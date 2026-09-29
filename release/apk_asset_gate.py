@@ -7,15 +7,34 @@ Port-Tuerarchiven (shared_assets/RE15DOOR) genau EINES (P07G.DO2, und das nur im
 Alle 30 wurden in v0.8.19 von Hand in der APK nachgemessen. Dieses Gate macht das fuer JEDE
 Datei JEDES Asset-Baums, bei jedem Bau.
 
+WIE DIE APK GELESEN WIRD (Nachbesserung R1, Befund B1 der Gegenpruefung)
+  ROH, so wie Androids ZIP-Leser libziparchive (android_glue.c:212 SDL_RWFromFile ->
+  AAssetManager_open -> libziparchive) - NICHT ueber Pythons zipfile. zipfile schneidet Namen am
+  NUL ab, ersetzt unter Windows '\\' durch '/' und vergleicht vom Local Header nur den Namen: drei
+  Faelschungen an RE15DOOR/P07G.DO2 ('\\' im Namen, CRC bzw. Groesse nur im Local Header falsch)
+  bestanden so die ganze Kette, obwohl libziparchive den Eintrag nicht oeffnet (aapt2 35.0.0:
+  "failed to find file." / "size/crc32 mismatch ... Inconsistent information"). Jetzt gilt fuer
+  JEDEN Eintrag der APK (auch lib/, classes.dex):
+   - End-of-Central-Directory am Dateiende (Kommentar reicht genau bis zum Ende), Zentral-
+     verzeichnis vollstaendig und ohne Rest lesbar, kein ZIP64/mehrteilig -> sonst Rueckgabe 2;
+   - Name roh: gueltiges UTF-8 und kein NUL (sonst verwirft libziparchive die GANZE APK), kein
+     '\\', keine Steuerzeichen, kein absoluter Pfad/'.'/'..'/'//'; Namen roh eindeutig;
+   - Local Header vorhanden, Name (Laenge + Bytes) = Zentralverzeichnis, ohne Data-Descriptor-Bit
+     CRC/Groessen = Zentralverzeichnis;
+   - Daten liegen ganz vor dem Zentralverzeichnis; Methode 0 oder 8; nicht verschluesselt;
+   - Daten ab dem Offset, den der LOCAL Header ergibt (wie das Geraet; AGP polstert dort zur
+     Ausrichtung, das Zentralverzeichnis nicht), csize Bytes gelesen und entpackt: CRC32 und
+     Laenge = Zentralverzeichnis, ein Deflate-Strom endet genau am Eintragsende.
+
 WAS GEPRUEFT WIRD
   0. Die Baumliste unten (BAEUME) ist die EINZIGE Liste des Gates. Sie wird gegen den
      Gradle-Task stageAssets (re15_port/platform/android/app/build.gradle) geprueft: jede
      from(new File(<basis>, "<quelle>")) { into "<ziel>"; include ... }-Anweisung. Weicht die
      build.gradle ab (neuer Baum wie RE15DOOR in Runde 33, anderes include, unbekannte
      Anweisung), bricht das Gate ab, statt still etwas anderes zu pruefen als gebaut wird.
-  a. Jede Quelldatei jedes Baums liegt in der APK unter assets/<ziel>/<pfad>.
-  b. Groesse UND sha256 sind gleich (Inhalt ueber zipfile gelesen; zipfile prueft dabei die
-     CRC jedes Eintrags mit).
+  a. Jede Quelldatei jedes Baums liegt in der APK unter assets/<ziel>/<pfad> (Name roh verglichen).
+  b. Groesse UND sha256 sind gleich (Daten wie oben gelesen; CRC32 zusaetzlich gegen das
+     Zentralverzeichnis).
   c. Unter assets/ liegt nichts ausser diesen Dateien und re15_assets.txt (keine Zusatz-,
      Doppel- oder Verzeichniseintraege).
   d. re15_assets.txt - so gelesen wie der Leser auf dem Geraet
@@ -29,6 +48,8 @@ WAS GEPRUEFT WIRD
   e. Ausgabe: Zaehlung je Baum und ausdruecklich RE2/DOOR, RE15DOOR, TORSE.VBS.
   Pflichtinhalt zusaetzlich: kein Baum leer, RE2/DOOR und RE15DOOR mit *.DO2, TORSE.VBS
   vorhanden (make_package.sh check_tree verlangt dasselbe fuer die PC-Pakete).
+  NICHT hier: Signatur, versionName, Paketname, ABIs - das pruefen apksigner/aapt in
+  release/apk_pruefen.sh (dieselbe Kette fuer build_android.sh und make_package.sh).
 
 RUECKGABE (fail closed)
   0 = APK und Quellbaum gleich
@@ -39,24 +60,27 @@ RUECKGABE (fail closed)
 AUFRUF (reines Python >= 3.8, keine Fremdpakete; Windows + Linux)
   apk_asset_gate.py [--repo <repo>] <apk>    Pruefung; --repo Standard = Ordner ueber release/
   apk_asset_gate.py --selbsttest             baut in einem Temp-Ordner Mini-Quellbaum,
-                                             Mini-APK und Manifest und prueft, dass das Gate
-                                             die gute APK annimmt und JEDE Faelschung ablehnt
-                                             (sonst bestaetigt sich das Gate nur selbst).
-  Aufrufer: release/build_android.sh (Abschnitt Gates, auch --gate-only <apk>).
+                                             Mini-APK (zipfile als UNABHAENGIGER Schreiber, danach
+                                             AGP-artig gepolstert) und Manifest und prueft, dass das
+                                             Gate die guten APKs annimmt und JEDE Faelschung
+                                             ablehnt (sonst bestaetigt sich das Gate nur selbst).
+  Aufrufer: release/apk_pruefen.sh (aus build_android.sh und make_package.sh).
   Interpreter per release/python_finden.sh (nie den WindowsApps-Alias "python3").
 """
 import argparse
+import concurrent.futures
 import hashlib
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
 import warnings
-import zipfile
+import zipfile          # NUR fuer den Selbsttest (unabhaengiger Schreiber) - die Pruefung liest roh
 import zlib
 
 RC_GLEICH, RC_ABWEICHUNG, RC_FEHLER = 0, 1, 2
@@ -89,9 +113,18 @@ ZAEHLEN = (("RE2/DOOR", "shared_assets/RE2/DOOR/"), ("RE15DOOR", "shared_assets/
 
 BLOCK = 1 << 20
 
+# ZIP-Aufbau (APPNOTE 4.3.7 / 4.3.12 / 4.3.16)
+EOCD_SIG, CD_SIG, LFH_SIG, Z64_LOC_SIG = b"PK\x05\x06", b"PK\x01\x02", b"PK\x03\x04", b"PK\x06\x07"
+EOCD_LEN, CD_LEN, LFH_LEN = 22, 46, 30
+FLAG_VERSCHLUESSELT, FLAG_DATA_DESCRIPTOR = 0x0001, 0x0008
+
 
 class Bedienfehler(Exception):
     """Gate kann keine gueltige Aussage treffen -> Rueckgabe 2."""
+
+
+class _Lesefehler(Exception):
+    """Ein Eintrag laesst sich nicht so lesen, wie sein Zentralverzeichnis-Eintrag ihn beschreibt."""
 
 
 # =============================================================================================
@@ -341,22 +374,191 @@ def quelldateien(repo, befund):
 
 
 # =============================================================================================
-# APK
+# APK roh lesen (wie libziparchive; Befund B1 der Gegenpruefung R1)
 # =============================================================================================
+class _Eintrag(object):
+    """Ein Zentralverzeichnis-Eintrag; name/daten_off/lesbar setzt struktur_pruefen."""
+    __slots__ = ("nr", "name_roh", "flags", "methode", "crc", "csize", "usize", "lho",
+                 "name", "daten_off", "lesbar")
+
+    def __init__(self, nr, name_roh, flags, methode, crc, csize, usize, lho):
+        self.nr, self.name_roh, self.flags, self.methode = nr, name_roh, flags, methode
+        self.crc, self.csize, self.usize, self.lho = crc, csize, usize, lho
+        self.name, self.daten_off, self.lesbar = None, None, False
+
+
+def zip_verzeichnis(pfad):
+    """End-of-Central-Directory + Zentralverzeichnis roh -> (cd_off, [ _Eintrag ]).
+    Wie libziparchive (MapCentralDirectory0/ParseZipArchive), teils strenger. Ist schon die
+    Grundstruktur unlesbar, gibt es keine Aussage ueber Eintraege -> Bedienfehler (Rueckgabe 2)."""
+    groesse = os.path.getsize(pfad)
+    with open(pfad, "rb") as f:
+        n_ende = min(groesse, EOCD_LEN + 0xFFFF)
+        f.seek(groesse - n_ende)
+        ende = f.read(n_ende)
+        i = ende.rfind(EOCD_SIG)          # libziparchive: die LETZTE Signatur (Suche von hinten)
+        if i < 0 or n_ende - i < EOCD_LEN:
+            raise Bedienfehler("APK nicht lesbar: %s (kein End-of-Central-Directory - kein ZIP oder "
+                               "abgeschnitten)" % pfad)
+        (_sig, disk, cd_disk, n_hier, n_ges, cd_groesse, cd_off, kom) = struct.unpack(
+            "<4sHHHHIIH", ende[i:i + EOCD_LEN])
+        eocd_pos = groesse - n_ende + i
+        if eocd_pos + EOCD_LEN + kom != groesse:
+            raise Bedienfehler("APK nicht lesbar: %s (%d Bytes hinter dem End-of-Central-Directory - "
+                               "libziparchive lehnt die Datei ab)" % (pfad, groesse - eocd_pos - EOCD_LEN - kom))
+        f.seek(max(0, eocd_pos - 20))
+        z64 = f.read(4) == Z64_LOC_SIG
+        if (z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off)
+                or disk != 0 or cd_disk != 0 or n_hier != n_ges):
+            raise Bedienfehler("APK nicht lesbar: %s (ZIP64/mehrteiliges Archiv - so baut AGP die APK nicht, "
+                               "das Gate liest es nicht)" % pfad)
+        if cd_off + cd_groesse > eocd_pos:
+            raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis ausserhalb der Datei: Offset %d + "
+                               "%d B > End-of-Central-Directory bei %d)" % (pfad, cd_off, cd_groesse, eocd_pos))
+        f.seek(cd_off)
+        cd = f.read(cd_groesse)
+    eintraege, p = [], 0
+    for nr in range(n_ges):
+        if p + CD_LEN > len(cd) or cd[p:p + 4] != CD_SIG:
+            raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis kaputt bei Eintrag %d von %d, "
+                               "Datei-Offset %d)" % (pfad, nr + 1, n_ges, cd_off + p))
+        (flags, methode, crc, csize, usize, nlen, xlen, klen, lho) = struct.unpack(
+            "<8xHH4xIIIHHH8xI", cd[p:p + CD_LEN])
+        eintraege.append(_Eintrag(nr, cd[p + CD_LEN:p + CD_LEN + nlen], flags, methode, crc, csize, usize, lho))
+        p += CD_LEN + nlen + xlen + klen
+    if p != len(cd):
+        raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis: %d B laut End-of-Central-Directory, "
+                           "die %d Eintraege belegen %d B - Rest oder Ueberlauf; ein anderer Leser saehe "
+                           "andere Eintraege)" % (pfad, len(cd), n_ges, p))
+    return cd_off, eintraege
+
+
+def _name_fehler(roh):
+    """'' = Name so, wie Android ihn findet; sonst der Grund (libziparchive + strenger)."""
+    if b"\x00" in roh:
+        return "NUL-Byte im Namen (libziparchive: 'Invalid entry name' - die GANZE APK ist unlesbar)"
+    try:
+        s = roh.decode("utf-8")
+    except UnicodeDecodeError:
+        return "Eintragsname kein gueltiges UTF-8 (libziparchive: 'Invalid entry name' - die GANZE APK ist unlesbar)"
+    if "\\" in s:
+        return ("'\\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet kein Leser den "
+                "Eintrag; zipfile ersetzte ihn unter Windows still durch '/')")
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
+        return "Steuerzeichen im Namen"
+    teile = s.split("/")
+    if s.startswith("/") or any(t in (".", "..") for t in teile) or "" in teile[:-1]:
+        return "absoluter Pfad, '.'/'..' oder '//' im Namen"
+    return ""
+
+
+def struktur_pruefen(fa, cd_off, eintraege, befund):
+    """Je Eintrag: Name, Local Header, Lage, Flags/Methode. Setzt name/daten_off/lesbar.
+    -> {name: [_Eintrag, ...]} aller Eintraege mit gueltigem Namen."""
+    je_name = {}
+    for e in eintraege:
+        grund = _name_fehler(e.name_roh)
+        if grund:
+            befund("APK-Struktur: Eintragsname", "unzulaessiger Eintragsname %r: %s" % (e.name_roh, grund))
+            continue
+        e.name = e.name_roh.decode("utf-8")
+        je_name.setdefault(e.name, []).append(e)
+        fa.seek(e.lho)
+        kopf = fa.read(LFH_LEN)
+        if len(kopf) < LFH_LEN or kopf[:4] != LFH_SIG:
+            befund("APK-Struktur: Local Header", "Local Header fehlt bei Offset %d: %s" % (e.lho, e.name))
+            continue
+        (l_flags, _l_meth, l_crc, l_csize, l_usize, l_nlen, l_xlen) = struct.unpack("<6xHH4xIIIHH", kopf)
+        l_name = fa.read(l_nlen)
+        if l_name != e.name_roh:
+            befund("APK-Struktur: Local Header", "Name im Local Header weicht vom Zentralverzeichnis ab: %s "
+                   "(Local Header %r) - libziparchive: 'Inconsistent information'" % (e.name, l_name))
+            continue
+        if not (l_flags & FLAG_DATA_DESCRIPTOR) and (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize):
+            befund("APK-Struktur: Local Header", "CRC/Groessen im Local Header weichen vom Zentralverzeichnis "
+                   "ab: %s (Local Header %08x/%d/%d, Zentralverzeichnis %08x/%d/%d) - libziparchive: "
+                   "'size/crc32 mismatch ... Inconsistent information'"
+                   % (e.name, l_crc, l_csize, l_usize, e.crc, e.csize, e.usize))
+            continue
+        e.daten_off = e.lho + LFH_LEN + l_nlen + l_xlen
+        if e.daten_off + e.csize > cd_off:
+            befund("APK-Struktur: Lage", "Daten ragen ins Zentralverzeichnis: %s (Daten %d + %d B > "
+                   "Zentralverzeichnis bei %d) - libziparchive: 'bad ... length'" % (e.name, e.daten_off, e.csize, cd_off))
+            continue
+        if (e.flags | l_flags) & FLAG_VERSCHLUESSELT:
+            befund("APK-Struktur: Methode/Flags", "verschluesselter Eintrag: %s" % e.name)
+            continue
+        if e.methode not in (0, 8):
+            befund("APK-Struktur: Methode/Flags", "Methode %d (lesbar sind 0 = Stored, 8 = Deflate): %s"
+                   % (e.methode, e.name))
+            continue
+        e.lesbar = True
+    for name in sorted(je_name):
+        if len(je_name[name]) > 1:
+            befund("APK: doppelt/Verzeichnis", "doppelter Eintrag in der APK (%dx): %s - libziparchive: "
+                   "'Duplicate entry'" % (len(je_name[name]), name))
+    return je_name
+
+
+def _eintrag_lesen(fa, e, sammeln=False):
+    """Liest e wie das Geraet: ab dem Datenoffset aus dem LOCAL Header csize Bytes, entpackt.
+    -> (sha256_hex, crc32, n_bytes, daten|None); _Lesefehler bei kaputtem Strom."""
+    h, st = hashlib.sha256(), [0, 0]            # st = [crc32, n]
+    teile = [] if sammeln else None
+
+    def nimm(b):
+        if not b:
+            return
+        st[1] += len(b)
+        if st[1] > e.usize:
+            raise _Lesefehler("entpackt mehr als die %d B des Zentralverzeichnisses" % e.usize)
+        h.update(b)
+        st[0] = zlib.crc32(b, st[0])
+        if teile is not None:
+            teile.append(b)
+
+    d = zlib.decompressobj(-15) if e.methode == 8 else None
+    fa.seek(e.daten_off)
+    rest = e.csize
+    try:
+        while rest:
+            b = fa.read(min(rest, BLOCK))
+            if not b:
+                raise _Lesefehler("Datei endet mitten im Eintrag")
+            rest -= len(b)
+            if d is None:
+                nimm(b)
+                continue
+            nimm(d.decompress(b, BLOCK))
+            while d.unconsumed_tail:
+                nimm(d.decompress(d.unconsumed_tail, BLOCK))
+        if d is not None:
+            nimm(d.flush())
+            if not d.eof or d.unused_data:
+                raise _Lesefehler("Deflate-Strom endet nicht genau am Eintragsende (%s)" % (
+                    "unvollstaendig" if not d.eof else "%d B dahinter" % len(d.unused_data)))
+    except zlib.error as ex:
+        raise _Lesefehler("Deflate-Strom kaputt: %s" % ex)
+    return h.hexdigest(), st[0] & 0xFFFFFFFF, st[1], (b"".join(teile) if teile is not None else None)
+
+
+def _eintrag_pruefen(fa, e, befund):
+    """Eintrag lesen, CRC32 + Laenge gegen das Zentralverzeichnis. -> (sha256, n) oder None."""
+    try:
+        sha, crc, n, _ = _eintrag_lesen(fa, e)
+    except _Lesefehler as ex:
+        befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: %s" % (e.name, ex))
+        return None
+    if crc != e.crc or n != e.usize:
+        befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: gelesen %d B, CRC %08x - "
+               "Zentralverzeichnis %d B, CRC %08x" % (e.name, n, crc, e.usize, e.crc))
+        return None
+    return sha, n
+
+
 def _sha_datei(pfad):
     h, n = hashlib.sha256(), 0
     with open(pfad, "rb") as f:
-        while True:
-            b = f.read(BLOCK)
-            if not b:
-                return h.hexdigest(), n
-            h.update(b)
-            n += len(b)
-
-
-def _sha_eintrag(zf, info):
-    h, n = hashlib.sha256(), 0
-    with zf.open(info) as f:
         while True:
             b = f.read(BLOCK)
             if not b:
@@ -461,85 +663,86 @@ def pruefen(repo, apk, max_zeilen):
 
     if not os.path.isfile(apk):
         raise Bedienfehler("APK fehlt: %s" % apk)
-    try:
-        zf = zipfile.ZipFile(apk)
-    except (zipfile.BadZipFile, OSError) as e:
-        raise Bedienfehler("APK nicht lesbar: %s (%s)" % (apk, e))
+    cd_off, eintraege = zip_verzeichnis(apk)
 
     quellen, zahl_quelle = quelldateien(repo, befund)
+    man_name = "assets/" + MANIFEST
 
-    with zf:
-        infos = zf.infolist()
-        namen = [i.filename for i in infos]
-        je_name = {}
-        for i in infos:
-            je_name.setdefault(i.filename, []).append(i)
+    with open(apk, "rb") as fa:
+        je_name = struktur_pruefen(fa, cd_off, eintraege, befund)
+        print("   ZIP-Struktur: %d Eintraege roh gelesen, %d fuer Android lesbar (Name, Local Header = "
+              "Zentralverzeichnis, Lage, Methode)" % (len(eintraege), sum(1 for e in eintraege if e.lesbar)))
         asset_infos = {}
-        n_komprimiert = {}
         for name, liste in je_name.items():
             if not name.startswith("assets/"):
                 continue
-            if len(liste) > 1:
-                befund("APK: doppelt/Verzeichnis", "doppelter Eintrag in der APK (%dx): %s" % (len(liste), name))
-            info = liste[-1]
-            if info.is_dir():
+            if name.endswith("/"):
                 befund("APK: doppelt/Verzeichnis", "Verzeichniseintrag in der APK: %s" % name)
                 continue
-            asset_infos[name] = info
+            asset_infos[name] = liste[-1]
 
-        # (a)+(b) jede Quelldatei in der APK, Groesse + sha256
+        # (a)+(b) jede Quelldatei in der APK, Groesse + CRC32 + sha256 (in APK-Reihenfolge lesen)
         gleich = {}
         bytes_gleich = 0
-        for name in sorted(quellen):
+        n_komprimiert = {}
+        gelesen, kaputt = set(), set()
+
+        def lage(name):
+            e = asset_infos.get(name)
+            return (e.lho if e is not None else -1, name)
+
+        for name in sorted(quellen, key=lage):
             pfad, rel = quellen[name]
-            info = asset_infos.get(name)
-            if info is None:
+            e = asset_infos.get(name)
+            if e is None:
                 hinweis = _auslass_hinweis(name[len("assets/"):])
                 befund("fehlt in der APK", "fehlt in der APK: %s  (Quelle %s)%s"
                        % (name, rel, ("  - " + hinweis) if hinweis else ""))
                 continue
+            if not e.lesbar:
+                continue                              # Grund steht unter "APK-Struktur"
             q_groesse = os.path.getsize(pfad)
-            if info.file_size != q_groesse:
+            if e.usize != q_groesse:
                 befund("Groesse weicht ab", "Groesse weicht ab: %s  Quelle %d B, APK %d B"
-                       % (name, q_groesse, info.file_size))
+                       % (name, q_groesse, e.usize))
                 continue
-            try:
-                a_sha, a_n = _sha_eintrag(zf, info)
-            except (zipfile.BadZipFile, zlib.error, EOFError) as e:
-                befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: %s" % (name, e))
+            gelesen.add(e.nr)
+            r = _eintrag_pruefen(fa, e, befund)
+            if r is None:
+                kaputt.add(e.nr)
                 continue
+            a_sha, a_n = r
             q_sha, q_n = _sha_datei(pfad)
-            if a_n != q_n:
-                befund("Groesse weicht ab", "Groesse weicht ab (gelesen): %s  Quelle %d B, APK %d B" % (name, q_n, a_n))
-            elif a_sha != q_sha:
-                befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, gleiche Groesse %d B): %s  "
-                       "Quelle %s.., APK %s.." % (q_n, name, q_sha[:16], a_sha[:16]))
+            if a_sha != q_sha or a_n != q_n:
+                befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s  Quelle %s.., APK %s.."
+                       % (("gleiche Groesse %d B" % q_n) if q_n == a_n else ("Quelle %d B, APK %d B" % (q_n, a_n)),
+                          name, q_sha[:16], a_sha[:16]))
             else:
                 gleich[name] = q_n
                 bytes_gleich += q_n
-            if info.compress_type != zipfile.ZIP_STORED:
-                n_komprimiert[name] = info.compress_type
+            if e.methode != 0:
+                n_komprimiert[name] = e.methode
+
+        # (b2) alle uebrigen lesbaren Eintraege (lib/, classes.dex, Manifest, ...): CRC32 + Laenge
+        for e in sorted((x for x in eintraege if x.lesbar and x.nr not in gelesen), key=lambda x: x.lho):
+            if _eintrag_pruefen(fa, e, befund) is None:
+                kaputt.add(e.nr)
 
         # (c) nichts Zusaetzliches unter assets/
-        man_name = "assets/" + MANIFEST
         for name in sorted(asset_infos):
             if name != man_name and name not in quellen:
                 befund("zusaetzlich in der APK", "zusaetzlich in der APK (kein Asset-Baum liefert ihn): %s" % name)
 
         # (d) Manifest
         n_man = b_man = None
-        if man_name not in asset_infos:
+        e_man = asset_infos.get(man_name)
+        if e_man is None:
             befund("Manifest", "Manifest fehlt in der APK: %s (das Geraet entpackt dann NICHTS, "
                                "android_glue.c:153)" % man_name)
-        else:
-            try:
-                roh = zf.read(asset_infos[man_name])
-            except (zipfile.BadZipFile, zlib.error, EOFError) as e:
-                befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: %s" % (man_name, e))
-                roh = None
-            if roh is not None:
-                apk_dateien = {n[len("assets/"):]: i.file_size for n, i in asset_infos.items() if n != man_name}
-                n_man, b_man = manifest_pruefen(roh, apk_dateien, befund)
+        elif e_man.lesbar and e_man.nr not in kaputt:
+            roh = _eintrag_lesen(fa, e_man, sammeln=True)[3]
+            apk_dateien = {n[len("assets/"):]: x.usize for n, x in asset_infos.items() if n != man_name}
+            n_man, b_man = manifest_pruefen(roh, apk_dateien, befund)
 
     # (e) Zaehlung
     zahl_apk = {}
@@ -561,7 +764,7 @@ def pruefen(repo, apk, max_zeilen):
             print("   %-10s Quelle %d, APK %d, sha256 gleich %d/%d" % (label + ":", q, a, g, q))
         else:
             q = os.path.getsize(quellen[name][0]) if name in quellen else None
-            a = asset_infos[name].file_size if name in asset_infos else None
+            a = asset_infos[name].usize if name in asset_infos else None
             print("   %-10s Quelle %s, APK %s, sha256 %s" % (
                 label + ":", ("%d B" % q) if q is not None else "FEHLT", ("%d B" % a) if a is not None else "FEHLT",
                 "gleich" if name in gleich else "NICHT gleich/nicht geprueft"))
@@ -587,12 +790,13 @@ def pruefen(repo, apk, max_zeilen):
                 print("      ... und %d weitere" % (len(liste) - max_zeilen))
         print("== APK-ASSET-GATE-ABWEICHUNG: %d Befunde ==" % n_befunde)
         return RC_ABWEICHUNG
-    print("== APK-ASSET-GATE-OK: %d Dateien in %d Baeumen bytegleich, Manifest stimmt ==" % (len(gleich), len(BAEUME)))
+    print("== APK-ASSET-GATE-OK: %d Dateien in %d Baeumen bytegleich, Manifest stimmt, ZIP-Struktur "
+          "wie Android sie liest ==" % (len(gleich), len(BAEUME)))
     return RC_GLEICH
 
 
 # =============================================================================================
-# Selbsttest: gute APK annehmen, JEDE Faelschung ablehnen
+# Selbsttest: gute APKs annehmen, JEDE Faelschung ablehnen
 # =============================================================================================
 _GRADLE_MUSTER = r'''plugins {
     id 'com.android.application'
@@ -646,25 +850,166 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
     ("synchro/unused/STAGE1/room1170/alt.mp3", 800),     # ausserhalb include "STAGE*/**"
     ("synchro/README.md", 100),                          # ausserhalb include "STAGE*/**"
 )
+# Datei > BLOCK: nur die "gross"-Faelle (sonst kaeme ein Vergleich nur ueber den 1. Block durch)
+_GROSS = ("re15_port/shared_assets/PSX/MOVIE/GROSS.STR", BLOCK + 4096 + 37)
+_NICHT_ASSETS = (("AndroidManifest.xml", b"<manifest/>"), ("classes.dex", b"dex\n035\0"),
+                 ("lib/arm64-v8a/libmain.so", b"\x7fELF"), ("resources.arsc", b"\x02\x00"))
 
 
 def _inhalt(name, groesse):
-    b = b""
-    k = 0
-    while len(b) < groesse:
-        b += hashlib.sha256(("%s#%d" % (name, k)).encode()).digest()
+    teile, n, k = [], 0, 0
+    while n < groesse:
+        d = hashlib.sha256(("%s#%d" % (name, k)).encode()).digest()
+        teile.append(d)
+        n += len(d)
         k += 1
-    return b[:groesse]
+    return b"".join(teile)[:groesse]
+
+
+def _crc_erhaltend(daten, q, p):
+    """Byte q kippen (^0x01) und 4 Ausgleichsbytes ab p so waehlen, dass zlib.crc32 GLEICH bleibt
+    (CRC32 ist linear ueber GF(2); 32 aufeinanderfolgende Bits gleichen jede Aenderung aus)."""
+    n = len(daten)
+    null = zlib.crc32(bytes(n))
+
+    def wirkung(pos, maske):
+        v = bytearray(n)
+        v[pos] = maske
+        return zlib.crc32(bytes(v)) ^ null
+
+    ziel = wirkung(q, 0x01)
+    basis = []                                   # (wert, auswahl), absteigend, verschiedene Spitzenbits
+    for k in range(32):
+        w, a = wirkung(p + k // 8, 1 << (k % 8)), 1 << k
+        for bw, ba in basis:
+            if w ^ bw < w:
+                w, a = w ^ bw, a ^ ba
+        if w:
+            basis.append((w, a))
+            basis.sort(reverse=True)
+    w, a = ziel, 0
+    for bw, ba in basis:
+        if w ^ bw < w:
+            w, a = w ^ bw, a ^ ba
+    if w:
+        raise AssertionError("Selbsttest-Fixture: kein CRC-Ausgleich gefunden")
+    neu = bytearray(daten)
+    neu[q] ^= 0x01
+    for k in range(32):
+        if a >> k & 1:
+            neu[p + k // 8] ^= 1 << (k % 8)
+    neu = bytes(neu)
+    if neu == daten or zlib.crc32(neu) != zlib.crc32(daten):
+        raise AssertionError("Selbsttest-Fixture: CRC-Ausgleich falsch")
+    return neu
+
+
+# --- Selbsttest-Helfer auf ROHEN Bytes, bewusst UNABHAENGIG vom Leser oben (eigener Mini-Parser),
+#     damit eine Faelschung nicht mit demselben Fehler gebaut wird, den sie aufdecken soll.
+def _fx_cd(d):
+    """-> ([(cd_pos, lho, nlen, xlen, klen, csize, name)], cd_off, eocd_pos) des Selbsttest-APKs."""
+    eocd = d.rfind(b"PK\x05\x06")
+    n, _cd_groesse, cd_off = struct.unpack("<HII", d[eocd + 10:eocd + 20])
+    aus, p = [], cd_off
+    for _ in range(n):
+        csize, = struct.unpack("<I", d[p + 20:p + 24])
+        nlen, xlen, klen = struct.unpack("<HHH", d[p + 28:p + 34])
+        lho, = struct.unpack("<I", d[p + 42:p + 46])
+        aus.append((p, lho, nlen, xlen, klen, csize, d[p + 46:p + 46 + nlen]))
+        p += 46 + nlen + xlen + klen
+    return aus, cd_off, eocd
+
+
+def _fx_lesen(apk):
+    with open(apk, "rb") as f:
+        return f.read()
+
+
+def _fx_schreiben(apk, d):
+    with open(apk, "wb") as f:
+        f.write(d)
+
+
+def _fx_polstern(apk, anhang=None):
+    """Neu schreiben wie AGP/zipflinger: jeder Local Header bekommt ein Ausrichtungsfeld 0xD935
+    (6-9 B), Stored-Daten liegen 4-Byte-ausgerichtet; das Zentralverzeichnis behaelt Extra 0.
+    So ist Local-Header-Extra != Zentralverzeichnis-Extra (Referenz-APK: 1584 von 3616 Eintraegen) -
+    ein Leser, der den Datenoffset aus dem Zentralverzeichnis rechnet, liest daneben.
+    anhang = (name_bytes, muell): Muell hinter die Daten des Eintrags, csize in LFH + CD mitziehen."""
+    alt = _fx_lesen(apk)
+    cd, _cd_off, eocd = _fx_cd(alt)
+    neu, neue_cd = bytearray(), bytearray()
+    for (p, lho, nlen, xlen, klen, csize, name) in cd:
+        l_nlen, l_xlen = struct.unpack("<HH", alt[lho + 26:lho + 30])
+        start = lho + 30 + l_nlen + l_xlen
+        daten = alt[start:start + csize]
+        lfh = bytearray(alt[lho:lho + 30])
+        cdr = bytearray(alt[p:p + 46 + nlen + xlen + klen])
+        if anhang is not None and name == anhang[0]:
+            daten += anhang[1]
+            struct.pack_into("<I", lfh, 18, csize + len(anhang[1]))
+            struct.pack_into("<I", cdr, 20, csize + len(anhang[1]))
+        off = len(neu)
+        pad = 6 + (-(off + 30 + l_nlen + 6)) % 4
+        struct.pack_into("<H", lfh, 28, pad)
+        neu += lfh + alt[lho + 30:lho + 30 + l_nlen] + struct.pack("<HHH", 0xD935, pad - 4, 4) + bytes(pad - 6) + daten
+        struct.pack_into("<I", cdr, 42, off)
+        neue_cd += cdr
+    ende = bytearray(alt[eocd:eocd + 22])
+    struct.pack_into("<I", ende, 12, len(neue_cd))
+    struct.pack_into("<I", ende, 16, len(neu))
+    _fx_schreiben(apk, bytes(neu + neue_cd + ende))
+
+
+def _fx_stelle(apk, name):
+    """(lho, cd_pos, datenoffset) des Eintrags name (str oder bytes) im fertigen Selbsttest-APK."""
+    nb = name.encode("utf-8") if isinstance(name, str) else name
+    d = _fx_lesen(apk)
+    cd, _cd_off, _eocd = _fx_cd(d)
+    t = [(lho, p) for (p, lho, _n, _x, _k, _s, nm) in cd if nm == nb]
+    if len(t) != 1:
+        raise AssertionError("Selbsttest-Fixture: Eintrag %r %d-mal" % (nb, len(t)))
+    lho, p = t[0]
+    l_nlen, l_xlen = struct.unpack("<HH", d[lho + 26:lho + 30])
+    return lho, p, lho + 30 + l_nlen + l_xlen
+
+
+def _fx_patch(apk, stellen):
+    """stellen = [(offset, bytes)] in place schreiben."""
+    with open(apk, "r+b") as f:
+        for off, b in stellen:
+            f.seek(off)
+            f.write(b)
+
+
+def _fx_name_ersetzen(apk, name, neu, nur_lfh=False):
+    """Namen (gleiche Laenge) in Local Header und Zentralverzeichnis (oder nur im Local Header) ersetzen."""
+    nb = name.encode("utf-8")
+    if len(neu) != len(nb):
+        raise AssertionError("Selbsttest-Fixture: Name muss gleich lang bleiben")
+    lho, p, _d = _fx_stelle(apk, nb)
+    _fx_patch(apk, [(lho + 30, neu)] + ([] if nur_lfh else [(p + 46, neu)]))
+
+
+def _fx_eocd(apk, feld, wert=None, plus=0):
+    """Feld des End-of-Central-Directory aendern: feld = (offset, fmt)."""
+    d = bytearray(_fx_lesen(apk))
+    eocd = d.rfind(b"PK\x05\x06")
+    off, fmt = feld
+    alt, = struct.unpack_from(fmt, d, eocd + off)
+    struct.pack_into(fmt, d, eocd + off, (wert if wert is not None else alt + plus))
+    _fx_schreiben(apk, bytes(d))
 
 
 class _Fall:
     """Ein Selbsttest-Fall: Mini-Repo + Mini-APK aufbauen, dann faelschen."""
 
-    def __init__(self, wurzel):
+    def __init__(self, wurzel, gross=False):
         self.repo = os.path.join(wurzel, "repo")
         self.apk = os.path.join(wurzel, "mini.apk")
         self.gradle = _GRADLE_MUSTER
-        self.quelle = {rel: _inhalt(rel, n) for rel, n in _FIXTURE}
+        fixture = _FIXTURE + ((_GROSS,) if gross else ())
+        self.quelle = {rel: _inhalt(rel, n) for rel, n in fixture}
         # APK-Inhalt = was stageAssets liefern wuerde: (name, bytes, methode)
         self.eintraege = []
         for rel, b in sorted(self.quelle.items()):
@@ -679,9 +1024,12 @@ class _Fall:
         self.manifest_roh = None             # Bytes ueberschreiben alles
         self.ohne_manifest = False
         self.doppelt = []
-        self.kippen = None                   # (name, offset) Byte im fertigen APK-Datenstrom kippen
+        self.verzeichnisse = []              # zusaetzliche Verzeichniseintraege (Name endet auf '/')
+        self.schreibname = {}                # Eintrag unter anderem Namen schreiben (danach roh patchen)
+        self.anhang = None                   # (name_bytes, muell) beim Polstern hinter die Daten
+        self.roh = []                        # Eingriffe auf rohen Bytes NACH dem Polstern: f(apk)
         self.leere_ordner = []
-        self.nach_schreiben = None           # Eingriff nach dem Schreiben (APK/build.gradle zerstoeren)
+        self.nach_schreiben = None           # Eingriff nach allem (APK/build.gradle zerstoeren)
 
     def manifest_aus_eintraegen(self):
         return [(n[len("assets/"):], len(b)) for n, b, _m in self.eintraege]
@@ -711,26 +1059,17 @@ class _Fall:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")          # "Duplicate name" beim Doppel-Fall
             with zipfile.ZipFile(self.apk, "w") as zf:
-                for name, b in (("AndroidManifest.xml", b"<manifest/>"), ("classes.dex", b"dex\n035\0"),
-                                ("lib/arm64-v8a/libmain.so", b"\x7fELF"), ("resources.arsc", b"\x02\x00")):
+                for name, b in _NICHT_ASSETS:
                     zf.writestr(name, b)
                 if not self.ohne_manifest:
                     zf.writestr(zipfile.ZipInfo("assets/" + MANIFEST), man, zipfile.ZIP_STORED)
                 for name, b, methode in self.eintraege + self.doppelt:
-                    zf.writestr(zipfile.ZipInfo(name), b, methode)
-        if self.kippen:
-            name, off = self.kippen
-            with zipfile.ZipFile(self.apk) as zf:
-                info = zf.getinfo(name)
-            with open(self.apk, "r+b") as f:
-                f.seek(info.header_offset + 26)
-                n_name = int.from_bytes(f.read(2), "little")
-                n_extra = int.from_bytes(f.read(2), "little")
-                pos = info.header_offset + 30 + n_name + n_extra + off
-                f.seek(pos)
-                alt = f.read(1)
-                f.seek(pos)
-                f.write(bytes([alt[0] ^ 0x5A]))
+                    zf.writestr(zipfile.ZipInfo(self.schreibname.get(name, name)), b, methode)
+                for name in self.verzeichnisse:
+                    zf.writestr(zipfile.ZipInfo(name), b"", zipfile.ZIP_STORED)
+        _fx_polstern(self.apk, self.anhang)
+        for eingriff in self.roh:
+            eingriff(self.apk)
 
     def eintrag(self, name):
         for e in self.eintraege:
@@ -745,9 +1084,14 @@ class _Fall:
 
 
 def _faelle():
-    """(Titel, Faelschung(fall), erwartete Rueckgabe, Pflicht-Teilstrings der Ausgabe)"""
+    """(Titel, Faelschung(fall), erwartete Rueckgabe, Pflicht-Teilstrings der Ausgabe[, gross])"""
     D7 = "assets/shared_assets/RE2/DOOR/DOOR07.DO2"
     P07 = "assets/shared_assets/RE15DOOR/P07G.DO2"
+    P2DS = "shared_assets/RE15DOOR/P2DS.DO2"
+    TEX = "assets/shared_assets/PSX/DATA/TEX.TIM"
+    GROSS = "assets/" + _GROSS[0][len("re15_port/"):]
+    # Zaehlzeile PSX mit der grossen Datei: 4 Dateien, alle gleich (ROOM1240 3000 + wincfg 0 + TEX 5000)
+    PSX_GROSS_ZEILE = "%-28s %7d %7d %8d %12d" % ("shared_assets/PSX", 4, 4, 4, 3000 + 0 + 5000 + _GROSS[1])
 
     def nichts(f):
         pass
@@ -756,7 +1100,7 @@ def _faelle():
         f.manifest_roh = _Fall.manifest_text(f.manifest_aus_eintraegen()).replace("\n", "\r\n").encode()
 
     def deflate(f):
-        f.eintrag("assets/shared_assets/PSX/DATA/TEX.TIM")[2] = zipfile.ZIP_DEFLATED
+        f.eintrag(TEX)[2] = zipfile.ZIP_DEFLATED
 
     def ohne_p07(f):
         f.eintraege.remove(f.eintrag(P07))
@@ -777,18 +1121,21 @@ def _faelle():
                              for p, g in f.manifest_aus_eintraegen()]
 
     def man_zeile_fehlt(f):
-        f.manifest_zeilen = [(p, g) for p, g in f.manifest_aus_eintraegen()
-                             if p != "shared_assets/RE15DOOR/P2DS.DO2"]
+        f.manifest_zeilen = [(p, g) for p, g in f.manifest_aus_eintraegen() if p != P2DS]
 
     def nur_quelle(f):
         f.quelle["re15_port/shared_assets/RE15DOOR/NEU.DO2"] = b"nur im Quellbaum"
 
     def kuerzer(f):
-        e = f.eintrag("assets/shared_assets/PSX/DATA/TEX.TIM")
+        e = f.eintrag(TEX)
         e[1] = e[1][:-10]
 
     def crc(f):
-        f.kippen = ("assets/shared_assets/extracted_fx/effect0_blood.tim", 100)
+        def kippen(apk):
+            _lho, _p, d = _fx_stelle(apk, "assets/shared_assets/extracted_fx/effect0_blood.tim")
+            b = _fx_lesen(apk)[d + 100]
+            _fx_patch(apk, [(d + 100, bytes([b ^ 0x5A]))])
+        f.roh.append(kippen)
 
     def doppelt(f):
         e = f.eintrag(D7)
@@ -856,6 +1203,144 @@ def _faelle():
     def gradle_fehlt(f):
         f.nach_schreiben = lambda: os.remove(os.path.join(f.repo, *GRADLE_REL.split("/")))
 
+    # --- Nachbesserung R1, Befund B3: Luecken des Selbsttests (Mutanten U1-U4, U7 der Gegenpruefung)
+    def gross_spaet(f):                  # U3: Vergleich nur ueber den ersten Block
+        e = f.eintrag(GROSS)
+        k = BLOCK + 100
+        e[1] = e[1][:k] + bytes([e[1][k] ^ 1]) + e[1][k + 1:]
+
+    def crc_gleich(f):                   # U4: CRC32 statt sha256 - CRC bleibt, Inhalt nicht
+        e = f.eintrag("assets/" + P2DS)
+        e[1] = _crc_erhaltend(e[1], 900, 1000)
+
+    def geisterzeile(f):                 # U1: Zeile fuer eine Datei, die es nirgends gibt
+        z = f.manifest_aus_eintraegen() + [("shared_assets/RE15DOOR/GEIST.DO2", 5)]
+        f.manifest_roh = _Fall.manifest_text(z).encode()
+
+    def doppelzeile(f):                  # U2: dieselbe Datei zweimal, erste Zeile mit falscher Groesse
+        t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+        kopf_, rest = t.split("\n", 1)
+        f.manifest_roh = (kopf_ + "\n9999\t" + P2DS + "\n" + rest).encode()
+
+    def unterstrich(f):                  # U7: '1_800' - int() nimmt es, atoll() liest 1
+        t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+        f.manifest_roh = t.replace("1800\t" + P2DS, "1_800\t" + P2DS, 1).encode()
+
+    def man_kein_utf8(f):
+        t = _Fall.manifest_text(f.manifest_aus_eintraegen()).encode()
+        f.manifest_roh = t.replace(b"P2DS.DO2", b"P2DS.D\xff2", 1)
+
+    def man_notiz(f):
+        f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + "# Notiz\n").encode()
+
+    def man_selbst(f):
+        f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + "12\tre15_assets.txt\n").encode()
+
+    def man_ohne_kopf(f):
+        f.manifest_roh = _Fall.manifest_text(f.manifest_aus_eintraegen()).split("\n", 1)[1].encode()
+
+    # --- Nachbesserung R1, Befund B1: ZIP-Struktur so pruefen, wie Android sie liest
+    def name_backslash(f):               # umgehung F2
+        f.roh.append(lambda apk: _fx_name_ersetzen(apk, P07, P07.replace("/", "\\").encode()))
+
+    def name_nul(f):                     # umgehung F3: Name + NUL + 'abc' (zipfile schnitt am NUL ab)
+        f.schreibname[P07] = P07 + "Xabc"
+
+        def nul(apk):
+            lho, p, _d = _fx_stelle(apk, P07 + "Xabc")
+            k = len(P07)                     # das 'X' hinter dem echten Namen
+            _fx_patch(apk, [(lho + 30 + k, b"\0"), (p + 46 + k, b"\0")])
+        f.roh.append(nul)
+
+    def name_utf8(f):
+        f.roh.append(lambda apk: _fx_name_ersetzen(apk, P07, P07.encode().replace(b"P07G", b"P07\xff")))
+
+    def name_steuer(f):
+        f.roh.append(lambda apk: _fx_name_ersetzen(apk, P07, P07.encode().replace(b"P07G", b"P07\x01")))
+
+    def name_punkte(f):
+        f.roh.append(lambda apk: _fx_name_ersetzen(apk, P07, P07.encode().replace(b"P07G.DO2", b"../G.DO2")))
+
+    def lfh_crc(f):                      # umgehung F4
+        def e(apk):
+            lho, _p, _d = _fx_stelle(apk, P07)
+            alt, = struct.unpack("<I", _fx_lesen(apk)[lho + 14:lho + 18])
+            _fx_patch(apk, [(lho + 14, struct.pack("<I", alt ^ 1))])
+        f.roh.append(e)
+
+    def lfh_groesse(f):                  # umgehung F5
+        def e(apk):
+            lho, _p, _d = _fx_stelle(apk, P07)
+            alt, = struct.unpack("<I", _fx_lesen(apk)[lho + 22:lho + 26])
+            _fx_patch(apk, [(lho + 22, struct.pack("<I", alt + 1))])
+        f.roh.append(e)
+
+    def lfh_name(f):
+        f.roh.append(lambda apk: _fx_name_ersetzen(apk, P07, P07.replace("DO2", "DO3").encode(), nur_lfh=True))
+
+    def lfh_signatur(f):
+        def e(apk):
+            lho, _p, _d = _fx_stelle(apk, P07)
+            _fx_patch(apk, [(lho, b"PK\x09\x09")])
+        f.roh.append(e)
+
+    def verschluesselt(f):
+        def e(apk):
+            lho, p, _d = _fx_stelle(apk, P07)
+            d = _fx_lesen(apk)
+            lf, = struct.unpack("<H", d[lho + 6:lho + 8])
+            cf, = struct.unpack("<H", d[p + 8:p + 10])
+            _fx_patch(apk, [(lho + 6, struct.pack("<H", lf | 1)), (p + 8, struct.pack("<H", cf | 1))])
+        f.roh.append(e)
+
+    def methode99(f):
+        def e(apk):
+            lho, p, _d = _fx_stelle(apk, P07)
+            _fx_patch(apk, [(lho + 8, struct.pack("<H", 99)), (p + 10, struct.pack("<H", 99))])
+        f.roh.append(e)
+
+    def ragt(f):
+        def e(apk):
+            lho, p, _d = _fx_stelle(apk, P07)
+            g = struct.pack("<II", 10 ** 7, 10 ** 7)
+            _fx_patch(apk, [(lho + 18, g), (p + 20, g)])
+        f.roh.append(e)
+
+    def dex_kippen(f):                   # kein Asset: nur CRC32 gegen das Zentralverzeichnis schuetzt es
+        def e(apk):
+            _lho, _p, d = _fx_stelle(apk, "classes.dex")
+            b = _fx_lesen(apk)[d + 2]
+            _fx_patch(apk, [(d + 2, bytes([b ^ 0x5A]))])
+        f.roh.append(e)
+
+    def deflate_muell(f):
+        f.eintrag(TEX)[2] = zipfile.ZIP_DEFLATED
+        f.anhang = (TEX.encode(), b"MUELL!!")
+
+    def verzeichnis(f):
+        f.verzeichnisse.append("assets/shared_assets/RE15DOOR/")
+
+    def abgeschnitten(f):                # umgehung F7
+        f.roh.append(lambda apk: _fx_schreiben(apk, _fx_lesen(apk)[:-10]))
+
+    def muell_hinten(f):
+        f.roh.append(lambda apk: _fx_schreiben(apk, _fx_lesen(apk) + b"MUELL"))
+
+    def zip64(f):
+        f.roh.append(lambda apk: (_fx_eocd(apk, (8, "<H"), 0xFFFF), _fx_eocd(apk, (10, "<H"), 0xFFFF)))
+
+    def cd_signatur(f):                  # umgehung F8
+        def e(apk):
+            _cd, cd_off, _eocd = _fx_cd(_fx_lesen(apk))
+            _fx_patch(apk, [(cd_off, b"PK\x09\x09")])
+        f.roh.append(e)
+
+    def cd_offset(f):
+        f.roh.append(lambda apk: _fx_eocd(apk, (16, "<I"), plus=1))
+
+    def eintrag_weniger(f):              # libziparchive saehe den letzten Eintrag nicht
+        f.roh.append(lambda apk: (_fx_eocd(apk, (8, "<H"), plus=-1), _fx_eocd(apk, (10, "<H"), plus=-1)))
+
     return (
         ("gute APK", nichts, 0, ["APK-ASSET-GATE-OK", "RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2"]),
         ("Manifest mit CRLF (Geraet schneidet \\r ab)", crlf, 0, ["APK-ASSET-GATE-OK"]),
@@ -865,9 +1350,9 @@ def _faelle():
         ("Zusatzeintrag unter assets/", zusatz, 1, ["zusaetzlich in der APK", "PSX/EXTRA.BIN"]),
         ("synchro/unused in der APK", unused, 1, ["zusaetzlich in der APK", "assets/synchro/unused/"]),
         ("Manifest: falsche Groesse", man_groesse, 1, ["Manifest-Groesse falsch: shared_assets/RE2/TORSE.VBS"]),
-        ("Manifest: fehlende Zeile", man_zeile_fehlt, 1, ["fehlt im Manifest: shared_assets/RE15DOOR/P2DS.DO2"]),
+        ("Manifest: fehlende Zeile", man_zeile_fehlt, 1, ["fehlt im Manifest: " + P2DS]),
         ("Datei nur im Quellbaum", nur_quelle, 1, ["fehlt in der APK: assets/shared_assets/RE15DOOR/NEU.DO2"]),
-        ("APK-Eintrag kuerzer als die Quelle", kuerzer, 1, ["Groesse weicht ab: assets/shared_assets/PSX/DATA/TEX.TIM"]),
+        ("APK-Eintrag kuerzer als die Quelle", kuerzer, 1, ["Groesse weicht ab: " + TEX]),
         ("Byte im APK-Datenstrom gekippt (CRC)", crc, 1, ["beschaedigt (CRC", "effect0_blood.tim"]),
         ("doppelter APK-Eintrag", doppelt, 1, ["doppelter Eintrag in der APK (2x): " + D7]),
         ("Manifest: Kopfzeile Anzahl falsch", kopf, 1, ["Manifest-Kopfzeile passt nicht"]),
@@ -879,45 +1364,106 @@ def _faelle():
                                                                "Pflichtinhalt fehlt: re15_port/shared_assets/RE15DOOR"]),
         ("RE15DOOR-Ordner fehlt ganz", re15door_weg, 1, ["Quellbaum fehlt: re15_port/shared_assets/RE15DOOR"]),
         ("TORSE.VBS fehlt (Quelle und APK)", torse_weg, 1, ["Pflichtdatei fehlt/leer: re15_port/shared_assets/RE2/TORSE.VBS"]),
-        ("APK ist kein ZIP", kein_zip, 2, ["APK nicht lesbar"]),
+        ("APK ist kein ZIP", kein_zip, 2, ["APK nicht lesbar", "kein End-of-Central-Directory"]),
         ("APK fehlt", apk_fehlt, 2, ["APK fehlt"]),
         ("build.gradle: zusaetzlicher Baum", gradle_neu, 2, ["nur in build.gradle: portRoot/shared_assets/NEU"]),
         ("build.gradle: Baum RE15DOOR fehlt", gradle_ohne, 2, ["nur im Gate:         portRoot/shared_assets/RE15DOOR"]),
         ("build.gradle: include geaendert", gradle_include, 2, ["include ['**']", "include ['STAGE*/**']"]),
         ("build.gradle: unbekannte Anweisung", gradle_exclude, 2, ["unbekannte Anweisung", 'exclude "**/*.DO2"']),
         ("build.gradle fehlt", gradle_fehlt, 2, ["build.gradle fehlt"]),
+        # --- ab hier Nachbesserung R1 (B3: Selbsttest-Luecken, B1: ZIP-Struktur wie Android)
+        ("gute APK mit Datei > 1 MiB", nichts, 0, ["APK-ASSET-GATE-OK", PSX_GROSS_ZEILE], True),
+        ("Datei > 1 MiB: 1 Byte hinter dem 1. MiB", gross_spaet, 1, ["Inhalt weicht ab (sha256", GROSS], True),
+        ("CRC32-erhaltende Aenderung (gleiche Groesse)", crc_gleich, 1, ["Inhalt weicht ab (sha256", "assets/" + P2DS]),
+        ("Manifest: Geisterzeile (weder APK noch Quelle)", geisterzeile, 1,
+         ["Manifest nennt shared_assets/RE15DOOR/GEIST.DO2 (5 B), die APK hat keinen Eintrag"]),
+        ("Manifest: Doppelzeile, erste mit falscher Groesse", doppelzeile, 1, ["Manifest nennt " + P2DS + " mehrfach"]),
+        ("Manifest: Groessenfeld '1_800'", unterstrich, 1, ["Groessenfeld '1_800' ist keine Zahl"]),
+        ("Manifest: kein UTF-8", man_kein_utf8, 1, ["Manifest ist kein gueltiges UTF-8"]),
+        ("Manifest: Kommentarzeile '# Notiz'", man_notiz, 1, ["unerwartete Kommentarzeile '# Notiz'"]),
+        ("Manifest: nennt sich selbst", man_selbst, 1, ["nennt das Manifest selbst"]),
+        ("Manifest: Kopfzeile fehlt", man_ohne_kopf, 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("Eintragsname mit '\\' (F2)", name_backslash, 1, ["'\\' im Namen", "fehlt in der APK: " + P07]),
+        ("Eintragsname mit NUL-Anhang (F3)", name_nul, 1, ["NUL-Byte im Namen", "fehlt in der APK: " + P07]),
+        ("Eintragsname kein UTF-8", name_utf8, 1, ["Eintragsname kein gueltiges UTF-8"]),
+        ("Eintragsname mit Steuerzeichen", name_steuer, 1, ["Steuerzeichen im Namen"]),
+        ("Eintragsname mit '..'", name_punkte, 1, ["'.'/'..' oder '//' im Namen"]),
+        ("Local Header: CRC falsch, Zentralverzeichnis richtig (F4)", lfh_crc, 1,
+         ["CRC/Groessen im Local Header weichen", P07]),
+        ("Local Header: Groesse falsch, Zentralverzeichnis richtig (F5)", lfh_groesse, 1,
+         ["CRC/Groessen im Local Header weichen", P07]),
+        ("Local Header: anderer Name", lfh_name, 1, ["Name im Local Header weicht", P07]),
+        ("Local Header: Signatur zerstoert", lfh_signatur, 1, ["Local Header fehlt", P07]),
+        ("Eintrag verschluesselt", verschluesselt, 1, ["verschluesselter Eintrag: " + P07]),
+        ("Eintrag mit Methode 99", methode99, 1, ["Methode 99", P07]),
+        ("Daten ragen ins Zentralverzeichnis", ragt, 1, ["Daten ragen ins Zentralverzeichnis: " + P07]),
+        ("classes.dex: Byte gekippt (kein Asset)", dex_kippen, 1, ["beschaedigt (CRC", "classes.dex"]),
+        ("Deflate-Strom mit Muell dahinter", deflate_muell, 1, ["beschaedigt (CRC", "Deflate-Strom endet nicht", TEX]),
+        ("Verzeichniseintrag unter assets/", verzeichnis, 1, ["Verzeichniseintrag in der APK: assets/shared_assets/RE15DOOR/"]),
+        ("APK abgeschnitten (F7)", abgeschnitten, 2, ["APK nicht lesbar", "kein End-of-Central-Directory"]),
+        ("Bytes hinter dem End-of-Central-Directory", muell_hinten, 2, ["5 Bytes hinter dem End-of-Central-Directory"]),
+        ("ZIP64-Markierung im End-of-Central-Directory", zip64, 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("Zentralverzeichnis-Signatur zerstoert (F8)", cd_signatur, 2, ["Zentralverzeichnis kaputt bei Eintrag 1"]),
+        ("Zentralverzeichnis-Offset zu gross", cd_offset, 2, ["Zentralverzeichnis ausserhalb der Datei"]),
+        ("End-of-Central-Directory nennt einen Eintrag zu wenig", eintrag_weniger, 2, ["Rest oder Ueberlauf"]),
     )
+
+
+def _fall_vorbereiten(tmp, nr, fall):
+    titel, faelschen, soll_rc, soll_text = fall[:4]
+    gross = len(fall) > 4 and fall[4]
+    wurzel = os.path.join(tmp, "f%02d" % nr)
+    os.makedirs(wurzel)
+    f = _Fall(wurzel, gross=gross)
+    faelschen(f)
+    f.schreiben()
+    if f.nach_schreiben:
+        f.nach_schreiben()
+    return f
+
+
+def _fall_laufen(f):
+    r = subprocess.run([sys.executable, os.path.abspath(__file__), "--repo", f.repo, f.apk],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                       timeout=120)
+    return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
 def selbsttest():
     t0 = time.monotonic()
     print("== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==")
     tmp = tempfile.mkdtemp(prefix="apk_gate_selbsttest_")
-    ok, schlecht = 0, []
+    faelle = _faelle()
+    ergebnis = {}
     try:
-        for nr, (titel, faelschen, soll_rc, soll_text) in enumerate(_faelle(), 1):
-            wurzel = os.path.join(tmp, "f%02d" % nr)
-            os.makedirs(wurzel)
-            f = _Fall(wurzel)
-            f.nach_schreiben = None
-            faelschen(f)
-            f.schreiben()
-            if f.nach_schreiben:
-                f.nach_schreiben()
-            r = subprocess.run([sys.executable, os.path.abspath(__file__), "--repo", f.repo, f.apk],
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                               timeout=120)
-            aus = r.stdout.decode("utf-8", "replace")
-            fehlt = [t for t in soll_text if t not in aus]
-            gut = (r.returncode == soll_rc and not fehlt)
-            print("   [%s] %02d %-50s rc=%d (soll %d)%s" % ("ok" if gut else "FEHLER", nr, titel, r.returncode, soll_rc,
-                                                        "" if not fehlt else "  fehlende Meldung: %s" % fehlt))
-            if gut:
-                ok += 1
-            else:
-                schlecht.append((nr, titel, aus))
+        vorbereitet = {}
+        for nr, fall in enumerate(faelle, 1):
+            try:
+                vorbereitet[nr] = _fall_vorbereiten(tmp, nr, fall)
+            except Exception:
+                ergebnis[nr] = (-1, "Fixture-Fehler:\n" + traceback.format_exc())
+        arbeiter = max(1, min(4, os.cpu_count() or 1))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=arbeiter) as pool:
+            laeufe = {nr: pool.submit(_fall_laufen, f) for nr, f in vorbereitet.items()}
+            for nr, lauf in laeufe.items():
+                try:
+                    ergebnis[nr] = lauf.result()
+                except Exception:
+                    ergebnis[nr] = (-1, "Lauf-Fehler:\n" + traceback.format_exc())
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    ok, schlecht = 0, []
+    for nr, fall in enumerate(faelle, 1):
+        titel, _f, soll_rc, soll_text = fall[:4]
+        rc, aus = ergebnis[nr]
+        fehlt = [t for t in soll_text if t not in aus]
+        gut = (rc == soll_rc and not fehlt)
+        print("   [%s] %02d %-58s rc=%d (soll %d)%s" % ("ok" if gut else "FEHLER", nr, titel, rc, soll_rc,
+                                                    "" if not fehlt else "  fehlende Meldung: %s" % fehlt))
+        if gut:
+            ok += 1
+        else:
+            schlecht.append((nr, titel, aus))
     n = ok + len(schlecht)
     print("   Laufzeit: %.1f s" % (time.monotonic() - t0))
     if schlecht:
@@ -926,7 +1472,7 @@ def selbsttest():
             print(aus.rstrip())
         print("== SELBSTTEST-FEHLER: %d von %d Faellen falsch - das Gate ist NICHT verlaesslich ==" % (len(schlecht), n))
         return RC_ABWEICHUNG
-    print("== SELBSTTEST-OK: %d/%d Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==" % (ok, n))
+    print("== SELBSTTEST-OK: %d/%d Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==" % (ok, n))
     return RC_GLEICH
 
 

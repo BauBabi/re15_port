@@ -9,7 +9,10 @@
 #           App-Speicherordner entpackt. Sideload: adb install -r <apk>.
 #           Die APK erscheint unter diesem Namen ERST, wenn alle Gates bestanden sind
 #           (vorher heisst sie <name>.apk.ungeprueft) - make_package.sh zippt sonst eine
-#           APK, die ein Gate abgelehnt hat.
+#           APK, die ein Gate abgelehnt hat. Eine VORIGE <name>.apk wird schon VOR Gradle
+#           entfernt (Nachbesserung R1): scheitert der Bau, liegt keine alte APK unter dem
+#           Auslieferungsnamen. Scheitert ein Gate, wird die .ungeprueft-Kopie geloescht (~360 MB,
+#           nicht gitignoriert); die gepruefte Gradle-Ausgabe bleibt unter app/build/outputs/.
 #
 # WARUM DIESER WEG (Entscheidung 2026-09-19, gemessen auf dieser Maschine):
 #   * Docker Desktop war nicht gestartet (Engine-Pipe fehlt) — ein Container-Bau
@@ -33,11 +36,12 @@
 #   release/build_android.sh --prepare           # nur Toolchain nachinstallieren
 #   release/build_android.sh --no-toolchain      # sdkmanager ueberspringen (schon da)
 #   release/build_android.sh --debug             # assembleDebug statt Release
-#   release/build_android.sh --gate-only <apk> [--version v0.8.19]
+#   release/build_android.sh --gate-only <apk> --version v0.8.19
 #                                                # NUR die Gates auf eine vorhandene APK:
-#                                                # kein JDK/Toolchain/Gradle, schreibt nichts
-#                                                # (keine SHA256SUMS, keine Kopie nach release/);
-#                                                # Version wird nur mit --version geprueft
+#                                                # kein Toolchain-Nachinstallieren, kein Gradle,
+#                                                # schreibt nichts (keine SHA256SUMS, keine Kopie).
+#                                                # --version ist Pflicht; aapt, apksigner und Java
+#                                                # muessen da sein (sonst Abbruch statt Luecke)
 #
 # UMGEBUNG (alle optional):
 #   ANDROID_SDK_ROOT / ANDROID_HOME   Sdk-Ordner (Standard: %LOCALAPPDATA%/Android/Sdk
@@ -51,21 +55,25 @@
 #                                     Interpreter fuer die volle Asset-Pruefung, siehe
 #                                     release/python_finden.sh (nie der WindowsApps-Alias)
 #
-# GATES am Ende (jedes bricht ab; Funktion run_gates, auch per --gate-only):
+# GATES am Ende (jedes bricht ab; release/apk_pruefen.sh - DIESELBE Kette ruft make_package.sh
+# vor dem Zippen auf; hier ueber run_gates, auch per --gate-only):
 #   * Stichproben: lib/{arm64-v8a,x86_64}/{libmain.so,libSDL2.so}, assets/re15_assets.txt
 #     und je eine Datei aus shared_assets/PSX, extracted_fx, RE2 und synchro
-#     (WARNUNG, falls Assets komprimiert gespeichert sind)
 #   * aapt dump badging: package 'de.re15.port', versionName = Version, beide ABIs
-#     (ohne aapt im SDK: mit Hinweis uebersprungen)
+#     (aapt fehlt -> Abbruch; bis zur Nachbesserung R1 still uebersprungen)
+#   * apksigner verify: gueltige v2/v3-Signatur (seit Nachbesserung R1 - vorher gingen
+#     unsignierte und nach dem Signieren veraenderte APKs durch)
 #   * VOLLE Asset-Pruefung (seit Runde 34a, release/apk_asset_gate.py):
-#       - erst "--selbsttest": das Gate muss eine gute Mini-APK annehmen und JEDE Faelschung
-#         ablehnen (fehlende Datei, gleiche Groesse/anderer Inhalt, Zusatzeintrag, Manifest
-#         mit falscher Groesse/fehlender Zeile, Datei nur im Quellbaum, ...)
-#       - dann die APK gegen den Quellbaum: JEDE Datei der fuenf Asset-Baeume (Liste gegen
-#         app/build.gradle stageAssets geprueft) liegt mit gleicher Groesse und sha256 in der
-#         APK, unter assets/ liegt nichts sonst, und re15_assets.txt stimmt Zeile fuer Zeile
-#         mit der APK ueberein (danach entpackt die App auf dem Geraet). Zaehlung je Baum und
-#         ausdruecklich RE2/DOOR, RE15DOOR, TORSE.VBS.
+#       - erst "--selbsttest": das Gate muss gute Mini-APKs annehmen und JEDE Faelschung
+#         ablehnen (fehlende Datei, gleiche Groesse/anderer Inhalt auch hinter dem 1. MiB und
+#         CRC32-erhaltend, Zusatzeintrag, Manifest mit falscher Groesse/fehlender/doppelter/
+#         Geister-Zeile, '\' oder NUL im Eintragsnamen, Local Header != Zentralverzeichnis, ...)
+#       - dann die APK gegen den Quellbaum, ROH gelesen wie Androids libziparchive: JEDE Datei
+#         der fuenf Asset-Baeume (Liste gegen app/build.gradle stageAssets geprueft) liegt unter
+#         genau ihrem Namen mit gleicher Groesse und sha256 in der APK, unter assets/ liegt
+#         nichts sonst, re15_assets.txt stimmt Zeile fuer Zeile (danach entpackt die App auf dem
+#         Geraet), jeder Eintrag ist fuer Android lesbar. Zaehlung je Baum und ausdruecklich
+#         RE2/DOOR, RE15DOOR, TORSE.VBS.
 #     Bis v0.8.19 prueften die Gates davon nur Stichproben - von den 30 Port-Tuerarchiven
 #     (RE15DOOR) keines in der APK.
 # =============================================================================
@@ -110,11 +118,9 @@ CMAKE_PKG="cmake;3.22.1"
 PLATFORM_PKG="platforms;android-35"
 BUILD_TOOLS_PKG="build-tools;35.0.0"
 
-# Pfade fuer Windows-Programme (Python, aapt) ausdruecklich als C:/... uebergeben - nicht auf
-# die automatische MSYS-Umwandlung verlassen (MSYS_NO_PATHCONV=1 schaltet sie ab).
-nativ_pfad() { if [[ "$HOST" == win ]]; then cygpath -m "$1"; else printf '%s\n' "$1"; fi; }
+# (Pfade fuer Windows-Programme - Python, aapt, java - gibt apk_pruefen.sh per apk_nativ als C:/...)
 
-# SDK-Ordner (Bau: Pflicht, siehe unten; --gate-only: nur fuer aapt)
+# SDK-Ordner (Bau und --gate-only: Pflicht - aapt und apksigner kommen aus build-tools)
 SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
 if [[ -z "$SDK" ]]; then
     if [[ "$HOST" == win ]]; then
@@ -135,63 +141,22 @@ if [[ $ONLY_PREPARE -eq 0 || -n "$GATE_ONLY_APK" ]]; then
 fi
 
 # --- Gates --------------------------------------------------------------------
+# Die Pruefkette steht EINMAL in release/apk_pruefen.sh - make_package.sh ruft dieselbe auf.
+# shellcheck source=apk_pruefen.sh
+source "$HERE/apk_pruefen.sh"
+APK_BUILD_TOOLS="${BUILD_TOOLS_PKG#build-tools;}"
+
 # $1 = APK. Jeder Befund bricht ab (die). Aufgerufen nach dem Bau und von --gate-only.
 run_gates() {
-    local apk="$1" list f n_assets n_defl aapt badging rc gate
-    echo "== Gates: $apk =="
-    list="$(unzip -Z1 "$apk")" || die "APK nicht lesbar (unzip -Z1): $apk"
-    for f in lib/arm64-v8a/libmain.so lib/arm64-v8a/libSDL2.so lib/x86_64/libmain.so lib/x86_64/libSDL2.so \
-             assets/re15_assets.txt assets/shared_assets/PSX/DATA/TEX.TIM assets/shared_assets/PSX/STAGE1/ROOM1240.RDT \
-             assets/shared_assets/extracted_fx/effect0_blood.tim assets/shared_assets/RE2/CDEMD0.EMS \
-             assets/synchro/STAGE1/room1170/main00.wav; do
-        grep -qxF "$f" <<<"$list" || die "APK unvollstaendig: $f fehlt"
-    done
-    n_assets="$(grep -c '^assets/' <<<"$list" || true)"
-    echo "   Inhalt: $n_assets Asset-Eintraege, native libs fuer arm64-v8a + x86_64"
-
-    # Unkomprimiert? (unzip -v: Methode 'Stored' je Eintrag)
-    n_defl="$(unzip -v "$apk" | awk '$0 ~ /assets\/shared_assets\// && $2 == "Defl:N" {c++} END {print c+0}')" \
-        || die "APK nicht lesbar (unzip -v): $apk"
-    [[ "$n_defl" -eq 0 ]] || echo "   WARNUNG: $n_defl Asset-Dateien sind komprimiert (noCompress-Liste pruefen)"
-
-    aapt="$SDK/build-tools/${BUILD_TOOLS_PKG#build-tools;}/aapt"
-    [[ -f "$aapt" || -f "$aapt.exe" ]] || aapt="$(ls -d "$SDK"/build-tools/*/aapt* 2>/dev/null | head -1 || true)"
-    if [[ -n "$aapt" ]]; then
-        badging="$("$aapt" dump badging "$(nativ_pfad "$apk")" 2>/dev/null || true)"
-        grep -E "^package:|^native-code:|^sdkVersion|^targetSdkVersion|^launchable-activity" <<<"$badging" \
-            | sed 's/^/   /' || true
-        grep -q "name='de.re15.port'" <<<"$badging" || die "aapt: Paketname ist nicht de.re15.port"
-        if [[ -n "$VERSION" ]]; then
-            grep -qF "versionName='${VERSION}'" <<<"$badging" || die "aapt: versionName ist nicht '${VERSION}'"
-        else
-            echo "   (versionName nicht geprueft: --gate-only ohne --version)"
-        fi
-        grep -q "native-code:.*'arm64-v8a'" <<<"$badging" || die "aapt: arm64-v8a fehlt"
-        grep -q "native-code:.*'x86_64'"    <<<"$badging" || die "aapt: x86_64 fehlt"
-    else
-        echo "   (aapt nicht gefunden - badging-Gate uebersprungen)"
-    fi
-
-    # VOLLE Asset-Pruefung (Runde 34a): erst beweist das Gate an Faelschungen, dass es sie
-    # erkennt, dann vergleicht es JEDE Datei der Asset-Baeume mit der APK und dem Manifest.
-    # Rueckgabe getrennt abfangen - kein Pipe, keine Subshell, die sie verschlucken koennte.
-    gate="$(nativ_pfad "$HERE/apk_asset_gate.py")"
-    echo "== Volle Asset-Pruefung 1/2: Selbsttest des Gates ($PY) =="
-    rc=0; "$PY" "$gate" --selbsttest || rc=$?
-    (( rc == 0 )) || die "Selbsttest des APK-Asset-Gates fehlgeschlagen (rc=$rc) - dem Gate ist nicht zu trauen"
-    echo "== Volle Asset-Pruefung 2/2: APK gegen den Quellbaum =="
-    rc=0; "$PY" "$gate" --repo "$(nativ_pfad "$REPO")" "$(nativ_pfad "$apk")" || rc=$?
-    case "$rc" in
-        0) ;;
-        1) die "APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)" ;;
-        *) die "APK-Asset-Gate: keine Aussage moeglich (rc=$rc, Meldung oben)" ;;
-    esac
+    apk_pruefen "$1" "$VERSION" "$REPO"
 }
 
 if [[ -n "$GATE_ONLY_APK" ]]; then
+    [[ -n "$VERSION" ]] || { echo "--gate-only braucht --version <versionName der APK> (Nachbesserung R1:" \
+                                  "kein Lauf mehr mit ungeprueftem Feld)" >&2; exit 2; }
     [[ -f "$GATE_ONLY_APK" ]] || die "--gate-only: APK fehlt: $GATE_ONLY_APK"
-    [[ -d "$SDK" ]] || echo "   (Android-SDK-Ordner fehlt: $SDK - ohne aapt)"
     echo "== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) =="
+    ANDROID_SDK_ROOT="$SDK" apk_werkzeuge_finden
     run_gates "$GATE_ONLY_APK"
     echo "== ANDROID-GATES-OK (--gate-only): $GATE_ONLY_APK =="
     exit 0
@@ -295,6 +260,18 @@ fi
 GRADLE_TASK="assembleRelease"; APK_SUB="release/app-release.apk"
 if [[ "$BUILD_TYPE" == debug ]]; then GRADLE_TASK="assembleDebug"; APK_SUB="debug/app-debug.apk"; fi
 
+# Pruefwerkzeuge (aapt, apksigner, Java) VOR den Bauminuten suchen - fehlt eines, bricht der
+# Bau hier ab und nicht erst nach Gradle.
+apk_werkzeuge_finden
+
+OUT="$HERE/${NAME}.apk"
+UNGEPRUEFT="$OUT.ungeprueft"
+# ⛔ Die VORIGE APK unter dem Auslieferungsnamen VOR dem Bau entfernen (Nachbesserung R1,
+# Gegenpruefung echtlauf B4). Bis dahin geschah das erst nach einem erfolgreichen Gradle-Lauf:
+# scheiterte Gradle, blieb die alte <name>.apk liegen, und make_package.sh haette sie gezippt -
+# die Asset-Pruefung allein faengt das nicht, wenn sich nur Code geaendert hat.
+rm -f "$OUT" "$UNGEPRUEFT"
+
 # ⛔ DEN GECACHTEN CMAKE-LAUF WEGWERFEN (2026-09-19, gemessen).
 # engine/CMakeLists.txt sammelt seine Quellen per `file(GLOB src/*.c)`. GLOB wird beim
 # CONFIGURE ausgewertet, und Gradle/AGP legt das Ergebnis in app/.cxx/<typ>/<hash>/ ab und
@@ -314,18 +291,26 @@ echo "== Gradle: fetchSdl2 ${GRADLE_TASK} (Version ${VERSION}) =="
 APK_SRC="$PROJ/app/build/outputs/apk/$APK_SUB"
 [[ -s "$APK_SRC" ]] || die "APK fehlt nach dem Bau: $APK_SRC"
 
-OUT="$HERE/${NAME}.apk"
 # ⛔ Erst pruefen, dann unter dem Auslieferungsnamen ablegen (Runde 34a). Bis v0.8.19 lag die
 # APK schon VOR den Gates unter release/<name>.apk; ein Gate-Abbruch liess sie dort liegen,
 # und make_package.sh haette genau diese abgelehnte APK gezippt. Jetzt: Kopie als
 # .ungeprueft, Gates darauf, erst danach mv (Umbenennen = dieselben Bytes) + SHA256SUMS.
-UNGEPRUEFT="$OUT.ungeprueft"
-rm -f "$OUT" "$UNGEPRUEFT"
+# Scheitert ein Gate, loescht die Falle die .ungeprueft-Kopie (Nachbesserung R1, echtlauf B3:
+# ~360 MB, nicht gitignoriert - ein "git add release/" haette sie ueber GitHubs 100-MB-Grenze
+# vorgemerkt). Zur Diagnose bleibt die Gradle-Ausgabe $APK_SRC liegen.
+aufraeumen_ungeprueft() {
+    if [[ -f "$UNGEPRUEFT" ]]; then
+        rm -f "$UNGEPRUEFT"
+        echo "   (Gate-Abbruch: $(basename "$UNGEPRUEFT") geloescht; dieselben Bytes liegen weiter unter $APK_SRC)" >&2
+    fi
+}
+trap aufraeumen_ungeprueft EXIT
 cp -f "$APK_SRC" "$UNGEPRUEFT"
 
 # --- Gates (Funktion run_gates oben) -----------------------------------------
 run_gates "$UNGEPRUEFT"
 mv -f "$UNGEPRUEFT" "$OUT"
+trap - EXIT
 
 ( cd "$HERE" && sha256sum "${NAME}.apk" > SHA256SUMS_android.txt )
 echo

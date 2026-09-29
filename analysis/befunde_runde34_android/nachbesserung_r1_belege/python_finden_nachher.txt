@@ -1,0 +1,47 @@
+# python_finden.sh nach der Nachbesserung (2026-09-29 22:19:31)
+== T1 normaler Git-Bash-PATH
+   Python: /c/Python310/python (3.10.11)
+PY=/c/Python310/python
+PY_VERSION=3.10.11
+rc=0
+== T2 PATH=/usr/bin:WindowsApps, RE15_PYTHON_NUR_PATH=1
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+== T3 PATH=/usr/bin:WindowsApps (Rueckfall /c/Python3*)
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+   Python: /c/Python310/python.exe (3.10.11)
+PY=/c/Python310/python.exe
+PY_VERSION=3.10.11
+rc=0
+== T4 RE15_PYTHON=WindowsApps/python3.exe
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+== T5 RE15_PYTHON=/c/Python39/python.exe
+   Python: /c/Python39/python.exe (3.9.0)
+PY=/c/Python39/python.exe
+PY_VERSION=3.9.0
+rc=0
+== T6 RE15_PYTHON=/c/gibt_es_nicht/python.exe
+   Python-Kandidat verworfen (fehlt oder 0 Byte - App-Alias?, NICHT gestartet): /c/gibt_es_nicht/python.exe
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+== T7 Paketbau-Rezept PATH=/c/msys64/usr/bin:$PATH
+   Python: /c/Python310/python (3.10.11)
+PY=/c/Python310/python
+PY_VERSION=3.10.11
+rc=0
+== T8 msys64/mingw64/bin VOR /c/Python310 (PATH-Reihenfolge wird respektiert)
+   Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+PY=/c/msys64/mingw64/bin/python3
+PY_VERSION=3.14.7
+rc=0
+== T9 per source unter set -euo pipefail, PATH nur WindowsApps + NUR_PATH=1
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+source rc=1 (sauberer Abbruch)
+rc=7

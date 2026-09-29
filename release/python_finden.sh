@@ -15,9 +15,14 @@
 #
 # KANDIDATEN (Reihenfolge; der erste, der die Pruefung besteht, gewinnt)
 #   1. $RE15_PYTHON, falls gesetzt - dann NUR dieser (kein stiller Rueckfall)
-#   2. jedes "python3" im PATH (type -a -P, PATH-Reihenfolge), danach jedes "python"
+#   2. die PATH-Ordner der Reihe nach, in JEDEM Ordner erst "python3", dann "python"
+#      (leere PATH-Eintraege = aktuelles Verzeichnis werden uebergangen)
 #   3. nur Windows (Git-Bash/MSYS/Cygwin): /c/Python3*/python.exe und
 #      "/c/Program Files"/Python3*/python.exe - abschaltbar mit RE15_PYTHON_NUR_PATH=1
+#   Nachbesserung R1 (Gegenpruefung echtlauf B1): bis dahin kamen erst ALLE "python3" des PATH
+#   und danach alle "python". Auf der Bau-Maschine gewann so /c/msys64/mingw64/bin/python3
+#   (MSYS2 3.14.x, Abhaengigkeit von gdb, wandert mit jedem pacman -Syu) gegen /c/Python310, das
+#   an Stelle 12 des PATH steht (msys64 an 43) und auch "python" im cmd-Fenster ist.
 # PRUEFUNG je Kandidat
 #   - Pfad (oder Link-Ziel) unter */WindowsApps/*, Gross/klein egal -> verworfen, NICHT gestartet
 #   - fehlt oder leere Datei (App-Execution-Aliase sind 0 Byte)       -> verworfen, NICHT gestartet
@@ -31,8 +36,8 @@
 # =============================================================================
 
 re15_python_finden() {
-    local kand low schluessel ziel ver rc name p
-    local -a kands=()
+    local kand low schluessel ziel ver rc name p d
+    local -a kands=() ordner=()
     local -A gesehen=()
     local probe='import sys, zipfile, hashlib; print("%d.%d.%d" % tuple(sys.version_info[:3])); sys.exit(0 if sys.version_info >= (3, 8) else 3)'
     PY=""
@@ -41,10 +46,14 @@ re15_python_finden() {
     if [[ -n "${RE15_PYTHON:-}" ]]; then
         kands=("$RE15_PYTHON")
     else
-        for name in python3 python; do
-            while IFS= read -r p; do
-                [[ -n "$p" ]] && kands+=("$p")
-            done < <(type -a -P "$name" 2>/dev/null)
+        IFS=: read -r -a ordner <<<"${PATH:-}"
+        for d in ${ordner[@]+"${ordner[@]}"}; do
+            [[ -n "$d" ]] || continue
+            for name in python3 python; do
+                if [[ -f "$d/$name" || -f "$d/$name.exe" ]]; then
+                    kands+=("$d/$name")
+                fi
+            done
         done
         case "${OSTYPE:-}" in
             msys*|cygwin*|win32*)

@@ -116,16 +116,23 @@ check_binary_optimiert() {   # $1 = Binary, $2 = Label
     echo "   Optimierungs-Gate: $label ist ein Release-Build ($n SDL2-Quellpfade)"
 }
 
-check_binary_fresh() {   # $1 = Binary, $2 = Label
+check_binary_fresh() {   # $1 = Binary, $2 = Label, [$3 ... = git-Pfade des Codes IN diesem Binary]
     # ⛔ v0.3.9-UNFALL (2026-08-21): Das Skript BAUT NICHT, es KOPIERT aus win_out/
     # bzw. linux_out/. Der Windows-Build lief nach release/wbuild/, win_out/ blieb
     # auf dem Stand von v0.3.8 — das ausgelieferte Paket enthielt KEINEN der fuenf
     # Fix-Commits (Beleg: 're15_climb' 0x im Paket-Binary, 10x im echten Build),
     # und der Nutzer hat vier bereits behobene Fehler erneut gemeldet.
-    # Gate: das Binary muss NEUER sein als der letzte Commit, der Port-Code aendert.
+    # Gate: das Binary muss NEUER sein als der letzte Commit, der SEINEN Code aendert.
+    # Standard = PC-Binaries: engine, include, platform OHNE platform/android (Nachbesserung
+    # Runde 34a, Gegenpruefung echtlauf B2: der PC-Bau haengt nicht an platform/android -
+    # re15_port/CMakeLists.txt:92-101 - und ein reiner build.gradle-Commit erklaerte die
+    # v0.8.19-PC-Binaries sonst fuer VERALTET). Die Android-APK uebergibt ihre eigenen Pfade.
     local bin="$1" label="$2" bin_t src_t
+    shift 2
+    local -a pfade=("$@")
+    (( ${#pfade[@]} )) || pfade=(re15_port/engine re15_port/include re15_port/platform ':(exclude)re15_port/platform/android')
     command -v git >/dev/null 2>&1 || return
-    src_t="$(git -C "$HERE/.." log -1 --format=%ct -- re15_port/engine re15_port/platform re15_port/include 2>/dev/null)"
+    src_t="$(git -C "$HERE/.." log -1 --format=%ct -- "${pfade[@]}" 2>/dev/null)"
     [[ -n "$src_t" ]] || return
     bin_t="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin" 2>/dev/null)"
     [[ -n "$bin_t" ]] || return
@@ -414,21 +421,50 @@ if [[ $DO_ZIP -eq 1 ]]; then
         || die "kein echtes Python >= 3.8 (release/python_finden.sh) - verify_split/zip_exec_bit.py brauchen es"
 fi
 
-# --- Android-APK: dieselbe volle Asset-Pruefung wie in build_android.sh ------
+# --- Android-APK: DIESELBE Pruefkette wie in build_android.sh ------------------
 # (Runde 34a) Zwischen Android-Bau und Paket kann sich der Quellbaum geaendert haben (neues
 # Asset, neues Tuerarchiv) - die APK waere dann veraltet und wuerde trotzdem gezippt. Deshalb
-# hier noch einmal gegen den AKTUELLEN Quellbaum, VOR den Kopierminuten. Fehlt die APK, gilt wie
+# hier noch einmal gegen den AKTUELLEN Stand, VOR den Kopierminuten. Fehlt die APK, gilt wie
 # bisher: kein Android-Satz (Hinweis beim Zippen).
+# Nachbesserung R1 (Gegenpruefung B2/B4/B5, echtlauf B4): bis dahin nur die Assets. Jetzt auch
+#   * Frische: die APK muss neuer sein als der letzte Commit an IHREM Code (engine, include,
+#     platform/pc - der Android-Bau uebersetzt dieselben Plattformquellen, jni/CMakeLists.txt:42 -
+#     und platform/android) - wie check_binary_fresh fuer die PC-Binaries;
+#   * versionName = --version, Paketname, ABIs (aapt) und eine gueltige v2/v3-Signatur (apksigner);
+#   * Identitaet: sha256/CRC32/Groesse der GEPRUEFTEN Bytes werden festgehalten; gezippt wird nur,
+#     wenn die Datei beim Zippen noch genau diese ist, und im fertigen Split-Satz muessen CRC32 und
+#     Groesse des Eintrags wieder stimmen. Vorher lagen zwischen Pruefen (hier) und Zippen (unten)
+#     Minuten Kopieren - eine in der Zeit getauschte oder erst dann abgelegte APK ging ungeprueft durch.
+# shellcheck source=apk_pruefen.sh
+source "$HERE/apk_pruefen.sh"
+
+apk_kennung() {          # $1 = Datei -> "sha256 crc32 groesse" in EINEM Lesedurchgang
+    "$PY" - "$(apk_nativ "$1")" <<'PY'
+import hashlib, sys, zlib
+h, c, n = hashlib.sha256(), 0, 0
+with open(sys.argv[1], "rb") as f:
+    while True:
+        b = f.read(1 << 20)
+        if not b:
+            break
+        h.update(b)
+        c = zlib.crc32(b, c)
+        n += len(b)
+print("%s %08x %d" % (h.hexdigest(), c & 0xFFFFFFFF, n))
+PY
+}
+
 APK_PRUEF="$HERE/${NAME}_android.apk"
+APK_KENNUNG=""
 if [[ $DO_ZIP -eq 1 && -f "$APK_PRUEF" ]]; then
-    py_arg() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s\n' "$1"; fi; }
-    echo "== Android-APK: Selbsttest + volle Asset-Pruefung gegen den Quellbaum =="
-    rc=0; "$PY" "$(py_arg "$HERE/apk_asset_gate.py")" --selbsttest || rc=$?
-    (( rc == 0 )) || die "Selbsttest des APK-Asset-Gates fehlgeschlagen (rc=$rc)"
-    rc=0; "$PY" "$(py_arg "$HERE/apk_asset_gate.py")" --repo "$(py_arg "$REPO")" "$(py_arg "$APK_PRUEF")" || rc=$?
-    (( rc == 0 )) || die "Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=$rc):
-        $APK_PRUEF
-        release/build_android.sh neu laufen lassen, dann erst paketieren."
+    echo "== Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) =="
+    check_binary_fresh "$APK_PRUEF" "Android-APK" \
+        re15_port/engine re15_port/include re15_port/platform/pc re15_port/platform/android
+    apk_werkzeuge_finden
+    apk_pruefen "$APK_PRUEF" "$VERSION" "$REPO"
+    APK_KENNUNG="$(apk_kennung "$APK_PRUEF")" || die "Kennung der geprueften APK nicht lesbar: $APK_PRUEF"
+    [[ "$APK_KENNUNG" =~ ^[0-9a-f]{64}\ [0-9a-f]{8}\ [0-9]+$ ]] || die "Kennung der APK unlesbar: '$APK_KENNUNG'"
+    echo "   gepruefte APK (sha256 crc32 Bytes): $APK_KENNUNG"
 fi
 
 copy_common() {          # $1 = Paketordner
@@ -481,6 +517,36 @@ missing = [n for n in range(1, disk+1)
            if not os.path.exists(f"{os.path.splitext(last)[0]}.z{n:02d}")]
 if missing: sys.exit(f"fehlende Volumes: {missing}")
 if total < want: sys.exit(f"Katalog listet nur {total} Eintraege, erwartet >= {want}")
+PY
+}
+
+# Nachbesserung R1 (B5): steckt im fertigen Split-Satz wirklich die GEPRUEFTE APK? Der Katalog im
+# letzten Volume nennt CRC32 und Groesse jedes Eintrags - beide muessen zur Kennung passen, die
+# vor den Kopierminuten von genau den geprueften Bytes genommen wurde.
+verify_apk_im_zip() {    # $1 = .zip (letztes Volume), $2 = Eintragsname, $3 = "sha256 crc32 groesse"
+    "$PY" - "$1" "$2" "$3" <<'PY'
+import struct, sys
+last, name, kennung = sys.argv[1], sys.argv[2].encode("utf-8"), sys.argv[3].split()
+crc_soll, n_soll = int(kennung[1], 16), int(kennung[2])
+d = open(last, "rb").read()
+i = d.rfind(b"PK\x05\x06")
+if i < 0: sys.exit("APK-Satz: kein End-of-Central-Directory")
+disk, cd_disk, here, total, cd_size, cd_off = struct.unpack("<HHHHII", d[i + 4:i + 20])
+if cd_disk != disk or here != total: sys.exit("APK-Satz: Katalog nicht vollstaendig im letzten Volume")
+p, treffer = cd_off, []
+for _ in range(total):
+    if d[p:p + 4] != b"PK\x01\x02": sys.exit("APK-Satz: Katalog kaputt")
+    crc, _cs, usize = struct.unpack("<III", d[p + 16:p + 28])
+    nlen, xlen, klen = struct.unpack("<HHH", d[p + 28:p + 34])
+    treffer.append((d[p + 46:p + 46 + nlen], crc, usize))
+    p += 46 + nlen + xlen + klen
+if len(treffer) != 1 or treffer[0][0] != name:
+    sys.exit("APK-Satz: erwartet genau den Eintrag %r, Katalog: %r" % (name, [t[0] for t in treffer]))
+_n, crc, usize = treffer[0]
+if (crc, usize) != (crc_soll, n_soll):
+    sys.exit("APK-Satz: Eintrag hat CRC32 %08x / %d B, gepruefte APK %08x / %d B - NICHT die gepruefte Datei"
+             % (crc, usize, crc_soll, n_soll))
+print("   APK im Split-Satz = gepruefte APK (CRC32 %08x, %d B)" % (crc, usize))
 PY
 }
 
@@ -590,11 +656,22 @@ if [[ $DO_ZIP -eq 1 ]]; then
     # release/-Schachtel entsteht.
     APK="$HERE/${NAME}_android.apk"
     if [[ -f "$APK" ]]; then
-        echo "== Zippen: ${NAME}_android (APK $(du -h "$APK" | cut -f1)) =="
+        # Nur die GEPRUEFTE APK (Nachbesserung R1, Gegenpruefung B5): dieselbe Datei wie oben?
+        [[ -n "$APK_KENNUNG" ]] || die "Android-APK $APK ist erst NACH der Pruefung aufgetaucht -
+        ungeprueft wird nichts gezippt. make_package.sh neu starten."
+        apk_jetzt="$(apk_kennung "$APK")" || die "Android-APK beim Zippen nicht lesbar: $APK"
+        [[ "$apk_jetzt" == "$APK_KENNUNG" ]] || die "Android-APK wurde nach der Pruefung veraendert oder ersetzt:
+        geprueft: $APK_KENNUNG
+        jetzt:    $apk_jetzt
+        Nichts gezippt. make_package.sh neu starten (prueft dann die jetzige Datei)."
+        echo "== Zippen: ${NAME}_android (APK $(du -h "$APK" | cut -f1), = gepruefte Datei) =="
         rm -f "${NAME}_android".z*
         zip -q -s "$SPLIT" -j "${NAME}_android.zip" "$APK"
         verify_split "${NAME}_android.zip" 1
+        verify_apk_im_zip "${NAME}_android.zip" "$(basename "$APK")" "$APK_KENNUNG"
         ANDROID_GEZIPPT=1
+    elif [[ -n "$APK_KENNUNG" ]]; then
+        die "Android-APK verschwand zwischen Pruefung und Zippen: $APK"
     else
         echo "   (kein Android-Paket: $(basename "$APK") fehlt — release/build_android.sh laeuft getrennt)"
     fi
