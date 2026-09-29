@@ -372,6 +372,49 @@ int re15_aot_point_in_quad(int32_t px, int32_t pz,
     return 1;
 }
 
+/* Viereck-Trefftest der Tuersaetze (Runde 31, tueren_04_bau.md Abschnitt 0), FUN_80014368
+ * (RE1.5 PSX.EXE) Befehl fuer Befehl. a0 = Punkt (x @0, z @8), a1 = Satz-Kopie auf dem Stapel
+ * (sp+40; der Scan legt dort die Satzpunkte pc+6..21 plus einen Objektversatz ab, der fuer
+ * Tueren 0 ist: pc[5] & 0x80 == 0 -> `sw zero,40(sp)` @0x80042dc0, Kopie @0x80042dd8..e5c):
+ *   80014368 lh t5,4(a1) / 8001436c lh t0,6(a1)          x0, z0
+ *   80014378 subu t1,pz,t0 / 8001437c subu t2,x1,t5 / 80014380 mult -> a0 = (x1-x0)*(pz-z0)
+ *   80014390 subu a2,px,t5 / 80014394 subu a3,z1,t0 / 80014398 mult -> v0 = (z1-z0)*(px-x0)
+ *   800143ac slt v0,v0,a0 / 800143b0 bne -> 0               (z1-z0)(px-x0) <  (x1-x0)(pz-z0)
+ *   800143b8..c8 (x3-x0)*(pz-z0) slt (z3-z0)*(px-x0) / 800143cc bne -> 0
+ *   800143d4..f8 Bezug auf Ecke 2: t1 = pz-z2, t2 = x1-x2, a2 = px-x2, a3 = z1-z2
+ *   80014408 slt a0,(x1-x2)(pz-z2),(z1-z2)(px-x2) / 8001440c bne -> 0
+ *   80014400 subu t3,t3,v0 (x3-x2) / 80014410 subu t4,t4,v1 (z3-z2)
+ *   80014424 slt v0,(z3-z2)(px-x2),(x3-x2)(pz-z2) / 80014428 beq -> 1 (Delay ori v0,zero,1)
+ * mult/mflo = untere 32 Bit des Produkts, slt vergleicht vorzeichenbehaftet: deshalb uint32-
+ * Produkte, als int32 gelesen. Die Differenzen sind 32-Bit-subu der lh-Werte bzw. lw-Lage. */
+static int32_t lo32(int32_t a, int32_t b) { return (int32_t)((uint32_t)a * (uint32_t)b); }
+
+int re15_aot_point_in_quad_fun80014368(int32_t px, int32_t pz,
+                                       const int16_t xs[4], const int16_t zs[4])
+{
+    int32_t x0 = xs[0], z0 = zs[0], x1 = xs[1], z1 = zs[1];
+    int32_t x2 = xs[2], z2 = zs[2], x3 = xs[3], z3 = zs[3];
+    int32_t t1 = (int32_t)((uint32_t)pz - (uint32_t)z0);
+    int32_t t2 = (int32_t)((uint32_t)x1 - (uint32_t)x0);
+    int32_t a2 = (int32_t)((uint32_t)px - (uint32_t)x0);
+    int32_t a3 = (int32_t)((uint32_t)z1 - (uint32_t)z0);
+    int32_t t3 = (int32_t)((uint32_t)x3 - (uint32_t)x0);
+    int32_t t4 = (int32_t)((uint32_t)z3 - (uint32_t)z0);
+    if (lo32(a3, a2) < lo32(t2, t1)) return 0;            /* @0x800143ac / @0x800143b0 */
+    if (lo32(t3, t1) < lo32(t4, a2)) return 0;            /* @0x800143c8 / @0x800143cc */
+    int32_t dz = (int32_t)((uint32_t)z2 - (uint32_t)z0);  /* @0x800143dc subu v1,v1,t0 */
+    int32_t dx = (int32_t)((uint32_t)x2 - (uint32_t)x0);  /* @0x800143e4 subu v0,v0,t5 */
+    t1 = (int32_t)((uint32_t)t1 - (uint32_t)dz);          /* @0x800143e0 pz - z2 */
+    t2 = (int32_t)((uint32_t)t2 - (uint32_t)dx);          /* @0x800143e8 x1 - x2 */
+    a2 = (int32_t)((uint32_t)a2 - (uint32_t)dx);          /* @0x800143f4 px - x2 */
+    a3 = (int32_t)((uint32_t)a3 - (uint32_t)dz);          /* @0x800143f8 z1 - z2 */
+    t3 = (int32_t)((uint32_t)t3 - (uint32_t)dx);          /* @0x80014400 x3 - x2 */
+    t4 = (int32_t)((uint32_t)t4 - (uint32_t)dz);          /* @0x80014410 z3 - z2 */
+    if (lo32(t2, t1) < lo32(a3, a2)) return 0;            /* @0x80014408 / @0x8001440c */
+    if (lo32(t4, a2) < lo32(t3, t1)) return 0;            /* @0x80014424 / @0x80014428 */
+    return 1;
+}
+
 /* Combination-lock NOTCH probe (byte-true FUN_80042bac @0x80042f5c `sb slot,0xb(entity)`):
  * the AOT scan sets a scanned entity's member+0xb to the sce=5 grid-cell slot it is over. The
  * keypad dial is exactly this — the cursor OBJECT (Work_set(3,0)) moves under the dpad, and each
@@ -605,8 +648,10 @@ static int aot_fire_door(int i)
      * existing rooms (scripts/door_graph.py, NEU ERHOBEN 2026-08-19 nach beiden
      * rdt_section_end-Fixes — die alte Angabe 563/567 stammte aus einem aelteren,
      * abschneidenden Walker-Stand; der Lauf davor meldete 640, dann 641, jetzt 649.
-     * Die 4 Misses sind unveraendert dieselben non-door scan artifacts in
-     * ROOM4030/4031 @0x47e/@0x4a6). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
+     * Die 4 "Misses" in ROOM4030/4031 @0x47e/@0x4a6 sind KEINE Scan-Artefakte, sondern
+     * Viereck-Tuersaetze (sat 0xB1, 40 B: Punkte pc+6..21, Nutzlast pc+22, @0x80042f90
+     * addiu a0,s0,20) nach ROOM4040 / ROOM4080 - seit Runde 31 liest op_door_aot_set sie so,
+     * damit loesen alle 653 auf). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
      * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
      * NO room==0 special case — the old `dest_room != 0` pre-filter threw
      * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
@@ -1183,8 +1228,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
             int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
             int32_t fx = player_x + (int32_t)((620 * c) >> 12);
             int32_t fz = player_z - (int32_t)((620 * s) >> 12);
+            /* Viereck-Tuersatz (sat & 0x80, 40 B, Runde 31): der Scan ruft @0x80042f10
+             * jal 0x80014368 (Viereck) statt @0x80042f20 jal 0x80042b64 (Rechteck), gewaehlt
+             * von @0x80042f04 andi v0,v1,0x80 - Trefftest Befehl fuer Befehl. */
             door_inside = a->has_quad
-                        ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                        ? re15_aot_point_in_quad_fun80014368(fx, fz, a->xs, a->zs)
                         : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
             /* BAND GATE (byte-true FUN_80042cac): player floor-band (DAT_800acad6) == door
              * band (door_params band, from Door_aot_set pc[4]) unless bit 0x80 / a pre-band
