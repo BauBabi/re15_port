@@ -3838,13 +3838,21 @@ static const uint8_t re2z_row_from_weapon[22] = {
  * dritter Id-Raum. Kriterium hier ist die SCHADENSKLASSE aus re15_damage_table @0x8006F418
  * {10,20,1000,1000,1000,50,100,200,300,1000,0}:
  *   Typ 0/1  (10/20, Nahkampf-Angriff eines Gegners) -> RE2 1  (Nahkampfzeile)
- *   Typ 2/3/4/9 (1000 = Instakill)                   -> RE2 17 (900er-Klasse; toetet ohnehin)
+ *   Typ 2/3/4 (Granaten, Runde 34)                   -> RE2 9/11/10 (s. unten, DAT_8006F430)
+ *   Typ 9 (1000 = Instakill)                         -> RE2 17 (900er-Klasse; toetet ohnehin)
  *   Typ 5/6  (50/100, Sprengstoff)                   -> RE2 9
  *   Typ 7    (200)                                   -> RE2 10
  *   Typ 8    (300)                                   -> RE2 11 (RE2-Id 8 traegt genau 300/80/60)
  *   Typ 10   (0)                                     -> RE2 1
  * [PORT-ZUORDNUNG] — im Original gibt es diesen Pfad nicht, dort kommt jede Zeile aus +0x10E. */
-static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 17, 17, 17, 9, 9, 10, 11, 17, 1 };
+/* ⛔ RUNDE 34 B3: Art 2/3/4 sind die drei GRANATEN (Resolver-Aufruf @0x800185b4 `ori a2,zero,0x2`
+ * fuer 0x09; 3/4 Port-Zuordnung E3). Ihr +0x5 ist im Original die RE1.5-WAFFEN-Id
+ * DAT_8006F430[Art] = 9/10/11 (@0x8006f432..34 `09 0a 0b`, Leser `lbu v0,0(at)` @0x80012fe8 /
+ * `sb v0,5(s1)` @0x80012ff0) — also dieselbe Uebersetzung wie jeder Waffentreffer:
+ * re2z_row_from_weapon[9/10/11] = 9 (GL Explosiv) / 11 (Saeure) / 10 (Brand). Die fruehere
+ * "Schadensklassen"-Zuordnung 17 (Rakete) fuer 2..4 ist damit ersetzt (BAUPLAN P18; RE2-GP §7).
+ * Die uebrigen Eintraege (0/1, 5..10) bleiben die dokumentierte Klassen-Zuordnung. */
+static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 9, 9, 10, 11, 17, 1 };
 
 /* INVARIANTE "kein stummer Treffer": faellt die gewaehlte Zeile in der TATSAECHLICH gestempelten
  * Spalte auf NULL, obwohl der Zombie den Treffer UEBERLEBT hat (also die HURT-Wurzel wirklich
@@ -7001,7 +7009,15 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
      * oder mit einem Zustandswort ungleich 2 (Flinch 0x501 @0x801050A4, Liegend 0x60501
      * @0x8010517C, NULL-Zelle 0x101). Eine zweite Stempelung im selben Treffer ist damit
      * ausgeschlossen — ohne Zusatz-Latch. */
-    if (e->sub_state_2 == 0u) re2z_stamp_hit(e, pl);
+    /* RUNDE 34 B3/B4: kam der Treffer aus dem GL-Applier-Zwilling (re15_re2_gl_apply bzw. dem
+     * Explosions-Stempel E6, re15_damage.c), stehen Richtung (+0x1D0 aus dem Treffpunkt P,
+     * @0x80047350-3d8) und Sperre schon; FUN_800470C0 zieht KEINE Zonen-Reserve ab (Store-Liste
+     * @0x800471f8-0x800473d8 ohne +0x151..0x153) — der Hitscan-Stempel hier (Reserve
+     * @0x80041954-88, Peilung SPIELER -> Gegner) darf dann nicht noch einmal laufen. */
+    if (e->sub_state_2 == 0u) {
+        if (e->re2_gl_stamp) e->re2_gl_stamp = 0u;
+        else                 re2z_stamp_hit(e, pl);
+    }
 
     re2z_grab_abort(e, pl);                                        /* @0x80104F68-FDC */
 

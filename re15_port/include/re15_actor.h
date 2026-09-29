@@ -741,6 +741,15 @@ typedef struct {
                                  * gestempelt? Wird beim Zustand 0 (INIT steht aus) und beim
                                  * Deaktivieren des Slots wieder geloescht. NUR im RE2-Flavor
                                  * gelesen — der RE1.5-Pfad fasst das Feld nie an.              */
+    uint8_t  re2_gl_stamp;      /* PORT-Feld (Runde 34 B3/B4, re15_damage.c re2_gl_stempel): 1 = der
+                                 * Applier-Stempel des LETZTEN Treffers kam aus dem GL-Pfad
+                                 * (FUN_800470C0-Zwilling bzw. Explosion E6): Richtung +0x1D0 aus
+                                 * dem Treffpunkt P (@0x80047350-3d8), KEINE Zonen-Reserve (der
+                                 * GL-Applier schreibt +0x151..0x153 nie — Store-Liste
+                                 * @0x800471f8-0x800473d8). re2z_hurt (enemy_ai_re2_zombie.c)
+                                 * stempelt dann NICHT noch einmal aus der Spielerpeilung
+                                 * (re2z_stamp_hit = Hitscan-Applier FUN_800410CC @0x80041954-88).
+                                 * Der Schusspfad (re15_re2_stamp_hit, row_src 0) loescht es.   */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
