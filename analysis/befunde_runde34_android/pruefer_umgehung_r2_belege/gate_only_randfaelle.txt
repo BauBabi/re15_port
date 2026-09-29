@@ -1,0 +1,8 @@
+fehlt: rc=1 | ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_umgehung_r2/gibt_es_nicht.apk
+Ordner: rc=1 | ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_umgehung_r2/ordner.apk
+Textdatei: rc=1 | ABBRUCH: APK nicht lesbar (unzip -Z1): build/r34a/pruefer_umgehung_r2/text.apk
+leer: rc=2 | --gate-only braucht den Pfad der APK
+ohne_Pfad: rc=2 | --gate-only braucht den Pfad der APK
+ohne_version: rc=2 | --gate-only braucht --version <versionName der APK> (Nachbesserung R1: kein Lauf mehr mit ungeprueftem Feld)
+version_leer: rc=2 | --gate-only braucht --version <versionName der APK> (Nachbesserung R1: kein Lauf mehr mit ungeprueftem Feld)
+version_falsch: rc=1 | ABBRUCH: aapt: versionName ist nicht 'v0.8.1'

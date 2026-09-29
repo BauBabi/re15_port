@@ -1,0 +1,13 @@
+   Python: /c/Python310/python (3.10.11)
+23:56:18 getauscht (waehrend des Selbsttests), Zeile 17 des Block-Logs
+== Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+   (Sonde: Frische-Pruefung uebersprungen - nicht Gegenstand)
+   Verified using v2 scheme (APK Signature Scheme v2): true
+== SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+== APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r2/mp_sandbox/release/re15_port_v0.8.19_android.apk ==
+   gepruefte APK (sha256 crc32 Bytes): 2110beff5b7d027c632c9a292ec57efbe3e2fdf9a23d788476d0473d6c82cb82 1af90309 363208307
+Zipzeit-Vergleich: = gepruefte Datei -> wuerde gezippt
+K0 (unsigniert):  2110beff5b7d027c632c9a292ec57efbe3e2fdf9a23d788476d0473d6c82cb82
+ref (signiert):   514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+EXIT=0

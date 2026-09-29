@@ -1,0 +1,36 @@
+(a) PATH=<8.3 WindowsApps> allein, RE15_PYTHON_NUR_PATH=1 (kein readlink/timeout erreichbar):
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+
+(b) PATH=<8.3 WindowsApps>:/usr/bin, RE15_PYTHON_NUR_PATH=1 (readlink erreichbar):
+   Python-Kandidat verworfen (Link auf WindowsApps: /c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   Python-Kandidat verworfen (Link auf WindowsApps: /c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python.exe, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+
+(c) PATH=<8.3 WindowsApps> allein, Standard (Rueckfall /c/Python3* erlaubt):
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Python310/python.exe
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Python310/python.exe
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Python39/python.exe
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Python39/python.exe
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 4 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+
+(d) RE15_PYTHON=<8.3>/python3.exe, PATH leer:
+   SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+   Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1
+
+(e) RE15_PYTHON=<8.3>/python3.exe, PATH=/usr/bin:
+   Python-Kandidat verworfen (Link auf WindowsApps: /c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+rc=1

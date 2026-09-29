@@ -1,0 +1,8 @@
+RE2/TORSE.VBS (Paket: letztes Byte ^1): rc=1 | ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS
+   zurueck: RE2/TORSE.VBS = Quelle
+RE2/DOOR/DOOR36.DO2 (Paket: letztes Byte ^1): rc=1 | ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR36.DO2
+   zurueck: RE2/DOOR/DOOR36.DO2 = Quelle
+RE2/DOOR/DOOR04.DO2 (Paket: letztes Byte ^1): rc=1 | ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR04.DO2
+   zurueck: RE2/DOOR/DOOR04.DO2 = Quelle
+Repo-TORSE.VBS unveraendert
+Positiv (Paket = Quelle, P2DS aus dem 29er-Versuch zurueckgelegt): rc=0 | CHECK_TREE_OK

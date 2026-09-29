@@ -14,6 +14,16 @@ Signing Block -> unsigniert; signieren danach mit apksigner). Eingriffe:
                             (Daten und CRC bleiben)
   --kommentar-plus N        EOCD-Kommentarlaenge +N (ohne Bytes anzuhaengen)
   --praefix N               N Bytes vor den ersten Local Header, alle Offsets verschoben
+  --cd-dd NAME              Data-Descriptor-Bit NUR im Zentralverzeichnis setzen
+  --lfh-crc-kippen NAME     CRC NUR im Local Header ^1
+  --daten-kippen NAME=OFF   ein Rohdaten-Byte ^0x01 (Header-CRC bleibt alt)
+  --umbenennen ALT=NEU      Name in LFH + CD (Manifestzeile unter assets/ mitgezogen)
+  --cd-backslash NAME       '/' -> '\' NUR im Zentralverzeichnis
+  --doppelt NAME=DATEI      weiteren Eintrag NAME anhaengen (auch neuer Name)
+  --verzeichnis NAME/       leeren Verzeichniseintrag anhaengen
+  --manifest-zeile-plus Z   Rohzeile anhaengen ('\t' = Tab), Kopf nachgezogen
+  --manifest-crlf / --manifest-leerzeilen
+  --ohne-lfh-extra          Ausrichtungs-Extra aus jedem Local Header entfernen
 
 Aufruf: r2_faelschen.py <quelle.apk> <ziel.apk> [Eingriffe ...]
         r2_faelschen.py --zeige <apk> NAME...   (Felder aus CD + LFH)
@@ -128,6 +138,14 @@ def main():
     ap.add_argument("--daten-kippen", action="append", default=[])
     ap.add_argument("--kommentar-plus", type=int, default=0)
     ap.add_argument("--praefix", type=int, default=0)
+    ap.add_argument("--umbenennen", action="append", default=[])
+    ap.add_argument("--cd-backslash", action="append", default=[])
+    ap.add_argument("--doppelt", action="append", default=[])
+    ap.add_argument("--verzeichnis", action="append", default=[])
+    ap.add_argument("--manifest-zeile-plus", action="append", default=[])
+    ap.add_argument("--manifest-crlf", action="store_true")
+    ap.add_argument("--manifest-leerzeilen", action="store_true")
+    ap.add_argument("--ohne-lfh-extra", action="store_true")
     a = ap.parse_args()
     ein, eocd = lesen(a.quelle)
     ohne = set(x.encode() for x in a.ohne)
@@ -173,9 +191,67 @@ def main():
         d = bytearray(e["daten"])
         d[int(off)] ^= 0x01
         e["daten"] = bytes(d)
+    for s in a.umbenennen:                 # Name in LFH + CD (beliebige Laenge); Manifestzeile mitziehen
+        alt, neu = s.split("=", 1)
+        e = idx.pop(alt.encode())
+        umbenennen(e, neu.encode())
+        idx[neu.encode()] = e
+        if alt.startswith("assets/") and MAN in idx:
+            em = idx[MAN]
+            t = manifest(em).replace("\t" + alt[len("assets/"):] + "\n", "\t" + neu[len("assets/"):] + "\n")
+            daten_setzen(em, t.encode("utf-8"))
+    for nm in a.cd_backslash:              # '/' -> '\' NUR im Zentralverzeichnis (LFH behaelt '/')
+        e = idx[nm.encode()]
+        nl, = struct.unpack("<H", e["cd"][28:30])
+        e["cd"][46:46 + nl] = bytes(e["cd"][46:46 + nl]).replace(b"/", b"\\")
+    vorlage = idx[MAN]
+    for s in a.doppelt:                    # zweiter Eintrag gleichen Namens, am Ende angehaengt
+        nm, datei = s.split("=", 1)
+        ein.append(neuer_eintrag(vorlage, nm.encode(), open(datei, "rb").read(), 10 ** 12 + len(ein)))
+    for nm in a.verzeichnis:               # leerer Verzeichniseintrag
+        ein.append(neuer_eintrag(vorlage, nm.encode(), b"", 10 ** 12 + len(ein)))
+    if a.manifest_zeile_plus or a.manifest_crlf or a.manifest_leerzeilen:
+        em = idx[MAN]
+        zeilen = manifest(em).split("\n")
+        for z in a.manifest_zeile_plus:
+            zeilen.insert(len(zeilen) - (1 if zeilen[-1] == "" else 0), z.replace("\\t", "\t"))
+        if a.manifest_zeile_plus:
+            zeilen[0] = kopf_neu(zeilen)
+        if a.manifest_leerzeilen:
+            zeilen = zeilen[:1] + [""] * 3 + zeilen[1:] + [""] * 3
+        t = "\n".join(zeilen)
+        if a.manifest_crlf:
+            t = t.replace("\n", "\r\n")
+        daten_setzen(em, t.encode("utf-8"))
+        print("Manifest neu: Kopf %s, %d B" % (ascii(zeilen[0]), len(t)))
+    if a.ohne_lfh_extra:                   # Ausrichtungs-Extra (AGP/zipalign) aus JEDEM Local Header entfernen
+        for e in ein:
+            lnl, lxl = struct.unpack("<HH", e["lfh"][26:30])
+            e["lfh"] = bytearray(e["lfh"][:28] + struct.pack("<H", 0) + e["lfh"][30:30 + lnl])
     schreiben(a.ziel, ein, eocd, a.praefix, a.kommentar_plus)
     print("geschrieben: %s (%d Eintraege)" % (a.ziel, len(ein)))
     return 0
+
+
+def umbenennen(e, neu):
+    lnl, lxl = struct.unpack("<HH", e["lfh"][26:30])
+    e["lfh"] = bytearray(e["lfh"][:26] + struct.pack("<HH", len(neu), lxl) + neu + e["lfh"][30 + lnl:])
+    nl, xl, kl = struct.unpack("<HHH", e["cd"][28:34])
+    e["cd"] = bytearray(e["cd"][:28] + struct.pack("<H", len(neu)) + e["cd"][30:46] + neu + e["cd"][46 + nl:])
+    e["name"] = neu
+
+
+def neuer_eintrag(vorlage, name, roh, lho):
+    lfh = bytearray(vorlage["lfh"][:30])
+    struct.pack_into("<HH", lfh, 26, len(name), 0)
+    lfh += name
+    nl, xl, kl = struct.unpack("<HHH", vorlage["cd"][28:34])
+    cd = bytearray(vorlage["cd"][:46])
+    struct.pack_into("<HHH", cd, 28, len(name), 0, 0)
+    cd += name
+    e = dict(name=name, cd=cd, lfh=lfh, daten=b"", lho=lho)
+    daten_setzen(e, roh)
+    return e
 
 
 if __name__ == "__main__":
