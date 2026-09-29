@@ -98,11 +98,11 @@ nicht beruehrt.
 | Datei:Zeile | Inhalt | Beleg |
 |---|---|---|
 | `main.c:259` | Sichtbarkeit `re15_pc_esp_sichtbar` = Flags Bit0 UND Bit1 (vorher nur Bit1) | @0x800532fc-0c |
-| `main.c:263`, `:283`, `:329-331` | Weltlage `re15_pc_esp_weltlage`: `wpos` (slot+0x28), Rueckfall `x+xlat` solange wpos 0 — fuer Regions-Test UND Projektion | @0x80053314-30, @0x8005350c |
+| `main.c:263`, `:287`, `:330-332` | Weltlage `re15_pc_esp_weltlage`: `wpos` (slot+0x28), Rueckfall `x+xlat` solange wpos 0 — fuer Regions-Test UND Projektion | @0x80053314-30, @0x8005350c |
 | `main.c:296-320` | GLOBAL-Bank: Seite nach TPAGE (`re15_pc_esp_tpage` & 0x1f), Palette nach CLUT (`re15_pc_esp_clut`), Slot 50/51; sonst Altweg (Ein-Paletten-Blaetter 20..23/44) | @0x80053538/@0x8005353c |
 | `main.c:418-424` | defW/defH `re15_pc_esp_defwh` = Zeilenkopie +0x04/+0x06 fuer JEDEN Row-VM-Platz (vorher nur Routine 17/18) | @0x800535d0/@0x800535e0 |
 | `main.c` Tri-Aufrufe | `clut_wort` an `re15_render_textured_tri` (render_pc.c waehlt damit den Paletten-Stapel) | — |
-| `main.c:3787-3813` | Boot: `DATA/TEX.TIM` -> Seiten 0x1e/0x1f (je 16 Paletten 480..495) -> Slots 50/51 | TEX.TIM-Offsets unten |
+| `main.c:3788-3816` | Boot: `DATA/TEX.TIM` -> Seiten 0x1e/0x1f (je 16 Paletten 480..495) -> Slots 50/51 | TEX.TIM-Offsets unten |
 | `main.c:140-141` | `RE15_TIM_SLOT_FX_SEITE_1E 50`, `_1F 51` | — |
 | `render_pc.c:204` | `RE15_TIM_SLOT_MAX` 50 -> 56 (50/51 Effektseiten, 52..55 frei fuer Spur D) | — |
 | `fx_plattform_pc.c` `re15_pc_fx_seite_bauen` | schneidet die Seite byte-true aus TEX.TIM, NUR im gemessenen Rechteck (Spalte >= 192) | s.u. |
@@ -115,6 +115,10 @@ TEX.TIM (Datei gelesen): Kopf `10 00 00 00 08 00 00 00` (4 bpp + CLUT); CLUT-Blo
 (gelesen): Id 3 `11 78 1e 00` @0x00C, Id 8 `11 79 1e 00` @0x62C, Id 0 `51 79 1f 00` @0x828, Id 2 `51 7a 1f 00` @0xF04,
 Id 4 `d1 7a 1f 00` @0x172C.
 
+CLUT/TPAGE-Saat des Spawners (selbst nachgelesen, `dis 0x80019870 12`): `lhu v0,4(t5)` / `addu v0,v0,s0` / `sh v0,50(t0)`
+@0x8001987c-88 (CLUT = Kopf +4 + (sub>>3)*0x40), `lhu v1,6(t5)` / `sh v1,48(t0)` @0x8001988c/98 (TPAGE = Kopf +6); Routine 10
+(`dis 0x800176b0 22`): `lhu a0,30(v1)` @0x800176e0, `sll a0,a0,6` @0x800176e8, `lhu v0,50` / `addu` / `sh v0,50(v1)`
+@0x800176f0-fc (CLUT += row[0x1e] << 6), TPAGE |= row[0x16] @0x800176d8-ec.
 Genutzte Paletten (Zeile = CLUT-Wort >> 6, Spalte 16 = x 272): 480 Rauch, 481 Rauch-Kind 0x0B, 483 Feuerball 0x19,
 484 Feuer, 485 Blut, 489 Muendung, 490 Zweitblitz (Routine 10 `CLUT += row[0x1e]<<6` @0x800176e0-fc, id 2 sub 4
 row[0x1e] = 1), 491 Huelse, 492 Granate 0x0D. Hochgeladen 480..495 (16 Paletten -> 256x4096 je Seite, unter der
