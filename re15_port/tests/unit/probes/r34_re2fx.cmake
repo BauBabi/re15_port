@@ -21,7 +21,7 @@ target_link_libraries(probe_r34_re2fx_knochen PRIVATE re15_engine re15_test_supp
 target_include_directories(probe_r34_re2fx_knochen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 # Die RE2-Spielerdateien liegen nur unter info/re2leon (Repo-Wurzel = eine Ebene ueber re15_port).
 get_filename_component(_r34_repo_root "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
-target_compile_definitions(probe_r34_re2fx_knochen PRIVATE RE15_REPO_ROOT=${_r34_repo_root})
+target_compile_definitions(probe_r34_re2fx_knochen PRIVATE RE15_REPO_ROOT="${_r34_repo_root}")
 if(NOT WIN32)
     target_link_libraries(probe_r34_re2fx_knochen PRIVATE m)
 endif()

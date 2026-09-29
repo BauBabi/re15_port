@@ -23,13 +23,11 @@
 #include "re15_emd.h"
 #include "re15_skeleton.h"
 
-#define RE15_XSTR_(x) #x
-#define RE15_XSTR(x)  RE15_XSTR_(x)
 
 static uint8_t *lesen(const char *rel, long *n)
 {
     char p[1024];
-    snprintf(p, sizeof p, "%s/%s", RE15_XSTR(RE15_REPO_ROOT), rel);
+    snprintf(p, sizeof p, "%s/%s", RE15_REPO_ROOT, rel);   /* Zeichenkette aus r34_re2fx.cmake (wie r16_trefferhoehe) */
     FILE *f = fopen(p, "rb");
     if (!f) { printf("kann %s nicht oeffnen\n", p); return NULL; }
     fseek(f, 0, SEEK_END); *n = ftell(f); fseek(f, 0, SEEK_SET);
