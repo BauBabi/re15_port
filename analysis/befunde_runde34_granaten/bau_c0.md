@@ -270,7 +270,10 @@ NICHT gemessen) — der Befund P13 (ARMS-Satz 0x0A ausserhalb der 10 Saetze von 
 * **Einzelwiederholung** (CPU-Last 4 %): `ctest -R "^integration_r30_irons_tisch_bild$"` →
   `1/1 Test #352: integration_r30_irons_tisch_bild ...   Passed   58.64 sec` → Last-Flattern
   (Memory reai-v2-gui-tests-flattern-bei-parallelen-agenten), kein reproduzierbares Rot.
-* **Lauf 2** (volle Suite erneut, Last gering): (folgt)
+* **Lauf 2** (`local_build.sh test`, volle Suite erneut, Last gering): `100% tests passed, 0 tests failed out of 428`,
+  `Total Test time (real) = 732.53 sec`, **`=== LOCAL-BUILD-OK (test) — Tests 428/428`**. (`integration_r30_irons_tisch_bild`
+  diesmal gruen im Verbund.)
+* **Lauf 3** (`local_build.sh` = all: configure + build + test, fuer die Zielzeile): (folgt)
 
 ---
 
