@@ -741,6 +741,12 @@ typedef struct {
                                  * gestempelt? Wird beim Zustand 0 (INIT steht aus) und beim
                                  * Deaktivieren des Slots wieder geloescht. NUR im RE2-Flavor
                                  * gelesen — der RE1.5-Pfad fasst das Feld nie an.              */
+    uint16_t re2z_c236;         /* +0x236 Bildzaehler der RE2-Zombie-Wurzel (Runde 34 B5): +1 je
+                                 * Wurzel-Aufruf NACH dem Zustands-Dispatch (`lhu v0,566(s0)` /
+                                 * `addiu v0,v0,1` / `sh v0,566(s0)` @0x801004F8-508 EMZ0.BIN),
+                                 * INIT 0 (`sh zero,566(s2)` @0x801008AC). Einzige Leser: der
+                                 * Brand-/Saeure-DoT-Takt `andi v0,v0,0x7` in EXEC[1] @0x80101DE8-F0
+                                 * und EXEC[2] @0x8010249C-A4 (1 HP je 8 Bilder).               */
     uint8_t  re2_gl_stamp;      /* PORT-Feld (Runde 34 B3/B4, re15_damage.c re2_gl_stempel): 1 = der
                                  * Applier-Stempel des LETZTEN Treffers kam aus dem GL-Pfad
                                  * (FUN_800470C0-Zwilling bzw. Explosion E6): Richtung +0x1D0 aus

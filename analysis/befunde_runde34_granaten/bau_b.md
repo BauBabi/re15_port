@@ -201,6 +201,52 @@ NPC 0x45/0x4b: der Kasten wirkt auch auf deren Wandklemme (`lhu a1,6(v0)` @0x801
 Versatz und Feuer-y wirken nur im Resolver bzw. im y-Band des Koerper-Schubs (Feuer). Regressionslauf aller
 Schaden-/Hund-/Alligator-/NPC-/Treffer-Tests (44 Tests, `ctest -R ...`): gruen nach der Hunde-Beschraenkung.
 
+---
+
+## B5 — Zombie: Brand-/Saeure-DoT und Leichen-Ausblender (`enemy_ai_re2_zombie.c`)
+
+### Selbst disassembliert (EMZ0.BIN)
+* EXEC[1] @0x80101DC0-EC0 (66 Instr.), EXEC[2] @0x80102474-54C (58 Instr.), Wurzel @0x80100470-52c (Zaehler +0x236 nach
+  dem Dispatch `jalr v0` @0x801004e8 und `jal 0x8010c2a4` @0x801004f0: `lhu v0,566` @0x801004F8 / `addiu 1` @0x80100504 /
+  `sh v0,566` @0x80100508), Epiloge EXEC[1] @0x80101f64 / EXEC[2] @0x801025d0, Leichen-Schwanz @0x8010a80c-868.
+  `srav s0,s0,v0` @0x80101e24 steht als Rohwort 0x00508007 (von Hand dekodiert: rd = s0, rt = s0, rs = v0).
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `include/re15_actor.h` | Feld `re2z_c236` (+0x236) |
+| `enemy_ai_re2_zombie.c` `re2z_dot_tick` (neu) | DoT-Block: Gate verkohlt/geaetzt, 8er-Takt, zwei Wuerfe + Gier-Zucken (nur EXEC[1]), HP -1, Tod 0x0A03/0x0B03 + +0x1D2 = 4 + +0x1D3 \|= 0x80 + +0x21A \|= 0x2000, Saeure-Zucken jedes Bild |
+| `re2z_exec_walk` (EXEC[1]) | Aufruf nach dem +0x15A-Block (dort stand die Fehldeutung "WALK edge-fall ... OPEN") |
+| `re2z_exec_bump` (EXEC[2]) | Aufruf nach der Bewegung, vor der Ausstiegs-Leiter; Kopfkommentar "Kanten-Sturz/Jitter" korrigiert |
+| `re15_re2z_tick` | `re2z_c236++` nach dem Zustands-Dispatch |
+| `re2z_init` | `re2z_c236 = 0` (@0x801008AC); INIT-Kommentar korrigiert |
+| `re2z_corpse` Schwanz | Leichen-Farbausblender (nur verkohlt, jedes 4. Bild 15 Parts -0x010101, Stopp bei Part-0-R 16) |
+
+### Sonde `unit_r34_reaktion` Teil `zombie` (ROOM1140, RE2-Flavor, echter `re15_game_step`, RE2-Baenke geladen)
+Harness-Hilfe: Brad 0x11 wird aus der Fress-Pose in den Gang gesetzt (Zustand 0x101); Treffer, KI, Filter, HP-Stempel
+und Anim laufen echt.
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 101/111 | Brand/Saeure-Explosion 300 neben Brad: HP 250 -> 50, Zustand 2, +0x5 10/11, Spalte 0 | gruen |
+| 102/112 | Stagger-P0 setzt die Element-Bits: Brand +0x10E 0x80 + +0x21A 0x800; Saeure +0x21A 0x1800 | gruen (0x0080/0x8800; 0x9820) |
+| 103/113 | DoT: 51 HP-Stufen, jede genau im 8er-Takt ((+0x236 & 7) == 1 nach dem Bild), Abstand ueber durchgehendes Gehen immer 8 | gruen (415/404 Gang-Bilder) |
+| 104/114 | Tod am Element: +0x5 0x0A bzw. 0x0B, +0x1D2 4, +0x1D3 0x80, +0x21A 0x2000 | gruen (Bild 1289 / 1401) |
+| 105 | Leichen-Ausblender: R von 64 auf 16 in 48 Stufen, je 4 Bilder | gruen |
+| 106 | Stopp bei R = 16 | gruen |
+| 107 | NEGATIV: gehender Brad ohne Element-Bits verliert in 400 Bildern keine HP | gruen |
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M17 DoT im Gang aus | 103/104 | 103/104/105/106/113/114 rot |
+| M18 Takt `& 7` -> `& 3` | 103 | 103/113 rot (Takt-Fehler 25/26) |
+| M19 Ausblender aus | 105 | 105/106 rot |
+| M20 Saeure-Todeswort 0x0B03 -> 0x0A03 | 114 | 114 rot |
+
+### Hinweis (Wirkung ueber die Granate hinaus)
+Der DoT gilt fuer JEDE Quelle der Element-Bits: auch der Flammenwerfer (RE1.5-Waffe 14 -> RE2-Zeile 16, MAIN-P0 setzt
+`+0x21A |= 0x800` @0x80105560) laesst verkohlte Zombies jetzt im Gang ausbluten — das ist RE2-Retail.
+
 ## INTEGRATIONSWUNSCH
 (noch keiner)
 
