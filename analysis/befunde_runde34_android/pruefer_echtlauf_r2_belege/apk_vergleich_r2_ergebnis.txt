@@ -1,0 +1,23 @@
+Referenz: C:/workspace/Re15Data/re15_packages_archiv/v0.8.19/re15_port_v0.8.19_android.apk  Eintraege 3616 (Namen eindeutig 3616)
+Neu:      release/re15_port_v0.8.19_android.apk  Eintraege 3616 (Namen eindeutig 3616)
+assets/: Referenz 3604, neu 3604, gemeinsam 3604, nur Referenz 0, nur neu 0, Reihenfolge gleich: True
+Inhalt: 3616 gemeinsame Eintraege per sha256 verglichen (362627832 Bytes entpackt)
+assets/ Stored: Referenz 3604/3604, neu 3604/3604
+--- ausserhalb assets/ (erwartet: nur Code/Signatur/Version) ---
+   anders: lib/arm64-v8a/libSDL2.so (Groesse 1420920/1420888; CRC 3d9c89b7/e3140fe8; sha256 7549f17e94cd../985fca814510..)
+   anders: lib/arm64-v8a/libmain.so (CRC 6cdb196d/8a3dfc17; sha256 9cb41f6b51ed../ed808f09b541..)
+   anders: lib/x86_64/libSDL2.so (Groesse 1537048/1537032; CRC 6c50a61b/532898ee; sha256 1a7c5875fb8d../12cd83b12ee1..)
+   anders: lib/x86_64/libmain.so (CRC 8de4cb1b/b9860af3; sha256 5169663e03ad../511f515491fe..)
+   gleich: 8 von 12/12
+Manifest sha256: Referenz 5f5acfdb062a8ee0, neu 5f5acfdb062a8ee0, gleich: True
+Manifest: Kopf # re15 assets 3603 356678277, Zeilen 3603, Summe 356678277, Zeilen ohne passenden Eintrag 0, Asset-Eintraege ohne Zeile 0
+Ausrichtung Referenz: 3604 Stored-Assets, davon nicht 4-Byte-ausgerichtet: 0
+Ausrichtung neu: 3604 Stored-Assets, davon nicht 4-Byte-ausgerichtet: 0
+Repo-Abgleich (C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android): Quelle 3603 Dateien, sha256 gleich 3603, fehlt in APK 0, anders 0, nur APK 0
+   shared_assets/PSX            Quelle  3193  gleich  3193
+   shared_assets/RE15DOOR       Quelle    30  gleich    30
+   shared_assets/RE2            Quelle   277  gleich   277
+   shared_assets/extracted_fx   Quelle    13  gleich    13
+   synchro                      Quelle    90  gleich    90
+ERGEBNIS: GLEICH (Abweichungen unter assets/ bzw. Repo: 0)
+rc=0 dauer=5.0 s
