@@ -135,6 +135,57 @@ void re15_door_rotmatrix(const uint16_t rot[3], int16_t m[9]);
 void re15_door_seq_objmatrix(const re15_door_mat_t *eltern, const uint16_t rot[3],
                              const int32_t pos[3], re15_door_mat_t *out);
 
+/* ===========================================================================
+ * Zeichnen (Runde 32, engine/src/door_seq_zeichnen.c, analysis/befunde_runde32/tueren_unterteilung.md)
+ * ======================================================================== */
+#define RE15_DOOR_OFX  160   /* RE2 SetGeomOffset 0x8008de04, Aufruf @0x80068e80 addiu a0,zero,160 */
+#define RE15_DOOR_OFY  120   /*                              @0x80068e88 addiu a1,zero,120 */
+#define RE15_DOOR_NDIV   3   /* DIVPOLYGON3.ndiv: Door_init @0x80013dc0 addiu v0,zero,3 / @0x80013dcc sw v0,12(a0) */
+#define RE15_DOOR_PIH  320   /* DIVPOLYGON3.pih:  @0x80013dd0 addiu v0,zero,320 / @0x80013dd4 sw v0,16(a0) */
+#define RE15_DOOR_PIV  240   /* DIVPOLYGON3.piv:  @0x80013dd8 addiu v0,zero,240 / @0x80013ddc sw v0,20(a0) */
+#define RE15_DOOR_FLAG_TEILEN 0x20   /* FUN_8001468c @0x80014a30 andi v0,v0,0x20 -> @0x80014a90 jal DivideGT3 */
+
+/* Eine projizierte Ecke (GTE SXY/SZ nach RTPT). */
+typedef struct { int16_t sx, sy; uint16_t sz; } re15_door_ecke_t;
+/* RTPT (sf=1) einer Objektraum-Ecke mit RT = W, TR = T, H 290, OFX/OFY 160/120. */
+re15_door_ecke_t re15_door_rtpt(const re15_door_mat_t *w, int16_t vx, int16_t vy, int16_t vz);
+
+/* RVECTOR (PsyQ LIBGTE.H): Teilpunkt der Unterteilung. */
+typedef struct {
+    int16_t  vx, vy, vz;     /* SVECTOR v, Objektraum      (RVECTOR +0)  */
+    uint8_t  u, v;           /* uv[2]                      (RVECTOR +8)  */
+    uint8_t  r, g, b;        /* CVECTOR c (cd = Code, hier nicht gefuehrt) (RVECTOR +12) */
+    int16_t  sx, sy;         /* DVECTOR sxy nach RTPT      (RVECTOR +16) */
+    uint16_t sz;             /* sz nach RTPT               (RVECTOR +20) */
+} re15_div_rvec_t;
+/* Ausgabe eines Teildreiecks (0x8008f288): Ecken in Paketfolge 0/1/2. */
+typedef void (*re15_div_ausgabe_t)(void *ctx, const re15_div_rvec_t *a,
+                                   const re15_div_rvec_t *b, const re15_div_rvec_t *c);
+/* PsyQ DivideGT3 (RE2 0x8008ebf4) mit den Objektraum-Ecken v[0..2], uv je Ecke und der Farbe rgb0
+ * fuer alle drei Ecken (RE2 uebergibt rgb0 dreimal, @0x80014a48..60). Liefert die Zahl der
+ * ausgegebenen Teildreiecke (0 bei NCLIP <= 0, @0x8008ecf8 blez; sonst bis 4^ndiv). */
+int re15_door_divide_gt3(const re15_door_mat_t *w, const re15_md1_vertex_t *v[3],
+                         const uint8_t uv[3][2], const uint8_t rgb0[3],
+                         uint32_t ndiv, uint32_t pih, uint32_t piv,
+                         re15_div_ausgabe_t aus, void *ctx);
+
+/* Ein Dreieck an die Plattform (ungeteilt = das POLY_GT3 von FUN_8001468c, geteilt = ein Paket
+ * aus RCpolyGT3A 0x8008f288). u/v roh aus dem MD1 (0..255), page/clut wie im MD1. */
+typedef struct {
+    int16_t  x[3], y[3];
+    uint8_t  u[3], v[3];
+    uint16_t page, clut;
+    int32_t  z;              /* Port-Sortierschluessel: OT-Platz * 4096 + laufende Nummer */
+    uint8_t  rgb[3][3];      /* NCCT-Farbe je Ecke (0x80 = neutral) */
+    uint8_t  geteilt;        /* 1 = Teildreieck aus DivideGT3 (Flag 0x20) */
+} re15_door_dreieck_t;
+typedef void (*re15_door_zeichner_t)(void *ctx, const re15_door_dreieck_t *d);
+/* Ein Tuer-Mesh zeichnen: FUN_80014234 Schritte e/f (Licht) + FUN_8001468c (RTPT, NCLIP, NCCT,
+ * AVSZ3, OT-Platz nach flags & 0xc0, Flag 0x20 -> DivideGT3). *lfd = laufende Nummer (Schluessel). */
+void re15_door_mesh_zeichnen(const re15_md1_mesh_t *m, const re15_door_mat_t *welt,
+                             const re15_door_mat_t *welt_vor, uint16_t flags, int *lfd,
+                             re15_door_zeichner_t zeichner, void *ctx);
+
 
 /* ===========================================================================
  * Anbindung ans Spiel
