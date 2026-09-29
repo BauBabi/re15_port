@@ -59,7 +59,7 @@ Definitionen: `engine/src/re15_esp.c:748-750` (`= 0` / `= NULL` / `= NULL`), `en
 | `include/re15_esp.h:223-250` | `g_re15_licht_latch`, `re15_esp_se_hook`, `re15_esp_aufschlag_hook` | V1b/c/d |
 | `engine/src/re15_esp.c:742-750` | Definitionen 0/NULL | V1 |
 | `include/re15_damage.h:329-345` | `re15_re2_gl_apply` (FUN_800470C0-Zwilling) | V2b |
-| `engine/src/re15_damage.c:3671-3687` | Stub `return 0` (Spur B4) | V2b |
+| `engine/src/re15_damage.c:3672-3687` | Stub `return 0` (Spur B4) | V2b |
 | `include/re2_fx.h` (neu) | RE2-FX-Schnittstelle | V3 |
 | `engine/src/re2_fx.c` (neu) | Stubs, Zeiger NULL | V3 |
 | `platform/pc/src/re2fx_pc.h/.c` (neu) | `re2fx_pc_draw` Stub | V3 |
@@ -262,7 +262,15 @@ Ohne `RE15_NOAUDIO` stuende im Mutationsfall ARMS01 geladen (abgeleitet aus `re1
 NICHT gemessen) — der Befund P13 (ARMS-Satz 0x0A ausserhalb der 10 Saetze von ARMS01, BAUPLAN P13).
 
 ### 7.4 Volle Suite
-(folgt)
+* **Lauf 1** (`local_build.sh test`, Bauverzeichnis `build_r34_c0`, parallel zu den Bauten anderer Spuren):
+  `99% tests passed, 1 tests failed out of 428`, `Total Test time (real) = 1651.93 sec`. Einziges Rot:
+  `352/428 Test #352: integration_r30_irons_tisch_bild ....***Timeout 400.52 sec` (vier echte exe-Laeufe am
+  CONTINUE-Weg, ROOM1150 Cut 2). Unter derselben Last brauchte `integration_r30_granate_laden` 284.88 s (gruen).
+  Der Test setzt weder `RE15_EQUIP` noch `RE15_STATE_LOG`/`RE15_FX_LOG` — keine der C0-Aenderungen liegt auf seinem Weg.
+* **Einzelwiederholung** (CPU-Last 4 %): `ctest -R "^integration_r30_irons_tisch_bild$"` →
+  `1/1 Test #352: integration_r30_irons_tisch_bild ...   Passed   58.64 sec` → Last-Flattern
+  (Memory reai-v2-gui-tests-flattern-bei-parallelen-agenten), kein reproduzierbares Rot.
+* **Lauf 2** (volle Suite erneut, Last gering): (folgt)
 
 ---
 
