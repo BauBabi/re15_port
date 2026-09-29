@@ -576,6 +576,37 @@ NULL-Zeile) -> 210 rot (10 Haenger).
    Original-Farbworte in `re2z_part_tint[]` (0 = nicht gesetzt, KEIN Neutralwert 0x00808080) und die Wurf-Flags in
    `re2z_part_flags[]`. Wunsch: fuer Typ 0x20/0x25 (RE2-Flavor) das Farbwort als NCCT-Faktor wie beim Zombie
    (`ldrgb` @0x80027C2C / NCCT @0x80027D10), Wert 0 -> neutral.
+2. **Applier binden** (Spur C/D, Bindungsstelle der RE2-FX-Haken in `platform/pc/main.c`, dazu PSX/Android an derselben
+   Stelle): `re2fx_applier = re15_re2_gl_apply;` (`#include "re15_damage.h"`). Vertrag V2b (`include/re2_fx.h:50-54`:
+   "Vorgabe NULL ... die Plattform bindet ihn an re15_re2_gl_apply, sobald Spur B gemergt ist"). Ohne die Bindung
+   macht das Bodenfeuer (Op 40) keinen Schaden.
+3. **Hinweis an alle Leser von `re2z_part_*`** (keine Aenderung noetig): `re2z_part_flags/_tint/_yaw98/_w9a/_w9c/_w9e` haben
+   jetzt 20 Eintraege (`include/re15_actor.h`); der Zombie-Renderer liest weiter 0..15.
 
 ## OFFEN
-(fortlaufend)
+1. **Hunde-Koerper-Schub mit dem Original-Kasten** (900/720/450 @0x80120f64): nur der Resolver nimmt ihn (B2); auf dem
+   Aktor wurde `unit_r27_hund_wandtrieb` rot (469 Bilder in der Wand). Eigene Runde.
+2. Kopf-Bit (Wort0 & 0x10000000) fuer Hund/Kraehe/Spinne/Baby nicht gescannt (verhaltensneutral, die Gehirne lesen +0x1D2 /3).
+3. Kraehe: +0x98 im Flug (0/-350 @0x80100204/08) hat kein Port-Feld; der Applier nimmt den INIT-Wert -350/530.
+4. Applier-Zeilen ausser 9/10/11 nicht hinterlegt (einziger Aufrufer Op 40 = Zeile 10).
+5. Hund: +0x1C0 \|= 1 im Teile-Wurf (@0x80104458-64) ohne Port-Feld; Flug der geworfenen Parts, FX-Arten 0x84/0x86 (FX 9-12)
+   und die Part-Farben ohne Zeichnung (-> INTEGRATIONSWUNSCH 1); Todes-Zeilen {7,8} (0x801042B0, aus w8/w13) und 14
+   (0x801048B4, von der Port-Uebersetzung nie gebildet) weiter auf dem Kern.
+6. Spinne: Part-19-Flug (FUN_80028DAC, +0x9C = 0x6464) nicht gezeichnet; die Gore-Salven der Zeilen 10/16 feuern ohne das
+   Part-Flag-Tor `(flags & 0x4B) == 1` (@0x80104b00-0c), weil der Port fuer die Spinne keine Part-Flags seedet (bestehend).
+7. Kakerlake 0x29: Luft-Landung im HURT/DEATH-Kopf (+0x1e0 -> 0x8001c1a4(0,0,-50,+0x1ba), Kasten @0x8011ec44[+0x1e4], SE 1
+   @0x801147a0-804 / @0x80114fc4-5028) und Lokator FUN_80115b68 nicht portiert; Blut 0x80019700 = Render.
+8. Alligator 0x23 (nicht 2090): EM023 in keinem RE1.5-EMS -> Clip-13-Laenge unbekannt; im Wasser (+0x1e0 != 0) endet der Tod
+   am Clip-Ende nur mit geladener Bank, ohne Bank greift die Bild-20-Regel (PORT-SICHERUNG).
+9. Tyrant 0x2b: Fussanker FUN_80115bec (Lokator) nicht portiert.
+10. G5: Ruettler +0x225 := 7 (@0x801029c4-d0), Zeilen-Partikel (0x8010221c / 0x80101d9c / 0x80101ff0 / 0x801022d0) nicht
+    portiert; Sperre nur fuer die GL-Zeilen gelesen (w1 der anderen Records nicht) — der Schuss-Pfad bleibt ohne Sperre.
+11. G5-Zuschlag nach Zeile wirkt auf alle Waffen (Liste in B9) — Abnahme durch Nutzer/Orchestrator.
+12. Schlafender RE2-Arm (grid & 0x1F != 1): Explosion setzt Zustand 3, Reaktion erst nach dem Aufwachen (RE2-Gate 4 fehlt im
+    RE1.5-Resolver).
+13. `re2z_row_from_atktype[5] = 9` (bestehend): Art 5 trifft RE2-KI-Typen im Spiel nicht (fuer sie laeuft der RE2-Applier);
+    nur im Zensus kuenstlich erreicht, nicht angefasst.
+14. Treppe: `re15_stair_reset` (Raumwechsel) loescht +0x93 Bit 0 nicht — kein Original-Pendant; der naechste Spieler-Tick gibt
+    es frei (gemessen: Mutation M49 laesst 203 gruen).
+15. Sichtpruefung am echten Programm (RE15_FRAMEDUMP) fuer Hund/Spinne/Kakerlake/Tyrant/Alligator nicht gemacht: die
+    Part-Farben werden nicht gezeichnet (INTEGRATIONSWUNSCH 1), die Clip-Wahl ist per Sonde belegt.
