@@ -1,0 +1,40 @@
+1790716133.026192 START 2026-09-29 23:08:53 :: bash release/make_package.sh --version v0.8.19
+1790716133.286211    Python: /c/Python310/python (3.10.11)
+1790716133.287809 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790716133.737542    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790716133.817801    hoechste glibc-Anforderung: GLIBC_2.29
+1790716134.537400    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790716136.457876    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790716136.485115    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790716136.667537    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790716136.707278    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790716139.391197    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790716142.085795    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790716142.262178    Zeilenenden-Gate: alle Skripte im Paket sind LF
+1790716142.317657    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+1790716142.625137    OK: 349M, 3606 Dateien
+1790716142.625408 == Windows-Paket: re15_port_v0.8.19 ==
+1790716143.042984    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790716143.681619    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790716145.788266    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790716145.821478    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790716146.046005    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790716146.088459    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790716148.773139    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790716152.110310    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790716153.487427    Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+1790716154.470584    Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+1790716154.879262    OK: 350M, 3607 Dateien
+1790716154.884490 == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+1790716166.657673    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+1790716166.866133    x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+1790716166.866304    x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+1790716166.866447    1 Eintrag/Eintraege im Zentralverzeichnis angepasst
+1790716167.034324    x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+1790716167.034473    x-Bit ok: re15_port_v0.8.19/run.sh  100755
+1790716167.034583 == Zippen: re15_port_v0.8.19_win64 ==
+1790716178.707328    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+1790716178.710021 ABBRUCH: Android-APK /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ist erst NACH der Pruefung aufgetaucht -
+1790716178.710204         ungeprueft wird nichts gezippt. make_package.sh neu starten.
+1790716179.732604 ENDE 2026-09-29 23:09:39
+EXIT=1

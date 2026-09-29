@@ -1,0 +1,10 @@
+1790716008.750316 START 2026-09-29 23:06:48 :: bash release/make_package.sh --version v0.8.19
+1790716009.069632    Python: /c/Python310/python (3.10.11)
+1790716009.071430 == Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790716009.301238 ABBRUCH: Android-APK ist VERALTET: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790716009.301402         stammt von 2026-09-29 20:00:00,
+1790716009.301576         der letzte Port-Code-Commit von 2026-09-29 20:55:26.
+1790716009.301773         Dieses Skript baut NICHT — es kopiert nur. Erst neu bauen und das Ergebnis
+1790716009.303107         nach /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/ kopieren, dann das Paket erzeugen.
+1790716010.345135 ENDE 2026-09-29 23:06:50
+EXIT=1

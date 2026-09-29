@@ -1,0 +1,13 @@
+1790716011.242634 START 2026-09-29 23:06:51 :: bash release/make_package.sh --version v0.8.20
+1790716011.504690    Python: /c/Python310/python (3.10.11)
+1790716011.506092 == Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790716011.673487    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790716011.674473 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.20_android.apk (Version v0.8.20) ==
+1790716012.417388    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790716012.579864    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790716012.580104    sdkVersion:'24'
+1790716012.580302    targetSdkVersion:'35'
+1790716012.580660    native-code: 'arm64-v8a' 'x86_64'
+1790716012.632200 ABBRUCH: aapt: versionName ist nicht 'v0.8.20'
+1790716013.672468 ENDE 2026-09-29 23:06:53
+EXIT=1

@@ -222,3 +222,35 @@ anders nur die vier .so (Baupfad im Binary, wie beim Pruefer) - `apk_vergleich_n
   `Tuerarchive fehlen im Repo`, `BUILD FAILED in 13s`, **EXIT=1**; die alte APK **fehlt** danach (vorher blieb
   sie liegen und haette gezippt werden koennen). RE15DOOR zurueck: 30/30 sha256 gleich, `git status` leer.
 - Nach den Baeuen: `release/SHA256SUMS_android.txt` per `git restore --source=HEAD` zurueck (cd139335...).
+
+### 3.8 make_package.sh echt (isoliert: `mp_isoliert_nb.sh` lenkt nur git add/rm in Wegwerf-Index/-Objektspeicher)
+Eingaben: PC-Binaries aus dem Archiv v0.8.19 (Split-Saetze kopiert, `sha256sum -c` 4 x OK, zusammengefuehrt,
+entpackt; `re15_pc.exe` 30d5b67b..., `re15_pc` abfbe7c5... = Pruefer echtlauf) mit ihren **Original-
+Zeitstempeln 19:34** (`cp -p`, KEIN touch); APK = der frische Bau aus 3.6 (5ec3a0eb...).
+- **Positiv** (`mp_positiv.log`, 23:04:54-23:06:26, **EXIT=0**, `== Fertig ==`): Python 3.10.11; APK-Kette
+  (Frische ok, aapt v0.8.19, apksigner v2, Selbsttest 72/72, Gate 3603/3603, 3616 lesbar); Kennung
+  `5ec3a0eb... afc43f3a 363212403`; **Linux- und Windows-Binary ohne "VERALTET"** (echtlauf B2 behoben: der
+  Pruefer musste dafuer noch `touch` benutzen); check_tree 27 + 30 Tuerarchive, LF-Gate, Laufzeit-Gate
+  26/26 + 26/26; Zippen: linux 3800, win64 3801, android `= gepruefte Datei`, `APK im Split-Satz = gepruefte
+  APK (CRC32 afc43f3a, 363212403 B)`; Git (Wegwerf-Index): 6 neue vorgemerkt, echter Index unberuehrt.
+- **Negativ, vor den Kopierminuten** (`mp_negativ.sh`, `mp_negativ_ergebnis.txt`, Logs `mp_apk_*.log`):
+  | Fall | EXIT | Abbruch |
+  |---|---|---|
+  | APK-mtime 20:00 (< f2d26986 20:55, letzter Commit an platform/android) | 1 (2 s) | `Android-APK ist VERALTET` |
+  | `--version v0.8.20`, APK hat versionName v0.8.19 | 1 (2 s) | `aapt: versionName ist nicht 'v0.8.20'` |
+  | K0 (unsigniert) als APK | 1 (3 s) | apksigner `DOES NOT VERIFY` |
+  | F2 signiert als APK | 1 (13 s) | Asset-Gate `'\' im Namen` |
+- **Negativ, WAEHREND der Kopierminuten (B5)** - APK wird getauscht, sobald das Log `Assets kopieren` zeigt:
+  | Fall | EXIT | Abbruch |
+  |---|---|---|
+  | gegen F1 signiert getauscht (23:08:06, gueltige Signatur, gleiche Version) | 1 (62 s) | `Android-APK wurde nach der Pruefung veraendert oder ersetzt: geprueft 5ec3a0eb... afc43f3a 363212403 / jetzt 30d50681... 29b152c3 363469910 - Nichts gezippt` |
+  | APK fehlte bei der Pruefung, taucht beim Kopieren auf (23:08:54) | 1 (47 s) | `ist erst NACH der Pruefung aufgetaucht - ungeprueft wird nichts gezippt` |
+- **B5 am ALTEN make_package.sh gemessen** (Pruefer: "nur aus dem Code"; `mp_alt_tausch.sh`, das Skript aus
+  568e9b88 kurz als release/make_package_alt.sh, Binaries per touch frisch): Pruefung der echten APK gruen,
+  Tausch gegen F1 signiert um 23:10:25 -> **EXIT=0 `== Fertig ==`**, und der Katalog des gezippten
+  Android-Satzes nennt CRC32 `29b152c3` / 363469910 B = die FAELSCHUNG (`verify_apk_im_zip` gegen die
+  Faelschungs-Kennung rc 0, gegen die gepruefte rc 1) - `mp_alt_tausch_ergebnis.txt`. Befund bestaetigt,
+  mit dem neuen Skript geschlossen (Zeile oben).
+- Danach: `git restore --source=HEAD` fuer SHA256SUMS.txt + 6 Split-Volumes (`sha256sum -c` 7/7 OK gegen den
+  Stand vor den Laeufen), pkg-linux/pkg-win/win_out/linux_out/APK/`release/__pycache__` geloescht,
+  `git status --short release/ re15_port/` leer.
