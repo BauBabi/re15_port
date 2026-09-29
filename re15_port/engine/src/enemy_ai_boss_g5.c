@@ -790,6 +790,8 @@ void re15_g5_flinch_zustand(int *akku, int *takt, int *fenster, int *sub)
     if (fenster) *fenster = (int)(s_g5.busy & 1u);
     if (sub)     *sub     = (int)s_g5.sub;
 }
+/* Testhaken (Runde 34 B12, Zensus): Modul-Routine (1 AKTIV / 3 TOD). */
+int re15_g5_routine(void) { return (int)s_g5.routine; }
 
 /* Diagnose fuer die Sonde: Spieler-Gierung + die beiden gedrehten Komponenten. */
 int re15_g5_blut_kamera(int32_t *yaw, int32_t *dirx, int32_t *dirz)

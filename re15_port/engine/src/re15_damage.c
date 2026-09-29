@@ -2994,7 +2994,11 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * re15_enemy_dmg_row(e)[waffe] = Klammer 0 der RE2-Zeile (Zombie Zeile 9 @0x800A41CC = 200,
      * Zeile 11 @0x800A41F4 = 200, Zeile 10 @0x800A41E0 = 200; Belege an den Tabellen oben).
      * Art 0/1 (Gegnerangriffe) bleiben unberuehrt. */
-    if (type >= 2u && type < 11u &&
+    /* 0x26 NACH HERKUNFT (wie re15_re2_stamp_hit): die sieben RDT-Feuer-Emitter von ROOM1090
+     * (Typ 0x26, Wurzel 0x80116288) sind RE1.5-Typen und behalten 1000 (BAUPLAN 1.6 "Feuer 0x26");
+     * nur echte RE2-Babys (re15_re2spider_baby_owns) stehen unter dem RE2-Modell. Vorher bekam
+     * der Emitter im RE2-Flavor die Baby-Zeile = 0 Schaden (Zensus Runde 34 B12). */
+    if (type >= 2u && type < 11u && (e->type != 0x26u || re15_re2spider_baby_owns(e)) &&
         (re15_re2_model_owns(e->type) || re15_re15_import_owns(e->type)))
         dmg = (int16_t)re15_enemy_dmg_row(e)[re15_react_table[type]];
     /* ⛔ RUNDE 34 B9 / BAUPLAN E16 — G5 im Endkampf (ROOM5090/5091, RE2-Modul em36, RE2-HP 600

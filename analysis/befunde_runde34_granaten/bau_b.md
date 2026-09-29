@@ -517,6 +517,59 @@ Regression `ctest -R "g5|5090|birkin|r34|tentakel|damage|schaden"`: 14/14 gruen.
   der Handler (@0x80035f18/1c, @0x8003609c/a0).
 * FUN_8002b498 neu: Kasten-Versatz je Bild (B2).
 
+---
+
+## B12 — Zensus "KEIN HAENGER-NACHBAU" (`unit_r34_reaktion` Teil `zensus`)
+
+Fuer 22 Typ-Eintraege (alle KI-Typen des `re15_enemy_ai_run_all`-Dispatchs, dazu G5@5090, Gator-Boss@2090, Birkin 0x36@3080,
+NPC 0x45) x beide Flavors x Art 2/3/4/5 (+0x5 = 9/10/11/14, DAT_8006f430 @0x8006f432-35) x {INIT-HP, HP 1} = 352 Laeufe:
+Treffer ueber den echten Resolver, danach je Bild ein Schritt wie `re15_game_step` (Anim-Vorschub, `run_all`, RE2-Filter,
+HP-Stempel; game_step_common.c:2234-2303). Bestanden = der Aktor verlaesst Zustand 2 bzw. 3 binnen 1500 Bildern (G5: Modul-
+Routinen). Ergebnis (H = HURT verlassen, T = Tod -> Leiche, t = Tod verlassen ohne Leiche, - = immun/ausgeschlossen):
+
+| Typ | RE15 | RE2 |
+|---|---|---|
+| Zombie 0x10 / 0x12 / 0x13 / 0x18 | TT TT TT HT | tt TT TT HT |
+| Zombie 0x11 (Brad, HP 250) | HT HT HT HT | Ht HT HT HT |
+| Zombie 0x16 | HT TT HT HT | Ht TT HT HT |
+| Writher/Arm 0x1a (wach) | TT TT TT HT | tt tt tt Ht |
+| Hund 0x20 | TT TT TT HT | TT TT TT HT |
+| Kraehe 0x21 | TT TT TT TT | TT TT TT TT |
+| Alligator 0x23 | TT TT TT HT | TT TT TT HT |
+| Gator-Boss 0x23@2090 | HT HT HT HT | HT HT HT HT |
+| FX 0x24 / Ivy 0x2d / NPC 0x45 | -- (immun bzw. E7) | -- |
+| Spinne 0x25 | TT TT TT HT | HT HT TT HT |
+| Feuer 0x26 | tt tt tt Ht | tt tt tt Ht |
+| Made 0x27 / Kakerlake 0x29 / Tyrant 0x2b | TT TT TT HT | TT TT TT HT |
+| Birkin 0x30 / 0x36@3080 | tt tt tt Ht (Mutations-Schutz, E7) | tt tt tt Ht |
+| G5 0x36@5090 | HT HT HT HT (Modul) | HT HT HT HT |
+
+**Kein Haenger.** Die `t`-Faelle sind belegte Ablaeufe: RE2-Zombie Zeile 9 = Knockdown-Handler 0x80107438 mit `+0x4 == 3`,
+Kriecher-Ausgang mit HP 10 (`sh v0(=10),342` @0x801077B0, 3/4 bzw. gaitrow == 0); RE2-Arm = `arm_death` HP 250 + Rueckzug
+(@0x80101090-A0, unsterblich); Feuer 0x26 = Flammen-Minderung (kein Leichenzustand); Birkin = Port-Todeshandler mit
+Mutations-Schutz (E7).
+
+**Befunde des Zensus (behoben/benannt):**
+1. **Feuer-Emitter 0x26 im RE2-Flavor bekam 0 Schaden** (`HH` statt `tt`): E4 (B3) nahm fuer den Typ 0x26 die RE2-Baby-Zeile,
+   weil `re15_re2_owns_type` typ- statt herkunftsgenau ist. Behoben in `re15_enemy_take_damage_at`: 0x26 nur mit
+   `re15_re2spider_baby_owns(e)` unter dem RE2-Modell (derselbe Herkunfts-Test wie `re15_re2_stamp_hit`). Sonde 212, Mutation M50.
+2. Schlafender RE2-Arm (grid & 0x1F != 1): der Port-Tick kehrt vor dem Zustands-Dispatch zurueck; ein Explosionstreffer
+   bleibt bis zum Aufwachen in Zustand 3 stehen und laeuft dann (arm_death). Der RE2-Applier liesse ihn ueber Gate 4
+   (+0x10E & 0xC000 @0x80047158-64) aus; der RE1.5-Resolver (Traeger der Granate) kennt Gate 4 nicht. OFFEN (kein Haenger,
+   verzoegerte Reaktion; ROOM1210 vor Member_set(12,1)).
+3. RE1.5-Kraehe HURT = `jr ra` (Tabelle @0x8012111c [2] = 0x80114e4c) — mit INIT-HP 0 unerreichbar (jede Art toetet).
+4. Gator-Boss@2090: Modul hebt den Kasten auf Bodenhoehe (+0x7c y = +1200); eine Explosion auf Hoehe des Wassers trifft nicht,
+   eine auf dem Steg (y 0) schon — der Zensus wirft dort.
+
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 210 | 352 Laeufe, 0 Haenger | gruen |
+| 211 | 0 unerwartete Immunitaeten/Treffer | gruen |
+| 212 | Feuer 0x26 im RE2-Flavor: 1000 Schaden, Zustand 3 | gruen |
+
+Mutationsproben: M50 Herkunfts-Tor 0x26 weg -> 212 rot; M51 RE1.5-Zombie-Tod kehrt bei +0x5 == 9 sofort zurueck (simulierte
+NULL-Zeile) -> 210 rot (10 Haenger).
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die

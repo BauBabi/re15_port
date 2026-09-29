@@ -910,6 +910,174 @@ static void teil_treppe(void)
     g_room_rdt_ok = 0;
 }
 
+/* =========================================================================================
+ * TEIL "zensus" — B12 "KEIN HAENGER-NACHBAU": fuer JEDEN KI-Typ des Ports, in BEIDEN Flavors,
+ * mit +0x5 = 9/10/11/14 (Resolver-Arten 2/3/4/5, DAT_8006f430 @0x8006f432-35) als Treffer (HP
+ * hoch -> HURT) und als Tod (HP 1 -> DEATH): laeuft ein FERTIGER Handler, d.h. verlaesst der
+ * Aktor den Zustand 2 bzw. 3 innerhalb von 1500 Bildern (Original: NULL-Zeile = `jalr` nach 0 =
+ * Haenger, Absturz-Dossier §1.4/§2.7)? Treffer ueber den ECHTEN Resolver, KI ueber
+ * re15_enemy_ai_run_all. Sonderfaelle: G5 (ROOM5090, Modul-Routinen statt +0x4), Alligator-Boss
+ * (ROOM2090, Modul setzt +0x4 selbst zurueck), immune/ausgeschlossene Typen (0x24/0x2d Gate B,
+ * NPC HP -1, E7).
+ * ========================================================================================= */
+extern int re15_g5_routine(void);
+/* Ein Bild wie re15_game_step (game_step_common.c:2234-2303): Anim-Vorschub, Entitaeten-Schleife,
+ * RE2-Trefferfilter, RE2-HP-Stempel — ohne Raum und ohne Spieler-Tick. */
+static void zensus_bild(void)
+{
+    extern void re15_re2z_hit_filter_apply(int slot);
+    extern void re15_re2_pause_filter_apply(int slot);
+    extern void re15_re2_hp_sync(void);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actors_anim_advance();
+    re15_enemy_ai_run_all(0);
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && re15_ai_re2_for_type(g_actors[s].type)) {
+            if (re15_re2z_owns_type(g_actors[s].type)) re15_re2z_hit_filter_apply(s);
+            else                                       re15_re2_pause_filter_apply(s);
+        }
+    re15_re2_hp_sync();
+    pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+}
+typedef struct { uint8_t typ; uint16_t raum; uint8_t grid; uint8_t immun; const char *name; } zensus_typ_t;
+static const zensus_typ_t k_zensus[] = {
+    { 0x10, 0x1140, 0x00, 0, "Zombie 0x10" },   { 0x11, 0x1140, 0x00, 0, "Zombie 0x11" },
+    { 0x12, 0x3000, 0x00, 0, "Zombie 0x12" },   { 0x13, 0x1140, 0x00, 0, "Zombie-Frau 0x13" },
+    { 0x16, 0x1140, 0x00, 0, "Zombie 0x16" },   { 0x18, 0x3000, 0x00, 0, "Zombie 0x18" },
+    { 0x1a, 0x1210, 0x01, 0, "Writher/Arm 0x1a" },   /* grid 1 = wach (ROOM1210 sub02 Member_set(12,1)
+                                                         * @0x1EDA); schlafend tickt der RE2-Arm nicht */
+    { 0x20, 0x11d0, 0x00, 0, "Hund 0x20" },     { 0x21, 0x1030, 0x00, 0, "Kraehe 0x21" },
+    { 0x23, 0x2000, 0x01, 0, "Alligator 0x23" },{ 0x23, 0x2090, 0x01, 0, "Gator-Boss 0x23@2090" },
+    { 0x24, 0x20b0, 0x05, 1, "FX 0x24 (immun)" },
+    { 0x25, 0x2000, 0x00, 0, "Spinne 0x25" },   { 0x26, 0x1090, 0x00, 0, "Feuer 0x26" },
+    { 0x27, 0x1000, 0x00, 0, "Made 0x27" },     { 0x29, 0x3000, 0x00, 0, "Kakerlake 0x29" },
+    { 0x2b, 0x4000, 0x00, 0, "Tyrant 0x2b" },   { 0x2d, 0x4000, 0x00, 1, "Ivy 0x2d (immun)" },
+    { 0x30, 0x3080, 0x00, 0, "Birkin 0x30" },   { 0x36, 0x3080, 0x00, 0, "Birkin 0x36@3080" },
+    { 0x36, 0x5090, 0x33, 0, "G5 0x36@5090" },
+    { 0x45, 0x1000, 0x00, 2, "NPC 0x45 (E7)" },
+};
+
+static void teil_zensus(void)
+{
+    printf("== zensus (B12)\n");
+    static const uint8_t arten[4] = { 2, 3, 4, 5 };      /* +0x5 = 9/10/11/14 */
+    int haenger = 0, laeufe = 0, unerwartet = 0;
+    for (int fl = 0; fl < 2; fl++) {
+        const re15_ai_flavor_t flavor = fl ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15;
+        for (size_t ti = 0; ti < sizeof k_zensus / sizeof k_zensus[0]; ti++) {
+            const zensus_typ_t *zt = &k_zensus[ti];
+            char zeile[512]; int zl = 0;
+            zl += snprintf(zeile + zl, sizeof zeile - (size_t)zl, "   %-4s %-22s", fl ? "RE2" : "RE15", zt->name);
+            for (int ai = 0; ai < 4; ai++) {
+                for (int tod = 0; tod < 2; tod++) {
+                    re15_ai_flavor_set(flavor);
+                    re15_game_state_init();
+                    re15_actor_init(); re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+                    re15_damage_seed_rng(0x0badf00du);
+                    g_room_rdt_ok = 0;
+                    g_current_room_id = zt->raum;
+                    if (flavor == RE15_AI_FLAVOR_RE2 || zt->raum == 0x5090) load_re2_bank(zt->typ);
+                    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                    memset(pl, 0, sizeof *pl);
+                    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 0; pl->z = 40000;
+                    const int slot = 1 + (int)((ti + (size_t)ai * 2u + (size_t)tod) % 8u);   /* G5 braucht Slot-Wechsel */
+                    re15_actor_t *e = &g_actors[slot];
+                    memset(e, 0, sizeof *e);
+                    e->active = 1; e->type = zt->typ; e->state = 0; e->grid_id = zt->grid;
+                    e->x = 0; e->y = 0; e->z = 0; e->rot_y = 0; e->em_flag_id = 0xFF;
+                    if (zt->typ >= 0x40) e->hp = -1;
+                    re15_enemy_apply_hitbox(e, zt->typ);
+                    for (int f = 0; f < 3; f++) zensus_bild();
+                    if (zt->raum == 0x5090) {                      /* Kampfstart des Moduls */
+                        e->grid_id = 0x13;
+                        for (int f = 0; f < 3; f++) zensus_bild();
+                    }
+                    /* Lauf 0: die HP des INIT (erreichbar = was der echte Schaden daraus macht), Lauf 1:
+                     * HP 1 (ein vorher angeschossener Gegner) -> Tod. */
+                    if (zt->typ < 0x40 && tod) e->hp = 1;
+                    const int16_t hp_vor = e->hp;
+                    if (zt->raum == 0x2090) {
+                        /* Der Boss liegt im Wasser (y -1200); das Modul hebt den Kasten auf Boden-
+                         * hoehe (+0x7c y = +1200, enemy_ai_boss_gator.c INIT). Eine Granate liegt auf
+                         * dem Steg (y 0) -> P.y = 0 - 500 (@0x800185a0-ac). */
+                        re15_attack_box_t b;
+                        b.x = e->x + 300; b.y = -500; b.z = e->z; b.radius = 500;
+                        re15_resolve_attack(&b, arten[ai], -1);
+                    } else {
+                        explosion_rel(e, 300, arten[ai]);
+                    }
+                    const int st_hit = e->state;
+                    const int getroffen = (zt->raum == 0x5090) ? (e->hp != hp_vor)
+                                                               : (st_hit == 2 || st_hit == 3);
+                    if (getenv("ZENSUS_DBG"))
+                        printf("      dbg %s %s Art %d %s: hp %d -> %d, st %d, +5 %d, +93 0x%02X\n",
+                               fl ? "RE2" : "RE15", zt->name, arten[ai], tod ? "Tod" : "nat", hp_vor, e->hp,
+                               st_hit, e->sub_state_1, e->hit_react);
+                    char c;
+                    laeufe++;
+                    if (!getroffen) {
+                        c = zt->immun ? '-' : '?';
+                        if (!zt->immun) unerwartet++;
+                    } else if (zt->immun) {
+                        c = '!'; unerwartet++;
+                    } else if (zt->raum == 0x5090) {
+                        int ok = 0;
+                        for (int f = 0; f < 60 && !ok; f++) {
+                            zensus_bild();
+                            int akku, takt, fen, sub;
+                            re15_g5_flinch_zustand(&akku, &takt, &fen, &sub);
+                            ok = tod ? (re15_g5_routine() == 3) : (akku > 0 || sub == 0xF);
+                        }
+                        c = ok ? (tod ? 'T' : 'H') : 'X';
+                        if (!ok) haenger++;
+                    } else {
+                        int verlassen = -1, leiche = 0;
+                        for (int f = 0; f < 1500 && verlassen < 0; f++) {
+                            zensus_bild();
+                            if (!e->active || e->state != st_hit) verlassen = f;
+                        }
+                        for (int f = 0; f < 1500 && e->active && e->state != 7; f++) {
+                            zensus_bild();
+                        }
+                        leiche = (!e->active || e->state == 7);
+                        if (verlassen < 0) { c = 'X'; haenger++; }
+                        else c = (st_hit == 3) ? (leiche ? 'T' : 't') : 'H';
+                        if (getenv("ZENSUS_DBG"))
+                            printf("      dbg   -> '%c' verlassen in Bild %d, Ende: aktiv %d st %d/%d/%d/%d hp %d\n", c,
+                                   verlassen, e->active, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
+                                   e->hp);
+                    }
+                    zl += snprintf(zeile + zl, sizeof zeile - (size_t)zl, "%s%c", (tod == 0) ? " " : "", c);
+                }
+            }
+            printf("%s\n", zeile);
+        }
+    }
+    printf("   Legende je Art 2/3/4/5 (+0x5 9/10/11/14) zwei Zeichen (INIT-HP, HP 1): H = HURT verlassen, T = Tod -> Leiche,\n"
+           "   t = Tod verlassen ohne Leiche (Wiederbelebung/Modul), - = immun/ausgeschlossen (erwartet), X = HAENGER,\n"
+           "   ? = unerwartet nicht getroffen, ! = unerwartet getroffen\n");
+    CHECK(210, haenger == 0, "Zensus: %d Laeufe, %d Haenger (Zustand 2/3 nach 1500 Bildern nicht verlassen)", laeufe,
+          haenger);
+    CHECK(211, unerwartet == 0, "Zensus: %d unerwartete Treffer-Ergebnisse (Immunitaet/Ausschluss)", unerwartet);
+    /* (212) Feuer-Emitter 0x26 (ROOM1090, RE1.5-Typ, KEIN RE2-Baby) im RE2-Flavor: Granate = 1000
+     *       (DAT_8006f41c) wie im RE1.5-Flavor, nicht die Baby-Zeile des RE2-Modells. */
+    {
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        re15_actor_init(); re15_enemy_reset();
+        g_current_room_id = 0x1090;
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        memset(pl, 0, sizeof *pl);
+        pl->active = 1; pl->hp = 100; pl->z = 40000;
+        re15_actor_t *e = &g_actors[1];
+        memset(e, 0, sizeof *e);
+        e->active = 1; e->type = 0x26; e->hp = 100; e->state = 1;
+        re15_enemy_apply_hitbox(e, 0x26);
+        explosion_rel(e, 300, 2);
+        CHECK(212, e->hp == -900 && e->state == 3,
+              "Feuer 0x26 (RE2-Flavor, kein Baby): hp 100 -> %d (-900), Zustand %d (3)", e->hp, e->state);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -920,6 +1088,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "re15")) teil_re15();
     if (alle || strstr(teil, "g5")) teil_g5();
     if (alle || strstr(teil, "treppe")) teil_treppe();
+    if (alle || strstr(teil, "zensus")) teil_zensus();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }
