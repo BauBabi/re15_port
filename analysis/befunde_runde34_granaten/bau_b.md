@@ -355,6 +355,71 @@ Regression: alle 20 Hund-/Dog-/r34-Tests gruen (`ctest -R "dog|hund|re2doc|r34"`
 
 Regression `ctest -R "spider|spinne|r34|gore|re2_hit"`: 16/16 gruen.
 
+---
+
+## B8 — RE1.5-KI-Typen (`enemy_ai_common.c`)
+
+### Selbst disassembliert / gelesen (re15_disasm.py)
+* Spur-Tabellen (22 Worte je `read`): 0x27 HURT @0x801214a8 / DEATH @0x80121500 (STAGE1), 0x29 HURT @0x8011ed84 / DEATH
+  @0x8011eddc (STAGE3) — beide Typen dieselbe Belegung: 0..6/12/14/19/20 Boden, 7/8/13 Luft, 9..11/15..18 Explosion, [21]
+  HURT Luft / DEATH Boden. Dispatcher `lbu v0,5(v0)` @0x8011afe0/@0x8011b780 (0x27), @0x80114814/@0x80115038 (0x29).
+* 0x29 (Datei `build/r34g_b/roach_hurt_death.dis`, 0x80114790..0x80115734): HURT-Zucken 0x8011484c (Clip 7, +0x93 \|= 2,
+  SE 2, Ausgang Sub 7/5/9), HURT-Luft 0x80114a40 (Clip 8/9 nach 0x80, Ausgang Sub 3, bei HP < 50 Sub 7/5/9 @0x80114c58),
+  HURT-Explosion 0x80114cb8 (Phasen `table 0x8010034c`: Clip 10/11, +0x8c = (rng&31)+80, +0x9c = 0, SE 2, Rueckstoss
+  0x800 + bei 0x80 zusaetzlich 0, Aufstehen Clip 0x10/0x11, Ausgang Sub 4), DEATH-Boden 0x80115070 (Clip 0xe, SE 7, SE 1
+  bei +0x95 == 0x3d), DEATH-Luft 0x80115280 (Clip 0xa/0xb, SE 7, SE 1 bei 0x13), DEATH-Explosion 0x801154b4 (Clip 10/11,
+  rng, SE 7, Rueckstoss, Leiche). CORPSE 0x80115a6c-b60: KEIN `jal` (kein anim_set).
+* 0x23 DEATH 0x8010e9e8/0x8010ea30 (STAGE2): alle 22 Zeilen -> 0x8010ea30; Clip 13, +0x93 \|= 2, Boden-Y
+  -(+0x82*1800), Bild 20 -> Leiche (nur +0x1e0 == 0), ab Bild 21 0x8001c1a4(+0x8c, 0, -80, +0x1ba). CORPSE 0x8010eca4-ed98
+  ohne `jal`. EM023 steht in KEINEM RE1.5-EMS (`re15_ems.c` s_ems_order) -> Clip-13-Laenge unbekannt (OFFEN, s.u.).
+* 0x2b DEATH 0x80114cb0 (STAGE4, Phasen `table 0x80100344`): Ph.0 +0x93 \|= 2 @0x80114d04, Clip 8/9, Crossfade **0**
+  (`sb zero,143` @0x80114d80), SE 2; Ph.1 bei +0x95 == 24 SE 7 UND Phase 2 (@0x80114ed4-efc); Ph.2 Clip 0xa/0xb nach
+  **0x80** (@0x80114f34), Crossfade 7; Ph.4 Leiche. CORPSE 0x80115af0 ohne `jal`.
+* Resolver-Riegel Bit 0 (fuer den Fresser): `andi v0,v1,0x1` @0x80012fbc / `ori v0,v1,0x2` @0x80012fc4 / `j 0x80013024`
+  @0x80012fc8 / `sb v0,147(s1)` @0x80012fcc.
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `s_spur_hurt` / `s_spur_death` / `re15_spur` (neu, vor `re15_maggot_ballistic`) | Spur-Tabellen; Werte >= 22 -> Spur 0 (PORT-SICHERUNG) |
+| 0x27 HURT/DEATH | Spurwahl ueber die Tabellen statt `< 7 / < 9 / sonst` (12/13/14/19/20/21 lagen in der Explosionsspur) |
+| 0x29 `case 2` | drei HURT-Spuren komplett (Zucken, Luft, Explosion mit Rueckstoss + Aufstehen); Phase 0 faellt wie im Original in Phase 1 |
+| 0x29 `case 3` | drei DEATH-Spuren (Boden/Luft/Explosion); SE-1-Bild NACH dem Vorschub; letztes Bild gehalten |
+| 0x29 `case 7` | Leiche ohne Anim-Vorschub (vorher lief der Todesclip 90 Bilder lang neu) |
+| 0x23 `case 3` | Todesablauf 0x8010ea30 statt sofortiger Leiche; `case 7` ohne Bildvorschub |
+| 0x2b `case 3` | Ph.0 \|= 2, Crossfade 0, Bild-24-Uebergang, Ph.2-Clip nach 0x80, Ph.3/Ph.4 getrennt; `re15_birkin_fc` (neu) haelt das letzte Bild; `case 7` ohne Anim-Vorschub |
+
+Der RE1.5-Fresser 0x16 haelt +0x93 = 1 in Ruhe bereits im Port (Sonde 189) -> keine Aenderung noetig.
+
+### Sonde `unit_r34_reaktion` Teil `re15` (Arena ohne Raum, `re15_enemy_ai_run_all`; Fresser in ROOM1140, RE15-Flavor)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 180/182 | 0x29 Explosion vorn/hinten: Tod, +0x5 9, Clip 10/11 nach 0x80, +0x8c 80, SE 7 1x, Leiche | gruen (hr 0x01 / 0x81) |
+| 181/183 | Rueckstoss im ersten Bild: vorn (-80,0), hinten netto (0,0); letztes Bild in der Leiche gehalten | gruen |
+| 184 | 0x29 Flaechenfeuer (Art 5): HURT, +0x5 14, HP -50, Clip 7 (Zucken-Spur) | gruen |
+| 185/186 | 0x2b vorn/hinten: Ph.0 Clip 8/9 + Bit 2, Ph.2 Clip 0xa/0xb nach 0x80, Leiche | gruen |
+| 187 | 0x23 Land: Clip 13, Leiche nach Bild 20, Bit 2 | gruen |
+| 188 | 0x27: Zeile 9 Crash-Clip 0xa; Art 5 (Zeile 14) jetzt Boden-Tod Clip 0xe | gruen |
+| 189 | 0x16 liegend (RE1.5-KI, ROOM1140): +0x93 Bit 0 in Ruhe, Explosion -> kein Schaden, \|= 2 | gruen (0x01 -> 0x83, HP 65) |
+
+Harness-Befund (Sonde, nicht Engine): nach dem Hunde-Teil blieb ROOM11D0 als `scd_register_current_rdt` registriert; der
+VM-Tick saet Slot 1 je Bild mit sub01 des registrierten Raums (`scd_vm.c:674`) -> ROOM1140 spawnte im Folgeteil nichts.
+`bringup` setzt jetzt Flags, `g_room_rdt_ok` und die Registrierung auf den Stand eines frischen Prozesses zurueck.
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M36 0x29 DEATH immer Boden-Spur (alter Port) | 180/182 | 180/181/182 rot |
+| M37 Spur-Tabelle HURT [14] = Explosion | 184 | 184 rot |
+| M38 zweiter Rueckstoss (a0 = 0) weg | 183 | 183 rot |
+| M39 0x2b Ph.2 nach Bit 2 (alter Port) | 185 | 185 rot |
+| M40 0x23 Bild-20-Regel weg | 187 | 187 rot |
+| M41 Spur-Tabelle DEATH [14] = Explosion (alter Port) | 188 | 188 rot |
+| M42 0x29-Leiche mit Anim-Vorschub (alter Port) | 181/183 | 181/183 rot |
+
+Regression `ctest -R "maggot|gorilla|roach|cockroach|tyrant|alligator|gator|birkin|kakerlake|made|r34|enemy|stage2|stage3|stage4"`:
+21/22 gruen, rot nur `unit_r34_reaktion` (der Harness-Befund oben, danach gruen).
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die

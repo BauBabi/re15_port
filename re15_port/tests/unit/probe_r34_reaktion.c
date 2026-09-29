@@ -26,6 +26,7 @@
 #include "re15_msg.h"
 #include "re15_tim.h"
 #include "re2_ems.h"
+#include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -103,6 +104,7 @@ static int room_load(int room_id, const char *stage)
 static void bringup(re15_ai_flavor_t flavor)
 {
     re15_ai_flavor_set(flavor);
+    re15_game_state_init();                /* Spielflags frisch: Todes-Flags frueherer Teile */
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();
@@ -110,6 +112,13 @@ static void bringup(re15_ai_flavor_t flavor)
     re15_esp_fx_reset();
     re15_damage_seed_rng(0x0badf00du);
     g_current_room_id = (uint16_t)s_room_id;
+    g_room_rdt_ok = 0; g_room_change.pending = 0;   /* derselbe Stand wie im ersten Teil eines frischen
+                                                     * Prozesses — kein veralteter Raum (bringup_hunde
+                                                     * setzt ROOM11D0 mit Zeigern in einen spaeter
+                                                     * freigegebenen Puffer) */
+    { extern void scd_register_current_rdt(const re15_rdt_t *rdt);
+      scd_register_current_rdt(NULL); }             /* sonst saet der VM-Tick Slot 1 je Bild mit
+                                                     * sub01 des ALTEN Raums neu (scd_vm.c:674) */
     if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
     if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
     g_scd.work_vars[10] = 0;
@@ -262,6 +271,7 @@ static void hund_se(int id, int flag2000) { (void)flag2000; if (id == 7) s_se7++
 static void bringup_hunde(void)
 {
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_game_state_init();
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     load_re2_bank(0x20);                   /* NACH dem Reset, VOR dem Spawn (probe_r30_hund_tod.c:108-113) */
@@ -557,13 +567,166 @@ static void teil_spinne(void)
     }
 }
 
+/* =========================================================================================
+ * TEIL "re15" — B8: RE1.5-KI-Typen 0x29 / 0x2b / 0x23 / 0x27 und der liegende Fresser 0x16.
+ * Arena ohne Raum (wie test_adult_spider_ai.c): Flavor RE15, EIN Gegner im Slot 1, Spieler weit
+ * weg, KI ueber re15_enemy_ai_run_all (der echte Dispatch), Treffer ueber re15_resolve_attack.
+ * ========================================================================================= */
+extern int g_test_room_se_log[2048];
+extern int g_test_room_se_n;
+static int se_zahl(int id) { int n = 0; for (int i = 0; i < g_test_room_se_n; i++) if (g_test_room_se_log[i] == id) n++; return n; }
+
+static re15_actor_t *re15_arena(uint8_t type, uint8_t grid)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_actor_init(); re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_damage_seed_rng(0x0badf00du);
+    g_current_room_id = 0x3000;                          /* kein Sonderraum (2090/5090) */
+    g_room_rdt_ok = 0;                                   /* keine Raumgeometrie (Arena) */
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(pl, 0, sizeof *pl);
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 0; pl->z = 30000;
+    re15_actor_t *e = &g_actors[1];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = type; e->state = 0; e->grid_id = grid;
+    e->x = 0; e->y = 0; e->z = 0; e->rot_y = 0;
+    re15_enemy_apply_hitbox(e, type);
+    re15_enemy_ai_run_all(0);                            /* INIT */
+    e->hit_react = 0;
+    g_test_room_se_n = 0;
+    return e;
+}
+
+/* Explosion vor (dx > 0 in Blickrichtung) oder hinter der Figur; Gier 0 = Blick nach +x. */
+static void explosion_rel(re15_actor_t *e, int32_t dx, uint8_t art)
+{
+    re15_attack_box_t b;
+    const int32_t c = re15_cos_q12(e->rot_y), s = re15_sin_q12(e->rot_y);
+    b.x = e->x + (int32_t)((c * dx) >> 12); b.z = e->z - (int32_t)((s * dx) >> 12);
+    b.y = e->y - 500; b.radius = 500;
+    re15_resolve_attack(&b, art, -1);
+}
+
+static void teil_re15(void)
+{
+    printf("== re15 (B8)\n");
+    /* ---- 0x29 Kakerlake: Explosions-Tod 0x801154b4 (vorn / hinten) ---- */
+    for (int hinten = 0; hinten < 2; hinten++) {
+        re15_actor_t *e = re15_arena(0x29, 0);
+        e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* ruhend, kein Flug */
+        const int32_t x0 = e->x, z0 = e->z;
+        explosion_rel(e, hinten ? -300 : 300, 2);
+        const int st = e->state, z5 = e->sub_state_1, hr = e->hit_react;
+        re15_enemy_ai_run_all(0);                        /* DEATH-P0 + Phase 1 im selben Bild */
+        const int clip = e->motion, sp = e->crow_speed;
+        const int32_t dx1 = e->x - x0, dz1 = e->z - z0;
+        int tod7 = -1, halt_ok = 1; int32_t fr_letzt = -1;
+        for (int f = 0; f < 400 && tod7 < 0; f++) { re15_enemy_ai_run_all(0); if (e->state == 7) tod7 = f; }
+        fr_letzt = e->anim_frame;
+        for (int f = 0; f < 30; f++) { re15_enemy_ai_run_all(0); if (e->anim_frame != fr_letzt) halt_ok = 0; }
+        const int soll_clip = (hr & 0x80) ? 11 : 10;
+        CHECK(180 + hinten * 2, st == 3 && z5 == 9 && clip == soll_clip && (e->hit_react & 2) && sp == 80 &&
+                                se_zahl(7) == 1 && tod7 >= 0,
+              "0x29 %s: st=%d +5=%d hr=0x%02X Clip %d (%d), +0x8c %d (80), SE7 %d (1), Leiche nach %d Bildern",
+              hinten ? "hinten" : "vorn", st, z5, hr, clip, soll_clip, sp, se_zahl(7), tod7);
+        const int64_t weg = (int64_t)dx1 * dx1 + (int64_t)dz1 * dz1;
+        CHECK(181 + hinten * 2, halt_ok && ((hr & 0x80) ? (weg <= 4) : (weg >= 70 * 70)),
+              "0x29 %s: Rueckstoss im ersten Bild (%d,%d) (%s), letztes Bild in der Leiche gehalten %d",
+              hinten ? "hinten" : "vorn", dx1, dz1, (hr & 0x80) ? "netto ~0 bei 0x80" : ">= 70 nach hinten", halt_ok);
+    }
+    /* ---- 0x29: Flaechenfeuer (Art 5, +0x5 = 14) -> Zucken-Spur Clip 7, NICHT Explosion ---- */
+    {
+        re15_actor_t *e = re15_arena(0x29, 0);
+        e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        const int16_t hp0 = e->hp;
+        explosion_rel(e, 300, 5);
+        const int st = e->state, z5 = e->sub_state_1;
+        re15_enemy_ai_run_all(0);
+        CHECK(184, st == 2 && z5 == 14 && e->hp == hp0 - 50 && e->motion == 7 && (e->hit_react & 2),
+              "0x29 Art 5: st=%d +5=%d hp %d -> %d (-50 @0x8006f422), Clip %d (7, Spur @0x8011ed84[14])",
+              st, z5, hp0, e->hp, e->motion);
+    }
+    /* ---- 0x2b Tyrant: Phase 2 Clip 0xa / 0xb nur bei +0x93 & 0x80 ---- */
+    for (int hinten = 0; hinten < 2; hinten++) {
+        re15_actor_t *e = re15_arena(0x2b, 0);
+        explosion_rel(e, hinten ? -300 : 300, 2);
+        const int hr = e->hit_react;
+        re15_enemy_ai_run_all(0);
+        const int clip0 = e->motion, hr2 = (e->hit_react & 2) != 0;
+        int se7_bild = -1, clip2 = -1, tod7 = -1;
+        for (int f = 0; f < 600 && tod7 < 0; f++) {
+            const int n7 = se_zahl(7);
+            re15_enemy_ai_run_all(0);
+            if (se7_bild < 0 && se_zahl(7) > n7) se7_bild = e->anim_frame;
+            if (clip2 < 0 && e->sub_state_3 >= 3) clip2 = e->motion;
+            if (e->state == 7) tod7 = f;
+        }
+        const int soll0 = (hr & 0x80) ? 9 : 8, soll2 = (hr & 0x80) ? 0x0b : 0x0a;
+        CHECK(185 + hinten, clip0 == soll0 && hr2 && clip2 == soll2 && tod7 >= 0,
+              "0x2b %s: hr=0x%02X, Ph.0 Clip %d (%d) + Bit 2 %d, Ph.2 Clip 0x%x (0x%x, @0x80114f34), Leiche %d",
+              hinten ? "hinten" : "vorn", hr, clip0, soll0, hr2, clip2, soll2, tod7);
+    }
+    /* ---- 0x23 Alligator (Land, grid ungerade): Clip 13, Leiche nach Bild 20 ---- */
+    {
+        re15_actor_t *e = re15_arena(0x23, 1);
+        explosion_rel(e, 300, 2);
+        const int st = e->state;
+        int clip = -1, bild_vor_leiche = -1;
+        for (int f = 0; f < 200 && e->state != 7; f++) {
+            const int32_t fr = e->anim_frame;
+            re15_enemy_ai_run_all(0);
+            if (clip < 0) clip = e->motion;
+            if (e->state == 7) bild_vor_leiche = fr;
+        }
+        CHECK(187, st == 3 && clip == 13 && e->state == 7 && bild_vor_leiche == 20 && (e->hit_react & 2),
+              "0x23: st=%d Clip %d (13 @0x8010eaa4), Leiche nach Bild %d (20 @0x8010eba8), Bit 2 %d",
+              st, clip, bild_vor_leiche, (e->hit_react & 2) != 0);
+    }
+    /* ---- 0x27 Made/Gorilla: Explosion (Zeile 9) unveraendert Crash-Tod, Zeile 14 jetzt Boden-Tod ---- */
+    {
+        re15_actor_t *e = re15_arena(0x27, 0);
+        explosion_rel(e, 300, 2);
+        re15_enemy_ai_run_all(0);
+        const int clip9 = e->motion, z9 = e->sub_state_1;
+        e = re15_arena(0x27, 0);
+        e->hp = 40;                                      /* < 50: Art 5 toetet */
+        explosion_rel(e, 300, 5);
+        const int st14 = e->state, z14 = e->sub_state_1;
+        re15_enemy_ai_run_all(0);
+        CHECK(188, z9 == 9 && (clip9 == 0x0a || clip9 == 0x0b) && st14 == 3 && z14 == 14 && e->motion == 0x0e,
+              "0x27: Zeile 9 Clip 0x%x (0xa/0xb Crash @0x8011bc10), Art 5 st=%d +5=%d Clip 0x%x (0xe Boden-Tod, "
+              "Spur @0x80121500[14])", clip9, st14, z14, e->motion);
+    }
+    /* ---- 0x16 liegender Fresser (RE1.5-KI, ROOM1140): +0x93 = 1 in Ruhe -> nur |= 2, kein Schaden ---- */
+    {
+        if (room_load(0x1140, "STAGE1") != 0) { CHECK(189, 0, "ROOM1140 fehlt"); return; }
+        bringup(RE15_AI_FLAVOR_RE15);
+        for (int f = 0; f < 60; f++) frame();
+        zensus_print("1140 RE15");
+        int n = 0, ok = 1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            re15_actor_t *e = &g_actors[s];
+            if (!e->active || e->type != 0x16) continue;
+            const int16_t hp0 = e->hp; const uint8_t hr0 = e->hit_react;
+            explosion_bei(e, 300, 2);
+            printf("   Fresser Slot %d: +0x93 0x%02X -> 0x%02X, hp %d -> %d, st %d\n", s, hr0, e->hit_react,
+                   hp0, e->hp, e->state);
+            if (!((hr0 & 1) && e->hp == hp0 && (e->hit_react & 2))) ok = 0;
+            n++;
+        }
+        CHECK(189, n > 0 && ok, "0x16 liegend (RE1.5): %d Fresser, alle +0x93 Bit 0 in Ruhe, kein Schaden, |= 2 "
+                               "(@0x80012fbc-cc)", n);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     int alle = (strcmp(teil, "alle") == 0);
-    if (alle || !strcmp(teil, "zombie")) teil_zombie();
-    if (alle || !strcmp(teil, "hund")) teil_hund();
-    if (alle || !strcmp(teil, "spinne")) teil_spinne();
+    if (alle || strstr(teil, "zombie")) teil_zombie();   /* Teile auch als Liste "a,b" */
+    if (alle || strstr(teil, "hund")) teil_hund();
+    if (alle || strstr(teil, "spinne")) teil_spinne();
+    if (alle || strstr(teil, "re15")) teil_re15();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }
