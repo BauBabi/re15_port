@@ -3319,19 +3319,79 @@ int re15_hitbox_overlap(int32_t cx, int32_t cy, int32_t cz,
  * ratan2 + rsin/rcos (@0x8002b65c) — byte-identical to the body-push ellipse, so it
  * routes through the shared re15_ellipse_radius. Circular boxes take radius_min directly
  * (the beq @0x8002b61c). */
+/* ⛔ RUNDE 34 B2 — FUN_8002b498 (selbst disassembliert, RE1.5 PSX.EXE): der Kasten-Versatz +0x7c
+ * wird JEDES Bild aus dem Kasten +0x78 GEDREHT neu geschrieben (Aufruf in jeder Wurzel nach dem
+ * Zustands-Dispatch, z.B. Hund `jal 0x8002b498` @0x8010d870 STAGE1, Alligator @0x8010c4e4 STAGE2):
+ *   8002b4bc  lw   s0,120(s1)        ; Kasten +0x78
+ *   8002b4c0  lw   s2,124(s1)        ; Versatz-Puffer +0x7c
+ *   8002b4c4  lhu  v0,106(s1)        ; Gier +0x6a (roh) -> SVECTOR (0, Gier, 0) @0x8002b4cc-d8
+ *   8002b4d4  jal  0x80068098        ; RotMatrix (Tabelle 0x800794c4 == RE2 rcossin 0x800adeac,
+ *                                    ;  eigener Vergleich 16384 B bytegleich -> re15_door_rotmatrix)
+ *   8002b4e0  lhu  v0,0(s0) / 8002b4ec lhu v0,4(s0)   ; (Kasten.x, [Gier], Kasten.z)
+ *   8002b4f4  jal  0x800661c0        ; ApplyMatrix: MVMVA sf=1 `4a486012` @0x800661f4, MAC -> VECTOR
+ *   8002b504  sh   v0,0(s2)          ; +0x7c[0] = gedrehtes x (untere 16 Bit)
+ *   8002b508  lhu  v0,2(s0) / 8002b510 sh v0,2(s2)    ; +0x7c[1] = Kasten.y UNGEDREHT
+ *   8002b51c  sh   v0,4(s2)          ; +0x7c[2] = gedrehtes z
+ * Der y-Eintrag des Drehvektors ist die Gier-Zahl selbst; bei der reinen Y-Drehmatrix
+ * (m[0][1] = m[2][1] = 0) wirkt er nur auf das verworfene Ausgangs-y. Der Port rechnet den
+ * Versatz beim Test (derselbe Stand der Gier: FUN_8002b498 laeuft nach dem Dispatch, der
+ * Resolver danach). hit_offset_x/y/z sind damit der LOKALE Kasten (+0x78 [0..2]). */
+static void re15_hitbox_versatz(const re15_actor_t *t, int32_t *ox, int32_t *oz)
+{
+    *ox = t->hit_offset_x; *oz = t->hit_offset_z;
+    if (!*ox && !*oz) return;
+    int16_t R[9];
+    const uint16_t rot[3] = { 0u, (uint16_t)t->rot_y, 0u };
+    re15_door_rotmatrix(rot, R);
+    const int32_t vx = t->hit_offset_x, vy = (int16_t)t->rot_y, vz = t->hit_offset_z;
+    *ox = (int16_t)(((int64_t)R[0] * vx + (int64_t)R[1] * vy + (int64_t)R[2] * vz) >> 12);
+    *oz = (int16_t)(((int64_t)R[6] * vx + (int64_t)R[7] * vy + (int64_t)R[8] * vz) >> 12);
+}
+
+/* Der Kasten, den der RESOLVER (FUN_8002b5d0-Zwilling) fuer ein Ziel nimmt: der Aktor-Kasten,
+ * gedreht nach FUN_8002b498 — mit EINER Ausnahme:
+ * ⛔ RUNDE 34 B2 — HUND 0x20. Sein Original-Kasten ist BYTE-GELESEN {0,-720,0, 900,720,450}:
+ * INIT 0x8010d93c `lw v0,3952(v0)` @0x8010da68 (*(0x80120f70) = 0x80120f64) / `sw v0,120(v1)`
+ * @0x8010da70; @0x80120f64 = `00 00 30 fd 00 00 84 03 d0 02 c2 01` = SEKTOR (+6 = 900 laengs der
+ * Blickrichtung, +0xa = 450 quer; @0x8002b61c `beq v1,v0` nicht genommen). Dieselben Bytes in
+ * STAGE3 @0x8011ea7c (Resolver-GP K17). Der Port fuehrt den Hund fuer Koerper-Schub und Schuss
+ * weiter mit 500/600: der Original-Kasten dort eingesetzt trieb den Spieler im ROOM11D0-Riegel in
+ * die Wand (unit_r27_hund_wandtrieb: 469 Bilder in einer soliden Zelle, gemessen Runde 34) — das ist
+ * eine eigene Runde (Koerper-Schub, FUN_8002aec4), hier nicht angefasst. Der Resolver-Kasten ist
+ * damit fuer den Hund getrennt gefuehrt (PORT-ZUORDNUNG, benannt). */
+static void re15_resolver_kasten(const re15_actor_t *t, int32_t *ox, int32_t *oy, int32_t *oz,
+                                 uint16_t *r1, uint16_t *r2, uint16_t *h)
+{
+    re15_hitbox_versatz(t, ox, oz);                         /* FUN_8002b498 (s.o.) */
+    *oy = t->hit_offset_y;
+    *r1 = t->hit_radius_min; *r2 = t->hit_radius_max; *h = t->hit_height;
+    if (t->type == 0x20u) {
+        *ox = 0; *oz = 0;                                   /* Kasten.x/.z = 0 -> gedreht 0 */
+        *oy = -720; *r1 = 900; *r2 = 450; *h = 720;         /* @0x80120f64: fd30 / 0384 / 02d0 / 01c2 */
+    }
+}
+
 int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
 {
     if (!target || !atk) return 0;
-    int32_t cx = target->x + target->hit_offset_x;          /* +0x34 + offset[0] */
-    int32_t cy = target->y + target->hit_offset_y;          /* +0x38 + offset[1] */
-    int32_t cz = target->z + target->hit_offset_z;          /* +0x3c + offset[2] */
+    int32_t ox, oy, oz;
+    uint16_t r1, r2, h;
+    re15_resolver_kasten(target, &ox, &oy, &oz, &r1, &r2, &h);
+    int32_t cx = target->x + ox;                            /* +0x34 + offset[0] */
+    int32_t cy = target->y + oy;                            /* +0x38 + offset[1] */
+    int32_t cz = target->z + oz;                            /* +0x3c + offset[2] */
+    /* ⛔ RUNDE 34 B2 — SPAWN-VOREINSTELLUNG. Sce_em_set schreibt JEDEM Gegner zuerst den Kasten
+     * 0x80072be0 (`lui v0,0x8007` / `addiu v0,v0,11232` / `sw v0,120(s0)` @0x800422c8-d0) =
+     * `00 00 00 00 00 00 01 00 01 00 01 00` = {0,0,0,1,1,1}; nur Typen, deren INIT +0x78 selbst
+     * setzt, ueberschreiben ihn. Ein kastenloser Typ (FX-Emitter 0x24, Ivy 0x2d) ist fuer den
+     * Resolver also NICHT unsichtbar (R = 1 + Angriffsradius). Der Port fuehrt diese Typen ohne
+     * Kasten (hit_radius_min = 0 schaltet dort Koerper-Schub und Zielhilfe ab, Audit wf_efd92a2c
+     * ivy #77) — die Voreinstellung gilt deshalb NUR hier, im FUN_8002b5d0-Zwilling. */
+    if (r1 == 0u && r2 == 0u && h == 0u) { r1 = 1u; r2 = 1u; h = 1u; }
     /* eff radius: circular -> radius_min; sector -> ellipse toward the attack point (@0x8002b65c). */
-    int32_t radius = re15_ellipse_radius((int32_t)target->hit_radius_min,
-                                         (int32_t)target->hit_radius_max,
-                                         (int32_t)target->rot_y,
+    int32_t radius = re15_ellipse_radius((int32_t)r1, (int32_t)r2, (int32_t)target->rot_y,
                                          atk->z - cz, atk->x - cx);
-    return re15_hitbox_overlap(cx, cy, cz, radius, target->hit_height,
-                               atk->x, atk->y, atk->z, atk->radius);
+    return re15_hitbox_overlap(cx, cy, cz, radius, h, atk->x, atk->y, atk->z, atk->radius);
 }
 
 /* ====================================================================== *
@@ -3405,6 +3465,11 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
          * PORT-ZUORDNUNG: der Typbereich 0x40..0x4D ist die NPC-Familie des Ports
          * (re15_npc_ai_tick, enemy_ai_common.c); nur HP < 0 schliesst aus (RE2 Gate 3). */
         if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;
+        /* Dieselbe Regel fuer den G5-TENTAKEL 0x37 (RE2-Modul em37, Port enemy_ai_tentakel_g5.c):
+         * Ctor HP -1 `addiu v0,zero,-1` / `sh v0,342(s1)` @0x80100530/34 -> vom RE2-Applier nie
+         * getroffen (Gate 3 @0x80047148-50). Er traegt im Port keinen Kasten, faende ueber die
+         * Spawn-Voreinstellung (s. re15_hitbox_test) aber einen. */
+        if (e->type == 0x37u && e->hp < 0) continue;
         if (re15_hitbox_test(e, atk))                          /* FUN_8002b5d0 @80012db4 */
             collected[ncol++] = i;                             /* local_78[] @80012dc8 */
     }
@@ -3569,9 +3634,18 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
          * `lw [0x8011a2d4] -> +0x78` @0x80116d60-68 — s. den IVY-Kommentar weiter unten, der
          * genau diese {450,1530}-Daten dem NPC zuordnet). 0x47 stand hier schon mit
          * denselben Werten aus einem Savestate. */
-        case 0x40: case 0x42: case 0x45:
-        case 0x47: case 0x49: case 0x4b:
+        case 0x40: case 0x42:
+        case 0x47: case 0x49:
         case 0x4d: r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
+        /* ⛔ RUNDE 34 B2: 0x45 und 0x4b haben EIGENE Kaesten (INIT-Zeiger selbst gelesen):
+         *   0x45: `lw v0,5940(v0)` @0x8011d2f8 (*(0x80121734) = 0x80121728) / `sw v0,120(v1)`
+         *         @0x8011d300; @0x80121728 = `00 00 60 fa 00 00 f4 01 a0 05 f4 01`
+         *         = {0,-1440,0, 500,1440,500}
+         *   0x4b: *(0x801218d4) = 0x801218c8 / `sw v0,120(...)` @0x8011e3b8;
+         *         @0x801218c8 = `00 00 60 fa 00 00 2c 01 a0 05 2c 01` = {0,-1440,0, 300,1440,300}
+         * (live bestaetigt mzd_stage1_npc Slot 2, Bosse-GP §10). */
+        case 0x45: r = 500;  h = 1440; break;
+        case 0x4b: r = 300;  h = 1440; break;
         /* The LIVE STAGE1 briefing zombies (0x10/0x11/0x16) all read 400/1440 — byte-true
          * from the live combat RAM (stage_saves/mzd_stage1_combat_death.sav, Phase 8.7: every
          * active 0x10/0x11 entity's *(+0x78) hitbox struct = radius 400 / height 1440, the
@@ -3590,7 +3664,10 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * 0x36 (form-5 EM036) shares the boss root (no +0x8 branch) so
                                                 * it uses the same box.  */
         case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
-                                                * (faithful-line: exact +0x78 dims deferred to Wave 2) */
+                                                * (faithful-line fuer Koerper-Schub/Schuss). Der
+                                                * byte-gelesene RESOLVER-Kasten {0,-720,0,900,720,450}
+                                                * @0x80120f64 gilt seit Runde 34 B2 im FUN_8002b5d0-
+                                                * Zwilling (re15_resolver_kasten), s. dort. */
         case 0x23: r = 2200; h = 720;  break;  /* ALLIGATOR (EM023, STAGE2) — byte-true box @0x80118b98 =
                                                 * {1000,-720,0,2200,720,800}: x_max 2200 (wide), y_max 720
                                                 * (low, giant) — INIT +0x78 @0x8010c708 */
@@ -3643,6 +3720,15 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                    * file 0x210fc, byte-verifiziert 2026-08-02) =
                                                    * {0,0,0,200,180,200} — ofs_y ist 0, NICHT -h */
         a->hit_offset_y = 0;
+    /* ⛔ RUNDE 34 B2: die beiden weiteren Kaesten, deren Versatz NICHT (0,-h,0) ist:
+     *   0x23 ALLIGATOR {1000,-720,0, 2200,720,800} @0x80118b98 (STAGE2, `e8 03 30 fd 00 00 98 08
+     *        d0 02 20 03`) — Kasten.x = 1000 = die Trefferzone liegt 1000 VOR dem Koerper (vor dem
+     *        Maul); FUN_8002b498 dreht sie jedes Bild mit der Gier (re15_hitbox_versatz).
+     *   0x26 (ROOM1090 RE1.5-FEUER-EMITTER, Kasten *(0x80121264) = 0x80121258 = `00 00 00 00 00 00
+     *        58 02 d0 02 58 02` = {0,0,0, 600,720,600}) — Versatz y = 0, NICHT -720 (RAM bestaetigt
+     *        room1090_orig, Bosse-GP §3/§9). */
+    if (type == 0x23) a->hit_offset_x = 1000;
+    if (type == 0x26) a->hit_offset_y = 0;
 }
 
 /* ====================================================================== *
@@ -4064,11 +4150,15 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
             if ((uint16_t)e->rot_y & 0x400u) { gx = e->x + t.o96; gz = e->z + t.o94; }
             else                             { gx = e->x + t.o94; gz = e->z + t.o96; }
         } else {
-            b98  = e->hit_offset_y;
-            h9e  = e->hit_height;
-            gx   = e->x + e->hit_offset_x;
-            gz   = e->z + e->hit_offset_z;
-            r1ee = (int16_t)re15_ellipse_radius((int32_t)e->hit_radius_min, (int32_t)e->hit_radius_max,
+            int32_t ox, oy, oz;
+            uint16_t kr1, kr2, kh;
+            re15_resolver_kasten(e, &ox, &oy, &oz, &kr1, &kr2, &kh);   /* FUN_8002b498 + Kasten */
+            if (kr1 == 0u && kr2 == 0u && kh == 0u) { kr1 = 1u; kr2 = 1u; kh = 1u; }  /* @0x80072be0 */
+            b98  = (int16_t)oy;
+            h9e  = kh;
+            gx   = e->x + ox;
+            gz   = e->z + oz;
+            r1ee = (int16_t)re15_ellipse_radius((int32_t)kr1, (int32_t)kr2,
                                                 (int32_t)e->rot_y, p[2] - gz, p[0] - gx);
         }
         e->re2z_hitdir1d0 &= 0xFF00u;                                  /* @0x8004716c-84 */

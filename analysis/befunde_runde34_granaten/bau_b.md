@@ -134,6 +134,73 @@ Beide Pakete teilen sich den Stempel und sind deshalb EIN Commit.
 | M9 O-VB4 Art 5 -> Art 2 | 93 | 93 rot |
 | M10 `re2z_row_from_atktype[2]` zurueck auf 17 | 39 | 39 rot (8 = Rueckfallzeile) |
 
+---
+
+## B2 — Kasten-Versatz FUN_8002b498 + Kaesten je Typ
+
+### Selbst disassembliert / gelesen
+* FUN_8002b498 (`re15_disasm.py dis 0x8002b498 60`): SVECTOR (0, +0x6a, 0) -> RotMatrix 0x80068098 (@0x8002b4d4) ->
+  ApplyMatrix 0x800661c0 (MVMVA sf=1 `4a486012` @0x800661f4, MAC -> VECTOR) auf (Kasten.x, [Gier], Kasten.z) ->
+  +0x7c[0]/[2] = gedrehtes x/z (@0x8002b504/@0x8002b51c), +0x7c[1] = Kasten.y ungedreht (@0x8002b508-10).
+* RotMatrix-Tabelle RE1.5 @0x800794c4 (`lw t9,-27452(t9)` @0x800680c0) mit RE2 rcossin @0x800adeac verglichen:
+  16384 Byte bytegleich -> der vorhandene RE2-Zwilling `re15_door_rotmatrix` ist auch der RE1.5-RotMatrix-Zwilling.
+* Gier-Konvention: Port-`rot_y` der RE1.5-Gegner = rohes +0x6a (z.B. `e->rot_y = atan2_q12(...) - 0x400`
+  enemy_ai_common.c:3445 = FUN_8001a6d4-Rohwert; `hit_from_front` nutzt dieselbe Konvention).
+* Kaesten, Bytes selbst gelesen: Hund @0x80120f64 `00 00 30 fd 00 00 84 03 d0 02 c2 01` (INIT `lw v0,3952(v0)`
+  @0x8010da68 / `sw v0,120(v1)` @0x8010da70); Alligator @0x80118b98 `e8 03 30 fd 00 00 98 08 d0 02 20 03` (STAGE2);
+  Feuer 0x26 @0x80121258 `00 00 00 00 00 00 58 02 d0 02 58 02`; NPC 0x45 @0x80121728 `00 00 60 fa 00 00 f4 01 a0 05 f4 01`;
+  NPC 0x4b @0x801218c8 `00 00 60 fa 00 00 2c 01 a0 05 2c 01`; Voreinstellung @0x80072be0 `00 00 00 00 00 00 01 00 01 00
+  01 00`; Tentakel em37 HP -1 `addiu v0,zero,-1` @0x80100530 / `sh v0,342(s1)` @0x80100534.
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `re15_damage.c` `re15_hitbox_versatz` (neu) | FUN_8002b498-Zwilling: gedrehter x/z-Versatz aus dem lokalen Kasten (hit_offset_x/z) |
+| `re15_damage.c` `re15_hitbox_test` | Mitte ueber `re15_hitbox_versatz`; Spawn-Voreinstellung {0,0,0,1,1,1} fuer kastenlose Typen NUR im Resolver-Test (Koerper-Schub/Zielhilfe bleiben bei "kein Kasten", Audit wf_efd92a2c ivy #77) |
+| `re15_damage.c` `re15_resolver_kasten` (neu) | Kasten des FUN_8002b5d0-Zwillings: Aktor-Kasten gedreht nach FUN_8002b498; fuer den HUND der byte-gelesene Sektor-Kasten {0,-720,0,900,720,450} @0x80120f64 |
+| `re15_damage.c` `re15_enemy_apply_hitbox` | Alligator Versatz x 1000, Feuer 0x26 Versatz y 0, NPC 0x45 500/1440, NPC 0x4b 300/1440 (Hund bleibt dort 500/600, s. unten) |
+| `re15_damage.c` Resolver Pass 1 | G5-Tentakel 0x37 mit HP < 0 kein Kandidat (RE2 Gate 3, sonst traefe ihn die Voreinstellung) |
+| `re15_damage.c` `re15_re2_gl_apply` | RE1.5-Kandidat: derselbe Resolver-Kasten (`re15_resolver_kasten` + Voreinstellung) |
+
+**Messung, die den Hunde-Kasten auf den Resolver beschraenkt:** Mit dem Original-Kasten 900/720/450 auf dem Aktor
+(also auch im Koerper-Schub FUN_8002aec4 und im Schusspfad) wurde `unit_r27_hund_wandtrieb` rot: **469 Bilder** mit
+dem Spieler in einer soliden Zelle (ROOM11D0, 8 Plaetze, 71 Bisse; 2 Plaetze betroffen). Der Koerper-Schub ist nicht
+Gegenstand dieser Runde -> der Hund behaelt dort 500/600, der Resolver nimmt den byte-gelesenen Kasten (PORT-ZUORDNUNG,
+benannt; OFFEN: Koerper-Schub des Hundes mit dem Original-Kasten, eigene Runde). Danach `unit_r27_hund_wandtrieb`
+wieder gruen.
+
+### Sonde `unit_r34_schaden` Teil `kasten` (41-49)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 41 | Alligator Gier 0: laengs +X 3650 trifft / 3750 nicht; Gier 1024: laengs -Z -3650 / -3750; der ungedrehte Punkt (3650,0) trifft bei Gier 1024 nicht | gruen |
+| 42 | Alligator-Hoehenband exakt 499/500/-1939/-1940 -> 1/0/1/0 | gruen |
+| 43 | Hund-Sektor: laengs 1350/1450, quer 900/1000, Gier 1024 tauscht die Achsen | gruen |
+| 44 | Hund-Band 499/500 | gruen |
+| 45 | Feuer 0x26 Band um y 0: P.y 1000 trifft, -1300 nicht | gruen |
+| 46 | NPC 0x45 950/1050, 0x4b 750/850 (mit HP >= 0) | gruen |
+| 47 | Voreinstellung (FX 0x24): 400 trifft, 600 nicht | gruen |
+| 48 | Tentakel 0x37 HP -1: kein Kandidat | gruen |
+| 49 | NEGATIV/Regression: Zombie 850/950 und Gier 1024 ohne Wirkung | gruen |
+| 17 | (aus B1) FX 0x24: 1. Treffer `|= 2`, 2. Treffer Gate B | jetzt gruen |
+
+Sqrt-Grenzen mit Abstand 50 (SquareRoot0 ist eine Tabellen-Naeherung, `re15_squareroot0`), Hoehenband exakt.
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M11 Versatz ungedreht (`re15_hitbox_versatz` kehrt sofort zurueck) | 41 | 41 rot |
+| M12 Alligator ohne x-Versatz | 41 | 41 rot |
+| M13 Hund-Resolver-Kasten zurueck auf 500/600 (`re15_resolver_kasten`) | 43 | 43 rot |
+| M14 Feuer 0x26 wieder -720 | 45 | 45 rot |
+| M15 Voreinstellung weg | 47 | 47 rot |
+| M16 Tentakel-Ausschluss weg | 48 | 48 rot |
+
+### Folge fuer andere Pfade (benannt)
+NPC 0x45/0x4b: der Kasten wirkt auch auf deren Wandklemme (`lhu a1,6(v0)` @0x8011cc60 liest +0x78) und Koerper-Schub
+— das ist das RE1.5-Original; `unit_npc_wall_clamp`, `unit_npc_back_walk`, `unit_1090_npc_prop_push` gruen. Alligator-
+Versatz und Feuer-y wirken nur im Resolver bzw. im y-Band des Koerper-Schubs (Feuer). Regressionslauf aller
+Schaden-/Hund-/Alligator-/NPC-/Treffer-Tests (44 Tests, `ctest -R ...`): gruen nach der Hunde-Beschraenkung.
+
 ## INTEGRATIONSWUNSCH
 (noch keiner)
 

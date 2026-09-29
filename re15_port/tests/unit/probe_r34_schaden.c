@@ -403,6 +403,98 @@ static void teil_stempel(void)
           "RE1.5 mit Import: hp=%d +6=%d +5=%d gl=%d", a->hp, a->sub_state_2, a->sub_state_1, a->re2_gl_stamp);
 }
 
+/* =========================================================================================
+ * TEIL "kasten" — B2: Kasten-Versatz FUN_8002b498 (gedreht) + Kaesten je Typ + Voreinstellung.
+ * Alle Faelle ueber den echten Resolver (re15_resolve_attack, Art 2, Radius 500), RE1.5-Flavor.
+ * Sqrt-Grenzen (SquareRoot0-Tabelle) mit Abstand 50 geprueft; das Hoehenband exakt (+-1).
+ * ========================================================================================= */
+static int trifft(uint8_t type, int32_t ex, int32_t ez, int16_t rot, int32_t px, int32_t py, int32_t pz)
+{
+    re15_actor_init(); pl_far();
+    re15_actor_t *e = mk(1, type, ex, 0, ez, 5000);
+    e->rot_y = rot;
+    re15_attack_box_t b = box_at(px, py, pz);
+    re15_resolve_attack(&b, 2, -1);
+    return e->hp != 5000;
+}
+
+static void teil_kasten(void)
+{
+    printf("== kasten (B2)\n");
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_re15_re2z_import_set(0);
+
+    /* (41) ALLIGATOR {1000,-720,0,2200,720,800} @0x80118b98: Mitte = Lage + RotY(Gier)*(1000,0).
+     *      Gier 0 -> Mitte (1000,·,0); laengs +X Radius 2200+500: 3650 trifft, 3750 nicht.
+     *      Gier 1024 -> Mitte (0,·,-1000) (RotMatrix: lokal +x -> Welt -z); laengs -Z: -3650
+     *      trifft, -3750 nicht; der ungedrehte Punkt (3650,0) trifft dann NICHT mehr. */
+    {
+        int a0 = trifft(0x23, 0, 0, 0, 3650, -500, 0), a1 = trifft(0x23, 0, 0, 0, 3750, -500, 0);
+        int b0 = trifft(0x23, 0, 0, 1024, 0, -500, -3650), b1 = trifft(0x23, 0, 0, 1024, 0, -500, -3750);
+        int c0 = trifft(0x23, 0, 0, 1024, 3650, -500, 0);
+        CHECK(41, a0 && !a1 && b0 && !b1 && !c0,
+              "Alligator: G0 3650/3750 -> %d/%d (1/0); G1024 z -3650/-3750 -> %d/%d (1/0); G1024 x 3650 -> %d (0)",
+              a0, a1, b0, b1, c0);
+    }
+    /* (42) Alligator-Hoehenband exakt: Mitte y = -720, h 720 -> |P.y + 720| < 500 + 720 = 1220
+     *      (streng, @0x8002b778-7a4): P.y 499 trifft, 500 nicht; -1939 trifft, -1940 nicht. */
+    {
+        int u = trifft(0x23, 0, 0, 0, 1000, 499, 0), v = trifft(0x23, 0, 0, 0, 1000, 500, 0);
+        int w = trifft(0x23, 0, 0, 0, 1000, -1939, 0), x = trifft(0x23, 0, 0, 0, 1000, -1940, 0);
+        CHECK(42, u && !v && w && !x, "Alligator-Band 499/500/-1939/-1940 -> %d/%d/%d/%d (1/0/1/0)", u, v, w, x);
+    }
+    /* (43) HUND {0,-720,0,900,720,450} @0x80120f64 (Sektor): Gier 0 laengs +X 900+500 -> 1350 trifft,
+     *      1450 nicht; quer (+Z) 450+500 -> 900 trifft, 1000 nicht. Gier 1024 tauscht die Achsen. */
+    {
+        int a0 = trifft(0x20, 0, 0, 0, 1350, -500, 0), a1 = trifft(0x20, 0, 0, 0, 1450, -500, 0);
+        int b0 = trifft(0x20, 0, 0, 0, 0, -500, 900),  b1 = trifft(0x20, 0, 0, 0, 0, -500, 1000);
+        int c0 = trifft(0x20, 0, 0, 1024, 0, -500, 1350), c1 = trifft(0x20, 0, 0, 1024, 1350, -500, 0);
+        CHECK(43, a0 && !a1 && b0 && !b1 && c0 && !c1,
+              "Hund: laengs 1350/1450 -> %d/%d, quer 900/1000 -> %d/%d, G1024 z1350/x1350 -> %d/%d",
+              a0, a1, b0, b1, c0, c1);
+    }
+    /* (44) Hund-Band: Mitte y -720, h 720 -> 1220: P.y 499 trifft, 500 nicht. */
+    {
+        int u = trifft(0x20, 0, 0, 0, 0, 499, 0), v = trifft(0x20, 0, 0, 0, 0, 500, 0);
+        CHECK(44, u && !v, "Hund-Band 499/500 -> %d/%d (1/0)", u, v);
+    }
+    /* (45) FEUER 0x26 (ROOM1090) {0,0,0,600,720,600} @0x80121258: Band um y 0 (nicht -720):
+     *      P.y 1000 trifft, -1300 nicht (mit dem alten -720 genau umgekehrt). */
+    {
+        int u = trifft(0x26, 0, 0, 0, 0, 1000, 0), v = trifft(0x26, 0, 0, 0, 0, -1300, 0);
+        CHECK(45, u && !v, "Feuer 0x26 Band: P.y 1000 -> %d (1), -1300 -> %d (0)", u, v);
+    }
+    /* (46) NPC 0x45 {..,500,1440,..} @0x80121728 / 0x4b {..,300,1440,..} @0x801218c8 (HP >= 0):
+     *      0x45: 950 trifft (R 1000), 1050 nicht; 0x4b: 750 trifft (R 800), 850 nicht. */
+    {
+        int a0 = trifft(0x45, 0, 0, 0, 950, -500, 0), a1 = trifft(0x45, 0, 0, 0, 1050, -500, 0);
+        int b0 = trifft(0x4b, 0, 0, 0, 750, -500, 0), b1 = trifft(0x4b, 0, 0, 0, 850, -500, 0);
+        CHECK(46, a0 && !a1 && b0 && !b1, "NPC 0x45 950/1050 -> %d/%d, 0x4b 750/850 -> %d/%d", a0, a1, b0, b1);
+    }
+    /* (47) Spawn-Voreinstellung {0,0,0,1,1,1} @0x80072be0 fuer kastenlose Typen (FX 0x24):
+     *      waagrecht 1 + 500: 400 trifft, 600 nicht; Band 1 + 500 um y 0: P.y -500 trifft. */
+    {
+        int a0 = trifft(0x24, 0, 0, 0, 400, -500, 0), a1 = trifft(0x24, 0, 0, 0, 600, -500, 0);
+        CHECK(47, a0 && !a1, "Voreinstellung 0x24: 400 -> %d (1), 600 -> %d (0)", a0, a1);
+    }
+    /* (48) G5-Tentakel 0x37 mit HP -1 ist KEIN Kandidat (RE2 Gate 3; em37 HP -1 @0x80100530/34). */
+    {
+        re15_actor_init(); pl_far();
+        re15_actor_t *e = mk(1, 0x37, 0, 0, 0, -1);
+        re15_attack_box_t b = box_at(0, -500, 0);
+        int n = re15_resolve_attack(&b, 2, -1);
+        CHECK(48, n == 0 && e->hp == -1 && e->state == 1, "Tentakel: n=%d hp=%d st=%d", n, e->hp, e->state);
+    }
+    /* (49) NEGATIV/REGRESSION: Zombie {0,-1440,0,400,1440,400} unveraendert (kein Versatz x/z):
+     *      Gier 1024 aendert nichts; 850 trifft (R 900), 950 nicht. */
+    {
+        int a0 = trifft(0x10, 0, 0, 0, 850, -500, 0), a1 = trifft(0x10, 0, 0, 0, 950, -500, 0);
+        int b0 = trifft(0x10, 0, 0, 1024, 850, -500, 0);
+        CHECK(49, a0 && !a1 && b0, "Zombie 850/950 -> %d/%d, G1024 850 -> %d", a0, a1, b0);
+    }
+    re15_re15_re2z_import_set(1);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -410,6 +502,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tore"))    teil_tore();
     if (alle || !strcmp(teil, "applier")) teil_applier();
     if (alle || !strcmp(teil, "stempel")) teil_stempel();
+    if (alle || !strcmp(teil, "kasten"))  teil_kasten();
     printf("probe_r34_schaden %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }
