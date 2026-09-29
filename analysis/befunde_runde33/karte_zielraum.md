@@ -202,3 +202,78 @@ PUNKTE an festen Kartenlagen, keine Raeume; sie verschwinden, wenn ihr Bit in Ba
   VBlank (Teiler 0 @0x80068A1C gilt fuer den ganzen Status-Task). OHNE Ton (2.3). Sie bleibt,
   bis der Zielraum besucht ist.
 
+
+---
+
+## 3. BAU (Zweig r33/karte, Commit 2d14ec04)
+
+### 3.1 Verhalten
+
+| | vorher | nachher |
+|---|---|---|
+| normale Karte nach dem Hinweis, 2F nie betreten | RUNTER 3F -> 1F, 2F uebersprungen | RUNTER 3F -> **2F** (Se(4,4)) -> 1F; HOCH 1F -> 2F -> 3F |
+| Funkraum ROOM10F0 auf Blatt 3 | nicht gezeichnet (unbesucht, Blatt nicht im Besitz) | **blinkt** wie im Hinweis: CLUT 502 (dunkelrot) / 498 (nur Wandlinie), Phasen 39 VBlanks = 0,652 s, kein Ton |
+| nach dem Betreten von ROOM10F0 (oder Elzas ROOM10F1) | — | Markierung aus; Kachel folgt der normalen Regel (AKTUELL im Raum, danach BESUCHT) |
+| Karte oeffnet auf | Blatt des Spielers | unveraendert Blatt des Spielers (RE2 `jal 0x8006e7f0` @0x8006D6B8) |
+| andere Blaetter | nur nach Besuch | unveraendert nur nach Besuch |
+| Hinweis-Schirm selbst | Runde 30 | unveraendert (Riegel `unit_r30_hinweis_*` gruen) |
+
+### 3.2 Dateien
+
+| Datei | Aenderung |
+|---|---|
+| `engine/src/map_hint_common.c` | Tabelleneintrag + Szenen-Flag (3,94) (sub08 @0x01110, main00 @0x00DE6); `ziel_zone`; Abschnitt 4 mit allen RE2-Belegen; `re15_map_ziel_blatt_frei`, `re15_map_blatt_waehlbar`, `re15_map_ziel_aktiv`; eigener, stummer Zielkachel-Blinker `re15_map_ziel_blink_*` (Schritt = `zaehl_schritt`, RE2 @0x8006D87C-0x8006D8D4) |
+| `include/re15_map_hint.h` | Deklarationen mit Belegblock |
+| `engine/src/menu_common.c` | HOCH/RUNTER: `re15_map_blatt_waehlbar` statt `re15_map_page_known`; `menu_task_step`: je Bild `ziel_aktiv/ziel_rot/ziel_page/ziel_rect` (nur MAP-Unterschirm, nie im Hinweis), Blinker-Neustart je Kartenansicht; Abbau in `close_phase` und `re15_menu_toggle` |
+| `include/re15_inv_screen.h` | vier Felder am Strukturende |
+| `engine/src/re15_inv_screen.c` | Kachel-Schleife: Zielkachel-Zweig direkt hinter dem Hinweis-Zweig, gleiche Zeichnung (1. Durchgang, ohne Besuchs-/Besitz-Gatter) |
+
+### 3.3 Port-Wahlen (keine Original-Adresse), begruendet
+
+1. **Blatt freigeben am Hinweis.** RE2 hat das Mittel (Set auf Bank 35 per Skript, Kartenaufnahme
+   ROOM20B0 sub10 @0x037E6-EE), benutzt es am Hinweis nicht. Nutzerwunsch. Frei wird NUR das Blatt
+   der Hauptzeile des Zielraums; das Gatter bleibt fuer alles andere RE2s Besuchsregel.
+2. **Zielkachel in der normalen Karte, bis der Ort besucht ist.** RE2 hat keinen Ziel-Zustand (2.3).
+   Stil = der einzige Ziel-Stil, den RE2 hat (Hinweis-Zeichner, CLUT 502/498); Takt = RE2s
+   Karten-Pulszaehler, den der normale Kartenschirm ohnehin faehrt (@0x8006D87C-0x8006D8D4); ohne
+   Ton, weil RE2s normale Karte den Hinweis-Ton nie spielt. "Bis besucht" statt "fuer immer":
+   ein besuchter Raum ist ohnehin gezeichnet (Zeile 501), die Markierung hat dann keinen Zweck mehr;
+   so verschwindet sie genau dann, wenn der Auftrag des Hinweises erfuellt ist.
+3. **Blinker-Start je Kartenansicht** mit den Hinweis-Startwerten (10/1): RE2s normaler Schirm
+   setzt den geteilten Zaehler nicht neu (Schreiber in FUN_8006D650 nur @0x8006D8A0/C4/D4). Der
+   Port hat keinen geteilten Zaehler; er beginnt jede Ansicht wie der Hinweis (rot ab Schritt 2).
+4. **Kein Speicherfeld.** Abgeleitet aus Szenen-Flag (3,94) und Besucht-Bit des Zielorts, die
+   beide schon im Stand liegen (g_game.flags seit v1, visited seit v6). Ein eigenes Feld waere eine
+   zweite Wahrheit; seine Hebung fuer alte Staende muesste exakt diese zwei Bits lesen. (3,94) ist
+   eindeutig: 2 Records in allen 240 RDTs, beide ROOM1150 (`karte_werkzeug/r33_re15_flag_zensus.py`:
+   main00 @0x00DE6 Ck, sub08 @0x01110 Set). Zwischen Set am Szenenanfang und Hinweis am Szenenende
+   ist kein Speichern moeglich (Szenen-Flags (2,7)/(1,27) ab @0x01114/@0x01118, der Spieler steht).
+
+### 3.4 Speicherstand
+
+**KEINE Formataenderung: Version bleibt 9, `sizeof(re15_savedata_t)` bleibt 944** (Riegel
+`unit_r33_karte_speicher` haelt beides fest). Abweichung vom Auftrag ("Version anheben, alte Staende
+heben"), weil kein neuer Zustand entsteht (3.3 Punkt 4). Folge fuer das Zusammenfuehren mit
+`r33/speichern`: von diesem Zweig kommt KEINE Versionsnummer, kein Feld, keine Hebung; alte v9-Staende
+nach der Irons-Szene zeigen die Markierung ohne weiteres (Flag gesetzt, Ziel unbesucht).
+
+### 3.5 Elza
+
+ROOM1151 hat die Szene nicht (Runde 30: 8 Subs, kein sub08, kein Ck(3,94)), kein Elza-Skript setzt
+(3,94) (Zensus) — Elza bekommt weder Hinweis noch Freigabe noch Markierung (Riegel etage, letzter
+Punkt). Betritt jemand Elzas Funkraum ROOM10F1, loescht das die Markierung ebenso (geteiltes
+Besucht-Bit, `zone_bit` maskiert `room & ~1`; Riegel markierung, letzter Punkt).
+
+---
+
+## 4. RIEGEL (`tests/unit/test_r33_karte.c`, `tests/unit/probes/r33_karte.cmake`)
+
+| Riegel | prueft |
+|---|---|
+| `unit_r33_karte_etage` | ohne Hinweis: RUNTER 3F -> 1F; nach dem Hinweis: Blatt 3 bekannt 0 / frei 1 / waehlbar 1, Besucht- und Etagen-Bits bitgleich, kein anderes Blatt frei, Karte oeffnet auf 4, RUNTER 4->3 mit Se(4,4), ->2, HOCH ->3, ->4; ohne (3,94) (Elza) nichts frei |
+| `unit_r33_karte_markierung` | im Hinweis-Schirm ziel_aktiv nie gesetzt; Ziel 3/9 = (156,76) 48x40 uv (208,80), UNVISITED, nicht im Besitz; Blatt 4 unveraendert (Irons' Buero AKTUELL); 4 s auf Blatt 3: Kachel in jedem Bild, CLUT = ziel_rot ? 502 : 498, Wechsel bei Schritt 2+39k auf ein Bild genau (30, 60, 144 Bilder/s), kein Se(2,0x2B), keine CORE-Toene, kein fremdes AKTUELL; ROOM10F0 betreten -> aus, Kachel stetig AKTUELL; zurueck in 1150 -> BESUCHT; ROOM10F1 loescht ebenso |
+| `unit_r33_karte_speicher` | Version 9 / 944 Byte; capture -> Zustand loeschen -> restore: Markierung + Freigabe zurueck, RUNTER -> 3 mit Zielkachel; nach dem Betreten gespeichert -> geladen: aus |
+
+Messsonden im selben Programm: `messen` (Abschnitt 1; nachher `karte_belege/messung_nachher.txt`:
+RUNTER 4 -> 3 mit Zielkachel CLUT 0x0012, -> 2, HOCH -> 3, -> 4) und `karte <pfad.mcr>`
+(Spielstaende einer Speicherkarte).

@@ -518,9 +518,56 @@ static int riegel_speicher(void)
     return g_fail;
 }
 
+/* MESSSONDE "karte <pfad.mcr>": Spielstaende einer Speicherkarte — Raum, Figur, (3,94),
+ * Blatt 3 bekannt/waehlbar, Markierung. Fuer die Abnahme an der echten exe. */
+#include "re15_memcard.h"
+static int sonde_karte(const char *pfad)
+{
+    for (int s = 0; s < RE15_SAVE_SLOTS; s++) {
+        static re15_savedata_t sd;
+        uint16_t raum = 0;
+        if (re15_memcard_load(pfad, s, &sd) != 0) continue;
+        re15_map_visited_reset();
+        memset(g_game.flags, 0, sizeof g_game.flags);
+        if (re15_savedata_restore(&sd, &raum) != 0) { printf("[K] Platz %d: ungueltig\n", s); continue; }
+        printf("[K] Platz %d: Raum %04X Figur %d Version %u  flag(3,94)=%d  Blatt3 bekannt=%d waehlbar=%d  Markierung=%d\n",
+               s, raum, sd.character, (unsigned)sd.version, re15_game_flag_get(3, 94), re15_map_page_known(3),
+               re15_map_blatt_waehlbar(3), re15_map_ziel_aktiv(NULL, NULL));
+    }
+    return 0;
+}
+
+/* MESSHILFE "karte_bauen <ein.mcr> <platz> <aus.mcr>" (nur fuer die Abnahme, kein Spiel-
+ * verhalten): nimmt einen Spielstand, stellt den Stand VOR der Irons-Szene ohne 2F her —
+ * (3,94) = 0, Besucht-Bits = der Weg ohne 2F (weg_ohne_2f) — und schreibt ihn als Platz 0
+ * einer neuen Karte. Alles andere (Inventar, Flags, Figur) bleibt, wie es war. */
+static int hilfe_karte_bauen(const char *ein, int platz, const char *aus)
+{
+    static re15_savedata_t sd;
+    uint16_t raum = 0;
+    char titel[RE15_MC_TITLE_LEN];
+    if (re15_memcard_load(ein, platz, &sd) != 0 || re15_savedata_restore(&sd, &raum) != 0) {
+        printf("[B] Platz %d in %s nicht lesbar\n", platz, ein);
+        return 2;
+    }
+    re15_game_flag_set(3, 94, 0);
+    re15_map_visited_reset();
+    int k = weg_ohne_2f();
+    spieler_1150();
+    re15_savedata_capture(&sd, sd.playtime, sd.save_count);
+    re15_mc_compose_title(titel, sd.character, sd.save_count, sd.loc_idx);
+    remove(aus);
+    int rc = re15_memcard_save(aus, 0, &sd, titel);
+    printf("[B] %s Platz %d -> %s Platz 0: rc=%d, Raum %04X, Figur %d, (3,94)=%d, %d Zeilen besucht, Blatt3 bekannt=%d\n",
+           ein, platz, aus, rc, sd.room, sd.character, re15_game_flag_get(3, 94), k, re15_map_page_known(3));
+    return rc ? 2 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "messen";
+    if (!strcmp(m, "karte") && argc > 2) return sonde_karte(argv[2]);
+    if (!strcmp(m, "karte_bauen") && argc > 4) return hilfe_karte_bauen(argv[2], atoi(argv[3]), argv[4]);
     if (!strcmp(m, "messen")) return sonde_messen();
     if (!strcmp(m, "etage")) return riegel_etage();
     if (!strcmp(m, "markierung")) return riegel_markierung();
