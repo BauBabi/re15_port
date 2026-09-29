@@ -133,11 +133,13 @@ Rueckgabe = erste fehlgeschlagene Pruefung (alle Nummern < 256).
 | 2 Zeitlinien | 31-50 | HOCH gesund 88/124/129/131, 8 Kontakte, xlat (18760,3180,1848); TIEF 40/76/81/83, 6, (1543,792,40); HOCH vergiftet 94/130/135/137, 10, (18721,3180,1974); MITTE vergiftet 79/115/120/122, 10, (11938,2483,1896) |
 | 3 Gier 1024 | 51-55 | L/X unveraendert, Liegestelle = Spawn + (1752, ., −11929); Negativ: Gier 0 endet anders |
 | 4 0x0A / 0x0B | 56-65 | X 109 / frei 116; Resolver 1x, Schaden erst in Bild 109; Dummy +5 = 10 / 11; Aufschlag-Spion 1x (re2_art 2 / 1, q = wpos, Gier 777); keine HE-Inhalte (0 SE 0x04080001, Latch 0, 0 Kinder), 8 Kontakt-SEs |
+| 1 (Nachtrag) | 81-82 | Bild 73: Flags 0x63, A 31, B 0, sichtbar; Bild 109: Flags 0x61, unsichtbar, Zuender 6 |
 | 5 Rand | 71-80 | Pool voll → NULL, kein Granatenplatz; Raumwechsel nach dem Liegen: 0 Resolver, Dummy 180, Pool leer; a ohne Zielbits → senkrechter Fall, 1 Kontakt; Spieler 1000 entfernt unversehrt, 949 entfernt −900 (R = 950 streng); Huelse behaelt Klemme (floor_y 60); Routine 9 Latch 0 → 1 |
 | 6 Spielschritt | 91-114 | ROOM1140, re15_game_step + ESP-Tick danach: Abzug Bild 0, Menge 5 → 4; Zombie 700 vor Leon (in Hitscan-Reichweite 1000) unversehrt; Spawn A+22 mit Art 2/3/4 fuer Waffe 9/10/11, Gier 0, Anker = Knochen + {0,0,0x1f4}; R1 los ab Bild 15 → kein Spawn, Menge 4; R1 nur in Bild 3..8 los → Spawn 22 (Negativ); Drehen LINKS/RECHTS je Bild −24/+24, Spawn-Gier 1000 ∓ 528 |
 | 7 Item-Debug | 131-148 | Raster offen; R1 ohne SELECT wirkungslos; SELECT → Zustand 3, Platz 0 = 00 ff, +3 = 0, SE CORE 9 1x; 9x R1 → 09 ff; R1-Flanke schreibt erst im Folgebild; 10x → 0A, 11x → 0B; L1/R2/L2; Kappung 0x47 (Unter-/Ueberlauf); Dreieck Menge +1; Kreis beendet; Schliessen ruestet 9 aus; SELECT im Reiter-Modus wirkungslos |
 
-Laeufe: `build/r34g_a/probe_lauf5.txt` (ALLE PRUEFUNGEN GRUEN).
+Laeufe: `build/r34g_a/probe_lauf6.txt` (ALLE PRUEFUNGEN GRUEN). Bauverzeichnis der Sonde = `build_r34_a` (Orchestrator-
+Vorgabe; der BAUPLAN nannte `build_r34_wurf`).
 
 ### 3.1 Mutationsproben (`build/r34g_a/mutation.py`, Ergebnis `build/r34g_a/mutation_ergebnis.txt`)
 Je Mutation: Datei sichern, eine Stelle aendern, Sonde bauen + laufen, Datei byte-gleich zuruecksetzen (vom Skript
@@ -161,6 +163,8 @@ geprueft), am Ende Neubau + Lauf gruen (`ZURUECK: bau rc=0, sonde rc=0 (GRUEN)`)
 | M14 | Item-Debug Kappung 0x49 | rot 143 |
 | M15 | SELECT setzt Id nicht zurueck | rot 145 (+146,147) |
 | M16 | R31 Platz frei NACH dem Kind | rot 28 |
+| M17 | R29 Liegen-Flags 0x23 statt 0x63 | rot 81 |
+| M18 | R31 Explosions-Flags 0x63 statt 0x61 (sichtbar) | rot 82 |
 
 ---
 
@@ -254,4 +258,26 @@ Pruefung), 5239b817 (Sonde 6a Zombie 700), + Dossier-Commits.
 
 ## 8. Suite
 
-(wird nach dem Lauf eingetragen)
+* **Lauf 1** (`local_build.sh` all): Bau-Abbruch `ld: cannot open output file platform\pc
+e15_pc.exe: Permission denied`
+  — die exe eines eigenen Messlaufs (a_tief2) war noch nicht beendet. Keine eigene re15_pc.exe lief danach mehr
+  (Prozessliste per Win32_Process; nur fremde Baeume r34g_c/r34g_d + Hauptbaum des Nutzers, NICHT angefasst).
+* **Lauf 2** (all, 429 Tests = 428 + unit_r34_wurf): `99% tests passed, 2 tests failed out of 429`, 1315.61 s.
+  Rot: `integration_r30_granate_laden` (Lauf [c] abgerissen, exit=1, debug.log endet nach Bild 96) und
+  `integration_r30_irons_tisch_bild` (Lauf P0 exit=1 vor dem Laden des Spielstands, debug.log endet nach dem
+  Fensteraufbau). Parallel liefen die Suiten der Spuren C und D (je ctest + re15_pc.exe).
+  Einzeln wiederholt: `irons_tisch_bild` **gruen** (65.44 s); `granate_laden` 3x: rot ([a] abgerissen nach Bild 240,
+  exit=1), rot ([d] Spielstand nicht geladen, exit=1), **gruen** (116.93 s). Der Lauf [a] von Hand nachgestellt
+  (`build/r34g_a/gl_a`, gleiche Umgebung): rc 0, `[granate] Modal auf`, `EXIT_AT: Bild 280`. exit=1 an wechselnden
+  Stellen (Start, Bild 96, Bild 240..280, Spielstand-Laden) ohne Meldung passt zu keinem Pfad der exe (SDL_QUIT ->
+  exit(0) render_pc.c:746-747, Absturz -> 0xC0000005); die Fehlerbilder beruehren keinen geaenderten Code-Pfad
+  (kein SELECT, keine Waffe 9-11 im Zielen, keine Granate im ESP-Pool). -> Last-Flattern, kein reproduzierbares Rot.
+* **Lauf 3** (all, nach Pruefung 81/82): `99% tests passed, 2 tests failed out of 429`, 1110.13 s. Rot diesmal ANDERE
+  exe-Tests: `integration_r30_sicherung_laden` ([b] abgerissen nach Bild 180, exit=1) und `integration_r30_titel_puls`
+  (Wanduhr-Periode 1977925 us ausserhalb der Toleranz 66155 us — Zeitmessung unter Last). Die beiden Rot aus Lauf 2
+  waren hier gruen. Einzeln: `titel_puls` gruen (41.64 s); `sicherung_laden` einmal rot (exit=1, [b]), dann per
+  ctest zusammen mit `granate_laden` beide **gruen** (65.01 s / 145.29 s). Lauf [b] von Hand 3x nachgestellt
+  (`build/r34g_a/sl_b`): 3x rc 0, je `EXIT_AT: Bild 280`, 26-27 s. Waehrenddessen liefen die Suiten der Spuren B, C
+  und D (Prozessliste: ctest + re15_pc.exe aus r34g_b/r34g_c/r34g_d).
+  -> Kein reproduzierbares Rot; jedes Rot wurde einzeln gruen wiederholt.
+* **Lauf 4**: siehe unten.
