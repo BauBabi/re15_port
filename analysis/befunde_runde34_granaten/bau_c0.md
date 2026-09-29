@@ -6,7 +6,8 @@ Auftrag: BAUPLAN §3.0 (V1, V2b, V3, V5) + §3.3 C0, mit der Orchestrator-Teilun
 Funktionen Stubs ohne Aufrufer. Einzige wirksame Aenderungen liegen in Debug-Harness-Pfaden (V5: nur mit
 `RE15_STATE_LOG` / `RE15_FX_LOG` / `RE15_EQUIP` gesetzt).
 
-STATUS: IN ARBEIT (Code + Assets geschrieben, Bau/Suite laufen).
+STATUS: FERTIG — Vertrag gebaut, volle Suite `=== LOCAL-BUILD-OK (all) — Tests 428/428` (§7.4), Harness V5 an der
+echten exe gemessen inkl. Mutationsprobe (§7.2/§7.3). Keine Verhaltensaenderung ausserhalb der Debug-Harness.
 
 ---
 
@@ -184,7 +185,7 @@ versionierten Original (kein Zuwachs im Repo). `.gitattributes`: beide Dateien `
 * `release/make_package.sh:409` `copy_common`: `cp -r "$RE2" "$out/shared_assets/RE2"` — der ganze Baum geht mit.
   Das Paket-Gate (`:186-203`) prueft nur CDEMD0.EMS, ENEMSE.VBS, TORSE.VBS, DOOR/*.DO2 — NICHT CORE00.ESP/TEX.TIM.
 * `platform/android/app/build.gradle:104` `stageAssets`: `from(new File(portRoot, "shared_assets/RE2")) { into "shared_assets/RE2" }`
-  — ganzer Baum; Existenz-Gate `:113-116` ohne die neuen Dateien; `noCompress` sammelt Endungen dynamisch (ESP/TIM
+  — ganzer Baum; Existenz-Gate `:113-115` (Liste, geprueft `:116-117`) ohne die neuen Dateien; `noCompress` sammelt Endungen dynamisch (ESP/TIM
   kommen schon aus `shared_assets/PSX`).
 * Android-Quellen: `platform/android/jni/CMakeLists.txt:42` GLOB `platform/pc/src/*.c`, Engine ueber
   `re15_port/CMakeLists.txt` (GLOB `engine/src/*.c`) → die neuen `.c` werden erfasst. Der Gradle-Bau cacht den
@@ -273,15 +274,35 @@ NICHT gemessen) — der Befund P13 (ARMS-Satz 0x0A ausserhalb der 10 Saetze von 
 * **Lauf 2** (`local_build.sh test`, volle Suite erneut, Last gering): `100% tests passed, 0 tests failed out of 428`,
   `Total Test time (real) = 732.53 sec`, **`=== LOCAL-BUILD-OK (test) — Tests 428/428`**. (`integration_r30_irons_tisch_bild`
   diesmal gruen im Verbund.)
-* **Lauf 3** (`local_build.sh` = all: configure + build + test, fuer die Zielzeile): (folgt)
+* **Lauf 3** (`RE15_BUILD_DIR=.../re15_port/build_r34_c0 bash re15_port/tools/local_build.sh` = all: configure +
+  build + test): `configure OK`, `build OK`, `test OK — 428/428 bestanden`, `100% tests passed, 0 tests failed out of 428`,
+  `Total Test time (real) = 720.29 sec`, Zielzeile **`=== LOCAL-BUILD-OK (all) — Tests 428/428`**.
+  N = 428 = heutige Zahl (`ctest -N` nach dem ersten Configure), `RE15_MIN_TESTS` unveraendert.
 
 ---
+
+## HINWEISE AN DIE SPUREN
+
+* **A**: `wpos` und `granate_art` stehen am ENDE von `re15_esp_fx_t`; der Spawn-`memset` (`re15_esp.c:330`) nullt sie.
+  Bis A die Weltlage rechnet, liest jeder Verbraucher 0 — Spur C darf den Zeichner erst nach dem Merge von A auf `wpos`
+  umstellen (Merge-Reihenfolge BAUPLAN §4: B, A, C). Der Latch `g_re15_licht_latch` wird nirgends zurueckgesetzt
+  (Original: nur `sb zero` @0x8001d1b4 nach dem Zeichnen) — das Loeschen gehoert dem Leser (C3).
+* **B**: `re15_re2_gl_apply` hat laut Vertrag `const int16_t box[4]`. Das Original schreibt die Radius-Erweiterung in den
+  Puffer des Aufrufers (@0x800471bc-ec) und nimmt sie nur im Nicht-Treffer-Zweig zurueck (@0x800471f0 → @0x800473dc);
+  im Modus "alle" (Bit 0x10000) springt der Treffer nach @0x8004740c und laesst sie fuer die FOLGENDEN Kandidaten
+  DESSELBEN Aufrufs stehen. Op 40 kopiert die Box vor jedem Aufruf neu (@0x80020770-8c) → im Applier auf einer
+  lokalen Kopie arbeiten; die Abnahme "zweiter Aufruf mit erweiterter Box" betrifft damit nur den Aufruf-internen
+  Fall (Modus "alle"), nicht zwei getrennte Op-40-Aufrufe.
+* **C/D**: `re2fx_register_core` liefert im Stub `-1` (nichts registriert). Beide Zeiger sind NULL; `re2fx_pc_draw`
+  hat keinen Aufrufer. Der FX-Log schreibt nur GEZEICHNETE Plaetze (Flags 0x61/0x63 fehlen dort).
+* **alle**: `RE15_EQUIP=<id>` laedt jetzt die ARMS-Bank dieser Id — Waffen-Log `bank=<id>(geladen=1)` auch unter
+  `RE15_NOAUDIO=1`. State-Log-Auswerter: `hp=` steht HINTER der Gegnerklammer.
 
 ## INTEGRATIONSWUNSCH (fremde Dateien — NICHT geaendert)
 
 1. `release/make_package.sh:186-189` — sobald Spur D CORE00.ESP/TEX.TIM liest: Gate-Zeile wie fuer CDEMD0.EMS/ENEMSE.VBS
    (`for f in CDEMD0.EMS ENEMSE.VBS CORE00.ESP TEX.TIM; do ...`), sonst waere der Saeure-/Brand-Aufschlag im Paket still tot.
-2. `platform/android/app/build.gradle:113-115` — Existenz-Gate um `"shared_assets/RE2/CORE00.ESP"` ergaenzen (gleiche Begruendung).
+2. `platform/android/app/build.gradle:113-115` (Liste des `doFirst`-Existenz-Gates) — um `"shared_assets/RE2/CORE00.ESP"` ergaenzen (gleiche Begruendung).
 3. Android-Bau (andere Sitzung, nur Ad-hoc-Gradle): `app/.cxx` loeschen / neu konfigurieren, weil
    `engine/src/re2_fx.c` und `platform/pc/src/re2fx_pc.c` neu sind (GLOB-Cache) — sonst Linkfehler, sobald
    `main.c` `re2fx_*` ruft. `release/build_android.sh:198` tut das beim Release-Bau schon selbst.
