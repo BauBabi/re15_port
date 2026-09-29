@@ -11,6 +11,9 @@ ein Farbband je Speicherung, Beleg §1.5).
 
 Status: GEBAUT + ABGENOMMEN (Framedumps echte exe, §5); Riegel unit_r33_speichern +
 integration_r33_speichern (§4). Commit ee17ca0a (Bau) auf Zweig r33/speichern.
+Suite (local_build.sh all): 417/418 im Gesamtlauf; der eine Ausfall integration_r30_granate_laden
+(Prozess mitten im Lauf abgerissen, Bild 180, exit 1, dasselbe Muster wie §4) einzeln wiederholt gruen
+-> 418/418. integration_r33_speichern im Gesamtlauf gruen (72 s).
 
 Quellen (nur gelesen): `info/re2leon/PSX.EXE` (SLUS_007.48, t_addr 0x80010000, RAM = 0x80010000 +
 Datei-Offset - 0x800), `info/re2leon/COMMON/BIN/MEM_CARD.BIN` (laedt @0x801C0000), `info/Re1.5/PSX.EXE`,
