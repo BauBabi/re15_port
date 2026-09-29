@@ -42,11 +42,6 @@ extern void re15_render_pc_request_readback(const char *path);
  * analysis/tor_1170/05_port_anschluss.md 2.1). */
 #define TUER_TIM_SLOT 24
 
-/* Tuerlicht RE2 (08_re_zeichnen.md 3): Lichtmatrix @0x8009a470, Farbmatrix @0x8009a490
- * (neunmal 0x0640 = 1600), Hintergrundfarbe 68 bzw. 136 bei Flag 0x1000 (@0x800142ac..308). */
-static const int16_t L_TUER[9] = { 400, 800, -500,  -1800, -1000, -2700,  3500, 6700, 1200 };
-#define LCM_TUER 1600
-
 /* ===========================================================================
  * Takt: virtueller Vcount mit NTSC 59,826 Hz (psx-spx graphicsprocessingunitgpu.md:1264).
  * VSync(0) = auf die naechste Austastung nach dem Aufruf warten (@0x80085efc..f58,
@@ -73,103 +68,28 @@ static void vsync0(void)
 }
 
 /* ===========================================================================
- * Zeichnen eines Tuerobjekts (FUN_80014234 Schritte e/f + FUN_8001468c), Rezept
- * 08_re_zeichnen.md 4.2.
+ * Zeichnen eines Tuerobjekts: die Dreiecksschleife (FUN_80014234 e/f + FUN_8001468c, samt
+ * Unterteilung bei Flag 0x20) liegt seit Runde 32 plattformfrei in engine/src/door_seq_zeichnen.c;
+ * hier nur die Uebergabe an die Warteschlange des Renderers. Die Textur liegt im Atlas je
+ * tpage-Spalte um (page & 0xF) * 128 verschoben.
  * ======================================================================== */
-static int32_t sat16(int32_t v) { return v < -0x8000 ? -0x8000 : (v > 0x7fff ? 0x7fff : v); }
-
-typedef struct { int sx, sy; uint16_t sz; } ecke_t;
-
-/* RTPT (sf=1) mit RT = W, TR = T: IR = sat((TR<<12 + R*V) >> 12), SZ3 = sat(MAC3>>12, 0..0xffff),
- * SX = (OFX + IR1 * n) >> 16 mit n = Division(H, SZ3), OFX/OFY = 160/120 (03 3.2 geerbt). */
-static ecke_t projizieren(const re15_door_mat_t *w, const re15_md1_vertex_t *v)
+static void dreieck_abgeben(void *ctx, const re15_door_dreieck_t *d)
 {
-    ecke_t e;
-    int32_t ir[3], mac3 = 0;
-    for (int i = 0; i < 3; i++) {
-        int32_t s = (int32_t)w->m[i * 3 + 0] * v->x + (int32_t)w->m[i * 3 + 1] * v->y
-                  + (int32_t)w->m[i * 3 + 2] * v->z;
-        int32_t mac = (s >> 12) + w->t[i];
-        ir[i] = sat16(mac);
-        if (i == 2) mac3 = mac;
-    }
-    uint32_t sz = mac3 < 0 ? 0u : (mac3 > 0xffff ? 0xffffu : (uint32_t)mac3);
-    uint32_t n = re15_gte_divide(RE15_DOOR_H, sz);
-    int64_t sx = ((int64_t)160 << 16) + (int64_t)ir[0] * n;
-    int64_t sy = ((int64_t)120 << 16) + (int64_t)ir[1] * n;
-    e.sx = (int)(sx >> 16);
-    e.sy = (int)(sy >> 16);
-    if (e.sx < -0x400) e.sx = -0x400; if (e.sx > 0x3ff) e.sx = 0x3ff;
-    if (e.sy < -0x400) e.sy = -0x400; if (e.sy > 0x3ff) e.sy = 0x3ff;
-    e.sz = (uint16_t)sz;
-    return e;
+    (void)ctx;
+    int pxo = (int)((d->page & 0x000F) * 128);
+    re15_render_textured_tri_lit(d->x[0], d->y[0], (int)d->u[0] + pxo, (int)d->v[0],
+                                 d->x[1], d->y[1], (int)d->u[1] + pxo, (int)d->v[1],
+                                 d->x[2], d->y[2], (int)d->u[2] + pxo, (int)d->v[2],
+                                 (int)d->page, (int)d->clut, (int)d->z,
+                                 d->rgb[0][0], d->rgb[0][1], d->rgb[0][2],
+                                 d->rgb[1][0], d->rgb[1][1], d->rgb[1][2],
+                                 d->rgb[2][0], d->rgb[2][1], d->rgb[2][2]);
 }
 
-/* Ein Mesh mit Objektmatrix welt (Licht mit welt_vor) zeichnen - FUN_80014234 e/f + FUN_8001468c. */
 static void mesh_zeichnen(const re15_md1_mesh_t *m, const re15_door_mat_t *welt,
                           const re15_door_mat_t *welt_vor, uint16_t flags, int *lfd)
 {
-    /* Licht: LLM = L * W des VORIGEN Bildes (Schritt e liest obj+84, bevor Schritt i es neu
-     * schreibt - 08_re_zeichnen.md 1.3), BK 68/136, LCM 1600. */
-    re15_actor_lightctx_t w, ctx;
-    memset(&w, 0, sizeof w);
-    for (int i = 0; i < 3; i++)
-        for (int k = 0; k < 3; k++) {
-            w.L[i][k] = L_TUER[i * 3 + k];
-            w.C[i][k] = LCM_TUER;
-        }
-    uint8_t bk = (flags & 0x1000) ? 136 : 68;
-    w.ambient[0] = w.ambient[1] = w.ambient[2] = bk;
-    w.active_lights = 3;
-    int32_t wv[9];
-    for (int i = 0; i < 9; i++) wv[i] = welt_vor->m[i];
-    re15_light_ctx_rotate_for_bone(&w, wv, &ctx);
-
-    int platz = 0;   /* Flags & 0xc0 == 0: Platz des vorigen Dreiecks (@0x800149e0) */
-    for (int t = 0; t < m->triangle_count; t++) {
-        const re15_md1_triangle_t *tr = &m->triangles[t];
-        if (tr->v0 >= m->tri_vertex_count || tr->v1 >= m->tri_vertex_count || tr->v2 >= m->tri_vertex_count)
-            continue;
-        ecke_t e0 = projizieren(welt, &m->tri_vertices[tr->v0]);
-        ecke_t e1 = projizieren(welt, &m->tri_vertices[tr->v1]);
-        ecke_t e2 = projizieren(welt, &m->tri_vertices[tr->v2]);
-        /* NCLIP: gezeichnet bei MAC0 >= 0 (@0x800148d0 / @0x800148f8 bgez) */
-        int64_t mac0 = (int64_t)e0.sx * e1.sy + (int64_t)e1.sx * e2.sy + (int64_t)e2.sx * e0.sy
-                     - (int64_t)e0.sx * e2.sy - (int64_t)e1.sx * e0.sy - (int64_t)e2.sx * e1.sy;
-        if (mac0 < 0) continue;
-        /* NCCT mit den drei Eckennormalen (@0x80014958) */
-        uint8_t c[3][3];
-        const uint16_t ni[3] = { tr->n0, tr->n1, tr->n2 };
-        for (int k = 0; k < 3; k++) {
-            if (ni[k] < m->tri_normal_count) {
-                const re15_md1_vertex_t *nv = &m->tri_normals[ni[k]];
-                re15_light_shade_vertex(&ctx, nv->x, nv->y, nv->z, &c[k][0], &c[k][1], &c[k][2]);
-            } else {
-                c[k][0] = c[k][1] = c[k][2] = 0x80;
-            }
-        }
-        /* AVSZ3 mit ZSF3 = 341 (@0x8008d29c), verworfen bei otz < 64 (@0x800149a8/ac) */
-        int32_t otz = (341 * ((int32_t)e0.sz + e1.sz + e2.sz)) >> 12;
-        if ((otz >> 6) == 0) continue;
-        /* Ordnungstabelle (08_re_zeichnen.md 2.2): 0x80 -> (otz>>7)+511, 0xc0 -> otz>>7,
-         * 0x40 -> eigene 16er-Tabelle, vor allem gezeichnet. Port-Schluessel: groesser = frueher
-         * gezeichnet; innerhalb eines Platzes das SPAETER eingehaengte zuerst (addPrim vorn). */
-        switch (flags & 0xC0) {
-        case 0x80: platz = (otz >> 7) + 511; break;
-        case 0xC0: platz = otz >> 7; break;
-        case 0x40: platz = 1024 + (otz >> 12); break;
-        default: break;
-        }
-        int z = platz * 4096 + ((*lfd)++ & 0xfff);
-        const re15_md1_tri_uv_t *uv = &m->triangle_uvs[t];
-        int pxo = (int)((uv->page & 0x000F) * 128);
-        re15_render_textured_tri_lit(e0.sx, e0.sy, (int)uv->u0 + pxo, (int)uv->v0,
-                                     e1.sx, e1.sy, (int)uv->u1 + pxo, (int)uv->v1,
-                                     e2.sx, e2.sy, (int)uv->u2 + pxo, (int)uv->v2,
-                                     (int)uv->page, (int)uv->clut, z,
-                                     c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2],
-                                     c[2][0], c[2][1], c[2][2]);
-    }
+    re15_door_mesh_zeichnen(m, welt, welt_vor, flags, lfd, dreieck_abgeben, NULL);
 }
 
 /* ===========================================================================

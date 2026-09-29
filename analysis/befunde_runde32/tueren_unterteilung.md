@@ -130,3 +130,23 @@ Ausgleichsgerade, Abweichung in Pixeln des 960x720-Abzugs = 3 x PSX-Pixel):
 Angesehen: S017 Mitte zeigt die V-Form an Fenster-Unterkante UND Feld-Oberkante (Spitze bei x ~ 605), S043 den fuenfeckigen
 Fensterumriss des linken Fluegels (Knick oben rechts und unten).
 
+## 3. Bau
+
+- **`engine/src/door_seq_zeichnen.c` (neu, plattformfrei):**
+  - `re15_door_rtpt` = die RTPT-Rechnung, die bisher als `projizieren` in `door_scene_pc.c` stand (unveraendert verschoben;
+    OFX/OFY 160/120 jetzt mit RE2-Beleg @0x80068e80/88 -> SetGeomOffset 0x8008de04).
+  - `re15_door_divide_gt3` = DivideGT3 0x8008ebf4 + RotAverageNclip3 + ReadSZfifo3 + RCpolyGT3A, Schritt fuer Schritt nach 1.4
+    (Nah-/Bild-Verwurf streng, Mitten `sra` bzw. `srl`, Blatt- und Rekursionsfolge getrennt, cr[5]).
+  - `re15_door_mesh_zeichnen` = die Dreiecksschleife FUN_80014234 e/f + FUN_8001468c, bisher `mesh_zeichnen` in
+    `door_scene_pc.c`, unveraendert verschoben; neu nur der Zweig `flags & 0x20` nach der OT-Platz-Wahl: DivideGT3 mit
+    `c[0]` (NCCT-Farbe Ecke 0) fuer alle Ecken, ndiv/pih/piv = `RE15_DOOR_NDIV/PIH/PIV` (3/320/240, @0x80013dcc/d4/dc),
+    Teildreiecke auf den OT-Platz des Ursprungsdreiecks, laufende Nummer zaehlt je Teildreieck weiter (addPrim vorn).
+    Das Ursprungsdreieck selbst wird dann nicht abgegeben (RE2 @0x80014ab8 `j 0x80014ae8`).
+- `include/re15_door_seq.h`: Konstanten mit @-Adresse, `re15_door_ecke_t`, `re15_div_rvec_t` (RVECTOR), `re15_door_dreieck_t`.
+- `platform/pc/src/door_scene_pc.c`: nur noch die Abgabe je Dreieck an `re15_render_textured_tri_lit` (Atlas-Versatz
+  `(page & 0xF) * 128` wie bisher).
+- Nicht angefasst: Tor-Daten/Tor-Generatoren, Maschine, Griff-Tausch (zeichnet ueber denselben Pfad; Griff-Objekte tragen
+  kein 0x20), PSX-Plattform (keine Tuerszene).
+- Schluessel-Umfang: laufende Nummer `& 0xfff` - groesstes Bild: 2 Blaetter x 12 Dreiecke x 64 + Griffe < 4096 (die Blatt-Meshes
+  aller 0x20-Archive haben 12 Dreiecke, gezaehlt aus den MD1), Warteschlange 8192.
+

@@ -15,6 +15,10 @@ Ablauf:
     2. Boegen bauen:
        python re15_port/tools/tueren/tuer_kontaktbogen.py
        -> build/r31_tueren/t4/kontaktbogen_NN.png, verkleinert analysis/befunde_runde31/tueren_belege/t4_kontaktbogen_NN.jpg
+
+Pfade (Runde 32, Arbeitsbaum ohne eigene T1-Ausschnitte): --t1 <dir> (zensus.json + re15_seiten, z. B. der
+Hauptbaum build/r31_tueren/t1, nur gelesen), --bilder <dir> (Sequenzbilder), --aus <dir> (Boegen),
+--belege <dir> und --praefix <name> (verkleinerte jpg).
 """
 import argparse
 import glob
@@ -39,6 +43,23 @@ EXE = os.path.join(PORT, "build", "platform", "pc", "re15_pc.exe")
 ZELLE = (240, 180)
 ZEILEN_JE_BOGEN = 12
 TEXT_B = 250
+
+
+def pfade_setzen(t1=None, bilder=None, aus=None, belege=None):
+    global ZENSUS, SEITEN, AUS, BILDER, BELEGE
+    if t1:
+        ZENSUS = os.path.join(t1, "zensus.json")
+        SEITEN = os.path.join(t1, "re15_seiten")
+    if aus:
+        AUS = aus
+        BILDER = os.path.join(AUS, "bilder")
+    if bilder:
+        BILDER = bilder
+    if belege:
+        BELEGE = belege
+
+
+PRAEFIX = "t4_kontaktbogen"
 
 
 def seiten_lesen():
@@ -132,7 +153,7 @@ def boegen():
         ziel = os.path.join(AUS, "kontaktbogen_%02d.png" % (b + 1))
         bogen.save(ziel)
         klein = bogen.resize((bogen.width * 2 // 3, bogen.height * 2 // 3), Image.LANCZOS)
-        klein.save(os.path.join(BELEGE, "t4_kontaktbogen_%02d.jpg" % (b + 1)), quality=72)
+        klein.save(os.path.join(BELEGE, "%s_%02d.jpg" % (PRAEFIX, b + 1)), quality=72)
         print("geschrieben:", ziel)
     print("Seiten %d, Boegen %d, ohne Sequenzbilder: %s" % (len(liste), n_boegen, " ".join(fehlend) or "keine"))
     return 0 if not fehlend else 1
@@ -141,7 +162,13 @@ def boegen():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--erzeugen", action="store_true", help="erst die Bilder mit der echten exe erzeugen")
+    ap.add_argument("--t1"); ap.add_argument("--bilder"); ap.add_argument("--aus"); ap.add_argument("--belege")
+    ap.add_argument("--praefix")
     a = ap.parse_args()
+    pfade_setzen(a.t1, a.bilder, a.aus, a.belege)
+    if a.praefix:
+        global PRAEFIX
+        PRAEFIX = a.praefix
     if a.erzeugen:
         erzeugen()
     sys.exit(boegen())
