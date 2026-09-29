@@ -1,3 +1,50 @@
+# v0.8.19 - 2026-09-29
+
+Ihre vier Auftraege dieser Runde sind gebaut. Suite 416 -> 428/428.
+
+## Was Sie merken
+
+**Speichern nur mit Memory Card.** Wie RE2s Schreibmaschine mit dem Farbband (AOT-Typ 9,
+Handler 0x80051AB0; Farbband-Suche nur im INVENTAR, nicht in der Item-Box): ohne Memory Card
+kommt nach dem ersten Satz der Stelle "If I had a Memory Card, I could save my progress...", mit
+Memory Card "You can save your progress with this. Will you use the Memory Card?" mit Ja/Nein;
+Ja oeffnet den Speicherbildschirm. RE2s Wortlaut (0x8009EFCC / 0x8009F01F), nur "Ink Ribbon" ->
+"Memory Card". Die Karte wird NICHT verbraucht (Ihr Wunsch; RE2 verbraucht das Farbband).
+Gilt an allen 16 Speicherstellen. Aeltere Spielstaende haben noch keine Memory Card — sie liegt
+auf Irons' Schreibtisch.
+
+**Karte: nach dem Irons-Hinweis ist 2F waehlbar, der Communication Room bleibt markiert.**
+Nach der Szene springt die Karte mit "runter" von 3F auf 2F (vorher uebersprungen, solange 2F
+nie betreten war) und zeigt dort den Communication Room im selben Rot/Umriss-Blinken wie im
+Hinweis — bis Sie ihn betreten, danach erscheint er als besucht. Das ueberlebt Speichern und
+Laden. RE2 selbst hat keine dauerhafte Ziel-Markierung (sein Kartenzeichner FUN_8006E120 kennt nur
+besucht / aktuell / unbesucht); gebaut auf Ihren Wunsch, im Stil des RE2-Hinweises.
+
+**ROOM1130 -> ROOM1120 erst nach Irons.** Bis zur ersten Szene mit Chief Irons steht an der
+Tuer "I have to report the situation to the chief first..." — kein Raumwechsel, keine
+Tueranimation. Die Szene spielt uebrigens in seinem Buero ROOM1150 (Flag 3/94, gesetzt in
+ROOM1150 sub08 @0x01110); in ROOM1170 gibt es keine Irons-Szene. RE2 sperrt Story-Tueren genauso,
+ohne Ton (ROOM2190 "I have to get back to Ben!"). Elza hat keine Irons-Szene, fuer sie bleibt
+die Tuer offen (sonst kaeme sie nie weiter).
+
+**Tueranimationen jetzt fuer 141 von 144 Tueren.** Die 57 Tueren, die es in RE2 nicht genau
+so gibt, haben jetzt eigene Tuermodelle: Bewegung, Skripte, Ton und Griff vom naechsten
+RE2-Archiv, die Textur so bearbeitet, dass sie der gemalten RE1.5-Tuer entspricht (z.B. die
+glatten dunklen Stahltueren im Revier = DOOR07 ohne Lueftungsschlitze, umgefaerbt, Druecker mit
+Schild wie gemalt). Die drei Tueren, die RE1.5 auf beiden Seiten verschieden malt, sind jetzt von
+beiden Seiten animiert; Treppenhausseiten haben ihre graugruene Farbe. Durchgaenge ohne
+Tuerblatt zeigen, was RE2 dort zeigt (Blende mit Ton, Archiv DOOR36). Nicht animiert sind nur
+drei Uebergaenge in ROOM1250, die im Spiel nie begehbar sind.
+
+## Grenzen
+
+* Das Hochklettern in eine Nische (T085) nutzt ebenfalls die Blende: RE2 hat fuer Klettern
+  nichts Passendes.
+* Kleinigkeiten bei den neuen Tueren: Strahlenschild P27S sitzt etwas tiefer als gemalt, Handrad
+  P26W bleibt in der Blattmitte, Toiletten-Piktogramme innen gespiegelt, das Gittertor behaelt
+  RE2-Rauten, zwei sehr hell gemalte Tueren sind an der Obergrenze der Helligkeit.
+* Die Toene sind nach Stimme und Tonhoehe gemessen, nicht angehoert.
+
 # v0.8.18 - 2026-09-29
 
 Ihre drei Befunde zu v0.8.17 sind behoben. Suite 411 -> 416/416.
