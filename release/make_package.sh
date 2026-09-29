@@ -189,18 +189,23 @@ check_tree() {           # $1 = fertiger Paketordner
     done
     # Seit v0.8.16: die Tuersequenz des Tors ROOM1170 spielt den Ton des RE2-Gittertors aus
     # shared_assets/RE2/TORSE.VBS (audio_pc.c load_re2_tor_se_pc). Fehlt sie, laeuft die
-    # Sequenz stumm - Gate statt Stille.
+    # Sequenz stumm - Gate statt Stille. Seit Runde 34a zusaetzlich bytegleich (cmp) mit der
+    # Quelle, wie die Tuerarchive unten.
     [[ -s "$out/shared_assets/RE2/TORSE.VBS" ]]         || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/TORSE.VBS (Tuersequenz waere stumm)"
+    cmp -s "$RE2/TORSE.VBS" "$out/shared_assets/RE2/TORSE.VBS" \
+        || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS"
     # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
     # UNVERAENDERT aus shared_assets/RE2/DOOR/DOORxx.DO2 (door_scene_pc.c re2_archiv_lesen,
     # Modellteil + Tonteil). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang
-    # ohne Sequenz - Gate statt Stille: jede DOORxx.DO2 des Quellbaums muss im Paket liegen
-    # und darf nicht leer sein.
+    # ohne Sequenz - Gate statt Stille: jede DOORxx.DO2 des Quellbaums muss im Paket liegen,
+    # darf nicht leer sein und muss (seit Runde 34a, wie RE15DOOR) bytegleich sein.
     local n_tuer=0 tf
     for tf in "$RE2"/DOOR/*.DO2; do
         [[ -e "$tf" ]] || die "Quellbaum ohne shared_assets/RE2/DOOR/*.DO2 (Tuersequenzen haetten kein Modell)"
         [[ -s "$out/shared_assets/RE2/DOOR/$(basename "$tf")" ]] \
             || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/DOOR/$(basename "$tf") (Tuersequenz ohne Modell)"
+        cmp -s "$tf" "$out/shared_assets/RE2/DOOR/$(basename "$tf")" \
+            || die "RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/$(basename "$tf")"
         n_tuer=$((n_tuer + 1))
     done
     echo "   Tuerarchive im Paket: $n_tuer x shared_assets/RE2/DOOR/*.DO2"
@@ -395,8 +400,19 @@ check_runtime_assets() {
 # --- Gemeinsames Einsammeln --------------------------------------------------
 [[ -d "$ASSETS" ]] || die "Asset-Baum fehlt: $ASSETS"
 [[ -d "$FX"     ]] || die "Effekt-Texturen fehlen: $FX"
-[[ -s "$RE2/CDEMD0.EMS" && -s "$RE2/ENEMSE.VBS" ]] || die "RE2-Assets fehlen: $RE2"
+[[ -s "$RE2/CDEMD0.EMS" && -s "$RE2/ENEMSE.VBS" && -s "$RE2/TORSE.VBS" ]] || die "RE2-Assets fehlen: $RE2"
 [[ -s "$SYNCHRO/STAGE1/room1170/main00.wav" ]] || die "Voiceover-Quelle fehlt: $SYNCHRO/STAGE1"
+
+# --- Python (verify_split, zip_exec_bit.py) ---------------------------------
+# ⛔ NIE blind "python3"/"python" (Runde 34a): unter Git-Bash ist "python3" zuerst der
+# WindowsApps-Alias - der Aufruf in verify_split hat in v0.8.17 ungefragt Python 3.14
+# installiert, v0.8.19 lief nur mit einem Shim im PATH. python_finden.sh verwirft den Alias,
+# ohne ihn zu starten, und setzt PY. Nur beim Zippen noetig, aber VOR den Kopierminuten suchen.
+if [[ $DO_ZIP -eq 1 ]]; then
+    # shellcheck source=python_finden.sh
+    source "$HERE/python_finden.sh" \
+        || die "kein echtes Python >= 3.8 (release/python_finden.sh) - verify_split/zip_exec_bit.py brauchen es"
+fi
 
 copy_common() {          # $1 = Paketordner
     local out="$1"
@@ -435,7 +451,7 @@ render_readme() {        # $1 = Vorlage, $2 = Ziel
 # Satzes und nennt die Volume-Nummer jedes Eintrags — daran haengt, ob der Satz
 # vollstaendig ist.
 verify_split() {         # $1 = .zip (letztes Volume), $2 = erwartete Dateizahl
-    python3 - "$1" "$2" <<'PY'
+    "$PY" - "$1" "$2" <<'PY'
 import struct, sys, glob, os
 last, want = sys.argv[1], int(sys.argv[2])
 d = open(last, 'rb').read()
@@ -533,10 +549,10 @@ if [[ $DO_ZIP -eq 1 ]]; then
         # entpackt und das Binary direkt startet, bekam "Permission denied".
         # Gesetzt wird im Zentralverzeichnis des letzten Volumes, danach wird
         # zurueckgelesen: ohne das Gate kehrt der Fehler beim naechsten Bau still wieder.
-        python "$HERE/zip_exec_bit.py" setzen \
+        "$PY" "$HERE/zip_exec_bit.py" setzen \
             "${NAME}_linux_steamdeck_x64.zip" re15_pc run.sh \
             || die "x-Bit konnte nicht gesetzt werden"
-        python "$HERE/zip_exec_bit.py" pruefen \
+        "$PY" "$HERE/zip_exec_bit.py" pruefen \
             "${NAME}_linux_steamdeck_x64.zip" re15_pc run.sh \
             || die "Gate: Linux-Archiv liefert eine Datei ohne Ausfuehrungsbit"
     fi
