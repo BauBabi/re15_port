@@ -236,3 +236,12 @@ an RE2**, sonst bleibt jeder Bildpunkt gleich. Bild: `tor_belege/re2_door2e_bild
    `re15_render_textured_tri_lit`) besteht weiter: behoben ist nur die Tuerszene. Fuer Figuren mit
    Raumlicht ist nicht gemessen, wie oft Eckfarben ueber 0x80 vorkommen.
 3. 5-Bit-Rundung der GPU-Modulation und Dithering (08 Offen 3) nicht nachgebildet.
+
+## 7. Suite
+
+`bash re15_port/tools/local_build.sh all` auf 8b946a36: **`=== LOCAL-BUILD-OK (all) — Tests 413/413`**
+(655 s). Drei vorherige Laeufe hatten je 1..5 GUI-Integrationstests rot (elza_vollstart,
+r30_granate_laden, r30_irons_tisch_bild/licht, r30_sicherung_bild), alle mit exit=1 MITTEN im Lauf
+ohne Absturzeintrag, waehrend zwei parallele Agenten (r32_hebetisch, r32_unterteilung) ihre Suiten
+fuhren; jeder davon einzeln gruen (elza 100 s, granate 87 s). Keiner dieser Tests beruehrt die
+Tuerszene.
