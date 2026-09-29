@@ -477,6 +477,50 @@ static int aspekt_lauf(int32_t hoehe)
     return 0;
 }
 
+/* 44x Landung im Luft-SCHRUMPFEN (Zustand 1): Op 46 setzt +0x1B nicht (@0x80020b60-c30), Op 19 zaehlt
+ * dann nur den Landezaehler 38 + r%8 im Schrumpfzweig herunter und stirbt (Saeure-GP §11). */
+static int pruef_landung_zustand1(void)
+{
+    start();
+    const int32_t q[3] = { 0, -100, 0 };
+    re2fx_aufschlag(1, q, 0);
+    re2fx_tick(); re2fx_tick();                         /* X, X+1: Flamme 92 nach Op 27 in der Luft */
+    uint8_t *w = re2fx_platz_sonde(92);
+    if (w[0] != 58) return fail(440, "Flamme nach Op 27 nicht in Op 58");
+    w[0x1B] = 1; w[0x42] = 50; w[0x43] = 0;            /* Luft-Zustand 1 mit langem Zaehler erzwingen */
+    int gel = -1, c = -1, tot = -1, zustand2 = 0;
+    for (int t = 0; t < 200; t++) {
+        re2fx_tick();
+        const uint8_t *f = re2fx_platz(92);
+        if (gel < 0 && f[0] == 19) { gel = t; c = s16(f, 0x42); if (f[0x1B] != 1) return fail(441, "Op 46 hat +0x1B gesetzt"); }
+        if (gel >= 0 && f[0x1B] == 2) zustand2 = 1;
+        if (u16(f, 0x18) == 0) { tot = t; break; }
+    }
+    if (gel < 0 || tot < 0) return fail(442, "Flamme landet/stirbt nicht");
+    if (c < 38 || c > 45) return fail(443, "Landezaehler != 38 + r%8");
+    if (zustand2) return fail(444, "nach Landung im Zustand 1 wieder Zustand 2");
+    if (tot - gel != c + 2) return fail(445, "Lebensdauer nach Landung im Zustand 1 != Zaehler + 2");
+    return 0;
+}
+
+/* 45x Pause-Gate: 0x10000000 (RE15_PAUSE_ACTION == RE2 0x800CFBDC-Bit @0x8001d318-2c) haelt die
+ * Aufschlag-Baenke 2/3/4/5 an (Bank-Liste 26/28/40/21/22/1 @0x8001d354-80); danach geht es weiter. */
+extern uint32_t g_re15_pauseflags;
+static int pruef_pause(void)
+{
+    start();
+    const int32_t q[3] = { 0, 0, 0 };
+    re2fx_aufschlag(2, q, 0);
+    g_re15_pauseflags |= 0x10000000u;
+    for (int t = 0; t < 5; t++) re2fx_tick();
+    int angehalten = (s_se_n == 0 && u16(re2fx_platz(95), 0x12) == 0 && lebendig() == 1);
+    g_re15_pauseflags &= ~0x10000000u;
+    if (!angehalten) return fail(450, "Pause haelt die RE2-FX nicht an");
+    re2fx_tick();
+    if (s_se_n != 1 || lebendig() != 4) return fail(451, "nach der Pause laeuft Phase 0 nicht");
+    return 0;
+}
+
 int main(void)
 {
     if (laden() != 0) return fail(1, "CORE00.ESP fehlt");
@@ -487,6 +531,8 @@ int main(void)
     if ((rc = pruef_bodenfeuer())) return rc;
     if ((rc = pruef_folgetakt())) return rc;
     if ((rc = pruef_aspekte())) return rc;
+    if ((rc = pruef_landung_zustand1())) return rc;
+    if ((rc = pruef_pause())) return rc;
     printf("probe_r34_re2fx: alle Pruefungen gruen\n");
     return 0;
 }

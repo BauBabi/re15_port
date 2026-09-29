@@ -111,10 +111,10 @@ unsigned re2fx_op_zaehler(int op) { return (op >= 0 && op < 96) ? s_op_zaehler[o
 
 /* Sichere Lesezugriffe in die registrierte Datei (das Original prueft nichts; die Datei ist
  * konsistent — ausserhalb liefert der Port 0 und zaehlt es als unbekannt). */
-static const uint8_t k_null8[8] = {0};
+static const uint8_t k_null[32] = {0};             /* groesster Leser: 24-Byte-Step */
 static const uint8_t *esp_at(uint32_t off, uint32_t n)
 {
-    if (!s_esp || (size_t)off + n > s_esp_size) { s_op_unbekannt++; return k_null8; }
+    if (!s_esp || n > sizeof k_null || (size_t)off + n > s_esp_size) { s_op_unbekannt++; return k_null; }
     return s_esp + off;
 }
 
