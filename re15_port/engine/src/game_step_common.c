@@ -1766,16 +1766,19 @@ void re15_game_step(const re15_game_ctx_t *c)
                         [8] = {1,1,1,3, {{2,3,0x0f00,{0xa0,0x528,3}},   /* @0x80033a5c-a4 */
                                          {3,0,0x1400,{0xa0,0x500,3}},   /* @0x80033aa8-c8 */
                                          {4,3,0x0920,{0xa0,0x208,0x50}}}},/* @0x80033acc-f8 */
-                        /* Granatwerfer: Handler 0x80033B38 = reiner Ammo-Stub (8
-                         * Instruktionen, KEINE FX, KEIN Hitscan @0x80033b40). Das
-                         * Projektil 0x040D1000 spawnt im FSM bei Rueckstoss-Frame
-                         * 19/22/24 (unten). resolve=1 ist eine PORT-BRUECKE: der
-                         * Explosionsschaden des Projektils ist noch un-RE'd (SPEC §4
-                         * Punkt 4) - ohne die Bruecke waere die Waffe wirkungslos. */
-                        [9] = {1,1,1,0, {{0}}},
-                        /* Granaten-Varianten 10/11: im Auslieferungsstand FOLGENLOS
-                         * (nur Ammo-Abzug @0x80033b58/78, kein Projektil, kein
-                         * Schaden) - byte-true so uebernommen. */
+                        /* Granate 0x09: Handler 0x80033B38 = reiner Ammo-Stub (8
+                         * Instruktionen, KEINE FX, KEIN Hitscan: nur `jal 0x8004eae4`
+                         * @0x80033b40). Das Projektil 0x040D1000 spawnt im FSM bei
+                         * Rueckstoss-Frame 19/22/24 (unten). Runde 34 A8 / P1: die
+                         * PORT-BRUECKE resolve=1 (Sofort-Hitscan im Abzugsbild, gemessen
+                         * 22 Bilder VOR dem Loslassen) ist weg — der Schaden kommt jetzt
+                         * byte-true aus Routine 31 (Zuender 7, `jal 0x80012d60` @0x800185b8,
+                         * re15_esp.c). resolve := 0. */
+                        [9] = {1,0,1,0, {{0}}},
+                        /* Granaten-Varianten 10/11: Entlade-Handler 0x80033B58/78 = nur
+                         * Ammo-Abzug (`jal 0x8004eae4` @0x80033b60/80), bytegleich zu 9.
+                         * Das Projektil kommt seit Runde 34 aus dem erweiterten Spawn-Gate
+                         * unten (E1, Port-Zuordnung). */
                         [10] = {1,0,1,0, {{0}}},
                         [11] = {1,0,1,0, {{0}}},
                         /* 12/14/19 Dauerfeuer: NICHT hier - eigener Pfad unten */
@@ -1939,16 +1942,30 @@ void re15_game_step(const re15_game_ctx_t *c)
                 }
             }
         }
-        /* GRANATWERFER (NUR Id 9, Gate hart @0x8003368c): Projektil 0x040D1000 bei
-         * Rueckstoss-Frame 19 (HOCH, Offs {0,0x12c,0x320}) / 22 (MITTE, {0,0,0x1f4}) /
-         * 24 (TIEF, {0,0,0x12c}) (@0x800336bc-0x800337a4). R1-Loslassen vor dem
-         * Spawn-Frame bricht den Rueckstoss (Schwelle 10) und unterdrueckt die
-         * Granate - Munition ist trotzdem weg (byte-true). */
+        /* GRANATE (Wurf): Projektil 0x040D1000 bei Rueckstoss-Frame 19 (HOCH, Offs
+         * {0,0x12c,0x320}) / 22 (MITTE, {0,0,0x1f4}) / 24 (TIEF, {0,0,0x12c})
+         * (@0x800336bc-0x800337a4). R1-Loslassen vor dem Spawn-Frame bricht den Rueckstoss
+         * (Schwelle 10) und unterdrueckt die Granate - Munition ist trotzdem weg (byte-true).
+         * Runde 34 A8:
+         *  - SPAWN-GATE: das Original spawnt NUR Id 9 (`lbu v1,-13731(v1)` / `ori v0,zero,0x9` /
+         *    `bne v1,v0,0x800337ac` @0x80033684-8c). E1 (Port-Zuordnung): 10/11 nutzen denselben
+         *    Wurf (Baenke PL00W09/0A/0B bytegleich, Entlade-Handler 0x80033B38/58/78 bytegleich,
+         *    Waffen-Parametersatz @0x800740b8/bd/c2 je `18 30 0a 01 00`).
+         *  - ART-KENNUNG (granate_art = Resolver-Art a2) EXPLIZIT: 9 -> 2 (`ori a2,zero,0x2`
+         *    @0x800185b4), 10 -> 3, 11 -> 4 (E3: DAT_8006f430[3]/[4] = 10/11 @0x8006f433/34 =
+         *    die Item-Ids, DAT_8006f418[3]/[4] = 1000 @0x8006f41e/20; ohne Aufrufer im Original).
+         *  - GIER: a1 = `lh a1,-13634(a1)` (0x800acabe = Spieler +0x6a) @0x800336cc (+@0x8003372c,
+         *    @0x80033788) -> Platz +0x2e (`sh s2,46(t0)` @0x800197e4). Port: pl->rot_y (== +0x6a,
+         *    Walker actor_locomotion.c:339-344 dreht (v,0,0) mit derselben Matrix). Bisher 0.
+         *  - floor_y ist fuer die Granate bedeutungslos (Boden = Welt-y 0 in Routine 29,
+         *    @0x80018330-38); re15_esp_granate_spawn setzt "kein Boden". */
         {
             extern int re15_player_granate_frame(void);
             extern int re15_player_aim_elevation(void);
             extern int re15_player_gunbone_world(int32_t, int32_t, int32_t, int32_t out[3]);
-            if (re15_player_equipped_weapon() == 9) {
+            int gw = re15_player_equipped_weapon();
+            uint8_t gart = (gw == 9) ? 2 : (gw == 10) ? 3 : (gw == 11) ? 4 : 0;
+            if (gart) {
                 int gf = re15_player_granate_frame();
                 int ge = re15_player_aim_elevation();
                 int treff = (gf == 19 && ge > 0) || (gf == 22 && ge == 0) || (gf == 24 && ge < 0);
@@ -1957,8 +1974,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int32_t gox = 0, goy = (ge > 0) ? 0x12c : (ge == 0) ? 0 : 0,
                             goz = (ge > 0) ? 0x320 : (ge == 0) ? 0x1f4 : 0x12c;
                     if (re15_player_gunbone_world(gox, goy, goz, gp3))
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0x0d, 0x1000,
-                                               gp3[0], gp3[1], gp3[2], pl->y, 0);
+                        re15_esp_granate_spawn(re15_esp_global_bank(), gart,
+                                               gp3[0], gp3[1], gp3[2], (int16_t)pl->rot_y);
                 }
             }
         }

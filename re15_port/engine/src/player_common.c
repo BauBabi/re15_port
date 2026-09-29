@@ -288,6 +288,34 @@ static int aim_cur_fc(void)
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
 int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
+
+/* Runde 34 A3 — das WORT 0x800acaec (Spieler +0x98, u16), wie Routine 30 es liest
+ * (`lhu a0,-13588(a0)` @0x80018484). Im Original traegt EIN Halbwort die Zielhoehe (Bits
+ * 15/14/13) UND die Status-Unterbits (Bit 1 = Gift, @0x80012eb4); der Port fuehrt beides
+ * getrennt (s_aim_elev hier, actor.status_flags) und setzt es hier wieder zusammen. Die
+ * Schreiber der Zielbits erhalten die unteren 13 Bit (selbst gelesen):
+ *   RAISE  @0x80032f98-a4  andi v0,v0,0x1fff / ori v0,v0,0x4000 / sh v0,-13588(at)  -> 0x4000
+ *   HOCH   @0x80033228-38  andi v0,v1,0x1fff / ori v0,v0,0x8000 / sh              -> 0x8000
+ *   TIEF   @0x80033270-84  andi v0,v1,0x1fff / ori v0,v0,0x2000 / sh              -> 0x2000
+ *   MITTE  @0x800332bc-c8  andi v0,v1,0x1fff / ori v0,v0,0x4000 / sh              -> 0x4000
+ *   LOWER  @0x80033cc0-c8  andi v0,v0,0x1fff / sh                                 -> keine Zielbits
+ * Port: Ziel-Phase NONE/LOWER = keine Zielbits; sonst s_aim_elev +1/0/-1 -> 0x8000/0x4000/0x2000
+ * (RAISE und das Nachladen setzen s_aim_elev = 0 = LEVEL, s. :375). Obere Bits von status_flags
+ * (SCD Member_set 17 schreibt das ganze Halbwort, actor_common.c:158) werden hier abgeschnitten:
+ * im Port liegen die Zielbits nur in s_aim_elev. */
+static int      s_acaec_test_on = 0;
+static uint16_t s_acaec_test    = 0;
+uint16_t re15_player_acaec(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_acaec_test_on) return s_acaec_test;
+    uint16_t w = (uint16_t)(g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x1fffu);
+    if (s_player_aim_phase == RE15_AIM_NONE || s_player_aim_phase == RE15_AIM_LOWER) return w;
+    return (uint16_t)(w | (s_aim_elev > 0 ? 0x8000u : s_aim_elev < 0 ? 0x2000u : 0x4000u));
+}
+/* TEST HOOK ONLY (Sonde probe_r34_wurf): das Wort fest vorgeben, ohne die Ziel-FSM zu fahren.
+ * on = 0 schaltet zurueck auf die Zusammensetzung oben. */
+void re15_player_acaec_override_for_test(int on, uint16_t w) { s_acaec_test_on = on; s_acaec_test = w; }
 /* TEST HOOK ONLY (same stance as re15_player_set_aim_clip_len): force the aim elevation so the
  * damage resolver's band gate can be exercised without driving the whole R1 + dpad aim FSM. */
 void re15_player_set_aim_elevation_for_test(int elev) { s_aim_elev = (elev > 0) ? 1 : (elev < 0) ? -1 : 0; }

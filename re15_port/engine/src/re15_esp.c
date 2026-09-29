@@ -13,10 +13,18 @@
 #include "re15_esp.h"
 #include "re15_scd.h"   /* g_re15_pauseflags + RE15_PAUSE_ACTION — Selbst-Gate @0x80019e40 */
 #include "re15_actor.h" /* g_actors — Follow-Anker (Flags-Bit 0x04, @0x80019f44-f94) */
+#include "re15_damage.h"   /* re15_resolve_attack = FUN_80012d60 (Routine 31, Runde 34 A5) */
+#include "re15_skeleton.h" /* re15_sin_q12/re15_cos_q12 = Tabelle 0x800794c4 (RotMatrix-Zwilling) */
+#include "re15_engine.h"   /* g_engine.frame_count — nur RE15_GRANATE_LOG */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
 
 extern uint8_t re15_engine_rand8(void);   /* the shared FUN_8001af20 draw (re15_damage.c) */
+/* Runde 34 A3: das Wort 0x800acaec (Spieler +0x98) = Zielbits 0x8000/0x4000/0x2000 | Status-
+ * Unterbits; im Port getrennt gefuehrt (player_common.c s_aim_elev + actor.status_flags) und dort
+ * wieder zusammengesetzt. */
+extern uint16_t re15_player_acaec(void);
 
 /* ===== Phase ESP-B: the active effect-sprite pool ====================================== */
 
@@ -520,6 +528,61 @@ static void esp_fx_kill(re15_esp_fx_t *f)
     f->active = 0;    /* Port-Belegung nachziehen (im Original dasselbe Byte) */
 }
 
+/* ===== Runde 34 Spur A — Hilfen fuer die Granaten-Routinen 29/30/31 =========================
+ * u16-Schreiber in die Zeilenkopie slot+0x00..0x27 (die Routinen schreiben mit `sh`). */
+static void row_set16(re15_esp_fx_t *f, int off, uint16_t v)
+{
+    f->row[off] = (uint8_t)v; f->row[off + 1] = (uint8_t)(v >> 8);
+}
+
+/* KEIN BODEN fuer Granatenplaetze und ihre Kinder (E12 / A6): der Original-Tick hat keine
+ * Klemme — Physik @0x8001a2fc-388 ist reines xlat += vel, vel += acc; den Boden kennt nur
+ * Routine B (12 bzw. 29: `lh t1,42(t0)` / `blez t1` @0x80018330-38). Die Port-Sammelklemme
+ * (re15_esp_fx_tick, "FLOOR BOUNCE") vergleicht y + xlat_y >= floor_y; mit INT32_MAX greift
+ * sie fuer diese Plaetze nie. Die uebrigen Effekte behalten ihre Klemme (eigenes Thema). */
+#define ESP_KEIN_BODEN INT32_MAX
+
+/* RE15_GRANATE_LOG=<datei> — DIAGNOSE (kein Verhalten): je ESP-Tick eine Zeile je Granaten-
+ * platz (granate_art != 0) plus die Ereignisse der Routinen 29/31 (SE-, Resolver-, Kind-,
+ * Aufschlag-, Latch-Aufrufe). Datei statt stderr: die GUI-exe hat kein stderr. */
+static unsigned s_gr_tick = 0;   /* zaehlt die ESP-Ticks, die das Pause-Gate passieren */
+static FILE *esp_granate_log(void)
+{
+    static FILE *s_gl = NULL; static int s_init = 0;
+    if (!s_init) { s_init = 1;
+        const char *e = getenv("RE15_GRANATE_LOG");
+        if (e && *e) s_gl = fopen(e, "w"); }
+    return s_gl;
+}
+
+/* MESSSCHIENE fuer die Sonde (kein Verhalten): Resolver-Aufrufe aus Routine 31. */
+static unsigned s_granate_resolver_calls = 0;
+unsigned re15_esp_granate_resolver_calls(void) { return s_granate_resolver_calls; }
+
+/* FUN_800199d4-Zwilling (Kind-Spawner mit Start-Flags 0x0a), unten definiert. */
+static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier,
+                             const int32_t p[3]);
+
+/* Explosionspunkt P = (x, Welt-y - 500, z), s32 aus den s16-Feldern slot+0x28/2a/2c:
+ * `lh v0,40(v1)` / `lh v0,42(v1)` / `addiu v0,v0,-500` / `lh v0,44(v1)` @0x80018594-bc
+ * (Zuender 7), @0x80018610-38 (Zuender 2), @0x80018688-ac (Zuender 0). */
+static void esp_granate_p(const re15_esp_fx_t *f, int32_t p[3])
+{
+    p[0] = (int32_t)f->wpos[0];
+    p[1] = (int32_t)f->wpos[1] - 500;
+    p[2] = (int32_t)f->wpos[2];
+}
+
+/* Granaten-Art (Resolver-Art a2, granate_art) -> RE2-Art-Byte des Aufschlags (V1d). EXPLIZITE
+ * Tabelle, nie "Id - 9" (RE2 +0x1B := Id - 9 @0x8001f1a8-b8 im RE2-PSX.EXE: 1 = Brand/Op 48,
+ * 2 = Saeure/Op 49; RE1.5 0x0A - 9 waere 1 = Brand = vertauscht, Saeure-GP §15):
+ *   Art 3 (Item 0x0A Acid)       -> 2 (Saeure, Optab @0x8009D868[49] = 0x800215C8)
+ *   Art 4 (Item 0x0B Incendiary) -> 1 (Brand,  Optab @0x8009D868[48] = 0x80020F3C) */
+static int esp_granate_re2_art(uint8_t art)
+{
+    return (art == 3) ? 2 : (art == 4) ? 1 : 0;
+}
+
 static void esp_fx_dispatch(re15_esp_fx_t *f)
 {
     if (!f->rows_base) return;
@@ -646,6 +709,14 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
         case 9: {   /* @0x80017654 (self-verified): the positional BANG — FUN_80045024(0x01000001,
                      * &world_pos) + noise latch 0x800b5358 := 1 + advance UNCONDITIONAL. */
             if (re15_esp_bang_hook) re15_esp_bang_hook();
+            /* Runde 34 A7: der Latch 0x800b5358 ist ein EIN-BILD-LICHT, kein Laerm (Wurf-Dossier
+             * §6, Gegenpruefung K): nach dem SE `jal 0x80045024` @0x80017684 setzt Routine 9
+             *   8001768c  ori  v0,zero,0x1
+             *   80017690  lui  at,0x800b
+             *   80017694  sb   v0,21336(at)        ; 0x800b5358 := 1
+             * und erst danach `jal 0x800174e4` @0x80017698 (Vorschub). Leser/Loescher = Plattform
+             * (Spur C3: @0x8001ce60 / @0x8001d1b4). */
+            g_re15_licht_latch = 1;
             esp_fx_row_advance(f);
             break;
         }
@@ -707,6 +778,156 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             }
             break;
         }
+        case 30: {  /* ROUTINE 30 @0x8001843c-544 — WURF-INIT der Granate (Routine A der Zeile 0,
+                     * CORE00.ESP @0x1AB8 `1e 00 ...` = A 30). Laeuft im Spawnbild in Schleife 1.
+                     * Selbst disassembliert (re15_disasm.py dis 0x8001843c 68):
+                     *   80018448 ori v0,zero,0x17 / 80018450 sb v0,110(v1)   +0x6e := 23 (Anim-Satz)
+                     *   8001845c ori v0,zero,0x3  / 80018460 sb v0,108(v1)   +0x6c := 3  (Flags)
+                     *   8001846c ori v0,zero,0x1d / 80018470 sh v0,2(v1)     +0x02 := 29 (Routine B)
+                     *   80018478 sh zero,0(v1)                               +0x00 := 0  (Routine A)
+                     *   80018474 ori v0,zero,0x2a / 8001847c sh v0,30(v1)    +0x1e := 42 (Zuender)
+                     *   80018484 lhu a0,-13588(a0)                           a = u16 0x800acaec */
+            f->frame = (int16_t)(0x17 - 1); f->timer = 0;   /* +0x6e := 0x17; Port-Konvention wie
+                                                             * Routine 5/10: der Anim-Schritt des
+                                                             * Hauptlaufs landet AUF Satz 23. Gleich-
+                                                             * wertig, weil Satz 0 (Spawner-+0x6d,
+                                                             * `lbu v1,10(t5)` @0x8001989c) und Satz 23
+                                                             * (CORE00.ESP @0x17E8 `10 01 01 10`) je
+                                                             * Dauer 1 tragen. */
+            f->flags = 0x03;
+            row_set16(f, 0x02, 29);
+            row_set16(f, 0x00, 0);
+            row_set16(f, 0x1e, 42);
+            {
+                uint16_t a = re15_player_acaec();
+                if (a & 0x8000) {                  /* HOCH: andi 0x8000 @0x8001848c */
+                    f->drift_x = 0x17c;            /* ori 0x17c / sh 16(v1) @0x80018494-98 = 380 */
+                    f->drift_y = -110;             /* addiu -110 / sh 18(v1) @0x8001849c-a0 */
+                    f->drift_z = 0x15;             /* ori 0x15 / sh 20(v1) @0x800184a4-a8 = 21 */
+                    f->accel_x = -2;               /* addiu v0,zero,-2 @0x800184b0 (Delay von
+                                                    * j @0x800184ac) -> sh v0,8(v1) @0x800184dc */
+                } else if (a & 0x4000) {           /* MITTE: andi 0x4000 @0x800184b4 */
+                    f->drift_x = 0x118;            /* ori 0x118 @0x800184bc = 280 */
+                    f->drift_y = -50;              /* addiu -50 @0x800184c4 */
+                    f->drift_z = 0x18;             /* ori 0x18 @0x800184cc = 24 */
+                    f->accel_x = -1;               /* addiu v0,zero,-1 @0x800184d4 -> @0x800184dc */
+                } else if (a & 0x2000) {           /* TIEF: andi 0x2000 @0x80018510 */
+                    f->drift_x = 0x50;             /* ori 0x50 / sh 16(v1) @0x80018518-1c = 80 */
+                    f->drift_z = 0x1;              /* ori 0x1 / sh 20(v1) @0x80018520-24 */
+                    f->accel_x = -1;               /* addiu -1 / sh 8(v1) @0x80018528-2c */
+                    f->drift_y = 0;                /* sh zero,18(v1) @0x80018534 */
+                    row_set16(f, 0x26, 5);         /* ori 0x5 / sh v0,38(v1) @0x80018530/38 */
+                }
+                if (a & 0xC000) {
+                    /* HOCH und MITTE: Abprall-Zaehler +0x26 = RNG(a) % 4 + 7 (@0x800184d8-0x8001850c).
+                     * Das "RNG" FUN_8001af20 wertet NUR das Register a0 = a aus (@0x8001af30-4c:
+                     * srl v1,a0,7 / andi v1,0xff / addu a0,a0,v1 / andi a0,0xff / Rueckgabe
+                     * andi v0,a0,0xff); der geladene Zustand (lhu t1 @0x8001af28) wird nie gelesen.
+                     * -> deterministisch aus dem Wort 0x800acaec (gesund 7, Gift-Bit 0x2 -> 9).
+                     * Den Zustands-Schreiber `sw a0,0(v0)` @0x8001af48 (0x800ac774) fuehrt der
+                     * Port nicht (re15_engine_rand8 ist ein Entropie-Ersatz, re15_damage.c:60-79)
+                     * und zieht deshalb KEINEN Port-Zufallswert. %4 = C-Rest auf v >= 0
+                     * (bgez @0x800184ec) = & 3; +7 `addiu v0,v0,7` @0x80018504, `sh v0,38(a0)`
+                     * @0x8001850c. */
+                    uint32_t v1 = ((uint32_t)a >> 7) & 0xffu;
+                    uint32_t r  = ((uint32_t)a + v1) & 0xffu;
+                    row_set16(f, 0x26, (uint16_t)((r & 3u) + 7u));
+                }
+            }
+            break;
+        }
+        case 31: {  /* ROUTINE 31 @0x8001854c-6dc — ZUENDER und EXPLOSION (Routine A ab dem Liegen).
+                     * Selbst disassembliert (re15_disasm.py dis 0x8001854c 104):
+                     *   80018560 lhu v1,30(a1)          Zuender +0x1e
+                     *   80018568 beq v1,zero,0x80018688 == 0 -> Ende (Platz frei, Rauch #2)
+                     *   8001856c/70 ori v0,zero,0x7 / bne v1,v0,0x800185f4  != 7 -> weiter
+                     *   -- Zuender 7: Latch @0x8001857c, Flags 0x61 @0x80018584, P, Resolver
+                     *      @0x800185b8, Kind 0x03195000 @0x800185dc, SE 0x04080001 @0x800185ec
+                     *   80018600-08 lhu v1,30(a1) / ori v0,zero,0x2 / bne  -- Zuender 2: Kinder
+                     *      0x03195000 @0x80018640 + 0x030B5400 @0x80018660
+                     *   8001867c-84 addiu v0,v0,-1 / sh v0,30(v1)   Zuender -= 1
+                     * Art 2 (0x09) = RE1.5 byte-true. Art 3/4 (0x0A/0x0B) = E8: Resolver-Art 3/4,
+                     * Flags 0x61, P wie oben, dann Aufschlag-Uebergabe an die RE2-FX-Maschine;
+                     * KEINE HE-Inhalte (Kinder, SE 0x04080001, Licht-Latch) — Routine 31 liest weder
+                     * +0x70/+0x71/+0x72 (Saeure-GP §6); die Zuender-Zeitstruktur bleibt. */
+            uint16_t z   = row_u16(f->row, 0x1e);
+            /* Original: a2 = 2 FEST (`ori a2,zero,0x2` @0x800185b4) fuer JEDEN Platz, der Routine 31
+             * faehrt; granate_art 3/4 ist die Port-Zuordnung E3. Ein Platz ohne Art (0) ist damit
+             * ein Original-Platz = Art 2 (HE-Inhalte). */
+            uint8_t  art = f->granate_art ? f->granate_art : 2;
+            int32_t  p[3];
+            FILE    *gl  = esp_granate_log();
+            if (z == 0) {
+                /* @0x80018688-cc: P, dann `sb zero,108(a1)` @0x800186b0 (Platz FREI) VOR dem Kind
+                 * 0x030B5800 (`lui a0,0x30b` @0x80018698 / `ori a0,a0,0x5800` @0x800186a8, `jal
+                 * 0x800199d4` @0x800186c8) — das Kind darf den Granatenplatz selbst belegen
+                 * (Wurf-GP §D). a1 = `lh a1,46(v0)` @0x800186c4 liest die Gier aus dem schon
+                 * freien Platz (+0x2e bleibt stehen) -> Gier/Bank VOR dem Freigeben sichern.
+                 * Kein Abzug: der Sprung @0x80018568 umgeht @0x80018668-84. */
+                const re15_esp_t *kb = f->bank;
+                int16_t gier = f->param;
+                esp_granate_p(f, p);
+                esp_fx_kill(f);
+                if (gl) fprintf(gl, "T=%u EV frei art=%u\n", s_gr_tick, (unsigned)art);
+                if (art == 2) esp_fx_spawn_kind(kb, 0x030B5800u, gier, p);
+                break;
+            }
+            if (z == 7) {
+                if (art == 2) {
+                    g_re15_licht_latch = 1;      /* ori v0,zero,0x1 (Delay @0x80018574) /
+                                                  * sb v0,21336(at) @0x8001857c */
+                    if (gl) fprintf(gl, "T=%u EV latch\n", s_gr_tick);
+                }
+                f->flags = 0x61;                 /* ori v0,zero,0x61 / sb v0,108(a1) @0x80018580-84:
+                                                  * aktiv|Physik-Stopp|Bild-Stopp, OHNE Bit 1 = unsichtbar */
+                esp_granate_p(f, p);
+                {
+                    /* FUN_80012d60(a0 = 500, a1 = &P, a2 = Art): `ori a0,zero,0x1f4` @0x80018598,
+                     * `addiu a1,sp,16` @0x800185a4, `ori a2,zero,0x2` @0x800185b4 (Art 3/4 =
+                     * Port-Zuordnung E3: DAT_8006f418[3]/[4] = 1000 @0x8006f41e/20, DAT_8006f430[3]/[4]
+                     * = 10/11 @0x8006f433/34, ohne Aufrufer im Original), `jal 0x80012d60` @0x800185b8.
+                     * Kein Gegner ausgeschlossen: Gate A vergleicht Platz+0x74 (Anker = Spieler-
+                     * Knochen) mit Gegner+0x188+0x40 (@0x80012f38-4c) -> attacker -1. */
+                    re15_attack_box_t box;
+                    box.x = p[0]; box.y = p[1]; box.z = p[2];
+                    box.radius = 500;
+                    int treffer = re15_resolve_attack(&box, art, -1);
+                    s_granate_resolver_calls++;
+                    if (gl) fprintf(gl, "T=%u EV resolver art=%u P=(%d,%d,%d) r=500 eingriffe=%d\n",
+                                    s_gr_tick, (unsigned)art, (int)p[0], (int)p[1], (int)p[2], treffer);
+                }
+                if (art == 2) {
+                    /* Kind 0x03195000 an P (`lui a0,0x319` / `ori a0,a0,0x5000` @0x800185c0-c4;
+                     * a2 = Einheitsmatrix 0x80072d4c @0x800185d0-d4; a1 = `lh a1,46(v0)` @0x800185d8;
+                     * a3 = &P @0x800185e0; `jal 0x800199d4` @0x800185dc), dann SE 0x04080001 an P
+                     * (`lui a0,0x408` / `ori a0,a0,0x1` / `jal 0x80045024` @0x800185e4-ec, a1 = &P). */
+                    esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
+                    if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d)\n", s_gr_tick,
+                                    0x04080001u, (int)p[0], (int)p[1], (int)p[2]);
+                    if (re15_esp_se_hook) re15_esp_se_hook(0x04080001u, p);
+                } else {
+                    /* E8: Aufschlag an der Granaten-WELTLAGE Q = slot+0x28/2a/2c (nicht P), Gier =
+                     * slot+0x2e. re2_art per expliziter Tabelle (esp_granate_re2_art). */
+                    int32_t q[3] = { (int32_t)f->wpos[0], (int32_t)f->wpos[1], (int32_t)f->wpos[2] };
+                    int re2_art = esp_granate_re2_art(art);
+                    if (gl) fprintf(gl, "T=%u EV aufschlag re2_art=%d q=(%d,%d,%d) gier=%d\n", s_gr_tick,
+                                    re2_art, (int)q[0], (int)q[1], (int)q[2], (int)f->param);
+                    if (re2_art && re15_esp_aufschlag_hook) re15_esp_aufschlag_hook(re2_art, q, f->param);
+                }
+            }
+            if (z == 2 && art == 2) {
+                /* Zuender 2 (@0x80018600-64): P neu (@0x80018610-38), Kind 0x03195000 (`lui a0,0x319`
+                 * @0x8001860c, `ori a0,a0,0x5000` @0x80018614, jal @0x80018640) und Kind 0x030B5400
+                 * (`lui a0,0x30b` / `ori a0,a0,0x5400` @0x80018648-4c, jal @0x80018660), beide mit
+                 * a2 = s0 = 0x80072d4c (@0x80018620-34) und a1 = Gier +0x2e. */
+                esp_granate_p(f, p);
+                esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
+                esp_fx_spawn_kind(f->bank, 0x030B5400u, f->param, p);
+            }
+            row_set16(f, 0x1e, (uint16_t)(z - 1u));   /* addiu v0,v0,-1 @0x8001867c /
+                                                       * sh v0,30(v1) @0x80018684 (Delay-Slot) */
+            break;
+        }
         default: break;                                  /* stage-3c selectors: noop for now */
     }
 }
@@ -721,9 +942,11 @@ void (*re15_esp_bang_hook)(void) = NULL;
  * contact = clink SE + gate := 1 + snap + drift.x/=2, z/=2, y := -(y/3) (the 0x55555556 div-3
  * idiom @0x80017924); SECOND contact (gate set) = kill (@0x800178b0). The gate lives in the row
  * copy's +0x26 (REPURPOSED as runtime state — byte-true). */
+static void esp_fx_dispatch_b_29(re15_esp_fx_t *f);   /* Runde 34 A4, unten */
 static void esp_fx_dispatch_b(re15_esp_fx_t *f)
 {
     if (!f->rows_base) return;
+    if (row_u16(f->row, 0x02) == 29) { esp_fx_dispatch_b_29(f); return; }
     if (row_u16(f->row, 0x02) != 12) return;
     if (f->y + f->xlat_y < f->floor_y) return;           /* airborne */
     if (row_u16(f->row, 0x26)) { f->active = 0; return; }/* 2nd flat contact -> despawn */
@@ -738,6 +961,61 @@ static void esp_fx_dispatch_b(re15_esp_fx_t *f)
 /* Platform SE hook for the shell clink (FUN_80045024(0x01020001) = ARMS bank record 2; the
  * shotgun-shell 0x01090001 variant is a stage-3 refinement). NULL = silent (engine tests). */
 void (*re15_esp_shell_clink_hook)(void) = NULL;
+
+/* ROUTINE 29 @0x80018320-434 — FLUG und ABPRALL der Granate (Routine B, je Bild im Hauptlauf
+ * NACH der Weltlage). Selbst disassembliert (re15_disasm.py dis 0x80018320 72):
+ *   80018330 lh   t1,42(t0)          t1 = Welt-y (slot+0x2a, in DIESEM Bild gerechnet)
+ *   80018338 blez t1,0x8001842c      Welt-y <= 0 -> in der Luft, nichts
+ *   80018340 lhu  v0,38(t0)          Zaehler +0x26
+ *   80018348 bne  v0,zero,0x80018388 != 0 -> Abprall
+ * -- Zaehler 0 = LIEGEN: SE 0x010A0001 (`lui a0,0x10a` / `ori a0,a0,0x1` / `jal 0x80045024`
+ *    @0x80018350-58, a1 = sp+16 UNBESCHRIEBEN), Flags := 0x63 (@0x80018368-6c), A := 31
+ *    (@0x80018378-7c), B := 0 (`sh zero,2(v1)` @0x80018384); KEINE y-Korrektur.
+ * -- Abprall: vx -= trunc(vx/3) (0x55555556-Idiom @0x8001834c-cc, `sh a3,16(t0)`),
+ *    Zaehler -= 1 (@0x800183d0-d4), xlat_y -= Welt-y (`lw v0,56(t0)` / `subu v0,v0,t1` /
+ *    `sw v0,56(t0)` @0x800183c4/dc/e0), vy := -trunc(vy/3) (@0x800183e4-f8), SE
+ *    0x010A0001 | (Zaehler_neu << 8) an der Eindringstelle (`lh` 40/42/44 @0x800183fc-414,
+ *    `sll a0,a0,8` / `or` @0x80018420/28, `jal 0x80045024` @0x80018424). vz wird NIE gedaempft. */
+static void esp_fx_dispatch_b_29(re15_esp_fx_t *f)
+{
+    int16_t t1 = f->wpos[1];
+    if (t1 <= 0) return;
+    FILE *gl = esp_granate_log();
+    uint16_t n = row_u16(f->row, 0x26);
+    if (n == 0) {
+        /* E14 (Port-Wahl, gekennzeichnet): die Lage dieses SEs ist im Original Stapelrest
+         * (sp+16..27 im Liegen-Pfad unbeschrieben, Wurf-GP §C); der Port gibt die Granatenlage. */
+        int32_t pos[3] = { (int32_t)f->wpos[0], (int32_t)f->wpos[1], (int32_t)f->wpos[2] };
+        if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d) liegen\n", s_gr_tick,
+                        0x010A0001u, (int)pos[0], (int)pos[1], (int)pos[2]);
+        if (re15_esp_se_hook) re15_esp_se_hook(0x010A0001u, pos);
+        f->flags = 0x63;
+        row_set16(f, 0x00, 31);
+        row_set16(f, 0x02, 0);
+        return;
+    }
+    {
+        int16_t vx = f->drift_x;
+        f->drift_x = (int16_t)(vx - (int16_t)(vx / 3));      /* C-Division = auf 0 gerundet */
+    }
+    n = (uint16_t)(n - 1u);
+    row_set16(f, 0x26, n);
+    f->xlat_y -= (int32_t)t1;
+    {
+        int16_t vy = f->drift_y;
+        f->drift_y = (int16_t)(-(int16_t)(vy / 3));
+    }
+    {
+        /* Punkt: `lh v1,40(t0)` @0x800183d8, `lh v0,42(t0)` @0x80018400, `lh v0,44(t0)`
+         * @0x8001840c — slot+0x2a ist noch die Eindring-Welt-y (erst der naechste Tick rechnet neu). */
+        int32_t pos[3] = { (int32_t)f->wpos[0], (int32_t)f->wpos[1], (int32_t)f->wpos[2] };
+        uint32_t code = 0x010A0001u | ((uint32_t)n << 8);   /* Byte1 wirkungslos (FUN_80045024
+                                                             * liest es nie, Wurf-GP §I) */
+        if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d) abprall\n", s_gr_tick,
+                        code, (int)pos[0], (int)pos[1], (int)pos[2]);
+        if (re15_esp_se_hook) re15_esp_se_hook(code, pos);
+    }
+}
 
 /* Runde 34 VERTRAG V1 (C0): nur die Definitionen — Belege je Symbol an der Deklaration in
  * include/re15_esp.h. In C0 setzt/liest/ruft sie niemand (keine Verhaltensaenderung).
@@ -770,6 +1048,44 @@ static void esp_fx_seed_header(re15_esp_fx_t *f, const re15_esp_t *rb, int ei, u
 /* Spawn the (effect_id, sub) row streams as ROW-VM slots — one slot per stream (the byte-true
  * spawner allocation; trace wf_a18487d9). `param` = the op/parent param word stored at slot+0x2e
  * (FUN_80019700 `*(u16*)(slot+0x2e) = param_2`). Returns the number of slots spawned. */
+/* Gemeinsamer Kern der Zeilen-Spawner (Runde 34: aus re15_esp_fx_spawn_rows herausgezogen,
+ * Verhalten fuer spawn_rows unveraendert). flags0 = Start-Flags des Platzes:
+ *   0x03 = FUN_80019700 (`ori v0,zero,0x3` @0x800197b4)
+ *   0x0a = FUN_800199d4 (`ori v0,zero,0xa` @0x80019a88, einziger Unterschied beider Spawner,
+ *          Wurf-GP §G) -> Bit 3: der Hauptlauf desselben Bilds macht Flags ^= 9 und ruft
+ *          Routine A einmal (@0x80019ef4-f30).
+ * *first (optional) = der erste gespawnte Platz. */
+static int esp_fx_spawn_rows_core(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                                  uint16_t scale16, int32_t x, int32_t y, int32_t z,
+                                  int32_t floor_y, int16_t param, uint8_t flags0,
+                                  re15_esp_fx_t **first, int *out_streams)
+{
+    const re15_esp_t *rb = bank;
+    int ei = re15_esp_find_id(rb, effect_id);
+    if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
+    int streams = (ei >= 0) ? re15_esp_row_streams(rb, ei, sub) : -1;
+    int spawned = 0;
+    if (first) *first = NULL;
+    if (out_streams) *out_streams = streams;
+    for (int s = 0; s < streams; s++) {
+        int nrows = 0;
+        const uint8_t *rows = re15_esp_row_stream(rb, ei, sub, s, &nrows);
+        if (!rows || nrows <= 0) continue;
+        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, param);
+        if (!f) break;
+        f->phys = 1; f->flags = flags0;
+        esp_fx_seed_header(f, rb, ei, sub);   /* CLUT/TPAGE seed (FUN_80019700) */
+        f->rows_base = rows; f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
+        f->row_cursor = 0;
+        esp_fx_row_load(f, 0);
+        f->xlat_x = f->xlat_y = f->xlat_z = 0;
+        f->floor_y = floor_y;
+        if (first && !*first) *first = f;
+        spawned++;
+    }
+    return spawned;
+}
+
 int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
                            uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y,
                            int16_t param)
@@ -778,29 +1094,62 @@ int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t su
     int ei = re15_esp_find_id(rb, effect_id);
     if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
     int streams = (ei >= 0) ? re15_esp_row_streams(rb, ei, sub) : -1;
-    int spawned = 0;
     {   /* Mess-Log (Debug-Harness) */
         extern FILE *re15_waffen_log(void);
         FILE *wl = re15_waffen_log();
         if (wl) fprintf(wl, "    SPAWN id=%u sub=%u scale=%#x streams=%d\n",
                         (unsigned)effect_id, (unsigned)sub, (unsigned)scale16, streams);
     }
-    for (int s = 0; s < streams; s++) {
-        int nrows = 0;
-        const uint8_t *rows = re15_esp_row_stream(rb, ei, sub, s, &nrows);
-        if (!rows || nrows <= 0) continue;
-        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, param);
-        if (!f) break;
-        f->phys = 1; f->flags = 0x03;
-        esp_fx_seed_header(f, rb, ei, sub);   /* CLUT/TPAGE seed (FUN_80019700) */
-        f->rows_base = rows; f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
-        f->row_cursor = 0;
-        esp_fx_row_load(f, 0);
-        f->xlat_x = f->xlat_y = f->xlat_z = 0;
-        f->floor_y = floor_y;
-        spawned++;
+    return esp_fx_spawn_rows_core(bank, effect_id, sub, scale16, x, y, z, floor_y, param,
+                                  0x03, NULL, NULL);
+}
+
+/* FUN_800199d4-ZWILLING (Runde 34 A5): Kind-Effekt a0 = (Kategorie<<24)|(sub<<16)|Skala
+ * (Decode `srl t8,a0,24` @0x800199fc, `andi t7,v0,0xff` @0x80019a04, `andi s1,a0,0xffff`
+ * @0x800199e8), a1 = Gier -> +0x2e (`sh s2,46(t0)` @0x80019ab8), a2 = Einheitsmatrix 0x80072d4c
+ * (T = 0), a3 = &P -> Versatz +0x40.. (@0x80019abc-dc) => Anker = P. Erster freier Platz ab 0
+ * (`sltiu v0,t3,0x60` @0x80019a60, `lbu v0,108(t0)` / `beq` @0x80019a7c-84), Start-Flags 0x0a
+ * (@0x80019a88 / `sb v0,108(t0)` @0x80019aa4). Kein Boden (Original-Tick ohne Klemme). */
+static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier,
+                             const int32_t p[3])
+{
+    uint8_t  cat   = (uint8_t)(code >> 24);
+    uint8_t  sub   = (uint8_t)((code >> 16) & 0xffu);
+    uint16_t scale = (uint16_t)(code & 0xffffu);
+    re15_esp_fx_t *k = NULL;
+    int n = esp_fx_spawn_rows_core(bank, cat, sub, scale, p[0], p[1], p[2], ESP_KEIN_BODEN,
+                                   gier, 0x0a, &k, NULL);
+    FILE *gl = esp_granate_log();
+    if (gl) fprintf(gl, "T=%u EV kind code=%08x n=%d slot=%d P=(%d,%d,%d) gier=%d\n", s_gr_tick,
+                    code, n, k ? (int)(k - s_esp_fx) : -1, (int)p[0], (int)p[1], (int)p[2], (int)gier);
+    return n;
+}
+
+/* FUN_80019700-ZWILLING fuer den Wurfkoerper 0x040D1000 (Runde 34 A8, Deklaration mit Belegen
+ * in re15_esp.h). Effekt 4 sub 0x0D hat 1 Strom mit 2 Zeilen (CORE00.ESP @0x1AB0 `01 00 00 00
+ * 02 00 00 00`, Zeile 0 @0x1AB8 = A 30, acc (0,10,0)) -> genau ein Platz. */
+re15_esp_fx_t *re15_esp_granate_spawn(const re15_esp_t *bank, uint8_t art,
+                                      int32_t x, int32_t y, int32_t z, int16_t gier)
+{
+    re15_esp_fx_t *g = NULL;
+    int streams = 0;
+    int n = esp_fx_spawn_rows_core(bank, 0x04, 0x0d, 0x1000, x, y, z, ESP_KEIN_BODEN, gier,
+                                   0x03, &g, &streams);
+    {   /* Mess-Log wie re15_esp_fx_spawn_rows (Debug-Harness, gleiches Zeilenformat) */
+        extern FILE *re15_waffen_log(void);
+        FILE *wl = re15_waffen_log();
+        if (wl) fprintf(wl, "    SPAWN id=%u sub=%u scale=%#x streams=%d\n",
+                        4u, 0x0du, 0x1000u, streams);
     }
-    return spawned;
+    if (n > 0 && g) g->granate_art = art;
+    {
+        FILE *gl = esp_granate_log();
+        if (gl) fprintf(gl, "F=%u SPAWN granate art=%u slot=%d anker=(%d,%d,%d) gier=%d%s\n",
+                        (unsigned)g_engine.frame_count, (unsigned)art,
+                        g ? (int)(g - s_esp_fx) : -1, (int)x, (int)y, (int)z, (int)gier,
+                        g ? "" : " POOL-VOLL");
+    }
+    return (n > 0) ? g : NULL;
 }
 
 /* Byte-true blood/gore SPLATTER — CORRECTED per trace wf_a18487d9 (adversarially verified):
@@ -858,6 +1207,128 @@ void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
     }
 }
 
+/* ===== Runde 34 A2 — WELTLAGE slot+0x28/2a/2c (V1a) =========================================
+ *
+ * RotMatrix-Zwilling FUN_80068098 (re15_disasm.py dis 0x80068098 110, Tabelle 0x800794c4 =
+ * re15_sin_q12/re15_cos_q12, je Eintrag lo16 = sin, hi16 = cos). Winkel `lh` (s16):
+ *   a >= 0: Index a & 0xfff (`bgez t7` + Delay `andi t9,t7,0xfff` @0x800680a0-a4)
+ *   a <  0: Index (-a) & 0xfff, sin NEGIERT, cos wie gelesen (`subu t7,zero,t7` @0x800680a8,
+ *           `subu t3,zero,t8` @0x800680d0). Die Tabelle ist NICHT punktsymmetrisch
+ *           (gemessen: tab[4095].sin = 0, tab[4094].sin = -6 = -tab[1].sin), deshalb ist der
+ *           Negativ-Zweig NICHT gleich "a & 0xfff" — eigener Zwilling statt mat3_from_euler.
+ * Eintraege (sh, 16 Bit):
+ *   m[0][2] = sy                         `sh t6,4(a1)`  @0x8006816c
+ *   m[1][2] = (-(cy*sx)) >> 12           `sh t6,10(a1)` @0x80068180
+ *   m[2][2] = (cy*cx) >> 12              `sh t6,16(a1)` @0x80068194 / @0x800681d4
+ *   m[0][0] = (cz*cy) >> 12              `sh t6,0(a1)`  @0x8006820c
+ *   m[0][1] = (-(sz*cy)) >> 12           `sh t7,2(a1)`  @0x8006822c
+ *   A = (cz*(-sy)) >> 12;  B = (sz*(-sy)) >> 12        @0x80068228-38 / @0x800682a0-b0
+ *   m[1][0] = ((sz*cx)>>12) - ((A*sx)>>12)   `sh t7,6(a1)`  @0x80068274
+ *   m[2][0] = ((sz*sx)>>12) + ((A*cx)>>12)   `sh t6,12(a1)` @0x800682a4
+ *   m[1][1] = ((cz*cx)>>12) + ((B*sx)>>12)   `sh t7,8(a1)`  @0x800682ec
+ *   m[2][1] = ((cz*sx)>>12) - ((B*cx)>>12)   `sh t6,14(a1)` @0x80068318 */
+static void esp_trig(int16_t a, int32_t *s, int32_t *c)
+{
+    if (a >= 0) {
+        *s = re15_sin_q12(a & 0xfff);
+        *c = re15_cos_q12(a & 0xfff);
+    } else {
+        int n = (-(int)a) & 0xfff;
+        *s = -re15_sin_q12(n);
+        *c = re15_cos_q12(n);
+    }
+}
+
+static void esp_rotmatrix(int16_t rx, int16_t ry, int16_t rz, int16_t m[9])
+{
+    int32_t sx, cx, sy, cy, sz, cz;
+    esp_trig(rx, &sx, &cx);
+    esp_trig(ry, &sy, &cy);
+    esp_trig(rz, &sz, &cz);
+    int32_t nsy = -sy;
+    int32_t A = (cz * nsy) >> 12;
+    int32_t B = (sz * nsy) >> 12;
+    m[2] = (int16_t)sy;
+    m[5] = (int16_t)((-(cy * sx)) >> 12);
+    m[8] = (int16_t)((cy * cx) >> 12);
+    m[0] = (int16_t)((cz * cy) >> 12);
+    m[1] = (int16_t)((-(sz * cy)) >> 12);
+    m[3] = (int16_t)(((sz * cx) >> 12) - ((A * sx) >> 12));
+    m[6] = (int16_t)(((sz * sx) >> 12) + ((A * cx) >> 12));
+    m[4] = (int16_t)(((cz * cx) >> 12) + ((B * sx) >> 12));
+    m[7] = (int16_t)(((cz * sx) >> 12) - ((B * cx) >> 12));
+}
+
+/* ApplyMatrix-Zwilling FUN_800661c0 (re15_disasm.py bytes 0x800661c0 160): ctc2 RT11..RT33
+ * (0x48c80000..0x48cc2000), lwc2 VXY0/VZ0 (0xc8a00000/0xc8a10004 = SVECTOR, s16), MVMVA
+ * 0x4a486012 (sf=1, mx=RT, v=V0, cv=keine), swc2 MAC1..3 (0xe8d90000..0xe8db0008) = 32-Bit-
+ * Ergebnis (Summe >> 12, KEINE Saettigung). */
+static void esp_applymatrix(const int16_t m[9], const int16_t v[3], int32_t r[3])
+{
+    for (int i = 0; i < 3; i++) {
+        int64_t s = (int64_t)m[i * 3 + 0] * v[0] + (int64_t)m[i * 3 + 1] * v[1]
+                  + (int64_t)m[i * 3 + 2] * v[2];
+        r[i] = (int32_t)(s >> 12);
+    }
+}
+
+/* Weltlage je Tick (Hauptlauf, vor Routine B). Selbst disassembliert (dis 0x80019e20 420):
+ *  Flags & 0x80 == 0 (@0x80019fb4-c0 -> @0x8001a118):
+ *    w = (euler.x, euler.y + GIER, euler.z): `lhu v0,32(a1)` / `lhu v0,34(a1)` + `lhu v1,46(a1)`
+ *        / `addu` @0x8001a16c-84 / `lhu v0,36(a1)` @0x8001a190; RotMatrix `jal 0x80068098` @0x8001a1a0
+ *    r  = ApplyMatrix(m, xlat lo16 (`lhu` 52/56/60 @0x8001a1b8-d4))  `jal 0x800661c0` @0x8001a1e4
+ *    +0x28/2a/2c := r (`sh v0,40/42/44(a0)` @0x8001a1fc/10/20)
+ *    r2 = ApplyMatrix(Anker.R (slot+0x4c), Versatz +0x40/44/48)       `jal 0x800661c0` @0x8001a248
+ *    +0x28 += r2.x + Anker.T.x (+0x60) usw. (16-Bit-`addu`/`sh` @0x8001a258-2a4)
+ *  => wpos = (s16)(Anker.R*Versatz + Anker.T + RotMatrix(euler + (0,Gier,0)) * xlat).
+ *  Der Port fuehrt Anker.R*Versatz + Anker.T als x/y/z (beim Spawn eingerechnet; Follow
+ *  ueberschreibt sie je Tick, s. (c)).
+ *  Flags & 0x80 != 0 (@0x80019fc8-0x8001a114): Welt = Anker.R*(RotMatrix(euler)*xlat + Versatz)
+ *    + Anker.T (RotMatrix OHNE Gier @0x8001a020, xlat dann im Ankerraum). Der Port hat keine
+ *    Anker-Matrix (Muendung: Waffenknochen) -> dort bleibt die bisherige Lage x + xlat
+ *    (BAUPLAN A2 / OFFEN O4, Zweig jetzt gelesen, Matrix fehlt). */
+static void esp_fx_weltlage(re15_esp_fx_t *f)
+{
+    if (f->flags & 0x80) {
+        f->wpos[0] = (int16_t)(f->x + f->xlat_x);
+        f->wpos[1] = (int16_t)(f->y + f->xlat_y);
+        f->wpos[2] = (int16_t)(f->z + f->xlat_z);
+        return;
+    }
+    int16_t m[9];
+    esp_rotmatrix((int16_t)row_u16(f->row, 0x20),
+                  (int16_t)(uint16_t)(row_u16(f->row, 0x22) + (uint16_t)f->param),
+                  (int16_t)row_u16(f->row, 0x24), m);
+    int16_t v[3] = { (int16_t)f->xlat_x, (int16_t)f->xlat_y, (int16_t)f->xlat_z };
+    int32_t r[3];
+    esp_applymatrix(m, v, r);
+    f->wpos[0] = (int16_t)(r[0] + f->x);
+    f->wpos[1] = (int16_t)(r[1] + f->y);
+    f->wpos[2] = (int16_t)(r[2] + f->z);
+}
+
+/* RE15_GRANATE_LOG: Zustandszeile je Granatenplatz (Diagnose). */
+static void esp_granate_log_tick(void)
+{
+    FILE *gl = esp_granate_log();
+    if (!gl) return;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = &s_esp_fx[i];
+        if (!f->active || !f->granate_art) continue;
+        fprintf(gl, "T=%u F=%u slot=%d art=%u A=%u B=%u fl=%02x zuender=%u zaehler=%u "
+                    "wpos=(%d,%d,%d) xlat=(%d,%d,%d) vel=(%d,%d,%d) acc=(%d,%d,%d) satz=%d gier=%d\n",
+                s_gr_tick, (unsigned)g_engine.frame_count, i, (unsigned)f->granate_art,
+                (unsigned)row_u16(f->row, 0x00), (unsigned)row_u16(f->row, 0x02),
+                (unsigned)f->flags, (unsigned)row_u16(f->row, 0x1e), (unsigned)row_u16(f->row, 0x26),
+                (int)f->wpos[0], (int)f->wpos[1], (int)f->wpos[2],
+                (int)f->xlat_x, (int)f->xlat_y, (int)f->xlat_z,
+                (int)f->drift_x, (int)f->drift_y, (int)f->drift_z,
+                (int)f->accel_x, (int)f->accel_y, (int)f->accel_z,
+                (int)f->frame, (int)f->param);
+    }
+    fflush(gl);
+}
+
 void re15_esp_fx_tick(const re15_esp_t *bank)
 {
     /* ANIM-/FX-FREEZE (Bit 0x10000000) — SELBST-GATE, byte-true zum Prolog derselben
@@ -876,31 +1347,53 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
      * (Die ANDERE Haelfte derselben Original-Funktion, die Keyframe-Integration, ist in
      *  game_step_common.c mit denselben Adressen gegatet.) */
     if (g_re15_pauseflags & RE15_PAUSE_ACTION) return;
+    s_gr_tick++;
     /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
      * the anim-record index; the new record's param-low byte = its duration, 0xFF = loop back
      * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn.
      * Each fx animates from ITS OWN resolved bank (room or global), set at spawn. */
     (void)bank;   /* per-fx bank now (f->bank); kept for call-site compat */
+
+    /* ===== Runde 34 A2: ZWEI DURCHGAENGE wie das Original (re15_disasm.py dis 0x80019e20 420):
+     * DURCHGANG 1 = Schleife 1 @0x80019e64-c4 ueber ALLE 96 Plaetze (s0 = 0x800a73b8, s2 = s0+12672):
+     *   80019e70 lbu v0,108(v1) / 80019e78 andi v0,v0,0x1 / 80019e7c beq -> Flags-Bit 0 aus: kein A
+     *   80019e84 lhu v0,0(v1) / sll 2 / Tabelle 0x80071d40 / 80019e9c jalr v0   (Routine A)
+     * Bis Runde 33 liefen A und B je Platz verschraenkt (A_i, B_i, Physik_i, dann Platz i+1). Ein
+     * in Durchgang 1 an einem KLEINEREN Index gespawntes Kind (FUN_80019700, Flags 3) bekommt im
+     * Spawnbild jetzt Weltlage/B/Physik/Anim, aber kein A — wie im Original. */
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        re15_esp_fx_t *f = &s_esp_fx[i];
+        if (!f->active || !f->rows_base) continue;   /* Altplaetze ohne Zeilen-VM: kein A */
+        if (!(f->flags & 0x01)) continue;            /* @0x80019e78-7c (Bit 0 = aktiv); ein Kind
+                                                      * mit Flags 0x0a wartet auf Durchgang 2 */
+        esp_fx_dispatch(f);                          /* loop-1 routineA */
+    }
+
+    /* DURCHGANG 2 = Hauptlauf @0x80019ee0-0x8001a49c je Platz: (a) Kind-Init, (b) Lebend-Gate,
+     * (c) Follow, (d) Weltlage, (e) Routine B, (f) Physik, (g) Anim. */
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         re15_esp_fx_t *f = &s_esp_fx[i];
         if (!f->active) continue;
 
-        /* ROW-VM DISPATCH (stage 2 blood subset — FUN_80019e20 loop 1): run the row's routineA
-         * BEFORE the physics, exactly like the PSX tick order. An advance re-seeds accel/velocity
-         * = the multi-phase ballistics (blood st0 switches to (60,14,0) after its 7-tick count). */
         if (f->rows_base) {
-            /* LEBEND-GATE des Flags-Bytes (nur Row-VM-Plaetze - die tragen, wie im Original,
+            /* (a) KIND-INIT @0x80019ef4-f30: `andi v0,v1,0x8` / `beq` / `xori v0,v1,0x9` (Delay)
+             * / `sb v0,108(a0)` @0x80019f00, dann Routine A EINMAL (`jalr v0` @0x80019f30). Traeger:
+             * Plaetze aus FUN_800199d4 (Start-Flags 0x0a -> 0x03). Laeuft VOR dem Lebend-Gate —
+             * 0x0a hat Bit 0 noch nicht. */
+            if (f->flags & 0x08) {
+                f->flags ^= 0x09;
+                esp_fx_dispatch(f);
+                if (!f->active) continue;
+            }
+            /* (b) LEBEND-GATE des Flags-Bytes (nur Row-VM-Plaetze - die tragen, wie im Original,
              * IMMER ein datengetriebenes Flags-Byte). Original: 80019e70 lbu v0,108(v1) /
              * 80019e78 andi v0,v0,0x1 / 80019e7c beq v0,zero -> Routine-A-Dispatch aus;
              * 80019f44-50 dasselbe fuer den ganzen Slot-Rumpf; Spawner 800197a8-b0 vergibt
              * genau so einen Platz neu. */
             if (!(f->flags & 0x01)) { f->active = 0; continue; }
-            esp_fx_dispatch(f);                  /* loop-1 routineA */
-            esp_fx_dispatch_b(f);                /* main-loop routineB (the shell bounce) */
-            if (!f->active) continue;            /* B may despawn (2nd floor contact) */
         }
 
-        /* FOLLOW (Flags-Bit 0x04, 1090-Feuer): der Original-Slot-Tick kopiert jeden Frame
+        /* (c) FOLLOW (Flags-Bit 0x04, 1090-Feuer): der Original-Slot-Tick kopiert jeden Frame
          * die Eltern-Part-Matrix aus slot+0x74 (`lbu flags @0x80019f44; andi 0x4; lw +0x74;
          * 8x lw/sw` @0x80019f68-f94). Port: Position des Anker-Aktors uebernehmen — die
          * Emitter fahren in ROOM1090 per Heim-Pin ~940 Einheiten hoch (@0x80116444-98),
@@ -910,11 +1403,28 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
             if (pa->active) { f->x = pa->x; f->y = pa->y; f->z = pa->z; }
         }
 
-        /* PHYSICS (byte-exact tick @0x8001a2f0, gated flags bit5==0): the position offset xlat
-         * (s32) integrates the drift velocity, which itself accelerates by gravity — LIVE-confirmed
-         * against mzd_stage1_hit_effect.sav. Draw adds xlat to the anchor. The row-VM freeze bit
-         * (flags bit5, e.g. the sub-2 stagger rows' 0x61) pauses the integration. */
+        /* (d) WELTLAGE slot+0x28/2a/2c (V1a) — VOR Routine B, die sie liest (Routine 29). */
+        esp_fx_weltlage(f);
+
+        /* (e) ROUTINE B @0x8001a2b4-d4 (`lhu v0,2(v0)` / Tabelle / `jalr v0`). */
+        if (f->rows_base) {
+            esp_fx_dispatch_b(f);                /* main-loop routineB (Huelse 12, Granate 29) */
+            if (!f->active) continue;            /* B may despawn (2nd floor contact) */
+        }
+
+        /* (f) PHYSICS (byte-exact tick @0x8001a2fc-388, gated flags bit5==0 — die Flags werden
+         * NACH Routine B neu gelesen, `lbu v0,108(a2)` @0x8001a2e8): euler += Winkelgeschw.
+         * (+0x20.. += +0x18.., @0x8001a2fc-330), dann xlat (s32) += vel (s16), DANACH vel += acc
+         * (@0x8001a324-388). LIVE-confirmed against mzd_stage1_hit_effect.sav. The row-VM freeze
+         * bit (flags bit5, e.g. the sub-2 stagger rows' 0x61) pauses the integration. */
         if (f->phys && !(f->rows_base && (f->flags & 0x20))) {
+            if (f->rows_base) {
+                /* euler +0x20/22/24 += +0x18/1a/1c (`lhu`/`addu`/`sh` @0x8001a2fc-330; 16 Bit) —
+                 * nur Row-VM-Plaetze fuehren die Zeilenkopie. */
+                for (int k = 0; k < 3; k++)
+                    row_set16(f, 0x20 + 2 * k,
+                              (uint16_t)(row_u16(f->row, 0x20 + 2 * k) + row_u16(f->row, 0x18 + 2 * k)));
+            }
             f->xlat_x += f->drift_x;                 /* xlat[0x34] += drift[0x10] */
             f->xlat_y += f->drift_y;                 /* xlat[0x38] += drift[0x12] */
             f->xlat_z += f->drift_z;                 /* xlat[0x3c] += drift[0x14] */
@@ -922,7 +1432,8 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
             f->drift_y = (int16_t)(f->drift_y + f->accel_y);
             f->drift_z = (int16_t)(f->drift_z + f->accel_z);
             /* FLOOR BOUNCE (routine 12 room_coll @0x8001c6e8, collapsed to a plane clamp): when the
-             * particle reaches the floor, clamp it there and damp-flip drift.y so it settles. */
+             * particle reaches the floor, clamp it there and damp-flip drift.y so it settles.
+             * Granatenplaetze und ihre Kinder tragen floor_y = ESP_KEIN_BODEN (E12/A6). */
             if (f->y + f->xlat_y >= f->floor_y) {
                 f->xlat_y = f->floor_y - f->y;
                 f->drift_y = (int16_t)(-f->drift_y / 2);       /* 50% restitution */
@@ -931,6 +1442,7 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
             }
         }
 
+        /* (g) ANIM @0x8001a38c-47c */
         if (f->timer == 0) {
             if (!(f->flags & 0x40)) f->frame++;   /* freeze-frame bit6 (@0x8001a3a8 lbu +0x6c; andi 0x40;
                                                    * bne skip): a frozen droplet HOLDS its frame — re-read
@@ -953,4 +1465,5 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
         }
         if (f->timer > 0) f->timer--;
     }
+    esp_granate_log_tick();
 }
