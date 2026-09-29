@@ -13,16 +13,16 @@ STATUS: FERTIG (Code + Sonde + Mutationsproben + exe-Messung); Suite: siehe §8.
 | Paket | Inhalt | Stand | Datei:Zeile |
 |---|---|---|---|
 | A1 | Vertragsfelder (C0) + additiv: `re15_esp_granate_spawn`, Messschiene `re15_esp_granate_resolver_calls` | fertig | `include/re15_esp.h:252-263` |
-| A2 | Tick in zwei Durchgaengen + Weltlage `wpos` mit Drehung | fertig | `engine/src/re15_esp.c:1332-1460` (Tick), `:1230-1309` (RotMatrix/ApplyMatrix/Weltlage) |
+| A2 | Tick in zwei Durchgaengen + Weltlage `wpos` mit Drehung | fertig | `engine/src/re15_esp.c:1332-1469` (Tick), `:1210-1308` (RotMatrix/ApplyMatrix/Weltlage) |
 | A3 | Routine 30 (Wurf-Init) + Wort 0x800acaec | fertig | `re15_esp.c:781-838`; `engine/src/player_common.c:292-318` |
-| A4 | Routine 29 (Flug/Abprall/Liegen) | fertig | `re15_esp.c:945-948` (Verteiler), `:966-1020` |
-| A5 | Routine 31 + FUN_800199d4-Zwilling | fertig | `re15_esp.c:839-938`; Kind-Spawner `:1105-1127`; Spawn-Kern `:1050-1085` |
-| A6 | Bodenklemme aus fuer Granatenplaetze + Kinder | fertig | `re15_esp.c:536-543` (`ESP_KEIN_BODEN`), Spawn `:1131-1152`, `:1113-1127` |
+| A4 | Routine 29 (Flug/Abprall/Liegen) | fertig | `re15_esp.c:945-948` (Verteiler), `:965-1020` |
+| A5 | Routine 31 + FUN_800199d4-Zwilling | fertig | `re15_esp.c:839-930`; Kind-Spawner `:1107-1126`; Spawn-Kern `:1051-1086` |
+| A6 | Bodenklemme aus fuer Granatenplaetze + Kinder | fertig | `re15_esp.c:538-543` (`ESP_KEIN_BODEN`), Granate `:1128-1155`, Kinder `:1107-1126` |
 | A7 | Routine 9 setzt den Licht-Latch | fertig | `re15_esp.c:709-722` |
-| A8 | Spielschritt: ENT[9].resolve 0, Gate 9/10/11 + Art, Gier rot_y; Drehen im Zielen korrigiert | fertig | `engine/src/game_step_common.c:1769-1784`, `:1945-1981`; `player_common.c:949-956`, `:1020-1034` |
-| A9 | Sonde `probe_r34_wurf` (7 Abschnitte, 16 Mutationsproben) | fertig | `tests/unit/probe_r34_wurf.c`, `tests/unit/probes/r34_wurf.cmake` |
-| A10 | Item-Debug des Statusschirms | fertig | `engine/src/menu_common.c:1253-1338` |
-| Diagnose | `RE15_GRANATE_LOG=<datei>` (nur Ausgabe) | fertig | `re15_esp.c:545-556`, `:1311-1330`, Ereigniszeilen in R29/R31/Kind/Spawn |
+| A8 | Spielschritt: ENT[9].resolve 0, Gate 9/10/11 + Art, Gier rot_y; Drehen im Zielen korrigiert | fertig | `engine/src/game_step_common.c:1769-1784`, `:1945-1981`; `player_common.c:949-956`, `:1023-1034` |
+| A9 | Sonde `probe_r34_wurf` (7 Abschnitte, 18 Mutationsproben) | fertig | `tests/unit/probe_r34_wurf.c`, `tests/unit/probes/r34_wurf.cmake` |
+| A10 | Item-Debug des Statusschirms | fertig | `engine/src/menu_common.c:1254-1337` |
+| Diagnose | `RE15_GRANATE_LOG=<datei>` (nur Ausgabe) | fertig | `re15_esp.c:545-556`, `:1310-1330`, Ereigniszeilen in R29/R31/Kind/Spawn |
 
 ---
 
