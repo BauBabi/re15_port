@@ -1,3 +1,47 @@
+# v0.8.18 - 2026-09-29
+
+Ihre drei Befunde zu v0.8.17 sind behoben. Suite 411 -> 416/416.
+
+## Was Sie merken
+
+**Granate und Sicherung liegen jetzt IN den Faechern.** Der hochfahrende Tisch in Irons' Buero
+hat unter der Tischplatte zwei offene Faecher mit einer Trennwand. v0.8.17 hatte beide
+Gegenstaende oben in die Kuppel zwischen die Papierstapel gelegt — das war falsch. Jetzt liegt die
+Granate auf dem Boden des LINKEN Fachs, die Sicherung auf dem Boden des RECHTEN (im Bild
+gemessen: Schwerpunkt Granate x 101, Sicherung x 209 von 320). Beide sind zu sehen, sobald der
+Tisch aus dem Schreibtisch faehrt, und stehen beim Dialog oben in der Ruhe ganz im Bild. Der
+Dialog kommt weiterhin erst, wenn der Tisch oben ruht, erst die Sicherung, dann die Granate.
+
+**Keine Verzerrung mehr beim Oeffnen der Tueren.** RE2 zerlegt die grossen Flaechen eines
+Tuerblatts beim Zeichnen in 8 x 8 kleinere Dreiecke (Flag 0x20 im Aufstell-Satz, Routine
+DivideGT3, Tiefe 3 @0x80013dc0; Abfrage @0x80014a30). Der Port zeichnete das Blatt als zwei grosse
+Dreiecke — deshalb knickten Kanten und Felder beim Aufschwingen zu einem "V". Jetzt wie in RE2
+unterteilt: die Kante zwischen Fenster und Feld an DOOR13 weicht in der Mitte der Oeffnung
+hoechstens 3,8 statt 27,8 Bildpunkte von der Geraden ab. Nachgeprueft, indem der ORIGINAL-Code aus
+der RE2-EXE Befehl fuer Befehl gegen den Port gerechnet wurde (8731 Faelle, 170 864 Teildreiecke
+gleich). Betroffen sind die 12 Archive, deren Blatt das Flag traegt; alle anderen Tueren sind
+bildgleich wie vorher.
+
+**Das Tor am Landeplatz ist so hell wie das gemalte Tor.** Es war 1,92-fach zu dunkel: die
+Tortextur stammt aus dem beleuchteten Hintergrundbild, und das RE2-Tuerlicht hat sie ein zweites
+Mal abgedunkelt (Faktor 1,75, Grundhelligkeit 68 @0x800142e8); dazu kamen 9 % Verlust beim
+Umrechnen der Farben. Jetzt traegt das Tor RE2s Flag fuer hellere Modelle (Grundhelligkeit 136,
+@0x800142b4 — dasselbe Flagwort wie die RE2-Klappe DOOR2B), die Farben werden gerundet, und die
+Textur ist auf dieses Licht abgestimmt: gemalt/gezeigt 1,000 an denselben Bildstellen.
+Mitbehoben: helle Eckfarben ueber 0x80 hellen jetzt wie auf der PSX auf (Texel x Farbe / 128);
+RE2-Tueren werden dadurch nur an wenigen Ecken bis zu 7 Stufen heller — naeher an RE2.
+
+## Grenzen
+
+* Die Granate wirkt im Fach dunkel: das ist das Raumlicht des Schreibtischs, nicht die Lage.
+* Das Tor entspricht dem Bild aus Cut 12 (Quelle seiner Textur); Cut 0/11 malen das Schild
+  heller.
+* Die Aufhellung ueber 0x80 gilt nur in der Tuerszene; Figuren und Raum-Modelle kappen weiter.
+
+## Technik
+
+* `make_package.sh` beendet im Laufzeit-Test nur noch die eigene exe (vorher jede gleichnamige).
+
 # v0.8.17 - 2026-09-29
 
 Ihre drei Auftraege dieser Runde sind gebaut: RE2-Tueranimationen fuer die Tueren, die es in
