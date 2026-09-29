@@ -2955,9 +2955,18 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
  * the FUN_8001a7a8 collision-confirm → +0x93 bit0x80 (@80012fa8), the self-exclusion
  * vs the attacker +0x188 (@80012f40), and the +0x90 0x3000000 state-mask gate
  * (@80012f54). This applies the per-enemy damage ONCE per attack window.
- * Returns 1 if the hit landed, 0 if the enemy was already hit this attack. */
+ * Returns 1 if the hit landed, 0 if the enemy was already hit this attack.
+ * RUNDE 34: `p` = der Angriffspunkt des Resolver-Aufrufs (FUN_80012d60 a1, s5 — z.B. der
+ * Explosionspunkt der Granate @0x80018594-bc) oder NULL, wenn der Aufrufer keinen hat
+ * (Direktaufrufe aus Sonden/Tests). */
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p);
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
 {
+    return re15_enemy_take_damage_at(e, attack_type, NULL);
+}
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p)
+{
+    (void)p;
     /* RE2-Adult/Baby-Spinne (Runde 7, spinne-todeszyklus.md 5.2): HP<0 = kein
      * gueltiges Ziel (@0x80047148-50) - auch der Messer-/Hitbox-Pfad laeuft im
      * Original durch dieselben Kandidaten-Gates. */
@@ -3307,6 +3316,20 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
         if (!e->active) continue;                              /* (*puVar6 & 1) @80012d9c */
+        /* ⛔ RUNDE 34 B1 / BAUPLAN E7 — NPCs 0x40..0x4D mit HP < 0 sind KEIN Kandidat.
+         * RE1.5 selbst hat hier KEINEN Typfilter (FUN_80012d60 prueft nur Wort 0 Bit 0 und
+         * den Kasten; der Waffen-Resolver FUN_80011f50 filtert `sltiu v0,v0,0x40`
+         * @0x80012180) — ein getroffenes NPC faellt im Original aus seinem Skript und steht
+         * danach fuer immer in Zustand 3 (0x80050ddc spielt den laufenden Clip zu Ende,
+         * 0x80050f00 kehrt bei +0x6 == 2 sofort zurueck, @0x80050f10-24) = UNFERTIG.
+         * Ziel ist deshalb RE2 (Beta->Retail): dessen Applier schliesst jeden Kandidaten mit
+         * HP < 0 aus (`lh v0,342(s0)` / `bltz v0,0x8004740c` @0x80047148-50), und RE2-NPCs
+         * tragen HP -1 (`addiu v0,zero,-1` / `sh v0,342(s0)` @0x8005d7b4-b8). Die RE1.5-NPCs
+         * tragen dieselbe Kennung aus ihrem INIT (Typ 0x45: `addiu v0,zero,-1` @0x8011d320 /
+         * `sh v0,154(v1)` @0x8011d324, STAGE1) — es fehlte nur die Abfrage.
+         * PORT-ZUORDNUNG: der Typbereich 0x40..0x4D ist die NPC-Familie des Ports
+         * (re15_npc_ai_tick, enemy_ai_common.c); nur HP < 0 schliesst aus (RE2 Gate 3). */
+        if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;
         if (re15_hitbox_test(e, atk))                          /* FUN_8002b5d0 @80012db4 */
             collected[ncol++] = i;                             /* local_78[] @80012dc8 */
     }
@@ -3331,12 +3354,18 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
          * pointer ↔ the same actor; the port maps that identity to slot equality. */
         if (slot == attacker_slot) continue;
 
-        /* GATE B — terminal-state skip (@80012f54): the original skips when
-         * (e+0x90 & 0x3000000) == 0x3000000 (the enemy's death / despawn terminal
-         * flags). The bit WRITER is the enemy death/lifecycle FSM, which the port has
-         * not yet implemented, so no enemy can be in that state today → the gate is
-         * inert and is OMITTED here (behaviourally identical now, same documented-
-         * deferral stance as the hit-SE below). FUN_80011f50 reads the same gate. */
+        /* GATE B (@0x80012f54-60, RUNDE 34 B1 — war hier als "Tod/Despawn-Flags, inert"
+         * AUSGELASSEN; das war falsch gelesen):
+         *     80012f54  lw   v0,144(s1)          ; WORT +0x90..+0x93 (little endian)
+         *     80012f58  lui  v1,0x300            ; Maske 0x03000000 = Bits 24/25 = BYTE +0x93 Bit 0|1
+         *     80012f5c  and  v0,v0,v1
+         *     80012f60  beq  v0,v1,0x8001302c    ; beide gesetzt -> naechster Kandidat
+         * Das Byte +0x93 ist im Port `hit_react` (der vorhandene Ein-Treffer-Riegel). Das
+         * Sprungziel 0x8001302c liegt HINTER dem Zaehler `addiu s4,s4,1` @0x80013024 -> ein
+         * uebersprungener Gegner zaehlt NICHT, und sein +0x93 bleibt UNBERUEHRT (auch Bit 0x80,
+         * das der Seitentest unten sonst neu berechnen wuerde). FUN_80011f50 prueft dieselbe
+         * Maske (`lui s4,0x300` @0x800120c0 / `beq v0,s4` @0x80012100). */
+        if ((e->hit_react & 3u) == 3u) continue;
 
         /* Per-attack collision bits (@80012f70-fac): clear all but the hit-once bit,
          * then set bit0x80 when the hit came from the target's FRONT (FUN_8001a7a8). */
@@ -3347,8 +3376,12 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
         /* type<2 → hit SE FUN_800453d0(10) @80012f80 — DEFERRED (audio SE-id table). */
 
         /* Enemy branch (@80012fb4-3034): applies the hit once per window (bit0 guard),
-         * else marks the re-hit bit0x2. */
-        re15_enemy_take_damage(e, attack_type);
+         * else marks the re-hit bit0x2. RUNDE 34: der Angriffspunkt P geht mit — der
+         * RE2-Stempel (E6) braucht ihn fuer Zone (+0x1D2) und Richtung (+0x1D0). */
+        {
+            const int32_t p[3] = { atk->x, atk->y, atk->z };
+            re15_enemy_take_damage_at(e, attack_type, p);
+        }
         hits++;                                                /* cVar9 += 1 @80012fec */
     }
     return hits;
