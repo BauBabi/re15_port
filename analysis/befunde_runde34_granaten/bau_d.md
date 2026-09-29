@@ -10,7 +10,7 @@ Alle RE2-Adressen = `info/re2leon/PSX.EXE` (t_addr 0x80010000), in DIESER Sitzun
 RE1.5-Adressen = `info/Re1.5/PSX.EXE` ueber `re15_disasm.py`. GTE-Worte, die das Werkzeug als `.word` zeigt, sind von Hand
 dekodiert und jeweils mit ihrem Rohwort zitiert.
 
-STATUS: IN ARBEIT (Paket 1 = O-VB1/O-VB2).
+STATUS: Pakete 1-6 gebaut, gemessen und committet; volle Suite siehe §7.
 
 ---
 
@@ -190,3 +190,203 @@ Routine 12 prueft wie Op 28 "Boden gegen gespeicherten Boden". Die Port-Abbildun
 Der Formtyp-genaue Test (Kreise, Schraegen: RE2-Typen 1..13) wird wie ueberall im Port durch den Zellen-Kasten ersetzt
 (`re15_collision_box_blocked` prueft nur das Rechteck — bestehende Port-Vereinfachung, nicht Teil dieser Spur).
 Fuer Sonden gibt es einen Haken `re2fx_boden_hook` (flache Ebene ohne Raum).
+
+### 2.5 Messung der Abbildung an echten RE1.5-Raeumen
+
+Werkzeug `build/r34g_d/boden/boden.c` (unversioniert; 250er-Gitter ueber die SCA-Huelle, ruft
+`re15_collision_room_coll(&rdt, x, z, 0, 8, 0x100)` und `re15_collision_box_blocked(&rdt, x, z, 0, 2, 2)`):
+
+| Raum | Gitterpunkte | Boden 0 | Boden −1800 | −3600 | −5400 | Zellkontakt Band 0 |
+|---|---|---|---|---|---|---|
+| ROOM1140 | 12100 | 3859 | 8241 | 0 | 0 | 8463 |
+| ROOM1150 | 4292 | 2076 | 2216 | 0 | 0 | 2144 |
+| ROOM1170 | 33473 | 19646 | 679 | 0 | 390 | 902 |
+| ROOM1000 | 13952 | 9683 | 4269 | 0 | 0 | 4424 |
+| ROOM2090 | 8343 | 4913 | 2172 | 1258 | 0 | 3619 |
+
+Die RE1.5-Bodensonde liefert −1800 ueber den Wand-/Hindernis-Zellen des Bandes 0 (Zahlen deckungsgleich mit dem
+Zellkontakt) und 0 auf freiem Boden. Folge fuer die Flammen: RE2 wertet einen Punkt IN einer Form als Kontakt, der Port
+wertet die Oberkante der Zelle als Boden; das unterscheidet sich nur fuer eine Flamme, die UEBER dem Boden (y < 0) in eine
+Wandzelle fliegt. Das ist im Port nicht erreichbar: die Granate liegt immer mit Welt-y > 0 (Routine 29 `lh t1,42(t0) /
+blez t1` @0x80018330-38, BAUPLAN §1.1 "steckt 3..20 im Boden"), die Flammen starten an Q (Op 48 Translation := Q
+@0x80021000-18), fallen nur (acc.y 5..12) und landen deshalb im ersten Op-28-Bild (`slt v1,s0,v1` @0x8001fc94: 0 < y) —
+nach der RE2- wie nach der Port-Regel. Der Gleit-Kontakt (Op 29, P.y = y − 100) ist in beiden Regeln "in der Wandzelle".
+
+---
+
+## 3. Die Maschine (engine/src/re2_fx.c, include/re2_fx.h)
+
+| Datei:Zeile | Inhalt | Beleg |
+|---|---|---|
+| re2_fx.c:84 | `s_gl_basis` = B (O-VB1) | §1.4 |
+| re2_fx.c:124 | `re2fx_reset` = Pool leer (Boot @0x8001bac4-e4) | |
+| re2_fx.c:135 | `re2fx_register_core` = FUN_8001babc-Kopf + FUN_8001bca0 (rueckwaerts, 8 Ids, Tabelle `(2ca+cb+2)*4`) | @0x8001bb54-90, @0x8001bcc8-2c |
+| re2_fx.c:176 | `spawn_kern` = FUN_8001cbe8 / FUN_8001bf10 inkl. Mehrteil-Zweig | @0x8001cbe8-0x8001cef4, @0x8001bfa8 |
+| re2_fx.c:279 | `weltlage` = FUN_8001d894 (0x800-Folgen, Vorbild-Lage, 0x400- und Normalzweig) | §1.1 |
+| re2_fx.c:346-785 | Ops 0/1/2/19/25/27/28/29/30/40/46/48/49/50/58/64, Dispatcher `op_rufen` | Tabelle 0x8009D868 |
+| re2_fx.c:378 | `re2fx_boden` = O-VB2-Abbildung | §2.4 |
+| re2_fx.c:778 | `schritt` = FUN_8001d68c (Op A?, Weltlage, Op B, Physik, Anim) | @0x8001d68c-0x8001d88c |
+| re2_fx.c:822 | `re2fx_tick` = FUN_8001d300 (Update-/Draw-Pass, Waisen-Kill, Befoerderung 0xA003, Pause-Liste) | @0x8001d300-0x8001d688 |
+| re2_fx.c:856 | `re2fx_quads` = FUN_80077924 + FUN_80077ed0 (§4) | |
+| re2_fx.c:923 | `re2fx_aufschlag` = Port-Zuordnung E8 (§3.2) | |
+
+### 3.1 Op-Belege (je Konstante mit Adresse; alle in dieser Sitzung disassembliert)
+
+| Op (Optab) | Adresse | Umgesetzt |
+|---|---|---|
+| 0 | 0x8001dc28 | `jr ra` |
+| 1 | 0x8001dc30 | Status := step[0x12] @0x8001dc3c-44, Anim := step[2] @0x8001dc40-4c, TPage \|= step[0x14] @0x8001dc48-60, Countdown := Dauer @0x8001dc64-7c, Index += step[0xB] @0x8001dc8c-9c, 24 B nachladen @0x8001dcac-dd28 (lwl/lwr Rohworte 0x88430003…0xb8850014) |
+| 2 | 0x8001dd2c | wie Op 1, Anim := step[2] + rand % (step[0x16]+1) (`div` @0x8001dd70, `mfhi` @0x8001dd98) |
+| 19 | 0x8001f2c0 | Schaden-Tor +0x4A @0x8001f2d0, ≥ 16 @0x8001f2e8, > 0x1000 @0x8001f2fc, Op 40 @0x8001f308, +0x16++ @0x8001f31c-28; Zustand 0 tot @0x8001f37c-84; 1: ×990/×980 @0x8001f3a4-e4 (0x10624dd3, sra 6, Vorzeichen); 2: ×1009/×1002 @0x8001f40c-44, Ende → Zustand 1, 90 + r%11 @0x8001f47c-4c8; 3: Zaehler, dann Zustand 2 mit 30 + r mod 8 @0x8001f4cc-51c |
+| 25 | 0x8001fa08 | Wasser `jal 0x800527b4` @0x8001fa20, w ≠ 0 && w < y → Op A/Status := 0 @0x8001fa2c-58 |
+| 27 | 0x8001fa9c | 0xB003 @0x8001fabc-c0, TPage \|= 0x20 @0x8001fac4-cc, Anim r%3 @0x8001faf4, Countdown @0x8001fb04-1c, Boden `jal 0x8004fba0` @0x8001fb4c → +0x14 als **u32** @0x8001fb60, Op A 58 @0x8001fb64-68, Op B 28 @0x8001fb74-78, +0x1B := 2 @0x8001fb8c, 8 + r%3 @0x8001fbb4-b8 |
+| 28 | 0x8001fbd0 | Wasser @0x8001fbec-24, vel.x < 0 → 0 @0x8001fc3c-48, P.y − 900 @0x8001fc6c, f < y → Op[step[2]] @0x8001fc94-cc (ohne +0x14), Kontakt → f == +0x14 ? Op[step[3]] : Op[step[2]] @0x8001fcd8-34, +0x14 := f @0x8001fd44 |
+| 29 | 0x8001fd5c | vel.x ≤ 0 → 0 @0x8001fd74-84; vel.x ≥ 61 @0x8001fd78 und step[2] % 15 == 0 @0x8001fd94-b8 → 0x0504 \| Skala×0.8 @0x8001fdc0-f8 mit a3 = Platz+0x34, Kind +0x4A := 1 @0x8001fe20; step[2]++ @0x8001fe30-3c; P.y − 100 @0x8001fe60, Kontakt → Op[step[3]] @0x8001fe84-b4 |
+| 30 | 0x8001fecc | Op 2 @0x8001fed4; Sub == 4 → +0x1B 2, 2 + r mod 8 @0x8001fee8-ff30; sonst 3, 700 + (r%6)·50 @0x8001ff34-84 |
+| 40 | 0x80020758 | Box 0x80010910 = [−600,0,300,150] (lwl/lwr @0x80020770-8c), P.y − 100 @0x800207a4, 0x2002000A @0x80020794/a0, `re2fx_applier` (NULL = kein Treffer), Treffer → Op 50 @0x800207cc |
+| 46 | 0x80020b60 | acc.y/step[2]/vel.y := 0 @0x80020b70-80, Op A 19 @0x80020b84, Op B 29 @0x80020b94, vel.x 180 @0x80020ba4, acc.x −10 − r%11 @0x80020bb0-f4, 38 + r mod 8 @0x80020c20, +0x12 &= 0xFFFE @0x80020c28 |
+| 48 | 0x80020f3c | §3.2 |
+| 49 | 0x800215c8 | §3.2 |
+| 50 | 0x80021970 | step[2] 64 @0x80021978, acc.x/step[3]/vel.x := 0 @0x8002198c-9c, +0x12 &= 0xFFFD @0x800219a8 |
+| 58 | 0x80022254 | Zustand 0 tot @0x800222a0-a8; 1: ×880 (mit) / ×800 (OHNE Vorzeichenkorrektur) @0x800222c8-328; 2: ×1010/×1007 @0x80022350-84, Ende → 1, 2 + r mod 2 @0x800223b8-e4 |
+| 64 | 0x80022728 | **erreichbar** (Korrektur zu Saeure-GP OFFEN 3): Op 28 Kontakt + gleicher Boden → Op 50 (step[2] := 64), naechste Bodenberuehrung → Op[64]: y := +0x14, acc.y/step[2]/vel.y := 0, Op B := 0, +0x12 &= 0xFFFE @0x80022734-70 |
+
+Erreichbare Ops (Skript-Dump CORE00.ESP, Baenke 2/3/4/5): genau die obigen; jeder andere Op zaehlt `re2fx_op_unbekannt()`
+(Sonde 222/429: 0).
+
+### 3.2 Aufschlaege (Op 48 / Op 49) und die Uebergabe (E8)
+
+`re2fx_aufschlag(re2_art, q, gier)` legt einen **RE2-Runden-Platz im Aufschlagbild** an (Port-Zuordnung, ohne RE2-Flug):
+FUN_8001bf10-Zwilling mit 0x020C1000 (Bank 2 Skr. 4 = Brand/Saeure-Runde `lui a0,0x20c / ori a0,a0,0x1000`
+@0x80044f9c-a0), a1 = gier, a2 = M (M.rot = RotY(gier)·B, M.t = Q), a3 = NULL; dann der Op-17-Stand: +0x1B := Art
+(`sb v0,27(v1)` @0x8001f1b8, explizit 2 = Saeure / 1 = Brand, nie Id − 9), Op B := 47 + Art (Op 15 → Op[step[2] = 47 + Art]
+@0x8001f0e4-104), Status 0xB403 @0x8001f1e4, Anim 18 @0x8001f1ec, TPage \|= 0x20, Lebensdauer 15 (@0x8001f1d4/@0x8001f284,
+≠ 255 = kein Wasser). Op A := 0 (die Rauchspur Op 22 gehoert zum RE2-Flug, den es im Port nicht gibt). Phase 0 laeuft im
+Draw-Pass desselben Bildes (re2fx_tick direkt nach dem ESP-Tick).
+
+* **Op 49 Saeure** (Sprungtabelle 0x80010950): Phase 0 Status 0x8403, Op A 0, Op B 49, SE 0x01130001 an (x,y,z),
+  vel.y 240 / vel.x 0 / acc.x −23 / acc.y 0, Kinder 0x030F2000, 0x040C2000, 0x041D1800 an a3 = Platz+0x34; Phase 1..4:
+  0x031F2000 / 0x03142000 / 0x040D2800 / 0x030F2000, Platz frei in Phase 4. Die zwei RE2-Treffer 0x1002000B laufen NICHT (E3).
+* **Op 48 Brand**: Phase 0 Translation := Weltlage, Status 0x8000, SE 0x01120001 an +0x60, Kinder 0x040C2800/0x041D2700
+  (a2 = Platz+0x4C), IMMER drei Bodenflammen (Skala 7168 + (r mod 8)·768, Gier + r%40 / + r%80 + 400 / + r%80 − 400,
+  vel.x += r%25, acc.y += r mod 8, +0x4A := 1, nur bei gueltigem Platz — die Zufallszuege r3/r4 fallen bei Pool-voll weg
+  wie im Original @0x80021174-7c), Ende: +0x60/+0x64/+0x68 := alte Translation mit y + 3600 (@0x80021578-a0); Phase 1 frei.
+  Die zwei RE2-Treffer 0x0002000A laufen NICHT (E3).
+* Zeitpunkt der Kinder: sie liegen auf den naechsten freien Plaetzen UNTER dem Aufschlag-Platz (Suche 95 abwaerts) und
+  werden deshalb im Draw-Pass des FOLGEbilds befoerdert (Pumpe laeuft 0 → 95). Das ist der RE2-Mechanismus; welches Bild
+  im Original, haengt dort ebenso an der Poolbelegung.
+
+---
+
+## 4. Zeichner (re2_fx.c `re2fx_quads`, platform/pc/src/re2fx_pc.c)
+
+* `re2fx_quads` (engine, plattformneutral): Schleife 95 → 0, Sichtbar (st & 0xA000) == 0xA000, Region-Test
+  `re15_esp_fx_culled` (= FUN_8002c820 auf das Viereck des aktiven Cuts; RE2 @0x80077a30 liest 0x800CE338, RE1.5-Raum:
+  DAT_800AC790), nprim/size/cell, Code 0x2C/0x2E, RTPS wie pc_draw_effects, Near-Gate SZ3 >> 9 (@0x80077f58 — RE2 verwirft
+  Sprites unter SZ 512, RE1.5-ESP erst unter 4), Klemme 32767, step/Breite/Hoehe/Texelschritt, Kanten-Trim, Ecken aus s8
+  cx/cy, UV = (u, v)..(u + size', v + size'). Status-Bit 0x200 (Alternativpfad @0x80077a54-60, 3D-Quads) wird ausgelassen —
+  kein Aufschlag-Skript setzt es (Status 0xB003/0xB803/0x8403/0x8000). Spiegelboden (0x800CFBD8 & 0x10000) entfaellt: RE1.5-
+  Raeume haben keinen.
+* `re2fx_pc_lade_tex`: TEX.TIM nach dem Lader FUN_80076a40 — **die Bildlage der Datei (0,0) wird ersetzt** durch (768,256)
+  (0x800CFBF0 = 28 per Halbwort-Store `sh v0,-1040(at)` @0x8002b8d4; x = 28·64 − 1024 @0x80076a64-80, y = 256
+  @0x80076a9c-a8), CLUT-y = 480 + 0 (@0x80076b00-0c). Die Seiten 0x1E/0x1F werden nebeneinander (512 × 256 Texel) mit den 19
+  CLUT-Zeilen der Spalte x 272 in EINEN Textur-Slot gelegt (Mehr-CLUT-Upload von render_pc.c: Zeile = CLUT-y − 480).
+* `re2fx_pc_draw`: je Quad zwei Dreiecke, u + 256 fuer Seite 0x1F, CLUT-Wort und TPage durchgereicht, Mischmodus aus
+  TPage-Bits 5-6 wie pc_draw_effects (main.c:436-448), Farbe 255 = PSX 0x80 (Paketfarbe 0x808080 @0x800783cc-d0; die
+  unbeleuchtete Queue-Funktion moduliert mit Farbe/255, render_pc.c:2505; die beleuchtete rechnet 0x80 → 0xFF,
+  render_pc.c:2536-2539). Puffer 384 Quads je Bild = RE2-Paketpuffer 0x3C00/40; das Loeschen eines nicht mehr passenden
+  Platzes (@0x80077e40-54) ist nicht nachgebaut (Aufschlaege < 130 Quads).
+* STP-Pruefung (Lauf `re2fx_katalog.py` + Zaehlung): in den CLUT-Zeilen 480..483 tragen alle 15 benutzten Farben das
+  STP-Bit; in Zeile 484 (Flammen) ist Eintrag 14 = 0x0001 ohne STP, aber 0 der 5849 deckenden Flammen-Texel (Zellen 0..9)
+  benutzen ihn → die Ganz-Quad-Mischung des PC-Renderers ist fuer alle gezeichneten Texel exakt.
+* UV-Ueberlauf-Pruefung: in den Baenken 2/3/4/5 hat keine Zelle u + size oder v + size ≥ 256.
+
+---
+
+## 5. Sonden und Mutationsproben
+
+`tests/unit/probes/r34_re2fx.cmake`: `unit_r34_re2fx`, `unit_r34_re2fx_knochen`, `unit_r34_re2fx_bild` (alle gruen).
+
+| Pruefung | Inhalt | Negativ-Kontrolle |
+|---|---|---|
+| 101-116 | Registrierung (8572 B, Ids 03 05 00 01 02 06 07 04), Spawn auf Platz 95, Step Bank 5 Skr. 5 `00 1b 2e 32 …`, Status 0x4000, Anim/UV/Step-Offsets (0x05F8 / 0x0698 / 0x0800), TPage/CLUT/+0x42/Countdown, CLUT + (sub>>3)·0x40, Pool voll → 0xFF | Rumpf-Datei → Fehler, Spawn ohne Registrierung → −1, Bank 9 → −1 |
+| 201-222 | Saeure: Platz Bank 2/0x0C Status 0xB403 Op B 49; SE 0x01130001 genau 1× an Q; Phase 0 → 0x8403/Phase 1/Op A 0, vel.y 240, vel.x −23 nach der Physik; Kinder X = 0x030F2000/0x040C2000/0x041D1800 (0x4000, Versatz Q); X+1..X+4 je ein Phasen-Kind, Lage = Q + RotY(1024)·B·lokal (±2); X+4 Platz frei | Art 0 und 3 → nichts |
+| 301-336 | Brand: SE 0x01120001 an +0x60, Status 0x8000, Ende +0x64 = Q.y + 3600, Kinder 0x040C2800/0x041D2700 mit Matrix-T = Q, drei Flammen gegen einen UNABHAENGIG nachgebauten RE2-Strom (Skala, Gier, vel.x, acc.y, +0x4A), Strom danach synchron, X+1 Platz frei, Flammen nach Op 27 (0xB003, Op A 58, Op B 28, Zustand 2) | — |
+| 401-430 | Landung → Op A 19 / Op B 29, Zaehler 38..45 / 90..100, Zustandsdauern exakt Zaehler + 1 / + 2; Lebensdauer 140 (Band 131..148); Applier nur bei step[0x16] ≥ 16 und X ≥ 0x1001, Box [−600,0,300,150], Hitcode 0x2002000A; Treffer → Op 50; Wand beim Gleiten → Op 50; Wand in der Luft → Op 64 | Flamme ohne +0x4A → kein Applier; ohne Wand kein Op 64 |
+| 440-451 | Landung im Luft-Schrumpfen: +0x1B bleibt 1, Tod nach Zaehler + 2; Pause 0x10000000 haelt an, danach Phase 0 | — |
+| 601-602 | Folgeflammen-Takt: vel.x 200 / acc.x 0 → genau 4 in 60 Bildern | vel.x 60 → 0 |
+| 701-705 | Aspekt-Folgen je Bild exakt (Op 58 Z2/Z1, Op 19 Z2/Z1), alle vier Zweige durchlaufen | — |
+| knochen 1-20 | B aus PL01.PLD + PL01W09.PLW nachgerechnet (Keyframe 271), Clip 10/12/14 waagrecht/hoch/tief, lokal +x oben | Clip 12 ≠ B |
+| bild 1-17 | Offscreen: keine Quads vor dem Aufschlag, Seiten nur 0x1E/0x1F, CLUT-Spalte 272, kein UV-Ueberlauf, jedes Sprite deckend, Saeure/Brand zeichnen | Bild 0 (vor dem Aufschlag) leer |
+
+Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck → gruen; alle in dieser Sitzung gefahren):
+
+| Mutation | Ergebnis |
+|---|---|
+| Op 19 `>= 0x10` → `>= 0x0F` | FAIL 412 |
+| Op 49 acc.x −23 → −22 | FAIL 206 |
+| B[1] 4079 → 4078 | knochen FAIL 10 |
+| Flammen-Skala 7168 → 7169 | FAIL 313 |
+| Op 29 `% 15` → `% 14` | FAIL 601 |
+| Op 64 aus der Tabelle entfernt | FAIL 429 |
+| Op 19 ×1009 → ×1008 | FAIL 703 |
+| Op 58 ×880 → ×881 | FAIL 702 |
+| Op 29 vel.x 61 → 60 | FAIL 602 |
+| Op 46 setzt +0x1B := 2 | FAIL 441 |
+| Pause-Gate aus | FAIL 450 |
+
+---
+
+## 6. Sichtpruefung ohne main.c (Paket 6, O9)
+
+* `probe_r34_re2fx_bild` rastert die Saeure- (16 Bilder) und Brand-Folge (48 Bilder) der echten Maschine vor einer festen
+  Kamera (Standort (−1500,−1800,−5200), Blick (1000,−400,0), fov 26684, camf 208) ueber ein **VRAM-Modell** (Lader-Lage wie
+  FUN_80076a40, PSX-4-bpp-Abruf aus TPage/CLUT-Wort, PSX-ABR je Texel mit STP-Bit) → PPM je Bild + `re2fx_quads.txt` +
+  `re2fx_crops.txt`. Lauf: 1060 Quads, 626 eindeutige Ausschnitte, 16 leere Ecken-Zellen (Daten), Pixel nach dem Aufschlag
+  Saeure 135182 / Brand 374878.
+* `tools/re2fx_katalog.py` (neu, unabhaengiger Dekoder direkt aus CORE00.ESP + TEX.TIM): Katalog der zehn Aufschlag-Kinder
+  (`build/r34g_d/katalog/re2fx_katalog.png`) und Abgleich: **626 Ausschnitte, 0 abweichende Texel** zwischen Port-Pfad
+  (re2fx_quads + VRAM-Modell) und Katalog-Dekoder. Katalog-Befund (O9 geschlossen): Bank 3 Skr. 7 CLUT 481 grauer Puff
+  (additiv, Anim 11..22), Bank 4 Skr. 4 CLUT 481 dunkler Rauch (subtraktiv, Anim 3..22), Bank 4 Skr. 5 CLUT 483 oranger Puff
+  (B + F/4, Anim 32..35), 0x031F2000 CLUT 483 weiss-gelb-roter Feuerball (additiv), 0x03142000 CLUT 482 gelb-brauner Puff,
+  Bodenflammen CLUT 484 Flammen (additiv, Anim 0..9 Schleife). Bildfolge `build/r34g_d/katalog/re2fx_bildfolge.png`.
+* Die exe-Sichtabnahme (gdigrab/RE15_FRAMEDUMP) braucht die Bindung in main.c (INTEGRATIONSWUNSCH 1-4) und ist damit
+  Sache der Integration.
+
+---
+
+## INTEGRATIONSWUNSCH (fremde Dateien — NICHT geaendert)
+
+1. `platform/pc/src/render_pc.c:204` — `#define RE15_TIM_SLOT_MAX 50` → **51**, Slot 50 = RE2-FX-Seiten (`RE2FX_TIM_SLOT`,
+   re2fx_pc.h). Ohne das laedt `re2fx_pc_lade_tex` nichts (Rueckgabe −7, stderr-Meldung) und `re2fx_pc_draw` zeichnet nichts.
+2. `platform/pc/main.c` Boot (nach Renderer-Start, neben dem Laden der RE1.5-CORE00.ESP): `shared_assets/RE2/CORE00.ESP`
+   resident laden → `re2fx_register_core(buf, n)` (Puffer bleibt gehalten); `shared_assets/RE2/TEX.TIM` →
+   `re2fx_pc_lade_tex(buf, n)` (Puffer danach frei).
+3. `platform/pc/main.c:10516` direkt nach `pc_draw_effects(...)`: `re2fx_pc_set_ansicht(&cam_view, cx, cy, pc_fx_camf(),
+   has_region, rxs, rzs); re2fx_pc_draw();`
+4. `platform/pc/main.c` 30-Hz-Block (C1): `re2fx_tick()` direkt hinter `re15_esp_fx_tick(...)` (RE2: Gegner-Schleife
+   0x800267c0-0x80026930 vor `jal 0x8001d300` @0x80026980).
+5. Raumwechsel: `re2fx_reset()` an denselben Stellen wie `re15_esp_fx_reset()` (`room_pc.c:130`, `scd_room_setup.c:199`) —
+   Port-Zuordnung nach RE1.5 FUN_80019354 (`sb zero` @0x80019378, gerufen @0x8003996c). RE2 selbst leert den Pool nur ueber
+   FUN_8001d07c (einziger Rufer @0x800569a8, ein SCD-Op) bzw. beim Boot FUN_8001babc; der Raumlader FUN_8001bba4 (@0x8004a2ec)
+   registriert nur die Raum-Baenke 8..15 neu.
+6. Haken: `re15_esp_aufschlag_hook = re2fx_aufschlag` (V1d); `re2fx_se_hook` → 0x01130001 = ARMS10 Satz 10, 0x01120001 =
+   ARMS11 Satz 10 (E9, audio_pc.c); `re2fx_applier = re15_re2_gl_apply` (nach Merge B).
+7. **O-VB4 (Orchestrator-Entscheid) liegt im Applier (Spur B, `re15_re2_gl_apply`, re15_damage.c)**: die Maschine ruft Op 40
+   fuer JEDE Flamme ab step[0x16] ≥ 16 / X > 0x1000 ohne Typfilter; Gegner ohne RE2-KI muessen dort ueber den RE1.5-
+   Gegnerzweig mit Art 5 "Flaechenfeuer" getroffen werden (DAT_8006f418[5] = 50 @0x8006f422, DAT_8006f430[5] = 14
+   @0x8006f435), E7-Rueckfall bei NULL-Zeile 14.
+8. `release/make_package.sh:186-189` Paket-Gate um `CORE00.ESP TEX.TIM` ergaenzen; `platform/android/app/build.gradle:113-115`
+   Existenz-Gate um `shared_assets/RE2/CORE00.ESP` und `shared_assets/RE2/TEX.TIM` (C0-Hinweis; jetzt liest Spur D beide).
+9. Hinweis an Spur C (nur gelesen, nicht gemessen): `pc_draw_effects` uebergibt `128,128,128` an die unbeleuchtete
+   Queue-Funktion (main.c:460/462), die die Farbe unveraendert als SDL-Faktor/255 nutzt (render_pc.c:2505) — die RE1.5-ESP-
+   Effekte liefen damit bei halber Helligkeit, falls nicht anderswo ausgeglichen. Fuer RE2-FX nimmt re2fx_pc 255 (§4).
+
+## OFFEN
+
+* O-VB2 Formtyp-Genauigkeit: der Zellen-Kontakt nutzt das Zellrechteck (`re15_collision_box_blocked`), nicht die RE2-
+  Formtests der Typen 1..13 (Schraegen/Treppen/Kreise). Bestehende Port-Vereinfachung; Weg: die RE1.5-Formtests
+  (re15_collision.c "SCA DIAGONAL / SLOPE cells") in re2fx_boden nutzen, sobald sie fuer Punkt-Tests exportiert sind.
+* RE2-Paketpuffer-Ueberlauf (Platz-Loeschen @0x80077e40-54) nicht nachgebaut (unerreichbar, §4).
+* Mischreihenfolge gleich tiefer Quads: die PSX-OT legt spaetere Pakete eines Buckets VOR fruehere; der Port sortiert nach
+  View-Z. Fuer die Aufschlag-Sprites ohne Folge (ABR 1/2/3 sind kommutativ; ABR 0 kommt in den Aufschlag-Skripten nicht vor).
