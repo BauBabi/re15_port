@@ -55,3 +55,150 @@ Woran es haengt (Datei:Zeile, Stand 53b69a1b):
 | `engine/src/re15_inv_screen.c:2597-2598` | Kachel-Schleife: `rs == UNVISITED && !re15_map_owned_page(page) -> continue` (RE2 @0x8006E744) |
 | `engine/src/re15_inv_screen.c:2570-2579` | die Zielkachel wird NUR im Hinweis-Schirm (`hint_aktiv`) gezeichnet |
 
+---
+
+## 2. RE2 (Retail, Leon) — Etagenwahl und Zielraeume
+
+Alle Adressen `info/re2leon/PSX.EXE` (t_addr 0x80010000, Kopf 0x800), selbst disassembliert mit
+`.claude/skills/re15-psx-disasm/scripts/re2_disasm.py`. Skript-Zensus ueber alle Leon-RDTs
+(`info/re2leon/PL0/RDT`) mit `karte_werkzeug/r33_re2_bank_zensus.py` (Walker
+`analysis/befunde_runde30/tools/r30_re2_scd.py`; 171 Bloecke desynchronisieren im Walker und
+sind nicht erfasst — die Aussagen unten gelten fuer die sauber gelaufenen Bloecke, die vier
+Hinweis-Bloecke gehoeren dazu).
+
+### 2.1 Die Flag-Baenke der Karte (Bank-Zeigertabelle @0x800A78C8)
+
+Die SCD-Befehle lesen ihre Bank ueber diese Tabelle: Ck 0x21 @0x80054354 (`lbu v1,1(v0)` Bank,
+`lhu a1,2(v0)` Bit, `lw v1,30920(at)` = `[0x800A78C8 + Bank*4]` @0x80054384), Set 0x22
+@0x800543B4 (`lbu v1,1(v0)` Bank, `lbu a1,2(v0)` Bit, `lbu a2,3(v0)` Op 0/1/7,
+`lw v1,30920(at)` @0x800543E8). Tabelle selbst gelesen:
+
+| Bank | Adresse | Bedeutung (belegt durch den Leser) |
+|---|---|---|
+| 9 | 0x800D490C | Raum besucht (Satzbyte +12; Zeichner @0x8006E67C-0x8006E688) |
+| 31 | 0x800D4A34 | Gegenstands-/Uebergangsmarken erledigt (FUN_8006DCC0, Runde 30 §3.9) |
+| 32 | 0x800D4920 | Kachel-VARIANTE je Raum (Satzbyte +13; @0x8006E604-0x8006E620, @0x8006E70C-0x8006E72C) |
+| 33 | 0x800D4924 | Karte des Blatts im Besitz (Bit = `[0x800AAA3D + Blatt*8]`, @0x8006E658-0x8006E66C) |
+| 35 | 0x800D4908 | **Blatt besucht = Etagenwahl-Gatter** (2.2) |
+
+(Fruehere Dossiers nennen Bank 35 "Bank 36" und Bank 31 "Bank 32" — die Zeigertabelle zaehlt ab
+0: `[0x800A7954]` = 0x800D4908 ist Index 35, `[0x800A7944]` = 0x800D4A34 ist Index 31.)
+
+### 2.2 (a) Woran die Waehlbarkeit einer Etage haengt
+
+Kartenschirm Zustand 3 (interaktiv), HOCH/RUNTER:
+
+```
+8006d8e0: lw   v0,0(a0)          ; a0 = 0x800CFB74, Bit 31 = Wiederhol-Takt
+8006d8e8: bgez v0,0x8006d9e0     ; kein Takt -> kein Etagenwechsel
+8006d8f0: lbu  a1,26(s0)         ; Blatt [0x800D5C0A]
+8006d8f8: sltiu v0,a1,0x2 / bne  ; Blatt < 2: keine Etagen
+8006d904: lhu  v0,8476(s1) / 8006d90c: andi v0,v0,0x1000   ; HOCH gehalten
+8006d920: lbu  a1,-25876(at)     ; Nachbar oben  [0x800A9AEC + Blatt]
+8006d928: sltiu v0,a1,0x2 / bne  ; kein Nachbar
+8006d934: jal  0x80077360        ; Bit PRUEFEN ...
+8006d938: addiu a0,a0,19860      ; ... in 0x800CFB74 + 0x4D94 = 0x800D4908 (Bank 35)
+8006d93c: beq  v0,zero,...       ; Blatt nie besucht -> NICHTS
+8006d958: sb   v0,26(s0)         ; Blatt := Nachbar
+8006d964: andi v0,v0,0x4000      ; RUNTER: dasselbe mit [0x800A9B04 + Blatt]
+8006d990: lui a0,0x800d / 8006d994: addiu a0,a0,18696   ; 0x800D4908
+8006d998: jal  0x80077360 / 8006d9a0: beq v0,zero,...
+8006d9bc: sb   v0,26(s0)
+8006d9d4: lui  a0,0x404 / 8006d9d8: jal 0x8005ba28      ; Se(4,4) beim Wechsel
+```
+
+Dasselbe Gatter zeichnet die Pfeil-Reiter (`addiu a0,a0,18696` @0x8006E3A4) und steht im
+zweiten Blaetterer (@0x8006EE28) — mit @0x8006D994 die EINZIGEN direkten Bezuege auf 0x800D4908
+(`analysis/befunde_runde30/r30_mips_dis.py --find-addr 0x800d4908`).
+
+**Wer setzt Bank 35?**
+
+1. **Das Betreten eines Raums.** FUN_8006931C (einziger Aufrufer `jal` @0x8004A39C am Ende der
+   Raum-Init FUN_80049E48, die ihrerseits nur aus dem Tuer-Uebergang @0x80026E1C gerufen wird):
+   ```
+   80069390: addiu a0,s0,238       ; 0x800D481E + 238 = 0x800D490C (Bank 9)
+   80069394: jal 0x8007730c        ; Bit SETZEN: Raum besucht (Stage-Basis + Raum)
+   800693a8: jal 0x8006e7f0        ; (Stage, Raum) -> Blatt des Raums
+   800693b0: addiu a0,s0,234       ; 0x800D481E + 234 = 0x800D4908 (Bank 35)
+   800693b4: jal 0x8007730c        ; Bit SETZEN: Blatt besucht
+   ```
+   (`0x8007730C` = Bit setzen, `or` @0x80077328; `0x80077360` = Bit pruefen, `and` @0x80077380.)
+2. **Skripte**, 31 Set-Records (0 Ck). Das Muster ist die AUFNAHME EINER KARTE: derselbe Block
+   setzt Besitz (Bank 33) UND Blatt-besucht (Bank 35) fuer dieselben Blaetter, z.B.
+   ROOM20B0 sub10 `22 21 02 01`/`03`/`04` @0x037DA-E2 und `22 23 02 01`/`03`/`04` @0x037E6-EE
+   (Polizeiwache 1F/2F/3F), ROOM2130 sub05 @0x01842/@0x01846 (Blatt 5), ROOM6120 sub03
+   @0x01504-16 / @0x01522-34 (Blaetter 13-17). Weitere Setzer ohne Besitz: ROOM1120 sub03
+   @0x02EDA (4), ROOM4010/4030/D010/D030 (7, 8), ROOM6030 sub03/04/10 (13, 14), ROOM60E0 sub06
+   (16, 17), ROOMA120 sub01 (4).
+
+**Setzt der Hinweis 0x84 oder die Szene davor etwas, das die Etage waehlbar macht? NEIN.**
+- Handler 0x84 @0x800591C4-0x80059228 schreibt genau vier Dinge (Modus, Phase, Bit 0x8000,
+  Hinweis-Nummer — `karte-3010.md` §3.2); der Hinweis-Modus hat 0 Bit-Setzer (13 x
+  `jal 0x80077360`, 0 x `0x8007730C` im Bereich 0x8006F1C4-0x8006F900, §3.5 d).
+- Die vier Szenenbloecke mit einem Hinweis-Record (ROOM3010 sub02 `84 02` @0x026EE, ROOM3040
+  sub24 `84 04` @0x01BB0, ROOM30B0 sub15 `84 01` @0x01A86, ROOM6030 sub21 `84 03` @0x035C8)
+  enthalten KEINEN Set auf Bank 35 (ROOM6030 setzt Bank 35 nur in sub03/04/10).
+- Zwei dieser Bloecke bereiten die Karte aber vor: ROOM3040 sub24 gibt direkt vor `84 04` die
+  Karten der Blaetter 2-8 (Set(33, 2..8) @0x01B90-A8) — der Zielraum steht danach in der
+  normalen Karte als Umriss (Zeile 498, Besitz ohne Besuch); ROOM30B0 sub15 schaltet vor `84 01`
+  die Kachel-Variante des Zielraums ein (Set(32,1) @0x01A60, 2.3).
+
+Ergebnis (a): **in RE2 ist eine Etage genau dann waehlbar, wenn Bank 35 ihr Bit traegt** — gesetzt
+beim Betreten eines Raums dieses Blatts oder per Skript (Kartenaufnahme). Der Hinweis selbst macht
+KEIN Blatt waehlbar.
+
+### 2.3 (b) Gibt es eine Darstellung von ZIELRAEUMEN in der normalen Karte? NEIN.
+
+Der normale Zeichner FUN_8006E120 kennt je Kachel genau diese CLUT-Zeilen (Raumschleife
+@0x8006E46C-0x8006E770, selbst disassembliert):
+
+| Zeile | Bedingung | Stelle |
+|---|---|---|
+| 501 | Raum besucht (Bank 9, Satzbyte +12) | `addiu s5,zero,501` @0x8006E614 |
+| 506 | besucht UND Bank-32-Bit (Satzbyte +13) | `addiu s5,zero,506` @0x8006E620 |
+| +1 (502/507) | aktuelles Blatt UND aktueller Raum | `bne v0,a3` @0x8006E630, `bne s2,a3` @0x8006E640, `addiu s5,s5,1` @0x8006E648 |
+| 498 | Karte im Besitz, unbesucht | `addiu s5,zero,498` @0x8006E71C |
+| 503 | dito UND Bank-32-Bit | `addiu s5,zero,503` @0x8006E72C |
+| — | ohne Karte und unbesucht: nicht gezeichnet | `beq v0,zero,0x8006e768` @0x8006E744 |
+| 509/510, 506/510 | nur Blatt 2 Raum 14 (Sonderzweig mit Bank-32-Bits 8/9/11/12) | @0x8006E4A0-0x8006E600 |
+
+Es gibt KEINEN Zweig "Ziel". Die einzige blinkende Raumdarstellung ist der Hinweis-Modus 4
+(Zeichner FUN_8006F1C4, Aufrufer nur @0x8006F840/@0x8006F8E0), und der hinterlaesst nichts
+(`karte-3010.md` §3.7). Die normale Karte spielt auch keinen Hinweis-Ton: in FUN_8006D650 und im
+Zeichner 0x8006DEA0-0x8006E7F0 stehen genau drei `jal 0x8005ba28` — Se(4,9) @0x8006D7EC
+(`lui a0,0x409` @0x8006D7DC), Se(4,4) @0x8006D9D8, Se(4,5) @0x8006D9FC; kein Se(2,0x2B).
+
+**Was Bank 32 ist (sie ist der naheliegende Verdacht fuer "Zielraum").** Nur die 9 Raeume mit
+Satzbyte +13 != 0 haben Kachel-Pixel mit Palettenindex >= 5 (Histogramm aller Kacheln der
+Blaetter 2/3/5/6/8/16/17: jeder andere Raum 0 solche Pixel). Die Zeilen 503/506/507 machen genau
+diese Indizes sichtbar (Eintraege 5-8 = Farben 1-4, in 498/501/502 durchsichtig) und faerben
+11/13/14/15 um. Gerendert (`karte_werkzeug/r33_re2_kachel_varianten.py`,
+`karte_belege/re2_b32_area*.png`, je besucht / besucht+b32 / unbesucht / unbesucht+b32):
+Blatt 3 Raum 2 bekommt einen zusaetzlichen FLURARM nach oben, Blatt 5 Raum 8 eine zusaetzliche
+TUER in der linken Wand. **Bank 32 = "die Kachel zeigt den veraenderten Grundriss"** (Durchgang
+geoeffnet, Tuer freigelegt) — Setzer sind 26 Skript-Records (ROOM20E0, ROOM2160, ROOM3040,
+ROOM30B0, ROOM4040, ROOM60B0/60C0/6160 u.a.), Leser nur die drei Zeichnerstellen
+(@0x8006E608, @0x8006E710, @0x8006F5D0) und der Sonderzweig (s3 = 0x800D481E + 258). Farbe
+und Blinken bleiben die gewoehnlichen.
+
+Die 14 Marken von FUN_8006DCC0 (Tabelle @0x800A9B1C, Blinkhelligkeit nach [0x800D5C19]) sind
+PUNKTE an festen Kartenlagen, keine Raeume; sie verschwinden, wenn ihr Bit in Bank 31 steht
+(Runde 30 §3.9, `analysis/karte_2026-08-31/C_re2_karte.md` §3.2).
+
+### 2.4 Folgerung fuer den Bau
+
+- **Etagenwahl:** RE2 hat das Mittel, ein Blatt ohne Besuch waehlbar zu machen — ein Set auf
+  Bank 35 aus dem Skript (Kartenaufnahme ROOM20B0 sub10 @0x037E6-EE). RE2 benutzt es am Hinweis
+  NICHT. Der Nutzer will es dort ausdruecklich: der Port gibt deshalb mit dem Hinweis das Blatt
+  des Zielraums frei — **Port-Wahl auf Nutzerwunsch**, gebaut als Gegenstueck zu RE2s
+  Set(35, Blatt); das Gatter selbst (nur freigegebene Blaetter) bleibt RE2s Regel.
+- **Zielraum-Markierung:** RE2 hat KEINE (2.3). Gebaut als **Port-Wahl auf ausdruecklichen
+  Nutzerwunsch**, im Stil der RE2-Karte: derselbe Rot/Umriss-Wechsel wie im Hinweis (CLUT 502 /
+  498, `addiu s2,s2,1` @0x8006F514 / `addiu s2,zero,498` @0x8006F5DC), getaktet wie RE2s
+  Karten-Pulszaehler — der normale Kartenschirm faehrt in Zustand 3 denselben Zaehler wie der
+  Hinweis-Zeichner (@0x8006D87C-0x8006D8D4: `sltiu v0,v0,0xa` @0x8006D894, `sb zero,41(s0)`
+  @0x8006D8A0, `addiu v0,v0,-2` @0x8006D8AC, `sltiu v0,v0,0x51` @0x8006D8B8, `addiu v0,v0,2`
+  @0x8006D8D0; s0 = 0x800D5BF0, +40 = Zaehler 0x800D5C18, +41 = Richtung 0x800D5C19), einmal je
+  VBlank (Teiler 0 @0x80068A1C gilt fuer den ganzen Status-Task). OHNE Ton (2.3). Sie bleibt,
+  bis der Zielraum besucht ist.
+
