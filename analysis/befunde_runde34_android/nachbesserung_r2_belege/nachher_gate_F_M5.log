@@ -1,0 +1,5 @@
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\nb2\apk\F_M5.apk
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/nb2/apk/F_M5.apk (Kommentarlaenge 10 des End-of-Central-Directory reicht 10 B ueber das Dateiende - libziparchive lehnt die Datei ab)

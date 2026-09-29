@@ -418,3 +418,87 @@ Stand: angelegt, noch nichts geprueft.
 ### N1 (mittel, ausserhalb) - NICHT geaendert
 - Liegt in `re15_port/platform/android/jni/android_glue.c` (Geraete-Code) - ausserhalb meines Dateibereichs
   (nur release/*, build.gradle). Befund bestaetigt und verschaerft (R2-1); Vorschlag in R2-5.
+
+## R2-5. N1 (ausserhalb meines Dateibereichs): Befund und Vorschlag
+
+**Bestaetigt, und schaerfer als gemeldet** (Code; SDL2 2.28.5 aus `re15_port/platform/android/_deps`):
+1. `android_glue.c:161-181`: der Marker `re15_assets_ok.txt` traegt FNV-1a64 des Manifests + Anzahl + Bytes.
+   Das Manifest nennt nur Groesse und Pfad je Datei. Aendert ein Update nur INHALTE bei gleicher Groesse
+   (P07G.DO2: b22088b5 -> 1aaa98c7 -> d094cea1, je 55908 B; fuenf Port-Archive haben 55908 B), ist das Manifest
+   bytegleich -> Marker gleich -> `Assets bereits entpackt`, return: es wird **gar nichts** geprueft.
+2. Selbst bei anderem Manifest entpackt :210 nur Dateien anderer Groesse - die gleich grosse, geaenderte Datei
+   bleibt alt.
+3. `SDL_rwops.c:537-557`: ein relativer Pfad wird ZUERST als `<intern>/<pfad>` per fopen geoeffnet, erst dann im
+   Asset-System. Liegt der Anker intern (:54-55, nur ohne beschreibbaren externen Speicher), oeffnet :212 fuer eine
+   Datei anderer Groesse die ALTE entpackte Datei, :213 kuerzt genau sie auf 0 -> 0 B gelesen -> `got != sz` ->
+   Fehler, kein Marker, bei jedem Start erneut.
+- Ausgeliefert wurde Fall 1/2 noch nicht: v0.8.18 hatte kein RE15DOOR (`git ls-tree v0.8.18`), alle drei
+  P07G-Staende liegen vor v0.8.19. Er trifft das NAECHSTE Update, das eine Textur/ein Archiv gleich gross aendert.
+- Das Gate kann das nicht fangen (die APK ist richtig), und aus build.gradle heraus laesst es sich nicht beheben:
+  das Geraet vergleicht nur Groesse und Pfad; eine dritte Manifestspalte laese der jetzige Leser als Teil des
+  Pfads (`rel = tab + 1`).
+- **Vorschlag (Geraete-Code, braucht eine Entscheidung - nicht mein Bereich):** (a) writeAssetManifest schreibt je
+  Zeile zusaetzlich eine Pruefsumme (`<bytes>\t<fnv64>\t<pfad>` o.ae.), android_glue.c liest sie und entpackt, wenn
+  Groesse ODER Pruefsumme von einer lokal abgelegten Liste abweichen (der Marker allein reicht dann, weil sich das
+  Manifest mit jedem Inhalt aendert); (b) Assets nicht ueber einen Pfad oeffnen, den SDL zuerst im internen
+  Speicher sucht (z.B. Anker `<intern>/re15/` statt `<intern>/`, mit Umzug von re15_card.mcr), oder in
+  `<ziel>.neu` schreiben und erst nach vollstaendigem Lesen umbenennen. Das Gate zieht (a) dann nach (Spalte
+  pruefen).
+
+## R2-3. Messungen nachher (Maschine die ganze Zeit unter Last: Granaten-Sitzung + Mutanten-Probe parallel)
+
+### R2-3.2 Gate direkt gegen die Faelschungen der Gegenpruefung (unsigniert; `nachher_gate_*.log`)
+| Faelschung | vorher (HEAD) | nachher |
+|---|---|---|
+| F_praefix (16 B vor dem 1. Local Header) | 0 | **2** `beginnt nicht mit einem Local Header ... 'Entry at offset zero has invalid LFH signature'` |
+| F_kopf_arabisch | 0 | **1** `Manifest-Kopfzeile fehlt/unlesbar: '# re15 assets \u0663\u0666...'` |
+| F_M1 / F_M9 / F_M14 / F_M16 | 1 | 1 (Manifest-Groesse / Laenge `gelesen 85672 B ... 85772 B` / `Data-Descriptor-Bit gesetzt (nur Zentralverzeichnis)` / CRC classes.dex) |
+| F_M5 (Kommentar +10) | 2 | 2 `Kommentarlaenge 10 ... reicht 10 B ueber das Dateiende` |
+Gegen diese Faelschungen hielt das echte Gate schon vorher; B1 betrifft die MUTANTEN - siehe R2-3.1.
+
+### R2-3.3 Volle Kette `build_android.sh --gate-only` (neue Skripte) - `nachher_kette.txt`
+| Lauf | EXIT | Abbruch in (vorher, R2-1) |
+|---|---|---|
+| Referenz v0.8.19 | **0** | - (Kopie 514bebd5... = Referenz, zipalign ok, Signer 432bc749..., Selbsttest 140/140, Gate 3603/3603, RE15DOOR/RE2 30/30 27/27) |
+| K0 unsigniert | 1 | apksigner `Signatur ungueltig` |
+| K0 fremder Schluessel (B4) | **1** (vorher 0) | `Signer-Zertifikat 85ad070a..., erwartet 432bc749...` |
+| K0 unausgerichtet, signiert (B5) | **1** (vorher 0) | `zipalign: Ausrichtung falsch` |
+| F_M1 signiert | 1 | Asset-Gate (Manifest-Groesse) |
+| F_kopf_arabisch signiert | **1** (vorher 0) | Asset-Gate (Kopfzeile) |
+| F_praefix "signiert" | 0 | kein Befund: `zipalign -f` schreibt das Archiv neu und laesst das Praefix weg - eine signierte Praefix-APK entsteht mit den SDK-Werkzeugen gar nicht; das Gate lehnt die unsignierte ab (R2-3.2) |
+| B3 Tausch gegen K0 waehrend des Selbsttests | **1** (vorher 0) | `APK wurde WAEHREND der Pruefung veraendert oder ersetzt ... geprueft (Kopie vom Anfang): 514bebd5... jetzt unter dem Pfad: 2110be...` |
+| B3 Gegenprobe ABA (hin zu K0, vor Schritt 6 zurueck) | 0 | korrekt: geprueft wurde die Kopie (= Referenz), und am Ende liegt dieselbe Datei unter dem Pfad |
+| Schatten ohne P2DS in Quelle UND APK, signiert (B2) | **1** (vorher 0) | `Port-Tuerarchiv fehlt: re15_port/shared_assets/RE15DOOR/P2DS.DO2 (verlangt von: .../re15_tuer_eigen.inc ...)`, `RE15DOOR: Quelle 29, APK 29` |
+| Schatten P07G 0 B in Quelle UND APK, signiert (B2) | **1** (vorher 0) | `... P07G.DO2 hat 0 B, Tabelle 55908 B (Tonteil 19608, Modellteil 35428 ab Sektor 10) - die Engine verwirft es` |
+| Schatten mit shared_assets/RE15NEU (B6) | **1** (vorher 0) | `re15_port/shared_assets/RE15NEU liegt in keinem Asset-Baum ...` |
+Keine Pruefkopie blieb in /tmp liegen (auch nicht nach den Abbruechen).
+
+### R2-3.4 Voller Android-Bau mit der neuen Kette (positiv) - `logs/android_voll.log`
+`bash release/build_android.sh --version v0.8.19 --no-toolchain` -> **EXIT=0 `ANDROID-BUILD-OK`**: Python /c/Python310
+(3.10.11), `APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0`, `erwarteter Signer: 432bc749...` VOR Gradle,
+stageAssets `RE2/DOOR: 27`, `RE15DOOR: 30`, `BUILD SUCCESSFUL in 5m 43s`; Kette auf der Pruefkopie (68426c29...):
+zipalign ok, Signer 432bc749..., Selbsttest 140/140, Tuer-Soll 30/30 + 27/27, Gate 3603/3603; danach
+`release/re15_port_v0.8.19_android.apk` = die gepruefte Kopie (sha256 68426c29... in SHA256SUMS_android.txt), keine
+.ungeprueft, keine Pruefkopie. Zeiten (unter Last): gesamt 404 s, Gradle 344 s, Kette 52,8 s (Kopie 2,8 / aapt+
+Stichproben 3,8 / apksigner 2,1 / Selbsttest 31,2 / Gate 8,6 / Kennungsvergleich 3,7). Ruhige Messung: R2-3.9.
+
+### R2-3.5 make_package.sh echt - `nachher_make_package.txt` (git-Schreibzugriffe in Wegwerf-Index, `mp_isoliert_nb2.sh`)
+PC-Binaries aus dem Archiv v0.8.19 mit Original-mtime (kein touch), APK aus R2-3.4.
+| Lauf | EXIT | Abbruch / Ergebnis |
+|---|---|---|
+| P positiv | **0** (400 s) | `APK-ASSET-GATE-QUELLBAUM-OK` vor dem Kopieren; APK-Kette (Kopie, zipalign, Signer, Selbsttest, Gate); `APK-ASSET-GATE-PAKET-OK: 3603 Dateien ... bytegleich, nichts zusaetzlich` fuer BEIDE Pakete; `APK im Split-Satz = gepruefte APK (CRC32 1da8d6dd)`; `== Fertig ==` |
+| N1 APK waehrend des Selbsttests gegen die (gueltig signierte!) Referenz getauscht (B3) | **1** | `APK wurde WAEHREND der Pruefung veraendert oder ersetzt ... geprueft 68426c29... jetzt 514bebd5...` - vorher wurde die Kennung erst NACH der Pruefung genommen (mp_toctou_ergebnis.txt der Gegenpruefung: K0 wuerde gezippt) |
+| N2 Quellbaum ohne RE15DOOR/P2DS.DO2 (B2) | **1** (4 s) | `Quellbaum weicht von der Asset-Liste bzw. den Tuer-Tabellen der Engine ab` + `Port-Tuerarchiv fehlt: .../P2DS.DO2` - VOR den Kopierminuten; vorher: check_tree `Port-Tuerarchive im Paket: 29` gruen |
+| N3 `--zip-only --only win`, Zusatzdatei shared_assets/RE2/EXTRA.BIN im Paket (B6) | **1** | `Paket ... weicht von der Asset-Liste ab`, `[zusaetzlich im Paket] 1` |
+| N4 `--zip-only --only linux`, 1 Byte in shared_assets/PSX/DATA/TEX.TIM des Pakets | **1** | `[Inhalt weicht ab (sha256)] 1` - der check_tree VOR R2 (per awk unveraendert aus e1640cd0) nimmt dasselbe Paket an: `CHECK_TREE_ALT_OK` (er verglich nur RE2/DOOR, RE15DOOR, TORSE.VBS) |
+Danach P2DS/TEX.TIM zurueck (sha256 = Quelle), `git restore` der Split-Volumes und SUMS, `git status release/ re15_port/` leer.
+
+### R2-3.6 python_finden.sh (B7) - `nachher_b7.txt`, Sonde `python_finden_SONDE_neu.sh` (= neue Datei bis auf die 2 Startzeilen)
+(a) PATH nur 8.3-WindowsApps: `verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet)` fuer python3
+und python; (d) `RE15_PYTHON=<8.3>/python3.exe`, PATH leer: ebenso; (b) 8.3 + /usr/bin: `verworfen (Langname
+C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe = WindowsApps-Alias ...)`; (e) Langname: Pfadregel;
+(f) normaler PATH: `/c/Python310/python (3.10.11)`. **0 x "WUERDE STARTEN"** (vorher 3 x).
+
+### R2-3.7 check_binary_fresh (B9) - `nachher_b9.txt`
+Sonde der Gegenpruefung unveraendert gegen die neue Funktion: EXIT=1 mit `ABBRUCH: Frische-Gate (Android-APK): git log
+findet keinen Commit fuer ... (kein Git-Repo, flacher Klon?) - nicht pruefbar, ob .../x.apk aktuell ist`.

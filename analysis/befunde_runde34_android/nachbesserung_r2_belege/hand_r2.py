@@ -74,7 +74,7 @@ HAND = [
         ("FLAG_VERSCHLUESSELT, FLAG_DATA_DESCRIPTOR = 0x0001 | 0x0040 | 0x2000, 0x0008",
          "FLAG_VERSCHLUESSELT, FLAG_DATA_DESCRIPTOR = 0x0001, 0x0008", 1)]),
     ("DP1_paket_nur_groesse", [
-        ("        if (q_sha, q_n) != (p_sha, p_n):", "        if q_n != p_n:", 1)]),
+        ("        if q_sha != p_sha:", "        if q_n != p_n:", 1)]),
     ("DT1_tuer_ohne_fnv", [
         ("            if mit_fnv:\n                h = _fnv1a32(p)", "            if False:\n                h = _fnv1a32(p)", 1)]),
     ("DT2_tuer_fnv_ueber_erste_block", [

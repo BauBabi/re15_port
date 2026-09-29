@@ -1,0 +1,1 @@
+EXIT=1 Ausgabe: vor check_binary_fresh|ABBRUCH: Frische-Gate (Android-APK): git log findet keinen Commit fuer re15_port/engine re15_port/include re15_port/platform/pc re15_port/platform/android|        (kein Git-Repo, flacher Klon?) - nicht pruefbar, ob build/r34a/nb2/mini_repo/release/x.apk aktuell ist|

@@ -1,0 +1,20 @@
+Sonde = release/python_finden.sh bis auf die 2 Startzeilen (diff: 4 Zeilen)
+--- (a) PATH nur 8.3-WindowsApps, NUR_PATH=1:
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- (d) RE15_PYTHON=<8.3>/python3.exe, PATH leer:
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- (b) PATH 8.3 + /usr/bin:
+      Python-Kandidat verworfen (Langname C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe = WindowsApps-Alias, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      Python-Kandidat verworfen (Langname C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python.exe = WindowsApps-Alias, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- (e) PATH Langname + /usr/bin:
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- (f) echter Finder, normaler PATH:
+      Python: /c/Python310/python (3.10.11)
+   PY=/c/Python310/python
+   PY_VERSION=3.10.11

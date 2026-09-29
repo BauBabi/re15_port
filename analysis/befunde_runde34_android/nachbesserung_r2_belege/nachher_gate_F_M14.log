@@ -1,0 +1,23 @@
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\nb2\apk\F_M14.apk
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3615 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       29      1859024
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3602    356622369
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 29/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  9.0 s
+--- Abweichungen: 1 ---
+   [APK-Struktur: Methode/Flags] 1
+      Data-Descriptor-Bit gesetzt (nur Zentralverzeichnis): assets/shared_assets/RE15DOOR/P07G.DO2 - AGP setzt es nie; das Gate liest nur Eintraege mit CRC/Groessen im Local Header
+== APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==

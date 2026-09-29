@@ -189,15 +189,37 @@ def mutanten(text, hand):
     return aus
 
 
+def _baum_beenden(proc):
+    """Prozess UND alle Kinder beenden: ein Mutant, der das Gate endlos laufen laesst, hinterliesse sonst
+    verwaiste Gate-Prozesse (der Selbsttest setzt deren Zeitgrenze selbst durch - stirbt er, tut es keiner)."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+    else:
+        try:
+            os.killpg(proc.pid, 9)
+        except OSError:
+            pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+
+
 def laufen(py, pfad, timeout):
     t0 = time.monotonic()
+    extra = {} if os.name == "nt" else {"start_new_session": True}
+    umgebung = dict(os.environ, RE15_GATE_SELBSTTEST_SCHNELL="1")   # Selbsttest bricht beim ersten falschen Fall ab
+    proc = subprocess.Popen([py, pfad, "--selbsttest"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            stdin=subprocess.DEVNULL, env=umgebung, **extra)
     try:
-        r = subprocess.run([py, pfad, "--selbsttest"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                           stdin=subprocess.DEVNULL, timeout=timeout)
-        aus = r.stdout.decode("utf-8", "replace")
-        rc = r.returncode
-    except subprocess.TimeoutExpired as e:
-        aus = (e.stdout or b"").decode("utf-8", "replace") + "\n[ZEITGRENZE %d s]" % timeout
+        out, _ = proc.communicate(timeout=timeout)
+        aus = out.decode("utf-8", "replace")
+        rc = proc.returncode
+    except subprocess.TimeoutExpired:
+        _baum_beenden(proc)
+        out, _ = proc.communicate()
+        aus = (out or b"").decode("utf-8", "replace") + "\n[ZEITGRENZE %d s - Prozessbaum beendet]" % timeout
         rc = -9
     rot = re.findall(r"\[FEHLER\] (\d+) ", aus)
     return rc, rot, aus, time.monotonic() - t0
@@ -211,7 +233,8 @@ def main():
     ap.add_argument("--python", default=sys.executable)
     ap.add_argument("--nur", default="ABCDEFGHI")
     ap.add_argument("--liste", action="store_true")
-    ap.add_argument("--timeout", type=int, default=900)
+    ap.add_argument("--timeout", type=int, default=300,
+                    help="je Mutant; ein Gate, das haengt, ist erkannt (der Selbsttest faellt damit ebenfalls)")
     ap.add_argument("--hand", default=None, help="Python-Datei mit HAND = [(name, [(alt, neu, n)])]")
     a = ap.parse_args()
     text = open(a.gate, encoding="utf-8").read().replace("\r\n", "\n")
@@ -224,46 +247,60 @@ def main():
     zahl = {}
     for name, _b, _t in liste:
         zahl[name[0]] = zahl.get(name[0], 0) + 1
-    print("# %d Mutanten %s aus %s, Python %s" % (len(liste), dict(sorted(zahl.items())), a.gate, a.python))
+    print("# %d Mutanten %s aus %s, Python %s" % (len(liste), dict(sorted(zahl.items())), a.gate, a.python), flush=True)
     if a.liste:
         for name, beschr, _t in liste:
             print("%-44s %s" % (name, beschr))
         return 0
     os.makedirs(a.ordner, exist_ok=True)
-    pfade = []
+    # Ergebnisse laufend in <ordner>/ergebnis.tsv (Name, rc, rote Faelle, Dauer) - ein Neustart ueberspringt,
+    # was dort schon steht (Mutanten mit gleichem Namen UND gleichem Text: Pruefsumme im Namen der Kopie)
+    ergebnis_datei = os.path.join(a.ordner, "ergebnis.tsv")
+    fertig_vorher = {}
+    if os.path.exists(ergebnis_datei):
+        for z in open(ergebnis_datei, encoding="utf-8"):
+            teile = z.rstrip("\n").split("\t")
+            if len(teile) >= 5:
+                fertig_vorher[(teile[0], teile[4])] = (int(teile[1]), teile[2].split(",") if teile[2] != "-" else [],
+                                                      float(teile[3]))
+    import hashlib
+    pfade, ergebnis = [], {}
     for name, beschr, t in liste:
+        kennung = hashlib.sha256(t.encode("utf-8")).hexdigest()[:12]
+        if (name, kennung) in fertig_vorher:
+            rc, rot, dauer = fertig_vorher[(name, kennung)]
+            ergebnis[name] = (rc, rot, "(aus ergebnis.tsv)", dauer)
+            pfade.append((name, beschr, None, kennung))
+            continue
         p = os.path.join(a.ordner, name + ".py")
         with open(p, "w", encoding="utf-8", newline="\n") as f:
             f.write(t)
-        pfade.append((name, beschr, p))
+        pfade.append((name, beschr, p, kennung))
+    offen = [(n, b, p, k) for n, b, p, k in pfade if p is not None]
+    print("# davon schon erledigt (ergebnis.tsv): %d, zu laufen: %d" % (len(pfade) - len(offen), len(offen)), flush=True)
     t0 = time.monotonic()
-    ergebnis = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=a.parallel) as pool:
-        laeufe = {name: pool.submit(laufen, a.python, p, a.timeout) for name, _b, p in pfade}
+        laeufe = {pool.submit(laufen, a.python, p, a.timeout): (n, b, p, k) for n, b, p, k in offen}
         fertig = 0
-        for name, lauf in laeufe.items():
-            ergebnis[name] = lauf.result()
+        for lauf in concurrent.futures.as_completed(laeufe):
+            n, b, p, k = laeufe[lauf]
+            rc, rot, aus, dauer = lauf.result()
+            ergebnis[n] = (rc, rot, aus, dauer)
+            with open(os.path.join(a.ordner, n + ".log"), "w", encoding="utf-8") as f:
+                f.write(aus)
+            with open(ergebnis_datei, "a", encoding="utf-8") as f:
+                f.write("%s\t%d\t%s\t%.1f\t%s\n" % (n, rc, ",".join(rot) if rot else "-", dauer, k))
+            if rc != 0:
+                os.remove(p)
             fertig += 1
+            print("%-9s rc=%-3d %5.0fs %-44s %s" % ("ERKANNT" if rc != 0 else "UEBERLEBT", rc, dauer, n, b[:90]), flush=True)
             if fertig % 25 == 0:
-                print("# ... %d/%d (%.0f s)" % (fertig, len(pfade), time.monotonic() - t0), flush=True)
-    ueberlebt = []
-    for name, beschr, p in pfade:
-        rc, rot, aus, dauer = ergebnis[name]
-        with open(os.path.join(a.ordner, name + ".log"), "w", encoding="utf-8") as f:
-            f.write(aus)
-        status = "ERKANNT" if rc != 0 else "UEBERLEBT"
-        if rc == 0:
-            ueberlebt.append((name, beschr))
-            os.remove(p) if False else None
-        print("%-9s rc=%-3d rot=%-22s %5.0fs %-44s %s" % (status, rc, ",".join(rot)[:22] if rot else "-", dauer, name, beschr))
+                print("# ... %d/%d (%.0f s)" % (fertig, len(offen), time.monotonic() - t0), flush=True)
+    ueberlebt = [(n, b) for n, b, _p, _k in pfade if ergebnis[n][0] == 0]
     print("# erkannt: %d / %d, ueberlebt: %d, Laufzeit %.0f s" % (len(pfade) - len(ueberlebt), len(pfade), len(ueberlebt),
                                                                time.monotonic() - t0))
-    for name, beschr in ueberlebt:
-        print("#   UEBERLEBT %s: %s" % (name, beschr))
-    # Mutanten-Kopien der erkannten loeschen (Platz), Logs bleiben
-    for name, _b, p in pfade:
-        if ergebnis[name][0] != 0:
-            os.remove(p)
+    for n, b in ueberlebt:
+        print("#   UEBERLEBT %s: %s" % (n, b))
     return 0
 
 
