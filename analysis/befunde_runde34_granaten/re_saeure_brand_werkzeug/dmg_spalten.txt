@@ -1,0 +1,66 @@
+; C:\workspace\git\reAi_v2\info\Re1.5\PSX.EXE  dmg = u16 @ 0x8006E0D0 + typ*0x58 + w*4
+typ  addr_row    w9    w10   w11   w14   w15   w16   w17    9==15 10==16 11==17  10!=11
+0x00 0x8006e0d0  47188 32801 8225  12321 20    16    24     False False False  JA
+0x01 0x8006e128  0     176   8     176   8     22    0      False False False  JA
+0x02 0x8006e180  8     73    0     53    0     176   8      False False False  JA
+0x03 0x8006e1d8  0     176   8     65535 3     3     72     False False False  JA
+0x04 0x8006e230  73    10    4096  2     5     4096  1      False False False  JA
+0x05 0x8006e288  0     65535 3     32777 62904 0     6177   False False False  JA
+0x06 0x8006e2e0  4     3     6181  0     65535 8320  32777  False False False  JA
+0x07 0x8006e338  1     32777 62904 0     47328 0     4129   False False False  JA
+0x08 0x8006e390  0     176   8     176   8     16    0      False False False  JA
+0x09 0x8006e3e8  8     112   0     67    0     176   8      False False False  JA
+0x0a 0x8006e440  0     2     12    192   8     10    0      False False False  JA
+0x0b 0x8006e498  8     23    0     0     0     160   8      False False False  JA
+0x0c 0x8006e4f0  0     160   8     160   8     25    0      False False False  JA
+0x0d 0x8006e548  10400 10400 10400 10400 10400 10400 10400  True  True  True   -
+0x0e 0x8006e5a0  1000  1000  1000  1000  1000  1000  1000   True  True  True   -
+0x0f 0x8006e5f8  1000  1000  1000  1000  1000  1000  1000   True  True  True   -
+0x10 0x8006e650  100   200   100   10    100   200   100    True  True  True   JA
+0x11 0x8006e6a8  100   200   100   10    100   200   100    True  True  True   JA
+0x12 0x8006e700  100   200   100   10    100   200   100    True  True  True   JA
+0x13 0x8006e758  100   200   100   10    100   200   100    True  True  True   JA
+0x14 0x8006e7b0  100   200   100   10    100   200   100    True  True  True   JA
+0x15 0x8006e808  100   200   100   10    100   200   100    True  True  True   JA
+0x16 0x8006e860  100   200   100   10    100   200   100    True  True  True   JA
+0x17 0x8006e8b8  100   200   100   10    100   200   100    True  True  True   JA
+0x18 0x8006e910  100   200   100   10    100   200   100    True  True  True   JA
+0x19 0x8006e968  100   200   100   10    100   200   100    True  True  True   JA
+0x1a 0x8006e9c0  100   200   100   10    100   200   100    True  True  True   JA
+0x1b 0x8006ea18  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x1c 0x8006ea70  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x1d 0x8006eac8  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x1e 0x8006eb20  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x1f 0x8006eb78  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x20 0x8006ebd0  100   100   200   10    100   100   200    True  True  True   JA
+0x21 0x8006ec28  2     2     2     2     2     2     2      True  True  True   -
+0x22 0x8006ec80  200   50    50    10    200   50    50     True  True  True   -
+0x23 0x8006ecd8  70    30    30    8     70    30    30     True  True  True   -
+0x24 0x8006ed30  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x25 0x8006ed88  100   50    200   10    100   50    200    True  True  True   JA
+0x26 0x8006ede0  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x27 0x8006ee38  40    40    70    8     40    40    70     True  True  True   JA
+0x28 0x8006ee90  40    40    70    8     40    40    70     True  True  True   JA
+0x29 0x8006eee8  50    100   200   15    50    100   200    True  True  True   JA
+0x2a 0x8006ef40  50    100   200   15    50    100   200    True  True  True   JA
+0x2b 0x8006ef98  50    200   100   10    50    200   100    True  True  True   JA
+0x2c 0x8006eff0  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x2d 0x8006f048  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x2e 0x8006f0a0  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x2f 0x8006f0f8  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x30 0x8006f150  40    70    40    8     40    70    40     True  True  True   JA
+0x31 0x8006f1a8  50    50    80    8     50    50    80     True  True  True   JA
+0x32 0x8006f200  90    60    60    10    90    60    60     True  True  True   -
+0x33 0x8006f258  90    60    60    10    90    60    60     True  True  True   -
+0x34 0x8006f2b0  60    60    90    8     60    60    90     True  True  True   JA
+0x35 0x8006f308  60    60    90    8     60    60    90     True  True  True   JA
+0x36 0x8006f360  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x37 0x8006f3b8  0     0     0     0     0     0     0      True  True  True   -  (Zeile komplett 0)
+0x38 0x8006f410  3595  4625  6576  93    63500 144   42528  False False False  JA
+0x39 0x8006f468  22548 489   20864 608   32768 624   32768  False False False  JA
+0x3a 0x8006f4c0  32768 752   32768 784   32768 800   16800  True  False False  JA
+0x3b 0x8006f518  36640 1002  34336 1101  22552 1177  544    False False False  JA
+0x3c 0x8006f570  53504 6497  12492 6391  12492 6398  12492  False False True   JA
+0x3d 0x8006f5c8  12492 6454  12492 6468  12492 6475  12492  True  False True   JA
+0x3e 0x8006f620  59696 9598  60392 9786  51856 9875  51680  False False False  JA
+0x3f 0x8006f678  22960 10563 22960 10587 25876 10599 25876  False False False  JA

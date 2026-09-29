@@ -1,0 +1,221 @@
+; C:\workspace\git\reAi_v2\re15_port\shared_assets\PSX\DATA\CORE00.ESP (7092 B), Ids [3, 8, 0, 2, 4]
+Effekt 3: EFF @0x0008..0x0384 count_a=29 count_b=163  Kopf+4 (clut/tpage-Wort)=0x001E7811
+  Sub-Tabelle @0x0384: 4 26 48 80 102 124 146 0
+  sub&7=0: Block @0x0394, 1 Stream(s)
+    Stream 0 @0x0398: 2 Zeile(n)
+      Z00 @0x039C A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=96 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=8
+      Z01 @0x03C4 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=1: Block @0x03EC, 1 Stream(s)
+    Stream 0 @0x03F0: 2 Zeile(n)
+      Z00 @0x03F4 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=10
+      Z01 @0x041C A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=2: Block @0x0444, 1 Stream(s)
+    Stream 0 @0x0448: 3 Zeile(n)
+      Z00 @0x044C A=15 B=0  wh=1,1 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=768 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0474 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=768 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x049C A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=768 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=3: Block @0x04C4, 1 Stream(s)
+    Stream 0 @0x04C8: 2 Zeile(n)
+      Z00 @0x04CC A=10 B=0  wh=4096,4096 acc=(0,5,0) p0e=19 vel=(0,-130,0) p16=64 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=8
+      Z01 @0x04F4 A=0  B=0  wh=4096,4096 acc=(0,5,0) p0e=0 vel=(0,-135,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=4: Block @0x051C, 1 Stream(s)
+    Stream 0 @0x0520: 2 Zeile(n)
+      Z00 @0x0524 A=10 B=0  wh=4096,4096 acc=(0,5,0) p0e=19 vel=(0,-80,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x054C A=0  B=0  wh=4096,4096 acc=(0,5,0) p0e=0 vel=(0,-75,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=5: Block @0x0574, 1 Stream(s)
+    Stream 0 @0x0578: 2 Zeile(n)
+      Z00 @0x057C A=10 B=0  wh=4096,4096 acc=(0,5,0) p0e=19 vel=(0,-80,0) p16=96 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x05A4 A=0  B=0  wh=4096,4096 acc=(0,5,0) p0e=0 vel=(0,-75,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=6: Block @0x05CC, 1 Stream(s)
+    Stream 0 @0x05D0: 2 Zeile(n)
+      Z00 @0x05D4 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=25
+      Z01 @0x05FC A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=7: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+Effekt 8: EFF @0x0628..0x06B0 count_a=11 count_b=10  Kopf+4 (clut/tpage-Wort)=0x001E7911
+  Sub-Tabelle @0x06B0: 4 26 48 70 0 0 0 0
+  sub&7=0: Block @0x06C0, 1 Stream(s)
+    Stream 0 @0x06C4: 2 Zeile(n)
+      Z00 @0x06C8 A=17 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=96 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x06F0 A=18 B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=1: Block @0x0718, 1 Stream(s)
+    Stream 0 @0x071C: 2 Zeile(n)
+      Z00 @0x0720 A=17 B=0  wh=4096,4096 acc=(0,0,0) p0e=23 vel=(0,0,0) p16=96 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x0748 A=18 B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=2: Block @0x0770, 1 Stream(s)
+    Stream 0 @0x0774: 2 Zeile(n)
+      Z00 @0x0778 A=17 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x07A0 A=18 B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=3: Block @0x07C8, 1 Stream(s)
+    Stream 0 @0x07CC: 2 Zeile(n)
+      Z00 @0x07D0 A=17 B=0  wh=4096,4096 acc=(0,0,0) p0e=23 vel=(0,0,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x07F8 A=18 B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=4: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=5: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=6: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=7: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+Effekt 0: EFF @0x0824..0x092C count_a=22 count_b=20  Kopf+4 (clut/tpage-Wort)=0x001F7951
+  Sub-Tabelle @0x092C: 4 68 163 340 0 0 0 0
+  sub&7=0: Block @0x093C, 3 Stream(s)
+    Stream 0 @0x0940: 2 Zeile(n)
+      Z00 @0x0944 A=3  B=0  wh=4096,4096 acc=(-2,8,0) p0e=19 vel=(74,-70,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x096C A=0  B=0  wh=4096,4096 acc=(-2,8,0) p0e=0 vel=(60,14,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x0994: 2 Zeile(n)
+      Z00 @0x0998 A=3  B=0  wh=4096,4096 acc=(-3,8,0) p0e=19 vel=(69,-46,-16) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x09C0 A=0  B=0  wh=4096,4096 acc=(-3,8,0) p0e=0 vel=(19,10,-16) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 2 @0x09E8: 2 Zeile(n)
+      Z00 @0x09EC A=3  B=0  wh=4096,4096 acc=(-3,8,0) p0e=19 vel=(64,-56,18) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0A14 A=0  B=0  wh=4096,4096 acc=(-3,8,0) p0e=0 vel=(43,0,18) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=1: Block @0x0A3C, 4 Stream(s)
+    Stream 0 @0x0A40: 2 Zeile(n)
+      Z00 @0x0A44 A=3  B=0  wh=4096,4096 acc=(-2,0,0) p0e=19 vel=(65,-6,7) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0A6C A=0  B=0  wh=4096,4096 acc=(-2,0,0) p0e=0 vel=(51,-6,7) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x0A94: 2 Zeile(n)
+      Z00 @0x0A98 A=3  B=0  wh=4096,4096 acc=(-3,0,0) p0e=19 vel=(73,-5,-7) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0AC0 A=0  B=0  wh=4096,4096 acc=(-3,0,0) p0e=0 vel=(52,-5,-7) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 2 @0x0AE8: 2 Zeile(n)
+      Z00 @0x0AEC A=3  B=0  wh=4096,4096 acc=(-1,0,0) p0e=19 vel=(63,5,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0B14 A=0  B=0  wh=4096,4096 acc=(-1,0,0) p0e=0 vel=(56,5,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 3 @0x0B3C: 3 Zeile(n)
+      Z00 @0x0B40 A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=3 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0B68 A=3  B=0  wh=3600,3600 acc=(1,10,0) p0e=19 vel=(-50,-2,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0B90 A=0  B=0  wh=3600,3600 acc=(1,10,0) p0e=0 vel=(-43,68,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=2: Block @0x0BB8, 6 Stream(s)
+    Stream 0 @0x0BBC: 2 Zeile(n)
+      Z00 @0x0BC0 A=3  B=0  wh=3600,3600 acc=(0,10,0) p0e=19 vel=(0,-100,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0BE8 A=0  B=0  wh=3600,3600 acc=(0,10,0) p0e=0 vel=(0,-30,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x0C10: 3 Zeile(n)
+      Z00 @0x0C14 A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=1 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0C3C A=3  B=0  wh=4200,4200 acc=(0,10,0) p0e=19 vel=(0,-80,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0C64 A=0  B=0  wh=4200,4200 acc=(0,10,0) p0e=0 vel=(0,-10,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 2 @0x0C8C: 3 Zeile(n)
+      Z00 @0x0C90 A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=2 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0CB8 A=3  B=0  wh=4800,4800 acc=(0,10,0) p0e=19 vel=(0,-70,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0CE0 A=0  B=0  wh=4800,4800 acc=(0,10,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 3 @0x0D08: 3 Zeile(n)
+      Z00 @0x0D0C A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=3 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0D34 A=3  B=0  wh=5400,5400 acc=(0,10,0) p0e=19 vel=(0,-60,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0D5C A=0  B=0  wh=5400,5400 acc=(0,10,0) p0e=0 vel=(0,10,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 4 @0x0D84: 3 Zeile(n)
+      Z00 @0x0D88 A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=5 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0DB0 A=3  B=0  wh=6000,6000 acc=(0,10,0) p0e=19 vel=(0,-50,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0DD8 A=0  B=0  wh=6000,6000 acc=(0,10,0) p0e=0 vel=(0,20,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 5 @0x0E00: 3 Zeile(n)
+      Z00 @0x0E04 A=4  B=0  wh=1,1 acc=(0,0,0) p0e=97 vel=(0,0,0) p16=7 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=1
+      Z01 @0x0E2C A=3  B=0  wh=5400,5400 acc=(0,10,0) p0e=19 vel=(0,-50,0) p16=7 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0E54 A=0  B=0  wh=5400,5400 acc=(0,10,0) p0e=0 vel=(0,20,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=3: Block @0x0E7C, 1 Stream(s)
+    Stream 0 @0x0E80: 3 Zeile(n)
+      Z00 @0x0E84 A=5  B=0  wh=4096,4096 acc=(0,10,0) p0e=13 vel=(0,-30,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x0EAC A=3  B=0  wh=4096,4096 acc=(0,10,0) p0e=51 vel=(0,-20,0) p16=2 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x0ED4 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=4: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=5: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=6: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+  sub&7=7: Offset 0 -> zeigt auf die Sub-Tabelle selbst = KEIN Row-Block
+Effekt 2: EFF @0x0F00..0x0FC8 count_a=17 count_b=14  Kopf+4 (clut/tpage-Wort)=0x001F7A51
+  Sub-Tabelle @0x0FC8: 4 57 110 142 258 280 302 418
+  sub&7=0: Block @0x0FD8, 2 Stream(s)
+    Stream 0 @0x0FDC: 3 Zeile(n)
+      Z00 @0x0FE0 A=8  B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,4) p16=32 ang=(0,0,0) p1e=4 eul=(0,0,0) gate=3000
+      Z01 @0x1008 A=9  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z02 @0x1030 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x1058: 2 Zeile(n)
+      Z00 @0x105C A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,-4) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x1084 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,-4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=1: Block @0x10AC, 2 Stream(s)
+    Stream 0 @0x10B0: 3 Zeile(n)
+      Z00 @0x10B4 A=8  B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,4) p16=32 ang=(0,0,0) p1e=4 eul=(0,0,0) gate=3000
+      Z01 @0x10DC A=9  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z02 @0x1104 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x112C: 2 Zeile(n)
+      Z00 @0x1130 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,-4) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x1158 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,-4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=2: Block @0x1180, 1 Stream(s)
+    Stream 0 @0x1184: 3 Zeile(n)
+      Z00 @0x1188 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=512 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x11B0 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=512 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x11D8 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=512 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=3: Block @0x1200, 5 Stream(s)
+    Stream 0 @0x1204: 3 Zeile(n)
+      Z00 @0x1208 A=8  B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,80,0) p16=32 ang=(0,0,0) p1e=5 eul=(0,0,3372) gate=4296
+      Z01 @0x1230 A=9  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,3372) gate=0
+      Z02 @0x1258 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,3372) gate=0
+    Stream 1 @0x1280: 2 Zeile(n)
+      Z00 @0x1284 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,80,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,820,3372) gate=0
+      Z01 @0x12AC A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,820,3372) gate=0
+    Stream 2 @0x12D4: 2 Zeile(n)
+      Z00 @0x12D8 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,80,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,1640,3372) gate=0
+      Z01 @0x1300 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,1640,3372) gate=0
+    Stream 3 @0x1328: 2 Zeile(n)
+      Z00 @0x132C A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,80,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,2456,3372) gate=0
+      Z01 @0x1354 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,2456,3372) gate=0
+    Stream 4 @0x137C: 2 Zeile(n)
+      Z00 @0x1380 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,80,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,3276,3372) gate=0
+      Z01 @0x13A8 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,80,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,3276,3372) gate=0
+  sub&7=4: Block @0x13D0, 1 Stream(s)
+    Stream 0 @0x13D4: 2 Zeile(n)
+      Z00 @0x13D8 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=32 ang=(0,0,0) p1e=1 eul=(0,0,0) gate=6
+      Z01 @0x1400 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=5: Block @0x1428, 1 Stream(s)
+    Stream 0 @0x142C: 2 Zeile(n)
+      Z00 @0x1430 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=32 ang=(0,0,0) p1e=1 eul=(0,0,0) gate=10
+      Z01 @0x1458 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=6: Block @0x1480, 5 Stream(s)
+    Stream 0 @0x1484: 3 Zeile(n)
+      Z00 @0x1488 A=8  B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,100,0) p16=32 ang=(0,0,0) p1e=5 eul=(0,0,3572) gate=4296
+      Z01 @0x14B0 A=9  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,3572) gate=0
+      Z02 @0x14D8 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,3572) gate=0
+    Stream 1 @0x1500: 2 Zeile(n)
+      Z00 @0x1504 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,100,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,820,3572) gate=0
+      Z01 @0x152C A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,820,3572) gate=0
+    Stream 2 @0x1554: 2 Zeile(n)
+      Z00 @0x1558 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,100,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,1640,3572) gate=0
+      Z01 @0x1580 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,1640,3572) gate=0
+    Stream 3 @0x15A8: 2 Zeile(n)
+      Z00 @0x15AC A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,100,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,2456,3672) gate=0
+      Z01 @0x15D4 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,2456,3672) gate=0
+    Stream 4 @0x15FC: 2 Zeile(n)
+      Z00 @0x1600 A=10 B=0  wh=4896,4896 acc=(0,0,0) p0e=147 vel=(0,100,0) p16=32 ang=(0,0,0) p1e=0 eul=(0,3276,3672) gate=0
+      Z01 @0x1628 A=0  B=0  wh=4896,4896 acc=(0,0,0) p0e=0 vel=(0,100,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,3276,3672) gate=0
+  sub&7=7: Block @0x1650, 2 Stream(s)
+    Stream 0 @0x1654: 3 Zeile(n)
+      Z00 @0x1658 A=8  B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,4) p16=32 ang=(0,0,0) p1e=4 eul=(0,0,0) gate=3000
+      Z01 @0x1680 A=26 B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z02 @0x16A8 A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+    Stream 1 @0x16D0: 2 Zeile(n)
+      Z00 @0x16D4 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=147 vel=(0,20,-4) p16=32 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x16FC A=0  B=0  wh=4096,4096 acc=(0,0,0) p0e=0 vel=(0,20,-4) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+Effekt 4: EFF @0x1728..0x18C0 count_a=36 count_b=28  Kopf+4 (clut/tpage-Wort)=0x001F7AD1
+  Sub-Tabelle @0x18C0: 4 26 48 80 102 124 146 158
+  sub&7=0: Block @0x18D0, 1 Stream(s)
+    Stream 0 @0x18D4: 2 Zeile(n)
+      Z00 @0x18D8 A=16 B=0  wh=1,1 acc=(0,0,0) p0e=99 vel=(0,0,0) p16=2 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=0
+      Z01 @0x1900 A=11 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-35,-50,-140) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=1: Block @0x1928, 1 Stream(s)
+    Stream 0 @0x192C: 2 Zeile(n)
+      Z00 @0x1930 A=11 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-35,-50,-140) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x1958 A=11 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-25,-50,-140) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=2: Block @0x1980, 1 Stream(s)
+    Stream 0 @0x1984: 3 Zeile(n)
+      Z00 @0x1988 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=1024 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z01 @0x19B0 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=1024 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=1
+      Z02 @0x19D8 A=15 B=0  wh=1,1 acc=(0,0,0) p0e=2 vel=(0,0,0) p16=1024 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=3: Block @0x1A00, 1 Stream(s)
+    Stream 0 @0x1A04: 2 Zeile(n)
+      Z00 @0x1A08 A=38 B=0  wh=1,1 acc=(0,0,0) p0e=103 vel=(0,0,0) p16=24 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=9
+      Z01 @0x1A30 A=11 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-18,-30,-100) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=4: Block @0x1A58, 1 Stream(s)
+    Stream 0 @0x1A5C: 2 Zeile(n)
+      Z00 @0x1A60 A=10 B=0  wh=4096,4096 acc=(0,0,0) p0e=19 vel=(0,0,0) p16=96 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=18
+      Z01 @0x1A88 A=27 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-35,-50,-140) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=5: Block @0x1AB0, 1 Stream(s)
+    Stream 0 @0x1AB4: 2 Zeile(n)
+      Z00 @0x1AB8 A=30 B=0  wh=4096,4096 acc=(0,10,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+      Z01 @0x1AE0 A=0  B=0  wh=0,0 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=6: Block @0x1B08, 1 Stream(s)
+    Stream 0 @0x1B0C: 1 Zeile(n)
+      Z00 @0x1B10 A=39 B=0  wh=1,1 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  sub&7=7: Block @0x1B38, 1 Stream(s)
+    Stream 0 @0x1B3C: 2 Zeile(n)
+      Z00 @0x1B40 A=16 B=0  wh=1,1 acc=(0,0,0) p0e=99 vel=(0,0,0) p16=2 ang=(0,0,0) p1e=3 eul=(0,0,0) gate=0
+      Z01 @0x1B68 A=27 B=0  wh=4096,4096 acc=(0,10,0) p0e=1 vel=(-35,-50,-140) p16=1 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0

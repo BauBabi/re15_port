@@ -1,0 +1,93 @@
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8001fd5c (92 instr)
+  8001fd5c: lui a1,0x800e                      
+  8001fd60: lw a1,-13360(a1)                   0x800dcbd0
+  8001fd64: addiu sp,sp,-40                    
+  8001fd68: sw ra,32(sp)                       
+  8001fd6c: lh v0,12(a1)                       0x800e000c
+  8001fd70: nop                                
+  8001fd74: bgtz v0,0x8001fd88                 
+  8001fd78: slti v0,v0,61                      
+  8001fd7c: sb zero,8(a1)                      0x800e0008
+  8001fd80: j 0x8001fe24                       
+  8001fd84: sh zero,12(a1)                     0x800e000c
+  8001fd88: bne v0,zero,0x8001fe24             
+  8001fd8c: nop                                
+  8001fd90: lbu v1,2(a1)                       0x800e0002
+  8001fd94: lui v0,0x8888                      
+  8001fd98: ori v0,v0,0x8889                   
+  8001fd9c: multu v1,v0                        
+  8001fda0: mfhi t0                            
+  8001fda4: srl a0,t0,3                        
+  8001fda8: sll v0,a0,4                        
+  8001fdac: subu v0,v0,a0                      
+  8001fdb0: subu v1,v1,v0                      
+  8001fdb4: andi v1,v1,0xff                    
+  8001fdb8: bne v1,zero,0x8001fe24             
+  8001fdbc: lui v1,0x6666                      
+  8001fdc0: lhu v0,58(a1)                      0x800e003a
+  8001fdc4: ori v1,v1,0x6667                   
+  8001fdc8: sll v0,v0,2                        
+  8001fdcc: mult v0,v1                         
+  8001fdd0: lui a2,0x800a                      
+  8001fdd4: addiu a2,a2,-9404                  0x8009db44
+  8001fdd8: addiu a3,a1,52                     0x800e0034
+  8001fddc: lh a1,34(a1)                       0x800e0022
+  8001fde0: sra v0,v0,31                       
+  8001fde4: mfhi t0                            
+  8001fde8: sra a0,t0,1                        
+  8001fdec: subu a0,a0,v0                      
+  8001fdf0: lui v0,0x504                       
+  8001fdf4: jal 0x8001cbe8                     
+  8001fdf8: or a0,a0,v0                        
+  8001fdfc: andi v1,v0,0xff                    
+  8001fe00: sltiu v0,v1,0xff                   
+  8001fe04: beq v0,zero,0x8001fe24             
+  8001fe08: sll v0,v1,5                        
+  8001fe0c: subu v0,v0,v1                      
+  8001fe10: sll v0,v0,2                        
+  8001fe14: addiu v1,zero,1                    
+  8001fe18: lui at,0x800e                      
+  8001fe1c: addu at,at,v0                      
+  8001fe20: sh v1,-29382(at)                   0x800d8d3a
+  8001fe24: lui v1,0x800e                      
+  8001fe28: lw v1,-13360(v1)                   0x800dcbd0
+  8001fe2c: nop                                
+  8001fe30: lbu v0,2(v1)                       0x800e0002
+  8001fe34: nop                                
+  8001fe38: addiu v0,v0,1                      
+  8001fe3c: sb v0,2(v1)                        0x800e0002
+  8001fe40: lui v1,0x800e                      
+  8001fe44: lw v1,-13360(v1)                   0x800dcbd0
+  8001fe48: addiu a0,sp,16                     
+  8001fe4c: lh v0,52(v1)                       0x800e0034
+  8001fe50: addiu a1,zero,2                    
+  8001fe54: sw v0,16(sp)                       
+  8001fe58: lh v0,54(v1)                       0x800e0036
+  8001fe5c: addiu a2,zero,8192                 
+  8001fe60: addiu v0,v0,-100                   
+  8001fe64: sw v0,20(sp)                       
+  8001fe68: lh v0,56(v1)                       0x800e0038
+  8001fe6c: addu a3,zero,zero                  
+  8001fe70: jal 0x8004fba0                     
+  8001fe74: sw v0,24(sp)                       
+  8001fe78: lui v0,0x800e                      
+  8001fe7c: lw v0,-13368(v0)                   0x800dcbc8
+  8001fe80: nop                                
+  8001fe84: beq v0,zero,0x8001febc             
+  8001fe88: nop                                
+  8001fe8c: lui v0,0x800e                      
+  8001fe90: lw v0,-13360(v0)                   0x800dcbd0
+  8001fe94: nop                                
+  8001fe98: lbu v0,3(v0)                       0x800e0003
+  8001fe9c: nop                                
+  8001fea0: sll v0,v0,2                        
+  8001fea4: lui at,0x800a                      
+  8001fea8: addu at,at,v0                      
+  8001feac: lw v0,-10136(at)                   0x8009d868
+  8001feb0: nop                                
+  8001feb4: jalr v0                            
+  8001feb8: nop                                
+  8001febc: lw ra,32(sp)                       
+  8001fec0: addiu sp,sp,40                     
+  8001fec4: jr ra                              
+  8001fec8: nop                                

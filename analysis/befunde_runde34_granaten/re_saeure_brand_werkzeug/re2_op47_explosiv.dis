@@ -1,0 +1,193 @@
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80020c3c (192 instr)
+  80020c3c: lui v0,0x800e                      
+  80020c40: lw v0,-13360(v0)                   0x800dcbd0
+  80020c44: addiu sp,sp,-64                    
+  80020c48: sw ra,60(sp)                       
+  80020c4c: sw s2,56(sp)                       
+  80020c50: sw s1,52(sp)                       
+  80020c54: sw s0,48(sp)                       
+  80020c58: lui a2,0x8001                      
+  80020c5c: addiu a2,a2,2328                   0x80010918
+  80020c60: .word 0x88c30003(op22)             
+  80020c64: .word 0x98c30000(op26)             
+  80020c68: .word 0x88c40007(op22)             
+  80020c6c: .word 0x98c40004(op26)             
+  80020c70: .word 0x88c5000b(op22)             
+  80020c74: .word 0x98c50008(op26)             
+  80020c78: .word 0xaba30023(op2a)             
+  80020c7c: .word 0xbba30020(op2e)             
+  80020c80: .word 0xaba40027(op2a)             
+  80020c84: .word 0xbba40024(op2e)             
+  80020c88: .word 0xaba5002b(op2a)             
+  80020c8c: .word 0xbba50028(op2e)             
+  80020c90: .word 0x88c3000f(op22)             
+  80020c94: .word 0x98c3000c(op26)             
+  80020c98: nop                                
+  80020c9c: .word 0xaba3002f(op2a)             
+  80020ca0: .word 0xbba3002c(op2e)             
+  80020ca4: lhu v1,18(v0)                      0x800e0012
+  80020ca8: nop                                
+  80020cac: sltiu v0,v1,0x5                    
+  80020cb0: beq v0,zero,0x80020f20             
+  80020cb4: sll v0,v1,2                        
+  80020cb8: lui at,0x8001                      
+  80020cbc: addu at,at,v0                      
+  80020cc0: lw v0,2344(at)                     0x80010928
+  80020cc4: nop                                
+  80020cc8: jr v0                              
+  80020ccc: nop                                
+  80020cd0: lui v1,0x800e                      
+  80020cd4: lw v1,-13360(v1)                   0x800dcbd0
+  80020cd8: nop                                
+  80020cdc: lh v0,52(v1)                       0x800e0034
+  80020ce0: lbu a0,30(v1)                      0x800e001e
+  80020ce4: sw v0,16(sp)                       
+  80020ce8: lh v0,54(v1)                       0x800e0036
+  80020cec: nop                                
+  80020cf0: sw v0,20(sp)                       
+  80020cf4: lh v0,56(v1)                       0x800e0038
+  80020cf8: addiu a0,a0,-12                    
+  80020cfc: sw v0,24(sp)                       
+  80020d00: ori v0,zero,0x8400                 
+  80020d04: sh v0,24(v1)                       0x800e0018
+  80020d08: sb zero,0(v1)                      0x800e0000
+  80020d0c: lui v1,0x800e                      
+  80020d10: lw v1,-13360(v1)                   0x800dcbd0
+  80020d14: addiu v0,zero,47                   
+  80020d18: sb v0,1(v1)                        0x800e0001
+  80020d1c: sll v0,a0,2                        
+  80020d20: addu v0,v0,a0                      
+  80020d24: lui v1,0x800e                      
+  80020d28: lw v1,-13360(v1)                   0x800dcbd0
+  80020d2c: sll s1,v0,9                        
+  80020d30: lbu v1,30(v1)                      0x800e001e
+  80020d34: addiu v0,zero,12                   
+  80020d38: bne v1,v0,0x80020dc0               
+  80020d3c: lui a0,0x114                       
+  80020d40: lui a0,0x111                       
+  80020d44: ori a0,a0,0x1                      
+  80020d48: jal 0x8005ba28                     
+  80020d4c: addiu a1,sp,16                     
+  80020d50: addiu a0,sp,16                     
+  80020d54: lui a3,0x1002                      
+  80020d58: ori a3,a3,0x9                      
+  80020d5c: lui v0,0x800e                      
+  80020d60: lw v0,-13360(v0)                   0x800dcbd0
+  80020d64: addiu s0,sp,32                     
+  80020d68: lbu a2,30(v0)                      0x800e001e
+  80020d6c: lh a1,34(v0)                       0x800e0022
+  80020d70: sll a2,a2,3                        
+  80020d74: addiu a2,a2,-96                    0x8000ffa0
+  80020d78: jal 0x800470c0                     
+  80020d7c: addu a2,s0,a2                      
+  80020d80: addiu a0,sp,16                     
+  80020d84: lui a3,0x1002                      
+  80020d88: ori a3,a3,0x9                      
+  80020d8c: lw v0,20(sp)                       
+  80020d90: lui v1,0x800e                      
+  80020d94: lw v1,-13360(v1)                   0x800dcbd0
+  80020d98: addiu v0,v0,900                    0x800e0384
+  80020d9c: sw v0,20(sp)                       
+  80020da0: lbu a2,30(v1)                      0x800e001e
+  80020da4: lh a1,34(v1)                       0x800e0022
+  80020da8: sll a2,a2,3                        
+  80020dac: addiu a2,a2,-96                    0x8000ffa0
+  80020db0: jal 0x800470c0                     
+  80020db4: addu a2,s0,a2                      
+  80020db8: j 0x80020dcc                       
+  80020dbc: nop                                
+  80020dc0: ori a0,a0,0x1                      
+  80020dc4: jal 0x8005ba28                     
+  80020dc8: addiu a1,sp,16                     
+  80020dcc: lui a0,0x800e                      
+  80020dd0: lw a0,-13360(a0)                   0x800dcbd0
+  80020dd4: nop                                
+  80020dd8: lbu v1,11(a0)                      0x800e000b
+  80020ddc: addiu v0,zero,255                  
+  80020de0: bne v1,v0,0x80020df8               
+  80020de4: andi s0,s1,0xffff                  
+  80020de8: lhu v0,54(a0)                      0x800e0036
+  80020dec: nop                                
+  80020df0: addiu v0,v0,-470                   0x800dfe2a
+  80020df4: sh v0,54(a0)                       0x800e0036
+  80020df8: addiu s2,s0,5888                   
+  80020dfc: lui a0,0x31f                       
+  80020e00: or a0,s2,a0                        
+  80020e04: addu a1,zero,zero                  
+  80020e08: lui s1,0x800a                      
+  80020e0c: addiu s1,s1,-9404                  0x8009db44
+  80020e10: lui a3,0x800e                      
+  80020e14: lw a3,-13360(a3)                   0x800dcbd0
+  80020e18: addu a2,s1,zero                    
+  80020e1c: jal 0x8001cbe8                     
+  80020e20: addiu a3,a3,52                     0x800e0034
+  80020e24: addiu s0,s0,7936                   
+  80020e28: lui a0,0x40c                       
+  80020e2c: or a0,s0,a0                        
+  80020e30: addu a1,zero,zero                  
+  80020e34: lui a3,0x800e                      
+  80020e38: lw a3,-13360(a3)                   0x800dcbd0
+  80020e3c: addu a2,s1,zero                    
+  80020e40: jal 0x8001cbe8                     
+  80020e44: addiu a3,a3,52                     0x800e0034
+  80020e48: lui a0,0x41d                       
+  80020e4c: or a0,s2,a0                        
+  80020e50: addu a1,zero,zero                  
+  80020e54: lui a3,0x800e                      
+  80020e58: lw a3,-13360(a3)                   0x800dcbd0
+  80020e5c: addu a2,s1,zero                    
+  80020e60: jal 0x8001cbe8                     
+  80020e64: addiu a3,a3,52                     0x800e0034
+  80020e68: lui v1,0x800e                      
+  80020e6c: lw v1,-13360(v1)                   0x800dcbd0
+  80020e70: addiu v0,zero,1                    
+  80020e74: j 0x80020f20                       
+  80020e78: sh v0,18(v1)                       0x800e0012
+  80020e7c: lui v1,0x800e                      
+  80020e80: lw v1,-13360(v1)                   0x800dcbd0
+  80020e84: addiu v0,zero,2                    
+  80020e88: j 0x80020f20                       
+  80020e8c: sh v0,18(v1)                       0x800e0012
+  80020e90: lui v1,0x800e                      
+  80020e94: lw v1,-13360(v1)                   0x800dcbd0
+  80020e98: addiu v0,zero,3                    
+  80020e9c: j 0x80020f20                       
+  80020ea0: sh v0,18(v1)                       0x800e0012
+  80020ea4: lui v1,0x800e                      
+  80020ea8: lw v1,-13360(v1)                   0x800dcbd0
+  80020eac: addiu v0,zero,4                    
+  80020eb0: j 0x80020f20                       
+  80020eb4: sh v0,18(v1)                       0x800e0012
+  80020eb8: lui a0,0x800e                      
+  80020ebc: lw a0,-13360(a0)                   0x800dcbd0
+  80020ec0: nop                                
+  80020ec4: lbu v1,11(a0)                      0x800e000b
+  80020ec8: addiu v0,zero,255                  
+  80020ecc: bne v1,v0,0x80020ee4               
+  80020ed0: nop                                
+  80020ed4: lhu v0,54(a0)                      0x800e0036
+  80020ed8: nop                                
+  80020edc: addiu v0,v0,-600                   0x800dfda8
+  80020ee0: sh v0,54(a0)                       0x800e0036
+  80020ee4: lui a0,0x415                       
+  80020ee8: ori a0,a0,0x2700                   
+  80020eec: addu a1,zero,zero                  
+  80020ef0: lui a3,0x800e                      
+  80020ef4: lw a3,-13360(a3)                   0x800dcbd0
+  80020ef8: lui a2,0x800a                      
+  80020efc: addiu a2,a2,-9404                  0x8009db44
+  80020f00: jal 0x8001cbe8                     
+  80020f04: addiu a3,a3,52                     0x800e0034
+  80020f08: lui v0,0x800e                      
+  80020f0c: lw v0,-13360(v0)                   0x800dcbd0
+  80020f10: nop                                
+  80020f14: sb zero,1(v0)                      0x800e0001
+  80020f18: sb zero,0(v0)                      0x800e0000
+  80020f1c: sh zero,24(v0)                     0x800e0018
+  80020f20: lw ra,60(sp)                       
+  80020f24: lw s2,56(sp)                       
+  80020f28: lw s1,52(sp)                       
+  80020f2c: lw s0,48(sp)                       
+  80020f30: addiu sp,sp,64                     
+  80020f34: jr ra                              
+  80020f38: nop                                

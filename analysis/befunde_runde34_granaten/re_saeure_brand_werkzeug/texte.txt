@@ -1,0 +1,10 @@
+Id 0x09  Desc @Bank+0x2AF: Hand grenade designed to detonate after a set amount of time.
+Id 0x0A  Desc @Bank+0x2EE: Hand grenade containing a powerful toxic gas.
+Id 0x0B  Desc @Bank+0x31D: Hand grenade containing a flammable substance.
+Id 0x0E  Desc @Bank+0x39B: Chemical flamethrower made by Umbrella Inc. / The fuel is fed from a small cartridge.
+Id 0x0F  Desc @Bank+0x3F1: M79 Grenade Launcher. Various rounds can be used. / The cut stock casues a great recoil. Made in the USA.
+Id 0x10  Desc @Bank+0x45B: M79 Grenade Launcher. Various rounds can be used. / The cut stock casues a great recoil. Made in the USA.
+Id 0x11  Desc @Bank+0x4C5: M79 Grenade Launcher. Various rounds can be used. / The cut stock casues a great recoil. Made in the USA.
+Id 0x19  Desc @Bank+0x6BB: Granade bearing rounds. For the M79 Granade Launcher.
+Id 0x1A  Desc @Bank+0x6F2: Granade acid rounds. For the M79 Granade Launcher.
+Id 0x1B  Desc @Bank+0x726: Granade flame rounds. For the M79 Granade Launcher.

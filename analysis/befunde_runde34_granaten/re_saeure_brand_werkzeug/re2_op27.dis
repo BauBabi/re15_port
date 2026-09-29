@@ -1,0 +1,78 @@
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8001fa9c (77 instr)
+  8001fa9c: addiu sp,sp,-40                    
+  8001faa0: sw s0,32(sp)                       
+  8001faa4: lui s0,0x5555                      
+  8001faa8: lui a0,0x800e                      
+  8001faac: lw a0,-13360(a0)                   0x800dcbd0
+  8001fab0: ori s0,s0,0x5556                   
+  8001fab4: sw ra,36(sp)                       
+  8001fab8: lhu v0,42(a0)                      0x800e002a
+  8001fabc: ori v1,zero,0xb003                 
+  8001fac0: sh v1,24(a0)                       0x800e0018
+  8001fac4: ori v0,v0,0x20                     
+  8001fac8: jal 0x80015fe8                     
+  8001facc: sh v0,42(a0)                       0x800e002a
+  8001fad0: mult v0,s0                         
+  8001fad4: sra v1,v0,31                       
+  8001fad8: mfhi t0                            
+  8001fadc: subu v1,t0,v1                      
+  8001fae0: sll a0,v1,1                        
+  8001fae4: addu a0,a0,v1                      
+  8001fae8: lui v1,0x800e                      
+  8001faec: lw v1,-13360(v1)                   0x800dcbd0
+  8001faf0: subu v0,v0,a0                      
+  8001faf4: sb v0,33(v1)                       0x800e0021
+  8001faf8: lui a0,0x800e                      
+  8001fafc: lw a0,-13360(a0)                   0x800dcbd0
+  8001fb00: nop                                
+  8001fb04: lbu v0,33(a0)                      0x800e0021
+  8001fb08: lw v1,112(a0)                      0x800e0070
+  8001fb0c: sll v0,v0,3                        
+  8001fb10: addu v1,v1,v0                      
+  8001fb14: lbu v0,2(v1)                       0x800e0002
+  8001fb18: nop                                
+  8001fb1c: sb v0,32(a0)                       0x800e0020
+  8001fb20: lui v1,0x800e                      
+  8001fb24: lw v1,-13360(v1)                   0x800dcbd0
+  8001fb28: addiu a1,zero,2                    
+  8001fb2c: lh v0,52(v1)                       0x800e0034
+  8001fb30: addiu a2,zero,8192                 
+  8001fb34: sw v0,16(sp)                       
+  8001fb38: lh v0,54(v1)                       0x800e0036
+  8001fb3c: addu a3,zero,zero                  
+  8001fb40: sw v0,20(sp)                       
+  8001fb44: lh v0,56(v1)                       0x800e0038
+  8001fb48: addiu a0,sp,16                     
+  8001fb4c: jal 0x8004fba0                     
+  8001fb50: sw v0,24(sp)                       
+  8001fb54: lui v1,0x800e                      
+  8001fb58: lw v1,-13360(v1)                   0x800dcbd0
+  8001fb5c: nop                                
+  8001fb60: sw v0,20(v1)                       0x800e0014
+  8001fb64: addiu v0,zero,58                   
+  8001fb68: sb v0,0(v1)                        0x800e0000
+  8001fb6c: lui v1,0x800e                      
+  8001fb70: lw v1,-13360(v1)                   0x800dcbd0
+  8001fb74: addiu v0,zero,28                   
+  8001fb78: sb v0,1(v1)                        0x800e0001
+  8001fb7c: lui v1,0x800e                      
+  8001fb80: lw v1,-13360(v1)                   0x800dcbd0
+  8001fb84: addiu v0,zero,2                    
+  8001fb88: jal 0x80015fe8                     
+  8001fb8c: sb v0,27(v1)                       0x800e001b
+  8001fb90: mult v0,s0                         
+  8001fb94: sra a0,v0,31                       
+  8001fb98: mfhi t0                            
+  8001fb9c: subu a0,t0,a0                      
+  8001fba0: sll v1,a0,1                        
+  8001fba4: addu v1,v1,a0                      
+  8001fba8: subu v0,v0,v1                      
+  8001fbac: lui v1,0x800e                      
+  8001fbb0: lw v1,-13360(v1)                   0x800dcbd0
+  8001fbb4: addiu v0,v0,8                      
+  8001fbb8: sh v0,66(v1)                       0x800e0042
+  8001fbbc: lw ra,36(sp)                       
+  8001fbc0: lw s0,32(sp)                       
+  8001fbc4: addiu sp,sp,40                     
+  8001fbc8: jr ra                              
+  8001fbcc: nop                                
