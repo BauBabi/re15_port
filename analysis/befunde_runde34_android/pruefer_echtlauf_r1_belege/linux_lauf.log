@@ -1,0 +1,110 @@
+== Umgebung ==
+Linux 5.15.167.4-microsoft-standard-WSL2 x86_64
+11.11
+/usr/bin/python3
+Python 3.9.2
+GNU bash, version 5.1.4(1)-release (x86_64-pc-linux-gnu)
+   unzip     FEHLT
+   timeout   /usr/bin/timeout
+   readlink  /bin/readlink
+   cygpath   FEHLT
+OSTYPE=linux-gnu
+== Referenz-APK (Archiv, ro) ==
+514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9  /archiv/re15_port_v0.8.19_android.apk
+514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 *re15_port_v0.8.19_android.apk
+== L1 python_finden.sh (Diagnose) ==
+   Python: /usr/bin/python3 (3.9.2)
+PY=/usr/bin/python3
+PY_VERSION=3.9.2
+L1_RC=0
+== L2 --selbsttest ==
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   [ok] 01 gute APK                                           rc=0 (soll 0)
+   [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+   [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+   [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+   [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+   [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+   [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+   [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+   [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+   [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+   [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+   [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+   [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+   [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+   [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+   [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+   [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+   [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+   [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+   [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+   [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+   [ok] 23 APK fehlt                                          rc=2 (soll 2)
+   [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+   [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+   [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+   [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+   [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+   Laufzeit: 6.1 s
+== SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+L2_RC=0  Dauer 6.28464 s
+== L3 Referenz-APK gegen /src (9p-Mount, ro) ==
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /archiv/re15_port_v0.8.19_android.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  57.0 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+L3_RC=0  Dauer 57.204 s
+== L4 Negativ: Kopie ohne RE15DOOR/P2DS.DO2 (im Container gebaut, /tmp) ==
+entfernt: 1
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /tmp/neg_ohne_p2ds.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      29       29      1836688
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3602     3602    356600033
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 29, sha256 gleich 29/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  52.9 s
+--- Abweichungen: 2 ---
+   [fehlt in der APK] 1
+      fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P2DS.DO2)
+   [Manifest: Zeile ohne APK-Eintrag] 1
+      Manifest nennt shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P2DS.DO2
+== APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+L4_RC=1
+== L5 Negativ: falsche Repo-Wurzel ==
+ABBRUCH (Rueckgabe 2): build.gradle fehlt: /tmp/re15_port/platform/android/app/build.gradle (zeigt --repo auf das Repo?)
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /archiv/re15_port_v0.8.19_android.apk
+   Quellbaum: /tmp
+L5_RC=2
+== L6 python_finden per source unter set -euo pipefail, dann Gate ueber $PY ==
+PY=/usr/bin/python3 PY_VERSION=3.9.2
+   Python: /usr/bin/python3 (3.9.2)
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+L6_RC=0
+== L7 build_android.sh --gate-only (Linux-Host-Pfad) ==
+   unzip fehlt im Image -> L7 nur mit nachinstalliertem unzip (siehe L7b)
+DOCKER_RC=0

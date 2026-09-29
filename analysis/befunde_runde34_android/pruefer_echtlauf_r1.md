@@ -14,10 +14,15 @@ Belege: analysis/befunde_runde34_android/pruefer_echtlauf_r1_belege/
 
 ## Stand
 
-(laufend fortgeschrieben)
+**Fertig — Urteil: haltbar** (Befunde B1-B4 niedrig, siehe unten).
 - 21:1x Dossier angelegt, Commits/Bauer-Dossier/Werkzeuge gelesen, Python-Schnappschuss 0.
 - 21:16:57-21:20:50 voller Android-Bau EXIT=0 ANDROID-BUILD-OK (Abschnitt 1); 21:22 APK-Vergleich rc 0 (Abschnitt 2).
 - 21:23-21:30 make_package.sh: 3a-3e (Abschnitt 3), release/ danach auf HEAD, Artefakte weg.
+- 21:33-21:37 Linux-Laeufe in Docker (Abschnitt 4).
+- 21:40 Aufraeumen: Gradle-Reste des eigenen Baus (`platform/android/{app/build,app/.cxx,.gradle,build,local.properties}`,
+  ~1,6 GB) und der eigene Arbeitsordner `build/r34a/pruefer_echtlauf_r1/` (zusammengefuehrte Pakete, Wegwerf-Objekt-
+  speicher 482 MB, Negativ-APK) geloescht; Ordner der anderen (Bauer, Pruefer Umgehung) unberuehrt.
+  `git status --short release/ re15_port/` leer. Python-Schnappschuss 4 (Ende) == 0.
 
 ## 0. Ausgangslage
 
@@ -166,6 +171,82 @@ leer.
 
 ## 4. Linux-Lauf
 
+Docker Desktop lief (Server 27.5.1). Baum und Archiv NUR LESEND eingehaengt
+(`-v <baum>:/src:ro -v <archiv v0.8.19>:/archiv:ro`), Faelschungen nur im Container unter /tmp.
+Skripte + Logs: `pruefer_echtlauf_r1_belege/linux_lauf{,2}.{sh,log}` (gestartet als
+`/src/build/r34a/pruefer_echtlauf_r1/linux_lauf*.sh`).
+
+`re15-linux-build:deb11` (Debian 11.11, Python 3.9.2, bash 5.1.4; kein unzip, kein cygpath; `OSTYPE=linux-gnu`):
+| Lauf | Ergebnis |
+|---|---|
+| Referenz-APK im Archiv | sha256 `514bebd5...` = Archiv-SUMS |
+| L1 `bash release/python_finden.sh` | `Python: /usr/bin/python3 (3.9.2)`, rc 0 |
+| L2 `python3 release/apk_asset_gate.py --selbsttest` | `SELBSTTEST-OK: 28/28`, rc 0, 6,3 s |
+| L3 `python3 release/apk_asset_gate.py --repo /src /archiv/...apk` | `APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich`, Zaehlung wie unter Windows (PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90; RE2/DOOR 27/27, RE15DOOR 30/30, TORSE.VBS gleich), rc 0, 57 s |
+| L4 Negativ: im Container gebaute Kopie ohne `RE15DOOR/P2DS.DO2` | rc 1, `fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2` + Manifestzeile ohne Eintrag |
+| L5 Negativ: `--repo /tmp` | rc 2, `build.gradle fehlt: /tmp/re15_port/platform/android/app/build.gradle` |
+| L6 `source python_finden.sh` unter `set -euo pipefail`, Gate ueber `"$PY"` | `PY=/usr/bin/python3`, `APK-ASSET-GATE-OK`, rc 0 |
+| L7 `build_android.sh --gate-only` | nicht moeglich: `unzip` fehlt im Image (Voraussetzung der ALTEN Stichproben-Gates, `unzip -Z1`) -> L7 in einem Image mit unzip |
+
+`re15-deck:latest` (Steam Runtime 3 "sniper", Python 3.9.2, unzip vorhanden):
+| Lauf | Ergebnis |
+|---|---|
+| L7 `bash release/build_android.sh --gate-only /archiv/...apk --version v0.8.19` | `Python: /usr/bin/python3 (3.9.2)`, `(Android-SDK-Ordner fehlt ... ohne aapt)`, Stichproben + `3604 Asset-Eintraege`, `(aapt nicht gefunden - badging-Gate uebersprungen)`, Selbsttest 28/28, volle Pruefung OK, `== ANDROID-GATES-OK (--gate-only) ==`, rc 0, 36 s |
+| L7n dasselbe mit der Kopie ohne P2DS.DO2 | Selbsttest 28/28, dann `fehlt in der APK: ...P2DS.DO2`, `ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab`, rc 1 |
+
+Folgerung: Gate, Selbsttest, python_finden.sh und der Gate-Teil von build_android.sh laufen unter Linux
+unveraendert (Pfade ohne cygpath, `nativ_pfad` = printf). Die Laufzeiten 31-57 s sind der bekannte WSL-9p-Mount
+(nativ unter Windows 3,2-4,1 s fuer dieselbe Pruefung), kein Gate-Effekt. `apk_asset_gate.py` ist im Git 100644
+und im Blob LF; die Aufrufer starten es immer als `"$PY" apk_asset_gate.py` (kein direkter Aufruf noetig).
+
 ## Befunde
 
+- **B1 (niedrig) — python_finden.sh waehlt auf dieser Maschine NICHT C:/Python310, sondern das MSYS2-Python
+  3.14.7.** Beleg: `android_voll_auszug.log` Z.3 und `mp_3c_voll.log`: `Python: /c/msys64/mingw64/bin/python3
+  (3.14.7)`. Grund: Kandidaten-Reihenfolge = zuerst jedes `python3` im PATH (WindowsApps verworfen, dann
+  `/c/msys64/mingw64/bin/python3`), die `/c/Python3*`-Ordner erst als Rueckfall. Das ist ein echtes Python (pacman,
+  Abhaengigkeit von gdb, laut Bauer-Dossier seit 2026-08-24), KEIN Installer (Schnappschuesse 0-3 gleich), und alle
+  Laeufe waren gruen. Aber: (a) die Erwartung im Auftrag nennt C:/Python310; (b) die Meldung "3.14.7" sieht aus wie
+  der v0.8.17-Unfall ("Paketbau installierte Python 3.14") und kann bei jedem Paketbau Rueckfragen ausloesen;
+  (c) die Version wandert mit jedem `pacman -Syu`. Der Rueckfall auf `/c/Python310/python.exe (3.10.11)` funktioniert
+  (3e-2). Wer 3.10 fest will: `RE15_PYTHON=/c/Python310/python.exe` oder unter Windows die `/c/Python3*`-Kandidaten
+  vor die PATH-Kandidaten stellen.
+- **B2 (niedrig) — Der build.gradle-Commit dieses Zweigs macht die vorhandenen PC-Binaries fuer make_package
+  "VERALTET".** Beleg `mp_3b_frische.log`: `ABBRUCH: Linux-Binary ist VERALTET ... stammt von 2026-09-29 19:34:13,
+  der letzte Port-Code-Commit von 2026-09-29 20:55:26` (= f2d26986 `build.gradle stageAssets`). check_binary_fresh
+  zaehlt `re15_port/platform` komplett, also auch `platform/android/app/build.gradle`, obwohl der PC-Code seit v0.8.19
+  unveraendert ist (`git diff --stat v0.8.19..HEAD -- re15_port/engine re15_port/platform re15_port/include` = nur
+  build.gradle). Nach dem Merge verlangt jeder Paketlauf frisch gebaute Windows-/Linux-Binaries (beim naechsten
+  Release ohnehin Pflicht, beim reinen Nachpacken ein unnoetiger Neubau). Kein Defekt der neuen Pruefung.
+- **B3 (niedrig) — `release/<name>.apk.ungeprueft` ist nicht gitignoriert.** Beleg: `git check-ignore -v
+  release/re15_port_v0.8.19_android.apk.ungeprueft` -> rc 1 (`.gitignore:63` deckt nur `release/*_android.apk`).
+  Nach einem roten Gate bleibt dort eine ~363-MB-Datei als "untracked" liegen (Bauer-Dossier 3.7: "nur
+  .apk.ungeprueft"), bis der naechste build_android.sh-Lauf sie loescht; ein `git add release/` wuerde eine Datei
+  ueber GitHubs 100-MB-Grenze vormerken. make_package zippt sie nicht (sucht exakt `<name>_android.apk`).
+- **B4 (niedrig, schon vorher so) — Das APK-Gate in make_package prueft nur Assets, nicht, ob die APK zum
+  aktuellen CODE passt.** Beleg: make_package.sh:422-432 ruft nur `apk_asset_gate.py`; fuer die APK gibt es kein
+  Gegenstueck zu check_binary_fresh und keine versionName-Pruefung. build_android.sh:323 loescht die vorige
+  `<name>.apk` erst NACH erfolgreichem Gradle-Lauf; bricht Gradle ab (:312), bleibt die alte APK unter dem
+  Auslieferungsnamen liegen (wie in a358fd5d, :209). Eine solche alte APK mit unveraenderten Assets besteht die neue
+  Pruefung und wird gezippt — z.B. besteht die Archiv-APK v0.8.19 (gebaut vor f2d26986) die Pruefung gegen den
+  heutigen Baum (L3/L7, Bauer 3.1). Der Kommentar make_package.sh:418-419 nennt genau diesen Fall ("die APK waere dann
+  veraltet und wuerde trotzdem gezippt"), abgedeckt ist davon nur die Asset-Haelfte.
+- **Altlast (niedrig, nicht diese Aenderung)** — verwaister HKCU-Uninstall-Eintrag `pymanager-pythoncore-3.14-64`
+  ("Python 3.14.7", InstallLocation im geloeschten `r31_integration/release/Python`), siehe 0.1. Die Entfernung vom
+  2026-09-29 hat ihn uebersehen.
+
+Widerlegt / bestaetigt ohne Befund:
+- Die neuen Gates laufen im echten Android-Bau und brechen im Fehlerfall wirklich ab (hier nicht wiederholt, Bauer
+  3.7; im echten make_package-Fluss von mir 3a/3e-2 belegt).
+- Die neuen cmp-Gates in check_tree greifen im echten Fluss (3d-1 DOOR04.DO2, 3d-2 TORSE.VBS).
+- Kein Python-Installer in irgendeinem Lauf: Schnappschuesse 0/1/2/3 identisch (121 Zeilen inkl. Registry-Werten).
+- Keine Selbsttest-Temp-Ordner liegen geblieben (`%TEMP%\apk_gate_selbsttest_*`: 0 nach 6 Windows-Selbsttests).
+- Die Gates veraendern die APK nicht (sha256 Gradle-Ausgabe == ausgelieferte APK).
+
 ## Urteil
+
+**haltbar.** Der echte Android-Bau lief mit den neuen Gates gruen (EXIT=0, ANDROID-BUILD-OK; Selbsttest 28/28 in
+3,9 s, volle Pruefung 3603/3603 mit Zaehlung je Baum in 3,4 s), die gebaute APK hat dieselben 3604 Asset-Eintraege
+bytegleich wie die Referenz-APK, make_package.sh lief ohne Shim und ohne Installer durch (Paketinhalt win64/linux
+identisch mit v0.8.19) und bricht in allen vier echten Negativfaellen ab, und Gate + Selbsttest + python_finden +
+`build_android.sh --gate-only` funktionieren unter Linux. B1-B4 sind niedrig und blockieren die Uebernahme nicht.
