@@ -251,11 +251,250 @@ static void teil_zombie(void)
     }
 }
 
+/* =========================================================================================
+ * TEIL "hund" — B6: RE2-Hund (EMD0G_MOD0.BIN), Tod Zeile 9/10/11 und HURT 9/10/11.
+ * ROOM11D0 mit Flag 3:152 = 1 (freier Hunde-Satz, Hochfahren wie probe_r30_hund_tod.c:106-133).
+ * ========================================================================================= */
+static const int16_t k_box_op40[4] = { -600, 0, 300, 150 };   /* @0x80010910 (RE2-PSX.EXE) */
+static int s_se7 = 0;
+static void hund_se(int id, int flag2000) { (void)flag2000; if (id == 7) s_se7++; }
+
+static void bringup_hunde(void)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    load_re2_bank(0x20);                   /* NACH dem Reset, VOR dem Spawn (probe_r30_hund_tod.c:108-113) */
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    extern void re15_esp_fx_reset(void);
+    re15_esp_fx_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    { extern void re15_re2z_rng_reset(void); re15_re2z_rng_reset(); }
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
+    g_current_room_id = (uint16_t)s_room_id; g_room_change.pending = 0;
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    scd_register_room_events(&s_rdt);
+    re15_game_flag_set(3, 152, 1);          /* freier Hunde-Satz (Else-Zweig @Datei 0x13EE) */
+    if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
+    if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
+    for (int i = 0; i < 120; i++) scd_vm_tick();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    re15_collision_set_band(0);
+    re15_player_set_aim_clip_len(12);
+    re15_re2dog_audio_hook(hund_se, NULL);
+}
+
+/* Arena: der erste Hund allein, stehend (Zustand 1), Spieler 8000 weit weg; hp > 0 setzt HP. */
+static re15_actor_t *hund_arena(int16_t hp)
+{
+    bringup_hunde();
+    for (int f = 0; f < 30; f++) frame();
+    int slot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x20) { slot = s; break; }
+    if (slot < 0) return NULL;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+    re15_actor_t *e = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (e->state != 1) re15_ai_set_state_word(e, 0x100);
+    e->grid_id = 0; e->re2z_f10e = 0; e->re2z_self1d3 = 0; e->hit_react = 0;
+    pl->x = e->x - 8000; pl->z = e->z; pl->y = e->y;
+    for (int f = 0; f < 3; f++) frame();
+    e->re2z_self1d3 = 0; e->hit_react = 0;
+    if (hp > 0) e->hp = hp;
+    return e;
+}
+
+static int hund_gl(re15_actor_t *e, unsigned zeile, unsigned k)
+{
+    const int32_t P[3] = { e->x, e->y - 100, e->z };      /* Flammenpunkt y - 100 (@0x800207a4) */
+    return re15_re2_gl_apply(P, 0, k_box_op40, (k << 28) | 0x20000u | zeile);
+}
+
+static const uint8_t k_teile[7] = { 2, 3, 4, 7, 8, 9, 10 };   /* @0x80105680 */
+static int in_teile(int p) { for (int i = 0; i < 7; i++) if (k_teile[i] == p) return 1; return 0; }
+static unsigned fxz(int fx) { return re15_re2dog_fx_zaehler(fx); }
+static unsigned fx_summe(void) { unsigned s = 0; for (int i = 0; i < 16; i++) s += fxz(i); return s; }
+static int tints_gleich(const re15_actor_t *e, int von, int bis, uint32_t w)
+{
+    for (int p = von; p < bis; p++) if (e->re2z_part_tint[p] != w) return 0;
+    return 1;
+}
+
+static void teil_hund(void)
+{
+    printf("== hund (B6)\n");
+    if (room_load(0x11D0, "STAGE1") != 0) { CHECK(120, 0, "ROOM11D0 fehlt"); return; }
+
+    /* ---- Tod Zeile 9 (Granate, Art 2 -> +0x5 = 9): Router 0x80104610 / P0 0x80104694 ---- */
+    {
+        re15_actor_t *e = hund_arena(0);
+        if (!e) { CHECK(120, 0, "kein Hund 0x20 in ROOM11D0"); return; }
+        int16_t hp0 = e->hp;
+        explosion_bei(e, 300, 2);
+        CHECK(120, e->state == 3 && e->sub_state_1 == 9 && e->re2z_hits1d2 < 3 && e->re2z_self1d3 == 15,
+              "HE: hp %d -> %d, st=%d, +5=%d (9), 1D2=%d (<3), 1D3=%d (15)", hp0, e->hp, e->state,
+              e->sub_state_1, e->re2z_hits1d2, e->re2z_self1d3);
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        const int16_t gier = e->rot_y;
+        frame();                                           /* DEATH-P0 */
+        int fl_ok = 1, feld_ok = 1;
+        for (int p = 0; p < 17; p++) {
+            const int soll = in_teile(p);
+            if (((e->re2z_part_flags[p] & 0x4Au) == 0x4Au) != soll) fl_ok = 0;
+            if (soll && !(e->re2z_part_tint[p] == 0x00101040u && e->re2z_part_w9c[p] == 800 &&
+                          e->re2z_part_w9a[p] == -150 && e->re2z_part_w9e[p] == 10 &&
+                          e->re2z_part_wa4[p] == -100 && e->re2z_part_life[p] == 0 &&
+                          e->re2z_part_yaw98[p] == gier)) feld_ok = 0;
+        }
+        CHECK(121, fl_ok, "Zeile 9: Flags |= 0x4A genau an Parts {2,3,4,7,8,9,10} (@0x80105680, @0x801044a4-a8)");
+        CHECK(122, feld_ok, "Teile-Felder +0x9C 800/+0x9A -150/+0x9E 10/+0xA4 -100/+0xA0 0, Farbe 0x00101040, "
+                            "+0x98 = Gier (@0x801044b4-cc)");
+        const unsigned b0 = e->re2d_budget21f;
+        CHECK(123, b0 == 15 && fxz(0) == 3 && fxz(1) + fxz(2) == 1 && fxz(7) <= 1 && s_se7 == 0,
+              "P0-Bild: +0x21F = %u (18 - 3 Router-Effekte = 15), FX0 %u (Kern 1 + Router 2), FX1/2 %u (1), "
+              "FX7 %u (<=1), SE7 %d (0, stumm @0x801046E8)", b0, fxz(0), fxz(1) + fxz(2), fxz(7), s_se7);
+        int stufen_ok = 1; unsigned b = b0;
+        for (int f = 0; f < 5; f++) {
+            frame();
+            if ((unsigned)e->re2d_budget21f + 3u != b) stufen_ok = 0;
+            b = e->re2d_budget21f;
+        }
+        frame(); frame();
+        CHECK(124, stufen_ok && e->re2d_budget21f == 0 && fxz(0) == 13 && fxz(1) + fxz(2) == 6,
+              "Blut je Bild (@0x80104644-7C): Budget 15 -> 0 in 3er-Stufen %d, FX0 %u (13), FX1/2 %u (6)",
+              stufen_ok, fxz(0), fxz(1) + fxz(2));
+    }
+
+    /* ---- Tod Zeile 10 (Brand, Art 4 -> Waffe 11 -> Zeile 10): 0x80104774 ---- */
+    {
+        re15_actor_t *e = hund_arena(0);
+        explosion_bei(e, 300, 4);
+        CHECK(130, e->state == 3 && e->sub_state_1 == 11 && e->re2z_hits1d2 < 3,
+              "Brand: st=%d, +5=%d (11 -> Zeile 10), 1D2=%d", e->state, e->sub_state_1, e->re2z_hits1d2);
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        frame();
+        CHECK(131, tints_gleich(e, 0, 17, 0x00202020u) && tints_gleich(e, 17, 20, 0u),
+              "Zeile 10: Parts 0..16 +0x70 = 0x00202020 (@0x801047d8-800), 17..19 unberuehrt "
+              "(p0 0x%08X p16 0x%08X p17 0x%08X)", e->re2z_part_tint[0], e->re2z_part_tint[16],
+              e->re2z_part_tint[17]);
+        CHECK(132, fxz(7) == 6 && fxz(0) == 1 && e->re2d_budget21f == 0 && s_se7 == 1,
+              "Zeile 10: FX7 %u (6, @0x801047b4-d4), FX0 %u (Kern 1), Budget %u (0), SE7 %d (1, Kern)",
+              fxz(7), fxz(0), e->re2d_budget21f, s_se7);
+        const unsigned s0 = fx_summe();
+        for (int f = 0; f < 10; f++) frame();
+        CHECK(133, fx_summe() == s0, "Zeile 10 hat kein Blut je Bild (Router 0x80104118): %u -> %u", s0, fx_summe());
+    }
+
+    /* ---- Tod Zeile 11 (Saeure, Art 3 -> Waffe 10 -> Zeile 11): 0x8010481C ---- */
+    {
+        re15_actor_t *e = hund_arena(0);
+        explosion_bei(e, 300, 3);
+        CHECK(140, e->state == 3 && e->sub_state_1 == 10 && e->re2z_hits1d2 < 3,
+              "Saeure: st=%d, +5=%d (10 -> Zeile 11), 1D2=%d", e->state, e->sub_state_1, e->re2z_hits1d2);
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        frame();
+        CHECK(141, tints_gleich(e, 0, 17, 0x00003F2Fu) && tints_gleich(e, 17, 20, 0u),
+              "Zeile 11: Parts 0..16 +0x70 = 0x00003F2F (@0x80104844-64) (p0 0x%08X p16 0x%08X p17 0x%08X)",
+              e->re2z_part_tint[0], e->re2z_part_tint[16], e->re2z_part_tint[17]);
+        CHECK(142, fxz(9) == 1 && fxz(10) == 1 && fxz(0) == 1 && e->re2d_budget21f == 0 && s_se7 == 1,
+              "Zeile 11: FX9 %u (1), FX10 %u (1) (@0x8010486c-9c), FX0 %u (Kern 1), Budget %u, SE7 %d",
+              fxz(9), fxz(10), fxz(0), e->re2d_budget21f, s_se7);
+    }
+
+    /* ---- Klammer-Tor (+0x1D2 >= 3): nur der Kern (Negativ-Kontrollen) ---- */
+    {
+        re15_actor_t *e = hund_arena(30);                  /* 30 < 50 (Klammer 1, @0x800A44D8) */
+        int r = hund_gl(e, 10, 1);
+        CHECK(150, r != 0 && e->state == 3 && e->sub_state_1 == 11 && e->re2z_hits1d2 == 3,
+              "GL Zeile 10 Kl. 1: r=%d st=%d +5=%d 1D2=%d (3)", r, e->state, e->sub_state_1, e->re2z_hits1d2);
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        frame();
+        CHECK(151, tints_gleich(e, 0, 17, 0u) && fxz(7) == 0 && s_se7 == 1,
+              "Zeile 10 bei 1D2 >= 3 (`sltiu v0,v0,0x3` @0x80104794): keine Farbe, FX7 %u (0), SE7 %d (1)",
+              fxz(7), s_se7);
+        e = hund_arena(30);
+        r = hund_gl(e, 9, 1);
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        frame();
+        int keine = 1;
+        for (int p = 0; p < 17; p++) if (e->re2z_part_flags[p] & 0x4Au) keine = 0;
+        for (int f = 0; f < 6; f++) frame();
+        CHECK(152, r != 0 && e->sub_state_1 == 9 && keine && s_se7 == 1 && fxz(0) == 1 && fxz(1) + fxz(2) == 0,
+              "Zeile 9 bei 1D2 >= 3 (@0x801046b8-cc): nur der Kern, Schrei SE7 %d (1), kein Teile-Wurf %d, "
+              "kein Blut (FX0 %u = Kern, FX1/2 %u)", s_se7, keine, fxz(0), fxz(1) + fxz(2));
+        /* (153) Zeile 16 (Waffe 14) ignoriert die Klammer (`bne v1,v0(=16)` @0x801047a0-a8):
+         *       Treffer-Stempel wie der Applier (Wort-`sw` 3 + `sb` Zeile), 1D2 = 3. */
+        e = hund_arena(30);
+        e->hp = -1; e->state = 3; e->sub_state_1 = 14; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->re2z_hits1d2 = 3;
+        re15_re2dog_fx_zaehler_reset(); s_se7 = 0;
+        frame();
+        CHECK(153, tints_gleich(e, 0, 17, 0x00202020u) && fxz(7) == 6,
+              "Zeile 16 bei 1D2 = 3: Farbe %d, FX7 %u (6)", tints_gleich(e, 0, 17, 0x00202020u), fxz(7));
+    }
+
+    /* ---- HURT: FX-8-Schleife ceil(n/2) (@0x80103d30-5c / @0x80103de8-e14), +0x5 := 1 ---- */
+    {
+        static const struct { unsigned zeile, k, n, fx8; } hn[4] = {
+            { 9, 1, 1, 1 }, { 9, 0, 2, 1 }, { 10, 1, 3, 2 }, { 10, 0, 4, 2 } };
+        for (int i = 0; i < 4; i++) {
+            re15_actor_t *e = hund_arena(1000);
+            int r = hund_gl(e, hn[i].zeile, hn[i].k);
+            re15_re2dog_fx_zaehler_reset();
+            frame();
+            const int sperre = (e->re2z_self1d3 & 0x80u) != 0;
+            CHECK(160 + i, r != 0 && e->state == 2 && fxz(8) == hn[i].fx8 && fxz(0) == 1 && e->sub_state_1 == 1 &&
+                           sperre == (hn[i].zeile == 10u),
+                  "HURT Zeile %u Kl. %u (n = %u): FX8 %u (%u), FX0 %u (P0 1), +5 = %d (1), 1D3 Bit 0x80 %d",
+                  hn[i].zeile, hn[i].k, hn[i].n, fxz(8), hn[i].fx8, fxz(0), e->sub_state_1, sperre);
+        }
+        /* (164) HURT 11 (0x80103E60): EIN Part rand&0xF := 0x00003F2F, FX9, +0x5 := 1. */
+        re15_actor_t *e = hund_arena(1000);
+        int r = hund_gl(e, 11, 0);
+        re15_re2dog_fx_zaehler_reset();
+        frame();
+        int n3f = 0;
+        for (int p = 0; p < 20; p++) if (e->re2z_part_tint[p] == 0x00003F2Fu) n3f++;
+        CHECK(164, r != 0 && e->state == 2 && n3f == 1 && fxz(9) == 1 && e->sub_state_1 == 1,
+              "HURT 11: %d Part(s) 0x00003F2F (1, @0x80103ebc-c0), FX9 %u (1), +5 = %d (1)", n3f, fxz(9),
+              e->sub_state_1);
+    }
+
+    /* ---- Sperre: nach HURT 10 kein Applier-Treffer, solange +0x1D3 & 0x80 steht ---- */
+    {
+        int bild[2] = { -1, -1 }, bit_bilder[2] = { 0, 0 }, frei_ok[2] = { 1, 1 };
+        for (int lauf = 0; lauf < 2; lauf++) {
+            re15_actor_t *e = hund_arena(1000);
+            hund_gl(e, lauf == 0 ? 9u : 10u, 0);
+            for (int f = 0; f < 600 && bild[lauf] < 0; f++) {
+                frame();
+                const uint8_t sperre = e->re2z_self1d3;
+                const int16_t hp_vor = e->hp;
+                if (hund_gl(e, 10, 2)) {                   /* Klammer 2 = 5 Schaden (@0x800A44D8) */
+                    bild[lauf] = f;
+                    if (sperre != 0u || e->hp != hp_vor - 5) frei_ok[lauf] = 0;
+                } else if (sperre == 0u) frei_ok[lauf] = 0;   /* frei, aber nicht getroffen */
+                if (sperre & 0x80u) bit_bilder[lauf]++;
+            }
+        }
+        CHECK(165, bild[0] == 14 && frei_ok[0] && bit_bilder[0] == 0,
+              "nach HURT 9 (ohne Bit 0x80): wieder treffbar in Bild %d (14 = Sperre 15 abgelaufen), sauber %d",
+              bild[0], frei_ok[0]);
+        CHECK(166, bild[1] > bild[0] && frei_ok[1] && bit_bilder[1] >= bild[1],
+              "nach HURT 10 (Bit 0x80 @0x80103e34-3c): erst in Bild %d wieder treffbar, Bit stand %d Bilder, "
+              "sauber %d", bild[1], bit_bilder[1], frei_ok[1]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     int alle = (strcmp(teil, "alle") == 0);
     if (alle || !strcmp(teil, "zombie")) teil_zombie();
+    if (alle || !strcmp(teil, "hund")) teil_hund();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }

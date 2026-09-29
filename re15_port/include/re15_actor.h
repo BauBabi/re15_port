@@ -515,8 +515,13 @@ typedef struct {
      * plus die Eltern-Kaskade `(Eltern & 0x21) == 0x20` @0x80027480-94; die Tinte MULTIPLIZIERT
      * das Beleuchtungsergebnis (GTE `ldrgb`@0x80027C2C + `NCCT`@0x80027D10). Vollstaendige
      * Belegkette im Kopfkommentar der Bruecke in engine/src/enemy_ai_re2_zombie.c. */
-    uint16_t re2z_part_flags[16];
-    uint32_t re2z_part_tint[16];
+    /* ⛔ RUNDE 34 B6/B7: 20 statt 16 Eintraege. Der Hund faerbt 17 Parts (`sltiu v0,s0,0x11`
+     * @0x801047f8 / @0x8010485c EMD0G_MOD0.BIN), die Spinne 20 (FUN_8010609C `sltiu v0,a2,0x14`
+     * @0x801060bc EMS25.BIN) und laesst Part 19 fliegen (@0x80104bc8-f4). Der Zombie nutzt
+     * weiter nur 0..15. Wert 0 = "nicht gesetzt" (Hund/Spinne laufen nicht durch
+     * re15_re2z_part_reset, das Neutral 0x00808080 setzt). */
+    uint16_t re2z_part_flags[20];
+    uint32_t re2z_part_tint[20];
     /* [i] = welcher MD1-Objektindex die GEOMETRIE dieses Parts liefert. Im Original sind das
      * die vier Wörter [i][+0x08/+0x0C/+0x10/+0x14] (Geometrie- und Paketzeiger, gelesen vom
      * Zeichner FUN_80027434 @0x80027AD4-B04); der Zerleger TAUSCHT sie:
@@ -556,10 +561,10 @@ typedef struct {
     int8_t   re2z_part_grav[16];    /* +0x79 */
     int8_t   re2z_part_blend[16];   /* +0x7A */
     int16_t  re2z_part_st86[16];    /* +0x86 */
-    int16_t  re2z_part_yaw98[16];   /* +0x98 */
-    int16_t  re2z_part_w9a[16];     /* +0x9A */
-    int16_t  re2z_part_w9c[16];     /* +0x9C */
-    int16_t  re2z_part_w9e[16];     /* +0x9E */
+    int16_t  re2z_part_yaw98[20];   /* +0x98 */
+    int16_t  re2z_part_w9a[20];     /* +0x9A */
+    int16_t  re2z_part_w9c[20];     /* +0x9C */
+    int16_t  re2z_part_w9e[20];     /* +0x9E */
     uint16_t re2z_part_life[16];    /* +0xA0 */
     uint16_t re2z_part_burst_draw;  /* Bitmaske: Part war DIESES Frame vor der
                                      * Physik im Burst-Zustand (0x08|0x01) - am

@@ -247,8 +247,79 @@ und Anim laufen echt.
 Der DoT gilt fuer JEDE Quelle der Element-Bits: auch der Flammenwerfer (RE1.5-Waffe 14 -> RE2-Zeile 16, MAIN-P0 setzt
 `+0x21A |= 0x800` @0x80105560) laesst verkohlte Zombies jetzt im Gang ausbluten — das ist RE2-Retail.
 
+---
+
+## B6 — Hund RE2 (`enemy_ai_re2_dog.c`, EMD0G_MOD0.BIN)
+
+### Selbst disassembliert
+* Todes-Wurzel 0x801040DC: `lbu v0,5(a0)` @0x801040E4, Tabelle @0x801055CC (22 Worte selbst gelesen):
+  [0] 0x801037E8, [1..4]/[10..13]/[15]/[16]/[18] 0x80104118, [5]/[6]/[9]/[17]/[19] 0x80104610, [7]/[8] 0x801042B0,
+  [14] 0x801048B4, [20]/[21] 0x80104178. Unter-Router 0x80104118: +0x6 == 0 -> P0-Tabelle @0x80105618[+0x5]
+  ([10]/[16] 0x80104774, [11] 0x8010481C, sonst Kern), sonst Phasen @0x80105668. Router 0x80104610: Phasen @0x80105688
+  = {0x80104694, 0x801034C8, 0x80104200, 0x801037E8}, danach IMMER FX(3,0), FX(2,0), FX(2,1+(rand&1)) @0x80104644-7C.
+  (Der alte Port-Kommentar ordnete Zeile 0 dem Gore-Router zu — die Wurzel schickt sie nach 0x801037E8; die Port-
+  Uebersetzung bildet Zeile 0 nie.)
+* P0 0x80104694 (Zeile 9 >= 3 -> nur Kern, `j 0x8010475c` ueberspringt das Budget), Teile-Wurf 0x80104440 (Tabelle
+  @0x80105680 = `02 03 04 07 08 09 0a`), Brand 0x80104774, Saeure 0x8010481C, HURT 9/10/11 0x80103CE4/0x80103D9C/
+  0x80103E60, Kern 0x80104178, HURT-P0 0x80103344 (`sb s0(=1),7(s2)` @0x801034a4 mit s2 = self+0x218 -> Budget 1, FX(0,0)),
+  Spawner 0x80105070 (Budget-Tor @0x80105090-98, Abzug @0x8010518c-98). Effekt-Tabelle @0x801056AC hat 13 Eintraege
+  (nicht 10): [10] `84 0f 00 00 00 0c` @0x801056E8, [11] `86 00 00 00 00 10`, [12] `84 0c 00 00 00 10`.
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `include/re15_actor.h` | `re2z_part_flags/_tint/_yaw98/_w9a/_w9c/_w9e` 16 -> 20 (Hund 17 Parts `sltiu 0x11` @0x801047f8, Spinne 20 @0x801060b4) |
+| `re2d_death` P0 | Reihenfolge des Originals: Router-9-Zeilen {5,6,9,17,19} (@0x801055CC): +0x231 := 1, Kern, Teile-Wurf, Zeile 9: Budget 1 + FX 7 hinter dem Flag-Tor 0x4A (@0x8010473C-50), dann Budget 18 (@0x80104758). Zeilen 10/16: Kern, bei +0x1D2 < 3 oder Zeile 16 Budget 6, 6x FX 7, 17 Parts 0x00202020. Zeile 11: Kern, bei +0x1D2 < 3 17 Parts 0x00003F2F, Budget 2, FX 9 an rand&7, FX 10 an (rand&7)\|8 |
+| `re2d_death` Phasen | Blut je Bild der Router-9-Zeilen nach der Phase (Zeile vor der Phase gelesen) |
+| `re2d_kern` / `re2d_teile_wurf` / `re2d_router9_blut` (neu) | Kern ausgelagert; Teile-Wurf mit allen Feldern (+0x00 \|= 0x4A, +0xA0 0, +0x9C 800, +0x9A -150, +0x9E 10, +0xA4 -100, +0x70 0x00101040, +0x98 Gier) |
+| `re2d_hurt` Zeile 9/10 | FX-8-Schleife `re2d_fx8_schleife` = ceil(n/2) (Zaehler waechst, Budget schrumpft, @0x80103d38-5c), +0x5 := 1 (@0x80103d64-68 / @0x80103e30) |
+| `re2d_hurt` Zeile 11 | EIN Part rand&0xF +0x70 := 0x00003F2F (@0x80103ebc-c0), FX 9 an diesem Part, +0x5 := 1 (@0x80103edc) |
+| `re2d_fx` | Testhaken `re15_re2dog_fx_zaehler` (Zaehlung hinter dem Budget-Tor, kein Verhalten); Kommentar zur Tabelle korrigiert |
+
+Vorher-Defekt (belegt): der Port-Kern lief NACH dem Gore-Block; sein HURT-P0 setzt Budget 1 und verbraucht es mit FX(0,0)
+— das Budget 18 war damit weg, das Blut je Bild fiel aus. Mutation M22 bildet genau das nach (rot).
+
+### Sonde `unit_r34_reaktion` Teil `hund` (ROOM11D0 + Flag 3:152, RE2-Flavor, Bank EM020 VOR dem Spawn, echter `re15_game_step`)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 120 | HE-Explosion (Art 2) 300 neben dem Hund: Tod, +0x5 9, +0x1D2 < 3, +0x1D3 15 | gruen (HP 83 -> -217) |
+| 121/122 | Teile-Flags 0x4A genau an {2,3,4,7,8,9,10}; Felder 800/-150/10/-100/0, Farbe 0x00101040, +0x98 = Gier | gruen |
+| 123 | P0-Bild: Budget 15 (= 18 - 3 Router-Effekte), FX0 3, FX1/2 1, FX7 <= 1, KEIN SE 7 | gruen (FX7 1) |
+| 124 | Blut je Bild: 15 -> 0 in 3er-Stufen, FX0 13, FX1/2 6 | gruen |
+| 130-133 | Brand (Art 4 -> Waffe 11 -> Zeile 10): 17 Parts 0x00202020, 17..19 unberuehrt, FX7 6, Budget 0, SE 7 1x, kein Blut je Bild | gruen |
+| 140-142 | Saeure (Art 3 -> Waffe 10 -> Zeile 11): 17 Parts 0x00003F2F, FX9 1, FX10 1, SE 7 1x | gruen |
+| 150/151 | NEGATIV GL Zeile 10 Klammer 1 (+0x1D2 = 3): keine Farbe, kein FX 7, Schrei | gruen |
+| 152 | NEGATIV GL Zeile 9 Klammer 1: nur Kern (Schrei), kein Teile-Wurf, kein Blut | gruen |
+| 153 | Zeile 16 (Waffe 14) bei +0x1D2 = 3 faerbt trotzdem (`bne v1,16` @0x801047a0-a8) | gruen |
+| 160-163 | HURT FX-8-Zahl n = 1/2/3/4 -> 1/1/2/2, FX0 1 (HURT-P0), +0x5 = 1, Bit 0x80 nur Zeile 10 | gruen |
+| 164 | HURT 11: genau 1 Part 0x00003F2F, FX9 1, +0x5 1 | gruen |
+| 165 | nach HURT 9: wieder treffbar in Bild 14 (Sperre 15 abgelaufen) | gruen |
+| 166 | nach HURT 10: erst in Bild 71 wieder treffbar, Bit 0x80 stand bis dahin | gruen |
+
+### Mutationsproben (alle mit `build/r34g_b/mut.sh`, MUTATION-Reste 0)
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M21 Budget 18 weg | 123/124 | 123/124 rot |
+| M22 alte Reihenfolge (Kern-P0 nach Budget 18) | 123/124 | 123/124 rot |
+| M23 Brand-Farbschleife 16 statt 17 | 131 | 131/153 rot |
+| M24 FX-8-Schleife bis Budget 0 (= n Wuerfe, alter Port) | 161-163 | 161/162/163 rot |
+| M25 HURT 9 ohne +0x5 := 1 | 160/161 | 160/161 rot |
+| M26 Teile-Wurf ohne Flags | 121 | 121 rot |
+| M27 Klammer-Tor der Brand-Zeile weg | 151 | 151 rot |
+| M28 `\|\| Zeile 16` weg | 153 | 153 rot |
+| M29 Blut je Bild weg | 124 | 124 rot |
+| M30 HURT 10 ohne Bit 0x80 | 162/163/166 | 162/163/166 rot (erster Lauf mit Kommentar-Baufehler, wiederholt) |
+| M31 HURT 11 ohne Part-Farbe | 164 | 164 rot |
+| M32 Saeure-Farbe 0x3F2E | 141 | 141 rot |
+
+Regression: alle 20 Hund-/Dog-/r34-Tests gruen (`ctest -R "dog|hund|re2doc|r34"`).
+
 ## INTEGRATIONSWUNSCH
-(noch keiner)
+1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
+   bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die
+   Original-Farbworte in `re2z_part_tint[]` (0 = nicht gesetzt, KEIN Neutralwert 0x00808080) und die Wurf-Flags in
+   `re2z_part_flags[]`. Wunsch: fuer Typ 0x20/0x25 (RE2-Flavor) das Farbwort als NCCT-Faktor wie beim Zombie
+   (`ldrgb` @0x80027C2C / NCCT @0x80027D10), Wert 0 -> neutral.
 
 ## OFFEN
 (fortlaufend)
