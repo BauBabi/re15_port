@@ -50,3 +50,6 @@ Folgerungen fuer die Runde:
 * Weg zur Granate im Original OHNE Savestate-Patch: im Spieler-Inventar **Select** druecken und dann
   **R (R1)** wiederholt, bis die Granate ausgewaehlt ist — ein weiteres Debug-Menue zur Item-Auswahl
   (im Original vorhanden). Fuer die Reproduktion nutzbar (vgamepad: BACK = Select, RB/RIGHT_SHOULDER = R1).
+* Nutzer-Ergaenzung, woertlich: "Du musst für den Waffen Debug auf einen Player Inventory Item Slot sein
+  mit dem Cursor...." -> Das Item-Debug (Select, dann R) greift nur, wenn der Inventar-Cursor auf einem
+  ITEM-SLOT des Spielers steht (nicht auf Karte/Datei/Waffenfeld o.ae.).
