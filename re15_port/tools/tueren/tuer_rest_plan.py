@@ -52,8 +52,11 @@ ARCHIVE = {
                  rezept="DOOR23-Blatt (achteckiges Profil + Ausbuchtung) je Fluegel; Griff-Tausch Spender DOOR23 (Riegelstange quer)",
                  griff="Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt)", stufe=2),
     "P1DG": dict(basis="DOOR1D", blatt="DOOR1D", ton="eigen DOOR1D (Blech-Doppeltuer, V2/V3)",
-                 rezept="Lueftungsgitter weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
-                 griff="Druecker flach (DOOR1D Mesh 1)", stufe=1),
+                 rezept="Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
+                 griff="Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) "
+                       "am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt "
+                       "waagerechte Druecker", stufe=1,
+                 tausch=dict(spender="DOOR07", spender_eigen="P07G")),
     "P1DK": dict(basis="DOOR1D", blatt="DOOR1A", ton="eigen DOOR1D",
                  rezept="Stahlrahmen-Felder ohne Glas (T014 drei Felder, T045 hohes Feld + Querriegel), grau",
                  griff="Druecker flach (DOOR1D Mesh 1)", stufe=2),

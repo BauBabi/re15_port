@@ -6,8 +6,8 @@
  * (Tonteil, Modellteil, Sektor), fnv = FNV-1a 32 ueber die ganze Datei. */
 static const re15_tuer_eigen_t re15_tuer_eigen[3] = {
     /* 1: P07G = DOOR07 + Textur 'Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1)' (Ton F3 (06 07 08 22 2F, Blechtuer)) */
-    { "P07G", 0x07, 19608, 35428, 10, 55908, 0x885641ACu },
-    /* 2: P1DG = DOOR1D + Textur 'Lueftungsgitter weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)' (Ton eigen DOOR1D (Blech-Doppeltuer, V2/V3)) */
+    { "P07G", 0x07, 19608, 35428, 10, 55908, 0x9155935Au },
+    /* 2: P1DG = DOOR1D + Textur 'Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)' (Ton eigen DOOR1D (Blech-Doppeltuer, V2/V3)) */
     { "P1DG", 0x1D, 23928, 36100, 12, 60676, 0xB736A098u },
     /* 3: P16M = DOOR16 + Textur 'Silberrohr -> Messing (goldgelb, ROOM12607.bmp), Lichtverlauf der Rohre bleibt' (Ton eigen DOOR16 (4 Sprossen, kein Schliesston)) */
     { "P16M", 0x16, 11000, 46572, 6, 58860, 0xF3556E1Cu },
@@ -109,13 +109,13 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[72] = {
     /* S039 T016 ROOM10C1 -> ROOM1060 | ROOM10C1.RDT@0xE42 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x10C1, 0, 0,   -600,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 39, 16, 0x00E42, 1 },
     /* S045 T026 ROOM10D0 -> ROOM1100 | ROOM10D0.RDT@0x11D6 main00 Slot 16 | P1DG (Basis DOOR1D) V2 (1D-Doppeltuer Seite A (wie T097)) */
-    { 0x10D0, 0, 0, -19300,  24000,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0xFF, 45, 26, 0x011D6, 2 },
+    { 0x10D0, 0, 0, -19300,  24000,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0x07, 45, 26, 0x011D6, 2 },
     /* S045 T026 ROOM10D1 -> ROOM1100 | ROOM10D1.RDT@0x11D6 main00 Slot 16 | P1DG (Basis DOOR1D) V2 (1D-Doppeltuer Seite A (wie T097)) */
-    { 0x10D1, 0, 0, -19300,  24000,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0xFF, 45, 26, 0x011D6, 2 },
+    { 0x10D1, 0, 0, -19300,  24000,   500,  2000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0x07, 45, 26, 0x011D6, 2 },
     /* S049 T026 ROOM1100 -> ROOM10D0 | ROOM1100.RDT@0x99A main00 Slot 0 | P1DG (Basis DOOR1D) V3 (1D-Doppeltuer Seite B (wie T097)) */
-    { 0x1100, 0, 0, -21330, -24790,   400,  1250, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0xFF, 49, 26, 0x0099A, 2 },
+    { 0x1100, 0, 0, -21330, -24790,   400,  1250, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0x07, 49, 26, 0x0099A, 2 },
     /* S049 T026 ROOM1101 -> ROOM10D0 | ROOM1101.RDT@0x99A main00 Slot 0 | P1DG (Basis DOOR1D) V3 (1D-Doppeltuer Seite B (wie T097)) */
-    { 0x1101, 0, 0, -21330, -24790,   400,  1250, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0xFF, 49, 26, 0x0099A, 2 },
+    { 0x1101, 0, 0, -21330, -24790,   400,  1250, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0x07, 49, 26, 0x0099A, 2 },
     /* S056 T015 ROOM1120 -> ROOM1060 | ROOM1120.RDT@0xC76 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x1120, 0, 0,   -700,   9550,   500,  1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 56, 15, 0x00C76, 1 },
     /* S056 T015 ROOM1121 -> ROOM1060 | ROOM1121.RDT@0xC76 main00 Slot 0 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
@@ -133,17 +133,17 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[72] = {
     /* S099 T053 ROOM11D1 -> ROOM1260 | ROOM11D1.RDT@0x1228 main00 Slot 1 | P16M (Basis DOOR16) V5 (hinab -> V5) */
     { 0x11D1, 0, 0,   2600, -22000,   900,   900, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x16, 5, 0, 0xFF, 99, 53, 0x01228, 3 },
     /* S100 T054 ROOM11E0 -> ROOM11F0 | ROOM11E0.RDT@0x1512 main00 Slot 0 | P1DG (Basis DOOR1D) V2 (1D-Doppeltuer Seite A (wie T097)) */
-    { 0x11E0, 0, 0, -25100,  -9550,  2000,   750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0xFF, 100, 54, 0x01512, 2 },
+    { 0x11E0, 0, 0, -25100,  -9550,  2000,   750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0x07, 100, 54, 0x01512, 2 },
     /* S102 T021 ROOM11E0 -> ROOM10A0 | ROOM11E0.RDT@0x1552 main00 Slot 2 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x11E0, 0, 0,   4750,  -5650,   550,  1050, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 102, 21, 0x01552, 1 },
     /* S100 T054 ROOM11E1 -> ROOM11F0 | ROOM11E1.RDT@0x1512 main00 Slot 0 | P1DG (Basis DOOR1D) V2 (1D-Doppeltuer Seite A (wie T097)) */
-    { 0x11E1, 0, 0, -25100,  -9550,  2000,   750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0xFF, 100, 54, 0x01512, 2 },
+    { 0x11E1, 0, 0, -25100,  -9550,  2000,   750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 2, 0, 0x07, 100, 54, 0x01512, 2 },
     /* S102 T021 ROOM11E1 -> ROOM10A0 | ROOM11E1.RDT@0x1552 main00 Slot 2 | P07G (Basis DOOR07) V0 (Griff links -> V0 (T2 2.4 Punkt 1)) */
     { 0x11E1, 0, 0,   4750,  -5650,   550,  1050, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 102, 21, 0x01552, 1 },
     /* S104 T054 ROOM11F0 -> ROOM11E0 | ROOM11F0.RDT@0xCC6 main00 Slot 0 | P1DG (Basis DOOR1D) V3 (1D-Doppeltuer Seite B (wie T097)) */
-    { 0x11F0, 0, 0,    250,   1150,  2000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0xFF, 104, 54, 0x00CC6, 2 },
+    { 0x11F0, 0, 0,    250,   1150,  2000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0x07, 104, 54, 0x00CC6, 2 },
     /* S104 T054 ROOM11F1 -> ROOM11E0 | ROOM11F1.RDT@0xCC6 main00 Slot 0 | P1DG (Basis DOOR1D) V3 (1D-Doppeltuer Seite B (wie T097)) */
-    { 0x11F1, 0, 0,    250,   1150,  2000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0xFF, 104, 54, 0x00CC6, 2 },
+    { 0x11F1, 0, 0,    250,   1150,  2000,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x1D, 3, 0, 0x07, 104, 54, 0x00CC6, 2 },
     /* S119 T022 ROOM1230 -> ROOM10A0 | ROOM1230.RDT@0xB34 main00 Slot 1 | P07G (Basis DOOR07) V0 (Zwilling von S078) */
     { 0x1230, 0, 0,   -177,  -7772,  1204,   722, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0xFF, 119, 22, 0x00B34, 1 },
     /* S119 T022 ROOM1231 -> ROOM10A0 | ROOM1231.RDT@0xB34 main00 Slot 1 | P07G (Basis DOOR07) V0 (Zwilling von S078) */
@@ -160,4 +160,12 @@ static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[72] = {
     { 0x1261, 0, 1, -20250,  -5750,   750,   500, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x16, 4, 0, 0xFF, 130, 23, 0x0116A, 3 },
     /* S131 T053 ROOM1261 -> ROOM11D0 | ROOM1261.RDT@0x118A main00 Slot 3 | P16M (Basis DOOR16) V4 (hinauf -> V4) */
     { 0x1261, 0, 1,  21850,  -8050,   500,   750, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x16, 4, 0, 0xFF, 131, 53, 0x0118A, 3 },
+};
+
+/* Griff-Tausch der Port-Archive (Spalten wie re15_griff_tausche der Runde 31, dazu spender_eigen =
+ * Spender-MD1/TIM aus diesem Port-Archiv). Werte [SIM] (tools/tor/tuerkatalog.py via
+ * tuer_zuordnung_gen.griff_daten). PORT-WAHL: RE2 tauscht Griffe nur archivintern (Bit 7). */
+static const re15_griff_tausch_t re15_griff_tausche_eigen[1] = {
+    /* P1DG: DOOR1D <- P07G (Basis DOOR07): Anker Archiv [130, -2850, -3410], Anker Spender [130, -3352, -3404] */
+    { 0x1D, 0x07, 1, 1, {0, 0, 0}, {2048, 2048, 0}, -245, -702, 1 },
 };

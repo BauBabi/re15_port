@@ -23,8 +23,8 @@
 | G3 | T076 | ROOM2030 <-> ROOM2070 | S141 V3; S156 V2 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
 | G3 | T081 | ROOM2070 | S157 V3 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
 | G3 | T082 | ROOM2070 | S158 V3 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
-| G4 | T026 | ROOM10D0 <-> ROOM1100 | S045 V2; S049 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach (DOOR1D Mesh 1) | DOOR1D | 1 |
-| G4 | T054 | ROOM11E0 <-> ROOM11F0 | S100 V2; S104 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach (DOOR1D Mesh 1) | DOOR1D | 1 |
+| G4 | T026 | ROOM10D0 <-> ROOM1100 | S045 V2; S049 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker | DOOR1D | 1 |
+| G4 | T054 | ROOM11E0 <-> ROOM11F0 | S100 V2; S104 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker | DOOR1D | 1 |
 | G4b | T014 | ROOM1050 <-> ROOM1090 | S022 V2; S030 V3 | P1DK | DOOR1D: eigen DOOR1D; Druecker flach (DOOR1D Mesh 1) | DOOR1A | 2 |
 | G4b | T045 | ROOM1180 <-> ROOM11B0 <-> ROOM1230 | S080 V2; S092 V3; S093 V3; S121 V2 | P1DK | DOOR1D: eigen DOOR1D; Druecker flach (DOOR1D Mesh 1) | DOOR1A | 2 |
 | G5 | T035 | ROOM1130 <-> ROOM1140 | S059 V2; S063 V2 | P04B | DOOR04: F2 (01 04 09 11, Holz); Stangengriff lang Messing (DOOR04 Mesh 1, gemalt gleich) | DOOR04 | 2 |

@@ -263,12 +263,69 @@ def rezept_glattes_blech(basis_rgba, korn_quelle, auswahl, schild=None, flicken=
     return out, proto
 
 
+# ----------------------------------------------------------------------------------------------
+# Griff-Farbe: RE1.5 malt die Druecker SILBERN (Merkmal Runde 31 "silberner Druecker"), die RE2-
+# Druecker (DOOR07/DOOR1D Mesh 1, Beschlagstreifen v 238..254) sind dunkel braun-oliv (Kontaktbogen 1
+# angesehen: Druecker in der Sequenz dunkler Strich). Gemessen: in den entzerrten Ausschnitten die
+# Punkte der Griffbox, die um > 30 heller sind als das Blatt daneben (Druecker + Schild, unscharf),
+# Median je Ausschnitt, Median ueber die Ausschnitte. Texel = gemalt * 128 / c wie das Blatt; die
+# Zeichnung (Glanzlicht/Schatten) des RE2-Griffs bleibt als Helligkeitsverlauf erhalten.
+# ----------------------------------------------------------------------------------------------
+def re15_griff_farbe(auswahl, box, blatt_spalten):
+    ordner = _t1_seiten()
+    werte, n = [], []
+    for seite, cut, griff in auswahl:
+        a = np.asarray(Image.open(glob.glob(os.path.join(ordner, "%s_*_%s_entz.png" % (seite, cut)))[0]).convert("RGB"),
+                       np.float64)
+        if griff == "rechts":
+            a = a[:, ::-1]
+        u0, v0, u1, v1 = box
+        reg = a[v0:v1, u0:u1].reshape(-1, 3)
+        L = reg @ LUM
+        blatt = np.median(np.concatenate([a[v0:v1, b0:b1] for b0, b1 in blatt_spalten], 1).reshape(-1, 3) @ LUM)
+        m = L > blatt + 30
+        if m.sum() >= 5:
+            werte.append(np.median(reg[m], 0))
+            n.append(int(m.sum()))
+    return np.median(np.array(werte), 0), len(werte)
+
+
+def griff_umfaerben(rgba, md1, meshes, farbe):
+    """Texel der Griff-Meshes: Helligkeitsverlauf des RE2-Griffs, skaliert auf Mittel = farbe*128/c,
+    Farbton = farbe (R/L, G/L, B/L). Rueckgabe (rgba, Maske der umgefaerbten Texel, Protokoll)."""
+    m = uv_maske(md1, meshes) & (rgba[..., 3] > 0)
+    L = rgba[..., :3].astype(np.float64) @ LUM
+    Lf = float(farbe @ LUM)
+    ziel = Lf * 128.0 / C_BLATT
+    mittel = float(L[m].mean())
+    # Verlauf um das neue Mittel: Faktor wie die Helligkeit (ziel/mittel), aber hoechstens so gross, dass
+    # das 99. Perzentil nicht ueber 255 geht (der RE2-Griff ist dunkel mit hartem Glanzlicht; 4,5fach
+    # gestreckt kappte er 22 % der Texel - erster Lauf P1DG)
+    obergrenze = 255.0 / float((farbe / Lf).max())          # kein Kanal ueber 255 (Farbton > 1)
+    k = min(ziel / max(mittel, 1.0), (obergrenze - ziel) / max(float(np.percentile(L[m], 99)) - mittel, 1.0))
+    Lneu = ziel + (L - mittel) * k
+    neu = Lneu[..., None] * (farbe / Lf)[None, None, :]
+    gekappt = int((neu[m] > 255).any(-1).sum())
+    out = rgba.copy()
+    out[m, :3] = np.round(np.clip(neu[m], 0, 255)).astype(np.uint8)
+    return out, m, dict(griff_gemalt=[round(float(x), 1) for x in farbe], griff_texel_mittel_vorher=round(mittel, 1),
+                        griff_kontrast=round(k, 3),
+                        griff_texel_mittel_nachher=round(float((out[..., :3].astype(np.float64) @ LUM)[m].mean()), 1),
+                        griff_texel=int(m.sum()), griff_gekappt=gekappt)
+
+
 def rezept_P07G(basis):
     """Schild-Umriss des DOOR07 (Pfeilform) entfaellt wie bei P1DG: RE1.5 malt ein Rechteckschild, das
     in den 30..95-px-Ausschnitten nicht aufzuloesen ist -> nicht gemalt statt geraten; der Druecker
     (Mesh 1) bleibt."""
     rgba = basis["rgba"]
-    return rezept_glattes_blech(rgba, rgba, G1_AUSWAHL, schild=None, flicken=(D07_SCHLITZE, D07_SCHILD_FLICKEN))
+    out, proto = rezept_glattes_blech(rgba, rgba, G1_AUSWAHL, schild=None, flicken=(D07_SCHLITZE, D07_SCHILD_FLICKEN))
+    farbe, n = re15_griff_farbe(G1_AUSWAHL, (0, 90, 40, 150), [(44, 104)])
+    out, maske, gp = griff_umfaerben(out, basis["md1"], [1], farbe)
+    gp["griff_ausschnitte"] = n
+    proto.update(gp)
+    proto["_frei"] = maske
+    return out, proto
 
 
 # G4 (T026, T054): graue glatte Stahl-Doppeltuer, zwei Druecker an der Fuge (Bogen angesehen).
@@ -285,8 +342,17 @@ def rezept_P1DG(basis):
     d07 = re2_lesen("DOOR07")
     korn_q, _ = rgba_aus_tim(d07[3])
     flicken = (D07_SCHLITZE, D07_SCHILD_FLICKEN)
-    return rezept_glattes_blech(basis["rgba"], korn_q, G4_AUSWAHL, schild=None, flicken=flicken,
-                                nur_zeilen=True)
+    out, proto = rezept_glattes_blech(basis["rgba"], korn_q, G4_AUSWAHL, schild=None, flicken=flicken,
+                                      nur_zeilen=True)
+    # Der DOOR1D-Druecker steht in Ruhe um x -780 gekippt (Simulator: Objekt 2/4 rot x 64756, fuer den
+    # gemalten Griffkasten), RE1.5 malt waagerechte Druecker -> Griff-Tausch mit dem DOOR07-Druecker
+    # (gleiche Formfamilie "Druecker flach", Grund-Drehung 0) aus P07G (silbern), plan.json "tausch".
+    # Die 1D-Griff-Texel bleiben deshalb bytegleich. Zum Vergleich gemessen (Protokoll): gemalte
+    # Grifffarbe der G4-Seiten (Doppeltuer-Ausschnitt: Druecker in der Mitte u 44..84).
+    farbe, n = re15_griff_farbe([(s_, c_, "links") for s_, c_, _ in G4_AUSWAHL], (44, 90, 84, 150), [(16, 40), (88, 112)])
+    proto["griff_gemalt_g4"] = [round(float(x), 1) for x in farbe]
+    proto["griff_ausschnitte"] = n
+    return out, proto
 
 
 # Messing (ROOM12607.bmp x 126..141 y 15..149 und ROOM12609.bmp x 203..225 y 0..149, Leiterpunkte
@@ -408,6 +474,9 @@ def archiv_bauen(kennung, spec, schreiben=True):
         schutz = np.zeros_like(blatt)   # alle Leiter-Meshes werden umgefaerbt
     else:
         schutz = andere                 # auch Ueberlappung Blatt/Griff (DOOR24) bleibt Griff
+    frei = proto.pop("_frei", None)          # vom Rezept bewusst umgefaerbte Griff-Texel
+    if frei is not None:
+        schutz = schutz & ~frei
     neu_tim, qinfo = tim_bauen(neu_rgba, tim, wert, schutz, unbenutzt)
     tim_b = neu_tim.schreiben()
     if len(tim_b) != len(o.tim):
@@ -466,8 +535,10 @@ def zeilen_bauen(plan, gebaut):
             k = s["schluessel"]
             sz = sorted({(x["datei"], x["off"], x["slot"], x["skript"]) for x in k["saetze"]})
             for rn in k["raeume"]:
+                tausch = plan["archive"][e["archiv"]].get("tausch")
                 zz = dict(seite=sp["id"], tuer=tid, raum=tzg.raum_id(rn), band=k["band"], archiv=e["archiv"],
                           basis=gebaut[e["archiv"]]["basis_nr"], variante=sp["variante"], herkunft=sp["herkunft"],
+                          spender=int(tausch["spender"][4:], 16) if tausch else 0xFF,
                           ziel=k.get("ziel"), saetze=[x for x in sz if x[0].startswith(rn)])
                 if k["form"] == "rechteck":
                     x, zc, w, dd = k["rect"]
@@ -495,7 +566,28 @@ def zeilen_bauen(plan, gebaut):
     return zeilen
 
 
-def inc_schreiben(eintraege, zeilen, pfad):
+def griff_tausche_bauen(plan, eintraege):
+    """Griff-Tausch je Port-Archiv mit plan.json "tausch": [SIM]-Werte wie Runde 31
+    (tuer_zuordnung_gen.griff_daten: Katalog-Simulator tuerkatalog.VM), Spender-TIM/MD1 aus dem
+    Port-Archiv spender_eigen (dessen MD1 = Spender-MD1 bytegleich, probe_r33 "archive")."""
+    idx = {e["kennung"]: i + 1 for i, e in enumerate(eintraege)}
+    nach_k = {e["kennung"]: e for e in eintraege}
+    out = []
+    for e in eintraege:
+        t = plan["archive"][e["kennung"]].get("tausch")
+        if not t:
+            continue
+        sp = int(t["spender"][4:], 16)
+        se = t.get("spender_eigen")
+        if se and (se not in idx or nach_k[se]["basis_nr"] != sp):
+            raise SystemExit("%s: Spender-Archiv %s fehlt oder hat nicht Basis %s" % (e["kennung"], se, t["spender"]))
+        g = tzg.griff_daten(e["basis_nr"], sp)
+        out.append(dict(archiv=e["basis_nr"], spender=sp, spender_eigen=idx.get(se, 0), kennung=e["kennung"],
+                        spender_name=se or t["spender"], **g))
+    return out
+
+
+def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
     L = ["/* Erzeugt von re15_port/tools/tueren/tuer_archiv_bauen.py - NICHT von Hand aendern.",
          " * Runde 33 / Thema T (analysis/befunde_runde33/tueren_rest_plan.md, tueren_rest_pilot.md).",
          " * ⛔ PORT-WAHL, KEINE Original-Adresse: port-eigene Tuerarchive im RE2-Aufbau (Tonteil, SCD, MD1",
@@ -518,10 +610,27 @@ def inc_schreiben(eintraege, zeilen, pfad):
         L.append("    /* %s %s ROOM%04X -> %s | %s | %s (Basis DOOR%02X) V%d (%s) */" % (
             z["seite"], z["tuer"], z["raum"], z["ziel"], ofs, z["archiv"], z["basis"], z["variante"],
             z["herkunft"].replace("*/", "* /")))
-        L.append("    { 0x%04X, %d, %d, %6d, %6d, %5d, %5d, {%d, %d, %d, %d}, {%d, %d, %d, %d}, 0x%02X, %d, 0, 0xFF, %d, %d, 0x%05X, %d }," % (
+        L.append("    { 0x%04X, %d, %d, %6d, %6d, %5d, %5d, {%d, %d, %d, %d}, {%d, %d, %d, %d}, 0x%02X, %d, 0, 0x%02X, %d, %d, 0x%05X, %d }," % (
             z["raum"], z["form"], z["band"], z["x"], z["z"], z["hw"], z["hh"], *z["qx"], *z["qz"], z["basis"],
-            z["variante"], int(z["seite"][1:]), int(z["tuer"][1:]), z["saetze"][0][1], idx[z["archiv"]]))
+            z["variante"], z["spender"], int(z["seite"][1:]), int(z["tuer"][1:]), z["saetze"][0][1], idx[z["archiv"]]))
     L.append("};")
+    L.append("")
+    L.append("/* Griff-Tausch der Port-Archive (Spalten wie re15_griff_tausche der Runde 31, dazu spender_eigen =")
+    L.append(" * Spender-MD1/TIM aus diesem Port-Archiv). Werte [SIM] (tools/tor/tuerkatalog.py via")
+    L.append(" * tuer_zuordnung_gen.griff_daten). PORT-WAHL: RE2 tauscht Griffe nur archivintern (Bit 7). */")
+    if tausche:
+        L.append("static const re15_griff_tausch_t re15_griff_tausche_eigen[%d] = {" % len(tausche))
+        for g in tausche:
+            L.append("    /* %s: DOOR%02X <- %s (Basis DOOR%02X): Anker Archiv %s, Anker Spender %s */" % (
+                g["kennung"], g["archiv"], g["spender_name"], g["spender"], g["anker_archiv"], g["anker_spender"]))
+            L.append("    { 0x%02X, 0x%02X, %d, %d, {%d, %d, %d}, {%d, %d, %d}, %d, %d, %d }," % (
+                g["archiv"], g["spender"], g["mesh_archiv"], g["mesh_spender"], *g["rot_vorn"], *g["rot_hinten"],
+                g["aus_archiv"], g["aus_spender"], g["spender_eigen"]))
+        L.append("};")
+    else:
+        L.append("static const re15_griff_tausch_t re15_griff_tausche_eigen[1] = {")
+        L.append("    { 0xFF, 0xFF, 0, 0, {0, 0, 0}, {0, 0, 0}, 0, 0, 0 },")
+        L.append("};")
     with open(pfad, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(L) + "\n")
 
@@ -550,7 +659,11 @@ def main():
         if a.nur and not a.pruefen:
             print("(--nur: .inc und archive.json NICHT geschrieben)")
         return 0
-    inc_schreiben(eintraege, zeilen, AUS_INC)
+    tausche = griff_tausche_bauen(plan, eintraege)
+    for g in tausche:
+        print("Griff-Tausch %s: DOOR%02X <- %s: %s" % (g["kennung"], g["archiv"], g["spender_name"],
+                                                     {k: g[k] for k in ("rot_vorn", "rot_hinten", "aus_archiv", "aus_spender")}))
+    inc_schreiben(eintraege, zeilen, AUS_INC, tausche)
     with open(AUS_JSON, "w", encoding="utf-8") as f:
         json.dump(dict(archive=eintraege, zeilen=len(zeilen),
                        seiten=sorted({z["seite"] for z in zeilen}),

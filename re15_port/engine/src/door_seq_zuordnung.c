@@ -37,6 +37,7 @@
 #define N_ZEILEN (N_ZEILEN_RE2 + N_ZEILEN_EIG)
 #define N_EIGEN  ((int)(sizeof re15_tuer_eigen / sizeof re15_tuer_eigen[0]))
 #define N_TAUSCH ((int)(sizeof re15_griff_tausche / sizeof re15_griff_tausche[0]))
+#define N_TAUSCH_EIG ((int)(sizeof re15_griff_tausche_eigen / sizeof re15_griff_tausche_eigen[0]))
 #define N_ARCH   ((int)(sizeof re2_tuer_arch / sizeof re2_tuer_arch[0]))
 #else
 #define N_ZEILEN 0
@@ -123,6 +124,10 @@ const re15_griff_tausch_t *re15_door_seq_griff_tausch(int archiv, int spender)
     for (int i = 0; i < N_TAUSCH; i++)
         if (re15_griff_tausche[i].archiv == archiv && re15_griff_tausche[i].spender == spender)
             return &re15_griff_tausche[i];
+    /* Runde 33: Griff-Tausch der Port-Archive (gen/re15_tuer_eigen.inc) */
+    for (int i = 0; i < N_TAUSCH_EIG; i++)
+        if (re15_griff_tausche_eigen[i].archiv == archiv && re15_griff_tausche_eigen[i].spender == spender)
+            return &re15_griff_tausche_eigen[i];
 #else
     (void)archiv; (void)spender;
 #endif

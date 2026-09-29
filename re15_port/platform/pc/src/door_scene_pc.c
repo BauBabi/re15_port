@@ -340,7 +340,7 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     memset(&g, 0, sizeof g);
     if (re2 && a->spender != RE15_DOOR_KEIN_SPENDER) {
         g.gt = re15_door_seq_griff_tausch(a->re2_nr, a->spender);
-        if (g.gt && re2_archiv_lesen(a->spender, 0, &spend) == 0 && spend.n_modell > 8) {
+        if (g.gt && re2_archiv_lesen(a->spender, g.gt->spender_eigen, &spend) == 0 && spend.n_modell > 8) {
             uint32_t md1_rel = rd32le(spend.modell), tim_rel = rd32le(spend.modell + 4);
             re15_tim_t tim;
             if (md1_rel < tim_rel && (int)tim_rel < spend.n_modell

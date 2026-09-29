@@ -248,6 +248,9 @@ typedef struct {
     uint8_t  mesh_archiv, mesh_spender;
     uint16_t rot_vorn[3], rot_hinten[3];   /* Grund-Drehung des Spendergriffs            */
     int16_t  aus_archiv, aus_spender;      /* Ausschlag rot x beim Oeffnen               */
+    uint8_t  spender_eigen;                /* Runde 33: Spender-MD1/TIM aus dem Port-Archiv
+                                            * re15_tuer_eigen[spender_eigen-1] (Basis = spender),
+                                            * 0 = aus der RE2-Datei DOORxx.DO2 (Runde 31)   */
 } re15_griff_tausch_t;
 
 extern re15_door_seq_anfrage_t g_door_seq_anfrage;

@@ -8,8 +8,8 @@
    "modell": 35428,
    "sektor": 10,
    "datei": 55908,
-   "fnv": 2287354284,
-   "sha1": "ec77da3e7d6a3174a47606c7d2b2869e03e0bd05",
+   "fnv": 2438304602,
+   "sha1": "ec136cfe39962dd48eeb10f366e49c02212f7cf6",
    "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
    "tim_off": 22596,
    "rezept": "Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1)",
@@ -55,15 +55,26 @@
     "gekappt": 0,
     "c_blatt": 73,
     "korn": 0.5,
-    "korn_std": 0.0757
+    "korn_std": 0.0757,
+    "griff_gemalt": [
+     72.0,
+     79.5,
+     80.0
+    ],
+    "griff_texel_mittel_vorher": 52.2,
+    "griff_kontrast": 2.423,
+    "griff_texel_mittel_nachher": 135.6,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "griff_ausschnitte": 18
    },
    "palette": {
-    "farben_geschuetzt": 16,
-    "farben_blatt": 98,
+    "farben_geschuetzt": 0,
+    "farben_blatt": 110,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 115
+    "palette_belegt": 111
    }
   },
   {
@@ -78,9 +89,9 @@
    "sha1": "3c2a1ce50cd1ac63a9279d37529171e24bbd9e28",
    "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
    "tim_off": 27364,
-   "rezept": "Lueftungsgitter weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
+   "rezept": "Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
    "ton_familie": "eigen DOOR1D (Blech-Doppeltuer, V2/V3)",
-   "griff": "Druecker flach (DOOR1D Mesh 1)",
+   "griff": "Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker",
    "protokoll": {
     "auswahl": [
      "S045_ROOM10D0_c08_entz.png",
@@ -107,7 +118,13 @@
     "gekappt": 0,
     "c_blatt": 73,
     "korn": 0.5,
-    "korn_std": 0.0757
+    "korn_std": 0.0757,
+    "griff_gemalt_g4": [
+     96.0,
+     101.0,
+     100.0
+    ],
+    "griff_ausschnitte": 5
    },
    "palette": {
     "farben_geschuetzt": 8,

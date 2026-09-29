@@ -61,7 +61,11 @@ Folge: **jede Blatt-Textur passt auf jedes dieser Archive**; die Griffe lesen nu
 mit Null-/Fernrechteck - ROOM2080 -> 2080 DOOR32 (Rechteck 20000,20000,1,1), ROOM2140 -> 2140 DOOR34 (0,0,1,1),
 ROOM4100 -> 4040 DOOR20 und DOOR36 (25000,25000). **Keine einzige begehbare RE2-Seite (Rechteck am Boden) ist
 ohne Tuerobjekt.** Was RE2 bei einem Uebergang ohne Tuer zeigt, ist also Blende + Ton eines objektlosen Archivs.
-Leiter/Luke/Klappe (16/28/1E/33/35) sind Objekte und passen nur, wo eine Leiter/Luke/Klappe gemalt ist.
+Leiter/Luke/Klappe (16/28/1E/33/35) sind Objekte und passen nur, wo eine Leiter/Luke/Klappe gemalt ist:
+RE2 animiert einen RUNDEN Schacht mit Sprosse mit DOOR16 V5 (ROOM21A0 c3 -> ROOM3020, Runde 31 3.1) - deshalb
+folgen die Schachtseiten S038/S095/S099/S173 ihrer Leiter (G6/G6b); DOOR28 ist die eckige Riffelblech-Bodenluke
+mit Kamerafahrt (RE2 3050/3070, 4010/4030/4040) und kommt in RE1.5 nicht gemalt vor; 35 V7 ("nur Rahmen",
+RE2 60A0 -> 6090, Rechteck 2400x1600) ist ein Kriechgang-Rahmen, keiner der G12-Uebergaenge zeigt einen.
 -> G12 (4 Tueren): objektloses RE2-Archiv, unveraendert (kein Port-Archiv). Welches der fuenf (Ton 20: 1,84 s;
 21: 4,68 s; 32: 4,43 s; 34: 4,51 s; 36: zwei Se_on Bild 80/140 je 0,96 s) - Stufe 2 nach Huellkurve/Einsatz, hier
 NICHT geraten.
@@ -92,7 +96,7 @@ Quelle: `re15_port/tools/tueren/tuer_rest_plan.py` -> `analysis/befunde_runde33/
 | G2 Fabrik-Stahltuer 2 Felder + Stange | 6 (T094 T098 T103 T105 T106 T107) | P06F | DOOR06, F3, Buegel-/Stangengriff | DOOR08 ohne Nieten/Rost, Randnut + gerahmte Felder, hellgrau |
 | G2b dito ungleiche Felder | 1 (T096) | P06U | DOOR06 | DOOR08, Felder oben hoch / unten quadratisch |
 | G3 DOOR23-Doppeltuer | 4 (T071 T076 T081 T082) | P1B3 | DOOR1B beide Fluegel, F5 | DOOR23-Blatt; Riegelstange per Griff-Tausch (Spender DOOR23) |
-| G4 glatte Stahl-Doppeltuer, 2 Druecker | 2 (T026 T054) | P1DG | DOOR1D V2/V3, eigener Blechton, Druecker flach | DOOR1D ohne Lueftungsgitter, graugruen |
+| G4 glatte Stahl-Doppeltuer, 2 Druecker | 2 (T026 T054) | P1DG | DOOR1D V2/V3, eigener Blechton; Druecker WAAGERECHT per Griff-Tausch DOOR07 (silbern aus P07G) | DOOR1D ohne Lueftungsgitter/Griffkasten, grau |
 | G4b Stahlrahmen-Doppeltuer mit Feldern | 2 (T014 T045) | P1DK | DOOR1D V2/V3 | Felder nach DOOR1A ohne Glas |
 | G5 Holz-Doppeltuer Kassetten + Messingstangen | 1 (T035) | P04B | DOOR04 V2, F2 Holz | DOOR04 blau -> braunes Holz |
 | G5b helle Holz-Doppeltuer Drahtglas | 1 (T025) | P0CD | DOOR0C, Holzton 0C | helles Holz, hohe schmale Drahtglasfenster, Panikstange |
@@ -138,8 +142,8 @@ Quelle: `re15_port/tools/tueren/tuer_rest_plan.py` -> `analysis/befunde_runde33/
 | G3 | T076 | ROOM2030 <-> ROOM2070 | S141 V3; S156 V2 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
 | G3 | T081 | ROOM2070 | S157 V3 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
 | G3 | T082 | ROOM2070 | S158 V3 | P1B3 | DOOR1B: F5 (1B 30, Doppeltuer); Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt) | DOOR23 | 2 |
-| G4 | T026 | ROOM10D0 <-> ROOM1100 | S045 V2; S049 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach (DOOR1D Mesh 1) | DOOR1D | 1 |
-| G4 | T054 | ROOM11E0 <-> ROOM11F0 | S100 V2; S104 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach (DOOR1D Mesh 1) | DOOR1D | 1 |
+| G4 | T026 | ROOM10D0 <-> ROOM1100 | S045 V2; S049 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker | DOOR1D | 1 |
+| G4 | T054 | ROOM11E0 <-> ROOM11F0 | S100 V2; S104 V3 | P1DG | DOOR1D: eigen DOOR1D (Blech-Doppeltuer, V2/V3); Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker | DOOR1D | 1 |
 | G4b | T014 | ROOM1050 <-> ROOM1090 | S022 V2; S030 V3 | P1DK | DOOR1D: eigen DOOR1D; Druecker flach (DOOR1D Mesh 1) | DOOR1A | 2 |
 | G4b | T045 | ROOM1180 <-> ROOM11B0 <-> ROOM1230 | S080 V2; S092 V3; S093 V3; S121 V2 | P1DK | DOOR1D: eigen DOOR1D; Druecker flach (DOOR1D Mesh 1) | DOOR1A | 2 |
 | G5 | T035 | ROOM1130 <-> ROOM1140 | S059 V2; S063 V2 | P04B | DOOR04: F2 (01 04 09 11, Holz); Stangengriff lang Messing (DOOR04 Mesh 1, gemalt gleich) | DOOR04 | 2 |
@@ -194,12 +198,97 @@ Quelle: `re15_port/tools/tueren/tuer_rest_plan.py` -> `analysis/befunde_runde33/
 
 ## 4. Werkzeug-Entscheidung
 
-(folgt in Abschnitt 5 nach dem Bau)
+### 4.1 Generator `re15_port/tools/tueren/tuer_archiv_bauen.py`
 
-## 5. Stand
+- Eingabe: `plan.json` (Archiv-Spezifikation: Basis, Blatt-Quelle, Rezept) + Basis-Archiv
+  `info/re2leon/COMMON/DOOR/DOORxx.DO2` (do2_format.Do2/Md1/Tim).
+- Ausgabe je Kennung: `re15_port/shared_assets/RE15DOOR/<Kennung>.DO2` im RE2-Aufbau
+  (Tonteil | Auffuellung auf Sektor | Modellteil = +0 MD1-Versatz, +4 TIM-Versatz, SCD, MD1, TIM).
+  **Tonteil, Kopf, SCD und MD1 sind bytegleich dem Basis-Archiv** (Generator bricht sonst ab:
+  `datei[:tim] == basis[:tim]`), die TIM hat dieselbe Laenge (0x8220 B) -> gleiche Groessen wie die
+  Basiszeile der RE2-Tabelle @0x8009a520.
+- TIM-Bau: Blatt-Texel (Mesh 0, v 0..217) aus dem Rezept; Texel, die ein Griff-/Anbau-Mesh liest
+  (UV-Maske aus dem MD1), bleiben bytegleich (Rueckprobe); Texel, die kein Dreieck liest, belegen keinen
+  Paletteplatz. 5 Bit GERUNDET (Runde 32: das Abschneiden kostete 8,6 %), Index 0 = 0x0000 durchsichtig
+  (GPU zeichnet 0x0000 nie), deckendes Schwarz 0x8000 wie RE2. Median-Cut nur, wenn > 255 Farben
+  (Pilot: nie noetig, 115/57/29 Farben).
+- Helligkeit: Texel = gemalt * 128 / c, c = 73 (NCCT der Blattflaeche, `tor_sequenz_bauen.ncct_eckfarbe`
+  mit BK 68 @0x800142e8, L @0x8009a470, LCM 1600 @0x8009a490, RGBC 0x808080 @0x80014b58; Generator prueft
+  73 fuer V0 und V1). Ziel "gezeigt = gemalt" wie beim Tor (Runde 32 3.2). Flag 0x1000 ist nicht
+  gesetzt - die Skripte bleiben unveraendert, gekappt wurde im Pilot kein Texel.
+- Zusaetzlich: `gen/re15_tuer_eigen.inc` = Tabelle der Port-Archive (Kennung, Basis, Tonteil, Modellteil,
+  Sektor, Dateigroesse, FNV-1a) + Seitenzeilen (Schluessel Raum + Flaeche + Band wie Runde 31, Spalte
+  `eigen` = Index+1); der Generator bricht ab, wenn eine Flaeche schon in der RE2-Tabelle steht.
+  `analysis/befunde_runde33/tueren_rest/archive.json` = Protokoll (gemalte Farbe, Texel-Mittel,
+  Palette, benutzte Ausschnitte).
+
+### 4.2 Datei statt eingebacken - Begruendung
+
+| | Datei `shared_assets/RE15DOOR` | eingebacken wie das Tor |
+|---|---|---|
+| Groesse | 25 geplante Archive x 53..81 KB ~ 1,6 MB Binaer | ~100 000 Zeilen .inc (Tor: 39 KB = 2 513 Zeilen), jede Engine-Uebersetzung |
+| PSX | nichts (kein Laeufer, Anfrage verfaellt, Tabelle nicht gelinkt) | nichts (door_seq_archiv.c nur PC-referenziert) |
+| Laufzeitweg | derselbe wie RE2/DOOR (`re2_archiv_lesen`, Aufteilung nach Groessen) | eigener Zweig |
+| Paket | Kopie + Gate (make_package.sh: vorhanden, nicht leer, `cmp` gleich Quellbaum), Android stageAssets | nichts |
+| Pruefung | Groesse + FNV-1a gegen gen/re15_tuer_eigen.inc beim Laden | Compiler |
+
+-> **Datei**. Das Tor bleibt eingebacken (eigenes MD1, eigene Skripte - kein RE2-Archiv mit anderer Textur).
+
+### 4.3 Laufzeit
+
+- `re15_tuer_zeile_t.eigen` / `re15_door_seq_anfrage_t.eigen`: 0 = RE2-Archiv `DOORxx.DO2` (re2_nr),
+  1..N = Port-Archiv `re15_tuer_eigen[eigen-1]`; `re2_nr` bleibt die Basis-Nummer (= var 15, Payload+12,
+  @0x80013e90/98) - die Skripte sehen genau ihr Archiv. Die Zeilen der Runde 31 bleiben unveraendert
+  (Feld am Ende, Initialisierung 0) - `gen/tuer_zuordnung.inc` wird nicht angefasst.
+- `door_seq_zuordnung.c`: Tabelle = RE2-Zeilen, dahinter die Port-Zeilen (`re15_door_seq_zeilen/zeile`),
+  Nachschlagen ueber beide; `re15_door_seq_eigen(i)`.
+- `door_scene_pc.c re2_archiv_lesen(nr, eigen, ...)`: eigen != 0 liest `RE15DOOR/<Kennung>.DO2` ueber
+  `re15_pc_read_shared` und prueft Groesse + FNV-1a; sonst wie Runde 31.
+- Pruefhaken `RE15_TUER_SEITE` findet die Port-Seiten ueber dieselbe Tabelle (Log "Port-Archiv P07G").
+
+### 4.4 Riegel `re15_port/tests/unit/probes/r33_tueren.cmake`
+
+- `unit_r33_tueren_archive`: je Port-Archiv Datei/Groesse/FNV, Tonteil + Kopf/SCD/MD1 bytegleich dem
+  Basis-Archiv, TIM 8 bit 128x256 mit einer 256er-CLUT (re15_tim_parse), jede benutzte Variante laeuft
+  Bild fuer Bild wie das Basis-Archiv (Pruefsumme ueber 10 Objekte, Se_on-Bilder, Schliesston), keine Notiz.
+- `unit_r33_tueren_zuordnung`: jede Port-Zeile trifft ihren Door_aot_set, findet ihre Wahl; G1-Tuer
+  ROOM1000 -> ROOM1050 stellt im Spielschritt die Anfrage mit P07G.
+- `unit_r31_zuordnung` angepasst: zaehlt nur die 368 RE2-Zeilen; das Beispiel "nicht abgedeckt" ist jetzt
+  ROOM1050 -> ROOM1090 (T014, Stufe 2) statt ROOM1000 -> ROOM1050 (jetzt P07G).
+
+## 5. Ergebnis nach vollstaendigem Plan (Stufe 2)
+
+| | physische Tueren |
+|---|---|
+| Runde 31 (RE2-Archiv gleich) | 83 |
+| Tor ROOM1170 (eigene Sequenz, v0.8.16) | 1 |
+| Port-Archive G1..G11 (Tuermodell + Animation + Ton) | 53 |
+| G12 Durchgang ohne Blatt: RE2-objektloses Archiv (Blende + Ton, KEIN Tuermodell - so zeigt es RE2) | 4 |
+| **mit Tuersequenz** | **141 von 144** |
+| **nicht baubar: G14 inert** (sce 0, im Spiel nie begehbar - es gibt nichts zu durchschreiten) | **3** |
+
+Die drei einseitigen Tueren (T048, T078, T161) sind danach von BEIDEN Seiten animiert (die schon gleiche Seite
+mit dem RE2-Archiv, die andere mit ihrem Port-Archiv).
+
+## 6. Stand
 
 - [x] Plan (dieses Dokument, plan.json)
-- [ ] Generator `tools/tueren/tuer_archiv_bauen.py`
-- [ ] Laufzeit: Kennung Port-Archiv neben RE2-Nummer
-- [ ] Pilot G1 (12 Tueren) + G4 T054 + G6 T053
-- [ ] Riegel `probes/r33_tueren.cmake`, RE15_MIN_TESTS
+- [x] Generator `tools/tueren/tuer_archiv_bauen.py` (+ `tuer_rest_bogen.py`, `tuer_rest_helligkeit.py`)
+- [x] Laufzeit: Kennung Port-Archiv neben RE2-Nummer (`eigen`), Griff-Tausch mit Spender aus Port-Archiv
+- [x] Pilot G1 (12 Tueren, vollstaendig) + G4 (T054, mit T026) + G6 (T053, mit T023/T052) = 17 Tueren,
+      36 Seiten, Kontaktbogen angesehen, Helligkeit F/P 1,01 (tueren_rest_pilot.md)
+- [x] Riegel `probes/r33_tueren.cmake` (2 Tests), RE15_MIN_TESTS 416 -> 418
+
+## 7. Offen (fuer Stufe 2)
+
+1. G12: welches objektlose RE2-Archiv (20/21/32/34/36) - nach Huellkurve/Se_on-Zeitpunkten der Tonteile
+   (`re2_tuer_ton.py`) und dem RE2-Einsatz (ROOM4100 20/36, ROOM2080 32, ROOM2140 34) entscheiden, nicht raten.
+   Der Laeufer braucht dafuer keinen Zeichner (keine Objekte), nur Blende + Ton - pruefen, dass 20/21/32/34/36
+   ohne Door_model_set durchlaufen (Simulator).
+2. T019 (ROOM1090 Band 6): ob die Flaeche im Spiel erreichbar ist (Band 6 = Dach), vor dem Bau messen.
+3. G3: 1B V2/V3 - Griff-Objekte beider Fluegel per Simulator, sonst Riegelstange nur am gehenden Fluegel.
+4. G2/G11: Rezepte mit gemalten Merkmalen (Randnut, Felder, Piktogramme, Strahlenzeichen, Warnstreifen) -
+   Zeichnung aus der RE2-Vorlage bearbeitet (Felder aus DOOR08/DOOR1A verschieben/skalieren), Farbe aus den
+   RE1.5-Ausschnitten wie im Pilot.
+5. Helligkeit: helle Tueren (G2 hellgrau, G11e beige) - pruefen, ob Texel = gemalt * 128/73 ueber 255 liegt;
+   dann Flag 0x1000 (BK 136, RE2-Beleg DOOR2B @Datei 0x5022) = Skriptaenderung, eigener Riegel.

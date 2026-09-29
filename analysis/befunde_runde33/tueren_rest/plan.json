@@ -38,9 +38,13 @@
    "basis": "DOOR1D",
    "blatt": "DOOR1D",
    "ton": "eigen DOOR1D (Blech-Doppeltuer, V2/V3)",
-   "rezept": "Lueftungsgitter weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
-   "griff": "Druecker flach (DOOR1D Mesh 1)",
-   "stufe": 1
+   "rezept": "Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
+   "griff": "Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt waagerechte Druecker",
+   "stufe": 1,
+   "tausch": {
+    "spender": "DOOR07",
+    "spender_eigen": "P07G"
+   }
   },
   "P1DK": {
    "basis": "DOOR1D",

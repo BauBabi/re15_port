@@ -13,7 +13,8 @@
  *             und liefert Bild fuer Bild dieselben Objektlagen wie das Basis-Archiv (Pruefsumme wie
  *             probe_r31_tueren "maschine"), dieselben Se_on-Bilder und denselben Schliesston-Merker.
  *   zuordnung Jede Port-Zeile trifft einen echten Door_aot_set ihres RDT (Flaeche/Band wie
- *             op_door_aot_set) und findet ihre Wahl (Basis, Variante, eigen); keine Flaeche doppelt
+ *             op_door_aot_set) und findet ihre Wahl (Basis, Variante, eigen, Griff-Tausch mit Spender aus
+ *             einem Port-Archiv, z. B. P1DG <- P07G); keine Flaeche doppelt
  *             mit anderer Wahl; im echten Spielschritt stellt eine G1-Tuer ROOM1000 -> ROOM1050 die
  *             Anfrage mit dem Port-Archiv P07G, der Raumwechsel steht danach noch an.
  */
@@ -319,8 +320,15 @@ static void teil_zuordnung(void)
         re15_door_seq_anfrage_t q;
         int r = re15_door_seq_zuordnen_flaeche(t->raum, t->form, t->x, t->z, t->hw, t->hh, t->qx, t->qz, t->band, &q);
         PRUEF(r == RE15_DOOR_ARCHIV_RE2 && q.eigen == t->eigen && q.re2_nr == t->re2_nr && q.tuer_nr == t->re2_nr
-              && q.variante == t->variante && q.spender == RE15_DOOR_KEIN_SPENDER,
+              && q.variante == t->variante && q.spender == t->spender,
               "Zeile %d S%03u: findet ihre Wahl nicht (eigen %d/%d)", i, t->seite, q.eigen, t->eigen);
+        if (t->spender != RE15_DOOR_KEIN_SPENDER) {
+            /* Griff-Tausch eines Port-Archivs: Satz vorhanden, Spender-Archiv (Port oder RE2) mit Basis = Spender */
+            const re15_griff_tausch_t *g = re15_door_seq_griff_tausch(t->re2_nr, t->spender);
+            const re15_tuer_eigen_t *se = g ? re15_door_seq_eigen(g->spender_eigen) : NULL;
+            PRUEF(g && (g->spender_eigen == 0 || (se && se->basis == t->spender)),
+                  "S%03u: Griff-Tausch DOOR%02X <- %02X fehlt/Spender-Archiv falsch", t->seite, t->re2_nr, t->spender);
+        }
         int neu = 1, neu_t = 1;
         for (int k = 0; k < i; k++) {
             const re15_tuer_zeile_t *u = re15_door_seq_zeile(k);
