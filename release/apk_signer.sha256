@@ -1,0 +1,11 @@
+# Erwarteter Signierschluessel der Android-APK: SHA-256 des Signer-Zertifikats, wie ihn
+#   java -jar <build-tools>/lib/apksigner.jar verify --print-certs <apk>
+# als "Signer #1 certificate SHA-256 digest" ausgibt. release/apk_pruefen.sh (build_android.sh und
+# make_package.sh) bricht ab, wenn die APK einen anderen Signer hat (Runde 34a, Nachbesserung R2,
+# Gegenpruefung B4): eine anders signierte APK installiert sich nicht als Update ueber die vorige, und
+# wer deshalb deinstalliert, verliert Android/data/de.re15.port/files (Spielstaende).
+# Stand v0.8.19 (Referenz-APK des Archivs, sha256 514bebd5...): der Android-Debug-Schluessel der
+# Bau-Maschine (~/.android/debug.keystore, build.gradle signingConfigs.release ohne RE15_KEYSTORE).
+# Neuer Schluessel mit Absicht (RE15_KEYSTORE): Wert hier ersetzen - oder fuer einen Lauf
+# RE15_APK_SIGNER_SHA256=<digest> setzen.
+432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18

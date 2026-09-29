@@ -206,9 +206,14 @@ android {
         // Standard: der Android-Debug-Schluessel (~/.android/debug.keystore) — fuer Sideload
         // ausreichend. Ein eigener Schluessel per RE15_KEYSTORE/RE15_KEYSTORE_PASS/
         // RE15_KEY_ALIAS/RE15_KEY_PASS (Umgebung) ueberschreibt das.
+        // ⛔ Gesetzt, aber die Datei fehlt -> ABBRUCH (Runde 34a, Nachbesserung R2, Gegenpruefung B4):
+        // bis dahin wurde dann still mit dem Debug-Schluessel signiert. Welcher Signer herauskommen
+        // muss, haelt release/apk_signer.sha256 fest (release/apk_pruefen.sh vergleicht).
         release {
             def ks = System.getenv("RE15_KEYSTORE")
-            if (ks && new File(ks).exists()) {
+            if (ks && !new File(ks).exists())
+                throw new GradleException("RE15_KEYSTORE=${ks} existiert nicht - kein stiller Rueckfall auf den Debug-Schluessel")
+            if (ks) {
                 storeFile file(ks)
                 storePassword System.getenv("RE15_KEYSTORE_PASS") ?: ""
                 keyAlias System.getenv("RE15_KEY_ALIAS") ?: "re15"

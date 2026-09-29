@@ -50,7 +50,11 @@
 #                                     C:/Program Files, sonst das JDK im PATH)
 #   RE15_KEYSTORE / RE15_KEYSTORE_PASS / RE15_KEY_ALIAS / RE15_KEY_PASS
 #                                     eigener Signierschluessel; ohne ihn wird mit dem
-#                                     Android-Debug-Schluessel signiert (reicht fuer Sideload)
+#                                     Android-Debug-Schluessel signiert (reicht fuer Sideload).
+#                                     Gesetzt, aber die Datei fehlt -> Gradle bricht ab
+#                                     (Nachbesserung R2; vorher still der Debug-Schluessel)
+#   RE15_APK_SIGNER_SHA256            erwarteter Signer (SHA-256 des Zertifikats) statt
+#                                     release/apk_signer.sha256 - fuer einen Lauf mit neuem Schluessel
 #   RE15_PYTHON / RE15_PYTHON_NUR_PATH
 #                                     Interpreter fuer die volle Asset-Pruefung, siehe
 #                                     release/python_finden.sh (nie der WindowsApps-Alias)
@@ -61,8 +65,13 @@
 #     und je eine Datei aus shared_assets/PSX, extracted_fx, RE2 und synchro
 #   * aapt dump badging: package 'de.re15.port', versionName = Version, beide ABIs
 #     (aapt fehlt -> Abbruch; bis zur Nachbesserung R1 still uebersprungen)
+#   * zipalign -c -P 16 4: Ausrichtung (Nachbesserung R2) - Android 11+ installiert sonst nicht
 #   * apksigner verify: gueltige v2/v3-Signatur (seit Nachbesserung R1 - vorher gingen
-#     unsignierte und nach dem Signieren veraenderte APKs durch)
+#     unsignierte und nach dem Signieren veraenderte APKs durch), genau ein Signer, und zwar der aus
+#     release/apk_signer.sha256 (Nachbesserung R2 - sonst kein Update ueber die vorige Version)
+#   * alle Schritte lesen EINE private Kopie der APK (Nachbesserung R2): unter dem Auslieferungsnamen
+#     landet genau diese gepruefte Kopie, und wurde die Datei waehrend der Pruefung getauscht, bricht
+#     die Kette ab
 #   * VOLLE Asset-Pruefung (seit Runde 34a, release/apk_asset_gate.py):
 #       - erst "--selbsttest": das Gate muss gute Mini-APKs annehmen und JEDE Faelschung
 #         ablehnen (fehlende Datei, gleiche Groesse/anderer Inhalt auch hinter dem 1. MiB und
@@ -74,6 +83,10 @@
 #         nichts sonst, re15_assets.txt stimmt Zeile fuer Zeile (danach entpackt die App auf dem
 #         Geraet), jeder Eintrag ist fuer Android lesbar. Zaehlung je Baum und ausdruecklich
 #         RE2/DOOR, RE15DOOR, TORSE.VBS.
+#       - Tuer-Soll (Nachbesserung R2): der Quellbaum selbst gegen die Engine-Tabellen - jedes
+#         Port-Archiv aus gen/re15_tuer_eigen.inc (30 x Groesse, Aufbau, FNV-1a), jedes RE2-Archiv,
+#         das eine Tuerzeile/ein Griff-Tausch/eine Basis nennt; fehlt eines in Quelle UND APK, bricht
+#         es ab (vorher lief 29/30 gruen durch)
 #     Bis v0.8.19 prueften die Gates davon nur Stichproben - von den 30 Port-Tuerarchiven
 #     (RE15DOOR) keines in der APK.
 # =============================================================================
@@ -156,9 +169,12 @@ if [[ -n "$GATE_ONLY_APK" ]]; then
                                   "kein Lauf mehr mit ungeprueftem Feld)" >&2; exit 2; }
     [[ -f "$GATE_ONLY_APK" ]] || die "--gate-only: APK fehlt: $GATE_ONLY_APK"
     echo "== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) =="
+    trap apk_pruefen_aufraeumen EXIT          # Pruefkopie (~360 MB) auch bei Abbruch weg
     ANDROID_SDK_ROOT="$SDK" apk_werkzeuge_finden
     run_gates "$GATE_ONLY_APK"
-    echo "== ANDROID-GATES-OK (--gate-only): $GATE_ONLY_APK =="
+    echo "== ANDROID-GATES-OK (--gate-only): $GATE_ONLY_APK (geprueft: sha256 crc32 Bytes $APK_GEPRUEFT_KENNUNG) =="
+    apk_pruefen_aufraeumen
+    trap - EXIT
     exit 0
 fi
 
@@ -299,6 +315,7 @@ APK_SRC="$PROJ/app/build/outputs/apk/$APK_SUB"
 # ~360 MB, nicht gitignoriert - ein "git add release/" haette sie ueber GitHubs 100-MB-Grenze
 # vorgemerkt). Zur Diagnose bleibt die Gradle-Ausgabe $APK_SRC liegen.
 aufraeumen_ungeprueft() {
+    apk_pruefen_aufraeumen                    # Pruefkopie aus apk_pruefen.sh (Temp-Ordner)
     if [[ -f "$UNGEPRUEFT" ]]; then
         rm -f "$UNGEPRUEFT"
         echo "   (Gate-Abbruch: $(basename "$UNGEPRUEFT") geloescht; dieselben Bytes liegen weiter unter $APK_SRC)" >&2
@@ -309,10 +326,18 @@ cp -f "$APK_SRC" "$UNGEPRUEFT"
 
 # --- Gates (Funktion run_gates oben) -----------------------------------------
 run_gates "$UNGEPRUEFT"
-mv -f "$UNGEPRUEFT" "$OUT"
+# Ausgeliefert wird die GEPRUEFTE Kopie selbst (Nachbesserung R2, Gegenpruefung B3): apk_pruefen hat
+# jeden Schritt an seiner privaten Kopie gemacht und am Ende verglichen, dass unter $UNGEPRUEFT noch
+# dieselben Bytes liegen. Mit dem mv der Kopie kann auch danach nichts anderes mehr hineinrutschen.
+mv -f "$APK_GEPRUEFT_KOPIE" "$OUT"
+rm -f "$UNGEPRUEFT"
+apk_pruefen_aufraeumen
 trap - EXIT
 
 ( cd "$HERE" && sha256sum "${NAME}.apk" > SHA256SUMS_android.txt )
+sha_out="$(cut -d' ' -f1 "$HERE/SHA256SUMS_android.txt")"
+[[ "$sha_out" == "${APK_GEPRUEFT_KENNUNG%% *}" ]] || { rm -f "$OUT";
+    die "ausgelieferte APK ($sha_out) ist nicht die gepruefte (${APK_GEPRUEFT_KENNUNG%% *}) - entfernt"; }
 echo
 ls -la "$OUT"
 cat "$HERE/SHA256SUMS_android.txt"

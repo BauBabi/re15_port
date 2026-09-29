@@ -333,3 +333,88 @@ Stand: angelegt, noch nichts geprueft.
 | N1 (ausserhalb) | Code gelesen: android_glue.c:210 nur Groesse; dazu STAERKER als gemeldet: der Marker (:161-181) traegt FNV-1a64 der Liste - bleibt die Liste gleich (gleiche Groessen, gleiche Pfade), wird gar nichts geprueft. SDL_rwops.c:537-557 (SDL2 2.28.5 in `_deps`): relativer Pfad -> zuerst `<intern>/<pfad>` per fopen, erst dann Assets - bestaetigt; `git log`: P07G.DO2 b22088b5/1aaa98c7/d094cea1 je 55908 B (alle vor v0.8.19, v0.8.18 hatte noch kein RE15DOOR -> ausgeliefert wurde der Fall noch nicht) | bestaetigt (Code) |
 | echtlauf B1 (niedrig) | `type -a python3`: zuerst `.../WindowsApps/python3`; Kopf `#!/usr/bin/env python3`, Kopf-Doku zeigt Direktaufrufe | bestaetigt (nicht ausgefuehrt) |
 | echtlauf B2 (niedrig) | make_package.sh:16-23 nennt weder APK noch SDK/JDK/Python | bestaetigt |
+
+## R2-2. Aenderungen (je Befund: Ursache -> Aenderung)
+
+### B1 (mittel) Teil-Abschwaechungen - Selbsttest 72 -> 140 Faelle + systematische Teil-Mutanten-Probe
+- **Ursache:** die Faelle trafen jede Pruefung nur von EINER Seite (Manifest nur +1/9999, EOCD nur Muell
+  dahinter, Laenge nie ohne CRC-Fehler, DD-Bit nie, alle Nicht-Assets Stored); die Probe der Runde 1
+  erzeugte nur Ganz-Abschaltungen (befund/raise -> pass).
+- **Aenderung Gate:** M5 eigene Meldung fuer zu langen Kommentar (`rest < 0`); M14: das Data-Descriptor-Bit
+  (LFH ODER CD) wird abgelehnt - AGP setzt es nie (Referenz 0 von 3616 in LFH und CD, gemessen), der
+  LFH/CD-Vergleich ist damit unbedingt und die Frage "aus welchem Kopf" entfaellt.
+- **Aenderung Selbsttest:** je Teil-Mutant der Gegenpruefung ein Fall, der NUR die geschwaechte Seite trifft
+  (M1 Manifest 1 B kleiner; M9 Laenge +100 bei richtiger CRC fuer classes.dex/Deflate UND libmain.so/Stored;
+  M5 Kommentar 1 B zu lang; M14 DD nur CD/nur LFH/beide; M16 Deflate-dex und Stored-.so gekippt - die Fixture
+  schreibt Manifest/dex jetzt wie AGP komprimiert). Grenzfaelle: genau 1 B hinter dem EOCD, Kommentar genau
+  1 B zu lang, Manifest genau an bzw. 1 B ueber der Grenze (Pruefhaken `RE15_GATE_MANIFEST_MAX`, der die
+  64 MiB nur SENKEN kann), EOCD disk/cd_disk/n_hier, ZIP64-Locator bei normalen Zaehlern, CD endet mitten im
+  Kopf. Dazu die Faelle der uebrigen Befunde (unten). Werkzeug `mutanten_teil.py` erzeugt aus dem Quelltext
+  per ast JEDE Teil-Abschwaechung (Vergleichsoperator in eine Richtung / Grenze um eins, je ein Operand
+  eines and/or weg, je ein Paar eines Tupelvergleichs weg, not weg, Zahl +-1) plus A/B/C der Runde 1 und
+  35 Hand-Mutanten (`hand_r2.py`: die der Runde 1 und M14/M16 in der neuen Form, Verschluesselungsbit nur
+  eine Seite, Paket nur Groesse, FNV nur 1. Block, Griff-Rueckfall/fuer_eigen, Basis, Wurzel, `\d`, Praefix).
+  Ergebnis R2-3.
+
+### B2 (mittel) Tuer-Soll aus den Engine-Tabellen - Gate, make_package, Selbsttest
+- **Ursache (bestaetigt):** das Gate verglich nur APK gegen Quellbaum; die Soll-Liste (`re15_tuer_eigen[30]`
+  mit Groesse + FNV-1a) nutzte niemand ausser der Engine und dem ctest-Probe `unit_r33_tueren_archive`, den
+  die Release-Kette nicht faehrt.
+- **Aenderung:** `tuer_soll()`/`tueren_pruefen()` lesen die Tabellen, nach denen `door_scene_pc.c` laedt
+  (`re2_archiv_lesen` :219-251): Spalten aus den typedefs in `include/re15_door_seq.h` (C-Initialisierer-Leser
+  mit C-Regeln: fehlende Felder am Zeilenende = 0 - die Runde-31-Zeilen lassen `eigen` bzw. `spender_eigen`
+  weg; unbekannte Form -> rc 2). RE15DOOR: jede Zeile von `re15_tuer_eigen` als `<kennung>.DO2`, Groesse =
+  datei, Sektor*0x800+Modellteil = Groesse, Tonteil <= Sektor*0x800 (dieselben Bedingungen wie :242-243),
+  FNV-1a = Tabelle; RE2/DOOR: jedes Archiv, das eine Tuerzeile mit eigen=0 (:322), ein Griff-Tausch mit
+  spender_eigen=0 (:347-350, erster Treffer, bei eigen=0 Rueckfall in die Port-Tabelle wie
+  door_seq_zuordnung.c:165-171) oder ein Port-Archiv als Basis nennt, mit Groesse/Aufbau aus
+  `gen/re2_tuer_tabelle.inc` (@0x8009a520); keine Datei ausserhalb dieser Listen; Tabellenfehler (Zeile nennt
+  Port-Archiv > N, Basis passt nicht zur Zeile - die Engine gibt dann -1 -, RE2-Nummer ausserhalb) als Befund.
+  Echter Baum: **RE15DOOR 30/30, RE2/DOOR 27/27** (25 aus Tuerzeilen/Spendern + DOOR0C/DOOR14 nur als Basis
+  von P0CD/P14A - gemessen mit `scratchpad/tuer_mengen.py`, deckt sich mit dem Ordner exakt).
+  make_package.sh prueft den Quellbaum damit VOR den Kopierminuten (`--quellbaum`) und jedes Paket danach
+  (`--paket`, siehe B6); das 0-Byte-Archiv faengt jetzt auch die APK-Seite.
+
+### B3 (niedrig) Pruefkopie statt Pfad
+- **Aenderung apk_pruefen.sh:** Schritt 0 kopiert die APK EINMAL in einen privaten Temp-Ordner (Kennung
+  sha256/CRC32/Groesse im selben Lesedurchgang); aapt, zipalign, apksigner, Selbsttest-Gate und Gate lesen NUR
+  die Kopie; am Ende muss die Kopie unveraendert sein UND der Pfad dieselbe Kennung tragen, sonst Abbruch.
+  Ergebnis `APK_GEPRUEFT_KENNUNG`/`APK_GEPRUEFT_KOPIE`. build_android.sh legt genau die gepruefte Kopie per mv
+  unter dem Auslieferungsnamen ab (und vergleicht die sha256 der SUMS-Zeile); make_package.sh nimmt die Kennung
+  der Kopie (nicht mehr die vom Pfad nach der Pruefung). Hin-und-zurueck-Tausch (ABA) aendert nichts: geprueft
+  wurde die Kopie, und am Ende liegen dieselben Bytes unter dem Pfad. EXIT-Fallen raeumen die Kopie ab.
+
+### B4 (niedrig) Signer festgehalten
+- `release/apk_signer.sha256` (432bc749..., Referenz v0.8.19 = Debug-Schluessel der Bau-Maschine),
+  Uebersteuerung `RE15_APK_SIGNER_SHA256`; apk_pruefen verlangt genau einen Signer mit diesem Zertifikat.
+  build.gradle: `RE15_KEYSTORE` gesetzt, Datei fehlt -> GradleException statt stillem Debug-Schluessel.
+
+### B5 (niedrig) Ausrichtung
+- apk_pruefen Schritt 3: `zipalign -c -P 16 4` aus build-tools 35.0.0 (Referenz rc 0); bei Fehler die BAD-Zeilen.
+
+### B6 (niedrig) dritte Liste + Wurzel
+- Gate `--paket <ordner>`: der fertige PC-Paketordner gegen DIESELBE Liste wie die APK (jede Datei der Baeume
+  mit Groesse + sha256, unter shared_assets/ und synchro/ nichts sonst), aus make_package.sh check_tree fuer
+  beide Pakete. `wurzel_pruefen`: unter re15_port/shared_assets nur die Baeume der Liste (der
+  RE15NEU-Schatten der Gegenpruefung waere jetzt rc 1).
+
+### B7 (niedrig) python_finden.sh
+- Langname per `cygpath -m -l` gegen */windowsapps/* (faengt 8.3); ein Link, dessen Ziel sich ohne readlink
+  nicht pruefen laesst, wird verworfen statt gestartet; Link mit leerem Ziel ebenso. Kopf korrigiert.
+
+### B8 (niedrig) libziparchive-Naehe
+- Datei muss mit einem Local Header beginnen (rc 2 sonst); KOPF_RE nur `[0-9]`.
+
+### B9 (niedrig) check_binary_fresh
+- die drei Vorbedingungen brechen weiter ab (fail closed), jetzt mit `ABBRUCH: Frische-Gate (...)`-Meldung.
+
+### echtlauf B1/B2 (niedrig)
+- apk_asset_gate.py und zip_exec_bit.py: Kopf laeuft beim Direktaufruf als Bash (`#!/bin/bash` + `''':'`-
+  Zeichenkette fuer Python) und startet den Interpreter aus python_finden.sh; `release/.gitattributes` haelt
+  release/*.py auf LF (core.autocrlf=true zog zip_exec_bit.py im Arbeitsbaum schon auf CRLF - gemessen
+  `git ls-files --eol`: `i/lf w/crlf`). `__doc__` explizit (zip_exec_bit.py druckt ihn als Hilfe).
+- make_package.sh-Kopf nennt APK-Eingabe und alle Voraussetzungen; `--help` druckt den ganzen Kopf.
+
+### N1 (mittel, ausserhalb) - NICHT geaendert
+- Liegt in `re15_port/platform/android/jni/android_glue.c` (Geraete-Code) - ausserhalb meines Dateibereichs
+  (nur release/*, build.gradle). Befund bestaetigt und verschaerft (R2-1); Vorschlag in R2-5.

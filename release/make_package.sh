@@ -18,9 +18,22 @@
 #   release/make_package.sh --version v0.1.2 --only linux    # nur Linux/Deck
 #   release/make_package.sh --version v0.1.2 --no-zip        # nur Ordner bauen
 #
-# Eingaben (Binaries, werden NICHT hier gebaut):
-#   Linux : release/linux_out/re15_pc    <- release/build_linux_deck.sh
-#   Windows: release/win_out/re15_pc.exe <- mingw64-Build, siehe RELEASE_NOTES
+# Eingaben (werden NICHT hier gebaut):
+#   Linux  : release/linux_out/re15_pc    <- release/build_linux_deck.sh
+#   Windows: release/win_out/re15_pc.exe  <- mingw64-Build, siehe RELEASE_NOTES
+#   Android: release/re15_port_<version>_android.apk (optional) <- release/build_android.sh
+#            liegt sie da, wird sie (nur beim Zippen) mit DERSELBEN Kette wie im Android-Bau
+#            geprueft (release/apk_pruefen.sh) und in den Split-Satz gebracht; fehlt sie, gibt es
+#            keinen Android-Satz (Hinweis beim Zippen).
+#
+# Voraussetzungen (Runde 34a, Nachbesserung R2 - Gegenpruefung echtlauf B2; fehlt etwas, bricht
+# das Skript mit Meldung ab, statt eine Pruefung auszulassen):
+#   * Python >= 3.8, IMMER (release/python_finden.sh, nie der WindowsApps-Alias): Quellbaum- und
+#     Paketpruefung (release/apk_asset_gate.py --quellbaum / --paket), verify_split, zip_exec_bit.py
+#   * zip (auch aus /c/msys64/usr/bin), strings/objdump fuer die Binary-Gates (sonst uebersprungen)
+#   * NUR wenn die APK da ist und gezippt wird: Android-SDK mit build-tools 35.0.0 (aapt, zipalign,
+#     lib/apksigner.jar), ein JDK (JAVA_HOME oder Adoptium 17), release/apk_signer.sha256
+#     (erwarteter Signer) - siehe release/apk_pruefen.sh
 # =============================================================================
 set -euo pipefail
 
@@ -43,7 +56,7 @@ while [[ $# -gt 0 ]]; do
         --win-bin)   WIN_BIN="$2";   shift 2 ;;
         --no-zip)    DO_ZIP=0; shift ;;
         --zip-only)  ZIP_ONLY=1; shift ;;
-        -h|--help)   sed -n '2,25p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        -h|--help)   awk 'NR == 1 { next } /^set -euo pipefail/ { exit } { print }' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
@@ -131,11 +144,15 @@ check_binary_fresh() {   # $1 = Binary, $2 = Label, [$3 ... = git-Pfade des Code
     shift 2
     local -a pfade=("$@")
     (( ${#pfade[@]} )) || pfade=(re15_port/engine re15_port/include re15_port/platform ':(exclude)re15_port/platform/android')
-    command -v git >/dev/null 2>&1 || return
-    src_t="$(git -C "$HERE/.." log -1 --format=%ct -- "${pfade[@]}" 2>/dev/null)"
-    [[ -n "$src_t" ]] || return
-    bin_t="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin" 2>/dev/null)"
-    [[ -n "$bin_t" ]] || return
+    # Nachbesserung R2 (Gegenpruefung B9): die drei Vorbedingungen brachen bis dahin mit '|| return'
+    # (Status 1) unter set -e STUMM ab - fail closed, aber ohne Meldung. Jetzt mit Meldung, Ergebnis gleich.
+    command -v git >/dev/null 2>&1 \
+        || die "Frische-Gate ($label): git fehlt - ohne Commit-Zeit ist nicht pruefbar, ob $bin aktuell ist"
+    src_t="$(git -C "$HERE/.." log -1 --format=%ct -- "${pfade[@]}" 2>/dev/null || true)"
+    [[ -n "$src_t" ]] || die "Frische-Gate ($label): git log findet keinen Commit fuer ${pfade[*]}
+        (kein Git-Repo, flacher Klon?) - nicht pruefbar, ob $bin aktuell ist"
+    bin_t="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin" 2>/dev/null || true)"
+    [[ -n "$bin_t" ]] || die "Frische-Gate ($label): Zeitstempel von $bin nicht lesbar"
     if (( bin_t < src_t )); then
         die "$label ist VERALTET: $bin
         stammt von $(date -d "@$bin_t" '+%F %T' 2>/dev/null || date -r "$bin_t" '+%F %T'),
@@ -243,6 +260,17 @@ check_tree() {           # $1 = fertiger Paketordner
     want="$(find "$SYNCHRO"/STAGE* -name '*.wav' 2>/dev/null | wc -l)"
     got="$(find "$out/synchro" -name '*.wav' 2>/dev/null | wc -l)"
     (( got == want )) || die "Voiceover unvollstaendig im Paket: $got/$want WAVs unter synchro/"
+    # Nachbesserung R2 (Gegenpruefung B6): copy_common ist eine DRITTE Liste neben build.gradle und
+    # BAEUME in apk_asset_gate.py - niemand verglich sie. Jetzt prueft das Gate den fertigen Paketordner
+    # gegen dieselbe Liste wie die APK: jede Datei der Asset-Baeume mit gleicher Groesse und sha256,
+    # unter shared_assets/ und synchro/ nichts sonst (auch Tuer-Soll + Wurzel des Quellbaums).
+    local rc=0
+    "$PY" "$(apk_nativ "$HERE/apk_asset_gate.py")" --repo "$(apk_nativ "$REPO")" --paket "$(apk_nativ "$out")" || rc=$?
+    case "$rc" in
+        0) ;;
+        1) die "Paket $out weicht von der Asset-Liste ab (Befunde oben) - APK und PC-Pakete muessen dieselben Assets tragen" ;;
+        *) die "Paketpruefung: keine Aussage moeglich (rc=$rc, Meldung oben)" ;;
+    esac
 }
 
 # =============================================================================
@@ -410,16 +438,30 @@ check_runtime_assets() {
 [[ -s "$RE2/CDEMD0.EMS" && -s "$RE2/ENEMSE.VBS" && -s "$RE2/TORSE.VBS" ]] || die "RE2-Assets fehlen: $RE2"
 [[ -s "$SYNCHRO/STAGE1/room1170/main00.wav" ]] || die "Voiceover-Quelle fehlt: $SYNCHRO/STAGE1"
 
-# --- Python (verify_split, zip_exec_bit.py) ---------------------------------
+# --- Python (Quellbaum/Paket-Pruefung, verify_split, zip_exec_bit.py) --------
 # ⛔ NIE blind "python3"/"python" (Runde 34a): unter Git-Bash ist "python3" zuerst der
 # WindowsApps-Alias - der Aufruf in verify_split hat in v0.8.17 ungefragt Python 3.14
 # installiert, v0.8.19 lief nur mit einem Shim im PATH. python_finden.sh verwirft den Alias,
-# ohne ihn zu starten, und setzt PY. Nur beim Zippen noetig, aber VOR den Kopierminuten suchen.
-if [[ $DO_ZIP -eq 1 ]]; then
-    # shellcheck source=python_finden.sh
-    source "$HERE/python_finden.sh" \
-        || die "kein echtes Python >= 3.8 (release/python_finden.sh) - verify_split/zip_exec_bit.py brauchen es"
-fi
+# ohne ihn zu starten, und setzt PY. Seit Nachbesserung R2 IMMER noetig (--paket/--quellbaum,
+# auch mit --no-zip) - VOR den Kopierminuten suchen.
+# shellcheck source=python_finden.sh
+source "$HERE/python_finden.sh" \
+    || die "kein echtes Python >= 3.8 (release/python_finden.sh) - Quellbaum-/Paketpruefung, verify_split und zip_exec_bit.py brauchen es"
+# shellcheck source=apk_pruefen.sh
+source "$HERE/apk_pruefen.sh"                # apk_nativ, apk_kennung, apk_pruefen (Android-Satz unten)
+
+# --- Quellbaum: Asset-Liste + Tuer-Soll (Nachbesserung R2, Gegenpruefung B2/B6) -------
+# VOR den Kopierminuten: fehlt ein Tuerarchiv, das die Engine-Tabellen verlangen (29/30), ist eines
+# 0 Byte oder passt es nicht zu Groesse/FNV-1a, oder liegt unter re15_port/shared_assets ein Ordner,
+# den keine Liste kennt, waeren ALLE Pakete falsch - check_tree verglich bisher nur Paket gegen Quelle.
+echo "== Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) =="
+rc_quelle=0
+"$PY" "$(apk_nativ "$HERE/apk_asset_gate.py")" --repo "$(apk_nativ "$REPO")" --quellbaum || rc_quelle=$?
+case "$rc_quelle" in
+    0) ;;
+    1) die "Quellbaum weicht von der Asset-Liste bzw. den Tuer-Tabellen der Engine ab (Befunde oben)" ;;
+    *) die "Quellbaum-Pruefung: keine Aussage moeglich (rc=$rc_quelle, Meldung oben)" ;;
+esac
 
 # --- Android-APK: DIESELBE Pruefkette wie in build_android.sh ------------------
 # (Runde 34a) Zwischen Android-Bau und Paket kann sich der Quellbaum geaendert haben (neues
@@ -435,34 +477,23 @@ fi
 #     wenn die Datei beim Zippen noch genau diese ist, und im fertigen Split-Satz muessen CRC32 und
 #     Groesse des Eintrags wieder stimmen. Vorher lagen zwischen Pruefen (hier) und Zippen (unten)
 #     Minuten Kopieren - eine in der Zeit getauschte oder erst dann abgelegte APK ging ungeprueft durch.
-# shellcheck source=apk_pruefen.sh
-source "$HERE/apk_pruefen.sh"
-
-apk_kennung() {          # $1 = Datei -> "sha256 crc32 groesse" in EINEM Lesedurchgang
-    "$PY" - "$(apk_nativ "$1")" <<'PY'
-import hashlib, sys, zlib
-h, c, n = hashlib.sha256(), 0, 0
-with open(sys.argv[1], "rb") as f:
-    while True:
-        b = f.read(1 << 20)
-        if not b:
-            break
-        h.update(b)
-        c = zlib.crc32(b, c)
-        n += len(b)
-print("%s %08x %d" % (h.hexdigest(), c & 0xFFFFFFFF, n))
-PY
-}
-
+# (apk_pruefen.sh ist oben geladen: apk_werkzeuge_finden, apk_pruefen, apk_kennung)
 APK_PRUEF="$HERE/${NAME}_android.apk"
 APK_KENNUNG=""
 if [[ $DO_ZIP -eq 1 && -f "$APK_PRUEF" ]]; then
-    echo "== Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) =="
+    echo "== Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) =="
     check_binary_fresh "$APK_PRUEF" "Android-APK" \
         re15_port/engine re15_port/include re15_port/platform/pc re15_port/platform/android
+    trap apk_pruefen_aufraeumen EXIT          # Pruefkopie (~360 MB) auch bei Abbruch weg
     apk_werkzeuge_finden
     apk_pruefen "$APK_PRUEF" "$VERSION" "$REPO"
-    APK_KENNUNG="$(apk_kennung "$APK_PRUEF")" || die "Kennung der geprueften APK nicht lesbar: $APK_PRUEF"
+    # Nachbesserung R2 (Gegenpruefung B3): die Kennung ist die der PRUEFKOPIE, an der JEDER Schritt lief -
+    # bis dahin nahm dieses Skript sie erst NACH der Pruefung vom Pfad, und eine waehrend des Selbsttests
+    # getauschte (unsignierte) APK wurde so zur "geprueften". apk_pruefen hat am Ende auch verglichen,
+    # dass unter dem Pfad noch dieselben Bytes liegen; beim Zippen wird unten noch einmal verglichen.
+    APK_KENNUNG="$APK_GEPRUEFT_KENNUNG"
+    apk_pruefen_aufraeumen
+    trap - EXIT
     [[ "$APK_KENNUNG" =~ ^[0-9a-f]{64}\ [0-9a-f]{8}\ [0-9]+$ ]] || die "Kennung der APK unlesbar: '$APK_KENNUNG'"
     echo "   gepruefte APK (sha256 crc32 Bytes): $APK_KENNUNG"
 fi

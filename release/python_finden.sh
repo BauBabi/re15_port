@@ -24,19 +24,23 @@
 #   (MSYS2 3.14.x, Abhaengigkeit von gdb, wandert mit jedem pacman -Syu) gegen /c/Python310, das
 #   an Stelle 12 des PATH steht (msys64 an 43) und auch "python" im cmd-Fenster ist.
 # PRUEFUNG je Kandidat
-#   - Pfad (oder Link-Ziel) unter */WindowsApps/*, Gross/klein egal -> verworfen, NICHT gestartet
+#   - Pfad, Langname (cygpath -l, falls da: 8.3-Kurznamen wie .../MICROS~1/WINDOW~1/) oder
+#     Link-Ziel unter */WindowsApps/*, Gross/klein egal                 -> verworfen, NICHT gestartet
+#   - ein Link, dessen Ziel sich nicht pruefen laesst (kein readlink)   -> verworfen, NICHT gestartet
 #   - fehlt oder leere Datei (App-Execution-Aliase sind 0 Byte)       -> verworfen, NICHT gestartet
 #   - '<kand> -c "import sys, zipfile, hashlib; ..."' mit stdin=/dev/null (+ timeout 30, falls
 #     vorhanden) muss Python >= 3.8 melden                               -> sonst verworfen
 # Nichts gefunden -> Meldung auf stderr, Rueckgabe 1 (fail closed).
-# Ausser dem Kandidaten selbst (und optional timeout/readlink) nur Bash-Bordmittel: laeuft
-# damit auch mit einem PATH, der NUR den WindowsApps-Ordner enthaelt (so geprueft, Runde 34a).
+# Ausser dem Kandidaten selbst (und optional timeout/readlink/cygpath) nur Bash-Bordmittel: laeuft
+# damit auch mit einem PATH, der NUR den WindowsApps-Ordner enthaelt - unter Lang- UND 8.3-Namen
+# (Nachbesserung R2, Gegenpruefung B7: bis dahin stimmte das nur fuer den Langnamen; ohne readlink
+# wurde die Linkregel uebersprungen und der Alias ueber den 8.3-Pfad gestartet).
 # Aufrufer: release/build_android.sh (APK-Asset-Gate), release/make_package.sh (verify_split,
 # zip_exec_bit.py). Beide laufen mit "set -euo pipefail": hier daher nur ${VAR:-}-Zugriffe.
 # =============================================================================
 
 re15_python_finden() {
-    local kand low schluessel ziel ver rc name p d
+    local kand low schluessel ziel lang ver rc name p d
     local -a kands=() ordner=()
     local -A gesehen=()
     local probe='import sys, zipfile, hashlib; print("%d.%d.%d" % tuple(sys.version_info[:3])); sys.exit(0 if sys.version_info >= (3, 8) else 3)'
@@ -76,11 +80,27 @@ re15_python_finden() {
                 echo "   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): $kand" >&2
                 continue ;;
         esac
-        if [[ -L "$kand" ]] && type -P readlink >/dev/null 2>&1; then
+        # 8.3-Kurzname (Nachbesserung R2, Gegenpruefung B7): .../MICROS~1/WINDOW~1/python3 entgeht der
+        # Pfadregel oben; cygpath -l liefert den Langnamen (Git-Bash/MSYS/Cygwin).
+        if type -P cygpath >/dev/null 2>&1; then
+            lang="$(cygpath -m -l -- "$kand" 2>/dev/null || true)"
+            case "${lang,,}" in
+                */windowsapps/*)
+                    echo "   Python-Kandidat verworfen (Langname $lang = WindowsApps-Alias, NICHT gestartet): $kand" >&2
+                    continue ;;
+            esac
+        fi
+        if [[ -L "$kand" ]]; then
+            # Ein Link, dessen Ziel sich nicht pruefen laesst, wird VERWORFEN (Nachbesserung R2, B7): bis dahin
+            # wurde die Linkregel ohne readlink uebersprungen - mit dem 8.3-Pfad kam so der Alias zum Start.
+            if ! type -P readlink >/dev/null 2>&1; then
+                echo "   Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): $kand" >&2
+                continue
+            fi
             ziel="$(readlink -f -- "$kand" 2>/dev/null || true)"
             case "${ziel,,}" in
-                */windowsapps/*)
-                    echo "   Python-Kandidat verworfen (Link auf WindowsApps: $ziel, NICHT gestartet): $kand" >&2
+                */windowsapps/*|"")
+                    echo "   Python-Kandidat verworfen (Link auf WindowsApps oder Ziel unlesbar: '${ziel}', NICHT gestartet): $kand" >&2
                     continue ;;
             esac
         fi
