@@ -240,6 +240,8 @@ typedef struct {
     uint16_t ton, modell;
     uint32_t sektor, datei;
     uint32_t fnv;
+    uint8_t  md1_eigen;   /* Stufe 2: 1 = MD1 = Basis-Meshes + ergaenzte Dreiecke (P1EL Lamellenplatte),
+                           * Tonteil + SCD bleiben bytegleich; 0 = MD1 bytegleich dem Basis-Archiv */
 } re15_tuer_eigen_t;
 
 /* Griff-Tausch je Paar Archiv <- Spender (tools/tueren/tuer_zuordnung_gen.py, [SIM]-Werte). */
@@ -293,6 +295,12 @@ int  re15_door_seq_zuordnen_re2(unsigned room_id, int viereck, int32_t x, int32_
  * eigen != 0). Auf der PSX ist die Tabelle leer. */
 int  re15_door_seq_zeilen(void);
 const re15_tuer_zeile_t *re15_door_seq_zeile(int i);
+/* Runde 33: Zahl der Runde-31-Zeilen (Index 0..n-1); dahinter die Zeilen aus gen/re15_tuer_eigen.inc
+ * (Port-Archive eigen != 0 UND die G12-Durchgaenge mit dem objektlosen RE2-Archiv DOOR36, eigen 0). */
+int  re15_door_seq_zeilen_runde31(void);
+/* Runde 33 Stufe 2: geplante Seiten (Sxxx) laut plan.json - der Riegel prueft, dass jede eine Zeile hat. */
+int  re15_door_seq_geplant(int i);
+int  re15_door_seq_geplant_anzahl(void);
 /* Anfrage einer Tuerseite (Sxxx) aus der Tabelle - erste Zeile dieser Seite. 0 = unbekannt. */
 int  re15_door_seq_anfrage_fuer_seite(int seite, re15_door_seq_anfrage_t *out, unsigned *raum);
 /* Griff-Tausch-Satz fuer Archiv <- Spender, NULL = keiner. */

@@ -283,6 +283,21 @@ def feld_voll(rgb):
 # (sonst saesse der Hebel neben seinem Schild): 8 x 16 Texel (gemessene Groesse minus Unschaerfe),
 # Mitte u 7, v 111 -> u 3..11, v 103..119.
 SCHILD_07 = (3, 103, 11, 119)
+# DOOR1D-Druecker (Mesh 1 = DOOR07.m1) am 1D-Anhaengepunkt (130,-2850,-3410): u = (3599-3410)/3599*128 = 6,7,
+# v = 111 + (3352-2850)*218/6602 = 127,6 -> Schild gleicher Groesse u 3..11 v 120..136 (G4-Ausschnitte S045/
+# S049/S104: Druecker je auf einem senkrechten Schild an der Fuge, wie G1).
+SCHILD_1D = (3, 120, 11, 136)
+
+
+def schild_aufs_blatt(out, farbe, box):
+    """Schild in 'gemalt'-Farbe auf ein fertiges Blatt (Texel) setzen: Texel -> gemalt -> Schild -> Texel."""
+    g = out[..., :3].astype(np.float64) * tab.C_BLATT / 128.0
+    g = griff_schild(g, farbe, box)
+    u0, v0, u1, v1 = box
+    t, _ = texel(g)
+    out = out.copy()
+    out[v0 - 1:v1 + 1, u0 - 1:u1 + 1, :3] = np.round(t[v0 - 1:v1 + 1, u0 - 1:u1 + 1]).astype(np.uint8)
+    return out
 
 
 def griff_schild(gemalt, farbe, box=SCHILD_07):
@@ -345,11 +360,23 @@ def rezept_P07T(basis):
 # ---------------------------------------------------------------------------------------------
 # G4 (P1DG): Pilot + eigener Druecker in der gemalten G4-Grifffarbe (Pilot-Punkt b)
 # ---------------------------------------------------------------------------------------------
+# Druecker DOOR1D (Mesh 1 = DOOR07.m1) im Selbst-Tausch: GEMESSEN wie der Pilot die G4-Abweichung
+# bestimmt hat (hellste Griffpunkte > Blatt + 25/30, Median): Sequenz S045/S104 (Bogen der Stufe 2, echte
+# exe) L 117,9 / 116,2 gegen gemalt L 99,4 (G1 mit derselben Messung: 76,4 gegen 77,3 = 0,99). Ziel "gezeigt
+# = gemalt" -> Grifftexel-Ziel x 99,4/117,9 = 0,843 (Kalibrierung an der Messung, keine Original-Konstante).
+# 2. Messung mit 0,843: S045/S104 L 106,8 / 109,8 (Mittel 108,3; die Kontrastgrenze macht die Antwort
+# nichtlinear) -> nochmals x 99,4/108,3.
+GRIFF_KAL_1D = (99.4 / 117.9) * (99.4 / 108.3)
+
+
 @rezept("P1DG")
 def rezept_P1DG(basis):
     out, proto = tab.rezept_P1DG(basis)
     farbe = np.array(proto["griff_gemalt_g4"], np.float64)
-    out, maske, gp = tab.griff_umfaerben(out, basis["md1"], [1], farbe)
+    out = schild_aufs_blatt(out, farbe, SCHILD_1D)
+    proto["schild"] = list(SCHILD_1D)
+    out, maske, gp = tab.griff_umfaerben(out, basis["md1"], [1], farbe * GRIFF_KAL_1D)
+    gp["griff_kalibrierung"] = round(GRIFF_KAL_1D, 3)
     proto.update(gp)
     proto["_frei"] = maske
     proto["griff_hinweis"] = ("Selbst-Tausch: Grund-Drehung DOOR07 (waagerecht), Mesh + Textur aus P1DG selbst "
@@ -468,6 +495,12 @@ def d1a_ohne_kasten():
     d1a, _ = re2_rgba("DOOR1A")
     f = d1a[..., :3].astype(np.float64)
     f[82:142, 4:29] = f[82:142, 123:98:-1]
+    # die rechte Feldseite liegt im Schatten (Bogen der Stufe 2: dunkler Streifen neben den Drueckern) ->
+    # je Zeile auf die Helligkeit der unveraenderten Feldflaeche daneben (u 29..40) bringen
+    L = f[..., :3] @ LUM
+    for v in range(82, 142):
+        k = L[v, 29:41].mean() / max(L[v, 16:29].mean(), 1.0)
+        f[v, 4:29] *= k
     return f
 
 
@@ -490,7 +523,10 @@ def _stahlrahmen(basis, auswahl, box, zwei_felder):
     out, gek = zusammensetzen(basis["rgba"], g)
     # Druecker (DOOR1D Mesh 1, Selbst-Tausch der Grund-Drehung): gemalte Grifffarbe
     gf, n = tab.re15_griff_farbe(auswahl, (0, 90, 40, 150), [(44, 104)])
-    out, maske, gp = tab.griff_umfaerben(out, basis["md1"], [1], gf)
+    out = schild_aufs_blatt(out, gf, SCHILD_1D)
+    proto["schild"] = list(SCHILD_1D)
+    out, maske, gp = tab.griff_umfaerben(out, basis["md1"], [1], gf * GRIFF_KAL_1D)   # wie P1DG kalibriert
+    gp["griff_kalibrierung"] = round(GRIFF_KAL_1D, 3)
     proto.update(gp)
     proto["griff_ausschnitte"] = n
     proto["_frei"] = maske
@@ -1005,16 +1041,16 @@ def _labor(basis, auswahl, strahlen):
         # S273 c00: gelbes Schild 'CAUTION' mit drei roten Strahlenfluegeln oben links im grossen Fluegel
         # (u 0..40 v 26..74 des 128er Ausschnitts) -> Teil A u 10..60 v 18..66
         # UV-Sonde (tuer_uv_sonde.py 27 0): der linke Teil liest u 0..100 v 0..100 fuer seine obere Flaeche,
-        # der Kasten unten links liest u 0..80 v 7..70 NOCHMAL -> Schild nur in v 71..100 (sonst doppelt)
-        g = auftragen(g, m_rechteck(4, 71, 44, 100, 1), gelb)
-        c = (24, 86)
+        # der Kasten unten links liest u 0..80 v 7..70 NOCHMAL -> Schild nur in v 74..98 (sonst doppelt; v 72/73 liest zusaetzlich die Unterkante des Kastens und ein Streifen oben rechts - gerastert mit tor_helligkeit, Bild 20 und 150: v 74..98 nur im linken oberen Feld)
+        g = auftragen(g, m_rechteck(4, 74, 44, 98, 1), gelb)
+        c = (24, 87)
         for w in (30, 150, 270):              # Strahlenzeichen: Fluegel oben links, oben rechts, unten
             a0 = np.radians(w - 30)
             a1 = np.radians(w + 30)
-            pts = [c, (c[0] + 12 * np.cos(a0), c[1] - 12 * np.sin(a0)), (c[0] + 12 * np.cos(a1), c[1] - 12 * np.sin(a1))]
+            pts = [c, (c[0] + 11 * np.cos(a0), c[1] - 11 * np.sin(a0)), (c[0] + 11 * np.cos(a1), c[1] - 11 * np.sin(a1))]
             g = auftragen(g, m_polygon(pts), rot)
-        g = auftragen(g, m_ellipse(21, 83, 27, 89), gelb)
-        g = auftragen(g, m_ellipse(22, 84, 26, 88), rot)
+        g = auftragen(g, m_ellipse(21, 84, 27, 90), gelb)
+        g = auftragen(g, m_ellipse(22, 85, 26, 89), rot)
     # Teil B: rotes Warndreieck unter dem Fensterkasten (S273: rechts ~u 92..104 v 60..72; S305: Mitte)
     g = auftragen(g, m_polygon([(66, 140), (82, 140), (74, 126)]), rot)
     # gelb-schwarzer Aufkleber unten rechts (S273/S305)
@@ -1124,3 +1160,54 @@ def rezept_P07M(basis):
                  rahmen_texel=int(braun.sum()), gekappt=gek)
     proto["_texel0"] = True
     return out, proto
+
+
+# ==============================================================================================
+# MD1-Ergaenzungen (PORT-WAHL): nur wo eine Textur allein die gemalte Gestalt NICHT zeigen kann
+# ==============================================================================================
+def md1_lamellenplatte(md1):
+    """P1EL (G7, RE1.5 S048/S154: waagerechte LAMELLEN im Rahmen). Die RE2-Lueftungsgitter 1E/33/35 sind
+    3D-Staebe mit ECHTEN Luecken (tuer_uv_sonde.py 1E 0: schwarz zwischen den Staeben = kein Dreieck;
+    DOOR1E Mesh 0: 6 achteckige Staebe z 163..1603, x 100..200, y 81..1116, Rahmen z 3..18/1782..1797,
+    y 0..15/1185..1200); RE2 hat keine Lamellenklappe. Eine Textur bemalt nur die Stabflaechen (Bogen 1:
+    Karomuster). Darum: eine Platte (vorn + hinten je 2 Dreiecke) in der Stabmitte x = 150 ueber die
+    Rahmenoeffnung z 18..1782, y 15..1185 - sie faehrt mit Mesh 0 (Klappe) mit. UV wie die Stabflaechen
+    (v = 5 + (y-81)*68/1035, u = 124,7 - 0,0606*z aus den Stab-Dreiecken, z. B. (200,1116,209)->(112,73),
+    (200,81,209)->(112,5)), damit Platte und Stab an jeder Hoehe dieselbe Lamellenzeile zeigen.
+    Umlauf wie die vorhandenen Stab-Dreiecke mit Normale +x (Kreuzprodukt x < 0, NCLIP @0x800148d0)."""
+    import do2_format as fmt
+    m = md1.meshes[0]
+    n_vorn = next(i for i, n in enumerate(m.normals) if tuple(n[:3]) == (4096, 0, 0))
+    n_hinten = next(i for i, n in enumerate(m.normals) if tuple(n[:3]) == (-4096, 0, 0))
+    ref = m.tri_tex[0]                      # clut 0x7800, tpage 0x80 wie alle Dreiecke des Meshes
+    k0 = len(m.vertices)
+    ecken = [(150, 15, 18, 0), (150, 15, 1782, 0), (150, 1185, 18, 0), (150, 1185, 1782, 0)]   # A B C D
+
+    def uv(e):
+        u = int(round(124.7 - 0.0606 * e[2]))
+        v = int(round(5 + (e[1] - 81) * 68 / 1035.0))
+        return max(0, min(127, u)), max(0, min(255, v))
+    A, B, C, D = range(k0, k0 + 4)
+    m.vertices = list(m.vertices) + ecken
+    tris = [((A, B, C), n_vorn), ((B, D, C), n_vorn), ((A, C, B), n_hinten), ((B, C, D), n_hinten)]
+    alt = (len(m.tris), len(m.tri_tex))
+    for (a, b, c), n in tris:
+        m.tris = list(m.tris) + [(n, a, n, b, n, c)]
+        ua, ub, uc = uv(ecken[a - k0]), uv(ecken[b - k0]), uv(ecken[c - k0])
+        m.tri_tex = list(m.tri_tex) + [(ua[0], ua[1], ref[2], ub[0], ub[1], ref[5], uc[0], uc[1], 0)]
+    # Kreuzprodukt der Vorderseite: x < 0 wie die Stab-Dreiecke mit Normale +x
+    import numpy as np
+    for (a, b, c), n in tris[:2]:
+        pa, pb, pc = [np.array(ecken[i - k0][:3]) for i in (a, b, c)]
+        assert np.cross(pb - pa, pc - pa)[0] < 0
+    neu = md1.schreiben()
+    # die Basis-Meshes bleiben der Anfang (Pruefung in probe_r33_tueren "archive")
+    rueck = fmt.Md1.lesen(neu)
+    assert len(rueck.meshes) == len(md1.meshes)
+    assert list(rueck.meshes[0].tris[:alt[0]]) == list(m.tris[:alt[0]])
+    return neu, dict(kurz="Lamellenplatte Mesh 0 (+4 Ecken, +4 Dreiecke: x 150, z 18..1782, y 15..1185)",
+                     ecken=ecken, dreiecke=[list(t) for t in m.tris[alt[0]:]],
+                     uv=[list(t) for t in m.tri_tex[alt[1]:]])
+
+
+MD1_ERGAENZUNG = {"P1EL": md1_lamellenplatte}

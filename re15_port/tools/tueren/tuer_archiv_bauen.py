@@ -489,7 +489,13 @@ def archiv_bauen(kennung, spec, schreiben=True):
     tim_b = neu_tim.schreiben()
     if len(tim_b) != len(o.tim):
         raise SystemExit("%s: TIM %d B statt %d" % (kennung, len(tim_b), len(o.tim)))
-    neu = fmt.Do2("re2", md1=o.md1, skripte=list(o.skripte), tim=tim_b, ton_vorspann=o.ton_vorspann,
+    # MD1: bytegleich dem Basis-Archiv - AUSSER ein Rezept ergaenzt Dreiecke (tuer_rezepte.MD1_ERGAENZUNG,
+    # PORT-WAHL; die Basis-Meshes bleiben unveraendert der Anfang jedes Meshes)
+    import tuer_rezepte
+    md1_b, md1_info = o.md1, None
+    if kennung in tuer_rezepte.MD1_ERGAENZUNG:
+        md1_b, md1_info = tuer_rezepte.MD1_ERGAENZUNG[kennung](fmt.Md1.lesen(o.md1))
+    neu = fmt.Do2("re2", md1=md1_b, skripte=list(o.skripte), tim=tim_b, ton_vorspann=o.ton_vorspann,
                   vh=o.vh, ton_nachspann=o.ton_nachspann, vb=o.vb)
     datei = neu.schreiben()
     # Pruefungen: gleiche Groesse, gleicher Tonteil, gleiche Skripte + MD1, Lader liest, TIM 128x256/8 bit/1 CLUT
@@ -498,9 +504,16 @@ def archiv_bauen(kennung, spec, schreiben=True):
         raise SystemExit("%s: Lader-Pruefung %s" % (kennung, bef["fehler"]))
     rueck = fmt.Do2.lesen(datei)
     lage_alt, lage_neu = o.lage(), rueck.lage()
-    assert len(datei) == len(d_basis), (kennung, len(datei), len(d_basis))
-    assert datei[:lage_alt["tim"]] == d_basis[:lage_alt["tim"]], "%s: vor der TIM nicht bytegleich" % kennung
-    assert lage_neu == lage_alt
+    if md1_info is None:
+        assert len(datei) == len(d_basis), (kennung, len(datei), len(d_basis))
+        assert datei[:lage_alt["tim"]] == d_basis[:lage_alt["tim"]], "%s: vor der TIM nicht bytegleich" % kennung
+        assert lage_neu == lage_alt
+    else:
+        # Tonteil + Kopf-Aufbau + SCD bytegleich, MD1 = Basis-Meshes als Anfang (Pruefung im Rezept)
+        assert datei[:lage_alt["scd"]] == d_basis[:lage_alt["scd"]] or \
+            datei[:lage_alt["ton_ende"]] == d_basis[:lage_alt["ton_ende"]], "%s: Tonteil" % kennung
+        assert datei[lage_neu["scd"]:lage_neu["md1"]] == d_basis[lage_alt["scd"]:lage_alt["md1"]], "%s: SCD" % kennung
+        assert rueck.md1 == md1_b and len(rueck.tim) == len(o.tim)
     t2, _ = fmt.Tim.lesen(rueck.tim)
     assert (t2.farbtiefe, t2.breite_px, t2.hoehe_px, t2.clut_rect[2] * t2.clut_rect[3]) == (8, 128, 256, 256)
     tab = neu.re2_tabelleneintrag()
@@ -509,7 +522,7 @@ def archiv_bauen(kennung, spec, schreiben=True):
                    datei=len(datei), fnv=fnv1a(datei), sha1=hashlib.sha1(datei).hexdigest(),
                    basis_sha1=hashlib.sha1(d_basis).hexdigest(), tim_off=lage_alt["tim"],
                    rezept=spec["rezept"], ton_familie=spec["ton"], griff=spec["griff"],
-                   protokoll=proto, palette=qinfo)
+                   protokoll=proto, palette=qinfo, md1_eigen=1 if md1_info else 0, md1_ergaenzung=md1_info)
     if schreiben:
         os.makedirs(AUS_DIR, exist_ok=True)
         with open(os.path.join(AUS_DIR, kennung + ".DO2"), "wb") as f:
@@ -639,7 +652,13 @@ def _anker(nr, varianten):
     return out
 
 
-def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
+def geplante_seiten(plan):
+    """Alle Seiten, die laut plan.json eine Sequenz bekommen (bau + Variante; Port-Archiv oder G12)."""
+    return sorted({int(s["id"][1:]) for e in plan["tueren"].values() for s in e["seiten"]
+                   if s.get("bau") and "variante" in s})
+
+
+def inc_schreiben(eintraege, zeilen, pfad, tausche=(), geplant=()):
     L = ["/* Erzeugt von re15_port/tools/tueren/tuer_archiv_bauen.py - NICHT von Hand aendern.",
          " * Runde 33 / Thema T (analysis/befunde_runde33/tueren_rest_plan.md, tueren_rest_pilot.md).",
          " * ⛔ PORT-WAHL, KEINE Original-Adresse: port-eigene Tuerarchive im RE2-Aufbau (Tonteil, SCD, MD1",
@@ -649,8 +668,10 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
          "static const re15_tuer_eigen_t re15_tuer_eigen[%d] = {" % max(1, len(eintraege))]
     for i, e in enumerate(eintraege):
         L.append("    /* %d: %s = %s + Textur '%s' (Ton %s) */" % (i + 1, e["kennung"], e["basis"], e["rezept"].replace("*/", "* /"), e["ton_familie"]))
-        L.append("    { \"%s\", 0x%02X, %d, %d, %d, %d, 0x%08Xu }," % (e["kennung"], e["basis_nr"], e["ton"], e["modell"],
-                                                                     e["sektor"], e["datei"], e["fnv"]))
+        if e.get("md1_eigen"):
+            L.append("    /*    MD1 = Basis + %s */" % e["md1_ergaenzung"]["kurz"])
+        L.append("    { \"%s\", 0x%02X, %d, %d, %d, %d, 0x%08Xu, %d }," % (e["kennung"], e["basis_nr"], e["ton"], e["modell"],
+                                                                         e["sektor"], e["datei"], e["fnv"], e.get("md1_eigen", 0)))
     L.append("};")
     L.append("")
     idx = {e["kennung"]: i + 1 for i, e in enumerate(eintraege)}
@@ -689,6 +710,13 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
         L.append("static const re15_griff_tausch_t re15_griff_tausche_eigen[1] = {")
         L.append("    { 0xFF, 0xFF, 0, 0, {0, 0, 0}, {0, 0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0, 0}, 0 },")
         L.append("};")
+    L.append("")
+    L.append("/* Stufe 2: geplante Seiten laut analysis/befunde_runde33/tueren_rest/plan.json (bau + Variante) -")
+    L.append(" * probe_r33_tueren 'zuordnung' prueft, dass JEDE eine Zeile oben hat (Tabelle deckt den Plan). */")
+    L.append("static const uint16_t re15_tuer_geplant[%d] = {" % max(1, len(geplant)))
+    for i in range(0, len(geplant), 16):
+        L.append("    " + ", ".join("%d" % x for x in geplant[i:i + 16]) + ",")
+    L.append("};")
     with open(pfad, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(L) + "\n")
 
@@ -722,7 +750,11 @@ def main():
     for g in tausche:
         print("Griff-Tausch %s: DOOR%02X <- %s: %s" % (g["kennung"], g["archiv"], g["spender_name"],
                                                      {k: g[k] for k in ("rot_vorn", "rot_hinten", "aus_archiv", "aus_spender")}))
-    inc_schreiben(eintraege, zeilen, AUS_INC, tausche)
+    geplant = geplante_seiten(plan)
+    fehlt = sorted(set(geplant) - {int(z["seite"][1:]) for z in zeilen})
+    if fehlt:
+        raise SystemExit("geplante Seiten ohne Zeile: %s" % fehlt)
+    inc_schreiben(eintraege, zeilen, AUS_INC, tausche, geplant)
     with open(AUS_JSON, "w", encoding="utf-8") as f:
         json.dump(dict(archive=eintraege, zeilen=len(zeilen),
                        seiten=sorted({z["seite"] for z in zeilen}),

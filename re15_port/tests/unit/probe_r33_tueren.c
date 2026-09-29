@@ -1,5 +1,5 @@
 /* probe_r33_tueren.c — Riegel der Runde 33 / Thema T "restliche Tueren"
- * (analysis/befunde_runde33/tueren_rest_plan.md, tueren_rest_pilot.md).
+ * (analysis/befunde_runde33/tueren_rest_plan.md, tueren_rest_pilot.md, tueren_rest_bau.md = Stufe 2).
  *
  * PORT-EIGENE Tuerarchive im RE2-Aufbau (shared_assets/RE15DOOR, tools/tueren/tuer_archiv_bauen.py,
  * Tabelle gen/re15_tuer_eigen.inc). ⛔ PORT-WAHL (Textur), keine Original-Adresse - gepinnt wird,
@@ -12,6 +12,13 @@
  *             der Tabelle benutzte Variante bis zum Ende (Platz 10 aus, < 4000 Bilder, keine Notiz)
  *             und liefert Bild fuer Bild dieselben Objektlagen wie das Basis-Archiv (Pruefsumme wie
  *             probe_r31_tueren "maschine"), dieselben Se_on-Bilder und denselben Schliesston-Merker.
+ *             Stufe 2: Archive mit md1_eigen (P1EL Lamellenplatte) - MD1 = Basis-Meshes als ANFANG
+ *             jedes Meshes (Ecken, Normalen, Dreiecke, UV bytegleich) + ergaenzte Dreiecke; Tonteil + SCD
+ *             bytegleich.
+ *   maschine  Stufe 2: jede (Basis, Variante), die NUR die Runde 33 benutzt (u. a. DOOR04 V2, DOOR07
+ *             V0/V1, DOOR0C, DOOR14, DOOR1D V0/V1, DOOR36 V0 = G12 objektlos), gegen den Katalog-Simulator
+ *             (tests/unit/gen/r33_tuer_referenz.inc, tools/tueren/tuer_maschine_referenz.py --r33) - wie
+ *             probe_r31_tueren "maschine" fuer die Runde-31-Paare.
  *   zuordnung Jede Port-Zeile trifft einen echten Door_aot_set ihres RDT (Flaeche/Band wie
  *             op_door_aot_set) und findet ihre Wahl (Basis, Variante, eigen, Griff-Tausch mit Spender aus
  *             einem Port-Archiv, z. B. P1DG <- P07G); keine Flaeche doppelt
@@ -34,6 +41,7 @@
 #include "re15_skeleton.h"
 #include "re15_door_seq.h"
 #include "re15_tim.h"
+#include "re15_md1.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -110,7 +118,7 @@ static int laufen(const uint8_t *teil, int n, int variante, int tuer_nr, lauf_t 
 static void teil_archive(void)
 {
     int n_eig = re15_door_seq_eigen_anzahl();
-    PRUEF(n_eig >= 3, "nur %d Port-Archive (Pilot: P07G, P1DG, P16M)", n_eig);
+    PRUEF(n_eig >= 30, "nur %d Port-Archive (Stufe 2: 30)", n_eig);
     static lauf_t la, lb;
     int varianten_geprueft = 0;
     for (int e = 1; e <= n_eig; e++) {
@@ -130,16 +138,41 @@ static void teil_archive(void)
               "%s: %u B / Sektor %u / Modell %u / FNV passt nicht zur Tabelle", t->kennung, (unsigned)n,
               (unsigned)t->sektor, (unsigned)t->modell);
         /* Basis gegen @0x8009a520: das Port-Archiv hat dieselbe Aufteilung wie sein Basis-Archiv */
-        PRUEF(n == nb && t->ton == ton && t->modell == modell && (int)t->sektor == sektor && groesse == (int)nb,
+        PRUEF((t->md1_eigen || (n == nb && t->modell == modell && groesse == (int)nb)) && t->ton == ton
+              && (int)t->sektor == sektor,
               "%s: Groessen weichen vom Basis-Archiv DOOR%02X ab", t->kennung, t->basis);
-        if (n != nb || (int)n != groesse) { free(d); free(b); continue; }
+        if (!t->md1_eigen && (n != nb || (int)n != groesse)) { free(d); free(b); continue; }
         const uint8_t *tm = d + t->sektor * 0x800, *bm = b + t->sektor * 0x800;
-        uint32_t tim_rel = rd32(tm + 4);
-        PRUEF(rd32(bm + 4) == tim_rel && rd32(bm) == rd32(tm), "%s: MD1-/TIM-Versatz anders", t->kennung);
+        uint32_t tim_rel = rd32(tm + 4), btim_rel = rd32(bm + 4);
         PRUEF(memcmp(d, b, t->ton) == 0, "%s: Tonteil nicht bytegleich dem Basis-Archiv", t->kennung);
-        PRUEF(memcmp(tm, bm, tim_rel) == 0, "%s: Kopf/SCD/MD1 nicht bytegleich dem Basis-Archiv", t->kennung);
         size_t diff = 0;
-        for (size_t k = t->sektor * 0x800 + tim_rel; k < n; k++) diff += d[k] != b[k];
+        if (!t->md1_eigen) {
+            PRUEF(btim_rel == tim_rel && rd32(bm) == rd32(tm), "%s: MD1-/TIM-Versatz anders", t->kennung);
+            PRUEF(memcmp(tm, bm, tim_rel) == 0, "%s: Kopf/SCD/MD1 nicht bytegleich dem Basis-Archiv", t->kennung);
+            for (size_t k = t->sektor * 0x800 + tim_rel; k < n; k++) diff += d[k] != b[k];
+        } else {
+            /* Stufe 2 (P1EL): SCD bytegleich, MD1 = Basis-Meshes als Anfang + ergaenzte Dreiecke */
+            uint32_t md1_rel = rd32(tm), bmd1_rel = rd32(bm);
+            PRUEF(md1_rel == bmd1_rel && memcmp(tm + 8, bm + 8, md1_rel - 8) == 0, "%s: SCD nicht bytegleich", t->kennung);
+            static re15_md1_t ma, mb;
+            int ok = re15_md1_parse(tm + md1_rel, (int)(tim_rel - md1_rel), &ma) == 0
+                     && re15_md1_parse(bm + bmd1_rel, (int)(btim_rel - bmd1_rel), &mb) == 0 && ma.mesh_count == mb.mesh_count;
+            int zusatz = 0;
+            for (int m = 0; ok && m < mb.mesh_count; m++) {
+                const re15_md1_mesh_t *x = &ma.meshes[m], *y = &mb.meshes[m];
+                ok = x->tri_vertex_count >= y->tri_vertex_count && x->triangle_count >= y->triangle_count
+                     && x->tri_normal_count >= y->tri_normal_count
+                     && !memcmp(x->tri_vertices, y->tri_vertices, sizeof *y->tri_vertices * (size_t)y->tri_vertex_count)
+                     && !memcmp(x->tri_normals, y->tri_normals, sizeof *y->tri_normals * (size_t)y->tri_normal_count)
+                     && !memcmp(x->triangles, y->triangles, sizeof *y->triangles * (size_t)y->triangle_count)
+                     && !memcmp(x->triangle_uvs, y->triangle_uvs, sizeof *y->triangle_uvs * (size_t)y->triangle_count)
+                     && x->quad_count == y->quad_count;
+                zusatz += x->triangle_count - y->triangle_count;
+            }
+            PRUEF(ok && zusatz > 0, "%s: MD1 ist nicht Basis + Ergaenzung (zusaetzliche Dreiecke %d)", t->kennung, zusatz);
+            printf("%s: MD1 = Basis DOOR%02X + %d Dreiecke (md1_eigen)\n", t->kennung, t->basis, zusatz);
+            diff = (size_t)(n - (t->sektor * 0x800 + tim_rel));
+        }
         re15_tim_t tim;
         int tok = re15_tim_parse(tm + tim_rel, (int)(t->modell - tim_rel), &tim) == 0;
         PRUEF(tok && tim.bpp == 8 && tim.width == 128 && tim.height == 256 && tim.has_clut && tim.clut_entries == 256,
@@ -156,7 +189,7 @@ static void teil_archive(void)
             if (z->eigen != e || z->variante >= 16 || gesehen[z->variante]) continue;
             gesehen[z->variante] = 1;
             int ra = laufen(tm, t->modell, z->variante, t->basis, &la);
-            int rb = laufen(bm, t->modell, z->variante, t->basis, &lb);
+            int rb = laufen(bm, modell, z->variante, t->basis, &lb);
             int gleich = ra == 0 && rb == 0 && la.bilder == lb.bilder && la.n_ton == lb.n_ton
                          && !memcmp(la.ton, lb.ton, sizeof la.ton) && la.schliess == lb.schliess
                          && !memcmp(la.summe, lb.summe, sizeof la.summe[0] * (size_t)la.bilder);
@@ -170,8 +203,64 @@ static void teil_archive(void)
         }
         free(d); free(b);
     }
-    PRUEF(varianten_geprueft >= 6, "nur %d Archiv-Varianten geprueft", varianten_geprueft);
+    PRUEF(varianten_geprueft >= 46, "nur %d Archiv-Varianten geprueft (Stufe 2: 46)", varianten_geprueft);
     printf("Port-Archive: %d, Varianten gegen das Basis-Archiv: %d\n", n_eig, varianten_geprueft);
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Teil "maschine" (Stufe 2): die nur von der Runde 33 benutzten Paare gegen den Katalog-Simulator
+ * ------------------------------------------------------------------------------------------ */
+#include "gen/r33_tuer_referenz.inc"
+
+static void teil_maschine(void)
+{
+    int n_ref = (int)(sizeof r33_refs / sizeof r33_refs[0]), gut = 0, g12 = 0;
+    for (int k = 0; k < n_ref; k++) {
+        const r33_ref_t *r = &r33_refs[k];
+        char pfad[600];
+        snprintf(pfad, sizeof pfad, "%s/DOOR/DOOR%02X.DO2", RE15_ASSET_RE2_DIR, r->archiv);
+        size_t n = 0;
+        uint8_t *d = slurp(pfad, &n);
+        PRUEF(d != NULL, "%s fehlt", pfad);
+        if (!d) continue;
+        int ton = 0, modell = 0, sektor = 0, groesse = 0;
+        PRUEF(re15_door_seq_re2_archiv(r->archiv, &ton, &modell, &sektor, &groesse) == 0 && groesse == (int)n
+              && sektor * 0x800 + modell == (int)n, "DOOR%02X: Datei passt nicht zur Tabelle @0x8009a520", r->archiv);
+        /* DOOR36 (objektlos, G12): Skript 0 hat KEINEN Switch auf var 0x0C - es gibt nur V0 (Referenz: Cases []) */
+        PRUEF(r->verteilt || (r->archiv == 0x36 && r->variante == 0),
+              "DOOR%02X V%d: Skript 0 verteilt die Variante nicht", r->archiv, r->variante);
+        static re15_door_seq_t s;
+        PRUEF(re15_door_seq_start(&s, d + sektor * 0x800, modell, r->variante, 0, r->archiv) == 0,
+              "DOOR%02X V%d: Start", r->archiv, r->variante);
+        int bild = 0, abw = 0, ton_i = 0, objekte = 0;
+        while (bild < 4000 && re15_door_seq_bild(&s, 1)) {
+            if (bild < r->n_bilder && bild_summe(&s) != r->summen[bild] && abw++ < 3)
+                printf("  DOOR%02X V%d Bild %d: Summe weicht ab\n", r->archiv, r->variante, bild);
+            for (int t = 0; t < s.n_ton; t++) {
+                PRUEF(ton_i < r->n_tone && r->tone[ton_i] == bild, "DOOR%02X V%d: Se_on in Bild %d unerwartet",
+                      r->archiv, r->variante, bild);
+                ton_i++;
+            }
+            for (int o = 0; o < RE15_DOOR_OBJEKTE; o++) objekte += s.obj[o].on;
+            bild++;
+        }
+        int ok = abw == 0 && bild == r->n_bilder && ton_i == r->n_tone && s.schliesston == r->schliesston
+                 && s.notizen == 0 && s.md1_ok && s.tim_ok;
+        printf("DOOR%02X V%d: %3d Bilder (Ref %3d), %d Se_on (Ref %d), Schliesston %d (Ref %d), Objekt-Bilder %d, "
+               "Notizen 0x%x -> %s\n", r->archiv, r->variante, bild, r->n_bilder, ton_i, r->n_tone, s.schliesston,
+               r->schliesston, objekte, s.notizen, ok ? "gleich" : "ANDERS");
+        PRUEF(ok, "DOOR%02X V%d: Maschine weicht vom Simulator ab", r->archiv, r->variante);
+        if (r->archiv == 0x36) {
+            /* G12: Blende + Ton ohne Tuerobjekt (tueren_02_re2.md 1.1) - kein Objekt je an, zwei Se_on */
+            PRUEF(objekte == 0 && ton_i == 2, "DOOR36 V0: %d Objekt-Bilder, %d Se_on (erwartet 0 / 2)", objekte, ton_i);
+            g12 = 1;
+        }
+        gut += ok;
+        re15_door_seq_ende(&s);
+        free(d);
+    }
+    PRUEF(n_ref >= 9 && g12, "nur %d Referenzpaare / DOOR36 fehlt", n_ref);
+    printf("Maschine gegen Simulator (Runde-33-Paare): %d von %d gleich\n", gut, n_ref);
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -198,6 +287,8 @@ static void frame(uint16_t held, uint16_t edge)
     while (scd_audio_queue_pop(&e)) { }
 }
 
+static int s_flag_bank = -1, s_flag_bit = 0;   /* Werkzeug "standplatz": Story-Flag nach scd_vm_init */
+
 static int room_boot(uint16_t room)
 {
     char rp[600];
@@ -208,6 +299,7 @@ static int room_boot(uint16_t room)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_actor_init(); re15_aot_init(); scd_vm_init();
+    if (s_flag_bank >= 0) re15_game_flag_set((uint8_t)s_flag_bank, (uint8_t)s_flag_bit, 1);   /* standplatz */
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset();
     re15_pauseflags_clear();
@@ -285,19 +377,62 @@ static int durchgehen(int slot, int *gefunden_out)
  * ------------------------------------------------------------------------------------------ */
 static re15_door_seq_anfrage_t s_gefangen;
 static int s_n_gefangen = 0;
+
+/* Raum booten, eine Tuer zum Ziel mit Zeile in der Runde-33-Tabelle suchen, per QUADRAT durchgehen:
+ * genau eine Anfrage mit Basis re2 und Port-Archiv kennung (NULL = RE2-Datei, eigen 0), Raumwechsel steht an. */
+static void durchgang_pruefen(uint16_t raum, uint16_t ziel, int re2, const char *kennung)
+{
+    if (room_boot(raum) != 0) return;
+    int erledigt = 0;
+    for (int i = 0; i < RE15_AOT_MAX && !erledigt; i++) {
+        const re15_aot_t *a = &g_aot.slots[i];
+        const re15_aot_door_params_t *d = &g_aot.door_params[i];
+        if (!a->active || a->type != RE15_AOT_TYPE_DOOR || d->dest_room != (ziel & 0xFF) >> 4
+            || d->dest_stage != (ziel >> 12) - 1 || !(a->half_w || a->half_h || a->has_quad)) continue;
+        re15_door_seq_anfrage_t soll;
+        if (re15_door_seq_zuordnen_flaeche(raum, a->has_quad, a->x, a->z, a->half_w, a->half_h, a->xs, a->zs,
+                                           d->band, &soll) != RE15_DOOR_ARCHIV_RE2 || soll.re2_nr != re2) continue;
+        s_n_gefangen = 0; memset(&s_gefangen, 0, sizeof s_gefangen);
+        int gefunden = 0;
+        int wechsel = durchgehen(i, &gefunden);
+        const re15_tuer_eigen_t *e = re15_door_seq_eigen(s_gefangen.eigen);
+        printf("ROOM%04X Slot %d (S%03u): Standplatz %d, Raumwechsel %d -> ROOM%04X, Laeufer %d x: DOOR%02X V%d eigen %d "
+               "(%s)\n", raum, i, soll.seite, gefunden, wechsel, g_room_change.room_id, s_n_gefangen, s_gefangen.re2_nr,
+               s_gefangen.variante, s_gefangen.eigen, e ? e->kennung : "RE2-Datei");
+        if (!gefunden) continue;
+        erledigt = 1;
+        PRUEF(wechsel && g_room_change.room_id == ziel, "ROOM%04X: kein Durchgang nach ROOM%04X", raum, ziel);
+        PRUEF(s_n_gefangen == 1 && s_gefangen.archiv == RE15_DOOR_ARCHIV_RE2 && s_gefangen.re2_nr == re2
+              && s_gefangen.variante == soll.variante
+              && (kennung ? (e && !strcmp(e->kennung, kennung)) : s_gefangen.eigen == 0),
+              "ROOM%04X: Anfrage DOOR%02X %s fehlt/falsch", raum, re2, kennung ? kennung : "(objektlos)");
+        PRUEF(g_room_change.pending, "ROOM%04X: Raumwechsel muss nach der Sequenz noch anstehen", raum);
+        g_room_change.pending = 0;
+    }
+    PRUEF(erledigt, "ROOM%04X: keine begehbare Tuer nach ROOM%04X mit Zeile DOOR%02X", raum, ziel, re2);
+}
 static void fang(const re15_door_seq_anfrage_t *a) { s_gefangen = *a; s_n_gefangen++; }
 
 static int16_t le16(const uint8_t *p) { return (int16_t)(p[0] | (p[1] << 8)); }
 
 static void teil_zuordnung(void)
 {
-    int n = re15_door_seq_zeilen(), eig = 0, treffer = 0, seiten = 0, tueren = 0;
-    for (int i = 0; i < n; i++) {
+    int n = re15_door_seq_zeilen(), n31 = re15_door_seq_zeilen_runde31(), eig = 0, g12 = 0, treffer = 0, seiten = 0,
+        tueren = 0;
+    for (int i = n31; i < n; i++) {
         const re15_tuer_zeile_t *t = re15_door_seq_zeile(i);
-        if (!t->eigen) continue;
         eig++;
-        const re15_tuer_eigen_t *e = re15_door_seq_eigen(t->eigen);
-        PRUEF(e && e->basis == t->re2_nr, "Zeile %d S%03u: eigen %d ohne Archiv/Basis", i, t->seite, t->eigen);
+        if (!t->eigen) {
+            /* G12: Durchgang ohne Tuerblatt -> RE2-Archiv ohne Objekt DOOR36 V0 (Datei in shared_assets/RE2/DOOR) */
+            int ar = 0, mo = 0, se = 0, gr = 0;
+            PRUEF(t->re2_nr == 0x36 && t->variante == 0 && t->spender == RE15_DOOR_KEIN_SPENDER
+                  && re15_door_seq_re2_archiv(0x36, &ar, &mo, &se, &gr) == 0,
+                  "Zeile %d S%03u: eigen 0 in der Runde-33-Tabelle, aber nicht DOOR36 V0", i, t->seite);
+            g12++;
+        }
+        const re15_tuer_eigen_t *e = t->eigen ? re15_door_seq_eigen(t->eigen) : NULL;
+        PRUEF(!t->eigen || (e && e->basis == t->re2_nr), "Zeile %d S%03u: eigen %d ohne Archiv/Basis", i, t->seite,
+              t->eigen);
         char rp[600];
         snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(t->raum >> 12), t->raum);
         size_t sz = 0;
@@ -333,10 +468,10 @@ static void teil_zuordnung(void)
                   "S%03u: Griff-Tausch DOOR%02X <- %02X fehlt/Spender-Archiv falsch", t->seite, t->re2_nr, t->spender);
         }
         int neu = 1, neu_t = 1;
-        for (int k = 0; k < i; k++) {
+        for (int k = n31; k < i; k++) {
             const re15_tuer_zeile_t *u = re15_door_seq_zeile(k);
             if (u->seite == t->seite) neu = 0;
-            if (u->tuer == t->tuer && u->eigen) neu_t = 0;
+            if (u->tuer == t->tuer) neu_t = 0;
             /* gleiche Flaeche in einer anderen Zeile: gleiche Wahl (sonst gewinnt die erste) */
             if (u->raum == t->raum && u->form == t->form && u->band == t->band && u->x == t->x && u->z == t->z
                 && u->hw == t->hw && u->hh == t->hh && !memcmp(u->qx, t->qx, sizeof u->qx) && !memcmp(u->qz, t->qz, sizeof u->qz))
@@ -345,8 +480,20 @@ static void teil_zuordnung(void)
         }
         seiten += neu; tueren += neu_t;
     }
-    printf("Port-Zeilen: %d, %d treffen ihren Satz, %d Tuerseiten, %d Tueren\n", eig, treffer, seiten, tueren);
-    PRUEF(eig >= 72 && seiten >= 36 && tueren >= 17, "Pilot: erwartet >= 72 Zeilen / 36 Seiten / 17 Tueren");
+    printf("Runde-33-Zeilen: %d (davon G12 objektlos %d), %d treffen ihren Satz, %d Tuerseiten, %d Tueren\n", eig,
+           g12, treffer, seiten, tueren);
+    PRUEF(eig >= 220 && seiten >= 110 && tueren >= 57 && g12 >= 10,
+          "Stufe 2: erwartet >= 220 Zeilen / 110 Seiten / 57 Tueren / 10 G12-Zeilen");
+    /* Tabelle deckt den Plan: jede geplante Seite (plan.json) hat mindestens eine Zeile */
+    int fehlt = 0;
+    for (int g = 0; g < re15_door_seq_geplant_anzahl(); g++) {
+        int da = 0;
+        for (int i = n31; i < n && !da; i++) da = re15_door_seq_zeile(i)->seite == re15_door_seq_geplant(g);
+        if (!da) { fehlt++; printf("FEHLT: geplante Seite S%03d ohne Zeile\n", re15_door_seq_geplant(g)); }
+    }
+    PRUEF(fehlt == 0 && re15_door_seq_geplant_anzahl() >= 110, "%d geplante Seiten ohne Zeile (Plan %d Seiten)", fehlt,
+          re15_door_seq_geplant_anzahl());
+    printf("Plan: %d geplante Seiten, alle in der Tabelle\n", re15_door_seq_geplant_anzahl());
 
     /* echter Spielschritt: G1-Tuer ROOM1000 -> ROOM1050 (T000..T002) stellt die Anfrage mit P07G */
     re15_door_seq_setze_laeufer(fang);
@@ -378,6 +525,9 @@ static void teil_zuordnung(void)
         }
         PRUEF(erledigt, "ROOM1000: keine begehbare G1-Tuer nach ROOM1050");
     }
+    /* Stufe 2: je ein echter Durchgang einer Stufe-2-Tuer und eines G12-Durchgangs */
+    durchgang_pruefen(0x3050, 0x30E0, 0x06, "P06F");     /* T098 Fabrik-Stahltuer (G2) */
+    durchgang_pruefen(0x4080, 0x4030, 0x36, NULL);       /* T117 Durchgang ohne Blatt (G12, DOOR36 V0) */
     re15_door_seq_setze_laeufer(NULL);
 }
 
@@ -386,6 +536,43 @@ int main(int argc, char **argv)
     const char *teil = argc > 1 ? argv[1] : "archive";
     if (!strcmp(teil, "archive")) teil_archive();
     else if (!strcmp(teil, "zuordnung")) teil_zuordnung();
+    else if (!strcmp(teil, "maschine")) teil_maschine();
+    else if (!strcmp(teil, "standplatz") && argc > 3) {
+        /* Werkzeug (kein ctest): Standplatz vor einer Tuer fuer den Echtlauf per Aktionstaste
+         * (RE15_PLAYER_POS="x,z,rot,band" + RE15_PRESS=square@N, analysis/befunde_runde33/tueren_rest_bau.md) */
+        unsigned raum = (unsigned)strtoul(argv[2], NULL, 16), ziel = (unsigned)strtoul(argv[3], NULL, 16);
+        if (argc > 4) {   /* optional Story-Flag "bank:bit" wie RE15_SET_FLAG (z. B. 4:243 Aufzug ROOM1120 @0xC9A) */
+            int bank = 0, bit = 0;
+            if (sscanf(argv[4], "%d:%d", &bank, &bit) == 2) { s_flag_bank = bank; s_flag_bit = bit; }
+        }
+        if (room_boot((uint16_t)raum) == 0)
+            for (int i = 0; i < RE15_AOT_MAX; i++) {
+                const re15_aot_t *a = &g_aot.slots[i];
+                const re15_aot_door_params_t *d = &g_aot.door_params[i];
+                if (!a->active || a->type != RE15_AOT_TYPE_DOOR || d->dest_room != (ziel & 0xFF) >> 4
+                    || d->dest_stage != (ziel >> 12) - 1 || !(a->half_w || a->half_h || a->has_quad)) continue;
+                re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                int band = d->band;
+                long ax = a->x, az = a->z;
+                if (a->has_quad) { ax = (a->xs[0] + a->xs[1] + a->xs[2] + a->xs[3]) / 4; az = (a->zs[0] + a->zs[1] + a->zs[2] + a->zs[3]) / 4; }
+                int gef = 0;
+                for (int dd = 0; dd < 16 && !gef; dd++) {
+                    int yaw = dd * 256;
+                    int32_t c = re15_cos_q12(yaw), sn = re15_sin_q12(yaw);
+                    int32_t px = (int32_t)ax - (int32_t)((620 * c) >> 12), pz = (int32_t)az + (int32_t)((620 * sn) >> 12);
+                    pl->rot_y = (int16_t)yaw; pl->x = px; pl->z = pz;
+                    if (!(band & 0x80)) { re15_collision_set_band(band); pl->floor = (uint8_t)band; }
+                    frame(0, 0);
+                    g_room_change.pending = 0;
+                    if (pl->x == px && pl->z == pz && (int)pl->rot_y == yaw && vorwaerts_trifft(a, px, pz, yaw)) {
+                        printf("STANDPLATZ ROOM%04X Slot %d -> ROOM%04X: RE15_PLAYER_POS=%d,%d,%d,%d\n", raum, i, ziel,
+                               px, pz, yaw, band & 0x7F);
+                        gef = 1;
+                    }
+                }
+                if (!gef) printf("ROOM%04X Slot %d -> ROOM%04X: kein Standplatz in der Mitte\n", raum, i, ziel);
+            }
+    }
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     printf(g_fehler ? "probe_r33_tueren %s: %d FEHLER\n" : "probe_r33_tueren %s: OK\n", teil, g_fehler);
     return g_fehler ? 1 : 0;

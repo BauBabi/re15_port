@@ -7194,11 +7194,15 @@ re_title:;
                              * der falsche Korridor. Ohne das hier wirkte der Teleport aus
                              * main.c:3626 nur beim Boot und wurde vom Sprung ueberschrieben. */
                             {   const char *ppj = getenv("RE15_PLAYER_POS");
-                                int ppx = 0, ppz = 0, pprot = 0;
-                                if (ppj && *ppj && sscanf(ppj, "%d,%d,%d", &ppx, &ppz, &pprot) >= 2) {
+                                int ppx = 0, ppz = 0, pprot = 0, ppband = -1;
+                                if (ppj && *ppj && sscanf(ppj, "%d,%d,%d,%d", &ppx, &ppz, &pprot, &ppband) >= 2) {
                                     dx = ppx; dz = ppz; dyaw = (int16_t)pprot;
+                                    /* Runde 33 (Tuer-Echtlauf per Aktionstaste): optional 4. Wert = Band,
+                                     * Y wie der JUMP-Executor selbst: -Band*0x708 (@0x8001d7b8-d4) */
+                                    if (ppband >= 0) dy = -(int32_t)ppband * 0x708;
                                     fprintf(stderr, "[parity] JUMP-Spawn ersetzt durch "
-                                                    "RE15_PLAYER_POS (%d,%d) rot=%d\n", ppx, ppz, pprot);
+                                                    "RE15_PLAYER_POS (%d,%d) rot=%d band=%d\n", ppx, ppz, pprot,
+                                                    ppband);
                                 } }
                             re15_room_request_change(droom, dx, dy, dz, dyaw, dcut);
                             fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X) spawn=(%d,%d,%d) cut=%d\n",

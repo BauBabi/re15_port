@@ -6,65 +6,66 @@
  * (Tonteil, Modellteil, Sektor), fnv = FNV-1a 32 ueber die ganze Datei. */
 static const re15_tuer_eigen_t re15_tuer_eigen[30] = {
     /* 1: P07G = DOOR07 + Textur 'Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1); Stufe 2: silbernes Rechteckschild unter dem Druecker gemalt (gemessen, Pilot-Punkt a)' (Ton F3 (06 07 08 22 2F, Blechtuer)) */
-    { "P07G", 0x07, 19608, 35428, 10, 55908, 0x982915E5u },
+    { "P07G", 0x07, 19608, 35428, 10, 55908, 0x982915E5u, 0 },
     /* 2: P07T = DOOR07 + Textur 'wie P07G, Farbe = Median der drei Treppenhausseiten ROOM1060 (hell graugruen gemalt, Gegenseiten dunkel; Pilot-Punkt c: je Seite ein Archiv)' (Ton F3 (06 07 08 22 2F, Blechtuer)) */
-    { "P07T", 0x07, 19608, 35428, 10, 55908, 0xD9329A38u },
+    { "P07T", 0x07, 19608, 35428, 10, 55908, 0xD9329A38u, 0 },
     /* 3: P06F = DOOR06 + Textur 'DOOR08-Blatt: Nieten/Rost weg, umlaufende gerundete Randnut + breit gerahmte Felder, hellgrau' (Ton F3 (Stahltuer)) */
-    { "P06F", 0x06, 19608, 37004, 10, 57484, 0xBFC0EFDEu },
+    { "P06F", 0x06, 19608, 37004, 10, 57484, 0xBFC0EFDEu, 0 },
     /* 4: P06U = DOOR06 + Textur 'wie P06F, aber gepraegte UNGLEICHE Felder (oben hoch, unten fast quadratisch, S188)' (Ton F3 (Stahltuer)) */
-    { "P06U", 0x06, 19608, 37004, 10, 57484, 0x7F0166E4u },
+    { "P06U", 0x06, 19608, 37004, 10, 57484, 0x7F0166E4u, 0 },
     /* 5: P1B3 = DOOR1B + Textur 'DOOR23-Blatt (achteckiges Profil + Ausbuchtung) je Fluegel; Griff-Tausch Spender DOOR23 (Riegelstange quer)' (Ton F5 (1B 30, Doppeltuer)) */
-    { "P1B3", 0x1B, 21176, 40744, 11, 63272, 0xA734099Fu },
+    { "P1B3", 0x1B, 21176, 40744, 11, 63272, 0xA734099Fu, 0 },
     /* 6: P1BD = DOOR1B + Textur 'wie P1B3, Farbe der ROOM2070-Seiten (kaltes blaugruenes Licht, dunkel gemalt) - je Seite ein Archiv' (Ton F5 (1B 30, Doppeltuer)) */
-    { "P1BD", 0x1B, 21176, 40744, 11, 63272, 0xB6ADC0ACu },
+    { "P1BD", 0x1B, 21176, 40744, 11, 63272, 0xB6ADC0ACu, 0 },
     /* 7: P1DG = DOOR1D + Textur 'Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)' (Ton eigen DOOR1D (Blech-Doppeltuer, V2/V3)) */
-    { "P1DG", 0x1D, 23928, 36100, 12, 60676, 0x9544905Eu },
+    { "P1DG", 0x1D, 23928, 36100, 12, 60676, 0xC2AEA401u, 0 },
     /* 8: P1DK = DOOR1D + Textur 'Stahlrahmen je Fluegel mit DREI Feldern ohne Glas (DOOR1A-Teilung, Kartenleser weg), dunkelgrau (T014)' (Ton eigen DOOR1D) */
-    { "P1DK", 0x1D, 23928, 36100, 12, 60676, 0x369CDFD5u },
+    { "P1DK", 0x1D, 23928, 36100, 12, 60676, 0x8EF0AA01u, 0 },
     /* 9: P1DL = DOOR1D + Textur 'Stahlrahmen je Fluegel mit hohem Feld oben + Querriegel + unterem Feld (T045), grau' (Ton eigen DOOR1D) */
-    { "P1DL", 0x1D, 23928, 36100, 12, 60676, 0x7740C4F4u },
+    { "P1DL", 0x1D, 23928, 36100, 12, 60676, 0xD8DF3E9Cu, 0 },
     /* 10: P04B = DOOR04 + Textur 'Blau -> braunes Holz (Farbton, Lage der Kassetten und Maserung bleiben)' (Ton F2 (01 04 09 11, Holz)) */
-    { "P04B", 0x04, 23928, 44984, 12, 69560, 0xC23A92B4u },
+    { "P04B", 0x04, 23928, 44984, 12, 69560, 0xC23A92B4u, 0 },
     /* 11: P0CD = DOOR0C + Textur 'helles gelbbraunes Holz, je Fluegel hohes schmales Drahtglasfenster, Panikstange gemalt' (Ton eigen DOOR0C (Holz-Doppeltuer mit Glas)) */
-    { "P0CD", 0x0C, 23880, 36892, 12, 61468, 0xBCFF74C5u },
+    { "P0CD", 0x0C, 23880, 36892, 12, 61468, 0xBCFF74C5u, 0 },
     /* 12: P16M = DOOR16 + Textur 'Silberrohr -> Messing (goldgelb, ROOM12607.bmp), Lichtverlauf der Rohre bleibt' (Ton eigen DOOR16 (4 Sprossen, kein Schliesston)) */
-    { "P16M", 0x16, 11000, 46572, 6, 58860, 0xF3556E1Cu },
+    { "P16M", 0x16, 11000, 46572, 6, 58860, 0xF3556E1Cu, 0 },
     /* 13: P16R = DOOR16 + Textur 'Silberrohr -> dunkles Rostbraun (ROOM11A00.bmp)' (Ton eigen DOOR16) */
-    { "P16R", 0x16, 11000, 46572, 6, 58860, 0x36589A6Au },
+    { "P16R", 0x16, 11000, 46572, 6, 58860, 0x36589A6Au, 0 },
     /* 14: P1EL = DOOR1E + Textur 'senkrechte Staebe -> waagerechte Lamellen (Durchsicht-Texel 0 wie im Original)' (Ton eigen DOOR1E (Klappe)) */
-    { "P1EL", 0x1E, 22872, 48908, 12, 73484, 0x22695894u },
+    /*    MD1 = Basis + Lamellenplatte Mesh 0 (+4 Ecken, +4 Dreiecke: x 150, z 18..1782, y 15..1185) */
+    { "P1EL", 0x1E, 22872, 49036, 12, 73612, 0xF429C89Eu, 1 },
     /* 15: P1EU = DOOR1E + Textur 'Staebe nur im unteren Drittel, oben dunkle Oeffnung' (Ton eigen DOOR1E) */
-    { "P1EU", 0x1E, 22872, 48908, 12, 73484, 0xE8C27496u },
+    { "P1EU", 0x1E, 22872, 48908, 12, 73484, 0xE8C27496u, 0 },
     /* 16: P25G = DOOR25 + Textur 'Schild SHAFT TYPE-L, Warnaufkleber, Rippen weg -> glattes graues Blech' (Ton eigen DOOR25 (Hubtuer)) */
-    { "P25G", 0x25, 17624, 34300, 9, 52732, 0x1F709C51u },
+    { "P25G", 0x25, 17624, 34300, 9, 52732, 0x1F709C51u, 0 },
     /* 17: P14A = DOOR14 + Textur 'groebere Rauten, hellgrauer Rahmen' (Ton eigen DOOR14 (Schiebe-Gittertor)) */
-    { "P14A", 0x14, 24024, 39128, 12, 63704, 0x8701F033u },
+    { "P14A", 0x14, 24024, 39128, 12, 63704, 0x8701F033u, 0 },
     /* 18: P2DS = DOOR2D + Textur 'Bedientafel + rote Lampe weg (Texel 0 = nicht gezeichnet), Warnrand bleibt' (Ton eigen DOOR2D (Hubbuehne)) */
-    { "P2DS", 0x2D, 22712, 53668, 12, 78244, 0xC9CE31CDu },
+    { "P2DS", 0x2D, 22712, 53668, 12, 78244, 0xC9CE31CDu, 0 },
     /* 19: P07R = DOOR07 + Textur 'DOOR22-Blatt ohne Nietrand und ohne gemalten D-Riegel, rostbraun' (Ton F3 (= DOOR22-Ton, bytegleich)) */
-    { "P07R", 0x07, 19608, 35428, 10, 55908, 0xEE008E6Du },
+    { "P07R", 0x07, 19608, 35428, 10, 55908, 0xEE008E6Du, 0 },
     /* 20: P1AP = DOOR1A + Textur 'DOOR23-Profil, Ausbuchtung am Griff gerade gezogen, braun' (Ton F4 (15 1A 23 = DOOR23-Ton)) */
-    { "P1AP", 0x1A, 21304, 37628, 11, 60156, 0xAF6CD1A1u },
+    { "P1AP", 0x1A, 21304, 37628, 11, 60156, 0xAF6CD1A1u, 0 },
     /* 21: P1DO = DOOR1D + Textur 'Lueftungsgitter -> schmales dunkles Schild + gelbes Warndreieck, orange' (Ton eigen DOOR1D) */
-    { "P1DO", 0x1D, 23928, 36100, 12, 60676, 0x73A9EA71u },
+    { "P1DO", 0x1D, 23928, 36100, 12, 60676, 0x73A9EA71u, 0 },
     /* 22: P26W = DOOR26 + Textur 'einteiliges Schott dunkel, zwei gelb-schwarze Warnstreifen, TYPE-P-Schilder weg, Handrad rot' (Ton F7 (26 31, Schott)) */
-    { "P26W", 0x26, 21832, 58808, 11, 81336, 0xB7A1B23Eu },
+    { "P26W", 0x26, 21832, 58808, 11, 81336, 0xB7A1B23Eu, 0 },
     /* 23: P24B = DOOR24 + Textur 'Aushang weg, Sichtfenster flacher/schmaler' (Ton F6 (24 29)) */
-    { "P24B", 0x24, 22728, 42996, 12, 67572, 0x7F07B2C7u },
+    { "P24B", 0x24, 22728, 42996, 12, 67572, 0x7F07B2C7u, 0 },
     /* 24: P07D = DOOR07 + Textur 'schwarzgrau glatt, kleines Feld mit abgeschnittener Ecke, Piktogramm Frau, blaues Schild' (Ton F3) */
-    { "P07D", 0x07, 19608, 35428, 10, 55908, 0x137A5E10u },
+    { "P07D", 0x07, 19608, 35428, 10, 55908, 0x137A5E10u, 0 },
     /* 25: P07H = DOOR07 + Textur 'wie P07D, Piktogramm Mann' (Ton F3) */
-    { "P07H", 0x07, 19608, 35428, 10, 55908, 0xD68E49EDu },
+    { "P07H", 0x07, 19608, 35428, 10, 55908, 0xD68E49EDu, 0 },
     /* 26: P27S = DOOR27 + Textur 'Laborseite ROOM5060: linkes Feld gelbes Strahlenwarnschild, rechts Fensterkasten + rotes Dreieck, blaugrau' (Ton eigen DOOR27 (Labor-Schiebetuer)) */
-    { "P27S", 0x27, 23176, 53932, 12, 78508, 0x08FF493Fu },
+    { "P27S", 0x27, 23176, 53932, 12, 78508, 0xDE98FF2Fu, 0 },
     /* 27: P27K = DOOR27 + Textur 'Gangseite ROOM5040/5120: quadratisches Sichtfenster, rotes Dreieck, gelb-schwarzer Aufkleber, schmales Feld rechts (anders gemalt als die Laborseite: je Seite ein Archiv)' (Ton eigen DOOR27 (Labor-Schiebetuer)) */
-    { "P27K", 0x27, 23176, 53932, 12, 78508, 0xD8E7EB92u },
+    { "P27K", 0x27, 23176, 53932, 12, 78508, 0xD8E7EB92u, 0 },
     /* 28: P27O = DOOR27 + Textur 'Gangseite ROOM5120 (S305): Malerei wie P27K, aber orange gemalt (Raumlicht) - je Seite ein Archiv' (Ton eigen DOOR27 (Labor-Schiebetuer)) */
-    { "P27O", 0x27, 23176, 53932, 12, 78508, 0x3976B3B5u },
+    { "P27O", 0x27, 23176, 53932, 12, 78508, 0x3976B3B5u, 0 },
     /* 29: P1AZ = DOOR1A + Textur 'zwei Felder + senkrechte Rahmenleiste rechts + dunkles Rechteck oben, graugruen' (Ton F4) */
-    { "P1AZ", 0x1A, 21304, 37628, 11, 60156, 0x3683DE80u },
+    { "P1AZ", 0x1A, 21304, 37628, 11, 60156, 0x3683DE80u, 0 },
     /* 30: P07M = DOOR07 + Textur 'Holz-/Rostrahmen, oben + unten Maschendraht (DOOR14-Raute, Loecher Texel 0), Mittelriegel' (Ton F3) */
-    { "P07M", 0x07, 19608, 35428, 10, 55908, 0xC00248C3u },
+    { "P07M", 0x07, 19608, 35428, 10, 55908, 0xC00248C3u, 0 },
 };
 
 /* Zuordnung RE1.5-Tuerseite -> Port-Archiv (Spalten wie gen/tuer_zuordnung.inc; re2_nr = Basis-Archiv
@@ -528,4 +529,16 @@ static const re15_griff_tausch_t re15_griff_tausche_eigen[5] = {
     { 0x1D, 0x07, 1, 1, {0, 0, 0}, {2048, 2048, 0}, -245, -702, 8, {0, 0, 0}, {0, 0, 0}, 8 },
     /* P1DL: DOOR1D <- P1DL (Rotation von DOOR07): Anker Archiv [130, -2850, -3410], Anker Spender [130, -3352, -3404] */
     { 0x1D, 0x07, 1, 1, {0, 0, 0}, {2048, 2048, 0}, -245, -702, 9, {0, 0, 0}, {0, 0, 0}, 9 },
+};
+
+/* Stufe 2: geplante Seiten laut analysis/befunde_runde33/tueren_rest/plan.json (bau + Variante) -
+ * probe_r33_tueren 'zuordnung' prueft, dass JEDE eine Zeile oben hat (Tabelle deckt den Plan). */
+static const uint16_t re15_tuer_geplant[110] = {
+    0, 1, 2, 3, 4, 5, 6, 10, 13, 14, 15, 18, 19, 20, 21, 22,
+    23, 24, 25, 30, 31, 33, 34, 35, 36, 38, 39, 40, 41, 44, 45, 48,
+    49, 56, 57, 59, 63, 78, 80, 87, 88, 89, 90, 91, 92, 93, 95, 99,
+    100, 102, 104, 119, 121, 128, 130, 131, 136, 139, 140, 141, 143, 144, 145, 151,
+    152, 153, 154, 155, 156, 157, 158, 164, 165, 166, 167, 171, 173, 183, 184, 185,
+    187, 188, 189, 195, 196, 198, 199, 201, 202, 203, 204, 205, 206, 208, 209, 211,
+    213, 214, 218, 226, 232, 236, 239, 240, 248, 269, 273, 274, 305, 322,
 };

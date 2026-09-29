@@ -83,10 +83,40 @@ def verteilt(door, variante):
     return faelle, None
 
 
-def main():
+PLAN33 = os.path.join(REPO, "analysis", "befunde_runde33", "tueren_rest", "plan.json")
+ARCH33 = os.path.join(REPO, "analysis", "befunde_runde33", "tueren_rest", "archive.json")
+AUS33 = os.path.join(PORT, "tests", "unit", "gen", "r33_tuer_referenz.inc")
+
+
+def paare_r31():
     d = json.load(open(ZUORDNUNG, encoding="utf-8"))
-    paare = sorted({(int(s["archiv"][4:], 16), s["variante"]) for t in d["tueren"] for s in t["seiten"]
-                    if s.get("abgedeckt")})
+    return sorted({(int(s["archiv"][4:], 16), s["variante"]) for t in d["tueren"] for s in t["seiten"]
+                   if s.get("abgedeckt")})
+
+
+def paare_r33():
+    """Runde 33: (Basis, Variante) jeder gebauten Seite (Port-Archiv oder G12 objektlos), die die Runde 31
+    NICHT schon gegen den Simulator pinnt."""
+    plan = json.load(open(PLAN33, encoding="utf-8"))
+    basis = {e["kennung"]: e["basis_nr"] for e in json.load(open(ARCH33, encoding="utf-8"))["archive"]}
+    out = set()
+    for e in plan["tueren"].values():
+        for s in e["seiten"]:
+            if not (s.get("bau") and "variante" in s):
+                continue
+            a = s.get("archiv", e["archiv"])
+            nr = int(e["basis"][4:], 16) if a == "OBJEKTLOS" else basis[a]
+            out.add((nr, s["variante"]))
+    return sorted(out - set(paare_r31()))
+
+
+def main():
+    if "--r33" in sys.argv:
+        return schreiben(paare_r33(), AUS33, "r33")
+    return schreiben(paare_r31(), AUS, "r31")
+
+
+def schreiben(paare, aus, praefix):
     L = ["/* GENERIERT von re15_port/tools/tueren/tuer_maschine_referenz.py - NICHT HAND-EDITIEREN.",
          " * Katalog-Simulator (tools/tor/tuerkatalog.py) je benutzter Archiv-Variante: Bildzahl,",
          " * Schliesston-Merker, Se_on-Bilder, je Bild FNV-1a ueber die 10 Objekte (an, Mesh, Flags,",
@@ -117,14 +147,14 @@ def main():
         print("DOOR%02X V%d: Cases %s %s, %d Bilder, Se_on %s, Schliesston %d, Notizen %s" % (
             ar, v, faelle, "ok" if ok else "NICHT VERTEILT", len(summen), tone, vm.global248, sorted(vm.notes)))
     L.append("typedef struct { int archiv, variante, verteilt; const uint32_t *summen; int n_bilder;")
-    L.append("                 const int *tone; int n_tone; int schliesston; } r31_ref_t;")
-    L.append("static const r31_ref_t r31_refs[%d] = {" % len(koerper))
+    L.append("                 const int *tone; int n_tone; int schliesston; } %s_ref_t;" % praefix)
+    L.append("static const %s_ref_t %s_refs[%d] = {" % (praefix, praefix, len(koerper)))
     L += koerper
     L.append("};")
-    os.makedirs(os.path.dirname(AUS), exist_ok=True)
-    with open(AUS, "w", encoding="utf-8", newline="\n") as f:
+    os.makedirs(os.path.dirname(aus), exist_ok=True)
+    with open(aus, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(L) + "\n")
-    print("Paare %d, nicht verteilt %d -> %s" % (len(paare), fehler, AUS))
+    print("Paare %d, nicht verteilt %d -> %s" % (len(paare), fehler, aus))
     return 1 if fehler else 0
 
 

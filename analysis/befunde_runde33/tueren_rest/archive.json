@@ -84,7 +84,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 116
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P07T",
@@ -154,7 +156,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 85
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P06F",
@@ -247,7 +251,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3778,
     "palette_belegt": 153
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P06U",
@@ -305,7 +311,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3778,
     "palette_belegt": 161
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1B3",
@@ -360,7 +368,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 1660,
     "palette_belegt": 161
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1BD",
@@ -415,7 +425,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 1660,
     "palette_belegt": 154
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1DG",
@@ -425,8 +437,8 @@
    "modell": 36100,
    "sektor": 12,
    "datei": 60676,
-   "fnv": 2504298590,
-   "sha1": "916a794cfc9ca22ff6e302157fa40d5623398ddd",
+   "fnv": 3266225153,
+   "sha1": "10adf0d30d3be845e55be2bc46bb9c4f9c9c7d0f",
    "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
    "tim_off": 27364,
    "rezept": "Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
@@ -465,26 +477,35 @@
      100.0
     ],
     "griff_ausschnitte": 5,
+    "schild": [
+     3,
+     120,
+     11,
+     136
+    ],
     "griff_gemalt": [
-     96.0,
-     101.0,
-     100.0
+     74.3,
+     78.2,
+     77.4
     ],
     "griff_texel_mittel_vorher": 38.4,
-    "griff_kontrast": 2.776,
-    "griff_texel_mittel_nachher": 174.3,
+    "griff_kontrast": 3.514,
+    "griff_texel_mittel_nachher": 134.8,
     "griff_texel": 983,
     "griff_gekappt": 0,
+    "griff_kalibrierung": 0.774,
     "griff_hinweis": "Selbst-Tausch: Grund-Drehung DOOR07 (waagerecht), Mesh + Textur aus P1DG selbst (DOOR1D.m1 = DOOR07.m1 bytegleich) - Druecker in der gemalten G4-Farbe"
    },
    "palette": {
     "farben_geschuetzt": 0,
-    "farben_blatt": 61,
+    "farben_blatt": 63,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 62
-   }
+    "palette_belegt": 64
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1DK",
@@ -494,8 +515,8 @@
    "modell": 36100,
    "sektor": 12,
    "datei": 60676,
-   "fnv": 916250581,
-   "sha1": "b2328e283c0c5955118845dd0da42648801a2080",
+   "fnv": 2398136833,
+   "sha1": "bb8f568b0cd8074cb6f5c76d1cb2d259fa0c105f",
    "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
    "tim_off": 27364,
    "rezept": "Stahlrahmen je Fluegel mit DREI Feldern ohne Glas (DOOR1A-Teilung, Kartenleser weg), dunkelgrau (T014)",
@@ -524,28 +545,37 @@
       47.0
      ]
     ],
+    "schild": [
+     3,
+     120,
+     11,
+     136
+    ],
     "griff_gemalt": [
-     103.0,
-     107.0,
-     96.5
+     79.7,
+     82.8,
+     74.7
     ],
     "griff_texel_mittel_vorher": 38.4,
-    "griff_kontrast": 2.385,
-    "griff_texel_mittel_nachher": 183.5,
+    "griff_kontrast": 3.698,
+    "griff_texel_mittel_nachher": 141.9,
     "griff_texel": 983,
     "griff_gekappt": 0,
+    "griff_kalibrierung": 0.774,
     "griff_ausschnitte": 2,
     "vorlage": "DOOR1A (Stahlrahmen) ohne Kartenleser",
     "gekappt": 0
    },
    "palette": {
     "farben_geschuetzt": 0,
-    "farben_blatt": 51,
+    "farben_blatt": 75,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 52
-   }
+    "palette_belegt": 76
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1DL",
@@ -555,8 +585,8 @@
    "modell": 36100,
    "sektor": 12,
    "datei": 60676,
-   "fnv": 2000733428,
-   "sha1": "fdfcee863ce3e0abf4e32d397d2d74ad54e3637d",
+   "fnv": 3638509212,
+   "sha1": "9b8aeecb60630917937b73d1e8641f3338d665fd",
    "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
    "tim_off": 27364,
    "rezept": "Stahlrahmen je Fluegel mit hohem Feld oben + Querriegel + unterem Feld (T045), grau",
@@ -590,28 +620,37 @@
       57.0
      ]
     ],
+    "schild": [
+     3,
+     120,
+     11,
+     136
+    ],
     "griff_gemalt": [
-     112.5,
-     116.0,
-     113.8
+     87.1,
+     89.8,
+     88.0
     ],
     "griff_texel_mittel_vorher": 38.4,
-    "griff_kontrast": 1.847,
-    "griff_texel_mittel_nachher": 201.1,
+    "griff_kontrast": 3.494,
+    "griff_texel_mittel_nachher": 155.6,
     "griff_texel": 983,
     "griff_gekappt": 0,
+    "griff_kalibrierung": 0.774,
     "griff_ausschnitte": 2,
     "vorlage": "DOOR1A (Stahlrahmen) ohne Kartenleser, oberer Querriegel weg",
     "gekappt": 0
    },
    "palette": {
     "farben_geschuetzt": 0,
-    "farben_blatt": 44,
+    "farben_blatt": 60,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 45
-   }
+    "palette_belegt": 61
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P04B",
@@ -651,7 +690,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3767,
     "palette_belegt": 110
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P0CD",
@@ -701,7 +742,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3778,
     "palette_belegt": 109
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P16M",
@@ -735,7 +778,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 27516,
     "palette_belegt": 29
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P16R",
@@ -769,18 +814,20 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 27516,
     "palette_belegt": 27
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1EL",
    "basis": "DOOR1E",
    "basis_nr": 30,
    "ton": 22872,
-   "modell": 48908,
+   "modell": 49036,
    "sektor": 12,
-   "datei": 73484,
-   "fnv": 577329300,
-   "sha1": "0022b812758f89356d47d6d8a40181ce02f9486e",
+   "datei": 73612,
+   "fnv": 4096379038,
+   "sha1": "fc1aa7046e5da7ec57ac185868ec676eda8381cb",
    "basis_sha1": "72cc67b40186e42793e68c450ed079d2aaadd05a",
    "tim_off": 40172,
    "rezept": "senkrechte Staebe -> waagerechte Lamellen (Durchsicht-Texel 0 wie im Original)",
@@ -830,6 +877,116 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 5962,
     "palette_belegt": 184
+   },
+   "md1_eigen": 1,
+   "md1_ergaenzung": {
+    "kurz": "Lamellenplatte Mesh 0 (+4 Ecken, +4 Dreiecke: x 150, z 18..1782, y 15..1185)",
+    "ecken": [
+     [
+      150,
+      15,
+      18,
+      0
+     ],
+     [
+      150,
+      15,
+      1782,
+      0
+     ],
+     [
+      150,
+      1185,
+      18,
+      0
+     ],
+     [
+      150,
+      1185,
+      1782,
+      0
+     ]
+    ],
+    "dreiecke": [
+     [
+      0,
+      256,
+      0,
+      257,
+      0,
+      258
+     ],
+     [
+      0,
+      257,
+      0,
+      259,
+      0,
+      258
+     ],
+     [
+      5,
+      256,
+      5,
+      258,
+      5,
+      257
+     ],
+     [
+      5,
+      257,
+      5,
+      258,
+      5,
+      259
+     ]
+    ],
+    "uv": [
+     [
+      124,
+      1,
+      30720,
+      17,
+      1,
+      128,
+      124,
+      78,
+      0
+     ],
+     [
+      17,
+      1,
+      30720,
+      17,
+      78,
+      128,
+      124,
+      78,
+      0
+     ],
+     [
+      124,
+      1,
+      30720,
+      124,
+      78,
+      128,
+      17,
+      1,
+      0
+     ],
+     [
+      17,
+      1,
+      30720,
+      124,
+      78,
+      128,
+      17,
+      78,
+      0
+     ]
+    ]
    }
   },
   {
@@ -876,7 +1033,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 5962,
     "palette_belegt": 165
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P25G",
@@ -926,7 +1085,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4864,
     "palette_belegt": 17
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P14A",
@@ -960,7 +1121,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3215,
     "palette_belegt": 168
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P2DS",
@@ -988,7 +1151,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 7309,
     "palette_belegt": 137
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P07R",
@@ -1043,7 +1208,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 38
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1AP",
@@ -1104,7 +1271,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4358,
     "palette_belegt": 114
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1DO",
@@ -1179,7 +1348,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 46
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P26W",
@@ -1241,7 +1412,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4722,
     "palette_belegt": 220
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P24B",
@@ -1302,7 +1475,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4318,
     "palette_belegt": 140
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P07D",
@@ -1380,7 +1555,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 64
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P07H",
@@ -1458,7 +1635,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 48
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P27S",
@@ -1468,8 +1647,8 @@
    "modell": 53932,
    "sektor": 12,
    "datei": 78508,
-   "fnv": 150948159,
-   "sha1": "30101d4b779d5e749efba5ce9a41a3ade4458482",
+   "fnv": 3734568751,
+   "sha1": "9d050f1f4b61aabb859873ec71ba50912ef292b8",
    "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
    "tim_off": 45196,
    "rezept": "Laborseite ROOM5060: linkes Feld gelbes Strahlenwarnschild, rechts Fensterkasten + rotes Dreieck, blaugrau",
@@ -1508,12 +1687,14 @@
    },
    "palette": {
     "farben_geschuetzt": 0,
-    "farben_blatt": 63,
+    "farben_blatt": 61,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4273,
-    "palette_belegt": 64
-   }
+    "palette_belegt": 62
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P27K",
@@ -1563,7 +1744,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4273,
     "palette_belegt": 42
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P27O",
@@ -1613,7 +1796,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4273,
     "palette_belegt": 57
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P1AZ",
@@ -1670,7 +1855,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 4358,
     "palette_belegt": 153
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   },
   {
    "kennung": "P07M",
@@ -1721,7 +1908,9 @@
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
     "palette_belegt": 123
-   }
+   },
+   "md1_eigen": 0,
+   "md1_ergaenzung": null
   }
  ],
  "zeilen": 220,

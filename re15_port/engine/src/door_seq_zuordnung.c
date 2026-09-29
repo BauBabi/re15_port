@@ -46,6 +46,34 @@
 
 int re15_door_seq_zeilen(void) { return N_ZEILEN; }
 
+int re15_door_seq_zeilen_runde31(void)
+{
+#ifndef RE15_PLATFORM_PSX
+    return N_ZEILEN_RE2;
+#else
+    return 0;
+#endif
+}
+
+int re15_door_seq_geplant_anzahl(void)
+{
+#ifndef RE15_PLATFORM_PSX
+    return (int)(sizeof re15_tuer_geplant / sizeof re15_tuer_geplant[0]);
+#else
+    return 0;
+#endif
+}
+
+int re15_door_seq_geplant(int i)
+{
+#ifndef RE15_PLATFORM_PSX
+    if (i >= 0 && i < re15_door_seq_geplant_anzahl()) return re15_tuer_geplant[i];
+#else
+    (void)i;
+#endif
+    return 0;
+}
+
 const re15_tuer_zeile_t *re15_door_seq_zeile(int i)
 {
 #ifndef RE15_PLATFORM_PSX

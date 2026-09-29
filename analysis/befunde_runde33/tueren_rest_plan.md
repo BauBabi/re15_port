@@ -283,7 +283,11 @@ mit dem RE2-Archiv, die andere mit ihrem Port-Archiv).
       36 Seiten, Kontaktbogen angesehen, Helligkeit F/P 1,01 (tueren_rest_pilot.md)
 - [x] Riegel `probes/r33_tueren.cmake` (2 Tests), RE15_MIN_TESTS 416 -> 418
 
-## 7. Offen (fuer Stufe 2)
+- [x] **Stufe 2** (`tueren_rest_bau.md`): alle 61 geplanten Tueren gebaut bzw. begruendet ausgenommen - 141 von 144
+      Tueren mit Sequenz, 30 Port-Archive (+P07T P1BD P1DL P27K P27O gegen den Plan: je anders gemalter Seite bzw.
+      eigener Aufteilung ein Archiv), G12 = DOOR36, Pilot-Punkte a-c erledigt, Riegel + unit_r33_tueren_maschine.
+
+## 7. Offen (fuer Stufe 2) - erledigt, s. tueren_rest_bau.md
 
 1. G12: welches objektlose RE2-Archiv (20/21/32/34/36) - nach Huellkurve/Se_on-Zeitpunkten der Tonteile
    (`re2_tuer_ton.py`) und dem RE2-Einsatz (ROOM4100 20/36, ROOM2080 32, ROOM2140 34) entscheiden, nicht raten.
