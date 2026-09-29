@@ -4,13 +4,24 @@ Nutzer-Befund woertlich: "Die Türen haben eine komische Verzerrung beim öffnen
 
 Zweig `r32/tueren-unterteilung`, Arbeitsbaum `.claude/worktrees/r32_unterteilung`.
 
-## Stand (laufend fortgeschrieben)
+## Kurz — Antwort an den Nutzer
 
-- [ ] 1. RE: 0x8008ebf4 = DivideGT3? DIVPOLYGON3-Felder, ndiv, pih/piv, Init-Stelle
-- [ ] 2. Messen vorher (Framedumps DOOR13-Seite + Standardblatt, Knick-Mass)
-- [ ] 3. Bauen (door_scene_pc.c, nur Objekte mit Bit 0x20)
-- [ ] 4. Messen nachher + Kontaktbogen 184 Seiten, ohne-0x20 bitgleich
-- [ ] 5. Riegel r32_unterteilung.cmake, RE15_MIN_TESTS anheben
+- **Ursache:** RE2 zeichnet die Tuerblaetter mit Objekt-Flag 0x20 nicht als zwei grosse Dreiecke je Flaeche, sondern
+  unterteilt jedes Dreieck mit der PsyQ-Funktion `DivideGT3` (0x8008ebf4) dreimal im 3D-Raum (64 Teildreiecke, jeder Teilpunkt
+  einzeln perspektivisch projiziert). Der Port kannte das Flag nicht; die Textur wurde je grossem Dreieck affin gestreckt und
+  knickte an der Diagonale (V-Form der Fensterkante bei DOOR13, fuenfeckiges Fenster bei DOOR1B).
+- **Jetzt:** Flag 0x20 byte-true nach DivideGT3 (ndiv 3, pih 320, piv 240 aus Door_init), fuer die 12 Archive, die es tragen
+  (06 09 13 15 1A 1B 1C 1D 23 24 25 29). Knick an der DOOR13-Fensterunterkante (S017 Mitte): **max 27,8 -> 3,8 px, RMS 13,1 -> 1,0 px**
+  (960x720-Abzug); Rest = Rundung der Teilpunkte auf ganze PSX-Pixel wie auf der PSX.
+- **Unveraendert (bitgleich):** alle 138 Bilder der 10 Archive ohne 0x20, beide Tor-Sequenzen ROOM1170 (648 Bilder).
+
+## Stand
+
+- [x] 1. RE: 0x8008ebf4 = DivideGT3, ndiv 3 / pih 320 / piv 240 (Door_init), Ablauf RCpolyGT3A (Abschnitt 1)
+- [x] 2. Messen vorher (Abschnitt 2)
+- [x] 3. Bauen (Abschnitt 3)
+- [x] 4. Messen nachher, 184 Seiten, Kontaktbogen, bitgleich ohne 0x20 + Tor (Abschnitt 4)
+- [x] 5. Riegel `tests/unit/probes/r32_unterteilung.cmake`, RE15_MIN_TESTS 411 -> 413 (Abschnitt 5)
 
 ## 1. RE: Flag 0x20 = PsyQ `DivideGT3` mit ndiv 3 (alles selbst disassembliert, `info/re2leon/PSX.EXE`)
 
@@ -48,8 +59,10 @@ Werkzeuge: `build/r32_unt/re/gte_dis.py` (Kopie aus `build/tor_1170/re_zeichnen/
 
 ### 1.2 0x8008ebf4 = `DivideGT3` (PsyQ libgte)
 
-Signatur (`LibRef47.pdf`, `LIBGTE.H` DIVPOLYGON3 Zeile 186-194):
-`POLY_GT3 *DivideGT3(SVECTOR *v0,*v1,*v2, u_long *uv0,*uv1,*uv2, CVECTOR *rgb0,*rgb1,*rgb2, POLY_GT3 *s, u_long *ot, DIVPOLYGON3 *divp)`
+Signatur (Run-Time Library Reference 8-44, Text in `info/Resident_Evil_und_Playstation_Information/information181.txt:8107-8160`;
+Struktur `PSYQ_SDK/psyq/include/LIBGTE.H:186-194`): "ot is a pointer to the OT entry ... You must set divp->ndiv to the desired
+number of divisions, and divp->pih, divp->piv to the display screen (clipping) resolution"; Tabelle 8-1: **ndiv 3 = 8x8**.
+`u_long *DivideGT3(SVECTOR *v0,*v1,*v2, u_long *uv0,*uv1,*uv2, CVECTOR *rgb0,*rgb1,*rgb2, POLY_GT3 *s, u_long *ot, DIVPOLYGON3 *divp)`
 - 12 Argumente, genau die Belegung von 1.1.
 - Beleg per Objektvergleich: `psyq-4.7-converted-full/lib/libgte/dvgt3_04.o` exportiert `DivideGT3` (0x1e0 B, importiert
   `RotAverageNclip3`, `ReadSZfifo3`, `RCpolyGT3A`). Die RE2-Funktion ist 0x1e0 B lang (0x8008ebf4..0x8008edc8) mit denselben
@@ -149,4 +162,68 @@ Fensterumriss des linken Fluegels (Knick oben rechts und unten).
   kein 0x20), PSX-Plattform (keine Tuerszene).
 - Schluessel-Umfang: laufende Nummer `& 0xfff` - groesstes Bild: 2 Blaetter x 12 Dreiecke x 64 + Griffe < 4096 (die Blatt-Meshes
   aller 0x20-Archive haben 12 Dreiecke, gezaehlt aus den MD1), Warteschlange 8192.
+
+## 4. Messung NACHHER (echte exe, beschleunigter Renderer)
+
+⚠ Falle waehrend der Runde: auch der erste Nachher-Lauf endete nach einer Seite mit exit 1, der Tor-Lauf V1 nach 7 Bildern -
+parallele Sitzungen beenden `re15_pc.exe` per Bildname. Abhilfe: Messlaeufe mit einer umbenannten Kopie `r32_mess.exe` im selben
+Verzeichnis (`tools/tueren/unterteilung_lauf.sh <ziel> [ALLE]`); damit liefen alle Laeufe durch (184 Seiten gespielt, 2 x 324 Tor-Bilder).
+
+**Knick-Mass** (`unterteilung_knick.py --folgen`, Kante ab einer Startspalte verfolgt; Abzug 960x720 = 3 x PSX):
+
+| Seite / Kante | vorher max / 95 % / RMS | nachher max / 95 % / RMS |
+|---|---|---|
+| S017 DOOR13 V0 Mitte, Fenster-Unterkante | 27,78 / 22,19 / 13,09 px | **3,77 / 2,88 / 1,04 px** |
+| S017 DOOR13 V0 Mitte, Feld-Oberkante | 30,11 / 24,60 / 14,76 px | **3,90 / 3,19 / 1,44 px** |
+| S043 DOOR1B V3 Mitte, Fenster-Unterkante linker Fluegel | 8,38 / 6,44 / 3,50 px | **0,90 / 0,82 / 0,48 px** |
+| S043 Aussenkante oben linker Fluegel (Silhouette, Kontrolle) | 0,51 / 0,47 / 0,29 px | 1,51 / 1,00 / 0,53 px |
+
+Die Silhouette war vorher eine einzige Dreieckskante und darum exakt gerade; nachher ist sie ein Zug durch die auf ganze
+Pixel gerundeten Teilpunkte (+-0,5 PSX-Pixel) - dieselbe Rundung wie auf der PSX (RTPT liefert ganzzahlige SXY je Teilpunkt).
+
+**Bitgleichheit** (`tools/tueren/unterteilung_vergleich.py`, je Seite Anfang + Mitte, 368 Bilder):
+
+| Archive | Bilder gleich | verschieden |
+|---|---|---|
+| ohne 0x20: 0A 16 19 1E 26 27 2A 2D 2E 31 | **138** | **0** |
+| mit 0x20: 06 09 13 15 1A 1B 1C 1D 23 24 25 29 | 0 | 230 |
+| Tor ROOM1170 V0 / V1 (`RE15_TUER_TEST`, alle Bilder) | **324 / 324** | **0 / 0** |
+
+Der Umbau (Dreiecksschleife aus `door_scene_pc.c` in die Engine) wurde getrennt geprueft: Lauf `nachher1` (Unterteilung noch in
+door_scene_pc.c) gegen `nachher2` (Engine-Schleife): **368 von 368 Bogenbildern gleich**, Tor wieder 648/648 gleich dem Vorher.
+
+**Angesehen:** alle 16 neuen Kontaktboegen erzeugt (`tuer_kontaktbogen.py --t1 <Hauptbaum>/build/r31_tueren/t1 --bilder
+build/r32_unt/nachher2/bogen ...`), Stichprobe ueber ALLE Archive mit 0x20: Bogen 1 (13, 1B), 2 (09, 1A), 4 (1C), 7 (06, 23, 15),
+8 (15, 1D, 24, 29), 9 (25, 29). Fensterkanten, Felder, X-Streben (06, 15), Warnstreifen (15), Schilder (29) gerade; kein
+fehlendes Stueck; DOOR25 (Hubtuer, fast frontal) sieht aus wie vorher. Einzelbilder S017/S043/S161/S217 vorher/nachher nebeneinander.
+
+Belegbilder (`analysis/befunde_runde32/unterteilung_belege/`):
+- `s017_door13_mitte_vorher_nachher.jpg`, `s043_door1b_mitte_vorher_nachher.jpg`
+- `knick_vorher_nachher.jpg` (Kantenpunkte rot, Ausgleichsgerade gruen, drei Kanten)
+- `r32_kontaktbogen_01..16.jpg` (alle 184 Seiten nachher; vorher = `befunde_runde31/tueren_belege/t4_kontaktbogen_*.jpg`)
+
+## 5. Riegel (`tests/unit/probes/r32_unterteilung.cmake`, `probe_r32_unterteilung.c`)
+
+| Test | prueft |
+|---|---|
+| `unit_r32_unterteilung_referenz` | `re15_door_divide_gt3` gegen die **Original-Befehle**: ein Mini-R3000 (nur die benutzten Befehle + GTE RTPT/NCLIP/AVSZ3 nach psx-spx) fuehrt DivideGT3 0x8008ebf4 samt RotAverageNclip3/ReadSZfifo3/RCpolyGT3A/Ausgabe aus `info/re2leon/PSX.EXE` aus, aufgerufen wie @0x80014a38..94. Verglichen: jedes POLY_GT3 in Ausgabefolge (ueber die OT-Kette), Ecken, UV, Farbe (= rgb0), Code 0x34, clut/tpage, Rueckgabezeiger. Faelle: DOOR13-Blatt in 144 echten Sequenzmatrizen (V0/V1), 3000 Zufallsdreiecke, Nahgrenze sz 144/145/146, 4000 winzige Dreiecke an den Bildgrenzen. **8731 Faelle, 170864 Teildreiecke gleich.** |
+| `unit_r32_unterteilung_tor` | Flag-Tor am echten Zeichenpfad `re15_door_mesh_zeichnen`: DOOR13-Blatt mit 0x0a80 (wie Tor/DOOR2E) -> kein Teildreieck; mit 0x0aa0 -> je sichtbarem Dreieck genau die Teildreiecke von DivideGT3, alle auf dem OT-Platz und in der Eckfarbe 0 des Ursprungsdreiecks. 29 Bilder, 27 geteilt, 2 Bilder mit ganz rechts ausserhalb liegendem Blatt (alle Ecken x > 320 -> Bild-Verwurf, auch ungeteilt unsichtbar). |
+
+**Gegenprobe** (Port absichtlich verfaelscht, nur `door_seq_zeichnen.c`, danach zurueck): Blattfolge zweier Teildreiecke
+vertauscht -> referenz ROT (42746 Fehler); UV-Mitte aufgerundet -> ROT (85492) (beide noch mit dem ersten Fallsatz,
+4728 Faelle); Nahgrenze `<=` statt `<` -> ROT (1, erst mit dem
+Grenzfall sz 145, ohne ihn blieb diese Mutation GRUEN - darum die Grenzfaelle); Bildgrenze x `<=` statt `<` -> ROT (7973). Original wiederhergestellt (`cmp` gegen die Sicherung).
+
+RE15_MIN_TESTS 411 -> 413 (`tools/local_build.sh` Kopf und Pruefzeile).
+
+## Offen
+
+1. PSX-Ziel nicht gebaut (keine Tuerszene auf der PSX; `door_seq_zeichnen.c` ist plattformfrei und nutzt nur Engine-Code,
+   ein PSX-Bau wurde hier nicht gefahren).
+2. Kein Emulator-Vergleich einer RE2-Tuersequenz (kein RE2-Savestate in einer Tuer); belegt ist der Mechanismus Befehl fuer Befehl
+   (Interpreter auf den Original-Bytes), nicht ein RE2-Bild.
+3. Die flache Eckfarbe 0 je Ursprungsdreieck ist RE2-Verhalten (rgb0 dreimal); sichtbar nur, wo ein Blatt-Dreieck verschiedene
+   Eckennormalen hat - in den Stichproben keine Helligkeitsstufe zu sehen.
+4. Parallel-Falle: fremde Sitzungen beenden `re15_pc.exe` per Bildname (nicht `local_build.sh`, das filtert seit 53bf3f3a auf den
+   eigenen Baum) - Quelle nicht gefunden; Messlaeufe darum mit umbenannter Kopie.
 
