@@ -60,7 +60,7 @@
 #   RE15_FRESH=1    Configure erzwingt frischen Cache
 #   RE15_TESTS      Standard: ON  (-DRE15_BUILD_TESTS)
 #   RE15_TOOLS      Standard: OFF (-DRE15_BUILD_TOOLS, alte API)
-#   RE15_MIN_TESTS  Standard: 416 (untere Schranke gegen eine KOLLABIERTE Suite,
+#   RE15_MIN_TESTS  Standard: 420 (untere Schranke gegen eine KOLLABIERTE Suite,
 #                   nicht nur gegen 0 Tests. Stand 2026-08-27 = 238 Tests (+8:
 #                   integration_item_name_census, integration_fx_region_cull,
 #                   unit_re2z_bandlock_pin, unit_re2z_rise_hittable, unit_writher_kill_flag, unit_rig_root_fix, unit_1090_flame_out_pin, unit_1210_gitterhaende); wird
@@ -80,7 +80,8 @@
 #                   2026-09-29: +3 (unit_r31_maschine, unit_r31_zuordnung, unit_r31_tuer_ton) -> 411.
 #                   2026-09-29: +1 (unit_r32_hebetisch_faecher, Runde 32 Hebetisch) -> 412.
 #                   2026-09-29 (Runde 32): +2 (unit_r32_unterteilung_referenz, unit_r32_unterteilung_tor) -> 414.
-#                   2026-09-29: +2 (unit_r32_tor_hell, integration_r32_tor_hell, Runde 32 Tor) -> 416.)
+#                   2026-09-29: +2 (unit_r32_tor_hell, integration_r32_tor_hell, Runde 32 Tor) -> 416.
+#                   2026-09-29: +4 (unit_r33_tuer1120_gesperrt/_frei/_szene/_elza, Runde 33 Tuer 1130->1120) -> 420.)
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------
@@ -333,8 +334,8 @@ do_test() {
     # Nicht nur "0 Tests" abfangen: auch eine auf wenige Tests KOLLABIERTE Suite
     # ist ein falsches Gruen (genau die Klasse, die hier schon einmal ein
     # erfundenes "224/224" erzeugt hat). Untergrenze deshalb = volle Suite.
-    [ "$total" -ge "${RE15_MIN_TESTS:-416}" ] \
-      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-416} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
+    [ "$total" -ge "${RE15_MIN_TESTS:-420}" ] \
+      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-420} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
     [ "$failed" -eq 0 ] || die "$failed von $total Tests ROT. Log: $log"
     info "test OK — $passed/$total bestanden"
     TEST_SUMMARY="$passed/$total"
