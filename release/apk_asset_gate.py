@@ -1,6 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""Volle Asset-Pruefung der Android-APK gegen den Quellbaum (Runde 34a, 2026-09-29).
+#!/bin/bash
+''':' #
+# Direktaufruf (./release/apk_asset_gate.py ...) laeuft zuerst als Bash-Skript (Nachbesserung R2,
+# Gegenpruefung echtlauf B1): der alte Kopf '#!/usr/bin/env python3' startete unter Git-Bash den
+# WindowsApps-Alias (v0.8.17: ungefragte Installation von Python 3.14). Der Interpreter kommt
+# jetzt aus release/python_finden.sh, der den Alias nie startet. Fuer Python ist dieser Block eine
+# Zeichenkette ohne Wirkung. Zeilenenden: release/.gitattributes haelt *.py auf LF (core.autocrlf).
+. "$(dirname "$0")/python_finden.sh" || exit 2 #
+exec "$PY" "$0" "$@" #
+'''
+__doc__ = """Volle Asset-Pruefung der Android-APK gegen den Quellbaum (Runde 34a, 2026-09-29).
 
 WARUM (offener Punkt aus v0.8.19): Der Android-Bau pruefte nur Stichproben - von den 30 neuen
 Port-Tuerarchiven (shared_assets/RE15DOOR) genau EINES (P07G.DO2, und das nur im Quellbaum).
@@ -15,12 +23,15 @@ WIE DIE APK GELESEN WIRD (Nachbesserung R1, Befund B1 der Gegenpruefung)
   bestanden so die ganze Kette, obwohl libziparchive den Eintrag nicht oeffnet (aapt2 35.0.0:
   "failed to find file." / "size/crc32 mismatch ... Inconsistent information"). Jetzt gilt fuer
   JEDEN Eintrag der APK (auch lib/, classes.dex):
-   - End-of-Central-Directory am Dateiende (Kommentar reicht genau bis zum Ende), Zentral-
-     verzeichnis vollstaendig und ohne Rest lesbar, kein ZIP64/mehrteilig -> sonst Rueckgabe 2;
+   - die Datei beginnt mit einem Local Header (libziparchive: "Entry at offset zero has invalid
+     LFH signature" - Nachbesserung R2, B8), End-of-Central-Directory am Dateiende (Kommentar
+     reicht genau bis zum Ende, weder zu kurz noch zu lang), Zentralverzeichnis vollstaendig und
+     ohne Rest lesbar, kein ZIP64/mehrteilig -> sonst Rueckgabe 2;
    - Name roh: gueltiges UTF-8 und kein NUL (sonst verwirft libziparchive die GANZE APK), kein
      '\\', keine Steuerzeichen, kein absoluter Pfad/'.'/'..'/'//'; Namen roh eindeutig;
-   - Local Header vorhanden, Name (Laenge + Bytes) = Zentralverzeichnis, ohne Data-Descriptor-Bit
-     CRC/Groessen = Zentralverzeichnis;
+   - Local Header vorhanden, Name (Laenge + Bytes) und CRC/Groessen = Zentralverzeichnis; kein
+     Data-Descriptor-Bit (Nachbesserung R2: AGP setzt es nie, Referenz v0.8.19 0 von 3616 - ein
+     Leser, der die Groessen je nach Bit aus dem einen oder anderen Kopf nimmt, ist damit weg);
    - Daten liegen ganz vor dem Zentralverzeichnis; Methode 0 oder 8; nicht verschluesselt;
    - Daten ab dem Offset, den der LOCAL Header ergibt (wie das Geraet; AGP polstert dort zur
      Ausrichtung, das Zentralverzeichnis nicht), csize Bytes gelesen und entpackt: CRC32 und
@@ -48,8 +59,27 @@ WAS GEPRUEFT WIRD
   e. Ausgabe: Zaehlung je Baum und ausdruecklich RE2/DOOR, RE15DOOR, TORSE.VBS.
   Pflichtinhalt zusaetzlich: kein Baum leer, RE2/DOOR und RE15DOOR mit *.DO2, TORSE.VBS
   vorhanden (make_package.sh check_tree verlangt dasselbe fuer die PC-Pakete).
-  NICHT hier: Signatur, versionName, Paketname, ABIs - das pruefen apksigner/aapt in
-  release/apk_pruefen.sh (dieselbe Kette fuer build_android.sh und make_package.sh).
+  f. SOLL-LISTE DER TUERARCHIVE (Nachbesserung R2, Befund B2): bis dahin verglich das Gate die
+     APK nur mit dem Quellbaum - fehlte ein Archiv in BEIDEN (29 von 30) oder war es in beiden
+     0 Byte, lief die ganze Kette gruen, und an den Tueren lief still der RE1.5-Uebergang. Jetzt
+     gilt der Quellbaum gegen die Tabellen, nach denen die Engine die Archive laedt und prueft
+     (door_scene_pc.c re2_archiv_lesen): jedes Port-Archiv aus gen/re15_tuer_eigen.inc liegt als
+     RE15DOOR/<kennung>.DO2 mit Groesse, Aufbau (Sektor * 0x800 + Modellteil = Groesse, Tonteil
+     davor) und FNV-1a der Tabelle; jedes RE2-Archiv, das eine Tuerzeile, ein Griff-Tausch oder
+     ein Port-Archiv als Basis nennt, liegt als RE2/DOOR/DOORxx.DO2 mit Groesse und Aufbau aus
+     gen/re2_tuer_tabelle.inc (@0x8009a520); keine Datei ausserhalb dieser Listen. Die Spalten
+     liest das Gate aus den typedefs in include/re15_door_seq.h (C-Regeln: fehlende Felder am
+     Zeilenende = 0) - unbekannte Form -> Rueckgabe 2.
+  g. Unter re15_port/shared_assets/ liegt nichts ausser den Baeumen der Liste (Nachbesserung R2,
+     Befund B6): ein neuer Ordner, den keine Liste kennt, fehlte sonst still in APK und Paketen.
+  NICHT hier: Signatur, versionName, Paketname, ABIs, Ausrichtung - das pruefen apksigner, aapt
+  und zipalign in release/apk_pruefen.sh (dieselbe Kette fuer build_android.sh und make_package.sh).
+
+PC-PAKETE (Nachbesserung R2, Befund B6): make_package.sh kopiert die Asset-Baeume selbst
+  (copy_common - eine dritte Liste neben build.gradle und BAEUME). Mit --paket <ordner> prueft das
+  Gate den fertigen Paketordner gegen DIESELBE Liste: jede Datei unter <ordner>/<ziel>/ mit
+  gleicher Groesse und sha256, unter <ordner>/shared_assets und <ordner>/synchro nichts sonst.
+  --quellbaum prueft nur den Quellbaum (a-Teil, f, g) - make_package.sh vor den Kopierminuten.
 
 RUECKGABE (fail closed)
   0 = APK und Quellbaum gleich
@@ -57,15 +87,20 @@ RUECKGABE (fail closed)
   2 = Bedien-/Lesefehler, Konfigurationsabweichung zur build.gradle oder JEDER unerwartete
       Fehler - nie 0, wenn nicht wirklich alles verglichen wurde.
 
-AUFRUF (reines Python >= 3.8, keine Fremdpakete; Windows + Linux)
-  apk_asset_gate.py [--repo <repo>] <apk>    Pruefung; --repo Standard = Ordner ueber release/
-  apk_asset_gate.py --selbsttest             baut in einem Temp-Ordner Mini-Quellbaum,
+AUFRUF (reines Python >= 3.8, keine Fremdpakete; Windows + Linux). Interpreter IMMER ueber
+release/python_finden.sh - so rufen es alle Skripte auf:
+  source release/python_finden.sh
+  "$PY" release/apk_asset_gate.py [--repo <repo>] <apk>       Pruefung (--repo Standard: Ordner ueber release/)
+  "$PY" release/apk_asset_gate.py [--repo <repo>] --quellbaum Quellbaum allein (Tuer-Soll, Baumliste, ...)
+  "$PY" release/apk_asset_gate.py [--repo <repo>] --paket <ordner>   PC-Paketordner gegen die Liste
+  "$PY" release/apk_asset_gate.py --selbsttest    baut in einem Temp-Ordner Mini-Quellbaum,
                                              Mini-APK (zipfile als UNABHAENGIGER Schreiber, danach
                                              AGP-artig gepolstert) und Manifest und prueft, dass das
                                              Gate die guten APKs annimmt und JEDE Faelschung
                                              ablehnt (sonst bestaetigt sich das Gate nur selbst).
-  Aufrufer: release/apk_pruefen.sh (aus build_android.sh und make_package.sh).
-  Interpreter per release/python_finden.sh (nie den WindowsApps-Alias "python3").
+  Ein Direktaufruf ./release/apk_asset_gate.py ... geht ebenfalls: der Kopf oben laeuft dann als
+  Bash-Skript und holt den Interpreter aus python_finden.sh (nie den WindowsApps-Alias "python3").
+  Aufrufer: release/apk_pruefen.sh (aus build_android.sh und make_package.sh), make_package.sh.
 """
 import argparse
 import concurrent.futures
@@ -99,10 +134,16 @@ BAEUME = (
 # build.gradle: portRoot = <repo>/re15_port, repoRoot = <repo> (app/build.gradle:25-26)
 BASIS_ORDNER = {"portRoot": "re15_port", "repoRoot": ""}
 GRADLE_REL = "re15_port/platform/android/app/build.gradle"
+# abgeleitet: die Ordner direkt unter re15_port/shared_assets/, die ausgeliefert werden, und die
+# obersten Ordner der Ziele (im PC-Paket: <paket>/shared_assets, <paket>/synchro)
+SHARED_WURZEL = frozenset(q.split("/", 1)[1] for b, q, _z, _m in BAEUME if b == "portRoot" and q.startswith("shared_assets/"))
+ZIEL_OBEN = tuple(sorted(set(z.split("/", 1)[0] for _b, _q, z, _m in BAEUME)))
 
 MANIFEST = "re15_assets.txt"
 MANIFEST_MAX = 64 << 20          # android_glue.c:80 read_apk_asset: sz > 64 MiB -> NULL
-KOPF_RE = re.compile(r"# re15 assets (\d+) (\d+)")
+# NUR ASCII-Ziffern (Nachbesserung R2, B8): '\d' nahm auch arabisch-indische Ziffern, das Geraet
+# liest per sscanf "%ld %lld" (android_glue.c:163) nur 0-9 -> Kopfzeile dort 0/0.
+KOPF_RE = re.compile(r"# re15 assets ([0-9]+) ([0-9]+)")
 
 # Pflichtinhalt (Pfade relativ zu assets/ bzw. zu re15_port/)
 PFLICHT_ORDNER = (("shared_assets/RE2/DOOR", ".DO2"), ("shared_assets/RE15DOOR", ".DO2"))
@@ -116,7 +157,17 @@ BLOCK = 1 << 20
 # ZIP-Aufbau (APPNOTE 4.3.7 / 4.3.12 / 4.3.16)
 EOCD_SIG, CD_SIG, LFH_SIG, Z64_LOC_SIG = b"PK\x05\x06", b"PK\x01\x02", b"PK\x03\x04", b"PK\x06\x07"
 EOCD_LEN, CD_LEN, LFH_LEN = 22, 46, 30
-FLAG_VERSCHLUESSELT, FLAG_DATA_DESCRIPTOR = 0x0001, 0x0008
+# Bit 0 verschluesselt, Bit 6 starke Verschluesselung, Bit 13 maskierter Kopf (APPNOTE 4.4.4)
+FLAG_VERSCHLUESSELT, FLAG_DATA_DESCRIPTOR = 0x0001 | 0x0040 | 0x2000, 0x0008
+
+# Tuerarchive: die Tabellen, nach denen die Engine sie laedt (Nachbesserung R2, Befund B2)
+TUER_KOPF = "re15_port/include/re15_door_seq.h"                 # typedefs = Spaltenreihenfolge
+TUER_EIGEN_INC = "re15_port/engine/src/gen/re15_tuer_eigen.inc"  # Port-Archive, Zeilen, Griff-Tausch
+TUER_RE2_INC = "re15_port/engine/src/gen/re2_tuer_tabelle.inc"   # RE2-Archivtabelle @0x8009a520
+TUER_ZUORDNUNG_INC = "re15_port/engine/src/gen/tuer_zuordnung.inc"  # Tuerzeilen + Griff-Tausch Runde 31
+RE15DOOR_REL = "re15_port/shared_assets/RE15DOOR"
+RE2DOOR_REL = "re15_port/shared_assets/RE2/DOOR"
+SEKTOR = 0x800                   # door_scene_pc.c:242 sektor * 0x800 + modell == n
 
 
 class Bedienfehler(Exception):
@@ -377,6 +428,391 @@ def quelldateien(repo, befund):
     return dateien, zahl
 
 
+def wurzel_pruefen(repo, befund):
+    """Unter re15_port/shared_assets/ nur die Baeume der Liste (Nachbesserung R2, Befund B6: ein neuer
+    Ordner, den weder build.gradle noch BAEUME noch copy_common kennt, fehlte still in APK und Paketen)."""
+    wurzel = os.path.join(repo, "re15_port", "shared_assets")
+    for name in sorted(os.listdir(wurzel)) if os.path.isdir(wurzel) else ():
+        if name not in SHARED_WURZEL:
+            befund("Quellbaum: in keiner Liste", "re15_port/shared_assets/%s liegt in keinem Asset-Baum (build.gradle "
+                   "stageAssets = BAEUME des Gates = make_package.sh copy_common) - der Port liest nur aus shared_assets, "
+                   "APK und Pakete haetten es nicht" % name)
+
+
+# --- Engine-Tabellen der Tuerarchive lesen (C-Initialisierer, Spalten aus den typedefs) ---------
+def _c_lesen(repo, rel):
+    p = os.path.join(repo, *rel.split("/"))
+    if not os.path.isfile(p):
+        raise Bedienfehler("Engine-Tabelle fehlt: %s (die Soll-Liste der Tuerarchive steht dort)" % rel)
+    with open(p, "r", encoding="utf-8") as f:
+        return _c_ohne_kommentare(f.read(), rel)
+
+
+def _c_ohne_kommentare(text, datei):
+    """C-Quelltext ohne /* */ und //; Zeichenketten bleiben."""
+    aus, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == '"':
+            j = i + 1
+            while j < n and text[j] not in '"\n':
+                j += 2 if text[j] == "\\" else 1
+            if j >= n or text[j] != '"':
+                raise Bedienfehler("%s: Zeichenkette ohne Ende (Zeichen %d)" % (datei, i))
+            aus.append(text[i:j + 1])
+            i = j + 1
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            if j < 0:
+                raise Bedienfehler("%s: Kommentar /* ohne Ende (Zeichen %d)" % (datei, i))
+            aus.append(" ")
+            i = j + 2
+        elif text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+        else:
+            aus.append(c)
+            i += 1
+    return "".join(aus)
+
+
+_C_TYP_RE = re.compile(r"(?:const\s+)?(?:unsigned\s+|signed\s+)?(char|u?int(?:8|16|32|64)_t|int|short|long)\s+(.+)$")
+_C_DEKL_RE = re.compile(r"([A-Za-z_]\w*)\s*(?:\[\s*([0-9]+)\s*\])?$")
+
+
+def c_struktur(code, typname, datei):
+    """typedef struct { ... } <typname>; -> [(feld, typ, anzahl|None)] in Speicherreihenfolge."""
+    t = re.findall(r"typedef\s+struct\s*\{([^{}]*)\}\s*" + re.escape(typname) + r"\s*;", code)
+    if len(t) != 1:
+        raise Bedienfehler("%s: 'typedef struct { ... } %s;' %s" % (datei, typname, "mehrfach" if t else "nicht gefunden"))
+    felder = []
+    for dekl in t[0].split(";"):
+        dekl = " ".join(dekl.split())
+        if not dekl:
+            continue
+        m = _C_TYP_RE.match(dekl)
+        if not m:
+            raise Bedienfehler("%s: %s - Feld nicht lesbar: '%s'" % (datei, typname, dekl))
+        for d in m.group(2).split(","):
+            md = _C_DEKL_RE.match(d.strip())
+            if not md:
+                raise Bedienfehler("%s: %s - Deklarator nicht lesbar: '%s'" % (datei, typname, d.strip()))
+            felder.append((md.group(1), m.group(1), int(md.group(2)) if md.group(2) else None))
+    return felder
+
+
+_C_TOK_RE = re.compile(r'(\{)|(\})|(,)|("(?:[^"\\\n]|\\.)*")|(-?(?:0[xX][0-9a-fA-F]+|[0-9]+))[uUlL]*(?![\w.])')
+
+
+def _c_werte(code, i, datei, name):
+    """Initialisierer ab code[i] (hinter der oeffnenden '{') bis zur passenden '}' ->
+    (verschachtelte Listen aus int/str, Index hinter der '}')."""
+    stapel = [[]]
+    while i < len(code):
+        if code[i].isspace():
+            i += 1
+            continue
+        m = _C_TOK_RE.match(code, i)
+        if not m:
+            raise Bedienfehler("%s: %s - unerwartetes Zeichen im Initialisierer: '%s'"
+                               % (datei, name, code[i:i + 30].replace("\n", " ")))
+        auf, zu, _komma, s, zahl = m.groups()
+        i = m.end()
+        if auf:
+            stapel[-1].append([])
+            stapel.append(stapel[-1][-1])
+        elif zu:
+            fertig = stapel.pop()
+            if not stapel:
+                return fertig, i
+        elif s is not None:
+            stapel[-1].append(s[1:-1])
+        elif zahl is not None:
+            stapel[-1].append(int(zahl, 0))
+    raise Bedienfehler("%s: Tabelle %s ohne Ende (schliessende '}' fehlt)" % (datei, name))
+
+
+def c_tabelle(code, typname, name, felder, datei):
+    """static const <typname> <name>[N] = { {..}, ... }; -> Liste von dict. C-Regeln: fehlende Felder am
+    Zeilenende = 0 bzw. ''. Mehr Werte als Felder, andere Form oder Zeilenzahl != N -> Bedienfehler."""
+    kopf = re.compile(r"static\s+const\s+" + re.escape(typname) + r"\s+" + re.escape(name) + r"\s*\[\s*([0-9]+)\s*\]\s*=\s*\{")
+    treffer = list(kopf.finditer(code))
+    if len(treffer) != 1:
+        raise Bedienfehler("%s: 'static const %s %s[N] = {' %s" % (datei, typname, name,
+                                                                   "mehrfach" if treffer else "nicht gefunden"))
+    m = treffer[0]
+    zeilen, j = _c_werte(code, m.end(), datei, name)
+    if not re.match(r"\s*;", code[j:]):
+        raise Bedienfehler("%s: Tabelle %s: nach der schliessenden '}' fehlt ';'" % (datei, name))
+    n_soll = int(m.group(1))
+    if len(zeilen) != n_soll:
+        raise Bedienfehler("%s: %s[%d] hat %d Zeilen (der Generator schreibt alle; fehlende fuellte C mit Nullen)"
+                           % (datei, name, n_soll, len(zeilen)))
+    aus = []
+    for k, z in enumerate(zeilen, 1):
+        if not isinstance(z, list):
+            raise Bedienfehler("%s: %s Zeile %d ist kein { ... }" % (datei, name, k))
+        if len(z) > len(felder):
+            raise Bedienfehler("%s: %s Zeile %d: %d Werte, %s hat %d Felder" % (datei, name, k, len(z), typname, len(felder)))
+        d = {}
+        for idx, (feld, typ, anz) in enumerate(felder):
+            w = z[idx] if idx < len(z) else None
+            if typ == "char" and anz:
+                w = "" if w is None else w
+                if not isinstance(w, str) or len(w.encode("utf-8")) >= anz:
+                    raise Bedienfehler("%s: %s Zeile %d Feld %s: Zeichenkette mit < %d Bytes erwartet" % (datei, name, k, feld, anz))
+            elif anz:
+                w = [] if w is None else w
+                if not isinstance(w, list) or len(w) > anz or not all(isinstance(x, int) for x in w):
+                    raise Bedienfehler("%s: %s Zeile %d Feld %s: { bis zu %d Zahlen } erwartet" % (datei, name, k, feld, anz))
+                w = w + [0] * (anz - len(w))
+            else:
+                w = 0 if w is None else w
+                if not isinstance(w, int):
+                    raise Bedienfehler("%s: %s Zeile %d Feld %s: Zahl erwartet" % (datei, name, k, feld))
+            d[feld] = w
+        aus.append(d)
+    return aus
+
+
+def _fnv1a32(pfad):
+    """FNV-1a 32 ueber die Datei - der Pruefwert der Port-Archive (door_scene_pc.c:209-214)."""
+    h = 2166136261
+    with open(pfad, "rb") as f:
+        for b in iter(lambda: f.read(BLOCK), b""):
+            for x in b:
+                h = ((h ^ x) * 16777619) & 0xFFFFFFFF
+    return h
+
+
+def tuer_soll(repo, befund):
+    """Soll-Liste der Tuerarchive aus den Engine-Tabellen, so wie door_scene_pc.c sie laedt:
+    -> (eigen {kennung: zeile}, re2 {nr: (tabellenzeile, grund)})."""
+    kopf = _c_lesen(repo, TUER_KOPF)
+    eigen_code = _c_lesen(repo, TUER_EIGEN_INC)
+    re2_code = _c_lesen(repo, TUER_RE2_INC)
+    zu_code = _c_lesen(repo, TUER_ZUORDNUNG_INC)
+    f_eigen = c_struktur(kopf, "re15_tuer_eigen_t", TUER_KOPF)
+    f_zeile = c_struktur(kopf, "re15_tuer_zeile_t", TUER_KOPF)
+    f_griff = c_struktur(kopf, "re15_griff_tausch_t", TUER_KOPF)
+    f_re2 = c_struktur(re2_code, "re2_tuer_arch_t", TUER_RE2_INC)
+    for felder, noetig, typ in ((f_eigen, ("kennung", "basis", "ton", "modell", "sektor", "datei", "fnv"), "re15_tuer_eigen_t"),
+                                (f_zeile, ("re2_nr", "spender", "eigen"), "re15_tuer_zeile_t"),
+                                (f_griff, ("archiv", "spender", "spender_eigen", "fuer_eigen"), "re15_griff_tausch_t"),
+                                (f_re2, ("ton", "modell", "sektor", "datei"), "re2_tuer_arch_t")):
+        fehlt = [x for x in noetig if x not in [f[0] for f in felder]]
+        if fehlt:
+            raise Bedienfehler("Engine-Tabellen: %s ohne Feld(er) %s - Gate (tuer_soll) nachziehen" % (typ, fehlt))
+    eigen = c_tabelle(eigen_code, "re15_tuer_eigen_t", "re15_tuer_eigen", f_eigen, TUER_EIGEN_INC)
+    arch = c_tabelle(re2_code, "re2_tuer_arch_t", "re2_tuer_arch", f_re2, TUER_RE2_INC)
+    z31 = c_tabelle(zu_code, "re15_tuer_zeile_t", "re15_tuer_zeilen", f_zeile, TUER_ZUORDNUNG_INC)
+    z33 = c_tabelle(eigen_code, "re15_tuer_zeile_t", "re15_tuer_zeilen_eigen", f_zeile, TUER_EIGEN_INC)
+    g31 = c_tabelle(zu_code, "re15_griff_tausch_t", "re15_griff_tausche", f_griff, TUER_ZUORDNUNG_INC)
+    g33 = c_tabelle(eigen_code, "re15_griff_tausch_t", "re15_griff_tausche_eigen", f_griff, TUER_EIGEN_INC)
+
+    kenn = {}
+    for i, e in enumerate(eigen, 1):
+        if not re.fullmatch(r"[A-Za-z0-9_]+", e["kennung"]) or e["kennung"] in kenn:
+            raise Bedienfehler("%s: re15_tuer_eigen Zeile %d: Kennung '%s' leer, doppelt oder kein Dateiname"
+                               % (TUER_EIGEN_INC, i, e["kennung"]))
+        kenn[e["kennung"]] = e
+    re2 = {}
+
+    def braucht(nr, grund):
+        if 0 <= nr < len(arch):
+            re2.setdefault(nr, (arch[nr], grund))
+        else:
+            befund("Engine-Tabelle", "%s nennt RE2-Tuerarchiv %d, re2_tuer_arch hat %d Zeilen - die Engine findet es nie"
+                   % (grund, nr, len(arch)))
+
+    def griff(z):                                         # door_seq_zuordnung.c:149-175, erster Treffer zaehlt
+        if z["eigen"]:
+            kand = [g for g in g33 if g["fuer_eigen"] == z["eigen"]]
+        else:
+            kand = g31 + g33
+        for g in kand:
+            if g["archiv"] == z["re2_nr"] and g["spender"] == z["spender"]:
+                return g
+        return None
+
+    for z in z31 + z33:
+        if z["eigen"] == 0:                               # door_scene_pc.c:322 RE2-Datei DOORxx.DO2
+            braucht(z["re2_nr"], "Tuerzeile")
+        elif z["eigen"] > len(eigen):
+            befund("Engine-Tabelle", "Tuerzeile nennt Port-Archiv %d, re15_tuer_eigen hat %d" % (z["eigen"], len(eigen)))
+        elif eigen[z["eigen"] - 1]["basis"] != z["re2_nr"]:  # :227 'if (!e || e->basis != nr) return -1'
+            e = eigen[z["eigen"] - 1]
+            befund("Engine-Tabelle", "Tuerzeile nennt DOOR%02X mit Port-Archiv %s (Basis DOOR%02X) - die Engine "
+                   "verwirft das Archiv" % (z["re2_nr"], e["kennung"], e["basis"]))
+        if z["spender"] == 0xFF:                          # RE15_DOOR_KEIN_SPENDER
+            continue
+        g = griff(z)                                      # :347-350 Spender des Griff-Tauschs
+        if g is None:
+            continue
+        if g["spender_eigen"] == 0:
+            braucht(z["spender"], "Griff-Spender")
+        elif g["spender_eigen"] > len(eigen):
+            befund("Engine-Tabelle", "Griff-Tausch nennt Port-Archiv %d, re15_tuer_eigen hat %d"
+                   % (g["spender_eigen"], len(eigen)))
+    for e in eigen:                                       # Quelle jedes Port-Archivs (tuer_archiv_bauen.py)
+        braucht(e["basis"], "Basis von %s" % e["kennung"])
+    return kenn, re2
+
+
+def tueren_pruefen(repo, befund):
+    """RE15DOOR und RE2/DOOR des Quellbaums gegen die Soll-Liste (Befund B2). Dieselben Bedingungen wie
+    door_scene_pc.c:242-243 beim Laden: Groesse = Tabelle, Sektor * 0x800 + Modellteil = Groesse, Tonteil
+    <= Sektor * 0x800, bei Port-Archiven FNV-1a = Tabelle. -> [(art, ordner, soll, gut)]"""
+    kenn, re2 = tuer_soll(repo, befund)
+    ergebnis = []
+    for art, rel, soll, mit_fnv, quelle in (
+            ("Port-Tuerarchiv", RE15DOOR_REL, {"%s.DO2" % k: (z, TUER_EIGEN_INC) for k, z in kenn.items()}, True,
+             TUER_EIGEN_INC),
+            ("RE2-Tuerarchiv", RE2DOOR_REL, {"DOOR%02X.DO2" % nr: v for nr, v in re2.items()}, False,
+             "Tuerzeilen, Griff-Tausch, Basis der Port-Archive")):
+        ordner = os.path.join(repo, *rel.split("/"))
+        da = set(os.listdir(ordner)) if os.path.isdir(ordner) else set()
+        gut = 0
+        for name in sorted(soll):
+            z, grund = soll[name]
+            p = os.path.join(ordner, name)
+            if not os.path.isfile(p):
+                befund("Quellbaum: Tuerarchiv", "%s fehlt: %s/%s (verlangt von: %s; ohne die Datei laeuft an diesen "
+                       "Tueren still der RE1.5-Uebergang)" % (art, rel, name, grund))
+                continue
+            n = os.path.getsize(p)
+            if n != z["datei"] or z["sektor"] * SEKTOR + z["modell"] != n or z["ton"] > z["sektor"] * SEKTOR:
+                befund("Quellbaum: Tuerarchiv", "%s passt nicht zur Engine-Tabelle: %s/%s hat %d B, Tabelle %d B (Tonteil "
+                       "%d, Modellteil %d ab Sektor %d) - die Engine verwirft es" % (art, rel, name, n, z["datei"], z["ton"],
+                                                                                   z["modell"], z["sektor"]))
+                continue
+            if mit_fnv:
+                h = _fnv1a32(p)
+                if h != z["fnv"]:
+                    befund("Quellbaum: Tuerarchiv", "%s passt nicht zur Engine-Tabelle: %s/%s FNV-1a %08x, Tabelle %08x - "
+                           "die Engine verwirft es" % (art, rel, name, h, z["fnv"]))
+                    continue
+            gut += 1
+        for name in sorted(da - set(soll)):
+            befund("Quellbaum: Tuerarchiv", "%s/%s steht in keiner Engine-Tabelle (%s) - Ordner und Tabellen passen nicht "
+                   "zusammen" % (rel, name, quelle))
+        ergebnis.append((art, rel, len(soll), gut))
+    return ergebnis
+
+
+def quellbaum_pruefen(repo, befund):
+    """Alles am Quellbaum, was nicht die APK braucht: Baeume, Pflichtinhalt, Wurzel, Tuer-Soll.
+    -> (quellen, zahl_quelle, tuer_ergebnis)"""
+    quellen, zahl = quelldateien(repo, befund)
+    wurzel_pruefen(repo, befund)
+    return quellen, zahl, tueren_pruefen(repo, befund)
+
+
+def _tuer_zeilen_drucken(tuer):
+    for art, rel, soll, gut in tuer:
+        print("   Tuer-Soll: %-15s %-34s %d/%d wie die Engine-Tabelle (Groesse, Aufbau%s)"
+              % (art, rel, gut, soll, ", FNV-1a" if art == "Port-Tuerarchiv" else ""))
+
+
+def paket_pruefen(repo, paket, max_zeilen):
+    """PC-Paketordner gegen dieselbe Liste wie die APK (Befund B6: make_package.sh copy_common ist eine dritte
+    Liste). Jede Datei der Baeume unter <paket>/<ziel>/ mit gleicher Groesse + sha256, unter <paket>/shared_assets
+    und <paket>/synchro nichts sonst."""
+    t0 = time.monotonic()
+    befunde, reihenfolge, befund = _sammler()
+
+    repo, paket = os.path.abspath(repo), os.path.abspath(paket)
+    print("== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==")
+    print("   Paket:     %s" % paket)
+    print("   Quellbaum: %s" % repo)
+    n_baeume = gradle_baeume_pruefen(repo)
+    print("   Baumliste: %d Baeume = build.gradle stageAssets (from/into/include geprueft)" % n_baeume)
+    if not os.path.isdir(paket):
+        raise Bedienfehler("Paketordner fehlt: %s" % paket)
+    quellen, zahl_quelle, tuer = quellbaum_pruefen(repo, befund)
+    _tuer_zeilen_drucken(tuer)
+    gleich = {}
+    for name in sorted(quellen):
+        pfad, rel = quellen[name]
+        ziel = os.path.join(paket, *name[len("assets/"):].split("/"))
+        if not os.path.isfile(ziel):
+            befund("fehlt im Paket", "fehlt im Paket: %s  (Quelle %s)" % (name[len("assets/"):], rel))
+            continue
+        q_sha, q_n = _sha_datei(pfad)
+        p_sha, p_n = _sha_datei(ziel)
+        if (q_sha, q_n) != (p_sha, p_n):
+            befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab: %s  Quelle %d B %s.., Paket %d B %s.."
+                   % (name[len("assets/"):], q_n, q_sha[:16], p_n, p_sha[:16]))
+            continue
+        gleich[name] = q_n
+    for oben in ZIEL_OBEN:
+        wurzel = os.path.join(paket, oben)
+        for dp, dns, fns in os.walk(wurzel):
+            dns.sort()
+            for fn in sorted(fns):
+                rel = os.path.relpath(os.path.join(dp, fn), paket).replace(os.sep, "/")
+                if "assets/" + rel not in quellen:
+                    befund("zusaetzlich im Paket", "zusaetzlich im Paket (kein Asset-Baum liefert es; make_package.sh "
+                           "copy_common weicht von build.gradle/BAEUME ab?): %s" % rel)
+    print("   %-28s %7s %7s" % ("Baum", "Quelle", "gleich"))
+    for _b, _q, ziel, _m in BAEUME:
+        pre = "assets/%s/" % ziel
+        print("   %-28s %7d %7d" % (ziel, zahl_quelle.get(ziel, 0), sum(1 for n in gleich if n.startswith(pre))))
+    print("   Laufzeit:  %.1f s" % (time.monotonic() - t0))
+    n_befunde = sum(len(v) for v in befunde.values())
+    if n_befunde == 0 and len(gleich) != len(quellen):
+        raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (len(quellen), len(gleich)))
+    return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE-PAKET",
+                             "%d Dateien in %d Baeumen bytegleich, nichts zusaetzlich" % (len(gleich), len(BAEUME)))
+
+
+def nur_quellbaum(repo, max_zeilen):
+    """--quellbaum: Baumliste, Baeume, Pflichtinhalt, Wurzel, Tuer-Soll - ohne APK und ohne Paket."""
+    befunde, reihenfolge, befund = _sammler()
+
+    repo = os.path.abspath(repo)
+    print("== APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==")
+    print("   Quellbaum: %s" % repo)
+    n_baeume = gradle_baeume_pruefen(repo)
+    print("   Baumliste: %d Baeume = build.gradle stageAssets (from/into/include geprueft)" % n_baeume)
+    quellen, zahl_quelle, tuer = quellbaum_pruefen(repo, befund)
+    for _b, _q, ziel, _m in BAEUME:
+        print("   %-28s %7d Dateien" % (ziel, zahl_quelle.get(ziel, 0)))
+    _tuer_zeilen_drucken(tuer)
+    return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE-QUELLBAUM",
+                             "%d Dateien in %d Baeumen, Tuer-Soll erfuellt" % (len(quellen), len(BAEUME)))
+
+
+def _sammler():
+    """-> (befunde {art: [text]}, reihenfolge [art], befund(art, text))"""
+    befunde, reihenfolge = {}, []
+
+    def befund(art, text):
+        if art not in befunde:
+            befunde[art] = []
+            reihenfolge.append(art)
+        befunde[art].append(text)
+    return befunde, reihenfolge, befund
+
+
+def _befunde_ausgeben(befunde, reihenfolge, max_zeilen, marke, ok_text):
+    """Befunde je Art (begrenzt) ausgeben; '== <marke>-OK/-ABWEICHUNG ==' -> Rueckgabe 0/1."""
+    n_befunde = sum(len(v) for v in befunde.values())
+    if n_befunde:
+        print("--- Abweichungen: %d ---" % n_befunde)
+        for art in reihenfolge:
+            liste = befunde[art]
+            print("   [%s] %d" % (art, len(liste)))
+            for t in liste[:max_zeilen]:
+                print("      " + t)
+            if len(liste) > max_zeilen:
+                print("      ... und %d weitere" % (len(liste) - max_zeilen))
+        print("== %s-ABWEICHUNG: %d Befunde ==" % (marke, n_befunde))
+        return RC_ABWEICHUNG
+    print("== %s-OK: %s ==" % (marke, ok_text))
+    return RC_GLEICH
+
+
 # =============================================================================================
 # APK roh lesen (wie libziparchive; Befund B1 der Gegenpruefung R1)
 # =============================================================================================
@@ -407,9 +843,17 @@ def zip_verzeichnis(pfad):
         (_sig, disk, cd_disk, n_hier, n_ges, cd_groesse, cd_off, kom) = struct.unpack(
             "<4sHHHHIIH", ende[i:i + EOCD_LEN])
         eocd_pos = groesse - n_ende + i
-        if eocd_pos + EOCD_LEN + kom != groesse:
+        rest = groesse - eocd_pos - EOCD_LEN - kom
+        if rest > 0:
             raise Bedienfehler("APK nicht lesbar: %s (%d Bytes hinter dem End-of-Central-Directory - "
-                               "libziparchive lehnt die Datei ab)" % (pfad, groesse - eocd_pos - EOCD_LEN - kom))
+                               "libziparchive lehnt die Datei ab)" % (pfad, rest))
+        if rest < 0:
+            raise Bedienfehler("APK nicht lesbar: %s (Kommentarlaenge %d des End-of-Central-Directory reicht %d B "
+                               "ueber das Dateiende - libziparchive lehnt die Datei ab)" % (pfad, kom, -rest))
+        f.seek(0)
+        if f.read(4) != LFH_SIG:
+            raise Bedienfehler("APK nicht lesbar: %s (beginnt nicht mit einem Local Header - Bytes vor dem ersten "
+                               "Eintrag? libziparchive: 'Entry at offset zero has invalid LFH signature')" % pfad)
         f.seek(max(0, eocd_pos - 20))
         z64 = f.read(4) == Z64_LOC_SIG
         if (z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off)
@@ -478,7 +922,15 @@ def struktur_pruefen(fa, cd_off, eintraege, befund):
             befund("APK-Struktur: Local Header", "Name im Local Header weicht vom Zentralverzeichnis ab: %s "
                    "(Local Header %r) - libziparchive: 'Inconsistent information'" % (e.name, l_name))
             continue
-        if not (l_flags & FLAG_DATA_DESCRIPTOR) and (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize):
+        if (e.flags | l_flags) & FLAG_DATA_DESCRIPTOR:
+            # Nachbesserung R2 (Gegenpruefung B1/M14): mit dem Bit nimmt libziparchive CRC/Groessen aus einem
+            # Data Descriptor HINTER den Daten statt aus dem Local Header; AGP setzt es nie (v0.8.19: 0 von 3616)
+            befund("APK-Struktur: Methode/Flags", "Data-Descriptor-Bit gesetzt (%s): %s - AGP setzt es nie; das "
+                   "Gate liest nur Eintraege mit CRC/Groessen im Local Header" % (
+                       "Local Header und Zentralverzeichnis" if (e.flags & l_flags & FLAG_DATA_DESCRIPTOR) else
+                       ("Local Header" if l_flags & FLAG_DATA_DESCRIPTOR else "nur Zentralverzeichnis"), e.name))
+            continue
+        if (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize):
             befund("APK-Struktur: Local Header", "CRC/Groessen im Local Header weichen vom Zentralverzeichnis "
                    "ab: %s (Local Header %08x/%d/%d, Zentralverzeichnis %08x/%d/%d) - libziparchive: "
                    "'size/crc32 mismatch ... Inconsistent information'"
@@ -572,12 +1024,19 @@ def _sha_datei(pfad):
             n += len(b)
 
 
+def _manifest_grenze():
+    """64 MiB wie das Geraet. RE15_GATE_MANIFEST_MAX (Pruefhaken des Selbsttests, Nachbesserung R2) kann die
+    Grenze nur SENKEN - so laesst sich die Grenze mit einem kleinen Manifest beidseitig pruefen."""
+    w = os.environ.get("RE15_GATE_MANIFEST_MAX", "")
+    return min(MANIFEST_MAX, int(w)) if w.isdigit() else MANIFEST_MAX
+
+
 def manifest_pruefen(roh, apk_dateien, befund):
     """roh = Bytes von assets/re15_assets.txt; apk_dateien = {rel: groesse} (ohne Manifest)."""
-    if len(roh) > MANIFEST_MAX:
-        # ohne Selbsttest-Fall (ein 64-MiB-Manifest kostete je Lauf Sekunden und viel Speicher); erreichbar
-        # nur mit > 1 KiB langen Pfaden, weil das Gate mehr als 65534 Eintraege (ZIP64) ohnehin ablehnt
-        befund("Manifest", "Manifest %d B > 64 MiB: das Geraet liest es nicht (android_glue.c:80)" % len(roh))
+    grenze = _manifest_grenze()
+    if len(roh) > grenze:
+        befund("Manifest", "Manifest %d B > %d B (64 MiB): das Geraet liest es nicht (android_glue.c:80)"
+               % (len(roh), grenze))
     if roh.startswith(b"\xef\xbb\xbf"):
         befund("Manifest", "Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar "
                            "(sscanf am Pufferanfang, android_glue.c:163)")
@@ -651,14 +1110,7 @@ def manifest_pruefen(roh, apk_dateien, befund):
 
 def pruefen(repo, apk, max_zeilen):
     t0 = time.monotonic()
-    befunde = {}
-    reihenfolge = []
-
-    def befund(art, text):
-        if art not in befunde:
-            befunde[art] = []
-            reihenfolge.append(art)
-        befunde[art].append(text)
+    befunde, reihenfolge, befund = _sammler()
 
     repo = os.path.abspath(repo)
     print("== APK-Asset-Gate (release/apk_asset_gate.py) ==")
@@ -672,7 +1124,8 @@ def pruefen(repo, apk, max_zeilen):
         raise Bedienfehler("APK fehlt: %s" % apk)
     cd_off, eintraege = zip_verzeichnis(apk)
 
-    quellen, zahl_quelle = quelldateien(repo, befund)
+    quellen, zahl_quelle, tuer = quellbaum_pruefen(repo, befund)
+    _tuer_zeilen_drucken(tuer)
     man_name = "assets/" + MANIFEST
 
     with open(apk, "rb") as fa:
@@ -787,20 +1240,9 @@ def pruefen(repo, apk, max_zeilen):
         # Sicherheitsnetz: greift nur, wenn eine Pruefung oben still ueberspringt (zweiter Fehler)
         raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde"
                            % (len(quellen), len(gleich)))
-    if n_befunde:
-        print("--- Abweichungen: %d ---" % n_befunde)
-        for art in reihenfolge:
-            liste = befunde[art]
-            print("   [%s] %d" % (art, len(liste)))
-            for t in liste[:max_zeilen]:
-                print("      " + t)
-            if len(liste) > max_zeilen:
-                print("      ... und %d weitere" % (len(liste) - max_zeilen))
-        print("== APK-ASSET-GATE-ABWEICHUNG: %d Befunde ==" % n_befunde)
-        return RC_ABWEICHUNG
-    print("== APK-ASSET-GATE-OK: %d Dateien in %d Baeumen bytegleich, Manifest stimmt, ZIP-Struktur "
-          "wie Android sie liest ==" % (len(gleich), len(BAEUME)))
-    return RC_GLEICH
+    return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE",
+                             "%d Dateien in %d Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur "
+                             "wie Android sie liest" % (len(gleich), len(BAEUME)))
 
 
 # =============================================================================================
@@ -849,10 +1291,13 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
     ("re15_port/shared_assets/extracted_fx/effect0_blood.tim", 700),
     ("re15_port/shared_assets/RE2/CDEMD0.EMS", 1200),
     ("re15_port/shared_assets/RE2/TORSE.VBS", 900),
-    ("re15_port/shared_assets/RE2/DOOR/DOOR07.DO2", 1500),
-    ("re15_port/shared_assets/RE2/DOOR/DOOR13.DO2", 1600),
-    ("re15_port/shared_assets/RE15DOOR/P07G.DO2", 1700),
-    ("re15_port/shared_assets/RE15DOOR/P2DS.DO2", 1800),
+    # Tuerarchive: Groessen = Aufbau der Mini-Engine-Tabellen unten (Sektor * 0x800 + Modellteil)
+    ("re15_port/shared_assets/RE2/DOOR/DOOR07.DO2", 2548),      # Tuerzeile, Basis P07G
+    ("re15_port/shared_assets/RE2/DOOR/DOOR09.DO2", 2148),      # NUR Griff-Spender (Runde-31-Tausch)
+    ("re15_port/shared_assets/RE2/DOOR/DOOR0C.DO2", 400),       # NUR Spender ueber den Rueckfall in die Port-Tabelle
+    ("re15_port/shared_assets/RE2/DOOR/DOOR13.DO2", 2648),      # Tuerzeile, G12-Zeile, Basis P2DS
+    ("re15_port/shared_assets/RE15DOOR/P07G.DO2", 2748),
+    ("re15_port/shared_assets/RE15DOOR/P2DS.DO2", 4396),
     ("synchro/STAGE1/room1170/main00.wav", 2000),
     ("synchro/STAGE2/room2000/main00.wav", 2100),
     ("synchro/unused/STAGE1/room1170/alt.mp3", 800),     # ausserhalb include "STAGE*/**"
@@ -860,8 +1305,105 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
 )
 # Datei > BLOCK: nur die "gross"-Faelle (sonst kaeme ein Vergleich nur ueber den 1. Block durch)
 _GROSS = ("re15_port/shared_assets/PSX/MOVIE/GROSS.STR", BLOCK + 4096 + 37)
-_NICHT_ASSETS = (("AndroidManifest.xml", b"<manifest/>"), ("classes.dex", b"dex\n035\0"),
-                 ("lib/arm64-v8a/libmain.so", b"\x7fELF"), ("resources.arsc", b"\x02\x00"))
+# wie AGP: Manifest/dex komprimiert (Deflate), .so und resources.arsc Stored (Nachbesserung R2, M16:
+# vorher waren ALLE Nicht-Assets Stored - ein Gate, das Deflate-Eintraege ausserhalb assets/ nie las,
+# bestand den Selbsttest)
+_NICHT_ASSETS = (("AndroidManifest.xml", b"<manifest package='de.re15.port'/>" * 20, zipfile.ZIP_DEFLATED),
+                 ("classes.dex", b"dex\n035\0" + b"".join(hashlib.sha256(b"dex%d" % k).digest() for k in range(94)),
+                  zipfile.ZIP_DEFLATED),
+                 ("lib/arm64-v8a/libmain.so", b"\x7fELF" + bytes(range(256)) * 8, zipfile.ZIP_STORED),
+                 ("resources.arsc", b"\x02\x00" + bytes(300), zipfile.ZIP_STORED))
+
+# --- Mini-Engine-Tabellen der Tuerarchive (Nachbesserung R2, B2). Aufbau wie die echten Dateien
+# (include/re15_door_seq.h, engine/src/gen/*.inc); die Werte fuellt _Fall.schreiben ein - FNV-1a mit
+# eigener Umsetzung (_fx_fnv1a32), nicht mit der des Gates.
+_TUER_KOPF_MUSTER = r'''/* Mini-Kopf fuer den Selbsttest: dieselben typedefs wie include/re15_door_seq.h */
+#include <stdint.h>   // Zeilenkommentar mit Klammer { und "Anfuehrungszeichen
+typedef struct {
+    uint16_t raum;        /* volle Raum-Id {Kommentar mit Klammern} */
+    uint8_t  form;
+    uint8_t  band;
+    int32_t  x, z, hw, hh;
+    int16_t  qx[4], qz[4];
+    uint8_t  re2_nr;
+    uint8_t  variante;
+    uint8_t  bit7;
+    uint8_t  spender;
+    uint16_t seite, tuer;
+    uint32_t off;
+    uint8_t  eigen;
+} re15_tuer_zeile_t;
+typedef struct {
+    char     kennung[8];
+    uint8_t  basis;
+    uint16_t ton, modell;
+    uint32_t sektor, datei;
+    uint32_t fnv;
+    uint8_t  md1_eigen;
+} re15_tuer_eigen_t;
+typedef struct {
+    uint8_t  archiv, spender;
+    uint8_t  mesh_archiv, mesh_spender;
+    uint16_t rot_vorn[3], rot_hinten[3];
+    int16_t  aus_archiv, aus_spender;
+    uint8_t  spender_eigen;
+    int16_t  versatz_vorn[3], versatz_hinten[3];
+    uint8_t  fuer_eigen;
+} re15_griff_tausch_t;
+'''
+# Tuerzeilen Runde 31: A = DOOR07; B = DOOR13 mit Spender DOOR09 (Tausch in re15_griff_tausche);
+# F = DOOR07 mit Spender DOOR0C - der Tausch steht NUR in der Port-Tabelle (Rueckfall :168-171)
+_TUER_ZUORDNUNG_MUSTER = r'''/* Mini: gen/tuer_zuordnung.inc - Kommentar mit } und "{" */
+static const re15_tuer_zeile_t re15_tuer_zeilen[3] = {
+    /* A */ { 0x1000, 0, 0, 100, 200, 500, 1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE },
+    /* B */ { 0x1020, 0, 0, -2750, -7250, 750, 1150, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0x09, 5, 3, 0x01C82 },
+    /* F */ { 0x1030, 1, 0, 0, 0, 0, 0, {1, 2, 3, 4}, {5, 6, 7, 8}, 0x07, 0, 0, 0x0C, 9, 7, 0x01C8A },
+};
+static const re15_griff_tausch_t re15_griff_tausche[1] = {
+    { 0x13, 0x09, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 1500, -702 },
+};
+'''
+# Port-Archive (FNV/Groessen per %-Platzhalter), Port-Zeilen C (P07G), D (P2DS, Spender DOOR0A ueber den
+# Selbst-Tausch: DOOR0A liegt NICHT im Baum und darf nicht verlangt werden), G (G12 objektlos DOOR13);
+# Griff-Tausch E1 (fuer_eigen 1, spender_eigen 0 -> wuerde DOOR0A verlangen, gilt aber nicht fuer D),
+# E2 (fuer_eigen 2, Selbst-Tausch), E3 (fuer_eigen 1, DOOR07 <- DOOR0C, Rueckfall fuer Zeile F)
+_TUER_EIGEN_MUSTER = r'''/* Mini: gen/re15_tuer_eigen.inc */
+static const re15_tuer_eigen_t re15_tuer_eigen[2] = {
+    { "P07G", 0x07, %(P07G_ton)d, %(P07G_modell)d, %(P07G_sektor)d, %(P07G_datei)d, 0x%(P07G_fnv)08Xu, 0 },
+    { "P2DS", 0x13, %(P2DS_ton)d, %(P2DS_modell)d, %(P2DS_sektor)d, %(P2DS_datei)d, 0x%(P2DS_fnv)08Xu, 1 },
+};
+static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[3] = {
+    /* C */ { 0x1000, 0, 0, 22850, -13400, 500, 1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE, 1 },
+    /* D */ { 0x5060, 0, 0, -26300, -11600, 800, 1800, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0x0A, 273, 142, 0x02AAE, 2 },
+    /* G */ { 0x4080, 0, 0, 1, 2, 3, 4, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0xFF, 7, 8, 0x0100, 0 },
+};
+static const re15_griff_tausch_t re15_griff_tausche_eigen[3] = {
+    /* E1 */ { 0x13, 0x0A, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 0, -450, 0, {0, -584, 458}, {0, -1064, 418}, 1 },
+    /* E2 */ { 0x13, 0x0A, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 0, -450, 2, {0, 0, 0}, {0, 0, 0}, 2 },
+    /* E3 */ { 0x07, 0x0C, 1, 1, {0, 0, 0}, {2048, 2048, 0}, -245, -702, 0, {0, 0, 0}, {0, 0, 0}, 1 },
+};
+static const uint16_t re15_tuer_geplant[2] = { 0, 1 };
+'''
+# RE2-Tabelle: 20 Zeilen (DOOR00..DOOR13), belegt 07, 09, 0A, 0C, 13 - die uebrigen {0} wie ein leerer Platz
+_TUER_RE2_MUSTER = r'''/* Mini: gen/re2_tuer_tabelle.inc */
+typedef struct { uint16_t ton, modell; uint32_t sektor; uint8_t ck_ton; uint32_t datei; } re2_tuer_arch_t;
+static const re2_tuer_arch_t re2_tuer_arch[20] = {
+%(zeilen)s
+};
+'''
+# (ton, modell, sektor) je RE2-Archiv der Mini-Tabelle; Datei = Sektor * 0x800 + Modellteil
+_TUER_RE2_AUFBAU = {0x07: (1000, 500, 1), 0x09: (50, 100, 1), 0x0A: (10, 20, 1), 0x0C: (0, 400, 0),
+                    0x13: (900, 600, 1)}
+_TUER_EIGEN_AUFBAU = {"P07G": (1000, 700, 1), "P2DS": (3000, 300, 2)}
+
+
+def _fx_fnv1a32(b):
+    """FNV-1a 32 - eigene Umsetzung der Fixture (NICHT _fnv1a32 des Gates)."""
+    h = 0x811C9DC5
+    for x in bytearray(b):
+        h ^= x
+        h = (h * 0x01000193) % (1 << 32)
+    return h
 
 
 def _inhalt(name, groesse):
@@ -1038,6 +1580,24 @@ class _Fall:
         self.roh = []                        # Eingriffe auf rohen Bytes NACH dem Polstern: f(apk)
         self.leere_ordner = []
         self.nach_schreiben = None           # Eingriff nach allem (APK/build.gradle zerstoeren)
+        # Mini-Engine-Tabellen (Nachbesserung R2, B2): Texte (Faelle aendern sie per Ersetzen) und Werte
+        # der Port-Archive - aus dem URSPRUENGLICHEN Inhalt, damit eine geaenderte Datei auffaellt
+        self.tuer_kopf, self.tuer_zuordnung = _TUER_KOPF_MUSTER, _TUER_ZUORDNUNG_MUSTER
+        self.tuer_eigen, self.tuer_re2 = _TUER_EIGEN_MUSTER, _TUER_RE2_MUSTER
+        self.re2_aufbau = dict(_TUER_RE2_AUFBAU)
+        self.tuer_werte = {}
+        for kennung, (ton, modell, sektor) in _TUER_EIGEN_AUFBAU.items():
+            b = self.quelle["re15_port/shared_assets/RE15DOOR/%s.DO2" % kennung]
+            if len(b) != sektor * 0x800 + modell:
+                raise AssertionError("Selbsttest-Fixture: %s passt nicht zum Aufbau" % kennung)
+            self.tuer_werte.update({kennung + "_ton": ton, kennung + "_modell": modell, kennung + "_sektor": sektor,
+                                    kennung + "_datei": len(b), kennung + "_fnv": _fx_fnv1a32(b)})
+        self.tuer_dateien_weg = []           # Tabellendateien, die nicht geschrieben werden
+        # Modus: "apk" (Standard), "quellbaum" (--quellbaum), "paket" (--paket <wurzel>/paket)
+        self.modus = "apk"
+        self.paket = os.path.join(wurzel, "paket")
+        self.paket_eingriffe = []            # f(paketordner) nach dem Kopieren
+        self.umgebung = {}                   # zusaetzliche Umgebung des Gate-Laufs (Pruefhaken)
 
     def manifest_aus_eintraegen(self):
         return [(n[len("assets/"):], len(b)) for n, b, _m in self.eintraege]
@@ -1059,6 +1619,36 @@ class _Fall:
         os.makedirs(os.path.dirname(g), exist_ok=True)
         with open(g, "w", encoding="utf-8", newline="\n") as f:
             f.write(self.gradle)
+        re2_zeilen = []
+        for nr in range(20):
+            if nr in self.re2_aufbau:
+                w = self.re2_aufbau[nr]              # (ton, modell, sektor[, datei abweichend])
+                ton, modell, sektor = w[:3]
+                re2_zeilen.append("    { 0x%04X, 0x%04X, %2d, 0x9A, %6d },  /* DOOR%02X */"
+                                  % (ton, modell, sektor, w[3] if len(w) > 3 else sektor * 0x800 + modell, nr))
+            else:
+                re2_zeilen.append("    { 0 },")
+        for rel, text in ((TUER_KOPF, self.tuer_kopf), (TUER_ZUORDNUNG_INC, self.tuer_zuordnung),
+                          (TUER_EIGEN_INC, self.tuer_eigen % self.tuer_werte),
+                          (TUER_RE2_INC, self.tuer_re2 % {"zeilen": "\n".join(re2_zeilen)})):
+            if rel in self.tuer_dateien_weg:
+                continue
+            p = os.path.join(self.repo, *rel.split("/"))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+        if self.modus == "paket":            # wie make_package.sh copy_common: Baeume unter <paket>/<ziel>
+            for rel, b in self.quelle.items():
+                if rel.startswith("re15_port/shared_assets/") or rel.startswith("synchro/STAGE"):
+                    ziel = rel[len("re15_port/"):] if rel.startswith("re15_port/") else rel
+                    p = os.path.join(self.paket, *ziel.split("/"))
+                    os.makedirs(os.path.dirname(p), exist_ok=True)
+                    with open(p, "wb") as f:
+                        f.write(b)
+            with open(os.path.join(self.paket, "re15_pc.exe"), "wb") as f:   # liegt ausserhalb der Baeume
+                f.write(b"MZ")
+            for eingriff in self.paket_eingriffe:
+                eingriff(self.paket)
         if self.manifest_roh is not None:
             man = self.manifest_roh
         else:
@@ -1067,8 +1657,8 @@ class _Fall:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")          # "Duplicate name" beim Doppel-Fall
             with zipfile.ZipFile(self.apk, "w") as zf:
-                for name, b in _NICHT_ASSETS:
-                    zf.writestr(name, b)
+                for name, b, methode in _NICHT_ASSETS:
+                    zf.writestr(zipfile.ZipInfo(name), b, methode)
                 if not self.ohne_manifest:
                     zf.writestr(zipfile.ZipInfo("assets/" + MANIFEST), man, zipfile.ZIP_STORED)
                 for name, b, methode in self.eintraege + self.doppelt:
@@ -1230,9 +1820,9 @@ def _faelle():
         kopf_, rest = t.split("\n", 1)
         f.manifest_roh = (kopf_ + "\n9999\t" + P2DS + "\n" + rest).encode()
 
-    def unterstrich(f):                  # U7: '1_800' - int() nimmt es, atoll() liest 1
+    def unterstrich(f):                  # U7: '4_396' - int() nimmt es, atoll() liest 4
         t = _Fall.manifest_text(f.manifest_aus_eintraegen())
-        f.manifest_roh = t.replace("1800\t" + P2DS, "1_800\t" + P2DS, 1).encode()
+        f.manifest_roh = t.replace("4396\t" + P2DS, "4_396\t" + P2DS, 1).encode()
 
     def man_kein_utf8(f):
         t = _Fall.manifest_text(f.manifest_aus_eintraegen()).encode()
@@ -1332,7 +1922,7 @@ def _faelle():
         f.roh.append(lambda apk: _fx_schreiben(apk, _fx_lesen(apk)[:-10]))
 
     def muell_hinten(f):
-        f.roh.append(lambda apk: _fx_schreiben(apk, _fx_lesen(apk) + b"MUELL"))
+        f.roh.append(lambda apk: _fx_schreiben(apk, _fx_lesen(apk) + b"M"))      # genau 1 B (Grenze, R2)
 
     def zip64(f):
         f.roh.append(lambda apk: (_fx_eocd(apk, (8, "<H"), 0xFFFF), _fx_eocd(apk, (10, "<H"), 0xFFFF)))
@@ -1403,8 +1993,200 @@ def _faelle():
             _fx_patch(apk, [(lho + 18, struct.pack("<I", cs + 5)), (p + 20, struct.pack("<I", cs + 5))])
         f.roh.append(e)
 
+    # --- Nachbesserung R2, Befund B1: die fuenf Teil-Mutanten der Gegenpruefung (M1, M9, M5, M14, M16)
+    SO = "lib/arm64-v8a/libmain.so"
+    D13 = "re15_port/shared_assets/RE2/DOOR/DOOR13.DO2"
+    Q07 = "re15_port/shared_assets/RE15DOOR/P07G.DO2"
+
+    def man_kleiner(f):                  # M1: Manifest nennt 1 B WENIGER als die APK hat
+        f.manifest_zeilen = [(p, g - 1 if p == P2DS else g) for p, g in f.manifest_aus_eintraegen()]
+
+    def usize_plus(name):                # M9: entpackte Laenge (LFH + CD) +100, Daten und CRC bleiben
+        def faelschen(f):
+            def e(apk):
+                lho, p, _d = _fx_stelle(apk, name)
+                us, = struct.unpack("<I", _fx_lesen(apk)[lho + 22:lho + 26])
+                _fx_patch(apk, [(lho + 22, struct.pack("<I", us + 100)), (p + 24, struct.pack("<I", us + 100))])
+            f.roh.append(e)
+        return faelschen
+
+    def kommentar_lang(f):               # M5: EOCD-Kommentarlaenge 1 B groesser als die Datei hergibt (Grenze)
+        f.roh.append(lambda apk: _fx_eocd(apk, (20, "<H"), plus=1))
+
+    def dd_bit(im_lfh, im_cd, crc_kippen):   # M14: Data-Descriptor-Bit (Bit 3)
+        def faelschen(f):
+            def e(apk):
+                lho, p, _d = _fx_stelle(apk, P07)
+                d = _fx_lesen(apk)
+                lf, = struct.unpack("<H", d[lho + 6:lho + 8])
+                cf, = struct.unpack("<H", d[p + 8:p + 10])
+                stellen = []
+                if im_lfh:
+                    stellen.append((lho + 6, struct.pack("<H", lf | 8)))
+                if im_cd:
+                    stellen.append((p + 8, struct.pack("<H", cf | 8)))
+                if crc_kippen:
+                    c, = struct.unpack("<I", d[lho + 14:lho + 18])
+                    stellen.append((lho + 14, struct.pack("<I", c ^ 1)))
+                _fx_patch(apk, stellen)
+            f.roh.append(e)
+        return faelschen
+
+    def so_kippen(f):                    # M16 (Stored-Seite): Byte in lib/arm64-v8a/libmain.so
+        def e(apk):
+            _lho, _p, d = _fx_stelle(apk, SO)
+            b = _fx_lesen(apk)[d + 100]
+            _fx_patch(apk, [(d + 100, bytes([b ^ 0x5A]))])
+        f.roh.append(e)
+
+    # --- Nachbesserung R2, Befund B8: Praefix vor dem ersten Local Header, arabisch-indische Kopfziffern
+    def praefix(f):
+        def e(apk):
+            d = bytearray(_fx_lesen(apk))
+            cd, cd_off, eocd = _fx_cd(bytes(d))
+            for (p, lho, _n, _x, _k, _s, _nm) in cd:
+                struct.pack_into("<I", d, p + 42, lho + 16)
+            struct.pack_into("<I", d, eocd + 16, cd_off + 16)
+            _fx_schreiben(apk, bytes(16) + bytes(d))
+        f.roh.append(e)
+
+    def kopf_arabisch(f):
+        t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+        kopf_, rest = t.split("\n", 1)
+        kopf_ = "# re15 assets " + "".join(chr(0x0660 + int(c)) if c.isdigit() else c
+                                            for c in kopf_[len("# re15 assets "):])
+        f.manifest_roh = (kopf_ + "\n" + rest).encode("utf-8")
+
+    # --- Nachbesserung R2, Befund B2: Tuerarchive gegen die Engine-Tabellen (Quelle UND APK gleich falsch)
+    def beide(rel, neu):                 # Quelle und APK-Eintrag gleich aendern (neu = None: entfernen)
+        def faelschen(f):
+            name = "assets/" + rel[len("re15_port/"):]
+            if neu is None:
+                del f.quelle[rel]
+                f.eintraege.remove(f.eintrag(name))
+            elif rel in f.quelle:
+                b = neu(f.quelle[rel])
+                f.quelle[rel] = b
+                f.eintrag(name)[1] = b
+            else:
+                b = neu(b"")
+                f.quelle[rel] = b
+                f.eintraege.append([name, b, zipfile.ZIP_STORED])
+        return faelschen
+
+    def tabelle(attr, alt, neu, n=1):    # Text einer Mini-Tabelle ersetzen
+        def faelschen(f):
+            t = getattr(f, attr)
+            if t.count(alt) != n:
+                raise AssertionError("Selbsttest-Fixture: %r %d-mal in %s" % (alt, t.count(alt), attr))
+            setattr(f, attr, t.replace(alt, neu))
+        return faelschen
+
+    def re2_aufbau(nr, wert):
+        def faelschen(f):
+            f.re2_aufbau[nr] = wert
+        return faelschen
+
+    def tuer_wert(schluessel, wert):
+        def faelschen(f):
+            f.tuer_werte[schluessel] = wert
+        return faelschen
+
+    def tabellendatei_weg(rel):
+        def faelschen(f):
+            f.tuer_dateien_weg.append(rel)
+        return faelschen
+
+    def byte_kippen(b):
+        return b[:100] + bytes([b[100] ^ 1]) + b[101:]
+
+    def alle(*faelschungen):
+        def faelschen(f):
+            for x in faelschungen:
+                x(f)
+        return faelschen
+
+    def anhaengen(attr, text):
+        def faelschen(f):
+            setattr(f, attr, getattr(f, attr) + text)
+        return faelschen
+
+    ZE = "{ 0x1000, 0, 0, 22850, -13400, 500, 1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE, 1 }"
+    ZD = "{ 0x5060, 0, 0, -26300, -11600, 800, 1800, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0x0A, 273, 142, 0x02AAE, 2 }"
+    E2 = "{ 0x13, 0x0A, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 0, -450, 2, {0, 0, 0}, {0, 0, 0}, 2 }"
+
+    # --- Nachbesserung R2, Befund B6: shared_assets-Wurzel, PC-Paket gegen die Liste
+    def wurzel_neu(f):
+        f.quelle["re15_port/shared_assets/RE15NEU/NEU.DAT"] = b"in keiner Liste"
+
+    def modus(m, *eingriffe):
+        def faelschen(f):
+            f.modus = m
+            for e in eingriffe:
+                e(f)
+        return faelschen
+
+    def paket(eingriff):
+        def faelschen(f):
+            f.paket_eingriffe.append(eingriff)
+        return faelschen
+
+    def paket_datei_weg(rel):
+        return paket(lambda d: os.remove(os.path.join(d, *rel.split("/"))))
+
+    def paket_datei_neu(rel):
+        def e(d):
+            p = os.path.join(d, *rel.split("/"))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "wb") as h:
+                h.write(b"nur im Paket")
+        return paket(e)
+
+    def paket_byte(rel):
+        def e(d):
+            p = os.path.join(d, *rel.split("/"))
+            with open(p, "r+b") as h:
+                h.seek(10)
+                b = h.read(1)
+                h.seek(10)
+                h.write(bytes([b[0] ^ 1]))
+        return paket(e)
+
+    def paket_ordner_weg(f):
+        f.paket_eingriffe.append(lambda d: shutil.rmtree(d))
+
+    # --- Nachbesserung R2, Mutanten-Probe: Grenzen und Teilbedingungen, die bisher kein Fall traf
+    def man_grenze(ueber):               # Manifest genau an bzw. 1 B ueber der (per Pruefhaken gesenkten) Grenze
+        def faelschen(f):
+            roh = _Fall.manifest_text(f.manifest_aus_eintraegen()).encode() + b"\n" * 7   # Leerzeilen: uebersprungen
+            f.manifest_roh = roh
+            f.umgebung["RE15_GATE_MANIFEST_MAX"] = str(len(roh) - (1 if ueber else 0))
+        return faelschen
+
+    def eocd_feld(off, wert=None, plus=0):
+        return lambda f: f.roh.append(lambda apk: _fx_eocd(apk, (off, "<H"), wert, plus))
+
+    def z64_locator(f):                  # ZIP64-Locator vor dem EOCD, Zaehler normal
+        def e(apk):
+            d = _fx_lesen(apk)
+            i = d.rfind(EOCD_SIG)
+            _fx_schreiben(apk, d[:i] + Z64_LOC_SIG + bytes(16) + d[i:])
+        f.roh.append(e)
+
+    def cd_kopf_halb(f):                 # Zentralverzeichnis endet mitten im Kopf eines weiteren Eintrags
+        def e(apk):
+            d = _fx_lesen(apk)
+            i = d.rfind(EOCD_SIG)
+            _fx_schreiben(apk, d[:i] + CD_SIG + bytes(10) + d[i:])
+            _fx_eocd(apk, (8, "<H"), plus=1)
+            _fx_eocd(apk, (10, "<H"), plus=1)
+            _fx_eocd(apk, (12, "<I"), plus=14)
+        f.roh.append(e)
+
     return (
-        ("gute APK", nichts, 0, ["APK-ASSET-GATE-OK", "RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2"]),
+        ("gute APK", nichts, 0, ["APK-ASSET-GATE-OK", "RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2",
+                                 "2/2 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)",
+                                 "4/4 wie die Engine-Tabelle (Groesse, Aufbau)"]),
         ("Manifest mit CRLF (Geraet schneidet \\r ab)", crlf, 0, ["APK-ASSET-GATE-OK"]),
         ("Eintrag komprimiert (Inhalt gleich)", deflate, 0, ["APK-ASSET-GATE-OK", "WARNUNG"]),
         ("fehlende Datei: RE15DOOR-Eintrag entfernt", ohne_p07, 1, ["fehlt in der APK: " + P07]),
@@ -1440,7 +2222,7 @@ def _faelle():
         ("Manifest: Geisterzeile (weder APK noch Quelle)", geisterzeile, 1,
          ["Manifest nennt shared_assets/RE15DOOR/GEIST.DO2 (5 B), die APK hat keinen Eintrag"]),
         ("Manifest: Doppelzeile, erste mit falscher Groesse", doppelzeile, 1, ["Manifest nennt " + P2DS + " mehrfach"]),
-        ("Manifest: Groessenfeld '1_800'", unterstrich, 1, ["Groessenfeld '1_800' ist keine Zahl"]),
+        ("Manifest: Groessenfeld '4_396'", unterstrich, 1, ["Groessenfeld '4_396' ist keine Zahl"]),
         ("Manifest: kein UTF-8", man_kein_utf8, 1, ["Manifest ist kein gueltiges UTF-8"]),
         ("Manifest: Kommentarzeile '# Notiz'", man_notiz, 1, ["unerwartete Kommentarzeile '# Notiz'"]),
         ("Manifest: nennt sich selbst", man_selbst, 1, ["nennt das Manifest selbst"]),
@@ -1459,11 +2241,11 @@ def _faelle():
         ("Eintrag verschluesselt", verschluesselt, 1, ["verschluesselter Eintrag: " + P07]),
         ("Eintrag mit Methode 99", methode99, 1, ["Methode 99", P07]),
         ("Daten ragen ins Zentralverzeichnis", ragt, 1, ["Daten ragen ins Zentralverzeichnis: " + P07]),
-        ("classes.dex: Byte gekippt (kein Asset)", dex_kippen, 1, ["beschaedigt (CRC", "classes.dex"]),
+        ("M16: classes.dex (Deflate, kein Asset) Byte im Strom gekippt", dex_kippen, 1, ["beschaedigt (CRC", "classes.dex"]),
         ("Deflate-Strom mit Muell dahinter", deflate_muell, 1, ["beschaedigt (CRC", "Deflate-Strom endet nicht", TEX]),
         ("Verzeichniseintrag unter assets/", verzeichnis, 1, ["Verzeichniseintrag in der APK: assets/shared_assets/RE15DOOR/"]),
         ("APK abgeschnitten (F7)", abgeschnitten, 2, ["APK nicht lesbar", "kein End-of-Central-Directory"]),
-        ("Bytes hinter dem End-of-Central-Directory", muell_hinten, 2, ["5 Bytes hinter dem End-of-Central-Directory"]),
+        ("Bytes hinter dem End-of-Central-Directory", muell_hinten, 2, ["(1 Bytes hinter dem End-of-Central-Directory"]),
         ("ZIP64-Markierung im End-of-Central-Directory", zip64, 2, ["ZIP64/mehrteiliges Archiv"]),
         ("Zentralverzeichnis-Signatur zerstoert (F8)", cd_signatur, 2, ["Zentralverzeichnis kaputt bei Eintrag 1"]),
         ("Zentralverzeichnis-Offset zu gross", cd_offset, 2, ["Zentralverzeichnis ausserhalb der Datei"]),
@@ -1481,7 +2263,139 @@ def _faelle():
         ("build.gradle: Zeichenkette ohne Ende", g_zeichenkette_offen, 2, ["Zeichenkette ohne Ende"]),
         ("build.gradle: Kommentar /* ohne Ende", g_kommentar_offen, 2, ["Kommentar /* ohne Ende (ab Zeichen"]),
         ("Stored-Eintrag: csize 5 B groesser als usize", stored_zu_lang, 1,
-         ["entpackt mehr als die 1700 B des Zentralverzeichnisses", P07]),
+         ["entpackt mehr als die 2748 B des Zentralverzeichnisses", P07]),
+        # --- ab hier Nachbesserung R2 (B1 Teil-Mutanten, B8, B2 Tuer-Soll, B6 Wurzel + PC-Paket)
+        ("M1: Manifest-Groesse 1 B KLEINER als die APK", man_kleiner, 1,
+         ["Manifest-Groesse falsch: " + P2DS + " Manifest 4395 B, APK 4396 B"]),
+        ("M9: classes.dex (Deflate) Laenge +100, CRC richtig", usize_plus("classes.dex"), 1,
+         ["beschaedigt (CRC", "classes.dex: gelesen 3016 B", "Zentralverzeichnis 3116 B"]),
+        ("M9: libmain.so (Stored) Laenge +100, CRC richtig", usize_plus(SO), 1,
+         ["beschaedigt (CRC", "libmain.so: gelesen 2052 B", "Zentralverzeichnis 2152 B"]),
+        ("M5: EOCD-Kommentarlaenge reicht ueber das Dateiende", kommentar_lang, 2, ["reicht 1 B ueber das Dateiende"]),
+        ("M14: Data-Descriptor-Bit nur im Zentralverzeichnis, LFH-CRC falsch", dd_bit(False, True, True), 1,
+         ["Data-Descriptor-Bit gesetzt (nur Zentralverzeichnis): " + P07]),
+        ("M14: Data-Descriptor-Bit nur im Local Header", dd_bit(True, False, False), 1,
+         ["Data-Descriptor-Bit gesetzt (Local Header): " + P07]),
+        ("M14: Data-Descriptor-Bit in beiden Koepfen", dd_bit(True, True, False), 1,
+         ["Data-Descriptor-Bit gesetzt (Local Header und Zentralverzeichnis): " + P07]),
+        ("M16: libmain.so (Stored, kein Asset) Byte gekippt", so_kippen, 1, ["beschaedigt (CRC", SO]),
+        ("B8: Praefix vor dem ersten Local Header, Offsets verschoben", praefix, 2,
+         ["beginnt nicht mit einem Local Header"]),
+        ("B8: Manifest-Kopfzeile mit arabisch-indischen Ziffern", kopf_arabisch, 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("B2: Port-Tuerarchiv fehlt in Quelle UND APK", beide(Q07, None), 1,
+         ["Port-Tuerarchiv fehlt: re15_port/shared_assets/RE15DOOR/P07G.DO2 (verlangt von: " + TUER_EIGEN_INC]),
+        ("B2: Port-Tuerarchiv 0 Byte in Quelle UND APK", beide(Q07, lambda b: b""), 1,
+         ["Port-Tuerarchiv passt nicht zur Engine-Tabelle: re15_port/shared_assets/RE15DOOR/P07G.DO2 hat 0 B, "
+          "Tabelle 2748 B"]),
+        ("B2: Port-Tuerarchiv gleiche Groesse, anderer Inhalt (FNV-1a)", beide(Q07, byte_kippen), 1,
+         ["re15_port/shared_assets/RE15DOOR/P07G.DO2 FNV-1a"]),
+        ("B2: Port-Tuerarchiv ohne Tabellenzeile (Quelle + APK)",
+         beide("re15_port/shared_assets/RE15DOOR/P99X.DO2", lambda b: b"x" * 100), 1,
+         ["re15_port/shared_assets/RE15DOOR/P99X.DO2 steht in keiner Engine-Tabelle"]),
+        ("B2: RE2-Tuerarchiv fehlt in Quelle UND APK", beide(D13, None), 1,
+         ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR13.DO2 (verlangt von: Tuerzeile"]),
+        ("B2: RE2-Tuerarchiv 1 B kuerzer (Quelle + APK)",
+         beide("re15_port/shared_assets/RE2/DOOR/DOOR07.DO2", lambda b: b[:-1]), 1,
+         ["RE2-Tuerarchiv passt nicht zur Engine-Tabelle: re15_port/shared_assets/RE2/DOOR/DOOR07.DO2 hat 2547 B, "
+          "Tabelle 2548 B"]),
+        ("B2: RE2-Tabelle Tonteil > Sektor * 0x800", re2_aufbau(0x07, (3000, 500, 1)), 1,
+         ["DOOR07.DO2 hat 2548 B, Tabelle 2548 B (Tonteil 3000"]),
+        ("B2: RE2-Tabelle Sektor * 0x800 + Modellteil != Groesse", re2_aufbau(0x07, (1000, 499, 1, 2548)), 1,
+         ["DOOR07.DO2 hat 2548 B, Tabelle 2548 B (Tonteil 1000, Modellteil 499"]),
+        ("B2: Port-Tabelle Modellteil passt nicht", tuer_wert("P07G_modell", 699), 1,
+         ["P07G.DO2 hat 2748 B, Tabelle 2748 B (Tonteil 1000, Modellteil 699"]),
+        ("B2: Port-Tabelle Tonteil 1 B ueber Sektor * 0x800", tuer_wert("P07G_ton", 2049), 1,
+         ["P07G.DO2 hat 2748 B, Tabelle 2748 B (Tonteil 2049"]),
+        ("B2: RE2-Archiv nur als Griff-Spender verlangt, fehlt",
+         beide("re15_port/shared_assets/RE2/DOOR/DOOR09.DO2", None), 1,
+         ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR09.DO2 (verlangt von: Griff-Spender"]),
+        ("B2: RE2-Spender nur ueber den Rueckfall in die Port-Tabelle, fehlt",
+         beide("re15_port/shared_assets/RE2/DOOR/DOOR0C.DO2", None), 1,
+         ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR0C.DO2 (verlangt von: Griff-Spender"]),
+        ("B2: RE2-Archiv nur als Basis eines Port-Archivs verlangt, fehlt",
+         alle(tabelle("tuer_eigen", '{ "P2DS", 0x13,', '{ "P2DS", 0x0A,'),
+              tabelle("tuer_eigen", ZD, ZD.replace("0x13, 0, 0, 0x0A", "0x0A, 0, 0, 0x0A"))), 1,
+         ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR0A.DO2 (verlangt von: Basis von P2DS"]),
+        ("B2: Tuerzeile mit Port-Archiv anderer Basis", tabelle("tuer_eigen", ZD, ZD.replace("0x13, 0, 0, 0x0A", "0x07, 0, 0, 0x0A")),
+         1, ["Tuerzeile nennt DOOR07 mit Port-Archiv P2DS (Basis DOOR13)"]),
+        ("B2: Tuerzeile nennt Port-Archiv ausserhalb der Tabelle", tabelle("tuer_eigen", ZD, ZD.replace("0x02AAE, 2 }", "0x02AAE, 5 }")),
+         1, ["Tuerzeile nennt Port-Archiv 5, re15_tuer_eigen hat 2"]),
+        ("B2: Griff-Tausch nennt Port-Archiv ausserhalb der Tabelle", tabelle("tuer_eigen", E2, E2.replace("-450, 2,", "-450, 7,")),
+         1, ["Griff-Tausch nennt Port-Archiv 7, re15_tuer_eigen hat 2"]),
+        ("B2: Tuerzeile nennt RE2-Archiv ausserhalb der RE2-Tabelle",
+         tabelle("tuer_zuordnung", "{0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE }", "{0, 0, 0, 0}, 0x30, 1, 0, 0xFF, 0, 2, 0x00BBE }"),
+         1, ["Tuerzeile nennt RE2-Tuerarchiv 48, re2_tuer_arch hat 20 Zeilen"]),
+        ("B2: Tabelle re15_tuer_eigen[3] mit 2 Zeilen", tabelle("tuer_eigen", "re15_tuer_eigen[2]", "re15_tuer_eigen[3]"), 2,
+         ["re15_tuer_eigen[3] hat 2 Zeilen"]),
+        ("B2: typedef ohne Feld fnv", tabelle("tuer_kopf", "uint32_t fnv;", "uint32_t fnw;"), 2,
+         ["re15_tuer_eigen_t ohne Feld(er) ['fnv']"]),
+        ("B2: Tabellenzeile mit mehr Werten als Feldern", tabelle("tuer_eigen", "08Xu, 0 },", "08Xu, 0, 0 },"), 2,
+         ["re15_tuer_eigen Zeile 1: 9 Werte, re15_tuer_eigen_t hat 8 Felder"]),
+        ("B2: Engine-Tabelle re2_tuer_tabelle.inc fehlt", tabellendatei_weg(TUER_RE2_INC), 2,
+         ["Engine-Tabelle fehlt: " + TUER_RE2_INC]),
+        ("B2: Kennung doppelt", tabelle("tuer_eigen", '{ "P2DS",', '{ "P07G",'), 2,
+         ["Kennung 'P07G' leer, doppelt oder kein Dateiname"]),
+        ("B2: Kennung leer", tabelle("tuer_eigen", '{ "P2DS",', '{ "",'), 2, ["Kennung '' leer, doppelt"]),
+        ("C-Leser: typedef fehlt", tabelle("tuer_kopf", "} re15_tuer_zeile_t;", "} re15_tuer_zeile_x;"), 2,
+         ["'typedef struct { ... } re15_tuer_zeile_t;' nicht gefunden"]),
+        ("C-Leser: typedef doppelt", anhaengen("tuer_kopf", "typedef struct { uint8_t a; } re15_griff_tausch_t;\n"), 2,
+         ["'typedef struct { ... } re15_griff_tausch_t;' mehrfach"]),
+        ("C-Leser: Feldtyp unbekannt", tabelle("tuer_kopf", "uint8_t  band;", "float    band;"), 2,
+         ["re15_tuer_zeile_t - Feld nicht lesbar: 'float band'"]),
+        ("C-Leser: Deklarator unlesbar", tabelle("tuer_kopf", "int16_t  qx[4], qz[4];", "int16_t  qx[4], *qz;"), 2,
+         ["Deklarator nicht lesbar: '*qz'"]),
+        ("C-Leser: Makroname statt Zahl", tabelle("tuer_zuordnung", "0x07, 1, 0, 0xFF, 0, 2, 0x00BBE }",
+                                                  "TUER_07, 1, 0, 0xFF, 0, 2, 0x00BBE }"), 2,
+         ["unerwartetes Zeichen im Initialisierer: 'TUER_07"]),
+        ("C-Leser: Tabelle ohne schliessende Klammer", tabelle("tuer_re2", "%(zeilen)s\n};", "%(zeilen)s\n"), 2,
+         ["re2_tuer_arch ohne Ende (schliessende '}' fehlt)"]),
+        ("C-Leser: ';' nach der Tabelle fehlt", tabelle("tuer_eigen", "08Xu, 1 },\n};", "08Xu, 1 },\n}"), 2,
+         ["re15_tuer_eigen: nach der schliessenden '}' fehlt ';'"]),
+        ("C-Leser: Zeile ist kein { ... }", tabelle("tuer_zuordnung", "{ 0x13, 0x09, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 1500, -702 },",
+                                                    "0x13,"), 2, ["re15_griff_tausche Zeile 1 ist kein { ... }"]),
+        ("C-Leser: Kennung ist keine Zeichenkette", tabelle("tuer_eigen", '{ "P07G", 0x07,', '{ 0x50, 0x07,'), 2,
+         ["Feld kennung: Zeichenkette mit < 8 Bytes erwartet"]),
+        ("C-Leser: Kennung 8 Bytes (char[8] braucht das NUL)", tabelle("tuer_eigen", '{ "P07G", 0x07,', '{ "P07GABCD", 0x07,'),
+         2, ["Feld kennung: Zeichenkette mit < 8 Bytes erwartet"]),
+        ("C-Leser: Feld qx ist keine Liste", tabelle("tuer_eigen", ZE, ZE.replace("1000, {0, 0, 0, 0}, {0, 0, 0, 0}", "1000, 0, {0, 0, 0, 0}")),
+         2, ["Feld qx: { bis zu 4 Zahlen } erwartet"]),
+        ("C-Leser: Feld qx mit 5 Zahlen", tabelle("tuer_eigen", ZE, ZE.replace("1000, {0, 0, 0, 0},", "1000, {0, 0, 0, 0, 0},")),
+         2, ["Feld qx: { bis zu 4 Zahlen } erwartet"]),
+        ("C-Leser: Feld qx mit Zeichenkette", tabelle("tuer_eigen", ZE, ZE.replace("1000, {0, 0, 0, 0},", '1000, {0, "a", 0, 0},')),
+         2, ["Feld qx: { bis zu 4 Zahlen } erwartet"]),
+        ("C-Leser: Feld re2_nr ist keine Zahl", tabelle("tuer_eigen", ZE, ZE.replace("0x07, 1, 0, 0xFF", '"x", 1, 0, 0xFF')),
+         2, ["Feld re2_nr: Zahl erwartet"]),
+        ("C-Leser: Zeichenkette ohne Ende", tabelle("tuer_eigen", '{ "P07G", 0x07,', '{ "P07G, 0x07,'), 2,
+         ["Zeichenkette ohne Ende"]),
+        ("C-Leser: Kommentar /* ohne Ende", anhaengen("tuer_zuordnung", "/* offen"), 2, ["Kommentar /* ohne Ende"]),
+        ("C-Leser: Tabelle doppelt", anhaengen("tuer_zuordnung", "static const re15_griff_tausch_t re15_griff_tausche[1] = { {0} };\n"),
+         2, ["re15_griff_tausche[N] = {' mehrfach"]),
+        ("C-Leser: Tabelle fehlt", tabelle("tuer_zuordnung", "re15_griff_tausche[1]", "re15_griff_tauschx[1]"), 2,
+         ["re15_griff_tausche[N] = {' nicht gefunden"]),
+        ("B6: Ordner unter shared_assets in keiner Liste", wurzel_neu, 1,
+         ["re15_port/shared_assets/RE15NEU liegt in keinem Asset-Baum"]),
+        ("--paket: gutes PC-Paket", modus("paket"), 0, ["APK-ASSET-GATE-PAKET-OK"]),
+        ("--paket: Datei fehlt im Paket", modus("paket", paket_datei_weg("shared_assets/RE2/DOOR/DOOR07.DO2")), 1,
+         ["fehlt im Paket: shared_assets/RE2/DOOR/DOOR07.DO2"]),
+        ("--paket: Zusatzbaum im Paket (copy_common weicht ab)", modus("paket", paket_datei_neu("shared_assets/RE15NEU/NEU.DAT")),
+         1, ["zusaetzlich im Paket", "shared_assets/RE15NEU/NEU.DAT"]),
+        ("--paket: gleiche Groesse, anderer Inhalt", modus("paket", paket_byte("synchro/STAGE2/room2000/main00.wav")), 1,
+         ["Inhalt weicht ab: synchro/STAGE2/room2000/main00.wav"]),
+        ("--paket: synchro/unused im Paket", modus("paket", paket_datei_neu("synchro/unused/STAGE1/room1170/alt.mp3")), 1,
+         ["zusaetzlich im Paket", "synchro/unused/STAGE1/room1170/alt.mp3"]),
+        ("--paket: Tuer-Soll greift auch hier", modus("paket", beide(Q07, None)), 1,
+         ["Port-Tuerarchiv fehlt: re15_port/shared_assets/RE15DOOR/P07G.DO2"]),
+        ("--paket: Paketordner fehlt", modus("paket", paket_ordner_weg), 2, ["Paketordner fehlt"]),
+        ("--quellbaum: gut", modus("quellbaum"), 0, ["APK-ASSET-GATE-QUELLBAUM-OK"]),
+        ("--quellbaum: RE2-Tuerarchiv fehlt", modus("quellbaum", beide(D13, None)), 1,
+         ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR13.DO2"]),
+        ("Manifest genau an der Grenze (Pruefhaken senkt 64 MiB)", man_grenze(False), 0, ["APK-ASSET-GATE-OK"]),
+        ("Manifest 1 B ueber der Grenze", man_grenze(True), 1, ["das Geraet liest es nicht (android_glue.c:80)"]),
+        ("EOCD: Datentraeger-Nummer 1", eocd_feld(4, 1), 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("EOCD: Zentralverzeichnis auf Datentraeger 1", eocd_feld(6, 1), 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("EOCD: Eintraege hier != Eintraege gesamt", eocd_feld(8, plus=-1), 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("ZIP64-Locator vor dem EOCD (Zaehler normal)", z64_locator, 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("Zentralverzeichnis endet mitten im Kopf", cd_kopf_halb, 2, ["Zentralverzeichnis kaputt bei Eintrag"]),
     )
 
 
@@ -1499,9 +2413,13 @@ def _fall_vorbereiten(tmp, nr, fall):
 
 
 def _fall_laufen(f):
-    r = subprocess.run([sys.executable, os.path.abspath(__file__), "--repo", f.repo, f.apk],
+    ziel = {"apk": [f.apk], "quellbaum": ["--quellbaum"], "paket": ["--paket", f.paket]}[f.modus]
+    umgebung = dict(os.environ)
+    umgebung.pop("RE15_GATE_MANIFEST_MAX", None)
+    umgebung.update(f.umgebung)
+    r = subprocess.run([sys.executable, os.path.abspath(__file__), "--repo", f.repo] + ziel,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                       timeout=120)
+                       timeout=120, env=umgebung)
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
@@ -1518,7 +2436,7 @@ def selbsttest():
                 vorbereitet[nr] = _fall_vorbereiten(tmp, nr, fall)
             except Exception:
                 ergebnis[nr] = (-1, "Fixture-Fehler:\n" + traceback.format_exc())
-        arbeiter = max(1, min(4, os.cpu_count() or 1))
+        arbeiter = max(1, min(8, os.cpu_count() or 1))
         with concurrent.futures.ThreadPoolExecutor(max_workers=arbeiter) as pool:
             laeufe = {nr: pool.submit(_fall_laufen, f) for nr, f in vorbereitet.items()}
             for nr, lauf in laeufe.items():
@@ -1568,13 +2486,25 @@ def main(argv=None):
         ap.add_argument("--repo", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help="Repo-Wurzel (Standard: Ordner ueber release/)")
         ap.add_argument("--selbsttest", action="store_true", help="Faelschungen im Temp-Ordner pruefen")
+        ap.add_argument("--quellbaum", action="store_true",
+                        help="nur den Quellbaum pruefen (Baumliste, Pflichtinhalt, Tuer-Soll, shared_assets-Wurzel)")
+        ap.add_argument("--paket", metavar="ORDNER", help="PC-Paketordner gegen dieselbe Asset-Liste pruefen")
         ap.add_argument("--max-zeilen", type=int, default=25, help="Befunde je Art (Rest: 'und N weitere')")
         a = ap.parse_args(argv)
-        if a.selbsttest == bool(a.apk):
-            ap.error("genau eins von: <apk> oder --selbsttest")
+        if [bool(a.apk), a.selbsttest, a.quellbaum, a.paket is not None].count(True) != 1:
+            ap.error("genau eins von: <apk>, --selbsttest, --quellbaum, --paket <ordner>")
         if a.max_zeilen < 1:
             ap.error("--max-zeilen muss >= 1 sein")
-        rc = selbsttest() if a.selbsttest else pruefen(a.repo, a.apk, a.max_zeilen)
+        if a.paket is not None and not a.paket:
+            ap.error("--paket braucht einen Ordner")
+        if a.selbsttest:
+            rc = selbsttest()
+        elif a.quellbaum:
+            rc = nur_quellbaum(a.repo, a.max_zeilen)
+        elif a.paket is not None:
+            rc = paket_pruefen(a.repo, a.paket, a.max_zeilen)
+        else:
+            rc = pruefen(a.repo, a.apk, a.max_zeilen)
         return rc if rc in (RC_GLEICH, RC_ABWEICHUNG) else RC_FEHLER
     except Bedienfehler as e:
         print("ABBRUCH (Rueckgabe 2): %s" % e, file=sys.stderr)

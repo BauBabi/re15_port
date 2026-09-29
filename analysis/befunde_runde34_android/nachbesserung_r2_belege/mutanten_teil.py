@@ -40,7 +40,8 @@ PRUEFCODE = {
     "manifest_pruefen", "pruefen",
     # Runde 2 (Tuer-Soll aus den Engine-Tabellen, Paketvergleich, Quellbaum-Wurzel)
     "_c_ohne_kommentare", "c_struktur", "_c_werte", "c_tabelle", "_fnv1a32", "_c_lesen", "tuer_soll",
-    "tueren_pruefen", "wurzel_pruefen", "paket_pruefen", "quellbaum_pruefen",
+    "tueren_pruefen", "wurzel_pruefen", "paket_pruefen", "quellbaum_pruefen", "nur_quellbaum", "_befunde_ausgeben",
+    "_sammler", "_manifest_grenze", "_tuer_zeilen_drucken",
 }
 
 ROR = {ast.NotEq: ("<", ">"), ast.Eq: ("<=", ">="), ast.Lt: ("<=",), ast.LtE: ("<",), ast.Gt: (">=",),
@@ -110,21 +111,26 @@ def mutanten(text, hand):
             elif (fn.name == "_name_fehler" and isinstance(k, ast.Return) and isinstance(k.value, ast.Constant)
                   and isinstance(k.value.value, str) and k.value.value):
                 neu("C_%s_Z%d" % (fn.name, z), kurz(), _zeilen_pass(q, k))
-            # --- E Vergleichsoperatoren (nur einfache Vergleiche mit genau einem Operator)
-            if isinstance(k, ast.Compare) and len(k.ops) == 1 and type(k.ops[0]) in ROR:
-                op = k.ops[0]
-                a = q.spanne(k.left)[1]
-                e = q.spanne(k.comparators[0])[0]
-                zwischen = q.text[a:e]
-                alt = OPTEXT[type(op)]
-                m = re.search(r"(?<![<>=!])" + re.escape(alt).replace(r"\ ", r"\s+") + r"(?![<>=])", zwischen)
-                if m:
+            # --- E Vergleichsoperatoren (auch in Ketten 'a <= b < c': je Operator einzeln)
+            if isinstance(k, ast.Compare):
+                operanden = [k.left] + list(k.comparators)
+                for oi, op in enumerate(k.ops):
+                    if type(op) not in ROR:
+                        continue
+                    a = q.spanne(operanden[oi])[1]
+                    e = q.spanne(operanden[oi + 1])[0]
+                    zwischen = q.text[a:e]
+                    alt = OPTEXT[type(op)]
+                    m = re.search(r"(?<![<>=!])" + re.escape(alt).replace(r"\ ", r"\s+") + r"(?![<>=])", zwischen)
+                    if not m:
+                        continue
                     for n_op in ROR[type(op)]:
                         t = q.ersetzen(a + m.start(), a + m.end(), n_op)
-                        neu("E_%s_Z%d_%s" % (fn.name, z, re.sub(r"\W", "", {"<": "lt", ">": "gt", "<=": "le", ">=": "ge",
-                                                                           "in": "in", "not in": "notin", "is": "is",
-                                                                           "is not": "isnot"}[n_op])),
+                        neu("E_%s_Z%d_%s%s" % (fn.name, z, {"<": "lt", ">": "gt", "<=": "le", ">=": "ge", "in": "in",
+                                                             "not in": "notin", "is": "is", "is not": "isnot"}[n_op],
+                                                "" if len(k.ops) == 1 else "_op%d" % oi),
                             "%s  [%s -> %s]" % (kurz(), alt, n_op), t)
+            if isinstance(k, ast.Compare) and len(k.ops) == 1:
                 # G Tupelvergleich: je ein Paar weg
                 if (isinstance(k.left, ast.Tuple) and isinstance(k.comparators[0], ast.Tuple)
                         and len(k.left.elts) == len(k.comparators[0].elts) >= 2):

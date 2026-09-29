@@ -1,6 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""Ausfuehrungsbit im Linux-ZIP setzen und nachweisen.
+#!/bin/bash
+''':' #
+# Direktaufruf (./release/zip_exec_bit.py ...) laeuft zuerst als Bash-Skript (Runde 34a, Nachbesserung R2,
+# Gegenpruefung echtlauf B1): '#!/usr/bin/env python3' startete unter Git-Bash den WindowsApps-Alias
+# (v0.8.17: ungefragte Installation von Python 3.14). Der Interpreter kommt aus release/python_finden.sh.
+# Fuer Python ist dieser Block eine Zeichenkette ohne Wirkung. make_package.sh ruft ohnehin "$PY" auf.
+. "$(dirname "$0")/python_finden.sh" || exit 2 #
+exec "$PY" "$0" "$@" #
+'''
+__doc__ = """Ausfuehrungsbit im Linux-ZIP setzen und nachweisen.
 
 WARUM DAS NOETIG IST (gemessen 2026-09-03 am Paket v0.3.97):
 Im ausgelieferten Linux-Archiv lag `re15_pc` mit Modus 0644. Wer das Paket auf dem Deck
