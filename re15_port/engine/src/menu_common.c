@@ -1251,13 +1251,90 @@ static void state5_use(void)
 }
 
 /* ---------------------------------------------------------------------------------- */
+/* ITEM-DEBUG des Statusschirms (Runde 34 A10) — Kopf von FUN_8004a0cc                 */
+/* ---------------------------------------------------------------------------------- */
+/* Der Auslieferungsstand traegt im Kopf des ITEM-Modus (25c1 = 3) ein eingebautes Item-Debug —
+ * der einzige Original-Weg zu den Granaten 0x0A/0x0B (Absturz-Dossier §2.2b, dynamisch n1:
+ * SELECT + 9x R1 -> Platz `09 ff 00 00`). Selbst disassembliert (re15_disasm.py dis 0x8004a0cc 120):
+ *   8004a138 lhu a1,-14494(a1)        0x800ac762 = ROHE Flanke Pad 1 (Port: `pressed`)
+ *   8004a140 andi v0,a1,0x100         SELECT
+ *   8004a150 sh v0,9832(at)           HALBWORT: 0x800b2668 := 1 UND 0x800b2669 := 0
+ *   8004a154 lui a0,0x409 / 8004a158 jal 0x80045024 (a1 = 0)   SE 0x04090000 = CORE Satz 9
+ *   8004a160-18c lbu 2668: 1 -> 8004a194, 2 -> 8004a1a4, 3 -> 8004a238, sonst Ende
+ *   Zustand 1: 8004a194-9c `jal 0x80013b60` (a0 = 0xb, a1 = 0x801a0000) = Datei 0xb laden
+ *              (Tabelle 0x8006f43c[0xb] = 86400 B = ITEMALL.PIX), faellt in Zustand 2
+ *   Zustand 2: 8004a1d4 `jal 0x800492b8` (a0 = 25bd, a2 = 0x801a0000 + Id*1200) = Bild ITEMALL[Id]
+ *              8004a1f0 sb v1,0(at)            inv[25bd].Id    := 2669
+ *              8004a1f8/204 ori 0xff / sb 1(at) inv[25bd].Menge := 255
+ *              8004a220 sb zero,1(at) (at = 0x800b10ae + 25bd*4)  inv[25bd].+3 := 0 (+2 bleibt)
+ *              8004a224-2c 2668 := 3, `j 0x8004a360` (OHNE Id-Kappung)
+ *   Zustand 3 (rohe Flanke, erste passende Taste gewinnt, jeweils 2668 := 2):
+ *              andi 0x8 R1 -> Id + 1 (@0x8004a238/58)   andi 0x4 L1 -> Id - 1 (@0x8004a288)
+ *              andi 0x2 R2 -> Id + 10 (@0x8004a2b8)     andi 0x1 L2 -> Id + 246 (@0x8004a2e8)
+ *              andi 0x20 KREIS -> 2668 := 0 (@0x8004a308)
+ *              andi 0x10 DREIECK (@0x8004a300) -> inv[25bd].Menge + 1 (sb @0x8004a33c auf
+ *                   0x800ac766 - 8398 + 27157 + 25bd*4 = 0x800b10ad + 25bd*4), 2668 bleibt 3
+ *              Kappung 8004a340-5c `sltiu v0,v0,0x48` / `sb 0x47`: Id <= 0x47
+ * Die rohen Bits der Flanke 0x800ac762 (L2 0x1, R2 0x2, L1 0x4, R1 0x8, Dreieck 0x10,
+ * Kreis 0x20, SELECT 0x100) sind im Port die physischen RE15_PAD_BIT_* (byte-vertauschtes
+ * Layout, Kopf dieses Moduls). Der Kopf laeuft in JEDEM ITEM-Zustand (vor dem 25c2-Sprung
+ * @0x8004a360). NICHT portiert: der Pad-2-Auffueller @0x8004a0dc-130 (lhu 0x800ac766 & 0x10 —
+ * der Port fuehrt kein zweites Pad). */
+static uint8_t s_dbg_zustand = 0;   /* 0x800b2668 */
+static uint8_t s_dbg_id      = 0;   /* 0x800b2669 */
+
+static void item_debug_platz(void)
+{
+    int k = g_inv_screen.item_cursor;               /* 25bd */
+    if (k < 0 || k >= RE15_INV_MAX_SLOTS) return;    /* Port-Feldgrenze (Original schreibt blind) */
+    g_inv.slots[k].id  = s_dbg_id;
+    g_inv.slots[k].qty = 0xff;
+    g_inv.slots[k].pad = 0;
+    /* FUN_800492b8(25bd, 0, ITEMALL + Id*1200) = die Zelle zeigt ITEMALL[Id] = die Identitaets-
+     * Zuordnung des Zellen-Caches (re15_inv_screen_cache_tile: Kachel = Id) -> Uebersteuerung 0. */
+    re15_inv_icon_blank(k);
+}
+
+static void item_debug(uint16_t pressed)
+{
+    if (pressed & RE15_PAD_BIT_SELECT) {
+        s_dbg_zustand = 1; s_dbg_id = 0;
+        se4(9);
+    }
+    switch (s_dbg_zustand) {
+    case 1:                                         /* Datei 0xb = ITEMALL.PIX (Port: resident) */
+    case 2:
+        item_debug_platz();
+        s_dbg_zustand = 3;
+        return;                                     /* j 0x8004a360: keine Kappung */
+    case 3:
+        if      (pressed & RE15_PAD_BIT_R1)       { s_dbg_zustand = 2; s_dbg_id = (uint8_t)(s_dbg_id + 1); }
+        else if (pressed & RE15_PAD_BIT_L1)       { s_dbg_zustand = 2; s_dbg_id = (uint8_t)(s_dbg_id - 1); }
+        else if (pressed & RE15_PAD_BIT_R2)       { s_dbg_zustand = 2; s_dbg_id = (uint8_t)(s_dbg_id + 10); }
+        else if (pressed & RE15_PAD_BIT_L2)       { s_dbg_zustand = 2; s_dbg_id = (uint8_t)(s_dbg_id + 246); }
+        else if (pressed & RE15_PAD_BIT_CIRCLE)   { s_dbg_zustand = 0; }
+        else if (pressed & RE15_PAD_BIT_TRIANGLE) {
+            int k = g_inv_screen.item_cursor;
+            if (k >= 0 && k < RE15_INV_MAX_SLOTS) g_inv.slots[k].qty = (uint8_t)(g_inv.slots[k].qty + 1);
+        }
+        if (s_dbg_id >= 0x48) s_dbg_id = 0x47;
+        return;
+    default:
+        return;
+    }
+}
+/* Sonden-Sicht (nur lesend). */
+int re15_menu_item_debug_zustand(void) { return s_dbg_zustand; }
+int re15_menu_item_debug_id(void)      { return s_dbg_id; }
+
+/* ---------------------------------------------------------------------------------- */
 /* ITEM mode (run sub-state 3) — FUN_8004a0cc, FSM on 25c2 (jump table @0x8004a714)    */
 /* ---------------------------------------------------------------------------------- */
 static void item_mode(uint16_t pressed, uint16_t held)
 {
-    /* head: pad-2 refill + SELECT debug item spawner (@0x8004a0e0-a35c) — the shipped
-     * build's debug features (browse/spawn ITEMALL items on SELECT). DEFERRED: needs the
-     * ITEMALL browse-upload path; not part of the wave-2 acceptance. */
+    /* head: pad-2 refill + SELECT debug item spawner (@0x8004a0e0-a35c) — Runde 34 A10:
+     * das SELECT-Item-Debug ist portiert (item_debug oben); der Pad-2-Auffueller nicht. */
+    item_debug(pressed);
     switch (g_inv_screen.item_state) {
     case 0:  /* entry slide @0x8004a394-3c0: 25ea +14/frame while <251 (slti 251);
               * lands exactly 166+14*7=264, then 25c2:=1. */

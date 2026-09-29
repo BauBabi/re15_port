@@ -32,6 +32,9 @@
 #include "re15_collision.h"
 #include "re15_inventory.h"
 #include "re15_msg.h"
+#include "re15_menu.h"
+#include "re15_inv_screen.h"
+#include "re15_fade.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -707,6 +710,120 @@ static void abschnitt_spielschritt(void)
     }
 }
 
+/* ================================================================================================
+ * Abschnitt 7: ITEM-DEBUG des Statusschirms (A10, K9) — FUN_8004a0cc-Kopf @0x8004a138-0x8004a35c
+ * Vergleich mit dem Original-Lauf n1 (Absturz-Dossier §2.2b): n1_sel Platz 0 = `00 ff 00 00`,
+ * n1_r9 = `09 ff 00 00`, Schliessen ruestet aus (Platz 0 = ausgeruesteter Platz).
+ * ================================================================================================ */
+extern int g_test_core_se_last, g_test_core_se_count;   /* tests/test_support.c */
+extern int re15_menu_item_debug_zustand(void);
+extern int re15_menu_item_debug_id(void);
+
+static void mf(uint16_t pressed, uint16_t held)
+{
+    re15_menu_start_poll(pressed, 1);
+    if (re15_menu_gameplay_frozen()) re15_menu_fsm_tick(pressed, held);
+    if (re15_menu_is_open()) re15_inv_screen_ecg_tick();
+    re15_fade_tick();
+}
+static void mf_leer(int n) { while (n-- > 0) mf(0, 0); }
+static void mf_taste(uint16_t t) { mf(t, t); mf(0, 0); }   /* Flanke, dann ein Bild ohne Taste */
+
+static int slot_ist(int k, uint8_t id, uint8_t qty, uint8_t pad)
+{
+    return g_inv.slots[k].id == id && g_inv.slots[k].qty == qty && g_inv.slots[k].pad == pad;
+}
+
+static void abschnitt_item_debug(void)
+{
+    welt_leer();
+    re15_inv_load_briefing();                       /* Platz 0 = Messer (ausgeruestet), 1 = HP 15 */
+    g_inv.slots[0].pad = 0x5a;                      /* +3 vorbelegt: der Debug-Schreiber nullt es */
+    re15_player_set_equipped_weapon(1);
+    re15_inv_set_equipped_slot(0);
+    re15_inv_set_prev_equip_slot(0x80);
+    re15_menu_toggle();                             /* Statusschirm auf (Debug-Oeffnen ohne Blende) */
+    mf(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);   /* Reiter ITEM bestaetigen -> 25c1 = 3 */
+    mf_leer(8);                                     /* Einfahrt -> Raster, Cursor 25bd = 0 */
+    PRUEF(131, re15_menu_is_open() && re15_menu_substate() == 3 && g_inv_screen.item_cursor == 0,
+          "Item-Debug: Statusschirm nicht im ITEM-Raster (offen %d, 25c1 %d, 25bd %d)",
+          re15_menu_is_open(), re15_menu_substate(), g_inv_screen.item_cursor);
+
+    /* Negativ-Kontrolle: R1 ohne SELECT aendert nichts (Zustand 0) */
+    mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(132, re15_menu_item_debug_zustand() == 0 && slot_ist(0, 0x01, 0, 0x5a),
+          "Item-Debug: R1 ohne SELECT hat gewirkt (Zustand %d, Platz 0 = %02x %02x %02x)",
+          re15_menu_item_debug_zustand(), g_inv.slots[0].id, g_inv.slots[0].qty, g_inv.slots[0].pad);
+
+    /* SELECT -> Zustand 1 -> (Datei 0xb) -> Zustand 2 schreibt Platz 25bd -> Zustand 3, SE CORE 9 */
+    int se_n = g_test_core_se_count;
+    mf(RE15_PAD_BIT_SELECT, RE15_PAD_BIT_SELECT);
+    PRUEF(133, re15_menu_item_debug_zustand() == 3 && re15_menu_item_debug_id() == 0 && slot_ist(0, 0x00, 0xff, 0),
+          "Item-Debug SELECT: Zustand %d Id %d Platz 0 = %02x %02x pad %02x (soll 3 / 0 / 00 ff +3=00)",
+          re15_menu_item_debug_zustand(), re15_menu_item_debug_id(), g_inv.slots[0].id, g_inv.slots[0].qty,
+          g_inv.slots[0].pad);
+    PRUEF(134, g_test_core_se_count == se_n + 1 && g_test_core_se_last == 9,
+          "Item-Debug SELECT: SE %d-mal, letzter Satz %d (soll 1x CORE Satz 9 = 0x04090000 @0x8004a154-58)",
+          g_test_core_se_count - se_n, g_test_core_se_last);
+    mf(0, 0);
+
+    /* 9x R1 -> Id 9 -> Platz 0 = 09 ff (Hand Grenade) */
+    for (int i = 0; i < 9; i++) mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(135, re15_menu_item_debug_id() == 9 && slot_ist(0, 0x09, 0xff, 0) && re15_menu_item_debug_zustand() == 3,
+          "Item-Debug 9x R1: Id %d Platz 0 = %02x %02x (soll 9 / 09 ff)", re15_menu_item_debug_id(),
+          g_inv.slots[0].id, g_inv.slots[0].qty);
+    /* R1 schreibt erst im FOLGEBILD (Zustand 2 @0x8004a1a4): Flankenbild selbst noch alt */
+    mf(RE15_PAD_BIT_R1, RE15_PAD_BIT_R1);
+    PRUEF(136, re15_menu_item_debug_zustand() == 2 && re15_menu_item_debug_id() == 10 && g_inv.slots[0].id == 0x09,
+          "Item-Debug R1-Flanke: Zustand %d Id %d Platz %02x (soll 2 / 10 / noch 09)",
+          re15_menu_item_debug_zustand(), re15_menu_item_debug_id(), g_inv.slots[0].id);
+    mf(0, 0);
+    PRUEF(137, slot_ist(0, 0x0A, 0xff, 0), "Item-Debug 10x R1: Platz 0 = %02x (soll 0A Acid)", g_inv.slots[0].id);
+    mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(138, slot_ist(0, 0x0B, 0xff, 0), "Item-Debug 11x R1: Platz 0 = %02x (soll 0B Incendiary)", g_inv.slots[0].id);
+    /* L1 -1, R2 +10, L2 -10 (+246) */
+    mf_taste(RE15_PAD_BIT_L1);
+    PRUEF(139, re15_menu_item_debug_id() == 0x0A && g_inv.slots[0].id == 0x0A, "Item-Debug L1: Id %d", re15_menu_item_debug_id());
+    mf_taste(RE15_PAD_BIT_R2);
+    PRUEF(140, re15_menu_item_debug_id() == 0x14 && g_inv.slots[0].id == 0x14, "Item-Debug R2: Id %d", re15_menu_item_debug_id());
+    mf_taste(RE15_PAD_BIT_L2);
+    PRUEF(141, re15_menu_item_debug_id() == 0x0A && g_inv.slots[0].id == 0x0A, "Item-Debug L2: Id %d", re15_menu_item_debug_id());
+    /* Kappung Id <= 0x47: 0x0A - 11 = 0xFF -> 0x47; 0x47 + 1 = 0x48 -> 0x47 */
+    for (int i = 0; i < 11; i++) mf_taste(RE15_PAD_BIT_L1);
+    PRUEF(142, re15_menu_item_debug_id() == 0x47 && g_inv.slots[0].id == 0x47,
+          "Item-Debug Unterlauf: Id %#x (soll 0x47 nach Kappung @0x8004a350-5c)", re15_menu_item_debug_id());
+    mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(143, re15_menu_item_debug_id() == 0x47, "Item-Debug Obergrenze: Id %#x (soll 0x47)", re15_menu_item_debug_id());
+    /* DREIECK: Menge + 1 des Cursor-Platzes, Zustand bleibt 3 (@0x8004a300-33c) */
+    mf_taste(RE15_PAD_BIT_TRIANGLE);
+    PRUEF(144, g_inv.slots[0].qty == 0x00 && re15_menu_item_debug_zustand() == 3,
+          "Item-Debug DREIECK: Menge %#x Zustand %d (soll 0x00 = 0xff+1 / 3)", g_inv.slots[0].qty,
+          re15_menu_item_debug_zustand());
+    /* zurueck auf 9 (Hand Grenade): SELECT setzt Id 0, dann 9x R1 */
+    mf_taste(RE15_PAD_BIT_SELECT);
+    for (int i = 0; i < 9; i++) mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(145, slot_ist(0, 0x09, 0xff, 0), "Item-Debug erneut: Platz 0 = %02x %02x", g_inv.slots[0].id, g_inv.slots[0].qty);
+    /* KREIS beendet: Zustand 0, weitere R1 wirken nicht */
+    mf_taste(RE15_PAD_BIT_CIRCLE);
+    mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(146, re15_menu_item_debug_zustand() == 0 && slot_ist(0, 0x09, 0xff, 0),
+          "Item-Debug KREIS: Zustand %d Platz %02x (soll 0 / 09)", re15_menu_item_debug_zustand(), g_inv.slots[0].id);
+    /* Schliessen ruestet aus (Platz 0 = ausgeruesteter Platz 25c8): Waffe 9 */
+    re15_menu_toggle();
+    PRUEF(147, re15_player_equipped_weapon() == 9, "Item-Debug Schliessen: ausgeruestet %d (soll 9)",
+          re15_player_equipped_weapon());
+
+    /* Negativ-Kontrolle: SELECT im REITER-Modus (25c1 = 0) loest das Debug NICHT aus */
+    re15_inv_load_briefing();
+    re15_player_set_equipped_weapon(1);
+    re15_menu_toggle();
+    mf_taste(RE15_PAD_BIT_SELECT);
+    PRUEF(148, re15_menu_substate() == 0 && slot_ist(0, 0x01, 0, 0),
+          "Item-Debug im Reiter-Modus: 25c1 %d Platz 0 = %02x %02x (soll 0 / 01 00)", re15_menu_substate(),
+          g_inv.slots[0].id, g_inv.slots[0].qty);
+    re15_menu_toggle();
+}
+
 int main(int argc, char **argv)
 {
     const char *nur = (argc > 1) ? argv[1] : NULL;
@@ -728,6 +845,7 @@ int main(int argc, char **argv)
     if (!nur || !strcmp(nur, "saeure"))     { printf("[4] 0x0A / 0x0B\n");         abschnitt_saeure_brand(); }
     if (!nur || !strcmp(nur, "rand"))       { printf("[5] Rand/Negativ\n");        abschnitt_rand(); }
     if (!nur || !strcmp(nur, "schritt"))    { printf("[6] Spielschritt\n");        abschnitt_spielschritt(); }
+    if (!nur || !strcmp(nur, "debug"))      { printf("[7] Item-Debug\n");          abschnitt_item_debug(); }
 
     re15_player_acaec_override_for_test(0, 0);
     re15_esp_se_hook = NULL; re15_esp_aufschlag_hook = NULL;
