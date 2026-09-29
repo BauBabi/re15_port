@@ -617,7 +617,12 @@ static void abschnitt_spielschritt(void)
         if (sp_bringup(waffe, 5) != 0) { PRUEF(nr, 0, "ROOM1140/Bringup"); return; }
         for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        re15_actor_t *e = dummy(1, 0x27, 180, pl->x + 1299, 0, pl->z);   /* rot_y 0 = +x vor Leon */
+        /* Zombie 0x10 700 vor Leon (rot_y 0 = +x), in Reichweite der alten Bruecke (Hitscan-Reichweite
+         * Waffe 9 = 1000, UNK_8006e5a0); KI angehalten, damit nur der Abzug wirkt. */
+        re15_actor_t *e = dummy(1, 0x10, 100, pl->x + 700, 0, pl->z);
+        e->rot_y = 2048;
+        e->re2_hp_stamped = 1;   /* kein HP-Neustempel (re15_re2_hp_sync) — HP bleibt Messgroesse */
+        re15_enemy_ai_set_paused(1);
         int z = sp_zielen();
         PRUEF(nr, z > 0, "Waffe %d: nicht zielbereit (%d)", waffe, z);
         pl->rot_y = 0;
@@ -631,7 +636,7 @@ static void abschnitt_spielschritt(void)
             if (abzug < 0 && vor_rec < 0 && re15_player_granate_frame() >= 0) {
                 abzug = b; menge_nach_abzug = g_inv.slots[3].qty;
             }
-            if (erster_schaden < 0 && e->hp != 180) erster_schaden = b;
+            if (erster_schaden < 0 && (e->hp != 100 || (e->hit_react & 1) || e->state == 2 || e->state == 3)) erster_schaden = b;
             int gp = granate_platz();
             if (spawn < 0 && gp >= 0) {
                 const re15_esp_fx_t *g = re15_esp_fx_get(gp);
@@ -644,7 +649,7 @@ static void abschnitt_spielschritt(void)
                spawn - abzug, spawn_art, spawn_gier, spawn_pos[0], spawn_pos[1], spawn_pos[2], erster_schaden);
         PRUEF(nr + 1, abzug == 0 && menge_nach_abzug == 4, "Waffe %d: Abzug Bild %d, Menge %d (soll 0 / 4)",
               waffe, abzug, menge_nach_abzug);
-        PRUEF(nr + 2, erster_schaden < 0, "Waffe %d: Gegner 1299 vor Leon beschaedigt im Bild %d (Bruecke!)",
+        PRUEF(nr + 2, erster_schaden < 0, "Waffe %d: Zombie 700 vor Leon beschaedigt im Bild %d (Bruecke!)",
               waffe, erster_schaden);
         PRUEF(nr + 3, spawn == abzug + 22, "Waffe %d: Spawn im Bild A+%d (soll A+22, Clipbild 0x16)",
               waffe, spawn - abzug);
