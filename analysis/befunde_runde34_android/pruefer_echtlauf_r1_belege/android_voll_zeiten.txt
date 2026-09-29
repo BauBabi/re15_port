@@ -1,0 +1,1 @@
+Start->Gradle fertig 222.5 s | alte Gates (unzip/aapt) 0.98 s | Selbsttest 3.88 s | volle Pruefung 3.43 s | mv+SUMS 1.48 s | neue Gates gesamt 7.31 s | Gates gesamt 9.77 s | Lauf gesamt 232.5 s
