@@ -326,7 +326,20 @@ Nach jeder Probe `git checkout` der Datei, Neubau, `GRUEN: 77 bestanden` (Logs `
 ---
 
 ## 10. Volle Suite
-(siehe Abschlusszeile unten; wird nach dem Endlauf eingetragen)
+
+Werkzeuge und Belegbilder dieses Dossiers: `analysis/befunde_runde34_granaten/bau_c_werkzeug/` (`lauf.sh` Messlauf,
+`ppmdiff.py` Pixelvergleich, `attrib.py` Pixel -> Effekt-Quad, `sheet_cmp.py` Texelvergleich alte Blaetter gegen
+TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsproben, drei PNG).
+
+* **Lauf nach C1** (`local_build.sh test`, 428 Tests): 426/428 — `integration_relatch_pin` (Timeout im Verbund, einzeln
+  `Passed 30.61 sec`) und `integration_r30_irons_tisch_bild` (Haenger im Titel vor der Spielschleife, §C1).
+* **Endlauf 1** (`local_build.sh` = all, Stand e993828a, 430 Tests = 428 + `unit_r34_plattform` +
+  `unit_r34_plattform_ton`): `99% tests passed, 2 tests failed out of 430`, 1296.93 s. Rot:
+  `integration_r30_granate_laden` (Lauf b, SOFTWARE_RENDER, Abriss bei F120 mit exit=1) und
+  `integration_r30_irons_tisch_bild` (Lauf P0: exe endet nach `[pad] kein Controller gefunden`, 5 Log-Zeilen, vor der
+  Spielschleife). **Einzeln wiederholt: beide gruen** (`Passed 111.42 sec` / `Passed 59.33 sec`) -> Last-Flattern
+  (parallel laufen die Bauten/exe-Laeufe der Spuren A, B, D und ein Android-Bau), kein reproduzierbares Rot.
+* **Endlauf 2**: siehe Abschlusszeile im Rueckgabe-Schema bzw. unten.
 
 ---
 
