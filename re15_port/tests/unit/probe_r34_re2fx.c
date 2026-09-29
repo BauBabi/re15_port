@@ -1,0 +1,408 @@
+/*
+ * probe_r34_re2fx — Runde 34 Spur D: die RE2-FX-Maschine (engine/src/re2_fx.c) gegen die
+ * Abnahmepunkte aus BAUPLAN §3.3 (Spur C, Teil D) und bau_d.md.
+ *
+ * Rueckgabe 0 = gruen, sonst die Nummer der ersten verletzten Pruefung.
+ *
+ * Pruefungen (je mit Negativ-Kontrolle):
+ *  1xx Registrierung CORE00.ESP (Ids 03 05 00 01 02 06 07 04, Bank 5 @0x05F0 Skr. 5 Step 00 1b 2e 32 …),
+ *      Spawner-Felder FUN_8001cbe8, Pool voll -> 0xFF, unregistrierte Bank -> -1.
+ *  2xx Saeure-Aufschlag (Op 49): SE 0x01130001 1x; Kinder 0x030F2000/0x040C2000/0x041D1800 im
+ *      Aufschlagbild X, dann je eins 0x031F2000/0x03142000/0x040D2800/0x030F2000 in X+1..X+4, Platz frei
+ *      in X+4; Lage der Phase-Kinder = Q + RotY(gier)*B*lokal (O-VB1).
+ *  3xx Brand-Aufschlag (Op 48): SE 0x01120001 1x; 2 Kinder + 3 Flammen 0x0505xxxx mit Skala 7168 +
+ *      (r%8)*768, Gier-Streuung r%40 / r%80+400 / r%80-400, vel.x 96 + r%25, acc.y 5 + r%8, +0x4A = 1
+ *      (unabhaengiger Nachbau des RE2-Stroms @0x80015FE8).
+ *  4xx Flamme ueber flachem Boden: Landung (Op 46) -> Op A 19 / Op B 29; Applier-Spion nur bei
+ *      step[0x16] >= 16 und X-Aspekt >= 0x1001; Treffer -> Op 50 (Gleiten aus).
+ *  5xx Lebensdauer (Zustand 2: +0x42 Bilder + 1, Zustand 1: +0x42 Bilder + 1, dann tot).
+ *  6xx Folgeflammen 0x0504xxxx (Skala x0.8) genau in den Bildern mit step[2] % 15 == 0 und vel.x >= 61.
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include "re2_fx.h"
+#include "re15_ai_flavor.h"   /* re15_re2z_rng_reset / re15_re2_rand */
+
+#define RE15_XSTR_(x) #x
+#define RE15_XSTR(x)  RE15_XSTR_(x)
+
+static uint8_t *s_esp; static size_t s_esp_n;
+
+static int fail(int n, const char *what)
+{
+    printf("FAIL %d: %s\n", n, what);
+    return n;
+}
+
+static uint16_t u16(const uint8_t *b, int o) { return (uint16_t)(b[o] | (b[o + 1] << 8)); }
+static int16_t  s16(const uint8_t *b, int o) { return (int16_t)u16(b, o); }
+static uint32_t u32(const uint8_t *b, int o)
+{ return (uint32_t)b[o] | ((uint32_t)b[o + 1] << 8) | ((uint32_t)b[o + 2] << 16) | ((uint32_t)b[o + 3] << 24); }
+
+/* ---- Spione ------------------------------------------------------------------------------ */
+static int      s_se_n;
+static uint32_t s_se_code[32];
+static int32_t  s_se_pos[32][3];
+static void se_spion(uint32_t code, const int32_t pos[3])
+{
+    if (s_se_n < 32) { s_se_code[s_se_n] = code; memcpy(s_se_pos[s_se_n], pos, sizeof s_se_pos[0]); }
+    s_se_n++;
+}
+
+static int      s_app_n, s_app_ret, s_app_bad;
+static uint32_t s_app_hit;
+static int      s_app_platz = -1;       /* welcher Platz den Applier gerufen hat (ueber seine Lage) */
+static int32_t  s_app_p[3];
+static int app_spion(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode)
+{
+    (void)gier;
+    s_app_n++; s_app_hit = hitcode; memcpy(s_app_p, p, sizeof s_app_p);
+    if (box[0] != -600 || box[1] != 0 || box[2] != 300 || box[3] != 150) s_app_bad++;
+    /* Tor-Pruefung: der rufende Platz (Lage x/z gleich, y - 100) muss step[0x16] >= 16 und X > 0x1000 haben. */
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        const uint8_t *b = re2fx_platz(i);
+        if (!(u16(b, 0x18) & 0x8000)) continue;
+        if (s16(b, 0x34) == p[0] && s16(b, 0x36) - 100 == p[1] && s16(b, 0x38) == p[2] && b[0] == 19) {
+            s_app_platz = i;
+            if (u16(b, 0x16) < 16 || u16(b, 0x04) < 0x1001) s_app_bad++;
+        }
+    }
+    return s_app_ret;
+}
+
+/* ---- unabhaengiger Nachbau des RE2-Zufallsstroms FUN_80015FE8 (Startwert wie re15_re2z_rng_reset) ---- */
+static uint32_t s_rs;
+static void     rnd_reset(void) { s_rs = 0xD2706CA4u; }
+static uint32_t rnd(void)
+{
+    uint32_t h = (s_rs >> 7) & 0xffu;                  /* `srl v1,v0,7 / andi 0xff` @0x80015ff8-fc */
+    uint32_t v = ((h + s_rs) & 0xffu) | (h << 8);      /* @0x80016000-0c */
+    s_rs = v & 0xffffu;                                /* `sw v1,0(a0)` @0x80016018 */
+    return v & 0xffu;                                  /* `andi v0,v0,0xff` @0x80016014 */
+}
+
+/* ---- Hilfen ------------------------------------------------------------------------------ */
+static int finde(unsigned bank, unsigned sub, int ab)
+{
+    for (int i = ab; i >= 0; i--) {
+        const uint8_t *b = re2fx_platz(i);
+        if (u16(b, 0x18) != 0 && b[0x1C] == bank && b[0x1E] == sub) return i;
+    }
+    return -1;
+}
+static int lebendig(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE2FX_PLAETZE; i++) if (u16(re2fx_platz(i), 0x18) != 0) n++;
+    return n;
+}
+static int32_t s_boden_y = 0;   /* flacher Boden fuer den Haken */
+static int     s_wand = 0;      /* 1 = Kontakt immer */
+static int32_t boden_flach(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt)
+{
+    (void)r; (void)mask; (void)a3;
+    /* s_wand: 0 = nur Grundebene (P.y > 0, @0x8004fc48-58), 1 = Kontakt immer (Luft und Boden),
+     * 2 = Kontakt nur fuer die Gleit-Sonde (Op 29 P.y = y - 100 > -500; Op 28 P.y = y - 900 bleibt frei). */
+    *kontakt = (p[1] > 0) || s_wand == 1 || (s_wand == 2 && p[1] > -500);
+    return s_boden_y;
+}
+
+static int laden(void)
+{
+    char p[1024];
+    snprintf(p, sizeof p, "%s/../RE2/CORE00.ESP", RE15_XSTR(RE15_ASSETS_PATH));
+    FILE *f = fopen(p, "rb");
+    if (!f) { printf("kann %s nicht oeffnen\n", p); return -1; }
+    fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET);
+    s_esp = (uint8_t *)malloc((size_t)n);
+    if (!s_esp || fread(s_esp, 1, (size_t)n, f) != (size_t)n) { fclose(f); return -1; }
+    fclose(f); s_esp_n = (size_t)n;
+    return 0;
+}
+
+static void start(void)
+{
+    re2fx_reset();
+    re15_re2z_rng_reset(); rnd_reset();
+    s_se_n = 0; s_app_n = 0; s_app_ret = 0; s_app_bad = 0; s_app_platz = -1;
+    re2fx_se_hook = se_spion; re2fx_applier = app_spion;
+    re2fx_boden_hook = boden_flach; s_boden_y = 0; s_wand = 0;
+}
+
+/* ============================================================================================ */
+static int pruef_registrierung(void)
+{
+    if (s_esp_n != 8572) return fail(101, "CORE00.ESP nicht 8572 Byte");
+    static const uint8_t ids[8] = { 3, 5, 0, 1, 2, 6, 7, 4 };
+    if (memcmp(s_esp, ids, 8) != 0) return fail(102, "Id-Kopf nicht 03 05 00 01 02 06 07 04");
+    /* Negativ-Kontrolle: abgeschnittene Datei -> Fehler, danach nichts registriert. */
+    if (re2fx_register_core(s_esp, 8) >= 0) return fail(103, "Rumpf-Datei wurde registriert");
+    if (re2fx_spawn(0x05051C00u, 0, re2fx_einheitsmatrix, NULL) != -1) return fail(104, "Spawn ohne Registrierung");
+    if (re2fx_register_core(s_esp, s_esp_n) != 0) return fail(105, "Registrierung schlug fehl");
+    start();
+    int i = re2fx_spawn(0x05051C00u, 123, re2fx_einheitsmatrix, NULL);
+    if (i != 95) return fail(106, "erster Spawn nicht auf Platz 95 (@0x8001cc44-6c)");
+    const uint8_t *b = re2fx_platz(i);
+    static const uint8_t step[14] = { 0x00, 0x1b, 0x2e, 0x32, 0x00, 0x10, 0x00, 0x10, 0x00, 0x05, 0x00, 0x00, 0x60, 0x00 };
+    if (memcmp(b, step, sizeof step) != 0) return fail(107, "Step Bank 5 Skr. 5 != 00 1b 2e 32 …");
+    if (u16(b, 0x18) != 0x4000) return fail(108, "Status nicht 0x4000 (@0x8001cc80)");
+    if (b[0x1C] != 5 || b[0x1E] != 5 || u16(b, 0x3A) != 0x1C00 || s16(b, 0x22) != 123) return fail(109, "Id/Skala/Gier");
+    if (u32(b, 0x70) != 0x05F0 + 8 || u32(b, 0x74) != 0x05F0 + 8 + 20 * 8 || u32(b, 0x78) != 0x0800)
+        return fail(110, "Anim/UV/Step-Zeiger (Bank 5 @0x05F0, n1 = 20, Step @0x0800)");
+    if (u16(b, 0x2A) != 0x001E || u16(b, 0x32) != 0x7911 || u16(b, 0x42) != 1 || b[0x20] != 1)
+        return fail(111, "TPage/CLUT/+0x42/Countdown");
+    /* CLUT-Zeile aus Sub>>3: 0x0415 = Bank 4, Sub 0x1D -> +3 Zeilen = 0x7811 + 0xC0. */
+    int k = re2fx_spawn(0x041D1800u, 0, re2fx_einheitsmatrix, NULL);
+    if (k != 94 || u16(re2fx_platz(k), 0x32) != 0x7811 + 3 * 0x40) return fail(112, "CLUT + (sub>>3)*0x40 (@0x8001ccf4-d10)");
+    /* Negativ-Kontrolle: unregistrierte Bank 9 -> -1, nichts belegt. */
+    int vor = lebendig();
+    if (re2fx_spawn(0x09001000u, 0, re2fx_einheitsmatrix, NULL) != -1 || lebendig() != vor)
+        return fail(113, "unregistrierte Bank spawnt");
+    /* Pool voll -> 0xFF. */
+    for (int n = 0; n < 200; n++) re2fx_spawn(0x04040000u, 0, re2fx_einheitsmatrix, NULL);
+    if (lebendig() != 96) return fail(114, "Pool nicht voll");
+    if (re2fx_spawn(0x04040000u, 0, re2fx_einheitsmatrix, NULL) != 0xFF) return fail(115, "voller Pool liefert nicht 0xFF");
+    re2fx_reset();
+    if (lebendig() != 0) return fail(116, "reset laesst Plaetze stehen");
+    return 0;
+}
+
+/* ============================================================================================ */
+static int pruef_saeure(void)
+{
+    start();
+    const int32_t q[3] = { 1000, 20, -2000 };
+    /* Negativ-Kontrollen: Art 0 (Explosiv, bleibt RE1.5) und 3 (unbekannt) -> nichts. */
+    re2fx_aufschlag(0, q, 1024); re2fx_aufschlag(3, q, 1024);
+    if (lebendig() != 0) return fail(201, "Art 0/3 legt Plaetze an");
+    re2fx_aufschlag(2, q, 1024);
+    int a = finde(2, 0x0C, 95);
+    if (a != 95 || u16(re2fx_platz(a), 0x18) != 0xB403 || re2fx_platz(a)[1] != 49 || re2fx_platz(a)[0x1B] != 2)
+        return fail(202, "Aufschlag-Platz nicht Bank 2 Skr. 4 mit Status 0xB403 / Op B 49 / Art 2");
+    /* Bild X */
+    re2fx_tick();
+    if (s_se_n != 1 || s_se_code[0] != 0x01130001u) return fail(203, "SE 0x01130001 nicht genau 1x");
+    if (s_se_pos[0][0] != q[0] || s_se_pos[0][1] != q[1] || s_se_pos[0][2] != q[2]) return fail(204, "SE-Lage != Q");
+    const uint8_t *ab = re2fx_platz(a);
+    if (u16(ab, 0x18) != 0x8403 || u16(ab, 0x12) != 1 || ab[0] != 0) return fail(205, "Phase 0 -> Status 0x8403 / Phase 1 / Op A 0");
+    if ((int8_t)ab[0x08] != -23 || s16(ab, 0x0E) != 240 || s16(ab, 0x0C) != -23 + 0 * 0) {
+        /* nach der Physik dieses Bilds: vel.x = 0 + acc.x = -23 (Physik nach Op B, @0x8001d70c-798) */
+        return fail(206, "Spritzer vel/acc (vel.y 240, acc.x -23 @0x80021738-7c)");
+    }
+    static const uint32_t k0[3] = { 0x030F2000u, 0x040C2000u, 0x041D1800u };
+    for (int n = 0; n < 3; n++) {
+        const uint8_t *c = re2fx_platz(94 - n);
+        if (c[0x1C] != (k0[n] >> 24) || c[0x1E] != ((k0[n] >> 16) & 0xff) || u16(c, 0x3A) != (k0[n] & 0xffff))
+            return fail(207, "Kinder Bild X != 0x030F2000/0x040C2000/0x041D1800");
+        if (u16(c, 0x18) != 0x4000) return fail(208, "Kind Bild X nicht aufgeschoben (0x4000)");
+        if (s16(c, 0x2C) != q[0] || s16(c, 0x2E) != q[1] || s16(c, 0x30) != q[2]) return fail(209, "Kind-Versatz != Q");
+    }
+    if (lebendig() != 4) return fail(210, "Bild X: nicht 1 + 3 Plaetze");
+    /* Bilder X+1..X+4 */
+    static const uint32_t kp[4] = { 0x031F2000u, 0x03142000u, 0x040D2800u, 0x030F2000u };
+    int16_t basis[9]; re2fx_gl_basis(basis);
+    for (int f = 1; f <= 4; f++) {
+        re2fx_tick();
+        int slot = 94 - 3 - (f - 1);
+        const uint8_t *c = re2fx_platz(slot);
+        if (c[0x1C] != (kp[f - 1] >> 24) || c[0x1E] != ((kp[f - 1] >> 16) & 0xff) || u16(c, 0x3A) != (kp[f - 1] & 0xffff))
+            return fail(210 + f, "Phasen-Kind X+f falsch");
+        /* Lage = Q + RotY(1024)*B*lokal, lokal = (-23*(f-1)*f/2... ) -> nach f Bildern Physik:
+         * Welt im Bild X+f aus lokal nach (f) Integrationen, gerechnet VOR der Integration dieses Bilds. */
+        double lx = -23.0 * (double)((f - 1) * f) / 2.0, ly = 240.0 * f, lz = 0.0;
+        double bx = (basis[0] * lx + basis[1] * ly + basis[2] * lz) / 4096.0;
+        double by = (basis[3] * lx + basis[4] * ly + basis[5] * lz) / 4096.0;
+        double bz = (basis[6] * lx + basis[7] * ly + basis[8] * lz) / 4096.0;
+        /* RotY(1024): [[c,0,s],[0,1,0],[-s,0,c]] mit c = 0, s = 1 */
+        double wx = q[0] + bz, wy = q[1] + by, wz = q[2] - bx;
+        if (fabs(s16(c, 0x2C) - wx) > 2.0 || fabs(s16(c, 0x2E) - wy) > 2.0 || fabs(s16(c, 0x30) - wz) > 2.0) {
+            printf("  f=%d Kind (%d,%d,%d) erwartet (%.1f,%.1f,%.1f)\n", f, s16(c, 0x2C), s16(c, 0x2E), s16(c, 0x30), wx, wy, wz);
+            return fail(215 + f, "Phasen-Kind-Lage != Q + RotY(gier)*B*lokal (O-VB1)");
+        }
+    }
+    if (u16(re2fx_platz(a), 0x18) != 0) return fail(220, "Aufschlag-Platz in X+4 nicht frei (@0x80021950-58)");
+    if (s_se_n != 1) return fail(221, "weitere SEs nach Phase 0");
+    if (re2fx_op_unbekannt() != 0) return fail(222, "nicht umgesetzter Op erreicht");
+    return 0;
+}
+
+/* ============================================================================================ */
+static int pruef_brand(void)
+{
+    start();
+    const int32_t q[3] = { -500, 10, 3000 };
+    const int16_t gier = 300;
+    re2fx_aufschlag(1, q, gier);
+    re2fx_tick();                                       /* Bild X */
+    if (s_se_n != 1 || s_se_code[0] != 0x01120001u) return fail(301, "SE 0x01120001 nicht genau 1x");
+    if (s_se_pos[0][0] != q[0] || s_se_pos[0][1] != q[1] || s_se_pos[0][2] != q[2]) return fail(302, "SE-Lage (+0x60) != Q");
+    const uint8_t *ab = re2fx_platz(95);
+    if (u16(ab, 0x18) != 0x8000 || u16(ab, 0x12) != 1 || ab[1] != 48) return fail(303, "Phase 0 -> Status 0x8000 / Phase 1 / Op B 48");
+    if ((int32_t)u32(ab, 0x64) != q[1] + 1800 + 1800) return fail(304, "Ende: +0x64 := alte Translation + 3600 (@0x80021578-a0)");
+    const uint8_t *c1 = re2fx_platz(94), *c2 = re2fx_platz(93);
+    if (c1[0x1C] != 4 || c1[0x1E] != 0x0C || u16(c1, 0x3A) != 0x2800) return fail(305, "Kind 0x040C2800");
+    if (c2[0x1C] != 4 || c2[0x1E] != 0x1D || u16(c2, 0x3A) != 0x2700) return fail(306, "Kind 0x041D2700");
+    if ((int32_t)u32(c1, 0x60) != q[0] || (int32_t)u32(c1, 0x64) != q[1] || (int32_t)u32(c1, 0x68) != q[2])
+        return fail(307, "Kind-Matrix-Translation != Q (a2 = Platz+0x4C)");
+    /* Die drei Flammen gegen den nachgebauten Strom. */
+    for (int n = 0; n < 3; n++) {
+        const uint8_t *f = re2fx_platz(92 - n);
+        uint32_t r1 = rnd(), r2 = rnd(), r3 = rnd(), r4 = rnd();
+        uint32_t skala = 7168u + (r1 % 8u) * 768u;
+        int32_t g = (n == 0) ? gier + (int32_t)(r2 % 40u)
+                  : (n == 1) ? gier + (int32_t)(r2 % 80u) + 400 : gier + (int32_t)(r2 % 80u) - 400;
+        if (f[0x1C] != 5 || f[0x1E] != 5) return fail(310 + n, "Flamme nicht Bank 5 Skr. 5");
+        if (u16(f, 0x3A) != skala) { printf("  Flamme %d Skala %u erwartet %u\n", n, u16(f, 0x3A), skala); return fail(313 + n, "Skala != 7168 + (r%8)*768"); }
+        if (s16(f, 0x22) != (int16_t)g) return fail(316 + n, "Gier-Streuung");
+        if (s16(f, 0x0C) != 96 + (int32_t)(r3 % 25u)) return fail(319 + n, "vel.x != 96 + r%25");
+        if ((int8_t)f[0x09] != 5 + (int32_t)(r4 % 8u)) return fail(322 + n, "acc.y != 5 + r%8");
+        if (s16(f, 0x4A) != 1) return fail(325 + n, "+0x4A != 1");
+        if ((int32_t)u32(f, 0x60) != q[0] || (int32_t)u32(f, 0x68) != q[2]) return fail(328 + n, "Flammen-Matrix-Translation != Q");
+    }
+    if (re15_re2_rand() != rnd()) return fail(331, "Strom laeuft auseinander (Zahl der Zufallszuege)");
+    if (lebendig() != 6) return fail(332, "Bild X: nicht 1 + 2 + 3 Plaetze");
+    re2fx_tick();                                       /* X+1: Platz frei, Kinder befoerdert */
+    if (u16(re2fx_platz(95), 0x18) != 0) return fail(333, "Op-48-Platz in X+1 nicht frei (@0x800215a4)");
+    for (int n = 0; n < 3; n++) {
+        const uint8_t *f = re2fx_platz(92 - n);
+        if (u16(f, 0x18) != 0xB003 || f[0] != 58 || f[1] != 28 || f[0x1B] != 2)
+            return fail(334 + n, "Flamme nach Op 27 nicht 0xB003 / Op A 58 / Op B 28 / Zustand 2");
+    }
+    return 0;
+}
+
+/* ============================================================================================ */
+/* Eine einzelne Flamme in der Luft (Q.y = -300), flacher Boden 0: Landung, Brennen, Schaden-Tor. */
+static int pruef_flamme(int app_treffer, int *lebenszeit, int *folge, int *folge_soll, int *app_rufe)
+{
+    start();
+    s_app_ret = app_treffer;
+    const int32_t q[3] = { 0, -100, 0 };
+    re2fx_aufschlag(1, q, 0);
+    re2fx_tick();                                       /* X: Aufschlag */
+    int fl = 92;                                        /* erste Flamme */
+    int gelandet = -1, zustand1 = -1, tot = -1, c2 = -1, c1 = -1;
+    *folge = 0; *folge_soll = 0;
+    for (int t = 1; t < 400; t++) {
+        const uint8_t *f = re2fx_platz(fl);
+        int vorher_opa = f[0];
+        int16_t vx_vor = s16(f, 0x0C);
+        uint8_t s2_vor = f[0x02];
+        int opb_vor = f[1];
+        uint8_t z_vor = f[0x1B];
+        uint8_t belegt[RE2FX_PLAETZE];
+        for (int i = 0; i < RE2FX_PLAETZE; i++) belegt[i] = (u16(re2fx_platz(i), 0x18) != 0);
+        re2fx_tick();
+        f = re2fx_platz(fl);
+        /* neue 0x0504-Kinder DIESER Flamme: Versatz (+0x2C/+0x30) = ihre Weltlage (+0x34/+0x38) in
+         * diesem Bild (a3 = Platz+0x34 @0x8001fdd8). */
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *b = re2fx_platz(i);
+            if (belegt[i] || !u16(b, 0x18) || b[0x1C] != 5 || b[0x1E] != 4) continue;
+            if (s16(b, 0x2C) == s16(f, 0x34) && s16(b, 0x30) == s16(f, 0x38)) {
+                (*folge)++;
+                if (u16(b, 0x3A) != (uint16_t)((u16(f, 0x3A) * 4u) / 5u)) *folge = -1000;   /* Skala x0.8 */
+                if (s16(b, 0x4A) != 1) *folge = -1000;
+            }
+        }
+        if (opb_vor == 29 && vx_vor >= 61 && (s2_vor % 15) == 0) (*folge_soll)++;
+        if (gelandet < 0 && f[0] == 19) {
+            gelandet = t;
+            if (f[1] != 29 || s16(f, 0x0C) > 180 || s16(f, 0x0E) != 0) return fail(401, "Landung: Op B 29 / vel.x <= 180 / vel.y 0 (@0x80020b60)");
+            c2 = s16(f, 0x42);
+            if (c2 < 38 || c2 > 45) return fail(402, "Landezaehler != 38 + r%8");
+        }
+        if (gelandet > 0 && zustand1 < 0 && z_vor == 2 && f[0x1B] == 1) {
+            zustand1 = t;
+            c1 = s16(f, 0x42);
+            if (c1 < 90 || c1 > 100) return fail(403, "Brennzaehler != 90 + r%11");
+        }
+        if (u16(f, 0x18) == 0) { tot = t; break; }
+        (void)vorher_opa;
+    }
+    if (gelandet < 0) return fail(404, "Flamme landet nicht (Op 28 -> Op 46)");
+    if (zustand1 < 0 || tot < 0) return fail(405, "Flamme brennt nicht aus");
+    /* Zeitplan (Op 19 @0x8001f388-51c): Zustand 2 zaehlt c2 herunter + 1 Wechselbild, Zustand 1
+     * zaehlt c1 herunter + 1 Bild auf Zustand 0, dann 1 Bild bis Status 0. */
+    if (zustand1 - gelandet != c2 + 1) return fail(406, "Zustand-2-Dauer != Zaehler + 1");
+    if (tot - zustand1 != c1 + 2) return fail(407, "Zustand-1-Dauer != Zaehler + 2");
+    *lebenszeit = tot - gelandet;
+    *app_rufe = s_app_n;
+    return 0;
+}
+
+static int pruef_bodenfeuer(void)
+{
+    int leben = 0, folge = 0, folge_soll = 0, rufe = 0;
+    int rc = pruef_flamme(0, &leben, &folge, &folge_soll, &rufe);
+    if (rc) return rc;
+    if (leben < 38 + 90 + 3 || leben > 45 + 100 + 3) return fail(410, "Lebensdauer ausserhalb (38..45)+(90..100)");
+    if (rufe <= 0) return fail(411, "Applier nie gerufen");
+    if (s_app_bad) return fail(412, "Applier-Ruf trotz step[0x16] < 16 oder X <= 0x1000 bzw. falsche Box");
+    if (s_app_hit != 0x2002000Au) return fail(413, "Hitcode != 0x2002000A");
+    if (folge != folge_soll || folge < 1) {
+        printf("  Folgeflammen %d, erwartet %d\n", folge, folge_soll);
+        return fail(414, "Folgeflammen != Bilder mit step[2] %% 15 == 0 und vel.x >= 61");
+    }
+    printf("  Flamme: Lebensdauer %d Bilder, Applier-Rufe %d, Folgeflammen %d\n", leben, rufe, folge);
+    /* Treffer -> Op 50: Gleiten aus (vel.x 0, step[2] 64, step[3] 0). */
+    start();
+    s_app_ret = 1;
+    const int32_t q[3] = { 0, -100, 0 };
+    re2fx_aufschlag(1, q, 0);
+    for (int t = 0; t < 40; t++) re2fx_tick();
+    const uint8_t *f = re2fx_platz(92);
+    if (s_app_n < 1) return fail(420, "Treffer-Lauf: Applier nie gerufen");
+    if (s16(f, 0x0C) != 0 || f[0x08] != 0 || f[0x03] != 0) return fail(421, "Treffer -> Op 50 (vel.x/acc.x/step[3] := 0 @0x80021978-9c)");
+    if (f[0] != 19) return fail(422, "Treffer: Op A 19 laeuft nicht weiter");
+    /* Negativ-Kontrolle: Flamme OHNE +0x4A (direkt gespawnt) ruft den Applier nie. */
+    start();
+    int i = re2fx_spawn(0x05051C00u, 0, re2fx_einheitsmatrix, NULL);
+    (void)i;
+    for (int t = 0; t < 200; t++) re2fx_tick();
+    if (s_app_n != 0) return fail(423, "Flamme ohne +0x4A ruft den Applier");
+    /* Wand beim GLEITEN (Kontakt nur fuer Op 29): Op[step[3]] = Op 50 -> vel.x 0, brennt weiter (Op A 19). */
+    start();
+    s_wand = 2;
+    re2fx_aufschlag(1, q, 0);
+    int gl = -1;
+    for (int t = 0; t < 30; t++) {
+        re2fx_tick();
+        f = re2fx_platz(92);
+        if (gl < 0 && f[0] == 19) gl = t;
+    }
+    f = re2fx_platz(92);
+    if (gl < 0) return fail(424, "Wand-Gleiten: Flamme landet nicht");
+    if (s16(f, 0x0C) != 0 || f[0] != 19 || f[0x03] != 0) return fail(425, "Wand beim Gleiten stoppt nicht ueber Op 50 (@0x8001fe84-b4)");
+    /* Wand in der LUFT (Kontakt immer, Boden gleich +0x14): Op 50 in der Luft setzt step[2] := 64, die
+     * Landung dispatcht dann Op 64 (@0x8001fcac-c8 -> 0x80022728): Op B := 0, kein Brennen (Op A bleibt 58). */
+    start();
+    s_wand = 1;
+    re2fx_aufschlag(1, q, 0);
+    int op19 = 0;
+    for (int t = 0; t < 60; t++) { re2fx_tick(); if (re2fx_platz(92)[0] == 19) op19 = 1; }
+    if (re2fx_op_zaehler(64) < 1) return fail(426, "Luft-Wand: Op 64 nie erreicht");
+    if (op19) return fail(427, "Luft-Wand: Flamme brennt trotzdem (Op A 19)");
+    if (s_app_n != 0) return fail(428, "Luft-Wand: Applier gerufen");
+    if (re2fx_op_unbekannt() != 0) return fail(429, "nicht umgesetzter Op erreicht");
+    /* Negativ-Kontrolle zu 426: ohne Wand kein Op 64. */
+    start();
+    re2fx_aufschlag(1, q, 0);
+    for (int t = 0; t < 60; t++) re2fx_tick();
+    if (re2fx_op_zaehler(64) != 0) return fail(430, "ohne Wand Op 64 erreicht");
+    return 0;
+}
+
+int main(void)
+{
+    if (laden() != 0) return fail(1, "CORE00.ESP fehlt");
+    int rc;
+    if ((rc = pruef_registrierung())) return rc;
+    if ((rc = pruef_saeure())) return rc;
+    if ((rc = pruef_brand())) return rc;
+    if ((rc = pruef_bodenfeuer())) return rc;
+    printf("probe_r34_re2fx: alle Pruefungen gruen\n");
+    return 0;
+}
