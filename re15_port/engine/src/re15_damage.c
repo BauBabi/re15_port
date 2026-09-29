@@ -3909,6 +3909,10 @@ static const uint32_t s_re2gl_rec_spider[6]   = {   /* 0x25 UND 0x26 -> 0x800A4B
     0x0140f03cu, 0x078f1fb4u,     /* Z9  @0x800A4C30   60/60/20 */
     0x00520882u, 0x078f1f68u,     /* Z10 @0x800A4C44  130/130/5 */
     0x00a0f05au, 0x078f1f68u };   /* Z11 @0x800A4C58   90/60/10 */
+static const uint32_t s_re2gl_rec_g5[6]       = {   /* 0x36 G5 -> 0x800A5EDC (Runde 34 B9) */
+    0x05014050u, 0x078f1e0au,     /* Z9  @0x800A5F7C   80/80/80 */
+    0x00511846u, 0x078f1e0au,     /* Z10 @0x800A5F90   70/70/5  */
+    0x00a11846u, 0x078f1e0au };   /* Z11 @0x800A5FA4   70/70/10 */
 static const uint32_t s_re2gl_rec_arm[6]      = {   /* RE2 0x2D (Port 0x1A) -> 0x800A5180 */
     0x0140f03cu, 0x078f1e0au,     /* Z9  @0x800A5220   60/60/20 */
     0x00a0f03cu, 0x078f1e0au,     /* Z10 @0x800A5234   60/60/10 */
@@ -3977,6 +3981,20 @@ static int re2_gl_typ(const re15_actor_t *e, re2_gl_typ_t *t)
     case 0x1A:
         if (!re15_re2arm_owns(e)) return 0;
         t->r1ee = 800; t->b98 = 0; t->h9e = 500; t->rec = s_re2gl_rec_arm;
+        break;
+    case 0x36:
+        /* RUNDE 34 B9 — der Endkampf-G5 (ROOM5090/5091) laeuft im RE2-Modul enemy_ai_boss_g5.c
+         * (Dispatch enemy_ai_common.c: `t == 0x36 && (room & 0xFFFE) == 0x5090`, in beiden
+         * Flavors). em36-Ctor, selbst disassembliert (CDEMD0_EM36_ai1.BIN aus re2_ems_cut.py):
+         *   +0x1EE 5700   `addiu v0,zero,5700` @0x80100578 / `sh v0,494(s0)` @0x8010058c
+         *   +0x94 -2000   `addiu v0,zero,-2000` @0x80100534 / `sh v0,148(s0)` @0x80100538
+         *   +0x96 0       `sh zero,150(s0)` @0x8010057c
+         *   +0x98 -1500   `addiu v1,zero,-1500` @0x80100470 / `sh v1,152(s0)` @0x80100520
+         *   +0x9E 1500    `addiu t0,zero,1500` @0x80100448 / `sh t0,158(s0)` @0x80100580
+         *   Wort0 |= 0x0C000000 (`lui v1,0xc00` / `or` @0x801005a0-ac) -> KEIN Kopf-Bit. */
+        if ((g_current_room_id & 0xFFFEu) != 0x5090u) return 0;
+        t->r1ee = 5700; t->o94 = -2000; t->o96 = 0; t->b98 = -1500; t->h9e = 1500;
+        t->rec = s_re2gl_rec_g5;
         break;
     default:
         return 0;

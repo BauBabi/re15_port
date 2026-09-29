@@ -420,6 +420,61 @@ VM-Tick saet Slot 1 je Bild mit sub01 des registrierten Raums (`scd_vm.c:674`) -
 Regression `ctest -R "maggot|gorilla|roach|cockroach|tyrant|alligator|gator|birkin|kakerlake|made|r34|enemy|stage2|stage3|stage4"`:
 21/22 gruen, rot nur `unit_r34_reaktion` (der Harness-Befund oben, danach gruen).
 
+---
+
+## B9 — Endkampf-G5 (`enemy_ai_boss_g5.c`, `re15_damage.c`)
+
+### Selbst disassembliert
+em36-KI aus dem RE2-Archiv geschnitten (`python re15_port/tools/re2_ems_cut.py 0x36` -> `build/extracted/re2_ems/CDEMD0_EM36_ai1.BIN`
+im Arbeitsbaum), dann `re2_disasm.py --bin <Pfad>`:
+* Treffer (0x80102940..0x80102acc, `build/r34g_b/em36_treffer.dis`): Zeilen-Partikel 9/17 -> 0x8010221c, 10 -> 0x80101d9c,
+  11 -> 0x80101ff0, 14 -> 0x801022d0; Byte[Zeile] `lbu v0,22195(at)` @0x801029bc (0x801056B3 + Zeile); `>= 11` -> +0x225 := 7
+  (@0x801029c4-d0); Umgehung +0x226 & 2 (@0x801029dc-e0); Akku +0x222 += Byte (@0x80102a18-34); erster Akku-Treffer: Fenster
+  +0x226 \|= 1, +0x221 = 15 (@0x80102a38-4c); `sltiu v0,v0,0xf` @0x80102a58 -> STAGGER 0x80102AD0 mit Akku/Zaehler/Fenster = 0
+  (@0x80102a84-90).
+* Byte-Tabelle `bytes 0x801056b0 32`: Zeile 0..20 = 0,5,5,5,5,14,20,14,20,14,14,14,5,5,20,1,1,20,1,0,0.
+* Main-Kopf @0x801000ec-15c: +0x1D3 -1 je Bild (Bit 0x80 bleibt); bei Fenster: +0x221 -1, bei 0 Akku -1 und +0x221 = 15, Akku 0
+  -> Fenster zu. => Akku -1 je 16 Bilder (Port vorher: je 15, ohne Fenster).
+* Ctor (0x801003f0..0x801005ac): +0x1EE 5700 (@0x80100578/8c), +0x94 -2000 (@0x80100534-38), +0x96 0 (@0x8010057c), +0x98 -1500
+  (@0x80100470 / @0x80100520), +0x9E 1500 (@0x80100448 / @0x80100580), Wort0 \|= 0x0C000000 (@0x801005a0-ac, kein Kopf-Bit).
+* Records (RE2-PSX.EXE, Zeiger *(0x800A6A88 + 0x36*4) = 0x800A5EDC): Z9 @0x800A5F7C `0x05014050`/`0x078f1e0a`,
+  Z10 @0x800A5F90 `0x00511846`/`0x078f1e0a`, Z11 @0x800A5FA4 `0x00a11846`/`0x078f1e0a` -> 80/80/80, 70/70/5, 70/70/10, Sperre 15.
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `re15_damage.c` `s_re2gl_rec_g5` + `re2_gl_typ` Fall 0x36 | G5 (ROOM5090/5091) ist RE2-Kandidat des Appliers (Bodenfeuer Op 40) UND bekommt den Explosions-Stempel (Sperre 15, Zone, +0x5, Richtung) |
+| `enemy_ai_boss_g5.c` Main-Kopf | Sperre -1 je Bild; Akku-Zerfall im Fenster je 16 Bilder |
+| `enemy_ai_boss_g5.c` Treffer | Zuschlag = Byte[Zeile] (+0x5 ueber re2z_row_from_weapon) statt der ausgeruesteten Waffe; Fenster armieren; STAGGER setzt Akku/Zaehler/Fenster zurueck; +0x93 Bit 0 bleibt bis zum Ende der Sperre (`treffer_offen`, PORT) |
+| `enemy_ai_boss_g5.c` `re15_g5_flinch_zustand` | Testhaken (nur Messung) |
+
+**Wirkung ueber die Granate hinaus (benannt):** der Zuschlag haengt jetzt fuer ALLE Waffen an der Treffer-Zeile. Nach der
+Uebersetzungstabelle (Belege je Waffe in `enemy_ai_re2_zombie.c` re2z_row_from_weapon) aendern sich u.a.: w9/w15 (Granate/GL
+HE) 20 -> 14, w10/w11/w16/w17 (Saeure/Brand) 5 -> 14, w5/w6 20 -> 5, w12 (MP) 14 -> 1, w13 (SPAS) 14 -> 20, w0/w1/w2 1/5 -> 5.
+Die fruehere Zuordnung war laut Kommentar eine "dokumentierte Port-Entscheidung aus §7"; das Original waehlt nach +0x5 (@0x801029b0).
+
+### Sonde `unit_r34_reaktion` Teil `g5` (ROOM5090-Kontext, Bank EM036, Kampfstart grid 0x13; je Arena neuer Slot)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 190 | Granate: HP 600 -> 520, +0x1D3 15, +0x93 Bit 0, +0x5 9 | gruen |
+| 191 | nach dem Bild: Akku 14, Fenster offen, Zaehler 15, kein STAGGER, Sperre 14 | gruen |
+| 192 | zweite Explosion waehrend der Sperre: kein Schaden, +0x93 = 3 | gruen |
+| 193 | Sperre frei genau in Bild 15, Akku noch 14 | gruen |
+| 194 | zweite Granate innerhalb des Zerfalls -> STAGGER, Akku/Fenster 0, HP 440 | gruen |
+| 195 | NEGATIV Einzeltreffer: nie STAGGER, Akku 13 in Bild 17, 0 in Bild 225, Fenster zu | gruen |
+| 196 | Bodenfeuer (Hitcode 0x2002000A) am G5: HP -5, Sperre 15, zweiter Aufruf durch Gate 2 gesperrt, Akku 14 | gruen |
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M43 Byte[9] = 20 (alter Port-Wert) | 191 | 191/193/195 rot |
+| M44 Fenster startet mit 14 (15er-Takt) | 195 | 191/195 rot |
+| M45 Bit 0 sofort frei (alter Port) | 192/193 | 192/193/194 rot |
+| M46 G5 kein RE2-Kandidat | 190/196 | 190-194/196 rot |
+| M47 Schaden 1000 (alter Port) | 190 | 190/191/193/194/195 rot |
+
+Regression `ctest -R "g5|5090|birkin|r34|tentakel|damage|schaden"`: 14/14 gruen.
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die

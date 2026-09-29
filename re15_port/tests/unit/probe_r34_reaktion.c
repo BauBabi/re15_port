@@ -719,6 +719,124 @@ static void teil_re15(void)
     }
 }
 
+/* =========================================================================================
+ * TEIL "g5" — B9: Endkampf-G5 (ROOM5090, RE2-Modul em36): Schaden E16, Sperre, Akku, Fenster.
+ * Aufbau wie probe_g5_boss.c:52-101 (Bank EM036, Slot 2, Kampfstart grid 0x13).
+ * ========================================================================================= */
+extern void re15_g5_boss_tick(int slot);
+extern void re15_g5_flinch_zustand(int *akku, int *takt, int *fenster, int *sub);
+
+static int s_g5_arena_slot = 2;
+static re15_actor_t *g5_arena(void)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_game_state_init();
+    re15_actor_init(); re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    g_room_rdt_ok = 0;
+    g_current_room_id = 0x5090;
+    load_re2_bank(0x36);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(pl, 0, sizeof *pl);
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 13699; pl->z = -23400; pl->y = 0;
+    /* Das Modul setzt seinen Zustand nur bei einem SLOT-Wechsel neu auf (enemy_ai_boss_g5.c
+     * `s_g5_slot != slot`) — jede Arena nimmt deshalb einen anderen Slot. */
+    static int s_n = 0;
+    s_g5_arena_slot = 2 + (s_n++ % 8);
+    re15_actor_t *e = &g_actors[s_g5_arena_slot];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x36; e->flags = 1; e->hp = 600;
+    e->x = 1200; e->z = -23350; e->grid_id = 0x33;
+    re15_enemy_apply_hitbox(e, 0x36);
+    re15_g5_boss_tick(s_g5_arena_slot);                 /* Ctor (HP 600 @0x801003fc) */
+    e->grid_id = 0x13;                                  /* Kampfstart (Member_set @0x130A) */
+    for (int f = 0; f < 3; f++) { re15_g5_boss_tick(s_g5_arena_slot); pl->hp = 100; pl->hit_react = 0; }
+    return e;
+}
+
+static void g5_bild(re15_actor_t *e)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_g5_boss_tick(s_g5_arena_slot);
+    pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+    (void)e;
+}
+
+static void teil_g5(void)
+{
+    printf("== g5 (B9)\n");
+    int akku, takt, fenster, sub;
+    /* (190) Granate Zeile 9: HP 600 - 80 (E16, Record @0x800A5F7C), Sperre 15 (w1 @0x800A5F80). */
+    re15_actor_t *e = g5_arena();
+    const int16_t hp0 = e->hp;
+    explosion_bei(e, 300, 2);
+    CHECK(190, hp0 == 600 && e->hp == 520 && e->re2z_self1d3 == 15 && (e->hit_react & 1u) && e->sub_state_1 == 9,
+          "G5 HE: hp %d -> %d (600 - 80), +0x1D3 %d (15), +0x93 0x%02X, +0x5 %d (9)", hp0, e->hp,
+          e->re2z_self1d3, e->hit_react, e->sub_state_1);
+    g5_bild(e);
+    re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
+    CHECK(191, akku == 14 && fenster == 1 && takt == 15 && sub != 0xF && e->re2z_self1d3 == 14,
+          "nach dem Bild: Akku %d (14 @0x801056BC), Fenster %d, Zaehler %d (15 @0x80102a48), Sub 0x%x (kein "
+          "STAGGER), Sperre %d (14 @0x801000ec)", akku, fenster, takt, sub, e->re2z_self1d3);
+    /* (192) Waehrend der Sperre: zweite Explosion -> kein Schaden, nur |= 2 (Resolver-Riegel). */
+    {
+        const int16_t hp1 = e->hp;
+        explosion_bei(e, 300, 2);
+        CHECK(192, e->hp == hp1 && (e->hit_react & 3u) == 3u,
+              "Sperre: 2. Explosion im Bild 1 -> hp %d -> %d (unveraendert), +0x93 0x%02X (Bit 0|2)", hp1, e->hp,
+              e->hit_react);
+    }
+    /* (193) Sperre laeuft ab -> Bit 0 frei genau nach 15 Bildern; der Akku ist dann 14 (Zerfall erst nach
+     *       16 Bildern im Fenster). */
+    int frei = -1;
+    for (int f = 2; f <= 20 && frei < 0; f++) { e->hit_react &= (uint8_t)~2u; g5_bild(e); if (!(e->hit_react & 1u)) frei = f; }
+    re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
+    CHECK(193, frei == 15 && akku == 14 && sub != 0xF,
+          "Sperre frei in Bild %d (15), Akku %d (14), Sub 0x%x", frei, akku, sub);
+    /* (194) zweite Granate innerhalb des Zerfalls -> STAGGER (Akku >= 15 @0x80102a58). */
+    explosion_bei(e, 300, 2);
+    g5_bild(e);
+    re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
+    CHECK(194, sub == 0xF && akku == 0 && fenster == 0 && e->hp == 440,
+          "2. Treffer: Sub 0x%x (0xF STAGGER), Akku %d / Fenster %d (zurueckgesetzt @0x80102a84-90), hp %d (440)",
+          sub, akku, fenster, e->hp);
+    /* (195) NEGATIV: ein einzelner Treffer taumelt nie; der Akku zerfaellt je 16 Bilder, das Fenster schliesst
+     *       bei 0 (@0x80100150). */
+    e = g5_arena();
+    explosion_bei(e, 300, 2);
+    int stagger = 0, bild_13 = -1, bild_0 = -1;
+    for (int f = 1; f <= 260; f++) {
+        g5_bild(e);
+        re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
+        if (sub == 0xF && !stagger)
+            printf("   STAGGER in Bild %d: akku=%d takt=%d fenster=%d hr=0x%02X lock=%d hp=%d\n", f, akku, takt,
+                   fenster, e->hit_react, e->re2z_self1d3, e->hp);
+        if (f < 40 && getenv("G5DBG"))
+            printf("   DBG %d: akku=%d takt=%d fen=%d sub=%x hr=0x%02X lock=%d hp=%d\n", f, akku, takt, fenster,
+                   sub, e->hit_react, e->re2z_self1d3, e->hp);
+        if (sub == 0xF) stagger = 1;
+        if (bild_13 < 0 && akku == 13) bild_13 = f;
+        if (bild_0 < 0 && akku == 0) bild_0 = f;
+    }
+    CHECK(195, !stagger && bild_13 == 17 && bild_0 == 1 + 14 * 16 && fenster == 0,
+          "Einzeltreffer: kein STAGGER %d, Akku 13 in Bild %d (17 = 1 + 16), 0 in Bild %d (%d), Fenster %d",
+          !stagger, bild_13, bild_0, 1 + 14 * 16, fenster);
+    /* (196) Bodenfeuer (Op 40, Hitcode 0x2002000A = Zeile 10 Klammer 2) am G5: RE2-Kandidat mit dem
+     *       em36-Kasten -> HP -5 (w0 0x00511846 >> 20 @0x800A5F90), Sperre 15, Akku +14 (Zeile 10). */
+    e = g5_arena();
+    {
+        const int32_t P[3] = { e->x - 2000, e->y - 100, e->z };   /* Mitte +0x94 = -2000 (@0x80100534) */
+        const int16_t hpa = e->hp;
+        const int r = re15_re2_gl_apply(P, 0, k_box_op40, 0x2002000Au);
+        const int lock = e->re2z_self1d3;
+        const int r2 = re15_re2_gl_apply(P, 0, k_box_op40, 0x2002000Au);   /* Gate 2: gesperrt */
+        g5_bild(e);
+        re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
+        CHECK(196, r != 0 && r2 == 0 && e->hp == hpa - 5 && lock == 15 && akku == 14 && fenster == 1,
+              "G5 Bodenfeuer: r=%d, 2. Aufruf r=%d (Gate 2), hp %d -> %d (-5), Sperre %d (15), Akku %d (14)",
+              r, r2, hpa, e->hp, lock, akku);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -727,6 +845,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "hund")) teil_hund();
     if (alle || strstr(teil, "spinne")) teil_spinne();
     if (alle || strstr(teil, "re15")) teil_re15();
+    if (alle || strstr(teil, "g5")) teil_g5();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }
