@@ -60,6 +60,12 @@ static uint8_t *enter_room(unsigned rid, re15_rdt_t *rdt,
     if (!buf) return NULL;
     if (re15_rdt_parse(buf, sz, rdt) != 0) { free(buf); return NULL; }
     scd_vm_init();
+    /* Runde 33 (Thema R, Nutzerwunsch): die Tuer ROOM1130 -> ROOM1120 (Slot 1, @0x008AE) ist bis zur
+     * ersten Irons-Szene ein Text-Platz (engine/src/tuer1120_1130.c). Dieser Lauf geht als Spieler
+     * NACH der Szene: Flag (3,94), gesetzt von ROOM1150 sub08 @0x01110. scd_vm_init oben ist die
+     * Neues-Spiel-Initialisierung und nullt die Flags je Raum (im Spiel bleiben sie stehen) —
+     * deshalb hier in JEDEM Raum neu setzen. Die Sperre selbst pinnt unit_r33_tuer1120_*. */
+    re15_game_flag_set(3, 94, 1);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = px; pl->y = py; pl->z = pz; pl->rot_y = yaw; pl->hp = 100;
     g_current_room_id = rid;                       /* dest-id resolution uses the low nibble */

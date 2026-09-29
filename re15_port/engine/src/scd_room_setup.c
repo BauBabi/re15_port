@@ -21,6 +21,7 @@
 #include "re15_sicherung.h" /* Sicherung im Hebetisch von Irons' Buero (ROOM1150/1151) */
 #include "re15_irons_tisch.h" /* Irons Diary + Memory Card auf dem Schreibtisch (ROOM1150/1151) */
 #include "re15_granate.h"     /* Handgranate im Hebetisch von Irons' Buero (ROOM1150/1151) */
+#include "re15_tuer1120.h"    /* Tuer ROOM1130 -> ROOM1120 erst nach der Irons-Szene (Runde 33) */
 
 extern scd_vm_t g_scd;
 
@@ -420,6 +421,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (9,56) erst dann gelesen). Tut in jedem anderen Raum nichts. Herleitung:
      * include/re15_granate.h. */
     re15_granate_install((uint16_t)g_current_room_id);
+    /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
+     * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade
+     * angelegt hat, zum Text-Platz umgewidmet — deshalb NACH dem Init-Lauf. Tut in jedem anderen
+     * Raum nichts. Herleitung: include/re15_tuer1120.h. */
+    re15_tuer1120_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und
