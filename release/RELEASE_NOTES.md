@@ -55,8 +55,8 @@ beiden Spielen bytegleich).
   im englischen Text keine mehr.
 * Drei Seiten tragen nur einen Zeilenrest ("earth is going on?", "can.", "hope you make it
   out alive!") — Folge des RE2-Seitenrasters mit 9 Zeilen, in dem jedes Datum neu beginnt.
-* Die Blaetterpfeile stehen jetzt an RE2s Stelle und in RE2s Gruen — vorher hat der linke
-  Pfeil auf 12 von 17 Seiten den ersten Buchstaben einer Zeile verdeckt.
+* Die Blaetterpfeile stehen an RE2s Stelle und in RE2s Gruen; an RE1.5s Stelle haette der
+  linke Pfeil den ersten Buchstaben mancher Zeilen verdeckt.
 
 **Die Memory Card liegt daneben** (Ihre blaue Marke). Es ist Item 0x21 — nicht 0x20, das ist
 die Incendiary Capsule. RE1.5 hat dafuer Bild und Icon, aber nie eine Platzierung und kein
