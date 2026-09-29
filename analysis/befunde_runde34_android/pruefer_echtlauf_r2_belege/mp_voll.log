@@ -1,0 +1,165 @@
+1790717187.899664 START 2026-09-29 23:26:27 :: bash release/make_package.sh --version v0.8.19
+1790717188.148707    Python: /c/Python310/python (3.10.11)
+1790717188.149973 == Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790717188.310794    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790717188.311137 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790717188.838781    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790717188.963353    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790717188.963612    sdkVersion:'24'
+1790717188.963692    targetSdkVersion:'35'
+1790717188.963795    native-code: 'arm64-v8a' 'x86_64'
+1790717189.905826    Verified using v1 scheme (JAR signing): false
+1790717189.906029    Verified using v2 scheme (APK Signature Scheme v2): true
+1790717189.906194    Verified using v3 scheme (APK Signature Scheme v3): false
+1790717189.906365    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790717189.906522    Verified using v4 scheme (APK Signature Scheme v4): false
+1790717189.906840    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790717189.969190 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790717190.091344 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790717196.025522    [ok] 01 gute APK                                                   rc=0 (soll 0)
+1790717196.025890    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)                 rc=0 (soll 0)
+1790717196.026215    [ok] 03 Eintrag komprimiert (Inhalt gleich)                        rc=0 (soll 0)
+1790717196.026531    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt                  rc=1 (soll 1)
+1790717196.026856    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte           rc=1 (soll 1)
+1790717196.027197    [ok] 06 Zusatzeintrag unter assets/                                rc=1 (soll 1)
+1790717196.027518    [ok] 07 synchro/unused in der APK                                  rc=1 (soll 1)
+1790717196.027832    [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+1790717196.028123    [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+1790717196.028411    [ok] 10 Datei nur im Quellbaum                                     rc=1 (soll 1)
+1790717196.028690    [ok] 11 APK-Eintrag kuerzer als die Quelle                         rc=1 (soll 1)
+1790717196.028944    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)                       rc=1 (soll 1)
+1790717196.029150    [ok] 13 doppelter APK-Eintrag                                      rc=1 (soll 1)
+1790717196.029352    [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+1790717196.029591    [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+1790717196.029793    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)
+1790717196.029995    [ok] 17 Manifest: Zeile ohne Tab                                   rc=1 (soll 1)
+1790717196.030196    [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+1790717196.030397    [ok] 19 RE15DOOR leer (Quelle und APK)                             rc=1 (soll 1)
+1790717196.030604    [ok] 20 RE15DOOR-Ordner fehlt ganz                                 rc=1 (soll 1)
+1790717196.030803    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+1790717196.031007    [ok] 22 APK ist kein ZIP                                           rc=2 (soll 2)
+1790717196.031207    [ok] 23 APK fehlt                                                  rc=2 (soll 2)
+1790717196.031410    [ok] 24 build.gradle: zusaetzlicher Baum                           rc=2 (soll 2)
+1790717196.031734    [ok] 25 build.gradle: Baum RE15DOOR fehlt                          rc=2 (soll 2)
+1790717196.032014    [ok] 26 build.gradle: include geaendert                            rc=2 (soll 2)
+1790717196.032298    [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)
+1790717196.032572    [ok] 28 build.gradle fehlt                                         rc=2 (soll 2)
+1790717196.032877    [ok] 29 gute APK mit Datei > 1 MiB                                 rc=0 (soll 0)
+1790717196.033155    [ok] 30 Datei > 1 MiB: 1 Byte hinter dem 1. MiB                    rc=1 (soll 1)
+1790717196.033434    [ok] 31 CRC32-erhaltende Aenderung (gleiche Groesse)               rc=1 (soll 1)
+1790717196.033717    [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+1790717196.033992    [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+1790717196.034276    [ok] 34 Manifest: Groessenfeld '1_800'                             rc=1 (soll 1)
+1790717196.034550    [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+1790717196.034834    [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+1790717196.035113    [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+1790717196.035396    [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+1790717196.035688    [ok] 39 Eintragsname mit '\' (F2)                                  rc=1 (soll 1)
+1790717196.035970    [ok] 40 Eintragsname mit NUL-Anhang (F3)                           rc=1 (soll 1)
+1790717196.036253    [ok] 41 Eintragsname kein UTF-8                                    rc=1 (soll 1)
+1790717196.036545    [ok] 42 Eintragsname mit Steuerzeichen                             rc=1 (soll 1)
+1790717196.036828    [ok] 43 Eintragsname mit '..'                                      rc=1 (soll 1)
+1790717196.037123    [ok] 44 Local Header: CRC falsch, Zentralverzeichnis richtig (F4)  rc=1 (soll 1)
+1790717196.037470    [ok] 45 Local Header: Groesse falsch, Zentralverzeichnis richtig (F5) rc=1 (soll 1)
+1790717196.037705    [ok] 46 Local Header: anderer Name                                 rc=1 (soll 1)
+1790717196.037908    [ok] 47 Local Header: Signatur zerstoert                           rc=1 (soll 1)
+1790717196.038110    [ok] 48 Eintrag verschluesselt                                     rc=1 (soll 1)
+1790717196.038309    [ok] 49 Eintrag mit Methode 99                                     rc=1 (soll 1)
+1790717196.038509    [ok] 50 Daten ragen ins Zentralverzeichnis                         rc=1 (soll 1)
+1790717196.038712    [ok] 51 classes.dex: Byte gekippt (kein Asset)                     rc=1 (soll 1)
+1790717196.038914    [ok] 52 Deflate-Strom mit Muell dahinter                           rc=1 (soll 1)
+1790717196.039114    [ok] 53 Verzeichniseintrag unter assets/                           rc=1 (soll 1)
+1790717196.039359    [ok] 54 APK abgeschnitten (F7)                                     rc=2 (soll 2)
+1790717196.039585    [ok] 55 Bytes hinter dem End-of-Central-Directory                  rc=2 (soll 2)
+1790717196.039831    [ok] 56 ZIP64-Markierung im End-of-Central-Directory               rc=2 (soll 2)
+1790717196.040061    [ok] 57 Zentralverzeichnis-Signatur zerstoert (F8)                 rc=2 (soll 2)
+1790717196.040273    [ok] 58 Zentralverzeichnis-Offset zu gross                         rc=2 (soll 2)
+1790717196.040478    [ok] 59 End-of-Central-Directory nennt einen Eintrag zu wenig      rc=2 (soll 2)
+1790717196.040684    [ok] 60 Deflate-Strom kaputt (Blocktyp 3)                          rc=1 (soll 1)
+1790717196.040922    [ok] 61 gute APK: End-of-Central-Directory-Signatur in Asset-Daten rc=0 (soll 0)
+1790717196.041141    [ok] 62 build.gradle: stageAssets fehlt                            rc=2 (soll 2)
+1790717196.041342    [ok] 63 build.gradle: stageAssets zweimal                          rc=2 (soll 2)
+1790717196.041543    [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2)
+1790717196.041786    [ok] 65 build.gradle: unbekannte Anweisung im from-Block           rc=2 (soll 2)
+1790717196.041986    [ok] 66 build.gradle: from ohne into                               rc=2 (soll 2)
+1790717196.042181    [ok] 67 build.gradle: preserve fehlt                               rc=2 (soll 2)
+1790717196.042381    [ok] 68 build.gradle: Klammern passen nicht                        rc=2 (soll 2)
+1790717196.042638    [ok] 69 build.gradle: stageAssets-Block ohne Ende                  rc=2 (soll 2)
+1790717196.042861    [ok] 70 build.gradle: Zeichenkette ohne Ende                       rc=2 (soll 2)
+1790717196.043064    [ok] 71 build.gradle: Kommentar /* ohne Ende                       rc=2 (soll 2)
+1790717196.043276    [ok] 72 Stored-Eintrag: csize 5 B groesser als usize               rc=1 (soll 1)
+1790717196.043340    Laufzeit: 5.9 s
+1790717196.043538 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790717196.043676 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790717196.228724 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790717196.229037    APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\re15_port_v0.8.19_android.apk
+1790717196.229218    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790717196.229401    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790717196.420024    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790717199.567046    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790717199.567244    shared_assets/PSX               3193    3193     3193    300522652
+1790717199.567431    shared_assets/extracted_fx        13      13       13      1079875
+1790717199.567604    shared_assets/RE2                277     277      277     25482039
+1790717199.567770    shared_assets/RE15DOOR            30      30       30      1914932
+1790717199.567940    synchro                           90      90       90     27678779
+1790717199.568108    SUMME                           3603    3603     3603    356678277
+1790717199.568241    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790717199.568373    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790717199.568515    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790717199.568724    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790717199.568791    Laufzeit:  3.3 s
+1790717199.569047 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790717199.569315 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ==
+1790717200.260122    gepruefte APK (sha256 crc32 Bytes): 9be7e512e14b8dcff7916dcafc55e524e767474eec4e457baf95fbd17e8865fd 99a4f42a 363212403
+1790717200.260410 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790717200.656678    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790717200.737957    hoechste glibc-Anforderung: GLIBC_2.29
+1790717200.952855    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790717203.475412    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790717203.513912    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790717203.747867    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790717203.789231    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790717206.392023    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790717209.174763    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790717209.445849    Zeilenenden-Gate: alle Skripte im Paket sind LF
+1790717209.499693    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+1790717209.840195    OK: 349M, 3606 Dateien
+1790717209.840478 == Windows-Paket: re15_port_v0.8.19 ==
+1790717210.282350    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790717210.463217    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790717213.394235    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790717213.434256    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790717213.682320    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790717213.737890    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790717216.458854    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790717219.276334    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790717220.510688    Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+1790717221.366453    Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+1790717221.775861    OK: 350M, 3607 Dateien
+1790717221.781330 == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+1790717233.917749    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+1790717234.122193    x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+1790717234.122355    x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+1790717234.122493    1 Eintrag/Eintraege im Zentralverzeichnis angepasst
+1790717234.255859    x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+1790717234.256012    x-Bit ok: re15_port_v0.8.19/run.sh  100755
+1790717234.259409 == Zippen: re15_port_v0.8.19_win64 ==
+1790717246.311755    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+1790717247.065518 == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+1790717257.466295    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+1790717257.592285    APK im Split-Satz = gepruefte APK (CRC32 99a4f42a, 363212403 B)
+1790717259.506753 
+1790717259.544403 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 23:27 re15_port_v0.8.19_android.z01
+1790717259.544622 -rw-r--r-- 1 mjoedicke Kein 75107369 Sep 29 23:27 re15_port_v0.8.19_android.zip
+1790717259.544849 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 23:27 re15_port_v0.8.19_linux_steamdeck_x64.z01
+1790717259.545064 -rw-r--r-- 1 mjoedicke Kein 75236322 Sep 29 23:27 re15_port_v0.8.19_linux_steamdeck_x64.zip
+1790717259.545257 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 23:27 re15_port_v0.8.19_win64.z01
+1790717259.545461 -rw-r--r-- 1 mjoedicke Kein 75344263 Sep 29 23:27 re15_port_v0.8.19_win64.zip
+1790717259.545565 == SHA256SUMS.txt geschrieben ==
+1790717259.579393 == Git: alte Pakete austauschen ==
+1790717280.449203    0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+1790717280.449578    (noch nicht committet — das macht der Release-Commit)
+1790717280.449669 == Fertig ==
+1790717281.482870 ENDE 2026-09-29 23:28:01
+EXIT=0
+EXIT_AUSSEN=0
