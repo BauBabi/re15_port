@@ -113,6 +113,27 @@ uint64_t re15_map_hint_schritte(void);
  * bestimmt, nicht hineingeschrieben (Erwartung laut Dossier 3.5 a: 78). */
 int  re15_map_hint_periode(void);
 
+/* ---- NACH DEM HINWEIS (Runde 33, Thema K) — ⛔ PORT-WAHL AUF NUTZERWUNSCH ----------------
+ * RE2 gibt mit dem Hinweis kein Blatt frei und kennt keinen Zielraum in der normalen Karte
+ * (analysis/befunde_runde33/karte_zielraum.md §2; Belege in map_hint_common.c Abschnitt 4).
+ * Der Nutzer will beides. Abgeleitet, KEIN eigener Zustand und kein Speicherfeld:
+ * "Hinweis gezeigt" = Szenen-Flag des Tabelleneintrags (ROOM1150: (3,94), sub08 @0x01110),
+ * "Ziel erreicht" = Besucht-Bit des Zielorts. Beides steht schon im Spielstand. */
+/* 1 = page ist das Blatt eines Zielraums, dessen Hinweis gezeigt wurde. */
+int  re15_map_ziel_blatt_frei(unsigned page);
+/* HOCH/RUNTER in der normalen Karte: bekannt (re15_map_page_known) ODER freigegeben. */
+int  re15_map_blatt_waehlbar(unsigned page);
+/* 1 = ein Zielraum ist markiert (Hinweis gezeigt, Zielort noch nicht besucht); Blatt und
+ * Rechteck seiner Hauptzeile. */
+int  re15_map_ziel_aktiv(int *page, int *rect);
+/* Blinker der Zielkachel in der normalen Karte: RE2s Karten-Pulszaehler (@0x8006D87C-
+ * 0x8006D8D4), ein Schritt je VBlank auf der Wanduhr, OHNE Ton. rot = Richtung 0 -> CLUT
+ * 502, sonst 498 (wie der Hinweis, @0x8006F514 / @0x8006F5DC). */
+void     re15_map_ziel_blink_begin(void);
+void     re15_map_ziel_blink_tick(void);
+int      re15_map_ziel_blink_rot(void);
+uint64_t re15_map_ziel_blink_schritte(void);
+
 /* ---- Satz-TOC der Mini-Bank shared_assets/RE2/HINTSE.VBS ---------------------------
  * Muster re15_elev_bank_rec (gen/re2_hint_bank.inc, erzeugt von tools/re2_hint_cut.py). */
 typedef struct {

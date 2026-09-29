@@ -404,6 +404,14 @@ typedef struct {
     uint8_t hint_page;      /* Blatt des Zielraums (RE2 [0x800D5C0A] @0x8006F738)         */
     uint8_t hint_rect;      /* Rechteck des Zielraums auf dem Blatt (RE2 FUN_8006EAE8
                              * @0x8006F2C8: (Blatt, Raum) -> Satzindex)                   */
+    /* ---- ZIELRAUM IN DER NORMALEN KARTE (Runde 33 Thema K, ⛔ PORT-WAHL auf Nutzer-
+     * wunsch — RE2s normaler Zeichner hat keinen Ziel-Zustand; Belege in
+     * map_hint_common.c Abschnitt 4). Je Menue-Bild aus re15_map_ziel_aktiv gesetzt
+     * (menu_common.c menu_task_step), im Hinweis-Schirm immer 0. NEUE FELDER ANS ENDE. */
+    uint8_t ziel_aktiv;     /* 1 = Zielkachel zeichnen (Hinweis gezeigt, Ziel unbesucht)  */
+    uint8_t ziel_rot;       /* Blinkphase wie hint_rot: 1 -> CLUT 502, 0 -> CLUT 498      */
+    uint8_t ziel_page;      /* Blatt der Hauptzeile des Zielraums                         */
+    uint8_t ziel_rect;      /* Rechteck darauf                                            */
 } re15_inv_screen_t;
 
 /* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve

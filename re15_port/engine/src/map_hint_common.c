@@ -58,6 +58,7 @@
 #include "re15_map_hint.h"
 #include "re15_audio.h"
 #include "re15_room.h"
+#include "re15_scd.h"         /* re15_game_flag_get — Szenen-Flag des Hinweises (Runde 33) */
 #include "re15_engine.h"     /* g_engine.frame_count — nur fuer die Messschiene */
 
 #include "gen/re2_hint_bank.inc"   /* RE2_HINT_EDT_SIZE / _VBD_OFF / _VBD_SIZE / RE2_HINT_SE */
@@ -69,14 +70,19 @@ typedef struct {
     unsigned char  pc_versatz;     /* Evt_end = sig + pc_versatz                          */
     unsigned short ziel_raum;      /* Raum, dessen Kachel blinkt                          */
     unsigned char  ziel_idx;       /* Zone dieses Raums                                   */
+    /* Runde 33: das Spiel-Flag, das die Szene als GELAUFEN markiert — "der Hinweis ist
+     * gezeigt worden" (Abschnitt 4 unten). */
+    unsigned char  fertig_bank, fertig_bit;
 } re15_map_hint_eintrag_t;
 
 static const re15_map_hint_eintrag_t s_hints[] = {
     /* ROOM1150.RDT @Datei 0x012E0 (1 Treffer in der Datei), Evt_end sub08 @0x012EC;
-     * Ziel ROOM10F0 "COMMUNIC. ROOM" (DEBUG.BIN @0x027C0), Zone 0. */
+     * Ziel ROOM10F0 "COMMUNIC. ROOM" (DEBUG.BIN @0x027C0), Zone 0.
+     * Szene gelaufen = flag(3,94): sub08 @0x01110 `22 03 5e 01` Set(3,94,1) am ANFANG der
+     * Szene, main00 @0x00DE6 `21 03 5e 00` Ck(3,94)==0 legt die AUTO-Zone nur davor an. */
     { 0x1150,
       { 0x42, 0x00, 0x3c, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x01, 0x00 },
-      12, 0x10F0, 0 },
+      12, 0x10F0, 0, 3, 94 },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))
 
@@ -127,9 +133,10 @@ long re15_map_hint_anchor_off(void)
 int  re15_map_hint_pending(void) { return s_pending; }
 void re15_map_hint_take(void)    { s_pending = -1; }
 
-int re15_map_hint_ziel(int nr, int *page, int *rect)
+/* Die HAUPTZEILE des Zielraums in der Zonen-Tabelle (NULL = keine). */
+static const re15_map_zone_t *ziel_zone(int nr)
 {
-    if (nr < 0 || nr >= HINT_COUNT) return 0;
+    if (nr < 0 || nr >= HINT_COUNT) return NULL;
     const int n = re15_map_zone_count();
     for (int i = 0; i < n; i++) {
         const re15_map_zone_t *zn = re15_map_zone_by_index(i);
@@ -137,6 +144,87 @@ int re15_map_hint_ziel(int nr, int *page, int *rect)
         if (zn->room != s_hints[nr].ziel_raum || zn->idx != s_hints[nr].ziel_idx) continue;
         if (zn->etage) continue;          /* Gastzeile auf fremdem Blatt: nicht das Ziel */
         if (zn->rect == 255) continue;    /* Schema-Zeichnung ohne Kachel                */
+        return zn;
+    }
+    return NULL;
+}
+
+int re15_map_hint_ziel(int nr, int *page, int *rect)
+{
+    const re15_map_zone_t *zn = ziel_zone(nr);
+    if (!zn) return 0;
+    if (page) *page = (int)zn->page;
+    if (rect) *rect = (int)zn->rect;
+    return 1;
+}
+
+/* ==========================================================================================
+ * 4. NACH DEM HINWEIS (Runde 33, Thema K) — ⛔ PORT-WAHL AUF NUTZERWUNSCH
+ * ==========================================================================================
+ * Nutzer (analysis/befunde_runde33/AUFTRAG.md): nach dem Hinweis muss man in der Karte zu
+ * 2F wechseln koennen, auch ohne 2F betreten zu haben, und der Raum muss "angezeigt
+ * bleiben, wie bei Resident Evil 2 bei Zielraeumen auch".
+ *
+ * RE2 TUT BEIDES NICHT (Dossier analysis/befunde_runde33/karte_zielraum.md §2):
+ *  - Etagenwahl: ein Blatt ist in RE2 waehlbar, wenn sein Bit in Bank 35 (0x800D4908)
+ *    steht (`jal 0x80077360` @0x8006D934 / @0x8006D998). Gesetzt wird es beim Betreten
+ *    eines Raums (FUN_8006931C `addiu a0,s0,234` @0x800693B0, `jal 0x8007730c` @0x800693B4)
+ *    und per Skript bei der Kartenaufnahme (ROOM20B0 sub10 Set(35,2..4) @0x037E6-EE) —
+ *    NICHT vom Hinweis (Handler @0x800591C4 schreibt vier Dinge, Modus 4 hat 0 Bit-Setzer).
+ *  - Zielraum: RE2s normaler Zeichner FUN_8006E120 hat keinen Zustand "Ziel" (Zeilen
+ *    501/506 +1, 498/503, Raumschleife @0x8006E46C-0x8006E770); das Blinken gibt es nur
+ *    im Hinweis-Modus 4, der nichts hinterlaesst.
+ *
+ * DER PORT, auf den ausdruecklichen Wunsch:
+ *  (a) Das Blatt des Zielraums wird mit dem Hinweis waehlbar — das Gegenstueck zu RE2s
+ *      Skript-Set auf Bank 35 (RE2s eigenes Mittel, ein Blatt ohne Besuch freizugeben).
+ *      Das Gatter selbst bleibt RE2s Regel: jedes andere Blatt nur nach Besuch.
+ *  (b) Der Zielraum blinkt in der normalen Karte weiter wie im Hinweis (CLUT 502 / 498),
+ *      bis er BESUCHT ist, OHNE den Hinweis-Ton (RE2s normale Karte spielt ihn nicht: dort
+ *      nur Se(4,9) @0x8006D7EC, Se(4,4) @0x8006D9D8, Se(4,5) @0x8006D9FC). Der Takt ist
+ *      der des Zaehlers, den RE2s normaler Kartenschirm in Zustand 3 faehrt
+ *      (@0x8006D87C-0x8006D8D4) — derselbe Zaehler, dieselben Schwellen wie im Hinweis-
+ *      Zeichner (@0x8006F20C-0x8006F284), also zaehl_schritt oben.
+ *
+ * ⛔ KEIN NEUER ZUSTAND, KEIN SPEICHERFELD. "Hinweis gezeigt" ist das Szenen-Flag des
+ * Tabelleneintrags (ROOM1150: (3,94), gesetzt am Anfang der Szene @0x01110 — gespeichert
+ * ist es mit g_game.flags seit v1), "Ziel erreicht" ist das Besucht-Bit des Zielorts
+ * (gespeichert seit v6; Leons ROOM10F0 und Elzas ROOM10F1 teilen es, zone_bit maskiert
+ * die Varianten). Ein eigenes Feld waere eine zweite Wahrheit — und seine Hebung fuer
+ * alte Staende muesste genau diese beiden Bits lesen. Die Flag-Wahl ist gemessen: (3,94)
+ * kommt in allen 240 RDTs nur in ROOM1150 vor (main00 @0x00DE6, sub08 @0x01110;
+ * analysis/befunde_runde33/karte_werkzeug/r33_re15_flag_zensus.py). Zwischen dem Setzen
+ * am Szenenanfang und dem Hinweis am Szenenende kann nicht gespeichert werden (die Szene
+ * haelt den Spieler, flag(1,27)/(2,7) @0x01114/@0x01118). */
+static int hint_gezeigt(int nr)
+{
+    if (nr < 0 || nr >= HINT_COUNT) return 0;
+    return re15_game_flag_get(s_hints[nr].fertig_bank, s_hints[nr].fertig_bit) != 0;
+}
+
+int re15_map_ziel_blatt_frei(unsigned page)
+{
+    for (int h = 0; h < HINT_COUNT; h++) {
+        const re15_map_zone_t *zn;
+        if (!hint_gezeigt(h)) continue;
+        zn = ziel_zone(h);
+        if (zn && (unsigned)zn->page == page) return 1;
+    }
+    return 0;
+}
+
+int re15_map_blatt_waehlbar(unsigned page)
+{
+    return re15_map_page_known(page) || re15_map_ziel_blatt_frei(page);
+}
+
+int re15_map_ziel_aktiv(int *page, int *rect)
+{
+    for (int h = 0; h < HINT_COUNT; h++) {
+        const re15_map_zone_t *zn;
+        if (!hint_gezeigt(h)) continue;
+        zn = ziel_zone(h);
+        if (!zn || re15_map_zone_visited(zn)) continue;   /* erreicht -> aus */
         if (page) *page = (int)zn->page;
         if (rect) *rect = (int)zn->rect;
         return 1;
@@ -259,6 +347,50 @@ void re15_map_hint_tick(void)
                     (s_richtung == 0) ? "rot" : "umriss", frei ? "" : " +Ton Se(2,0x2B)");
     }
 }
+
+/* ---- Runde 33: der Blinker der ZIELKACHEL in der normalen Karte (Abschnitt 4 b) ---------
+ * Eigener Zaehler, damit der Hinweis-Zaehler (und sein Ton-Protokoll) unberuehrt bleibt.
+ * Schritt = zaehl_schritt, also RE2s Zaehler Befehl fuer Befehl (normaler Kartenschirm
+ * Zustand 3 @0x8006D87C-0x8006D8D4 = Hinweis-Zeichner @0x8006F20C-0x8006F284), ein Schritt
+ * je VBlank (Teiler 0 @0x80068A1C), auf der Wanduhr wie der Hinweis. KEIN Ton: der Rueck-
+ * gabewert von zaehl_schritt wird verworfen (RE2s normale Karte ruft Se(2,0x2B) nie).
+ * Start mit den Werten des Hinweis-Inits (Zaehler 10 @0x8006F6DC, Richtung 1 @0x8006F6B4):
+ * PORT-WAHL — RE2s normaler Schirm setzt den geteilten Zaehler beim Oeffnen nicht neu
+ * (Schreiber nur @0x8006D8A0/C4/D4 in FUN_8006D650), er laeuft dort mit dem Stand weiter,
+ * den der letzte Modus hinterliess; der Port beginnt jede Kartenansicht wie der Hinweis,
+ * damit die Kachel so auftaucht, wie der Spieler sie aus dem Hinweis kennt (rot ab dem
+ * zweiten Schritt). Nach einem Stillstand wird wie beim Hinweis ueber die Periode
+ * gefaltet. */
+static uint8_t  s_zb_zaehler  = RE15_HINT_ZAEHLER_START;
+static uint8_t  s_zb_richtung = RE15_HINT_RICHTUNG_START;
+static uint64_t s_zb_start_us = 0;
+static uint64_t s_zb_schritte = 0;
+
+void re15_map_ziel_blink_begin(void)
+{
+    s_zb_zaehler  = RE15_HINT_ZAEHLER_START;
+    s_zb_richtung = RE15_HINT_RICHTUNG_START;
+    s_zb_start_us = re15_host_clock_us();
+    s_zb_schritte = 0;
+}
+
+void re15_map_ziel_blink_tick(void)
+{
+    uint64_t now = re15_host_clock_us();
+    uint64_t total = (now > s_zb_start_us) ? re15_map_hint_vblanks(now - s_zb_start_us) : 0;
+    if (total <= s_zb_schritte) return;
+    uint64_t due = total - s_zb_schritte;
+    const uint64_t p = (uint64_t)re15_map_hint_periode();
+    if (p > 0 && due > p) {                         /* Stillstand: ueber die Periode falten */
+        uint64_t weg = (due / p) * p;
+        s_zb_schritte += weg;
+        due -= weg;
+    }
+    while (due--) { (void)zaehl_schritt(&s_zb_zaehler, &s_zb_richtung); s_zb_schritte++; }
+}
+
+int      re15_map_ziel_blink_rot(void)      { return s_zb_richtung == 0; }
+uint64_t re15_map_ziel_blink_schritte(void) { return s_zb_schritte; }
 
 int      re15_map_hint_rot(void)      { return s_richtung == 0; }
 int      re15_map_hint_zaehler(void)  { return (int)s_zaehler; }

@@ -2578,6 +2578,28 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                          rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
                     continue;
                 }
+                /* ---- ZIELRAUM IN DER NORMALEN KARTE (Runde 33, Thema K) ---------------
+                 * ⛔ PORT-WAHL AUF NUTZERWUNSCH: RE2s normaler Zeichner kennt keinen Ziel-
+                 * Zustand (Raumschleife @0x8006E46C-0x8006E770: nur 501/506 +1, 498/503,
+                 * sonst nichts; Dossier analysis/befunde_runde33/karte_zielraum.md §2.3).
+                 * Gezeichnet wird die Zielkachel deshalb GENAU wie im Hinweis (Zweig oben,
+                 * RE2 @0x8006F4E8-0x8006F608): immer, ohne Besuch und ohne Kartenbesitz,
+                 * im ERSTEN Durchgang, CLUT 502 in der roten Phase / 498 im Umriss —
+                 * solange der Zielort unbesucht ist (menu_common.c menu_task_step). Der
+                 * aktuelle Raum und alle anderen Kacheln folgen unveraendert der normalen
+                 * Regel. */
+                if (!st->hint_aktiv && st->ziel_aktiv &&
+                    st->map_page == st->ziel_page && i == st->ziel_rect) {
+                    if (durchgang_r != 0) continue;
+                    if (!re15_map_rect_geometry((unsigned)st->map_page, (unsigned)i,
+                                                &rx, &ry, &rw, &rh)) continue;
+                    if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
+                        continue;
+                    sprt(&e, RE15_INV_PAGE_MAP4,
+                         st->ziel_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                         rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
+                    continue;
+                }
                 /* Ein Rechteck mit TEILBEREICHEN traegt gemischte Zustaende - es
                  * muss deshalb in BEIDEN Durchgaengen drankommen, damit der rote Teil
                  * frueh (= oben) und die gruenen spaeter eingetragen werden. Das Gate
