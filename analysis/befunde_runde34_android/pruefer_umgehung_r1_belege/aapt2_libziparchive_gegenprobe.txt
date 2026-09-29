@@ -1,0 +1,19 @@
+# Gegenprobe mit Androids eigenem ZIP-Leser (libziparchive, im Host-aapt2/aapt 35.0.0 enthalten)
+# Befehl: aapt2 dump xmltree --file assets/shared_assets/RE15DOOR/P07G.DO2 <apk>  (DO2 ist kein XML: 'failed to parse file as binary XML' = Eintrag GEFUNDEN und GELESEN)
+=== ref
+W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 55908
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+=== K0_neu_identisch
+W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 55908
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+=== F2_backslash_p07g
+error: failed to find file.
+=== F3_nul_p07g
+W ziparchive: Zip: invalid file name at entry 3205
+C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F3_nul_p07g.apk: error: failed opening zip: Invalid entry name.
+=== F4_lfh_crc_p07g
+W ziparchive: Zip: size/crc32 mismatch. expected {55908, 55908, 2c23d999}, was {55908, 55908, 2c23d998}
+C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F4_lfh_crc_p07g.apk: error: failed opening zip: Inconsistent information.
+=== F5_lfh_usize_p07g
+W ziparchive: Zip: size/crc32 mismatch. expected {55908, 55908, 2c23d999}, was {55908, 55909, 2c23d999}
+C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F5_lfh_usize_p07g.apk: error: failed opening zip: Inconsistent information.

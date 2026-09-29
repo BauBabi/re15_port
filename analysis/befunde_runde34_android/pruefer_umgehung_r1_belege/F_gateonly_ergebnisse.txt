@@ -1,0 +1,41 @@
+# build_android.sh --gate-only <apk> --version v0.8.19 (Standard-Python per python_finden = mingw64 3.14.7)
+gateonly_F2_backslash_p07g           EXIT=0 | == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_umgehung_r1/apk/F2_backslash_p07g.apk ==
+gateonly_F3_nul_p07g                 EXIT=1 | ABBRUCH: aapt: Paketname ist nicht de.re15.port
+gateonly_F4_lfh_crc_p07g             EXIT=0 | == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_umgehung_r1/apk/F4_lfh_crc_p07g.apk ==
+gateonly_F5_lfh_usize_p07g           EXIT=0 | == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_umgehung_r1/apk/F5_lfh_usize_p07g.apk ==
+
+# Volles Log F2 (ohne die 28 [ok]-Zeilen des Selbsttests):
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+== Gates: build/r34a/pruefer_umgehung_r1/apk/F2_backslash_p07g.apk ==
+   Inhalt: 3603 Asset-Eintraege, native libs fuer arm64-v8a + x86_64
+   package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+   sdkVersion:'24'
+   targetSdkVersion:'35'
+   launchable-activity: name='de.re15.port.RE15Activity'  label='RE1.5 Port' icon=''
+   native-code: 'arm64-v8a' 'x86_64'
+== Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/msys64/mingw64/bin/python3) ==
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   Laufzeit: 4.0 s
+== SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+== Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F2_backslash_p07g.apk
+   Quellbaum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  3.6 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+== ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_umgehung_r1/apk/F2_backslash_p07g.apk ==
+EXIT=0

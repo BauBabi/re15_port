@@ -1,0 +1,40 @@
+# Faelschungen F1-F8 + K0 an Kopien der Referenz-APK (v0.8.19, sha256 514bebd5...), Gate gegen den Arbeitsbaum
+# Befehl je Fall: "$P" release/apk_asset_gate.py --repo <baum> <apk>; P = /c/Python310/python.exe (3.10.11) bzw. /c/msys64/mingw64/bin/python3.exe (3.14.7)
+gate_Python310_310_F1_crc_kollision_vab      EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+gate_Python310_310_F2_backslash_p07g         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_Python310_310_F3_nul_p07g               EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_Python310_310_F4_lfh_crc_p07g           EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_Python310_310_F5_lfh_usize_p07g         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_Python310_310_F6_case_p07g              EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+gate_Python310_310_F7_abgeschnitten          EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F7_abgeschnitten.apk (File is not a zip file)
+gate_Python310_310_F8_cd_sig                 EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F8_cd_sig.apk (Bad magic number for central directory)
+gate_Python310_310_K0_neu_identisch          EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_bin_314_F1_crc_kollision_vab            EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+gate_bin_314_F2_backslash_p07g               EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_bin_314_F3_nul_p07g                     EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_bin_314_F4_lfh_crc_p07g                 EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_bin_314_F5_lfh_usize_p07g               EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+gate_bin_314_F6_case_p07g                    EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+gate_bin_314_F7_abgeschnitten                EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F7_abgeschnitten.apk (File is not a zip file)
+gate_bin_314_F8_cd_sig                       EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_umgehung_r1/apk/F8_cd_sig.apk (Bad magic number for central directory)
+gate_bin_314_K0_neu_identisch                EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+
+# Detail F1 (CRC32-erhaltende Aenderung in ENEMSE.VBS, 6694912 B):
+--- Abweichungen: 1 ---
+   [Inhalt weicht ab (sha256)] 1
+      Inhalt weicht ab (sha256, gleiche Groesse 6694912 B): assets/shared_assets/RE2/ENEMSE.VBS  Quelle 8d65cda43b5c6f2b.., APK 6d78d257840b906b..
+== APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+EXIT=1
+
+# Detail F6 (Gross/klein):
+--- Abweichungen: 4 ---
+   [fehlt in der APK] 1
+      fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)
+   [zusaetzlich in der APK] 1
+      zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/shared_assets/RE15DOOR/p07g.do2
+   [Manifest: Zeile ohne APK-Eintrag] 1
+      Manifest nennt shared_assets/RE15DOOR/P07G.DO2 (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2
+   [Manifest: Datei fehlt im Manifest] 1
+      fehlt im Manifest: shared_assets/RE15DOOR/p07g.do2 (wird auf dem Geraet nie entpackt)
+== APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+EXIT=1
