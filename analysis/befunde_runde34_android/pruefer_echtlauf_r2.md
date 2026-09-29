@@ -199,6 +199,10 @@ sha256 gleich 29/30`, `fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2`
 shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag` -> `ABBRUCH: APK-Asset-Gate: die APK weicht
 vom Quellbaum ab`, **EXIT=1**. (Erster Versuch scheiterte an meinem Laufwerkzeug: `/c/msys64/usr/bin` vorn im PATH
 machte `bash` zur MSYS2-bash, die `LOG` nicht sah - Skript danach mit absolutem zip-Pfad, Lauf wie oben.)
+Grenze (nicht meine Linse, zur Einordnung): das gilt bei VOLLSTAENDIGEM Quellbaum - das Gate vergleicht APK gegen
+Quellbaum, nicht gegen die Soll-Zahl 30. Fehlt dieselbe Datei auch im Quellbaum, laeuft die Kette gruen
+(Gegenpruefer Umgehung R2, Abschnitt 1.2: `RE15DOOR: Quelle 29, APK 29`); Quellbaum gegen die Engine-Tabelle
+`re15_tuer_eigen.inc` prueft laut Bauer-Dossier 1 die Suite (`tests/unit/probes/r33_tueren.cmake`).
 
 ## 6. Aufraeumen + Endstand (23:45)
 - Eigene Laufreste geloescht: `build/r34a/pruefer_echtlauf_r2/{git_iso (489 MB), pakete (1,5 GB), neu_v0.8.19.apk,
@@ -261,4 +265,5 @@ geprueft mit dem Quellbaum; make_package.sh lief ohne Shim, ohne touch und ohne 
 Pakete identisch mit v0.8.19, APK im Satz = gepruefte APK), die neuen cmp-Gates brechen im echten Fluss fuer beide
 Pakete ab, kein Skriptteil ruft Python am Finder vorbei; unter Linux laufen Selbsttest und Gate portabel (rc 0/1/2
 wie erwartet, gleiche Zahlen), die volle Kette schliesst ohne SDK ab. Die echte Kette faengt genau den offenen Punkt
-(eine fehlende RE15DOOR-Datei in einer gueltig signierten APK). B1/B2 sind niedrig und blockieren die Uebernahme nicht.
+(eine fehlende RE15DOOR-Datei in einer gueltig signierten APK, bei vollstaendigem Quellbaum - Abschnitt 5). B1/B2
+sind niedrig und blockieren die Uebernahme nicht.
