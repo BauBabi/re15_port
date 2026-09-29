@@ -1,3 +1,76 @@
+# v0.8.17 - 2026-09-29
+
+Ihre drei Auftraege dieser Runde sind gebaut: RE2-Tueranimationen fuer die Tueren, die es in
+RE2 genauso gibt, der Hebetisch in Irons' Buero und der Generator in ROOM11F0. Jede Aenderung
+hat ein zweiter Agent im echten Spiel gegengeprueft. Suite 405 -> 411/411.
+
+## Was Sie merken
+
+**RE2-Tueranimationen — 83 von 144 Tueren.** Jede Tuer, die RE1.5 aufstellt, wurde im
+Hintergrundbild ausgeschnitten und mit den 55 RE2-Tuerarchiven verglichen, Seite fuer Seite am
+Bild, jede Zuordnung von einem zweiten Agenten auf Widerlegung geprueft. Wo die gemalte Tuer
+DIESELBE ist (gleiche Felder, Fenster, Gitter, Material, Farbe), laeuft beim Durchgehen jetzt die
+RE2-Sequenz dieses Archivs — mit dem Ton genau dieses Archivs (35 verschiedene Tonteile in RE2;
+der Schliesston klingt wie in RE2 ueber den Raumwechsel weiter). Abgedeckt sind 184 Tuerseiten, u. a.
+die Fenstertueren mit Querschild (DOOR13), die Asservaten-Schiebetueren (DOOR19), die X-Tore mit
+Warnstreifen in der Fabrik (DOOR15), die Zellentuer (DOOR0A), die Leitern (DOOR16, hinauf und
+hinab), die Labortueren (DOOR25/DOOR29), die TYPE-P-Schotts (DOOR26; innen am Kuehlraum das vereiste
+DOOR31) und die Hubbuehne (DOOR2D). Ablauf wie in RE2: das Bild dunkelt ab, die Tuer oeffnet
+sich, die Kamera faehrt hindurch, dann blendet der neue Raum ein (gut 5 Sekunden je Tuer).
+* **Griffe:** der Griff steht in der Animation auf der Seite, auf der er im RE1.5-Bild gemalt ist
+  (die Variante wird je Tuerseite danach gewaehlt — RE2 macht es genauso, 24 von 25 geprueften
+  RE2-Tueren). Wo die Griff-FORM nicht stimmte, ist der Griff getauscht: ROOM10D0 <-> ROOM10F0
+  bekommt den Druecker aus DOOR07 statt des Knaufs, die beiden Kassettentueren ROOM1120/1130/1150
+  die Messingstange aus DOOR04.
+* **Nicht abgedeckt: 61 Tueren.** 45 davon sind nur AEHNLICH — vor allem die glatten, dunklen
+  Stahltueren mit Druecker im Revier (12 Stueck): RE2 hat keine Tuer ohne Lueftung oder Fenster,
+  am naechsten kommt DOOR07 mit Lueftungsschlitzen. Weiter: 5 Aufzugseinstiege, 4 im Spiel
+  nicht aktive oder unsichtbare Uebergaenge, 3 Durchgaenge ohne Tuer (Schacht, Lueftung),
+  3 Tueren, die RE1.5 auf beiden Seiten verschieden malt (dort laeuft die Animation nur von der
+  gleichen Seite), und das Tor ROOM1170 (hat seine eigene Sequenz). Diese Tueren wechseln wie
+  bisher mit der RE1.5-Blende.
+* **ROOM4030 -> ROOM4040 / ROOM4080 funktioniert wieder.** Die zwei schraegen Tueren dort sind
+  Vier-Ecken-Saetze (40 Byte); der Port las sie als gewoehnliche Tuer und schickte Sie in einen
+  Raum, den es nicht gibt. Jetzt wie im Original gelesen (Trefftest FUN_80014368, Nutzlast
+  @0x80042f90).
+
+**Hebetisch in Irons' Buero.** Die Granate liegt LINKS im Fach, die Sicherung RECHTS — im Bild
+gemessen, in jedem Bild der Fahrt. Die Sicherung liegt schraeg und reicht zur Haelfte unter den
+rechten Deckel: die Oeffnung ist nur 300 breit, anders passen die 406 lange Sicherung und die
+Granate nicht nebeneinander. Der Aufnahme-Dialog kommt erst, wenn der Tisch wirklich OBEN RUHT
+(nach dem letzten Nachsetzen, Skript `Sleep 30` @0x101A) — vorher kam er mitten im Hochfahren.
+Erst die Sicherung, dann die Granate; waehrend der Dialoge steht der Tisch (das Original haelt
+die Szene bei einer Aufnahme an, @0x8001db98). "No" bietet den Gegenstand bei der naechsten
+Fahrt wieder an.
+
+**Generator ROOM11F0.** Die Abnahme kam bisher schon, als der Zeiger erst bei 62 stand. Jetzt
+wie in RE2 (ROOM2130): der Zeiger faehrt auf 80, STEHT dort eine Sekunde (30 Bilder,
+@0x0171C), erst dann "Power supply OK.", der Bestaetigungston und danach das Licht. Waehrend der
+Zeiger faehrt, nimmt das Bedienfeld wie in RE2 keine Eingabe an (nach jedem Schalter).
+Elzas Raum ROOM11F1 hat jetzt ebenfalls den Zeiger.
+
+## Grenzen
+
+* Die Animation gibt es auf PC, Steam Deck und Android; die PSX-Fassung wechselt weiter mit der Blende.
+* Tueren, die ein Skript waehrend einer Zwischensequenz ausloest, bekommen keine Animation
+  (Port-Entscheidung, sonst liefe sie mitten in der Szene).
+* 4 der 184 gebauten Seiten sind im Spiel nie begehbar (ihre Saetze sind im Original abgeschaltet);
+  die Tueren selbst sind ueber die Gegenseite abgedeckt.
+* Der getauschte Druecker an ROOM10D0 ist im ersten Bild schmal (so zeigt ihn auch RE2 an DOOR07).
+* DOOR29 zeigt beim Aufziehen (Variante 1) das Schild von hinten gespiegelt — so steht es in den
+  RE2-Daten.
+* Die Toene sind nach Stimme, Tonhoehe und Bild gemessen, nicht angehoert (kein Audiogeraet an
+  der Bau-Maschine).
+
+## Technik
+
+* Die 24 benoetigten RE2-Tuerarchive liegen unveraendert unter `shared_assets/RE2/DOOR/`
+  (bytegleich mit der RE2-Disc); das Paket prueft sie.
+* `local_build.sh` beendet vor dem Link nur noch die exe des eigenen Bauverzeichnisses (vorher
+  jede `re15_pc.exe` der Maschine).
+* Belege: `analysis/befunde_runde31/` (Zuordnung und Vergleichsboegen `tueren_03_zuordnung.md`,
+  `tueren_belege/t3_vergleich_*.jpg`).
+
 # v0.8.16 - 2026-09-28
 
 Alle neun Befunde Ihrer letzten Runde sind gebaut, dazu vier Fehler, die erst beim Bauen
