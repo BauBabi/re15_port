@@ -99,7 +99,8 @@ static void quad_rastern(const re2fx_quad_t *q)
                     default: r = b + f[k] / 4; break;
                     }
                 } else r = f[k];
-                if (r < 0) r = 0; if (r > 31) r = 31;
+                if (r < 0) r = 0;
+                if (r > 31) r = 31;
                 s_rgb[y][x][k] = (uint8_t)(r << 3);
             }
             s_pixel++;
