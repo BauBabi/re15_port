@@ -192,3 +192,33 @@ Parser, nicht den des Gates); `_sig` = danach mit dem Release-Schluessel neu sig
 | N2 signiert (Name kein UTF-8) | 1 | aapt badging (libziparchive oeffnet die APK nicht) |
 | N3 signiert (Verschluesselungsbit) | 1 | Asset-Gate |
 Volle Logs `build/r34a/nb/kette/*.log`.
+
+### 3.6 Voller Android-Bau mit der neuen Kette (positiv)
+`bash release/build_android.sh --version v0.8.19 --no-toolchain` (22:57:48-23:00:29, **EXIT=0**, Log mit
+Zeitstempeln `nachbesserung_r1_belege/android_voll.log`): Python **/c/Python310/python (3.10.11)** (echtlauf
+B1 im echten Fluss), `APK-Werkzeuge: aapt + apksigner aus 35.0.0` VOR Gradle, stageAssets `RE2/DOOR: 27`,
+`RE15DOOR: 30`, `BUILD SUCCESSFUL in 2m 25s`; Kette auf der `.ungeprueft`-Kopie: Stichproben (3604
+Asset-Eintraege), aapt `versionName='v0.8.19'` + beide ABIs, apksigner `v2 ... true`, Signer 432bc749...,
+Selbsttest 72/72, Gate 3616 Eintraege lesbar / 3603 Dateien bytegleich / RE2/DOOR 27/27 / RE15DOOR 30/30 /
+TORSE.VBS gleich / Manifest 3603 Zeilen; dann mv + SHA256SUMS (`5ec3a0eb...`, 363212403 B), keine
+`.ungeprueft` uebrig.
+Laufzeit (aus den Zeitstempeln): gesamt 161 s, Gradle 146,7 s, Stichproben+aapt+apksigner 1,6 s,
+Selbsttest 5,6 s, Gate 3,6 s, mv+sha256sum 1,7 s -> neue Kette 10,9 s = 6,8 % des Laufs.
+APK gegen Referenz mit dem unabhaengigen Vergleich des Pruefers (`apk_vergleich.py`, zipfile, nicht der
+Gate-Code): 3604/3604 assets-Eintraege sha256-gleich, Manifest `5f5acfdb...` beidseitig, alle Stored;
+anders nur die vier .so (Baupfad im Binary, wie beim Pruefer) - `apk_vergleich_nachher.txt`, rc 0.
+
+### 3.7 Echte Android-Baeue, die scheitern MUESSEN (echtlauf B3 + B4)
+- **Gate scheitert** (`android_neg_lauf.sh`, 23:00:56-23:03:22): Punktdatei `RE15DOOR/.r34a_nb_probe.bin`
+  (21 B) im Quellbaum + "alte" APK `release/re15_port_v0.8.19-nbneg_android.apk` (Kopie der Referenz,
+  mtime 10:00). Beim Log-Eintrag `== Gradle:` (23:00:57) war die alte APK **schon entfernt**; Gradle
+  `BUILD SUCCESSFUL in 2m 12s` (Manifest 3604 Dateien), Gate: `fehlt in der APK: ...probe.bin - Name beginnt
+  mit '.'` + `Manifest nennt ... die APK hat keinen Eintrag` -> **EXIT=1**; danach weder `<name>.apk` noch
+  `.ungeprueft` (Falle meldet `Gate-Abbruch: ... geloescht; dieselben Bytes liegen weiter unter
+  .../app-release.apk`), `release/*.ungeprueft`: 0, SHA256SUMS_android.txt unveraendert, Probe entfernt,
+  `git status re15_port/` leer (`android_neg_beobachtung.txt`, `android_neg.log`).
+- **Gradle scheitert** (`android_gradle_fehler_lauf.sh`, genau der Fall der Gegenpruefung): alle 30
+  RE15DOOR/*.DO2 kurz geparkt + alte APK `...-nbgradle_android.apk` -> `Task :app:stageAssets FAILED`,
+  `Tuerarchive fehlen im Repo`, `BUILD FAILED in 13s`, **EXIT=1**; die alte APK **fehlt** danach (vorher blieb
+  sie liegen und haette gezippt werden koennen). RE15DOOR zurueck: 30/30 sha256 gleich, `git status` leer.
+- Nach den Baeuen: `release/SHA256SUMS_android.txt` per `git restore --source=HEAD` zurueck (cd139335...).

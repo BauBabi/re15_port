@@ -1,0 +1,1272 @@
+1790715656.254967 START 2026-09-29 23:00:56 :: bash release/build_android.sh --version v0.8.19-nbneg --no-toolchain
+1790715656.572158    Python: /c/Python310/python (3.10.11)
+1790715656.720597 == Android-Bau re15_port_v0.8.19-nbneg_android ==
+1790715656.720711    Host:    win
+1790715656.720863    SDK:     C:/Users/mjoedicke/AppData/Local/Android/Sdk
+1790715656.721037    JDK:     C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\
+1790715656.721263    Projekt: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android
+1790715656.721443    NDK:     /c/Users/mjoedicke/AppData/Local/Android/Sdk/ndk/27.2.12479018
+1790715656.790475    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790715657.064361 == CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) ==
+1790715657.064542 == Gradle: fetchSdl2 assembleRelease (Version v0.8.19-nbneg) ==
+1790715658.190862 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+1790715660.187927 Daemon will be stopped at the end of the build 
+1790715669.493502 > Task :app:fetchSdl2 UP-TO-DATE
+1790715671.495614 
+1790715671.495769 > Task :app:stageAssets
+1790715671.495967 stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+1790715671.496128 stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+1790715677.097577 
+1790715677.098625 > Task :app:writeAssetManifest
+1790715677.100875 re15_assets.txt: 3604 Dateien, 356678298 Bytes
+1790715677.101487 
+1790715677.102641 > Task :app:preBuild
+1790715677.103588 > Task :app:preReleaseBuild
+1790715677.103984 > Task :app:javaPreCompileRelease UP-TO-DATE
+1790715677.104675 > Task :app:checkReleaseAarMetadata UP-TO-DATE
+1790715677.104909 > Task :app:generateReleaseResValues UP-TO-DATE
+1790715677.105099 > Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+1790715677.192820 > Task :app:generateReleaseResources UP-TO-DATE
+1790715677.192980 > Task :app:mergeReleaseResources UP-TO-DATE
+1790715677.301313 > Task :app:packageReleaseResources UP-TO-DATE
+1790715677.301474 > Task :app:parseReleaseLocalResources UP-TO-DATE
+1790715677.301605 > Task :app:createReleaseCompatibleScreenManifests
+1790715677.301724 > Task :app:extractDeepLinksRelease UP-TO-DATE
+1790715677.395983 > Task :app:processReleaseMainManifest
+1790715677.692649 > Task :app:processReleaseManifest
+1790715677.800496 > Task :app:extractProguardFiles UP-TO-DATE
+1790715707.680425 > Task :app:processReleaseManifestForPackage
+1790715707.680598 > Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+1790715719.203824 
+1790715719.204355 > Task :app:buildCMakeRelWithDebInfo[arm64-v8a][SDL2,main]
+1790715719.206354 C/C++: ninja: Entering directory `C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\app\.cxx\RelWithDebInfo\2l2d1o5v\arm64-v8a'
+1790715719.207569 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/emd_morph.c:28:
+1790715719.208766 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715719.210022 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.210809 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.211392 C/C++:       |                                                   ^
+1790715719.211680 C/C++: 1 warning generated.
+1790715719.212681 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/actor_common.c:15:
+1790715719.214127 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.215341 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.216127 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.216690 C/C++:       |                                                   ^
+1790715719.216950 C/C++: 1 warning generated.
+1790715719.218030 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/camera_common.c:205:
+1790715719.219030 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715719.220187 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.220896 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.221476 C/C++:       |                                                   ^
+1790715719.221758 C/C++: 1 warning generated.
+1790715719.222792 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/anim_select_common.c:15:
+1790715719.223781 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_anim_select.h:21:
+1790715719.224926 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.225629 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.226140 C/C++:       |                                                   ^
+1790715719.227466 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/anim_select_common.c:143:27: warning: data argument not used by format string [-Wformat-extra-args]
+1790715719.228146 C/C++:   138 |           if (tf) fprintf(tf, "%u %d %d %d %d %d %u %d %d %d %d\n",
+1790715719.228828 C/C++:       |                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1790715719.229674 C/C++:   139 |                           (unsigned)g_engine.frame_count, (int)(a - g_actors), (int)a->type,
+1790715719.230534 C/C++:   140 |                           (int)a->motion, clip_idx, clip->frame_count, (unsigned)cur, slot,
+1790715719.231068 C/C++:   141 |                           re15_actor_clip_len(a),
+1790715719.231748 C/C++:   142 |                           re15_actor_uses_loco_bank(a) ? 1 : 0, reverse,
+1790715719.232322 C/C++:   143 |                           re15_actor_clip_len_legacy(a));
+1790715719.232699 C/C++:       |                           ^
+1790715719.232952 C/C++: 2 warnings generated.
+1790715719.233926 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/actor_locomotion.c:48:
+1790715719.234874 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.240518 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.241213 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.241760 C/C++:       |                                                   ^
+1790715719.242017 C/C++: 1 warning generated.
+1790715719.243197 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/door_seq_zeichnen.c:161:31: warning: '/*' within block comment [-Wcomment]
+1790715719.244105 C/C++:   161 |         /* r0/r1/r2.c <- *rgb0/*rgb1/*rgb2 (@0x8008ed68/74/8c) - alle drei Zeiger = rgb0 (@0x80014a48) */
+1790715719.244529 C/C++:       |                               ^
+1790715719.245689 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/door_seq_zeichnen.c:161:37: warning: '/*' within block comment [-Wcomment]
+1790715719.246601 C/C++:   161 |         /* r0/r1/r2.c <- *rgb0/*rgb1/*rgb2 (@0x8008ed68/74/8c) - alle drei Zeiger = rgb0 (@0x80014a48) */
+1790715719.247024 C/C++:       |                                     ^
+1790715719.247346 C/C++: 2 warnings generated.
+1790715719.248275 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/climb_common.c:30:
+1790715719.249183 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_climb.h:33:
+1790715719.250262 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.250919 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.251430 C/C++:       |                                                   ^
+1790715719.252302 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/climb_common.c:33:
+1790715719.253423 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.254141 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.254621 C/C++:       |                                           ^
+1790715719.255685 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.256509 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.257115 C/C++:       |                                                                 ^
+1790715719.257376 C/C++: 3 warnings generated.
+1790715719.258233 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/emd_common.c:24:
+1790715719.259265 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.259872 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.260387 C/C++:       |                                                   ^
+1790715719.260625 C/C++: 1 warning generated.
+1790715719.261492 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_common.c:7:
+1790715719.262324 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715719.263362 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.263977 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.264495 C/C++:       |                                                   ^
+1790715719.264738 C/C++: 1 warning generated.
+1790715719.265664 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_zellenarm.c:97:
+1790715719.266513 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.267509 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.268124 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.268615 C/C++:       |                                                   ^
+1790715719.268851 C/C++: 1 warning generated.
+1790715719.269694 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/hebetisch_1150.c:12:
+1790715719.270533 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.271520 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.272112 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.273037 C/C++:       |                                                   ^
+1790715719.273317 C/C++: 1 warning generated.
+1790715719.274577 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/aot_common.c:24:
+1790715719.284883 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.286162 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.293084 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.293714 C/C++:       |                                                   ^
+1790715719.294711 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/aot_common.c:26:
+1790715719.295859 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.296593 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.297046 C/C++:       |                                           ^
+1790715719.298184 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.299516 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.300097 C/C++:       |                                                                 ^
+1790715719.300359 C/C++: 3 warnings generated.
+1790715719.301419 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_use_common.c:16:
+1790715719.302349 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.303609 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.304267 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.304899 C/C++:       |                                                   ^
+1790715719.305137 C/C++: 1 warning generated.
+1790715719.306036 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_g5.c:73:
+1790715719.306907 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.309000 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.309623 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.310367 C/C++:       |                                                   ^
+1790715719.311638 C/C++: 1 warning generated.
+1790715719.315018 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_modal_common.c:18:
+1790715719.316537 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715719.323434 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.324094 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.324608 C/C++:       |                                                   ^
+1790715719.324866 C/C++: 1 warning generated.
+1790715719.325724 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_icon_common.c:8:
+1790715719.326772 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715719.327492 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715719.328037 C/C++:       |                                                            ^
+1790715719.329098 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715719.329755 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715719.330326 C/C++:       |                                                               ^
+1790715719.330575 C/C++: 2 warnings generated.
+1790715719.331454 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_crow.c:70:
+1790715719.332260 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.333285 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.333879 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.334359 C/C++:       |                                                   ^
+1790715719.335229 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_crow.c:77:
+1790715719.336217 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.336900 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.337322 C/C++:       |                                           ^
+1790715719.338308 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.339052 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.339619 C/C++:       |                                                                 ^
+1790715719.339868 C/C++: 3 warnings generated.
+1790715719.340676 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/lock_se_common.c:19:
+1790715719.341472 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.342431 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.343024 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.343490 C/C++:       |                                                   ^
+1790715719.343718 C/C++: 1 warning generated.
+1790715719.344517 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/itps_common.c:10:
+1790715719.345471 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715719.346147 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715719.346708 C/C++:       |                                                                    ^
+1790715719.347642 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715719.348301 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715719.348901 C/C++:       |                                                                       ^
+1790715719.349131 C/C++: 2 warnings generated.
+1790715719.349925 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/map_hint_common.c:62:
+1790715719.350697 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.351654 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.352235 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.352680 C/C++:       |                                                   ^
+1790715719.352908 C/C++: 1 warning generated.
+1790715719.353732 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_tentakel_g5.c:66:
+1790715719.354495 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.355409 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.355909 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.356300 C/C++:       |                                                   ^
+1790715719.356492 C/C++: 1 warning generated.
+1790715719.357475 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_phase_common.c:34:84: warning: '/*' within block comment [-Wcomment]
+1790715719.358143 C/C++:    34 |  * Kept free of platform code: laeuft identisch im PSX- und PC-Bau (GLOB engine/src/*.c).
+1790715719.358770 C/C++:       |                                                                                    ^
+1790715719.359573 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_phase_common.c:36:
+1790715719.360311 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715719.361193 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.361725 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.362144 C/C++:       |                                                   ^
+1790715719.362351 C/C++: 2 warnings generated.
+1790715719.363100 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/game_step_common.c:10:
+1790715719.363812 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_game_step.h:6:
+1790715719.364683 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.365232 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.365682 C/C++:       |                                                   ^
+1790715719.366454 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/game_step_common.c:16:
+1790715719.367359 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.367931 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.368285 C/C++:       |                                           ^
+1790715719.369152 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.369807 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.370298 C/C++:       |                                                                 ^
+1790715719.370497 C/C++: 3 warnings generated.
+1790715719.371216 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_common.c:6:
+1790715719.371953 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.372748 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.373309 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.373717 C/C++:       |                                                   ^
+1790715719.373922 C/C++: 1 warning generated.
+1790715719.374619 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_dog.c:59:
+1790715719.375332 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.376114 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.376596 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.376990 C/C++:       |                                                   ^
+1790715719.377188 C/C++: 1 warning generated.
+1790715719.377875 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_spider.c:83:
+1790715719.378537 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.379368 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.379862 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.380248 C/C++:       |                                                   ^
+1790715719.380442 C/C++: 1 warning generated.
+1790715719.381202 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/panel_zeiger_common.c:15:
+1790715719.381871 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.382674 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.383177 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.383564 C/C++:       |                                                   ^
+1790715719.383752 C/C++: 1 warning generated.
+1790715719.384450 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_gator.c:50:
+1790715719.385156 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_boss_gator.h:11:
+1790715719.385806 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.386572 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.387043 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.387412 C/C++:       |                                                   ^
+1790715719.388100 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_gator.c:58:
+1790715719.388890 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.389434 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.389771 C/C++:       |                                           ^
+1790715719.390555 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.391157 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.391603 C/C++:       |                                                                 ^
+1790715719.391801 C/C++: 3 warnings generated.
+1790715719.392478 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/nav_zone_common.c:32:
+1790715719.393128 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.393867 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.394340 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.394702 C/C++:       |                                                   ^
+1790715719.394873 C/C++: 1 warning generated.
+1790715719.396134 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/msg_common.c:270:16: warning: result of comparison of constant 256 with expression of type 'unsigned char' is always false [-Wtautological-constant-out-of-range-compare]
+1790715719.396740 C/C++:   270 |     if (msg_id >= MSG_TABLE_N) return;   /* PSX: small table — high ids unsupported (no crash) */
+1790715719.397021 C/C++:       |         ~~~~~~ ^  ~~~~~~~~~~~
+1790715719.397310 C/C++: 1 warning generated.
+1790715719.398012 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:11:25: warning: '/*' within block comment [-Wcomment]
+1790715719.398420 C/C++:    11 |  *   - RE_15_modified_V2/*.c        (Ghidra-decompiled RE1.5 PSX.EXE)
+1790715719.398649 C/C++:       |                         ^
+1790715719.399402 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:12:21: warning: '/*' within block comment [-Wcomment]
+1790715719.399844 C/C++:    12 |  *   - RE2_Quellcode/*.c             (Ghidra-decompiled RE2 retail)
+1790715719.400067 C/C++:       |                     ^
+1790715719.400809 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:16:48: warning: '/*' within block comment [-Wcomment]
+1790715719.401314 C/C++:    16 |  *     ??? secondary_source/BioRdt-master/*.cpp            (C++ RDT editor)
+1790715719.401622 C/C++:       |                                          ^
+1790715719.402231 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:23:
+1790715719.402803 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715719.403383 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.403685 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.403915 C/C++:       |                                                   ^
+1790715719.404030 C/C++: 4 warnings generated.
+1790715719.404618 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/player_common.c:22:
+1790715719.405214 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715719.405846 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.406189 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.406522 C/C++:       |                                                   ^
+1790715719.406679 C/C++: 1 warning generated.
+1790715719.407257 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/menu_common.c:59:
+1790715719.407819 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.408566 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.408984 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.409312 C/C++:       |                                                   ^
+1790715719.409476 C/C++: 1 warning generated.
+1790715719.410069 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_g5_skin.c:30:
+1790715719.410649 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.411315 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.411659 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.411935 C/C++:       |                                                   ^
+1790715719.412067 C/C++: 1 warning generated.
+1790715719.412566 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_trig_lut.c:7:
+1790715719.413093 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715719.413706 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.414121 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.414443 C/C++:       |                                                   ^
+1790715719.414603 C/C++: 1 warning generated.
+1790715719.415177 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_itembox.c:19:
+1790715719.415710 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715719.416370 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.416774 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.417071 C/C++:       |                                                   ^
+1790715719.417230 C/C++: 1 warning generated.
+1790715719.418218 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:28:
+1790715719.419665 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.420599 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.421617 C/C++:       |                                           ^
+1790715719.422914 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.424260 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.426029 C/C++:       |                                                                 ^
+1790715719.426607 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:33:
+1790715719.427247 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.427913 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.428290 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.428615 C/C++:       |                                                   ^
+1790715719.429282 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:125:71: warning: '/*' within block comment [-Wcomment]
+1790715719.429670 C/C++:   125 |  * 8003d7e8/8003d930; resolved to our origin=0 frame (player abs = *lx/*lz, like
+1790715719.430025 C/C++:       |                                                                       ^
+1790715719.430666 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:382:69: warning: '/*' within block comment [-Wcomment]
+1790715719.431117 C/C++:   382 |  * 1x type6). Each handler has push_rect's signature and mutates *lx/*lz in place. KEY findings:
+1790715719.431473 C/C++:       |                                                                     ^
+1790715719.431618 C/C++: 5 warnings generated.
+1790715719.432095 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_esp.c:15:
+1790715719.432597 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.433209 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.433584 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.433868 C/C++:       |                                                   ^
+1790715719.434015 C/C++: 1 warning generated.
+1790715719.434504 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_savedata.c:7:
+1790715719.435016 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.435572 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.435915 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.436204 C/C++:       |                                                   ^
+1790715719.436719 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_savedata.c:10:
+1790715719.437347 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.437744 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.438011 C/C++:       |                                           ^
+1790715719.438577 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.439037 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.439375 C/C++:       |                                                                 ^
+1790715719.439526 C/C++: 3 warnings generated.
+1790715719.439981 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re2_ems.c:12:
+1790715719.440444 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re2_ems.h:33:
+1790715719.440930 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715719.441493 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.441847 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.442106 C/C++:       |                                                   ^
+1790715719.442241 C/C++: 1 warning generated.
+1790715719.442699 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_damage.c:25:
+1790715719.443150 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_damage.h:21:
+1790715719.443600 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.444152 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.444486 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.444755 C/C++:       |                                                   ^
+1790715719.444886 C/C++: 1 warning generated.
+1790715719.445321 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/room_common.c:16:
+1790715719.445766 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.446279 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.446614 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.446891 C/C++:       |                                                   ^
+1790715719.447323 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/room_common.c:26:
+1790715719.447843 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.448203 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.448447 C/C++:       |                                           ^
+1790715719.449010 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.449416 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.449726 C/C++:       |                                                                 ^
+1790715719.449868 C/C++: 3 warnings generated.
+1790715719.450324 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/scd_room_setup.c:17:
+1790715719.450798 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.451335 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.451655 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.451913 C/C++:       |                                                   ^
+1790715719.452059 C/C++: 1 warning generated.
+1790715719.452514 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/sicherung_itembild.c:25:
+1790715719.453063 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715719.453430 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715719.453742 C/C++:       |                                                                    ^
+1790715719.454249 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715719.454616 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715719.454946 C/C++:       |                                                                       ^
+1790715719.455378 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/sicherung_itembild.c:26:
+1790715719.455863 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715719.456202 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715719.456527 C/C++:       |                                                            ^
+1790715719.457064 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715719.457395 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715719.457685 C/C++:       |                                                               ^
+1790715719.457823 C/C++: 4 warnings generated.
+1790715719.458231 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_map_zones.c:29:
+1790715719.458751 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.459091 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.459313 C/C++:       |                                           ^
+1790715719.459816 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.460173 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.460458 C/C++:       |                                                                 ^
+1790715719.460875 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_map_zones.c:30:
+1790715719.461273 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.461730 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.462022 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.462254 C/C++:       |                                                   ^
+1790715719.462374 C/C++: 3 warnings generated.
+1790715719.575495 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/skeleton_common.c:22:
+1790715719.575928 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715719.576407 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.576701 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.576948 C/C++:       |                                                   ^
+1790715719.577075 C/C++: 1 warning generated.
+1790715719.984690 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_zombie.c:61:
+1790715719.985138 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.985684 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.986017 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.986260 C/C++:       |                                                   ^
+1790715719.986382 C/C++: 1 warning generated.
+1790715719.986806 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_inv_screen.c:26:
+1790715719.987211 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715719.987694 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.987998 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.988233 C/C++:       |                                                   ^
+1790715719.988640 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_inv_screen.c:27:
+1790715719.989116 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715719.989503 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715719.989756 C/C++:       |                                           ^
+1790715719.990280 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715719.990670 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715719.990960 C/C++:       |                                                                 ^
+1790715719.991108 C/C++: 3 warnings generated.
+1790715719.991519 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/scd_vm.c:26:
+1790715719.991989 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715719.992479 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715719.992775 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715719.993098 C/C++:       |                                                   ^
+1790715719.993308 C/C++: 1 warning generated.
+1790715720.335156 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/stair_common.c:32:
+1790715720.335651 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_stair.h:29:
+1790715720.336195 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715720.336586 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715720.336864 C/C++:       |                                                   ^
+1790715720.337313 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/stair_common.c:37:
+1790715720.337869 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715720.338300 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715720.338553 C/C++:       |                                           ^
+1790715720.339531 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715720.339910 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715720.340210 C/C++:       |                                                                 ^
+1790715720.340332 C/C++: 3 warnings generated.
+1790715720.910271 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/asset_pc.c:11:
+1790715720.910719 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715720.911196 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715720.911505 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715720.911748 C/C++:       |                                                   ^
+1790715720.911877 C/C++: 1 warning generated.
+1790715721.104353 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/asset_selftest_pc.c:57:22: warning: '/*' within block comment [-Wcomment]
+1790715721.104757 C/C++:    57 |     /* --- Ton. SOUND/*.BGM lief frueher ueber einen Leser OHNE Paket-Wurzel: im direkt
+1790715721.104924 C/C++:       |                      ^
+1790715721.105045 C/C++: 1 warning generated.
+1790715721.393870 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/bg_pc.c:30:
+1790715721.394319 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715721.394802 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715721.395123 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715721.395381 C/C++:       |                                                   ^
+1790715721.395543 C/C++: 1 warning generated.
+1790715721.694176 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/input_pc.c:23:
+1790715721.694970 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715721.695863 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715721.696307 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715721.696574 C/C++:       |                                                   ^
+1790715721.696785 C/C++: 1 warning generated.
+1790715721.697304 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/door_scene_pc.c:26:
+1790715721.697758 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715721.698395 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715721.699292 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715721.700654 C/C++:       |                                                   ^
+1790715721.700834 C/C++: 1 warning generated.
+1790715722.006776 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/jni/android_glue.c:35:
+1790715722.007208 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715722.007701 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715722.007991 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715722.008230 C/C++:       |                                                   ^
+1790715722.008356 C/C++: 1 warning generated.
+1790715722.316052 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_common.c:20:
+1790715722.316527 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy_ai.h:50:
+1790715722.316950 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715722.317451 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715722.317757 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715722.318005 C/C++:       |                                                   ^
+1790715722.318450 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_common.c:27:
+1790715722.318970 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715722.319328 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715722.319563 C/C++:       |                                           ^
+1790715722.320055 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715722.320428 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715722.320735 C/C++:       |                                                                 ^
+1790715722.320872 C/C++: 3 warnings generated.
+1790715722.797548 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/audio_pc.c:33:
+1790715722.797989 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re2_ems.h:33:
+1790715722.798413 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715722.798906 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715722.799202 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715722.799437 C/C++:       |                                                   ^
+1790715722.799957 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/audio_pc.c:2149:25: warning: '/*' within block comment [-Wcomment]
+1790715722.800323 C/C++:  2149 |          * Aus dem SOUND/*.BGM-Container gelesen (Trailer-Offsets, FUN_80044564 @0x80044564 /
+1790715722.800490 C/C++:       |                         ^
+1790715722.800617 C/C++: 2 warnings generated.
+1790715722.914180 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/render_pc.c:20:
+1790715722.914617 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715722.915114 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715722.915422 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715722.915720 C/C++:       |                                                   ^
+1790715722.916162 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/render_pc.c:28:
+1790715722.929816 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715722.931292 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715722.932876 C/C++:       |                                                                    ^
+1790715722.935252 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715722.935686 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715722.936306 C/C++:       |                                                                       ^
+1790715722.936472 C/C++: 3 warnings generated.
+1790715727.377415 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:33:
+1790715727.377746 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715727.378107 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715727.378326 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715727.378503 C/C++:       |                                                   ^
+1790715727.378801 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:76:
+1790715727.379175 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715727.379418 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715727.379928 C/C++:       |                                           ^
+1790715727.380327 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715727.380604 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715727.380841 C/C++:       |                                                                 ^
+1790715727.381134 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:81:
+1790715727.381509 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715727.381742 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715727.381932 C/C++:       |                                                            ^
+1790715727.382288 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715727.382525 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715727.382723 C/C++:       |                                                               ^
+1790715727.383023 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:86:
+1790715727.383366 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715727.383613 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715727.383817 C/C++:       |                                                                    ^
+1790715727.384162 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715727.384416 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715727.384625 C/C++:       |                                                                       ^
+1790715727.384961 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:498:83: warning: '/*' within block comment [-Wcomment]
+1790715727.385209 C/C++:   498 |      * (extracted_fx/ liegt NEBEN PSX/, nicht darin: genau daran ist "extracted_fx/*.tim"
+1790715727.385746 C/C++:       |                                                                                   ^
+1790715727.386119 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:4461:53: warning: '/*' within block comment [-Wcomment]
+1790715727.386305 C/C++:  4461 |      * RE2-faithful chain (decoded from ROOM1170 scd/*.c):
+1790715727.386477 C/C++:       |                                                     ^
+1790715727.386986 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:8313:35: warning: assigning to 'void *' from 'const re15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715727.387232 C/C++:  8313 |                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+1790715727.387443 C/C++:       |                                   ^ ~~~~~~~~~~
+1790715727.387942 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:9552:35: warning: assigning to 'void *' from 'const re15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715727.388185 C/C++:  9552 |                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
+1790715727.388319 C/C++:       |                                   ^ ~~~
+1790715727.388854 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:9896:58: warning: passing 'const re15_actor_t *' to parameter of type 're15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715727.389046 C/C++:  9896 |                         (void)re15_re2z_gore_part_matrix(npc, nbi,
+1790715727.389222 C/C++:       |                                                          ^~~
+1790715727.389558 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1184:46: note: passing argument to parameter 'e' here
+1790715727.389762 C/C++:  1184 | int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+1790715727.389912 C/C++:       |                                              ^
+1790715727.389995 C/C++: 12 warnings generated.
+1790715757.495898 
+1790715757.496084 > Task :app:configureCMakeRelWithDebInfo[x86_64]
+1790715767.888717 
+1790715767.890166 > Task :app:buildCMakeRelWithDebInfo[x86_64][SDL2,main]
+1790715767.894018 C/C++: ninja: Entering directory `C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\app\.cxx\RelWithDebInfo\2l2d1o5v\x86_64'
+1790715767.895140 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/actor_common.c:15:
+1790715767.896194 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.897409 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.898124 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.898722 C/C++:       |                                                   ^
+1790715767.899029 C/C++: 1 warning generated.
+1790715767.899995 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/emd_morph.c:28:
+1790715767.901006 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715767.902184 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.902964 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.903565 C/C++:       |                                                   ^
+1790715767.903864 C/C++: 1 warning generated.
+1790715767.904934 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/camera_common.c:205:
+1790715767.905924 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715767.907119 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.907847 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.908439 C/C++:       |                                                   ^
+1790715767.908744 C/C++: 1 warning generated.
+1790715767.909789 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/actor_locomotion.c:48:
+1790715767.910781 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.911999 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.912724 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.913306 C/C++:       |                                                   ^
+1790715767.913563 C/C++: 1 warning generated.
+1790715767.914541 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/anim_select_common.c:15:
+1790715767.915509 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_anim_select.h:21:
+1790715767.916653 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.917350 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.917899 C/C++:       |                                                   ^
+1790715767.919293 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/anim_select_common.c:143:27: warning: data argument not used by format string [-Wformat-extra-args]
+1790715767.919968 C/C++:   138 |           if (tf) fprintf(tf, "%u %d %d %d %d %d %u %d %d %d %d\n",
+1790715767.920625 C/C++:       |                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1790715767.921499 C/C++:   139 |                           (unsigned)g_engine.frame_count, (int)(a - g_actors), (int)a->type,
+1790715767.922347 C/C++:   140 |                           (int)a->motion, clip_idx, clip->frame_count, (unsigned)cur, slot,
+1790715767.922979 C/C++:   141 |                           re15_actor_clip_len(a),
+1790715767.923964 C/C++:   142 |                           re15_actor_uses_loco_bank(a) ? 1 : 0, reverse,
+1790715767.924588 C/C++:   143 |                           re15_actor_clip_len_legacy(a));
+1790715767.924982 C/C++:       |                           ^
+1790715767.925315 C/C++: 2 warnings generated.
+1790715767.926428 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/climb_common.c:30:
+1790715767.927917 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_climb.h:33:
+1790715767.929084 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.929789 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.930369 C/C++:       |                                                   ^
+1790715767.931327 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/climb_common.c:33:
+1790715767.932598 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715767.933507 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715767.934020 C/C++:       |                                           ^
+1790715767.935403 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715767.936269 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715767.936922 C/C++:       |                                                                 ^
+1790715767.937212 C/C++: 3 warnings generated.
+1790715767.938415 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/door_seq_zeichnen.c:161:31: warning: '/*' within block comment [-Wcomment]
+1790715767.939318 C/C++:   161 |         /* r0/r1/r2.c <- *rgb0/*rgb1/*rgb2 (@0x8008ed68/74/8c) - alle drei Zeiger = rgb0 (@0x80014a48) */
+1790715767.939687 C/C++:       |                               ^
+1790715767.940840 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/door_seq_zeichnen.c:161:37: warning: '/*' within block comment [-Wcomment]
+1790715767.941788 C/C++:   161 |         /* r0/r1/r2.c <- *rgb0/*rgb1/*rgb2 (@0x8008ed68/74/8c) - alle drei Zeiger = rgb0 (@0x80014a48) */
+1790715767.942234 C/C++:       |                                     ^
+1790715767.942530 C/C++: 2 warnings generated.
+1790715767.943477 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_common.c:7:
+1790715767.944389 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715767.945479 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.946152 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.946673 C/C++:       |                                                   ^
+1790715767.946929 C/C++: 1 warning generated.
+1790715767.947845 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/emd_common.c:24:
+1790715767.948911 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.949579 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.950106 C/C++:       |                                                   ^
+1790715767.950356 C/C++: 1 warning generated.
+1790715767.951295 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/aot_common.c:24:
+1790715767.952243 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.953384 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.954035 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.954604 C/C++:       |                                                   ^
+1790715767.956369 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/aot_common.c:26:
+1790715767.957537 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715767.958390 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715767.958914 C/C++:       |                                           ^
+1790715767.960314 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715767.962719 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715767.963399 C/C++:       |                                                                 ^
+1790715767.963666 C/C++: 3 warnings generated.
+1790715767.964662 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_zellenarm.c:97:
+1790715767.965577 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.966617 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.967242 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.967731 C/C++:       |                                                   ^
+1790715767.967975 C/C++: 1 warning generated.
+1790715767.968857 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_use_common.c:16:
+1790715767.969743 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.970768 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.971376 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.971859 C/C++:       |                                                   ^
+1790715767.972097 C/C++: 1 warning generated.
+1790715767.973002 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/hebetisch_1150.c:12:
+1790715767.973811 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715767.974732 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.975342 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.975838 C/C++:       |                                                   ^
+1790715767.976087 C/C++: 1 warning generated.
+1790715767.977014 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_g5.c:73:
+1790715767.977849 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.978842 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.979464 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.979942 C/C++:       |                                                   ^
+1790715767.980175 C/C++: 1 warning generated.
+1790715767.981042 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_icon_common.c:8:
+1790715767.982065 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715767.982713 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715767.983257 C/C++:       |                                                            ^
+1790715767.984272 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715767.984918 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715767.986130 C/C++:       |                                                               ^
+1790715767.986402 C/C++: 2 warnings generated.
+1790715767.988695 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_dog.c:59:
+1790715767.989867 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715767.993831 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715767.994463 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715767.994944 C/C++:       |                                                   ^
+1790715767.995164 C/C++: 1 warning generated.
+1790715767.996503 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/lock_se_common.c:19:
+1790715767.997841 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715768.000395 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.001177 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.001887 C/C++:       |                                                   ^
+1790715768.002155 C/C++: 1 warning generated.
+1790715768.004057 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/item_modal_common.c:18:
+1790715768.004903 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715768.005893 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.006519 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.006987 C/C++:       |                                                   ^
+1790715768.007215 C/C++: 1 warning generated.
+1790715768.008139 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_tentakel_g5.c:66:
+1790715768.009275 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.010417 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.011644 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.012345 C/C++:       |                                                   ^
+1790715768.012588 C/C++: 1 warning generated.
+1790715768.013498 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/game_step_common.c:10:
+1790715768.014414 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_game_step.h:6:
+1790715768.015443 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.015963 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.016313 C/C++:       |                                                   ^
+1790715768.016939 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/game_step_common.c:16:
+1790715768.017922 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.018867 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.019333 C/C++:       |                                           ^
+1790715768.020349 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.021090 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.021647 C/C++:       |                                                                 ^
+1790715768.021878 C/C++: 3 warnings generated.
+1790715768.022809 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_gator.c:50:
+1790715768.023549 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_boss_gator.h:11:
+1790715768.024309 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.025290 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.025850 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.026354 C/C++:       |                                                   ^
+1790715768.027233 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_boss_gator.c:58:
+1790715768.028233 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.028883 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.029306 C/C++:       |                                           ^
+1790715768.030271 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.030956 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.031497 C/C++:       |                                                                 ^
+1790715768.031736 C/C++: 3 warnings generated.
+1790715768.032504 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/itps_common.c:10:
+1790715768.034631 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715768.035488 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715768.036193 C/C++:       |                                                                    ^
+1790715768.038379 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715768.039056 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715768.039603 C/C++:       |                                                                       ^
+1790715768.039831 C/C++: 2 warnings generated.
+1790715768.040681 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_phase_common.c:34:84: warning: '/*' within block comment [-Wcomment]
+1790715768.041198 C/C++:    34 |  * Kept free of platform code: laeuft identisch im PSX- und PC-Bau (GLOB engine/src/*.c).
+1790715768.041728 C/C++:       |                                                                                    ^
+1790715768.042596 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_phase_common.c:36:
+1790715768.043429 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715768.044381 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.044993 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.045416 C/C++:       |                                                   ^
+1790715768.045677 C/C++: 2 warnings generated.
+1790715768.046515 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/map_hint_common.c:62:
+1790715768.047301 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715768.048207 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.048746 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.049187 C/C++:       |                                                   ^
+1790715768.049512 C/C++: 1 warning generated.
+1790715768.050387 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/pad_common.c:6:
+1790715768.051312 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715768.052502 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.053165 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.053610 C/C++:       |                                                   ^
+1790715768.053926 C/C++: 1 warning generated.
+1790715768.054954 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/nav_zone_common.c:32:
+1790715768.055730 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.056565 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.057091 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.057501 C/C++:       |                                                   ^
+1790715768.057711 C/C++: 1 warning generated.
+1790715768.058466 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_spider.c:83:
+1790715768.059709 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.060639 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.061201 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.061685 C/C++:       |                                                   ^
+1790715768.062109 C/C++: 1 warning generated.
+1790715768.062891 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/panel_zeiger_common.c:15:
+1790715768.063622 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715768.064469 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.064989 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.065393 C/C++:       |                                                   ^
+1790715768.065592 C/C++: 1 warning generated.
+1790715768.066298 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_crow.c:70:
+1790715768.066946 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.067712 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.068179 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.068544 C/C++:       |                                                   ^
+1790715768.069227 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_crow.c:77:
+1790715768.070026 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.070798 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.071185 C/C++:       |                                           ^
+1790715768.072009 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.072595 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.073103 C/C++:       |                                                                 ^
+1790715768.073316 C/C++: 3 warnings generated.
+1790715768.074090 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/player_common.c:22:
+1790715768.074565 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715768.075117 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.075525 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.075886 C/C++:       |                                                   ^
+1790715768.076066 C/C++: 1 warning generated.
+1790715768.077346 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/msg_common.c:270:16: warning: result of comparison of constant 256 with expression of type 'unsigned char' is always false [-Wtautological-constant-out-of-range-compare]
+1790715768.077958 C/C++:   270 |     if (msg_id >= MSG_TABLE_N) return;   /* PSX: small table — high ids unsupported (no crash) */
+1790715768.078213 C/C++:       |         ~~~~~~ ^  ~~~~~~~~~~~
+1790715768.078385 C/C++: 1 warning generated.
+1790715768.079022 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/menu_common.c:59:
+1790715768.079635 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.080342 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.080668 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.080920 C/C++:       |                                                   ^
+1790715768.081039 C/C++: 1 warning generated.
+1790715768.081907 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:11:25: warning: '/*' within block comment [-Wcomment]
+1790715768.083120 C/C++:    11 |  *   - RE_15_modified_V2/*.c        (Ghidra-decompiled RE1.5 PSX.EXE)
+1790715768.084743 C/C++:       |                         ^
+1790715768.086540 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:12:21: warning: '/*' within block comment [-Wcomment]
+1790715768.086995 C/C++:    12 |  *   - RE2_Quellcode/*.c             (Ghidra-decompiled RE2 retail)
+1790715768.087260 C/C++:       |                     ^
+1790715768.088068 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:16:48: warning: '/*' within block comment [-Wcomment]
+1790715768.088786 C/C++:    16 |  *     ??? secondary_source/BioRdt-master/*.cpp            (C++ RDT editor)
+1790715768.089111 C/C++:       |                                          ^
+1790715768.089743 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_to_re2.c:23:
+1790715768.090386 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715768.091114 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.091443 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.091781 C/C++:       |                                                   ^
+1790715768.092029 C/C++: 4 warnings generated.
+1790715768.092679 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_trig_lut.c:7:
+1790715768.093242 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715768.093976 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.094359 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.094656 C/C++:       |                                                   ^
+1790715768.094801 C/C++: 1 warning generated.
+1790715768.095313 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_g5_skin.c:30:
+1790715768.095836 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.096511 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.096909 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.097243 C/C++:       |                                                   ^
+1790715768.097449 C/C++: 1 warning generated.
+1790715768.098174 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_damage.c:25:
+1790715768.098727 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_damage.h:21:
+1790715768.099245 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.099852 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.100260 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.100595 C/C++:       |                                                   ^
+1790715768.100781 C/C++: 1 warning generated.
+1790715768.101413 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re2_ems.c:12:
+1790715768.101961 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re2_ems.h:33:
+1790715768.102552 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715768.103269 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.103672 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.104005 C/C++:       |                                                   ^
+1790715768.104176 C/C++: 1 warning generated.
+1790715768.104749 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_itembox.c:19:
+1790715768.105277 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_player.h:27:
+1790715768.105838 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.106222 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.106536 C/C++:       |                                                   ^
+1790715768.106692 C/C++: 1 warning generated.
+1790715768.107257 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:28:
+1790715768.107943 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.108398 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.108677 C/C++:       |                                           ^
+1790715768.109363 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.109867 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.110232 C/C++:       |                                                                 ^
+1790715768.110772 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:33:
+1790715768.111230 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.111762 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.112247 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.112548 C/C++:       |                                                   ^
+1790715768.113071 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:125:71: warning: '/*' within block comment [-Wcomment]
+1790715768.113527 C/C++:   125 |  * 8003d7e8/8003d930; resolved to our origin=0 frame (player abs = *lx/*lz, like
+1790715768.113942 C/C++:       |                                                                       ^
+1790715768.114577 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_collision.c:382:69: warning: '/*' within block comment [-Wcomment]
+1790715768.115084 C/C++:   382 |  * 1x type6). Each handler has push_rect's signature and mutates *lx/*lz in place. KEY findings:
+1790715768.115427 C/C++:       |                                                                     ^
+1790715768.115544 C/C++: 5 warnings generated.
+1790715768.116012 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_esp.c:15:
+1790715768.116544 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.117135 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.117493 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.117784 C/C++:       |                                                   ^
+1790715768.117936 C/C++: 1 warning generated.
+1790715768.118456 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/room_common.c:16:
+1790715768.119066 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.119683 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.120215 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.120514 C/C++:       |                                                   ^
+1790715768.121004 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/room_common.c:26:
+1790715768.122327 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.123032 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.123345 C/C++:       |                                           ^
+1790715768.123911 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.124352 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.124776 C/C++:       |                                                                 ^
+1790715768.124944 C/C++: 3 warnings generated.
+1790715768.125433 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_savedata.c:7:
+1790715768.125932 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.126542 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.126912 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.127212 C/C++:       |                                                   ^
+1790715768.127688 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_savedata.c:10:
+1790715768.128277 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.128669 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.128859 C/C++:       |                                           ^
+1790715768.129275 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.129693 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.130053 C/C++:       |                                                                 ^
+1790715768.130204 C/C++: 3 warnings generated.
+1790715768.130667 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_map_zones.c:29:
+1790715768.131244 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.131622 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.131886 C/C++:       |                                           ^
+1790715768.132447 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.132867 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.133189 C/C++:       |                                                                 ^
+1790715768.133674 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_map_zones.c:30:
+1790715768.134155 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.134658 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.134966 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.135231 C/C++:       |                                                   ^
+1790715768.135362 C/C++: 3 warnings generated.
+1790715768.135837 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/scd_room_setup.c:17:
+1790715768.136292 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.136838 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.137146 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.137604 C/C++:       |                                                   ^
+1790715768.137777 C/C++: 1 warning generated.
+1790715768.138221 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/sicherung_itembild.c:25:
+1790715768.138766 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715768.139161 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715768.139491 C/C++:       |                                                                    ^
+1790715768.140052 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715768.140436 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715768.140880 C/C++:       |                                                                       ^
+1790715768.141350 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/sicherung_itembild.c:26:
+1790715768.141898 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715768.142241 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715768.142519 C/C++:       |                                                            ^
+1790715768.143021 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715768.143350 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715768.143630 C/C++:       |                                                               ^
+1790715768.143777 C/C++: 4 warnings generated.
+1790715768.144192 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/stair_common.c:32:
+1790715768.144596 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_stair.h:29:
+1790715768.145073 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.145360 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.145597 C/C++:       |                                                   ^
+1790715768.146016 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/stair_common.c:37:
+1790715768.146509 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.146849 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.147134 C/C++:       |                                           ^
+1790715768.147667 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.148138 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.148449 C/C++:       |                                                                 ^
+1790715768.148583 C/C++: 3 warnings generated.
+1790715768.149026 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_re2_zombie.c:61:
+1790715768.149472 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.149950 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.150283 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.150525 C/C++:       |                                                   ^
+1790715768.150671 C/C++: 1 warning generated.
+1790715768.677240 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/skeleton_common.c:22:
+1790715768.677685 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_skeleton.h:25:
+1790715768.678226 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.678644 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.678920 C/C++:       |                                                   ^
+1790715768.679097 C/C++: 1 warning generated.
+1790715768.679535 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_inv_screen.c:26:
+1790715768.679992 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715768.680489 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.680795 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.681066 C/C++:       |                                                   ^
+1790715768.681505 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/re15_inv_screen.c:27:
+1790715768.681973 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715768.682309 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715768.682527 C/C++:       |                                           ^
+1790715768.683076 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715768.683499 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715768.683724 C/C++:       |                                                                 ^
+1790715768.683813 C/C++: 3 warnings generated.
+1790715768.684281 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/scd_vm.c:26:
+1790715768.684652 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715768.685119 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715768.685413 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715768.685657 C/C++:       |                                                   ^
+1790715768.685788 C/C++: 1 warning generated.
+1790715769.688228 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/asset_selftest_pc.c:57:22: warning: '/*' within block comment [-Wcomment]
+1790715769.688631 C/C++:    57 |     /* --- Ton. SOUND/*.BGM lief frueher ueber einen Leser OHNE Paket-Wurzel: im direkt
+1790715769.688795 C/C++:       |                      ^
+1790715769.688926 C/C++: 1 warning generated.
+1790715769.689351 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/asset_pc.c:11:
+1790715769.689766 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715769.690245 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715769.690541 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715769.690787 C/C++:       |                                                   ^
+1790715769.690909 C/C++: 1 warning generated.
+1790715770.221887 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/bg_pc.c:30:
+1790715770.222311 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715770.222805 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715770.223107 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715770.223351 C/C++:       |                                                   ^
+1790715770.223469 C/C++: 1 warning generated.
+1790715770.640179 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/jni/android_glue.c:35:
+1790715770.640854 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715770.641326 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715770.641616 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715770.641871 C/C++:       |                                                   ^
+1790715770.641993 C/C++: 1 warning generated.
+1790715770.709924 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_common.c:20:
+1790715770.710436 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy_ai.h:50:
+1790715770.710917 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1147:
+1790715770.711867 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715770.713507 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715770.713803 C/C++:       |                                                   ^
+1790715770.714271 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/engine/src/enemy_ai_common.c:27:
+1790715770.714879 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715770.715238 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715770.715492 C/C++:       |                                           ^
+1790715770.716020 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715770.716395 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715770.716854 C/C++:       |                                                                 ^
+1790715770.717004 C/C++: 3 warnings generated.
+1790715770.814874 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/input_pc.c:23:
+1790715770.815334 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715770.815840 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715770.816134 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715770.816372 C/C++:       |                                                   ^
+1790715770.816492 C/C++: 1 warning generated.
+1790715771.012672 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/door_scene_pc.c:26:
+1790715771.013112 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715771.013612 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715771.013926 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715771.014170 C/C++:       |                                                   ^
+1790715771.014298 C/C++: 1 warning generated.
+1790715772.007757 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/audio_pc.c:33:
+1790715772.008216 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re2_ems.h:33:
+1790715772.008652 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_enemy.h:20:
+1790715772.009156 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715772.009466 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715772.009706 C/C++:       |                                                   ^
+1790715772.010209 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/audio_pc.c:2149:25: warning: '/*' within block comment [-Wcomment]
+1790715772.010587 C/C++:  2149 |          * Aus dem SOUND/*.BGM-Container gelesen (Trailer-Offsets, FUN_80044564 @0x80044564 /
+1790715772.010750 C/C++:       |                         ^
+1790715772.010872 C/C++: 2 warnings generated.
+1790715772.103326 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/render_pc.c:20:
+1790715772.103844 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715772.104382 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715772.104711 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715772.104979 C/C++:       |                                                   ^
+1790715772.105453 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/src/render_pc.c:28:
+1790715772.105985 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715772.106366 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715772.106679 C/C++:       |                                                                    ^
+1790715772.107200 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715772.107589 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715772.107893 C/C++:       |                                                                       ^
+1790715772.108033 C/C++: 3 warnings generated.
+1790715776.186563 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:33:
+1790715776.186919 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_engine.h:188:
+1790715776.187293 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_emd.h:37:51: warning: '/*' within block comment [-Wcomment]
+1790715776.187518 C/C++:    37 |  * Reference: src/main/java/de/re15/extractors/emd/*.java (in-tree).
+1790715776.187703 C/C++:       |                                                   ^
+1790715776.188005 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:76:
+1790715776.188398 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:85:43: warning: '/*' within block comment [-Wcomment]
+1790715776.188655 C/C++:    85 |  * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+1790715776.188825 C/C++:       |                                           ^
+1790715776.189193 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_collision.h:90:65: warning: '/*' within block comment [-Wcomment]
+1790715776.189526 C/C++:    90 |  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+1790715776.189780 C/C++:       |                                                                 ^
+1790715776.190091 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:81:
+1790715776.190485 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:60: warning: '/*' within block comment [-Wcomment]
+1790715776.190738 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715776.190937 C/C++:       |                                                            ^
+1790715776.191317 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_item_icon.h:32:63: warning: '/*' within block comment [-Wcomment]
+1790715776.191562 C/C++:    32 |  * byte-true palette captured yet): returns 0 and leaves *r/*g/*b untouched. */
+1790715776.191773 C/C++:       |                                                               ^
+1790715776.192063 C/C++: In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:86:
+1790715776.192413 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:68: warning: '/*' within block comment [-Wcomment]
+1790715776.192693 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715776.192906 C/C++:       |                                                                    ^
+1790715776.193271 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_itps.h:33:71: warning: '/*' within block comment [-Wcomment]
+1790715776.193530 C/C++:    33 |  * 0 = black, or out of range / not loaded) returns 0 and leaves *r/*g/*b untouched. */
+1790715776.193751 C/C++:       |                                                                       ^
+1790715776.194103 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:498:83: warning: '/*' within block comment [-Wcomment]
+1790715776.194360 C/C++:   498 |      * (extracted_fx/ liegt NEBEN PSX/, nicht darin: genau daran ist "extracted_fx/*.tim"
+1790715776.194602 C/C++:       |                                                                                   ^
+1790715776.194963 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:4461:53: warning: '/*' within block comment [-Wcomment]
+1790715776.195153 C/C++:  4461 |      * RE2-faithful chain (decoded from ROOM1170 scd/*.c):
+1790715776.195330 C/C++:       |                                                     ^
+1790715776.195872 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:8313:35: warning: assigning to 'void *' from 'const re15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715776.196128 C/C++:  8313 |                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+1790715776.196294 C/C++:       |                                   ^ ~~~~~~~~~~
+1790715776.196803 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:9552:35: warning: assigning to 'void *' from 'const re15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715776.197050 C/C++:  9552 |                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
+1790715776.197189 C/C++:       |                                   ^ ~~~
+1790715776.197735 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/pc/main.c:9896:58: warning: passing 'const re15_actor_t *' to parameter of type 're15_actor_t *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+1790715776.197936 C/C++:  9896 |                         (void)re15_re2z_gore_part_matrix(npc, nbi,
+1790715776.198118 C/C++:       |                                                          ^~~
+1790715776.198451 C/C++: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/include/re15_actor.h:1184:46: note: passing argument to parameter 'e' here
+1790715776.198667 C/C++:  1184 | int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+1790715776.198820 C/C++:       |                                              ^
+1790715776.198905 C/C++: 12 warnings generated.
+1790715777.873452 
+1790715777.873816 > Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+1790715777.874009 > Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+1790715777.874229 > Task :app:desugarReleaseFileDependencies UP-TO-DATE
+1790715777.874416 > Task :app:mergeReleaseStartupProfile UP-TO-DATE
+1790715777.874617 > Task :app:mergeExtDexRelease UP-TO-DATE
+1790715777.874813 > Task :app:mergeReleaseArtProfile UP-TO-DATE
+1790715777.874961 > Task :app:mergeReleaseShaders UP-TO-DATE
+1790715777.875076 > Task :app:compileReleaseShaders NO-SOURCE
+1790715777.875192 > Task :app:generateReleaseAssets UP-TO-DATE
+1790715777.980491 > Task :app:mergeReleaseNativeLibs
+1790715782.094608 > Task :app:mergeReleaseAssets
+1790715782.189643 > Task :app:stripReleaseDebugSymbols
+1790715782.394677 > Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+1790715782.395068 > Task :app:processReleaseJavaRes NO-SOURCE
+1790715782.395265 > Task :app:mergeReleaseJavaResource UP-TO-DATE
+1790715782.395688 > Task :app:collectReleaseDependencies UP-TO-DATE
+1790715782.395948 > Task :app:sdkReleaseDependencyData UP-TO-DATE
+1790715782.396140 > Task :app:validateSigningRelease UP-TO-DATE
+1790715782.396315 > Task :app:writeReleaseAppMetadata UP-TO-DATE
+1790715782.396574 > Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+1790715782.396750 > Task :app:compressReleaseAssets
+1790715782.599913 > Task :app:extractReleaseNativeSymbolTables
+1790715782.788308 > Task :app:processReleaseResources
+1790715782.788499 > Task :app:compileReleaseJavaWithJavac UP-TO-DATE
+1790715782.898770 > Task :app:mergeReleaseNativeDebugMetadata
+1790715782.898978 > Task :app:generateReleaseLintVitalReportModel
+1790715782.994821 > Task :app:dexBuilderRelease UP-TO-DATE
+1790715782.994960 > Task :app:mergeDexRelease UP-TO-DATE
+1790715782.995094 > Task :app:mergeReleaseGlobalSynthetics UP-TO-DATE
+1790715782.995216 > Task :app:compileReleaseArtProfile UP-TO-DATE
+1790715783.103683 > Task :app:optimizeReleaseResources
+1790715785.593916 > Task :app:packageRelease
+1790715785.594086 > Task :app:createReleaseApkListingFileRedirect
+1790715790.287273 > Task :app:lintVitalAnalyzeRelease
+1790715790.287474 > Task :app:lintVitalReportRelease UP-TO-DATE
+1790715790.287579 > Task :app:lintVitalRelease
+1790715790.287661 > Task :app:assembleRelease
+1790715790.287686 
+1790715790.287763 BUILD SUCCESSFUL in 2m 12s
+1790715790.287888 54 actionable tasks: 23 executed, 31 up-to-date
+1790715790.559724 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19-nbneg_android.apk.ungeprueft (Version v0.8.19-nbneg) ==
+1790715791.080245    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790715791.210706    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19-nbneg' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790715791.210798    sdkVersion:'24'
+1790715791.210885    targetSdkVersion:'35'
+1790715791.210984    native-code: 'arm64-v8a' 'x86_64'
+1790715792.126340    Verified using v1 scheme (JAR signing): false
+1790715792.126580    Verified using v2 scheme (APK Signature Scheme v2): true
+1790715792.126801    Verified using v3 scheme (APK Signature Scheme v3): false
+1790715792.127023    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790715792.127247    Verified using v4 scheme (APK Signature Scheme v4): false
+1790715792.127579    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790715792.190534 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790715792.322795 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790715798.117130    [ok] 01 gute APK                                                   rc=0 (soll 0)
+1790715798.117445    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)                 rc=0 (soll 0)
+1790715798.117680    [ok] 03 Eintrag komprimiert (Inhalt gleich)                        rc=0 (soll 0)
+1790715798.117888    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt                  rc=1 (soll 1)
+1790715798.118094    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte           rc=1 (soll 1)
+1790715798.118332    [ok] 06 Zusatzeintrag unter assets/                                rc=1 (soll 1)
+1790715798.118537    [ok] 07 synchro/unused in der APK                                  rc=1 (soll 1)
+1790715798.118747    [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+1790715798.118953    [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+1790715798.119162    [ok] 10 Datei nur im Quellbaum                                     rc=1 (soll 1)
+1790715798.119367    [ok] 11 APK-Eintrag kuerzer als die Quelle                         rc=1 (soll 1)
+1790715798.119576    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)                       rc=1 (soll 1)
+1790715798.119781    [ok] 13 doppelter APK-Eintrag                                      rc=1 (soll 1)
+1790715798.119993    [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+1790715798.120200    [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+1790715798.120446    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)
+1790715798.120680    [ok] 17 Manifest: Zeile ohne Tab                                   rc=1 (soll 1)
+1790715798.120899    [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+1790715798.121109    [ok] 19 RE15DOOR leer (Quelle und APK)                             rc=1 (soll 1)
+1790715798.121316    [ok] 20 RE15DOOR-Ordner fehlt ganz                                 rc=1 (soll 1)
+1790715798.121525    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+1790715798.121733    [ok] 22 APK ist kein ZIP                                           rc=2 (soll 2)
+1790715798.121936    [ok] 23 APK fehlt                                                  rc=2 (soll 2)
+1790715798.122154    [ok] 24 build.gradle: zusaetzlicher Baum                           rc=2 (soll 2)
+1790715798.122359    [ok] 25 build.gradle: Baum RE15DOOR fehlt                          rc=2 (soll 2)
+1790715798.122565    [ok] 26 build.gradle: include geaendert                            rc=2 (soll 2)
+1790715798.122774    [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)
+1790715798.122981    [ok] 28 build.gradle fehlt                                         rc=2 (soll 2)
+1790715798.123186    [ok] 29 gute APK mit Datei > 1 MiB                                 rc=0 (soll 0)
+1790715798.123394    [ok] 30 Datei > 1 MiB: 1 Byte hinter dem 1. MiB                    rc=1 (soll 1)
+1790715798.123599    [ok] 31 CRC32-erhaltende Aenderung (gleiche Groesse)               rc=1 (soll 1)
+1790715798.123806    [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+1790715798.124022    [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+1790715798.124227    [ok] 34 Manifest: Groessenfeld '1_800'                             rc=1 (soll 1)
+1790715798.124429    [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+1790715798.124636    [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+1790715798.124840    [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+1790715798.125042    [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+1790715798.125302    [ok] 39 Eintragsname mit '\' (F2)                                  rc=1 (soll 1)
+1790715798.125579    [ok] 40 Eintragsname mit NUL-Anhang (F3)                           rc=1 (soll 1)
+1790715798.125866    [ok] 41 Eintragsname kein UTF-8                                    rc=1 (soll 1)
+1790715798.126163    [ok] 42 Eintragsname mit Steuerzeichen                             rc=1 (soll 1)
+1790715798.126447    [ok] 43 Eintragsname mit '..'                                      rc=1 (soll 1)
+1790715798.126734    [ok] 44 Local Header: CRC falsch, Zentralverzeichnis richtig (F4)  rc=1 (soll 1)
+1790715798.127021    [ok] 45 Local Header: Groesse falsch, Zentralverzeichnis richtig (F5) rc=1 (soll 1)
+1790715798.127301    [ok] 46 Local Header: anderer Name                                 rc=1 (soll 1)
+1790715798.127585    [ok] 47 Local Header: Signatur zerstoert                           rc=1 (soll 1)
+1790715798.127862    [ok] 48 Eintrag verschluesselt                                     rc=1 (soll 1)
+1790715798.128150    [ok] 49 Eintrag mit Methode 99                                     rc=1 (soll 1)
+1790715798.128431    [ok] 50 Daten ragen ins Zentralverzeichnis                         rc=1 (soll 1)
+1790715798.128722    [ok] 51 classes.dex: Byte gekippt (kein Asset)                     rc=1 (soll 1)
+1790715798.129002    [ok] 52 Deflate-Strom mit Muell dahinter                           rc=1 (soll 1)
+1790715798.129287    [ok] 53 Verzeichniseintrag unter assets/                           rc=1 (soll 1)
+1790715798.129573    [ok] 54 APK abgeschnitten (F7)                                     rc=2 (soll 2)
+1790715798.129851    [ok] 55 Bytes hinter dem End-of-Central-Directory                  rc=2 (soll 2)
+1790715798.130141    [ok] 56 ZIP64-Markierung im End-of-Central-Directory               rc=2 (soll 2)
+1790715798.130418    [ok] 57 Zentralverzeichnis-Signatur zerstoert (F8)                 rc=2 (soll 2)
+1790715798.130691    [ok] 58 Zentralverzeichnis-Offset zu gross                         rc=2 (soll 2)
+1790715798.130969    [ok] 59 End-of-Central-Directory nennt einen Eintrag zu wenig      rc=2 (soll 2)
+1790715798.131245    [ok] 60 Deflate-Strom kaputt (Blocktyp 3)                          rc=1 (soll 1)
+1790715798.131517    [ok] 61 gute APK: End-of-Central-Directory-Signatur in Asset-Daten rc=0 (soll 0)
+1790715798.131795    [ok] 62 build.gradle: stageAssets fehlt                            rc=2 (soll 2)
+1790715798.132075    [ok] 63 build.gradle: stageAssets zweimal                          rc=2 (soll 2)
+1790715798.132349    [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2)
+1790715798.132625    [ok] 65 build.gradle: unbekannte Anweisung im from-Block           rc=2 (soll 2)
+1790715798.132900    [ok] 66 build.gradle: from ohne into                               rc=2 (soll 2)
+1790715798.133176    [ok] 67 build.gradle: preserve fehlt                               rc=2 (soll 2)
+1790715798.133452    [ok] 68 build.gradle: Klammern passen nicht                        rc=2 (soll 2)
+1790715798.133728    [ok] 69 build.gradle: stageAssets-Block ohne Ende                  rc=2 (soll 2)
+1790715798.134020    [ok] 70 build.gradle: Zeichenkette ohne Ende                       rc=2 (soll 2)
+1790715798.134296    [ok] 71 build.gradle: Kommentar /* ohne Ende                       rc=2 (soll 2)
+1790715798.134573    [ok] 72 Stored-Eintrag: csize 5 B groesser als usize               rc=1 (soll 1)
+1790715798.134662    Laufzeit: 5.8 s
+1790715798.134943 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790715798.135137 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790715798.337787 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790715798.338120    APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\re15_port_v0.8.19-nbneg_android.apk.ungeprueft
+1790715798.338291    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790715798.338477    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790715798.511109    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790715801.834402    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790715801.834608    shared_assets/PSX               3193    3193     3193    300522652
+1790715801.834785    shared_assets/extracted_fx        13      13       13      1079875
+1790715801.834953    shared_assets/RE2                277     277      277     25482039
+1790715801.835126    shared_assets/RE15DOOR            31      30       30      1914932
+1790715801.835343    synchro                           90      90       90     27678779
+1790715801.835557    SUMME                           3604    3603     3603    356678277
+1790715801.835697    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790715801.835829    RE15DOOR:  Quelle 31, APK 30, sha256 gleich 30/31
+1790715801.835967    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790715801.836204    Manifest:  3604 Zeilen / 356678298 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790715801.836288    Laufzeit:  3.5 s
+1790715801.836365 --- Abweichungen: 2 ---
+1790715801.836437    [fehlt in der APK] 1
+1790715801.836848       fehlt in der APK: assets/shared_assets/RE15DOOR/.r34a_nb_probe.bin  (Quelle re15_port/shared_assets/RE15DOOR/.r34a_nb_probe.bin)  - Name beginnt mit '.' (Gradle/AAPT lassen ihn aus)
+1790715801.836958    [Manifest: Zeile ohne APK-Eintrag] 1
+1790715801.837279       Manifest nennt shared_assets/RE15DOOR/.r34a_nb_probe.bin (21 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/.r34a_nb_probe.bin
+1790715801.837392 == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+1790715801.838509 ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+1790715801.929392    (Gate-Abbruch: re15_port_v0.8.19-nbneg_android.apk.ungeprueft geloescht; dieselben Bytes liegen weiter unter /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/app/build/outputs/apk/release/app-release.apk)
+1790715802.955456 ENDE 2026-09-29 23:03:22
+EXIT=1
