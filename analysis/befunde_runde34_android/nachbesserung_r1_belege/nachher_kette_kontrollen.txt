@@ -1,0 +1,13 @@
+# build_android.sh --gate-only (Kette apk_pruefen.sh), Stand 7f476d9f+Arbeitsbaum, 2026-09-29 22:55:28
+ref_ok                     EXIT=0 ( 12 s) |    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)#== ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk ==#
+ref_falsche_version        EXIT=1 (  1 s) | ABBRUCH: aapt: versionName ist nicht 'v9.9.9'#
+ref_ohne_version           EXIT=2 (  0 s) | --gate-only braucht --version <versionName der APK> (Nachbesserung R1: kein Lauf mehr mit ungeprueftem Feld)#
+B4_sdk_fehlt               EXIT=1 (  0 s) | ABBRUCH: APK-Pruefung: Android-SDK-Ordner fehlt: /c/gibt_es_nicht (ANDROID_SDK_ROOT setzen) - ohne aapt und#
+K0_neu                     EXIT=1 (  2 s) |    DOES NOT VERIFY#ABBRUCH: apksigner: Signatur ungueltig (rc=1) - die APK waere nicht installierbar oder nach dem Signieren veraendert#
+F4_lfh_crc                 EXIT=1 (  2 s) |    DOES NOT VERIFY#ABBRUCH: apksigner: Signatur ungueltig (rc=1) - die APK waere nicht installierbar oder nach dem Signieren veraendert#
+F2_signiert                EXIT=1 ( 11 s) |    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)#      unzulaessiger Eintragsname b'assets\\shared_assets\\RE15DOOR\\P07G.DO2': '\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet k#   [fehlt in der APK] 1#
+F1_crc_koll_sig            EXIT=1 ( 12 s) |    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)#   [Inhalt weicht ab (sha256)] 1#      Inhalt weicht ab (sha256, gleiche Groesse 6694912 B): assets/shared_assets/RE2/ENEMSE.VBS  Quelle 8d65cda43b5c6f2b.., APK 6d78d257840b906b..#
+F6_case_sig                EXIT=1 ( 12 s) |    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)#   [fehlt in der APK] 1#      fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)#
+N2_utf8_sig                EXIT=1 (  1 s) | ABBRUCH: aapt dump badging fehlgeschlagen (rc=1): 09-29 22:56:21.557 25820 26112 W ziparchive: Zip: invalid file name at entry 3224#
+N3_verschl_sig             EXIT=1 ( 12 s) |    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)#      verschluesselter Eintrag: assets/shared_assets/RE15DOOR/P27S.DO2#ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)#
+ENDE 2026-09-29 22:56:33

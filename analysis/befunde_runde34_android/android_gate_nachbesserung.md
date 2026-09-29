@@ -159,7 +159,7 @@ rohen Bytes mit dem Werkzeug der Gegenpruefung (`umgehung_werkzeug.py`) bzw. `nb
 Parser, nicht den des Gates); `_sig` = danach mit dem Release-Schluessel neu signiert (apksigner verify rc 0,
 `signieren_faelschungen.txt`). Orakel = aapt2 35.0.0 (libziparchive, `vorher_/nachher_aapt2_libziparchive.txt`).
 
-| APK | Gate vorher (HEAD 568e9b88) | Gate nachher | libziparchive (aapt2) |
+| APK | Gate vorher (HEAD 568e9b88; `vorher_gate_HEAD*.txt`) | Gate nachher | libziparchive (aapt2) |
 |---|---|---|---|
 | ref_v0.8.19 | 0 | **0** - 3603/3603 bytegleich, 3616 Eintraege lesbar | liest |
 | K0 Umschrift (unsigniert) | 0 | 0 (Inhalt/Struktur richtig; Kette: apksigner, 3.5) | liest |
@@ -171,8 +171,24 @@ Parser, nicht den des Gates); `_sig` = danach mit dem Release-Schluessel neu sig
 | F6 gross/klein, auch `_sig` | 1 | 1 fehlt/zusaetzlich/Manifest | failed to find file |
 | F7 abgeschnitten | 2 | 2 `kein End-of-Central-Directory` | Invalid file |
 | F8 CD-Signatur | 2 | 2 `Zentralverzeichnis kaputt bei Eintrag 2150` | missed a central dir sig |
-| N1 Name nur im LFH anders (P1AP.DO2) | (1, zipfile-Fehler) | 1 `Name im Local Header weicht` | lfh name did not match |
-| N2 Name kein UTF-8 (P24B.DO2), auch `_sig` | - | 1 `Eintragsname kein gueltiges UTF-8` | Invalid entry name (ganze APK) |
-| N3 Verschluesselungsbit (P27S.DO2), auch `_sig` | - | 1 `verschluesselter Eintrag` | **liest** - hier ist das Gate strenger als das Geraet (AGP setzt das Bit nie) |
-| N4 Methode 99 (DOOR36.DO2) | - | 1 `Methode 99` | failed to open file |
-| N5 EOCD nennt 3615 statt 3616 | - | 2 `Rest oder Ueberlauf` | oeffnet, sieht aber `resources.arsc` (letzter CD-Eintrag) NICHT |
+| N1 Name nur im LFH anders (P1AP.DO2) | 1 (zipfile: 'File name in directory ... and header ... differ') | 1 `Name im Local Header weicht` | lfh name did not match |
+| N2 Name kein UTF-8 (P24B.DO2), auch `_sig` | 1 (zipfile las den Namen als cp437: fehlt/zusaetzlich) | 1 `Eintragsname kein gueltiges UTF-8` | Invalid entry name (ganze APK) |
+| N3 Verschluesselungsbit (P27S.DO2), auch `_sig` | 2 (RuntimeError aus zipfile) | 1 `verschluesselter Eintrag` | **liest** - hier ist das Gate strenger als das Geraet (AGP setzt das Bit nie) |
+| N4 Methode 99 (DOOR36.DO2) | 2 (NotImplementedError aus zipfile) | 1 `Methode 99` | failed to open file |
+| N5 EOCD nennt 3615 statt 3616 | **0** (zipfile sah 3615 Eintraege - weiterer Durchlass des alten Gates) | 2 `Rest oder Ueberlauf` | oeffnet, sieht aber `resources.arsc` (letzter CD-Eintrag) NICHT |
+
+### 3.5 Volle Kette `build_android.sh --gate-only` (apk_pruefen.sh) - `nachher_kette_kontrollen.txt`
+| Lauf | EXIT | Abbruch in |
+|---|---|---|
+| ref `--version v0.8.19` | **0** (12 s inkl. Selbsttest 72/72) | - (`ANDROID-GATES-OK`; apksigner v2 true, Signer 432bc749...) |
+| ref `--version v9.9.9` | 1 | aapt: versionName |
+| ref ohne `--version` | 2 | Bedienung: `--gate-only braucht --version` |
+| B4: `ANDROID_SDK_ROOT=/c/gibt_es_nicht ... --version v9.9.9` | **1** (vorher 0) | APK-Pruefung: SDK-Ordner fehlt |
+| K0 (unsigniert) | **1** (vorher 0 im Gate) | apksigner `DOES NOT VERIFY` |
+| F4 (nach dem Signieren veraendert) | **1** (vorher 0) | apksigner |
+| F2 signiert | **1** (vorher 0) | Asset-Gate: `'\' im Namen` + fehlt |
+| F1 signiert | 1 | Asset-Gate: sha256 |
+| F6 signiert | 1 | Asset-Gate: fehlt/zusaetzlich |
+| N2 signiert (Name kein UTF-8) | 1 | aapt badging (libziparchive oeffnet die APK nicht) |
+| N3 signiert (Verschluesselungsbit) | 1 | Asset-Gate |
+Volle Logs `build/r34a/nb/kette/*.log`.

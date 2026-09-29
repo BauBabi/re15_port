@@ -1,0 +1,9 @@
+# alter Gate-Stand (HEAD 568e9b88 = build/r34a/nb/gate_alt.py) gegen die zusaetzlichen Faelschungen, Python 3.10.11, 2026-09-29 22:56:45
+N1_lfh_name        EXIT=1 | APK-Eintrag beschaedigt (CRC/Entpacken): assets/shared_assets/RE15DOOR/P1AP.DO2: File name in directory 'assets/shared_assets/RE15DOOR/P1AP.DO2' and header b'assets#
+N2_utf8            EXIT=1 | fehlt in der APK: assets/shared_assets/RE15DOOR/P24B.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P24B.DO2)#zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/shared_assets/RE15DOOR/P24 .DO2#
+N3_verschl         EXIT=2 |     raise RuntimeError("File %r is encrypted, password "#RuntimeError: File <ZipInfo filename='assets/shared_assets/RE15DOOR/P27S.DO2' filemode='-rw-r--r--' file_size=78508> is encrypted, password required for extraction#
+N4_meth99          EXIT=2 |     raise NotImplementedError("That compression method is not supported")#NotImplementedError: That compression method is not supported#
+N5_weniger         EXIT=0 | 
+F6_case            EXIT=1 | fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)#zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/shared_assets/RE15DOOR/p07g.do2#
+F7_abgeschnitten   EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/nb/apk/F7_abgeschnitten.apk (File is not a zip file)#
+F8_cd_sig          EXIT=2 | ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/nb/apk/F8_cd_sig.apk (Bad magic number for central directory)#
