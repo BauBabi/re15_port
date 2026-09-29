@@ -324,9 +324,12 @@ static void teil_zuordnung(void)
               "Zeile %d S%03u: findet ihre Wahl nicht (eigen %d/%d)", i, t->seite, q.eigen, t->eigen);
         if (t->spender != RE15_DOOR_KEIN_SPENDER) {
             /* Griff-Tausch eines Port-Archivs: Satz vorhanden, Spender-Archiv (Port oder RE2) mit Basis = Spender */
-            const re15_griff_tausch_t *g = re15_door_seq_griff_tausch(t->re2_nr, t->spender);
+            const re15_griff_tausch_t *g = re15_door_seq_griff_tausch_fuer(t->re2_nr, t->spender, t->eigen);
             const re15_tuer_eigen_t *se = g ? re15_door_seq_eigen(g->spender_eigen) : NULL;
-            PRUEF(g && (g->spender_eigen == 0 || (se && se->basis == t->spender)),
+            /* Spender = RE2-Datei, Port-Archiv mit Basis = Spender, oder Selbst-Tausch (Spender-Archiv =
+             * dieses Archiv, Griff-Mesh bytegleich dem Spender-Mesh; tuer_archiv_bauen prueft das) */
+            PRUEF(g && g->fuer_eigen == t->eigen
+                  && (g->spender_eigen == 0 || (se && (se->basis == t->spender || g->spender_eigen == t->eigen))),
                   "S%03u: Griff-Tausch DOOR%02X <- %02X fehlt/Spender-Archiv falsch", t->seite, t->re2_nr, t->spender);
         }
         int neu = 1, neu_t = 1;

@@ -8,11 +8,11 @@
    "modell": 35428,
    "sektor": 10,
    "datei": 55908,
-   "fnv": 2438304602,
-   "sha1": "ec136cfe39962dd48eeb10f366e49c02212f7cf6",
+   "fnv": 2552829413,
+   "sha1": "18a301af63be3110d32298992a7b8a355a804b3f",
    "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
    "tim_off": 22596,
-   "rezept": "Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1)",
+   "rezept": "Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1); Stufe 2: silbernes Rechteckschild unter dem Druecker gemalt (gemessen, Pilot-Punkt a)",
    "ton_familie": "F3 (06 07 08 22 2F, Blechtuer)",
    "griff": "Druecker flach (DOOR07 Mesh 1, gemalt: Druecker auf Rechteckschild)",
    "protokoll": {
@@ -66,15 +66,355 @@
     "griff_texel_mittel_nachher": 135.6,
     "griff_texel": 983,
     "griff_gekappt": 0,
-    "griff_ausschnitte": 18
+    "griff_ausschnitte": 18,
+    "schild": {
+     "box": [
+      3,
+      103,
+      11,
+      119
+     ],
+     "herkunft": "g1_griff_zoom: Schild u 4..14 v 116..136 (unscharf) -> 8x16 Texel an der Lage des Druecker-Meshes (u 7, v 111)"
+    }
    },
    "palette": {
     "farben_geschuetzt": 0,
-    "farben_blatt": 110,
+    "farben_blatt": 115,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 111
+    "palette_belegt": 116
+   }
+  },
+  {
+   "kennung": "P07T",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 3643972152,
+   "sha1": "19d8c8fc6700f4be5a7af53bd0c393a2df79b709",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "wie P07G, Farbe = Median der drei Treppenhausseiten ROOM1060 (hell graugruen gemalt, Gegenseiten dunkel; Pilot-Punkt c: je Seite ein Archiv)",
+   "ton_familie": "F3 (06 07 08 22 2F, Blechtuer)",
+   "griff": "Druecker flach (DOOR07 Mesh 1) + gemaltes Rechteckschild",
+   "protokoll": {
+    "auswahl": [
+     "S023_ROOM1060_c00_entz.png",
+     "S024_ROOM1060_c02_entz.png",
+     "S025_ROOM1060_c05_entz.png"
+    ],
+    "gemalt_mittel": [
+     72.3,
+     81.9,
+     66.8
+    ],
+    "gemalt_mitte": [
+     76.2,
+     85.1,
+     69.7
+    ],
+    "texel_mittel": [
+     126.8,
+     143.5,
+     117.0
+    ],
+    "gekappt": 0,
+    "c_blatt": 73,
+    "korn": 0.5,
+    "korn_std": 0.0757,
+    "griff_gemalt": [
+     121.0,
+     132.5,
+     123.0
+    ],
+    "griff_texel_mittel_vorher": 52.2,
+    "griff_kontrast": 0.479,
+    "griff_texel_mittel_nachher": 224.4,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "griff_ausschnitte": 3,
+    "schild": {
+     "box": [
+      3,
+      103,
+      11,
+      119
+     ],
+     "herkunft": "g1_griff_zoom: Schild u 4..14 v 116..136 (unscharf) -> 8x16 Texel an der Lage des Druecker-Meshes (u 7, v 111)"
+    }
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 84,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 85
+   }
+  },
+  {
+   "kennung": "P06F",
+   "basis": "DOOR06",
+   "basis_nr": 6,
+   "ton": 19608,
+   "modell": 37004,
+   "sektor": 10,
+   "datei": 57484,
+   "fnv": 3217092574,
+   "sha1": "41db760c84b59d23a70fb2b8448dba52fb8305e7",
+   "basis_sha1": "7052cdb7901ca1a33d036bfb253df26d4d895ac2",
+   "tim_off": 24172,
+   "rezept": "DOOR08-Blatt: Nieten/Rost weg, umlaufende gerundete Randnut + breit gerahmte Felder, hellgrau",
+   "ton_familie": "F3 (Stahltuer)",
+   "griff": "Buegel-/Stangengriff senkrecht (DOOR06 Mesh 1)",
+   "protokoll": {
+    "gemalt_feld": [
+     59.5,
+     63.0,
+     53.5
+    ],
+    "gemalt_feld_je_ausschnitt": [
+     [
+      87.0,
+      83.0,
+      71.0
+     ],
+     [
+      55.0,
+      56.0,
+      50.0
+     ],
+     [
+      83.0,
+      83.0,
+      66.0
+     ],
+     [
+      64.0,
+      70.0,
+      57.0
+     ],
+     [
+      22.0,
+      24.0,
+      17.0
+     ],
+     [
+      43.0,
+      44.0,
+      32.0
+     ],
+     [
+      87.0,
+      97.0,
+      109.0
+     ],
+     [
+      52.0,
+      54.0,
+      44.0
+     ]
+    ],
+    "felder": [
+     [
+      28,
+      28,
+      100,
+      94
+     ],
+     [
+      28,
+      111,
+      100,
+      189
+     ]
+    ],
+    "randnut": true,
+    "erhaben": false,
+    "gekappt": 0,
+    "griffplatte": "DOOR06 u 0..24 v 96..128",
+    "licht": "senkrechter Verlauf der gemalten Blaetter (Median, sigma 18)",
+    "korn": "DOOR07-Blech (Schlitze geflickt) x 0,6"
+   },
+   "palette": {
+    "farben_geschuetzt": 104,
+    "farben_blatt": 48,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3778,
+    "palette_belegt": 153
+   }
+  },
+  {
+   "kennung": "P06U",
+   "basis": "DOOR06",
+   "basis_nr": 6,
+   "ton": 19608,
+   "modell": 37004,
+   "sektor": 10,
+   "datei": 57484,
+   "fnv": 2130798308,
+   "sha1": "48c5bab3ec0d0b3b2556cdcd165ac7180f1a5734",
+   "basis_sha1": "7052cdb7901ca1a33d036bfb253df26d4d895ac2",
+   "tim_off": 24172,
+   "rezept": "wie P06F, aber gepraegte UNGLEICHE Felder (oben hoch, unten fast quadratisch, S188)",
+   "ton_familie": "F3 (Stahltuer)",
+   "griff": "Stangengriff senkrecht (DOOR06 Mesh 1)",
+   "protokoll": {
+    "gemalt_feld": [
+     110.0,
+     106.0,
+     91.0
+    ],
+    "gemalt_feld_je_ausschnitt": [
+     [
+      110.0,
+      106.0,
+      91.0
+     ]
+    ],
+    "felder": [
+     [
+      22,
+      16,
+      106,
+      100
+     ],
+     [
+      30,
+      112,
+      98,
+      190
+     ]
+    ],
+    "randnut": false,
+    "erhaben": true,
+    "gekappt": 351,
+    "griffplatte": "DOOR06 u 0..24 v 96..128",
+    "licht": "senkrechter Verlauf der gemalten Blaetter (Median, sigma 18)",
+    "korn": "DOOR07-Blech (Schlitze geflickt) x 0,6"
+   },
+   "palette": {
+    "farben_geschuetzt": 104,
+    "farben_blatt": 56,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3778,
+    "palette_belegt": 161
+   }
+  },
+  {
+   "kennung": "P1B3",
+   "basis": "DOOR1B",
+   "basis_nr": 27,
+   "ton": 21176,
+   "modell": 40744,
+   "sektor": 11,
+   "datei": 63272,
+   "fnv": 2805205407,
+   "sha1": "abe81029d17c13f0a1f5849cfa7f76b122a0ef1e",
+   "basis_sha1": "3c4f7e866d0d9668c08b24ca2bc74f98f1ba25f0",
+   "tim_off": 29960,
+   "rezept": "DOOR23-Blatt (achteckiges Profil + Ausbuchtung) je Fluegel; Griff-Tausch Spender DOOR23 (Riegelstange quer)",
+   "ton_familie": "F5 (1B 30, Doppeltuer)",
+   "griff": "Riegelstange quer (Spender DOOR23 Mesh 1 am DOOR23-Anhaengepunkt: Versatz)",
+   "protokoll": {
+    "gemalt_fluegel": [
+     37.5,
+     34.5,
+     23.0
+    ],
+    "gemalt_fluegel_je_ausschnitt": [
+     [
+      46.0,
+      42.0,
+      31.0
+     ],
+     [
+      38.0,
+      35.0,
+      24.0
+     ],
+     [
+      37.0,
+      34.0,
+      22.0
+     ],
+     [
+      33.0,
+      28.0,
+      16.0
+     ]
+    ],
+    "vorlage": "DOOR23 v 0..217 (achteckiges Profil + Ausbuchtung bei u klein = Fuge in 1B)",
+    "gekappt": 49
+   },
+   "palette": {
+    "farben_geschuetzt": 126,
+    "farben_blatt": 34,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 1660,
+    "palette_belegt": 161
+   }
+  },
+  {
+   "kennung": "P1BD",
+   "basis": "DOOR1B",
+   "basis_nr": 27,
+   "ton": 21176,
+   "modell": 40744,
+   "sektor": 11,
+   "datei": 63272,
+   "fnv": 3064840364,
+   "sha1": "007bc966cd4a0fbb51c6dd83a0974d90aaf5f129",
+   "basis_sha1": "3c4f7e866d0d9668c08b24ca2bc74f98f1ba25f0",
+   "tim_off": 29960,
+   "rezept": "wie P1B3, Farbe der ROOM2070-Seiten (kaltes blaugruenes Licht, dunkel gemalt) - je Seite ein Archiv",
+   "ton_familie": "F5 (1B 30, Doppeltuer)",
+   "griff": "Riegelstange quer (Spender DOOR23 Mesh 1 am DOOR23-Anhaengepunkt: Versatz)",
+   "protokoll": {
+    "gemalt_fluegel": [
+     17.0,
+     20.5,
+     14.0
+    ],
+    "gemalt_fluegel_je_ausschnitt": [
+     [
+      18.0,
+      19.0,
+      10.0
+     ],
+     [
+      19.0,
+      18.0,
+      8.0
+     ],
+     [
+      16.0,
+      26.0,
+      23.0
+     ],
+     [
+      13.0,
+      22.0,
+      18.0
+     ]
+    ],
+    "vorlage": "DOOR23 v 0..217 (achteckiges Profil + Ausbuchtung bei u klein = Fuge in 1B)",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 126,
+    "farben_blatt": 27,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 1660,
+    "palette_belegt": 154
    }
   },
   {
@@ -85,8 +425,8 @@
    "modell": 36100,
    "sektor": 12,
    "datei": 60676,
-   "fnv": 3073810584,
-   "sha1": "3c2a1ce50cd1ac63a9279d37529171e24bbd9e28",
+   "fnv": 2504298590,
+   "sha1": "916a794cfc9ca22ff6e302157fa40d5623398ddd",
    "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
    "tim_off": 27364,
    "rezept": "Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
@@ -124,15 +464,243 @@
      101.0,
      100.0
     ],
-    "griff_ausschnitte": 5
+    "griff_ausschnitte": 5,
+    "griff_gemalt": [
+     96.0,
+     101.0,
+     100.0
+    ],
+    "griff_texel_mittel_vorher": 38.4,
+    "griff_kontrast": 2.776,
+    "griff_texel_mittel_nachher": 174.3,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "griff_hinweis": "Selbst-Tausch: Grund-Drehung DOOR07 (waagerecht), Mesh + Textur aus P1DG selbst (DOOR1D.m1 = DOOR07.m1 bytegleich) - Druecker in der gemalten G4-Farbe"
    },
    "palette": {
-    "farben_geschuetzt": 8,
-    "farben_blatt": 48,
+    "farben_geschuetzt": 0,
+    "farben_blatt": 61,
     "quantisiert": false,
     "groesster_fehler_5bit": 0,
     "texel_unbenutzt": 3881,
-    "palette_belegt": 57
+    "palette_belegt": 62
+   }
+  },
+  {
+   "kennung": "P1DK",
+   "basis": "DOOR1D",
+   "basis_nr": 29,
+   "ton": 23928,
+   "modell": 36100,
+   "sektor": 12,
+   "datei": 60676,
+   "fnv": 916250581,
+   "sha1": "b2328e283c0c5955118845dd0da42648801a2080",
+   "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
+   "tim_off": 27364,
+   "rezept": "Stahlrahmen je Fluegel mit DREI Feldern ohne Glas (DOOR1A-Teilung, Kartenleser weg), dunkelgrau (T014)",
+   "ton_familie": "eigen DOOR1D",
+   "griff": "Druecker flach WAAGERECHT (Selbst-Tausch der Grund-Drehung DOOR07, wie P1DG)",
+   "protokoll": {
+    "gemalt": [
+     37.0,
+     46.0,
+     47.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      37.0,
+      51.0,
+      49.0
+     ],
+     [
+      50.0,
+      46.0,
+      43.0
+     ],
+     [
+      30.0,
+      46.0,
+      47.0
+     ]
+    ],
+    "griff_gemalt": [
+     103.0,
+     107.0,
+     96.5
+    ],
+    "griff_texel_mittel_vorher": 38.4,
+    "griff_kontrast": 2.385,
+    "griff_texel_mittel_nachher": 183.5,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "griff_ausschnitte": 2,
+    "vorlage": "DOOR1A (Stahlrahmen) ohne Kartenleser",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 51,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 52
+   }
+  },
+  {
+   "kennung": "P1DL",
+   "basis": "DOOR1D",
+   "basis_nr": 29,
+   "ton": 23928,
+   "modell": 36100,
+   "sektor": 12,
+   "datei": 60676,
+   "fnv": 2000733428,
+   "sha1": "fdfcee863ce3e0abf4e32d397d2d74ad54e3637d",
+   "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
+   "tim_off": 27364,
+   "rezept": "Stahlrahmen je Fluegel mit hohem Feld oben + Querriegel + unterem Feld (T045), grau",
+   "ton_familie": "eigen DOOR1D",
+   "griff": "Druecker flach WAAGERECHT (Selbst-Tausch der Grund-Drehung DOOR07, wie P1DG)",
+   "protokoll": {
+    "gemalt": [
+     30.5,
+     34.5,
+     32.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      41.0,
+      46.0,
+      45.0
+     ],
+     [
+      3.0,
+      9.0,
+      6.0
+     ],
+     [
+      20.0,
+      23.0,
+      19.0
+     ],
+     [
+      63.0,
+      65.0,
+      57.0
+     ]
+    ],
+    "griff_gemalt": [
+     112.5,
+     116.0,
+     113.8
+    ],
+    "griff_texel_mittel_vorher": 38.4,
+    "griff_kontrast": 1.847,
+    "griff_texel_mittel_nachher": 201.1,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "griff_ausschnitte": 2,
+    "vorlage": "DOOR1A (Stahlrahmen) ohne Kartenleser, oberer Querriegel weg",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 44,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 45
+   }
+  },
+  {
+   "kennung": "P04B",
+   "basis": "DOOR04",
+   "basis_nr": 4,
+   "ton": 23928,
+   "modell": 44984,
+   "sektor": 12,
+   "datei": 69560,
+   "fnv": 3258618548,
+   "sha1": "d8b53875c7b1ce80010bfb14a71606e342fa3a0b",
+   "basis_sha1": "1f1c81e67c21aa30294b5bd15c4961f26b5812ea",
+   "tim_off": 36248,
+   "rezept": "Blau -> braunes Holz (Farbton, Lage der Kassetten und Maserung bleiben)",
+   "ton_familie": "F2 (01 04 09 11, Holz)",
+   "griff": "Stangengriff lang Messing (DOOR04 Mesh 1, gemalt gleich)",
+   "protokoll": {
+    "gemalt_holz": [
+     33.0,
+     25.0,
+     6.0
+    ],
+    "gemalt_holz_je_ausschnitt": [
+     [
+      33.0,
+      25.0,
+      6.0
+     ]
+    ],
+    "gekappt": 0,
+    "messing_texel": 164
+   },
+   "palette": {
+    "farben_geschuetzt": 74,
+    "farben_blatt": 35,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3767,
+    "palette_belegt": 110
+   }
+  },
+  {
+   "kennung": "P0CD",
+   "basis": "DOOR0C",
+   "basis_nr": 12,
+   "ton": 23880,
+   "modell": 36892,
+   "sektor": 12,
+   "datei": 61468,
+   "fnv": 3170858181,
+   "sha1": "a0f8bb19c2983f6b8c3a40fe92cb8bf5be16cb8b",
+   "basis_sha1": "b514f72fa64ab5b317881996f876db72fd7f998b",
+   "tim_off": 28156,
+   "rezept": "helles gelbbraunes Holz, je Fluegel hohes schmales Drahtglasfenster, Panikstange gemalt",
+   "ton_familie": "eigen DOOR0C (Holz-Doppeltuer mit Glas)",
+   "griff": "Stangengriff senkrecht (DOOR0C Mesh 1)",
+   "protokoll": {
+    "gemalt_holz": [
+     82.0,
+     69.0,
+     42.0
+    ],
+    "gemalt_glas": [
+     37.0,
+     39.0,
+     37.5
+    ],
+    "fenster": [
+     26,
+     17,
+     57,
+     137
+    ],
+    "panikstange": [
+     14,
+     147,
+     116,
+     153
+    ],
+    "gekappt": 0,
+    "herkunft": "S041 c03 Vollbild: Fenster 20..45 %% Breite ab Fuge, 8..63 %% Hoehe; Stange 69 %%"
+   },
+   "palette": {
+    "farben_geschuetzt": 57,
+    "farben_blatt": 51,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3778,
+    "palette_belegt": 109
    }
   },
   {
@@ -168,9 +736,995 @@
     "texel_unbenutzt": 27516,
     "palette_belegt": 29
    }
+  },
+  {
+   "kennung": "P16R",
+   "basis": "DOOR16",
+   "basis_nr": 22,
+   "ton": 11000,
+   "modell": 46572,
+   "sektor": 6,
+   "datei": 58860,
+   "fnv": 911776362,
+   "sha1": "16286bae46e06f15f59bc531f409266d5720a408",
+   "basis_sha1": "f26be8f1f15e215cc5c50eea31a78f852bc44d06",
+   "tim_off": 25548,
+   "rezept": "Silberrohr -> dunkles Rostbraun (ROOM11A00.bmp)",
+   "ton_familie": "eigen DOOR16",
+   "griff": "-",
+   "protokoll": {
+    "rost_verhaeltnis": [
+     0.972,
+     1.077,
+     0.682
+    ],
+    "punkte": 159,
+    "texel_umgefaerbt": 5252,
+    "herkunft": "S088 c00 Vollbild x 120..160 y 40..200, R >= G-2, L > 15"
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 26,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 27516,
+    "palette_belegt": 27
+   }
+  },
+  {
+   "kennung": "P1EL",
+   "basis": "DOOR1E",
+   "basis_nr": 30,
+   "ton": 22872,
+   "modell": 48908,
+   "sektor": 12,
+   "datei": 73484,
+   "fnv": 577329300,
+   "sha1": "0022b812758f89356d47d6d8a40181ce02f9486e",
+   "basis_sha1": "72cc67b40186e42793e68c450ed079d2aaadd05a",
+   "tim_off": 40172,
+   "rezept": "senkrechte Staebe -> waagerechte Lamellen (Durchsicht-Texel 0 wie im Original)",
+   "ton_familie": "eigen DOOR1E (Klappe)",
+   "griff": "-",
+   "protokoll": {
+    "gemalt_lamellen": [
+     11.0,
+     12.0,
+     10.0
+    ],
+    "gemalt_lamellen_je_ausschnitt": [
+     [
+      22.0,
+      23.0,
+      19.0
+     ],
+     [
+      10.0,
+      11.0,
+      9.0
+     ],
+     [
+      11.0,
+      12.0,
+      10.0
+     ]
+    ],
+    "gemalt_blech": [
+     25.0,
+     25.0,
+     22.0
+    ],
+    "gemalt_spalt": [
+     1.0,
+     2.0,
+     1.0
+    ],
+    "lamellen": "alle 8 Texel (5 Blech, 3 Spalt) in u 8..120 v 8..72",
+    "gekappt": 0,
+    "herkunft": "S048/S154: waagerechte Lamellen im Rahmen (raster, fokus_P1E.png)"
+   },
+   "palette": {
+    "farben_geschuetzt": 142,
+    "farben_blatt": 41,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 5962,
+    "palette_belegt": 184
+   }
+  },
+  {
+   "kennung": "P1EU",
+   "basis": "DOOR1E",
+   "basis_nr": 30,
+   "ton": 22872,
+   "modell": 48908,
+   "sektor": 12,
+   "datei": 73484,
+   "fnv": 3905057942,
+   "sha1": "24aa3209cf311122485bbb5efd04f4c7da86804a",
+   "basis_sha1": "72cc67b40186e42793e68c450ed079d2aaadd05a",
+   "tim_off": 40172,
+   "rezept": "Staebe nur im unteren Drittel, oben dunkle Oeffnung",
+   "ton_familie": "eigen DOOR1E",
+   "griff": "-",
+   "protokoll": {
+    "gemalt_staebe": [
+     11.5,
+     12.0,
+     10.5
+    ],
+    "gemalt_staebe_je_ausschnitt": [
+     [
+      6.0,
+      6.0,
+      6.0
+     ],
+     [
+      17.0,
+      18.0,
+      15.0
+     ]
+    ],
+    "durchsicht": "u 12..116 v 8..50 (Texel 0)",
+    "oberholm": "v 50..55",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 142,
+    "farben_blatt": 22,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 5962,
+    "palette_belegt": 165
+   }
+  },
+  {
+   "kennung": "P25G",
+   "basis": "DOOR25",
+   "basis_nr": 37,
+   "ton": 17624,
+   "modell": 34300,
+   "sektor": 9,
+   "datei": 52732,
+   "fnv": 527473745,
+   "sha1": "2573c3e7323d9bedc4cdf9cc13dfea128fa86665",
+   "basis_sha1": "830b62c7d01a6df512184676a9b818cff9341458",
+   "tim_off": 19420,
+   "rezept": "Schild SHAFT TYPE-L, Warnaufkleber, Rippen weg -> glattes graues Blech",
+   "ton_familie": "eigen DOOR25 (Hubtuer)",
+   "griff": "-",
+   "protokoll": {
+    "gemalt": [
+     25.0,
+     28.0,
+     28.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      15.0,
+      27.0,
+      28.0
+     ],
+     [
+      29.0,
+      33.0,
+      32.0
+     ],
+     [
+      25.0,
+      28.0,
+      26.0
+     ]
+    ],
+    "entfernt": "Schild, Warnaufkleber, Griffmulde, Rippen, Pfeil (Zeilen desselben Feldes gekachelt)",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 16,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4864,
+    "palette_belegt": 17
+   }
+  },
+  {
+   "kennung": "P14A",
+   "basis": "DOOR14",
+   "basis_nr": 20,
+   "ton": 24024,
+   "modell": 39128,
+   "sektor": 12,
+   "datei": 63704,
+   "fnv": 2265051187,
+   "sha1": "901f9c908a4dff4e42b07bb39ba2618c02ce24e5",
+   "basis_sha1": "276a0769bdbb2fc12d3e99699678116c88ab540b",
+   "tim_off": 30392,
+   "rezept": "groebere Rauten, hellgrauer Rahmen",
+   "ton_familie": "eigen DOOR14 (Schiebe-Gittertor)",
+   "griff": "Griffplatte (DOOR14 Mesh 1)",
+   "protokoll": {
+    "gemalt_rahmen": [
+     80.0,
+     82.0,
+     76.0
+    ],
+    "rahmen_texel": 8112,
+    "gekappt": 1079,
+    "herkunft": "S195 c04 Vollbild Pfosten x 42..54 y 70..190, helle unbunte Punkte"
+   },
+   "palette": {
+    "farben_geschuetzt": 10,
+    "farben_blatt": 157,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3215,
+    "palette_belegt": 168
+   }
+  },
+  {
+   "kennung": "P2DS",
+   "basis": "DOOR2D",
+   "basis_nr": 45,
+   "ton": 22712,
+   "modell": 53668,
+   "sektor": 12,
+   "datei": 78244,
+   "fnv": 3385733581,
+   "sha1": "520e0052e14cc765017b8ce5b956936aa6eea682",
+   "basis_sha1": "53bef771bba73961ab10945ed8914fdfabd07646",
+   "tim_off": 44932,
+   "rezept": "Bedientafel + rote Lampe weg (Texel 0 = nicht gezeichnet), Warnrand bleibt",
+   "ton_familie": "eigen DOOR2D (Hubbuehne)",
+   "griff": "-",
+   "protokoll": {
+    "nicht_gezeichnet": 7317,
+    "herkunft": "S218 c01: leerer Schacht, keine Tafel/Lampe gemalt"
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 136,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 7309,
+    "palette_belegt": 137
+   }
+  },
+  {
+   "kennung": "P07R",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 3993013869,
+   "sha1": "bd0fc5b3f6907b827c75b2a140ccf6a913504b3b",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "DOOR22-Blatt ohne Nietrand und ohne gemalten D-Riegel, rostbraun",
+   "ton_familie": "F3 (= DOOR22-Ton, bytegleich)",
+   "griff": "Druecker flach (DOOR07 Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     43.5,
+     31.0,
+     15.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      28.0,
+      19.0,
+      8.0
+     ],
+     [
+      59.0,
+      43.0,
+      22.0
+     ]
+    ],
+    "griff_gemalt": [
+     21.8,
+     15.5,
+     7.5
+    ],
+    "griff_texel_mittel_vorher": 52.2,
+    "griff_kontrast": 0.553,
+    "griff_texel_mittel_nachher": 28.8,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "vorlage": "DOOR22 ohne Nietrand (Inneres gestreckt) und ohne gemalten D-Riegel",
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 37,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 38
+   }
+  },
+  {
+   "kennung": "P1AP",
+   "basis": "DOOR1A",
+   "basis_nr": 26,
+   "ton": 21304,
+   "modell": 37628,
+   "sektor": 11,
+   "datei": 60156,
+   "fnv": 2943144353,
+   "sha1": "62f947552a648ed68edc0d5fb111f4332f772582",
+   "basis_sha1": "138e28c3242891b8f7b8bee4ef7608a2461513cd",
+   "tim_off": 26844,
+   "rezept": "DOOR23-Profil, Ausbuchtung am Griff gerade gezogen, braun",
+   "ton_familie": "F4 (15 1A 23 = DOOR23-Ton)",
+   "griff": "Druecker auf Kasten (DOOR1A Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     30.5,
+     25.5,
+     13.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      42.0,
+      35.0,
+      20.0
+     ],
+     [
+      19.0,
+      15.0,
+      6.0
+     ],
+     [
+      44.0,
+      38.0,
+      24.0
+     ],
+     [
+      17.0,
+      16.0,
+      6.0
+     ]
+    ],
+    "vorlage": "DOOR23 v 0..217, Ausbuchtung durch gerade Profilzeilen ersetzt",
+    "platte": [
+     12,
+     104,
+     20,
+     130
+    ],
+    "gekappt": 8
+   },
+   "palette": {
+    "farben_geschuetzt": 50,
+    "farben_blatt": 63,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4358,
+    "palette_belegt": 114
+   }
+  },
+  {
+   "kennung": "P1DO",
+   "basis": "DOOR1D",
+   "basis_nr": 29,
+   "ton": 23928,
+   "modell": 36100,
+   "sektor": 12,
+   "datei": 60676,
+   "fnv": 1940515441,
+   "sha1": "bf7ba174ac8e38d79a109442d103b85ee8662ad0",
+   "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
+   "tim_off": 27364,
+   "rezept": "Lueftungsgitter -> schmales dunkles Schild + gelbes Warndreieck, orange",
+   "ton_familie": "eigen DOOR1D",
+   "griff": "Druecker flach im Griffkasten (DOOR1D Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     64.0,
+     34.0,
+     12.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      64.0,
+      34.0,
+      10.0
+     ],
+     [
+      67.0,
+      37.0,
+      12.0
+     ],
+     [
+      52.0,
+      33.0,
+      15.0
+     ]
+    ],
+    "gemalt_dreieck": [
+     76.5,
+     76.5,
+     20.0
+    ],
+    "schild": [
+     42,
+     45,
+     90,
+     52
+    ],
+    "dreieck": [
+     [
+      57,
+      86
+     ],
+     [
+      75,
+      86
+     ],
+     [
+      66,
+      68
+     ]
+    ],
+    "gekappt": 0,
+    "bleibt": "Griffkasten + Sockel (DOOR1D, gemalt gleich)"
+   },
+   "palette": {
+    "farben_geschuetzt": 8,
+    "farben_blatt": 37,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 46
+   }
+  },
+  {
+   "kennung": "P26W",
+   "basis": "DOOR26",
+   "basis_nr": 38,
+   "ton": 21832,
+   "modell": 58808,
+   "sektor": 11,
+   "datei": 81336,
+   "fnv": 3080827454,
+   "sha1": "fd6c3f0446b86b3a1f14d58b4c2acdc753608d26",
+   "basis_sha1": "105a4a3a9371c512fa84632cb4d18586e13c6a51",
+   "tim_off": 48024,
+   "rezept": "einteiliges Schott dunkel, zwei gelb-schwarze Warnstreifen, TYPE-P-Schilder weg, Handrad rot",
+   "ton_familie": "F7 (26 31, Schott)",
+   "griff": "Handrad (DOOR26 Mesh 3)",
+   "protokoll": {
+    "gemalt": [
+     15.0,
+     16.0,
+     10.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      18.0,
+      16.0,
+      10.0
+     ],
+     [
+      15.0,
+      16.0,
+      10.0
+     ],
+     [
+      15.0,
+      16.0,
+      10.0
+     ]
+    ],
+    "gemalt_streifen_gelb": [
+     34.0,
+     35.5,
+     18.5
+    ],
+    "gemalt_rad": [
+     41.0,
+     23.5,
+     18.5
+    ],
+    "warnstreifen": "v 50..60, 104..114 (u 0..63)",
+    "rad_punkte": 48,
+    "streifen_punkte": 10,
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 209,
+    "farben_blatt": 10,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4722,
+    "palette_belegt": 220
+   }
+  },
+  {
+   "kennung": "P24B",
+   "basis": "DOOR24",
+   "basis_nr": 36,
+   "ton": 22728,
+   "modell": 42996,
+   "sektor": 12,
+   "datei": 67572,
+   "fnv": 2131210951,
+   "sha1": "8a514f82fab1327506b5069e0cbdac7a030f1d26",
+   "basis_sha1": "365ed7350e14a2d34b9d347dd5987c6dc349d53d",
+   "tim_off": 34260,
+   "rezept": "Aushang weg, Sichtfenster flacher/schmaler",
+   "ton_familie": "F6 (24 29)",
+   "griff": "Druecker schraeg (DOOR24 Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     148.0,
+     138.0,
+     145.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      148.0,
+      138.0,
+      145.0
+     ]
+    ],
+    "gemalt_glas": [
+     115.0,
+     117.0,
+     121.0
+    ],
+    "gemalt_tritt": [
+     54.0,
+     49.0,
+     54.0
+    ],
+    "gemalt_kasten": [
+     46.0,
+     48.0,
+     64.0
+    ],
+    "fenster": [
+     40,
+     44,
+     96,
+     62
+    ],
+    "gekappt": 9897,
+    "hinweis": "helle Tuer: gemalt L 142 > 145 = hellster zeigbarer Wert bei c = 73 ohne Flag 0x1000 (Skript bleibt bytegleich) -> gekappte Texel, Farbton erhalten"
+   },
+   "palette": {
+    "farben_geschuetzt": 49,
+    "farben_blatt": 90,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4318,
+    "palette_belegt": 140
+   }
+  },
+  {
+   "kennung": "P07D",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 326786576,
+   "sha1": "744d02fec04c1ff8018ec361363ee2239570a602",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "schwarzgrau glatt, kleines Feld mit abgeschnittener Ecke, Piktogramm Frau, blaues Schild",
+   "ton_familie": "F3",
+   "griff": "Druecker flach (DOOR07 Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     17.0,
+     19.0,
+     18.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      17.0,
+      19.0,
+      18.0
+     ]
+    ],
+    "gemalt_schild": [
+     129.5,
+     132.5,
+     132.5
+    ],
+    "gemalt_blau": [
+     5.0,
+     20.0,
+     44.0
+    ],
+    "griff_gemalt": [
+     56.0,
+     58.0,
+     58.0
+    ],
+    "griff_texel_mittel_vorher": 52.2,
+    "griff_kontrast": 1.927,
+    "griff_texel_mittel_nachher": 100.7,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "feld": [
+     44,
+     24,
+     84,
+     58,
+     8
+    ],
+    "schild": [
+     50,
+     80,
+     76,
+     112
+    ],
+    "blaues_schild": [
+     42,
+     120,
+     86,
+     160
+    ],
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 63,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 64
+   }
+  },
+  {
+   "kennung": "P07H",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 3599649261,
+   "sha1": "56697777146f97b105f1ae774126e09dcfd83cb2",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "wie P07D, Piktogramm Mann",
+   "ton_familie": "F3",
+   "griff": "Druecker flach (DOOR07 Mesh 1)",
+   "protokoll": {
+    "gemalt": [
+     17.0,
+     19.0,
+     17.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      17.0,
+      19.0,
+      17.0
+     ]
+    ],
+    "gemalt_schild": [
+     142.5,
+     144.0,
+     144.0
+    ],
+    "gemalt_blau": [
+     11.0,
+     23.0,
+     49.0
+    ],
+    "griff_gemalt": [
+     67.0,
+     69.0,
+     69.0
+    ],
+    "griff_texel_mittel_vorher": 52.2,
+    "griff_kontrast": 2.297,
+    "griff_texel_mittel_nachher": 119.9,
+    "griff_texel": 983,
+    "griff_gekappt": 0,
+    "feld": [
+     44,
+     28,
+     84,
+     62,
+     8
+    ],
+    "schild": [
+     52,
+     86,
+     78,
+     112
+    ],
+    "blaues_schild": [
+     44,
+     128,
+     86,
+     162
+    ],
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 47,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 48
+   }
+  },
+  {
+   "kennung": "P27S",
+   "basis": "DOOR27",
+   "basis_nr": 39,
+   "ton": 23176,
+   "modell": 53932,
+   "sektor": 12,
+   "datei": 78508,
+   "fnv": 150948159,
+   "sha1": "30101d4b779d5e749efba5ce9a41a3ade4458482",
+   "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
+   "tim_off": 45196,
+   "rezept": "Laborseite ROOM5060: linkes Feld gelbes Strahlenwarnschild, rechts Fensterkasten + rotes Dreieck, blaugrau",
+   "ton_familie": "eigen DOOR27 (Labor-Schiebetuer)",
+   "griff": "-",
+   "protokoll": {
+    "gemalt": [
+     13.0,
+     19.0,
+     31.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      13.0,
+      19.0,
+      31.0
+     ],
+     [
+      13.0,
+      19.0,
+      31.0
+     ]
+    ],
+    "gemalt_gelb": [
+     80.0,
+     102.0,
+     19.0
+    ],
+    "gemalt_rot": [
+     103.5,
+     23.0,
+     4.0
+    ],
+    "strahlenschild": true,
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 63,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4273,
+    "palette_belegt": 64
+   }
+  },
+  {
+   "kennung": "P27K",
+   "basis": "DOOR27",
+   "basis_nr": 39,
+   "ton": 23176,
+   "modell": 53932,
+   "sektor": 12,
+   "datei": 78508,
+   "fnv": 3639077778,
+   "sha1": "d91387898353abec9b02522fc2d80f86c56b74d8",
+   "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
+   "tim_off": 45196,
+   "rezept": "Gangseite ROOM5040/5120: quadratisches Sichtfenster, rotes Dreieck, gelb-schwarzer Aufkleber, schmales Feld rechts (anders gemalt als die Laborseite: je Seite ein Archiv)",
+   "ton_familie": "eigen DOOR27 (Labor-Schiebetuer)",
+   "griff": "-",
+   "protokoll": {
+    "gemalt": [
+     5.0,
+     19.0,
+     25.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      5.0,
+      19.0,
+      25.0
+     ]
+    ],
+    "gemalt_gelb": [
+     66.8,
+     85.1,
+     15.9
+    ],
+    "gemalt_rot": [
+     86.4,
+     19.2,
+     3.3
+    ],
+    "strahlenschild": false,
+    "gekappt": 0
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 41,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4273,
+    "palette_belegt": 42
+   }
+  },
+  {
+   "kennung": "P27O",
+   "basis": "DOOR27",
+   "basis_nr": 39,
+   "ton": 23176,
+   "modell": 53932,
+   "sektor": 12,
+   "datei": 78508,
+   "fnv": 964080565,
+   "sha1": "f40ad1c15be527a8a4b44d3e723e9e0dfbc10002",
+   "basis_sha1": "b6f2d7bfe816fbe7db3d1c7b930ed6ec093535d9",
+   "tim_off": 45196,
+   "rezept": "Gangseite ROOM5120 (S305): Malerei wie P27K, aber orange gemalt (Raumlicht) - je Seite ein Archiv",
+   "ton_familie": "eigen DOOR27 (Labor-Schiebetuer)",
+   "griff": "-",
+   "protokoll": {
+    "gemalt": [
+     103.0,
+     54.0,
+     16.0
+    ],
+    "gemalt_je_ausschnitt": [
+     [
+      103.0,
+      54.0,
+      16.0
+     ]
+    ],
+    "gemalt_gelb": [
+     128.0,
+     163.2,
+     30.4
+    ],
+    "gemalt_rot": [
+     165.6,
+     36.8,
+     6.4
+    ],
+    "strahlenschild": false,
+    "gekappt": 3559
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 56,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4273,
+    "palette_belegt": 57
+   }
+  },
+  {
+   "kennung": "P1AZ",
+   "basis": "DOOR1A",
+   "basis_nr": 26,
+   "ton": 21304,
+   "modell": 37628,
+   "sektor": 11,
+   "datei": 60156,
+   "fnv": 914611840,
+   "sha1": "52a8cfa200ddd4e406e2296ce26b0b08904e1854",
+   "basis_sha1": "138e28c3242891b8f7b8bee4ef7608a2461513cd",
+   "tim_off": 26844,
+   "rezept": "zwei Felder + senkrechte Rahmenleiste rechts + dunkles Rechteck oben, graugruen",
+   "ton_familie": "F4",
+   "griff": "Druecker (DOOR1A Mesh 1)",
+   "protokoll": {
+    "gemalt_unten": [
+     35.0,
+     37.0,
+     28.5
+    ],
+    "gemalt_unten_je_ausschnitt": [
+     [
+      38.0,
+      40.0,
+      31.0
+     ],
+     [
+      32.0,
+      34.0,
+      26.0
+     ]
+    ],
+    "gemalt_oben": [
+     102.0,
+     100.0,
+     78.5
+    ],
+    "rahmenleiste": [
+     20,
+     4,
+     28,
+     214
+    ],
+    "teilung": "oberes Feld v 0..106, Mittelleiste 106..120, unteres 120..218",
+    "gekappt": 864,
+    "nicht_gemalt": "dunkles Rechteck oben (im Ausschnitt nicht abgrenzbar)"
+   },
+   "palette": {
+    "farben_geschuetzt": 50,
+    "farben_blatt": 102,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 4358,
+    "palette_belegt": 153
+   }
+  },
+  {
+   "kennung": "P07M",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 3221375171,
+   "sha1": "fc2532e86e42dbd888b943265552f25d827f1e2f",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "Holz-/Rostrahmen, oben + unten Maschendraht (DOOR14-Raute, Loecher Texel 0), Mittelriegel",
+   "ton_familie": "F3",
+   "griff": "Druecker flach (DOOR07 Mesh 1)",
+   "protokoll": {
+    "gemalt_rahmen": [
+     49.0,
+     34.0,
+     15.0
+    ],
+    "gemalt_rahmen_je_ausschnitt": [
+     [
+      30.5,
+      14.0,
+      1.0
+     ],
+     [
+      49.0,
+      45.0,
+      18.0
+     ],
+     [
+      60.0,
+      34.0,
+      15.0
+     ]
+    ],
+    "vorlage": "DOOR14 u 3..123 v 3..224 -> Blatt (naechster Nachbar, Loecher Texel 0)",
+    "rahmen_texel": 4924,
+    "gekappt": 16
+   },
+   "palette": {
+    "farben_geschuetzt": 16,
+    "farben_blatt": 106,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 123
+   }
   }
  ],
- "zeilen": 72,
+ "zeilen": 220,
  "seiten": [
   "S000",
   "S001",
@@ -180,34 +1734,108 @@
   "S005",
   "S006",
   "S010",
+  "S013",
   "S014",
   "S015",
   "S018",
   "S019",
   "S020",
   "S021",
+  "S022",
   "S023",
   "S024",
   "S025",
+  "S030",
+  "S031",
   "S033",
   "S034",
   "S035",
   "S036",
   "S038",
   "S039",
+  "S040",
+  "S041",
+  "S044",
   "S045",
+  "S048",
   "S049",
   "S056",
+  "S057",
+  "S059",
+  "S063",
   "S078",
+  "S080",
+  "S087",
+  "S088",
+  "S089",
+  "S090",
+  "S091",
+  "S092",
+  "S093",
   "S095",
   "S099",
   "S100",
   "S102",
   "S104",
   "S119",
+  "S121",
   "S128",
   "S130",
-  "S131"
+  "S131",
+  "S136",
+  "S139",
+  "S140",
+  "S141",
+  "S143",
+  "S144",
+  "S145",
+  "S151",
+  "S152",
+  "S153",
+  "S154",
+  "S155",
+  "S156",
+  "S157",
+  "S158",
+  "S164",
+  "S165",
+  "S166",
+  "S167",
+  "S171",
+  "S173",
+  "S183",
+  "S184",
+  "S185",
+  "S187",
+  "S188",
+  "S189",
+  "S195",
+  "S196",
+  "S198",
+  "S199",
+  "S201",
+  "S202",
+  "S203",
+  "S204",
+  "S205",
+  "S206",
+  "S208",
+  "S209",
+  "S211",
+  "S213",
+  "S214",
+  "S218",
+  "S226",
+  "S232",
+  "S236",
+  "S239",
+  "S240",
+  "S248",
+  "S269",
+  "S273",
+  "S274",
+  "S305",
+  "S322"
  ],
  "tueren": [
   "T000",
@@ -216,16 +1844,56 @@
   "T003",
   "T004",
   "T006",
+  "T011",
   "T012",
   "T013",
+  "T014",
   "T015",
   "T016",
+  "T017",
+  "T018",
+  "T019",
   "T021",
   "T022",
   "T023",
+  "T025",
   "T026",
+  "T029",
+  "T035",
+  "T045",
+  "T047",
+  "T048",
+  "T049",
+  "T050",
   "T052",
   "T053",
-  "T054"
+  "T054",
+  "T071",
+  "T072",
+  "T073",
+  "T074",
+  "T076",
+  "T078",
+  "T080",
+  "T081",
+  "T082",
+  "T084",
+  "T085",
+  "T086",
+  "T094",
+  "T095",
+  "T096",
+  "T098",
+  "T102",
+  "T103",
+  "T105",
+  "T106",
+  "T107",
+  "T112",
+  "T117",
+  "T123",
+  "T126",
+  "T142",
+  "T161"
  ]
 }

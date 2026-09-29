@@ -118,6 +118,22 @@ int re15_door_seq_anfrage_fuer_seite(int seite, re15_door_seq_anfrage_t *out, un
     return 0;
 }
 
+const re15_griff_tausch_t *re15_door_seq_griff_tausch_fuer(int archiv, int spender, int eigen)
+{
+#ifndef RE15_PLATFORM_PSX
+    if (eigen) {
+        for (int i = 0; i < N_TAUSCH_EIG; i++)
+            if (re15_griff_tausche_eigen[i].fuer_eigen == eigen && re15_griff_tausche_eigen[i].archiv == archiv
+                && re15_griff_tausche_eigen[i].spender == spender)
+                return &re15_griff_tausche_eigen[i];
+        return NULL;
+    }
+#else
+    (void)eigen;
+#endif
+    return re15_door_seq_griff_tausch(archiv, spender);
+}
+
 const re15_griff_tausch_t *re15_door_seq_griff_tausch(int archiv, int spender)
 {
 #ifndef RE15_PLATFORM_PSX

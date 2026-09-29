@@ -160,8 +160,11 @@ static void griff_zeichnen(const re15_door_seq_t *s, griff_tausch_t *g, int oi, 
     int32_t delta = (int16_t)(uint16_t)(o->rot[0] - o->rot0[0]);  /* Griffbewegung des Archivs */
     int32_t d2 = g->gt->aus_archiv ? delta * g->gt->aus_spender / g->gt->aus_archiv : 0;
     uint16_t rot[3] = { (uint16_t)(basis[0] + d2), basis[1], basis[2] };
+    /* Runde 33: Versatz (P1B3: Riegelstange am Spender-Anhaengepunkt), sonst 0 */
+    const int16_t *vs = hinten ? g->gt->versatz_hinten : g->gt->versatz_vorn;
+    int32_t pos[3] = { o->pos[0] + vs[0], o->pos[1] + vs[1], o->pos[2] + vs[2] };
     re15_door_mat_t welt;
-    re15_door_seq_objmatrix(&s->obj[o->eltern].welt, rot, o->pos, &welt);
+    re15_door_seq_objmatrix(&s->obj[o->eltern].welt, rot, pos, &welt);
     re15_render_pc_bind_tim_slot(SPENDER_TIM_SLOT);
     mesh_zeichnen(&g->md1.meshes[g->gt->mesh_spender], &welt, &g->vor[oi], o->flags, lfd);
     re15_render_pc_bind_tim_slot(TUER_TIM_SLOT);
@@ -339,8 +342,13 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     /* Griff-Tausch (PORT-WAHL, s.o.): Spender-Archiv lesen, MD1 + TIM daraus */
     memset(&g, 0, sizeof g);
     if (re2 && a->spender != RE15_DOOR_KEIN_SPENDER) {
-        g.gt = re15_door_seq_griff_tausch(a->re2_nr, a->spender);
-        if (g.gt && re2_archiv_lesen(a->spender, g.gt->spender_eigen, &spend) == 0 && spend.n_modell > 8) {
+        g.gt = re15_door_seq_griff_tausch_fuer(a->re2_nr, a->spender, a->eigen);
+        /* Spender-Archiv: RE2-Datei (Basis = Spender) oder Port-Archiv mit SEINER Basis - beim
+         * Selbst-Tausch (Runde 33, P1DG/P1DK/P1DL) das eigene Archiv (Griff-Mesh bytegleich dem
+         * Spender-Mesh, tuer_archiv_bauen.griff_tausche_bauen prueft das). */
+        const re15_tuer_eigen_t *se = g.gt ? re15_door_seq_eigen(g.gt->spender_eigen) : NULL;
+        if (g.gt && re2_archiv_lesen(se ? se->basis : a->spender, g.gt->spender_eigen, &spend) == 0
+            && spend.n_modell > 8) {
             uint32_t md1_rel = rd32le(spend.modell), tim_rel = rd32le(spend.modell + 4);
             re15_tim_t tim;
             if (md1_rel < tim_rel && (int)tim_rel < spend.n_modell

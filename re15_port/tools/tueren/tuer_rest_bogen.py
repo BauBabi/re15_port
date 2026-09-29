@@ -33,6 +33,7 @@ KOPIE = os.path.join(PORT, "build", "platform", "pc", "re15_pc_r33t.exe")
 ZELLE = (240, 180)
 TEXT_B = 300
 JE_BOGEN = 13
+PRAEFIX = "pilot_kontaktbogen"   # --praefix (Stufe 2: bau_kontaktbogen)
 
 
 def t1_dir():
@@ -48,11 +49,19 @@ def seiten():
     gebaut = {e["kennung"]: e for e in json.load(open(ARCHIVE, encoding="utf-8"))["archive"]}
     out = []
     for tid, e in plan["tueren"].items():
-        if e["archiv"] not in gebaut:
-            continue
         for s in e["seiten"]:
-            if s.get("bau") and "variante" in s:
-                out.append(dict(tuer=tid, gruppe=e["gruppe"], archiv=e["archiv"], basis=gebaut[e["archiv"]]["basis"], **s))
+            if not (s.get("bau") and "variante" in s):
+                continue
+            a = s.get("archiv", e["archiv"])
+            if a == "OBJEKTLOS":
+                basis = e["basis"]
+            elif a in gebaut:
+                basis = gebaut[a]["basis"]
+            else:
+                continue
+            d = dict(s)
+            d.pop("archiv", None)
+            out.append(dict(tuer=tid, gruppe=e["gruppe"], archiv=a, basis=basis, **d))
     out.sort(key=lambda s: (s["gruppe"], int(s["id"][1:])))
     return out
 
@@ -124,11 +133,11 @@ def boegen(liste):
             h = s["herkunft"]
             for j in range(0, min(len(h), 120), 40):
                 d.text((x, y + 58 + j // 40 * 16), h[j:j + 40], fill=(160, 160, 160))
-        name = os.path.join(AUS, "bogen_%02d.png" % (b // JE_BOGEN + 1))
+        name = os.path.join(AUS, "%s_%02d.png" % (PRAEFIX, b // JE_BOGEN + 1))
         bogen.save(name)
         klein = bogen.copy()
         klein.thumbnail((1100, 3000))
-        jpg = os.path.join(BELEGE, "pilot_kontaktbogen_%02d.jpg" % (b // JE_BOGEN + 1))
+        jpg = os.path.join(BELEGE, "%s_%02d.jpg" % (PRAEFIX, b // JE_BOGEN + 1))
         klein.save(jpg, quality=85)
         namen.append((name, jpg))
     for n in namen:
@@ -139,10 +148,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--erzeugen", action="store_true")
     ap.add_argument("--nur", default="")
+    ap.add_argument("--praefix", default=PRAEFIX)
+    ap.add_argument("--ohne", default="", help="Archive/Gruppen auslassen (Komma), z. B. den Pilot")
     a = ap.parse_args()
+    globals()["PRAEFIX"] = a.praefix
     liste = seiten()
     if a.nur:
         liste = [s for s in liste if s["id"] in a.nur.split(",") or s["archiv"] in a.nur.split(",")]
+    if a.ohne:
+        liste = [s for s in liste if s["archiv"] not in a.ohne.split(",") and s["gruppe"] not in a.ohne.split(",")]
     print("%d Seiten" % len(liste))
     if a.erzeugen:
         erzeugen(liste)

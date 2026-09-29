@@ -40,8 +40,13 @@ AUS = os.path.join(REPO, "analysis", "befunde_runde33", "tueren_rest")
 # ----------------------------------------------------------------------------------------------
 ARCHIVE = {
     "P07G": dict(basis="DOOR07", blatt="DOOR07", ton="F3 (06 07 08 22 2F, Blechtuer)",
-                 rezept="Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1)",
+                 rezept="Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1); Stufe 2: "
+                        "silbernes Rechteckschild unter dem Druecker gemalt (gemessen, Pilot-Punkt a)",
                  griff="Druecker flach (DOOR07 Mesh 1, gemalt: Druecker auf Rechteckschild)", stufe=1),
+    "P07T": dict(basis="DOOR07", blatt="DOOR07", ton="F3 (06 07 08 22 2F, Blechtuer)",
+                 rezept="wie P07G, Farbe = Median der drei Treppenhausseiten ROOM1060 (hell graugruen gemalt, "
+                        "Gegenseiten dunkel; Pilot-Punkt c: je Seite ein Archiv)",
+                 griff="Druecker flach (DOOR07 Mesh 1) + gemaltes Rechteckschild", stufe=2),
     "P06F": dict(basis="DOOR06", blatt="DOOR08", ton="F3 (Stahltuer)",
                  rezept="DOOR08-Blatt: Nieten/Rost weg, umlaufende gerundete Randnut + breit gerahmte Felder, hellgrau",
                  griff="Buegel-/Stangengriff senkrecht (DOOR06 Mesh 1)", stufe=2),
@@ -50,16 +55,26 @@ ARCHIVE = {
                  griff="Stangengriff senkrecht (DOOR06 Mesh 1)", stufe=2),
     "P1B3": dict(basis="DOOR1B", blatt="DOOR23", ton="F5 (1B 30, Doppeltuer)",
                  rezept="DOOR23-Blatt (achteckiges Profil + Ausbuchtung) je Fluegel; Griff-Tausch Spender DOOR23 (Riegelstange quer)",
-                 griff="Riegelstange quer (Spender DOOR23 Mesh 1 am 1B-Anhaengepunkt)", stufe=2),
+                 griff="Riegelstange quer (Spender DOOR23 Mesh 1 am DOOR23-Anhaengepunkt: Versatz)", stufe=2,
+                 tausch=dict(spender="DOOR23", am_spender_anker=True)),
+    "P1BD": dict(basis="DOOR1B", blatt="DOOR23", ton="F5 (1B 30, Doppeltuer)",
+                 rezept="wie P1B3, Farbe der ROOM2070-Seiten (kaltes blaugruenes Licht, dunkel gemalt) - je Seite ein Archiv",
+                 griff="Riegelstange quer (Spender DOOR23 Mesh 1 am DOOR23-Anhaengepunkt: Versatz)", stufe=2,
+                 tausch=dict(spender="DOOR23", am_spender_anker=True)),
     "P1DG": dict(basis="DOOR1D", blatt="DOOR1D", ton="eigen DOOR1D (Blech-Doppeltuer, V2/V3)",
                  rezept="Lueftungsgitter + Griffkasten weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
                  griff="Druecker flach WAAGERECHT: Griff-Tausch Mesh + Grund-Drehung DOOR07 (silbern aus P07G) "
                        "am 1D-Anhaengepunkt - DOOR1D steht in Ruhe um x -780 gekippt (Griffkasten), RE1.5 malt "
                        "waagerechte Druecker", stufe=1,
-                 tausch=dict(spender="DOOR07", spender_eigen="P07G")),
+                 tausch=dict(spender="DOOR07", spender_eigen="P1DG")),
     "P1DK": dict(basis="DOOR1D", blatt="DOOR1A", ton="eigen DOOR1D",
-                 rezept="Stahlrahmen-Felder ohne Glas (T014 drei Felder, T045 hohes Feld + Querriegel), grau",
-                 griff="Druecker flach (DOOR1D Mesh 1)", stufe=2),
+                 rezept="Stahlrahmen je Fluegel mit DREI Feldern ohne Glas (DOOR1A-Teilung, Kartenleser weg), dunkelgrau (T014)",
+                 griff="Druecker flach WAAGERECHT (Selbst-Tausch der Grund-Drehung DOOR07, wie P1DG)", stufe=2,
+                 tausch=dict(spender="DOOR07", spender_eigen="P1DK")),
+    "P1DL": dict(basis="DOOR1D", blatt="DOOR1A", ton="eigen DOOR1D",
+                 rezept="Stahlrahmen je Fluegel mit hohem Feld oben + Querriegel + unterem Feld (T045), grau",
+                 griff="Druecker flach WAAGERECHT (Selbst-Tausch der Grund-Drehung DOOR07, wie P1DG)", stufe=2,
+                 tausch=dict(spender="DOOR07", spender_eigen="P1DL")),
     "P04B": dict(basis="DOOR04", blatt="DOOR04", ton="F2 (01 04 09 11, Holz)",
                  rezept="Blau -> braunes Holz (Farbton, Lage der Kassetten und Maserung bleiben)",
                  griff="Stangengriff lang Messing (DOOR04 Mesh 1, gemalt gleich)", stufe=2),
@@ -104,7 +119,14 @@ ARCHIVE = {
     "P07H": dict(basis="DOOR07", blatt="DOOR07", ton="F3",
                  rezept="wie P07D, Piktogramm Mann", griff="Druecker flach (DOOR07 Mesh 1)", stufe=2),
     "P27S": dict(basis="DOOR27", blatt="DOOR27", ton="eigen DOOR27 (Labor-Schiebetuer)",
-                 rezept="linkes Feld gelbes Strahlenwarnschild, quadratisches Fenster, rotes Dreieck, blaugrau",
+                 rezept="Laborseite ROOM5060: linkes Feld gelbes Strahlenwarnschild, rechts Fensterkasten + rotes Dreieck, blaugrau",
+                 griff="-", stufe=2),
+    "P27K": dict(basis="DOOR27", blatt="DOOR27", ton="eigen DOOR27 (Labor-Schiebetuer)",
+                 rezept="Gangseite ROOM5040/5120: quadratisches Sichtfenster, rotes Dreieck, gelb-schwarzer Aufkleber, "
+                        "schmales Feld rechts (anders gemalt als die Laborseite: je Seite ein Archiv)",
+                 griff="-", stufe=2),
+    "P27O": dict(basis="DOOR27", blatt="DOOR27", ton="eigen DOOR27 (Labor-Schiebetuer)",
+                 rezept="Gangseite ROOM5120 (S305): Malerei wie P27K, aber orange gemalt (Raumlicht) - je Seite ein Archiv",
                  griff="-", stufe=2),
     "P1AZ": dict(basis="DOOR1A", blatt="DOOR1A", ton="F4",
                  rezept="zwei Felder + senkrechte Rahmenleiste rechts + dunkles Rechteck oben, graugruen",
@@ -115,7 +137,14 @@ ARCHIVE = {
 }
 
 # RE2-Archive ohne Objekt (tueren_02_re2.md 1.1 "Ohne Objekt": nur Blende + Ton)
-OBJEKTLOS = "RE2 objektlos (DOOR20/21/32/34/36, Wahl in Stufe 2 nach Huellkurve)"
+OBJEKTLOS = "RE2 objektlos DOOR36 (Blende + zwei kurze Einsaetze, Bild 80/140; Wahl nach Huellkurve, tools/tueren/tuer_g12_ton.py)"
+OBJEKTLOS_BASIS = "DOOR36"
+
+# Seiten, die anders gemalt sind als ihre Gegenseite(n): eigenes Archiv je Seite (Stufe 2, Pilot-Punkt c;
+# wie T131 in Runde 31). Alle anderen Seiten tragen das Archiv ihrer Tuer.
+SEITE_ARCHIV = {"S023": "P07T", "S024": "P07T", "S025": "P07T",   # Treppenhaus ROOM1060, hell graugruen
+                "S269": "P27K", "S305": "P27O",
+                "S155": "P1BD", "S156": "P1BD", "S157": "P1BD", "S158": "P1BD"}   # ROOM2070: dunkel                   # Gangseite der P-4-Labortuer
 
 # ----------------------------------------------------------------------------------------------
 # Gruppen: Tuer -> Archiv (+ Begruendung). Reihenfolge = Tabelle.
@@ -138,8 +167,10 @@ GRUPPEN = [
      "Stahl-Doppeltuer mit beiden Fluegeln, Paar 2/3); Riegelstange per Griff-Tausch (Spender DOOR23)"),
     ("G4", "glatte Stahl-Doppeltuer mit zwei Drueckern", "P1DG", "T026 T054",
      "Doppeltuer mit Druecker flach = DOOR1D V2/V3 (Blech, so schon an T097); Blatt ohne Lueftungsgitter"),
-    ("G4b", "Stahlrahmen-Doppeltuer mit Feldern + zwei Drueckern", "P1DK", "T014 T045",
-     "wie G4, Blatt mit Feldern (Aufteilung aus DOOR1A, ohne Glas)"),
+    ("G4b", "Stahlrahmen-Doppeltuer mit drei Feldern + zwei Drueckern", "P1DK", "T014",
+     "wie G4, Blatt mit Feldern (Aufteilung aus DOOR1A, ohne Glas; S030 ROOM1090 c03: drei Felder je Fluegel)"),
+    ("G4c", "Stahlrahmen-Doppeltuer mit hohem Feld + Querriegel", "P1DL", "T045",
+     "wie G4b, aber zwei Felder (S080 'hohes Feld oben und Querriegel', S121 'oberes und unteres Feld')"),
     ("G5", "Holz-Doppeltuer mit Kassetten + langen Messingstangen", "P04B", "T035",
      "DOOR04 hat dieselbe Aufteilung + dieselben Stangengriffe, nur blau -> Umfaerben; Ton F2 = Holz"),
     ("G5b", "helle Holz-Doppeltuer mit Drahtglas + Panikstange", "P0CD", "T025",
@@ -237,7 +268,7 @@ EINSEITIG_GEBAUT = {"S159", "S146", "S314"}   # schon abgedeckt (Runde 31), blei
 def main():
     z = json.load(open(ZUORDNUNG, encoding="utf-8"))
     tueren = {t["id"]: t for t in z["tueren"]}
-    plan = {"stand": "Runde 33 Stufe 1", "quelle": os.path.relpath(ZUORDNUNG, REPO).replace("\\", "/"),
+    plan = {"stand": "Runde 33 Stufe 2", "quelle": os.path.relpath(ZUORDNUNG, REPO).replace("\\", "/"),
             "archive": ARCHIVE, "gruppen": [], "tueren": {}}
     gesehen = set()
     zeilen = ["| Gruppe | Tuer | Raeume | Seiten (Variante) | Port-Archiv | Basis (Bewegung/Ton/Griff) | Blatt aus | Stufe |",
@@ -253,6 +284,8 @@ def main():
             if t["status"] == "abgedeckt":
                 raise SystemExit("%s ist schon abgedeckt" % tid)
             eintrag = dict(gruppe=gid, archiv=arch, grund_r31=t["grund"], seiten=[])
+            if arch == "OBJEKTLOS":
+                eintrag["basis"] = OBJEKTLOS_BASIS
             seiten = [s for s in t["seiten"] if s.get("begehbar")]
             haupt = {}
             for i, s in enumerate(seiten):
@@ -264,20 +297,29 @@ def main():
                     s = dict(s)
                     s["_auf"] = LEITER_AUF.get(s["id"])
                     idx = len([e for e in eintrag["seiten"] if e.get("bau") and not e.get("zwilling")])
-                    v, h = variante(arch, t, s, idx, seiten)
+                    arch_s = SEITE_ARCHIV.get(s["id"], arch)
+                    v, h = variante(arch_s, t, s, idx, seiten)
                     zw = s.get("zwilling_von")
                     if v is None or (zw and zw in haupt):
                         v, h = haupt[zw], "Zwilling von %s" % zw
                     haupt[s["id"]] = v
-                    eintrag["seiten"].append(dict(id=s["id"], raum=s["raum"], bau=True, variante=v,
-                                                  herkunft=h, zwilling=bool(zw), griff=s["griff_seite"]))
+                    e_s = dict(id=s["id"], raum=s["raum"], bau=True, variante=v,
+                               herkunft=h, zwilling=bool(zw), griff=s["griff_seite"])
+                    if arch_s != arch:
+                        e_s["archiv"] = arch_s
+                    eintrag["seiten"].append(e_s)
+                elif arch == "OBJEKTLOS":
+                    # objektloses RE2-Archiv hat nur V0 (Skript 0 verteilt 0, tueren_02_re2.md 1.1)
+                    eintrag["seiten"].append(dict(id=s["id"], raum=s["raum"], bau=True, variante=0,
+                                                  herkunft="kein Tuerobjekt -> %s V0 (Blende + Ton)" % OBJEKTLOS_BASIS))
                 else:
-                    eintrag["seiten"].append(dict(id=s["id"], raum=s["raum"], bau=arch == "OBJEKTLOS",
+                    eintrag["seiten"].append(dict(id=s["id"], raum=s["raum"], bau=False,
                                                   herkunft="kein Tuerobjekt"))
             plan["tueren"][tid] = eintrag
             raeume = " <-> ".join(sorted({s["raum"] for s in seiten}))
-            sv = "; ".join("%s%s" % (e["id"], (" V%d" % e["variante"]) if "variante" in e else
-                           (" (gebaut R31)" if not e["bau"] and "gleich" in e["herkunft"] else ""))
+            sv = "; ".join("%s%s%s" % (e["id"], (" V%d" % e["variante"]) if "variante" in e else
+                           (" (gebaut R31)" if not e["bau"] and "gleich" in e["herkunft"] else ""),
+                           (" " + e["archiv"]) if e.get("archiv") else "")
                            for e in eintrag["seiten"])
             a = ARCHIVE.get(arch)
             zeilen.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (

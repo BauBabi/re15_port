@@ -378,6 +378,13 @@ def rezept_P16M(basis):
 REZEPTE = {"P07G": rezept_P07G, "P1DG": rezept_P1DG, "P16M": rezept_P16M}
 
 
+def _rezepte_stufe2():
+    """Stufe 2 (tuer_rezepte.py): ueberschreibt P07G/P1DG (Schild, eigener G4-Druecker) und bringt alle
+    uebrigen Port-Archive. Spaet importiert (tuer_rezepte importiert dieses Modul)."""
+    import tuer_rezepte
+    REZEPTE.update(tuer_rezepte.REZEPTE)
+
+
 # ==============================================================================================
 # TIM bauen: geschuetzte Texel exakt, Rest 5 Bit gerundet, Palette <= 256 mit Index 0 = durchsichtig
 # ==============================================================================================
@@ -474,6 +481,7 @@ def archiv_bauen(kennung, spec, schreiben=True):
         schutz = np.zeros_like(blatt)   # alle Leiter-Meshes werden umgefaerbt
     else:
         schutz = andere                 # auch Ueberlappung Blatt/Griff (DOOR24) bleibt Griff
+    proto.pop("_texel0", None)               # Hinweis: Rezept setzt bewusst Texel 0 (Durchsicht)
     frei = proto.pop("_frei", None)          # vom Rezept bewusst umgefaerbte Griff-Texel
     if frei is not None:
         schutz = schutz & ~frei
@@ -526,18 +534,22 @@ def zeilen_bauen(plan, gebaut):
             seiten_r31[s["id"]] = (t, s)
     zeilen = []
     for tid, e in plan["tueren"].items():
-        if e["archiv"] not in gebaut:
-            continue
         for sp in e["seiten"]:
             if not sp.get("bau") or "variante" not in sp:
+                continue
+            arch = sp.get("archiv", e["archiv"])        # Stufe 2: eigenes Archiv je anders gemalter Seite
+            if arch == "OBJEKTLOS":
+                basis_nr, tausch = int(e["basis"][4:], 16), None    # G12: RE2-Archiv ohne Objekt, eigen 0
+            elif arch in gebaut:
+                basis_nr, tausch = gebaut[arch]["basis_nr"], plan["archive"][arch].get("tausch")
+            else:
                 continue
             t, s = seiten_r31[sp["id"]]
             k = s["schluessel"]
             sz = sorted({(x["datei"], x["off"], x["slot"], x["skript"]) for x in k["saetze"]})
             for rn in k["raeume"]:
-                tausch = plan["archive"][e["archiv"]].get("tausch")
-                zz = dict(seite=sp["id"], tuer=tid, raum=tzg.raum_id(rn), band=k["band"], archiv=e["archiv"],
-                          basis=gebaut[e["archiv"]]["basis_nr"], variante=sp["variante"], herkunft=sp["herkunft"],
+                zz = dict(seite=sp["id"], tuer=tid, raum=tzg.raum_id(rn), band=k["band"], archiv=arch,
+                          basis=basis_nr, variante=sp["variante"], herkunft=sp["herkunft"],
                           spender=int(tausch["spender"][4:], 16) if tausch else 0xFF,
                           ziel=k.get("ziel"), saetze=[x for x in sz if x[0].startswith(rn)])
                 if k["form"] == "rechteck":
@@ -579,11 +591,51 @@ def griff_tausche_bauen(plan, eintraege):
             continue
         sp = int(t["spender"][4:], 16)
         se = t.get("spender_eigen")
-        if se and (se not in idx or nach_k[se]["basis_nr"] != sp):
-            raise SystemExit("%s: Spender-Archiv %s fehlt oder hat nicht Basis %s" % (e["kennung"], se, t["spender"]))
         g = tzg.griff_daten(e["basis_nr"], sp)
+        if se and (se not in idx or nach_k[se]["basis_nr"] not in (sp, e["basis_nr"])):
+            raise SystemExit("%s: Spender-Archiv %s fehlt oder hat weder Basis %s noch die eigene" % (
+                e["kennung"], se, t["spender"]))
+        if se and nach_k[se]["basis_nr"] == e["basis_nr"] and nach_k[se]["basis_nr"] != sp:
+            # Selbst-Tausch (Stufe 2, Pilot-Punkt b): nur die Grund-Drehung kommt vom Spender, Mesh + Textur
+            # aus dem eigenen Archiv - nur zulaessig, wenn das Griff-Mesh des Archivs dem Spender-Mesh
+            # bytegleich ist (Formfamilie, tueren_02_re2.md 3: DOOR07.m1 = DOOR1D.m1)
+            ma, ms = re2_lesen("DOOR%02X" % e["basis_nr"])[2], re2_lesen(t["spender"])[2]
+            a_m, s_m = ma.meshes[g["mesh_archiv"]], ms.meshes[g["mesh_spender"]]
+            if (a_m.vertices, a_m.tri_tex, a_m.quad_tex) != (s_m.vertices, s_m.tri_tex, s_m.quad_tex):
+                raise SystemExit("%s: Selbst-Tausch, aber Griff-Mesh %d != Spender-Mesh %d" % (
+                    e["kennung"], g["mesh_archiv"], g["mesh_spender"]))
+            g["mesh_spender"] = g["mesh_archiv"]
+        vv, vh = [0, 0, 0], [0, 0, 0]
+        if t.get("am_spender_anker"):
+            # Versatz = Anhaengepunkt des Spenders - Anhaengepunkt des Archivs, getrennt vorn (x > 0) /
+            # hinten (x < 0); [SIM] tuerkatalog.VM, erste Griff-Objekte ueber alle benutzten Varianten
+            aa = _anker(e["basis_nr"], (0, 1, 2, 3))
+            sa = _anker(sp, (0, 1))
+            vv = [sa["vorn"][i] - aa["vorn"][i] for i in range(3)]
+            vh = [sa["hinten"][i] - aa["hinten"][i] for i in range(3)]
+            g["anker_archiv_hinten"], g["anker_spender_hinten"] = aa["hinten"], sa["hinten"]
         out.append(dict(archiv=e["basis_nr"], spender=sp, spender_eigen=idx.get(se, 0), kennung=e["kennung"],
-                        spender_name=se or t["spender"], **g))
+                        spender_name=se or t["spender"], versatz_vorn=vv, versatz_hinten=vh,
+                        fuer_eigen=idx[e["kennung"]], **g))
+    return out
+
+
+def _anker(nr, varianten):
+    """[SIM] erste Lage eines Griff-Objekts (Kind mit Mesh != 0) vorn (x > 0) und hinten (x < 0)."""
+    import tuerkatalog as tk
+    out = {}
+    for v in varianten:
+        try:
+            vm = tk.VM(tk.Door(nr), variant=v, sound_ready_tick=0).run()
+        except Exception:        # Variante nicht verteilt
+            continue
+        for fr in vm.frames:
+            for o in fr:
+                if o["parent"] >= 0 and o["mesh"] != 0:
+                    k = "vorn" if o["pos"][0] > 0 else "hinten"
+                    out.setdefault(k, list(o["pos"]))
+    if "vorn" not in out or "hinten" not in out:
+        raise SystemExit("DOOR%02X: kein Griff vorn/hinten fuer den Versatz" % nr)
     return out
 
 
@@ -603,7 +655,9 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
     L.append("")
     idx = {e["kennung"]: i + 1 for i, e in enumerate(eintraege)}
     L.append("/* Zuordnung RE1.5-Tuerseite -> Port-Archiv (Spalten wie gen/tuer_zuordnung.inc; re2_nr = Basis-Archiv")
-    L.append(" * = var 15, eigen = Index+1 in re15_tuer_eigen[]). Variante nach tueren_02_re2.md 2.4 (Herkunft je Zeile). */")
+    L.append(" * = var 15, eigen = Index+1 in re15_tuer_eigen[]). Variante nach tueren_02_re2.md 2.4 (Herkunft je Zeile).")
+    L.append(" * eigen = 0 in dieser Tabelle: G12-Durchgang ohne Tuerblatt -> RE2-Archiv OHNE Objekt (DOOR36, Blende + Ton),")
+    L.append(" * Wahl nach Huellkurve (tools/tueren/tuer_g12_ton.py, analysis/befunde_runde33/tueren_rest_bau.md). */")
     L.append("static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[%d] = {" % max(1, len(zeilen)))
     for z in zeilen:
         ofs = ", ".join("%s@0x%X %s Slot %d" % (x[0], x[1], x[3], x[2]) for x in z["saetze"])
@@ -612,7 +666,7 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
             z["herkunft"].replace("*/", "* /")))
         L.append("    { 0x%04X, %d, %d, %6d, %6d, %5d, %5d, {%d, %d, %d, %d}, {%d, %d, %d, %d}, 0x%02X, %d, 0, 0x%02X, %d, %d, 0x%05X, %d }," % (
             z["raum"], z["form"], z["band"], z["x"], z["z"], z["hw"], z["hh"], *z["qx"], *z["qz"], z["basis"],
-            z["variante"], z["spender"], int(z["seite"][1:]), int(z["tuer"][1:]), z["saetze"][0][1], idx[z["archiv"]]))
+            z["variante"], z["spender"], int(z["seite"][1:]), int(z["tuer"][1:]), z["saetze"][0][1], idx.get(z["archiv"], 0)))
     L.append("};")
     L.append("")
     L.append("/* Griff-Tausch der Port-Archive (Spalten wie re15_griff_tausche der Runde 31, dazu spender_eigen =")
@@ -621,15 +675,19 @@ def inc_schreiben(eintraege, zeilen, pfad, tausche=()):
     if tausche:
         L.append("static const re15_griff_tausch_t re15_griff_tausche_eigen[%d] = {" % len(tausche))
         for g in tausche:
-            L.append("    /* %s: DOOR%02X <- %s (Basis DOOR%02X): Anker Archiv %s, Anker Spender %s */" % (
-                g["kennung"], g["archiv"], g["spender_name"], g["spender"], g["anker_archiv"], g["anker_spender"]))
-            L.append("    { 0x%02X, 0x%02X, %d, %d, {%d, %d, %d}, {%d, %d, %d}, %d, %d, %d }," % (
+            L.append("    /* %s: DOOR%02X <- %s (Rotation von DOOR%02X): Anker Archiv %s, Anker Spender %s%s */" % (
+                g["kennung"], g["archiv"], g["spender_name"], g["spender"], g["anker_archiv"], g["anker_spender"],
+                (", hinten %s / %s -> Versatz vorn %s hinten %s" % (g["anker_archiv_hinten"], g["anker_spender_hinten"],
+                                                                     g["versatz_vorn"], g["versatz_hinten"]))
+                if "anker_archiv_hinten" in g else ""))
+            L.append("    { 0x%02X, 0x%02X, %d, %d, {%d, %d, %d}, {%d, %d, %d}, %d, %d, %d, {%d, %d, %d}, {%d, %d, %d}, %d }," % (
                 g["archiv"], g["spender"], g["mesh_archiv"], g["mesh_spender"], *g["rot_vorn"], *g["rot_hinten"],
-                g["aus_archiv"], g["aus_spender"], g["spender_eigen"]))
+                g["aus_archiv"], g["aus_spender"], g["spender_eigen"], *g["versatz_vorn"], *g["versatz_hinten"],
+                g["fuer_eigen"]))
         L.append("};")
     else:
         L.append("static const re15_griff_tausch_t re15_griff_tausche_eigen[1] = {")
-        L.append("    { 0xFF, 0xFF, 0, 0, {0, 0, 0}, {0, 0, 0}, 0, 0, 0 },")
+        L.append("    { 0xFF, 0xFF, 0, 0, {0, 0, 0}, {0, 0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0, 0}, 0 },")
         L.append("};")
     with open(pfad, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(L) + "\n")
@@ -641,6 +699,7 @@ def main():
     ap.add_argument("--pruefen", action="store_true")
     a = ap.parse_args()
     plan = json.load(open(PLAN, encoding="utf-8"))
+    _rezepte_stufe2()
     kennungen = [k for k in plan["archive"] if k in REZEPTE]
     if a.nur:
         kennungen = [k for k in kennungen if k in a.nur.split(",")]
