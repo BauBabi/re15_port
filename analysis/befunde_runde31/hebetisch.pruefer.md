@@ -40,7 +40,16 @@ Zweig r31/generator und wird hier NICHT geprueft. "room 1170" im Auftrag = ROOM1
 (Runde 30 vom Nutzer bestaetigt, AUFTRAG.md Lesart H).
 
 ## 2. Bau + Suite
-(folgt)
+
+Selbst gebaut: `bash re15_port/tools/local_build.sh all` (HEAD 137bd422 + Pruefer-Dossier), Log
+`build/r31_hebetisch/pruefer_suite.log`:
+```
+100% tests passed, 0 tests failed out of 406
+Total Test time (real) = 603.17 sec
+=== LOCAL-BUILD-OK (all) — Tests 406/406
+```
+Parallel lief eine fremde ctest-Sitzung (r30_n_linux/build_pruef) - kein Flattern, keine Wiederholung
+noetig. Deckt sich mit dem Bauer (406/406).
 
 ## 3. Stichproben Bytes/Adressen
 
@@ -71,6 +80,24 @@ Work_set 0 (Plattform). Also ruht zwischen @0x1018 und @0x1048 WIRKLICH das ganz
 ```
 Alle vom Bauer zitierten Adressen/Instruktionen stimmen. PC im Sleeping = Sleep+1 = 0x101B
 (= Logzeile `sub04-PC @0x101B`).
+
+### 3.3 Riegel/Test-Aenderungen (P6)
+
+* `unit_r31_hebetisch` (probe_r31_hebetisch.c): Pruefungen 2..6 rechnen die Sitze gegen die
+  RDT-Geometrie (Ergebnis, nicht Absicht). Pruefungen 8..11 fahren eine EIGENE Bildschleife "in der
+  Reihenfolge des Spiels" (SCD-Tick nur ohne Aufnahme, dann Sicherung-, Granaten-, Aufnahme-Tick) -
+  das ist ein Nachbau der main.c-Reihenfolge, nicht die main.c selbst; der echte Takt ist nur durch
+  die Framedump-/Protokoll-Laeufe belegt (s. §4). Mutation M1 (alte y-Schranke) macht 8..11 rot -
+  der Riegel faengt also die Regression, die der Nutzer bemaengelt hat.
+* Pruefung 7 (links/rechts) rechnet mit der Engine-Kamera ueber ALLE Proben, nicht die sichtbaren;
+  Beleg fuer das Bild ist allein die MIT/OHNE-Differenz im Framedump.
+* r30-Riegel nachgezogen: `unit_r30_granate` 4/5/7/8, `unit_r30_sicherung_sitz` (POS_Z-Mitte
+  gestrichen, "auf der Naht" -> "rechts der Naht", Achse "genau z" -> "naeher an z"),
+  `unit_r30_sicherung_nein` 2 (y == -1205), Integration EXIT_AT 250 -> 280. Jede Aenderung folgt
+  dem neuen Nutzerwunsch (Sitz/Zeitpunkt), keine lockert eine Pruefung, die nicht vom Wunsch
+  betroffen ist. `(void)zmin;` in probe_r30_granate: die frueher geforderte "ganz in der Oeffnung"
+  (zmin >= 1110) ist gefallen - die Granate ragt 35 unter den linken Deckel (Dossier offen gelegt).
+* RE15_MIN_TESTS 405 -> 406 an beiden Stellen (Z. 63 und 321) - geprueft im diff.
 
 ## 4. Sichtpruefung echtes Spiel (Framedump)
 (folgt)
