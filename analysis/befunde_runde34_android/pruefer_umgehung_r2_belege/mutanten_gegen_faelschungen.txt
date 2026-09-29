@@ -1,0 +1,5 @@
+F_M1_man_kleiner: echtes Gate rc=1 | Mutant M1_manifest_nur_zu_gross rc=0 | Mutant-Ausgabe: == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+F_M9_dex_usize: echtes Gate rc=1 | Mutant M9_laenge_nicht_gegen_cd rc=0 | Mutant-Ausgabe: == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+F_M5_kommentar: echtes Gate rc=2 | Mutant M5_eocd_nur_muell_hinten rc=0 | Mutant-Ausgabe: == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+F_M14_cd_dd: echtes Gate rc=1 | Mutant M14_dd_bit_aus_cd rc=0 | Mutant-Ausgabe: == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+F_M16_dex_kippen: echtes Gate rc=1 | Mutant M16_nicht_assets_nur_stored rc=0 | Mutant-Ausgabe: == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==

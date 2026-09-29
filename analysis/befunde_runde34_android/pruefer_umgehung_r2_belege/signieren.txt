@@ -1,0 +1,7 @@
+K0: sign rc=0 verify rc=0 Verified using v2 scheme (APK Signature Scheme v2): true 
+F_M1_man_kleiner: sign rc=0 verify rc=0 Verified using v2 scheme (APK Signature Scheme v2): true 
+F_M9_dex_usize: sign rc=1 verify rc=1  Exception in thread "main" com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: classes.dex 	at com.android.apksig.ApkSigner.fulfillInspectInputJarEntryRequest(ApkSigner.java:737) 	at com
+F_M14_cd_dd: sign rc=1 verify rc=1  Exception in thread "main" com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: assets/shared_assets/RE15DOOR/P07G.DO2 	at com.android.apksig.ApkSigner.sign(ApkSigner.java:420) 	at com.an
+F_M16_dex_kippen: sign rc=1 verify rc=1  Exception in thread "main" com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: classes.dex 	at com.android.apksig.ApkSigner.fulfillInspectInputJarEntryRequest(ApkSigner.java:737) 	at com
+F_ohne_P2DS: sign rc=0 verify rc=0 Verified using v2 scheme (APK Signature Scheme v2): true 
+F_kopf_arabisch: sign rc=0 verify rc=0 Verified using v2 scheme (APK Signature Scheme v2): true 

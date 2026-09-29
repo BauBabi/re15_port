@@ -1,0 +1,15 @@
+=== K0
+09-29 23:36:21.477 24284 23520 W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 55908
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+aapt2 rc=1
+package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+install-location:'auto'
+aapt rc=0
+=== F_praefix
+09-29 23:36:21.607 22616 26532 W ziparchive: Zip: Entry at offset zero has invalid LFH signature 0
+build/r34a/pruefer_umgehung_r2/apk/F_praefix.apk: error: failed opening zip: Invalid file.
+aapt2 rc=1
+09-29 23:36:21.675 15620  8416 W ziparchive: Zip: Entry at offset zero has invalid LFH signature 0
+09-29 23:36:21.675 15620  8416 W zipro   : Error opening archive build/r34a/pruefer_umgehung_r2/apk/F_praefix.apk: Invalid file
+aapt rc=1

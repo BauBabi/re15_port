@@ -1,0 +1,18 @@
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_umgehung_r2\apk\F_ohne_P2DS_sig.apk
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_umgehung_r2\schatten
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   ZIP-Struktur: 3618 Eintraege roh gelesen, 3618 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            29      29       29      1836688
+   synchro                           90      90       90     27678779
+   SUMME                           3602    3602     3602    356600033
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 29, APK 29, sha256 gleich 29/29
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3602 Zeilen / 356600033 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  3.8 s
+== APK-ASSET-GATE-OK: 3602 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
