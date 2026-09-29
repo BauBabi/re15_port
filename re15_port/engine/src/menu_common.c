@@ -1437,6 +1437,7 @@ static void close_phase(void)
     s_hint_target = 0;
     s_hint_nr = -1;
     g_inv_screen.hint_aktiv = 0;
+    g_inv_screen.ziel_aktiv = 0;   /* Runde 33: Zielkachel lebt nur mit dem Schirm */
     s_alive = 0;
     /* Task-0 resume continuation @0x8001cb50-74: aca3c &= ~(0x40|0x8000); 5359=3;
      * falls THROUGH into stage 3 @0x8001cbb8 in the same round (no unfaded frame):
@@ -1543,7 +1544,11 @@ static void map_mode(uint16_t pressed)
             for (k = 1; k <= 13; k++) {
                 int j = hier + dir * k;
                 if (j < 0 || j > 12) break;              /* kein Umlauf an den Enden */
-                if (!re15_map_page_known(ORDER[j])) continue;
+                /* Runde 33 (Thema K): bekannt ODER mit dem Kartenhinweis freigegeben —
+                 * Gegenstueck zu RE2s Skript-Set auf Bank 35 (ROOM20B0 sub10 @0x037E6-EE),
+                 * das RE2 selbst am Hinweis nicht benutzt: PORT-WAHL auf Nutzerwunsch,
+                 * Belege in map_hint_common.c Abschnitt 4. */
+                if (!re15_map_blatt_waehlbar(ORDER[j])) continue;
                 se4(4);                                  /* Bewegungs-Ton wie sonst auch */
                 g_inv_screen.map_page = ORDER[j];
                 break;
@@ -2309,6 +2314,28 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
         re15_map_hint_tick();
         g_inv_screen.hint_rot = (uint8_t)re15_map_hint_rot();
     }
+    /* ZIELRAUM IN DER NORMALEN KARTE (Runde 33, Thema K — PORT-WAHL auf Nutzerwunsch,
+     * Belege map_hint_common.c Abschnitt 4): solange der MAP-Unterschirm steht (auch beim
+     * Herein- und Herausgleiten, dort zeichnet die Kachel-Schleife ohnehin nicht), wird je
+     * Bild neu bestimmt, ob ein Zielraum markiert ist; der Blinker laeuft wie RE2s Karten-
+     * Pulszaehler je VBlank (@0x8006D87C-0x8006D8D4) und beginnt mit jeder Kartenansicht. */
+    {
+        int zp = 0, zr = 0;
+        if (s_alive && s_substate == 1 && !g_inv_screen.hint_aktiv &&
+            re15_map_ziel_aktiv(&zp, &zr)) {
+            /* ziel_aktiv ist beim Oeffnen 0 (re15_inv_screen_open loescht die Struktur),
+             * beim Schliessen (close_phase / re15_menu_toggle) und ausserhalb der Karte:
+             * jede Kartenansicht beginnt den Blinker neu. */
+            if (!g_inv_screen.ziel_aktiv) re15_map_ziel_blink_begin();
+            re15_map_ziel_blink_tick();
+            g_inv_screen.ziel_aktiv = 1;
+            g_inv_screen.ziel_page  = (uint8_t)zp;
+            g_inv_screen.ziel_rect  = (uint8_t)zr;
+            g_inv_screen.ziel_rot   = (uint8_t)re15_map_ziel_blink_rot();
+        } else {
+            g_inv_screen.ziel_aktiv = 0;
+        }
+    }
     /* Spielermarker: im Hinweis nicht — RE2s Hinweis-Zeichner liest die Spielerlage
      * nicht (Zugriffe auf [0x800CFC30]/[0x800CFC38] nur im normalen Zeichner
      * @0x8006E1E4/@0x8006E1F8). */
@@ -2528,6 +2555,7 @@ void re15_menu_toggle(void)
         g_inv_screen.file_bild = 0;
         re15_re2doc_select(-1);
         g_inv_screen.hint_aktiv = 0;
+        g_inv_screen.ziel_aktiv = 0;   /* Runde 33 */
         s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;
