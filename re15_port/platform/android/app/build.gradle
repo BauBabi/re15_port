@@ -9,10 +9,12 @@
 //                      PC-Bau per FetchContent) nach platform/android/_deps/ und entpackt es.
 //                      Daraus kommen die Java-Klassen org.libsdl.app.* (SDLActivity) und
 //                      der C-Quellbaum fuer libSDL2.so (jni/CMakeLists.txt).
-//   stageAssets        kopiert (Sync) die vier Asset-Baeume in app/build/re15_assets/:
+//   stageAssets        kopiert (Sync) die fuenf Asset-Baeume in app/build/re15_assets/:
 //                      shared_assets/PSX, shared_assets/extracted_fx, shared_assets/RE2,
-//                      synchro/STAGE* — dieselbe Liste wie release/make_package.sh
-//                      (copy_common), synchro/unused bleibt draussen.
+//                      shared_assets/RE15DOOR, synchro/STAGE* — dieselbe Liste wie
+//                      release/make_package.sh (copy_common), synchro/unused bleibt draussen.
+//                      ⛔ Die Liste steht ein zweites Mal in release/apk_asset_gate.py (BAEUME);
+//                      das Gate prueft beide gegeneinander und bricht ab, wenn sie abweichen.
 //   writeAssetManifest schreibt dort re15_assets.txt ("<bytes>\t<pfad>"); android_glue.c
 //                      entpackt danach beim ersten Start in den App-Speicherordner.
 //   noCompress         JEDE Endung der Asset-Baeume -> die APK speichert die Assets
@@ -111,10 +113,18 @@ tasks.register("stageAssets", Sync) {
     duplicatesStrategy = DuplicatesStrategy.FAIL
     doFirst {
         ["shared_assets/PSX/STAGE1", "shared_assets/extracted_fx/effect0_blood.tim",
-         "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS",
-         "shared_assets/RE15DOOR/P07G.DO2"].each { rel ->
+         "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS"].each { rel ->
             if (!new File(portRoot, rel).exists())
                 throw new GradleException("Asset fehlt im Repo: re15_port/${rel}")
+        }
+        // Tuerarchive (Runde 34a): nicht an EINER Datei festmachen (bis v0.8.19 nur RE15DOOR/P07G.DO2)
+        // - beide Ordner muessen *.DO2 enthalten. Ob JEDE Datei bytegleich in der APK liegt, prueft
+        // release/apk_asset_gate.py (release/build_android.sh, Abschnitt Gates).
+        ["shared_assets/RE2/DOOR", "shared_assets/RE15DOOR"].each { rel ->
+            def n = (new File(portRoot, rel).listFiles() ?: []).count { it.isFile() && it.name.endsWith(".DO2") }
+            if (n == 0)
+                throw new GradleException("Tuerarchive fehlen im Repo: re15_port/${rel}/*.DO2 (0 Dateien)")
+            logger.lifecycle("stageAssets: re15_port/${rel}: ${n} x *.DO2")
         }
         if (!new File(repoRoot, "synchro/STAGE1/room1170/main00.wav").exists())
             throw new GradleException("Voiceover fehlt im Repo: synchro/STAGE1/room1170/main00.wav")
