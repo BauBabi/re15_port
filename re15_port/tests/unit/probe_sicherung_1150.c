@@ -2,7 +2,7 @@
  *
  * Nicht "Build ist gruen": diese Sonde faehrt den Ablauf wirklich und misst.
  *   1. ROOM1150 hochfahren und pruefen, dass das ZUSAETZLICHE Prop angelegt ist
- *      (obj_id 4, parent_obj 0, Sitz im Kuppelfach).
+ *      (obj_id 4, parent_obj 0; Sitz seit Runde 32 im rechten unteren Fach).
  *   2. sub04 ausloesen (die Hebetisch-Sequenz) und die Fahrt Bild fuer Bild
  *      protokollieren: y der Plattform UND die daraus verkettete Weltlage der
  *      Sicherung — faehrt sie wirklich mit, oder bleibt sie stehen?
@@ -127,7 +127,7 @@ int main(void)
            (long)g_scd.props[pi].z, g_scd.props[pi].rot_y);
     pruefe(3, "haengt an der Elternmatrix der Plattform",
            g_scd.props[si].parent_obj == 0);
-    pruefe(4, "sitzt auf dem Boden des Kuppelfachs (y=-1062 = -1036 - 26)",
+    pruefe(4, "sitzt auf dem Boden des rechten unteren Fachs (Runde 32: y=-117 = -91 - 26)",
            g_scd.props[si].y == RE15_SICHERUNG_POS_Y);
     pruefe(5, "ist sichtbar", g_scd.props[si].active == 1);
 
@@ -175,7 +175,7 @@ int main(void)
     pruefe(8, "die Sicherung faehrt mit (lokaler Abstand konstant)", mitgefahren);
     printf("   Sicherung-Welt-y am Hochpunkt: %ld (Plattform %ld)\n",
            sich_y_bei_min, y_min);
-    /* Bezug ist die Lage IM RAUM (Plattform auf -305 => Sicherung auf -1232), nicht
+    /* Bezug ist die Lage IM RAUM (Plattform auf -305 => Sicherung auf -422, Runde 32), nicht
      * die Parkposition -21251: sonst vergleicht man gegen einen Ort ausserhalb des Raums. */
     pruefe(9, "die Sicherung ist oben mit angehoben",
            sich_y_bei_min < (-305L + RE15_SICHERUNG_POS_Y) - 500L);

@@ -10,14 +10,15 @@
  *       Punkte/Normalen gedreht (x,y,z) -> (x, -(z-32), y-190), UV-Werte gleich,
  *       clut 0x7840 -> 0x7800, page 0x0081 -> 0x0080
  *    3  TIM 128x256 8bpp, CLUT = dir[3]-CLUT (256 Eintraege), dir[3]-Bild 56x32 bei (72,224)
- *  Sitz (je ROOM1150.RDT und ROOM1151.RDT, Plattform-Koordinaten, Kanten in 8 Stuecke geteilt):
- *    4  tiefster Punkt genau AUF dem Fachboden y=-1036 (Prop 0) — Runde 31: liegt auf (vorher
- *       3 versenkt, weil sie mittig aufliegend durch die geschlossene Kuppel ragte)
+ *  Sitz (je ROOM1150.RDT und ROOM1151.RDT, Plattform-Koordinaten, Kanten in 8 Stuecke geteilt).
+ *  Runde 32: im LINKEN UNTEREN Fach von Prop 0 (Runde 30/31: oben in der Kuppel, Boden -1036):
+ *    4  tiefster Punkt genau AUF dem Boden des Fachs (Viereck 89, y=-90)
  *    5  Abstand zur Sicherung (Zylinder r=26 um deren GEDREHTE Laengsachse, +-203) > 0
- *    6  Luft unter der GESCHLOSSENEN Kuppel (Prop 1/2) > 0
- *    7  Runde 31 "Granate links": ganz links der Sicherungs-Mitte (Plattform-z < POS_Z der
- *       Sicherung; +z = Schirm rechts in Cut 4), die Granaten-Mitte in der Oeffnung
- *       (Deckelweg +-150: z 1110..1410). Links/rechts GEMESSEN: Dossier runde31 §1.3
+ *    6  unter der Fachdecke (Viereck 87, y=-810), vor der Rueckwand x=-1258, hinter der offenen
+ *       Vorderkante x=2
+ *    7  "Granate links": ganz im linken Fach zwischen den Waenden z=96/861 (Viereck 86/88),
+ *       links der Sicherung (+z = Schirm rechts in Cut 4). Links/rechts GEMESSEN: Dossier
+ *       runde32 hebetisch_faecher.md §4
  *  Fahrten (je Raum, Bildschleife in der Reihenfolge des Spiels):
  *    8  Fall A Fahrt 1: genau EIN Sicherungs- und EIN Granaten-Modal, Granate NACH Sicherung,
  *       beide in der RUHE OBEN (y = -1205, Runde 31; vorher Fenster (-5000,-1100] mitten im
@@ -164,53 +165,28 @@ static void modell_pruefen(void)
 }
 
 /* ---------------------------------------------------------------- Sitz ----------------- */
-typedef struct { float a[3], b[3], c[3]; } dreieck_t;
+/* Runde 32: die Granate liegt im LINKEN UNTEREN Fach von Prop 0 (vorher oben in der Kuppel).
+ * Fach A aus den Bytes (ROOM1150.RDT Prop 0 MD1 @0x11E40; ROOM1151 dieselben Indizes):
+ *   Boden Viereck 89 (y=-90), Decke Viereck 87 (y=-810), Waende Viereck 86 (z=96) / 88 (z=861);
+ *   vorn offen x=2, Rueckwand x=-1258. Herleitung: include/re15_granate.h, Dossier
+ *   analysis/befunde_runde32/hebetisch_faecher.md; volle Fach-Pruefung unit_r32_hebetisch_faecher. */
+#define Q_BODEN_A 89
+#define Q_DECKE_A 87
+#define Q_WAND0_A 86
+#define Q_WAND1_A 88
 
-static int kuppel_lesen(const re15_rdt_t *rdt, dreieck_t *d, int max)
+/* konstante Koordinate (achse 1 = y, 2 = z) eines Vierecks von Prop 0; 0x7fffffff = nicht konstant */
+static int viereck_fest(const re15_md1_mesh_t *m, int qi, int achse)
 {
-    int n = 0;
-    for (int op = 1; op <= 2; op++) {
-        static re15_md1_t m;
-        if (re15_md1_parse(rdt->prop_md1[op], rdt->prop_md1_size[op], &m) != 0) return -1;
-        const re15_md1_mesh_t *s = &m.meshes[0];
-        for (int i = 0; i < s->triangle_count && n < max; i++) {
-            const re15_md1_triangle_t *t = &s->triangles[i];
-            const re15_md1_vertex_t *v[3] = { &s->tri_vertices[t->v0], &s->tri_vertices[t->v1], &s->tri_vertices[t->v2] };
-            for (int k = 0; k < 3; k++) { float *p = k == 0 ? d[n].a : k == 1 ? d[n].b : d[n].c;
-                p[0] = v[k]->x; p[1] = v[k]->y; p[2] = v[k]->z; }
-            n++;
-        }
-        for (int i = 0; i < s->quad_count && n + 1 < max; i++) {
-            const re15_md1_quad_t *q = &s->quads[i];
-            const re15_md1_vertex_t *v[4] = { &s->quad_vertices[q->v0], &s->quad_vertices[q->v1],
-                                              &s->quad_vertices[q->v2], &s->quad_vertices[q->v3] };
-            static const int idx[2][3] = { {0, 1, 2}, {1, 3, 2} };
-            for (int h = 0; h < 2; h++) {
-                for (int k = 0; k < 3; k++) { float *p = k == 0 ? d[n].a : k == 1 ? d[n].b : d[n].c;
-                    p[0] = v[idx[h][k]]->x; p[1] = v[idx[h][k]]->y; p[2] = v[idx[h][k]]->z; }
-                n++;
-            }
-        }
+    if (qi >= m->quad_count) return 0x7fffffff;
+    const re15_md1_quad_t *q = &m->quads[qi];
+    const uint16_t vi[4] = { q->v0, q->v1, q->v2, q->v3 };
+    int w0 = achse == 1 ? m->quad_vertices[vi[0]].y : m->quad_vertices[vi[0]].z;
+    for (int k = 1; k < 4; k++) {
+        int w = achse == 1 ? m->quad_vertices[vi[k]].y : m->quad_vertices[vi[k]].z;
+        if (w != w0) return 0x7fffffff;
     }
-    return n;
-}
-
-/* kleinste Hoehe (ueber dem Boden -1036) der Kuppel-Unterseite ueber (x,z); 1e9 = keine */
-static float kuppel_hoehe(const dreieck_t *d, int n, float x, float z)
-{
-    float best = 1e9f;
-    for (int i = 0; i < n; i++) {
-        const float *a = d[i].a, *b = d[i].b, *c = d[i].c;
-        float den = (b[2] - c[2]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[2] - c[2]);
-        if (den == 0) continue;
-        float l1 = ((b[2] - c[2]) * (x - c[0]) + (c[0] - b[0]) * (z - c[2])) / den;
-        float l2 = ((c[2] - a[2]) * (x - c[0]) + (a[0] - c[0]) * (z - c[2])) / den;
-        float l3 = 1 - l1 - l2;
-        if (l1 < -1e-6f || l2 < -1e-6f || l3 < -1e-6f) continue;
-        float h = -1036.0f - (l1 * a[1] + l2 * b[1] + l3 * c[1]);
-        if (h > 0.5f && h < best) best = h;
-    }
-    return best;
+    return w0;
 }
 
 /* Weltpunkt eines Modellpunkts: Drehung wie main.c pc_prop_rot_q12 (Ry*Rx*Rz, hier nur Ry). */
@@ -224,23 +200,18 @@ static void welt(const float m[3], float w[3])
 
 static void sitz_pruefen(const re15_rdt_t *rdt, uint16_t rid)
 {
-    printf("\n== %04X Sitz im Kuppelfach ==\n", rid);
+    printf("\n== %04X Sitz im linken unteren Fach ==\n", rid);
     static re15_md1_t g, p0;
     int msz = 0; const uint8_t *mb = re15_granate_md1_bytes(&msz);
     if (re15_md1_parse(mb, msz, &g) != 0 ||
         re15_md1_parse(rdt->prop_md1[0], rdt->prop_md1_size[0], &p0) != 0) {
         pruefe(4, "MD1 lesbar", 0); return;
     }
-    /* Fachboden: die acht Punkte des Achtecks (Vierecke 79-81) tragen y = -1036 */
-    int boden = 0;
-    for (int i = 0; i < p0.meshes[0].tri_vertex_count; i++) {
-        const re15_md1_vertex_t *v = &p0.meshes[0].tri_vertices[i];
-        if (v->y == -1036 && v->z >= 875 && v->z <= 1645 && v->x <= -74 && v->x >= -485) boden++;
-    }
-    static dreieck_t kd[64];
-    int nk = kuppel_lesen(rdt, kd, 64);
+    const re15_md1_mesh_t *pm = &p0.meshes[0];
+    int boden = viereck_fest(pm, Q_BODEN_A, 1), decke = viereck_fest(pm, Q_DECKE_A, 1);
+    int wand0 = viereck_fest(pm, Q_WAND0_A, 2), wand1 = viereck_fest(pm, Q_WAND1_A, 2);
     const re15_md1_mesh_t *s = &g.meshes[0];
-    float tief = -1e9f, abst = 1e9f, luft = 1e9f, zmin = 1e9f, zmax = -1e9f;
+    float tief = -1e9f, hoch = 1e9f, abst = 1e9f, zmin = 1e9f, zmax = -1e9f, xmin = 1e9f, xmax = -1e9f;
     for (int art = 0; art < 2; art++) {
         int nf = art ? s->quad_count : s->triangle_count;
         for (int i = 0; i < nf; i++) {
@@ -258,9 +229,12 @@ static void sitz_pruefen(const re15_rdt_t *rdt, uint16_t rid)
                                                  a->z + (b->z - a->z) * t }, w[3];
                     welt(m, w);
                     if (w[1] > tief) tief = w[1];
+                    if (w[1] < hoch) hoch = w[1];
                     if (w[2] < zmin) zmin = w[2];
                     if (w[2] > zmax) zmax = w[2];
-                    {   /* Sicherungs-Zylinder um die gedrehte Modell-X-Achse (Runde 31) */
+                    if (w[0] < xmin) xmin = w[0];
+                    if (w[0] > xmax) xmax = w[0];
+                    {   /* Sicherungs-Zylinder um die gedrehte Modell-X-Achse */
                         int ss = re15_sin_q12(RE15_SICHERUNG_ROT_Y), sc = re15_cos_q12(RE15_SICHERUNG_ROT_Y);
                         float ax[3] = { sc / 4096.0f, 0.0f, -ss / 4096.0f };
                         float d3[3] = { w[0] - RE15_SICHERUNG_POS_X, w[1] - RE15_SICHERUNG_POS_Y,
@@ -271,22 +245,22 @@ static void sitz_pruefen(const re15_rdt_t *rdt, uint16_t rid)
                                                      : hypotf(fmaxf(0.0f, r - 26.0f), fabsf(t) - 203.0f);
                         if (d < abst) abst = d;
                     }
-                    float h = kuppel_hoehe(kd, nk, w[0], w[2]) - (-1036.0f - w[1]);
-                    if (h < luft) luft = h;
                 }
             }
         }
     }
-    printf("   Fachboden-Punkte y=-1036: %d, Kuppel-Dreiecke: %d | tiefster Punkt y=%.0f, "
-           "Abstand zur Sicherung %.2f, Luft unter der Kuppel %.2f, z %.0f..%.0f\n",
-           boden, nk, tief, abst, luft, zmin, zmax);
-    pruefe(4, "tiefster Punkt genau auf dem Fachboden y=-1036 (Runde 31: liegt auf)",
-           boden >= 8 && (int)lroundf(tief) == -1036);
+    printf("   Fach A: Boden y=%d (Viereck %d), Decke y=%d (Viereck %d), Waende z=%d/%d (Viereck %d/%d) | "
+           "Granate y %.0f..%.0f x %.0f..%.0f z %.0f..%.0f, Abstand zur Sicherung %.2f\n",
+           boden, Q_BODEN_A, decke, Q_DECKE_A, wand0, wand1, Q_WAND0_A, Q_WAND1_A,
+           hoch, tief, xmin, xmax, zmin, zmax, abst);
+    pruefe(4, "tiefster Punkt genau auf dem Boden des linken unteren Fachs (Viereck 89, y=-90)",
+           boden == -90 && (int)lroundf(tief) == boden);
     pruefe(5, "Abstand zur Sicherung > 0 (kein Durchdringen)", abst > 0.0f);
-    pruefe(6, "Luft unter der geschlossenen Kuppel > 0 (ragt nicht durch)", nk > 0 && luft > 0.0f);
-    pruefe(7, "LINKS der Sicherung (z max < POS_Z Sicherung), Mitte in der Oeffnung 1110..1410",
-           zmax < (float)RE15_SICHERUNG_POS_Z && RE15_GRANATE_POS_Z > 1110 && RE15_GRANATE_POS_Z < 1410);
-    (void)zmin;
+    pruefe(6, "unter der Fachdecke (Viereck 87, y=-810) und zwischen Vorderkante x=2 und Rueckwand x=-1258",
+           decke == -810 && hoch > (float)decke && xmax < 2.0f && xmin > -1258.0f);
+    pruefe(7, "LINKS: ganz im linken Fach zwischen den Waenden z=96 / z=861 (Viereck 86/88), links der Sicherung",
+           wand0 == 96 && wand1 == 861 && zmin > (float)wand0 && zmax < (float)wand1 &&
+           zmax < (float)RE15_SICHERUNG_POS_Z);
 }
 
 /* ---------------------------------------------------------------- Fahrten -------------- */

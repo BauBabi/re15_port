@@ -5,9 +5,9 @@
 # include/re15_granate.h, include/re15_hebetisch.h.
 #
 #   unit_r31_hebetisch   Ruhe-Fenster aus den RDT-Bytes (1150/1151, Negativ-Kontrolle 1140);
-#                        Sitze gegen Fachboden, geschlossene Kuppel, offene Deckel, Achteck,
-#                        gegenseitiges Durchdringen; links/rechts in Cut 4 (Rechnung — gemessen im
-#                        Framedump, Dossier §1.3); Aufnahme im ersten Ruhebild, jede Aufnahme bei
+#                        (Runde 32: die Sitz-Pruefungen 2..7 in der Kuppel entfallen, der Sitz in
+#                        den unteren Faechern steht in probes/r32_hebetisch_faecher.cmake);
+#                        Aufnahme im ersten Ruhebild, jede Aufnahme bei
 #                        y=-1205, 40 Ruhebilder ohne Aufnahme (Sleep 30 + Sleep 10), Yes/Yes
 add_executable(probe_r31_hebetisch ${CMAKE_CURRENT_LIST_DIR}/../probe_r31_hebetisch.c)
 target_link_libraries(probe_r31_hebetisch PRIVATE re15_engine re15_test_support)

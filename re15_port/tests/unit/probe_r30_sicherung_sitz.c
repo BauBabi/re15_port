@@ -7,19 +7,23 @@
  * Geometrie aus ROOM1150.RDT UND ROOM1151.RDT und faellt, wenn jemand den Sitz
  * verschiebt, ohne die Geometrie anzusehen:
  *
- *   1. Der Boden des Kuppelfachs = Vierecke 79/80/81 von Prop 0 (Face-Records @Datei
- *      0x12E40/0x12E50/0x12E60 in ROOM1150.RDT): acht Punkte, alle auf EINER Hoehe.
- *   2. POS_X = Mitte dieses Achtecks +-1;  POS_Y = Bodenhoehe - Rohrradius, der
+ * Runde 32 (Nutzer: "sie sollen unten, in den hochfahrenden Fach liegen - ein item links ein
+ * item rechts"): die Sicherung liegt im RECHTEN UNTEREN Fach von Prop 0, nicht mehr in der Kuppel.
+ *   1. Der Boden des rechten Fachs = Viereck 93 von Prop 0 (Face-Record @Datei 0x12F20 in
+ *      ROOM1150.RDT): vier Punkte auf EINER Hoehe, von der offenen Vorderkante x=2 bis zur
+ *      Rueckwand x=-1258, zwischen den Waenden Viereck 90 (z=950) und 92 (z=1715).
+ *   2. POS_X / POS_Z = Mitte dieses Bodens (+-1);  POS_Y = Bodenhoehe - Rohrradius, der
  *      Rohrradius = groesstes y des Sicherungs-MD1.
- *   3. POS_Z liegt RECHTS der Naht der beiden Deckelhaelften (Plattform +z = Schirm rechts in
- *      Cut 4) — Runde 31 (Nutzer: "die Sicherung rechts"), vorher genau auf der Naht.
- *   4. ROT_Y legt die Laengsachse X des Modells naeher an die LANGE Seite des Fachs (z) als an
- *      x — Runde 31 schraeg (rot_y 1440), vorher genau auf z (1024). Laengs x passt das Rohr
- *      nicht unter die geschlossene Kuppel (analysis/befunde_runde31/hebetisch.md §1.1).
- *      Die genaue Passung (Kuppel zu/offen, Achteck, Granate) haelt unit_r31_hebetisch fest.
- *   5. Die Sicherung passt in das Fach (Laenge <= lange Seite, Dicke <= kurze Seite).
+ *   3. Das Fach liegt RECHTS der Trennwand zum linken Fach (dessen Wand Viereck 88, z=861;
+ *      Plattform +z = Schirm rechts in Cut 4): z0 des Fachs > 861.
+ *   4. ROT_Y legt die Laengsachse X des Modells auf z = parallel zur offenen Vorderseite (quer im
+ *      Bild).
+ *   5. Die Sicherung passt in das Fach (Laenge <= Fachbreite in z, Dicke <= Fachtiefe in x).
+ *      Die volle Fach-Pruefung (Durchstoss, Sichtlinien, links/rechts) haelt
+ *      unit_r32_hebetisch_faecher fest.
  *   6. Der Deckelweg ist 15 x 10 = 150 (For-Record `0d 00 18 00 0f 00`: Zaehler = drittes
- *      Feld, For-Handler @0x8003f540 `lhu a1,4(t0)` @0x8003f568) — NICHT 240.
+ *      Feld, For-Handler @0x8003f540 `lhu a1,4(t0)` @0x8003f568) — NICHT 240. (Seit Runde 32
+ *      nur noch Byte-Beleg der Fahrt; die Sicherung liegt nicht mehr unter den Deckeln.)
  *   7. Im Spiel (Raumstart ueber scd_room_reenter) traegt das Prop genau diese Werte.
  *
  * Rueckgabe 0 = alles bestanden.
@@ -92,7 +96,7 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
     pruefe("der Raum bringt vier Props mit (nOmodel = 4), Slot 4 ist frei", rdt.prop_count == 4);
     if (rdt.prop_count < 3) { free(buf); return; }
 
-    /* ---- 1. Fachboden ---- */
+    /* ---- 1. Boden des rechten unteren Fachs (Viereck 93) ---- */
     static re15_md1_t tisch, d1, d2, sich;
     if (re15_md1_parse(rdt.prop_md1[0], rdt.prop_md1_size[0], &tisch) != 0 ||
         re15_md1_parse(rdt.prop_md1[1], rdt.prop_md1_size[1], &d1) != 0 ||
@@ -104,25 +108,31 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
     printf("   Prop 0: MD1 @Datei 0x%05lX, %d Punkte, %d Vierecke\n",
            md1_off, (int)m->quad_vertex_count, (int)m->quad_count);
     pruefe("Prop 0 traegt 163 Punkte und 120 Vierecke", m->quad_vertex_count == 163 && m->quad_count == 120);
-    if (m->quad_count < 82) { free(buf); return; }
+    if (m->quad_count < 94) { free(buf); return; }
 
     int lo[3] = { 0x7fffffff, 0x7fffffff, 0x7fffffff }, hi[3] = { -0x7fffffff, -0x7fffffff, -0x7fffffff };
-    int punkte[12], np = 0;
-    for (int qi = 79; qi <= 81; qi++) {
-        const re15_md1_quad_t *q = &m->quads[qi];
+    {
+        const re15_md1_quad_t *q = &m->quads[93];
         uint16_t vi[4] = { q->v0, q->v1, q->v2, q->v3 };
         for (int k = 0; k < 4; k++) {
-            int schon = 0;
-            for (int j = 0; j < np; j++) if (punkte[j] == vi[k]) schon = 1;
-            if (!schon) punkte[np++] = vi[k];
             int p[3] = { m->quad_vertices[vi[k]].x, m->quad_vertices[vi[k]].y, m->quad_vertices[vi[k]].z };
             for (int a = 0; a < 3; a++) { if (p[a] < lo[a]) lo[a] = p[a]; if (p[a] > hi[a]) hi[a] = p[a]; }
         }
+        printf("   Fachboden (Viereck 93, Face-Record @Datei 0x%05lX): x[%d..%d] y[%d..%d] z[%d..%d]\n",
+               (long)((const uint8_t *)q - buf), lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]);
     }
-    printf("   Fachboden (Vierecke 79-81): %d Punkte, x[%d..%d] y[%d..%d] z[%d..%d]\n",
-           np, lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]);
-    pruefe("der Fachboden ist ein Achteck (8 verschiedene Punkte)", np == 8);
-    pruefe("alle acht Punkte liegen auf EINER Hoehe", lo[1] == hi[1]);
+    int w0 = 0x7fffffff, w1 = 0x7fffffff;
+    for (int qi = 90; qi <= 92; qi += 2) {            /* Waende Viereck 90 / 92: je ein z */
+        const re15_md1_quad_t *q = &m->quads[qi];
+        uint16_t vi[4] = { q->v0, q->v1, q->v2, q->v3 };
+        int z = m->quad_vertices[vi[0]].z, eins = 1;
+        for (int k = 1; k < 4; k++) if (m->quad_vertices[vi[k]].z != z) eins = 0;
+        if (eins) { if (qi == 90) w0 = z; else w1 = z; }
+    }
+    printf("   Waende: Viereck 90 z=%d, Viereck 92 z=%d\n", w0, w1);
+    pruefe("alle vier Bodenpunkte liegen auf EINER Hoehe", lo[1] == hi[1]);
+    pruefe("der Boden reicht von der Vorderkante x=2 bis zur Rueckwand x=-1258", lo[0] == -1258 && hi[0] == 2);
+    pruefe("die Waende (Viereck 90/92) begrenzen den Boden in z", w0 == lo[2] && w1 == hi[2]);
 
     /* ---- 2. Mitte und Hoehe ---- */
     int n_s = 0;
@@ -135,22 +145,29 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
            slo[0], shi[0], slo[1], shi[1], slo[2], shi[2], shi[0] - slo[0], radius);
     /* Mitte mal zwei, damit die halbe Einheit bei ungerader Spanne nicht wegrundet */
     int mx2 = lo[0] + hi[0], mz2 = lo[2] + hi[2];
-    printf("   Mitte des Fachbodens: x = %.1f, z = %.1f ; Boden y = %d\n",
-           mx2 / 2.0, mz2 / 2.0, lo[1]);
+    printf("   Mitte des Fachbodens: x = %.1f, z = %.1f ; Boden y = %d\n", mx2 / 2.0, mz2 / 2.0, lo[1]);
     snprintf(was, sizeof was, "POS_X %d = Mitte des Fachbodens +-1", RE15_SICHERUNG_POS_X);
     pruefe(was, abs(2 * RE15_SICHERUNG_POS_X - mx2) <= 2);
-    (void)mz2;   /* Runde 31: POS_Z nicht mehr die Mitte, s. Pruefung 3 */
+    snprintf(was, sizeof was, "POS_Z %d = Mitte des Fachbodens +-1", RE15_SICHERUNG_POS_Z);
+    pruefe(was, abs(2 * RE15_SICHERUNG_POS_Z - mz2) <= 2);
     snprintf(was, sizeof was, "POS_Y %d = Boden %d - Rohrradius %d", RE15_SICHERUNG_POS_Y, lo[1], radius);
     pruefe(was, RE15_SICHERUNG_POS_Y == lo[1] - radius);
 
-    /* ---- 3. Naht der Deckelhaelften ---- */
+    /* ---- 3. rechts der Trennwand ---- */
     int l1[3], h1[3], l2[3], h2[3];
     bbox(&d1.meshes[0], l1, h1);
     bbox(&d2.meshes[0], l2, h2);
     printf("   Deckel Prop 1 z[%d..%d], Prop 2 z[%d..%d]\n", l1[2], h1[2], l2[2], h2[2]);
     pruefe("die Deckelhaelften stossen aneinander (z min Prop 1 = z max Prop 2)", l1[2] == h2[2]);
-    pruefe("POS_Z liegt RECHTS der Naht (Runde 31: Sicherung rechts, Plattform +z = Schirm rechts)",
-           RE15_SICHERUNG_POS_Z > l1[2]);
+    {   /* Trennwand zum linken Fach: dessen rechte Wand = Viereck 88 (ein z) */
+        const re15_md1_quad_t *q = &m->quads[88];
+        uint16_t vi[4] = { q->v0, q->v1, q->v2, q->v3 };
+        int zt = m->quad_vertices[vi[0]].z, eins = 1;
+        for (int k = 1; k < 4; k++) if (m->quad_vertices[vi[k]].z != zt) eins = 0;
+        printf("   Trennwand: rechte Wand des linken Fachs Viereck 88 z=%d, dieses Fach ab z=%d\n", zt, lo[2]);
+        pruefe("das Fach liegt RECHTS der Trennwand (Plattform +z = Schirm rechts): z0 > Viereck 88",
+               eins && lo[2] > zt);
+    }
 
     /* ---- 4./5. Drehung und Passung ---- */
     int ex = hi[0] - lo[0], ez = hi[2] - lo[2];
@@ -158,13 +175,12 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
     int32_t c = (int32_t)re15_cos_q12(RE15_SICHERUNG_ROT_Y);
     /* Prop-Drehmatrix Ry*Rx*Rz mit rx = rz = 0 (pc_prop_rot_q12, main.c): die Modellachse X
      * geht auf (cos ry, 0, -sin ry). */
-    printf("   Fach: %d in x, %d in z ; ROT_Y %d -> Modell-X auf (%d, 0, %d) / 4096\n",
+    printf("   Fach: %d in x (Tiefe), %d in z (Breite) ; ROT_Y %d -> Modell-X auf (%d, 0, %d) / 4096\n",
            ex, ez, RE15_SICHERUNG_ROT_Y, (int)c, (int)-s);
-    pruefe("die lange Seite des Fachs ist z", ez > ex);
-    pruefe("ROT_Y legt die Laengsachse naeher an z als an x (Runde 31 schraeg, |cos| < |sin|)",
-           abs((int)c) < abs((int)s));
-    pruefe("die Sicherung passt der Laenge nach ins Fach", (shi[0] - slo[0]) <= ez);
-    pruefe("die Sicherung passt der Dicke nach ins Fach", (shi[2] - slo[2]) <= ex);
+    pruefe("ROT_Y legt die Laengsachse auf z, parallel zur offenen Vorderseite (cos = 0, |sin| = 4096)",
+           c == 0 && abs((int)s) == 4096);
+    pruefe("die Sicherung passt der Laenge nach ins Fach (Laenge <= Breite in z)", (shi[0] - slo[0]) <= ez);
+    pruefe("die Sicherung passt der Dicke nach ins Fach (Dicke <= Tiefe in x)", (shi[2] - slo[2]) <= ex);
 
     /* ---- 6. Deckelweg ---- */
     static const uint8_t FOR15[6] = { 0x0d, 0x00, 0x18, 0x00, 0x0f, 0x00 };
@@ -179,8 +195,6 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
            for_ok && memcmp(buf + for_offset + 20, "\x2f\x02\xf6\xff", 4) == 0);
     printf("   Deckelweg %d -> Oeffnung z[%d..%d]\n", weg, l1[2] - weg, l1[2] + weg);
     pruefe("Deckelweg 150", weg == 150);
-    pruefe("die Mitte der Sicherung liegt in der Oeffnung",
-           RE15_SICHERUNG_POS_Z > l1[2] - weg && RE15_SICHERUNG_POS_Z < l1[2] + weg);
 
     /* ---- 7. im Spiel ---- */
     scd_vm_init(); re15_actor_init();
