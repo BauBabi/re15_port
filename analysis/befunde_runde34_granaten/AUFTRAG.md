@@ -39,3 +39,14 @@ Folgerungen fuer die Runde:
   kaputt/unfertig (-> RE2 Retail als Ziel, Beleg aus RE2 — GL-Explosiv-/Saeure-/Brand-Runde).
 * Den RE1.5-Schadenswert der Granate NICHT ungeprueft uebernehmen: existiert er, wird er im Original je
   erreicht (ohne Absturz)?
+
+## Nutzer-Antwort zur Absturz-Beobachtung (2026-09-29), woertlich
+
+> Bei der Explosion wenn sie einen Zombie erwischt. Und ich kam zur Granate, indem ich im player
+> Inventory select und so lange r drücke, bis die Granate im Inventar ausgewählt ist. Es gibt in der
+> Original Version ein weiteres Debug Menu zur Item Auswahl.
+
+* Absturzbedingung laut Nutzer: **die Explosion erwischt einen Zombie** (Wurf und Flug laufen also).
+* Weg zur Granate im Original OHNE Savestate-Patch: im Spieler-Inventar **Select** druecken und dann
+  **R (R1)** wiederholt, bis die Granate ausgewaehlt ist — ein weiteres Debug-Menue zur Item-Auswahl
+  (im Original vorhanden). Fuer die Reproduktion nutzbar (vgamepad: BACK = Select, RB/RIGHT_SHOULDER = R1).
