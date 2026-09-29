@@ -227,3 +227,15 @@ RE15_MIN_TESTS 411 -> 413 (`tools/local_build.sh` Kopf und Pruefzeile).
 4. Parallel-Falle: fremde Sitzungen beenden `re15_pc.exe` per Bildname (nicht `local_build.sh`, das filtert seit 53bf3f3a auf den
    eigenen Baum) - Quelle nicht gefunden; Messlaeufe darum mit umbenannter Kopie.
 
+## Suite
+
+`bash re15_port/tools/local_build.sh all` (Arbeitsbaum r32_unterteilung): **`=== LOCAL-BUILD-OK (all) — Tests 413/413`** (649 s).
+Zwei Laeufe davor je 1 rot, jedes Mal ein ANDERER GUI-Integrationstest mit echter exe (`integration_r30_irons_tisch_licht`,
+dann `integration_r30_granate_laden`), beide "Lauf abgerissen (exit=1)" nach ~25 s - dieselbe Signatur wie die fremd beendeten
+Messlaeufe (Abschnitt 4); jeder einzeln wiederholt gruen, beide beruehren die Tuerszene nicht.
+
+## Log
+
+- 1b9c583a wip: RE + Messung vorher.
+- b5852be4 wip: Bau (Engine-Zeichenpfad + DivideGT3), Riegel, MIN_TESTS 413.
+- 95d1d0b9 doc: Messung nachher, Kontaktboegen, Werkzeuge.
