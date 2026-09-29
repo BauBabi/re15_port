@@ -30,3 +30,86 @@ Faelschungen mit dem Rohbyte-Werkzeug des Pruefers (`pruefer_umgehung_r1_belege/
 | echtlauf B3 (niedrig) | `git check-ignore -v ...apk.ungeprueft` rc 1; `...android.apk` -> `.gitignore:63` | bestaetigt |
 | echtlauf B4 (niedrig) | Code: `build_android.sh:323` `rm -f "$OUT" "$UNGEPRUEFT"` steht NACH Gradle (:311-315); make_package prueft weder versionName noch Codestand der APK | bestaetigt (Code) |
 | Altlast | `HKCU\...\Uninstall\pymanager-pythoncore-3.14-64`: DisplayName Python 3.14.7, InstallDate 20260929, InstallLocation (Test-Path False), UninstallString startet den WindowsApps-PythonManager | bestaetigt |
+
+## 2. Aenderungen (je Befund: Ursache -> Aenderung)
+
+### 2.1 umgehung B1 (hoch): Gate liest die APK jetzt roh wie Android - `release/apk_asset_gate.py`
+- **Ursache (Code, bestaetigt):** `pruefen()` las ausschliesslich ueber `zipfile`: Namen erst NACH dessen
+  Normalisierung (NUL abgeschnitten, unter Windows `\` -> `/`), vom Local Header nur der Name verglichen.
+  Der Geraete-Leser (android_glue.c:212 `SDL_RWFromFile` -> AAssetManager -> libziparchive) sieht die rohen
+  Bytes und verlangt Local Header == Zentralverzeichnis.
+- **Aenderung:** eigener ZIP-Leser, `zipfile` nur noch im Selbsttest als UNABHAENGIGER Schreiber.
+  `zip_verzeichnis()`: EOCD = letzte Signatur von hinten, Kommentar reicht genau bis zum Dateiende, kein
+  ZIP64/mehrteilig, Zentralverzeichnis im Bereich und ohne Rest (sonst rc 2 "APK nicht lesbar").
+  `struktur_pruefen()` fuer JEDEN Eintrag (auch lib/, classes.dex): Name roh (kein NUL, gueltiges UTF-8,
+  kein `\`, keine Steuerzeichen, kein `/`-Anfang/`.`/`..`/`//`), Local-Header-Signatur, Name im Local
+  Header = Zentralverzeichnis (Laenge + Bytes), ohne Data-Descriptor-Bit CRC/csize/usize gleich, Daten
+  ganz vor dem Zentralverzeichnis, nicht verschluesselt, Methode 0/8; Namen roh eindeutig.
+  `_eintrag_lesen()`: Daten ab dem Offset aus dem LOCAL Header (wie libziparchive; die Referenz-APK hat bei
+  1584 von 3616 Eintraegen LFH-Extra != CD-Extra = AGP-Ausrichtung), csize Bytes, entpackt (Deflate mit
+  Ende-Pruefung), CRC32 + Laenge gegen das Zentralverzeichnis - fuer ALLE Eintraege; Assets zusaetzlich
+  sha256 gegen den Quellbaum. Ergebnisse (Abschnitt 3): F2/F3/F4/F5 jetzt rc 1.
+
+### 2.2 umgehung B2 (mittel): Signaturpruefung - neue `release/apk_pruefen.sh`
+- **Ursache:** keine Signaturpruefung in der Kette; make_package.sh rief nur das Asset-Gate.
+- **Aenderung:** EINE Pruefkette fuer beide Aufrufer (build_android.sh `run_gates`, make_package.sh):
+  Stichproben, aapt badging (Paket, versionName, beide ABIs), `java -jar build-tools/35.0.0/lib/apksigner.jar
+  verify -v --print-certs` (rc 0 UND "Verified using v2|v3 ... true"; Signer-Digest wird ausgegeben),
+  Gate-Selbsttest, Gate. apksigner.jar direkt statt apksigner.bat (kein cmd.exe-Quoting).
+
+### 2.3 umgehung B3 (mittel): Selbsttest 28 -> 70 Faelle + systematische Mutanten-Probe
+- **Ursache (bestaetigt):** Fixture <= 5000 B (< BLOCK), keine CRC32-erhaltende Faelschung, kein Geister-/
+  Doppelzeilen-Fall; die Mutanten-Probe des Bauers schaltete nur ganze Pruefungen ab.
+- **Aenderung:** neue Faelle 29-70: gute APK mit Datei > 1 MiB (4 Dateien/1060709 B in der PSX-Zeile
+  verlangt), 1 Byte hinter dem 1. MiB, CRC32-erhaltende Aenderung (GF(2)-Ausgleich, `_crc_erhaltend`),
+  Geisterzeile, Doppelzeile, `1_800`, Manifest kein UTF-8 / `# Notiz` / nennt sich selbst / ohne Kopf;
+  Eintragsname `\` (F2), NUL-Anhang (F3), kein UTF-8, Steuerzeichen, `..`; Local Header CRC (F4),
+  Groesse (F5), Name, Signatur; verschluesselt; Methode 99; Daten ragen ins Zentralverzeichnis;
+  classes.dex-Byte (nur CRC schuetzt es); Deflate mit Muell dahinter / Blocktyp 3; Verzeichniseintrag;
+  abgeschnitten (F7), Bytes hinter dem EOCD, ZIP64, CD-Signatur (F8), CD-Offset, ein Eintrag zu wenig;
+  gute APK mit EOCD-Signatur in Asset-Daten; neun build.gradle-Lesefehler.
+  Fixture wie AGP: nach dem Schreiben per zipfile bekommt jeder Local Header ein Ausrichtungsfeld 0xD935
+  (6-9 B, CD-Extra bleibt 0) - ein Leser, der den Datenoffset aus dem Zentralverzeichnis rechnet, faellt
+  schon im guten Fall durch. Faelschungen per eigenem Mini-Parser `_fx_cd` (unabhaengig vom Gate-Leser).
+  Faelle laufen parallel (4 Prozesse): 70 Faelle in 7-12 s.
+- **Beweis:** `nachbesserung_r1_belege/mutanten_voll.py` erzeugt per `ast` JEDE Abschwaechung des
+  Pruefcodes (A: jedes `befund(...)` -> `pass`, B: jedes `raise Bedienfehler/_Lesefehler` -> `pass`,
+  C: jede Namensregel, D: 18 Hand-Mutanten inkl. U3/U4, Offset aus dem CD, Namen wie zipfile, EOCD von
+  vorn) - Ergebnis Abschnitt 3.3.
+
+### 2.4 umgehung B4 (niedrig): kein stilles Ueberspringen mehr
+- `apk_werkzeuge_finden` bricht ab, wenn SDK, aapt, apksigner.jar oder Java fehlen (Meldung nennt den
+  Weg fuer die reine Asset-Pruefung). `--gate-only` verlangt `--version` (rc 2 sonst). Im Bau werden die
+  Werkzeuge VOR Gradle gesucht.
+
+### 2.5 umgehung B5 (niedrig): make_package.sh zippt nur die gepruefte APK
+- Vor den Kopierminuten: `check_binary_fresh` fuer die APK (Pfade engine, include, platform/pc,
+  platform/android - der Android-Bau uebersetzt platform/pc/src/*.c, jni/CMakeLists.txt:42), dann
+  `apk_pruefen` (Version = `--version`, Signatur, Assets), dann `APK_KENNUNG` = sha256/CRC32/Groesse in
+  EINEM Lesedurchgang.
+- Beim Zippen: APK ohne Kennung (erst spaeter abgelegt) -> Abbruch; Kennung jetzt != Kennung geprueft ->
+  Abbruch; nach dem Zippen `verify_apk_im_zip`: Katalog des letzten Volumes nennt genau den einen Eintrag,
+  CRC32 + Groesse = gepruefte Kennung. APK verschwunden -> Abbruch.
+
+### 2.6 echtlauf B1 (niedrig): python_finden.sh - PATH-Reihenfolge je Ordner
+- Je PATH-Ordner erst `python3`, dann `python` (leere Eintraege uebergangen). Auf dieser Maschine: `/c/Python310`
+  (PATH-Stelle 12) statt MSYS2 3.14.7 (Stelle 43). Belege `python_finden_nachher.txt` T1-T9.
+
+### 2.7 echtlauf B2 (niedrig): check_binary_fresh ohne platform/android fuer die PC-Binaries
+- Standard-Pfade jetzt `engine include platform ':(exclude)re15_port/platform/android'`; die APK uebergibt
+  ihre eigenen. Beleg: letzter Commit ohne android = cf386e32 19:02:06 < v0.8.19-Binaries 19:34.
+
+### 2.8 echtlauf B3 (niedrig): .apk.ungeprueft bleibt nicht liegen
+- `.gitignore` liegt ausserhalb meines Dateibereichs (nur release/*, build.gradle). Stattdessen loescht
+  eine EXIT-Falle in build_android.sh die `.ungeprueft`-Kopie bei jedem Abbruch nach dem Kopieren; die
+  identischen Bytes bleiben als Gradle-Ausgabe `app/build/outputs/apk/release/app-release.apk` (gitignoriert).
+
+### 2.9 echtlauf B4 (niedrig): alte APK vor Gradle entfernen + Version/Frische in make_package
+- `rm -f "$OUT" "$UNGEPRUEFT"` steht jetzt VOR Gradle; make_package prueft versionName (aapt) und Frische
+  (siehe 2.5).
+
+### 2.10 Altlast Uninstall-Eintrag: NICHT geaendert
+- Registry des Nutzers liegt ausserhalb dieses Auftrags (nur release/*, build.gradle). Der Eintrag
+  `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64` zeigt auf einen
+  geloeschten Ordner; sein UninstallString STARTET den WindowsApps-PythonManager - nicht ausfuehren.
+  Entfernen (Nutzerentscheidung): `reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64" /f`.

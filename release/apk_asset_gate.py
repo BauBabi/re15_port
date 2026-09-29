@@ -159,6 +159,7 @@ def _ohne_kommentare(text):
         elif text.startswith("/*", i):
             j = text.find("*/", i + 2)
             if j < 0:
+                # defensiv, unerreichbar: der Block kommt aus _klammer_ende, das jedes offene /* schon meldet
                 raise Bedienfehler("build.gradle: Kommentar /* ohne Ende")
             aus.append("\n" * text.count("\n", i, j + 2))
             i = j + 2
@@ -185,7 +186,7 @@ def _klammer_ende(code, i):
         if code.startswith("/*", j):
             k = code.find("*/", j + 2)
             if k < 0:
-                raise Bedienfehler("build.gradle: Kommentar /* ohne Ende")
+                raise Bedienfehler("build.gradle: Kommentar /* ohne Ende (ab Zeichen %d)" % j)
             j = k + 2
             continue
         if c in paar:
@@ -212,6 +213,7 @@ def _anweisungen(code):
         elif c in ")}]":
             tiefe -= 1
             if tiefe < 0:
+                # defensiv, unerreichbar: _klammer_ende hat den Block schon als ausgeglichen erkannt
                 raise Bedienfehler("build.gradle: Klammern passen nicht im stageAssets-Block")
         elif tiefe == 0 and c in "\n;":
             aus.append(code[start:j].strip())
@@ -340,6 +342,8 @@ def quelldateien(repo, befund):
     dateien, zahl = {}, {}
 
     def walk_fehler(e):
+        # im Selbsttest nicht nachstellbar (unlesbarer Ordner); fiele er weg, meldete die Zusatz-Pruefung
+        # die APK-Dateien des uebersprungenen Ordners als "zusaetzlich in der APK" (rc 1)
         raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
 
     for basis, quelle, ziel, muster in BAEUME:
@@ -524,6 +528,7 @@ def _eintrag_lesen(fa, e, sammeln=False):
         while rest:
             b = fa.read(min(rest, BLOCK))
             if not b:
+                # defensiv, unerreichbar: struktur_pruefen verlangt daten_off + csize <= Zentralverzeichnis
                 raise _Lesefehler("Datei endet mitten im Eintrag")
             rest -= len(b)
             if d is None:
@@ -570,6 +575,8 @@ def _sha_datei(pfad):
 def manifest_pruefen(roh, apk_dateien, befund):
     """roh = Bytes von assets/re15_assets.txt; apk_dateien = {rel: groesse} (ohne Manifest)."""
     if len(roh) > MANIFEST_MAX:
+        # ohne Selbsttest-Fall (ein 64-MiB-Manifest kostete je Lauf Sekunden und viel Speicher); erreichbar
+        # nur mit > 1 KiB langen Pfaden, weil das Gate mehr als 65534 Eintraege (ZIP64) ohnehin ablehnt
         befund("Manifest", "Manifest %d B > 64 MiB: das Geraet liest es nicht (android_glue.c:80)" % len(roh))
     if roh.startswith(b"\xef\xbb\xbf"):
         befund("Manifest", "Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar "
@@ -777,6 +784,7 @@ def pruefen(repo, apk, max_zeilen):
 
     n_befunde = sum(len(v) for v in befunde.values())
     if n_befunde == 0 and len(gleich) != len(quellen):
+        # Sicherheitsnetz: greift nur, wenn eine Pruefung oben still ueberspringt (zweiter Fehler)
         raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde"
                            % (len(quellen), len(gleich)))
     if n_befunde:
@@ -1341,6 +1349,60 @@ def _faelle():
     def eintrag_weniger(f):              # libziparchive saehe den letzten Eintrag nicht
         f.roh.append(lambda apk: (_fx_eocd(apk, (8, "<H"), plus=-1), _fx_eocd(apk, (10, "<H"), plus=-1)))
 
+    def deflate_kaputt(f):               # Blocktyp 3 (reserviert) im ersten Byte des Deflate-Stroms
+        f.eintrag(TEX)[2] = zipfile.ZIP_DEFLATED
+
+        def e(apk):
+            _lho, _p, d = _fx_stelle(apk, TEX)
+            _fx_patch(apk, [(d, b"\x07")])
+        f.roh.append(e)
+
+    def eocd_in_daten(f):                # gut: die LETZTE Signatur zaehlt (libziparchive sucht von hinten)
+        rel = "synchro/STAGE2/room2000/main00.wav"
+        b = f.quelle[rel]
+        b = b[:100] + EOCD_SIG + bytes(18) + b[122:]
+        f.quelle[rel] = b
+        f.eintrag("assets/" + rel)[1] = b
+
+    # --- build.gradle nicht lesbar: jede Abbruchstelle des Gradle-Lesers (Nachbesserung R1, Mutanten-Probe)
+    def g_ohne_task(f):
+        f.gradle_ersetzen('tasks.register("stageAssets", Sync) {', 'tasks.register("stageAssetsX", Sync) {')
+
+    def g_zweimal(f):
+        f.gradle += '\ntasks.register("stageAssets", Sync) {\n    into(assetStage)\n}\n'
+
+    def g_from_format(f):
+        f.gradle_ersetzen('from(new File(portRoot, "shared_assets/RE2"))', 'from(file("shared_assets/RE2"))')
+
+    def g_from_anweisung(f):
+        f.gradle_ersetzen('{ into "shared_assets/RE2" }', '{ into "shared_assets/RE2"; exclude "**/*.VBS" }')
+
+    def g_ohne_into(f):
+        f.gradle_ersetzen('{ into "shared_assets/RE2" }', '{ include "**" }')
+
+    def g_ohne_preserve(f):
+        f.gradle_ersetzen('    preserve { include "re15_assets.txt" }\n', '')
+
+    def g_klammer_falsch(f):
+        f.gradle_ersetzen('    into(assetStage)\n', '    into(assetStage]\n')
+
+    def g_klammer_offen(f):
+        f.gradle = f.gradle[:f.gradle.index('    into(assetStage)')]
+
+    def g_zeichenkette_offen(f):
+        f.gradle = f.gradle[:f.gradle.index('Asset-Baeume nach app/build')]
+
+    def g_kommentar_offen(f):
+        f.gradle = f.gradle[:f.gradle.index('/* Block-Kommentar') + len('/* Block')]
+
+    def stored_zu_lang(f):               # csize 5 B groesser als usize (LFH + CD gleich): Leseschutz greift
+        def e(apk):
+            lho, p, _d = _fx_stelle(apk, P07)
+            d = _fx_lesen(apk)
+            cs, = struct.unpack("<I", d[lho + 18:lho + 22])
+            _fx_patch(apk, [(lho + 18, struct.pack("<I", cs + 5)), (p + 20, struct.pack("<I", cs + 5))])
+        f.roh.append(e)
+
     return (
         ("gute APK", nichts, 0, ["APK-ASSET-GATE-OK", "RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2"]),
         ("Manifest mit CRLF (Geraet schneidet \\r ab)", crlf, 0, ["APK-ASSET-GATE-OK"]),
@@ -1406,6 +1468,20 @@ def _faelle():
         ("Zentralverzeichnis-Signatur zerstoert (F8)", cd_signatur, 2, ["Zentralverzeichnis kaputt bei Eintrag 1"]),
         ("Zentralverzeichnis-Offset zu gross", cd_offset, 2, ["Zentralverzeichnis ausserhalb der Datei"]),
         ("End-of-Central-Directory nennt einen Eintrag zu wenig", eintrag_weniger, 2, ["Rest oder Ueberlauf"]),
+        ("Deflate-Strom kaputt (Blocktyp 3)", deflate_kaputt, 1, ["Deflate-Strom kaputt", TEX]),
+        ("gute APK: End-of-Central-Directory-Signatur in Asset-Daten", eocd_in_daten, 0, ["APK-ASSET-GATE-OK"]),
+        ("build.gradle: stageAssets fehlt", g_ohne_task, 2, ['stageAssets", Sync) { ... } nicht gefunden']),
+        ("build.gradle: stageAssets zweimal", g_zweimal, 2, ["mehrfach vorhanden"]),
+        ("build.gradle: from in unbekanntem Format", g_from_format, 2, ["from-Anweisung nicht im bekannten Format"]),
+        ("build.gradle: unbekannte Anweisung im from-Block", g_from_anweisung, 2, ["unbekannte Anweisung im from-Block"]),
+        ("build.gradle: from ohne into", g_ohne_into, 2, ["from 'shared_assets/RE2' ohne into"]),
+        ("build.gradle: preserve fehlt", g_ohne_preserve, 2, ["erwartet genau ein 'into(assetStage)'"]),
+        ("build.gradle: Klammern passen nicht", g_klammer_falsch, 2, ["Klammern passen nicht (Zeichen"]),
+        ("build.gradle: stageAssets-Block ohne Ende", g_klammer_offen, 2, ["Klammer ohne Ende"]),
+        ("build.gradle: Zeichenkette ohne Ende", g_zeichenkette_offen, 2, ["Zeichenkette ohne Ende"]),
+        ("build.gradle: Kommentar /* ohne Ende", g_kommentar_offen, 2, ["Kommentar /* ohne Ende (ab Zeichen"]),
+        ("Stored-Eintrag: csize 5 B groesser als usize", stored_zu_lang, 1,
+         ["entpackt mehr als die 1700 B des Zentralverzeichnisses", P07]),
     )
 
 
