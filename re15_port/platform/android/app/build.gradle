@@ -102,6 +102,7 @@ tasks.register("stageAssets", Sync) {
     from(new File(portRoot, "shared_assets/PSX"))          { into "shared_assets/PSX" }
     from(new File(portRoot, "shared_assets/extracted_fx")) { into "shared_assets/extracted_fx" }
     from(new File(portRoot, "shared_assets/RE2"))          { into "shared_assets/RE2" }
+    from(new File(portRoot, "shared_assets/RE15DOOR"))     { into "shared_assets/RE15DOOR" }   // Runde 33: Port-Tuerarchive
     from(new File(repoRoot, "synchro")) {
         into "synchro"
         include "STAGE*/**"        // synchro/unused/ + README bleiben draussen (kein Codepfad liest sie)
@@ -110,7 +111,8 @@ tasks.register("stageAssets", Sync) {
     duplicatesStrategy = DuplicatesStrategy.FAIL
     doFirst {
         ["shared_assets/PSX/STAGE1", "shared_assets/extracted_fx/effect0_blood.tim",
-         "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS"].each { rel ->
+         "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS",
+         "shared_assets/RE15DOOR/P07G.DO2"].each { rel ->
             if (!new File(portRoot, rel).exists())
                 throw new GradleException("Asset fehlt im Repo: re15_port/${rel}")
         }

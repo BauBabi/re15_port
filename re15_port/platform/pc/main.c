@@ -3130,8 +3130,10 @@ int main(int argc, char *argv[])
               re15_door_seq_anfrage_t q;
               unsigned raum = 0;
               if (!re15_door_seq_anfrage_fuer_seite(z->seite, &q, &raum)) continue;
-              fprintf(stderr, "[tuer-seite] %s ROOM%04X DOOR%02X V%d Spender %02X\n",
-                      name, raum, q.re2_nr, q.variante, q.spender);
+              fprintf(stderr, "[tuer-seite] %s ROOM%04X DOOR%02X V%d Spender %02X%s%s\n",
+                      name, raum, q.re2_nr, q.variante, q.spender,
+                      q.eigen ? " Port-Archiv " : "",
+                      q.eigen && re15_door_seq_eigen(q.eigen) ? re15_door_seq_eigen(q.eigen)->kennung : "");
               q.aktiv = 1;
               g_door_seq_anfrage = q;
               re15_door_seq_ausfuehren();

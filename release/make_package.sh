@@ -51,6 +51,7 @@ done
 ASSETS="$REPO/re15_port/shared_assets/PSX"
 FX="$REPO/re15_port/shared_assets/extracted_fx"
 RE2="$REPO/re15_port/shared_assets/RE2"
+RE15DOOR="$REPO/re15_port/shared_assets/RE15DOOR"
 SYNCHRO="$REPO/synchro"
 NAME="re15_port_${VERSION}"
 
@@ -203,6 +204,19 @@ check_tree() {           # $1 = fertiger Paketordner
         n_tuer=$((n_tuer + 1))
     done
     echo "   Tuerarchive im Paket: $n_tuer x shared_assets/RE2/DOOR/*.DO2"
+    # Seit Runde 33: PORT-EIGENE Tuerarchive im RE2-Aufbau (tools/tueren/tuer_archiv_bauen.py,
+    # door_scene_pc.c re2_archiv_lesen mit eigen != 0, gen/re15_tuer_eigen.inc prueft Groesse +
+    # FNV-1a). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang - Gate statt Stille.
+    local n_eig=0
+    for tf in "$RE15DOOR"/*.DO2; do
+        [[ -e "$tf" ]] || die "Quellbaum ohne shared_assets/RE15DOOR/*.DO2 (Port-Tuerarchive fehlen)"
+        [[ -s "$out/shared_assets/RE15DOOR/$(basename "$tf")" ]] \
+            || die "Port-Tuerarchiv fehlt/leer im Paket: shared_assets/RE15DOOR/$(basename "$tf") (Tuersequenz ohne Modell)"
+        cmp -s "$tf" "$out/shared_assets/RE15DOOR/$(basename "$tf")" \
+            || die "Port-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE15DOOR/$(basename "$tf")"
+        n_eig=$((n_eig + 1))
+    done
+    echo "   Port-Tuerarchive im Paket: $n_eig x shared_assets/RE15DOOR/*.DO2"
     # Voiceover: der Port laedt NICHT aus shared_assets/PSX/VOICE, sondern aus
     # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip).
     # Seit 2026-08-24 ueber die BASIS-Wurzelliste (asset_root_pc.c): synchro/ muss
@@ -393,6 +407,8 @@ copy_common() {          # $1 = Paketordner
     cp -r "$FX" "$out/shared_assets/extracted_fx"
     echo "   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ..."
     cp -r "$RE2" "$out/shared_assets/RE2"
+    echo "   Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ..."
+    cp -r "$RE15DOOR" "$out/shared_assets/RE15DOOR"
     echo "   Voiceover kopieren (synchro/STAGE*, ohne unused/) ..."
     # Paket-Wurzel, NICHT unter shared_assets: re15_pc_read_base() sucht
     # "<Basis-Wurzel>/synchro/..." und die Basis-Wurzel ist das exe-Verzeichnis.

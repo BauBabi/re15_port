@@ -1,0 +1,214 @@
+{
+ "archive": [
+  {
+   "kennung": "P07G",
+   "basis": "DOOR07",
+   "basis_nr": 7,
+   "ton": 19608,
+   "modell": 35428,
+   "sektor": 10,
+   "datei": 55908,
+   "fnv": 2287354284,
+   "sha1": "ec77da3e7d6a3174a47606c7d2b2869e03e0bd05",
+   "basis_sha1": "8dc2ed15146707cdb27cac45feb3fab64f0d8e8f",
+   "tim_off": 22596,
+   "rezept": "Lueftungsschlitze + Flecken weg, Farbe = Median der RE1.5-Blaetter (G1)",
+   "ton_familie": "F3 (06 07 08 22 2F, Blechtuer)",
+   "griff": "Druecker flach (DOOR07 Mesh 1, gemalt: Druecker auf Rechteckschild)",
+   "protokoll": {
+    "auswahl": [
+     "S001_ROOM1000_c03_entz.png",
+     "S002_ROOM1000_c06_entz.png",
+     "S004_ROOM1010_c04_entz.png",
+     "S003_ROOM1010_c00_entz.png",
+     "S005_ROOM1020_c09_entz.png",
+     "S014_ROOM1040_c00_entz.png",
+     "S056_ROOM1120_c00_entz.png",
+     "S039_ROOM10C0_c00_entz.png",
+     "S036_ROOM10A0_c07_entz.png",
+     "S119_ROOM1230_c02_entz.png",
+     "S078_ROOM1180_c02_entz.png",
+     "S021_ROOM1050_c04_entz.png",
+     "S033_ROOM10A0_c00_entz.png",
+     "S023_ROOM1060_c00_entz.png",
+     "S024_ROOM1060_c02_entz.png",
+     "S025_ROOM1060_c05_entz.png",
+     "S000_ROOM1000_c00_entz.png",
+     "S020_ROOM1050_c04_entz.png",
+     "S019_ROOM1050_c01_entz.png"
+    ],
+    "gemalt_mittel": [
+     23.3,
+     34.4,
+     36.2
+    ],
+    "gemalt_mitte": [
+     21.5,
+     33.2,
+     37.4
+    ],
+    "texel_mittel": [
+     40.9,
+     60.3,
+     63.5
+    ],
+    "gekappt": 0,
+    "c_blatt": 73,
+    "korn": 0.5,
+    "korn_std": 0.0757
+   },
+   "palette": {
+    "farben_geschuetzt": 16,
+    "farben_blatt": 98,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 115
+   }
+  },
+  {
+   "kennung": "P1DG",
+   "basis": "DOOR1D",
+   "basis_nr": 29,
+   "ton": 23928,
+   "modell": 36100,
+   "sektor": 12,
+   "datei": 60676,
+   "fnv": 3073810584,
+   "sha1": "3c2a1ce50cd1ac63a9279d37529171e24bbd9e28",
+   "basis_sha1": "5820dcf6d5266a9ea3758a0fbf8e1007973c57f8",
+   "tim_off": 27364,
+   "rezept": "Lueftungsgitter weg, glattes Blech, Farbe nach RE1.5 (graugruen/blaugrau)",
+   "ton_familie": "eigen DOOR1D (Blech-Doppeltuer, V2/V3)",
+   "griff": "Druecker flach (DOOR1D Mesh 1)",
+   "protokoll": {
+    "auswahl": [
+     "S045_ROOM10D0_c08_entz.png",
+     "S045_ROOM10D0_c09_entz.png",
+     "S049_ROOM1100_c00_entz.png",
+     "S104_ROOM11F0_c00_entz.png",
+     "S104_ROOM11F0_c01_entz.png"
+    ],
+    "gemalt_mittel": [
+     37.2,
+     42.3,
+     41.7
+    ],
+    "gemalt_mitte": [
+     35.0,
+     40.0,
+     39.2
+    ],
+    "texel_mittel": [
+     65.1,
+     74.2,
+     73.0
+    ],
+    "gekappt": 0,
+    "c_blatt": 73,
+    "korn": 0.5,
+    "korn_std": 0.0757
+   },
+   "palette": {
+    "farben_geschuetzt": 8,
+    "farben_blatt": 48,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 3881,
+    "palette_belegt": 57
+   }
+  },
+  {
+   "kennung": "P16M",
+   "basis": "DOOR16",
+   "basis_nr": 22,
+   "ton": 11000,
+   "modell": 46572,
+   "sektor": 6,
+   "datei": 58860,
+   "fnv": 4082462236,
+   "sha1": "3fe3a23811d3b3e9bf02b403be2f2f6633cc2cb6",
+   "basis_sha1": "f26be8f1f15e215cc5c50eea31a78f852bc44d06",
+   "tim_off": 25548,
+   "rezept": "Silberrohr -> Messing (goldgelb, ROOM12607.bmp), Lichtverlauf der Rohre bleibt",
+   "ton_familie": "eigen DOOR16 (4 Sprossen, kein Schliesston)",
+   "griff": "-",
+   "protokoll": {
+    "messing_verhaeltnis": [
+     1.1125,
+     1.02,
+     0.5815
+    ],
+    "texel_umgefaerbt": 5252,
+    "gekappt": 0,
+    "L_mittel": 48.3
+   },
+   "palette": {
+    "farben_geschuetzt": 0,
+    "farben_blatt": 28,
+    "quantisiert": false,
+    "groesster_fehler_5bit": 0,
+    "texel_unbenutzt": 27516,
+    "palette_belegt": 29
+   }
+  }
+ ],
+ "zeilen": 72,
+ "seiten": [
+  "S000",
+  "S001",
+  "S002",
+  "S003",
+  "S004",
+  "S005",
+  "S006",
+  "S010",
+  "S014",
+  "S015",
+  "S018",
+  "S019",
+  "S020",
+  "S021",
+  "S023",
+  "S024",
+  "S025",
+  "S033",
+  "S034",
+  "S035",
+  "S036",
+  "S038",
+  "S039",
+  "S045",
+  "S049",
+  "S056",
+  "S078",
+  "S095",
+  "S099",
+  "S100",
+  "S102",
+  "S104",
+  "S119",
+  "S128",
+  "S130",
+  "S131"
+ ],
+ "tueren": [
+  "T000",
+  "T001",
+  "T002",
+  "T003",
+  "T004",
+  "T006",
+  "T012",
+  "T013",
+  "T015",
+  "T016",
+  "T021",
+  "T022",
+  "T023",
+  "T026",
+  "T052",
+  "T053",
+  "T054"
+ ]
+}

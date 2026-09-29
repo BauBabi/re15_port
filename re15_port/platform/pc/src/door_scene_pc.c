@@ -189,6 +189,7 @@ static void abzug(const char *serie, const char *art, int n)
 }
 
 /* ===========================================================================
+ * Port-eigene Archive (Runde 33, shared_assets/RE15DOOR) haben denselben Aufbau, s. re2_archiv_lesen.
  * RE2-Archiv aus shared_assets/RE2/DOOR (Runde 31): Datei UNVERAENDERT, Aufteilung nach der
  * EXE-Tabelle @0x8009a520 (gen/re2_tuer_tabelle.inc): Tonteil = Datei[0 .. Tonteil) (Tonlader
  * FUN_80014cd0 @0x80014d94), Modellteil = Datei + Sektor * 0x800 (Lader FUN_80015064
@@ -201,21 +202,44 @@ typedef struct {
     const uint8_t *ton;    int n_ton;
 } re2_archiv_t;
 
-static int re2_archiv_lesen(int nr, re2_archiv_t *a)
+/* FNV-1a 32 ueber die Datei (Pruefwert der Port-Archive, gen/re15_tuer_eigen.inc). */
+static uint32_t fnv1a(const uint8_t *d, int n)
+{
+    uint32_t h = 2166136261u;
+    for (int i = 0; i < n; i++) { h ^= d[i]; h *= 16777619u; }
+    return h;
+}
+
+/* eigen = 0: RE2-Archiv shared_assets/RE2/DOOR/DOORxx.DO2 (nr), gegen die Tabelle @0x8009a520.
+ * eigen = 1..N (Runde 33): PORT-EIGENES Archiv shared_assets/RE15DOOR/<kennung>.DO2 im RE2-Aufbau,
+ * gegen gen/re15_tuer_eigen.inc (Groessen + FNV-1a). Aufteilung in beiden Faellen gleich. */
+static int re2_archiv_lesen(int nr, int eigen, re2_archiv_t *a)
 {
     memset(a, 0, sizeof *a);
     int ton = 0, modell = 0, sektor = 0, groesse = 0;
-    if (re15_door_seq_re2_archiv(nr, &ton, &modell, &sektor, &groesse) != 0) return -1;
-    char rel[32];
-    snprintf(rel, sizeof rel, "DOOR/DOOR%02X.DO2", nr);
+    const re15_tuer_eigen_t *e = NULL;
+    char rel[40];
     int n = 0;
-    uint8_t *d = re15_pc_read_re2(rel, &n);
+    uint8_t *d = NULL;
+    if (eigen) {
+        e = re15_door_seq_eigen(eigen);
+        if (!e || e->basis != nr) return -1;
+        ton = e->ton; modell = e->modell; sektor = (int)e->sektor; groesse = (int)e->datei;
+        snprintf(rel, sizeof rel, "RE15DOOR/%s.DO2", e->kennung);
+        d = re15_pc_read_shared(rel, &n);
+    } else {
+        if (re15_door_seq_re2_archiv(nr, &ton, &modell, &sektor, &groesse) != 0) return -1;
+        snprintf(rel, sizeof rel, "DOOR/DOOR%02X.DO2", nr);
+        d = re15_pc_read_re2(rel, &n);
+    }
     if (!d) {
-        fprintf(stderr, "[tuer] shared_assets/RE2/%s fehlt\n", rel);
+        fprintf(stderr, "[tuer] shared_assets/%s%s fehlt\n", eigen ? "" : "RE2/", rel);
         return -1;
     }
-    if (n != groesse || sektor * 0x800 + modell != n || ton > sektor * 0x800) {
-        fprintf(stderr, "[tuer] %s: %d B passt nicht zur Tabelle @0x8009a520 (%d B)\n", rel, n, groesse);
+    if (n != groesse || sektor * 0x800 + modell != n || ton > sektor * 0x800
+        || (e && fnv1a(d, n) != e->fnv)) {
+        fprintf(stderr, "[tuer] %s: %d B passt nicht zur Tabelle (%d B%s)\n", rel, n, groesse,
+                e ? ", FNV-1a gen/re15_tuer_eigen.inc" : " @0x8009a520");
         free(d);
         return -1;
     }
@@ -292,7 +316,7 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     int n = 0;
     const uint8_t *teil = NULL;
     if (re2) {
-        if (re2_archiv_lesen(a->re2_nr, &arch) == 0) { teil = arch.modell; n = arch.n_modell; }
+        if (re2_archiv_lesen(a->re2_nr, a->eigen, &arch) == 0) { teil = arch.modell; n = arch.n_modell; }
     } else {
         teil = re15_door_seq_archiv(a->archiv, &n);
     }
@@ -305,17 +329,18 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     const char *serie = getenv("RE15_TUER_SERIE");
     const char *bogen = getenv("RE15_TUER_BOGEN");
     int schnell = getenv("RE15_TUER_SCHNELL") != NULL;   /* Pruefhaken: ohne VSync-Takt */
-    fprintf(stderr, "[tuer] Sequenz Archiv %d DOOR%02X Variante %d Bit7 %d Tuer %u Seite S%03u T%03u "
+    const re15_tuer_eigen_t *eig = re2 ? re15_door_seq_eigen(a->eigen) : NULL;
+    fprintf(stderr, "[tuer] Sequenz Archiv %d DOOR%02X%s%s Variante %d Bit7 %d Tuer %u Seite S%03u T%03u "
                     "Spender %02X (%d Skripte)\n",
-            a->archiv, re2 ? a->re2_nr : 0x2E, a->variante, a->bit7, a->tuer_nr, a->seite, a->tuer,
-            a->spender, s.n_skripte);
+            a->archiv, re2 ? a->re2_nr : 0x2E, eig ? " Port-Archiv " : "", eig ? eig->kennung : "",
+            a->variante, a->bit7, a->tuer_nr, a->seite, a->tuer, a->spender, s.n_skripte);
     if (s.tim_ok) re15_render_pc_upload_tim_slot(&s.tim, TUER_TIM_SLOT);
 
     /* Griff-Tausch (PORT-WAHL, s.o.): Spender-Archiv lesen, MD1 + TIM daraus */
     memset(&g, 0, sizeof g);
     if (re2 && a->spender != RE15_DOOR_KEIN_SPENDER) {
         g.gt = re15_door_seq_griff_tausch(a->re2_nr, a->spender);
-        if (g.gt && re2_archiv_lesen(a->spender, &spend) == 0 && spend.n_modell > 8) {
+        if (g.gt && re2_archiv_lesen(a->spender, 0, &spend) == 0 && spend.n_modell > 8) {
             uint32_t md1_rel = rd32le(spend.modell), tim_rel = rd32le(spend.modell + 4);
             re15_tim_t tim;
             if (md1_rel < tim_rel && (int)tim_rel < spend.n_modell
