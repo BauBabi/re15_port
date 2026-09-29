@@ -83,6 +83,9 @@ extern void (*re2fx_se_hook)(uint32_t code, const int32_t pos[3]);
  *  NULL fuer i ausserhalb 0..95. */
 const uint8_t *re2fx_platz(int i);
 
+/** NUR SONDEN: beschreibbarer Zugriff auf das Platz-Abbild (Zustand fuer gezielte Taktproben setzen). */
+uint8_t *re2fx_platz_sonde(int i);
+
 /** Die registrierte CORE00.ESP (NULL vor re2fx_register_core). */
 const uint8_t *re2fx_esp_daten(size_t *groesse);
 

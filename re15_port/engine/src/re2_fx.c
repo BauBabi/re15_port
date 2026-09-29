@@ -93,6 +93,12 @@ const uint8_t *re2fx_platz(int i)
     return s_pool[i].b;
 }
 
+uint8_t *re2fx_platz_sonde(int i)
+{
+    if (i < 0 || i >= RE2FX_PLAETZE) return NULL;
+    return s_pool[i].b;
+}
+
 const uint8_t *re2fx_esp_daten(size_t *groesse)
 {
     if (groesse) *groesse = s_esp ? s_esp_size : 0;

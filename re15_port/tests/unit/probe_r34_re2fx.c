@@ -395,6 +395,88 @@ static int pruef_bodenfeuer(void)
     return 0;
 }
 
+
+/* ============================================================================================ */
+/* 6xx Folgeflammen-Takt: gelandete Flamme mit vel.x 200 / acc.x 0 legt genau alle 15 Bilder eine
+ * Folgeflamme (step[2] % 15 == 0, @0x8001fd94-b8), mit vel.x 60 (< 61, @0x8001fd78) keine. */
+static int folge_zaehlen(int vx, int bilder)
+{
+    start();
+    const int32_t q[3] = { 0, -100, 0 };
+    re2fx_aufschlag(1, q, 0);
+    int t;
+    for (t = 0; t < 40 && re2fx_platz(92)[0] != 19; t++) re2fx_tick();
+    if (re2fx_platz(92)[0] != 19) return -1;
+    uint8_t *w = re2fx_platz_sonde(92);
+    w[0x0C] = (uint8_t)vx; w[0x0D] = (uint8_t)(vx >> 8); w[0x08] = 0; w[0x02] = 0;
+    int n = 0;
+    for (t = 0; t < bilder; t++) {
+        uint8_t belegt[RE2FX_PLAETZE];
+        for (int i = 0; i < RE2FX_PLAETZE; i++) belegt[i] = (u16(re2fx_platz(i), 0x18) != 0);
+        re2fx_tick();
+        const uint8_t *f = re2fx_platz(92);
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *b = re2fx_platz(i);
+            if (belegt[i] || !u16(b, 0x18) || b[0x1C] != 5 || b[0x1E] != 4) continue;
+            if (s16(b, 0x2C) == s16(f, 0x34) && s16(b, 0x30) == s16(f, 0x38)) n++;
+        }
+    }
+    return n;
+}
+static int pruef_folgetakt(void)
+{
+    int n = folge_zaehlen(200, 60);
+    if (n != 4) { printf("  Folgeflammen bei vel.x 200 in 60 Bildern: %d\n", n); return fail(601, "Folgeflammen-Takt != alle 15 Bilder"); }
+    n = folge_zaehlen(60, 60);
+    if (n != 0) return fail(602, "Negativ-Kontrolle: vel.x 60 legt Folgeflammen");
+    return 0;
+}
+
+/* 7xx Aspekt-Folgen der Flamme (Op 58 in der Luft, Op 19 am Boden) je Bild exakt:
+ *   Op 58 Zustand 2 x1010/x1007 (@0x80022350-84), Zustand 1 x880/x800 (@0x800222c8-328),
+ *   Op 19 Zustand 2 x1009/x1002 (@0x8001f40c-44), Zustand 1 x990/x980 (@0x8001f3a4-e4). */
+static int geprueft[4];
+static int aspekt_lauf(int32_t hoehe);
+static int pruef_aspekte(void)
+{
+    memset(geprueft, 0, sizeof geprueft);
+    int rc = aspekt_lauf(-100);                         /* landet: Op 58 Zustand 2, dann Op 19 */
+    if (!rc) rc = aspekt_lauf(-30000);                  /* bleibt in der Luft: Op 58 Zustand 2 und 1 */
+    if (rc) return rc;
+    if (!geprueft[0] || !geprueft[1] || !geprueft[2] || !geprueft[3]) return fail(705, "nicht alle Aspekt-Zweige durchlaufen");
+    return 0;
+}
+static int aspekt_lauf(int32_t hoehe)
+{
+    start();
+    const int32_t q[3] = { 0, hoehe, 0 };
+    re2fx_aufschlag(1, q, 0);
+    re2fx_tick(); re2fx_tick();                         /* X, X+1 (Op 27) */
+    for (int t = 0; t < 300; t++) {
+        const uint8_t *f = re2fx_platz(92);
+        if (!u16(f, 0x18)) break;
+        unsigned opa = f[0], z = f[0x1B];
+        int ctr = s16(f, 0x42);
+        uint32_t x = u16(f, 0x04), y = u16(f, 0x06);
+        re2fx_tick();
+        f = re2fx_platz(92);
+        if (!u16(f, 0x18) || ctr == 0) continue;
+        uint32_t kx = 0, ky = 0; int k = -1;
+        if (opa == 58 && z == 2) { kx = 1010; ky = 1007; k = 0; }
+        if (opa == 58 && z == 1) { kx = 880;  ky = 800;  k = 1; }
+        if (opa == 19 && z == 2) { kx = 1009; ky = 1002; k = 2; }
+        if (opa == 19 && z == 1) { kx = 990;  ky = 980;  k = 3; }
+        if (k < 0) continue;
+        if (u16(f, 0x04) != (uint16_t)(x * kx / 1000u) || u16(f, 0x06) != (uint16_t)(y * ky / 1000u)) {
+            printf("  t=%d Op %u Zustand %u: (%u,%u) -> (%u,%u), erwartet (%u,%u)\n", t, opa, z, x, y,
+                   u16(f, 0x04), u16(f, 0x06), x * kx / 1000u, y * ky / 1000u);
+            return fail(701 + k, "Aspekt-Folge falsch");
+        }
+        geprueft[k]++;
+    }
+    return 0;
+}
+
 int main(void)
 {
     if (laden() != 0) return fail(1, "CORE00.ESP fehlt");
@@ -403,6 +485,8 @@ int main(void)
     if ((rc = pruef_saeure())) return rc;
     if ((rc = pruef_brand())) return rc;
     if ((rc = pruef_bodenfeuer())) return rc;
+    if ((rc = pruef_folgetakt())) return rc;
+    if ((rc = pruef_aspekte())) return rc;
     printf("probe_r34_re2fx: alle Pruefungen gruen\n");
     return 0;
 }
