@@ -203,4 +203,22 @@ Sitz, den der Nutzer jetzt verwirft):
 
 ## 8. Suite / Commits
 
-(folgt)
+Commits: 4c8ca88f (Dossier + Faecher-Geometrie), 5a977e22 (Sitze + Messbelege), 093b731a (Riegel,
+RE15_MIN_TESTS 412), 27ce185e (Dossier Abnahme), dazu dieser Abschluss.
+
+`bash re15_port/tools/local_build.sh all` (412 Tests):
+
+| Lauf | Ergebnis | rot | Ursache laut Log | Einzel-Wiederholung (`ctest -R`) |
+|---|---|---|---|---|
+| 1 | 406/412 | integration_r30_cut_blitz, _elza_vollstart, _r30_granate_laden, _r30_irons_tisch_licht, _r30_sicherung_laden, _r30_titel_puls | jede: "Lauf ist vorher abgerissen (exit=1)" bzw. "Lauf beendet mit '1'" | alle 6 gruen (granate_laden im 2., irons_tisch_licht im 3. Versuch; dazwischen wieder exit=1) |
+| 2 | 410/412 | integration_elza_vollstart, _r30_sicherung_bild | exit=1 (elza: "Lauf beendet mit '1'") | beide gruen |
+| 3 | 411/412, 611 s | integration_r30_sicherung_laden | [a] exit=1, abgerissen nach F150 (in Lauf 1 derselbe Test bei F248) | gruen |
+
+Alle Unit-Riegel in beiden Laeufen gruen (unit_r32_hebetisch_faecher, unit_r31_hebetisch, unit_r30_granate,
+unit_r30_sicherung_sitz, unit_sicherung_1150 u.a.). Die roten sind ausschliesslich exe-Laeufe, die mitten im
+Lauf mit Rueckgabe 1 enden, ohne Meldung und ohne Absturzeintrag — wechselnd von Lauf zu Lauf, darunter Tests
+ohne jeden Bezug zum Hebetisch (Titel, Elza-Start, Cut-Blitz). Rueckgabe 1 ist das, was `taskkill /F` hinterlaesst;
+der parallele Agent in `r32_unterteilung` vermerkt in `build/r32_unt/lauf.sh`, dass parallele Sitzungen
+"taskkill /IM re15_pc.exe" absetzen, und misst deshalb mit einer umbenannten exe. Gegenprobe hier: die
+Konfiguration P2 von integration_r30_irons_tisch_licht (Cut 2, zweimal bei F30..F60 abgerissen) lief danach 3x mit
+`re15_pc.exe` und 3x mit einer umbenannten Kopie sauber bis EXIT_AT.
