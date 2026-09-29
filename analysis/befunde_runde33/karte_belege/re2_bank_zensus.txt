@@ -1,0 +1,136 @@
+=== Bank 31: 9 Records (Set 5, Ck 4)
+  ROOM1090 sub20 @0x02C4E Ck  bit  16 == 1   [21 1f 10 01]
+  ROOM10E0 sub00 @0x01D66 Set bit  18 op 1   [22 1f 12 01]
+  ROOM1150 sub12 @0x019B6 Set bit  27 op 1   [22 1f 1b 01]
+  ROOM2000 sub02 @0x02940 Ck  bit  17 == 0   [21 1f 11 00]
+  ROOM2000 sub06 @0x02A24 Set bit  17 op 1   [22 1f 11 01]
+  ROOM2110 sub07 @0x01B0C Ck  bit  14 == 0   [21 1f 0e 00]
+  ROOM3040 sub24 @0x01B88 Set bit   9 op 1   [22 1f 09 01]
+  ROOM3040 sub24 @0x01B8C Set bit   4 op 1   [22 1f 04 01]
+  ROOM6060 sub03 @0x00F66 Ck  bit  24 == 1   [21 1f 18 01]
+=== Bank 32: 26 Records (Set 26, Ck 0)
+  ROOM20E0 sub00 @0x01768 Set bit  11 op 1   [22 20 0b 01]
+  ROOM20E0 sub00 @0x0176C Set bit   8 op 1   [22 20 08 01]
+  ROOM20E0 sub00 @0x01770 Set bit   9 op 0   [22 20 09 00]
+  ROOM20E0 sub00 @0x01820 Set bit  12 op 1   [22 20 0c 01]
+  ROOM20E0 sub00 @0x01824 Set bit   8 op 0   [22 20 08 00]
+  ROOM20E0 sub00 @0x01828 Set bit   9 op 1   [22 20 09 01]
+  ROOM2160 sub02 @0x0119A Set bit  13 op 1   [22 20 0d 01]
+  ROOM3040 sub24 @0x01BAC Set bit  13 op 1   [22 20 0d 01]
+  ROOM30B0 sub06 @0x01348 Set bit   4 op 1   [22 20 04 01]
+  ROOM30B0 sub09 @0x015C2 Set bit   4 op 1   [22 20 04 01]
+  ROOM30B0 sub15 @0x01A60 Set bit   1 op 1   [22 20 01 01]
+  ROOM4040 sub18 @0x0147C Set bit   2 op 1   [22 20 02 01]
+  ROOM60B0 sub05 @0x014E9 Set bit   5 op 1   [22 20 05 01]
+  ROOM60C0 sub04 @0x01268 Set bit   6 op 1   [22 20 06 01]
+  ROOM6160 sub04 @0x0215C Set bit   7 op 1   [22 20 07 01]
+  ROOMB0E0 main00 @0x017A8 Set bit  11 op 1   [22 20 0b 01]
+  ROOMB0E0 main00 @0x017AC Set bit   8 op 1   [22 20 08 01]
+  ROOMB0E0 main00 @0x017B0 Set bit   9 op 0   [22 20 09 00]
+  ROOMB0E0 main00 @0x017D4 Set bit  12 op 1   [22 20 0c 01]
+  ROOMB0E0 main00 @0x017D8 Set bit   8 op 0   [22 20 08 00]
+  ROOMB0E0 main00 @0x017DC Set bit   9 op 1   [22 20 09 01]
+  ROOMB160 main00 @0x00F6A Set bit  13 op 1   [22 20 0d 01]
+  ROOMB1B0 main00 @0x0252A Set bit   2 op 1   [22 20 02 01]
+  ROOMF0B0 main00 @0x01126 Set bit   5 op 1   [22 20 05 01]
+  ROOMF0C0 main00 @0x01114 Set bit   6 op 1   [22 20 06 01]
+  ROOMF160 main00 @0x01D30 Set bit   7 op 1   [22 20 07 01]
+=== Bank 33: 25 Records (Set 25, Ck 0)
+  ROOM20B0 sub10 @0x037DA Set bit   2 op 1   [22 21 02 01]
+  ROOM20B0 sub10 @0x037DE Set bit   3 op 1   [22 21 03 01]
+  ROOM20B0 sub10 @0x037E2 Set bit   4 op 1   [22 21 04 01]
+  ROOM2130 sub05 @0x01842 Set bit   5 op 1   [22 21 05 01]
+  ROOM3040 sub24 @0x01B90 Set bit   2 op 1   [22 21 02 01]
+  ROOM3040 sub24 @0x01B94 Set bit   3 op 1   [22 21 03 01]
+  ROOM3040 sub24 @0x01B98 Set bit   4 op 1   [22 21 04 01]
+  ROOM3040 sub24 @0x01B9C Set bit   5 op 1   [22 21 05 01]
+  ROOM3040 sub24 @0x01BA0 Set bit   6 op 1   [22 21 06 01]
+  ROOM3040 sub24 @0x01BA4 Set bit   7 op 1   [22 21 07 01]
+  ROOM3040 sub24 @0x01BA8 Set bit   8 op 1   [22 21 08 01]
+  ROOM3060 sub22 @0x02852 Set bit   6 op 1   [22 21 06 01]
+  ROOM4040 sub06 @0x00FBC Set bit   7 op 1   [22 21 07 01]
+  ROOM4040 sub06 @0x00FC0 Set bit   8 op 1   [22 21 08 01]
+  ROOM5040 sub13 @0x0217C Set bit   9 op 1   [22 21 09 01]
+  ROOM5040 sub13 @0x02180 Set bit  10 op 1   [22 21 0a 01]
+  ROOM5040 sub13 @0x02184 Set bit  11 op 1   [22 21 0b 01]
+  ROOM5060 sub04 @0x01032 Set bit   9 op 1   [22 21 09 01]
+  ROOM5060 sub04 @0x01036 Set bit  10 op 1   [22 21 0a 01]
+  ROOM5060 sub04 @0x0103A Set bit  11 op 1   [22 21 0b 01]
+  ROOM6120 sub03 @0x01504 Set bit  13 op 1   [22 21 0d 01]
+  ROOM6120 sub03 @0x01508 Set bit  14 op 1   [22 21 0e 01]
+  ROOM6120 sub03 @0x0150C Set bit  15 op 1   [22 21 0f 01]
+  ROOM6120 sub03 @0x01512 Set bit  16 op 1   [22 21 10 01]
+  ROOM6120 sub03 @0x01516 Set bit  17 op 1   [22 21 11 01]
+=== Bank 35: 31 Records (Set 31, Ck 0)
+  ROOM1120 sub03 @0x02EDA Set bit   4 op 1   [22 23 04 01]
+  ROOM20B0 sub10 @0x037E6 Set bit   2 op 1   [22 23 02 01]
+  ROOM20B0 sub10 @0x037EA Set bit   3 op 1   [22 23 03 01]
+  ROOM20B0 sub10 @0x037EE Set bit   4 op 1   [22 23 04 01]
+  ROOM2130 sub05 @0x01846 Set bit   5 op 1   [22 23 05 01]
+  ROOM4010 sub12 @0x0297A Set bit   8 op 1   [22 23 08 01]
+  ROOM4010 sub12 @0x02996 Set bit   7 op 1   [22 23 07 01]
+  ROOM4030 sub00 @0x02448 Set bit   7 op 1   [22 23 07 01]
+  ROOM4030 sub00 @0x02470 Set bit   8 op 1   [22 23 08 01]
+  ROOM6030 sub03 @0x02F36 Set bit  13 op 1   [22 23 0d 01]
+  ROOM6030 sub04 @0x02F40 Set bit  14 op 1   [22 23 0e 01]
+  ROOM6030 sub10 @0x0308C Set bit  14 op 1   [22 23 0e 01]
+  ROOM60E0 sub06 @0x005EC Set bit  16 op 1   [22 23 10 01]
+  ROOM60E0 sub06 @0x0060E Set bit  17 op 1   [22 23 11 01]
+  ROOM6120 sub03 @0x01522 Set bit  13 op 1   [22 23 0d 01]
+  ROOM6120 sub03 @0x01526 Set bit  14 op 1   [22 23 0e 01]
+  ROOM6120 sub03 @0x0152A Set bit  15 op 1   [22 23 0f 01]
+  ROOM6120 sub03 @0x01530 Set bit  16 op 1   [22 23 10 01]
+  ROOM6120 sub03 @0x01534 Set bit  17 op 1   [22 23 11 01]
+  ROOMA120 sub01 @0x02DCA Set bit   4 op 1   [22 23 04 01]
+  ROOMD010 main00 @0x022C4 Set bit   8 op 1   [22 23 08 01]
+  ROOMD010 main00 @0x02624 Set bit   7 op 1   [22 23 07 01]
+  ROOMD010 sub08 @0x02930 Set bit   8 op 1   [22 23 08 01]
+  ROOMD010 sub08 @0x0294C Set bit   7 op 1   [22 23 07 01]
+  ROOMD030 sub00 @0x023AC Set bit   7 op 1   [22 23 07 01]
+  ROOMD030 sub00 @0x02438 Set bit   8 op 1   [22 23 08 01]
+  ROOMF030 sub03 @0x02DCE Set bit  13 op 1   [22 23 0d 01]
+  ROOMF030 sub04 @0x02DD8 Set bit  14 op 1   [22 23 0e 01]
+  ROOMF030 sub10 @0x02F24 Set bit  14 op 1   [22 23 0e 01]
+  ROOMF0E0 sub05 @0x00518 Set bit  16 op 1   [22 23 10 01]
+  ROOMF0E0 sub05 @0x0053A Set bit  17 op 1   [22 23 11 01]
+desync-Bloecke: 171
+   ('1000', 'sub', 4, 'desync@0x13FC op=0xB6')
+   ('1020', 'main', 0, 'desync@0x18C2 op=0xED')
+   ('1020', 'sub', 17, 'desync@0x1D3A op=0xD2')
+   ('1020', 'sub', 19, 'desync@0x1EF0 op=0xF8')
+   ('1030', 'sub', 6, 'desync@0x3920 op=0xF4')
+   ('1030', 'sub', 7, 'desync@0x3A22 op=0xD2')
+   ('1040', 'sub', 1, 'desync@0xDF8 op=0x9C')
+   ('1080', 'sub', 3, 'desync@0x1C86 op=0xE2')
+   ('1090', 'sub', 5, 'desync@0x245C op=0xCA')
+   ('10A0', 'main', 0, 'desync@0x1C6E op=0x48')
+   ('10A0', 'sub', 4, 'desync@0x1EF3 op=0x04')
+   ('10B0', 'sub', 7, 'desync@0x1A9A op=0xE2')
+   ('1110', 'sub', 2, 'desync@0x236A op=0x9A')
+   ('1110', 'sub', 3, 'desync@0x290A op=0x9C')
+   ('1120', 'sub', 53, 'desync@0x47F6 op=0x75')
+   ('1130', 'sub', 30, 'desync@0x21B6 op=0x7B')
+   ('1140', 'main', 0, 'desync@0xA8A op=0x48')
+   ('1160', 'sub', 3, 'desync@0xB9E op=0xC2')
+   ('1170', 'main', 0, 'desync@0xD06 op=0x0F')
+   ('1180', 'sub', 2, 'desync@0x1F56 op=0xF2')
+   ('11B0', 'sub', 4, 'desync@0xBF7 op=0x78')
+   ('11C0', 'sub', 13, 'desync@0x1000 op=0xCC')
+   ('11D0', 'main', 0, 'desync@0x1B3E op=0xB9')
+   ('2030', 'sub', 1, 'desync@0x8AB op=0xFC')
+   ('2040', 'main', 0, 'desync@0x1996 op=0x85')
+   ('2050', 'main', 0, 'desync@0x17A2 op=0x9C')
+   ('2070', 'main', 0, 'desync@0x10D7 op=0x78')
+   ('2070', 'sub', 5, 'desync@0x12B2 op=0x48')
+   ('20B0', 'main', 0, 'desync@0x30D6 op=0x76')
+   ('20B0', 'sub', 7, 'desync@0x35B8 op=0xE2')
+   ('20B0', 'sub', 13, 'desync@0x3922 op=0x60')
+   ('2120', 'sub', 8, 'desync@0xAAE op=0x40')
+   ('2140', 'sub', 6, 'desync@0x76A op=0xD4')
+   ('2190', 'sub', 20, 'desync@0x14F6 op=0x3A')
+   ('3020', 'sub', 2, 'desync@0xB76 op=0x96')
+   ('3030', 'main', 0, 'desync@0x15FB op=0x92')
+   ('3040', 'main', 0, 'desync@0x1096 op=0xDF')
+   ('3050', 'main', 0, 'desync@0x176E op=0xC2')
+   ('3050', 'sub', 12, 'desync@0x1A2B op=0x94')
+   ('30B0', 'main', 0, 'desync@0xBFA op=0x26')

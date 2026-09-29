@@ -67,7 +67,8 @@ Woran es haengt (Datei:Zeile, Stand 53b69a1b):
 
 Alle Adressen `info/re2leon/PSX.EXE` (t_addr 0x80010000, Kopf 0x800), selbst disassembliert mit
 `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py`. Skript-Zensus ueber alle Leon-RDTs
-(`info/re2leon/PL0/RDT`) mit `karte_werkzeug/r33_re2_bank_zensus.py` (Walker
+(`info/re2leon/PL0/RDT`) mit `karte_werkzeug/r33_re2_bank_zensus.py` (Ausgabe
+`karte_belege/re2_bank_zensus.txt`; Walker
 `analysis/befunde_runde30/tools/r30_re2_scd.py`; 171 Bloecke desynchronisieren im Walker und
 sind nicht erfasst — die Aussagen unten gelten fuer die sauber gelaufenen Bloecke, die vier
 Hinweis-Bloecke gehoeren dazu).
@@ -332,8 +333,13 @@ Laufs fallen in den Hinweis (F1874-F1999).
 Voller Lauf 1 (`build_r33_suite1.log`): 417/419 — `integration_r30_cut_blitz` (Lauf B endete mit
 exit 1 nach 250 Bildern) und `integration_r30_granate_laden` rot; beide einzeln wiederholt gruen,
 `cut_blitz` zusaetzlich mit der alten exe (`re15_pc_r33k_vorher.exe`) gegengefahren: beide gruen,
-bitgleiche Ausgabe (731 Bilder, 45 mit 3D, 2 Wechsel). Unter Last flatternde GUI-Tests
-(Memory `reai-v2-gui-tests-flattern-bei-parallelen-agenten`), kein Zusammenhang mit der Karte.
+bitgleiche Ausgabe (731 Bilder, 45 mit 3D, 2 Wechsel). Voller Lauf 2 (`build_r33_suite2.log`,
+nach den Gegenproben, `local_build.sh all`): 417/419 — `integration_r30_cut_blitz` (diesmal Teil C,
+exit 1) und `integration_r30_titel_puls` (Bilddauer im Titel bis 79,8 ms = Last); beide einzeln
+wiederholt gruen (`ctest -R`, 2/2). Unter Last flatternde GUI-Tests (Memory
+`reai-v2-gui-tests-flattern-bei-parallelen-agenten`, drei andere Agenten bauten parallel), in
+keinem Fall derselbe Test zweimal an derselben Stelle, kein Bezug zur Karte. Die drei neuen Riegel
+und die fuenf `unit_r30_hinweis_*` waren in beiden Laeufen gruen.
 
 ---
 
