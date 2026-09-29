@@ -151,4 +151,28 @@ Ueberlebende (je Grund, im Code kommentiert):
 | B_quelldateien "Quellbaum nicht lesbar" | im Selbsttest nicht nachstellbar (unlesbarer Ordner); faellt er weg, meldet die Zusatz-Pruefung die APK-Dateien des uebersprungenen Ordners (rc 1) |
 | B__eintrag_lesen "Datei endet mitten im Eintrag" | unerreichbar: struktur_pruefen verlangt daten_off + csize <= Zentralverzeichnis |
 | A_manifest_pruefen "> 64 MiB" | ohne Fall: 64-MiB-Manifest je Selbsttest zu teuer; erreichbar nur mit > 1 KiB langen Pfaden (mehr als 65534 Eintraege lehnt das Gate als ZIP64 ab) |
-| B_pruefen "interner Widerspruch" | Sicherheitsnetz fuer einen ZWEITEN Fehler (still uebersprungene Pruefung); z. B. faengt es A_pruefen_Z706 mit ab |
+| B_pruefen "interner Widerspruch" | Sicherheitsnetz fuer einen ZWEITEN Fehler (still uebersprungene Pruefung): in Lauf 2 erkennt es die Mutanten A_pruefen_Z706/Z713/Z724 ("fehlt"/"Groesse"/"Inhalt" geloescht) mit rc 2 statt 1 |
+
+### 3.4 Gate direkt gegen die Referenz-APK und 19 Faelschungen (je 3.10.11 und 3.14.7)
+`kontrollen_gate.sh` -> `nachher_gate_kontrollen.txt` (40 Laeufe, 22:52-22:55, je ~3,4 s). Faelschungen auf
+rohen Bytes mit dem Werkzeug der Gegenpruefung (`umgehung_werkzeug.py`) bzw. `nb_faelschen.py` (nutzt dessen
+Parser, nicht den des Gates); `_sig` = danach mit dem Release-Schluessel neu signiert (apksigner verify rc 0,
+`signieren_faelschungen.txt`). Orakel = aapt2 35.0.0 (libziparchive, `vorher_/nachher_aapt2_libziparchive.txt`).
+
+| APK | Gate vorher (HEAD 568e9b88) | Gate nachher | libziparchive (aapt2) |
+|---|---|---|---|
+| ref_v0.8.19 | 0 | **0** - 3603/3603 bytegleich, 3616 Eintraege lesbar | liest |
+| K0 Umschrift (unsigniert) | 0 | 0 (Inhalt/Struktur richtig; Kette: apksigner, 3.5) | liest |
+| F1 CRC32-erhaltend (ENEMSE.VBS), auch `_sig` | 1 | 1 `Inhalt weicht ab (sha256` | liest (falschen Inhalt) |
+| F2 `\` im Namen, auch signiert | **0** | **1** `'\' im Namen` + `fehlt in der APK` | failed to find file |
+| F3 NUL-Anhang | **0** | **1** `NUL-Byte im Namen` | Invalid entry name (ganze APK) |
+| F4 LFH-CRC | **0** | **1** `CRC/Groessen im Local Header weichen ... ab` | Inconsistent information |
+| F5 LFH-Groesse | **0** | **1** dito | Inconsistent information |
+| F6 gross/klein, auch `_sig` | 1 | 1 fehlt/zusaetzlich/Manifest | failed to find file |
+| F7 abgeschnitten | 2 | 2 `kein End-of-Central-Directory` | Invalid file |
+| F8 CD-Signatur | 2 | 2 `Zentralverzeichnis kaputt bei Eintrag 2150` | missed a central dir sig |
+| N1 Name nur im LFH anders (P1AP.DO2) | (1, zipfile-Fehler) | 1 `Name im Local Header weicht` | lfh name did not match |
+| N2 Name kein UTF-8 (P24B.DO2), auch `_sig` | - | 1 `Eintragsname kein gueltiges UTF-8` | Invalid entry name (ganze APK) |
+| N3 Verschluesselungsbit (P27S.DO2), auch `_sig` | - | 1 `verschluesselter Eintrag` | **liest** - hier ist das Gate strenger als das Geraet (AGP setzt das Bit nie) |
+| N4 Methode 99 (DOOR36.DO2) | - | 1 `Methode 99` | failed to open file |
+| N5 EOCD nennt 3615 statt 3616 | - | 2 `Rest oder Ueberlauf` | oeffnet, sieht aber `resources.arsc` (letzter CD-Eintrag) NICHT |
