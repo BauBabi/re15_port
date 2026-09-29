@@ -81,6 +81,10 @@ phase Compile+Link
 # die local_build.sh fuer den lokalen Bau schon abfaengt (CLAUDE.md). Deshalb wird die
 # Ausgabe vollstaendig gesichert, die Summenzeile ausgegeben UND ihr Vorhandensein
 # erzwungen.
+# Seriell wie bisher (Standard 1). Port-Wahl, keine Original-Adresse: gemessen 2026-09-29
+# -j1 ctest 392/393 s, -j8 101 s bei gleichem Fingerabdruck (EIN Lauf) - parallel bleibt
+# Opt-in (RE15_CTEST_JOBS), weil GUI-Haken unter Last flattern (Memory
+# reai-v2-gui-tests-flattern-bei-parallelen-agenten) und ein Release-Gate kein Muenzwurf sein soll.
 CTEST_JOBS="${RE15_CTEST_JOBS:-1}"
 # Kein Grafikgeraet im Container (Mesa-Software-GL): Bildpruefungen, die eine echte GPU
 # brauchen, melden sich damit SICHTBAR als uebersprungen (integration_r30_titel_puls);

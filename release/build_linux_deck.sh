@@ -24,6 +24,9 @@
 # Link /src/<pfad> -> /host/<pfad> angelegt — es fehlt keine Datei, die es im Repo
 # gibt. release/linux_out wird direkt eingehaengt (dort landet das Binary).
 #   --mount   alter Weg: Repo direkt als /src einhaengen (Vergleichslaeufe, Fehlersuche)
+#   RE15_CTEST_JOBS=N  ctest parallel (Opt-in, Standard seriell; -j8: ctest 101 s statt 392 s)
+# Diagnose je Lauf (auch bei Rot): release/linux_out/diag/ (ctest-Ausgabe, LastTest.log,
+# Fingerabdruck je Test, .ninja_log; bei rotem ctest das Binary als re15_pc.UNGEPRUEFT-...).
 #
 # Warum nicht einfach auf dem Host bauen: SteamOS 3.7 hat glibc 2.41; das
 # Binary liefe dann NUR auf gleich neuen Systemen. Siehe docker_linux_build.sh.
@@ -41,7 +44,7 @@ while [[ $# -gt 0 ]]; do
         --distrobox) BOX="$2"; shift 2 ;;
         --image)     IMAGE="$2"; shift 2 ;;
         --mount)     MODE=mount; shift ;;
-        -h|--help)   sed -n '2,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        -h|--help)   sed -n '2,32p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
@@ -79,7 +82,8 @@ fi
 # 128 Dateien, 2,3 MB — pri/STAGE1 und vier Dateien unter analysis/; Dossier
 # nachtrag-linux-bau.md). Alles andere erreicht der Container ueber die
 # Rueckfall-Links — langsam, aber vollstaendig. Ein Eintrag hier aendert also nur
-# die Geschwindigkeit, nie das Ergebnis.
+# die Geschwindigkeit, nie das Ergebnis. Port-Wahl, keine Original-Adresse (Bau-Umgebung;
+# gemessen: 18577 Dateien, 550 MB, packen 17 s + auspacken 14-15 s je Lauf).
 KOPIE=(
     re15_port
     synchro

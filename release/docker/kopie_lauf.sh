@@ -74,6 +74,7 @@ container_lauf() {
     command -v git >/dev/null 2>&1 && ( cd "$REPO" && git rev-parse --git-dir >/dev/null 2>&1 ) || {
         echo "Kopie-Modus braucht ein git-Repo (Dateiliste). Ohne: --mount" >&2; return 1; }
 
+    local t_pack; t_pack=$(date +%s)
     STAGE="$(mktemp -d "${TMPDIR:-/tmp}/re15_stage.XXXXXX")"
     trap 'rm -rf "$STAGE"' EXIT
     mkdir -p "$STAGE/.re15_stage"
@@ -112,7 +113,7 @@ container_lauf() {
     n_dateien=$(tr -cd '\0' < "$STAGE/files.lst" | wc -c)
     n_links=$(tr -cd '\0' < "$LINKS" | wc -c)
     tar -cf "$STAGE/src.tar" -C "$STAGE" .re15_stage -C "$REPO" --null -T "$STAGE/files.lst"
-    echo "== Phase Quellbaum packen: $(( $(date +%s) - T0 )) s  ($n_dateien Dateien, $(( $(wc -c < "$STAGE/src.tar") / 1048576 )) MB, $n_links Rueckfall-Links)"
+    echo "== Phase Quellbaum packen: $(( $(date +%s) - t_pack )) s, gesamt $(( $(date +%s) - T0 )) s  ($n_dateien Dateien, $(( $(wc -c < "$STAGE/src.tar") / 1048576 )) MB, $n_links Rueckfall-Links)"
 
     echo "== Bauen in $RUNNER ($IMAGE), Quellbaum als Kopie im Container =="
     local rc=0

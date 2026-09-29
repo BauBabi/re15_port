@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --image) IMAGE="$2"; shift 2 ;;
         --mount) MODE=mount; shift ;;
-        -h|--help) sed -n '2,18p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        -h|--help) sed -n '2,17p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
@@ -47,6 +47,7 @@ fi
 
 # Ohne Tests (RE15_BUILD_TESTS=OFF) liest der Bau nur re15_port (Quellen + die
 # Existenzpruefung von shared_assets/PSX im Configure). Alles andere: Rueckfall-Links.
+# Port-Wahl, keine Original-Adresse (Bau-Umgebung; gemessen 4613 Dateien, 333 MB).
 KOPIE=(
     re15_port
     release/docker_win_build.sh
