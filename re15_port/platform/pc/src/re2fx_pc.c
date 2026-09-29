@@ -117,7 +117,11 @@ void re2fx_pc_draw(void)
                         s_ansicht.has_region, s_ansicht.rxs, s_ansicht.rzs, q, (int)(sizeof q / sizeof q[0]));
     if (n <= 0) return;
     re15_render_pc_bind_tim_slot(RE2FX_TIM_SLOT);
-    for (int i = 0; i < n; i++) {
+    /* Reihenfolge: FUN_80077ed0 haengt jedes Paket VORN an seinen OT-Bucket (`lw v0,0(t3)` / `sw v0,0(t0)` /
+     * `sw a0,0(t3)` @0x80077f94-fac) — innerhalb eines Buckets zeichnet die GPU die zuletzt eingereihten
+     * zuerst. Der Port-Sortierer ist stabil (render_pc.c:963-971), also die Quads RUECKWAERTS einreihen:
+     * gleich tiefe Sprites (z.B. die drei Saeure-Kinder an Q) liegen dann wie im Original uebereinander. */
+    for (int i = n - 1; i >= 0; i--) {
         const re2fx_quad_t *e = &q[i];
         unsigned seite = e->tpage & 0x1Fu;
         if (seite != 0x1E && seite != 0x1F) continue;          /* nur die TEX.TIM-Seiten (s. Kopf) */

@@ -382,11 +382,44 @@ Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck 
    Queue-Funktion (main.c:460/462), die die Farbe unveraendert als SDL-Faktor/255 nutzt (render_pc.c:2505) — die RE1.5-ESP-
    Effekte liefen damit bei halber Helligkeit, falls nicht anderswo ausgeglichen. Fuer RE2-FX nimmt re2fx_pc 255 (§4).
 
+10. Optional (nur Tempo, Ergebnis unveraendert laut Kopf von release/build_linux_deck.sh:80-86): `KOPIE` um
+   `info/re2leon/PL0/PLD/PL01.PLD` und `info/re2leon/PL0/PLD/PL01W09.PLW` ergaenzen (liest `unit_r34_re2fx_knochen`).
+
 ## OFFEN
 
 * O-VB2 Formtyp-Genauigkeit: der Zellen-Kontakt nutzt das Zellrechteck (`re15_collision_box_blocked`), nicht die RE2-
   Formtests der Typen 1..13 (Schraegen/Treppen/Kreise). Bestehende Port-Vereinfachung; Weg: die RE1.5-Formtests
   (re15_collision.c "SCA DIAGONAL / SLOPE cells") in re2fx_boden nutzen, sobald sie fuer Punkt-Tests exportiert sind.
 * RE2-Paketpuffer-Ueberlauf (Platz-Loeschen @0x80077e40-54) nicht nachgebaut (unerreichbar, §4).
-* Mischreihenfolge gleich tiefer Quads: die PSX-OT legt spaetere Pakete eines Buckets VOR fruehere; der Port sortiert nach
-  View-Z. Fuer die Aufschlag-Sprites ohne Folge (ABR 1/2/3 sind kommutativ; ABR 0 kommt in den Aufschlag-Skripten nicht vor).
+* Mischreihenfolge: die PSX-OT haengt jedes Paket vorn an seinen Bucket (@0x80077f94-fac, Bucket = SZ >> 5) — innerhalb
+  eines Buckets gilt "zuletzt eingereiht, zuerst gezeichnet". re2fx_pc reiht deshalb rueckwaerts ein (stabiler Port-Sortierer
+  render_pc.c:963-971), womit GLEICH tiefe Quads (die Kinder an Q) exakt wie im Original liegen. Quads mit verschiedenem
+  View-Z im selben 32er-Bucket ordnet der Port nach View-Z, das Original nach Einreihung — offen, wirkt nur, wo additive
+  (ABR 1/3) und subtraktive (ABR 2) Sprites mit Saettigung ueberlappen (reine Additionen/Subtraktionen sind kommutativ).
+
+---
+
+## 7. Bau und Suite
+
+* Bauverzeichnis `re15_port/build_r34_d` (eigenes; nur ueber `local_build.sh` bzw. PATH mit msys64 zuerst). Neue Tests:
+  `unit_r34_re2fx`, `unit_r34_re2fx_knochen`, `unit_r34_re2fx_bild` → N = 428 (C0) + 3 = **431** (`ctest -N` nach dem
+  Configure). `RE15_MIN_TESTS` NICHT angefasst (Integration hebt es, BAUPLAN §4).
+* **Lauf 1** (`local_build.sh` all, 2026-09-30 00:32-01:02, parallel zu den Suiten anderer Spuren; CPU-Last gemessen 94 %,
+  3 ctest + 3 re15_pc gleichzeitig): `99% tests passed, 6 tests failed out of 431`, `Total Test time (real) = 1698.51 sec`.
+  Rot NUR exe-/GUI-Tests: `integration_r30_cut_blitz` (exit=1 nach 0,29 s, debug.log endet nach `[window] windowed 960x720`),
+  `integration_r30_granate_laden` (Lauf abgerissen, exit=1), `integration_r30_irons_tisch_laden` (keine CONTINUE-Zeile,
+  exit=1), `integration_r30_irons_tisch_licht` (Timeout 400,32 s), `integration_r30_titel_puls` ((D) 1 von 3 Perioden
+  ausserhalb der Bilddauer-Toleranz — Zeitmessung), `integration_relatch_pin` (exit=1 nach F60).
+* **Einzelwiederholung** (je `ctest -R "^<name>$"`, nacheinander): alle sechs **Passed** — cut_blitz 71,93 s,
+  granate_laden 109,01 s, irons_tisch_laden 32,74 s, irons_tisch_licht 57,52 s, titel_puls 28,79 s, relatch_pin 24,68 s →
+  Last-Flattern (Memory reai-v2-gui-tests-flattern-bei-parallelen-agenten), kein reproduzierbares Rot. Keiner dieser Tests
+  beruehrt Spur-D-Code: main.c ruft keine re2fx-Funktion (Bindung = INTEGRATIONSWUNSCH), re2fx_pc.c ist gelinkt, aber
+  ohne Aufrufer.
+* **Lauf 2** (`local_build.sh` all, 01:07-01:24, CPU-Last waehrend des Laufs 91 %): `99% tests passed, 4 tests failed out
+  of 431`, `Total Test time (real) = 863.79 sec`. Rot wieder NUR exe-Tests, andere Menge als Lauf 1:
+  `integration_r30_cut_blitz` (Teil C exit=1), `integration_r30_granate_laden` (abgerissen, exit=1),
+  `integration_r30_irons_tisch_bild` (exit=1), `integration_r30_titel_puls` ((D) Perioden-Messung).
+* **Einzelwiederholung** nach Lauf 2: cut_blitz Passed 102,45 s, granate_laden Passed 132,97 s, irons_tisch_bild Passed
+  83,22 s; titel_puls bei CPU-Last 99 % **Failed** ((D) 62 bzw. 58 Engine-Schritte je Periode statt 60 — Bilddauern bis
+  105 ms), bei Last 42 % gestartet **Passed** 29,36 s. Der Test misst die Echtzeit-Taktung des Titelschirms (title_pulse.c,
+  main.c-Titelschleife), die Spur D nicht beruehrt → Last-Flattern, kein reproduzierbares Rot.
