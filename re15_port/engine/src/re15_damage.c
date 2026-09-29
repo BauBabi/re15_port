@@ -3668,3 +3668,20 @@ void re15_re2_pause_filter_apply(int slot)
      * frueher treffbar statt fuer immer unverwundbar. */
     if ((e->re2z_self1d3 & 0x7fu) == 0u) e->hit_react &= (uint8_t)~1u;
 }
+
+/* ============================================================================================
+ * Runde 34 VERTRAG V2b (C0) — re15_re2_gl_apply = FUN_800470C0-Zwilling (RE2-GL-Applier).
+ * --------------------------------------------------------------------------------------------
+ * STUB (Spur C0, keine Verhaltensaenderung): trifft nichts, Rueckgabe 0 = kein Treffer.
+ * Die Umsetzung gehoert Spur B (Arbeitspaket B4, BAUPLAN §3.2): Leerliste (0x800CFBF3 == 0
+ * @0x800470c4/@0x8004710c), vier Gates (@0x8004712c-64), Band (@0x8004716c-a4), Box FUN_80041EF8
+ * auf den Trefferkasten-Mittelpunkt (@0x800471b4 `addiu a2,s0,132`), Radius-Erweiterung
+ * (@0x800471bc-ec; Ruecknahme nur im Nicht-Treffer-Zweig @0x800473dc-408), Modus-Bit 0x10000
+ * (@0x80047208-10), Records *(0x800A6A88 + Typ*4) (@0x80047214-68), Zone/Zeile/Sperre/Richtung
+ * (@0x80047294-3d8). Aufrufer im Port: das Bodenfeuer der RE2-FX-Maschine (Op 40 @0x80020758)
+ * ueber re2fx_applier (include/re2_fx.h); Argumente siehe re15_damage.h. */
+int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode)
+{
+    (void)p; (void)gier; (void)box; (void)hitcode;
+    return 0;   /* Stub: Spur B4 */
+}

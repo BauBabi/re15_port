@@ -28,3 +28,9 @@ re15_port/shared_assets/RE2/DOOR/** -text
 # Port-eigene Tuerarchive (Runde 33): Binaerdateien im RE2-Aufbau (re15_port/tools/tueren/tuer_archiv_bauen.py,
 # Groesse + FNV-1a in gen/re15_tuer_eigen.inc). NIE normalisieren.
 re15_port/shared_assets/RE15DOOR/** -text
+# RE2-Effektbank + Effekt-Textur (Runde 34 Granaten, Vertrag C0): UNVERAENDERTE Kopien von
+# info/re2leon/COMMON/DATA/CORE00.ESP (8572 B, md5 c0b0a7f46862698b7eccbf445d86048c) und TEX.TIM
+# (132320 B, md5 7472e1a871a480b5e6e7e7d50b7761b5) fuer die RE2-FX-Maschine (include/re2_fx.h).
+# Heute schuetzt sie nur Gits NUL-Heuristik (Byte 2 bzw. 1 = 00) — wie DOOR/RE15DOOR: NIE normalisieren.
+re15_port/shared_assets/RE2/CORE00.ESP -text
+re15_port/shared_assets/RE2/TEX.TIM -text

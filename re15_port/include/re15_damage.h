@@ -326,6 +326,24 @@ void    re15_re2_damage_model_set(int on);
 int16_t re15_re2_init_hp(const re15_actor_t *e);
 void    re15_re2_hp_sync(void);
 
+/* ---- Runde 34 VERTRAG V2b (C0, BAUPLAN §3.0): der RE2-GL-APPLIER ----------------------------
+ * re15_re2_gl_apply = FUN_800470C0-Zwilling (RE2-PSX.EXE), gerufen vom Bodenfeuer der RE2-FX-
+ * Maschine (Op 40 @0x80020758) ueber den Funktionszeiger re2fx_applier (include/re2_fx.h).
+ * Argumente wie im Original-Aufruf @0x80020768-bc:
+ *   p       = a0 = &P, s32-Vektor auf dem Stapel (sp+16/20/24 = Flammenlage, y - 100 @0x800207a4)
+ *   gier    = a1 = `lh a1,34(v1)` @0x800207b8 (Platz +0x22)
+ *   box     = a2 = Stapelkopie (sp+32) der 4 x s16 @0x80010910 = {-600, 0, 300, 150}
+ *             (Kopie per lwl/lwr/swl/swr @0x80020770-8c, je Aufruf frisch)
+ *   hitcode = a3 = 0x2002000A (`lui a3,0x2002` @0x80020794 / `ori a3,a3,0xa` @0x800207a0)
+ * Rueckgabe != 0 = Treffer (Op 40 springt dann nach Op 50: `beq v0,zero` @0x800207c4,
+ * `jal 0x80021970` @0x800207cc).
+ * ⛔ box ist hier const: die Radius-Erweiterung des Originals (@0x800471bc-ec, Ruecknahme nur im
+ * Nicht-Treffer-Zweig @0x800473dc-408) schreibt in den PUFFER DES AUFRUFERS; der einzige Aufrufer
+ * Op 40 kopiert die Box vor jedem Aufruf neu -> eine lokale Kopie im Applier ist fuer ihn gleich-
+ * wertig. Umsetzung (Leerliste, Gates, Band, Box FUN_80041EF8, Records, Stempel): Spur B4.
+ * C0 = STUB: trifft nichts, Rueckgabe 0. */
+int     re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode);
+
 /* MECHANISMUS-ZAEHLER (Runde 34, nur fuer Sonden — sie aendern kein Spielverhalten).
  * gate5   = wie oft das fuenfte Tor des Kandidatenfilters FUN_800470C0 (@0x8004716C-A4)
  *           ein Urteil gefaellt hat. Nach der Umstellung gehoert es AUSSCHLIESSLICH zum
