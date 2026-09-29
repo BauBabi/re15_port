@@ -115,7 +115,8 @@ int re15_pc_fx_seite_bauen(const uint8_t *tex, size_t n, uint16_t tpage,
     int vx = (tpage & 0x0f) * 64;                                       /* psx-spx TPAGE x    */
     if (!((tpage >> 4) & 1)) return -6;          /* y 0: nicht im TEX-Schnitt (Seiten bei y 256) */
     int col0 = vx - TEX_VRAM_SEITE_X0 + TEX_QUELL_SPALTE0;
-    if (col0 < 0 || col0 + 64 > iw) return -6;
+    /* nur das GEMESSENE Rechteck (VRAM 896..1023 = Spalten 192..319); alles andere ist nicht belegt */
+    if (col0 < TEX_QUELL_SPALTE0 || col0 + 64 > iw) return -6;
     for (int y = 0; y < 256; y++)
         for (int x = 0; x < 64; x++)
             seite->pix[y * 64 + x] = rd16(pix + ((size_t)y * iw + col0 + x) * 2u);

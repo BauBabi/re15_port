@@ -7491,6 +7491,28 @@ re_title:;
                         re2fx_aufschlag(fa_art, fa_q, (int16_t)fa_pl->rot_y);
                     }
                 }
+                {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein
+                     * Spielverhalten): setzt den Latch 0x800b5358 in genau diesen Spielbildern, wie
+                     * es Routine 31 (@0x8001857c) bzw. Routine 9 (@0x80017694) im ESP-Tick tun —
+                     * damit ist der Leser (C3) ohne Spur A messbar. Nur in Bildern mit Takt. */
+                    static const char *s_fl = NULL; static int s_fl_init = 0;
+                    if (!s_fl_init) { s_fl_init = 1; s_fl = getenv("RE15_FORCE_LICHT"); }
+                    if (s_fl && re15_pc_fx_takt_frei()) {
+                        const char *p = s_fl;
+                        while (*p) {
+                            char *e = NULL;
+                            long b = strtol(p, &e, 10);
+                            if (e == p) break;
+                            if (b == (long)g_engine.frame_count) {
+                                g_re15_licht_latch = 1;
+                                fprintf(stderr, "[harness] RE15_FORCE_LICHT F%u -> Latch 1\n",
+                                        (unsigned)g_engine.frame_count);
+                            }
+                            p = (*e == ',') ? e + 1 : e;
+                            if (!*e) break;
+                        }
+                    }
+                }
                 re15_pc_fx_takt();
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
                  * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
@@ -8658,11 +8680,18 @@ re_title:;
              * (`jal 0x8001e8c8` @0x8001d09c) und Figuren-Schleife (@0x8001d0e8-164), dann Satz
              * zurueck + Latch := 0 (@0x8001d1ac/@0x8001d1b4) — VOR den Props (@0x8001d1c0). Belege je
              * Instruktion: fx_plattform_pc.h. Das Zurueckstellen steht hinter der NPC-Schleife. */
-            re15_pc_licht_latch_anwenden(&g_re15_room_lights, g_re15_active_cut,
-                                         g_actors[RE15_ACTOR_SLOT_PLAYER].x,
-                                         g_actors[RE15_ACTOR_SLOT_PLAYER].y,
-                                         g_actors[RE15_ACTOR_SLOT_PLAYER].z,
-                                         (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
+            if (re15_pc_licht_latch_anwenden(&g_re15_room_lights, g_re15_active_cut,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].y,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                                             (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y)) {
+                const re15_light_cut_t *lc = &g_re15_room_lights.cuts[g_re15_active_cut];
+                fprintf(stderr, "[licht] F%u Latch -> Cut %d Licht2 Typ %u Farbe (%u,%u,%u) Lage (%d,%d,%d) "
+                                "Hell %u\n", (unsigned)g_engine.frame_count, g_re15_active_cut,
+                        (unsigned)lc->type_flags[2], (unsigned)lc->colors[2][0], (unsigned)lc->colors[2][1],
+                        (unsigned)lc->colors[2][2], (int)lc->positions[2][0], (int)lc->positions[2][1],
+                        (int)lc->positions[2][2], (unsigned)lc->brightness[2]);
+            }
             /* CANONICAL per-bone NCCT lighting (2026-06-02, mirrors the PSX-native
              * mesh_psx.c + FUN_8001e9ec). Build the WORLD-space context ONCE here
              * (actor_rot = NULL → ctx->L stays world-space); the per-bone fold
