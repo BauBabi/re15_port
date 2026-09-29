@@ -102,9 +102,15 @@ void re2fx_pc_set_ansicht(const re15_camera_view_t *cam, int cx, int cy, int cam
     s_ansicht.gueltig = 1;
 }
 
+/* Paketpuffer je Bild: 0x3C00 Byte = 384 POLY_FT4 zu 40 Byte (Anfang 0x800C4418 + Puffer*0x3C00
+ * FUN_800778f8, Ende 0x800C8018 + Puffer*0x3C00 `addiu a2,a2,-15360` @0x8007796c / @0x800779b0). Passt ein
+ * Sprite nicht mehr hinein, LOESCHT das Original den Platz (`sh zero,24(s0)` @0x80077e40-54) — im Port
+ * nicht nachgebaut: die Aufschlaege erzeugen hoechstens ~130 Quads je Bild (bau_d.md §4). */
+#define RE2FX_PAKETE_JE_BILD 384
+
 void re2fx_pc_draw(void)
 {
-    static re2fx_quad_t q[512];
+    static re2fx_quad_t q[RE2FX_PAKETE_JE_BILD];
     s_letzte_quads = 0;
     if (!s_ansicht.gueltig || !s_tex_ok || !re15_render_pc_dbg_slot_loaded(RE2FX_TIM_SLOT)) return;
     int n = re2fx_quads(&s_ansicht.cam, s_ansicht.cx, s_ansicht.cy, s_ansicht.camf,
