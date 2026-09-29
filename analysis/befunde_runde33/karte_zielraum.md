@@ -11,11 +11,17 @@ Arbeitsbaum `.claude/worktrees/r33_karte`, Zweig `r33/karte`. Laufend fortgeschr
 
 ## Stand
 
-- [ ] 1. Messen im Port (Etagenwahl, Darstellung, Datei:Zeile)
-- [ ] 2. RE2 prüfen (Etagenwahl, Zielraum-Darstellung)
-- [ ] 3. Bauen
-- [ ] 4. Riegel (probes/r33_karte.cmake), RE15_MIN_TESTS
-- [ ] 5. Abnahme im echten Spiel (Framedumps)
+- [x] 1. Messen im Port (Etagenwahl, Darstellung, Datei:Zeile) — Abschnitt 1
+- [x] 2. RE2 prüfen (Etagenwahl, Zielraum-Darstellung) — Abschnitt 2
+- [x] 3. Bauen — Abschnitt 3 (Commit 2d14ec04)
+- [x] 4. Riegel (probes/r33_karte.cmake), RE15_MIN_TESTS 416 -> 419 — Abschnitt 4
+- [x] 5. Abnahme im echten Spiel (Framedumps) — Abschnitt 5
+
+**Kurz:** RE2 macht am Hinweis kein Blatt waehlbar (Gatter Bank 35 = Blatt besucht, gesetzt beim
+Raumeintritt und bei der Kartenaufnahme) und kennt keine Zielraum-Markierung in der normalen Karte
+(Bank 32 ist eine Grundriss-Variante, keine Markierung). Beides ist deshalb Port-Wahl auf den
+ausdruecklichen Nutzerwunsch, im Stil und Takt der RE2-Karte, abgeleitet aus Flag (3,94) und dem
+Besucht-Bit des Funkraums — **Speicherstand unveraendert v9**.
 
 ## Protokoll
 
@@ -277,3 +283,72 @@ Besucht-Bit, `zone_bit` maskiert `room & ~1`; Riegel markierung, letzter Punkt).
 Messsonden im selben Programm: `messen` (Abschnitt 1; nachher `karte_belege/messung_nachher.txt`:
 RUNTER 4 -> 3 mit Zielkachel CLUT 0x0012, -> 2, HOCH -> 3, -> 4) und `karte <pfad.mcr>`
 (Spielstaende einer Speicherkarte).
+
+### 4.1 Gegenproben (`karte_werkzeug/r33_karte_gegenprobe.sh`)
+
+Je eine Mutation am Bau, Build, drei Riegel (Rueckgabe 0 = gruen, 1 = rot), Datei danach aus git:
+
+```
+M1 Freigabe weg      (blatt_waehlbar = nur bekannt):        etage=1 markierung=1 speicher=1
+M2 Zielkachel weg    (Zeichner-Zweig aus):                  etage=0 markierung=1 speicher=1
+M3 Hinweis-Ton       (Zielblinker spielt Se(2,0x2B)):       etage=0 markierung=1 speicher=0
+M4 Besuch egal       (ziel_aktiv ohne Besucht-Test):        etage=0 markierung=1 speicher=1
+unveraendert:                                               etage=0 markierung=0 speicher=0
+```
+
+---
+
+## 5. ABNAHME an der echten exe (RE15_FRAMEDUMP, beschleunigter Renderer)
+
+Werkzeug `karte_werkzeug/r33_karte_abnahme.sh` (Muster Runde 30), Lauf-exe als Kopie
+`re15_pc_r33k.exe` (vorher: `re15_pc_r33k_vorher.exe`, gebaut aus 53b69a1b), Speicherkarte = KOPIE
+von `re15_port/build/platform/pc/re15_card.mcr` des Hauptbaums. Deren Platz 0 ist genau der Fall des
+Nutzers (Sonde `test_r33_karte karte`): `Raum 1150, flag(3,94)=0, Blatt3 bekannt=0`. Titel -> LOAD
+GAME (Platz 0) -> Debug-JUMP 1150 in die AUTO-Zone (-20500,-22800) wie Runde 30 -> die Szene laeuft
+von selbst -> Hinweis; Tasten per RE15_INPUT_SCRIPT auf der Spielbild-Achse. Kein AUTOSHOT, kein
+SOFTWARE_RENDER. Bilder, Logs und Karten liegen in `build/r33_karte_abnahme/` (nicht versioniert);
+Kontaktbogen `karte_belege/abnahme_kontaktbogen.jpg`, Einzelbilder `karte_belege/lauf_a_002250.jpg`
+(Umriss) / `lauf_a_002270.jpg` (rot). Alle Bilder angesehen.
+
+Kachel-Mittelwert der Zielkachel (156,76) 48x40 (x3 im 960x720-Bild), `r33_karte_kontaktbogen.py`:
+rot = (46,12,56), Umriss = (4,20,94) — dieselben Werte wie der Hinweis in Runde 30 (49,13,55)/(4,20,94);
+Hintergrund ohne Kachel (6,23,90).
+
+| Lauf | Ablauf (Log) | Befund |
+|---|---|---|
+| vorher_a (alte exe) | Hinweis F1879, START F1999 schliesst, START F2098, L1 F2149 (se=4, Blatt 4), RUNTER F2230: **kein Ton, kein Blattwechsel** | Bild F2250: weiter "POLICE STATION 3F" — 2F unerreichbar (in diesem Stand ist auch 1F unbekannt) |
+| lauf_a (neue exe) | Hinweis F1874 .. F1999 wie gehabt; L1 F2149 -> Blatt 4; RUNTER F2230 -> se=4, **Blatt 3**; RUNTER F2401 -> nichts (1F unbekannt); HOCH F2452 -> Blatt 4; HOCH F2503 -> Blatt 5 (Dach) | Bild F2240 rot / F2250-2260 Umriss / F2270-2280 rot / ... bis F2450 im 20-Bilder-Wechsel (0,65 s bei ~30 Bildern/s); auf Blatt 4 und 5 keine Zielkachel |
+| lauf_b | wie lauf_a bis zum Schliessen des Hinweises, Speichern F2150 auf Platz 3 (`[save] saved (room 1150)`) | Sonde auf der Karte danach: `Platz 3: Raum 1150 flag(3,94)=1 Blatt3 bekannt=0 waehlbar=1 Markierung=1` |
+| lauf_c | Platz 3 laden, KEIN Sprung; START F91, L1 F142 (Blatt 4), RUNTER F223 -> Blatt 3 | kein `[hint]` (Szene laeuft nicht erneut); Bild F250 Umriss, F260 rot — **ueberlebt Speichern/Laden** |
+| lauf_d | Platz 3 laden, Debug-JUMP ROOM10F0 (F61), START F181, L1 F232 -> Blatt 3 (Spieler dort), Speichern F450 auf Platz 4 | Bilder F260-F380: Kachel stetig (46..48,13,56) = AKTUELL mit Spielermarker, **kein Blinken** |
+| lauf_e | Platz 4 laden (in 10F0), Debug-JUMP 1150, L1 F232 (Blatt 4), RUNTER F313 -> Blatt 3 | Bilder F320-F400: Kachel stetig (18,55,49) = BESUCHT (gruen), **Markierung weg** |
+
+Toene (lauf_a, `[se]`-Zeilen, RE15_SE_DEBUG=1): zwischen L1 (F2149) und dem Schliessen (F2566)
+genau 4 x se=4 (Oeffnen der Karte + drei Blattwechsel), KEIN se=43; alle 4 Hinweis-Toene se=43 des
+Laufs fallen in den Hinweis (F1874-F1999).
+
+### 5.1 Suite
+
+Voller Lauf 1 (`build_r33_suite1.log`): 417/419 — `integration_r30_cut_blitz` (Lauf B endete mit
+exit 1 nach 250 Bildern) und `integration_r30_granate_laden` rot; beide einzeln wiederholt gruen,
+`cut_blitz` zusaetzlich mit der alten exe (`re15_pc_r33k_vorher.exe`) gegengefahren: beide gruen,
+bitgleiche Ausgabe (731 Bilder, 45 mit 3D, 2 Wechsel). Unter Last flatternde GUI-Tests
+(Memory `reai-v2-gui-tests-flattern-bei-parallelen-agenten`), kein Zusammenhang mit der Karte.
+
+---
+
+## 6. Offen / nicht gemessen
+
+* Ton nicht hoerbar geprueft (SDL-Dummy); belegt sind die Abspiel-Aufrufe (`[se]`-Zeilen).
+* 60/144 Bilder/s nur im Riegel (Wanduhr-Zeiten gleich), an der echten exe nur ~30 Bilder/s.
+* Kein gdigrab am Fenster; Bildbeweis ist RE15_FRAMEDUMP (komponierter Frame vor dem Present).
+* PSX-/Android-Bau nicht gefahren (keine neue Quelldatei; nur vorhandene engine/src-Dateien geaendert).
+* Leeres Blatt: wer 2F nie betreten hat, sieht auf 2F NUR die Zielkachel (wie im Hinweis, Runde 30
+  R2). Ohne Karte zeigt RE2 unbesuchte Raeume ebenfalls nicht (@0x8006E744).
+* Die Tuer des Funkraums braucht weiter die Blue Keycard (Runde 30 R3) — die Markierung zeigt auf
+  einen zunaechst verschlossenen Raum; unveraendert.
+* Die 171 im RE2-Walker desynchronisierten Skriptbloecke sind im Bank-Zensus nicht enthalten
+  (die vier Hinweis-Bloecke laufen sauber); fuer Aussage 2.2 (Hinweis setzt Bank 35 nicht) genuegt
+  das, fuer eine Vollzaehlung aller Bank-35-Setzer nicht.
+* Die Bedeutung der RE2-Bank-31-Marken (14 Punkte, FUN_8006DCC0) ist nicht aufgeloest; fuer den
+  Auftrag ohne Belang (keine Raeume).
