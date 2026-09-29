@@ -88,6 +88,7 @@ static inline int RNDI(float f) {
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
 #include "asset_selftest_pc.h" /* RE15_ASSET_SELFTEST=1 — Paket-Gate, reine Diagnose */
+#include "fx_plattform_pc.h"  /* Runde 34 Spur C: ESP-Takt, Ton-Weiche, Licht-Latch, TEX.TIM-Seiten */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -5356,6 +5357,10 @@ re_title:;
         /* SCD VM ticks at the AH-round 30Hz (pre-BE: tuned timing). At
          * 30fps target SCD ticks every frame. At 60fps target (env override),
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
+        /* Runde 34 C1 (E10): der ESP-Takt wird nur im SCD-30-Hz-Zweig unten FREIGEGEBEN und laeuft
+         * hinter re15_game_step (Original @0x8001ce0c Spieler < @0x8001ce2c ESP-Tick); jede Kette
+         * beginnt ohne Freigabe (eingefrorene Bilder ticken nicht, wie bisher). */
+        re15_pc_fx_takt_setzen(0);
         if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_discard_frozen()) {
             /* "DISCARD IT?"-ABFRAGE SICHTBAR: die Welt steht. RE2 friert an derselben Stelle
              * ein — `sw v0,[0x800CFBDC]` @0x80051850 mit a3 = 0xff000000 (@0x80051838
@@ -5432,7 +5437,13 @@ re_title:;
              *                                  = WALK-Handler 0x80030af0), NPC RE15_PAUSE_AI
              *                                  (@0x8011c5c0); Beleg in actor_locomotion.c.
              * So gilt das Gate fuer PC- UND PSX-Loop und ist unit-testbar (test_text_freeze). */
-            re15_esp_fx_tick(re15_esp_room_bank());   /* Phase ESP-C: advance effect particles (30Hz) */
+            /* Runde 34 C1 (E10): hier stand der ESP-Tick (Phase ESP-C, 30 Hz) — VOR dem Spielschritt.
+             * Original-Hauptlauf FUN_8001c6e8 (selbst disassembliert): Gegner `jal 0x8001a50c`
+             * @0x8001ce04 -> Spieler/Waffen-FSM `jal 0x80031c44` @0x8001ce0c -> ESP-Tick
+             * `jal 0x80019e20` @0x8001ce2c -> Item-Modal `jal 0x8001db28` @0x8001ce34. An dieser
+             * Stelle wird der Takt jetzt nur freigegeben; re15_pc_fx_takt() laeuft direkt hinter
+             * re15_game_step (fx_plattform_pc.c), dahinter die RE2-FX-Pumpe. */
+            re15_pc_fx_takt_setzen(1);
             /* Walker steps once per 30 Hz SCD tick. (A 2026-06-01 disasm trace
              * suggested the PSX walker runs at 60 Hz → tried 2× stepping, but the
              * USER confirmed 2× FEELS TOO FAST vs PSX — so the PSX position-advance
@@ -7378,6 +7389,10 @@ re_title:;
                                                + ((pc_now % pc_hz) * 1000000ull) / pc_hz);
                 }
                 re15_game_step(&gctx);
+                /* Runde 34 C1 (E10): ESP-Tick + RE2-FX-Pumpe HINTER dem Spielschritt und VOR dem
+                 * Item-Modal — @0x8001ce0c (Spieler) < @0x8001ce2c (ESP) < @0x8001ce34 (Modal).
+                 * Laeuft nur, wenn der SCD-30-Hz-Zweig dieses Bilds den Takt freigegeben hat. */
+                re15_pc_fx_takt();
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
                  * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
                  * ... -> Modal-FSM @0x8001ce34 `jal 0x8001db28`; selbst nachdisassembliert
@@ -10519,6 +10534,11 @@ re_title:;
             s_cs_view = cam_view; s_cs_view_ok = 1;
             s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;
         }
+        /* Runde 34 C1: Rueckfall fuer ein Bild ohne Spielschritt (Spielermodell nicht geladen,
+         * md1_ok == 0) — der freigegebene ESP-Takt laeuft dann hier statt gar nicht (vorher hing er
+         * nicht am Modell). Im Normalfall hat re15_pc_fx_takt() hinter re15_game_step die
+         * Freigabe schon verbraucht, dann ist dieser Aufruf wirkungslos. */
+        re15_pc_fx_takt();
 
         /* INVENTORY on top (Phase 8.26 / wave 1): the screen is drawn into the framebuffer, but
          * end_frame composites the queued 3D meshes, character-shadow blobs AND the room PRI
