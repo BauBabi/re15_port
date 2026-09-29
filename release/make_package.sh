@@ -322,8 +322,17 @@ check_runtime_assets() {
         fi
         # Sicherheitsnetz: der GUI-Prozess kann den Shell-Job ueberleben (genau so
         # geschehen). Was dieser Lauf gestartet hat, wird hier zuverlaessig beendet.
+        # ⛔ NUR die exe AUS DIESEM Lauf-Ordner beenden (Runde 32, 2026-09-29): das fruehere
+        # "taskkill //F //IM $bin" beendete jede gleichnamige exe der Maschine — auch Messlaeufe
+        # paralleler Agenten/Sitzungen (dieselbe Falle wie local_build.sh, Commit 53bf3f3a).
         case "$(uname -s)" in
-            MINGW*|MSYS*|CYGWIN*) taskkill //F //IM "$bin" >/dev/null 2>&1 || true ;;
+            MINGW*|MSYS*|CYGWIN*)
+                local _pw; _pw="$(cygpath -w "$(cd "$out" && pwd)/$bin" 2>/dev/null || true)"
+                if [[ -n "$_pw" ]] && command -v powershell >/dev/null 2>&1; then
+                    powershell -NoProfile -Command \
+                      "Get-Process -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path -ieq '$_pw' } | Stop-Process -Force" \
+                      >/dev/null 2>&1 || true
+                fi ;;
         esac
 
         [[ -f "$log" ]] || die "Laufzeit-Gate ($pass): das Binary hat keine debug.log
