@@ -208,7 +208,8 @@ Quelle: `re15_port/tools/tueren/tuer_rest_plan.py` -> `analysis/befunde_runde33/
   `datei[:tim] == basis[:tim]`), die TIM hat dieselbe Laenge (0x8220 B) -> gleiche Groessen wie die
   Basiszeile der RE2-Tabelle @0x8009a520.
 - TIM-Bau: Blatt-Texel (Mesh 0, v 0..217) aus dem Rezept; Texel, die ein Griff-/Anbau-Mesh liest
-  (UV-Maske aus dem MD1), bleiben bytegleich (Rueckprobe); Texel, die kein Dreieck liest, belegen keinen
+  (UV-Maske aus dem MD1), bleiben bytegleich (Rueckprobe) - ausser das Rezept faerbt sie ausdruecklich um
+  (P07G: Druecker silbern nach gemessener RE1.5-Grifffarbe); Texel, die kein Dreieck liest, belegen keinen
   Paletteplatz. 5 Bit GERUNDET (Runde 32: das Abschneiden kostete 8,6 %), Index 0 = 0x0000 durchsichtig
   (GPU zeichnet 0x0000 nie), deckendes Schwarz 0x8000 wie RE2. Median-Cut nur, wenn > 255 Farben
   (Pilot: nie noetig, 115/57/29 Farben).
@@ -245,6 +246,9 @@ Quelle: `re15_port/tools/tueren/tuer_rest_plan.py` -> `analysis/befunde_runde33/
 - `door_scene_pc.c re2_archiv_lesen(nr, eigen, ...)`: eigen != 0 liest `RE15DOOR/<Kennung>.DO2` ueber
   `re15_pc_read_shared` und prueft Groesse + FNV-1a; sonst wie Runde 31.
 - Pruefhaken `RE15_TUER_SEITE` findet die Port-Seiten ueber dieselbe Tabelle (Log "Port-Archiv P07G").
+- Griff-Tausch fuer Port-Archive (plan.json "tausch"): `re15_griff_tausch_t.spender_eigen` = Spender-MD1/TIM aus
+  einem Port-Archiv (P1DG <- P07G: waagerechter silberner Druecker), Tabelle `re15_griff_tausche_eigen` im selben
+  .inc; [SIM]-Werte wie Runde 31 (`tuer_zuordnung_gen.griff_daten`).
 
 ### 4.4 Riegel `re15_port/tests/unit/probes/r33_tueren.cmake`
 

@@ -26,7 +26,7 @@ Nach dem Pilot spielen **100 von 144** physischen Tueren eine Tuersequenz (83 Ru
   durch glattes Blech 46 bzw. 40 Zeilen daneben ersetzt; Korn = L/Tiefpass(L, sigma 1,5) - 1 (Flecken > 3
   Texel fallen heraus), halb so stark (PORT-WAHL "glattes Blatt", Merkmal Runde 31: "glatter CG-Lack");
   Farbe = Zeilenprofil x Spaltenfaktor des Medians ueber 19 entzerrte RE1.5-Blaetter (Liste in archive.json),
-  Texel = gemalt * 128 / 73. Druecker-Mesh (Mesh 1) und seine Texel (v 238..254) bytegleich DOOR07.
+  Texel = gemalt * 128 / 73. Druecker-Mesh (Mesh 1) bytegleich DOOR07 (MD1 unveraendert), seine Texel s. u.
   Das Rechteckschild unter dem Druecker ist NICHT gemalt: in den 30..95-px-Ausschnitten nicht aufloesbar.
   **Druecker silbern** (Kontaktbogen 1: der RE2-Druecker war ein dunkler brauner Strich, RE1.5 malt ihn
   silbern): gemessen in 18 Ausschnitten (Griffbox u 0..40 v 90..150, Punkte > Blatt + 30, Median je
@@ -41,7 +41,9 @@ Nach dem Pilot spielen **100 von 144** physischen Tueren eine Tuersequenz (83 Ru
   der Fuge): Mesh + Grund-Drehung des DOOR07-Drueckers (Formfamilie "Druecker flach", DOOR07.m1 = DOOR1D.m1
   bytegleich), Textur aus P07G (silbern), am 1D-Anhaengepunkt (130,-2850,-3410), Bewegung des 1D-Griffs mit
   Ausschlag -245 -> -702 ([SIM] tuer_zuordnung_gen.griff_daten, gen/re15_tuer_eigen.inc
-  re15_griff_tausche_eigen). Gemalte G4-Grifffarbe zum Vergleich [96.0, 101.0, 100.0] (P07G-Druecker gemalt [72.0, 79.5, 80.0]).
+  re15_griff_tausche_eigen). Gemalte G4-Grifffarbe zum Vergleich [96.0, 101.0, 100.0] (P07G-Druecker gemalt [72.0, 79.5, 80.0]):
+  die G4-Druecker erscheinen damit rund 22 % dunkler als gemalt (Rest, Stufe 2: eigener Spender-TIM, falls
+  der Nutzer es sieht).
 - **P16M**: Helligkeit je Texel = RE2-Leiter, Farbton = gemalte Messingleiter (ROOM12607.bmp x 126..141
   y 15..149: 1,109/1,021/0,596; ROOM12609.bmp x 203..225 y 0..149: 1,116/1,019/0,567; Leiterpunkte R > B+12,
   L > 30). Nur die 5 252 Texel, die ein Leiter-Dreieck liest.
@@ -118,4 +120,16 @@ abgedunkelt.
 
 ## 5. Suite
 
-(folgt)
+`bash re15_port/tools/local_build.sh all` (Endstand): `=== LOCAL-BUILD-OK (all) — Tests 418/418`
+(RE15_MIN_TESTS 416 -> 418: + unit_r33_tueren_archive, unit_r33_tueren_zuordnung). Im ersten Lauf war
+`integration_r30_irons_tisch_laden` rot ("der Lauf hat nicht geladen", 10 s, mehrere re15_pc.exe anderer Agenten
+liefen parallel) und einzeln sofort gruen (30,5 s) - GUI-Haken unter Last (memory
+reai-v2-gui-tests-flattern-bei-parallelen-agenten), der zweite volle Lauf 418/418.
+
+## 6. Offen
+
+1. G4-Druecker (Spender P07G) rund 22 % dunkler als die gemalten G4-Druecker (1.).
+2. Treppenhausseiten S023/S024/S025: RE1.5 malt sie im Leuchtstofflicht graugruen, die Sequenz zeigt das
+   gemeinsame dunkle Blatt der Tuer (ein Archiv je Tuer wie RE2) - bewusst, sichtbar.
+3. Ton nicht abgehoert (Bogenlauf mit RE15_NOAUDIO; Tonteile bytegleich den Basis-Archiven, Riegel).
+4. Rest der 61 Tueren: Stufe 2 nach `tueren_rest_plan.md` (22 Port-Archive, G12 objektlos).
