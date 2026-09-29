@@ -1,0 +1,9 @@
+[M0] Weg ohne 2F: 18 Haupt-Zeilen besucht (Blaetter 2/4/5); Ziel = Blatt 3 Rechteck 9
+[M1] vor dem Hinweis: flag(3,94)=0  bekannt: 0:0 1:1 2:1 3:0 4:1 5:1 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+[M2] nach dem Hinweis: flag(3,94)=1  offen=0  bekannt: 0:0 1:1 2:1 3:0 4:1 5:1 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+[M2] Ziel Blatt 3 Rechteck 9: Zustand UNVISITED, Blatt im Besitz 0
+[M3] normale Karte: substate 1, Blatt 4
+[M3] RUNTER -> Blatt 2 (Ton ja)  Zielkachel in der Op-Liste: - (CLUT 0x0000)
+[M3] RUNTER -> Blatt 1 (Ton ja)  Zielkachel in der Op-Liste: - (CLUT 0x0000)
+[M3] HOCH   -> Blatt 2 (Ton ja)  Zielkachel in der Op-Liste: - (CLUT 0x0000)
+[M3] HOCH   -> Blatt 4 (Ton ja)  Zielkachel in der Op-Liste: - (CLUT 0x0000)
