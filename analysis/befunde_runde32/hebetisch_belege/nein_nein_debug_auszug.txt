@@ -1,0 +1,12 @@
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 306 -> F506 Tasten 0x0020
+[input-script] Tick 327 -> F527 Tasten 0x8000
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1205), die naechste Fahrt bietet sie wieder an
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 480 -> F680 Tasten 0x0020
+[input-script] Tick 500 -> F700 Tasten 0x8000
+[granate] No/voll: nicht genommen, Granate bleibt liegen (Hebetisch y=-1205), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[granate] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest

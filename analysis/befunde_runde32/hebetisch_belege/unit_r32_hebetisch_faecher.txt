@@ -1,0 +1,42 @@
+
+== 1150 (STAGE1/ROOM1150.RDT) ==
+   Fach A: z 96..861, Boden y=-90 (Viereck 89), Decke y=-810 (Viereck 87), Waende Viereck 86/88, Rueckwand Viereck 119 | Boden-Record @0x12EE0
+   Fach B: z 950..1715, Boden y=-91 (Viereck 93), Decke y=-811 (Viereck 91), Waende Viereck 90/92, Rueckwand Viereck 82 | Boden-Record @0x12F20
+   Prop 0 MD1 @0x11E40
+   [OK ] 1. genau zwei Faecher: A z 96..861 Boden -90 Decke -810, B z 950..1715 Boden -91 Decke -811, je eine volle Rueckwand bei x=-1258
+   Pool: Granate (-628,-145,478) rot (0,1024,0) parent 0 | Sicherung (-628,-117,1332) rot (0,1024,0) parent 0 | Plattform (-20700,-20324,-17460) rot_y 2048
+   [OK ] 2. Raumstart: Sitz/Drehung der Konstanten im Pool, beide an der Plattform (parent 0, rot_y 2048)
+   Granate   (587 Proben) in Fach A: tiefster Punkt +0.00 zum Boden | Abstand vorn 575.0 hinten 575.0 Wand 305.0 / 306.0 Decke 610.0
+   Sicherung (1720 Proben) in Fach B: tiefster Punkt +0.00 zum Boden | Abstand vorn 604.0 hinten 604.0 Wand 179.0 / 180.0 Decke 668.0
+   [OK ] 3. beide liegen AUF ihrem Fachboden (tiefster Punkt = Boden A -90 / Boden B -91)
+   [OK ] 4. ganz im Fach, kein Durchstoss: Granate in A, Sicherung in B (alle Abstaende > 0)
+   Flaechen von Prop 0 im Inneren von A/B: 0 (von 131)
+   [OK ] 5. keine andere Flaeche von Prop 0 ragt in ein Fach
+   Plattform y=-1205: Kamera lokal (1242,-955,918); Sichtlinie ausserhalb der eigenen Oeffnung: Granate 0 von 587, Sicherung 0 von 1720
+   Plattform y=-1205, Cut 4: Granate Schirm-x Mitte 102.1 rechts bis 112.3 | Trennwand 155.3 | Sicherung links ab 184.1 Mitte 210.1
+   Plattform y=-905: Kamera lokal (1242,-1255,918); Sichtlinie ausserhalb der eigenen Oeffnung: Granate 0 von 587, Sicherung 0 von 1720
+   Plattform y=-905, Cut 4: Granate Schirm-x Mitte 104.5 rechts bis 114.2 | Trennwand 155.5 | Sicherung links ab 183.1 Mitte 208.0
+   [OK ] 6. Cut 4, Plattform y=-1205 und -905: jede Sichtlinie geht durch die Oeffnung des eigenen Fachs
+   [OK ] 7. Cut 4: Granate ganz LINKS der Trennwand, Sicherung ganz RECHTS
+
+== 1151 (STAGE1/ROOM1151.RDT) ==
+   Fach A: z 96..861, Boden y=-90 (Viereck 89), Decke y=-810 (Viereck 87), Waende Viereck 86/88, Rueckwand Viereck 119 | Boden-Record @0x14F58
+   Fach B: z 950..1715, Boden y=-91 (Viereck 93), Decke y=-811 (Viereck 91), Waende Viereck 90/92, Rueckwand Viereck 82 | Boden-Record @0x14F98
+   Prop 0 MD1 @0x13EB8
+   [OK ] 1. genau zwei Faecher: A z 96..861 Boden -90 Decke -810, B z 950..1715 Boden -91 Decke -811, je eine volle Rueckwand bei x=-1258
+   Pool: Granate (-628,-145,478) rot (0,1024,0) parent 0 | Sicherung (-628,-117,1332) rot (0,1024,0) parent 0 | Plattform (-20700,-20324,-17460) rot_y 2048
+   [OK ] 2. Raumstart: Sitz/Drehung der Konstanten im Pool, beide an der Plattform (parent 0, rot_y 2048)
+   Granate   (587 Proben) in Fach A: tiefster Punkt +0.00 zum Boden | Abstand vorn 575.0 hinten 575.0 Wand 305.0 / 306.0 Decke 610.0
+   Sicherung (1720 Proben) in Fach B: tiefster Punkt +0.00 zum Boden | Abstand vorn 604.0 hinten 604.0 Wand 179.0 / 180.0 Decke 668.0
+   [OK ] 3. beide liegen AUF ihrem Fachboden (tiefster Punkt = Boden A -90 / Boden B -91)
+   [OK ] 4. ganz im Fach, kein Durchstoss: Granate in A, Sicherung in B (alle Abstaende > 0)
+   Flaechen von Prop 0 im Inneren von A/B: 0 (von 131)
+   [OK ] 5. keine andere Flaeche von Prop 0 ragt in ein Fach
+   Plattform y=-1205: Kamera lokal (1242,-955,918); Sichtlinie ausserhalb der eigenen Oeffnung: Granate 0 von 587, Sicherung 0 von 1720
+   Plattform y=-1205, Cut 4: Granate Schirm-x Mitte 102.1 rechts bis 112.3 | Trennwand 155.3 | Sicherung links ab 184.1 Mitte 210.1
+   Plattform y=-905: Kamera lokal (1242,-1255,918); Sichtlinie ausserhalb der eigenen Oeffnung: Granate 0 von 587, Sicherung 0 von 1720
+   Plattform y=-905, Cut 4: Granate Schirm-x Mitte 104.5 rechts bis 114.2 | Trennwand 155.5 | Sicherung links ab 183.1 Mitte 208.0
+   [OK ] 6. Cut 4, Plattform y=-1205 und -905: jede Sichtlinie geht durch die Oeffnung des eigenen Fachs
+   [OK ] 7. Cut 4: Granate ganz LINKS der Trennwand, Sicherung ganz RECHTS
+
+ALLES BESTANDEN - 0 Pruefung(en) gerissen

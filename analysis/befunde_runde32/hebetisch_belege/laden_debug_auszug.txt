@@ -1,0 +1,10 @@
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[sicherung] Boot-Weg: Prop obj_id=4 im Pool (slot 4, Raum 1150)
+[granate] Boot-Weg: Prop obj_id=7 im Pool (slot 7, Raum 1150)
+[fire-aot] slot=1 at F90 (Raum 1150)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[save] CONTINUE: resumed in room 1151 (hp=100)
+[sicherung] Boot-Weg: Prop obj_id=4 im Pool (slot 4, Raum 1151)
+[granate] Boot-Weg: Prop obj_id=7 im Pool (slot 7, Raum 1151)
+[fire-aot] slot=1 at F90 (Raum 1151)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x0FF9), Sperre bis zum Ende dieser Fahrt

@@ -1,0 +1,107 @@
+Abfahrt MIT F756, OHNE F427; Parklage MIT F955, OHNE F626; Versatz 329 / 329
+MIT F750 (y=-1205) gegen OHNE F421 (y=-1205): 635 Punkte bbox x90..235 y141..156
+MIT F752 (y=-1205) gegen OHNE F423 (y=-1205): 635 Punkte bbox x90..235 y141..156
+MIT F754 (y=-1205) gegen OHNE F425 (y=-1205): 635 Punkte bbox x90..235 y141..156
+MIT F756 (y=-1195) gegen OHNE F427 (y=-1195): 653 Punkte bbox x90..235 y142..157
+MIT F758 (y=-1175) gegen OHNE F429 (y=-1175): 643 Punkte bbox x90..235 y144..159
+MIT F760 (y=-1155) gegen OHNE F431 (y=-1155): 630 Punkte bbox x91..235 y147..161
+MIT F762 (y=-1135) gegen OHNE F433 (y=-1135): 638 Punkte bbox x91..234 y149..164
+MIT F764 (y=-1115) gegen OHNE F435 (y=-1115): 611 Punkte bbox x91..234 y151..166
+MIT F766 (y=-1095) gegen OHNE F437 (y=-1095): 621 Punkte bbox x91..234 y154..168
+MIT F768 (y=-1075) gegen OHNE F439 (y=-1075): 630 Punkte bbox x91..234 y156..171
+MIT F770 (y=-1055) gegen OHNE F441 (y=-1055): 636 Punkte bbox x92..234 y158..173
+MIT F772 (y=-1035) gegen OHNE F443 (y=-1035): 598 Punkte bbox x92..233 y161..175
+MIT F774 (y=-1015) gegen OHNE F445 (y=-1015): 608 Punkte bbox x92..233 y163..177
+MIT F776 (y=-995) gegen OHNE F447 (y=-995): 616 Punkte bbox x92..233 y165..179
+MIT F778 (y=-975) gegen OHNE F449 (y=-975): 622 Punkte bbox x92..233 y167..182
+MIT F780 (y=-955) gegen OHNE F451 (y=-955): 627 Punkte bbox x93..233 y169..184
+MIT F782 (y=-935) gegen OHNE F453 (y=-935): 604 Punkte bbox x93..232 y172..186
+MIT F784 (y=-915) gegen OHNE F455 (y=-915): 581 Punkte bbox x93..232 y174..188
+MIT F786 (y=-895) gegen OHNE F457 (y=-895): 603 Punkte bbox x93..232 y176..190
+MIT F788 (y=-875) gegen OHNE F459 (y=-875): 609 Punkte bbox x93..232 y178..192
+MIT F790 (y=-855) gegen OHNE F461 (y=-855): 624 Punkte bbox x93..232 y180..195
+MIT F792 (y=-835) gegen OHNE F463 (y=-835): 616 Punkte bbox x94..231 y182..197
+MIT F794 (y=-815) gegen OHNE F465 (y=-815): 618 Punkte bbox x94..231 y184..199
+MIT F796 (y=-795) gegen OHNE F467 (y=-795): 589 Punkte bbox x94..231 y187..201
+MIT F798 (y=-775) gegen OHNE F469 (y=-775): 590 Punkte bbox x94..231 y189..203
+MIT F800 (y=-755) gegen OHNE F471 (y=-755): 589 Punkte bbox x94..231 y191..205
+MIT F802 (y=-735) gegen OHNE F473 (y=-735): 592 Punkte bbox x95..230 y193..207
+MIT F804 (y=-715) gegen OHNE F475 (y=-715): 562 Punkte bbox x95..230 y195..209
+MIT F806 (y=-695) gegen OHNE F477 (y=-695): 561 Punkte bbox x95..230 y197..211
+MIT F808 (y=-675) gegen OHNE F479 (y=-675): 552 Punkte bbox x95..230 y199..213
+MIT F810 (y=-655) gegen OHNE F481 (y=-655): 561 Punkte bbox x95..230 y201..215
+MIT F812 (y=-635) gegen OHNE F483 (y=-635): 479 Punkte bbox x95..229 y203..215
+MIT F814 (y=-615) gegen OHNE F485 (y=-615): 344 Punkte bbox x96..229 y205..215
+MIT F816 (y=-595) gegen OHNE F487 (y=-595): 219 Punkte bbox x96..229 y207..215
+MIT F818 (y=-575) gegen OHNE F489 (y=-575): 113 Punkte bbox x97..115 y209..215
+MIT F820 (y=-555) gegen OHNE F491 (y=-555): 71 Punkte bbox x98..115 y211..215
+MIT F822 (y=-535) gegen OHNE F493 (y=-535): 36 Punkte bbox x100..113 y213..215
+MIT F824 (y=-515) gegen OHNE F495 (y=-515): 10 Punkte bbox x102..111 y215..215
+MIT F826 (y=-495) gegen OHNE F497 (y=-495): 0 Punkte
+MIT F828 (y=-475) gegen OHNE F499 (y=-475): 0 Punkte
+MIT F830 (y=-455) gegen OHNE F501 (y=-455): 0 Punkte
+MIT F832 (y=-435) gegen OHNE F503 (y=-435): 0 Punkte
+MIT F834 (y=-415) gegen OHNE F505 (y=-415): 0 Punkte
+MIT F836 (y=-395) gegen OHNE F507 (y=-395): 0 Punkte
+MIT F838 (y=-375) gegen OHNE F509 (y=-375): 0 Punkte
+MIT F840 (y=-355) gegen OHNE F511 (y=-355): 0 Punkte
+MIT F842 (y=-335) gegen OHNE F513 (y=-335): 0 Punkte
+MIT F844 (y=-315) gegen OHNE F515 (y=-315): 0 Punkte
+MIT F846 (y=-303) gegen OHNE F517 (y=-303): 0 Punkte
+MIT F848 (y=-303) gegen OHNE F519 (y=-303): 0 Punkte
+MIT F850 (y=-305) gegen OHNE F521 (y=-305): 0 Punkte
+MIT F852 (y=-305) gegen OHNE F523 (y=-305): 0 Punkte
+MIT F854 (y=-305) gegen OHNE F525 (y=-305): 0 Punkte
+MIT F856 (y=-305) gegen OHNE F527 (y=-305): 0 Punkte
+MIT F858 (y=-305) gegen OHNE F529 (y=-305): 0 Punkte
+MIT F860 (y=-305) gegen OHNE F531 (y=-305): 0 Punkte
+MIT F862 (y=-305) gegen OHNE F533 (y=-305): 0 Punkte
+MIT F864 (y=-305) gegen OHNE F535 (y=-305): 0 Punkte
+MIT F866 (y=-305) gegen OHNE F537 (y=-305): 0 Punkte
+MIT F868 (y=-305) gegen OHNE F539 (y=-305): 0 Punkte
+MIT F870 (y=-305) gegen OHNE F541 (y=-305): 0 Punkte
+MIT F872 (y=-305) gegen OHNE F543 (y=-305): 0 Punkte
+MIT F874 (y=-305) gegen OHNE F545 (y=-305): 0 Punkte
+MIT F876 (y=-305) gegen OHNE F547 (y=-305): 0 Punkte
+MIT F878 (y=-305) gegen OHNE F549 (y=-305): 0 Punkte
+MIT F880 (y=-305) gegen OHNE F551 (y=-305): 0 Punkte
+MIT F882 (y=-305) gegen OHNE F553 (y=-305): 0 Punkte
+MIT F884 (y=-305) gegen OHNE F555 (y=-305): 0 Punkte
+MIT F886 (y=-305) gegen OHNE F557 (y=-305): 0 Punkte
+MIT F888 (y=-305) gegen OHNE F559 (y=-305): 0 Punkte
+MIT F890 (y=-305) gegen OHNE F561 (y=-305): 0 Punkte
+MIT F892 (y=-305) gegen OHNE F563 (y=-305): 0 Punkte
+MIT F894 (y=-305) gegen OHNE F565 (y=-305): 0 Punkte
+MIT F896 (y=-305) gegen OHNE F567 (y=-305): 0 Punkte
+MIT F898 (y=-305) gegen OHNE F569 (y=-305): 0 Punkte
+MIT F900 (y=-305) gegen OHNE F571 (y=-305): 0 Punkte
+MIT F902 (y=-305) gegen OHNE F573 (y=-305): 0 Punkte
+MIT F904 (y=-305) gegen OHNE F575 (y=-305): 0 Punkte
+MIT F906 (y=-305) gegen OHNE F577 (y=-305): 0 Punkte
+MIT F908 (y=-305) gegen OHNE F579 (y=-305): 0 Punkte
+MIT F910 (y=-305) gegen OHNE F581 (y=-305): 0 Punkte
+MIT F912 (y=-305) gegen OHNE F583 (y=-305): 0 Punkte
+MIT F914 (y=-305) gegen OHNE F585 (y=-305): 0 Punkte
+MIT F916 (y=-305) gegen OHNE F587 (y=-305): 0 Punkte
+MIT F918 (y=-305) gegen OHNE F589 (y=-305): 0 Punkte
+MIT F920 (y=-305) gegen OHNE F591 (y=-305): 0 Punkte
+MIT F922 (y=-305) gegen OHNE F593 (y=-305): 0 Punkte
+MIT F924 (y=-305) gegen OHNE F595 (y=-305): 0 Punkte
+MIT F926 (y=-305) gegen OHNE F597 (y=-305): 0 Punkte
+MIT F928 (y=-305) gegen OHNE F599 (y=-305): 0 Punkte
+MIT F930 (y=-305) gegen OHNE F601 (y=-305): 0 Punkte
+MIT F932 (y=-305) gegen OHNE F603 (y=-305): 0 Punkte
+MIT F934 (y=-305) gegen OHNE F605 (y=-305): 0 Punkte
+MIT F936 (y=-305) gegen OHNE F607 (y=-305): 0 Punkte
+MIT F938 (y=-305) gegen OHNE F609 (y=-305): 0 Punkte
+MIT F940 (y=-305) gegen OHNE F611 (y=-305): 0 Punkte
+MIT F942 (y=-305) gegen OHNE F613 (y=-305): 0 Punkte
+MIT F944 (y=-305) gegen OHNE F615 (y=-305): 0 Punkte
+MIT F946 (y=-305) gegen OHNE F617 (y=-305): 0 Punkte
+MIT F948 (y=-305) gegen OHNE F619 (y=-305): 0 Punkte
+MIT F950 (y=-305) gegen OHNE F621 (y=-305): 0 Punkte
+MIT F952 (y=-305) gegen OHNE F623 (y=-305): 0 Punkte
+MIT F954 (y=-305) gegen OHNE F625 (y=-305): 0 Punkte
+MIT F956 (y=-20224) gegen OHNE F627 (y=-20224): 0 Punkte
+MIT F958 (y=-20224) gegen OHNE F629 (y=-20224): 0 Punkte
+MIT F960 (y=-20224) gegen OHNE F631 (y=-20224): 0 Punkte
