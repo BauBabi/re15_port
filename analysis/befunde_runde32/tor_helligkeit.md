@@ -9,8 +9,8 @@ Zweig `r32/tor-hell`, Arbeitsbaum `.claude/worktrees/r32_tor`. Messwerkzeug (neu
 
 - [x] 1. Messen: Tor in Sequenz vs. gemaltes Tor (gleiche Texelstellen), RE2 DOOR2E gezeigt/Texel
 - [x] 2. Ursache belegt (Licht-Rechnung mit Adressen + 5-Bit-Rundung im Generator)
-- [ ] 3. Korrektur, nachher messen, RE2-Tueren vorher/nachher
-- [ ] 4. Riegel (probes/r32_tor.cmake), RE15_MIN_TESTS
+- [x] 3. Korrektur (RE2-Flag 0x1000 + Generator + Renderer > 0x80), nachher gemessen, RE2-Tueren vorher/nachher
+- [x] 4. Riegel (probes/r32_tor.cmake: unit_r32_tor_hell, integration_r32_tor_hell), RE15_MIN_TESTS 411 -> 413
 
 ## 1. Messung vorher (Stand master eb10ceba + Auftrag 48d43b34)
 
@@ -126,3 +126,113 @@ flags 0x1a80). Weitere Wege gibt es nicht: der Member_set-Setter (0x80055cb0, Sp
 @0x80011228, 44 Felder) schreibt obj+124 (RGBC) mit keinem Feld (selbst disassembliert:
 Felder 0..43 = +0,+2,+4..+8,+270,+10,+11,+16,+56,+60,+64,+116..+120,+262,+340,+450..+474,
 +324,+326,+328,+334,+148..+158,+478,+280,+282,+536,+538,+467); Flag 0x100 pulsiert RGBC 0..255.
+
+## 3. Korrektur (Commit 52ea9ba1)
+
+Ziel: das Tor an DENSELBEN Stellen so hell wie das gemalte Tor (Cut 12), RE2-Tueren unveraendert
+oder begruendet naeher an RE2.
+
+### 3.1 RE2-Mechanismus: Flag 0x1000 (BK 136)
+
+`tor_sequenz_bauen.py` (d): Fluegel `0x0a80 -> 0x1a80`, Pfosten `0x0280 -> 0x1280` in beiden
+Aufbauskripten (4 Bytes im Archiv: Skript 1/2 je +7 und +0x1d). Das Torblatt traegt damit
+byte-gleich das Flagwort des DOOR2B-Blatts (@Datei 0x5022). Der Generator prueft die DOOR2B-Bytes
+als Anker. Schild-Eckfarbe 73 -> **107** (2.2). Allein: gezeigt/gemalt 0,52 -> 0,76 (noch 1,31fach
+zu dunkel), also reicht der RE2-Mechanismus nicht.
+
+### 3.2 PORT-WAHL im Generator: Textur fuers Tuerlicht
+
+`tor_sequenz_bauen.textur_fuers_tuerlicht`: je Kanal (1) 5 Bit GERUNDET `v5 = (p+4)>>3` statt
+abgeschnitten, (2) `v5' = round(v5 * 128 / c_schild)`, c_schild = 107 aus den RE2-Konstanten im
+Generator nachgerechnet (`ncct_eckfarbe`, bricht ab, wenn nicht 107/73). Herleitung: F = T * c/128
+(psx-spx GPU:1438-1446), Ziel F = P -> T = P * 128/c. Schritt (2) auf der 5-Bit-Farbe haelt die
+Palette bei 228 Farben (direkte 8-Bit-Skalierung gaebe 297 > 255 CLUT-Plaetze -> Median-Cut).
+0 Texel gekappt (hoechster Kanal vorher 152). Gemessen Schild gezeigt/gemalt: zweistufig 1,008,
+direkt+Median-Cut 0,997.
+
+Warum nicht nur die Textur (BK 68, Faktor 1,75)? Dann waere jeder helle Texel ueber 145 gekappt
+(Tafel), und die Abweichung vom RE2-Rechenweg groesser; mit BK 136 bleibt der Port-Anteil 1,196.
+
+### 3.3 Renderer: Eckfarben ueber 0x80 (door_scene_pc.c `tri_psx`)
+
+Mit BK 136 liegen 48 von 246 Ecken des Fluegels ueber 128 (bis 152). Die GPU hellt dort auf
+(Texel * c / 128, Saettigung 1Fh; psx-spx GPU:349-354, 1438-1446; Befehl 0x34 = Modulation,
+@0x80014744 `ori v0,v0,0x34`); die SDL-Modulation reicht nur bis 1,0
+(`render_pc.c psx_prim_to_sdl_vert` kappt bei 0xFF). `tri_psx` zeichnet dasselbe Dreieck, NUR
+wenn eine Ecke ueber 0x80 liegt, ein zweites Mal mit max(c-128,0) im ADD-Modus (Mischart 1) und
+demselben z: interp(min(c,128)) + interp(max(c-128,0)) = interp(c), Saettigung durch die
+ADD-Mischung bei 255. Stabile Sortierung (end_frame, strikt <) haelt die Zusatzlage direkt hinter
+ihrem Dreieck. Aenderung in `door_scene_pc.c`: ein Block (Helfer `ueber_80`/`tri_psx`) + EIN
+Aufruf in `mesh_zeichnen` (Hinweis fuer r32_unterteilung: unterteilte Dreiecke ebenfalls ueber
+`tri_psx` abgeben, sonst fehlt ihnen die Aufhellung).
+
+## 4. Messung nachher
+
+### 4.1 Tor (gleiche Stellen wie 1.3)
+
+| | vorher P/F | nur Archiv (3.1+3.2) | **nachher** P/F | F/P |
+|---|---|---|---|---|
+| V0 Bild 100 gesamt | 1,917 | 1,002 | **1,000** | 0,9997 |
+| V1 Bild 100 gesamt | 1,912 | 1,001 | **0,999** | 1,0013 |
+| V0 Bild 100 Schild | 1,921 | 0,992 | 0,992 | 1,0085 |
+| V0 Bild 100 Rohr | 1,911 | 1,018 | 1,014 | 0,9865 |
+| V0 Bild 100 Pfosten | 1,910 | 1,002 | 1,002 | 0,998 |
+| V0 Bild 170 (Schwenk) gesamt | - | 0,978 | 0,977 | 1,0233 |
+| V1 Bild 170 (Schwenk) gesamt | - | 0,979 | 0,977 | 1,0234 |
+
+Bildpunkte mit Eckfarbe > 0x80 (Tor, Bild 100): V0 488, V1 480. Nur Archiv: F/T 1,000 (gekappt),
+Abweichung zum PSX-Modell 8,63 / 11,38 Stufen; nachher F/T 1,0943 / 1,1200 gegen PSX-Modell 1,0936 /
+1,1197, Abweichung **0,18 / 0,20**. Modell gegen Bild ueberall 0,19..0,26 Stufen.
+
+Waehrend des Schwenks (Bild 170) ist das Schild um 3,5 % heller als gemalt: die Schild-Normale
+dreht zum Licht (c 110 statt 107) - das ist das RE2-Licht, nicht die Textur.
+
+### 4.2 RE2-Tueren vorher/nachher (gleiche exe-Pruefhaken, ganze Serie)
+
+| | Bilder mit Unterschied | Bildpunkte | Richtung | max |
+|---|---|---|---|---|
+| S315 DOOR2E V0 (324 Bilder) | 193 | 45 773 | nur heller | +7 Stufen |
+| S017 DOOR13 V0 (319 Bilder) | 98 | 4 460 | nur heller | +4 Stufen |
+
+Geaendert sind genau die Ecken ueber 0x80 (BK 68: DOOR2E bis 137). An diesen Punkten folgte das
+Bild vorher der PC-Kappung (DOOR2E Bild 131/139: Abweichung zum PC-Modell 0,02/0,01, zum
+PSX-Modell 0,46/0,43), nachher dem PSX-Modell (0,08 / 0,08). Die RE2-Tueren kommen also **naeher
+an RE2**, sonst bleibt jeder Bildpunkt gleich. Bild: `tor_belege/re2_door2e_bild139_vorher_nachher.jpg`.
+
+### 4.3 Belegbilder (`analysis/befunde_runde32/tor_belege/`, angesehen)
+
+- `v1_bild100_vorher_nachher.jpg`: Cut 12 gemalt (4x) | Sequenz V1 Bild 100 vorher | nachher -
+  nachher Tafel, Streifen und Rohre in der Helligkeit des gemalten Tors, keine Kappung sichtbar.
+- `v0_bild100_vorher_nachher.jpg`, `v1_bild170_vorher_nachher.jpg` (Schwenk).
+- `re2_door2e_bild139_vorher_nachher.jpg`: DOOR2E vorher | nachher | Differenz x30 (schmale
+  Oberkante des Rahmens).
+
+## 5. Riegel
+
+`re15_port/tests/unit/probes/r32_tor.cmake`, Quelle `tests/unit/probe_r32_tor.c`,
+`tests/integration/test_r32_tor_hell.cmake`:
+
+- `unit_r32_tor_hell` (Engine): A Maschine setzt Fluegel/Pfosten mit 0x1a80/0x1280 auf (V0/V1,
+  Bild 100); B DOOR2B @0x5022 = `4d 00 00 00 01 00 80 1a`, Torblatt-Flags gleich; C Schild-Eckfarbe
+  107 mit dem Port-Lichtcode (Gegenprobe BK 68 -> 73); D Schild-Texel x 107/128 / gemalt 33,41 =
+  1,0085 (Band 0,97..1,03).
+- `integration_r32_tor_hell` (echte exe, beschleunigter Renderer, Massstab 1, RE15_TUER_TEST=1,
+  RE15_TUER_BOGEN -> Bild 20 = Bild 100): R1 Schild-Rechteck gezeigt/gemalt 1,0084 (Band 3 %);
+  R2 Rohr mit c 148: F/Texel 1,1549 (Band 1,10..1,20; PSX 1,156).
+- **Gegenproben (gemessen):** ohne `tri_psx`-Zusatzlage -> R2 0,9998 ROT (R1 gruen); altes Archiv
+  -> unit ROT in A/B/C/D (Eckfarbe 73, Texel 0,751), integration R1 0,5032 ROT, R2 0,714 ROT.
+- `unit_door_seq`, `unit_tor_1170_anfrage` gruen (Bild-fuer-Bild-Referenz unveraendert: die
+  Maschine rechnet mit Lage/Drehung, Flags und TIM gehen nicht ein; `tuerseq_referenz.py` erzeugt
+  dieselbe Datei).
+
+## 6. Offen
+
+1. **Cut 0 / Cut 11 malen das Schild heller** (Y 125,6 / 50,9 gegen 33,7 in Cut 12). Die Textur
+   stammt aus Cut 12 (07 §1, NACHBAU 4: beide Seiten tragen den Laufsteg-Druck), die Sequenz ist
+   jetzt so hell wie DIESES gemalte Tor. Wer von der Landeplatz-Seite (V0) kommt, sah das Tor zuletzt
+   im Lampenlicht von Cut 0/11 - eine eigene, hellere Landeplatz-Seite waere eine Modell-Aenderung
+   (zweiter Texturbereich aus Cut 0/11, dort nur 235/476 Bildpunkte Aufloesung). Nicht gemacht.
+2. **Kappung ueber 0x80 in den uebrigen PC-Zeichenpfaden** (Figuren, Raum-Props ueber
+   `re15_render_textured_tri_lit`) besteht weiter: behoben ist nur die Tuerszene. Fuer Figuren mit
+   Raumlicht ist nicht gemessen, wie oft Eckfarben ueber 0x80 vorkommen.
+3. 5-Bit-Rundung der GPU-Modulation und Dithering (08 Offen 3) nicht nachgebildet.

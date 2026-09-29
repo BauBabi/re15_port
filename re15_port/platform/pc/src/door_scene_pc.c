@@ -107,7 +107,7 @@ static ecke_t projizieren(const re15_door_mat_t *w, const re15_md1_vertex_t *v)
 }
 
 /* ---------------------------------------------------------------------------
- * Runde 32: Eckfarben UEBER 0x80 (analysis/befunde_runde32/tor_helligkeit.md 3.2).
+ * Runde 32: Eckfarben UEBER 0x80 (analysis/befunde_runde32/tor_helligkeit.md 3.3).
  * RE2 zeichnet die Tuerdreiecke als POLY_GT3 mit Modulation (Code 0x34, @0x80014744 ori v0,v0,0x34;
  * Bit 24 = 0 -> Modulation, psx-spx GPU:140-149). Die GPU rechnet je Kanal Texel * Farbe / 128 und
  * saettigt auf 1Fh (psx-spx GPU:349-354, 1438-1446): Farben 0x81..0xFF hellen bis knapp 2x auf.
