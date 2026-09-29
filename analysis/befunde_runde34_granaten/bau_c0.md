@@ -120,7 +120,10 @@ Optab 0x8009D868: [40] = 0x80020758, [48] = 0x80020F3C, [49] = 0x800215C8
 ### 3.6 re15_re2_gl_apply / re2fx_applier (RE2 PSX.EXE, Aufrufer Op 40)
 ```
 80020768: lui a2,0x8001 / 8002076c: addiu a2,a2,2320   (0x80010910)
-80020770..8002078c: lwl/lwr/swl/swr  (8-Byte-Box -> sp+32, je Aufruf frisch)
+80020770..8002078c: lwl/lwr/swl/swr  (8-Byte-Box -> sp+32, je Aufruf frisch; re2_disasm.py zeigt sie als
+                    Rohworte, von Hand dekodiert: 88c20003 = lwl v0,3(a2), 98c20000 = lwr v0,0(a2),
+                    88c40007 = lwl a0,7(a2), 98c40004 = lwr a0,4(a2), aba20023 = swl v0,35(sp),
+                    bba20020 = swr v0,32(sp), aba40027 = swl a0,39(sp), bba40024 = swr a0,36(sp))
 80020790: lh v0,52(v1)  8002079c: lh v0,54(v1)  800207a4: addiu v0,v0,-100  800207ac: lh v0,56(v1)
 80020794: lui a3,0x2002   800207a0: ori a3,a3,0xa   800207b0: addiu a0,sp,16   800207b8: lh a1,34(v1)
 800207bc: jal 0x800470c0   800207c0: addiu a2,sp,32   800207c4: beq v0,zero,0x800207d4   800207cc: jal 0x80021970
@@ -178,14 +181,15 @@ versionierten Original (kein Zuwachs im Repo). `.gitattributes`: beide Dateien `
 `core.autocrlf = true`).
 
 **Paketbau / Android (nur GELESEN, nicht geaendert):**
-* `release/make_package.sh:410-411` `copy_common`: `cp -r "$RE2" "$out/shared_assets/RE2"` — der ganze Baum geht mit.
-  Das Paket-Gate (`:186-193`) prueft nur CDEMD0.EMS, ENEMSE.VBS, TORSE.VBS, DOOR/*.DO2 — NICHT CORE00.ESP/TEX.TIM.
+* `release/make_package.sh:409` `copy_common`: `cp -r "$RE2" "$out/shared_assets/RE2"` — der ganze Baum geht mit.
+  Das Paket-Gate (`:186-203`) prueft nur CDEMD0.EMS, ENEMSE.VBS, TORSE.VBS, DOOR/*.DO2 — NICHT CORE00.ESP/TEX.TIM.
 * `platform/android/app/build.gradle:104` `stageAssets`: `from(new File(portRoot, "shared_assets/RE2")) { into "shared_assets/RE2" }`
-  — ganzer Baum; Existenz-Gate `:113-115` ohne die neuen Dateien; `noCompress` sammelt Endungen dynamisch (ESP/TIM
+  — ganzer Baum; Existenz-Gate `:113-116` ohne die neuen Dateien; `noCompress` sammelt Endungen dynamisch (ESP/TIM
   kommen schon aus `shared_assets/PSX`).
 * Android-Quellen: `platform/android/jni/CMakeLists.txt:42` GLOB `platform/pc/src/*.c`, Engine ueber
-  `re15_port/CMakeLists.txt` → die neuen `.c` werden erfasst, ABER der Android-Bau cacht den Configure in `app/.cxx`
-  (Memory reai-v2-android-glob-cache) → vor dem naechsten Android-Bau neu konfigurieren.
+  `re15_port/CMakeLists.txt` (GLOB `engine/src/*.c`) → die neuen `.c` werden erfasst. Der Gradle-Bau cacht den
+  Configure in `app/.cxx` (Memory reai-v2-android-glob-cache); `release/build_android.sh:198` verwirft ihn schon
+  (`rm -rf "$PROJ/app/.cxx"`) — betroffen sind nur Ad-hoc-Gradle-Laeufe ohne dieses Skript.
 
 ---
 
@@ -199,7 +203,7 @@ versionierten Original (kein Zuwachs im Repo). `.gitattributes`: beide Dateien `
   schon in `PL(x,z,rot=..,hp=..)` (P30 war nur fuer die Gegner richtig).
   Regex fuer neue Auswerter: `\[(\d+) t=([0-9a-f]+) [^\]]*\] hp=(-?\d+)`.
 * **RE15_EQUIP**: nach `re15_player_set_equipped_weapon` jetzt `re15_audio_prime_weapon(re15_player_equipped_weapon())`
-  (vorher: Bank blieb ARMS01 aus `re15_audio_init` `audio_pc.c:1767`; Bestaetigung im Code-Kommentar `main.c:4520-4522`).
+  (vorher: Bank blieb ARMS01 aus `re15_audio_init` `audio_pc.c:1767`; Bestaetigung im Code-Kommentar des CONTINUE-Pfads `main.c:4542-4544`).
   Wirkt auch mit `RE15_NOAUDIO=1` (der Lader liest nur Dateien; `re15_audio_weapon_se` bleibt dann stumm, der
   Waffen-Log zeigt aber `bank=9(geladen=1)` statt `bank=-1(geladen=0)`).
 * **FX-Log** (`RE15_FX_LOG`): alte Zeile bis `q=%d` unveraendert, angehaengt
@@ -211,13 +215,54 @@ versionierten Original (kein Zuwachs im Repo). `.gitattributes`: beide Dateien `
 
 ## 6. Sonden / Mutationsproben
 
-Keine neuen Tests (Auftrag: "keine neuen Tests noetig"; C0 hat kein Verhalten). Messungen: siehe §7.
+Keine neuen Tests (Auftrag: "keine neuen Tests noetig"; C0 hat kein Verhalten). Die einzige wirksame Aenderung
+(RE15_EQUIP laedt die ARMS-Bank) ist per MUTATIONSPROBE an der echten exe belegt (§7.3): Zeile auskommentiert →
+`bank=-1(geladen=0) count=0`; zurueckgesetzt → `bank=3(geladen=1) count=16`. Nach der Probe `main.c` byte-gleich
+zum Commit (`git diff --stat HEAD -- re15_port/platform/pc/main.c` leer, `grep -c MUTATION` = 0), neu gebaut und
+den Positivlauf wiederholt (`v5_equip3_zurueck`, wieder `bank=3(geladen=1) count=16`).
 
 ---
 
 ## 7. Messungen
 
-(folgt: Bau, volle Suite, Harness-Lauf)
+### 7.1 Bau
+`RE15_BUILD_DIR=.../re15_port/build_r34_c0 bash re15_port/tools/local_build.sh configure` + `build` (frisches
+Verzeichnis, SDL-Configure 199.5 s): `=== LOCAL-BUILD-OK (configure)`, `=== LOCAL-BUILD-OK (build)`, 1617 Schritte.
+Keine Warnung aus den geaenderten/neuen Zeilen (die drei `-Wdiscarded-qualifiers` in `main.c:8342/9581/9925` sind
+Altbestand). Vorab `gcc -std=c11 -Wall -Wextra -fsyntax-only` auf `re2_fx.c`, `re15_esp.c`, `re15_damage.c`,
+`re2fx_pc.c`: sauber. `ctest -N`: **428** Tests konfiguriert (= heutige Zahl, `RE15_MIN_TESTS` 428 unveraendert).
+
+### 7.2 Harness-Laeufe (echte exe dieses Baums, `RE15_NOAUDIO=1`, ROOM1140 per `RE15_DEBUG_JUMP=1140@250`)
+Laufskript `build/r34g_c0/lauf_v5.sh` (nicht versioniert; Kopie von `port_inventar_werkzeug/lauf_baseline.sh` mit
+exe `re15_port/build_r34_c0/platform/pc/re15_pc.exe`, Ausgabe `build/r34g_c0/<marke>/`, `RE15_WINDOW_SCALE=1`,
+Skript `W1,M1,MA0.2,M2.5,W4` ab Spielbild 300, `RE15_EXIT_AT=600#1140`). Alle Laeufe `rc=0`, 851 State-Zeilen.
+
+* `v5_granate` (`RE15_GIVE=9:5 RE15_EQUIP=9`):
+  - State-Log: `... @(-800,-20600,r1024)] hp=79 [2 t=10 ... @(-1800,-19600,r512)] hp=50 [3 ...`; ueber den Lauf
+    **3000 Gegnerbloecke**, davon matcht der ALTE Auswerter-Regex (`auswertung.py` RX_EN, verankert bis `)\]`)
+    ebenfalls **3000** → Format rueckwaerts kompatibel. HP-Stempel im Bild 6: 0 → 79/50/80/250/250 (Slots 1..5,
+    Typen 0x16/0x10/0x10/0x11/0x11 = `re15_re2_hp_sync`, RE2-Flavor Standard).
+  - FX-Log: `id=4 sub=13 eidx=4 frame=0 w(-6851,-2474,-18279) phys=1 xlat=(0,0,0) drift=(0,0,0) slot=23 q=2424
+    wpos=(0,0,0) A=30 B=0 zuender=0 zaehler=0 fl=03 art=0 F=382` — alte Felder unveraendert; wpos 0 und A=30 ohne
+    Wirkung (Routine 30 fehlt im Port, P4) = Stand vor Spur A, wie erwartet.
+  - Waffen-Log: 0 `SE arms_rec`-Zeilen beim Wurf (wie in der RE-Phase, `port_inventar_baseline.md:519`) — die
+    Bank-Wirkung ist daher mit einer Schusswaffe gemessen (7.3).
+* `v5_equip3` (`RE15_GIVE=3:15 RE15_EQUIP=3`): Schuss im Bild 359/360, Slot 2 (Typ 0x10) `st=1 ... hp=50` →
+  `st=2 ss1=3 ... hp=35` — das neue Feld zeigt den Treffer im Trefferbild.
+
+### 7.3 RE15_EQUIP → ARMS-Bank (Positiv / Mutation / zurueck)
+
+| Lauf | Code | `debug.log` | Waffen-Log (Schuss, Bild 360) |
+|---|---|---|---|
+| `v5_equip3` | mit `re15_audio_prime_weapon` | `[equip] RE15_EQUIP -> item 3 (slot 1)` | `SE  arms_rec=0 bank=3(geladen=1) count=16` |
+| `v5_equip3_mutation` | Zeile auskommentiert | gleich | `SE  arms_rec=0 bank=-1(geladen=0) count=0` |
+| `v5_equip3_zurueck` | zurueckgesetzt, neu gebaut | gleich | `SE  arms_rec=0 bank=3(geladen=1) count=16` |
+
+Ohne `RE15_NOAUDIO` stuende im Mutationsfall ARMS01 geladen (abgeleitet aus `re15_audio_init` `audio_pc.c:1767`,
+NICHT gemessen) — der Befund P13 (ARMS-Satz 0x0A ausserhalb der 10 Saetze von ARMS01, BAUPLAN P13).
+
+### 7.4 Volle Suite
+(folgt)
 
 ---
 
@@ -226,8 +271,9 @@ Keine neuen Tests (Auftrag: "keine neuen Tests noetig"; C0 hat kein Verhalten). 
 1. `release/make_package.sh:186-189` — sobald Spur D CORE00.ESP/TEX.TIM liest: Gate-Zeile wie fuer CDEMD0.EMS/ENEMSE.VBS
    (`for f in CDEMD0.EMS ENEMSE.VBS CORE00.ESP TEX.TIM; do ...`), sonst waere der Saeure-/Brand-Aufschlag im Paket still tot.
 2. `platform/android/app/build.gradle:113-115` — Existenz-Gate um `"shared_assets/RE2/CORE00.ESP"` ergaenzen (gleiche Begruendung).
-3. Android-Bau (andere Sitzung): `app/.cxx` loeschen / neu konfigurieren, weil `engine/src/re2_fx.c` und
-   `platform/pc/src/re2fx_pc.c` neu sind (GLOB-Cache) — sonst Linkfehler, sobald `main.c` `re2fx_*` ruft.
+3. Android-Bau (andere Sitzung, nur Ad-hoc-Gradle): `app/.cxx` loeschen / neu konfigurieren, weil
+   `engine/src/re2_fx.c` und `platform/pc/src/re2fx_pc.c` neu sind (GLOB-Cache) — sonst Linkfehler, sobald
+   `main.c` `re2fx_*` ruft. `release/build_android.sh:198` tut das beim Release-Bau schon selbst.
 4. Bindung (Spur C, `platform/pc/main.c` / `audio_pc.c`): `re15_esp_se_hook`, `re15_esp_aufschlag_hook = re2fx_aufschlag`,
    `re2fx_applier = re15_re2_gl_apply` (nach Merge B), `re2fx_se_hook`, `re2fx_register_core` beim Boot mit
    `shared_assets/RE2/CORE00.ESP` (Lader `re15_pc_read_re2`), `re2fx_reset` an denselben Stellen wie `re15_esp_fx_reset`
