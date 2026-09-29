@@ -13,10 +13,17 @@
  *  3xx Brand-Aufschlag (Op 48): SE 0x01120001 1x; 2 Kinder + 3 Flammen 0x0505xxxx mit Skala 7168 +
  *      (r%8)*768, Gier-Streuung r%40 / r%80+400 / r%80-400, vel.x 96 + r%25, acc.y 5 + r%8, +0x4A = 1
  *      (unabhaengiger Nachbau des RE2-Stroms @0x80015FE8).
- *  4xx Flamme ueber flachem Boden: Landung (Op 46) -> Op A 19 / Op B 29; Applier-Spion nur bei
- *      step[0x16] >= 16 und X-Aspekt >= 0x1001; Treffer -> Op 50 (Gleiten aus).
- *  5xx Lebensdauer (Zustand 2: +0x42 Bilder + 1, Zustand 1: +0x42 Bilder + 1, dann tot).
- *  6xx Folgeflammen 0x0504xxxx (Skala x0.8) genau in den Bildern mit step[2] % 15 == 0 und vel.x >= 61.
+ *  401-414 Flamme ueber flachem Boden: Landung (Op 46) -> Op A 19 / Op B 29, Zaehler 38 + r%8 bzw.
+ *      90 + r%11, Lebensdauer (Zustand 2: +0x42 + 1 Bilder, Zustand 1: +0x42 + 2); Applier-Spion nur bei
+ *      step[0x16] >= 16 und X-Aspekt >= 0x1001, Box {-600,0,300,150}, Hitcode 0x2002000A.
+ *  420-430 Treffer -> Op 50 (Gleiten aus); ohne +0x4A kein Applier; Wand beim Gleiten -> Op 50;
+ *      Wand in der Luft -> Op 50, dann Op 64 bei der Landung (kein Brennen, kein Applier); ohne Wand kein Op 64.
+ *  440-445 Landung im Luft-Schrumpfen (Zustand 1 bleibt, Tod nach Zaehler + 2).
+ *  450-451 Pause 0x10000000 haelt die Maschine an, danach laeuft Phase 0.
+ *  601-602 Folgeflammen 0x0504xxxx (Skala x0.8) genau in den Bildern mit step[2] % 15 == 0 und
+ *      vel.x >= 61 (Negativ-Kontrolle vel.x 60).
+ *  701-705 Aspekt-Folgen der Ops 19/58 (990/980, 1009/1002, 880/800, 1010/1007) Bild fuer Bild gegen
+ *      einen unabhaengigen Nachbau, alle Zweige durchlaufen.
  */
 #include <stdio.h>
 #include <stdlib.h>
