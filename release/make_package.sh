@@ -414,6 +414,23 @@ if [[ $DO_ZIP -eq 1 ]]; then
         || die "kein echtes Python >= 3.8 (release/python_finden.sh) - verify_split/zip_exec_bit.py brauchen es"
 fi
 
+# --- Android-APK: dieselbe volle Asset-Pruefung wie in build_android.sh ------
+# (Runde 34a) Zwischen Android-Bau und Paket kann sich der Quellbaum geaendert haben (neues
+# Asset, neues Tuerarchiv) - die APK waere dann veraltet und wuerde trotzdem gezippt. Deshalb
+# hier noch einmal gegen den AKTUELLEN Quellbaum, VOR den Kopierminuten. Fehlt die APK, gilt wie
+# bisher: kein Android-Satz (Hinweis beim Zippen).
+APK_PRUEF="$HERE/${NAME}_android.apk"
+if [[ $DO_ZIP -eq 1 && -f "$APK_PRUEF" ]]; then
+    py_arg() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s\n' "$1"; fi; }
+    echo "== Android-APK: Selbsttest + volle Asset-Pruefung gegen den Quellbaum =="
+    rc=0; "$PY" "$(py_arg "$HERE/apk_asset_gate.py")" --selbsttest || rc=$?
+    (( rc == 0 )) || die "Selbsttest des APK-Asset-Gates fehlgeschlagen (rc=$rc)"
+    rc=0; "$PY" "$(py_arg "$HERE/apk_asset_gate.py")" --repo "$(py_arg "$REPO")" "$(py_arg "$APK_PRUEF")" || rc=$?
+    (( rc == 0 )) || die "Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=$rc):
+        $APK_PRUEF
+        release/build_android.sh neu laufen lassen, dann erst paketieren."
+fi
+
 copy_common() {          # $1 = Paketordner
     local out="$1"
     echo "   Assets kopieren (shared_assets/PSX, ~283 MB) ..."
