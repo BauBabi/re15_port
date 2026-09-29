@@ -15,7 +15,9 @@ Kein Spielcode angefasst (nur `release/*`, `app/build.gradle`, dieses Dossier).
 - 20:50 `build_android.sh` (Gates als Funktion, `--gate-only`), `build.gradle`, `make_package.sh`.
 - 20:53-21:00 Gradle-Laeufe stageAssets (3.6), Negativ-Kontrollen an APK-Kopien (3.4/3.5),
   check_tree-/verify_split-Sonden (3.9).
-- 21:02 voller Android-Bau mit den neuen Gates (3.7).
+- 21:02 voller Android-Bau mit den neuen Gates, rc 0 (3.7); make_package.sh-APK-Schritt + Sonde.
+- 21:07 voller Android-Bau mit Punktdatei im Quellbaum -> Gate rc 1, Bau bricht ab (3.7).
+- 21:10 Aufraeumen, Endstand (3.10).
 
 ## 1. Bestand (gelesen, nicht vermutet)
 
@@ -130,6 +132,11 @@ Kein Spielcode angefasst (nur `release/*`, `app/build.gradle`, dieses Dossier).
 - `source python_finden.sh` (nur bei `DO_ZIP=1`, vor dem Kopieren); `verify_split` ruft
   `"$PY" -`, zip_exec_bit.py beide Male `"$PY"`. RE2/DOOR je Datei und TORSE.VBS zusaetzlich per
   `cmp -s` gegen den Quellbaum; TORSE.VBS gehoert jetzt zur Eingangspruefung der Quelle.
+- Zusaetzlich (ueber den Auftrag hinaus, klein): liegt `release/<name>_android.apk` und wird
+  gezippt, laufen VOR den Kopierminuten `apk_asset_gate.py --selbsttest` und die volle Pruefung
+  gegen den AKTUELLEN Quellbaum. Grund: zwischen build_android.sh und make_package.sh kann sich
+  der Baum aendern (neues Asset/Tuerarchiv) - die dann veraltete APK wurde bisher ungeprueft
+  gezippt. Fehlt die APK: wie bisher kein Android-Satz.
 
 ## 3. Messwerte
 
@@ -223,8 +230,30 @@ Laufzeit je Lauf 3.5-4.3 s.
   rc 2 `nur im Gate: portRoot/shared_assets/RE15DOOR`; aktuelle Fassung + Zeile
   `shared_assets/NEU` -> rc 2 `nur in build.gradle: portRoot/shared_assets/NEU`.
 
-### 3.7 Voller Android-Bau mit den neuen Gates
-_folgt (Lauf gestartet 21:02:11)_
+### 3.7 Voller Android-Bau mit den neuen Gates (selbst gefahren, Log `build/r34a/android_voll*.log`)
+- **Positiv** `bash release/build_android.sh --version v0.8.19-r34a-test --no-toolchain`
+  (21:02:11-21:06:09, EXIT=0): Python = mingw64 3.14.7 (Alias verworfen), `BUILD SUCCESSFUL in
+  3m 37s`, 54 Tasks; Gates auf `release/re15_port_v0.8.19-r34a-test_android.apk.ungeprueft`:
+  Stichproben ok, 3604 Asset-Eintraege, aapt `versionName='v0.8.19-r34a-test'` versionCode 81900,
+  beide ABIs; Selbsttest 28/28 (7.9 s unter Baulast); volle Pruefung 3603/3603 bytegleich,
+  RE2/DOOR 27/27, RE15DOOR 30/30, TORSE.VBS gleich, Manifest 3603/356678277 (5.7 s); erst dann
+  `mv` + SHA256SUMS (`6b3402f3...`, APK 363212411 B), `ANDROID-BUILD-OK`. Manifest in der APK
+  bytegleich mit dem der Referenz-APK (sha256 5f5acfdb...). stageAssets/writeAssetManifest waren
+  hier UP-TO-DATE (Eingaben seit dem Gradle-Lauf 3.6 unveraendert).
+- **Negativ, echter Fehlerfall** — Punktdatei `re15_port/shared_assets/RE15DOOR/.r34a_probe.bin`
+  (50 B) in den Quellbaum gelegt, derselbe Aufruf (21:07-21:09:37, **EXIT=1**):
+  Gradle Sync kopiert sie (`app/build/re15_assets/shared_assets/RE15DOOR/.r34a_probe.bin`),
+  writeAssetManifest nimmt sie auf (`re15_assets.txt: 3604 Dateien, 356678327 Bytes`, Zeile 1093
+  `50\tshared_assets/RE15DOOR/.r34a_probe.bin`), aber AGP laesst sie beim Packen still weg (APK:
+  30 RE15DOOR-Eintraege). Auf dem Geraet haette jeder Start an dieser Zeile einen Entpack-Fehler
+  gemeldet (android_glue.c:225), der Marker waere nie geschrieben worden. Die ALTEN Gates liefen
+  gruen durch (Stichproben, aapt); das neue Gate:
+  `fehlt in der APK: assets/shared_assets/RE15DOOR/.r34a_probe.bin ... - Name beginnt mit '.'
+  (Gradle/AAPT lassen ihn aus)` + `Manifest nennt shared_assets/RE15DOOR/.r34a_probe.bin (50 B),
+  die APK hat keinen Eintrag ...` -> `ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab`.
+  Danach: KEINE `release/re15_port_v0.8.19-r34a-test_android.apk` (nur `.apk.ungeprueft`),
+  `release/SHA256SUMS_android.txt` = HEAD (cd139335...). Probe-Datei, `.ungeprueft`, app/build,
+  app/.cxx, .gradle, local.properties danach entfernt; `git status re15_port/ release/` sauber.
 
 ### 3.8 (f) python_finden.sh
 | Lauf | Ergebnis |
@@ -251,19 +280,40 @@ python/pymanager/msiexec-Prozess. (Endstand siehe 3.10.)
   | B DOOR04.DO2 1 Byte (gleiche Groesse) | rc 1 `RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR04.DO2` | **rc 0** (Luecke) |
   | C TORSE.VBS 1 Byte | rc 1 `RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS` | **rc 0** (Luecke) |
   | D wieder intakt | rc 0 | — |
+- APK-Schritt (per awk aus dem Skript, `werkzeug/make_package_apk_sonde.sh`): Referenz-Kopie ->
+  Selbsttest 28/28 + `APK-ASSET-GATE-OK`, rc 0; Faelschung N2 (DOOR04.DO2 1 Byte) -> `Inhalt weicht
+  ab (sha256 ...)` + `ABBRUCH: Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=1)`, rc 1;
+  keine APK -> Schritt uebersprungen, rc 0.
 - verify_split + zip_exec_bit.py ueber `"$PY"` (mingw64 3.14.7; `werkzeug/split_probe.sh`) an Kopien
   der v0.8.19-Split-Saetze: android (1) rc 0, linux (3606; Katalog 3800) rc 0, linux (9999) rc 1,
   android ohne .z01 rc 1 `fehlende Volumes: [1]`; `zip_exec_bit pruefen` linux rc 0 (re15_pc +
   run.sh 100755), android re15_pc rc 1. Kopien danach sha256-gleich mit der Archiv-SUMS (4/4).
 - Den vollen make_package-Lauf fahren die Pruefer.
 
-### 3.10 Endstand
-_folgt_
+### 3.10 Endstand (21:10)
+- Python-Schnappschuss nach ALLEN Laeufen (inkl. zwei vollen Android-Baeuen, Gradle, Sonden):
+  `diff` gegen 20:34 leer (27 Zeilen), 0 Dateien/Ordner neuer als 20:30 in `%LOCALAPPDATA%\Python`,
+  `...\WindowsApps`, `...\Programs\Python`, Benutzer-Startmenue; 0 python/pymanager/msiexec-Prozesse.
+- `git status --short release/ re15_port/`: leer bis auf die committeten Aenderungen;
+  SHA256SUMS_android.txt unveraendert; keine APK/Paketdatei unter release/.
+- Liegen gelassen (unversioniert, ignoriert bzw. build/): `build/r34a/ref_v0.8.19.apk` (Kopie der
+  Referenz fuer die Pruefer), `build/r34a/*.log`, `build/r34a/neg/*.log`,
+  `re15_port/platform/android/_deps/SDL2-2.28.5.tar.gz` (Kopie aus dem Hauptbaum, sha256 wie
+  build.gradle erwartet).
 
 ## 4. Offen / Hinweise fuer die Pruefer
 
+- **Befund (neu, gemessen 3.7):** Eine Datei, deren Name mit `.` beginnt (vermutlich ebenso
+  Ordner mit `_`, AAPT-Ignoriermuster), landet ueber stageAssets im Manifest, aber NICHT in der APK
+  -> auf dem Geraet Entpack-Fehler bei jedem Start. Heute liegt keine solche Datei in den Baeumen
+  (Abschnitt 1); das Gate faengt den Fall jetzt ab. Offen, ob stageAssets/writeAssetManifest
+  solche Namen zusaetzlich schon in Gradle ablehnen sollen — bewusst NICHT gebaut (Auftrag:
+  build.gradle minimal-invasiv; Ordner mit `_` nicht gemessen).
+- Gradle-Inkrement: ist stageAssets UP-TO-DATE, laeuft sein doFirst nicht (3.7 positiv). Harmlos,
+  weil die Eingaben dann seit dem letzten erfolgreichen Lauf unveraendert sind; das APK-Gate laeuft
+  immer.
 - Den vollen `make_package.sh`-Lauf (mit Zippen) habe ich nicht gefahren; verify_split,
-  zip_exec_bit.py und check_tree sind einzeln gegen echte Artefakte belegt (3.9).
+  zip_exec_bit.py, check_tree und der neue APK-Schritt sind einzeln gegen echte Artefakte belegt (3.9).
 - `release/*.py` fallen nicht unter `*.sh text eol=lf` (.gitattributes, nicht in meinem
   Dateibereich): unter core.autocrlf=true liegen sie im Windows-Arbeitsbaum mit CRLF (wie schon
   zip_exec_bit.py). Harmlos, weil beide immer als `"$PY" datei.py` gestartet werden.
