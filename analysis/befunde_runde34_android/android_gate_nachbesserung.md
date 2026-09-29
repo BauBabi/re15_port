@@ -113,3 +113,42 @@ Faelschungen mit dem Rohbyte-Werkzeug des Pruefers (`pruefer_umgehung_r1_belege/
   `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64` zeigt auf einen
   geloeschten Ordner; sein UninstallString STARTET den WindowsApps-PythonManager - nicht ausfuehren.
   Entfernen (Nutzerentscheidung): `reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64" /f`.
+
+## 3. Messungen nachher
+
+### 3.1 Selbsttest (72 Faelle)
+`== SELBSTTEST-OK: 72/72 Faelle ==` unter Python 3.10.11, 3.14.7 (MSYS2) und 3.9.0 (`build/r34a/nb/selbsttest_*.log`).
+Laufzeit 7,6 s (70 Faelle, ruhige Maschine) bis 47-54 s (72 Faelle, Maschine unter Last: selbst
+`python -c pass` brauchte da 441-645 ms statt ~80 ms). Einzelne Faelle mit voller Gate-Ausgabe:
+`nachbesserung_r1_belege/fall_zeigen.py <gate> <ordner> <nr> ...` (zeigt auch den rohen Eintragsnamen).
+
+### 3.2 Kennung/Katalog-Sonde (make_package B5)
+`kennung_sonde.sh` schneidet `apk_kennung` und `verify_apk_im_zip` per awk UNVERAENDERT aus make_package.sh
+und faehrt sie gegen die Referenz-APK + das letzte Volume des Archiv-Android-Satzes v0.8.19:
+Kennung sha256 `514bebd5...` (= Archiv-SUMS) / CRC32 `d16ad30a` / 363212403 B; Katalog passt -> rc 0;
+falsche CRC -> rc 1 `NICHT die gepruefte Datei`; falscher Name -> rc 1 (`kennung_sonde_ergebnis.txt`).
+
+### 3.3 Mutanten-Probe (B3): 84 Mutanten, 78 erkannt, 6 begruendet
+`mutanten_voll.py release/apk_asset_gate.py <ordner> --parallel 2 --python /c/Python310/python.exe`
+(Lauf 1 mit 70 Faellen `mutanten_voll_lauf1.txt`: 76/84; danach 2 Faelle ergaenzt; Lauf 2 mit 72 Faellen
+`mutanten_voll_lauf2.txt`: **78/84**). Erzeugt aus dem Quelltext: A 34 x `befund(...)` -> `pass`, B 27 x
+`raise` -> `pass`, C 5 Namensregeln, D 18 Hand-Mutanten. Ein Mutant gilt als erkannt, wenn sein
+`--selbsttest` rc != 0 liefert; die roten Faelle stehen je Zeile im Lauf-Protokoll. Nur B__klammer_ende_Z189
+wurde ueber eine Zeitgrenze erkannt (ohne den raise laeuft _klammer_ende endlos; Fall 71 -> "Lauf-Fehler
+TimeoutExpired"); kein anderer Mutant-Log enthaelt "Lauf-Fehler" -> keine Erkennung durch Last.
+
+Die Luecken der Gegenpruefung jetzt: U1 Geisterzeile = A_manifest_pruefen (Zeile ohne APK-Eintrag) -> Fall 32;
+U2 Doppelzeile -> 33; U3 = D1 -> 29, 30 (und D16 "nur APK-Seite 1. Block" -> 29, 30); U4 = D2 -> 31;
+U5 Verzeichnis -> 53; U6 Kommentarzeile -> 36; U7 `1_800` -> 34. U8 (64 MiB) siehe unten.
+Weitere tragende: D3 Datenoffset aus dem Zentralverzeichnis -> 22 Faelle rot (auch die GUTE APK, dank
+AGP-Polster); D4 Namen wie zipfile -> 39, 40; D5 Local Header nur Name -> 44, 45; D9 EOCD von vorn -> 61.
+
+Ueberlebende (je Grund, im Code kommentiert):
+| Mutant | Grund |
+|---|---|
+| B__ohne_kommentare "Kommentar /* ohne Ende" | unerreichbar: der Block kommt aus _klammer_ende, das jedes offene `/*` selbst meldet (Z189, erkannt) |
+| B__anweisungen "Klammern passen nicht im stageAssets-Block" | unerreichbar: _klammer_ende hat den Block schon als ausgeglichen erkannt |
+| B_quelldateien "Quellbaum nicht lesbar" | im Selbsttest nicht nachstellbar (unlesbarer Ordner); faellt er weg, meldet die Zusatz-Pruefung die APK-Dateien des uebersprungenen Ordners (rc 1) |
+| B__eintrag_lesen "Datei endet mitten im Eintrag" | unerreichbar: struktur_pruefen verlangt daten_off + csize <= Zentralverzeichnis |
+| A_manifest_pruefen "> 64 MiB" | ohne Fall: 64-MiB-Manifest je Selbsttest zu teuer; erreichbar nur mit > 1 KiB langen Pfaden (mehr als 65534 Eintraege lehnt das Gate als ZIP64 ab) |
+| B_pruefen "interner Widerspruch" | Sicherheitsnetz fuer einen ZWEITEN Fehler (still uebersprungene Pruefung); z. B. faengt es A_pruefen_Z706 mit ab |
