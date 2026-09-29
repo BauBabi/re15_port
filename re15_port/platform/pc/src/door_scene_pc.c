@@ -280,34 +280,53 @@ static uint32_t rd32le(const uint8_t *p)
 
 /* Pruefhaken RE15_TUER_BOGEN=<Verzeichnis> (Runde 31): statt der ganzen Serie nur zwei Bilder
  * je Sequenz, <Sxxx>_anfang.ppm (Tuer zu, nach dem Einblenden) und <Sxxx>_mitte.ppm (Oeffnen).
- * Welche Bilder, bestimmt ein Trockenlauf derselben Maschine: erstes und letztes Bild, in dem
- * sich nach dem Einblenden ein Objekt bewegt; Mitte = halber Weg dazwischen. */
+ * Welche Bilder, bestimmt ein Trockenlauf derselben Maschine an Objekt 0 (Blatt bzw. Leiter,
+ * Klappe, Plattform): Mitte = das Bild, in dem die aufsummierte Drehung von Objekt 0 die Haelfte
+ * ihrer Summe erreicht (Drehung unter 256 oder keine: Lage y/z; Lage x ist die Kamerafahrt zur
+ * Tuer hin). Anfang =
+ * vor der ersten Bewegung irgendeines Objekts nach dem Einblenden (Bild 16..20). */
+static int32_t absdiff16(uint16_t a, uint16_t b) { int32_t d = (int16_t)(uint16_t)(a - b); return d < 0 ? -d : d; }
+
 static void bogen_bilder(const uint8_t *teil, int n, const re15_door_seq_anfrage_t *a, int *anfang, int *mitte)
 {
     static re15_door_seq_t t;
+    static int32_t kum_rot[4000], kum_pos[4000];
     *anfang = 20; *mitte = 120;
     if (re15_door_seq_start(&t, teil, n, a->variante, a->bit7 ? 0x80 : 0, a->tuer_nr) != 0) return;
     int32_t alt[RE15_DOOR_OBJEKTE][7];
     memset(alt, 0, sizeof alt);
-    int bild = 0, erst = -1, letzt = -1;
+    uint16_t r_alt[3] = {0, 0, 0};
+    int32_t y_alt = 0, z_alt = 0, sr = 0, sp = 0;
+    int bild = 0, ea = -1, la = -1;
     while (bild < 4000 && re15_door_seq_bild(&t, 1)) {
+        const re15_door_obj_t *o = &t.obj[0];
+        if (bild > 16 && o->on) {
+            sr += absdiff16(o->rot[0], r_alt[0]) + absdiff16(o->rot[1], r_alt[1]) + absdiff16(o->rot[2], r_alt[2]);
+            sp += (o->pos[1] > y_alt ? o->pos[1] - y_alt : y_alt - o->pos[1])
+                + (o->pos[2] > z_alt ? o->pos[2] - z_alt : z_alt - o->pos[2]);
+        }
+        memcpy(r_alt, o->rot, sizeof r_alt); y_alt = o->pos[1]; z_alt = o->pos[2];
+        kum_rot[bild] = sr; kum_pos[bild] = sp;
         for (int i = 0; i < RE15_DOOR_OBJEKTE; i++) {
-            const re15_door_obj_t *o = &t.obj[i];
-            int32_t neu[7] = { o->on, o->pos[0], o->pos[1], o->pos[2], o->rot[0], o->rot[1], o->rot[2] };
-            if (bild > 16 && memcmp(neu, alt[i], sizeof neu) != 0) {
-                if (erst < 0) erst = bild;
-                letzt = bild;
-            }
-            memcpy(alt[i], neu, sizeof neu);
+            const re15_door_obj_t *q = &t.obj[i];
+            int32_t w[7] = { q->on, q->pos[0], q->pos[1], q->pos[2], q->rot[0], q->rot[1], q->rot[2] };
+            if (bild > 16 && memcmp(w, alt[i], sizeof w) != 0) { if (ea < 0) ea = bild; la = bild; }
+            memcpy(alt[i], w, sizeof w);
         }
         bild++;
     }
     re15_door_seq_ende(&t);
-    if (erst > 0) {
-        *anfang = erst - 1 < 20 ? erst - 1 : 20;
-        if (*anfang < 16) *anfang = 16;
-        *mitte = (erst + letzt) / 2;
+    /* kleine Drehungen (Wackeln einer Schiebetuer) zaehlen nicht als Oeffnen: ab 256 = 22,5 Grad */
+    int drehen = sr >= 256;
+    const int32_t *kum = drehen ? kum_rot : (sp > 0 ? kum_pos : (sr > 0 ? kum_rot : NULL));
+    int32_t summe = drehen ? sr : (sp > 0 ? sp : sr);
+    if (kum) {
+        for (int b = 0; b < bild; b++) if (kum[b] * 2 >= summe) { *mitte = b; break; }
+    } else if (ea > 0) {
+        *mitte = (ea + la) / 2;
     }
+    if (ea > 0) *anfang = ea - 1 < 20 ? ea - 1 : 20;
+    if (*anfang < 16) *anfang = 16;
 }
 
 static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
@@ -360,7 +379,10 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
 
     int b_anfang = -1, b_mitte = -1;
     char bogen_pfad[512];
-    if (bogen && *bogen) bogen_bilder(teil, n, a, &b_anfang, &b_mitte);
+    if (bogen && *bogen) {
+        bogen_bilder(teil, n, a, &b_anfang, &b_mitte);
+        fprintf(stderr, "[tuer] Bogen-Bilder S%03u: Anfang Bild %d, Mitte Bild %d\n", a->seite, b_anfang, b_mitte);
+    }
 
     uint8_t balken = g_letterbox_level;
     /* Tonteil laden ("DOOR SOUND", FUN_80014cd0) - im Port synchron, also vor dem ersten

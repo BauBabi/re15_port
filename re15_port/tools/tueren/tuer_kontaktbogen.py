@@ -84,7 +84,10 @@ def zelle(pfad):
 def erzeugen():
     os.makedirs(BILDER, exist_ok=True)
     env = dict(os.environ)
-    env.update(RE15_TUER_SEITE="ALLE", RE15_TUER_BOGEN=BILDER.replace("\\", "/"), RE15_TUER_SCHNELL="1")
+    # Ton ohne Audiogeraet messbar: RE15_AUDIO_CAP_SYNC rendert die Mix-Kette in eine Datei (kein
+    # SDL-Geraet noetig), RE15_SE_DEBUG=1 schreibt jede Stimme ins debug.log.
+    env.update(RE15_TUER_SEITE="ALLE", RE15_TUER_BOGEN=BILDER.replace("\\", "/"), RE15_TUER_SCHNELL="1",
+               RE15_AUDIO_CAP_SYNC=os.path.join(AUS, "ton_alle.pcm").replace("\\", "/"), RE15_SE_DEBUG="1")
     cwd = os.path.dirname(EXE)
     print("starte", EXE)
     r = subprocess.run([EXE], cwd=cwd, env=env, timeout=3600)

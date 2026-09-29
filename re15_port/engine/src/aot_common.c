@@ -628,6 +628,20 @@ static void tuer_sequenz_anfragen(const re15_aot_t *a, const re15_aot_door_param
                                                 a->x, a->z, a->half_w, a->half_h,
                                                 a->xs, a->zs, d->band, &q);
     if (archiv == RE15_DOOR_ARCHIV_KEINS) return;
+    /* Zwischensequenz-Uebergaenge bleiben ohne RE2-Sequenz (Auftrag Runde 31: "Null-Rechteck-/
+     * Intro-/Cutscene-Uebergaenge NICHT anfassen"). Eine Tuer, die WAEHREND einer Zwischensequenz
+     * feuert, hat kein Spieler durchschritten: der Scan selbst sperrt in dieser Lage jede
+     * Tuer (in_cinematic in re15_aot_scan: player_mode 2 oder Balken schliessen noch), gefeuert
+     * hat sie also ein Skript per Aot_on (gemessen: ROOM4000-Eintrittsszene, Plc_dest einer
+     * Figur zur Tuer, dann Slot 1 -> ROOM4010). PORT-WAHL; das Tor (eigene Sequenz) bleibt, wie es war. */
+    if (archiv == RE15_DOOR_ARCHIV_RE2 &&
+        (g_scd.player_mode == 2 || g_scd.letterbox_countdown != 0)) {
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[aot] Tuer S%03u in einer Zwischensequenz gefeuert -> RE1.5-Uebergang ohne Sequenz\n",
+                q.seite);
+#endif
+        return;
+    }
     q.aktiv = 1;
     g_door_seq_anfrage = q;
 }

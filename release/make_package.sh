@@ -190,6 +190,19 @@ check_tree() {           # $1 = fertiger Paketordner
     # shared_assets/RE2/TORSE.VBS (audio_pc.c load_re2_tor_se_pc). Fehlt sie, laeuft die
     # Sequenz stumm - Gate statt Stille.
     [[ -s "$out/shared_assets/RE2/TORSE.VBS" ]]         || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/TORSE.VBS (Tuersequenz waere stumm)"
+    # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
+    # UNVERAENDERT aus shared_assets/RE2/DOOR/DOORxx.DO2 (door_scene_pc.c re2_archiv_lesen,
+    # Modellteil + Tonteil). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang
+    # ohne Sequenz - Gate statt Stille: jede DOORxx.DO2 des Quellbaums muss im Paket liegen
+    # und darf nicht leer sein.
+    local n_tuer=0 tf
+    for tf in "$RE2"/DOOR/*.DO2; do
+        [[ -e "$tf" ]] || die "Quellbaum ohne shared_assets/RE2/DOOR/*.DO2 (Tuersequenzen haetten kein Modell)"
+        [[ -s "$out/shared_assets/RE2/DOOR/$(basename "$tf")" ]] \
+            || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/DOOR/$(basename "$tf") (Tuersequenz ohne Modell)"
+        n_tuer=$((n_tuer + 1))
+    done
+    echo "   Tuerarchive im Paket: $n_tuer x shared_assets/RE2/DOOR/*.DO2"
     # Voiceover: der Port laedt NICHT aus shared_assets/PSX/VOICE, sondern aus
     # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip).
     # Seit 2026-08-24 ueber die BASIS-Wurzelliste (asset_root_pc.c): synchro/ muss
