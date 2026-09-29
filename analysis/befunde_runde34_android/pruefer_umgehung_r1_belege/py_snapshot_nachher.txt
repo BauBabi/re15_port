@@ -1,0 +1,27 @@
+﻿DIR C:\Users\mjoedicke\AppData\Local\Python\_cache 2026-09-29T15:39:13
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10 2025-09-25T08:38:21
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12 2025-02-22T16:08:12
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9 2025-09-25T08:03:07
+REG HKEY_CURRENT_USER\Software\Python\PythonCore
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Help
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Help\Main Python Documentation
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstallPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\PythonPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\PythonPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Help
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Help\Main Python Documentation
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstallPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\PythonPath

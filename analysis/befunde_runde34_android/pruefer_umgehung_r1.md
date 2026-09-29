@@ -40,6 +40,18 @@ aapt-Gate; make_package.sh ruft vor dem Zippen NUR apk_asset_gate.py (make_packa
 auch F3 durch.
 Nebenbei sichtbar: fuer F2 meldet die alte Stichprobenzeile "3603 Asset-Eintraege" statt 3604 (unzip zeigt den
 rohen `\`-Namen), prueft den Wert aber nicht (build_android.sh:149-150).
+**Installierbar:** F2 laesst sich mit DEMSELBEN Schluessel wie der Release-Bau neu signieren
+(`apksigner sign --ks ~/.android/debug.keystore`, build.gradle:205-226) -> `apksigner verify` rc 0, Signer-SHA-256
+432bc749... = Referenz (also sogar als Update ueber die Original-APK installierbar), aapt2 weiter `failed to find
+file`, `build_android.sh --gate-only F2_signiert --version v0.8.19` -> **rc 0 ANDROID-GATES-OK**
+(`apksigner_und_F2_signiert.txt`). F4 dagegen weist apksigner ab (`Malformed ZIP entry`) - F4/F5 blieben
+unsigniert (B2).
+Einordnung: ein normaler AGP-Bau erzeugt weder `\`/NUL-Namen noch LFH/CD-Widersprueche; es sind gezielte
+Byte-Faelschungen (bzw. Folgen eines fehlerhaften Nachbearbeitungswerkzeugs). Nach dem Massstab des Auftrags
+("haltbar nur, wenn keine Faelschung durchkommt"; `\` war ausdruecklich genannt) reicht das fuer "nicht haltbar".
+Abhilfe-Richtung (nicht gebaut, ich aendere keine Werkzeuge): Namen roh vergleichen (`ZipInfo.orig_filename`,
+`\`/NUL ablehnen) und je Eintrag den Local Header gegen das CD pruefen (CRC, Groessen, Methode, Name) - oder
+den Eintrag zusaetzlich ueber einen libziparchive-Leser oeffnen; dazu `apksigner verify` (B2).
 Belege: `pruefer_umgehung_r1_belege/F_gate_ergebnisse.txt`, `F_gateonly_ergebnisse.txt`,
 `aapt2_libziparchive_gegenprobe.txt`.
 
@@ -170,3 +182,29 @@ F3-F5 gingen dort ebenso durch.
 - 21:22 Python-Schnappschuss vorher (`py_snapshot_vorher.txt`, 27 Zeilen = Stand des Bauers).
 - 21:24 F1-F8 + K0 erzeugt; 21:25 Gate je Fall unter 3.10.11 und 3.14.7.
 - 21:26 aapt2/aapt-Gegenprobe (libziparchive); 21:27 build_android.sh --gate-only F2-F5; apksigner.
+- 21:29 Mutanten U1-U8 + Selbsttest je Mutant (alle 28/28); 21:31 Mini-Faelle A1-A20; U3/U4 gegen F1.
+- 21:33 make_package.sh-APK-Block (awk) mit echtem Gate/U3; build_android.sh-Randfaelle V1-V7.
+- 21:35 python_finden: nur Alias / kein Python / guard_probe (8.3-Pfad, ohne Start); Zwischen-Schnappschuss.
+- 21:37 check_tree-cmp an eigener Schattenkopie (neu vs. a358fd5d).
+- 21:40 F2/F4 mit dem Release-Schluessel neu signiert; F2_signiert durch --gate-only (rc 0).
+- 21:42 End-Schnappschuss, Aufraeumen.
+
+## 10. Endstand (21:43)
+- Python-Schnappschuss vorher/zwischen/nachher identisch (27 Zeilen, `py_snapshot_*.txt`); 0 Dateien/Ordner
+  neuer als 21:18 in `%LOCALAPPDATA%\Python`, `...\WindowsApps`, `...\Programs\Python`, Benutzer-Startmenue;
+  0 python/pymanager/msiexec-Prozesse. Kein Aufruf des WindowsApps-Alias (python_finden verwarf ihn in jedem Lauf).
+- Aufgeraeumt: alle Faelschungs-APKs (3,7 GB), Schattenkopie, Mini-Repos, Hardlinks unter
+  build/r34a/pruefer_umgehung_r1/; liegen gelassen: logs/, mutanten/, make_package_alt.sh (klein). Jede
+  Faelschung ist mit `umgehung_werkzeug.py forge` in Sekunden wiederherstellbar.
+- build/r34a/ref_v0.8.19.apk unveraendert (sha256 514bebd5... = Archiv-SUMS). Archiv unter C:/workspace/Re15Data
+  nur gelesen (SUMS). `git status --short release/`: leer (die zeitweisen Paketdateien waren vom Pruefer echtlauf).
+- Werkzeuge (release/*, build.gradle) NICHT geaendert.
+
+## 11. Urteil: NICHT HALTBAR
+Die Asset-Pruefung selbst ist gruendlich (sha256 ueber alles, auch CRC-erhaltende Aenderungen in grossen
+Dateien; Manifest wie der Geraete-Leser; fail closed bei kaputter APK/fehlendem Python; kein verschluckter
+Rueckgabewert in build_android.sh). Aber sie prueft die APK so, wie Pythons zipfile sie sieht, nicht so, wie
+Android sie liest: `\`-Namen, NUL-Namen und LFH/CD-Widersprueche kommen durch (B1), F2 sogar korrekt signiert
+und installierbar durch die GESAMTE Kette. Der Selbsttest bestaetigt vier tragende Abschwaechungen nicht (B3).
+Nebenbefunde B2 (keine Signaturpruefung), B4 (Version ohne aapt still ungeprueft), B5 (Zeitfenster
+Pruefen/Zippen in make_package.sh).
