@@ -1,0 +1,57 @@
+# build_android.sh --gate-only Randfaelle (Referenz-APK-Kopie build/r34a/ref_v0.8.19.apk)
+V1_sdk_fehlt_falsche_version       EXIT=0
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+        Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+        (Android-SDK-Ordner fehlt: /c/gibt_es_nicht - ohne aapt)
+        (aapt nicht gefunden - badging-Gate uebersprungen)
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk ==
+V2_sdk_da_falsche_version          EXIT=1
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+        Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+        package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+     ABBRUCH: aapt: versionName ist nicht 'v9.9.9'
+V3_pfad_fehlt                      EXIT=1
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+        Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+     ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_umgehung_r1/gibt_es_nicht.apk
+V4_pfad_ist_ordner                 EXIT=1
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+        Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+     ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_umgehung_r1
+V5_pfad_leer                       EXIT=2
+     --gate-only braucht den Pfad der APK
+V6_ohne_pfad                       EXIT=2
+     --gate-only braucht den Pfad der APK
+V7_version_ohne_wert               EXIT=1
+     release/build_android.sh: line 86: $2: unbound variable
+nur_alias                          EXIT=1
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+        Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+     FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+     ABBRUCH: kein echtes Python >= 3.8 (release/python_finden.sh) - die volle Asset-Pruefung braucht es
+
+# python_finden.sh
+== pf_kein_python_im_path
+   Python: /c/Python310/python.exe (3.10.11)
+PY=/c/Python310/python.exe
+PY_VERSION=3.10.11
+EXIT=0
+== pf_nur_alias
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+EXIT=1
+
+# make_package.sh APK-Block (make_package_apk_block_sonde.sh), HERE mit echtem Gate bzw. Mutant U3
+U3_F1            EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) == | APK-BLOCK-OK (make_package.sh wuerde diese APK zippen)
+echt_F1          EXIT=1 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) == | ABBRUCH: Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=1):
+echt_F3          EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) == | APK-BLOCK-OK (make_package.sh wuerde diese APK zippen)
+echt_F4          EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) == | APK-BLOCK-OK (make_package.sh wuerde diese APK zippen)
+
+# make_package.sh check_tree (Sonde des Bauers werkzeug/check_tree_sonde.sh, eigene Schattenkopie build/r34a/pruefer_umgehung_r1/schatten)
+A_intakt                             CHECK_TREE_OK
+B_TORSE_letztes_byte                 ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS
+C_wieder_intakt                      CHECK_TREE_OK
+D_DOOR36.DO2_letztes_byte            ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR36.DO2
+E_DOOR36.DO2_fehlt                   ABBRUCH: RE2-Asset fehlt/leer im Paket: shared_assets/RE2/DOOR/DOOR36.DO2 (Tuersequenz ohne Modell)
+F_alt_TORSE                          CHECK_TREE_OK

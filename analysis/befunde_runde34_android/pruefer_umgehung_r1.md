@@ -50,7 +50,72 @@ CHUNKED_SHA256 digest mismatch`. Alle drei bestehen apk_asset_gate.py mit rc 0 (
 --gate-only-Kette). Auch die K0-"Identitaet" des Bauers (3.4, zipfile-Umschrift) ist unsigniert und lief rc 0.
 Eine solche APK ist nicht installierbar (targetSdk 35 verlangt v2+). make_package.sh zippt sie trotzdem.
 
+### B3 (mittel) Der Selbsttest faengt vier tragende Abschwaechungen NICHT (28/28 trotz kaputtem Gate)
+Mutanten (`pruefer_umgehung_r1_belege/mutanten_umgehung.py`, je EINE Pruefung abgeschwaecht, Kopien unter
+build/r34a/pruefer_umgehung_r1/mutanten/), jeweils `<mutant> --selbsttest` -> **SELBSTTEST-OK 28/28**, und
+jeweils eine Faelschung, die das ECHTE Gate ablehnt, der Mutant aber mit rc 0 annimmt:
+| Mutant | Selbsttest | Faelschung | echtes Gate | Mutant |
+|---|---|---|---|---|
+| U1 "Manifest-Zeile ohne APK-Eintrag" still | 28/28 OK | A1 Geisterzeile `5\tshared_assets/RE15DOOR/GEIST.DO2`, Kopf angepasst | rc 1 | **rc 0** |
+| U2 doppelte Manifest-Zeile: spaetere gewinnt still | 28/28 OK | A2 P2DS.DO2 zweimal, erste mit 9999 B (Geraet: Entpack-Fehler, android_glue.c:225) | rc 1 | **rc 0** |
+| U3 Inhalt nur ueber den ersten 1-MiB-Block | 28/28 OK | F1 (echte APK, ENEMSE.VBS 6,7 MB, Aenderung bei L-40) | rc 1 | **rc 0** |
+| U4 CRC32 statt sha256 (APK-Eintrag weiter gelesen) | 28/28 OK | F1 (CRC32 bleibt 52dc25a2) | rc 1 | **rc 0** |
+| U7 Groessenfeld nicht auf Ziffern geprueft | 28/28 OK | A6 `1_800` (int() 1800, atoll() 1) | rc 1 | rc 0 (konstruiert) |
+Nicht tragend (andere Pruefung faengt es, gemessen): U5 Verzeichniseintrag (A3: rc 1 ueber "zusaetzlich"),
+U6 Kommentarzeile (A4 versteckte Zeile: rc 1 ueber "fehlt im Manifest"), U8 64-MiB-Grenze (unrealistisch).
+Ursache: die Fixture-Dateien sind hoechstens 5000 B (< BLOCK = 1 MiB, apk_asset_gate.py:90, :633-648), keine
+Faelschung erhaelt die CRC32, und es gibt keinen Fall "Manifest-Zeile fuer eine Datei, die weder in APK noch
+Quelle liegt" und keinen Fall "doppelte Manifest-Zeile". Die Mutanten-Probe des Bauers (M1-M8) deckte nur
+Totalabschaltungen ab. Folge in make_package.sh (APK-Block per awk ausgeschnitten, HERE mit U3 als
+apk_asset_gate.py): Selbsttest 28/28, F1 -> `APK-BLOCK-OK (make_package.sh wuerde diese APK zippen)`; mit dem
+echten Gate: `ABBRUCH: Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=1)`.
+Belege: `mutanten_und_minifaelle.txt`, `make_package_apk_block_sonde.sh`, Abschnitt 4.
+
+### B4 (niedrig) --gate-only mit --version, aber ohne aapt: Versionspruefung still uebersprungen, rc 0
+`ANDROID_SDK_ROOT=/c/gibt_es_nicht bash release/build_android.sh --gate-only <ref> --version v9.9.9`
+-> `(aapt nicht gefunden - badging-Gate uebersprungen)` ... `== ANDROID-GATES-OK (--gate-only) ==`, **rc 0**,
+obwohl die APK versionName 'v0.8.19' hat (mit SDK: rc 1 `aapt: versionName ist nicht 'v9.9.9'`). Der Kopf
+(build_android.sh:40) verspricht "Version wird nur mit --version geprueft"; ohne aapt fallen auch Paketname
+und ABIs weg (:157-173). Im vollen Bau ist das SDK Pflicht (:212), aapt kommt aus build-tools (AGP braucht
+es nicht - ein SDK ohne build-tools/aapt ist moeglich).
+
+### B5 (niedrig) make_package.sh: Pruefzeitpunkt und Zipzeitpunkt der APK fallen auseinander
+Gepruefte APK = `release/<name>_android.apk` zum Zeitpunkt make_package.sh:423-432, gezippt wird die Datei, die
+bei :591-596 dort liegt; dazwischen liegen copy_common + Laufzeit-Gates beider Plattformen (Minuten). Eine
+in dieser Zeit ersetzte/neu abgelegte APK (z.B. von Hand kopiert) wird ungeprueft gezippt; lag bei :423 keine
+APK, entfaellt die Pruefung ganz. (Nur Codebefund; make_package.sh selbst nicht gefahren, der Pruefer
+"echtlauf" nutzt release/ im selben Baum.) Ebenfalls nur Assets: eine APK mit veraltetem libmain.so (Code
+nach dem APK-Bau geaendert, gleiche Version) besteht die Pruefung - fuer die PC-Binaries gibt es dafuer
+check_binary_fresh (:119-139), fuer die APK nichts.
+
 (weitere Befunde folgen unten, Abschnitt 1 wird fortgeschrieben)
+
+### Was HAELT (gemessen)
+- Gleiche Groesse/anderer Inhalt in einer GROSSEN Datei, sogar CRC32-erhaltend (F1, VAB 6,7 MB): rc 1.
+- Gross/klein (F6), abgeschnittene APK (F7, rc 2), zerstoerter CD-Eintrag (F8, rc 2), Verschluesselungsbit
+  (A15, rc 2), Methode 99 (A16, rc 2), Verzeichniseintrag (A3), Doppelzeile/Geisterzeile/versteckte Zeile/
+  Tab/Leerzeichen/NUL im Manifest (A1-A4, A9-A11: rc 1), Leerzeilen und `\r\r\n` (A7/A8: rc 0 = wie das Geraet),
+  RE15DOOR nur mit leerem Unterordner (A17: rc 1).
+- Drift-Schutz: ein Baum ueber `tasks.named("stageAssets")` AUSSERHALB des register-Blocks umgeht zwar den
+  build.gradle-Abgleich (kein rc 2), der Inhalt faellt aber als "zusaetzlich in der APK" auf (A19 rc 1);
+  liefert der Baum nichts, bleibt rc 0 (A20, richtig). Keine Faelschung ueber diesen Weg.
+- python_finden.sh: nur WindowsApps im PATH + NUR_PATH=1 -> rc 1 ohne Start, build_android.sh --gate-only
+  bricht VOR jedem Gate ab; kein Python im PATH -> Rueckfall /c/Python310 (3.10.11). Alias in 8.3-Schreibweise
+  (`C:\Users\MJOEDI~1\...\WINDOW~1\python3.exe`): Pfadregel greift nicht, die Linkregel (readlink -f ->
+  `/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_.../python3.exe`) verwirft ihn ohne
+  Start (`guard_probe.sh`, ohne einen Kandidaten zu starten). Anmerkung: die "0-Byte"-Regel greift unter MSYS
+  fuer Aliase NICHT (`-s` folgt dem Link; Kopfkommentar python_finden.sh:23 ist dort ungenau) - harmlos, weil
+  die Linkregel vorher greift.
+- --gate-only: Pfad fehlt/Ordner -> rc 1, leer/ohne Pfad -> rc 2, `--version` ohne Wert -> rc 1 (set -u).
+- make_package.sh check_tree (eigene Schattenkopie, echte Funktion per awk): TORSE.VBS letztes Byte -> rc 1,
+  DOOR36.DO2 letztes Byte -> rc 1, DOOR36.DO2 fehlt -> rc 1; alte Fassung a358fd5d bei TORSE -> rc 0 (Luecke
+  geschlossen). `bash -n` fuer make_package.sh, build_android.sh, python_finden.sh: OK. python_finden an beiden
+  Stellen (verify_split `"$PY" -`, zip_exec_bit.py 2x `"$PY"`) - sonst kein python3/python-Aufruf.
+- Shell-Fehlerwege build_android.sh: alle neuen Gate-Aufrufe `rc=0; ... || rc=$?` + explizites die, run_gates
+  nie in einem Bedingungskontext (set -e wirkt), kein Pipe/Subshell um die Rueckgaben. `|| true` nur an
+  Anzeige-/Suchstellen (:149 Zaehlung, :158 aapt-Suche, :160-162 badging-Anzeige; danach explizite greps).
+  Einziger weicher Weg: aapt fehlt -> ueberspringen (B4). `source python_finden.sh || die` schaltet set -e im
+  Skript ab - python_finden arbeitet mit expliziten Rueckgaben, geprueft ok.
 
 ## 2. Faelschungen an der Referenz-APK (Kopien unter build/r34a/pruefer_umgehung_r1/apk/)
 
@@ -69,6 +134,36 @@ LFH/CD konsistent, keine `\`/NUL-Namen).
 | F6 | P07G.DO2 -> p07g.do2 (Gross/klein) | 1 | 1 | fehlt / zusaetzlich / Manifest-Zeile ohne APK-Eintrag / fehlt im Manifest |
 | F7 | letzte 100 B abgeschnitten | 2 | 2 | `APK nicht lesbar ... (File is not a zip file)` — fail closed |
 | F8 | CD-Eintrag TEX.TIM Signatur zerstoert | 2 | 2 | `APK nicht lesbar ... (Bad magic number for central directory)` — fail closed |
+
+Gegenprobe mit libziparchive (aapt2 35.0.0, `aapt2 dump xmltree --file <eintrag> <apk>`; bei einer DO2 heisst
+"failed to parse file as binary XML" = Eintrag gefunden UND gelesen): ref/K0 gelesen (55908 B); F2 `failed to
+find file`; F3 `Zip: invalid file name at entry 3205 ... Invalid entry name` (ganze APK nicht zu oeffnen);
+F4/F5 `Zip: size/crc32 mismatch ... Inconsistent information`. Der Geraete-Leser geht denselben Weg:
+android_glue.c:212 `SDL_RWFromFile(rel)` -> SDL_android.c:1945 `AAssetManager_open` -> libziparchive.
+apksigner 35.0.0 verify: ref rc 0; K0 `Missing META-INF/MANIFEST.MF`; F2/F4 `CHUNKED_SHA256 digest mismatch`.
+zipfile-Quelltext: 3.10 `C:\Python310\lib\zipfile.py:351` (NUL), `:358` (os.sep -> '/'), `:1559` (einziger
+LFH-Vergleich: Name); 3.14.7 `mingw64/lib/python3.14/zipfile/__init__.py:410/:417/:419` (os.altsep='\\'
+-> '/'), `:1770`. Unter Linux (os.altsep None) wuerde F2 gefangen - aus dem Quelltext, nicht gemessen;
+F3-F5 gingen dort ebenso durch.
+
+## 3. Mini-Faelle (`minifaelle_umgehung.py`, Fixture `_Fall` des Gates, echtes Gate + Mutanten je Prozess)
+| Fall | echtes Gate | Bemerkung |
+|---|---|---|
+| A1 Geisterzeile (weder APK noch Quelle) | 1 | U1: 0 |
+| A2 Doppelzeile, erste falsche Groesse | 1 | U2: 0 |
+| A3 Verzeichniseintrag | 1 | U5: 1 (redundant) |
+| A4 Zeile auskommentiert | 1 | U6: 1 (redundant) |
+| A5 harmlose `# Notiz` | 1 | strenger als das Geraet (ok) |
+| A6 Groesse `1_800` | 1 | U7: 0 |
+| A7 Leerzeilen / A8 `\r\r\n` | 0 / 0 | wie das Geraet (harmlos) |
+| A9 Tab im Pfad / A10 Leerzeichen am Ende / A11 NUL-Zeile | 1 / 1 / 1 | |
+| A12 `\` im Namen / A13 NUL im Namen / A14 LFH-CRC | **0 / 0 / 0** | Mini-Nachbau von B1 - passte in den Selbsttest |
+| A15 Verschluesselungsbit / A16 Methode 99 | 2 / 2 | fail closed |
+| A17 RE15DOOR nur leerer Unterordner | 1 | |
+| A18 `synchro/STAGEX.txt` nur in der Quelle | 1 | Gate erwartet Dateien auf oberster Ebene, die auf `STAGE*/**` passen (wie Gradle); Abweichung waere in beide Richtungen rc 1 |
+| A19/A20 Baum per tasks.named ausserhalb | 1 / 0 | siehe "Was haelt" |
+
+## 4. Mutanten (`mutanten_umgehung.py`) - siehe B3; Selbsttest-Logs build/r34a/pruefer_umgehung_r1/logs/selbsttest_U*.log
 
 ## 9. Laufprotokoll
 - 21:18 Dossier angelegt; Bestand/Code gelesen.
