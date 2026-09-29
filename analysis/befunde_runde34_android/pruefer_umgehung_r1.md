@@ -100,8 +100,6 @@ APK, entfaellt die Pruefung ganz. (Nur Codebefund; make_package.sh selbst nicht 
 nach dem APK-Bau geaendert, gleiche Version) besteht die Pruefung - fuer die PC-Binaries gibt es dafuer
 check_binary_fresh (:119-139), fuer die APK nichts.
 
-(weitere Befunde folgen unten, Abschnitt 1 wird fortgeschrieben)
-
 ### Was HAELT (gemessen)
 - Gleiche Groesse/anderer Inhalt in einer GROSSEN Datei, sogar CRC32-erhaltend (F1, VAB 6,7 MB): rc 1.
 - Gross/klein (F6), abgeschnittene APK (F7, rc 2), zerstoerter CD-Eintrag (F8, rc 2), Verschluesselungsbit
