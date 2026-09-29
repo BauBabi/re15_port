@@ -199,7 +199,7 @@ Messing-Stangengriff links bzw. rechts, steht).
   `RE15_TUER_SCHNELL=1` ohne VSync-Takt (184 Seiten in 44 s).
 - `tools/tueren/tuer_kontaktbogen.py [--erzeugen]` -> `build/r31_tueren/t4/kontaktbogen_01..16.png`, verkleinert
   `tueren_belege/t4_kontaktbogen_01..16.jpg`: je Seite RE1.5-Ausschnitt (T1, groesster Umriss) | Anfang | Mitte + Wahl.
-- **Angesehen: Boegen 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16 (~150 Seiten)**, darin alle 22 Sequenz-Archive
+- **Angesehen: alle 16 Boegen (alle 184 Seiten)**, darin alle 22 Sequenz-Archive
   (06 09 0A 13 15 16 19 1A 1B 1C 1D 1E 23 24 25 26 27 29 2A 2D 2E 31), beide Varianten (V0/V1, V2/V3, V4/V5), alle
   Griff-Tausch-Seiten (S042, S058, S060, S061, S065). Befund: Griffseite im Anfangsbild = gemalte Seite (V0 links, V1 rechts),
   Oeffnungsrichtung wie T2 1.1 (V0 weg, V1 hin; Schiebetueren 19/2A in ihre Richtung; 25 hebt; 16 Leiter; 1E Klappe kippt;
@@ -260,3 +260,4 @@ aller drei Etagen pinnen `unit_fahrstuhl_4020_etagen`/`_1080_etagen` (Suite grue
 - (2026-09-29) Schritt 0 gebaut, gemessen, Suite 406/406 (Commit 3398f601).
 - wip-Commit b2ef2c7c: Schritte 1-5.
 - Kontaktbogen 184 Seiten, Echtlauf 5 Tueren, Zwischensequenz-Sperre nach dem ROOM4000-Befund, Paket-Gate.
+- Commit 7ce4233f (Schritte 5-9). Suite danach: `=== LOCAL-BUILD-OK (all) — Tests 409/409` (586 s).
