@@ -275,7 +275,16 @@ do_build() {
     # gruen melden - die alte exe bleibt liegen. So habe ich dem Nutzer einen Fix
     # gemeldet, den seine exe nicht enthielt; er lief 13 Sekunden vor dem Neubau und
     # sah auf der Karte KEINE einzige Tuer mehr. Immer ueber dieses Skript bauen.
-    if command -v taskkill >/dev/null 2>&1; then
+    # ⛔ NUR die exe DIESES Bauverzeichnisses beenden (2026-09-29, Runde 31): das fruehere
+    # "taskkill //F //IM re15_pc.exe" beendete JEDE re15_pc.exe auf der Maschine — auch
+    # Messlaeufe paralleler Agenten und Sitzungen in anderen Arbeitsbaeumen (zwei Pruefer-
+    # Laeufe endeten so mit EXIT=1 mitten im Lauf, ohne Absturzeintrag).
+    if command -v powershell >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+        _bw="$(cygpath -w "$(cd "$BUILD_REL" && pwd)")"
+        powershell -NoProfile -Command \
+          "Get-Process re15_pc -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path.StartsWith('$_bw', [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force" \
+          >/dev/null 2>&1 || true
+    elif command -v taskkill >/dev/null 2>&1; then
         taskkill //F //IM re15_pc.exe >/dev/null 2>&1 || true
     fi
     if [ -n "${RE15_JOBS:-}" ]; then
