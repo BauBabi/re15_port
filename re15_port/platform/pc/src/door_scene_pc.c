@@ -37,6 +37,7 @@ extern void re15_render_pc_clear_scene_overlays(void);
 extern void re15_render_pc_title_fade_sub(int b);
 extern int  re15_render_pc_standbild_wiederholen(void);
 extern void re15_render_pc_request_readback(const char *path);
+extern void re15_render_pc_set_tri_blend(int m);
 
 /* TIM-Platz der Tuertextur: 24 ist frei (platform/pc/main.c "RESERVED/unused",
  * analysis/tor_1170/05_port_anschluss.md 2.1). */
@@ -73,6 +74,24 @@ static void vsync0(void)
  * hier nur die Uebergabe an die Warteschlange des Renderers. Die Textur liegt im Atlas je
  * tpage-Spalte um (page & 0xF) * 128 verschoben.
  * ======================================================================== */
+/* ---------------------------------------------------------------------------
+ * Runde 32: Eckfarben UEBER 0x80 (analysis/befunde_runde32/tor_helligkeit.md 3.3).
+ * RE2 zeichnet die Tuerdreiecke als POLY_GT3 mit Modulation (Code 0x34, @0x80014744 ori v0,v0,0x34;
+ * Bit 24 = 0 -> Modulation, psx-spx GPU:140-149). Die GPU rechnet je Kanal Texel * Farbe / 128 und
+ * saettigt auf 1Fh (psx-spx GPU:349-354, 1438-1446): Farben 0x81..0xFF hellen bis knapp 2x auf.
+ * Die SDL-Modulation reicht nur bis 1,0 (render_pc.c psx_prim_to_sdl_vert kappt bei 0xFF).
+ * Deshalb, NUR wenn eine Ecke ueber 0x80 liegt: dasselbe Dreieck ein zweites Mal mit dem
+ * Ueberschuss max(c - 128, 0) je Ecke, Mischart 1 (render_pc.c: SDL_BLENDMODE_ADD), selbes z.
+ * Je Bildpunkt: interp(min(c,128)) + interp(max(c-128,0)) = interp(c), also Texel * c / 128; die
+ * ADD-Mischung saettigt bei 255 wie die GPU bei 1Fh. Selbes z + stabile Sortierung in end_frame
+ * (render_pc.c "Sort tris by depth descending", strikt <): die Zusatzlage folgt unmittelbar auf
+ * ihr Dreieck. Texel mit Wert 0x0000 (Alpha 0) addieren nichts. Die Tuerszene zeichnet sonst nur
+ * Mischart 0 (Flag 0x4000 ist nicht umgesetzt), daher danach wieder 0.
+ * Gilt fuer JEDES abgegebene Dreieck, also auch fuer die Teildreiecke der Unterteilung (Flag 0x20,
+ * engine/src/door_seq_zeichnen.c; dort tragen alle Teildreiecke die Farbe der Ecke 0, @0x80014a90).
+ * ------------------------------------------------------------------------ */
+static uint8_t ueber_80(uint8_t c) { return c > 0x80 ? (uint8_t)(c - 0x80) : 0; }
+
 static void dreieck_abgeben(void *ctx, const re15_door_dreieck_t *d)
 {
     (void)ctx;
@@ -84,6 +103,19 @@ static void dreieck_abgeben(void *ctx, const re15_door_dreieck_t *d)
                                  d->rgb[0][0], d->rgb[0][1], d->rgb[0][2],
                                  d->rgb[1][0], d->rgb[1][1], d->rgb[1][2],
                                  d->rgb[2][0], d->rgb[2][1], d->rgb[2][2]);
+    int ueber = 0;
+    for (int k = 0; k < 3; k++)
+        for (int ch = 0; ch < 3; ch++) if (d->rgb[k][ch] > 0x80) ueber = 1;
+    if (!ueber) return;
+    re15_render_pc_set_tri_blend(1);
+    re15_render_textured_tri_lit(d->x[0], d->y[0], (int)d->u[0] + pxo, (int)d->v[0],
+                                 d->x[1], d->y[1], (int)d->u[1] + pxo, (int)d->v[1],
+                                 d->x[2], d->y[2], (int)d->u[2] + pxo, (int)d->v[2],
+                                 (int)d->page, (int)d->clut, (int)d->z,
+                                 ueber_80(d->rgb[0][0]), ueber_80(d->rgb[0][1]), ueber_80(d->rgb[0][2]),
+                                 ueber_80(d->rgb[1][0]), ueber_80(d->rgb[1][1]), ueber_80(d->rgb[1][2]),
+                                 ueber_80(d->rgb[2][0]), ueber_80(d->rgb[2][1]), ueber_80(d->rgb[2][2]));
+    re15_render_pc_set_tri_blend(0);
 }
 
 static void mesh_zeichnen(const re15_md1_mesh_t *m, const re15_door_mat_t *welt,

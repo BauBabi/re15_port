@@ -31,8 +31,24 @@ SKRIPTE - Byte fuer Byte aus DOOR2E (info/re2leon/COMMON/DOOR/DOOR2E.DO2), nur d
         gestartet im selben Bild wie die Fahrt des Fluegels.
     (c) die Lage des Pfostens: Angelachse + 364 in z (Tuerszene) = 191,51 Raumeinheiten
         (Cut 12, M9) * k 1,90 (06_massstab.skeptiker.md).
+    (d) Runde 32 (Tor zu dunkel, analysis/befunde_runde32/tor_helligkeit.md): Fluegel und Pfosten
+        tragen Objekt-Flag 0x1000 = Hintergrundfarbe 136 statt 68 (RE2 @0x800142ac lhu 304(s1),
+        @0x800142b4 andi 0x1000, @0x800142bc addiu a3,zero,136). RE2-MECHANISMUS, belegt in DOOR2B
+        (@Datei 0x5022 `4d 00 00 00 01 00 80 1a`, Blatt flags 0x1a80 - das Torblatt traegt genau
+        dieses Flagwort).
     Alles andere - Aufstellung des Fluegels (2500,3512,+-1714/-1374), Schwenk 570 in 80
     Bildern, Klang in Bild 100, Fahrt 90 Bilder, Blenden - ist DOOR2E.
+
+TEXTUR FUERS TUERLICHT (Runde 32, PORT-WAHL mit gemessener Herleitung)
+    Die Tortextur ist ein Abzug der beleuchteten Cut-12-Pixel (tor_modell.textur_bauen). Die
+    Tuermaschine moduliert jeden Texel mit der NCCT-Eckfarbe c / 128 (psx-spx GPU:1438-1446).
+    RE2 malt seine Tuertexturen fuer dieses Licht (DOOR2E: gezeigt/Texel 0,567, Texel-Mittel im
+    Blatt 69 gegen 37 im Torschild). Damit das Tor so hell erscheint wie das gemalte Tor an
+    DERSELBEN Stelle, wird die Textur um 128 / c_schild angehoben, c_schild = NCCT der Schild-
+    Normale mit den RE2-Konstanten (L @0x8009a470, LCM 1600 @0x8009a490, BK 136 @0x800142bc,
+    RGBC 0x808080 @0x80014b58, Kamera @0x80076cb0 / 08_re_zeichnen 1.2) = 107 -> Faktor 1,196.
+    Und die 5-Bit-Stufe wird GERUNDET statt abgeschnitten (tim_aus_bild schneidet `a >> 3` ab,
+    der Port liest `<< 3`, include/re15_tim.h:114 - das kostete im Schild 8,6 %).
 """
 import argparse
 import os
@@ -53,6 +69,20 @@ AUS_TON = os.path.join(PORT, "shared_assets", "RE2", "TORSE.VBS")
 
 RCOSSIN = 0x800ADEAC            # RotMatrix @0x8008e21c `lw t9,-8532(t9)` (lui 0x800b)
 PFOSTEN_DZ = 364                # round(191,51 * 1,90), s.o. (c)
+DOOR2B = os.path.join(REPO, "info", "re2leon", "COMMON", "DOOR", "DOOR2B.DO2")
+
+# Runde 32 (d): Objekt-Flag 0x1000 -> BK 136 (RE2 @0x800142b4 andi v0,v0,0x1000;
+# @0x800142bc..c4 addiu a3/t0/t1,zero,136; sonst @0x800142e8..f0 addiu ..,zero,68).
+FLAG_HELL = 0x1000
+BK_NORMAL = 68                  # @0x800142e8 addiu a3,zero,68
+BK_HELL = 136                   # @0x800142bc addiu a3,zero,136
+DOOR2B_BLATT = (0x5022, bytes.fromhex("4d0000000100801a"))   # DOOR2B Skript 1: Blatt flags 0x1a80
+# Tuerlicht RE2 (analysis/tor_1170/08_re_zeichnen.md 3), Bytes selbst gelesen:
+L_TUER = ((400, 800, -500), (-1800, -1000, -2700), (3500, 6700, 1200))   # @0x8009a470
+LCM_TUER = 1600                 # @0x8009a490 (neunmal 0x0640)
+RGBC_TUER = 128                 # @0x80014b4c lui v0,0x80 / @0x80014b58 ori v0,v0,0x8080
+KAMERA = ((0, 0, 4096), (0, 4096, 0), (-4096, 0, 0))   # Blickmatrix 0x80076cb0, Auge (10000,0,0) - 08 1.2
+SCHILD_NORMALE = (4096, 0, 0)   # Schild zur Kamera bei Drehung 0 (V0); V1 (Drehung 2048) dieselbe
 
 
 # =============================================================================
@@ -109,11 +139,25 @@ def skripte_bauen(do2):
     pruef(s8, 0x00, bytes.fromhex("2e0500"), "Skript 8 Work_set 5,0 @0x0520c")
     pruef(s8, 0x40, bytes.fromhex("530002070004"), "Skript 8 Ausblenden @0x0524c")
 
-    fluegel_v0 = s1[0x00:0x16]
-    fluegel_v1 = s2[0x00:0x16]
+    def hell(rec):
+        """(d) Flag 0x1000 im Door_model_set (+6 u16 Flags, 03 5.1): 0x0a80 -> 0x1a80 wie DOOR2B."""
+        b = bytearray(rec)
+        fl = struct.unpack_from("<H", b, 6)[0] | FLAG_HELL
+        struct.pack_into("<H", b, 6, fl)
+        return bytes(b)
+
+    d2b = open(DOOR2B, "rb").read()
+    off, soll = DOOR2B_BLATT
+    if d2b[off:off + len(soll)] != soll:
+        raise SystemExit("DOOR2B @0x%x: erwartet %s, gefunden %s" % (off, soll.hex(" "), d2b[off:off + len(soll)].hex(" ")))
+
+    fluegel_v0 = hell(s1[0x00:0x16])
+    fluegel_v1 = hell(s2[0x00:0x16])
+    if fluegel_v0[6:8] != d2b[off + 6:off + 8]:
+        raise SystemExit("Torblatt-Flags weichen von DOOR2B ab")
     # Pfosten: Wurzel (Eltern = Kamera, Flag 0x10 aus), Flags wie der Fluegel ohne den
     # Schliesston-Merker 0x800 (den setzt der Fluegel, @0x80014c90..a8 genuegt einmal).
-    pf_flags = 0x0A80 & ~0x0800
+    pf_flags = (0x0A80 | FLAG_HELL) & ~0x0800
     pfosten_v0 = door_model_set(1, 1, pf_flags, 2500, 3512, 1714 + PFOSTEN_DZ)
     pfosten_v1 = door_model_set(1, 1, pf_flags, 2500, 3512, -1374 - PFOSTEN_DZ, ry=2048)
 
@@ -165,10 +209,57 @@ def modellteil(skripte, md1_b, tim_b):
     return struct.pack("<II", md1_rel, tim_rel) + scd + md1_b + tim_b, md1_rel, tim_rel
 
 
+def ncct_eckfarbe(normale, bk, rot_y=0):
+    """NCCT (sf=1, lm=1) einer Tuerecke, Rechenweg 08_re_zeichnen.md 4.3 (bitgleich gegen RE2 ueber
+    1 084 116 Ecken): LLM = L * (C * R), IR = lm1(LLM n >> 12), IR_c = lm1((BK<<4<<12 + LCM*sum IR) >> 12),
+    Farbe = ((RGBC<<4) * IR_c >> 12) >> 4. Nur Drehung um y 0 oder 2048 (sin 0) wird gebraucht."""
+    cy = {0: 4096, 2048: -4096}[rot_y]
+    R = ((cy, 0, 0), (0, 4096, 0), (0, 0, cy))
+    W = [[sum(KAMERA[i][k] * R[k][j] for k in range(3)) >> 12 for j in range(3)] for i in range(3)]
+    LLM = [[sum(L_TUER[i][k] * W[k][j] for k in range(3)) >> 12 for j in range(3)] for i in range(3)]
+    ir = [min(max(sum(LLM[i][k] * normale[k] for k in range(3)) >> 12, 0), 32767) for i in range(3)]
+    irc = min(max(((bk << 4) * 4096 + LCM_TUER * sum(ir)) >> 12, 0), 32767)
+    return min(max((((RGBC_TUER << 4) * irc) >> 12) >> 4, 0), 255)
+
+
+def textur_fuers_tuerlicht(tex):
+    """Runde 32 (PORT-WAHL, Kopf "TEXTUR FUERS TUERLICHT"), zwei Schritte je Kanal:
+      1. gemalt -> 5 Bit GERUNDET: v5 = (p + 4) >> 3 (statt des Abschneidens p >> 3),
+      2. Farbwert fuers Tuerlicht angehoben: v5' = round(v5 * 128 / c_schild), hoechstens 31.
+    Schritt 2 wirkt auf die 5-Bit-Farbe, nicht auf den 8-Bit-Bildpunkt: so entstehen keine neuen
+    Farben (228 statt 297 bei direkter Skalierung - die passen nicht in die 255 CLUT-Plaetze, und
+    der Median-Cut von tim_aus_bild waere verlustbehaftet). Gemessen (tor_helligkeit.py):
+    gezeigt/gemalt im Schild 1,008 zweistufig, 0,997 direkt+Median-Cut, 0,5125 vorher.
+    Ausgabe auf dem 5-Bit-Raster (v5' << 3), damit tim_aus_bild (`>> 3`) nichts mehr abschneidet.
+    Rueckgabe (Bild, Protokoll)."""
+    import numpy as np
+    from PIL import Image
+    c_v0 = ncct_eckfarbe(SCHILD_NORMALE, BK_HELL, 0)
+    c_v1 = ncct_eckfarbe((-SCHILD_NORMALE[0], 0, 0), BK_HELL, 2048)
+    if c_v0 != c_v1:
+        raise SystemExit("Schild-Eckfarbe V0 %d != V1 %d" % (c_v0, c_v1))
+    a = np.asarray(tex.convert("RGBA")).astype(np.int64)
+    rgb = a[..., :3]
+    v5 = np.minimum(31, (rgb + 4) >> 3)                          # 1. runden statt abschneiden
+    roh = (v5 * 256 + c_v0) // (2 * c_v0)                        # 2. round(v5 * 128 / c)
+    aus = a.copy()
+    aus[..., :3] = np.minimum(31, roh) << 3
+    gekappt = int((roh > 31).any(-1).sum())
+    proto = dict(c_schild=c_v0, c_schild_bk68=ncct_eckfarbe(SCHILD_NORMALE, BK_NORMAL, 0),
+                 faktor=128.0 / c_v0, gekappt=gekappt)
+    return Image.fromarray(aus.astype(np.uint8)), proto
+
+
 def modell_bauen():
     import tor_modell as tm
     tex, _ = tm.textur_bauen()
-    tim, _ = fmt.tim_aus_bild(tex)
+    tex, proto = textur_fuers_tuerlicht(tex)
+    if proto["c_schild"] != 107 or proto["c_schild_bk68"] != 73:
+        raise SystemExit("Eckfarbe Schild %d/%d statt 107/73 (08_re_zeichnen 4.3)" % (
+            proto["c_schild"], proto["c_schild_bk68"]))
+    tim, info = fmt.tim_aus_bild(tex)
+    if info.get("quantisiert"):
+        raise SystemExit("Tortextur: %d 15-Bit-Farben > 255 Plaetze" % info["farben_15bit"])
     Sf, Sp = tm.Sammler(), tm.Sammler()
     tm.fluegel_bauen(Sf)
     tm.pfosten_bauen(Sp)
@@ -234,6 +325,9 @@ def main(argv=None):
         " * %d Skripte, abgeleitet aus RE2 DOOR2E (Aenderungen im Kopf des Werkzeugs)." % len(skripte),
         " * Mesh 0 Fluegel %d Dreiecke, Mesh 1 Pfosten %d Dreiecke (tools/tor/tor_modell.py," % (n_f, n_p),
         " * analysis/tor_1170/07_modell.md). Den Ton liefert shared_assets/RE2/TORSE.VBS.",
+        " * Runde 32 (analysis/befunde_runde32/tor_helligkeit.md): Fluegel/Pfosten mit Flag 0x1000",
+        " * (BK 136, RE2 @0x800142b4, Vorbild DOOR2B @Datei 0x5022); Textur fuers Tuerlicht angehoben",
+        " * (128 / c_schild = 128 / 107) und auf 5 Bit gerundet.",
         " */",
     ]
     for k, sk in enumerate(skripte):
@@ -256,6 +350,8 @@ def main(argv=None):
     os.makedirs(os.path.dirname(AUS_TON), exist_ok=True)
     open(AUS_TON, "wb").write(ton)
 
+    import tor_modell as tm
+    print("Textur fuers Tuerlicht:", textur_fuers_tuerlicht(tm.textur_bauen()[0])[1])
     print("Modellteil %d B (MD1 @0x%x %d B, TIM @0x%x %d B), %d Skripte" % (
         len(teil), md1_rel, len(md1_b), tim_rel, len(tim_b), len(skripte)))
     print("TORSE.VBS %d B = DOOR2E-Tonteil (Vorspann %d, VH %d, Nachspann %d, VB %d)" % (
