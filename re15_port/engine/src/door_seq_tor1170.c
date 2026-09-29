@@ -21,6 +21,7 @@
 #include "re15_door_seq.h"
 
 #include <stddef.h>
+#include <string.h>
 
 
 re15_door_seq_anfrage_t g_door_seq_anfrage;
@@ -44,18 +45,40 @@ static const tuer_eintrag_t s_tabelle[] = {
     { 0x1171, -11065, -27850,  875, 600, 4, RE15_DOOR_ARCHIV_TOR1170, 1 },
 };
 
+int re15_door_seq_zuordnen_flaeche(unsigned room_id, int viereck, int32_t x, int32_t z,
+                                   int32_t half_w, int32_t half_h,
+                                   const int16_t qx[4], const int16_t qz[4], int band,
+                                   re15_door_seq_anfrage_t *out)
+{
+    if (out) memset(out, 0, sizeof *out);
+    /* 1. das Tor (eigene Sequenz, unveraendert; Rechtecke) */
+    if (!viereck) {
+        for (size_t i = 0; i < sizeof s_tabelle / sizeof s_tabelle[0]; i++) {
+            const tuer_eintrag_t *t = &s_tabelle[i];
+            if (t->raum == room_id && t->x == x && t->z == z && t->hw == half_w && t->hh == half_h
+                && t->band == band) {
+                if (out) {
+                    out->archiv   = t->archiv;
+                    out->variante = t->variante;
+                    out->tuer_nr  = 0;
+                    out->re2_nr   = 0xFF;
+                    out->spender  = RE15_DOOR_KEIN_SPENDER;
+                }
+                return t->archiv;
+            }
+        }
+    }
+    /* 2. die RE2-Tabelle der Runde 31 (door_seq_zuordnung.c) */
+    return re15_door_seq_zuordnen_re2(room_id, viereck, x, z, half_w, half_h, qx, qz, band, out);
+}
+
 int re15_door_seq_zuordnen(unsigned room_id, int32_t x, int32_t z, int32_t half_w, int32_t half_h,
                            int band, int *variante)
 {
-    for (size_t i = 0; i < sizeof s_tabelle / sizeof s_tabelle[0]; i++) {
-        const tuer_eintrag_t *t = &s_tabelle[i];
-        if (t->raum == room_id && t->x == x && t->z == z && t->hw == half_w && t->hh == half_h
-            && t->band == band) {
-            if (variante) *variante = t->variante;
-            return t->archiv;
-        }
-    }
-    return RE15_DOOR_ARCHIV_KEINS;
+    re15_door_seq_anfrage_t a;
+    int r = re15_door_seq_zuordnen_flaeche(room_id, 0, x, z, half_w, half_h, NULL, NULL, band, &a);
+    if (r != RE15_DOOR_ARCHIV_KEINS && variante) *variante = a.variante;
+    return r;
 }
 
 void re15_door_seq_setze_laeufer(re15_door_seq_laeufer_t f)

@@ -372,6 +372,49 @@ int re15_aot_point_in_quad(int32_t px, int32_t pz,
     return 1;
 }
 
+/* Viereck-Trefftest der Tuersaetze (Runde 31, tueren_04_bau.md Abschnitt 0), FUN_80014368
+ * (RE1.5 PSX.EXE) Befehl fuer Befehl. a0 = Punkt (x @0, z @8), a1 = Satz-Kopie auf dem Stapel
+ * (sp+40; der Scan legt dort die Satzpunkte pc+6..21 plus einen Objektversatz ab, der fuer
+ * Tueren 0 ist: pc[5] & 0x80 == 0 -> `sw zero,40(sp)` @0x80042dc0, Kopie @0x80042dd8..e5c):
+ *   80014368 lh t5,4(a1) / 8001436c lh t0,6(a1)          x0, z0
+ *   80014378 subu t1,pz,t0 / 8001437c subu t2,x1,t5 / 80014380 mult -> a0 = (x1-x0)*(pz-z0)
+ *   80014390 subu a2,px,t5 / 80014394 subu a3,z1,t0 / 80014398 mult -> v0 = (z1-z0)*(px-x0)
+ *   800143ac slt v0,v0,a0 / 800143b0 bne -> 0               (z1-z0)(px-x0) <  (x1-x0)(pz-z0)
+ *   800143b8..c8 (x3-x0)*(pz-z0) slt (z3-z0)*(px-x0) / 800143cc bne -> 0
+ *   800143d4..f8 Bezug auf Ecke 2: t1 = pz-z2, t2 = x1-x2, a2 = px-x2, a3 = z1-z2
+ *   80014408 slt a0,(x1-x2)(pz-z2),(z1-z2)(px-x2) / 8001440c bne -> 0
+ *   80014400 subu t3,t3,v0 (x3-x2) / 80014410 subu t4,t4,v1 (z3-z2)
+ *   80014424 slt v0,(z3-z2)(px-x2),(x3-x2)(pz-z2) / 80014428 beq -> 1 (Delay ori v0,zero,1)
+ * mult/mflo = untere 32 Bit des Produkts, slt vergleicht vorzeichenbehaftet: deshalb uint32-
+ * Produkte, als int32 gelesen. Die Differenzen sind 32-Bit-subu der lh-Werte bzw. lw-Lage. */
+static int32_t lo32(int32_t a, int32_t b) { return (int32_t)((uint32_t)a * (uint32_t)b); }
+
+int re15_aot_point_in_quad_fun80014368(int32_t px, int32_t pz,
+                                       const int16_t xs[4], const int16_t zs[4])
+{
+    int32_t x0 = xs[0], z0 = zs[0], x1 = xs[1], z1 = zs[1];
+    int32_t x2 = xs[2], z2 = zs[2], x3 = xs[3], z3 = zs[3];
+    int32_t t1 = (int32_t)((uint32_t)pz - (uint32_t)z0);
+    int32_t t2 = (int32_t)((uint32_t)x1 - (uint32_t)x0);
+    int32_t a2 = (int32_t)((uint32_t)px - (uint32_t)x0);
+    int32_t a3 = (int32_t)((uint32_t)z1 - (uint32_t)z0);
+    int32_t t3 = (int32_t)((uint32_t)x3 - (uint32_t)x0);
+    int32_t t4 = (int32_t)((uint32_t)z3 - (uint32_t)z0);
+    if (lo32(a3, a2) < lo32(t2, t1)) return 0;            /* @0x800143ac / @0x800143b0 */
+    if (lo32(t3, t1) < lo32(t4, a2)) return 0;            /* @0x800143c8 / @0x800143cc */
+    int32_t dz = (int32_t)((uint32_t)z2 - (uint32_t)z0);  /* @0x800143dc subu v1,v1,t0 */
+    int32_t dx = (int32_t)((uint32_t)x2 - (uint32_t)x0);  /* @0x800143e4 subu v0,v0,t5 */
+    t1 = (int32_t)((uint32_t)t1 - (uint32_t)dz);          /* @0x800143e0 pz - z2 */
+    t2 = (int32_t)((uint32_t)t2 - (uint32_t)dx);          /* @0x800143e8 x1 - x2 */
+    a2 = (int32_t)((uint32_t)a2 - (uint32_t)dx);          /* @0x800143f4 px - x2 */
+    a3 = (int32_t)((uint32_t)a3 - (uint32_t)dz);          /* @0x800143f8 z1 - z2 */
+    t3 = (int32_t)((uint32_t)t3 - (uint32_t)dx);          /* @0x80014400 x3 - x2 */
+    t4 = (int32_t)((uint32_t)t4 - (uint32_t)dz);          /* @0x80014410 z3 - z2 */
+    if (lo32(t2, t1) < lo32(a3, a2)) return 0;            /* @0x80014408 / @0x8001440c */
+    if (lo32(t4, a2) < lo32(t3, t1)) return 0;            /* @0x80014424 / @0x80014428 */
+    return 1;
+}
+
 /* Combination-lock NOTCH probe (byte-true FUN_80042bac @0x80042f5c `sb slot,0xb(entity)`):
  * the AOT scan sets a scanned entity's member+0xb to the sce=5 grid-cell slot it is over. The
  * keypad dial is exactly this — the cursor OBJECT (Work_set(3,0)) moves under the dpad, and each
@@ -570,6 +613,39 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z)
  * from BOTH the scan's action fire and Aot_on fire-now (jalr @0x8004082c — the original
  * fires the SAME handler either way). Returns 1 = door consumed (cross-room load queued
  * or same-room teleport applied), 0 = skipped (invalid all-zero-spawn guard). */
+/* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ-ANFRAGE. RE1.5 startet an dieser Stelle die
+ * Tuermaschine (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript
+ * Evt_end ist; RE2 spielt dort die Sequenz (FUN_80026b7c @0x80026bf8/bfc, Task 1 = Door_main).
+ * Welche Tuer eine bekommt, sagt die Port-Tabelle (Tor: door_seq_tor1170.c; RE2-Archive, Runde 31:
+ * door_seq_zuordnung.c) - RE1.5-Daten tragen keine Wahl. Schluessel = Raum + Flaeche (Rechteck
+ * bzw. Viereck) + Band, nie der Slot. Gespielt wird im Spielschritt (game_step_common.c) bzw.
+ * vor re15_room_apply_pending (main.c). Null-Rechteck-/Skript-Uebergaenge stehen in keiner
+ * Tabelle und bleiben ohne Sequenz. */
+static void tuer_sequenz_anfragen(const re15_aot_t *a, const re15_aot_door_params_t *d)
+{
+    re15_door_seq_anfrage_t q;
+    int archiv = re15_door_seq_zuordnen_flaeche(g_current_room_id, a->has_quad ? 1 : 0,
+                                                a->x, a->z, a->half_w, a->half_h,
+                                                a->xs, a->zs, d->band, &q);
+    if (archiv == RE15_DOOR_ARCHIV_KEINS) return;
+    /* Zwischensequenz-Uebergaenge bleiben ohne RE2-Sequenz (Auftrag Runde 31: "Null-Rechteck-/
+     * Intro-/Cutscene-Uebergaenge NICHT anfassen"). Eine Tuer, die WAEHREND einer Zwischensequenz
+     * feuert, hat kein Spieler durchschritten: der Scan selbst sperrt in dieser Lage jede
+     * Tuer (in_cinematic in re15_aot_scan: player_mode 2 oder Balken schliessen noch), gefeuert
+     * hat sie also ein Skript per Aot_on (gemessen: ROOM4000-Eintrittsszene, Plc_dest einer
+     * Figur zur Tuer, dann Slot 1 -> ROOM4010). PORT-WAHL; das Tor (eigene Sequenz) bleibt, wie es war. */
+    if (archiv == RE15_DOOR_ARCHIV_RE2 &&
+        (g_scd.player_mode == 2 || g_scd.letterbox_countdown != 0)) {
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[aot] Tuer S%03u in einer Zwischensequenz gefeuert -> RE1.5-Uebergang ohne Sequenz\n",
+                q.seite);
+#endif
+        return;
+    }
+    q.aktiv = 1;
+    g_door_seq_anfrage = q;
+}
+
 static int aot_fire_door(int i)
 {
     re15_aot_t *a = &g_aot.slots[i];
@@ -605,8 +681,10 @@ static int aot_fire_door(int i)
      * existing rooms (scripts/door_graph.py, NEU ERHOBEN 2026-08-19 nach beiden
      * rdt_section_end-Fixes — die alte Angabe 563/567 stammte aus einem aelteren,
      * abschneidenden Walker-Stand; der Lauf davor meldete 640, dann 641, jetzt 649.
-     * Die 4 Misses sind unveraendert dieselben non-door scan artifacts in
-     * ROOM4030/4031 @0x47e/@0x4a6). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
+     * Die 4 "Misses" in ROOM4030/4031 @0x47e/@0x4a6 sind KEINE Scan-Artefakte, sondern
+     * Viereck-Tuersaetze (sat 0xB1, 40 B: Punkte pc+6..21, Nutzlast pc+22, @0x80042f90
+     * addiu a0,s0,20) nach ROOM4040 / ROOM4080 - seit Runde 31 liest op_door_aot_set sie so,
+     * damit loesen alle 653 auf). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
      * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
      * NO room==0 special case — the old `dest_room != 0` pre-filter threw
      * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
@@ -658,6 +736,11 @@ static int aot_fire_door(int i)
              * Die 1240→1170-Intro-Übergabe (Payload -26214,0,-3861 cut0, die OPENING-
              * Konstante) läuft ebenfalls byte-true über den Payload; die Intro-Choreografie
              * des Zielraums positioniert den Spieler selbst (wie im Original). */
+            /* Runde 31: Kreuz-Raum-Tueren stellen dieselbe Anfrage wie Selbst-Tueren; die
+             * Sequenz laeuft VOR dem Raumwechsel (Standbild = letzter Blick in den alten Raum),
+             * die RE1.5-Einblendung danach im NEUEN Raum (RE2 FUN_80026b7c: Door_main
+             * @0x80026bfc, Zielraum @0x80026e1c, Warten auf das Tuer-Ende @0x80026e28..54). */
+            tuer_sequenz_anfragen(a, d);
             re15_room_request_change(dest_id, d->spawn_x, d->spawn_y, d->spawn_z,
                                      d->spawn_yaw_4096, (int)d->target_cut);
             a->was_inside = 1;
@@ -724,17 +807,7 @@ static int aot_fire_door(int i)
      * Einblenden liegt. Gesetzt fuer JEDE Selbst-Tuer dieses Zweigs, nicht nur fuer die mit
      * Szenario: die Szenario-Schranke oben ist variantenblind (0x1000|dest<<4 gegen 0x1171
      * -> falsch), das Tor in Elzas ROOM1171 wuerde sonst nie spielen. */
-    {
-        int var = 0;
-        int archiv = re15_door_seq_zuordnen(g_current_room_id, a->x, a->z, a->half_w, a->half_h,
-                                            d->band, &var);
-        if (archiv != RE15_DOOR_ARCHIV_KEINS) {
-            g_door_seq_anfrage.aktiv    = 1;
-            g_door_seq_anfrage.archiv   = (uint8_t)archiv;
-            g_door_seq_anfrage.variante = (uint8_t)var;
-            g_door_seq_anfrage.tuer_nr  = 0;
-        }
-    }
+    tuer_sequenz_anfragen(a, d);
     /* BO-round 2026-05-29 (hack audit): removed the fabricated door
      * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
      * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc
@@ -1183,8 +1256,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
             int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
             int32_t fx = player_x + (int32_t)((620 * c) >> 12);
             int32_t fz = player_z - (int32_t)((620 * s) >> 12);
+            /* Viereck-Tuersatz (sat & 0x80, 40 B, Runde 31): der Scan ruft @0x80042f10
+             * jal 0x80014368 (Viereck) statt @0x80042f20 jal 0x80042b64 (Rechteck), gewaehlt
+             * von @0x80042f04 andi v0,v1,0x80 - Trefftest Befehl fuer Befehl. */
             door_inside = a->has_quad
-                        ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                        ? re15_aot_point_in_quad_fun80014368(fx, fz, a->xs, a->zs)
                         : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
             /* BAND GATE (byte-true FUN_80042cac): player floor-band (DAT_800acad6) == door
              * band (door_params band, from Door_aot_set pc[4]) unless bit 0x80 / a pre-band

@@ -1,0 +1,639 @@
+{
+ "stapel": 4,
+ "rolle": "gegenpruefer",
+ "status": "fertig",
+ "eintraege": [
+  {
+   "seite": "S141",
+   "raum": "ROOM2030",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c15 (aus + entz, aufgehellt): eindeutig zweifluegelig, jeder Fluegel achteckiges Profil mit Ausbuchtung + Riegelstange an der Mittelfuge (gespiegelt) = DOOR23-Fluegel. Nach einem gleichen Archiv gesucht (Uebersicht aller 55): RE2-Doppeltueren sind 0C (dunkelgruenes Holz mit Glasfeld), 1B (braune Blechtuer mit Sichtfenster), 30 (Glasrahmen) und die Doppelvarianten V2/V3 von 01/04/06/15/1D (Holz, Blau-Holz, X-Stahl, Bretter, rotbraunes Blech mit Gitter) - keine mit DOOR23-Gestalt; DOOR23 selbst hat nur V0/V1 (einfluegelig). Top-5 (26/09/00/18/02 um 0,54-0,57) sind Schott bzw. Holztueren - keine passt. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S141_ROOM2030_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S141_ROOM2030_c00_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S141_ROOM2030_c15_aus.png",
+    "build/r31_tueren/t1/re2/uebersicht.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S142",
+   "raum": "ROOM2030",
+   "vorher": "gleich DOOR06 (rechts/stange)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c09 (aus + entz, aufgehellt): dunkle Stahltuer, aufgesetztes X-Kreuz von Ecke zu Ecke innerhalb eines umlaufenden Rahmenprofils, Riegelkasten mit senkrechtem Buegel an der RECHTEN Kante auf ~40-45 % Hoehe - dieselbe Aufteilung wie die DOOR06-Textur (X im Rahmen, Riegelkasten an einer Kante auf halber Hoehe), gespiegelt -> V1. Farbe dunkel gruenlich-grau im schwachen Kanallicht; DOOR06-Textur neutral grau (Mittel 77/70/69), die RE2-Hintergruende zeigen DOOR06 ebenfalls braeunlich-dunkel (ROOM4020 c4) - Lichtfrage, keine Gestaltungsabweichung. Die waagerechten schwarzen Linien quer ueber das Blatt sind das Gelaender davor. Griff selbst abgelesen: Buegel auf Kasten rechts -> rechts/stange stimmt (DOOR06-Griff = Buegelgriff 36 Dreiecke, Formfamilie Stange mit 0B/0C/2F).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S142_ROOM2030_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S142_ROOM2030_c09_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S142_ROOM2030_c09_voll.png",
+    "build/r31_tueren/t1/re2/DOOR06.png"
+   ]
+  },
+  {
+   "seite": "S143",
+   "raum": "ROOM2030",
+   "vorher": "aehnlich (naechstes DOOR23, s=1)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "abweichung": "DOOR23 (Panzertuer, achteckiges Profil mit sechseckiger Ausbuchtung am Griff): Ausbuchtung hier nicht erkennbar (steile Ansicht; der gleiche Tuertyp S151 zeigt frontal eine gerade Profilkante), Griff Druecker auf Platte statt Riegelstange; DOOR22 (rostrote genietete Stahltuer): kein Nietrand -> nicht gebaut. (Farbe ist KEINE Abweichung: DOOR23-Textur ist dunkel braun-grau, Mittel 42/37/32, Chroma 0,378/0,333/0,288; dieses Blatt 0,383/0,358/0,259, wie das gleich gewertete S170.)"
+   },
+   "begruendung": "Urteil aehnlich bleibt, nur die Begruendung korrigiert: das Argument 'braun statt grau' ist falsch - die DOOR23-Textur ist nicht grau, sondern dunkel braun-grau (gemessen), und S170 (gleich DOOR23) hat dieselbe Farbe wie S143/S151. Tragend bleibt allein die fehlende Ausbuchtung des Profils am Griff (bei S143 selbst wegen der steilen Ansicht c13 nicht pruefbar, am gleichen Tuertyp S151 frontal widerlegt). Kein anderes Archiv gleich (Top-5: 23 0,50, sonst Leiter/Schiebetueren).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S143_ROOM2030_c13_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S143_ROOM2030_c13_entz.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S144",
+   "raum": "ROOM2030",
+   "vorher": "aehnlich (naechstes DOOR1D, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c13 (aus + entz, aufgehellt) und Gegenseite S153 c00 frontal: orange-braune Blechtuer, schmales Schild oben, gelbes Warndreieck, Druecker auf dunklem Kasten, dunkles Trittblech. DOOR1D hat oben das grosse Lueftungsgitter und kein Warndreieck -> Aufteilung weicht ab. Top-5 (08 0,56, 16, 14, 29, 07) geprueft: 08 genietet mit zwei Feldern, 29 Aufzugtuer mit Tafel, 07 graue Blechtuer mit Schlitzen UNTEN - keine gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S144_ROOM2030_c13_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S144_ROOM2030_c13_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1D.png",
+    "build/r31_tueren/t1/re2/uebersicht.png"
+   ]
+  },
+  {
+   "seite": "S145",
+   "raum": "ROOM2040",
+   "vorher": "aehnlich (naechstes DOOR1E, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c01/c05: dunkle Oeffnung hoch in der Ziegelwand, im unteren Drittel eine Reihe kurzer senkrechter Staebe mit Handlauf (gelaenderartig), darueber offen - keine durchgehende Gitterklappe wie DOOR1E. Kein anderes Archiv (Top-5 1A/0F/09/06/2A sind Tueren/Treppe). aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S145_ROOM2040_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S145_ROOM2040_c01_aus.png",
+    "build/r31_tueren/t1/re2/DOOR1E.png"
+   ]
+  },
+  {
+   "seite": "S146",
+   "raum": "ROOM2040",
+   "vorher": "gleich DOOR1E (unsichtbar/keiner)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, kein sicher abweichendes Merkmal gefunden. c15/c07 auf den Umriss vergroessert: rechteckige dunkle Lueftungsoeffnung hoch in der Ziegelwand (oberer Teil des Umrisses, ueber der Wandleuchte), darin ~7 senkrechte Staebe ueber die ganze Hoehe - DOOR1E ist genau diese Gitterklappe (Textur ~6-7 senkrechte Staebe im Rahmen; RE2-Hintergrund ROOM6000 c7 dieselbe Wandlueftung). Vorbehalt: der DOOR1E-Rahmen ist hell-metallisch mit gerundeten oberen Ecken, hier ist der Rahmen dunkel und bei 3-4 px Aufloesung nicht formbar - die Oeffnung liegt ueber dem Lampengehaeuse im Schatten, daher als Licht-/Aufloesungsfrage gewertet, nicht als Gestaltungsabweichung. Griff unsichtbar/keiner stimmt (DOOR1E hat keinen Griff). Die Gegenseite S154 ist mit waagerechten Lamellen anders gemalt (dort zu Recht aehnlich) - nach T2-Regel bekommt jede Seite ihre eigene Zuordnung, der Leiter muss nur wissen, dass T078 damit einseitig abgedeckt ist.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S146_ROOM2040_c15_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S146_ROOM2040_c15_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S146_ROOM2040_c07_voll.png",
+    "build/r31_tueren/t1/re2/DOOR1E.png"
+   ]
+  },
+  {
+   "seite": "S147",
+   "raum": "ROOM2040",
+   "vorher": "gleich DOOR06 (rechts/stange)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c10 Vollbild auf den Umriss vergroessert (Tuer in der rechten Treppenhauswand, steil): beide Diagonalen des X-Kreuzes sichtbar, an der rechten (freien) Blattkante ein Kasten mit senkrechtem Buegel auf ~35-45 % Hoehe = DOOR06 V1 (RE2 malt DOOR06 V1 genau so: ROOM4020 c4, Kasten rechts). Blatt beige-braun im warmen Treppenlicht; dieselbe physische Tuer erscheint auf der Gegenseite S148 grau-braun im kalten Licht -> Farbe folgt dem Licht. c09 zu klein, c13 zeigt eine andere Wand (Fehlprojektion). Griff selbst abgelesen: rechts/stange stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S147_ROOM2040_c10_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S147_ROOM2040_c10_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S147_ROOM2040_c10_voll.png",
+    "build/r31_tueren/t1/re2/DOOR06.png"
+   ]
+  },
+  {
+   "seite": "S148",
+   "raum": "ROOM2040",
+   "vorher": "gleich DOOR06 (links/stange)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c11 frontal (aus + entz, aufgehellt): X-Kreuz ueber das ganze Blatt, heller Riegelkasten an der LINKEN Kante auf ~45-50 % Hoehe, Blatt grau-braun - Aufteilung und Kastenlage wie die DOOR06-Textur selbst (Kasten links) -> V0. Griff selbst abgelesen: links/stange stimmt; komplementaer zu S147 (dieselbe Selbst-Tuer T079 von der anderen Seite).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S148_ROOM2040_c11_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S148_ROOM2040_c11_entz.png",
+    "build/r31_tueren/t1/re2/DOOR06.png"
+   ]
+  },
+  {
+   "seite": "S149",
+   "raum": "ROOM2040",
+   "vorher": "gleich DOOR0A (links/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c12 Vollbild vergroessert: Gittertuer im schmalen Rahmen, fuenf bis sechs senkrechte Staebe, EIN breites flaches Querband knapp unter der Mitte (~50-60 %), dahinter schwarz - dieselbe Aufteilung wie DOOR0A (Textur: 5 Staebe im Rahmen, Querband 46-58 %; RE2-Hintergrund ROOM4070 c4 zeigt DOOR0A genauso dunkel-gruenlich). DOOR2E als Gegenprobe verworfen: dicker Rahmen mit gerundeten Ecken + Baender - hier nicht vorhanden. Farbe grau-dunkel im kalten Gang; DOOR0A-Textur rostbraun (Mittel 43/35/31), in RE2-Hintergruenden ebenfalls grau-dunkel -> Licht. Griff: das Schlossteil ist nur als dunklere Stelle am linken Bandende zu ahnen (Aufloesung); die Gegenseite S160 zeigt das helle Schlossteil rechts - komplementaer, also links plausibel. Form 'unklar' ist richtig (DOOR0A-Griff = Riegelkasten, im Schema keine eigene Form).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S149_ROOM2040_c12_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S149_ROOM2040_c12_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S149_ROOM2040_c12_voll.png",
+    "build/r31_tueren/t1/re2/DOOR0A.png",
+    "build/r31_tueren/t1/re2/DOOR2E.png"
+   ]
+  },
+  {
+   "seite": "S150",
+   "raum": "ROOM2050",
+   "vorher": "aehnlich (naechstes DOOR16, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 vergroessert: im eigenen Bild nur das gruene Rohrgelaender und rechts ein grau gebogenes Holmende; die Leiter selbst (T070) zeigt die untere Seite S172 (ROOM20B0 c09): breite flache rostbraune Holme und Sprossen - Profil, Staerke und Farbe weichen von DOOR16 (duennes silbernes Rohr, so auch alle RE2-Hintergruende mit DOOR16: ROOM3090 c0, ROOM4090 c3, ROOM4100 c7) ab. Gleiche Strenge wie Pruefer 2 bei S088. aehnlich bleibt. WIDERSPRUCH fuer den Leiter: die dritte Seite derselben Leiter T070, S137 (ROOM2000, Stapel 3), steht dort als gleich DOOR16 - T070 muss einheitlich entschieden werden.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S150_ROOM2050_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S150_ROOM2050_c00_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S172_ROOM20B0_c09_aus.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S151",
+   "raum": "ROOM2050",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "abweichung": "DOOR23 hat dasselbe abgeschraegte Profil, aber mit sechseckiger Ausbuchtung am Griff; hier laeuft die linke Profilkante gerade durch (c05 frontal vergroessert), Griff Druecker auf senkrechter Platte statt Riegelstange quer. (Farbe ist KEINE Abweichung: DOOR23-Textur dunkel braun-grau, Chroma 0,378/0,333/0,288; Blatt 0,402/0,366/0,232 im warmen Licht.)"
+   },
+   "begruendung": "Urteil aehnlich bleibt; Ausbuchtung fehlt sichtbar (c05 Vollbild auf den Umriss vergroessert: nur die oberen Ecken abgeschraegt, linke Kante gerade, Druecker auf schmaler Platte). Das Farbargument 'grau statt braun' gestrichen (Textur gemessen braun-grau). Kein anderes Archiv gleich: DOOR22 (Nietrand), DOOR2C (Drahtglasfenster), DOOR1A (drei Felder) passen nicht; Top-5 unter 0,50.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S151_ROOM2050_c05_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S151_ROOM2050_c05_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S151_ROOM2050_c05_voll.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S152",
+   "raum": "ROOM2050",
+   "vorher": "aehnlich (naechstes DOOR1E, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c03/c04: wie S145 - oben schwarze Oeffnung, davor ein kurzes Stabgelaender mit Handlauf, keine Gitterklappe im Rahmen. Top-5 (1A/06/28/2D/17) keine gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S152_ROOM2050_c03_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S152_ROOM2050_c04_aus.png",
+    "build/r31_tueren/t1/re2/DOOR1E.png"
+   ]
+  },
+  {
+   "seite": "S153",
+   "raum": "ROOM2060",
+   "vorher": "aehnlich (naechstes DOOR1D, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 frontal: wie S144 (Schild + Warndreieck oben statt Lueftungsgitter, Druecker rechts). Top-5 (0D/15/01/1A/16 um 0,57) sind Holztueren/Leiter - keine gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S153_ROOM2060_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S153_ROOM2060_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1D.png"
+   ]
+  },
+  {
+   "seite": "S154",
+   "raum": "ROOM2060",
+   "vorher": "aehnlich (naechstes DOOR1E, s=3)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c02/c04: Lueftung mit WAAGERECHTEN Lamellen im hellen Metallrahmen - DOOR1E hat senkrechte Staebe; ein RE2-Lueftungsarchiv mit Lamellen gibt es nicht (Lamellen nur auf Tuerblaettern 07/11/1D/2A). Top-5 03 0,51 / 2B 0,50 = Holztuer / Klappe DUMPING - nicht gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S154_ROOM2060_c02_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S154_ROOM2060_c04_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1E.png"
+   ]
+  },
+  {
+   "seite": "S155",
+   "raum": "ROOM2070",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c03: Doppeltuer, je Fluegel DOOR23-Profil mit Ausbuchtung und Riegelstange an der Mittelfuge - wie S141. Kein RE2-Doppeltuerarchiv mit dieser Gestalt (0C/1B/30, V2/V3 von 01/04/06/15/1D geprueft). Top-5 06/08/1F/09/16 passen nicht. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S155_ROOM2070_c03_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S155_ROOM2070_c03_entz.png",
+    "build/r31_tueren/t1/re2/uebersicht.png"
+   ]
+  },
+  {
+   "seite": "S156",
+   "raum": "ROOM2070",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c01/c02: Doppeltuer mit DOOR23-Fluegeln (Profil, Ausbuchtung, Stange je Fluegel an der Mittelfuge), Gegenseite S141 gleich gemalt. Kein gleiches RE2-Archiv (s. S141); Top-5 inkl. 23 (0,57) ist das einfluegelige DOOR23. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S156_ROOM2070_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S156_ROOM2070_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S157",
+   "raum": "ROOM2070",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c04/c05 (aufgehellt): Doppeltuer mit DOOR23-Fluegeln; in c04 sind die beiden Ausbuchtungen mit Rosetten an der Mittelfuge erkennbar (Griff also eher 'beide/stange' als 'unsichtbar/unklar' - ohne Folgen, da nicht gebaut). Kein gleiches RE2-Archiv. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S157_ROOM2070_c04_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S157_ROOM2070_c04_entz.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S158",
+   "raum": "ROOM2070",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c06/c07 (aufgehellt): Doppeltuer mit DOOR23-Fluegeln am Gangende, sehr dunkel. Kein gleiches RE2-Archiv. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S158_ROOM2070_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S158_ROOM2070_c07_aus.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S159",
+   "raum": "ROOM2070",
+   "vorher": "gleich DOOR0A (rechts/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c12 Vollbild vergroessert: Gittertuer in gruen gestrichener Bogenzarge, fuenf senkrechte Staebe, breites Querband auf ~50 % mit einem kurzen waagerechten Riegelhebel rechts - praktisch deckungsgleich mit RE2s eigenem DOOR0A-Hintergrund ROOM4070 c4 var 1 (Querband mit Hebel rechts, gruenlich-dunkel). Einzige Besonderheit: ein heller Lappen/Zettel haengt oben links an den Staeben - gemaltes Beiwerk, keine Tuergestaltung (die Sequenz zeigt ohnehin das Modell). Griff selbst abgelesen: Hebel rechts -> rechts/unklar (Riegelkasten) stimmt. Vorbehalt fuer den Leiter (schon vom Zuordner gemeldet): die Gegenseite S087 (ROOM11A0, Stapel 2) ist anders gemalt; RE2 fuehrt beide Seiten immer mit demselben Archiv.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S159_ROOM2070_c12_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S159_ROOM2070_c12_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S159_ROOM2070_c12_voll.png",
+    "build/r31_tueren/t1/re2/DOOR0A.png"
+   ]
+  },
+  {
+   "seite": "S160",
+   "raum": "ROOM2070",
+   "vorher": "gleich DOOR0A (rechts/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c09/c10/c11 sehr dunkel, aufgehellt: senkrechte Staebe, breites Querband auf ~45 % mit hellem Schlossteil am rechten Ende, Bogenzarge wie bei S159 - Aufteilung DOOR0A. Keine Abweichung erkennbar (Aufloesung begrenzt, aber Stab/Band/Schloss eindeutig). Griff selbst abgelesen: Schloss rechts -> rechts/unklar stimmt; komplementaer zu S149 (T077).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S160_ROOM2070_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S160_ROOM2070_c09_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S160_ROOM2070_c10_entz.png",
+    "build/r31_tueren/t1/re2/DOOR0A.png"
+   ]
+  },
+  {
+   "seite": "S161",
+   "raum": "ROOM2080",
+   "vorher": "gleich DOOR06 (unsichtbar/unklar, s=1)",
+   "urteil": "widerlegt",
+   "nachher": {
+    "urteil": "keine",
+    "archiv": null,
+    "naechstes": "DOOR06",
+    "abweichung": "kein Tuerblatt im Bild: der Umriss liegt weit hinten im dunklen gruenen Gang hinter der leeren orangen Zarge (c02, vergroessert und aufgehellt) - dort ist weder Blatt noch Griff gemalt. DOOR06 nur ueber die Gegenseite S142 erschlossen; RE1.5 malt in diesem Stapel mehrere Tueren auf beiden Seiten verschieden (T048, T050, T084), die Gestalt dieser Seite ist damit nicht belegt. Behandlung wie S165 (Gegenseite S164 Tuer, eigene Seite ohne Blatt -> keine).",
+    "sicherheit": 2
+   },
+   "begruendung": "Das Gleich-Urteil stuetzt sich allein auf die Gegenseite; im eigenen Bild (c02, einziger gueltiger Cut) ist an der Umrissstelle nur dunkler Gang (Boden, eine Lampe links, ein grauer Fleck) - kein Merkmal, das DOOR06 bestaetigt, und die Variante waere nur per Komplement (V0) zu raten, nicht aus dem gemalten Griff (T2-Regel). Der Zuordner selbst behandelt den gleichgelagerten Fall S165 (T084: Gegenseite S164 Tuer, eigene Seite blattlos) als keine - im Zweifel widerlegt, damit beide Faelle gleich behandelt werden. Entscheidet der Leiter, blattlose Seiten generell ueber die Gegenseite zu fuehren (so Pruefer 2 bei der Leiter S069), wird S161 wieder gleich DOOR06 (V0 per Komplement) und S165 aehnlich DOOR26 (weiter nicht abgedeckt) - die Regel muss dann fuer alle Stapel gelten.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S161_ROOM2080_c02_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S161_ROOM2080_c02_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S142_ROOM2030_c09_aus.png",
+    "build/r31_tueren/t1/re2/DOOR06.png"
+   ]
+  },
+  {
+   "seite": "S162",
+   "raum": "ROOM2080",
+   "vorher": "gleich DOOR16 (Leiter, V5 hinab)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c04 Vollbild vergroessert: am Rand der Bodenoeffnung (hinter dem dicken grauen Treppengelaender) zwei duenne runde Leiterholme, oben ueber die Kante gebogen - die gebogenen Rohrenden wie in der DOOR16-Textur. Farbe der Holme gemessen warm-grau (92/88/73, 85/75/56), dieselbe Farbe wie die Leiter von unten (S163, 60-70/57-70/46-60) - Stahl im warmen Licht, nicht rostbraun. Gleiche Art und Gestalt wie DOOR16 (und wie RE2s gemalte Leitern ROOM4090 c3/ROOM4100 c7). Griff unsichtbar/keiner stimmt; Abstieg -> V5.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S162_ROOM2080_c04_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S163_ROOM2090_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR16.png",
+    "build/r31_tueren/t1/re2_seiten/R188_ROOM4100_D16_c07_voll.png"
+   ]
+  },
+  {
+   "seite": "S163",
+   "raum": "ROOM2090",
+   "vorher": "gleich DOOR16 (Leiter, V4 hinauf)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 vergroessert: senkrechte Wandleiter, zwei duenne gerade Holme, gerade Sprossen, Holme gemessen neutral-grau (60-70/57-70/46-60) vor gruenstichiger Wand (17/22/11) - Stahlgrau, keine Rost-/Messingfarbe. Entspricht RE2s gemalten DOOR16-Leitern (ROOM4100 c7, ROOM4090 c3: duenne silberne Leiter, gerade Sprossen). Griff unsichtbar/keiner stimmt; Aufstieg -> V4. c05/c06 sind Fehlprojektionen (Wandstueck).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S163_ROOM2090_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S163_ROOM2090_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR16.png",
+    "build/r31_tueren/t1/re2_seiten/R180_ROOM4090_D16_c03_voll.png"
+   ]
+  },
+  {
+   "seite": "S164",
+   "raum": "ROOM2090",
+   "vorher": "aehnlich (naechstes DOOR26, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c01/c02/c03 (aufgehellt): dunkles Blatt mit zwei gelb-schwarzen Warnstreifen und kleinem rotem Handrad an der Kante - DOOR26/31 sind rostrote zweiteilige Schotts mit Beschlagbaendern, grossem Handrad mittig und TYPE-P-Schildern, ohne Warnstreifen. Einziges weiteres Archiv mit Warnstreifen ist 2D (Hubbuehne) - andere Art. Top-5 16/28/03/2A/23 nicht gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S164_ROOM2090_c01_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S164_ROOM2090_c02_aus.png",
+    "build/r31_tueren/t1/re2/DOOR26.png"
+   ]
+  },
+  {
+   "seite": "S165",
+   "raum": "ROOM20A0",
+   "vorher": "keine (s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c13 frontal: schwarze rechteckige Oeffnung am Gangende, kein Blatt; c07 zeigt nur Ziegelwand. Top-5 alle ~0,51 (Mass auf schwarzer Flaeche bedeutungslos). RE2 hat fuer blattlose Oeffnungen nur die objektlosen Blende-Archive 20/21/32/34/36 - keine Tuergestalt. keine bleibt (gleiche Behandlung jetzt auch fuer S161).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S165_ROOM20A0_c13_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S165_ROOM20A0_c13_voll.png",
+    "build/r31_tueren/t1/re2/uebersicht.png"
+   ]
+  },
+  {
+   "seite": "S166",
+   "raum": "ROOM20A0",
+   "vorher": "keine (s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c04/c12: kein Blatt - Umriss auf der Ziegelwand ueber der Brustwehr (Hochklettern in die Wandnische, Holzleiter liegt am Boden), c12 Fehlprojektion auf den Boden. Kein RE2-Archiv fuer diese Art (16 = stehende Wandleiter mit Sequenz, 28 = Bodenluke, 1E = Gitterklappe). Top-5 (28 0,52, 06/14/16/26 0,50) nicht gleich. keine bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S166_ROOM20A0_c04_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S166_ROOM20A0_c04_voll.png"
+   ]
+  },
+  {
+   "seite": "S167",
+   "raum": "ROOM20A0",
+   "vorher": "aehnlich (naechstes DOOR23, s=2)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "abweichung": "DOOR23: gleiches abgeschraegtes Profil, aber mit sechseckiger Ausbuchtung am Griff (hier gerade, c08 vergroessert), Druecker auf Platte statt Riegelstange quer. (Farbe ist KEINE Abweichung, DOOR23-Textur ist dunkel braun-grau.)"
+   },
+   "begruendung": "Urteil aehnlich bleibt; c08 frontal vergroessert: Rahmen mit abgeschraegten oberen Ecken, keine Ausbuchtung, Druecker rechts auf ~50 %. Farbargument gestrichen (s. S151). Top-5 enthaelt 08 mit 0,58: DOOR08 hat eine klare waagerechte Zweiteilung (heller oberes/dunkler unteres vertieftes Feld, Nieten, Knauf B) - hier keine Teilung -> nicht gleich.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S167_ROOM20A0_c08_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S167_ROOM20A0_c08_entz.png",
+    "build/r31_tueren/t1/re2/DOOR23.png",
+    "build/r31_tueren/t1/re2/DOOR08.png"
+   ]
+  },
+  {
+   "seite": "S168",
+   "raum": "ROOM20B0",
+   "vorher": "aehnlich (naechstes DOOR16, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c01: Leiter mit breiten flachen Holmen, dunkel rostbraun (dunkler als die warm beleuchtete Wand, eine silberne Rohrleiter waere dort hell) - DOOR16 ist duennes silbernes Rohr. Profil + Farbe weichen ab -> aehnlich bleibt (strenge Leiterregel wie S088/Pruefer 2). Gegenseite S129 steht in Stapel 3 als gleich DOOR16 - Widerspruch, einheitlich entscheiden.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S168_ROOM20B0_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S168_ROOM20B0_c01_entz.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S169",
+   "raum": "ROOM20B0",
+   "vorher": "aehnlich (naechstes DOOR16, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c03/c04 frontal: Leiter mit breiten flachen Vierkantholmen und -sprossen; gemessen dunkel braun (Leiter 35/32/22, Wand daneben 151/144/119) - bemalter/rostiger Stahl, kein silbernes Rohr. aehnlich bleibt. Gegenseite S132 steht in Stapel 3 als gleich DOOR16 - Widerspruch, einheitlich entscheiden.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S169_ROOM20B0_c03_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S169_ROOM20B0_c04_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S169_ROOM20B0_c04_entz.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S170",
+   "raum": "ROOM20B0",
+   "vorher": "gleich DOOR23 (links/stange)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c10 frontal (aus + entz, aufgehellt): achteckiges Innenprofil (alle vier Ecken abgeschraegt), sechseckige Ausbuchtung des Profils an der linken Kante auf ~40 % mit Rosette und waagerechter Riegelstange - Profil und Ausbuchtung wie die DOOR23-Textur. Farbe: DOOR23-Textur ist nicht grau, sondern dunkel braun-grau (Mittel 42/37/32, Chroma 0,378/0,333/0,288); S170 33/30/22 (0,388/0,353/0,259) - praktisch gleich. Griff selbst abgelesen: Riegelstange links -> links/stange stimmt (DOOR23-Griff = Riegelstange quer).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S170_ROOM20B0_c10_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S170_ROOM20B0_c10_entz.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S171",
+   "raum": "ROOM20B0",
+   "vorher": "keine (s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c11/c12: schwarze Oeffnung ohne Blatt am Ende des gefluteten Gangs (gleiche Kamera wie ROOM2070 S156, dort mit Doppeltuer). Einseitig, kein Blatt -> keine Tuergestalt. keine bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S171_ROOM20B0_c11_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S171_ROOM20B0_c11_voll.png"
+   ]
+  },
+  {
+   "seite": "S172",
+   "raum": "ROOM20B0",
+   "vorher": "aehnlich (naechstes DOOR16, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c09: schraeg an der Wand stehende Leiter mit breiten flachen rostbraunen Holmen - nicht die silberne Rohrleiter DOOR16. aehnlich bleibt (T070, s. S150).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S172_ROOM20B0_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S172_ROOM20B0_c09_entz.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S173",
+   "raum": "ROOM3000",
+   "vorher": "aehnlich (naechstes DOOR28, s=2)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "art": "schacht",
+    "naechstes": "DOOR16",
+    "abweichung": "offener runder Kanalschacht im Boden, Deckel liegt daneben, im Schacht eine U-Sprosse (c00 vergroessert) - genau die Art, die RE2 mit DOOR16 V5 (hinab) animiert (ROOM21A0 c3 -> ROOM3020, Rundschacht mit Sprosse); DOOR28 ist die eckige Riffelblech-Bodenluke mit Kamerafahrt und passt nicht. Nicht gleich, weil die DOOR16-Sequenz die Leiter gross zeigt und die Leiter dieses Schachts (Sprosse hier dick grau-braun, Gegenseite S088 dunkle rostbraune Flachholme mit Vierkantsprossen) von DOOR16s duennem Silberrohr abweicht - dieselbe Begruendung, mit der Pruefer 2 die Gegenseite S088 auf aehnlich gesetzt hat."
+   },
+   "begruendung": "Urteil aehnlich bleibt, naechstes Archiv korrigiert: DOOR16 (V5 hinab) statt DOOR28. Der Ausschnitt (10x10-Rechteck) trifft nur den Zaun; im Vollbild c00 liegt der offene Rundschacht mit daneben liegendem Deckel und U-Sprosse. Praezedenz: Stapel 1 S038 und Stapel 2 S095 (Pruefer) fuehren denselben offenen Rundschacht als gleich DOOR16 V5 - dort ohne Leiterfarbe als Kriterium. Faellt der Leiter die milde Leiterregel, wird S173 gleich DOOR16 V5 (und T047 mit S088 beidseitig DOOR16); bei der strengen Regel bleibt T047 beidseitig aehnlich. Griff unsichtbar/keiner stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S173_ROOM3000_c00_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S173_ROOM3000_c00_aus.png",
+    "build/r31_tueren/t2/hg/paar217_DOOR16_21A0_3020.png",
+    "build/r31_tueren/t1/re2/DOOR16.png",
+    "build/r31_tueren/t1/re2/DOOR28.png"
+   ]
+  },
+  {
+   "seite": "S174",
+   "raum": "ROOM3000",
+   "vorher": "gleich DOOR15 (rechts/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c03 (aus + entz, aufgehellt): Brettertuer, oberes Feld X-Streben, Querband mit gelb-schwarzen Schraegstreifen, unteres Feld X-Streben, schwarzer Kasten an der rechten Kante in Bandhoehe. DOOR15: X oben (0-31 %), Streifenband mit Blechfeld-Kasten an einer Kante (31-56 %), X unten - dieselbe Aufteilung; Streifen in RE2s eigenen DOOR15-Hintergruenden (ROOM4070 c5, ROOM4080 c0) ebenfalls gelb-schwarz. Farbe roetlich-braun (Chroma 0,55/0,29/0,16 gegen DOOR15 0,42/0,32/0,26) im warmen Strassenlicht; Zaun daneben gleich getoent -> Licht. Griff selbst abgelesen: Kasten rechts -> rechts; Form unklar (DOOR15-Beschlag = Strebe) stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S174_ROOM3000_c03_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S174_ROOM3000_c03_entz.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S175",
+   "raum": "ROOM3010",
+   "vorher": "gleich DOOR15 (links/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c01 Vollbild vergroessert: X oben ~26 %, Streifenband ~19 %, X unten ~45 % der Blatthoehe gegen DOOR15 31/24/44 % - gleiche Dreiteilung und fast gleiche Proportion; schwarzer Kasten an der linken Kante in Bandhoehe an der Stelle des gemalten DOOR15-Blechfelds. Griff selbst abgelesen: links -> V0, komplementaer zu S174 (T087). c02/c03 sind Fehlprojektionen (Gelaender/Rampe).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S175_ROOM3010_c01_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S175_ROOM3010_c01_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S175_ROOM3010_c01_voll.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S176",
+   "raum": "ROOM3010",
+   "vorher": "gleich DOOR15 (rechts/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c00 (aus + entz, aufgehellt): X oben, gelb-schwarzes Streifenband, X unten, schwarzer Kasten rechts in Bandhoehe - DOOR15-Aufteilung. c08/c09 zeigen Fehlprojektionen (Container innen). Griff selbst abgelesen: rechts stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S176_ROOM3010_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S176_ROOM3010_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S178",
+   "raum": "ROOM3010",
+   "vorher": "gleich DOOR15 (links/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c06 (aus + entz, aufgehellt): X oben, Streifenband (setzt sich im Zaun fort), X unten, schwarzer Kasten an der linken Kante in Bandhoehe - DOOR15. Griff selbst abgelesen: links stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S178_ROOM3010_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S178_ROOM3010_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S179",
+   "raum": "ROOM3010",
+   "vorher": "gleich DOOR15 (links/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Dasselbe Rechteck und derselbe Cut c06 wie S178 (nur anderes Ziel ROOM30D0) - dasselbe Bild, dieselbe Pruefung: DOOR15-Aufteilung, Kasten links. Bestaetigt wie S178.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S179_ROOM3010_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S179_ROOM3010_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S180",
+   "raum": "ROOM3010",
+   "vorher": "gleich DOOR24 (rechts/druecker)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c05 Vollbild vergroessert: beiges Blatt, Sichtfenster oben mit hellem Rahmen, weisser Blechkasten mit schraegem Druecker rechts auf ~55 %, helles Trittblech unten, links unter dem Fenster ein dunkelblaues Rechteck an der Stelle des Aushangs (DOOR24 V1 zeigt den Aushang von hinten links, so auch RE2s Hintergrund ROOM30B0 c2 var 1). Senkrechte Striche = Gelaenderpfosten davor. Gegenseite S210 (ROOM30E0 c00) zeigt DOOR24 wortgetreu (Fenster, Aushang weiss mit blauem Streifen, Kasten links, Trittblech). Griff selbst abgelesen: rechts/druecker stimmt (DOOR24-Griff = Druecker schraeg 184 Dreiecke).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S180_ROOM3010_c05_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S180_ROOM3010_c05_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S180_ROOM3010_c05_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S210_ROOM30E0_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR24.png"
+   ]
+  },
+  {
+   "seite": "S181",
+   "raum": "ROOM3020",
+   "vorher": "gleich DOOR15 (rechts/unklar)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Widerlegung versucht, nichts gefunden. c00/c05/c07: dunkelbraunes Blatt im hellen Holzzaun, X oben, gelb-schwarzes Streifenband, X unten - DOOR15 (dunkelbraun wie die Textur). Kasten in c07 als dunkles Rechteck rechts unter dem Band sichtbar. Griff selbst abgelesen: rechts stimmt (komplementaer zu S178, T090).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S181_ROOM3020_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S181_ROOM3020_c07_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S181_ROOM3020_c07_entz.png",
+    "build/r31_tueren/t1/re2/DOOR15.png"
+   ]
+  },
+  {
+   "seite": "S183",
+   "raum": "ROOM3030",
+   "vorher": "aehnlich (naechstes DOOR24, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 Vollbild vergroessert: helle beige-rosa glatte Tuer, flaches graues Fenster im oberen Viertel mit nur schmalem hellem Rand (DOOR24: grosses Fenster mit hellem genietetem Rahmen), dunkler Griffkasten rechts auf ~60 %, KEIN Aushang (bei S180, derselben Bauart V1, ist er als dunkelblaues Rechteck links unter dem Fenster sichtbar), unten dunkler Streifen statt hellem Trittblech. Die Gegenseite S214 (ROOM30E0 c06, vergroessert) zeigt nur sehr steil ein helles beiges Blatt mit dunklem Fenster oben und dunklem Griffkasten in der Mitte - derselbe Typ wie S183, ohne weitere Einzelheiten (kein Aushang erkennbar). Weitere Kandidaten: 1C (beige mit vergittertem Fenster + Klappe unten), 2C (graues Stahlblatt mit gerundetem Drahtglasfenster), 1B (braun, kleines quadratisches Fenster) - keine gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S183_ROOM3030_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S183_ROOM3030_c00_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S214_ROOM30E0_c06_voll.png",
+    "build/r31_tueren/t1/re2/DOOR24.png"
+   ]
+  },
+  {
+   "seite": "S184",
+   "raum": "ROOM3030",
+   "vorher": "aehnlich (naechstes DOOR13, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c01 vergroessert und gemessen: Zweiteilung wie DOOR13 (grosses oberes Feld, unteres Feld, heller Rahmen), aber das obere Feld ist HELL (81/90/100 bei Rahmen 96/95/92, Verhaeltnis ~0,9), bei DOOR13 ist das Gitterfenster dunkel (19/20/23 bei Rahmen 61/67/72, ~0,3) und traegt ein Querschild - das ist eine andere Fuellung, nicht nur Licht. DOOR1A (graue Stahlrahmentuer) hat drei Felder und einen Knaufkasten auf dem Blatt - hier zwei Felder, Kasten an der Wand. Top-5 1F 0,56 (rostige Stahlplatte), 08, 16, 07, 00 - nicht gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S184_ROOM3030_c01_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S184_ROOM3030_c01_entz.png",
+    "build/r31_tueren/t1/re2/DOOR13.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S185",
+   "raum": "ROOM3030",
+   "vorher": "aehnlich (naechstes DOOR13, s=1)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Dasselbe Rechteck und derselbe Cut c01 wie S184 (nur anderes Ziel, Lobby-Variante MARVIN) - dieselbe Pruefung, aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S185_ROOM3030_c01_aus.png",
+    "build/r31_tueren/t1/re2/DOOR13.png"
+   ]
+  }
+ ],
+ "zuordner_datei": "analysis/befunde_runde31/tueren_03/stapel_4.json",
+ "zaehlung": {
+  "geprueft": 43,
+  "bestaetigt": 38,
+  "widerlegt": 1,
+  "korrigiert": 4,
+  "gleich_vorher": 18,
+  "gleich_nach_pruefung": 17,
+  "aehnlich_nach_pruefung": 22,
+  "keine_nach_pruefung": 4,
+  "gleich_je_archiv": {
+   "DOOR06": 3,
+   "DOOR0A": 3,
+   "DOOR15": 6,
+   "DOOR16": 2,
+   "DOOR1E": 1,
+   "DOOR23": 1,
+   "DOOR24": 1
+  },
+  "nicht_abgedeckt_nach_pruefung": 26,
+  "begehbare_seiten": 43,
+  "griff_tausch": [],
+  "spanne_je_nach_leiterentscheid": {
+   "streng (dieser Stand)": 26,
+   "milde Leiterregel (S150 S168 S169 S172 S173 -> gleich DOOR16)": 21,
+   "milde Leiterregel + blattlose Seite ueber Gegenseite (S161 -> gleich DOOR06)": 20
+  }
+ },
+ "fuer_den_leiter": [
+  "Leiterregel zwischen den Stapeln uneinheitlich: Stapel 1/3 (Zuordner) werten flache, rost-/messingfarbene Leitern als gleich DOOR16, Pruefer 2 (S088) und Stapel 4 als aehnlich. Betroffen hier S150 S168 S169 S172 S173; gleiche physische Leitern in Stapel 3: S137 (T070), S129 (T067), S132 (T068); Stapel 2: S088 (T047). Einmal einheitlich entscheiden - sonst sind T047/T067/T068/T070 je Seite verschieden gebaut.",
+  "Blattlose Seite mit sichtbarer Gegenseite: S161 (hier widerlegt -> keine) und S165 (keine) gleich behandeln; Pruefer 2 hat bei der Leiter S069 die Gegenseite gelten lassen.",
+  "Das Farbargument \"DOOR23 grau, RE1.5 braun\" ist falsch: die DOOR23-Textur ist dunkel braun-grau (Mittel 42/37/32). S143/S151/S167 bleiben aehnlich allein wegen der fehlenden Profil-Ausbuchtung (Begruendung korrigiert).",
+  "S173 ist kein Luken-Fall (DOOR28), sondern ein offener Rundschacht = RE2s DOOR16-V5-Art (ROOM21A0); naechstes Archiv auf DOOR16 korrigiert.",
+  "Einseitig abgedeckte Tueren (RE1.5 malt die Seiten verschieden): T078 (S146 gleich DOOR1E, S154 aehnlich), T048 (S159 gleich DOOR0A, Gegenseite S087 in Stapel 2), T075 (S142 gleich DOOR06, S161 keine)."
+ ]
+}

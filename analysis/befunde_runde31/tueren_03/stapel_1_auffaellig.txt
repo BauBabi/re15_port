@@ -1,0 +1,26 @@
+### Zaehlung (43 begehbare Seiten, 26 Tueren)
+
+| | Seiten | Tueren (alle Seiten im Stapel) |
+|---|---|---|
+| **gleich** (wird gebaut) | **12** | T005, T007, T010, T027 (DOOR13, je 2 Seiten), T028 (DOOR1B, 2 Seiten), T024 Leiter (DOOR16 V4, 1 Seite hier; Gegenseite S069 in Stapel 2 ebenfalls DOOR16), T023 Kanalschacht (DOOR16 V5, 1 Seite hier; Gegenseite S130 = Leiter im Kanal) |
+| aehnlich (nicht abgedeckt) | 30 | glatte dunkle Stahl-/Blechtueren -> naechstes DOOR07 (22 Seiten), Doppeltueren -> DOOR1B (5), Aufzugtueren -> DOOR25 (2), Lamellen-Lueftung -> DOOR1E (1) |
+| keine (nicht abgedeckt) | 1 | S031 ROOM1090 Dach -> ROOM1100: kein Tuerblatt im Bild |
+| **nicht abgedeckt gesamt** | **31 von 43** | |
+
+Je Archiv (gleich): DOOR13 8 Seiten, DOOR1B 2, DOOR16 2.
+
+Griff-Tausch noetig: 1 Seite - S042 (Druecker statt Knauf B an DOOR13; Spender DOOR07 Druecker flach grau, alternativ DOOR01/05 Druecker Messing). Alle anderen gleich-Seiten haben die Archiv-Griff-Form.
+
+Variante aus dem gemalten Griff (T2-Regel, Standardgruppe): DOOR13 - S007 links->V0, S016 rechts->V1, S008 rechts->V1, S017 links->V0, S009 rechts->V1, S026 links->V0, S042 rechts->V1, S047 links->V0 (alle vier Tueren ergeben von selbst ein 0/1-Paar). DOOR1B (beide Fluegel): S043/S046 - wie RE2 Seite A weg / Seite B hin. DOOR16: S037 hinauf V4, S038 hinab V5.
+
+### Auffaelliges
+
+- **Die haeufigste Tuer des Stapels hat KEIN RE2-Gegenstueck:** 22 Seiten (WC/Umkleide, Verhoerraum, Buero, Treppenhaeuser 1F-3F/B1/B2, Flure) sind glatte, ungeteilte, dunkle bzw. graugruene Stahl-/Blechtueren mit Druecker. RE2 hat kein glattes Blatt ohne Lueftung/Fenster; DOOR07 (grau-fleckig, Lueftungsschlitze unten) ist das naechste. Die Treppenhaustueren ROOM1060 (graugruen) liegen farblich am naechsten an DOOR07, aber ebenfalls ohne Lueftung.
+- **DOOR13 passt genau** (Fenster oben mit Querschild, bei ROOM1030/1070 als Drahtglas, ein Feld unten, Rahmen, Knauf): 4 Tueren, 8 Seiten. Helligkeit gemessen: entzerrtes Blatt S017 Mittel RGB 34/42/41, S007 67/73/76 gegen DOOR13-Textur 42/45/48 (im RE2-Hintergrund ROOM1160 sogar 15/18/18) - also kein Farbabstand.
+- **DOOR1B passt genau** fuer die Doppeltuer zum Untersuchungsraum T028 (quadratische Fenster zur Fuge hin, waagerechte Druckplatten) - an den gerenderten DOOR1B_v0/v1 geprueft, nicht nur an der Textur.
+- Doppeltueren (S022/S030, S041/S044, S045): `griff_seite` = "mitte" (beide Fluegel tragen Griff/Schloss/Stange an der Mittelfuge) - ausserhalb der Liste links/rechts/unsichtbar, weil beides falsch waere.
+- S038 ist ein offener Kanalschacht (Deckel verschoben, Leitersprosse im Schacht), KEINE Tuer; RE2 macht genau diesen Abstieg mit DOOR16 V5 (RE2 ROOM21A0 c3, Hintergrund angesehen). Gegenseite S130 (ROOM1260 c15) ist die Leiter im Kanal.
+- T1-Umriss daneben (Bild trotzdem eindeutig): S030 (auf dem Fallrohr, Doppeltuer rechts daneben), S040 (auf dem Pfeiler links der Aufzugnische), S013 (c4 zeigt nur Wand, Aufzug in c5), S038 (Wand neben dem Schacht), S047 (leicht links der Tuer).
+- S031 (ROOM1090 Dach, Band 6 -> ROOM1100): in keinem der 16 Cuts ein Tuerblatt; einseitig; Flaeche 4200 x 5500 an der Nachbarwand.
+- Aufzugtueren S013/S040: glatt, ohne Schild/Aufschrift - DOOR25 hat "SHAFT TYPE-L"-Schild, Warnaufkleber, Rippen; DOOR29 ist eine Drehtuer.
+- Nebenbefund Arbeitsweise: das Scratchpad ist zwischen den Stapel-Agenten GETEILT; ein gleichnamiges Hilfsskript (add.py) von Stapel 2 hat meine ersten ROOM1050/1090-Eintraege in stapel_2.json geschrieben - sofort wieder entfernt (nur exakt meine 8 Objekte; stapel_2 danach mit seinen 10 eigenen Seiten S049..S058, MD mit dessen Skript neu geschrieben). Eigene Skripte danach unter scratchpad/st1/.

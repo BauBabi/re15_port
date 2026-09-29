@@ -1,0 +1,592 @@
+{
+ "stapel": 2,
+ "pruefungen": [
+  {
+   "seite": "S049",
+   "vorher": "aehnlich (naechstes DOOR1B, s=3)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00: zweifluegelige glatte graue Stahltuer ohne Felder/Fenster, zwei Druecker an der Mittelfuge. Doppeltuer-Archive 0C (gruenes Holz+Glas), 1B (braunes Blech mit Sichtfenster + Druckstange), 30 (Glasrahmen) und Einzelfluegel-Archive 01/04/06/15/1D V2/V3, 11 haben kein glattes graues Blatt. Top-5 (00 0.60 Holz Kreuzfries, 16 0.59 Leiter, 05 0.59 Holz 3 Querfelder, 08 0.59 genietet 2 Felder, 03 0.58 Rautenholz) alle abweichend. Gleich wie Pruefer 1 bei der Gegenseite S045. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S049_ROOM1100_c00_aus.png",
+    "build/r31_tueren/t1/re2/uebersicht.png",
+    "build/r31_tueren/t1/re2/DOOR1B.png"
+   ]
+  },
+  {
+   "seite": "S050",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c06 frontal: Wellen-Oberkante mit drei Boegen, zwei waagerechte Schlitze rechts, Drehscheibe (Schlitzscheibe) auf erhabener Platte links = DOOR19-Textur + Beschlag (Scheibe mit Schlitz) + RE2 ROOM5070 c0 gemalt (Scheibe auf Platte links). Grundton dunkelgrau statt beige, aber RE2 ROOM2140 c0 malt DOOR19 selbst ebenso dunkelgrau -> kein Gestaltungsunterschied. Griff links abgelesen (Scheibe an der linken Kante), Form Drehscheibe in Griffplatte (als knauf gefuehrt) stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S050_ROOM1100_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S050_ROOM1100_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S051",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00: Rueckseite von S050, Wellenkante, zwei Schlitze links, Drehscheibe auf Platte rechts; c05/c06 zeigen nur Regal (Umriss verdeckt). Griff rechts abgelesen, stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S051_ROOM1110_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S051_ROOM1110_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S052",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c06: Wellenkante, Schlitze rechts, Drehscheibe auf Platte links, rote Lampe ueber der Zarge (Wand). Griff links abgelesen, stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S052_ROOM1110_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S052_ROOM1110_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S053",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c07 frontal: drei Wellenboegen oben, zwei Schlitze links, Drehscheibe auf Platte rechts = DOOR19 gespiegelt (V1). Griff rechts abgelesen, stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S053_ROOM1110_c07_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S053_ROOM1110_c07_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S054",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c05/c06: Wellenkante, Schlitze rechts, Drehscheibe links, rote Lampe darueber. Griff links abgelesen, stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S054_ROOM1110_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S054_ROOM1110_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S055",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c10 frontal: Wellenkante, Schlitze links, Drehscheibe auf Platte rechts. Griff rechts abgelesen, stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S055_ROOM1110_c10_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S055_ROOM1110_c10_entz.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S056",
+   "vorher": "aehnlich (naechstes DOOR07, s=3)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00: glattes graues Stahlblatt ohne Felder/Fenster/Lueftung, Druecker links, Tuerschliesser oben. DOOR07 hat Lueftungsschlitze unten; Top-5 (05, 00, 08, 11, 12) Holz/genietet/Lamellen/Treppe. Kein merkmalloses Blatt unter den 55 (wie Pruefer 1 fuer S000..S039). aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S056_ROOM1120_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR07.png"
+   ]
+  },
+  {
+   "seite": "S057",
+   "vorher": "aehnlich (naechstes DOOR25, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00: Aufzugtuer in tiefer Nische, glattes graues Blechfeld, Tasterfeld rechts in der Nische. RE2 malt DOOR25 selbst mit gut sichtbarem Schild 'SHAFT TYPE-L' und Warnaufkleber (ROOM6140/6080/6110 c0), DOOR29 hat Bedientafel am Blatt. Top-5 (00, 16, 08, 06, 25 0.56) - 25 ist das naechste, nicht gleich. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S057_ROOM1120_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR25.png"
+   ]
+  },
+  {
+   "seite": "S058",
+   "vorher": "gleich DOOR09 (Griff-Tausch DOOR2F)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "griff_tausch": "DOOR04"
+   },
+   "begruendung": "Gestaltung bestaetigt: c03 entzerrt neben DOOR09 gelegt -> sechs Kassetten 2 x 3 mit Mittelfries, Reihenhoehen deckungsgleich (je ca. 25 % mit gleichen Friesen), Holz, Olivton (DOOR18 olivgruen hat nur 4 Felder, DOOR03 Rautenfuellung, DOOR04 blau). Griff rechts/stange im Bild abgelesen, stimmt. KORREKTUR nur am Griff-Spender: der RE1.5-Griff ist eine lange Stange (silbrig) zwischen zwei Messing-Haltern, entzerrt 143/436 = ca. 33 % der Blatthoehe (S061 c06: 152/436 = 35 %). DOOR2F.m1 (Familie 06/0B/0C/2F) ist ein schlichter Kupferstab 1369/6602 = 21 %; DOOR04.m1 'Stangengriff lang' (T2 §3: 196 Dreiecke, y 1755 = 27 %, Messing-Halter + Stange, Anhaengepunkt [130,-3124,-3308] ~ DOOR2F [130,-3126,-3406]) trifft Laenge und Messing-Halter besser. Der Familienvorteil (nur Streifen tauschen) gilt fuer DOOR09 ohnehin nicht, weil DOOR09.m1 Knauf B ist - jeder Stangen-Spender wird mit seinem eigenen TIM gezeichnet (T2 §3 / 2.5).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S058_ROOM1120_c03_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S058_ROOM1120_c03_entz.png",
+    "build/r31_tueren/t1/re2/DOOR09.png",
+    "build/r31_tueren/t1/re2/DOOR04.png",
+    "build/r31_tueren/t1/re2/DOOR2F.png",
+    "analysis/befunde_runde31/tueren_belege/t2_griffe.jpg"
+   ]
+  },
+  {
+   "seite": "S059",
+   "vorher": "aehnlich (naechstes DOOR04, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Nur steil sichtbar; Gestalt ueber S063 (Doppeltuer, braunes Holz, je Fluegel 2 x 3 Kassetten, lange Messing-Stangen an der Fuge). DOOR04 hat Aufteilung + Stangengriff + Doppelvarianten V2/V3, ist aber blau gestrichen; DOOR09 hat den braun/oliven 2 x 3-Fluegel, aber nur V0/V1 (keine Doppeltuer); 0C gruenes Holz mit Glas. Top-5 (07, 1D, 16, 0C, 0A) abweichend. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S059_ROOM1130_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR04.png",
+    "build/r31_tueren/t1/re2/DOOR09.png"
+   ]
+  },
+  {
+   "seite": "S060",
+   "vorher": "gleich DOOR09 (Griff-Tausch DOOR2F)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "griff_tausch": "DOOR04"
+   },
+   "begruendung": "c02 (steil, linke Wand): 2 x 3 Kassetten entzerrt erkennbar, Stangengriff an der nahen Kante; linke Umrisskante laenger = nah, Griff im Bild links am Blatt -> vor der Tuer links. Gestaltung + Griff links/stange bestaetigt; Spender wie S058 auf DOOR04.m1 (lange Stange mit Messing-Haltern) statt DOOR2F.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S060_ROOM1130_c02_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S060_ROOM1130_c02_entz.png",
+    "build/r31_tueren/t1/re2/DOOR09.png",
+    "build/r31_tueren/t1/re2/DOOR04.png"
+   ]
+  },
+  {
+   "seite": "S061",
+   "vorher": "gleich DOOR09 (Griff-Tausch DOOR2F)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "griff_tausch": "DOOR04"
+   },
+   "begruendung": "c06 frontal + c09: 2 x 3 Kassetten, Messing-Halter oben/unten mit Stange an der linken Kante (152/436 = 35 % Blatthoehe), 'Chief Office'-Schild (c05). Gestaltung + Griff links/stange bestaetigt; Spender DOOR04.m1 statt DOOR2F (Begruendung S058).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S061_ROOM1130_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S061_ROOM1130_c06_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S061_ROOM1130_c09_entz.png",
+    "build/r31_tueren/t1/re2/DOOR09.png",
+    "build/r31_tueren/t1/re2/DOOR04.png"
+   ]
+  },
+  {
+   "seite": "S062",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c07 (schraeg) und entzerrt neben die DOOR1A-Textur gelegt: Stahlrahmentuer mit drei liegenden Feldern in nahezu gleichen Hoehen (ca. 35/33/30 % gegen DOOR1A 33/33/30 %), Druecker auf schmaler senkrechter Platte mit rundem Schloss darueber im Mittelfeld = DOOR1A-Platte mit Rundelement + Beschlag (Rosette + Hebelstange im Streifen v219..255). RE2 ROOM21A0 c0 malt DOOR1A ebenso dunkel. Kleinabweichung: DOOR1A hat seitlich eine Doppelleiste, im RE1.5-Bild nur eine Kante erkennbar - kein Aufteilungsmerkmal. Griff rechts abgelesen (Platte an der rechten Blattkante), Form druecker stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S062_ROOM1130_c07_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S062_ROOM1130_c07_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S063",
+   "vorher": "aehnlich (naechstes DOOR04, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 Vollbild: zweifluegelige braune Holztuer, je Fluegel 2 x 3 Kassetten, zwei lange Messing-Stangen an der Fuge, Zierrahmen. Doppel gegen Doppel: nur DOOR04 (V2/V3) hat sechs Kassetten + lange Stange, aber BLAU (unter warmem Raumlicht ist das RE1.5-Holz braun, nicht blau). Top-1 DOOR09 0.56 = gleiche Fluegel-Aufteilung, aber einfluegelig. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S063_ROOM1140_c00_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S063_ROOM1140_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR04.png"
+   ]
+  },
+  {
+   "seite": "S064",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c06 frontal: drei liegende Felder, Druecker + rundes Schloss auf Platte rechts im Mittelfeld, Notausgang-Schild darueber; Feldhoehen entzerrt deckungsgleich mit DOOR1A. Griff rechts/druecker stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S064_ROOM1140_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S064_ROOM1140_c06_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S065",
+   "vorher": "gleich DOOR09 (Griff-Tausch DOOR2F)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "griff_tausch": "DOOR04"
+   },
+   "begruendung": "c00 Vollbild 4-fach: Tuer in der rechten Wand hinter der Wandlampe, extrem steil; Blatt von x~175 (fern) bis x~330 (nah, an der Lampe). Griff = silbrige Stange mit zwei gebogenen Messing-Haltern im fernen = linken Teil des Blatts -> vor der Tuer links (Zuordner stimmt). Kassetten nur teilweise sichtbar, Gestaltung ueber S061 belegt. Der Griff zeigt hier am deutlichsten die Messing-Halter + Stange -> Spender DOOR04.m1 statt DOOR2F-Kupferstab.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S065_ROOM1150_c00_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S065_ROOM1150_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR04.png",
+    "build/r31_tueren/t1/re2/DOOR2F.png"
+   ]
+  },
+  {
+   "seite": "S066",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 (dunkel): drei liegende Felder (oberes groesstes), Druecker + rundes Schloss auf Platte rechts; c03 zeigt nur das Bulletin-Brett (Umriss daneben). Griff rechts/druecker stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S066_ROOM1160_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S066_ROOM1160_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S067",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Bilder identisch zu S066 (dieselbe Flaeche, anderes Ziel). Befund wie S066.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S067_ROOM1160_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S068",
+   "vorher": "keine (Tor, eigene Sequenz, s=3)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c01: niedriges Rohrrahmen-Tor im Dachgelaender mit gelb-schwarz umrandetem Warnschild. Top-5 (1A 0.51, 25 0.51, 09 0.51, 2B 0.50) sind Tueren/Klappen; kein RE2-Archiv hat ein Gelaendertor (2D Hubbuehne hat nur den Warnrand). Eigene Sequenz aus analysis/tor_1170 - fuer die Zaehlung als 'abgedeckt, nicht per RE2-Archiv' fuehren.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S068_ROOM1170_c00_aus.png",
+    "build/r31_tueren/t1/re2/uebersicht.png"
+   ]
+  },
+  {
+   "seite": "S069",
+   "vorher": "gleich DOOR16 (Leiter, V5 hinab)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Eigene Seite zeigt nur die Luecke im Dachgelaender (c02/c03/c04, Nacht, Leiter nicht sichtbar); Gestalt ueber die Gegenseite S037 (ROOM10B0 c00, Stapel 1, vom Pruefer 1 bestaetigt): einfache Steigleiter an der Hauswand, zwei gerade Holme, gerade Sprossen, Stahlgrau im warmen Licht, kein Rueckenschutz = die Art, fuer die RE2 DOOR16 nimmt (gemalt silbergraue Steigleitern ROOM3090 c0, ROOM4090 c3, ROOM4100 c7). Abweichung nur im Holmprofil (flach statt Rohr) - dieselbe Toleranz wie bei S037; faellt S037, faellt S069 mit. Griff unsichtbar/keiner stimmt; hinab -> V5.",
+   "bilder": [
+    "build/r31_tueren/t1/_s069.png",
+    "build/r31_tueren/t1/_s037.png",
+    "build/r31_tueren/t1/re15_seiten/S069_ROOM1170_c04_aus.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S072",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c08 (steil von oben, Nacht): Stahlrahmentuer mit drei liegenden Feldern (Querriegel hell angeleuchtet), Druecker + Schloss an der linken Blattkante im Mittelfeld; c06 nur Silhouette. Griff links/druecker stimmt; komplementaer zu S062 (rechts).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S072_ROOM1170_c08_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S072_ROOM1170_c08_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S073",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c09 (klein, dunkel): drei liegende Felder, kleine helle Beschlagmarken an der linken Kante im Mittelfeld; c06/c10 ohne Blatt (Umriss auf Treppe/Silhouette). Griff links/druecker stimmt; komplementaer zu S064 (rechts).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S073_ROOM1170_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S073_ROOM1170_c09_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S074",
+   "vorher": "keine (Tor, eigene Sequenz, s=3)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c11/c12: Gegenseite desselben Gelaendertors mit Warnschild. Top-5 alle <= 0.50. Wie S068.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S074_ROOM1170_c12_aus.png"
+   ]
+  },
+  {
+   "seite": "S076",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 frontal (tuerkises Licht): drei liegende Felder, Druecker + rundes Schloss auf Platte links im Mittelfeld, Leuchte ueber der Zarge; entzerrt Feldhoehen wie DOOR1A. Griff links/druecker stimmt (V0-Lage, Platte links wie in der DOOR1A-Textur).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S076_ROOM1180_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S076_ROOM1180_c00_entz.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S077",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Bilder identisch zu S076 (dieselbe Flaeche, anderes Ziel). Befund wie S076.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S077_ROOM1180_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S078",
+   "vorher": "aehnlich (naechstes DOOR07, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c02: glattes dunkles Stahlblatt, Druecker links, Tuerschliesser, Notausgang-Leuchte. Wie S056 (kein glattes Archiv; DOOR07 mit Lueftung). Top-5 (06 X-Kreuz, 28 Luke, 05 Holz, 23 Achteckprofil, 12 Treppe) abweichend. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S078_ROOM1180_c02_aus.png",
+    "build/r31_tueren/t1/re2/DOOR07.png"
+   ]
+  },
+  {
+   "seite": "S079",
+   "vorher": "gleich DOOR13",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c07 frontal: dunkle Stahltuer, oben grosses dunkles Fenster (Rahmen abgesetzt) mit kleinem hellem Schild mittig oben, unten glattes Feld, runder Knauf an der linken Kante genau an der Teilung = DOOR13 (Fenster + Schildleiste auf der Textur; Knauf B Anhaengepunkt y -3364 = Teilungshoehe). RE2 ROOM1160 c0 malt DOOR13 ebenso dunkel. Griff links/knauf stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S079_ROOM1180_c07_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S079_ROOM1180_c07_entz.png",
+    "build/r31_tueren/t1/re2/DOOR13.png"
+   ]
+  },
+  {
+   "seite": "S080",
+   "vorher": "aehnlich (naechstes DOOR1B, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c08 mit Gamma 0.45 aufgehellt, 8-fach: Doppeltuer, zwei Druecker gegenlaeufig an der Mittelfuge, Fluegel mit Stahlrahmen und Querriegel (Feldaufteilung wie DOOR1A, aber zweifluegelig). Kein Doppeltuer-Archiv mit fensterlosen Stahlrahmen-Feldern (1B Sichtfenster + Druckstange braun; 0C/30 Glas); DOOR1A nur einfluegelig. Top-5 (11, 07, 08, 06, 12) abweichend. aehnlich bleibt; als naechstes waere fuer die Fluegelgestaltung auch DOOR1A zu nennen.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S080_ROOM1180_c08_voll.png",
+    "build/r31_tueren/t1/re2/DOOR1B.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S081",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c06 (linke Flurwand, steil, sehr dunkel; mit Helligkeit x2.5 geprueft): zwei waagerechte Schlitze an der linken Kante, Drehscheibe auf erhabener Platte rechts, Leuchte ueber der Zarge, 'Fire Shutter'-Schild links an der Wand = DOOR19 in V1-Lage. Linke Umrisskante laenger = nahe Kante, Scheibe an der fernen = rechten Kante; vor der Tuer stehend rechts. Griff rechts/knauf stimmt. Wellenkante oben im steilen Bild nicht aufgeloest, Rest eindeutig.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S081_ROOM1180_c06_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S081_ROOM1180_c06_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S081_ROOM1180_c06_voll.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S082",
+   "vorher": "gleich DOOR13",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00/c01: gleiche Aufteilung (Fenster oben mit Schildleiste, unteres Feld mit abgesetzter Oberkante), Knauf rechts an der Teilung. Blatt hellgrau unter dem hellen, blaeulichen Raumlicht von ROOM1190 (Waende ebenso hell); Gegenseite S079 dunkel unter tuerkisem Flurlicht - der Maler hat dieselbe Tuer lichtabhaengig getoent, kein Material-/Aufteilungsunterschied. Griff rechts/knauf stimmt; komplementaer zu S079.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S082_ROOM1190_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S082_ROOM1190_c01_entz.png",
+    "build/r31_tueren/t1/re2/DOOR13.png"
+   ]
+  },
+  {
+   "seite": "S083",
+   "vorher": "gleich DOOR13",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Bilder identisch zu S082 (dieselbe Flaeche, Ziel ROOM1230). Befund wie S082.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S083_ROOM1190_c00_aus.png",
+    "build/r31_tueren/t1/re2/DOOR13.png"
+   ]
+  },
+  {
+   "seite": "S084",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c12 (klein, blaues Licht; Vollbild-Ausschnitt 8-fach mit Kontrast geprueft): zwei waagerechte Schlitze von der linken Kante bis gut zur Mitte (bei ca. 40 % und 73 % Hoehe), dunkle kleine Marke rechts bei ca. 65 % Hoehe (Scheibe/Platte), punktierte Oberkante (Wellen angedeutet), Notausgang-Leuchte darueber = DOOR19 gespiegelt (Schlitze der Textur laufen von der Mitte bis zur Kante). DOOR2A (kurzer Sichtschlitz mittig + Lamellen unten) scheidet aus: die Schlitze beginnen an der Kante. Gegenseite S081 eindeutig DOOR19. Griff rechts/knauf abgelesen (schwach), stimmt. Physisch unstimmig: auch S081 hat den Griff rechts -> je Seite eigene Variante (V1/V1), wie vom Zuordner vermerkt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S084_ROOM1190_c12_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S084_ROOM1190_c12_voll.png",
+    "build/r31_tueren/t1/re2/DOOR19.png",
+    "build/r31_tueren/t1/re2/DOOR2A.png"
+   ]
+  },
+  {
+   "seite": "S085",
+   "vorher": "gleich DOOR19",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Bild identisch zu S084 (dieselbe Flaeche, Ziel ROOM1230); Befund wie S084.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S085_ROOM1190_c12_aus.png",
+    "build/r31_tueren/t1/re2/DOOR19.png"
+   ]
+  },
+  {
+   "seite": "S087",
+   "vorher": "aehnlich (naechstes DOOR14, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c07: Tuer im braunen Rahmen, oberes Feld Rautengitter, Mittelriegel mit Druecker rechts, unteres Feld dunkel. Aufteilung wie DOOR14 (zwei Rautengitterfelder + Mittelriegel), aber DOOR14 ist ein SCHIEBE-Tor (Schieben z -3875, Griffplatte am Rand), die RE1.5-Tuer hat einen Druecker = Drehtuer -> Bewegung und Beschlag weichen ab. Top-5 (11, 05, 26, 0D, 0A 0.52): 0A hat Staebe, kein Maschendraht. aehnlich bleibt. Achtung Tuer-Ebene: die Gegenseite S159 ist in Stapel 4 'gleich DOOR0A' (Staebe) - T048 hat zwei verschieden gemalte Seiten, ein Archiv fuer beide Seiten (RE2 238/238) ist dann nicht gleich; der Leiter muss T048 als nicht abgedeckt zaehlen oder die Regel festlegen.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S087_ROOM11A0_c07_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S087_ROOM11A0_c07_entz.png",
+    "build/r31_tueren/t1/re2/DOOR14.png",
+    "build/r31_tueren/t1/re15_seiten/S159_ROOM2070_c12_aus.png"
+   ]
+  },
+  {
+   "seite": "S088",
+   "vorher": "gleich DOOR16 (Leiter, V4 hinauf)",
+   "urteil": "widerlegt",
+   "nachher": {
+    "urteil": "aehnlich",
+    "archiv": null,
+    "naechstes": "DOOR16",
+    "abweichung": "Art gleich (Steigleiter zum runden Deckenschacht), Gestalt nicht: dunkle rost-/graubraune Leiter mit dicken Flachholmen und breiten Vierkant-Sprossen (ROOM11A0 c00, im gruenen Kanallicht, das Silber gruenlich-grau und nicht braun faerben wuerde); DOOR16 und alle von RE2 mit DOOR16 gemalten Leitern (ROOM3090 c0, ROOM4090 c3, ROOM4100 c7) = duenne silberne Rohrleiter mit gerundeten Sprossenenden. Die DOOR16-Sequenz zeigt diese Rohrleiter gross im Bild."
+   },
+   "begruendung": "c00 neben die RE2-Leiterausschnitte gelegt (Profil, Staerke und Farbe weichen gleichzeitig ab; bei S037/S069 nur das Profil). Die Gegenseite derselben Tuer T047, S173 (Stapel 4), ist bereits aehnlich mit genau diesem Argument ('Leiter der Gegenseite dunkel/flach statt silbernem Rohr') - mit gleich hier waere T047 gespalten. Im Zweifel widerlegt. Hinweis an den Leiter: die Leiter-Farbregel ist zwischen den Stapeln uneinheitlich (S037/S128 gleich trotz Profil/Farbe, S150/S168/S169/S172/S173 aehnlich) - einheitlich entscheiden.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S088_ROOM11A0_c00_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S088_ROOM11A0_c00_entz.png",
+    "build/r31_tueren/t1/re2_seiten/R145_ROOM3090_D16_c00_aus.png",
+    "build/r31_tueren/t1/re2_seiten/R180_ROOM4090_D16_c03_aus.png",
+    "build/r31_tueren/t1/re2_seiten/R188_ROOM4100_D16_c07_aus.png",
+    "build/r31_tueren/t1/re2/DOOR16.png"
+   ]
+  },
+  {
+   "seite": "S089",
+   "vorher": "gleich DOOR22 (Griff-Tausch DOOR07)",
+   "urteil": "widerlegt",
+   "nachher": {
+    "urteil": "aehnlich",
+    "archiv": null,
+    "naechstes": "DOOR22",
+    "griff_tausch": null,
+    "abweichung": "DOOR22 = rostrote Stahltuer mit breitem genietetem Rand (ca. 9 % der Blattbreite je Seite, Nietreihe rundum) und aufgemaltem D-foermigem Riegelblock mit Schloss; RE1.5 = schlichtes braunes Blatt ohne sichtbaren Rand (entzerrt kein Tonsprung oben/rechts), duenner dunkler Druecker rechts auf halber Hoehe. Der Riegel ist Teil der DOOR22-TEXTUR (kein Griff-Mesh) - ein Griff-Tausch liesse ihn neben dem Spender-Druecker stehen (zwei Griffe). Naechstes Archiv DOOR22, nicht gleich."
+   },
+   "begruendung": "c09 (gross, linke Wand) entzerrt und aufgehellt neben DOOR22/DOOR23 gelegt: kein breiter Rand, keine Nieten, kein D-Riegel; nur ein duenner dunkler Druecker rechts. Bei ca. 50 px Blattbreite waere der 9-%-Rand als Tonstufe sichtbar. Stapel 4 lehnt DOOR22 fuer S143 aus demselben Grund ab ('kein Nietrand erkennbar'). Zusaetzlich: der Zuordner vermerkt selbst, dass der gemalte DOOR22-Riegel nach dem Tausch sichtbar bliebe - das Ergebnis haette zwei Griffe und waere nicht die RE1.5-Tuer. Griff rechts/druecker im Bild bestaetigt. Im Zweifel widerlegt (Sicherheit war 2).",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S089_ROOM11A0_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S089_ROOM11A0_c09_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S089_ROOM11A0_c09_voll.png",
+    "build/r31_tueren/t1/re2/DOOR22.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S090",
+   "vorher": "gleich DOOR22 (Griff-Tausch DOOR07)",
+   "urteil": "widerlegt",
+   "nachher": {
+    "urteil": "aehnlich",
+    "archiv": null,
+    "naechstes": "DOOR22",
+    "griff_tausch": null,
+    "abweichung": "wie S089: schlichtes braunes Blatt mit Druecker rechts; DOOR22 hat genieteten Rand + aufgemalten D-Riegel (Textur, bleibt beim Griff-Tausch sichtbar)."
+   },
+   "begruendung": "c12: dieselbe schlichte braune Tuer wie S089 (Druecker rechts auf halber Hoehe, kein Rand/Nieten sichtbar); c05 nur Streifen. Zweite Seite derselben Selbst-Verbindung T049 -> gleiches Urteil wie S089. Griff rechts/druecker bestaetigt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S090_ROOM11A0_c12_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S090_ROOM11A0_c12_entz.png",
+    "build/r31_tueren/t1/re2/DOOR22.png"
+   ]
+  },
+  {
+   "seite": "S091",
+   "vorher": "gleich DOOR22 (Griff-Tausch DOOR07)",
+   "urteil": "widerlegt",
+   "nachher": {
+    "urteil": "aehnlich",
+    "archiv": null,
+    "naechstes": "DOOR22",
+    "griff_tausch": null,
+    "sicherheit": 1,
+    "abweichung": "wie S089 (kein Nietrand, Druecker statt gemaltem D-Riegel). Ausserdem: Gegenseite S167 (Stapel 4, ROOM20A0 c08) zeigt dieselbe Tuer T050 als braune Stahltuer mit abgeschraegtem Innenrahmen + Druecker auf Platte = aehnlich DOOR23; beide Seiten einer Tuer brauchen dasselbe Archiv (RE2 238/238) - ein gleich DOOR22 auf dieser Seite widerspricht der Gegenseite."
+   },
+   "begruendung": "c09 frontal, nur ca. 16 px breit: braunes Blatt mit Randlinien, Griff rechts auf halber Hoehe; c11 hinter dem Regal verdeckt. Auf dieser Aufloesung ist gleich nicht belegbar (Sicherheit 1), und die gut sichtbare Gegenseite S167 ist ein anderer Typ (abgeschraegter Innenrahmen, von Stapel 4 als aehnlich DOOR23 gefuehrt, nebeneinander angesehen: S151/S167 zeigen die Fasen deutlich). Griff rechts/druecker bestaetigt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S091_ROOM11A0_c09_aus.png",
+    "build/r31_tueren/t1/re15_seiten/S091_ROOM11A0_c09_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S167_ROOM20A0_c08_entz.png",
+    "build/r31_tueren/t1/re15_seiten/S151_ROOM2050_c05_entz.png",
+    "build/r31_tueren/t1/re2/DOOR22.png",
+    "build/r31_tueren/t1/re2/DOOR23.png"
+   ]
+  },
+  {
+   "seite": "S092",
+   "vorher": "aehnlich (naechstes DOOR1B, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c00 Vollbild (Gamma 0.6): an der linken Wand sehr steil eine Stahlrahmentuer mit hellen Drueckern in der Mitte, T1-Umriss liegt davor auf der Wand. Gestalt ueber S080. Top-5 (18 0.58 Holz 4 Felder, 26 0.51 Schott) abweichend. aehnlich bleibt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S092_ROOM11B0_c00_voll.png",
+    "build/r31_tueren/t1/re2/DOOR1B.png"
+   ]
+  },
+  {
+   "seite": "S093",
+   "vorher": "aehnlich (naechstes DOOR1B, s=2)",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "Bilder identisch zu S092 (dieselbe Flaeche, Ziel ROOM1230). Wie S092.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S093_ROOM11B0_c00_voll.png"
+   ]
+  },
+  {
+   "seite": "S094",
+   "vorher": "gleich DOOR1A",
+   "urteil": "bestaetigt",
+   "nachher": {},
+   "begruendung": "c01 Vollbild: T1-Umriss nur als duenner Streifen an der linken Tuerkante, die Tuer selbst steht frontal in der Stirnwand hinter den Pylonen: Stahlrahmentuer, drei liegende Felder, Druecker + Schloss auf Platte links im Mittelfeld = DOOR1A. Griff links/druecker stimmt.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S094_ROOM11B0_c01_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S094_ROOM11B0_c01_aus.png",
+    "build/r31_tueren/t1/re2/DOOR1A.png"
+   ]
+  },
+  {
+   "seite": "S095",
+   "vorher": "aehnlich (naechstes DOOR28, s=2)",
+   "urteil": "korrigiert",
+   "nachher": {
+    "urteil": "gleich",
+    "archiv": "DOOR16",
+    "naechstes": null,
+    "abweichung": "Variante V5 (hinab). Art gleich: offener runder Kanaldeckel im Boden, Deckel daneben - RE2 animiert genau diese Art mit DOOR16 V5 (ROOM21A0 c3: offener Rundschacht im Boden -> ROOM3020; build/r31_tueren/t2/hg/paar217_DOOR16_21A0_3020.png). DOOR28 ist die eckige Riffelblech-Luke mit Kamerafahrt, nicht der Rundschacht. Vorbehalt: die Leiter im Schacht (Gegenseite S128, ROOM1260 c07) ist duenn und rostig-messingfarben statt silbern - faellt bei einheitlich strenger Leiter-Farbregel, dann T052 beidseitig aehnlich DOOR16.",
+    "sicherheit": 2
+   },
+   "begruendung": "c06 Vollbild: offener runder Schacht im Garagenboden, Deckel liegt daneben (c05/c11 Umriss an der Wand bzw. hinter dem Gitter). Identische Lage wie S038 (Stapel 1, Pruefer 1: 'offener runder Schacht im Boden ... Deckel daneben - identisch mit RE2 ROOM21A0 c3', gleich DOOR16 V5 bestaetigt). Das Gegenargument des Zuordners ('DOOR16 zeigt keinen Deckel') trifft RE2 selbst: auch RE2 spielt fuer seinen Rundschacht die Leiter-Sequenz ohne Deckel. Automatisches Mass: Top-1 = Archiv 22 (0x16 = DOOR16) mit 0.68. Gegenseite S128 ist in Stapel 3 gleich DOOR16 (V4 hinauf) -> T052 beidseitig DOOR16, stimmig. Griff unsichtbar/keiner.",
+   "bilder": [
+    "build/r31_tueren/t1/re15_seiten/S095_ROOM11B0_c06_voll.png",
+    "build/r31_tueren/t1/re15_seiten/S095_ROOM11B0_c06_aus.png",
+    "build/r31_tueren/t2/hg/paar217_DOOR16_21A0_3020.png",
+    "build/r31_tueren/t1/re2/DOOR16.png",
+    "build/r31_tueren/t1/re2/DOOR28.png"
+   ]
+  }
+ ],
+ "rolle": "Gegenpruefer",
+ "zuordner_datei": "analysis/befunde_runde31/tueren_03/stapel_2.json",
+ "status": "fertig",
+ "zaehlung": {
+  "geprueft": 43,
+  "bestaetigt": 34,
+  "widerlegt": 4,
+  "korrigiert": 5,
+  "seiten_nach_pruefung": {
+   "gleich": 27,
+   "aehnlich": 14,
+   "keine": 2
+  },
+  "seiten_vor_pruefung": {
+   "gleich": 30,
+   "aehnlich": 11,
+   "keine": 2
+  },
+  "tueren_nach_pruefung": {
+   "gleich": 13,
+   "aehnlich": 10,
+   "tor_eigene_sequenz": 1,
+   "summe": 24
+  }
+ }
+}

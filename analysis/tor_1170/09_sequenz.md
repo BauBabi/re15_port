@@ -129,6 +129,8 @@ Spielschritt, und die Sequenz laeuft im selben Schritt - Standbild = das zuletzt
    (main.c) denselben Aufruf; ausserdem muss der Schliesston den Raumwechsel ueberleben
    (08_re_ton 5: `re15_audio_load_room_banks` schaltet alle Stimmen ab, RE2 verschont die
    Tuerbank).
+   -> Erledigt in Runde 31 (analysis/befunde_runde31/tueren_04_bau.md Abschnitte 3 und 5): Kreuz-Raum-
+   Tueren fragen an, Sequenz vor re15_room_apply_pending, Tuerbank ueberlebt re15_audio_load_room_banks.
 3. Wie viele Bilder RE2 zwischen Door_exit und der Raum-Einblendung schwarz haelt, haengt am
    Laden (08_re_blende 4c); der Port laedt synchron und blendet sofort ein.
 4. Dynamische Gegenprobe gegen eine RE2-Aufnahme einer DOOR2E-Sequenz steht aus - alles ist

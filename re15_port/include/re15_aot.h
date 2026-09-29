@@ -319,6 +319,15 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z);
 int  re15_aot_point_in_quad(int32_t px, int32_t pz,
                             const int16_t xs[4], const int16_t zs[4]);
 
+/* Viereck-Trefftest der Tuersaetze, Befehl fuer Befehl nach FUN_80014368 (RE1.5 PSX.EXE,
+ * Runde 31, analysis/befunde_runde31/tueren_04_bau.md Abschnitt 0): feste Umlaufrichtung,
+ * vier Halbebenen gegen Ecke 0 (Kanten 0->1, 0->3) und Ecke 2 (Kanten 2->1, 2->3), Produkte
+ * als untere 32 Bit (mult/mflo) und vorzeichenbehaftet verglichen (slt). Anders als
+ * re15_aot_point_in_quad (Umlaufrichtung frei) trifft ein falsch herum umlaufendes Viereck
+ * hier nie - wie im Original. */
+int  re15_aot_point_in_quad_fun80014368(int32_t px, int32_t pz,
+                                        const int16_t xs[4], const int16_t zs[4]);
+
 /* WASSER-PULL-SCAN — Port-Zwilling von FUN_800527B4 (RE2-Retail-EXE @0x800527B4, selbst
  * disassembliert 2026-08-20). Liefert die WASSER-OBERFLAECHEN-Y an (x,z), oder 0 wenn der
  * Punkt in keiner Wasserzone liegt.

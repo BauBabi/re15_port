@@ -21,3 +21,6 @@ extracted_re2_dokumente/** -text
 # Dockerfiles der Release-Baus (release/docker/): RUN-Zeilen mit \ am Zeilenende
 # brechen, wenn autocrlf ein \r dahinter setzt. Immer LF.
 release/docker/Dockerfile* text eol=lf
+# RE2-Tuerarchive (Runde 31): UNVERAENDERTE Kopien von info/re2leon/COMMON/DOOR (sha1-geprueft von
+# re15_port/tools/tueren/re2_tuer_tabelle.py). NIE normalisieren.
+re15_port/shared_assets/RE2/DOOR/** -text

@@ -1,0 +1,417 @@
+# Tueren T3 - Stapel 6 - Gegenpruefung
+
+Raeume ROOM4070, 4080, 4090, 40A0, 40B0, 5000, 5010, 5020, 5030, 5040, 5050, 5060, 5070, 5080, 5090, 50A0, 50B0, 50C0. Geprueft gegen analysis/befunde_runde31/tueren_03/stapel_6.json (Zuordner, 43 Seiten).
+Verfahren: je Seite der saubere Hintergrund extracted/PSX/STAGEn/ROOMxxx/ROOMxxxNN.bmp um den T1-Umriss ausgeschnitten, 4- bis 8-fach vergroessert, bei dunklen Bildern aufgehellt (Werkzeug scratchpad/st6p/crop.py + mont.py), gegen DOORxx.png (Modell-Textur + gemalte RE2-Ausschnitte), die Variantenbilder build/r31_tueren/t2/bilder/DOORxx_vN.png und, wo vorhanden, dieselbe Malerei im RE2-Hintergrund (build/r31_tueren/t1/re2_seiten/). Griffseite so, wie man VOR der Tuer auf dieser Seite steht (schraege Wand: linke Wand -> nahe Kante = links, rechte Wand -> ferne Kante = links).
+
+Stand: fertig. 43 von 43 Seiten geprueft; bestaetigt 43, widerlegt 0, korrigiert 0.
+
+## Zaehlung nach der Pruefung
+
+- Seiten: gleich 39, aehnlich 3, keine 1 -> nicht abgedeckt 4.
+- Physische Tueren mit mindestens einer Seite in Stapel 6: 27; alle Seiten hier gleich: 25 (T114 T115 T120 T127 T128 T129 T130 T131 T133 T134 T135 T136 T138 T139 T140 T141 T143 T144 T145 T147 T148 T149 T150 T157 T158); nicht (ganz) abgedeckt: 2 (T117 T142).
+
+## Ergebnis und Auffaelliges
+
+- **Ergebnis:** alle 43 Seiten geprueft (39 gleich, 3 aehnlich, 1 keine). Kein gleich widerlegt, keine Korrektur noetig: bestaetigt 43, widerlegt 0, korrigiert 0. Die Zaehlung des Zuordners bleibt: nicht abgedeckt 4 Seiten (S248, S269, S273, S274) = 2 physische Tueren (T117 hier nur die Seite S248, T142 ganz).
+- **Warum so viele gleich:** STAGE4 hinten und STAGE5 sind in RE2 fast 1:1 weiterverwendet. Drei Mal ist das direkt belegt: RE1.5 ROOM4080 c04 = RE2 ROOM6140 c09 (dieselbe graue WILL-NOT-OPEN-Schotttuer, RE2 setzt DOOR26 V0), RE1.5 ROOM40B0 c01 = RE2 ROOM60F0 c01 (gleicher Hintergrund, RE2 setzt DOOR26 V0 an derselben Stelle), die khaki Schotttueren = RE2 ROOM6170 c00 (grau-khaki mit Rostrand, Rad links, TYPE-P, DOOR26 V0; RE2-Hintergrund ROOM61700.bmp selbst ausgeschnitten).
+- **DOOR26-Farbe:** Das Modell ist rostrot; RE2 malt dieselbe Tuer grau bzw. khaki und nimmt trotzdem DOOR26. Deshalb gilt die Farbe hier nicht als Abweichung. Die Animation zeigt dann, wie in RE2, ein rostrotes Blatt vor einer grau oder khaki gemalten Tuer.
+- **DOOR2A-Riegel (S280):** Ich habe zuerst aus einer verkleinerten Bildmontage gelesen, beide Varianten zeigten den Riegel rechts. Das war falsch. In voller Aufloesung zeigt DOOR2A_v0 den Riegel LINKS (schiebt nach rechts) und DOOR2A_v1 RECHTS (schiebt nach links). Riegel links bedeutet also V0, so wie der Zuordner schreibt. Die Gegenseite S323 (Stapel 7) hat den Riegel rechts und bekommt V1; das passt zusammen.
+- **Schreibweise griff_form:** Fuer die DOOR29-Bedientafel schreibt Stapel 6 'unklar', Stapel 5 in 13 Faellen 'druecker'. Beides meint dieselbe Tafel mit Hebel (DOOR29 Mesh 1/2). Einen Griff-Tausch gibt es in keinem der beiden Stapel. Beim Zusammenfuehren sollte der Leiter eine Schreibweise waehlen. Handrad (DOOR26/31) und Drehriegel (DOOR2A) stehen als 'unklar' im Stapel, weil das Schema dafuer keinen Wert hat. 'beide' bei den zweifluegeligen DOOR2A-Tueren liegt ausserhalb des Schemas, wie in Stapel 4/5 (Variante V2/V3).
+- **S248 / Gegenseite S226:** c07 zeigt durch die Zarge eine Treppe und den Schachtboden. Dort ist also kein Blatt. Die Beschreibung 'rotbraunes Blatt mit senkrechten Streifen' in Stapel 5 (S226) und T1 Zeile 364 meint die rot beleuchtete Schachtwand. S226 bleibt 'aehnlich DOOR25, s=1'; das sollte der Stapel-5-Pruefer wissen.
+- **T131 (S251 DOOR26 V2 aussen, S252 DOOR31 V0 innen):** Hier bleiben zwei Archive fuer eine Tuer, beide Seiten fuer sich gleich. In RE2 bekommen beide Seiten immer dasselbe Archiv. Das muss der Leiter entscheiden.
+- **Gleiche Rechtecke:** S256/S257, S271/S272 und S273/S274 sind jeweils dasselbe Rechteck mit derselben gemalten Tuer, nur mit anderem Skript-Ziel. Sie zaehlen als Seiten doppelt.
+
+## Tabelle
+
+| Seite | Raum | vorher | Urteil | nachher | Kurzbegruendung |
+|---|---|---|---|---|---|
+| S245 | ROOM4070 | gleich DOOR29 (links/unklar, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauberer Hintergrund ROOM40700.bmp um den Umriss, 5-fach, aufgehellt): Tuer frontal unter zwei gruenen Lampen, oben mittig helles Schild im dunklen Rahmen, darunter gelb-sch... |
+| S246 | ROOM4070 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c04 (sauber ROOM40704.bmp, 4-fach): Rahmen mit abgeschraegten oberen Ecken, hohes Mittelband mit hellem Schild oben und gerahmter Tafel darunter, Seitenstreifen links/rechts, Tri... |
+| S247 | ROOM4070 | gleich DOOR29 (links/unklar, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c11 (sauber ROOM40711.bmp, 4-fach): Tuer steil von oben unter zwei gruenen Lampen - Schild im dunklen Rahmen oben, Warnaufkleber darunter, U-Bedientafel an der LINKEN Kante, Luef... |
+| S248 | ROOM4080 | keine (durchgang, s=2) | **bestaetigt** | - | Geprueft, weil s=2 und Top-5 >= 0.50 (DOOR08 0.560, DOOR1D 0.558). c07 (sauber ROOM40807.bmp, 8-fach, aufgehellt): durch die Zarge sieht man die rot beleuchtete Rueckwand mit senkrechten Rohren UND links unten eine sc... |
+| S249 | ROOM4080 | gleich DOOR26 (links/unklar, s=3, schott) | **bestaetigt** | - | Widerlegung versucht (Farbe/Schild TYPE-L statt rostrot TYPE-P), nicht tragfaehig. c04 (sauber ROOM40804.bmp, 4-fach): graue zweiteilige Schotttuer unter dem Schild 'WILL NOT OPEN', Beschlagbaender oben/unten mit Scha... |
+| S250 | ROOM4080 | gleich DOOR29 (rechts/unklar, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c05 (sauber ROOM40805.bmp, 5-fach) und c06: graue Tuer frontal unter zwei gruenen Lampen, Schild mit blauem Balken oben, Punktreihe darunter, U-Bedientafel mit Hebel an der RECHT... |
+| S251 | ROOM4080 | gleich DOOR26 (rechts/unklar, s=2, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden ausser der Modell-Farbe (wie S249). c00 (sauber ROOM40800.bmp, 4-fach): graue EINTEILIGE Schotttuer unter 'WILL NOT OPEN', Scharnierbloecke der Baender an der LINKEN Kante, Handra... |
+| S252 | ROOM4090 | gleich DOOR31 (links/unklar, s=3, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM40900.bmp, 4-fach): zweiteilige Schotttuer mit Mittelfuge, weiss ueberkrustet, Baender oben/unten, Handrad links, Schild TYPE-P mit rotem Balken rechts - genau di... |
+| S253 | ROOM40A0 | gleich DOOR29 (links/unklar, s=3) | **bestaetigt** | - | Widerlegung versucht: einzige Auffaelligkeit ist der Lueftungskasten, der etwas links der Mitte sitzt (Textur/RE2-Malerei: leicht rechts der Mitte) - das ist Malerei-Streuung, kein anderes Gestaltungsmerkmal (Zahl und... |
+| S255 | ROOM40B0 | gleich DOOR26 (unsichtbar/unklar, s=2, schott) | **bestaetigt** | - | Nicht widerlegbar, Beleg ueber RE2 selbst: c01 zeigt die Tuer steil am rechten Bildrand (Baender, Schild mit rotem Balken, Rad nicht zu sehen). Der ganze Hintergrund ROOM40B0 c01 ist der Vorlaeufer von RE2 ROOM60F0 c0... |
+| S256 | ROOM5000 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50000.bmp, 4-fach): Schild SHAFT TYPE-L im Mittelband, gelb-schwarz gerahmte Tafel darunter, Griffmulde am linken und Lamellen am rechten Seitenstreifen, dunkle S... |
+| S257 | ROOM5000 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Wie S256 - dasselbe Rechteck (pts [-1050,-3100]..[-50,-1100]) und dieselbe gemalte Tuer, nur anderes Ziel (511 statt 503). DOOR25 eindeutig. |
+| S258 | ROOM5000 | gleich DOOR29 (rechts/unklar, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c03 (sauber ROOM50003.bmp, 4-fach): Tuer frontal unter zwei gruenen Lampen, Schild SHAFT TYPE-M oben, gelb-schwarzer Aufkleber, schildfoermige Bedientafel an der RECHTEN Kante, L... |
+| S259 | ROOM5000 | gleich DOOR26 (links/unklar, s=2, schott) | **bestaetigt** | - | Widerlegung versucht (khaki statt rostrot), nicht tragfaehig. c06 (sauber ROOM50006.bmp, 4-fach) und c02: zweiteilige Schotttuer unter 'STORAGE DEPOT', Baender oben/unten mit Bloecken, Handrad links der Mitte, Riegelk... |
+| S260 | ROOM5000 | gleich DOOR27 (unsichtbar/keiner, s=3, aufzug) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c05 (sauber ROOM50005.bmp, 4-fach) und c04: zweifluegelige Schiebetuer mit verzahnter Mittelfuge, Kasten rechts oben, Schildchen rechts unten, Plakette + dunkler Kasten links unt... |
+| S261 | ROOM5010 | gleich DOOR29 (links/unklar, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50100.bmp, 4-fach): Tuer schraeg in einer nach rechts fliehenden Wand (linke Kante laenger = nah): Schild mit blauem Balken oben, Bedientafel mit Hebel an der nah... |
+| S262 | ROOM5020 | gleich DOOR26 (links/unklar, s=3, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden ausser der Farbe. c01 (sauber ROOM50201.bmp, 4-fach, gross): linke Haelfte mit Schildchen oben, Handrad, rotem Dreieck + gelb-schwarzen Streifen; rechte Haelfte mit Riegelkasten a... |
+| S264 | ROOM5030 | gleich DOOR25 (unsichtbar/keiner, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c01 (sauber ROOM50301.bmp, 4- und 6-fach, aufgehellt): Tuer 'B-2 LABORATORY' zwischen den hellen Pfeilern mit gelb-schwarzem Band (dieselbe Zarge wie die DOOR25-Tuer S256 in ROOM... |
+| S265 | ROOM5030 | gleich DOOR25 (unsichtbar/keiner, s=2) | **bestaetigt** | - | Nicht widerlegbar. c02 (sauber ROOM50302.bmp, 4-fach): Tuer 'A-2 ELEVATOR' schraeg, Mittelband mit Schild, gelb-schwarzer Pfeiler links - dieselbe Zarge/Blattform wie S264/S267; c03 trifft nur Wand. Gegenseite S256 (R... |
+| S266 | ROOM5030 | gleich DOOR25 (unsichtbar/keiner, s=2) | **bestaetigt** | - | Nicht widerlegbar. c03 (sauber ROOM50303.bmp, 4-fach): Tuer 'SHELTER D' steil in der rechten Wand, heller Pfeiler mit gelb-schwarzem Band wie bei den anderen DOOR25-Tueren des Raums; Blatt selbst kaum sichtbar. Gegens... |
+| S267 | ROOM5030 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c04/c05 (sauber, 4-fach): Tuer 'C-2 HANGAR': Mittelband mit Schild oben und gerahmter Tafel darunter, Seitenstreifen, Pfeiler mit gelb-schwarzem Band - DOOR25. Griff: keiner. |
+| S268 | ROOM5040 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50400.bmp, 6-fach, aufgehellt, blaues Licht): Mittelband mit Schild oben und gerahmter Tafel darunter, Seitenstreifen, Rahmen mit abgeschraegten Ecken (Zarge ande... |
+| S269 | ROOM5040 | aehnlich -> DOOR27 (s=2) | **bestaetigt** | - | Geprueft (s=2, Top-5: DOOR26 0.500). c06 (sauber ROOM50406.bmp, 5-fach, aufgehellt): P-4-Labortuer mit kleinem Fenster oben, rotem Warndreieck, weissem Schild + gelb-schwarzem Aufkleber unten, gelbem Schild rechts, gl... |
+| S270 | ROOM5040 | gleich DOOR25 (unsichtbar/keiner, s=2) | **bestaetigt** | - | Nicht widerlegbar. c05 (sauber, 4-fach): Blatt schraeg im blauen Licht, Mittelband mit Schild und Tafel, Rahmen mit abgeschraegten Ecken wie S268; c04 nur Kante. Gegenseite S271/S272 (ROOM5050) ist eindeutig DOOR25. G... |
+| S271 | ROOM5050 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): Schild im Mittelband, gerahmte Tafel darunter, Seitenstreifen mit Schlitzen oben und Lamellen rechts, Pfeil unten, Rahmen mit abgeschraegten Ecken - DOO... |
+| S272 | ROOM5050 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Wie S271 - dieselbe gemalte Tuer (c00 identischer Ausschnitt), DOOR25 eindeutig. |
+| S273 | ROOM5060 | aehnlich -> DOOR27 (s=2) | **bestaetigt** | - | Geprueft (s=2, Top-5 DOOR00 0.515 - Holztuer, unsinnig). c00 (sauber ROOM50600.bmp, 4-fach): breite blaugraue Labortuer, links grosses gelbes Strahlenwarnschild, rechts Fensterkasten oben, rotes Dreieck, gelb-schwarze... |
+| S274 | ROOM5060 | aehnlich -> DOOR27 (s=2) | **bestaetigt** | - | Wie S273 - dasselbe Rechteck (pts gleich), dieselbe gemalte P-4-Tuer, nur anderes Skript-Ziel. aehnlich DOOR27. |
+| S275 | ROOM5070 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50700.bmp, 4-fach): Schild im Mittelband, gelb-schwarz gerahmte Tafel, Seitenstreifen mit dunklen Schlitzen oben, Pfeiler mit gelb-schwarzem Band - DOOR25. Griff:... |
+| S276 | ROOM5070 | gleich DOOR26 (links/unklar, s=2, schott) | **bestaetigt** | - | Widerlegung versucht (Farbe, Lage von Dreieck/Schild), nicht tragfaehig. c09 (sauber ROOM50709.bmp, 6-fach): SHELTER #01 - einteilige Schotttuer, oberes Band mit Scharnierblock RECHTS, Platte mit Handrad LINKS, rotes ... |
+| S277 | ROOM5070 | gleich DOOR26 (rechts/unklar, s=2, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden ausser der Farbe. c06 (sauber ROOM50706.bmp, 6-fach): SHELTER #02 - einteilige Schotttuer, oberes Band mit Scharnierblock LINKS, Handrad RECHTS, rotes Dreieck + gelb-schwarze Stre... |
+| S278 | ROOM5080 | gleich DOOR1A (links/druecker, s=2) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50800.bmp, 7-fach): Stahlrahmentuer mit DREI Feldern (Querriegel bei ~35 % und ~60 %), Beschlagplatte mit rundem Element (Kartenleser) und waagerechtem Druecker a... |
+| S279 | ROOM5090 | gleich DOOR2A (beide/unklar, s=2, doppeltuer) | **bestaetigt** | - | Widerlegung versucht (Fensterglas hell statt schwarz), nicht tragfaehig. c00/c01 (sauber, 4-fach): zweifluegelige Zugtuer, je Fluegel abgerundetes Fenster oben, runder Drehriegel an der Mittelfuge auf halber Hoehe, La... |
+| S280 | ROOM5090 | gleich DOOR2A (links/unklar, s=2) | **bestaetigt** | - | Widerlegung versucht (Riegelseite), nicht tragfaehig. c03 (sauber ROOM50903.bmp, 7-fach) und c02: einfluegelige Zugtuer, Fenster oben, runder Drehriegel an der LINKEN Kante auf halber Hoehe, Lamellenfeld unten - DOOR2... |
+| S281 | ROOM5090 | gleich DOOR2A (beide/unklar, s=3, doppeltuer) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c05/c06 (sauber, 4-fach): dieselbe zweifluegelige Zugtuer wie S279 - Fenster je Fluegel, zwei Drehriegel an der Fuge, Lamellen unten. Helles Glas wie S279 (Gegenseite S283 dunkel... |
+| S282 | ROOM5090 | gleich DOOR2A (beide/unklar, s=3, doppeltuer) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c07/c08 (sauber, 4-fach, gelbes Licht): zweifluegelig, dunkle Fenster oben, zwei Ringriegel an der Fuge, Lamellenfelder unten - DOOR2A zweiteilig wie RE2 ROOM7040 c12. c09 steil,... |
+| S283 | ROOM5090 | gleich DOOR2A (beide/unklar, s=3, doppeltuer) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c13 (sauber, 4-fach): wie S282 - zwei Fluegel mit dunklem Fenster, Ringriegel an der Fuge, Lamellen unten. c14 steil. DOOR2A V2/V3. |
+| S285 | ROOM50A0 | gleich DOOR25 (unsichtbar/keiner, s=1) | **bestaetigt** | - | Nicht widerlegbar, nur ueber die Gegenseite belegt: c08 (sauber, 4-fach) zeigt am Umriss nur einen hellen Pfeiler mit gelb-schwarzem Band (dieselbe Zarge wie die DOOR25-Tueren in ROOM5000/5030/5070), das Blatt selbst ... |
+| S286 | ROOM50A0 | gleich DOOR25 (unsichtbar/keiner, s=3) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): Rahmen mit abgeschraegten Ecken, Schild im Mittelband, gerahmte Tafel, Seitenstreifen mit Schlitzen oben - DOOR25. Griff: keiner. |
+| S287 | ROOM50B0 | gleich DOOR26 (links/unklar, s=3, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden ausser der Farbe. c00/c01 (sauber, 4-fach): khaki zweiteilige Schotttuer mit rostfarbenem Rand, Handrad links, Schild TYPE-P rechts, Baender mit Bloecken, Streifen am oberen Band ... |
+| S288 | ROOM50B0 | gleich DOOR2D (unsichtbar/keiner, s=2, hubbuehne) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c03/c02 (sauber, 3-fach): Plattform mit olivgruenem Bedienkasten mit roten Tasten links, Gelaender dahinter, gelb-schwarzer Rand am Boden - dieselben Teile wie das DOOR2D-Modell ... |
+| S289 | ROOM50C0 | gleich DOOR26 (links/unklar, s=3, schott) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c06/c05 (sauber, 4-fach, aufgehellt): zweiteilige Schotttuer, Handrad links mit Dreieck + Streifen darunter, Schild TYPE-P rechts, Baender mit Bloecken; Farbe braun-rostig (naehe... |
+| S290 | ROOM50C0 | gleich DOOR27 (unsichtbar/keiner, s=3, aufzug) | **bestaetigt** | - | Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): zweifluegelige Schiebetuer mit verzahnter Mittelfuge, Kasten mit Schildern rechts oben, senkrechte Griffleiste, gelb-schwarzer WARNING-Aufkleber rechts ... |
+
+## Begruendungen (voll)
+
+### S245 (ROOM4070) - bestaetigt
+
+vorher: gleich DOOR29 (links/unklar, s=2)
+
+Widerlegung versucht, nichts gefunden. c00 (sauberer Hintergrund ROOM40700.bmp um den Umriss, 5-fach, aufgehellt): Tuer frontal unter zwei gruenen Lampen, oben mittig helles Schild im dunklen Rahmen, darunter gelb-schwarz schraffierter Warnaufkleber, an der LINKEN Kante auf ~45 % die helle U-foermige Bedientafel mit Hebel - genau die DOOR29-Aufteilung (Schild SHAFT TYPE-M, Aufkleber, Tafel links). Untere Haelfte (Lueftungskasten) vom Gelaender verdeckt, widerspricht nichts. Farbe beige im rosa Treppenhauslicht (DOOR29 oliv). Griff selbst abgelesen: Tafel links -> V0; Form 'unklar' = Bedientafel wie DOOR29 Mesh 1 (Stapel 5 schreibt fuer dieselbe Tafel 'druecker' - nur Schreibweise, kein Tausch).
+
+Bilder: build/r31_tueren/t1/re15_seiten/S245_ROOM4070_c00_aus.png, build/r31_tueren/t1/re15_seiten/S245_ROOM4070_c00_entz.png, extracted/PSX/STAGE4/ROOM407/ROOM40700.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S246 (ROOM4070) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c04 (sauber ROOM40704.bmp, 4-fach): Rahmen mit abgeschraegten oberen Ecken, hohes Mittelband mit hellem Schild oben und gerahmter Tafel darunter, Seitenstreifen links/rechts, Trittblech davor - dieselbe Malerei wie RE2 ROOM6080 c0 (DOOR25, ebenfalls warmes Licht, DOOR25.png). Lueftung am rechten Streifen/Pfeil unten bei der Groesse nicht aufloesbar, widerspricht nichts. c00 zeigt nur Gelaender vor der Tuer. Griff: DOOR25 hat keinen, unsichtbar/keiner richtig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S246_ROOM4070_c04_aus.png, build/r31_tueren/t1/re15_seiten/S246_ROOM4070_c04_entz.png, extracted/PSX/STAGE4/ROOM407/ROOM40704.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S247 (ROOM4070) - bestaetigt
+
+vorher: gleich DOOR29 (links/unklar, s=2)
+
+Widerlegung versucht, nichts gefunden. c11 (sauber ROOM40711.bmp, 4-fach): Tuer steil von oben unter zwei gruenen Lampen - Schild im dunklen Rahmen oben, Warnaufkleber darunter, U-Bedientafel an der LINKEN Kante, Lueftungskasten unten - DOOR29-Aufteilung wie S245 (gleiches Treppenhaus). c07/c08 zeigen nur Gelaender/Boden (Umriss verdeckt bzw. daneben). Griff selbst abgelesen: Tafel links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S247_ROOM4070_c11_aus.png, build/r31_tueren/t1/re15_seiten/S247_ROOM4070_c11_entz.png, extracted/PSX/STAGE4/ROOM407/ROOM40711.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S248 (ROOM4080) - bestaetigt
+
+vorher: keine (durchgang, s=2)
+
+Geprueft, weil s=2 und Top-5 >= 0.50 (DOOR08 0.560, DOOR1D 0.558). c07 (sauber ROOM40807.bmp, 8-fach, aufgehellt): durch die Zarge sieht man die rot beleuchtete Rueckwand mit senkrechten Rohren UND links unten eine schraeg ablaufende Treppe samt Boden - das ist der Blick IN den Schacht, kein Blatt (ein Blatt wuerde die Treppe verdecken). Die Beschreibung der Gegenseite in Stapel 5 (S226: 'rotbraunes Blatt mit senkrechten Streifen') ist damit die Schachtwand, kein Blatt. Kein RE2-Archiv zeigt eine blattlose Oeffnung (nur die objektlosen 20/21/32/34/36 = Blende + Ton) - Uebersicht aller 55 durchgesehen, DOOR08/1D sind Blatt-Tueren. keine richtig; zaehlt als nicht abgedeckt wie S165/S171/S204.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S248_ROOM4080_c07_aus.png, build/r31_tueren/t1/re15_seiten/S248_ROOM4080_c07_voll.png, extracted/PSX/STAGE4/ROOM408/ROOM40807.bmp, build/r31_tueren/t1/re2/uebersicht.png
+
+### S249 (ROOM4080) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=3, schott)
+
+Widerlegung versucht (Farbe/Schild TYPE-L statt rostrot TYPE-P), nicht tragfaehig. c04 (sauber ROOM40804.bmp, 4-fach): graue zweiteilige Schotttuer unter dem Schild 'WILL NOT OPEN', Beschlagbaender oben/unten mit Scharnierbloecken, Handrad links, Schild TYPE-L rechts - Strich fuer Strich dieselbe Malerei wie RE2 ROOM6140 c09 (re2_seiten R253), und RE2 setzt dort DOOR26 V0 (zensus re2_seiten R253: archiv 38, varianten [0]). Die Abweichung Modell-Farbe/Schild hat RE2 selbst; die Gestalt (zweiteilig, Baender, Rad links, Schild rechts) ist DOOR26. Griff selbst abgelesen: Rad links, zweiteilig -> V0; Form 'unklar' = Handrad (DOOR26 Mesh 3).
+
+Bilder: build/r31_tueren/t1/re15_seiten/S249_ROOM4080_c04_aus.png, build/r31_tueren/t1/re15_seiten/S249_ROOM4080_c04_entz.png, extracted/PSX/STAGE4/ROOM408/ROOM40804.bmp, build/r31_tueren/t1/re2_seiten/R253_ROOM6140_D26_c09_aus.png, build/r31_tueren/t1/re2/DOOR26.png
+
+### S250 (ROOM4080) - bestaetigt
+
+vorher: gleich DOOR29 (rechts/unklar, s=2)
+
+Widerlegung versucht, nichts gefunden. c05 (sauber ROOM40805.bmp, 5-fach) und c06: graue Tuer frontal unter zwei gruenen Lampen, Schild mit blauem Balken oben, Punktreihe darunter, U-Bedientafel mit Hebel an der RECHTEN Kante auf ~45 %, runder Lueftungskasten unten links der Mitte - die gespiegelte DOOR29-Rueckseite (V1: Tafel rechts, Kasten links), Punktreihe statt Aufkleber wie in den RE2-Malereien ROOM6100 c0/ROOM60B0. c02 trifft nur die Wand. Griff selbst abgelesen: rechts -> V1.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S250_ROOM4080_c05_aus.png, build/r31_tueren/t1/re15_seiten/S250_ROOM4080_c05_entz.png, build/r31_tueren/t1/re15_seiten/S250_ROOM4080_c06_aus.png, extracted/PSX/STAGE4/ROOM408/ROOM40805.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S251 (ROOM4080) - bestaetigt
+
+vorher: gleich DOOR26 (rechts/unklar, s=2, schott)
+
+Widerlegung versucht, nichts gefunden ausser der Modell-Farbe (wie S249). c00 (sauber ROOM40800.bmp, 4-fach): graue EINTEILIGE Schotttuer unter 'WILL NOT OPEN', Scharnierbloecke der Baender an der LINKEN Kante, Handrad mit Gehaeuse rechts der Mitte, kleines Schild links unten - Aufteilung wie DOOR26 V2 (Variantenbild DOOR26_v2: einteilig, Angel links, Rad rechts, Dreieck/Streifen links unten). Griff selbst abgelesen: Rad rechts -> V2. Hinweis (Zuordner hat es vermerkt): die Gegenseite S252 ist zweiteilig und vereist (DOOR31) - T131 bekommt zwei Archive, Entscheidung des Leiters.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S251_ROOM4080_c00_aus.png, build/r31_tueren/t1/re15_seiten/S251_ROOM4080_c00_entz.png, extracted/PSX/STAGE4/ROOM408/ROOM40800.bmp, build/r31_tueren/t2/bilder/DOOR26_v2.png
+
+### S252 (ROOM4090) - bestaetigt
+
+vorher: gleich DOOR31 (links/unklar, s=3, schott)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM40900.bmp, 4-fach): zweiteilige Schotttuer mit Mittelfuge, weiss ueberkrustet, Baender oben/unten, Handrad links, Schild TYPE-P mit rotem Balken rechts - genau die DOOR31-Textur (DOOR26 vereist). Griff selbst abgelesen: Rad links, zweiteilig -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S252_ROOM4090_c00_aus.png, build/r31_tueren/t1/re15_seiten/S252_ROOM4090_c00_entz.png, extracted/PSX/STAGE4/ROOM409/ROOM40900.bmp, build/r31_tueren/t1/re2/DOOR31.png
+
+### S253 (ROOM40A0) - bestaetigt
+
+vorher: gleich DOOR29 (links/unklar, s=3)
+
+Widerlegung versucht: einzige Auffaelligkeit ist der Lueftungskasten, der etwas links der Mitte sitzt (Textur/RE2-Malerei: leicht rechts der Mitte) - das ist Malerei-Streuung, kein anderes Gestaltungsmerkmal (Zahl und Anordnung der Elemente gleich). c00 (sauber ROOM40A00.bmp, 4-fach): graue Tuer, Schild oben, zwei Lochreihen darunter, U-Bedientafel mit Hebel an der LINKEN Kante, Lamellenkasten unten - wie die RE2-Malerei ROOM6100 c0 (DOOR29.png). Griff selbst abgelesen: links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S253_ROOM40A0_c00_aus.png, build/r31_tueren/t1/re15_seiten/S253_ROOM40A0_c00_entz.png, extracted/PSX/STAGE4/ROOM40A/ROOM40A00.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S255 (ROOM40B0) - bestaetigt
+
+vorher: gleich DOOR26 (unsichtbar/unklar, s=2, schott)
+
+Nicht widerlegbar, Beleg ueber RE2 selbst: c01 zeigt die Tuer steil am rechten Bildrand (Baender, Schild mit rotem Balken, Rad nicht zu sehen). Der ganze Hintergrund ROOM40B0 c01 ist der Vorlaeufer von RE2 ROOM60F0 c01 (Tanks, Monitor, Boden gleich; R243_ROOM60F0_D26_c01_voll), und RE2 setzt an genau dieser Stelle DOOR26 V0 (zensus re2_seiten R243: archiv 38, varianten [0], Ziel 60C0). Gegenseite S249 = DOOR26 V0. Griff unsichtbar/unklar richtig; Variante wie RE2 V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S255_ROOM40B0_c01_aus.png, build/r31_tueren/t1/re15_seiten/S255_ROOM40B0_c01_voll.png, build/r31_tueren/t1/re2_seiten/R243_ROOM60F0_D26_c01_voll.png, build/r31_tueren/t1/re2/DOOR26.png
+
+### S256 (ROOM5000) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50000.bmp, 4-fach): Schild SHAFT TYPE-L im Mittelband, gelb-schwarz gerahmte Tafel darunter, Griffmulde am linken und Lamellen am rechten Seitenstreifen, dunkle Schlitze oben an den Streifen, Pfeil unten - Element fuer Element die DOOR25-Textur. S256 und S257 sind dasselbe Rechteck (pts gleich, nur anderes Ziel).
+
+Bilder: build/r31_tueren/t1/re15_seiten/S256_ROOM5000_c00_aus.png, build/r31_tueren/t1/re15_seiten/S256_ROOM5000_c00_entz.png, extracted/PSX/STAGE5/ROOM500/ROOM50000.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S257 (ROOM5000) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Wie S256 - dasselbe Rechteck (pts [-1050,-3100]..[-50,-1100]) und dieselbe gemalte Tuer, nur anderes Ziel (511 statt 503). DOOR25 eindeutig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S257_ROOM5000_c00_aus.png, extracted/PSX/STAGE5/ROOM500/ROOM50000.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S258 (ROOM5000) - bestaetigt
+
+vorher: gleich DOOR29 (rechts/unklar, s=3)
+
+Widerlegung versucht, nichts gefunden. c03 (sauber ROOM50003.bmp, 4-fach): Tuer frontal unter zwei gruenen Lampen, Schild SHAFT TYPE-M oben, gelb-schwarzer Aufkleber, schildfoermige Bedientafel an der RECHTEN Kante, Lamellenkasten unten links der Mitte - gespiegelte DOOR29 (V1). Griff selbst abgelesen: rechts -> V1.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S258_ROOM5000_c03_aus.png, build/r31_tueren/t1/re15_seiten/S258_ROOM5000_c03_entz.png, extracted/PSX/STAGE5/ROOM500/ROOM50003.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S259 (ROOM5000) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=2, schott)
+
+Widerlegung versucht (khaki statt rostrot), nicht tragfaehig. c06 (sauber ROOM50006.bmp, 4-fach) und c02: zweiteilige Schotttuer unter 'STORAGE DEPOT', Baender oben/unten mit Bloecken, Handrad links der Mitte, Riegelkasten an der Fuge, Schilder mit rotem Balken rechts - Aufteilung DOOR26 V0 wie die Gegenseite S262 (c01 dort sehr deutlich). Die khaki Farbe malt RE2 fuer DOOR26 ebenso (ROOM6170 c00). Griff selbst abgelesen: Rad links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S259_ROOM5000_c06_aus.png, build/r31_tueren/t1/re15_seiten/S259_ROOM5000_c06_entz.png, extracted/PSX/STAGE5/ROOM500/ROOM50006.bmp, build/r31_tueren/t1/re2_seiten/R258_ROOM6170_D26_c00_aus.png, build/r31_tueren/t2/bilder/DOOR26_v0.png
+
+### S260 (ROOM5000) - bestaetigt
+
+vorher: gleich DOOR27 (unsichtbar/keiner, s=3, aufzug)
+
+Widerlegung versucht, nichts gefunden. c05 (sauber ROOM50005.bmp, 4-fach) und c04: zweifluegelige Schiebetuer mit verzahnter Mittelfuge, Kasten rechts oben, Schildchen rechts unten, Plakette + dunkler Kasten links unten - Aufteilung wie DOOR27_v0 (und wie S290 und S215/Stapel 5). Einzige Kleinigkeit: die Plakette links ist rot gerahmt (Textur gruenlich) - Farbe eines Schildchens, kein Gestaltungsmerkmal. Griff: gemalt, Varianten 0..3 gleich -> unsichtbar/keiner richtig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S260_ROOM5000_c05_aus.png, build/r31_tueren/t1/re15_seiten/S260_ROOM5000_c05_entz.png, extracted/PSX/STAGE5/ROOM500/ROOM50005.bmp, build/r31_tueren/t2/bilder/DOOR27_v0.png, build/r31_tueren/t1/re2/DOOR27.png
+
+### S261 (ROOM5010) - bestaetigt
+
+vorher: gleich DOOR29 (links/unklar, s=2)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50100.bmp, 4-fach): Tuer schraeg in einer nach rechts fliehenden Wand (linke Kante laenger = nah): Schild mit blauem Balken oben, Bedientafel mit Hebel an der nahen = LINKEN Kante auf ~45 %, Lamellenkasten unten - DOOR29-Vorderseite. Aufkleber unter dem Schild nicht aufloesbar (Punktreihe wie RE2-Malereien moeglich), widerspricht nichts. Griff selbst abgelesen: links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S261_ROOM5010_c00_aus.png, build/r31_tueren/t1/re15_seiten/S261_ROOM5010_c00_entz.png, extracted/PSX/STAGE5/ROOM501/ROOM50100.bmp, build/r31_tueren/t1/re2/DOOR29.png
+
+### S262 (ROOM5020) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=3, schott)
+
+Widerlegung versucht, nichts gefunden ausser der Farbe. c01 (sauber ROOM50201.bmp, 4-fach, gross): linke Haelfte mit Schildchen oben, Handrad, rotem Dreieck + gelb-schwarzen Streifen; rechte Haelfte mit Riegelkasten an der Fuge und Schild TYPE-P; gelb-gruene Streifen am oberen Band - jedes Element der DOOR26-Textur an seinem Platz. Khaki mit rostfarbenem Rand statt rostrot (RE2 malt DOOR26 ebenso, ROOM6170 c00). Griff selbst abgelesen: Rad links, zweiteilig -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S262_ROOM5020_c01_aus.png, build/r31_tueren/t1/re15_seiten/S262_ROOM5020_c01_entz.png, extracted/PSX/STAGE5/ROOM502/ROOM50201.bmp, build/r31_tueren/t1/re2/DOOR26.png
+
+### S264 (ROOM5030) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=2)
+
+Widerlegung versucht, nichts gefunden. c01 (sauber ROOM50301.bmp, 4- und 6-fach, aufgehellt): Tuer 'B-2 LABORATORY' zwischen den hellen Pfeilern mit gelb-schwarzem Band (dieselbe Zarge wie die DOOR25-Tuer S256 in ROOM5000): hohes Mittelband mit Schild oben, Seitenstreifen, Schlitze oben - DOOR25-Aufbau. Aufkleber/Pfeil im Dunkeln nicht aufloesbar, widerspricht nichts; c00 steil. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S264_ROOM5030_c01_aus.png, build/r31_tueren/t1/re15_seiten/S264_ROOM5030_c01_entz.png, extracted/PSX/STAGE5/ROOM503/ROOM50301.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S265 (ROOM5030) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=2)
+
+Nicht widerlegbar. c02 (sauber ROOM50302.bmp, 4-fach): Tuer 'A-2 ELEVATOR' schraeg, Mittelband mit Schild, gelb-schwarzer Pfeiler links - dieselbe Zarge/Blattform wie S264/S267; c03 trifft nur Wand. Gegenseite S256 (ROOM5000 c00) zeigt die DOOR25-Textur Element fuer Element. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S265_ROOM5030_c02_aus.png, extracted/PSX/STAGE5/ROOM503/ROOM50302.bmp, build/r31_tueren/t1/re15_seiten/S256_ROOM5000_c00_aus.png, build/r31_tueren/t1/re2/DOOR25.png
+
+### S266 (ROOM5030) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=2)
+
+Nicht widerlegbar. c03 (sauber ROOM50303.bmp, 4-fach): Tuer 'SHELTER D' steil in der rechten Wand, heller Pfeiler mit gelb-schwarzem Band wie bei den anderen DOOR25-Tueren des Raums; Blatt selbst kaum sichtbar. Gegenseite S275 (ROOM5070 c00/c01) ist klar DOOR25 (Schild, Tafel, Seitenstreifen). Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S266_ROOM5030_c03_aus.png, extracted/PSX/STAGE5/ROOM503/ROOM50303.bmp, build/r31_tueren/t1/re15_seiten/S275_ROOM5070_c00_aus.png, build/r31_tueren/t1/re2/DOOR25.png
+
+### S267 (ROOM5030) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c04/c05 (sauber, 4-fach): Tuer 'C-2 HANGAR': Mittelband mit Schild oben und gerahmter Tafel darunter, Seitenstreifen, Pfeiler mit gelb-schwarzem Band - DOOR25. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S267_ROOM5030_c04_aus.png, build/r31_tueren/t1/re15_seiten/S267_ROOM5030_c05_aus.png, extracted/PSX/STAGE5/ROOM503/ROOM50305.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S268 (ROOM5040) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50400.bmp, 6-fach, aufgehellt, blaues Licht): Mittelband mit Schild oben und gerahmter Tafel darunter, Seitenstreifen, Rahmen mit abgeschraegten Ecken (Zarge anders als in ROOM5030, aber das ist Wand, nicht Blatt). Pfeil unten im Dunkeln nicht sicher. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S268_ROOM5040_c00_aus.png, build/r31_tueren/t1/re15_seiten/S268_ROOM5040_c00_entz.png, extracted/PSX/STAGE5/ROOM504/ROOM50400.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S269 (ROOM5040) - bestaetigt
+
+vorher: aehnlich -> DOOR27 (s=2)
+
+Geprueft (s=2, Top-5: DOOR26 0.500). c06 (sauber ROOM50406.bmp, 5-fach, aufgehellt): P-4-Labortuer mit kleinem Fenster oben, rotem Warndreieck, weissem Schild + gelb-schwarzem Aufkleber unten, gelbem Schild rechts, glatter senkrechter Fuge. Gegenseite S273 zeigt dazu das grosse gelbe Strahlenwarnschild. Alle 55 RE2-Archive durchgesehen: kein Blatt mit Strahlenschild/Warndreieck; DOOR27 (Labor-Schiebetuer) hat verzahnte Mittelfuge und Plakette+Kasten statt Strahlenschild; DOOR26 (0.500) ist ein Schott mit Handrad - nicht vergleichbar; DOOR2C/19/24 andere Aufteilung. aehnlich DOOR27 richtig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S269_ROOM5040_c06_aus.png, build/r31_tueren/t1/re15_seiten/S269_ROOM5040_c06_entz.png, extracted/PSX/STAGE5/ROOM504/ROOM50406.bmp, build/r31_tueren/t2/bilder/DOOR27_v0.png, build/r31_tueren/t1/re2/uebersicht.png
+
+### S270 (ROOM5040) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=2)
+
+Nicht widerlegbar. c05 (sauber, 4-fach): Blatt schraeg im blauen Licht, Mittelband mit Schild und Tafel, Rahmen mit abgeschraegten Ecken wie S268; c04 nur Kante. Gegenseite S271/S272 (ROOM5050) ist eindeutig DOOR25. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S270_ROOM5040_c05_aus.png, extracted/PSX/STAGE5/ROOM504/ROOM50405.bmp, build/r31_tueren/t1/re15_seiten/S271_ROOM5050_c00_aus.png, build/r31_tueren/t1/re2/DOOR25.png
+
+### S271 (ROOM5050) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): Schild im Mittelband, gerahmte Tafel darunter, Seitenstreifen mit Schlitzen oben und Lamellen rechts, Pfeil unten, Rahmen mit abgeschraegten Ecken - DOOR25-Textur. S271 und S272 sind dieselbe gemalte Tuer (gleiche Ausschnitte, anderes Ziel). Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S271_ROOM5050_c00_aus.png, build/r31_tueren/t1/re15_seiten/S271_ROOM5050_c00_entz.png, extracted/PSX/STAGE5/ROOM505/ROOM50500.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S272 (ROOM5050) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Wie S271 - dieselbe gemalte Tuer (c00 identischer Ausschnitt), DOOR25 eindeutig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S272_ROOM5050_c00_aus.png, extracted/PSX/STAGE5/ROOM505/ROOM50500.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S273 (ROOM5060) - bestaetigt
+
+vorher: aehnlich -> DOOR27 (s=2)
+
+Geprueft (s=2, Top-5 DOOR00 0.515 - Holztuer, unsinnig). c00 (sauber ROOM50600.bmp, 4-fach): breite blaugraue Labortuer, links grosses gelbes Strahlenwarnschild, rechts Fensterkasten oben, rotes Dreieck, gelb-schwarzer Aufkleber unten, glatte Fuge mit Griffmulde. DOOR27: verzahnte Fuge, Plakette + Kasten links, kein Strahlenschild, kein Dreieck. Kein anderes der 55 Archive hat diese Aufteilung. aehnlich DOOR27 richtig, Abweichung wie vom Zuordner beschrieben.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S273_ROOM5060_c00_aus.png, build/r31_tueren/t1/re15_seiten/S273_ROOM5060_c00_entz.png, extracted/PSX/STAGE5/ROOM506/ROOM50600.bmp, build/r31_tueren/t2/bilder/DOOR27_v0.png, build/r31_tueren/t1/re2/uebersicht.png
+
+### S274 (ROOM5060) - bestaetigt
+
+vorher: aehnlich -> DOOR27 (s=2)
+
+Wie S273 - dasselbe Rechteck (pts gleich), dieselbe gemalte P-4-Tuer, nur anderes Skript-Ziel. aehnlich DOOR27.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S274_ROOM5060_c00_aus.png, extracted/PSX/STAGE5/ROOM506/ROOM50600.bmp, build/r31_tueren/t1/re2/DOOR27.png
+
+### S275 (ROOM5070) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50700.bmp, 4-fach): Schild im Mittelband, gelb-schwarz gerahmte Tafel, Seitenstreifen mit dunklen Schlitzen oben, Pfeiler mit gelb-schwarzem Band - DOOR25. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S275_ROOM5070_c00_aus.png, build/r31_tueren/t1/re15_seiten/S275_ROOM5070_c00_entz.png, extracted/PSX/STAGE5/ROOM507/ROOM50700.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S276 (ROOM5070) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=2, schott)
+
+Widerlegung versucht (Farbe, Lage von Dreieck/Schild), nicht tragfaehig. c09 (sauber ROOM50709.bmp, 6-fach): SHELTER #01 - einteilige Schotttuer, oberes Band mit Scharnierblock RECHTS, Platte mit Handrad LINKS, rotes Dreieck + gelb-schwarze Streifen rechts, unteres Band - Aufteilung DOOR26 V3 (Variantenbild: Angel rechts, Rad links, Dreieck/Streifen rechts). Dreieck sitzt hier oben rechts auf der Platte statt unten rechts, das Schildchen darueber fehlt - Malerei-Streuung auf derselben Platte. Silbergrau/creme statt rostrot (RE2 malt DOOR26 selbst grau/khaki). Griff selbst abgelesen: Rad links -> V3.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S276_ROOM5070_c09_aus.png, build/r31_tueren/t1/re15_seiten/S276_ROOM5070_c09_entz.png, extracted/PSX/STAGE5/ROOM507/ROOM50709.bmp, build/r31_tueren/t2/bilder/DOOR26_v3.png
+
+### S277 (ROOM5070) - bestaetigt
+
+vorher: gleich DOOR26 (rechts/unklar, s=2, schott)
+
+Widerlegung versucht, nichts gefunden ausser der Farbe. c06 (sauber ROOM50706.bmp, 6-fach): SHELTER #02 - einteilige Schotttuer, oberes Band mit Scharnierblock LINKS, Handrad RECHTS, rotes Dreieck + gelb-schwarze Streifen links, unteres Band - DOOR26 V2 (Angel links, Rad rechts). Griff selbst abgelesen: Rad rechts -> V2.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S277_ROOM5070_c06_aus.png, build/r31_tueren/t1/re15_seiten/S277_ROOM5070_c06_entz.png, extracted/PSX/STAGE5/ROOM507/ROOM50706.bmp, build/r31_tueren/t2/bilder/DOOR26_v2.png
+
+### S278 (ROOM5080) - bestaetigt
+
+vorher: gleich DOOR1A (links/druecker, s=2)
+
+Widerlegung versucht, nichts gefunden. c00 (sauber ROOM50800.bmp, 7-fach): Stahlrahmentuer mit DREI Feldern (Querriegel bei ~35 % und ~60 %), Beschlagplatte mit rundem Element (Kartenleser) und waagerechtem Druecker an der LINKEN Kante im mittleren Feld - genau DOOR1A (DOOR1A_v0: Griff links). Gelbliches Raumlicht statt grau. c01 bestaetigt Druecker links. Griff selbst abgelesen: links/druecker -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S278_ROOM5080_c00_aus.png, build/r31_tueren/t1/re15_seiten/S278_ROOM5080_c00_entz.png, extracted/PSX/STAGE5/ROOM508/ROOM50800.bmp, build/r31_tueren/t2/bilder/DOOR1A_v0.png, build/r31_tueren/t1/re2/DOOR1A.png
+
+### S279 (ROOM5090) - bestaetigt
+
+vorher: gleich DOOR2A (beide/unklar, s=2, doppeltuer)
+
+Widerlegung versucht (Fensterglas hell statt schwarz), nicht tragfaehig. c00/c01 (sauber, 4-fach): zweifluegelige Zugtuer, je Fluegel abgerundetes Fenster oben, runder Drehriegel an der Mittelfuge auf halber Hoehe, Lamellengitter unten - wie DOOR2A zweiteilig (Variantenbild DOOR2A_v2: Riegel beider Fluegel an der Fuge) und die RE2-Malerei ROOM7040 c12. Das Glas ist Licht, keine Gestalt: dieselbe Tuer T145 zeigt von der Gegenseite S282 dunkle Fenster. Doppel- gegen Doppeltuer passt. Griff: Riegel an der Fuge, beide Fluegel -> V2/V3 (Schreibweise 'beide' ausserhalb des Schemas, wie Stapel 4/5).
+
+Bilder: build/r31_tueren/t1/re15_seiten/S279_ROOM5090_c00_aus.png, build/r31_tueren/t1/re15_seiten/S279_ROOM5090_c00_entz.png, extracted/PSX/STAGE5/ROOM509/ROOM50900.bmp, build/r31_tueren/t1/re2_seiten/R268_ROOM7040_D2A_c12_aus.png, build/r31_tueren/t2/bilder/DOOR2A_v2.png
+
+### S280 (ROOM5090) - bestaetigt
+
+vorher: gleich DOOR2A (links/unklar, s=2)
+
+Widerlegung versucht (Riegelseite), nicht tragfaehig. c03 (sauber ROOM50903.bmp, 7-fach) und c02: einfluegelige Zugtuer, Fenster oben, runder Drehriegel an der LINKEN Kante auf halber Hoehe, Lamellenfeld unten - DOOR2A. RE2s eigene einfluegelige Zugtuer ROOM7030 c00 (R266, V1) hat den Riegel rechts gemalt; DOOR2A_v0 zeigt ihn LINKS (schiebt nach rechts), DOOR2A_v1 rechts (schiebt nach links) - Variantenbilder in voller Aufloesung geprueft. Also Riegel links -> V0, wie der Zuordner schreibt. Warmes Licht (beige) statt dunkelgrau. Gegenseite S323 (Stapel 7) Riegel rechts -> V1, stimmig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S280_ROOM5090_c03_aus.png, build/r31_tueren/t1/re15_seiten/S280_ROOM5090_c03_entz.png, extracted/PSX/STAGE5/ROOM509/ROOM50903.bmp, build/r31_tueren/t2/bilder/DOOR2A_v0.png, build/r31_tueren/t2/bilder/DOOR2A_v1.png, build/r31_tueren/t1/re2_seiten/R266_ROOM7030_D2A_c00_voll.png
+
+### S281 (ROOM5090) - bestaetigt
+
+vorher: gleich DOOR2A (beide/unklar, s=3, doppeltuer)
+
+Widerlegung versucht, nichts gefunden. c05/c06 (sauber, 4-fach): dieselbe zweifluegelige Zugtuer wie S279 - Fenster je Fluegel, zwei Drehriegel an der Fuge, Lamellen unten. Helles Glas wie S279 (Gegenseite S283 dunkel -> Licht). DOOR2A V2/V3.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S281_ROOM5090_c05_aus.png, build/r31_tueren/t1/re15_seiten/S281_ROOM5090_c05_entz.png, extracted/PSX/STAGE5/ROOM509/ROOM50905.bmp, build/r31_tueren/t2/bilder/DOOR2A_v2.png
+
+### S282 (ROOM5090) - bestaetigt
+
+vorher: gleich DOOR2A (beide/unklar, s=3, doppeltuer)
+
+Widerlegung versucht, nichts gefunden. c07/c08 (sauber, 4-fach, gelbes Licht): zweifluegelig, dunkle Fenster oben, zwei Ringriegel an der Fuge, Lamellenfelder unten - DOOR2A zweiteilig wie RE2 ROOM7040 c12. c09 steil, widerspricht nicht.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S282_ROOM5090_c08_aus.png, build/r31_tueren/t1/re15_seiten/S282_ROOM5090_c08_entz.png, extracted/PSX/STAGE5/ROOM509/ROOM50908.bmp, build/r31_tueren/t1/re2_seiten/R268_ROOM7040_D2A_c12_aus.png
+
+### S283 (ROOM5090) - bestaetigt
+
+vorher: gleich DOOR2A (beide/unklar, s=3, doppeltuer)
+
+Widerlegung versucht, nichts gefunden. c13 (sauber, 4-fach): wie S282 - zwei Fluegel mit dunklem Fenster, Ringriegel an der Fuge, Lamellen unten. c14 steil. DOOR2A V2/V3.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S283_ROOM5090_c13_aus.png, build/r31_tueren/t1/re15_seiten/S283_ROOM5090_c13_entz.png, extracted/PSX/STAGE5/ROOM509/ROOM50913.bmp, build/r31_tueren/t2/bilder/DOOR2A_v2.png
+
+### S285 (ROOM50A0) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=1)
+
+Nicht widerlegbar, nur ueber die Gegenseite belegt: c08 (sauber, 4-fach) zeigt am Umriss nur einen hellen Pfeiler mit gelb-schwarzem Band (dieselbe Zarge wie die DOOR25-Tueren in ROOM5000/5030/5070), das Blatt selbst steht in der Seitenwand und ist nicht zu sehen. Gegenseite S246 (ROOM4070 c04) ist DOOR25 (oben bestaetigt). s=1 richtig.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S285_ROOM50A0_c08_aus.png, extracted/PSX/STAGE5/ROOM50A/ROOM50A08.bmp, build/r31_tueren/t1/re15_seiten/S246_ROOM4070_c04_aus.png, build/r31_tueren/t1/re2/DOOR25.png
+
+### S286 (ROOM50A0) - bestaetigt
+
+vorher: gleich DOOR25 (unsichtbar/keiner, s=3)
+
+Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): Rahmen mit abgeschraegten Ecken, Schild im Mittelband, gerahmte Tafel, Seitenstreifen mit Schlitzen oben - DOOR25. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S286_ROOM50A0_c00_aus.png, build/r31_tueren/t1/re15_seiten/S286_ROOM50A0_c00_entz.png, extracted/PSX/STAGE5/ROOM50A/ROOM50A00.bmp, build/r31_tueren/t1/re2/DOOR25.png
+
+### S287 (ROOM50B0) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=3, schott)
+
+Widerlegung versucht, nichts gefunden ausser der Farbe. c00/c01 (sauber, 4-fach): khaki zweiteilige Schotttuer mit rostfarbenem Rand, Handrad links, Schild TYPE-P rechts, Baender mit Bloecken, Streifen am oberen Band - DOOR26 V0. Griff selbst abgelesen: Rad links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S287_ROOM50B0_c00_aus.png, build/r31_tueren/t1/re15_seiten/S287_ROOM50B0_c00_entz.png, extracted/PSX/STAGE5/ROOM50B/ROOM50B00.bmp, build/r31_tueren/t2/bilder/DOOR26_v0.png
+
+### S288 (ROOM50B0) - bestaetigt
+
+vorher: gleich DOOR2D (unsichtbar/keiner, s=2, hubbuehne)
+
+Widerlegung versucht, nichts gefunden. c03/c02 (sauber, 3-fach): Plattform mit olivgruenem Bedienkasten mit roten Tasten links, Gelaender dahinter, gelb-schwarzer Rand am Boden - dieselben Teile wie das DOOR2D-Modell (Variantenbild DOOR2D_v5: Kasten links, Gelaender, Streckmetall mit Warnrand, schraeg auslaufender Handlauf links). Die gestreifte Schranke rechts steht im Raum, nicht auf der Buehne. Art gleich (Hubbuehne), RE2 nimmt DOOR2D fuer genau diese Art. Griff: keiner.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S288_ROOM50B0_c03_aus.png, build/r31_tueren/t1/re15_seiten/S288_ROOM50B0_c03_voll.png, extracted/PSX/STAGE5/ROOM50B/ROOM50B03.bmp, build/r31_tueren/t2/bilder/DOOR2D_v5.png, build/r31_tueren/t1/re2/DOOR2D.png
+
+### S289 (ROOM50C0) - bestaetigt
+
+vorher: gleich DOOR26 (links/unklar, s=3, schott)
+
+Widerlegung versucht, nichts gefunden. c06/c05 (sauber, 4-fach, aufgehellt): zweiteilige Schotttuer, Handrad links mit Dreieck + Streifen darunter, Schild TYPE-P rechts, Baender mit Bloecken; Farbe braun-rostig (naeher am Modell als die khaki Fassungen). DOOR26 V0. Griff selbst abgelesen: Rad links -> V0.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S289_ROOM50C0_c06_aus.png, build/r31_tueren/t1/re15_seiten/S289_ROOM50C0_c06_entz.png, extracted/PSX/STAGE5/ROOM50C/ROOM50C06.bmp, build/r31_tueren/t2/bilder/DOOR26_v0.png
+
+### S290 (ROOM50C0) - bestaetigt
+
+vorher: gleich DOOR27 (unsichtbar/keiner, s=3, aufzug)
+
+Widerlegung versucht, nichts gefunden. c00/c01 (sauber, 4-fach): zweifluegelige Schiebetuer mit verzahnter Mittelfuge, Kasten mit Schildern rechts oben, senkrechte Griffleiste, gelb-schwarzer WARNING-Aufkleber rechts unten, Plakette + dunkler Kasten links unten - Element fuer Element DOOR27 (DOOR27_v0). Gruenlich-beiges Raumlicht.
+
+Bilder: build/r31_tueren/t1/re15_seiten/S290_ROOM50C0_c00_aus.png, build/r31_tueren/t1/re15_seiten/S290_ROOM50C0_c00_entz.png, extracted/PSX/STAGE5/ROOM50C/ROOM50C00.bmp, build/r31_tueren/t2/bilder/DOOR27_v0.png
+

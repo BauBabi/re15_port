@@ -3879,33 +3879,69 @@ static int op_door_aot_set(scd_thread_t *t)
      * the RDT RVD zones were always LE (rdt_common parse_zones) — only these
      * SCD-set AOTs were wrong. Verified vs raw main00.scd bytes + the user's
      * "the door wasn't anywhere near where I stood". */
-    int16_t  rect_x  = scd_read_le_s16(&t->pc[6]);
-    int16_t  rect_z  = scd_read_le_s16(&t->pc[8]);
-    int16_t  rect_w  = scd_read_le_s16(&t->pc[10]);
-    int16_t  rect_d  = scd_read_le_s16(&t->pc[12]);
-    int16_t  nx      = scd_read_le_s16(&t->pc[14]);
-    int16_t  ny      = scd_read_le_s16(&t->pc[16]);
-    int16_t  nz      = scd_read_le_s16(&t->pc[18]);
-    int16_t  ncdir_y = scd_read_le_s16(&t->pc[20]);
-    uint8_t  target_cut = t->pc[24];
-    /* Compute axis-aligned rect from RDT's (x,z,w,d) where (x,z) is the
-     * NW corner and (w,d) is the full extent (so center = (x+w/2, z+d/2),
-     * half-extents = (w/2, d/2)). */
-    int32_t cx = (int32_t)rect_x + (int32_t)rect_w / 2;
-    int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
-    int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
-    int32_t hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
+    /* ⛔ VIERECK-TUERSATZ (Runde 31, analysis/befunde_runde31/tueren_04_bau.md Abschnitt 0).
+     * sat = pc[3] Bit 0x80 waehlt die 40-Byte-Form: der Installer schiebt pc um 40 statt 32
+     * (@0x80040618 lbu v0,3(v1) / @0x80040620 andi 0x80 / @0x80040630 addiu v0,v1,40), der Scan
+     * testet die Flaeche als Viereck (@0x80042f04 andi v0,v1,0x80 -> @0x80042f10 jal 0x80014368)
+     * mit den vier Punkten pc+6..21 (Kopie @0x80042dd8..e5c aus s0+4..s0+18, s0 = pc+2) und
+     * reicht die Nutzlast ab pc+22 an den Tuer-Handler (@0x80042f90 addiu a0,s0,20), die
+     * Rechteckform ab pc+14 (@0x80042fb8 addiu a0,s0,12). Die Nutzlast selbst ist in beiden
+     * Formen gleich aufgebaut (Warp FUN_8001d600: +0/+2/+4 Lage, +6 Richtung, +8 Stage, +9 Raum,
+     * +10 Cut). Einzige Saetze im Spiel: ROOM4030/4031 @0x47E (Slot 1 -> ROOM4040) und @0x4A6
+     * (Slot 2 -> ROOM4080). Vorher las der Port auch sie mit dem 32-Byte-Schema und stellte die
+     * Ziele "BF0A0"/"C5F00" auf. */
+    const int viereck = (t->pc[3] & 0x80) != 0;
+    const uint8_t *nl = viereck ? &t->pc[22] : &t->pc[14];   /* Nutzlast */
+    int32_t cx, cz, hw, hh;
+    int16_t qx[4] = {0, 0, 0, 0}, qz[4] = {0, 0, 0, 0};
+    if (viereck) {
+        int16_t mnx = 0x7fff, mxx = -0x8000, mnz = 0x7fff, mxz = -0x8000;
+        for (int k = 0; k < 4; k++) {
+            qx[k] = scd_read_le_s16(&t->pc[6 + 4 * k]);    /* FUN_80014368: lh 4/8/12/16(a1) */
+            qz[k] = scd_read_le_s16(&t->pc[8 + 4 * k]);    /*               lh 6/10/14/18(a1) */
+            if (qx[k] < mnx) mnx = qx[k]; if (qx[k] > mxx) mxx = qx[k];
+            if (qz[k] < mnz) mnz = qz[k]; if (qz[k] > mxz) mxz = qz[k];
+        }
+        /* Huellrechteck nur fuer Port-Stellen, die mit Mitte/Halbmass rechnen (Markierung
+         * "schon drin" nach dem Sprung, Karte); getroffen wird ueber das Viereck. */
+        cx = ((int32_t)mnx + (int32_t)mxx) / 2;
+        cz = ((int32_t)mnz + (int32_t)mxz) / 2;
+        hw = ((int32_t)mxx - (int32_t)mnx) / 2;
+        hh = ((int32_t)mxz - (int32_t)mnz) / 2;
+    } else {
+        int16_t rect_x = scd_read_le_s16(&t->pc[6]);
+        int16_t rect_z = scd_read_le_s16(&t->pc[8]);
+        int16_t rect_w = scd_read_le_s16(&t->pc[10]);
+        int16_t rect_d = scd_read_le_s16(&t->pc[12]);
+        /* Compute axis-aligned rect from RDT's (x,z,w,d) where (x,z) is the
+         * NW corner and (w,d) is the full extent (so center = (x+w/2, z+d/2),
+         * half-extents = (w/2, d/2)). */
+        cx = (int32_t)rect_x + (int32_t)rect_w / 2;
+        cz = (int32_t)rect_z + (int32_t)rect_d / 2;
+        hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
+        hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
+    }
+    int16_t  nx      = scd_read_le_s16(&nl[0]);
+    int16_t  ny      = scd_read_le_s16(&nl[2]);
+    int16_t  nz      = scd_read_le_s16(&nl[4]);
+    int16_t  ncdir_y = scd_read_le_s16(&nl[6]);
+    uint8_t  target_cut = nl[10];
     re15_aot_set_door((int)slot, cx, cz, hw, hh,
                        target_cut,
                        (int32_t)nx, (int32_t)ny, (int32_t)nz,
                        ncdir_y);
-    /* Cross-room destination (pc[22]=stage, pc[23]=room — Java
+    /* Cross-room destination (Nutzlast +8 = stage, +9 = room — Java
      * SCDScriptDisassembler case 0x3B). The AOT scan uses these to trigger a
      * room load when the dest differs from the current room; a dest resolving
      * to the current room is a same-room teleport (the existing DOOR path). */
     if ((int)slot >= 0 && (int)slot < RE15_AOT_MAX) {
-        g_aot.door_params[slot].dest_stage = t->pc[22];
-        g_aot.door_params[slot].dest_room  = t->pc[23];
+        g_aot.door_params[slot].dest_stage = nl[8];
+        g_aot.door_params[slot].dest_room  = nl[9];
+        /* Flaechenform des Satzes: Viereck (Punkte) oder Rechteck - der Satz bestimmt sie
+         * selbst (sat & 0x80); ein frueher in diesem Platz installiertes Viereck darf nicht
+         * stehen bleiben. */
+        g_aot.slots[slot].has_quad = (uint8_t)(viereck ? 1 : 0);
+        for (int k = 0; k < 4; k++) { g_aot.slots[slot].xs[k] = qx[k]; g_aot.slots[slot].zs[k] = qz[k]; }
         /* pc[3] = the door's FLOOR byte (e.g. 0x31). The AOT door scan gates on the
          * player standing on this floor (band == (floor>>4)+1). */
         g_aot.door_params[slot].floor      = t->pc[3];
@@ -3926,8 +3962,8 @@ static int op_door_aot_set(scd_thread_t *t)
     /* PC-Vorschub konditional pc[3]&0x80: 4P-Tür (40 B) vs Standard (32 B). Byte-true:
      * LAB_800405bc @0x80040618 `lbu v0,0x3(v1)`; @0x80040620 `andi 0x80`; @0x80040624 `beq`
      * -> @0x80040630 +0x28(40) wenn Bit gesetzt, sonst @0x80040634 +0x20(32) (ghidra1_V2.txt).
-     * STAGE1-Türen (z.B. 1240) haben pc[3]=0x31 (Bit clear) -> bleiben 32. 4P-Feld-Offsets
-     * (Rect-Punkte ab +0x20) = Folgearbeit; hier nur PC-Sync. [BYTE_TRUE_AUDIT #5] */
+     * STAGE1-Türen (z.B. 1240) haben pc[3]=0x31 (Bit clear) -> bleiben 32. Die Felder der
+     * 40-B-Form (Punkte pc+6..21, Nutzlast pc+22) liest der Block oben (Runde 31). */
     t->pc += (t->pc[3] & 0x80) ? 40 : 32;
     return 1;
 }
