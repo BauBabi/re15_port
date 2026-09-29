@@ -1,0 +1,9 @@
+Schatten: 3803 Dateien; Hardlink-Probe: 2 Links auf TEX.TIM
+KONTROLLE Schatten vs Referenz rc=0
+B2a 29/30 (Quelle+APK ohne P2DS) rc=0 |    RE15DOOR:  Quelle 29, APK 29, sha256 gleich 29/29
+B2b P07G 0 B (Quelle+APK) rc=0 |    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+B6 neuer Baum shared_assets/RE15NEU (keine Liste) rc=0
+B8a Praefix 16 B: Gate rc=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+B8a aapt2 (libziparchive) rc=1 | 09-30 01:02:25.969 29796 21540 W ziparchive: Zip: Entry at offset zero has invalid LFH signature 0 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb2/apk/F_praefix.apk: error: fai
+B8b Kopf arabisch: Gate rc=0 |    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft) == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+EXIT=0

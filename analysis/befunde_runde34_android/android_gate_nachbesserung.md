@@ -296,3 +296,40 @@ genauso durchgelassen).
   der Inhaltsabgleich greifen trotzdem.
 - Laufzeit der Kette im Bau: 10,9 s von 161 s (3.6); der Selbsttest (72 Faelle, 4 parallel) braucht auf
   ruhiger Maschine 4-8 s, unter Last bis ~55 s (gemessen, 3.1).
+
+---
+
+# Runde 2 — Nachbesserung nach Gegenpruefung r2 (Start 2026-09-30)
+
+Auftrag: jeden Befund B1..B9, N1 und die zwei Echtlauf-Befunde erst selbst pruefen,
+dann beheben (hoch/mittel Pflicht, niedrig wo ohne Risiko), Selbsttest + Positiv-/Negativ-
+Kontrollen erneut fahren, committen. Dieses Kapitel wird laufend fortgeschrieben.
+
+Stand: angelegt, noch nichts geprueft.
+
+## R2-0. Laufprotokoll (fortlaufend)
+
+- 00:40 Dossier-Kapitel angelegt (erster Werkzeugaufruf); Bestand + Pruefer-Dossiers r2 gelesen.
+- 00:44 Python-Schnappschuss 0 (`nachbesserung_r2_belege/py_zustand_0_vorher.txt`, 121 Zeilen) = Endstand des
+  Pruefers umgehung r2 (`Compare-Object` leer), kein python/pymanager/msiexec-Prozess.
+- 00:45-01:05 alle Pruefer-Behauptungen am UNVERAENDERTEN Werkzeugstand (HEAD e1640cd0 = 35d25455) selbst
+  nachgemessen (R2-1). Arbeitsordner `build/r34a/nb2/` (Referenz-APK-Kopie `build/r34a/ref_v0.8.19.apk`,
+  sha256 514bebd5... = Archiv-SUMS; Faelschungen mit dem Rohbyte-Werkzeug des Pruefers `r2_faelschen.py`).
+- 00:58 Grundlinie der systematischen Teil-Mutanten-Probe am HEAD-Gate gestartet (R2-3.1).
+
+## R2-1. Nachpruefung der Befunde (vor jeder Aenderung)
+
+| Befund | eigene Messung (Belege `nachbesserung_r2_belege/vorher_*.txt`) | Urteil |
+|---|---|---|
+| B1 (mittel) | 5 Mutanten per `r2_mutanten.py`: je `SELBSTTEST-OK: 72/72` (15-53 s je Lauf, Maschine unter Last); jeder Mutant gegen seine Faelschung an der echten APK (mit `--repo`): M1/M9/M5/M14/M16 je **rc 0**, echtes Gate rc 1/1/2/1/1; F_M1 mit dem Debug-Schluessel signiert: apksigner Signer 432bc749... (= Referenz), Mutant M1 rc 0, echtes Gate rc 1 `Manifest-Groesse falsch ... 78243 B, APK 78244 B`. (Lauf 1 meines Skripts rief die Mutanten ohne `--repo` -> rc 2 "build.gradle fehlt" - mein Fehler, korrigiert in `vorher_b1_mutanten_gegen_faelschungen.sh`.) | bestaetigt |
+| B2 (mittel) | Schattenbaum (PSX/synchro/RE2/fx Hardlinks, RE15DOOR Kopie; Kontrolle Schatten gegen Referenz rc 0): P2DS in Quelle UND APK weg -> rc 0 `RE15DOOR: Quelle 29, APK 29, sha256 gleich 29/29`; P07G in beiden 0 B -> rc 0 `30/30` | bestaetigt |
+| B3 (niedrig) | echte `build_android.sh --gate-only`, Tausch gegen K0 (unsigniert) waehrend des Selbsttests: `Verified using v2 ... true`, `ANDROID-GATES-OK`, EXIT=0; die Datei unter dem Namen danach: apksigner `DOES NOT VERIFY` | bestaetigt |
+| B4 (niedrig) | frischer Schluessel (keytool), K0 damit signiert: Kette EXIT=0, Signer 85ad070a... statt 432bc749...; Code build.gradle:210-218 (`if (ks && new File(ks).exists()) ... else initWith debug`) | bestaetigt |
+| B5 (niedrig) | K0 ohne Ausrichtungs-Extras, `apksigner sign --alignment-preserved true`: verify rc 0; `zipalign -c -P 16 4` rc 1, 2327 BAD (libmain.so arm64 BAD - 3545, resources.arsc BAD - 1); Kette EXIT=0; Referenz zipalign rc 0 | bestaetigt |
+| B6 (niedrig) | Schatten mit `re15_port/shared_assets/RE15NEU/NEU.DAT` (keine Liste), APK = Referenz -> Gate rc 0 | bestaetigt |
+| B7 (niedrig) | Sonde des Pruefers = python_finden.sh bis auf die 2 Startzeilen (`diff`: 4 Zeilen); (a) PATH nur 8.3-WindowsApps + NUR_PATH -> `SONDE: WUERDE STARTEN (ohne timeout): .../WINDOW~1/python3` (und python); (d) `RE15_PYTHON=<8.3>/python3.exe`, PATH leer -> WUERDE STARTEN; (b) mit /usr/bin -> `verworfen (Link auf WindowsApps ...)`. Nichts gestartet. | bestaetigt |
+| B8 (niedrig) | F_praefix (16 B, Offsets verschoben): Gate rc 0, aapt2 `Entry at offset zero has invalid LFH signature 0 ... failed` rc 1; Kopfzeile mit arabisch-indischen Ziffern: Gate rc 0 | bestaetigt |
+| B9 (niedrig) | `frische_stumm_sonde.sh` (Funktion per awk unveraendert) im Mini-Repo: Ausgabe nur `vor check_binary_fresh`, EXIT=1 | bestaetigt |
+| N1 (ausserhalb) | Code gelesen: android_glue.c:210 nur Groesse; dazu STAERKER als gemeldet: der Marker (:161-181) traegt FNV-1a64 der Liste - bleibt die Liste gleich (gleiche Groessen, gleiche Pfade), wird gar nichts geprueft. SDL_rwops.c:537-557 (SDL2 2.28.5 in `_deps`): relativer Pfad -> zuerst `<intern>/<pfad>` per fopen, erst dann Assets - bestaetigt; `git log`: P07G.DO2 b22088b5/1aaa98c7/d094cea1 je 55908 B (alle vor v0.8.19, v0.8.18 hatte noch kein RE15DOOR -> ausgeliefert wurde der Fall noch nicht) | bestaetigt (Code) |
+| echtlauf B1 (niedrig) | `type -a python3`: zuerst `.../WindowsApps/python3`; Kopf `#!/usr/bin/env python3`, Kopf-Doku zeigt Direktaufrufe | bestaetigt (nicht ausgefuehrt) |
+| echtlauf B2 (niedrig) | make_package.sh:16-23 nennt weder APK noch SDK/JDK/Python | bestaetigt |
