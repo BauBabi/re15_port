@@ -475,6 +475,38 @@ Die fruehere Zuordnung war laut Kommentar eine "dokumentierte Port-Entscheidung 
 
 Regression `ctest -R "g5|5090|birkin|r34|tentakel|damage|schaden"`: 14/14 gruen.
 
+---
+
+## B10 — Treppen-Unverwundbarkeit (`stair_common.c`, E13)
+
+### Selbst disassembliert (PSX.EXE)
+* hoch: Gang-Aufbau @0x80038a00 (aca5b = 3, Clip 0x14 @0x80038a0c-14), `lbu v0,-13593` @0x80038a38 / `ori v0,v0,0x1` @0x80038a50 /
+  `sb v0,-13593(at)` @0x80038a58 (player+0x93 \|= 1); Abschluss @0x80038bb0 (Standby-Clip 2, aca59/5a/5b := 0), `andi v0,v0,0xfe`
+  @0x80038c1c / `sb` @0x80038c24.
+* runter: Clip 0x15 @0x80038cb4-bc, `lbu` @0x80038cd0 / `ori 0x1` @0x80038cf8 / `sb` @0x80038d00; Abschluss @0x80038e50,
+  `andi 0xfe` @0x80038eb8 / `sb` @0x80038ec0.
+* Riegel des Spielerzweigs: `if (p->hit_react & 1) return 0` (re15_damage.c, @0x80012e24-30).
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `re15_stair_try_start` (Erfolgsweg) | `p->hit_react \|= 1` — der Port startet den Gang-Clip direkt (kein Dreh-Vorspann), also an dieser Stelle |
+| `re15_stair_tick` Abschluss (`s_finalize`) | `p->hit_react &= ~1` |
+
+### Sonde `unit_r34_reaktion` Teil `treppe` (ROOM1060 Slot 9, Band 2 -> 0, Aufbau wie probe_adv_stairband_1060.c)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 200 | Treppe gestartet, +0x93 Bit 0 gesetzt | gruen |
+| 201 | Explosion (Art 2, 300 neben dem Spieler) waehrend der Treppe: ueberlappt (Rueckgabe 1), HP bleibt 100 | gruen |
+| 202 | Treppe beendet (58 Takte), Bit 0 frei | gruen |
+| 203 | NEGATIV-Gegenstueck nach der Treppe: dieselbe Explosion -> HP -900, Zustand 3, cmd 3 -> Clip 7 | gruen |
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M48 kein Setzen beim Start | 200/201 | 200/201 rot (HP -900 auf der Treppe) |
+| M49 kein Loeschen im Abschluss | 202 | 202 rot (203 bleibt gruen: der naechste Spieler-Tick gibt Bit 0 ohnehin frei) |
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die

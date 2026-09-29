@@ -837,6 +837,79 @@ static void teil_g5(void)
     }
 }
 
+/* =========================================================================================
+ * TEIL "treppe" — B10: Treppen-Unverwundbarkeit des Spielers (E13), ROOM1060 Slot 9 (Band 2 -> 0),
+ * Aufbau wie probe_adv_stairband_1060.c:53-70/103-124.
+ * ========================================================================================= */
+#include "re15_stair.h"
+static void frame_ohne_hp(void)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+    re15_game_step(&s_ctx);
+}
+
+static void teil_treppe(void)
+{
+    printf("== treppe (B10)\n");
+    if (room_load(0x1060, "STAGE1") != 0) { CHECK(200, 0, "ROOM1060 fehlt"); return; }
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_game_state_init();
+    re15_actor_init(); re15_aot_init(); scd_vm_init(); re15_enemy_reset();
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    g_current_room_id = 0x1060;
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1; g_room_change.pending = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100;
+    pl->x = 26000; pl->y = -8 * 0x708; pl->z = 25300;
+    scd_register_room_events(&s_rdt);
+    scd_room_reenter(&s_rdt, 0, 0, 0);
+    for (int f = 0; f < 10; f++) scd_vm_tick();
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;   /* nur der Spieler */
+
+    const re15_aot_t *a = &g_aot.slots[9];
+    pl->x = a->x; pl->z = 20200; pl->y = -2 * 0x708; pl->rot_y = 3072;
+    pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->motion = 0; pl->anim_frame = 0; pl->anim_flags = 0;
+    re15_stair_reset();
+    re15_collision_set_band(2);
+    const int gestartet = re15_stair_try_start(&s_rdt, 1);
+    CHECK(200, gestartet && (pl->hit_react & 1u),
+          "Treppe gestartet %d, +0x93 0x%02X (Bit 0 @0x80038a50-58 / @0x80038cf8-d00)", gestartet, pl->hit_react);
+    /* (201) Explosion am Spieler waehrend der Treppe: HP unveraendert (Riegel @0x80012e24-30). */
+    for (int f = 0; f < 5; f++) re15_stair_tick(&s_rdt, NULL, NULL);
+    int getroffen = 0;
+    {
+        re15_attack_box_t b; b.x = pl->x + 300; b.y = pl->y - 500; b.z = pl->z; b.radius = 500;
+        getroffen = re15_resolve_attack(&b, 2, -1);       /* zaehlt den Spieler bei Ueberlappung
+                                                           * (cVar9 @0x80012efe), auch wenn der
+                                                           * Riegel den Schaden verhindert */
+    }
+    CHECK(201, getroffen >= 1 && pl->hp == 100 && re15_stair_active(),
+          "Explosion auf der Treppe: ueberlappt %d, hp %d (100), Treppe aktiv %d", getroffen, pl->hp,
+          re15_stair_active());
+    int n = 0;
+    while (re15_stair_active() && n < 900) { re15_stair_tick(&s_rdt, NULL, NULL); n++; }
+    CHECK(202, !re15_stair_active() && !(pl->hit_react & 1u),
+          "Treppe beendet nach %d Takten, +0x93 0x%02X (Bit 0 frei @0x80038eb8-c0)", n, pl->hit_react);
+    /* (203) NEGATIV-Gegenstueck: nach der Treppe toetet dieselbe Explosion (1000 @DAT_8006f41c), cmd 3 ->
+     *       Clip 7 (@0x80036778-80). */
+    pl->hp = 100; pl->state = 0;
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1;
+    frame_ohne_hp();                                      /* Vor-HP 100 fuer den Tod-Uebergang */
+    {
+        re15_attack_box_t b; b.x = pl->x + 300; b.y = pl->y - 500; b.z = pl->z; b.radius = 500;
+        re15_resolve_attack(&b, 2, -1);
+    }
+    const int16_t hp_tod = pl->hp; const int st_tod = pl->state;
+    frame_ohne_hp(); frame_ohne_hp();
+    CHECK(203, hp_tod < 0 && st_tod == 3 && pl->motion == 7,
+          "nach der Treppe: hp %d (< 0), Zustand %d (3), Clip %d (7, cmd 3)", hp_tod, st_tod, pl->motion);
+    { extern void scd_register_current_rdt(const re15_rdt_t *rdt); scd_register_current_rdt(NULL); }
+    g_room_rdt_ok = 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -846,6 +919,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "spinne")) teil_spinne();
     if (alle || strstr(teil, "re15")) teil_re15();
     if (alle || strstr(teil, "g5")) teil_g5();
+    if (alle || strstr(teil, "treppe")) teil_treppe();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }

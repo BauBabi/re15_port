@@ -194,6 +194,10 @@ void re15_stair_tick(const re15_rdt_t *rdt,
              * worst case == the original, best/normal case == clean forward landing. */
             if (!done) { p->x = lx; p->z = lz; }
         }
+        /* RUNDE 34 B10: der Abschluss (Standby-Clip 2, aca59/5a/5b := 0) loescht den Riegel —
+         *   hoch   80038c00 lbu v0,-13593 / 80038c1c andi v0,v0,0xfe / 80038c24 sb v0,-13593(at)
+         *   runter 80038ea0 lbu v0,-13593 / 80038eb8 andi v0,v0,0xfe / 80038ec0 sb v0,-13593(at) */
+        p->hit_react &= (uint8_t)~1u;
         s_finalize = 0;
         s_active   = 0;
         return;
@@ -492,5 +496,15 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     s_footref_ok  = 0;
     s_prev_sel    = -1;
     p->anim_frame = 0;
+    /* RUNDE 34 B10 — TREPPEN-UNVERWUNDBARKEIT (BAUPLAN E13, selbst disassembliert PSX.EXE): mit
+     * dem Gang-Clip setzt der Unterzustand +0x93 Bit 0 des Spielers,
+     *   hoch   (Clip 0x14 @0x80038a0c-14):  80038a38 lbu v0,-13593 / 80038a50 ori v0,v0,0x1 /
+     *                                       80038a58 sb v0,-13593(at)      ; player+0x93 |= 1
+     *   runter (Clip 0x15 @0x80038cb4-bc):  80038cd0 lbu v0,-13593 / 80038cf8 ori v0,v0,0x1 /
+     *                                       80038d00 sb v0,-13593(at)
+     * — den Riegel des Spielerzweigs im Resolver (`if (p->hit_react & 1) return 0`,
+     * @0x80012e24-30): eine Explosion waehrend der Treppe kostet keine HP, und der Tod ohne
+     * Clip 7 (cmd 3 ist waehrend der Treppe gesperrt, game_step_common.c) kann nicht entstehen. */
+    p->hit_react |= 1u;
     return 1;
 }
