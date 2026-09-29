@@ -507,6 +507,16 @@ Regression `ctest -R "g5|5090|birkin|r34|tentakel|damage|schaden"`: 14/14 gruen.
 | M48 kein Setzen beim Start | 200/201 | 200/201 rot (HP -900 auf der Treppe) |
 | M49 kein Loeschen im Abschluss | 202 | 202 rot (203 bleibt gruen: der naechste Spieler-Tick gibt Bit 0 ohnehin frei) |
 
+---
+
+## B11 — Katalog (`RE15_FUN_CATALOG.md`)
+* FUN_80012d60: Gate B = `lw v0,144(s1)` / `lui v1,0x300` / `and` / `beq` @0x80012f54-60 = (+0x93 & 3) == 3, nicht gezaehlt (Ziel hinter
+  `addiu s4,s4,1` @0x80013024); die alte Lesart "Tod/Despawn-Flags, inert" als falsch markiert; Ablauf danach (&= 1, Seitenbit, Riegel
+  Bit 0 @0x80012fbc-cc) ergaenzt.
+* FUN_8001a7a8: Rueckgabe 1 = Punkt HINTEN (Instruktionen @0x8001a7c4-ec), Spieler +0x5 = 2 vorn / 3 hinten mit den Schub-Richtungen
+  der Handler (@0x80035f18/1c, @0x8003609c/a0).
+* FUN_8002b498 neu: Kasten-Versatz je Bild (B2).
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die
