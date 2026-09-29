@@ -1,0 +1,7 @@
+1790710112.899837 START 2026-09-29 21:28:32 :: bash release/make_package.sh --version v0.8.19
+1790710113.052161    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790710113.052552    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+1790710113.053203 FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+1790710113.054648 ABBRUCH: kein echtes Python >= 3.8 (release/python_finden.sh) - verify_split/zip_exec_bit.py brauchen es
+1790710114.071900 ENDE 2026-09-29 21:28:34
+EXIT=1

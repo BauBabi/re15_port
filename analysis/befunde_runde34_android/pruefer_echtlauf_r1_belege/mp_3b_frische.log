@@ -1,0 +1,60 @@
+1790709874.355184 START 2026-09-29 21:24:34 :: bash release/make_package.sh --version v0.8.19
+1790709874.658147    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790709874.882890    Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+1790709874.883440 == Android-APK: Selbsttest + volle Asset-Pruefung gegen den Quellbaum ==
+1790709875.139976 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790709875.330567    [ok] 01 gute APK                                           rc=0 (soll 0)
+1790709875.492091    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+1790709875.652782    [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+1790709875.842617    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+1790709875.969600    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+1790709876.116140    [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+1790709876.258041    [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+1790709876.414715    [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+1790709876.573049    [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+1790709876.731140    [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+1790709876.857290    [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+1790709877.047618    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+1790709877.194680    [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+1790709877.336801    [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+1790709877.478111    [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+1790709877.609634    [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+1790709877.775916    [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+1790709877.983293    [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+1790709878.145984    [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+1790709878.302650    [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+1790709878.444910    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+1790709878.570491    [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+1790709878.698097    [ok] 23 APK fehlt                                          rc=2 (soll 2)
+1790709878.840960    [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+1790709878.981738    [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+1790709879.108546    [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+1790709879.239675    [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+1790709879.350363    [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+1790709879.508802    Laufzeit: 4.4 s
+1790709879.509376 == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+1790709879.848081 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790709879.848708    APK:       C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790709879.848881    Quellbaum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android
+1790709879.849071    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790709883.930468    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790709883.930692    shared_assets/PSX               3193    3193     3193    300522652
+1790709883.931014    shared_assets/extracted_fx        13      13       13      1079875
+1790709883.931430    shared_assets/RE2                277     277      277     25482039
+1790709883.931832    shared_assets/RE15DOOR            30      30       30      1914932
+1790709883.932517    synchro                           90      90       90     27678779
+1790709883.933065    SUMME                           3603    3603     3603    356678277
+1790709883.933412    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790709883.933733    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790709883.934097    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790709883.934568    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790709883.934707    Laufzeit:  4.1 s
+1790709883.935099 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+1790709883.956442 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790709884.337842 ABBRUCH: Linux-Binary ist VERALTET: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/re15_pc
+1790709884.338014         stammt von 2026-09-29 19:34:13,
+1790709884.338226         der letzte Port-Code-Commit von 2026-09-29 20:55:26.
+1790709884.338513         Dieses Skript baut NICHT — es kopiert nur. Erst neu bauen und das Ergebnis
+1790709884.338923         nach /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/ kopieren, dann das Paket erzeugen.
+1790709885.376125 ENDE 2026-09-29 21:24:45
+EXIT=1

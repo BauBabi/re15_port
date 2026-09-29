@@ -1,0 +1,102 @@
+1790709907.655381 START 2026-09-29 21:25:07 :: bash release/make_package.sh --version v0.8.19
+1790709907.835911    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790709907.960390    Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+1790709907.961030 == Android-APK: Selbsttest + volle Asset-Pruefung gegen den Quellbaum ==
+1790709908.121729 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790709908.264904    [ok] 01 gute APK                                           rc=0 (soll 0)
+1790709908.460412    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+1790709908.618629    [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+1790709908.778014    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+1790709908.925705    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+1790709909.053575    [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+1790709909.212305    [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+1790709909.372024    [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+1790709909.531435    [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+1790709909.722213    [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+1790709909.865504    [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+1790709910.032442    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+1790709910.190285    [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+1790709910.364766    [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+1790709910.531437    [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+1790709910.674253    [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+1790709910.928830    [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+1790709911.058185    [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+1790709911.231587    [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+1790709911.357230    [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+1790709911.551608    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+1790709911.741332    [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+1790709911.884300    [ok] 23 APK fehlt                                          rc=2 (soll 2)
+1790709912.042427    [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+1790709912.206933    [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+1790709912.350369    [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+1790709912.477089    [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+1790709912.639685    [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+1790709912.829805    Laufzeit: 4.7 s
+1790709912.830051 == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+1790709913.150106 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790709913.150387    APK:       C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790709913.150557    Quellbaum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android
+1790709913.150748    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790709917.088514    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790709917.088851    shared_assets/PSX               3193    3193     3193    300522652
+1790709917.089022    shared_assets/extracted_fx        13      13       13      1079875
+1790709917.089191    shared_assets/RE2                277     277      277     25482039
+1790709917.089357    shared_assets/RE15DOOR            30      30       30      1914932
+1790709917.089577    synchro                           90      90       90     27678779
+1790709917.089746    SUMME                           3603    3603     3603    356678277
+1790709917.089881    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790709917.090012    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790709917.090281    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790709917.090588    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790709917.090691    Laufzeit:  4.0 s
+1790709917.090953 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+1790709917.108265 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790709917.729204    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790709918.304853    hoechste glibc-Anforderung: GLIBC_2.29
+1790709918.565136    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790709921.616683    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790709921.662112    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790709921.869723    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790709921.916192    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790709924.972813    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790709927.991846    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790709928.260817    Zeilenenden-Gate: alle Skripte im Paket sind LF
+1790709928.351707    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+1790709928.901442    OK: 349M, 3606 Dateien
+1790709928.901784 == Windows-Paket: re15_port_v0.8.19 ==
+1790709929.424702    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790709929.594061    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790709932.661107    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790709932.702947    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790709932.961168    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790709933.013033    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790709936.199490    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790709939.238030    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790709940.567391    Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+1790709941.712869    Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+1790709942.185893    OK: 350M, 3607 Dateien
+1790709942.193541 == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+1790709955.606552    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+1790709955.892965    x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+1790709955.893134    x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+1790709955.893273    1 Eintrag/Eintraege im Zentralverzeichnis angepasst
+1790709956.070562    x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+1790709956.070712    x-Bit ok: re15_port_v0.8.19/run.sh  100755
+1790709956.071967 == Zippen: re15_port_v0.8.19_win64 ==
+1790709969.668637    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+1790709969.799126 == Zippen: re15_port_v0.8.19_android (APK 347M) ==
+1790709981.072257    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+1790709983.077714 
+1790709983.115280 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 21:26 re15_port_v0.8.19_android.z01
+1790709983.115496 -rw-r--r-- 1 mjoedicke Kein 75104359 Sep 29 21:26 re15_port_v0.8.19_android.zip
+1790709983.115711 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 21:25 re15_port_v0.8.19_linux_steamdeck_x64.z01
+1790709983.115930 -rw-r--r-- 1 mjoedicke Kein 75236322 Sep 29 21:25 re15_port_v0.8.19_linux_steamdeck_x64.zip
+1790709983.116109 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 29 21:26 re15_port_v0.8.19_win64.z01
+1790709983.116288 -rw-r--r-- 1 mjoedicke Kein 75344263 Sep 29 21:26 re15_port_v0.8.19_win64.zip
+1790709983.116384 == SHA256SUMS.txt geschrieben ==
+1790709983.148076 == Git: alte Pakete austauschen ==
+1790710005.067363    0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+1790710005.067574    (noch nicht committet — das macht der Release-Commit)
+1790710005.067644 == Fertig ==
+1790710006.103320 ENDE 2026-09-29 21:26:46
+EXIT=0
