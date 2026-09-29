@@ -123,6 +123,8 @@ REG="$(cd "$BUILD" && ctest -N | grep -aoE 'Total Tests: [0-9]+' | grep -oE '[0-
 [[ -n "$RAN" && -n "$REG" ]] || die "Testzahl nicht lesbar (gelaufen '$RAN', registriert '$REG')"
 [[ "$RAN" == "$REG" ]] || die "ctest lief $RAN Tests, registriert sind $REG"
 MIN="$(grep -oE 'RE15_MIN_TESTS:-[0-9]+' "$REPO/re15_port/tools/local_build.sh" 2>/dev/null | head -1 | grep -oE '[0-9]+$' || true)"
+# Gegenpruefer Runde 30: ohne gefundene Untergrenze fiele dieses Gate STILL weg -> abbrechen.
+[[ -n "$MIN" ]] || die "Untergrenze RE15_MIN_TESTS in re15_port/tools/local_build.sh nicht gefunden - Gate waere still aus"
 if [[ -n "$MIN" ]]; then
     [[ "$RAN" -ge "$MIN" ]] || die "nur $RAN Tests, local_build.sh verlangt >= $MIN - Suite kollabiert?"
 fi
