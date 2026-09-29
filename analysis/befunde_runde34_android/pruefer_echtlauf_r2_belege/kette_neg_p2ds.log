@@ -1,0 +1,47 @@
+1790718260.685863 START 2026-09-29 23:44:20 :: bash release/build_android.sh --gate-only C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_echtlauf_r2/kette_neg/neg_p2ds_signiert.apk --version v0.8.19
+1790718261.092478    Python: /c/Python310/python (3.10.11)
+1790718261.094260 == Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+1790718261.183904    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790718261.184426 == APK-Pruefung: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_echtlauf_r2/kette_neg/neg_p2ds_signiert.apk (Version v0.8.19) ==
+1790718261.708520    Stichproben ok; unzip zaehlt 3603 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790718261.833329    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790718261.833454    sdkVersion:'24'
+1790718261.833560    targetSdkVersion:'35'
+1790718261.833701    native-code: 'arm64-v8a' 'x86_64'
+1790718263.334886    Verified using v1 scheme (JAR signing): false
+1790718263.335165    Verified using v2 scheme (APK Signature Scheme v2): true
+1790718263.335355    Verified using v3 scheme (APK Signature Scheme v3): true
+1790718263.335555    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790718263.335727    Verified using v4 scheme (APK Signature Scheme v4): false
+1790718263.336066    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790718263.418261 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790718263.573611 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790718270.378322    Laufzeit: 6.8 s
+1790718270.378518 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790718270.378667 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790718270.625971 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790718270.626313    APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_echtlauf_r2\kette_neg\neg_p2ds_signiert.apk
+1790718270.626499    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790718270.626710    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790718270.878708    ZIP-Struktur: 3618 Eintraege roh gelesen, 3618 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790718274.831203    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790718274.831409    shared_assets/PSX               3193    3193     3193    300522652
+1790718274.831581    shared_assets/extracted_fx        13      13       13      1079875
+1790718274.831752    shared_assets/RE2                277     277      277     25482039
+1790718274.831921    shared_assets/RE15DOOR            30      29       29      1836688
+1790718274.832100    synchro                           90      90       90     27678779
+1790718274.832269    SUMME                           3603    3602     3602    356600033
+1790718274.832403    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790718274.832536    RE15DOOR:  Quelle 30, APK 29, sha256 gleich 29/30
+1790718274.832679    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790718274.832897    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790718274.832962    Laufzeit:  4.2 s
+1790718274.833035 --- Abweichungen: 2 ---
+1790718274.833107    [fehlt in der APK] 1
+1790718274.833376       fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P2DS.DO2)
+1790718274.833485    [Manifest: Zeile ohne APK-Eintrag] 1
+1790718274.833778       Manifest nennt shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P2DS.DO2
+1790718274.833893 == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+1790718274.838643 ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+1790718275.870350 ENDE 2026-09-29 23:44:35
+EXIT=1

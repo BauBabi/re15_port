@@ -3,7 +3,15 @@
 Pruefer: Gegenpruefer (Linse echter Lauf/Integration, Runde 2)
 Baum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android (Zweig r34a/android-gate)
 Datum: 2026-09-29
-Status: IN ARBEIT (Dossier wird laufend fortgeschrieben)
+Status: **fertig - Urteil: haltbar** (Befunde B1-B2 niedrig, siehe Ende). Pruefgegenstand: Bauer-Stand
+35d25455 (a358fd5d..35d25455); dieses Dossier aendert keine Werkzeuge.
+
+Kurz: voller Android-Bau EXIT=0 `ANDROID-BUILD-OK` (Kette 12,5 s = 8,1 % des Laufs; Selbsttest 72/72, Gate
+3603/3603 mit Zaehlung je Baum); APK = Referenz unter assets/ (unabhaengig verglichen, auch gegen den Quellbaum);
+make_package.sh ohne Shim und ohne touch EXIT=0, Python = C:/Python310, kein Installer (Schnappschuesse 0-4
+gleich), cmp-Gates RE2/DOOR + TORSE.VBS brechen im echten Fluss ab (Linux- und Windows-Paket), Stolperdraht:
+0 Aufrufe am Finder vorbei; unter Linux Selbsttest 72/72 + Gate rc 0/1/2 wie erwartet, volle Kette ohne SDK
+geschlossen rc 1.
 
 ## Auftrag (Kurzfassung)
 1. Voller Android-Bau im Arbeitsbaum (`bash release/build_android.sh --version v0.8.19 --no-toolchain`),
@@ -15,7 +23,6 @@ Status: IN ARBEIT (Dossier wird laufend fortgeschrieben)
 4. apk_asset_gate.py unter Linux (Docker-Bau-Image) gegen Referenz-APK + Quellbaum, --selbsttest.
 
 ## Protokoll
-(folgt)
 
 - 23:20 Dossier angelegt; Commits (a358fd5d..35d25455, 27 Commits), Bauer-Dossiers (android_gate.md,
   android_gate_nachbesserung.md), Pruefer-R1-Dossier und die Werkzeuge gelesen.
@@ -153,3 +160,105 @@ Neue SHA256SUMS.txt vorher gegengeprueft (`sha256sum -c` 6/6 OK). Dann `git rest
 + 6 Split-Volumes (danach 7/7 sha256 = Stand vor den Laeufen, `release_vorher.sha256`), `pkg-linux`, `pkg-win`,
 `win_out`, `linux_out`, APK geloescht (Kopie fuer Schritt 4 unter `build/r34a/pruefer_echtlauf_r2/neu_v0.8.19.apk`);
 `git status --short release/ re15_port/` leer, `git status --ignored release/` ohne Reste.
+
+## 4. Linux (Docker Desktop 27.5.1 lief; Baum und Archiv NUR LESEND eingehaengt, Faelschungen nur im Container)
+
+Skripte + Logs: `linux_lauf_r2.sh` / `linux_lauf_r2.log` (Image `re15-linux-build:deb11`: Debian 11 bullseye,
+Python 3.9.2, bash 5.1.4, `OSTYPE=linux-gnu`, kein unzip/cygpath/java/aapt) und `linux_lauf_r2_deck.sh` /
+`linux_lauf_r2_deck.log` (Image `re15-deck:latest`: Steam Runtime 3 sniper, Python 3.9.2, unzip, kein SDK).
+Gate-Datei im Mount: 0 CR (LF), Modus 777 (9p).
+| Lauf | Ergebnis |
+|---|---|
+| L1 `bash release/python_finden.sh` | `Python: /usr/bin/python3 (3.9.2)`, rc 0 |
+| L2 `python3 release/apk_asset_gate.py --selbsttest` | **72/72** `[ok]`, rc 0, 3,6 s (Temp unter /tmp; /src ist ro - der Selbsttest schreibt nichts in den Baum) |
+| L3 Referenz-APK gegen `--repo /src` (9p) | **rc 0** `APK-ASSET-GATE-OK`, Zaehlung wie unter Windows (PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90; RE2/DOOR 27/27, RE15DOOR 30/30, TORSE.VBS gleich; 3616 Eintraege roh lesbar), 43,4 s |
+| L4 die in Abschnitt 1 gebaute APK gegen `/src` | rc 0, dieselbe Zaehlung, 50,9 s |
+| L5 Negativ: Kopie der Referenz, 1 Byte in den Daten von RE15DOOR/P07G.DO2 | **rc 1** `APK-Eintrag beschaedigt (CRC/Entpacken): ...P07G.DO2: gelesen 55908 B, CRC a88df3b1 - Zentralverzeichnis 55908 B, CRC 2c23d999`, RE15DOOR 29/30 |
+| L6 Negativ: Kopie ohne RE2/TORSE.VBS (Manifest unveraendert) | **rc 1** `fehlt in der APK: assets/shared_assets/RE2/TORSE.VBS` + `Manifest nennt ... die APK hat keinen Eintrag`, `TORSE.VBS: ... APK FEHLT` |
+| L7 `--repo /tmp` | rc 2 `build.gradle fehlt: /tmp/re15_port/platform/android/app/build.gradle` |
+| L8 `source python_finden.sh` unter `set -euo pipefail`, Gate ueber `"$PY"` | `PY=/usr/bin/python3`, gate-rc 0 |
+| L9 Direktaufruf `/src/release/apk_asset_gate.py --selbsttest` (Shebang `#!/usr/bin/env python3`) | 72/72, rc 0 (unter Linux unkritisch; zu Windows siehe Befund B2) |
+| L10 Quellbaum-Kopie auf dem Container-Dateisystem (346 MB, Kopie 63,7 s), Gate gegen die Referenz | rc 0, **8,0 s** statt 43-54 s -> die Linux-Laufzeiten ueber /src sind der 9p-Mount, nicht das Gate |
+| D1 `bash release/build_android.sh --gate-only <ref> --version v0.8.19` (deck, ohne Android-SDK) | **rc 1** `ABBRUCH: APK-Pruefung: Android-SDK-Ordner fehlt: /root/Android/Sdk ... Nur die Assets: "$PY" release/apk_asset_gate.py --repo . <apk>` (r1: hier noch rc 0 mit "aapt uebersprungen" - jetzt geschlossen) |
+| D2 dasselbe ohne `--version` | rc 2 `--gate-only braucht --version` |
+| D3 Gate direkt im deck-Image | rc 0, 54,1 s |
+Folgerung: `apk_asset_gate.py` (Selbsttest + Pruefung) und `python_finden.sh` sind unter Linux portabel und liefern
+dieselben Zahlen; die volle Kette (`apk_pruefen.sh`: aapt/apksigner/Java) braucht ein Linux-Android-SDK, das keines der
+re15-Images hat - dort bricht sie geschlossen ab (D1), statt still zu ueberspringen.
+Nebenbei: `re15-deck:latest` hat ENTRYPOINT `/usr/local/bin/re15-build`; mein erster Aufruf ohne `--entrypoint bash`
+startete den Deck-Bau, der am ro-Mount scheiterte (`CMake Error: Unable to (re)create ... pkgRedirects`) - nichts
+geschrieben (`git status` leer, kein `targets/steamdeck/build`).
+
+## 5. Der urspruengliche offene Punkt in der ECHTEN Kette (`kette_neg_tuer.sh`, `kette_neg_tuer.out`, `kette_neg_p2ds.log`)
+Kopie der in Abschnitt 1 gebauten APK OHNE `assets/shared_assets/RE15DOOR/P2DS.DO2` (bewusst nicht P07G.DO2, die
+fruehere einzige Stichprobe), `zipalign -p 4`, mit dem Debug-Schluessel neu signiert (`apksigner verify`:
+`Verifies`, v2 true) - also eine APK, die wie ein normaler Bau aussieht. `build_android.sh --gate-only <apk>
+--version v0.8.19`: Stichproben ok (3603 Asset-Eintraege), aapt `versionName='v0.8.19'`, apksigner v2 true,
+Selbsttest 72/72 - alles, was bis v0.8.19 geprueft wurde, ist gruen - dann das Gate: `RE15DOOR: Quelle 30, APK 29,
+sha256 gleich 29/30`, `fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2`, `Manifest nennt
+shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag` -> `ABBRUCH: APK-Asset-Gate: die APK weicht
+vom Quellbaum ab`, **EXIT=1**. (Erster Versuch scheiterte an meinem Laufwerkzeug: `/c/msys64/usr/bin` vorn im PATH
+machte `bash` zur MSYS2-bash, die `LOG` nicht sah - Skript danach mit absolutem zip-Pfad, Lauf wie oben.)
+
+## 6. Aufraeumen + Endstand (23:45)
+- Eigene Laufreste geloescht: `build/r34a/pruefer_echtlauf_r2/{git_iso (489 MB), pakete (1,5 GB), neu_v0.8.19.apk,
+  kette_neg (1,1 GB)}` und die Gradle-Ausgaben des eigenen Baus `re15_port/platform/android/{app/build (1,5 GB),
+  app/.cxx, .gradle, build, local.properties}` (vorher Prozessliste: kein Bau im Baum; Gegenpruefer Umgehung R2
+  arbeitete in einer eigenen Sandbox unter build/r34a/pruefer_umgehung_r2). Liegen gelassen: die Logs unter
+  `build/r34a/pruefer_echtlauf_r2/` (~300 KB), `re15_port/platform/android/_deps` (vom Bauer, schon vorher da).
+- `git status --short release/ re15_port/` leer; `git status --ignored` unter release/ ohne Reste; release/-Dateien
+  7/7 sha256 = Stand vor den Laeufen; keine `%TEMP%\apk_gate_selbsttest_*` (0 nach 9 Windows-Selbsttests).
+- Python-Schnappschuss 4 (23:45:59, `-seit 23:21:00`) == Schnappschuss 0 (125 Zeilen, `Compare-Object` leer).
+  Die Altlast (Uninstall-Eintrag `pymanager-pythoncore-3.14-64`) steht unveraendert in allen fuenf Schnappschuessen.
+
+## Befunde
+
+- **B1 (niedrig) - Direktaufruf des Gates unter Git-Bash landet beim WindowsApps-Alias.** `release/apk_asset_gate.py`
+  beginnt mit `#!/usr/bin/env python3`, ist unter Git-Bash wegen des Shebangs ausfuehrbar, und sein Kopf zeigt
+  Direktaufrufe (`apk_asset_gate.py:61-62`: `apk_asset_gate.py [--repo <repo>] <apk>`, `apk_asset_gate.py
+  --selbsttest`). Ein direkter Start loest `python3` ueber den PATH auf; auf dieser Maschine ist der erste Treffer
+  `type -P python3` = `/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3` - die v0.8.17-Installer-Klasse.
+  Beleg ohne Risiko: mit dem Stolperdraht vorn im PATH landet `./release/apk_asset_gate.py --selbsttest` beim Draht
+  (`stolperdraht_direkt.log`: `ARGS=[./release/apk_asset_gate.py --selbsttest]`, rc 97) - ohne Draht waere es der
+  Alias. Die automatischen Aufrufer sind NICHT betroffen (alle ueber `"$PY"`; 3c: 0 Umgehungsaufrufe in Bau-Kette
+  und make_package). Das Muster gab es schon (`release/zip_exec_bit.py`, gleicher Shebang, vor a358fd5d); neu ist
+  ein zweites, dessen Kopf zum Direktaufruf einlaedt. Vorschlag: im Kopf nur `source release/python_finden.sh` +
+  `"$PY" release/apk_asset_gate.py ...` zeigen bzw. "unter Git-Bash nie direkt starten" vermerken.
+- **B2 (niedrig) - Kopf von make_package.sh nennt die neuen Voraussetzungen nicht.** Liegt
+  `release/<name>_android.apk`, braucht make_package.sh jetzt Android-SDK (aapt + lib/apksigner.jar aus
+  build-tools), ein JDK und Python >= 3.8 und bricht sonst ab (fail closed; Meldung klar, vgl. D1 `APK-Pruefung:
+  Android-SDK-Ordner fehlt ... Nur die Assets: ...`). Der Kopf (`make_package.sh:16-23`, "Aufruf"/"Eingaben") nennt
+  weder die APK als Eingabe noch diese Voraussetzungen; beschrieben ist es nur im Code (`:413-468`). Auf der
+  Bau-Maschine ist alles da (3a gruen) - Dokumentationsluecke, kein Defekt.
+
+Hinweise (kein Befund dieser Linse):
+- Jede Neubau-APK hat eine andere sha256 bei gleicher Groesse (libmain.so: `__DATE__/__TIME__`,
+  `platform/pc/main.c:6006`, + eingebauter Baupfad): "APK = Referenz" laesst sich nur eintragsweise belegen (so
+  hier, Abschnitt 2), nicht per Hash.
+- Im Normalfluss kommt der WindowsApps-Zweig des Finders nicht dran (/c/Python310 PATH-Stelle 12 < WindowsApps 35);
+  belegt ist er im vollen Fluss nur durch 3c (WindowsApps vor Python gesetzt).
+- Code-Lesart, von mir NICHT gemessen (Zeitfenster-Linse; der Gegenpruefer Umgehung R2 sondiert genau das gerade in
+  seiner Sandbox): make_package.sh nimmt `APK_KENNUNG` erst NACH `apk_pruefen` (`:464` pruefen, `:465` Kennung). Die
+  Kennung haelt also die Datei fest, die nach den ~12 s Pruefung dort liegt - der Zipzeit-Vergleich (`:662`) sichert
+  damit das Kopierfenster, nicht das Pruefzeitfenster. In meinen echten Laeufen kein Effekt (niemand tauscht).
+
+Widerlegt / bestaetigt ohne Befund:
+- Der echte Android-Bau laeuft mit der neuen Kette gruen und nimmt der APK nichts weg (1, 2); die Kette veraendert
+  die Datei nicht (sha256 Gradle-Ausgabe == Auslieferung).
+- r1-B1 (Finder waehlte MSYS2 3.14.7) ist im echten Fluss behoben: `/c/Python310/python (3.10.11)` in Bau, make_package,
+  --gate-only. r1-B2 (build.gradle-Commit machte PC-Binaries VERALTET): behoben, 3a ohne touch gruen. r1-B3
+  (`.ungeprueft` bleibt liegen): im Erfolgsfall nichts uebrig. r1-B4 (make_package prueft nur Assets): make_package
+  prueft jetzt Frische, versionName, Signatur und Assets der APK (3a-Log).
+- Kein Python-Installer in irgendeinem Lauf (Schnappschuesse 0-4 gleich, kein Prozess, keine neue Datei).
+- Paketinhalt win64/linux identisch mit v0.8.19; die APK im Android-Satz ist bytegleich die gepruefte.
+
+## Urteil
+
+**haltbar.** Der echte Android-Bau lief mit den neuen Gates gruen (EXIT=0, `ANDROID-BUILD-OK`; Selbsttest 72/72 in
+6,9 s, volle Pruefung 3603/3603 mit Zaehlung je Baum in 3,6 s, Kette gesamt 12,5 s = 8,1 %); die gebaute APK hat
+dieselben 3604 Asset-Eintraege bytegleich (und in derselben Reihenfolge) wie die Referenz-APK und stimmt unabhaengig
+geprueft mit dem Quellbaum; make_package.sh lief ohne Shim, ohne touch und ohne Installer durch (Python C:/Python310,
+Pakete identisch mit v0.8.19, APK im Satz = gepruefte APK), die neuen cmp-Gates brechen im echten Fluss fuer beide
+Pakete ab, kein Skriptteil ruft Python am Finder vorbei; unter Linux laufen Selbsttest und Gate portabel (rc 0/1/2
+wie erwartet, gleiche Zahlen), die volle Kette schliesst ohne SDK ab. Die echte Kette faengt genau den offenen Punkt
+(eine fehlende RE15DOOR-Datei in einer gueltig signierten APK). B1/B2 sind niedrig und blockieren die Uebernahme nicht.

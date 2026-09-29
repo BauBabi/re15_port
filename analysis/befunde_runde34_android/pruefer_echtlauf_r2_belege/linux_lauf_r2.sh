@@ -17,7 +17,7 @@ schritt() {   # $1 = Titel, Rest = Kommando
     "$@" > /tmp/schritt.out 2>&1 || rc=$?
     t1=$(date +%s.%N)
     cat /tmp/schritt.out
-    printf '### -> rc=%d  dauer=%.1f s\n' "$rc" "$(echo "$t1 - $t0" | bc)"
+    awk -v r="$rc" -v a="$t0" -v b="$t1" 'BEGIN { printf "### -> rc=%d  dauer=%.1f s\n", r, b - a }'
 }
 echo "=== Umgebung ==="
 head -2 /etc/os-release; uname -srm; bash --version | head -1
@@ -81,7 +81,7 @@ cp -a /src/re15_port/shared_assets/PSX /src/re15_port/shared_assets/extracted_fx
 cp -a /src/re15_port/platform/android/app/build.gradle /tmp/repo/re15_port/platform/android/app/
 cp -a /src/synchro/STAGE* /tmp/repo/synchro/
 t1=$(date +%s.%N)
-printf 'Kopie nach /tmp/repo: %.1f s, %s\n' "$(echo "$t1 - $t0" | bc)" "$(du -sh /tmp/repo | cut -f1)"
+awk -v a="$t0" -v b="$t1" -v g="$(du -sh /tmp/repo | cut -f1)" 'BEGIN { printf "Kopie nach /tmp/repo: %.1f s, %s\n", b - a, g }'
 schritt "L10 Referenz-APK gegen die Kopie auf dem Container-Dateisystem" python3 "$GATE" --repo /tmp/repo "$REF"
 echo
 echo "=== Ende $(date '+%F %T') ==="
