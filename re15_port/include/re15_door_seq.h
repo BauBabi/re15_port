@@ -45,6 +45,8 @@ typedef struct {
     uint16_t flags;    /* obj+0x144 (u16 @6)                            */
     int32_t  pos[3];   /* obj+0x38/0x3c/0x40                            */
     uint16_t rot[3];   /* obj+0x74/0x76/0x78 (4096 = 360 Grad)          */
+    uint16_t rot0[3];  /* Drehung aus Door_model_set pc+16..21 (nur Port: Grund-Drehung fuer den
+                        * Griff-Tausch, door_scene_pc.c; die Maschine liest es nie)          */
     int8_t   eltern;   /* Flag 0x10 -> flags & 0xF, sonst -1 = Kamera   */
     re15_door_mat_t welt;       /* obj+0x54: Objekt -> Sicht, dieses Bild   */
     re15_door_mat_t welt_vor;   /* dieselbe Matrix des VORIGEN Bildes (Licht) */
@@ -129,6 +131,9 @@ void re15_door_seq_ende(re15_door_seq_t *s);   /* Speicher der Skriptkopie freig
 
 /* Mathematik (auch fuer Tests): RE2 libgte RotMatrix @0x8008e1f4 mit rcossin_tbl @0x800adeac. */
 void re15_door_rotmatrix(const uint16_t rot[3], int16_t m[9]);
+/* Objektmatrix = Eltern * RotMatrix(rot) + Lage (Kette FUN_80014234), fuer den Griff-Tausch. */
+void re15_door_seq_objmatrix(const re15_door_mat_t *eltern, const uint16_t rot[3],
+                             const int32_t pos[3], re15_door_mat_t *out);
 
 
 /* ===========================================================================
@@ -136,13 +141,45 @@ void re15_door_rotmatrix(const uint16_t rot[3], int16_t m[9]);
  * ======================================================================== */
 #define RE15_DOOR_ARCHIV_KEINS     0
 #define RE15_DOOR_ARCHIV_TOR1170   1   /* engine/src/gen/tor_1170_door.inc */
+#define RE15_DOOR_ARCHIV_RE2       2   /* RE2-Archiv DOORxx.DO2 aus shared_assets/RE2/DOOR (Runde 31) */
+
+#define RE15_DOOR_KEIN_SPENDER  0xFFu
 
 typedef struct {
-    uint8_t aktiv;
-    uint8_t archiv;      /* RE15_DOOR_ARCHIV_* */
-    uint8_t variante;    /* var 12 */
-    uint8_t tuer_nr;     /* var 15 */
+    uint8_t  aktiv;
+    uint8_t  archiv;     /* RE15_DOOR_ARCHIV_* */
+    uint8_t  variante;   /* var 12 = Payload+13 & 0x7f (@0x80013e5c/6c)            */
+    uint8_t  tuer_nr;    /* var 15 = Payload+12 (@0x80013e90/98) = RE2-Archivnummer */
+    uint8_t  bit7;       /* var 14 = Payload+13 & 0x80 (@0x80013e84/8c)             */
+    uint8_t  re2_nr;     /* RE2-Archiv 0..0x36 (nur RE15_DOOR_ARCHIV_RE2)           */
+    uint8_t  spender;    /* Griff-Tausch: Spender-Archiv, RE15_DOOR_KEIN_SPENDER     */
+    uint16_t seite;      /* Tuerseite Sxxx (Runde 31, Pruefhaken/Protokoll), 0 = keine */
+    uint16_t tuer;       /* Tuer Txxx, 0 = keine                                     */
 } re15_door_seq_anfrage_t;
+
+/* Eine Zeile der Port-Tabelle RE1.5-Tuerseite -> RE2-Archiv (engine/src/gen/tuer_zuordnung.inc,
+ * erzeugt von tools/tueren/tuer_zuordnung_gen.py). PORT-WAHL aus dem Bildvergleich. */
+typedef struct {
+    uint16_t raum;        /* volle Raum-Id inkl. Variante (xxx0 / xxx1)               */
+    uint8_t  form;        /* 0 = Rechteck (Mitte/Halbmass), 1 = Viereck (Punkte)      */
+    uint8_t  band;        /* Door_aot_set pc[4]                                      */
+    int32_t  x, z, hw, hh;
+    int16_t  qx[4], qz[4];
+    uint8_t  re2_nr;
+    uint8_t  variante;
+    uint8_t  bit7;
+    uint8_t  spender;
+    uint16_t seite, tuer;
+    uint32_t off;         /* RDT-Datei-Offset eines Door_aot_set dieser Seite (Herkunft, Riegel) */
+} re15_tuer_zeile_t;
+
+/* Griff-Tausch je Paar Archiv <- Spender (tools/tueren/tuer_zuordnung_gen.py, [SIM]-Werte). */
+typedef struct {
+    uint8_t  archiv, spender;
+    uint8_t  mesh_archiv, mesh_spender;
+    uint16_t rot_vorn[3], rot_hinten[3];   /* Grund-Drehung des Spendergriffs            */
+    int16_t  aus_archiv, aus_spender;      /* Ausschlag rot x beim Oeffnen               */
+} re15_griff_tausch_t;
 
 extern re15_door_seq_anfrage_t g_door_seq_anfrage;
 
@@ -154,6 +191,28 @@ extern re15_door_seq_anfrage_t g_door_seq_anfrage;
  * Rueckgabe RE15_DOOR_ARCHIV_*, *variante = var 12. */
 int  re15_door_seq_zuordnen(unsigned room_id, int32_t x, int32_t z, int32_t half_w, int32_t half_h,
                             int band, int *variante);
+/* Dasselbe fuer jede Flaechenform (Runde 31): Rechteck (viereck = 0: Mitte/Halbmass) oder
+ * Viereck (viereck = 1: die vier Punkte pc+6..21). Erst das Tor, dann die RE2-Tabelle.
+ * Fuellt *out (aktiv bleibt 0) und liefert RE15_DOOR_ARCHIV_*. */
+int  re15_door_seq_zuordnen_flaeche(unsigned room_id, int viereck, int32_t x, int32_t z,
+                                    int32_t half_w, int32_t half_h,
+                                    const int16_t qx[4], const int16_t qz[4], int band,
+                                    re15_door_seq_anfrage_t *out);
+/* Nur die RE2-Tabelle (ohne Tor), door_seq_zuordnung.c. */
+int  re15_door_seq_zuordnen_re2(unsigned room_id, int viereck, int32_t x, int32_t z,
+                                int32_t half_w, int32_t half_h,
+                                const int16_t qx[4], const int16_t qz[4], int band,
+                                re15_door_seq_anfrage_t *out);
+/* Tabellenzugriff (Pruefhaken, Tests): Anzahl Zeilen, Zeile i. Auf der PSX ist die Tabelle leer. */
+int  re15_door_seq_zeilen(void);
+const re15_tuer_zeile_t *re15_door_seq_zeile(int i);
+/* Anfrage einer Tuerseite (Sxxx) aus der Tabelle - erste Zeile dieser Seite. 0 = unbekannt. */
+int  re15_door_seq_anfrage_fuer_seite(int seite, re15_door_seq_anfrage_t *out, unsigned *raum);
+/* Griff-Tausch-Satz fuer Archiv <- Spender, NULL = keiner. */
+const re15_griff_tausch_t *re15_door_seq_griff_tausch(int archiv, int spender);
+/* RE2-Archivtabelle @0x8009a520 (engine/src/gen/re2_tuer_tabelle.inc): Tonteil- und
+ * Modellteil-Groesse, Sektor. 0 = gut. */
+int  re15_door_seq_re2_archiv(int nr, int *ton, int *modell, int *sektor, int *datei);
 /* Modellteil eines Archivs (eingebacken). */
 const uint8_t *re15_door_seq_archiv(int archiv, int *groesse);
 

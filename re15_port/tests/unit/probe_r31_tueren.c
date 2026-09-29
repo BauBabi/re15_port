@@ -8,6 +8,18 @@
  *             Ziel, Lage, Cut), der Trefftest Befehl fuer Befehl, und ein echter Durchgang im
  *             Spielschritt (Standplatz vor der Tuer, QUADRAT) -> Raumwechsel nach ROOM4040 bzw.
  *             ROOM4080 mit der Lage aus der Nutzlast.
+ *   maschine  Die Tuermaschine (engine/src/door_seq_common.c) gegen den Katalog-Simulator fuer JEDE
+ *             benutzte Archiv-Variante (43 Paare), gelesen aus den Kopien shared_assets/RE2/DOOR:
+ *             je Bild Pruefsumme ueber alle 10 Objekte, Se_on-Bilder, Bildzahl, Schliesston-Merker;
+ *             ausserdem: Skript 0 verteilt die Variante (Case, nicht Default), keine Notiz
+ *             (unbekannter Opcode/Feld). Referenz tests/unit/gen/r31_tuer_referenz.inc
+ *             (tools/tueren/tuer_maschine_referenz.py).
+ *   zuordnung Die Port-Tabelle (gen/tuer_zuordnung.inc): jede Zeile trifft einen echten Door_aot_set
+ *             ihres RDT (Offset in der Zeile, Flaeche/Band so gerechnet wie op_door_aot_set) und
+ *             findet ihre Wahl; eine Kreuz-Raum-Tuer mit Griff-Tausch (T033/T034/T027) stellt
+ *             im echten Spielschritt die Anfrage (Laeufer-Attrappe) und der Raumwechsel steht danach
+ *             noch an; eine nicht abgedeckte Tuer nicht; das Tor bleibt beim Tor-Archiv; die
+ *             Intro-Uebergabe (Null-Rechteck) nicht; Viereck S225 ja, S226 nein.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -233,10 +245,248 @@ static void teil_viereck(void)
     }
 }
 
+
+/* ---------------------------------------------------------------------------------------------
+ * Teil "maschine"
+ * ------------------------------------------------------------------------------------------ */
+#include "gen/r31_tuer_referenz.inc"
+
+static uint32_t fnv(uint32_t h, uint32_t w)
+{
+    for (int k = 0; k < 4; k++) { h ^= (w >> (8 * k)) & 0xFFu; h *= 16777619u; }
+    return h;
+}
+
+static uint32_t bild_summe(const re15_door_seq_t *s)
+{
+    uint32_t h = 2166136261u;
+    for (int i = 0; i < RE15_DOOR_OBJEKTE; i++) {
+        const re15_door_obj_t *o = &s->obj[i];
+        h = fnv(h, (uint32_t)i);
+        if (!o->on) { h = fnv(h, 0); continue; }
+        h = fnv(h, 1);
+        h = fnv(h, o->mesh);
+        h = fnv(h, o->flags);
+        for (int a = 0; a < 3; a++) h = fnv(h, (uint32_t)o->pos[a]);
+        for (int a = 0; a < 3; a++) h = fnv(h, o->rot[a]);
+    }
+    return h;
+}
+
+static uint8_t *datei(const char *pfad, int *n)
+{
+    size_t z = 0;
+    uint8_t *b = slurp(pfad, &z);
+    *n = (int)z;
+    return b;
+}
+
+static void teil_maschine(void)
+{
+    int n_ref = (int)(sizeof r31_refs / sizeof r31_refs[0]);
+    int gut = 0;
+    for (int k = 0; k < n_ref; k++) {
+        const r31_ref_t *r = &r31_refs[k];
+        char pfad[600];
+        snprintf(pfad, sizeof pfad, "%s/DOOR/DOOR%02X.DO2", RE15_ASSET_RE2_DIR, r->archiv);
+        int n = 0, ton = 0, modell = 0, sektor = 0, groesse = 0;
+        uint8_t *d = datei(pfad, &n);
+        PRUEF(d != NULL, "%s fehlt", pfad);
+        if (!d) continue;
+        PRUEF(re15_door_seq_re2_archiv(r->archiv, &ton, &modell, &sektor, &groesse) == 0
+              && groesse == n && sektor * 0x800 + modell == n,
+              "DOOR%02X: Datei %d B passt nicht zur Tabelle @0x8009a520", r->archiv, n);
+        PRUEF(r->verteilt, "DOOR%02X V%d: Skript 0 verteilt die Variante nicht", r->archiv, r->variante);
+        re15_door_seq_t s;
+        PRUEF(re15_door_seq_start(&s, d + sektor * 0x800, modell, r->variante, 0, r->archiv) == 0,
+              "DOOR%02X V%d: Start", r->archiv, r->variante);
+        int bild = 0, abw = 0, ton_i = 0;
+        while (bild < 4000 && re15_door_seq_bild(&s, 1)) {
+            if (bild < r->n_bilder && bild_summe(&s) != r->summen[bild]) {
+                if (abw++ < 3) printf("  DOOR%02X V%d Bild %d: Summe weicht ab\n", r->archiv, r->variante, bild);
+            }
+            for (int t = 0; t < s.n_ton; t++) {
+                PRUEF(ton_i < r->n_tone && r->tone[ton_i] == bild, "DOOR%02X V%d: Se_on in Bild %d unerwartet",
+                      r->archiv, r->variante, bild);
+                ton_i++;
+            }
+            bild++;
+        }
+        int ok = abw == 0 && bild == r->n_bilder && ton_i == r->n_tone && s.schliesston == r->schliesston
+                 && s.notizen == 0 && s.md1_ok && s.tim_ok;
+        printf("DOOR%02X V%d: %3d Bilder (Ref %3d), %d Se_on (Ref %d), Schliesston %d (Ref %d), Notizen 0x%x, "
+               "Abweichungen %d -> %s\n", r->archiv, r->variante, bild, r->n_bilder, ton_i, r->n_tone,
+               s.schliesston, r->schliesston, s.notizen, abw, ok ? "gleich" : "ANDERS");
+        PRUEF(ok, "DOOR%02X V%d: Maschine weicht vom Simulator ab", r->archiv, r->variante);
+        gut += ok;
+        re15_door_seq_ende(&s);
+        free(d);
+    }
+    printf("Maschine gegen Simulator: %d von %d Archiv-Varianten gleich\n", gut, n_ref);
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Teil "zuordnung"
+ * ------------------------------------------------------------------------------------------ */
+static re15_door_seq_anfrage_t s_gefangen;
+static int s_n_gefangen = 0;
+static void fang(const re15_door_seq_anfrage_t *a) { s_gefangen = *a; s_n_gefangen++; }
+
+static int16_t le16(const uint8_t *p) { return (int16_t)(p[0] | (p[1] << 8)); }
+
+/* Schluessel aus den Satzbytes, gerechnet wie op_door_aot_set (scd_vm.c). */
+static int satz_schluessel(const uint8_t *pc, int *form, int32_t *x, int32_t *z, int32_t *hw, int32_t *hh,
+                           int16_t qx[4], int16_t qz[4], int *band)
+{
+    if (pc[0] != 0x3B) return -1;
+    *band = pc[4];
+    if (pc[3] & 0x80) {
+        *form = 1;
+        for (int k = 0; k < 4; k++) { qx[k] = le16(pc + 6 + 4 * k); qz[k] = le16(pc + 8 + 4 * k); }
+        *x = *z = *hw = *hh = 0;
+    } else {
+        int16_t rx = le16(pc + 6), rz = le16(pc + 8), rw = le16(pc + 10), rd = le16(pc + 12);
+        *form = 0;
+        *x = (int32_t)rx + (int32_t)rw / 2; *z = (int32_t)rz + (int32_t)rd / 2;
+        *hw = (int32_t)(rw < 0 ? -rw : rw) / 2; *hh = (int32_t)(rd < 0 ? -rd : rd) / 2;
+        for (int k = 0; k < 4; k++) { qx[k] = 0; qz[k] = 0; }
+    }
+    return 0;
+}
+
+static void teil_zuordnung(void)
+{
+    /* 1. Tabelle gegen die echten Saetze */
+    int n = re15_door_seq_zeilen(), treffer = 0, seiten = 0, geteilt = 0;
+    PRUEF(n == 368, "Tabelle hat %d Zeilen, erwartet 368 (184 Seiten x 2 Raumdateien)", n);
+    for (int i = 0; i < n; i++) {
+        const re15_tuer_zeile_t *t = re15_door_seq_zeile(i);
+        char rp[600];
+        snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(t->raum >> 12), t->raum);
+        size_t sz = 0;
+        uint8_t *b = slurp(rp, &sz);
+        int form = -1, band = -1; int32_t x = 0, z = 0, hw = 0, hh = 0; int16_t qx[4], qz[4];
+        int ok = b && t->off + 40 <= sz && satz_schluessel(b + t->off, &form, &x, &z, &hw, &hh, qx, qz, &band) == 0
+                 && form == t->form && band == t->band
+                 && (form == 1 ? (!memcmp(qx, t->qx, sizeof qx) && !memcmp(qz, t->qz, sizeof qz))
+                               : (x == t->x && z == t->z && hw == t->hw && hh == t->hh));
+        PRUEF(ok, "Zeile %d S%03u ROOM%04X @0x%X trifft keinen passenden Door_aot_set", i, t->seite, t->raum,
+              (unsigned)t->off);
+        free(b);
+        re15_door_seq_anfrage_t q;
+        int r = re15_door_seq_zuordnen_flaeche(t->raum, t->form, t->x, t->z, t->hw, t->hh, t->qx, t->qz, t->band, &q);
+        /* Die Wahl muss stimmen; die Seitennummer darf eine andere sein, wo zwei Seiten dieselbe
+         * Flaeche mit verschiedenen Zielen teilen (Szenario-Saetze, z. B. S117/S118) - die
+         * Tabelle hat dann fuer beide dieselbe Wahl (tuer_zuordnung_gen.py prueft das). */
+        PRUEF(r == RE15_DOOR_ARCHIV_RE2 && q.re2_nr == t->re2_nr && q.variante == t->variante
+              && q.tuer_nr == t->re2_nr && q.spender == t->spender && q.bit7 == t->bit7,
+              "Zeile %d S%03u: findet ihre Wahl nicht", i, t->seite);
+        if (q.seite != t->seite) geteilt++;
+        int ar = 0, mo = 0, se = 0, gr = 0;
+        PRUEF(re15_door_seq_re2_archiv(t->re2_nr, &ar, &mo, &se, &gr) == 0, "S%03u: DOOR%02X ohne Tabelle",
+              t->seite, t->re2_nr);
+        if (t->spender != RE15_DOOR_KEIN_SPENDER)
+            PRUEF(re15_door_seq_griff_tausch(t->re2_nr, t->spender) != NULL, "S%03u: Griff-Tausch fehlt", t->seite);
+        treffer += ok;
+        int neu = 1;
+        for (int k = 0; k < i; k++) if (re15_door_seq_zeile(k)->seite == t->seite) { neu = 0; break; }
+        seiten += neu;
+    }
+    printf("Tabelle: %d Zeilen, %d treffen ihren Satz, %d Tuerseiten, %d Zeilen teilen die Flaeche mit einer "
+           "anderen Seite (gleiche Wahl)\n", n, treffer, seiten, geteilt);
+    PRUEF(seiten == 184, "%d Tuerseiten, erwartet 184", seiten);
+
+    /* 2. Tor unveraendert, Intro-Uebergabe nicht, Viereck S225 ja, S226 nein */
+    {
+        re15_door_seq_anfrage_t q;
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x1170, 0, 2550, 15250, 1050, 850, NULL, NULL, 4, &q) == RE15_DOOR_ARCHIV_TOR1170
+              && q.variante == 0, "Tor ROOM1170 Slot 0");
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x1171, 0, -11065, -27850, 875, 600, NULL, NULL, 4, &q) == RE15_DOOR_ARCHIV_TOR1170
+              && q.variante == 1, "Tor ROOM1171 Slot 5");
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x1170, 0, 0, 0, 0, 0, NULL, NULL, 0, &q) == RE15_DOOR_ARCHIV_KEINS,
+              "Intro-Uebergabe (Null-Rechteck) darf keine Sequenz bekommen");
+        const int16_t qx[4] = { -24190, -25170, -26630, -25250 }, qz[4] = { -25490, -26560, -25220, -23930 };
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x4030, 1, 0, 0, 0, 0, qx, qz, 0, &q) == RE15_DOOR_ARCHIV_RE2
+              && q.re2_nr == 0x25 && q.variante == 0 && q.seite == 225, "Viereck S225 -> DOOR25 V0");
+        const int16_t px[4] = { -20490, -19400, -20740, -21840 }, pz[4] = { -24080, -25070, -26460, -25240 };
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x4030, 1, 0, 0, 0, 0, px, pz, 0, &q) == RE15_DOOR_ARCHIV_KEINS,
+              "Viereck S226 (keine Tuer, nicht abgedeckt) darf keine Sequenz bekommen");
+    }
+
+    /* 3. echter Spielschritt: Kreuz-Raum-Tuer mit Anfrage, nicht abgedeckte ohne */
+    re15_door_seq_setze_laeufer(fang);
+    {
+        /* eine beim Betreten aktive Kreuz-Raum-Tuer MIT Griff-Tausch (T033/T034: DOOR09 <- DOOR04,
+         * T027: DOOR13 <- DOOR07). ROOM10D0 S042 ist beim Betreten inert (sce 0, @0x1052). */
+        static const uint16_t raeume[] = { 0x1130, 0x1120, 0x1150, 0x10F0, 0x10D0 };
+        int erledigt = 0;
+        for (size_t r = 0; r < sizeof raeume / sizeof raeume[0] && !erledigt; r++) {
+            if (room_boot(raeume[r]) != 0) continue;
+            for (int i = 0; i < RE15_AOT_MAX && !erledigt; i++) {
+                const re15_aot_t *a = &g_aot.slots[i];
+                const re15_aot_door_params_t *d = &g_aot.door_params[i];
+                if (!a->active || a->type != RE15_AOT_TYPE_DOOR || !(a->half_w || a->half_h || a->has_quad)) continue;
+                re15_door_seq_anfrage_t soll;
+                if (re15_door_seq_zuordnen_flaeche(raeume[r], a->has_quad, a->x, a->z, a->half_w, a->half_h,
+                                                   a->xs, a->zs, d->band, &soll) != RE15_DOOR_ARCHIV_RE2) continue;
+                if (soll.spender == RE15_DOOR_KEIN_SPENDER) continue;
+                s_n_gefangen = 0; memset(&s_gefangen, 0, sizeof s_gefangen);
+                int gefunden = 0;
+                int wechsel = durchgehen(i, &gefunden);
+                printf("ROOM%04X Slot %d (S%03u): Standplatz %d, Raumwechsel %d -> ROOM%04X, Laeufer %d x: "
+                       "Archiv %d DOOR%02X V%d Tuer %u Spender %02X Seite S%03u\n", raeume[r], i, soll.seite,
+                       gefunden, wechsel, g_room_change.room_id, s_n_gefangen, s_gefangen.archiv, s_gefangen.re2_nr,
+                       s_gefangen.variante, s_gefangen.tuer_nr, s_gefangen.spender, s_gefangen.seite);
+                if (!gefunden) continue;                     /* kein Standplatz: naechste Tuer */
+                erledigt = 1;
+                PRUEF(wechsel && g_room_change.room_id != raeume[r], "S%03u: kein Kreuz-Raum-Durchgang", soll.seite);
+                PRUEF(s_n_gefangen == 1 && s_gefangen.archiv == RE15_DOOR_ARCHIV_RE2 && s_gefangen.re2_nr == soll.re2_nr
+                      && s_gefangen.variante == soll.variante && s_gefangen.tuer_nr == soll.re2_nr
+                      && s_gefangen.spender == soll.spender,
+                      "S%03u: Anfrage DOOR%02X V%d Spender %02X fehlt/falsch", soll.seite, soll.re2_nr, soll.variante,
+                      soll.spender);
+                /* die Sequenz lief im Spielschritt VOR dem Raumwechsel: der Wechsel steht noch an */
+                PRUEF(g_room_change.pending, "S%03u: Raumwechsel muss nach der Sequenz noch anstehen", soll.seite);
+                g_room_change.pending = 0;
+            }
+        }
+        PRUEF(erledigt, "keine begehbare Kreuz-Raum-Tuer mit Griff-Tausch gefunden");
+    }
+    if (room_boot(0x1000) == 0) {
+        /* eine Tuer ROOM1000 -> ROOM1050 (T000..T002, "aehnlich DOOR07"): nicht abgedeckt */
+        int slot = -1;
+        for (int i = 0; i < RE15_AOT_MAX && slot < 0; i++) {
+            const re15_aot_t *a = &g_aot.slots[i];
+            const re15_aot_door_params_t *d = &g_aot.door_params[i];
+            if (a->active && a->type == RE15_AOT_TYPE_DOOR && d->dest_room == 0x05 && d->dest_stage == 0
+                && (a->half_w || a->half_h)) {
+                re15_door_seq_anfrage_t q;
+                if (re15_door_seq_zuordnen_flaeche(0x1000, a->has_quad, a->x, a->z, a->half_w, a->half_h,
+                                                   a->xs, a->zs, d->band, &q) == RE15_DOOR_ARCHIV_KEINS)
+                    slot = i;
+            }
+        }
+        PRUEF(slot >= 0, "ROOM1000: keine nicht abgedeckte Tuer nach ROOM1050 gefunden");
+        if (slot >= 0) {
+            s_n_gefangen = 0;
+            int gefunden = 0;
+            int wechsel = durchgehen(slot, &gefunden);
+            printf("ROOM1000 Slot %d (nicht abgedeckt): Standplatz %d, Raumwechsel %d -> ROOM%04X, Laeufer %d x\n",
+                   slot, gefunden, wechsel, g_room_change.room_id, s_n_gefangen);
+            PRUEF(gefunden && wechsel && g_room_change.room_id == 0x1050, "ROOM1000: kein Durchgang nach ROOM1050");
+            PRUEF(s_n_gefangen == 0, "nicht abgedeckte Tuer darf keine Sequenz anfragen");
+            g_room_change.pending = 0;
+        }
+    }
+    re15_door_seq_setze_laeufer(NULL);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "viereck";
     if (!strcmp(teil, "viereck")) teil_viereck();
+    else if (!strcmp(teil, "maschine")) teil_maschine();
+    else if (!strcmp(teil, "zuordnung")) teil_zuordnung();
     else { printf("unbekannter Teil %s\n", teil); return 2; }
     printf(g_fehler ? "probe_r31_tueren %s: %d FEHLER\n" : "probe_r31_tueren %s: OK\n", teil, g_fehler);
     return g_fehler ? 1 : 0;

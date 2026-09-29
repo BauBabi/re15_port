@@ -18,3 +18,6 @@ re15_port/platform/android/gradlew text eol=lf
 # core.autocrlf ist hier true; heute retten nur Gits NUL-Heuristik und die TIM-Kopfbytes.
 # Die Text-Beigaben (csv/txt/html/obj) werden bereits mit LF geschrieben, -text haelt sie so.
 extracted_re2_dokumente/** -text
+# RE2-Tuerarchive (Runde 31): UNVERAENDERTE Kopien von info/re2leon/COMMON/DOOR (sha1-geprueft von
+# re15_port/tools/tueren/re2_tuer_tabelle.py). NIE normalisieren.
+re15_port/shared_assets/RE2/DOOR/** -text

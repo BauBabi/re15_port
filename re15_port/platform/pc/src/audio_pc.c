@@ -3560,17 +3560,36 @@ void re15_audio_footstep(int foot, int sound_type)
 /* Raum-Sound-Baenke (snd0 Schritte + snd1 Raum/Combat-SE) fuer den GERADE geladenen Raum
  * binden. Gegenstueck zu FUN_80043eac/FUN_80043fb0 im Raumlader FUN_800396fc — muss nach dem
  * RDT-Parse und bei JEDEM Raumwechsel laufen, weil beide Baenke aus dem RDT geschnitten werden. */
+static int ist_tuer_pcm(const int16_t *pcm);   /* Tuerbank (Tor + RE2-Tuer), s.u. */
+
 void re15_audio_load_room_banks(void)
 {
     if (!g_audio.initialized) return;
     SDL_LockAudioDevice(s_audio_dev);
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) s_active[i].active = 0;  /* nichts spielt mehr aus der alten Bank */
+    /* ⛔ Runde 31 (RE2-ERGAENZUNG, Tuersequenz): die TUERBANK ueberlebt den Raumwechsel. RE2
+     * FUN_80059e54 @0x80059e90 jal 0x800597a4: dort je Stimme 23..0 (@0x800597ac addiu s1,zero,24,
+     * @0x800597d8 addiu s1,s1,-1) Key-Off NUR, wenn die SPU-Startadresse im Raumbereich liegt
+     * (@0x800597bc/c0 s3 = -0x14441, @0x800597c8/cc s2 = 0x2980e, @0x80059800 addu, @0x80059804
+     * sltu, @0x80059808 bne -> ausserhalb weiter; @0x80059810 jal 0x80079498 Key-Off) - also
+     * 0x14441..0x3DC4F. Die Tuerbank liegt bei 0x3DC50 (@0x80014f08 lui a2,0x3 / @0x80014f18
+     * ori a2,a2,0xdc50, SsVabOpenHeadSticky @0x80014f14): der Schliesston (Door_exit, Flag 0x800)
+     * klingt ueber den Raumwechsel weiter. Port: Stimmen, deren PCM aus der Tuerbank stammt,
+     * bleiben an; ihre Prioritaet und Vormerkung bleiben stehen. */
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) {
+        if (s_active[i].active && ist_tuer_pcm(s_active[i].pcm)) continue;
+        s_active[i].active = 0;                      /* nichts spielt mehr aus der alten Bank */
+    }
     /* Stimm-Prioritaeten + Vormerkungen zuruecksetzen. Das Original loescht sie im Raum-Init
      * FUN_80043a34 (`sb zero,0x800b22cc` @0x80043acc, `sb zero,0x800b22d0` @0x80043ad4);
      * hier faellt ohnehin JEDE Stimme still, und FUN_800458d4 setzt prio einer stillen
      * Stimme auf 0 — deshalb ist das vollstaendige Loeschen gleichwertig. */
-    memset(s_se_prio, 0, sizeof s_se_prio);
-    memset(s_se_pend, 0, sizeof s_se_pend);
+    for (int v = 0; v < RE15_SE_VOICE_COUNT; v++) {
+        if ((s_active[v].active && ist_tuer_pcm(s_active[v].pcm)) ||
+            (s_se_pend[v].pending && ist_tuer_pcm(s_se_pend[v].pcm)))
+            continue;                                /* Tuerbank: Runde 31, s.o. */
+        s_se_prio[v] = 0;
+        memset(&s_se_pend[v], 0, sizeof s_se_pend[v]);
+    }
     /* Dasselbe fuer die RE2-ENEMSE-Kanaele: das Original bestimmt die Gegner-Bank bei JEDEM
      * Raumwechsel neu (FUN_80052b38 aus dem Raum-Setup FUN_80053528 @0x80053610) und laedt
      * sie ueber FUN_8005a09c nach; die Kanal-Prioritaeten einer nicht mehr geladenen Bank
@@ -3678,4 +3697,106 @@ void re15_audio_re2_tor_se(int se)
     s_se_pegel_re2 = 1;
     se_play_layers(s_tor_edt, &s_tor_vab, s_tor_decoded, s_tor_decoded_len, se);
     s_se_pegel_re2 = 0;
+}
+
+/* ===== Bank-Slot: RE2-TUERSEQUENZ je Archiv (Runde 31) ================================
+ * ⛔ RE2-ERGAENZUNG (Beta -> Retail). Tonteil = DOORxx.DO2[0 .. Tonteil) UNVERAENDERT (Groesse aus
+ * der EXE-Tabelle @0x8009a520, FUN_80014cd0 @0x80014d94 lhu s4,0(s1); gelesen von door_scene_pc.c
+ * aus shared_assets/RE2/DOOR). Aufbau in ALLEN 55 Archiven wie TORSE (analysis/befunde_runde31/
+ * tueren_02_re2.md 4: Tonkopf @0 `00 00 14 16 | 00 00 24 17 | ff..`, VH @0x10, Nachspann @0xC30,
+ * VB @0xC38; 55/55 geprueft von tools/tueren/re2_tuer_ton.py) - also derselbe Lader. Eine Bank je
+ * geladenem Tonteil; gleiche Bytes (Tonfamilie, z. B. F4 = 15/1A/23) werden nicht neu dekodiert.
+ * Abspielen wie das Tor ueber se_play_layers mit RE2-Pegelgesetz. */
+static re15_vab_t s_tuer_vab;
+static uint8_t   *s_tuer_edt = NULL;
+static int16_t   *s_tuer_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_tuer_decoded_len[RE15_VAB_MAX_SAMPLES];
+static int        s_tuer_loaded = 0;
+static uint8_t   *s_tuer_kopie = NULL;   /* die geladenen Tonteil-Bytes (Vergleich) */
+static int        s_tuer_groesse = 0;
+
+static int ist_tuer_pcm(const int16_t *pcm)
+{
+    if (!pcm) return 0;
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        if (s_tor_decoded[i] && pcm == s_tor_decoded[i]) return 1;
+        if (s_tuer_decoded[i] && pcm == s_tuer_decoded[i]) return 1;
+    }
+    return 0;
+}
+
+static void tuer_bank_freigeben(void)
+{
+    /* Keine Stimme darf auf freigegebenes PCM zeigen: laufende Tuertoene der ALTEN Bank enden
+     * hier (erst beim naechsten Tuerladen, nicht im Raumwechsel - s. re15_audio_load_room_banks). */
+    SDL_LockAudioDevice(s_audio_dev);
+    for (int v = 0; v < MIXER_MAX_ACTIVE_SAMPLES; v++)
+        for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++)
+            if (s_tuer_decoded[i] && s_active[v].pcm == s_tuer_decoded[i]) s_active[v].active = 0;
+    for (int v = 0; v < RE15_SE_VOICE_COUNT; v++)
+        for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++)
+            if (s_tuer_decoded[i] && s_se_pend[v].pcm == s_tuer_decoded[i]) s_se_pend[v].pending = 0;
+    SDL_UnlockAudioDevice(s_audio_dev);
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s_tuer_decoded[i]);
+        s_tuer_decoded[i] = NULL;
+        s_tuer_decoded_len[i] = 0;
+    }
+    free(s_tuer_edt);   s_tuer_edt = NULL;
+    free(s_tuer_kopie); s_tuer_kopie = NULL;
+    s_tuer_groesse = 0;
+    s_tuer_loaded = 0;
+}
+
+int re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse)
+{
+    if (!g_audio.initialized || !ton) return 0;
+    if (s_tuer_loaded && groesse == s_tuer_groesse && memcmp(ton, s_tuer_kopie, (size_t)groesse) == 0)
+        return 1;                                    /* dieselbe Tonfamilie */
+    tuer_bank_freigeben();
+    if ((unsigned)groesse <= TORSE_EDT_SIZE) return 0;
+    uint32_t vbd_size = (uint32_t)groesse - TORSE_EDT_SIZE;
+    uint8_t *edt = (uint8_t *)malloc(TORSE_EDT_SIZE);
+    uint8_t *kopie = (uint8_t *)malloc((size_t)groesse);
+    if (!edt || !kopie) { free(edt); free(kopie); return 0; }
+    memcpy(edt, ton, TORSE_EDT_SIZE);
+    memcpy(kopie, ton, (size_t)groesse);
+    /* Nachspann @0xC30 = VH-Versatz (@0x80014e48 addiu a3,s0,3120) */
+    uint32_t vh_off = (uint32_t)edt[TORSE_EDT_SIZE-8]         | ((uint32_t)edt[TORSE_EDT_SIZE-7] << 8)
+                    | ((uint32_t)edt[TORSE_EDT_SIZE-6] << 16) | ((uint32_t)edt[TORSE_EDT_SIZE-5] << 24);
+    if (vh_off + 0x20u > TORSE_EDT_SIZE ||
+        re15_vab_parse(edt + vh_off, (size_t)TORSE_EDT_SIZE - vh_off, &s_tuer_vab) != 0) {
+        free(edt); free(kopie); return 0;
+    }
+    const uint8_t *vb = ton + TORSE_EDT_SIZE;       /* VB @0xC38 (@0x80014f84 ori s1,s1,0x1c38) */
+    for (int i = 0; i < s_tuer_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_tuer_vab.samples[i].offset, vsz = s_tuer_vab.samples[i].size;
+        if (off + vsz > vbd_size || vsz == 0) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+        s_tuer_decoded[i]     = pcm;
+        s_tuer_decoded_len[i] = n;
+    }
+    s_tuer_edt     = edt;
+    s_tuer_kopie   = kopie;
+    s_tuer_groesse = groesse;
+    s_tuer_loaded  = 1;
+    return 1;
+}
+
+void re15_audio_re2_tuer_se(int se)
+{
+    if (!g_audio.initialized || !s_tuer_loaded) return;
+    s_se_pegel_re2 = 1;
+    se_play_layers(s_tuer_edt, &s_tuer_vab, s_tuer_decoded, s_tuer_decoded_len, se);
+    s_se_pegel_re2 = 0;
+}
+
+/* Messhaken (Riegel r31_tueren): spielt die SE-Stimme v (0..7 = SPU 16..23) gerade? */
+int re15_audio_se_stimme_aktiv(int v)
+{
+    if (v < 0 || v >= RE15_SE_VOICE_COUNT) return 0;
+    return s_active[v].active ? 1 : 0;
 }

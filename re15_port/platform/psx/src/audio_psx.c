@@ -889,3 +889,6 @@ void re15_audio_re2_panel_se(int se_id)
 int re15_audio_re2_tor_laden(void) { return 0; }
 void re15_audio_re2_tor_se(int se) { (void)se; }
 void re15_audio_se_pumpe(void) { }
+int  re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse) { (void)ton; (void)groesse; return 0; }
+void re15_audio_re2_tuer_se(int se) { (void)se; }
+int  re15_audio_se_stimme_aktiv(int v) { (void)v; return 0; }

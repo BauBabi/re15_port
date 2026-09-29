@@ -613,6 +613,25 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z)
  * from BOTH the scan's action fire and Aot_on fire-now (jalr @0x8004082c — the original
  * fires the SAME handler either way). Returns 1 = door consumed (cross-room load queued
  * or same-room teleport applied), 0 = skipped (invalid all-zero-spawn guard). */
+/* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ-ANFRAGE. RE1.5 startet an dieser Stelle die
+ * Tuermaschine (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript
+ * Evt_end ist; RE2 spielt dort die Sequenz (FUN_80026b7c @0x80026bf8/bfc, Task 1 = Door_main).
+ * Welche Tuer eine bekommt, sagt die Port-Tabelle (Tor: door_seq_tor1170.c; RE2-Archive, Runde 31:
+ * door_seq_zuordnung.c) - RE1.5-Daten tragen keine Wahl. Schluessel = Raum + Flaeche (Rechteck
+ * bzw. Viereck) + Band, nie der Slot. Gespielt wird im Spielschritt (game_step_common.c) bzw.
+ * vor re15_room_apply_pending (main.c). Null-Rechteck-/Skript-Uebergaenge stehen in keiner
+ * Tabelle und bleiben ohne Sequenz. */
+static void tuer_sequenz_anfragen(const re15_aot_t *a, const re15_aot_door_params_t *d)
+{
+    re15_door_seq_anfrage_t q;
+    int archiv = re15_door_seq_zuordnen_flaeche(g_current_room_id, a->has_quad ? 1 : 0,
+                                                a->x, a->z, a->half_w, a->half_h,
+                                                a->xs, a->zs, d->band, &q);
+    if (archiv == RE15_DOOR_ARCHIV_KEINS) return;
+    q.aktiv = 1;
+    g_door_seq_anfrage = q;
+}
+
 static int aot_fire_door(int i)
 {
     re15_aot_t *a = &g_aot.slots[i];
@@ -703,6 +722,11 @@ static int aot_fire_door(int i)
              * Die 1240→1170-Intro-Übergabe (Payload -26214,0,-3861 cut0, die OPENING-
              * Konstante) läuft ebenfalls byte-true über den Payload; die Intro-Choreografie
              * des Zielraums positioniert den Spieler selbst (wie im Original). */
+            /* Runde 31: Kreuz-Raum-Tueren stellen dieselbe Anfrage wie Selbst-Tueren; die
+             * Sequenz laeuft VOR dem Raumwechsel (Standbild = letzter Blick in den alten Raum),
+             * die RE1.5-Einblendung danach im NEUEN Raum (RE2 FUN_80026b7c: Door_main
+             * @0x80026bfc, Zielraum @0x80026e1c, Warten auf das Tuer-Ende @0x80026e28..54). */
+            tuer_sequenz_anfragen(a, d);
             re15_room_request_change(dest_id, d->spawn_x, d->spawn_y, d->spawn_z,
                                      d->spawn_yaw_4096, (int)d->target_cut);
             a->was_inside = 1;
@@ -769,17 +793,7 @@ static int aot_fire_door(int i)
      * Einblenden liegt. Gesetzt fuer JEDE Selbst-Tuer dieses Zweigs, nicht nur fuer die mit
      * Szenario: die Szenario-Schranke oben ist variantenblind (0x1000|dest<<4 gegen 0x1171
      * -> falsch), das Tor in Elzas ROOM1171 wuerde sonst nie spielen. */
-    {
-        int var = 0;
-        int archiv = re15_door_seq_zuordnen(g_current_room_id, a->x, a->z, a->half_w, a->half_h,
-                                            d->band, &var);
-        if (archiv != RE15_DOOR_ARCHIV_KEINS) {
-            g_door_seq_anfrage.aktiv    = 1;
-            g_door_seq_anfrage.archiv   = (uint8_t)archiv;
-            g_door_seq_anfrage.variante = (uint8_t)var;
-            g_door_seq_anfrage.tuer_nr  = 0;
-        }
-    }
+    tuer_sequenz_anfragen(a, d);
     /* BO-round 2026-05-29 (hack audit): removed the fabricated door
      * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
      * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc

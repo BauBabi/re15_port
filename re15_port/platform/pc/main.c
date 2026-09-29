@@ -3103,7 +3103,42 @@ int main(int argc, char *argv[])
           g_door_seq_anfrage.archiv = RE15_DOOR_ARCHIV_TOR1170;
           g_door_seq_anfrage.variante = (uint8_t)atoi(tt);
           g_door_seq_anfrage.tuer_nr = 0;
+          g_door_seq_anfrage.spender = RE15_DOOR_KEIN_SPENDER;
           re15_door_seq_ausfuehren();
+          return 0;
+      } }
+    /* Pruefhaken RE15_TUER_SEITE=<Sxxx[,Syyy...]|ALLE> (Runde 31, analysis/befunde_runde31/
+     * tueren_04_bau.md Abschnitt 6): die RE2-Sequenz einer abgedeckten Tuerseite (Archiv,
+     * Variante, Griff-Tausch aus gen/tuer_zuordnung.inc) direkt spielen und beenden. Bilder:
+     * RE15_TUER_BOGEN=<dir> (je Seite Anfang + Mitte) bzw. RE15_TUER_SERIE=<dir> (alle Bilder);
+     * RE15_TUER_SCHNELL=1 ohne VSync-Takt. Kontaktbogen: tools/tueren/tuer_kontaktbogen.py. */
+    { const char *ts = getenv("RE15_TUER_SEITE");
+      if (ts && *ts) {
+          extern re15_door_seq_anfrage_t g_door_seq_anfrage;
+          int alle = !strcmp(ts, "ALLE");
+          int zuletzt = -1, gespielt = 0;
+          for (int i = 0; i < re15_door_seq_zeilen(); i++) {
+              const re15_tuer_zeile_t *z = re15_door_seq_zeile(i);
+              if ((int)z->seite == zuletzt) continue;
+              char name[8];
+              snprintf(name, sizeof name, "S%03u", z->seite);
+              if (!alle && !strstr(ts, name)) continue;
+              int schon = 0;   /* jede Seite nur einmal (xxx0 und xxx1 tragen dieselbe Wahl) */
+              for (int k = 0; k < i; k++) if (re15_door_seq_zeile(k)->seite == z->seite) schon = 1;
+              if (schon) continue;
+              zuletzt = (int)z->seite;
+              re15_door_seq_anfrage_t q;
+              unsigned raum = 0;
+              if (!re15_door_seq_anfrage_fuer_seite(z->seite, &q, &raum)) continue;
+              fprintf(stderr, "[tuer-seite] %s ROOM%04X DOOR%02X V%d Spender %02X\n",
+                      name, raum, q.re2_nr, q.variante, q.spender);
+              q.aktiv = 1;
+              g_door_seq_anfrage = q;
+              re15_door_seq_ausfuehren();
+              gespielt++;
+          }
+          fprintf(stderr, "[tuer-seite] %d Seiten gespielt\n", gespielt);
+          fflush(stderr);
           return 0;
       } }
 
@@ -7661,6 +7696,11 @@ re_title:;
                                             * callback stays NULL, behaviour is parity w/ PSX). */
                 rc.load_cinematic   = 0;   /* PC keeps its boot-loaded Elliot/rbj resident (not
                                             * RAM-constrained) → no per-room cinematic reload. */
+                /* Runde 31: Tuersequenz einer Kreuz-Raum-Tuer, die AUSSERHALB des Spielschritts
+                 * gefeuert hat (Aot_on im SCD-Takt, Pruefhaken RE15_FIRE_AOT) - vor dem Laden des
+                 * Zielraums spielen, wie RE2 FUN_80026b7c Door_main (@0x80026bfc) vor dem Zielraum
+                 * (@0x80026e1c) startet. Aus dem Spielschritt ist sie dann schon verbraucht. */
+                if (g_room_change.pending && g_door_seq_anfrage.aktiv) re15_door_seq_ausfuehren();
                 if (re15_room_apply_pending(&rc)) {
                     /* RE-POINT THE RAW RDT BYTES AT THE NEW ROOM.
                      * rc only carries the PARSED rdt + the cut table; the consumers that

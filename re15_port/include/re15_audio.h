@@ -213,6 +213,12 @@ void re15_audio_re2_panel_se(int se_id);
 int  re15_audio_re2_tor_laden(void);
 void re15_audio_re2_tor_se(int se);
 void re15_audio_se_pumpe(void);   /* nur die SE-Pumpe (Tuerszene, 60 Hz) */
+/* Runde 31: Tonteil eines RE2-Tuerarchivs (DOORxx.DO2[0..Tonteil), Aufbau wie TORSE) laden und
+ * Tonkopf-Eintrag se spielen (0 Skript-Se_on, 1 Door_exit). Die Tuerbank ueberlebt
+ * re15_audio_load_room_banks (RE2 @0x800597a4..0x80059818, Tuerbank 0x3DC50). PSX: Stubs. */
+int  re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse);
+void re15_audio_re2_tuer_se(int se);
+int  re15_audio_se_stimme_aktiv(int v);   /* Messhaken: SE-Stimme v (0..7) spielt */
 
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the

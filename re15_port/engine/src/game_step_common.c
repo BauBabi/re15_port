@@ -2078,7 +2078,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Laeuft danach KEIN Szenario-Wiedereintritt (Elzas ROOM1171, s. aot_common.c), blendet
      * der Raum hier ein: das Original spielt die State-3-Einblendung bei JEDER Transition
      * (FUN_8001c958, `sb zero,0x800aca58` @0x8001cbdc; re15_room_transition_present). */
-    if (re15_door_seq_ausfuehren() && g_scd_pending_scenario < 0)
+    /* Runde 31: auch Kreuz-Raum-Tueren (aot_common.c) stellen die Anfrage. Die Sequenz laeuft
+     * HIER, also vor re15_room_apply_pending (main.c) - das Standbild ist der letzte Blick in den
+     * ALTEN Raum; die RE1.5-Einblendung gehoert dann hinter den Raumwechsel (main.c nach
+     * re15_room_apply_pending), nicht in den alten Raum. RE2 FUN_80026b7c laedt den Zielraum
+     * (@0x80026e1c) und blendet erst nach dem Tuer-Ende ein (@0x80026e28..60). */
+    if (re15_door_seq_ausfuehren() && g_scd_pending_scenario < 0 && !g_room_change.pending)
         re15_room_transition_present();
 
     /* Same-room SCENARIO re-entry: a SELF-room door (dest == current room) queued

@@ -97,6 +97,17 @@ static void verketten(const re15_door_mat_t *a, const int16_t r[9], const int32_
     *out = o;
 }
 
+/* Objektmatrix mit ERSETZTER Drehung am Elternobjekt (Runde 31, Griff-Tausch in
+ * door_scene_pc.c): dieselbe Kette wie FUN_80014234 (RotMatrix, dann Verkettung), nur mit einer
+ * anderen Drehung als der des Objekts. */
+void re15_door_seq_objmatrix(const re15_door_mat_t *eltern, const uint16_t rot[3],
+                             const int32_t pos[3], re15_door_mat_t *out)
+{
+    int16_t r[9];
+    re15_door_rotmatrix(rot, r);
+    verketten(eltern, r, pos, out);
+}
+
 /* ===========================================================================
  * Start (Door_init FUN_80013c1c)
  * ======================================================================== */
@@ -405,11 +416,68 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
         e->pc += 1;
         for (int a = 0; a < 6; a++) e->speed[a] = (int16_t)(e->speed[a] + e->speed[6 + a]);
         return 1;
-    case 0x34: case 0x35: case 0x3D:
-        /* Member_set (0x80055c00, +4) / Member_set2 (0x80055c50, +3) / Member_copy (0x80055e38, +3):
-         * in keinem Skript des Tors; nur Vorschub. DOOR10 nutzt Member_set Feld 13 (z). */
+    case 0x34: case 0x35: {
+        /* Member_set (Handler 0x80055c00): a0 = Arbeitsobjekt (@0x80055c14 lw a0,340(s0)),
+         * a1 = Feld pc[1] (@0x80055c18 lbu), a2 = s16 pc[2] (@0x80055c1c lh); PC += 4 (@0x80055c30).
+         * Member_set2 (Handler 0x80055c50): a2 = Variable pc[2] als s16 (@0x80055c68 lbu /
+         * @0x80055c7c lh 0x800d47ec[..]); PC += 3 (@0x80055c90). Beide -> Setter 0x80055cb0:
+         * Feld < 44 (@0x80055cb0 sltiu 0x2c), Sprungtabelle @0x80011228, Befehl im Delay-Slot.
+         * Runde 31: gebraucht von DOOR2D (Felder 11/12/13); weitere Felder nur, wo der Port
+         * sie als Objektfeld fuehrt. */
+        int feld = b[1];
+        int32_t w = (b[0] == 0x34) ? rs16(b + 2) : s->var[b[2]];
         e->pc += (b[0] == 0x34) ? 4 : 3;
-        return 1;
+        re15_door_obj_t *o = arbeitsobjekt(s, e);
+        if (!o) return 1;
+        switch (feld) {
+        case 0:  o->on = (uint16_t)w; break;                      /* @0x80055cd8 sh a2,0(a0)   */
+        case 7:  o->bild = (uint16_t)w; break;                    /* @0x80055d10 sh a2,270(a0) */
+        case 11: o->pos[0] = w; break;                            /* @0x80055d30 sw a2,56(a0)  */
+        case 12: o->pos[1] = w; break;                            /* @0x80055d38 sw a2,60(a0)  */
+        case 13: o->pos[2] = w; break;                            /* @0x80055d40 sw a2,64(a0)  */
+        case 14: o->rot[0] = (uint16_t)w; break;                  /* @0x80055d48 sh a2,116(a0) */
+        case 15: o->rot[1] = (uint16_t)w; break;                  /* @0x80055d50 sh a2,118(a0) */
+        case 16: o->rot[2] = (uint16_t)w; break;                  /* @0x80055d58 sh a2,120(a0) */
+        /* Flags: nur das Wort, der Elternzeiger bleibt (er steht fest in obj+128 und wird
+         * nur von Door_model_set geschrieben, @0x80014c64..8c) */
+        case 27: o->flags = (uint16_t)((o->flags & 0xFF00) | (w & 0xFF)); break;  /* @0x80055db0 sb a2,324(a0) */
+        case 28: o->flags = (uint16_t)w; break;                   /* @0x80055db8 sh a2,324(a0) */
+        case 29: o->mesh = (uint16_t)w; break;                    /* @0x80055dc0 sh a2,326(a0) */
+        default: s->notizen |= RE15_DOOR_NOTIZ_UNBEKANNT; break;  /* Feld ohne Port-Gegenstueck */
+        }
+        return 1; }
+    case 0x3D: {
+        /* Member_copy (Handler 0x80055e38): Variable = lb pc[1] (@0x80055e4c), Feld = lb pc[2]
+         * (@0x80055e50), PC += 3 (@0x80055e54); Getter 0x80055f50 (Sprungtabelle @0x800112f8,
+         * Befehl AM Sprungziel), Ablage als Halbwort (@0x80055e70 sh v0,0x800d47ec[..]). */
+        int var = (int8_t)b[1], feld = (int8_t)b[2];
+        e->pc += 3;
+        re15_door_obj_t *o = arbeitsobjekt(s, e);
+        if (!o) return 1;
+        int32_t w;
+        switch (feld) {
+        case 0:  w = o->on; break;                                /* @0x80055f78 lhu v0,0(a0)   */
+        case 7:  w = o->bild; break;                              /* @0x80055fcc lhu v0,270(a0) */
+        case 11: w = o->pos[0]; break;                            /* @0x80055ffc lw v0,56(a0)   */
+        case 12: w = o->pos[1]; break;                            /* @0x80056008 lw v0,60(a0)   */
+        case 13: w = o->pos[2]; break;                            /* @0x80056014 lw v0,64(a0)   */
+        case 14: w = (int16_t)o->rot[0]; break;                   /* @0x80056020 lh v0,116(a0)  */
+        case 15: w = (int16_t)o->rot[1]; break;                   /* @0x8005602c lh v0,118(a0)  */
+        case 16: w = (int16_t)o->rot[2]; break;                   /* @0x80056038 lh v0,120(a0)  */
+        case 27: w = o->flags & 0xFF; break;                      /* @0x800560bc lbu v0,324(a0) */
+        case 28: w = (int16_t)o->flags; break;                    /* @0x800560c8 lh v0,324(a0)  */
+        case 29: w = (int16_t)o->mesh; break;                     /* @0x800560d4 lh v0,326(a0)  */
+        default: s->notizen |= RE15_DOOR_NOTIZ_UNBEKANNT; return 1;
+        }
+        s->var[var & 0xFF] = (int16_t)w;
+        return 1; }
+    case 0x8A:  /* Vibration (Handler 0x80059348 -> jal 0x8003947c), Rueckgabe 1, PC += 6 (@0x80059378) */
+    case 0x8B:  /* Vibration (Handler 0x80059394 -> jal 0x80039514), Rueckgabe 1, PC += 6 (@0x800593c8) */
+        /* Runde 31 (DOOR2D): nur Vorschub - die Wirkung (Rumpeln der Hubbuehne) hat der Port
+         * nicht; entscheidend ist, dass das Skript weiterlaeuft statt in default: zu enden. */
+        e->pc += 6; return 1;
+    case 0x8C:  /* Vibration (Handler 0x800593e4 -> jal 0x800395b8), Rueckgabe 1, PC += 8 (@0x8005941c) */
+        e->pc += 8; return 1;
     case 0x36:  /* Se_on, Handler 0x80056428, @0x8005653c addiu v1,s0,12 */
         e->pc += 12;
         if (s->n_ton < (int)(sizeof s->ton / sizeof s->ton[0])) {
@@ -430,6 +498,7 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
             o->w10 = rs16(b + 8);
             o->pos[0] = rs16(b + 10); o->pos[1] = rs16(b + 12); o->pos[2] = rs16(b + 14);
             o->rot[0] = rd16(b + 16); o->rot[1] = rd16(b + 18); o->rot[2] = rd16(b + 20);
+            o->rot0[0] = o->rot[0]; o->rot0[1] = o->rot[1]; o->rot0[2] = o->rot[2];
             /* Eltern: Flag 0x10, Nummer = Flags & 0xF (@0x80014c64..8c) */
             o->eltern = (int8_t)((o->flags & 0x10) ? (o->flags & 0xF) : -1);
             /* Schliesston-Merker (@0x80014c90..a8) */
