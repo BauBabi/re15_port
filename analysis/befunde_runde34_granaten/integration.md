@@ -10,7 +10,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | Schritt | Stand |
 |---|---|
 | S1 Merge r34g/b-schaden | erledigt 94c7d41d — konfliktfrei, Bau OK, unit_r34_schaden + unit_r34_reaktion gruen (430 Tests) |
-| S1 Merge r34g/a-granate | offen |
+| S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | offen |
 | S1 Merge r34g/d-re2fx | offen |
 | S2 W1..W11 | offen |
@@ -25,6 +25,14 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 * Sonden der Spur: `unit_r34_schaden` Passed, `unit_r34_reaktion` Passed (`probe_r34_reaktion alle: 0 Fehler`, Zensus
   352 Laeufe / 0 Haenger, Ausgang K1 220-222 ok). `ctest -N`: 430 Tests.
 
+### 1.2 r34g/a-granate — Merge-Commit c4ebd472
+* `git merge --no-ff r34g/a-granate`: **keine Konflikte** (9 Dateien, +2841/-58: re15_esp.c, re15_esp.h, game_step_common.c,
+  player_common.c, menu_common.c, probe_r34_wurf).
+* Bau: `configure` (neue Sonde probes/r34_wurf.cmake) + `build` -> `LOCAL-BUILD-OK`.
+* Sonden: `unit_r34_wurf` Passed (`probe_r34_wurf: ALLE PRUEFUNGEN GRUEN`; MITTE gesund SE-Folge 0x010a0601..0x010a0001 +
+  Liegen, Explosion Bild 109, Zeitlinien HOCH/TIEF/vergiftet wie BAUPLAN 1.1), dazu erneut `unit_r34_schaden`,
+  `unit_r34_reaktion` und die ESP-/Waffen-Bestandspins `probe_abzug_takt`, `unit_r17_waffen_loop_pin`, `unit_r26_mg_blut`,
+  `unit_r30_granate`, `r30b_muendungshoehe`, `unit_espr_11e0`, `unit_aim*` — 11/11 gruen. `ctest -N`: 431.
 
 ## 2. Integrationswuensche (Schritt 2)
 
