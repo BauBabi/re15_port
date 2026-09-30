@@ -198,3 +198,14 @@ das ausdruecklich "kein Android-Satz" meldet. Die R4-Nachschaerfung "SHA256SUMS 
 Volumes" gilt nur fuer den kanonischen Android-Namen; fuer alles andere mit dem Versions-Praefix nicht. Abhilfe-Richtung:
 SUMS/git add aus einer Positivliste der in diesem Lauf gezippten Saetze (plus bewusst die der anderen Plattform) statt
 aus dem Glob.
+
+### 2.3 Kelvin-Paar im Quellbaum (H5) - das ECHTE Gate laesst es durch
+
+NTFS (Bau-Maschine) gemessen (Python, Wegwerf-Ordner): `K.bin`/`U+212A.bin`, `k.bin`/`U+212A.bin`, NFC-`é`/NFD-`é`,
+`straße`/`strasse` liegen als ZWEI Dateien nebeneinander; nur `Ä`/`ä` und `A`/`a` faltet NTFS zusammen. Ein
+Quellbaum auf der Bau-Maschine kann solche Paare also enthalten.
+`u1_kette_fk.sh` (Beleg `kette_A12.txt`): beide Dateien (5 B, "AAAAA"/"BBBBB") als eigene Dateien in den
+Sandbox-Quellbaum `shared_assets/PSX/` (Original unberuehrt, danach entfernt), FK_sig durch
+`build_android.sh --gate-only` mit dem ECHTEN Gate: **EXIT 0** - `shared_assets/PSX 3195 3195 3195`, `Manifest: 3605
+Zeilen ... gegen die APK geprueft`, `APK-ASSET-GATE-OK: 3605 Dateien ... Manifest stimmt`, `ANDROID-GATES-OK`.
+Was das Geraet daraus macht: Abschnitt 6 (Emulator).

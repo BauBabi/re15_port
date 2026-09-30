@@ -1,0 +1,11 @@
+   Sandbox-Quellbaum PSX:  ["'K.bin'", "'\\u212a.bin'"]
+   Original-Quellbaum PSX: []
+== A A12_echt_FK_quelle_mit_paar (FK_sig.apk, Quellbaum mit Kelvin-Paar): EXIT=0 (66 s)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        shared_assets/PSX               3195    3195     3195    300522662
+        Manifest:  3605 Zeilen / 356678287 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+     == APK-ASSET-GATE-OK: 3605 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_u1/apk/FK_sig.apk (geprueft: sha256 crc32 Bytes 3f52f45724738ea488bbcf919f54e4eb46431608c52088362f654755ef90759b dc7b6393 363711728) ==
+   entfernt; Sandbox-PSX jetzt 18 Eintraege oben
+FERTIG
+EXIT=0
