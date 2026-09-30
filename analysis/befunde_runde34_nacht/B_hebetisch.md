@@ -112,7 +112,7 @@ beiden hellen CLUT-Farben der Cursor-Textur).
 
 | Groesse | Messung | Rechnung (Port-Projektion, Cut 10 von ROOM11F0) |
 |---|---|---|
-| Bbox am Start | x 148.3..172.0, y 107.7..130.0 (23,7 x 22,3 px), Mitte (160.2,118.8) | Oberseite y=-900 im Modell + Typ-4-Anhebung -900 (@0x8002c23c/@0x8002c24c) = Welt-y -1800, Tiefe 17442-1800 = 15642, n = gte_divide(208,15642) = 871: 1800 x 871/65536 = 23,9 px; Mitte x 160 + 74x871/65536 = 161,0, y 120 - 68x871/65536 = 119,1 |
+| Bbox am Start | x 148.3..172.0, y 107.7..130.0 (23,7 x 22,3 px), Mitte (160.2,118.8) | Oberseite y=-900 im Modell + Typ-4-Anhebung -900 (@0x8002c23c/@0x8002c24c) = Welt-y -1800, Tiefe ~15650, n = gte_divide(208,15650) ~ 871: 1800 x 871/65536 = 23,9 px; Mitte x 160 + 74x871/65536 = 161,0, y 120 - 68x871/65536 = 119,1. Engine-Sonde (ganzzahlig): Start (160,119), Kanten x+-900 -> 149 / 172, Tiefe 15687 |
 | Schritt | 8 px je Bild bei 960 (Folge 9/6/9), = 2,667 px/Bild bei 320; rechts, runter, hoch, links gleich (m3, `B_belege/11f0_cursor_schritt_m3.txt`) | 200 x 871/65536 = 2,658 px/Bild |
 | Grenze | keine: rechts gehalten verlaesst der Cursor ab F570 das Bild (m2, `B_belege/11f0_cursor_rechts_bogen.png`) | Add_speed LAB_80040f40 addiert nur (scd_vm.c op_add_speed) |
 | Farben | nur (8,248,0) und (216,208,0) = CLUT[3]/[4] der Cursor-Textur, also NEUTRAL (Tint 128) | TIM @0x018DAC CLUT @VRAM(0,480) |
@@ -197,6 +197,12 @@ Direkt dahinter: `main00 @0x00DBA  2c 04 01 31 00 00 74 aa f8 ad 68 10 50 14 00 
 FUN_8004032c liest ihn zurueck (@0x8004033c). Laeuft sub04 aus der Raumkamera an, merkt @0x0FB2 die Raumkamera und
 @0x10B2 kehrt dorthin zurueck. **Zeigt vorher schon etwas anderes Cut 4 an, merkt @0x0FB2 die 4 — und @0x10B2 bleibt
 auf Cut 4 stehen, mit geparkter Plattform = das Loch-Bild (§2.2).** Das entscheidet den Bauweg (§5.1).
+
+GEMESSEN mit Engine-Code (Mess-Sonde `probe_r34n_b_messung`, `B_belege/probe_r34n_b_messung.txt`, ROOM1150 und 1151):
+* sub04 aus der Raumkamera (angezeigter Cut 0): am Halt `cam_id_prev = 0`; nach der Fahrt (Plattform geparkt
+  y=-20224, Bild 395) `cam_id = 0` -> **zurueck in die Raumkamera**.
+* Gegenprobe "Vorschalt" (vor sub04 `work_vars[0x0A] = 4`, also Cut 4 schon angezeigt): am Halt `cam_id_prev = 4`;
+  nach der Fahrt `cam_id = 4` -> **bleibt auf Cut 4 (Loch-Bild)**.
 
 **Indiz fuer einen geplanten Cursor-Schritt:** `Set(5,0,0)` @0x010A6 ist in ROOM1150 der EINZIGE Zugriff auf Bank 5 Bit 0
 (Zensus `cursor_zensus.py`: kein Ck(5,0), kein Set(5,0,1) im ganzen Raum; ROOM1151 dasselbe @0x01084). In ROOM11F0 ist
@@ -304,6 +310,10 @@ in Runde 31/32 gegen Framedumps auf < 1 px geprueft), Cursor-Zustand: Plattform 
 **Gegenprobe am gerenderten Bild:** von 53 020 projizierten Kuppel-Pixeln (960x720) liegen 52 771 = 99,53 % in der
 Differenzmaske "Plattform da" (m1 F240) gegen "Plattform nicht da" (m4 F240); die 249 anderen sind Randpixel.
 Sichtbild: `B_belege/kuppel_trefferflaeche_cut4_320.png` und `kuppel_trefferflaeche_lupe.png`.
+**Gegenprobe mit Engine-Code** (`probe_r34n_b_messung`, re15_camera_build_view + re15_camera_compose_view_bone +
+re15_gte_divide wie main.c PROJECT_VERT, ganzzahlig): Huelle (151,171) (163,161) (180,151) (206,148) (235,150)
+(248,156) (267,170) (265,190) (261,204) (214,210) (164,204) (151,191) — groesster Abstand zur Python-Huelle
+2 px² (<= 1,4 px), 1151 gleich.
 
 ### 3.7 Halte-Stelle in sub04 (`halt_signatur.py`, `B_belege/halt_signatur.txt`)
 
@@ -313,6 +323,9 @@ Ruhe-Signatur von hebetisch_1150.c (Fenster [0x101A,0x1042) bzw. [0x0FF8,0x1020)
 Port-Semantik op_for (scd_vm.c, LAB_8003f540): liest Blocklaenge/Zaehler, legt den Schleifenrahmen an, PC += 6 — ein
 Halt VOR diesem Opcode (Rueckgabe Yield, PC unveraendert) laesst den Thread ohne jede Zustandsaenderung stehen.
 Vorbild fuer einen solchen PC-Halt im Port: `re15_panel_zeiger_abnahme_haelt(t->pc, raw)` in op_evt_exec (Runde 31).
+GEMESSEN (`probe_r34n_b_messung`): nach `scd_event_fire(4)` steht der sub04-Thread nach 10 VM-Takten mit PC auf dem
+For (noch nicht ausgefuehrt), Plattform y=-305, angefordert Cut 4, gemerkt die Raumkamera, Deckel z 0 / 0; einen Takt
+spaeter Deckel z +10 / -10 (For laeuft). Im exe-Lauf m1 entspricht das F230 (Druck) -> F241 (erstes Deckelbild F242).
 
 ### 3.8 Laute in ROOM1150
 
@@ -395,11 +408,12 @@ Begruendung: das Original legt fuer sub04 keinen "erledigt"-Zustand an, und der 
 | `re15_port/platform/pc/src/hebetisch_cursor_pc.c` | neu (B-eigen, PC) | Zeichnen: 11F0-MD1 mit Cut-10-Sicht projizieren, Dreiecke in die Tri-Queue, TIM-Slot 28 |
 | `re15_port/engine/src/gen/hebetisch_cursor.inc` | neu, generiert | MD1 (5556 B) + TIM (33312 B) bytegleich aus ROOM11F0.RDT @0x001928/@0x018DAC |
 | `re15_port/tools/r34n_b/cursor_export.py` | neu | erzeugt das .inc, prueft Bytegleichheit (Vorbild tools/irons_tisch_engine_export.py) |
-| `re15_port/engine/src/scd_vm.c` | Haken 1 Zeile | op_for: `if (s_current_rdt && re15_hebetisch_cursor_haelt(t->pc, s_current_rdt->raw)) return SCD_R_YIELD;` vor jeder Zustandsaenderung |
+| `re15_port/engine/src/scd_vm.c` | Haken 1 Zeile | op_for: `if (s_current_rdt && re15_hebetisch_cursor_haelt(t->pc, s_current_rdt->raw, s_current_rdt->raw_size)) return SCD_R_YIELD;` vor jeder Zustandsaenderung (im Zustand AUS nur ein Vergleich) |
 | `re15_port/engine/src/game_step_common.c` | Haken 2 Zeilen | (a) GENERIC-Ausgabe: `re15_hebetisch_cursor_aktion(g_aot.fired_event_id_this_frame);` vor `scd_event_fire(...)`; (b) neben `re15_granate_tick()`: `if (c->rdt_ok) re15_hebetisch_cursor_tick();` |
 | `re15_port/engine/src/scd_room_setup.c` | Haken 1 Zeile | neben `re15_granate_install(...)`: `re15_hebetisch_cursor_install((uint16_t)g_current_room_id);` (Zustand zuruecksetzen, Signatur suchen) |
-| `re15_port/platform/pc/main.c` | Haken ~10 Zeilen | (a) in `pc_load_room_prop_set` nach dem Granaten-Block: Cursor-TIM in `RE15_TIM_SLOT_PROP(8)` laden (nur 1150/1151, nur wenn `nprops <= 8`); (b) nach der Prop-Zeichenschleife: `re15_hebetisch_cursor_zeichnen_pc();` |
-| `re15_port/tests/unit/probe_r34n_b_*.c` + `probes/r34n_b_hebetisch.cmake` | neu | Riegel §6 |
+| `re15_port/platform/pc/main.c` | Haken 1 Zeile | nach der Prop-Zeichenschleife: `re15_hebetisch_cursor_zeichnen_pc();` — das TIM laedt die PC-Datei selbst beim ersten Zeichnen je Cursor-Sitzung in `RE15_TIM_SLOT_PROP(8)` = 28 (`re15_render_pc_upload_tim_slot`; Upload wendet den Farbschluessel wie fuer jedes Prop an). Die Zeichenfolge je Viereck MUSS die der Raum-Prop-Schleife sein (Zerlegung + Abtastphase re15_abtastphase.h), sonst weicht das Kreuz ab (Runde 26/27) |
+| `re15_port/tests/unit/probe_r34n_b_messung.c` + `probes/r34n_b_hebetisch.cmake` | liegt schon (Mess-Sonde dieser Stufe, kein add_test) | Halt, Cut_old mit/ohne Vorschalt, Kuppel-Huelle, 11F0-Projektion (§3.2/§3.6/§3.7) |
+| `re15_port/tests/unit/probe_r34n_b_*.c` (Bau) | neu | Riegel §6 (dann mit add_test, RE15_MIN_TESTS mitziehen) |
 | `re15_port/tests/integration/test_r34n_b_*.cmake` | neu | exe-Laeufe §6 |
 
 PSX-Ziel: wie Sicherung/Granate kein Lader fuer Zusatz-Props; `hebetisch_cursor_pc.c` gibt es dort nicht -> auf PSX
@@ -408,9 +422,10 @@ halten wir sub04 NICHT an (Modul fragt `RE15_PLATFORM_PC`), sonst stuende die Fa
 ### 5.3 API und Ablauf im Modul
 
 ```c
-void re15_hebetisch_cursor_install(uint16_t room);        /* Raumaufbau: Zustand 0, Halte-Signatur suchen (§3.7) */
+void re15_hebetisch_cursor_install(uint16_t room);        /* Raumaufbau: Zustand AUS */
 void re15_hebetisch_cursor_aktion(uint8_t ereignis);      /* GENERIC-Ausgabe: 1150/1151 && ereignis == 4 -> VERLANGT */
-int  re15_hebetisch_cursor_haelt(const uint8_t *pc, const uint8_t *raw); /* op_for: 1 = Yield */
+int  re15_hebetisch_cursor_haelt(const uint8_t *pc, const uint8_t *raw, int raw_size);
+                                   /* op_for: 1 = Yield; sucht die Halte-Signatur (§3.7) einmal je raw-Puffer */
 void re15_hebetisch_cursor_tick(void);                    /* je Spielbild */
 int  re15_hebetisch_cursor_sicht(int32_t *x11f0, int32_t *z11f0); /* fuers Zeichnen: 1 = zeigen */
 ```
@@ -465,7 +480,7 @@ mit der Engine-Projektion (§6 R2).
 * scd_vm.c: 1 Zeile in `op_for` + 1 `#include "re15_hebetisch_cursor.h"`.
 * game_step_common.c: 2 Zeilen (Aktion, Tick) + Include.
 * scd_room_setup.c: 1 Zeile (Install) + Include.
-* main.c: Upload-Block (~10 Zeilen, Muster Granaten-Block) + 1 Zeichen-Aufruf + Include.
+* main.c: 1 Zeichen-Aufruf + Include (Upload in der B-eigenen PC-Datei).
 * Keine Aenderung an aot_common.c, msg_common.c, panel_zeiger_common.c, re15_panel_zeiger.h (Spur C), audio_pc.c.
 
 ## 6 Abnahmeplan
@@ -488,7 +503,7 @@ mit der Engine-Projektion (§6 R2).
 | "nicht direkt aufgeht" | Tuerweg wie m1 (A bei F230), Serie F230..F330 | Deckel bleiben zu; Log `cursor=AKTIV` ab dem Haltbild; Bild ab F241: Cursor sichtbar |
 | "unseren Cursor" | Cursor-Pixel am Start in ROOM1150 gegen 11F0 F480 (m2): nur CLUT-Farben vergleichen | gleiche Pixel (bbox 148.3..172.0 x 107.7..130.0, 524 Punkte bei 960x720) |
 | "navigieren" | R0.5 / D1 / U0.5 / L0.5 wie m3 | 8 px je Bild @960, Richtungen wie 11F0 |
-| "Nothing happened" | Druck bei Start (161,119) | `[msg]` Text 20 offen, Wortlaut im Bild, KEIN `se=10` (`AUDIO=1 RE15_SE_DEBUG=1`), Deckel zu |
+| "Nothing happened" | Druck bei Start (161,119) | `[msg]` Text 20 offen, Wortlaut im Bild, KEIN `se=10` (`AUDIO=1 RE15_SE_DEBUG=1`), Deckel zu, KEIN zweiter sub04-Thread und KEIN msg 0 (Risiko 10), Text schliesst erst beim zweiten Druck (Risiko 11) |
 | "unten rechts auf die Kuppel" | R 18 Bilder + D 22 Bilder (Heisspunkt ~(209,177)), A | `se=10` im selben Bild, Deckel oeffnen im naechsten, Ruhe-Protokoll wie Runde 31 (`ruht=1 pc=0x101B`), Items-Dialoge |
 | "normaler Ablauf" | bis Parken + 30 Bilder | `Cut_chg`/Cut_old-Log: zurueck in die Raumkamera (nicht 4), Bild ohne Loch |
 | Rand | Cursor hinaus und zurueck | verlaesst das Bild wie 11F0, kommt zurueck |
@@ -518,6 +533,14 @@ Kuppeldruck-Klick, Deckelfahrt, Cut_old-Ziel). Bestehende Riegel unveraendert gr
    am Tisch druecken (Tuerweg m1).
 8. **PSX-Ziel:** kein Halt (5.2). Android: neue .c-Dateien -> frischer Configure (Memory android-glob-cache).
 9. **Irons (Typ 0x45) im Raum:** KI steht (sub04 @0x0F9A), wie heute waehrend der Fahrt.
+10. **Kein zweites sub04 / kein Schild-Text durch den Cursor-Druck:** solange (2,0) steht (sub04 @0x0F96), setzt
+    game_step_common.c im PAUSE_PLAYER-Zweig `g_aot_action_pressed = 0` (Original: Spieler-Dispatcher FUN_80031c44
+    @0x80031c78 `bltz` ueberspringt die Kommando-FSM, aus der allein der ACTION-Scan kommt). Der Viereck-Druck im
+    Cursor erreicht also weder Slot 1 (sub04) noch Slot 4 (msg 0 "Raccoon City 21st Century") — nur das Modul liest ihn
+    ueber das virtuelle Wort. Abnahme §6.2 prueft es mit (kein zweiter sub04-Start, kein msg 0).
+11. **Gleiche Flanke fuer Text und Bestaetigung:** der Druck, der "Nothing happened." oeffnet, traegt auch das
+    virtuelle Bestaetigungsbit 0x4000 (<- SQUARE). Der Text muss ihn wie jeden Examine-Oeffnungsdruck ueberstehen
+    (Schreibmaschinen-Zustand); an der exe pruefen, dass der Text erst beim ZWEITEN Druck schliesst.
 
 ## 8 Offene Punkte
 
