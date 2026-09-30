@@ -127,6 +127,19 @@ Neustart (`pe1_lauf.sh`, keine neue APK):
 falsch 0, zusaetzlich 0, **`.neu`-Reste 0**, Liste = N -> **GERAET-KONSISTENT**. Bild danach (angesehen,
 `geraet/f_titelbild_nach_abbruch_neustart.png`, 10:11:37): Titelbild wie in 3.2.
 
+### 3.7 Zusatz: Uebergang v0.8.19 -> M mit Abbruch in der Pruefphase (`pe1_uebergang_abbruch.sh`, `geraet/g*.txt`)
+Warum: im Uebergang 3.2 hatte N dieselben Assets wie v0.8.19 (0 abweichend) - hier traegt das Ziel M genau die gleich grosse
+Aenderung, die der alte Entpacker nie saehe, und der Lauf wird mittendrin beendet.
+- g1: deinstalliert, Referenz v0.8.19 frisch: `Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler`.
+- g2: M als Update, `Abgleich (Uebergang v0.8.19): ... pruefen 3603` (08:15:06.480), force-stop 08:15:13 (keine
+  Abschlusszeile). Zustand: Marker `re15_assets_ok.txt` **noch da**, keine `re15_assets_entpackt.txt`, kein `.neu`,
+  ROOM4010.RDT noch alt (`23d5fdc1...`).
+- g3: Neustart -> wieder `Abgleich (Uebergang v0.8.19)`, dann
+  `Summe weicht ab -> neu: shared_assets/PSX/STAGE4/ROOM4010.RDT` und
+  `Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 1 kopiert (297112 B, 13 ms), 3603 per SHA-256 geprueft (356678277 B,
+  9052 ms, 1 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 11210 ms`; `adb pull` == Inhalt in M (`c065442b...`, cmp rc 0);
+  `pe1_geraet.py M` -> **GERAET-KONSISTENT** (Marker weg, Liste = M).
+
 ## 4. PC-Suite local_build.sh all
 
 ## 5. Kein Python-Installer

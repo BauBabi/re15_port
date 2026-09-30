@@ -1,0 +1,9 @@
+/sdcard/Android/data/de.re15.port/files/shared_assets/PSX/STAGE4/ROOM4010.RDT: 1 file pulled, 0 skipped. 13.9 MB/s (297112 bytes in 0.020s)
+adb pull sha256: c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da
+cmp pull == Inhalt in APK M: rc 0
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 ed0433e3f16d9069b1424f1de3188b006e9715420b67898d51b623777d60aac8
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich 0 | .neu-Reste (ueberall) 0
+re15_assets_entpackt.txt sha256: ed0433e3f16d9069b1424f1de3188b006e9715420b67898d51b623777d60aac8 (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
