@@ -623,6 +623,11 @@ print(f"   Volumes: {len(vols)} (letztes = Nr. {disk+1}), Eintraege im Katalog: 
 missing = [n for n in range(1, disk+1)
            if not os.path.exists(f"{os.path.splitext(last)[0]}.z{n:02d}")]
 if missing: sys.exit(f"fehlende Volumes: {missing}")
+# Runde 4 (B1): auch KEINE fremden - vor dem Zippen wurde <satz>.z* geloescht; was jetzt mehr da ist als die
+# Volumes 1..disk und das letzte, stammt nicht aus diesem zip-Lauf und kaeme sonst in SHA256SUMS.txt/git add
+soll = {os.path.normcase(f"{os.path.splitext(last)[0]}.z{n:02d}") for n in range(1, disk+1)} | {os.path.normcase(last)}
+fremd = [v for v in vols if os.path.normcase(v) not in soll]
+if fremd: sys.exit(f"fremde Dateien neben dem Satz (nicht aus diesem zip-Lauf): {fremd}")
 if total < want: sys.exit(f"Katalog listet nur {total} Eintraege, erwartet >= {want}")
 PY
 }
@@ -819,8 +824,16 @@ if [[ $DO_ZIP -eq 1 ]]; then
         rm -f "${NAME}_android".z*
         zip -q -s "$SPLIT" -j "${NAME}_android.zip" "$APK"
         verify_split "${NAME}_android.zip" 1
+        # Runde 4 (B1): festhalten, WAS ausgeliefert wird - die Volumes dieses zip-Laufs mit ihrer sha256, genommen
+        # VOR und NACH der Inhaltspruefung (gleich = geprueft wurde genau das). SHA256SUMS.txt bekommt fuer Android
+        # genau diese Zeilen, git add genau diese Dateien; hat sich bis dahin etwas geaendert, Abbruch.
+        android_vorher="$(sha256sum "${NAME}_android".z*)" || die "Android-Satz nicht lesbar"
         verify_apk_im_zip "${NAME}_android.zip" "$(basename "$APK")" "$APK_KENNUNG" \
             || die "Android-Satz ${NAME}_android.z* enthaelt NICHT die gepruefte APK (Meldung oben) - nicht ausgeliefert"
+        ANDROID_SUMS="$(sha256sum "${NAME}_android".z*)" || die "Android-Satz nicht lesbar"
+        [[ "$ANDROID_SUMS" == "$android_vorher" ]] || die "Android-Satz hat sich WAEHREND der Inhaltspruefung veraendert:
+        vorher: $(echo $android_vorher)
+        nachher: $(echo $ANDROID_SUMS)"
         ANDROID_GEZIPPT=1
     elif [[ -n "$APK_KENNUNG" ]]; then
         die "Android-APK verschwand zwischen Pruefung und Zippen: $APK"
@@ -834,17 +847,29 @@ if [[ $DO_ZIP -eq 1 ]]; then
         die "Android-Satz ohne gepruefte APK aus diesem Lauf: $(echo $(android_satz_da)) - nicht ausgeliefert
         (release/build_android.sh --version $VERSION, oder --ohne-android)"
     fi
+    if [[ -n "${ANDROID_GEZIPPT:-}" ]]; then
+        android_jetzt="$(sha256sum "${NAME}_android".z*)" || die "Android-Satz nicht lesbar"
+        [[ "$android_jetzt" == "$ANDROID_SUMS" ]] || die "Android-Satz wurde nach der Pruefung veraendert oder ergaenzt - nicht ausgeliefert:
+        geprueft: $(echo $ANDROID_SUMS)
+        jetzt:    $(echo $android_jetzt)"
+    fi
     sums=()
     for f in "${NAME}"_*.z*; do
         [[ -f "$f" ]] || continue
-        case "$f" in "${NAME}_android".z*) [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue ;; esac
+        case "$f" in "${NAME}_android".z*) continue ;; esac     # Android: die festgehaltenen Zeilen (unten)
         sums+=("$f")
     done
-    (( ${#sums[@]} )) || die "keine Split-Volumes fuer SHA256SUMS.txt"
-    sha256sum "${sums[@]}" > SHA256SUMS.txt
+    (( ${#sums[@]} )) || [[ -n "${ANDROID_GEZIPPT:-}" ]] || die "keine Split-Volumes fuer SHA256SUMS.txt"
+    pc_sums=""
+    if (( ${#sums[@]} )); then pc_sums="$(sha256sum "${sums[@]}")" || die "sha256sum der PC-Volumes fehlgeschlagen"; fi
+    # nur Bash selbst schreibt die Datei (sha256sum aus /c/msys64/usr/bin laeuft unter einer anderen MSYS-Laufzeit)
+    { if [[ -n "${ANDROID_GEZIPPT:-}" ]]; then printf '%s\n' "$ANDROID_SUMS"; fi
+      if [[ -n "$pc_sums" ]]; then printf '%s\n' "$pc_sums"; fi; } > SHA256SUMS.txt
     echo
-    ls -la "${sums[@]}"
-    echo "== SHA256SUMS.txt geschrieben (${#sums[@]} Volumes${ANDROID_GEZIPPT:+, Android-Satz aus diesem Lauf}) =="
+    zeigen=("${sums[@]}")
+    if [[ -n "${ANDROID_GEZIPPT:-}" ]]; then zeigen+=("${NAME}_android".z*); fi
+    ls -la "${zeigen[@]}"
+    echo "== SHA256SUMS.txt geschrieben ($(grep -c '' SHA256SUMS.txt) Volumes${ANDROID_GEZIPPT:+, Android-Satz aus diesem Lauf}) =="
 fi
 
 # --- Git: NUR die aktuelle Version im Repo halten ----------------------------
@@ -903,8 +928,13 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
     for f in "$HERE/${NAME}"_*.z*; do
         [[ -f "$f" ]] || continue
         # Runde 4 (B1): einen Android-Satz nur vormerken, wenn er in DIESEM Lauf aus der geprueften APK
-        # entstand - auch mit --no-zip (dort entsteht keiner; ein vorhandener wird nicht angefasst)
-        case "$(basename "$f")" in "${NAME}_android".z*) [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue ;; esac
+        # entstand, und nur die dabei festgehaltenen Volumes (ANDROID_SUMS) - auch mit --no-zip (dort entsteht
+        # keiner; ein vorhandener wird nicht angefasst)
+        case "$(basename "$f")" in
+            "${NAME}_android".z*)
+                [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue
+                [[ $'\n'"${ANDROID_SUMS:-}"$'\n' == *"$(basename "$f")"$'\n'* ]] || continue ;;
+        esac
         git -C "$HERE/.." add -- "release/$(basename "$f")" && neu=$((neu+1))
     done
     echo "   $alt alte Paketdatei(en) aus dem Repo entfernt, $neu neue vorgemerkt"
