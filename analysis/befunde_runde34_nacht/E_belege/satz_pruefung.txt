@@ -1,0 +1,48 @@
+[1] Nutzertext dok1_police_officer (499 Zeichen, md5 9c8bbf64) gegen satz_eingabe.txt: ZEICHENGLEICH
+[2] 3 Textseiten zurueckgelesen: Kernpixel ohne Glyphe 0, Abstaende ausserhalb der Metrik 0
+[3] Wortfolge: Nutzertext 97 Woerter, zurueckgelesen 97: WORTGLEICH
+[4] Nutzerzeilen, die NICHT am Anfang einer Satzzeile beginnen: 0
+    p01: I barely managed to close the / shutter before the zombie / horde broke through. / But I was too late... One of / those damn things still got / me... / So this is where I'll spend my / last hours... / But at least I'll go knowing I
+    p02: protected the police station / from the rest of those / cowards. I left the fuse with / the Chief. He'll keep it safe in / the secret hiding place in his / office, where not just anyone / can get to it. / Lucia, I'm sorry I can't hold / you in my arms anymore. Take
+    p03: good care of yourself and / Mom...
+[5] Titelseite zurueckgelesen ["POLICE OFFICER'S", 'FINAL DIARY ENTRY'] (Soll "POLICE OFFICER'S FINAL DIARY ENTRY"): GLEICH; title_page == p00: True; title_paper == FILE00: True; Seiten mit abweichendem Kopf: 0
+[6] Dateibestand p00..p03, kein p04; max_page laut Satz 3: STIMMT
+[7] konstruierte Glyphen zurueckgelesen: 0
+ERGEBNIS FILE26: ALLE PRUEFUNGEN BESTANDEN
+
+[1] Nutzertext dok2_elliot (648 Zeichen, md5 9d796a1b) gegen satz_eingabe.txt: ZEICHENGLEICH
+[2] 4 Textseiten zurueckgelesen: Kernpixel ohne Glyphe 0, Abstaende ausserhalb der Metrik 0
+[3] Wortfolge: Nutzertext 115 Woerter, zurueckgelesen 115: WORTGLEICH
+[4] Nutzerzeilen, die NICHT am Anfang einer Satzzeile beginnen: 0
+    p01: I made it! I managed to reach / headquarters. They're / sending an escape helicopter / for me! /  / Afterwards, I destroyed the / communications equipment and / pulled the fuse. That should / keep the others from
+    p02: following my trail long / enough. /  / Only 3 more hours... that's / how long I have to keep / playing the good cop, just / like Chief Irons ordered. /  / He wants us to stay here and
+    p03: save as many civilians as / possible. But there are no / civilians left. They're all / dead, or they've turned into / one of those things by now... / So basically, he's ordering us / to stay put until we're as / good as dead.
+    p04: Well, not me! Go ahead and / sacrifice yourselves. I'm as / good as gone.
+[5] Titelseite zurueckgelesen ["ELLIOT'S DIARY"] (Soll "ELLIOT'S DIARY"): GLEICH; title_page == p00: True; title_paper == FILE08: True; Seiten mit abweichendem Kopf: 0
+[6] Dateibestand p00..p04, kein p05; max_page laut Satz 4: STIMMT
+[7] konstruierte Glyphen zurueckgelesen: 0
+ERGEBNIS FILE27: ALLE PRUEFUNGEN BESTANDEN
+
+[1] Nutzertext dok3_marvin (300 Zeichen, md5 5d63de08) gegen satz_eingabe.txt: ZEICHENGLEICH
+[2] 2 Textseiten zurueckgelesen: Kernpixel ohne Glyphe 0, Abstaende ausserhalb der Metrik 0
+[3] Wortfolge: Nutzertext 54 Woerter, zurueckgelesen 54: WORTGLEICH
+[4] Nutzerzeilen, die NICHT am Anfang einer Satzzeile beginnen: 0
+    p01: To all officers, / Following the recent sabotage / of our communications / equipment, I have ordered the / access code to the room to be / changed. / The new code is: 4312 / Until we know more about who / is responsible for the attack, / I ask that you do not share / this code with anyone else.
+    p02: Thanks! / Marvin Branagh
+[5] Titelseite zurueckgelesen ["MARVIN'S NOTES"] (Soll "MARVIN'S NOTES"): GLEICH; title_page == p00: True; title_paper == FILE02: True; Seiten mit abweichendem Kopf: 0
+[6] Dateibestand p00..p02, kein p03; max_page laut Satz 2: STIMMT
+[7] konstruierte Glyphen zurueckgelesen: 0
+ERGEBNIS FILE28: ALLE PRUEFUNGEN BESTANDEN
+
+[1] Nutzertext dok4_armory (312 Zeichen, md5 e503898e) gegen satz_eingabe.txt: ZEICHENGLEICH
+[2] 2 Textseiten zurueckgelesen: Kernpixel ohne Glyphe 0, Abstaende ausserhalb der Metrik 0
+[3] Wortfolge: Nutzertext 50 Woerter, zurueckgelesen 50: WORTGLEICH
+[4] Nutzerzeilen, die NICHT am Anfang einer Satzzeile beginnen: 0
+    p01: Chief Irons has instructed us / to distribute the remaining / equipment strategically / throughout the station for / any other survivors. / We've gathered part of the / supplies in the armory. / Whoever is reading this can / access the room with the code: / 5632 / We hope these reserves make
+    p02: the difference between life / and death.
+[5] Titelseite zurueckgelesen ['ARMORY NOTICE'] (Soll 'ARMORY NOTICE'): GLEICH; title_page == p00: True; title_paper == FILE06: True; Seiten mit abweichendem Kopf: 0
+[6] Dateibestand p00..p02, kein p03; max_page laut Satz 2: STIMMT
+[7] konstruierte Glyphen zurueckgelesen: 0
+ERGEBNIS FILE29: ALLE PRUEFUNGEN BESTANDEN
+
+GESAMT: ALLE VIER BESTANDEN

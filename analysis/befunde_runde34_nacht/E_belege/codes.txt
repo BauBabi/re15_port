@@ -1,0 +1,24 @@
+ROOM10D0: Radwerte je Sub {6: 3, 7: 4, 8: 5, 9: 6, 10: 7, 11: 8, 12: 9, 13: 10, 14: 11, 15: 12, 16: 13}
+   Stelle 1: sub09 setzt Bank5/Bit13 @0x0165E, Radwert 6 (Member_cmp @0x013DA)
+   Stelle 2: sub08 setzt Bank5/Bit14 @0x01612, Radwert 5 (Member_cmp @0x013B2)
+   Stelle 3: sub06 setzt Bank5/Bit15 @0x0157A, Radwert 3 (Member_cmp @0x01362)
+   Stelle 4: sub07 setzt Bank5/Bit16 @0x015C2, Radwert 4 (Member_cmp @0x0138A)
+   Radwerte [6, 5, 3, 4] -> Ziffern je Versatz (w - v) mod 10: v=0:6534, v=1:5423, v=2:4312, v=3:3201, v=4:2190, v=5:1089, v=6:0978, v=7:9867
+ROOM10D1: Radwerte je Sub {6: 3, 7: 4, 8: 5, 9: 6, 10: 7, 11: 8, 12: 9, 13: 10, 14: 11, 15: 12, 16: 13}
+   Stelle 1: sub09 setzt Bank5/Bit13 @0x01648, Radwert 6 (Member_cmp @0x013C4)
+   Stelle 2: sub08 setzt Bank5/Bit14 @0x015FC, Radwert 5 (Member_cmp @0x0139C)
+   Stelle 3: sub06 setzt Bank5/Bit15 @0x01564, Radwert 3 (Member_cmp @0x0134C)
+   Stelle 4: sub07 setzt Bank5/Bit16 @0x015AC, Radwert 4 (Member_cmp @0x01374)
+   Radwerte [6, 5, 3, 4] -> Ziffern je Versatz (w - v) mod 10: v=0:6534, v=1:5423, v=2:4312, v=3:3201, v=4:2190, v=5:1089, v=6:0978, v=7:9867
+ROOM1230: Radwerte je Sub {6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 12: 13, 13: 14, 14: 15, 15: 16, 16: 17}
+   Stelle 1: sub10 setzt Bank5/Bit13 @0x01172, Radwert 11 (Member_cmp @0x00ECA)
+   Stelle 2: sub11 setzt Bank5/Bit14 @0x011BE, Radwert 12 (Member_cmp @0x00EF2)
+   Stelle 3: sub08 setzt Bank5/Bit15 @0x010DA, Radwert 9 (Member_cmp @0x00E7A)
+   Stelle 4: sub07 setzt Bank5/Bit16 @0x0108A, Radwert 8 (Member_cmp @0x00E52)
+   Radwerte [11, 12, 9, 8] -> Ziffern je Versatz (w - v) mod 10: v=0:1298, v=1:0187, v=2:9076, v=3:8965, v=4:7854, v=5:6743, v=6:5632, v=7:4521
+ROOM1231: Radwerte je Sub {6: 7, 7: 8, 8: 9, 9: 10, 10: 11, 11: 12, 12: 13, 13: 14, 14: 15, 15: 16, 16: 17}
+   Stelle 1: sub10 setzt Bank5/Bit13 @0x01172, Radwert 11 (Member_cmp @0x00ECA)
+   Stelle 2: sub11 setzt Bank5/Bit14 @0x011BE, Radwert 12 (Member_cmp @0x00EF2)
+   Stelle 3: sub08 setzt Bank5/Bit15 @0x010DA, Radwert 9 (Member_cmp @0x00E7A)
+   Stelle 4: sub07 setzt Bank5/Bit16 @0x0108A, Radwert 8 (Member_cmp @0x00E52)
+   Radwerte [11, 12, 9, 8] -> Ziffern je Versatz (w - v) mod 10: v=0:1298, v=1:0187, v=2:9076, v=3:8965, v=4:7854, v=5:6743, v=6:5632, v=7:4521

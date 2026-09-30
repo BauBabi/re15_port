@@ -1,0 +1,4 @@
+RDT-Dateien: 240
+Item_aot_set-Muster (50 slot 09): 416, davon Id 0x48..0x4C: 0 []
+Aot_reset-Muster (46 slot 09):    52, davon Id 0x48..0x4C: 0 []
+Gegenprobe ROOM1010: ['0x996', '0x9ac', '0x9c2'] (erwartet 0x996, 0x9ac, 0x9c2)
