@@ -1,0 +1,18 @@
+ARMS09.EDH: Deskriptor-Tabelle 32 Records, VAB b'pBAV' ps=1 ts=8 vs=6, VAG-Groessen [0, 48, 4672, 12800, 1824, 6896, 4176]
+  Record  0 (SE 0x01000001): desc 00001436  prog 0 tone 1  -> VagAtr @0x8C0 vag=2  ARMS09_00000.wav (VAG 4672 B)
+  Record  1 (SE 0x01010001): desc 00005416  prog 0 tone 5  -> VagAtr @0x940 vag=4  ARMS09_00002.wav (VAG 1824 B)
+  Record  3 (SE 0x01030001): desc 00007417  prog 0 tone 7  -> VagAtr @0x980 vag=6  ARMS09_00004.wav (VAG 4176 B)
+  Record 14 (SE 0x010E0001): desc 00006416  prog 0 tone 6  -> VagAtr @0x960 vag=5  ARMS09_00003.wav (VAG 6896 B)
+  Record 17 (SE 0x01110001): desc 00003320  prog 0 tone 3  -> VagAtr @0x900 vag=3  ARMS09_00001.wav (VAG 12800 B)
+ARMS0A.EDH: Deskriptor-Tabelle 32 Records, VAB b'pBAV' ps=1 ts=8 vs=6, VAG-Groessen [0, 48, 4672, 11664, 1824, 6896, 4176]
+  Record  0 (SE 0x01000001): desc 00001436  prog 0 tone 1  -> VagAtr @0x8C0 vag=2  ARMS0A_00000.wav (VAG 4672 B)
+  Record  1 (SE 0x01010001): desc 00005416  prog 0 tone 5  -> VagAtr @0x940 vag=4  ARMS0A_00002.wav (VAG 1824 B)
+  Record  3 (SE 0x01030001): desc 00007417  prog 0 tone 7  -> VagAtr @0x980 vag=6  ARMS0A_00004.wav (VAG 4176 B)
+  Record 14 (SE 0x010E0001): desc 00006416  prog 0 tone 6  -> VagAtr @0x960 vag=5  ARMS0A_00003.wav (VAG 6896 B)
+  Record 18 (SE 0x01120001): desc 00003320  prog 0 tone 3  -> VagAtr @0x900 vag=3  ARMS0A_00001.wav (VAG 11664 B)
+ARMS0B.EDH: Deskriptor-Tabelle 32 Records, VAB b'pBAV' ps=1 ts=8 vs=6, VAG-Groessen [0, 48, 4672, 10992, 1824, 6896, 4176]
+  Record  0 (SE 0x01000001): desc 00001436  prog 0 tone 1  -> VagAtr @0x8C0 vag=2  ARMS0B_00000.wav (VAG 4672 B)
+  Record  1 (SE 0x01010001): desc 00005416  prog 0 tone 5  -> VagAtr @0x940 vag=4  ARMS0B_00002.wav (VAG 1824 B)
+  Record  3 (SE 0x01030001): desc 00007417  prog 0 tone 7  -> VagAtr @0x980 vag=6  ARMS0B_00004.wav (VAG 4176 B)
+  Record 14 (SE 0x010E0001): desc 00006416  prog 0 tone 6  -> VagAtr @0x960 vag=5  ARMS0B_00003.wav (VAG 6896 B)
+  Record 19 (SE 0x01130001): desc 00003320  prog 0 tone 3  -> VagAtr @0x900 vag=3  ARMS0B_00001.wav (VAG 10992 B)

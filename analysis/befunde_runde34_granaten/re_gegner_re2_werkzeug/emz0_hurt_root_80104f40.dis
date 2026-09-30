@@ -1,0 +1,321 @@
+; C:\workspace\git\reAi_v2\info\re2leon\COMMON\BIN\EMZ0.BIN  @0x80104f40 (320 instr)
+  80104f40: addiu sp,sp,-48                    
+  80104f44: sw s1,28(sp)                       
+  80104f48: addu s1,a0,zero                    
+  80104f4c: sw s2,32(sp)                       
+  80104f50: addu s2,a1,zero                    
+  80104f54: sw s3,36(sp)                       
+  80104f58: lui a0,0x800d                      
+  80104f5c: addiu a0,a0,-1028                  0x800cfbfc
+  80104f60: sw ra,40(sp)                       
+  80104f64: sw s0,24(sp)                       
+  80104f68: lbu v1,0(a0)                       0x800d0000
+  80104f6c: addiu v0,zero,5                    
+  80104f70: bne v1,v0,0x80104fe0               
+  80104f74: addu s3,a2,zero                    
+  80104f78: lui v0,0x800d                      
+  80104f7c: lw v0,-596(v0)                     0x800cfdac
+  80104f80: nop                                
+  80104f84: bne v0,s1,0x80104fe0               
+  80104f88: addiu v0,zero,1                    
+  80104f8c: sw v0,0(a0)                        0x800d0000
+  80104f90: lui v0,0x800d                      
+  80104f94: lbu v0,-565(v0)                    0x800cfdcb
+  80104f98: lui v1,0x800d                      
+  80104f9c: lbu v1,-584(v1)                    0x800cfdb8
+  80104fa0: andi v0,v0,0x7f                    
+  80104fa4: andi v1,v1,0xed                    
+  80104fa8: lui at,0x800d                      
+  80104fac: sb v0,-565(at)                     0x800cfdcb
+  80104fb0: lui at,0x800d                      
+  80104fb4: sb v1,-584(at)                     0x800cfdb8
+  80104fb8: lw v0,0(s1)                        
+  80104fbc: addiu v1,zero,-4101                
+  80104fc0: and v0,v0,v1                       
+  80104fc4: sw v0,0(s1)                        
+  80104fc8: lui v0,0x800d                      
+  80104fcc: lw v0,-1032(v0)                    0x800cfbf8
+  80104fd0: nop                                
+  80104fd4: and v0,v0,v1                       
+  80104fd8: lui at,0x800d                      
+  80104fdc: sw v0,-1032(at)                    0x800cfbf8
+  80104fe0: lhu a0,270(s1)                     
+  80104fe4: nop                                
+  80104fe8: andi v0,a0,0x1                     
+  80104fec: beq v0,zero,0x80105014             
+  80104ff0: addu a1,s2,zero                    
+  80104ff4: lbu v0,5(s1)                       
+  80104ff8: nop                                
+  80104ffc: sll v0,v0,2                        
+  80105000: lui at,0x8011                      
+  80105004: addu at,at,v0                      
+  80105008: lw v0,-13336(at)                   0x8010cbe8
+  8010500c: j 0x8010540c                       
+  80105010: addu a0,s1,zero                    
+  80105014: lhu v0,538(s1)                     
+  80105018: nop                                
+  8010501c: andi v0,v0,0x10                    
+  80105020: beq v0,zero,0x8010503c             
+  80105024: andi v0,a0,0x40                    
+  80105028: addu a0,s1,zero                    
+  8010502c: jal 0x80107a78                     
+  80105030: addu a2,s3,zero                    
+  80105034: j 0x80105418                       
+  80105038: nop                                
+  8010503c: beq v0,zero,0x8010505c             
+  80105040: addu v1,zero,zero                  
+  80105044: lbu v0,5(s1)                       
+  80105048: nop                                
+  8010504c: xori v0,v0,0x1                     
+  80105050: sltu v0,zero,v0                    
+  80105054: subu v0,zero,v0                    
+  80105058: andi v1,v0,0x17                    
+  8010505c: lbu v0,6(s1)                       
+  80105060: nop                                
+  80105064: bne v0,zero,0x80105168             
+  80105068: nop                                
+  8010506c: lb v0,547(s1)                      
+  80105070: nop                                
+  80105074: slt v0,v1,v0                       
+  80105078: bne v0,zero,0x80105168             
+  8010507c: addiu v1,zero,1                    
+  80105080: lbu v0,546(s1)                     
+  80105084: nop                                
+  80105088: beq v0,v1,0x801050a0               
+  8010508c: addiu v0,zero,1                    
+  80105090: lbu v0,5(s1)                       
+  80105094: nop                                
+  80105098: bne v0,v1,0x80105164               
+  8010509c: addiu v0,zero,1                    
+  801050a0: sb v0,546(s1)                      
+  801050a4: addiu v0,zero,1281                 
+  801050a8: jal 0x80015fe8                     
+  801050ac: sw v0,4(s1)                        
+  801050b0: lbu a0,466(s1)                     
+  801050b4: lui v1,0xaaaa                      
+  801050b8: ori v1,v1,0xaaab                   
+  801050bc: multu a0,v1                        
+  801050c0: andi v0,v0,0xf                     
+  801050c4: addiu v0,v0,16                     0x800d0010
+  801050c8: sb v0,547(s1)                      
+  801050cc: mfhi t0                            
+  801050d0: srl v1,t0,1                        
+  801050d4: sll v0,v1,1                        
+  801050d8: addu v0,v0,v1                      
+  801050dc: subu a0,a0,v0                      
+  801050e0: andi a0,a0,0xff                    
+  801050e4: bne a0,zero,0x8010511c             
+  801050e8: addiu a0,zero,4096                 
+  801050ec: addiu a0,zero,6096                 
+  801050f0: addiu a3,sp,16                     
+  801050f4: lw a2,408(s1)                      
+  801050f8: addiu v0,zero,800                  
+  801050fc: sh zero,16(sp)                     
+  80105100: sh v0,18(sp)                       
+  80105104: sh zero,20(sp)                     
+  80105108: lh a1,118(s1)                      
+  8010510c: jal 0x8001bf10                     
+  80105110: addiu a2,a2,244                    
+  80105114: j 0x80105418                       
+  80105118: nop                                
+  8010511c: lw v1,408(s1)                      
+  80105120: nop                                
+  80105124: lw v0,1420(v1)                     
+  80105128: nop                                
+  8010512c: sh v0,16(sp)                       
+  80105130: lw v0,1424(v1)                     
+  80105134: nop                                
+  80105138: addiu v0,v0,500                    0x800d01f4
+  8010513c: sh v0,18(sp)                       
+  80105140: lw v0,1428(v1)                     
+  80105144: addiu a3,sp,16                     
+  80105148: sh v0,20(sp)                       
+  8010514c: lw s0,408(s1)                      
+  80105150: lh a1,118(s1)                      
+  80105154: jal 0x8001bf10                     
+  80105158: addiu a2,s0,72                     
+  8010515c: j 0x80105418                       
+  80105160: nop                                
+  80105164: sb v0,546(s1)                      
+  80105168: lhu v1,538(s1)                     
+  8010516c: nop                                
+  80105170: andi v0,v1,0x2                     
+  80105174: beq v0,zero,0x80105288             
+  80105178: addiu v0,zero,1                    
+  8010517c: lui v1,0x6                         
+  80105180: ori v1,v1,0x501                    
+  80105184: sw v1,4(s1)                        
+  80105188: lbu v1,5(s1)                       
+  8010518c: sb v0,363(s1)                      
+  80105190: addiu v0,zero,10                   
+  80105194: bne v1,v0,0x801051c8               
+  80105198: nop                                
+  8010519c: lhu v0,270(s1)                     
+  801051a0: nop                                
+  801051a4: andi v0,v0,0x80                    
+  801051a8: bne v0,zero,0x801051c8             
+  801051ac: nop                                
+  801051b0: jal 0x80106128                     
+  801051b4: addu a0,s1,zero                    
+  801051b8: lhu v0,538(s1)                     
+  801051bc: nop                                
+  801051c0: ori v0,v0,0x800                    
+  801051c4: sh v0,538(s1)                      
+  801051c8: lbu v1,5(s1)                       
+  801051cc: addiu v0,zero,11                   
+  801051d0: bne v1,v0,0x801051e8               
+  801051d4: addiu v0,zero,9                    
+  801051d8: jal 0x80106310                     
+  801051dc: addu a0,s1,zero                    
+  801051e0: lbu v1,5(s1)                       
+  801051e4: addiu v0,zero,9                    
+  801051e8: bne v1,v0,0x8010520c               
+  801051ec: nop                                
+  801051f0: lhu v0,270(s1)                     
+  801051f4: nop                                
+  801051f8: andi v0,v0,0x80                    
+  801051fc: bne v0,zero,0x8010520c             
+  80105200: nop                                
+  80105204: jal 0x8010640c                     
+  80105208: addu a0,s1,zero                    
+  8010520c: lbu v1,5(s1)                       
+  80105210: addiu v0,zero,14                   
+  80105214: bne v1,v0,0x8010522c               
+  80105218: addiu v0,zero,16                   
+  8010521c: jal 0x80106510                     
+  80105220: addu a0,s1,zero                    
+  80105224: lbu v1,5(s1)                       
+  80105228: addiu v0,zero,16                   
+  8010522c: bne v1,v0,0x80105418               
+  80105230: nop                                
+  80105234: lhu v0,270(s1)                     
+  80105238: nop                                
+  8010523c: andi v0,v0,0x80                    
+  80105240: bne v0,zero,0x80105274             
+  80105244: nop                                
+  80105248: lbu v0,570(s1)                     
+  8010524c: nop                                
+  80105250: sltiu v0,v0,0x9                    
+  80105254: bne v0,zero,0x80105274             
+  80105258: nop                                
+  8010525c: jal 0x80106128                     
+  80105260: addu a0,s1,zero                    
+  80105264: lhu v0,538(s1)                     
+  80105268: nop                                
+  8010526c: ori v0,v0,0x800                    
+  80105270: sh v0,538(s1)                      
+  80105274: lbu v0,570(s1)                     
+  80105278: nop                                
+  8010527c: addiu v0,v0,1                      0x800d0001
+  80105280: j 0x80105418                       
+  80105284: sb v0,570(s1)                      
+  80105288: andi v0,v1,0x60                    
+  8010528c: bne v0,zero,0x801053dc             
+  80105290: addu a0,s1,zero                    
+  80105294: lb v0,338(s1)                      
+  80105298: nop                                
+  8010529c: bgez v0,0x801053e0                 
+  801052a0: addu a1,s2,zero                    
+  801052a4: lhu v0,464(s1)                     
+  801052a8: nop                                
+  801052ac: andi v0,v0,0xc0                    
+  801052b0: beq v0,zero,0x801053d8             
+  801052b4: addiu a0,zero,9                    
+  801052b8: jal 0x8005bd6c                     
+  801052bc: addu a1,s1,zero                    
+  801052c0: lhu v0,464(s1)                     
+  801052c4: nop                                
+  801052c8: andi v0,v0,0x80                    
+  801052cc: beq v0,zero,0x801052e8             
+  801052d0: nop                                
+  801052d4: lw v1,408(s1)                      
+  801052d8: lhu v0,538(s1)                     
+  801052dc: addiu s0,v1,2064                   
+  801052e0: j 0x801052f8                       
+  801052e4: ori v0,v0,0x40                     
+  801052e8: lw v1,408(s1)                      
+  801052ec: lhu v0,538(s1)                     
+  801052f0: addiu s0,v1,1548                   
+  801052f4: ori v0,v0,0x20                     
+  801052f8: jal 0x80015fe8                     
+  801052fc: sh v0,538(s1)                      
+  80105300: andi v0,v0,0x1                     
+  80105304: beq v0,zero,0x80105354             
+  80105308: addiu v0,zero,30                   
+  8010530c: lbu v1,8(s1)                       
+  80105310: nop                                
+  80105314: beq v1,v0,0x80105354               
+  80105318: nop                                
+  8010531c: lw v1,408(s1)                      
+  80105320: nop                                
+  80105324: lw v0,2588(v1)                     
+  80105328: nop                                
+  8010532c: sw v0,8(s0)                        
+  80105330: lw v0,2596(v1)                     
+  80105334: nop                                
+  80105338: sw v0,16(s0)                       
+  8010533c: lw v0,2592(v1)                     
+  80105340: nop                                
+  80105344: sw v0,12(s0)                       
+  80105348: lw v0,2600(v1)                     
+  8010534c: nop                                
+  80105350: sw v0,20(s0)                       
+  80105354: jal 0x80015fe8                     
+  80105358: nop                                
+  8010535c: addiu a0,zero,8000                 
+  80105360: sll a1,v0,4                        
+  80105364: addiu a2,s0,72                     
+  80105368: jal 0x8001bf10                     
+  8010536c: addu a3,zero,zero                  
+  80105370: addiu s0,s0,172                    
+  80105374: lw v0,0(s0)                        
+  80105378: nop                                
+  8010537c: ori v0,v0,0x1062                   
+  80105380: sw v0,0(s0)                        
+  80105384: lhu v1,118(s1)                     
+  80105388: addiu v0,zero,10                   
+  8010538c: sh v0,60(s0)                       
+  80105390: addiu v0,zero,-200                 
+  80105394: sh v0,58(s0)                       
+  80105398: addiu v0,zero,50                   
+  8010539c: sh zero,134(s0)                    
+  801053a0: sb v0,121(s0)                      
+  801053a4: sh zero,62(s0)                     
+  801053a8: addiu v1,v1,2048                   
+  801053ac: sh v1,56(s0)                       
+  801053b0: lhu v1,118(s1)                     
+  801053b4: addiu v0,zero,1024                 
+  801053b8: sh v0,66(s0)                       
+  801053bc: jal 0x80015fe8                     
+  801053c0: sh v1,64(s0)                       
+  801053c4: addiu a0,zero,7000                 
+  801053c8: sll a1,v0,4                        
+  801053cc: addiu a2,s0,72                     
+  801053d0: jal 0x8001bf10                     
+  801053d4: addu a3,zero,zero                  
+  801053d8: addu a0,s1,zero                    
+  801053dc: addu a1,s2,zero                    
+  801053e0: lbu v1,5(a0)                       0x800d0005
+  801053e4: lui a2,0x8011                      
+  801053e8: addiu a2,a2,-14016                 0x8010c940
+  801053ec: sll v0,v1,3                        
+  801053f0: addu v0,v0,v1                      
+  801053f4: sll v0,v0,2                        
+  801053f8: lbu v1,466(a0)                     0x800d01d2
+  801053fc: addu v0,v0,a2                      
+  80105400: sll v1,v1,2                        
+  80105404: addu v1,v1,v0                      
+  80105408: lw v0,0(v1)                        
+  8010540c: nop                                
+  80105410: jalr v0                            
+  80105414: addu a2,s3,zero                    
+  80105418: lw ra,40(sp)                       
+  8010541c: lw s3,36(sp)                       
+  80105420: lw s2,32(sp)                       
+  80105424: lw s1,28(sp)                       
+  80105428: lw s0,24(sp)                       
+  8010542c: addiu sp,sp,48                     
+  80105430: jr ra                              
+  80105434: nop                                
+  80105438: addiu sp,sp,-96                    
+  8010543c: sw s1,76(sp)                       

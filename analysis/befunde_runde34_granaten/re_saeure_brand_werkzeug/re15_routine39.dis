@@ -1,0 +1,254 @@
+; C:\workspace\git\reAi_v2\info\Re1.5\PSX.EXE  @0x80018918 (253 instr)
+  80018918: lui a0,0x800b                      
+  8001891c: lw a0,21188(a0)                    attack_workstruct
+  80018920: addiu sp,sp,-56                    
+  80018924: sw ra,48(sp)                       
+  80018928: sw s3,44(sp)                       
+  8001892c: sw s2,40(sp)                       
+  80018930: sw s1,36(sp)                       
+  80018934: sw s0,32(sp)                       
+  80018938: lw v0,64(a0)                       0x800b0040
+  8001893c: nop                                
+  80018940: addiu v0,v0,25                     
+  80018944: sw v0,16(sp)                       
+  80018948: lw v0,68(a0)                       0x800b0044
+  8001894c: nop                                
+  80018950: sw v0,20(sp)                       
+  80018954: lw v0,72(a0)                       0x800b0048
+  80018958: nop                                
+  8001895c: sw v0,24(sp)                       
+  80018960: lhu v1,14(a0)                      0x800b000e
+  80018964: ori v0,zero,0x1                    
+  80018968: beq v1,v0,0x80018a7c               
+  8001896c: slti v0,v1,2                       
+  80018970: beq v0,zero,0x80018988             
+  80018974: nop                                
+  80018978: beq v1,zero,0x8001899c             
+  8001897c: addu a1,zero,zero                  
+  80018980: j 0x80018cec                       
+  80018984: nop                                
+  80018988: ori v0,zero,0x2                    
+  8001898c: beq v1,v0,0x80018c44               
+  80018990: ori a1,zero,0xd70                  
+  80018994: j 0x80018cec                       
+  80018998: nop                                
+  8001899c: ori v0,zero,0x1                    
+  800189a0: addiu a3,sp,16                     
+  800189a4: sb v0,108(a0)                      0x800b006c
+  800189a8: ori v0,zero,0x1                    
+  800189ac: lui v1,0x800b                      
+  800189b0: lw v1,21188(v1)                    attack_workstruct
+  800189b4: lui s3,0x400                       
+  800189b8: lhu a0,114(v1)                     0x800b0072
+  800189bc: addiu a2,v1,76                     0x800b004c
+  800189c0: sh v0,14(v1)                       0x800b000e
+  800189c4: jal 0x800199d4                     
+  800189c8: or a0,a0,s3                        
+  800189cc: ori a1,zero,0x2b0                  
+  800189d0: addiu a3,sp,16                     
+  800189d4: sll v1,v0,5                        
+  800189d8: addu v1,v1,v0                      
+  800189dc: sll v1,v1,2                        
+  800189e0: ori s2,zero,0x3                    
+  800189e4: ori s1,zero,0x28                   
+  800189e8: ori v0,zero,0xa                    
+  800189ec: lui at,0x800a                      
+  800189f0: addiu at,at,29732                  0x800a7424
+  800189f4: addu at,at,v1                      
+  800189f8: sb s2,0(at)                        0x800a0000
+  800189fc: lui a2,0x800b                      
+  80018a00: lw a2,21188(a2)                    attack_workstruct
+  80018a04: ori s0,zero,0x1000                 
+  80018a08: lui at,0x800a                      
+  80018a0c: addiu at,at,29624                  model_inst_pool
+  80018a10: addu at,at,v1                      
+  80018a14: sh zero,0(at)                      0x800a0000
+  80018a18: lui at,0x800a                      
+  80018a1c: addiu at,at,29626                  0x800a73ba
+  80018a20: addu at,at,v1                      
+  80018a24: sh s1,0(at)                        0x800a0000
+  80018a28: lui at,0x800a                      
+  80018a2c: addiu at,at,29634                  0x800a73c2
+  80018a30: addu at,at,v1                      
+  80018a34: sh v0,0(at)                        0x800a0000
+  80018a38: lui at,0x800a                      
+  80018a3c: addiu at,at,29628                  0x800a73bc
+  80018a40: addu at,at,v1                      
+  80018a44: sh s0,0(at)                        0x800a0000
+  80018a48: lui at,0x800a                      
+  80018a4c: addiu at,at,29630                  0x800a73be
+  80018a50: addu at,at,v1                      
+  80018a54: sh s0,0(at)                        0x800a0000
+  80018a58: lhu a0,114(a2)                     0x800b0072
+  80018a5c: addiu a2,a2,76                     0x800b004c
+  80018a60: jal 0x800199d4                     
+  80018a64: or a0,a0,s3                        
+  80018a68: sll v1,v0,5                        
+  80018a6c: addu v1,v1,v0                      
+  80018a70: sll v1,v1,2                        
+  80018a74: j 0x80018bdc                       
+  80018a78: ori v0,zero,0x8                    
+  80018a7c: ori a1,zero,0x560                  
+  80018a80: addiu a2,a0,76                     0x800b004c
+  80018a84: addiu a3,sp,16                     
+  80018a88: ori v0,zero,0x2                    
+  80018a8c: sh v0,14(a0)                       0x800b000e
+  80018a90: lhu a0,114(a0)                     0x800b0072
+  80018a94: lui s3,0x400                       
+  80018a98: jal 0x800199d4                     
+  80018a9c: or a0,a0,s3                        
+  80018aa0: ori a1,zero,0x810                  
+  80018aa4: addiu a3,sp,16                     
+  80018aa8: sll v1,v0,5                        
+  80018aac: addu v1,v1,v0                      
+  80018ab0: sll v1,v1,2                        
+  80018ab4: ori s2,zero,0x3                    
+  80018ab8: ori s1,zero,0x28                   
+  80018abc: ori v0,zero,0x8                    
+  80018ac0: lui at,0x800a                      
+  80018ac4: addiu at,at,29732                  0x800a7424
+  80018ac8: addu at,at,v1                      
+  80018acc: sb s2,0(at)                        0x800a0000
+  80018ad0: lui a2,0x800b                      
+  80018ad4: lw a2,21188(a2)                    attack_workstruct
+  80018ad8: ori s0,zero,0x1000                 
+  80018adc: lui at,0x800a                      
+  80018ae0: addiu at,at,29624                  model_inst_pool
+  80018ae4: addu at,at,v1                      
+  80018ae8: sh zero,0(at)                      0x800a0000
+  80018aec: lui at,0x800a                      
+  80018af0: addiu at,at,29626                  0x800a73ba
+  80018af4: addu at,at,v1                      
+  80018af8: sh s1,0(at)                        0x800a0000
+  80018afc: lui at,0x800a                      
+  80018b00: addiu at,at,29634                  0x800a73c2
+  80018b04: addu at,at,v1                      
+  80018b08: sh v0,0(at)                        0x800a0000
+  80018b0c: lui at,0x800a                      
+  80018b10: addiu at,at,29628                  0x800a73bc
+  80018b14: addu at,at,v1                      
+  80018b18: sh s0,0(at)                        0x800a0000
+  80018b1c: lui at,0x800a                      
+  80018b20: addiu at,at,29630                  0x800a73be
+  80018b24: addu at,at,v1                      
+  80018b28: sh s0,0(at)                        0x800a0000
+  80018b2c: lhu a0,114(a2)                     0x800b0072
+  80018b30: addiu a2,a2,76                     0x800b004c
+  80018b34: jal 0x800199d4                     
+  80018b38: or a0,a0,s3                        
+  80018b3c: ori a1,zero,0xac0                  
+  80018b40: addiu a3,sp,16                     
+  80018b44: sll v1,v0,5                        
+  80018b48: addu v1,v1,v0                      
+  80018b4c: sll v1,v1,2                        
+  80018b50: lui at,0x800a                      
+  80018b54: addiu at,at,29732                  0x800a7424
+  80018b58: addu at,at,v1                      
+  80018b5c: sb s2,0(at)                        0x800a0000
+  80018b60: lui a2,0x800b                      
+  80018b64: lw a2,21188(a2)                    attack_workstruct
+  80018b68: ori v0,zero,0xb                    
+  80018b6c: lui at,0x800a                      
+  80018b70: addiu at,at,29624                  model_inst_pool
+  80018b74: addu at,at,v1                      
+  80018b78: sh zero,0(at)                      0x800a0000
+  80018b7c: lui at,0x800a                      
+  80018b80: addiu at,at,29626                  0x800a73ba
+  80018b84: addu at,at,v1                      
+  80018b88: sh s1,0(at)                        0x800a0000
+  80018b8c: lui at,0x800a                      
+  80018b90: addiu at,at,29634                  0x800a73c2
+  80018b94: addu at,at,v1                      
+  80018b98: sh v0,0(at)                        0x800a0000
+  80018b9c: lui at,0x800a                      
+  80018ba0: addiu at,at,29628                  0x800a73bc
+  80018ba4: addu at,at,v1                      
+  80018ba8: sh s0,0(at)                        0x800a0000
+  80018bac: lui at,0x800a                      
+  80018bb0: addiu at,at,29630                  0x800a73be
+  80018bb4: addu at,at,v1                      
+  80018bb8: sh s0,0(at)                        0x800a0000
+  80018bbc: lhu a0,114(a2)                     0x800b0072
+  80018bc0: addiu a2,a2,76                     0x800b004c
+  80018bc4: jal 0x800199d4                     
+  80018bc8: or a0,a0,s3                        
+  80018bcc: sll v1,v0,5                        
+  80018bd0: addu v1,v1,v0                      
+  80018bd4: sll v1,v1,2                        
+  80018bd8: ori v0,zero,0x9                    
+  80018bdc: lui at,0x800a                      
+  80018be0: addiu at,at,29732                  0x800a7424
+  80018be4: addu at,at,v1                      
+  80018be8: sb s2,0(at)                        0x800a0000
+  80018bec: lui at,0x800a                      
+  80018bf0: addiu at,at,29624                  model_inst_pool
+  80018bf4: addu at,at,v1                      
+  80018bf8: sh zero,0(at)                      0x800a0000
+  80018bfc: lui at,0x800a                      
+  80018c00: addiu at,at,29626                  0x800a73ba
+  80018c04: addu at,at,v1                      
+  80018c08: sh s1,0(at)                        0x800a0000
+  80018c0c: lui at,0x800a                      
+  80018c10: addiu at,at,29634                  0x800a73c2
+  80018c14: addu at,at,v1                      
+  80018c18: sh v0,0(at)                        0x800a0000
+  80018c1c: lui at,0x800a                      
+  80018c20: addiu at,at,29628                  0x800a73bc
+  80018c24: addu at,at,v1                      
+  80018c28: sh s0,0(at)                        0x800a0000
+  80018c2c: lui at,0x800a                      
+  80018c30: addiu at,at,29630                  0x800a73be
+  80018c34: addu at,at,v1                      
+  80018c38: sh s0,0(at)                        0x800a0000
+  80018c3c: j 0x80018cec                       
+  80018c40: nop                                
+  80018c44: sb zero,108(a0)                    0x800b006c
+  80018c48: lui v0,0x800b                      
+  80018c4c: lw v0,21188(v0)                    attack_workstruct
+  80018c50: addiu a3,sp,16                     
+  80018c54: addiu a2,v0,76                     0x800b004c
+  80018c58: sh zero,0(v0)                      0x800b0000
+  80018c5c: sh zero,2(v0)                      0x800b0002
+  80018c60: lhu v0,114(v0)                     0x800b0072
+  80018c64: lui a0,0x400                       
+  80018c68: jal 0x800199d4                     
+  80018c6c: or a0,v0,a0                        
+  80018c70: sll v1,v0,5                        
+  80018c74: addu v1,v1,v0                      
+  80018c78: sll v1,v1,2                        
+  80018c7c: ori v0,zero,0x3                    
+  80018c80: lui at,0x800a                      
+  80018c84: addiu at,at,29732                  0x800a7424
+  80018c88: addu at,at,v1                      
+  80018c8c: sb v0,0(at)                        0x800a0000
+  80018c90: ori v0,zero,0x28                   
+  80018c94: lui at,0x800a                      
+  80018c98: addiu at,at,29626                  0x800a73ba
+  80018c9c: addu at,at,v1                      
+  80018ca0: sh v0,0(at)                        0x800a0000
+  80018ca4: ori v0,zero,0xc                    
+  80018ca8: lui at,0x800a                      
+  80018cac: addiu at,at,29634                  0x800a73c2
+  80018cb0: addu at,at,v1                      
+  80018cb4: sh v0,0(at)                        0x800a0000
+  80018cb8: ori v0,zero,0x1000                 
+  80018cbc: lui at,0x800a                      
+  80018cc0: addiu at,at,29624                  model_inst_pool
+  80018cc4: addu at,at,v1                      
+  80018cc8: sh zero,0(at)                      0x800a0000
+  80018ccc: lui at,0x800a                      
+  80018cd0: addiu at,at,29628                  0x800a73bc
+  80018cd4: addu at,at,v1                      
+  80018cd8: sh v0,0(at)                        0x800a0000
+  80018cdc: lui at,0x800a                      
+  80018ce0: addiu at,at,29630                  0x800a73be
+  80018ce4: addu at,at,v1                      
+  80018ce8: sh v0,0(at)                        0x800a0000
+  80018cec: lw ra,48(sp)                       
+  80018cf0: lw s3,44(sp)                       
+  80018cf4: lw s2,40(sp)                       
+  80018cf8: lw s1,36(sp)                       
+  80018cfc: lw s0,32(sp)                       
+  80018d00: addiu sp,sp,56                     
+  80018d04: jr ra                              
+  80018d08: nop                                
