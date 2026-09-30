@@ -1,6 +1,11 @@
 /* probe_r34n_f_leiche.c — MESS-SONDE (Runde 34 Nacht, Spur F): die zwei Leichen-Ereignisse
  * ROOM1110 (Slot 5 -> sub02) und ROOM1230 (Slot 18 -> sub21) im ECHTEN Bild-Ablauf des Ports.
  *
+ * ⛔ WERKZEUG DES RE-SCHRITTS, VOR DEM BAU. Seit dem Bau (leiche_1110_1230.c, Haken in
+ * op_message_on und re15_game_step) laufen die echten Haken im Engine-Code mit: der Modus "ist"
+ * misst deshalb NICHT mehr den Auslieferungsstand, und die "soll"-Simulation liegt auf den echten
+ * Haken drauf. Die Messung des gebauten Stands ist der Riegel test_r34n_f_leiche.
+ *
  * Kein Pin, kein Spielverhalten, KEIN Port-Code — misst den Ist-Stand und fuehrt den BAUPLAN
  * als Simulation IN DER SONDE vor (analysis/befunde_runde34_nacht/F_leichen.md, 2/4/5/6):
  *

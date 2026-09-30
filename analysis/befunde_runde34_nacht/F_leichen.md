@@ -586,16 +586,86 @@ den ORIGINAL-Ids und misst seit dem Bau nicht mehr den Ist-Stand — sie bleibt 
 im Baum, der Riegel ersetzt sie.
 
 ### 9.5 Suite
-- (offen)
+- (laeuft)
 
 ### 9.6 Eigene Abnahme an der echten exe (Bilder unter F_belege/)
-- (offen)
+
+Alle Laeufe mit der Bau-exe dieses Baums (Kopie `build/r34n_f/bin/re15_pc_r34nf.exe`, RE15_WINDOW_SCALE=3,
+Framedumps angesehen, Bogen mit `tools/r34n_f/r34n_f_bogen.py`, Logauszug je Lauf daneben).
+
+| Beleg | Weg | Gesehen (Framedump) + Log |
+|---|---|---|
+| `soll_1110_nein.png/.log` | Sprung 1110 + RE15_PLAYER_POS, CUT 3 (nur Sicht) | Seite 1 "It's a police officer, he's dead." mit Pfeil ▼, Seite 2 "He is holding something.", Bild H. Gun Bullets zoomt ein, "Will you take the H. Gun Bullets?" (Name gruen) Yes/No, R -> Cursor auf No, Bild schrumpft; 2. Druck: wieder Text + Frage. Log: `Port-Nachricht 20` / `Text zu -> Aufnahme-Modal` / `No/voll ... bietet sie wieder an` / 2x; dann Yes 50 -> 57 |
+| `soll_1110_ja.png/.log`, `soll_1110_ja_inventar57.png` | wie oben | Yes -> Bild weg ohne Schrumpfen; 2. Druck nur "It's a police officer, he's dead." (kein Pfeil, kein Modal); Statusschirm: H. Gun Bullets **57** (gestapelt auf die 50). Log: `Port-Nachricht 21 (Bit (9,61)=1)` |
+| `soll_1230.png/.log` | Sprung 1230, CUT 8 | "A miserable death..." ▼ / "He is holding something." / Frage / No / 2. Druck / Frage / Yes / 3. Druck nur "A miserable death..."; Log 22 / 22 / Yes 50 -> 57 / 23 |
+| `laden_1110.png/.log` | **Lade-Weg**: Speicherkarte (probe_r34n_f_karte) + RE15_CONTINUE_TEST + RE15_CARD_AUTO | ohne Bit: langer Text + Frage, Yes 50 -> 57; mit Bit (9,61): nur der kurze Text, kein Modal |
+| `durchlauf_1110.png/.log` | **Tuerweg** ROOM1100 Slot 1 (@0x009BA, Tuersequenz DOOR19 301 Bilder) -> ROOM1110 Spawn (-2400,-5000); Gang per RE15_INPUT_SCRIPT (Basis Spielbild) nach Norden, dann Osten bis (10481,2442); **ohne** RE15_FORCE_CUT, **ohne** RE15_PLAYER_POS nach dem Eintritt | Auto-Kamera waehlt Cut 3; Seite 1 / Seite 2 / Frage / No / 2. Druck / Frage / Yes / 3. Druck kurz. Log 20, No, 20, Yes 50 -> 57, 21 |
+| `durchlauf_1230.png/.log` | **Tuerweg** ROOM11B0 Slot 0 (@0x00F88, Tuersequenz DOOR1D 311 Bilder) -> ROOM1230 Spawn (4725,28650) Cut 8; Gang -X, Drehung, -Z bis (3900,26850) | "A miserable death..." ▼ / Seite 2 / Frage / No / 2. Druck / Frage / Yes / 3. Druck kurz. Log 22, No, 22, Yes 50 -> 57, 23 |
+| `gegenprobe_andere_texte.png/.log` | Sprung + RE15_PLAYER_POS | ROOM1230 Kartenleser msg 7 (3 Seiten + Ja/Nein), msg 9 "You've used the Red Keycard.", **Tastenfeld msg 0 "Enter the first number."** unveraendert; ROOM1110 Regal msg 3 "A pile of investigation reports." unveraendert; 0 `[leiche]`-Zeilen |
+
+Vorbedingungen der Durchlaeufe (als RE15_SET_FLAG, belegt, kein Spielverhalten geaendert):
+- 1110: (3,103) und (4,232) = Minidisc-Schloss offen. Ohne sie legt ROOM1100 sub00 die Tuer still und setzt den
+  Text-Platz "It's electronically locked." darauf (@0x00AC4 Ifel Ck(3,103) / @0x00ACC Aot_reset(1) / @0x00AEA
+  Aot_set Slot 3 msg 0; @0x00B02 Ifel Ck(4,232)) — gemessen: erster Versuch zeigte genau diesen Text.
+- 1230: (4,243) = Garagentuer fuehrt nach ROOM1230 statt ROOM1180 (ROOM11B0 main00 @0x00F5C Ifel Ck(4,243)==0 ->
+  @0x00F64 Ziel 0x18, sonst @0x00F88 Ziel 0x23); (3,130) = Marvin-Garagenszene gesehen (sub01 @0x011AE Ck(3,130)
+  -> Evt_exec sub04, sub04 @0x012A6 `22 03 82 01`) — gemessen: ohne das lief die Szene ueber den Tuerdruck;
+  (7,136)/(7,137) = die zwei Hunde des Gangs erledigt (Sce_em_set @0x00D08 `44 00 20 00 00 00 00 88`, @0x00D1C
+  `... 89`, Kill-Gate @0x80042120-38 auf Bank 7 = `re15_em_status_zone` STAGE1) — gemessen im ersten Lauf ohne
+  diese zwei Flags: zwei Typ-0x20 liefen heran und bissen Leon nach dem ersten Modal (hp 100 -> 80 ab F1201,
+  -20 bei F1551, Todeszustand pst 7); das Protokoll dieses Laufs ist vom Wiederholungslauf im selben
+  Verzeichnis ueberschrieben, die Zahlen stehen hier.
+  Das ist normales Spiel (die Hunde gehoeren zum Raum) und kein Befund der Spur F: waehrend Text und Modal
+  steht die Welt (Maske 0xFFFF0000 bzw. 0xFF000000).
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
-- (offen)
+
+1. **Modal-Schranke = Belegt-Bit statt `message_active`.** Plan 5.1: `if (g_scd.message_active || ...) return 0;`.
+   Gebaut: `re15_pauseflags_belegt()` + `re15_msg_nachhall_beenden()`. Grund: FUN_80027e68 verwirft ein
+   zweites Oeffnen, solange das Belegt-Bit steht (@0x80027e74/@0x80027e7c/@0x80027e80 -> @0x80027e88), und die
+   Modal-Frage geht ueber genau diese Routine (@0x8001dfe0/@0x8001df90). Im Untersuchen-Nachhall (Nutzer-
+   Entscheidung 2026-09-20, msg-FSM 7) bleibt `message_active` = 1, obwohl der Freeze schon geloest ist — mit
+   der Plan-Schranke liefe der Faden dann weiter (Plc_motion ...) und das Modal kaeme erst nach der Aufnahme.
+   Gemessen: Riegel `nachhall`, Mutation M7 -> rot. Muster: `item_discard_common.c` (dieselbe Schranke, derselbe
+   Nachhall-Abbruch). Heute ohne Wirkung (es gibt keine main20..23.wav), wirksam, sobald der Nutzer sie aufnimmt.
+2. **Haken-Stelle `scd_vm.c`**: hinter dem Stimmen-Riegel statt hinter der `[msg]`-Zeile (Auflage 1).
+3. **Latch** (Auflage 5): zusaetzlich Id-/Raum-Basis-/Raum-Anfrage-Pruefung; kein Teardown-Haken noetig.
+4. **Riegel**: 12 Teile statt 9 (+ `stimme`, `nachhall`, `latch`); der Riegel ist eine neue Datei
+   `test_r34n_f_leiche.c` mit den echten Haken, die RE-Sonde bleibt als Werkzeug (Kopf-Vermerk).
+5. **Durchlaeufe**: mit Flag-Vorbedingungen (9.6) — ohne sie ist der Weg im Auslieferungsstand zu (Minidisc,
+   Lichter) bzw. toedlich (Hunde); der Tuerweg selbst ist unveraendert der echte.
 
 ### 9.8 Commits
-- (offen)
+
+(siehe `git log master..r34n/leichen`; Bau-Commits dieser Stufe:)
+- `67404748` wip: Modul + zwei Haken
+- `e76e1695` wip: Riegel test_r34n_f_leiche (12 Teile)
+- `05d9edd9` wip: Mutationsprobe + Abnahme echte exe 1110/1230
+- `b0135829` wip: Lade-Weg (Speicherkarte)
+- `4b110d45` doc: Dossier 9.1-9.4
+- `99e02c04` wip: Durchlauf 1100 -> 1110
+- `b3fd30e3` wip: Durchlauf 11B0 -> 1230
+- `cdb61106` wip: Gegenprobe andere Texte
+- (Abschluss-Commit mit Suite folgt)
 
 ### 9.9 Offene Punkte
-- (offen)
+
+1. ⛔ **F nur zusammen mit E integrieren/ausliefern** (R8, Auflage 2): die Codes 4312/5632 stehen danach nur noch
+   in Marvin's Notes (ROOM1020) und der Armory Notice (ROOM1010). Integrationslauf: Dok 3/4 lesbar UND
+   Leichen-Texte ohne Code.
+2. **Stimmdateien** (Nutzer nimmt auf, MiniMax), Pfad = volle Raum-Id (`audio_pc.c:1988` `synchro/STAGE%u/room%04X/`,
+   `main%02d.wav`):
+   - `synchro/STAGE1/room1110/main20.wav` "It's a police officer, he's dead. He is holding something."
+   - `synchro/STAGE1/room1110/main21.wav` "It's a police officer, he's dead."
+   - `synchro/STAGE1/room1230/main22.wav` "A miserable death... He is holding something."
+   - `synchro/STAGE1/room1230/main23.wav` "A miserable death..."
+   - Elza: dieselben Dateien unter `room1111/` (main20/21) und `room1231/` (main22/23).
+   Ohne Datei: stumm mit Untertitel (gemessen, alle Laeufe RE15_NOAUDIO bzw. ohne Datei).
+3. **Zusammenfuehrung** (R1): zwei reine Textkonflikt-Stellen — `scd_vm.c` hinter dem Stimmen-Riegel,
+   `game_step_common.c` hinter `re15_granate_tick()` (dort haengt laut B_hebetisch.md auch Spur B ein). Alle Zeilen
+   behalten, Reihenfolge fachlich egal (disjunkte Raeume).
+4. **Android**: neue Quelle `engine/src/leiche_1110_1230.c` -> `app/.cxx` neu konfigurieren (GLOB-Cache,
+   memory reai-v2-android-glob-cache).
+5. Pose bei Plc_motion(1,11,0) (nicht Spur F, Dossier 8.1) — unveraendert offen.
+6. Die RE-Sonde `probe_r34n_f_leiche` misst seit dem Bau nicht mehr den Auslieferungsstand (Kopf-Vermerk); sie ist
+   kein ctest und kann bei der Integration entfallen.
