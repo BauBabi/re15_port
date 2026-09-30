@@ -122,3 +122,30 @@ Groesse mit Nullen/Leerzeichen/Unterstrich; BOM, NUL.
   | V2 `_pfad_fehler`: `c < 0x20` -> `c < 0x1f` | **SELBSTTEST-OK 248/248**, EXIT 0 | `pfad_steuer_1f`: Gate nimmt an, Geraet verwirft |
   Weder `_MANIFEST_PROBEN` noch die 248 Faelle enthalten eine Zeile nur aus Leerraum oder das Byte 0x1f im Pfad
   (der C-Unit-Test hat 0x1f, das Gate nicht). Ganze Kette mit V1 und einer signierten Faelschung: Abschnitt 2.
+
+## 2. Die ganze Kette mit kaputtem Gate, fremdem Gate und Mutant V1
+
+Eigene Sandbox `build/r34a/pruefer_u1/sb` (R4-Werkzeug `r4_sandbox_anlegen.sh`: Release-Skripte = Kopien des
+Arbeitsbaums, per `cmp` geprueft; Quellbaum per Hardlink; eigenes git-Repo, Commit 2026-09-29 12:00). Nur
+`<sandbox>/release/apk_asset_gate.py` wird getauscht (danach zurueck, `cmp` = Arbeitsbaum). Werkzeug `u1_kette.sh`,
+Beleg `kette_A.txt` (gekuerzt; volle Logs `build/r34a/pruefer_u1/logs/kette/`).
+APKs (Kopien unter `build/r34a/pruefer_u1/apk/`, release/ nur gelesen): N2 = `release/re15_port_v0.8.20-n1f_android.apk`
+(N1-Endstand, Liste v2, c393a18e...); FW_sig = N2 + Listenzeile nur aus drei Leerzeichen am Ende (`r3_faelschen.py
+--manifest-anhang`, `r3_signieren.sh`: zipalign + DERSELBE Debug-Schluessel, verify rc 0, Signer 432bc749...);
+FD_sig = N2 + `RE15DOOR/P07G.DO2` mit 1 gekipptem Byte UND passender sha256 in der Liste (das Geraet entpackt das
+klaglos: Groesse und Summe stimmen) - `faelschen_FD.txt`; FK_sig = N2 + Kelvin-Paar (Abschnitt 6) - `faelschen_FK.txt`.
+
+### 2.1 build_android.sh --gate-only (= apk_pruefen.sh Schritte 0-6)
+
+| Lauf | Gate | APK | EXIT | Ausgabe |
+|---|---|---|---|---|
+| A0 | echt | N2 | 0 | Selbsttest 248/248, `APK-ASSET-GATE-OK`, `ANDROID-GATES-OK` (Kontrolle) |
+| A1 | echt | ref v0.8.19 (Liste v1) | 1 | `Manifest im alten Format v1 ... das Geraet lehnt es ab und entpackt NICHTS` (Kontrolle) |
+| A6 | echt | FW_sig | 1 | Kontrolle: Leerraumzeile erkannt |
+| **A2** | **G0 (0 Byte)** | ref v0.8.19 | **0** (9 s) | kein Selbsttest-Text, kein Gate-Text, dann `== ANDROID-GATES-OK (--gate-only)` |
+| **A3** | **G1 (`main()` ohne `sys.exit`)** | ref v0.8.19 | **0** (43 s) | im selben Log `== SELBSTTEST-FEHLER: 234 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==` und danach `== ANDROID-GATES-OK` |
+| **A7** | **V1 (`if not z.strip():`)** | FW_sig | **0** (33 s) | `SELBSTTEST-OK: 248/248`, `APK-ASSET-GATE-OK`, `ANDROID-GATES-OK` - das Geraet verwirft genau diese Liste (Korpus `zeile_nur_leerzeichen`: `Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet`) und entpackt NICHTS |
+| **A4** | echt in release/, aber Umgebung `APK_GATE_DATEI=<G0>` | ref v0.8.19 | **0** | wie A2 - build_android.sh uebernimmt die Variable (H2) |
+| **A5** | echt in release/, Umgebung `APK_GATE_DATEI=<Gate be8b60f3>` | ref v0.8.19 | **0** | `SELBSTTEST-OK: 202/202`, `APK-ASSET-GATE-OK ... Manifest stimmt`, `ANDROID-GATES-OK` - das alte Gate nimmt die v1-Liste an; welches Gate lief, verraet nur die Fallzahl 202 statt 248 |
+
+Keine Pruefkopie blieb liegen (`re15_apk_pruefen.*`: 0).
