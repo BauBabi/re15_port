@@ -549,7 +549,14 @@ Tuerweg gegen Ladeweg), `nb_mut_takt_exe.sh`, `nb_mut_oc7.py` (Mutationsproben).
   trifft; derselbe Bau, Log `build/r34g_c/nb/suite2_ctest.log`): `99% tests passed, 1 tests failed out of 432`, ctest
   897.48 s. Rot nur `integration_r30_sicherung_laden` (Lauf a: "Bild 280 in ROOM1150 wurde nicht erreicht ... exit=1" =
   von aussen beendet); einzeln `Passed 55.81 sec`. Die vier Tests der Spur gruen (takt 23.4 s, esp_eintritt 9.7 s).
-* **Lauf N3** (`local_build.sh test`): (folgt)
+* **Lauf N3** (`local_build.sh test`, Log `build/r34g_c/nb/suite3_ctest.log`): `99% tests passed, 1 tests failed out of
+  432`, ctest 795.07 s. Rot wieder nur `integration_r30_sicherung_laden`, diesmal Lauf b: debug.log bricht nach 61 Zeilen
+  bei `[walk] F30` in ROOM1150 ab, exit=1 (kein Absturzcode) = von aussen beendet; einzeln `Passed 38.71 sec`. Die vier
+  Tests der Spur gruen (takt 22.5 s, esp_eintritt 9.3 s).
+* **Ergebnis**: drei Volllaeufe (423/432, 431/432, 431/432), jedes Rot ein exe-Test mit exit=1 (bzw. titel_puls:
+  Bilddauer unter Last), jedes einzeln gruen — kein reproduzierbares Rot. Die Zielzeile `LOCAL-BUILD-OK (all)` war unter
+  der Parallel-Last (Spuren A/B, r34n-Baeume, Android) nicht erreichbar; die gemessene Ursache der exit=1-Abrisse ist
+  INTEGRATIONSWUNSCH 7. Alle Unit-Sonden in jedem Lauf gruen.
 
 ---
 
@@ -602,11 +609,12 @@ Tuerweg gegen Ladeweg), `nb_mut_takt_exe.sh`, `nb_mut_oc7.py` (Mutationsproben).
    `/c/Windows/System32/WindowsPowerShell/v1.0`, `command -v powershell` ist dort leer (gemessen) -> Rueckfall
    `taskkill //F //IM re15_pc.exe` (Zeile 299) beendet bei jedem `build` ALLE `re15_pc.exe` der Maschine (fremde
    Testlaeufe, das Spiel des Nutzers). Vorschlag: PowerShell mit absolutem Pfad rufen und den `taskkill /IM`-Zweig
-   streichen. (Deckt sich mit dem Selbstbefund der Gegenpruefung Spur A.)
+   streichen. (Deckt sich mit dem Selbstbefund der Gegenpruefung Spur A.) Dasselbe in `scripts/green.sh:19`
+   (`taskkill //F //IM re15_pc.exe`, Gegenpruefung H5).
 8. `engine/src/enemy_ai_re2_zombie.c:1032/4306` (Spur B, Hinweis H3): `re2z_part_to_bone` ist `static`;
    `re15_pc_re2_part_tint` (`fx_plattform_pc.c`) setzt Part i = Bone i voraus. Sobald Spur B Tinten fuer Aktoren schreibt,
    deren Bank nicht das RE2-EMD ist (RE1.5-Rueckfall in `pc_enemy_load_ex`), die Permutation exportieren
-   (`include/re15_enemy_ai.h`) — dann bildet C7 Part -> Bone darueber ab.
+   (neben `re15_re2z_gore_resolve` in `include/re15_actor.h`) — dann bildet C7 Part -> Bone darueber ab.
 
 ## OFFEN
 
