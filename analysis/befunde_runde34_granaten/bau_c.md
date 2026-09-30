@@ -6,8 +6,9 @@ Auftrag: BAUPLAN §3.3 C1-C4, C7, C8 mit der Orchestrator-Teilung C (Plattform) 
 Dateibesitz: `platform/pc/main.c`, `platform/pc/src/*.c` ausser `re2fx_pc.c/.h`, `tests/unit/probe_r34_plattform*.c`,
 `tests/unit/probes/r34_plattform.cmake`.
 
-STATUS: FERTIG — C1, C2, C3, C4, C7, C8 gebaut und gemessen; zwei neue Sonden gruen, Mutationsproben rot/gruen (§9); volle Suite
-§10. Was erst mit Spur A/B/D messbar ist, steht unter OFFEN.
+STATUS: FERTIG + NACHBESSERUNG (Gegenpruefung M1/M2, Abschnitt NACHBESSERUNG unten) — C1, C2, C3, C4, C7, C8 gebaut und
+gemessen; Sonden + zwei exe-Pins gruen, Mutationsproben rot/gruen (§9, NACHBESSERUNG); volle Suite §10 / NACHBESSERUNG N6.
+Was erst mit Spur A/B/D messbar ist, steht unter OFFEN.
 
 Neue Datei `platform/pc/src/fx_plattform_pc.c/.h`: die fensterlos pruefbaren Teile (Takt, Ton-Weiche, Haken-Bindung,
 Licht-Latch, TEX.TIM-Seiten, Zeichen-Helfer, Harness-Parse, Part-Tinte, Zeichenkamera fuer Spur D). Jede Konstante traegt
@@ -58,7 +59,8 @@ Der Zustand, den das alte Programm erst im Bild 361 zeigte, steht jetzt im Spawn
 ein Bild, die @0x8001ce0c < @0x8001ce2c verlangt.
 
 ### Gebrochene Pins durch die Verschiebung
-Keine. Die volle Suite nach C1 (`build/r34g_c/suite_c1.log`) ergab 426/428; beide Roten sind Laufzeit-Flattern ohne
+Keine. (Gegenpruefung M2: das hiess auch — es GAB keinen Pin auf die Lage des Takts in main.c. Seit der Nachbesserung
+haelt ihn `integration_r34_plattform_takt` fest, s. NACHBESSERUNG N2.) Die volle Suite nach C1 (`build/r34g_c/suite_c1.log`) ergab 426/428; beide Roten sind Laufzeit-Flattern ohne
 Bezug zum Takt, einzeln nachgeprueft:
 * `integration_relatch_pin` (Timeout 30 s im Verbund) -> einzeln `Passed 30.61 sec`.
 * `integration_r30_irons_tisch_bild`: exe endet bzw. haengt NACH `[pad] kein Controller gefunden` und VOR `[fps] target=`
@@ -128,8 +130,10 @@ row[0x1e] = 1), 491 Huelse, 492 Granate 0x0D. Hochgeladen 480..495 (16 Paletten 
 * Blut id 0 sub 0/1 Stroeme 0-2: 0x1000; sub 1 Strom 3 und sub 2 Stroeme 1-5: Halte-Zeile w/h 1 (Flags 0x61, unsichtbar),
   danach 0x0e10 / 0x1068 / 0x12c0 / 0x1518 / 0x1770; sub 2 Strom 0 0x0e10.
 * Muendung id 2 sub 0/1/4/5/7: 0x1000; sub 3/6: 0x1320; sub 2: w/h 1 (Routine 15, unsichtbar).
-* Huelse id 4 sub 0/7 Zeile 0: w/h 1 bei Flags 0x63 (SICHTBAR) -> 0-Pixel-Quad = die Huelse ist in ihren 2 Haltebildern im
-  Original nicht zu sehen; Zeile 1: 0x1000.
+* Huelse id 4 sub 0/7 Zeile 0: w/h 1 bei Flags 0x63 (SICHTBAR) -> Quad von HOECHSTENS 1 Pixel (Korrektur der Nachbesserung:
+  die Ecke x0 = (sx<<16 + dx*stepX) >> 16 rundet eine negative Zellen-Ecke auf -1 ab, x1 = (... + w16) >> 16 auf 0 —
+  Original `srl a0,a0,16` / `srl t1,t1,16` @0x800536e0-e8 mit s6 = SX<<16 @0x80053558, der Port rechnet dieselbe
+  Abrundung; also auch im Original ein 1-Pixel-Punkt, kein unsichtbarer Platz); Zeile 1: 0x1000.
 * Granate id 4 sub 0x0D (Zeile @0x1AB8), Feuerball/Rauch id 3 sub 1/3: 0x1000.
 
 ### Reihenfolge
@@ -156,7 +160,7 @@ Blut (25 Partikel in 360-370): **pixelgleich** (Seite 0x1f Palette 485 == `effec
 0x1000). Feuer id 8: Seite 0x1e Palette 484 == `effect8_fire.tim` (S47/S49).
 
 Zuordnung per Mutationsprobe (Seiten-Upload aus, `re15_pc_mutT.exe`): C1 vs mutT = **1 Pixel** (F360 (153,78) = die
-Huelse in ihrer Halte-Zeile w/h 1, Flags 0x63 -> 0-Pixel-Quad, @0x800535d0); mutT vs C2 = **90 Pixel** = der
+Huelse in ihrer Halte-Zeile w/h 1, Flags 0x63 -> Quad von hoechstens 1 Pixel, @0x800535d0/@0x800536e0-e8); mutT vs C2 = **90 Pixel** = der
 Texturwechsel. Dessen Ursachen, belegt:
 1. Die alten Blaetter 21/22/23 sind ShowVRAM-Abzuege OHNE Bit 15 (README extracted_fx). Texelvergleich alte Blaetter
    gegen TEX.TIM-Seite + Palette (`sheet_cmp.py`): Muendung 1269, Rauch 4162, Huelse 1269 abweichende Texel — **alle**
@@ -382,12 +386,165 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
 
 ---
 
+## NACHBESSERUNG (Gegenpruefung `bau_c.gegenpruefung.md`, Maengel M1/M2)
+
+Stand: 2026-09-30, Commits `810a5ff2` (M2), `48e7ac16` (M1 + H4/H7), Dossier-Commit dieses Abschnitts. Laufzeit-Ausgaben
+`build/r34g_c/nb*` (unversioniert), Werkzeuge `bau_c_werkzeug/nb_*`.
+
+### N1 — M1: defW/defH aus der Zeile fuer Raum-Bank-Effekte mit nicht portierten Routinen
+
+**Befund bestaetigt, Tragweite an der exe nachgemessen und korrigiert.** Der Zeichenpfad bleibt (byte-true, @0x800535d0/e0);
+die Folgen stehen jetzt hier, die Ursache (Routinen) als INTEGRATIONSWUNSCH an Spur A, und ein Altbestand-Defekt, der den
+Befund an der exe verdeckte, ist behoben (N1.4).
+
+**N1.1 Original, selbst disassembliert** (`re15_disasm.py table 0x80071d40 48`, `dis` je Adresse; Slot-Felder aus dem
+Spawner FUN_80019700: +0x70 Effekt-Id `sb t8,112(t0)` @0x800197d4, +0x72 scale `sh s1,114(t0)` @0x800197dc, +0x78
+Satz-Basis `sw v0,120(t0)` @0x80019894, +0x80 Strom-Anfang `sw t0,128(t1)` @0x80019900):
+
+| Routine | Adresse | Wirkung (Instruktionen) | schreibt +0x04/+0x06? |
+|---|---|---|---|
+| 41 | 0x80018ef4 | Flags := row[0x0e] (`lbu 14` @0x80018f04, `sb 108` @0x80018f0c); row[0x16] != 0 -> row[0x16]-- (@0x80018f1c-3c), sonst Flags := row[0x1e] (@0x80018f40-48), Satzindex +0x6e := row[0x26] (`lbu 38` @0x80018f58, `sb 110` im Delay-Slot @0x80018f60), Vorschub `jal 0x800174e4` @0x80018f5c, dann +0x0a (Beschl. y der NEUEN Zeile) += rng & 3 (`jal 0x8001af20` @0x80018f64, `andi 0x3` @0x80018f7c, `sh` @0x80018f84) | nein (die Zeilenkopie beim Vorschub) |
+| 42 | 0x80018f98 | u16 +0x0e < u16 +0x26 (@0x80018fa8-b8): +0x0e++ (@0x80018fc0-cc); nur fuer Effekt-Id 0x0b (`lbu 112` @0x80018fc4, `bne` @0x80018fd4): Treffer = FUN_8002b7e8({+0x28,+0x2a,+0x2c}, 0x2d) (@0x80018fdc-ffc, a1 im Delay-Slot @0x80018fd8; alle aktiven Entitaeten 0x800acc2c Stride 0x1F4 + Spieler 0x800aca54 ueber FUN_8002b5d0) -> Flags \|= 0x20 sonst Flags := 0x13 (@0x80019004-30); ab +0x0e >= 0x10 **defH += 768** (`addiu v0,v0,768` @0x8001905c, `sh v0,6(v1)` @0x80019064). Sonst SCHLEIFE: 40 Byte Zeile 0 aus [+0x80] (@0x80019068-11c), Cursor +0x6f := 0 (@0x8001912c), row[0x16] := 0 (@0x80019138), xlat := 0 (@0x8001913c-44), Satzindex := 1 (@0x8001914c), Timer +0x6d := Satz[1].Byte2 (@0x8001915c-74) | defH |
+| 24 | 0x80017f50 | row[0x0e] != 0 -> -- (@0x80017f60-80), sonst Vorschub (@0x80017f84); dann `jal 0x80017fa4` (Routine 25) @0x80017f8c | ueber 25 |
+| 25 | 0x80017fa4 | **defW += 30, defH += 30** (@0x80017fbc-c8 / @0x80017fcc-d8); room_coll auf +0x28 (`jal 0x8001c6e8` @0x80017ff4); FUN_80012d60(0x1f4, Punkt, 0) @0x80018008; Treffer oder Boden -> Kind FUN_800199d4(0x030C0000 \| (+0x72 + 500), +0x2e, 0x80072d4c) @0x80018030-54, SE 0x03030001 @0x8001805c-64, A/B/Beschl./Geschw. := 0 @0x80018078-94, Satzindex := 0x0d @0x80018098 | defW, defH |
+| 13 | 0x80017990 | room_coll auf +0x28 (@0x800179c4); gelandet -> Flags := row[0x0e] (@0x800179f0-f8), xlat_y -= Ueberstand (@0x800179fc-0c), row[0x16] != 0 -> Satzindex := row[0x16] (@0x80017a10-28), row[0x26] != 0 -> Vorschub (@0x80017a38-48) | nein |
+| 19 | 0x80017d08 | row[0x0e] != 0 -> -- (@0x80017d1c-3c); sonst Kind FUN_800199d4(((row[0x16]>>8)<<24) \| ((row[0x16]&0xff)<<16) \| (rng+3072), rng*682, +0x74, +0x40) @0x80017d40-a0, row[0x26] != 0 -> Vorschub @0x80017db4-c4 | nein |
+
+Zeilen (Gegenpruefer-Werkzeug `esp_zeilen_room2000.py`, ROOM2000.RDT Effekt 0x0b ab 0x15110): sub 0 = 6 Stroeme, Zeile 0
+Routine 41 w/h 1, Flags 0x13 (Strom 0) bzw. 0x61 (Stroeme 1-5 = UNSICHTBAR, Bit 1 fehlt), Halten 0/5/10/15/20/25; Zeile 1
+Routine 42 w 0x1000 h 0x19c4, Grenze +0x26 = 25. Original also: ein Dauerstrahl — Strom 0 sofort, die anderen gestaffelt,
+jede Schleife ohne Halten, ab Zaehler 16 waechst die Hoehe um 768 je Takt.
+
+**N1.2 Wo der Port abweicht (gemessen, echte exe).** Routine 41 laeuft im Port nicht (`re15_esp.c` `default: break`), der
+Platz bleibt in Zeile 0 mit den Spawner-Flags 0x03 (sichtbar) und w/h 1, bis die Anim-Saetze enden (27-32 Takte):
+* **Ladeweg** (Karte -> Continue, `nb_lauf_laden.sh`, `RE15_FORCE_CUT=9`, Lauf `nb_2000_laden_cut9`): 18 Plaetze, FX-Log
+  486 Zeilen F0..F26, `A=41 fl=03`, `w16=180`. Mit derselben Abrundung wie das Original (`srl` @0x800536e0-e8, s. §C2)
+  wird daraus ein Quad von hoechstens 1 Pixel. master (defW 0x1000): w16 = 4096 x 180 = 737280 -> **11-Pixel-Kleckse**,
+  27 Bilder lang. Beides nicht das Original; C2 ist im Zeichnen byte-true, die Luecke ist Routine 41/42.
+* **Tuer-/Sprungweg** (vor N1.4): auf master UND C2 IDENTISCH — der Effekt wurde nie gezeichnet, weil sein Spawn scheiterte
+  (N1.4). Lauf `nb_2000_tuer` (Sprung-Spawn = Tuer-Ankunft aus ROOM2050 (-26450,10250), Tuertabelle
+  `re15_port/tools/engine_tueren.txt` Zeile `2050 2000 9100 5700 -26450 10250 0`): Waffen-Log
+  `SPAWN id=11 sub=0 scale=0x1900 streams=-1` x3 + `SPAWN id=6 ... streams=-1` x3, FX-Zaehler 6 -> 0 im Folgebild, kein
+  FX-Log in 45 Bildern. Der Gegenpruefer-Vorschlag "Sichtabnahme bei Ankunft ueber die Tuer" war damit vor N1.4 gar nicht
+  moeglich.
+* Sichtbar ist die Lage (-23900..-22700, -5300, 11200) nur in ROOM2000-Cuts 5..10 und 13 (Werkzeug `nb_cut_regionen.c`,
+  Region-Test = derselbe `re15_esp_fx_culled`); Cut 0 (Debug-Sprung) cullt sie.
+
+**N1.3 Umfang (Kollateral der C2-Regel, vollstaendig).**
+| Effekt (Raumbank) | Routinen | Spawner im Port | Wirkung von C2 |
+|---|---|---|---|
+| 0x0b sub 0 | 41/42 | ROOM2000/2001 main00 @0x174C/5C/6C (Eintrittstakt), ROOM20B0/20B1 sub00 @0x1E96/A6/B6 (Else-Zweig von Ck(3,235), also nur bei Flag (3,235)=1) | Zeile 0 w/h 1 statt 0x1000: <= 1-Pixel-Punkte statt 11-Pixel-Kleckse, 27-32 Takte |
+| 0x0d sub 0/1 | 10/24/25 | keiner (kein Sce_espr_on in 206 RDTs mit Flags 0, kein Engine-Aufruf mit Id 0x0d: `grep` der 40 Spawn-Aufrufe, variable Ids nur Gore 0/5/7/8) | keine |
+| 0x06 sub 1/2 | 10/0 | keiner der Eintritts-Spawns (ROOM2000 sub07 = sub 0, ROOM20A0 sub02 = sub 6, beide w/h 0x1000) | keine; die Zeilengroessen 0x0f9c/0x1064 waeren ohnehin byte-true (10/0 schreiben +4/+6 nicht) |
+| 0x05 sub 0 (Gore-Bruecken) | 19 | Hund/Zombie (Ids 5/7 ueber die Raumbank) | keine (w/h 0x1000) |
+
+**N1.4 Altbestand behoben: die Raum-Effektbank stand beim SCD-Eintrittstakt noch nicht.**
+* Ursache: `pc_load_room_esp` lief erst NACH `re15_room_apply_pending`, dessen `scd_room_reenter` den Eintrittstakt
+  faehrt; der Teardown `re15_room_reset_render_pc` hatte die Bank vorher auf NULL gesetzt. Jeder Sce_espr_on des
+  Eintrittsbilds loeste gegen die leere Bank auf -> `streams=-1` -> row-loser Ersatzplatz `re15_esp_fx_spawn_ex(NULL,..)`
+  -> im naechsten Takt verworfen (`eff_idx < 0`). Auf master identisch (`git show master:.../main.c` Zeile 7726,
+  `room_pc.c` Zeile 131).
+* Original: Raumlader FUN_800396fc `jal 0x80019354` @0x8003996c (einziger Aufrufer, Voll-Scan im Kommentar von
+  `scd_room_reenter`), darin Parse `jal 0x8001945c` @0x80019428 (RDT+0x4c @0x80019404, +0x50 @0x80019424) und
+  TIM-Installer @0x8001943c-48 — VOR der SCD-Raum-Init `jal 0x8003ef6c` @0x80039a00.
+* Fix (Dateien Spur C): `re15_pc_room_esp_laden()` (`platform/pc/main.c` hinter `pc_load_room_esp`) wird aus
+  `re15_room_reset_render_pc` (`platform/pc/src/room_pc.c`, Teardown (4)) direkt nach dem Clear gerufen; der spaete Aufruf
+  nach `apply_pending` entfaellt (Kommentar an der alten Stelle). Boot-/Ladeweg (`main.c` Boot-Block) war schon richtig.
+* Zensus (Werkzeug `nb_eintritt_zensus.c`, 206 RDTs, alle Flags 0, Tuerweg = Bank NULL gegen Ladeweg = Bank vorher):
+  ```
+  ROOM11E0/11E1  Tuerweg  1 Platz ohne Zeilen/Bank | Ladeweg  1: id11 x1 (A0=10)            sub27 Schleife, Sleep 20
+  ROOM2000/2001  Tuerweg  6 ohne Zeilen/Bank       | Ladeweg 21: id06 x3 (A0=10) id0b x18 (A0=41)   main00 einmalig
+  ROOM20A0/20A1  Tuerweg  5 ohne Zeilen/Bank       | Ladeweg  5: id06 x5 (A0=10)            sub02 Schleife, Sleep 5
+  ROOM5090..5141 Tuerweg 13..27 Plaetze, 0 ohne    | id08 (A0=17) aus CORE00 (Raumbaenke ohne 0x08) — unveraendert
+  Raeume 206, mit Eintritts-Effekt 16, auf dem Tuerweg ohne Zeilen/Bank: 24 Plaetze
+  ```
+  (+ ROOM20B0/20B1 bei Flag (3,235)=1.) Schleifen-Effekte erschienen vorher eine Schleifenperiode spaeter, die Einmal-Spawns
+  in ROOM2000/2001/20B0/20B1 nie.
+* Messung vorher (Mutationsbau = alte Reihenfolge) / nachher, echte exe, Framedumps F0-F40, `ppmdiff.py`:
+  | Lauf | Waffen-Log vorher | nachher | Pixel |
+  |---|---|---|---|
+  | ROOM20A0 Sprung | 5x `streams=-1`, 39x `=1`; FX id 6 ab F10 | 44x `streams=1`; FX id 6 ab F0 | 0 (ausserhalb des Bilds) |
+  | ROOM11E0 Sprung | 1x `-1`, 1x `1` | 2x `1` | 0 (gecullt) |
+  | ROOM2000 Sprung, Cut 0 | 6x `-1` | 3x `6`, 3x `1` | 0 (gecullt) |
+  | ROOM2000 Tuer-Lage, `RE15_FORCE_CUT=9` | 6x `-1`, kein FX-Log | 3x `6`, 3x `1`; FX id 11 F1..32 (w16 180), id 6 | **18** = 3 Punkte je 1 Pixel in F18-20/F24-26 bei (138..154, 71) |
+  Die 18 Pixel sind die drei Spawn-Lagen von 0x0b in Zeile 0 (w/h 1, Flags 0x03, Routine 41 fehlt) — dasselbe Bild wie auf
+  dem Ladeweg seit C2; das Original zeigt dort (Strom 0) den Strahl bzw. (Stroeme 1-5, Flags 0x61) nichts. Weg damit erst
+  mit Routine 41/42 (INTEGRATIONSWUNSCH 6).
+* Pin `integration_r34_plattform_esp_eintritt` (`tests/unit/probes/r34_plattform.cmake`, Skriptmodus `R34_PIN=esp_eintritt`):
+  Debug-Sprung ROOM2000 (derselbe `re15_room_apply_pending`-Weg wie eine Tuer), Waffen-Log muss genau 3x
+  `SPAWN id=11 sub=0 scale=0x1900 streams=6` und 3x `SPAWN id=6 sub=0 scale=0x1000 streams=1` tragen, kein `-1`.
+  Negativ-Kontrolle des Auswerters vor dem Lauf (Zeile mit `streams=-1` zaehlt nicht). Gruen 9.2 s.
+  **Mutationsprobe** (`nb_mut_oc7.py`: Aufruf im Teardown entfernt + alter Aufruf nach apply_pending): ROT
+  `Effekt 0x0b beim Eintritt 3x gespawnt, davon 0x mit 6 Stroemen`, der Takt-Pin blieb gruen; `git checkout`, Neubau,
+  beide gruen.
+
+### N2 — M2: exe-Pin fuer die Lage des ESP-Takts
+
+* `integration_r34_plattform_takt` (`tests/unit/probes/r34_plattform.cmake`, Skriptmodus `R34_PIN=takt`; Dateibesitz C —
+  kein neues File unter `tests/integration/`): echte exe, `RE15_DEBUG_JUMP=1140@250`, `RE15_GIVE=3:15 RE15_EQUIP=3`, Skript
+  `W1,M1,MA0.2,M2.5,W4` ab Spielbild 300 (Schuss F360), `RE15_FX_LOG` + `RE15_WAFFEN_LOG`, Ende F400.
+  Pruefung: Spawnbild = F-Zeile des Waffen-Logs vor `SPAWN id=2 sub=0`; erste FX-Zeile `id=2 sub=0` muss im Spawnbild stehen
+  mit `frame=1` und `fl=93`; keine Muendungszeile des Spawnbilds mit `fl=03`. Belege: @0x8001ce0c < @0x8001ce2c; Routine 8
+  (0x80071d40[8] = 0x800175dc) `lbu v0,14(v1)` @0x800175ec / `sb v0,108(v1)` @0x800175f4; CORE00.ESP id 2 sub 0 Zeile 0
+  @0x0FE0 (A=8, +0x0e = 0x93), Zeile 1 @0x1008 (A=9). Negativ-Kontrolle des Auswerters vor jedem Lauf (alte Zeile
+  `frame=0 fl=03`, Zeile aus dem Folgebild -> verworfen; neue Zeile -> gilt). Gruen 22.6-33.0 s.
+* **Mutationsproben** (`nb_mut_takt_exe.sh`, je Bau + Pin + `git checkout`):
+  | Mutation (main.c) | Ergebnis |
+  |---|---|
+  | `re15_pc_fx_takt()` VOR `re15_game_step` (Aufruf dahinter entfernt) | ROT `Spawnbild 360: frame=0 fl=03, erwartet frame=1 fl=93` |
+  | Aufruf hinter `re15_game_step` entfernt (nur der Rueckfall nach dem Zeichenblock tickt) | ROT dito |
+* **Befund beim ersten Lauf** (fremde Datei, INTEGRATIONSWUNSCH 7): exit=1 bei Spielbild 17 nach dem Sprung, Waffen-Log
+  mitten in der Zeile abgerissen. `tools/local_build.sh` setzt `CLEAN_PATH` ohne `WindowsPowerShell`
+  (`command -v powershell` im Bau-PATH leer, gemessen), faellt deshalb in `do_build` auf `taskkill //F //IM re15_pc.exe`
+  zurueck und beendet bei JEDEM `build` irgendeiner Sitzung alle `re15_pc.exe` der Maschine (auch die des Nutzers). Das
+  erklaert die "exit=1 ohne Logmeldung"-Roten aller Suiten dieser Runde. Der Pin wiederholt deshalb genau einmal bei
+  exit=1 (Signatur "von aussen beendet") oder Startfehler, nie bei einem falschen Ergebnis.
+
+### N3 — Hinweise der Gegenpruefung
+* **H4 behoben** (`main.c` vor `re15_re2z_gore_resolve`): `gore_draw/gore_tint/gore_mesh` werden fuer alle
+  RE15_EMD_MAX_BONES Eintraege mit den Werten vorbelegt, die der Resolver selbst einem Slot ohne RE2-Part gibt (zeichnen,
+  Tinte 0x808080, eigenes Mesh); 0x808080 = RE2 Part-Init `lui v0,0x80 / ori v0,v0,0x8080` @0x80028450-54,
+  `sw v0,-36(s1)` @0x80028468. Vorher las die Zeichenschleife ab min(npc_bones,16) uninitialisierten Stapel (auch
+  `gore_mesh`, Zeile `if (gore_mesh[nbi] < ...)`). Neutral = Identitaet, Renderpfad sonst bitgleich; `unit_re2_gore*`,
+  `unit_re2z_*` (16 Tests) gruen.
+* **H7 behoben** (Kommentare `fx_plattform_pc.h` C3-Block, `main.c` Licht-Latch zwei Stellen): nach der Latch-Loeschung
+  laeuft zuerst `jal 0x80039ca0` @0x8001d1b8 (Tabelle 0x800af33c), dann `jal 0x8002c18c` @0x8001d1c0 (selbst gelesen,
+  `dis 0x8001d1a4 10`). Welche Port-Objekte FUN_80039ca0 entsprechen, bleibt OFFEN (O-C9).
+* **H1 unveraendert** (OFFEN O-C8): Bank 5 springt im Original ohne Satz-Tor auf die snd0-Tabelle (`table 0x80010e70 6`:
+  [5] = 0x80045130 = das Ziel von Bank 2 hinter dessen Tor @0x800450e4-f0). Ein Satz >= 0x21 liest im Original jenseits
+  der 0x21 Eintraege im RAM weiter. Im Port wuerde dasselbe ueber das Pufferende lesen: `re15_edt_decode`
+  (`engine/src/vab_common.c:252-265`) rechnet `edt + se_id*4` ohne Obergrenze — das Tor schuetzt den Port vor einem
+  Lesezugriff ausserhalb des Puffers. Deshalb unveraendert. Fuer die Granate (Bank 1/4) ohne Folge; ein Aufrufer mit
+  Bank 5 ist nicht belegt.
+* **H2 unveraendert**: die FX-Log-Zeile hinter die Gates zu legen aendert die V5-Zeilenmenge, auf der Auswerter der Spuren
+  A/D verankern — Zuender-Phasen per Unit-Sonde abnehmen (Spur A).
+* **H3**: INTEGRATIONSWUNSCH 8 (Part->Bone-Permutation exportieren), heute ohne Wirkung (keine Tinten-Schreiber).
+* **H5/H6**: fremde Dateien bzw. Integration (INTEGRATIONSWUNSCH 7, BAUPLAN §4).
+
+### N4 — Werkzeuge der Nachbesserung (`bau_c_werkzeug/`)
+`nb_karte_raum.c` (Speicherkarte fuer den Ladeweg in einen beliebigen Raum), `nb_lauf_laden.sh` (Messlauf ueber den
+Ladeweg), `nb_cut_regionen.c` (welche Cuts einen Weltpunkt zeigen), `nb_eintritt_zensus.c` (Eintritts-Spawns aller Raeume,
+Tuerweg gegen Ladeweg), `nb_mut_takt_exe.sh`, `nb_mut_oc7.py` (Mutationsproben). Uebersetzungszeile im Kopf der .c-Dateien.
+
+### N5 — Sonden-Stand
+`unit_r34_plattform` (77), `unit_r34_plattform_ton` (8), `integration_r34_plattform_takt`,
+`integration_r34_plattform_esp_eintritt` — alle gruen; Suite 430 -> 432 Tests.
+
+### N6 — Volle Suite
+(folgt)
+
+---
+
 ## HINWEISE AN DIE SPUREN
 
 * **A**: `wpos` wird vom Zeichner gelesen, sobald nicht alle drei 0 sind (Regions-Test + Projektion). Der Latch-Leser
   loescht `g_re15_licht_latch` nach den Figuren; Routine 9/31 muessen ihn nur setzen. `re15_esp_se_hook` ist gebunden
   (Bank 1 -> geladene ARMS-Bank, Bank 4 -> CORE; Byte1 egal). Kind-Plaetze mit Flags 0x0a sind unsichtbar, bis die
   Kind-Init Bit 0 setzt (Zeichner prueft Bit0 UND Bit1).
+  Nachbesserung: der Zeichner nimmt defW/defH (+0x04/+0x06) fuer JEDEN Row-VM-Platz aus der Zeilenkopie — Routinen, die
+  sie schreiben (41/42, 24/25) oder die Flags fuer die Halte-Phase setzen (41: 0x61 = unsichtbar), fehlen im Port
+  (INTEGRATIONSWUNSCH 6). Seit N1.4 steht die Raum-Effektbank schon im Eintrittstakt; Effekt 0x0b in ROOM2000/2001
+  (und 20B0/20B1) wird damit auch auf dem Tuerweg als Row-VM-Platz gespawnt und zeigt nach eurer Portierung den Strahl.
 * **B**: `re2fx_applier` zeigt auf `re15_re2_gl_apply`. V4-Tinten fuer Hund/Spinne werden gezeichnet, sobald sie in
   `re2z_part_tint[i]` (i = Part = Bone) stehen und `re15_ai_re2_for_type(type)` gilt; ein Wort 0 gilt als ungesetzt.
 * **D**: `re2fx_pc_draw()` wird im Effekt-Zeichenpass direkt nach `pc_draw_effects` gerufen; die Ansicht DIESES Bilds
@@ -411,8 +568,27 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
    `shared_assets/RE2/CORE00.ESP` (und `TEX.TIM`, sobald Spur D sie liest) ergaenzen (aus C0 uebernommen, weiter offen).
 4. Android-Bau (andere Sitzung): `platform/pc/src/fx_plattform_pc.c` ist NEU (GLOB-Cache `app/.cxx` verwerfen; beim
    Release-Bau tut `release/build_android.sh:198` das selbst).
-5. Hauptbaum/Integration: `tools/local_build.sh` `RE15_MIN_TESTS` unveraendert (428); Spur C bringt +2 Tests
-   (`unit_r34_plattform`, `unit_r34_plattform_ton`).
+5. Hauptbaum/Integration: `tools/local_build.sh` `RE15_MIN_TESTS` unveraendert (428); Spur C bringt +4 Tests
+   (`unit_r34_plattform`, `unit_r34_plattform_ton`, `integration_r34_plattform_takt`,
+   `integration_r34_plattform_esp_eintritt`) — Suite dieses Baums 432.
+6. **Spur A**, `engine/src/re15_esp.c:710` (`default: break;` in `esp_fx_dispatch`, Zeile 523): die ESP-Routinen
+   **41** (0x80018ef4) und **42** (0x80018f98) portieren, danach **24** (0x80017f50) / **25** (0x80017fa4) und
+   **13** (0x80017990) / **19** (0x80017d08) — Instruktionen je Routine in N1.1 (Tabelle). Braucht: +0x70 = Effekt-Id,
+   +0x72 = scale, +0x78 Satzbasis, +0x80 Strom-Anfang (Spawner @0x800197d4/dc/@0x80019894/@0x80019900; im Port
+   `effect_id`/`scale16`/`rows_base`), fuer 42 den Treffer-Test FUN_8002b7e8 (alle aktiven Entitaeten + Spieler,
+   FUN_8002b5d0, a1 = 0x2d), fuer 25 room_coll + FUN_80012d60 + Kind-Spawn 0x800199d4. Abnahme danach: ROOM2000 ueber die
+   Tuer aus ROOM2050 (Ankunft (-26450,0,10250)) in einem Cut 5..10/13 — Strom 0 sofort sichtbar mit h 0x19c4, wachsend
+   um 768 je Takt ab Zaehler 16, Schleife alle 25 Takte; Sonde: `nb_eintritt_zensus.c`-Aufbau + Takte, Zeilen-Cursor und
+   Flags gegen N1.1.
+7. `tools/local_build.sh:147/293-300` (alle Baeume): der Bau-PATH `CLEAN_PATH` enthaelt kein
+   `/c/Windows/System32/WindowsPowerShell/v1.0`, `command -v powershell` ist dort leer (gemessen) -> Rueckfall
+   `taskkill //F //IM re15_pc.exe` (Zeile 299) beendet bei jedem `build` ALLE `re15_pc.exe` der Maschine (fremde
+   Testlaeufe, das Spiel des Nutzers). Vorschlag: PowerShell mit absolutem Pfad rufen und den `taskkill /IM`-Zweig
+   streichen. (Deckt sich mit dem Selbstbefund der Gegenpruefung Spur A.)
+8. `engine/src/enemy_ai_re2_zombie.c:1032/4306` (Spur B, Hinweis H3): `re2z_part_to_bone` ist `static`;
+   `re15_pc_re2_part_tint` (`fx_plattform_pc.c`) setzt Part i = Bone i voraus. Sobald Spur B Tinten fuer Aktoren schreibt,
+   deren Bank nicht das RE2-EMD ist (RE1.5-Rueckfall in `pc_enemy_load_ex`), die Permutation exportieren
+   (`include/re15_enemy_ai.h`) — dann bildet C7 Part -> Bone darueber ab.
 
 ## OFFEN
 
@@ -428,4 +604,12 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
 * O-C5 Lage-Flag (Byte0) der SEs ohne Wirkung (positionaler Zweig FUN_80045a64, BAUPLAN O5).
 * O-C6 Laufzeit-Flattern: exe-Laeufe haengen unter der Last der Parallel-Spuren gelegentlich im Titel (vor der
   Spielschleife) bzw. der msys-Prozess wird nach `_exit` nicht abgeraeumt (exe fertig, Bilder/Logs vollstaendig,
-  `timeout` beendet); betrifft fremde Spuren ebenso (gesehen: Spur-A-exe).
+  `timeout` beendet); betrifft fremde Spuren ebenso (gesehen: Spur-A-exe). Nachbesserung: die "exit=1 ohne Logmeldung"-Abrisse haben
+  eine gemessene Ursache — INTEGRATIONSWUNSCH 7 (`local_build.sh` beendet bei jedem Bau alle `re15_pc.exe`).
+* O-C7 GESCHLOSSEN (Nachbesserung N1.4): Raum-Effektbank vor dem SCD-Eintrittstakt, Pin `integration_r34_plattform_esp_eintritt`.
+* O-C8 Bank-5-Satztor (H1): bleibt, weil `re15_edt_decode` keine Obergrenze kennt (N3).
+* O-C9 Welche Port-Objekte der Tabelle 0x800af33c (`jal 0x80039ca0` @0x8001d1b8, hinter der Latch-Loeschung, also OHNE das
+  Ein-Bild-Licht) entsprechen, ist nicht zugeordnet — laufen sie im Port in der Figuren-Schleife, bekaemen sie das Licht
+  faelschlich (H7).
+* O-C10 Sichtabnahme Effekt 0x0b (ROOM2000/2001/20B0/20B1) erst nach INTEGRATIONSWUNSCH 6; bis dahin zeigt der Port dort in
+  den Cuts 5..10/13 fuer 27-32 Takte drei 1-Pixel-Punkte (Zeile 0 w/h 1, Flags 0x03) statt des Strahls (N1.4, Messung).

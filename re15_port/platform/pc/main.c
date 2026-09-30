@@ -437,9 +437,14 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * +0x04/+0x06 einzeln nachgeprueft sind") ist aufgehoben — nachgeprueft in CORE00.ESP
          * (Dossier bau_c.md §C2): Blut sub 0/1 0x1000, Blut sub 1 Strom 3 / sub 2 0x0e10..0x1770
          * (nach einer UNSICHTBAREN Halte-Zeile w/h 1, Flags 0x61), Muendung sub 3/6 0x1320,
-         * Huelse sub 0/7 Zeile 0 w/h 1 bei Flags 0x63 (sichtbar, also ein 0-Pixel-Quad = die
-         * Huelse ist in den 2 Haltebildern im Original NICHT zu sehen), Granate/Feuerball/Rauch
-         * 0x1000. Plaetze ohne Row-VM: 0x1000 wie bisher (re15_pc_esp_defwh). */
+         * Huelse sub 0/7 Zeile 0 w/h 1 bei Flags 0x63 (sichtbar -> ein Quad von hoechstens 1 Pixel:
+         * die negative Zellen-Ecke rundet auf -1 ab, genau wie das Original `srl a0,a0,16` /
+         * `srl t1,t1,16` @0x800536e0-e8 mit s6 = SX<<16 @0x80053558), Granate/Feuerball/Rauch
+         * 0x1000. Plaetze ohne Row-VM: 0x1000 wie bisher (re15_pc_esp_defwh).
+         * Nachbesserung M1: dieselbe Regel gilt fuer RAUM-Bank-Effekte; wo deren Routine die
+         * Groesse erst schreibt (41/42 fuer Effekt 0x0b, 24/25 fuer 0x0d) und der Port sie nicht
+         * ausfuehrt (re15_esp.c `default: break`), bleibt die Anfangsgroesse der Zeile stehen —
+         * bau_c.md NACHBESSERUNG N1, INTEGRATIONSWUNSCH an Spur A. */
         int64_t defw, defh;
         {
             int32_t dw = 0x1000, dh = 0x1000;
