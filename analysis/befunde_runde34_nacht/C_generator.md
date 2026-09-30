@@ -661,11 +661,64 @@ scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
 
 ### 9.4 Riegel + Mutationsproben
 
-(in Arbeit)
+**Neu: `unit_r34n_c_generator`** (`tests/unit/probe_r34n_c_generator.c`, Harness wie r31: echte RDT,
+`scd_vm_tick` + `re15_game_step`, Cursor ueber den ECHTEN Eingabepfad sub02..05, Quadrat ueber
+`51 01 40 00`). Gemessen (gruen, `build/r34n_c/probe_gruen_1.txt`):
+
+| Teil | Soll | Messwert |
+|---|---|---|
+| A | nach Zwischenschalter 7 (echte Cursorfahrt + Quadrat), UNTEN gehalten: Cursor bewegt sich in jedem Bild der Fahrt + 30 Ruhebilder, keine Sperre, Zeiger trotzdem 20 | Bit im Bild 15 (Kippung 16), Zeiger 20 im Bild b+19, 51 Bilder: Cursor stand 0-mal, Sperre 0-mal |
+| B (11F0 + 11F1) | 7, 9, 3, 1 ohne Warten, dann 5: vor b* nie gesperrt; ab b* gesperrt bis zur Abnahme, Cursor steht trotz HOCH+QUADRAT, kein Schalterwechsel, Abnahme k+31 (Soll als ZAHL 30 mit @0x0171D), Ton im Abnahmebild, danach frei, Lampen 3 | 195 Bilder freies Schalten, 0 mit Sperre; b* Zeiger 61 -> 80 bei b*+19, Abnahme b*+50 = k+31, Ton b*+50, 0 Luecken, 0 Bewegung, 0 Wechsel |
+| C | Zielwechsel 30 -> 20 bei Wert 25: 5 Schritte abwaerts, kein Sprung, keine Sperre/Abnahme | 5 / 0 / 0 |
+| D | 60 -> 90 -> 60 durch die 80 in beiden Richtungen: nie gesperrt, nie abgenommen | durch 80 = 3 (beide), Sperre 0, Abnahme 0 |
+| E | Wahrheitstafel aus den zehn Ck-Bytes @0x012BE..0x012E2 (aus der RDT gelesen, Loesung 0x155), alle 1024 Masken; beide an <=> Loesung <=> Ziel 80; live 2 x 1024 Bilder mit 4:238 = 0/1 | 0 / 0 Fehler, beide an bei genau 1 Maske, 1024/1024, live 0 Abweichungen |
+| F | echter Pfad: 5 dazu -> oben an im Bitbild (nicht davor), Zellen 3 4 3 4; 2 dazu -> aus im Bitbild; 2 weg -> an, Zelle 3 neu; 7 + 9 -> unten an; 8 -> unten aus; Lage (212,65)/(212,125), Kante 22; Cut 8 unsichtbar | alles wie Soll |
+| G | ROOM11F1 = B + Lampe + keine Zwischensperre; Raum 1170 nie sichtbar | ok |
+| H | Wiedereintritt mit 4:238: Slot 1 = MESSAGE (vorher Ereignis), Bits 0 -> Lampen aus, keine Sperre, Zeiger 80; Robustheit: Maske 0x155 + 4:238 sperrt nicht | Typ 0 -> 5, ok |
+| I | LAMPE2130.TIM 4256 B, ESP-TIM-Lage @0x0E398 aus Kopfwort[20]/[21], byte-gleich; Zellen 851/832 Texel, Bit 15; Zeichner = unabhaengig aus den TIM-Bytes nachgerechnetes Soll (408/408 Pixel, 0 Abweichungen, aussen 0), Saettigung, Cut 8 nichts, Loesung beide | ok |
+
+**Umgeschrieben: `unit_r31_generator` Teil D** (Auflage 6, Plan 5.1 Schritt 7): Zwischenschalter 7 ->
+Cursor faehrt in allen 49 Bildern (dz 9600), 0 Sperrbilder, Zeiger 20; Loesungsmaske -> Sperre in jedem
+der 50 Bilder bis zur Abnahme k+31, Cursor dx = dz = 0, 0 Schalterwechsel; nach 4:238 frei; 5:0 = 0 ->
+keine Sperre auch bei Maske 0x155. A/B/C/E/F unveraendert gruen.
+
+**Rueckbau-Nachweis** (`tools/r34n_c/mutation.sh`, jede Mutation gebaut + beide Riegel gefahren + Quelle
+per `git checkout` zurueck; Protokoll `C_belege/mutation.log`):
+
+| Mutation | unit_r34n_c_generator | unit_r31_generator |
+|---|---|---|
+| m1 Endsperre aus (`sperrt()` = 0) | ROT, 12 FAIL (B 11F0 + 11F1: Sperre, Cursor, Quadrat, k+31, Lampen) | ROT, 2 FAIL (D Endsperre) |
+| m2 alte Runde-31-Zwischensperre wieder an | ROT, 7 FAIL (A, B vor b*, C, D, G) | ROT, 2 FAIL (D Zwischenschalter) |
+| m3 Lampenregel lax (nur EIN-Schalter) | ROT, 5 FAIL (E oben/unten, F falscher Schalter) | gruen (prueft keine Lampen) |
+| m4 Zeichner deckend statt additiv | ROT, 2 FAIL (I Soll-Pixel, Saettigung) | gruen |
+| m5 Texel 0 nicht durchsichtig | ROT, 2 FAIL (I) | gruen |
+| m6 Takt beginnt mit Zelle 4 | ROT, 2 FAIL (F Zellfolge) | gruen |
+| m7 Lampe rastet ein (klebriges Bit) | ROT, 4 FAIL (E live, F aus/an) | gruen |
+
+Nach dem Rueckbau: Quellen unveraendert (`git status` leer), beide Riegel wieder ALLES GRUEN.
 
 ### 9.5 Suite
 
-(in Arbeit)
+`bash re15_port/tools/local_build.sh` (configure + build + test) im eigenen Baum:
+**425/429 gruen**, 4 rot — alle vier Haken starten die echte `re15_pc.exe`:
+`integration_r30_cut_blitz`, `integration_elza_vollstart`, `integration_r30_granate_laden`,
+`integration_r33_speichern` (`re15_port/build/local_build_ctest.log`). Einzeln nachgefahren (je 2-3x):
+cut_blitz 1 gruen / 2 rot, elza 1 gruen / 2 rot, granate 0/2, speichern 0/3.
+**Ursache gefunden, kein Fehler dieser Spur:** Die Laeufe endeten mit exit=1 mitten im Spiel (debug.log
+bricht ab, kein `EXIT_AT`), zu wechselnden Bildern und in fremden Raeumen (1150, 1240, 1170) — exit 1 ist
+die Handschrift von `taskkill /F`. `local_build.sh` setzt einen CLEAN_PATH OHNE
+`WindowsPowerShell/v1.0`; `command -v powershell` scheitert, und der Runde-31-Pfadfilter faellt auf das
+GLOBALE `taskkill //F //IM re15_pc.exe` zurueck (selbst gemessen: `powershell NICHT im CLEAN_PATH`; `WindowsPowerShell` kommt in local_build.sh des
+Hauptbaums und von r34g_a, r34g_b, r34n_rolltor, r34n_hebetisch 0-mal vor). Jeder Bau eines parallelen Agenten beendet damit jede
+`re15_pc.exe` der Maschine. **Gegenprobe:** dieselben vier Haken mit einer umbenannten Kopie derselben exe
+(`re15_tst34c.exe`, gleiches Verzeichnis, `cmake -P` mit `-DRE15_PC_EXE=`): **4/4 rc=0** (82 / 101 / 102 /
+72 s, `build/r34n_c/integ_umbenannt.log`). Behoben in a2c3ec22 (PowerShell-Verzeichnis in den CLEAN_PATH;
+Gegenprobe: der Filter auf das eigene Bauverzeichnis laesst die exe von r34g_a, r34g_b und eine
+Scratchpad-Kopie am Leben). Wirkt fuer andere Agenten erst nach der Zusammenfuehrung.
+Panel-Riegel in der Suite: unit_r34n_c_generator, unit_r31_generator, unit_r27_panel_schalterwerte (G:
+90 Bilder Quadrat gehalten), unit_r26_panel_11f0 (A), unit_r17_cursor_klick_pin, unit_gen_11f0_switches,
+unit_gen_11f0_cursor_view, unit_11f0_cut_after_puzzle — alle gruen im Vollauf (Auflage 6: r17/r27 G/
+r26 A waren schon im ersten Lauf gruen, kein Nachfahren noetig).
 
 ### 9.6 Eigene Abnahme an der echten exe (Bilder)
 
@@ -707,7 +760,29 @@ scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
 
 ### 9.8 Rueckmeldung an den Nutzer (Auflage 9)
 
-(in Arbeit)
+Kurzfassung fuer die Rueckmeldung (Bilder in `C_belege/`, s. §9.6):
+
+* **Frei bewegen:** Nach jedem Schalter bleibt der Cursor frei, der Zeiger faehrt nebenher auf den
+  neuen Wert (auch wenn du waehrenddessen weiter schaltest — er dreht dann vom aktuellen Stand um).
+  RE1.5 selbst sperrt hier nie; die Sperre nach jedem Schalter war unsere RE2-Angleichung aus Runde 31.
+* **Ganz am Ende:** Sobald die Stellung stimmt (1, 3, 5, 7, 9 an), ist die Eingabe gesperrt, der Zeiger
+  faehrt auf 80, steht 30 Bilder (RE2), dann "Power supply OK." und das Licht der Flure (Cut 0x0D dunkel
+  -> 0x0E hell) wie bisher. (i) Die Lampe der Seite, die du zuletzt richtig stellst, geht schon im
+  Moment des Umlegens an — also VOR der 80, waehrend die Eingabe schon gesperrt ist. (ii) "Die Lichter"
+  nach dem OK sind unveraendert die Flurlichter.
+* **(iii) Quadrat GEDRUECKT HALTEN** legt jetzt einen Schalter etwa alle 17 Bilder erneut um — das ist
+  RE1.5-Verhalten (der Schalter-Poll liest die gehaltene Taste), vorher von der Sperre verdeckt. Am Ende
+  (richtige Stellung) passiert das nicht mehr.
+* **Lampen:** oben = linke Spalte (Schalter 1..5: 1, 3, 5 an UND 2, 4 aus), unten = rechte Spalte
+  (6..10: 7, 9 an UND 6, 8, 10 aus). Jeder falsche Schalter der Seite macht ihre Lampe sofort wieder aus.
+  (iv) Die untere Lampe gehoert zur RECHTEN Spalte, obwohl sie optisch neben Zeile 3/4 sitzt.
+* **(v) Aussehen/Groesse = PORT-WAHL:** RE1.5 hat fuer diese Lampe keine Leuchtkunst. Genommen ist die
+  quadratische Schalterlampe desselben Bedienfelds aus RE2 (ROOM2130), in RE2s Gruen, additiv, mit dem
+  RE2-Flimmern (zwei Zellen im Wechsel je Bild); 22 px sind aus RE2s Bildgroesse abgeleitet. Alternative
+  (nicht genommen, Bild `esp01_vergleich.png`): RE1.5s eigene gruene Glanzleuchte (Impfstoff-Maschine
+  ROOM5060) — rund, mit grossem Hof (58..73 px). Wenn dir die besser gefaellt: kurzer Wunsch genuegt.
+* Kein Ton beim Aufleuchten (RE2 zuendet seine Schalterlampen still).
+* Spracheingaben/Dateien: keine neuen Texte, keine Aufnahmen noetig.
 
 ### 9.9 Offene Punkte
 
