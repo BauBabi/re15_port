@@ -1973,9 +1973,14 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int32_t gp3[3];
                     int32_t gox = 0, goy = (ge > 0) ? 0x12c : (ge == 0) ? 0 : 0,
                             goz = (ge > 0) ? 0x320 : (ge == 0) ? 0x1f4 : 0x12c;
-                    if (re15_player_gunbone_world(gox, goy, goz, gp3))
-                        re15_esp_granate_spawn(re15_esp_global_bank(), gart,
+                    if (re15_player_gunbone_world(gox, goy, goz, gp3)) {
+                        re15_esp_fx_t *gs = re15_esp_granate_spawn(re15_esp_global_bank(), gart,
                                                gp3[0], gp3[1], gp3[2], (int16_t)pl->rot_y);
+                        /* Bezugsebene des Bodentests = Standhoehe des Werfers (Spieler-y :=
+                         * -1800*Band @0x8001d7b8-d4). PORT-ZUORDNUNG fuer Raeume mit Boden != 0
+                         * (Original: Ebene y 0 @0x80018330-38; Herleitung re15_esp.h granate_boden). */
+                        if (gs) gs->granate_boden = pl->y;
+                    }
                 }
             }
         }

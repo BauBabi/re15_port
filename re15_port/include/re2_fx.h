@@ -116,6 +116,10 @@ extern int32_t (*re2fx_wasser_hook)(int32_t x, int32_t z);
  *  oder P in Form/Objekt, Bit 2 = P ueber der Unterkante einer beruehrten Form). Abbildung: bau_d.md §N1. */
 int32_t re2fx_boden_sonde(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt);
 
+/** Bezugsebene des Bodentests (Grundebene statt RE2-y 0) — PORT-ZUORDNUNG fuer RE1.5-Raeume mit Boden
+ *  != 0, gesetzt von der Granate (Routine 31) unmittelbar vor re2fx_aufschlag; re2fx_reset -> 0. */
+void re2fx_boden_basis_setzen(int32_t y);
+
 /** Diagnose: Zahl der Aufrufe eines nicht umgesetzten Ops (0 = alle erreichten Ops umgesetzt). */
 unsigned re2fx_op_unbekannt(void);
 /** Diagnose: Zahl der Op-Aufrufe je Op-Nummer seit re2fx_reset (Sonden). */

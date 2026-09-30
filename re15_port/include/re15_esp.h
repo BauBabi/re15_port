@@ -218,6 +218,16 @@ typedef struct {
      * `sb t8,112(t0)` @0x800197d4 / `sb t7,113(t0)` @0x800197d8 / `sh s1,114(t0)` @0x800197dc);
      * Setzer = Spur A8 (Spawn-Gate 9/10/11 @0x80033688-8c erweitert, E1). */
     uint8_t  granate_art;
+    /* granate_boden = BEZUGSEBENE des Bodentests der Routine 29 (Runde 34, Nachtrag nach der
+     * Messung mess_geg.md): das Original prueft nur Welt-y > 0 (`lh t1,42(t0)` / `blez t1`
+     * @0x80018330-38), also die Standhoehe von Band 0. In Raeumen, deren begehbarer Boden nicht auf
+     * y 0 liegt (gemessen 1090, 1170-Heliport, 2030/2050, 20A0, 3040, 5080), faellt die Granate
+     * dadurch bis y 0 durch den Boden und explodiert darunter, ohne etwas zu treffen = UNFERTIGE
+     * Beta-Physik (Beta->Retail: RE2s GL-Runde prallt am echten Boden, FUN_8004fba0).
+     * ⛔ PORT-ZUORDNUNG, KEINE ORIGINAL-ADRESSE: Bezugsebene = Standhoehe des WERFERS beim Spawn
+     * (Spieler-y := -1800 * Band, `sll`/`subu`/`sw v0,-13684(at)` @0x8001d7b8-d4). Band 0
+     * (Boden y 0) ergibt 0 = byte-gleich zum Original. memset beim Spawn -> 0. */
+    int32_t  granate_boden;
 } re15_esp_fx_t;
 
 /* ===== Runde 34 VERTRAG V1 (C0) — Latch und Plattform-Haken ================================

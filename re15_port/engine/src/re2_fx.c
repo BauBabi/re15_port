@@ -119,6 +119,16 @@ static const uint8_t *esp_at(uint32_t off, uint32_t n)
     return s_esp + off;
 }
 
+/* BEZUGSEBENE des Bodentests (Runde 34, Nachtrag nach mess_geg.md). RE2 FUN_8004fba0 setzt die
+ * Grundwerte Rueckgabe := 0 (`sh zero,15228(at)` @0x8004fc3c) und Kontakt := (P.y > 0)
+ * (@0x8004fc48-58): Ebene y 0. Die RE1.5-Raeume des Ports haben begehbare Boeden auch auf
+ * -1800*Band; ohne Zelle darunter fielen die Flammen dort bis y 0 durch.
+ * ⛔ PORT-ZUORDNUNG, KEINE ORIGINAL-ADRESSE: Ebene = Standhoehe des Werfers (RE1.5 Spieler-y :=
+ * -1800*Band @0x8001d7b8-d4), gesetzt von der Granate unmittelbar vor dem Aufschlag
+ * (re15_esp.c Routine 31, granate_boden). 0 = byte-gleich zu RE2. */
+static int32_t s_boden_basis = 0;
+void re2fx_boden_basis_setzen(int32_t y) { s_boden_basis = y; }
+
 /* ---------------------------------------------------------------------------------------------
  * Registrierung — FUN_8001babc (Boot-Teil) + FUN_8001bca0
  * ------------------------------------------------------------------------------------------- */
@@ -127,6 +137,7 @@ void re2fx_reset(void)
     /* @0x8001bac4-e4: 96 Plaetze, Status +0x18 := 0 (`sh zero,-29432(at)` = 0x800D8D08). Der Port
      * nullt das ganze Abbild (die uebrigen Felder schreibt jeder Spawn neu, @0x8001cc80-0x8001cdbc).
      * Raumwechsel-Aufrufer = Plattform (re2fx_reset an denselben Stellen wie re15_esp_fx_reset). */
+    s_boden_basis = 0;
     memset(s_pool, 0, sizeof s_pool);
     s_cur = 0;
     memset(s_op_zaehler, 0, sizeof s_op_zaehler);
@@ -453,8 +464,9 @@ static int32_t re2fx_boden(const int32_t p[3], int r, uint32_t mask, int a3, int
 {
     if (re2fx_boden_hook) return re2fx_boden_hook(p, r, mask, a3, kontakt);
     (void)mask;
-    int k = (p[1] > 0) ? 1 : 0;                        /* @0x8004fc34-58 */
-    int32_t f = 0;                                     /* @0x8004fc3c */
+    /* Grundwerte gegen die Bezugsebene s_boden_basis (0 = RE2: @0x8004fc34-58 / @0x8004fc3c). */
+    int k = (p[1] > s_boden_basis) ? 1 : 0;            /* @0x8004fc34-58 */
+    int32_t f = s_boden_basis;                         /* @0x8004fc3c */
     if (g_room_rdt_ok) {
         if (a3 == 0) {                                 /* Objekt-Schleife @0x8004fc5c-fd68 */
             for (int q = 0; q < (int)g_scd.prop_count && q < RE15_SCD_MAX_PROPS; q++) {

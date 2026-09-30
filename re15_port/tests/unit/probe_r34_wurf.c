@@ -140,6 +140,8 @@ static int slot_von(const re15_esp_fx_t *g)
     return -1;
 }
 
+static int32_t s_wurf_boden = 0;              /* granate_boden fuer wurf() (Abschnitt 2b) */
+
 /* Faellt der Platz `slot` in diesem Bild auf "liegt" (A 31)? -> L. */
 static int wurf(uint8_t art, uint16_t acaec, int16_t h, int16_t gier, int bilder, wurf_t *w,
                 void (*je_bild)(int k, const wurf_t *w))
@@ -153,6 +155,7 @@ static int wurf(uint8_t art, uint16_t acaec, int16_t h, int16_t gier, int bilder
     s_bild = 0;
     re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, art, X0, h, Z0, gier);
     if (!g) return -1;
+    g->granate_boden = s_wurf_boden;          /* Abschnitt 2b: Bezugsebene (sonst 0 wie im Original) */
     w->slot = slot_von(g);
     int alt_B = 29, alt_z = 42;
     for (int k = 0; k < bilder; k++) {
@@ -373,6 +376,53 @@ static void abschnitt_zeitlinien(void)
         printf("  %-16s L %d X %d Z2 %d frei %d Kontakte %d xlat (%d,%d,%d)\n", F[i].name, w.L, w.X, w.Z2,
                w.frei, w.kontakte, w.xl[0], w.xl[1], w.xl[2]);
     }
+}
+
+/* ================================================================================================
+ * Abschnitt 2b: Bezugsebene (Runde 34, Nachtrag nach mess_geg.md) — Boden != 0.
+ * Original: Routine 29 prueft nur Welt-y > 0 (`lh t1,42(t0)` / `blez t1` @0x80018330-38). PORT-
+ * ZUORDNUNG granate_boden = Standhoehe des Werfers (-1800*Band @0x8001d7b8-d4). Erwartung: derselbe
+ * MITTE-Wurf 1800 hoeher mit Ebene -1800 verlaeuft BILDGLEICH (L 73 / X 109 / Z2 114 / frei 116,
+ * 8 Kontakte, xlat (11929,2483,1752) wie Pruefungen 11-30) und liegt 9 unter der Ebene (-1791 statt
+ * +9). Negativ-Kontrolle: Ebene 0 -> die Granate faellt bis y 0 durch (L > 73). Dazu die RE2-
+ * Bodensonde der Flammen: Grundebene = s_boden_basis (re2fx_boden_basis_setzen). */
+static void abschnitt_boden(void)
+{
+    wurf_t w;
+    welt_leer();
+    s_wurf_boden = -1800;
+    int rc = wurf(2, 0x4000, (int16_t)(-2474 - 1800), 0, 220, &w, NULL);
+    s_wurf_boden = 0;
+    PRUEF(171, rc == 0, "Boden -1800: Spawn");
+    PRUEF(172, w.L == 73 && w.X == 109 && w.Z2 == 114 && w.frei == 116,
+          "Boden -1800: L %d X %d Z2 %d frei %d (soll 73/109/114/116)", w.L, w.X, w.Z2, w.frei);
+    PRUEF(173, w.kontakte == 8, "Boden -1800: Kontakt-SEs %d (soll 8)", w.kontakte);
+    PRUEF(174, w.xl[0] == 11929 && w.xl[1] == 2483 && w.xl[2] == 1752,
+          "Boden -1800: xlat bei L (%d,%d,%d) (soll 11929/2483/1752)", w.xl[0], w.xl[1], w.xl[2]);
+    PRUEF(175, w.wl[1] == -1791, "Boden -1800: Welt-y beim Liegen %d (soll -1791)", (int)w.wl[1]);
+    /* Negativ-Kontrolle: derselbe Wurf mit Ebene 0 (Original-Regel) faellt durch. */
+    welt_leer();
+    rc = wurf(2, 0x4000, (int16_t)(-2474 - 1800), 0, 260, &w, NULL);
+    PRUEF(176, rc == 0 && w.L > 73, "Ebene 0: L %d (soll > 73, faellt bis y 0)", w.L);
+    /* RE2-Bodensonde der Flammen (ohne Raum: nur die Grundebene). */
+    {
+        extern void re2fx_boden_basis_setzen(int32_t y);
+        extern int32_t re2fx_boden_sonde(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt);
+        extern int g_room_rdt_ok;
+        int alt_ok = g_room_rdt_ok, k = -1;
+        g_room_rdt_ok = 0;
+        const int32_t pa[3] = { 30000, -1700, 30000 }, pb[3] = { 30000, -1900, 30000 };
+        re2fx_boden_basis_setzen(-1800);
+        int32_t fa = re2fx_boden_sonde(pa, 2, 0x100u, 1, &k);
+        PRUEF(177, fa == -1800 && k == 1, "RE2-Basis -1800, P.y -1700: Rueckgabe %d Kontakt %d (soll -1800/1)", fa, k);
+        int32_t fb = re2fx_boden_sonde(pb, 2, 0x100u, 1, &k);
+        PRUEF(178, fb == -1800 && k == 0, "RE2-Basis -1800, P.y -1900: Rueckgabe %d Kontakt %d (soll -1800/0)", fb, k);
+        re2fx_boden_basis_setzen(0);
+        int32_t fc = re2fx_boden_sonde(pa, 2, 0x100u, 1, &k);
+        PRUEF(179, fc == 0 && k == 0, "RE2-Basis 0 (RE2 @0x8004fc34-58), P.y -1700: Rueckgabe %d Kontakt %d (soll 0/0)", fc, k);
+        g_room_rdt_ok = alt_ok;
+    }
+    printf("  Boden -1800: L %d X %d frei %d Welt-y beim Liegen %d\n", w.L, w.X, w.frei, (int)w.wl[1]);
 }
 
 /* ================================================================================================
@@ -1231,6 +1281,7 @@ int main(int argc, char **argv)
 
     if (!nur || !strcmp(nur, "mitte"))      { printf("[1] MITTE gesund\n");        abschnitt_mitte(); }
     if (!nur || !strcmp(nur, "zeit"))       { printf("[2] Zeitlinien\n");          abschnitt_zeitlinien(); }
+    if (!nur || !strcmp(nur, "boden"))      { printf("[2b] Bezugsebene\n");        abschnitt_boden(); }
     if (!nur || !strcmp(nur, "gier"))       { printf("[3] Gier 1024\n");           abschnitt_gier(); }
     if (!nur || !strcmp(nur, "saeure"))     { printf("[4] 0x0A / 0x0B\n");         abschnitt_saeure_brand(); }
     if (!nur || !strcmp(nur, "rand"))       { printf("[5] Rand/Negativ\n");        abschnitt_rand(); }

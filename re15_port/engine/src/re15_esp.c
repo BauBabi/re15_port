@@ -971,6 +971,10 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                     int re2_art = esp_granate_re2_art(art);
                     if (gl) fprintf(gl, "T=%u EV aufschlag re2_art=%d q=(%d,%d,%d) gier=%d\n", s_gr_tick,
                                     re2_art, (int)q[0], (int)q[1], (int)q[2], (int)f->param);
+                    /* Bezugsebene der RE2-Bodenflammen = Standhoehe des Werfers (granate_boden,
+                     * PORT-ZUORDNUNG, re15_esp.h / re2_fx.c s_boden_basis). */
+                    { extern void re2fx_boden_basis_setzen(int32_t y);
+                      re2fx_boden_basis_setzen(f->granate_boden); }
                     if (re2_art && re15_esp_aufschlag_hook) re15_esp_aufschlag_hook(re2_art, q, f->param);
                 }
             }
@@ -1124,7 +1128,10 @@ void (*re15_esp_shell_clink_hook)(void) = NULL;
  *    `sll a0,a0,8` / `or` @0x80018420/28, `jal 0x80045024` @0x80018424). vz wird NIE gedaempft. */
 static void esp_fx_dispatch_b_29(re15_esp_fx_t *f)
 {
-    int16_t t1 = f->wpos[1];
+    /* t1 = Eindringtiefe unter die Bezugsebene. Original: Ebene y 0 (`lh t1,42(t0)` / `blez t1`
+     * @0x80018330-38). granate_boden (re15_esp.h) = Standhoehe des Werfers, PORT-ZUORDNUNG fuer
+     * Raeume mit Boden != 0; bei Boden 0 (granate_boden == 0) byte-gleich. */
+    int32_t t1 = (int32_t)f->wpos[1] - f->granate_boden;
     if (t1 <= 0) return;
     FILE *gl = esp_granate_log();
     uint16_t n = row_u16(f->row, 0x26);
