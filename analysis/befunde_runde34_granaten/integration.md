@@ -13,7 +13,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
-| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W7 (6f7aa99f), W8 (7fbd45a0, 6e320214), W9 (c49f20fe); W10, W11 in Arbeit |
+| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W7 (6f7aa99f), W8 (7fbd45a0, 6e320214), W9 (c49f20fe), W10 (b787f722), W11 (Dossier) — alle erledigt |
 | S3 volle Suite | offen |
 
 ## 1. Merges (Schritt 1)
@@ -210,6 +210,39 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   FX-Zaehler im Zustandslog bleibt 21 (18 Strahl + 3 Effekt 0x06) — die Stroeme sterben nicht mehr am Satz-10-Terminator.
 * Nicht umgesetzt (OFFEN, bau_c.md INTEGRATIONSWUNSCH 6 zweiter Teil): Routinen 24/25 (@0x80017f50/@0x80017fa4) und 13/19
   (@0x80017990/@0x80017d08) — kein Auslieferungs-Raum spawnt Effekt 0x0d (Zensus bau_c.md N1.3), sie sind unerreichbar.
+
+### W10 — RE15_MIN_TESTS (erledigt b787f722)
+* `tools/local_build.sh`: 428 -> **442** (Kopf-Historie: B +2, A +1, C +4, D +5, Integration +2 = W9 + W7); `ctest -N` im
+  Integrationsbaum = 442.
+
+### W11 — Fuer die Release-Notes (Verhaltensaenderungen UEBER die Granate hinaus)
+* **G5 (Endkampf ROOM5090/5091): Flinch-Zuschlag jetzt nach der Treffer-ZEILE fuer ALLE Waffen** (Spur B, B9): Zuschlag aus
+  dem Byte @0x801056B3 + Zeile statt je Waffe, Zerfall -1 je 16 Bilder mit Fenster 15, Sperre +0x1D3 = 15 mit Abbau.
+  Wirkt auch auf Pistole/Schrot/MG (bau_b.md B9, OFFEN 11: Abnahme durch Nutzer/Orchestrator).
+* **Drehen im Zielen fuer ALLE Waffen korrigiert** (Spur A, A8): nur noch die Ziel-Drehung, LINKS minus / RECHTS plus, 24 je
+  Bild beim Heben/Senken/Nachladen/Abzug, 48 im Halten (@0x80033000-4c, @0x800333a0-e8, @0x8003355c-fc, @0x80033cf0,
+  @0x80033e00) statt vorher Lauf- + Ziel-Drehung zusammen (72); im Halten mit OBEN/UNTEN dreht Leon jetzt (vorher netto 0).
+* **Auto-Nachfuehrung beim Heben nach FUN_8001a8f8** (Spur A, H-1): Schritte ohne `& 0xfff`, Richtungsgrenze um +s
+  verschoben (@0x8001a958-9b0) — fuer Ziele knapp unter 180 Grad dreht Leon jetzt in die Original-Richtung.
+* **Raum-Effektbank steht vor dem SCD-Eintrittstakt** (Spur C, N1): Eintritts-Effekte (ROOM2000/2001/20B0/20B1 Wasser,
+  ROOM11E0-Funke, ROOM20A0) erscheinen auch beim Betreten ueber eine Tuer sofort (vorher eine Schleifenperiode spaeter bzw.
+  nie).
+* **Alle RE1.5-Effekte (Muendung, Rauch, Huelse, Blut, Feuer, Feuerball) mit voller Helligkeit** (Integration W8): sie
+  liefen seit jeher halb so hell (Primitivfarbe 128 als SDL-Faktor statt PSX 0x80 = x 1.0, FUN_800537e4 @0x800537ec).
+* **Wasserstrahl ROOM2000/2001/20B0/20B1** (Integration W7): Routinen 41/42 portiert — durchgehender Strahl aus dem Gitter
+  statt drei 1-Pixel-Punkten fuer ~1 s; Tropfen, die Leon oder einen Gegner treffen, bleiben stehen (FUN_8002b7e8).
+* **Effekt-Start wie das Original** (Integration W7): Satz 1 / Zeitgeber Satz[0] beim Spawn (FUN_80019700 @0x800198a0);
+  sichtbar nur bei Plaetzen mit Bild-Stopp im Spawnbild (z.B. Salven-Huelse: erster Satz 1 statt 0).
+* **SELECT im Inventar oeffnet das UTILITY/DEBUG-MENU nicht mehr** (Integration W5); das Item-Debug (SELECT + R1/L1/R2/L2,
+  Menge 255) funktioniert wie im Original (Spur A10).
+* **RE2-Aufschlaege sichtbar** (Integration W1-W3): Saeure-/Brand-Aufschlag und Bodenflammen werden gezeichnet (vorher ohne
+  Kamera -> nie).
+* **RE2-Part-Farben fuer Hund (17 Parts) und Spinne (20 Parts)** beim Tod durch Brand/Saeure (Integration W6).
+* **Treppen-Unverwundbarkeit des Spielers** (Spur B, B10): auf der Treppe trifft ihn weder Explosion noch Resolver-Angriff
+  (+0x93 Bit 0 @0x80038a58/@0x80038c24/@0x80038d00/@0x80038ec0).
+* Paket: `shared_assets/RE2/CORE00.ESP` und `TEX.TIM` sind jetzt Pflicht (Gates in make_package.sh / build_android.sh /
+  build.gradle); Android-Bau braucht einen frischen Configure (neue Quellen fx_plattform_pc.c, re2fx_pc.c, re2_fx.c —
+  Memory reai-v2-android-glob-cache; release/build_android.sh verwirft app/.cxx selbst).
 
 ## 3. Volle Suite (Schritt 3)
 
