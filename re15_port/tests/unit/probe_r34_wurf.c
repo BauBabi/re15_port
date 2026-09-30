@@ -830,6 +830,50 @@ static void abschnitt_spielschritt(void)
             PRUEF(F[i].nr + 2, n == F[i].n, "%s: Zaehler +0x26 = %u (soll %u)", F[i].name, n, F[i].n);
         }
     }
+
+    /* 6e — NACHBESSERUNG H-1: AUTO-NACHFUEHRUNG beim Heben = FUN_8001a8f8 (gun sub0 `ori a1,zero,
+     * 0xc8` @0x80032fe0, `jal 0x8001a8f8` @0x80032fec). a1 = (t - rot + s) & 0xfff (@0x8001a960-68);
+     * a1 < 2s -> rot := t (@0x8001a984); sonst rot := rot - s (`subu v0,a2,s1` @0x8001a97c, `sh`
+     * @0x8001a988, OHNE Maske) und bei a1 <= 0x800 (`sltiu v0,a1,0x801` @0x8001a98c) rot += 2s
+     * (@0x8001a9ac-b0). Ziel = Zombie 700 in +x; seine Peilung t ist die des Port-atan2
+     * ((re15_atan2_q12(0, 700) - 0x400) & 0xfff = 4095, gemessen, Vorbedingung 128 — Aufbau, keine
+     * Verhaltenskonstante). Erwartung von Hand aus FUN_8001a8f8 mit t = 4095, s = 200:
+     *   A  rot0 = -300: a1 = (4095 + 300 + 200) & 0xfff = 499 -> rot + s = -100 (alter Port: & 0xfff
+     *      = 3996); dann a1 = 299 < 400 -> rot := t = 4095
+     *   B  rot0 = 2196: a1 = (4095 - 2196 + 200) & 0xfff = 2099 > 0x800 -> rot - s = 1996 (alter Port
+     *      mit zentrierter Differenz +1899 -> +s = 2396); dann a1 = 2299 -> 1796
+     *   B' rot0 = 2296: a1 = 1999 <= 0x800 -> rot + s = 2496, dann 1799 -> 2696 (Negativ-Kontrolle:
+     *      ausserhalb des Bands [0x801 - s, 0x7ff] drehen alter Port und Original gleich) */
+    {
+        struct { const char *name; int16_t rot0, soll1, soll2; int nr; } F[] = {
+            { "A Schritt ueber 0",        -300,  -100, 4095, 129 },
+            { "B Band unter 180 Grad",    2196,  1996, 1796, 130 },
+            { "B' Grenze (Negativ-Kon.)", 2296,  2496, 2696, 153 },
+        };
+        for (unsigned i = 0; i < sizeof F / sizeof F[0]; i++) {
+            if (sp_bringup(9, 5) != 0) { PRUEF(F[i].nr, 0, "Bringup 6e"); return; }
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            re15_actor_t *e = dummy(1, 0x10, 100, pl->x + 700, 0, pl->z);
+            e->re2_hp_stamped = 1;
+            re15_enemy_ai_set_paused(1);
+            int peil = ((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0xfff;
+            if (i == 0) PRUEF(128, peil == 4095, "6e Vorbedingung: Peilung zum Zombie in +x = %d (soll 4095)", peil);
+            pl->rot_y = F[i].rot0;
+            int16_t seq[8]; int n = 0;
+            int16_t alt = pl->rot_y;
+            for (int b = 0; b < 30 && n < 8; b++) {
+                sp_bild(RE15_PAD_BIT_R1, b == 0 ? RE15_PAD_BIT_R1 : 0);
+                if (pl->rot_y != alt) { seq[n++] = pl->rot_y; alt = pl->rot_y; }
+            }
+            printf("  6e %-24s: rot0 %d ->", F[i].name, F[i].rot0);
+            for (int k = 0; k < n; k++) printf(" %d", seq[k]);
+            printf("\n");
+            PRUEF(F[i].nr, n >= 2 && seq[0] == F[i].soll1 && seq[1] == F[i].soll2,
+                  "6e %s: rot0 %d -> %d, %d (soll %d, %d)", F[i].name, F[i].rot0, n > 0 ? seq[0] : -9999,
+                  n > 1 ? seq[1] : -9999, F[i].soll1, F[i].soll2);
+        }
+    }
 }
 
 /* ================================================================================================

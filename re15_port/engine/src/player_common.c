@@ -1047,10 +1047,31 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 int32_t tx, tz;
                 if (re15_player_aim_target(radius, &tx, &tz)) {
                     int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
-                    int d = (((bearing - (int)p->rot_y) + 0x800) & 0xfff) - 0x800;
-                    if (d >  slew) d =  slew;
-                    if (d < -slew) d = -slew;
-                    p->rot_y = (int16_t)(((int)p->rot_y + d) & 0xfff);
+                    /* Runde 34 A NACHBESSERUNG (Gegenpruefung H-1, Bauer-OFFEN 5) — FUN_8001a8f8
+                     * byte-true (re15_disasm.py dis 0x8001a8f8 52; Aufrufer gun sub0 `ori a1,zero,
+                     * 0xc8` @0x80032fe0 / `jal 0x8001a8f8` @0x80032fec, L1 @0x80033f94, melee `ori
+                     * a1,zero,0xc0` @0x80034fb0 / `jal` @0x80034fbc):
+                     *   8001a958 lhu a2,106(v1)            rot (u16 +0x6a)
+                     *   8001a960 subu v0,a0,a2 / addu v0,s1,v0 / andi a1,v0,0xfff
+                     *                                      a1 = (t - rot + s) & 0xfff
+                     *   8001a96c-74 sll/sra 15 / slt       a1 < 2*s ?
+                     *   8001a984 sh a0,106(v1)             ja:   rot := t (atan2 & 0xfff @0x8001a768)
+                     *   8001a97c subu v0,a2,s1 / 8001a988 sh v0,106(v1)
+                     *                                      nein: rot := rot - s   (16 Bit, OHNE Maske)
+                     *   8001a98c sltiu v0,a1,0x801 / 8001a994 sll a0,s1,1 / 8001a9ac addu / 8001a9b0 sh
+                     *                                      a1 <= 0x800: rot += 2*s (netto rot + s)
+                     * Vorher maskierte der Port jeden Schritt (& 0xfff) und drehte per zentrierter
+                     * Differenz: (1) nach einem Schritt ueber 0 lag die Gier bei 4096-k statt -k
+                     * (anderer RotMatrix-Zweig fuer die Granate, s. esp_trig); (2) fuer Ziele mit
+                     * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (knapp unter 180 Grad links) drehte er
+                     * +s, das Original -s (die Halbebenen-Grenze ist um s verschoben). */
+                    int a1 = (bearing - (int)p->rot_y + (int)slew) & 0xfff;
+                    if (a1 < 2 * (int)slew)
+                        p->rot_y = (int16_t)bearing;                          /* @0x8001a984 */
+                    else if (a1 <= 0x800)
+                        p->rot_y = (int16_t)((int)p->rot_y + (int)slew);      /* @0x8001a988 + @0x8001a9b0 */
+                    else
+                        p->rot_y = (int16_t)((int)p->rot_y - (int)slew);      /* @0x8001a988 */
                 }
             }
         }
