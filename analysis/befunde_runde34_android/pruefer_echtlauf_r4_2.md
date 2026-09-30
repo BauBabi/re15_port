@@ -54,7 +54,33 @@ in der Liste RE15DOOR 30, RE2/DOOR 27: **LISTE-OK**.
 
 ## 2. make_package.sh echt (Binaries aus Archiv v0.8.19) + "nur PC mit altem Android-Satz"
 
-(laeuft - Abschnitt folgt)
+`pe2_mp_folge.sh` (Zusammenfassung `mp_folge.txt`, volle Logs `mp/E*.log`), 12:18:30-12:33:17. Jeder Lauf per
+`pe2_mp.sh`: make_package.sh ECHT und unveraendert im Arbeitsbaum (kein Shim, PATH unveraendert); nur git schreibt in einen
+Wegwerf-Index (Kopie des echten) + Wegwerf-Objektspeicher (Alternates = echter Objektspeicher) - im Baum arbeitet der
+zweite Pruefer, dessen Commits sonst die Volumes mitnehmen koennten. Vor jedem Lauf: kein fremder make_package-Prozess
+(Win32_Process). Eingaben: PC-Binaries v0.8.19 aus dem ARCHIV (`pe2_binaries.sh`: Split-Saetze `sha256sum -c` 4 x OK,
+zusammengefuehrt, nur die Binaries entpackt, Eintrags-mtime 19:34:13/19:34:23, KEIN touch; re15_pc.exe `30d5b67b...`,
+re15_pc `abfbe7c5...`) nach release/win_out + linux_out (`cp -p`); APK N aus 1. (mtime 12:03, nach dem letzten APK-Code-
+Commit ef5fa0fe 11:15).
+
+| Lauf | Aufruf (`--version v0.8.19` ...) | EXIT | Ergebnis |
+|---|---|---|---|
+| E0a | keine APK; der VERSIONIERTE Android-Satz v0.8.19 (HEAD) liegt da | **1** (77 s) | Gate-Kopie festgehalten (`8a0e3f15... = festgehalten`), Selbsttest 258/258 + 132, QUELLBAUM-OK, dann `ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK` mit beiden Auswegen; 0 x "Assets kopieren"; SUMS und Saetze unveraendert (= HEAD), Wegwerf-Index ohne release/-Aenderung |
+| E0b | ALTE v0.8.19-APK (Liste v1) als frische Kopie unter `release/re15_port_v0.8.19_android.apk` | **1** (165 s) | Frische ok, APK-Kette bis zum Gate, `Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS`, `Gate-Urteil (apk, Rueckgabe 1): ... Schlusszeile und Rueckgabe stimmen ueberein` -> `ABBRUCH`; 0 x kopieren, SUMS/Saetze unveraendert, Index ohne release/-Aenderung (die abgelehnte APK habe ich danach entfernt) |
+| E1 | APK N | **0** (387 s) | Selbsttest 258/258, QUELLBAUM-OK, APK-Kette (`Gate-Urteil (apk, Rueckgabe 0)`, `APK-PRUEFUNG-OK 2c6a1c30... e8f89b4b 363483287`); Linux: Optimierung 4, glibc 2.29, Tueren 27 + 30, PAKET-OK, LF, 3606 Dateien; Windows: Optimierung 3, 27 + 30, PAKET-OK, Laufzeit-Gate 26/26 in_pkg + 26/26 foreign_cwd, 3607 Dateien; Zippen linux 3800 (x-Bit gesetzt + geprueft), win64 3801, android 1: Katalog `CRC32 e8f89b4b, 363483287 B = gepruefte Kennung`, `APK im Split-Satz = gepruefte APK (entpackt: sha256 2c6a1c30...)`; `SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf, Positivliste)`, `0 alte ... entfernt, 6 neue vorgemerkt` (Wegwerf-Index: M x 6 release/-Volumes) |
+| unabh. | - | - | `sha256sum -c SHA256SUMS.txt` 6 x OK; APK aus dem neuen Satz per `zip -s 0` + `unzip`: genau ein Eintrag `re15_port_v0.8.19_android.apk`, sha256 **`2c6a1c30...` = gebaute APK N** |
+| E2 | APK weg (geparkt), Satz aus E1 liegt; `--only linux` ("nur PC") | **1** (25 s) | Selbsttest + QUELLBAUM-OK, dann B1-ABBRUCH vor den Kopierminuten; SUMS (E1) und Android-Volumes unveraendert; Wegwerf-Index ohne release/-Aenderung |
+| E3 | dasselbe + `--ohne-android` | **0** (145 s) | Selbsttest vor dem PC-Pfad (B4), `--ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: ..._android.z01 ..._android.zip`, Linux PAKET-OK, `alter Android-Satz entfernt` x 2, `Satz ..._linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf`, `Satz ..._win64: 2 Volume(s), andere Plattform aus einem frueheren Lauf - in diesem Lauf nicht neu geprueft, unveraendert mitgefuehrt`, `SHA256SUMS.txt geschrieben (4 Volumes, Positivliste)` = linux + win64, `2 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt`; Wegwerf-Index: **D** android.z01/.zip, M linux x 2, M win64 x 2; `sha256sum -c` 4 x OK |
+
+"Nur PC mit altem Android-Satz" -> **kein alter Satz**: ohne Schalter Abbruch vor den Kopierminuten (E0a mit dem echten
+versionierten v0.8.19-Satz, E2 mit dem Satz aus E1), mit `--ohne-android` verschwindet er aus Datei, SUMS und Index (E3);
+eine alte v1-APK kommt nicht durch (E0b); der Android-Satz eines erfolgreichen Laufs enthaelt nachweislich genau die
+gepruefte APK (E1, sha256 aus dem Satz). Stufe-4-Punkte im echten Lauf: B1 (E0a/E2/E3), B3 (E1: sha256 aus dem Satz),
+B4 (E0a/E2/E3: Selbsttest vor --quellbaum), Positivliste (E1/E3).
+Aufraeumen: `git restore --source=HEAD` fuer SHA256SUMS.txt und die 6 Volumes (die in E3 geloeschten Android-Volumes
+kommen zurueck), pkg-linux/pkg-win/linux_out/win_out geloescht: alle 42 versionierten release/-Dateien sha256 vorher ==
+nachher (`cmp`), `git status --short release/ re15_port/ synchro/` leer, echter Index gegen HEAD fuer release/ leer;
+Wegwerf-Index/-Objekte (836 MB) geloescht. APK N liegt nur noch unter build/r34a/pruefer_e2/apk/.
 
 ## 3. Emulator headless
 

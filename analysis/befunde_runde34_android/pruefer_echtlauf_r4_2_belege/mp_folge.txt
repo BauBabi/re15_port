@@ -1,0 +1,215 @@
+== pe2_mp_folge Start 2026-09-30 12:18:30, HEAD 0d6c48f1
+-- versionierte release/-Dateien vorher (sha256):
+42
+-- Binaries (cp -p aus build/r34a/pruefer_e2/bin, Archiv-mtime):
+   -rw-r--r-- 1 mjoedicke 197121 3834872 2026-09-29 19:34:13.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/re15_pc
+   -rwxr-xr-x 1 mjoedicke 197121 4381178 2026-09-29 19:34:23.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/win_out/re15_pc.exe
+   abfbe7c517bf98ce4cdd31607b81a8e555f0ce23af1c22e84f89ba76f5cf0dc3 *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/re15_pc
+   30d5b67b0b03f64e6fa3ce59528e36c30fbad0a4e29387beb78a22761d6fd41b *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/win_out/re15_pc.exe
+-- fremde make_package-Prozesse: []
+
+===== E0a: keine APK, versionierter Android-Satz v0.8.19 (HEAD) liegt da =====
+E0a EXIT=1 (77 s)
+--- Zustand nach E0a (12:20:02):
+   10:31:13 94371840 c406bbfede0759ca.. re15_port_v0.8.19_android.z01
+   10:31:14 75105247 2e1697d9112986ad.. re15_port_v0.8.19_android.zip
+   10:31:15 94371840 442728930e4c6443.. re15_port_v0.8.19_linux_steamdeck_x64.z01
+   10:31:16 75236322 70d26390fdd9f339.. re15_port_v0.8.19_linux_steamdeck_x64.zip
+   10:31:17 94371840 3bfeb32c61c8085b.. re15_port_v0.8.19_win64.z01
+   10:31:18 75344263 55aa2b042c03cdf5.. re15_port_v0.8.19_win64.zip
+   SHA256SUMS.txt:
+      c406bbfede0759ca63ccd90e6643e06c68a2b2e21ff09cd7be197ab040805cf9 *re15_port_v0.8.19_android.z01
+      2e1697d9112986adce9e7f8c05549c57a0ca69f89197efadcbca826e08ced20c *re15_port_v0.8.19_android.zip
+      442728930e4c6443433ee5fcc2c342d6cec4e13d7a1f5211903d1b11836dd22b *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      70d26390fdd9f339bb378a9168264c8f125458bd8e6872159e1d699a7c62c849 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+      3bfeb32c61c8085be8c50e7f2c38659a037c64d1d67dc1ae5f678d9ca29f0d17 *re15_port_v0.8.19_win64.z01
+      55aa2b042c03cdf5d9249f85ba50e78f4e7709814b7800fe21fb2edafbb87eff *re15_port_v0.8.19_win64.zip
+   Wegwerf-Index gegen HEAD (release/):
+   Schluesselzeilen:
+      235:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      269:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      283:   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+      284:ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+      290:            release/make_package.sh --version v0.8.19 --ohne-android ...
+      291:EXIT=1 (77 s)
+
+===== E0b: alte v0.8.19-APK (Liste v1) als frische Kopie unter dem Auslieferungsnamen =====
+   514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 mtime 2026-09-30 12:20:13.954745000 +0200
+-- fremde make_package-Prozesse: []
+E0b EXIT=1 (165 s)
+--- Zustand nach E0b (12:23:09):
+   10:31:13 94371840 c406bbfede0759ca.. re15_port_v0.8.19_android.z01
+   10:31:14 75105247 2e1697d9112986ad.. re15_port_v0.8.19_android.zip
+   10:31:15 94371840 442728930e4c6443.. re15_port_v0.8.19_linux_steamdeck_x64.z01
+   10:31:16 75236322 70d26390fdd9f339.. re15_port_v0.8.19_linux_steamdeck_x64.zip
+   10:31:17 94371840 3bfeb32c61c8085b.. re15_port_v0.8.19_win64.z01
+   10:31:18 75344263 55aa2b042c03cdf5.. re15_port_v0.8.19_win64.zip
+   12:20:13 363212403 514bebd55bd6b8ec.. re15_port_v0.8.19_android.apk
+   SHA256SUMS.txt:
+      c406bbfede0759ca63ccd90e6643e06c68a2b2e21ff09cd7be197ab040805cf9 *re15_port_v0.8.19_android.z01
+      2e1697d9112986adce9e7f8c05549c57a0ca69f89197efadcbca826e08ced20c *re15_port_v0.8.19_android.zip
+      442728930e4c6443433ee5fcc2c342d6cec4e13d7a1f5211903d1b11836dd22b *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      70d26390fdd9f339bb378a9168264c8f125458bd8e6872159e1d699a7c62c849 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+      3bfeb32c61c8085be8c50e7f2c38659a037c64d1d67dc1ae5f678d9ca29f0d17 *re15_port_v0.8.19_win64.z01
+      55aa2b042c03cdf5d9249f85ba50e78f4e7709814b7800fe21fb2edafbb87eff *re15_port_v0.8.19_win64.zip
+   Wegwerf-Index gegen HEAD (release/):
+   Schluesselzeilen:
+      235:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      269:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      283:   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+      284:== Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+      533:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      567:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      590:      Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 assets v2 <anzahl> <bytes>' + '<bytes>\t<
+      592:   Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+      593:ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+      594:EXIT=1 (165 s)
+
+===== E1: APK N, beide Plattformen =====
+   APK 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+-- fremde make_package-Prozesse: []
+E1 EXIT=0 (387 s)
+--- Zustand nach E1 (12:29:57):
+   12:29:13 94371840 7b7d675e601f75b1.. re15_port_v0.8.19_android.z01
+   12:29:14 75223971 77cfd72833f5511f.. re15_port_v0.8.19_android.zip
+   12:28:16 94371840 99494fa5790d23b2.. re15_port_v0.8.19_linux_steamdeck_x64.z01
+   12:28:26 75236322 a60616ac71b2ae13.. re15_port_v0.8.19_linux_steamdeck_x64.zip
+   12:28:41 94371840 392c656d96c5ea19.. re15_port_v0.8.19_win64.z01
+   12:28:51 75344263 d4d9477c3cb08837.. re15_port_v0.8.19_win64.zip
+   12:03:01 363483287 2c6a1c30c97eb978.. re15_port_v0.8.19_android.apk
+   SHA256SUMS.txt:
+      7b7d675e601f75b180410b7b831cb3cbd9c9a7b1d82830c14cef767758a2818c *re15_port_v0.8.19_android.z01
+      77cfd72833f5511f3f8eaab6dcadf56b25cea400d7d57a532b1ca06fafaf8e7c *re15_port_v0.8.19_android.zip
+      99494fa5790d23b25e40b92dfe62e848b65ce032bfd1b9dbe37f2ac7e48eabdd *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a60616ac71b2ae13b4dcdd6a05b0c68987c69cc60580d0198d28856cd3ef33d1 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+      392c656d96c5ea19c529edc98d4c7d4ed21df681a1eeee2f8244fa6cdd3ab501 *re15_port_v0.8.19_win64.z01
+      d4d9477c3cb08837dd319da37ed81d6134eb5563dc7def8766fcaad5c2bfe1cf *re15_port_v0.8.19_win64.zip
+   Wegwerf-Index gegen HEAD (release/):
+      M	release/re15_port_v0.8.19_android.z01
+      M	release/re15_port_v0.8.19_android.zip
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+      M	release/re15_port_v0.8.19_win64.z01
+      M	release/re15_port_v0.8.19_win64.zip
+   Schluesselzeilen:
+      235:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      269:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      283:   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+      284:== Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+      533:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      567:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      590:   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 3603 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS gleich, 2 Tuer-Soll-Zeilen g/g
+      591:== APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea e8f89b4b 363483287) ==
+      596:   Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      597:   Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+      598:   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+      599:   Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+      600:   Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+      617:== APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      618:   Gate-Urteil (paket, Rueckgabe 0): APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen, je Baum Quelle = gleich, 2 Tuer-Soll-Zeilen g/g
+      620:   (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+      624:   Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      625:   Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+      626:   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+      627:   Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+      628:   Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+      645:== APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      646:   Gate-Urteil (paket, Rueckgabe 0): APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen, je Baum Quelle = gleich, 2 Tuer-Soll-Zeilen g/g
+      647:   Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+      648:   Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+      650:== Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      657:== Zippen: re15_port_v0.8.19_win64 ==
+      659:== Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+      661:   APK-Satz, Katalog: genau re15_port_v0.8.19_android.apk, CRC32 e8f89b4b, 363483287 B = gepruefte Kennung
+      662:   APK im Split-Satz = gepruefte APK (entpackt: sha256 2c6a1c30c97eb978... = Pruefkopie)
+      663:   Satz re15_port_v0.8.19_linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf
+      664:   Satz re15_port_v0.8.19_win64: 2 Volume(s), aus diesem Lauf
+      672:== SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf, Positivliste) ==
+      674:   0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+      677:EXIT=0 (387 s)
+-- unabhaengig: sha256sum -c SHA256SUMS.txt
+   re15_port_v0.8.19_android.z01: OK
+   re15_port_v0.8.19_android.zip: OK
+   re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+   re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+   re15_port_v0.8.19_win64.z01: OK
+   re15_port_v0.8.19_win64.zip: OK
+-- unabhaengig: APK aus dem neuen Android-Satz (zip -s 0 + unzip)
+   Eintrag: re15_port_v0.8.19_android.apk
+   sha256 aus dem Satz: 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+   sha256 APK N:        2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+
+===== E2: nur PC (--only linux), APK weg, Android-Satz aus E1 liegt da =====
+-- fremde make_package-Prozesse: []
+E2 EXIT=1 (25 s)
+--- Zustand nach E2 (12:30:40):
+   12:29:13 94371840 7b7d675e601f75b1.. re15_port_v0.8.19_android.z01
+   12:29:14 75223971 77cfd72833f5511f.. re15_port_v0.8.19_android.zip
+   12:28:16 94371840 99494fa5790d23b2.. re15_port_v0.8.19_linux_steamdeck_x64.z01
+   12:28:26 75236322 a60616ac71b2ae13.. re15_port_v0.8.19_linux_steamdeck_x64.zip
+   12:28:41 94371840 392c656d96c5ea19.. re15_port_v0.8.19_win64.z01
+   12:28:51 75344263 d4d9477c3cb08837.. re15_port_v0.8.19_win64.zip
+   SHA256SUMS.txt:
+      7b7d675e601f75b180410b7b831cb3cbd9c9a7b1d82830c14cef767758a2818c *re15_port_v0.8.19_android.z01
+      77cfd72833f5511f3f8eaab6dcadf56b25cea400d7d57a532b1ca06fafaf8e7c *re15_port_v0.8.19_android.zip
+      99494fa5790d23b25e40b92dfe62e848b65ce032bfd1b9dbe37f2ac7e48eabdd *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a60616ac71b2ae13b4dcdd6a05b0c68987c69cc60580d0198d28856cd3ef33d1 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+      392c656d96c5ea19c529edc98d4c7d4ed21df681a1eeee2f8244fa6cdd3ab501 *re15_port_v0.8.19_win64.z01
+      d4d9477c3cb08837dd319da37ed81d6134eb5563dc7def8766fcaad5c2bfe1cf *re15_port_v0.8.19_win64.zip
+   Wegwerf-Index gegen HEAD (release/):
+   Schluesselzeilen:
+      235:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      269:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      283:   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+      284:ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+      290:            release/make_package.sh --version v0.8.19 --ohne-android ...
+      291:EXIT=1 (25 s)
+
+===== E3: dasselbe + --ohne-android =====
+-- fremde make_package-Prozesse: []
+E3 EXIT=0 (145 s)
+--- Zustand nach E3 (12:33:11):
+   12:32:23 94371840 29a65dbecaa9b66e.. re15_port_v0.8.19_linux_steamdeck_x64.z01
+   12:32:33 75236322 36f10af54b4677bd.. re15_port_v0.8.19_linux_steamdeck_x64.zip
+   12:28:41 94371840 392c656d96c5ea19.. re15_port_v0.8.19_win64.z01
+   12:28:51 75344263 d4d9477c3cb08837.. re15_port_v0.8.19_win64.zip
+   SHA256SUMS.txt:
+      29a65dbecaa9b66e6dc608b65cb34693b83bf7bb622864474bc97eab552a11f3 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      36f10af54b4677bdf7a6f80517b132e888851d289412a843691d8373c8d8ecb9 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+      392c656d96c5ea19c529edc98d4c7d4ed21df681a1eeee2f8244fa6cdd3ab501 *re15_port_v0.8.19_win64.z01
+      d4d9477c3cb08837dd319da37ed81d6134eb5563dc7def8766fcaad5c2bfe1cf *re15_port_v0.8.19_win64.zip
+   Wegwerf-Index gegen HEAD (release/):
+      D	release/re15_port_v0.8.19_android.z01
+      D	release/re15_port_v0.8.19_android.zip
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+      M	release/re15_port_v0.8.19_win64.z01
+      M	release/re15_port_v0.8.19_win64.zip
+   Schluesselzeilen:
+      1:== pe2_mp E3: make_package.sh --version v0.8.19 --only linux --ohne-android (2026-09-30 12:30:46)
+      235:   [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+      269:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+      283:   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+      284:== --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip ==
+      288:   Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      289:   Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+      290:   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+      291:   Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+      292:   Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+      309:== APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      310:   Gate-Urteil (paket, Rueckgabe 0): APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen, je Baum Quelle = gleich, 2 Tuer-Soll-Zeilen g/g
+      312:   (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+      314:== Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      321:   (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.z01)
+      322:   (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.zip)
+      323:   Satz re15_port_v0.8.19_linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf
+      325:   Satz re15_port_v0.8.19_win64: 2 Volume(s), andere Plattform aus einem frueheren Lauf - in diesem Lauf nicht neu geprueft, unveraendert mitgefuehrt
+      331:== SHA256SUMS.txt geschrieben (4 Volumes, Positivliste) ==
+      333:   2 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+      336:EXIT=0 (145 s)
+-- unabhaengig: sha256sum -c SHA256SUMS.txt
+   re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+   re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+   re15_port_v0.8.19_win64.z01: OK
+   re15_port_v0.8.19_win64.zip: OK
+== pe2_mp_folge Ende 2026-09-30 12:33:17
