@@ -46,6 +46,7 @@
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
+#include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 
 scd_vm_t g_scd;
 
@@ -388,6 +389,10 @@ static void register_opcodes(void)
     s_op_table[0x51]                  = op_sce_key_ck;
     s_op_table[0x5E]                  = op_keep_item_ck;
     s_op_table[0x5D]                  = op_mizu_div_set;
+    /* Runde 34 Nacht, Spur A: 0x62 = RE2 Sce_item_lost (0x800a74c8[0x62] -> 0x800585e4) NUR im
+     * Port-Programm des Rolltors (PC-Schranke in rolltor_1050.c); fuer RDT-Bytecode bleibt es
+     * op_unknown-gleich (pc+1, s_opcode_sizes[0x62] = 1). */
+    s_op_table[RE15_ROLLTOR_OP_ITEM_LOST] = re15_rolltor_op_item_lost;
 }
 
 /* Internal: enqueue an audio event. Drops if full (ring buffer overflow). */
@@ -600,7 +605,10 @@ int scd_event_fire(uint8_t event_id)
         }
     }
     if (event_id >= RE15_RDT_MAX_SUB_SCD || !s_current_rdt) return -1;
-    const uint8_t *pc = s_current_rdt->sub_scd[event_id];
+    /* Runde 34 Nacht, Spur A (rolltor_1050.c): ROOM1050/1051 Ereignis 2 = Rolltor-Schalter ->
+     * Port-Programm "Sicherung einsetzen", solange (9,63)=0; sonst NULL = ausgelieferter sub. */
+    const uint8_t *pc = re15_rolltor_ereignis((uint16_t)g_current_room_id, event_id);
+    if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
         if (!g_scd.threads[slot].active) {
