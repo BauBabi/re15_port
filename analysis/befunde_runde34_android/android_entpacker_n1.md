@@ -222,7 +222,34 @@ nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht
 
 ## 3. Nachweis im Emulator
 
-(folgt)
+Test-AVD `Medium_Phone_API_36_r34a` (1.3 Punkt 3). APKs (alle `build_android.sh`, Gates gruen):
+- **N0** = neuer Stand, `--version v0.8.20-n1c` (Log `build_N0.log`);
+- **N1** = N0 + dieselbe gleich grosse Aenderung an `synchro/STAGE1/room1090/main03.wav` wie bei B
+  (voruebergehend, danach zurueckgesetzt), `--version v0.8.20-n1d`;
+- Referenz v0.8.19 = `build/r34a/ref_v0.8.19.apk` (Kopie aus dem Archiv, sha256 wie im Archiv).
+Pruefwerkzeug `build/r34a/n1/geraet_pruefen.py <apk>`: sha256 JEDER Datei unter `shared_assets/` + `synchro/`
+auf dem Geraet gegen die Liste v2 der APK, dazu Zusatzdateien, `.neu`-Reste und die oberste Ebene.
+
+N0: `build_N0.log` EXIT 0 (8 min 42 s), `re15_assets.txt (v2): 3603 Dateien, 356678277 Bytes, sha256 je Datei`,
+Gate-Selbsttest 248/248, `APK-ASSET-GATE-OK ... Manifest stimmt`; APK sha256 `027099ed...8555`, 363479831 B
+(267428 B mehr als A: die Liste traegt jetzt 3603 x 65 Zeichen sha256 + Tab; Liste 398099 B statt 163901 B).
+Bauwarnungen: nur die bekannten `-Wcomment` aus `re15_emd.h`/`re15_itps.h`, keine aus den neuen Quellen.
+
+### 3.1 (i) Frische Installation
+
+`adb uninstall de.re15.port` (externer Ordner weg: `ls /sdcard/Android/data | grep -c re15` = 0), `lauf.sh
+s3i_N0_frisch <N0>`:
+```
+07:02:00.518 [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+07:02:18.660 [android] Entpacken fertig (ohne Liste): 3603 geprueft, 3603 kopiert (356678277 B, 15482 ms),
+             0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 18172 ms
+```
+18,2 s gesamt (15,5 s Kopieren inkl. Hashen) - der alte Entpacker brauchte auf demselben AVD 27,6 s (1.3 Punkt 4).
+`geraet_pruefen.py` (`s3i_geraet.txt`): 3603 Dateien, fehlen 0, sha256 falsch 0, zusaetzlich 0, `.neu`-Reste 0,
+`re15_assets_entpackt.txt` sha256 `95770eb5...15dd` = Liste der APK, kein `re15_assets_ok.txt` ->
+**GERAET-KONSISTENT**. Bild (`s3i_bild4.png`, angesehen): Titelbild "BIOHAZARD 2 Sample Ver.2025.01.25",
+NEW GAME / LOAD GAME / OPTION (vorher lag Androids Einmal-Hinweis "Viewing full screen" darueber -
+Systemdialog des frischen AVD, per `settings put secure immersive_mode_confirmations confirmed` abgestellt).
 
 ## 4. Gates / Suite
 
