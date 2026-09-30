@@ -141,3 +141,30 @@ F480 pad=0000 pos=(15800,-13500) rot=2973 mo=200 cam=4 msg_aktiv=0 id=24 pf=0100
 F481 pad=0010 pos=(15789,-13426) rot=2973 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
 F508 pad=0010 pos=(15492,-11428) rot=2973 mo=105 cam=3 msg_aktiv=0 id=24 pf=01000007 pm=0
 F511 pad=0000 pos=(15470,-11280) rot=2973 mo=200 cam=3 msg_aktiv=0 id=24 pf=01000007 pm=0
+
+## Lauf t7
+# Gegen die Wand gelaufen, dann Quadrat: SCRIPT START=100 U0.8,W0.2,XU1.0 (Rennen F130-F159 gegen x=16732), PRESS square@150 (waehrend Rennen+Halten)
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[room] PC loaded room1000.rdt (177032 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16732,-13500) Gierung 0 -> Blickpunkt (17487,-13500), Rueckschritt-Ziel (15977,-13500)
+[flow] EXIT_AT: Bild 420 in Raum 1050 erreicht -> exit
+F128 pad=0000 PL(16500,-13500,rot=0,hp=100) pst=1 ps mo= 200 pm= 0
+F130 pad=4010 PL(16700,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F131 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F149 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F150 pad=c010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F151 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=4 ps mo= 1 pm= 2
+F160 pad=0000 PL(16732,-13500,rot=0,hp=100) pst=4 ps mo= 1 pm= 2
+F272 pad=0000 PL(16732,-13500,rot=4095,hp=100) pst=4 mo= 1 pm= 2
+F276 pad=0000 PL(16452,-13500,rot=4095,hp=100) pst=4 mo= 236 pm= 2
+F280 pad=0000 PL(16172,-13500,rot=4095,hp=100) pst=4 mo= 236 pm= 2
+F284 pad=0000 PL(16032,-13500,rot=3903,hp=100) pst=4 mo= 1 pm= 2
+F296 pad=0000 PL(16032,-13500,rot=2947,hp=100) pst=4 mo= 1 pm= 2
+
+## PSX-Uebersetzung des Moduls (kein PSX-Gesamtbau, bekannte Luecke reai-v2-psx-build-gap)
+mipsel-none-elf-gcc 12.3 -c -O2 -G0 -march=r3000 -msoft-float -ffreestanding -DRE15_PLATFORM_PSX engine/src/adaruf_1050.c -> exit 0 (nur die vorbestehende Warnung re15_emd.h:37 '/*' in Kommentar)
