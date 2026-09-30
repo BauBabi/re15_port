@@ -193,7 +193,10 @@
                                             * VERTRAG §1.5 Spur B; in 1150/1151 frei (nOmodel 4,
                                             * Port-Props 4..7 = Slots 8/9/26/27) */
 #define RE15_HC_LICHT_CUT        10        /* Lichtsatz ROOM11F0 Cut 10 @0x0718 (s.o.) */
-#define RE15_HC_TINT_OHNE_NORMALE 0x80     /* nur falls eine Flaeche keine Normale traegt (neutral) */
+#define RE15_HC_TINT_OHNE_NORMALE 0x80     /* nur falls eine Flaeche keine Normale traegt: neutral = face_rgb
+                                            * 0x808080 (RE15_FACE_RGB_CODE, re15_light.h: FUN_80039b2c.c:27).
+                                            * Fuer das Cursor-MD1 unbenutzt: der Pixelvergleich mit 11F0
+                                            * (1905/1905 gleich) deckt jede sichtbare Flaeche ab. */
 #define RE15_HC_TIEFE_VERSATZ    65536     /* PORT-WAHL: vor allem (s.o.) */
 
 /* ---- Zustaende / Rueckgaben ---------------------------------------------------------------- */
