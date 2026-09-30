@@ -1,0 +1,5 @@
+56ef3d26b9328097cf16576b14a6887ed70e2e959d909b980e661fbdfecb7ca9 *build/r34a/pruefer_e1/apk/M_v0.8.19-pe1m.apk
+a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc *build/r34a/pruefer_e1/apk/N_geparkt.apk
+a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc *build/r34a/pruefer_e1/apk/N_v0.8.19.apk
+2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195 *build/r34a/pruefer_e1/apk/R_ohne_CDEMD0.apk
+514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 *build/r34a/pruefer_e1/ref_v0.8.19.apk

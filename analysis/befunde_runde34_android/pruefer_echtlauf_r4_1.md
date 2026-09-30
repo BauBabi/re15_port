@@ -4,7 +4,7 @@ Pruefer: Gegenpruefer (Linse ECHTER LAUF, Runde 1). Aendert KEINE Werkzeuge/Quel
 Baum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android (Zweig r34a/android-gate)
 Gegenstand: Commits be8b60f3..HEAD, Dossiers android_gate_r4_kette.md, android_entpacker_n1.md
 
-Stand: IN ARBEIT (Abschnitte werden fortlaufend gefuellt und committet)
+Stand: ABGESCHLOSSEN 2026-09-30 (Urteil Abschnitt 7)
 Arbeitsordner (nicht versioniert): build/r34a/pruefer_e1/ ; Belege: analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/
 
 ## 0. Ausgangslage (Commits, HEAD)
@@ -33,10 +33,10 @@ vergleicht jede Datei der APK mit dem Quellbaum). Kette auf der Pruefkopie: aapt
 versionName='v0.8.19'`, beide ABIs, zipalign ok, v2 true, 1 Signer `432bc749...`, Selbsttest **248/248 + 116/116**,
 Tuer-Soll RE15DOOR 30/30 + RE2/DOOR 27/27, ZIP 3616/3616 lesbar, **3603/3603 bytegleich** (356678277 B), Manifest
 3603 Zeilen. APK **N** = `a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc`, 363479879 B
-(Kopie `build/r34a/pruefer_e1/apk/N_v0.8.19.apk`). `release/SHA256SUMS_android.txt` danach per `git restore` auf HEAD.
+(Kopie `build/r34a/pruefer_e1/apk/N_v0.8.19.apk`, am Ende geloescht). `release/SHA256SUMS_android.txt` danach per `git restore` auf HEAD.
 
 Unabhaengig (eigenes Skript `pe1_apk_liste.py`, nicht das Gate; `apk_liste_N.txt`): Liste in N 398099 B, sha256
-`95770eb5...`, Kopf `# re15 assets v2 3603 356678277`, jede Zeile `<bytes>	<64 hex>	<pfad>`, sortiert, keine
+`95770eb5...`, Kopf `# re15 assets v2 3603 356678277`, jede Zeile `<bytes>\t<64 hex>\t<pfad>`, sortiert, keine
 (auch Gross/klein-)Dubletten, Kopf = Summe; Eintraege unter `assets/` = Liste + re15_assets.txt; je Zeile sha256 +
 Groesse der APK-Daten UND der Quelldatei = Liste: **0 Abweichungen, LISTE-OK**.
 
@@ -67,7 +67,8 @@ Commits der beiden Pruefer, die NACH dem Kopieren des Index entstanden (HEAD lie
 release/-Eintraege (oben).
 Aufraeumen: `git restore --source=HEAD` fuer SHA256SUMS.txt, SHA256SUMS_android.txt und die 6 Volumes, pkg-*, win_out,
 linux_out geloescht: alle versionierten release/-Dateien = Stand vorher (sha256-Liste `cmp` gleich), `git status --short
-release/ re15_port/` leer, echter Index 0 Eintraege. APK N liegt geparkt unter build/r34a/pruefer_e1/apk/.
+release/ re15_port/` leer, echter Index 0 Eintraege. APK N lag danach geparkt unter build/r34a/pruefer_e1/apk/
+(am Ende geloescht, sha256 in `apk_sha256_vor_loeschen.txt`: unveraendert `a340a325...`).
 
 ## 3. Emulator headless: v0.8.19 -> neue APK -> Update mit gleich grosser Aenderung -> Update ohne Aenderung -> force-stop mitten im Entpacken
 
@@ -201,10 +202,60 @@ Aenderung, die der alte Entpacker nie saehe, und der Lauf wird mittendrin beende
   Lesart "keine Reste"; die Abschlusszeile meldet `0 .neu-Reste`, waehrend einer liegt. Nicht in N1 5. "Offen"
   genannt.
 
+### 3.10 Emulator beendet, aufgeraeumt
+`adb uninstall de.re15.port`, `adb -s emulator-5580 emu kill` (Log: `EMULATOR EXIT=0`, 10:27:49), danach kein
+qemu-/emulator-Prozess, `adb devices` leer. Datenabbilder meiner AVD-Kopie geloescht (7,0 GB; config.ini bleibt).
+Nutzer-AVD `Medium_Phone_API_36` nie gestartet (config.ini/.ini mtime 2025-04-05 unveraendert).
+
 ## 4. PC-Suite local_build.sh all
+
+`RE15_BUILD_DIR=<baum>/build/r34a/pruefer_e1/pc_build bash re15_port/tools/local_build.sh all` - eigenes, FRISCHES
+Bauverzeichnis (kein Zusammenstoss mit re15_port/build, den der zweite Pruefer benutzen koennte), 10:18:44-10:36:38
+(Auszug `pc_suite_auszug.txt`, ctest-Log `build/r34a/pruefer_e1/logs/pc_ctest.log`): cc1-Preflight ok, configure,
+voller Bau 1618/1618, ctest **429/429** (892 s, `100% tests passed, 0 tests failed out of 429`), darin
+`unit_r34a_asset_abgleich ... Passed 1.05 sec`; `=== LOCAL-BUILD-OK (all) — Tests 429/429`, **EXIT 0**. Kein
+Einzelwiederholungsbedarf (kein roter Test), obwohl parallel Emulator und make_package liefen.
 
 ## 5. Kein Python-Installer
 
+- Schnappschuss 0 (09:51) und Ende (`py_zustand_1_ende.txt`, nach allen Laeufen): je 121 Zeilen, `diff` leer (kein
+  Unterschluessel unter `HKCU\Software\Python\PythonCore`, kein neuer Startmenue-Ordner "Python 3.1x", kein
+  pymanager/WindowsApps-Eintrag neu, keine Uninstall-Zeile). Am Ende kein python-/msiexec-/pymanager-Prozess.
+- Alle 7 Skriptlaeufe mit Python (2 x build_android.sh, 5 x make_package.sh) melden `Python: /c/Python310/python
+  (3.10.11)` (python_finden.sh), die Gate-Selbsttests `/c/Python310/python`; kein "WindowsApps" in einem Log. Meine
+  eigenen Skripte liefen nur mit `/c/Python310/python.exe`.
+
 ## 6. Befunde
 
+| Nr. | Schwere | Befund | Beleg |
+|---|---|---|---|
+| E1 | niedrig | Abbruch waehrend des Entpackens + Update auf eine Version, die genau diese Pfade nicht mehr fuehrt (vor einem erfolgreichen Start): das halbe `.neu` bzw. die schon fertige Datei bleibt dauerhaft liegen; der Lauf meldet `0 Fehler` (und `0 .neu-Reste`), schreibt die Liste, danach schneller Weg. README ("Dateien, die nicht mehr in der Liste stehen, werden geloescht") gilt in diesem Fall nicht; gleiche Luecke beim Uebergang von v0.8.19 (keine Liste auf dem Geraet), heute ohne Folge (gleiche 3603 Pfade). | 3.9, `geraet/j2_geraet.txt` (CDEMD0.EMS.neu 7340032 B), `geraet/k2_geraet.txt` (CDEMD0.EMS 11124736 B), `geraet/j3_neustart_R.txt`; Code: android_glue.c `unlink(pf_liste)` vor dem Lauf, `plan.n_weg` nur aus einer alten Liste, `unlink(tmp)` nur je Eintrag der neuen Liste |
+
+Keine Befunde an den geforderten Punkten 1-5. Hinweise ohne Befund:
+- Nach dem M-Bau liegt im Gradle-Ausgabeordner des Baums (`app/build/re15_assets`, `outputs/apk/release`) der Stand mit
+  der geaenderten ROOM4010.RDT bzw. APK M. Ein spaeterer `build_android.sh` synchronisiert per Inhaltsvergleich neu
+  (gesehen: stageAssets/writeAssetManifest liefen im M-Bau neu), und das Gate vergleicht jede Datei mit dem Quellbaum -
+  kein Risiko, nur zur Nachvollziehbarkeit.
+- make_package.sh laesst eine abgelehnte APK unter dem Auslieferungsnamen liegen (E0b) - sie ist Eingabe, kein
+  Ergebnis; jeder weitere Lauf lehnt sie erneut ab bzw. `--ohne-android` zippt sie nicht.
+
 ## 7. Urteil
+
+**haltbar.** Alle fuenf Pruefpunkte im echten Lauf belegt:
+1. `build_android.sh --version v0.8.19` EXIT 0, Kette gruen (Selbsttest 248/248, 3603/3603 bytegleich, Tuer-Soll,
+   Signer), Liste v2 unabhaengig nachgeprueft; zweiter echter Bau (M) mit geaenderter Datei ebenso gruen.
+2. make_package.sh echt mit Archiv-Binaries: E1 EXIT 0, Android-Satz = gebaute APK (sha256 aus dem Satz), SUMS 6 x OK;
+   "nur PC mit altem Android-Satz" -> Abbruch (E0a echter v0.8.19-Satz, E2) bzw. mit `--ohne-android` ohne Satz in
+   Datei/SUMS/Index (E3); alte v1-APK abgelehnt (E0b); release/ danach = HEAD, echter Index leer.
+3. Emulator: v0.8.19 -> N Uebergang (3603 per SHA-256, 0 Fehler, konsistent), Titelbild angesehen; N -> M genau
+   ROOM4010.RDT neu (logcat + mtime), `adb pull` = neuer Inhalt; Update ohne Aenderung und Neustart -> schneller Weg;
+   force-stop mitten in CAPCOM.STR (halbes `.neu`) -> Neustart vollstaendig, 0 `.neu`, Titelbild. Zusatz: Uebergang
+   v0.8.19 -> M mit Abbruch in der Pruefphase findet die gleich grosse Aenderung, Loesch-Weg ok.
+4. `local_build.sh all` 429/429 im frischen eigenen Bauordner.
+5. Python-Schnappschuss vorher = nachher, nur /c/Python310.
+Der Befund E1 (niedrig) liegt ausserhalb der geforderten Punkte (Randfall Abbruch + Update mit gestrichenen Pfaden);
+er sollte behoben oder in README/Dossier als Grenze genannt werden, stellt die Pruefpunkte aber nicht in Frage.
+
+Arbeitsordner danach: build/r34a/pruefer_e1/ nur noch logs/ (4,6 MB), orig/ (Sicherung ROOM4010.RDT), avd/config;
+APKs (sha256 in `apk_sha256_vor_loeschen.txt`), Binaries, PC-Bauordner, Wegwerf-Index geloescht.
+`git status --short release/ re15_port/ synchro/` leer.

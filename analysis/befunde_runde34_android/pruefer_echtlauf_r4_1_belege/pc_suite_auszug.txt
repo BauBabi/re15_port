@@ -1,0 +1,15 @@
+START 2026-09-30 10:18:44
+    cc1 --version EXIT=0  -> Toolchain OK
+    Mini-Compile OK (95539 Bytes exe)
+=== [local_build] configure — re15_port -> build/r34a/pruefer_e1/pc_build (Ninja, PC=ON TESTS=ON TOOLS=OFF)
+=== [local_build] build — build/r34a/pruefer_e1/pc_build
+    build OK
+=== [local_build] test — ctest in build/r34a/pruefer_e1/pc_build
+100% tests passed, 0 tests failed out of 429
+Total Test time (real) = 892.18 sec
+    test OK — 429/429 bestanden
+=== LOCAL-BUILD-OK (all) — Tests 429/429
+ENDE 2026-09-30 10:36:38
+EXIT=0
+        Start 406: unit_r34a_asset_abgleich
+406/429 Test #406: unit_r34a_asset_abgleich ............   Passed    1.05 sec
