@@ -172,6 +172,9 @@ apk_pruefen() {
     APK_GEPRUEFT_KENNUNG=""
     APK_PRUEF_TMP="$(mktemp -d "${TMPDIR:-/tmp}/re15_apk_pruefen.XXXXXX")" \
         || die "apk_pruefen: kein Temp-Ordner fuer die Pruefkopie"
+    # Windows-Pfad (Runde 4): make_package.sh stellt spaeter /c/msys64/usr/bin vorn in den PATH - dessen rm kennt /tmp
+    # als C:/msys64/tmp; mit dem C:/...-Pfad raeumt apk_pruefen_aufraeumen in jeder Lage den richtigen Ordner ab
+    APK_PRUEF_TMP="$(apk_nativ "$APK_PRUEF_TMP")"
     kopie="$APK_PRUEF_TMP/$(basename "$apk")"
     kennung="$(apk_kopie_mit_kennung "$apk" "$kopie")" || die "apk_pruefen: APK nicht lesbar/kopierbar: $apk"
     [[ "$kennung" =~ ^[0-9a-f]{64}\ [0-9a-f]{8}\ [0-9]+$ ]] || die "apk_pruefen: Kennung der Pruefkopie unlesbar: '$kennung'"

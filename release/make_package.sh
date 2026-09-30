@@ -472,9 +472,13 @@ source "$HERE/apk_pruefen.sh"                # apk_nativ, apk_kennung, apk_pruef
 # Datei durch (Pruefer R3: echter Lauf --zip-only --only linux EXIT 0). Jetzt: EINE Kopie des Gates in einem
 # privaten Temp-Ordner, Selbsttest auf ihr, und genau sie macht alle Pruefungen dieses Laufs (--quellbaum,
 # --paket und ueber APK_GATE_DATEI auch apk_pruefen) - ein waehrend der Kopierminuten getauschtes
-# release/apk_asset_gate.py wirkt nicht mehr. Die EXIT-Falle raeumt Gate-Kopie, APK-Pruefkopie und den
-# Temp-Ordner der Satzpruefung ab (auch bei Abbruch).
+# release/apk_asset_gate.py wirkt nicht mehr. Die EXIT-Falle raeumt Gate-Kopie und APK-Pruefkopie ab (auch bei
+# Abbruch). ⛔ Den Temp-Ordner als WINDOWS-Pfad (cygpath -m) festhalten: der Zip-Abschnitt stellt /c/msys64/usr/bin
+# vorn in den PATH, danach ist "rm" das rm von MSYS2 - dessen /tmp ist C:/msys64/tmp, nicht der Temp-Ordner von
+# Git-Bash. Mit dem /tmp-Pfad liess die EXIT-Falle nach JEDEM erfolgreichen Zip-Lauf die Gate-Kopie liegen (gemessen:
+# 8 Reste, nur Laeufe mit Zippen; Abbrueche und --no-zip raeumten ab).
 MP_TMP="$(mktemp -d "${TMPDIR:-/tmp}/re15_make_package.XXXXXX")" || die "kein Temp-Ordner fuer die Gate-Kopie"
+MP_TMP="$(apk_nativ "$MP_TMP")"
 mp_aufraeumen() {
     apk_pruefen_aufraeumen
     if [[ -n "${MP_TMP:-}" && -d "$MP_TMP" ]]; then rm -rf "$MP_TMP"; fi
@@ -669,18 +673,19 @@ if (crc, usize) != (crc_soll, n_soll):
 print("   APK-Satz, Katalog: genau %s, CRC32 %08x, %d B = gepruefte Kennung" % (name.decode("utf-8"), crc, usize))
 PY
     tmp="$(mktemp -d "${TMPDIR:-/tmp}/re15_apk_satz.XXXXXX")" || { echo "APK-Satz: kein Temp-Ordner" >&2; return 1; }
+    # ab hier NUR der Windows-Pfad (zip, unzip, rm): mktemp/cygpath/rm koennen aus verschiedenen MSYS-Laufzeiten stammen
     tmp_n="$tmp"
     if command -v cygpath >/dev/null 2>&1; then tmp_n="$(cygpath -m "$tmp")" || tmp_n="$tmp"; fi
     zip -q -s 0 "$satz" --out "$tmp_n/ganz.zip" || rc=$?
     if (( rc == 0 )); then liste="$(unzip -Z1 "$tmp_n/ganz.zip")" || rc=$?; fi
     if (( rc == 0 )) && [[ "$liste" != "$name" ]]; then
-        rm -rf "$tmp"
+        rm -rf "$tmp_n"
         echo "APK-Satz: zusammengefuehrt enthaelt er [$(echo $liste)] statt genau $name" >&2
         return 1
     fi
     # alle Eintraege nach stdout = genau der eine (eben geprueft) - kein Namensmuster, das unzip auswerten wuerde
     if (( rc == 0 )); then sha_ist="$(unzip -p "$tmp_n/ganz.zip" | sha256sum)" || rc=$?; fi
-    rm -rf "$tmp"
+    rm -rf "$tmp_n"
     if (( rc != 0 )); then
         echo "APK-Satz: zusammenfuehren (zip -s 0) oder entpacken (unzip) fehlgeschlagen (rc=$rc)" >&2
         return 1

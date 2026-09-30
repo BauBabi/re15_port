@@ -1,0 +1,102 @@
+echter Index vorher: 0 Eintraege
+   -rw-r--r-- 1 mjoedicke 197121   3834872 2026-09-29 19:34:13.000000000 +0200 release/linux_out/re15_pc
+   -rw-r--r-- 1 mjoedicke 197121 363212403 2026-09-30 04:50:14.282919900 +0200 release/re15_port_v0.8.19_android.apk
+   -rwxr-xr-x 1 mjoedicke 197121   4381178 2026-09-29 19:34:23.000000000 +0200 release/win_out/re15_pc.exe
+letzter Commit an den PC-Pfaden:  cf386e32 2026-09-29 19:02:06 +0200
+letzter Commit an den APK-Pfaden: 3b677ea0 2026-09-30 04:40:11 +0200
+== E1_voll (): EXIT=0
+      Python: /c/Python310/python (3.10.11)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+      Gate: d89512466f64811d... (Kopie von release/apk_asset_gate.py)
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4ce4bab5c 
+      gepruefte APK (sha256 crc32 Bytes): 66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4ce4bab5c 58626da3 363212403
+      Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+      hoechste glibc-Anforderung: GLIBC_2.29
+      Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+      Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+   == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      Zeilenenden-Gate: alle Skripte im Paket sind LF
+      (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+      Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+      Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+      Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+   == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+      Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+      x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+      x-Bit ok: re15_port_v0.8.19/run.sh  100755
+   == Zippen: re15_port_v0.8.19_win64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+      APK-Satz, Katalog: genau re15_port_v0.8.19_android.apk, CRC32 58626da3, 363212403 B = gepruefte Kennung
+      APK im Split-Satz = gepruefte APK (entpackt: sha256 66c5d8e146ca6178... = Pruefkopie)
+   == SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf) ==
+      0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+   == Fertig ==
+   EXIT=0
+   Wegwerf-Index gegen HEAD: M release/re15_port_v0.8.19_android.z01 M release/re15_port_v0.8.19_android.zip M release/re15_port_v0.8.19_linux_steamdeck_x64.z01 M release/re15_port_v0.8.19_linux_steamdeck_x64.zip M release/re15_port_v0.8.19_win64.z01 M release/re15_port_v0.8.19_win64.zip 
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: *re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip 
+--- unabhaengig: APK aus dem neuen Android-Satz (zip -s 0 + unzip -p) gegen die gebaute APK
+   im Satz: 66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4ce4bab5c
+   gebaut:  66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4ce4bab5c
+== E2_ohne_apk_satz_da (--only win --zip-only): EXIT=1
+      Python: /c/Python310/python (3.10.11)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+      Gate: d89512466f64811d... (Kopie von release/apk_asset_gate.py)
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+               release/make_package.sh --version v0.8.19 --ohne-android ...
+   EXIT=1
+   Wegwerf-Index gegen HEAD: 
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: *re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip 
+== E3_ohne_android (--only win --zip-only --ohne-android): EXIT=0
+   START 2026-09-30 05:01:23 :: bash release/make_package.sh --version v0.8.19 --only win --zip-only --ohne-android
+      Python: /c/Python310/python (3.10.11)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+      Gate: d89512466f64811d... (Kopie von release/apk_asset_gate.py)
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip ==
+      Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+      Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+      Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+   == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+      Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+   == Zippen: re15_port_v0.8.19_win64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.z01)
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.zip)
+   == SHA256SUMS.txt geschrieben (4 Volumes) ==
+      2 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+   == Fertig ==
+   EXIT=0
+   Wegwerf-Index gegen HEAD: D release/re15_port_v0.8.19_android.z01 D release/re15_port_v0.8.19_android.zip M release/re15_port_v0.8.19_linux_steamdeck_x64.z01 M release/re15_port_v0.8.19_linux_steamdeck_x64.zip M release/re15_port_v0.8.19_win64.z01 M release/re15_port_v0.8.19_win64.zip 
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip 
+--- Aufraeumen release/
+   release/: ABWEICHUNG
+   git status --short release/ re15_port/: []
+   git status --short --ignored release/: []
+   echter Index: 0 Eintraege
+FERTIG
+EXIT=0

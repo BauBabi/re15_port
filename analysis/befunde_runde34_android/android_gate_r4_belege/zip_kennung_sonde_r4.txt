@@ -4,7 +4,7 @@ Ziel:   sha256 2dd9497b3475ffcc3a5b619ab86bccbc3d2d6ccf392894716f5f97e731bd9958 
 Bytes ab Offset 306928668: vorher ffffffffff, nachher fe69cff888
 OK: gleiche Groesse und CRC32, anderer Inhalt
 Kennung der geprueften APK (Referenz): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
-ausgeschnitten: NEU 66 Zeilen, ALT 42 Zeilen
+ausgeschnitten: NEU 71 Zeilen, ALT 42 Zeilen
 == NEU Satz K: rc=0
       Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
       APK-Satz, Katalog: genau re15_port_v0.8.19_android.apk, CRC32 d16ad30a, 363212403 B = gepruefte Kennung
@@ -19,6 +19,11 @@ ausgeschnitten: NEU 66 Zeilen, ALT 42 Zeilen
 == ALT Satz F: rc=0
       Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
       APK im Split-Satz = gepruefte APK (CRC32 d16ad30a, 363212403 B)
+== NEU Satz E (fremde .z05 daneben): verify_split rc=1
+      Volumes: 3 (letztes = Nr. 2), Eintraege im Katalog: 1
+   fremde Dateien neben dem Satz (nicht aus diesem zip-Lauf): ['re15_port_v0.8.19_android.z05']
+== ALT Satz E (fremde .z05 daneben): verify_split rc=0
+      Volumes: 3 (letztes = Nr. 2), Eintraege im Katalog: 1
 --- Temp-Reste der Satzpruefung: 0
 FERTIG
 EXIT=0

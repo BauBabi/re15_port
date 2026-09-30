@@ -6,6 +6,7 @@
 #   K  Satz aus der Referenz-APK                                  -> NEU rc 0, ALT rc 0
 #   F  Satz aus einer CRC32-/Groessen-GLEICHEN Faelschung (r3_crc_gleich.py, 1 Byte + 4 Ausgleichsbytes in
 #      RE15DOOR/P07G.DO2)                                          -> NEU soll rc 1, ALT rc 0 (der Befund)
+#   E  Satz K + fremde Datei daneben (verify_split, Runde 4 nachgeschaerft)
 # PATH beim Funktionsaufruf wie im Zip-Abschnitt von make_package.sh (zip aus /c/msys64/usr/bin). Nur /c/Python310/python.
 # ⛔ Die awk-Schnitte laufen VOR dem PATH-Wechsel: ein awk aus /c/msys64/usr/bin (andere MSYS-Laufzeit) erbt von
 # Git-Bash das O_APPEND von ">>" nicht und schreibt ab Byte 0 - Lauf 1 dieser Sonde verlor so verify_split.
@@ -52,6 +53,16 @@ for stand in neu alt; do
         echo "== ${stand^^} Satz $x: rc=$rc"
         sed 's/^/   /' "$D/lauf_${stand}_$x.log" | tr -d '\r' | cut -c1-200
     done
+done
+# E  Satz K + eine FREMDE Datei re15_port_v0.8.19_android.z05 daneben (nicht aus diesem zip-Lauf) -> verify_split
+#    NEU soll rc 1 (Runde 4, 80559d2f), ALT rc 0
+cp -rp "$D/K" "$D/E"; printf "fremd" > "$D/E/re15_port_v0.8.19_android.z05"
+for stand in neu alt; do
+    rc=0
+    ( set -uo pipefail; export PATH="/c/msys64/usr/bin:$PATH"; source "$D/funktionen_$stand.sh" || exit 90
+      cd "$D/E" || exit 91; verify_split re15_port_v0.8.19_android.zip 1 || exit $? ) > "$D/lauf_${stand}_E.log" 2>&1 || rc=$?
+    echo "== ${stand^^} Satz E (fremde .z05 daneben): verify_split rc=$rc"
+    sed 's/^/   /' "$D/lauf_${stand}_E.log" | tr -d '' | cut -c1-200
 done
 echo "--- Temp-Reste der Satzpruefung: $(ls -d "${TMPDIR:-/tmp}"/re15_apk_satz.* 2>/dev/null | wc -l)"
 echo FERTIG

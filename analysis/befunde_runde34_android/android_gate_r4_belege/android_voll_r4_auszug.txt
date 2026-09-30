@@ -1,0 +1,39 @@
+1790736315.809485 START 2026-09-30 04:45:15 :: bash release/build_android.sh --version v0.8.19 --no-toolchain
+1790736316.779862    Python: /c/Python310/python (3.10.11)
+1790736317.532670    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790736317.532980    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+1790736317.951306 == CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) ==
+1790736317.951583 == Gradle: fetchSdl2 assembleRelease (Version v0.8.19) ==
+1790736357.701266 > Task :app:stageAssets
+1790736357.701602 stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+1790736357.701893 stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+1790736612.907521 BUILD SUCCESSFUL in 4m 54s
+1790736614.292398    Pruefkopie (sha256 crc32 Bytes: 66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4ce4bab5c 58626da3 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.Gp64xw/re15_port_v0.8.19_andr
+1790736614.895487    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+1790736615.026305    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790736615.026686    native-code: 'arm64-v8a' 'x86_64'
+1790736615.272218    zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+1790736616.379261    Verified using v2 scheme (APK Signature Scheme v2): true
+1790736616.380008    Number of signers: 1
+1790736616.380322    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790736616.751410    Innere Proben: 61/61 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende, Manifest-Grenze)
+1790736633.355646 == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790736633.607620    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790736634.258004    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790736634.258416    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790736634.350285    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790736638.752214    shared_assets/PSX               3193    3193     3193    300522652
+1790736638.752404    shared_assets/extracted_fx        13      13       13      1079875
+1790736638.752602    shared_assets/RE2                277     277      277     25482039
+1790736638.752792    shared_assets/RE15DOOR            30      30       30      1914932
+1790736638.752973    synchro                           90      90       90     27678779
+1790736638.753195    SUMME                           3603    3603     3603    356678277
+1790736638.753389    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790736638.753632    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790736638.753836    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790736638.754108    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790736638.754602 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790736640.412480 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk.ungeprueft (sha256 crc32 Bytes: 66c5d8e146ca6178fc6238f0d24d1c2dae8b4651f37c60e6054655e4
+1790736642.798014 == ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ==
+1790736643.826214 ENDE 2026-09-30 04:50:43
+EXIT=0

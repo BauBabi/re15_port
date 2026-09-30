@@ -1,0 +1,6 @@
+Vergleich Kampagne 4 (R2, Gate v5/v6) gegen Kampagne R4 (Gate mit 223 Faellen), Namen mit Zeilenversatz +4:
+  Kampagne 4: 449 Mutanten, 6 ueberlebt | R4: 449 Mutanten, 4 ueberlebt
+  Namen nur in Kampagne 4: [] | nur in R4: []
+  in R4 ueberlebt, in Kampagne 4 erkannt (SCHLECHTER): []
+  in R4 erkannt, in Kampagne 4 ueberlebt: ['E__ant_passt_Z374_le', 'E__ant_passt_Z374_le_2']
+  Ueberlebende R4: ['E__ant_passt_Z378_ge', 'E__ant_passt_Z379_ge', 'E__eintrag_pruefen_Z1037_lt_2', 'E_tuer_soll_Z669_ge']
