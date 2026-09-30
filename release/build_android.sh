@@ -141,7 +141,14 @@ BUILD_TOOLS_PKG="build-tools;35.0.0"
 SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
 if [[ -z "$SDK" ]]; then
     if [[ "$HOST" == win ]]; then
-        SDK="$(cygpath -u "${LOCALAPPDATA}")/Android/Sdk"
+        # MSYS2-bash mit /c/msys64/usr/bin vorn im PATH verliert LOCALAPPDATA (gemessen von reai-v2-56
+        # beim Paketbau v0.8.20): dann den Ordner selbst erfragen (CSIDL_LOCAL_APPDATA = 28) bzw. aus
+        # USERPROFILE ableiten, statt still auf "/Android/Sdk" zu zeigen.
+        _lad="${LOCALAPPDATA:-}"
+        [[ -n "$_lad" ]] || _lad="$(cygpath -w -F 28 2>/dev/null || true)"
+        [[ -n "$_lad" || -z "${USERPROFILE:-}" ]] || _lad="${USERPROFILE}/AppData/Local"
+        [[ -n "$_lad" ]] || die "Android-SDK nicht bestimmbar: weder ANDROID_SDK_ROOT/ANDROID_HOME noch LOCALAPPDATA/USERPROFILE gesetzt"
+        SDK="$(cygpath -u "$_lad")/Android/Sdk"
     else
         SDK="$HOME/Android/Sdk"
     fi
