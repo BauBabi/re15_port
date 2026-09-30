@@ -5,6 +5,8 @@ Bauverzeichnis `re15_port/build_r34_a`, Laufzeit-Ausgaben (unversioniert) `build
 Auftrag: BAUPLAN §3.1 A1-A10, K1-K3, K9, P1-P10, P31; Orchestrator-Vorgaben (O-VB4 entschieden, "alle Gegner").
 
 STATUS: FERTIG (Code + Sonde + 18 Mutationsproben + exe-Messung); Suite: kein reproduzierbares Rot, Zielzeile unter Fremd-Kills nicht erreicht (§8).
+NACHBESSERUNG (Gegenpruefung `bau_a.gegenpruefung.md` M-1..M-5, H-1..H-5): §9 — M-2/M-3/M-4 + H-1 gebaut, 11 neue Mutationsproben, M-1 ohne Fremd-Kill
+(Wrapper `build/r34g_a/lb.sh`, INTEGRATIONSWUNSCH 8 mit fertigem Patch), Suite-Stand §9.6.
 
 ---
 
@@ -211,7 +213,10 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
   `atk->x/y/z` (Peilquelle fuer den RE2-Stempel, B3). Der Spieler-Zweig wird mitgetroffen (Pruefung 25/78).
 * **C**: `wpos` ist jetzt fuer ALLE Plaetze gueltig (Flags&0x80: x + xlat wie bisher). Fuer Plaetze mit Gier ≠ 0 und
   xlat ≠ 0 (Granate; auch W14-Flammenstrahl param 3000, Huelsen haben param 0) weicht `wpos` von `x + xlat` ab — das
-  ist die Original-Lage. Latch-Setzer: R31 (nur Art 2) und R9 (jeder Schuss). SE-Codes: 0x010A0001|(n<<8) (Bank 1
+  ist die Original-Lage. **Ergaenzung (Gegenpruefung H-2):** auch die Blut-Stroeme des RE2-Zombies
+  (`enemy_ai_re2_zombie.c:1113`, param = yaw) und des Hundes (`enemy_ai_re2_dog.c:376-378`, param = rot_y + off) sind
+  Zeilen-VM-Plaetze mit xlat ≠ 0 und Gier ≠ 0 — ihre gezeichnete Flugrichtung aendert sich mit C2 (Original: RotY(+0x2e)
+  wirkt auf xlat, @0x8001a16c-1a0); Blut-Pins muessen das in C2 erwarten. Latch-Setzer: R31 (nur Art 2) und R9 (jeder Schuss). SE-Codes: 0x010A0001|(n<<8) (Bank 1
   Satz 0x0A), 0x04080001 (Bank 4 Satz 8).
 * **D**: Aufschlag-Haken bekommt q = Granaten-Weltlage (nicht P), Gier = Platz +0x2e, re2_art 2/1.
 
@@ -233,7 +238,9 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
 8. ⛔ `re15_port/tools/local_build.sh:293-300` (Integration, DRINGEND): powershell per absolutem Pfad aufrufen
    (`/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`) und den Rueckfall `taskkill //F //IM re15_pc.exe`
    streichen (lieber gar nicht beenden als alle). Gemessen: unter CLEAN_PATH (`:147`) fehlt powershell, jeder
-   build-Schritt beendet jede re15_pc.exe der Maschine (Waechter: 9 Fremd-Kills in 12 min, §8).
+   build-Schritt beendet jede re15_pc.exe der Maschine (Waechter: 9 Fremd-Kills in 12 min, §8). Betroffen sind
+   `build`, `test` (`do_build && do_test`, `:360`) und `all` (`:361`). **Fertiger Patch** (Ersatz fuer `:293-300`) und
+   die Zwischenloesung ohne Aenderung der Datei: §9.1.
 
 ## OFFEN
 
@@ -249,7 +256,8 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
 4. **Item-Debug-Nebenwirkung**: Datei 0xb (ITEMALL) ueberschreibt 0x801a0000, wo sonst MIXITEM fuer die EXCHANGE-Bilder
    liegt — im selben Menue-Lauf zeigte das Original danach falsche Kombinationsbilder. Nicht nachgebaut. Pad-2-Auffueller
    @0x8004a0dc-130 nicht portiert (kein zweites Pad). Breite Waffen (+2 = 1/2) behalten beim Debug ihre Anzeigeart.
-5. **Auto-Nachfuehrung beim Heben** (`player_common.c` Ziel-Block, `& 0xfff`): Maskierung gegen FUN_8001a8f8 nicht geprueft.
+5. ~~Auto-Nachfuehrung beim Heben~~ → **GESCHLOSSEN** (Nachbesserung H-1, §9.5): FUN_8001a8f8 selbst gelesen, Schritte
+   ohne Maske, Richtungsgrenze um +s verschoben; `player_common.c:1068-1074`, Sonde 128-130/153.
 6. **exe-Treffer** einer geworfenen Granate an einem Zombie per Skript nicht erreicht (Zombies 1140 stehen/wandern
    ausserhalb der Wurfweiten); Abnahme im Integrationstest.
 
@@ -314,6 +322,219 @@ e15_pc.exe: Permission denied`
   `taskkill //F //IM re15_pc.exe` = jede re15_pc.exe der Maschine (alle Baeume UND die exe des Nutzers im Hauptbaum)
   wird in jedem `build`-Schritt beendet. Meine eigenen Aufrufe (build 0/1/2 und die Suite-Laeufe 1-5 = 8
   build-Schritte, 2026-09-30 00:05-02:25) haben das ebenso ausgeloest; die exe des Nutzers
-  (`C:\workspace\giteAi_v2e15_portuild\platform\pce15_pc.exe`, pid 28632, um 00:47 laufend) war um
+  (`C:\workspace\git
+eAi_v2
+e15_portuild\platform\pc
+e15_pc.exe`, pid 28632, um 00:47 laufend) war um
   01:17 nicht mehr in der Prozessliste. -> INTEGRATIONSWUNSCH 8. Seit dem Befund keine weiteren local_build.sh-Laeufe
   von mir (Wiederholungen nur per ctest, ohne Bauschritt).
+
+---
+
+## 9. NACHBESSERUNG (Gegenpruefung `bau_a.gegenpruefung.md`, 2026-09-30)
+
+Bauverzeichnis weiter `re15_port/build_r34_a`; Laufzeit-Ausgaben `build/r34g_a/nb_*`, `mutation_nb*`, `watch_kill_nb.txt`.
+Gebaut NUR ueber `local_build.sh` — aufgerufen durch den Wrapper `build/r34g_a/lb.sh` (§9.1); Mutationsproben wie bisher
+gezielt (`cmake --build build_r34_a --target probe_r34_wurf`, msys64 vorn im PATH, kein re15_pc-Link).
+
+### 9.0 Uebersicht
+
+| Nr | Schwere | Ergebnis | Datei:Zeile | Commit |
+|---|---|---|---|---|
+| M-1 | kritisch (Infrastruktur) | fremde Datei NICHT geaendert; INTEGRATIONSWUNSCH 8 mit fertigem Patch; eigene Laeufe nachweislich ohne Fremd-Kill (exportierte Shell-Funktion `powershell` -> Skript-eigener Zweig `:293-297`) | `build/r34g_a/lb.sh` (unversioniert) | — |
+| M-2 | mittel | gebaut: Debug-Zustand/-Id beim Oeffnen := 0 | `menu_common.c:1410-1421` | 8a33ddbd |
+| M-3 | mittel | gebaut: Kinder von R8/R15 mit Start-Flags 0x0a; Kommentar Durchgang 1 korrigiert | `re15_esp.c:565-570`, `:641-660` (R15), `:716-726` (R8), `:1110-1143`, `:1400-1408` | 8a33ddbd |
+| M-4 | mittel | Sonde: Gier -24, echte acaec-Zusammensetzung (Override in Abschnitt 6 aus), HOCH/TIEF/Gift | `probe_r34_wurf.c:395-418`, `:648-651`, `:700-710`, `:778-832` | 8a33ddbd |
+| M-5 | mittel | Suite ueber den Wrapper, §9.6 | — | — |
+| H-1 | Hinweis | zusaetzlich gebaut (eigene Datei, eigener Commit, einzeln rueckbaubar): FUN_8001a8f8 byte-true | `player_common.c:1050-1075` | 82205b96 |
+| H-2 | Hinweis | §6 (Hinweis an C) ergaenzt | `bau_a.md` §6 | — |
+| H-3/H-4/H-5 | Hinweis | unveraendert Integration: INTEGRATIONSWUNSCH 1/2 (A nur mit C1/C2 zum Nutzer), OFFEN 6 / Wunsch 7 (exe-Treffer am Zombie in `test_r34_granaten`), Wunsch 6 (UTILITY-Menue) | — | — |
+
+### 9.1 M-1 — `local_build.sh` beendet jede re15_pc.exe (NICHT Spur-A-Code, Datei nicht geaendert)
+
+* **Messung** (wie Bauer/Pruefer): unter dem CLEAN_PATH des Skripts (`:147`) liefert `command -v powershell` nichts,
+  `command -v taskkill` = `/c/Windows/System32/taskkill` -> immer der Rueckfall `taskkill //F //IM re15_pc.exe` (`:298-299`).
+  `test` (`do_build && do_test`, `:360`) und `all` (`:361`) laufen ebenfalls durch `do_build`.
+* **Zwischenloesung ohne Dateiaenderung** (`build/r34g_a/lb.sh`): der Wrapper exportiert
+  `powershell() { /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "$@"; }` (`export -f`). `command -v` findet
+  eine exportierte Funktion unabhaengig vom PATH -> das Skript nimmt seinen EIGENEN Zweig `:293-297`
+  (`Get-Process re15_pc | Where Path beginnt mit <Bauverzeichnis> | Stop-Process`). Der Wrapper prueft das vor dem
+  `exec` unter `PATH=/usr/bin:/c/Windows/System32` und bricht sonst ab (exit 97). Gemessen:
+  * Vorpruefung: `cv powershell: powershell`, `ZWEIG=powershell`; jedes Bau-Log beginnt mit
+    `=== lb.sh: Kill-Zweig = powershell (nur build_r34_a)`.
+  * Filter TROCKEN (nur `Select-Object`, kein Stop): Praefix `...\r34g_b\re15_port\build_r34_b` -> genau
+    `8700 ...\r34g_b\...\re15_pc.exe`; Praefix `...\r34g_a\re15_port\build_r34_a` -> leer.
+  * Waechter `build/r34g_a/watch_kill_nb.ps1` (100 ms, taskkill/tskill mit Eltern und Grosseltern) ueber alle eigenen
+    Baulaeufe und die Suite (eigene Kette aus Win32_Process: Bash 28844 `local_build.sh all` -> 37720 -> ctest 32292;
+    `build/r34g_a/lb_pids.txt`): KEIN taskkill aus diesem Baum. Protokolliert wurden nur FREMDE, u. a.
+    `03:54:05.491 taskkill /F /IM re15_pc.exe parent=2264` (r34n_generator, `local_build.sh test` gestartet 03:54:04),
+    `03:56:33.110 ... grandparent=35800 local_build.sh build` (nicht meine PIDs), 03:55:55 / 03:57:03 / 04:02:37
+    (Kommandozeile nicht mehr lesbar, Eltern nicht meine PIDs). `build/r34g_a/watch_kill_nb.txt`.
+* **Fertiger Patch fuer INTEGRATIONSWUNSCH 8** (Ersatz fuer `local_build.sh:293-300`, fuer Integration/master):
+
+      _ps=/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+      if [ -x "$_ps" ] && command -v cygpath >/dev/null 2>&1; then
+          _bw="$(cygpath -w "$(cd "$BUILD_REL" && pwd)")"
+          "$_ps" -NoProfile -Command \
+            "Get-Process re15_pc -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path.StartsWith('$_bw', [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force" \
+            >/dev/null 2>&1 || true
+      fi
+      # KEIN `taskkill //IM`-Rueckfall: lieber nichts beenden (der Link scheitert dann mit "Permission denied" und
+      # das Skript bricht ab) als jede re15_pc.exe der Maschine (Nutzer-exe im Hauptbaum, Messlaeufe anderer Spuren).
+
+* **Hinweis an den Orchestrator**: bis der Patch in master ist, beendet JEDER `local_build.sh build|test|all` eines anderen
+  Baums weiter fremde exe-Laeufe (waehrend dieser Nachbesserung gemessen, s. oben) — auch die exe des Nutzers im
+  Hauptbaum. Alle Spuren koennen das `lb.sh`-Muster (exportierte Funktion) sofort nutzen, ohne die Datei anzufassen.
+
+### 9.2 M-2 — Item-Debug beim Oeffnen des Statusschirms aus
+
+* **Disasm (selbst, `re15_disasm.py dis 0x800460b8 200` / `dis 0x800463c0 60`)**: FUN_800460b8 laeuft von 0x800460b8 bis
+  zum Kompaktierer `jal 0x8004dadc` @0x800464a0 gerade durch (nur die Bildschirmmodus-Zweige @0x800461f4-0x80046368 laufen
+  wieder zusammen):
+
+      800463e0 sb zero,9660(at)  25bc   ...  80046400 sb zero,9687(at)  25d7
+      80046488 lui at,0x800b
+      8004648c sb zero,9832(at)         0x800b2668 (Debug-Zustand) := 0
+      80046490 lui at,0x800b
+      80046494 sb zero,9833(at)         0x800b2669 (Debug-Id)      := 0
+      8004649c sb v1,9678(at)           25ce (Equip-Schnappschuss)
+      800464a0 jal 0x8004dadc           Kompaktierer
+
+* **Xref** (`build/r34g_a/xref_imm.py`, lui 0x800b + imm): 0x800b2668 -> `0x8004648c sb`, `0x8004a150 sh`, `0x8004a164 lbu`,
+  `0x8004a22c/254/284/2b4/2e4/308 sb`; 0x800b2669 -> `0x80046494 sb`, `0x8004a1b4/1e4/248/278/2a8/2d8 lbu`,
+  `0x8004a260/290/2c0/2f0 sb`, `0x8004a344 addiu`. Ausser FUN_8004a0cc schreibt NUR die Oeffnungs-Init.
+* **Port**: `menu_common.c:1410-1421` in `phase0_init` VOR dem Schnappschuss (Original-Reihenfolge). Alle Oeffnungswege
+  laufen durch `phase0_init` (Phase 0 in `menu_task_dispatch`, `re15_menu_toggle`, `re15_menu_toggle_box`). Beim
+  Schliessen bleibt der Zustand stehen (wie im Original, kein weiterer Schreiber).
+* **Sonde** 149 (Vorbedingung: Zustand 3, Id 3, Platz 0 = `03 ff`), 150 (nach Schliessen OHNE KREIS + Wiederoeffnen:
+  Zustand 0 / Id 0), 151 (ITEM bestaetigt, R1/L1/R2/L2: Platz 0 unveraendert, Zustand 0), 152 (Positiv-Kontrolle: SELECT
+  danach wie gewohnt -> Zustand 3, Id 0, `00 ff`). Mutation N1 (Nullung entfernt) -> ROT 150, 151.
+
+### 9.3 M-3 — Kinder von Routine 8 und 15 ueber den 0x0a-Kern
+
+* **Disasm (selbst)**: R8 @0x800175ec: `addiu a2,a3,76` @0x80017604 (a2 = Platz+0x4c), `lh a1,46(a3)` @0x80017614,
+  `lui v0,0x200` @0x80017624 (Kat 2), `addiu a3,a3,64` @0x8001762c (a3 = Platz+0x40), `jal 0x800199d4` @0x80017634.
+  R15 @0x80017ac8: `lh a1,46(a3)` @0x80017b1c, `lw a2,116(a3)` @0x80017b20, `addiu a3,a3,64` @0x80017b24,
+  `jal 0x800199d4` @0x80017b38. FUN_800199d4: `beq v0,zero,0x80019aa4` / Delay `ori v0,zero,0xa` @0x80019a84-88 ->
+  `sb v0,108(t0)` @0x80019aa4. FUN_80019700: `ori v0,zero,0x3` @0x800197b4 -> `sb v0,108(t0)` @0x800197d0.
+* **jal-Scan PSX.EXE + STAGE1..6.BIN** (`build/r34g_a/jal_scan_ovl.py`, Overlays ohne Header @0x80100000):
+  `jal 0x800199d4` 16x, ALLE in den ESP-Routinen (0x800172f8, 0x80017634, 0x80017b38, 0x80017da0, 0x80018054,
+  0x800185dc, 0x80018640, 0x80018660, 0x800186c8, 0x800189c4, 0x80018a60, 0x80018a98, 0x80018b34, 0x80018bc4, 0x80018c68,
+  0x800191e0); `jal 0x80019700` 40x in der EXE (0x8002c74c-0x8002c8fc, 0x800336ec-0x80033e88, 0x800348b0-0x80034bdc,
+  0x80038794/bc, 0x80041954, 0x80045710), in STAGE1..5 nur 0x80019700 (98/77/97/99/110 Stellen), STAGE6 keine.
+  -> Der oeffentliche Weg `re15_esp_fx_spawn_rows` (Waffen-FSM, SCD-Op 0x3A, Gegner-Blut) bleibt 0x03; nur die Kinder der
+  Routinen gehen ueber den neuen internen Weg `esp_fx_spawn_rows_flags(.., 0x0a)` (gleiche Mess-Log-Zeile).
+* **Port**: `re15_esp.c:658-660` (R15), `:724-726` (R8), `:1110-1143` (Weg mit Start-Flags), Kommentar Durchgang 1
+  `:1400-1408` (es gibt im Original KEINEN "Flags-3-Kind ohne A"-Fall). Lage (Anker = Eltern-Anker: a3 = Eltern+0x40,
+  a2 = Eltern-Matrix; der Port traegt Anker.R*Versatz+Anker.T in x/y/z), Boden (Port-Sammelklemme, eigenes Thema),
+  Skala und Gier unveraendert.
+* **Sichtbare Wirkung** nur, wenn das Kind UNTER dem Eltern-Index landet (freier Platz darunter): der Zweitblitz des
+  Muendungsfeuers (Kat 2 sub 4, Zeile 0 @CORE00 0x13D8 = R10: Flags 0x13, Satz 6) zeigt im Spawnbild schon seinen
+  Satz 6 statt Satz 1; die Salven-Huelse (Kat 4 sub 0, Zeile 0 @0x18D8 = R16: Flags 0x63 = Physik-/Bild-Stopp) steht im
+  Spawnbild still statt ein Bild lang zu laufen, ihr Halten endet ein Bild frueher. Landet das Kind darueber (leerer
+  Pool = Normalfall der Bestandssonden), ist der Zustand je Bild unveraendert (A in Durchgang 2 statt 1).
+* **Sonde Abschnitt 8** (`probe_r34_wurf kinder`, `probe_r34_wurf.c:1040-1157`): 8a — Saeuregranate (Art 3, keine Kinder)
+  auf Platz 0 erreicht Zuender 0 genau im Bild, in dem das Muendungsfeuer (Plaetze 1/2) Routine 8 faehrt -> Kind auf
+  Platz 0 < 1: 161/162 Vorbedingungen, 163 Kind unten = Flags 0x13, Zeile 1 (R10 einmal), 164 identisch zum Kind ueber dem
+  Eltern-Platz (leerer Pool, Platz 2). 8b — Altplatz ohne Bank auf Platz 0 faellt im Hauptlauf von Bild 1; Salve
+  id 4 sub 2 auf Platz 1: Kind #1 (Bild 1) auf Platz 2, Kind #2 (Bild 4) auf Platz 0: 165/166 Vorbedingungen,
+  167 Kind #1 = Flags 0x63, +0x16 = 1, Satz 0, 168 Kind #2 identisch. Gemessen:
+  `8a R8-Kind unten (Platz 0): fl 13 Zeile 1 Satz 6 clut 7a91 tpage 003f | oben (Platz 2): fl 13 Zeile 1 Satz 6`,
+  `8b R15-Kind #1 (Platz 2): fl 63 +16 1 sichtbar 1 | #2 (Platz 0): fl 63 +16 1 sichtbar 1`.
+  (Erste Fassung erwartete fuer 0x63 "unsichtbar" — falsch: 0x63 traegt Bit 1; korrigiert, bevor committet wurde.)
+* **Mutationen**: N2 (R8-Kind 0x03) -> ROT 163, 164; N3 (R15-Kind 0x03) -> ROT 168; N4 (Kind-Init aus) -> ROT 26-30,
+  163, 164, 167, 168; N5 (Kind auch in Durchgang 1 dispatcht, Gate `& 0x09`) -> GRUEN = **aequivalente Mutante fuer die
+  CORE00-Daten**: jedes Kind, das eine Routine spawnt (R8 -> Kat 2 sub 4/5 = R10; R15 -> Kat 2 sub 0 = R8/R10, Kat 3 sub 0
+  = R10, Kat 4 sub 0 = R16; R31 -> Kat 3 sub 1/3 = R10; `build/r34g_a/esp_rows_dump.py`), beginnt mit einer Routine,
+  die die Flags aus der Zeile setzt (Bit 3 weg) -> die Kind-Init greift danach nicht mehr, A laeuft in beiden Faellen
+  einmal. Das Gate selbst ist byte-true Bit 0 (`andi v0,v0,0x1` @0x80019e78).
+
+### 9.4 M-4 — tote Sondenstellen G2/G4/G5
+
+* **Gier -24** (Pruefungen 66/67, `probe_r34_wurf.c:395-418`): Erwartung unabhaengig aus PSX.EXE gerechnet
+  (`build/r34g_a/gier_neg_erwartung.py`: Tabelle 0x800794c4 + Formeln FUN_80068098/FUN_800661c0):
+  `[24]` @0x80079524 = 0x0FFD0097 (sin 151, cos 4093), `[4072]` @0x8007D464 = 0x0FFDFF70 (sin -144, cos 4093);
+  Negativzweig `bgez t7` @0x800680a0 faellt durch, `subu t7,zero,t7` @0x800680a8, `andi t7,t7,0xfff` @0x800680b0,
+  `subu t3,zero,t8` @0x800680d0 (sin negiert), `sra t0,t9,16` @0x800680d8 (cos). Original: M = [[4093,0,-151],[0,4096,0],
+  [151,0,4093]] -> Liegestelle (5004, 9, -16089); `a & 0xfff` gaebe (5007, 9, -16109). Gegenprobe des Skripts: Gier 0 ->
+  (5078, 9, -16527) = Pruefung 19, Gier 1024 -> (-5099, 9, -30208) = Pruefung 54. Gemessen: `Gier -24: Liegestelle
+  (5004,9,-16089)`. Mutation G2 -> ROT 66.
+* **Echte Zusammensetzung von `re15_player_acaec`** (`probe_r34_wurf.c:648-651`: Override in Abschnitt 6 AUS; 115: 6a
+  mit MITTE gesund = K1 MITTE, Zaehler 7; 116-127 = 6d, `:778-832`): Hoehe ueber das Steuerkreuz im HALTEN, Gift-Bit in
+  `status_flags`. Gemessen:
+
+      6d HOCH gesund    : Hoehe 1 Wort 8000, Abzug 0, Spawn A+19, xlat (380,-110,21) vel (378,-100,21) acc_x -2 Zaehler 7
+      6d HOCH vergiftet : Hoehe 1 Wort 8002, Abzug 0, Spawn A+19, xlat (380,-110,21) vel (378,-100,21) acc_x -2 Zaehler 9
+      6d TIEF vergiftet : Hoehe -1 Wort 2002, Abzug 0, Spawn A+24, xlat (80,0,1) vel (79,10,1) acc_x -1 Zaehler 5
+      6d MITTE vergiftet: Hoehe 0 Wort 4002, Abzug 0, Spawn A+22, xlat (280,-50,24) vel (279,-40,24) acc_x -1 Zaehler 9
+
+  Erwartung: K1 (HOCH `ori 0x17c`/`addiu -110`/`ori 0x15` @0x80018494-a8, acc_x -2 @0x800184b0; TIEF `ori 0x50`/`ori 0x1`
+  @0x80018518-24, acc_x -1 @0x80018528-2c, Zaehler 5 @0x80018530/38; MITTE @0x800184bc-d4), Zaehler-Formel
+  ((a + ((a>>7)&0xff)) & 0xff) % 4 + 7 (@0x8001af30-4c, `addiu v0,v0,7` @0x80018504): 0x8000 -> 7, 0x8002 -> 9,
+  0x4002 -> 9; Schreiber HOCH `ori 0x8000` @0x80033228-38, TIEF `ori 0x2000` @0x80033270-84, MITTE `ori 0x4000`
+  @0x800332bc-c8 (je `andi 0x1fff` davor), Gift `ori 0x2` @0x80012eac; Spawn-Clipbild HOCH 0x13 @0x80033690, TIEF 0x18
+  @0x80033758. Mutation G4 (HOCH/TIEF-Bit vertauscht) -> ROT 117, 118, 120, 121, 123, 124; G5 (ohne Status-Unterbits)
+  -> ROT 121, 127.
+
+### 9.5 H-1 — Auto-Nachfuehrung beim Heben (zusaetzlich; schliesst OFFEN 5)
+
+* **Disasm (selbst, `dis 0x8001a8f8 52`)** und Aufrufer (`jal_scan.py 0x8001a8f8`: 0x80032fec gun sub0 mit `ori a1,zero,
+  0xc8` @0x80032fe0, 0x80033f94 L1-Nachziehen mit `ori a1,zero,0xc8` @0x80033f90, 0x80034fbc melee mit `ori a1,zero,0xc0`
+  @0x80034fb0, dazu 0x80034134, 0x80035620):
+
+      8001a958 lhu  a2,106(v1)          rot (u16, Platz +0x6a)
+      8001a960 subu v0,a0,a2            t - rot            (t = atan2 & 0xfff, `andi v0,v0,0xfff` @0x8001a768)
+      8001a964 addu v0,s1,v0            + s
+      8001a968 andi a1,v0,0xfff         a1 = (t - rot + s) & 0xfff
+      8001a96c sll  v0,s1,16 / 8001a970 sra v0,v0,15 / 8001a974 slt v0,a1,v0      a1 < 2s ?
+      8001a978 beq  v0,zero,0x8001a988 / Delay 8001a97c subu v0,a2,s1
+      8001a984 sh   a0,106(v1)          ja:   rot := t
+      8001a988 sh   v0,106(v1)          nein: rot := rot - s   (16 Bit, OHNE & 0xfff)
+      8001a98c sltiu v0,a1,0x801 / 8001a994 sll a0,s1,1 / 8001a9ac addu v1,v1,a0 / 8001a9b0 sh v1,106(v0)
+                                        a1 <= 0x800: rot += 2s (netto rot + s)
+
+* **Port** `player_common.c:1050-1075` genau so. Vorher (zentrierte Differenz, Klemme +-s, `& 0xfff` je Schritt) zwei
+  Abweichungen: (1) Schritt ueber 0 -> 4096-k statt -k (anderer RotMatrix-Zweig fuer die Granaten-Gier, M-4/G2);
+  (2) NEUER Befund: fuer (t - rot) & 0xfff in [0x801 - s, 0x7ff] (Ziel knapp unter 180 Grad, Bandbreite s-1 = 199 bzw.
+  191 Einheiten, gut 17 Grad) drehte der Port +s, das Original -s — die Halbebenen-Grenze liegt wegen des `+ s` in a1
+  um s verschoben.
+* **Sonde 6e** (`probe_r34_wurf.c:834-876`): Ziel Zombie 700 in +x, Peilung des Port-atan2 = 4095 (Vorbedingung 128,
+  Aufbau). 129: rot -300 -> -100 -> 4095 (alt: 3996); 130: rot 2196 -> 1996 -> 1796 (alt: 2396); 153 Negativ-Kontrolle:
+  rot 2296 -> 2496 -> 2696 (ausserhalb des Bands drehen alt und Original gleich). Mutationen H1a (alter Schritt) -> ROT
+  129, 130; H1b (nur Maske) -> ROT 129; H1c (Grenze ohne +s) -> ROT 130.
+* **Beobachtung ausserhalb des Dateibesitzes** (nur Hinweis): der Lauf-Lenker FUN_8001aac4 ist baugleich (`subu v0,a2,s1`
+  / `sh v0,106(v1)` @0x8001ab4c/58, `addu v1,v1,a0` / `sh` @0x8001ab7c-80, ohne Maske); sein Port-Zwilling
+  `re15_enemy_steer_point` (`enemy_ai_common.c:3499-3513`) maskiert jeden Schritt (`& 0x0fff`) — gleiche Klasse wie H-1
+  fuer Gegner (die Richtungslogik dort rechnet bereits mit `+ slew`). INTEGRATIONSWUNSCH 9.
+
+### 9.7 Mutationsproben der Nachbesserung (`build/r34g_a/mutation_nb.py`, `mutation_nb_ergebnis.txt`, `mutation_nb_h1.txt`)
+
+| Nr | Mutation | Ergebnis |
+|---|---|---|
+| N1 | M-2: Nullung beim Oeffnen entfernt (menu_common.c) | ROT 150, 151 |
+| N2 | M-3: Routine-8-Kind Flags 0x03 | ROT 163, 164 |
+| N3 | M-3: Routine-15-Kind Flags 0x03 | ROT 168 |
+| N4 | M-3: Kind-Init im Hauptlauf aus | ROT 26, 27, 28, 29, 30, 163, 164, 167, 168 |
+| N5 | M-3: Kind auch in Durchgang 1 dispatcht | GRUEN — aequivalent fuer CORE00 (§9.3) |
+| G2 | M-4: RotMatrix-Negativzweig -> `a & 0xfff` | ROT 66 |
+| G4 | M-4: acaec HOCH/TIEF-Bit vertauscht | ROT 117, 118, 120, 121, 123, 124 |
+| G5 | M-4: acaec ohne Status-Unterbits | ROT 121, 127 |
+| H1a | H-1: alter Port-Schritt | ROT 129, 130 |
+| H1b | H-1: Schritt maskiert | ROT 129 |
+| H1c | H-1: Richtungsgrenze ohne +s | ROT 130 |
+| — | Rueckbau (beide Laeufe) | `ZURUECK: bau rc=0, sonde rc=0 (GRUEN)`, `git status` nur `build/` |
+
+Die drei toten Stellen der Gegenpruefung (G2, G4, G5) sind jetzt rot.
+
+### 9.8 INTEGRATIONSWUNSCH (neu)
+
+9. `re15_port/engine/src/enemy_ai_common.c:3499-3513` (`re15_enemy_steer_point`, Gegner-KI): Schritte ohne `& 0x0fff`
+   wie FUN_8001aac4 (`sh v0,106(v1)` @0x8001ab58 = rot - s, `addu`/`sh` @0x8001ab7c-80 = + 2s); Einrasten bleibt
+   `bearing` (0..4095). Vorher pruefen, ob Gegner-Leser rot_y ungemaskert als Index nutzen. Nur Hinweis (Gegenstueck
+   zu H-1), kein Spur-A-Thema.
+
+### 9.9 OFFEN (neu)
+
+7. Routinen mit Kind-Spawn, die der Port noch nicht kennt (R2, R19, R25, R39, R43 = noop), muessen beim Bau ueber
+   `esp_fx_spawn_rows_flags(.., 0x0a)` spawnen (jal @0x800172f8 / 0x80017da0 / 0x80018054 / 0x800189c4-0x80018c68 /
+   0x800191e0).
