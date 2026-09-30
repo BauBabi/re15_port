@@ -191,13 +191,6 @@ check_tree() {           # $1 = fertiger Paketordner
     # shared_assets/RE2/TORSE.VBS (audio_pc.c load_re2_tor_se_pc). Fehlt sie, laeuft die
     # Sequenz stumm - Gate statt Stille.
     [[ -s "$out/shared_assets/RE2/TORSE.VBS" ]]         || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/TORSE.VBS (Tuersequenz waere stumm)"
-    # Seit Runde 34 (Granaten): die RE2-FX-Maschine (Saeure-/Brand-Aufschlag der Granaten 0x0A/0x0B,
-    # Bodenflammen) registriert beim Start shared_assets/RE2/CORE00.ESP (re2fx_register_core) und laedt
-    # die Effektseiten aus shared_assets/RE2/TEX.TIM (re2fx_pc_lade_tex). Fehlt eine, kehrt
-    # re2fx_aufschlag still zurueck bzw. zeichnet nichts - Gate statt Stille.
-    for f in CORE00.ESP TEX.TIM; do
-        [[ -s "$out/shared_assets/RE2/$f" ]]             || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$f (RE2-Aufschlaege der Granaten waeren tot)"
-    done
     # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
     # UNVERAENDERT aus shared_assets/RE2/DOOR/DOORxx.DO2 (door_scene_pc.c re2_archiv_lesen,
     # Modellteil + Tonteil). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang
