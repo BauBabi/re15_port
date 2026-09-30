@@ -1,0 +1,427 @@
+
+=== ROOM1110, Modus ist (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F144 Seite 2 fertig
+    F241 Nachricht ZU, Faden @0x00D09
+    F242 Faden slot 10 pc @0x00D13
+    F271 Faden slot 10 pc @0x00D16
+    F272 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F272 Ereignis beendet, Platz 5 aktiv=1
+  ERGEBNIS ist: Nachricht id 0, 2 Seitenstopps, zu F241, Faden bei ZU @0x00D09, Modal je 0, scharf 1
+  ok: Ist: Original-Nachricht 0
+  ok: Ist: kein Item-Modal
+  ok: Ist: Platz 5 danach wieder scharf
+
+=== ROOM1110, Modus soll-nein (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 MODAL AUF (Zustand 2)
+    F272 MODAL ZU
+    F273 Faden slot 10 pc @0x00D13
+    F302 Faden slot 10 pc @0x00D16
+    F303 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F303 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F272 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F303, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 No: Bit (9,61) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F272 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F303, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 No: Bit (9,61) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1110, Modus soll-ja (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 MODAL AUF (Zustand 2)
+    F245 MODAL ZU
+    F246 Faden slot 10 pc @0x00D13
+    F275 Faden slot 10 pc @0x00D16
+    F276 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F276 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F245 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F276, Bit=1, Munition 50 -> 57, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 Yes: Bit (9,61) gesetzt
+  ok: Runde 1 Yes: +7 H. Gun Bullets (15 halbiert)
+  Runde 2: Text kurz (37 B), 0 Seitenstopps, zu F101, Modal auf F-1 zu F-1 (Starts 0), Faden waehrend Modal @0x7FFFFFFF..@0xFFFFFFFF, Ende F132, Bit=1, Munition 57 -> 57, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2 nach Yes: kein Modal mehr
+  ok: Runde 2 nach Yes: kurzer Text ohne Seitenstopp
+
+=== ROOM1110, Modus soll-voll (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 0
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    
+F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 MODAL AUF (Zustand 2)
+    F257 MODAL ZU
+    F258 Faden slot 10 pc @0x00D13
+    F287 Faden slot 10 pc @0x00D16
+    F288 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F288 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F257 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F288, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 voll: Bit (9,61) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F257 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F288, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 voll: Bit (9,61) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1111, Modus ist (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F144 Seite 2 fertig
+    F241 Nachricht ZU, Faden @0x00D09
+    F242 Faden slot 10 pc @0x00D13
+    F271 Faden slot 10 pc @0x00D16
+    F272 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F272 Ereignis beendet, Platz 5 aktiv=1
+  ERGEBNIS ist: Nachricht id 0, 2 Seitenstopps, zu F241, Faden bei ZU @0x00D09, Modal je 0, scharf 1
+  ok: Ist: Original-Nachricht 0
+  ok: Ist: kein Item-Modal
+  ok: Ist: Platz 5 danach wieder scharf
+
+=== ROOM1111, Modus soll-nein (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 MODAL AUF (Zustand 2)
+    F272 MODAL ZU
+    F273 Faden slot 10 pc @0x00D13
+    F302 Faden slot 10 pc @0x00D16
+    F303 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F303 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F272 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F303, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 No: Bit (9,61) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F272 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F303, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 No: Bit (9,61) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1111, Modus soll-ja (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 
+MODAL AUF (Zustand 2)
+    F245 MODAL ZU
+    F246 Faden slot 10 pc @0x00D13
+    F275 Faden slot 10 pc @0x00D16
+    F276 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F276 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F245 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F276, Bit=1, Munition 50 -> 57, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 Yes: Bit (9,61) gesetzt
+  ok: Runde 1 Yes: +7 H. Gun Bullets (15 halbiert)
+  Runde 2: Text kurz (37 B), 0 Seitenstopps, zu F101, Modal auf F-1 zu F-1 (Starts 0), Faden waehrend Modal @0x7FFFFFFF..@0xFFFFFFFF, Ende F132, Bit=1, Munition 57 -> 57, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2 nach Yes: kein Modal mehr
+  ok: Runde 2 nach Yes: kurzer Text ohne Seitenstopp
+
+=== ROOM1111, Modus soll-voll (Platz 5, Nachricht 0, Bit (9,61)) ===
+  Standplatz (10330,2650) Blick 0, Munition 0x15 vorher 0
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x00CEE
+    F002 Faden slot 10 pc @0x00D01
+    F031 Faden slot 10 pc @0x00D04
+    F032 Faden slot 10 pc @0x00D09
+    F032 Nachricht AUF id=0 Freeze=0xFFFF0000
+    F098 Seite 1 fertig
+    F151 Nachricht ZU, Faden @0x00D09
+    F151 MODAL AUF (Zustand 2)
+    F257 MODAL ZU
+    F258 Faden slot 10 pc @0x00D13
+    F287 Faden slot 10 pc @0x00D16
+    F288 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F288 Ereignis beendet, Platz 5 aktiv=1
+  Runde 1: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F257 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F288, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 1: Platz 5 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 voll: Bit (9,61) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (63 B), 1 Seitenstopps, zu F151, Modal auf F151 zu F257 (Starts 1), Faden waehrend Modal @0x00D09..@0x00D09, Ende F288, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 2: Platz 5 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F151/F151)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x00D09 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 voll: Bit (9,61) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1230, Modus ist (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F124 Seite 2 fertig
+    F221 Nachricht ZU, Faden @0x014C1
+    F222 Faden slot 10 pc @0x014CB
+    F251 Faden slot 10 pc @0x014CE
+    F252 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F252 Ereignis beendet, Platz 18 aktiv=1
+  ERGEBNIS ist: Nachricht id 10, 2 Seitenstopps, zu F221, Faden bei ZU @0x014C1, Modal je 0, scharf 1
+  ok: Ist: Original-Nachricht 10
+  ok: Ist: kein Item-Modal
+  ok: Ist: Platz 18 danach wieder scharf
+
+=== ROOM1230, Modus soll-nein (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F252 MODAL ZU
+    F253 Faden slot 10 pc @0x014CB
+    F282 Faden slot 10 pc @0x014CE
+    F283 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F283 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu [scd] thread start slot=10 first_op=0x46
+F252 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F283, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 No: Bit (9,62) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F252 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F283, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 No: Bit (9,62) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1230, Modus soll-ja (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F225 MODAL ZU
+    F226 Faden slot 10 pc @0x014CB
+    F255 Faden slot 10 pc @0x014CE
+    F256 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F256 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F225 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F256, Bit=1, Munition 50 -> 57, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 Yes: Bit (9,62) gesetzt
+  ok: Runde 1 Yes: +7 H. Gun Bullets (15 halbiert)
+  Runde 2: Text kurz (24 B), 0 Seitenstopps, zu F81, Modal auf F-1 zu F-1 (Starts 0), Faden waehrend Modal @0x7FFFFFFF..@0xFFFFFFFF, Ende F112, Bit=1, Munition 57 -> 57, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2 nach Yes: kein Modal mehr
+  ok: Runde 2 nach Yes: kurzer Text ohne Seitenstopp
+
+=== ROOM1230, Modus soll-voll (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 0
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F237 MODAL ZU
+    F238 Faden slot 10 pc @0x014CB
+    F267 Faden slot 10 pc @0x014CE
+    F268 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F268 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F237 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F268, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 voll: Bit (9,62) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F237 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F268, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 voll: Bit (9,62) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1231, Modus ist (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+   
+ F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F124 Seite 2 fertig
+    F221 Nachricht ZU, Faden @0x014C1
+    F222 Faden slot 10 pc @0x014CB
+    F251 Faden slot 10 pc @0x014CE
+    F252 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F252 Ereignis beendet, Platz 18 aktiv=1
+  ERGEBNIS ist: Nachricht id 10, 2 Seitenstopps, zu F221, Faden bei ZU @0x014C1, Modal je 0, scharf 1
+  ok: Ist: Original-Nachricht 10
+  ok: Ist: kein Item-Modal
+  ok: Ist: Platz 18 danach wieder scharf
+
+=== ROOM1231, Modus soll-nein (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F252 MODAL ZU
+    F253 Faden slot 10 pc @0x014CB
+    F282 Faden slot 10 pc @0x014CE
+    F283 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F283 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F252 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F283, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 No: Bit (9,62) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F252 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F283, Bit=0, Munition 50 -> 50, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 No: Bit (9,62) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+=== ROOM1231, Modus soll-ja (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 50
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F225 MODAL ZU
+    F226 Faden slot 10 pc @0x014CB
+    F255 Faden slot 10 pc @0x014CE
+    F256 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F256 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F225 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F256, Bit=1, Munition 50 -> 57, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 Yes: Bit (9,62) gesetzt
+  ok: Runde 1 Yes: +7 H. Gun Bullets (15 halbiert)
+  Runde 2: Text kurz (24 B), 0 Seitenstopps, zu F81, Modal auf F-1 zu F-1 (Starts 0), Faden waehrend Modal @0x7FFFFFFF..@0xFFFFFFFF, Ende F112, Bit=1, Munition 57 -> 57, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2 nach Yes: kein Modal mehr
+  ok: Runde 2 nach Yes: kurzer Text ohne Seitenstopp
+
+=== ROOM1231, Modus soll-voll (Platz 18, Nachricht 10, Bit (9,62)) ===
+  Standplatz (3280,25900) Blick 0, Munition 0x15 vorher 0
+    F000 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F001 Faden slot 10 pc @0x014A6
+    F002 Faden slot 10 pc @0x014B9
+    F031 Faden slot 10 pc @0x014BC
+    F032 Faden slot 10 pc @0x014C1
+    F032 Nachricht AUF id=10 Freeze=0xFFFF0000
+    F072 Seite 1 fertig
+    F131 Nachricht ZU, Faden @0x014C1
+    F131 MODAL AUF (Zustand 2)
+    F237 MODAL ZU
+  [scd] thread start slot=10 first_op=0x46
+  F238 Faden slot 10 pc @0x014CB
+    F267 Faden slot 10 pc @0x014CE
+    F268 Faden slot -1 pc @0xFFFFFFFF (beendet)
+    F268 Ereignis beendet, Platz 18 aktiv=1
+  Runde 1: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F237 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F268, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 1: Platz 18 am Ende wieder scharf
+  ok: Runde 1: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 1: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 1 voll: Bit (9,62) bleibt 0
+  ok: Runde 1: Inventar unveraendert
+  Runde 2: Text lang (50 B), 1 Seitenstopps, zu F131, Modal auf F131 zu F237 (Starts 1), Faden waehrend Modal @0x014C1..@0x014C1, Ende F268, Bit=0, Munition 0 -> 0, scharf 1
+  ok: Runde 2: Platz 18 am Ende wieder scharf
+  ok: Runde 2: Modal geht im Bild auf, in dem der Text zugeht (F131/F131)
+  ok: Runde 2: Faden steht waehrend des Modals auf @0x014C1 (nach Evt_next, vor der 2. Plc_motion)
+  ok: Runde 2 voll: Bit (9,62) bleibt 0
+  ok: Runde 2: Inventar unveraendert
+
+probe_r34n_f_leiche: 0 FEHLER
