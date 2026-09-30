@@ -107,6 +107,11 @@ Fundstelle Hebetisch ROOM1150, `sicherung_1150.c`, Zone-9-Bit 53) hat im Spiel k
 Zusatzmessung Nahansicht: `RE15_FORCE_CUT=7`, Spieler am Schalter (16556,-8313): Cut 7 zeigt den
 Wandschrank mit roter Leuchte, der Spieler ist NICHT im Bild (`A_belege/cut7_erzwungen_spieler_am_schalter.jpg`),
 der Nachrichtenkasten liegt unten wie ueblich. Die Nahansicht braucht also keine Spieler-Umpositionierung.
+**Mechanismus (Gegenpruefung, Auflage 8):** das ist kein Standort-Zufall. Der Spieler wird gegen das
+Regionsviereck des AKTIVEN Cuts gecullt (`platform/pc/main.c` "Per-cut region-quad cull", byte-true
+FUN_80039ca0 -> FUN_80014368, `re15_aot_point_in_quad`), und Cut 7/8 haben nur das Blindrechteck
+@0x32C/@0x340 (x 19600..22100, z -6900..-4900). Jeder Ausloese-Standort am Schalter liegt ausserhalb —
+Leon/Elza sind in Cut 7/8 immer unsichtbar (bestaetigt im Bau: alle Cut-7/8-Bilder in `A_belege/bau_105x_*.jpg`).
 
 ## 3 Original-/RE2-Mechanismus (Adressen, Bytes, Instruktionen)
 
@@ -165,9 +170,9 @@ sub12 @0x015BA  2b 00 ff ff  02 00               Generator-Frage, Evt_next
       @0x015CC  21 03 90 00  2b 01 ff ff  02 00  NICHT eingesetzt -> msg 1 "I need to insert the missing fuse
                                                  before I can operate this."      <== Vorbild fuer msg 2 in 1050
 sub18 @0x01678  2b 03 ff ff  02 00  2b 04 ff ff  msg 3 "One of the fuses is missing..." -> msg 4 "Will you use the Fuse?"
-      @0x01688  21 0c 1f 00  29 08               Ja -> Cut_chg 8 (Nahansicht VORHER), dann Set(5,10/11/5): sub01
-                                                 @0x012B4..@0x01332 fuehrt per Richtungstaste (Sce_key_ck) Objekt 4
-                                                 und startet bei Member_cmp==7 + Aktion sub19 (Einsetz-Feinbedienung)
+      @0x01688  21 0c 1f 00  29 08               Ja -> Cut_chg 8 (Panel-Nahansicht VORHER), dann Set(5,10/11/5): sub01
+                                                 @0x012B4..@0x01332 fuehrt per Richtungstaste (Sce_key_ck) den ZEIGER
+                                                 obj 4 und startet bei Member_cmp==7 + Aktion sub19 (Zeiger-Panel)
 sub19 @0x0169E  22 03 90 01  29 09               Set(3,144,1) eingesetzt, Cut_chg 9 (Nahansicht NACHHER)
       @0x016B8  46 09 01 31 06 00 ff ff 00 00    Slot 9 -> Text msg 6
       @0x016C8  2b 05 ff ff  02 00  29 0a  3c 01  msg 5 "You've used the Fuse.", Cut_chg 10, Cut_auto 1
@@ -178,9 +183,27 @@ Texte (Offsettabelle @0x1758): msg 4 @0x1855 (32 B) `04 02 33 45 48 48 00 55 4b 
 @0x2934/@0x2961). ROOM2061 = ROOM2060.
 **Einordnung (memory beta-zu-retail):** Frage-Ablauf am Weltobjekt ist in RE1.5 FERTIG (ROOM2060,
 ROOM1090 sub06, ROOM10D0 sub20) -> RE1.5 massgeblich. Kein Se_on in sub18/sub19 -> Einsetzen ist stumm.
-Die Feinbedienung (Objekt 4 per Richtungstaste) wird NICHT uebernommen: ROOM1050 hat fuer den Kasten
-kein bewegliches Modell (nOmodel=2: obj 0 Rolltor, obj 1 Raum-Prop), der Zustandswechsel ist dort
-GEMALT (Cut 7 -> Cut 8); ohne Modell gaebe es nichts zu fuehren.
+
+**⛔ Berichtigt (Gegenpruefung, Auflage 1):** ROOM2060s Einsetzen ist ein **Zeiger-Panel**, keine
+"gefuehrte Sicherung". obj 3 (Generator-Panel) und obj 4 (Sicherungs-Panel) tragen dasselbe
+Zeigermodell (TIM @0x382B0, MD1 @0x33E4, bytegleich); Cut 7 und Cut 8/9 sind SENKRECHTE Panelkameras
+(pos (19572,-17442,-22584) -> tgt (19572,15928,-22583)) ueber dem geparkten Zeiger obj 4 (@0x00F12);
+sub01 @0x012B4..@0x0130C fuehrt ihn per Sce_key_ck, @0x01314..@0x01332 Ck(5,11,1) + Member_cmp(0x0F==7)
++ Sce_key_ck 0x40 -> sub19 (Bild `A_belege/gegen_2060_zeigerpanel_vs_1050_weltkamera.jpg`).
+Der Verzicht auf diese Feinbedienung ist **PORT-WAHL, keine Original-Adresse — Grund:** ROOM1050s
+Cut 7/8 sind WELTKAMERA-Nahansichten (Kamera @0x140/@0x160, pos (16171,-2733,-8185), Blick fast
+waagerecht nach Osten, kein Panelrahmen), ROOM1050.RDT hat kein Zeigermodell (nOmodel=2) und keine
+sce-5-Zonen. Die RE1.5-Form fuer Weltkamera-Nahansichten ist die DIREKTE Frage: ROOM1051 sub03
+(@0x0DB4 `29 09`, @0x0DB6 `2b 05 ff ff`, derselbe Raum) und ROOM1090 sub06 (@0x02702 msg 7, @0x02708
+msg 8 "Will you use the Fire Extinguisher?", @0x02712 Ja -> Wirkung). Ein Zeiger ueber Cut 7 muesste
+Ebene, Zonen und Zeigerlage erfinden = raten. (Dieselbe Begruendung steht im Kopf von
+`engine/src/rolltor_1050.c` und in der Commit-Message des Baus.)
+
+**Auftragspunkt 4 ("Nahansicht zeigt beim Ansehen Cut 8"):** nach dem Einsetzen gibt es KEINE weitere
+Nahansicht. Das ist RE1.5-konform: ROOM2060 macht den Kasten danach zum reinen Textplatz msg 6 "The fuse
+is in place." (sub00 @0x010DE, sub19 @0x016B8 `46 09 01 31 06 00 ff ff 00 00`), ohne Cut_chg. In ROOM1050
+ist der Kasten zugleich der Schalter (§3.2) — der Platz faehrt danach den ausgelieferten sub02 (Frage,
+Tor, Ton). Cut 8 erscheint genau einmal: beim Einsetzen, waehrend "You've used the Fuse.".
 
 ### 3.4 Gegenstand aus dem Inventar — RE1.5 kann es nicht, RE2 kann es
 
@@ -221,6 +244,21 @@ GEMALT (Cut 7 -> Cut 8); ohne Modell gaebe es nichts zu fuehren.
   Port hat die RE2-Kiste -> Besitz = Inventar-Suche (RE2 Keep_Item_ck-Semantik).
 * Item 0x40 kann nicht wegkombiniert werden: Eigenschaftszeile @0x800750a8 `01 00 00 00 88 4c 07 80 00 00 00
   00` (Paarzeiger = Leerzeiger 0x80074c88, 0 Paare; Gegenprobe Item 0x24 @0x80074f58: 6 Paare).
+* **Ergaenzt (Gegenpruefung, Auflage 2) — RE1.5s Sicherung ist ein reines FLAG, nie ein Gegenstand:**
+  ROOM2030 sub06 @0x01FE4 `2b 02 ff ff` "Will you take the Fuse?" -> @0x01FEE `21 0c 1f 00` Ja -> @0x01FF2
+  `22 03 6c 01` Set(3,108,1) -> @0x02000 `2b 03 ff ff` "You've taken the Fuse." — kein Item_aot_set, kein
+  Aot_on (Zensus: 0 Ausgaben fuer 0x40). ROOM2060 prueft nur dieses Flag (sub00 @0x010A2 `21 03 6c 00`).
+  Deshalb braucht RE1.5 kein Entfernen; der Port fuehrt die Sicherung aber als Inventar-Item (Fundstelle
+  Hebetisch, `sicherung_1150.c`) -> die RE2-Wahl `Sce_item_lost` ist fuer dieses Item zwingend.
+* **Zwei Negativbelege, selbst disassembliert (re15_disasm.py, Bau-Stufe):**
+  * Opcode 0x5E (Tabelle @0x80074620 -> 0x80042b04) ist KEIN Besitztest: `lw v0,0(v1)` 0x800aca3c,
+    @0x80042b20 `ori v0,v0,0x20`, @0x80042b24 `sw`, @0x80042b30/@0x80042b34 `lbu a0,1(v0)` / `lhu a1,2(v0)`,
+    @0x80042b38 `jal 0x80013278`, @0x80042b44 `ori v0,zero,0x1`, @0x80042b48 pc+4 — kein Praedikat.
+  * Die Inventarauswahl schickt Nicht-Waffe/Nicht-Heilmittel in Zustand 6 (Tabelle 0x80074c28[6] @0x80074c40
+    -> 0x8004b250). Der Handler (bis `jr ra` @0x8004b334) schreibt nur 0x800b25ee/0x800b25c4/0x800b25c2/
+    0x800b25c3, ruft nur @0x8004b2e8 `jal 0x80027e68` (Meldung) und wartet @0x8004b300/@0x8004b308 auf
+    0x800b8520 & 0x80 — kein Schreiben in die Inventarplaetze. Schluesselgegenstaende verlassen das
+    RE1.5-Inventar also nie.
 
 ### 3.5 ⛔ Korrektur: Cut_replace ist NICHT der Mechanismus der Nahansicht
 
@@ -320,7 +358,7 @@ Kein AOT-Slot, kein Prop, keine neue Flag-Bank. Nachrichten 20/21 werden beim Au
 | `re15_port/tests/unit/test_r34n_a_rolltor.c` | NEU (Riegel) | aus der Sonde: Faelle A/B/B-Nein/C/1051 ueber `scd_event_fire(2)` (echter Haken), plus Herkunftsmarke der Bytes (msg 20/21 == ROOM2060 @0x1855/@0x1875) und PC-Schranke (0x62 ausserhalb = pc+1) |
 | `re15_port/tests/unit/probes/r34n_a_rolltor.cmake` | ERWEITERN | `add_test(unit_r34n_a_rolltor …)`; Sonde bleibt ohne Test |
 | `re15_port/tests/unit/test_room1050_sicherung.c` | ANPASSEN | Teil (6) "Durchspielbarkeit" faehrt kuenftig ZUERST Fall B (Sicherung einsetzen), dann den ausgelieferten sub02 -> (3,121)=1, Zelle 19 frei; Kopf-Absatz "Mechanismus = Cut_replace" nach §3.5 berichtigen |
-| `re15_port/tools/local_build.sh` | ANPASSEN | `RE15_MIN_TESTS` 428 -> 429 |
+| `re15_port/tools/local_build.sh` | ~~ANPASSEN~~ **NICHT angefasst** (Auflage 6) | `RE15_MIN_TESTS` bleibt 428 im Spurzweig; die Suite laeuft mit `RE15_MIN_TESTS=429` als Umgebung. ⛔ ZUSAMMENFUEHRUNG: B (B_hebetisch.md) und C (C_generator.md) heben dieselbe Zahl — die Integration setzt sie EINMAL auf 428 + Summe der neuen Tests (A: +1 `unit_r34n_a_rolltor`) |
 | `re15_port/tools/r34n_a/lauf.sh` | ERWEITERN | Modi `ohne`, `mit` (RE15_GIVE=0x40:1), `mit_nein`, `danach` (RE15_SET_FLAG_AT=9:63) fuer die Abnahme (§6) |
 
 Keine Aenderung an: `scd_room_setup.c`, `main.c`, `aot_common.c`, `msg_common.c`, `game_step_common.c`,
@@ -455,8 +493,11 @@ sicherung_laden, boot_bg_pin im 1. Anlauf; granate_laden und irons_tisch_licht i
 
 ## 8 Offene Punkte
 
-1. **Rote Leuchte in Cut 3 nach dem Einsetzen** (§7): nur ueber ein bearbeitetes Hintergrundbild
-   loesbar (neue Kunst) — nicht Teil des Auftrags, dem Nutzer vorlegen.
+1. **Rote Leuchte in Cut 3 nach dem Einsetzen — BEKANNTE GRENZE (Auflage 5, keine Frage an den Nutzer):**
+   Cut 3 zeigt den Kasten (x124..141 y68..96, ~17x28 px) nach dem Einsetzen weiter mit der roten Leuchte.
+   ROOM105.BSS hat fuer Cut 3 keine Kunstvariante; RE1.5 loest dasselbe in ROOM2060 mit Varianten-Cuts
+   10/11 per Cut_replace (sub19 @0x016C2/@0x016C5, sub00 @0x010F2/@0x010F5). Ohne neue Kunst nicht loesbar
+   — im Liefertext als Grenze genannt.
 2. **Ton beim Einsetzen:** RE1.5 (ROOM2060) stumm, RE2 spielt einen Raum-SE (room1110 sub04 +0x2C Se_on
    2/0x0F). ROOM1050s snd0 hat nur die drei Rolltor-SE. Plan: stumm (RE1.5 fertig -> massgeblich).
 3. **Nicht gemessen:** ob ROOM1090s obere Ebene (Ankunft aus 10F0, y=-9000) zur Tuer nach ROOM1050 fuehrt —
@@ -478,11 +519,46 @@ Stand: in Arbeit. Abschnitte werden nach jedem Teilschritt gefuellt und committe
 
 ### 9.1 Auflagen der Gegenpruefung — abgehakt / abgelehnt
 
-(folgt)
+| # | Auflage | Stand | Wo / Beleg |
+|---|---|---|---|
+| 1 | §3.3 berichtigen (Zeiger-Panel, Verzicht als PORT-WAHL mit Grund), Auftragspunkt 4 beantworten | **erledigt** | §3.3 "Berichtigt"; Kopf `engine/src/rolltor_1050.c`; Commit-Message des Baus; Belegbytes selbst gelesen: ROOM2060 obj 3 @0x00EF0 / obj 4 @0x00F12, Slot 7 sce 5 flags 0x44 @0x0100C, Textplatz msg 6 sub00 @0x010DE / sub19 @0x016B8 |
+| 2 | §3.4 ergaenzen (RE1.5-Sicherung = Flag; zwei Negativbelege) | **erledigt** | §3.4, beide Negativbelege in der Bau-Stufe SELBST disassembliert (0x80042b04..0x80042b58; 0x80074c40 -> 0x8004b250..0x8004b334) |
+| 3 | §7/§8.3 schliessen, Cut-4-Folge messen, an D uebergeben | siehe §9.6 (3) | `tools/r34n_a/lauf_1090.sh`, Bilder `A_belege/bau_1090_*.jpg` |
+| 4a | ROOM1051 an der echten exe | **erledigt** | `lauf.sh elza_ohne/elza_mit` ueber den echten Weg (Charakterwahl -> ROOM1241 -> ROOM1031 Tuer Slot 0 @0x01CD8 -> ROOM1051); `A_belege/bau_1051_*.jpg` |
+| 4b | Statusschirm nach dem Einsetzen | **erledigt** | `lauf.sh mit` F1300 (Sicherung weg, kein Loch), `mit_nein` F1170/F1200 (Sicherung da); `A_belege/bau_1050_mit*.jpg` |
+| 4c | Doppelausloesen ausschliessen | **erledigt** | je Druck genau EINE `[rolltor]`-Zeile; Viereck schliesst msg 2 (F881/882) bzw. msg 21 (F1128) — im selben und im Folgebild KEINE neue Frage (state.log `A_belege/bau_laeufe.txt`). Die zwei `[msg] id=0`-Zeilen je Frage sind Oeffnen + Entblocken derselben Wahl-Nachricht (op_message_on parkt und betritt den Opcode erneut, scd_vm.c "CHOICE message") — ebenso im Auslieferungsstand |
+| 4d | Laden/Speichern reproduzierbar | **erledigt** | Riegel-Fall L (capture -> Zustand weg -> restore -> Raumaufbau -> Schalter startet sub02 @0x0CAC, Inventar ohne 0x40) + echter Kartenlauf `tools/r34n_a/lauf_laden.sh` (§9.6 (4)) |
+| 4e | Wiederbetreten als Riegel-Fall | **erledigt** | Riegel-Fall W (neuer Raumaufbau mit (9,63)=1 -> sub02 @0x0CAC) |
+| 4f | Cut-4-Lauf | siehe Auflage 3 | |
+| 5 | §8.1 umformulieren (bekannte Grenze, keine Frage) | **erledigt** | §8.1 |
+| 6 | RE15_MIN_TESTS nicht anheben oder Konflikt markieren | **erledigt (beides)** | `local_build.sh` unberuehrt, Suite mit `RE15_MIN_TESTS=429`; Zusammenfuehrungshinweis in §5.2 |
+| 7 | (Soll) HAKEN 1 mit D abstimmen | **offen fuer die Integration, begruendet** | Ds Dossier (Stand `21ccd4dc`, §5 "Bauplan" leer) plant bisher KEINE Ereignis-Umleitung. Eine gemeinsame Tabelle nach `s_power_gates`-Muster passt nicht ohne Umbau: `s_power_gates` lenkt eine Ereignis-Id auf eine ANDERE RDT-Sub-Id um, A liefert einen Port-Programmzeiger (Bytecode ausserhalb der RDT). HAKEN 1 ist deshalb EINE Zeile mit EINER Funktion (`re15_rolltor_ereignis`); braucht D spaeter dasselbe, ist die Integration mit einer zweiten Zeile `if (!pc) pc = re15_<d>_ereignis(...)` konfliktfrei |
+| 8 | (Soll) §2 Mechanismus der Unsichtbarkeit; echte Kette oder RE15_GIVE begruenden | **erledigt** | §2 (Regions-Cull `main.c` FUN_80039ca0 -> FUN_80014368 gegen Blindrechteck @0x32C/@0x340). RE15_GIVE gleichwertig: die Weiche liest NUR `re15_inv_find_item(0x40)` beim Ausloesen, RE15_GIVE schreibt dieselben `g_inv.slots` wie die Aufnahme; die Aufnahme selbst pinnen `unit_r31_hebetisch`, `unit_r30_sicherung_nein`, `integration_r30_sicherung_laden` |
 
 ### 9.2 Dateien und Haken
 
-(folgt)
+| Datei | Art | Inhalt |
+|---|---|---|
+| `re15_port/include/re15_rolltor.h` | NEU | Konstanten mit Beleg (Raeume, Ereignis 2 @0x0C33, (3,121) @0x0C1E/@0x0CBA, (9,63) PORT-WAHL/VERTRAG, msg 20/21, Opcode 0x62), Schnittstelle |
+| `re15_port/engine/src/rolltor_1050.c` | NEU | Port-Programme `k_ohne` (38 B) / `k_mit` (68 B) Byte fuer Byte wie §5.3, Texte 20/21 = ROOM2060 msg 4/5, Weiche `re15_rolltor_ereignis`, Opcode `re15_rolltor_op_item_lost` (RE2 0x800585e4) mit PC-Schranke, Protokollzeilen `[rolltor]` (nur PC) |
+| `re15_port/engine/src/scd_vm.c` | HAKEN 1 (+3 Zeilen) | `scd_event_fire`: `pc = re15_rolltor_ereignis(room, event_id); if (!pc) pc = sub_scd[event_id];` |
+| `re15_port/engine/src/scd_vm.c` | HAKEN 2 (+4 Zeilen) | `register_opcodes`: `s_op_table[0x62] = re15_rolltor_op_item_lost;` (+ `#include "re15_rolltor.h"`); `s_opcode_sizes[0x62]` bleibt 1 |
+| `re15_port/tests/unit/test_r34n_a_rolltor.c` | NEU (Riegel) | Faelle A/A-N/B/B-N/C (1050, 1051), W, L, Herkunft 20/21/msg 2, PC-Schranke |
+| `re15_port/tests/unit/probes/r34n_a_rolltor.cmake` | ERWEITERT | `add_test(unit_r34n_a_rolltor)`; die Sonde bleibt ohne Test |
+| `re15_port/tests/unit/test_room1050_sicherung.c` | ANGEPASST | (6) = (6i) ohne Sicherung zu / (6ii) Einsetzen / (6iii) ausgelieferter sub02 oeffnet; Kopf berichtigt (Cut_replace, Fundstelle) |
+| `re15_port/tools/r34n_a/lauf.sh` | ERWEITERT | Modi `ohne`, `mit`, `mit_nein`, `danach`, `elza_ohne`, `elza_mit` (+ RE15_SE_DEBUG) |
+| `re15_port/tools/r34n_a/lauf_laden.sh` | NEU | echter Kartenlauf Speichern (1150) -> CONTINUE -> 1050 |
+| `re15_port/tools/r34n_a/lauf_1090.sh` | NEU | Auflage 3: 10F0 -> 1090 (Feuer brennt) -> Tuer Slot 0 -> 1050 Sued |
+
+Nicht angefasst: `scd_room_setup.c`, `main.c`, `aot_common.c`, `msg_common.c`, `game_step_common.c`, RDTs,
+`gen/discard_sites.inc`, `local_build.sh`. Keine AOT-Slots, keine Props, keine neue Flag-Bank; Ressourcen
+aus dem VERTRAG: Bank-9-Bit 63 (64 Reserve unbenutzt), Nachrichten 20/21.
+
+**Sprachaufnahmen (VERTRAG §1.3), vom Nutzer aufzunehmen — ohne Datei laufen die Zeilen stumm mit
+Untertitel:** `synchro/STAGE1/room1050/main20.wav` ("Will you use the Fuse?"),
+`synchro/STAGE1/room1050/main21.wav` ("You've used the Fuse."), wahlweise `main02.wav` ("I need a fuse to run
+the shutter.", Originalsatz); fuer Elza dieselben drei unter `synchro/STAGE1/room1051/` (der Pfad traegt die
+volle Raum-Id, `platform/pc/src/audio_pc.c` "synchro/STAGE%u/room%04X/").
 
 ### 9.3 Commits
 
@@ -490,7 +566,42 @@ Stand: in Arbeit. Abschnitte werden nach jedem Teilschritt gefuellt und committe
 
 ### 9.4 Riegel + Mutationsprobe
 
-(folgt)
+`unit_r34n_a_rolltor` (`test_r34n_a_rolltor.c`) faehrt den ECHTEN Weg: Raumaufbau (main00 + sub00 durch
+die VM), Aktion am Schalter ueber `re15_aot_scan` (AOT 7), `scd_event_fire(2)` (= HAKEN 1, wie
+`game_step_common.c`), dann Bild fuer Bild Nachrichten-FSM + VM. Er prueft das ERGEBNIS (Lehre der
+Sonden-Gegenprobe), nicht nur das Fadenende. Ausgabe (gruen):
+
+```
+  A    1050 ohne, Ja     Frage@79 Cut7@81 msg2@81 Cut3@149 Ende@150 | cam=3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Z19solide=5 fremd=0
+  A-N  1050 ohne, Nein   Frage@79 Cut7@-1 ... Ende@82              | (3,121)=0 (9,63)=0
+  B    1050 mit, Ja/Ja   Frage@79 Cut7@81 msg2@81 msg20@149 Cut8@196 msg21@196 Cut3@240 Ende@241 | (3,121)=0 (9,63)=1 Fuse=-1
+  C danach: ausgeliefert  Frage@79 ... Ende@302                   | (3,121)=1 (9,63)=1 Z19solide=0
+  B-N  1050 mit, Ja/Nein  ... msg20@149 Cut8@-1 Cut3@196          | (9,63)=0 Fuse=3
+  A/B  1051 identisch, C 1051 startet sub02 @0x0CC8
+  W  Wiederbetreten mit (9,63)=1: Schalter -> ausgelieferter sub02 @0x0CAC
+  L  Laden (capture/restore): (9,63)=1, keine Sicherung, Schalter -> sub02 @0x0CAC
+  PC-Schranke: 0x62 ausserhalb des Port-Programms = pc+1, Inventar unberuehrt
+```
+Die Bildzahlen sind bitgleich zur Plan-Sonde (§4) — der eingebaute Weg hat die geplante Zeitsemantik.
+
+**Mutationsprobe** (`A_belege/mutationsprobe.txt`; je Mutation einzeln gebaut, danach Rueckbau aus einer
+Sicherungskopie, `cmp` bestaetigt): 
+| Mutation | Ergebnis |
+|---|---|
+| a: HAKEN 1 raus (`pc = 0`) | ROT, 45 FAIL-Zeilen ("scd_event_fire startet NICHT das Port-Programm", Tor offen ohne Sicherung) |
+| b: HAKEN 2 raus (0x62 = op_unknown) | ROT, 23 FAIL-Zeilen ("Sicherung noch im Inventar", "(9,63) nicht gesetzt", "Cut 8 / msg 21 fehlt") — genau das stille Verschlucken der Sonden-Gegenprobe |
+| c: PC-Schranke raus | ROT ("0x62 im RDT-Bytecode laeuft nicht wie op_unknown", "entfernt einen Gegenstand") |
+| d: Weiche ohne (9,63)-Pruefung | ROT (C: "zweiter Druck startet nicht den ausgelieferten sub02", "Tor oeffnet nach dem Einsetzen nicht") |
+| e: Rueckweg `29 07` statt `29 03` | ROT ("nicht zurueck in Cut 3", 1050 und 1051) |
+| f: Nahansicht Cut 8 statt 7 fuer msg 2/20 | ROT ("114 Bilder Text im falschen Cut") |
+| ohne Mutation (neu gebaut) | `RESULT: OK` |
+
+⛔ Beim ersten Anlauf der Mutationsprobe fehlte `git` im Bau-PATH, der Rueckbau per `git checkout` lief ins
+Leere und die Mutationen haeuften sich — erkannt an identischen FAIL-Listen, Dateien per git wiederhergestellt,
+Probe mit Datei-Sicherungskopien wiederholt (die Tabelle oben ist der zweite, saubere Lauf).
+
+`unit_room1050_sicherung` (angepasst) prueft zusaetzlich die Durchspielbarkeit ueber den ganzen Ablauf
+(6i ohne Sicherung zu -> 6ii Einsetzen -> 6iii ausgelieferter sub02: (3,121)=1, Zelle 19 frei): gruen.
 
 ### 9.5 Suite
 
