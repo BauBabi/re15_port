@@ -651,6 +651,11 @@ Stand: FERTIG gebaut und an der echten exe abgenommen (2026-09-30). Selbst nachg
 | `re15_port/tests/unit/r31_generator.c` | Spur-C-Riegel | Teil D auf "nur Endsperre" umgeschrieben |
 | `re15_port/tools/r34n_c/esp01_re15.py`, `esp01_vorschau.py` | NEU (Werkzeug) | ESP 0x01 aus einer RE1.5-RDT beschreiben / auf ROOM5060 und ROOM11F10 zeichnen (Auflage 2) |
 
+Zeichenreihenfolge (Skill re15-pc-render-order): Ebene 1 = Software-Framebuffer, direkt nach
+Hintergrund und Zeiger; darueber liegen die 3D-Hebel (Ebene 3, x 64..172 — keine Ueberdeckung mit
+x 212..233) und das Text-Overlay (Ebene 5: "Power supply OK." kommt ohnehin erst in Cut 8, wo keine Lampe
+gezeichnet wird, S2 F801). Additiv wie RE2 (Prim 0x2E + ABR 1), Riegel I prueft die Pixel.
+
 Vertragsressourcen (Bank-9-Bits 69/70, AOT 40/41, Nachrichten 28/29): **nicht benutzt** — der Zustand
 ist vollstaendig aus Bank 5 Bits 13..22 abgeleitet, kein neuer Text, keine neue Zone.
 scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
@@ -671,7 +676,8 @@ Zweig `r34n/generator` (auf dem Bauplan 65ceabdd), in Reihenfolge:
 | f0359377 | Dossier 9.4/9.5 (Rueckbau-Nachweis, Suite) |
 | 2e3e7841, 1684efb7, 18847ddd, 948dc976 | Abnahme S1..S7 + gdigrab, Belegbilder, Dossier 9.6 |
 | 00c487ea | Dossier 9.9, Stand |
-| (letzter) | Dossier-Abschluss (9.3/9.5 dritter Lauf) |
+| 03610af1 | Dossier 9.5 dritter Lauf |
+| (dieser) | Abschluss: 16/16 exe-Haken mit umbenannter Kopie gruen, Suite-Belege, Zeichenreihenfolge |
 
 ### 9.4 Riegel + Mutationsproben
 
@@ -739,7 +745,14 @@ Cut 10 dort (Zeichner).
 `integration_r30_cut_blitz` (`cut_blitz[A]: exit=1`) und `integration_r30_irons_tisch_licht` (`exit=1`,
 Spielstand nicht geladen) — dieselbe Handschrift. Ein sauberes `LOCAL-BUILD-OK` ist in dieser Nacht nicht
 erreichbar, solange parallele Agenten mit dem alten `local_build.sh` bauen (jeder Bau = globales
-`taskkill`). Gegenprobe ueber ALLE 16 Haken, die die echte exe starten, mit umbenannter Kopie: s. unten.
+`taskkill`). **Gegenprobe ueber ALLE 16 Haken, die die echte exe starten** (aus `ctest -N -V` gezogen,
+dieselben Kommandos, nur `-DRE15_PC_EXE=` auf die umbenannte Kopie `re15_tst34c.exe` im selben Verzeichnis
+und eigene `_umb`-Arbeitsverzeichnisse): **16/16 rc=0** (`C_belege/suite_exe_haken_umbenannt.log`:
+weste 8 s, cut_blitz 94 s, elza 100 s, granate 93 s, irons_tisch_laden/bild/licht 32/51/51 s,
+sicherung_laden/bild 39/11 s, titel_puls 26 s, tor_hell 6 s, speichern 78 s, boot_bg/dark_start/relatch/
+save_counter 3/2/24/21 s). Zusammen mit dem dritten Lauf (alle 413 Haken ohne echte exe gruen) ist die
+Suite damit **429/429 gruen bis auf den externen Abbruch**; Zusammenfassung der drei Laeufe:
+`C_belege/suite_laeufe_zusammenfassung.txt`.
 Panel-Riegel in der Suite: unit_r34n_c_generator, unit_r31_generator, unit_r27_panel_schalterwerte (G:
 90 Bilder Quadrat gehalten), unit_r26_panel_11f0 (A), unit_r17_cursor_klick_pin, unit_gen_11f0_switches,
 unit_gen_11f0_cursor_view, unit_11f0_cut_after_puzzle — alle gruen im Vollauf (Auflage 6: r17/r27 G/
