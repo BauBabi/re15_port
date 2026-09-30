@@ -172,8 +172,58 @@ APK geloescht (Kopie `build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk` fuer Absch
 release/-Dateien sha256 = Stand vor den Laeufen (`release_vorher.sha256` == `release_nachher.sha256`), `git status --short
 release/ re15_port/` leer, `git status --ignored release/` ohne Reste, echter Index leer.
 
-## 4. Linux (Docker)
-(folgt)
+## 4. Linux (Docker Desktop 27.5.1 lief; Baum NUR LESEND unter /src, Kopien/Faelschungen nur im Container)
+Skript `linux_lauf_r3.sh`, Log `linux_lauf_r3.log` (03:43:37-03:47:43, EXIT_DOCKER=0). Image `re15-linux-build:deb11`:
+Debian 11 bullseye, Kernel 5.15 WSL2, bash 5.1.4, `OSTYPE=linux-gnu`, Python 3.9.2, readlink/timeout da, kein
+unzip/cygpath/java/aapt. Gate-Datei im Mount: 0 CR, erste Zeile `#!/bin/bash`, Modus 777 (9p). APKs: Referenz-Kopie
+`514bebd5...`, neuer Bau `b7bfb699...`.
+| Lauf | Ergebnis |
+|---|---|
+| L1 `bash release/python_finden.sh` | `Python: /usr/bin/python3 (3.9.2)`, rc 0 (Link -> readlink-Pruefung, gestartet) |
+| L2 `python3 release/apk_asset_gate.py --selbsttest` | **202/202 + 58/58 innere Proben**, rc 0, 19,9 s (Temp unter /tmp; /src ist ro - der Selbsttest schreibt nichts in den Baum) |
+| L3 `--repo /src --quellbaum` (9p) | rc 0 `QUELLBAUM-OK`, PSX 3193 / fx 13 / RE2 277 / RE15DOOR 30 / synchro 90, Tuer-Soll 30/30 + 27/27, 3,0 s |
+| L4 Referenz-APK gegen den **Mount** /src (9p) | **rc 0** `APK-ASSET-GATE-OK`, Zaehlung je Baum wie unter Windows (3603/3603/3603, RE2/DOOR 27/27, RE15DOOR 30/30, TORSE.VBS gleich, 3616 Eintraege roh lesbar), 124,4 s (9p-Mount) |
+| (Kopie der gelesenen Baumteile nach /tmp/repo) | 40,0 s, 346 MB |
+| L5 Referenz-APK gegen die **Kopie** | rc 0, dieselbe Zaehlung, 10,8 s -> die 124 s sind der 9p-Mount, nicht das Gate |
+| L6 **neue APK** (Abschnitt 1) gegen die Kopie | rc 0, dieselbe Zaehlung, 5,7 s |
+| L7 Direktaufruf `/src/release/apk_asset_gate.py --repo /tmp/repo --quellbaum` | der Kopf laeuft als Bash: `Python: /usr/bin/python3 (3.9.2)`, `QUELLBAUM-OK`, rc 0 |
+| L8 Negativ: Referenz-Kopie, 1 Byte in RE2/DOOR/DOOR36.DO2 (eigener Rohzugriff) | **rc 1** `APK-Eintrag beschaedigt (CRC/Entpacken): ...DOOR36.DO2: gelesen 58396 B, CRC 037fa8f1 - Zentralverzeichnis ... 81150628`, RE2/DOOR 26/27 |
+| L9 Negativ: Quellbaum-Kopie + RE15DOOR/P99X.DO2 (APK = Referenz) | **rc 1** `P99X.DO2 steht in keiner Engine-Tabelle` + `fehlt in der APK`, RE15DOOR 30/31 |
+| L10 Negativ: APK nach 100 MB abgeschnitten | **rc 2** `APK nicht lesbar ... (kein End-of-Central-Directory ...)` |
+| L11a `--paket` auf einem Paketordner wie copy_common (harte Links) | rc 0 `PAKET-OK: 3603 Dateien ... nichts zusaetzlich`, 1,3 s |
+| L11b dasselbe, 1 Byte in RE2/TORSE.VBS (Link vorher geloest) | **rc 1** `Inhalt weicht ab: shared_assets/RE2/TORSE.VBS  Quelle ... d84c806f.., Paket ... 1230ec58..` |
+| L12 `bash release/build_android.sh --gate-only <ref> --version v0.8.19` ohne Android-SDK | **rc 1** `APK-Pruefung: Android-SDK-Ordner fehlt: /root/Android/Sdk ... Nur die Assets: "$PY" release/apk_asset_gate.py --repo . <apk>` (geschlossen, kein stilles Ueberspringen) |
+Folgerung: `apk_asset_gate.py` (Selbsttest, APK-Pruefung, `--quellbaum`, `--paket`, Direktaufruf) und `python_finden.sh`
+sind unter Linux portabel und liefern dieselben Zahlen wie unter Windows; Mount und Kopie geben dasselbe Ergebnis. Die
+volle Kette (aapt/zipalign/apksigner/Java) braucht ein Linux-Android-SDK, das keines der re15-Images hat - dort bricht sie
+geschlossen ab (L12). Statisch zusaetzlich: `ast.parse(..., feature_version=(3, 8))` fuer apk_asset_gate.py und
+zip_exec_bit.py ok, kein Aufruf aus einer Liste bekannter 3.9+/3.10+/3.11+-APIs (removeprefix, functools.cache,
+int.to_bytes ohne byteorder, cancel_futures, ignore_cleanup_errors, eingebaute Generics zur Laufzeit, match, ...) - Python
+3.8 selbst lief nicht (keines der Images/keine Installation hat 3.8; kleinstes gemessen: 3.9.2 hier, 3.9.0 beim Bauer).
+
+## 5. Integration mit dem naechsten Paket (nur gelesen: Hauptbaum und die parallelen Zweige)
+- Kein paralleler Zweig (r34g/a, b, c, c0, d; r34n/adaruf, dokumente, generator, hebetisch, leichen, rolltor,
+  schrift1170) aendert release/, platform/android, .gitignore, include/re15_door_seq.h oder die Tuer-Tabellen
+  (`git diff --name-only master...<zweig>`) -> beim Zusammenfuehren keine Konflikte mit diesem Zweig.
+- Keine fest verdrahtete Anzahl in der Kette (`grep` nach 277/3603/3604/3616/3193/Bytesummen in Gate, apk_pruefen,
+  build_android, make_package, build.gradle: nur Doku-Kommentare); noCompress in build.gradle wird aus den Endungen ALLER
+  Dateien der Baeume berechnet (neue Endungen bleiben unkomprimiert).
+- **Die Granaten-Zweige fuegen `re15_port/shared_assets/RE2/CORE00.ESP` (8572 B) und `RE2/TEX.TIM` (132320 B) hinzu**
+  (gleiche Blobs `e030f790...`/`e2f3e1b3...` in allen fuenf r34g-Zweigen). Nachgestellt im Container (`linux_integration_r34g.sh`,
+  `linux_integration_r34g.log`; Blobs per `git cat-file` aus r34g/d-re2fx, Quellbaum-Kopie unter /tmp):
+  | Lauf | Ergebnis |
+  |---|---|
+  | I1 `--quellbaum` mit den zwei neuen Dateien | rc 0, RE2 279, `QUELLBAUM-OK: 3605 Dateien`, Tuer-Soll unveraendert 30/30 + 27/27 |
+  | I2 Referenz-APK v0.8.19 gegen diesen Quellbaum | **rc 1** `fehlt in der APK: assets/shared_assets/RE2/CORE00.ESP`, `... RE2/TEX.TIM` (RE2 279/277) |
+  | I3 neue APK (Abschnitt 1) gegen diesen Quellbaum | **rc 1**, dieselben zwei Befunde |
+  | I4 `--paket` auf einem neuen Paket (mit den Dateien) | rc 0 `PAKET-OK: 3605 Dateien` |
+  | I5 `--paket` auf einem alten Paket (ohne) | **rc 1** `fehlt im Paket: shared_assets/RE2/CORE00.ESP`, `... TEX.TIM` |
+  Folge fuer das naechste Paket: die zwei Dateien blockieren die Kette nicht (neue Dateien in einem bekannten Baum sind
+  zulaessig), aber eine VOR dem Zusammenfuehren gebaute APK wird von make_package.sh abgelehnt (dieselbe Kette vor dem
+  Zippen) - die APK muss nach dem Zusammenfuehren neu gebaut werden. Genau dafuer ist die Wiederholung in make_package da.
+- Nebenbei (nicht dieser Zweig, vorbestehend): im Hauptbaum liegen unter release/ neun alte, gitignorierte APKs
+  v0.8.7-v0.8.15 (je ~358 MB, zusammen ~3,2 GB). make_package.sh raeumt nur alte Split-Volumes (`re15_port_v0*.z*`),
+  keine alten APKs; das Gate sieht nur `<NAME>_android.apk` der angegebenen Version und wird davon nicht beeinflusst.
 
 ## Befunde
 (folgt)
