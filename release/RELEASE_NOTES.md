@@ -1,3 +1,65 @@
+# v0.8.21 - 2026-09-30
+
+Ihr Auftrag dieser Runde ist gebaut: alle drei Granaten sind voll benutzbar. Suite 463 -> 477/477.
+
+## Was Sie merken
+
+**Handgranate: Wurf, Abprall, Explosion wie im Original.** Leon wirft die Granate in
+Blickrichtung (Wurfbogen je nach Zielhoehe hoch/mitte/tief), sie taumelt olivgruen durch die
+Luft, springt mehrmals mit Ton ab, bleibt liegen und explodiert gut eine Sekunde spaeter
+(36 Bilder) mit Feuerball und aufsteigendem Rauch; Leon wird im Explosionsbild kurz orange
+angestrahlt. Der Schaden faellt erst bei der Explosion, im Umkreis der Granate - vorher traf
+schon der Abzug sofort. Wurf, Flug, Zuender und Explosion sind die Routinen des Originals.
+
+**Warum das Original abstuerzt - und warum es jetzt nicht mehr passiert.** Ihre Beobachtung
+stimmt: im Original haengt das Spiel, sobald die Explosion einen STEHENDEN Zombie trifft. Die
+Granate zieht ihm 1000 HP ab und setzt die Reaktion 9; im naechsten Bild springt seine
+Todesroutine ueber eine leere Tabellenzelle ins Leere (STAGE1 `80106c00: jalr v0` mit v0 = 0)
+- Standbild. Das betrifft auch Zombie-Maedchen, Gitterhaende und G-Birkin. Im Port reagieren
+diese Gegner jetzt wie auf RE2s eigene Granatwerfer-Explosion (Sturz-Tod bzw. Treffer).
+In ueber 160 Testlaeufen gab es keinen Haenger.
+
+**Saeure- und Brandgranate funktionieren.** Im Original waren beide Attrappen (Wurfanimation,
+aber keine Granate). Jetzt fliegen sie wie die Handgranate; beim Aufschlag gibt es RE2s
+Saeurespritzer bzw. RE2s Brand mit drei gleitenden Bodenflammen, die rund fuenf Sekunden
+brennen und Gegner darin weiter verletzen. Die Toene kommen aus den RE1.5-Baenken
+ARMS10/ARMS11 (bytegleich zu RE2).
+
+**Gegnerreaktion bei allen Gegnern.** Zombies fallen um, bei Saeure und Brand mit Veraetzung
+bzw. Verkohlung und Schaden ueber Zeit; Hunde zerplatzen, verkohlen oder werden veraetzt;
+Kraehen, Spinnen, Gorilla, Kakerlaken, Tyrant, Alligator, G5 und Birkin reagieren nach ihren
+Original-Routinen. Ivy bleibt immun, NPCs werden nicht getroffen.
+
+**Vorsicht, Eigenschaden (Original).** Wer naeher als etwa 950 an der eigenen Explosion steht,
+stirbt - 1000 Schaden gegen 100 HP. Das tut das Original genauso.
+
+**Granaten beschaffen wie im Original.** Das Item-Debug des Statusschirms ist jetzt eingebaut:
+Inventar oeffnen, Cursor auf einen Item-Platz, SELECT, dann R1 (+1), L1 (-1), R2 (+10), L2 (-10)
+bis zur gewuenschten Id (Hand Grenade = 9x R1, Acid Grenade 10x, Incendiary Grenade 11x),
+Kreis beendet; Menge 255. Die Handgranate im Hebetisch von Irons' Buero (ROOM1150) bleibt.
+
+**Weiteres, das Sie sehen.**
+* Effekte (Muendungsblitz, Huelsen, Rauch, Feuer) zeichnen jetzt in voller Helligkeit und mit
+  den echten Paletten - vorher halb so hell.
+* Beim Zielen dreht Leon wie im Original 24 bzw. 48 je Bild (vorher 72); die automatische
+  Zielnachfuehrung folgt dem Original; beim Messerhieb dreht er nicht mehr.
+* Im Dauerfeuer werden Figuren kurz vom Muendungsfeuer angestrahlt (Original).
+* Der Wasserstrahl in ROOM2000/2001/20B0/20B1 ist wieder ein durchgehender Strahl; Raumeffekte
+  starten jetzt auch, wenn man den Raum durch die Tuer betritt.
+* Birkin (ROOM3070) bleibt nach dem Tod liegen, statt wieder aufzustehen.
+* Das Bauskript beendete bei jedem Build jede laufende re15_pc.exe auf dem Rechner - behoben.
+
+## Grenzen
+
+* Wie im Original fliegt die Granate durch Waende. Auf erhoehten Boeden (Heliport 1170, 1090,
+  2030/2050, 20A0, 3040, 5080) landet sie auf der Hoehe, auf der Leon steht; das Original liess
+  sie dort durch den Boden fallen.
+* Nach dem HE-Tod brennt die Leiche eines RE2-Zombies mit zwei kleinen Flammen weiter
+  (RE2-Russ, dort ebenfalls ohne Zeitende).
+* Nicht am Bildschirm gemessen: das Zombie-Maedchen (erscheint im Port in ROOM4050 noch nicht),
+  Birkin 0x36 in ROOM3080 und der Alligator ausserhalb von ROOM2090 (kein Modell auf der Disc).
+* Beim RE2-Hund fehlen die Saeure-Funken, bei der Kraehe fliegen beim Zerplatzen keine Teile.
+
 # v0.8.20 - 2026-09-30
 
 Ihre Hausaufgaben fuer die Nacht sind gebaut — sieben Themen, jedes von einer eigenen Pruefung an der
