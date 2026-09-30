@@ -11,6 +11,7 @@
 #   FLAGS     RE15_SET_FLAG (z.B. "9:61"), leer = keine
 #   GIVE      RE15_GIVE (Inventar vorbelegen), leer = keine
 #   SEK       Wanduhr-Deckel, Standard 120
+#   CUT       RE15_FORCE_CUT (Kamera festhalten, nur fuer die Sicht; 1110: 3, 1230: 8)
 #   EXE       Pfad der exe; Standard: Kopie der Bau-exe nach build/r34n_f/bin (eigener Name,
 #             damit local_build.sh sie nicht beendet und keine fremde exe getroffen wird)
 #
@@ -54,6 +55,7 @@ export RE15_PAD_AT="${PAD_AT:-330:A,470:A,560:A,700:A,820:A}"
 export RE15_EXIT_AT="${EXIT:-950}"
 if [ -n "${FLAGS:-}" ]; then export RE15_SET_FLAG="$FLAGS"; fi
 if [ -n "${GIVE:-}" ]; then export RE15_GIVE="$GIVE"; fi
+if [ -n "${CUT:-}" ]; then export RE15_FORCE_CUT="$CUT"; fi
 timeout -k 5 "${SEK:-120}" "$EXE"
 rc=$?
 echo "[r34n-f-lauf] $MARKE raum=$RAUM spieler=$SPIELER rc=$rc Bilder: $(ls f_*.ppm 2>/dev/null | wc -l)"

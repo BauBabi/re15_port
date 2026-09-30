@@ -42,7 +42,27 @@ Stand: Abschnitte 1 und 3 (Teil) gefuellt, Rest in Arbeit.
 
 ## 2 Ist-Zustand im Port (gemessen)
 
-(in Arbeit)
+Echte exe dieses Baums (Stand master cf0e68ba, `local_build.sh configure` + `build`, LOCAL-BUILD-OK),
+als Kopie `build/r34n_f/bin/re15_pc_r34nf.exe`, Lauf `re15_port/tools/r34n_f/r34n_f_lauf.sh`
+(RE15_NO_INTRO, Titel-Autovorlauf, `RE15_DEBUG_JUMP=<raum>@240`, `RE15_PLAYER_POS` vor der Leiche
+mit Blick +X, `RE15_PAD_AT="330:A,470:A,560:A,700:A,820:A"`, Framedump je 10 Bilder, `RE15_FORCE_CUT`
+NUR fuer die Sicht: 1110 Cut 3, 1230 Cut 8 — die zwei Cuts, deren Blickrichtung am naechsten an der
+Leiche liegt, 8,8 deg / 12,0 deg, aus den RID-Saetzen @RDT+0x60 gerechnet).
+
+| Raum | Lauf | Beobachtung |
+|---|---|---|
+| ROOM1110 | `ist1110_b` | Sprung-Spawn (10580,2650) -> Kollision schiebt auf (10448,2646). F330 Viereck: `thread start slot=10 first_op=0x46` (= sub02 Aot_reset), `Plc_motion(entity=1, motion=11)`, ~30 Bilder spaeter `[msg] room=1110 id=0`. Drei Seiten: "It's a police officer, he's dead." ▼ "He is holding a slip." ▼ 'The numbers "4312" are / printed on the slip.' (4312 gruen). Danach steht das Ereignis wieder scharf: F820 Viereck -> dasselbe Ereignis ein zweites Mal (`[msg] room=1110 id=0` 2x). Kein Item, kein Modal (modal.log leer). |
+| ROOM1230 | `ist1230_b` | Spawn (3280,25900), F330 Viereck -> sub21, `[msg] room=1230 id=10`: "A miserable death..." ▼ "He is holding a slip." ▼ 'The numbers "5632" are / printed on the slip.' Zweites Untersuchen F820 wieder dasselbe. |
+
+Belegbilder: `F_belege/ist_1110_leiche.png`, `F_belege/ist_1230_leiche.png` (je F320 vor dem Druck,
+F370 Schreibmaschine, F450 Seite 1, F540 Seite 2, F660 Seite 3, F760 nach dem Text).
+Nebenbefund (nicht Spur F): im Port aendert Plc_motion(1,11,0) Leons sichtbare Haltung nicht
+(Ausschnitt F320..F760 gleich: stehend, Messer gesenkt). Ob das Original hier eine andere Pose
+zeigt, ist NICHT gemessen; das Ereignis bleibt in Spur F unveraendert, die Frage gehoert nicht in
+diesen Bau (Abschnitt 8).
+
+Ist-Stand in einem Satz: der Port zeigt beide Original-Texte byte-true und beliebig oft, es gibt
+kein Munitionsangebot und kein Merkbit.
 
 ## 3 Original-/RE2-Mechanismus (Adressen, Bytes, Instruktionen)
 
@@ -57,11 +77,11 @@ sub02 @0x0CEE (Ereignis der Leiche):
 
     0x0CEE  Aot_reset  46 05 00 00 00 00 00 00 00 00   Slot 5 stilllegen
     0x0CF8  Work_set   2e 01 00                         Spieler
-    0x0CFC  Plc_motion 3f 01 0b 00                      Leon kniet (Bewegung 11)
+    0x0CFC  Plc_motion 3f 01 0b 00                      Spieler-Ereignisbewegung 11
     0x0D00  Sleep      09 0a 1e 00                      30 Bilder
     0x0D04  Message_on 2b 00 ff ff                      Nachricht 0, Maske 0xffff (Einfrieren)
     0x0D08  Evt_next   02
-    0x0D0A  Plc_motion 3f 01 0b 00                      aufstehen
+    0x0D0A  Plc_motion 3f 01 0b 00                      Spieler-Ereignisbewegung 11 (zweiter Teil)
     0x0D0E  Plc_flg    43 00 80 00
     0x0D12  Sleep      09 0a 1e 00                      30 Bilder
     0x0D16  Plc_ret    42
@@ -88,9 +108,9 @@ Nachricht 10 @0x16F4 (roh): `04 02` | `1d 00 49 45 4f 41 4e 3d 3e 48 41 00 40 41
 `02 00` | `24 41 00 45 4f 00 44 4b 48 40 45 4a 43 00 3d 00 4f 48 45 4c 57` = "He is holding a slip." | `02 00` |
 `30 44 41 ... 61 05 01 11 12 0f 0e 05 00 19 ... 4f 48 45 4c 57` = 'The numbers "5632" are / printed on the slip.' | `01 00`.
 
-Beide Leichen sind also ein ORIGINAL-Ereignis mit Knien — Leon kniet, der Text friert die Welt ein
+Beide Leichen sind also ein ORIGINAL-Ereignis mit eigener Spieler-Bewegung — Plc_motion(1,11,0), der Text friert die Welt ein
 (Maske 0xffff, `LAB_800404f4` @0x80040508 `lhu a3,2(v0)` / @0x8004051c `sll a3,a3,16`, Port `scd_vm.c` op_message_on),
-danach steht er auf und der Platz wird wieder scharf. Kein Item, kein Flag.
+danach zweite Plc_motion(1,11,0) + Plc_flg + 30 Bilder + Plc_ret, und der Platz wird wieder scharf. Kein Item, kein Flag.
 
 ### 3.2 Text: Zeichen, Satzbau, Glyph-Belege (Werkzeug `re15_port/tools/r34n_f/r34n_f_zensus.py texte glyphen breite msgref`)
 
@@ -181,9 +201,9 @@ Der RE2-Item-Handler (AOT-Tabelle @0x800A73C4, Typ 2 -> 0x80051884) zweigt auf a
 `lbu v0,7(a0)` @0x800518cc / `andi v0,v0,0x1` @0x800518d4 / `bne` @0x800518d8 -> @0x80051924
 `sb 6,-0x403(at)` (0x800cfbfd) statt sofortigem Aufnahme-Start (@0x800518f8 `sb 2 -> 0x800d5c00`).
 Die Leichen-Medaille traegt action 1 (eigener Spieler-Ablauf vor der Aufnahme). RE1.5 hat fuer
-diese zwei Leichen bereits einen eigenen Spieler-Ablauf: das Knien per Plc_motion(1,11,0) im
-Ereignis selbst (3.1). ⛔ Was Spieler-Routine 6 in RE2 genau zeigt, ist NICHT weiter
-disassembliert — fuer den Bau nicht noetig, weil das RE1.5-Knien bleibt.
+diese zwei Leichen bereits einen eigenen Spieler-Ablauf: Plc_motion(1,11,0) im Ereignis selbst
+(3.1). ⛔ Was Spieler-Routine 6 in RE2 genau zeigt, ist NICHT weiter disassembliert — fuer den
+Bau nicht noetig, weil der RE1.5-Ereignisablauf unveraendert bleibt.
 
 RE2 "Sce_Item_get" (Opcode 0x76, Handler 0x800587b8 aus Tabelle @0x800A74C8): liest pc[1] Item,
 pc[2] Menge, ruft direkt das Einfuegen `jal 0x80069adc` @0x80058864, pc += 3 — **ohne** Frage.
