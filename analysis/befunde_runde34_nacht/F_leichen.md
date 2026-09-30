@@ -480,7 +480,7 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
 | R5 | Stimme | Neue IDs -> Dateien `synchro/STAGE1/room1110/main20.wav`, `main21.wav`, `synchro/STAGE1/room1230/main22.wav`, `main23.wav` (Nutzer nimmt auf). Ohne Datei stumm mit Untertitel. Elza-Varianten suchen unter room1111/room1231. |
 | R6 | PSX-Ziel | IDs < 32 (MSG_TABLE_N 32), Texte <= 63 B < MSG_RAW_LEN 128; Logzeilen nur unter RE15_PLATFORM_PC. |
 | R7 | Menge | Der Spieler bekommt 7 Schuss (15 halbiert) — Folge der Nutzer-Halbierung fuer JEDE Welt-Munition, bewusst nicht umgangen. |
-| R8 | Spur E | Marvins Notiz (4312) und Armory Notice (5632) nehmen die Codes auf, die hier aus den Leichen-Texten verschwinden — inhaltlich passend, technisch unabhaengig (andere Raeume, eigene Bits 57..60, eigene IDs in 1000/1010/1020). Die Codes der Tastenfelder selbst aendern sich nicht. |
+| R8 | Spur E — ⛔ SOFTLOCK-KOPPLUNG (berichtigt nach Gegenpruefung Auflage 2) | ROOM1110 msg 0 ("4312", @0x0DB0) und ROOM1230 msg 10 ("5632", @0x172F) sind die EINZIGEN Quellen der beiden Tastenfeld-Codes. **F nur zusammen mit E integrieren und ausliefern** (Dok 3 Marvin's Notes 4312 in ROOM1020, Dok 4 Armory Notice 5632 in ROOM1010); F allein = Communication Room und Weapon Storage ohne Code. Die Integration prueft das mit einem gemeinsamen Lauf (Dok 3/4 lesbar UND Leichen-Texte ohne Code). Technisch getrennt (andere Raeume, Bits 57..60, eigene IDs in 1000/1010/1020); die Codes der Tastenfelder selbst aendern sich nicht. |
 | R9 | Zwei Untersuchungen schnell hintereinander | Das Ereignis legt Platz 5/18 beim Start still (@0x0CEE / @0x014A6) und erst am Ende wieder scharf — kein Doppel-Ausloesen. |
 | R10 | Integrationstests mit echter exe flattern unter Last | Hoechstens EIN neuer exe-Haken; Befund immer einzeln 2x nachfahren (memory reai-v2-gui-tests-flattern-bei-parallelen-agenten). |
 
@@ -491,8 +491,9 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
    gemessen. Der Bau aendert das Ereignis nicht; eine eigene Pruefung gehoert in eine andere Runde.
 2. **Stimmdateien** main20..23.wav (Texte in 4.1-4.3) nimmt der Nutzer auf; bis dahin stumm mit Untertitel.
 3. **Laufwege fuer `durchlauf_1110` / `durchlauf_1230`** (Tuer-Spawns belegt: ROOM1100 @0x009BA -> (-2400,0,-5000),
-   ROOM11B0 @0x00F88 -> (4725,0,28650)) sind im Bau per Framedump zu vermessen; die Sprung-Laeufe (6.2) decken die
-   Funktion schon ab.
+   ROOM11B0 @0x00F88 -> (4725,0,28650)) sind im Bau per Framedump zu vermessen. ⛔ BERICHTIGT (Gegenpruefung
+   Auflage 3): die Sprung-Laeufe ersetzen den Tuerweg NICHT (memory reai-v2-playthrough-not-jumpin) — die
+   Durchlauf-Abnahme ist Pflicht, Ergebnis in 9.6.
 4. **RE2-Spieler-Routine 6** (Item-AOT action Bit 0, @0x80051924) ist nicht weiter disassembliert — fuer
    den Bau nicht noetig (RE1.5-Ereignisablauf bleibt).
 5. Keine offene RE-Frage fuer den Bau selbst: Text-Bytes, Nachrichten-Stelle, Faden-Stand, Modal-Weg,
@@ -500,19 +501,89 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
 
 ## 9 Umsetzung
 
-(Stufe BAU, Runde 34 Nacht, Spur F — Geruest, wird fortlaufend gefuellt)
+(Stufe BAU, Runde 34 Nacht, Spur F — wird fortlaufend gefuellt)
 
 ### 9.1 Dateien
-- (offen)
+
+| Datei | Art | Inhalt |
+|---|---|---|
+| `re15_port/include/re15_leiche.h` | NEU | Konstanten (Raeume, Original-/Port-Nachrichten, Bits, Item, Menge) mit Belegen, API |
+| `re15_port/engine/src/leiche_1110_1230.c` | NEU | vier Texte (Glyph-Fundstellen je Baustein), `re15_leiche_message_on`, `re15_leiche_tick`, Pruefhaken |
+| `re15_port/engine/src/scd_vm.c` | Haken (1 Anweisung + include) | `op_message_on` HINTER dem Stimmen-Riegel, vor `re15_discard_besitz_vor_nachricht` |
+| `re15_port/engine/src/game_step_common.c` | Haken (1 Anweisung + include) | nach `re15_granate_tick()`, vor `if (re15_item_modal_active()) return;` |
+| `re15_port/tests/unit/test_r34n_f_leiche.c` | NEU | RIEGEL, 12 Teile (echte Haken) |
+| `re15_port/tests/unit/probe_r34n_f_karte.c` | NEU | Mess-Werkzeug: Speicherkarte mit Stand vor der Leiche (Lade-Weg der exe) |
+| `re15_port/tests/unit/probes/r34n_f_leiche.cmake` | erweitert | Riegel (12 ctest-Eintraege `unit_r34n_f_leiche_*`) + Kartenwerkzeug |
+| `re15_port/tools/r34n_f/r34n_f_bogen.py` | NEU | Belegbogen aus Framedumps (256-Farben-PNG) |
+| `re15_port/tools/r34n_f/r34n_f_laden.sh` | NEU | Lade-Lauf an der echten exe (Karte + CONTINUE) |
+
+Kein Raumstart-Haken, kein neuer AOT-Platz, kein Asset-Patch, kein neues Speicherformat.
 
 ### 9.2 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
-- (offen)
+
+| # | Auflage | Stand |
+|---|---|---|
+| 1 | Haken hinter den Stimmen-Riegel | ✅ `scd_vm.c` direkt nach dem Block "DEN VORIGEN SATZ AUSREDEN LASSEN" (`t->voice_wait = 0`), vor `re15_discard_besitz_vor_nachricht`. Riegel-Teil `stimme`: laufende Aufnahme 120 Bilder -> Text erst F121 (ohne Aufnahme F32). Gegenprobe M3 (Haken an der alten Plan-Stelle hinter der `[msg]`-Zeile) -> `stimme` ROT (Text F32). Die `[msg]`-Logzeile traegt weiter die Original-Id. |
+| 2 | E+F-Kopplung festschreiben | ✅ R8 unten berichtigt, Kopf von `re15_leiche.h`, Commit-Messages. Siehe 9.9. |
+| 3 | Durchlauf-Abnahme verpflichtend | siehe 9.6 (Tuerweg ROOM1100 -> 1110, ROOM11B0 -> 1230) |
+| 4 | Riegel misst den Id-Tausch | ✅ Teile `nein_*`/`ja_*`/`voll`/`varianten`: geoeffnete Nachricht = 20/21 bzw. 22/23, Rohbytes 20..23 = eingebackene Texte, `re15_msg_get_raw(0)`/`(10)` nach dem Untersuchen bytegleich zur RDT-Nachricht; Teil `andere` inkl. Gegenprobe. Gegenprobe M1 (Haken raus) -> rot an der Id ("Nachricht 20 (Port, lang) statt 0"). |
+| 5 | Angebots-Latch absichern | ✅ PORT-WAHL im Code gekennzeichnet: Modal nur, wenn `g_scd.message_id` beim Schliessen noch die eigene lange Id ist (deckt den Raum-Neuaufbau ab: `scd_room_reenter` nullt g_scd), bei Wechsel der Raum-Basis oder angemeldeter Raum-Anfrage faellt das Angebot. Riegel-Teil `latch` (a Raum-Neuaufbau, b fremde Raum-Basis); Gegenproben M5/M6 -> `latch` ROT. Ein eigener Teardown-Haken ist damit unnoetig (kein weiterer Eingriff in gemeinsame Dateien). |
+| 6 | Belege nachziehen | ✅ (a) ROOM1011 sub06 @0x00E0A / sub07 @0x00E4E / sub00 @0x00A70 im Kopf von `re15_leiche.h`; (b) "He is holding something" = ROOM1011 @0x012A3 am Stueck (Riegel `texte` prueft zusaetzlich die Teilstellen @0x0D8D/@0x0EC4); (c) Kleinschreibung mit dem Runde-33-Vorlauf ("Report" -> "report", `tuer1120_1130.c`) im Kommentar von `leiche_1110_1230.c`; (d) RE2 ROOM4050 aot 7 (Shotgun Shells x7) bei `RE15_LEICHE_MENGE` als geprueft-kein-Handgun vermerkt. Alle Bytes in diesem Bau selbst nachgelesen (Python ueber `shared_assets/PSX/STAGE1`). |
+| 7 | Paket/Android | ✅ neue Quelle `engine/src/leiche_1110_1230.c` wird ueber das GLOB `engine/src/*.c` erfasst (Configure im Baum gelaufen); ⛔ Android-Bau cacht die GLOB-Liste (memory reai-v2-android-glob-cache) -> bei der Integration `app/.cxx` neu konfigurieren. Stimmdateien-Liste vollstaendig in 9.9. |
 
 ### 9.3 Konstanten und Belege
-- (offen)
+
+Alle Konstanten stehen mit Beleg in `re15_leiche.h` (Tabelle 5.3 unveraendert uebernommen). In diesem Bau
+zusaetzlich selbst disassembliert/gelesen und im Code zitiert:
+
+| Stelle | Instruktionen / Bytes (selbst gelesen) | Wofuer |
+|---|---|---|
+| Message_on LAB_800404f4 (Tabelle @0x80074554 -> 0x800404f4) | @0x80040504 `lbu a2,1(v0)`, @0x80040508 `lhu a3,2(v0)`, @0x8004050c `addiu v0,v0,4`, @0x80040518 `jal 0x80027e68`, @0x8004051c `sll a3,a3,16` | nur die Id tauschen, Maske/pc+=4 bleiben |
+| FUN_80027e68 Open-Guard | @0x80027e74 `lbu v0,0(v1)` (0x800b8520), @0x80027e7c `andi v0,v0,0x80`, @0x80027e80 `beq v0,zero,0x80027e90`, @0x80027e88 `j 0x800280ac` (v0 = -1) | Modal erst, wenn das Belegt-Bit frei ist (`re15_pauseflags_belegt`), NICHT auf `message_active` (Nachhall) |
+| Modal-Frage ueber dieselbe Routine | Zustand 5: Ja/Nein `ori a1,zero,0x100` @0x8001df6c -> `jal 0x80027e68` @0x8001dfe0; voll `ori a1,zero,0x100` @0x8001df88 -> `jal 0x80027e68` @0x8001df90 | "ein Nachrichtenkanal" -> Nachhall der Leichen-Zeile beenden (wie `item_discard_common.c`) |
+| Modal Zustand 7 (Tabelle @0x800106b4[7] -> 0x8001e048) | @0x8001e054 `bltz v0,0x8001e0ec` (voll), @0x8001e068 `andi v0,v0,0x1` + @0x8001e06c `bne` (Nein), @0x8001e090 `sb zero,0(v1)`, @0x8001e0c4 `jal 0x8004dc4c` (a1 = `lhu a1,2(s1)`), @0x8001e0d0 `jal 0x8004ef90` (a0 = 0x800b0fd6+162 @0x8001e0d4 = Bank 9) | Wiederholbarkeit bis zur Annahme, Bit nur bei Ja |
+| Item-AOT-Handler LAB_80043328 | @0x80043334 `bne v0,zero,0x80043368` (laeuft schon -> nichts) | Tick wartet, wenn schon ein Modal laeuft |
+| RDT-Bytes | ROOM1110 @0x00AEE, sub02 @0x0CEE..0x0D23, msg 0 @0x0D68 (Seite 1 @0x0D6A, Umbruch @0x0D8B, "He is holding" @0x0D8D, "." @0x0DA1, Code @0x0DB0, Ende @0x0DD3), " something" @0x0EC4; ROOM1230 @0x00D52, sub21 @0x14A6..0x14DB, msg 10 @0x16F4 (Seite 1 @0x16F6, Umbruch @0x170A, @0x170C, "." @0x1720, Code @0x172F, Ende @0x1752); ROOM1011 msg 19 @0x012A1 (`04 02 24 41 00 45 4f 00 44 4b 48 40 45 4a 43 00 4f 4b 49 41 50 44 45 4a 43 57 57 57 01 00`), sub06 @0x0E0A, sub00 @0x0A52/@0x0A70; Nachrichtensektionen 1110/1111 @0x0D54 (10), 1230/1231 @0x14F4 (12); 1111/1231 bytegleich | Texte, Ids, Varianten |
+
+Neue PORT-WAHLEN dieses Baus (keine Original-Adresse, im Code gekennzeichnet):
+- Angebots-Latch nur bei eigener Id / gleicher Raum-Basis / ohne Raum-Anfrage (Auflage 5, Robustheit).
+- Nachhall beenden beim Oeffnen des Modals: der Original-Mechanismus (ein Kanal, Open-Guard) ist belegt; der
+  Nachhall selbst ist Nutzer-Entscheidung 2026-09-20 und hat kein Original.
 
 ### 9.4 Sonden/Pins + Mutationsprobe
-- (offen)
+
+Riegel `test_r34n_f_leiche` (12 ctest-Eintraege `unit_r34n_f_leiche_<teil>`), gemessen mit den ECHTEN Haken:
+
+| Teil | Ergebnis (gruen) |
+|---|---|
+| texte | 1110 lang 63 B / kurz 37 B, 1230 lang 50 B / kurz 24 B = RDT-Stellen; lesen sich "It's a police officer, he's dead.He is holding something." (Seitenumbruch ohne Zeichen) usw. |
+| nein_1110 | Nachricht 20 auf F32, zu F151, 1 Seitenstopp, Modal F151..F272, Faden @0x00D09, Ende F303, Platz 5 scharf, Stimme-Id 20; Runde 2 identisch |
+| nein_1230 | Nachricht 22, zu F131, Modal F131..F252, Faden @0x014C1, Ende F283; Runde 2 identisch |
+| ja_1110 | Modal F151..F245, Bit (9,61), 50 -> 57 im selben Platz; Runde 2/3: Nachricht 21, 0 Seitenstopps, kein Modal, Ende F132 |
+| ja_1230 | Modal F131..F225, Bit (9,62), 50 -> 57; danach Nachricht 23, Ende F112 |
+| voll | Prompt 2 "can't carry", Modal F151..F257 (1110) / F131..F237 (1230), Bit 0, Runde 2 identisch |
+| varianten | ROOM1111 / ROOM1231: dieselben Zahlen wie 1110 / 1230 |
+| laden | Speicherstand capture/restore traegt Bit 61 (1) und 62 (0); Bit vor dem Raumaufbau -> Nachricht 21/23, kein Modal |
+| andere | 1110/1111 9 von 9, 1230/1231 11 von 11 uebrigen Nachrichten unveraendert unter eigener Id, kein Angebot (u.a. 1230 msg 0 Tastenfeld); Gegenprobe msg 0/10 -> 20/22 mit Angebot |
+| stimme | ohne Aufnahme Text F32; mit laufender Aufnahme (120 Bilder) Text F121, trotzdem Nachricht 20/22 und Modal im Schliess-Bild |
+| nachhall | eigene Aufnahme 400 Bilder: Text geht in den Nachhall (msg-FSM 7), Modal trotzdem im Freeze-Bild F151/F131, Nachhall beendet, Faden steht |
+| latch | offener Text + Raum-Neuaufbau -> 0 Modale in 90 Bildern; fremde Raum-Basis -> 0 Modale |
+
+Mutationsprobe (`F_belege/mutationsprobe.log`, Skript im Scratchpad, je Mutation Riegel neu gebaut + 12 Teile):
+
+| Mutation | rot |
+|---|---|
+| M1 Message_on-Haken raus | 11 von 12 (alle ausser `texte`) — an der Id: "Nachricht 20 (Port, lang) statt 0" |
+| M2 Tick-Zeile raus | 10 (kein Modal; `laden`/`texte` bleiben richtigerweise gruen) |
+| M3 Haken VOR den Stimmen-Riegel | `stimme` (Text F32 statt >= F120) |
+| M4 Nachhall nicht beenden | `nachhall` |
+| M5 Id-Pruefung raus | `latch` (+ Folgefehler in `andere`) |
+| M6 Raum-Basis-Pruefung raus | `latch` |
+| M7 Gate auf `message_active` statt Belegt-Bit | `nachhall` (Modal erst nach dem Nachhall, Faden laeuft weiter) |
+
+Nach dem Zuruecksetzen 12/12 gruen. Die RE-Sonde `probe_r34n_f_leiche` (kein add_test) simuliert den Plan mit
+den ORIGINAL-Ids und misst seit dem Bau nicht mehr den Ist-Stand — sie bleibt als Werkzeug des RE-Schritts
+im Baum, der Riegel ersetzt sie.
 
 ### 9.5 Suite
 - (offen)
