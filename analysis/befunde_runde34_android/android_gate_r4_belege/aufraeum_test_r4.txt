@@ -1,0 +1,13 @@
+== T1_zip_mit_apk: EXIT=0, Temp-Reste vorher 0, nachher 0 (abgeraeumt)
+      APK im Split-Satz = gepruefte APK (entpackt: sha256 514bebd55bd6b8ec... = Pruefkopie)
+   == SHA256SUMS.txt geschrieben (4 Volumes, Android-Satz aus diesem Lauf) ==
+   == Fertig ==
+== T2_gate_only: EXIT=0, Temp-Reste vorher 0, nachher 0 (abgeraeumt)
+   == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16
+== T3_abbruch_nach_path: EXIT=1, Temp-Reste vorher 0, nachher 0 (abgeraeumt)
+   /usr/bin/rm: cannot remove 're15_port_v0.8.19_linux_steamdeck_x64.z07': Is a directory
+   (T3 Ende)    OK: 349M, 3606 Dateien
+   (T3 Ende) == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   (T3 Ende) /usr/bin/rm: cannot remove 're15_port_v0.8.19_linux_steamdeck_x64.z07': Is a directory
+FERTIG
+EXIT=0

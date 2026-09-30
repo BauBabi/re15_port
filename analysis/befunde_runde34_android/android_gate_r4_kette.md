@@ -17,7 +17,17 @@ Belege: `analysis/befunde_runde34_android/android_gate_r4_belege/`, Arbeitsordne
 - Python-Schnappschuss 0 (`py_zustand_0_vorher.txt`, 121 Zeilen) == Endstand Pruefer R3 (`diff` leer).
   Python immer `/c/Python310/python` bzw. `release/python_finden.sh` (-> /c/Python310, 3.10.11).
 - B2 gebaut (Selbsttest 223/223 + 61/61), MU0-MU8 + MUP je SELBSTTEST-FEHLER (`selbsttests_r4.txt`),
-  Commit 42d72ec1 (nur Selbsttest-Teil des Gates). Kampagne (449) laeuft im Hintergrund.
+  Commit 42d72ec1 (nur Selbsttest-Teil des Gates). Kampagne (449) im Hintergrund.
+- Kette B1/B3/B4 + README gebaut, Commit 3b677ea0; B3-Sonde (Lauf 1 der Sonde verlor verify_split: awk aus
+  msys64 + `>>`, Sonde korrigiert), B1-Sandbox Lauf 1 (L1-L6).
+- Drei Selbsttest-Faelle mehr (VT/FF als Trenner, Groesse 64 GiB), Commit 7f269d04; B1 nachgeschaerft
+  (verify_split ohne fremde Dateien, Android-Volumes mit sha256 festgehalten), Commit 80559d2f.
+- Frischer Android-Bau (APK 66c5d8e1...), Kampagne fertig (445/449), Mutanten/Kette/Sonden am Endstand,
+  B1-Sandbox Lauf 2, B4-Sandbox, B3 echter Fluss (Lauf 1 der Sonde: relativer Pfad in der zip-Attrappe -> EXIT 12
+  fuer NEU UND ALT, Sondenfehler; korrigiert und wiederholt), make_package echt E1-E3.
+- Dabei gefunden: die Gate-Kopie blieb nach JEDEM erfolgreichen Zip-Lauf in /tmp liegen (8 Reste) - rm aus
+  msys64 nach der PATH-Ergaenzung. Behoben (Windows-Pfad), Commit cb6617fd; Aufraeum-Test T1-T3, B3 wiederholt.
+- Aufgeraeumt, Python-Schnappschuss 2, Abschluss-Commit.
 
 ## 1. B2 — Selbsttest faengt MU1-MU8 (Commits 42d72ec1, 7f269d04)
 
@@ -115,8 +125,15 @@ Quellbaum-, APK- und Paketpruefung unterbleiben, nichts wird kopiert oder gezipp
 macht `--quellbaum`, `--paket` (check_tree) und ueber `APK_GATE_DATEI` auch Schritt 5 in apk_pruefen.sh
 (build_android.sh setzt die Variable nicht -> dort wie bisher release/apk_asset_gate.py). Eine EXIT-Falle
 `mp_aufraeumen` raeumt Gate-Kopie und APK-Pruefkopie ab (ersetzt das fruehere `trap ... EXIT; trap - EXIT`
-im APK-Abschnitt). Kosten: ein Selbsttest mehr je Paketlauf (12-14 s ruhig; mit APK laeuft apk_pruefen
-seinen eigenen Selbsttest auf derselben Kopie zusaetzlich - bewusst belassen, build_android.sh braucht ihn).
+im APK-Abschnitt). Kosten: ein Selbsttest mehr je Paketlauf (12-14 s ruhig, 26 s unter Last im echten Lauf; mit
+APK laeuft apk_pruefen seinen eigenen Selbsttest auf derselben Kopie zusaetzlich - bewusst belassen,
+build_android.sh braucht ihn).
+- **Leck gefunden und behoben (Commit cb6617fd):** mit dem `/tmp/...`-Pfad blieb die Gate-Kopie nach JEDEM
+  erfolgreichen Lauf MIT Zippen liegen (8 Reste; Abbrueche und `--no-zip` raeumten ab): der Zip-Abschnitt stellt
+  `/c/msys64/usr/bin` vorn in den PATH, danach ist `rm` das rm von MSYS2, dessen `/tmp` `C:/msys64/tmp` ist - die
+  Falle loeschte dort "nichts" (per `bash -x` gesehen: `rm -rf /tmp/re15_make_package.X` lief, der Ordner blieb).
+  Jetzt werden `MP_TMP` und (apk_pruefen.sh) `APK_PRUEF_TMP` sofort per `cygpath -m` zum `C:/...`-Pfad;
+  `verify_apk_im_zip` benutzt nach `mktemp` nur noch den Windows-Pfad. Beleg 6.13.
 
 ## 5. README (Commit 3b677ea0)
 
@@ -132,24 +149,27 @@ des Entpackers) habe ich NICHT angefasst - das ist N1 (anderer Agent).
 ## 6. Messungen (Maschine unter Last: Granaten-Sitzung baut parallel, dazu meine Kampagne)
 
 ### 6.1 Selbsttest
-`/c/Python310/python release/apk_asset_gate.py --selbsttest` -> **SELBSTTEST-OK 223/223 + 61/61 innere Proben**,
-12,4-13,4 s (vorher 202 + 58, 11-12 s). Der Fall 223 (Manifest 64 MiB + 1 B) kostet rund 1 s.
+`/c/Python310/python release/apk_asset_gate.py --selbsttest` -> **SELBSTTEST-OK 226/226 + 61/61 innere Proben**
+(Endstand; 223 Faelle: 12,4-13,4 s ruhig, vorher 202 + 58 in 11-12 s; 226 Faelle unter Last 14-45 s). Der Fall
+226 (Manifest 64 MiB + 1 B) kostet rund 1 s.
 
 ### 6.2 `--gate-only` gegen die Referenz-APK (`gate_only_ref_r4.txt`)
 `bash release/build_android.sh --gate-only build/r34a/ref_v0.8.19.apk --version v0.8.19` -> **EXIT 0** (62 s unter
 Last): Pruefkopie 514bebd5... (= Archiv-SUMS), aapt v0.8.19 + beide ABIs, zipalign ok, v2 true, Signer 432bc749...,
 Selbsttest 223/223 + 61/61, Tuer-Soll RE15DOOR 30/30 + RE2/DOOR 27/27, ZIP 3616/3616 lesbar, 3603/3603 bytegleich,
-Manifest 3603 Zeilen, `ANDROID-GATES-OK`.
+Manifest 3603 Zeilen, `ANDROID-GATES-OK`. Am Endstand (226 Faelle, Windows-Pfad der Pruefkopie) wiederholt: 6.13 T2, EXIT 0.
 
 ### 6.3 Mutanten MU0-MU8 + MUP (`selbsttests_r4.txt`, Werkzeug der Pruefer unveraendert)
-`r3_mutanten.py` erzeugt alle neun Mutanten aus dem neuen Gate (jedes Muster genau einmal gefunden). ECHT OK
-223/223; MU0 FEHLER 5, MU1 5, MU2 2, MU3 6, MU4 2 innere Proben, MU5 3, MU6 3, MU7 3, MU8 6, MUP 3 - **alle acht
-MU1-MU8 gefangen** (vorher alle OK 202/202). Fallzuordnung Abschnitt 1.
+`r3_mutanten.py` erzeugt alle neun Mutanten aus dem Endstand-Gate (jedes Muster genau einmal gefunden). ECHT OK
+226/226; MU0 FEHLER 5, MU1 5, MU2 2, MU3 8, MU4 2 innere Proben, MU5 3, MU6 3, MU7 3, MU8 6, MUP 3 - **alle acht
+MU1-MU8 gefangen** (vorher alle OK 202/202). Fallzuordnung Abschnitt 1. Fall 226 allein gegen MU4
+(`mu4_fall_r4.txt`, `r4_mu4_fall.sh`): innere Proben stillgelegt -> ohne MU4 OK 226/226, mit MU4 genau Fall 226
+FEHLER (`fehlende Meldung: 'Manifest 67108865 B > 67108864 B (64 MiB)...'`).
 
 ### 6.4 B3 Funktions-Sonde (`zip_kennung_sonde_r4.txt`, `r4_zip_kennung_sonde.sh`)
 CRC32-/Groessen-gleiche Faelschung (r3_crc_gleich.py: sha256 2dd9497b..., CRC32 d16ad30a, 363212403 B wie die
 Referenz 514bebd5...), gezippt wie make_package (zip -s 90m -j), verify_split + verify_apk_im_zip per awk
-unveraendert geschnitten (Endstand 80559d2f bzw. 9d2337e4):
+unveraendert geschnitten (Endstand cb6617fd bzw. 9d2337e4; Ergebnis am Stand 80559d2f gleich):
 | Satz | NEU | ALT (9d2337e4) |
 |---|---|---|
 | K Referenz | rc 0 `APK im Split-Satz = gepruefte APK (entpackt: sha256 514bebd55bd6b8ec... = Pruefkopie)` | rc 0 |
@@ -165,7 +185,7 @@ Namen, **kein Mutant schlechter**; die 4 Ueberlebenden sind genau die 4 in der R
 (`_ant_passt` i/j `== -> >=`, `tuer_soll` spender `== -> >=`, `_eintrag_pruefen` `n != usize -> <`). Je Klasse
 A 47/47, B 45/45 (1 per Zeitgrenze wie R2), C 5/5, D 35/35, E 169/173, F 71/71, G 5/5, H 42/42, I 26/26.
 
-### 6.6 B1 in der Sandbox, Lauf 1 (Stand 3b677ea0; `build/r34a/r4/mp_veraltet_r4_lauf1_stand3b677ea0.txt`)
+### 6.6 B1 in der Sandbox, Lauf 1 (Stand 3b677ea0; `mp_veraltet_r4_lauf1_stand3b677ea0.txt`)
 `r4_mp_veraltet.sh`, make_package.sh ECHT (Sandbox: Skripte = Arbeitsbaum, Quellbaum per Hardlink, eigenes
 git-Repo), `--version v0.8.19 --only linux`, Linux-Binary aus dem Archiv (19:34, kein touch):
 | Lauf | EXIT | Ergebnis |
@@ -178,6 +198,119 @@ git-Repo), `--version v0.8.19 --only linux`, Linux-Binary aus dem Archiv (19:34,
 | L4 `--ohne-android` | **0** (71 s) | `der Satz dieser Version wird entfernt`, beide Volumes entfernt, SUMS nur Linux (2 Volumes), Index: `D` android.z01/.zip, `M` linux |
 | L5 Satz unversioniert aber vorgemerkt, `--ohne-android --zip-only` | **0** (74 s) | Satz entfernt und aus dem Index (vorher `A`), SUMS nur Linux |
 | L6 Satz unversioniert, nicht vorgemerkt, `--no-zip` | **0** (35 s) | Satz bleibt liegen und wird NICHT vorgemerkt (vorgemerkt nur die Linux-Volumes - vorbestehend: der Git-Schritt laeuft auch mit --no-zip) |
-Wiederholung mit dem Endstand (80559d2f): 6.7.
+Wiederholung mit dem Endstand: 6.7.
 
-(weitere Messungen folgen)
+### 6.7 B1 in der Sandbox, Lauf 2 (Stand 80559d2f; `mp_veraltet_r4.txt`, Logs `build/r34a/r4/logs/mp/`)
+Dieselbe Folge mit den nachgeschaerften Skripten (Sandbox-Commit 82c1ab5):
+| Lauf | EXIT | Ergebnis |
+|---|---|---|
+| L1 APK = Referenz | 0 (149 s) | `APK im Split-Satz = gepruefte APK (entpackt: sha256 514bebd5... = Pruefkopie)`, `SHA256SUMS.txt geschrieben (4 Volumes, Android-Satz aus diesem Lauf)`, 4 vorgemerkt (A x4), Release-Commit |
+| L2 APK noch da, Quellbaum geaendert | 1 (55 s) | APK-Asset-Gate weicht ab |
+| L3n ohne APK, NEU | **1** (23 s) | B1-ABBRUCH, 0 x "Assets kopieren", Satz + SUMS `sha256sum -c` OK, Index leer |
+| L3a ohne APK, ALT (9d2337e4) | 0 (64 s) | der Befund: SHA256SUMS.txt nennt `...android.z01/.zip` des alten Satzes |
+| L4 `--ohne-android` | **0** (89 s) | Satz entfernt, SUMS 2 Volumes (nur Linux), Index `D` android, `M` linux |
+| L5 vorgemerkt + `--ohne-android --zip-only` | **0** (75 s) | Satz entfernt, aus dem Index |
+| L6 unversioniert + `--no-zip` | **0** (90 s) | Satz bleibt, NICHT vorgemerkt |
+Der Stand cb6617fd (Temp-Pfade) aendert an diesen Wegen nichts ausser dem Aufraeumen (6.13).
+
+### 6.8 B4 in der Sandbox (`mp_ohne_selbsttest_r4.txt`, `r4_mp_ohne_selbsttest.sh`)
+Wie `r3_mp_ohne_selbsttest.sh`: `--version v0.8.19 --only linux --zip-only`, 1 Byte in der PAKET-Kopie von
+`shared_assets/PSX/DATA/TEX.TIM` (Linkzahl 1 geprueft, danach zurueck):
+| Lauf | EXIT | Ergebnis |
+|---|---|---|
+| L0 `--no-zip`, echtes Gate (Paket anlegen) | 0 (47 s) | Selbsttest der Gate-Kopie 226/226, QUELLBAUM-OK, PAKET-OK |
+| LA echtes Gate | 1 (51 s) | `Inhalt weicht ab: shared_assets/PSX/DATA/TEX.TIM ... APK-ASSET-GATE-PAKET-ABWEICHUNG` |
+| LB Gate := MUP (`if q_sha != p_sha:` -> `if False:`), NEUES Skript | **1** (17 s) | `SELBSTTEST-FEHLER: 3 von 226` (132, 185, 186) -> `ABBRUCH: Selbsttest des Asset-Gates fehlgeschlagen (rc=1) - dem Gate ist nicht zu trauen` - VOR `--quellbaum` (kein QUELLBAUM-OK im Log) |
+| LC MUP + ALTES Skript (9d2337e4) | 0 (44 s) | der Befund: `PAKET-OK` mit veraenderter Datei, `== Fertig ==` |
+
+### 6.9 B3 im echten Fluss (`mp_zip_tausch_r4.txt`, `r4_mp_zip_tausch.sh`)
+Sandbox, APK = Referenz, eine zip-ATTRAPPE vorn im PATH reicht alles an `/c/msys64/usr/bin/zip` durch, legt aber
+beim Zippen der APK die CRC32-/Groessen-gleiche Faelschung (gleicher Name) in den Satz - die Datei unter release/
+bleibt die gepruefte, die Kennungspruefung VOR dem Zippen sieht nichts:
+| Lauf | EXIT | Ergebnis |
+|---|---|---|
+| LN NEUES Skript (Endstand) | **1** (94 s) | Katalog `CRC32 d16ad30a, 363212403 B = gepruefte Kennung` (Stufe 1 haelt es NICHT), dann `die entpackte APK hat sha256 2dd9497b..., die gepruefte 514bebd5...` -> `ABBRUCH: Android-Satz ... enthaelt NICHT die gepruefte APK - nicht ausgeliefert`; keine SHA256SUMS.txt |
+| LA ALTES Skript (9d2337e4) | 0 (85 s) | der Befund: `APK im Split-Satz = gepruefte APK (CRC32 d16ad30a, ...)`, SUMS mit 2 Android-Zeilen, im Satz steckt die Faelschung (sha256 2dd9497b...) |
+(Lauf 1 dieser Sonde brach fuer NEU und ALT mit EXIT 12 ab - die Attrappe gab einen RELATIVEN Pfad weiter, zip
+lief mit cwd release/: "Nothing to do". Sondenfehler, korrigiert; Protokoll `mp_zip_tausch_r4_lauf1_testfehler.txt`.)
+
+### 6.10 Ganze Kette mit signierten Faelschungen und Mutanten-Gates (`kette_mutanten_r4.txt`, `r4_kette_mutanten.sh`)
+Faelschungen mit den unveraenderten Pruefer-Werkzeugen (`r3_faelschen.py`, `r3_signieren.sh`: zipalign + DERSELBE
+Debug-Schluessel, apksigner verify rc 0, Signer 432bc749...), `build_android.sh --gate-only ... --version v0.8.19`:
+| Lauf | EXIT | vorher (R3) |
+|---|---|---|
+| echte Skripte: K0_sig / F1_leerzeichen_sig / F2_vollbreit_sig | 0 / 1 / 1 | 0 / 1 / 1 |
+| Sandbox, Gate := MU1, F1_sig | **1** (`SELBSTTEST-FEHLER` -> `ABBRUCH: Selbsttest des APK-Asset-Gates fehlgeschlagen`) | **0** (`ANDROID-GATES-OK`) |
+| Sandbox, Gate := MU2, F2_sig | **1** (dito) | **0** |
+| Sandbox, Gate := MU1 ... MU8, je mit K0_sig | je **1** am Selbsttest (MU4 nach 8 s an den inneren Proben) | - |
+| Sandbox, echtes Gate: F1_sig / K0_sig | 1 / 0 | 1 / - |
+Keine Pruefkopie blieb liegen.
+
+### 6.11 Voller Android-Bau mit der Endstand-Kette (`android_voll_r4_auszug.txt`)
+`bash release/build_android.sh --version v0.8.19 --no-toolchain` (04:45:15-04:50:43) -> **EXIT 0 `ANDROID-BUILD-OK`**:
+Python /c/Python310 (3.10.11), Werkzeuge + Signer VOR Gradle, stageAssets `RE2/DOOR: 27`, `RE15DOOR: 30`,
+`BUILD SUCCESSFUL in 4m 54s`; Kette auf der Pruefkopie 29,9 s (Selbsttest 226/226 in 16,8 s, Gate 5,4 s): zipalign
+ok, v2 true, Signer 432bc749..., Tuer-Soll 30/30 + 27/27, ZIP 3616/3616, 3603/3603 bytegleich. APK
+`66c5d8e1...` (363212403 B, 04:50:14). `SHA256SUMS_android.txt` danach per `git restore` zurueck (6.12).
+
+### 6.12 make_package.sh ECHT im Arbeitsbaum (`mp_echt_r4.txt`, `r4_mp_echt.sh`, Logs `build/r34a/r4/logs/echt/`)
+PC-Binaries v0.8.19 aus dem Archiv (`r4_binaries.sh`: Split-Saetze `sha256sum -c` 4 x OK, zusammengefuehrt, nur die
+Binaries entpackt; re15_pc.exe 30d5b67b..., re15_pc abfbe7c5..., mtime 19:34 - KEIN touch), APK aus 6.11; git nur in
+einen Wegwerf-Index (`mp_isoliert_r4.sh`, echter Index vorher und nachher 0 Eintraege). Letzter Commit an den
+PC-Pfaden cf386e32 19:02, an den APK-Pfaden 3b677ea0 04:40 (README) - beide Frische-Gates ohne Meldung.
+| Lauf | EXIT | Ergebnis |
+|---|---|---|
+| E1 `--version v0.8.19` | **0** (235,6 s) | Selbsttest der Gate-Kopie 226/226 (26,3 s unter Last), QUELLBAUM-OK, APK-Kette (Selbsttest 226/226 auf derselben Kopie, APK-PRUEFUNG-OK `66c5d8e1... 58626da3 363212403`), Linux: Optimierung 4, glibc 2.29, Tuerarchive 27 + 30, PAKET-OK, LF; Windows: Optimierung 3, 27 + 30, PAKET-OK, Laufzeit-Gate 26/26 + 26/26 aus dem Paket; Zippen linux 3800 (x-Bit ok), win64 3801, android: Katalog `CRC32 58626da3 = gepruefte Kennung`, `entpackt: sha256 66c5d8e146ca6178... = Pruefkopie` (Zippen bis Satzpruefung fertig 22,2 s); `SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf)`, 6 vorgemerkt (Wegwerf-Index) |
+| unabhaengig | - | APK aus dem neuen Satz per `zip -s 0` + `unzip -p`: sha256 `66c5d8e1...` = gebaute APK |
+| APK weg | - | nach build/r34a/r4/apk_echt/ |
+| E2 `--only win --zip-only` (Satz aus E1 liegt) | **1** (33 s) | Selbsttest, QUELLBAUM-OK, dann B1-ABBRUCH; Wegwerf-Index leer, SUMS unveraendert |
+| E3 dasselbe + `--ohne-android` | **0** (101 s) | Satz entfernt, `SHA256SUMS.txt geschrieben (4 Volumes)` = linux + win64 (Linux derselben Version bleibt, gewollt), Wegwerf-Index `D` android.z01/.zip, `M` linux/win64 |
+Aufraeumen: `git restore --source=HEAD` fuer SHA256SUMS.txt, SHA256SUMS_android.txt und die 6 Volumes; pkg-*,
+win_out, linux_out geloescht. `git status --short release/ re15_port/` leer, `--ignored release/` leer, echter
+Index 0. (Die Meldung `release/: ABWEICHUNG` des Werkzeugs betrifft nur SHA256SUMS_android.txt: die "vorher"-Liste
+wurde NACH dem Android-Bau genommen, der sie beschrieben hatte - jetzt wieder HEAD, cd139335... wie bei R3.)
+E1-E3 liefen am Stand 80559d2f (vor dem Temp-Pfad-Fix); das Aufraeumen des Endstands belegt 6.13.
+
+### 6.13 Aufraeumen der Temp-Ordner (`aufraeum_test_r4.txt`, `r4_aufraeum_test.sh`, Stand cb6617fd)
+Gezaehlt vor/nach jedem Lauf: `/tmp/re15_make_package.*`, `re15_apk_pruefen.*`, `re15_apk_satz.*`,
+`apk_gate_selbsttest_*` und dasselbe unter `C:/msys64/tmp`:
+| Lauf | EXIT | Reste vorher -> nachher |
+|---|---|---|
+| T1 Sandbox, `--only linux`, APK = Referenz (Zippen, APK-Kette, Satzpruefung) | 0 | 0 -> 0 |
+| T2 `build_android.sh --gate-only <Referenz>` (Arbeitsbaum) | 0 | 0 -> 0 |
+| T3 Sandbox, Abbruch NACH der PATH-Ergaenzung (Ordner `<satz>.z07` laesst das `rm -f` scheitern, `/usr/bin/rm` = msys64) | 1 | 0 -> 0 |
+Vorher (Stand 3b677ea0/80559d2f) blieb je erfolgreichem Zip-Lauf ein `/tmp/re15_make_package.*` (168 KB) liegen -
+8 Stueck, alle entfernt. Die Wiederholungen von 6.4 und 6.9 am Stand cb6617fd: dieselben Ergebnisse, 0 Reste.
+
+## 7. Endstand
+
+- Commits (Zweig r34a/android-gate): 42d72ec1 (B2 Selbsttest), 3b677ea0 (Kette B1/B3/B4, README), 7f269d04 (B2 drei
+  Faelle), 80559d2f (B1 nachgeschaerft), cb6617fd (Temp-Pfade), dazu der Abschluss-Commit (Dossier + Belege).
+  Werkzeugdateien: release/apk_asset_gate.py (NUR Selbsttest-Teil + Doku-Kopf), release/make_package.sh,
+  release/apk_pruefen.sh, re15_port/platform/android/README.md. Kein Engine-/PC-Spielcode, kein android_glue.c,
+  keine build.gradle-Aenderung.
+- Python-Schnappschuss 1 (nach den Hauptlaeufen) und 2 (Ende) == Schnappschuss 0 (121 Zeilen): kein Unterschluessel
+  unter `HKCU\Software\Python\PythonCore` (der Schluessel selbst existierte schon, leer), kein Startmenue-Ordner
+  "Python 3.1x" (nur ProgramData 3.9/3.10/3.12 wie vorher), kein pymanager/msiexec. Alle Laeufe mit /c/Python310
+  bzw. python_finden.sh (-> /c/Python310); der einzige fremde python-Prozess am Ende gehoerte einer anderen
+  Sitzung (`build/r34n_c/...`).
+- Aufgeraeumt: Sandboxen sb_mp/sb_b4/sb_b3/sb_kette/sb_tmp (Hardlinks - Linkzahlen der Originale wieder 1,
+  effect0_blood.tim a7ac86c7... unveraendert), signierte Faelschungen, CRC-Saetze, zip-Attrappe, frische APK,
+  Binary-Kopien, Wegwerf-Index, Kampagnen-Mutanten; Gradle-Ausgaben (`app/build` 1,5 GB, `app/.cxx`, `.gradle`,
+  `build`, `local.properties`; `_deps` lag schon vorher da). Liegen gelassen: `build/r34a/r4/{logs,mutanten,kampagne,alt}`
+  (4 MB), `build/r34a/ref_v0.8.19.apk` (sha256 514bebd5... unveraendert).
+- `git status --short release/ re15_port/ synchro/` leer.
+
+## 8. Offen / Hinweise
+
+- **N1 (Geraete-Entpacker)** nicht angefasst - anderer Agent. Wenn N1 das Manifestformat aendert (z.B. eine
+  Pruefsummen-Spalte), passen `manifest_pruefen` und die Faelle 203-226 (sie bauen das Manifest ueber
+  `_Fall.manifest_text` und ersetzen einzelne Zeilen) mit.
+- Die APK-Frische misst den letzten Commit an `platform/android` - auch ein reiner README-Commit macht eine vorher
+  gebaute APK "VERALTET" (hier: README-Commit 3b677ea0, danach frisch gebaut). Bewusst nicht geaendert.
+- Vorbestehend, nicht Teil von B1: der Git-Schritt laeuft auch mit `--no-zip`; mit `--only` bleiben die PC-Volumes
+  der anderen Plattform derselben Version in den SUMS (gewollt). Restfenster zwischen letztem Vergleich und
+  `git add`: Abschnitt 2.
+- Allgemeine Falle fuer Werkzeuge unter Git-Bash: Programme aus `/c/msys64/usr/bin` sind eine ANDERE MSYS-Laufzeit
+  (eigenes `/tmp` = C:/msys64/tmp, kein geerbtes `O_APPEND` bei `>>`). make_package.sh stellt sie im Zip-Abschnitt
+  vorn in den PATH - danach nur Windows-Pfade an Dateiwerkzeuge geben und Dateien nur von Bash schreiben lassen.
