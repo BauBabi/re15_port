@@ -13,7 +13,8 @@ Door_aot_set (0x3B, 32 B; 40 B bei sat&0x80): Nutzlast ab pc+14 (pc+22 bei Viere
 Bedingung = die Ck-Opcodes (0x21 bank bit val) direkt hinter jedem umschliessenden Ifel_ck
 (0x06; Blockende = pc+4+len) bzw. deren Verneinung im Else-Zweig (0x07; Ende = pc+len).
 
-Aufruf:  python raumgraph.py [stage=1]  -> Tabelle auf stdout
+Aufruf:  python raumgraph.py [stage=1]          -> Tuertabelle auf stdout
+         python raumgraph.py 1 wege               -> Erreichbarkeit Fundstelle/Rolltor je Szenario
 """
 import os, sys, struct, glob
 
@@ -73,18 +74,58 @@ def tueren(pfad):
     return raus
 
 
+def kanten_variante1(stage=1):
+    """Wie kanten(), aber fuer Szenario 1 (Elza): nur ROOM…1-Dateien, Ziel-Id (Basis) auf die
+    …1-Datei abgebildet, wenn es sie gibt (sonst Basis)."""
+    import collections
+    k = collections.defaultdict(set)
+    da = set(os.path.basename(p)[:-4] for p in glob.glob(os.path.join(ROOT, "STAGE%d" % stage, "ROOM*.RDT")))
+
+    def kn(r, z=None, slot=None, x=None):
+        basis = r[:-1] + "0"
+        n = knoten(basis, z=z, slot=slot, x=x)
+        return (r + n[len(basis):]) if n.startswith(basis) else n
+
+    for pfad in sorted(glob.glob(os.path.join(ROOT, "STAGE%d" % stage, "ROOM*1.RDT"))):
+        name = os.path.basename(pfad)[:-4]
+        d = open(pfad, "rb").read()
+        for t in tueren(pfad):
+            if t["sce"] == 0:
+                continue
+            pc = int(t["ort"].split("@0x")[1], 16)
+            nl = pc + (22 if (d[pc + 3] & 0x80) else 14)
+            ziel = t["ziel"][:-1] + "1"
+            if ziel not in da:
+                ziel = t["ziel"]
+            k[kn(name, slot=t["slot"])].add((kn(ziel, z=L.s16(d, nl + 4), x=L.s16(d, nl)), name, t["slot"],
+                                            t["ort"], " | ".join(t["bed"]) or "immer", L.s16(d, nl + 2)))
+    return k
+
+
 def main():
     stage = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    for pfad in sorted(glob.glob(os.path.join(ROOT, "STAGE%d" % stage, "ROOM*.RDT"))):
-        name = os.path.basename(pfad)[:-4]
-        for t in tueren(pfad):
+    if len(sys.argv) > 2 and sys.argv[2] == "wege":
+        # Die Messung des Dossiers: Fundstelle und Rolltor-Seiten je Szenario.
+        for titel, k, start, ziele in (
+                ("Szenario 0 (Leon)", kanten(stage), "ROOM1170",
+                 ["ROOM1150", "ROOM1050N", "ROOM1050S", "ROOM1000-Umkleide", "ROOM10A0"]),
+                ("Szenario 1 (Elza)", kanten_variante1(stage), "ROOM1031",
+                 ["ROOM1151", "ROOM1051N", "ROOM1051S"])):
+            w = bfs(k, start)
+            print("### %s, Start %s" % (titel, start))
+            for z in ziele:
+                print("== %s %s" % (z, "erreichbar" if z in w else "NICHT erreichbar"))
+                for zeile in pfad(w, z):
+                    print("    " + zeile)
+        return
+    for datei in sorted(glob.glob(os.path.join(ROOT, "STAGE%d" % stage, "ROOM*.RDT"))):
+        name = os.path.basename(datei)[:-4]
+        for t in tueren(datei):
             print("%s  slot %2d sce %d  -> %s cut %2d  rect %-26s  %s  [%s]" % (
                 name, t["slot"], t["sce"], t["ziel"], t["cut"], str(t["rect"]), t["ort"],
                 " | ".join(t["bed"]) or "immer"))
 
 
-if __name__ == "__main__":
-    main()
 
 
 # ---------------------------------------------------------------------------------------------
@@ -159,3 +200,7 @@ def pfad(weg, ziel):
         out.append("%s -[%s slot %d %s y=%d {%s}]-> %s" % (n, raum, slot, ort, zy, bed, ziel))
         ziel = n
     return list(reversed(out))
+
+
+if __name__ == "__main__":
+    main()
