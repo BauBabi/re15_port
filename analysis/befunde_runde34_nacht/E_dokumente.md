@@ -692,3 +692,38 @@ m. Modell-Bytes: md5 der eingebetteten MD1/TIM = 5.2; CLUT-Zeile je Modell (2/0/
 3. **PSX-Seite** (7.10): Prop-Lader fuer portseitige Props fehlt dort generell (auch Irons).
 4. **Absprache mit D** (7.11) ueber die Geometrie der Slots 13/14 in ROOM1050/1051.
 5. **Auslieferung E + F gemeinsam** (7.5).
+
+## 9 Umsetzung (Bau-Stufe)
+
+### 9.0 Selbstpruefung des Plans
+(offen)
+
+### 9.1 Dok 1 — Police Officer's Final Diary Entry (ROOM1050, Item 0x49, FILE26)
+(offen)
+
+### 9.2 Dok 2 — Elliot's Diary (ROOM1000, Item 0x4A, FILE27)
+(offen)
+
+### 9.3 Dok 3 — Marvin's Notes (ROOM1020, Item 0x4B, FILE28)
+(offen)
+
+### 9.4 Dok 4 — Armory Notice (ROOM1010, Item 0x4C, FILE29)
+(offen)
+
+### 9.5 Codes 4312/5632 gegen Schloesser
+(offen)
+
+### 9.6 Dateien und Commits
+(offen)
+
+### 9.7 Suite
+(offen)
+
+### 9.8 Eigene Abnahme (Bilder)
+(offen)
+
+### 9.9 Abweichungen vom Plan
+(offen)
+
+### 9.10 Offene Punkte
+(offen)
