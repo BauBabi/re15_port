@@ -1,0 +1,16 @@
+# Spur G2 BAU - DuckStation-Gegenprobe ROOM3000 Cut 0 (Gegenpruefung Auflage 9), 2026-09-30 ~10:35
+# Basis: g2/orig_1150_jump.sav (Original, MZD-Disk, sauber, Debug-Menue offen, Stage 0, Raum 0x24).
+# RAM-Patch wie der Quadrat-Zweig des Debug-Menues (@0x80014a44-58) + Debug-Zweig FUN_8001d600
+# (Stage = DAT_800bbe5e, Raum = DAT_800bbe5f[Stage]; Stage-Wechsel -> FUN_80039a30):
+#   0x800bbe5e := 2 (Stage 3), 0x800bbe61 := 0 (Raum 0x00), 0x800b5359 := 1, 0x800ac9a8 := 0, 0x800bbe5c := 0
+#   Zombie-Variante zusaetzlich: 0x800b1018 := 0x00400000 (Flag-Bank 4 @0x80074674, Wort 0, Bit 9 MSB-first)
+# Lauf: re15_port/tools/r34n_g/ds_lauf.py <patch> <aus> <sicherung> --warte 25 (keine Eingabe;
+#   Nutzer-Staende HASH-957757946319438E_resume/_1.sav/_1.bak vorher kopiert, nachher zurueckgelegt, SHA-256 OK)
+# Auswertung: re15_port/tools/r34n_g/ss_masken_records.py (Code der Masken-/SCD-/Apply-Funktionen im RAM == PSX.EXE)
+# Ergebnis:
+#   normal  (4,9)=0 -> main00 (5,0) := 1 -> sub01 Ck(5,0)==0 falsch -> 43/43 Records Byte0 = 1 (gezeichnet)
+#   Zombie  (4,9)=1 -> main00 (5,0) := 0 -> sub01 Case 0: Gruppen 1..3 := 0 -> 0/43 Records Byte0 = 1
+#   Bildspeicher: normal = Leichen-Masken sichtbar; Zombie = nur Blutfleck des Hintergrunds (G2_16 png)
+# Port (neue exe) im selben Zustand: normal 0 Opcode-0x45-Treffer (43/43 an), Zombie 43 Treffer je Bild (0/43 an) -> gleich.
+# ⛔ stage_saves/PATCHED-EXE_HASH-881C08B8082E53B6_3.sav (ROOM3000) taugt NICHT: dort sind 0x8003f088 (SCD-Laeufer)
+#    und 0x80021bf8-0x80021c0c (Cut-Apply) gepatcht (ss_masken_records.py: Code != PSX.EXE).
