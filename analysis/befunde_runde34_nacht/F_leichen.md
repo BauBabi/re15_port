@@ -173,6 +173,13 @@ Glyph-Belege (erste Fundstellen im Auslieferungsstand, `glyphen`):
 | "A miserable death..." | `1d 00 49 45 4f 41 4e 3d 3e 48 41 00 40 41 3d 50 44 57 57 57` | ROOM1230.RDT @0x016F6 (msg 10, Seite 1), ROOM1231 @0x016F6 |
 | Kopf / Seitenumbruch / Ende | `04 02` / `02 00` / `01 00` | wie msg 0 bzw. msg 10 selbst (@0x0D68/@0x0D8B/@0x0DD3 bzw. @0x16F4/@0x170A/@0x1752) |
 
+Vorschau in der Spielschrift (`re15_port/tools/r34n_f/r34n_f_textvorschau.py`, derselbe Weg wie der
+PC-Zeichner: DATA/TEX.TIM Schriftseite x 256.., CLUT-Zeile je Farbcode, Vorschub DEBUG.BIN[0x4416+code]):
+`F_belege/textvorschau.png` — Original- und neue Seiten nebeneinander. Die Original-Seiten stimmen
+Glyph fuer Glyph mit den Framedumps der echten exe (`F_belege/ist_1110_leiche.png`) ueberein (auch die
+gruenen Ziffern), die neuen Seiten lesen sich "It's a police officer, he's dead." / "He is holding
+something." / "A miserable death...".
+
 Zeilenbreiten (Vorschub `include/font_width.h` = DEBUG.BIN[0x4416+code], Leser FUN_80028868):
 1110 lang 210 px / 160 px, 1110 kurz 210 px, 1230 lang 129 px / 160 px, 1230 kurz 129 px.
 Bestand: 2505 Zeilen, Median 171 px, 99 %-Quantil 271 px -> alle neuen Zeilen im ueblichen Mass, kein Umbruch noetig.
