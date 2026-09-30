@@ -349,7 +349,18 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
   Logzeile ist das Bild eines von aussen beendeten Prozesses (`taskkill /F` setzt Exit-Code 1) — die Parallel-Sitzungen
   starten und beenden `re15_pc.exe`-Prozesse (Memory "taskkill-Falle"). Jedes der vier verschiedenen Roten lief einzeln
   gruen; kein Rot war reproduzierbar.
-* **Endlauf 3**: siehe Rueckgabe (Abschlusszeile).
+* **Endlauf 3** (all, Stand wie Endlauf 2 + Dossier): `99% tests passed, 5 tests failed out of 430`, 1225.16 s:
+  `integration_elza_vollstart`, `integration_r30_irons_tisch_bild` (P0 exit=1), `integration_r30_irons_tisch_licht`
+  (P60 exit=1), `integration_r30_titel_puls` (Bilddauer im Titel bis 393 ms statt ~33 ms -> Periode verfehlt, Last),
+  `integration_r33_speichern` (b exit=1). Einzeln wiederholt: irons_tisch_bild `Passed 105.49`, irons_tisch_licht
+  `Passed 52.96`, titel_puls `Passed 27.64`, r33_speichern `Passed 76.28`; elza_vollstart zweimal mit exit=1 nach 35 s
+  bzw. 90 s abgerissen, dann `Passed 102.57 sec`.
+* **Gegenprobe "von aussen beendet"**: derselbe elza-Riegel (`cmake -P test_elza_vollstart.cmake`) mit einer
+  UMBENANNTEN Kopie derselben exe (`re15_pc_r34c_probe.exe`, bytegleich) -> `Process terminated due to timeout`
+  (= der erwartete Ausgang) und `elza_vollstart OK`, waehrend die Laeufe unter dem Namen `re15_pc.exe` in derselben
+  Viertelstunde mit exit=1 abrissen. Im Repo beendet `scripts/green.sh:20` noch `taskkill //F //IM re15_pc.exe`
+  maschinenweit (fremde Datei, nicht angefasst); `tools/local_build.sh:290-296` ist schon auf das eigene Bauverzeichnis
+  begrenzt.
 
 ---
 
