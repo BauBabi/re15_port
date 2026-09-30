@@ -445,9 +445,14 @@ Zusaetzlich: Suite im eigenen Baum (429 Tests), GUI-Haken einzeln nachfahren (me
 2. **Ton beim Einsetzen:** RE1.5 (ROOM2060) stumm, RE2 spielt einen Raum-SE (room1110 sub04 +0x2C Se_on
    2/0x0F). ROOM1050s snd0 hat nur die drei Rolltor-SE. Plan: stumm (RE1.5 fertig -> massgeblich).
 3. **Nicht gemessen:** ob ROOM1090s obere Ebene (Ankunft aus 10F0, y=-9000) zur Tuer nach ROOM1050 fuehrt —
-   nur fuer die Frage "Rolltor fortschrittsnoetig?" relevant, nicht fuer einen Softlock.
-4. **Nebenbefund (nicht Spur A):** `re15_tuer1120_install` steht nur am Tuerweg (scd_room_setup.c:428), nicht
-   am Boot-/CONTINUE-Weg in main.c (4658..4685 ruft sicherung/irons_tisch/granate). Ob in ROOM1130 geladen
-   werden kann, nicht geprueft.
+   nur fuer die Frage "Rolltor fortschrittsnoetig?" relevant, nicht fuer einen Softlock. Hinweis aus den
+   Daten: die RVD verbindet die hohe Kameragruppe (Cut 0..2, Kamera y -12798/-11088) mit der unteren
+   (Cut 3..7) ueber die Zone @0x2A8 (Cut 0 -> 3, x -14889..-4999 z 3400..8400), die SCA fuehrt Schraeg-/
+   Treppenzellen (Typ 3/4, floor 18/19); ob die Feuer-Emitter (sub00 @0x02214.., Typ 0x26) den Weg
+   sperren, waere ein Lauf im echten Spiel.
+4. ~~Nebenbefund~~ geprueft, KEIN Befund: `re15_tuer1120_install` steht nur am Tuerweg
+   (scd_room_setup.c:428), nicht am Boot-/CONTINUE-Weg (main.c 4658..4685) — aber STAGE1 speichert nur in
+   ROOM1120/1150 (`re15_savepoint.c:46/47`), ein Laden startet also nie in ROOM1130. Spur A braucht den
+   Boot-Weg ebenfalls nicht (Texte 20/21 werden beim Ausloesen eingesetzt, §5.1).
 5. Der Bau muss die Kopfkommentare von `test_room1050_sicherung.c` (Cut_replace-These, "keine
    Sicherungs-Bedingung") nachziehen (§3.5).
