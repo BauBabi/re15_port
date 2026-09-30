@@ -1,0 +1,18 @@
+== Zustand nach a (v0.8.19 entpackt) 2026-09-30 10:01:07
+total 48
+drwxrws--- 4 u0_a211 ext_data_rw 4096 2026-09-30 08:00 .
+drwxrws--- 3 u0_a211 ext_data_rw 4096 2026-09-30 07:59 ..
+-rw-rw---- 1 u0_a211 ext_data_rw 1309 2026-09-30 08:00 debug.log
+-rw-rw---- 1 u0_a211 ext_data_rw   32 2026-09-30 08:00 re15_assets_ok.txt
+drwxrws--- 6 u0_a211 ext_data_rw 4096 2026-09-30 08:00 shared_assets
+drwxrws--- 4 u0_a211 ext_data_rw 4096 2026-09-30 07:59 synchro
+af45d06a3555f997 3603 356678277
+
+23d5fdc1caff80786ff855e59450f09e2ab810b8ad0a1cb08494033ec79e8174  shared_assets/PSX/STAGE4/ROOM4010.RDT
+-- gegen die Liste von N:
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+oberste Ebene: debug.log re15_assets_ok.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich 0 | .neu-Reste (ueberall) 0
+re15_assets_entpackt.txt sha256: - (NICHT die APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: True
+GERAET-ABWEICHUNG

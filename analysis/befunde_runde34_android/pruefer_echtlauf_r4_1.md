@@ -44,6 +44,47 @@ Groesse der APK-Daten UND der Quelldatei = Liste: **0 Abweichungen, LISTE-OK**.
 
 ## 3. Emulator headless: v0.8.19 -> neue APK -> Update mit gleich grosser Aenderung -> Update ohne Aenderung -> force-stop mitten im Entpacken
 
+### 3.0 Aufbau
+- **Eigene AVD-Kopie** `Medium_Phone_API_36_pe1` unter `build/r34a/pruefer_e1/avd/` (ANDROID_AVD_HOME): config.ini des
+  Nutzer-AVD `Medium_Phone_API_36` (Ordner Medium_Phone.avd) mit genau 5 Aenderungen (`diff --strip-trailing-cr`):
+  AvdId, Anzeigename, `disk.dataPartition.size = 12884901888` (statt 6 GiB), Kaltstart erzwungen. Grund: auf dem
+  Nutzer-AVD scheitert ein Update an `INSTALL_FAILED_INSUFFICIENT_STORAGE` (von N1 gemessen, 1.3 Punkt 3); dort liegen
+  fremde Apps, ich fasse ihn nicht an. Dasselbe System-Image (android-36 google_apis_playstore x86_64).
+- Start `emulator -avd Medium_Phone_API_36_pe1 -port 5580 -no-window -no-audio -gpu swiftshader_indirect -no-snapshot
+  -wipe-data -no-boot-anim` (vorher: `adb devices` leer, kein qemu/emulator-Prozess). Boot 09:58:42; Android 16,
+  `ro.build.type=user`, x86_64, /data 12G (11G frei), `de.re15.port` nicht installiert.
+  `settings put secure immersive_mode_confirmations confirmed` (Einmal-Hinweis des frischen AVD).
+- Werkzeuge (eigene, nicht die von N1): `pe1_adb.sh` (nur `-s emulator-5580`, MSYS_NO_PATHCONV), `pe1_lauf.sh`
+  (install -r mit Erfolgspruefung, installierte base.apk per sha256 identifiziert, Kaltstart, Warten auf die
+  Abschlusszeile, logcat Tag re15), `pe1_geraet.py` (sha256 JEDER Datei unter shared_assets/ + synchro/ auf dem
+  Geraet per toybox sha256sum gegen die Liste der APK, Zusatzdateien, *.neu, Liste "zuletzt entpackt", alter Marker).
+- APKs: Referenz v0.8.19 = frische Kopie aus dem Archiv (`514bebd5...` = Archiv-SUMS); **N** = Bau aus 1.;
+  **M** = derselbe Stand + EINE gleich grosse Aenderung, ECHT gebaut (`pe1_m_bau.sh`, Auszug `android_M_auszug.txt`):
+  `shared_assets/PSX/STAGE4/ROOM4010.RDT` (297112 B) Byte 148556 0xf2 -> 0xa8, sha256 `23d5fdc1...` -> `c065442b...`,
+  `build_android.sh --version v0.8.19-pe1m --no-toolchain` -> EXIT 0, stageAssets + writeAssetManifest liefen neu,
+  Selbsttest 248/248, 3603/3603 bytegleich, APK `56ef3d26b9328097...` (versionCode 81900 wie N). Quelldatei nur
+  09:56:37-10:00:00 geaendert (per rename; Linkzahl vorher 1), danach `git restore`: hash-object `d0ba28b8...` = Index,
+  `cmp` gegen die Sicherung rc 0, `git status` leer. N gegen M (`liste_N_gegen_M.txt`): Listen je 398099 B, **genau eine
+  Zeile anders** (ROOM4010.RDT, nur die sha256), genau zwei assets/-Eintraege mit anderer CRC (Liste + ROOM4010.RDT).
+
+### 3.1 Referenz v0.8.19 frisch (`geraet/a_ref0819_frisch.txt`, `geraet/a_zustand.txt`)
+install `Success` (29,3 s), installiert `514bebd5...`; alter Entpacker: `Entpacke 3603 Dateien (356678277 Bytes)` ->
+`Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler` (39,7 s). Oberste Ebene `debug.log re15_assets_ok.txt
+shared_assets synchro`, Marker `af45d06a3555f997 3603 356678277`. Gegen die Liste von N: 3603 Dateien, fehlen 0,
+sha256 falsch 0, zusaetzlich 0 (v0.8.19 hat dieselben Assets wie N), keine v2-Liste, Marker da.
+
+### 3.2 Update v0.8.19 -> N: Uebergang + Titelbild (`geraet/b_uebergang_ref_zu_N.txt`, `geraet/b_geraet.txt`)
+install -r `Success` (22,2 s), `lastUpdateTime` neu, `firstInstallTime` alt, installiert `a340a325...` (= N):
+```
+08:02:40.636 [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+08:03:08.888 [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 0 kopiert (0 B, 0 ms), 3603 per SHA-256 geprueft
+             (356678277 B, 18851 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 28364 ms
+```
+(Uhrzeiten logcat = UTC, Host = UTC+2.) `pe1_geraet.py N`: 3603/0/0/0, 0 `.neu`, `re15_assets_entpackt.txt` =
+Liste von N (`95770eb5...`), Marker weg -> **GERAET-KONSISTENT**. Bildschirm (8 Bilder im 6-s-Takt ab 10:03:24,
+ANGESEHEN): Bild 1 Intro-Effekt, Bild 8 (10:04:10, `geraet/b_titelbild_nach_uebergang.png`) **Titelbild "BIOHAZARD 2
+Sample Ver.2025.01.25", NEW GAME / LOAD GAME / OPTION**, Touch-Overlay; Prozess laeuft (pidof 6277).
+
 ## 4. PC-Suite local_build.sh all
 
 ## 5. Kein Python-Installer

@@ -1,0 +1,26 @@
+Index-Blob d0ba28b8d9d4051377124e7ed242f932ca78d189, Datei-Blob d0ba28b8d9d4051377124e7ed242f932ca78d189, Linkzahl 1
+Groesse 297112, Offset 148556: 0xf2 -> 0xa8
+sha256 alt 23d5fdc1caff80786ff855e59450f09e2ab810b8ad0a1cb08494033ec79e8174
+sha256 neu c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da
+AENDERUNG AN: 2026-09-30 09:56:37
+Datei jetzt: c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da 297112 B
+BAU START 2026-09-30 09:56:37
+> Task :app:stageAssets
+> Task :app:writeAssetManifest
+re15_assets.txt (v2): 3603 Dateien, 356678277 Bytes, sha256 je Datei
+BUILD SUCCESSFUL in 2m 48s
+   Pruefkopie (sha256 crc32 Bytes: 56ef3d26b9328097cf16576b14a6887ed70e2e959d909b980e661fbdfecb7ca9 e0073e42 363479879) - alle Schritte lesen nur sie: C:/Users/MJOEDI~1/AppData/Local/Temp/re15_apk_pruefen.ohe9vF/re15_port_v0.8.19-pe1m_andro
+   package: name='de.re15.port' versionCode='81900' versionName='v0.8.19-pe1m' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+== SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   SUMME                           3603    3603     3603    356678277
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+== APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19-pe1m_android.apk.ungeprueft (sha256 crc32 Bytes: 56ef3d26b9328097cf16576b14a6887ed70e2e959d909b980e661fbdfecb7ca9 e0073e42 363479879) ==
+== ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19-pe1m_android.apk ==
+BAU ENDE 2026-09-30 10:00:00
+EXIT=0
+ZURUECK AN: 2026-09-30 10:00:00
+--- zurueckgesetzt: hash-object d0ba28b8d9d4051377124e7ed242f932ca78d189 Index d0ba28b8d9d4051377124e7ed242f932ca78d189; cmp mit Sicherung rc 0
+--- git status: []

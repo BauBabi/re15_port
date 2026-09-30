@@ -1,0 +1,10 @@
+Liste N 398099 B sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+Liste M 398099 B sha256 ed0433e3f16d9069b1424f1de3188b006e9715420b67898d51b623777d60aac8
+--- 
++++ 
+@@ -3002 +3002 @@
+-297112	23d5fdc1caff80786ff855e59450f09e2ab810b8ad0a1cb08494033ec79e8174	shared_assets/PSX/STAGE4/ROOM4010.RDT
++297112	c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da	shared_assets/PSX/STAGE4/ROOM4010.RDT
+assets/-Eintraege mit anderer CRC/Groesse: ['assets/re15_assets.txt', 'assets/shared_assets/PSX/STAGE4/ROOM4010.RDT']
+nur in N: [] nur in M: []
+ROOM4010.RDT in M: 297112 B sha256 c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da

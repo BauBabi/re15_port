@@ -1,0 +1,15 @@
+== b_uebergang_ref_zu_N 2026-09-30 10:01:54
+APK: build/r34a/pruefer_e1/apk/N_v0.8.19.apk sha256 a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+install rc=0 (22172 ms): Performing Streamed Install Success 
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+   lastUpdateTime=2026-09-30 08:02:20
+   firstInstallTime=2026-09-30 07:59:33
+installiert: /data/app/~~k9-_gx1N6nuM0obbBP8CRw==/de.re15.port-eblp8X0g-59l2c-j38GN8w==/base.apk sha256 a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+Status: ok
+LaunchState: COLD
+TotalTime: 3814
+warten rc=0 (33355 ms ab am start)
+09-30 08:02:39.483 I/re15    ( 6277): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:02:40.636 I/re15    ( 6277): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 08:03:08.888 I/re15    ( 6277): [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 0 kopiert (0 B, 0 ms), 3603 per SHA-256 geprueft (356678277 B, 18851 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 28364 ms
