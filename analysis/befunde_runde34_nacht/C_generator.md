@@ -722,7 +722,30 @@ r26 A waren schon im ersten Lauf gruen, kein Nachfahren noetig).
 
 ### 9.6 Eigene Abnahme an der echten exe (Bilder)
 
-(in Arbeit)
+Alle Laeufe an einer Kopie der gebauten exe (`re15_r34nc.exe`, Stand 42baac77 = heutiger Spielcode),
+echter Eingabepfad (DEBUG_JUMP 11F0 -> FIRE_AOT Slot 1 = sub16, Meldungen + "Ja" per INPUT_SCRIPT, Panel
+offen ab F500; Cursor/Schalter nur per D-Pad/Quadrat), `RE15_WINDOW_SCALE=3`, Framedumps = Readback vor
+Present. Werkzeuge: `tools/r34n_c/abnahme.sh` (s1..s5), `lampen_spur.py` (Lampen RELATIV zum Hintergrund
+ROOM11F10.bmp + Zellvergleich gegen `vorschau_k22_z3/_z4.png` + Cursor/Zeiger aus dem Bild), `cursor_spur.py`,
+`streifen.py`, `gdigrab_s2.sh`. Bild F zeigt den Log-Stand F-1 (Zeichnen am Schleifenanfang).
+Die Framedump-Rohdaten (PPM, 2 MB je Bild) sind nach der Auswertung geloescht; die Tabellen liegen in
+`C_belege/bau_*_spur.txt`.
+
+| # | Punkt | Messung | Ergebnis | Beleg |
+|---|---|---|---|---|
+| 1 | "nach dem Klick ... frei bewegen" | S1 = Ist-Lauf 2.2 (Schalter 7, 3 s UNTEN) | `panelsperre=0` in JEDEM Bild F500..F640; Cursor-y im gerenderten Bild steigt ohne Plateau 95.7 (F517) -> 136.0 (F532, Schalterbit) -> 182.3 (F550) -> 196.0 (F559), dann aus dem Feld; Zeiger 0 -> 20 (y 177.3 -> 152.3) im selben Zeitraum. Ist (vorher): Plateau 136.0 von F532 bis F580 | `bau_s1_cursor_spur.txt`, `bau_s1_streifen.png` (vs `ist1_streifen.png`) |
+| 2 | "ganz am Ende ... zunaechst auf die 80" | S2 = 7, 9, 3, 1 ohne Warten, 5; ab b* 3 s HOCH+QUADRAT | Bits: 7 F532, 9 F563, 3 F618, 1 F644, 5 F693 = b*; `panelsperre` 0 von F500 bis F692, 1 von F693 bis F742, danach 0 mit `padsperre=1` (sub18 @0x01736); Zeiger 61 (b*) -> 80 bei F712 = k; Abnahme `geloest=1` + Ton bei F743 = k+31; Cursor im Bild (66.3, 185.0) unbewegt von F672 bis F741 trotz gehaltenem HOCH ab F699; Maske bleibt 0x155 | `bau_s2_lampen_spur.txt`, `bau_s2_streifen.png` |
+| 7b | Quadrat GEHALTEN auf dem letzten Schalter | S6 = wie S2, aber Quadrat 3 s ab dem Druck auf Schalter 5 | b* F693, Maske bleibt 0x155 bis zur Abnahme F743 = k+31 (k F712), 0 Wechsel | `bau_s2_s6_s7_zustand.txt` |
+| — | Quadrat GEHALTEN in der freien Phase (Rueckmeldung iii) | S7 = Schalter 7, Quadrat 3 s | Hebel kippt alle 17 Bilder neu: Maske 040 F532, 000 F549, 040 F566, 000 F583, 040 F600, 000 F617 — RE1.5-Verhalten (0x51 liest das gehaltene Wort, Zelle @0x0135C wieder scharf), keine Sperre | `bau_s2_s6_s7_zustand.txt` |
+| 3 | Ziel wechselt waehrend der Fahrt (7d: Bildpaar) | S4 = Schalter 9 (+30), gleich danach 10 (-60) | Bit 9 F534 (Ziel 30), Zeiger 1..19; Bit 10 F553 (Ziel 0): Zeiger dreht 19 -> 18 -> ... -> 0 (F571), kein Sprung; gerendert y 165.3 -> 155.3 (steigend) -> 157.3 ... 177.3 (fallend); `panelsperre=0` durchgehend | `bau_s4_zielwechsel.png`, `bau_s4_cursor_spur.txt` |
+| 5 | Lampen an/aus (7e: relativ zum Hintergrund) | S3 = 3, 1, 5 ; +2 ; -2 ; +7 ; +9 | dG (Glas minus Original-BG, gleiche Pixel): AN oben +195.6 / +174.9 (Zelle 3/4), unten +192.5 / +168.1; AUS -0.9 (MDEC-Dekodierrest). Folge im Bild: oben an F687 (Bit 5 F686), aus F765 (Bit 2 F763), an F804 (Bit 2 weg F801), unten an F942 (Bit 9 F939) = beide an; Endsperre ab F939, Abnahme F999 = k+31 (k F968) | `bau_s3_lampen_spur.txt`, `bau_s3_lampen_zoom.png` |
+| 6 | Lage/Groesse/Kunst | S2/S3 gegen die Soll-Vorschau (dieselbe Regel) | mittlere Kanaldifferenz im 22x22-Quadrat: oben 0,4, unten 0,6 (Soll <= 1, MDEC-Rest wie §2.3); Bilder angesehen: gruenes Glas genau im Rahmen, schmaler Hof | `bau_s2_lampen_zoom.png`, `bau_s3_lampen_zoom.png` |
+| 7 | Wechselrhythmus | jedes 3. Bild bzw. Log | Zelle 3 im ersten Bild nach dem Bit, dann 4, 3, 4 ... (im Log `lzelle` je Bild wechselnd; im Bild dG 195.6/174.9 im Wechsel) | `bau_s2_lampen_spur.txt` |
+| 7a | Leck: Cut 8 nach der Abnahme | S2 F747..F960 | Lampenrechtecke gegen ROOM11F08.bmp: mittlere Differenz 1,04 / 0,72, kein positives dG — nichts gezeichnet; Meldung "Power supply OK." sichtbar | `bau_s2_F801_cut8.png` |
+| 7a | Leck: Nachbarraum | S5 = Panel ueber RE15_SUBSTART 16, 3, 1, 5 (obere Lampe AN), bei F720 Tuer Slot 0 per FIRE_AOT -> ROOM11E0 | ROOM11E0 Cut 12 (F100/F140): Lampenrechtecke gegen ROOM11E12.bmp max dG 0 (oben 1,71 / unten 5,79 mittlere Differenz = Hintergrund-Dekodierrest, kein Gruen) | `bau_s5_nachbarraum.png` |
+| 7c | Cursor nie ueber den Lampen | alle Lampen-Messbilder S1..S4 | Cursor-x 66..171 (< 200) in jedem Bild | Spalte `cur_x` in den Spur-Dateien |
+| gd | Sichtpruefung echtes Fenster (Skill re15-port-visual-verify) | S2, gdigrab per Fenster-Handle der eigenen exe (4 Bilder/s, KEIN Readback) | beide Lampen gruen (dG 195.6 / 192.5 = identisch mit dem Readback), Zeiger auf 80, Cursor steht; danach Cut 8 mit "Power supply OK." | `bau_gdigrab_beide_lampen.png`, `bau_gdigrab_ok.png` |
+| 8 | 11F1 / Laden | nur Riegel (DEBUG_JUMP ohne Varianten-Nibble) | Riegel B/G auf ROOM11F1 gruen; Wiedereintritt H gruen | §9.4 |
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
 

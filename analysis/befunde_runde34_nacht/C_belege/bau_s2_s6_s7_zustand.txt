@@ -1,0 +1,21 @@
+# S6: wie S2, Quadrat 3 s ab dem Druck auf Schalter 5 (A3) - Zustandswechsel (panel.log)
+F640: maske=144 wert=40 sperre=0 geloest=0 cut=10 padsperre=0
+F644: maske=145 wert=41 sperre=0 geloest=0 cut=10 padsperre=0
+F693: maske=155 wert=61 sperre=1 geloest=0 cut=10 padsperre=0
+F743: maske=155 wert=80 sperre=0 geloest=1 cut=10 padsperre=1
+F744: maske=155 wert=80 sperre=0 geloest=1 cut=8 padsperre=1
+wert 80 ab F712
+
+# S7: Schalter 7, Quadrat 3 s gehalten (A3) in der freien Phase - Zustandswechsel
+F500: maske=000 sperre=0
+F532: maske=040 sperre=0
+F549: maske=000 sperre=0
+F566: maske=040 sperre=0
+F583: maske=000 sperre=0
+F600: maske=040 sperre=0
+F617: maske=000 sperre=0
+
+# S2 Sperr-Intervalle
+ab F500: panelsperre=0 maske=000 wert=0 padsperre=0 cut=10
+ab F693: panelsperre=1 maske=155 wert=61 padsperre=0 cut=10
+ab F743: panelsperre=0 maske=155 wert=80 padsperre=1 cut=10
