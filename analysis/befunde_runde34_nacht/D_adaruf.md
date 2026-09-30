@@ -602,7 +602,9 @@ Alle Bilder angesehen.
 * `bau_stimme_platzhalter.png` + `.txt` — Platzhalter-Stimmen (9): msg 23 steht, bis main23 zu Ende ist
   (F315..F425), msg 24 + Clip 17 ab F430.
 * Elza: Riegel `unit_r34n_d_adaruf_elza` (ROOM1051 Slot 4 bleibt Tuer, Druck -> ROOM10A1); kein exe-Lauf mit
-  Elza-Start (die Installation kehrt fuer jeden Raum ausser 0x1050 in ihrer ersten Zeile zurueck).
+  Elza-Start — ein Versuch mit RE15_PSELECT_AUTO/_AUTO_SWITCH ueber `messlauf.sh` waehlte Leon (Log `Spieler-Familie
+  PL00`, die Titel-Automatik des Messlaufs kollidiert mit der Auswahl-Automatik; `integration_elza_vollstart` faehrt
+  den Titel anders). Die Installation kehrt fuer jeden Raum ausser 0x1050 in ihrer ersten Zeile zurueck.
 
 ### 9.6 Mutationsproben (Fix raus -> Riegel rot, danach zurueck, Riegel wieder gruen)
 
