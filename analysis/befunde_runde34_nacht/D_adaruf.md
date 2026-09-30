@@ -328,9 +328,9 @@ Keine Aenderung an: aot_common.c, msg_common.c, game_step_common.c, main.c, door
 Weiche (`re15_adaruf_ereignis`): nur `room == 0x1050 && event_id == 13`; kopiert `k_ruf` nach `s_prog`, setzt aus
 der Spielerposition im Druckbild den Blickpunkt `(x+755, z)` in `s_prog[0x28..0x2B]` und das Rueckschritt-Ziel
 `(x-755, z)` in `s_prog[0x3C..0x3F]` (LE s16), gibt `s_prog` zurueck. `scd_event_fire` startet den Faden im ersten
-freien Ereignis-Slot (10..23) wie jedes Raum-Sub.
+freien Ereignis-Slot (10..23) wie jedes Raum-Sub. **BAU (Auflage 5):** die Weiche liefert das Programm nur, wenn zusaetzlich (9,65)=0, (3,0xBB)=0 und kein Faden das Programm schon ausfuehrt; sonst NULL.
 
-### 5.3 Der Bytecode `k_ruf` (142 Bytes; Sonde = Plan)
+### 5.3 Der Bytecode `k_ruf` (142 Bytes; Sonde = Plan — gebaut 162 Bytes, siehe +4C/+54 und §9.7)
 
 | Vers. | Bytes | Opcode | Vorbild |
 |---|---|---|---|
