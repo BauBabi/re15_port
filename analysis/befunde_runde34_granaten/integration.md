@@ -247,3 +247,43 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
 ## 3. Volle Suite (Schritt 3)
 
 ## 4. OFFEN
+
+Aus der Integration (neu):
+* **I-1 Aufstellung von `integration_r34_granaten`**: die Treffer-Laeufe haengen an den gemessenen KI-Wegen der ROOM1140-
+  Fresser (RE2-KI: Zombie 3 steht im Bild 119 in 771 der Granate; RE1.5-KI: Zombie 2 in 513). Aendert eine spaetere Runde die
+  Zombie-KI, meldet der Test "AUFSTELLUNG ... neu messen" (Vorbedingung), keinen Granatenfehler. Weg: `integration_werkzeug/
+  auswert.py` auf einen Probelauf, Leon so setzen, dass die TIEF-Granate (Landung ~2511 vor, ~310 seitlich) den Gegner im
+  Bild X trifft.
+* **I-2 Hund/Spinne ueber den echten Wurf**: die Part-Farben sind ueber den Mess-Haken `RE15_FORCE_EXPLOSION` abgenommen
+  (W6). Ein Wurf an einen Hund/eine Spinne ist nicht verlaesslich (Hunde in ROOM11D0 rennen sofort; die ruhenden Hunde in
+  ROOM1190 bei (690,-28500) nimmt der Resolver bei 577 Abstand nicht — Kasten/Band der Ruhe-Pose ungeprueft; MITTE landet
+  wegen der Seitendrift 1752 ~1400 neben dem Ziel der Auto-Nachfuehrung). Weg: Kasten/Hoehe des ruhenden Hundes (Zustand 4,
+  grid 0x40) im Savestate lesen.
+* **I-3 Routinen 24/25 (@0x80017f50/@0x80017fa4) und 13/19 (@0x80017990/@0x80017d08)** nicht portiert: kein Auslieferungs-
+  Raum spawnt Effekt 0x0d (bau_c.md N1.3 Zensus) — unerreichbar; Routine 25 brauchte room_coll + FUN_80012d60 + Kind 0x030C.
+* **I-4 Spawn ohne Bank**: `re15_esp_fx_spawn_ex` setzt den Zeitgeber aus Satz[0] nur mit aufgeloester Bank; ein Platz ohne
+  Bank (eff_idx < 0) behaelt 0 und faellt im ersten Anim-Schritt wie bisher weg.
+* **I-5 BAUPLAN §1.6 Text** (bau_b.md INTEGRATIONSWUNSCH N-2): "HE DEATH[9][0] = 0x80107438" ist durch Spur B (K1) ersetzt:
+  HE an der RE2-Zombie-Familie stempelt Spalte Zone + 3 -> DEATH[9][3] = 0x80108530 (Sturz-Tod), Brad HURT[9][3] =
+  0x80105438. Gemessen im Integrationstest: RE2-Zombie 0x10 nach HE -> Zeile 9, Leiche ab Bild 180. BAUPLAN selbst nicht
+  geaendert (Planungsdokument der RE-Phase).
+
+Uebernommen aus den Spuren (unveraendert offen, Details in den Bau-Dossiers):
+* A: Weltlage fuer Flags&0x80 (Anker-Matrix, bau_a OFFEN 1), Liegen-SE-Lage = Stapelrest (E14), Item-Debug-Nebenwirkung
+  ITEMALL/MIXITEM (OFFEN 4), Kind-Spawns weiterer Routinen 2/19/25/39/43 ueber den 0x0a-Weg (OFFEN 7), INTEGRATIONSWUNSCH 9
+  (`re15_enemy_steer_point` maskiert je Schritt `& 0x0fff`, Lauf-Lenker FUN_8001aac4 nicht — Gegenstueck zu H-1).
+* B: N-a Saeure-Spalte (RE2 Op 49 = K1, gebaut K0 nach E6), N-b RE2-Wiederbelebung nach dem Sturz-Tod (~1/8, @0x80108918-9ec)
+  fehlt im Port fuer alle Waffen, N-c Setzer von 0x800CFBD8 Bit 0x10000000, OFFEN 1-15 (Hunde-Koerper-Schub mit Original-
+  Kasten, Kraehe +0x98, Applier-Zeilen ausser 9/10/11, Part-19-Flug der Spinne, Kakerlake/Alligator/Tyrant-Details, G5-
+  Ruettler/Zeilen-Partikel, schlafender RE2-Arm), H1-H8 der Gegenpruefung.
+* C: O-C2 Flags-Bit 3 (zweites Zeichnen), O-C3/D Mischreihenfolge innerhalb eines OT-Eimers, O-C4 Paletten-Versatz der Raum-
+  TIMs, O-C5 Lage-Flag der SEs (FUN_80045a64), O-C8 Bank-5-Satztor, O-C9 Objekte der Tabelle 0x800af33c ohne Ein-Bild-Licht.
+  **O-C1 ist mit W9 geschlossen**: Wurf-Toene im Waffen-Log (TIEF: 5 Abpraller 0x010a0401..0x010a0001 + Liegen 0x010a0001 ->
+  ARMS Satz 10), Explosion 0x04080001 -> CORE Satz 8 (nur Art 2), Saeure 0x01130001 -> ARMS10 Satz 10, Brand 0x01120001 ->
+  ARMS11 Satz 10 (E9), Licht-Latch `[licht] F119 Latch -> Cut 1 Licht2 Typ 0 Farbe (210,140,80) ... Hell 6000` im
+  Explosionsbild.
+* D: O-VB2-Formtypen 1..13 (Kreise/Schraegen/Treppen) im Flammen-Bodentest, RE2-Paketpuffer-Ueberlauf (@0x80077e40-54).
+* Infrastruktur: D M9 — drei Skills schreiben `taskkill //F //IM re15_pc.exe` vor (`re15-room-probe/SKILL.md:13/:63`,
+  `re15-enemy-ai-re/SKILL.md:260`, `re15-pc-render-order/SKILL.md:74`); `scripts/green.sh` erwaehnt den alten Weg nur noch
+  im Kommentar. Umstellung auf den Pfad-Filter von local_build.sh = Sache des Orchestrators (Skills sind nicht Teil dieses
+  Auftrags).
