@@ -703,3 +703,8 @@ Dateien mit uncommitteten Aenderungen.)
   (nur lesend geprueft); zur Zeit liefen re15_pc.exe aus r34g_b, r34g_c und r34n_hebetisch. ctest laeuft sequenziell.
   Aufrufer von Spur-D-Funktionen ausserhalb der Sonden: keine (re15_damage.c:3682 nur Kommentar).
 * **Einzelwiederholung** irons_tisch_laden zweimal: **Passed** 30,83 s (Last 59 %), **Passed** 30,83 s (Last 37 %).
+* **Lauf 7** (auf 36b0ac63, 05:12-05:24): `99% tests passed, 2 tests failed out of 433`, `Total Test time (real) =
+  686.44 sec`. Rot diesmal `integration_r30_granate_laden` ([e] "Spielstand in ROOM1150 nicht geladen (exit=1)") und
+  `integration_r33_speichern` ([a] "Lauf unvollstaendig (_h_exit fehlt, exit=1)"); irons_tisch_laden gruen.
+  Einzelwiederholung: granate_laden **Passed** 91,33 s (Last 51 %), r33_speichern **Passed** 88,67 s (Last 7 %).
+  Ueber die Laeufe 5-7: 5 rote Eintraege in 4 verschiedenen exe-Tests, keiner reproduzierbar, jeder einzeln gruen.
