@@ -423,3 +423,20 @@ Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck 
   83,22 s; titel_puls bei CPU-Last 99 % **Failed** ((D) 62 bzw. 58 Engine-Schritte je Periode statt 60 — Bilddauern bis
   105 ms), bei Last 42 % gestartet **Passed** 29,36 s. Der Test misst die Echtzeit-Taktung des Titelschirms (title_pulse.c,
   main.c-Titelschleife), die Spur D nicht beruehrt → Last-Flattern, kein reproduzierbares Rot.
+* **Lauf 3** (`local_build.sh` all auf 0a7eb5bf, also mit der OT-Reihenfolge 6b746ff4; Start 02:06:48 nach Lastabfall auf
+  42/30 %, waehrend des Laufs wieder 96-100 % durch die Suiten der Spuren A/B/C und weitere Baeume): `99% tests passed,
+  4 tests failed out of 431`, `Total Test time (real) = 749.10 sec`, Abschlusszeile `!!! [local_build] FEHLER: ctest
+  fehlgeschlagen (exit=8), Log: re15_port/build_r34_d/local_build_ctest.log`. Rot NUR exe-Tests, wieder eine andere Menge:
+  `integration_r30_granate_laden` ([b] exit=1, debug.log endet nach `[pad] kein Controller gefunden`),
+  `integration_r30_sicherung_laden` ([a] exit=1 vor Bild 280), `integration_r30_titel_puls` ((D) 61 Engine-Schritte in
+  Periode 3), `integration_relatch_pin` (exit=1 nach 4,45 s, debug.log 47 Zeilen).
+* **exit=1 ist kein Absturz** (gemessen): das Windows-Anwendungsprotokoll (Ereignis 1000/1001/1002, 00:25-02:25) enthaelt
+  KEINEN re15_pc-Eintrag; Kontrolle, dass es aufzeichnet: 78 Ereignisse 1000 in 30 Tagen, darunter re15_pc mit
+  0xc0000005 am 06./07.09. Die exit(1)-Pfade der exe (render_pc.c:582/617/630/638) schreiben vorher eine Meldung ins
+  debug.log — sie fehlt. Das Prozessende kommt also von aussen (TerminateProcess mit Code 1, wie `taskkill /F`). Zur selben
+  Zeit zeigen die Suiten der Spuren B und C dieselbe Klasse (cut_blitz, elza_vollstart, irons_tisch_laden rot; nur gelesen).
+* **Einzelwiederholung** nach Lauf 3 (nacheinander, je `ctest -R "^<name>$"`): granate_laden **Passed** (Last 100 %),
+  sicherung_laden **Passed** (99 %), relatch_pin **Passed** (97 %); titel_puls bei 96 % **Failed** ((D) 61/59 Engine-
+  Schritte), nach drei Lastproben < 50 % (63 → 22/16/7 %) gestartet **Passed** (02:37:56-02:38:24). Ueber drei Laeufe:
+  kein Test ist reproduzierbar rot, die rote Menge wechselt von Lauf zu Lauf, jeder rote Test ist ein exe-Test ohne
+  Spur-D-Aufrufer (`grep re2fx platform/pc/main.c` leer; Diff zu C0 nur in den Spur-D-Dateien).
