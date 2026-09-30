@@ -6,7 +6,7 @@ Pruefgegenstand: `git diff 8d8651e4..HEAD` (die 13 Commits der Spur B; 8d8651e4 
 Der Gegenpruefer aendert KEINEN Code; Mutationsproben werden angewandt, gebaut, gefahren und aus einer
 Sicherungskopie zurueckgesetzt (Nachweis `git diff` leer am Ende).
 
-STATUS: IN ARBEIT (fortlaufend geschrieben)
+STATUS: ABGESCHLOSSEN — 1 kritisch (K1), 2 mittel (M1, M2), 8 Hinweise (H1-H8); Befundliste Abschnitt 5, Fazit Abschnitt 8.
 
 ---
 
@@ -71,6 +71,8 @@ STATUS: IN ARBEIT (fortlaufend geschrieben)
 | Hund Teile-Wurf, Brand, Saeure, HURT 9/10/11 | `80104440-4d8`; `80104774-800`; `8010481c-89c`; `80103ce4-d78`, `80103d9c-e3c`, `80103e60-edc` (FX-8-Schleife `sltu s0 < +0x21F` NACH dem Spawner-Abzug; `+0x5 := 1` @0x80103d68 / @0x80103e30 / @0x80103edc; `ori 0x80` @0x80103e34-3c) | bestaetigt |
 | Spinne | EMS25 `8010609c-c4` (20 Parts), `80104a5c-b58`, `80104b88-c2c` (Part 19 = +3268, +0x9E 90, +0x98/+0x9A 0, +0x9C/+0x9D 100/100, Flags \|= 0x10), `80104c5c-c98` | bestaetigt |
 | G5 (em36, `CDEMD0_EM36_ai1.BIN`) | Byte-Tabelle `801056b0: 01 0d 00 00 05 05 05 05 0e 14 0e 14 0e 0e 0e 05 05 14 01 01 14 01 00 00` -> Zeile 0..20 = 0,5,5,5,5,14,20,14,20,14,14,14,5,5,20,1,1,20,1,0,0; Main `801000ec-15c` (Zaehler `addiu v0,v1,255` + `sb` im Delay, bei 0: Akku-1 und `sb 15` im Delay @0x8010014c, Akku 0 -> Fenster zu); Treffer `801029b0-a8c`; Ctor `801003fc` 600 (bei Spielwort-Bit 0x20: 400 @0x80100414-18), `80100534-38`, `80100578-8c`, `80100580`. ai0 ist dieselbe Routine mit anderer Ladeadresse (Diff nur Sprungziele) | bestaetigt |
+| Je-Typ-Eingaben des Appliers | Hund EMD0G_MOD0 `80100284 addiu v0,zero,500` / `80100288 sh v0,148` (+0x94), `8010028c/94` -1000 -> +0x98, `80100298/9c` 1000 -> +0x9E, `80100290 addiu v1,zero,600` / `801002c4 sh v1,494`; Zombie EMZ0 `80100958-64` -1500/1500, `8010096c` 500 / `80100980 sh v1,494`, `80100990/94` +0x94/+0x96 = 0; Kraehe EMOVL21_S0 `801003b8/c4` -350, `801003c8/dc` 530, `801003f4/fc` 300 -> +0x1EE; Spinne EMS25 `80100414/20` 800 -> +0x1EE; Tentakel em37 (`re2_ems_cut.py` -> CDEMD0_EM37_ai1.BIN) `80100530 addiu v0,zero,-1` / `80100534 sh v0,342(s1)` | bestaetigt |
+| RE2 Op 47 (GL-Explosion) Hitcode | RE2 PSX.EXE `80020d54 lui a3,0x1002` / `80020d58 ori a3,a3,0x9` / `80020d78 jal 0x800470c0` -> 0x10020009 = Klammer 1, Bit 0x20000, Zeile 9, Einzelmodus | Grundlage fuer K1 |
 
 ---
 
@@ -149,9 +151,10 @@ nur nicht durch eine Sonde geschuetzt (Regressionsschutz fehlt), mit Ausnahme vo
   nicht auf die Explosion. Der Bauer hat das im Zensus als `t` gesehen und als "belegter Ablauf" eingeordnet, aber
   nicht als Abweichung vom BAUPLAN-Soll gemeldet. Die Abnahme B3 prueft nur den Stempel im Bild X, nicht den Ausgang.
 * **Vorschlag**: Orchestrator-/Nutzer-Entscheidung vor der Integration: (a) Spalte wie Op 47 mit Klammer 1
-  stempeln (+0x1D2 = Zone + 3), Schaden bleibt E4 (K0 = 200) -> Tod ueber 0x80108530 wie RE2-Retail; oder
-  (b) den Kriecher-Ausgang ausdruecklich abnehmen. In beiden Faellen eine Sonde, die den AUSGANG (Leiche/Kriecher)
-  nach N Bildern pinnt.
+  stempeln (+0x1D2 = Zone + 3), Schaden bleibt E4 (K0 = 200) -> Tod ueber 0x80108530 wie RE2-Retail (Achtung:
+  global angewandt aendert Klammer 1 auch den Hund — Zeile 9 mit +0x1D2 >= 3 = nur Kern/Schrei statt "zerplatzt",
+  @0x801046a8-d4 —, also ggf. nur fuer die Zombie-Familie); oder (b) den Kriecher-Ausgang ausdruecklich abnehmen.
+  In beiden Faellen eine Sonde, die den AUSGANG (Leiche/Kriecher) nach N Bildern pinnt.
 
 ### M1 (mittel) — Bodenfeuer an RE1.5-KI-Zombies mit Import-Option: 15 statt 50 Schaden und RE2-Beinabriss
 * **Messung**: mess1 M1 (Import AN = Vorgabe) -15 je Treffer, M1b (Import AUS) -50, M2 (RE2-KI) -5; mess3:
@@ -235,3 +238,69 @@ nur nicht durch eine Sonde geschuetzt (Regressionsschutz fehlt), mit Ausnahme vo
   `80038fc4 ori v0,v0,0x1` / `80038fcc sb v0,-13593(at)` und loescht es @0x80039078 — im Port finde ich keinen
   Zwilling (kein Treffer auf 80038fcc/80039078). **Vorschlag**: Aktion bestimmen; falls der Port sie fuehrt, i-Frame
   nachziehen, sonst im Dossier als nicht portierte Aktion benennen.
+
+---
+
+## 6. Volle Suite / Integrationstests
+
+* Eigener Lauf aller 31 Integrationstests (`ctest -R integration -j 1`, 04:15-04:26): 23/31 gruen, rot
+  `r30_cut_blitz`, `r30_granate_laden`, `r30_irons_tisch_bild`, `r30_irons_tisch_licht`, `r30_sicherung_laden`,
+  `r30_titel_puls`, `r33_speichern`, `relatch_pin` — dieselbe Klasse wie beim Bauer: die exe endet mit exit 1
+  an wechselnden Stellen (z.B. `r30_irons_tisch_bild`: debug.log endet nach `[pad] kein Controller gefunden`;
+  `r30_cut_blitz` Lauf 78409a4a_b endet bei F90, Lauf c6297273_c nach 5 Zeilen, Laeufe a/b desselben Tests
+  erreichen `EXIT_AT`).
+* **Ursache (nicht Spur B)**: exit 1 ohne Absturzcode ist die Signatur von `taskkill /F`. `tools/local_build.sh`
+  setzt `CLEAN_PATH` ohne `WindowsPowerShell` (local_build.sh:147), `command -v powershell` schlaegt fehl und der
+  Rueckfall `taskkill //F //IM re15_pc.exe` (local_build.sh:298-299) beendet bei JEDEM `build` irgendeiner Sitzung
+  alle re15_pc.exe der Maschine. Spur C hat das bereits gemessen (Kommentar in
+  `r34g_c/re15_port/tests/unit/probes/r34_plattform.cmake:84-89`, bau_c.md NACHBESSERUNG M2). Waehrend meiner Laeufe
+  fuhren die Baeume r34g_a und r34g_c ihre vollen Suiten. **Nebenwirkung meiner Pruefung**: meine zwei
+  `local_build.sh build` (~03:54 und nach den Mutationsproben ~04:14) haben ueber denselben Rueckfall ebenfalls
+  alle re15_pc.exe der Maschine beendet — parallele exe-Laeufe anderer Baeume koennen dadurch rot geworden sein.
+* Wiederholung der 8 roten Tests einzeln (`ctest --repeat until-pass:4 -j 1`, 04:27-04:40): gruen `r30_granate_laden`
+  (1. Wiederholung), `r30_irons_tisch_bild`, `r33_speichern` (3. Versuch), `relatch_pin`; nach 4 Versuchen weiter rot
+  `r30_cut_blitz`, `r30_irons_tisch_licht`, `r30_sicherung_laden`, `r30_titel_puls`. `Testing/Temporary/LastTest.log`
+  des Wiederholungslaufs: 18x `exit=1`, 4x `exit=0`, KEIN Absturzcode (0xc0000005); die debug.log der roten Laeufe
+  enden ohne Fehlermeldung (titel_puls nach 5 Zeilen, sicherung lauf_76025d40_a bei F150).
+* Keiner der roten Tests beruehrt Schaden/Gegnerreaktion; alle 399 Nicht-Integrationstests sind gruen. Eine
+  `LOCAL-BUILD-OK`-Zeile ist unter dieser Last nicht zu erreichen — wie beim Bauer. INTEGRATIONSWUNSCH (Integration,
+  `tools/local_build.sh:147`): `/c/Windows/System32/WindowsPowerShell/v1.0` in `CLEAN_PATH` aufnehmen, damit der
+  gezielte Kill greift; ohne das ist keine GUI-Suite unter Parallel-Last aussagekraeftig.
+
+---
+
+## 7. Dateibesitz, Vertraege, Vollstaendigkeit
+
+* **Dateibesitz eingehalten**: `git diff --stat 8d8651e4..6d806abd` = 14 Dateien, alle in der B-Liste von BAUPLAN
+  §3.0 (re15_damage.c, re15_actor.h, re15_ai_flavor.h, enemy_ai_re2_zombie/dog/spider.c, enemy_ai_common.c,
+  enemy_ai_boss_g5.c, stair_common.c, RE15_FUN_CATALOG.md, probe_r34_schaden.c, probe_r34_reaktion.c,
+  probes/r34_schaden.cmake, bau_b.md). `re15_damage.h` (V2b-Signatur) unveraendert, `local_build.sh`/RE15_MIN_TESTS
+  unveraendert. Keine fremde Datei beruehrt.
+* **Commit-Messages**: alle 13 mit `Co-Authored-By`; die elf Bau-Commits tragen die @0x-Adressen ihrer Konstanten
+  (3..37 je Commit); die zwei Doku-Commits haben keine Konstanten.
+* **Konstanten ohne Adresse im Code**: keine tragende gefunden. Rueckfallwert `fc = 40` in `re15_birkin_fc`
+  (enemy_ai_common.c) ist die bestehende Port-Sicherung von `re15_birkin_anim` (nur ohne geladene Bank).
+* **BAUPLAN §3.2 B1-B12**: alle gebaut. Offen/abweichend: die Abnahme-Punkte "+-1 an R" (B2) und O8 (vier
+  Quadranten) — s. H4; die Gegnerreaktion der RE2-Zombies auf die Handgranate weicht vom erwarteten "Tod" ab — s. K1.
+* **Auftrag** ("Gegner Reaktion, korrekter Animation, Schaden etc. mit allen"): Schaden und Reaktion sind fuer alle
+  Typen verdrahtet und haengerfrei (Zensus 352 Laeufe; Pruefungen 210/211 in jedem meiner Sondenlaeufe gruen,
+  Quelltext des Zensus gelesen). Sichtbar fehlen
+  weiter die Part-Farben/-Fluege (O-VB3/O7, Spur C/D) und die Applier-Bindung (INTEGRATIONSWUNSCH 2 des Bauers).
+  Eine Sichtpruefung am echten Programm ist fuer B allein nicht moeglich (Granate fliegt erst mit A, zeichnet erst
+  mit C) und wurde nicht gemacht.
+
+---
+
+## 8. Fazit
+
+Der Bau ist handwerklich sauber und in den tragenden Konstanten korrekt: jede von mir nachgelesene Adresse und jedes
+Byte stimmt (Gate B, FUN_8002b498, alle Kaesten, FUN_800470C0 samt FUN_80041EF8 inkl. der S1/S2-Stapelreste,
+FUN_800154AC/FUN_80036E30, alle GL-Records, Zombie-DoT/Ausblender, Hund, Spinne, 0x27/0x29/0x2b/0x23-Spuren und
+-Todesablaeufe, G5-Tabelle/Zerfall/Treffer, Treppe). Dateibesitz eingehalten, 399/399 Unit-Tests gruen, die
+roten GUI-Tests sind extern verursacht (local_build.sh-Rueckfall-Kill). ABER: (K1) die Handgranate toetet im
+Vorgabe-Flavor RE2 keinen stehenden Zombie, er steht in 24/24 Messlaeufen als Kriecher mit HP 10 wieder auf —
+Folge der BAUPLAN-Wahl Klammer 0 fuer die Spalte (E6), abweichend vom erwarteten "Tod" und von RE2s eigener
+GL-Explosion (Klammer 1 -> 0x80108530); (M1) das Bodenfeuer trifft RE1.5-Import-Zombies mit 15 statt 50 und reisst
+nach 7 Treffern ein Bein ab (O-VB4 x E4 x Import-Bruecke, Dossier-Aussage OFFEN 13 falsch); (M2) die E6-Wache gegen
+den zweiten Stempel ist ungepinnt. Vor der Integration braucht K1 eine Entscheidung, M1 eine Korrektur oder
+dokumentierte Entscheidung mit Sonde.
