@@ -3,7 +3,7 @@
 Setzt ausgewaehlte Framedumps (PPM, 960x720 bei RE15_WINDOW_SCALE=3) verkleinert auf 320x240 mit
 Bildnummer zu einem Bogen zusammen, damit die Abnahme am ARTEFAKT ansehbar und klein ablegbar ist.
 
-    python r34n_f_bogen.py <laufverzeichnis> <ausgabe.png> <spalten> <bild>[:<titel>] ...
+    python r34n_f_bogen.py <laufverzeichnis> <ausgabe.png> <spalten> <bild>[:<titel>] ... [@<lauf2> <bild>...]
 
 Beispiel:
     python r34n_f_bogen.py build/r34n_f/soll1110_nein F_belege/soll_1110_nein.png 4 460:Seite1 540:Seite2
@@ -21,13 +21,16 @@ def main():
     lauf, aus, spalten = sys.argv[1], sys.argv[2], int(sys.argv[3])
     felder = []
     for arg in sys.argv[4:]:
+        if arg.startswith("@"):          # @<laufverzeichnis>: die folgenden Bilder aus diesem Lauf
+            lauf = arg[1:]
+            continue
         nr, _, titel = arg.partition(":")
-        felder.append((int(nr), titel))
+        felder.append((lauf, int(nr), titel))
     w, h, kopf = 320, 240, 14
     zeilen = (len(felder) + spalten - 1) // spalten
     bogen = Image.new("RGB", (spalten * w, zeilen * (h + kopf)), (40, 40, 40))
     zeichner = ImageDraw.Draw(bogen)
-    for i, (nr, titel) in enumerate(felder):
+    for i, (lauf, nr, titel) in enumerate(felder):
         p = os.path.join(lauf, "f_%06d.ppm" % nr)
         x, y = (i % spalten) * w, (i // spalten) * (h + kopf)
         zeichner.text((x + 3, y + 1), ("F%d %s" % (nr, titel)).strip(), fill=(255, 255, 0))

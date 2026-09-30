@@ -33,3 +33,9 @@ foreach(_teil texte nein_1110 nein_1230 ja_1110 ja_1230 voll varianten laden and
     add_test(NAME unit_r34n_f_leiche_${_teil} COMMAND test_r34n_f_leiche ${_teil})
     set_tests_properties(unit_r34n_f_leiche_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
+
+# MESS-WERKZEUG (kein add_test): Speicherkarte mit einem Stand vor der Leiche (Lade-Weg der
+# echten exe, RE15_CONTINUE_TEST + RE15_CARD_AUTO), Muster probe_r30_granate_karte.
+add_executable(probe_r34n_f_karte ${CMAKE_CURRENT_SOURCE_DIR}/probe_r34n_f_karte.c)
+target_link_libraries(probe_r34n_f_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r34n_f_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)

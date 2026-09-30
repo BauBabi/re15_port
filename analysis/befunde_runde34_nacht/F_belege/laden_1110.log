@@ -1,0 +1,8 @@
+ohne: 65:[msg] room=1110 id=0 savepoint=0
+ohne: 66:[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+ohne: 89:[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+ohne: 110:[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+mit:  65:[msg] room=1110 id=0 savepoint=0
+mit:  66:[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+mit:  97:[msg] room=1110 id=0 savepoint=0
+mit:  98:[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
