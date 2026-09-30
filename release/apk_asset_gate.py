@@ -53,8 +53,9 @@ WAS GEPRUEFT WIRD
      Kopf von asset_abgleich.h; beide lesen BYTES): Zeilen an '\\n' getrennt, angehaengte '\\r'
      abgeschnitten, leere Zeilen uebersprungen, Zeile 1 = "# re15 assets v2 <anzahl> <bytes>",
      jede weitere = "<bytes>\\t<sha256>\\t<pfad>" (1-18 Ziffern 0-9, 64 Zeichen 0-9a-f klein, Pfad
-     1-512 Bytes relativ mit '/', ohne '\\', Steuerzeichen, leere/'.'/'..'-Segmente, gueltiges UTF-8,
-     nicht auf ".neu"); weitere '#'-Zeilen, doppelte (auch nur in Gross/klein verschiedene) Pfade,
+     1-512 Bytes relativ mit '/', NUR druckbares ASCII 0x20-0x7e ohne '\\', jedes Segment 1-251 Bytes und
+     nicht '.'/'..', nicht auf ".neu" - Nachbesserung R4-1: der App-Speicher faltet Unicode-Gross/klein und
+     -Normalform, und Namen > 255 B legt er nicht an); weitere '#'-Zeilen, doppelte (auch nur in Gross/klein verschiedene) Pfade,
      NUL, keine Datei, falsche Kopfzeile, > 64 MiB -> das Geraet verwirft die GANZE Liste. Die alte
      Liste v1 ("# re15 assets <n> <b>", "<bytes>\\t<pfad>", bis v0.8.19) wird ausdruecklich abgelehnt.
      Jede Zeile muss genau einen APK-Eintrag assets/<pfad> treffen, mit derselben Groesse UND demselben
@@ -90,6 +91,15 @@ RUECKGABE (fail closed)
   1 = Abweichung (alle Befunde werden gelistet, je Art begrenzt mit "und N weitere")
   2 = Bedien-/Lesefehler, Konfigurationsabweichung zur build.gradle oder JEDER unerwartete
       Fehler - nie 0, wenn nicht wirklich alles verglichen wurde.
+  Die Release-Skripte glauben der Rueckgabe NICHT allein (Nachbesserung R4-1, Gegenpruefung H1: ein 0-Byte-Gate oder
+  'main()' ohne sys.exit gab immer 0): release/apk_pruefen.sh gate_laufen verlangt zusaetzlich genau die Schlusszeile
+  "== <MARKE>-OK: ... ==" als letzte Zeile, passende Zaehlzeilen und beim Selbsttest jede Fallzeile mit rc = soll.
+
+PIN (Nachbesserung R4-1, Gegenpruefung H1/H2): die Release-Skripte fuehren nur ein Gate aus, dessen sha256 in
+  release/apk_asset_gate.sha256 steht (apk_pruefen.sh gate_festhalten, wie apk_signer.sha256). WER DIESE DATEI
+  AENDERT, haelt danach ihren neuen Wert dort fest:  sha256sum release/apk_asset_gate.py  (Zeilenenden LF,
+  release/.gitattributes) - sonst bricht jeder Android-Bau und jedes make_package.sh mit "Gate ist nicht das
+  festgehaltene" ab.
 
 AUFRUF (reines Python >= 3.8, keine Fremdpakete; Windows + Linux). Interpreter IMMER ueber
 release/python_finden.sh - so rufen es alle Skripte auf:
@@ -165,6 +175,9 @@ KOPF_V1_RE = re.compile(rb"# re15 assets ([0-9]+) ([0-9]+)")      # bis v0.8.19 
 GROESSE_RE = re.compile(rb"[0-9]{1,18}")
 SHA_RE = re.compile(rb"[0-9a-f]{64}")
 PFAD_MAX = 512                   # asset_abgleich.h RE15_ABGLEICH_PFAD_MAX (Bytes)
+# Nachbesserung R4-1 (Gegenpruefung U3): je Segment hoechstens 251 Bytes - das Geraet legt Namen bis 255 B an (Emulator
+# API 36 gemessen: 255 ok, 256 "File name too long"), und der Entpacker schreibt erst <name>.neu (+4 B).
+SEGMENT_MAX = 251                # asset_abgleich.h RE15_ABGLEICH_SEGMENT_MAX
 NEU_ENDUNG = b".neu"             # asset_abgleich.h RE15_ABGLEICH_NEU_ENDUNG (Zwischendatei, ASCII gross/klein egal)
 _ASCII_KLEIN = bytes.maketrans(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ", b"abcdefghijklmnopqrstuvwxyz")
 
@@ -440,6 +453,7 @@ def quelldateien(repo, befund):
                 zahl[ziel] += 1
         if not zahl[ziel]:
             befund("Quellbaum", "Quellbaum leer: %s" % rel_baum)
+    quellpfade_pruefen(dateien, befund)
     for ordner, endung in PFLICHT_ORDNER:
         n = sum(1 for a in dateien if a.startswith("assets/%s/" % ordner) and a.endswith(endung)
                 and "/" not in a[len("assets/%s/" % ordner):])
@@ -450,6 +464,24 @@ def quelldateien(repo, befund):
         if not q or not os.path.getsize(q[0]):
             befund("Quellbaum", "Pflichtdatei fehlt/leer: re15_port/%s" % datei)
     return dateien, zahl
+
+
+def quellpfade_pruefen(dateien, befund):
+    """Nachbesserung R4-1 (Gegenpruefung H5): jeder Pfad des Quellbaums (Ziel unter assets/) muss die Regeln der Liste v2
+    erfuellen (nur druckbares ASCII, Segment <= 251 B, ...) und darf sich von keinem anderen nur in ASCII-Gross/klein
+    unterscheiden - sonst bricht Gradle (writeAssetManifest) ab bzw. waere die Datei auf dem Geraet nicht (oder als EINE)
+    anlegbar. Hier, damit auch --quellbaum/--paket (make_package.sh vor den Kopierminuten) es melden, nicht erst der
+    Android-Bau. dateien = {"assets/<ziel>/<pfad>": (abs_pfad, rel_zum_repo)}."""
+    klein = {}
+    for name, (_p, rel) in sorted(dateien.items()):
+        roh = name[len("assets/"):].encode("utf-8", "surrogateescape")
+        grund = _pfad_fehler(roh)
+        if grund:
+            befund("Quellbaum: Pfad", "Pfad verletzt die Regeln der Liste v2 (%s): %s - Gradle writeAssetManifest bricht "
+                   "ab, das Geraet koennte ihn nicht sicher anlegen" % (grund, rel))
+        klein.setdefault(roh.translate(_ASCII_KLEIN), []).append(rel)
+    for gruppe in sorted(v for v in klein.values() if len(v) > 1):
+        befund("Quellbaum: Pfad", "Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)" % " / ".join(gruppe))
 
 
 def wurzel_pruefen(repo, befund):
@@ -1076,13 +1108,21 @@ def _t(b, n=120):
 
 def _pfad_fehler(p):
     """Pfadregel der Liste v2 auf BYTES - dieselben Regeln wie asset_abgleich.c re15_abgleich_pfad_ok.
-    -> None (zulaessig) oder der Grund."""
+    -> None (zulaessig) oder der Grund.
+    Nachbesserung R4-1 (Gegenpruefung H5): NUR druckbares ASCII 0x20-0x7e. Der App-Speicher des Geraets faltet
+    Unicode-Gross/klein, NFC/NFD und sogar 'ss'/'sz' (Emulator API 36 gemessen: Kelvin-Zeichen/K, Ae/ae, e+U+0301/e-acute,
+    strasse/strasze je EINE Datei), NTFS haelt solche Paare getrennt - ein Paar bestand Gate und Geraete-Leser und
+    landete auf dem Geraet als eine Datei mit falschem Inhalt. Mit reinem ASCII ist die ASCII-Faltung der
+    Dublettenregel (manifest_lesen) vollstaendig; gueltiges UTF-8 folgt daraus."""
     if not p:
         return "leer"
     if len(p) > PFAD_MAX:
         return "%d Bytes > %d" % (len(p), PFAD_MAX)
     if any(c < 0x20 or c == 0x7f for c in p):
         return "Steuerzeichen"
+    if any(c > 0x7f for c in p):
+        return ("Nicht-ASCII-Byte - nur druckbares ASCII 0x20-0x7e: der App-Speicher faltet Unicode-Gross/klein und "
+                "-Normalform, zwei solche Namen waeren auf dem Geraet EINE Datei")
     if b"\\" in p:
         return "'\\'"
     teile = p.split(b"/")
@@ -1090,12 +1130,12 @@ def _pfad_fehler(p):
         return "ohne '/' (Assets liegen nie direkt im Speicherordner)"
     if any(t in (b"", b".", b"..") for t in teile):
         return "absolut, '//', '/' am Ende, '.' oder '..' - landet ausserhalb des Ankers"
+    lang = max(len(t) for t in teile)
+    if lang > SEGMENT_MAX:
+        return ("Segment mit %d Bytes > %d (Geraet: Name <= 255 B, der Entpacker haengt '.neu' an)"
+                % (lang, SEGMENT_MAX))
     if p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG:
         return "endet auf .neu (Endung der Zwischendatei beim Entpacken)"
-    try:
-        p.decode("utf-8")
-    except UnicodeDecodeError:
-        return "kein gueltiges UTF-8"
     return None
 
 
@@ -1177,8 +1217,8 @@ def manifest_lesen(roh, grenze=MANIFEST_MAX):
             fehler.append("Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeilen ergeben %d / %d"
                           % (n_kopf, b_kopf, n_ist, b_ist))
     klein = {}
-    for p in eintraege:                             # der App-Speicher ist case-insensitiv (Dossier N1, 1.3)
-        klein.setdefault(p.encode("utf-8").translate(_ASCII_KLEIN), []).append(p)
+    for p in eintraege:                             # der App-Speicher ist case-insensitiv (Dossier N1, 1.3); die Pfade
+        klein.setdefault(p.encode("utf-8").translate(_ASCII_KLEIN), []).append(p)   # sind reines ASCII (_pfad_fehler)
     for gruppe in sorted(v for v in klein.values() if len(v) > 1):
         fehler.append("Manifest: Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)"
                       % " / ".join(sorted(gruppe)))
@@ -1397,8 +1437,10 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
     ("re15_port/shared_assets/PSX/STAGE1/wincfg.bin", 0),
     ("re15_port/shared_assets/PSX/DATA/TEX.TIM", 5000),
     ("re15_port/shared_assets/extracted_fx/effect0_blood.tim", 700),
-    ("re15_port/shared_assets/extracted_fx/A~B C.tim", 300),         # Leerzeichen und '~' sind erlaubt
-    ("re15_port/shared_assets/extracted_fx/gr\u00fcn.tim", 310),     # UTF-8-Name ist erlaubt
+    ("re15_port/shared_assets/extracted_fx/A~B C.tim", 300),         # Leerzeichen und '~' (0x7e) sind erlaubt
+    # Nachbesserung R4-1 (H5): Asset-Pfade nur noch druckbares ASCII - bis dahin stand hier ein UTF-8-Name ("gruen"
+    # mit u-Umlaut) als "erlaubt". Den rohen UTF-8-Namen in der APK prueft jetzt ein Nicht-Asset-Eintrag (_NICHT_ASSETS).
+    ("re15_port/shared_assets/extracted_fx/gruen.tim", 310),
     ("re15_port/shared_assets/RE2/CDEMD0.EMS", 1200),
     ("re15_port/shared_assets/RE2/TORSE.VBS", 900),
     # Tuerarchive: Groessen = Aufbau der Mini-Engine-Tabellen unten (Sektor * 0x800 + Modellteil)
@@ -1426,7 +1468,9 @@ _NICHT_ASSETS = (("AndroidManifest.xml", b"<manifest package='de.re15.port'/>" *
                  ("classes.dex", b"dex\n035\0" + b"".join(hashlib.sha256(b"dex%d" % k).digest() for k in range(94)),
                   zipfile.ZIP_DEFLATED),
                  ("lib/arm64-v8a/libmain.so", b"\x7fELF" + bytes(range(256)) * 8, zipfile.ZIP_STORED),
-                 ("resources.arsc", b"\x02\x00" + bytes(300), zipfile.ZIP_STORED))
+                 ("resources.arsc", b"\x02\x00" + bytes(300), zipfile.ZIP_STORED),
+                 # UTF-8-Name ausserhalb von assets/ (Nachbesserung R4-1): der rohe Leser muss ihn lesen koennen
+                 ("res/raw/gr\u00fcn.bin", b"utf8-name" * 7, zipfile.ZIP_STORED))
 
 # --- Mini-Engine-Tabellen der Tuerarchive (Nachbesserung R2, B2). Aufbau wie die echten Dateien
 # (include/re15_door_seq.h, engine/src/gen/*.inc); die Werte fuellt _Fall.schreiben ein - FNV-1a mit
@@ -2582,6 +2626,17 @@ def _faelle():
             f.manifest_zeilen = f.manifest_aus_eintraegen() + list(zeilen)
         return faelschen
 
+    def man_anhang(text):                # Text hinter das sonst gute Manifest (Nachbesserung R4-1, V1: Leerraumzeilen)
+        def faelschen(f):
+            f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + text).encode("utf-8")
+        return faelschen
+
+    def kelvin_paar(f):                  # Gegenpruefung R4-1 H5: K.bin + Kelvin-Zeichen.bin - NTFS haelt beide, der
+        for name, b in (("shared_assets/PSX/K.bin", b"AAAAA"),               # App-Speicher faltet sie zu EINER Datei
+                        ("shared_assets/PSX/" + chr(0x212A) + ".bin", b"BBBBB")):
+            f.quelle["re15_port/" + name] = b
+            f.eintraege.append(["assets/" + name, b, zipfile.ZIP_STORED])
+
     def zusatz_summe_falsch(f):          # Zusatzeintrag ohne Quelle, im Manifest mit falscher Summe: auch fuer
         x = "shared_assets/PSX/EXTRA.BIN"  # Eintraege ohne Quelle wird die Summe gegen die APK-Daten gemeldet
         f.eintraege.append(["assets/" + x, b"zusatz", zipfile.ZIP_STORED])
@@ -2938,7 +2993,9 @@ def _faelle():
         ("R4 MU1/MU3: Manifestzeile endet mit FF (\\x0c)", pfad_ende("\x0c"), 1,
          ["unzulaessiger Pfad '%s\x0c' (Steuerzeichen)" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU1/MU8: Manifestpfad mit NBSP (U+00A0) am Ende", pfad_ende(" "), 1,
-         ["Manifest nennt %s" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+         # seit Nachbesserung R4-1 (H5, nur druckbares ASCII) schon an der Pfadregel abgelehnt; ein strip() auf dem
+         # dekodierten Pfad (MU8) nimmt P07G.DO2 an und verliert "fehlt im Manifest"
+         ["unzulaessiger Pfad '%s" % P07M, "(Nicht-ASCII-Byte", "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU8: Manifestpfad mit Leerzeichen am Anfang", man_ersetzen("\t%s\n" % P07M, "\t %s\n" % P07M), 1,
          ["Manifest nennt  %s (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU3: U+2028 statt '\\n' vor einer Zeile", trenner(" "), 1,
@@ -3013,7 +3070,8 @@ def _faelle():
         ("N1: Pfad endet auf .NEU (Gross/klein egal)", man_geister([("shared_assets/PSX/X.NEU", 5)]), 1,
          ["unzulaessiger Pfad 'shared_assets/PSX/X.NEU' (endet auf .neu"]),
         ("N1: Pfad 513 Bytes", man_geister([("shared_assets/" + "x" * 499, 5)]), 1, ["(513 Bytes > 512)"]),
-        ("N1: Pfad genau 512 Bytes (Regel gut, Datei fehlt in der APK)", man_geister([("shared_assets/" + "x" * 498, 5)]), 1,
+        ("N1: Pfad genau 512 Bytes (Regel gut, Datei fehlt in der APK)",       # Segmente <= 251 B (R4-1, U3)
+         man_geister([("shared_assets/" + "x" * 251 + "/" + "y" * 246, 5)]), 1,
          ["Manifest nennt shared_assets/xxxx"], False, ["unzulaessiger Pfad"]),
         ("N1: Pfade nur in Gross/klein verschieden", man_geister([("shared_assets/re15door/P07G.DO2", 2748)]), 1,
          ["Pfade nur in Gross/klein verschieden: shared_assets/RE15DOOR/P07G.DO2 / shared_assets/re15door/P07G.DO2"]),
@@ -3028,6 +3086,27 @@ def _faelle():
          ["Summe der Groessen > 2^63-1"]),
         ("N1: Zusatzeintrag ohne Quelle, Manifest-Summe falsch", zusatz_summe_falsch, 1,
          ["zusaetzlich in der APK", "Manifest-Pruefsumme falsch: shared_assets/PSX/EXTRA.BIN Manifest 0000000000000000.."]),
+        # --- Nachbesserung R4-1 (Gegenpruefung H5/U3/V1/V2): nur druckbares ASCII, Segment <= 251 B, Leerraumzeilen
+        ("R4-1 H5: Kelvin-Paar in Quelle, APK und Manifest (Geraet: EINE Datei)", kelvin_paar, 1,
+         ["Pfad verletzt die Regeln der Liste v2 (Nicht-ASCII-Byte", "unzulaessiger Pfad 'shared_assets/PSX/",
+          "(Nicht-ASCII-Byte"]),
+        ("R4-1 H5: Kelvin-Paar im Quellbaum (--quellbaum)", modus("quellbaum", kelvin_paar), 1,
+         ["Pfad verletzt die Regeln der Liste v2 (Nicht-ASCII-Byte", "APK-ASSET-GATE-QUELLBAUM-ABWEICHUNG"]),
+        ("R4-1 H5: Kelvin-Paar im Quellbaum (--paket)", modus("paket", kelvin_paar), 1,
+         ["Pfad verletzt die Regeln der Liste v2 (Nicht-ASCII-Byte", "APK-ASSET-GATE-PAKET-ABWEICHUNG"]),
+        ("R4-1 H5: Manifestpfad mit Byte 0x80", man_geister([("shared_assets/PSX/A" + chr(0x80) + ".BIN", 5)]), 1,
+         ["(Nicht-ASCII-Byte"]),
+        ("R4-1 H5: Manifestpfad mit '~' (0x7e) ist gut (Datei fehlt in der APK)", man_geister([("shared_assets/PSX/A~.BIN", 5)]),
+         1, ["Manifest nennt shared_assets/PSX/A~.BIN"], False, ["unzulaessiger Pfad"]),
+        ("R4-1 U3: Manifestpfad mit Segment 252 Bytes", man_geister([("shared_assets/PSX/" + "x" * 252, 5)]), 1,
+         ["(Segment mit 252 Bytes > 251"]),
+        ("R4-1 U3: Segment genau 251 Bytes (Regel gut, Datei fehlt in der APK)",
+         man_geister([("shared_assets/PSX/" + "x" * 251, 5)]), 1, ["Manifest nennt shared_assets/PSX/xxxx"], False,
+         ["unzulaessiger Pfad"]),
+        ("R4-1 V1: Manifestzeile nur aus Leerzeichen", man_anhang("   \n"), 1, ["0 Tab(s): '   '"]),
+        ("R4-1 V1: Manifestzeile nur ein Tab", man_anhang("\t\n"), 1, ["1 Tab(s)"]),
+        ("R4-1 V2: Manifestpfad mit 0x1f", man_geister([("shared_assets/PSX/A" + chr(0x1F) + "B.BIN", 5)]), 1,
+         ["(Steuerzeichen)"]),
     )
 
 
@@ -3101,11 +3180,23 @@ _MANIFEST_PROBEN = (
     ("ohne \\n am Ende", _MK + b"a/b", True),
     ("Nullen vorn", b"# re15 assets v2 01 005\n005\t" + _MS + b"\ta/b\n", True),
     ("18 Ziffern", b"# re15 assets v2 1 999999999999999999\n999999999999999999\t" + _MS + b"\ta/b\n", True),
-    ("UTF-8 2 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xc3\x84.bin\n", True),
-    ("UTF-8 4 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xf0\x9f\x98\x80\n", True),
+    # Nachbesserung R4-1 (H5): nur druckbares ASCII 0x20-0x7e - wohlgeformtes UTF-8 reicht nicht mehr
+    ("UTF-8 2 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xc3\x84.bin\n", False),
+    ("UTF-8 4 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xf0\x9f\x98\x80\n", False),
+    ("Pfad Kelvin-Zeichen U+212A", _MK + b"a/\xe2\x84\xaa.bin\n", False),
+    ("Pfad NFD e+U+0301", _MK + b"a/e\xcc\x81.bin\n", False),
+    ("Pfad U+00DF", _MK + b"a/stra\xc3\x9fe.bin\n", False),
+    ("Pfad 0x80", _MK + b"a/b\x80\n", False),
+    ("Pfad 0x7e", _MK + b"a/b~\n", True),
+    ("Pfad 0x1f", _MK + b"a/b\x1f\n", False),
+    ("Segment 251 Bytes", _MK + b"a/" + b"x" * 251 + b"\n", True),
+    ("Segment 252 Bytes", _MK + b"a/" + b"x" * 252 + b"\n", False),
+    ("Ordner-Segment 252 Bytes", _MK + b"x" * 252 + b"/a\n", False),
+    ("Zeile nur Leerzeichen", _MK + b"a/b\n   \n", False),
+    ("Zeile nur Tab", _MK + b"a/b\n\t\n", False),
     ("Leerzeichen im Pfad", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/b c.bin\n", True),
     ("Punkt-Segmente als Name", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/.b/..c/x.neux\n", True),
-    ("Pfad 512 Bytes", _MK + b"a/" + b"x" * 510 + b"\n", True),
+    ("Pfad 512 Bytes", _MK + b"d" * 9 + b"/" + b"x" * 251 + b"/" + b"y" * 250 + b"\n", True),   # Segmente <= 251
     ("v1-Liste", b"# re15 assets 2 10\n5\ta/b\n5\ta/c\n", False),
     ("Kopf fehlt", b"5\t" + _MS + b"\ta/b\n", False),
     ("Kopf v3", b"# re15 assets v3 1 5\n5\t" + _MS + b"\ta/b\n", False),
@@ -3153,9 +3244,29 @@ _MANIFEST_PROBEN = (
 )
 
 
+_QUELLPFAD_PROBEN = (    # quellpfade_pruefen (Nachbesserung R4-1, H5): (Titel, Namen unter assets/, Zahl der Befunde)
+    ("gut", ("assets/shared_assets/PSX/A.BIN", "assets/synchro/STAGE1/b c~.wav"), 0),
+    ("Kelvin-Zeichen", ("assets/shared_assets/PSX/" + chr(0x212A) + ".BIN",), 1),
+    ("nur Gross/klein verschieden", ("assets/shared_assets/PSX/A.BIN", "assets/shared_assets/psx/a.bin"), 1),
+    ("Segment 252 Bytes", ("assets/shared_assets/PSX/" + "x" * 252,), 1),
+    ("Segment 251 Bytes", ("assets/shared_assets/PSX/" + "x" * 251,), 0),
+)
+
+
 def _innere_proben():
     """-> Liste der falschen Antworten (leer = gut)."""
     falsch = []
+    # Quellbaum-Pfade: eine Gross/klein-Dublette laesst sich auf NTFS nicht als Datei anlegen - deshalb direkt
+    for titel, namen, soll in _QUELLPFAD_PROBEN:
+        gefunden = []
+        try:
+            quellpfade_pruefen({n: ("/probe/" + n, "re15_port/" + n[len("assets/"):]) for n in namen},
+                               lambda _art, text: gefunden.append(text))
+            ist = len(gefunden)
+        except Exception as ex:
+            ist = "Ausnahme %r" % (ex,)
+        if ist != soll:
+            falsch.append("quellpfade_pruefen(%s): %r Befunde, soll %d (%s)" % (titel, ist, soll, gefunden[:2]))
     for titel, roh, soll in _MANIFEST_PROBEN:
         try:
             _e, _z, _v1, fehler = manifest_lesen(roh)
@@ -3244,9 +3355,9 @@ def selbsttest():
     # Ergebnis aendert das nichts (ein falscher Fall = SELBSTTEST-FEHLER), es spart nur die Laufzeit
     schnell = os.environ.get("RE15_GATE_SELBSTTEST_SCHNELL") == "1"
     falsch = _innere_proben()
-    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7 + 3 + len(_MANIFEST_PROBEN)
+    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7 + 3 + len(_MANIFEST_PROBEN) + len(_QUELLPFAD_PROBEN)
     print("   Innere Proben: %d/%d (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende, "
-          "Manifest-Grenze, manifest_lesen v2)" % (n_innen - len(falsch), n_innen))
+          "Manifest-Grenze, manifest_lesen v2, Quellbaum-Pfade)" % (n_innen - len(falsch), n_innen))
     if falsch:
         for z in falsch:
             print("   [FEHLER] " + z)
