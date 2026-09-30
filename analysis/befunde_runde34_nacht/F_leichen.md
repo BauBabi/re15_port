@@ -92,7 +92,154 @@ Beide Leichen sind also ein ORIGINAL-Ereignis mit Knien — Leon kniet, der Text
 (Maske 0xffff, `LAB_800404f4` @0x80040508 `lhu a3,2(v0)` / @0x8004051c `sll a3,a3,16`, Port `scd_vm.c` op_message_on),
 danach steht er auf und der Platz wird wieder scharf. Kein Item, kein Flag.
 
-(3.2 ff. in Arbeit)
+### 3.2 Text: Zeichen, Satzbau, Glyph-Belege (Werkzeug `re15_port/tools/r34n_f/r34n_f_zensus.py texte glyphen breite msgref`)
+
+Zensus ueber den Auslieferungsstand: 240 RDT-Dateien, 206 mit Kopf, **1227 Nachrichten** mit `01`-Ende.
+
+| Befund | Zahl | Folgerung |
+|---|---|---|
+| letztes Zeichen vor `01`: `.` (0x57) / `!` / `?` / Auswahl-Code 03 / `"` | 814 / 158 / 126 / 81 / 14 | 1193 von 1227 (97 %) enden auf Satzzeichen oder Auswahl. Auf einen BUCHSTABEN enden nur 14 (m 4, s 3, t 2, y 2, c 2, n 1). -> L8: Punkt ans Satzende. |
+| Folgen `57 57 57` ("...") | 270, davon 24 direkt vor Seitenumbruch `02` (u.a. ROOM1230 msg 10 selbst) | "..." ist in RE1.5 IMMER drei Einzelpunkte 0x57. |
+| Folgen `57 57 57 57` (vier Punkte) | **0** | -> L9: kein vierter Punkt. |
+| Glyphe 0xF2 (vom Dump-Werkzeug als "..." gefuehrt) | **0** Vorkommen in Nachrichten | Es gibt KEINE Auslassungs-Einzelglyphe; "…" des Nutzers = `57 57 57`. |
+| Nachrichtenbloecke ROOM1110 == ROOM1111, ROOM1230 == ROOM1231 | 10/10, 12/12 bytegleich | Varianten tragen denselben Text an denselben IDs. |
+
+Glyph-Belege (erste Fundstellen im Auslieferungsstand, `glyphen`):
+
+| Baustein | Bytes | Beleg |
+|---|---|---|
+| "It's a police officer, he's dead." | `25 50 3a 4f 00 3d 00 4c 4b 48 45 3f 41 00 4b 42 42 45 3f 41 4e 18 00 44 41 3a 4f 00 40 41 3d 40 57` | ROOM1110.RDT @0x00D6A (msg 0, Seite 1), ROOM1111 @0x00D6A |
+| "He is holding" | `24 41 00 45 4f 00 44 4b 48 40 45 4a 43` | ROOM1110.RDT @0x00D8D (msg 0, Seite 2); ROOM1230.RDT @0x0170C (msg 10, Seite 2); ROOM1011 @0x01259 |
+| " something" | `00 4f 4b 49 41 50 44 45 4a 43` | ROOM1110.RDT @0x00EC4 (msg 6 "A rocket launcher, has something"), 19 Fundstellen |
+| "." | `57` | Satzende von "He is holding a slip." ROOM1110.RDT @0x00DA1 / ROOM1230.RDT @0x01720 |
+| "A miserable death..." | `1d 00 49 45 4f 41 4e 3d 3e 48 41 00 40 41 3d 50 44 57 57 57` | ROOM1230.RDT @0x016F6 (msg 10, Seite 1), ROOM1231 @0x016F6 |
+| Kopf / Seitenumbruch / Ende | `04 02` / `02 00` / `01 00` | wie msg 0 bzw. msg 10 selbst (@0x0D68/@0x0D8B/@0x0DD3 bzw. @0x16F4/@0x170A/@0x1752) |
+
+Zeilenbreiten (Vorschub `include/font_width.h` = DEBUG.BIN[0x4416+code], Leser FUN_80028868):
+1110 lang 210 px / 160 px, 1110 kurz 210 px, 1230 lang 129 px / 160 px, 1230 kurz 129 px.
+Bestand: 2505 Zeilen, Median 171 px, 99 %-Quantil 271 px -> alle neuen Zeilen im ueblichen Mass, kein Umbruch noetig.
+
+**Wer oeffnet die Leichen-Nachricht?** (`msgref`, ueber Message_on pc[1], Aot_set/Aot_reset sce 1 Nutzlast):
+ROOM1110 msg 0 und ROOM1111 msg 0: genau 1 Stelle, sub02 @0x00D04 `2b 00 ff ff`.
+ROOM1230 msg 10 und ROOM1231 msg 10: genau 1 Stelle, sub21 @0x014BC `2b 0a ff ff`.
+-> Ein Abfangen von (Raum 1110/1111, msg 0) bzw. (1230/1231, msg 10) trifft NUR die Leiche.
+⛔ ROOM1230 msg **0** ist "Enter the first number." (Tastenfeld sub17 @0x013AA) — der Schluessel
+muss deshalb (Raum, msg) sein, nie msg allein.
+
+### 3.3 Mechanismus "Angebot wiederholbar bis Annahme" — RE1.5 FUN_8001db28 Zustand 7 (selbst disassembliert)
+
+Arm-Handler des Item-Platzes (AOT-Tabelle Typ 9, LAB_80043328):
+
+    80043328: lui  v0,0x8007
+    8004332c: lbu  v0,0x2d3b(v0)        ; Zustand DAT_80072d3b
+    80043334: bne  v0,zero,0x80043368   ; laeuft schon -> nichts
+    80043338: ori  v1,zero,0x1
+    8004333c: lbu  v0,0(a0)             ; Nutzlast[0] = Item-Typ
+    80043344: lw   a0,-0x4264(a0)       ; 0x800bbd9c = ausloesender Satz
+    8004334c: sb   v1,0x2d3b(at)        ; Zustand = 1
+    8004335c: sb   v0,-0x44a(at)        ; 0x800afbb6 = Item-Typ
+    80043364: sw   a0,-0x35d0(at)       ; 0x800aca30 = Satz-Zeiger
+    80043368: jr   ra
+
+Zustand 7 (Einfuegen / Ablehnen):
+
+    8001e04c: lb   v0,-0x9d4(v0)        ; 0x8008f62c freier Platz (-1 = voll)
+    8001e054: bltz v0,0x8001e0ec        ; VOLL  -> Zustand 8 (Item bleibt)
+    8001e060: lbu  v0,-0x7ae0(v0)       ; 0x800b8520 Auswahl-Byte
+    8001e068: andi v0,v0,0x1            ; "No"
+    8001e06c: bne  v0,zero,0x8001e0ec   ; NEIN  -> Zustand 8 (Item bleibt)
+    8001e078: lw   v1,-0x35d0(v1)       ; 0x800aca30 Satz
+    8001e090: sb   zero,0(v1)           ; NUR bei JA: sce-Byte des Satzes = 0 (Zone aus)
+    8001e0c0: lhu  a1,2(s1)             ; Menge
+    8001e0c4: jal  0x8004dc4c           ; Einfuegen
+    8001e0cc: lhu  a1,4(s1)             ; Zone-9-Bit
+    8001e0d0: jal  0x8004ef90           ; a0 = 0x800b0fd6+162 = 0x800b1078 (Bank 9) -> Bit setzen
+    8001e0e0: sb   zero,0x2d3b(at)      ; Zustand 0
+    8001e0ec..e100: f630 = f634 = 0, Zustand = 8 (Schrumpfen, 17 Bilder, @0x8001e10c ff.)
+
+-> Nur "Ja" schaltet die Zone ab und setzt das Bank-9-Bit; "Nein" und "voll" lassen beides
+unberuehrt, das naechste Ausloesen bietet dasselbe Item wieder an. Genau das verlangt der Nutzer
+("immer wiederholt ... bis man die Munition annimmt"). Der Port bildet das 1:1 ab
+(`item_modal_common.c:334`/`:340`; aot_slot -1 = keine Zone abzuschalten).
+
+### 3.4 RE2-Vorbild "Leiche haelt ein Item" (Werkzeug `r34n_f_zensus.py re2leiche`, RE2 Leon, alle Raeume)
+
+Suche: Item-AOT (0x4E) und Text-AOT (0x2C sce 4) auf DEMSELBEN Rechteck, Text mit corpse/body/dead/holding.
+Genau **ein** Treffer — RE2 ROOM4050 (Kanalisation, toter Umbrella-Soldat), sub00:
+
+    @0x00F1A  4e 06 02 31 01 00 74 dc d4 95 7e 09 aa 05 49 00 01 00 be 00 ff 01
+              Item_aot_set aot 6, Rechteck (-9100,-27180, 2430x1450), Item 0x49 "Wolf Medal" x1,
+              Flag 0xbe, md1 0xff (KEIN Weltmodell), action 0x01
+    (Else-Zweig) @0x00F82  2c 06 04 31 01 00 74 dc d4 95 7e 09 aa 05 08 00 00 00 ff ff
+              Aot_set aot 6, sce 4 (Text), GLEICHES Rechteck, msg 8 =
+              "He's holding something. | I don't need this right now."
+
+Also: RE2 laesst die Leiche das Item ueber den NORMALEN Aufnahme-Weg anbieten (Item-AOT, Frage
+"Will you take the ...?"), ohne Weltmodell (md1 = 0xFF), und benutzt fuer "haelt etwas" den Satz
+"He's holding something." — der Nutzersatz "He is holding something." ist dessen RE1.5-Form.
+Der RE2-Item-Handler (AOT-Tabelle @0x800A73C4, Typ 2 -> 0x80051884) zweigt auf action Bit 0:
+`lbu v0,7(a0)` @0x800518cc / `andi v0,v0,0x1` @0x800518d4 / `bne` @0x800518d8 -> @0x80051924
+`sb 6,-0x403(at)` (0x800cfbfd) statt sofortigem Aufnahme-Start (@0x800518f8 `sb 2 -> 0x800d5c00`).
+Die Leichen-Medaille traegt action 1 (eigener Spieler-Ablauf vor der Aufnahme). RE1.5 hat fuer
+diese zwei Leichen bereits einen eigenen Spieler-Ablauf: das Knien per Plc_motion(1,11,0) im
+Ereignis selbst (3.1). ⛔ Was Spieler-Routine 6 in RE2 genau zeigt, ist NICHT weiter
+disassembliert — fuer den Bau nicht noetig, weil das RE1.5-Knien bleibt.
+
+RE2 "Sce_Item_get" (Opcode 0x76, Handler 0x800587b8 aus Tabelle @0x800A74C8): liest pc[1] Item,
+pc[2] Menge, ruft direkt das Einfuegen `jal 0x80069adc` @0x80058864, pc += 3 — **ohne** Frage.
+Fuer "Ja/Nein, bis man annimmt" ist es deshalb NICHT das Vorbild; das ist der Item-AOT-Weg.
+
+**Folgerung Modell:** kein Weltmodell (RE2-Vorbild md1 = 0xFF; RE1.5 hat an beiden Leichen kein Prop).
+
+### 3.5 RE1.5-Vorbild "Text, Ja/Nein, nehmen, danach anderer Text" — ROOM1110 selbst
+
+ROOM1110 sub03 @0x0D24 (Zeitbombe, Platz 20 aus sub00 @0x0CD4, nur solange (3,146) = 0):
+
+    0x0D24 Message_on 2b 08 ff ff      "Will you take the Time Bomb?"  (03 = Ja/Nein)
+    0x0D2A Ifel_ck / 0x0D2E Ck 21 0c 1f 00   (12,31) == 0  = "Ja"
+    0x0D32 Set 22 03 92 01             (3,146) = 1  (genommen)
+    0x0D36 Aot_reset 46 14 00 ...      Platz 20 aus
+    0x0D40 Message_on 2b 09 ff ff      "You've taken the Time Bomb."
+
+Das ist RE1.5s eigener Skript-Weg fuer "anbieten, bei Ja merken, danach nie wieder" — er ist
+aber ein reiner Text-Dialog ohne Inventar-Eintrag (die Zeitbombe ist kein Item; kein
+Item_aot_set, kein Einfuegen). Fuer Munition, die "wie jedes Item" ins Inventar soll, ist das
+Aufnahme-Modal (3.3) der richtige Weg; die Zeitbombe belegt nur die REIHENFOLGE Text -> Frage ->
+Merkbit in RE1.5 selbst.
+
+### 3.6 Munition: Item-Id und Menge (Werkzeug `r34n_f_zensus.py munition`)
+
+Item-Id **0x15** = "H. Gun Bullets": Namens-Blob des Ports (`inventory_common.c` s_item_names[0x15]
+"H. GUN BULLETS", aus DAT_800c4a28 ueber die Offsettabelle DAT_800c495c), gleiche Id wie die
+Handgun-Munition im Auslieferungsstand (38 Item_aot_set mit Typ 0x15, z.B. ROOM1110.RDT @0x00B18
+`50 07 09 31 00 00 d2 dd 32 00 20 03 20 03 15 00 1e 00 e7 00 01 00`). Munitions-Klasse byte-true
+(`sltiu id,0x15` @0x80047d54 / `sltiu id,0x22` @0x80049124).
+
+| Spiel | Saetze H. Gun Bullets | Menge 15 | Menge 30 | andere |
+|---|---|---|---|---|
+| RE1.5 (Typ 0x15, alle RDTs inkl. Varianten) | 38 | **22** | 16 | – |
+| RE2 Leon (Id 0x14, 2553 SCD-Bloecke, 45 desynchron) | 44 | **37** | 6 | 6 (1x) |
+
+Menge **15** = die haeufigste Packung in BEIDEN Spielen (RE1.5 58 %, RE2 84 %). Es gibt kein
+RE2-Vorbild "Leiche haelt Munition" (3.4: einziger Leichen-Item-Treffer ist die Wolf Medal).
+Beim Aufnehmen halbiert der Port auf Nutzerwunsch jede Welt-Munition (`re15_pickup_menge_nutzer`,
+15 -> 7) und stapelt sie (`re15_inv_grant_stapeln_nutzer`) — das gilt hier genauso ("wie bei jedem Item").
+
+### 3.7 Bank 9 (Zone-9-Bits) und Speicherstand (`r34n_f_zensus.py bank9`)
+
+Auslieferungsstand: 85 Bits belegt (Item_aot_set +18, Ck/Set Bank 9; Opcode 0x59 mit Bank 9: 0),
+freier Block 53..84 — Bit 61 und 62 frei. Port-Code: nur 53 (Sicherung), 54 (Diary), 55 (Memory
+Card), 56 (Granate) (`grep` ueber engine/include). VERTRAG 1.1: 61 = Leiche 1110, 62 = Leiche 1230.
+Speicherstand: `re15_savedata.h:131` sichert `flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE]`
+(16 Baenke x 256 Bit) -> Bank 9 ist im Speicherstand, kein neues Format.
+
+### 3.8 Varianten und Plaetze (`r34n_f_zensus.py slots`)
+
+ROOM1111 / ROOM1231 (Elza-Variante, unterste Hex-Ziffer = RDT-Variante, `re15_room_full_text`):
+Leichen-Aot_set und Ereignis bytegleich (1110/1111 sub02 54 B, 1230/1231 sub21 54 B).
+Belegte AOT-Plaetze: 1110/1111 0..20, 1230/1231 0..19 (48..63 Kamerazonen). **Kein neuer Platz
+noetig** — das Original-Ereignis bleibt der Ausloeser.
+Nachrichten: 1110/1111 IDs 0..9, 1230/1231 IDs 0..11 -> Port-IDs 20..23 frei (VERTRAG 1.3).
 
 ## 4 Soll-Verhalten (Zeitlinie)
 
