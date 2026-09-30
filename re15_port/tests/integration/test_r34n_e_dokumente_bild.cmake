@@ -9,8 +9,8 @@
 #      `jal 0x800396fc` @0x8001d5ac LOAD / @0x8001d988 Tuer);
 #   3. im Framedump liegt um die projizierte Dokument-Mitte (unit_r34n_e_dokumente Teil V/M)
 #      eine Mindestzahl Pixel, die sich zwischen beiden Laeufen unterscheidet — das Dokument ist
-#      also GEZEICHNET: Prop-Lader-Haken (MD1+TIM), Regions-Test, Licht und in 1010 Cut 0 die
-#      Tiefen-Klemme (ohne sie verdecken die nachgezeichneten Tischmasken die ferne Blatthaelfte).
+#      also GEZEICHNET: Prop-Lader-Haken (MD1+TIM), Regions-Test, Licht und in 1010 Cut 1 die
+#      Tiefen-Klemme (ohne sie verdecken die nachgezeichneten Tischmasken gut die Haelfte des Blatts).
 # Kamera: RE15_FORCE_CUT = Cut des Nutzerbilds (reiner Mess-Schalter; die Kamera-Logik ist
 # nicht Gegenstand dieses Riegels).
 # Dossier: analysis/befunde_runde34_nacht/E_dokumente.md (6.2, 9).
@@ -108,18 +108,21 @@ set(_faelle
     "d1|1050|14900,-6750,0|3|348|387|468|467|MIN_D1"
     "d2|1000|18250,-11723,0|0|519|476|639|556|MIN_D2"
     "d3|1020|-16000,-11000,0|6|409|276|529|356|MIN_D3"
-    "d3c3|1020|-16000,-11000,0|3|375|254|495|334|MIN_D3C3"
-    "d4|1010|3400,7200,1024|0|570|470|690|550|MIN_D4")
-# Mindestzahlen = rund die Haelfte der gemessenen Pixel (Kalibrierlauf 2026-09-30, Dossier 9.8:
-# d1 283, d2 783, d3 228, d3c3 51, d4 1603; ausserhalb der Fenster jeweils 0 — die zwei Laeufe
-# unterscheiden sich NUR im Dokument). d3c3 ist der Riegel fuer die Tiefen-Klemme im Prop-Zeichner
-# (main.c, re15_dokumente_sort_max_mit): ROOM1020 Cut 3 liegt die Original-Tischmaske Tiefe 258
-# (@0xD28, Maske 35) ueber dem ganzen Blatt — ohne Klemme 0 Pixel (Mutationsprobe M1, Dossier 9.8).
+    "d4|1010|3400,7200,1024|0|570|470|690|550|MIN_D4"
+    "d4c1|1010|3400,7200,1024|1|150|430|300|540|MIN_D4C1")
+# Mindestzahlen (Kalibrierung 2026-09-30 am Lade-Weg F100, Dossier 9.8; ausserhalb der Fenster je 0 —
+# die zwei Laeufe unterscheiden sich NUR im Dokument): d1 283, d2 783, d3 228, d4 1603, d4c1 1625.
+# Schwelle = rund die Haelfte, AUSSER d4c1: das ist der Riegel fuer die TIEFEN-KLEMME im Prop-Zeichner
+# (main.c, re15_dokumente_sort_max_mit). ROOM1010 Cut 1 fuehrt nachgezeichnete Tischmasken (MSK,
+# Maske 46 Tiefe 53 ueber der nahen Ecke, otz>>4 @0x8002565c); Mutationsprobe M3 (Klemme aus):
+# d4c1 739 Pixel statt 1625 -> Schwelle 1180 (Mitte). Verworfen als Klemmen-Riegel: ROOM1020 Cut 3
+# (mit Klemme 24 / ohne 0 Pixel, aber ein Zombie des Raums steht am Lade-Weg vor dem Tisch —
+# zu knapp), ROOM1010 Cut 0/6/8 (ohne Klemme 1565/1288/1554 statt 1603/1321/1554 — kaum Wirkung).
 set(MIN_D1 140)
 set(MIN_D2 390)
 set(MIN_D3 110)
-set(MIN_D3C3 25)
 set(MIN_D4 800)
+set(MIN_D4C1 1180)
 
 set(_fehler "")
 foreach(_f ${_faelle})

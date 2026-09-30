@@ -199,9 +199,12 @@ int main(void)
               "Dokument-Tabelle Eintrag 0: Item-Id 0x%02x, Bild-Satz %d, max_page %d, H %d "
               "(Soll 0x48 / 25 / 15 / 144)", d ? d->item_id : 0, d ? d->bildsatz : -1,
               d ? d->max_page : -1, d ? d->page_h : -1);
+        /* Runde 34 Nacht (Spur E): 0x49..0x4C sind jetzt die Dokumente 1..4 (re15_files.c);
+         * die Grenze der Tabelle liegt bei 0x48 + Anzahl. */
         CHECK(re15_files_doc_from_item(0x48) == 0 && re15_files_doc_from_item(0x47) == -1 &&
-              re15_files_doc_from_item(0x49) == -1,
-              "Item-Id -> Dokument: 0x48 -> 0, 0x47 -> keines, 0x49 -> keines");
+              re15_files_doc_from_item(0x48 + re15_files_doc_count()) == -1,
+              "Item-Id -> Dokument: 0x48 -> 0, 0x47 -> keines, 0x%02X (Tabellenende) -> keines",
+              0x48 + re15_files_doc_count());
 
         re15_inv_screen_t a = g_inv_screen, b = g_inv_screen, t = g_inv_screen;
         a.substate = b.substate = t.substate = 2;

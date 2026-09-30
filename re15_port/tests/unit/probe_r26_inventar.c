@@ -269,9 +269,14 @@ int main(void)
         }
         printf("  (B4 Vergleiche gefahren: %d, Dokument-Ids ausgenommen: %d)\n",
                gefahren, dokumente);
-        PRUEFE("B4 kein Kollateral in den uebrigen Skripten", ok && gefahren >= 900);
-        PRUEFE("B4b genau EINE Dokument-Id ausgenommen (0x48), je Schluessel einmal",
-               dokumente == 9);
+        /* Runde 34 Nacht (Spur E): die Dokument-Tabelle fuehrt jetzt 0x48..0x4C (Irons Diary +
+         * vier Dokumente, re15_files.c) — ausgenommen werden genau ihre Ids, alle anderen
+         * (102 - Tabellengroesse) werden je Schluessel verglichen. */
+        const int n_dok = re15_files_doc_count();
+        PRUEFE("B4 kein Kollateral in den uebrigen Skripten",
+               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok) && gefahren >= 850);
+        PRUEFE("B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal",
+               dokumente == 9 * n_dok);
     }
     /* B5 DOKUMENT-NAME (Runde 30): Skript [5] "The <name> has been filed." (@0x800c506f,
      * Schluessel 7) traegt fuer 0x48 den Namen "Irons Diary" aus der Dokument-Tabelle; der
