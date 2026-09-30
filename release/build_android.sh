@@ -214,6 +214,7 @@ LIST="$(unzip -Z1 "$OUT")"
 for f in lib/arm64-v8a/libmain.so lib/arm64-v8a/libSDL2.so lib/x86_64/libmain.so lib/x86_64/libSDL2.so \
          assets/re15_assets.txt assets/shared_assets/PSX/DATA/TEX.TIM assets/shared_assets/PSX/STAGE1/ROOM1240.RDT \
          assets/shared_assets/extracted_fx/effect0_blood.tim assets/shared_assets/RE2/CDEMD0.EMS \
+         assets/shared_assets/RE2/CORE00.ESP assets/shared_assets/RE2/TEX.TIM \
          assets/synchro/STAGE1/room1170/main00.wav; do
     grep -qxF "$f" <<<"$LIST" || die "APK unvollstaendig: $f fehlt"
 done

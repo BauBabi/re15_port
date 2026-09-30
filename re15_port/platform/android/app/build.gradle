@@ -112,6 +112,7 @@ tasks.register("stageAssets", Sync) {
     doFirst {
         ["shared_assets/PSX/STAGE1", "shared_assets/extracted_fx/effect0_blood.tim",
          "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS",
+         "shared_assets/RE2/CORE00.ESP", "shared_assets/RE2/TEX.TIM",    // Runde 34: RE2-FX (Granaten 0x0A/0x0B)
          "shared_assets/RE15DOOR/P07G.DO2"].each { rel ->
             if (!new File(portRoot, rel).exists())
                 throw new GradleException("Asset fehlt im Repo: re15_port/${rel}")
