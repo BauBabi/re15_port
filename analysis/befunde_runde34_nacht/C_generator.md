@@ -657,7 +657,21 @@ scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
 
 ### 9.3 Commits
 
-(in Arbeit)
+Zweig `r34n/generator` (auf dem Bauplan 65ceabdd), in Reihenfolge:
+
+| Commit | Inhalt |
+|---|---|
+| 7ec96551 | Dossier-Geruest Abschnitt 9 |
+| 42baac77 | Engine (nur Endsperre, Lampenzustand), PC-Zeichner, LAMPE2130.TIM, main.c-Haken, Kopf-Kommentare |
+| 5ecfb348 | Riegel `unit_r34n_c_generator` (A..I) |
+| bdb7a680 | `unit_r31_generator` Teil D umgeschrieben, RE15_MIN_TESTS 429 |
+| d206b0ef | Paket-Gate LAMPE2130.TIM, Dossier-Berichtigungen (Auflagen 1-4, 8, 10), ESP01-Vergleich |
+| 8e7b7e51 | Dossier 9.1/9.2/9.7, Abnahme-Werkzeuge |
+| a2c3ec22 | **fix** local_build.sh: PowerShell in den CLEAN_PATH (globales taskkill), mutation.sh |
+| f0359377 | Dossier 9.4/9.5 (Rueckbau-Nachweis, Suite) |
+| 2e3e7841, 1684efb7, 18847ddd, 948dc976 | Abnahme S1..S7 + gdigrab, Belegbilder, Dossier 9.6 |
+| 00c487ea | Dossier 9.9, Stand |
+| (letzter) | Dossier-Abschluss (9.3/9.5 dritter Lauf) |
 
 ### 9.4 Riegel + Mutationsproben
 
@@ -715,6 +729,12 @@ Hauptbaums und von r34g_a, r34g_b, r34n_rolltor, r34n_hebetisch 0-mal vor). Jede
 72 s, `build/r34n_c/integ_umbenannt.log`). Behoben in a2c3ec22 (PowerShell-Verzeichnis in den CLEAN_PATH;
 Gegenprobe: der Filter auf das eigene Bauverzeichnis laesst die exe von r34g_a, r34g_b und eine
 Scratchpad-Kopie am Leben). Wirkt fuer andere Agenten erst nach der Zusammenfuehrung.
+**Zweiter Volllauf** (`local_build.sh` all nach a2c3ec22, `build/r34n_c/suite2.log`): **428/429**, einziger
+roter Haken `integration_r30_irons_tisch_licht` (wieder `exit=1` mitten im Lauf) — einzeln nachgefahren
+2/2 gruen (52,9 / 54,3 s). Die vier Haken des ersten Laufs waren diesmal gruen. Jeder der fuenf je einmal
+roten Haken ist damit mindestens einmal gruen gelaufen; keiner hat mit dem Generator-Raum zu tun (1150,
+1240, 1170, 1031, Speichern), und der Spielcode dieser Spur wirkt nur in 11F0/11F1 (Sperre, Lampen) bzw.
+Cut 10 dort (Zeichner).
 Panel-Riegel in der Suite: unit_r34n_c_generator, unit_r31_generator, unit_r27_panel_schalterwerte (G:
 90 Bilder Quadrat gehalten), unit_r26_panel_11f0 (A), unit_r17_cursor_klick_pin, unit_gen_11f0_switches,
 unit_gen_11f0_cursor_view, unit_11f0_cut_after_puzzle — alle gruen im Vollauf (Auflage 6: r17/r27 G/
