@@ -793,6 +793,7 @@ static int pc_enemy_load_re2_kind(uint8_t type, int kind, re15_enemy_bank_t *eb)
         return 0;
     }
     eb->buf = NULL;                                    /* Bank aliast das residente EMS */
+    eb->re2_rig = 1;                                   /* RE2-Skelett (W6; der Hybrid behaelt es) */
     int slot = 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);    /* TIM-Slot-Upload wie der RE1.5-Pfad */
@@ -9953,8 +9954,19 @@ re_title:;
                  * re15_pc_re2_part_tint die Tinte je Part; neutrale/ungesetzte Parts = 0x808080 =
                  * Identitaet (prim * 0x80 >> 7), der Renderpfad bleibt dann bitgleich. */
                 int tint_on = gore_on;
-                if (!gore_on)
-                    tint_on = re15_pc_re2_part_tint(npc, npc_bones, gore_tint, RE15_EMD_MAX_BONES);
+                if (!gore_on) {
+                    /* Integration W6 (Gegenpruefung C H3): Part == Bone nur, wenn das GEZEICHNETE
+                     * Skelett das RE2-Rig der Bank ist (reines RE2-EMD oder Hybrid); die RE1.5-
+                     * Rueckfallbank (ohne RE2-Archiv) und die RE1.5-Posenbank des Sitz-Imports
+                     * tragen die RE1.5-Bone-Ordnung -> re15_pc_re2_part_tint bildet dann ueber
+                     * re2_hybrid_perm ab (wie re2z_part_to_bone). */
+                    const re15_enemy_bank_t *tb = re15_enemy_find(npc->type);
+                    int npc_re2_rig = tb && tb->re2_rig && npc_md1 == &tb->md1 &&
+                                      (npc_skel == &tb->skel || npc_skel == &tb->skel_loco ||
+                                       npc_skel == &tb->skel_own);
+                    tint_on = re15_pc_re2_part_tint(npc, npc_bones, npc_re2_rig, gore_tint,
+                                                    RE15_EMD_MAX_BONES);
+                }
                 /* NCCT-Modulation des Farbworts +0x70: das Wort geht als CVECTOR ins
                  * GTE-RGB-Register (`sw a2,0x10(sp)` @0x80027C08 — LOW BYTE = R, Byte 3
                  * ist der GPU-Primitiv-Code `sb a3,0x13(sp)` @0x80027C18 — dann

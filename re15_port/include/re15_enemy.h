@@ -75,6 +75,11 @@ typedef struct {
      * gezeichnet. remap_ok == 0 => 1:1 (mesh_idx == bone_idx, emd_common.c:190). */
     int8_t  mesh_remap[RE15_EMD_MAX_BONES];
     uint8_t remap_ok;
+    /* Runde 34 Integration W6: 1 = skel/skel_loco/skel_own sind das RE2-Skelett (Bank aus dem
+     * RE2-CDEMD0.EMS, rein oder als Hybrid mit RE1.5-Geometrie) -> Bone-Slot i == RE2-Part i.
+     * 0 = RE1.5-Skelett (RE1.5-Bank, auch der Rueckfall im RE2-Flavor ohne RE2-Archiv). Leser:
+     * der PC-Zeichner der RE2-Part-Tinte (fx_plattform_pc.c re15_pc_re2_part_tint). */
+    uint8_t re2_rig;
     /* GORE-SEITENBANK (Stumpf-Geometrie, gore-vollausbau.md 4.2): das ORIGINALE RE2-MD1
      * mit den Reserve-Meshes 15 (Bein-Stumpf) / 16 (Rumpf-Stumpf) - re2_hybrid_apply
      * ersetzt eb->md1 durch das RE1.5-MD1 und legt die RE2-Fassung hier ab. Die Zeiger

@@ -206,9 +206,12 @@ void re15_audio_arms_zusatz_se(int arms_id, int satz);
  * fuer den Zombie. main.c wendet sie fuer Zombies mit aktiver Gore-Bruecke schon an
  * (RE2_GORE_TINT, `re15_re2z_gore_resolve`); diese Funktion liefert die Tinte fuer die UEBRIGEN
  * RE2-KI-Aktoren (re15_ai_re2_for_type), deren Parts Spur B (V4) in re2z_part_tint[] schreibt.
- * Bone i = Part i (RE2-EMD direkt geladen, Mesh i == Part i). Ein Wort 0 = nie geseedet (RE2 seedet
- * JEDEN Part mit 0x808080) -> neutral. Rueckgabe 1 = mindestens ein Part nicht neutral. */
+ * re2_rig = 1: die gezeichnete Bank traegt das RE2-Skelett (reines RE2-EMD oder Hybrid) -> Bone i =
+ * Part i; re2_rig = 0: RE1.5-Skelett (Rueckfall ohne RE2-Archiv) -> Bone = re2_hybrid_perm[Part]
+ * (Integration W6, Gegenpruefung C H3). n = Bones der Bank, alle 20 Part-Woerter (re15_actor.h).
+ * Ein Wort 0 = nie geseedet (RE2 seedet JEDEN Part mit 0x808080) -> neutral. Rueckgabe 1 =
+ * mindestens ein Part nicht neutral. */
 #include "re15_actor.h"
-int re15_pc_re2_part_tint(const re15_actor_t *e, int n, uint32_t *out_tint, int out_n);
+int re15_pc_re2_part_tint(const re15_actor_t *e, int n, int re2_rig, uint32_t *out_tint, int out_n);
 
 #endif /* FX_PLATTFORM_PC_H */

@@ -390,22 +390,57 @@ static void teil_F(void)
     uint32_t t[32];
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     e.re2z_part_tint[3] = 0x00202020u;
-    int r = re15_pc_re2_part_tint(&e, 17, t, 32);
+    int r = re15_pc_re2_part_tint(&e, 17, 1, t, 32);
     CHECK(110, r == 0 && t[3] == 0x00808080u, "RE1.5-KI-Hund: keine Tinte (neutral)");
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
-    r = re15_pc_re2_part_tint(&e, 17, t, 32);
+    r = re15_pc_re2_part_tint(&e, 17, 1, t, 32);
     CHECK(111, r == 1 && t[3] == 0x00202020u && t[0] == 0x00808080u && t[16] == 0x00808080u,
           "RE2-KI-Hund: Part 3 = 0x%08x (Soll 0x00202020, Verkohlung H_TOD_BRAND), ungesetzte Parts neutral",
           t[3]);
     memset(e.re2z_part_tint, 0, sizeof e.re2z_part_tint);
     for (int i = 0; i < 16; i++) e.re2z_part_tint[i] = 0x00808080u;
-    r = re15_pc_re2_part_tint(&e, 17, t, 32);
+    r = re15_pc_re2_part_tint(&e, 17, 1, t, 32);
     CHECK(112, r == 0, "alle Parts neutral 0x808080 -> kein Tint-Pfad (Renderpfad bitgleich)");
     e.re2z_part_tint[5] = 0x00003F2Fu;
-    r = re15_pc_re2_part_tint(&e, 4, t, 32);
+    r = re15_pc_re2_part_tint(&e, 4, 1, t, 32);
     CHECK(113, r == 0 && t[5] == 0x00808080u, "n = 4 Bones: Part 5 liegt ausserhalb -> neutral");
-    r = re15_pc_re2_part_tint(&e, 17, t, 32);
+    r = re15_pc_re2_part_tint(&e, 17, 1, t, 32);
     CHECK(114, r == 1 && t[5] == 0x00003F2Fu, "Part 5 = 0x00003F2F (H_TOD_SAEURE)");
+
+    /* Integration W6: alle 20 Part-Woerter (re2z_part_tint[20], Spur B) und Part -> Bone der
+     * RE1.5-Bank. Hund-Tod Brand faerbt 17 Parts (EMD0G_MOD0 `sw a0,112(v0)` @0x801047f4 /
+     * `sltiu v0,s0,0x11` @0x801047f8) mit 0x00202020, Spinnen-Tod 20 Parts (EMS25 FUN_8010609C
+     * `sw a1,112(v0)` @0x801060b0 / `sltiu v0,a2,0x14` @0x801060b4) mit 0x00202F2F. */
+    memset(e.re2z_part_tint, 0, sizeof e.re2z_part_tint);
+    for (int i = 0; i < 17; i++) e.re2z_part_tint[i] = 0x00202020u;
+    r = re15_pc_re2_part_tint(&e, 17, 1, t, 32);
+    CHECK(115, r == 1 && t[16] == 0x00202020u && t[7] == 0x00202020u && t[17] == 0x00808080u,
+          "RE2-Rig Hund: Part 16 -> Bone 16 = 0x%08x (Soll 0x00202020; vorher Grenze 16 -> neutral), "
+          "Bone 17 ausserhalb neutral", t[16]);
+    /* RE1.5-Rig (Rueckfall ohne RE2-Archiv): Part p -> Bone k_perm_dog[p] (re2_ems.c
+     * { 0,1,2,3,4,5,6,-1, 7, 8,-1, 9,10,11,12,13,14 }), die Pfoten-Parts 7/10 haben keinen Bone. */
+    for (int i = 0; i < 17; i++) e.re2z_part_tint[i] = 0x00808080u;
+    e.re2z_part_tint[8]  = 0x00202020u;     /* Part 8 -> Bone 7  */
+    e.re2z_part_tint[7]  = 0x00003F2Fu;     /* Part 7 -> -1      */
+    e.re2z_part_tint[16] = 0x00101F3Fu;     /* Part 16 -> Bone 14 */
+    r = re15_pc_re2_part_tint(&e, 15, 0, t, 32);
+    CHECK(116, r == 1 && t[7] == 0x00202020u && t[14] == 0x00101F3Fu && t[8] == 0x00808080u &&
+               t[15] == 0x00808080u && t[16] == 0x00808080u,
+          "RE1.5-Rig Hund: Bone 7 = 0x%08x (Part 8), Bone 14 = 0x%08x (Part 16), Part 7 (Pfote) faellt weg",
+          t[7], t[14]);
+    r = re15_pc_re2_part_tint(&e, 15, 1, t, 32);
+    CHECK(117, t[7] == 0x00003F2Fu && t[8] == 0x00202020u,
+          "NEGATIV-KONTROLLE: dieselben Woerter als RE2-Rig gelesen landen auf Bone 7 = Part 7 (0x%08x)", t[7]);
+    e.type = 0x25;                          /* Spinne: 20 Parts, Identitaet (k_perm_ident) */
+    memset(e.re2z_part_tint, 0, sizeof e.re2z_part_tint);
+    for (int i = 0; i < 20; i++) e.re2z_part_tint[i] = 0x00202F2Fu;
+    r = re15_pc_re2_part_tint(&e, 20, 1, t, 32);
+    CHECK(118, r == 1 && t[19] == 0x00202F2Fu && t[16] == 0x00202F2Fu && t[20] == 0x00808080u,
+          "RE2-Rig Spinne: Part 19 -> Bone 19 = 0x%08x (Soll 0x00202F2F)", t[19]);
+    r = re15_pc_re2_part_tint(&e, 20, 0, t, 32);
+    CHECK(119, r == 1 && t[19] == 0x00202F2Fu,
+          "RE1.5-Rig Spinne (Identitaet): Part 19 -> Bone 19 = 0x%08x", t[19]);
+    e.type = 0x20;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
 }
 

@@ -306,20 +306,37 @@ int re15_pc_force_aufschlag_eintrag(const char *spec, unsigned bild, int32_t px,
 /* ===== C7 — RE2-Part-Farbwort fuer RE2-KI-Aktoren ausserhalb der Zombie-Gore-Bruecke ========= */
 
 #include "re15_ai_flavor.h"
+#include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part -> Bone der RE1.5-Bank (Integration W6) */
 
-int re15_pc_re2_part_tint(const re15_actor_t *e, int n, uint32_t *out_tint, int out_n)
+int re15_pc_re2_part_tint(const re15_actor_t *e, int n, int re2_rig, uint32_t *out_tint, int out_n)
 {
     if (!e || !out_tint || out_n <= 0) return 0;
     for (int i = 0; i < out_n; i++) out_tint[i] = 0x00808080u;      /* neutral (FUN_80028368.c:55) */
     if (!re15_ai_re2_for_type(e->type)) return 0;                    /* nur RE2-KI-Typen */
-    int m = n;
-    if (m > 16) m = 16;                                              /* V4: re2z_part_tint[16] */
-    if (m > out_n) m = out_n;
+    /* Integration W6: ALLE Part-Woerter, die Spur B fuehrt (re2z_part_tint[20], re15_actor.h) —
+     * Hund-Tod faerbt 17 Parts (EMD0G_MOD0: `sw a0,112(v0)` @0x801047f4, `sltiu v0,s0,0x11`
+     * @0x801047f8), Spinnen-Tod 20 (EMS25 FUN_8010609C: `sw a1,112(v0)` @0x801060b0,
+     * `sltiu v0,a2,0x14` @0x801060b4) — selbst nachgelesen. Vorher endete die Schleife bei 16. */
+    const int parts = (int)(sizeof e->re2z_part_tint / sizeof e->re2z_part_tint[0]);
+    /* Part -> Bone der GEZEICHNETEN Bank (Gegenpruefung C H3): traegt sie das RE2-Skelett (reines
+     * RE2-EMD oder Hybrid "RE2-Rig + RE1.5-Geometrie", re2_hybrid_apply), ist Bone-Slot i == Part i.
+     * Ist es das RE1.5-Skelett (RE2-Archiv fehlte -> pc_enemy_load_ex-Rueckfall), liegt Part p auf
+     * Bone perm[p] der Hybrid-Tabelle re2_hybrid_perm — dieselbe Abbildung, die re2z_part_to_bone /
+     * re2z_bone_to_part im Import-Modus nehmen (re2z_perm_for); -1 (Hundepfoten-Slots 7/10) = kein
+     * Bone -> die Tinte faellt weg. Ohne Tabelle fuer den Typ: keine Tinte. */
+    const int8_t *perm = NULL;
+    int pn = parts;
+    if (!re2_rig) {
+        pn = re2_hybrid_perm((int)e->type, &perm);
+        if (pn <= 0 || !perm) return 0;
+    }
     int nicht_neutral = 0;
-    for (int i = 0; i < m; i++) {
-        uint32_t t = e->re2z_part_tint[i];
+    for (int p = 0; p < parts && p < pn; p++) {
+        uint32_t t = e->re2z_part_tint[p];
         if (t == 0) continue;                                        /* nie geseedet -> neutral */
-        out_tint[i] = t;                                             /* Part +0x70 (@0x80027900) */
+        int b = re2_rig ? p : (int)perm[p];
+        if (b < 0 || b >= n || b >= out_n) continue;
+        out_tint[b] = t;                                             /* Part +0x70 (@0x80027900) */
         if ((t & 0x00ffffffu) != 0x00808080u) nicht_neutral = 1;
     }
     return nicht_neutral;
