@@ -26,5 +26,19 @@ case "$1" in
   # S4 = Abnahme 3 (Zielwechsel waehrend der Fahrt, Bildpaar): Schalter 9 (+30), gleich danach 10
   # (-60): Ziel 30 -> 0 mitten in der Fahrt; Schalter 8 -> 9: D0.37 ; 9 -> 10: D0.37.
   s4) bash "$L" "$OUT/s4" 640 "D0.37,W0.2,A0.07,D0.37,W0.2,A0.07,W4" "$FD" ;;
+  # S5 = Auflage 7a Nachbarraum: Panel per RE15_SUBSTART=16 (sub16 = Evt_exec-Ziel des Panel-AOT,
+  # Slot 1 @0x00D64 `.. ff 00 18 10`), 3, 1, 5 (obere Lampe AN), dann bei F720 die Tuer Slot 0
+  # (main00 @0x00CC6, Ziel ROOM11E0) per RE15_FIRE_AOT — mit brennender Lampe raus. Der Bildzaehler
+  # beginnt im neuen Raum bei 0; die Framedumps F20..F140 zeigen danach ROOM11E0 (ueberschrieben),
+  # F160..F720 ROOM11F0. Ende F150 in ROOM11E0.
+  s5) D="$OUT/s5"; mkdir -p "$D"; cd "$D" || exit 2; rm -f panel.log out.txt fd_*.ppm
+      S=""; for i in $(seq 1 8); do S="${S}A0.5,W0.1,"; done; S="${S}A0.07,W1.1333,"
+      S="${S}L1.17,W0.2,A0.07,W0.8,U0.65,W0.2,A0.07,W0.8,D1.47,W0.2,A0.07,W6"
+      env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=3 \
+          RE15_DEBUG_JUMP="11F0@240" RE15_SUBSTART="16@40#11F0" RE15_FIRE_AOT="0@720#11F0" \
+          RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=320 RE15_INPUT_SCRIPT="$S" \
+          RE15_PANEL_LOG=panel.log RE15_FRAMEDUMP="${FD:-20-720/20:fd_}" RE15_EXIT_AT="150#11E0" \
+          timeout 600 "$BAUM/re15_port/build/platform/pc/re15_r34nc.exe" > out.txt 2>&1
+      echo "EXIT=$?" ;;
   *) echo "lauf?"; exit 2 ;;
 esac
