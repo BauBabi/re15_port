@@ -13,7 +13,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
-| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W8 (7fbd45a0, 6e320214), W9 (c49f20fe); W7, W10, W11 in Arbeit |
+| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W7 (6f7aa99f), W8 (7fbd45a0, 6e320214), W9 (c49f20fe); W10, W11 in Arbeit |
 | S3 volle Suite | offen |
 
 ## 1. Merges (Schritt 1)
@@ -179,6 +179,37 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   (Muendung, Rauch, Huelse, Blut, Feuer, Feuerball) — sie waren seit jeher halb so hell (Release-Hinweis).
 * Pin: Lauf "debug" von `integration_r34_granaten` misst denselben Beitrag (Werkzeug `probe_r34_ppm_beitrag`, Schranke
   >= 240 je Kanal, >= 200 Pixel). Mutation M6 (Farbe wieder 128): ROT "Feuerball im Explosionsbild zu dunkel".
+
+### W7 — ESP-Routinen 41/42 (erledigt 6f7aa99f)
+* Belege (selbst disassembliert): R41 @0x80018ef4 (41 Instruktionen), R42 @0x80018f98 (bis @0x80019174), Vorschub
+  FUN_800174e4 @0x800174e4-0x800175d8, "RNG" FUN_8001af20 @0x8001af20-54, Treffer-Test FUN_8002b7e8 @0x8002b7e8-894,
+  Spawn-Anim FUN_80019700 @0x8001989c-bc / FUN_800199d4 @0x80019b70-90, Anim-Schritt @0x8001a38c-47c — Zitate im Code
+  (re15_esp.c case 41/42, esp_treffer_test, re15_esp_fx_spawn_ex).
+* Befunde beim Portieren (ueber bau_c.md N1.1 hinaus):
+  1. Das "RNG" von R41 wertet das Register a0 aus, das der Vorschub FUN_800174e4 hinterlaesst: den dritten Wortladebefehl
+     des zweiten 16-Byte-Blocks (`lw a0,8(a2)` @0x80017594 bzw. `lwl/lwr a0,0xb/8(a2)` @0x80017548/4c) = u32 der NEUEN
+     Zeile ab +0x18. Effekt 0x0b: dort 0 -> +0x0a bleibt 12 (Sonde 12); synthetisch w = 0x81 -> +2 (Sonde 50).
+  2. Der SCD-Spawn gibt `floor_y = y` (scd_vm.c) — die Port-Sammelklemme hielt den Strahl auf Spawnhoehe fest. Der Takt hat
+     keine Klemme (@0x8001a2fc-388), Effekt 0x0b hat B = 0 -> `floor_y = ESP_KEIN_BODEN` in R41 (Muster A6/E12).
+  3. Die Spawner setzen +0x6e := 1 und +0x6d := Satz[0].Byte2; der Port startete mit 0/0. R41 setzt +0x6e OHNE den
+     Zeitgeber — mit dem alten Start sprang Strom 0 im Spawnbild einen Satz zu weit. Port jetzt wie das Original. Zensus
+     aller 506 Effekte der Auslieferung (501 aus den RDTs, 5 aus CORE00): Dauer(Satz 0) == Dauer(Satz 1) ueberall -> fuer
+     alle anderen Effekte dieselbe Bildfolge; sichtbar anders nur ein Platz mit Bild-Stopp im Spawnbild (Satz 1 statt 0):
+     Pin `unit_r34_wurf` 167/168 (Salven-Huelse, Flags 0x63) mit Beleg @0x80019b74-78 nachgezogen.
+* Sonde `unit_r34_wasser` (neu, `probes/r34_wasser.cmake`, echte ROOM2000-Daten, 19 Pruefungen): Freigabe Strom 0 im Bild 1
+  (A 42, Flags 0x13, Satz 0 / Zeitgeber 3 -> 2, +0x0a 12, xlat 50, drift (49,12)), Stroeme 1..5 halten 5k (Flags 0x61),
+  Zaehler 1..25, defH +768 ab 16 (0x1cc4 ... 0x37c4), kein Bodenklemmen (xlat_y 660 nach Bild 11), Schleife im Bild 27
+  (Zeile 0, xlat 0, Satz 1 / Zeitgeber 3 -> 2), Bild 28 neu frei; Strom 3 frei im Bild 16 (Satz 11 -> Anim-Schritt 12, weil
+  sein Zeitgeber nach 15 Bildern Bild-Stopp auf 0 steht); RNG-Weg mit w = 0x81; Treffer an wpos -> Flags 0x33 + Physik-
+  Stopp, NEGATIV ohne Gegner Flags 0x13. Mutationen MW1-MW5 (Schwelle 16->17, RNG aus alter Zeile, kein Physik-Stopp,
+  mit Bodenklemme, Spawn-Satz 0) je ROT, byte-gleich zurueck.
+* Sichtabnahme (Framedump x3, ROOM2000 per Debug-Sprung = derselbe `re15_room_apply_pending`-Weg wie die Tuer, Leon an der
+  Tuer-Ankunft aus ROOM2050 (-26450,10250), `RE15_FORCE_CUT=9` — Cut 0 des Sprungs cullt die Lage, sichtbar nur Cuts
+  5..10/13, bau_c.md N1.2): ein durchgehender Wasserfall aus dem Gitter der Kanalwand ab F20, bis F80 unveraendert
+  laufend (`integration_werkzeug/w7_wasserstrahl_room2000_cut9.png`); vorher drei 1-Pixel-Punkte fuer 27-32 Takte.
+  FX-Zaehler im Zustandslog bleibt 21 (18 Strahl + 3 Effekt 0x06) — die Stroeme sterben nicht mehr am Satz-10-Terminator.
+* Nicht umgesetzt (OFFEN, bau_c.md INTEGRATIONSWUNSCH 6 zweiter Teil): Routinen 24/25 (@0x80017f50/@0x80017fa4) und 13/19
+  (@0x80017990/@0x80017d08) — kein Auslieferungs-Raum spawnt Effekt 0x0d (Zensus bau_c.md N1.3), sie sind unerreichbar.
 
 ## 3. Volle Suite (Schritt 3)
 
