@@ -149,3 +149,28 @@ klaglos: Groesse und Summe stimmen) - `faelschen_FD.txt`; FK_sig = N2 + Kelvin-P
 | **A5** | echt in release/, Umgebung `APK_GATE_DATEI=<Gate be8b60f3>` | ref v0.8.19 | **0** | `SELBSTTEST-OK: 202/202`, `APK-ASSET-GATE-OK ... Manifest stimmt`, `ANDROID-GATES-OK` - das alte Gate nimmt die v1-Liste an; welches Gate lief, verraet nur die Fallzahl 202 statt 248 |
 
 Keine Pruefkopie blieb liegen (`re15_apk_pruefen.*`: 0).
+
+Nachtrag (`u1_kette_fd.sh`, Beleg `kette_A2.txt`) - die Faelschung, die auf dem Geraet wirklich schadet (FD_sig: falsches
+Tuerarchiv, Liste passend, das Geraet entpackt es ohne Fehler):
+| Lauf | Gate | APK | EXIT | Ausgabe |
+|---|---|---|---|---|
+| A8 | echt | FD_sig | 1 | `Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2 Quelle 68306346.., APK 0f75724b..` (Kontrolle) |
+| **A9** | **G0 (0 Byte)** | FD_sig | **0** (13 s) | `ANDROID-GATES-OK` |
+| **A10** | **G2 (`RC_ABWEICHUNG = 0`)** | FD_sig | **0** (48 s) | im Log `SELBSTTEST-FEHLER: 165 von 248`, dann `Inhalt weicht ab ... P07G.DO2` + `APK-ASSET-GATE-ABWEICHUNG: 1 Befunde` - und trotzdem `ANDROID-GATES-OK` |
+| A11 | echt | FK_sig (Kelvin-Paar) | 1 | NUR `zusaetzlich in der APK (kein Asset-Baum liefert ihn)` fuer beide Dateien; die Liste selbst (3605 Zeilen, Kelvin-Paar) ohne Befund - siehe Abschnitt 6 |
+
+**Befund H1 (hoch):** Der Selbsttest vor dem PC-Pfad (B4) und die ganze APK-Kette verlassen sich allein auf Exit-Codes,
+die der geprufte Code selbst erzeugt. Eine 0-Byte-Gate-Datei (die Falle aus Memory reai-v2-patchskript-truncate: ein
+Patch-Skript kuerzte 2026-09-07 zweimal Quelldateien auf 0 B, es fiel zwei Releases lang nicht auf; das Gate hat 6 Zeilen
+mit Nicht-ASCII) oder eine Ein-Zeilen-Aenderung im Ausgangspfad laesst ein falsches Tuerarchiv, eine v1-Liste usw. mit
+`ANDROID-GATES-OK` durch - auch dann, wenn dasselbe Log `SELBSTTEST-FEHLER` bzw. den Befund zeigt. Abhilfe-Richtung:
+zusaetzlich zur 0 die Schlusszeile verlangen (`SELBSTTEST-OK: n/n` mit n >= bekannter Mindestzahl, `APK-ASSET-GATE-OK`,
+`QUELLBAUM-OK`, `PAKET-OK`) und/oder die sha256 des Gates gegen einen versionierten Wert pruefen.
+
+**Befund H2 (mittel):** `build_android.sh` uebernimmt `APK_GATE_DATEI` aus der Umgebung (apk_pruefen.sh Schritt 5:
+`${APK_GATE_DATEI:-...}`; nur make_package.sh setzt es selbst). Weder build_android.sh noch apk_pruefen.sh zeigen den
+Pfad oder die sha256 des benutzten Gates an. A4/A5: mit einem leeren bzw. dem alten Gate (be8b60f3) ist die v0.8.19-APK
+mit Liste v1 `ANDROID-GATES-OK`. Die Variable ist nirgends als Bedienschalter dokumentiert (README nennt sie nicht).
+
+**Befund V1/V2 (niedrig):** zwei Ein-Zeilen-Mutanten im v2-Teil bestehen den Selbsttest 248/248; V1 laesst mit einer
+signierten Faelschung (Leerraumzeile) die ganze Kette gruen durch (A7), die das Geraet verwirft (nichts entpackt).
