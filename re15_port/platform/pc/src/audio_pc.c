@@ -35,6 +35,7 @@
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
+#include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -1068,6 +1069,79 @@ void re15_audio_weapon_se(int se_id)
 void re15_audio_prime_weapon(int weapon_id)
 {
     load_weapon_se_vab_pc(weapon_id);
+}
+
+/* ===== Runde 34 C4 (E9): ZUSATZBAENKE fuer die Aufschlagtoene der RE2-FX-Maschine ============
+ * Der Saeure-/Brand-Aufschlag (RE2 Op 49 `lui a0,0x113 / ori a0,a0,0x1` @0x80021678-7c, Op 48
+ * `lui a0,0x112` @0x80020fd4 / `ori a0,a0,0x1` @0x80021028) spielt in RE2 aus der ARMS-Bank der
+ * GL-Waffe (ARMS0B Satz 19 / ARMS0A Satz 18 = `00 00 33 20`). Dieselben Toene liegen bytegleich
+ * in RE1.5 selbst: SOUND/ARMS10 (= RE2 ARMS0B, VB md5 39cec979) und ARMS11 (= RE2 ARMS0A, VB md5
+ * 46833b5e), Satz 10 @0x28 = `00 00 33 20` -> Prog 0 Ton 3 -> VAG 3 (Saeure-GP §12). Die Bank-Wahl
+ * ist Port-Zuordnung (E9): FEST, NICHT ueber die Bank der ausgeruesteten Waffe (die Granaten-
+ * baenke ARMS09/0A/0B haben keinen Aufschlagton, nur VAG 2). Deshalb eigene, einmal geladene
+ * Baenke neben s_weap_*; Satz-Aufloesung und Stimmen/Prio-Maschine = se_play_layers wie ARMS. */
+#define ARMS_ZUSATZ_N 2
+typedef struct {
+    int         id;                                   /* ARMS-Id (0x10/0x11), -1 = leer         */
+    int         state;                                /* 0 ungeprueft, 1 geladen, -1 fehlt       */
+    int16_t    *decoded    [RE15_VAB_MAX_SAMPLES];
+    int         decoded_len[RE15_VAB_MAX_SAMPLES];
+    re15_vab_t  vab;
+    uint8_t    *edt;                                  /* EDH-Puffer, EDT-Praefix @0             */
+    int         edt_count;
+} arms_zusatz_t;
+static arms_zusatz_t s_arms_zusatz[ARMS_ZUSATZ_N] = { { .id = -1 }, { .id = -1 } };
+
+static arms_zusatz_t *arms_zusatz_laden(int arms_id)
+{
+    arms_zusatz_t *frei = NULL;
+    for (int i = 0; i < ARMS_ZUSATZ_N; i++) {
+        if (s_arms_zusatz[i].id == arms_id)
+            return (s_arms_zusatz[i].state == 1) ? &s_arms_zusatz[i] : NULL;
+        if (!frei && s_arms_zusatz[i].id < 0) frei = &s_arms_zusatz[i];
+    }
+    if (!frei) return NULL;                           /* nur die zwei Aufschlag-Baenke vorgesehen */
+    frei->id = arms_id;
+    frei->state = -1;
+    char path[64];
+    uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
+    snprintf(path, sizeof path, "SOUND/ARMS%02X.EDH", arms_id);
+    edh = re15_pc_read_cd(path, &edh_sz);
+    snprintf(path, sizeof path, "SOUND/ARMS%02X.VB", arms_id);
+    vb = re15_pc_read_cd(path, &vb_sz);
+    if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return NULL; }
+    /* gleiches EDH-Layout wie load_weapon_se_vab_pc: pBAV-Offset = u32 @edh[size-8] */
+    uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
+                    ((uint32_t)edh[edh_sz-6] << 16) | ((uint32_t)edh[edh_sz-5] << 24);
+    if (pbav + 0x20u > (uint32_t)edh_sz ||
+        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &frei->vab) != 0) {
+        free(edh); free(vb); return NULL;
+    }
+    for (int i = 0; i < frei->vab.vag_count; i++) {
+        uint32_t off = frei->vab.samples[i].offset, sz = frei->vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        frei->decoded[i]     = pcm;
+        frei->decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vb);
+    frei->edt       = edh;
+    frei->edt_count = (int)(pbav / 4);
+    frei->state     = 1;
+    return frei;
+}
+
+void re15_audio_arms_zusatz_se(int arms_id, int satz)
+{
+    {   extern FILE *re15_waffen_log(void);
+        FILE *wl = re15_waffen_log();
+        if (wl) fprintf(wl, "    SE  zusatz ARMS%02X satz=%d\n", arms_id, satz); }
+    if (!g_audio.initialized) return;
+    arms_zusatz_t *b = arms_zusatz_laden(arms_id);
+    if (!b || satz < 0 || satz >= b->edt_count) return;
+    se_play_layers(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 
 /* ===== 5. Bank-Slot: RE2-Flavor ENEMSE (WELLE A, PORT-OPTION) ====================

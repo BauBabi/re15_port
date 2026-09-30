@@ -88,6 +88,9 @@ static inline int RNDI(float f) {
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
 #include "asset_selftest_pc.h" /* RE15_ASSET_SELFTEST=1 — Paket-Gate, reine Diagnose */
+#include "fx_plattform_pc.h"  /* Runde 34 Spur C: ESP-Takt, Ton-Weiche, Licht-Latch, TEX.TIM-Seiten */
+#include "re2_fx.h"           /* Runde 34 V3: RE2-FX-Maschine (Registrierung, Aufschlag-Harness) */
+#include "re2fx_pc.h"         /* Runde 34 V3: re2fx_pc_draw im Effekt-Zeichenpass (Spur D)       */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -129,6 +132,13 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
                                     * 0x02000800 @0x800337bc); ShowVRAM-extracted sheet. */
 #define RE15_TIM_SLOT_FX_SMOKE  22 /* global effect-id 3 — gun smoke (0x03000c00) */
 #define RE15_TIM_SLOT_FX_SHELL  23 /* global effect-id 4 — shell eject/debris (0x04000800) */
+/* Runde 34 C2: die zwei Effektseiten der GLOBAL-Bank, byte-true aus DATA/TEX.TIM geschnitten
+ * (fx_plattform_pc.c re15_pc_fx_seite_bauen), je mit den 16 Paletten 480..495 — der Zeichner waehlt
+ * die Palette ueber das CLUT-Wort des Platzes (slot+0x32). TPAGE 0x1e = VRAM (896,256) (Rauch,
+ * Feuer, Feuerball), 0x1f = (960,256) (Blut, Muendung, Huelse, Granate). Die alten Ein-Paletten-
+ * Blaetter 20..23/44 bleiben geladen (Rueckfall + Zustands-Log sl=). render_pc.c: MAX 50 -> 56. */
+#define RE15_TIM_SLOT_FX_SEITE_1E 50
+#define RE15_TIM_SLOT_FX_SEITE_1F 51
 #define RE15_TIM_SLOT_FX_FIRE   44 /* global effect-id 8 — FEUER/Explosion. Fuenftes und letztes
                                     * Sheet der CORE00-Bank; ROOM1090 zieht daraus die Flammen der
                                     * Truemmer-Varianten 0 und 3 (Sprungtabelle @0x80100364, s.
@@ -213,6 +223,30 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
     }
 }
 
+/* Runde 34 Nachbesserung M1 (bau_c.md NACHBESSERUNG §M1.4): die Effekt-Bank des NEUEN Raums wird
+ * geparst, BEVOR dessen SCD den Eintrittstakt faehrt — gerufen aus dem Teardown
+ * re15_room_reset_render_pc (room_pc.c) direkt nach dem Clear, also innerhalb von
+ * re15_room_apply_pending nach load_rdt und vor scd_room_reenter.
+ * ORIGINAL (selbst disassembliert): der Raumlader FUN_800396fc laedt die RDT (`jal 0x80013b60`
+ * @0x800397e8) und ruft `jal 0x80019354` @0x8003996c — EIN Aufrufer —, das die 96 Plaetze nullt
+ * (@0x80019378), die Id-Maps auf -1 setzt (@0x80019388-e4) und DANN die Sektion parst
+ * (`lw a0,76(a1)` @0x80019404 = RDT+0x4c, `lw a1,80(a1)` @0x80019424 = RDT+0x50,
+ * `jal 0x8001945c` @0x80019428) und die TIMs installiert (`lw a0,88` / `lw a1,84` @0x8001943c/40,
+ * FUN_800194f8); die SCD-Raum-Init FUN_8003ef6c folgt erst @0x80039a00.
+ * VORHER (Altbestand, auch auf master): pc_load_room_esp lief erst NACH re15_room_apply_pending;
+ * jeder Sce_espr_on des Eintrittsbilds (scd_room_reenter) sah die geloeschte Bank (NULL) ->
+ * re15_esp_fx_spawn_rows streams=-1 -> row-loser Ersatzplatz ohne Bank, im naechsten Takt verworfen.
+ * Gemessen (Debug-Sprung ROOM2000): Waffen-Log "SPAWN id=11 sub=0 scale=0x1900 streams=-1" x3 und
+ * "id=6 ... streams=-1" x3, im Folgebild 0 Plaetze; ueber den Lade-Pfad (Bank vor main00, Zeile
+ * pc_load_room_esp im Boot-Block) "streams=6" x3 + "streams=1" x3. */
+void re15_pc_room_esp_laden(void)
+{
+    extern const unsigned char *re15_room_pc_bytes(int *size);
+    int n = 0;
+    const unsigned char *b = re15_room_pc_bytes(&n);
+    if (b && n > 0) pc_load_room_esp(b, n, (unsigned)g_current_room_id);
+}
+
 /* Phase ESP-C draw: project each live effect particle (byte-true owner+offset world pos, same
  * camera transform as the player) and emit a billboard quad textured from the effect TIM.
  * The texture is byte-true: room fx sample the RDT effect TIM (slot 19); GLOBAL-bank fx (effect-id
@@ -242,7 +276,15 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         const re15_esp_fx_t *f = re15_esp_fx_get(i);
         if (!f) continue;
-        if (!re15_esp_fx_visible(f)) continue;   /* byte-true flags bit1 gate (frozen/staggered = hidden) */
+        /* Runde 34 C2: Flags Bit 0 UND Bit 1 (`andi 0x1`/`andi 0x2` + beq @0x800532fc-0c); vorher
+         * nur Bit 1 (re15_esp_fx_visible). Reihenfolge 0 -> 95 in die stabil nach Tiefe sortierte
+         * Liste = die Eimer-Reihenfolge des Originals (Kopfeinhaengen @0x80053778-b0, Schleife
+         * 95 -> 0 @0x800532f0; Begruendung in fx_plattform_pc.h). */
+        if (!re15_pc_esp_sichtbar(f)) continue;
+        /* Runde 34 C2: die WELTLAGE slot+0x28 (V1a) — Regions-Test UND Projektion lesen sie im
+         * Original (@0x80053314-30, @0x8005350c); Rueckfall x + xlat, solange Spur A sie nicht fuellt. */
+        int32_t wl[3];
+        re15_pc_esp_weltlage(f, wl);
         /* ⛔ REGION-SICHTBARKEIT — Nutzer-Befund 2026-08-27: "alle Effekte wie Strom, Feuer etc.
          * ueberdecken nicht sichtbare Bereiche. Zum Beispiel wenn sie noch um die Ecke hinter der
          * Kamera sind." Der Port hatte diesen Test fuer Effekte NICHT (nur fuer Spieler/NPC/Prop).
@@ -264,16 +306,31 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * @0x80021c0c `sw v0,-14448(at)`; FUN_80014324 liefert den ersten RVD-Satz (20 Byte,
          * Tabelle = RDT+0x28) mit rec[+2] == Cut-Id.
          * Getestet wird slot+0x28 — genau das Feld, aus dem FUN_800534c4 danach per RTPS
-         * projiziert (@0x800534ec `addiu v0,a1,40`), im Port also x+xlat_x / z+xlat_z.
+         * projiziert (@0x800534ec `addiu v0,a1,40`) — seit Runde 34 C2 die Weltlage wl (wpos).
          * has_region == 0 -> nicht cullen (dieselbe Rueckfallregel wie bei Prop/NPC/Spieler). */
-        if (re15_esp_fx_culled(f->x + f->xlat_x, f->z + f->xlat_z, has_region, rxs, rzs))
+        if (re15_esp_fx_culled(wl[0], wl[2], has_region, rxs, rzs))
             continue;
         /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
          * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
         const re15_esp_t *bank = f->bank;
         int slot = RE15_TIM_SLOT_EFFECT;
+        int clut_wort = 0;   /* CLUT-Wort an den Zeichner (0 = erste Palette des Blatts, Altweg) */
         if (bank && bank == global_bank) {
+            /* Runde 34 C2: Seite nach TPAGE (slot+0x30, Seitenbits 0..4) und Palette nach CLUT
+             * (slot+0x32) — genau die beiden Worte, die FUN_800534c4 in den POLY_FT4 schreibt
+             * (`lhu v0,50(a1)` @0x80053538, `lhu v1,48(a1)` @0x8005353c). Damit bekommt z.B. die
+             * Granate (Id 4 sub 0x0D -> CLUT 0x7B11 = Zeile 492) ihr oliv statt des Huelsen-Oranges
+             * (Zeile 491) und der Feuerball (Id 3 sub 0x19 -> 0x78D1 = Zeile 483) sein Weiss-Gelb
+             * statt des Rauch-Graus. Nur wenn Seite + Palette hochgeladen sind; sonst Altweg. */
+            uint16_t tpw = re15_pc_esp_tpage(f), clw = re15_pc_esp_clut(f);
+            int seite = tpw & 0x1f;
+            int sslot = (seite == 0x1e) ? RE15_TIM_SLOT_FX_SEITE_1E
+                      : (seite == 0x1f) ? RE15_TIM_SLOT_FX_SEITE_1F : -1;
+            if (sslot >= 0 && re15_render_pc_dbg_slot_loaded(sslot) && re15_pc_fx_seite_clut_ok(clw)) {
+                slot = sslot;
+                clut_wort = clw;
+            } else {
             /* Sheet-Zuordnung einmalig in der Engine (re15_esp_global_sheet_index): id 0/2/3/4/8.
              * Die alte switch-Kaskade kannte 0x08 NICHT und schickte es per `default` auf das
              * BLUT-Sheet (Slot 20) — dort sind 9 der 10 Flammen-Zellen von id 0x08 (UV v=168/208,
@@ -282,6 +339,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
              * dem Feuer-Sheet). */
             int si = re15_esp_global_sheet_index(f->effect_id);
             slot = (si >= 0) ? k_global_fx_slot[si] : RE15_TIM_SLOT_EFFECT_GLOBAL;
+            }
         } else if (bank && f->eff_idx >= 0) {
             /* ROOM-Bank: die TIM DIESES Effekts (Upload-Schleife oben; byte-true
              * FUN_800194f8-Analog — auf PSX zeigen die gepatchten TPAGE-Page-Bits auf
@@ -290,12 +348,12 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
         }
         if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
         re15_render_pc_bind_tim_slot(slot);
-        /* SPLATTER physics offset (byte-true xlat): a physics particle draws at anchor + xlat. */
         /* byte-true integer GTE RTPS (same path as the character mesh + shadows):
-         * view = (rot·world)>>12 + trans, no float. rot is int32 Q12, trans int32. */
-        int32_t wx = f->x + f->xlat_x;
-        int32_t wy = f->y + f->xlat_y;
-        int32_t wz = f->z + f->xlat_z;
+         * view = (rot·world)>>12 + trans, no float. rot is int32 Q12, trans int32.
+         * Quelle = die Weltlage wl (Runde 34 C2, slot+0x28 @0x8005350c; Rueckfall Anker + xlat). */
+        int32_t wx = wl[0];
+        int32_t wy = wl[1];
+        int32_t wz = wl[2];
         int32_t vx = (int32_t)(((int64_t)cam->rot[0]*wx + (int64_t)cam->rot[1]*wy + (int64_t)cam->rot[2]*wz) >> 12) + cam->trans[0];
         int32_t vy = (int32_t)(((int64_t)cam->rot[3]*wx + (int64_t)cam->rot[4]*wy + (int64_t)cam->rot[5]*wz) >> 12) + cam->trans[1];
         int32_t vz = (int32_t)(((int64_t)cam->rot[6]*wx + (int64_t)cam->rot[7]*wy + (int64_t)cam->rot[8]*wz) >> 12) + cam->trans[2];
@@ -372,21 +430,26 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
         }
         int sz = (int)vz; if (sz < 1) sz = 1;
         int64_t step16 = ((int64_t)S * (int64_t)f->scale16 * (int64_t)camf) / ((int64_t)sz << 4);
-        /* defW/defH: der Original-Draw FUN_800534c4 liest slot+0x04/+0x06 — im Port bisher
-         * fest 0x1000. Der FEUER-Oszillator (Routine 18 = FUN_80017c8c, 2026-08-29) schreibt
-         * die Felder jeden Frame; NUR fuer solche Slots (aktuelle Row-Routine 17/18) werden
-         * sie live gelesen. KONSERVATIV: die uebrigen Row-Fx (Blut/Muendung/Huelse) behalten
-         * 0x1000, bis deren Row-Bytes +0x04/+0x06 einzeln nachgeprueft sind (OPEN — eine
-         * falsche 0 dort machte die Sprites unsichtbar). */
-        int64_t defw = 0x1000, defh = 0x1000;
-        if (f->rows_base) {
-            uint16_t selA = (uint16_t)(f->row[0x00] | (f->row[0x01] << 8));
-            if (selA == 17 || selA == 18) {
-                defw = (int64_t)(uint16_t)(f->row[0x04] | (f->row[0x05] << 8));
-                defh = (int64_t)(uint16_t)(f->row[0x06] | (f->row[0x07] << 8));
-                if (defw <= 0) defw = 0x1000;
-                if (defh <= 0) defh = defw;
-            }
+        /* defW/defH: der Original-Draw FUN_800534c4 liest slot+0x04/+0x06 (`lhu v0,4(a1)`
+         * @0x800535d0, `lhu v0,6(a1)` @0x800535e0) — fuer JEDEN Platz, nicht nur fuer den
+         * Feuer-Oszillator (Routine 18 = FUN_80017c8c schreibt sie je Bild um). Runde 34 C2:
+         * die fruehere Beschraenkung auf Routine 17/18 ("KONSERVATIV ... OPEN, bis die Row-Bytes
+         * +0x04/+0x06 einzeln nachgeprueft sind") ist aufgehoben — nachgeprueft in CORE00.ESP
+         * (Dossier bau_c.md §C2): Blut sub 0/1 0x1000, Blut sub 1 Strom 3 / sub 2 0x0e10..0x1770
+         * (nach einer UNSICHTBAREN Halte-Zeile w/h 1, Flags 0x61), Muendung sub 3/6 0x1320,
+         * Huelse sub 0/7 Zeile 0 w/h 1 bei Flags 0x63 (sichtbar -> ein Quad von hoechstens 1 Pixel:
+         * die negative Zellen-Ecke rundet auf -1 ab, genau wie das Original `srl a0,a0,16` /
+         * `srl t1,t1,16` @0x800536e0-e8 mit s6 = SX<<16 @0x80053558), Granate/Feuerball/Rauch
+         * 0x1000. Plaetze ohne Row-VM: 0x1000 wie bisher (re15_pc_esp_defwh).
+         * Nachbesserung M1: dieselbe Regel gilt fuer RAUM-Bank-Effekte; wo deren Routine die
+         * Groesse erst schreibt (41/42 fuer Effekt 0x0b, 24/25 fuer 0x0d) und der Port sie nicht
+         * ausfuehrt (re15_esp.c `default: break`), bleibt die Anfangsgroesse der Zeile stehen —
+         * bau_c.md NACHBESSERUNG N1, INTEGRATIONSWUNSCH an Spur A. */
+        int64_t defw, defh;
+        {
+            int32_t dw = 0x1000, dh = 0x1000;
+            re15_pc_esp_defwh(f, &dw, &dh);
+            defw = dw; defh = dh;
         }
         int64_t w16 = defw * step16;                  /* w16 = defW * step16 (RAW mult, byte-true —
                                                        * the 16.16 result absorbs the Q12:
@@ -456,10 +519,12 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
             int y1 = sy + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
             if (x1 <= x0 || y1 <= y0) continue;
             int u0 = c.u, v0 = c.v, u1 = c.u + S - ute, v1 = c.v + S - vte;
+            /* clut_wort waehlt im Seiten-Slot die Palette (render_pc.c: Zeile - clut_base_y =
+             * Stapel-Index); 0 = erste Palette (Altweg der Ein-Paletten-Blaetter). */
             re15_render_textured_tri(x0, y0, u0, v0,  x1, y0, u1, v0,
-                                     x0, y1, u0, v1,  0, 0, z, 128, 128, 128);
+                                     x0, y1, u0, v1,  0, clut_wort, z, 128, 128, 128);
             re15_render_textured_tri(x1, y0, u1, v0,  x1, y1, u1, v1,
-                                     x0, y1, u0, v1,  0, 0, z, 128, 128, 128);
+                                     x0, y1, u0, v1,  0, clut_wort, z, 128, 128, 128);
         }
         if (abe) { re15_render_pc_set_tri_blend(0); re15_render_pc_set_tri_alpha(255); }
     }
@@ -3749,11 +3814,52 @@ re_title:;
                 fprintf(stderr, "[esp] %s NOT found\n", k_gfx[gi].file);
             }
         }
+        /* Runde 34 C2: die beiden GLOBAL-Effektseiten byte-true aus DATA/TEX.TIM (Datei-Offsets
+         * und Messbeleg: fx_plattform_pc.h), je mit den 16 Paletten 480..495. Der Zeichner nimmt
+         * sie, sobald Seite (TPAGE slot+0x30) und Palette (CLUT slot+0x32) eines GLOBAL-Platzes
+         * darin liegen; die Ein-Paletten-Blaetter oben bleiben der Rueckfall. */
+        {
+            static re15_pc_fx_seite_t s_fx_seite[2];
+            int tsz = 0;
+            uint8_t *tex = pc_read_shared("DATA/TEX.TIM", &tsz);
+            static const uint16_t k_seite_tp[2] = { 0x001e, 0x001f };
+            static const int k_seite_slot[2] = { RE15_TIM_SLOT_FX_SEITE_1E, RE15_TIM_SLOT_FX_SEITE_1F };
+            for (int si = 0; si < 2; si++) {
+                re15_tim_t st;
+                int rc = tex ? re15_pc_fx_seite_bauen(tex, (size_t)tsz, k_seite_tp[si], &s_fx_seite[si], &st)
+                             : -1;
+                if (rc == 0) {
+                    re15_render_pc_upload_tim_slot(&st, k_seite_slot[si]);
+                    fprintf(stderr, "[esp] Effektseite tpage 0x%04x (TEX.TIM) -> slot %d: 256x256 4bpp, "
+                                    "Paletten %d..%d\n", k_seite_tp[si], k_seite_slot[si],
+                            RE15_PC_FX_CLUT_Y0, RE15_PC_FX_CLUT_Y0 + RE15_PC_FX_CLUT_ZEILEN - 1);
+                } else {
+                    fprintf(stderr, "[esp] Effektseite tpage 0x%04x NICHT gebaut (rc=%d) -> Altweg\n",
+                            k_seite_tp[si], rc);
+                }
+            }
+            free(tex);
+        }
     }
 
     /* Phase 4.6.1: SDL audio device + SCD audio queue consumer. Silent
      * playback callback until 4.6.3 wires the ADPCM mixer in. */
     re15_audio_init();
+
+    /* Runde 34 C4: Haken der Granaten-Kette binden (fx_plattform_pc.c; Vertrag V1c/V1d/V2b/V3):
+     * re15_esp_se_hook (Routinen 29/31 -> FUN_80045024-Analogon), re15_esp_aufschlag_hook =
+     * re2fx_aufschlag (Zuender-7-Bild 0x0A/0x0B, E8), re2fx_se_hook (Op 48/49 -> ARMS11/ARMS10
+     * Satz 10, E9), re2fx_applier = re15_re2_gl_apply (Op 40, FUN_800470C0-Zwilling). Dazu die
+     * RE2-CORE00.ESP (8572 B, Ids 03 05 00 01 02 06 07 04) fuer die RE2-FX-Maschine registrieren —
+     * der Puffer lebt bis zum Prozessende (re2fx_register_core haelt ihn, kopiert nicht). */
+    re15_pc_r34_haken_binden();
+    {
+        static uint8_t *s_re2_core = NULL;
+        static int      s_re2_core_sz = 0;
+        if (!s_re2_core) s_re2_core = re15_pc_read_re2("CORE00.ESP", &s_re2_core_sz);
+        int rc = s_re2_core ? re2fx_register_core(s_re2_core, (size_t)s_re2_core_sz) : -9;
+        fprintf(stderr, "[re2fx] RE2 CORE00.ESP %d B -> re2fx_register_core rc=%d\n", s_re2_core_sz, rc);
+    }
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -5356,6 +5462,10 @@ re_title:;
         /* SCD VM ticks at the AH-round 30Hz (pre-BE: tuned timing). At
          * 30fps target SCD ticks every frame. At 60fps target (env override),
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
+        /* Runde 34 C1 (E10): der ESP-Takt wird nur im SCD-30-Hz-Zweig unten FREIGEGEBEN und laeuft
+         * hinter re15_game_step (Original @0x8001ce0c Spieler < @0x8001ce2c ESP-Tick); jede Kette
+         * beginnt ohne Freigabe (eingefrorene Bilder ticken nicht, wie bisher). */
+        re15_pc_fx_takt_setzen(0);
         if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_discard_frozen()) {
             /* "DISCARD IT?"-ABFRAGE SICHTBAR: die Welt steht. RE2 friert an derselben Stelle
              * ein — `sw v0,[0x800CFBDC]` @0x80051850 mit a3 = 0xff000000 (@0x80051838
@@ -5432,7 +5542,13 @@ re_title:;
              *                                  = WALK-Handler 0x80030af0), NPC RE15_PAUSE_AI
              *                                  (@0x8011c5c0); Beleg in actor_locomotion.c.
              * So gilt das Gate fuer PC- UND PSX-Loop und ist unit-testbar (test_text_freeze). */
-            re15_esp_fx_tick(re15_esp_room_bank());   /* Phase ESP-C: advance effect particles (30Hz) */
+            /* Runde 34 C1 (E10): hier stand der ESP-Tick (Phase ESP-C, 30 Hz) — VOR dem Spielschritt.
+             * Original-Hauptlauf FUN_8001c6e8 (selbst disassembliert): Gegner `jal 0x8001a50c`
+             * @0x8001ce04 -> Spieler/Waffen-FSM `jal 0x80031c44` @0x8001ce0c -> ESP-Tick
+             * `jal 0x80019e20` @0x8001ce2c -> Item-Modal `jal 0x8001db28` @0x8001ce34. An dieser
+             * Stelle wird der Takt jetzt nur freigegeben; re15_pc_fx_takt() laeuft direkt hinter
+             * re15_game_step (fx_plattform_pc.c), dahinter die RE2-FX-Pumpe. */
+            re15_pc_fx_takt_setzen(1);
             /* Walker steps once per 30 Hz SCD tick. (A 2026-06-01 disasm trace
              * suggested the PSX walker runs at 60 Hz → tried 2× stepping, but the
              * USER confirmed 2× FEELS TOO FAST vs PSX — so the PSX position-advance
@@ -7378,6 +7494,55 @@ re_title:;
                                                + ((pc_now % pc_hz) * 1000000ull) / pc_hz);
                 }
                 re15_game_step(&gctx);
+                /* Runde 34 C1 (E10): ESP-Tick + RE2-FX-Pumpe HINTER dem Spielschritt und VOR dem
+                 * Item-Modal — @0x8001ce0c (Spieler) < @0x8001ce2c (ESP) < @0x8001ce34 (Modal).
+                 * Laeuft nur, wenn der SCD-30-Hz-Zweig dieses Bilds den Takt freigegeben hat. */
+                /* Runde 34 C8 — MESS-HAKEN RE15_FORCE_AUFSCHLAG="<re2_art>@<bild>[,...]" (Muster
+                 * RE15_FORCE_SPLAT, kein Spielverhalten): re2fx_aufschlag 1500 vor Leon genau dort,
+                 * wo Routine 31 den Haken im echten Ablauf ruft — im ESP-Takt vor der RE2-Pumpe.
+                 * Nur in Bildern mit Takt (eingefrorene Bilder ticken nicht). */
+                if (re15_pc_fx_takt_frei()) {
+                    static const char *s_fa = NULL; static int s_fa_init = 0;
+                    if (!s_fa_init) { s_fa_init = 1; s_fa = getenv("RE15_FORCE_AUFSCHLAG"); }
+                    int fa_art = 0; int32_t fa_q[3];
+                    const re15_actor_t *fa_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                    if (s_fa && re15_pc_force_aufschlag_eintrag(s_fa, g_engine.frame_count,
+                                                                fa_pl->x, fa_pl->y, fa_pl->z,
+                                                                (int16_t)fa_pl->rot_y, &fa_art, fa_q)) {
+                        fprintf(stderr, "[harness] RE15_FORCE_AUFSCHLAG F%u art=%d q=(%d,%d,%d) gier=%d\n",
+                                (unsigned)g_engine.frame_count, fa_art, fa_q[0], fa_q[1], fa_q[2],
+                                (int)fa_pl->rot_y);
+                        {   extern FILE *re15_waffen_log(void);
+                            FILE *wl = re15_waffen_log();
+                            if (wl) fprintf(wl, "F%u AUFSCHLAG-HARNESS art=%d q=(%d,%d,%d) gier=%d\n",
+                                            (unsigned)g_engine.frame_count, fa_art, fa_q[0], fa_q[1],
+                                            fa_q[2], (int)fa_pl->rot_y); }
+                        re2fx_aufschlag(fa_art, fa_q, (int16_t)fa_pl->rot_y);
+                    }
+                }
+                {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein
+                     * Spielverhalten): setzt den Latch 0x800b5358 in genau diesen Spielbildern, wie
+                     * es Routine 31 (@0x8001857c) bzw. Routine 9 (@0x80017694) im ESP-Tick tun —
+                     * damit ist der Leser (C3) ohne Spur A messbar. Nur in Bildern mit Takt. */
+                    static const char *s_fl = NULL; static int s_fl_init = 0;
+                    if (!s_fl_init) { s_fl_init = 1; s_fl = getenv("RE15_FORCE_LICHT"); }
+                    if (s_fl && re15_pc_fx_takt_frei()) {
+                        const char *p = s_fl;
+                        while (*p) {
+                            char *e = NULL;
+                            long b = strtol(p, &e, 10);
+                            if (e == p) break;
+                            if (b == (long)g_engine.frame_count) {
+                                g_re15_licht_latch = 1;
+                                fprintf(stderr, "[harness] RE15_FORCE_LICHT F%u -> Latch 1\n",
+                                        (unsigned)g_engine.frame_count);
+                            }
+                            p = (*e == ',') ? e + 1 : e;
+                            if (!*e) break;
+                        }
+                    }
+                }
+                re15_pc_fx_takt();
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
                  * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
                  * ... -> Modal-FSM @0x8001ce34 `jal 0x8001db28`; selbst nachdisassembliert
@@ -7752,7 +7917,10 @@ re_title:;
                         if (nbuf && nsz > 0) {
                             rdt_buf  = (uint8_t *)nbuf;
                             rdt_size = nsz;
-                            pc_load_room_esp(rdt_buf, rdt_size, dest_room);
+                            /* Runde 34 Nachbesserung M1: die Effekt-Bank ist hier schon geparst —
+                             * re15_pc_room_esp_laden() lief im Teardown VOR dem Eintrittstakt des
+                             * SCD (Original @0x8003996c vor @0x80039a00); vorher stand hier
+                             * pc_load_room_esp(rdt_buf, rdt_size, dest_room), also DANACH. */
                         }
                     }
                     /* BYTE-TRUE DOOR TRANSITION FADE-IN (RE1.5 transition FSM FUN_8001c958 state-1,
@@ -8537,6 +8705,26 @@ re_title:;
                 }
             }
 
+            /* Runde 34 C3 (E11): EIN-BILD-LICHT des Latch 0x800b5358 (Granaten-Explosion Routine 31,
+             * Muendungsknall Routine 9). Original: Leser `lbu v0,21336(v0)` @0x8001ce60 hinter dem
+             * ESP-Tick, stellt Licht 2 des aktiven Cuts um (Typ 0, Farbe max(.,D2/8C/50), Lage 1200
+             * vor Leon auf Hoehe y-800, Helligkeit 0x1770; @0x8001cef8-0x8001d084), DANN Spieler
+             * (`jal 0x8001e8c8` @0x8001d09c) und Figuren-Schleife (@0x8001d0e8-164), dann Satz
+             * zurueck + Latch := 0 (@0x8001d1ac/@0x8001d1b4) — VOR `jal 0x80039ca0` @0x8001d1b8 und den
+             * Props (@0x8001d1c0). Belege je
+             * Instruktion: fx_plattform_pc.h. Das Zurueckstellen steht hinter der NPC-Schleife. */
+            if (re15_pc_licht_latch_anwenden(&g_re15_room_lights, g_re15_active_cut,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].y,
+                                             g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                                             (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y)) {
+                const re15_light_cut_t *lc = &g_re15_room_lights.cuts[g_re15_active_cut];
+                fprintf(stderr, "[licht] F%u Latch -> Cut %d Licht2 Typ %u Farbe (%u,%u,%u) Lage (%d,%d,%d) "
+                                "Hell %u\n", (unsigned)g_engine.frame_count, g_re15_active_cut,
+                        (unsigned)lc->type_flags[2], (unsigned)lc->colors[2][0], (unsigned)lc->colors[2][1],
+                        (unsigned)lc->colors[2][2], (int)lc->positions[2][0], (int)lc->positions[2][1],
+                        (int)lc->positions[2][2], (unsigned)lc->brightness[2]);
+            }
             /* CANONICAL per-bone NCCT lighting (2026-06-02, mirrors the PSX-native
              * mesh_psx.c + FUN_8001e9ec). Build the WORLD-space context ONCE here
              * (actor_rot = NULL → ctx->L stays world-space); the per-bone fold
@@ -9714,8 +9902,28 @@ re_title:;
                 uint8_t  gore_draw[RE15_EMD_MAX_BONES];
                 uint32_t gore_tint[RE15_EMD_MAX_BONES];
                 uint8_t  gore_mesh[RE15_EMD_MAX_BONES];
+                /* Runde 34 Nachbesserung (Gegenpruefung H4): re15_re2z_gore_resolve fuellt nur
+                 * min(npc_bones, 16) Eintraege (Modellblock 16 Records), die Zeichenschleife liest
+                 * gore_draw/gore_tint/gore_mesh aber bis npc_zeichen_n (<= RE15_EMD_MAX_BONES) —
+                 * dahinter stand uninitialisierter Stapel. Vorbelegung = genau die Werte, die der
+                 * Resolver selbst einem Slot ohne RE2-Part gibt (enemy_ai_re2_zombie.c
+                 * re15_re2z_gore_resolve: zeichnen, Tinte neutral, eigenes Mesh); neutral 0x808080 =
+                 * RE2 Part-Init `lui v0,0x80 / ori v0,v0,0x8080` @0x80028450-54, `sw v0,-36(s1)`
+                 * @0x80028468. */
+                for (int gi = 0; gi < RE15_EMD_MAX_BONES; gi++) {
+                    gore_draw[gi] = 1u; gore_tint[gi] = 0x00808080u; gore_mesh[gi] = (uint8_t)gi;
+                }
                 int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
                                                      gore_draw, gore_tint, gore_mesh);
+                /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
+                 * ueber denselben Part-Zeichner (Entity-Schleife `jal 0x80027160` @0x8002689c,
+                 * Farbwort `lw fp,112(s1)` @0x80027900 -> RGBC @0x80027c2c -> NCCT). Fuer RE2-KI-
+                 * Aktoren OHNE Zombie-Gore-Bruecke (Hund, Spinne, ...: V4-Tinten der Spur B) liefert
+                 * re15_pc_re2_part_tint die Tinte je Part; neutrale/ungesetzte Parts = 0x808080 =
+                 * Identitaet (prim * 0x80 >> 7), der Renderpfad bleibt dann bitgleich. */
+                int tint_on = gore_on;
+                if (!gore_on)
+                    tint_on = re15_pc_re2_part_tint(npc, npc_bones, gore_tint, RE15_EMD_MAX_BONES);
                 /* NCCT-Modulation des Farbworts +0x70: das Wort geht als CVECTOR ins
                  * GTE-RGB-Register (`sw a2,0x10(sp)` @0x80027C08 — LOW BYTE = R, Byte 3
                  * ist der GPU-Primitiv-Code `sb a3,0x13(sp)` @0x80027C18 — dann
@@ -9726,7 +9934,7 @@ re_title:;
                  * Vertexfarben des Ports stehen im selben PSX-Primitiv-Raum
                  * (render_pc.c psx_prim_to_sdl_vert: "final = (tex x prim) / 0x80"),
                  * also ist ein Modulationsschritt genau `prim * tint / 0x80`. */
-#define RE2_GORE_TINT(r_, g_, b_) do { if (gore_on) {                                  \
+#define RE2_GORE_TINT(r_, g_, b_) do { if (tint_on && nbi < RE15_EMD_MAX_BONES) {      \
         uint32_t _t = gore_tint[nbi];                                                  \
         int _r = ((int)(r_) * (int)( _t         & 0xFFu)) >> 7;                        \
         int _g = ((int)(g_) * (int)((_t >>  8)  & 0xFFu)) >> 7;                        \
@@ -10207,6 +10415,12 @@ re_title:;
 #undef RE2_GORE_TINT
             }
 
+            /* Runde 34 C3: Figuren (Spieler + Gegner/NPC) sind gezeichnet -> Lichtsatz zurueck und
+             * Latch := 0 (`jal 0x8004ee38` @0x8001d1ac, `sb zero,0(s0)` @0x8001d1b4) — VOR den Props,
+             * die im Original erst danach laufen (`jal 0x80039ca0` @0x8001d1b8 Tabelle 0x800af33c,
+             * dann `jal 0x8002c18c` @0x8001d1c0). */
+            re15_pc_licht_latch_zurueck(&g_re15_room_lights);
+
             /* I-round disable (2026-05-24): NPC name-label overlay
              * removed — was drawing "Elliot(x,z)" text on top of him. */
 
@@ -10513,12 +10727,29 @@ re_title:;
              * projizierten die Effekte im Anforderungsbild schon mit dem neuen H (Runde 30,
              * cut-blitz). */
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
+            /* Runde 34 C4: dieselbe Ansicht fuer den RE2-FX-Zeichner (Vertrag V3: re2fx_pc_draw(void))
+             * ablegen — fx_plattform_pc.h re15_pc_fx_kamera(). */
+            re15_pc_fx_kamera_setzen(&cam_view, cx, cy, cam_has_region, cam_region_xs, cam_region_zs,
+                                     pc_fx_camf());
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
+            /* Runde 34 C4: die RE2-FX-Plaetze (Saeure-/Brand-Aufschlag, Bodenflammen) im selben
+             * Effekt-Zeichenpass, hinter den RE1.5-Partikeln in die Tiefenliste (Spur D, re2fx_pc.c). */
+            re2fx_pc_draw();
+            re15_pc_fx_kamera_ungueltig();
             /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
             s_cs_view = cam_view; s_cs_view_ok = 1;
             s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;
         }
+        /* Runde 34 C1: Rueckfall fuer ein Bild ohne Spielschritt (Spielermodell nicht geladen,
+         * md1_ok == 0) — der freigegebene ESP-Takt laeuft dann hier statt gar nicht (vorher hing er
+         * nicht am Modell). Im Normalfall hat re15_pc_fx_takt() hinter re15_game_step die
+         * Freigabe schon verbraucht, dann ist dieser Aufruf wirkungslos. */
+        re15_pc_fx_takt();
+        /* Runde 34 C3: der Latch wird im Original UNABHAENGIG vom Zeichnen geloescht
+         * (@0x8001d16c-b4 nur an "Latch != 0" gebunden). Im Normalfall hat die Figuren-Schleife
+         * oben schon zurueckgestellt -> wirkungslos; ohne Zeichenblock (md1_ok == 0) faellt er hier. */
+        re15_pc_licht_latch_zurueck(&g_re15_room_lights);
 
         /* INVENTORY on top (Phase 8.26 / wave 1): the screen is drawn into the framebuffer, but
          * end_frame composites the queued 3D meshes, character-shadow blobs AND the room PRI

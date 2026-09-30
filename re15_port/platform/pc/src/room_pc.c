@@ -14,6 +14,7 @@
 #include "re15_msg.h"     /* re15_msg_clear_room_block  — Teardown (3) */
 #include "re15_light.h"   /* g_re15_room_lights_ok      — Teardown (2) */
 #include "re15_esp.h"     /* re15_esp_fx_reset / _set_room_bank — Teardown (4) */
+#include "re2_fx.h"       /* re2fx_reset — Teardown (4), Runde 34 C4 */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 /* Overdraw-Layer des PC-Renderers (definiert in render_pc.c) — Teardown (1). */
@@ -129,6 +130,20 @@ void re15_room_reset_render_pc(void)
      * Sektion des neuen Raumes geparst. */
     re15_esp_fx_reset();
     re15_esp_set_room_bank(NULL);
+    /* Runde 34 Nachbesserung M1: DANN die Sektion des NEUEN Raums parsen + TIMs installieren —
+     * dieselbe Folge wie FUN_80019354 (Parse `jal 0x8001945c` @0x80019428, TIM-Installer
+     * @0x8001943c-48) und VOR der SCD-Raum-Init (Original @0x80039a00, Port scd_room_reenter in
+     * re15_room_apply_pending). load_rdt hat die neuen Bytes schon (re15_room_pc_bytes). Vorher
+     * lief der Parse erst nach apply_pending -> Eintritts-Sce_espr_on gegen eine leere Bank. */
+    {
+        extern void re15_pc_room_esp_laden(void);   /* platform/pc/main.c */
+        re15_pc_room_esp_laden();
+    }
+    /* Runde 34 C4: der RE2-FX-Pool (Saeure/Brand-Aufschlag, Bodenflammen) teilt im Port die
+     * Lebensdauer des RE1.5-ESP-Pools — PORT-ZUORDNUNG: RE1.5 kennt keinen zweiten Pool, der
+     * Raumwechsel nullt dort die 96 ESP-Plaetze (@0x80019378); eine liegende Flamme darf den
+     * Raumwechsel ebenso wenig ueberleben wie eine liegende Granate (BAUPLAN §1.1 RAUMWECHSEL). */
+    re2fx_reset();
 
     /* (5) PROP-TEXTUR-SLOTS 4..9 ungueltig machen. pc_load_room_prop_set laedt Slot 4+op nur fuer
      * die Props, die der neue Raum HAT; ein Raum mit weniger Props behielt die Textur des Vorraums
