@@ -6759,18 +6759,13 @@ static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
  *      bleibt INTAKT. Schienbein + Fuss fliegen trotzdem weg — genau das Ergebnis, das der
  *      Nutzer im Modus "RE2 AI" (= RE1.5-Modelle!) als korrekt bestaetigt hat.
  * ========================================================================================== */
-void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_src, unsigned row_id)
+/* --- der LAZY-INIT der RE2-Zerleger-Felder (beide Bruecken-Einstiege) ------------------------
+ * Im RE2-Modus macht das re2z_init (Zustand 0, Tabelle @0x8010C830). Im RE1.5-Modus laeuft
+ * dieser INIT nie, also seedet der erste Treffer. Bit 0 von part_flags[0] ist der Marker:
+ * ein frisch gespawnter Aktor ist genullt (re15_actor_init/Spawn-memset), also feuert der
+ * Seed nach JEDEM Respawn genau einmal. */
+static void re2z_import_seed(re15_actor_t *e)
 {
-    if (!e || !pl) return;
-    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
-    if (e->state == 3) return;                             /* toedlicher Treffer -> DEATH-Wurzel,
-                                                            * der Zerleger sitzt im HURT (s.o. c) */
-
-    /* --- der LAZY-INIT der RE2-Zerleger-Felder ------------------------------------------------
-     * Im RE2-Modus macht das re2z_init (Zustand 0, Tabelle @0x8010C830). Im RE1.5-Modus laeuft
-     * dieser INIT nie, also seedet der erste Treffer. Bit 0 von part_flags[0] ist der Marker:
-     * ein frisch gespawnter Aktor ist genullt (re15_actor_init/Spawn-memset), also feuert der
-     * Seed nach JEDEM Respawn genau einmal. */
     if (!(e->re2z_part_flags[0] & 1u)) {
         re15_re2z_part_reset(e);                           /* Modellblock (PORT-MAPPING) */
         e->re2z_pool151 = e->re2z_pool152 = e->re2z_pool153 = 13;  /* `addiu v0,zero,13`
@@ -6781,6 +6776,17 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
         e->re2z_hits1d2   = 0;                             /* +0x1D2 (Applier stempelt gleich)   */
         e->re2z_gaitrow   = 0;
     }
+}
+
+static void re2z_import_gore_dispatch(re15_actor_t *e, unsigned row);
+
+void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_src, unsigned row_id)
+{
+    if (!e || !pl) return;
+    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
+    if (e->state == 3) return;                             /* toedlicher Treffer -> DEATH-Wurzel,
+                                                            * der Zerleger sitzt im HURT (s.o. c) */
+    re2z_import_seed(e);
 
     /* --- der Applier-Stempel (re15_re2_stamp_hit-Zwilling, dieselben zwei Belege) ------------ */
     e->re2z_hits1d2 = 1u;                                  /* Basis-Zone 1 @0x80047294-98 +
@@ -6793,6 +6799,54 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
     /* --- (2) DER ZERLEGER @0x80105288-3D8 ---------------------------------------------------- */
     re2z_leg_gore(e);
 
+    /* --- (3) */
+    re2z_import_gore_dispatch(e, row);
+}
+
+/* ============================================================================================
+ * ⛔ RUNDE 34 NACHBESSERUNG M1 — DIE BRUECKE FUER EINEN TREFFER DES RE2-GL-APPLIERS
+ *    (Bodenfeuer Op 40 an einem RE1.5-KI-Import-Zombie, O-VB4; Aufrufer re15_damage.c
+ *    re15_enemy_take_damage_at mit dem Hitcode des Appliers)
+ * --------------------------------------------------------------------------------------------
+ * Im RE2-Modus stempelt FUN_800470C0 selbst (Richtung aus dem Treffpunkt P, Spalte Zone + 3K,
+ * KEINE Zonen-Reserve — Store-Liste @0x80047184-0x8004749c ohne Offset 337..339), und re2z_hurt
+ * laesst den Hitscan-Stempel dann aus (Wache re2_gl_stamp). Die fruehere Bruecke fuhr fuer den
+ * GL-Treffer den HITSCAN-Stempel (re2z_row_from_atktype[5] = 9, Reserve-Abzug @0x80041954-88)
+ * und riss nach sieben Flammen ein Bein ab (Gegenpruefung Spur B, mess3). Hier dieselbe Reihen-
+ * folge wie im RE2-Modus fuer einen GL-Treffer:
+ *   (1') GL-Stempel: +0x1D2 = spalte (@0x80047330); +0x1D0 &= 0xFF00 (`andi v1,v1,0xff00`
+ *        @0x80047178 / `sh v1,464(s0)` @0x80047184), |= 1 (`ori v0,v0,0x1` @0x80047200),
+ *        Richtungsbits aus a = FUN_800154AC(P -> Ziel) - (s16)+0x76 (`jal 0x800154ac` /
+ *        `lh v1,118(s1)` @0x80047350-68; Tests @0x8004736c-3d8); KEINE Reserve.
+ *   (2)  der Zerleger @0x80105288-3D8 (sein Reserve-Tor `(s8)+0x152 < 0` oeffnet nur, wenn
+ *        Schuesse die Reserve vorher geleert haben — wie im RE2-Flavor),
+ *   (3)  der Gore-Zweig des Dispatch mit der Hitcode-Zeile.
+ * `zeile` = Hitcode & 0xFFFF (Op 40: 10), `spalte` = Zone + 3K (Op 40: K = 2). */
+void re15_re15_re2z_gore_hit_gl(re15_actor_t *e, const int32_t p[3], unsigned zeile, unsigned spalte)
+{
+    if (!e || !p) return;
+    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
+    if (e->state == 3) return;                             /* toedlich -> DEATH (s. Bruecke oben) */
+    re2z_import_seed(e);
+
+    e->re2z_hits1d2 = (uint8_t)spalte;                     /* sb v0,466(s1) @0x80047330 */
+    {   /* FUN_800154AC: alle vier Argumente s16 (`sll 16 / sra 16` @0x800154b4-d8), Peilung P -> Ziel,
+         * 0 = +X; Port-Zwilling re15_atan2_q12(dz,dx) - 1024 (derselbe wie re2z_stamp_hit_row). */
+        int32_t dx = (int32_t)(int16_t)e->x - (int32_t)(int16_t)p[0];
+        int32_t dz = (int32_t)(int16_t)e->z - (int32_t)(int16_t)p[2];
+        int a = ((((int)re15_atan2_q12(dz, dx) - 1024) & 0xfff) - (int)e->rot_y);
+        uint16_t dir = (uint16_t)((e->re2z_hitdir1d0 & 0xFF00u) | 1u);   /* @0x80047178-84, @0x80047200 */
+        if (((a + 1024) & 0xfff) < 2048) dir |= 0x20u;                   /* @0x8004736c-8c */
+        if (((a + 1536) & 0xfff) < 1024) dir |= 0x40u;                   /* @0x80047390-b0 */
+        if (((a -  512) & 0xfff) < 1024) dir |= 0x80u;                   /* @0x800473b4-d8 */
+        e->re2z_hitdir1d0 = dir;
+    }
+    re2z_leg_gore(e);                                      /* (2) @0x80105288-3D8 */
+    re2z_import_gore_dispatch(e, zeile);                   /* (3) */
+}
+
+static void re2z_import_gore_dispatch(re15_actor_t *e, unsigned row)
+{
     /* --- (3) der Dispatch-Zweig, der Gore erzeugt: Handler 0x80107438 (Knockdown) reisst in
      *     seiner Phase 0 die ARME ab (@0x80107514-708, `beq v1,12` @0x8010750C schliesst nur
      *     Zeile 12 aus). Die Bruecke fragt DIESELBE Tabelle @0x8010C940 wie re2z_hurt, damit

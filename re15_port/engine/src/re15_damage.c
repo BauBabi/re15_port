@@ -36,6 +36,14 @@
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
+/* Runde 34 NACHBESSERUNG M1 — ein Treffer des RE2-GL-Appliers FUN_800470C0 an einem RE1.5-KI-
+ * Kandidaten (O-VB4): Zeile (Hitcode & 0xFFFF, `andi v1,s5,0xffff` @0x80047214), Klammer
+ * (`srl s6,s5,28` @0x80047114) und die Spalte Zone + 3K, die der Applier einem RE2-Typ stempeln
+ * wuerde (@0x80047294-330). NULL = kein GL-Treffer (Resolver FUN_80012d60, Direktaufruf). */
+typedef struct { unsigned zeile, k, spalte; } re2gl_treffer_t;
+/* Die GL-Records (Zeilen 9/10/11) eines Typs, UNABHAENGIG vom KI-Besitz (Definition am Dateiende
+ * bei den Records): Zeiger *(0x800A6A88 + Typ*4). NULL = kein RE2-Record fuer den Typ. */
+static const uint32_t *re2_gl_rec_typ(uint8_t type);
 
 /* fix_1d2_spec — Definition vor take_damage. `row_src`/`row_id`: welcher Port-Erzeuger die
  * RE2-Trefferreaktions-ZEILE (+0x5) speist (0 = RE1.5-Waffen-Id, 1 = RE1.5-Angriffstyp). */
@@ -2965,12 +2973,21 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
  * RUNDE 34: `p` = der Angriffspunkt des Resolver-Aufrufs (FUN_80012d60 a1, s5 — z.B. der
  * Explosionspunkt der Granate @0x80018594-bc) oder NULL, wenn der Aufrufer keinen hat
  * (Direktaufrufe aus Sonden/Tests). */
-static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p);
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
+                                     const re2gl_treffer_t *gl);
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
 {
-    return re15_enemy_take_damage_at(e, attack_type, NULL);
+    return re15_enemy_take_damage_at(e, attack_type, NULL, NULL);
 }
-static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p)
+/* E4-Bedingung: steht der Typ unter dem RE2-Schadens-/HP-Modell ("HP UND SCHADEN GEHEN NUR
+ * ZUSAMMEN", Block ueber re15_re15_import_owns)? 0x26 NACH HERKUNFT (s. unten). */
+static int re15_e4_modell(const re15_actor_t *e)
+{
+    return (e->type != 0x26u || re15_re2spider_baby_owns(e)) &&
+           (re15_re2_model_owns(e->type) || re15_re15_import_owns(e->type));
+}
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
+                                     const re2gl_treffer_t *gl)
 {
     /* RE2-Adult/Baby-Spinne (Runde 7, spinne-todeszyklus.md 5.2): HP<0 = kein
      * gueltiges Ziel (@0x80047148-50) - auch der Messer-/Hitbox-Pfad laeuft im
@@ -2988,19 +3005,34 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
     /* ⛔ RUNDE 34 B3 / BAUPLAN E4 — "HP UND SCHADEN GEHEN NUR ZUSAMMEN" (Block ueber
      * re15_re15_import_owns). Fuer die Typen unter dem RE2-Schadens-/HP-Modell (RE2-KI mit
      * Modell-Schalter bzw. RE1.5-KI-Zombie mit Import-Option) ist die RE1.5-Flachzahl
-     * DAT_8006f418[Art] (1000 fuer Art 2/3/4 @0x8006f41c/1e/20, 50 fuer Art 5 @0x8006f422) die
-     * verbotene Haelften-Mischung (RE2-HP 50..250 gegen RE1.5-1000). Sie bekommen die
-     * BESTEHENDE Modell-Auswahl der Waffen-Id DAT_8006f430[Art] (@0x8006f432.. = 9/10/11/14):
+     * DAT_8006f418[Art] (1000 fuer Art 2/3/4 @0x8006f41c/1e/20) die verbotene Haelften-Mischung
+     * (RE2-HP 50..250 gegen RE1.5-1000). Sie bekommen die BESTEHENDE Modell-Auswahl der
+     * Waffen-Id DAT_8006f430[Art] (@0x8006f432..34 = 9/10/11):
      * re15_enemy_dmg_row(e)[waffe] = Klammer 0 der RE2-Zeile (Zombie Zeile 9 @0x800A41CC = 200,
      * Zeile 11 @0x800A41F4 = 200, Zeile 10 @0x800A41E0 = 200; Belege an den Tabellen oben).
-     * Art 0/1 (Gegnerangriffe) bleiben unberuehrt. */
+     * Art 0/1 (Gegnerangriffe) bleiben unberuehrt.
+     * ⛔ NUR ART 2..4 (NACHBESSERUNG M1): BAUPLAN E4 nennt genau die drei Granaten; die fruehere
+     * Ausdehnung auf `type < 11` gab Art 5 (Bodenfeuer, O-VB4) die Waffen-Id 14 = RE2-FLAMMENWERFER-
+     * Zeile 16 (s_re2_wpn_dmg_zombie[14] = 15 @0x800A4258) — weder O-VB4 (50) noch RE2 (5). */
     /* 0x26 NACH HERKUNFT (wie re15_re2_stamp_hit): die sieben RDT-Feuer-Emitter von ROOM1090
      * (Typ 0x26, Wurzel 0x80116288) sind RE1.5-Typen und behalten 1000 (BAUPLAN 1.6 "Feuer 0x26");
      * nur echte RE2-Babys (re15_re2spider_baby_owns) stehen unter dem RE2-Modell. Vorher bekam
      * der Emitter im RE2-Flavor die Baby-Zeile = 0 Schaden (Zensus Runde 34 B12). */
-    if (type >= 2u && type < 11u && (e->type != 0x26u || re15_re2spider_baby_owns(e)) &&
-        (re15_re2_model_owns(e->type) || re15_re15_import_owns(e->type)))
+    if (type >= 2u && type <= 4u && re15_e4_modell(e))
         dmg = (int16_t)re15_enemy_dmg_row(e)[re15_react_table[type]];
+    /* ⛔ NACHBESSERUNG M1 — das Bodenfeuer (RE2-GL-Applier, O-VB4 Art 5) an einem RE1.5-KI-Typ
+     * UNTER DEM RE2-MODELL (Import-Zombies im RE1.5-Flavor = Vorgabe): RE2-HP gegen die RE1.5-Zahl
+     * 50 (@0x8006f422) waere dieselbe verbotene Haelften-Mischung wie oben. Er bekommt deshalb den
+     * RE2-Record-Wert DESSELBEN Hitcodes — genau den Schaden, den ein RE2-KI-Gegner desselben Typs
+     * fuer dieselbe Flamme erleidet: HP -= (w0 >> 10*K) & 0x3FF (`srlv` @0x80047254 /
+     * `andi v1,v1,0x3ff` @0x8004725c), Record *(0x800A6A88 + Typ*4) + (Zeile-1)*20
+     * (`lw a1,27272(at)` @0x8004722c). Op 40 (0x2002000A) am Zombie: Z10 w0 0x0050C8C8 @0x800A41E0
+     * -> K2 = 5. Ohne RE2-Modell (Import AUS, Made, Kakerlake, ...) bleibt O-VB4 = 50. */
+    if (gl && re15_e4_modell(e)) {
+        const uint32_t *rec = re2_gl_rec_typ(e->type);
+        if (rec && gl->zeile >= 9u && gl->zeile <= 11u && gl->k < 3u)
+            dmg = (int16_t)((rec[(gl->zeile - 9u) * 2u] >> (10u * gl->k)) & 0x3FFu);
+    }
     /* ⛔ RUNDE 34 B9 / BAUPLAN E16 — G5 im Endkampf (ROOM5090/5091, RE2-Modul em36, RE2-HP 600
      * @0x801003fc) bekommt fuer die Granaten die RE2-Records, Klammer 0: Zeile 9 = 80
      * (w0 0x05014050 @0x800A5F7C), Zeile 11 = 70 (0x00A11846 @0x800A5FA4), Zeile 10 = 70
@@ -3028,8 +3060,15 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * Peilungsquelle des +0x1D0-Stempels ist der TREFFPUNKT: beim Spieler-Angriff ohne Punkt
      * der Spieler, beim Resolver-Aufruf mit Punkt (Explosion, Runde 34 B3) der Punkt P selbst
      * — RE2 peilt `jal 0x800154ac` mit a0/a1 = P (`lw a0,0(s4)` / `lw a1,8(s4)` @0x80047350-54),
-     * RE1.5 nimmt fuer Bit 0x80 ebenfalls P (`lw a1,0(s5)` / `lw a2,8(s5)` @0x80012f8c-90). */
-    if (p) {
+     * RE1.5 nimmt fuer Bit 0x80 ebenfalls P (`lw a1,0(s5)` / `lw a2,8(s5)` @0x80012f8c-90).
+     * ⛔ NACHBESSERUNG M1: ein GL-Treffer (Bodenfeuer, O-VB4) laeuft als GL-STEMPEL durch die Bruecke
+     * — Zeile = Hitcode-Zeile, Spalte = Zone + 3K, Richtung aus P, KEIN Reserve-Abzug (FUN_800470C0
+     * schreibt +0x151..+0x153 nicht: Store-Liste @0x80047184-0x8004749c ohne Offset 337..339). Vorher
+     * lief er ueber re2z_row_from_atktype[5] = 9 (GL-EXPLOSIV) mit dem Hitscan-Reserve-Abzug
+     * (@0x80041954-88): nach 7 Flammen riss der Zerleger ein Bein ab (Gegenpruefung mess3). */
+    if (gl && p) {
+        re15_re15_re2z_gore_hit_gl(e, p, gl->zeile, gl->spalte);
+    } else if (p) {
         static re15_actor_t s_quelle;                              /* nur x/z werden gelesen */
         memset(&s_quelle, 0, sizeof s_quelle);
         s_quelle.x = p[0]; s_quelle.y = p[1]; s_quelle.z = p[2];
@@ -3409,7 +3448,8 @@ int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
  * (gezaehlt, `addiu s4,s4,1` @0x80013024 — auch der Riegel-Fall "Bit 0 schon gesetzt").
  * Runde 34: ausgelagert, weil der RE2-GL-Applier (re15_re2_gl_apply) RE1.5-KI-Kandidaten ueber
  * GENAU diesen Zweig schickt (O-VB4, Art 5). */
-static int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3])
+static int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3],
+                                     const re2gl_treffer_t *gl)
 {
     /* GATE B (@0x80012f54-60, RUNDE 34 B1 — war hier als "Tod/Despawn-Flags, inert"
      * AUSGELASSEN; das war falsch gelesen):
@@ -3434,8 +3474,9 @@ static int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const
 
     /* Enemy branch (@80012fb4-3034): applies the hit once per window (bit0 guard),
      * else marks the re-hit bit0x2. RUNDE 34: der Angriffspunkt P geht mit — der
-     * RE2-Stempel (E6) braucht ihn fuer Zone (+0x1D2) und Richtung (+0x1D0). */
-    re15_enemy_take_damage_at(e, attack_type, p);
+     * RE2-Stempel (E6) braucht ihn fuer Zone (+0x1D2) und Richtung (+0x1D0). `gl` != NULL nur aus
+     * dem RE2-GL-Applier (O-VB4, NACHBESSERUNG M1). */
+    re15_enemy_take_damage_at(e, attack_type, p, gl);
     return 1;
 }
 
@@ -3500,7 +3541,7 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
 
         {
             const int32_t p[3] = { atk->x, atk->y, atk->z };
-            if (re15_resolver_gegnerzweig(e, attack_type, p) < 0) continue;   /* Gate B */
+            if (re15_resolver_gegnerzweig(e, attack_type, p, NULL) < 0) continue;   /* Gate B */
         }
         hits++;                                                /* cVar9 += 1 @80012fec */
     }
@@ -3922,6 +3963,22 @@ static const uint32_t s_re2gl_rec_arm[6]      = {   /* RE2 0x2D (Port 0x1A) -> 0
     0x00a0f03cu, 0x078f1e0au,     /* Z10 @0x800A5234   60/60/10 */
     0x00a0f03cu, 0x078f1e0au };   /* Z11 @0x800A5248   60/60/10 */
 
+/* NACHBESSERUNG M1 — die Records eines Typs OHNE Besitz-Test (die Zeiger oben, *(0x800A6A88 +
+ * Typ*4)), fuer den RE2-Modell-Schaden eines RE1.5-KI-Kandidaten des Appliers. Nur die Typen, die
+ * re15_enemy_dmg_row unter dem RE2-Modell fuehrt (Zombie-Familie, 0x16, Hund, Kraehe, Spinne/Baby);
+ * Arm/G5 sind RE2-Modul-Typen ohne RE1.5-Gegenstueck unter dem Modell. */
+static const uint32_t *re2_gl_rec_typ(uint8_t type)
+{
+    switch (type) {
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x18: return s_re2gl_rec_zombie;
+    case 0x16:                                             return s_re2gl_rec_zombie16;
+    case 0x20:                                             return s_re2gl_rec_dog;
+    case 0x21:                                             return s_re2gl_rec_crow;
+    case 0x25: case 0x26:                                  return s_re2gl_rec_spider;
+    default:                                               return NULL;
+    }
+}
+
 /* ---- Je-Typ-Eingaben des Appliers, die der Port nicht ueberall als Feld fuehrt ------------ *
  * r1ee = +0x1EE (Zielradius), o94/o96 = +0x94/+0x96 (Mittelpunkt-Versatz fuer FUN_80036E30),
  * b98/h9e = +0x98/+0x9E (Band; wo der Port re2_hit_box_set fuehrt, gilt das Feld), kopf =
@@ -4120,9 +4177,11 @@ static void re2_gl_stempel(re15_actor_t *e, const re2_gl_typ_t *t, const int32_t
 /* B3 / E6 — der Explosionstreffer (RE1.5-Resolver, Art >= 2 mit Punkt P) an einem RE2-KI-Typ.
  * Schaden, +0x4 und +0x93 hat der RE1.5-Gegnerzweig schon geschrieben (E4/E5). Hier der
  * RE2-Stempel: Zeile = re2z_row_from_weapon[DAT_8006f430[Art]] (Art 2 -> 9, 3 -> 11, 4 -> 10;
- * @0x8006f432..34 = 09 0a 0b), Klammer 0 (E4), Zone aus P mit der Zonen-Regel der GL-Hitcodes
- * (Bit 0x20000, Port-Zuordnung E6), Sperre = (w1 >> 9) & 0x7F = 15 (alle GL-Zeilen, s. Records),
- * +0x1D0 &= 0xFF00 und Richtung aus P, KEINE Zonen-Reserve. Rueckgabe 1 = gestempelt. */
+ * @0x8006f432..34 = 09 0a 0b), Schadens-Klammer 0 (E4), Zone aus P mit der Zonen-Regel der
+ * GL-Hitcodes (Bit 0x20000, Port-Zuordnung E6), Spalte = Zone + 3*K mit K = 0 — ausser HE an der
+ * Zombie-Familie: K = 1 wie RE2 Op 47 (NACHBESSERUNG K1, Beleg im Rumpf), Sperre = (w1 >> 9) & 0x7F
+ * = 15 (alle GL-Zeilen, s. Records), +0x1D0 &= 0xFF00 und Richtung aus P, KEINE Zonen-Reserve.
+ * Rueckgabe 1 = gestempelt. */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3])
 {
     re2_gl_typ_t t;
@@ -4133,8 +4192,25 @@ static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const 
                                             * gleich), ohne Sperren-Dekrement — bleibt beim alten Weg */
     unsigned zeile = (unsigned)re15_react_table[attack_type];         /* 9/10/11 = RE1.5-Waffe */
     zeile = (zeile == 10u) ? 11u : (zeile == 11u) ? 10u : zeile;      /* re2z_row_from_weapon */
+    /* ⛔ NACHBESSERUNG K1 (Gegenpruefung Spur B) — die SPALTEN-Klammer der HE-Explosion an der
+     * RE2-ZOMBIE-FAMILIE ist die der RE2-EXPLOSION Op 47, nicht die des Schadens (E4 bleibt K0 = 200):
+     *   80020d54 lui a3,0x1002 / 80020d58 ori a3,a3,0x9 / 80020d78 jal 0x800470c0   (Hitcode 0x10020009)
+     *   80020d84 lui a3,0x1002 / 80020d88 ori a3,a3,0x9 / 80020db0 jal 0x800470c0   (P.y + 900)
+     *   80047114 srl s6,s5,28 (K = 1) -> 80047310 sll v1,s6,1 / 80047320 addu v1,v1,s6 /
+     *   80047328 addu v0,v0,v1 / 80047330 sb v0,466(s1)  => +0x1D2 = Zone + 3.
+     * Warum: mit Spalte 0 (Beine) laeuft DEATH[9][0] = 0x80107438 (`table 0x8010CD68`), dessen Tod-
+     * Zweig belebt als KRIECHER mit HP 10 wieder (`8010778c jal 0x80015fe8` / `80107794 andi 0x3` /
+     * `80107798 bne v0,zero,0x801077b0` / `801077b0 sh v0(=10),342(s2)`) — gemessen 24/24 (mess5).
+     * Das gehoert in RE2 zum FLUG-Kontakt des Geschosses (0x00030009 = K0, `8001ee90 lui s2,0x3` /
+     * `8001ee9c ori s2,s2,0x9` / `8001eed8 jal 0x800470c0`), den die Handgranate nicht hat (E2).
+     * Spalte 3 -> DEATH[9][3] = 0x80108530 (Sturz-Tod, P2 `8010891c sw v0(=7),4(s1)` = Leiche),
+     * HURT[9][3] = 0x80105438 (`table 0x8010CA84`). NUR Zeile 9 der Zombie-Familie: Zeilen 10/11
+     * sterben spaltenunabhaengig (`table 0x8010CD8C 18` = 0x80108530) und ueberleben mit Spalte 0 in
+     * 0x80105BC0 (Taumeln + Element-Leiter, BAUPLAN §1.6; Brand = Op 48 0x0002000A = K0 @0x80021058-70);
+     * der Hund behaelt K0 (Spalte >= 3 = nur Kern/Schrei @0x801046a8-d4 statt "zerplatzt", §1.6). */
+    const unsigned k_spalte = (t.zombie && zeile == 9u) ? 1u : 0u;
     e->re2z_hitdir1d0 &= 0xFF00u;                                      /* @0x8004716c-84 */
-    re2_gl_stempel(e, &t, p, zeile, 0u, t.rec[(zeile - 9u) * 2u + 1u], 0x20000u);
+    re2_gl_stempel(e, &t, p, zeile, k_spalte, t.rec[(zeile - 9u) * 2u + 1u], 0x20000u);
     return 1;
 }
 
@@ -4201,8 +4277,17 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
         if (!re2) {
             /* O-VB4 (Orchestrator-Entscheidung): RE1.5-Angriffsart 5 "Flaechenfeuer" ueber den
              * RE1.5-Gegnerzweig — DAT_8006f418[5] = 50 (@0x8006f422), DAT_8006f430[5] = 14
-             * (@0x8006f435). Gate B -> kein Treffer (wie @0x80012f60), sonst gezaehlt (@0x80013024). */
-            if (re15_resolver_gegnerzweig(e, 5u, p) < 0) continue;
+             * (@0x8006f435). Gate B -> kein Treffer (wie @0x80012f60), sonst gezaehlt (@0x80013024).
+             * NACHBESSERUNG M1: der Hitcode geht mit (Zeile, Klammer, Spalte) — fuer Typen unter dem
+             * RE2-Modell der RE2-Record-Schaden (s. re15_enemy_take_damage_at) und der GL-Stempel der
+             * Import-Bruecke. Spalte = Zone + 3K wie @0x80047294-330: Zone 1, mit Bit 0x20000 und
+             * Y + (b98 >> 1) < P.y -> 0 (`sra a0,v0,17` @0x800472b8 / `slt` @0x800472c8); b98 = der
+             * Band-Versatz DIESES Kandidaten (oben, Port-Zuordnung O-VB4); kein Kopf-Bit. */
+            re2gl_treffer_t gl;
+            unsigned zone = 1u;
+            if ((hitcode & 0x20000u) && e->y + ((int32_t)b98 >> 1) < p[1]) zone = 0u;
+            gl.zeile = zeile; gl.k = k; gl.spalte = zone + 3u * k;
+            if (re15_resolver_gegnerzweig(e, 5u, p, &gl) < 0) continue;
             getroffen = s + 1;
             if (!alle) break;
             continue;

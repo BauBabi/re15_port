@@ -1247,5 +1247,11 @@ int re15_re2z_gore_part_burst(const re15_actor_t *e, int bone_slot,
  * Treffer (der Zerleger sitzt im HURT, das DEATH hat seinen eigenen Gore-Zweig @0x80108250). */
 void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl,
                              int row_src, unsigned row_id);
+/* Runde 34 NACHBESSERUNG M1: derselbe Einstieg fuer einen Treffer des RE2-GL-Appliers FUN_800470C0
+ * (Bodenfeuer an einem RE1.5-KI-Import-Zombie, O-VB4): GL-Stempel (Richtung aus dem Treffpunkt `p`,
+ * +0x1D2 = `spalte` = Zone + 3K, KEIN Reserve-Abzug — Store-Liste @0x80047184-0x8004749c), dann
+ * Zerleger und Gore-Zweig mit der Hitcode-Zeile `zeile`. Gates wie oben. */
+void re15_re15_re2z_gore_hit_gl(re15_actor_t *e, const int32_t p[3], unsigned zeile,
+                                unsigned spalte);
 
 #endif /* RE15_ACTOR_H */
