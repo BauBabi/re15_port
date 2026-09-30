@@ -545,7 +545,7 @@ Original findet sie RDT[0] = 0 der frisch geladenen RDT (206/206 RDTs Byte 0 == 
   `integration_r34n_g_schrift1150` selbst — das Skript war waehrend des Laufs um Lauf C erweitert
   worden, der Auswerter aber noch der alte (ohne `--menue`, verglich die Schirm-Bilder). Nach dem
   Neubau einzeln gruen (75 s), auch nach Mutation 4 + Ruecknahme.
-* Lauf 2 (Endstand): siehe unten.
+* Lauf 2 (Endstand, Commit 28e74760 + unveraenderter Code, ohne parallele Messlaeufe): `=== LOCAL-BUILD-OK (all) — Tests 430/430` (771 s). Darin gruen: unit_r34n_g_maskgrp, integration_r34n_g_schrift1150 (79 s, Laeufe A/B/C), integration_r30_irons_tisch_laden/_bild/_licht (FORCE_CUT=2 in ROOM1150 — unberuehrt, kein Blink-Beleg).
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder)
 
@@ -605,7 +605,7 @@ Elza-Szene, dort Lichtfolge), ROOM1211 Cut 7 (nach Flag (5,2)), ROOM5060/5061 Cu
 20a7761d (Modul + Haken), f52dc5ce (Pin), 97e47445 (Abnahme exe), b0fc996a (Auflage 5),
 cdea3286 (Integrations-Riegel), 0488fdb8 (Dossier), 308dbd28 (6.6 3000/3010/5060), 20ce50da
 (DuckStation-Gegenprobe ROOM3000), 47a75ba9 (Riegel Lauf C + Kartenwerkzeug), 53fee0cf (6.6 1211/3071),
-danach der Abschluss-Commit dieses Abschnitts.
+28e74760 (Dossier Abschnitt 9), danach der Abschluss-Commit mit der Suite-Zeile.
 
 ### 9.8 Offene Punkte
 
