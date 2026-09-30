@@ -16,8 +16,9 @@ Bauplan Abschnitt 5. Stand 2026-09-30 ~09:15.
   Jalousie-Lamellen; der BSS-Hintergrund darunter zeigt die Lamellen *rot beleuchtet*. Maske an =
   Buchstaben grau auf Rot, Maske aus = gleichmaessiges Rotlicht.
 * **Takt (gemessen, 6 Savestates desselben deterministischen Laufs):** 1 SCD-Takt = 2 VBlanks
-  (VSync-Modus DAT_800b5456 = 2), Umschaltpunkte exakt bei Vcount 7052 + 40·k — **40 VBlanks je
-  Zustand = 20 Spielbilder, Periode 80 VBlanks** (bei 59,83 Hz 0,669 s an / 0,669 s aus). RAM-Zustand
+  (VSync-Modus DAT_800b5456 = 2), Umschaltpunkte auf dem Raster Vcount 7052/7053 + 40·k (±1 VBlank
+  Phasenlage des Speicherpunkts) — **40 VBlanks je Zustand = 20 Spielbilder, Periode 80 VBlanks**
+  (bei 59,83 Hz 0,669 s an / 0,669 s aus). RAM-Zustand
   (Record-Byte0), SCD-Faden (pc/Sleep-Rest) und **beide Bildspeicher** stimmen in allen 6 Staenden
   ueberein (Maskenpixel bitgleich 558/558 bzw. 13/558).
 * **Port (gemessen):** die SCD-VM fuehrt sub05 im richtigen Takt aus (RE15_SCD_TRACE: 0x45 bei F25,
@@ -83,7 +84,17 @@ F45, F85, F125, F165, `@0x10CC..0x10DB op=0x45` (:=1) bei F25, F65, F105, F145, 
 `op=0x09` (Sleep) und 20 Bilder spaeter `op=0x17` (Goto). **Der Takt stimmt also bereits; es fehlt
 allein die Wirkung des Opcodes.** Auszug `G2_08`.
 
-**Messung 3 — echter Durchlauf / Spielstand:** (folgt, Abschnitt 2.1)
+**Messung 3 — Lade-Weg (Spielstand, Raumlader wie im Spiel, kein Debug-Sprung).** Eigene Karte
+`probe_r34n_g_karte` (Spielstand in ROOM1150 bzw. ROOM1151, Spieler (-22250,0,-18500) im Regionsviereck
+von Cut 2, `camera_cut` = 2), dann `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1
+RE15_CARD_SLOT=0 RE15_WINDOW_SCALE=3 RE15_CUT_SYNC_LOG=cutsync.log RE15_FRAMEDUMP="100-300/2:f"
+RE15_EXIT_AT="300#<raum>"`. debug.log: `[save] CONTINUE: resumed in room 1150` bzw. `1151`,
+`[pri] cut=2 pri_offset=0x66C masks=54 fg_atlas=1`. Ergebnis je Raum: **101/101 Dumps F100..F300 = AN,
+max |d| 0**, Lebendnachweis 100/100 Dumps mit Aenderung ausserhalb des Rechtecks (Leon steht im Bild,
+Leerlauf-Animation). Bild `G2_09`. Ein echter Durchlauf Titel -> ... -> ROOM1150 per Eingabeskript ist
+nicht gefahren (Raumkette zu lang); der Lade-Weg benutzt denselben Raumlader wie Tuer/LOAD und
+schliesst den Debug-Sprung als Ursache aus. Der Befund ist ohnehin strukturell (Opcode fehlt, Renderer
+kennt kein Sichtbarkeitsbit).
 
 ⛔ Nebenbefund Werkzeug: `tools/maske/original.py atlas()` (Python-SLD-Entpacker) liefert fuer
 ROOM1150 Cut 2 einen Atlas, der in **11978 von 65536 Texeln** vom Port-Entpacker abweicht; der
@@ -225,8 +236,12 @@ Bilder beider Zustaende aus dem Original-Bildspeicher: `G2_05`.
 
 ### 3.7 RE2 (Retail) zum Vergleich
 
-(folgt — Einordnung nach reai-v2-beta-zu-retail: RE1.5 hat das System VOLLSTAENDIG (Daten + Opcode +
-Zeichnen) — RE1.5 ist massgeblich.)
+RE2s Maskenzeichner `RE2_Quellcode_V2/FUN_80049ca8.c` hat dieselbe Record-Form (4 Byte, Zahl aus
+`*DAT_800ce324`, Tiefe im Halbwort +2, SetSprt + SetDrawMode(...,0x95) + AddPrim) und dieselbe
+Bedingung **`(*pbVar5 & 1) != 0`** — plus eine zweite Pruefung `FUN_80077360(&DAT_800d4928 + ..., byte)`
+(Flag-Test je Record). RE2 behaelt also das Sichtbarkeitsbit, das Opcode 0x45 schaltet. Einordnung nach
+reai-v2-beta-zu-retail: RE1.5 hat das System **vollstaendig** (Daten in 10 Raeumen, Opcode, Aufbau,
+Zeichnen) — RE1.5 ist massgeblich, RE2 bestaetigt nur die Architektur. Kein RE2-Nachbau noetig.
 
 ## 4 Soll-Verhalten (Zeitlinie)
 
