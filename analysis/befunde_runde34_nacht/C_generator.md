@@ -1,6 +1,6 @@
 # Spur C — Generator ROOM11F0/11F1: freier Cursor, Endsperre bis 80, zwei gruene Lampen
 
-Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code). Arbeitsbaum `.claude/worktrees/r34n_generator`, Zweig `r34n/generator`.
+Stufe: ERMITTLUNG + BAUPLAN, danach BAU (Abschnitt 9). Arbeitsbaum `.claude/worktrees/r34n_generator`, Zweig `r34n/generator`.
 
 Stand: alle Abschnitte gefuellt (Ermittlung + Bauplan), 2026-09-30.
 
@@ -618,7 +618,7 @@ Loesen (beide Lampen gruen, Zeiger auf 80, dann "Power supply OK.").
 
 ## 9 Umsetzung (Stufe BAU)
 
-Stand: IN ARBEIT (2026-09-30). Abschnitte werden nach jedem Teilschritt gespeichert.
+Stand: FERTIG gebaut und an der echten exe abgenommen (2026-09-30). Selbst nachgelesen in der BAU-Stufe (Bytes aus den Dateien): RE2 ROOM2130 @0x01294 `64 01 16 02 00 00 ba 02`, @0x017A8 `64 0d 16 10`, @0x017B8 `64 0e 16 10`, @0x01798 `36 02 0f 01`, @0x01814 `65 0d` / @0x01816 `65 0e` / @0x01818 `22 02 07 00`; RE1.5 ROOM11F0 @0x0101A `07 00 70 00`, @0x0101E `2c 01 01 31`, @0x016FA `22 05 00 00` .. @0x0172A `22 05 0c 00`, @0x01736 `22 02 07 01`, @0x0173A `29 08`, Ck-Kette @0x012BE..0x012E2 (Riegel E liest sie zur Laufzeit); ROOM5060 @0x03124 `3a 00 01 08 00 01 00 0d ..`; RE2-Groesse neu gerechnet (re2_2130_projektion.py: H 330, SZ 1116, 25,8 px).
 
 ### 9.1 Auflagen der Gegenpruefung — Abhakliste
 
@@ -809,5 +809,29 @@ Kurzfassung fuer die Rueckmeldung (Bilder in `C_belege/`, s. §9.6):
 
 ### 9.9 Offene Punkte
 
-(in Arbeit)
+1. **Integration — Haken hinter dem Zeiger-Block in `platform/pc/main.c`:** 2 Zeilen direkt hinter dem
+   Zeiger, noch in `if (re15_bg_is_loaded())`. Spur G (ROOM1170, Schrift im Hintergrund) koennte an
+   derselben Stelle einhaengen — beim Zusammenfuehren beide Bloecke behalten (sie sind raumgebunden).
+2. **Integration — `local_build.sh`:** (a) RE15_MIN_TESTS: diese Spur +1 (429); die Integration setzt die
+   Summe aller Spuren. (b) Der PATH-Fix a2c3ec22 wirkt fuer die anderen Baeume erst nach dem Merge; bis
+   dahin beendet jeder fremde Bau jede `re15_pc.exe` — Integrations-Haken mit der echten exe koennen in
+   parallelen Laeufen deshalb weiter mit exit=1 reissen (Gegenprobe: umbenannte exe-Kopie, §9.5).
+3. **Android:** neue Datei `platform/pc/src/panel_lampen_pc.c` -> Android-GLOB-Cache neu konfigurieren
+   (Memory reai-v2-android-glob-cache), sonst fehlt `re15_panel_lampen_pc_zeichnen` beim Linken.
+4. **Paket:** `release/make_package.sh` prueft jetzt `shared_assets/RE2/LAMPE2130.TIM` (Gate); die Datei
+   liegt versioniert im Baum (4256 B).
+5. **PSX-Zeichner der Lampe** nicht gebaut (Plan §8.1): braucht LAMPE2130.TIM im VRAM (4 bpp, CLUT-Zeile 2)
+   und ein POLY_FT4 Code 0x2E + TPAGE-ABR 1. Der Engine-Teil (Sperre, Lampenzustand) ist gemeinsam und
+   wirkt dort schon; der PSX-Bau laeuft derzeit ohnehin nicht (Memory reai-v2-psx-build-gap).
+6. **Nutzer-Entscheidungen, die offen bleiben duerfen:** Kunst (RE2-Quadrat gewaehlt; Alternative RE1.5-
+   Glanzleuchte ESP 0x01, `C_belege/esp01_vergleich.png`), Kante 22 px (PORT-WAHL, eine Konstante
+   `RE15_PANEL_LAMPE_KANTE`).
+7. **Nicht Teil des Auftrags:** die zehn kleinen Lampen links neben den Hebeln bleiben dunkel; Meldung 3
+   "Power supply incorrect." (RDT @0x1909) bleibt unbenutzt (Beta-Luecke).
+8. **Live nicht gefahren:** ROOM11F1 (DEBUG_JUMP ohne Varianten-Nibble, nur Riegel B/G/H); das
+   Flur-Licht-Flackern Cut 0x0D/0x0E nach dem "OK" (sub18 @0x01748..0x01772, Code unveraendert) — die
+   Messlaeufe haben die Meldung nicht weggedrueckt und endeten in Cut 8.
+9. **Sichtbare Nebenwirkung (RE1.5-Original):** Quadrat gehalten kippt den Hebel in der freien Phase alle
+   17 Bilder neu (S7). Vorher verdeckte die Runde-31-Sperre das; in der Endsperre passiert es nicht (S6).
+   Steht in der Rueckmeldung (§9.8 iii).
 
