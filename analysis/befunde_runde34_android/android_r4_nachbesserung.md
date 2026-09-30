@@ -171,3 +171,20 @@ Dublettenregel vollstaendig (Unicode-Paare kommen gar nicht erst in die Liste).
 - **U3**: mit H5 (Segment <= 251 B).
 - Abschlusszeile des Entpackers nennt zusaetzlich `n Waisen entfernt (m nicht loeschbar)`.
 - README (platform/android): Gate-Pin, Positivliste, ASCII-Regel, Waisen, fail closed.
+
+## 7. Nachweise
+
+### 7.1 Voller Android-Bau mit der neuen Kette
+
+`bash release/build_android.sh --version v0.8.20-nb1 --no-toolchain` (Log `build/r34a/nb/logs/android_nb1.log`):
+**EXIT 0, `ANDROID-BUILD-OK`**. Gradle `BUILD SUCCESSFUL in 2m 56s` (beide ABIs neu, `re15_assets.txt (v2): 3603
+Dateien` - die Gradle-Regel laesst den Bestand durch), aapt `versionName='v0.8.20-nb1'`, Signer `432bc749...`,
+`Gate: private Kopie ... sha256 8a0e3f15... = festgehalten`, `Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK
+258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132`, `Gate-Urteil (apk, Rueckgabe 0):
+APK-ASSET-GATE-OK: 3603 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR +
+TORSE.VBS gleich` (RE2/DOOR 27/27, RE15DOOR 30/30). APK **NB1** = `d6921014c580c4e8...`, 363483287 B (nach
+`build/r34a/nb/apk/NB1.apk` verschoben; `release/SHA256SUMS_android.txt` per `git restore` auf HEAD). Keine
+Compiler-Warnung aus android_glue.c oder asset_abgleich.c (die 12 Warnungen im Log stammen aus Engine-Kopfdateien).
+Faelschungen daraus (`nb_faelschen.sh`, Werkzeuge der Pruefer, zipalign + derselbe Debug-Schluessel, verify rc 0):
+FW_sig (Leerraumzeile), FD_sig (P07G.DO2 1 Byte gekippt + passende sha256), FK_sig (Kelvin-Paar), R_sig (ohne
+RE2/CDEMD0.EMS, Kopf nachgerechnet).
