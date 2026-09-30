@@ -673,7 +673,37 @@ scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
 
-(in Arbeit)
+1. **`|| geloest` gestrichen** (Plan 5.1 Schritt 2 / §4.4) — Auflage 3. Die Lampen sind eine reine
+   Funktion der Schalterbits. Riegel H prueft statt "Lampen an nach der Loesung" die Unerreichbarkeit
+   der Buehne (Slot 1 wird nach 4:238 als sce 1 = Text installiert, @0x0101A/@0x0101E) und als
+   Robustheit, dass nach 4:238 selbst bei Maske 0x155 nichts sperrt. Riegel E fährt die Tafel live mit
+   4:238 = 0 UND 1 (0 Abweichungen): 4:238 aendert an den Lampen nichts.
+2. **Schnittstelle:** `re15_panel_lampe_an_aus_maske(nr, maske)` ohne den geplanten `geloest`-Parameter
+   (folgt aus 1). Zusaetzlich `re15_panel_lampe_takt()` (Messhaken) und im Zeichner
+   `re15_panel_lampen_pc_dekodieren()` / `re15_panel_lampen_pc_zelle()` nicht-statisch, damit Riegel I
+   den ECHTEN Zeichner einkompiliert pruefen kann (Stubs nur fuer Framebuffer und RE2-Leser).
+3. **Kunst: nach Auflage 2 die RE2-Quadrat-Lampe BESTAETIGT, der RE1.5-Kandidat ESP 0x01 NICHT genommen.**
+   Bild: `C_belege/esp01_vergleich.png` (von links: RE2-Quadrat 22 px = gewaehlt | ESP 0x01 gruen in der
+   eigenen ROOM5060-Bildgroesse 58 px | ESP 0x01 nach derselben Herleitung 73 px | das RE1.5-Vorbild
+   ROOM5060 Cut 11). Gruende:
+   * (a) **Form folgt der gemalten Lampe — in BEIDEN Spielen.** RE2 legt die Rechteck-Zellen 0..2 auf
+     rechteckige Fenster (@0x017A8/@0x017B8, Schloss) und die Quadrat-Zellen 3/4 auf die quadratischen
+     Schalterfenster (@0x01294); RE1.5 legt die runde Glanzleuchte auf die runde Maschinenlampe (ROOM5060
+     @0x03124, selbst projiziert: Mitte (266.2, 76.5) = Mitte der gemalten runden Lampe, 57,9 px). Die
+     Generator-Lampen sind QUADRATISCHE Fenster (Rahmen 19x19, Oeffnung 14x13) -> die Quadrat-Zelle.
+   * (b) **Groesse nach derselben Herleitung.** ESP 0x01 ist in ROOM5060 ~3,9-mal so gross wie die
+     Einfassung der Lampe (57,9 px / ~15 px); auf die 19-px-Rahmen uebertragen ~73 px (ueber das Glas
+     gerechnet ~97 px) — ein Hof ueber die halbe rechte Panelhaelfte (x 186..259) bis an die Skala
+     (Teilstrichsaeule x 278, Rahmen ab ~257). Die RE2-Zelle nach derselben Herleitung: 22 px, Rahmen
+     plus schmaler Hof.
+   * (c) **Ein Guss mit dem Panel.** Die ganze Bedienfeld-Mechanik des Ports ist RE2 ROOM2130 (dasselbe
+     Panel in Retail): Zeiger, Nachfuehrung, Stillstand, Toene — und der Zeiger traegt schon das Rot
+     derselben TIM (`esp16.tim` CLUT 0 @0x22, `RE15_PANEL_ROT_*`).
+   * (d) **Beta -> Retail:** RE1.5 hat fuer DIESE Lampe nichts (Rahmen gemalt, dunkel, keine ESP-Weltlage)
+     = unfertig -> RE2 ist das Ziel. ESP 0x01 ist RE1.5-Kunst fuer eine andere Maschine, kein fertiges
+     System dieses Panels.
+   Was eine Umstellung braeuchte (kein Code, nur fuer die Rueckmeldung): andere Quelle (ROOM5060.RDT, TIM
+   @0x1D4A0, CLUT-Zeile 1), fuenf 24x24-Zellen (u 0..96) mit Funkeln je Bild, Kante 58..73 px.
 
 ### 9.8 Rueckmeldung an den Nutzer (Auflage 9)
 
