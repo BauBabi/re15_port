@@ -13,7 +13,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
-| S2 W1..W11 | W1-W5 erledigt (c91ae1ed); W6-W11 in Arbeit |
+| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 Code (5b7d3dc9), W9 (c49f20fe); W6-Sicht, W7, W8, W10, W11 in Arbeit |
 | S3 volle Suite | offen |
 
 ## 1. Merges (Schritt 1)
@@ -105,6 +105,51 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   lebt / Stufe != 0 / Latch, menu_common.c:146). Abnahme ueber den Item-Debug-Weg in W9 (debug.log ohne
   `[debug-menu] OPEN`).
 
+
+### W6 — Part-Farben (Code erledigt 5b7d3dc9; Sichtabnahme siehe unten)
+* Befund: `re15_pc_re2_part_tint` las nur Parts 0..15 (V4 hatte 16 Felder) und setzte Part i = Bone i ungeprueft.
+* Belege (selbst): Hund-Tod-Faerbung EMD0G_MOD0 `sw a0,112(v0)` @0x801047f4 / `sltiu v0,s0,0x11` @0x801047f8 (17 Parts);
+  Spinne EMS25 FUN_8010609C `sw a1,112(v0)` @0x801060b0 / `sltiu v0,a2,0x14` @0x801060b4 (20 Parts).
+* Gebaut: Schleife ueber alle `re2z_part_tint[20]`; Parameter `re2_rig`: 1 = das GEZEICHNETE Skelett ist das RE2-Rig der
+  Bank (reines RE2-EMD oder Hybrid `re2_hybrid_apply`, Bone-Slot = RE2-Part) -> Part = Bone; 0 = RE1.5-Rig (Rueckfall ohne
+  RE2-Archiv) -> Bone = `re2_hybrid_perm[Part]` (dieselbe Tabelle wie `re2z_part_to_bone`/`re2z_perm_for`), -1 (Hunde-
+  pfoten 7/10) = kein Bone. Neues Bankfeld `re15_enemy_bank_t.re2_rig` (gesetzt in `pc_enemy_load_re2_kind`); main.c
+  nimmt `re2_rig` nur, wenn `npc_skel` eines der drei Bank-Skelette ist (die RE1.5-Posenbank des Sitz-Imports faellt heraus).
+* Hinweis: die Aufgabe nennt "Gegenpruefung C H5" — gemeint ist H3 (`bau_c.gegenpruefung.md` §8: "Part i = Bone i ...
+  `re2z_bone_to_part`"); H5 ist dort die Suite-Zielzeile.
+* Sonde `unit_r34_plattform` 115-119 (RE2-Rig Hund Part 16, RE1.5-Rig Hund Part 8 -> Bone 7 / 16 -> 14 / Pfote weg,
+  Negativ-Kontrolle RE2-Lesart, Spinne 19 in beiden Rigs): 82/82 gruen. Mutationen: "Grenze 16" -> rot 115/116/118/119;
+  "Part = Bone immer" -> rot 116.
+
+### W9 — Integrationstest `integration_r34_granaten` (erledigt c49f20fe)
+* Dateien: `tests/integration/test_r34_granaten.cmake` (Skript), `tests/unit/probes/r34_granaten_exe.cmake` (Registrierung,
+  Muster probes/r30_granate.cmake, TIMEOUT 1200). 8 exe-Laeufe, gemessen 176 s.
+* Aufstellung (gemessen, weil die Fresser in ROOM1140 bei Leon < 4000 aufwachen — RE1.5-Fresser-Tor `ai_dist < 0xfa0`,
+  `re2z_exec_feeding` — und RE2-/RE1.5-KI danach verschieden laufen): RE2-KI Leon (-1676,-18070) Blick 1076 -> TIEF-Granate
+  liegt bei (-2199,-20548), Zombie 3 (0x10, HP 80) im Bild X in 771; RE1.5-KI Leon (-4311,-19289) Blick 0 -> Granate bei
+  (-1856,-19902), Zombie 2 (0x10, HP 75) in 513. Skript ab Spielbild 1: `MD0.6,MDA0.2,MD2.5,W5` (TIEF, Abzug im Bild 19).
+  Faellt die Vorbedingung (kein Treffer), meldet der Test "AUFSTELLUNG" statt eines Granatenfehlers.
+* Harness-Befunde: (1) der Bildzaehler faellt beim Debug-Sprung auf 1 zurueck (Zustandslog wird ab dem Rueckgang gelesen);
+  (2) das Skript laeuft mit Basis "spiel" zweimal (Startraum ROOM1240 bis zum Sprung, dort player_mode 2 — gemessen: mg
+  bleibt 5, kein Wurf) — deshalb "genau ein SPAWN"; (3) der Zustandslog steht in main.c HINTER dem ESP-Takt: der HP-
+  Verlust und Zustand 2/3 stehen schon in Zeile X, die Reaktion (neuer Clip / +0x6/+0x7) in Zeile X+1; (4) START wirkt nach
+  dem Sprung erst ab Bild ~6 (Pausebits FF000007 in F1-F5) — der Item-Debug-Lauf beginnt bei Bild 260 (> Sprungbild 250,
+  der Startraum erreicht das Skript nie) mit Leon am Tuer-Sprungpunkt (alle Fresser > 4000, keiner wacht).
+* Ergebnis je Lauf (Auszug): RE2 g9/g10/g11: A 19, S 43, L 83, X 119, Zombie 3 HP 80 -> -120, Zeile 9/11/10, Leiche ab
+  Bild 180/180/170; RE1.5 g9/g10/g11: X 119, Zombie 2 HP 75 -> -125, Zeile 9/10/11, Leiche ab 173; debug: Menge 255, W09,
+  kein `[debug-menu] OPEN` nach dem Sprung, A 593, S 617, L 657, X 693; abzug: Zombie 2 in 849 vor Leon, kein HP-Verlust.
+* Negativ-Kontrolle (im Skript, vor jedem exe-Lauf): erfundene Zeilen "Schaden im Abzugsbild", "keine Reaktion in X+1",
+  "falsche Zeile" muessen fallen, "kein Treffer" muss leer bleiben — sonst "Auswerter defekt". Beim ersten Lauf fing sie
+  einen echten Auswerterfehler (CMake kennt nur CMAKE_MATCH_0..9, der 10. Fang lieferte leer).
+* Mutationsproben (`mut_exe.sh`: Datei aendern, exe bauen, Test mit Auswahl `-DR34_NUR`, byte-gleich zurueck, neu bauen):
+  | Id | Mutation | Lauf | Ergebnis |
+  |---|---|---|---|
+  | M1 | `ENT[9] = {1,1,1,0}` (Sofort-Bruecke zurueck) | abzug | ROT "Gegner 2 verliert im Abzugsbild HP 50 -> -150" (g9_re2 bleibt gruen: Ziel ausser Reichweite 1000) |
+  | M2 | Zuender 42 -> 43 (re15_esp.c Routine 30) | g9_re2 | ROT "Explosion im Bild 120, erwartet L + 36 = 119" |
+  | M3 | W5-Tor entfernt | debug | ROT "SELECT im ITEM-Raster oeffnete das UTILITY/DEBUG-MENU" |
+  | M4 | `re2z_row_from_atktype[3]` 11 -> 10 | g10_re2 | GRUEN — diese Tabelle speist nur den Direktaufruf; der Explosionsstempel nimmt `re15_react_table[Art]` + Tausch 10/11 (re15_damage.c `re2_gl_explosion_stempel`) |
+  | M4b | Tausch 10/11 in `re2_gl_explosion_stempel` entfernt | g10_re2 | ROT "Reaktionszeile +0x5 = 10, erwartet 11" |
+  | M5 | RE1.5-Todeshandler kehrt fuer Zeile 9..11 sofort zurueck (Nachbau des Original-Haengers: Zeile NULL) | g9_re15 | ROT "keine Reaktion im Bild X+1" |
 
 ## 3. Volle Suite (Schritt 3)
 
