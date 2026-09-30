@@ -269,7 +269,8 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
 
 b9ee0468 (A2-A8), 690c2053 (Sonde 1-5), 8aca11ef (Drehen + Sonde 6), a9a772da (A10 + Sonde 7), 76894e74 (R9-Latch-
 Pruefung), 5239b817 (Sonde 6a Zombie 700), + Dossier-Commits.
-NACHBESSERUNG: 8a33ddbd (M-2/M-3/M-4 Code + Sonde), 82205b96 (H-1 Code + Sonde), 356d331c und folgende (Dossier §9).
+NACHBESSERUNG: 8a33ddbd (M-2/M-3/M-4 Code + Sonde), 82205b96 (H-1 Code + Sonde), 691253f1 (H-1 Kommentar), 356d331c /
+b1b34074 / dda0994f und folgende (Dossier §9).
 
 ## 8. Suite
 
