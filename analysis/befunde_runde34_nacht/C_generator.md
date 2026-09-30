@@ -601,3 +601,43 @@ Loesen (beide Lampen gruen, Zeiger auf 80, dann "Power supply OK.").
    aber im Bild nicht offensichtlich; in der Rueckmeldung an den Nutzer erwaehnen.
 6. Live nicht fahrbar: ROOM11F1 (DEBUG_JUMP ohne Varianten-Nibble) — nur Riegel.
 
+## 9 Umsetzung (Stufe BAU)
+
+Stand: IN ARBEIT (2026-09-30). Abschnitte werden nach jedem Teilschritt gespeichert.
+
+### 9.1 Auflagen der Gegenpruefung — Abhakliste
+
+(in Arbeit)
+
+### 9.2 Dateien und Haken
+
+(in Arbeit)
+
+### 9.3 Commits
+
+(in Arbeit)
+
+### 9.4 Riegel + Mutationsproben
+
+(in Arbeit)
+
+### 9.5 Suite
+
+(in Arbeit)
+
+### 9.6 Eigene Abnahme an der echten exe (Bilder)
+
+(in Arbeit)
+
+### 9.7 Abweichungen vom Plan (mit Grund)
+
+(in Arbeit)
+
+### 9.8 Rueckmeldung an den Nutzer (Auflage 9)
+
+(in Arbeit)
+
+### 9.9 Offene Punkte
+
+(in Arbeit)
+
