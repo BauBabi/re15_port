@@ -46,6 +46,7 @@
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
+#include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 
 scd_vm_t g_scd;
 
@@ -600,7 +601,10 @@ int scd_event_fire(uint8_t event_id)
         }
     }
     if (event_id >= RE15_RDT_MAX_SUB_SCD || !s_current_rdt) return -1;
-    const uint8_t *pc = s_current_rdt->sub_scd[event_id];
+    /* Runde 34 Nacht, Spur D (adaruf_1050.c): ROOM1050 Ereignis 13 = umgewidmete Tuer Slot 4 ->
+     * Port-Programm "Ada-Ruf", solange (9,65)=0 und (3,0xBB)=0; sonst NULL = ausgelieferter sub. */
+    const uint8_t *pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);
+    if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
         if (!g_scd.threads[slot].active) {

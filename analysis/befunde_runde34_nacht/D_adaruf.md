@@ -446,3 +446,26 @@ nachfahren (memory reai-v2-gui-tests-flattern).
   meint: b = Clip 17 vor + zurueck, c = Clip 15 (Arm-Schwung nach vorn, "Hey!"). Umstellung = die Clip-Bytes an
   +0x56/+0x5E bzw. +0x6E. Katalogbild `D_belege/gesten_katalog_vorn.png` fuer die Rueckfrage bei der Abnahme.
 * **Echte-exe-Abnahme** erst mit dem Bau (§6); in dieser Stufe nur die Sonde an der echten VM/Spielschritt.
+
+
+## 9 Umsetzung (Stufe BAU, Runde 34 Nacht)
+
+_Stand: Geruest angelegt, wird fortlaufend gefuellt._
+
+### 9.1 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
+
+### 9.2 Dateien
+
+### 9.3 Commits
+
+### 9.4 Suite-Zeile
+
+### 9.5 Eigene Abnahme an der echten exe (Bilder)
+
+### 9.6 Mutationsproben
+
+### 9.7 Abweichungen vom Plan (mit Grund)
+
+### 9.8 Offene Punkte
+
+### 9.9 Sprachdateien fuer den Nutzer
