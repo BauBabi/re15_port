@@ -85,6 +85,8 @@ def mutanten(text, hand):
     aus = []
     gesehen = set()
 
+    namen = set()
+
     def neu(name, beschr, t):
         if t == text or t in gesehen:
             return
@@ -93,6 +95,13 @@ def mutanten(text, hand):
         except SyntaxError:
             return
         gesehen.add(t)
+        # eindeutige Namen: zwei Vergleiche in EINER Zeile ergaben denselben Namen - und damit dieselbe Kopie
+        # (Kampagne 2 lief daran auf: die zweite Kopie ueberschrieb die erste, os.remove scheiterte)
+        basis, k = name, 2
+        while name in namen:
+            name = "%s_%d" % (basis, k)
+            k += 1
+        namen.add(name)
         aus.append((name, beschr, t))
 
     for fn in ast.walk(baum):
@@ -236,6 +245,7 @@ def main():
     ap.add_argument("--timeout", type=int, default=300,
                     help="je Mutant; ein Gate, das haengt, ist erkannt (der Selbsttest faellt damit ebenfalls)")
     ap.add_argument("--hand", default=None, help="Python-Datei mit HAND = [(name, [(alt, neu, n)])]")
+    ap.add_argument("--nur-namen", default=None, help="Datei mit Mutanten-Namen (je Zeile): nur diese laufen lassen")
     a = ap.parse_args()
     text = open(a.gate, encoding="utf-8").read().replace("\r\n", "\n")
     hand = []
@@ -244,6 +254,12 @@ def main():
         exec(open(a.hand, encoding="utf-8").read(), ns)
         hand = ns["HAND"]
     liste = [m for m in mutanten(text, hand) if m[0][0] in a.nur]
+    if a.nur_namen:
+        namen = set(z.split()[0] for z in open(a.nur_namen, encoding="utf-8") if z.strip())
+        fehlend = sorted(namen - set(m[0] for m in liste))
+        if fehlend:
+            print("# --nur-namen: %d Namen gibt es im Code nicht (mehr): %s" % (len(fehlend), " ".join(fehlend)))
+        liste = [m for m in liste if m[0] in namen]
     zahl = {}
     for name, _b, _t in liste:
         zahl[name[0]] = zahl.get(name[0], 0) + 1
@@ -284,16 +300,23 @@ def main():
         fertig = 0
         for lauf in concurrent.futures.as_completed(laeufe):
             n, b, p, k = laeufe[lauf]
-            rc, rot, aus, dauer = lauf.result()
+            try:
+                rc, rot, aus, dauer = lauf.result()
+            except Exception as ex:                  # Werkzeugfehler: eigener Status 99, nie "erkannt"
+                rc, rot, aus, dauer = 99, [], "WERKZEUGFEHLER: %r" % (ex,), 0.0
             ergebnis[n] = (rc, rot, aus, dauer)
             with open(os.path.join(a.ordner, n + ".log"), "w", encoding="utf-8") as f:
                 f.write(aus)
             with open(ergebnis_datei, "a", encoding="utf-8") as f:
                 f.write("%s\t%d\t%s\t%.1f\t%s\n" % (n, rc, ",".join(rot) if rot else "-", dauer, k))
-            if rc != 0:
-                os.remove(p)
+            if rc not in (0, 99):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
             fertig += 1
-            print("%-9s rc=%-3d %5.0fs %-44s %s" % ("ERKANNT" if rc != 0 else "UEBERLEBT", rc, dauer, n, b[:90]), flush=True)
+            status = "UEBERLEBT" if rc == 0 else ("WERKZEUG" if rc == 99 else "ERKANNT")
+            print("%-9s rc=%-3d %5.0fs %-44s %s" % (status, rc, dauer, n, b[:90]), flush=True)
             if fertig % 25 == 0:
                 print("# ... %d/%d (%.0f s)" % (fertig, len(offen), time.monotonic() - t0), flush=True)
     ueberlebt = [(n, b) for n, b, _p, _k in pfade if ergebnis[n][0] == 0]
