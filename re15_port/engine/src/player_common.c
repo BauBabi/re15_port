@@ -288,6 +288,34 @@ static int aim_cur_fc(void)
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
 int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
+
+/* Runde 34 A3 — das WORT 0x800acaec (Spieler +0x98, u16), wie Routine 30 es liest
+ * (`lhu a0,-13588(a0)` @0x80018484). Im Original traegt EIN Halbwort die Zielhoehe (Bits
+ * 15/14/13) UND die Status-Unterbits (Bit 1 = Gift, @0x80012eb4); der Port fuehrt beides
+ * getrennt (s_aim_elev hier, actor.status_flags) und setzt es hier wieder zusammen. Die
+ * Schreiber der Zielbits erhalten die unteren 13 Bit (selbst gelesen):
+ *   RAISE  @0x80032f98-a4  andi v0,v0,0x1fff / ori v0,v0,0x4000 / sh v0,-13588(at)  -> 0x4000
+ *   HOCH   @0x80033228-38  andi v0,v1,0x1fff / ori v0,v0,0x8000 / sh              -> 0x8000
+ *   TIEF   @0x80033270-84  andi v0,v1,0x1fff / ori v0,v0,0x2000 / sh              -> 0x2000
+ *   MITTE  @0x800332bc-c8  andi v0,v1,0x1fff / ori v0,v0,0x4000 / sh              -> 0x4000
+ *   LOWER  @0x80033cc0-c8  andi v0,v0,0x1fff / sh                                 -> keine Zielbits
+ * Port: Ziel-Phase NONE/LOWER = keine Zielbits; sonst s_aim_elev +1/0/-1 -> 0x8000/0x4000/0x2000
+ * (RAISE und das Nachladen setzen s_aim_elev = 0 = LEVEL, s. :375). Obere Bits von status_flags
+ * (SCD Member_set 17 schreibt das ganze Halbwort, actor_common.c:158) werden hier abgeschnitten:
+ * im Port liegen die Zielbits nur in s_aim_elev. */
+static int      s_acaec_test_on = 0;
+static uint16_t s_acaec_test    = 0;
+uint16_t re15_player_acaec(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_acaec_test_on) return s_acaec_test;
+    uint16_t w = (uint16_t)(g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x1fffu);
+    if (s_player_aim_phase == RE15_AIM_NONE || s_player_aim_phase == RE15_AIM_LOWER) return w;
+    return (uint16_t)(w | (s_aim_elev > 0 ? 0x8000u : s_aim_elev < 0 ? 0x2000u : 0x4000u));
+}
+/* TEST HOOK ONLY (Sonde probe_r34_wurf): das Wort fest vorgeben, ohne die Ziel-FSM zu fahren.
+ * on = 0 schaltet zurueck auf die Zusammensetzung oben. */
+void re15_player_acaec_override_for_test(int on, uint16_t w) { s_acaec_test_on = on; s_acaec_test = w; }
 /* TEST HOOK ONLY (same stance as re15_player_set_aim_clip_len): force the aim elevation so the
  * damage resolver's band gate can be exercised without driving the whole R1 + dpad aim FSM. */
 void re15_player_set_aim_elevation_for_test(int elev) { s_aim_elev = (elev > 0) ? 1 : (elev < 0) ? -1 : 0; }
@@ -918,7 +946,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         if (pad_bits & RE15_PAD_BIT_UP)    move_dir  += 1;
         if (pad_bits & RE15_PAD_BIT_DOWN)  move_dir  -= 1;
 
-        if (yaw_delta != 0) {
+        /* Runde 34 A8 (Sonde probe_r34_wurf 6c, gemessen vorher: Drehen im Wurf 72 je Bild):
+         * im ZIELEN (Aktion 7: Ziel-FSM 0x80032e9c statt der Lauf-Modi) dreht NUR die Ziel-FSM —
+         * die Lauf-Drehung darf dann nicht zusaetzlich wirken. Vorher liefen beide: -96 (Stehen,
+         * Rate @0x80073ee4) + 24 (Rueckstoss, falsches Vorzeichen) = -72 je Bild statt -24. */
+        int zielt_schon = ((pad_bits & RE15_PAD_BIT_R1) != 0) || (s_player_aim_phase != RE15_AIM_NONE);
+        if (yaw_delta != 0 && !zielt_schon) {
             p->rot_y = (int16_t)((int)p->rot_y + yaw_delta);
         }
 
@@ -987,8 +1020,18 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
              * recoiling, 48 in steady HOLD. (Sustained handgun fire keeps Leon in recoil most frames,
              * so this is the common STAGE1 case.) */
             int rate = (s_player_aim_phase == RE15_AIM_READY) ? (s_aim_recoil ? 24 : 48) : 24;
-            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)(((int)p->rot_y + rate) & 0xfff);
-            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - rate) & 0xfff);
+            /* Runde 34 A8 — RICHTUNG und WERTEBEREICH nach der Gun-FSM (selbst disassembliert):
+             *   RAISE  Sub 0 @0x80033000-98: `andi v0,a0,0x8` (virtuell LINKS) -> `subu` Byte0 (24,
+             *          `addiu at,at,16528` @0x80033028); `andi v0,a0,0x2` (RECHTS) -> `addu`
+             *   HOLD   Sub 1 @0x800333a0-38: dieselbe Richtung, Byte1 (48, @0x800333c8)
+             *   ABZUG  Sub 2 @0x8003355c-fc: Byte1 `srl v0,v0,1` = 24 (@0x80033590/@0x800335a4)
+             *   LOWER  Sub 3 @0x80033cd8-d1c / RELOAD Sub 4 @0x80033de8-e2c: `addiu v0,v0,-24` / `+24`
+             * also LINKS = Gier MINUS, RECHTS = PLUS (virtuelle Bits 3/1 = LINKS/RECHTS,
+             * pad_common.c Preset @0x80073dbc), gespeichert mit `sh` auf 0x800acabe OHNE & 0xfff
+             * (16-Bit-Umlauf wie die Lauf-Drehung oben). Das alte "+rate fuer LINKS" glich nur den
+             * doppelt laufenden Lauf-Anteil aus (HOLD: -96 + 48 = -48). */
+            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)((int)p->rot_y - rate);
+            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)((int)p->rot_y + rate);
             /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
              * sub (@0x80034fa0-c0 melee slew 0xC0 / gun sub0 slew 0xC8); the HOLD subs have no
              * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000.
@@ -1004,10 +1047,31 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 int32_t tx, tz;
                 if (re15_player_aim_target(radius, &tx, &tz)) {
                     int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
-                    int d = (((bearing - (int)p->rot_y) + 0x800) & 0xfff) - 0x800;
-                    if (d >  slew) d =  slew;
-                    if (d < -slew) d = -slew;
-                    p->rot_y = (int16_t)(((int)p->rot_y + d) & 0xfff);
+                    /* Runde 34 A NACHBESSERUNG (Gegenpruefung H-1, Bauer-OFFEN 5) — FUN_8001a8f8
+                     * byte-true (re15_disasm.py dis 0x8001a8f8 52; Aufrufer gun sub0 `ori a1,zero,
+                     * 0xc8` @0x80032fe0 / `jal 0x8001a8f8` @0x80032fec, L1 @0x80033f94, melee `ori
+                     * a1,zero,0xc0` @0x80034fb0 / `jal` @0x80034fbc):
+                     *   8001a958 lhu a2,106(v1)            rot (u16 +0x6a)
+                     *   8001a960 subu v0,a0,a2 / addu v0,s1,v0 / andi a1,v0,0xfff
+                     *                                      a1 = (t - rot + s) & 0xfff
+                     *   8001a96c-74 sll/sra 15 / slt       a1 < 2*s ?
+                     *   8001a984 sh a0,106(v1)             ja:   rot := t (atan2 & 0xfff @0x8001a768)
+                     *   8001a97c subu v0,a2,s1 / 8001a988 sh v0,106(v1)
+                     *                                      nein: rot := rot - s   (16 Bit, OHNE Maske)
+                     *   8001a98c sltiu v0,a1,0x801 / 8001a994 sll a0,s1,1 / 8001a9ac addu / 8001a9b0 sh
+                     *                                      a1 <= 0x800: rot += 2*s (netto rot + s)
+                     * Vorher maskierte der Port jeden Schritt (& 0xfff) und drehte per zentrierter
+                     * Differenz: (1) nach einem Schritt ueber 0 lag die Gier bei 4096-k statt -k
+                     * (anderer RotMatrix-Zweig fuer die Granate, s. esp_trig); (2) fuer Ziele mit
+                     * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (Ziel knapp unter +180 Grad) drehte er
+                     * +s, das Original -s (die Halbebenen-Grenze ist um s verschoben). */
+                    int a1 = (bearing - (int)p->rot_y + (int)slew) & 0xfff;
+                    if (a1 < 2 * (int)slew)
+                        p->rot_y = (int16_t)bearing;                          /* @0x8001a984 */
+                    else if (a1 <= 0x800)
+                        p->rot_y = (int16_t)((int)p->rot_y + (int)slew);      /* @0x8001a988 + @0x8001a9b0 */
+                    else
+                        p->rot_y = (int16_t)((int)p->rot_y - (int)slew);      /* @0x8001a988 */
                 }
             }
         }

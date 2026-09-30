@@ -249,6 +249,19 @@ extern void (*re15_esp_se_hook)(uint32_t code, const int32_t pos[3]);
  *  (include/re2_fx.h): Plattform (Spur C). NULL = kein Aufschlag. */
 extern void (*re15_esp_aufschlag_hook)(int re2_art, const int32_t q[3], int16_t gier);
 
+/* ===== Runde 34 Spur A (additiv zu V1) — Granaten-Spawn und Messschiene ====================
+ * re15_esp_granate_spawn = FUN_80019700-Zwilling fuer den Wurfkoerper a0 = 0x040D1000
+ * (Effekt 4, sub 0x0D, Skala 0x1000; `lui a0,0x40d` / `ori a0,a0,0x1000` @0x800336bc-c0,
+ * `jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4). (x,y,z) = Anker.R*Versatz + Anker.T
+ * (Knochen-11-Weltmatrix des Vorbilds, @0x800336d0-f0), gier = Spieler +0x6a -> Platz +0x2e
+ * (`lh a1,-13634(a1)` @0x800336cc, `sh s2,46(t0)` @0x800197e4). art = Resolver-Art 2/3/4
+ * (granate_art, V1). Liefert den Platz oder NULL (Pool voll: `ori v0,zero,0xff` @0x800197c8-cc). */
+re15_esp_fx_t *re15_esp_granate_spawn(const re15_esp_t *bank, uint8_t art,
+                                      int32_t x, int32_t y, int32_t z, int16_t gier);
+/** MESSSCHIENE (kein Verhalten): Zahl der Flaechenresolver-Aufrufe aus Routine 31 (Zuender 7,
+ *  `jal 0x80012d60` @0x800185b8) seit Programmstart. Fuer die Sonde probe_r34_wurf. */
+unsigned       re15_esp_granate_resolver_calls(void);
+
 void           re15_esp_fx_reset(void);
 int            re15_esp_fx_count(void);
 /** Spawn an op-0x3a effect particle. `bank` = the room's parsed ESP (resolves effect_id ->
