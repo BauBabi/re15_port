@@ -70,7 +70,11 @@ Gradle-Seite (`app/build.gradle`):
 * `stageAssets`/`writeAssetManifest` spiegeln die fuenf Asset-Baeume `shared_assets/PSX`,
   `shared_assets/extracted_fx`, `shared_assets/RE2`, `shared_assets/RE15DOOR` (Port-Tuerarchive,
   seit Runde 33) und `synchro/STAGE*` nach `app/build/re15_assets/` und schreiben
-  `re15_assets.txt` (Groesse + Pfad je Datei). Dieselbe Liste steht in
+  `re15_assets.txt` im **Format v2** (Runde 34a N1): Kopfzeile `# re15 assets v2 <anzahl> <bytes>`,
+  je Datei `<bytes>\t<sha256>\t<pfad>`, nach Pfad sortiert. Die Regeln (fail closed) stehen in
+  `jni/asset_abgleich.h`; `release/apk_asset_gate.py` liest die Liste in der APK nach denselben
+  Regeln und prueft jede Summe gegen die Daten der APK (die Liste v1 bis v0.8.19 wird abgelehnt).
+  Dieselbe Baum-Liste steht in
   `release/apk_asset_gate.py` (`BAEUME`, wird gegen `stageAssets` geprueft - weicht sie ab, bricht
   die Pruefung ab) und in `release/make_package.sh` (`copy_common`, jedes PC-Paket wird per
   `apk_asset_gate.py --paket` gegen die Liste geprueft).
@@ -130,7 +134,17 @@ erlauben). Mindestens Android 7.0 (API 24), Ziel Android 15 (API 35).
 
 **Erster Start:** die Assets werden aus der APK in den App-Speicherordner entpackt
 (Fortschrittsbalken, ~365 MB, je nach Geraet 10-60 s). Danach startet das Spiel wie am PC
-(Capcom-Intro, Titel). Weitere Starts pruefen nur einen Marker und starten sofort.
+(Capcom-Intro, Titel). Weitere Starts vergleichen die Liste der APK mit der zuletzt entpackten
+(`re15_assets_entpackt.txt`) und pruefen nur die Dateigroessen - das Spiel startet sofort.
+
+**Update:** nur Dateien, deren Groesse ODER sha256 sich gegenueber dem zuletzt entpackten Stand
+geaendert hat (oder die fehlen), werden neu entpackt; Dateien, die nicht mehr in der Liste
+stehen, werden geloescht (`adb logcat -s re15` nennt jede Datei). Jede Datei wird als
+`<ziel>.neu` geschrieben und erst nach passender Groesse und sha256 umbenannt. Von v0.8.19
+kommend (nur der alte Marker `re15_assets_ok.txt`) wird einmal jede vorhandene Datei per
+sha256 geprueft ("ASSETS WERDEN EINMALIG GEPRUEFT"); ebenso nach einem abgebrochenen Entpacken.
+Die Quelle ist ausschliesslich die APK (AAssetManager). Dokumentation:
+`analysis/befunde_runde34_android/android_entpacker_n1.md`.
 
 Der App-Speicherordner ist der **exe-Anker** des Ports (so wie am PC das Verzeichnis neben
 der exe): `/storage/emulated/0/Android/data/de.re15.port/files/` (per USB-Dateiuebertragung
@@ -143,7 +157,7 @@ oder `adb` einsehbar), sonst der interne `files`-Ordner der App. Dort liegen
 | `re15_card.mcr` | die Memory-Card (Spielstaende) |
 | `re2_ki.log` | RE2-KI-Trace (nur mit `RE15_RE2_TRACE`) |
 | `shared_assets/`, `synchro/` | die entpackten Assets |
-| `re15_assets_ok.txt` | Marker "Assets vollstaendig" (loeschen = neu entpacken) |
+| `re15_assets_entpackt.txt` | Kopie der Asset-Liste nach vollstaendigem Entpacken (loeschen = beim naechsten Start jede Datei per sha256 pruefen) |
 
 Auslesen z.B. mit `adb pull /sdcard/Android/data/de.re15.port/files/befund.log`.
 
@@ -236,8 +250,11 @@ einmal "Got it" antippen.
 ## Bekannte Grenzen
 
 * Die APK ist ~365 MB gross und entpackt sich beim ersten Start noch einmal in derselben
-  Groesse (zusammen ~730 MB). Ein Update der App laesst die entpackten Assets liegen;
-  weichen Groessen/Liste ab, wird nur nachkopiert, was fehlt.
+  Groesse (zusammen ~730 MB). Ein Update der App laesst die entpackten Assets liegen und
+  entpackt nur geaenderte (Groesse oder sha256), neue und fehlende Dateien nach. Fuer die
+  Installation eines Updates braucht Android zusaetzlich Platz fuer die neue APK (~365 MB) plus
+  seine Speicherreserve - im Emulator mit 6 GB `/data` und ~850 MB frei schlug das mit
+  `INSTALL_FAILED_INSUFFICIENT_STORAGE` fehl.
 * Nur Landscape. Kein Speichern der Fensterlage o.ae. — es gibt kein Fenster.
 * Kein Vibrations-/Sensor-Einsatz; das Overlay hat keine Einstellungen (Groesse/Lage fest,
   relativ zur Bildhoehe).
