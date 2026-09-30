@@ -682,3 +682,16 @@ Dateien mit uncommitteten Aenderungen.)
 * OFFEN bleibt: RE2-Paketpuffer-Ueberlauf (@0x80077e40-54), Mischreihenfolge innerhalb eines OT-Buckets bei
   verschiedenem View-Z (§OFFEN oben).
 * Unerreichbar mit echten Daten, synthetisch geprueft: Seite 0x1F (N5), M.rot·Versatz mit M.rot ≠ I (N3).
+
+### Suite nach der Nachbesserung (Bauverzeichnis re15_port/build_r34_d, 433 Tests = 431 + raum + pc)
+
+* **Lauf 5** (`local_build.sh` all auf 6d589759, Start 04:37:51, CPU-Last 90-96 % durch parallele Spuren):
+  `99% tests passed, 2 tests failed out of 433`, `Total Test time (real) = 915.77 sec`, Abschlusszeile
+  `!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8)`. Rot NUR `integration_r30_irons_tisch_laden`
+  ([a1150] "Bild 120 nicht erreicht (keine EXIT_AT-Zeile, exit=1)", debug.log endet mitten in `[prop-render]`-Zeilen)
+  und `integration_r30_irons_tisch_bild` ([S] "Spielstand nicht geladen (exit=1)", debug.log endet nach
+  `[pad] kein Controller gefunden`) — dasselbe Abriss-Muster wie Laeufe 1-4 und Pruefer §5a. Alle fuenf Spur-D-Sonden
+  gruen (`unit_r34_re2fx`, `_knochen`, `_bild`, `_raum`, `_pc`).
+* **Einzelwiederholung** (nacheinander): irons_tisch_laden **Passed** 34,52 s (Last 96 %), irons_tisch_bild **Passed**
+  48,05 s (Last 85 %). Kein reproduzierbares Rot; beide exe-Tests fuehren keinen Spur-D-Code aus
+  (`grep re2fx platform/pc/main.c` leer).
