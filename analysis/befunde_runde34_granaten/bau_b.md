@@ -5,7 +5,9 @@ Auftrag: BAUPLAN §3.2 B1-B12, E4-E7, E13, E16, K4-K7, P14-P27; O-VB4 vom Orches
 (Bodenfeuer an Gegnern OHNE RE2-KI = RE1.5-Angriffsart 5 "Flaechenfeuer", 50 @0x8006f422 / Reaktion 14 @0x8006f435).
 Bauverzeichnis `re15_port/build_r34_b`; Laufzeit-Ausgaben `build/r34g_b/` (unversioniert).
 
-STATUS: IN ARBEIT (fortlaufend geschrieben).
+STATUS: B1-B12 GEBAUT, alle Sonden gruen (unit_r34_schaden 39, unit_r34_reaktion 63 Pruefungen, Mutationsproben M1-M51);
+volle Suite: 5 Laeufe je 426-429/430, rot nur GUI-Integrationen mit exe-Abbruch unter Parallel-Last, alle einzeln gruen
+(Abschnitt "Volle Suite").
 
 ---
 
@@ -569,6 +571,41 @@ Mutations-Schutz (E7).
 
 Mutationsproben: M50 Herkunfts-Tor 0x26 weg -> 212 rot; M51 RE1.5-Zombie-Tod kehrt bei +0x5 == 9 sofort zurueck (simulierte
 NULL-Zeile) -> 210 rot (10 Haenger).
+
+---
+
+## Volle Suite (`local_build.sh`, Bauverzeichnis `re15_port/build_r34_b`)
+* **Lauf 1** (all, 2026-09-30 01:19-01:40, parallel zu den Suiten der Arbeitsbaeume r34g_a/_c/_d mit ihren GUI-Laeufen):
+  `99% tests passed, 4 tests failed out of 430` — rot nur die GUI-/exe-Integrationen `integration_r30_irons_tisch_licht`
+  (kein Framedump, exe exit 1), `integration_r30_titel_puls` (eine Pulsperiode am Bild 8936 us daneben bei 106 ms
+  Bilddauer), `integration_r33_speichern` (exe exit 1 beim Hochfahren, vor dem CONTINUE), `integration_dark_start_pin`
+  (exe exit 1). Einzeln wiederholt: alle vier **gruen** (dark_start_pin 19.9 s, irons_tisch_licht 60.6 s, titel_puls 25.8 s,
+  r33_speichern 89.5 s beim dritten Einzellauf; die ersten zwei Einzellaeufe fielen mit exe exit 1 an wechselnden Stellen
+  des Hochfahrens, waehrend Arbeitsbaum r34g_c GENAU DIESE Tests ebenfalls einzeln nachfuhr). Der r33-Ablauf mit
+  denselben Umgebungsvariablen von Hand: exit 0, `CONTINUE: resumed`, Hinweis ohne Karte. Keiner der vier Tests beruehrt
+  Schaden/Gegnerreaktion; RE15_MIN_TESTS unveraendert.
+* **Lauf 2** (test, 02:14-02:32, dieselben Binaerdateien): `99% tests passed, 1 tests failed out of 430` — die vier aus Lauf 1
+  gruen, rot nur `integration_r30_cut_blitz` (in Lauf 1 gruen). Einzeln waehrend der GUI-Suiten von r34g_a, r34g_c,
+  r34g_d und r34n_rolltor fuenfmal rot, jedes Mal mit exe **exit 1 an einer anderen Stelle** (vor dem ersten Bild,
+  Bild 30, 60, 150, 240 — `debug.log` bricht mitten im Lauf ab); kein Absturzcode (0xC0000005), sondern Rueckgabe 1 wie
+  bei einem von aussen beendeten Prozess oder dem dokumentierten SDL-Abbau-Flake (`platform/pc/main.c:2749-2762`).
+  Um 02:48 einzeln **gruen** (88.6 s). Damit ist jeder der 430 Tests auf demselben Stand mindestens einmal gruen gelaufen.
+* **Lauf 3** (test, 02:52-03:10): `3 tests failed out of 430` — `integration_elza_vollstart`, `integration_r30_granate_laden`
+  (Lauf "abgerissen", exit 1), `integration_r30_irons_tisch_laden` (exit 1 vor Bild 120) — alle drei in Lauf 1 und 2 gruen,
+  einzeln sofort gruen (101.1 s / 96.2 s / 35.8 s). Wieder nur GUI-Integrationen, wieder wechselnde.
+* **Lauf 4** (test, 03:14-03:27): `5 tests failed out of 430` — `integration_r30_irons_tisch_bild`, `..._licht`,
+  `integration_r33_speichern`, `integration_relatch_pin`, `integration_save_counter_pin` (alle: exe exit 1 frueh bzw.
+  mitten im Lauf). Einzeln: relatch_pin und save_counter_pin sofort gruen, irons_tisch_licht im 2., r33_speichern im 2.,
+  irons_tisch_bild im 4. Einzellauf gruen. Zur selben Zeit fuhr Arbeitsbaum r34g_c GENAU diese GUI-Tests
+  (cut_blitz, elza_vollstart, granate_laden, irons_tisch_*) einzeln nach — die Ausfaelle sind baumuebergreifend.
+* **Lauf 5** (test, 03:34-03:47): `99% tests passed, 1 tests failed out of 430` — nur `integration_r33_speichern`
+  (Lauf a: `debug.log` endet mitten im Lauf bei Bild 240, exit 1; die Laeufe b und c desselben Tests erreichen
+  `EXIT_AT`). Einzeln sofort gruen (81.9 s).
+* **Ergebnis:** in fuenf vollen Laeufen waren ALLE Unit-/Sonden-Tests (darunter unit_r34_schaden, unit_r34_reaktion)
+  jedes Mal gruen; rot waren ausschliesslich GUI-Integrationen der exe mit Abbruch `exit 1` an wechselnden Stellen, jeder
+  davon einzeln gruen. Eine Zeile `LOCAL-BUILD-OK` kam unter der Parallel-Last der anderen Arbeitsbaeume nicht zustande
+  (letzte Zeile: `!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8), Log: re15_port/build_r34_b/local_build_ctest.log`).
+  Empfehlung: die volle Suite nach dem Merge auf einer ruhigen Maschine einmal ohne Parallel-Laeufe wiederholen.
 
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
