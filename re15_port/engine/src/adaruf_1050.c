@@ -63,33 +63,44 @@ static const uint8_t k_ruf[RE15_ADARUF_PROG_LEN] = {
     /* +44 */ 0x02, 0x00,               /* Evt_next + Nop            = sub04 @0x026EA                     */
     /* +46 */ 0x12, 0x04,               /* Edwhile                   = sub04 @0x026EC                     */
     /* +48 */ 0x21, 0x05, 0x20, 0x00,   /* Ck(5,32)==0 (Ankunft)     = sub04 @0x026EE                     */
-    /* +4C */ 0x09, 0x0a, 0x14, 0x00,   /* Sleep 20                  = ROOM1090 sub02 @0x02486            */
-    /* +50 */ 0x2b, RE15_ADARUF_MSG_LEON_A, 0x00, 0x00,
+    /* +4C */ 0x40, 0x00, 0x09, 0x20,
+              (uint8_t)(RE15_ADARUF_KAMERA_X & 0xff), (uint8_t)((RE15_ADARUF_KAMERA_X >> 8) & 0xff),
+              (uint8_t)(RE15_ADARUF_KAMERA_Z & 0xff), (uint8_t)((RE15_ADARUF_KAMERA_Z >> 8) & 0xff),
+                                        /* Plc_dest Modus 9: zur Kamera drehen (Cut 4, re15_adaruf.h
+                                           RE15_ADARUF_KAMERA_*). PORT-WAHL, Grund dort: nur frontal
+                                           liest sich die Geste so, wie der Nutzer sie beschreibt.
+                                           Form wie +0x24 (ROOM1050 sub03 @0x00DC2).                      */
+    /* +54 */ 0x11, 0x00, 0x08, 0x00,   /* Do                        = ROOM1050 sub03 @0x00DCA            */
+    /* +58 */ 0x02, 0x00,               /* Evt_next + Nop            = @0x00DCE                           */
+    /* +5A */ 0x12, 0x04,               /* Edwhile                   = @0x00DD0                           */
+    /* +5C */ 0x21, 0x05, 0x20, 0x00,   /* Ck(5,32)==0 (Ankunftsbit) = @0x00DD2                           */
+    /* +60 */ 0x09, 0x0a, 0x14, 0x00,   /* Sleep 20                  = ROOM1090 sub02 @0x02486            */
+    /* +64 */ 0x2b, RE15_ADARUF_MSG_LEON_A, 0x00, 0x00,
                                         /* Message_on 23 "Leon: Another civilian survivor." — Form
                                            @0x0248A `2b 01 00 00`                                          */
-    /* +54 */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0) Arm hinaus = ROOM1090 sub03 @0x0265C
+    /* +68 */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0) Arm hinaus = ROOM1090 sub03 @0x0265C
                                            (Handler 0x80041b90: `sb a1,148(v0)` @0x80041ba8 = Clip)        */
-    /* +58 */ 0x09, 0x0a, 0x19, 0x00,   /* Sleep 25                  = sub03 @0x02660                     */
-    /* +5C */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0)        = sub03 @0x02664                     */
-    /* +60 */ 0x43, 0x00, 0x80, 0x00,   /* Plc_flg(0,0x80,0) rueckwaerts = sub03 @0x02668 (Handler
+    /* +6C */ 0x09, 0x0a, 0x19, 0x00,   /* Sleep 25                  = sub03 @0x02660                     */
+    /* +70 */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0)        = sub03 @0x02664                     */
+    /* +74 */ 0x43, 0x00, 0x80, 0x00,   /* Plc_flg(0,0x80,0) rueckwaerts = sub03 @0x02668 (Handler
                                            0x80041fb8, `or v0,v0,a2` @0x80041ffc auf +0x1c4)               */
-    /* +64 */ 0x09, 0x0a, 0x1a, 0x00,   /* Sleep 26                  = sub03 @0x0266C                     */
-    /* +68 */ 0x2b, RE15_ADARUF_MSG_LEON_B, 0x00, 0x00,
+    /* +78 */ 0x09, 0x0a, 0x1a, 0x00,   /* Sleep 26                  = sub03 @0x0266C                     */
+    /* +7C */ 0x2b, RE15_ADARUF_MSG_LEON_B, 0x00, 0x00,
                                         /* Message_on 24 "Leon: I have to help her!" — Form sub03
                                            @0x02670 `2b 06 00 00`; der Stimmen-Riegel (voice_wait) haelt
                                            diese Zeile bis main23.wav zu Ende ist                          */
-    /* +6C */ 0x3f, 0x00, 0x11, 0x00,   /* Plc_motion(0,17,0) Arm-Schwung = ROOM1170 sub02 @0x015F0       */
-    /* +70 */ 0x09, 0x0a, 0x64, 0x00,   /* Sleep 100                 = ROOM1170 sub02 @0x015F4            */
-    /* +74 */ 0x22, 0x02, 0x07, 0x00,   /* Set(2,7)=0                = ROOM1090 sub02 @0x024BE            */
-    /* +78 */ 0x22, 0x01, 0x1b, 0x00,   /* Set(1,27)=0               = ROOM1090 sub02 @0x024C2            */
-    /* +7C */ 0x2e, 0x01, 0x00, 0x00,   /* Work_set(1,0)+Nop         = ROOM1090 sub02 @0x024C6            */
-    /* +80 */ 0x42, 0x00,               /* Plc_ret + Nop             = ROOM1090 sub02 @0x024CA (Handler
+    /* +80 */ 0x3f, 0x00, 0x11, 0x00,   /* Plc_motion(0,17,0) Arm-Schwung = ROOM1170 sub02 @0x015F0       */
+    /* +84 */ 0x09, 0x0a, 0x64, 0x00,   /* Sleep 100                 = ROOM1170 sub02 @0x015F4            */
+    /* +88 */ 0x22, 0x02, 0x07, 0x00,   /* Set(2,7)=0                = ROOM1090 sub02 @0x024BE            */
+    /* +8C */ 0x22, 0x01, 0x1b, 0x00,   /* Set(1,27)=0               = ROOM1090 sub02 @0x024C2            */
+    /* +90 */ 0x2e, 0x01, 0x00, 0x00,   /* Work_set(1,0)+Nop         = ROOM1090 sub02 @0x024C6            */
+    /* +94 */ 0x42, 0x00,               /* Plc_ret + Nop             = ROOM1090 sub02 @0x024CA (Handler
                                            0x80041f88: +0x4 = 1, +0x5..+0x7 = 0)                           */
-    /* +82 */ 0x46, RE15_ADARUF_SLOT, RE15_ADARUF_SCE_TEXT, RE15_ADARUF_FLAGS,
+    /* +96 */ 0x46, RE15_ADARUF_SLOT, RE15_ADARUF_SCE_TEXT, RE15_ADARUF_FLAGS,
               RE15_ADARUF_MSG_SPERRE, 0x00, 0xff, 0xff, 0x00, 0x00,
                                         /* Aot_reset(4, sce 1, 0x31, msg 25, 0xffff, 0) — Form ROOM1130
                                            sub01 @0x00A1C `46 03 01 31 01 00 ff ff 00 00`                 */
-    /* +8C */ 0x01, 0x00,               /* Evt_end                                                        */
+    /* +A0 */ 0x01, 0x00,               /* Evt_end                                                        */
 };
 
 /* Die RAM-Kopie, die die VM ausfuehrt: die Weiche setzt die zwei Ziel-Operanden aus der Spieler-

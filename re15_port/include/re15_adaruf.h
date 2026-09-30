@@ -111,12 +111,30 @@
  * @0x80031210, `sh` +0x8c @0x80031218) und endet bei Rest < 100 (`slti v0,v0,100` @0x800312fc). */
 #define RE15_ADARUF_SCHRITT         755
 
+/* Nach dem Rueckschritt dreht Leon sich zur KAMERA (Plc_dest Modus 9 auf ihren Standort), dann erst
+ * die zwei Leon-Zeilen mit den Gesten. ⛔ PORT-WAHL, keine Original-Adresse fuer die Blickrichtung —
+ * Grund (gemessen an der echten exe, Dossier §9 / Gegenpruefung Auflage 7): alle Leon-Gesten bewegen
+ * den LINKEN Arm (Dossier §3.5), der Nutzer beschreibt sie aber als "den rechten Arm ... nach rechts"
+ * — das ist die Sicht von VORN (sein linker Arm liegt dann rechts im Bild und geht nach rechts
+ * hinaus). Zur Tuer gewandt sieht Cut 4 Leon schraeg von hinten links: der Arm ginge im Bild nach
+ * LINKS, der Schwung (Clip 17) verschwindet halb hinter dem Koerper. Eine Kamera, die Leon an der
+ * Tuer von vorn zeigt, gibt es nicht: Kameratabelle RDT @0x00060 (10 Saetze a 0x20) — Cut 0..4, 6..9
+ * stehen westlich/noerdlich (x 14332..16171), Cut 5 (@0x00100, Standort (20036,-22179)) suedoestlich:
+ * er saehe Leons rechte Seite (Waffenhand) und zeigt ihn an der Tuer nur als Streifen hinter der
+ * Wandkante (Dossier §1 L9). An der Tuer ist aus jeder Richtung Cut 4 aktiv (RVD-Baender, §2.2).
+ * Also dreht sich Leon zur aktiven Kamera. Standort Cut 4 = ROOM1050.RDT @0x000E0 `00 00 3c 68 97 3a
+ * 00 00 23 f2 ff ff 34 e0 ff ff ...` (pos_x @0x000E4 = 14999, pos_z @0x000EC = -8140). */
+#define RE15_ADARUF_KAMERA_X        14999
+#define RE15_ADARUF_KAMERA_Z        (-8140)
+
 /* Operanden-Stellen im Programm, die die Weiche beim Ausloesen setzt (x/z als LE s16):
  *   +0x28 = Blickpunkt des Plc_dest Modus 9 (x + SCHRITT, z)  — Drehung zur Tuerwand
- *   +0x3C = Ziel des Plc_dest Modus 8      (x - SCHRITT, z)  — Rueckschritt */
+ *   +0x3C = Ziel des Plc_dest Modus 8      (x - SCHRITT, z)  — Rueckschritt
+ * (+0x50 = Kamera-Standort, fest im Programm.) */
 #define RE15_ADARUF_OFF_DREH        0x28
 #define RE15_ADARUF_OFF_ZIEL        0x3C
-#define RE15_ADARUF_PROG_LEN        142
+#define RE15_ADARUF_OFF_KAMERA      0x50
+#define RE15_ADARUF_PROG_LEN        162
 
 /* Zustand nach der Installation (Pruefhaken). */
 #define RE15_ADARUF_AUS             0    /* nicht ROOM1050, gerettet, oder Slot 4 keine Tuer */

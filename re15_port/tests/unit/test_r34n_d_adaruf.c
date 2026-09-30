@@ -14,8 +14,9 @@
  *
  * Teile (je ein ctest-Eintrag):
  *   szene    Erster Druck, Ada nicht gerettet: Szene statt Raumwechsel; Nachrichtenfolge 22 -> 23 -> 24;
- *            Ruf VOR dem Rueckschritt; Rueckschritt <= 12 Bilder, Weg 600..760, z unveraendert, Blick
- *            bleibt zur Tuer; Clip 19 vor, Clip 19 rueckwaerts (Plc_flg 0x80), Clip 17; Balken voll und
+ *            Ruf VOR dem Rueckschritt; Rueckschritt <= 12 Bilder, Weg 600..760, z unveraendert, dabei
+ *            Blick zur Tuer; danach Drehung zur Kamera Cut 4 (PORT-WAHL, re15_adaruf.h) und beide Gesten
+ *            mit Blick zur Kamera; Clip 19 vor, Clip 19 rueckwaerts (Plc_flg 0x80), Clip 17; Balken voll und
  *            wieder weg; Flags danach (9,65)=1 (2,7)=0 (1,27)=0; Slot 4 = Text-Platz msg 25; kein
  *            Raumwechsel, keine Tuersequenz.
  *   doppel   (Auflage 5) Quadrat alle 10 Bilder waehrend der Szene + direkter zweiter scd_event_fire(13)
@@ -265,6 +266,9 @@ typedef struct {
     int msg_folge_ok;            /* nur 22,23,24 in dieser Reihenfolge, keine andere Nachricht     */
     int schritt_start, ankunft;  /* Bild mit PC > +0x38 bzw. > +0x48                               */
     double weg; int dz, gierung_ende;
+    int zur_kamera;              /* Bild mit PC > +0x5C (Drehung zur Kamera fertig)                */
+    double blick_kamera;         /* cos(Blick, Richtung zur Kamera) in diesem Bild                 */
+    int geste_blick_ok;          /* in JEDEM Gestenbild (Clip 19/17) Blick zur Kamera              */
     int clip19_vor, clip19_rueck, clip17;   /* Bild, in dem der Clip (mit Flag) zuerst steht      */
     int ende;                    /* Bild, in dem der Faden weg ist                                 */
     int lb_voll, lb_weg;         /* Letterbox 0xF0 erreicht / nach dem Ende wieder 0               */
@@ -274,12 +278,30 @@ typedef struct {
     int ziel_geaendert;
 } szene_t;
 
+/* cos des Winkels zwischen Leons Blick und der Richtung zur Kamera Cut 4. Blickvektor wie der
+ * Vorwaerts-620-Punkt des Aktions-Scans: (cos, -sin) der Gierung (FUN_80042bac @0x80042bd0). */
+static double blick_zur_kamera(const re15_actor_t *pl)
+{
+    double fx = re15_cos_q12(pl->rot_y & 0xfff) / 4096.0, fz = -re15_sin_q12(pl->rot_y & 0xfff) / 4096.0;
+    double kx = (double)RE15_ADARUF_KAMERA_X - pl->x, kz = (double)RE15_ADARUF_KAMERA_Z - pl->z;
+    double n = sqrt(kx * kx + kz * kz);
+    return n > 0 ? (fx * kx + fz * kz) / n : 0.0;
+}
+/* Toleranz: Modus 9 stoppt im Kegel `ori a2,zero,0x60` (@0x800313d4) und dreht 0x60 je Bild
+ * (@0x80031440) — hoechstens 2 x 0x60 = 192 Einheiten = 16,9 Grad daneben. */
+#define BLICK_TOL_COS 0.956
+/* Obergrenze der Szenendauer: Sleep 20+100+20+25+26+100 = 291 Bilder (Programm +0x18/+0x20/+0x60/
+ * +0x6C/+0x78/+0x84) + zwei Drehungen je hoechstens 0x800/0x60 = 22 Bilder + Rueckschritt <= 12
+ * + 5 Bilder Opcode-Uebergaenge = 352 -> 360. */
+#define SZENE_MAX 360
+
 static szene_t szene_fahren(int quadrat_waehrend, int zweiter_fire)
 {
     szene_t r; memset(&r, 0, sizeof r);
     r.msg_bild[0] = r.msg_bild[1] = r.msg_bild[2] = -1;
     r.schritt_start = r.ankunft = r.ende = r.lb_voll = r.lb_weg = -1;
     r.clip19_vor = r.clip19_rueck = r.clip17 = -1;
+    r.zur_kamera = -1; r.geste_blick_ok = 1;
     r.msg_folge_ok = 1;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     s_n_seq = 0; g_room_change.pending = 0;
@@ -321,6 +343,9 @@ static szene_t szene_fahren(int quadrat_waehrend, int zweiter_fire)
         if (pl->motion == 19 && !(pl->anim_flags & 0x80) && r.clip19_vor < 0)  r.clip19_vor = f;
         if (pl->motion == 19 &&  (pl->anim_flags & 0x80) && r.clip19_rueck < 0) r.clip19_rueck = f;
         if (pl->motion == 17 && r.clip17 < 0) r.clip17 = f;
+        if ((pl->motion == 19 || pl->motion == 17) && off >= 0 && blick_zur_kamera(pl) < BLICK_TOL_COS)
+            r.geste_blick_ok = 0;
+        if (r.zur_kamera < 0 && off > 0x5C) { r.zur_kamera = f; r.blick_kamera = blick_zur_kamera(pl); }
         if (r.schritt_start < 0 && off > 0x38) r.schritt_start = f;
         if (r.ankunft < 0 && off > 0x48) {
             r.ankunft = f;
@@ -349,10 +374,11 @@ static int text_ist(int id, const char *soll)
 static void szene_pruefen(const szene_t *r)
 {
     printf("  Druck: Ereignis %d, Faden %d | msg 22/23/24 ab B%d/B%d/B%d | Schritt B%d..B%d Weg %.0f dz %d "
-           "Gierung %d | Clip19 B%d, Clip19 rueckw. B%d, Clip17 B%d | Ende B%d | Balken voll B%d weg B%d\n",
+           "Gierung %d | zur Kamera B%d cos %.3f | Clip19 B%d, Clip19 rueckw. B%d, Clip17 B%d | Ende B%d | "
+           "Balken voll B%d weg B%d\n",
            r->ereignis, r->gestartet, r->msg_bild[0], r->msg_bild[1], r->msg_bild[2], r->schritt_start,
-           r->ankunft, r->weg, r->dz, r->gierung_ende, r->clip19_vor, r->clip19_rueck, r->clip17, r->ende,
-           r->lb_voll, r->lb_weg);
+           r->ankunft, r->weg, r->dz, r->gierung_ende, r->zur_kamera, r->blick_kamera, r->clip19_vor,
+           r->clip19_rueck, r->clip17, r->ende, r->lb_voll, r->lb_weg);
     PRUEF(r->ereignis == RE15_ADARUF_EREIGNIS && r->gestartet == 1,
           "Quadrat -> Aktions-Scan meldet Ereignis 13, scd_event_fire startet das Port-Programm");
     PRUEF(r->msg_folge_ok && r->msg_bild[0] > 0 && r->msg_bild[1] > r->msg_bild[0] && r->msg_bild[2] > r->msg_bild[1],
@@ -365,13 +391,17 @@ static void szene_pruefen(const szene_t *r)
     PRUEF(r->weg >= 600.0 && r->weg <= 760.0, "Weg %.0f in 600..760 (Soll ~700 wie ROOM1090 sub02)", r->weg);
     PRUEF(abs(r->dz) < 100, "z aendert sich nicht (dz %d) — keine Kamerazone gekreuzt", r->dz);
     PRUEF(r->gierung_ende <= 128 || r->gierung_ende >= 4096 - 128,
-          "Blick bleibt zur Tuer (+X): Gierung %d", r->gierung_ende);
+          "Rueckschritt mit Blick zur Tuer (+X): Gierung %d bei Ankunft", r->gierung_ende);
+    PRUEF(r->zur_kamera > r->ankunft && r->zur_kamera - r->ankunft <= 23 && r->blick_kamera >= BLICK_TOL_COS,
+          "danach zur Kamera Cut 4 gedreht (B%d, cos %.3f; <= 0x800/0x60 = 22 Bilder)", r->zur_kamera,
+          r->blick_kamera);
+    PRUEF(r->geste_blick_ok, "beide Gesten mit Blick zur Kamera (Arm im Bild rechts, geht nach rechts)");
     PRUEF(r->msg_bild[1] > 0 && r->clip19_vor >= r->msg_bild[1] && r->clip19_rueck > r->clip19_vor &&
           r->clip19_rueck < r->msg_bild[2],
           "\"Another civilian survivor.\": Clip 19 vor (B%d), dann rueckwaerts (B%d), vor msg 24",
           r->clip19_vor, r->clip19_rueck);
     PRUEF(r->clip17 >= r->msg_bild[2] && r->msg_bild[2] > 0, "\"I have to help her!\": Clip 17 (B%d)", r->clip17);
-    PRUEF(r->ende > 0 && r->ende <= 330, "Faden endet (B%d <= 330)", r->ende);
+    PRUEF(r->ende > 0 && r->ende <= SZENE_MAX, "Faden endet (B%d <= %d)", r->ende, SZENE_MAX);
     PRUEF(r->lb_voll > 0 && r->lb_voll < r->msg_bild[0] && r->lb_weg > r->ende,
           "Balken wie jede Original-Szene: voll ab B%d, nach dem Ende weg (B%d)", r->lb_voll, r->lb_weg);
     PRUEF(r->pm_frei, "Steuerung danach frei (player_mode 0)");
@@ -449,7 +479,7 @@ static void teil_doppel(void)
            r.max_faeden, r.ziel_geaendert, r.ende, r.schritt_start, r.ankunft);
     PRUEF(r.gestartet == 1 && r.max_faeden == 1, "genau EIN Faden (max %d)", r.max_faeden);
     PRUEF(!r.ziel_geaendert, "Ziel-Operanden +0x28/+0x3C unveraendert");
-    PRUEF(r.ende > 0 && r.ende <= 330 && !r.raumwechsel && r.seq == 0,
+    PRUEF(r.ende > 0 && r.ende <= SZENE_MAX && !r.raumwechsel && r.seq == 0,
           "Szene endet normal (B%d), kein Raumwechsel, keine Tuersequenz", r.ende);
     PRUEF(g_aot.slots[RE15_ADARUF_SLOT].type == RE15_AOT_TYPE_MESSAGE, "Slot 4 danach Text-Platz");
 }
@@ -589,7 +619,7 @@ static void teil_raster(void)
     printf("  gemessene Ostgrenze: z=-15700 -> %d, z=-15000 -> %d, z=-13700 -> %d, z=-11700 -> %d\n",
            (int)ost[0], (int)ost[7], (int)ost[20], (int)ost[40]);
     int kandidaten = 0, gueltig = 0, ereignis = 0, haengt = 0, schlecht = 0;
-    int max_schritt = 0, max_ende = 0; double min_weg = 1e9, max_weg = 0; int max_dz = 0;
+    int max_schritt = 0, max_ende = 0; double min_weg = 1e9, max_weg = 0, min_blick = 1.0; int max_dz = 0;
     for (int32_t x = 15700; x <= 17500; x += 100) {
         int iz = 0;
         for (int32_t z = -15700; z <= -11700; z += 100, iz++)
@@ -612,19 +642,23 @@ static void teil_raster(void)
             if (r.weg < min_weg) min_weg = r.weg;
             if (r.weg > max_weg) max_weg = r.weg;
             if (abs(r.dz) > max_dz) max_dz = abs(r.dz);
-            if (schritt > 12 || r.weg < 600.0 || r.weg > 760.0 || abs(r.dz) >= 100 || r.ende > 330) {
+            if (r.blick_kamera < min_blick) min_blick = r.blick_kamera;
+            if (schritt > 12 || r.weg < 600.0 || r.weg > 760.0 || abs(r.dz) >= 100 || r.ende > SZENE_MAX ||
+                !r.geste_blick_ok || r.zur_kamera < 0 || r.blick_kamera < BLICK_TOL_COS) {
                 schlecht++;
-                printf("  AUSSERHALB  (%d,%d) Gierung %d: Schritt %d Bilder, Weg %.0f, dz %d, Ende B%d\n",
-                       (int)x, (int)z, yaw, schritt, r.weg, r.dz, r.ende);
+                printf("  AUSSERHALB  (%d,%d) Gierung %d: Schritt %d Bilder, Weg %.0f, dz %d, Ende B%d, "
+                       "Blick zur Kamera cos %.3f (Gesten %d)\n", (int)x, (int)z, yaw, schritt, r.weg, r.dz,
+                       r.ende, r.blick_kamera, r.geste_blick_ok);
             }
         }
     }
     printf("  Kandidaten %d, gueltig %d, Ereignis 13 %d, haengt %d, ausserhalb %d | Schritt max %d Bilder, "
-           "Weg %.0f..%.0f, |dz| max %d, Szene max %d Bilder\n", kandidaten, gueltig, ereignis, haengt, schlecht,
-           max_schritt, min_weg, max_weg, max_dz, max_ende);
+           "Weg %.0f..%.0f, |dz| max %d, Szene max %d Bilder, Blick zur Kamera cos min %.3f\n", kandidaten,
+           gueltig, ereignis, haengt, schlecht, max_schritt, min_weg, max_weg, max_dz, max_ende, min_blick);
     PRUEF(gueltig >= 100, "genug begehbare Druckstellen (%d)", gueltig);
     PRUEF(ereignis == gueltig && haengt == 0 && schlecht == 0,
-          "ueberall Ereignis 13, Faden endet, Schritt <= 12, Weg 600..760, |dz| < 100, Ende <= 330");
+          "ueberall Ereignis 13, Faden endet, Schritt <= 12, Weg 600..760, |dz| < 100, Ende <= %d, "
+          "Gesten mit Blick zur Kamera", SZENE_MAX);
 }
 
 int main(int argc, char **argv)
