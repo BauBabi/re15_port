@@ -1,0 +1,3 @@
+[maskgrp] F0 Raum 1150 wv0A=2 wv0C=0 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
+[maskgrp] F107 Raum 1150 wv0A=6 wv0C=6 Aufbau Cut 6 pri_offset=0xBCC NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F386 Raum 1150 wv0A=2 wv0C=2 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
