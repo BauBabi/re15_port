@@ -161,5 +161,29 @@ den Geraete-Leser (Klasse V1/V2 der Runde 1): eine APK geht gruen durch die Kett
 nicht (fail closed, mit Meldung). Keiner laesst FALSCHEN INHALT auf das Geraet: der schaedliche Fall (Tuerarchiv falsch, Liste
 passend) haengt am Quellbaum-Vergleich in `pruefen`, und dort ueberlebte kein Mutant (E_pruefen 1/23, aequivalent). Die Proben
 `_MANIFEST_PROBEN`/Faelle haben: CR vor Kopf- bzw. Datenzeile (nur CR HINTER), 19 Ziffern nur im Bytes-Feld des Kopfs, die
-Gross/klein-Dublette nur als `B`/`b`, falsche Listen-Summe nur in einer Richtung (Fall 247/248: `0123456789abcdef..`, `0000..`).
+Gross/klein-Dublette nur als `B`/`b`, falsche Listen-Summe nur in einer Richtung (Fall 228 `0123456789abcdef..`, Fall 248 `0000..` - beide kleiner als jede echte Summe; fuer den Quellbaum- und Paketvergleich gibt es dagegen beide Richtungen: Faelle 167/168, 185/186).
 **Befund F-Y1 (niedrig)** - dieselbe Klasse wie V1/V2 der Runde 1, dort als niedrig gefuehrt und mit 16 Proben + 10 Faellen behoben.
+
+### 4.3 Der ECHTE Entpacker auf einem Linux-Pruefstand (Y4, Y6, Y9)
+
+Der Emulator gehoerte beim Start dem Pruefer ECHTER LAUF (`emulator-5586`). Statt ihn zu teilen: android_glue.c + asset_abgleich.c
+HEAD UNVERAENDERT (sha256 0e295345... / 7699ee31...) mit Attrappen fuer SDL (keine Anzeige, `SDL_PollEvent` liefert beim 3. Aufruf
+SDL_QUIT = "App geschlossen"), JNI (Activity.getAssets), AAssetManager (liest die "APK-Assets" aus einem Ordner) und android/log
+im Linux-Container uebersetzt (gcc 10.2, uid 1000; Werkzeug `pruefstand/harness_main.c`, `pruefstand/stub/`, `pruefstand/szenarien.sh`,
+Beleg `pruefstand_1000.txt`). Der Speicher ist dort case-SENSITIV (ext4/overlay) - fuer diese Faelle ohne Belang.
+| Szenario | EXIT | Ergebnis |
+|---|---|---|
+| S0 frisch / S1 Neustart / S2 Update mit gleich grosser Aenderung (N1a) | 0/0/0 | `ohne Liste` 3 kopiert; `schneller Weg`; `Update ... geaendert 1` -> b.bin neu (bbbb2) |
+| **S3 Y4**: `PSX/X` + `PSX/X.neu/B` frisch, dann Update mit geaendertem X | 0 / **1 / 1 / 1** | frisch ok (X zuerst, dann Ordner X.neu/); Update: `FEHLER beim Entpacken: .../PSX/X.neu nicht anlegbar: Is a directory` -> `ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN`; JEDER weitere Start (`ohne Liste`, Summe weicht ab -> neu) scheitert gleich - **dauerhaft**, bis die App-Daten geloescht werden |
+| **S4 verschluckt**: Update streicht `ALT/w.bin`, Ordner `ALT/` nur lesbar | **0 / 0** | `Abgleich (Update) ... weg 1`, dann `0 entfernt ... 0 Fehler`, SPIELSTART, Liste geschrieben; `ALT/w.bin` bleibt, KEINE Warnung/Zeile; Neustart `schneller Weg` - die Datei bleibt fuer immer (kein Waisen-Lauf mit gueltiger Liste) |
+| S5 kein AssetManager (JNI) | 1 | `ABBRUCH: FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS`, Meldung gezeichnet, Ende erst mit SDL_QUIT - fail closed mit Anzeige |
+| S6 kein AssetManager UND kein Renderer | 1 | fail closed, aber 0 Zeichenaufrufe: schwarzer Schirm bis zum Schliessen (Grenze: ohne Renderer laeuft das Spiel ohnehin nicht) |
+| S7 Abbruch mitten im Entpacken (`_exit` im AAsset_read), Neustart | 9 / 0 | `.neu`-Rest, keine Liste; Neustart: `Waise entfernt ... a.bin.neu`, alles kopiert, 0 `.neu`, Inhalt = APK |
+| S9 Liste v1 / S10 Datei fehlt in der APK / S11 falsche Listen-Summe | 1 / 1 / 1,1 | je `ABBRUCH` mit Meldung; S11 bei JEDEM Start (Folge von A3 in Abschnitt 5) |
+Bestaetigt: F-Y4 am echten Code (dauerhaft fail closed). **Neu F-Y6 (niedrig):** das `unlink` der weg-Pfade (android_glue.c:499-506,
+`if (unlink(dst) == 0) {...}` ohne else) verschluckt jeden Fehler ausser dem Erfolg - kein Zaehler, keine Zeile, "0 Fehler", die Liste
+wird geschrieben und die Datei nie mehr angefasst. Gleiche Klasse wie U1 der Runde 1 (dort fuer `unlink(pf_liste)` behoben: "ausser
+ENOENT -> Fehler"), und gegenlaeufig zu `re15_abgleich_waisen`, das nicht loeschbare Waisen wenigstens als WARNUNG meldet. Folge nur,
+wenn die Engine eine gestrichene Datei noch oeffnet (sie probiert optionale Pfade) - dann laedt sie den alten Stand. Auf dem Geraet
+schwer herbeizufuehren (App-eigener Speicher); am Pruefstand eindeutig.
+(Randnotiz ohne Befund: gcc meldet in draw_progress :313 `-Wmisleading-indentation` fuer `if (frac < 0) frac = 0; if (frac > 1) frac = 1;` - Verhalten richtig.)

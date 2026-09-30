@@ -1,0 +1,126 @@
+Warnungen beim Uebersetzen: 1
+android_glue.c sha256 0e295345b471f71b..., asset_abgleich.c 7699ee319e2b6f1b...
+== S0 A frisch: EXIT=0
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 F
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 2 Zeichenaufrufe, letzte Anzeige '3 / 3 DATEIEN  (100%)  0 MB'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/DATA/ shared_assets/PSX/DATA/b.bin=bbbb1 shared_assets/PSX/a.bin=AAAA synchro/ synchro/STAGE1/ synchro/STAGE1/m.wav=mmmm 
+     Liste zuletzt entpackt: # re15 assets v2 3 13
+== S1 A Neustart: EXIT=0
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 13 Bytes unter /tmp/hs/s_ab (0 ms)
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 0 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 0 Zeichenaufrufe, letzte Anzeige ''
+== S2 Update A->B (b.bin gleich gross geaendert): EXIT=0
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 1, neu 0, pruefen 0, weg 0
+     [android] entpacke shared_assets/PSX/DATA/b.bin (geaendert)
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (5 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 2 Zeichenaufrufe, letzte Anzeige '3 / 3 DATEIEN  (100%)  0 MB'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/DATA/ shared_assets/PSX/DATA/b.bin=bbbb2 shared_assets/PSX/a.bin=AAAA synchro/ synchro/STAGE1/ synchro/STAGE1/m.wav=mmmm 
+     Liste zuletzt entpackt: # re15 assets v2 3 13
+--- Y4-Liste: shared_assets/PSX/X shared_assets/PSX/X.neu/B shared_assets/PSX/a.bin 
+== S3a Y1 frisch (X + X.neu/B): EXIT=0
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 F
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 2 Zeichenaufrufe, letzte Anzeige '3 / 3 DATEIEN  (100%)  0 MB'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/X=xxxx1 shared_assets/PSX/X.neu/ shared_assets/PSX/X.neu/B=BBBB shared_assets/PSX/a.bin=AAAA 
+     Liste zuletzt entpackt: # re15 assets v2 3 13
+== S3b Update Y1->Y2 (X geaendert, gleich gross): EXIT=1
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 1, neu 0, pruefen 0, weg 0
+     [android] entpacke shared_assets/PSX/X (geaendert)
+     [android] FEHLER beim Entpacken: /tmp/hs/s_y4/shared_assets/PSX/X.neu nicht anlegbar: Is a directory
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/X=xxxx1 shared_assets/PSX/X.neu/ shared_assets/PSX/X.neu/B=BBBB shared_assets/PSX/a.bin=AAAA 
+     Liste zuletzt entpackt: (keine)
+== S3c Neustart mit Y2: EXIT=1
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Summe weicht ab -> neu: shared_assets/PSX/X
+     [android] FEHLER beim Entpacken: /tmp/hs/s_y4/shared_assets/PSX/X.neu nicht anlegbar: Is a directory
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 0 kopiert (0 B, 0 ms), 3 per SHA-256 geprueft (13 B, 0 ms, 1 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 F
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/X=xxxx1 shared_assets/PSX/X.neu/ shared_assets/PSX/X.neu/B=BBBB shared_assets/PSX/a.bin=AAAA 
+     Liste zuletzt entpackt: (keine)
+== S3d noch ein Neustart mit Y2: EXIT=1
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Summe weicht ab -> neu: shared_assets/PSX/X
+     [android] FEHLER beim Entpacken: /tmp/hs/s_y4/shared_assets/PSX/X.neu nicht anlegbar: Is a directory
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 0 kopiert (0 B, 0 ms), 3 per SHA-256 geprueft (13 B, 0 ms, 1 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 F
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/X=xxxx1 shared_assets/PSX/X.neu/ shared_assets/PSX/X.neu/B=BBBB shared_assets/PSX/a.bin=AAAA 
+     Liste zuletzt entpackt: (keine)
+== S4a W1 frisch: EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fe
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 2 Zeichenaufrufe, letzte Anzeige '2 / 2 DATEIEN  (100%)  0 MB'
+== S4b Update W1->W2 (w.bin gestrichen, ALT/ nur lesbar; uid 1000): EXIT=0
+     [android] Abgleich (Update): 1 Dateien (4 Bytes) - behalten 0, geaendert 1, neu 0, pruefen 0, weg 1
+     [android] entpacke shared_assets/PSX/a.bin (geaendert)
+     [android] Entpacken fertig (Update): 1 geprueft, 1 kopiert (4 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 1 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 1 Zeichenaufrufe, letzte Anzeige '1 / 1 DATEIEN  (100%)  0 MB'
+     Speicher: shared_assets/ shared_assets/ALT/ shared_assets/ALT/w.bin=wwww shared_assets/PSX/ shared_assets/PSX/a.bin=AAA2 
+     Liste zuletzt entpackt: # re15 assets v2 1 4
+== S4c Neustart W2: EXIT=0
+     [android] Assets aktuell (schneller Weg): 1 Dateien, 4 Bytes unter /tmp/hs/s_weg (1 ms)
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 0 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 0 Zeichenaufrufe, letzte Anzeige ''
+== S5 kein AssetManager: EXIT=1
+     [android] FEHLER: kein AAssetManager (Activity.getAssets) - keine Assets.
+     [android] ABBRUCH: FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 3 Zeichenaufrufe, letzte Anzeige 'FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS'
+== S6 kein AssetManager UND kein Renderer: EXIT=1
+     [android] FEHLER: kein AAssetManager (Activity.getAssets) - keine Assets.
+     [android] ABBRUCH: FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 0 Zeichenaufrufe, letzte Anzeige ''
+== S7a C frisch, Abbruch nach 150000 B (mitten in gross.bin): EXIT=9
+     [android] Abgleich (ohne Liste): 3 Dateien (300008 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     PRUEFSTAND: ABBRUCH nach 309 gelesenen Bytes (Prozess endet mitten im Entpacken)
+     .neu im Speicher: ./shared_assets/PSX/a.bin.neu 
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/a.bin.neu= 
+     Liste zuletzt entpackt: (keine)
+== S7b Neustart C: EXIT=0
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/a.bin.neu
+     [android] Abgleich (ohne Liste): 3 Dateien (300008 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (300008 B, 11 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     PRUEFSTAND: Ende, 2 Zeichenaufrufe, letzte Anzeige '3 / 3 DATEIEN  (100%)  0 MB'
+     .neu im Speicher: 0; gross.bin sha gleich APK: ja
+== S9 Liste v1: EXIT=1
+     [android] FEHLER: assets/re15_assets.txt ungueltig (Zeile 1: Kopfzeile im alten Format v1 (bis v0.8.19, ohne Pruefsumme)) - es wird NICHTS entpackt.
+     [android] ABBRUCH: FEHLER: ASSET-LISTE IM ALTEN FORMAT - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 3 Zeichenaufrufe, letzte Anzeige 'FEHLER: ASSET-LISTE IM ALTEN FORMAT'
+== S10 Liste nennt Datei, die der APK fehlt: EXIT=1
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/DATA/b.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 2 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fe
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== S11a Liste: falsche Summe fuer a.bin, frisch: EXIT=1
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/a.bin (4/4 Bytes, sha256 63c1dd951ffedf6f7fd968ad4efa39b8ed584f162f46e715114ee184f8de9201, Liste fffffffffffffffffffffffffffffffffffffffffffffff
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (9 B, 2 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fe
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== S11b Neustart: EXIT=1
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/a.bin (4/4 Bytes, sha256 63c1dd951ffedf6f7fd968ad4efa39b8ed584f162f46e715114ee184f8de9201, Liste fffffffffffffffffffffffffffffffffffffffffffffff
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 0 kopiert (0 B, 0 ms), 2 per SHA-256 geprueft (9 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fe
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND: SDL_QUIT (App geschlossen) nach 3 Polls
+     PRUEFSTAND: Ende, 5 Zeichenaufrufe, letzte Anzeige '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== Szenarien fertig
