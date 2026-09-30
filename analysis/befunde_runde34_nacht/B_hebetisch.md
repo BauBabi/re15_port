@@ -667,7 +667,15 @@ dieses Abschnitts siehe `git log`).
 
 ### 9.4 Suite
 
-(wird nach dem Lauf eingetragen)
+Neu: 9 Tests (unit_r34n_b_halt, _kuppel, _ablauf, _cut_old, _harness, _abbruch, _kreuztext, _cursor_bytes,
+integration_r34n_b_cursor) -> 428 + 9 = **437**.
+
+* **Lauf 1** (`tools/r34n_b/lb.sh` = local_build.sh configure+build+test, 961 s): **435/437**; alle 9 neuen gruen
+  (integration_r34n_b_cursor 145 s). ROT: integration_r30_granate_laden (Lauf c "Endbild nicht erreicht", exit=1) und
+  integration_r30_irons_tisch_bild (Lauf P, exit=1 vor dem Laden) — beide mit der Signatur des Namens-Kills (exit=1
+  ohne Absturzeintrag, waehrenddessen bauten parallele Agenten, §9.8 Nr. 2). **Einzeln nachgefahren, je zweimal:**
+  granate_laden 121,6 s / 125,1 s gruen, irons_tisch_bild 55,2 s / 71,9 s gruen.
+* **Lauf 2** (nur test): LAUF2_PLATZHALTER
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder angesehen)
 
