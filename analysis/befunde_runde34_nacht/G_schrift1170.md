@@ -274,7 +274,10 @@ Keine Verhaltenskonstante. Die in den Messwerkzeugen benutzten Werte und ihre He
 | Aktueller Cut / Raum | DAT_800b0fe4 / DAT_800b0fe2 | FUN_80021bbc `lh 4068(v1)` @0x80021d44, `lh 0(s0)` @0x80021d48 |
 | VBlank-Zaehler | 0x800787dc | VSync(-1): `lw v0,-30756(v0)` @0x80062004 |
 | Zonen-Scan aus (nur Messung) | DAT_800aca3c Bit 0x100 | Katalog "main @0x8001cce0" |
-| Schild-Rechtecke | Cut 2 x285..312 y50..63, Cut 3 x292..319 y6..21, Cut 10 x262..287 y0..10 | gemessen an der BSS-Dekodierung (Blau-Maske) |
+| Schild-Rechtecke | Cut 2 x285..312 y50..63, Cut 3 x292..319 y6..21, Cut 10 x262..287 y0..10, **[BAU]** Cut 4 x317..319 y12..21 (Rand); Pruefrechtecke mit 2 px Rand: 283,48,314,65 / 290,4,319,23 / 260,0,289,12 / 315,10,319,23 | gemessen an der BSS-Dekodierung (Blau-Maske b>150, b>r+60, b>g+40) |
+| **[BAU]** Upload-Auslass | DAT_800b536c != 0 | `lbu` @0x8002151c, `bne` @0x80021524 → 0x80021584; einziger Schreiber `sb a0` @0x80021638 (FUN_80021634) |
+| **[BAU]** Sauberkeits-Pruefung Savestate | Wort @0x80026e4c: 0x03e00008 sauber, 0x0801c224 gepatcht | CLAUDE.md (`08 00 e0 03` gegen `24 c2 01 08`) |
+| **[BAU]** Stage-Fingerabdruck | CRC32(0x80100000..+0x8000) = 0x96290818 → STAGE 1 | re15_savestate_inspect.py `STAGE_FP` |
 
 ## 6 Abnahmeplan
 
@@ -288,8 +291,20 @@ Baum):
 3. Original, ganzer Vorspann: `ds_rec_fb0.py <orig_intro_late.sav> rec.mkv 150`, dann
    `rec_analyse.py voll rec.mkv <praefix>` → Schild-Laeufe mit min == max.
 4. Savestates: `ds_sign_eval.py <ordner-mit-cap_*.sav>` (RAM-Kopie == beide Bildspeicher) und
-   `ss_ot_walk.py <sav> [--box …]` → keine Zeile "<== SCHILD".
+   `ss_ot_walk.py <sav> [--box …]` → keine Zeile "<== SCHILD". **[BAU, Auflage 4]** Vollzensus in
+   einem Lauf: `ss_zensus_1170.py <stage_saves> <bss-praefix>` → je Stand Sauberkeit, Cut, RAM-Kopie
+   gegen BSS, beide Bildspeicher gegen RAM-Kopie, OT-Treffer im Rechteck DES CUTS (`ss_ot_walk.py`
+   waehlt das Rechteck jetzt ebenfalls selbst, `--box auto`).
 5. Port: echte exe mit `RE15_FRAMEDUMP` (Abschnitt 2), Schildausschnitt gegen BSS → max |Δ| = 0.
+   **[BAU, Auflage 2]** Pflicht ist der ECHTE Durchlauf Titel → NEW GAME → Leon → ROOM1240 → ROOM1170
+   (Umgebung Abschnitt 2, `RE15_FRAMEDUMP="0-5200/10:…"`, `RE15_EXIT_AT="5200#1170"`; ⛔ `frame_count`
+   beginnt je Raum bei 0, die Montage-Dumps werden ueberschrieben); der Debug-Sprung
+   (`RE15_DEBUG_JUMP=1170@240`) bleibt als zweite Probe. Auswertung `port_schild_eval.py` (Stufe BAU).
+6. **[BAU, Auflage 3]** Aufnahmen ohne Schwelle: `rec_leben.py <aufnahme.mkv> [--box …] [--von --bis]`
+   → Bildwechsel im ganzen Bild (Lebendnachweis) und im Pruefrechteck, Spanne je Pixel/Kanal.
+   Tragend ist ein Pruefrechteck nur zusammen mit Bildwechseln anderswo im selben Abschnitt.
+7. **[BAU, Auflage 6]** `exe_transfer_zensus.py` → alle Aufrufstellen der vier Bildtransfers
+   und der Schreiber von DAT_800b536c (G18).
 
 Gegenprobe, dass die Messkette ein Blinken ueberhaupt saehe: dieselbe Auswertung erkennt den
 Kinobalken, der am Ende des Vorspanns ueber dem Cut-3-Schild ausblendet (Original F2751-2763, Port
@@ -303,6 +318,11 @@ F1769-1782) — eine Helligkeitsaenderung genau in diesem Rechteck wird also gem
   HASH-957757946319438E_resume.sav` neu geschrieben. Der vorherige Stand (00:06:12 Uhr, 1606754 B —
   vom Nutzer oder von der Granaten-Sitzung) ist damit **verloren**; eine Kopie gab es nicht. Nummerierte
   Slots (_1.._9) sind unberuehrt. Kuenftig vor jedem DuckStation-Lauf die resume-Datei sichern.
+  **[BAU, Auflage 8]** Dem Nutzer ausdruecklich gemeldet (Rundenbericht, strukturierte Rueckgabe der
+  Spur G, Punkt "offen"). Regel fuer kuenftige DuckStation-Laeufe: `resume.sav` VOR dem Start kopieren
+  und NACH dem Lauf zuruecklegen (nicht nur sichern). Die jetzige Datei (03:28:12, 1285879 B) ist der
+  End-Stand des letzten Messlaufs (Cut 12 erzwungen, Vcount 15939) — kein Nutzerstand. Stufe BAU hat
+  DuckStation nicht gestartet und die Datei nur gelesen.
 * DuckStation-Einstellungen wurden **nicht** veraendert (ShowVRAM/Software-Renderer so vorgefunden).
 * Die Sonde `probe_r34n_g_bss` hat kein add_test und keine Abhaengigkeit ausser re15_engine — sie kann
   keinen fremden Bau brechen.
@@ -310,11 +330,17 @@ F1769-1782) — eine Helligkeitsaenderung genau in diesem Rechteck wird also gem
 ## 8 Offene Punkte
 
 1. **Beobachtung des Nutzers (Messfrage, keine Wahlfrage).** Ich habe das Original in allen 13 Cuts,
-   im ganzen Vorspann und 5 Minuten im Freilauf gemessen, dazu 19 Savestates und 18 Zeichenlisten —
-   nirgends blinkt die Schrift. Der naechste Weg ist die Stelle, an der der Nutzer es gesehen hat:
-   *"In welchem Bild (Screenshot oder kurzes Video mit Zeitmarke) blinkt die Schrift, und mit welchem
-   Emulator/Renderer und welchem Disk-Abbild?"* Mit einer Zeitmarke laesst sich genau dieser Moment
-   nachstellen und messen.
+   im ganzen Vorspann und 5 Minuten im Freilauf gemessen, dazu 23 Savestates und 20 Zeichenlisten
+   (Stufe BAU, G16) — nirgends blinkt die Schrift. Der naechste Weg ist die Stelle, an der der Nutzer
+   es gesehen hat. **[BAU, Auflage 7]** Die Frage geht woertlich in den Rundenbericht (strukturierte
+   Rueckgabe, "offen"); sie beruecksichtigt, dass das "Original" des Nutzers die MZD-Disk "Update
+   25-01-2025" ist (= `info/Re1.5`, G15 C) und deren README fuer Raum 117 nur eine neue Leon-Szene und
+   einen Hubschrauber-Ton nennt:
+   *"Wo genau blinkt die Schrift MAGAZINE CLUB in ROOM1170 — im Vorspann (Hubschrauber-Szene), beim
+   freien Laufen oder in einem Film? In welcher Kameraeinstellung (Screenshot oder kurzes Video mit
+   Zeitmarke)? Mit welchem Emulator und welchem Renderer (ePSXe GPUCORE / DuckStation Hardware /
+   Software) und welchem Disk-Abbild?"* Mit einer Zeitmarke laesst sich genau dieser Moment nachstellen
+   und messen. **Ohne diese Antwort wird kein Blink-Effekt gebaut** (er waere geraten).
 2. Nicht gemessen: DuckStation **Hardware-Renderer** (bewusst nicht umgestellt, um die Einstellungen
    des Nutzers nachts nicht zu veraendern) und ein **laufendes ePSXe/GPUCORE** (nur Standbilder
    geprueft, siehe 3.3). Ein dort sichtbares Blinken waere ein Emulator-Effekt, kein
