@@ -1,0 +1,12 @@
+ECHT                           rc=0   11s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU0_sha_vergleich_aus          rc=1   14s | == SELBSTTEST-FEHLER: 5 von 202 Faellen falsch - das Gate ist NICHT verlaesslich ==
+MU1_manifest_rstrip_alles      rc=0   14s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU2_groesse_unicode_ziffern    rc=0   12s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU3_splitlines                 rc=0   17s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU4_manifest_max_64GiB         rc=0   12s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU5_methode_bis_8              rc=0   13s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU6_groesse_isdigit            rc=0   12s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU7_kopf_strip                 rc=0   13s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU8_pfad_strip                 rc=0   15s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+FERTIG
+EXIT=0
