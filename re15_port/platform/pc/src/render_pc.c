@@ -984,7 +984,11 @@ void re15_render_end_frame(void)
         int mask_n = (!s_pri_suppress && !s_black_bg && s_pri_atlas_tex && s_pri_rect_count > 0)
                    ? s_pri_rect_count : 0;
         int mask_order[RE15_PRI_RECTS_MAX];
-        for (int i = 0; i < mask_n; i++) mask_order[i] = i;
+        /* Runde 34 Nacht G2: nur Masken mit Record-Byte0 & 1 (FUN_80039590 @0x800395f0-f4; Opcode
+         * 0x45 schaltet es, re15_masken_gruppen.h). Reihenfolge der uebrigen bleibt unveraendert. */
+        { extern int re15_mg_sichtbar(int i);
+          int n_alle = mask_n; mask_n = 0;
+          for (int i = 0; i < n_alle; i++) if (re15_mg_sichtbar(i)) mask_order[mask_n++] = i; }
         for (int i = 1; i < mask_n; i++) {
             int k  = mask_order[i];
             float kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);

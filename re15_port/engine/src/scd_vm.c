@@ -388,6 +388,11 @@ static void register_opcodes(void)
     s_op_table[0x51]                  = op_sce_key_ck;
     s_op_table[0x5E]                  = op_keep_item_ck;
     s_op_table[0x5D]                  = op_mizu_div_set;
+    {   /* Runde 34 Nacht G2: 0x45 Col_chg_set — Tabelle @0x800745bc -> 0x800428d4 ->
+         * FUN_800396a8 (Sichtbarkeit je Maskengruppe, masken_gruppen.c / re15_masken_gruppen.h). */
+        extern int op_col_chg_set(scd_thread_t *t);
+        s_op_table[0x45]              = op_col_chg_set;
+    }
 }
 
 /* Internal: enqueue an audio event. Drops if full (ring buffer overflow). */

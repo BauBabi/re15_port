@@ -28,6 +28,7 @@
 #include "re15_climb.h"   /* re15_climb_reset — Kletter-FSM (Substate 9/10) */
 #include "re15_audio.h"
 #include "re15_fade.h"        /* re15_fade_config/kick/done — die Transitions-Blende */
+#include "re15_masken_gruppen.h"  /* re15_mg_aufbauen — Masken-Sichtbarkeit (Runde 34 Nacht G2) */
 
 /*=========================================================================
  * SELBSTHEILENDER KAMERA-APPLY — byte-true FUN_8002137c @0x800214dc-0x80021514
@@ -379,6 +380,10 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     /* (9) ARCH: stream the entry cut's BG now (the per-cut load only fires on a
      * cut CHANGE; we just set cam to the entry cut after that block ran). */
     c->load_bg_cut(cut);
+    /* Runde 34 Nacht G2: Masken-Sichtbarkeit fuer den Eintritts-Cut neu aufbauen — Raumlader
+     * FUN_8001d600 `DAT_800b5457 = 1` @0x8001daec -> FUN_80021bbc -> FUN_800392d4 @0x80021c28
+     * (re15_masken_gruppen.h). NACH scd_room_reenter wie im Original (Aufbau erst beim Present). */
+    re15_mg_aufbauen(c->rdt, cut, "raum");
 
     /* (10) Per-room lighting: re-parse the new room's NCCT light set + apply. */
     if (c->rdt->lights &&

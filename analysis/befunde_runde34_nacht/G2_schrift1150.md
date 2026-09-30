@@ -448,3 +448,39 @@ neuer Softlock, der bestehende bleibt unberuehrt.
    (scd_room_reenter vor load_bg_cut). Im Bau mit dem Lade-Weg-Haken (6.3) mitpruefen.
 5. Kein Nutzer-Rueckfragebedarf: das Original blinkt nachweislich (3.5), der Befund des Nutzers ist
    bestaetigt.
+
+## 9 Umsetzung (Stufe BAU)
+
+Stand: Bau begonnen 2026-09-30. Abschnitte werden fortlaufend gefuellt.
+
+### 9.1 Auflagen der Gegenpruefung (abgehakt / abgelehnt mit Beleg)
+
+(in Arbeit)
+
+### 9.2 Dateien und Haken
+
+(in Arbeit)
+
+### 9.3 Pins und Mutationsproben
+
+(in Arbeit)
+
+### 9.4 Suite
+
+(in Arbeit)
+
+### 9.5 Eigene Abnahme an der echten exe (Bilder)
+
+(in Arbeit)
+
+### 9.6 Abweichungen vom Plan (mit Grund)
+
+(in Arbeit)
+
+### 9.7 Commits
+
+(in Arbeit)
+
+### 9.8 Offene Punkte
+
+(in Arbeit)
