@@ -18,14 +18,15 @@
 #include <stdio.h>
 #endif
 
-/* ---- Die Szene (142 Bytes). Jede Zeile traegt ihr Vorbild im Auslieferungsstand (Datei-Offsets).
+/* ---- Die Szene (162 Bytes). Jede Zeile traegt ihr Vorbild im Auslieferungsstand (Datei-Offsets).
  * Opcode-Laengen = s_opcode_sizes (scd_vm.c). Die Form ist die der RE1.5-Szenen, die der Nutzer
  * nennt: ROOM1090 sub02 (Ruf der Frau, Rueckschritt nach dem Lauf zum Feuer), ROOM1090 sub03
  * (Clip 19 vor + zurueck), ROOM1170 sub02 (Clip 17), ROOM1050 sub03 (Plc_dest Modus 9 + Warte-
  * schleife), ROOM1130 sub01 (Tuer -> Text-Platz).
- * Zeitlinie (echte VM, Sonde probe_r34n_d_adaruf, B = Bilder nach dem Quadrat-Druck): Balken ab B1
- * (voll ab B16), Ruf B21..B121, Drehung ab B121, Rueckschritt B123..B133, Leon-Zeilen ab B154/B205,
- * Szenen-Ende B305 (+15 Bilder Balken-Rampe). */
+ * Zeitlinie (Riegel test_r34n_d_adaruf szene = echte VM + Spielschritt, B = Bilder nach dem Quadrat-
+ * Druck): Balken ab B1 (voll ab B15), Ruf B21..B120, Drehung zur Tuer ab B121, Rueckschritt
+ * B123..B133, Drehung zur Kamera bis B145, Leon-Zeilen ab B165/B216, Szenen-Ende B316 (+15 Bilder
+ * Balken-Rampe, weg ab B330). */
 static const uint8_t k_ruf[RE15_ADARUF_PROG_LEN] = {
     /* +00 */ 0x22, 0x09, 0x41, 0x01,   /* Set(9,65)=1 "Szene gesehen" — Einmal-Riegel als ERSTES Opcode
                                            wie ROOM11B0 sub06 @0x01478 `22 03 83 01`                      */
