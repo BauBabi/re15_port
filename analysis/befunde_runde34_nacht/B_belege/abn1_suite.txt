@@ -1,0 +1,62 @@
+# Abnahme 1: Suite-Lauf im Baum (local_build.sh test, 08:31-08:49, nach dem Kill-Fix d1c2d8b0)
+336/437 Test #336: unit_r30_android_r1_toggle ..........   Passed    0.05 sec
+337/437 Test #337: unit_r30_android_n1_inventar_cmd ....   Passed    0.03 sec
+338/437 Test #338: unit_r30_android_n3_plc_aim .........   Passed    0.03 sec
+339/437 Test #339: unit_r30_birkin_frost ...............   Passed    1.02 sec
+340/437 Test #340: integration_r30_cut_blitz ...........   Passed   70.64 sec
+341/437 Test #341: unit_r30_elza_selbsttuer ............   Passed    0.10 sec
+343/437 Test #343: unit_r30_granate ....................   Passed    0.35 sec
+344/437 Test #344: integration_r30_granate_laden .......   Passed   90.00 sec
+345/437 Test #345: unit_r30_hund_tod ...................   Passed    1.18 sec
+346/437 Test #346: unit_r30_hund_tod_n2 ................   Passed    0.05 sec
+347/437 Test #347: unit_r30_hund_tod_elza ..............   Passed    1.03 sec
+348/437 Test #348: unit_r30_irons_diary_dokument .......   Passed    0.05 sec
+349/437 Test #349: unit_r30_irons_diary_ablauf .........   Passed    0.02 sec
+350/437 Test #350: unit_r30_irons_tisch ................   Passed    0.06 sec
+351/437 Test #351: integration_r30_irons_tisch_laden ...   Passed   31.41 sec
+352/437 Test #352: integration_r30_irons_tisch_bild ....   Passed   42.67 sec
+353/437 Test #353: unit_r30_irons_tisch_licht ..........   Passed    0.03 sec
+354/437 Test #354: integration_r30_irons_tisch_licht ...   Passed   46.77 sec
+355/437 Test #355: unit_r30_hinweis_anker ..............   Passed    0.06 sec
+356/437 Test #356: unit_r30_hinweis_fsm ................   Passed    0.02 sec
+357/437 Test #357: unit_r30_hinweis_spurlos ............   Passed    0.01 sec
+358/437 Test #358: unit_r30_hinweis_zeichner ...........   Passed    0.09 sec
+359/437 Test #359: unit_r30_hinweis_bank ...............   Passed    0.01 sec
+361/437 Test #361: unit_r30_karte_nutzerstand ..........   Passed    0.74 sec
+363/437 Test #363: unit_r30_n_room5080_birkin_wand .....   Passed    0.10 sec
+364/437 Test #364: unit_r30_pfeil ......................   Passed    0.02 sec
+365/437 Test #365: unit_r30_sicherung_nein .............   Passed    0.16 sec
+366/437 Test #366: unit_r30_sicherung_modell ...........   Passed    0.06 sec
+367/437 Test #367: unit_r30_sicherung_sitz .............   Passed    0.03 sec
+368/437 Test #368: unit_r30_sicherung_bild .............   Passed    0.04 sec
+369/437 Test #369: integration_r30_sicherung_laden .....   Passed   46.01 sec
+370/437 Test #370: integration_r30_sicherung_bild ......   Passed   11.62 sec
+372/437 Test #372: integration_r30_titel_puls ..........   Passed   39.97 sec
+373/437 Test #373: unit_r30_tuerse_bank ................   Passed    0.07 sec
+374/437 Test #374: unit_r30_tuer_tabelle ...............   Passed    0.14 sec
+375/437 Test #375: unit_r30_tuer_r4000 .................   Passed    0.35 sec
+376/437 Test #376: unit_r30_tuer_verschlossen ..........   Passed   32.51 sec
+377/437 Test #377: unit_r30_tuer_strom .................   Passed    0.07 sec
+378/437 Test #378: unit_r30_tuer_stimme ................   Passed    0.05 sec
+383/437 Test #383: unit_r31_hebetisch ..................   Passed    0.06 sec
+388/437 Test #388: unit_r32_hebetisch_faecher ..........   Passed    0.05 sec
+406/437 Test #406: unit_r34n_b_halt ....................   Passed    0.07 sec
+407/437 Test #407: unit_r34n_b_kuppel ..................   Passed    0.06 sec
+408/437 Test #408: unit_r34n_b_ablauf ..................   Passed    0.13 sec
+409/437 Test #409: unit_r34n_b_cut_old .................   Passed    0.16 sec
+410/437 Test #410: unit_r34n_b_harness .................   Passed    0.06 sec
+411/437 Test #411: unit_r34n_b_abbruch .................   Passed    0.06 sec
+412/437 Test #412: unit_r34n_b_kreuztext ...............   Passed    0.08 sec
+413/437 Test #413: unit_r34n_b_cursor_bytes ............   Passed    0.04 sec
+414/437 Test #414: integration_r34n_b_cursor ...........   Passed  230.99 sec
+100% tests passed, 0 tests failed out of 437
+Total Test time (real) = 1069.17 sec
+
+=== LOCAL-BUILD-OK (test) — Tests 437/437
+exit=0
+
+# Frueherer Lauf des Bauers (build/r34n_b_suite3.log, Ende 05:41, im Dossier NICHT erwaehnt):
+99% tests passed, 1 tests failed out of 437
+The following tests FAILED:
+	354 - integration_r30_irons_tisch_licht (Failed)
+# Ursache laut LastTest.log (05:34): 'irons_tisch_licht[P20]: der Lauf hat den Spielstand in ROOM1150 nicht geladen (exit=1 ...)' = Namens-Kill-Signatur (Kill-Fix erst 08:08); im Lauf oben gruen (46.77 s)

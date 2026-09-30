@@ -1,0 +1,70 @@
+# Abnahme 1, Lauf J1 (echte exe re15_abn1.exe, Sprung 1150, Ton an, RE15_SE_DEBUG=1)
+# SKRIPT=RE15_INPUT_SCRIPT="W1,A0.2,W1,L0.5,W0.3,A0.1,W2,A0.1,W1,RD0.67,R1.23,W0.3,A0.1,W2,X0.1,W1,LD0.17,L0.4,W0.3,A0.1,W4.5,A0.1,W1,A0.1,W1,A0.1,W1,A0.1,W1,A0.1,W1,A0.1,W1,A0.1,W1,A0.1,W8,W2,A0.2,W1,RD0.6,D0.13,W0.3,A0.1,W25"
+# cursor.log (ohne takt-Zeilen)
+F230 raum=1150 verlangt cursor=1 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=0 klick=0 text=0 abbruch=0
+F241 raum=1150 aktiv cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=0 text=0 abbruch=0
+F291 raum=1150 nichts cursor=2 x=-22554 z=22684 sx=121 sy=119 treffer=0 cam=4 klick=0 text=1 abbruch=0
+F453 raum=1150 nichts cursor=2 x=-11154 z=18684 sx=272 sy=172 treffer=0 cam=4 klick=0 text=2 abbruch=0
+F575 raum=1150 kuppel cursor=0 x=-14554 z=17684 sx=227 sy=185 treffer=1 cam=4 klick=1 text=2 abbruch=0
+F1246 raum=1150 verlangt cursor=1 x=-14554 z=17684 sx=227 sy=185 treffer=1 cam=0 klick=1 text=2 abbruch=0
+F1257 raum=1150 aktiv cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=1 text=2 abbruch=0
+F1314 raum=1150 kuppel cursor=0 x=-15954 z=18284 sx=208 sy=177 treffer=1 cam=4 klick=2 text=2 abbruch=0
+# debug.log Auszug
+62:[input-script] Tick 30 -> F230 Tasten 0x8000
+85:[pri] cut=0 pri_offset=0x500 masks=2 fg_atlas=1
+95:[input-script] Tick 30 -> F230 Tasten 0x8000
+99:[se] Stimme: se=10 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 1 (SPU 17)
+100:[scd F236] Cut_chg(4)
+103:[pri] cut=4 pri_offset=0xAEC masks=18 fg_atlas=1
+110:[hebetisch-cursor] Sitzung 1: Cursor-Textur in TIM-Platz 28, Cut 4, Licht 11F0 Cut 10
+113:[input-script] Tick 66 -> F266 Tasten 0x0080
+117:[input-script] Tick 90 -> F290 Tasten 0x8000
+125:[input-script] Tick 153 -> F353 Tasten 0x8000
+130:[input-script] Tick 186 -> F386 Tasten 0x0060
+134:[input-script] Tick 206 -> F406 Tasten 0x0020
+140:[input-script] Tick 252 -> F452 Tasten 0x8000
+149:[input-script] Tick 315 -> F515 Tasten 0x4000
+153:[input-script] Tick 348 -> F548 Tasten 0x00C0
+155:[input-script] Tick 353 -> F553 Tasten 0x0080
+159:[input-script] Tick 374 -> F574 Tasten 0x8000
+160:[se] Stimme: se=10 layer=0 vag=9 note=66 fine=57 center=84 vol=127 pitch=0x5f3 (16397 Hz) -> SE-Stimme -16 (SPU 0)
+167:[se] Stimme: se=12 layer=0 vag=6 note=65 fine=0 center=89 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+181:[se] Stimme: se=13 layer=0 vag=7 note=66 fine=0 center=90 vol=111 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+182:[input-script] Tick 512 -> F712 Tasten 0x8000
+185:[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+189:[input-script] Tick 545 -> F745 Tasten 0x8000
+194:[input-script] Tick 578 -> F778 Tasten 0x8000
+199:[input-script] Tick 611 -> F811 Tasten 0x8000
+200:[se] Stimme: se=6 layer=0 vag=3 note=64 fine=0 center=76 vol=90 pitch=0x800 (22050 Hz) -> SE-Stimme -10 (SPU 6)
+201:[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+202:[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+207:[input-script] Tick 644 -> F844 Tasten 0x8000
+212:[input-script] Tick 677 -> F877 Tasten 0x8000
+217:[input-script] Tick 710 -> F910 Tasten 0x8000
+218:[se] Stimme: se=6 layer=0 vag=3 note=64 fine=0 center=76 vol=90 pitch=0x800 (22050 Hz) -> SE-Stimme -10 (SPU 6)
+219:[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 4
+225:[se] Stimme: se=10 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 1 (SPU 17)
+226:[input-script] Tick 743 -> F943 Tasten 0x8000
+230:[se] Stimme: se=12 layer=0 vag=6 note=65 fine=0 center=89 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+243:[se] Stimme: se=13 layer=0 vag=7 note=66 fine=0 center=90 vol=111 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+257:[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+258:[granate] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+261:[pri] cut=0 pri_offset=0x500 masks=2 fg_atlas=1
+273:[input-script] Tick 1046 -> F1246 Tasten 0x8000
+277:[se] Stimme: se=10 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 1 (SPU 17)
+278:[scd F1252] Cut_chg(4)
+280:[pri] cut=4 pri_offset=0xAEC masks=18 fg_atlas=1
+282:[hebetisch-cursor] Sitzung 2: Cursor-Textur in TIM-Platz 28, Cut 4, Licht 11F0 Cut 10
+286:[input-script] Tick 1082 -> F1282 Tasten 0x0060
+289:[input-script] Tick 1100 -> F1300 Tasten 0x0040
+291:[input-script] Tick 1113 -> F1313 Tasten 0x8000
+292:[se] Stimme: se=10 layer=0 vag=9 note=66 fine=57 center=84 vol=127 pitch=0x5f3 (16397 Hz) -> SE-Stimme -16 (SPU 0)
+301:[se] Stimme: se=12 layer=0 vag=6 note=65 fine=0 center=89 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+315:[se] Stimme: se=13 layer=0 vag=7 note=66 fine=0 center=90 vol=111 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+322:[se] Stimme: se=10 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 1 (SPU 17)
+326:[se] Stimme: se=12 layer=0 vag=6 note=65 fine=0 center=89 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+339:[se] Stimme: se=13 layer=0 vag=7 note=66 fine=0 center=90 vol=111 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+354:[pri] cut=0 pri_offset=0x500 masks=2 fg_atlas=1
+398:[flow] EXIT_AT: Bild 2060 in Raum 1150 erreicht -> exit
+# lauf_rc
+rc=0 Bilder=153

@@ -1,0 +1,6 @@
+integration_r30_sicherung_laden Lauf 1 (exe-Kopie): rc=0 in 42 s
+integration_r30_sicherung_laden Lauf 2 (exe-Kopie): rc=0 in 42 s
+integration_r30_granate_laden Lauf 1 (exe-Kopie): rc=0 in 95 s
+integration_r30_granate_laden Lauf 2 (exe-Kopie): rc=0 in 100 s
+integration_r30_irons_tisch_bild Lauf 1 (exe-Kopie): rc=0 in 61 s
+integration_r30_irons_tisch_bild Lauf 2 (exe-Kopie): rc=0 in 77 s

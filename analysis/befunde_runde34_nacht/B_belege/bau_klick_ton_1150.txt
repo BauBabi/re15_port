@@ -1,0 +1,17 @@
+# Lauf b3 (Sprung 1150, Ton an, RE15_SE_DEBUG=1): Tischdruck F230, Kuppeldruck F369 (VM F370)
+# se=10 vag=3 pitch=0x400 = ROOM1150-snd0 0x0A (sub04 Se_on @0x0FA2); se=10 vag=9 note=66 fine=57 pitch=0x5f3 = RE2-Panel-Klick (Gruppe 2/0x0A, wie 11F0 m5); se=12 = sub04 Se_on(2,0x0C) @0x0FE2
+61:[input-script] Tick 30 -> F230 Tasten 0x8000
+94:[input-script] Tick 30 -> F230 Tasten 0x8000
+98:[se] Stimme: se=10 layer=0 vag=3 note=63 fine=0 center=87 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 1 (SPU 17)
+113:[input-script] Tick 57 -> F257 Tasten 0x8000
+126:[input-script] Tick 120 -> F320 Tasten 0x8000
+131:[input-script] Tick 138 -> F338 Tasten 0x0060
+135:[input-script] Tick 156 -> F356 Tasten 0x0040
+140:[input-script] Tick 169 -> F369 Tasten 0x8000
+141:[se] Stimme: se=10 layer=0 vag=9 note=66 fine=57 center=84 vol=127 pitch=0x5f3 (16397 Hz) -> SE-Stimme -16 (SPU 0)
+152:[se] Stimme: se=12 layer=0 vag=6 note=65 fine=0 center=89 vol=110 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+# cursor.log
+F230 raum=1150 verlangt cursor=1 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=0 klick=0 text=0 abbruch=0
+F241 raum=1150 aktiv cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=0 text=0 abbruch=0
+F258 raum=1150 nichts cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=0 text=1 abbruch=0
+F370 raum=1150 kuppel cursor=0 x=-15954 z=18284 sx=208 sy=177 treffer=1 cam=4 klick=1 text=1 abbruch=0

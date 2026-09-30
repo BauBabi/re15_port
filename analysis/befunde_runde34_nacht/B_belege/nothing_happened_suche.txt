@@ -1,0 +1,13 @@
+RE1.5 ROOM1141.RDT msg 2 @0x0115F: "{04:00}{05:01}Elza:{05:00} Same here... are you okay? / what's happened?{04:01}"
+RE1.5 ROOM2001.RDT msg 7 @0x01F6E: "{04:00}{05:01}Elza:{05:00} What happened? why didn't you / wait for me?{04:01}"
+RE1.5 ROOM3001.RDT msg 6 @0x0198D: '{04:00}{05:01}Elza:{05:00} What happened here?{04:01}'
+RE1.5 ROOM30E0.RDT msg 5 @0x01206: "{04:00}{05:01}Leon:{05:00} And what happened in that / tunnel, what's with all the police / officer corpses?{04:01}"
+RE1.5 ROOM5060.RDT msg 5 @0x033F7: "{04:02}Something must've happened inside / this building. These footprints look / like those of an injured person."
+RE1.5 ROOM5061.RDT msg 5 @0x033F7: "{04:02}Something must've happened inside / this building. These footprints look / like those of an injured person."
+# durchsucht: RE1.5 1229 RDT-Nachrichten, RE2 2315 .msg-Dateien
+# Rohbytes 'othing happ' in info/Re1.5/PSX.EXE: 0 Treffer 
+# Rohbytes 'othing happ' in info/Re1.5/PSX/BIN/DEBUG.BIN: 0 Treffer 
+# Rohbytes 'othing happ' in info/re2leon/PSX.EXE: 0 Treffer 
+# Rohbytes 'happened' in info/Re1.5/PSX.EXE: 0 Treffer 
+# Rohbytes 'happened' in info/Re1.5/PSX/BIN/DEBUG.BIN: 0 Treffer 
+# Rohbytes 'happened' in info/re2leon/PSX.EXE: 0 Treffer 

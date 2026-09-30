@@ -70,6 +70,7 @@ static inline int RNDI(float f) {
 #include "re15_sicherung.h"
 #include "re15_irons_tisch.h"   /* Runde 30 E2: Irons Diary + Memory Card (ROOM1150/1151) */
 #include "re15_granate.h"       /* Runde 30 Nachtrag K: Handgranate im Hebetisch (ROOM1150/1151) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Hebetisch-Cursor (ROOM1150/1151) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -4689,6 +4690,10 @@ re_title:;
                 fprintf(stderr, "[granate] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         RE15_GRANATE_OBJ_ID, k, (unsigned)g_current_room_id);
+    /* HEBETISCH-CURSOR (Runde 34 Nacht B, Auflage 2) — derselbe Grund wie Sicherung/Granate: der
+     * Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter. Zustand AUS, Signatur-Cache leer.
+     * Herleitung: include/re15_hebetisch_cursor.h. */
+    re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -10486,6 +10491,9 @@ re_title:;
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
+            /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
+             * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */
+            re15_hebetisch_cursor_zeichnen_pc();
             /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
             s_cs_view = cam_view; s_cs_view_ok = 1;
             s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;

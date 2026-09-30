@@ -1,0 +1,13 @@
+# m5: ROOM11F0, Audio an, RE15_SE_DEBUG=1; A bei F500 auf Startzelle (Slot 9), A bei F577 ausserhalb jeder Zelle
+145:[se] Stimme: se=6 layer=0 vag=3 note=64 fine=0 center=76 vol=90 pitch=0x800 (22050 Hz) -> SE-Stimme -10 (SPU 6)
+161:[input-script] Tick 180 -> F500 Tasten 0x8000
+163:[se] Stimme: se=10 layer=0 vag=9 note=66 fine=57 center=84 vol=127 pitch=0x5f3 (16397 Hz) -> SE-Stimme -16 (SPU 0)
+167:[input-script] Tick 212 -> F532 Tasten 0x0020
+186:[input-script] Tick 257 -> F577 Tasten 0x8000
+# panel.log F575..F580
+F575 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F576 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F577 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F578 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F579 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F580 raum=11F0 cut=10 aktiv=1 maske=080 ein=1 roh=-50 ziel=0 wert=0 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0 ruhe=30 panelsperre=0

@@ -47,6 +47,7 @@
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 
 scd_vm_t g_scd;
 
@@ -938,6 +939,12 @@ static int op_for(scd_thread_t *t)
      * count==0 → skip the block via block_len (kept as a defensive port early-out;
      * byte-true For would push count=0 → Next underflows to 0xFFFF = 65536 iters,
      * which no known RE1.5 script relies on and the dispatcher safety-cap bounds). */
+    /* Runde 34 Nacht B (include/re15_hebetisch_cursor.h): der Hebetisch-Cursor haelt sub04 VOR dem
+     * For 15 @0x0FC0 (1151 @0x0F9E) an, bis die Kuppel gedrueckt ist (Yield, PC bleibt), oder setzt
+     * beim Abbruch den PC auf die Aufraeumbytes @0x109A (weiter). Im Zustand AUS ein Vergleich. */
+    { const int hc = s_current_rdt ? re15_hebetisch_cursor_for(t, s_current_rdt->raw, s_current_rdt->raw_size) : 0;
+      if (hc == RE15_HC_HALT) return SCD_R_YIELD;
+      if (hc == RE15_HC_SPRUNG) return SCD_R_CONTINUE; }
     int16_t  block_len = scd_read_le_s16(t->pc + 2);
     uint16_t count     = (uint16_t)scd_read_le_s16(t->pc + 4);
     const uint8_t *body = t->pc + 6;

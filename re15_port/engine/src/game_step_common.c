@@ -36,6 +36,7 @@
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -2189,7 +2190,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * original's free-slot scan) — DIAGNOSE it loudly instead of silently: a
      * dropped examine (e.g. the save phone) looks like a dead button. */
     if (g_aot.fired_event_id_this_frame != 0) {
-        if (scd_event_fire(g_aot.fired_event_id_this_frame) < 0) {
+        const int ev_slot = scd_event_fire(g_aot.fired_event_id_this_frame);
+        /* Runde 34 Nacht B: nur der SPIELERWEG armiert den Hebetisch-Cursor (Ereignis 4 in
+         * ROOM1150/1151, Thread gestartet) - include/re15_hebetisch_cursor.h. */
+        re15_hebetisch_cursor_aktion(g_aot.fired_event_id_this_frame, ev_slot);
+        if (ev_slot < 0) {
 #ifdef RE15_PLATFORM_PC
             fprintf(stderr, "[scd] WARN: event %u DROPPED (no free event slot)\n",
                     (unsigned)g_aot.fired_event_id_this_frame);

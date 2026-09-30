@@ -1,0 +1,14 @@
+# Abnahme 1, Lauf J5 (echte exe, RE15_FPS=60 = Nicht-Standard-Modus, Sprung 1150): zwei gleich lange SQUARE-Tipps (0.1 s = 6 Bilder) am Startpunkt
+# SKRIPT=RE15_INPUT_SCRIPT="W1,A0.2,W2,A0.1,W1,W0.02,A0.1,W3"
+[fps] target=60 FPS, frame_budget=16ms (RE15_FPS env to override)
+[input-script] Tick 60 -> F260 Tasten 0x8000
+[input-script] Tick 192 -> F392 Tasten 0x8000
+[input-script] Tick 259 -> F459 Tasten 0x8000
+# cursor.log (ohne takt-Zeilen)
+F260 raum=1150 verlangt cursor=1 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=0 klick=0 text=0 abbruch=0
+F282 raum=1150 aktiv cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=0 text=0 abbruch=0
+F460 raum=1150 nichts cursor=2 x=-19554 z=22684 sx=160 sy=119 treffer=0 cam=4 klick=0 text=1 abbruch=0
+# VM-Takte (gerade Bilder):
+F260 F282 F284 F286 F288 F290 
+# Befund: Tipp ab F392 (gerades Bild) VERLOREN (kein 'nichts'), Tipp ab F459 (ungerades Bild) -> 'nichts' F460.
+# Die Flanke eines geraden Bilds wird von game_step F+1 (g_scd_pad_edge = pad_pressed, game_step_common.c:1104) ueberschrieben, bevor die VM (nur gerade Bilder, main.c:5382) sie liest.

@@ -1,0 +1,108 @@
+
+== 1150 R1 halt ==
+   aktiv in Bild 10, sub04-Slot 10 PC @0x0FC0, Plattform y -305, cam 4 (gemerkt 0), Deckel z 0/0
+   [OK ] 1. Halt im 11. VM-Takt nach dem Tischdruck, PC = For 15 (1150 @0x0FC0 / 1151 @0x0F9E)
+   [OK ] 2. Cursor-Zustand: Plattform y -305 (@0x0FB4), Cut 4 angefordert, Raumkamera gemerkt, Deckel 0/0
+   [OK ] 3. 110 Bilder spaeter: PC, Deckel, Plattform unveraendert, Cursor sichtbar am Start (160,119)
+
+== 1150 R2 kuppel ==
+   116 Punkte, Engine-Huelle 12 Ecken, groesster Eckabstand 0 px^2
+   [OK ] 4. Huelle im Modul = Engine-Projektion der ausgelieferten Kuppel (+-1 px, beide Richtungen)
+   Heisspunkt nach 18x RIGHT + 22x DOWN: (208,177)
+   [OK ] 5. Start (160,119) NICHT in der Kuppel; Mitte (209,176) und (208,177) drin; (150,180) (268,180) (208,147) (208,212) draussen
+
+== 1150 R3 ablauf ==
+   Fehldruck: Texte 1, aktiv 1 Id 20, Pause 0xFFFF0000, Klicks 0, PC @0x0FC0
+   [OK ] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+   [OK ] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+   nach dem D-Pad: (-15954,18284) -> Heisspunkt (208,177)
+   [OK ] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+   Kuppeldruck: Klicks 1 (letzter 0x0A), Zustand 0, Deckel z 10/-10
+   [OK ] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+   [OK ] 10. nach 15 Takten Deckel offen (+150/-150, For 15 @0x0FC0 unveraendert)
+   Sicherung Bild 131 (y -1205), Granate Bild 203 (y -1205), sub04 zu Ende Bild 528, Plattform y -20224, cam 0
+   [OK ] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+
+== 1150 R3 ablauf + R4 cut_old ==
+   Fehldruck: Texte 1, aktiv 1 Id 20, Pause 0xFFFF0000, Klicks 0, PC @0x0FC0
+   [OK ] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+   [OK ] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+   nach dem D-Pad: (-15954,18284) -> Heisspunkt (208,177)
+   [OK ] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+   Kuppeldruck: Klicks 1 (letzter 0x0A), Zustand 0, Deckel z 10/-10
+   [OK ] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+   [OK ] 10. nach 15 Takten Deckel offen (+150/-150, For 15 @0x0FC0 unveraendert)
+   Sicherung Bild 131 (y -1205), Granate Bild 203 (y -1205), sub04 zu Ende Bild 528, Plattform y -20224, cam 0
+   [OK ] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+   [OK ] 12. R4: sub04 zu Ende, Plattform geparkt (-20224 @0x109E), Cut_old @0x10B2 = Raumkamera (nicht 4)
+
+== 1150 R5 harness ==
+   nach 11 Takten: Zustand 0, Deckel z 10/-10
+   [OK ] 13. Harness-Weg ohne Aktion: kein Cursor, die Deckel laufen im 11. Takt wie bisher (+10/-10)
+
+== 1150 R7 abbruch ==
+   nach CROSS: Abbrueche 1, Zustand 0, sub04 -1, Plattform y -20224, cam 0, Pause 0x00000000, Deckel 0/0
+   [OK ] 15. CROSS: Aufraeumbytes gelaufen (sub04 zu Ende, Plattform -20224, Spieler+KI frei, Raumkamera, Deckel zu), kein Text, kein Klick
+   [OK ] 16. Tisch-Items unberuehrt (Props da, Flags (9,53)/(9,56) = 0)
+   [OK ] 17. erneute Aktion am Tisch bringt den Cursor wieder (Halt nach 11 Takten)
+
+== 1150 R8 kreuztext ==
+   Text zu 1, Abbrueche 0, Zustand 2, sub04 10
+   [OK ] 18. "Nothing happened." mit CROSS geschlossen: KEIN Abbruch, Cursor bleibt, sub04 steht am Halt
+
+== 1151 R1 halt ==
+   aktiv in Bild 10, sub04-Slot 10 PC @0x0F9E, Plattform y -305, cam 4 (gemerkt 0), Deckel z 0/0
+   [OK ] 1. Halt im 11. VM-Takt nach dem Tischdruck, PC = For 15 (1150 @0x0FC0 / 1151 @0x0F9E)
+   [OK ] 2. Cursor-Zustand: Plattform y -305 (@0x0FB4), Cut 4 angefordert, Raumkamera gemerkt, Deckel 0/0
+   [OK ] 3. 110 Bilder spaeter: PC, Deckel, Plattform unveraendert, Cursor sichtbar am Start (160,119)
+
+== 1151 R2 kuppel ==
+   116 Punkte, Engine-Huelle 12 Ecken, groesster Eckabstand 0 px^2
+   [OK ] 4. Huelle im Modul = Engine-Projektion der ausgelieferten Kuppel (+-1 px, beide Richtungen)
+   Heisspunkt nach 18x RIGHT + 22x DOWN: (208,177)
+   [OK ] 5. Start (160,119) NICHT in der Kuppel; Mitte (209,176) und (208,177) drin; (150,180) (268,180) (208,147) (208,212) draussen
+
+== 1151 R3 ablauf ==
+   Fehldruck: Texte 1, aktiv 1 Id 20, Pause 0xFFFF0000, Klicks 0, PC @0x0F9E
+   [OK ] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+   [OK ] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+   nach dem D-Pad: (-15954,18284) -> Heisspunkt (208,177)
+   [OK ] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+   Kuppeldruck: Klicks 1 (letzter 0x0A), Zustand 0, Deckel z 10/-10
+   [OK ] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+   [OK ] 10. nach 15 Takten Deckel offen (+150/-150, For 15 @0x0FC0 unveraendert)
+   Sicherung Bild 131 (y -1205), Granate Bild 203 (y -1205), sub04 zu Ende Bild 528, Plattform y -20224, cam 0
+   [OK ] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+
+== 1151 R3 ablauf + R4 cut_old ==
+   Fehldruck: Texte 1, aktiv 1 Id 20, Pause 0xFFFF0000, Klicks 0, PC @0x0F9E
+   [OK ] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+   [OK ] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+   nach dem D-Pad: (-15954,18284) -> Heisspunkt (208,177)
+   [OK ] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+   Kuppeldruck: Klicks 1 (letzter 0x0A), Zustand 0, Deckel z 10/-10
+   [OK ] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+   [OK ] 10. nach 15 Takten Deckel offen (+150/-150, For 15 @0x0FC0 unveraendert)
+   Sicherung Bild 131 (y -1205), Granate Bild 203 (y -1205), sub04 zu Ende Bild 528, Plattform y -20224, cam 0
+   [OK ] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+   [OK ] 12. R4: sub04 zu Ende, Plattform geparkt (-20224 @0x109E), Cut_old @0x10B2 = Raumkamera (nicht 4)
+
+== 1151 R5 harness ==
+   nach 11 Takten: Zustand 0, Deckel z 10/-10
+   [OK ] 13. Harness-Weg ohne Aktion: kein Cursor, die Deckel laufen im 11. Takt wie bisher (+10/-10)
+
+== 1151 R7 abbruch ==
+   nach CROSS: Abbrueche 1, Zustand 0, sub04 -1, Plattform y -20224, cam 0, Pause 0x00000000, Deckel 0/0
+   [OK ] 15. CROSS: Aufraeumbytes gelaufen (sub04 zu Ende, Plattform -20224, Spieler+KI frei, Raumkamera, Deckel zu), kein Text, kein Klick
+   [OK ] 16. Tisch-Items unberuehrt (Props da, Flags (9,53)/(9,56) = 0)
+   [OK ] 17. erneute Aktion am Tisch bringt den Cursor wieder (Halt nach 11 Takten)
+
+== 1151 R8 kreuztext ==
+   Text zu 1, Abbrueche 0, Zustand 2, sub04 10
+   [OK ] 18. "Nothing happened." mit CROSS geschlossen: KEIN Abbruch, Cursor bleibt, sub04 steht am Halt
+
+== R6 bytes ==
+   MD1 5556 B, TIM 33312 B, Licht 40 B
+   [OK ] 14. MD1 == ROOM11F0.RDT @0x001928 (5556 B), TIM == @0x018DAC (33312 B), Licht == @0x000718 (40 B)
+
+ALLES BESTANDEN — 0 Pruefung(en) gerissen

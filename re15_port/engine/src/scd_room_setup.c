@@ -22,6 +22,7 @@
 #include "re15_irons_tisch.h" /* Irons Diary + Memory Card auf dem Schreibtisch (ROOM1150/1151) */
 #include "re15_granate.h"     /* Handgranate im Hebetisch von Irons' Buero (ROOM1150/1151) */
 #include "re15_tuer1120.h"    /* Tuer ROOM1130 -> ROOM1120 erst nach der Irons-Szene (Runde 33) */
+#include "re15_hebetisch_cursor.h" /* Hebetisch-Cursor ROOM1150/1151 (Runde 34 Nacht B) */
 
 extern scd_vm_t g_scd;
 
@@ -421,6 +422,9 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (9,56) erst dann gelesen). Tut in jedem anderen Raum nichts. Herleitung:
      * include/re15_granate.h. */
     re15_granate_install((uint16_t)g_current_room_id);
+    /* Runde 34 Nacht B: Hebetisch-Cursor beim Raumaufbau AUS (auch main.c Boot-/CONTINUE-Weg,
+     * Auflage 2). Herleitung: include/re15_hebetisch_cursor.h. */
+    re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
     /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
      * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade
      * angelegt hat, zum Text-Platz umgewidmet — deshalb NACH dem Init-Lauf. Tut in jedem anderen
