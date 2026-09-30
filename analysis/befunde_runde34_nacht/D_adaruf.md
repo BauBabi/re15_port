@@ -29,8 +29,9 @@ tuer_graph.py, texte_bauen.py, messlauf.sh). Sonde: `re15_port/tests/unit/probe_
   `scd_vm.c scd_event_fire` (Ereignis 13 -> Port-Programm, eine Zeile neben Spur As HAKEN 1).
 * **Sprachdateien:** `synchro/STAGE1/room1050/main22.wav` (Frau, <= 3,3 s), `main23.wav`, `main24.wav` (Leon).
   msg 25 ist ein Untersuchungstext (Text-Platz) — der spielt im Port keine Stimme (wie tuer1120).
-* **Lesarten (§1):** Bildschirmname "Woman:" statt "Ada:" (RE1.5-Konvention vor der Rettung); "rechter Arm ...
-  nach rechts" = Zuschauersicht (alle Leon-Gesten sind LINKSARMIG, die rechte Hand haelt die Waffe).
+* **Lesarten (§1):** Bildschirmname "Woman:" statt "Ada:" (RE1.5-Konvention vor der Rettung, vom Nutzer
+  bestaetigt: AUFTRAG.md Nachtrag); "rechter Arm ... nach rechts" = Zuschauersicht (alle Leon-Gesten sind
+  LINKSARMIG, die rechte Hand haelt die Waffe); Leons Zeile als zwei Nachrichten (Gesten- und Stimmen-Takt).
 
 ## 1 Nutzerwortlaut + Lesart
 
@@ -51,7 +52,8 @@ Wortlaut (AUFTRAG.md Z. 14-19):
 | # | Mehrdeutigkeit | Festlegung | Grund |
 |---|---|---|---|
 | L1 | Wann feuert die Szene? | Beim ERSTEN Quadrat-Druck an Slot 4, solange (3,0xBB)=0 und (9,65)=0. | Tueren oeffnen nur per Quadrat-Flanke (memory reai-v2-door-transition, FUN_80042bac kind 0x10); "Drückt man nach dieser Cutscene erneut die Tür" setzt einen ersten Druck voraus. |
-| L2 | "Ada:" | Bildschirmtext **"Woman:"** | RE1.5 nennt Ada vor und waehrend der Rettung "Woman:" (ROOM1090 msg 0 @0x275C, msg 2 @0x27BD, msg 4 @0x281F); "Ada:" erstmals NACH der Rettung (ROOM1050 msg 6 @0x1007, ROOM11C0 msg 1..8). Leons eigene Zeile ("Another civilian survivor ... help her") zeigt, dass er sie nicht kennt. "Ada:" im Auftrag = Drehbuch-Sprecherangabe (wie "Leon:"). Umstellung = die 6 Namensbytes `33 4b 49 3d 4a 16` gegen die 4 von "Ada:" `1d 40 3d 16` tauschen (ROOM1050 msg 6 @0x100B, gleiche Farbe 02). |
+| L2 | "Ada:" | Bildschirmtext **"Woman:"** — **vom Nutzer bestaetigt** (AUFTRAG.md, Nachtrag 2026-09-30: "Du hast recht! Da muss woman: stehen statt Ada:"). | RE1.5 nennt Ada vor und waehrend der Rettung "Woman:" (ROOM1090 msg 0 @0x275C, msg 2 @0x27BD, msg 4 @0x281F); "Ada:" erstmals NACH der Rettung (ROOM1050 msg 6 @0x1007, ROOM11C0 msg 1..8). Satz bleibt woertlich "Hello? Anyone? Please, get me out of here!". |
+| L2b | "Leon: Another civilian survivor. I have to help her!" = eine oder zwei Nachrichten? | ZWEI: msg 23 "Leon: Another civilian survivor." und msg 24 "Leon: I have to help her!" | Die Gesten sollen "bei" den Satzteilen kommen: jede Geste haengt direkt hinter ihrem Message_on, und `voice_wait` haelt msg 24 bis main23.wav fertig ist — nur so bleibt die zweite Geste am zweiten Satz. RE1.5 setzt zwei ganze Saetze desselben Sprechers ebenfalls als zwei Nachrichten mit je "Leon:" (ROOM1090 msg 5 @0x2861 / msg 6 @0x2899, sub03 @0x02640/@0x02670). |
 | L3 | "einen Schritt zurück ... wie in ROOM 1090 ..., nachdem er zum Feuer läuft" | `Plc_dest` Modus **8** (ROOM1090 sub02 @0x0247C), gleiche Weglaenge. | Der einzige Rueckwaertsbefehl in sub02, direkt nach den drei Lauf-`Plc_dest` Modus 5 zum Feuer (@0x0244A/0x02454/0x0245E). Der Nutzer hat genau diesen Schritt schon einmal beanstandet ("im Original macht er noch EINEN Schritt zurueck, bei uns ZWEI", actor_locomotion.c) — er ist ihm vertraut. |
 | L4 | "den rechten Arm um 180° dreht und nach rechts bewegt ... den gleichen Weg wieder zurück" | **Clip 19**, vorwaerts + rueckwaerts (`Plc_flg 0x80`). | §3.5: alle Leon-Gesten bewegen den LINKEN Arm (Knochen 12-14); der rechte (9-11, Waffenhand) steht. "rechts" ist also Zuschauersicht (Leon frontal: sein linker Arm ist rechts im Bild). Clip 19 hebt den Arm seitlich nach aussen (Hand +300 nach aussen, Unterarm von haengend -79 Grad auf waagerecht +11 Grad) und dreht die Hand dabei um (Handflaeche vom Oberschenkel nach oben, ~100 Grad) — "dreht und bewegt nach rechts". "den gleichen Weg wieder zurück" = das Muster, in dem Clip 19 im Original IMMER laeuft (vor + `Plc_flg 0x80`, 11 von 26 Aufrufen rueckwaerts; z.B. ROOM1090 sub03 @0x0265C/@0x02664). |
 | L5 | "seine Arm Schwung Animation" | **Clip 17**, einmal vorwaerts (kehrt selbst in die Ruhe zurueck). | Der einzige Schwung der Bibliothek: Hand von der Brustmitte bis ganz seitlich hinaus (+780 Einheiten), Unterarm schwenkt 107 Grad. Leons "Now what am I gonna do?" im Intro (ROOM1170 sub02 @0x015F0, im Port bei Bild 1686 gemessen), "Ada, you hide inside that patrol car.", "Hurry up! They're coming!". Clip 17 wird im Original NIE rueckwaerts gespielt — passt dazu, dass der Nutzer hier keinen Rueckweg nennt. |
@@ -208,11 +210,18 @@ eine Weiche fuer Port-Programme ein (A_rolltor.md §5.2 HAKEN 1) — Spur D brau
 
 ### 3.7 Szenen-Rahmen (in jeder Original-Szene gleich)
 
-`Set(2,7)=1` (Pad-Sperre; Zone 2 Wort 0 = g_pauseflags, game_state.c) + `Set(1,27)=1` (Letterbox: DAT_800aca3c
-&0x10, FUN_80021a0c +0x10/Bild @0x80021a40-54, 15 Bilder) am Anfang, `Set(2,7)=0` / `Set(1,27)=0` / `Work_set(1,0)`
+`Set(2,7)=1` (Pad-Sperre) + `Set(1,27)=1` (Letterbox) am Anfang. Selbst nachgeprueft: Bank-Tabelle @0x80074664
+(`read`): [1] = 0x800aca3c, [2] = 0x800aca40 (Pausemaske), [3] = 0x800b0ff8; Bit-Zaehlung MSB-first -> (1,27) =
+Maske 0x10, (2,7) = 0x01000000. Letterbox FUN_80021a0c: `lw v0,0x800aca3c` @0x80021a10, `andi v0,v0,0x10`
+@0x80021a24, Stand @0x800b5568 `sltiu 0xf0` @0x80021a40 -> `addiu +16` @0x80021a54, sonst `sltiu 0x10` @0x80021a68 ->
+`addiu +240` (= -16) @0x80021a7c: 15 Bilder auf/zu. Am Ende `Set(2,7)=0` / `Set(1,27)=0` / `Work_set(1,0)`
 / `Plc_ret` am Ende — ROOM1090 sub02 @0x02414/@0x02418 bzw. @0x024BE/@0x024C2/@0x024C6/@0x024CA, ebenso sub03,
 ROOM1050 sub02/sub03. Stehen bleiben: `Plc_dest 40 00 06 3f 00 00 00 00` (Modus 6 = 0x800517f0, Clip 1 einmal ->
-Clip-2-Idle) — ROOM1090 sub02 @0x0242C.
+Clip-2-Idle) — ROOM1090 sub02 @0x0242C. Selbst nachgeprueft (`dis 0x80051840`): Phase `sb v1,6(a0)` @0x80051844,
+`sb v1,148(v0)` @0x80051854 (+0x94), `sb zero,149(v0)` @0x80051864, +0x8f = 7 @0x80051874, `jal anim_set` @0x8005188c;
+Folgeclip `ori v0,zero,0x2` / `sb v0,148(v1)` @0x800518c4/@0x800518c8. Message_on (`dis 0x800404f4`): `lbu a2,1(v0)`
+@0x80040504 (Id), `lhu a3,2(v0)` @0x80040508 (Maske), `sll a3,a3,16` @0x8004051c, `jal 0x80027e68` @0x80040518, PC += 4
+@0x8004050c — Maske 0 = Untertitel ohne Einfrieren (wie alle Leon-Dialogzeilen `2b nn 00 00`).
 
 ### 3.8 Nachrichtenform und Sprachausgabe
 
@@ -362,9 +371,9 @@ msg 6 @0x1099 · "nyone" ROOM1031 msg 19 @0x2FBC · "? " ROOM1011 msg 4 @0x0F8F 
 "get me out of here!" ROOM1090 msg 0 @0x2784 · "Leon:" ROOM1050 msg 7 @0x103B · "An" ROOM1010 msg 1 @0x0A90 ·
 "other " ROOM1011 msg 13 @0x1164 · "ci" ROOM1011 msg 6 @0x0FFE · "vi" ROOM1011 msg 13 @0x1156 · "li" ROOM1011
 msg 18 @0x126A · "an su" ROOM1240 msg 0 @0x0673 · "rvivor" ROOM1011 msg 13 @0x1155 · "." (0x57) ROOM1000 msg 0
-@0x0D33 · "I have to " ROOM1170 msg 16 @0x1C4B · "help her" ROOM11B0 msg 11 @0x1BBA · "!" ROOM1000 msg 0 @0x0E10 ·
+@0x0D33 · "I have to " ROOM1170 msg 16 @0x1C4B · "help her" ROOM11B0 msg 11 @0x1BBA · "!" ROOM1011 msg 1 @0x0EF0 ·
 "help" ROOM1011 msg 16 @0x11F5 · "the " ROOM1011 msg 1 @0x0F13 · "S" ROOM1010 msg 0 @0x0A54 · "urvivor" ROOM1011
-msg 13 @0x1154 · " first" ROOM11B0 msg 11 @0x1BAE. Glyphentabelle = Umkehrung msg_common.c re15_msg_glyph.
+msg 13 @0x1154 · " first" ROOM11B0 msg 11 @0x1BAE. Glyphentabelle = Umkehrung msg_common.c re15_msg_glyph; Suche nur innerhalb der Nachrichten (bis Ende-Code `01 xx`).
 
 ### 5.6 Sprachdateien (der Nutzer nimmt auf, MiniMax)
 
@@ -397,7 +406,7 @@ Protokoll `RE15_MSG_LOG`, `RE15_SCD_TRACE`, `RE15_FLAG_TRACE`.
 | auch nach Raumwechsel | Lauf mit `RE15_SET_FLAG=3:121,9:65` | erster Druck = Text, keine Szene |
 | erst nach Rettung durch die Tuer | Lauf mit `RE15_SET_FLAG=3:121,3:187` | `DOOR FIRE slot=4`, Tuersequenz P07G, room10a0 |
 | Ablauf ueber die echte Rettung | Lauf ROOM1090 mit `RE15_SET_FLAG=3:132,3:128,3:129,3:133` (Sub03 wie in §3.3-Messung), dann Tuer Slot 0 -> 1050 | (3,0xBB)=1 im FLAG_TRACE, "Hey, wait!"-Szene laeuft, danach Slot 4 = Tuer |
-| Elza | `RE15_DEBUG_JUMP=1051@120` + Standplatz + Quadrat | Tuer nach 10A1 wie bisher |
+| Elza | Riegel-Fall ROOM1051 (Installation kehrt bei room != 0x1050 sofort zurueck, Slot 4 bleibt Tuer); exe-Lauf mit Elza-Start (Spielerauswahl-Schalter `RE15_PSELECT_*` — getenv-Stelle vor dem Lauf lesen) bis ROOM1051 Slot 4 | Tuer nach 10A1 wie bisher, keine Szene |
 
 Gegenproben: (a) Riegel `unit_r34n_d_adaruf` mit HAKEN 2 auskommentiert -> ROT (Szene startet nicht, Druck
 bleibt folgenlos — Port meldet `event 13 DROPPED`); (b) Freigabe probeweise auf (3,0x6E) -> Riegel-Fall "Rueckkehr
@@ -436,5 +445,4 @@ nachfahren (memory reai-v2-gui-tests-flattern).
   auch auf Clip 17 (Unterarm schwenkt von quer vor der Brust nach aussen). Alternative, falls der Nutzer anders
   meint: b = Clip 17 vor + zurueck, c = Clip 15 (Arm-Schwung nach vorn, "Hey!"). Umstellung = die Clip-Bytes an
   +0x56/+0x5E bzw. +0x6E. Katalogbild `D_belege/gesten_katalog_vorn.png` fuer die Rueckfrage bei der Abnahme.
-* **Sprechername "Woman:" vs. "Ada:"** (L2) — 6 gegen 4 Namensbytes.
 * **Echte-exe-Abnahme** erst mit dem Bau (§6); in dieser Stufe nur die Sonde an der echten VM/Spielschritt.

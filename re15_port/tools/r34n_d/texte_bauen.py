@@ -58,8 +58,24 @@ def korpus():
             s = ms + o
             e = ms + tbl[i + 1] if i + 1 < n else min(len(d), s + 400)
             if s < e <= len(d):
+                e = s + nachrichten_laenge(d[s:e])   # nur bis einschliesslich Ende-Code 01 xx
                 out.append((os.path.basename(f)[:8], i, s, d[s:e]))
     return out
+
+
+def nachrichten_laenge(b):
+    """Laenge einer .msg bis einschliesslich Ende-Code `01 xx` — Steuercodes wie scd_walk_lib.decode
+    (02/04/05/06/09/0A/0B = 2 Byte, 03/07 = 1 Byte), damit ein Parameterbyte 01 nicht als Ende zaehlt
+    und die LETZTE Nachricht eines Blocks nicht in fremde Daten dahinter reicht."""
+    i = 0
+    while i < len(b):
+        c = b[i]
+        if c == 0x01:
+            return min(len(b), i + 2)
+        if c in (0x02, 0x04, 0x05, 0x06, 0x09, 0x0A, 0x0B):
+            i += 2; continue
+        i += 1
+    return len(b)
 
 
 def fundstelle(korp, stueck):
