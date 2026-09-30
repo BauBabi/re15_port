@@ -1,0 +1,8 @@
+# Festgehaltene sha256 von release/apk_asset_gate.py (Zeilenenden LF, release/.gitattributes) - Nachbesserung R4-1,
+# Gegenpruefung H1/H2 (analysis/befunde_runde34_android/android_r4_nachbesserung.md). release/apk_pruefen.sh
+# (build_android.sh, make_package.sh) fuehrt das Asset-Gate NUR aus, wenn die sha256 seiner privaten Kopie diese ist:
+# ein leeres, abgeschnittenes, veraendertes oder altes Gate gab bis dahin Rueckgabe 0 und liess jede Pruefung durch.
+# Gate mit Absicht geaendert: erst  "$PY" release/apk_asset_gate.py --selbsttest  (SELBSTTEST-OK), dann den Wert von
+#   sha256sum release/apk_asset_gate.py
+# hier eintragen und zusammen mit der Gate-Aenderung committen. Keine Umgebungsvariable ersetzt diese Datei.
+8a0e3f152f508690fcd4478a46961033e964e132a04eff2a7a4d2821ffbbedcb

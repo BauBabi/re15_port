@@ -72,6 +72,10 @@
 #   * alle Schritte lesen EINE private Kopie der APK (Nachbesserung R2): unter dem Auslieferungsnamen
 #     landet genau diese gepruefte Kopie, und wurde die Datei waehrend der Pruefung getauscht, bricht
 #     die Kette ab
+#   * das Asset-Gate laeuft nur als private Kopie mit der sha256 aus release/apk_asset_gate.sha256, und sein Urteil
+#     kommt aus Rueckgabe UND Ausgabe (Schlusszeile, Zaehlzeilen, jede Selbsttest-Fallzeile rc = soll) - Nachbesserung
+#     R4-1, Gegenpruefung H1: vorher galt allein die Rueckgabe, und ein leeres Gate gab 0. APK_GATE_DATEI aus der
+#     Umgebung wird ignoriert (H2).
 #   * VOLLE Asset-Pruefung (seit Runde 34a, release/apk_asset_gate.py):
 #       - erst "--selbsttest": das Gate muss gute Mini-APKs annehmen und JEDE Faelschung
 #         ablehnen (fehlende Datei, gleiche Groesse/anderer Inhalt auch hinter dem 1. MiB und

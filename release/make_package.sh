@@ -35,6 +35,13 @@
 #                --ohne-android nur die PC-Saetze schnueren: das entfernt den alten Satz (Datei und
 #                git-Index), statt ihn ungeprueft mitzuliefern.
 #            Aeltere Versionen (re15_port_<alt>_android.z*) bleiben wie bisher unangetastet.
+#   SHA256SUMS.txt und git add (Nachbesserung R4-1, Gegenpruefung H3): nur eine POSITIVLISTE - die in diesem Lauf
+#            gezippten Saetze, bewusst der Satz der anderen PC-Plattform derselben Version (frueherer Lauf, wird als
+#            solcher gemeldet) und der Android-Satz aus diesem Lauf. Jede andere Datei <NAME>_*.z* (z.B.
+#            re15_port_<v>_ANDROID.zip) bricht ab - vor den Kopierminuten und vor dem Schreiben der SUMS.
+#   Asset-Gate (Nachbesserung R4-1, H1/H2): es laeuft nur als private Kopie mit der sha256 aus
+#            release/apk_asset_gate.sha256, und jedes Urteil kommt aus Rueckgabe UND Ausgabe (release/apk_pruefen.sh
+#            gate_laufen). Wer apk_asset_gate.py aendert, haelt den neuen Wert dort fest.
 #
 # Voraussetzungen (Runde 34a, Nachbesserung R2 - Gegenpruefung echtlauf B2; fehlt etwas, bricht
 # das Skript mit Meldung ab, statt eine Pruefung auszulassen):
@@ -279,12 +286,13 @@ check_tree() {           # $1 = fertiger Paketordner
     # gegen dieselbe Liste wie die APK: jede Datei der Asset-Baeume mit gleicher Groesse und sha256,
     # unter shared_assets/ und synchro/ nichts sonst (auch Tuer-Soll + Wurzel des Quellbaums).
     # Runde 4 (Gegenpruefung R3 B4): $GATE = die private, oben selbstgetestete Kopie des Gates.
+    # Nachbesserung R4-1 (H1): Urteil aus Rueckgabe UND Ausgabe (gate_laufen, release/apk_pruefen.sh).
     local rc=0
-    "$PY" "$(apk_nativ "$GATE")" --repo "$(apk_nativ "$REPO")" --paket "$(apk_nativ "$out")" || rc=$?
+    gate_laufen paket "$GATE" --repo "$(apk_nativ "$REPO")" --paket "$(apk_nativ "$out")" || rc=$?
     case "$rc" in
         0) ;;
         1) die "Paket $out weicht von der Asset-Liste ab (Befunde oben) - APK und PC-Pakete muessen dieselben Assets tragen" ;;
-        *) die "Paketpruefung: keine Aussage moeglich (rc=$rc, Meldung oben)" ;;
+        *) die "Paketpruefung: keine Aussage moeglich (Urteil $rc, Meldung oben)" ;;
     esac
 }
 
@@ -477,6 +485,9 @@ source "$HERE/apk_pruefen.sh"                # apk_nativ, apk_kennung, apk_pruef
 # vorn in den PATH, danach ist "rm" das rm von MSYS2 - dessen /tmp ist C:/msys64/tmp, nicht der Temp-Ordner von
 # Git-Bash. Mit dem /tmp-Pfad liess die EXIT-Falle nach JEDEM erfolgreichen Zip-Lauf die Gate-Kopie liegen (gemessen:
 # 8 Reste, nur Laeufe mit Zippen; Abbrueche und --no-zip raeumten ab).
+# Nachbesserung R4-1 (Gegenpruefung H1): die Kopie muss dem Pin release/apk_asset_gate.sha256 gleichen (gate_festhalten),
+# und JEDES Gate-Urteil kommt aus Rueckgabe UND Ausgabe (gate_laufen, release/apk_pruefen.sh) - bis dahin lieferte ein
+# 0-Byte-Gate oder eines mit 'main()' ohne sys.exit hier ein Paket mit veraenderter Datei aus (SHA256SUMS + git add).
 MP_TMP="$(mktemp -d "${TMPDIR:-/tmp}/re15_make_package.XXXXXX")" || die "kein Temp-Ordner fuer die Gate-Kopie"
 MP_TMP="$(apk_nativ "$MP_TMP")"
 mp_aufraeumen() {
@@ -484,15 +495,14 @@ mp_aufraeumen() {
     if [[ -n "${MP_TMP:-}" && -d "$MP_TMP" ]]; then rm -rf "$MP_TMP"; fi
 }
 trap mp_aufraeumen EXIT
-cp "$HERE/apk_asset_gate.py" "$MP_TMP/apk_asset_gate.py" || die "Asset-Gate nicht kopierbar: $HERE/apk_asset_gate.py"
-GATE="$MP_TMP/apk_asset_gate.py"
-APK_GATE_DATEI="$GATE"                       # apk_pruefen.sh (Schritt 5) nimmt dieselbe Kopie
-echo "== Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) =="
-echo "   Gate: $(sha256sum "$GATE" | cut -c1-16)... (Kopie von release/apk_asset_gate.py)"
+echo "== Asset-Gate: festhalten und Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) =="
+gate_festhalten "$MP_TMP"
+GATE="$GATE_KOPIE"
+APK_GATE_KOPIE="$GATE"                       # apk_pruefen.sh (Schritt 5) nimmt dieselbe Kopie (nie aus der Umgebung)
 rc_selbst=0
-"$PY" "$(apk_nativ "$GATE")" --selbsttest || rc_selbst=$?
-(( rc_selbst == 0 )) || die "Selbsttest des Asset-Gates fehlgeschlagen (rc=$rc_selbst) - dem Gate ist nicht zu trauen;
-        Quellbaum-, APK- und Paketpruefung unterbleiben, nichts wird kopiert oder gezippt"
+gate_laufen selbsttest "$GATE" --selbsttest || rc_selbst=$?
+(( rc_selbst == 0 )) || die "Selbsttest des Asset-Gates nicht bestanden (Urteil $rc_selbst, Meldung oben) - dem Gate ist
+        nicht zu trauen; Quellbaum-, APK- und Paketpruefung unterbleiben, nichts wird kopiert oder gezippt"
 
 # --- Quellbaum: Asset-Liste + Tuer-Soll (Nachbesserung R2, Gegenpruefung B2/B6) -------
 # VOR den Kopierminuten: fehlt ein Tuerarchiv, das die Engine-Tabellen verlangen (29/30), ist eines
@@ -500,11 +510,11 @@ rc_selbst=0
 # den keine Liste kennt, waeren ALLE Pakete falsch - check_tree verglich bisher nur Paket gegen Quelle.
 echo "== Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) =="
 rc_quelle=0
-"$PY" "$(apk_nativ "$GATE")" --repo "$(apk_nativ "$REPO")" --quellbaum || rc_quelle=$?
+gate_laufen quellbaum "$GATE" --repo "$(apk_nativ "$REPO")" --quellbaum || rc_quelle=$?
 case "$rc_quelle" in
     0) ;;
     1) die "Quellbaum weicht von der Asset-Liste bzw. den Tuer-Tabellen der Engine ab (Befunde oben)" ;;
-    *) die "Quellbaum-Pruefung: keine Aussage moeglich (rc=$rc_quelle, Meldung oben)" ;;
+    *) die "Quellbaum-Pruefung: keine Aussage moeglich (Urteil $rc_quelle, Meldung oben)" ;;
 esac
 
 # --- Android-APK: DIESELBE Pruefkette wie in build_android.sh ------------------
@@ -577,6 +587,33 @@ if [[ $OHNE_ANDROID -eq 1 ]]; then
         echo "== --ohne-android: keine APK-Pruefung, kein Android-Satz (keiner dieser Version vorhanden) =="
     fi
 fi
+
+# --- Fremde Dateien mit dem Versions-Praefix (Nachbesserung R4-1, Gegenpruefung H3) ----------------------------------
+# B1 schuetzte nur den kanonischen Namen <NAME>_android.z* (Glob, gross/klein-genau). SHA256SUMS.txt und git add nahmen
+# per Glob "${NAME}"_*.z* aber JEDE Datei mit dem Praefix mit - ein re15_port_<v>_ANDROID.zip oder _android.apk.zip
+# (Pruefer: je ein Zip mit einer Text-"APK") stand danach in SHA256SUMS.txt und war git-vorgemerkt, auch mit
+# --ohne-android. Jetzt: ausgeliefert wird nur eine Positivliste (Zippen unten), und jede Datei <NAME>_*.z*, die keinem
+# Satz dieses Skripts gehoert (<NAME>_{linux_steamdeck_x64,win64,android}.zip/.zNN, gross/klein-genau), bricht ab - hier
+# vor den Kopierminuten und noch einmal vor dem Schreiben von SHA256SUMS.txt.
+fremde_versionsdateien() {   # Namen (je Zeile) der Dateien <NAME>_*.z* in release/, die keinem Satz gehoeren
+    local f b rest
+    for f in "$HERE/${NAME}"_*.z*; do
+        [[ -e "$f" ]] || continue
+        b="$(basename "$f")"
+        rest="${b#"${NAME}_"}"
+        [[ "$rest" =~ ^(linux_steamdeck_x64|win64|android)\.(zip|z[0-9][0-9]+)$ ]] && continue
+        printf '%s\n' "$b"
+    done
+    return 0
+}
+fremde_abbruch() {           # $1 = Zeitpunkt (Text)
+    local fremd
+    fremd="$(fremde_versionsdateien)"
+    [[ -z "$fremd" ]] || die "fremde Datei(en) mit dem Versions-Praefix in release/ ($1): $(echo $fremd)
+        Sie gehoeren zu keinem Satz dieses Skripts (${NAME}_linux_steamdeck_x64|win64|android als .zip/.zNN) und kaemen
+        sonst ungeprueft in SHA256SUMS.txt bzw. git. Entfernen oder umbenennen, dann neu starten."
+}
+if [[ $DO_ZIP -eq 1 ]]; then fremde_abbruch "vor den Kopierminuten"; fi
 
 copy_common() {          # $1 = Paketordner
     local out="$1"
@@ -757,6 +794,8 @@ if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
 fi
 
 # --- Zippen (Split-Volumes) --------------------------------------------------
+AUSLIEFERN=()                     # PC-Volumes fuer SHA256SUMS.txt + git add (Positivliste, Nachbesserung R4-1 H3)
+ANDROID_VOLUMES=()                # Android-Volumes aus DIESEM Lauf (nur mit ANDROID_GEZIPPT)
 if [[ $DO_ZIP -eq 1 ]]; then
     # ⛔ zip LIEGT IN msys64/usr/bin, NICHT IN mingw64/bin (CLAUDE.md, Build-Kapitel).
     # Aus einer Shell, die nur mingw64/bin im PATH hat, starb der Paketlauf am
@@ -839,6 +878,9 @@ if [[ $DO_ZIP -eq 1 ]]; then
         [[ "$ANDROID_SUMS" == "$android_vorher" ]] || die "Android-Satz hat sich WAEHREND der Inhaltspruefung veraendert:
         vorher: $(echo $android_vorher)
         nachher: $(echo $ANDROID_SUMS)"
+        for f in "${NAME}_android".z*; do
+            if [[ -f "$f" ]]; then ANDROID_VOLUMES+=("$f"); fi
+        done
         ANDROID_GEZIPPT=1
     elif [[ -n "$APK_KENNUNG" ]]; then
         die "Android-APK verschwand zwischen Pruefung und Zippen: $APK"
@@ -858,23 +900,37 @@ if [[ $DO_ZIP -eq 1 ]]; then
         geprueft: $(echo $ANDROID_SUMS)
         jetzt:    $(echo $android_jetzt)"
     fi
-    sums=()
-    for f in "${NAME}"_*.z*; do
-        [[ -f "$f" ]] || continue
-        case "$f" in "${NAME}_android".z*) continue ;; esac     # Android: die festgehaltenen Zeilen (unten)
-        sums+=("$f")
+    # Nachbesserung R4-1 (Gegenpruefung H3): SHA256SUMS.txt und git add aus einer POSITIVLISTE statt aus dem Glob
+    # "${NAME}"_*.z*: die in DIESEM Lauf gezippten PC-Saetze, bewusst der kanonische Satz der anderen PC-Plattform
+    # derselben Version (frueherer Lauf; verify_split: vollstaendig, nichts Fremdes) und der Android-Satz nur mit
+    # ANDROID_GEZIPPT (die festgehaltenen Volumes). Jede andere <NAME>_*.z* bricht ab (fremde_abbruch).
+    fremde_abbruch "vor dem Schreiben von SHA256SUMS.txt"
+    for p in linux_steamdeck_x64 win64; do
+        satz=()
+        for f in "${NAME}_${p}".z*; do
+            if [[ -f "$f" ]]; then satz+=("$f"); fi
+        done
+        (( ${#satz[@]} )) || continue
+        if [[ "$ONLY" == "both" || ( "$ONLY" == "linux" && "$p" == linux_steamdeck_x64 ) || ( "$ONLY" == "win" && "$p" == win64 ) ]]; then
+            herkunft="aus diesem Lauf"                # oben gezippt und mit verify_split geprueft
+        else
+            [[ -f "${NAME}_${p}.zip" ]] || die "Satz ${NAME}_${p}.z* ohne letztes Volume ${NAME}_${p}.zip - unvollstaendig"
+            verify_split "${NAME}_${p}.zip" 1 || die "Satz der anderen Plattform ${NAME}_${p}.z* ist unvollstaendig oder hat Fremdes"
+            herkunft="andere Plattform aus einem frueheren Lauf - in diesem Lauf nicht neu geprueft, unveraendert mitgefuehrt"
+        fi
+        AUSLIEFERN+=("${satz[@]}")
+        echo "   Satz ${NAME}_${p}: ${#satz[@]} Volume(s), $herkunft"
     done
-    (( ${#sums[@]} )) || [[ -n "${ANDROID_GEZIPPT:-}" ]] || die "keine Split-Volumes fuer SHA256SUMS.txt"
+    (( ${#AUSLIEFERN[@]} )) || [[ -n "${ANDROID_GEZIPPT:-}" ]] || die "keine Split-Volumes fuer SHA256SUMS.txt"
     pc_sums=""
-    if (( ${#sums[@]} )); then pc_sums="$(sha256sum "${sums[@]}")" || die "sha256sum der PC-Volumes fehlgeschlagen"; fi
+    if (( ${#AUSLIEFERN[@]} )); then pc_sums="$(sha256sum "${AUSLIEFERN[@]}")" || die "sha256sum der PC-Volumes fehlgeschlagen"; fi
     # nur Bash selbst schreibt die Datei (sha256sum aus /c/msys64/usr/bin laeuft unter einer anderen MSYS-Laufzeit)
     { if [[ -n "${ANDROID_GEZIPPT:-}" ]]; then printf '%s\n' "$ANDROID_SUMS"; fi
       if [[ -n "$pc_sums" ]]; then printf '%s\n' "$pc_sums"; fi; } > SHA256SUMS.txt
     echo
-    zeigen=("${sums[@]}")
-    if [[ -n "${ANDROID_GEZIPPT:-}" ]]; then zeigen+=("${NAME}_android".z*); fi
+    zeigen=("${AUSLIEFERN[@]}" "${ANDROID_VOLUMES[@]}")
     ls -la "${zeigen[@]}"
-    echo "== SHA256SUMS.txt geschrieben ($(grep -c '' SHA256SUMS.txt) Volumes${ANDROID_GEZIPPT:+, Android-Satz aus diesem Lauf}) =="
+    echo "== SHA256SUMS.txt geschrieben ($(grep -c '' SHA256SUMS.txt) Volumes${ANDROID_GEZIPPT:+, Android-Satz aus diesem Lauf}, Positivliste) =="
 fi
 
 # --- Git: NUR die aktuelle Version im Repo halten ----------------------------
@@ -930,17 +986,20 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
         rm -f "$f" && alt=$((alt+1))
     done
     neu=0
-    for f in "$HERE/${NAME}"_*.z*; do
-        [[ -f "$f" ]] || continue
-        # Runde 4 (B1): einen Android-Satz nur vormerken, wenn er in DIESEM Lauf aus der geprueften APK
-        # entstand, und nur die dabei festgehaltenen Volumes (ANDROID_SUMS) - auch mit --no-zip (dort entsteht
-        # keiner; ein vorhandener wird nicht angefasst)
-        case "$(basename "$f")" in
+    # Nachbesserung R4-1 (Gegenpruefung H3): vorgemerkt wird GENAU die Positivliste aus SHA256SUMS.txt (Zippen oben):
+    # PC-Saetze dieses Laufs + bewusst der Satz der anderen PC-Plattform, Android nur aus diesem Lauf (Runde 4, B1:
+    # nur die festgehaltenen Volumes). Bis dahin nahm der Glob "${NAME}"_*.z* jede Datei mit dem Versions-Praefix mit.
+    # Mit --no-zip entsteht keine Liste - dann wird nichts vorgemerkt (vorhandene Saetze bleiben, wie sie sind).
+    for f in "${AUSLIEFERN[@]}" "${ANDROID_VOLUMES[@]}"; do
+        b="$(basename "$f")"
+        case "$b" in
             "${NAME}_android".z*)
                 [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue
-                [[ $'\n'"${ANDROID_SUMS:-}"$'\n' == *"$(basename "$f")"$'\n'* ]] || continue ;;
+                [[ $'\n'"${ANDROID_SUMS:-}"$'\n' == *"$b"$'\n'* ]] || die "Android-Volume $b steht nicht in den festgehaltenen Summen" ;;
         esac
-        git -C "$HERE/.." add -- "release/$(basename "$f")" && neu=$((neu+1))
+        [[ -f "$HERE/$b" ]] || die "Volume der Positivliste verschwand vor git add: release/$b"
+        git -C "$HERE/.." add -- "release/$b" || die "git add fehlgeschlagen: release/$b"
+        neu=$((neu+1))
     done
     echo "   $alt alte Paketdatei(en) aus dem Repo entfernt, $neu neue vorgemerkt"
     echo "   (noch nicht committet — das macht der Release-Commit)"
