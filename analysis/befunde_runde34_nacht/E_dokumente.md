@@ -284,23 +284,37 @@ Beispiel ROOM10E0 @0x00C4E `Item_aot_set` Slot 1 Rechteck (−650,−7350,2600,1
 `Aot_set` sce 1 Slot 8 mit DEMSELBEN Rechteck. **Regel des Originals: liegt ein Gegenstand im
 Untersuchen-Rechteck, steht er im kleineren Slot und gewinnt.**
 
-Gemessen an den geplanten Zonen (Sonde `abdeckung`, Raster 50, 64 Blickrichtungen; `druck` = ein
-echter Druck durch `re15_aot_scan`):
+Gemessen an den ENDGUELTIGEN Zonen (Sonde `abdeckung`, Raster 50, 64 Blickrichtungen; `druck` = ein
+echter Druck durch `re15_aot_scan`, Item 0x48 als Stellvertreter, weil die Dokument-Tabelle 0x49..0x4C
+noch nicht kennt — der Leser-Weg ist derselbe; `rot` 0 = Blick +x/Ost, 1024 = Blick −z/Sued).
+Alles aus EINEM Lauf `re15_port/tools/r34n_e/endwerte.sh` → `E_belege/endwerte.txt`:
 
-| Raum | Zone (Ecke, Groesse), Slot | Standorte | Treffer | abgefangen | echter Druck |
+| Raum | Zone (Ecke, Groesse), Slot | Standorte | eigene Treffer | abgefangen | echter Druck |
 |---|---|---|---|---|---|
-| 1050 | (15250,−7250,1000,1000), 15 | 709 | 8239 | 0 | Stand (14900,−6750) Blick Ost → **Leser** |
+| 1050 | (15250,−7250,1000,1000), 15 | 709 | 8239 | 0 | Stand (14900,−6750) rot 0 → **Leser** |
 | 1051 | dieselbe, 15 | 0 | 0 | **8239 von Slot 11** (Leichen-Satz) | → **event 3** (Leichen-Satz) |
-| 1000/1001 | (18724,−12200,1000,1000), 10 | 130 | 1004 | 0 | Stand (18250,−11700) Blick Ost → **Leser** |
-| 1020/1021 | (−10963,−16932,2000,1000), 14 | 0 | 0 | **3740 von Slot 10 / 11** (Tisch-Nachricht) | → **msg 3** „It's Lieutenant Branagh's desk." |
-| 1020/1021 mit Tisch-Nachricht nach Slot 15 | dieselbe, 14 | 451 | 3740 | 0 | → **Leser** |
-| 1010/1011 | (300,5140,1000,1000), 9 | 258 | 1876 | 1033 (Slot 2 Spray 1024, Slot 3 Munition 9) | Stand (900,6400) Blick Sued → **Leser** |
+| 1000 / 1001 | (18726,−12223,1000,1000), 10 | 134 | 1000 | 0 | Stand (18250,−11723) rot 0 → **Leser** |
+| 1020 / 1021 | (−11100,−16928,2200,1000), 14 | 0 | 0 | **5384 von Slot 10 / 11** (Tisch-Nachricht) | → **msg 3** „It's Lieutenant Branagh's desk." |
+| 1020 / 1021, Tisch-Nachricht nach Slot 15 | dieselbe, 14 | 611 | 5384 | 0 | Stand (−11500,−16428) rot 0 → **Leser** (1020 und 1021) |
+| 1010 / 1011 | (−50,5100,1000,1000), 9 | 201 | 786 | 2202 (Slot 2 Spray) | Stand (700,6400) rot 1024 → **Leser**; Stand (300,6400) rot 1024 → **Spray** (Item-Modal) |
 
 Folgen: ROOM1020 braucht die Vorrang-Regel des Originals (5.3), sonst ist Marvins Notiz
-UNERREICHBAR. ROOM1010: waehrend das Spray liegt, bekommt der Spieler an dessen Stelle zuerst das
-Spray (Item vor Item, kleinerer Slot — Original-Praxis ROOM5010, Runde 30), das Blatt hat einen
-eigenen Bereich (1876 Treffer). ROOM1051: der Leichen-Satz (Waffe) kommt zuerst; nach dem Nehmen
-der Waffe raeumt sub01 Slot 11 ab, dann das Tagebuch.
+UNERREICHBAR. ROOM1010: waehrend das Spray liegt, bekommt der Spieler dort, wo sich beide Zonen
+decken, zuerst das Spray (Item vor Item, kleinerer Slot — Original-Praxis ROOM5010, Runde 30); das
+Blatt hat einen eigenen Bereich (786 Treffer), nach dem Spray gehoeren ihm alle. ROOM1051: der
+Leichen-Satz (Waffe) kommt zuerst; nach dem Nehmen der Waffe setzt sub01 @0x00CB2
+`06 00 10 00 | 21 09 a5 01 | 46 0b 00 00 00 00 00 00 00 00` (Ck(9,165) → Aot_reset(11, sce 0,
+sat 0x00)) Slot 11 auf TRAEGE (sat 0 = keine Ausloesebits), dann greift das Tagebuch.
+
+**Zensus aller Slot- und obj-Zugriffe** (`slot_zensus.py`, JEDER Block main + subs, nicht nur der
+Raumstart; 0x2C/0x3B/0x50/0x46/0x47 slot = pc[1], 0x2D obj = pc[1]; 0 abgebrochene Bloecke,
+`E_belege/slot_zensus.txt`): die Originalskripte beruehren in ROOM1000/1001 Slots 0..9, obj 0..1;
+ROOM1010 0..7 / ROOM1011 0..8, obj 0..2; ROOM1020 0..12 / ROOM1021 0..13, obj 0..6; ROOM1050 0..10 /
+ROOM1051 0..12, obj 0..1. Slot 10 in ROOM1020 und Slot 11 in ROOM1021 (die Tisch-Nachricht) werden
+NUR von ihrem eigenen Aot_set @0x01F0E / @0x01F6C beruehrt — kein Aot_reset/Aot_on darauf, das
+Verschieben bricht also keinen Skriptverweis. Kein anderer Aktions-Satz in ROOM1020/1021 schneidet
+das Tisch-Rechteck x[−11100..−8900] z[−18100..−14800] (Slots 11/12 bzw. 12/13 liegen bei
+x −14500..−12000 / −7300..−6300).
 
 ### 3.5 Oberflaechenhoehen — je zwei Verfahren
 
@@ -323,15 +337,31 @@ die Maskentiefe):
 
 | Dok | Cut | Masken | Ergebnis |
 |---|---|---|---|
-| 1 (1050) | 3 | 20 nachgezeichnete (`MASKS/ROOM1050.MSK`) | keine ueber dem Buch → **sichtbar** |
-| 1 | 5 | 83 nachgezeichnete, Maske 64 Tiefe 93 | verdeckt (15600 weit hinter dem Rolltor, 4 px — gewollt) |
-| 1 | 9 | keine | sichtbar |
-| 2 (1000) | 0 | 105 nachgezeichnete, Masken 73..78 Tiefe 94..100 | Buch vz 5380..5808 < 6086 → **sichtbar**, keine Klemme |
-| 3 (1020) | 6 | Original @pri 0x12CC, Maske 32 Tiefe 156 | Blatt vz 9636..10007 < 10058 → sichtbar, **Rand nur 51** |
-| 3 | 3 | Original @pri 0xD28, Maske 35 Tiefe 258 (x 127..166 y 91..114 = der Tisch) | Blatt vz 17032..17409 > 16592 → **VERDECKT** (wie der Irons-Tisch Cut 2) |
-| 4 (1010) | 0 | 100 nachgezeichnete, Masken 18/21/25 Tiefe 42/44/46 (Tischplatte als Treppe) | naechste Ecke frei, **fernste verdeckt** → das Blatt waere halb abgeschnitten |
-| 4 | 1 / 6 / 8 | nachgezeichnete, Tiefe ab 53 / 56 / 51 | dito, fernste Ecke verdeckt |
-| 4 (1011) | alle | keine (`MASKS/ROOM1011.MSK` gibt es nicht; der Lader sucht je Raum-Id) | sichtbar |
+ENDWERTE (`endwerte.sh`, Quader um die Modell-bbox, gedreht wie das Prop):
+
+| Dok | Cut | Masken | Ergebnis |
+|---|---|---|---|
+| 1 (1050) | 3 | 20 nachgezeichnete (`MASKS/ROOM1050.MSK`, md5 `36039eae…`) | keine ueber dem Buch → **sichtbar** |
+| 1 | 5 | 83 nachgezeichnete, Maske 64 Tiefe 93 | verdeckt (Fernblick durch die Rolltor-Linie, 4 px breit — der gemalte Vordergrund liegt davor; keine Klemme) |
+| 1 | 9 | keine | sichtbar (Nahaufnahme, 55 px breit) |
+| 1 (1051) | alle | keine (`ROOM1051.MSK` gibt es nicht) | sichtbar |
+| 2 (1000) | 0 | 105 nachgezeichnete (`ROOM1000.MSK`, md5 `0f6b030b…`) | keine ueber der Buchhuelle (vz 5402..5830) → **sichtbar**, keine Klemme |
+| 3 (1020 und 1021) | 6 | Original @pri 0x12CC, Maske 32 Tiefe 156 | Blatt vz 9624..9993 < 10058 → sichtbar (Rand 65) |
+| 3 | 3 | Original @pri 0xD28, Maske 35 Tiefe 258 (x 127..166 y 91..114 = der Tisch) | Blatt vz 17020..17395 > 16592 → **VERDECKT** (wie der Irons-Tisch Cut 2) → Klemme 258 |
+| 3 | 5 / 8 | Original, Tiefe 324 / keine ueber der Huelle | sichtbar |
+| 4 (1010) | 0 | 100 nachgezeichnete (`ROOM1010.MSK`, md5 `25542699…`), Masken 14/18/21/25 Tiefe 40/42/44/46 (Tischplatte als Treppe) | naechste Ecke frei, **fernste verdeckt** → Klemme 40 |
+| 4 | 1 | Maske 46 Tiefe 53 (auch die naechste Ecke), 48..56 Tiefe 54..58 | Klemme 53 |
+| 4 | 6 | Masken 14/20 Tiefe 60/64 | Klemme 60 |
+| 4 | 8 | Masken 2/6/11 Tiefe 51/54/57 | Klemme 51 |
+| 4 | 7 | keine | sichtbar |
+| 4 (1011) | alle | keine (`MASKS/ROOM1011.MSK` gibt es nicht; der Lader sucht je Raum-Id) | sichtbar, keine Klemme |
+
+Klemme = kleinste Tiefe unter den Masken, die die Huelle verdecken; Sortierschluessel hoechstens
+`re15_pri_mask_camera_z(Tiefe) − 1` (Irons-Vorbild `re15_irons_tisch_sort_max`). Die ROOM1010-Masken
+sind NACHGEZEICHNET: das Original fuehrt dort eine NULL-Sektion und verdeckt im Spiel GAR NICHTS —
+die Klemme stellt fuer das Blatt genau das Original her. Das Original-Spray daneben (Huelle vz
+2452..2762) wird von denselben Masken 14/17/18 an seiner fernsten Ecke ebenfalls beschnitten; im
+Nullbild der echten exe (3.8) ist das nicht zu sehen (Zylinder, die Ecke liegt hinter dem Koerper).
 
 Das Original kennt keinen Tiefen-Versatz je Objekt (FUN_8002c18c reicht nur Mesh/Farbe/ABE weiter,
 Runde 30 3.2): ein Objekt auf einer Platte, deren Maske die Platte selbst ist, waere auch im

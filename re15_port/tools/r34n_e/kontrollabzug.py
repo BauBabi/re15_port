@@ -157,16 +157,24 @@ def modell_zeichnen(bild, zbuf, cam, pos, ry, polys, tim, licht):
 
 # ------------------------------------------------------------------ die vier Faelle
 def faelle():
+    # ENDWERTE (E_dokumente.md 5.2, Konstanten-Tabelle). Herleitung je Wert dort:
+    #   Dok 1 Schoss-Triangulation (16474,-347,-6592) - 13 (halbe Buchdicke, bbox y -13..13)
+    #   Dok 2 Rueckprojektion der Markenmitte (193.0,172.5) Cut 0 auf die Bank y -385
+    #         (Sonde `strahl`: (19226.4,-385,-11723.4)), Buchmitte -385 - 13
+    #   Dok 3 Rueckprojektion der Markenmitte (156.5,105.5) Cut 6 auf den Tisch y -1410
+    #         ((-9975.9,-16434.6)) minus Grundriss-Mitte des Blatts (-1,-7) -> Ursprung
+    #   Dok 4 globales Optimum lage_1010.py (450,5600, rot_y 3840)
+    #   Drehung Buecher/Dok 3: Grundstellung 0 (lange Achse z = lange Achse der Ablage)
     return [
         dict(name="dok1_1050", raum="1050", modell="mesh00_0541704e", cuts=(3, 9),
-             pos=(16474, -360, -6592), ry=2048, licht=(41 / 128, 39 / 128, 39 / 128), marke=None, extra=[]),
+             pos=(16474, -360, -6592), ry=0, licht=(41 / 128, 39 / 128, 39 / 128), marke=None, extra=[]),
         dict(name="dok2_1000", raum="1000", modell="mesh03_cf9f316d", cuts=(0,),
-             pos=(19224, -398, -11700), ry=2048, licht=(41 / 128, 39 / 128, 39 / 128),
+             pos=(19226, -398, -11723), ry=0, licht=(41 / 128, 39 / 128, 39 / 128),
              marke=((182, 162, 203, 182), 0), extra=[]),
         dict(name="dok3_1020", raum="1020", modell="mesh01_ae2d0a30", cuts=(6, 3, 5, 8),
-             pos=(-9963, -1405, -16432), ry=0, licht=(50 / 128, 52 / 128, 52 / 128), marke=((151, 101, 161, 109), 6), extra=[]),
+             pos=(-9975, -1410, -16428), ry=0, licht=(50 / 128, 52 / 128, 52 / 128), marke=((151, 101, 161, 109), 6), extra=[]),
         dict(name="dok4_1010", raum="1010", modell="mesh04_cab7b32d", cuts=(0, 1, 6),
-             pos=(470, -1600, 5640), ry=0, licht=(41 / 128, 39 / 128, 39 / 128),
+             pos=(450, -1600, 5600), ry=3840, licht=(41 / 128, 39 / 128, 39 / 128),
              marke=((208, 166, 231, 187), 0), extra=[(0, (200, -1600, 5500), 3084)]),
     ]
 

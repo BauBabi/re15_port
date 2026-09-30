@@ -1,0 +1,33 @@
+Kodierung belegt: DEBUG.BIN 0x04e04 = 1f 44 4e 45 4f 3a 00 20 45 3d 4e 55 07 = kodiere("Chris' Diary")
+
+Liste: Zeile ab x 44, Hervorhebung x 43..196 (w 0x9a @0x800c749c-c0)
+  Dok 0 Irons Diary                          11 Zeichen   75 px -> Ende x 118  | Meldung Zeile 1 "The Irons Diary" 104 px -> Ende x 137
+        Bytes 25 4e 4b 4a 4f 00 20 45 3d 4e 55 07
+  Dok 1 Police Officer's Final Diary Entry   34 Zeichen  228 px -> Ende x 271 (ueber die Kachel hinaus um 75) | Meldung Zeile 1 "The Police Officer's Final Diary Entry" 257 px -> Ende x 290
+        Bytes 2c 4b 48 45 3f 41 00 2b 42 42 45 3f 41 4e 3a 4f 00 22 45 4a 3d 48 00 20 45 3d 4e 55 00 21 4a 50 4e 55 07
+  Dok 2 Elliot's Diary                       14 Zeichen   88 px -> Ende x 131  | Meldung Zeile 1 "The Elliot's Diary" 117 px -> Ende x 150
+        Bytes 21 48 48 45 4b 50 3a 4f 00 20 45 3d 4e 55 07
+  Dok 3 Marvin's Notes                       14 Zeichen  100 px -> Ende x 143  | Meldung Zeile 1 "The Marvin's Notes" 129 px -> Ende x 162
+        Bytes 29 3d 4e 52 45 4a 3a 4f 00 2a 4b 50 41 4f 07
+  Dok 4 Armory Notice                        13 Zeichen   96 px -> Ende x 139  | Meldung Zeile 1 "The Armory Notice" 125 px -> Ende x 158
+        Bytes 1d 4e 49 4b 4e 55 00 2a 4b 50 45 3f 41 07
+
+RE1.5s eigene FILE-Zeilen (Namensbank Ids 0x48..0x65), breiteste zuerst:
+  0x5B K{ Sullivan <64> R{ Aiken      140 px -> Ende x 183
+  0x59 E{ Dewey <64> K{ Dooley        133 px -> Ende x 176
+  0x5A J{ Frost <64> F{ Speyer        128 px -> Ende x 171
+  0x56 Rebecca Chambers               123 px -> Ende x 166
+  0x5E Mutated Alligator              119 px -> Ende x 162
+  0x49 Operation Report               115 px -> Ende x 158
+  0x5D Mutated Baboon                 106 px -> Ende x 149
+  0x5F Gargantuagator                 106 px -> Ende x 149
+  ... schmalste 4 px; 0 von 30 breiter als die Kachel (> 153 px)
+
+breiteste Namen der ganzen Bank (fuer die Meldung):
+  0x44 Minidisc Player w\ Disc        158 px
+  0x1D Empty Grenade Shells           143 px
+  0x43 Communications Card            140 px
+  0x5B K{ Sullivan <64> R{ Aiken      140 px
+Framedump Zeile y 61: blaue Tafel x 10..305
+Framedump Zeile y 141: blaue Tafel x 10..305
+Framedump Zeile y 205: blaue Tafel x 10..305
