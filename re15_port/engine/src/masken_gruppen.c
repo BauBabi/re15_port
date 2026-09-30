@@ -33,8 +33,11 @@ static void mg_log(const char *fmt, ...)
     if (!p || !*p) return;
     FILE *f = fopen(p, "ab");
     if (!f) return;
-    fprintf(f, "[maskgrp] F%u Raum %04X ", (unsigned)g_engine.frame_count,
-            (unsigned)g_current_room_id);
+    /* wv0A/wv0C = gezeigter/alter Cut (DAT_800b0fe4/DAT_800b0fe8) — belegt in der Mess-Zeile,
+     * dass ein Menue sie NICHT umschreibt (Gegenpruefung Auflage 5). */
+    fprintf(f, "[maskgrp] F%u Raum %04X wv0A=%d wv0C=%d ", (unsigned)g_engine.frame_count,
+            (unsigned)g_current_room_id, (int)g_scd.work_vars[0x0A],
+            (int)g_scd.work_vars[0x0C]);
     va_list ap;
     va_start(ap, fmt);
     vfprintf(f, fmt, ap);
