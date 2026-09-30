@@ -1136,8 +1136,9 @@ void re15_game_step(const re15_game_ctx_t *c)
      *       `Sce_key_ck` (0x51/0x52) seine Tasten liest (op_sce_key_ck), und faelschte
      *       damit die ausgelieferten Raetsel-Eingaben. Den SPIELER-Pad hat er ohnehin
      *       nicht angefasst (der rohe c->pad_current geht direkt an re15_player_tick). */
-    /* ⛔ RE2-ANGLEICHUNG PANEL-SPERRE (Runde 31, ROOM11F0/11F1 Generator-Raetsel): solange
-     * der Leistungszeiger faehrt bzw. die 30 Stillstands-Bilder danach laufen, wirkt dieselbe
+    /* ⛔ RE2-ANGLEICHUNG PANEL-SPERRE (Runde 31, ROOM11F0/11F1 Generator-Raetsel): seit Runde 34
+     * Nacht NUR NOCH DIE ENDSPERRE (Schaltermaske = Loesung, bis zur Abnahme), s.
+     * re15_panel_zeiger.h. Dann wirkt dieselbe
      * Maske wie Bit 0x01000000. RE2 haelt ueber die ganze Nachfuehrschleife und den Sleep
      * Bank 2 Bit 7 (ROOM2130.RDT sub04 @0x01110 `22 02 07 01` .. @0x01818 `22 02 07 00`;
      * Leser @0x800391F8..0x80039224 `andi v0,v0,0x3c00`). Das Pausen-WORT selbst bleibt
