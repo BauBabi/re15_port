@@ -42,6 +42,33 @@ Groesse der APK-Daten UND der Quelldatei = Liste: **0 Abweichungen, LISTE-OK**.
 
 ## 2. make_package.sh echt (Binaries aus Archiv v0.8.19) + "nur PC mit altem Android-Satz"
 
+`pe1_mp_folge.sh` (Zusammenfassung `mp_folge.txt`, volle Logs `mp/E*.log`), 10:20:31-10:31:12. Jeder Lauf per
+`pe1_mp.sh`: make_package.sh ECHT und unveraendert im Arbeitsbaum (kein Shim, PATH unveraendert); nur git schreibt in
+einen Wegwerf-Index + Wegwerf-Objektspeicher (GIT_INDEX_FILE/GIT_OBJECT_DIRECTORY, Alternates) - im Baum arbeitet der
+zweite Pruefer. Vor jedem Lauf: kein anderer make_package-Prozess auf DIESEM release/ (Win32_Process-Befehlszeilen; der
+zweite Pruefer lief in seiner Sandbox build/r34a/pruefer_u1/sb). Eingaben: PC-Binaries v0.8.19 aus dem Archiv
+(`pe1_binaries.sh`: Split-Saetze `sha256sum -c` 4 x OK, nur die Binaries entpackt, Original-mtime 19:34, KEIN touch;
+re15_pc.exe `30d5b67b...`, re15_pc `abfbe7c5...`) nach release/win_out + linux_out; APK N aus 1. Frische-Lage: PC
+cf386e32 (09-29 19:02) < Binaries 19:34; APK-Pfade 026632a4 (09-30 09:22) < APK N 09:54.
+
+| Lauf | Aufruf (`--version v0.8.19` ...) | EXIT | Ergebnis |
+|---|---|---|---|
+| E0a | keine APK; der VERSIONIERTE Android-Satz v0.8.19 (HEAD, darin die v1-APK) liegt da | **1** (68 s) | Selbsttest der Gate-Kopie 248/248, QUELLBAUM-OK, dann `ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK` mit beiden Auswegen; 0 x "Assets kopieren"; SHA256SUMS.txt und Satz unveraendert (HEAD); Wegwerf-Index ohne release/-Eintrag |
+| E0b | die ALTE v0.8.19-APK (Liste v1) als frische Kopie unter `release/re15_port_v0.8.19_android.apk` | **1** (101 s) | Frische ok, Kette bis zum Gate (Selbsttest 248/248), dann `Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS` -> `APK-ASSET-GATE-ABWEICHUNG: 1 Befunde` -> `ABBRUCH`; 0 x kopieren, SUMS/Satz unveraendert (die abgelehnte APK bleibt als Eingabe liegen; von mir entfernt) |
+| E1 | APK N (a340a325...) | **0** (261 s) | Selbsttest 248/248, QUELLBAUM-OK, APK-Kette (Selbsttest 248/248, `APK-PRUEFUNG-OK a340a325... e9f8cf9d 363479879`); Linux: Optimierung 4, glibc 2.29, Tueren 27 + 30, PAKET-OK, LF; Windows: Optimierung 3, 27 + 30, PAKET-OK, Laufzeit-Gate 26/26 + 26/26; Zippen linux 3800 (x-Bit ok), win64 3801, android: Katalog `CRC32 e9f8cf9d, 363479879 B = gepruefte Kennung`, `entpackt: sha256 a340a32585580130... = Pruefkopie`; `SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf)`, `6 neue vorgemerkt` (Wegwerf-Index: M x 6 release/-Volumes) |
+| unabh. | - | - | `sha256sum -c SHA256SUMS.txt` 6 x OK; APK aus dem neuen Satz per `zip -s 0` + `unzip -p`: genau ein Eintrag `re15_port_v0.8.19_android.apk`, sha256 **`a340a325...` = gebaute APK N** |
+| E2 | APK weg (geparkt), Satz aus E1 liegt; `--only win --zip-only` ("nur PC") | **1** (16 s) | B1-ABBRUCH vor den Kopierminuten; SUMS (E1) und Android-Volumes unveraendert; Wegwerf-Index leer |
+| E3 | dasselbe + `--ohne-android` | **0** (118 s) | `--ohne-android: ... der Satz dieser Version wird entfernt`, Windows PAKET-OK + Laufzeit-Gate, beide Android-Volumes entfernt, `SHA256SUMS.txt geschrieben (4 Volumes)` = linux + win64 (ohne Android), `2 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt`; Wegwerf-Index: **D** android.z01/.zip, M linux x 2, M win64 x 2 |
+
+"Nur PC mit altem Android-Satz" -> **kein alter Satz**: ohne Schalter Abbruch (E0a mit dem echten v0.8.19-Satz, E2 mit
+dem Satz aus E1), mit `--ohne-android` verschwindet er aus Datei, SUMS und Index (E3); eine alte v1-APK kommt nicht
+durch (E0b). Anmerkung zum Protokoll: die Zeile "Wegwerf-Index gegen HEAD" nennt auch analysis/-Pfade - das sind
+Commits der beiden Pruefer, die NACH dem Kopieren des Index entstanden (HEAD lief weiter); massgeblich sind die
+release/-Eintraege (oben).
+Aufraeumen: `git restore --source=HEAD` fuer SHA256SUMS.txt, SHA256SUMS_android.txt und die 6 Volumes, pkg-*, win_out,
+linux_out geloescht: alle versionierten release/-Dateien = Stand vorher (sha256-Liste `cmp` gleich), `git status --short
+release/ re15_port/` leer, echter Index 0 Eintraege. APK N liegt geparkt unter build/r34a/pruefer_e1/apk/.
+
 ## 3. Emulator headless: v0.8.19 -> neue APK -> Update mit gleich grosser Aenderung -> Update ohne Aenderung -> force-stop mitten im Entpacken
 
 ### 3.0 Aufbau
