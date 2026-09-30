@@ -1,6 +1,8 @@
 # Spur B — Hebetisch Irons Office ROOM1150/1151: Cursor-Bedienung statt Direktoeffnung
 
-Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code). Arbeitsbaum `.claude/worktrees/r34n_hebetisch`, Zweig `r34n/hebetisch`.
+Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code) — Stand: FERTIG. Arbeitsbaum `.claude/worktrees/r34n_hebetisch`,
+Zweig `r34n/hebetisch`. Einzige Code-Zugabe: die Mess-Sonde `tests/unit/probe_r34n_b_messung.c` (kein add_test,
+Suite bleibt 428).
 Werkzeuge: `re15_port/tools/r34n_b/`, Belege: `analysis/befunde_runde34_nacht/B_belege/`, grosse Zwischenausgaben
 `build/r34n_b/` (nicht versioniert). Alle Messungen an der echten exe dieses Baums (`re15_pc.exe`, Kopie `re15_r34nb.exe`,
 beschleunigter Renderer, `RE15_FRAMEDUMP`, `RE15_WINDOW_SCALE=3`, kein AUTOSHOT/SOFTWARE_RENDER).
@@ -28,7 +30,11 @@ beschleunigter Renderer, `RE15_FRAMEDUMP`, `RE15_WINDOW_SCALE=3`, kein AUTOSHOT/
   und `Cut_old` @0x10B2 liesse die Kamera nach der Fahrt auf dem Loch-Bild stehen.
 * Ressourcen: Nachrichten-Id 20 (frei in 1150 [15 Texte] und 1151 [4]), TIM-Slot `RE15_TIM_SLOT_PROP(8)` = 28;
   KEIN Bank-9-Bit, KEIN AOT-Slot, KEIN g_scd.props-Eintrag noetig.
-* Offen fuer den Nutzer (§8): Abbruch ohne Kuppel (RE1.5 hat in keinem Cursor-Raum eine Abbruchtaste).
+* Belegt mit Engine-Code (Mess-Sonde): Halt nach 10 VM-Takten auf dem For, Plattform -305, Deckel zu; Cut_old kehrt
+  aus dem Halt-Weg in die Raumkamera zurueck, aus einem Vorschalt-Weg NICHT (bleibt auf 4); Kuppel-Huelle Engine =
+  Python (<= 1,4 px); 11F0-Cursor-Start (160,119). Alle tragenden EXE-Adressen selbst nachdisassembliert (§3.9).
+* Offen fuer den Nutzer (§8): Abbruch ohne Kuppel (RE1.5 hat in keinem Cursor-Raum eine Abbruchtaste; falls
+  gewuenscht, mit den Aufraeum-Bytes von sub04 @0x109E..@0x10B2), Trefferflaeche mit/ohne Podest, Sprachdatei main20.
 
 ## 1 Nutzerwortlaut + Lesart
 
