@@ -84,8 +84,12 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   x3): Saeure (q = (-6100,0,-17600) = 1500 vor Leon, Gier 0): F322 erste Puffs, F324 grauer Puff, F326-F332 orange-
   roter Puff/Feuerball (CLUT 483), F334-F336 dunkler Rauch, danach leer; Brand: F402 Feuerball + Flammen, die Flammen
   gleiten (nach links im Bild), brennen bis ~F500 und verloeschen — `integration_werkzeug/w3_saeure_crop.png`,
-  `w3_brand_crop.png`. Die Tischkante verdeckt den Fuss der Effekte (PRI-Maske des Tischs, vorne). Lage-Abnahme an
-  der echten Granate: W9 (Explosion an der Liegestelle des RE1.5-Sprites).
+  `w3_brand_crop.png`. Die Tischkante verdeckt den Fuss der Effekte (PRI-Maske des Tischs, vorne).
+* Lage-Abnahme an der ECHTEN Granate (Aufstellung RE2-KI aus W9, Liegestelle (-2199,-20548) neben Zombie 3, Framedump x3,
+  Explosion X = F119): 0x0B — Feuerball + Flammen ab F122 an der Liegestelle, der getroffene Zombie verkohlt (dunkle
+  Silhouette), die Bodenflammen gleiten nach rechts und brennen bis ueber F194 (`w3_echte_granate_0B_brand.png`); 0x0A —
+  grauer Puff F120, weisser Blitz F122, orange Puff F124-126, roter Puff F130, dunkler Rauch F136 am Boden an derselben
+  Stelle, der Zombie dunkel-oliv geaetzt (`w3_echte_granate_0A_saeure.png`).
 
 ### W4 — re2fx_reset im SCD-Raumaufbau (erledigt)
 * `engine/src/scd_room_setup.c`: `#include "re2_fx.h"`, `re2fx_reset()` direkt hinter `re15_esp_fx_reset()`.
@@ -138,6 +142,9 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
 * Ergebnis je Lauf (Auszug): RE2 g9/g10/g11: A 19, S 43, L 83, X 119, Zombie 3 HP 80 -> -120, Zeile 9/11/10, Leiche ab
   Bild 180/180/170; RE1.5 g9/g10/g11: X 119, Zombie 2 HP 75 -> -125, Zeile 9/10/11, Leiche ab 173; debug: Menge 255, W09,
   kein `[debug-menu] OPEN` nach dem Sprung, A 593, S 617, L 657, X 693; abzug: Zombie 2 in 849 vor Leon, kein HP-Verlust.
+* Nachtrag 7cdd0c73 — (h) TOENE je Wurf-Lauf aus dem Waffen-Log: 6x 0x010A..01 (TIEF: 5 Abpraller + Liegen), 0x04080001
+  genau einmal nur bei Art 2, RE2-Aufschlag 0x01130001 / 0x01120001 genau einmal nur bei Art 3 / 4 (E9). Damit ist O-C1 der
+  Spur C als Pin gefuehrt. Mutation M7 (`re2fx_se_hook = NULL`): ROT g10_re2 "Toene: ... 0x01130001 (Soll 1)".
 * Negativ-Kontrolle (im Skript, vor jedem exe-Lauf): erfundene Zeilen "Schaden im Abzugsbild", "keine Reaktion in X+1",
   "falsche Zeile" muessen fallen, "kein Treffer" muss leer bleiben — sonst "Auswerter defekt". Beim ersten Lauf fing sie
   einen echten Auswerterfehler (CMake kennt nur CMAKE_MATCH_0..9, der 10. Fang lieferte leer).
@@ -179,6 +186,10 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   (Muendung, Rauch, Huelse, Blut, Feuer, Feuerball) — sie waren seit jeher halb so hell (Release-Hinweis).
 * Pin: Lauf "debug" von `integration_r34_granaten` misst denselben Beitrag (Werkzeug `probe_r34_ppm_beitrag`, Schranke
   >= 240 je Kanal, >= 200 Pixel). Mutation M6 (Farbe wieder 128): ROT "Feuerball im Explosionsbild zu dunkel".
+
+### W4 — Nachtrag (7cdd0c73)
+* Pin `unit_r34_wasser` 70: nach `re2fx_aufschlag(Brand)` + einem Tick sind 6 RE2-Plaetze belegt (Runde + 2 Kinder +
+  3 Bodenflammen), nach `scd_room_reenter` 0. Mutation MW6 (Aufruf in scd_room_setup.c entfernt): ROT 70 (6 -> 6).
 
 ### W7 — ESP-Routinen 41/42 (erledigt 6f7aa99f)
 * Belege (selbst disassembliert): R41 @0x80018ef4 (41 Instruktionen), R42 @0x80018f98 (bis @0x80019174), Vorschub
