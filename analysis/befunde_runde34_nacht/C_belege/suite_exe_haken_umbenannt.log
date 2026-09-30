@@ -1,0 +1,17 @@
+307 test_weste_load_pin.cmake rc=0 8s
+340 test_r30_cut_blitz.cmake rc=0 94s
+342 test_elza_vollstart.cmake rc=0 100s
+344 test_r30_granate_laden.cmake rc=0 93s
+351 test_r30_irons_tisch_laden.cmake rc=0 32s
+352 test_r30_irons_tisch_bild.cmake rc=0 51s
+354 test_r30_irons_tisch_licht.cmake rc=0 51s
+369 test_r30_sicherung_laden.cmake rc=0 39s
+370 test_r30_sicherung_bild.cmake rc=0 11s
+372 test_r30_titel_puls.cmake rc=0 26s
+390 test_r32_tor_hell.cmake rc=0 6s
+398 test_r33_speichern.cmake rc=0 78s
+425 test_boot_bg_pin.cmake rc=0 3s
+426 test_dark_start_pin.cmake rc=0 2s
+427 test_relatch_pin.cmake rc=0 24s
+428 test_save_counter_pin.cmake rc=0 21s
+FERTIG

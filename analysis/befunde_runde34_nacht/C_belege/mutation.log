@@ -1,0 +1,60 @@
+=== m1: Endsperre aus (sperrt() liefert immer 0)
+  probe_r34n_c_generator: rc=1  12 FAIL
+       [FAIL] im Bild b* gesperrt (LIVE-Maske)
+       [FAIL] die Sperre steht in JEDEM Bild von b* bis zur Abnahme
+       [FAIL] der Cursor steht trotz gehaltenem HOCH (bis einschliesslich Abnahmebild)
+       [FAIL] gehaltenes Quadrat legt keinen Schalter um
+       [FAIL] Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)
+       [FAIL] beide Lampen gruen im Abnahmebild und danach (Bits 13..22 bleiben, sub18 @0x016FA..0x0172A)
+       [FAIL] im Bild b* gesperrt (LIVE-Maske)
+       [FAIL] die Sperre steht in JEDEM Bild von b* bis zur Abnahme
+       [FAIL] der Cursor steht trotz gehaltenem HOCH (bis einschliesslich Abnahmebild)
+       [FAIL] gehaltenes Quadrat legt keinen Schalter um
+       [FAIL] Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)
+       [FAIL] beide Lampen gruen im Abnahmebild und danach (Bits 13..22 bleiben, sub18 @0x016FA..0x0172A)
+  r31_generator: rc=1  2 FAIL
+       [FAIL] Endsperre: gesperrt in jedem Bild ab Maske 0x155 bis zur Abnahme
+       [FAIL] Endsperre: der Cursor steht trotz HOCH
+=== m2: alte Runde-31-Zwischensperre wieder an
+  probe_r34n_c_generator: rc=1  7 FAIL
+       [FAIL] in JEDEM Bild der Fahrt und der 30 Ruhebilder bewegt sich der Cursor
+       [FAIL] und nie eine Sperre
+       [FAIL] vor b* in KEINEM Bild eine Sperre (7, 9, 3, 1 frei, Zeiger faehrt dabei)
+       [FAIL] keine Sperre, keine Abnahme
+       [FAIL] nie gesperrt, nie abgenommen
+       [FAIL] vor b* in KEINEM Bild eine Sperre (7, 9, 3, 1 frei, Zeiger faehrt dabei)
+       [FAIL] ROOM11F1: Zwischenschalter sperrt nicht
+  r31_generator: rc=1  2 FAIL
+       [FAIL] nach einem Zwischenschalter bewegt sich der Cursor in jedem Bild (keine Sperre)
+       [FAIL] und die Sperre stand in keinem Bild
+=== m3: Lampenregel lax (nur die EIN-Schalter der Seite)
+  probe_r34n_c_generator: rc=1  5 FAIL
+       [FAIL] obere Lampe = linke Spalte (Schalter 1..5) in Loesungsstellung, alle 1024
+       [FAIL] untere Lampe = rechte Spalte (Schalter 6..10) in Loesungsstellung, alle 1024
+       [FAIL] falscher Schalter links: obere Lampe AUS im Bitbild
+       [FAIL] zurueckgenommen: wieder AN, Zelle 3 neu (kein Einrasten)
+       [FAIL] falscher Schalter rechts (8): untere Lampe aus, obere bleibt an
+  r31_generator: rc=0  0 FAIL
+=== m4: Zeichner deckend statt additiv
+  probe_r34n_c_generator: rc=1  2 FAIL
+       [FAIL] jedes Pixel = Hintergrund + Texel<<3 (B+F, gesaettigt), Texel 0 durchsichtig
+       [FAIL] heller Hintergrund: Gruen saettigt bei 255 (kein Ueberlauf)
+  r31_generator: rc=0  0 FAIL
+=== m5: Texel 0 nicht durchsichtig
+  probe_r34n_c_generator: rc=1  2 FAIL
+       [FAIL] jedes Pixel = Hintergrund + Texel<<3 (B+F, gesaettigt), Texel 0 durchsichtig
+       [FAIL] heller Hintergrund: Gruen saettigt bei 255 (kein Ueberlauf)
+  r31_generator: rc=0  0 FAIL
+=== m6: Takt beginnt mit Zelle 4 statt 3
+  probe_r34n_c_generator: rc=1  2 FAIL
+       [FAIL] Zelle 3 im Einschaltbild, dann 4, 3, 4 (RE2 Saetze 4/5, je Bild)
+       [FAIL] zurueckgenommen: wieder AN, Zelle 3 neu (kein Einrasten)
+  r31_generator: rc=0  0 FAIL
+=== m7: Lampe rastet ein (klebriges Bit)
+  probe_r34n_c_generator: rc=1  4 FAIL
+       [FAIL] live im Tick dieselbe Tafel, und 4:238 aendert nichts (keine Nach-Loesung-Regel)
+       [FAIL] falscher Schalter links: obere Lampe AUS im Bitbild
+       [FAIL] zurueckgenommen: wieder AN, Zelle 3 neu (kein Einrasten)
+       [FAIL] falscher Schalter rechts (8): untere Lampe aus, obere bleibt an
+  r31_generator: rc=0  0 FAIL
+=== Rueckbau fertig, Quellen zurueckgesetzt (0 geaenderte Dateien)

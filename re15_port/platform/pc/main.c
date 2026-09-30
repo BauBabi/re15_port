@@ -5298,6 +5298,8 @@ re_title:;
                                        RE15_PANEL_ROT_R, RE15_PANEL_ROT_G, RE15_PANEL_ROT_B);
                   }
               } }
+            /* Spur C Runde 34 Nacht: die zwei gruenen Generator-Lampen (panel_lampen_pc.c). */
+            { extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
              * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,
