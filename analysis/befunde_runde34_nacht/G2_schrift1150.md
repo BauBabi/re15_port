@@ -328,6 +328,12 @@ Masken @0x8001ce54. Beide: Aufbau VOR dem SCD-Takt, Umschalten wirkt im selben B
 NICHT in den pri-Block (nach dem SCD-Takt): dort wuerde ein Umschalten im Cut-Wechsel-Bild sofort
 wieder ueberschrieben (im Original bleibt es stehen).
 
+Zeichenebene (Skill re15-pc-render-order): die Masken bleiben in Ebene 3 (3D-Dreiecke + sprite.pri-
+Overdraw, Tiefen-Mischung in `re15_render_end_frame`); der Bau entfernt nur ausgeschaltete Masken aus
+`mask_order`, Reihenfolge und Tiefenschluessel (`re15_pri_mask_camera_z`) bleiben unveraendert. Die sechs
+Buchstaben haben Tiefe 0 = kleinster Schluessel = zuletzt gezeichnet (im Original OT-Index 0 der
+1024er-OT, AddPrim @FUN_80039590), liegen also ueber allem 3D in Cut 2 — wie heute.
+
 ### 5.4 Konstanten-Tabelle
 
 | Wert | Bedeutung | Beleg |
@@ -434,8 +440,11 @@ neuer Softlock, der bestehende bleibt unberuehrt.
    `Keyboard/X & SDL-0/Y` — vgamepad-Navigation (re15_quickload.py) wirkt damit nicht mehr. Der
    RAM-Patch-Weg (3.5, `ds_lauf.py`) braucht keine Eingabe. Einstellungen nicht geaendert; der Skill
    re15-room-capture sollte den Befund bekommen.
-4. Raumeintritt MIT Cut 2 als Eintritts-Cut (kommt ueber Tueren nicht vor): im Original laeuft der
-   erste sub05-Takt in der SCD-Init vor dem Aufbau (Aufbau erst beim Present) — der Port hat dieselbe
-   Reihenfolge (scd_room_reenter vor load_bg_cut). Im Bau mit dem Lade-Weg-Haken (6.3) mitpruefen.
+4. Raumeintritt MIT Cut 2 als Eintritts-Cut kommt ueber Tueren nicht vor: die einzigen Tueren nach
+   ROOM1150 stehen in ROOM1130/1131 main00 @0x008CE (Door_aot_set, Ziel Raum 0x15, Eintritts-Cut 0 —
+   Zensus aller STAGE1-RDTs); der Debug-Sprung setzt ebenfalls Cut 0 (FUN_8001d600 Z. 24). Nur ein
+   Spielstand mit camera_cut 2 (Port-Werkzeug) startet in Cut 2. Im Original liefe der erste sub05-Takt
+   in der SCD-Init vor dem Aufbau (Aufbau erst beim Present) — der Port hat dieselbe Reihenfolge
+   (scd_room_reenter vor load_bg_cut). Im Bau mit dem Lade-Weg-Haken (6.3) mitpruefen.
 5. Kein Nutzer-Rueckfragebedarf: das Original blinkt nachweislich (3.5), der Befund des Nutzers ist
    bestaetigt.
