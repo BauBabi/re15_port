@@ -2932,6 +2932,15 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
         active_cut_idx = (int)g_scd.cam_id;
         if (active_cut_idx >= active_cut_count)
             active_cut_idx = active_cut_count - 1;
+        /* Runde 34 Nacht G2: Cut-Apply FUN_80021bbc baut die Masken-Sichtbarkeit neu auf
+         * (FUN_800392d4 @0x80021c28). Dieser Zweig bildet die Dirty-1-Setzer @0x8001d5c8 (Laden),
+         * @0x80021514 (Cut-Abweichung), @0x800402f4 (Cut_chg), @0x80040354 (Cut_old) ab; den
+         * Raumlader @0x8001daec deckt room_common.c Schritt 9. Einen Dirty-2-Pfad (Statusschirm
+         * @0x800466fc, Kartenschirm @0x80026634 -> Sprung @0x80021bd4 ueber den Aufbau) hat der
+         * Port nicht und bekommt keinen. ⛔ RE15_FORCE_CUT setzt oben JEDES Bild pending -> Aufbau
+         * jedes Bild -> kein Blinken messbar (Dossier G2 §9). */
+        { extern void re15_mg_aufbauen(const re15_rdt_t *rdt, int cut, const char *grund);
+          re15_mg_aufbauen(rdt_ok ? rdt : NULL, active_cut_idx, "cut"); }
     }
     if (active_cut_idx != s_last_cut_idx) {
         { extern int re15_fade_log_on(void);

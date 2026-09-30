@@ -65,6 +65,17 @@ Parallel laeuft die Granaten-Runde (r34g_*, Zweige r34g/*) einer anderen Sitzung
 >
 > - In ROOM 1170 blinkt im Hintergrund die Schrift des Gebäudes. Bei uns nicht.
 
+## ⛔ Nutzer-Korrektur 2026-09-30 (nach Rundenstart) — gilt fuer Spur G, VERBINDLICH
+
+Auf die Rueckmeldung, dass in ROOM1170 (Heliport) nachweislich nichts blinkt (Dossier `G_schrift1170.md`:
+einzige Gebaeudeschrift "MAGAZINE CLUB", im Original konstant), schrieb der Nutzer woertlich:
+
+> Nein, nicht beim Heliport, sondern in Irons Office room 1150 blinkt die Schrift eigentlich im Hintergrund.
+
+Also: der Punkt betrifft **ROOM1150** (Irons' Buero; Elza-Variante ROOM1151 mitpruefen), nicht ROOM1170
+(bekannte 1150/1170-Verwechslung, memory reai-v2-runde33-memorycard-karte-tueren). Das 1170-Dossier bleibt
+als Beleg stehen; die neue Ermittlung steht in `G2_schrift1150.md`.
+
 ## Referenzbilder des Nutzers (Repo-Wurzel, 320x240 RGB)
 
 | Datei | Inhalt |

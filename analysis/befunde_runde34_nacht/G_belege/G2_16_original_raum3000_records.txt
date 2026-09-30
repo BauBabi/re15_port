@@ -1,0 +1,25 @@
+Stand r3000_normal_w25.sav: EXE sauber (@0x80026e4c = 03e00008)
+  Code 800392d4..800396f8 im RAM == PSX.EXE
+  Code 800428d4..8004290c im RAM == PSX.EXE
+  Code 8003f038..8003f0a0 im RAM == PSX.EXE
+  Code 80021bbc..80021c30 im RAM == PSX.EXE
+  Code 8001ce3c..8001ce5c im RAM == PSX.EXE
+  Raum 0x00, Cut (wv0A) 0, alter Cut (wv0C) 0
+  Flag (4,9) = 0
+  Flag (5,0) = 1
+  RDT @8011f80c: RDT[0] (Zahl) = 43, RDT[7] = 105; Records @8012df58
+  Records i < Zahl (i:Byte0/gGruppe+1): 0:1/g1 1:1/g1 2:1/g1 3:1/g1 4:1/g1 5:1/g1 6:1/g1 7:1/g1 8:1/g1 9:1/g2 10:1/g2 11:1/g2 12:1/g2 13:1/g2 14:1/g2 15:1/g2 16:1/g2 17:1/g2 18:1/g2 19:1/g2 20:1/g2 21:1/g2 22:1/g2 23:1/g2 24:1/g2 25:1/g2 26:1/g2 27:1/g2 28:1/g2 29:1/g3 30:1/g3 31:1/g3 32:1/g3 33:1/g3 34:1/g3 35:1/g3 36:1/g3 37:1/g3 38:1/g3 39:1/g3 40:1/g3 41:1/g3 42:1/g3
+  -> gezeichnet (Byte0 & 1): 43 von 43
+
+Stand r3000_zombie_w25.sav: EXE sauber (@0x80026e4c = 03e00008)
+  Code 800392d4..800396f8 im RAM == PSX.EXE
+  Code 800428d4..8004290c im RAM == PSX.EXE
+  Code 8003f038..8003f0a0 im RAM == PSX.EXE
+  Code 80021bbc..80021c30 im RAM == PSX.EXE
+  Code 8001ce3c..8001ce5c im RAM == PSX.EXE
+  Raum 0x00, Cut (wv0A) 0, alter Cut (wv0C) 0
+  Flag (4,9) = 1
+  Flag (5,0) = 0
+  RDT @8011f80c: RDT[0] (Zahl) = 43, RDT[7] = 105; Records @8012df58
+  Records i < Zahl (i:Byte0/gGruppe+1): 0:0/g1 1:0/g1 2:0/g1 3:0/g1 4:0/g1 5:0/g1 6:0/g1 7:0/g1 8:0/g1 9:0/g2 10:0/g2 11:0/g2 12:0/g2 13:0/g2 14:0/g2 15:0/g2 16:0/g2 17:0/g2 18:0/g2 19:0/g2 20:0/g2 21:0/g2 22:0/g2 23:0/g2 24:0/g2 25:0/g2 26:0/g2 27:0/g2 28:0/g2 29:0/g3 30:0/g3 31:0/g3 32:0/g3 33:0/g3 34:0/g3 35:0/g3 36:0/g3 37:0/g3 38:0/g3 39:0/g3 40:0/g3 41:0/g3 42:0/g3
+  -> gezeichnet (Byte0 & 1): 0 von 43
