@@ -33,3 +33,24 @@ endif()
 add_test(NAME unit_r34n_e_dokumente COMMAND test_r34n_e_dokumente
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r34n_e_dokumente PROPERTIES TIMEOUT 180)
+
+# MESS-WERKZEUGE (kein add_test) fuer den Bild-Riegel: Speicherkarte im Dokument-Raum schreiben,
+# zwei Framedumps im Fenster um das Dokument vergleichen.
+add_executable(probe_r34n_e_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r34n_e_karte.c)
+target_link_libraries(probe_r34n_e_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r34n_e_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_executable(probe_r34n_e_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r34n_e_bild.c)
+
+#   integration_r34n_e_dokumente_bild   echte exe, CONTINUE direkt in 1050/1000/1020/1010: Prop am
+#                                       Lade-Weg angelegt ("[dokumente] Boot-Weg") und im Framedump
+#                                       gezeichnet (mit/ohne Genommen-Bit)
+if(TARGET re15_pc)
+    add_test(NAME integration_r34n_e_dokumente_bild
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r34n_e_karte>
+                     -DRE15_BILD_TOOL=$<TARGET_FILE:probe_r34n_e_bild>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r34n_e_dokumente_bild_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r34n_e_dokumente_bild.cmake)
+    set_tests_properties(integration_r34n_e_dokumente_bild PROPERTIES TIMEOUT 900)
+endif()
