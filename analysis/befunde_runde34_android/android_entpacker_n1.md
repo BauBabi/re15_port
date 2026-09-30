@@ -10,7 +10,16 @@ Dieses Dossier wird laufend fortgeschrieben (Sitzungslimit-Regel).
 
 - [start] Dossier angelegt.
 - [sitzung 2] Fortsetzung ab 1.3 (1.1/1.2 aus Sitzung 1 uebernommen, nicht neu gemessen). Entwurf
-  `jni/asset_abgleich.h` wird geprueft und fertiggestellt.
+  `jni/asset_abgleich.h` geprueft und fertiggestellt (Pfadlaenge 512, UTF-8, Gross/klein-Dubletten ergaenzt).
+- [1.3] N1a im Emulator nachgestellt (Update A -> B, `main03.wav` bleibt alt). Nutzer-AVD zu voll fuer ein
+  Update -> eigene AVD-Kopie mit 12 GB Datenbereich.
+- [2] `asset_abgleich.c`, Glue, CMake, Gradle v2, Gate v2 (+22 Faelle, +55 innere Proben), Unit-Test 272/0,
+  C-Mutanten 14/14, Gate-Mutanten 22/22 (G22 erst nach Fall 248), Differenz-Test 0 Abweichungen.
+- [3] Emulator (i)-(v) + N1b + Zusatzwege (geloeschte Datei, geaendert+weg, Abbruchzustand) mit N0/N1/N0d.
+- [2.5] Eigenpruefung: Loeschen nach dem Entpacken falsch (case-insensitiver Speicher) - mit N0 auf dem Geraet
+  gemessen, behoben (026632a4), Endstand N2 im Emulator komplett nachgelaufen (3.8).
+- [4] build_android.sh (N2) gruen, --gate-only N2 gruen, v0.8.19 erwartungsgemaess abgelehnt (v1),
+  local_build.sh all 429/429. Emulator beendet, Test-AVD-Daten geloescht.
 
 ## 1. Messen / Belegen
 
@@ -204,18 +213,6 @@ nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht
    `[android] Entpacken fertig (<modus>): ... kopiert (B, ms), ... per SHA-256 geprueft (B, ms, abweichend),
    ... entfernt, ... .neu-Reste, ... Fehler, <ms>` bzw. `[android] Assets aktuell (schneller Weg): ...`.
 
-### 2.5 Eigenpruefung: Loeschen erst NACH dem Entpacken war falsch (behoben)
-
-Beim Durchsehen des Glue nach den ersten Emulator-Laeufen gefunden: die erste Fassung loeschte die Pfade "nur in
-der alten Liste" NACH der Entpack-Schleife. Der App-Speicher ist case-insensitiv (gemessen, 1.3). Aendert eine
-Version einen Pfad nur in der Gross/Kleinschreibung (alt `a/X.BIN`, neu `a/x.bin`), so schreibt die Schleife
-zuerst `a/x.bin` (ueber den Eintrag `a/X.BIN`), und das anschliessende `unlink("a/X.BIN")` trifft genau diese
-frische Datei - sie fehlt bis zum naechsten Start (dann holt der Groessen-Nachlauf sie zurueck). Die Liste v2
-verbietet solche Paare nur INNERHALB einer Liste, nicht zwischen alter und neuer. Behoben: erst loeschen, dann
-entpacken - auf einem case-insensitiven Speicher faellt die alte Schreibweise weg und die neue wird frisch
-geschrieben, auf einem case-sensitiven (interner Speicher) ebenso ohne Rest. Die APKs N0/N1 der Laeufe 3.1-3.6
-stammen von VOR diesem Fix; Nachlauf mit dem Endstand in 3.8.
-
 ### 2.4 Pruefung des C-Teils (PC)
 
 - `unit_r34a_asset_abgleich`: 272 Pruefungen, 0 Fehler (`gcc -std=c11 -Wall -Wextra -Wpedantic -Wshadow
@@ -246,6 +243,18 @@ stammen von VOR diesem Fix; Nachlauf mit dem Endstand in 3.8.
   erfasst - Urteil unveraendert, weil solche Eintraege immer "zusaetzlich in der APK" ausloesen, aber die Meldung
   "Manifest-Pruefsumme falsch" fehlte) -> Fall 248 "Zusatzeintrag ohne Quelle, Manifest-Summe falsch" ergaenzt ->
   G22 ROT. Endstand 0 von 22 nicht gefangen.
+
+### 2.5 Eigenpruefung: Loeschen erst NACH dem Entpacken war falsch (behoben)
+
+Beim Durchsehen des Glue nach den ersten Emulator-Laeufen gefunden: die erste Fassung loeschte die Pfade "nur in
+der alten Liste" NACH der Entpack-Schleife. Der App-Speicher ist case-insensitiv (gemessen, 1.3). Aendert eine
+Version einen Pfad nur in der Gross/Kleinschreibung (alt `a/X.BIN`, neu `a/x.bin`), so schreibt die Schleife
+zuerst `a/x.bin` (ueber den Eintrag `a/X.BIN`), und das anschliessende `unlink("a/X.BIN")` trifft genau diese
+frische Datei - sie fehlt bis zum naechsten Start (dann holt der Groessen-Nachlauf sie zurueck). Die Liste v2
+verbietet solche Paare nur INNERHALB einer Liste, nicht zwischen alter und neuer. Behoben: erst loeschen, dann
+entpacken - auf einem case-insensitiven Speicher faellt die alte Schreibweise weg und die neue wird frisch
+geschrieben, auf einem case-sensitiven (interner Speicher) ebenso ohne Rest. Die APKs N0/N1 der Laeufe 3.1-3.6
+stammen von VOR diesem Fix; Nachlauf mit dem Endstand in 3.8.
 
 ## 3. Nachweis im Emulator
 
@@ -463,8 +472,39 @@ derselbe Weg ist mit N2 ueber die manipulierte Liste (Zeile 3) belegt.
 
 ## 4. Gates / Suite
 
-(folgt)
+| Pruefung | Ergebnis | Log |
+|---|---|---|
+| `build_android.sh --version v0.8.20-n1f` (Endstand N2) | EXIT 0, `ANDROID-BUILD-OK`, `re15_assets.txt (v2)` 3603 Dateien, Selbsttest 248/248, `APK-ASSET-GATE-OK ... Manifest stimmt`; APK sha256 `c393a18e...c4e6`, 363479879 B | `build_N2.log` |
+| `build_android.sh --gate-only <N2> --version v0.8.20-n1f` (mit dem Gate-Endstand 85c8189e) | EXIT 0: aapt/badging, `zipalign -c -P 16 4` ok, Signer `432bc749...` = `apk_signer.sha256`, Selbsttest 248/248, `ANDROID-GATES-OK (--gate-only)` | `gateonly_N2.log`, `gateonly_N2_final.log` |
+| `build_android.sh --gate-only build/r34a/ref_v0.8.19.apk --version v0.8.19` | **EXIT 1 - erwartet**: alle 3603 Dateien in 5 Baeumen bytegleich zum Quellbaum, Tuer-Soll erfuellt, einziger Befund `[Manifest] Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS`. Eine v0.8.19-APK kann nach diesem Umbau kein Paket mehr bestehen; das naechste Paket braucht eine neu gebaute APK (Liste v2). | `gateonly_ref0819.log`, `gate_ref0819_direkt.log` |
+| `re15_port/tools/local_build.sh all` | `=== LOCAL-BUILD-OK (all) — Tests 429/429` (voller Neubau 1618 Schritte, 20 min unter Last), darin `unit_r34a_asset_abgleich ... Passed 1.57 sec`; `RE15_MIN_TESTS` 428 -> 429 | `pc_suite.log` |
+| Gate-Selbsttest einzeln | 248/248, innere Proben 116/116 | `gate_selbsttest_3.log` |
+| Gate-Mutanten | 22/22 gefangen (2.4) | `gate_mutanten_1.log` + G22-Nachlauf |
+| C-Mutanten | 14/14 gefangen (2.4) | `build/r34a/n1/pc/mutanten.py` |
+| Differenz-Test Geraet <-> Gate | 2 x 20257 Listen, 0 Abweichungen (2.4) | `build/r34a/n1/diff/` |
+
+Nach jedem Lauf, der `release/` beschreibt: nur `release/SHA256SUMS_android.txt` per `git checkout` zurueckgesetzt
+(`git status --short release/` danach leer bzw. nur die eigene Gate-Aenderung); keine APK committet.
+APKs dieser Runde (ungetrackt, `release/`): n1a (alter Stand, A), n1b (alter Stand + Aenderung, B), n1c (N0),
+n1d (N1), n1e (N0d debuggable), n1f (N2 = Endstand); zusammen 2,1 GB. Test-AVD: Datenabbilder nach dem letzten
+Lauf geloescht (6,7 GB), `build/r34a/n1/avd/*.ini` + `config.ini` bleiben (mit `-wipe-data` neu aufsetzbar).
+Emulator beendet (`adb emu kill`, keine qemu-/emulator-Prozesse mehr). Nutzer-AVD `Medium_Phone_API_36`:
+`de.re15.port` wieder deinstalliert, 4,1 G belegt wie vorher, sonst unveraendert.
 
 ## 5. Offen
 
-(folgt)
+- **Echtes Geraet nicht gemessen** (keins angeschlossen): Laufzeiten nur Emulator; ob Pruefen auf einem Telefon
+  schneller ist als Entpacken (dort ist Schreiben meist teurer als Lesen), ist nicht belegt.
+- **N1b nicht als Ganzes nachgestellt** (interner Speicherordner laesst sich auf dem user-Image nicht erzwingen);
+  statisch ausgeschlossen und mit gepflanzten Dateien am neuen Stand geprueft (3.7). Der alte Stand wurde fuer N1b
+  nicht dynamisch gezeigt (braeuchte einen debuggable Bau des alten Glue).
+- **Stufe-4-Aenderungen der Kette** (make_package.sh / apk_pruefen.sh, B1-B4) sind weiterhin nicht gegengeprueft;
+  dieser Auftrag hat sie nicht angefasst. Folge des Formatwechsels fuer die Kette: make_package.sh laeuft ueber
+  dasselbe Gate - eine APK mit Liste v1 (jede bis v0.8.19) wird dort jetzt abgelehnt.
+- **Nicht abgedeckt, bewusst**: eine im Speicher gleich gross veraenderte Datei bei unveraenderter Liste erkennt
+  der schnelle Weg nicht (nur `stat`); ein Pfad, der case-insensitiv Ordner eines anderen Pfades ist
+  (`a/b` und `A/B/c`), scheitert erst beim Entpacken laut (Fehlerbild) statt schon beim Lesen der Liste - in einem
+  Quellbaum auf NTFS kann es das nicht geben.
+- Update mit Aenderungen kostet auf dem Emulator ~1,0-1,5 s, davon der groesste Teil `stat` + `unlink(<ziel>.neu)`
+  je Datei ueber FUSE (3603 x); bewusst so gelassen (Aufraeumen von `.neu`-Resten in jedem aendernden Lauf).
+- Gegenpruefung dieses Umbaus (N1) steht aus.
