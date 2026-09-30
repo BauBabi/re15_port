@@ -64,6 +64,12 @@ Mehrdeutigkeiten, aufgeloest (Vertrag §3.2: Wortlaut + Bilder, begruendet):
   Schwester-Raetsel ROOM2060: Generator-Frage msg 0 -> Ja -> `Ck(3,144,0)` -> msg 1 "I need to insert the
   missing fuse before I can operate this." (sub12 @0x015BA..@0x015D6); (iv) der Nein-Zweig der Frage
   bleibt bytegleich zum Auslieferungsstand.
+  Verworfene Alternative: Aktion -> sofort Nahansicht + msg 2 (ohne Schalterfrage), die Frage erst nach dem
+  Einsetzen. Das entspraeche ROOM2060s KASTEN-Zone (sub18 beginnt mit dem Zustandssatz), aber ROOM1050
+  hat keinen eigenen Kasten-Platz — der Platz IST der Schalter (msg 0 "It's a shutter switch"), und fuer einen
+  sicherungsgesperrten SCHALTER ist sub12 das RE1.5-Muster. Der Wechsel waere ein Handgriff im Bytecode
+  (Message_on 0, Evt_next, das aeussere Ifel_ck/Ck(12,31,0) und dessen Endif entfallen), falls der Nutzer
+  es anders sieht.
 * **Wo eingesetzt wird.** Kasten und Schalter sind DIESELBE Stelle (§3.2) — keine zweite Zone. Die
   Einsetz-Frage folgt in derselben Nahansicht auf msg 2, wie in ROOM2060 sub18 (Zustandssatz msg 3 ->
   "Will you use the Fuse?" msg 4).
