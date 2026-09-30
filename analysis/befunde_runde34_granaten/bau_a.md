@@ -7,7 +7,8 @@ Auftrag: BAUPLAN §3.1 A1-A10, K1-K3, K9, P1-P10, P31; Orchestrator-Vorgaben (O-
 STATUS: FERTIG (Code + Sonde + 18 Mutationsproben + exe-Messung); Suite: kein reproduzierbares Rot, Zielzeile unter Fremd-Kills nicht erreicht (§8).
 NACHBESSERUNG (Gegenpruefung `bau_a.gegenpruefung.md` M-1..M-5, H-1..H-5): §9 — M-2/M-3/M-4 + H-1 gebaut, 11 neue Mutationsproben, M-1 ohne Fremd-Kill
 (Wrapper `build/r34g_a/lb.sh`, INTEGRATIONSWUNSCH 8 mit fertigem Patch). Suite §9.6: 413/413 Nicht-exe-Tests in zwei Laeufen gruen, alle 16 exe-Tests
-gruen im Beweislauf mit umbenannter byte-gleicher exe; Zielzeile `LOCAL-BUILD-OK (all)` wegen 51 fremder `taskkill /IM` NICHT erreicht.
+gruen im Beweislauf mit umbenannter byte-gleicher exe; Zielzeile `LOCAL-BUILD-OK (all)` in drei Laeufen (5/9/2 exe-Rot) wegen fremder
+`taskkill /IM` NICHT erreicht.
 
 ---
 
@@ -526,20 +527,27 @@ gezielt (`cmake --build build_r34_a --target probe_r34_wurf`, msys64 vorn im PAT
 * **Suite 2** (`lb.sh test`, 04:17:32-04:28:06; Windows-Kette Bash 32740 -> 1988 -> ctest 27240): `98% tests passed,
   9 tests failed out of 429`, 631.79 s (`build/r34g_a/nb_suite2_ctest.log`). Rot NUR exe-Tests (cut_blitz, granate_laden,
   irons_tisch_laden, irons_tisch_bild, irons_tisch_licht, sicherung_bild, r32_tor_hell, r33_speichern, boot_bg_pin; alle
-  `exit=1`/Abriss). Im Fenster 10 fremde `taskkill /F /IM re15_pc.exe`, 0 aus meiner Kette.
+  `exit=1`/Abriss). Im Fenster 10 fremde taskkill-Aufrufe (9 lesbar `taskkill /F /IM re15_pc.exe`, 1 nicht mehr lesbar),
+  0 aus meiner Kette.
+* **Suite 3** (`lb.sh test`, 04:44:22-04:58:12, Windows-Bash-PID 32144 laut `lb_pids.txt`): `99% tests passed, 2 tests failed
+  out of 429`, 826.82 s (`build/r34g_a/nb_suite3_ctest.log`). Rot: `integration_r30_cut_blitz` ([B] Abriss nach Bild 33 in
+  ROOM1240, 04:47:50.2-04:47:51.7, exit=1 ohne Meldung; kein Waechter-Eintrag = zu kurzer taskkill) und
+  `integration_r33_speichern` ([b] letzter Log-Schreibzugriff 04:56:40.602 -> Waechter 04:56:41.752 fremdes
+  `taskkill /F /IM re15_pc.exe`). Beide liefen in beiden Beweislaeufen mit der umbenannten exe gruen.
 * **Beweislauf gegen die Fremd-Kills** (`build/r34g_a/exe_kopie_lauf.sh`): exakt die ctest-Kommandos (`ctest -N -V`), nur
   mit einer BYTE-GLEICHEN Kopie der exe unter anderem Bildnamen (`re15_pc_nb.exe`, md5 `be0159f91324c255c236a874a7cf503d`
   = Original, gleiches Verzeichnis = gleiche Asset-Wurzel; danach geloescht): **alle 16 exe-Tests rc 0**
   (04:28:22-04:43:00, `build/r34g_a/kopie_nb_alle.txt`: weste_load_pin, r30_cut_blitz, elza_vollstart, r30_granate_laden,
   r30_irons_tisch_laden/_bild/_licht, r30_sicherung_laden/_bild, r30_titel_puls, r32_tor_hell, r33_speichern, boot_bg_pin,
   dark_start_pin, relatch_pin, save_counter_pin). Im selben Fenster protokollierte der Waechter 16 fremde
-  `taskkill /F /IM re15_pc.exe` (04:29:06-04:38:00) — ohne Wirkung auf die Kopie. Vorher schon die 5 Rot aus Suite 1
+  taskkill-Aufrufe (15 lesbar `taskkill /F /IM re15_pc.exe`, 1 nicht mehr lesbar; 04:29:06-04:38:00) — ohne Wirkung auf die Kopie. Vorher schon die 5 Rot aus Suite 1
   (04:11:58-04:17:22, `build/r34g_a/kopie_nb1.txt`): 5/5 rc 0.
 * **Ergebnis**: alle 413 Nicht-exe-Tests (Unit, Sonden inkl. `unit_r34_wurf`, Blut-/Huelsen-/Muendungs-Pins
   `unit_r26_mg_blut`, `unit_r17_waffen_loop_pin`, `probe_abzug_takt`, `unit_r30_granate`, `unit_espr_11e0`, C-Integration)
-  in BEIDEN Suiten gruen; alle 16 exe-Tests gruen (Suite 1: 11 direkt, der Rest in beiden Beweislaeufen). Kein
-  reproduzierbares Rot. **Die Zielzeile `=== LOCAL-BUILD-OK (all) — Tests 429/429` ist NICHT erreicht**: Ursache sind
-  fremde `local_build.sh build|test|all` (M-1 in den anderen Baeumen; Waechter: 51 Fremd-Kills zwischen 03:54 und 04:38,
+  in ALLEN DREI Suiten gruen; alle 16 exe-Tests gruen (Suite 3: 14 direkt, alle 16 im Beweislauf). Das exe-Rot wechselt
+  von Lauf zu Lauf (5 / 9 / 2 Tests, jeweils andere) — kein reproduzierbares Rot. **Die Zielzeile `=== LOCAL-BUILD-OK (all) — Tests 429/429` ist NICHT erreicht**: Ursache sind
+  fremde `local_build.sh build|test|all` (M-1 in den anderen Baeumen; Waechter 03:54-04:57: 55 taskkill-Eintraege =
+  42 lesbar `taskkill /F /IM re15_pc.exe`, 10 mit nicht mehr lesbarer Kommandozeile, 3 PID-genaue eines anderen Baums;
   keiner aus diesem Baum). Ein ungestoerter Gesamtlauf braucht INTEGRATIONSWUNSCH 8 in allen laufenden Baeumen (oder eine
   ruhige Maschine) — vor dem Merge von A nachzuholen (Orchestrator).
 
