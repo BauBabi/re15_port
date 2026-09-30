@@ -17,7 +17,7 @@ Aufruf:
   gesten_streifen.py <ROOM.RDT> <rec> <clip> <out.png> [--bilder 0,4,8,...] [--rueck]
   --rueck haengt den Rueckweg an (Plc_flg 0x80: Index = laenge-1-frame, anim_select_common.c).
 """
-import argparse, os, sys
+import argparse, math, os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -94,7 +94,10 @@ def main():
     ap.add_argument("--rueck", action="store_true")
     ap.add_argument("--groesse", type=int, default=150)
     ap.add_argument("--ansichten", default="vorn,oben,rechts",
-                    help="Auswahl aus vorn,oben,rechts,links (Komma)")
+                    help="Auswahl aus vorn,oben,rechts,links,kamera (Komma)")
+    ap.add_argument("--kamera", default="",
+                    help="kx,ky,kz,fx,fy,fz,yaw: Kamera- und Figurposition in Weltkoordinaten + Gierung "
+                         "der Figur (4096=360) -> Ansicht 'kamera' = Blick der Raumkamera auf die Figur")
     a = ap.parse_args()
 
     mo = Leon(a.rdt, a.rec)
@@ -116,6 +119,21 @@ def main():
 
     # Vorderansicht (Kamera vor der Figur) und Draufsicht; Achsen wie emd_ansichtsblatt
     alle_views = {"vorn": E.V_FRONT, "oben": E.V_TOP, "rechts": E.V_RIGHT, "links": E.V_LEFT}
+    if a.kamera:
+        kx, ky, kz, fx, fy, fz, yaw = [float(v) for v in a.kamera.split(",")]
+        # Blickrichtung Kamera -> Figur (Welt), in den Modellraum der Figur drehen (Gierung um Y;
+        # Gierung 0 = Modell-Vorderseite +X, Standplatz-Test rotate((620,0)) in aot_common.c)
+        dw = np.array([fx - kx, fy - 900.0 - ky, fz - kz])   # auf Brusthoehe (y -900) zielen
+        dw /= np.linalg.norm(dw)
+        t = yaw * 2 * math.pi / 4096.0
+        # Welt = RotY(yaw) * Modell  ->  Modell = RotY(-yaw) * Welt  (RotMatrix-Konvention @0x80068130:
+        # m[0]=cos, m[2]=sin, m[6]=-sin, m[8]=cos fuer reine Y-Drehung)
+        c, sn = math.cos(t), math.sin(t)
+        dm = np.array([c * dw[0] - sn * dw[2], dw[1], sn * dw[0] + c * dw[2]])
+        down = np.array([0.0, 1.0, 0.0]) - dm[1] * dm
+        down /= np.linalg.norm(down)
+        right = np.cross(down, dm)
+        alle_views["kamera"] = (tuple(right), tuple(down), tuple(-dm))
     views = [(nm, alle_views[nm]) for nm in a.ansichten.split(",")]
     G = a.groesse
     lab = 18
