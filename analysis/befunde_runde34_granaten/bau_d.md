@@ -448,6 +448,6 @@ Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck 
   ([P2] exit=1 vor dem Laden), `integration_r33_speichern` ([c] exit=1, Lauf unvollstaendig). Die drei Spur-D-Sonden
   `unit_r34_re2fx`, `unit_r34_re2fx_knochen`, `unit_r34_re2fx_bild` sind in allen vier Laeufen gruen.
 * **Einzelwiederholung** nach Lauf 4 (nacheinander): irons_tisch_licht **Passed** (Last 97-100 %), r33_speichern
-  **Passed** (100 %), elza_vollstart **Passed** (100 → 76 %). Stand ueber vier Laeufe: 13 rote Eintraege in 10 verschiedenen
+  **Passed** (100 %), elza_vollstart **Passed** (100 → 76 %). Stand ueber vier Laeufe: 17 rote Eintraege (6 + 4 + 4 + 3) in 10 verschiedenen
   exe-Tests, KEINER reproduzierbar (jeder einzeln gruen, titel_puls bei niedriger Last); die Ziel-Zeile
   `=== LOCAL-BUILD-OK (all)` kam unter der Dauerlast der parallelen Spuren in keinem Lauf zustande.
