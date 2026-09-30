@@ -41,6 +41,7 @@
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_vab.h"
 #include "re15_lock_se.h"
+#include "re15_item_modal.h"   /* Runde 34 Nacht, Spur F: offenes Aufnahme-Modal zwischen Raeumen beenden */
 #include "gen/re2_door_bank.inc"   /* RE2_DOOR_SE_ZU_A / _B / _E (nur Makros) */
 
 /* SOLL der Zuordnung Art -> Satz = die Vorgabe der Runde 30 (lock_se_common.c,
@@ -316,6 +317,12 @@ static void frame(uint16_t held, uint16_t edge, int zaehlen)
 static int room_boot(uint16_t room)
 {
     if (rdt_laden(room) != 0) { printf("  FEHLER: ROOM%04X nicht ladbar\n", room); g_fail++; return -1; }
+    /* Runde 34 Nacht, Spur F: der Leichen-Platz ROOM1230/1231 Slot 18 (sub21) oeffnet nach seinem
+     * Text das Aufnahme-Modal (engine/src/leiche_1110_1230.c). Dieser Pruefstand tickt das Modal
+     * nicht (main.c:7380); ein offenes Modal reichte sonst in den naechsten Raum durch und sperrte
+     * dort re15_game_step (Freeze-Gate game_step_common.c). Wie ein Spieler: zu Ende beantworten. */
+    for (int i = 0; i < 600 && re15_item_modal_active(); i++)
+        re15_item_modal_tick(re15_item_modal_prompt_ready() ? 0x4000 : 0, 0);
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_actor_init(); re15_aot_init(); scd_vm_init();
