@@ -5,7 +5,8 @@ Auftrag: BAUPLAN §3.2 B1-B12, E4-E7, E13, E16, K4-K7, P14-P27; O-VB4 vom Orches
 (Bodenfeuer an Gegnern OHNE RE2-KI = RE1.5-Angriffsart 5 "Flaechenfeuer", 50 @0x8006f422 / Reaktion 14 @0x8006f435).
 Bauverzeichnis `re15_port/build_r34_b`; Laufzeit-Ausgaben `build/r34g_b/` (unversioniert).
 
-STATUS: B1-B12 GEBAUT, alle Sonden gruen (unit_r34_schaden 39, unit_r34_reaktion 63 Pruefungen, Mutationsproben M1-M51);
+STATUS: B1-B12 GEBAUT + NACHBESSERUNG K1/M1/M2 (Abschnitt am Dateiende; unit_r34_schaden 46, unit_r34_reaktion 69
+Pruefungen, Mutationsproben MN1-MN12). Stand vor der Nachbesserung: alle Sonden gruen (unit_r34_schaden 39, unit_r34_reaktion 63 Pruefungen, Mutationsproben M1-M51);
 volle Suite: 5 Laeufe je 426-429/430, rot nur GUI-Integrationen mit exe-Abbruch unter Parallel-Last, alle einzeln gruen
 (Abschnitt "Volle Suite").
 
@@ -80,6 +81,8 @@ Beide Pakete teilen sich den Stempel und sind deshalb EIN Commit.
 | `enemy_ai_re2_zombie.c` `re2z_row_from_atktype` | [2..4] = 9/11/10 statt 17 (P18) |
 
 ### Port-Zuordnungen (gekennzeichnet)
+* **[NACHBESSERUNG M1: Typen unter dem RE2-Schadens-/HP-Modell (Import-Zombies) bekommen statt 50 den RE2-Record-Wert
+  des Hitcodes (Zombie Z10 K2 = 5 @0x800A41E0); die E4-Modellwahl gilt nur Art 2..4. Vorher gab der Code 15 — s. Dateiende.]**
 * **O-VB4 (Orchestrator):** RE1.5-KI-Kandidaten des Appliers laufen durch den RE1.5-Gegnerzweig mit Art 5
   (50 @0x8006f422 / Reaktion 14 @0x8006f435); ihr Band/Radius/Mittelpunkt ist der eigene RE1.5-Kasten (Mitte =
   Lage + Versatz, Halbhoehe = Kastenhoehe, Radius = `re15_ellipse_radius` zum Punkt). Gate B -> kein Treffer.
@@ -112,10 +115,10 @@ Beide Pakete teilen sich den Stempel und sind deshalb EIN Commit.
 | 92 | Richtung aus P: 0x61 (P in -z) / 0x81 (P in +z) | gruen |
 | 93 | RE1.5-KI (Made 0x27): Art 5 -> HP 180 -> 130, +0x5 14, +0x6 1, +0x93 Bit 0 | gruen |
 | 94 | Gate B im Applier: Made +0x93 = 3 -> kein Treffer, der Zombie dahinter wird getroffen | gruen |
-| 31 | Explosion RE2-Zombie HP 80: -120, Zustand 3, +0x5 9, +0x6 0, +0x1D2 0, +0x1D3 15, gl_stamp, Reserve 13 | gruen |
+| 31 | Explosion RE2-Zombie HP 80: -120, Zustand 3, +0x5 9, +0x6 0, +0x1D2 ~~0~~ **3** (NACHBESSERUNG K1), +0x1D3 15, gl_stamp, Reserve 13 | gruen |
 | 32 | Richtung aus P (0x21 / 0x01) | gruen |
 | 33 | Saeure -> Zeile 11, Brand -> Zeile 10 | gruen |
-| 34 | Brad 0x11 HP 250 -> 50, HURT, Zeile 9, Spalte 0 | gruen |
+| 34 | Brad 0x11 HP 250 -> 50, HURT, Zeile 9, Spalte ~~0~~ **3** (NACHBESSERUNG K1) | gruen |
 | 35 | 0x16: HE 80 / Saeure 200 / Brand 80 | gruen |
 | 36 | Hund RE2 Saeure: 300, +0x5 = 10 (Waffen-Id), +0x1D3 15, +0x6 0 | gruen |
 | 39 | Direktaufruf ohne Punkt: atktype 2/3/4 -> Zeile 9/11/10 | gruen |
@@ -531,9 +534,9 @@ Routinen). Ergebnis (H = HURT verlassen, T = Tod -> Leiche, t = Tod verlassen oh
 
 | Typ | RE15 | RE2 |
 |---|---|---|
-| Zombie 0x10 / 0x12 / 0x13 / 0x18 | TT TT TT HT | tt TT TT HT |
-| Zombie 0x11 (Brad, HP 250) | HT HT HT HT | Ht HT HT HT |
-| Zombie 0x16 | HT TT HT HT | Ht TT HT HT |
+| Zombie 0x10 / 0x12 / 0x13 / 0x18 | TT TT TT HT | ~~tt~~ **TT** TT TT HT (NACHBESSERUNG K1) |
+| Zombie 0x11 (Brad, HP 250) | HT HT HT HT | ~~Ht~~ **HT** HT HT HT (K1) |
+| Zombie 0x16 | HT TT HT HT | ~~Ht~~ **HT** TT HT HT (K1) |
 | Writher/Arm 0x1a (wach) | TT TT TT HT | tt tt tt Ht |
 | Hund 0x20 | TT TT TT HT | TT TT TT HT |
 | Kraehe 0x21 | TT TT TT TT | TT TT TT TT |
@@ -546,6 +549,7 @@ Routinen). Ergebnis (H = HURT verlassen, T = Tod -> Leiche, t = Tod verlassen oh
 | Birkin 0x30 / 0x36@3080 | tt tt tt Ht (Mutations-Schutz, E7) | tt tt tt Ht |
 | G5 0x36@5090 | HT HT HT HT (Modul) | HT HT HT HT |
 
+**[NACHBESSERUNG K1: die RE2-Zombie-`t` der Art 2 waren eine Abweichung vom §1.6-Soll "Tod" — jetzt `T`, s. Dateiende.]**
 **Kein Haenger.** Die `t`-Faelle sind belegte Ablaeufe: RE2-Zombie Zeile 9 = Knockdown-Handler 0x80107438 mit `+0x4 == 3`,
 Kriecher-Ausgang mit HP 10 (`sh v0(=10),342` @0x801077B0, 3/4 bzw. gaitrow == 0); RE2-Arm = `arm_death` HP 250 + Rueckzug
 (@0x80101090-A0, unsterblich); Feuer 0x26 = Flammen-Minderung (kein Leichenzustand); Birkin = Port-Todeshandler mit
@@ -641,7 +645,9 @@ NULL-Zeile) -> 210 rot (10 Haenger).
 11. G5-Zuschlag nach Zeile wirkt auf alle Waffen (Liste in B9) — Abnahme durch Nutzer/Orchestrator.
 12. Schlafender RE2-Arm (grid & 0x1F != 1): Explosion setzt Zustand 3, Reaktion erst nach dem Aufwachen (RE2-Gate 4 fehlt im
     RE1.5-Resolver).
-13. `re2z_row_from_atktype[5] = 9` (bestehend): Art 5 trifft RE2-KI-Typen im Spiel nicht (fuer sie laeuft der RE2-Applier);
+13. ~~`re2z_row_from_atktype[5] = 9` (bestehend): Art 5 trifft RE2-KI-Typen im Spiel nicht (fuer sie laeuft der RE2-Applier);~~
+    **BERICHTIGT (Gegenpruefung M1):** ueber O-VB4 erreicht Art 5 jeden RE1.5-KI-Import-Zombie (Vorgabe im RE1.5-Flavor);
+    die Bruecke lief dabei ueber Zeile 9 mit Reserve-Abzug. Behoben (GL-Bruecke, NACHBESSERUNG N3). Alter Wortlaut:
     nur im Zensus kuenstlich erreicht, nicht angefasst.
 14. Treppe: `re15_stair_reset` (Raumwechsel) loescht +0x93 Bit 0 nicht — kein Original-Pendant; der naechste Spieler-Tick gibt
     es frei (gemessen: Mutation M49 laesst 203 gruen).
@@ -736,3 +742,109 @@ auch fuer Kandidaten, die das Band/den Kasten verfehlen).
   Hitcode-Zeile (10), Spalte = Zone(P) + 3K, Richtung aus P mit `|= 1`, KEIN Reserve-Abzug; der Zerleger bleibt (sein
   Reserve-Tor oeffnet nur, wenn Schuesse die Reserve vorher geleert haben — wie im RE2-Flavor).
 * **M2 -> Sonden**, kein Engine-Eingriff (Verhalten war richtig, gemessen mess4).
+
+### N3 Gebaut (Datei:Zeile, Stand nach Commit 023f5532)
+| Datei:Zeile | Inhalt | Beleg |
+|---|---|---|
+| `re15_damage.c:4211-4213` (`re2_gl_explosion_stempel`) | `k_spalte = (t.zombie && zeile == 9u) ? 1u : 0u` -> `re2_gl_stempel(..., k_spalte, ...)`: HE an der RE2-Zombie-Familie stempelt +0x1D2 = Zone + 3; Schaden unveraendert E4 (K0) | Op 47 0x10020009 @0x80020d54-58/0x80020d84-88, Spalte @0x80047310-30 (K1) |
+| `re15_damage.c:43` | `re2gl_treffer_t {zeile, k, spalte}` — der Hitcode eines GL-Treffers an einem RE1.5-KI-Kandidaten | `andi v1,s5,0xffff` @0x80047214, `srl s6,s5,28` @0x80047114 |
+| `re15_damage.c:2984` (`re15_e4_modell`) | E4-Bedingung ausgelagert (Herkunft 0x26 + RE2-Modell/Import) | Kopf `re15_damage.c` 675-697 |
+| `re15_damage.c:3021` | E4-Modellwahl nur noch `type >= 2u && type <= 4u` | BAUPLAN E4, react_table @0x8006f432..34 |
+| `re15_damage.c:3031-3035` | GL-Treffer an einem Typ unter dem RE2-Modell: HP -= (w0[Zeile] >> 10K) & 0x3FF des Typ-Records | `srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c; Z10 0x0050C8C8 @0x800A41E0 |
+| `re15_damage.c:3069-3070` | GL-Treffer -> `re15_re15_re2z_gore_hit_gl` statt der Hitscan-Bruecke | Store-Liste @0x80047184-0x8004749c |
+| `re15_damage.c:3970` (`re2_gl_rec_typ`) | Records je Typ ohne Besitz-Test (Zombie/0x16/Hund/Kraehe/Spinne) | *(0x800A6A88 + Typ*4) |
+| `re15_damage.c:4286-4290` (Applier, RE1.5-Pfad) | Spalte = Zone + 3K mit dem Band-Versatz des Kandidaten (Port-Zuordnung O-VB4), `gl` an den Gegnerzweig | @0x80047294-330 |
+| `re15_damage.c` `re15_resolver_gegnerzweig` | Parameter `gl` (Resolver: NULL) | — |
+| `enemy_ai_re2_zombie.c:6767` (`re2z_import_seed`) | Lazy-Init der Bruecke ausgelagert (unveraendert) | @0x8010081C/@0x80100820-28, @0x801006BC, @0x8010087C |
+| `enemy_ai_re2_zombie.c:6825` (`re15_re15_re2z_gore_hit_gl`) | GL-Bruecke: +0x1D2 = Spalte, +0x1D0 = (alt & 0xFF00) \| 1 \| Richtung aus P, KEINE Reserve, Zerleger, Gore-Zweig | @0x80047330, @0x80047178/84, @0x80047200, @0x80047350-3d8, @0x80105288-3D8 |
+| `enemy_ai_re2_zombie.c:6848` (`re2z_import_gore_dispatch`) | Gore-Zweig (3) der Bruecke ausgelagert (unveraendert) | @0x8010750C-708 |
+| `include/re15_actor.h:1254` | Prototyp `re15_re15_re2z_gore_hit_gl` | — |
+
+### N4 Sonden (neu bzw. geaendert; alle gruen, Stand 3558eaff + (99))
+| Nr | Sonde | Pruefung | Ergebnis |
+|---|---|---|---|
+| 31 | schaden | HE an RE2-0x10: +0x1D2 = **3** (vorher 0) | gruen |
+| 34 | schaden | Brad HE: Spalte **3** | gruen |
+| 30 | schaden | Abgrenzung: Saeure/Brand Spalte 0, Hund HE Spalte < 3, +0x5 9 | gruen (0/0/1) |
+| 81 | schaden | Explosion: +0x1D0 vorbelegt 0x12E0 -> 0x1221 | gruen |
+| 82 | schaden | Applier: Kandidat ausserhalb des Kastens 0x34C0 -> 0x3400, getroffener 0x56E0 -> 0x5661 | gruen |
+| 95 | schaden | Import-Zombie + Bodenfeuer: HP 80 -> 75, +0x5 14, +0x6 1, +0x1D2 6, +0x1D0 Bit 0 | gruen |
+| 96 | schaden | 12 seitliche Flammen: je 5, Reserve 13/13/13, kein Bein; NEGATIV Pistole danach +0x152 13 -> 9 | gruen |
+| 97 | schaden | NEGATIV Import AUS: 50 (O-VB4), keine Bruecke (+0x1D2 0) | gruen |
+| 98 | schaden | Zerleger im GL-Stempel: +0x152 = -1 vorher -> seitliche Flamme reisst das Bein ab | gruen |
+| 99 | schaden | E4 nur Art 2..4: Direktaufruf Art 5 = 50, Art 2 = 200 | gruen |
+| 108/118 | reaktion | Bild X+1 nach dem GL-Stempel (Brand/Saeure an Brad): Reserve 13/13/13 unveraendert, +0x1D0 0x21 unveraendert, gl 0 | gruen |
+| 109 | reaktion | NEGATIV: derselbe Treffer ohne GL-Stempel -> Reserve-Summe 39 -> 37 im Bild X+1 | gruen |
+| 220 | reaktion | HE an stehendem 0x10 (ROOM1140, echter `re15_game_step`), 8 RNG-Verschiebungen: 8/8 Leiche, DEATH-Zelle 0x80108530 | gruen |
+| 221 | reaktion | NEGATIV: Spalte von Hand 0 -> Kriecher HP 10, +0x10E 0x2001, DEATH-Zelle 0x80107438 | gruen |
+| 222 | reaktion | Brad HE -> HURT 0x80105438 (Spalte 3); Brand -> 0x80105BC0 (Spalte 0) | gruen |
+
+Zensus (Teil zensus, 352 Laeufe) nach der Nachbesserung: 0 Haenger, 0 unerwartet; RE2-Flavor Zombie 0x10/0x12/0x13/0x18
+`TT TT TT HT` (vorher `tt ...`), Brad 0x11 `HT HT HT HT` (vorher `Ht ...`), 0x16 `HT TT HT HT` (vorher `Ht ...`); alle
+uebrigen Zeilen unveraendert.
+
+### N5 Mutationsproben (`build/r34g_b/nb/mut_nb.py`, Bau je Mutation ueber `lb.sh build`, Log `mut_nb.log`)
+| Id | Mutation (Datei) | erwartet rot | Ergebnis |
+|---|---|---|---|
+| MN1 | Spalten-Klammer HE = 0 (Stand vor K1) (re15_damage.c) | 31 34 220 222 | 31/34/220/222 rot (220: Leiche 0, Kriecher 8) |
+| MN2 | Klammer 1 fuer ALLE Zeilen der Zombie-Familie | 30 101 111 222 | 30/101-106/111-114/222 rot — Saeure/Brand mit Spalte 3 verlieren Element-Bits und DoT (belegt die Beschraenkung auf Zeile 9) |
+| MN3 | Klammer 1 auch fuer den Hund | 30 120 | 30/120-124 rot (kein Zerplatzen) |
+| MN4 | E4 wieder `type < 11` | 99 | 99 rot (Art 5 -> 15) |
+| MN5 | RE2-Record-Schaden des GL-Treffers aus | 95 96 | 95/96 rot (50 statt 5) |
+| MN6 | alte Bruecke fuer GL-Treffer (Hitscan-Stempel) | 95 96 | 95/96 rot (+0x1D2 1, Reserve -1, Bein ab) |
+| MN7 | GL-Wache in `re2z_hurt` weg (= G06 der Gegenpruefung) | 108 118 | 108/118 rot (Reserve 13 -> 11, +0x1D0 0x21 -> 0x00) |
+| MN8 | Applier ohne +0x1D0 &= 0xFF00 je Kandidat (= G03) | 82 | 82 rot (A 0x34C0, B 0x56E1) |
+| MN9 | Explosions-Stempel ohne das Loeschen | 81 | 81 rot (0x12E1) |
+| MN10 | GL-Bruecke ohne Bit 0 | 95 | 95 rot |
+| MN11 | Zone im RE1.5-Pfad immer 1 | 95 | 95 rot (+0x1D2 7) |
+| MN12 | GL-Bruecke ohne Zerleger | 98 | 98 rot |
+
+Alle Dateien nach jeder Mutation aus der Sicherung zurueck (Pruefung Byte-gleich), danach `lb.sh build` und beide Sonden
+gruen, `git diff` leer.
+
+### N6 Messungen nach der Nachbesserung (Programme der Gegenpruefung, neu gegen `libre15_engine.a` gebaut, `build/r34g_b/nb/`)
+| Messung | vorher | nachher |
+|---|---|---|
+| mess5 (24 RNG-Verschiebungen, HE an stehendem 0x10) | Kriecher 24/24 | **Leiche 24/24**, Spalte 3 |
+| mess6 (6 Laeufe + 2. Granate) | 2. Granate noetig | Leiche 6/6 schon nach der 1. |
+| mess1 M1 / M1b / M2 | -15 / -50 / -5 | **-5** / -50 / -5 |
+| mess3 (12 seitliche Flammen, Import AN) | -15 je, +0x152 -> -1, Bein ab bei 7 | **-5 je, +0x152 13, kein Bein**, +0x1D0 0x0061/0x0081 |
+| mess4 (Brad Art 4, X..X+3) | Reserve 13/13/13, 1D0 0x0021 | unveraendert (Wache wirkt; jetzt gepinnt 108/118) |
+
+### N7 Folgen und Grenzen (benannt)
+* **Brad 0x11 (und 0x16 mit viel HP) ueberlebt HE:** HURT[9][3] = 0x80105438 (Haupt-Treffer) statt 0x80107438 (Knockdown mit
+  Arm-Abriss @0x8010750C-708). RE2-Reaktion eines Zombies, der die GL-Explosion ueberlebt. BAUPLAN §1.6 nennt noch
+  HURT[9][0] -> INTEGRATIONSWUNSCH N-2.
+* **Saeure-Spalte:** RE2 Op 49 stempelt 0x1002000B (K1, `800216e4 lui a3,0x1002` / Delay `800216f0 ori a3,a3,0xb`). E6 K0 bleibt
+  (BAUPLAN §1.6: Brad-Saeure = Taumeln 0x80105BC0 mit Aetzung/Bein-Wegaetzen/DoT). Mutation MN2 belegt: mit Spalte 3
+  verliert der ueberlebende Zombie Element-Bits und DoT (0x80105438-P0 ruft die Leiter nur fuer Zeile 16/14). Fuer die
+  Toetung ist die Spalte bedeutungslos (DEATH 10/11 = 0x80108530 x18). OFFEN N-a (Entscheidung Orchestrator/Nutzer).
+* **Wiederbelebung nach dem Sturz-Tod:** RE2 0x80108530-P2 belebt hinter fuenf Toren (~1/8) als Kriecher mit HP 1
+  (@0x80108918-9ec); der Port-`re2z_death_main` endet seit jeher als Leiche (OFFEN, alle Waffen) — deshalb 8/8 bzw. 24/24
+  Leiche statt ~7/8. OFFEN N-b.
+* **Import-Zombie + Bodenfeuer:** Reaktion bleibt O-VB4 (+0x5 = 14, E7-Rueckfall bei NULL-Zeile); nur Schaden und Bruecke
+  folgen dem RE2-Modell.
+
+### N8 Volle Suite
+Lauf 1 (all, ab 05:10): laeuft — Ergebnis folgt im naechsten Commit.
+
+### INTEGRATIONSWUNSCH (Nachbesserung)
+* **N-1** `re15_port/tools/local_build.sh:147` (Integration): `/c/Windows/System32/WindowsPowerShell/v1.0` in `CLEAN_PATH`
+  aufnehmen; sonst faellt `do_build` (:298-299) auf `taskkill //F //IM re15_pc.exe` zurueck und beendet JEDE re15_pc.exe der
+  Maschine (auch die des Nutzers). Spur B baute deshalb ueber `build/r34g_b/nb/lb.sh` (exportierte `powershell`-Funktion,
+  neutralisiertes `taskkill`), gemessen: der gezielte Zweig laeuft.
+* **N-2** `analysis/befunde_runde34_granaten/BAUPLAN.md` §1.6 Zeile "Zombie 0x10/..." (nicht Spur-B-Datei): "Tod: HE DEATH[9][0]
+  = 0x80107438 (Knockdown-Tod ...)" -> "HE DEATH[9][3] = 0x80108530 (Sturz-Tod; Spalte mit Klammer 1 wie RE2 Op 47,
+  0x10020009 @0x80020d54-58)"; "Brad ... HE HURT[9][0] = 0x80107438" -> "HE HURT[9][3] = 0x80105438". E6 um "Spalte HE an
+  der Zombie-Familie = Zone + 3" ergaenzen; E4 bleibt (Schaden K0).
+* Unveraendert gueltig: INTEGRATIONSWUNSCH 1-3 oben (Part-Farben zeichnen, Applier binden, Feldbreite 20).
+
+### OFFEN (Nachbesserung)
+* **N-a** Saeure-Spalte (s. N7): RE2 Op 49 = K1, gebaut K0 nach BAUPLAN E6/§1.6 — Abnahme durch Orchestrator/Nutzer.
+* **N-b** Port `re2z_death_main` P2 ohne die RE2-Wiederbelebung (HP 1, @0x80108918-9ec) — bestehende Luecke, alle Waffen.
+* **N-c** Setzer von 0x800CFBD8 Bit 0x10000000 (einziger Schreiber `80058df8`, SCD-Opcode-Rumpf @0x80058dac) nicht einem
+  Opcode zugeordnet; im Port ohne Produzent (Knockdown- und Sturz-Tod lesen es). Weg: Opcode-Tabelle des RE2-SCD auf
+  0x80058dac durchsuchen.
+* **H1-H8** der Gegenpruefung (Gator-Boss-Versatz, Hund-Immunitaet 0x80, Kraehe +0x98, Vier-Quadranten, ungepinnte Details
+  G02/G05/G08-G11/G15, Treppen-Sonde ueber `re15_game_step`, Kakerlaken-Tabellen STAGE4/5, Unterzustand 13) waren nicht
+  Teil dieses Nachbesserungsauftrags und bleiben wie in `bau_b.gegenpruefung.md` §5 beschrieben offen.
