@@ -128,3 +128,110 @@ nur nicht durch eine Sonde geschuetzt (Regressionsschutz fehlt), mit Ausnahme vo
 * Alle 399 Nicht-Integrationstests (`ctest -E integration -j 4`): **399/399 gruen** (45 s).
 * Integrationstests (31, `-j 1`, waehrend die Baeume r34g_a / r34g_c / r34n_generator parallel ihre
   exe-Tests fuhren): siehe Abschnitt 6.
+
+---
+
+## 5. Maengel
+
+### K1 (kritisch, Entscheidung vor der Integration) — Handgranate toetet keinen stehenden RE2-Zombie: er steht als Kriecher mit HP 10 wieder auf
+* **Messung** (mess5, RE2-Flavor = Vorgabe, ROOM1140, echter `re15_game_step`): 24 von 24 Laeufen — Treffer
+  HP 50 -> -150, Zustand 3, Spalte 0; Ausgang IMMER Zustand 1, HP 10, +0x10E 0x2001 (Kriecher), 0 Leichen.
+  Erst eine zweite Granate toetet (Kriecherkasten -> Spalte 1 -> DEATH[9][1] 0x80108BEC, mess6).
+* **Mechanik** (selbst gelesen): E6-Stempel mit Klammer 0 -> +0x1D2 = Zone 0 (Beine: Y + (-1500>>1) = -750 <
+  P.y = -490) -> DEATH-Tabelle EMZ0 `read 0x8010CD68 9` = {0x80107438, 0x80108BEC, 0x80108BEC, 0x80108530 x6}
+  -> Spalte 0 = 0x80107438 (Knockdown) mit dem `death`-Zweig: `8010778c jal 0x80015fe8` / `80107794 andi v0,v0,0x3`
+  / `80107798 bne v0,zero,0x801077b0` (3/4 -> `801077b0 sh v0(=10),342(s2)`), sonst `801077a0 lb v0,363(s2)`
+  (+0x16B) -> nur mit abgerissenem Arm Leiche. Port `re2z_hit_knockdown(death=1)` bildet das korrekt nach.
+* **Widerspruch**: BAUPLAN §1.6 erwartet "Tod: HE DEATH[9][0] = 0x80107438 (Knockdown-Tod ...)". RE2s eigene
+  GL-Explosion (Op 47) stempelt Hitcode **0x10020009** (`80020d54 lui a3,0x1002` / `80020d58 ori a3,a3,0x9`,
+  re_gegner_re2_familie + Gegenpruefung §1.2) = Klammer 1 -> Spalte 3/4 -> DEATH[9][3] = **0x80108530**
+  (Sturz-Tod -> Leiche). Die Kriecher-Wiederbelebung ist in RE2 die Reaktion auf den FLUG-Kontakt (0x00030009, K0),
+  nicht auf die Explosion. Der Bauer hat das im Zensus als `t` gesehen und als "belegter Ablauf" eingeordnet, aber
+  nicht als Abweichung vom BAUPLAN-Soll gemeldet. Die Abnahme B3 prueft nur den Stempel im Bild X, nicht den Ausgang.
+* **Vorschlag**: Orchestrator-/Nutzer-Entscheidung vor der Integration: (a) Spalte wie Op 47 mit Klammer 1
+  stempeln (+0x1D2 = Zone + 3), Schaden bleibt E4 (K0 = 200) -> Tod ueber 0x80108530 wie RE2-Retail; oder
+  (b) den Kriecher-Ausgang ausdruecklich abnehmen. In beiden Faellen eine Sonde, die den AUSGANG (Leiche/Kriecher)
+  nach N Bildern pinnt.
+
+### M1 (mittel) — Bodenfeuer an RE1.5-KI-Zombies mit Import-Option: 15 statt 50 Schaden und RE2-Beinabriss
+* **Messung**: mess1 M1 (Import AN = Vorgabe) -15 je Treffer, M1b (Import AUS) -50, M2 (RE2-KI) -5; mess3:
+  Reserve +0x152 sinkt je Treffer um 2, **beim 7. Treffer Bein ab** (+0x21A |= 0x20, part_mesh[9] = 15).
+* **Ursache**: (1) E4-Erweiterung auf `type >= 2u && type < 11u` (re15_damage.c:3001) greift auch fuer Art 5 ->
+  `re15_enemy_dmg_row(e)[DAT_8006f430[5] = 14]` = `s_re2_wpn_dmg_zombie[14]` = 15 (@0x800A4258, RE2-Flammenwerfer-
+  Zeile 16). BAUPLAN E4 nennt nur Art 2/3/4; das Dossier (bau_b.md §B4 "O-VB4") und Commit d89afba1 nennen fuer
+  Art 5 "50 @0x8006f422". (2) Die Import-Bruecke `re15_re15_re2z_gore_hit(e, P, 1, 5)` stempelt ueber
+  `re2z_row_from_atktype[5] = 9` die GL-EXPLOSIV-Zeile und zieht die Zonen-Reserve ab (w1 0x078F1E0A & 7 = 2);
+  RE2 selbst zieht beim GL-Applier KEINE Reserve ab (Store-Liste @0x800471f8-0x800473d8, BAUPLAN K6 RESERVE).
+* **Falsche Aussage im Dossier**: OFFEN 13 "Art 5 trifft RE2-KI-Typen im Spiel nicht ... nur im Zensus kuenstlich
+  erreicht" — ueber O-VB4 erreicht Art 5 jeden RE1.5-KI-Zombie mit Import (Vorgabe im RE1.5-Flavor).
+* Keine Sonde deckt den Fall ab (Pruefung 93 nimmt die Made 0x27 ohne Import). Wirksam, sobald C/D den Applier
+  bindet (INTEGRATIONSWUNSCH 2).
+* **Vorschlag**: Entscheidung dokumentieren und pinnen: E4 auf Art 2..4 begrenzen (dann 50 laut O-VB4) oder fuer
+  Import-Zombies den RE2-Wert des RE2-Pfads (Z10 K2 = 5 @0x800A41E0); die Import-Bruecke fuer Art 5 nicht ueber die
+  Explosiv-Zeile 9 und nicht mit Reserve-Abzug laufen lassen. Sonde: Import-Zombie + Bodenfeuer -> Schaden,
+  +0x152, +0x21A.
+
+### M2 (mittel) — tragende E6-Pruefung ohne Wirkung: die GL-Wache in re2z_hurt ist durch keine Sonde gepinnt
+* Mutation **G06** (`if (e->re2_gl_stamp) ...` -> `if (0) ...`, enemy_ai_re2_zombie.c:7079 = zweiter Stempel mit
+  Spielerpeilung und Reserve-Abzug) laesst beide Sonden gruen. Die Pruefungen 22/31/101/111 lesen den Stempel im
+  Bild X, der Konsument re2z_hurt laeuft erst in X+1.
+* Am Stand HEAD wirkt die Wache (mess4: Reserve 13/13/13 und 1D0 0x0021 aus P bleiben in X+1..X+3; mit Spielerpeilung
+  waere es 0x01). Das Verhalten stimmt — es ist nur ungeschuetzt. Dasselbe fuer G03 (+0x1D0 &= 0xFF00 je Kandidat,
+  re15_damage.c:4186, @0x8004716c-84).
+* **Vorschlag**: in `unit_r34_reaktion` Teil zombie nach dem Treffer ein Bild fahren und Reserve + Richtungsbits
+  pruefen (Negativ-Kontrolle: Schuss-Pfad zieht ab); fuer G03 einen Kandidaten mit vorbelegtem 1D0-Low-Byte.
+
+### H1 (hinweis) — Gator-Boss ROOM2090 bekommt den Alligator-Versatz 1000 ungeskaliert
+* mess1 M3: `re15_enemy_apply_hitbox(a, 0x23)` -> hit_offset_x = 1000 (re15_damage.c:3734) fuer JEDEN 0x23, also auch
+  den Boss; dessen Modul skaliert Radien/Hoehe auf 2/3 (enemy_ai_boss_gator.c:1057-1061), den Versatz nicht. Wirkung:
+  Granaten-/Bodenfeuer-Kasten des Bosses liegt 1000 vor der Figur. BAUPLAN §1.6/E16: Gator-Boss "unveraendert".
+  Im Dossier nicht erwaehnt. **Vorschlag**: im Boss-Modul den Versatz mitskalieren oder bewusst 0 setzen
+  (Nutzer-Design) und benennen.
+
+### H2 (hinweis) — Hund: Immunitaet +0x1D3 Bit 0x80 nach HURT 10/16 wirkt nur gegen den GL-Applier
+* `re15_re2_pause_filter_apply` (re15_damage.c:3843) gibt +0x93 Bit 0 frei, sobald `(+0x1D3 & 0x7F) == 0` — Bit 0x80
+  bleibt unbeachtet. RE2 prueft in BEIDEN Appliern das ganze Byte (Schuss FUN_800410CC `80041270 lbu v0,467(s2)` /
+  `80041278 bne`; GL `80047138-40`). Folge im Port: Granate/Schuss treffen den Hund 15 Bilder nach HURT 10 wieder,
+  RE2 erst nach `&= 0x7F`. Vorbestehend (Filter aelter als Runde 34); fuer die Granate folgenlos (Hund stirbt an 300),
+  Sonde 166 misst nur den GL-Applier. **Vorschlag**: im Dossier benennen; den Filter nur mit gemessener Freigabe aller
+  `&= 0x7F`-Stellen auf das ganze Byte umstellen (sonst Dauersperre).
+
+### H3 (hinweis) — Kraehe: OFFEN 3 ("+0x98 hat kein Port-Feld") ist falsch
+* Der Port fuehrt +0x98 der Kraehe je Bild (`e->re2_hit_b98 = (ai_dist < 0x384) ? -350 : 0`,
+  enemy_ai_re2_crow.c:1824, Beleg @0x801001ec-208), setzt nur `re2_hit_box_set` bewusst nicht (Messer-Tor).
+  `re2_gl_typ` (Fall 0x21) nimmt deshalb den INIT-Wert -350 statt des gefuehrten Feldes. Praktisch klein.
+  **Vorschlag**: fuer 0x21 das Feld direkt lesen oder OFFEN 3 berichtigen.
+
+### H4 (hinweis) — Sektor-Kaesten: Vier-Quadranten-Pruefung (BAUPLAN O8 / Abnahme B2) fehlt
+* mess2: bei Gier 512/1536 liegt die lange Achse (Hund 900) QUER zur Blickrichtung. Grund (byte-true): FUN_8002b5d0
+  nimmt `ratan2(dz,dx) - +0x6a` (`8002b648 jal 0x80065de0` / `8002b650 lhu v1,106(s3)` / `8002b658 subu`); ratan2 =
+  +atan2 (0x80065de0, Port `re15_ratan2`), die Blickrichtung ist (cos g, -sin g) (FUN_800245d8, Port
+  `re15_dog_advance`). Bei 0/1024/2048/3072 fallen beide zusammen, bei Diagonalen nicht — Original-Eigenheit, vom Port
+  treu nachgebildet (rsin 0x800683e8 / rcos 0x80068348 wie im Original zugeordnet). Sonde 43 prueft nur Gier 0/1024
+  und kann das nicht unterscheiden. Die Radien-Grenzen sind mit +-50 statt +-1 (Abnahme B2) geprueft.
+  **Vorschlag**: Pruefung bei Gier 512 (laengs 0 / quer 1) als Pin; O8 im Dossier schliessen.
+
+### H5 (hinweis) — ungepinnte Details (eigene Mutationen gruen), Code gegen Disasm korrekt
+* G02 (S1*S2-Term FUN_80041EF8), G05 (DoT-Gier-Zucken @0x80101e10-50 / @0x80101ea8-c0), G08/G09 (0x29 Luft-Spur:
+  SE 1 bei Bild 0x13 @0x80115460-74, Ausgang HP < 50 @0x80114c58), G10 (0x2b Crossfade 0 @0x80114d80), G11 (0x23
+  +0x1ba = -(+0x82*1800) @0x8010eaf8-b18), G15 (Hund Flag-Tor 0x4A @0x8010473c-40; Sonde 123 akzeptiert FX7 0 UND 1).
+  **Vorschlag**: je eine gezielte Pruefung (bei G15 den Zufallsteil ueber den Strom festlegen, FX7 exakt pruefen).
+
+### H6 (hinweis) — Treppen-Sonde umgeht re15_game_step
+* Pruefung 201 tickt `re15_stair_tick` direkt. Dass der Normal-Zweig mit `pl->hit_react = 0` (game_step_common.c:1520,
+  @0x80031964) waehrend der Treppe NICHT laeuft, belegt erst die Code-Lesung (Treppen-Zweig :1383-1391 ist ein eigener
+  `else if`; `re15_stair_try_start` :2051 laeuft NACH dem Nullen im selben Bild). Verhalten korrekt, aber ungepinnt.
+  **Vorschlag**: Pruefung 201 ueber `re15_game_step` fahren.
+
+### H7 (hinweis) — Kakerlaken-Spurtabellen STAGE4/5 nachtragen
+* Das Dossier belegt nur STAGE3. Eigene Lesung: STAGE4 HURT @0x80119fb4 / DEATH @0x8011a00c, STAGE5 HURT @0x8011fb1c /
+  DEATH @0x8011fb74 — dieselbe Belegung; die Port-Tabelle gilt fuer alle drei Stages. **Vorschlag**: Adressen in den
+  Kommentar bei `s_spur_hurt` / `s_spur_death` und ins Dossier.
+
+### H8 (hinweis) — Spieler-Unterzustand 13: i-Frame-Setzer ohne Port-Zuordnung
+* BAUPLAN §2 ordnet "Treppen-/Kletter-i-Frames" den Modus-1-Unterzustaenden 9..13 zu; gebaut sind 11/12 (B10), 9/10
+  bestanden schon (climb_common.c:406/421/471/534). Unterzustand 13 (Dispatch 0x80073fb0[13] = 0x80038EF4, Tick
+  0x80073ff0[13] = 0x80038EFC; Clip 0x13 `80038f90 ori v0,zero,0x13` / `80038f98 sb v0,-13592(at)`) setzt Bit 0
+  `80038fc4 ori v0,v0,0x1` / `80038fcc sb v0,-13593(at)` und loescht es @0x80039078 — im Port finde ich keinen
+  Zwilling (kein Treffer auf 80038fcc/80039078). **Vorschlag**: Aktion bestimmen; falls der Port sie fuehrt, i-Frame
+  nachziehen, sonst im Dossier als nicht portierte Aktion benennen.
