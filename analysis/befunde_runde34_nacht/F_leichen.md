@@ -669,3 +669,8 @@ Vorbedingungen der Durchlaeufe (als RE15_SET_FLAG, belegt, kein Spielverhalten g
 5. Pose bei Plc_motion(1,11,0) (nicht Spur F, Dossier 8.1) — unveraendert offen.
 6. Die RE-Sonde `probe_r34n_f_leiche` misst seit dem Bau nicht mehr den Auslieferungsstand (Kopf-Vermerk); sie ist
    kein ctest und kann bei der Integration entfallen.
+7. **PSX-Ziel (vorbestehende Luecke, nicht von F eingefuehrt, ungebaut — memory reai-v2-psx-build-gap):**
+   `platform/psx/main.c` tickt das Item-Modal gar nicht (kein `re15_item_modal_tick`, kein Modal-Gate vor
+   `scd_vm_tick`) und ruft `re15_msg_tick` erst NACH `re15_game_step`. Das betrifft JEDE Welt-Aufnahme auf der
+   PSX gleich (Item-AOTs rufen dasselbe `re15_item_modal_start`); die Leichen erben es. Der Engine-Teil der Spur
+   (Texte, Ids < 32, Haken) ist plattformneutral; die PC-Reihenfolge ist main.c:5343/:5378/:5503/:7358/:7380.
