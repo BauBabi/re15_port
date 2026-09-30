@@ -298,10 +298,68 @@ die App liest/loescht sie trotzdem - gemessen unten).
   ```
   GERAET-KONSISTENT (kein `.neu`, `main06.wav` wieder richtig).
 
-**Aufwand Pruefen gegen Entpacken (Wahl fuer den Uebergang v0.8.19):** alle 3603 Dateien per SHA-256 pruefen
-4,4 s (3,1 s reines Hashen von 356678277 B) gegen vollstaendiges Entpacken 18,2 s (15,5 s Kopieren+Hashen) auf
-demselben AVD -> Pruefen ist ~4x schneller und schreibt nichts; gewaehlt: gleich grosse Dateien pruefen, nur
-abweichende neu entpacken. Bestaetigung mit der echten v0.8.19-APK unter 3.5.
+(Der Vergleich 4,4 s gegen 18,2 s taugt NICHT als Aufwandsvergleich: (viii) lief mit warmem Cache - die Dateien
+waren kurz vorher von `geraet_pruefen.py` gelesen worden -, (i) lief waehrend des N1-Baus. Fairer Vergleich
+unter 3.5.)
+
+### 3.4 (ii) Update mit einer gleich grossen Inhaltsaenderung (N0 -> N1)
+
+N0 und N1 unterscheiden sich in der Liste in GENAU einer Zeile (`difflib` ueber `assets/re15_assets.txt`):
+```
+-109306	0fac8b2a951bbd5cbd6fe592ee5aff7d4cdab24c3fb142ba04936bc19ec196ba	synchro/STAGE1/room1090/main03.wav
++109306	41edb1737570110db4576bc091fec03ec4c8c718e99276a154f3ec902ec0d1ef	synchro/STAGE1/room1090/main03.wav
+```
+(N1-Bau `build_N1.log` EXIT 0, Selbsttest 248/248, Gate gruen; danach `main03.wav` und `SHA256SUMS_android.txt`
+per `git checkout` zurueckgesetzt, `git status` leer, `cmp` gegen die Sicherung rc 0, Blob `18a44b01`.)
+Vorher auf dem Geraet: `main03.wav` sha256 `0fac8b2a...`. `lauf.sh s3ii_N1_update <N1>`:
+```
+dumpsys: versionName=v0.8.20-n1d, lastUpdateTime=07:06:51
+07:06:54.957 [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 0
+07:06:56.176 [android] entpacke synchro/STAGE1/room1090/main03.wav (geaendert)
+07:06:56.242 [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (109306 B, 6 ms), 0 per SHA-256 geprueft
+             (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 1325 ms
+```
+`adb pull` `main03.wav`: sha256 **`41edb173...d1ef` = neuer Inhalt**; `cmp -l` gegen das Original: genau Byte 109207
+(1-basiert) `1` statt `0`. `geraet_pruefen.py <N1>`: GERAET-KONSISTENT, `re15_assets_entpackt.txt` = Liste von N1
+(`3a54758c...5b62`). **Befund N1a behoben** (Gegenprobe zu 1.3 Punkt 4, dort blieb die Datei alt).
+
+### 3.5 (iv) Uebergang von v0.8.19 (Referenz-APK -> N1)
+
+`adb uninstall`, `lauf.sh s3iv_ref0819_erst build/r34a/ref_v0.8.19.apk` (versionCode 81900, alter Entpacker):
+```
+07:07:39.691 [android] Entpacke 3603 Dateien (356678277 Bytes) nach .../files
+07:07:49.923 [android] Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler
+oberste Ebene: debug.log re15_assets_ok.txt shared_assets synchro; Marker af45d06a3555f997 3603 356678277 (= A)
+main03.wav sha256 0fac8b2a... (v0.8.19-Inhalt)
+```
+Dann N1 als Update (`s3iv_uebergang_N1`):
+```
+dumpsys: versionName=v0.8.20-n1d
+07:08:17.215 [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+07:08:31.947 [android] Summe weicht ab -> neu: synchro/STAGE1/room1090/main03.wav
+07:08:32.384 [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 1 kopiert (109306 B, 27 ms), 3603 per SHA-256
+             geprueft (356678277 B, 11944 ms, 1 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 15216 ms
+oberste Ebene danach: debug.log re15_assets_entpackt.txt shared_assets synchro   (re15_assets_ok.txt geloescht)
+```
+GERAET-KONSISTENT gegen N1. Bild danach (`s3iv_bild.png`, angesehen): Titelbild wie in (i) - das Spiel laeuft.
+Genau die eine gleich grosse Aenderung wurde gefunden, die der alte Entpacker uebersah.
+
+**Aufwand, fair gemessen** (N1 installiert, abwechselnd direkt hintereinander, `s3iv_zeit_*`):
+
+| Runde | Pruefen (Liste weg -> alle 3603 per SHA-256) | Entpacken (Assets + Liste weg -> alle 3603) |
+|---|---|---|
+| 1 | 8116 ms (Hashen 6702 ms; Dateien kurz vorher gelesen) | 16485 ms (Kopieren 13586 ms) |
+| 2 | 14508 ms (Hashen 11998 ms; Dateien frisch geschrieben) | 12110 ms (Kopieren 9714 ms) |
+| Uebergang oben | 15216 ms (Hashen 11944 ms, kalt) | - |
+| (viii) oben | 4441 ms (Hashen 3130 ms, warm) | - |
+
+Der Emulator zeigt **keinen klaren Zeitvorteil** fuer eine Seite: die Streuung (Host-Last durch parallele Bau-
+Spuren, Cache-Zustand) ist groesser als der Unterschied. Das Lesen der entpackten Dateien geht durch FUSE
+(`/storage/emulated`), das Entpacken liest die APK direkt - darum ist Pruefen hier nicht billiger, obwohl es eine
+echte Teilmenge der Arbeit ist (Entpacken = APK lesen + schreiben + dieselbe SHA-256). **Gewaehlt: Pruefen**, weil
+es bei gleichem gemessenem Zeitaufwand nichts schreibt (keine 356 MB Schreiblast auf den Flash des Geraets, keine
+`.neu`-Zwischendateien) und nur abweichende Dateien neu entpackt; die Fortschrittsanzeige laeuft in beiden Faellen
+("ASSETS WERDEN EINMALIG GEPRUEFT"). Echtes Geraet: nicht gemessen (keins angeschlossen).
 
 ## 4. Gates / Suite
 
