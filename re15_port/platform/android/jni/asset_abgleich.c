@@ -4,13 +4,31 @@
  * Originalverhalten (siehe Kopf dort). Reines C99 ohne SDL/Android - der PC-Unit-Test
  * tests/unit/test_r34a_asset_abgleich.c uebersetzt genau diese Datei.
  * ============================================================================================= */
+/* POSIX-Dateifunktionen (opendir, lstat, unlink, rmdir) fuer re15_abgleich_waisen - wie asset_root_pc.c, weil
+ * CMake mit -std=c11 ohne Erweiterungen uebersetzt (glibc blendet sie sonst aus). */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1
+#endif
 #include "asset_abgleich.h"
 
+#include <dirent.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#if defined(_WIN32)
+#  include <direct.h>
+#  include <io.h>
+#  define re15_lstat stat                 /* mingw: kein lstat, keine Symlinks im Test */
+#  define RE15_IST_LINK(m) 0
+#else
+#  define re15_lstat lstat
+#  define RE15_IST_LINK(m) S_ISLNK(m)
+#endif
 
 /* =============================================================================== SHA-256 */
 /* FIPS 180-4: 4.2.2 (K = erste 32 Bit der Nachkommastellen der Kubikwurzeln der ersten 64 Primzahlen),
@@ -175,36 +193,11 @@ static int kopf_lesen(const char *z, size_t L, long long *anzahl, long long *byt
     return RE15_ABGLEICH_UNGUELTIG;
 }
 
-/* Wohlgeformtes UTF-8 nach Unicode 3.9 Tabelle 3-7 (= Pythons strenger Decoder: keine
- * ueberlangen Formen, keine Surrogate, nichts ueber U+10FFFF). */
-static int utf8_ok(const unsigned char *s, size_t n)
-{
-    size_t i = 0;
-    while (i < n) {
-        unsigned char c = s[i];
-        if (c < 0x80) { i++; continue; }
-        size_t k;
-        unsigned char lo = 0x80, hi = 0xBF;
-        if (c >= 0xC2 && c <= 0xDF) k = 1;
-        else if (c == 0xE0) { k = 2; lo = 0xA0; }
-        else if (c >= 0xE1 && c <= 0xEC) k = 2;
-        else if (c == 0xED) { k = 2; hi = 0x9F; }
-        else if (c >= 0xEE && c <= 0xEF) k = 2;
-        else if (c == 0xF0) { k = 3; lo = 0x90; }
-        else if (c >= 0xF1 && c <= 0xF3) k = 3;
-        else if (c == 0xF4) { k = 3; hi = 0x8F; }
-        else return 0;
-        if (n - i < k + 1) return 0;
-        if (s[i + 1] < lo || s[i + 1] > hi) return 0;
-        for (size_t j = 2; j <= k; j++)
-            if (s[i + j] < 0x80 || s[i + j] > 0xBF) return 0;
-        i += k + 1;
-    }
-    return 1;
-}
-
 static char ascii_klein(char c) { return (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : c; }
 
+/* Regeln im Kopf von asset_abgleich.h. Nachbesserung R4-1 (Gegenpruefung H5/U3): NUR druckbares ASCII 0x20-0x7e
+ * (bis dahin jedes wohlgeformte UTF-8 - der App-Speicher faltet Unicode, eine Dublettenregel mit ASCII-Faltung liess
+ * Kelvin-Zeichen/K durch) und jedes Segment <= RE15_ABGLEICH_SEGMENT_MAX (Namen > 255 B legt das Geraet nicht an). */
 int re15_abgleich_pfad_ok(const char *p, size_t n)
 {
     if (!p || n == 0 || n > RE15_ABGLEICH_PFAD_MAX) return 0;
@@ -214,6 +207,7 @@ int re15_abgleich_pfad_ok(const char *p, size_t n)
         if (i == n || p[i] == '/') {
             size_t l = i - seg;
             if (l == 0) return 0;                          /* fuehrendes '/', '//', '/' am Ende */
+            if (l > RE15_ABGLEICH_SEGMENT_MAX) return 0;
             if (l == 1 && p[seg] == '.') return 0;
             if (l == 2 && p[seg] == '.' && p[seg + 1] == '.') return 0;
             if (i < n) schraeg = 1;
@@ -221,7 +215,7 @@ int re15_abgleich_pfad_ok(const char *p, size_t n)
             continue;
         }
         unsigned char c = (unsigned char)p[i];
-        if (c < 0x20 || c == 0x7f || c == '\\') return 0;
+        if (c < 0x20 || c > 0x7e || c == '\\') return 0;  /* Steuerzeichen, DEL, Nicht-ASCII, '\' */
     }
     if (!schraeg) return 0;
     size_t k = sizeof RE15_ABGLEICH_NEU_ENDUNG - 1;
@@ -230,7 +224,7 @@ int re15_abgleich_pfad_ok(const char *p, size_t n)
         for (j = 0; j < k && ascii_klein(p[n - k + j]) == RE15_ABGLEICH_NEU_ENDUNG[j]; j++) {}
         if (j == k) return 0;
     }
-    return utf8_ok((const unsigned char *)p, n);
+    return 1;
 }
 
 static int pfad_vergleich(const void *a, const void *b)
@@ -449,4 +443,114 @@ int re15_abgleich_tun(int aktion, long long groesse_ist, long long groesse_soll)
     default:                                               /* GEAENDERT, NEU, Unbekanntes */
         return RE15_TUN_ENTPACKEN;
     }
+}
+
+/* =============================================================================== Waisen (R4-1, U2/E1) */
+#define WAISEN_PFAD  4096                                  /* <wurzel>/<rel> (Android PATH_MAX) */
+#define WAISEN_TIEFE 64                                    /* Ordnertiefe (die Baeume haben 4) */
+
+typedef struct {
+    const char *wurzel;
+    const re15_abgleich_liste_t *l;
+    void (*melde)(void *ctx, const char *rel, int ok);
+    void *ctx;
+    long n_weg, n_fehler;
+} waisen_t;
+
+/* Alle Namen eines Ordners (ohne "." und "..") ZUERST einlesen, dann erst loeschen - kein unlink waehrend readdir.
+ * 0 = ok (namen und n gesetzt, auch leer), -1 = Ordner unlesbar oder kein Speicher (namen enthaelt, was gelesen wurde). */
+static int namen_lesen(const char *ordner, char ***namen, size_t *n)
+{
+    *namen = NULL;
+    *n = 0;
+    DIR *d = opendir(ordner);
+    if (!d) return -1;
+    size_t kap = 0;
+    int rc = 0;
+    struct dirent *de;
+    while ((de = readdir(d)) != NULL) {
+        const char *s = de->d_name;
+        if (strcmp(s, ".") == 0 || strcmp(s, "..") == 0) continue;
+        if (*n == kap) {
+            size_t k2 = kap ? 2 * kap : 64;
+            char **m = (char **)realloc(*namen, k2 * sizeof *m);
+            if (!m) { rc = -1; break; }
+            *namen = m;
+            kap = k2;
+        }
+        size_t k = strlen(s);
+        char *c = (char *)malloc(k + 1);
+        if (!c) { rc = -1; break; }
+        memcpy(c, s, k + 1);
+        (*namen)[(*n)++] = c;
+    }
+    closedir(d);
+    return rc;
+}
+
+/* rel = Pfad relativ zu w->wurzel (Puffer WAISEN_PFAD, len Zeichen belegt) */
+static void waisen_ordner(waisen_t *w, char *rel, size_t len, int tiefe)
+{
+    char voll[WAISEN_PFAD];
+    int k0 = snprintf(voll, sizeof voll, "%s/%s", w->wurzel, rel);
+    if (k0 < 0 || (size_t)k0 >= sizeof voll) { w->n_fehler++; return; }
+    char **namen = NULL;
+    size_t n = 0;
+    if (namen_lesen(voll, &namen, &n) != 0) w->n_fehler++;   /* was gelesen wurde, wird trotzdem bearbeitet */
+    for (size_t i = 0; i < n; i++) {
+        size_t k = strlen(namen[i]);
+        if (len + 1 + k >= WAISEN_PFAD) { w->n_fehler++; free(namen[i]); continue; }
+        rel[len] = '/';
+        memcpy(rel + len + 1, namen[i], k + 1);
+        free(namen[i]);
+        int k1 = snprintf(voll, sizeof voll, "%s/%s", w->wurzel, rel);
+        struct stat sb;
+        if (k1 < 0 || (size_t)k1 >= sizeof voll) {
+            w->n_fehler++;
+        } else if (re15_lstat(voll, &sb) != 0) {
+            /* zwischen readdir und lstat verschwunden - nichts zu tun */
+        } else if (S_ISDIR(sb.st_mode) && !RE15_IST_LINK(sb.st_mode)) {
+            if (tiefe < WAISEN_TIEFE) waisen_ordner(w, rel, len + 1 + k, tiefe + 1);
+            else w->n_fehler++;
+            (void)rmdir(voll);                             /* nur wenn leer; sonst ENOTEMPTY - gewollt */
+        } else if (!re15_abgleich_suchen(w->l, rel)) {     /* Datei, Symlink, Rest: nicht in der Liste -> weg */
+            int ok = unlink(voll) == 0;
+            if (ok) w->n_weg++;
+            else w->n_fehler++;
+            if (w->melde) w->melde(w->ctx, rel, ok);
+        }
+        rel[len] = '\0';
+    }
+    free(namen);
+}
+
+long re15_abgleich_waisen(const char *wurzel, const char *const *baeume, size_t n_baeume,
+                          const re15_abgleich_liste_t *l,
+                          void (*melde)(void *ctx, const char *rel, int ok), void *ctx, long *n_fehler)
+{
+    waisen_t w;
+    memset(&w, 0, sizeof w);
+    w.wurzel = wurzel;
+    w.l = l;
+    w.melde = melde;
+    w.ctx = ctx;
+    char rel[WAISEN_PFAD];
+    char voll[WAISEN_PFAD];
+    for (size_t b = 0; wurzel && l && baeume && b < n_baeume; b++) {
+        const char *baum = baeume[b];
+        size_t k = baum ? strlen(baum) : 0;
+        /* nur ein einfacher Ordnername direkt unter der Wurzel (nie "", ".", "..", nie mit '/') */
+        if (k == 0 || k >= sizeof rel || strchr(baum, '/') || strcmp(baum, ".") == 0 || strcmp(baum, "..") == 0) {
+            w.n_fehler++;
+            continue;
+        }
+        int kv = snprintf(voll, sizeof voll, "%s/%s", wurzel, baum);
+        struct stat sb;
+        if (kv < 0 || (size_t)kv >= sizeof voll) { w.n_fehler++; continue; }
+        if (re15_lstat(voll, &sb) != 0 || !S_ISDIR(sb.st_mode) || RE15_IST_LINK(sb.st_mode)) continue;   /* kein Baum */
+        memcpy(rel, baum, k + 1);
+        waisen_ordner(&w, rel, k, 0);
+    }
+    if (n_fehler) *n_fehler = w.n_fehler;
+    return w.n_weg;
 }

@@ -7,12 +7,30 @@
  * SHA-256-Sollwerte: FIPS 180-2 Anhang B (""/"abc"/448 Bit/896 Bit/10^6 x 'a'); die Kette ueber die
  * Laengen 0..300 ist mit Python hashlib gerechnet (Dossier analysis/befunde_runde34_android/
  * android_entpacker_n1.md, Abschnitt 2).
+ *
+ * Nachbesserung R4-1 (Dossier android_r4_nachbesserung.md): Pfade nur druckbares ASCII + Segment <= 251 B
+ * (Gegenpruefung H5/U3), Zeilen nur aus Leerraum (V1), und re15_abgleich_waisen auf einem echten Ordner
+ * (Gegenpruefung U2/E1: Waisen nach Abbruch/Uebergang).
  * ============================================================================================= */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#  define _DEFAULT_SOURCE 1
+#endif
 #include "asset_abgleich.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#if defined(_WIN32)
+#  include <direct.h>
+#  define ordner_neu(p) _mkdir(p)
+#  define ordner_weg(p) _rmdir(p)
+#else
+#  include <unistd.h>
+#  define ordner_neu(p) mkdir((p), 0700)
+#  define ordner_weg(p) rmdir(p)
+#endif
 
 static int s_pruef = 0, s_fehl = 0;
 
@@ -150,9 +168,8 @@ static void test_lesen_gut(void)
     erwarte("letzte Zeile ohne \\n", "# re15 assets v2 1 5\n5\t" SB "\ta/b", 0, NULL);
     erwarte("Nullen vorn", "# re15 assets v2 01 005\n005\t" SB "\ta/b\n", 0, NULL);
     erwarte("18 Ziffern", "# re15 assets v2 1 999999999999999999\n999999999999999999\t" SB "\ta/b\n", 0, NULL);
-    erwarte("UTF-8 2 Byte", "# re15 assets v2 1 1\n1\t" SB "\ta/\xc3\x84.bin\n", 0, NULL);
-    erwarte("UTF-8 4 Byte", "# re15 assets v2 1 1\n1\t" SB "\ta/\xf0\x9f\x98\x80\n", 0, NULL);
     erwarte("Leerzeichen im Pfad", "# re15 assets v2 1 1\n1\t" SB "\ta/b c.bin\n", 0, NULL);
+    erwarte("'~' (0x7e) im Pfad", "# re15 assets v2 1 1\n1\t" SB "\ta/b~c.bin\n", 0, NULL);
     erwarte("Punkt im Segment", "# re15 assets v2 1 1\n1\t" SB "\ta/.b/..c/x.neux\n", 0, NULL);
 }
 
@@ -230,18 +247,25 @@ static void test_lesen_zeilen(void)
     erwarte("Pfad Gross/klein im Ordner", "# re15 assets v2 3 15\n5\t" SB "\tPSX/x\n5\t" SC "\tb/y\n5\t" SA "\tpsx/X\n",
             RE15_ABGLEICH_UNGUELTIG, "nur in Gross/klein verschieden");
 
-    /* Pfadlaenge: 512 Bytes gut, 513 abgelehnt */
+    /* Pfadlaenge: 512 Bytes gut, 513 abgelehnt - aus Segmenten <= 251 B ("ddddddddd/" + 251 x + "/" + 250 y) */
     {
         static char t[2048], p[600];
-        memset(p, 'x', sizeof p);
-        p[0] = 'a'; p[1] = '/';
+        memset(p, 'd', 9);
+        p[9] = '/';
+        memset(p + 10, 'x', 251);
+        p[261] = '/';
+        memset(p + 262, 'y', 251);
         p[512] = '\0';
         snprintf(t, sizeof t, "# re15 assets v2 1 5\n5\t" SB "\t%s\n", p);
-        erwarte("Pfad 512 Bytes", t, 0, NULL);
-        p[512] = 'x'; p[513] = '\0';
+        erwarte("Pfad 512 Bytes (Segmente 9/251/250)", t, 0, NULL);
+        p[512] = 'y'; p[513] = '\0';                  /* letztes Segment 251 B, Pfad 513 B */
         snprintf(t, sizeof t, "# re15 assets v2 1 5\n5\t" SB "\t%s\n", p);
         erwarte("Pfad 513 Bytes", t, RE15_ABGLEICH_UNGUELTIG, "unzulaessiger Pfad");
     }
+    /* Zeilen nur aus Leerraum (Nachbesserung R4-1, Gegenpruefung V1): KEINE leere Zeile -> ganze Liste ungueltig */
+    erwarte("Zeile nur Leerzeichen", "# re15 assets v2 1 5\n5\t" SB "\ta/b\n   \n", RE15_ABGLEICH_UNGUELTIG, "Groesse");
+    erwarte("Zeile nur Tab", "# re15 assets v2 1 5\n5\t" SB "\ta/b\n\t\n", RE15_ABGLEICH_UNGUELTIG, "Groesse");
+    erwarte("Zeile nur \\r (leer)", "# re15 assets v2 1 5\n5\t" SB "\ta/b\n\r\n", 0, NULL);
     /* NUL-Byte (Laenge explizit) */
     {
         static const char t[] = "# re15 assets v2 1 5\n5\t" SB "\ta/b\0c\n";
@@ -292,6 +316,126 @@ static void test_pfad_ok(void)
     PRUEFE(re15_abgleich_pfad_ok("../a", 4) == 0, "../a");
     PRUEFE(re15_abgleich_pfad_ok("./a/b", 5) == 0, "./a/b");
     PRUEFE(re15_abgleich_pfad_ok("a/...", 5) == 1, "'...' ist ein Name");
+}
+
+/* Nachbesserung R4-1 (Gegenpruefung H5/U3): nur druckbares ASCII 0x20-0x7e, Segment <= 251 B. Der App-Speicher
+ * faltet Unicode-Gross/klein und -Normalform (Emulator API 36: Kelvin-Zeichen/K, e+U+0301/e-acute, 'ss'/U+00DF, Ae/ae
+ * je EINE Datei) - wohlgeformtes UTF-8 reicht deshalb nicht mehr. */
+static void test_pfad_ascii(void)
+{
+    PRUEFE(re15_abgleich_pfad_ok("a/ ~", 4) == 1, "0x20 und 0x7e erlaubt");
+    PRUEFE(re15_abgleich_pfad_ok("a/\x1f", 3) == 0, "0x1f");
+    PRUEFE(re15_abgleich_pfad_ok("a/\x7f", 3) == 0, "0x7f");
+    PRUEFE(re15_abgleich_pfad_ok("a/\x80", 3) == 0, "0x80");
+    PRUEFE(re15_abgleich_pfad_ok("a/\xff", 3) == 0, "0xff");
+    PRUEFE(re15_abgleich_pfad_ok("a/\xc3\x84.bin", 8) == 0, "UTF-8 2 Byte (Ae)");
+    PRUEFE(re15_abgleich_pfad_ok("a/\xe2\x84\xaa.bin", 9) == 0, "Kelvin-Zeichen U+212A");
+    PRUEFE(re15_abgleich_pfad_ok("a/e\xcc\x81.bin", 9) == 0, "NFD e + U+0301");
+    PRUEFE(re15_abgleich_pfad_ok("a/stra\xc3\x9f" "e", 9) == 0, "U+00DF");
+    PRUEFE(re15_abgleich_pfad_ok("a/\xf0\x9f\x98\x80", 6) == 0, "UTF-8 4 Byte");
+    erwarte("UTF-8 2 Byte in der Liste", "# re15 assets v2 1 1\n1\t" SB "\ta/\xc3\x84.bin\n", RE15_ABGLEICH_UNGUELTIG, "unzulaessiger Pfad");
+    erwarte("Kelvin-Paar in der Liste", "# re15 assets v2 2 10\n5\t" SB "\tshared_assets/PSX/K.bin\n5\t" SC "\tshared_assets/PSX/\xe2\x84\xaa.bin\n",
+            RE15_ABGLEICH_UNGUELTIG, "unzulaessiger Pfad");
+    {
+        char p[600];
+        p[0] = 'a'; p[1] = '/';
+        memset(p + 2, 'x', 252);
+        PRUEFE(re15_abgleich_pfad_ok(p, 2 + 251) == 1, "Segment 251 B");
+        PRUEFE(re15_abgleich_pfad_ok(p, 2 + 252) == 0, "Segment 252 B");
+        memset(p, 'x', 252);
+        p[252] = '/'; p[253] = 'a';
+        PRUEFE(re15_abgleich_pfad_ok(p + 1, 253) == 1, "Ordner-Segment 251 B");
+        PRUEFE(re15_abgleich_pfad_ok(p, 254) == 0, "Ordner-Segment 252 B");
+    }
+}
+
+/* ------------------------------------------------------------------------------ Waisen (R4-1, U2/E1) */
+static void datei_neu(const char *p, const char *inhalt)
+{
+    FILE *f = fopen(p, "wb");
+    PRUEFE(f != NULL, "Datei nicht anlegbar: %s", p);
+    if (f) { fputs(inhalt, f); fclose(f); }
+}
+
+static int gibt_es(const char *p)
+{
+    struct stat sb;
+    return stat(p, &sb) == 0;
+}
+
+typedef struct { int n_ok, n_fehl; char letzte[256]; } melde_t;
+
+static void melden(void *ctx, const char *rel, int ok)
+{
+    melde_t *m = (melde_t *)ctx;
+    if (ok) m->n_ok++; else m->n_fehl++;
+    snprintf(m->letzte, sizeof m->letzte, "%s", rel);
+}
+
+#define WR "r34a_waisen_probe"
+static const char *const W_DATEIEN[] = {
+    WR "/shared_assets/PSX/A.BIN", WR "/shared_assets/PSX/B.BIN", WR "/shared_assets/PSX/A.BIN.neu",
+    WR "/shared_assets/ALT/C.BIN", WR "/synchro/STAGE1/x.wav", WR "/synchro/STAGE9/y.wav", WR "/andere/z.bin",
+    WR "/re15_card.mcr"
+};
+static const char *const W_ORDNER[] = {   /* tiefste zuerst (Aufraeumen) */
+    WR "/shared_assets/PSX", WR "/shared_assets/ALT", WR "/shared_assets/LEER", WR "/shared_assets",
+    WR "/synchro/STAGE1", WR "/synchro/STAGE9", WR "/synchro", WR "/andere", WR
+};
+
+static void waisen_aufraeumen(void)
+{
+    for (size_t i = 0; i < sizeof W_DATEIEN / sizeof *W_DATEIEN; i++) remove(W_DATEIEN[i]);
+    for (size_t i = 0; i < sizeof W_ORDNER / sizeof *W_ORDNER; i++) (void)ordner_weg(W_ORDNER[i]);
+}
+
+static void test_waisen(void)
+{
+    waisen_aufraeumen();                                  /* Rest eines abgebrochenen Laufs */
+    for (size_t i = sizeof W_ORDNER / sizeof *W_ORDNER; i-- > 0;) (void)ordner_neu(W_ORDNER[i]);
+    for (size_t i = 0; i < sizeof W_DATEIEN / sizeof *W_DATEIEN; i++) datei_neu(W_DATEIEN[i], "x");
+    PRUEFE(gibt_es(WR "/shared_assets/LEER"), "Ordner LEER angelegt");
+
+    re15_abgleich_liste_t l;
+    char fehler[256];
+    const char *text = "# re15 assets v2 3 15\n5\t" SA "\tshared_assets/PSX/A.BIN\n5\t" SB "\tshared_assets/PSX/FEHLT.BIN\n"
+                       "5\t" SC "\tsynchro/STAGE1/x.wav\n";
+    int rc = re15_abgleich_lesen(&l, text, strlen(text), fehler, sizeof fehler);
+    PRUEFE(rc == 0, "Waisen-Liste: rc %d (%s)", rc, fehler);
+    static const char *const baeume[] = { "shared_assets", "synchro", "gibt_es_nicht" };
+    melde_t m;
+    memset(&m, 0, sizeof m);
+    long nf = -1;
+    long n = re15_abgleich_waisen(WR, baeume, 3, &l, melden, &m, &nf);
+    PRUEFE(n == 4 && nf == 0 && m.n_ok == 4 && m.n_fehl == 0, "Waisen: %ld geloescht, %ld Fehler, gemeldet %d/%d", n, nf, m.n_ok, m.n_fehl);
+    PRUEFE(gibt_es(WR "/shared_assets/PSX/A.BIN"), "gelistete Datei bleibt");
+    PRUEFE(gibt_es(WR "/synchro/STAGE1/x.wav"), "gelistete Datei bleibt (synchro)");
+    PRUEFE(!gibt_es(WR "/shared_assets/PSX/B.BIN"), "Waise weg");
+    PRUEFE(!gibt_es(WR "/shared_assets/PSX/A.BIN.neu"), ".neu-Rest weg");
+    PRUEFE(!gibt_es(WR "/shared_assets/ALT/C.BIN") && !gibt_es(WR "/shared_assets/ALT"), "Waise + leerer Ordner weg");
+    PRUEFE(!gibt_es(WR "/synchro/STAGE9"), "leerer Ordner nach der Waise weg");
+    PRUEFE(!gibt_es(WR "/shared_assets/LEER"), "leerer Ordner weg");
+    PRUEFE(gibt_es(WR "/shared_assets/PSX") && gibt_es(WR "/shared_assets") && gibt_es(WR "/synchro"), "Baeume bleiben");
+    PRUEFE(gibt_es(WR "/andere/z.bin"), "ausserhalb der Baeume unberuehrt");
+    PRUEFE(gibt_es(WR "/re15_card.mcr"), "Spielstand in der Wurzel unberuehrt");
+
+    /* zweiter Lauf: nichts mehr zu tun */
+    memset(&m, 0, sizeof m);
+    n = re15_abgleich_waisen(WR, baeume, 3, &l, melden, &m, &nf);
+    PRUEFE(n == 0 && nf == 0 && m.n_ok == 0, "zweiter Lauf: %ld geloescht, %ld Fehler", n, nf);
+
+    /* unzulaessige Baumnamen: nie ausserhalb der Wurzel, nie die Wurzel selbst */
+    static const char *const schlecht[] = { "", ".", "..", "shared_assets/PSX", "../x" };
+    datei_neu(WR "/shared_assets/PSX/B.BIN", "x");
+    n = re15_abgleich_waisen(WR, schlecht, 5, &l, NULL, NULL, &nf);
+    PRUEFE(n == 0 && nf == 5 && gibt_es(WR "/shared_assets/PSX/B.BIN") && gibt_es(WR "/andere/z.bin"),
+           "schlechte Baumnamen: %ld geloescht, %ld Fehler", n, nf);
+    n = re15_abgleich_waisen(WR, baeume, 3, NULL, NULL, NULL, &nf);
+    PRUEFE(n == 0 && gibt_es(WR "/shared_assets/PSX/B.BIN"), "ohne Liste: nichts geloescht");
+
+    re15_abgleich_frei(&l);
+    waisen_aufraeumen();
+    PRUEFE(!gibt_es(WR), "Probeordner aufgeraeumt");
 }
 
 /* ------------------------------------------------------------------------------ Abgleich */
@@ -390,8 +534,10 @@ int main(void)
     test_lesen_kopf();
     test_lesen_zeilen();
     test_pfad_ok();
+    test_pfad_ascii();
     test_planen();
     test_tun();
+    test_waisen();
     printf("== r34a asset_abgleich: %d Pruefungen, %d Fehler ==\n", s_pruef, s_fehl);
     return s_fehl ? 1 : 0;
 }

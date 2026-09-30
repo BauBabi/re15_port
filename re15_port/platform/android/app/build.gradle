@@ -148,18 +148,28 @@ tasks.register("writeAssetManifest") {
         fileTree(assetStage) { exclude "re15_assets.txt" }.visit { d ->
             if (!d.isDirectory()) {
                 def rel = d.relativePath.pathString
-                // Grundregeln der Liste v2 (vollstaendig: jni/asset_abgleich.h, geprueft von
-                // release/apk_asset_gate.py) - hier nur, damit der Bau frueh und deutlich abbricht
-                if (!rel.contains("/") || rel.contains("\\") || rel.getBytes("UTF-8").length > 512
+                // Regeln der Liste v2 (vollstaendig: jni/asset_abgleich.h, geprueft von
+                // release/apk_asset_gate.py) - hier, damit der Bau frueh und deutlich abbricht.
+                // Nachbesserung R4-1 (Gegenpruefung H5/U3): NUR druckbares ASCII 0x20-0x7e (der App-Speicher faltet
+                // Unicode-Gross/klein und -Normalform - Kelvin-Zeichen/K waeren auf dem Geraet EINE Datei) und jedes
+                // Segment <= 251 Bytes (Geraet: Name <= 255 B, der Entpacker haengt ".neu" an).
+                if (!rel.contains("/") || rel.contains("\\") || rel.length() > 512
                         || rel.toLowerCase(Locale.ROOT).endsWith(".neu")
-                        || rel.chars().anyMatch { int c -> c < 0x20 || c == 0x7f })
-                    throw new GradleException("Asset-Pfad verletzt die Regeln der Liste v2: '${rel}'")
+                        || rel.chars().anyMatch { int c -> c < 0x20 || c > 0x7e }
+                        || rel.split("/", -1).any { String s -> s.isEmpty() || s == "." || s == ".." || s.length() > 251 })
+                    throw new GradleException("Asset-Pfad verletzt die Regeln der Liste v2 (nur druckbares ASCII, " +
+                                              "Segment 1-251 B, siehe jni/asset_abgleich.h): '${rel}'")
                 def len = d.file.length()
                 rows << [rel, len, sha256(d.file)]
                 total += len
             }
         }
-        rows.sort { a, b -> a[0] <=> b[0] }      // nach Pfad (die Pfade sind ASCII: UTF-16 = Bytefolge)
+        // Pfade, die sich nur in ASCII-Gross/klein unterscheiden: auf dem Geraet EINE Datei (Dublettenregel der Liste v2)
+        def falten = rows.groupBy { it[0].toLowerCase(Locale.ROOT) }.findAll { k, v -> v.size() > 1 }
+        if (!falten.isEmpty())
+            throw new GradleException("Asset-Pfade nur in Gross/klein verschieden (auf dem Geraet EINE Datei): " +
+                                      falten.values().collect { v -> v.collect { it[0] }.join(" / ") }.join(", "))
+        rows.sort { a, b -> a[0] <=> b[0] }      // nach Pfad (reines ASCII: UTF-16-Reihenfolge = Bytefolge)
         def text = "# re15 assets v2 ${rows.size()} ${total}\n" +
                    rows.collect { "${it[1]}\t${it[2]}\t${it[0]}" }.join("\n") + "\n"
         manifest.setText(text, "UTF-8")

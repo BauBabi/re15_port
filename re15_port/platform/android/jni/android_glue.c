@@ -42,6 +42,14 @@
  *     "a/X.BIN" alt, "a/x.bin" neu waere sonst nach dem Entpacken wieder geloescht). Ohne gueltige alte Liste (Erstinstallation, v0.8.19-Geraet mit
  *     nur dem alten Marker, abgebrochener Lauf) -> jede gleich grosse Datei per SHA-256 pruefen,
  *     sonst entpacken (Aufwand gemessen: Dossier Abschnitt 3).
+ * Nachbesserung R4-1 (Dossier analysis/befunde_runde34_android/android_r4_nachbesserung.md):
+ *   - U2/E1 Waisen: ohne gueltige alte Liste werden shared_assets/ und synchro/ vor dem Entpacken durchgegangen,
+ *     alles, was nicht in der neuen Liste steht (auch .neu-Reste), wird geloescht (re15_abgleich_waisen) - vorher
+ *     blieben nach Abbruch + Update bzw. beim Uebergang von v0.8.19 gestrichene Dateien fuer immer liegen.
+ *   - U4 fail closed: jeder Fehler (kein AssetManager, Liste fehlt/ungueltig/v1, kein Speicher, Dateifehler) haelt
+ *     die Meldung stehen, bis die App geschlossen wird - das Spiel startet nicht mit altem/gemischtem Baum.
+ *   - U1: scheitert das Loeschen der "zuletzt entpackt"-Liste, laeuft kein Lauf.
+ *   - H5/U3 (asset_abgleich.c): Pfade nur druckbares ASCII, Segment <= 251 B.
  * ============================================================================================= */
 #include <SDL.h>
 #include <SDL_system.h>
@@ -316,9 +324,44 @@ static void draw_progress(SDL_Renderer *r, const char *l1, const char *l2, doubl
     SDL_PumpEvents();
 }
 
-static void fehler_zeigen(SDL_Renderer *r, const char *text)
+/* Fail closed (Nachbesserung R4-1, Gegenpruefung U4): ohne vollstaendigen Asset-Baum startet das Spiel NICHT. Bis dahin
+ * stand jede Fehlermeldung ~3 s (90 x 33 ms) auf dem Schirm, dann lief main() weiter - bei einem Update mit dem ALTEN
+ * bzw. einem gemischten Baum (das Symptom von N1a, nur mit Hinweis). re15_android_bootstrap_assets() hat keine
+ * Rueckgabe, und main.c (PC-Code) bleibt unberuehrt: deshalb haelt diese Funktion die Meldung stehen, bis die App
+ * geschlossen wird (SDL_QUIT), und beendet dann den Prozess. Die Ursache steht in debug.log und logcat (Tag re15). */
+static _Noreturn void fehler_halten(SDL_Renderer *r, const char *text)
 {
-    for (int i = 0; i < 90; i++) { draw_progress(r, "RE1.5 PORT", text, 0); SDL_Delay(33); }
+    fprintf(stderr, "[android] ABBRUCH: %s - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)\n",
+            text);
+    fflush(stderr);
+    LOGE("[android] ABBRUCH: %s - das Spiel startet nicht (Meldung bleibt stehen)", text);
+    for (;;) {
+        draw_progress(r, "RE1.5 PORT - FEHLER", text, 0);
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            if (ev.type == SDL_QUIT || ev.type == SDL_APP_TERMINATING) {
+                LOGI("[android] App geschlossen - Prozess endet ohne Spielstart");
+                fflush(stderr);
+                exit(1);
+            }
+        }
+        SDL_Delay(100);
+    }
+}
+
+/* re15_abgleich_waisen meldet je Datei (Nachbesserung R4-1, U2/E1). Nicht loeschbar = Warnung, kein Abbruch: eine Waise
+ * steht in keiner Liste, die Engine oeffnet sie nie - sie kostet nur Platz. */
+static void waise_melden(void *ctx, const char *rel, int ok)
+{
+    (void)ctx;
+    if (ok) {
+        fprintf(stderr, "[android] Waise entfernt (steht in keiner Liste): %s\n", rel);
+        LOGI("[android] Waise entfernt (steht in keiner Liste): %s", rel);
+    } else {
+        int err = errno;
+        fprintf(stderr, "[android] WARNUNG: Waise nicht loeschbar: %s (%s)\n", rel, strerror(err));
+        LOGE("[android] Waise nicht loeschbar: %s (%s)", rel, strerror(err));
+    }
 }
 
 /* ------------------------------------------------------------------------------ 2. Assets */
@@ -334,8 +377,7 @@ void re15_android_bootstrap_assets(void)
     if (!am) {
         fprintf(stderr, "[android] FEHLER: kein AAssetManager (Activity.getAssets) - keine Assets.\n");
         LOGE("[android] kein AAssetManager (Activity.getAssets)");
-        fehler_zeigen(r, "FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS");
-        return;
+        fehler_halten(r, "FEHLER: KEIN ZUGRIFF AUF DIE APK-ASSETS");
     }
 
     size_t mlen = 0;
@@ -343,18 +385,16 @@ void re15_android_bootstrap_assets(void)
     if (!man) {
         fprintf(stderr, "[android] FEHLER: assets/%s fehlt in der APK (oder > 64 MiB) - keine Assets.\n", LISTE_APK);
         LOGE("[android] assets/%s fehlt in der APK (oder > 64 MiB)", LISTE_APK);
-        fehler_zeigen(r, "FEHLER: ASSET-LISTE FEHLT IN DER APK");
-        return;
+        fehler_halten(r, "FEHLER: ASSET-LISTE FEHLT IN DER APK");
     }
     re15_abgleich_liste_t neu;
     int rc = re15_abgleich_lesen(&neu, man, mlen, fehler, sizeof fehler);
     if (rc != 0) {
         fprintf(stderr, "[android] FEHLER: assets/%s ungueltig (%s) - es wird NICHTS entpackt.\n", LISTE_APK, fehler);
         LOGE("[android] assets/%s ungueltig: %s", LISTE_APK, fehler);
-        fehler_zeigen(r, rc == RE15_ABGLEICH_ALTES_FORMAT ? "FEHLER: ASSET-LISTE IM ALTEN FORMAT"
-                                                          : "FEHLER: ASSET-LISTE DER APK UNGUELTIG");
         free(man);
-        return;
+        fehler_halten(r, rc == RE15_ABGLEICH_ALTES_FORMAT ? "FEHLER: ASSET-LISTE IM ALTEN FORMAT"
+                                                          : "FEHLER: ASSET-LISTE DER APK UNGUELTIG");
     }
 
     char pf_liste[PATH_MAX], pf_marker[PATH_MAX], pf_liste_neu[PATH_MAX];
@@ -383,9 +423,8 @@ void re15_android_bootstrap_assets(void)
     re15_abgleich_plan_t plan;
     if (re15_abgleich_planen(&plan, &neu, gleich ? &neu : (alt_ok ? &alt : NULL)) != 0) {
         LOGE("[android] kein Speicher fuer den Abgleich");
-        fehler_zeigen(r, "FEHLER: KEIN SPEICHER");
         re15_abgleich_frei(&alt); re15_abgleich_frei(&neu); free(man);
-        return;
+        fehler_halten(r, "FEHLER: KEIN SPEICHER");
     }
 
     char dst[PATH_MAX], tmp[PATH_MAX];
@@ -410,11 +449,33 @@ void re15_android_bootstrap_assets(void)
         LOGI("[android] Liste = zuletzt entpackt, aber %zu Dateien fehlen/falsche Groesse -> neu entpacken", falsch);
     }
 
-    /* ---- Lauf, der etwas aendern kann: "zuletzt entpackt" ZUERST weg (haltbar) */
+    /* ---- Lauf, der etwas aendern kann: "zuletzt entpackt" ZUERST weg (haltbar). Nachbesserung R4-1 (Gegenpruefung U1):
+     *      scheitert das Loeschen (ausser "gibt es nicht"), laeuft KEIN Lauf - sonst koennte nach einem Abbruch die ALTE
+     *      Liste stehen bleiben und mehr versprechen, als auf der Platte liegt. */
     const char *modus = gleich ? "Groessen-Nachlauf" : alt_ok ? "Update" : v1_marker ? "Uebergang v0.8.19" : "ohne Liste";
-    unlink(pf_liste);
+    if (unlink(pf_liste) != 0 && errno != ENOENT) {
+        int err = errno;
+        fprintf(stderr, "[android] FEHLER: %s nicht loeschbar (%s) - ohne das waere ein Abbruch nicht erkennbar\n",
+                pf_liste, strerror(err));
+        LOGE("[android] %s nicht loeschbar: %s", pf_liste, strerror(err));
+        re15_abgleich_plan_frei(&plan); re15_abgleich_frei(&alt); re15_abgleich_frei(&neu); free(man);
+        fehler_halten(r, "FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG");
+    }
     unlink(pf_liste_neu);
     ordner_haltbar(s_root);
+
+    /* Waisen (Nachbesserung R4-1, Gegenpruefung U2 / echter Lauf E1): ohne gueltige "zuletzt entpackt"-Liste
+     * (Erstinstallation, Uebergang v0.8.19, abgebrochener Lauf) weiss niemand, welche Dateien eines frueheren Stands
+     * noch liegen - geloescht wurde bis dahin nur, was eine ALTE Liste nannte, und .neu-Reste nur fuer Pfade der NEUEN.
+     * Abbruch + Update, das den abgebrochenen Pfad streicht, liess die halbe .neu bzw. die fertige Datei fuer immer
+     * liegen. Jetzt: shared_assets/ und synchro/ (gehoeren allein dem Entpacker; die Engine schreibt dort nichts)
+     * durchgehen und alles, was nicht in der neuen Liste steht, VOR dem Entpacken loeschen. */
+    long n_waisen = 0, n_waisen_fehler = 0;
+    if (!gleich && !alt_ok) {
+        static const char *const baeume[] = { "shared_assets", "synchro" };
+        n_waisen = re15_abgleich_waisen(s_root, baeume, sizeof baeume / sizeof *baeume, &neu, waise_melden, NULL,
+                                        &n_waisen_fehler);
+    }
     fprintf(stderr, "[android] Abgleich (%s): %zu Dateien (%lld Bytes) - behalten %zu, geaendert %zu, neu %zu, pruefen %zu, weg %zu\n",
             modus, neu.n, neu.summe, plan.n_behalten, plan.n_geaendert, plan.n_neu, plan.n_pruefen, plan.n_weg);
     LOGI("[android] Abgleich (%s): %zu Dateien (%lld Bytes) - behalten %zu, geaendert %zu, neu %zu, pruefen %zu, weg %zu",
@@ -505,19 +566,21 @@ void re15_android_bootstrap_assets(void)
     }
     Uint32 ms = SDL_GetTicks() - t0;
     fprintf(stderr, "[android] Entpacken fertig (%s): %zu geprueft, %ld kopiert (%lld B, %u ms), %ld per SHA-256 geprueft "
-                    "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld .neu-Reste, %ld Fehler, %u ms\n",
+                    "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld Waisen entfernt (%ld nicht loeschbar), "
+                    "%ld .neu-Reste, %ld Fehler, %u ms\n",
             modus, neu.n, n_kopiert, b_kopiert, (unsigned)ms_kopie, n_summe, b_summe, (unsigned)ms_summe, n_summe_neu,
-            n_weg, n_reste, n_fehler, (unsigned)ms);
+            n_weg, n_waisen, n_waisen_fehler, n_reste, n_fehler, (unsigned)ms);
     LOGI("[android] Entpacken fertig (%s): %zu geprueft, %ld kopiert (%lld B, %u ms), %ld per SHA-256 geprueft "
-         "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld .neu-Reste, %ld Fehler, %u ms",
+         "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld Waisen entfernt (%ld nicht loeschbar), "
+         "%ld .neu-Reste, %ld Fehler, %u ms",
          modus, neu.n, n_kopiert, b_kopiert, (unsigned)ms_kopie, n_summe, b_summe, (unsigned)ms_summe, n_summe_neu,
-         n_weg, n_reste, n_fehler, (unsigned)ms);
-    if (n_fehler) {
-        snprintf(l2, sizeof l2, "%ld DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG", n_fehler);
-        for (int i = 0; i < 90; i++) { draw_progress(r, "RE1.5 PORT", l2, 1.0); SDL_Delay(33); }
-    }
+         n_weg, n_waisen, n_waisen_fehler, n_reste, n_fehler, (unsigned)ms);
     re15_abgleich_plan_frei(&plan);
     re15_abgleich_frei(&alt);
     re15_abgleich_frei(&neu);
     free(man);
+    if (n_fehler) {                                       /* fail closed (R4-1, U4): kein Spielstart mit Loch im Baum */
+        snprintf(l2, sizeof l2, "%ld DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG", n_fehler);
+        fehler_halten(r, l2);
+    }
 }

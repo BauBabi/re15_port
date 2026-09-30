@@ -5,8 +5,9 @@
  * PORT-WAHL, kein Originalverhalten: die PSX las von CD, der PC-Port liest den Paketordner.
  * Nur die Android-App muss ihre Assets aus der APK in den App-Speicherordner entpacken
  * (android_glue.c re15_android_bootstrap_assets). Diese Datei ist der reine C-Teil davon -
- * ohne SDL, ohne Android -, damit ein PC-Unit-Test (tests/unit/test_r34a_asset_abgleich.c,
- * Sonde probes/r34a_android.cmake) GENAU diesen Code uebersetzt und prueft.
+ * ohne SDL, ohne Android (nur C und fuer re15_abgleich_waisen POSIX-Dateifunktionen) -, damit ein
+ * PC-Unit-Test (tests/unit/test_r34a_asset_abgleich.c, Sonde probes/r34a_android.cmake) GENAU diesen
+ * Code uebersetzt und prueft.
  *
  * WARUM (Befund N1a): bis v0.8.19 trug die Liste nur "<bytes>\t<pfad>", und der Marker
  * re15_assets_ok.txt war ein FNV-1a ueber diese Liste. Aenderte ein Update eine Datei bei
@@ -22,13 +23,17 @@
  *     "# re15 assets <n> <b>" (v1, bis v0.8.19) wird erkannt und ABGELEHNT (eigene Rueckgabe).
  *   - Datenzeile: 1-18 Ziffern, Tab, 64 Zeichen [0-9a-f] (Grossbuchstaben NICHT), Tab, Pfad.
  *   - Pfad: 1-512 Bytes, relativ, mindestens ein '/' (Assets liegen nie direkt im Speicherordner -
- *     dort liegen Logs, Spielstand und diese Listen), kein '\\', keine Steuerzeichen (< 0x20,
- *     0x7f), kein leeres/'.'/'..'-Segment, gueltiges UTF-8 (wie libziparchive die APK-Namen
- *     verlangt), endet nicht auf ".neu" (ASCII, Gross/klein egal: Endung der Zwischendatei).
+ *     dort liegen Logs, Spielstand und diese Listen), NUR druckbares ASCII 0x20-0x7e (also keine
+ *     Steuerzeichen, kein 0x7f, kein Byte >= 0x80), kein '\\', jedes Segment 1-251 Bytes und nicht
+ *     '.'/'..', endet nicht auf ".neu" (ASCII, Gross/klein egal: Endung der Zwischendatei).
+ *     Nachbesserung R4-1 (Gegenpruefung H5/U3): bis dahin war jedes wohlgeformte UTF-8 erlaubt - der
+ *     App-Speicher faltet aber Unicode-Gross/klein, NFC/NFD und 'ss'/U+00DF (Emulator API 36:
+ *     Kelvin-Zeichen/K je EINE Datei), NTFS nicht; ein solches Paar wurde auf dem Geraet still eine
+ *     Datei mit falschem Inhalt. Und Namen > 255 B legt das Geraet nicht an, '.neu' haengt 4 B an.
  *   - weitere '#'-Zeilen, doppelte Pfade (auch nur in ASCII-Gross/klein verschieden: der
- *     App-Speicher ist case-insensitiv), NUL-Bytes, keine Datei, Kopfzeile passt nicht zu den
- *     Zeilen, Liste > 64 MiB -> die GANZE Liste ist ungueltig (fail closed: lieber gar nicht
- *     entpacken als still mit einem Loch im Asset-Baum).
+ *     App-Speicher ist case-insensitiv; mit reinem ASCII ist diese Faltung vollstaendig), NUL-Bytes,
+ *     keine Datei, Kopfzeile passt nicht zu den Zeilen, Liste > 64 MiB -> die GANZE Liste ist
+ *     ungueltig (fail closed: lieber gar nicht entpacken als still mit einem Loch im Asset-Baum).
  * ============================================================================================= */
 #ifndef RE15_ASSET_ABGLEICH_H
 #define RE15_ASSET_ABGLEICH_H
@@ -45,6 +50,7 @@ extern "C" {
 #define RE15_ABGLEICH_LISTE_MAX   (64u << 20)           /* wie bisher read_apk_asset: > 64 MiB -> abgelehnt */
 #define RE15_ABGLEICH_ZAHL_MAX    18                    /* Ziffern je Zahl (< 2^63, kein Ueberlauf) */
 #define RE15_ABGLEICH_PFAD_MAX    512                   /* Bytes je Pfad (Puffer im Entpacker: PATH_MAX) */
+#define RE15_ABGLEICH_SEGMENT_MAX 251                   /* Bytes je Segment: Geraet Name <= 255 B, dazu ".neu" */
 #define RE15_ABGLEICH_NEU_ENDUNG  ".neu"                /* Zwischendatei <ziel>.neu, danach rename() */
 
 /* ---------------------------------------------------------------------------- SHA-256 (FIPS 180-4) */
@@ -117,6 +123,19 @@ enum {
     RE15_TUN_SUMME_PRUEFEN = 2     /* gleich gross, Stand unbekannt: sha256 der Datei gegen die Liste */
 };
 int  re15_abgleich_tun(int aktion, long long groesse_ist, long long groesse_soll);
+
+/* ---------------------------------------------------------------------------- Waisen (Nachbesserung R4-1, U2/E1) */
+/* Unter <wurzel>/<baum> (je Eintrag von baeume) jede Datei, deren Pfad relativ zu <wurzel> NICHT (bytegenau) in l
+ * steht, loeschen - auch .neu-Reste und Symlinks (nie gefolgt) -, danach leere Unterordner (die Baeume selbst bleiben).
+ * Gedacht fuer die Baeume, die allein dem Entpacker gehoeren (shared_assets, synchro: die Engine schreibt dort nichts).
+ * Aufgerufen, wenn es keine gueltige "zuletzt entpackt"-Liste gibt (Erstinstallation, Uebergang v0.8.19, abgebrochener
+ * Lauf) - dann weiss sonst niemand, was frueher entpackt wurde, und Dateien, die die neue Liste nicht mehr fuehrt,
+ * blieben fuer immer liegen (Gegenpruefung R4-1: halbe CDEMD0.EMS.neu bzw. ganze CDEMD0.EMS als Waise).
+ * melde(ctx, rel, ok) je Datei (ok 1 = geloescht, 0 = nicht loeschbar; melde darf NULL sein).
+ * Rueckgabe: Zahl der geloeschten Dateien; *n_fehler (darf NULL sein) = nicht loeschbare Dateien + unlesbare Ordner. */
+long re15_abgleich_waisen(const char *wurzel, const char *const *baeume, size_t n_baeume,
+                          const re15_abgleich_liste_t *l,
+                          void (*melde)(void *ctx, const char *rel, int ok), void *ctx, long *n_fehler);
 
 #ifdef __cplusplus
 }

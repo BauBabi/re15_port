@@ -43,6 +43,11 @@ Das Skript
    * `zipalign -c -P 16 4`: Ausrichtung (Android 11+ installiert sonst nicht),
    * `apksigner verify`: gueltige v2/v3-Signatur, genau ein Signer, und zwar der aus
      `release/apk_signer.sha256` (Signer-Pin, siehe unten),
+   * das Asset-Gate laeuft nur als private Kopie, deren sha256 in `release/apk_asset_gate.sha256`
+     steht (Gate-Pin, siehe unten), und jedes Urteil kommt aus Rueckgabe UND Ausgabe: die letzte Zeile
+     muss die Schlusszeile sein, die Zaehlzeilen muessen passen, beim Selbsttest jede Fallzeile
+     `[ok]` mit `rc = soll` (Nachbesserung R4-1 - vorher gab ein leeres Gate Rueckgabe 0, und alles
+     ging durch); `APK_GATE_DATEI` aus der Umgebung wird ignoriert,
    * `release/apk_asset_gate.py --selbsttest`: das Gate muss seine guten Mini-APKs annehmen und
      jede Faelschung ablehnen, sonst wird ihm nicht getraut,
    * die volle Asset-Pruefung: JEDE Datei der fuenf Asset-Baeume liegt mit gleicher Groesse und
@@ -61,6 +66,9 @@ Kette (dazu: neuer als der letzte Commit an `engine`, `include`, `platform/pc`,
 muss die der geprueften Kopie sein. Ein Android-Satz kommt nur in `SHA256SUMS.txt` und in git,
 wenn er in DIESEM Lauf so entstanden ist. Liegt ohne APK ein Satz derselben Version da, bricht
 make_package ab; `--ohne-android` schnuert nur die PC-Saetze und entfernt den alten Satz.
+`SHA256SUMS.txt` und `git add` nehmen nur eine Positivliste (Saetze dieses Laufs, bewusst der Satz der
+anderen PC-Plattform derselben Version, Android nur aus diesem Lauf); jede andere Datei
+`re15_port_<version>_*.z*` (etwa `..._ANDROID.zip`) bricht ab.
 
 Gradle-Seite (`app/build.gradle`):
 
@@ -74,6 +82,11 @@ Gradle-Seite (`app/build.gradle`):
   je Datei `<bytes>\t<sha256>\t<pfad>`, nach Pfad sortiert. Die Regeln (fail closed) stehen in
   `jni/asset_abgleich.h`; `release/apk_asset_gate.py` liest die Liste in der APK nach denselben
   Regeln und prueft jede Summe gegen die Daten der APK (die Liste v1 bis v0.8.19 wird abgelehnt).
+  **Asset-Pfade: nur druckbares ASCII** (0x20-0x7e), jedes Segment hoechstens 251 Bytes, keine zwei
+  Pfade, die sich nur in Gross/klein unterscheiden (Nachbesserung R4-1): der App-Speicher des Geraets
+  faltet Unicode-Gross/klein und -Normalform (Kelvin-Zeichen und `K`, `ss` und `sz`-Ligatur werden EINE
+  Datei, gemessen im Emulator API 36), und laengere Namen legt er nicht an. Gradle, Gate und Geraet
+  lehnen solche Pfade ab; `apk_asset_gate.py --quellbaum` meldet sie schon im Quellbaum.
   Dieselbe Baum-Liste steht in
   `release/apk_asset_gate.py` (`BAEUME`, wird gegen `stageAssets` geprueft - weicht sie ab, bricht
   die Pruefung ab) und in `release/make_package.sh` (`copy_common`, jedes PC-Paket wird per
@@ -93,6 +106,13 @@ Gradle-Seite (`app/build.gradle`):
   Wert aus `java -jar <build-tools>/lib/apksigner.jar verify --print-certs <apk>` (Zeile
   `Signer #1 certificate SHA-256 digest`) in `release/apk_signer.sha256` eintragen und committen,
   oder fuer einen einzelnen Lauf `RE15_APK_SIGNER_SHA256=<64 Hexziffern>` setzen.
+* **Gate-Pin** (Nachbesserung R4-1): `release/apk_asset_gate.sha256` haelt die sha256 von
+  `release/apk_asset_gate.py` fest; `build_android.sh` und `make_package.sh` fuehren nur ein Gate mit
+  genau dieser Summe aus. **Wer das Gate aendert**, laesst danach `"$PY" release/apk_asset_gate.py
+  --selbsttest` laufen (muss `SELBSTTEST-OK` melden), traegt den Wert von `sha256sum
+  release/apk_asset_gate.py` in `release/apk_asset_gate.sha256` ein und committet beides zusammen.
+  Werden Selbsttest-Faelle entfernt, bricht die Kette ab, bis die Mindestzahlen
+  (`GATE_SELBSTTEST_MIN_FAELLE`/`_INNEN` in `release/apk_pruefen.sh`) bewusst gesenkt sind.
 
 Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_ANDROID=ON`
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`
@@ -143,8 +163,19 @@ stehen, werden geloescht (`adb logcat -s re15` nennt jede Datei). Jede Datei wir
 `<ziel>.neu` geschrieben und erst nach passender Groesse und sha256 umbenannt. Von v0.8.19
 kommend (nur der alte Marker `re15_assets_ok.txt`) wird einmal jede vorhandene Datei per
 sha256 geprueft ("ASSETS WERDEN EINMALIG GEPRUEFT"); ebenso nach einem abgebrochenen Entpacken.
+In diesen beiden Faellen (keine gueltige "zuletzt entpackt"-Liste) werden vorher `shared_assets/`
+und `synchro/` durchgegangen und alle Dateien, die nicht in der neuen Liste stehen, geloescht -
+auch halbe `.neu`-Reste und Dateien, die ein Update nach einem Abbruch gestrichen hat
+("Waise entfernt" im Log; Nachbesserung R4-1). Was sich nicht loeschen laesst, meldet `debug.log`
+als Warnung.
+**Fehler:** fehlt die Asset-Liste der APK, ist sie ungueltig, oder laesst sich eine Datei nicht
+entpacken (z.B. Speicher voll), bleibt die Fehlermeldung stehen, bis die App geschlossen wird - das
+Spiel startet dann NICHT mit einem alten oder halben Asset-Baum (bis Nachbesserung R4-1: 3 s Meldung,
+danach Start). Ursache: `debug.log` im Speicherordner bzw. `adb logcat -s re15`; der naechste Start
+prueft jede Datei neu.
 Die Quelle ist ausschliesslich die APK (AAssetManager). Dokumentation:
-`analysis/befunde_runde34_android/android_entpacker_n1.md`.
+`analysis/befunde_runde34_android/android_entpacker_n1.md`,
+`analysis/befunde_runde34_android/android_r4_nachbesserung.md`.
 
 Der App-Speicherordner ist der **exe-Anker** des Ports (so wie am PC das Verzeichnis neben
 der exe): `/storage/emulated/0/Android/data/de.re15.port/files/` (per USB-Dateiuebertragung
