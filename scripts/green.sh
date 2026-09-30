@@ -17,7 +17,16 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD="$ROOT/re15_port/build"
 
 # 1) release the exe self-lock (a running re15_pc.exe blocks the linker)
-taskkill //F //IM re15_pc.exe >/dev/null 2>&1 || true
+# ⛔ Only the exe of THIS build dir (Runde 34, 2026-09-30): the former
+#    "taskkill //F //IM re15_pc.exe" ended every re15_pc.exe on the machine (the
+#    user's exe, exe tests of parallel worktrees). Same rule as tools/local_build.sh.
+_ps=/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+if [ -x "$_ps" ] && [ -d "$BUILD" ] && command -v cygpath >/dev/null 2>&1; then
+    _bw="$(cygpath -w "$BUILD")"
+    "$_ps" -NoProfile -Command \
+      "Get-Process re15_pc -ErrorAction SilentlyContinue | Where-Object { \$_.Path -and \$_.Path.StartsWith('$_bw', [System.StringComparison]::OrdinalIgnoreCase) } | Stop-Process -Force" \
+      >/dev/null 2>&1 || true
+fi
 
 # 2) configure once (tests default OFF in CMake -> force them ON)
 # ⚠️ Wenn $BUILD schon existiert, aber OHNE RE15_BUILD_TESTS konfiguriert wurde,

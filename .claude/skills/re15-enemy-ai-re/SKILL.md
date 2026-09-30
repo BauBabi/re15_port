@@ -257,7 +257,8 @@ SPIELER während des Grabs — Leons PL00-Knochen + bank2-Keyframes), bank3 = Pa
 (`re15_port/tests/unit/test_room1140_combat.c` als Vorlage): Raum-RDT laden, SCD starten,
 `re15_enemy_ai_run_all` ticken, `g_actors` direkt prüfen. Gotcha: Test-Gegner isolieren
 (andere auf x=z=30000, grid_id=0x86 parken); die exe lockt sich selbst
-(`taskkill //F //IM re15_pc.exe` vor dem Build).
+(immer über `tools/local_build.sh` bauen — es beendet seit Runde 34 NUR die exe des eigenen
+Bauverzeichnisses; ⛔ NIE `taskkill /IM re15_pc.exe`, das trifft die exe des Nutzers und parallele Messläufe).
 
 Port-Harness (env — die exe ignoriert argv!; `re15_port/build/platform/pc/re15_pc.exe`):
 
