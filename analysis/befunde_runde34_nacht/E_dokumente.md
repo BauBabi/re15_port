@@ -696,7 +696,63 @@ m. Modell-Bytes: md5 der eingebetteten MD1/TIM = 5.2; CLUT-Zeile je Modell (2/0/
 ## 9 Umsetzung (Bau-Stufe)
 
 ### 9.0 Selbstpruefung des Plans
-(offen)
+
+Die Gegenpruefung dieser Spur starb am Konto-Limit, bevor sie etwas schrieb. Der Bau hat deshalb
+JEDE tragende Byte-/Adress-Behauptung des Plans VOR dem Einbau selbst nachgeprueft — an den echten
+Dateien bzw. an der Disassembly, nicht am Dossier (memory reai-v2-zitierte-adresse-ist-kein-beleg).
+Werkzeug fuer alle Datei-Byte-Pruefungen: `re15_port/tools/r34n_e/selbstpruefung.py` (ein Lauf,
+**56 von 57 PASS**, die eine Abweichung s. u.).
+
+**Disassembly (selbst disassembliert):**
+
+| Behauptung | Instruktionen | Urteil |
+|---|---|---|
+| Aktions-Scan feuert je Druck den ERSTEN treffenden Satz in Slot-Reihenfolge (Vorrang-Regel 3.4, Grundlage fuer 1020-Umzug und 1051-Folge) | RE1.5 FUN_80042bac: `lw s0,0(s4)` / `addiu s4,s4,4` @0x80042c50/54 = aufsteigend ueber die Zeigertabelle 0x800AC9B0 (fp = 0x800AC784 + 556; das Annotations-Label „0x800b022c" des Werkzeugs ist falsch gerechnet, Ghidra-XREF `80042c50 lw s0,0x0(s4)=>DAT_800ac9b0`); im Aktionsmodus (s6 != 0) nach dem Handler `jalr v0` @0x80042f8c/@0x80042fb4 sofort `j 0x80043028` = Ruecksprung (nur EIN Satz je Druck); Satz mit sce 0 wird uebersprungen (`beq v0,zero,0x8004301c` @0x80042f50) | **bestaetigt** |
+| Tabellen-Index = Slot | Aot_set-Handler LAB_80040534: `lbu v0,0x1(v0)` (pc[1] = Slot) @0x8004053c, `sll v0,v0,0x2` @0x80040548, `sw v0,0x0(v1)=>DAT_800ac9b0` @0x80040584 | **bestaetigt** |
+| Pruefpunkt 620 voraus | `ori v0,zero,0x26c` @0x80042bd0 | **bestaetigt** |
+| Dokument-Nr = Item-Id − erste Dokument-Id | RE2 `sltiu v0,a3,0x68` @0x80071bbc, `beq v0,zero,0x80071d00` @0x80071bc0, `jal 0x800692dc` @0x80071d00, `addiu a0,a3,-104` @0x80071d04 (`re2_disasm.py`) | **bestaetigt** |
+
+**Datei-Bytes (`selbstpruefung.py`, Auszug; volle Ausgabe beim Aufruf):**
+
+| Behauptung (Plan) | gelesen | Urteil |
+|---|---|---|
+| Dok-1-Rechteck = Leichen-Satz ROOM1051 @0x00C0E `2c 0b 03 31 00 00 92 3b ae e3 e8 03 e8 03 ff 00 18 03 00 00` → (15250,−7250,1000,1000) | identisch | PASS |
+| ROOM1051 sub01 @0x00CB2 `06 00 10 00 21 09 a5 01 46 0b 00…` (Ck(9,165) → Aot_reset(11, sce 0, sat 0)) | identisch; `scd_dump_room.py`: `Aot_reset 46 0b 00 00…` @0x00CBA | PASS |
+| ROOM1050 hat den Leichen-Satz NICHT (Slot 11 leer) | kein `2c 0b 03 31` in ROOM1050.RDT | PASS |
+| Tisch-Nachricht ROOM1020 @0x01F0E (Slot 10, msg 3, (−11100,−18100,2200,3300), sat 0x31) / ROOM1021 @0x01F6C (Slot 11, msg 12) | identisch; einziger Zugriff auf 1020:10 bzw. 1021:11 ist dieses Aot_set (`scd_dump_room.py`, alle Bloecke) | PASS |
+| ROOM1010 Spray @0x00996 (Slot 2, Id 0x22, Bit 140, obj 0), Obj_model_set obj 0 @0x00930 (200,−1600,5500) rot 0x0C0C = 3084, obj 1 @0x00952 (1800,−1600,5750), Munition @0x009AC (1300,5300,1000,1000) Id 0x15; ROOM1011 @0x00954 Id 0x39 an derselben Stelle | identisch | PASS |
+| Vorrang-Beispiel ROOM10E0 @0x00C4E Item Slot 1 / @0x00CCC Nachricht Slot 8, gleiches Rechteck (−650,−7350,2600,1000) | identisch | PASS |
+| pri NULL: ROOM1010 @0x458/45C/460/464/470/478, ROOM1000 @0x4C8 | `ff ff ff ff` | PASS |
+| ROOM1020 pri Cut 3 @0xD28: Maske 35 = x 127..166 y 91..114 Tiefe 258 (Klemme) | Kopf 9 Gruppen / 44 Masken, Maske 35 = (127, 91, 40×24, Tiefe 258) | PASS |
+| DEBUG.BIN 0x07370 = `48 52 5c`; 0x04e04 „Chris' Diary" `1f 44 4e 45 4f 3a 00 20 45 3d 4e 55 07` | identisch | PASS |
+| vier RE2-Modelle: MD1/TIM je Datei-Offset + md5 (Tabelle 5.2 „Modelle") | 8 von 8 md5 gleich | PASS |
+| FILE26..29: md5 = `satz_md5.txt`, max_page 3/4/2/2 (p<max> da, p<max+1> nicht); FILE27-Papier = FILE25-Papier | 23 Dateien gleich; Seiten wie geplant; `05e25f3b…` | PASS |
+| Texte: unabhaengig (eigene Zeilenlogik) aus `AUFTRAG.md` Z. 23–27 / 30–38 / 42–48 / 56–58 gezogen == `E_texte/dok*.txt`, Titel Z. 22/29/41/55 | 4 von 4 Texten + 4 von 4 Titeln zeichengleich | PASS |
+| nOmodel (RDT-Byte 2): 1000/1001 2, 1010/1011 3, 1020 7, **1021 6**, 1050/1051 2 | 1021 = **7** | **FAIL** → berichtigt |
+
+**Berichtigung (einziger widerlegter Punkt):** Tabelle 2.2 nennt fuer ROOM1021 „7 / 6" Props; das
+RDT-Byte 2 (nOmodel) ist in BEIDEN Varianten **7** (`selbstpruefung.py`), und ROOM1021 legt obj
+0..6 per Obj_model_set an (`scd_dump_room.py` @0x01CE2..@0x01E40). Die 6 war die Zahl der Props
+im Pool nach dem Raumstart, nicht nOmodel. **Folge fuer den Plan: keine** — obj 7 bleibt in beiden
+Varianten die erste freie Nummer (der Plattform-Lader prueft `nprops <= oid` gegen nOmodel = 7).
+
+**Unabhaengig nachgezaehlt (anderer Walker als `slot_zensus.py`):** `scd_dump_room.py` ueber alle
+Bloecke der acht Raeume — Slots 1000/1001 0..9, 1010 0..7, 1011 0..8, 1020 0..12, 1021 0..13,
+1050 0..10, 1051 0..12; obj 1000/1001/1050/1051 0..1, 1010/1011 0..2, 1020/1021 0..6; 0 Fehlerzeilen.
+Plan-Slots 10 / 9 / 14 (+15) / 15 und obj 2 / 3 / 7 / 2 sind frei. Kein Port-Code behandelt diese
+acht Raeume gesondert (grep auf die Raum-Ids in engine/ und platform/pc/).
+
+**Rueckprojektion an der Engine (Sonde `projekt`):** Dok 2 Auflagepunkt (19226, −385, −11723) →
+Cut 0 (192,98 ; 172,49), Markenmitte (193,0 ; 172,5); Dok 3 Blattmitte (−9976, −1410, −16435) →
+Cut 6 (156,49 ; 105,48), Markenmitte (156,5 ; 105,5). Beide auf 0,03 px.
+
+**Speicherstand:** `RE15_FLAG_WORDS_ZONE 8` = 256 Bits je Bank (`re15_scd.h:450`) → Bits 57..60
+liegen im gespeicherten `flags[9]`; `files[24]` wird von `re15_files_export/import` gespeichert
+(`re15_savedata.c:233/331`). Kein neues Format — bestaetigt.
+
+**Spur A / D in ROOM1050:** A braucht KEINEN AOT-Slot (A_rolltor.md Z. 27), D arbeitet an der Tuer
+Slot 4 (16700,−14700,1000,2000) — beide schneiden das Dok-1-Rechteck x[15250..16250]
+z[−7250..−6250] nicht; der Rolltor-Schalter Slot 7 x[16800..17600] z[−8950..−8150] ebenfalls nicht.
 
 ### 9.1 Dok 1 — Police Officer's Final Diary Entry (ROOM1050, Item 0x49, FILE26)
 (offen)
