@@ -675,7 +675,15 @@ integration_r34n_b_cursor) -> 428 + 9 = **437**.
   integration_r30_irons_tisch_bild (Lauf P, exit=1 vor dem Laden) — beide mit der Signatur des Namens-Kills (exit=1
   ohne Absturzeintrag, waehrenddessen bauten parallele Agenten, §9.8 Nr. 2). **Einzeln nachgefahren, je zweimal:**
   granate_laden 121,6 s / 125,1 s gruen, irons_tisch_bild 55,2 s / 71,9 s gruen.
-* **Lauf 2** (nur test): LAUF2_PLATZHALTER
+* **Lauf 2** (nur test, 888 s): **436/437**; alle 9 neuen gruen (integration_r34n_b_cursor 106 s). ROT diesmal ein
+  ANDERER GUI-Haken: integration_r30_sicherung_laden (Lauf b, "Bild 280 nicht erreicht", exit=1). Einzeln nachgefahren:
+  1. Mal wieder exit=1 nach 21,7 s mitten im Lauf, 2. Mal gruen (45,7 s).
+* **Gegenprobe gegen den Namens-Kill** (`tools/r34n_b/haken_kopie.sh`: das ctest-Kommando aus `ctest -N -V`, nur die exe
+  als Kopie unter eigenem Namen): integration_r30_sicherung_laden 2/2, integration_r30_granate_laden 2/2,
+  integration_r30_irons_tisch_bild 2/2 gruen (`B_belege/bau_gui_haken_exe_kopie.txt`). Jeder der drei roten Laeufe
+  endete mit exit=1 OHNE Absturzeintrag an wechselnder Stelle — das ist der Namens-Kill (§9.8 Nr. 2), keine
+  Regression. Alle drei Haken fahren den Harness-Weg `RE15_FIRE_AOT` ohne Cursor (Auflage 8), den das Modul nicht
+  armiert (Riegel R5, Integrations-Lauf D).
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder angesehen)
 
