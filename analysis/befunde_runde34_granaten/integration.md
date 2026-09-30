@@ -11,7 +11,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 |---|---|
 | S1 Merge r34g/b-schaden | erledigt 94c7d41d — konfliktfrei, Bau OK, unit_r34_schaden + unit_r34_reaktion gruen (430 Tests) |
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
-| S1 Merge r34g/c-plattform | offen |
+| S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | offen |
 | S2 W1..W11 | offen |
 | S3 volle Suite | offen |
@@ -33,6 +33,14 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
   Liegen, Explosion Bild 109, Zeitlinien HOCH/TIEF/vergiftet wie BAUPLAN 1.1), dazu erneut `unit_r34_schaden`,
   `unit_r34_reaktion` und die ESP-/Waffen-Bestandspins `probe_abzug_takt`, `unit_r17_waffen_loop_pin`, `unit_r26_mg_blut`,
   `unit_r30_granate`, `r30b_muendungshoehe`, `unit_espr_11e0`, `unit_aim*` — 11/11 gruen. `ctest -N`: 431.
+### 1.3 r34g/c-plattform — Merge-Commit 7c202b7a
+* `git merge --no-ff r34g/c-plattform`: **keine Konflikte** (main.c, audio_pc.c, render_pc.c, room_pc.c, neue
+  fx_plattform_pc.c/.h, Sonden probe_r34_plattform*, Werkzeuge bau_c_werkzeug/ + bau_c_gegen_werkzeug/).
+* Bau: `configure` + `build` -> `LOCAL-BUILD-OK`. Die drei Warnungen `-Wdiscarded-qualifiers` (main.c:8510/9769/10133)
+  sind Altbestand (Gore-Pfad), nicht durch den Merge entstanden.
+* Sonden: `unit_r34_plattform`, `unit_r34_plattform_ton`, `integration_r34_plattform_takt` (23.0 s),
+  `integration_r34_plattform_esp_eintritt` (9.7 s), dazu `unit_r34_schaden`, `unit_r34_reaktion`, `unit_r34_wurf` —
+  7/7 gruen. `ctest -N`: 435.
 
 ## 2. Integrationswuensche (Schritt 2)
 
