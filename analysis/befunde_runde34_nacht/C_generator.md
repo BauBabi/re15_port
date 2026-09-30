@@ -735,6 +735,11 @@ roter Haken `integration_r30_irons_tisch_licht` (wieder `exit=1` mitten im Lauf)
 roten Haken ist damit mindestens einmal gruen gelaufen; keiner hat mit dem Generator-Raum zu tun (1150,
 1240, 1170, 1031, Speichern), und der Spielcode dieser Spur wirkt nur in 11F0/11F1 (Sperre, Lampen) bzw.
 Cut 10 dort (Zeichner).
+**Dritter Lauf** (`local_build.sh test`, `build/r34n_c/suite3.log`): **427/429**, rot nur
+`integration_r30_cut_blitz` (`cut_blitz[A]: exit=1`) und `integration_r30_irons_tisch_licht` (`exit=1`,
+Spielstand nicht geladen) — dieselbe Handschrift. Ein sauberes `LOCAL-BUILD-OK` ist in dieser Nacht nicht
+erreichbar, solange parallele Agenten mit dem alten `local_build.sh` bauen (jeder Bau = globales
+`taskkill`). Gegenprobe ueber ALLE 16 Haken, die die echte exe starten, mit umbenannter Kopie: s. unten.
 Panel-Riegel in der Suite: unit_r34n_c_generator, unit_r31_generator, unit_r27_panel_schalterwerte (G:
 90 Bilder Quadrat gehalten), unit_r26_panel_11f0 (A), unit_r17_cursor_klick_pin, unit_gen_11f0_switches,
 unit_gen_11f0_cursor_view, unit_11f0_cut_after_puzzle — alle gruen im Vollauf (Auflage 6: r17/r27 G/
