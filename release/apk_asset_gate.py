@@ -2582,6 +2582,11 @@ def _faelle():
             f.manifest_zeilen = f.manifest_aus_eintraegen() + list(zeilen)
         return faelschen
 
+    def zusatz_summe_falsch(f):          # Zusatzeintrag ohne Quelle, im Manifest mit falscher Summe: auch fuer
+        x = "shared_assets/PSX/EXTRA.BIN"  # Eintraege ohne Quelle wird die Summe gegen die APK-Daten gemeldet
+        f.eintraege.append(["assets/" + x, b"zusatz", zipfile.ZIP_STORED])
+        f.manifest_zeilen = [(p, g, "0" * 64 if p == x else s) for p, g, s in f.manifest_aus_eintraegen()]
+
     def kopf_rand(vorn, hinten):         # MU7 strip(): Leerraum vor bzw. hinter der Kopfzeile
         def faelschen(f):
             t = _Fall.manifest_text(f.manifest_aus_eintraegen())
@@ -3021,6 +3026,8 @@ def _faelle():
         ("N1: Summe der Groessen > 2^63-1 (10 x 18 Ziffern)",
          man_geister([("shared_assets/PSX/G%d.BIN" % i, 999999999999999999) for i in range(10)]), 1,
          ["Summe der Groessen > 2^63-1"]),
+        ("N1: Zusatzeintrag ohne Quelle, Manifest-Summe falsch", zusatz_summe_falsch, 1,
+         ["zusaetzlich in der APK", "Manifest-Pruefsumme falsch: shared_assets/PSX/EXTRA.BIN Manifest 0000000000000000.."]),
     )
 
 
