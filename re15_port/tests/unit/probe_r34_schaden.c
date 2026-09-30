@@ -300,6 +300,104 @@ static void teil_applier(void)
     r = re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40);
     CHECK(94, r == 3 && a->hp == 180 && a->hit_react == 3 && b->hp == 75,
           "Gate B im Applier: r=%d a.hp=%d a.hr=0x%02X b.hp=%d", r, a->hp, a->hit_react, b->hp);
+
+    /* (82) +0x1D0 &= 0xFF00 JE KANDIDAT, VOR Band und Kasten (`lhu v1,464(s0)` @0x8004716c /
+     *      `andi v1,v1,0xff00` @0x80047178 / `sh v1,464(s0)` @0x80047184): A (Slot 1, Gates 1-4
+     *      frei, im Band, aber ausserhalb des Kastens x 3000) vorbelegt 0x34C0 -> 0x3400; B (Slot 2,
+     *      im Kasten) vorbelegt 0x56E0, P in -z -> 0x5661 (Richtung 0x61 wie 92, Bit 0 @0x80047200).
+     *      Ohne das Loeschen: A bliebe 0x34C0, B wuerde 0x56E1. */
+    {
+        re15_actor_init(); pl_far();
+        a = mk_re2z(1, 0x10, 3000, 0, 0, 80); a->re2z_hitdir1d0 = 0x34C0u;
+        b = mk_re2z(2, 0x10, 0, 0, 0, 80);    b->re2z_hitdir1d0 = 0x56E0u;
+        int32_t Qa[3] = { 0, -100, -500 };
+        r = re15_re2_gl_apply(Qa, 0, k_box_op40, HIT_OP40);
+        CHECK(82, r == 3 && a->hp == 80 && a->re2z_hitdir1d0 == 0x3400u && b->hp == 75 &&
+                  b->re2z_hitdir1d0 == 0x5661u,
+              "1D0 je Kandidat: r=%d A.hp=%d A.1D0=0x%04X (0x3400) B.hp=%d B.1D0=0x%04X (0x5661)", r, a->hp,
+              a->re2z_hitdir1d0, b->hp, b->re2z_hitdir1d0);
+    }
+
+    /* ---- NACHBESSERUNG M1: Bodenfeuer an einem RE1.5-KI-Zombie MIT Import-Option (Vorgabe im
+     *      RE1.5-Flavor, re15_re15_re2z_import). Er steht unter dem RE2-Modell (RE2-HP) -> der
+     *      RE2-Record-Wert desselben Hitcodes: Z10 w0 0x0050C8C8 @0x800A41E0, K2 = (w0 >> 20) &
+     *      0x3FF (`srlv` @0x80047254 / `andi` @0x8004725c) = 5; Reaktion bleibt O-VB4 (+0x5 = 14
+     *      @0x8006f435, +0x6 = 1). Die Import-Bruecke stempelt wie FUN_800470C0: KEINE Reserve. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_re15_re2z_import_set(1);
+    /* (95) ein Treffer: HP 80 -> 75, +0x5 14, +0x6 1, Zustand 2; Bruecken-Stempel: +0x1D2 = Zone 0 +
+     *      3*2 = 6 (Y + (-1440 >> 1) = -720 < P.y = -100), +0x1D0 = Bit 0 | Richtung aus P. */
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x10, 0, 0, 0, 80);
+    r = re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40);
+    CHECK(95, r == 2 && a->hp == 75 && a->sub_state_1 == 14 && a->sub_state_2 == 1 && a->state == 2 &&
+              a->re2z_hits1d2 == 6 && (a->re2z_hitdir1d0 & 1u),
+          "Import-Zombie Bodenfeuer: r=%d hp=%d (75) +5=%d (14) +6=%d st=%d 1D2=%d (6) 1D0=0x%04X", r, a->hp,
+          a->sub_state_1, a->sub_state_2, a->state, a->re2z_hits1d2, a->re2z_hitdir1d0);
+    /* (96) zwoelf seitliche Flammen (P.z +-300, wie Gegenpruefung mess3; Riegel/Zustand zwischen den
+     *      Treffern zurueck = Ende der HURT-Reaktion): je 5 Schaden, die Mitte-Reserve +0x152 bleibt
+     *      13, KEIN Bein (+0x21A & 0x60 == 0). NEGATIV-KONTROLLE im selben Aktor: ein Pistolentreffer
+     *      ueber die Hitscan-Bruecke (Waffe 3 -> Zeile 3, w1 0x02851014 & 7 = 4, @0x80041954-70)
+     *      zieht ab: 13 -> 9. */
+    {
+        re15_actor_init(); pl_far();
+        a = mk(1, 0x10, 0, 0, 0, 2000);
+        int dmg_ok = 1, pool_min = 99;
+        for (int i = 0; i < 12; i++) {
+            int32_t Q[3] = { 0, -100, (i & 1) ? 300 : -300 };
+            int16_t h0 = a->hp;
+            re15_re2_gl_apply(Q, 0, k_box_op40, HIT_OP40);
+            if (h0 - a->hp != 5) dmg_ok = 0;
+            if (a->re2z_pool152 < pool_min) pool_min = a->re2z_pool152;
+            a->hit_react = 0; a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 0; a->sub_state_3 = 0;
+        }
+        const int bein = (a->re2z_flags21a & 0x60u) != 0u;
+        const int p151 = a->re2z_pool151, p152 = a->re2z_pool152, p153 = a->re2z_pool153;
+        re15_re15_re2z_gore_hit(a, &g_actors[RE15_ACTOR_SLOT_PLAYER], 0, 3u);   /* Pistole, Hitscan */
+        const int p152_schuss = a->re2z_pool152;
+        CHECK(96, dmg_ok && pool_min == 13 && p151 == 13 && p152 == 13 && p153 == 13 && !bein &&
+                  p152_schuss == 9,
+              "12 Flammen: je 5 %d, Reserve %d/%d/%d (13), min %d, Bein %d (0); Schuss danach +0x152 %d (9)",
+              dmg_ok, p151, p152, p153, pool_min, bein, p152_schuss);
+    }
+    /* (97) NEGATIV: Import AUS -> kein RE2-Modell -> O-VB4 = 50 (@0x8006f422), keine Bruecke. */
+    re15_re15_re2z_import_set(0);
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x10, 0, 0, 0, 80);
+    r = re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40);
+    CHECK(97, r == 2 && a->hp == 30 && a->sub_state_1 == 14 && a->re2z_hits1d2 == 0,
+          "Import AUS: r=%d hp=%d (30) +5=%d 1D2=%d (0, keine Bruecke)", r, a->hp, a->sub_state_1, a->re2z_hits1d2);
+    re15_re15_re2z_import_set(1);
+    /* (98) Der Zerleger laeuft im GL-Stempel weiter (Reserve-Tor `(s8)+0x152 < 0` @0x80105288-B0):
+     *      haben Schuesse die Mitte-Reserve geleert, reisst eine SEITLICHE Flamme das Bein ab — wie im
+     *      RE2-Flavor (re2z_hurt -> re2z_leg_gore nach dem GL-Stempel). */
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x10, 0, 0, 0, 2000);
+    {
+        int32_t Q[3] = { 0, -100, 300 };
+        re15_re2_gl_apply(Q, 0, k_box_op40, HIT_OP40);          /* 1. Treffer saet die Felder */
+        a->hit_react = 0; a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 0;
+        a->re2z_pool152 = -1;                                    /* Reserve von Schuessen geleert */
+        re15_re2_gl_apply(Q, 0, k_box_op40, HIT_OP40);
+    }
+    CHECK(98, (a->re2z_flags21a & 0x60u) != 0u && a->re2z_pool152 == -1,
+          "Zerleger im GL-Stempel: 21a=0x%04X (&0x60 != 0), +0x152 %d (-1)", a->re2z_flags21a, a->re2z_pool152);
+    /* (99) E4 gilt NUR fuer Art 2..4 (BAUPLAN E4, react_table @0x8006f432..34): ein Direktaufruf mit
+     *      Art 5 OHNE Hitcode (kein GL-Treffer) nimmt am Import-Zombie die RE1.5-Zahl 50 (@0x8006f422),
+     *      nicht die Modellzeile [14] = 15 (RE2-Flammenwerfer @0x800A4258); Kontrolle Art 2 -> 200
+     *      (E4, Z9 K0 @0x800A41CC). */
+    {
+        re15_actor_init(); pl_far();
+        a = mk(1, 0x10, 0, 0, 0, 2000);
+        re15_enemy_take_damage(a, 5);
+        const int d5 = 2000 - a->hp;
+        re15_actor_init(); pl_far();
+        a = mk(1, 0x10, 0, 0, 0, 2000);
+        re15_enemy_take_damage(a, 2);
+        const int d2 = 2000 - a->hp;
+        CHECK(99, d5 == 50 && d2 == 200, "Import-Zombie Direktaufruf: Art 5 -> %d (50), Art 2 -> %d (200)", d5, d2);
+    }
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 
 /* =========================================================================================
@@ -312,14 +410,16 @@ static void teil_stempel(void)
     re15_re2_damage_model_set(1);
 
     /* (31) RE2-Zombie 0x10 HP 80, P 300 daneben auf gleichem Boden (P.y = -500 @0x800185a8):
-     *      HP 80 - 200 (E4, Zeile 9 K0 @0x800A41CC) < 0 -> Zustand 3, +0x5 = 9, +0x1D2 = 0
-     *      (Zone 0: -750 < -500), +0x1D3 = 15, +0x6 = 0, Reserve unberuehrt, gl_stamp. */
+     *      HP 80 - 200 (E4, Zeile 9 K0 @0x800A41CC) < 0 -> Zustand 3, +0x5 = 9, +0x1D2 = 3
+     *      (Zone 0: -750 < -500, + 3*K mit K = 1 der RE2-Explosion Op 47: Hitcode 0x10020009
+     *      `lui a3,0x1002` / `ori a3,a3,0x9` @0x80020d54-58, Spalte @0x80047310-30 —
+     *      NACHBESSERUNG K1), +0x1D3 = 15, +0x6 = 0, Reserve unberuehrt, gl_stamp. */
     re15_actor_init(); pl_far();
     re15_actor_t *a = mk_re2z(1, 0x10, 0, 0, 0, 80);
     re15_attack_box_t b = box_at(-300, -500, 0);
     int n = re15_resolve_attack(&b, 2, -1);
     CHECK(31, n == 1 && a->hp == -120 && a->state == 3 && a->sub_state_1 == 9 && a->sub_state_2 == 0 &&
-              a->re2z_hits1d2 == 0 && a->re2z_self1d3 == 15 && a->re2_gl_stamp == 1 &&
+              a->re2z_hits1d2 == 3 && a->re2z_self1d3 == 15 && a->re2_gl_stamp == 1 &&
               a->re2z_pool152 == 13,
           "HE 0x10: n=%d hp=%d st=%d +5=%d +6=%d 1D2=%d 1D3=%d gl=%d pool152=%d", n, a->hp, a->state,
           a->sub_state_1, a->sub_state_2, a->re2z_hits1d2, a->re2z_self1d3, a->re2_gl_stamp, a->re2z_pool152);
@@ -347,12 +447,42 @@ static void teil_stempel(void)
         int s4 = a->sub_state_1;
         CHECK(33, s3 == 11 && s4 == 10, "Saeure +5=%d (11), Brand +5=%d (10)", s3, s4);
     }
-    /* (34) Brad 0x11 HP 250 ueberlebt (250 - 200 = 50) -> HURT, Zeile 9, Spalte 0. */
+    /* (34) Brad 0x11 HP 250 ueberlebt (250 - 200 = 50) -> HURT, Zeile 9, Spalte 3 (Op 47, K1;
+     *      HURT[9][3] = 0x80105438 `table 0x8010CA84`). */
     re15_actor_init(); pl_far();
     a = mk_re2z(1, 0x11, 0, 0, 0, 250);
     re15_resolve_attack(&b, 2, -1);
-    CHECK(34, a->hp == 50 && a->state == 2 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 0,
-          "Brad: hp=%d st=%d +5=%d 1D2=%d", a->hp, a->state, a->sub_state_1, a->re2z_hits1d2);
+    CHECK(34, a->hp == 50 && a->state == 2 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 3,
+          "Brad: hp=%d st=%d +5=%d 1D2=%d (3)", a->hp, a->state, a->sub_state_1, a->re2z_hits1d2);
+    /* (30) ABGRENZUNG der Klammer-1-Spalte (NACHBESSERUNG K1): NUR HE an der Zombie-Familie.
+     *      Saeure/Brand an 0x10 -> Spalte 0 (E6 K0; DEATH 10/11 spaltenunabhaengig `table
+     *      0x8010CD8C` = 0x80108530, HURT 10/11 Spalte 0 = 0x80105BC0); Hund HE -> Spalte < 3 (K0,
+     *      Spalte >= 3 waere nur Kern/Schrei @0x801046a8-d4 statt "zerplatzt"). */
+    {
+        int sp[2]; const uint8_t art[2] = { 3, 4 };
+        for (int i = 0; i < 2; i++) {
+            re15_actor_init(); pl_far();
+            a = mk_re2z(1, 0x10, 0, 0, 0, 80);
+            re15_resolve_attack(&b, art[i], -1);
+            sp[i] = a->re2z_hits1d2;
+        }
+        re15_actor_init(); pl_far();
+        a = mk(1, 0x20, 0, 0, 0, 100); a->re2z_self1d3 = 0;
+        re15_resolve_attack(&b, 2, -1);
+        int hund = a->re2z_hits1d2, hund_z = a->sub_state_1;
+        CHECK(30, sp[0] == 0 && sp[1] == 0 && hund < 3 && hund_z == 9,
+              "Spalte: Saeure %d (0), Brand %d (0), Hund HE %d (<3) +5=%d (9)", sp[0], sp[1], hund, hund_z);
+    }
+    /* (81) +0x1D0 &= 0xFF00 VOR der Richtung (@0x8004716c-84, `andi v1,v1,0xff00` @0x80047178 /
+     *      `sh v1,464(s0)` @0x80047184) auch im Explosions-Stempel: vorbelegt 0x12E0, P bei x -300
+     *      (Richtung 0x21, s. 32) -> 0x1221 (Oberbyte bleibt, Unterbyte frisch). Ohne das Loeschen
+     *      bliebe 0x12E1 stehen (Mutation im Dossier). */
+    re15_actor_init(); pl_far();
+    a = mk_re2z(1, 0x10, 0, 0, 0, 80);
+    a->re2z_hitdir1d0 = 0x12E0u;
+    re15_resolve_attack(&b, 2, -1);
+    CHECK(81, a->re2z_hitdir1d0 == 0x1221u, "Explosion, 1D0 vorbelegt 0x12E0 -> 0x%04X (0x1221)",
+          a->re2z_hitdir1d0);
     /* (35) 0x16 (Zeile @0x800A42A8): HE 80 / Saeure 200 / Brand 80. */
     {
         int hp[3]; const uint8_t art[3] = { 2, 3, 4 };

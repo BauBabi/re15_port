@@ -7,7 +7,7 @@
  * ersten fehlgeschlagenen Pruefung.
  *
  * Aufruf: probe_r34_reaktion [teil]   teil = zombie | hund | spinne | re15 | g5 | treppe |
- *                                            zensus | alle (Vorgabe)
+ *                                            zensus | ausgang | alle (Vorgabe)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -184,6 +184,22 @@ static void teil_zombie(void)
                                e->sub_state_1 == (lauf == 0 ? 10 : 11) && e->re2z_hits1d2 == 0,
               "Brad %s: hp %d -> %d (-200), st=%d, +5=%d, 1D2=%d", lauf == 0 ? "Brand" : "Saeure",
               hp0, e->hp, e->state, e->sub_state_1, e->re2z_hits1d2);
+        /* (108/118) NACHBESSERUNG M2 — der KONSUMENT des GL-Stempels laeuft erst im Bild X+1
+         *      (re2z_hurt). Dort darf der Hitscan-Stempel NICHT noch einmal laufen: FUN_800470C0 zieht
+         *      keine Zonen-Reserve ab (Store-Liste @0x80047184-0x8004749c ohne 337..339) und peilt vom
+         *      Treffpunkt P (`jal 0x800154ac` mit a0/a1 = P @0x80047350-54), nicht vom Spieler. Also
+         *      nach dem Bild: Reserven wie in X (13/13/13) und +0x1D0-Unterbyte wie in X. */
+        {
+            const int r151 = e->re2z_pool151, r152 = e->re2z_pool152, r153 = e->re2z_pool153;
+            const unsigned d0 = e->re2z_hitdir1d0 & 0xffu;
+            frame();
+            CHECK(108 + 10 * lauf, r151 == 13 && r152 == 13 && r153 == 13 && e->re2z_pool151 == r151 &&
+                                   e->re2z_pool152 == r152 && e->re2z_pool153 == r153 &&
+                                   (e->re2z_hitdir1d0 & 0xffu) == d0 && (d0 & 1u) && e->re2_gl_stamp == 0,
+                  "Bild X+1 nach GL-Stempel: Reserve %d/%d/%d -> %d/%d/%d (13, unveraendert), 1D0 0x%02X -> 0x%02X, "
+                  "gl %d (0)", r151, r152, r153, e->re2z_pool151, e->re2z_pool152, e->re2z_pool153, d0,
+                  e->re2z_hitdir1d0 & 0xffu, e->re2_gl_stamp);
+        }
         /* Verkohlung (+0x10E |= 0x80, +0x21A |= 0x800 — FUN_80106128 @0x8010613C-48 + @0x80105df0-fc)
          * bzw. Aetzung (+0x21A |= 0x1800 @0x8010632C-38) aus Stagger-P0 (@0x80105DC4-F18). */
         int el = 0;
@@ -257,6 +273,129 @@ static void teil_zombie(void)
         int16_t hp0 = e->hp;
         for (int f = 0; f < 400; f++) frame();
         CHECK(107, e->hp == hp0, "ohne Element: hp %d -> %d", hp0, e->hp);
+    }
+    /* (109) NEGATIV-KONTROLLE zu 108/118: derselbe Brad, derselbe Brand-Schaden, aber OHNE GL-Stempel
+     *      (Direktaufruf ohne Treffpunkt -> re15_re2_stamp_hit, re2_gl_stamp = 0): im Bild X+1 laeuft
+     *      der Hitscan-Stempel re2z_stamp_hit (@0x80041954-88) und zieht die Reserve der Region
+     *      +0x1D2 % 3 um (w1 0x078EFC0A >> 0) & 7 = 2 ab (Zeile 10, Klammer 0) -> Summe 39 -> 37. */
+    {
+        bringup(RE15_AI_FLAVOR_RE2);
+        for (int f = 0; f < 60; f++) frame();
+        int slot = -1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x11) { slot = s; break; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+        re15_actor_t *e = &g_actors[slot];
+        e->grid_id = 0; e->re2z_f10e = 0; e->re2z_flags21a &= (uint16_t)~0x12u; e->re2z_self1d3 = 0;
+        e->hit_react = 0;
+        re15_ai_set_state_word(e, 0x101);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = e->x - 6000; g_actors[RE15_ACTOR_SLOT_PLAYER].z = e->z;
+        for (int f = 0; f < 10; f++) frame();
+        const int s0 = e->re2z_pool151 + e->re2z_pool152 + e->re2z_pool153;
+        re15_enemy_take_damage(e, 4);
+        const int gl = e->re2_gl_stamp;
+        frame();
+        const int s1 = e->re2z_pool151 + e->re2z_pool152 + e->re2z_pool153;
+        CHECK(109, s0 == 39 && gl == 0 && s1 == 37,
+              "ohne GL-Stempel: Reserve-Summe %d (39) -> %d (37) im Bild X+1, gl %d (0)", s0, s1, gl);
+    }
+}
+
+/* =========================================================================================
+ * TEIL "ausgang" — NACHBESSERUNG K1: der AUSGANG eines stehenden RE2-Zombies nach der HE-
+ * Explosion (Resolver Art 2, P 300 daneben auf gleichem Boden). Die Spalte traegt die Klammer der
+ * RE2-Explosion Op 47 (0x10020009, @0x80020d54-58): Zone 0 + 3 = 3 -> DEATH[9][3] = 0x80108530
+ * (Sturz-Tod, P2 `8010891c sw v0(=7),4(s1)` = Leiche). Mit Spalte 0 liefe 0x80107438, dessen
+ * Tod-Zweig als Kriecher mit HP 10 wiederbelebt (@0x8010778c-0x801077b0).
+ * ========================================================================================= */
+extern int re15_re2z_last_hit_handler(void);
+extern int re15_re2z_last_death_handler(void);   /* re15_re2_rand: re15_ai_flavor.h */
+static re15_actor_t *ausgang_arena(uint8_t typ)
+{
+    bringup(RE15_AI_FLAVOR_RE2);
+    for (int f = 0; f < 60; f++) frame();
+    int slot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == typ) { slot = s; break; }
+    if (slot < 0) return NULL;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+    re15_actor_t *e = &g_actors[slot];
+    e->grid_id = 0; e->re2z_f10e = 0; e->re2z_flags21a &= (uint16_t)~0x12u; e->re2z_self1d3 = 0;
+    e->hit_react = 0;
+    re15_ai_set_state_word(e, 0x101);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = e->x - 6000; pl->z = e->z; pl->y = e->y;
+    for (int f = 0; f < 10; f++) frame();
+    return e;
+}
+/* Nach dem Treffer bis zu 400 Bilder: 7 = Leiche, 1 = Zustand 2/3 verlassen (Wiederbelebung). */
+static int ausgang_lauf(re15_actor_t *e)
+{
+    for (int f = 0; f < 400; f++) {
+        frame();
+        if (e->state == 7) return 7;
+        if (e->state != 3 && e->state != 2) return 1;
+    }
+    return -1;
+}
+static void teil_ausgang(void)
+{
+    printf("== ausgang (K1)\n");
+    if (room_load(0x1140, "STAGE1") != 0) { CHECK(220, 0, "ROOM1140 fehlt"); return; }
+    /* (220) acht Laeufe, RE2-Zufallsstrom je Lauf um k Zuege verschoben (Seitenwurf @0x801085A4,
+     *       Wiederbelebungs-Wurf @0x80108918): HE toetet den stehenden 0x10 (HP 50 - 200), Spalte 3,
+     *       DEATH-Zelle 0x80108530 (Port RE2ZD_MAIN = 1), Ausgang IMMER Leiche (Zustand 7, HP < 0). */
+    {
+        int leiche = 0, kriecher = 0, spalte_ok = 1, zelle_ok = 1, laeufe = 0;
+        for (int k = 0; k < 8; k++) {
+            re15_actor_t *e = ausgang_arena(0x10);
+            if (!e) { CHECK(220, 0, "kein Zombie 0x10 in ROOM1140"); return; }
+            for (int i = 0; i < k; i++) (void)re15_re2_rand();
+            explosion_bei(e, 300, 2);
+            if (e->state != 3 || e->re2z_hits1d2 != 3) spalte_ok = 0;
+            int ende = ausgang_lauf(e);
+            if (re15_re2z_last_death_handler() != 1) zelle_ok = 0;
+            laeufe++;
+            if (ende == 7 && e->hp < 0) leiche++;
+            else if (ende == 1 && e->hp == 10 && (e->re2z_f10e & 1u)) kriecher++;
+        }
+        CHECK(220, laeufe == 8 && leiche == 8 && kriecher == 0 && spalte_ok && zelle_ok,
+              "HE an stehendem 0x10: %d Laeufe, Leiche %d (8), Kriecher %d (0), Spalte 3 %d, DEATH-Zelle 0x80108530 %d",
+              laeufe, leiche, kriecher, spalte_ok, zelle_ok);
+    }
+    /* (221) NEGATIV-KONTROLLE: derselbe Treffer, die Spalte von Hand auf 0 (der Stand VOR der
+     *       Nachbesserung, E6 mit K0) -> 0x80107438 mit `+0x4 == 3` -> Kriecher mit HP 10
+     *       (`801077b0 sh v0(=10),342(s2)`, +0x10E = 0x2001 `80107820 addiu v1,zero,8193`). Die Sonde
+     *       unterscheidet also beide Ausgaenge. */
+    {
+        re15_actor_t *e = ausgang_arena(0x10);
+        if (!e) { CHECK(221, 0, "kein Zombie 0x10 in ROOM1140"); return; }
+        explosion_bei(e, 300, 2);
+        e->re2z_hits1d2 = 0;
+        int ende = ausgang_lauf(e);
+        CHECK(221, ende == 1 && e->hp == 10 && e->re2z_f10e == 0x2001u && re15_re2z_last_death_handler() == 2,
+              "Spalte 0 von Hand: Ende %d (1), hp %d (10), f10e 0x%04X (0x2001), Zelle %d (2 = 0x80107438)", ende,
+              e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
+    }
+    /* (222) Brad 0x11 (HP 250) UEBERLEBT HE (-200): Spalte 3 -> HURT[9][3] = 0x80105438 (Haupt-Treffer,
+     *       Port RE2ZH_MAIN = 1, `table 0x8010CA84`). Gegenstueck Brand: Spalte 0 -> 0x80105BC0
+     *       (Taumeln, RE2ZH_STAGGER = 2) — die Element-Leiter bleibt dort (Teil zombie 102). */
+    {
+        re15_actor_t *e = ausgang_arena(0x11);
+        if (!e) { CHECK(222, 0, "kein Brad 0x11 in ROOM1140"); return; }
+        explosion_bei(e, 300, 2);
+        const int sp_he = e->re2z_hits1d2, st_he = e->state;
+        frame();
+        const int h_he = re15_re2z_last_hit_handler();
+        e = ausgang_arena(0x11);
+        if (!e) { CHECK(222, 0, "kein Brad 0x11 (2. Arena)"); return; }
+        explosion_bei(e, 300, 4);
+        const int sp_br = e->re2z_hits1d2;
+        frame();
+        const int h_br = re15_re2z_last_hit_handler();
+        CHECK(222, st_he == 2 && sp_he == 3 && h_he == 1 && sp_br == 0 && h_br == 2,
+              "Brad HE: st %d (2) Spalte %d (3) Handler %d (1 = 0x80105438); Brand: Spalte %d (0) Handler %d (2)",
+              st_he, sp_he, h_he, sp_br, h_br);
     }
 }
 
@@ -1089,6 +1228,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "g5")) teil_g5();
     if (alle || strstr(teil, "treppe")) teil_treppe();
     if (alle || strstr(teil, "zensus")) teil_zensus();
+    if (alle || strstr(teil, "ausgang")) teil_ausgang();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }
