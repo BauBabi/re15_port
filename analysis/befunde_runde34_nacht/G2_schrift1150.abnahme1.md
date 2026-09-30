@@ -31,11 +31,51 @@ Status: IN ARBEIT (Geruest angelegt)
 
 ## 2. Eigener Bau + Suite-Zeile
 
-(offen)
+`bash re15_port/tools/local_build.sh` im Baum `r34n_schrift`, HEAD `303094c8` (Code-Stand unveraendert
+seit dem Bau; `ninja: no work to do`), 10:58-11:10, parallel liefen die Suiten zweier anderer Baeume
+(r34n_integration, r34n_adaruf) und exe-Laeufe von r34g_int:
+
+    Total Test time (real) = 741.93 sec
+    test OK — 430/430 bestanden
+    === LOCAL-BUILD-OK (all) — Tests 430/430
+
+Darin `unit_r34n_g_maskgrp` (0 s) und `integration_r34n_g_schrift1150` (57 s) gruen, kein Ausfall,
+auch keiner der bekannten Flatter-Haken. Messlaeufe danach mit einer KOPIE `re15_pc_abn1g2.exe`
+(md5 94ccfc7a… == re15_pc.exe).
 
 ## 3. Nutzerpunkt an der echten exe (AUFTRAG.md, Nutzer-Korrektur ROOM1150)
 
-(offen)
+Nutzerwortlaut: *"Nein, nicht beim Heliport, sondern in Irons Office room 1150 blinkt die Schrift
+eigentlich im Hintergrund."* Gemessen wird das BILD, ohne das Port-Log als Orakel:
+eigener Auswerter `re15_port/tools/r34n_g/abn1_blink_eval.py` vergleicht das Schrift-Rechteck jedes
+Port-Bilds (RE15_FRAMEDUMP, Skala 3, Mittelpunkt je 3x3-Block, 5 Bit) direkt mit dem
+**Original-Bildspeicher** zweier sauberer DuckStation-Staende der Ermittlung (`c2_w12.7.sav` = Masken
+an, `c2_w12.sav` = Masken aus; Stub @0x80026e4c == 0x03e00008 geprueft; je zwei weitere Staende
+desselben Zustands sind bitgleich, `c2_w10.5`/`c2_w13.5`). Im Original unterscheiden sich AN und AUS
+in 545 Punkten, davon 409 um mehr als 2 Stufen ("Schriftpunkte"). Port-Bild = AN, wenn alle 409
+Schriftpunkte **bitgleich** zum Original-AN sind; = AUS, wenn alle 409 hoechstens 2 Stufen vom
+Original-AUS liegen (BSS-Dekodierung Port/PSX); sonst "?" (anderer Cut).
+
+| Lauf | Weg (echte exe, Kopie) | Ergebnis (Bild gegen Original) | Beleg |
+|---|---|---|---|
+| U | **Spielstand des NUTZERS** (Hauptbaum `re15_port/build/platform/pc/re15_card.mcr`, nur kopiert; Slot 0 = v8-Stand ROOM1150, camera_cut 2, Pos (-22689,-19693)), CONTINUE + CARD_AUTO | F100..F230: jedes Bild AN (409/409 bitgleich Original-AN) oder AUS (409/409 <= 2 Stufen Original-AUS); Laeufe AN 100-118, AUS 119-138, AN 139-158, AUS 159-178, AN 179-198, AUS 199-218, AN 219-230: **jeder volle Lauf 20 Bilder** | `G_belege/G2_A1_01_nutzerkarte_1150.png`, `G2_A1_eval_U.txt` |
+| D1 | **echter Tuerweg**: Titel -> Spiel, `RE15_DEBUG_JUMP=1130@gp`, `RE15_FIRE_AOT=2@30#1130` (ROOM1130 Door_aot_set slot 2 @0x008CE -> Raum 0x15, Eintritts-Cut 0), in 1150 zu Fuss (`U3.84,W0.5,D1.5,W1,U1.5,W4`, Basis Spielbild, Start F100) | Cut 0 -> Cut 1 (F125) -> **Cut 2 bei F204**: AN F204 (Aufbau), AUS F205-224, AN F225-239; zurueck in Cut 1 F240; wieder Cut 2 F345: AN 345-364, AUS 365-384, AN 385-404, AUS 405-424, AN 425-444, AUS 445-464 | `G2_A1_eval_D1.txt` |
+| D2 | wie D1, Wiedereintritt spaeter (`W1.8`) | Wiedereintritt in Cut 2 bei **F369 mitten in einer AUS-Phase** (:= 0 war F365): sofort AN (Neuaufbau), das `:= 1` bei F385 aendert nichts, AUS erst beim naechsten `:= 0` F405 -> AN 36 Bilder, dann 20/20 — genau die Original-Regel (Aufbau FUN_800392d4 @0x80021c28 bei jedem Dirty-1-Apply, sub05 laeuft unabhaengig weiter) | `G2_A1_02_tuerweg_wiedereintritt.png`, `G2_A1_eval_D2.txt` |
+| E3 | **ROOM1151** (Elza-Raum): Karte `probe_r34n_g_karte re15_card.mcr 1151 1 p=-22900,-15900`, CONTINUE in Cut 1, zu Fuss (`D1.5`) nach Cut 2 | Cut 2 bei F70: AN 70-78, AUS 79-98, AN 99-118, ... AUS 239-258: jeder volle Lauf 20 Bilder, pixelgleich zum Original wie 1150 | `G2_A1_03_raum1151_zu_fuss.png`, `G2_A1_eval_E3.txt` |
+
+Selbst angesehen (G2_A1_01..03): AN = die sechs Buchstaben als unbeleuchtete Lamellen (grau mit
+hellen Punkten) im roten Schein, AUS = gleichmaessig rot beleuchtete Lamellen — dasselbe Bildpaar wie
+der Original-Bildspeicher (Dossier G2_05). Das Nutzer-Symptom "blinkt bei uns nicht" ist an allen
+vier Wegen behoben; der Takt (20 Spielbilder = 20 SCD-Takte je Zustand) entspricht den 40 VBlanks
+des Originals (VSync(2), Dossier §3.5).
+
+Nebenbeobachtung Tuerweg (Log D1): der erste sub05-Takt laeuft in der SCD-Init des Raumwechsels
+(`F30 ... Gruppe 6 := 0 (0 Treffer, Zahl 0)` noch mit dem Bildzaehler von 1130, VOR `Aufbau Cut 0
+... Grund raum`), danach `:= 1` bei 1150-F25. Selbst nachgelesen: im Original laeuft der Init-Durchlauf
+aller Faeden ebenfalls in der Raum-Init — FUN_800396fc -> FUN_8003ef6c -> `FUN_8003f0a0()`
+(Decompilat: Schleife ueber 10 Faden-Plaetze, Handler bis Rueckgabe != 1), also VOR dem Aufbau im
+ersten Present (`DAT_800b5457 = 1` am Ende von FUN_8001d600). Reihenfolge wie im Port — Dossier §8.4
+bestaetigt.
 
 ## 4. Gegenproben (vorher/nachher, Variante 1151, Wiederbetreten, Laden, Nachbarraeume)
 

@@ -1,0 +1,51 @@
+[maskgrp] F0 Raum 1240 wv0A=0 wv0C=0 Aufbau Cut 0 pri_offset=0x3A0 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F162 Raum 1240 wv0A=1 wv0C=1 Aufbau Cut 1 pri_offset=0x3A4 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F364 Raum 1240 wv0A=2 wv0C=2 Aufbau Cut 2 pri_offset=0x3A8 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F746 Raum 1240 wv0A=3 wv0C=3 Aufbau Cut 3 pri_offset=0x3AC NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F856 Raum 1240 wv0A=4 wv0C=4 Aufbau Cut 4 pri_offset=0x3B0 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F948 Raum 1240 wv0A=5 wv0C=5 Aufbau Cut 5 pri_offset=0x3B4 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1058 Raum 1240 wv0A=6 wv0C=6 Aufbau Cut 6 pri_offset=0x3B8 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1150 Raum 1240 wv0A=7 wv0C=7 Aufbau Cut 7 pri_offset=0x3BC NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1250 Raum 1240 wv0A=8 wv0C=8 Aufbau Cut 8 pri_offset=0x3C0 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1421 Raum 1170 wv0A=7 wv0C=0 Aufbau Cut 7 pri_offset=0xA30 NULL-Sektion -> Zahl 0 Grund raum
+[maskgrp] F1 Raum 1170 wv0A=7 wv0C=7 Aufbau Cut 7 pri_offset=0xA30 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F446 Raum 1170 wv0A=0 wv0C=0 Aufbau Cut 0 pri_offset=0x66C NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F480 Raum 1170 wv0A=2 wv0C=2 Aufbau Cut 2 pri_offset=0x698 Zahl 3 Records 3 Grund cut
+[maskgrp] F983 Raum 1170 wv0A=1 wv0C=1 Aufbau Cut 1 pri_offset=0x670 Zahl 3 Records 3 Grund cut
+[maskgrp] F1044 Raum 1170 wv0A=2 wv0C=2 Aufbau Cut 2 pri_offset=0x698 Zahl 3 Records 3 Grund cut
+[maskgrp] F1231 Raum 1170 wv0A=0 wv0C=0 Aufbau Cut 0 pri_offset=0x66C NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1325 Raum 1170 wv0A=1 wv0C=0 Aufbau Cut 1 pri_offset=0x670 Zahl 3 Records 3 Grund cut
+[maskgrp] F1361 Raum 1170 wv0A=2 wv0C=1 Aufbau Cut 2 pri_offset=0x698 Zahl 3 Records 3 Grund cut
+[maskgrp] F1393 Raum 1170 wv0A=3 wv0C=2 Aufbau Cut 3 pri_offset=0x6C0 NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1414 Raum 1170 wv0A=6 wv0C=6 Aufbau Cut 6 pri_offset=0xA2C NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F1549 Raum 1170 wv0A=4 wv0C=4 Aufbau Cut 4 pri_offset=0x6C4 Zahl 21 Records 21 Grund cut
+[maskgrp] F1768 Raum 1130 wv0A=0 wv0C=0 Aufbau Cut 0 pri_offset=0x544 NULL-Sektion -> Zahl 0 Grund raum
+[maskgrp] F30 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 0)
+[maskgrp] F30 Raum 1150 wv0A=0 wv0C=0 Aufbau Cut 0 pri_offset=0x500 Zahl 2 Records 2 Grund raum
+[maskgrp] F25 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 1 (0 Treffer, Zahl 2)
+[maskgrp] F45 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 2)
+[maskgrp] F65 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 1 (0 Treffer, Zahl 2)
+[maskgrp] F85 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 2)
+[maskgrp] F105 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 1 (0 Treffer, Zahl 2)
+[maskgrp] F125 Raum 1150 wv0A=1 wv0C=0 Aufbau Cut 1 pri_offset=0x51C Zahl 28 Records 28 Grund cut
+[maskgrp] F125 Raum 1150 wv0A=1 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F145 Raum 1150 wv0A=1 wv0C=0 Gruppe 6 := 1 (0 Treffer, Zahl 28)
+[maskgrp] F165 Raum 1150 wv0A=1 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F185 Raum 1150 wv0A=1 wv0C=0 Gruppe 6 := 1 (0 Treffer, Zahl 28)
+[maskgrp] F204 Raum 1150 wv0A=2 wv0C=1 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
+[maskgrp] F205 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F225 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F240 Raum 1150 wv0A=1 wv0C=2 Aufbau Cut 1 pri_offset=0x51C Zahl 28 Records 28 Grund cut
+[maskgrp] F245 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F265 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 1 (0 Treffer, Zahl 28)
+[maskgrp] F285 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F305 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 1 (0 Treffer, Zahl 28)
+[maskgrp] F325 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F345 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 1 (0 Treffer, Zahl 28)
+[maskgrp] F365 Raum 1150 wv0A=1 wv0C=2 Gruppe 6 := 0 (0 Treffer, Zahl 28)
+[maskgrp] F369 Raum 1150 wv0A=2 wv0C=1 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
+[maskgrp] F385 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F405 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F425 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F445 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F465 Raum 1150 wv0A=2 wv0C=1 Gruppe 6 := 1 (1 Treffer, Zahl 54)
