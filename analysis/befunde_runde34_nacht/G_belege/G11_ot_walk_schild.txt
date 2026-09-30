@@ -1,0 +1,28 @@
+lamp_near.sav  cut=2  aca34(buf)=0
+OT 0x800ac714 buf0: 1 Pakete cmd00:1
+OT 0x800ac754 buf1: 1 Pakete cmd00:1
+OT 0x800ab6d4 buf0: 499 Pakete ENVe1:3 POLYFT4:1 POLYGT3:134 POLYGT4:360 cmd00:1
+OT 0x800ac6d4 buf1: 499 Pakete ENVe1:3 POLYFT4:1 POLYGT3:134 POLYGT4:360 cmd00:1
+OT 0x800aa6b4 buf0: 17 Pakete ENVe1:16 cmd00:1
+OT 0x800aa6d4 buf1: 17 Pakete ENVe1:16 cmd00:1
+orig_1170_gp.sav  cut=2  aca34(buf)=1
+OT 0x800ac714 buf0: 1 Pakete cmd00:1
+OT 0x800ac754 buf1: 1 Pakete cmd00:1
+OT 0x800ab6d4 buf0: 1062 Pakete ENVe1:3 POLYFT4:1 POLYGT3:816 POLYGT4:241 cmd00:1
+OT 0x800ac6d4 buf1: 1063 Pakete ENVe1:3 POLYFT4:1 POLYGT3:817 POLYGT4:241 cmd00:1
+OT 0x800aa6b4 buf0: 53 Pakete ENVe1:17 POLYF4:2 SPRT:33 cmd00:1
+OT 0x800aa6d4 buf1: 53 Pakete ENVe1:17 POLYF4:2 SPRT:33 cmd00:1
+lamp_behind1.sav  cut=3  aca34(buf)=0
+OT 0x800ac714 buf0: 1 Pakete cmd00:1
+OT 0x800ac754 buf1: 1 Pakete cmd00:1
+OT 0x800ab6d4 buf0: 486 Pakete POLYFT4:1 POLYGT3:119 POLYGT4:365 cmd00:1
+OT 0x800ac6d4 buf1: 486 Pakete POLYFT4:1 POLYGT3:119 POLYGT4:365 cmd00:1
+OT 0x800aa6b4 buf0: 17 Pakete ENVe1:16 cmd00:1
+OT 0x800aa6d4 buf1: 17 Pakete ENVe1:16 cmd00:1
+orig_lamp_start.sav  cut=3  aca34(buf)=0
+OT 0x800ac714 buf0: 1 Pakete cmd00:1
+OT 0x800ac754 buf1: 1 Pakete cmd00:1
+OT 0x800ab6d4 buf0: 486 Pakete POLYFT4:1 POLYGT3:119 POLYGT4:365 cmd00:1
+OT 0x800ac6d4 buf1: 486 Pakete POLYFT4:1 POLYGT3:119 POLYGT4:365 cmd00:1
+OT 0x800aa6b4 buf0: 17 Pakete ENVe1:16 cmd00:1
+OT 0x800aa6d4 buf1: 17 Pakete ENVe1:16 cmd00:1
