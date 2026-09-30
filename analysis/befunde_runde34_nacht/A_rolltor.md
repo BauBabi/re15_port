@@ -471,3 +471,39 @@ sicherung_laden, boot_bg_pin im 1. Anlauf; granate_laden und irons_tisch_licht i
    Boot-Weg ebenfalls nicht (Texte 20/21 werden beim Ausloesen eingesetzt, §5.1).
 5. Der Bau muss die Kopfkommentare von `test_room1050_sicherung.c` (Cut_replace-These, "keine
    Sicherungs-Bedingung") nachziehen (§3.5).
+
+## 9 Umsetzung (Stufe BAU)
+
+Stand: in Arbeit. Abschnitte werden nach jedem Teilschritt gefuellt und committet.
+
+### 9.1 Auflagen der Gegenpruefung — abgehakt / abgelehnt
+
+(folgt)
+
+### 9.2 Dateien und Haken
+
+(folgt)
+
+### 9.3 Commits
+
+(folgt)
+
+### 9.4 Riegel + Mutationsprobe
+
+(folgt)
+
+### 9.5 Suite
+
+(folgt)
+
+### 9.6 Eigene Abnahme an der echten exe (Bilder)
+
+(folgt)
+
+### 9.7 Abweichungen vom Plan (mit Grund)
+
+(folgt)
+
+### 9.8 Offene Punkte / bekannte Grenzen
+
+(folgt)
