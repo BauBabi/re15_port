@@ -174,3 +174,27 @@ mit Liste v1 `ANDROID-GATES-OK`. Die Variable ist nirgends als Bedienschalter do
 
 **Befund V1/V2 (niedrig):** zwei Ein-Zeilen-Mutanten im v2-Teil bestehen den Selbsttest 248/248; V1 laesst mit einer
 signierten Faelschung (Leerraumzeile) die ganze Kette gruen durch (A7), die das Geraet verwirft (nichts entpackt).
+
+### 2.2 make_package.sh (PC-Pfad, B4) und fremd benannte Android-Dateien (B1)
+
+Sandbox wie 2.1, `--version v0.8.19 --only linux`, Linux-Binary v0.8.19 aus dem Archiv (`u1_binaries.sh`: Split-Satz
+`sha256sum -c` OK, mtime 2026-09-29 19:34, kein touch), keine APK. Beleg `kette_B.txt`.
+| Lauf | Gate | Lage | EXIT | Ergebnis |
+|---|---|---|---|---|
+| B0 | echt | `--no-zip` (Paket anlegen) | 0 | Selbsttest 248/248, `APK-ASSET-GATE-PAKET-OK` |
+| - | - | 1 Byte in der PAKET-Kopie von `PSX/DATA/TEX.TIM` (Linkzahl 1) | - | Paket 2daac755..., Quelle 7f10f1af... |
+| B1 | echt | `--zip-only` | 1 | `Inhalt weicht ab: shared_assets/PSX/DATA/TEX.TIM` -> ABBRUCH (Kontrolle) |
+| **B2** | **G0 (0 Byte)** | `--zip-only` | **0** (50 s) | nach "Selbsttest der privaten Kopie" kein Wort, `== Fertig ==`, `SHA256SUMS.txt` mit beiden Linux-Volumes, git-vorgemerkt (A x2); im ausgelieferten Satz (zip -s 0 + unzip -p) TEX.TIM = **2daac755...** (die veraenderte) |
+| **B3** | **G1** | `--zip-only` | **0** (49 s) | im Log `SELBSTTEST-FEHLER: 234 von 248` und `Inhalt weicht ab: shared_assets/PSX/DATA/TEX.TIM ... APK-ASSET-GATE-PAKET-ABWEICHUNG`, dann `== Fertig ==`, SUMS + git add |
+| - | echt | TEX.TIM zurueck; in release/ (Sandbox) `re15_port_v0.8.19_ANDROID.zip` und `re15_port_v0.8.19_android.apk.zip` (je 193 B: ein Zip mit einer "APK" aus Text) | - | - |
+| **B4** | echt | ohne APK, `--zip-only` | **0** (55 s) | kein B1-Abbruch; `SHA256SUMS.txt`: `*re15_port_v0.8.19_ANDROID.zip *re15_port_v0.8.19_android.apk.zip` + die Linux-Volumes; git: **A** fuer beide |
+| **B5** | echt | ohne APK, `--zip-only --ohne-android` | **0** (60 s) | Meldung `--ohne-android: keine APK-Pruefung, kein Android-Satz (keiner dieser Version vorhanden)` - und trotzdem beide Dateien in `SHA256SUMS.txt` und git-vorgemerkt |
+
+**Befund H1 bestaetigt auf dem PC-Pfad:** B4 (Selbsttest der privaten Kopie) haelt weder ein leeres noch ein im
+Ausgangspfad kaputtes Gate auf; das veraenderte Paket wird gezippt, in SHA256SUMS.txt geschrieben und vorgemerkt.
+**Befund H3 (mittel):** B1 schuetzt nur den kanonischen Namen `${NAME}_android.z*` (Glob, gross/klein-genau).
+SHA256SUMS.txt und git add nehmen weiterhin JEDE Datei `${NAME}_*.z*` ohne Pruefung mit - auch bei `--ohne-android`,
+das ausdruecklich "kein Android-Satz" meldet. Die R4-Nachschaerfung "SHA256SUMS nur aus den in DIESEM Lauf erzeugten
+Volumes" gilt nur fuer den kanonischen Android-Namen; fuer alles andere mit dem Versions-Praefix nicht. Abhilfe-Richtung:
+SUMS/git add aus einer Positivliste der in diesem Lauf gezippten Saetze (plus bewusst die der anderen Plattform) statt
+aus dem Glob.
