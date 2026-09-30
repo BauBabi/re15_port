@@ -209,3 +209,41 @@ Sandbox-Quellbaum `shared_assets/PSX/` (Original unberuehrt, danach entfernt), F
 `build_android.sh --gate-only` mit dem ECHTEN Gate: **EXIT 0** - `shared_assets/PSX 3195 3195 3195`, `Manifest: 3605
 Zeilen ... gegen die APK geprueft`, `APK-ASSET-GATE-OK: 3605 Dateien ... Manifest stimmt`, `ANDROID-GATES-OK`.
 Was das Geraet daraus macht: Abschnitt 6 (Emulator).
+
+## 5. Geraete-Entpacker: Code gegen die Fragen des Auftrags (android_glue.c HEAD, asset_abgleich.c)
+
+- **Ausserhalb des Speicherordners schreiben/loeschen:** nicht gefunden. Jede Zeile (neue UND "zuletzt entpackt"-Liste,
+  also auch jedes `weg`-unlink) laeuft durch `re15_abgleich_pfad_ok`: kein fuehrendes `/`, kein leeres/`.`/`..`-Segment,
+  kein `\`, keine Steuerzeichen, <= 512 B, mindestens ein `/` (Korpus + Unit-Test). Puffer: `pfad_bauen` = snprintf
+  mit Laengenpruefung in `PATH_MAX` (4096) - `s_root` (<= 511) + `/` + 512 + `.neu` passt immer; `mkdirs_for` kopiert
+  per snprintf in `PATH_MAX`. Symlinks: `open(<ziel>.neu, O_CREAT|O_TRUNC)` ohne `O_NOFOLLOW`, aber unmittelbar davor
+  `unlink(<ziel>.neu)`; Zwischenordner folgen Symlinks - anlegen kann sie im externen Speicher (FUSE) niemand ohne root,
+  im internen nur die App selbst (Messung ln -s: Abschnitt 6). Kein Befund.
+- **Abbruch + Neustart:** Liste "zuletzt entpackt" wird VOR jeder Aenderung geloescht (`:415-417`), `.neu` + `fsync` +
+  `rename` beim Schreiben (`liste_schreiben`), eine halbe `.neu`-Liste wird im naechsten aendernden Lauf entfernt (`:416`);
+  ohne Liste prueft der naechste Start jede gleich grosse Datei per SHA-256, `.neu`-Reste je Listenpfad weg (`:455`).
+  Eine halbe Liste kann nicht als gueltig gelesen werden (Kopfzeile nennt Anzahl + Bytes). Kein Befund zur Konsistenz.
+  Randbefunde (niedrig):
+  - U1 `unlink(pf_liste)` (`:415`) ohne Rueckgabepruefung: die tragende Invariante "ein aendernder Lauf hat die alte Liste
+    zuerst entfernt" wird nicht erzwungen (scheitert das unlink, laeuft der Lauf weiter; mit einem spaeteren Fehler bliebe
+    die ALTE Liste stehen). Auf dem Geraet nicht provozierbar gefunden - ein Verzeichnis gleichen Namens laesst auch das
+    spaetere `rename` scheitern (laut, jeder Start PRUEFEN).
+  - U2 Reste, die nie mehr entfernt werden: geloescht wird `weg` nur mit gueltiger alter Liste (`re15_abgleich_planen`
+    alt != NULL). Nach einem Abbruch, von v0.8.19 kommend oder nach einem Abbruch VOR der weg-Schleife bleiben Dateien, die
+    die neue Version nicht mehr hat, fuer immer liegen; `.neu`-Reste nur fuer Pfade der NEUEN Liste werden entfernt. Die
+    Engine zaehlt keine Ordner auf (grep opendir/readdir/FindFirstFile: 0) - nur Platz. README "Dateien, die nicht mehr in
+    der Liste stehen, werden geloescht" gilt nur fuer das Update mit gueltiger alter Liste.
+  - U3 Segmentlaenge: die Liste erlaubt Segmente bis 512 B; ext4/f2fs erlauben 255 B je Name, `<name>.neu` braucht 4 mehr.
+    Ein Segment von 252-255 B liesse sich nie entpacken (laut: Fehler bei jedem Start), > 255 B ebenso; Gate und Gradle
+    lassen es durch (Messung Abschnitt 6).
+- **Fehlerpfade (JNI ohne AssetManager, Liste fehlt/ungueltig/v1, Datei-Fehler):** Anzeige ja - `fehler_zeigen` bzw. die
+  Fehlerzeile laufen 90 x 33 ms = ~3 s (`:321`, `:517`), dazu logcat + debug.log. **Fail closed nein:**
+  `re15_android_bootstrap_assets()` hat keine Rueckgabe, main.c:3075 laeuft danach weiter (`re15_pc_asset_roots_report`
+  meldet ohne Baum nur `WARNUNG: keine Asset-Wurzel gefunden - es wird nichts laden`). Bei einem Update startet das Spiel
+  nach 3 s mit dem ALTEN Baum (bzw. bei Datei-Fehlern mit einem gemischten) - also genau das Symptom von N1a (alte Dateien),
+  nur mit einem 3-s-Hinweis. Im gegateten Bau erreicht man diese Pfade nur ueber ein kaputtes Gate (H1/V1) oder ein volles
+  Geraet. Befund U4 (niedrig; vorbestehend seit v0.8.19, durch N1 um die neuen Ablehnungen erweitert).
+- **SHA-256:** haltbar (Abschnitt 3).
+- **Geaenderte Datei wird NICHT neu entpackt:** der schnelle Weg prueft bewusst nur Groessen (dokumentiert); alle anderen
+  Wege vergleichen Summen. Einzige gefundene Luecke: zwei Listenzeilen, die der App-Speicher zu EINER Datei faltet, ohne
+  dass die ASCII-Dublettenregel greift (H5) - Messung Abschnitt 6.
