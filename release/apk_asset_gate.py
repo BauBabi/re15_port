@@ -16,8 +16,8 @@ Alle 30 wurden in v0.8.19 von Hand in der APK nachgemessen. Dieses Gate macht da
 Datei JEDES Asset-Baums, bei jedem Bau.
 
 WIE DIE APK GELESEN WIRD (Nachbesserung R1, Befund B1 der Gegenpruefung)
-  ROH, so wie Androids ZIP-Leser libziparchive (android_glue.c:212 SDL_RWFromFile ->
-  AAssetManager_open -> libziparchive) - NICHT ueber Pythons zipfile. zipfile schneidet Namen am
+  ROH, so wie Androids ZIP-Leser libziparchive (android_glue.c entpacken(): AAssetManager_open ->
+  libziparchive) - NICHT ueber Pythons zipfile. zipfile schneidet Namen am
   NUL ab, ersetzt unter Windows '\\' durch '/' und vergleicht vom Local Header nur den Namen: drei
   Faelschungen an RE15DOOR/P07G.DO2 ('\\' im Namen, CRC bzw. Groesse nur im Local Header falsch)
   bestanden so die ganze Kette, obwohl libziparchive den Eintrag nicht oeffnet (aapt2 35.0.0:
@@ -48,14 +48,18 @@ WAS GEPRUEFT WIRD
      Zentralverzeichnis).
   c. Unter assets/ liegt nichts ausser diesen Dateien und re15_assets.txt (keine Zusatz-,
      Doppel- oder Verzeichniseintraege).
-  d. re15_assets.txt - so gelesen wie der Leser auf dem Geraet
-     (re15_port/platform/android/jni/android_glue.c, re15_android_bootstrap_assets):
-     Zeilen an '\\n' getrennt, angehaengte '\\r' abgeschnitten (:200), leere und '#'-Zeilen
-     uebersprungen (:201), Zeile = "<bytes>\\t<pfad>" (:202-206), Kopfzeile
-     "# re15 assets <anzahl> <bytes>" am Pufferanfang (:163). Jede Zeile muss genau einen
-     APK-Eintrag assets/<pfad> derselben Groesse treffen, und jede Asset-Datei der APK muss im
-     Manifest stehen - sonst wird sie auf dem Geraet nie entpackt. Format des Schreibers:
-     app/build.gradle writeAssetManifest (:131-141).
+  d. re15_assets.txt, FORMAT v2 (Runde 34a N1) - gelesen nach DENSELBEN Regeln wie auf dem Geraet
+     (manifest_lesen = re15_port/platform/android/jni/asset_abgleich.c re15_abgleich_lesen, Regeln im
+     Kopf von asset_abgleich.h; beide lesen BYTES): Zeilen an '\\n' getrennt, angehaengte '\\r'
+     abgeschnitten, leere Zeilen uebersprungen, Zeile 1 = "# re15 assets v2 <anzahl> <bytes>",
+     jede weitere = "<bytes>\\t<sha256>\\t<pfad>" (1-18 Ziffern 0-9, 64 Zeichen 0-9a-f klein, Pfad
+     1-512 Bytes relativ mit '/', ohne '\\', Steuerzeichen, leere/'.'/'..'-Segmente, gueltiges UTF-8,
+     nicht auf ".neu"); weitere '#'-Zeilen, doppelte (auch nur in Gross/klein verschiedene) Pfade,
+     NUL, keine Datei, falsche Kopfzeile, > 64 MiB -> das Geraet verwirft die GANZE Liste. Die alte
+     Liste v1 ("# re15 assets <n> <b>", "<bytes>\\t<pfad>", bis v0.8.19) wird ausdruecklich abgelehnt.
+     Jede Zeile muss genau einen APK-Eintrag assets/<pfad> treffen, mit derselben Groesse UND demselben
+     sha256 wie dessen Daten, und jede Asset-Datei der APK muss im Manifest stehen - sonst wird sie auf
+     dem Geraet nie (oder nie richtig) entpackt. Schreiber: app/build.gradle writeAssetManifest.
   e. Ausgabe: Zaehlung je Baum und ausdruecklich RE2/DOOR, RE15DOOR, TORSE.VBS.
   Pflichtinhalt zusaetzlich: kein Baum leer, RE2/DOOR und RE15DOOR mit *.DO2, TORSE.VBS
   vorhanden (make_package.sh check_tree verlangt dasselbe fuer die PC-Pakete).
@@ -153,10 +157,16 @@ SHARED_WURZEL = frozenset(q.split("/", 1)[1] for b, q, _z, _m in BAEUME if b == 
 ZIEL_OBEN = tuple(sorted(set(z.split("/", 1)[0] for _b, _q, z, _m in BAEUME)))
 
 MANIFEST = "re15_assets.txt"
-MANIFEST_MAX = 64 << 20          # android_glue.c:80 read_apk_asset: sz > 64 MiB -> NULL
-# NUR ASCII-Ziffern (Nachbesserung R2, B8): '\d' nahm auch arabisch-indische Ziffern, das Geraet
-# liest per sscanf "%ld %lld" (android_glue.c:163) nur 0-9 -> Kopfzeile dort 0/0.
-KOPF_RE = re.compile(r"# re15 assets ([0-9]+) ([0-9]+)")
+MANIFEST_MAX = 64 << 20          # asset_abgleich.h RE15_ABGLEICH_LISTE_MAX: > 64 MiB -> Liste ungueltig
+# Format v2 (Runde 34a N1, jni/asset_abgleich.h). Gelesen wird auf BYTES, NUR ASCII-Ziffern (Nachbesserung
+# R2, B8: '\d' nahm auch arabisch-indische Ziffern; das Geraet liest nur 0-9) und nur Kleinbuchstaben a-f.
+KOPF_RE = re.compile(rb"# re15 assets v2 ([0-9]{1,18}) ([0-9]{1,18})")
+KOPF_V1_RE = re.compile(rb"# re15 assets ([0-9]+) ([0-9]+)")      # bis v0.8.19 - wird ABGELEHNT
+GROESSE_RE = re.compile(rb"[0-9]{1,18}")
+SHA_RE = re.compile(rb"[0-9a-f]{64}")
+PFAD_MAX = 512                   # asset_abgleich.h RE15_ABGLEICH_PFAD_MAX (Bytes)
+NEU_ENDUNG = b".neu"             # asset_abgleich.h RE15_ABGLEICH_NEU_ENDUNG (Zwischendatei, ASCII gross/klein egal)
+_ASCII_KLEIN = bytes.maketrans(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ", b"abcdefghijklmnopqrstuvwxyz")
 
 # Pflichtinhalt (Pfade relativ zu assets/ bzw. zu re15_port/)
 PFLICHT_ORDNER = (("shared_assets/RE2/DOOR", ".DO2"), ("shared_assets/RE15DOOR", ".DO2"))
@@ -1059,81 +1069,150 @@ def _manifest_grenze():
     return min(MANIFEST_MAX, int(w)) if w.isdigit() else MANIFEST_MAX
 
 
-def manifest_pruefen(roh, apk_dateien, befund):
-    """roh = Bytes von assets/re15_assets.txt; apk_dateien = {rel: groesse} (ohne Manifest)."""
-    grenze = _manifest_grenze()
-    if len(roh) > grenze:
-        befund("Manifest", "Manifest %d B > %d B (64 MiB): das Geraet liest es nicht (android_glue.c:80)"
-               % (len(roh), grenze))
-    if roh.startswith(b"\xef\xbb\xbf"):
-        befund("Manifest", "Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar "
-                           "(sscanf am Pufferanfang, android_glue.c:163)")
+def _t(b, n=120):
+    """Bytes fuer eine Meldung (gekuerzt, nicht darstellbares ersetzt)."""
+    return b[:n].decode("utf-8", "replace")
+
+
+def _pfad_fehler(p):
+    """Pfadregel der Liste v2 auf BYTES - dieselben Regeln wie asset_abgleich.c re15_abgleich_pfad_ok.
+    -> None (zulaessig) oder der Grund."""
+    if not p:
+        return "leer"
+    if len(p) > PFAD_MAX:
+        return "%d Bytes > %d" % (len(p), PFAD_MAX)
+    if any(c < 0x20 or c == 0x7f for c in p):
+        return "Steuerzeichen"
+    if b"\\" in p:
+        return "'\\'"
+    teile = p.split(b"/")
+    if len(teile) < 2:
+        return "ohne '/' (Assets liegen nie direkt im Speicherordner)"
+    if any(t in (b"", b".", b"..") for t in teile):
+        return "absolut, '//', '/' am Ende, '.' oder '..' - landet ausserhalb des Ankers"
+    if p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG:
+        return "endet auf .neu (Endung der Zwischendatei beim Entpacken)"
     try:
-        text = roh.decode("utf-8")
+        p.decode("utf-8")
+    except UnicodeDecodeError:
+        return "kein gueltiges UTF-8"
+    return None
+
+
+def manifest_lesen(roh, grenze=MANIFEST_MAX):
+    """re15_assets.txt (Format v2) nach DENSELBEN Regeln lesen wie das Geraet
+    (re15_port/platform/android/jni/asset_abgleich.c re15_abgleich_lesen; Kopf von asset_abgleich.h).
+    Das Geraet verwirft bei der ERSTEN Abweichung die ganze Liste und entpackt nichts; hier werden alle
+    Abweichungen gesammelt. Es gilt: das Geraet nimmt die Liste an <=> fehler ist leer.
+    -> (eintraege {pfad: (groesse, sha256)}, zeile_von {pfad: nr}, v1, fehler [text])"""
+    fehler = []
+    if len(roh) > grenze:
+        fehler.append("Manifest %d B > %d B (64 MiB): das Geraet liest es nicht (asset_abgleich.h "
+                      "RE15_ABGLEICH_LISTE_MAX)" % (len(roh), grenze))
+    if b"\0" in roh:
+        fehler.append("Manifest enthaelt ein NUL-Byte (Stelle %d)" % roh.index(b"\0"))
+    if roh.startswith(b"\xef\xbb\xbf"):
+        fehler.append("Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar")
+    try:
+        roh.decode("utf-8")
     except UnicodeDecodeError as e:
-        befund("Manifest", "Manifest ist kein gueltiges UTF-8 (%s) - Pfade treffen die APK-Namen nicht" % e)
-        text = roh.decode("utf-8", "replace")
+        fehler.append("Manifest ist kein gueltiges UTF-8 (%s) - Pfade treffen die APK-Namen nicht" % e)
 
-    zeilen = text.split("\n")                       # android_glue.c:197 (strchr '\n')
-    eintraege, zeile_von = {}, {}
-    kopf = zeilen[0].rstrip("\r")                  # :163 sscanf am Pufferanfang
-    # die erste Zeile ist die Kopfzeile, wenn sie mit '#' beginnt (:201 ueberspringt sie); sonst ist sie
-    # fuer das Geraet eine gewoehnliche Datenzeile
-    daten = zeilen[1:] if kopf.startswith("#") else zeilen
-    for nr, z in enumerate(daten, len(zeilen) - len(daten) + 1):
-        z = z.rstrip("\r")                          # :200 nur angehaengte '\r'
-        if not z:
-            continue                                # :201
-        if z.startswith("#"):
-            befund("Manifest", "Manifest-Zeile %d: unerwartete Kommentarzeile '%s' (der Schreiber "
-                               "schreibt nur die Kopfzeile)" % (nr, z[:80]))
-            continue
-        if "\t" not in z:
-            befund("Manifest", "Manifest-Zeile %d ohne Tab (das Geraet ueberspringt sie still, "
-                               "android_glue.c:203): '%s'" % (nr, z[:120]))
-            continue
-        groesse, pfad = z.split("\t", 1)
-        if not re.fullmatch(r"[0-9]+", groesse):
-            befund("Manifest", "Manifest-Zeile %d: Groessenfeld '%s' ist keine Zahl (atoll, :205)" % (nr, groesse[:40]))
-            continue
-        teile = pfad.split("/")
-        if "\\" in pfad or any(t in ("", ".", "..") for t in teile):     # leer/absolut: ein Teil ist ""
-            befund("Manifest", "Manifest-Zeile %d: unzulaessiger Pfad '%s' (leer, absolut, '\\\\', "
-                               "'.'/'..' oder '//': landet ausserhalb des Ankers)" % (nr, pfad[:120]))
-            continue
-        if pfad == MANIFEST:
-            befund("Manifest", "Manifest-Zeile %d nennt das Manifest selbst" % nr)
-            continue
-        if pfad in eintraege:
-            befund("Manifest", "Manifest nennt %s mehrfach (Zeilen %d und %d)" % (pfad, zeile_von[pfad], nr))
-            continue
-        eintraege[pfad] = int(groesse)
-        zeile_von[pfad] = nr
-
+    zeilen = roh.split(b"\n")                      # nur '\n' trennt (asset_abgleich.c: strchr '\n')
+    kopf = zeilen[0].rstrip(b"\r")                 # angehaengte '\r' weg
     m = KOPF_RE.fullmatch(kopf)
+    if not m and KOPF_V1_RE.fullmatch(kopf):
+        fehler.append("Manifest im alten Format v1 ('%s', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab "
+                      "und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 "
+                      "'# re15 assets v2 <anzahl> <bytes>' + '<bytes>\\t<sha256>\\t<pfad>'" % _t(kopf, 80))
+        return {}, {}, True, fehler
     if not m:
-        befund("Manifest", "Manifest-Kopfzeile fehlt/unlesbar: '%s' (erwartet '# re15 assets <anzahl> <bytes>', "
-                           "build.gradle writeAssetManifest)" % kopf[:80])
-    else:
+        fehler.append("Manifest-Kopfzeile fehlt/unlesbar: '%s' (erwartet '# re15 assets v2 <anzahl> <bytes>', "
+                      "build.gradle writeAssetManifest)" % _t(kopf, 80))
+    # Geraet: Zeile 1 ist IMMER die Kopfzeile. Beginnt sie nicht mit '#', wird sie hier zusaetzlich als
+    # Datenzeile gelesen - nur fuer die Meldungen (das Urteil "ungueltig" steht dann schon fest).
+    daten = zeilen[1:] if kopf.startswith(b"#") else zeilen
+    eintraege, zeile_von, summe = {}, {}, 0
+    for nr, z in enumerate(daten, len(zeilen) - len(daten) + 1):
+        z = z.rstrip(b"\r")
+        if not z:
+            continue                                # leere Zeile: uebersprungen
+        if z.startswith(b"#"):
+            fehler.append("Manifest-Zeile %d: unerwartete Kommentarzeile '%s' (der Schreiber schreibt nur die "
+                          "Kopfzeile)" % (nr, _t(z, 80)))
+            continue
+        teile = z.split(b"\t", 2)
+        if len(teile) < 3:
+            fehler.append("Manifest-Zeile %d: erwartet '<bytes>\\t<sha256>\\t<pfad>', %d Tab(s): '%s'"
+                          % (nr, len(teile) - 1, _t(z)))
+            continue
+        groesse, sha, pfad = teile
+        if not GROESSE_RE.fullmatch(groesse):
+            fehler.append("Manifest-Zeile %d: Groessenfeld '%s' ist keine Zahl (1-18 Ziffern 0-9)" % (nr, _t(groesse, 40)))
+            continue
+        if not SHA_RE.fullmatch(sha):
+            fehler.append("Manifest-Zeile %d: Pruefsumme '%s' ist kein sha256 (genau 64 Zeichen 0-9a-f, "
+                          "Kleinbuchstaben)" % (nr, _t(sha, 70)))
+            continue
+        grund = _pfad_fehler(pfad)
+        if grund:
+            fehler.append("Manifest-Zeile %d: unzulaessiger Pfad '%s' (%s)" % (nr, _t(pfad), grund))
+            continue
+        p = pfad.decode("utf-8")
+        if p in eintraege:
+            fehler.append("Manifest nennt %s mehrfach (Zeilen %d und %d)" % (p, zeile_von[p], nr))
+            continue
+        eintraege[p] = (int(groesse), sha.decode("ascii"))
+        zeile_von[p] = nr
+        summe += int(groesse)
+        if summe > (1 << 63) - 1:
+            fehler.append("Manifest-Zeile %d: Summe der Groessen > 2^63-1 (asset_abgleich.c: laeuft ueber)" % nr)
+            summe = -(1 << 70)                      # nur einmal melden; Kopfzeile passt dann sicher nicht
+    if not eintraege and m:
+        fehler.append("Manifest ohne Dateien (das Geraet entpackt dann nichts)")
+    if m:
         n_kopf, b_kopf = int(m.group(1)), int(m.group(2))
-        n_ist, b_ist = len(eintraege), sum(eintraege.values())
+        n_ist, b_ist = len(eintraege), sum(g for g, _s in eintraege.values())
         if (n_kopf, b_kopf) != (n_ist, b_ist):
-            befund("Manifest", "Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeilen "
-                               "ergeben %d / %d" % (n_kopf, b_kopf, n_ist, b_ist))
+            fehler.append("Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeilen ergeben %d / %d"
+                          % (n_kopf, b_kopf, n_ist, b_ist))
+    klein = {}
+    for p in eintraege:                             # der App-Speicher ist case-insensitiv (Dossier N1, 1.3)
+        klein.setdefault(p.encode("utf-8").translate(_ASCII_KLEIN), []).append(p)
+    for gruppe in sorted(v for v in klein.values() if len(v) > 1):
+        fehler.append("Manifest: Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)"
+                      % " / ".join(sorted(gruppe)))
+    return eintraege, zeile_von, False, fehler
 
+
+def manifest_pruefen(roh, apk_dateien, befund):
+    """roh = Bytes von assets/re15_assets.txt; apk_dateien = {rel: (groesse, sha256|None)} (ohne Manifest;
+    sha256 None = Eintrag nicht lesbar, der Grund steht schon unter "APK: beschaedigt")."""
+    eintraege, _zeile_von, v1, fehler = manifest_lesen(roh, _manifest_grenze())
+    for text in fehler:
+        befund("Manifest", text)
+    if v1:
+        return 0, 0
     for pfad in sorted(eintraege):
+        m_groesse, m_sha = eintraege[pfad]
         if pfad not in apk_dateien:
             befund("Manifest: Zeile ohne APK-Eintrag",
-                   "Manifest nennt %s (%d B), die APK hat keinen Eintrag assets/%s" % (pfad, eintraege[pfad], pfad))
-        elif apk_dateien[pfad] != eintraege[pfad]:
+                   "Manifest nennt %s (%d B), die APK hat keinen Eintrag assets/%s" % (pfad, m_groesse, pfad))
+            continue
+        a_groesse, a_sha = apk_dateien[pfad]
+        if a_groesse != m_groesse:
             befund("Manifest: falsche Groesse",
-                   "Manifest-Groesse falsch: %s Manifest %d B, APK %d B (Entpacken scheitert bei jedem "
-                   "Start, android_glue.c:225)" % (pfad, eintraege[pfad], apk_dateien[pfad]))
+                   "Manifest-Groesse falsch: %s Manifest %d B, APK %d B (das Geraet verwirft die entpackte Datei, "
+                   "android_glue.c entpacken)" % (pfad, m_groesse, a_groesse))
+        elif a_sha is not None and a_sha != m_sha:
+            befund("Manifest: falsche Pruefsumme",
+                   "Manifest-Pruefsumme falsch: %s Manifest %s.., APK %s.. (das Geraet verwirft die entpackte "
+                   "Datei, android_glue.c entpacken)" % (pfad, m_sha[:16], a_sha[:16]))
     for pfad in sorted(apk_dateien):
         if pfad not in eintraege:
             befund("Manifest: Datei fehlt im Manifest",
                    "fehlt im Manifest: %s (wird auf dem Geraet nie entpackt)" % pfad)
-    return len(eintraege), sum(eintraege.values())
+    return len(eintraege), sum(g for g, _s in eintraege.values())
 
 
 def pruefen(repo, apk, max_zeilen):
@@ -1174,6 +1253,7 @@ def pruefen(repo, apk, max_zeilen):
         bytes_gleich = 0
         n_komprimiert = {}
         gelesen, kaputt = set(), set()
+        apk_sha = {}                                  # Name -> sha256 der Daten (fuer die Manifest-Pruefsummen)
 
         def lage(name):
             e = asset_infos.get(name)
@@ -1200,6 +1280,7 @@ def pruefen(repo, apk, max_zeilen):
                 kaputt.add(e.nr)
                 continue
             a_sha, a_n = r
+            apk_sha[name] = a_sha
             q_sha, q_n = _sha_datei(pfad)
             if a_sha != q_sha:
                 befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s  Quelle %s.., APK %s.."
@@ -1212,8 +1293,11 @@ def pruefen(repo, apk, max_zeilen):
 
         # (b2) alle uebrigen lesbaren Eintraege (lib/, classes.dex, Manifest, ...): CRC32 + Laenge
         for e in sorted((x for x in eintraege if x.lesbar and x.nr not in gelesen), key=lambda x: x.lho):
-            if _eintrag_pruefen(fa, e, befund) is None:
+            r = _eintrag_pruefen(fa, e, befund)
+            if r is None:
                 kaputt.add(e.nr)
+            elif asset_infos.get(e.name) is e:
+                apk_sha[e.name] = r[0]
 
         # (c) nichts Zusaetzliches unter assets/
         for name in sorted(asset_infos):
@@ -1225,10 +1309,10 @@ def pruefen(repo, apk, max_zeilen):
         e_man = asset_infos.get(man_name)
         if e_man is None:
             befund("Manifest", "Manifest fehlt in der APK: %s (das Geraet entpackt dann NICHTS, "
-                               "android_glue.c:153)" % man_name)
+                               "android_glue.c apk_datei_lesen)" % man_name)
         elif e_man.lesbar and e_man.nr not in kaputt:
             roh = _eintrag_lesen(fa, e_man, sammeln=True)[3]
-            apk_dateien = {n[len("assets/"):]: x.usize for n, x in asset_infos.items() if n != man_name}
+            apk_dateien = {n[len("assets/"):]: (x.usize, apk_sha.get(n)) for n, x in asset_infos.items() if n != man_name}
             n_man, b_man = manifest_pruefen(roh, apk_dateien, befund)
 
     # (e) Zaehlung
@@ -1331,8 +1415,8 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
 )
 # Datei > BLOCK: nur die "gross"-Faelle (sonst kaeme ein Vergleich nur ueber den 1. Block durch)
 _GROSS = ("re15_port/shared_assets/PSX/MOVIE/GROSS.STR", BLOCK + 4096 + 37)
-# Manifest-Grenze DES GERAETS, als eigene Zahl der Fixture (Runde 4, Gegenpruefung R3 MU4): android_glue.c:80
-# read_apk_asset verwirft das Manifest bei sz > (64u << 20). Bewusst NICHT die Konstante des Gates - sonst
+# Manifest-Grenze DES GERAETS, als eigene Zahl der Fixture (Runde 4, Gegenpruefung R3 MU4; seit Runde 34a N1:
+# asset_abgleich.h RE15_ABGLEICH_LISTE_MAX (64u << 20), android_glue.c apk_datei_lesen verwirft groessere). Bewusst NICHT die Konstante des Gates - sonst
 # wanderte ein Fall mit einer verschobenen Konstante (64 << 30) einfach mit und bestaetigte sich selbst.
 _FX_GERAET_MANIFEST = 64 * 1024 * 1024
 # wie AGP: Manifest/dex komprimiert (Deflate), .so und resources.arsc Stored (Nachbesserung R2, M16:
@@ -1641,12 +1725,20 @@ class _Fall:
         self.argumente = []                  # zusaetzliche Aufrufargumente (z.B. --max-zeilen)
 
     def manifest_aus_eintraegen(self):
-        return [(n[len("assets/"):], len(b)) for n, b, _m in self.eintraege]
+        """[(pfad, groesse, sha256)] wie writeAssetManifest sie aus den gestagten Dateien schreibt."""
+        return [(n[len("assets/"):], len(b), hashlib.sha256(b).hexdigest()) for n, b, _m in self.eintraege]
 
     @staticmethod
     def manifest_text(zeilen):
-        z = sorted("%d\t%s" % (g, p) for p, g in zeilen)           # wie writeAssetManifest (:131-141)
-        return "# re15 assets %d %d\n" % (len(z), sum(g for _p, g in zeilen)) + "\n".join(z) + "\n"
+        """Format v2 wie writeAssetManifest (nach Pfad sortiert). Zeilen (pfad, groesse[, sha256]); ohne sha256
+        (Geisterzeilen) steht eine gueltige, aber zu keiner Datei passende Summe da."""
+        z = []
+        for t in zeilen:
+            s = t[2] if len(t) > 2 else hashlib.sha256(("geist:" + t[0]).encode("utf-8", "surrogatepass")).hexdigest()
+            z.append((t[0], "%d\t%s\t%s" % (t[1], s, t[0])))
+        z.sort()
+        return ("# re15 assets v2 %d %d\n" % (len(z), sum(t[1] for t in zeilen)) + "\n".join(l for _p, l in z)
+                + "\n")
 
     def schreiben(self):
         for rel, b in self.quelle.items():
@@ -1758,11 +1850,11 @@ def _faelle():
         f.eintraege.append(["assets/" + rel, f.quelle[rel], zipfile.ZIP_STORED])
 
     def man_groesse(f):
-        f.manifest_zeilen = [(p, g + 1 if p == "shared_assets/RE2/TORSE.VBS" else g)
-                             for p, g in f.manifest_aus_eintraegen()]
+        f.manifest_zeilen = [(p, g + 1 if p == "shared_assets/RE2/TORSE.VBS" else g, s)
+                             for p, g, s in f.manifest_aus_eintraegen()]
 
     def man_zeile_fehlt(f):
-        f.manifest_zeilen = [(p, g) for p, g in f.manifest_aus_eintraegen() if p != P2DS]
+        f.manifest_zeilen = [z for z in f.manifest_aus_eintraegen() if z[0] != P2DS]
 
     def nur_quelle(f):
         f.quelle["re15_port/shared_assets/RE15DOOR/NEU.DO2"] = b"nur im Quellbaum"
@@ -1785,7 +1877,7 @@ def _faelle():
     def kopf(f):
         t = _Fall.manifest_text(f.manifest_aus_eintraegen())
         n = len(f.eintraege)
-        f.manifest_roh = t.replace("# re15 assets %d " % n, "# re15 assets %d " % (n + 1), 1).encode()
+        f.manifest_roh = t.replace("# re15 assets v2 %d " % n, "# re15 assets v2 %d " % (n + 1), 1).encode()
 
     def bom(f):
         f.manifest_roh = b"\xef\xbb\xbf" + _Fall.manifest_text(f.manifest_aus_eintraegen()).encode()
@@ -1861,11 +1953,13 @@ def _faelle():
     def doppelzeile(f):                  # U2: dieselbe Datei zweimal, erste Zeile mit falscher Groesse
         t = _Fall.manifest_text(f.manifest_aus_eintraegen())
         kopf_, rest = t.split("\n", 1)
-        f.manifest_roh = (kopf_ + "\n9999\t" + P2DS + "\n" + rest).encode()
+        f.manifest_roh = (kopf_ + "\n9999\t" + "9" * 64 + "\t" + P2DS + "\n" + rest).encode()
 
-    def unterstrich(f):                  # U7: '4_396' - int() nimmt es, atoll() liest 4
+    def unterstrich(f):                  # U7: '4_396' - int() nimmt es, das Geraet liest nur 0-9
         t = _Fall.manifest_text(f.manifest_aus_eintraegen())
-        f.manifest_roh = t.replace("4396\t" + P2DS, "4_396\t" + P2DS, 1).encode()
+        if t.count("\n4396\t") != 1:
+            raise AssertionError("Selbsttest-Fixture: '4396' nicht genau einmal als Groesse im Manifest")
+        f.manifest_roh = t.replace("\n4396\t", "\n4_396\t", 1).encode()
 
     def man_kein_utf8(f):
         t = _Fall.manifest_text(f.manifest_aus_eintraegen()).encode()
@@ -1875,7 +1969,7 @@ def _faelle():
         f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + "# Notiz\n").encode()
 
     def man_selbst(f):
-        f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + "12\tre15_assets.txt\n").encode()
+        f.manifest_roh = (_Fall.manifest_text(f.manifest_aus_eintraegen()) + "12\t" + "0" * 64 + "\tre15_assets.txt\n").encode()
 
     def man_ohne_kopf(f):
         f.manifest_roh = _Fall.manifest_text(f.manifest_aus_eintraegen()).split("\n", 1)[1].encode()
@@ -2042,7 +2136,7 @@ def _faelle():
     Q07 = "re15_port/shared_assets/RE15DOOR/P07G.DO2"
 
     def man_kleiner(f):                  # M1: Manifest nennt 1 B WENIGER als die APK hat
-        f.manifest_zeilen = [(p, g - 1 if p == P2DS else g) for p, g in f.manifest_aus_eintraegen()]
+        f.manifest_zeilen = [(p, g - 1 if p == P2DS else g, s) for p, g, s in f.manifest_aus_eintraegen()]
 
     def usize_plus(name):                # M9: entpackte Laenge (LFH + CD) +100, Daten und CRC bleiben
         def faelschen(f):
@@ -2096,8 +2190,8 @@ def _faelle():
     def kopf_arabisch(f):
         t = _Fall.manifest_text(f.manifest_aus_eintraegen())
         kopf_, rest = t.split("\n", 1)
-        kopf_ = "# re15 assets " + "".join(chr(0x0660 + int(c)) if c.isdigit() else c
-                                            for c in kopf_[len("# re15 assets "):])
+        kopf_ = "# re15 assets v2 " + "".join(chr(0x0660 + int(c)) if c.isdigit() else c
+                                               for c in kopf_[len("# re15 assets v2 "):])
         f.manifest_roh = (kopf_ + "\n" + rest).encode("utf-8")
 
     # --- Nachbesserung R2, Befund B2: Tuerarchive gegen die Engine-Tabellen (Quelle UND APK gleich falsch)
@@ -2277,7 +2371,7 @@ def _faelle():
             t = _Fall.manifest_text(z)
             kopf_, rest = t.split("\n", 1)
             n, b = [int(x) for x in kopf_.split()[-2:]]
-            kopf_ = "# re15 assets %d %d" % (n + kopf_anzahl, b + kopf_bytes)
+            kopf_ = "# re15 assets v2 %d %d" % (n + kopf_anzahl, b + kopf_bytes)
             f.manifest_roh = (kopf_ + "\n" + (nach_kopf + "\n" if nach_kopf else "") + rest).encode("utf-8")
         return faelschen
 
@@ -2438,35 +2532,54 @@ def _faelle():
     # Methodenpruefung, die der Selbsttest bis dahin NICHT fing (Mutanten MU1-MU8 der Gegenpruefung:
     # rstrip() statt rstrip('\r'), '\d' bzw. isdigit() statt [0-9], splitlines(), 64 << 30, Methode <= 8,
     # strip() an Kopfzeile bzw. Pfad). Das echte Gate lehnt jede dieser Faelschungen ab (wie das Geraet sie
-    # liest, android_glue.c:196-206: Trennung NUR an '\n', nur angehaengte '\r' weg, atoll/sscanf nur 0-9);
+    # liest, asset_abgleich.c re15_abgleich_lesen: Trennung NUR an '\n', nur angehaengte '\r' weg, nur 0-9);
     # je Mutant trifft mindestens ein Fall GENAU seine Abschwaechung - der Mutant nimmt die Faelschung an.
     P07M = P07[len("assets/"):]                  # Manifestpfad der Fixture: shared_assets/RE15DOOR/P07G.DO2, 2748 B
 
     def man_ersetzen(alt, neu):
-        """Manifest wie writeAssetManifest, dann GENAU EINE Textstelle ersetzen (Kopfzeile bleibt)."""
+        """Manifest wie writeAssetManifest, dann GENAU EINE Textstelle ersetzen (Kopfzeile bleibt).
+        '{S}' in alt/neu = die echte sha256 von P07G.DO2 (Format v2: '<bytes>\\t<sha256>\\t<pfad>')."""
         def faelschen(f):
+            s = hashlib.sha256(f.eintrag(P07)[1]).hexdigest()
+            platz = (("{SU}", s.upper()), ("{S63}", s[:63]), ("{S}", s))
+            a, n = alt, neu
+            for k, v in platz:
+                a, n = a.replace(k, v), n.replace(k, v)
             t = _Fall.manifest_text(f.manifest_aus_eintraegen())
-            if t.count(alt) != 1:
-                raise AssertionError("Selbsttest-Fixture: %r %d-mal im Manifest" % (alt, t.count(alt)))
-            f.manifest_roh = t.replace(alt, neu).encode("utf-8")
+            if t.count(a) != 1:
+                raise AssertionError("Selbsttest-Fixture: %r %d-mal im Manifest" % (a, t.count(a)))
+            f.manifest_roh = t.replace(a, n).encode("utf-8")
         return faelschen
 
     def pfad_ende(zeichen):              # MU1 rstrip() / MU8 strip(): Zeichen am Ende von Pfad bzw. Zeile
         return man_ersetzen("\t%s\n" % P07M, "\t%s%s\n" % (P07M, zeichen))
 
     def trenner(zeichen):                # MU3 splitlines(): anderer Zeilentrenner statt '\n' VOR der P07G-Zeile
-        return man_ersetzen("\n2748\t%s\n" % P07M, "%s2748\t%s\n" % (zeichen, P07M))
+        return man_ersetzen("\n2748\t{S}\t%s\n" % P07M, "%s2748\t{S}\t%s\n" % (zeichen, P07M))
 
     def groesse_ziffern(ziffern):        # MU2 '\d' / MU6 isdigit(): Groesse 2748 in anderen Ziffern (ziffern[0..9])
-        return man_ersetzen("\n2748\t%s\n" % P07M, "\n%s\t%s\n" % ("".join(ziffern[int(c)] for c in "2748"), P07M))
+        return man_ersetzen("\n2748\t{S}\t%s\n" % P07M,
+                            "\n%s\t{S}\t%s\n" % ("".join(ziffern[int(c)] for c in "2748"), P07M))
 
     def kopf_ziffern(ziffern):           # KOPF_RE nur [0-9]: Kopfzeile in anderen Ziffern
         def faelschen(f):
             t = _Fall.manifest_text(f.manifest_aus_eintraegen())
             kopf_, rest = t.split("\n", 1)
-            zahlen = kopf_[len("# re15 assets "):]
-            f.manifest_roh = ("# re15 assets " + "".join(ziffern[int(c)] if "0" <= c <= "9" else c for c in zahlen)
+            zahlen = kopf_[len("# re15 assets v2 "):]
+            f.manifest_roh = ("# re15 assets v2 " + "".join(ziffern[int(c)] if "0" <= c <= "9" else c for c in zahlen)
                               + "\n" + rest).encode("utf-8")
+        return faelschen
+
+    # --- Runde 34a N1 (Format v2): die neue Spalte sha256 und die neuen Pfad-/Listenregeln
+    #     (jni/asset_abgleich.h). Das Geraet verwirft die GANZE Liste bei jeder Abweichung; das Gate meldet sie.
+    def man_v1(f):                       # die Liste von v0.8.19 (Format v1) in einer sonst guten APK
+        z = sorted("%d\t%s" % (g, p) for p, g, _s in f.manifest_aus_eintraegen())
+        f.manifest_roh = ("# re15 assets %d %d\n" % (len(z), sum(g for _p, g, _s in f.manifest_aus_eintraegen()))
+                          + "\n".join(z) + "\n").encode()
+
+    def man_geister(zeilen):             # zusaetzliche (Geister-)Zeilen, Kopfzeile passend mitgerechnet
+        def faelschen(f):
+            f.manifest_zeilen = f.manifest_aus_eintraegen() + list(zeilen)
         return faelschen
 
     def kopf_rand(vorn, hinten):         # MU7 strip(): Leerraum vor bzw. hinter der Kopfzeile
@@ -2515,7 +2628,8 @@ def _faelle():
         ("Manifest: Kopfzeile Anzahl falsch", kopf, 1, ["Manifest-Kopfzeile passt nicht"]),
         ("Manifest: BOM", bom, 1, ["BOM"]),
         ("Manifest fehlt in der APK", ohne_manifest, 1, ["Manifest fehlt in der APK"]),
-        ("Manifest: Zeile ohne Tab", ohne_tab, 1, ["ohne Tab", "fehlt im Manifest: shared_assets/RE2/CDEMD0.EMS"]),
+        ("Manifest: Zeile mit nur einem Tab (Summe + Pfad verschmolzen)", ohne_tab, 1,
+         ["1 Tab(s)", "fehlt im Manifest: shared_assets/RE2/CDEMD0.EMS"]),
         ("Manifest: Pfad mit '..'", punktpunkt, 1, ["unzulaessiger Pfad 'shared_assets/../../boese.bin'"]),
         ("RE15DOOR leer (Quelle und APK)", re15door_leer, 1, ["Quellbaum leer: re15_port/shared_assets/RE15DOOR",
                                                                "Pflichtinhalt fehlt: re15_port/shared_assets/RE15DOOR"]),
@@ -2538,7 +2652,7 @@ def _faelle():
         ("Manifest: Groessenfeld '4_396'", unterstrich, 1, ["Groessenfeld '4_396' ist keine Zahl"]),
         ("Manifest: kein UTF-8", man_kein_utf8, 1, ["Manifest ist kein gueltiges UTF-8"]),
         ("Manifest: Kommentarzeile '# Notiz'", man_notiz, 1, ["unerwartete Kommentarzeile '# Notiz'"]),
-        ("Manifest: nennt sich selbst", man_selbst, 1, ["nennt das Manifest selbst"]),
+        ("Manifest: nennt sich selbst", man_selbst, 1, ["unzulaessiger Pfad 're15_assets.txt' (ohne '/'"]),
         ("Manifest: Kopfzeile fehlt", man_ohne_kopf, 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
         ("Eintragsname mit '\\' (F2)", name_backslash, 1, ["'\\' im Namen", "fehlt in der APK: " + P07]),
         ("Eintragsname mit NUL-Anhang (F3)", name_nul, 1, ["NUL-Byte im Namen", "fehlt in der APK: " + P07]),
@@ -2715,7 +2829,7 @@ def _faelle():
         ("--quellbaum: RE2-Tuerarchiv fehlt", modus("quellbaum", beide(D13, None)), 1,
          ["RE2-Tuerarchiv fehlt: re15_port/shared_assets/RE2/DOOR/DOOR13.DO2"]),
         ("Manifest genau an der Grenze (Pruefhaken senkt 64 MiB)", man_grenze(False), 0, ["APK-ASSET-GATE-OK"]),
-        ("Manifest 1 B ueber der Grenze", man_grenze(True), 1, ["das Geraet liest es nicht (android_glue.c:80)"]),
+        ("Manifest 1 B ueber der Grenze", man_grenze(True), 1, ["das Geraet liest es nicht (asset_abgleich.h"]),
         ("EOCD: Datentraeger-Nummer 1", eocd_feld(4, 1), 2, ["ZIP64/mehrteiliges Archiv"]),
         ("EOCD: Zentralverzeichnis auf Datentraeger 1", eocd_feld(6, 1), 2, ["ZIP64/mehrteiliges Archiv"]),
         ("EOCD: Eintraege hier != Eintraege gesamt", eocd_feld(8, plus=-1), 2, ["ZIP64/mehrteiliges Archiv"]),
@@ -2813,11 +2927,11 @@ def _faelle():
         ("R4 MU1/MU8: Manifestpfad mit Leerzeichen am Ende", pfad_ende(" "), 1,
          ["Manifest nennt %s  (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU1/MU8: Manifestpfad mit Tab am Ende", pfad_ende("\t"), 1,
-         ["Manifest nennt %s\t (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+         ["unzulaessiger Pfad '%s\t' (Steuerzeichen)" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU1/MU3: Manifestzeile endet mit VT (\\x0b)", pfad_ende("\x0b"), 1,
-         ["Manifest nennt %s\x0b (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+         ["unzulaessiger Pfad '%s\x0b' (Steuerzeichen)" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU1/MU3: Manifestzeile endet mit FF (\\x0c)", pfad_ende("\x0c"), 1,
-         ["Manifest nennt %s\x0c (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+         ["unzulaessiger Pfad '%s\x0c' (Steuerzeichen)" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU1/MU8: Manifestpfad mit NBSP (U+00A0) am Ende", pfad_ende(" "), 1,
          ["Manifest nennt %s" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU8: Manifestpfad mit Leerzeichen am Anfang", man_ersetzen("\t%s\n" % P07M, "\t %s\n" % P07M), 1,
@@ -2837,22 +2951,22 @@ def _faelle():
         # Groesse >= 64 GiB (atoll liest 64 Bit, das Geraet vergleicht mit der echten Dateigroesse): Kopfzeile
         # passend mitgerechnet, damit NUR die Groesse abweicht - ein Leser mit 32-Bit-Groessen saehe 2748 B
         ("R4: Groessenfeld 64 GiB + 2748 (32-Bit-Ueberlauf waere 2748)",
-         lambda f: setattr(f, "manifest_zeilen", [(p, g + (64 << 30) if p == P07M else g)
-                                                  for p, g in f.manifest_aus_eintraegen()]), 1,
+         lambda f: setattr(f, "manifest_zeilen", [(p, g + (64 << 30) if p == P07M else g, s)
+                                                  for p, g, s in f.manifest_aus_eintraegen()]), 1,
          ["Manifest-Groesse falsch: %s Manifest %d B, APK 2748 B" % (P07M, (64 << 30) + 2748)], False,
          ["Manifest-Kopfzeile passt nicht"]),
         ("R4 MU2/MU6: Groessenfeld in Vollbreit-Ziffern", groesse_ziffern("０１２３４５６７８９"),
-         1, ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+         1, ["ist keine Zahl (1-18 Ziffern 0-9)", "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU2/MU6: Groessenfeld in arabisch-indischen Ziffern",
          groesse_ziffern("٠١٢٣٤٥٦٧٨٩"), 1,
-         ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+         ["ist keine Zahl (1-18 Ziffern 0-9)", "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU6: Groessenfeld hochgestellt (isdigit, nicht Nd)",
          groesse_ziffern("⁰¹²³⁴⁵⁶⁷⁸⁹"), 1,
-         ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+         ["ist keine Zahl (1-18 Ziffern 0-9)", "fehlt im Manifest: %s (wird" % P07M]),
         ("R4: Manifest-Kopfzeile in Vollbreit-Ziffern",
          kopf_ziffern("０１２３４５６７８９"), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
         ("R4 MU7: Kopfzeile mit Leerzeichen davor", kopf_rand(" ", ""), 1,
-         ["Manifest-Kopfzeile fehlt/unlesbar", "Manifest-Zeile 1 ohne Tab"]),
+         ["Manifest-Kopfzeile fehlt/unlesbar", "Manifest-Zeile 1: erwartet"]),
         ("R4 MU7: Kopfzeile mit Leerzeichen dahinter", kopf_rand("", " "), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
         ("R4 MU7: Kopfzeile mit Tab dahinter", kopf_rand("", "\t"), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
         ("R4 MU5: Methode 1 auf Deflate-Daten", methode_nr(1, True), 1,
@@ -2863,6 +2977,50 @@ def _faelle():
          ["Methode 1 (lesbar sind 0 = Stored, 8 = Deflate): " + TEX]),
         ("R4 MU4: Manifest 1 B ueber 64 MiB, OHNE Pruefhaken", man_geraet_grenze, 1,
          ["Manifest %d B > %d B (64 MiB): das Geraet liest es nicht" % (_FX_GERAET_MANIFEST + 1, _FX_GERAET_MANIFEST)]),
+        # --- ab hier Runde 34a N1: Format v2 (Spalte sha256, Pfad-/Listenregeln aus jni/asset_abgleich.h, v1 abgelehnt)
+        ("N1: Manifest im alten Format v1 (wie v0.8.19)", man_v1, 1,
+         ["Manifest im alten Format v1", "entpackt NICHTS"], False, ["fehlt im Manifest"]),
+        ("N1: Pruefsumme falsch (andere gueltige sha256, gleiche Groesse)",
+         man_ersetzen("\t{S}\t%s\n" % P07M, "\t%s\t%s\n" % ("0123456789abcdef" * 4, P07M)), 1,
+         ["Manifest-Pruefsumme falsch: %s Manifest 0123456789abcdef.., APK " % P07M], False,
+         ["Manifest-Groesse falsch", "fehlt im Manifest"]),
+        ("N1: Pruefsumme fehlt (v1-Zeile in einer v2-Liste)", man_ersetzen("\t{S}\t%s\n" % P07M, "\t%s\n" % P07M), 1,
+         ["1 Tab(s): '2748\t%s'" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme in Grossbuchstaben (Wert sonst gleich)", man_ersetzen("\t{S}\t%s\n" % P07M, "\t{SU}\t%s\n" % P07M), 1,
+         ["ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme mit Leerzeichen dahinter", man_ersetzen("\t{S}\t%s\n" % P07M, "\t{S} \t%s\n" % P07M), 1,
+         ["ist kein sha256", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme mit Leerzeichen davor", man_ersetzen("\t{S}\t%s\n" % P07M, "\t {S}\t%s\n" % P07M), 1,
+         ["ist kein sha256", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme 63 Zeichen", man_ersetzen("\t{S}\t%s\n" % P07M, "\t{S63}\t%s\n" % P07M), 1,
+         ["ist kein sha256", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme 65 Zeichen", man_ersetzen("\t{S}\t%s\n" % P07M, "\t{S}0\t%s\n" % P07M), 1,
+         ["ist kein sha256", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Pruefsumme leer", man_ersetzen("\t{S}\t%s\n" % P07M, "\t\t%s\n" % P07M), 1,
+         ["Pruefsumme '' ist kein sha256", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Groessenfeld mit 19 Ziffern", man_ersetzen("\n2748\t{S}\t%s\n" % P07M, "\n0000000000000002748\t{S}\t%s\n" % P07M),
+         1, ["Groessenfeld '0000000000000002748' ist keine Zahl", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: leere Zeilen zwischen den Zeilen (gut)", man_ersetzen("\n2748\t{S}\t", "\n\n\r\n\r\r\n2748\t{S}\t"), 0,
+         ["APK-ASSET-GATE-OK"]),
+        ("N1: Pfad ohne '/'", man_geister([("GEIST.BIN", 5)]), 1, ["unzulaessiger Pfad 'GEIST.BIN' (ohne '/'"]),
+        ("N1: Pfad endet auf .neu", man_geister([("shared_assets/PSX/X.neu", 5)]), 1,
+         ["unzulaessiger Pfad 'shared_assets/PSX/X.neu' (endet auf .neu"]),
+        ("N1: Pfad endet auf .NEU (Gross/klein egal)", man_geister([("shared_assets/PSX/X.NEU", 5)]), 1,
+         ["unzulaessiger Pfad 'shared_assets/PSX/X.NEU' (endet auf .neu"]),
+        ("N1: Pfad 513 Bytes", man_geister([("shared_assets/" + "x" * 499, 5)]), 1, ["(513 Bytes > 512)"]),
+        ("N1: Pfad genau 512 Bytes (Regel gut, Datei fehlt in der APK)", man_geister([("shared_assets/" + "x" * 498, 5)]), 1,
+         ["Manifest nennt shared_assets/xxxx"], False, ["unzulaessiger Pfad"]),
+        ("N1: Pfade nur in Gross/klein verschieden", man_geister([("shared_assets/re15door/P07G.DO2", 2748)]), 1,
+         ["Pfade nur in Gross/klein verschieden: shared_assets/RE15DOOR/P07G.DO2 / shared_assets/re15door/P07G.DO2"]),
+        ("N1: NUL-Byte im Pfad", man_ersetzen("\t%s\n" % P07M, "\t%s\0x\n" % P07M), 1,
+         ["Manifest enthaelt ein NUL-Byte", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Manifest ohne Dateien", lambda f: setattr(f, "manifest_roh", b"# re15 assets v2 0 0\n"), 1,
+         ["Manifest ohne Dateien", "fehlt im Manifest: %s (wird" % P07M]),
+        ("N1: Kopfzeile v3", lambda f: setattr(f, "manifest_roh", _Fall.manifest_text(f.manifest_aus_eintraegen()).replace(
+            "# re15 assets v2 ", "# re15 assets v3 ", 1).encode()), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("N1: Summe der Groessen > 2^63-1 (10 x 18 Ziffern)",
+         man_geister([("shared_assets/PSX/G%d.BIN" % i, 999999999999999999) for i in range(10)]), 1,
+         ["Summe der Groessen > 2^63-1"]),
     )
 
 
@@ -2924,9 +3082,81 @@ _AUSLASS_PROBEN = (
 )
 
 
+# manifest_lesen gegen die Regeln des Geraets (Runde 34a N1): dieselben Listen wie der PC-Unit-Test
+# re15_port/tests/unit/test_r34a_asset_abgleich.c (asset_abgleich.c) - (Titel, Bytes, Geraet nimmt an?)
+_MS = b"0123456789abcdef" * 4
+_MK = b"# re15 assets v2 1 5\n5\t" + _MS + b"\t"
+_MANIFEST_PROBEN = (
+    ("gut", _MK + b"a/b\n", True),
+    ("CRLF", b"# re15 assets v2 1 5\r\n5\t" + _MS + b"\ta/b\r\n", True),
+    ("mehrere \\r", b"# re15 assets v2 1 5\r\r\n5\t" + _MS + b"\ta/b\r\r\r\n", True),
+    ("Leerzeilen", b"# re15 assets v2 1 5\n\n\r\n5\t" + _MS + b"\ta/b\n\n\n", True),
+    ("ohne \\n am Ende", _MK + b"a/b", True),
+    ("Nullen vorn", b"# re15 assets v2 01 005\n005\t" + _MS + b"\ta/b\n", True),
+    ("18 Ziffern", b"# re15 assets v2 1 999999999999999999\n999999999999999999\t" + _MS + b"\ta/b\n", True),
+    ("UTF-8 2 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xc3\x84.bin\n", True),
+    ("UTF-8 4 Byte", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/\xf0\x9f\x98\x80\n", True),
+    ("Leerzeichen im Pfad", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/b c.bin\n", True),
+    ("Punkt-Segmente als Name", b"# re15 assets v2 1 1\n1\t" + _MS + b"\ta/.b/..c/x.neux\n", True),
+    ("Pfad 512 Bytes", _MK + b"a/" + b"x" * 510 + b"\n", True),
+    ("v1-Liste", b"# re15 assets 2 10\n5\ta/b\n5\ta/c\n", False),
+    ("Kopf fehlt", b"5\t" + _MS + b"\ta/b\n", False),
+    ("Kopf v3", b"# re15 assets v3 1 5\n5\t" + _MS + b"\ta/b\n", False),
+    ("Kopf + Leerzeichen", b"# re15 assets v2 1 5 \n5\t" + _MS + b"\ta/b\n", False),
+    ("Kopf nach Leerzeile", b"\n" + _MK + b"a/b\n", False),
+    ("Kopf mit BOM", b"\xef\xbb\xbf" + _MK + b"a/b\n", False),
+    ("Kopf 19 Ziffern", b"# re15 assets v2 1 0000000000000000005\n5\t" + _MS + b"\ta/b\n", False),
+    ("Kopf Anzahl falsch", b"# re15 assets v2 2 5\n5\t" + _MS + b"\ta/b\n", False),
+    ("Kopf Bytes falsch", b"# re15 assets v2 1 6\n5\t" + _MS + b"\ta/b\n", False),
+    ("keine Datei", b"# re15 assets v2 0 0\n", False),
+    ("leer", b"", False),
+    ("Kommentarzeile", b"# re15 assets v2 1 5\n# x\n5\t" + _MS + b"\ta/b\n", False),
+    ("Groesse 19 Ziffern", b"# re15 assets v2 1 5\n0000000000000000005\t" + _MS + b"\ta/b\n", False),
+    ("Groesse +5", b"# re15 assets v2 1 5\n+5\t" + _MS + b"\ta/b\n", False),
+    ("Summe fehlt", b"# re15 assets v2 1 5\n5\ta/b\n", False),
+    ("Summe gross", b"# re15 assets v2 1 5\n5\t" + _MS.upper() + b"\ta/b\n", False),
+    ("Summe 63", b"# re15 assets v2 1 5\n5\t" + _MS[:63] + b"\ta/b\n", False),
+    ("Summe 65", b"# re15 assets v2 1 5\n5\t" + _MS + b"0\ta/b\n", False),
+    ("Summe + Leerzeichen", b"# re15 assets v2 1 5\n5\t" + _MS + b" \ta/b\n", False),
+    ("Pfad leer", _MK + b"\n", False),
+    ("Pfad mit Tab", _MK + b"a/b\tc\n", False),
+    ("Pfad '..'", _MK + b"shared_assets/../../boese.bin\n", False),
+    ("Pfad '.'", _MK + b"a/./b\n", False),
+    ("Pfad absolut", _MK + b"/data/b\n", False),
+    ("Pfad Backslash", _MK + b"a\\b\n", False),
+    ("Pfad ohne '/'", _MK + b"re15_card.mcr\n", False),
+    ("Pfad '//'", _MK + b"a//b\n", False),
+    ("Pfad '/' am Ende", _MK + b"a/b/\n", False),
+    ("Pfad 0x01", _MK + b"a/b\x01\n", False),
+    ("Pfad DEL", _MK + b"a/b\x7f\n", False),
+    ("Pfad \\r innen", _MK + b"a/\rb\n", False),
+    ("Pfad .neu", _MK + b"a/b.neu\n", False),
+    ("Pfad .Neu", _MK + b"a/b.Neu\n", False),
+    ("Pfad 513 Bytes", _MK + b"a/" + b"x" * 511 + b"\n", False),
+    ("UTF-8 0xff", _MK + b"a/b\xff\n", False),
+    ("UTF-8 ueberlang", _MK + b"a/\xc0\xaf\n", False),
+    ("UTF-8 Surrogat", _MK + b"a/\xed\xa0\x80\n", False),
+    ("UTF-8 > U+10FFFF", _MK + b"a/\xf4\x90\x80\x80\n", False),
+    ("UTF-8 abgeschnitten", _MK + b"a/\xe2\x82\n", False),
+    ("Pfad doppelt", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/b\n5\t" + _MS + b"\ta/b\n", False),
+    ("nur Gross/klein", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/B\n5\t" + _MS + b"\ta/b\n", False),
+    ("NUL", _MK + b"a/b\0c\n", False),
+    ("Summe > 2^63-1", b"# re15 assets v2 10 999999999999999999\n"
+     + b"".join(b"999999999999999999\t" + _MS + b"\ta/%d\n" % i for i in range(10)), False),
+)
+
+
 def _innere_proben():
     """-> Liste der falschen Antworten (leer = gut)."""
     falsch = []
+    for titel, roh, soll in _MANIFEST_PROBEN:
+        try:
+            _e, _z, _v1, fehler = manifest_lesen(roh)
+            ist = not fehler
+        except Exception as ex:
+            ist, fehler = "Ausnahme %r" % (ex,), []
+        if ist is not soll:
+            falsch.append("manifest_lesen(%s) nimmt an = %r, soll %r (%s)" % (titel, ist, soll, "; ".join(fehler)[:200]))
     for muster, pfad, soll in _ANT_PROBEN:
         try:
             ist = _ant_passt(muster, pfad)
@@ -2967,7 +3197,7 @@ def _innere_proben():
             ist = "Ausnahme %r" % (ex,)
         if not isinstance(ist, str) or (soll not in ist if soll else ist != ""):
             falsch.append("_auslass_hinweis(%r) = %r, soll %s" % (rel, ist, repr(soll) if soll else "''"))
-    # Manifest-Grenze = die des Geraets (Runde 4, Gegenpruefung R3 MU4: android_glue.c:80 sz > (64u << 20) -> NULL);
+    # Manifest-Grenze = die des Geraets (Runde 4, Gegenpruefung R3 MU4; asset_abgleich.h RE15_ABGLEICH_LISTE_MAX);
     # die Fall-Laeufe pruefen die Grenze sonst nur ueber den Pruefhaken, der sie senkt. Der Haken darf nie anheben.
     haken_vorher = os.environ.pop("RE15_GATE_MANIFEST_MAX", None)
     try:
@@ -3007,9 +3237,9 @@ def selbsttest():
     # Ergebnis aendert das nichts (ein falscher Fall = SELBSTTEST-FEHLER), es spart nur die Laufzeit
     schnell = os.environ.get("RE15_GATE_SELBSTTEST_SCHNELL") == "1"
     falsch = _innere_proben()
-    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7 + 3
+    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7 + 3 + len(_MANIFEST_PROBEN)
     print("   Innere Proben: %d/%d (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende, "
-          "Manifest-Grenze)" % (n_innen - len(falsch), n_innen))
+          "Manifest-Grenze, manifest_lesen v2)" % (n_innen - len(falsch), n_innen))
     if falsch:
         for z in falsch:
             print("   [FEHLER] " + z)
