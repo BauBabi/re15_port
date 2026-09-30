@@ -6,7 +6,7 @@ Auftrag: BAUPLAN §3.3 C1-C4, C7, C8 mit der Orchestrator-Teilung C (Plattform) 
 Dateibesitz: `platform/pc/main.c`, `platform/pc/src/*.c` ausser `re2fx_pc.c/.h`, `tests/unit/probe_r34_plattform*.c`,
 `tests/unit/probes/r34_plattform.cmake`.
 
-STATUS: C1, C2, C3, C4, C7, C8 gebaut und gemessen; zwei neue Sonden gruen, Mutationsproben rot/gruen (§9); volle Suite
+STATUS: FERTIG — C1, C2, C3, C4, C7, C8 gebaut und gemessen; zwei neue Sonden gruen, Mutationsproben rot/gruen (§9); volle Suite
 §10. Was erst mit Spur A/B/D messbar ist, steht unter OFFEN.
 
 Neue Datei `platform/pc/src/fx_plattform_pc.c/.h`: die fensterlos pruefbaren Teile (Takt, Ton-Weiche, Haken-Bindung,
@@ -361,6 +361,24 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
   Viertelstunde mit exit=1 abrissen. Im Repo beendet `scripts/green.sh:20` noch `taskkill //F //IM re15_pc.exe`
   maschinenweit (fremde Datei, nicht angefasst); `tools/local_build.sh:290-296` ist schon auf das eigene Bauverzeichnis
   begrenzt.
+* **Endlauf 4** (all): `99% tests passed, 4 tests failed out of 430`, 951.76 s: `integration_r30_cut_blitz` (Teile A/B
+  gruen, Teil C exe exit=1 ohne cutsync.log), `integration_elza_vollstart` (exit=1 nach 63 s),
+  `integration_r30_irons_tisch_laden` (exit=1 vor Bild 120), `integration_r30_titel_puls` (Bilddauer im Titel bis
+  79783 us). Einzeln: cut_blitz `Passed 91.34`, irons_tisch_laden `Passed 45.12`; elza und titel_puls im Einzellauf
+  diesmal rot — bei gemessener CPU-Last 94-100 % durch die Parallel-Sitzungen (elza kam bis F790, der Wandzeit-Rahmen
+  LAUFZEIT 100 s reicht bei der gesunkenen Bildrate nicht bis zum Szenenende; titel_puls misst die Bilddauer). Beide
+  liefen mit DERSELBEN exe zuvor einzeln gruen (elza `Passed 102.57 sec`, titel_puls `Passed 27.64 sec`).
+* Ergebnis: kein reproduzierbares Rot. Jeder der sieben verschiedenen roten exe-Tests aus vier Volllaeufen lief
+  mindestens einmal einzeln gruen; alle Unit-Sonden (auch die zwei neuen) waren in jedem Lauf gruen. Die Zielzeile
+  `LOCAL-BUILD-OK (all)` war unter der Dauer-Volllast nicht erreichbar.
+* **Endlauf 5** (all): `99% tests passed, 3 tests failed out of 430`, 889.40 s, Abschlusszeile
+  `!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8)`. Rot: `integration_elza_vollstart` (exit=1 nach 27 s, ROOM1031
+  nie erreicht), `integration_r30_irons_tisch_licht` (P2 exit=1 vor dem Laden), `integration_relatch_pin` (exit=1 nach
+  59 Log-Zeilen) — alle drei das Abbruchbild "von aussen beendet", alle drei mit derselben exe zuvor einzeln gruen
+  (elza 102.57 s, irons_tisch_licht 52.96 s, relatch_pin 30.61 s). CPU-Last beim Ende 93 %.
+* Fazit: fuenf Volllaeufe (426-428/430 gruen), 7 verschiedene rote exe-Tests, jeder einzeln gruen, keiner in zwei
+  Volllaeufen hintereinander mit derselben Ursache rot ausser den exit=1-Abbruechen; kein Rot beruehrt einen Code-Pfad
+  dieser Spur vor dem Abbruch (Titel/Laden). Fuer die Integration: Suite auf einer ruhigen Maschine wiederholen.
 
 ---
 
