@@ -60,7 +60,7 @@ Wortlaut (AUFTRAG.md Z. 14-19):
 | L6 | "erneut die Tür" | Jeder weitere Druck vor der Rettung zeigt NUR den Text msg 25; auch nach Raumwechsel (Bit (9,65) gespeichert). | Wortlaut. |
 | L7 | "Erst wenn man Ada gerettet hat" | Freigabe (3,0xBB). | §3.2. |
 | L8 | Elza ROOM1051 | Keine Sperre. | ROOM1091 hat weder Feuer noch Ada noch Nachrichten (sub00 @0x0222E und sub01 @0x02230 = `01 00`), (3,0xBB) wird in Elzas Spiel nie gesetzt; Sperre waere dauerhaft. Gleiche Regel wie tuer1120 (nur ROOM1130). |
-| L9 | Kamera | Aktive Kamera (Cut 4), kein Cut_chg. | §2.2: Cut 4 ist die einzige Kamera, die die Tuer zeigt (Cut 5: Leon hinter der Wandkante). Der Nutzer nennt keinen Schnitt. |
+| L9 | Kamera | Aktive Kamera (Cut 4), kein Cut_chg. | §2.2: an der Tuer ist aus jeder Richtung Cut 4 aktiv, und er zeigt Leon an der Tuer (Bild Mitte in `ist_cut4_rolltor_zu_offen_cut5.png`); die Nachbarkamera Cut 5 zeigt ihn nur als Streifen hinter der Wandkante (rechts). Der Nutzer nennt keinen Schnitt. |
 
 ## 2 Ist-Zustand im Port (gemessen)
 
