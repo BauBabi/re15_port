@@ -145,7 +145,12 @@ MSYS_BIN_POSIX="/$(printf '%s' "$MSYS_BIN_WIN" | sed -e 's#^\([A-Za-z]\):#\L\1#'
 [ -x "$MSYS_BIN_POSIX/gcc.exe" ] \
   || die "gcc.exe nicht gefunden unter $MSYS_BIN_POSIX (RE15_MSYS_BIN setzen)"
 
-CLEAN_PATH="$MSYS_BIN_POSIX:$CMAKE_DIR:$NINJA_DIR:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem"
+# ⛔ WindowsPowerShell/v1.0 gehoert hinein (2026-09-30, Runde 34 Nacht Spur C, gemessen): ohne
+# es findet `command -v powershell` unten im Bauschritt nichts, und der Pfadfilter faellt auf das
+# GLOBALE `taskkill //F //IM re15_pc.exe` zurueck — jeder Bau jedes Agenten beendete damit jede
+# re15_pc.exe der Maschine (Integrationshaken endeten mit exit=1 mitten im Lauf; dieselben vier
+# Haken mit umbenannter exe-Kopie: 4/4 gruen).
+CLEAN_PATH="$MSYS_BIN_POSIX:$CMAKE_DIR:$NINJA_DIR:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0"
 export PATH="$CLEAN_PATH"
 
 # --- Compiler explizit festnageln (nicht der CMake-Suche ueberlassen) ------
