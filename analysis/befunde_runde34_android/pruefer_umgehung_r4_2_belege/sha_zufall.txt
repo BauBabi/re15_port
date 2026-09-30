@@ -1,0 +1,7 @@
+zufall: 200 Nachrichten (Laengen 2..1044923, 87 davon < 300 B, 57 >= 64 KiB), 0 falsch
+strom 5368709121 B (5.00 GiB): C 286f212e14914d06.. Python 286f212e14914d06.. gleich
+strom 4294967296 B (4.00 GiB): C c141addf9e9e2d75.. Python c141addf9e9e2d75.. gleich
+strom 4294967295 B (4.00 GiB): C 489c1247f8dda951.. Python 489c1247f8dda951.. gleich
+datei C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb/apk/NB1.apk: C rc 0, 363483287 B, d6921014c580c4e8.. / Python 363483287 B, d6921014c580c4e8.. gleich
+ERGEBNIS: 0 falsch
+EXIT=0 194s

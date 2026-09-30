@@ -88,3 +88,37 @@ Werkzeug `u2_korpus.py` = Runde-1-Korpus (`u1_korpus.py`, 57 Listen, unveraender
   Inhalt ist gelistet). Gleiche Klasse wie U3 der Runde 1 (Gate gruen, Geraet kann die Liste nie umsetzen); heute ohne Folge
   (kein Asset-Ordner endet auf `.neu`), und NTFS haelt `X` + `X.neu\` nebeneinander - Befund F-Y4 (niedrig), Messung auf dem
   Geraet: Abschnitt 4 (sofern der Emulator frei wird).
+
+## 4. Entpacker (Y5, Y6, Y8, Y9)
+
+### 4.1 SHA-256 (Y8) - haltbar
+
+Der SHA-Teil von asset_abgleich.c ist seit der Runde 1 unveraendert (`git diff 6b8e8cc8 HEAD`: keine Zeile in SHA-Code).
+Trotzdem neu gemessen, gegen HEAD uebersetzt (Belege `sha_fips.txt`, `sha_zufall.txt`, Werkzeug `u2_sha_fips.c` + R4-1-Werkzeug
+`u1_sha_zusatz.c`/`u1_sha_vergleich.py` unveraendert):
+- FIPS-180-/NIST-Vektoren: leer, `abc`, 448 Bit (Stueck 1 und am Stueck), 896 Bit (Stuecke zu 7 B), 1 000 000 x `a` (je 1 B),
+  RFC-6234-TEST4, **NIST-Langnachricht 64 B x 16777216 = 1 GiB** (`50e72a0e...`): **8/8 ok**.
+- 200 Zufallsnachrichten mit NEUEM Seed 777001 (Laengen 2..1044923, 87 < 300 B, 57 >= 64 KiB, zufaellige Stueckelung inkl.
+  0-B-Aufrufe), Stroeme **5 GiB + 1 B**, genau 4 GiB, 4 GiB - 1 B (Byte- und Bitzaehler ueber 2^32), `re15_sha256_datei` auf NB1.apk
+  (363483287 B, `d6921014...`): **0 falsch** gegen Python hashlib.
+
+### 4.2 Waisen-Loeschen unter echtem POSIX (Y5, Y9) - haltbar
+
+Der Projekt-Unit-Test laeuft nur unter mingw - dort ist `re15_lstat` = `stat` und `RE15_IST_LINK` = 0 (asset_abgleich.c:23-31):
+die Symlink-Regel des NEUEN Loesch-Codes lief bis hier nie. `u2_waisen_test.c` (asset_abgleich.c HEAD unveraendert, sha256
+7699ee31...) im Linux-Container `re15-linux-build:deb11` (gcc 10.2, Test-Ordner im Container-/tmp, nicht auf dem 9p-Mount),
+einmal als uid 1000, einmal als root (Belege `waisen_linux_1000_1000.txt` 19/19 ok, `waisen_linux_0_0.txt` 17/17 ok, 2 Rechte-Faelle
+als root nicht aussagekraeftig):
+| Fall | Ergebnis |
+|---|---|
+| W1 `shared_assets` selbst ist Symlink nach aussen | Ziel unberuehrt, Link bleibt ("kein Baum", 0 geloescht) |
+| W2 Unterordner `PSX` ist Symlink nach aussen | nur der Link geloescht, Ziel unberuehrt |
+| W3 Datei-Symlinks | gelisteter Name bleibt (Entpacker: stat folgt, rename ersetzt den Link), ungelisteter Link weg, Ziel bleibt |
+| W4 Tiefe 70 (Grenze 64) | Waise in Tiefe 63 weg, in Tiefe 70 bleibt, Fehler gezaehlt |
+| W5 Pfade 3671 B / 4877 B (Grenze 4096) | kurzer Pfad geloescht, langer bleibt, Fehler gezaehlt - kein Loeschen eines abgeschnittenen Pfads |
+| W6 Ordner mit dem Namen einer gelisteten Datei / Datei mit dem Namen eines gelisteten Ordners | beide weg (Entpacker kann schreiben) |
+| W7 Ordner 0000 / Ordner 0555 (uid 1000) | Inhalt bleibt, als Fehler gezaehlt bzw. `melde(ok=0)` - Warnung, kein Abbruch (so dokumentiert) |
+| W8 `.neu`-Rest, `a.bin` neben gelistetem `A.BIN` (Linux: 2 Dateien), Name `\xff\xfe.bin`, `.nomedia`, FIFO | alle weg, gelistete Datei bleibt; zweiter Lauf (= Neustart nach Abbruch) 0/0 |
+| W9 Wurzel mit `/` am Ende, Spielstand + Listen in der Wurzel, `shared_assets` fehlt | Wurzel-Dateien unberuehrt, Waise in `synchro` weg, kein Fehler |
+Ausserhalb von `<s_root>/{shared_assets,synchro}` wird nichts geloescht; die Engine schreibt in beide Baeume nichts (grep aller
+`fopen(...,"w"/"a"...)`/`SDL_RWFromFile(...,"w")`: nur Logs im Arbeitsverzeichnis, Pfade aus Umgebungsvariablen, re15_card.mcr).
