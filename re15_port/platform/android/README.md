@@ -13,36 +13,82 @@ Controller funktioniert daneben wie auf dem PC (SDL-GameController).
 ## Bauen
 
 Voraussetzungen auf dem Bau-Rechner: JDK 17, ein Android-SDK-Ordner (wird ergaenzt),
-Internet (SDL2-Tarball, Gradle-Plugins, NDK). **Kein Android Studio noetig.**
+Internet (SDL2-Tarball, Gradle-Plugins, NDK) und **Python >= 3.8** fuer die Asset-Pruefung.
+**Kein Android Studio noetig.** Den Interpreter sucht `release/python_finden.sh`: ein echtes Python
+aus dem PATH (je Ordner erst `python3`, dann `python`) bzw. aus `RE15_PYTHON`, unter Windows
+zusaetzlich `C:/Python3*`. Der WindowsApps-Alias `python3`, der unter Git-Bash sonst zuerst kommt
+(und in v0.8.17 ungefragt Python 3.14 installiert hat), wird am Pfad erkannt und nie gestartet.
+Fehlt Python, bricht der Bau **vor** Gradle ab. Diagnose: `bash release/python_finden.sh`.
 
 ```bash
 release/build_android.sh                    # Version aus git describe --tags
 release/build_android.sh --version v0.8.5   # feste Version
+release/build_android.sh --gate-only <apk> --version v0.8.19   # nur die Pruefungen, kein Bau
 ```
 
 Das Skript
 
-1. installiert per `sdkmanager` in den vorhandenen SDK-Ordner nach, was fehlt
+1. sucht Python (`python_finden.sh`) und die Pruefwerkzeuge (`aapt`, `zipalign`,
+   `lib/apksigner.jar` aus `build-tools;35.0.0`, Java) — fehlt eines, Abbruch vor Gradle,
+2. installiert per `sdkmanager` in den vorhandenen SDK-Ordner nach, was fehlt
    (cmdline-tools 13114758, `ndk;27.2.12479018`, `cmake;3.22.1`, `platforms;android-35`,
    `build-tools;35.0.0`) und bestaetigt die Lizenzen,
-2. ruft `./gradlew -Pre15Version=<v> fetchSdl2 assembleRelease` in `platform/android/`,
-3. kopiert das Ergebnis nach `release/re15_port_<version>_android.apk`, prueft den Inhalt
-   (beide ABIs, alle Asset-Baeume, `aapt dump badging`) und schreibt
-   `release/SHA256SUMS_android.txt`.
+3. entfernt eine vorige `release/re15_port_<version>_android.apk` (scheitert der Bau, liegt keine
+   alte APK unter dem Namen) und den CMake-Cache `app/.cxx` (neue `*.c` fehlten sonst still),
+   dann `./gradlew -Pre15Version=<v> fetchSdl2 assembleRelease` in `platform/android/`,
+4. prueft die Gradle-Ausgabe mit `release/apk_pruefen.sh` — jeder Schritt an EINER privaten
+   Kopie der APK, jeder Befund bricht ab:
+   * Stichproben: beide ABIs (`libmain.so`, `libSDL2.so`), `re15_assets.txt`, je ein Asset je Baum,
+   * `aapt dump badging`: Paket `de.re15.port`, `versionName` = Version, `arm64-v8a` + `x86_64`,
+   * `zipalign -c -P 16 4`: Ausrichtung (Android 11+ installiert sonst nicht),
+   * `apksigner verify`: gueltige v2/v3-Signatur, genau ein Signer, und zwar der aus
+     `release/apk_signer.sha256` (Signer-Pin, siehe unten),
+   * `release/apk_asset_gate.py --selbsttest`: das Gate muss seine guten Mini-APKs annehmen und
+     jede Faelschung ablehnen, sonst wird ihm nicht getraut,
+   * die volle Asset-Pruefung: JEDE Datei der fuenf Asset-Baeume liegt mit gleicher Groesse und
+     sha256 in der APK, unter `assets/` liegt nichts sonst, `re15_assets.txt` stimmt Zeile fuer
+     Zeile (danach entpackt die App), jeder Eintrag ist so lesbar wie fuer Androids ZIP-Leser;
+     dazu das Tuer-Soll aus den Engine-Tabellen (jedes Port-Tuerarchiv in `RE15DOOR`, jedes
+     verlangte `RE2/DOOR/DOORxx.DO2` mit Groesse und Aufbau),
+   * am Ende: die Kopie ist unveraendert und unter dem Pfad liegen noch dieselben Bytes,
+5. legt erst danach genau die gepruefte Kopie als `release/re15_port_<version>_android.apk` ab
+   und schreibt `release/SHA256SUMS_android.txt`. Scheitert ein Schritt, liegt keine APK unter
+   diesem Namen (die Gradle-Ausgabe bleibt zur Diagnose unter `app/build/outputs/apk/`).
+
+`release/make_package.sh` prueft eine vorhandene APK vor dem Zippen noch einmal mit derselben
+Kette (dazu: neuer als der letzte Commit an `engine`, `include`, `platform/pc`,
+`platform/android`), bringt sie in den Split-Satz und entpackt sie daraus wieder: ihre sha256
+muss die der geprueften Kopie sein. Ein Android-Satz kommt nur in `SHA256SUMS.txt` und in git,
+wenn er in DIESEM Lauf so entstanden ist. Liegt ohne APK ein Satz derselben Version da, bricht
+make_package ab; `--ohne-android` schnuert nur die PC-Saetze und entfernt den alten Satz.
 
 Gradle-Seite (`app/build.gradle`):
 
 * `fetchSdl2` laedt `SDL2-2.28.5.tar.gz` sha256-geprueft nach `platform/android/_deps/`
   (gitignoriert). Daraus kommen `libSDL2.so` (CMake, `jni/CMakeLists.txt`) **und** die
   Java-Klassen `org.libsdl.app.*`.
-* `stageAssets`/`writeAssetManifest` spiegeln `shared_assets/PSX`, `shared_assets/extracted_fx`,
-  `shared_assets/RE2` und `synchro/STAGE*` (dieselbe Liste wie `release/make_package.sh`) nach
-  `app/build/re15_assets/` und schreiben `re15_assets.txt` (Groesse + Pfad je Datei).
+* `stageAssets`/`writeAssetManifest` spiegeln die fuenf Asset-Baeume `shared_assets/PSX`,
+  `shared_assets/extracted_fx`, `shared_assets/RE2`, `shared_assets/RE15DOOR` (Port-Tuerarchive,
+  seit Runde 33) und `synchro/STAGE*` nach `app/build/re15_assets/` und schreiben
+  `re15_assets.txt` (Groesse + Pfad je Datei). Dieselbe Liste steht in
+  `release/apk_asset_gate.py` (`BAEUME`, wird gegen `stageAssets` geprueft - weicht sie ab, bricht
+  die Pruefung ab) und in `release/make_package.sh` (`copy_common`, jedes PC-Paket wird per
+  `apk_asset_gate.py --paket` gegen die Liste geprueft).
 * `noCompress` enthaelt jede Endung der Asset-Baeume: die APK speichert die Assets
   **unkomprimiert** (~365 MB), das Entpacken auf dem Geraet ist damit ein reines Kopieren.
 * Signiert wird standardmaessig mit dem Android-Debug-Schluessel (`~/.android/debug.keystore`),
   das reicht fuer Sideload. Eigener Schluessel: `RE15_KEYSTORE`, `RE15_KEYSTORE_PASS`,
-  `RE15_KEY_ALIAS`, `RE15_KEY_PASS` in der Umgebung.
+  `RE15_KEY_ALIAS`, `RE15_KEY_PASS` in der Umgebung (gesetzt, aber die Datei fehlt: Gradle
+  bricht ab, kein stiller Rueckfall auf den Debug-Schluessel).
+* **Signer-Pin:** die Pruefkette verlangt genau den Signer aus `release/apk_signer.sha256`
+  (SHA-256 des Signer-Zertifikats; Stand v0.8.19 der Debug-Schluessel der Bau-Maschine,
+  `432bc749...`). Eine anders signierte APK installiert sich nicht als Update ueber die vorige,
+  und wer deshalb deinstalliert, verliert die Spielstaende. **Wer mit eigenem Schluessel (oder auf
+  einer anderen Maschine mit anderem `debug.keystore`) baut**, bekommt deshalb den Abbruch
+  `apksigner: Signer-Zertifikat ..., erwartet 432bc749...`. Ist der neue Schluessel Absicht: den
+  Wert aus `java -jar <build-tools>/lib/apksigner.jar verify --print-certs <apk>` (Zeile
+  `Signer #1 certificate SHA-256 digest`) in `release/apk_signer.sha256` eintragen und committen,
+  oder fuer einen einzelnen Lauf `RE15_APK_SIGNER_SHA256=<64 Hexziffern>` setzen.
 
 Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_ANDROID=ON`
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`

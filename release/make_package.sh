@@ -17,20 +17,32 @@
 #   release/make_package.sh --version v0.1.2                 # beide Plattformen
 #   release/make_package.sh --version v0.1.2 --only linux    # nur Linux/Deck
 #   release/make_package.sh --version v0.1.2 --no-zip        # nur Ordner bauen
+#   release/make_package.sh --version v0.1.2 --ohne-android  # nur PC-Saetze; ein Android-Satz DIESER
+#                                                            # Version wird entfernt (siehe Android unten)
 #
 # Eingaben (werden NICHT hier gebaut):
 #   Linux  : release/linux_out/re15_pc    <- release/build_linux_deck.sh
 #   Windows: release/win_out/re15_pc.exe  <- mingw64-Build, siehe RELEASE_NOTES
 #   Android: release/re15_port_<version>_android.apk (optional) <- release/build_android.sh
 #            liegt sie da, wird sie (nur beim Zippen) mit DERSELBEN Kette wie im Android-Bau
-#            geprueft (release/apk_pruefen.sh) und in den Split-Satz gebracht; fehlt sie, gibt es
-#            keinen Android-Satz (Hinweis beim Zippen).
+#            geprueft (release/apk_pruefen.sh) und in den Split-Satz gebracht; aus dem fertigen Satz
+#            wird sie wieder entpackt und per sha256 mit der geprueften Kopie verglichen.
+#            Ausgeliefert (SHA256SUMS.txt, git add) wird ein Android-Satz NUR, wenn er in DIESEM Lauf
+#            aus einer gerade geprueften APK entstand (Runde 4, Gegenpruefung R3 B1). Fehlt die APK:
+#              * kein re15_port_<version>_android.z* da -> kein Android-Satz (Hinweis beim Zippen);
+#              * ein Satz DERSELBEN Version liegt da (frueherer Lauf, auch versioniert) -> ABBRUCH vor
+#                den Kopierminuten. Dann entweder die APK neu bauen (build_android.sh) oder mit
+#                --ohne-android nur die PC-Saetze schnueren: das entfernt den alten Satz (Datei und
+#                git-Index), statt ihn ungeprueft mitzuliefern.
+#            Aeltere Versionen (re15_port_<alt>_android.z*) bleiben wie bisher unangetastet.
 #
 # Voraussetzungen (Runde 34a, Nachbesserung R2 - Gegenpruefung echtlauf B2; fehlt etwas, bricht
 # das Skript mit Meldung ab, statt eine Pruefung auszulassen):
-#   * Python >= 3.8, IMMER (release/python_finden.sh, nie der WindowsApps-Alias): Quellbaum- und
-#     Paketpruefung (release/apk_asset_gate.py --quellbaum / --paket), verify_split, zip_exec_bit.py
-#   * zip (auch aus /c/msys64/usr/bin), strings/objdump fuer die Binary-Gates (sonst uebersprungen)
+#   * Python >= 3.8, IMMER (release/python_finden.sh, nie der WindowsApps-Alias): Selbsttest des Gates,
+#     Quellbaum- und Paketpruefung (release/apk_asset_gate.py --selbsttest / --quellbaum / --paket),
+#     verify_split, zip_exec_bit.py
+#   * zip (auch aus /c/msys64/usr/bin), unzip + sha256sum (Android-Satz entpacken und vergleichen),
+#     strings/objdump fuer die Binary-Gates (sonst uebersprungen)
 #   * NUR wenn die APK da ist und gezippt wird: Android-SDK mit build-tools 35.0.0 (aapt, zipalign,
 #     lib/apksigner.jar), ein JDK (JAVA_HOME oder Adoptium 17), release/apk_signer.sha256
 #     (erwarteter Signer) - siehe release/apk_pruefen.sh
@@ -44,6 +56,7 @@ VERSION="v0.1.2"
 ONLY="both"
 DO_ZIP=1
 ZIP_ONLY=0                        # nur zippen, vorhandene pkg-*/ wiederverwenden
+OHNE_ANDROID=0                    # nur PC-Saetze; Android-Satz dieser Version entfernen (Runde 4, B1)
 SPLIT="90m"                       # < 100 MB je Volume (GitHub-Dateigrenze)
 LINUX_BIN="$HERE/linux_out/re15_pc"
 WIN_BIN="$HERE/win_out/re15_pc.exe"
@@ -56,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         --win-bin)   WIN_BIN="$2";   shift 2 ;;
         --no-zip)    DO_ZIP=0; shift ;;
         --zip-only)  ZIP_ONLY=1; shift ;;
+        --ohne-android) OHNE_ANDROID=1; shift ;;
         -h|--help)   awk 'NR == 1 { next } /^set -euo pipefail/ { exit } { print }' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
@@ -264,8 +278,9 @@ check_tree() {           # $1 = fertiger Paketordner
     # BAEUME in apk_asset_gate.py - niemand verglich sie. Jetzt prueft das Gate den fertigen Paketordner
     # gegen dieselbe Liste wie die APK: jede Datei der Asset-Baeume mit gleicher Groesse und sha256,
     # unter shared_assets/ und synchro/ nichts sonst (auch Tuer-Soll + Wurzel des Quellbaums).
+    # Runde 4 (Gegenpruefung R3 B4): $GATE = die private, oben selbstgetestete Kopie des Gates.
     local rc=0
-    "$PY" "$(apk_nativ "$HERE/apk_asset_gate.py")" --repo "$(apk_nativ "$REPO")" --paket "$(apk_nativ "$out")" || rc=$?
+    "$PY" "$(apk_nativ "$GATE")" --repo "$(apk_nativ "$REPO")" --paket "$(apk_nativ "$out")" || rc=$?
     case "$rc" in
         0) ;;
         1) die "Paket $out weicht von der Asset-Liste ab (Befunde oben) - APK und PC-Pakete muessen dieselben Assets tragen" ;;
@@ -450,13 +465,38 @@ source "$HERE/python_finden.sh" \
 # shellcheck source=apk_pruefen.sh
 source "$HERE/apk_pruefen.sh"                # apk_nativ, apk_kennung, apk_pruefen (Android-Satz unten)
 
+# --- Asset-Gate: private Kopie, Selbsttest VOR der ersten Nutzung (Runde 4, Gegenpruefung R3 B4) ----
+# Bis dahin lief --selbsttest nur in apk_pruefen, also nur mit APK: der PC-Pfad (--quellbaum hier, --paket
+# in check_tree) benutzte ein Gate, dessen Selbsttest in diesem Lauf niemand gefahren hatte. Ein Gate ohne
+# Paket-sha-Vergleich (Mutant MUP, sein eigener Selbsttest: FEHLER 3/202) liess so ein Paket mit veraenderter
+# Datei durch (Pruefer R3: echter Lauf --zip-only --only linux EXIT 0). Jetzt: EINE Kopie des Gates in einem
+# privaten Temp-Ordner, Selbsttest auf ihr, und genau sie macht alle Pruefungen dieses Laufs (--quellbaum,
+# --paket und ueber APK_GATE_DATEI auch apk_pruefen) - ein waehrend der Kopierminuten getauschtes
+# release/apk_asset_gate.py wirkt nicht mehr. Die EXIT-Falle raeumt Gate-Kopie, APK-Pruefkopie und den
+# Temp-Ordner der Satzpruefung ab (auch bei Abbruch).
+MP_TMP="$(mktemp -d "${TMPDIR:-/tmp}/re15_make_package.XXXXXX")" || die "kein Temp-Ordner fuer die Gate-Kopie"
+mp_aufraeumen() {
+    apk_pruefen_aufraeumen
+    if [[ -n "${MP_TMP:-}" && -d "$MP_TMP" ]]; then rm -rf "$MP_TMP"; fi
+}
+trap mp_aufraeumen EXIT
+cp "$HERE/apk_asset_gate.py" "$MP_TMP/apk_asset_gate.py" || die "Asset-Gate nicht kopierbar: $HERE/apk_asset_gate.py"
+GATE="$MP_TMP/apk_asset_gate.py"
+APK_GATE_DATEI="$GATE"                       # apk_pruefen.sh (Schritt 5) nimmt dieselbe Kopie
+echo "== Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) =="
+echo "   Gate: $(sha256sum "$GATE" | cut -c1-16)... (Kopie von release/apk_asset_gate.py)"
+rc_selbst=0
+"$PY" "$(apk_nativ "$GATE")" --selbsttest || rc_selbst=$?
+(( rc_selbst == 0 )) || die "Selbsttest des Asset-Gates fehlgeschlagen (rc=$rc_selbst) - dem Gate ist nicht zu trauen;
+        Quellbaum-, APK- und Paketpruefung unterbleiben, nichts wird kopiert oder gezippt"
+
 # --- Quellbaum: Asset-Liste + Tuer-Soll (Nachbesserung R2, Gegenpruefung B2/B6) -------
 # VOR den Kopierminuten: fehlt ein Tuerarchiv, das die Engine-Tabellen verlangen (29/30), ist eines
 # 0 Byte oder passt es nicht zu Groesse/FNV-1a, oder liegt unter re15_port/shared_assets ein Ordner,
 # den keine Liste kennt, waeren ALLE Pakete falsch - check_tree verglich bisher nur Paket gegen Quelle.
 echo "== Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) =="
 rc_quelle=0
-"$PY" "$(apk_nativ "$HERE/apk_asset_gate.py")" --repo "$(apk_nativ "$REPO")" --quellbaum || rc_quelle=$?
+"$PY" "$(apk_nativ "$GATE")" --repo "$(apk_nativ "$REPO")" --quellbaum || rc_quelle=$?
 case "$rc_quelle" in
     0) ;;
     1) die "Quellbaum weicht von der Asset-Liste bzw. den Tuer-Tabellen der Engine ab (Befunde oben)" ;;
@@ -466,25 +506,26 @@ esac
 # --- Android-APK: DIESELBE Pruefkette wie in build_android.sh ------------------
 # (Runde 34a) Zwischen Android-Bau und Paket kann sich der Quellbaum geaendert haben (neues
 # Asset, neues Tuerarchiv) - die APK waere dann veraltet und wuerde trotzdem gezippt. Deshalb
-# hier noch einmal gegen den AKTUELLEN Stand, VOR den Kopierminuten. Fehlt die APK, gilt wie
-# bisher: kein Android-Satz (Hinweis beim Zippen).
+# hier noch einmal gegen den AKTUELLEN Stand, VOR den Kopierminuten. Fehlt die APK: kein
+# Android-Satz aus diesem Lauf - und ein alter derselben Version wird nicht mitgeliefert (unten, B1).
 # Nachbesserung R1 (Gegenpruefung B2/B4/B5, echtlauf B4): bis dahin nur die Assets. Jetzt auch
 #   * Frische: die APK muss neuer sein als der letzte Commit an IHREM Code (engine, include,
 #     platform/pc - der Android-Bau uebersetzt dieselben Plattformquellen, jni/CMakeLists.txt:42 -
 #     und platform/android) - wie check_binary_fresh fuer die PC-Binaries;
 #   * versionName = --version, Paketname, ABIs (aapt) und eine gueltige v2/v3-Signatur (apksigner);
 #   * Identitaet: sha256/CRC32/Groesse der GEPRUEFTEN Bytes werden festgehalten; gezippt wird nur,
-#     wenn die Datei beim Zippen noch genau diese ist, und im fertigen Split-Satz muessen CRC32 und
-#     Groesse des Eintrags wieder stimmen. Vorher lagen zwischen Pruefen (hier) und Zippen (unten)
+#     wenn die Datei beim Zippen noch genau diese ist, und aus dem fertigen Split-Satz wird die APK wieder
+#     entpackt: ihre sha256 muss die der geprueften Kopie sein (Runde 4, Gegenpruefung R3 B3 - vorher nur
+#     CRC32 + Groesse aus dem Katalog). Vorher lagen zwischen Pruefen (hier) und Zippen (unten)
 #     Minuten Kopieren - eine in der Zeit getauschte oder erst dann abgelegte APK ging ungeprueft durch.
 # (apk_pruefen.sh ist oben geladen: apk_werkzeuge_finden, apk_pruefen, apk_kennung)
 APK_PRUEF="$HERE/${NAME}_android.apk"
 APK_KENNUNG=""
-if [[ $DO_ZIP -eq 1 && -f "$APK_PRUEF" ]]; then
+if [[ $DO_ZIP -eq 1 && $OHNE_ANDROID -eq 0 && -f "$APK_PRUEF" ]]; then
     echo "== Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) =="
     check_binary_fresh "$APK_PRUEF" "Android-APK" \
         re15_port/engine re15_port/include re15_port/platform/pc re15_port/platform/android
-    trap apk_pruefen_aufraeumen EXIT          # Pruefkopie (~360 MB) auch bei Abbruch weg
+    # (Pruefkopie ~360 MB: die EXIT-Falle mp_aufraeumen oben raeumt sie auch bei Abbruch ab)
     apk_werkzeuge_finden
     apk_pruefen "$APK_PRUEF" "$VERSION" "$REPO"
     # Nachbesserung R2 (Gegenpruefung B3): die Kennung ist die der PRUEFKOPIE, an der JEDER Schritt lief -
@@ -493,9 +534,44 @@ if [[ $DO_ZIP -eq 1 && -f "$APK_PRUEF" ]]; then
     # dass unter dem Pfad noch dieselben Bytes liegen; beim Zippen wird unten noch einmal verglichen.
     APK_KENNUNG="$APK_GEPRUEFT_KENNUNG"
     apk_pruefen_aufraeumen
-    trap - EXIT
     [[ "$APK_KENNUNG" =~ ^[0-9a-f]{64}\ [0-9a-f]{8}\ [0-9]+$ ]] || die "Kennung der APK unlesbar: '$APK_KENNUNG'"
     echo "   gepruefte APK (sha256 crc32 Bytes): $APK_KENNUNG"
+fi
+
+# --- Android-Satz NUR aus diesem Lauf (Runde 4, Gegenpruefung R3 B1) ----------------------------------
+# Bis dahin nahmen SHA256SUMS.txt (sha256sum "${NAME}"_*.z*) und git add JEDEN vorhandenen
+# <NAME>_android.z* mit - auch den eines frueheren Laufs derselben Version, dessen APK dieses Skript im
+# Lauf davor selbst als "weicht vom Quellbaum ab" abgelehnt hatte (Pruefer R3, r3_mp_veraltet.sh: Lauf ohne
+# APK EXIT 0, der alte Satz in SHA256SUMS.txt und git-vorgemerkt). Jetzt gilt: ausgeliefert wird ein
+# Android-Satz nur, wenn er in DIESEM Lauf aus der gerade geprueften APK entsteht (ANDROID_GEZIPPT, Zippen
+# unten). Liegt ohne gepruefte APK ein Satz derselben Version da, bricht das Skript HIER ab, vor den
+# Kopierminuten. Warum Abbruch und nicht still entfernen: der Satz einer Version liegt nach dem
+# Release-Commit versioniert im Repo (v0.8.19: git ls-files) - ein Lauf, dem nur die APK fehlt, soll ihn
+# weder ungefragt loeschen noch ungeprueft mitliefern. Wer bewusst nur die PC-Saetze will, sagt
+# --ohne-android; dann entfernt das Skript den alten Satz (Datei hier beim Zippen, git-Index im Git-Schritt).
+android_satz_da() {          # Volumes <NAME>_android.z* in release/ (Namen, je Zeile)
+    local f
+    for f in "$HERE/${NAME}_android".z*; do
+        if [[ -e "$f" ]]; then printf '%s\n' "$(basename "$f")"; fi
+    done
+    return 0
+}
+ANDROID_ALT="$(android_satz_da)"
+if [[ $DO_ZIP -eq 1 && $OHNE_ANDROID -eq 0 && -z "$APK_KENNUNG" && -n "$ANDROID_ALT" ]]; then
+    die "Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+        ($(basename "$APK_PRUEF") fehlt): $(echo $ANDROID_ALT)
+        Er stammt aus einem frueheren Lauf und passt nicht nachweislich zum jetzigen Quellbaum - ungeprueft kommt
+        er weder in SHA256SUMS.txt noch in git. Entweder die APK neu bauen:
+            release/build_android.sh --version $VERSION      (danach prueft und zippt dieses Skript sie neu)
+        oder nur die PC-Saetze schnueren und den alten Satz entfernen lassen:
+            release/make_package.sh --version $VERSION --ohne-android ..."
+fi
+if [[ $OHNE_ANDROID -eq 1 ]]; then
+    if [[ -n "$ANDROID_ALT" ]]; then
+        echo "== --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: $(echo $ANDROID_ALT) =="
+    else
+        echo "== --ohne-android: keine APK-Pruefung, kein Android-Satz (keiner dieser Version vorhanden) =="
+    fi
 fi
 
 copy_common() {          # $1 = Paketordner
@@ -551,11 +627,19 @@ if total < want: sys.exit(f"Katalog listet nur {total} Eintraege, erwartet >= {w
 PY
 }
 
-# Nachbesserung R1 (B5): steckt im fertigen Split-Satz wirklich die GEPRUEFTE APK? Der Katalog im
-# letzten Volume nennt CRC32 und Groesse jedes Eintrags - beide muessen zur Kennung passen, die
-# vor den Kopierminuten von genau den geprueften Bytes genommen wurde.
+# Nachbesserung R1 (B5): steckt im fertigen Split-Satz wirklich die GEPRUEFTE APK? Stufe 1: der Katalog im
+# letzten Volume nennt genau den einen Eintrag, CRC32 und Groesse muessen zur Kennung passen, die vor den
+# Kopierminuten von genau den geprueften Bytes genommen wurde.
+# Runde 4 (Gegenpruefung R3 B3): CRC32 + Groesse allein halten eine CRC-gleiche Faelschung nicht fest
+# (r3_zip_kennung_sonde.sh: 1 Byte + 4 Ausgleichsbytes in RE15DOOR/P07G.DO2, CRC32/Groesse gleich, sha256
+# anders -> "= gepruefte APK", apksigner DOES NOT VERIFY). Stufe 2: den Satz zusammenfuehren (zip -s 0 -
+# unzip liest keine Split-Saetze), die APK mit unzip ENTPACKEN (prueft dabei ihre CRC32) und ihre sha256 mit
+# der der geprueften Kopie vergleichen. Zip/unzip bekommen Windows-Pfade (cygpath -m): das zip aus
+# /c/msys64/usr/bin hat eine eigene Einhaengetabelle, in der /tmp NICHT der Temp-Ordner von Git-Bash ist
+# (gemessen: "zip error: Nothing to do!"). Temp-Platz ~ Groesse des Satzes; Rueckgabe != 0 bei jedem Fehler.
 verify_apk_im_zip() {    # $1 = .zip (letztes Volume), $2 = Eintragsname, $3 = "sha256 crc32 groesse"
-    "$PY" - "$1" "$2" "$3" <<'PY'
+    local satz="$1" name="$2" kennung="$3" tmp tmp_n rc=0 liste="" sha_ist=""
+    "$PY" - "$satz" "$name" "$kennung" <<'PY' || return 1
 import struct, sys
 last, name, kennung = sys.argv[1], sys.argv[2].encode("utf-8"), sys.argv[3].split()
 crc_soll, n_soll = int(kennung[1], 16), int(kennung[2])
@@ -577,8 +661,31 @@ _n, crc, usize = treffer[0]
 if (crc, usize) != (crc_soll, n_soll):
     sys.exit("APK-Satz: Eintrag hat CRC32 %08x / %d B, gepruefte APK %08x / %d B - NICHT die gepruefte Datei"
              % (crc, usize, crc_soll, n_soll))
-print("   APK im Split-Satz = gepruefte APK (CRC32 %08x, %d B)" % (crc, usize))
+print("   APK-Satz, Katalog: genau %s, CRC32 %08x, %d B = gepruefte Kennung" % (name.decode("utf-8"), crc, usize))
 PY
+    tmp="$(mktemp -d "${TMPDIR:-/tmp}/re15_apk_satz.XXXXXX")" || { echo "APK-Satz: kein Temp-Ordner" >&2; return 1; }
+    tmp_n="$tmp"
+    if command -v cygpath >/dev/null 2>&1; then tmp_n="$(cygpath -m "$tmp")" || tmp_n="$tmp"; fi
+    zip -q -s 0 "$satz" --out "$tmp_n/ganz.zip" || rc=$?
+    if (( rc == 0 )); then liste="$(unzip -Z1 "$tmp_n/ganz.zip")" || rc=$?; fi
+    if (( rc == 0 )) && [[ "$liste" != "$name" ]]; then
+        rm -rf "$tmp"
+        echo "APK-Satz: zusammengefuehrt enthaelt er [$(echo $liste)] statt genau $name" >&2
+        return 1
+    fi
+    # alle Eintraege nach stdout = genau der eine (eben geprueft) - kein Namensmuster, das unzip auswerten wuerde
+    if (( rc == 0 )); then sha_ist="$(unzip -p "$tmp_n/ganz.zip" | sha256sum)" || rc=$?; fi
+    rm -rf "$tmp"
+    if (( rc != 0 )); then
+        echo "APK-Satz: zusammenfuehren (zip -s 0) oder entpacken (unzip) fehlgeschlagen (rc=$rc)" >&2
+        return 1
+    fi
+    sha_ist="${sha_ist%% *}"
+    if [[ "$sha_ist" != "${kennung%% *}" ]]; then
+        echo "APK-Satz: die entpackte APK hat sha256 $sha_ist, die gepruefte ${kennung%% *} - NICHT die gepruefte Datei" >&2
+        return 1
+    fi
+    echo "   APK im Split-Satz = gepruefte APK (entpackt: sha256 ${sha_ist:0:16}... = Pruefkopie)"
 }
 
 # --- Linux / Steam Deck ------------------------------------------------------
@@ -686,10 +793,23 @@ if [[ $DO_ZIP -eq 1 ]]; then
     # -j (junk paths) legt die APK in die Archivwurzel, damit beim Entpacken keine
     # release/-Schachtel entsteht.
     APK="$HERE/${NAME}_android.apk"
-    if [[ -f "$APK" ]]; then
+    if [[ $OHNE_ANDROID -eq 1 ]]; then
+        # --ohne-android (Runde 4, B1): kein Android-Satz aus diesem Lauf, der dieser Version wird entfernt
+        # (hier die Dateien; den git-Index raeumt der Git-Schritt unten ueber behalten())
+        if [[ -f "$APK" ]]; then
+            echo "   (--ohne-android: $(basename "$APK") bleibt ungeprueft liegen und wird nicht gezippt)"
+        fi
+        for f in "${NAME}_android".z*; do
+            [[ -e "$f" ]] || continue
+            rm -f "$f" || die "alter Android-Satz nicht entfernbar: $f"
+            echo "   (--ohne-android: alter Android-Satz entfernt: $f)"
+        done
+    elif [[ -f "$APK" ]]; then
         # Nur die GEPRUEFTE APK (Nachbesserung R1, Gegenpruefung B5): dieselbe Datei wie oben?
         [[ -n "$APK_KENNUNG" ]] || die "Android-APK $APK ist erst NACH der Pruefung aufgetaucht -
         ungeprueft wird nichts gezippt. make_package.sh neu starten."
+        command -v unzip >/dev/null 2>&1 && command -v sha256sum >/dev/null 2>&1 \
+            || die "unzip/sha256sum fehlen - ohne sie ist nicht pruefbar, ob der Android-Satz die gepruefte APK enthaelt"
         apk_jetzt="$(apk_kennung "$APK")" || die "Android-APK beim Zippen nicht lesbar: $APK"
         [[ "$apk_jetzt" == "$APK_KENNUNG" ]] || die "Android-APK wurde nach der Pruefung veraendert oder ersetzt:
         geprueft: $APK_KENNUNG
@@ -699,17 +819,32 @@ if [[ $DO_ZIP -eq 1 ]]; then
         rm -f "${NAME}_android".z*
         zip -q -s "$SPLIT" -j "${NAME}_android.zip" "$APK"
         verify_split "${NAME}_android.zip" 1
-        verify_apk_im_zip "${NAME}_android.zip" "$(basename "$APK")" "$APK_KENNUNG"
+        verify_apk_im_zip "${NAME}_android.zip" "$(basename "$APK")" "$APK_KENNUNG" \
+            || die "Android-Satz ${NAME}_android.z* enthaelt NICHT die gepruefte APK (Meldung oben) - nicht ausgeliefert"
         ANDROID_GEZIPPT=1
     elif [[ -n "$APK_KENNUNG" ]]; then
         die "Android-APK verschwand zwischen Pruefung und Zippen: $APK"
     else
         echo "   (kein Android-Paket: $(basename "$APK") fehlt — release/build_android.sh laeuft getrennt)"
     fi
-    sha256sum "${NAME}"_*.z* > SHA256SUMS.txt
+    # Ausgeliefert wird nur, was in DIESEM Lauf entstand (Runde 4, B1): ein Android-Satz dieser Version ohne
+    # ANDROID_GEZIPPT ist ein Rest (auch einer, der erst waehrend der Kopierminuten auftauchte) -> Abbruch,
+    # statt ihn in SHA256SUMS.txt und git aufzunehmen. Die Liste unten laesst ihn zusaetzlich aus.
+    if [[ -z "${ANDROID_GEZIPPT:-}" && -n "$(android_satz_da)" ]]; then
+        die "Android-Satz ohne gepruefte APK aus diesem Lauf: $(echo $(android_satz_da)) - nicht ausgeliefert
+        (release/build_android.sh --version $VERSION, oder --ohne-android)"
+    fi
+    sums=()
+    for f in "${NAME}"_*.z*; do
+        [[ -f "$f" ]] || continue
+        case "$f" in "${NAME}_android".z*) [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue ;; esac
+        sums+=("$f")
+    done
+    (( ${#sums[@]} )) || die "keine Split-Volumes fuer SHA256SUMS.txt"
+    sha256sum "${sums[@]}" > SHA256SUMS.txt
     echo
-    ls -la "${NAME}"_*.z*
-    echo "== SHA256SUMS.txt geschrieben =="
+    ls -la "${sums[@]}"
+    echo "== SHA256SUMS.txt geschrieben (${#sums[@]} Volumes${ANDROID_GEZIPPT:+, Android-Satz aus diesem Lauf}) =="
 fi
 
 # --- Git: NUR die aktuelle Version im Repo halten ----------------------------
@@ -739,7 +874,12 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
     [[ -n "${ANDROID_GEZIPPT:-}" ]] && plattformen+=("android")
     behalten() {                       # 0 = darf bleiben
         local b="$1" p
-        case "$b" in "${NAME}"_*) return 0 ;; esac    # die AKTUELLE Version bleibt
+        case "$b" in
+            "${NAME}_android".z*)                     # Android-Satz DIESER Version (Runde 4, B1):
+                [[ $OHNE_ANDROID -eq 1 && -z "${ANDROID_GEZIPPT:-}" ]] && return 1   # --ohne-android: weg
+                return 0 ;;
+            "${NAME}"_*) return 0 ;;                  # die AKTUELLE Version bleibt
+        esac
         for p in "${plattformen[@]}"; do
             case "$b" in *_"$p".z*) return 1 ;; esac  # eigene Plattform, alte Version
         done
@@ -762,6 +902,9 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
     neu=0
     for f in "$HERE/${NAME}"_*.z*; do
         [[ -f "$f" ]] || continue
+        # Runde 4 (B1): einen Android-Satz nur vormerken, wenn er in DIESEM Lauf aus der geprueften APK
+        # entstand - auch mit --no-zip (dort entsteht keiner; ein vorhandener wird nicht angefasst)
+        case "$(basename "$f")" in "${NAME}_android".z*) [[ -n "${ANDROID_GEZIPPT:-}" ]] || continue ;; esac
         git -C "$HERE/.." add -- "release/$(basename "$f")" && neu=$((neu+1))
     done
     echo "   $alt alte Paketdatei(en) aus dem Repo entfernt, $neu neue vorgemerkt"

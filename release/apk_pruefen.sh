@@ -34,7 +34,8 @@
 #      genau EIN Signer, und dessen Zertifikat = der festgehaltene (Nachbesserung R2, B4: sonst
 #      installiert sich die APK nicht als Update, und Deinstallieren loescht die Spielstaende)
 #   5. release/apk_asset_gate.py --selbsttest, dann --repo <repo> <kopie> (JEDE Datei der
-#      Asset-Baeume, Tuer-Soll aus den Engine-Tabellen, Manifest, ZIP-Struktur wie Android sie liest)
+#      Asset-Baeume, Tuer-Soll aus den Engine-Tabellen, Manifest, ZIP-Struktur wie Android sie liest);
+#      ist APK_GATE_DATEI gesetzt, diese Gate-Datei (make_package.sh: seine private Kopie, Runde 4 B4)
 #   6. die Kopie ist unveraendert UND die APK unter dem Pfad hat noch dieselbe Kennung - sonst
 #      Abbruch (eine waehrend der Pruefung getauschte Datei gilt nicht als geprueft)
 #   Ergebnis: APK_GEPRUEFT_KENNUNG ("sha256 crc32 bytes"), APK_GEPRUEFT_KOPIE (die gepruefte Kopie -
@@ -225,7 +226,9 @@ apk_pruefen() {
     # 5. volle Asset-Pruefung: erst beweist das Gate an Faelschungen, dass es sie erkennt, dann
     #    JEDE Datei der Asset-Baeume gegen die APK (roh gelesen wie Android), Tuer-Soll, Manifest.
     #    Rueckgaben getrennt abfangen - kein Pipe, keine Subshell, die sie verschlucken koennte.
-    gate="$(apk_nativ "$(dirname "${BASH_SOURCE[0]}")/apk_asset_gate.py")"
+    #    APK_GATE_DATEI (Runde 4, Gegenpruefung R3 B4): make_package.sh uebergibt seine private, schon
+    #    selbstgetestete Kopie des Gates - dann pruefen Quellbaum, APK und Pakete mit DEMSELBEN Code.
+    gate="$(apk_nativ "${APK_GATE_DATEI:-$(dirname "${BASH_SOURCE[0]}")/apk_asset_gate.py}")"
     echo "== Volle Asset-Pruefung 1/2: Selbsttest des Gates ($PY) =="
     rc=0; "$PY" "$gate" --selbsttest || rc=$?
     (( rc == 0 )) || die "Selbsttest des APK-Asset-Gates fehlgeschlagen (rc=$rc) - dem Gate ist nicht zu trauen"
