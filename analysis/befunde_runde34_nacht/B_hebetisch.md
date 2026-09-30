@@ -344,11 +344,16 @@ Bildnummern relativ zum Druck am Tisch (F0), abgeleitet aus Lauf m1 (§2.1); all
 | F0..F5 | Raumkamera, Laut ROOM1150-0x0A | sub04 @0x0F96..@0x0FAE unveraendert (Pause Spieler+KI, Se_on, Sleep 5) |
 | F6 | Schnitt auf Cut 4, Modell im Tisch, Kuppel zu | @0x0FB2 Cut_chg 4 (merkt die RAUMkamera), @0x0FB4 Pos_set |
 | F6..F10 | Standbild | @0x0FBC Sleep 5 |
-| F11.. | **der 11F0-Cursor erscheint in der Bildmitte (161,119)**; D-Pad bewegt ihn 200 11F0-Einheiten = 2,66 px je Bild, diagonal moeglich (vier Abfragen unabhaengig wie sub01), keine Randgrenze | sub04 steht VOR `For` @0x0FC0 (Halt), Spieler + KI bleiben angehalten (sub04 @0x0F96/@0x0F9A) |
+| F11.. | **der 11F0-Cursor erscheint in der Bildmitte (160,119)**; D-Pad bewegt ihn 200 11F0-Einheiten = 2,66 px je Bild, diagonal moeglich (vier Abfragen unabhaengig wie sub01), keine Randgrenze | sub04 steht VOR `For` @0x0FC0 (Halt), Spieler + KI bleiben angehalten (sub04 @0x0F96/@0x0F9A) |
 | Druck daneben | "Nothing happened." (eine Zeile, kein Laut); Welt steht, Cursor steht; nach dem Wegdruecken wieder frei | Text-Id 20, Pausemaske 0xFFFF0000 wie alle 524 sce-1-Texte |
 | Druck auf der Kuppel (Bild K) | Panel-Klick; Cursor weg | Klick = derselbe Aufruf wie 11F0; Halt frei |
 | K+1.. | Kuppel geht auf (15 Bilder), Plattform faehrt hoch, Ruhe oben: Sicherung/Granate wie bisher, Abfahrt, Kuppel zu, Parken | sub04 ab @0x0FC0 unveraendert |
 | Ende | zurueck in die Raumkamera, Spieler frei | @0x10AA/@0x10AE Pause aus, @0x10B2 Cut_old = gemerkte Raumkamera |
+
+**Soll-Bild (MONTAGE, kein Port-Lauf):** `B_belege/soll_montage_cursor_cut4.png` — die 1308 Cursor-Pixel aus dem
+11F0-Framedump m2 F480 (nur die exakten CLUT-Farben der Cursor-Textur) auf das Cut-4-Bild m1 F240 versetzt: links am
+Start (160,119) zwischen den Hochhaeusern, rechts ueber der Kuppel (209,176); rote Linie = Trefferflaeche.
+Werkzeug `soll_montage.py`. Ein Druck links -> "Nothing happened.", rechts -> Klick + Kuppel auf.
 
 ### 4.1 Laden/Speichern
 
@@ -485,8 +490,8 @@ Trefferflaeche: die 12 Ecken als Konstanten im Kopf (Werte oben), Riegel R2 rech
 
 | # | Riegel | prueft | Gegenprobe (Mutation -> rot) |
 |---|---|---|---|
-| R1 | `unit_r34n_b_halt` | ROOM1150+1151: Signatur gefunden (Halt @0x0FC0 / @0x0F9E); Aktion 4 + sub04 -> Thread steht nach 11 Bildern auf dem Halt-PC, Plattform y=-305, angefordert Cut 4, Deckel lokal z=0; 60 weitere Bilder: PC und Deckel unveraendert | Haken in op_for entfernt -> Deckel bewegen sich |
-| R2 | `unit_r34n_b_kuppel` | Engine-Projektion (camera_common.c) der Kuppel unter Cut 4 = Huelle §3.6 (+-1 px); Heisspunkt am Start (161,119) liegt NICHT drin, (209,176) liegt drin; 1151 gleich | Huelle aus Prop 0 statt 1/2 -> rot |
+| R1 | `unit_r34n_b_halt` | ROOM1150+1151: Signatur gefunden (Halt @0x0FC0 / @0x0F9E); Aktion 4 + sub04 -> Thread steht nach 10 VM-Takten auf dem Halt-PC (Sonde §3.7), Plattform y=-305, angefordert Cut 4, Deckel lokal z=0; 60 weitere Bilder: PC und Deckel unveraendert | Haken in op_for entfernt -> Deckel bewegen sich |
+| R2 | `unit_r34n_b_kuppel` | Engine-Projektion (camera_common.c) der Kuppel unter Cut 4 = Huelle §3.6 (+-1 px); Heisspunkt am Start (160,119) liegt NICHT drin, (209,176) liegt drin; 1151 gleich | Huelle aus Prop 0 statt 1/2 -> rot |
 | R3 | `unit_r34n_b_ablauf` | Kuppeldruck: Klickzaehler +1, naechstes Bild For ausgefuehrt, nach 15 Bildern Deckel offen (+-150), Ruhe-Fenster und Items wie unit_r31_hebetisch; Fehldruck: Text 20 offen, Bytes = §5.4, Klickzaehler unveraendert, Halt bleibt | Treffertest invertiert -> rot |
 | R4 | `unit_r34n_b_cut_old` | nach komplettem Durchlauf mit Cursor: `Cut_old` stellt die Raumkamera her (cam_id_prev != 4) | Vorschalt-Variante (Port zeigt Cut 4 selbst) -> cam_id_prev == 4 -> rot |
 | R5 | `unit_r34n_b_harness` | `re15_aot_fire_slot(1)` / `scd_event_fire(4)` ohne Aktion -> KEIN Halt (Fahrt wie heute) | Armieren im scd_event_fire -> rot |
@@ -499,7 +504,7 @@ Trefferflaeche: die 12 Ecken als Konstanten im Kopf (Werte oben), Riegel R2 rech
 | "nicht direkt aufgeht" | Tuerweg wie m1 (A bei F230), Serie F230..F330 | Deckel bleiben zu; Log `cursor=AKTIV` ab dem Haltbild; Bild ab F241: Cursor sichtbar |
 | "unseren Cursor" | Cursor-Pixel am Start in ROOM1150 gegen 11F0 F480 (m2): nur CLUT-Farben vergleichen | gleiche Pixel (bbox 148.3..172.0 x 107.7..130.0, 524 Punkte bei 960x720) |
 | "navigieren" | R0.5 / D1 / U0.5 / L0.5 wie m3 | 8 px je Bild @960, Richtungen wie 11F0 |
-| "Nothing happened" | Druck bei Start (161,119) | `[msg]` Text 20 offen, Wortlaut im Bild, KEIN `se=10` (`AUDIO=1 RE15_SE_DEBUG=1`), Deckel zu, KEIN zweiter sub04-Thread und KEIN msg 0 (Risiko 10), Text schliesst erst beim zweiten Druck (Risiko 11) |
+| "Nothing happened" | Druck bei Start (160,119) | `[msg]` Text 20 offen, Wortlaut im Bild, KEIN `se=10` (`AUDIO=1 RE15_SE_DEBUG=1`), Deckel zu, KEIN zweiter sub04-Thread und KEIN msg 0 (Risiko 10), Text schliesst erst beim zweiten Druck (Risiko 11) |
 | "unten rechts auf die Kuppel" | R 18 Bilder + D 22 Bilder (Heisspunkt ~(209,177)), A | `se=10` im selben Bild, Deckel oeffnen im naechsten, Ruhe-Protokoll wie Runde 31 (`ruht=1 pc=0x101B`), Items-Dialoge |
 | "normaler Ablauf" | bis Parken + 30 Bilder | `Cut_chg`/Cut_old-Log: zurueck in die Raumkamera (nicht 4), Bild ohne Loch |
 | Rand | Cursor hinaus und zurueck | verlaesst das Bild wie 11F0, kommt zurueck |
@@ -540,11 +545,11 @@ Kuppeldruck-Klick, Deckelfahrt, Cut_old-Ziel). Bestehende Riegel unveraendert gr
 
 ## 8 Offene Punkte
 
-1. **Abbruch ohne Kuppel?** RE1.5 kennt keinen (§3.4). Falls der Nutzer einen will: virtuelle Abbruchtaste 0x8000
-   (<- CROSS, @0x80073dbc[15], die Menue-Abbruchtaste) -> Halt frei UND sub04 bis zum Parken ueberspringen waere ein
-   Eingriff in sub04; sauberer: vor dem Halt gar nicht erst Cut 4 zeigen geht nicht (Kamera kommt aus sub04). Vorschlag,
-   falls gewuenscht: bei Abbruch sub04 per Evt_kill beenden und die drei Aufraeum-Opcodes von @0x109A..@0x10B2
-   nachstellen — erst nach Nutzerentscheid.
+1. **Abbruch ohne Kuppel?** RE1.5 kennt keinen (§3.4), geplant ist deshalb keiner. Falls der Nutzer einen will, ginge
+   es OHNE erfundenes Verhalten so: Taste = die virtuelle Menue-Abbruchtaste 0x8000 (<- CROSS, @0x80073dbc[15]) als
+   PORT-WAHL; Wirkung = genau die Aufraeum-Bytes, mit denen sub04 selbst endet: sub04-Thread beenden (er steht vor der
+   Deckelfahrt, die Deckel sind zu), Plattform parken wie `Pos_set` @0x109E (-20700,-20224,-17460), `Set(5,0,0)` @0x10A6,
+   `Set(2,0,0)` @0x10AA, `Set(2,2,0)` @0x10AE, `Cut_old` @0x10B2. Erst nach Nutzerentscheid.
 2. **Trefferflaeche nur Deckel oder Deckel+Podest?** Geplant ist beides (sichtbar ein Objekt). Nur Deckel waere
    y 149..188 statt 149..211.
 3. **Sprachdatei** `synchro/STAGE1/room1150/main20.wav` (+ `room1151/main20.wav`) fuer "Nothing happened." — optional,
