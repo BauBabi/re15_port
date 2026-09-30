@@ -1063,7 +1063,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                      * Vorher maskierte der Port jeden Schritt (& 0xfff) und drehte per zentrierter
                      * Differenz: (1) nach einem Schritt ueber 0 lag die Gier bei 4096-k statt -k
                      * (anderer RotMatrix-Zweig fuer die Granate, s. esp_trig); (2) fuer Ziele mit
-                     * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (knapp unter 180 Grad links) drehte er
+                     * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (Ziel knapp unter +180 Grad) drehte er
                      * +s, das Original -s (die Halbebenen-Grenze ist um s verschoben). */
                     int a1 = (bearing - (int)p->rot_y + (int)slew) & 0xfff;
                     if (a1 < 2 * (int)slew)
