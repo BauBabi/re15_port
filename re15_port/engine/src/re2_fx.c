@@ -375,33 +375,122 @@ static void op_2(void)
     memcpy(b, esp_at(rd32(b, 0x78) + (uint32_t)b[0x1F] * 24u, 24), 24);   /* @0x8001de00-.. */
 }
 
-/* ---- O-VB2: FUN_8004fba0-Abbildung (bau_d.md §2.4) --------------------------------------- */
+/* ---- O-VB2: FUN_8004fba0-Abbildung (bau_d.md §2.4, Nachbesserung N1 = Maengel M1) -----------
+ * RE2 FUN_8004fba0(P, r, mask, a3): Rueckgabe = DAT_800C3B7C (s16, `lh v0,15228(v0)` @0x800500d8),
+ * Kontakt = DAT_800DCBC8 (Op 28/29 werten ihn als != 0: `beq v0,zero` @0x8001fce4 / @0x8001fe84).
+ *   Grundwerte: Rueckgabe := 0 (`sh zero,15228(at)` @0x8004fc3c), Kontakt := (P.y > 0)
+ *     (`sw zero,-13368(at)` @0x8004fc34, `blez v1` / `sw v0(=1)` @0x8004fc48-58).
+ *   Objekte (nur a3 == 0, `bne s0,zero,0x800500c8` @0x8004fc5c): XZ-Kasten FUN_80038950(P,obj,r,0)
+ *     (a3 = 0 -> KEIN Hoehen-/Bandtest, `beq a3,zero,0x800389e0` @0x800389a4); oben = Mitte - Halbhoehe
+ *     (`lhu a2,22(s1)` / `lw a0,0(s1)` / `subu v1,a0,a2` @0x8004fcbc-c8), unten = Mitte + Halbhoehe
+ *     (`addu v0,a0,a2` @0x8004fcd4). P.y <= oben -> Kandidat oben (`slt v0,v1,a1` / `bne` @0x8004fccc-d0,
+ *     `j 0x8004fd38 / addu a0,v1,zero` @0x8004fcd8-dc); P.y > unten -> nichts (`slt v0,v0,a1 / bne`
+ *     @0x8004fce0-e4); sonst Kontakt |= 1 (`ori v0,v0,0x1` @0x8004fd0c) und Kandidat P.y - 1 (`addiu a0,v0,-1`
+ *     @0x8004fd34). Rueckgabe = min(Rueckgabe, Kandidat) (`slt v0,a0,v0` / `sh a0,15228(at)` @0x8004fd44-54).
+ *   Formen (@0x8004fd74-0x800500cc): XZ-Rechteck um r ERWEITERT (`addu s6,s6,s4` @0x8004fbf8, `sll a0,s4,1`
+ *     / `addu v0,v0,a0` / `sltu` @0x8004fd84-98), unten s1 = -1800 * Bitindex(+12) (@0x8004fde4-e04),
+ *     oben s0 = -1800 * ((+10 >> 6) & 0x1f) (@0x8004fe08-30); dann
+ *       P.y > unten          -> nur Buchhaltung 0x800D5BE4 (`slt v0,s1,v1 / bne` @0x8004ffdc-e0),
+ *       oben < P.y <= unten  -> Kontakt |= 1 (`slt v0,s0,v1` @0x8004ffe4, `ori v0,v0,0x1` @0x80050000),
+ *       P.y <= oben          -> Rueckgabe = min(Rueckgabe, oben) (`slt v0,s0,v0` / `sh s0,15228(at)`
+ *                               @0x80050034-44); P.y < oben -> fertig (`slt v0,v0,s0 / bne` @0x80050050-54),
+ *     und fuer "innen" wie fuer P.y == oben: P.y < unten -> Kontakt |= 2 (`slt v0,v0,s1` / `ori v0,v0,0x2`
+ *     @0x80050064-80).
+ * PORT-ZUORDNUNG auf die RE1.5-Raumdaten (Dossier bau_d.md §N1):
+ *   Form   <-> SCA-Zelle des Bandes b, gefiltert wie FUN_8001c6e8 mit den Argumenten der RE1.5-ESP-
+ *              Routine 12 (Blutstropfen-Aufprall = RE1.5-Gegenstueck "Boden unter einem Effekt-Teilchen"):
+ *              Maske 0x100 (`ori a3,zero,0x100` @0x800177d0), Baender 7..0 (`ori a2,zero,0x8` @0x800177c4),
+ *              Bandfilter (`andi v0,v0,0xf002` / `bne s3,v0` @0x8001c89c-a0).
+ *              oben  = -1800*(b+1) = Rueckgabe von FUN_8001c6e8 fuer Band b (@0x8001c868-88c),
+ *              unten = -1800*b = Standhoehe des Bandes (Spieler-y := -1800 * +0x82 @0x8001d7b8-cc).
+ *              Rechteck: FUN_8001c6e8 SCHRUMPFT um sein r (`addu v0,v0,s6` / `subu a0,a0,a3` @0x8001c8c8-d0),
+ *              RE2 ERWEITERT um r -> Zellscan mit -r (gleicher Ausdruck (u32)(P.x + r - x) < (u32)(w + 2r)).
+ *              Nur der ZELLEN-Teil von FUN_8001c6e8 laeuft (zelle_im_band); dessen Objekt-Stufe nicht
+ *              (sie gaebe vor den Zellen des Bandes eine Objekt-Oberkante zurueck, @0x8001c810-840) — die
+ *              Objekte laufen nach der RE2-Regel oben. (Maske | 0x10000 statt eigenem Scan waere FALSCH:
+ *              FUN_8001c6e8 erweitert das Zellwort vorzeichenrichtig `lh v0,6(a1)` @0x8001c8a8, bei u0-Bit 7
+ *              traefe dann Bit 0x10000.)
+ *   Objekt <-> aktives Obj_model_set-Prop: XZ = FUN_8002da4c-Zwilling mit Rand r und dem EIGENEN Band des
+ *              Props (RE2 hat kein Band-Tor, s.o.); oben = y - 2*hy (FUN_8001c6e8 `lhu v1,8(v0)` / `lhu v0,56(s0)`
+ *              / `sll v1,v1,1` / `subu` @0x8001c828-834), unten = y (Standflaeche pool+0x38).
+ *   Entfaellt: RE2-Formtyp-Tests 1..13 und Oberkanten-Feinstufe (+10 >> 11) * 100 (@0x8004ffb0-d0) — die
+ *              RE1.5-Zellen sind Rechtecke ganzer Bandhoehe (OFFEN im Dossier); mask (RE2 0x2000 =
+ *              Flammen-Klasse) hat kein RE1.5-Gegenstueck, die Zellklasse ist die der Routine 12.
+ * Folge (gemessen, Sonde probe_r34_re2fx_raum): eine Flamme am Boden (Op 27, P.y = Q.y > 0) liegt unter
+ * jeder Band-0-Zelle -> Rueckgabe 0 wie in RE2 (vorher -1800 -> +0x16 = 0xFFFF -> Op-19-Tor sofort offen). */
+
+/* Zellen-Teil von FUN_8001c6e8 fuer EIN Band b: Quadrant FUN_8003b068 (Versatz 0x80010694 = {0,0,0,0},
+ * `jal 0x8003b068` @0x8001c770; `and v0,v0,a3(0x80000000)` / `srl v1,v1,1` / `or` / `srl v0,v0,30`
+ * @0x8003b084-a0), Zellen der Quadrantengruppe (@0x8001c778-794, Port: sca_rgn wie re15_collision_room_coll),
+ * Filter `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0 und `lh v0,6(a1) / and v0,v0,fp / beq`
+ * @0x8001c8a8-b4, Rechteck `addu v0,v0,s6 / subu v1,v1,v0 / subu a0,a0,a3 / sltu` @0x8001c8bc-fc. */
+static int zelle_im_band(int32_t x, int32_t z, int b, int32_t r15, uint32_t maske)
+{
+    const re15_rdt_t *rdt = &g_room_rdt;
+    if (!rdt->sca || rdt->sca_count <= 0) return 0;
+    unsigned zb = (unsigned)(z - (int32_t)(int16_t)rdt->ceiling_z) & 0x80000000u;
+    unsigned xb = (unsigned)(x - (int32_t)(int16_t)rdt->ceiling_x) & 0x80000000u;
+    int q = (int)((zb | (xb >> 1)) >> 30);
+    int start = 0;
+    for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    const int32_t rr = (int32_t)(int16_t)r15;          /* `sll v1,v1,16 / sra s6,v1,16` @0x8001c760-6c */
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        uint16_t w10 = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+        uint16_t w08 = (uint16_t)((uint16_t)e->type | ((uint16_t)e->u0 << 8));
+        if (((uint32_t)(int32_t)(int16_t)w10 & 0xf002u) != ((uint32_t)b << 12)) continue;
+        if (((uint32_t)(int32_t)(int16_t)w08 & maske) == 0) continue;
+        if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
+        if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
+        return 1;
+    }
+    return 0;
+}
+
 static int32_t re2fx_boden(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt)
 {
     if (re2fx_boden_hook) return re2fx_boden_hook(p, r, mask, a3, kontakt);
-    int k = (p[1] > 0);                                /* DAT_800DCBC8 := (P.y > 0) @0x8004fc2c-58 */
-    int32_t f = 0;                                     /* DAT_800C3B7C := 0 @0x8004fc3c */
+    (void)mask;
+    int k = (p[1] > 0) ? 1 : 0;                        /* @0x8004fc34-58 */
+    int32_t f = 0;                                     /* @0x8004fc3c */
     if (g_room_rdt_ok) {
-        /* RE1.5-Bodensonde der ESP-Routine 12: FUN_8001c6e8(P, 0, 8, 0x100) (@0x800177b8/c4/d0/d4). */
-        f = (int32_t)re15_collision_room_coll(&g_room_rdt, p[0], p[2], 0, 8, 0x100u);
-        int band = re15_collision_band_from_y(p[1]);
-        /* Form-Kontakt -> solide SCA-Zelle des Bandes, Rand r, Objekt-Klassenbit 2 (FUN_8003b558
-         * `jal 0x8003b558` @0x8002bfb0 mit `ori a1,zero,0x2` @0x8002bfb4). */
-        if (re15_collision_box_blocked(&g_room_rdt, p[0], p[2], band, r, 2u)) k = 1;
-        /* Objekt-Kontakt (RE2 a3 == 0 -> Objekt-Schleife @0x8004fc64-0x8004fd68): P im Prop-Kasten
-         * (FUN_8002da4c) und zwischen Ober- und Unterkante. */
-        if (a3 == 0) {
+        if (a3 == 0) {                                 /* Objekt-Schleife @0x8004fc5c-fd68 */
             for (int q = 0; q < (int)g_scd.prop_count && q < RE15_SCD_MAX_PROPS; q++) {
                 if (!g_scd.props[q].active) continue;
-                if (!re15_collision_prop_box_hit(q, p[0], p[2], r, band)) continue;
+                if (!re15_collision_prop_box_hit(q, p[0], p[2], r, g_scd.props[q].band)) continue;
                 int32_t oben  = (int32_t)g_scd.props[q].y - 2 * (int32_t)(uint16_t)g_scd.props[q].box_hy;
                 int32_t unten = (int32_t)g_scd.props[q].y;
-                if (oben < p[1] && p[1] <= unten) k = 1;
+                int32_t c;
+                if (p[1] <= oben)       c = oben;                     /* @0x8004fccc-dc */
+                else if (p[1] <= unten) { k |= 1; c = p[1] - 1; }     /* @0x8004fce0-fd34 */
+                else continue;                                        /* @0x8004fce4 */
+                if (c < f) f = (int16_t)c;                            /* `sh a0` @0x8004fd44-54 */
             }
         }
+        for (int b = 7; b >= 0; b--) {                 /* Formen-Schleife @0x8004fd74-0x800500cc; Baender 7..0 = a2 8 @0x800177c4 */
+            const int32_t oben = -1800 * (b + 1), unten = -1800 * b;   /* @0x8001c868-88c / @0x8001d7b8-cc */
+            if (!zelle_im_band(p[0], p[2], b, -r, 0x100u)) continue;  /* Maske 0x100 @0x800177d0, r -> -r */
+            if (p[1] > unten) continue;                /* @0x8004ffdc-e0 */
+            if (p[1] > oben) {
+                k |= 1;                                /* @0x8004ffe4-5000c */
+            } else {
+                if (oben < f) f = oben;                /* @0x80050028-44 */
+                if (p[1] < oben) continue;             /* @0x80050048-54 */
+            }
+            if (p[1] < unten) k |= 2;                  /* @0x8005005c-8c */
+        }
     }
-    (void)mask;
     *kontakt = k;
+    return f;
+}
+
+int32_t re2fx_boden_sonde(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt)
+{
+    int k = 0;
+    int32_t f = re2fx_boden(p, r, mask, a3, &k);
+    if (kontakt) *kontakt = k;
     return f;
 }
 static int32_t wasser(int32_t x, int32_t z)

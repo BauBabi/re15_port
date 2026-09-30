@@ -110,6 +110,12 @@ extern int32_t (*re2fx_boden_hook)(const int32_t p[3], int r, uint32_t mask, int
 /** Messhaken Wasser (nur Sonden): ersetzt re15_aot_water_at (FUN_800527b4-Zwilling). NULL = echt. */
 extern int32_t (*re2fx_wasser_hook)(int32_t x, int32_t z);
 
+/** NUR SONDEN (Nachbesserung N1/N2): ruft die Port-Abbildung von FUN_8004fba0 direkt (bei gesetztem
+ *  re2fx_boden_hook den Haken). p = Pruefpunkt (s32 x/y/z), r = Rand (Flammen 2), mask/a3 wie das Original
+ *  (a3 != 0 = Objekt-Schleife aus). Rueckgabe = DAT_800C3B7C, *kontakt = DAT_800DCBC8 (Bit 1 = Grundebene
+ *  oder P in Form/Objekt, Bit 2 = P ueber der Unterkante einer beruehrten Form). Abbildung: bau_d.md §N1. */
+int32_t re2fx_boden_sonde(const int32_t p[3], int r, uint32_t mask, int a3, int *kontakt);
+
 /** Diagnose: Zahl der Aufrufe eines nicht umgesetzten Ops (0 = alle erreichten Ops umgesetzt). */
 unsigned re2fx_op_unbekannt(void);
 /** Diagnose: Zahl der Op-Aufrufe je Op-Nummer seit re2fx_reset (Sonden). */
