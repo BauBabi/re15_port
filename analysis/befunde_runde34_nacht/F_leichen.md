@@ -27,7 +27,7 @@ Stand: vollstaendig (Ermittlung + Bauplan). Werkzeuge: `re15_port/tools/r34n_f/`
   Modal im Schliess-Bild, Ereignis-Faden steht waehrend des Modals auf @0x0D09/@0x014C1, laeuft danach
   normal weiter, Platz wieder scharf, Ja -> 50 -> 57 Munition + Bit.
 - **Bau:** zwei neue Dateien (`re15_leiche.h`, `leiche_1110_1230.c`), ZWEI Haken-Zeilen
-  (`scd_vm.c` op_message_on nach `pause_mask`, `game_step_common.c` nach `re15_granate_tick`), kein
+  (`scd_vm.c` op_message_on hinter der `[msg]`-Logzeile, `game_step_common.c` nach `re15_granate_tick`), kein
   Raumstart-Haken, kein neuer AOT-Platz, kein Asset-Patch, Speicherstand unveraendert (Bank 9 wird
   gesichert).
 
@@ -54,13 +54,13 @@ Stand: vollstaendig (Ermittlung + Bauplan). Werkzeuge: `re15_port/tools/r34n_f/`
 |---|---|---|---|
 | L1 | Welche "Leiche"? | ROOM1110: Ereignis-Platz **Slot 5** (sce 3 -> sub02, Nachricht 0). ROOM1230: Ereignis-Platz **Slot 18** (sce 3 -> sub21, Nachricht 10). | Einzige Leichen-Saetze beider RDTs (Abschnitt 3.1). "Evidence Room" = ROOM1110: DEBUG.BIN-Sprungliste Stage 0 Index 0x11 = `"EVIDENCE ROOM"` (`include/debug_jump_table.h`, Generator `tools/gen_debug_jump_table.py`). |
 | L2 | "Passend dazu" | Die Leiche haelt nicht mehr den Zettel mit dem Code (1110: "4312", 1230: "5632") — diese Codes wandern in Spur E in Marvins Notiz (ROOM1020) bzw. die Armory Notice (ROOM1010). Satz 3 der Original-Nachricht ("The numbers ... printed on the slip.") entfaellt deshalb ganz. | AUFTRAG.md Z. 44 ("The new code is: 4312") und Z. 57 ("with the code: 5632") stehen unmittelbar vor den beiden Leichen-Absaetzen. |
-| L3 | "einmal Handfeuerwaffen Munition" | EINE Packung Item **0x15 "H. Gun Bullets"**, nur ein einziges Mal je Leiche (einmal = einmalig, nicht "eine Patrone"). Menge: Abschnitt 3.4. | Namens-Blob Abschnitt 3.4. |
+| L3 | "einmal Handfeuerwaffen Munition" | EINE Packung Item **0x15 "H. Gun Bullets"**, nur ein einziges Mal je Leiche (einmal = einmalig, nicht "eine Patrone"). Menge: Abschnitt 3.6. | Namens-Blob Abschnitt 3.6. |
 | L4 | "bis man die Munition annimmt" / "zum mitnehmen erscheinen" | Das normale Aufnahme-Modal des Ports (Bild zoomt ein, "Will you take the H. Gun Bullets?" Ja/Nein) — dasselbe wie bei jedem Item (FUN_8001db28-Port `item_modal_common.c`). "annehmen" setzt eine Wahl voraus (Ja/Nein); "erscheinen zum mitnehmen" = das Item-Bild erscheint. | Wortlaut; Auftrag Spur F ("Aufnahme-Abfrage wie bei jedem Item, Ja/Nein"). |
 | L5 | Nein / Inventar voll | Beides: Munition bleibt bei der Leiche, das naechste Untersuchen zeigt WIEDER den langen Text und WIEDER das Angebot. | "Der Text soll immer wiederholt werden können ... bis man die Munition annimmt." Voll = nicht angenommen (Modal Zustand 8, Item bleibt, `item_modal_common.c:334`). |
 | L6 | Gross-/Kleinschreibung "Police", "Holding" | Die WORTGLEICHEN Teile kommen als ORIGINAL-BYTES aus der RDT: "It's a police officer, he's dead." (klein, ROOM1110 msg 0 Seite 1), "He is holding" (klein, beide RDTs Seite 2), "A miserable death..." (ROOM1230 msg 10 Seite 1). Neu ist nur "something". | Auftrag Spur F: "Wortgleiche Teile aus den Original-Bytes uebernehmen; Nutzer-Schreibung sonst zeichengetreu". Die Grossbuchstaben stehen bei WORTGLEICHEN Teilen (Nutzer zitiert den Original-Satz), "something" ist klein geschrieben. |
-| L7 | Seitenumbruch zwischen den zwei Saetzen | Wie im Original: `02 00` (Seite fuer Seite, Taste blaettert). | Der Original-Satz hat genau dort `02 00` (ROOM1110 @0x0D8C, ROOM1230 @0x1708). Der Nutzer schreibt alles in eine Zeile, weil er den Text abtippt; die Seitenfolge ist Teil der "wortgleichen" Original-Bytes. |
+| L7 | Seitenumbruch zwischen den zwei Saetzen | Wie im Original: `02 00` (Seite fuer Seite, Taste blaettert). | Der Original-Satz hat genau dort `02 00` (ROOM1110 @0x0D8B, ROOM1230 @0x170A). Der Nutzer schreibt alles in eine Zeile, weil er den Text abtippt; die Seitenfolge ist Teil der "wortgleichen" Original-Bytes. |
 | L8 | Punkt am Ende von "He is Holding something" (1110 ohne, 1230 mit) | In BEIDEN Raeumen mit Punkt 0x57. | (a) Derselbe Satz steht in 1230 beim Nutzer MIT Punkt; (b) der ersetzte Original-Satz "He is holding a slip." endet in beiden RDTs auf 0x57; (c) Zensus Abschnitt 3.2: Anteil der ausgelieferten Nachrichten, die ohne Satzzeichen enden. |
-| L9 | "…." (Auslassung + Punkt) in 1230 | "A miserable death" + **drei** 0x57 wie im Original, KEIN vierter Punkt. "…" = RE1.5-"..." = `57 57 57`. | Der Teil ist wortgleich zum Original (`1d 00 49 45 4f 41 4e 3d 3e 48 41 00 40 41 3d 50 44 57 57 57` @0x16F6); der Nutzer schreibt den Nachtext "A miserable death…" mit genau EINER Auslassung; der Punkt hinter "…" ist sein Satztrenner beim Abtippen zweier Seiten in einer Zeile. Zensus 3.2: vier Punkte in Folge kommen im Auslieferungsstand nicht/als Ausnahme vor. |
+| L9 | "…." (Auslassung + Punkt) in 1230 | "A miserable death" + **drei** 0x57 wie im Original, KEIN vierter Punkt. "…" = RE1.5-"..." = `57 57 57`. | Der Teil ist wortgleich zum Original (`1d 00 49 45 4f 41 4e 3d 3e 48 41 00 40 41 3d 50 44 57 57 57` @0x16F6); der Nutzer schreibt den Nachtext "A miserable death…" mit genau EINER Auslassung; der Punkt hinter "…" ist sein Satztrenner beim Abtippen zweier Seiten in einer Zeile. Zensus 3.2: vier Punkte in Folge kommen im Auslieferungsstand 0-mal vor (1227 Nachrichten). |
 | L10 | Nachtext | 1110: "It's a police officer, he's dead." = Original-Seite 1 von msg 0 + `01 00`. 1230: "A miserable death..." = Original-Seite 1 von msg 10 + `01 00`. | Nutzer-Wortlaut, wortgleich zum Original. |
 | L11 | Menge "Stapeln wie Runde 26" | Keine Sonderregel: das Modal halbiert (Nutzer-Entscheidung 2026-09-20) und stapelt (2026-09-26) automatisch wie bei jeder Welt-Munition. | `re15_pickup_menge_nutzer` / `re15_inv_grant_stapeln_nutzer` sitzen im EINZIGEN Welt-Aufnahme-Pfad (`item_modal_common.c:155`, `:334`). |
 
@@ -242,6 +242,10 @@ Genau **ein** Treffer — RE2 ROOM4050 (Kanalisation, toter Umbrella-Soldat), su
 Also: RE2 laesst die Leiche das Item ueber den NORMALEN Aufnahme-Weg anbieten (Item-AOT, Frage
 "Will you take the ...?"), ohne Weltmodell (md1 = 0xFF), und benutzt fuer "haelt etwas" den Satz
 "He's holding something." — der Nutzersatz "He is holding something." ist dessen RE1.5-Form.
+⛔ Im RE2-Zweig MIT Item liegt auf dem Rechteck NUR der Item-AOT — kein Text davor; der Satz erscheint dort
+nur im Zweig OHNE Item. Die Reihenfolge "erst Text, dann Angebot" hat also kein RE2-Vorbild, sie ist
+NUTZER-VORGABE ("…He is Holding something" und dann soll man … Munition erhalten"). Aus RE2 belegt sind
+der Aufnahme-Weg (normales Item-Modal), das fehlende Weltmodell und der Wortlaut "holding something".
 Der RE2-Item-Handler (AOT-Tabelle @0x800A73C4, Typ 2 -> 0x80051884) zweigt auf action Bit 0:
 `lbu v0,7(a0)` @0x800518cc / `andi v0,v0,0x1` @0x800518d4 / `bne` @0x800518d8 -> @0x80051924
 `sb 6,-0x403(at)` (0x800cfbfd) statt sofortigem Aufnahme-Start (@0x800518f8 `sb 2 -> 0x800d5c00`).
@@ -390,7 +394,7 @@ Platz 7 @0x0B18), Kamera, Ereignis-Ablauf, RDT-Bytes (kein Asset-Patch).
 
 | Datei | Stelle | Zeilen |
 |---|---|---|
-| `re15_port/engine/src/scd_vm.c` | `op_message_on`, direkt NACH `uint32_t pause_mask = ...;` (heute Z. 1633), VOR der Savepoint-Abfangung | `if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }` + Kommentar, `#include "re15_leiche.h"` |
+| `re15_port/engine/src/scd_vm.c` | `op_message_on`, direkt NACH der Logzeile `[msg] room=%04x id=%d savepoint=0` (heute Z. 1680-1681), VOR dem Ja/Nein-Zweig — so bleibt das `RE15_MSG_LOG` mit der ORIGINAL-Id erhalten; Savepoint/Item-Box davor treffen 1110/1230 nie | `if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }` + Kommentar, `#include "re15_leiche.h"` |
 | `re15_port/engine/src/game_step_common.c` | direkt NACH `if (c->rdt_ok) re15_granate_tick();` (heute Z. 1050), VOR `if (re15_item_modal_active()) return;` | `if (c->rdt_ok) re15_leiche_tick();` + Kommentar, `#include "re15_leiche.h"` |
 
 Warum genau dort (gemessen, Sonde): Bild-Reihenfolge main.c SCD-Takt (:5378, beim Modal uebersprungen :5343)
@@ -468,7 +472,7 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
 
 | # | Risiko | Einschaetzung / Gegenmittel |
 |---|---|---|
-| R1 | Zusammenfuehrung: die zwei Haken-Zeilen liegen dort, wo auch andere Spuren einhaengen (op_message_on nach `pause_mask`; game_step nach `re15_granate_tick`) | Reiner Textkonflikt, fachlich unabhaengig (disjunkte Raeume/Nachrichten). Bei der Integration alle Zeilen behalten, Reihenfolge egal. |
+| R1 | Zusammenfuehrung: die zwei Haken-Zeilen liegen dort, wo auch andere Spuren einhaengen (op_message_on hinter der `[msg]`-Logzeile; game_step nach `re15_granate_tick`) | Reiner Textkonflikt, fachlich unabhaengig (disjunkte Raeume/Nachrichten). Bei der Integration alle Zeilen behalten, Reihenfolge egal. |
 | R2 | Softlock | Keiner: der Faden haengt nur am Text-Freeze und danach am Modal; das Modal endet immer (Zustand 0 bzw. 8 -> 0, `item_modal_common.c`). Kann das Modal nicht starten (nur theoretisch, anderes Modal aktiv), wartet der Tick; das Ereignis laeuft nach dem Modal normal weiter. |
 | R3 | ROOM1230 Tastenfeld (Nachricht **0**) | Schluessel ist (Raum, Nachricht); ROOM1230 msg 0 wird nie abgefangen. Riegel `andere` + `integration_keypad`. |
 | R4 | Wegwerf-/Tuerton-/Savepoint-Abfangungen im selben op_message_on | Keine hat einen Eintrag fuer (1110, 0) oder (1230, 10) (`gen/discard_sites.inc` nur msg 5/9 in 1230, `gen/lock_se_sites.inc` nur msg 6; kein Savepoint/Item-Box in beiden Raeumen) — der fruehe Ausstieg verliert nichts. |
