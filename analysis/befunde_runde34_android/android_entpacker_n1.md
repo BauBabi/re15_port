@@ -433,6 +433,34 @@ ausgeschlossen:
   GERAET-KONSISTENT. Der alte Entpacker haette an dieser Stelle die gepflanzte Liste gelesen (`:77`, SDL-Quelle
   1.1); das ist nicht dynamisch nachgestellt (dafuer waere ein debuggable Bau des ALTEN Stands noetig gewesen).
 
+### 3.8 Befund 2.5 auf dem Geraet und Nachlauf mit dem Endstand (N2)
+
+**Vorher (N0, Stand vor dem Fix)**, `build/r34a/n1/liste_gross.py`: in der Liste "zuletzt entpackt" auf dem
+Geraet `synchro/STAGE1/room1090/main05.wav` -> `MAIN05.WAV` (Groesse/Summe gleich, Liste gueltig), Neustart
+(`s25_gross_vorher_N0`):
+```
+[android] Abgleich (Update): ... behalten 3602, geaendert 0, neu 1, pruefen 0, weg 1
+[android] entpacke synchro/STAGE1/room1090/main05.wav (neu)
+[android] entfernt (nicht mehr in der Liste): synchro/STAGE1/room1090/MAIN05.WAV
+[android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (164290 B, 5 ms), ..., 1 entfernt, 0 .neu-Reste, 0 Fehler, 1000 ms
+ls room1090: main00..main04, main06 - main05.wav FEHLT;  geraet_pruefen: fehlt 1 -> GERAET-ABWEICHUNG
+```
+Der Lauf meldet 0 Fehler und schreibt die Liste - und die frisch entpackte Datei ist weg. Befund 2.5 gemessen.
+
+**Endstand N2** = `build_android.sh --version v0.8.20-n1f` nach dem Fix (Commit 026632a4), `build_N2.log` EXIT 0
+(4 min 38 s), Selbsttest 248/248, Gate gruen, APK sha256 `c393a18e...c4e6`; Liste bytegleich der von N0:
+| Lauf | Log | Ergebnis |
+|---|---|---|
+| frische Installation | `s38a_N2_frisch` | `3603 kopiert (356678277 B, 12930 ms) ... 0 Fehler, 15271 ms`, KONSISTENT |
+| Gross/klein wie oben | `s38b_N2_gross` | `entfernt ... MAIN05.WAV` (07:35:34.245) VOR `entpacke ... main05.wav (neu)` (07:35:35.239), `1 kopiert, 1 entfernt, 0 Fehler`, **KONSISTENT** |
+| geaendert + weg (liste_manipulieren) | `s38c_N2_liste_anders` | `entfernt ... geist.bin`, `entpacke ... main05.wav (geaendert)`, KONSISTENT |
+| Neustart | `s38d_N2_neustart` | `Assets aktuell (schneller Weg) ... 268 ms`; Bild `s38_bild.png` (angesehen): Titelbild |
+| Uebergang v0.8.19 -> N2 | `s38e_uebergang_N2` | `Abgleich (Uebergang v0.8.19)`, `3603 per SHA-256 geprueft (356678277 B, 9298 ms, 0 abweichend)`, 0 kopiert, KONSISTENT (N2 hat die Assets von v0.8.19) |
+| Abbruch (`abbruch.sh`, 1500) + Neustart | `s3v_abbruch.logcat`, `s38f_N2_neustart_nach_abbruch` | Abbruch traf diesmal mitten in eine Datei: `BG05.BSS.neu` 65536 B; Neustart `2004 kopiert, 1599 per SHA-256 geprueft (0 abweichend), 1 .neu-Reste, 0 Fehler`, KONSISTENT |
+
+(ii) mit echten APKs lief mit N0 -> N1 (3.4); der Fix beruehrt den Weg "geaendert -> entpacken" nicht, und
+derselbe Weg ist mit N2 ueber die manipulierte Liste (Zeile 3) belegt.
+
 ## 4. Gates / Suite
 
 (folgt)
