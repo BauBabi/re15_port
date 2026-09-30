@@ -80,8 +80,8 @@ Mehrdeutigkeiten, aufgeloest (Vertrag §3.2: Wortlaut + Bilder, begruendet):
 Lauf `re15_port/tools/r34n_a/lauf.sh ist|nein` (echte `re15_pc.exe` unter eigenem Namen, beschleunigter
 Renderer, RE15_FRAMEDUMP, Bau dieses Baums = master cf0e68ba). Neues Spiel -> Debug-JUMP ROOM1050 (setzt
 Cut 0, @0x8001d818-20) -> Spieler startet IN der RVD-Zone 0->1 und GEHT ueber die Uebergaenge 1->2 und
-2->3 an den Schalter (so laeuft die Kamera wie im Spiel; ein Sprung direkt an den Schalter liesse Cut 0
-stehen).
+2->3 an den Schalter (so laeuft die Kamera wie im Spiel; nach einem Debug-JUMP bleibt sie sonst auf
+Cut 0 stehen — gemessen in Runde 33, `analysis/befunde_runde33/tuer1120_werkzeug/lauf.sh` Kopf).
 
 | Bild | Ereignis (state.log / debug.log) |
 |---|---|
@@ -99,7 +99,7 @@ Fundstelle Hebetisch ROOM1150, `sicherung_1150.c`, Zone-9-Bit 53) hat im Spiel k
 `RE15_SICHERUNG_ITEM` wird genau einmal benutzt (Aufnahme-Modal). Cut 7/8 und msg 2 sind unerreichbar.
 
 Zusatzmessung Nahansicht: `RE15_FORCE_CUT=7`, Spieler am Schalter (16556,-8313): Cut 7 zeigt den
-Wandschrank mit roter Leuchte, der Spieler ist NICHT im Bild (`re15_port/build/r34n_a/cut7/c7_640.png`),
+Wandschrank mit roter Leuchte, der Spieler ist NICHT im Bild (`A_belege/cut7_erzwungen_spieler_am_schalter.jpg`),
 der Nachrichtenkasten liegt unten wie ueblich. Die Nahansicht braucht also keine Spieler-Umpositionierung.
 
 ## 3 Original-/RE2-Mechanismus (Adressen, Bytes, Instruktionen)
@@ -122,6 +122,11 @@ Dateien (Stand: **88 OK, 0 FEHLT**).
 | Rueckgabe | sub02 @0x0D74..@0x0D82 | `22 02 07 00 22 01 1b 00 3c 01 2e 01 00 00 42` | Sperre aus, Cut_auto 1, Plc_ret |
 | Nachricht | msg @0x0ED2 | `04 02 25 00 4a 41 41 40 … 57 01 00` | "I need a fuse to run the shutter." — kein `2b 02` im SCD |
 | Nahansicht | Kamera @0x140 / @0x160 | erste 28 Byte gleich, pri 0x518 / 0x51C | Cut 7 / Cut 8, Kamera (16171,-2733,-8185) -> (18240,-1974,-8706) |
+
+Kunst Cut 7 gegen Cut 8 (ROOM105.BSS Scheibe 7/8, Engine-Dekoder `probe_bg_dump`), selbst nachgemessen:
+Kanalabweichung >4: **2761 Pixel, bbox x123..268 y16..181**; >8: 1544 (x137..221 y64..178); >24: 742
+(x188..206 y64..162) — alles im Kasten. (Die Memory-Zahl "2317 Pixel" passt zu keiner dieser Schwellen; der
+Befund "nur der Kasten unterscheidet sich" haelt.)
 
 ROOM1051 (Elza): sub02 @0x0CC8..0x0DA4 **bytegleich** zu ROOM1050 sub02, Schalter-Zone @0x0C4C gleich,
 msg 0 @0x0DEC und msg 2 @0x0E68 gleich, Kameratabelle (alle 10 Cuts) gleich. ⛔ ROOM1051 main00 belegt
@@ -154,7 +159,9 @@ sub12 @0x015BA  2b 00 ff ff  02 00               Generator-Frage, Evt_next
       @0x015CC  21 03 90 00  2b 01 ff ff  02 00  NICHT eingesetzt -> msg 1 "I need to insert the missing fuse
                                                  before I can operate this."      <== Vorbild fuer msg 2 in 1050
 sub18 @0x01678  2b 03 ff ff  02 00  2b 04 ff ff  msg 3 "One of the fuses is missing..." -> msg 4 "Will you use the Fuse?"
-      @0x01688  21 0c 1f 00  29 08               Ja -> Cut_chg 8 (Nahansicht VORHER) + Einsetz-Spiel (Bank 5)
+      @0x01688  21 0c 1f 00  29 08               Ja -> Cut_chg 8 (Nahansicht VORHER), dann Set(5,10/11/5): sub01
+                                                 @0x012B4..@0x01332 fuehrt per Richtungstaste (Sce_key_ck) Objekt 4
+                                                 und startet bei Member_cmp==7 + Aktion sub19 (Einsetz-Feinbedienung)
 sub19 @0x0169E  22 03 90 01  29 09               Set(3,144,1) eingesetzt, Cut_chg 9 (Nahansicht NACHHER)
       @0x016B8  46 09 01 31 06 00 ff ff 00 00    Slot 9 -> Text msg 6
       @0x016C8  2b 05 ff ff  02 00  29 0a  3c 01  msg 5 "You've used the Fuse.", Cut_chg 10, Cut_auto 1
@@ -165,6 +172,9 @@ Texte (Offsettabelle @0x1758): msg 4 @0x1855 (32 B) `04 02 33 45 48 48 00 55 4b 
 @0x2934/@0x2961). ROOM2061 = ROOM2060.
 **Einordnung (memory beta-zu-retail):** Frage-Ablauf am Weltobjekt ist in RE1.5 FERTIG (ROOM2060,
 ROOM1090 sub06, ROOM10D0 sub20) -> RE1.5 massgeblich. Kein Se_on in sub18/sub19 -> Einsetzen ist stumm.
+Die Feinbedienung (Objekt 4 per Richtungstaste) wird NICHT uebernommen: ROOM1050 hat fuer den Kasten
+kein bewegliches Modell (nOmodel=2: obj 0 Rolltor, obj 1 Raum-Prop), der Zustandswechsel ist dort
+GEMALT (Cut 7 -> Cut 8); ohne Modell gaebe es nichts zu fuehren.
 
 ### 3.4 Gegenstand aus dem Inventar — RE1.5 kann es nicht, RE2 kann es
 
@@ -395,7 +405,9 @@ Zusaetzlich: Suite im eigenen Baum (429 Tests), GUI-Haken einzeln nachfahren (me
 
 * **Softlock — Sicherung verloren?** Nein. (a) Wegwerfen: nur an `discard_sites.inc`-Stellen; die Sicherung
   steht dort nicht (ROOM2060 msg 5 vom Generator verworfen, Bedingung B); msg 21 lebt nur im Port.
-  (b) Kiste: Ablage, jederzeit zurueck; die Weiche sieht nur das Inventar -> "I need a fuse…" statt Frage.
+  (b) Kiste: Ablage, jederzeit zurueck (STAGE1-Kisten nur ROOM1150/1151 msg 3, `re15_itembox.c:63`, keine
+  Sperrliste); die Weiche sieht nur das Inventar -> "I need a fuse…" statt Frage. In ROOM1050 gibt es keine
+  Kiste und keine Fundstelle — der Besitz kann sich dort zwischen Ausloesen und Frage nicht aendern.
   (c) Kombinieren: 0 Paare (@0x800750a8). (d) Tod/Laden: Flags und Inventar werden zusammen gespeichert.
 * **Fundstelle erreichbar?** ROOM1150 ab Spielbeginn: ROOM1170 -> ROOM1130 (Slot 4) -> ROOM1150 (Slot 2),
   beide "immer" (raumgraph.py); der Hebetisch ist unbedingt armiert (scd_vm.c op_aot_set, ROOM1150 Slot 1).
