@@ -7,6 +7,9 @@ Pruefer aendert KEINEN Code. Alle Mutationsproben unten wurden mit `git checkout
 zurueckgesetzt; danach `git diff` leer, Neubau ueber `local_build.sh build`, Sonden wieder mit den Bauer-Zahlen
 (Lebensdauer 140, Applier-Rufe 206, Pixel Saeure 135182 / Brand 374878, 626 Ausschnitte).
 
+STATUS: abgeschlossen (Konstanten §1, Semantik §2, Sonden/Mutationen §3, Dateibesitz §4, Tests §5/§5a, Risiko §6,
+Vollstaendigkeit §7, Maengel M1-M9, Fazit).
+
 Werkzeuge: `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py` (RE2 `info/re2leon/PSX.EXE`, md5 09a9b642…) und
 `re15_disasm.py` (RE1.5 `info/Re1.5/PSX.EXE`), eigener unabhaengiger ESP-Dekoder (Scratch, nicht versioniert) fuer
 RE2 `CORE00.ESP` (md5 c0b0a7f4… = `shared_assets/RE2/CORE00.ESP`), `TEX.TIM` md5 7472e1a8… (= Asset).
@@ -61,6 +64,24 @@ Bildzaehlung X / X+1..X+4 (Saeure) bzw. X / X+1 (Brand).
   → Op-19-Tor `sltiu v0,v0,0x10` @0x8001f2e8 ist im ersten Brennbild offen (dann Ueberlauf auf 0) statt nach 16 Bildern.
   Das Dossier (bau_d.md §2.5) nennt als einzige Abweichung die unerreichbare Luft-Wand; diese hier ist erreichbar
   (Granate fliegt durch Waende, BAUPLAN §1.1; Bauer-Messung §2.5: ROOM1140 8241 von 12100 Gitterpunkten mit Boden −1800).
+* **Messung M1 (echte Engine, echte Raeume)**: Scratch-Programm (Pruefer, unversioniert; linkt `build_r34_d/engine/
+  libre15_engine.a` + `tests/libre15_test_support.a`, laedt `ROOM####.RDT` nach `g_room_rdt`, `re2fx_boden_hook = NULL`,
+  Applier-Spion, `re2fx_aufschlag(1, {x, 10, z}, 0)`, 120 × `re2fx_tick`; Punkte per 250er-Raster: Wand = room_coll −1800
+  und `box_blocked`, frei = room_coll 0 und 3000 Umkreis frei):
+
+  | Raum | Punkt | room_coll | Flamme 92 +0x14..17 | +0x16 | Landung | 1. Applier-Ruf |
+  |---|---|---|---|---|---|---|
+  | ROOM1140 | Wand (−10500, −25500) | −1800 | 0xFFFFF8F8 | 0xFFFF | Bild 2 | **Bild 3** |
+  | ROOM1140 | frei (−30000, −30000) | 0 | 0x00000000 | 0x0000 | Bild 2 | Bild 19 |
+  | ROOM1170 | Wand (−24000, −28750) | −1800 | 0xFFFFF8F8 | 0xFFFF | Bild 2 | **Bild 3** |
+  | ROOM1170 | frei (−5750, −30000) | 0 | 0x00000000 | 0x0000 | Bild 2 | Bild 19 |
+  | ROOM1150 | Wand (−28250, −27750) | −1800 | 0xFFFFF8F8 | 0xFFFF | Bild 2 | **Bild 3** |
+  | ROOM1150 | frei (−11250, −30000) | 0 | 0x00000000 | 0x0000 | Bild 2 | Bild 19 |
+
+  Ueber einer Band-0-Zelle beginnt der Nachbrenner-Schaden 16 Bilder frueher als auf freiem Boden. Nach RE2-Regel waere
+  die Rueckgabe dort ebenfalls 0 und der erste Ruf in Bild 19: P.y = +10 liegt unter der Unterkante jeder Form (≤ 0) →
+  Zweig "unter unten" (`slt v0,s1,v1` / `bne` @0x8004ffdc-e0 → @0x8005005c → nur Buchhaltung 0x800D5BE4), bei Objekten
+  `slt v0,v0,a1` / `bne` @0x8004fce0-e4 (Unterkante < P.y → uebersprungen); die Rueckgabe 0x800C3B7C bleibt 0.
 
 ---
 
@@ -98,12 +119,26 @@ Eigene Mutationsproben (je: Konstante verstellt → `local_build.sh build` (17 s
 
 * `local_build.sh build` → `LOCAL-BUILD-OK (build)`; `ctest -R unit_r34_re2fx` 3/3 gruen.
 * Alle Unit-Tests: `ctest -R "^unit_" -j 4` → **356/356 Passed** (31,9 s).
-* Die zehn beim Bauer roten exe-Tests einzeln/sequenziell: siehe §5a (Nachtrag nach Laufende).
+* Die zehn beim Bauer roten exe-Tests einzeln/sequenziell: siehe §5a.
 * Volle Suite nicht erneut gefahren (Last durch Suiten A/B parallel; D ist ohne Aufrufer in `main.c`, kein Bestandstest
   kann D-Code ausfuehren). Die Bauer-Begruendung (kein reproduzierbares Rot, kein re15_pc-Absturzeintrag) ist schluessig.
-  Nebenbefund: `local_build.sh:298-299` faellt ohne powershell/cygpath auf `taskkill //F //IM re15_pc.exe` zurueck — eine
-  Sitzung ohne diese Werkzeuge (oder ein aelterer Baum) beendet jede re15_pc.exe der Maschine mit exit 1 ohne Meldung; das
-  passt zum beobachteten Muster, ist aber nicht belegt (nur Hinweis).
+  Nebenbefund (plausibler Taeter, nicht belegt): drei Skills fordern Agenten ausdruecklich zum Beenden JEDER re15_pc.exe
+  auf — `.claude/skills/re15-room-probe/SKILL.md:13` und `:63` (`taskkill //F //IM re15_pc.exe 2>/dev/null; true`),
+  `.claude/skills/re15-enemy-ai-re/SKILL.md:260`, `.claude/skills/re15-pc-render-order/SKILL.md:74` — dazu der Rueckfall
+  `local_build.sh:298-299` ohne powershell/cygpath. Ein so beendeter Prozess endet mit exit 1 ohne Meldung im debug.log —
+  genau das Muster der Bauer-Laeufe und meines Wiederholungslaufs (§5a). Das widerspricht der harten Regel "niemals
+  taskkill per Bildname" und trifft alle parallelen Spuren; Vorschlag an den Orchestrator: die drei SKILL.md-Stellen auf
+  "nur eigene PID / Pfad-Filter wie local_build.sh:293-297" umstellen.
+
+### 5a. Wiederholung der zehn Bauer-roten exe-Tests (Pruefer, 03:37-03:47, `-j 1`, Suiten A/B parallel)
+
+`ctest -R "^integration_(r30_cut_blitz|elza_vollstart|r30_granate_laden|r30_irons_tisch_laden|r30_irons_tisch_bild|
+r30_irons_tisch_licht|r30_sicherung_laden|r30_titel_puls|r33_speichern|relatch_pin)$" -j 1`: **9/10 Passed**
+(cut_blitz 69,78 s, elza_vollstart 100,09 s, granate_laden 104,24 s, irons_tisch_laden 30,46 s, irons_tisch_bild 60,65 s,
+irons_tisch_licht 61,22 s, sicherung_laden 44,45 s, r33_speichern 86,69 s, relatch_pin 24,14 s). `integration_r30_titel_puls`
+rot nach 4,50 s: "129 Bilder … exit=1", `debug.log` (Lauf `lauf_88e132a5`) endet nach `[pad] kein Controller gefunden`
+OHNE Fehlermeldung — dasselbe Muster wie beim Bauer (Prozessende von aussen). Einzeln wiederholt bei CPU 28 %:
+**Passed 28,55 s**. Kein reproduzierbares Rot; D-Code wird von keinem dieser Tests ausgefuehrt.
 
 ---
 
@@ -115,7 +150,13 @@ Eigene Mutationsproben (je: Konstante verstellt → `local_build.sh build` (17 s
   `RE15_TIM_SLOT_MAX 51` (kein Schleifen-Loeschen ueber alle Slots in `render_pc.c` gefunden, Slot bleibt ueber
   Raumwechsel); (c) fehlt `shared_assets/RE2/CORE00.ESP` im Paket, bleibt der Aufschlag stumm (`re2fx_aufschlag` kehrt
   bei `!s_esp` still zurueck) — Paket-Gate (Integrationswunsch 8) ist Pflicht; (d) O-VB4 liegt in Spur B
-  (`re15_re2_gl_apply`, im Baum r34g_b gelesen: RE1.5-Zweig Art 5 vorhanden, Signatur passt zu Op 40).
+  (`re15_re2_gl_apply`, im Baum r34g_b gelesen: RE1.5-Zweig Art 5 vorhanden, Signatur passt zu Op 40);
+  (e) Android baut `platform/pc/src/*.c` per GLOB mit (`platform/android/jni/CMakeLists.txt:42`) — nach der Bindung in
+  `main.c` braucht der Android-Bau einen frischen Configure (Memory reai-v2-android-glob-cache), sonst fehlen
+  `re2fx_pc.c`/`re2_fx.c` beim Linken; (f) der RE2-Slot wird 512 × (256 · 19) = 512 × 4864 Texel gross
+  (`re2fx_pc.c:74-86`, eine Kopie je CLUT-Zeile), benutzt werden nur die Zeilen 481..484 (CLUT-Worte 0x7851/0x7891/
+  0x78D1/0x7911 der Aufschlag-Kinder) — auf GLES-Geraeten mit 4096er Texturgrenze scheitert `SDL_CreateTexture`, die
+  RE2-FX blieben dort unsichtbar (render_pc.c prueft keine Maximalgroesse).
 
 ---
 
@@ -137,10 +178,13 @@ Paket-Gates. Der PC-Zeichner `re2fx_pc.c` ist ohne jede Sonde (M7).
 * **M2 (mittel)** RE1.5-Raumteil von `re2fx_boden` (re2_fx.c:384-402) von keiner Sonde ausgefuehrt (Haken bzw. kein Raum);
   Mutation B gruen; Messwerkzeug §2.5 unversioniert. Vorschlag: Sonde mit geladenem ROOM1140/1170 (Muster re15-room-probe):
   Flamme auf freiem Boden gleitet, an Wandzelle Op 50, Rueckgabe/+0x14 je Fall gepinnt; Negativ-Kontrolle.
-* **M3 (mittel)** Billboard-Geometrie FUN_80077ed0 ungepinnt; O9-Abgleich vergleicht nur Texel der vom Port gewaehlten
-  Rechtecke (selbstbestaetigend). Vorschlag: je Kind-Code ein Quad eines festen Bildes (feste Kamera) gegen Handrechnung
-  aus @0x80077f14-0x8007814c pinnen und die UV-Rechteck-Menge gegen die aus CORE00.ESP abgeleitete Anim-Folge des
-  Katalogs pruefen (ctest statt Handlauf).
+* **M3 (mittel)** Billboard-Geometrie FUN_80077ed0 ungepinnt; O9-Abgleich (`re2fx_katalog.py --vergleich`, `pruef()`)
+  vergleicht nur die Texel der vom Port gewaehlten Rechtecke (tp, clut, u0..v1 aus `re2fx_crops.txt`) mit dem eigenen
+  TIM-Dekoder — blind fuer falsche Rechtecke und Bildschirmlage (Mutation A: 593 Ausschnitte, 0 Abweichungen), laeuft
+  zudem nicht in ctest. Positiv: CLUT/TPage je Kind-Code der Port-Quads (8 Kombinationen, `re2fx_quads.txt`) stimmen
+  mit der Katalog-Liste ueberein (hier von Hand verglichen). Vorschlag: je Kind-Code ein Quad eines festen Bildes (feste
+  Kamera) gegen Handrechnung aus @0x80077f14-0x8007814c pinnen und die UV-Rechteck-Menge gegen die aus CORE00.ESP
+  abgeleitete Anim-/UV-Folge pruefen (in ctest).
 * **M4 (mittel)** Normalzweig der Weltlage (re2_fx.c:303-317, @0x8001dac8-dc1c) ungepinnt; Mutation H gruen.
   Vorschlag: Flamme mit Gier 1024 gleiten lassen, Lage nach n Bildern = Q + RotY(1024)·(Σ vel.x, 0, 0) pruefen.
 * **M5 (hinweis)** Op 46 vel.x 180 (@0x80020ba4) nur als Obergrenze geprueft (401); 180 → 189 gruen. Vorschlag: im
@@ -149,10 +193,20 @@ Paket-Gates. Der PC-Zeichner `re2fx_pc.c` ist ohne jede Sonde (M7).
   Op-28-Bild), nur der Luftfall der Sonde.
 * **M7 (hinweis)** `re2fx_pc.c` ohne Sonde/Aufrufer (Seiten-/CLUT-Zeilen-/u+256-Abbildung, Blend) — bis zur Integration
   ungeprueft; Vorschlag: Puffer-Variante von `re2fx_pc_lade_tex` gegen das VRAM-Modell der bild-Sonde texelweise.
+* **M8 (hinweis)** RE2-Textur-Slot 512 × 4864 (19 CLUT-Kopien, `re2fx_pc.c:74-86`), gebraucht werden die Zeilen 481..484;
+  auf Android (gleiche Quelle per GLOB) mit 4096er GLES-Grenze schlaegt die Textur fehl. Vorschlag: nur die benutzten
+  Zeilen hochladen (Zeilenbasis entsprechend verschieben) oder die Renderer-Grenze pruefen und melden.
+* **M9 (hinweis, ausserhalb Spur D)** Die Suiten-Roetungen "exit=1 ohne Meldung" (Bauer 17×, Pruefer 1× titel_puls) passen
+  zu `taskkill //F //IM re15_pc.exe`, das drei Skills ausdruecklich vorschreiben (`.claude/skills/re15-room-probe/SKILL.md:13`
+  und `:63`, `re15-enemy-ai-re/SKILL.md:260`, `re15-pc-render-order/SKILL.md:74`) — gegen die harte Regel, trifft alle
+  parallelen Spuren. Vorschlag (Orchestrator): Skills auf den Pfad-Filter von `local_build.sh:293-297` umstellen.
 
 ## FAZIT
 
 Die Maschine ist in allen tragenden Konstanten und Ablaeufen byte-treu zum RE2-Disasm (selbst nachgeprueft, keine
-falsche Adresse, keine falsche Zahl gefunden); Dateibesitz eingehalten; 356/356 Unit-Tests gruen. Nicht fertig im Sinne
-"verifiziert": die O-VB2-Abbildung hat eine erreichbare, im Dossier verneinte Abweichung (M1) und ist wie die
-Billboard-Geometrie und der Normalzweig der Weltlage von keiner Sonde abgedeckt (M2-M4, je per Mutation gezeigt).
+falsche Adresse, keine falsche Zahl gefunden); Dateibesitz eingehalten; 356/356 Unit-Tests gruen; die zehn Bauer-roten
+exe-Tests ohne reproduzierbares Rot (9/10 im Block, titel_puls einzeln gruen). Nicht fertig im Sinne "verifiziert": die
+O-VB2-Abbildung hat eine erreichbare, im Dossier verneinte Abweichung (M1, gemessen: erster Nachbrenner-Ruf Bild 3 statt 19
+ueber Band-0-Zellen in ROOM1140/1150/1170) und ist wie die Billboard-Geometrie und der Normalzweig der Weltlage von keiner
+Sonde abgedeckt (M2-M4, je per Mutation gezeigt). Kein kritischer Mangel; kein Regressionsrisiko im heutigen Stand (ohne
+Aufrufer), die Integrationsrisiken stehen in §6.
