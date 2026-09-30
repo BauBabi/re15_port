@@ -8,6 +8,9 @@
 #                   Gier 1024, Ziel-Dummy 0x27 + Spieler-Eigenschaden, 0x0A/0x0B mit Aufschlag-Spion,
 #                   Pool voll, Raumwechsel, Negativ-Kontrollen; Spielschritt (kein Schaden im Abzugsbild,
 #                   R1 los, Drehen) und Item-Debug des Statusschirms.
+#                   NACHBESSERUNG (bau_a.gegenpruefung.md M-2..M-4): Gier -24 (RotMatrix-Negativzweig),
+#                   echte acaec-Zusammensetzung (HOCH/TIEF/Gift ohne Override), Debug-Reset beim Oeffnen,
+#                   Kind-Spawns R8/R15 (Start-Flags 0x0a) auf freiem Platz UNTER dem Eltern-Index.
 add_executable(probe_r34_wurf ${CMAKE_CURRENT_LIST_DIR}/../probe_r34_wurf.c)
 target_link_libraries(probe_r34_wurf PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r34_wurf PRIVATE ${CMAKE_SOURCE_DIR}/include)

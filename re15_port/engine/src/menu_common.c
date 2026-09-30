@@ -1407,7 +1407,19 @@ static void phase0_init(void)
     /* (3) DAT_800b5456=0 @0x800460dc — frame-pacing mode input (FUN_80061fc0 vsync-
      *     divider; the port has no divider — PC runs a fixed 30fps cap; noted).
      * (4) DrawSync/geometry/CLUT init @0x800460e4-fc — wave-1 build-time geometry.
-     * (5) DAT_800b25ce equip snapshot @0x8004649c.                                    */
+     * (4b) Runde 34 A10 NACHBESSERUNG (Gegenpruefung M-2): ITEM-DEBUG AUS beim Oeffnen.
+     *     FUN_800460b8 ist bis zum Kompaktierer gerade durchlaufender Code (nur die lokalen
+     *     Bildschirmmodus-Zweige @0x800461f4-0x80046368 laufen wieder zusammen) und nullt
+     *     in derselben Folge wie 25bc/bd/be/d6/d7 (@0x800463e0-0x80046400):
+     *       80046488 lui at,0x800b / 8004648c sb zero,9832(at)   0x800b2668 (Zustand) := 0
+     *       80046490 lui at,0x800b / 80046494 sb zero,9833(at)   0x800b2669 (Id)      := 0
+     *     (re15_disasm.py dis 0x800460b8 / 0x800463c0). Xref beider Bytes (lui 0x800b + imm
+     *     9832/9833, PSX.EXE): ausser FUN_8004a0cc (0x8004a150..0x8004a344) sind das die
+     *     EINZIGEN Schreiber. Ohne diese Nullung ueberschrieb nach "Debug benutzt, ohne
+     *     KREIS geschlossen, wieder geoeffnet" das erste R1/L1/R2/L2 den Cursor-Platz. */
+    s_dbg_zustand = 0;                     /* sb zero,9832(at) @0x8004648c */
+    s_dbg_id      = 0;                     /* sb zero,9833(at) @0x80046494 */
+    /* (5) DAT_800b25ce equip snapshot @0x8004649c.                                    */
     s_snapshot = equip_id_now();
     /* (6) FUN_8004dadc inventory compaction @0x800464a0. */
     re15_inv_compact();

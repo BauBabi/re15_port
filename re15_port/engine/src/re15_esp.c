@@ -562,6 +562,11 @@ unsigned re15_esp_granate_resolver_calls(void) { return s_granate_resolver_calls
 /* FUN_800199d4-Zwilling (Kind-Spawner mit Start-Flags 0x0a), unten definiert. */
 static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier,
                              const int32_t p[3]);
+/* Zeilen-Spawn mit waehlbaren Start-Flags (0x03 = FUN_80019700, 0x0a = FUN_800199d4), unten
+ * definiert. Routinen 8/15 spawnen ihre Kinder damit ueber den 0x0a-Weg (Gegenpruefung M-3). */
+static int esp_fx_spawn_rows_flags(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                                   uint16_t scale16, int32_t x, int32_t y, int32_t z,
+                                   int32_t floor_y, int16_t param, uint8_t flags0);
 
 /* Explosionspunkt P = (x, Welt-y - 500, z), s32 aus den s16-Feldern slot+0x28/2a/2c:
  * `lh v0,40(v1)` / `lh v0,42(v1)` / `addiu v0,v0,-500` / `lh v0,44(v1)` @0x80018594-bc
@@ -632,7 +637,15 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      *                Positions-Spawner; im Port derselbe Weg wie
                      *                der Routine-8-Kind-Spawn)
                      *   80017b4c-60  row[0x26] != 0 -> Advance (0x800174e4)
-                     *   80017b6c     sonst Slot AUS (Flags 0) */
+                     *   80017b6c     sonst Slot AUS (Flags 0)
+                     * Runde 34 A NACHBESSERUNG (Gegenpruefung M-3): das Kind kommt aus
+                     * FUN_800199d4 (`jal 0x800199d4` @0x80017b38; a1 = `lh a1,46(a3)`
+                     * @0x80017b1c, a2 = `lw a2,116(a3)` @0x80017b20, a3 = slot+0x40
+                     * @0x80017b24) -> Start-Flags 0x0a (`ori v0,zero,0xa` @0x80019a88 /
+                     * `sb v0,108(t0)` @0x80019aa4), NICHT 0x03 (FUN_80019700 @0x800197b4):
+                     * Routine A des Kindes laeuft genau einmal in der Kind-Init des Haupt-
+                     * laufs (@0x80019ef4-f30), auch wenn es UNTER dem Eltern-Index landet.
+                     * Lage (Anker = Eltern-Anker), Boden und Skala wie bisher. */
             f->flags = 0x65;
             {
                 uint16_t cnt = row_u16(f->row, 0x0e);
@@ -642,8 +655,9 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                     break;
                 }
             }
-            re15_esp_fx_spawn_rows(f->bank, f->row[0x17], f->row[0x16], f->scale16,
-                                   f->x, f->y, f->z, f->floor_y, f->param);
+            esp_fx_spawn_rows_flags(f->bank, f->row[0x17], f->row[0x16], f->scale16,
+                                    f->x, f->y, f->z, f->floor_y, f->param,
+                                    0x0a);   /* FUN_800199d4 @0x80019a88 */
             if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
             else esp_fx_kill(f);   /* @0x80017b6c sb zero,108(v1) = Flags-Byte 0 = Platz FREI */
             break;
@@ -698,11 +712,18 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * bits, muzzle rows carry 0x20 = ABR1 additive); CHILD spawn cat 2 FIXED
                      * (lui 0x200 @0x80017624), sub = row[0x1e], scale = row[0x26], param = the
                      * PARENT's param (lh a1,0x2e(a3) @0x80017614) — the 0x02040bb8 secondary
-                     * flash; advance UNCONDITIONAL. */
+                     * flash; advance UNCONDITIONAL.
+                     * Runde 34 A NACHBESSERUNG (Gegenpruefung M-3): Spawner = FUN_800199d4
+                     * (`jal 0x800199d4` @0x80017634; a2 = slot+0x4c `addiu a2,a3,76`
+                     * @0x80017604, a3 = slot+0x40 `addiu a3,a3,64` @0x8001762c) -> Start-
+                     * Flags 0x0a (`ori v0,zero,0xa` @0x80019a88), nicht 0x03: Routine A des
+                     * Zweitblitzes laeuft einmal in der Kind-Init (@0x80019ef4-f30), auch auf
+                     * einem Platz UNTER dem Eltern-Index. Lage/Boden wie bisher. */
             f->flags = f->row[0x0e];
             f->tpage |= row_u16(f->row, 0x16);
-            re15_esp_fx_spawn_rows(f->bank, 2, f->row[0x1e], row_u16(f->row, 0x26),
-                                   f->x, f->y, f->z, f->floor_y, f->param);
+            esp_fx_spawn_rows_flags(f->bank, 2, f->row[0x1e], row_u16(f->row, 0x26),
+                                    f->x, f->y, f->z, f->floor_y, f->param,
+                                    0x0a);   /* FUN_800199d4 @0x80019a88 */
             esp_fx_row_advance(f);
             break;
         }
@@ -1086,9 +1107,17 @@ static int esp_fx_spawn_rows_core(const re15_esp_t *bank, uint8_t effect_id, uin
     return spawned;
 }
 
-int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
-                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y,
-                           int16_t param)
+/* Zeilen-Spawn mit Mess-Log und waehlbaren Start-Flags (Runde 34 A NACHBESSERUNG M-3):
+ *   flags0 0x03 = FUN_80019700 (`ori v0,zero,0x3` @0x800197b4) — Aufrufer ausserhalb des
+ *                 ESP-Ticks (jal-Scan PSX.EXE: 0x8002c74c-0x8002c8fc, Gun-FSM 0x800336ec-
+ *                 0x80033e88, 0x800348b0-0x80034bdc, 0x80038794/bc, 0x80041954, 0x80045710)
+ *   flags0 0x0a = FUN_800199d4 (`ori v0,zero,0xa` @0x80019a88) — ALLE Kind-Spawns der ESP-
+ *                 Routinen (jal @0x800172f8 R2, @0x80017634 R8, @0x80017b38 R15, @0x80017da0,
+ *                 @0x80018054, @0x800185dc/640/660/6c8 R31, @0x800189c4-0x80018c68,
+ *                 @0x800191e0). */
+static int esp_fx_spawn_rows_flags(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                                   uint16_t scale16, int32_t x, int32_t y, int32_t z,
+                                   int32_t floor_y, int16_t param, uint8_t flags0)
 {
     const re15_esp_t *rb = bank;
     int ei = re15_esp_find_id(rb, effect_id);
@@ -1101,7 +1130,16 @@ int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t su
                         (unsigned)effect_id, (unsigned)sub, (unsigned)scale16, streams);
     }
     return esp_fx_spawn_rows_core(bank, effect_id, sub, scale16, x, y, z, floor_y, param,
-                                  0x03, NULL, NULL);
+                                  flags0, NULL, NULL);
+}
+
+int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y,
+                           int16_t param)
+{
+    /* oeffentlicher Weg = FUN_80019700 (Start-Flags 0x03 @0x800197b4): Waffen-FSM, SCD-Op 0x3A,
+     * Gegner-Blut. Kinder der ESP-Routinen gehen ueber esp_fx_spawn_rows_flags(.., 0x0a). */
+    return esp_fx_spawn_rows_flags(bank, effect_id, sub, scale16, x, y, z, floor_y, param, 0x03);
 }
 
 /* FUN_800199d4-ZWILLING (Runde 34 A5): Kind-Effekt a0 = (Kategorie<<24)|(sub<<16)|Skala
@@ -1358,9 +1396,15 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
      * DURCHGANG 1 = Schleife 1 @0x80019e64-c4 ueber ALLE 96 Plaetze (s0 = 0x800a73b8, s2 = s0+12672):
      *   80019e70 lbu v0,108(v1) / 80019e78 andi v0,v0,0x1 / 80019e7c beq -> Flags-Bit 0 aus: kein A
      *   80019e84 lhu v0,0(v1) / sll 2 / Tabelle 0x80071d40 / 80019e9c jalr v0   (Routine A)
-     * Bis Runde 33 liefen A und B je Platz verschraenkt (A_i, B_i, Physik_i, dann Platz i+1). Ein
-     * in Durchgang 1 an einem KLEINEREN Index gespawntes Kind (FUN_80019700, Flags 3) bekommt im
-     * Spawnbild jetzt Weltlage/B/Physik/Anim, aber kein A — wie im Original. */
+     * Bis Runde 33 liefen A und B je Platz verschraenkt (A_i, B_i, Physik_i, dann Platz i+1).
+     * KIND-SPAWNS aus Routinen (Nachbesserung M-3, korrigiert): im Original gehen ALLE ueber
+     * FUN_800199d4 (jal-Scan PSX.EXE + STAGE1..6: nur @0x800172f8/0x80017634 R8/0x80017b38 R15/
+     * 0x80017da0/0x80018054/0x800185dc-0x800186c8 R31/0x800189c4-0x80018c68/0x800191e0) mit
+     * Start-Flags 0x0a (`ori v0,zero,0xa` @0x80019a88): so ein Kind wird hier NIE dispatcht (Bit 0
+     * frei) und bekommt Routine A genau einmal in der Kind-Init von Durchgang 2 — egal, ob es
+     * unter oder ueber dem Eltern-Index landet. FUN_80019700 (Flags 3) hat im ESP-Tick keinen
+     * Aufrufer; einen "Flags-3-Kind ohne A"-Fall gibt es im Original nicht (Port R8/R15 seit der
+     * Nachbesserung ebenfalls 0x0a). */
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         re15_esp_fx_t *f = &s_esp_fx[i];
         if (!f->active || !f->rows_base) continue;   /* Altplaetze ohne Zeilen-VM: kein A */

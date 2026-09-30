@@ -46,6 +46,8 @@
 #endif
 
 extern void re15_player_acaec_override_for_test(int on, uint16_t w);
+extern uint16_t re15_player_acaec(void);
+extern int  re15_player_aim_elevation(void);
 extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
 extern int  re15_player_aim_ready(void);
@@ -391,6 +393,28 @@ static void abschnitt_gier(void)
     wurf_t w0;
     wurf(2, 0x4000, -2474, 0, 90, &w0, NULL);
     PRUEF(55, w0.wl[0] != w.wl[0] && w0.wl[2] != w.wl[2], "Gier 0 und 1024 enden an derselben Stelle");
+
+    /* NACHBESSERUNG M-4 (G2): NEGATIVE Gier -24 (= ein LINKS-Bild im Zielen aus Gier 0; seit dem
+     * Wegfall von & 0xfff im Zielen erreichbar). RotMatrix FUN_80068098, Negativzweig (selbst
+     * disassembliert): `bgez t7` @0x800680a0 faellt durch, `subu t7,zero,t7` @0x800680a8, Index
+     * (-a) & 0xfff (`andi t7,t7,0xfff` im Delay @0x800680b0), sin NEGIERT (`subu t3,zero,t8`
+     * @0x800680d0, fuer die Gier `subu t6,zero,t4` @0x80068134), cos wie gelesen. Tabelle
+     * 0x800794c4 (`re15_disasm.py read`): [24] @0x80079524 = 0x0FFD0097 -> sin 151, cos 4093;
+     * [4072] @0x8007D464 = 0x0FFDFF70 -> sin -144, cos 4093. Erwartung (unabhaengig gerechnet,
+     * build/r34g_a/gier_neg_erwartung.py aus PSX.EXE): M = [[4093,0,-151],[0,4096,0],[151,0,4093]],
+     * r = M * (11929, 2483, 1752) >> 12 = (11855, 2483, 2190) -> Liegestelle (5004, 9, -16089).
+     * Der falsche Weg "a & 0xfff" (Index 4072) laege bei (5007, 9, -16109). */
+    welt_leer();
+    wurf_t wn;
+    if (wurf(2, 0x4000, -2474, -24, 200, &wn, NULL) != 0) { PRUEF(66, 0, "Gier -24: Spawn"); return; }
+    PRUEF(66, wn.wl[0] == X0 + 11855 && wn.wl[1] == 9 && wn.wl[2] == Z0 + 2190,
+          "Gier -24: Liegestelle (%d,%d,%d) (soll (%d,9,%d) = Negativzweig sin -151/cos 4093; "
+          "a & 0xfff gaebe (%d,9,%d))", wn.wl[0], wn.wl[1], wn.wl[2], X0 + 11855, Z0 + 2190,
+          X0 + 11858, Z0 + 2170);
+    PRUEF(67, wn.L == 73 && wn.X == 109 && wn.xl[0] == 11929 && wn.xl[1] == 2483 && wn.xl[2] == 1752,
+          "Gier -24: L %d X %d xlat (%d,%d,%d) (soll 73/109, lokal 11929/2483/1752 wie Gier 0)",
+          wn.L, wn.X, wn.xl[0], wn.xl[1], wn.xl[2]);
+    printf("  Gier -24: Liegestelle (%d,%d,%d)\n", wn.wl[0], wn.wl[1], wn.wl[2]);
 }
 
 /* ================================================================================================
@@ -621,6 +645,11 @@ static int granate_platz(void)
 
 static void abschnitt_spielschritt(void)
 {
+    /* NACHBESSERUNG M-4 (G4/G5): Abschnitt 6 faehrt die ECHTE Zusammensetzung des Worts
+     * 0x800acaec (re15_player_acaec: Zielbits aus der Ziel-FSM + status_flags & 0x1fff) — das
+     * Test-Ueberschreiben der Abschnitte 1-5 ist hier AUS (vorher blieb es bis main-Ende an). */
+    re15_player_acaec_override_for_test(0, 0);
+    int r30_mitte_ok = 1;
     /* 6a — Abzug mit Gegner 1299 vor Leon: KEIN Schaden im Abzugsbild (P1: ENT[9].resolve = 0,
      * Handler 0x80033B38 nur `jal 0x8004eae4` @0x80033b40); Spawn im Clipbild 22 (MITTE,
      * `ori v0,zero,0x16` @0x800336a4/@0x800336fc) mit Art 2 und Gier = rot_y. */
@@ -655,6 +684,11 @@ static void abschnitt_spielschritt(void)
                 const re15_esp_fx_t *g = re15_esp_fx_get(gp);
                 spawn = b; spawn_gier = g->param; spawn_art = g->granate_art;
                 spawn_pos[0] = g->x; spawn_pos[1] = g->y; spawn_pos[2] = g->z;
+                /* Routine 30 im Spawnbild mit dem ECHTEN Wort (MITTE gesund = 0x4000): K1 MITTE
+                 * v (0x118,-50,0x18) @0x800184bc-cc, acc_x -1 @0x800184d4, Zaehler 7 */
+                if (!(g->xlat_x == 280 && g->xlat_y == -50 && g->xlat_z == 24 && g->drift_x == 279 &&
+                      g->drift_y == -40 && g->drift_z == 24 && g->accel_x == -1 && ru16(g, 0x26) == 7))
+                    r30_mitte_ok = 0;
             }
         }
         printf("  Waffe %d: zielbereit nach %d, Abzug Bild %d, Menge %d, Spawn Bild %d (A+%d) art %d gier %d "
@@ -673,6 +707,7 @@ static void abschnitt_spielschritt(void)
               "Waffe %d: Anker (%d,%d,%d) (soll Knochen + {0,0,0x1f4} = (%d,%d,%d))", waffe,
               spawn_pos[0], spawn_pos[1], spawn_pos[2], s_hand[0], s_hand[1], s_hand[2] + 0x1f4);
     }
+    PRUEF(115, r30_mitte_ok, "6a: Routine 30 im Spawnbild mit echtem Wort (MITTE gesund) nicht K1 MITTE / Zaehler 7");
 
     /* 6b — R1 los nach Clipbild 10 -> kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
      * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c) */
@@ -738,6 +773,62 @@ static void abschnitt_spielschritt(void)
                              spawn_gier == 1000 + 22 * soll_d,
               "Drehen %s: Spawn %d Gier %d (soll Bild 22, Gier %d = 1000 + 22 Bilder x %d)", dir ? "RECHTS" : "LINKS",
               spawn, spawn_gier, 1000 + 22 * soll_d, soll_d);
+    }
+
+    /* 6d — NACHBESSERUNG M-4 (G4/G5): ZIELHOEHE aus der Ziel-FSM (Steuerkreuz im HALTEN) und GIFT-
+     * Bit aus status_flags, KEIN Test-Ueberschreiben. Original-Schreiber des Worts 0x800acaec (je
+     * `andi 0x1fff` davor, die Statusbits bleiben): HOCH `ori v0,v0,0x8000` @0x80033228-38, TIEF
+     * `ori v0,v0,0x2000` @0x80033270-84, MITTE `ori v0,v0,0x4000` @0x800332bc-c8; Gift `ori 0x2`
+     * @0x80012eac. Routine 30 im Spawnbild (K1): HOCH v (0x17c,-110,0x15) @0x80018494-a8, acc_x -2
+     * (@0x800184b0 im Delay von `j`); TIEF v (0x50,0,1) @0x80018518-24, acc_x -1 @0x80018528-2c,
+     * Zaehler 5 @0x80018530/38; MITTE v (0x118,-50,0x18), acc_x -1. Zaehler HOCH/MITTE
+     * ((a + ((a>>7)&0xff)) & 0xff) % 4 + 7 (RNG @0x8001af30-4c, `addiu v0,v0,7` @0x80018504):
+     * 0x8000 -> 7, 0x8002 -> 9, 0x4002 -> 9. Nach dem Spawnbild: xlat = v, vel = v + acc (acc_y 10
+     * aus CORE00 @0x1AB8). Spawn-Clipbild HOCH 0x13 @0x80033690, TIEF 0x18 @0x80033758. */
+    {
+        struct { const char *name; uint16_t taste; int gift, spawn_d, elev; int16_t xl[3], v[3], ax; uint16_t n; int nr; } F[] = {
+            { "HOCH gesund",     RE15_PAD_BIT_UP,   0, 19,  1, {380, -110, 21}, {378, -100, 21}, -2, 7, 116 },
+            { "HOCH vergiftet",  RE15_PAD_BIT_UP,   1, 19,  1, {380, -110, 21}, {378, -100, 21}, -2, 9, 119 },
+            { "TIEF vergiftet",  RE15_PAD_BIT_DOWN, 1, 24, -1, { 80,    0,  1}, { 79,   10,  1}, -1, 5, 122 },
+            { "MITTE vergiftet", 0,                 1, 22,  0, {280,  -50, 24}, {279,  -40, 24}, -1, 9, 125 },
+        };
+        for (unsigned i = 0; i < sizeof F / sizeof F[0]; i++) {
+            if (sp_bringup(9, 5) != 0) { PRUEF(F[i].nr, 0, "Bringup 6d"); return; }
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            sp_zielen();
+            if (F[i].gift) pl->status_flags |= 0x0002;
+            if (F[i].taste) sp_bild((uint16_t)(RE15_PAD_BIT_R1 | F[i].taste), 0);   /* Hoehenwechsel im HALTEN */
+            int elev_vor = re15_player_aim_elevation();
+            uint16_t wort_vor = re15_player_acaec();
+            int abzug = -1, spawn = -1;
+            int32_t xl[3] = {0, 0, 0}; int16_t v[3] = {0, 0, 0}, ax = 0; uint16_t n = 0xffff;
+            for (int b = 0; b < 40; b++) {
+                int vor = re15_player_granate_frame();
+                sp_bild((uint16_t)(RE15_PAD_BIT_R1 | F[i].taste | (b == 0 ? RE15_PAD_BIT_SQUARE : 0)),
+                        (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+                if (abzug < 0 && vor < 0 && re15_player_granate_frame() >= 0) abzug = b;
+                int gp = granate_platz();
+                if (spawn < 0 && gp >= 0) {
+                    const re15_esp_fx_t *g = re15_esp_fx_get(gp);
+                    spawn = b;
+                    xl[0] = g->xlat_x; xl[1] = g->xlat_y; xl[2] = g->xlat_z;
+                    v[0] = g->drift_x; v[1] = g->drift_y; v[2] = g->drift_z; ax = g->accel_x;
+                    n = ru16(g, 0x26);
+                }
+            }
+            printf("  6d %-15s: Hoehe %d Wort %04x, Abzug %d, Spawn A+%d, xlat (%d,%d,%d) vel (%d,%d,%d) acc_x %d Zaehler %u\n",
+                   F[i].name, elev_vor, wort_vor, abzug, spawn - abzug, xl[0], xl[1], xl[2], v[0], v[1], v[2], ax, n);
+            PRUEF(F[i].nr, elev_vor == F[i].elev && abzug == 0 && spawn == abzug + F[i].spawn_d,
+                  "%s: Hoehe %d, Abzug %d, Spawn A+%d (soll %d / 0 / A+%d)", F[i].name, elev_vor, abzug,
+                  spawn - abzug, F[i].elev, F[i].spawn_d);
+            PRUEF(F[i].nr + 1, xl[0] == F[i].xl[0] && xl[1] == F[i].xl[1] && xl[2] == F[i].xl[2] &&
+                               v[0] == F[i].v[0] && v[1] == F[i].v[1] && v[2] == F[i].v[2] && ax == F[i].ax,
+                  "%s: xlat (%d,%d,%d) vel (%d,%d,%d) acc_x %d (soll (%d,%d,%d) / (%d,%d,%d) / %d)", F[i].name,
+                  xl[0], xl[1], xl[2], v[0], v[1], v[2], ax, F[i].xl[0], F[i].xl[1], F[i].xl[2],
+                  F[i].v[0], F[i].v[1], F[i].v[2], F[i].ax);
+            PRUEF(F[i].nr + 2, n == F[i].n, "%s: Zaehler +0x26 = %u (soll %u)", F[i].name, n, F[i].n);
+        }
     }
 }
 
@@ -853,6 +944,171 @@ static void abschnitt_item_debug(void)
           "Item-Debug im Reiter-Modus: 25c1 %d Platz 0 = %02x %02x (soll 0 / 01 00)", re15_menu_substate(),
           g_inv.slots[0].id, g_inv.slots[0].qty);
     re15_menu_toggle();
+
+    /* NACHBESSERUNG M-2: das Oeffnen des Statusschirms schaltet das Debug AB. FUN_800460b8 (Init
+     * jedes Oeffnens, gerade durchlaufend bis zum Kompaktierer @0x800464a0) nullt
+     *   8004648c sb zero,9832(at)   0x800b2668 (Zustand)
+     *   80046494 sb zero,9833(at)   0x800b2669 (Id)
+     * (Xref: einzige Schreiber ausser FUN_8004a0cc). Ablauf der Gegenpruefung: Debug benutzen,
+     * OHNE KREIS schliessen, wieder oeffnen, ITEM waehlen, R1 -> Platz 25bd bleibt. */
+    re15_inv_load_briefing();
+    g_inv.slots[0].pad = 0;
+    re15_player_set_equipped_weapon(1);
+    re15_inv_set_equipped_slot(0);
+    re15_inv_set_prev_equip_slot(0x80);
+    re15_menu_toggle();
+    mf(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    mf_leer(8);
+    mf(RE15_PAD_BIT_SELECT, RE15_PAD_BIT_SELECT);
+    mf(0, 0);
+    for (int i = 0; i < 3; i++) mf_taste(RE15_PAD_BIT_R1);
+    PRUEF(149, re15_menu_item_debug_zustand() == 3 && re15_menu_item_debug_id() == 3 && slot_ist(0, 0x03, 0xff, 0),
+          "M-2 Vorbedingung: Zustand %d Id %d Platz 0 = %02x %02x (soll 3 / 3 / 03 ff)",
+          re15_menu_item_debug_zustand(), re15_menu_item_debug_id(), g_inv.slots[0].id, g_inv.slots[0].qty);
+    re15_menu_toggle();                             /* schliessen OHNE KREIS (Debug steht auf 3) */
+    re15_menu_toggle();                             /* wieder oeffnen -> phase0_init */
+    PRUEF(150, re15_menu_item_debug_zustand() == 0 && re15_menu_item_debug_id() == 0,
+          "M-2 Oeffnen: Zustand %d Id %d (soll 0 / 0 — sb zero @0x8004648c / @0x80046494)",
+          re15_menu_item_debug_zustand(), re15_menu_item_debug_id());
+    mf(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);   /* ITEM bestaetigen -> Cursor 25bd = 0 */
+    mf_leer(8);
+    {
+        uint8_t id0 = g_inv.slots[0].id, q0 = g_inv.slots[0].qty, p0 = g_inv.slots[0].pad;
+        mf_taste(RE15_PAD_BIT_R1);
+        mf_taste(RE15_PAD_BIT_L1);
+        mf_taste(RE15_PAD_BIT_R2);
+        mf_taste(RE15_PAD_BIT_L2);
+        PRUEF(151, re15_menu_item_debug_zustand() == 0 && g_inv_screen.item_cursor == 0 &&
+                   slot_ist(0, id0, q0, p0),
+              "M-2 nach Wiederoeffnen: R1/L1/R2/L2 wirken (Zustand %d, Platz 0 = %02x %02x statt %02x %02x)",
+              re15_menu_item_debug_zustand(), g_inv.slots[0].id, g_inv.slots[0].qty, id0, q0);
+    }
+    /* Positiv-Kontrolle: SELECT schaltet das Debug danach wie gewohnt ein (Id ab 0). */
+    mf(RE15_PAD_BIT_SELECT, RE15_PAD_BIT_SELECT);
+    PRUEF(152, re15_menu_item_debug_zustand() == 3 && re15_menu_item_debug_id() == 0 && slot_ist(0, 0x00, 0xff, 0),
+          "M-2 SELECT nach Wiederoeffnen: Zustand %d Id %d Platz 0 = %02x %02x (soll 3 / 0 / 00 ff)",
+          re15_menu_item_debug_zustand(), re15_menu_item_debug_id(), g_inv.slots[0].id, g_inv.slots[0].qty);
+    mf(0, 0);
+    mf_taste(RE15_PAD_BIT_CIRCLE);
+    re15_menu_toggle();
+}
+
+/* ================================================================================================
+ * Abschnitt 8: KIND-SPAWNS der Routinen 8/15 auf einem FREIEN PLATZ UNTER dem Eltern-Index
+ * (NACHBESSERUNG M-3). Original: R8 `jal 0x800199d4` @0x80017634, R15 `jal 0x800199d4`
+ * @0x80017b38; FUN_800199d4 setzt die Start-Flags 0x0a (`ori v0,zero,0xa` @0x80019a88 / `sb v0,
+ * 108(t0)` @0x80019aa4). Durchgang 1 laesst so ein Kind aus (`andi v0,v0,0x1` @0x80019e78), die
+ * Kind-Init des Hauptlaufs (`andi v0,v1,0x8` @0x80019ef4, `xori v0,v1,0x9` im Delay, `sb` @0x80019f00,
+ * `jalr` @0x80019f30) ruft Routine A GENAU EINMAL — im Spawnbild, egal ob das Kind UNTER oder UEBER
+ * dem Eltern-Platz landet. Mit den alten Start-Flags 0x03 (FUN_80019700) bekam ein Kind UNTER dem
+ * Eltern-Index im Spawnbild KEIN A (Durchgang 1 war schon vorbei).
+ * ================================================================================================ */
+typedef struct { uint8_t flags, cursor; int16_t frame, timer; uint16_t clut, tpage, r16; int32_t xl[3]; int16_t v[3]; int sichtbar; } kind_t;
+static kind_t kind_von(const re15_esp_fx_t *f)
+{
+    kind_t k; memset(&k, 0, sizeof k);
+    if (!f) { k.flags = 0xee; return k; }
+    k.flags = f->flags; k.cursor = f->row_cursor; k.frame = f->frame; k.timer = f->timer;
+    k.clut = f->clut; k.tpage = f->tpage; k.r16 = ru16(f, 0x16);
+    k.xl[0] = f->xlat_x; k.xl[1] = f->xlat_y; k.xl[2] = f->xlat_z;
+    k.v[0] = f->drift_x; k.v[1] = f->drift_y; k.v[2] = f->drift_z;
+    k.sichtbar = re15_esp_fx_visible(f);
+    return k;
+}
+static int kind_gleich(const kind_t *a, const kind_t *b)
+{
+    return a->flags == b->flags && a->cursor == b->cursor && a->frame == b->frame && a->timer == b->timer &&
+           a->clut == b->clut && a->tpage == b->tpage && a->r16 == b->r16 && a->sichtbar == b->sichtbar &&
+           a->xl[0] == b->xl[0] && a->xl[1] == b->xl[1] && a->xl[2] == b->xl[2] &&
+           a->v[0] == b->v[0] && a->v[1] == b->v[1] && a->v[2] == b->v[2];
+}
+
+static void abschnitt_kinder(void)
+{
+    /* 8a — ROUTINE 8: Muendungsfeuer id 2 sub 0 (CORE00 @0xFE0 Zeile 0: A 8, +0x1e = 4, +0x26 = 0xBB8
+     * -> Kind Kat 2 sub 4 Skala 0xBB8; Kind-Zeile 0 @0x13D8: A 10, +0x0e = 0x13, +0x16 = 0x20,
+     * +0x1e = 1, +0x26 = 6; Zeile 1 @0x1400: A 0). Der Platz UNTER dem Eltern-Platz wird im SELBEN
+     * Durchgang 1 frei: eine Saeuregranate (Art 3 = keine Kinder) auf Platz 0 erreicht Zuender 0
+     * (`beq v1,zero` @0x80018568 -> `sb zero,108(a1)` @0x800186b0) genau in dem Bild, in dem das
+     * Muendungsfeuer (Plaetze 1/2) seine Routine 8 faehrt -> das Kind landet auf Platz 0. */
+    welt_leer();
+    re15_esp_fx_reset(); spione_reset();
+    re15_player_acaec_override_for_test(1, 0x4000);
+    re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 3, X0, -2474, Z0, 0);
+    int gslot = g ? slot_von(g) : -1;
+    for (int k = 0; k < 116 && g; k++) re15_esp_fx_tick(NULL);   /* MITTE: frei im Bild 116 (Pruefung 17) */
+    PRUEF(161, gslot == 0 && g && g->active && g->granate_art == 3 && ru16(g, 0x00) == 31 && ru16(g, 0x1e) == 0 &&
+               re15_esp_fx_count() == 1,
+          "8a Vorbedingung: Granatenplatz %d aktiv %d Art %u A %u Zuender %u Pool %d (soll 0/1/3/31/0/1)", gslot,
+          g ? g->active : 0, g ? g->granate_art : 0, g ? ru16(g, 0) : 0, g ? ru16(g, 0x1e) : 0, re15_esp_fx_count());
+    re15_esp_fx_spawn_rows(&s_core, 2, 0, 0x0800, 0, -1500, 0, 0, 0);   /* Plaetze 1 (A 8) / 2 (A 10) */
+    {
+        const re15_esp_fx_t *e1 = re15_esp_fx_get(1), *e2 = re15_esp_fx_get(2);
+        PRUEF(162, e1 && e2 && e1->effect_id == 2 && e1->sub_index == 0 && ru16(e1, 0x00) == 8 &&
+                   ru16(e2, 0x00) == 10 && e1->flags == 0x03,
+              "8a Vorbedingung: Muendungsfeuer nicht auf Plaetzen 1/2 (A %u/%u)", e1 ? ru16(e1, 0) : 0, e2 ? ru16(e2, 0) : 0);
+    }
+    re15_esp_fx_tick(NULL);                 /* Bild 116: Durchgang 1 Platz 0 frei, dann R8 auf Platz 1 */
+    const re15_esp_fx_t *k0 = re15_esp_fx_get(0);
+    kind_t unten = kind_von(k0);
+    int unten_ist_kind = k0 && k0->effect_id == 2 && k0->sub_index == 4 && k0->scale16 == 0x0BB8 && k0->granate_art == 0;
+    re15_player_acaec_override_for_test(0, 0);
+    /* Vergleich: dasselbe Muendungsfeuer in einem LEEREN Pool -> Kind UEBER dem Eltern-Platz (2 > 0) */
+    re15_esp_fx_reset();
+    re15_esp_fx_spawn_rows(&s_core, 2, 0, 0x0800, 0, -1500, 0, 0, 0);   /* Plaetze 0 / 1 */
+    re15_esp_fx_tick(NULL);
+    const re15_esp_fx_t *k2 = re15_esp_fx_get(2);
+    kind_t oben = kind_von(k2);
+    int oben_ist_kind = k2 && k2->effect_id == 2 && k2->sub_index == 4 && k2->scale16 == 0x0BB8;
+    printf("  8a R8-Kind unten (Platz 0): fl %02x Zeile %u Satz %d clut %04x tpage %04x | oben (Platz 2): fl %02x Zeile %u Satz %d\n",
+           unten.flags, unten.cursor, unten.frame, unten.clut, unten.tpage, oben.flags, oben.cursor, oben.frame);
+    /* Routine 10 einmal (@0x800176b0-fc): Flags := +0x0e = 0x13, Vorschub -> Zeile 1 */
+    PRUEF(163, unten_ist_kind && unten.flags == 0x13 && unten.cursor == 1 && unten.sichtbar,
+          "8a R8-Kind UNTER dem Eltern-Platz: Flags %02x Zeile %u (soll 0x13 / 1 = Routine 10 einmal im Spawnbild)",
+          unten.flags, unten.cursor);
+    PRUEF(164, oben_ist_kind && oben.flags == 0x13 && oben.cursor == 1 && kind_gleich(&unten, &oben),
+          "8a R8-Kind ueber/unter dem Eltern-Platz ungleich (oben Flags %02x Zeile %u Satz %d, unten %02x %u %d)",
+          oben.flags, oben.cursor, oben.frame, unten.flags, unten.cursor, unten.frame);
+
+    /* 8b — ROUTINE 15: Huelsen-Salve id 4 sub 2 (CORE00 @0x1988: Zeile 0 A 15, Zaehler +0x0e 0,
+     * +0x16 = 0x0400 -> Kind Kat 4 sub 0, +0x26 = 1 -> Vorschub; Zeile 1 @0x19B0: Zaehler 2).
+     * Kind = Huelse id 4 sub 0 (Zeile 0 @0x18D8: A 16, +0x0e = 0x63, +0x16 = 2). Platz 0 haelt ein
+     * Altplatz ohne Bank; er faellt im Hauptlauf des ersten Bilds (Anim ohne Bank -> aus). Kind #1
+     * (Bild 1, Platz 0 noch belegt) landet UEBER dem Eltern-Platz, Kind #2 (Bild 4) auf dem nun
+     * freien Platz 0 UNTER ihm. Routine 16 einmal (@0x80017b80): Flags := +0x0e = 0x63 (Physik- und
+     * Bild-Stopp Bit 5/6, sichtbar Bit 1), Zaehler +0x16 2 -> 1. Ohne A (alte Start-Flags 0x03 unter
+     * dem Eltern-Index) bliebe es bei Flags 0x03, Zaehler 2, Bild laeuft weiter. */
+    welt_leer();
+    re15_esp_fx_reset();
+    re15_esp_fx_t *fueller = re15_esp_fx_spawn_ex(NULL, 0x7f, 0, 0x1000, 0, 0, 0, 0);
+    re15_esp_fx_spawn_rows(&s_core, 4, 2, 0x0800, 0, -1500, 0, 0, 0);
+    {
+        const re15_esp_fx_t *e1 = re15_esp_fx_get(1);
+        PRUEF(165, fueller && slot_von(fueller) == 0 && e1 && e1->effect_id == 4 && e1->sub_index == 2 &&
+                   ru16(e1, 0x00) == 15 && re15_esp_fx_count() == 2,
+              "8b Vorbedingung: Fueller Platz %d, Salve auf Platz 1 (A %u), Pool %d", fueller ? slot_von(fueller) : -1,
+              e1 ? ru16(e1, 0) : 0, re15_esp_fx_count());
+    }
+    re15_esp_fx_tick(NULL);                               /* Bild 1: Kind #1 */
+    const re15_esp_fx_t *c1 = re15_esp_fx_get(2);
+    kind_t k1 = kind_von(c1);
+    int k1_ok = c1 && c1->effect_id == 4 && c1->sub_index == 0 && c1->scale16 == 0x0800;
+    int frei0 = (re15_esp_fx_get(0) == NULL);
+    re15_esp_fx_tick(NULL);                               /* Bild 2: Zaehler 2 -> 1 */
+    re15_esp_fx_tick(NULL);                               /* Bild 3: 1 -> 0 */
+    PRUEF(166, frei0 && re15_esp_fx_get(0) == NULL, "8b: Platz 0 nicht frei (nach Bild 1: %d)", frei0);
+    re15_esp_fx_tick(NULL);                               /* Bild 4: Kind #2 */
+    const re15_esp_fx_t *c2 = re15_esp_fx_get(0);
+    kind_t k2s = kind_von(c2);
+    int k2_ok = c2 && c2->effect_id == 4 && c2->sub_index == 0 && c2->scale16 == 0x0800;
+    printf("  8b R15-Kind #1 (Platz 2): fl %02x +16 %u sichtbar %d | #2 (Platz 0): fl %02x +16 %u sichtbar %d\n",
+           k1.flags, k1.r16, k1.sichtbar, k2s.flags, k2s.r16, k2s.sichtbar);
+    PRUEF(167, k1_ok && k1.flags == 0x63 && k1.r16 == 1 && k1.sichtbar && k1.frame == 0,
+          "8b Kind #1 (ueber dem Eltern-Platz): Flags %02x +0x16 %u sichtbar %d Satz %d (soll 0x63 / 1 / 1 / 0)",
+          k1.flags, k1.r16, k1.sichtbar, k1.frame);
+    PRUEF(168, k2_ok && k2s.flags == 0x63 && k2s.r16 == 1 && k2s.frame == 0 && kind_gleich(&k1, &k2s),
+          "8b Kind #2 UNTER dem Eltern-Platz: Flags %02x +0x16 %u Satz %d (soll wie Kind #1: 0x63 / 1 / 0 = "
+          "Routine 16 einmal im Spawnbild)", k2s.flags, k2s.r16, k2s.frame);
 }
 
 int main(int argc, char **argv)
@@ -877,6 +1133,7 @@ int main(int argc, char **argv)
     if (!nur || !strcmp(nur, "rand"))       { printf("[5] Rand/Negativ\n");        abschnitt_rand(); }
     if (!nur || !strcmp(nur, "schritt"))    { printf("[6] Spielschritt\n");        abschnitt_spielschritt(); }
     if (!nur || !strcmp(nur, "debug"))      { printf("[7] Item-Debug\n");          abschnitt_item_debug(); }
+    if (!nur || !strcmp(nur, "kinder"))     { printf("[8] Kind-Spawns R8/R15\n");  abschnitt_kinder(); }
 
     re15_player_acaec_override_for_test(0, 0);
     re15_esp_se_hook = NULL; re15_esp_aufschlag_hook = NULL;
