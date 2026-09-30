@@ -361,6 +361,23 @@ es bei gleichem gemessenem Zeitaufwand nichts schreibt (keine 356 MB Schreiblast
 `.neu`-Zwischendateien) und nur abweichende Dateien neu entpackt; die Fortschrittsanzeige laeuft in beiden Faellen
 ("ASSETS WERDEN EINMALIG GEPRUEFT"). Echtes Geraet: nicht gemessen (keins angeschlossen).
 
+### 3.6 (v) Abbruch waehrend des Entpackens (`am force-stop`) und Neustart
+
+Jeweils `adb uninstall`, N0 frisch installiert, App gestartet, waehrend des Entpackens beendet, danach
+`lauf.sh` (Neustart) und `geraet_pruefen.py`:
+
+| Lauf | Abbruch | Zustand danach | Neustart | Ergebnis |
+|---|---|---|---|---|
+| v-a (`abbruch.sh`, Schwelle 1500 Dateien) | `am force-stop` nach 14 s | 1624 Dateien, keine Liste, kein `.neu` (zwischen zwei Dateien getroffen), Log endet nach `Abgleich (ohne Liste)` | `Entpacken fertig (ohne Liste): 3603 geprueft, 1979 kopiert (249711725 B, 10870 ms), 1624 per SHA-256 geprueft (106966552 B, 1431 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 15677 ms` | KONSISTENT |
+| v-b (`abbruch2.sh`, Ausloeser `CDEMD0.EMS.neu` per adb) | `.neu` gesehen, Stopp kam per adb-Rundlauf zu spaet | 3235 Dateien, 11-MB-Datei fertig umbenannt, kein `.neu` | `368 kopiert, 3235 per SHA-256 geprueft (314211360 B, 6571 ms, 0 abweichend), 0 .neu-Reste, 0 Fehler, 9938 ms` | KONSISTENT |
+| v-c (`abbruch3.sh`, Ausloeser AUF dem Geraet: Shell-Schleife + `cmd activity force-stop`) | mitten in `shared_assets/RE2/CDEMD0.EMS` (11124736 B) | `CDEMD0.EMS.neu` **6291456 B** (halb), `CDEMD0.EMS` **existiert nicht** (nie umbenannt), 3226 Eintraege | `378 kopiert (54157661 B, 1792 ms), 3225 per SHA-256 geprueft (302520616 B, 7352 ms, 0 abweichend), 0 entfernt, **1 .neu-Reste**, 0 Fehler, 11293 ms` | KONSISTENT, kein `.neu` |
+
+In keinem Abbruch lag eine halb geschriebene Datei unter ihrem echten Namen, und nie eine Liste "zuletzt
+entpackt" (sie entsteht erst nach vollem Erfolg). Nach v-c laeuft das Spiel (`s3v_bild.png`, angesehen:
+Hinweisbild "This game contains scenes of explicit violence and gore." vor dem Intro).
+(Der Ausloeser von v-c legte vorab `mkdir -p <files>` an; die Ordner gehoeren danach trotzdem der App
+`u0_a216`, der Lauf ist davon unberuehrt.)
+
 ## 4. Gates / Suite
 
 (folgt)
