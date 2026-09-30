@@ -1,0 +1,11 @@
+Gate Arbeitsbaum sha256 8f84f136c4cf5edd...
+ECHT                         EXIT=0   25s  Bytes-Ausgabe=21647  OK-Zeile=1  FEHLER-Zeile=0  [FEHLER]-Faelle=0
+      == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+G0_leer                      EXIT=0    0s  Bytes-Ausgabe=0      OK-Zeile=0  FEHLER-Zeile=0  [FEHLER]-Faelle=0
+G4_abgeschnitten_vor_main    EXIT=0    0s  Bytes-Ausgabe=0      OK-Zeile=0  FEHLER-Zeile=0  [FEHLER]-Faelle=0
+G1_kein_sys_exit             EXIT=0   30s  Bytes-Ausgabe=361127 OK-Zeile=0  FEHLER-Zeile=1  [FEHLER]-Faelle=234
+      == SELBSTTEST-FEHLER: 234 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
+G2_rc_abweichung_0           EXIT=0   40s  Bytes-Ausgabe=324898 OK-Zeile=0  FEHLER-Zeile=1  [FEHLER]-Faelle=165
+      == SELBSTTEST-FEHLER: 165 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
+G3_main_return_0             EXIT=0   50s  Bytes-Ausgabe=324898 OK-Zeile=0  FEHLER-Zeile=1  [FEHLER]-Faelle=165
+      == SELBSTTEST-FEHLER: 165 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==

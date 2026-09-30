@@ -66,3 +66,24 @@ Ziel: ein falsches Ergebnis erzwingen (Umgehung) oder einen verschluckten Fehler
   (`diff` rc 0): kein neuer PythonCore-Schluessel, kein Startmenue-Eintrag, `LocalAppData\Python` unveraendert
   (neuester Eintrag `_cache/last_welcome.txt` 2026-09-29T15:39:13), kein pymanager/msiexec-Prozess. Ab hier nur
   `/c/Python310/python`.
+
+## 1. H1 - der Selbsttest (B4) urteilt nur ueber den Exit-Code des geprueften Codes
+
+Werkzeug `u1_mutanten.py` (Kopien unter `build/r34a/pruefer_u1/mut/`, je Mutant `diff` = genau 1 geaenderte Zeile;
+G0/G4 sind Kuerzungen), `u1_selbsttests.sh` (Selbsttest direkt, Rueckgabe selbst abgefangen). Beleg
+`selbsttests_h1h4_teil1.txt`:
+
+| Gate | Selbsttest EXIT | gedruckte Aussage |
+|---|---|---|
+| ECHT (sha256 8f84f136...) | 0 (25 s) | `SELBSTTEST-OK: 248/248` |
+| G0 leere Datei (0 B) | **0** (0 s) | nichts - 0 Byte Ausgabe |
+| G4 abgeschnitten vor dem `main()`-Block (Anweisungsgrenze, 184185 B) | **0** (0 s) | nichts |
+| G1 `sys.exit(main())` -> `main()` | **0** (30 s) | `SELBSTTEST-FEHLER: 234 von 248 Faellen falsch` |
+| G2 `RC_GLEICH, RC_ABWEICHUNG, RC_FEHLER = 0, 1, 2` -> `0, 0, 2` | **0** (40 s) | `SELBSTTEST-FEHLER: 165 von 248` |
+| G3 `return rc if rc in (RC_GLEICH, RC_ABWEICHUNG) else RC_FEHLER` -> `return RC_GLEICH` | **0** (50 s) | `SELBSTTEST-FEHLER: 165 von 248` |
+
+make_package.sh (`(( rc_selbst == 0 ))`) und apk_pruefen.sh (`(( rc == 0 ))`) werten NUR diese Exit-Codes aus. Dieselben
+Gates liefern auch fuer `--quellbaum`, `--paket` und die APK-Pruefung rc 0 (G0/G4: es laeuft gar nichts; G1-G3: jede
+Abweichung endet mit 0). Die ganze Kette mit diesen Gates: Abschnitt 2.
+Warum die Kampagnen das nicht sahen: `mutanten_teil.py` (R2) "Nur Pruefcode wird mutiert (nicht Selbsttest/Fixture/
+main)", G1-G22 (N1) nur `manifest_lesen`/`manifest_pruefen`/`_pfad_fehler`, MU1-MU8 (R3) Pruefcode.
