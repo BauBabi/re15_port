@@ -96,7 +96,40 @@ launchable-activity `de.re15.port.RE15Activity`.
 2. APK B: dieselbe Datei im Quellbaum VORUEBERGEHEND geaendert (`build/r34a/n1/byte_kippen.py`: Byte 109206
    0x00 -> 0x01, gleiche Groesse, sha256 neu `41edb173...d1ef`; Original gesichert unter
    `build/r34a/n1/orig/main03.wav`, git-Blob `18a44b01`), `build_android.sh --version v0.8.20-n1b` (Log
-   `build_B_alt.log`) - Ergebnis unten.
+   `build_B_alt.log`: EXIT 0, 5 min 32 s, Selbsttest 226/226, Gate gruen; APK sha256 `ac122a5e...d64c`).
+   Danach ZURUECKGESETZT: `git checkout -- synchro/STAGE1/room1090/main03.wav release/SHA256SUMS_android.txt`,
+   `git status --short synchro/ release/` leer, `cmp` gegen die Sicherung rc 0, `git hash-object` = `18a44b01`
+   (= Index). A gegen B (Python zipfile): `assets/re15_assets.txt` in beiden 163901 B, **bytegleich**
+   (Kopfzeile `# re15 assets 3603 356678277`); `main03.wav` weicht nur in Byte 109206 ab, alle anderen
+   Asset-Eintraege haben dieselbe CRC.
+3. Update A -> B scheiterte auf dem Nutzer-AVD: `INSTALL_FAILED_INSUFFICIENT_STORAGE: Failed to override
+   installation location` (851 MB frei, `pm trim-caches 8G` brachte nur 26 MB). Den Nutzer-AVD NICHT
+   geloescht (darauf liegen fremde Apps `com.example.goodsstore`, `com.example.goodscounter`), sondern:
+   `adb uninstall de.re15.port` (vorher nicht installiert; danach wieder 4,1 G belegt / 1,5 G frei wie zu
+   Beginn), Emulator beendet, und eine **Kopie derselben AVD-Konfiguration** mit eigenem Datenbereich unter
+   `build/r34a/n1/avd/` (`ANDROID_AVD_HOME`), Name `Medium_Phone_API_36_r34a`: config.ini bytegleich bis auf
+   AvdId/Anzeigename, `disk.dataPartition.size = 12884901888` (statt 6442450944) und Kaltstart; dasselbe
+   System-Image `google_apis_playstore/x86_64` (Android 16). Start mit `-wipe-data` (erste Inbetriebnahme),
+   `/data` 12 G, 11 G frei. Alle folgenden Emulator-Laeufe dort (Log `emulator_r34a.log`, Helfer
+   `build/r34a/n1/lauf.sh`).
+4. Auf dem Test-AVD wiederholt (`s13b_A_erst.logcat`, `s13b_B_update.logcat`):
+   ```
+   A frisch:  06:41:11.765 [android] Entpacke 3603 Dateien (356678277 Bytes) nach .../files
+              06:41:39.414 [android] Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler      (27,6 s)
+              Marker af45d06a3555f997 3603 356678277; main03.wav auf dem Geraet sha256 0fac8b2a...96ba
+   Update B:  dumpsys: versionName=v0.8.20-n1b, lastUpdateTime=06:42:55
+              06:43:02.018 [android] Assets aktuell (af45d06a3555f997 3603 356678277)
+              debug.log: [android] Assets bereits entpackt (3603 Dateien, 356678277 Bytes) unter .../files
+              main03.wav auf dem Geraet (adb pull): sha256 0fac8b2a...96ba = ALT, cmp gegen das Original rc 0
+   ```
+   **Befund N1a nachgestellt:** B traegt `main03.wav` mit sha256 `41edb173...d1ef`, das Geraet behaelt nach
+   dem Update die alte Datei - der Marker (FNV-1a ueber die bytegleiche v1-Liste) passt, `android_glue.c:175`
+   kehrt ohne jede Pruefung zurueck.
+5. Befund N1b (interner Speicher) laesst sich auf diesem Image nicht als Ganzes nachstellen: der
+   Speicherordner liegt extern (`extern=1`, `SDL_AndroidGetExternalStorageState()` = mounted), und ohne
+   `adb root`/`run-as` (Release-APK, user-Image) laesst sich unter `/data/user/0/de.re15.port/files` nichts
+   anlegen. Beleg bleibt die Quelle (1.1). Der Umbau schliesst ihn konstruktiv aus (Abschnitt 2); Nachweis
+   am neuen Stand in Abschnitt 3.
 
 ## 2. Bau (PORT-WAHL, kein Originalverhalten)
 

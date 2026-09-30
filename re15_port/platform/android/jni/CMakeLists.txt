@@ -7,6 +7,9 @@
 #   libSDL2.so  aus dem SDL2-2.28.5-Quellbaum (RE15_SDL2_SRC, Gradle-Task fetchSdl2)
 #   libmain.so  = re15_engine (engine/src) + ALLE PC-Plattformquellen
 #                 (platform/pc/src/*.c + platform/pc/main.c) + android_glue.c
+#                 + asset_abgleich.c (Runde 34a N1: Asset-Liste v2 + SHA-256 + Abgleich;
+#                 dieselbe Datei uebersetzt der PC-Test tests/unit/test_r34a_asset_abgleich.c)
+#                 libandroid (AAssetManager: Entpacken NUR aus der APK) war schon gelinkt.
 # SDLActivity laedt "SDL2" und "main" (RE15Activity.getLibraries) und ruft in
 # libmain.so das Symbol SDL_main — main.c benennt sein main() dafuer per
 # <SDL_main.h> um (nur unter __ANDROID__).
@@ -44,7 +47,8 @@ file(GLOB RE15_PC_PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/platform/pc/src/*.c")
 add_library(main SHARED
     "${CMAKE_SOURCE_DIR}/platform/pc/main.c"
     ${RE15_PC_PLATFORM_SOURCES}
-    android_glue.c)
+    android_glue.c
+    asset_abgleich.c)
 
 target_compile_definitions(main PRIVATE
     RE15_PLATFORM_PC

@@ -15,8 +15,11 @@
 //                      release/make_package.sh (copy_common), synchro/unused bleibt draussen.
 //                      ⛔ Die Liste steht ein zweites Mal in release/apk_asset_gate.py (BAEUME);
 //                      das Gate prueft beide gegeneinander und bricht ab, wenn sie abweichen.
-//   writeAssetManifest schreibt dort re15_assets.txt ("<bytes>\t<pfad>"); android_glue.c
-//                      entpackt danach beim ersten Start in den App-Speicherordner.
+//   writeAssetManifest schreibt dort re15_assets.txt, Format v2 (Runde 34a N1):
+//                      "# re15 assets v2 <anzahl> <bytes>" + je Datei "<bytes>\t<sha256>\t<pfad>",
+//                      nach Pfad sortiert. android_glue.c entpackt danach in den App-Speicherordner
+//                      und vergleicht Groesse UND Summe mit dem zuletzt entpackten Stand (Regeln:
+//                      jni/asset_abgleich.h; release/apk_asset_gate.py prueft die Liste in der APK).
 //   noCompress         JEDE Endung der Asset-Baeume -> die APK speichert die Assets
 //                      unkomprimiert (Entpacken = reines Kopieren, ~365 MB APK).
 // =============================================================================
@@ -132,25 +135,36 @@ tasks.register("stageAssets", Sync) {
 }
 
 tasks.register("writeAssetManifest") {
-    description = "re15_assets.txt (Groesse + Pfad je Datei) fuer das Entpacken auf dem Geraet"
+    description = "re15_assets.txt Format v2 (Groesse + sha256 + Pfad je Datei) fuer das Entpacken auf dem Geraet"
     dependsOn "stageAssets"
     def manifest = new File(assetStage, "re15_assets.txt")
     inputs.files(fileTree(assetStage) { exclude "re15_assets.txt" })
     outputs.file(manifest)
     doLast {
-        def lines = []
+        // Runde 34a N1: bis v0.8.19 nur "<bytes>\t<pfad>" -> eine gleich grosse Aenderung blieb auf dem
+        // Geraet alt (Befund N1a). Jetzt mit sha256 je Datei; das Geraet vergleicht Groesse UND Summe.
+        def rows = []
         long total = 0
         fileTree(assetStage) { exclude "re15_assets.txt" }.visit { d ->
             if (!d.isDirectory()) {
+                def rel = d.relativePath.pathString
+                // Grundregeln der Liste v2 (vollstaendig: jni/asset_abgleich.h, geprueft von
+                // release/apk_asset_gate.py) - hier nur, damit der Bau frueh und deutlich abbricht
+                if (!rel.contains("/") || rel.contains("\\") || rel.getBytes("UTF-8").length > 512
+                        || rel.toLowerCase(Locale.ROOT).endsWith(".neu")
+                        || rel.chars().anyMatch { int c -> c < 0x20 || c == 0x7f })
+                    throw new GradleException("Asset-Pfad verletzt die Regeln der Liste v2: '${rel}'")
                 def len = d.file.length()
-                lines << "${len}\t${d.relativePath.pathString}"
+                rows << [rel, len, sha256(d.file)]
                 total += len
             }
         }
-        lines.sort()
-        manifest.text = "# re15 assets ${lines.size()} ${total}\n" + lines.join("\n") + "\n"
-        logger.lifecycle("re15_assets.txt: ${lines.size()} Dateien, ${total} Bytes")
-        if (lines.size() < 3000) throw new GradleException("Asset-Liste zu kurz (${lines.size()} < 3000) — Staging unvollstaendig?")
+        rows.sort { a, b -> a[0] <=> b[0] }      // nach Pfad (die Pfade sind ASCII: UTF-16 = Bytefolge)
+        def text = "# re15 assets v2 ${rows.size()} ${total}\n" +
+                   rows.collect { "${it[1]}\t${it[2]}\t${it[0]}" }.join("\n") + "\n"
+        manifest.setText(text, "UTF-8")
+        logger.lifecycle("re15_assets.txt (v2): ${rows.size()} Dateien, ${total} Bytes, sha256 je Datei")
+        if (rows.size() < 3000) throw new GradleException("Asset-Liste zu kurz (${rows.size()} < 3000) — Staging unvollstaendig?")
     }
 }
 

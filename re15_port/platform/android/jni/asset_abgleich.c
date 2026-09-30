@@ -277,9 +277,9 @@ int re15_abgleich_lesen(re15_abgleich_liste_t *l, const char *text, size_t len,
     if (!b) { fehler_setzen(fehler, fehler_n, "kein Speicher"); return RE15_ABGLEICH_KEIN_SPEICHER; }
     memcpy(b, text, len);
     b[len] = '\0';
-    size_t zeilen = 1;
-    for (size_t i = 0; i < len; i++) zeilen += (b[i] == '\n');
-    re15_abgleich_eintrag_t *e = (re15_abgleich_eintrag_t *)malloc(zeilen * sizeof *e);
+    /* Eintraege wachsen mit (nicht je '\n' vorab: 64 MiB Leerzeilen waeren sonst ~6 GB) */
+    size_t kap = 1024;
+    re15_abgleich_eintrag_t *e = (re15_abgleich_eintrag_t *)malloc(kap * sizeof *e);
     const char **klein = NULL;
     if (!e) { free(b); fehler_setzen(fehler, fehler_n, "kein Speicher"); return RE15_ABGLEICH_KEIN_SPEICHER; }
 
@@ -335,6 +335,12 @@ int re15_abgleich_lesen(re15_abgleich_liste_t *l, const char *text, size_t len,
             if (summe > LLONG_MAX - g) {
                 fehler_setzen(fehler, fehler_n, "Zeile %zu: Summe der Groessen laeuft ueber", nr);
                 goto raus;
+            }
+            if (n == kap) {
+                re15_abgleich_eintrag_t *mehr = (re15_abgleich_eintrag_t *)realloc(e, 2 * kap * sizeof *e);
+                if (!mehr) { fehler_setzen(fehler, fehler_n, "kein Speicher"); rc = RE15_ABGLEICH_KEIN_SPEICHER; goto raus; }
+                e = mehr;
+                kap *= 2;
             }
             e[n].groesse = g;
             memcpy(e[n].sha, p, 64);
