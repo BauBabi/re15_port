@@ -18,7 +18,7 @@
  *                                          Port-Installern): aktive AOT-Slots + Props
  *   zonen    RAUM x z                      RVD-Kamerazonen, die den Punkt enthalten
  *   stand    RAUM x0 x1 z0 z1 schritt      begehbare x-Abschnitte je z (Klemmpfad des Spielers)
- *   abdeckung RAUM X Z W D SLOT x0 x1 z0 z1 schritt
+ *   abdeckung RAUM X Z W D SLOT x0 x1 z0 z1 schritt [VON NACH]  (VON/NACH: Satz vorher verschieben)
  *                                          Aufhebe-Rechteck (Ecke X,Z Groesse W,D, sat 0x31) in
  *                                          SLOT; ZAEHLT Standorte x 64 Blickrichtungen, deren
  *                                          FORWARD-620-Punkt trifft, und jeden Treffer, den ein
@@ -45,6 +45,7 @@
 #include "re15_item_modal.h"
 #include "re15_light.h"
 #include "re15_pri.h"
+#include "re15_md1.h"
 #include "re15_menu.h"
 
 extern re15_aot_state_t g_aot;
@@ -227,6 +228,79 @@ static int cmd_sicht(long x, long y, long z)
     return 0;
 }
 
+/* HUELLE eines gedrehten Quaders (Mitte x,y,z; Drehung rot_y wie pc_prop_rot_q12 = reines rot_y:
+ * Modell (mx,my,mz) -> Welt (c*mx + s*mz, my, -s*mx + c*mz); halbe Kanten hx,hy,hz): je Cut die
+ * Bildhuelle der 8 Ecken, der vz-Bereich und JEDE Maske, die die Huelle schneidet - mit dem Urteil
+ * fuer die naechste und die fernste Ecke (verdeckt ab vz = (Tiefe+1)*65536/1023, @0x8002565c). */
+static int cmd_huelle(long x, long y, long z, int ry, long hx, long hy, long hz)
+{
+    int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
+    for (int k = 0; k < s_rdt.cut_count; k++) {
+        re15_camera_view_t v;
+        if (re15_camera_build_view(&s_rdt.cuts[k], &v) != 0) continue;
+        double x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; long vmin = 1L << 30, vmax = -(1L << 30);
+        int vor = 0;
+        for (int e = 0; e < 8; e++) {
+            long mx = (e & 1) ? hx : -hx, my = (e & 2) ? hy : -hy, mz = (e & 4) ? hz : -hz;
+            long wx = x + ((c * mx + s * mz) >> 12), wy = y + my, wz = z + ((-s * mx + c * mz) >> 12);
+            double sx, sy;
+            long vz = projiziere(&v, wx, wy, wz, &sx, &sy);
+            if (vz <= 0) continue;
+            vor++;
+            if (sx < x0) x0 = sx;
+            if (sx > x1) x1 = sx;
+            if (sy < y0) y0 = sy;
+            if (sy > y1) y1 = sy;
+            if (vz < vmin) vmin = vz;
+            if (vz > vmax) vmax = vz;
+        }
+        if (vor < 8 || x1 < 0 || x0 >= 320 || y1 < 0 || y0 >= 240) continue;
+        re15_pri_cut_t pri; int nz = 0;
+        int n = masken_des_cuts(k, &pri, &nz);
+        printf("HUELLE cut=%d Bild x %.1f..%.1f y %.1f..%.1f vz %ld..%ld (Bucket %d..%d) | Masken im Cut %d%s\n",
+               k, x0, x1, y0, y1, vmin, vmax, re15_pri_bucket_of_vz(vmin), re15_pri_bucket_of_vz(vmax), n,
+               nz ? " (NACHGEZEICHNET)" : (n ? " (Original)" : ""));
+        for (int m = 0; m < pri.mask_count; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m];
+            int dx = (int16_t)q->dstX, dy = (int16_t)q->dstY;
+            if (dx + q->width <= x0 || dx > x1 || dy + q->height <= y0 || dy > y1) continue;
+            printf("   Maske %3d x %d..%d y %d..%d Tiefe %u (verdeckt ab vz %.0f): naechste Ecke %s, fernste %s\n",
+                   m, dx, dx + q->width - 1, dy, dy + q->height - 1, (unsigned)q->depth,
+                   re15_pri_mask_camera_z(q->depth),
+                   re15_pri_mask_occludes(q->depth, vmin) ? "VERDECKT" : "frei",
+                   re15_pri_mask_occludes(q->depth, vmax) ? "VERDECKT" : "frei");
+        }
+    }
+    return 0;
+}
+
+/* MODELLE des Raums (RDT-Zeigertabelle @0x30, nOmodel Eintraege): MD1-Groesse und bbox je obj. */
+static int cmd_modelle(void)
+{
+    for (int op = 0; op < s_rdt.prop_count && op < RE15_RDT_MAX_PROPS; op++) {
+        static re15_md1_t md1;
+        if (!s_rdt.prop_md1[op] || re15_md1_parse(s_rdt.prop_md1[op], (size_t)s_rdt.prop_md1_size[op], &md1) != 0) {
+            printf("MODELL obj %d: kein/ungueltiges MD1\n", op); continue; }
+        int lo[3] = { 1 << 30, 1 << 30, 1 << 30 }, hi[3] = { -(1 << 30), -(1 << 30), -(1 << 30) };
+        int nt = 0, nq = 0;
+        for (int i = 0; i < md1.mesh_count; i++) {
+            const re15_md1_mesh_t *m = &md1.meshes[i];
+            nt += m->triangle_count; nq += m->quad_count;
+            for (int k = 0; k < m->tri_vertex_count; k++) {
+                int v[3] = { m->tri_vertices[k].x, m->tri_vertices[k].y, m->tri_vertices[k].z };
+                for (int a = 0; a < 3; a++) { if (v[a] < lo[a]) lo[a] = v[a]; if (v[a] > hi[a]) hi[a] = v[a]; }
+            }
+            for (int k = 0; k < m->quad_vertex_count; k++) {
+                int v[3] = { m->quad_vertices[k].x, m->quad_vertices[k].y, m->quad_vertices[k].z };
+                for (int a = 0; a < 3; a++) { if (v[a] < lo[a]) lo[a] = v[a]; if (v[a] > hi[a]) hi[a] = v[a]; }
+            }
+        }
+        printf("MODELL obj %d: MD1 %d B, TIM %d B, %d Dreiecke %d Vierecke, bbox x %d..%d y %d..%d z %d..%d\n",
+               op, s_rdt.prop_md1_size[op], s_rdt.prop_tim_size[op], nt, nq, lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]);
+    }
+    return 0;
+}
+
 static void raum_hochfahren(uint16_t room_id, int32_t px, int32_t pz)
 {
     scd_vm_init(); re15_actor_init();
@@ -388,11 +462,29 @@ static int frueherer(int slot, int32_t x, int32_t z, int32_t fx, int32_t fz)
 }
 
 static int cmd_abdeckung(int32_t X, int32_t Z, int32_t Wd, int32_t Dp, int slot,
-                         int32_t x0, int32_t x1, int32_t z0, int32_t z1, int32_t st)
+                         int32_t x0, int32_t x1, int32_t z0, int32_t z1, int32_t st,
+                         int von, int nach)
 {
     re15_game_state_init();
     raum_hochfahren(s_raum, (x0 + x1) / 2, (z0 + z1) / 2);
     re15_collision_ensure_band(0);
+    /* VERSCHIEBEN (Bauplan ROOM1020): den Satz aus Slot `von` unveraendert nach Slot `nach` legen
+     * (alle Parameter-Felder mit), Slot `von` frei - misst die Vorrang-Regel "Gegenstand vor
+     * ueberdeckender Nachricht" ohne Port-Code. */
+    if (von >= 0 && nach >= 0 && von < RE15_AOT_MAX && nach < RE15_AOT_MAX) {
+        if (!g_aot.slots[von].active || g_aot.slots[nach].active) {
+            printf("Verschieben %d -> %d nicht moeglich (Quelle leer oder Ziel belegt)\n", von, nach);
+            return 4; }
+        g_aot.slots[nach] = g_aot.slots[von];
+        g_aot.door_params[nach] = g_aot.door_params[von];
+        g_aot.item_params[nach] = g_aot.item_params[von];
+        g_aot.flag_params[nach] = g_aot.flag_params[von];
+        g_aot.env_params[nach] = g_aot.env_params[von];
+        g_aot.stair_params[nach] = g_aot.stair_params[von];
+        memset(&g_aot.slots[von], 0, sizeof g_aot.slots[von]);
+        printf("VERSCHOBEN: Slot %d -> Slot %d (%s evt %d)\n", von, nach, typname(g_aot.slots[nach].type),
+               (int)g_aot.slots[nach].event_id);
+    }
     if (g_aot.slots[slot].active) { printf("Slot %d ist BELEGT (%s)\n", slot, typname(g_aot.slots[slot].type)); return 3; }
     re15_aot_set_item_tk_prop(slot, X + Wd / 2, Z + Dp / 2, Wd / 2, Dp / 2, 0x48, 1, 0, 0xFF);
     g_aot.slots[slot].sce_flags = 0x31;
@@ -441,11 +533,17 @@ static int cmd_abdeckung(int32_t X, int32_t Z, int32_t Wd, int32_t Dp, int slot,
 }
 
 static int cmd_druck(int32_t x, int32_t z, int rot, int32_t X, int32_t Z, int32_t Wd, int32_t Dp,
-                     int slot, int item)
+                     int slot, int item, int von, int nach)
 {
     re15_game_state_init();
     raum_hochfahren(s_raum, x, z);
     re15_collision_ensure_band(0);
+    if (von >= 0 && nach >= 0 && g_aot.slots[von].active && !g_aot.slots[nach].active) {   /* wie abdeckung */
+        g_aot.slots[nach] = g_aot.slots[von]; g_aot.item_params[nach] = g_aot.item_params[von];
+        g_aot.door_params[nach] = g_aot.door_params[von]; g_aot.flag_params[nach] = g_aot.flag_params[von];
+        memset(&g_aot.slots[von], 0, sizeof g_aot.slots[von]);
+        printf("VERSCHOBEN: Slot %d -> Slot %d\n", von, nach);
+    }
     if (g_aot.slots[slot].active) { printf("Slot %d ist BELEGT\n", slot); return 3; }
     re15_aot_set_item_tk_prop(slot, X + Wd / 2, Z + Dp / 2, Wd / 2, Dp / 2, (uint8_t)item, 1, 0, 0xFF);
     g_aot.slots[slot].sce_flags = 0x31;
@@ -506,6 +604,10 @@ int main(int argc, char **argv)
         return cmd_strahl(atoi(argv[3]), atof(argv[4]), atof(argv[5]), atof(argv[6]));
     if (!strcmp(cmd, "sicht") && argc >= 6) return cmd_sicht(atol(argv[3]), atol(argv[4]), atol(argv[5]));
     if (!strcmp(cmd, "aots")) return cmd_aots();
+    if (!strcmp(cmd, "modelle")) return cmd_modelle();
+    if (!strcmp(cmd, "huelle") && argc >= 10)
+        return cmd_huelle(atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]),
+                          atol(argv[7]), atol(argv[8]), atol(argv[9]));
     if (!strcmp(cmd, "zonen") && argc >= 5) return cmd_zonen(atol(argv[3]), atol(argv[4]));
     if (!strcmp(cmd, "zonenliste")) return cmd_zonenliste();
     if (!strcmp(cmd, "sca") && argc >= 7)
@@ -514,10 +616,12 @@ int main(int argc, char **argv)
         return cmd_stand(atol(argv[3]), atol(argv[4]), atol(argv[5]), atol(argv[6]), atol(argv[7]));
     if (!strcmp(cmd, "abdeckung") && argc >= 13)
         return cmd_abdeckung(atol(argv[3]), atol(argv[4]), atol(argv[5]), atol(argv[6]), atoi(argv[7]),
-                             atol(argv[8]), atol(argv[9]), atol(argv[10]), atol(argv[11]), atol(argv[12]));
+                             atol(argv[8]), atol(argv[9]), atol(argv[10]), atol(argv[11]), atol(argv[12]),
+                             argc >= 15 ? atoi(argv[13]) : -1, argc >= 15 ? atoi(argv[14]) : -1);
     if (!strcmp(cmd, "druck") && argc >= 12)
         return cmd_druck(atol(argv[3]), atol(argv[4]), atoi(argv[5]), atol(argv[6]), atol(argv[7]),
-                         atol(argv[8]), atol(argv[9]), atoi(argv[10]), (int)strtol(argv[11], NULL, 0));
+                         atol(argv[8]), atol(argv[9]), atoi(argv[10]), (int)strtol(argv[11], NULL, 0),
+                         argc >= 14 ? atoi(argv[12]) : -1, argc >= 14 ? atoi(argv[13]) : -1);
     if (!strcmp(cmd, "licht") && argc >= 6) return cmd_licht(atol(argv[3]), atol(argv[4]), atol(argv[5]));
     fprintf(stderr, "unbekannt/Argumente fehlen: %s\n", cmd);
     return 2;

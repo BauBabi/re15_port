@@ -71,7 +71,106 @@ Ort in etwa markiert in interrogation.bmp".
 
 ## 2 Ist-Zustand im Port (gemessen)
 
-(in Arbeit)
+Bau des Arbeitsbaums (cf0e68ba + Sonde), `local_build.sh configure/build` exit 0. Alle Zahlen
+unten aus der Engine-Sonde `probe_r34n_e_dokumente` (echter Raumstart `scd_room_reenter` samt
+aller Port-Installer) bzw. aus den ausgelieferten RDTs (`shared_assets/PSX/STAGE1`).
+
+### 2.1 Dokument-System heute
+
+* `re15_files.c`: die Dokument-Tabelle fuehrt genau EIN Dokument (Nr 0 = Irons Diary, Item 0x48,
+  Bildsatz 25, max_page 15, H 144). `re15_files_doc_from_item` liefert fuer 0x49..0x4C −1
+  (`doc >= DOC_COUNT`) — eine Zone mit diesen Ids taete heute NICHTS (weder Leser noch
+  Item-Modal, `aot_item_dokument` → `re15_menu_request_doc` → `re15_files_doc(doc) == NULL`).
+* `shared_assets/RE2/FILES/`: FILE00..FILE25, kein FILE26..29.
+* Speicherstand v9 traegt `files[24]` (Dokument-Nummern roh, `re15_files_export/import`) und die
+  Zone-9-Bits in `flags` — Dokument-Nummern 1..4 und Bits 57..60 brauchen KEIN neues Format
+  (Pruefung in 5.6).
+
+### 2.2 Raeume, Varianten, Slots, Props (nach dem echten Raumstart)
+
+| Raum | nCut | nOmodel = Props | aktive AOT-Slots < 48 | erster freier | Nachrichten im RDT |
+|---|---|---|---|---|---|
+| ROOM1000 / 1001 | 9 | 2 (obj 0,1 Items im Duschbereich, y 0) | 0..9 | 10 | 1 (msg 0 „Nothing unusual.") |
+| ROOM1010 / 1011 | 9 | 3 (obj 0,1,2 Items, y −1600) | 0..7 / 0..8 | 8 / 9 | 3 / 24 |
+| ROOM1020 / 1021 | 13 | 7 / 6 (4 Deckenventilatoren, 2 Items y −1500, Leiche Roy) | 0..12 / 0..13 | 13 / 14 | 6 / 15 |
+| ROOM1050 / 1051 | 10 | 2 (obj 0 Rolltor, obj 1) | 0..10 / 0..12 | 11 / 13 | 9 / 6 |
+
+Zone-9-Bits 57..60 sind nach dem Raumstart in allen acht Raeumen 0.
+Messdateien `build/r34n_e/aots_<raum>.txt`, `scd_<raum>.txt`, `msg_<raum>.txt`.
+
+### 2.3 Die Nutzerbilder: Cut und Marke
+
+`marken.py` (Differenz gegen JEDEN Hintergrund des Raums, Engine-Dekoder `probe_bg_dump`; Marke =
+abweichende Pixel mit exakt (237,28,36)):
+
+| Bild | Raum | Cut (Abweichung / naechstbester) | Marke | Mitte (Pixelmitten) |
+|---|---|---|---|---|
+| elliot.bmp | 1000 | **0** (4,22 / 77,54) | x 182..203 y 162..182, 462 px voll | (193,0 ; 172,5) |
+| marvin.bmp | 1020 | **6** (4,49 / 107,50) | x 151..161 y 101..109, 99 px voll | (156,5 ; 105,5) |
+| interrogation.bmp | 1010 | **0** (3,80 / 76,64) | x 208..231 y 166..187, 528 px voll | (220,0 ; 177,0) |
+
+Fuer ROOM1050 gibt es kein Bild; die sitzende Leiche ist GEMALT (Hintergrund Cut 3 und Cut 9,
+kein Modell). Die Nutzerbilder sind der reine Hintergrund (Abweichung 3,8..4,5) — 3D-Props sieht
+man darin nicht (wichtig fuer ROOM1010, 2.7).
+
+### 2.4 ROOM1050: wo die Leiche sitzt
+
+* Kollision: SCA-Zelle 12 (und ihre vier Quadranten-Kopien) **x[15700..17200] z[−7850..−5950]**
+  an der Ostwand (SCA 1 x[17200..18100]), direkt noerdlich des Rolltor-Schalters (Slot 7
+  x[16800..17600] z[−8950..−8150]); Rolltor-Linie SCA 19 z[−10600..−10200].
+* Kameras: im Spiel sieht man sie nur in **Cut 3** (RVD-Zone 8 „Cut 3", gilt fuer den ganzen Flur
+  z −12500..−1300); **Cut 9** (flag 1, Nahaufnahme) hat nur eine Kopfzone ausserhalb des Flurs
+  (19600..22100, −6900..−4900) und wird nur per `Cut_chg 9` gezeigt — in ROOM1051 sub03 @0x00DB4.
+* Schoss/Oberschenkel trianguliert (`geom.trianguliere`, Engine-Matrix): Hautfleck der Hand auf
+  dem Schenkel Cut 9 (157,67;167,83, 48 px) mit Cut 3 (136,06;142,39, 18 px) →
+  **(16474, −347, −6592)**, Strahlabstaende 6,0 / 6,0, Rueckprojektion 0,8 / 0,2 px;
+  ±1 px in Cut 3 verschiebt um ±45 (x) / ±13 (y).
+* Vorhandener Untersuchen-Satz: **nur ROOM1051 (Elza)**: main00 @0x00C0E
+  `2c 0b 03 31 00 00 92 3b ae e3 e8 03 e8 03 ff 00 18 03 00 00` = Slot 11, sce 3, Rechteck
+  (15250,−7250,1000,1000) → sub03 @0x00DA4: `Plc_motion`, `Cut_chg 9`, `Message_on 5` („He's got a
+  big bite on his neck … Sorry, I'll just borrow this..."), `Aot_on 12` (Item_aot_set Slot 12 @0x00C22
+  = Id 0x04 x15, Bit 165, Null-Rechteck), `Cut_chg 3`; sub01 @0x00CB2 (jedes Bild): Bit (9,165)
+  gesetzt → `Aot_reset 11`. In ROOM1050 (Leon) ist msg 5 toter Text, Slot 11/12 leer.
+
+### 2.5 ROOM1000: Bank
+
+* SCA-Zelle 7 x[18800..20650] z[−12450..−2750] = beide Mittelbaenke (Cut 0: die rechte Bank im
+  Bild ist Welt x 18800..~19725).
+* Nur Cut 0 sieht die Marke (Sonde `projekt`: Cut 1 y 1061, Cut 2 hinter der Kamera …).
+* Hoehe der Sitzflaeche: 3.5.
+
+### 2.6 ROOM1020: Marvins Schreibtisch
+
+* SCA-Zelle 2 x[−10893..−9197] z[−17864..−15064] (floor 2 wie der Irons-Tisch ROOM1150 SCA 1).
+* Die Marke liegt mitten auf der Platte (Rueckprojektion 82 Einheiten neben der Zellenmitte).
+* Der Tisch ist in Cut 3, 5, 6, 8 zu sehen; Cut 6 ist der des Nutzerbilds.
+* **Untersuchen-Satz des Tischs**: ROOM1020 main00 @0x01F0E `2c 0a 01 31 00 00 a4 d4 4c b9 98 08 e4 0c
+  03 00 ff ff 00 00` = Slot 10, Nachricht 3 „It's Lieutenant Branagh's desk.", Rechteck
+  x[−11100..−8900] z[−18100..−14800] — deckt den GANZEN Tisch; ROOM1021 dieselbe Zone als Slot 11,
+  Nachricht 12 (@0x01F6C).
+
+### 2.7 ROOM1010: Verhoertisch — das Original-Item unter der Marke
+
+* SCA-Zelle 5 x[−50..2450] z[1550..5900] = der Tisch (Projektion der Zellenkanten auf y −1600
+  deckt sich mit der gemalten Platte, Bild `E_belege/r1010_tisch_zelle_items.png`: gruen = Zelle auf
+  y −1600, gelb = Spray-Dose, orange = ihre Zone Slot 2, blau = Munitions-Zone Slot 3).
+* **Unter der roten Marke steht im Spiel das Original-Item First Aid Spray**: ROOM1010.RDT sub00
+  @0x00996 `50 02 09 31 00 00 a2 fe 50 14 e8 03 e8 03 22 00 01 00 8c 00 00 00` (Slot 2, Id 0x22,
+  Bit 140, Prop 0) + Obj_model_set @0x00930 obj 0 bei **(200, −1600, 5500)** rot_y 3084;
+  ROOM1011: Id 0x39 (@0x00954) an derselben Stelle. Modell obj 0: bbox x −79..79, **y −489..0**,
+  z −90..90 (Sonde `modelle`) — eine 489 hohe Dose. Ihr Fuss projiziert in Cut 0 auf
+  (227,9 ; 177,7), 8 px neben der Markenmitte. Der Nutzer hat sie im reinen Hintergrundbild nicht
+  sehen koennen.
+* Zweites Item auf dem Tisch: obj 1 (Id 0x15 x15) bei (1800, −1600, 5750), Slot 3.
+
+### 2.8 Licht in den vier Raeumen (RDT @0x2C, 40 Byte je Cut)
+
+ROOM1000, ROOM1010, ROOM1050: ALLE Cuts tragen denselben Standard-Satz
+`02 00 01 00 00…00 53 4e 4e 00…` (scale 2, Lichtfarben 0, ambient (83,78,78)) — derselbe wie der
+Item-Box-Schirm ROOM1150 Cut 8. Vertexfarbe damit fuer jede Normale (41,39,39) = Texel × 0,32 —
+fuer JEDES Objekt dieser Raeume (Sonde `licht`), also auch Spieler, Gegner, Items. ROOM1020 hat echte
+Lichtsaetze (ambient 63,68,68 + Lichter), Cut 6 an der Tischstelle: Normale −Y (50,52,52) = ×0,39.
+Folge (Kontrollabzug 4): die Dokument-Modelle werden in 1000/1010/1050 sehr dunkel (5.4, Risiko 7.1).
 
 ## 3 Original-/RE2-Mechanismus (Adressen, Bytes, Instruktionen)
 
@@ -163,6 +262,81 @@ bzw. Wortende).
 Die Leerzeile vor „Thanks!" (Dok 3) faellt auf den Seitenkopf von p02 und entfaellt dort (Regel
 „keine Leerzeile am Kopf einer Folgeseite", §6.3). In Dok 4 bricht der Code auf eine eigene Zeile
 um (bei Rand 4 endet „access the room with the code:" bei Kern-x 249, mit „ 5632" bei 293 > 253).
+
+### 3.4 Aufheben: Aktions-Scan, Vorrang und die Original-Regel "Gegenstand vor Nachricht"
+
+Der Aktions-Scan feuert je Druck genau EINEN Satz — den ersten in Slot-Reihenfolge, dessen
+Geometrie trifft (FUN_80042bac; Port `aot_common.c` `re15_aot_scan` mit `action_fired`, Test je
+Satz: Mitte bei sat&0x40, sonst Punkt 620 voraus bei sat&0x20, `ori v0,zero,0x26c` @0x80042bd0).
+Ein Dokument ist eine Item-Zone (sce 9); der Port zweigt fuer Id >= 0x48 in den Leser ab
+(`aot_item_dokument`, RE2-Vorbild `sltiu v0,a3,0x68` @0x80071bbc).
+
+**Zensus aller 240 RDTs** (`zensus_item_nachricht.py`, 1579 Bloecke, davon 18 desynchron abgebrochen —
+deren Inhalt fehlt, die Zahlen sind Untergrenzen): 27 Paare Item-Rechteck × Nachrichten-Rechteck mit
+Ueberschneidung. Sortiert nach Ueberdeckung des Item-Rechtecks:
+
+| Ueberdeckung | Paare | Item im kleineren Slot (gewinnt) |
+|---|---|---|
+| >= 81 % (ROOM10E0/E1 ×4 je 100 %, ROOM1110/1111 ×4 81/100 %, ROOM30A0/A1 ×2 100 %) | 10 | **10 von 10** |
+| <= 12,5 % (Randberuehrung: 10F0/F1, 11A0/A1, 11B0/B1, 4010/4011, 40B0/B1) | 17 | 2 von 17 |
+
+Beispiel ROOM10E0 @0x00C4E `Item_aot_set` Slot 1 Rechteck (−650,−7350,2600,1000) und @0x00CCC
+`Aot_set` sce 1 Slot 8 mit DEMSELBEN Rechteck. **Regel des Originals: liegt ein Gegenstand im
+Untersuchen-Rechteck, steht er im kleineren Slot und gewinnt.**
+
+Gemessen an den geplanten Zonen (Sonde `abdeckung`, Raster 50, 64 Blickrichtungen; `druck` = ein
+echter Druck durch `re15_aot_scan`):
+
+| Raum | Zone (Ecke, Groesse), Slot | Standorte | Treffer | abgefangen | echter Druck |
+|---|---|---|---|---|---|
+| 1050 | (15250,−7250,1000,1000), 15 | 709 | 8239 | 0 | Stand (14900,−6750) Blick Ost → **Leser** |
+| 1051 | dieselbe, 15 | 0 | 0 | **8239 von Slot 11** (Leichen-Satz) | → **event 3** (Leichen-Satz) |
+| 1000/1001 | (18724,−12200,1000,1000), 10 | 130 | 1004 | 0 | Stand (18250,−11700) Blick Ost → **Leser** |
+| 1020/1021 | (−10963,−16932,2000,1000), 14 | 0 | 0 | **3740 von Slot 10 / 11** (Tisch-Nachricht) | → **msg 3** „It's Lieutenant Branagh's desk." |
+| 1020/1021 mit Tisch-Nachricht nach Slot 15 | dieselbe, 14 | 451 | 3740 | 0 | → **Leser** |
+| 1010/1011 | (300,5140,1000,1000), 9 | 258 | 1876 | 1033 (Slot 2 Spray 1024, Slot 3 Munition 9) | Stand (900,6400) Blick Sued → **Leser** |
+
+Folgen: ROOM1020 braucht die Vorrang-Regel des Originals (5.3), sonst ist Marvins Notiz
+UNERREICHBAR. ROOM1010: waehrend das Spray liegt, bekommt der Spieler an dessen Stelle zuerst das
+Spray (Item vor Item, kleinerer Slot — Original-Praxis ROOM5010, Runde 30), das Blatt hat einen
+eigenen Bereich (1876 Treffer). ROOM1051: der Leichen-Satz (Waffe) kommt zuerst; nach dem Nehmen
+der Waffe raeumt sub01 Slot 11 ab, dann das Tagebuch.
+
+### 3.5 Oberflaechenhoehen — je zwei Verfahren
+
+| Raum | Flaeche | Verfahren 1 | Verfahren 2 | gewaehlt |
+|---|---|---|---|---|
+| 1000 | Bank (SCA 7) | Kantenlage gegen die SCA-Kanten (`kantenhoehe.py`): Cut 0 Suedende z −12450 → **−385** (0,48 px), Cut 2 Nordende z −2750 → **−400** (0,45 px), Cut 0 Ostkante x 20650 → −325 (0,60 px, andere Kantendefinition) | Deckflaeche (`deckflaeche.py`, Jaccard Holz R−B>=30 gegen vorhergesagte Platte): Cut 0 → **−345** (0,834), Cut 2 → **−385** (0,839) | **−385** (Median der fuenf; Spanne −325..−400). Cut 1 verworfen: kein Gipfel (Jaccard 0,836 gegen 0,833) bzw. Fernkante hinter der Wandbank nicht trennbar |
+| 1020 | Schreibtisch (SCA 2) | Kantenlage Westkante x −10893: Cut 6 → **−1405** (0,21 px), Cut 3 → −1450 (0,73 px) | Deckflaeche (hell >= 60): Cut 6 → **−1415** (0,620), Cut 3 → −1455 (0,413) | **−1410** (Cut 6 = Nutzerbild, beide Verfahren); Cut 3 liegt 45 hoeher (0,5 px dort) |
+| 1010 | Verhoertisch (SCA 5) | ORIGINAL-DATEN: beide Tisch-Items stehen bei y **−1600** (RDT @0x00930 `… c8 00 c0 f9 7c 15 …` = (200,−1600,5500); @0x00952 (1800,−1600,5750)), Modell-Fuss y 0 (bbox y −489..0 / −72..0) | Deckflaeche Cut 0 → −1545 (0,816; zweiter Gipfel −1410 0,809 — flach) | **−1600** (Original); Kantenlage verworfen (13,5 px Restabstand: die Zellkante ist nicht die gemalte Kante) |
+| 1050 | Schoss der Leiche | Triangulation Cut 9 × Cut 3 (Hand auf dem Schenkel) **−347** (Strahlabstand 6) | — (keine zweite gemeinsame Flaeche; zweiter Beleg: Rueckprojektion 0,8/0,2 px in beiden Cuts) | Buch-Unterseite auf −347 → Buchmitte **−360** |
+
+Zum Massstab (Plausibilitaet, kein Beleg): Irons-Tisch −1520 (Runde 30), Marvins Tisch −1410,
+Verhoertisch −1600, Tisch-Items ROOM1020 −1500 — Tische liegen in RE1.5 bei 1400..1600; die Bank
+bei −385 ist ein Viertel davon.
+
+### 3.6 Verdeckung durch Masken
+
+Sonde `huelle` (8 Ecken des gedrehten Modell-Quaders, jede Maske ueber der Bildhuelle mit dem
+Urteil fuer die naechste und fernste Ecke; Regel `re15_pri_mask_occludes` = @0x8002565c otz>>4 gegen
+die Maskentiefe):
+
+| Dok | Cut | Masken | Ergebnis |
+|---|---|---|---|
+| 1 (1050) | 3 | 20 nachgezeichnete (`MASKS/ROOM1050.MSK`) | keine ueber dem Buch → **sichtbar** |
+| 1 | 5 | 83 nachgezeichnete, Maske 64 Tiefe 93 | verdeckt (15600 weit hinter dem Rolltor, 4 px — gewollt) |
+| 1 | 9 | keine | sichtbar |
+| 2 (1000) | 0 | 105 nachgezeichnete, Masken 73..78 Tiefe 94..100 | Buch vz 5380..5808 < 6086 → **sichtbar**, keine Klemme |
+| 3 (1020) | 6 | Original @pri 0x12CC, Maske 32 Tiefe 156 | Blatt vz 9636..10007 < 10058 → sichtbar, **Rand nur 51** |
+| 3 | 3 | Original @pri 0xD28, Maske 35 Tiefe 258 (x 127..166 y 91..114 = der Tisch) | Blatt vz 17032..17409 > 16592 → **VERDECKT** (wie der Irons-Tisch Cut 2) |
+| 4 (1010) | 0 | 100 nachgezeichnete, Masken 18/21/25 Tiefe 42/44/46 (Tischplatte als Treppe) | naechste Ecke frei, **fernste verdeckt** → das Blatt waere halb abgeschnitten |
+| 4 | 1 / 6 / 8 | nachgezeichnete, Tiefe ab 53 / 56 / 51 | dito, fernste Ecke verdeckt |
+| 4 (1011) | alle | keine (`MASKS/ROOM1011.MSK` gibt es nicht; der Lader sucht je Raum-Id) | sichtbar |
+
+Das Original kennt keinen Tiefen-Versatz je Objekt (FUN_8002c18c reicht nur Mesh/Farbe/ABE weiter,
+Runde 30 3.2): ein Objekt auf einer Platte, deren Maske die Platte selbst ist, waere auch im
+Original verdeckt. Deshalb (wie Irons-Tisch) die TIEFEN-KLEMME als Port-Zusatz, Wert = Tiefe der
+verdeckenden Maske (5.4).
 
 ## 4 Soll-Verhalten (Zeitlinie)
 
