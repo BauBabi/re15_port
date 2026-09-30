@@ -20,6 +20,13 @@
 #   release/make_package.sh --version v0.1.2 --ohne-android  # nur PC-Saetze; ein Android-Satz DIESER
 #                                                            # Version wird entfernt (siehe Android unten)
 #
+# ⛔ PATH unter Windows (gemessen beim Paketbau v0.8.21, reai-v2-b5): zip liegt in /c/msys64/usr/bin -
+# diesen Ordner HINTEN anhaengen, nicht vorn einsetzen:
+#   PATH="$PATH:/c/msys64/usr/bin" bash release/make_package.sh --version vX.Y.Z
+# Steht er VORN, startet "bash" das MSYS2-bash, und dabei gingen LOCALAPPDATA und sogar ein gesetztes
+# ANDROID_SDK_ROOT verloren -> apk_pruefen.sh suchte das SDK unter /home/.../Android/Sdk und brach ab.
+# (Seit dem Folgecommit erfragt apk_pruefen.sh den Ordner notfalls selbst bei Windows, CSIDL 28.)
+#
 # Eingaben (werden NICHT hier gebaut):
 #   Linux  : release/linux_out/re15_pc    <- release/build_linux_deck.sh
 #   Windows: release/win_out/re15_pc.exe  <- mingw64-Build, siehe RELEASE_NOTES

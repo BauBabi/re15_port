@@ -89,8 +89,18 @@ apk_werkzeuge_finden() {
     local sdk bt kand j
     sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
     if [[ -z "$sdk" ]]; then
-        if command -v cygpath >/dev/null 2>&1 && [[ -n "${LOCALAPPDATA:-}" ]]; then
-            sdk="$(cygpath -u "$LOCALAPPDATA")/Android/Sdk"
+        # ⛔ Windows: steht /c/msys64/usr/bin VORN im PATH, startet "bash" das MSYS2-bash, und dabei
+        # gehen LOCALAPPDATA und sogar ein gesetztes ANDROID_SDK_ROOT verloren (gemessen von reai-v2-b5
+        # beim Paketbau v0.8.21: Suche unter /home/.../Android/Sdk, Abbruch). Deshalb den Ordner notfalls
+        # direkt bei Windows erfragen (CSIDL_LOCAL_APPDATA = 28) bzw. aus USERPROFILE ableiten -
+        # dieselbe Regel wie release/build_android.sh.
+        local lad="${LOCALAPPDATA:-}"
+        if command -v cygpath >/dev/null 2>&1; then
+            [[ -n "$lad" ]] || lad="$(cygpath -w -F 28 2>/dev/null || true)"
+            [[ -n "$lad" || -z "${USERPROFILE:-}" ]] || lad="${USERPROFILE}/AppData/Local"
+        fi
+        if [[ -n "$lad" ]] && command -v cygpath >/dev/null 2>&1; then
+            sdk="$(cygpath -u "$lad")/Android/Sdk"
         else
             sdk="$HOME/Android/Sdk"
         fi
