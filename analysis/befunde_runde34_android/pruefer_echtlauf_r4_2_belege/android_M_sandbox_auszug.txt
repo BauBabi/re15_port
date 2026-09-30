@@ -1,0 +1,48 @@
+START 2026-09-30 12:05:46
+   Python: /c/Python310/python (3.10.11)
+== Android-Bau re15_port_v0.8.19-pe2m_android ==
+19:> Task :app:stageAssets
+20:stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+21:stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+23:> Task :app:writeAssetManifest
+24:re15_assets.txt (v2): 3603 Dateien, 356678277 Bytes, sha256 je Datei
+1163:BUILD SUCCESSFUL in 3m 45s
+1168:   package: name='de.re15.port' versionCode='81900' versionName='v0.8.19-pe2m' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1179:   Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1181:         sha256 8a0e3f152f508690fcd4478a46961033e964e132a04eff2a7a4d2821ffbbedcb = festgehalten (release/apk_asset_gate.sha256)
+1193:   [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+1194:   [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+1199:   [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+1200:   [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+1202:   [ok] 17 Manifest: Zeile mit nur einem Tab (Summe + Pfad verschmolzen) rc=1 (soll 1)
+1203:   [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+1206:   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+1217:   [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+1218:   [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+1219:   [ok] 34 Manifest: Groessenfeld '4_396'                             rc=1 (soll 1)
+1220:   [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+1221:   [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+1222:   [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+1223:   [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+1247:   [ok] 62 build.gradle: stageAssets fehlt                            rc=2 (soll 2)
+1248:   [ok] 63 build.gradle: stageAssets zweimal                          rc=2 (soll 2)
+1257:   [ok] 72 build.gradle: stageAssets-Block ohne Ende                  rc=2 (soll 2)
+1345:   [ok] 160 Manifest: Geisterzeile, die vor dem Manifest sortiert      rc=1 (soll 1)
+1346:   [ok] 161 Manifest: Pfad mit Backslash                               rc=1 (soll 1)
+1347:   [ok] 162 Manifest: Kopfzeile Bytes 1 zu gross                       rc=1 (soll 1)
+1348:   [ok] 163 Manifest: Kopfzeile Anzahl 1 zu klein                      rc=1 (soll 1)
+1349:   [ok] 164 Manifest: Kommentarzeile direkt nach dem Kopf              rc=1 (soll 1)
+1377:   [ok] 192 TORSE.VBS 0 B in Quelle UND APK                            rc=1 (soll 1)
+1446:   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+1452:   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1462:   SUMME                           3603    3603     3603    356678277
+1463:   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1464:   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1465:   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1466:   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1469:   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 3603 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS gleich, 2 Tuer-Soll-Zeilen g/g
+1470:== APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_e2/sb/release/re15_port_v0.8.19-pe2m_android.apk.ungeprueft (sha256 crc32 Bytes: 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b
+1474:== ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_e2/sb/release/re15_port_v0.8.19-pe2m_android.apk ==
+== ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_e2/sb/release/re15_port_v0.8.19-pe2m_android.apk ==
+ENDE 2026-09-30 12:10:15
+EXIT=0

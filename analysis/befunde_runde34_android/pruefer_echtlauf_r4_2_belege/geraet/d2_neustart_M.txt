@@ -1,0 +1,13 @@
+== d2_neustart_M 2026-09-30 12:16:38
+   firstInstallTime=2026-09-30 10:07:38
+   lastUpdateTime=2026-09-30 10:16:17
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe2m
+installiert: /data/app/~~n9gTGfepqxXLHlJ3HzqlcA==/de.re15.port-_wYKfZsjSCEtBAkaM1vgEQ==/base.apk sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+Status: ok
+LaunchState: COLD
+TotalTime: 1345
+warten rc=0 (2734 ms ab am start)
+09-30 10:16:51.793 I/re15    ( 8613): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:16:52.893 I/re15    ( 8613): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 694 ms
+pidof: 8613

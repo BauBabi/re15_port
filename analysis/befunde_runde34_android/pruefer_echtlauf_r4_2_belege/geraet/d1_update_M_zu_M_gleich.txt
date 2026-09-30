@@ -1,0 +1,15 @@
+== d1_update_M_zu_M_gleich 2026-09-30 12:16:03
+APK: build/r34a/pruefer_e2/apk/M.apk sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+install -r rc=0 (11387 ms): Performing Streamed Install Success 
+   firstInstallTime=2026-09-30 10:07:38
+   lastUpdateTime=2026-09-30 10:16:17
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe2m
+installiert: /data/app/~~n9gTGfepqxXLHlJ3HzqlcA==/de.re15.port-_wYKfZsjSCEtBAkaM1vgEQ==/base.apk sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+Status: ok
+LaunchState: COLD
+TotalTime: 2404
+warten rc=0 (3768 ms ab am start)
+09-30 10:16:31.931 I/re15    ( 8528): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:16:32.605 I/re15    ( 8528): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 343 ms
+pidof: 8528

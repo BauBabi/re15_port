@@ -1,0 +1,16 @@
+== a_ref0819_frisch 2026-09-30 12:07:06
+APK: build/r34a/pruefer_e2/apk/REF_v0.8.19.apk sha256 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+install -r rc=0 (33375 ms): Performing Streamed Install Success 
+   firstInstallTime=2026-09-30 10:07:38
+   lastUpdateTime=2026-09-30 10:07:38
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+installiert: /data/app/~~nyZ_cwrt298h64MkwayHtw==/de.re15.port-OGl-s6AdNCjyes7_MsJHMA==/base.apk sha256 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+Status: ok
+LaunchState: COLD
+TotalTime: 2222
+warten rc=0 (34347 ms ab am start)
+09-30 10:07:50.004 I/re15    ( 4623): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:07:51.296 I/re15    ( 4623): [android] Entpacke 3603 Dateien (356678277 Bytes) nach /storage/emulated/0/Android/data/de.re15.port/files
+09-30 10:08:21.467 I/re15    ( 4623): [android] Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler
+pidof: 4623
