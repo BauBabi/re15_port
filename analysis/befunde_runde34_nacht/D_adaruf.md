@@ -53,14 +53,14 @@ Wortlaut (AUFTRAG.md Z. 14-19):
 |---|---|---|---|
 | L1 | Wann feuert die Szene? | Beim ERSTEN Quadrat-Druck an Slot 4, solange (3,0xBB)=0 und (9,65)=0. | Tueren oeffnen nur per Quadrat-Flanke (memory reai-v2-door-transition, FUN_80042bac kind 0x10); "Drückt man nach dieser Cutscene erneut die Tür" setzt einen ersten Druck voraus. |
 | L2 | "Ada:" | Bildschirmtext **"Woman:"** — **vom Nutzer bestaetigt** (AUFTRAG.md, Nachtrag 2026-09-30: "Du hast recht! Da muss woman: stehen statt Ada:"). | RE1.5 nennt Ada vor und waehrend der Rettung "Woman:" (ROOM1090 msg 0 @0x275C, msg 2 @0x27BD, msg 4 @0x281F); "Ada:" erstmals NACH der Rettung (ROOM1050 msg 6 @0x1007, ROOM11C0 msg 1..8). Satz bleibt woertlich "Hello? Anyone? Please, get me out of here!". |
-| L2b | "Leon: Another civilian survivor. I have to help her!" = eine oder zwei Nachrichten? | ZWEI: msg 23 "Leon: Another civilian survivor." und msg 24 "Leon: I have to help her!" | Die Gesten sollen "bei" den Satzteilen kommen: jede Geste haengt direkt hinter ihrem Message_on, und `voice_wait` haelt msg 24 bis main23.wav fertig ist — nur so bleibt die zweite Geste am zweiten Satz. RE1.5 setzt zwei ganze Saetze desselben Sprechers ebenfalls als zwei Nachrichten mit je "Leon:" (ROOM1090 msg 5 @0x2861 / msg 6 @0x2899, sub03 @0x02640/@0x02670). |
+| L2b | "Leon: Another civilian survivor. I have to help her!" = eine oder zwei Nachrichten? | ZWEI: msg 23 "Leon: Another civilian survivor." und msg 24 "Leon: I have to help her!" — **PORT-WAHL (BAU, Auflage 4)** | Grund = Sprach-Takt: jede Geste haengt direkt hinter ihrem Message_on, und `voice_wait` haelt msg 24 bis main23.wav fertig ist — nur so bleibt die zweite Geste am zweiten Satz, egal wie lang die (noch nicht aufgenommene) Stimme wird. **Gegenbeleg (Gegenpruefung, angenommen):** RE1.5 setzt zwei Saetze eines Sprechers auch in EINEN Kasten, mit zwei Gesten waehrend EINER Nachricht (ROOM1090 msg 5 @0x2861 "We can talk later... It's not safe / here.", sub03 @0x02640 Message_on 5, Clip 18 @0x02648/@0x02650, Clip 19 @0x0265C/@0x02664); das frueher hier zitierte Vorbild msg 5/6 belegt die Aufteilung NICHT. **Lesbarkeit msg 23 ohne Stimme (51 Bilder, Sleep 25+26) am Zensus gemessen** (`dialog_budget`, 301 Dialogzeilen aller RDTs mit fester Zeit bis zum naechsten Message_on): das Original laesst eine Dialogzeile selbst nur 51 Bilder stehen (ROOM4001 sub10 @0x01A24 msg 9 "John: Sherry, hold on!", @0x01A3C msg 10) und kommt bis 0,99 Bilder je Zeichen herunter (ROOM1141 sub02 @0x00EBC, 101 Bilder / 102 Zeichen); msg 23 hat 26 Zeichen = 1,96 Bilder je Zeichen — innerhalb der Original-Praxis, keine Verlaengerung der Sleep-Kette. Framedump F315..F366 (§9.5): der Text steht ganz. |
 | L3 | "einen Schritt zurück ... wie in ROOM 1090 ..., nachdem er zum Feuer läuft" | `Plc_dest` Modus **8** (ROOM1090 sub02 @0x0247C), gleiche Weglaenge. | Der einzige Rueckwaertsbefehl in sub02, direkt nach den drei Lauf-`Plc_dest` Modus 5 zum Feuer (@0x0244A/0x02454/0x0245E). Der Nutzer hat genau diesen Schritt schon einmal beanstandet ("im Original macht er noch EINEN Schritt zurueck, bei uns ZWEI", actor_locomotion.c) — er ist ihm vertraut. |
 | L4 | "den rechten Arm um 180° dreht und nach rechts bewegt ... den gleichen Weg wieder zurück" | **Clip 19**, vorwaerts + rueckwaerts (`Plc_flg 0x80`). | §3.5: alle Leon-Gesten bewegen den LINKEN Arm (Knochen 12-14); der rechte (9-11, Waffenhand) steht. "rechts" ist also Zuschauersicht (Leon frontal: sein linker Arm ist rechts im Bild). Clip 19 hebt den Arm seitlich nach aussen (Hand +300 nach aussen, Unterarm von haengend -79 Grad auf waagerecht +11 Grad) und dreht die Hand dabei um (Handflaeche vom Oberschenkel nach oben, ~100 Grad) — "dreht und bewegt nach rechts". "den gleichen Weg wieder zurück" = das Muster, in dem Clip 19 im Original IMMER laeuft (vor + `Plc_flg 0x80`, 11 von 26 Aufrufen rueckwaerts; z.B. ROOM1090 sub03 @0x0265C/@0x02664). |
 | L5 | "seine Arm Schwung Animation" | **Clip 17**, einmal vorwaerts (kehrt selbst in die Ruhe zurueck). | Der einzige Schwung der Bibliothek: Hand von der Brustmitte bis ganz seitlich hinaus (+780 Einheiten), Unterarm schwenkt 107 Grad. Leons "Now what am I gonna do?" im Intro (ROOM1170 sub02 @0x015F0, im Port bei Bild 1686 gemessen), "Ada, you hide inside that patrol car.", "Hurry up! They're coming!". Clip 17 wird im Original NIE rueckwaerts gespielt — passt dazu, dass der Nutzer hier keinen Rueckweg nennt. |
 | L6 | "erneut die Tür" | Jeder weitere Druck vor der Rettung zeigt NUR den Text msg 25; auch nach Raumwechsel (Bit (9,65) gespeichert). | Wortlaut. |
 | L7 | "Erst wenn man Ada gerettet hat" | Freigabe (3,0xBB). | §3.2. |
 | L8 | Elza ROOM1051 | Keine Sperre. | ROOM1091 hat weder Feuer noch Ada noch Nachrichten (sub00 @0x0222E und sub01 @0x02230 = `01 00`), (3,0xBB) wird in Elzas Spiel nie gesetzt; Sperre waere dauerhaft. Gleiche Regel wie tuer1120 (nur ROOM1130). |
-| L9 | Kamera | Aktive Kamera (Cut 4), kein Cut_chg. | §2.2: an der Tuer ist aus jeder Richtung Cut 4 aktiv, und er zeigt Leon an der Tuer (Bild Mitte in `ist_cut4_rolltor_zu_offen_cut5.png`); die Nachbarkamera Cut 5 zeigt ihn nur als Streifen hinter der Wandkante (rechts). Der Nutzer nennt keinen Schnitt. |
+| L9 | Kamera | Aktive Kamera (Cut 4), kein Cut_chg. **BAU (Auflage 7): nach dem Rueckschritt dreht sich Leon zur Kamera Cut 4 (Plc_dest Modus 9 auf ihren Standort), erst dann die Gesten — PORT-WAHL.** | §2.2: an der Tuer ist aus jeder Richtung Cut 4 aktiv, und er zeigt Leon an der Tuer (Bild Mitte in `ist_cut4_rolltor_zu_offen_cut5.png`); die Nachbarkamera Cut 5 zeigt ihn nur als Streifen hinter der Wandkante (rechts). Der Nutzer nennt keinen Schnitt. **Am echten Bild gemessen (§9.5):** zur Tuer gewandt sieht Cut 4 Leon schraeg von hinten links, Clip 19 geht im Bild nach LINKS und Clip 17 verschwindet halb hinter dem Koerper — das ist NICHT "der rechte Arm ... nach rechts". Eine Kamera von vorn gibt es an der Tuer nicht (Kameratabelle RDT @0x00060: Cut 0..4/6..9 westlich/noerdlich x 14332..16171, Cut 5 @0x00100 suedoestlich = Waffenseite). Mit Blick zur Kamera liegt der Gestenarm (sein linker) rechts im Bild und geht nach rechts hinaus — genau die Beschreibung des Nutzers (Lesart L4 = Zuschauersicht, frontal). |
 
 ## 2 Ist-Zustand im Port (gemessen)
 
@@ -190,6 +190,27 @@ ROOM1050-RBJ, `gesten_streifen.py`). Messung `gesten_arme.py` (Rumpfsystem, x vo
 Der RECHTE Arm (Knochen 9-11, die Waffenhand — Skill re15-weapon-render: "the weapon REPLACES the hand mesh at
 bone 11", Schulter rel z = -369) bewegt sich in keiner Geste nennenswert (max 342 in Clip 17). Seitenbeleg:
 PL00.EMR rel-Offsets Knochen 9 z=-369 / 12 z=+369; die rechte Flanke zeigt das Holster.
+
+**Nachtrag BAU (Gegenpruefung Auflage 2) — GEPRUEFT UND VERWORFEN** (Bild
+`D_belege/gegenpruefung_weitere_leon_clips.png`, vom Gegenpruefer mit `gesten_streifen.py` gerendert, von mir
+angesehen): Clip 24 des ROOM1050-RBJ (= ROOM3070 Clip 24, dort vor+rueck @0x0350C/@0x03514) = Kopf-/Oberkoerper-
+Wendung OHNE Arm; Clip 25 = Ganzkoerper-Drehung um 90 Grad (nie gerufen); die raumeigenen Spieler-Clips ROOM1170
+rec0 Clip 25 (@0x015E4, "Oh, that's just freaking great...") = Hand ans Gesicht; ROOM1150 rec0 Clip 10/11/12 (Irons-
+Szene sub03/sub08) = KNIEND. Selbst nachgerendert (`D_belege/bau_weitere_leon_clips_50b0_2020.png`): ROOM50B0 rec0
+Clip 13 (84 B, sub04 @0x00A76, Adas Tod) = Haende an den Kopf, Zusammensacken auf die Knie; Clip 14 (3 B, @0x00A88)
+= kniend; ROOM2020 rec0 Clip 0 (40 B, sub02 @0x00A9C "Will you use the Crank?") = beide Arme nach vorn, Kurbel.
+(ROOM50B0/ROOM10D0 rufen ausserdem Clip 4 = INHALT von Clip 19, Hash fde929aa6e6b.) Keiner ist eine
+stehende Arm-Geste "180 Grad nach rechts" — die Wahl 19/17 bleibt. **Zensus berichtigt:** `plc_motion_zensus.py`
+nahm den ERSTEN Record mit Bit 0; der Binder FUN_8001b3f8 laeuft aber ueber alle Records ohne Abbruch (Schleife
+@0x8001b42c..@0x8001b4d4) und schreibt die Spieler-Bindung bei jedem Bit 0 neu (`sw v0,0(t3)` @0x8001b450,
+`sw v0,4(t3)` @0x8001b460, t3 = 0x800acbd4) — der LETZTE Record gewinnt (ROOM6030 rec2, Marker 3). Neu erhoben
+(`D_belege/plc_motion_zensus.tsv`, 661 Aufrufe, ohne Hash 91 -> 33): Inhalt Clip 17 (ce75d881cd9d) 11x, nie
+rueckwaerts; Inhalt Clip 19 (fde929aa6e6b) 32x, davon 14x rueckwaerts. Schluss unveraendert.
+Nebenbefund (NICHT Spur D, ungeprueft): der Gegner-Index a3 im selben Binder wird nur einmal genullt
+(`addu a3,zero,zero` @0x8001b410, vor der Record-Schleife) und je Marker-Bit hochgezaehlt (`addiu a3,a3,1`
+@0x8001b4c4) — bei mehreren Gegner-Records haengt die Zuordnung Bit -> Gegner also von den Vorgaenger-Records ab;
+der Port (enemy_common.c rbj_resolve_slot: erster Record mit Bit == Slot) rechnet anders. Fuer die Integration
+notiert.
 
 Wo der Nutzer sie gesehen hat (echte exe): Clip 17 im Intro bei Bild 1686 (`D_belege/r1170_sub02_clip17_echt.png`,
 Kamera hinter Leon), Clip 15/20 in ROOM1090 sub02 nach dem Rueckschritt (`r1090_sub02_gesten15_20_echt.png`).
@@ -335,7 +356,7 @@ freien Ereignis-Slot (10..23) wie jedes Raum-Sub.
 | RE15_ADARUF_EREIGNIS | 13 | PORT-WAHL — Grund: < RE15_RDT_MAX_SUB_SCD 32 (Schranke in scd_event_fire), kein ROOM1050-Sub (Tabelle @0xC10, 5 Eintraege), nicht Spur As Ereignis 2; = Vertrags-Slotnummer 13 zur Wiedererkennung |
 | Ereignis-Nutzlast | p0 0x00FF, p1 0x0D18 | Form ROOM1050 sub00 @0x00C22 Nutzlast `ff 00 18 02`; Handler @0x800430f0 `lhu a0,0` @0x800430fc, `lbu a1,3` @0x80043100 |
 | Platz-Flags | 0x31 | Door_aot_set @0x00B5A pc[3]; Schalter @0x00C22 pc[3]; ROOM1130 @0x00A1C |
-| Text-Platz | sce 1, msg 25, Maske 0xFFFF | ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff`; 524/524 sce-1-Saetze 0xffff (scd_vm.c) |
+| Text-Platz | sce 1, msg 25, Maske 0xFFFF | ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff`; 524/524 sce-1-Saetze 0xffff (scd_vm.c). **Vorbild im selben Handlungsstrang (BAU, Auflage 11):** ROOM1090 sub00 @0x0230A `21 03 85 00` Ck(3,133)==0 -> @0x0230E `2c 02 01 b1 ...` Aot_set Slot 2, sce 1, Langform (flags 0xB1), Nutzlast `07 00 ff ff` = Text-Platz msg 7 "I must hurry up and get something to / put out this fire to save that woman!" — derselbe Mechanismus (Hinweistext, solange die Bedingung fehlt). Ohne Ton: der sce-1-Handler @0x80043084 ruft nur `jal 0x80027e68` @0x800430a0 (Nachricht oeffnen), kein Se_on; RE2 sperrt Story-Tueren ebenso stumm (re15_tuer1120.h). |
 | Nachrichten-Ids | 22, 23, 24, 25 | VERTRAG §1.3; ROOM1050 Nachrichtentabelle @0xE44 off[0] `12 00` = 9 Eintraege (0..8); PSX MSG_TABLE_N 32 |
 | Rueckschritt-Laenge | 755 | NUTZER-VORGABE "wie in ROOM 1090": \|(613,-2123)-(-130,-1988)\| = 755,2 aus ROOM1090 sub02 Member_set @0x0246C/@0x02470 und Plc_dest @0x0247C; tatsaechlich 700 wegen Ankunft `slti 100` @0x800312fc (Sonde B123..B133 = echte exe ROOM1090 Bild 301..311) |
 | Rueckschritt-Richtung | -X (x-755, z gleich) | PORT-WAHL — Grund: die Tuer liegt auf der Ostseite (Rechteck x 16700..17700 @0x00B5A, Standplatz Gierung 0 = Blick +X); Modus 8 dreht den Ruecken zum Ziel (`addiu a2,zero,-48` @0x80031254), Leon bleibt also zur Tuer gewandt; z bleibt, also keine Kamerazone (Satz 12/13 @0x2A0/@0x2B4). Das Original stellt Leon vorher per Member_set auf Ort UND Richtung (@0x0246C-74) — hinter einem Cut_chg versteckt; hier ohne Schnitt waere der Sprung sichtbar, darum Ziel relativ zum Standort (C setzt die Operanden). |
@@ -421,6 +442,28 @@ nachfahren (memory reai-v2-gui-tests-flattern).
   werden. Innerhalb: Suedteil nur durch das Rolltor (Spur A, §2.3); Feuerloescher ROOM1000 Slot 3 (Umkleide,
   Kameragruppe {0,1,2}) haengt an 1050-Sued Slot 3 <-> 1000 Slot 0; Ada ROOM1090 Hof an 1050 Slot 5. Die
   1090-Kette braucht (3,133) aus ROOM1000 — nichts hinter 10A0. Kein Softlock.
+  **BAU, Auflage 1 — Tuergraph berichtigt:** `tuer_graph.py` las das Stage-Byte nicht (Stage aus dem Quellraum);
+  jetzt Byte 22 (bei den 4 Viereck-Saetzen ROOM4030/4031, Satzbreite 40, Byte 30). Falsch waren u.a. ROOM11A0
+  @0x01006 Slot 4 (Byte 22 = 0x01 -> **ROOM20A0**, nicht 10A0), 11A0 Slot 0 -> ROOM2070, Slot 1 -> ROOM3000, ROOM1260
+  Slot 1 -> ROOM2000. Berichtigte Eingaenge von ROOM10A0 (alle selbst gelesen): 1050 S4 @0x00B5A, 1180 S1 @0x00A34,
+  11E0 S2 @0x01552, 1230 S1 @0x00B34 — alle ausser 1050 liegen HINTER 10A0. ROOM1170 main00 @0x01226 Slot 1 -> 10B0
+  ist sce 0 und wird nie scharf (die BFS folgt nur sce 2). Die Zahl bleibt: 22 Raeume ohne 10A0, 37 mit.
+  **BAU, Auflage 3 — die ganze Kette MIT Bedingungen** (Bytes selbst gelesen, `bytes_check`):
+  1170 -S4 @0x012F8 `3b 04 02 31 ... 00 13 07`-> 1130 -S2-> 1150 (erste Irons-Szene setzt (3,94) sub08 @0x01110
+  `22 03 5e 01`; die Sicherung liegt im Hebetisch, sub04 vom Port ueber Slot 1 @0x0D7E ohne Vorbedingung scharf)
+  -> 1130 -S1 @0x008AE (tuer1120: erst nach (3,94))-> 1120 -> 1060/1080 -> 1040 -> 1030 -S0 @0x01C6A-> 1050 Nord
+  -> Rolltor (Spur A: nur mit Sicherung, Bank 9 Bit 63) -> 1050 Sued -S3 @0x00B3A-> 1000 Umkleide (Loescher Item
+  0x31 Item_aot_set Slot 3 @0x00C24, sub01 @0x00D00 Ck(9,134) / @0x00D08 Ck(3,133)==0 / @0x00D0C Set(3,133)) -> 1000
+  -S0 @0x00BBE (Cut 4)-> 1050 -S5 @0x00B7A-> 1090 (sub00 @0x0230A Hinweistext solange (3,133)=0; sonst Slot 2 ->
+  sub06: @0x0271E Set(3,129), @0x02722 Set(3,132), @0x02726 Aot_on 3 Selbsttuer -> sub00 @0x022A6 Ck(3,132)==1 ->
+  sub03 @0x024D2 Set(3,187)) -> 1050 -S4-> 10A0. Keine Bedingung dieser Kette liegt hinter 10A0 -> **kein Softlock**.
+  Der Riegel `unit_r34n_d_adaruf_rettung` faehrt den Schluss der Kette im Port-VM (1090 sub03 setzt (3,187) selbst,
+  1050 sub03 loescht (3,110), Tuer bleibt frei, auch beim Wiederbetreten).
+  **Alt-Spielstaende** (heutiger Port, Speicherstand schon HINTER 10A0 ohne Rettung): Rueckweg 10A0 S0 @0x00DB2 ->
+  1050; der naechste Druck an Slot 4 zeigt dann die Szene bzw. den Sperrtext, die Rettung (1000/1090) bleibt
+  erreichbar -> kein Softlock. Ein Speicherstand IN ROOM1050 ist nicht moeglich (keine Speicherstelle: STAGE1 nur
+  1070/1120/1150, re15_savepoint.c:45-47); der CONTINUE-Weg (main.c, ohne scd_room_reenter) kommt also nie direkt
+  in ROOM1050 an — jede Ankunft dort laeuft durch die Installation in scd_room_reenter.
 * **Freigabe-Flag.** Wer (3,0x6E) nimmt, sperrt die Tuer nach Adas Weglaufen wieder (Softlock). (3,0xBB) ist
   Pflicht. Alte Spielstaende nach der Rettung tragen (3,0xBB)=1 -> Tuer offen, keine Szene (richtig).
 * **Rueckschritt haengt?** Erste Planfassung (Schritt ohne Drehung) haengte aus schraegem Stand endlos (Modus 8

@@ -1,0 +1,11 @@
+ROOM1050: 10 Kameras (RDT Byte 1), Punkt (16000,-13700)
+Cut 0 @0x00060: pos (14349,-3547,11418) ziel (24168,-87,13522) Blick 12 Grad | zum Punkt -86 Grad, 25172 entfernt
+Cut 1 @0x00080: pos (15138,-3161,1474) ziel (16372,-87,13522) Blick 84 Grad | zum Punkt -87 Grad, 15198 entfernt
+Cut 2 @0x000A0: pos (14332,-3486,-3050) ziel (16306,851,12624) Blick 83 Grad | zum Punkt -81 Grad, 10780 entfernt
+Cut 3 @0x000C0: pos (14605,-3721,550) ziel (17259,3056,-19612) Blick -83 Grad | zum Punkt -84 Grad, 14318 entfernt
+Cut 4 @0x000E0: pos (14999,-3549,-8140) ziel (15618,-2173,-12830) Blick -82 Grad | zum Punkt -80 Grad, 5649 entfernt
+Cut 5 @0x00100: pos (20036,-3915,-22179) ziel (17211,-329,-10014) Blick 103 Grad | zum Punkt 115 Grad, 9391 entfernt
+Cut 6 @0x00120: pos (15356,-3957,-14960) ziel (19783,-1071,-22709) Blick -60 Grad | zum Punkt 63 Grad, 1415 entfernt
+Cut 7 @0x00140: pos (16171,-2733,-8185) ziel (18240,-1974,-8706) Blick -14 Grad | zum Punkt -92 Grad, 5518 entfernt
+Cut 8 @0x00160: pos (16171,-2733,-8185) ziel (18240,-1974,-8706) Blick -14 Grad | zum Punkt -92 Grad, 5518 entfernt
+Cut 9 @0x00180: pos (14892,-851,-6001) ziel (18240,-610,-7291) Blick -21 Grad | zum Punkt -82 Grad, 7778 entfernt

@@ -5,7 +5,12 @@ Liest JEDEN Door_aot_set (0x3B) aus main- UND sub-SCD (scd_walk_lib, eine Laenge
 Kontext: in welchem Thread, hinter welchen Ck-Bedingungen (Ifel_ck-Kette unmittelbar davor) er
 steht. Satzlayout (include/re15_tuer1120.h, ROOM1130 @0x008AE):
   [1] Slot [2] sce [3] flags [4] Band [6..13] Rechteck x,z,w,h [14..19] Spawn x,y,z [20..21] dir
-  [22] Stage-Byte [23] Raum (low byte, Stage aus dem Raumnamen) [24] Cut
+  [22] Stage-Byte (0 = STAGE1 ...) [23] Raum (low byte) [24] Cut
+  Viereck-Saetze (flags & 0x80, Satzbreite 40 statt 32, 4 Stueck in ROOM4030/4031) tragen 8 Bytes mehr
+  Flaeche: dort Stage/Raum/Cut an [30]/[31]/[32].
+  BERICHTIGT (Gegenpruefung Spur D, Auflage 1): die erste Fassung nahm die Stage aus dem QUELLraum und
+  ignorierte das Stage-Byte — ROOM11A0 @0x01006 Slot 4 (Byte 22 = 0x01) zeigte so faelschlich auf
+  ROOM10A0 statt ROOM20A0.
 Erreichbarkeit: BFS ab einem Startraum, optional ohne einen gesperrten Raum ("--ohne 10A0").
 Bedingungen werden NUR ausgegeben, nicht ausgewertet — die Bewertung steht im Dossier.
 
@@ -33,9 +38,10 @@ def tueren(d):
                         ck.append("Cmp@0x%X" % pc2)
                     elif op2 in (0x07,):
                         ck.append("Else")
+                q = sz - 32                                 # Viereck-Satz: 8 Bytes mehr Flaeche
                 out.append(dict(thread="%s%02d" % (tag, idx), off=pc, slot=d[pc + 1], sce=d[pc + 2],
-                                flags=d[pc + 3], band=d[pc + 4], ziel=d[pc + 23], stagebyte=d[pc + 22],
-                                cut=d[pc + 24], kontext=ck))
+                                flags=d[pc + 3], band=d[pc + 4], ziel=d[pc + 23 + q],
+                                stagebyte=d[pc + 22 + q], cut=d[pc + 24 + q], kontext=ck))
     return out
 
 
@@ -52,13 +58,10 @@ def main():
         d = open(f, "rb").read()
         if len(d) < 0x60:
             continue
-        st = raum[0]
         kanten = []
         for t in tueren(d):
-            ziel = "%s%02X%s" % (st, t["ziel"], "0" if raum[-1] == "0" else raum[-1])
-            ziel = ziel[:4]
-            # Raum-Id = Stage-Ziffer + Raumbyte (2 Hex) + Spieler-Variante (0 Leon / 1 Elza)
-            ziel = "%s%02X%s" % (st, t["ziel"], raum[-1])
+            # Raum-Id = Stage (Stage-Byte + 1) + Raumbyte (2 Hex) + Spieler-Variante (0 Leon / 1 Elza)
+            ziel = "%X%02X%s" % (t["stagebyte"] + 1, t["ziel"], raum[-1])
             kanten.append((ziel, t))
         graph[raum] = kanten
     for raum, kanten in graph.items():

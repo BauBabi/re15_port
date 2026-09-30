@@ -1,3 +1,5 @@
+# tuer_graph.py (BERICHTIGT: Stage-Byte, Gegenpruefung Spur D Auflage 1) — STAGE1 Leon, Start ROOM1170
+# Aufruf: tuer_graph.py re15_port/shared_assets/PSX/STAGE1 --start 1170 --nur-leon  [und --ohne 10A0]
 ROOM1000 main00 @0x00BBE Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 4 
 ROOM1000 main00 @0x00BDE Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 1 
 ROOM1000 main00 @0x00BFE Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 1 
@@ -84,11 +86,11 @@ ROOM1190 sub13 @0x028D6 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 7   [Ck(
 ROOM1190 sub14 @0x02B1C Slot  6 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 6   [Ck(4,243)==0]
 ROOM1190 sub14 @0x02B40 Slot  6 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 6   [Ck(4,243)==0, Else]
 ROOM1190 sub14 @0x02D70 Slot 15 sce 2 flags 0x31 Band 1 -> ROOM1190 Cut 13   [Ck(3,117)==0]
-ROOM11A0 main00 @0x00F5A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1070 Cut 12   [Ck(3,151)==0, Else]
-ROOM11A0 main00 @0x00F7C Slot  1 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 0   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x00F5A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM2070 Cut 12   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x00F7C Slot  1 sce 2 flags 0x31 Band 1 -> ROOM3000 Cut 0   [Ck(3,151)==0, Else]
 ROOM11A0 main00 @0x00F9C Slot  2 sce 2 flags 0x31 Band 1 -> ROOM11A0 Cut 10   [Ck(3,151)==0, Else]
 ROOM11A0 main00 @0x00FC6 Slot  3 sce 2 flags 0x31 Band 3 -> ROOM11A0 Cut 8   [Ck(3,151)==0, Else]
-ROOM11A0 main00 @0x01006 Slot  4 sce 2 flags 0x31 Band 1 -> ROOM10A0 Cut 8   [Else, Ck(3,206)==0, Else]
+ROOM11A0 main00 @0x01006 Slot  4 sce 2 flags 0x31 Band 1 -> ROOM20A0 Cut 8   [Else, Ck(3,206)==0, Else]
 ROOM11B0 main00 @0x00F64 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 8   [Ck(4,243)==1, Ck(4,243)==0]
 ROOM11B0 main00 @0x00F88 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 8   [Ck(4,243)==1, Ck(4,243)==0, Else]
 ROOM11B0 main00 @0x00FAA Slot  1 sce 2 flags 0x31 Band 0 -> ROOM11C0 Cut 0   [Ck(4,243)==1, Ck(4,243)==0, Else]
@@ -128,10 +130,14 @@ ROOM1250 main00 @0x00CB2 Slot  0 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0
 ROOM1250 main00 @0x00CD2 Slot  1 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0 
 ROOM1250 main00 @0x00CF2 Slot  2 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0 
 ROOM1260 main00 @0x0112A Slot  0 sce 2 flags 0x31 Band 1 -> ROOM11B0 Cut 6 
-ROOM1260 main00 @0x0114A Slot  1 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 0 
+ROOM1260 main00 @0x0114A Slot  1 sce 2 flags 0x31 Band 1 -> ROOM2000 Cut 0 
 ROOM1260 main00 @0x0116A Slot  2 sce 2 flags 0x31 Band 1 -> ROOM10B0 Cut 7 
 ROOM1260 main00 @0x0118A Slot  3 sce 2 flags 0x31 Band 1 -> ROOM11D0 Cut 7 
-ROOM1260 main00 @0x011AA Slot  4 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 4 
+ROOM1260 main00 @0x011AA Slot  4 sce 2 flags 0x31 Band 1 -> ROOM2000 Cut 4 
 
+Erreichbar ab ROOM1170 (37 Raeume, Bedingungen NICHT ausgewertet):
+ROOM1000 ROOM1010 ROOM1020 ROOM1030 ROOM1040 ROOM1050 ROOM1060 ROOM1070 ROOM1080 ROOM1090 ROOM10A0 ROOM10B0 ROOM10C0 ROOM10D0 ROOM10E0 ROOM10F0 ROOM1100 ROOM1110 ROOM1120 ROOM1130 ROOM1140 ROOM1150 ROOM1160 ROOM1170 ROOM1180 ROOM1190 ROOM11B0 ROOM11C0 ROOM11D0 ROOM11E0 ROOM11F0 ROOM1200 ROOM1210 ROOM1220 ROOM1230 ROOM1240 ROOM1260
+
+## ohne ROOM10A0
 Erreichbar ab ROOM1170 ohne ROOM10A0 (22 Raeume, Bedingungen NICHT ausgewertet):
 ROOM1000 ROOM1010 ROOM1020 ROOM1030 ROOM1040 ROOM1050 ROOM1060 ROOM1070 ROOM1080 ROOM1090 ROOM10C0 ROOM10D0 ROOM10E0 ROOM10F0 ROOM1100 ROOM1110 ROOM1120 ROOM1130 ROOM1140 ROOM1150 ROOM1170 ROOM1240

@@ -23,10 +23,17 @@ import rbj_zensus as R                         # noqa: E402
 
 
 def spieler_record(recs):
+    """Der Record, den der Marker-Binder FUN_8001b3f8 dem SPIELER zuletzt zuweist.
+    BERICHTIGT (Gegenpruefung Spur D, Auflage 2): der Binder laeuft ueber ALLE Records ohne Abbruch
+    (Schleife @0x8001b42c..@0x8001b4d4, Zaehler `addiu t2,t2,-1` @0x8001b4cc) und schreibt bei
+    gesetztem Bit 0 (`andi v0,a0,0x1` @0x8001b440) die Spieler-Bindung +0x180/+0x184 jedes Mal neu
+    (`sw v0,0(t3)` @0x8001b450, `sw v0,4(t3)` @0x8001b460, t3 = 0x800acbd4) — der LETZTE Record mit
+    Bit 0 gewinnt (ROOM6030: rec0 Marker 1 mit 1 Clip, rec2 Marker 3 = die Bibliothek)."""
+    treffer = None
     for r in recs:
         if "marker" in r and (r["marker"] & 1):
-            return r
-    return None
+            treffer = r
+    return treffer
 
 
 def main():

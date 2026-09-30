@@ -359,24 +359,24 @@ ROOM3071	sub11	0x03C27	3f 00 0f 00	15	0x00	0	25	20	3e20a32edca8	12	Elza: I told 
 ROOM3071	sub11	0x03C2F	3f 00 0f 00	15	0x00	1	25	20	3e20a32edca8	12	Elza: I told you that weird monster / came from here!
 ROOM3071	sub11	0x03C3B	3f 00 11 00	17	0x00	0	50	30	a891289fe964	12	Elza: I told you that weird monster / came from here!
 ROOM3071	sub11	0x03C43	3f 00 17 00	23	0x00	0	20	24	358acb7d0d71	12	Elza: I told you that weird monster / came from here!
-ROOM3091	sub07	0x0170E	3f 00 0d 00	13	0x00	0	2	-	-	32	You've used the Latch Key.
-ROOM3091	sub07	0x018EE	3f 00 0c 00	12	0x00	0	50	-	-	15	Sherry: It's Sherry...
-ROOM3091	sub07	0x018F6	3f 00 0c 00	12	0x00	1	50	-	-	15	Sherry: It's Sherry...
-ROOM3091	sub07	0x01902	3f 00 0d 00	13	0x00	0	20	-	-	15	Sherry: It's Sherry...
-ROOM3091	sub07	0x01A1E	3f 00 0b 00	11	0x00	0	50	-	-	20	Sherry: This is... where my dad used to / be...
-ROOM3091	sub07	0x01A26	3f 00 0b 00	11	0x00	1	50	-	-	20	Sherry: This is... where my dad used to / be...
-ROOM3091	sub07	0x01A32	3f 00 0d 00	13	0x00	0	20	-	-	20	Sherry: This is... where my dad used to / be...
-ROOM3091	sub07	0x01AF6	3f 00 0b 00	11	0x00	0	50	-	-	22	Sherry: What was that?
-ROOM3091	sub07	0x01AFE	3f 00 0b 00	11	0x00	1	50	-	-	22	Sherry: What was that?
-ROOM3091	sub07	0x01B0A	3f 00 0d 00	13	0x00	0	20	-	-	22	Sherry: What was that?
-ROOM3091	sub07	0x01B62	3f 00 0c 00	12	0x00	0	50	-	-	24	Sherry: There wasn't anybody before.
-ROOM3091	sub07	0x01B6A	3f 00 0c 00	12	0x00	1	50	-	-	24	Sherry: There wasn't anybody before.
-ROOM3091	sub07	0x01B76	3f 00 0d 00	13	0x00	0	20	-	-	24	Sherry: There wasn't anybody before.
-ROOM3091	sub07	0x01C46	3f 00 0c 00	12	0x00	0	50	-	-	28	Sherry: Yes sir.
-ROOM3091	sub07	0x01C58	3f 00 0c 00	12	0x00	1	70	-	-	28	Sherry: Yes sir.
-ROOM3091	sub07	0x01C88	3f 00 0b 00	11	0x00	0	50	-	-	29	Sherry: Good luck!
-ROOM3091	sub07	0x01C90	3f 00 0b 00	11	0x00	1	50	-	-	29	Sherry: Good luck!
-ROOM3091	sub07	0x01C9C	3f 00 0d 00	13	0x00	0	20	-	-	29	Sherry: Good luck!
+ROOM3091	sub07	0x0170E	3f 00 0d 00	13	0x00	0	2	40	067568a0df16	32	You've used the Latch Key.
+ROOM3091	sub07	0x018EE	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x018F6	3f 00 0c 00	12	0x00	1	50	30	46c05281b43b	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x01902	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x01A1E	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01A26	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01A32	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01AF6	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	22	Sherry: What was that?
+ROOM3091	sub07	0x01AFE	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	22	Sherry: What was that?
+ROOM3091	sub07	0x01B0A	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	22	Sherry: What was that?
+ROOM3091	sub07	0x01B62	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01B6A	3f 00 0c 00	12	0x00	1	50	30	46c05281b43b	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01B76	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01C46	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	28	Sherry: Yes sir.
+ROOM3091	sub07	0x01C58	3f 00 0c 00	12	0x00	1	70	30	46c05281b43b	28	Sherry: Yes sir.
+ROOM3091	sub07	0x01C88	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	29	Sherry: Good luck!
+ROOM3091	sub07	0x01C90	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	29	Sherry: Good luck!
+ROOM3091	sub07	0x01C9C	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	29	Sherry: Good luck!
 ROOM30C1	sub03	0x00CB6	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	1	Elza: Who are you?
 ROOM30C1	sub03	0x00CBE	3f 00 00 00	0	0x00	1	50	20	3e20a32edca8	1	Elza: Who are you?
 ROOM30C1	sub03	0x00CCA	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	1	Elza: Who are you?
@@ -616,47 +616,47 @@ ROOM50B1	sub02	0x00526	3f 01 0b 00	11	0x00	0	30	-	-
 ROOM50B1	sub02	0x00534	3f 01 0b 00	11	0x00	1	30	-	-	0	It's Ada. She's dead.It looks like one of those / gorillas killed her.
 ROOM6000	sub03	0x0103C	3f 00 17 00	23	0x00	0	30	24	b385706e1ff0		
 ROOM6000	sub06	0x010BA	3f 00 17 00	23	0x00	0	5	24	b385706e1ff0		
-ROOM6030	sub02	0x00DC6	3f 00 00 00	0	0x00	0	25	2	69f5ddc51fac	0	Leon: Hang on, Marvin. / We're getting out of here.
-ROOM6030	sub02	0x00DCE	3f 00 00 00	0	0x00	1	25	2	69f5ddc51fac	0	Leon: Hang on, Marvin. / We're getting out of here.
-ROOM6030	sub02	0x00DDA	3f 00 02 00	2	0x00	0	50	-	-	0	Leon: Hang on, Marvin. / We're getting out of here.
-ROOM6030	sub02	0x00DE2	3f 00 07 00	7	0x00	0	51	-	-	0	Leon: Hang on, Marvin. / We're getting out of here.
-ROOM6030	sub02	0x00E64	3f 00 04 00	4	0x00	0	50	-	-	1	Leon: Where's Elza?
-ROOM6030	sub02	0x00E6C	3f 00 04 00	4	0x00	1	50	-	-	1	Leon: Where's Elza?
-ROOM6030	sub02	0x00E78	3f 00 07 00	7	0x00	0	20	-	-	1	Leon: Where's Elza?
-ROOM6030	sub02	0x00ECE	3f 00 01 00	1	0x00	0	50	-	-	4	Leon: Why aren't you out there?
-ROOM6030	sub02	0x00ED6	3f 00 01 00	1	0x00	1	50	-	-	4	Leon: Why aren't you out there?
-ROOM6030	sub02	0x00EE2	3f 00 07 00	7	0x00	0	20	-	-	4	Leon: Why aren't you out there?
-ROOM6030	sub02	0x00F2A	3f 00 04 00	4	0x00	0	50	-	-	6	Leon: Where's Annette?
-ROOM6030	sub02	0x00F32	3f 00 04 00	4	0x00	1	50	-	-	6	Leon: Where's Annette?
-ROOM6030	sub02	0x00F3E	3f 00 07 00	7	0x00	0	20	-	-	6	Leon: Where's Annette?
-ROOM6030	sub02	0x00F86	3f 00 05 00	5	0x00	0	50	-	-	8	Leon: I see. Thanks.
-ROOM6030	sub02	0x00F8E	3f 00 05 00	5	0x00	1	50	-	-	8	Leon: I see. Thanks.
-ROOM6030	sub02	0x00F9A	3f 00 07 00	7	0x00	0	30	-	-	8	Leon: I see. Thanks.
-ROOM6030	sub08	0x0119C	3f 00 01 00	1	0x00	0	25	-	-	12	Leon: Keeping the monsters at bay. / Can you start this thing?
-ROOM6030	sub08	0x011A4	3f 00 01 00	1	0x00	1	25	-	-	12	Leon: Keeping the monsters at bay. / Can you start this thing?
-ROOM6030	sub08	0x011B0	3f 00 00 00	0	0x00	0	25	2	69f5ddc51fac	12	Leon: Keeping the monsters at bay. / Can you start this thing?
-ROOM6030	sub08	0x011B8	3f 00 00 00	0	0x00	1	25	2	69f5ddc51fac	12	Leon: Keeping the monsters at bay. / Can you start this thing?
-ROOM6030	sub08	0x011C4	3f 00 07 00	7	0x00	0	20	-	-	12	Leon: Keeping the monsters at bay. / Can you start this thing?
-ROOM6030	sub08	0x01262	3f 00 04 00	4	0x00	0	50	-	-	15	Leon: What's wrong?
-ROOM6030	sub08	0x0126A	3f 00 04 00	4	0x00	1	50	-	-	15	Leon: What's wrong?
-ROOM6030	sub08	0x01276	3f 00 07 00	7	0x00	0	20	-	-	15	Leon: What's wrong?
-ROOM6030	sub08	0x012C6	3f 00 03 00	3	0x00	0	50	-	-	17	Leon: I'll take care of it!
-ROOM6030	sub08	0x012CE	3f 00 03 00	3	0x00	1	50	-	-	17	Leon: I'll take care of it!
-ROOM6030	sub08	0x012DA	3f 00 07 00	7	0x00	0	20	-	-	17	Leon: I'll take care of it!
-ROOM6030	sub08	0x0130E	3f 00 06 00	6	0x00	0	50	-	-	19	Leon: Good luck to both of us!
-ROOM6030	sub08	0x01316	3f 00 07 00	7	0x00	0	50	-	-	19	Leon: Good luck to both of us!
-ROOM6031	sub02	0x00DB6	3f 00 0d 00	13	0x00	0	50	-	-	0	Elza: Where's Leon?
-ROOM6031	sub02	0x00DBE	3f 00 0d 00	13	0x00	1	50	-	-	0	Elza: Where's Leon?
-ROOM6031	sub02	0x00DCA	3f 00 10 00	16	0x00	0	20	-	-	0	Elza: Where's Leon?
-ROOM6031	sub02	0x00DDE	3f 00 0c 00	12	0x00	0	50	-	-	2	Elza: I'll do it!
-ROOM6031	sub02	0x00DE6	3f 00 0c 00	12	0x00	1	50	-	-	2	Elza: I'll do it!
-ROOM6031	sub02	0x00DF2	3f 00 10 00	16	0x00	0	50	-	-	2	Elza: I'll do it!
-ROOM6031	sub08	0x0102E	3f 00 0d 00	13	0x00	0	50	-	-	7	Elza: What's wrong?
-ROOM6031	sub08	0x01036	3f 00 0d 00	13	0x00	1	50	-	-	7	Elza: What's wrong?
-ROOM6031	sub08	0x01042	3f 00 10 00	16	0x00	0	20	-	-	7	Elza: What's wrong?
-ROOM6031	sub08	0x0104A	3f 00 11 00	17	0x00	0	0	-	-	7	Elza: What's wrong?
-ROOM6031	sub08	0x010A2	3f 00 0c 00	12	0x00	0	25	-	-	10	Elza: Let me take care of that. / You start the train once it's ready.
-ROOM6031	sub08	0x010AA	3f 00 0c 00	12	0x00	1	25	-	-	10	Elza: Let me take care of that. / You start the train once it's ready.
-ROOM6031	sub08	0x010B6	3f 00 09 00	9	0x00	0	25	-	-	10	Elza: Let me take care of that. / You start the train once it's ready.
-ROOM6031	sub08	0x010BE	3f 00 09 00	9	0x00	1	25	-	-	10	Elza: Let me take care of that. / You start the train once it's ready.
-ROOM6031	sub08	0x010CA	3f 00 10 00	16	0x00	0	20	-	-	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6030	sub02	0x00DC6	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DCE	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DDA	3f 00 02 00	2	0x00	0	50	30	ce75d881cd9d	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DE2	3f 00 07 00	7	0x00	0	51	24	b385706e1ff0	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00E64	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00E6C	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00E78	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00ECE	3f 00 01 00	1	0x00	0	50	30	fec1ec970163	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00ED6	3f 00 01 00	1	0x00	1	50	30	fec1ec970163	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00EE2	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00F2A	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F32	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F3E	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F86	3f 00 05 00	5	0x00	0	50	25	28617fb5751d	8	Leon: I see. Thanks.
+ROOM6030	sub02	0x00F8E	3f 00 05 00	5	0x00	1	50	25	28617fb5751d	8	Leon: I see. Thanks.
+ROOM6030	sub02	0x00F9A	3f 00 07 00	7	0x00	0	30	24	b385706e1ff0	8	Leon: I see. Thanks.
+ROOM6030	sub08	0x0119C	3f 00 01 00	1	0x00	0	25	30	fec1ec970163	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011A4	3f 00 01 00	1	0x00	1	25	30	fec1ec970163	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011B0	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011B8	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011C4	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x01262	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	15	Leon: What's wrong?
+ROOM6030	sub08	0x0126A	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	15	Leon: What's wrong?
+ROOM6030	sub08	0x01276	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	15	Leon: What's wrong?
+ROOM6030	sub08	0x012C6	3f 00 03 00	3	0x00	0	50	20	37bbc50056bc	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x012CE	3f 00 03 00	3	0x00	1	50	20	37bbc50056bc	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x012DA	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x0130E	3f 00 06 00	6	0x00	0	50	35	12f8c236fb59	19	Leon: Good luck to both of us!
+ROOM6030	sub08	0x01316	3f 00 07 00	7	0x00	0	50	24	b385706e1ff0	19	Leon: Good luck to both of us!
+ROOM6031	sub02	0x00DB6	3f 00 0d 00	13	0x00	0	50	30	2baf4d018c78	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DBE	3f 00 0d 00	13	0x00	1	50	30	2baf4d018c78	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DCA	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DDE	3f 00 0c 00	12	0x00	0	50	20	448e35e6af79	2	Elza: I'll do it!
+ROOM6031	sub02	0x00DE6	3f 00 0c 00	12	0x00	1	50	20	448e35e6af79	2	Elza: I'll do it!
+ROOM6031	sub02	0x00DF2	3f 00 10 00	16	0x00	0	50	24	358acb7d0d71	2	Elza: I'll do it!
+ROOM6031	sub08	0x0102E	3f 00 0d 00	13	0x00	0	50	30	2baf4d018c78	7	Elza: What's wrong?
+ROOM6031	sub08	0x01036	3f 00 0d 00	13	0x00	1	50	30	2baf4d018c78	7	Elza: What's wrong?
+ROOM6031	sub08	0x01042	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	7	Elza: What's wrong?
+ROOM6031	sub08	0x0104A	3f 00 11 00	17	0x00	0	0	20	b723bfd38a73	7	Elza: What's wrong?
+ROOM6031	sub08	0x010A2	3f 00 0c 00	12	0x00	0	25	20	448e35e6af79	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010AA	3f 00 0c 00	12	0x00	1	25	20	448e35e6af79	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010B6	3f 00 09 00	9	0x00	0	25	20	3e20a32edca8	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010BE	3f 00 09 00	9	0x00	1	25	20	3e20a32edca8	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010CA	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	10	Elza: Let me take care of that. / You start the train once it's ready.
