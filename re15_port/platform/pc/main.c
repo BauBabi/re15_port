@@ -526,11 +526,22 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
             if (x1 <= x0 || y1 <= y0) continue;
             int u0 = c.u, v0 = c.v, u1 = c.u + S - ute, v1 = c.v + S - vte;
             /* clut_wort waehlt im Seiten-Slot die Palette (render_pc.c: Zeile - clut_base_y =
-             * Stapel-Index); 0 = erste Palette (Altweg der Ein-Paletten-Blaetter). */
+             * Stapel-Index); 0 = erste Palette (Altweg der Ein-Paletten-Blaetter).
+             * ⛔ FARBE (Integration Runde 34, W8 — gemessen, dann behoben): das Original setzt die
+             * Primitivfarbe JEDES ESP-POLY_FT4 einmal beim Start auf 0x80 (FUN_800537e4:
+             * `ori s3,zero,0x80` @0x800537ec, `sb s3,4/5/6(s0)` @0x800538fc/00/08 ueber alle
+             * 1024 Pakete ab 0x80093394, Aufrufer `jal 0x800537e4` @0x800212fc); der Sprite-Bau
+             * FUN_800534c4 schreibt je Quad nur das Code-Byte (`sb v0,7(t2)` @0x8005369c, Code 0x2C/
+             * 0x2E = modulierte Textur) -> Texel x 0x80/0x80 = x 1.0. Der unbeleuchtete Queue-Weg
+             * (render_pc.c re15_render_textured_tri) reicht die Farbe unveraendert als SDL-Faktor
+             * /255 weiter: 128 ergab x 0.502 — gemessen am HE-Feuerball (Palette 483 Index 1 =
+             * (248,248,248), ABR 0): wirksamer Beitrag 2*out - B = 125 statt 248. PSX 0x80 = SDL
+             * 0xFF (Umrechnung wie psx_prim_to_sdl_vert im beleuchteten Weg; re2fx_pc nimmt
+             * dieselbe 255 fuer die RE2-Paketfarbe 0x808080 @0x800783cc-d0). */
             re15_render_textured_tri(x0, y0, u0, v0,  x1, y0, u1, v0,
-                                     x0, y1, u0, v1,  0, clut_wort, z, 128, 128, 128);
+                                     x0, y1, u0, v1,  0, clut_wort, z, 255, 255, 255);
             re15_render_textured_tri(x1, y0, u1, v0,  x1, y1, u1, v1,
-                                     x0, y1, u0, v1,  0, clut_wort, z, 128, 128, 128);
+                                     x0, y1, u0, v1,  0, clut_wort, z, 255, 255, 255);
         }
         if (abe) { re15_render_pc_set_tri_blend(0); re15_render_pc_set_tri_alpha(255); }
     }
