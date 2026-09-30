@@ -781,16 +781,71 @@ Item 0x49, Bit 57, Bildsatz 26 (max_page 3, H 144).
   Objekt ausserhalb des Ankers genauso (Cut 9 zeigt nur ROOM1051 sub03 per `Cut_chg 9`).
 
 ### 9.2 Dok 2 — Elliot's Diary (ROOM1000, Item 0x4A, FILE27)
-(offen)
+
+Commit `34838629`. Werte wie Plan 5.2: obj 2 (19226, −398, −11723) rot 0, Slot 10, Rechteck
+(18726,−12223,1000,1000), Bildsatz 27 (max_page 4, H 144), Modell mesh03 = Irons-Diary-Modell,
+Papier = FILE25-Papier (md5 `05e25f3b…`).
+* Riegel (Teile T/P/Z/G/D/S/V/M/B) in ROOM1000 und 1001 gruen; Marke: Mitte (193,03 ; 172,07) in
+  x182..203 y162..182 (elliot.bmp).
+* Echte exe (Stand (18250,−11723,0), Cut 0 ohne Zwang): Buch auf der rechten Bank in der Marke,
+  Leser „ELLIOT'S DIARY" 1/5..5/5 + EXIT, Meldung „The Elliot's Diary has been filed.", Bank danach
+  leer. Belege `bau_d2_aufnahme_bogen.png`, `bau_d2_bank_vorher_nachher.png`.
+* Das Buch ist dunkel: Raumlicht aller Cuts = Standard-Satz (Texel × 0,32, 2.8/3.8) — byte-true, wie
+  jedes Original-Item des Raums (Risiko 7.1, keine Port-Wahl).
 
 ### 9.3 Dok 3 — Marvin's Notes (ROOM1020, Item 0x4B, FILE28)
-(offen)
+
+Commit `bbdd45b5`. Werte wie Plan: obj 7 (−9975, −1410, −16428) rot 0, Slot 14, Rechteck
+(−11100,−16928,2200,1000), Bildsatz 28 (max_page 2, H 176); Tisch-Nachricht Slot 10/11 → 15 mit
+Satz-Waechter; Klemme Cut 3 Tiefe 258.
+* Riegel: Umzug (1020: msg 3 Slot 10 → 15; 1021: msg 12 Slot 11 → 15), mit Bit 59 bleibt sie,
+  Waechter (veraenderter Satz zieht nicht um), Druck → Leser, nach dem Aufheben im selben Besuch
+  zweiter Druck → Nachricht aus Slot 15, mit Bit 59 → Nachricht aus 10/11, Druck an der Tisch-
+  Nordseite (−11500,−15300) → Nachricht; Marke Cut 6 (156,37 ; 105,48) in x151..161 y101..109.
+* **Befund beim Bau (Riegel-Falle, behoben):** der Menue-Zustand ist prozessweit — ein nur
+  ANGEFORDERTER Leser (Druck ohne Menue-Takt) blieb fuer den naechsten Druck „aktiv"
+  (`re15_menu_doc_active()` = 1) und liess die Nachricht-Pruefung falsch rot bzw. eine Leser-Pruefung
+  falsch gruen werden. Der Riegel faehrt jetzt jeden angeforderten Leser zu Ende
+  (`leser_abschliessen`, Muster test_r30_irons_tisch.c) und prueft „vor dem Druck kein Leser offen".
+* Echte exe: Cut 6 (Nutzer-Cut) Blatt auf dem Tisch zwischen Monitor und Schreibmaschine (228 px
+  Unterschied mit/ohne Bit 59, `RE15_SET_FLAG=9:59`), Cut 3 sichtbar trotz Tischmaske (Klemme, 51 px,
+  das Blatt ist dort klein), Cut 5 zur Messzeit von einem Zombie verdeckt (0 px — kein Fehler des
+  Blatts). Leser „MARVIN'S NOTES" 1/3..3/3 („The new code is: 4312", „Marvin Branagh" rechts), Meldung,
+  danach zweiter Quadrat-Druck → „It's Lieutenant Branagh's desk.". Belege `bau_d3_aufnahme_bogen.png`,
+  `bau_d3_cut6_mit_ohne.png`, `bau_d3_cut3_mit_ohne.png`.
+* Das Blatt wirkt dunkelgrau: die mesh01-Textur ist selbst ein mittelgraues Blatt mit getippten Zeilen
+  (RE2-Render `mesh01_ae2d0a30_a.png`), in Cut 6 × Lichtsatz (−Y (50,52,52) ≈ × 0,39) — der
+  Kontrollabzug der Ermittlung zeigte es genauso.
 
 ### 9.4 Dok 4 — Armory Notice (ROOM1010, Item 0x4C, FILE29)
-(offen)
+
+Commit `2d7ede7b`. Werte wie Plan: obj 3 (450, −1600, 5600) rot 3840, Slot 9, Rechteck
+(−50,5100,1000,1000), Bildsatz 29 (max_page 2, H 176); Klemmen Cut 0/1/6/8 = 40/53/60/51 (nur 1010).
+* Riegel: Spray-Vorrang in 1010 (Item-Modal 0x22) und 1011 (0x39) von (300,6400) Blick −z, Blatt
+  von (700,6400); Ursprung Cut 0 (210,73 ; 170,49) in der Marke x208..231 y166..187.
+  **K jetzt ueber die Modell-Huelle** (bbox der eingebetteten MD1, gedreht wie der Prop-Zeichner,
+  Masken wie main.c: Original-Sektion, bei NULL die MSK-Seitendaten) — der Riegel rechnet die
+  Klemmen-Tiefen UNABHAENGIG nach und findet 40/53/60/51 und 258 (Plan: `endwerte.txt`), plus: in
+  den Cuts ohne Klemme (1050 C3, 1000 C0, 1020 C6, 1011 C0/C1, je beide Varianten) verdeckt keine
+  Maske die Huelle.
+* Echte exe (Stand (3400,7200) fern vom Tisch, `RE15_FORCE_CUT` nur fuer die Kamera): Blatt neben
+  der Dose in Cut 0/1/6/8 vollstaendig sichtbar (1603/1625/1321/1554 px mit/ohne Bit 60); Leser
+  „ARMORY NOTICE" 1/3..3/3 (Code „5632" auf eigener Zeile), Meldung. Belege
+  `bau_d4_aufnahme_bogen.png`, `bau_d4_cut0_mit_ohne.png`, `bau_d4_cut1_6_8_mit_ohne.png`.
+* Nebenbefund ohne Bezug zur Spur: nach `RE15_DEBUG_JUMP 1010` greift ein Zombie des Raums den
+  Spieler am Stand (700,6400) — das Blatt ist davon unberuehrt.
 
 ### 9.5 Codes 4312/5632 gegen Schloesser
-(offen)
+
+Selbst nachgeprueft (Nachrichten der ausgelieferten RDTs, `rdt_msgdump.py`):
+ROOM1110 msg 0 @0x0D68 „It's a police officer, he's dead. He is holding a slip. The numbers 4312 are
+printed on the slip." und ROOM1230 msg 10 @0x16F4 „A miserable death... He is holding a slip. The numbers
+5632 are printed on the slip." — das ORIGINAL nennt genau die Codes der Nutzertexte; ROOM10D0 msg 6
+@0x1F3B „Communication Room — It's electronically locked…" ist das Schloss. Die Ziffern-Subs der beiden
+Schloesser (codes.py, 3.7) verlangen genau diese Folgen; der Port fuehrt die Skripte unveraendert aus
+(`tests/integration/test_keypad.c` „code 5632"). **Ergebnis: beide Nutzertexte passen zu den
+Schloessern, kein Text geaendert.** Kopplung mit Spur F bleibt (7.5): F ersetzt die zwei Zettel, danach
+stehen die Codes nur noch in Dok 3/Dok 4 — E und F zusammen ausliefern.
 
 ### 9.6 Dateien und Commits
 (offen)
