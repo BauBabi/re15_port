@@ -49,6 +49,7 @@
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
+#include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 
 scd_vm_t g_scd;
 
@@ -615,6 +616,10 @@ int scd_event_fire(uint8_t event_id)
     /* Runde 34 Nacht, Spur A (rolltor_1050.c): ROOM1050/1051 Ereignis 2 = Rolltor-Schalter ->
      * Port-Programm "Sicherung einsetzen", solange (9,63)=0; sonst NULL = ausgelieferter sub. */
     const uint8_t *pc = re15_rolltor_ereignis((uint16_t)g_current_room_id, event_id);
+    /* Runde 34 Nacht, Spur D (adaruf_1050.c): ROOM1050 Ereignis 13 = umgewidmete Tuer Slot 4 ->
+     * Port-Programm "Ada-Ruf", solange (9,65)=0 und (3,0xBB)=0; sonst NULL = ausgelieferter sub.
+     * Integration: A (Ereignis 2) und D (Ereignis 13) sind disjunkt, die Reihenfolge ist gleichgueltig. */
+    if (!pc) pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {

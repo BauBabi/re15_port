@@ -1,0 +1,9 @@
+# Lauf mit Platzhalter-WAVs (Auflage 9): synchro/STAGE1/room1050/main22 <- room1090/main02 (4,38 s), main23 <- room1090/main06 (3,76 s), main24 <- room1150/main04 (4,25 s); danach geloescht, nicht committet.
+# stimme.log (RE15_STIMME_LOG, scd_vm.c op_message_on):
+raum=1050 nachricht=22  laeuft=0 rest=0  0 gewartet
+raum=1050 nachricht=23  laeuft=0 rest=0  0 gewartet
+raum=1050 nachricht=24  laeuft=1 rest=0  61 gewartet
+# debug.log:
+[voice] clip loaded: main22.wav (32000 Hz x1 → 193024 @44100 Hz)
+[voice] clip loaded: main23.wav (32000 Hz x1 → 165889 @44100 Hz)
+[voice] clip loaded: main24.wav (32000 Hz x1 → 187393 @44100 Hz)
