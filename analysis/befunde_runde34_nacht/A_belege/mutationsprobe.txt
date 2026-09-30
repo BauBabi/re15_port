@@ -1,0 +1,64 @@
+# Mutationsprobe Riegel unit_r34n_a_rolltor (je Mutation einzeln, danach Rueckbau aus Sicherungskopie)
+=== MUTATION a: Haken 1 (scd_event_fire) raus (re15_port/engine/src/scd_vm.c)
+FAIL: A    1050 ohne, Ja: scd_event_fire startet NICHT das Port-Programm (Haken 1)
+FAIL: A    1050 ohne, Ja: 302 Bilder mit PC ausserhalb des Plans
+FAIL: A    1050 ohne, Ja: Nahansicht Cut 7 / msg 2 fehlt
+FAIL: A    1050 ohne, Ja: nicht zurueck in Cut 3
+FAIL: A    1050 ohne, Ja: Tor ist offen (3,121)=1 ohne Sicherung
+FAIL: A    1050 ohne, Ja: SCA-Zelle 19 nicht mehr solide
+FAIL: A-N  1050 ohne, Nein: scd_event_fire startet NICHT das Port-Programm (Haken 1)
+FAIL: A-N  1050 ohne, Nein: 82 Bilder mit PC ausserhalb des Plans
+FAIL-Zeilen: 45
+exit=1
+(Rueckbau ok)
+=== MUTATION b: Haken 2 (Opcode 0x62) raus (re15_port/engine/src/scd_vm.c)
+FAIL: B    1050 mit, Ja/Ja: Sicherung noch im Inventar (Opcode 0x62?)
+FAIL: B    1050 mit, Ja/Ja: Raster nicht nachgerueckt (Platz 3=0x40, 4=0x21)
+FAIL: B    1050 mit, Ja/Ja: (9,63) nicht gesetzt
+FAIL: B    1050 mit, Ja/Ja: Cut 8 / msg 21 fehlt
+FAIL: C: zweiter Druck startet nicht den ausgelieferten sub02 @0x0CAC (PC-Versatz -392110640)
+FAIL: Faden laeuft nach 4000 Bildern noch
+FAIL: C: Tor oeffnet nach dem Einsetzen nicht
+FAIL: C: SCA-Zelle 19 nicht frei
+FAIL-Zeilen: 23
+exit=1
+(Rueckbau ok)
+=== MUTATION c: PC-Schranke raus (re15_port/engine/src/rolltor_1050.c)
+FAIL: PC-Schranke: 0x62 im RDT-Bytecode laeuft nicht wie op_unknown (aktiv=0, PC+-1)
+FAIL: PC-Schranke: 0x62 ausserhalb entfernt einen Gegenstand
+RESULT: FAIL
+FAIL-Zeilen: 2
+exit=1
+(Rueckbau ok)
+=== MUTATION d: Weiche ohne (9,63)-Pruefung (re15_port/engine/src/rolltor_1050.c)
+FAIL: C: zweiter Druck startet nicht den ausgelieferten sub02 @0x0CAC (PC-Versatz -1503273584)
+FAIL: C: Tor oeffnet nach dem Einsetzen nicht
+FAIL: C: SCA-Zelle 19 nicht frei
+FAIL: C: Nahansicht nach dem Einsetzen
+FAIL: C: zweiter Druck startet nicht den ausgelieferten sub02 @0x0CC8 (PC-Versatz -1503273584)
+FAIL: C: Tor oeffnet nach dem Einsetzen nicht
+FAIL: C: SCA-Zelle 19 nicht frei
+FAIL: C: Nahansicht nach dem Einsetzen
+FAIL-Zeilen: 10
+exit=1
+(Rueckbau ok)
+=== MUTATION e: Rueckweg Cut_chg 3 im OHNE-Programm = Cut_chg 7 (re15_port/engine/src/rolltor_1050.c)
+FAIL: A    1050 ohne, Ja: nicht zurueck in Cut 3
+FAIL: A    1051 ohne, Ja: nicht zurueck in Cut 3
+RESULT: FAIL
+FAIL-Zeilen: 2
+exit=1
+(Rueckbau ok)
+=== MUTATION f: Nahansicht Cut 8 statt 7 fuer msg 2 (MIT) (re15_port/engine/src/rolltor_1050.c)
+FAIL: B    1050 mit, Ja/Ja: 114 Bilder Text im falschen Cut
+FAIL: B    1050 mit, Ja/Ja: Cut 8 / msg 21 fehlt
+FAIL: B-N  1050 mit, Ja/Nein: 114 Bilder Text im falschen Cut
+FAIL: B-N  1050 mit, Ja/Nein: Cut 8 / msg 21 bei Nein
+FAIL: B    1051 mit, Ja/Ja: 114 Bilder Text im falschen Cut
+FAIL: B    1051 mit, Ja/Ja: Cut 8 / msg 21 fehlt
+RESULT: FAIL
+FAIL-Zeilen: 6
+exit=1
+(Rueckbau ok)
+=== OHNE MUTATION (Rueckbau, neu gebaut)
+RESULT: OK
