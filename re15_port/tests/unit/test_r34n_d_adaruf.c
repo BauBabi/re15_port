@@ -314,11 +314,20 @@ static szene_t szene_fahren(int quadrat_waehrend, int zweiter_fire)
     uint8_t ziele[8];
     memcpy(ziele, re15_adaruf_laufprogramm() + RE15_ADARUF_OFF_DREH, 4);
     memcpy(ziele + 4, re15_adaruf_laufprogramm() + RE15_ADARUF_OFF_ZIEL, 4);
+    r.max_faeden = r.gestartet;
+    if (zweiter_fire == 2) {
+        /* im SELBEN Bild wie der Druck, vor dem ersten VM-Takt: (9,65) ist noch 0 — hier greift
+         * nur der Waechter "Programm laeuft schon" (adaruf_1050.c programm_laeuft) */
+        int s2 = scd_event_fire(RE15_ADARUF_EREIGNIS);
+        printf("  zweiter scd_event_fire(13) im Druckbild (vor dem ersten VM-Takt) -> %d\n", s2);
+        int nf = faeden_im_programm(NULL);
+        if (nf > r.max_faeden) r.max_faeden = nf;
+    }
     int zuletzt = -1;
     for (int f = 1; f <= 700; f++) {
         uint16_t e = (quadrat_waehrend && (f % 10) == 0 && r.ende < 0) ? RE15_PAD_BIT_SQUARE : 0;
         frame(e, e);
-        if (zweiter_fire && f == 1) {
+        if (zweiter_fire == 1 && f == 1) {
             int s2 = scd_event_fire(RE15_ADARUF_EREIGNIS);
             printf("  direkter zweiter scd_event_fire(13) nach dem ersten VM-Takt -> %d\n", s2);
         }
@@ -468,20 +477,23 @@ static void teil_szene(void)
 
 static void teil_doppel(void)
 {
-    printf("[doppel] Quadrat alle 10 Bilder waehrend der Szene + direkter zweiter scd_event_fire(13)\n");
-    grundzustand();
-    if (room_boot(0x1050, STAND_X, STAND_Z, 0, EINTRITT_CUT_1050, 1, 30) != 0) return;
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->x = STAND_X; pl->z = STAND_Z; pl->rot_y = 0;
-    frame(0, 0);
-    szene_t r = szene_fahren(1, 1);
-    printf("  Faeden im Programm max %d, Ziel-Operanden geaendert %d, Ende B%d, Rueckschritt B%d..B%d\n",
-           r.max_faeden, r.ziel_geaendert, r.ende, r.schritt_start, r.ankunft);
-    PRUEF(r.gestartet == 1 && r.max_faeden == 1, "genau EIN Faden (max %d)", r.max_faeden);
-    PRUEF(!r.ziel_geaendert, "Ziel-Operanden +0x28/+0x3C unveraendert");
-    PRUEF(r.ende > 0 && r.ende <= SZENE_MAX && !r.raumwechsel && r.seq == 0,
-          "Szene endet normal (B%d), kein Raumwechsel, keine Tuersequenz", r.ende);
-    PRUEF(g_aot.slots[RE15_ADARUF_SLOT].type == RE15_AOT_TYPE_MESSAGE, "Slot 4 danach Text-Platz");
+    for (int variante = 1; variante <= 2; variante++) {
+        printf("[doppel] Variante %d: Quadrat alle 10 Bilder waehrend der Szene + zweiter scd_event_fire(13) %s\n",
+               variante, variante == 1 ? "nach dem ersten VM-Takt" : "im Druckbild selbst");
+        grundzustand();
+        if (room_boot(0x1050, STAND_X, STAND_Z, 0, EINTRITT_CUT_1050, 1, 30) != 0) return;
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->x = STAND_X; pl->z = STAND_Z; pl->rot_y = 0;
+        frame(0, 0);
+        szene_t r = szene_fahren(1, variante);
+        printf("  Faeden im Programm max %d, Ziel-Operanden geaendert %d, Ende B%d, Rueckschritt B%d..B%d\n",
+               r.max_faeden, r.ziel_geaendert, r.ende, r.schritt_start, r.ankunft);
+        PRUEF(r.gestartet == 1 && r.max_faeden == 1, "genau EIN Faden (max %d)", r.max_faeden);
+        PRUEF(!r.ziel_geaendert, "Ziel-Operanden +0x28/+0x3C unveraendert");
+        PRUEF(r.ende > 0 && r.ende <= SZENE_MAX && !r.raumwechsel && r.seq == 0,
+              "Szene endet normal (B%d), kein Raumwechsel, keine Tuersequenz", r.ende);
+        PRUEF(g_aot.slots[RE15_ADARUF_SLOT].type == RE15_AOT_TYPE_MESSAGE, "Slot 4 danach Text-Platz");
+    }
 }
 
 static void teil_sperre(void)
