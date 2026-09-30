@@ -584,7 +584,20 @@ volle Raum-Id, `platform/pc/src/audio_pc.c` "synchro/STAGE%u/room%04X/").
 
 ### 9.3 Commits
 
-(folgt)
+Zweig `r34n/rolltor` (Bau-Stufe, aelteste unten; davor die Ermittlung bis `54d2cc15`):
+
+| Commit | Inhalt |
+|---|---|
+| (Abschluss) | `feat(r34n-a): Rolltor ROOM1050/1051 - Sicherung einsetzen mit Nahansicht, Tor erst danach` — Dossier final, Sonden-Kopf, volle Commit-Message mit allen Konstanten/Adressen und der PORT-WAHL-Begruendung (Auflage 1) |
+| `46b1a152` | doc: Auflagen-Tabelle 3/4d/4f abgeschlossen, Abnahmezeile 1 praezisiert |
+| `36be6062` | doc: Dossier 9.6 Abnahme, 9.7 Abweichungen, 9.8 offene Punkte |
+| `3fea637a` | wip: echter Kartenlauf — Speichern in 1150 mit (9,63), CONTINUE -> 1050 = ausgelieferter sub02 |
+| `993706ff` | doc: Auflage 3 geschlossen — Rolltor fortschrittsnoetig, Cut-4-Folge tritt nicht auf |
+| `6ce201f6` | doc: Auflagen 1/2/5/6/8 eingearbeitet, 9.1/9.2/9.4, Laufskripte 1090/Laden |
+| `38caf9e2` | wip: Abnahme an der echten exe — 1050/1051 ohne, mit, mit_nein, danach |
+| `17244ee9` | wip: Riegel gruen + Mutationsprobe, test_room1050_sicherung nachgezogen |
+| `1b74cb01` | wip: Modul `rolltor_1050.c`, zwei Haken in `scd_vm.c`, Riegel (Konstanten mit Adressen in der Message) |
+| `9ab87ac0` | wip: Dossier-Geruest Abschnitt 9 |
 
 ### 9.4 Riegel + Mutationsprobe
 
@@ -627,7 +640,23 @@ Probe mit Datei-Sicherungskopien wiederholt (die Tabelle oben ist der zweite, sa
 
 ### 9.5 Suite
 
-(folgt)
+Bau: `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (602 Ziele, keine Warnung
+aus den neuen Dateien). Suite im eigenen Baum mit `RE15_MIN_TESTS=429` (428 + `unit_r34n_a_rolltor`),
+waehrend bis zu sechs andere Spuren bauten und ihre exe fuhren:
+
+| Lauf | Ergebnis | Rot | Einzeln nachgefahren |
+|---|---|---|---|
+| 1 (`test`, 835 s) | 427/429 | `integration_r30_granate_laden` (exe exit=1 vor dem Endbild), `integration_r30_titel_puls` (Pruefung D Wanduhr: Periode 3 mit 59 Engine-Schritten, Bilddauern bis 133 ms) | granate_laden: rot (exit=1, 27 s), gruen, gruen; titel_puls: 3x gruen |
+| 2 (`all` = configure+build+test, 624 s) | 427/429 | `integration_r30_granate_laden` (exit=1), `integration_r33_speichern` (exit=1 nach 6 s, vor "CONTINUE: resumed") | beide 2x gruen |
+| 3 | (siehe unten) | | |
+
+Alle Roten sind Integrations-Haken mit der ECHTEN `re15_pc.exe`, die mitten im Lauf mit exit=1 enden (bzw.
+an der Wanduhr haengen) — das bekannte Muster unter Parallel-Last (memory gui-tests-flattern); Spur C
+meldet fuer dieselbe Nacht ein fremdes globales `taskkill` auf `re15_pc.exe` (der Rueckfall-Zweig in
+`local_build.sh` Zeile ~298 beendet jede re15_pc.exe, wenn powershell/cygpath fehlen). Keiner der roten
+Haken beruehrt ROOM1050/1051, Ereignis 2 oder Opcode 0x62; alle sind einzeln gruen. Die Spur-A-Tests:
+`unit_r34n_a_rolltor` und `unit_room1050_sicherung` in beiden Laeufen gruen. Die eigenen Messlaeufe benutzen
+deshalb eine umbenannte exe-Kopie (`re15_pc_r34n_a.exe`) und waren nie betroffen.
 
 ### 9.6 Eigene Abnahme an der echten exe (Bilder)
 

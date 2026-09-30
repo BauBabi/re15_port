@@ -22,6 +22,11 @@
  * jede geplante Opcode-Position genau so besucht, wie der Plan es sagt (keine Fremd-Opcodes).
  *
  * Kein Pin: diese Sonde prueft den PLAN, nicht den Port. Der Riegel fuer den Bau kommt mit dem Bau.
+ *
+ * STAND BAU (Runde 34 Nacht): Opcode 0x62 ist jetzt registriert (re15_rolltor_op_item_lost), aber mit
+ * PC-SCHRANKE auf das Port-Programm in engine/src/rolltor_1050.c. Diese Sonde faehrt ihre EIGENE Kopie
+ * des Bytecodes — fuer sie bleibt 0x62 deshalb op_unknown-gleich (pc+1), die Gegenprobe unten misst
+ * weiterhin genau das. Der Riegel des Baus ist tests/unit/test_r34n_a_rolltor.c.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
