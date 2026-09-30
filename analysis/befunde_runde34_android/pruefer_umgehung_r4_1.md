@@ -259,3 +259,40 @@ a340a325...; nur gelesen), Sandbox wie oben, `--zip-only --only linux`:
 | P3 | ohne APK, Satz versioniert | **1** (26 s) | B1-Abbruch vor den Kopierminuten; SUMS unveraendert, Index leer - haelt |
 Zusammen mit R4 L1-L6/E1-E3 (nur PC, abgelehnte APK, `--ohne-android`, `--only win`) haelt B1 fuer den KANONISCHEN
 Namen in allen Varianten; die Luecke ist der Name (H3, 2.2).
+
+## 6. Emulator: der App-Speicher faltet Unicode - das Kelvin-Paar endet als EINE Datei, der schnelle Weg merkt es nie
+
+`u1_emu.sh` (Beleg `emu.txt`, logcat `emu_fk_erststart.logcat`, `emu_fk_neustart.logcat`). Vorher `adb devices` leer und
+kein qemu-Prozess (der Emulator des Pruefers ECHTER LAUF war beendet). Nutzer-AVD `Medium_Phone_API_36`, headless,
+Android 16 / API 36 / x86_64, `/storage/emulated` = FUSE. `de.re15.port` war nicht installiert.
+
+**1. Faltung (`u1_fold.sh`, in `/sdcard/Download` UND im App-Speicher `Android/data/de.re15.port/files`, gleiches Ergebnis):**
+| Paar | Geraet |
+|---|---|
+| `A.bin` / `a.bin` | gefaltet (bekannt, N1 1.3) |
+| `x.bin` / `y.bin` (Kontrolle) | getrennt |
+| `K.bin` / `U+212A.bin` (Kelvin) | **gefaltet** (1 Eintrag) |
+| `Ä.bin` / `ä.bin` | **gefaltet** |
+| NFC `é.bin` / NFD `e`+U+0301`.bin` | **gefaltet** |
+| `straße.bin` / `strasse.bin` | **gefaltet** |
+| Name 255 B / 256 B / 252 B + `.neu` | angelegt / **zu lang** / **zu lang** (U3 bestaetigt) |
+| `ln -s` im Speicher | abgelehnt (kein Symlink moeglich) |
+(Im gemeinsamen Speicher lasen die zweiten Namen direkt danach teils noch den alten Inhalt - Cache; im App-Speicher
+konsistent. Massgeblich ist die Zahl der Eintraege: 1.)
+
+**2. FK_sig frisch installiert (Liste: `K.bin` = "AAAAA" sha 11770b3e..., `U+212A.bin` = "BBBBB" sha 0fad32b1...):**
+- `Abgleich (ohne Liste): 3605 Dateien ... pruefen 3605` -> `Summe weicht ab -> neu: shared_assets/PSX/K.bin` ->
+  `Entpacken fertig (ohne Liste): 3605 geprueft, 3605 kopiert ..., 0 Fehler`, Liste "zuletzt entpackt" geschrieben.
+- Auf dem Geraet: in `shared_assets/PSX` EIN Eintrag `K.bin` (5 B); `cat K.bin` = `cat U+212A.bin` = **BBBBB**, sha256
+  beider Namen 0fad32b1... - die Liste verspricht fuer `K.bin` 11770b3e... ("AAAAA").
+- Neustart: `Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3605 Dateien, Groessen geprueft, 293 ms` -
+  `K.bin` bleibt dauerhaft "BBBBB". **Kein Fehler, keine Meldung, falscher Inhalt.**
+- Danach deinstalliert (`Android/data` ohne re15), Emulator beendet (`adb emu kill`, kein qemu mehr).
+
+**Befund H5 (mittel):** Die Dublettenregel der Liste v2 (asset_abgleich.c `ascii_klein`, Gate `_ASCII_KLEIN`) faltet
+nur ASCII, der App-Speicher faltet Unicode-Gross/klein, Normalform und sogar `ß`/`ss`. Ein Paar, das NTFS als zwei Dateien
+haelt (gemessen: Kelvin/K, NFC/NFD, ß/ss), besteht Gradle, das ECHTE Gate (2.3: `ANDROID-GATES-OK`) und den
+Geraete-Leser - und liefert auf dem Geraet still den falschen Inhalt, den der schnelle Weg nie mehr korrigiert (gleiche
+Groesse). Heute ohne Folge: alle 3603 Pfade sind ASCII (Gradle-Kommentar "die Pfade sind ASCII", aber nirgends erzwungen).
+Abhilfe-Richtung: Pfade auf druckbares ASCII (0x21-0x7e plus Leerzeichen) beschraenken - in Gradle, Gate und
+`re15_abgleich_pfad_ok` - statt Unicode nachzufalten; dazu Segmentlaenge <= 251 B (U3).

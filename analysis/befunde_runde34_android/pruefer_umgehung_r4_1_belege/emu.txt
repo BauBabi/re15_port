@@ -1,0 +1,84 @@
+[10:29:03] Emulator starten (Medium_Phone_API_36, -no-window -no-snapshot)
+[10:29:58] gebootet nach 32 s: 16 API 36, x86_64
+/dev/block/dm-56 5.8G 4.1G  1.5G  73% /data/user/0
+build/r34a/pruefer_u1/u1_fold_lf.sh: 1 file pushed, 0 skipped. 1.2 MB/s (2227 bytes in 0.002s)
+== 1. u1_fold.sh in /sdcard/Download/u1_fold
+ascii_A_a: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+kontrolle_x_y: getrennt | danach Eintraege: 2 | a=A b=B
+kelvin_K: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=A b=B
+kelvin_k: GEFALTET (b findet a, Inhalt B) | danach Eintraege: 1 | a=A b=B
+AE_ae: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=A b=B
+nfc_nfd: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=A b=B
+sz_ss: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=A b=B
+ascii_neu: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+name255: angelegt
+name256: FEHLER (zu lang)
+name252+.neu (256 B): FEHLER (zu lang)
+symlink: abgelehnt
+/dev/fuse on /storage/emulated type fuse (rw,lazytime,nosuid,nodev,noexec,noatime,user_id=0,group_id=0,allow_other)
+FOLD-FERTIG
+== 2. FK_sig frisch installieren
+Success
+   install 22 s
+Status: ok
+TotalTime: 2466
+   warten rc=0
+09-30 08:30:43.535 I/re15    ( 3408): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:30:43.843 I/re15    ( 3408): [android] Abgleich (ohne Liste): 3605 Dateien (356678287 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3605, weg 0
+09-30 08:31:10.628 I/re15    ( 3408): [android] Summe weicht ab -> neu: shared_assets/PSX/K.bin
+09-30 08:31:13.462 I/re15    ( 3408): [android] Entpacken fertig (ohne Liste): 3605 geprueft, 3605 kopiert (356678287 B, 24254 ms), 1 per SHA-256 geprueft (5 B, 1 ms, 1 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 29650 ms
+build/r34a/pruefer_u1/u1_fk_lesen.sh: 1 file pushed, 0 skipped. 1.5 MB/s (544 bytes in 0.000s)
+   -- auf dem Geraet nach dem Erststart:
+   Eintraege in PSX mit Namen <= 7 Zeichen + .bin:
+   -rw-rw----   1 u0_a213 ext_data_rw     5 2026-09-30 08:31 K.bin
+   cat K.bin     : BBBBB
+   cat U+212A.bin: BBBBB
+   cat k.bin     : BBBBB
+   0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742  /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/K.bin
+   0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742  /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/K.bin
+   Liste zuletzt entpackt, letzte 2 Zeilen:
+   5	11770b3ea657fe68cba19675143e4715c8de9d763d3c21a85af6b7513d43997d	shared_assets/PSX/K.bin
+   5	0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742	shared_assets/PSX/K.bin
+   Kopf: # re15 assets v2 3605 356678287
+   -- u1_fold.sh im App-Speicher (/sdcard/Android/data/de.re15.port/files/u1_fold):
+   ascii_A_a: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   kontrolle_x_y: getrennt | danach Eintraege: 2 | a=A b=B
+   kelvin_K: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   kelvin_k: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   AE_ae: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   nfc_nfd: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   sz_ss: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   ascii_neu: GEFALTET (b findet a, Inhalt A) | danach Eintraege: 1 | a=B b=B
+   name255: angelegt
+   name256: FEHLER (zu lang)
+   name252+.neu (256 B): FEHLER (zu lang)
+   symlink: abgelehnt
+   /dev/fuse on /storage/emulated type fuse (rw,lazytime,nosuid,nodev,noexec,noatime,user_id=0,group_id=0,allow_other)
+   FOLD-FERTIG
+== 2b. Neustart (force-stop + start)
+Status: ok
+TotalTime: 1371
+   warten rc=0
+09-30 08:31:17.695 I/re15    ( 4413): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:31:18.222 I/re15    ( 4413): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3605 Dateien, Groessen geprueft, 293 ms
+   Eintraege in PSX mit Namen <= 7 Zeichen + .bin:
+   -rw-rw----   1 u0_a213 ext_data_rw     5 2026-09-30 08:31 K.bin
+   cat K.bin     : BBBBB
+   cat U+212A.bin: BBBBB
+   cat k.bin     : BBBBB
+   0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742  /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/K.bin
+   0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742  /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/K.bin
+   Liste zuletzt entpackt, letzte 2 Zeilen:
+   5	11770b3ea657fe68cba19675143e4715c8de9d763d3c21a85af6b7513d43997d	shared_assets/PSX/K.bin
+   5	0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742	shared_assets/PSX/K.bin
+   Kopf: # re15 assets v2 3605 356678287
+== 2c. deinstallieren
+Success
+   Android/data mit re15: 0
+/dev/block/dm-56 5.8G 4.4G  1.1G  80% /data/user/0
+== 3. Emulator beenden
+OK: killing emulator, bye bye
+OK
+[10:31:42] beendet; adb devices:  
+FERTIG
+EXIT=0
