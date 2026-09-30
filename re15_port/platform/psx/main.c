@@ -455,6 +455,10 @@ int main(int argc, const char **argv)
             if (target_cut >= active_cut_count) {
                 target_cut = active_cut_count - 1;
             }
+            /* Runde 34 Nacht G2: Masken-Sichtbarkeit neu aufbauen wie PC pc_cam_present_apply
+             * (FUN_80021bbc -> FUN_800392d4 @0x80021c28; Dirty-1-Setzer siehe PC main.c). */
+            { extern void re15_mg_aufbauen(const re15_rdt_t *rdt, int cut, const char *grund);
+              re15_mg_aufbauen(re15_test_rdt_ok ? &re15_test_rdt : NULL, target_cut, "cut"); }
         }
         if (target_cut != cam_active_cut) {
             cam_active_cut = target_cut;

@@ -1,0 +1,33 @@
+
+== 1150 sub04 aus der Raumkamera: Halt-PC @0x0FC0, angezeigter Cut vor sub04 = 0 ==
+   Bild 9 (nach 10 VM-Takten): sub04-PC @0x0FC0 = For 15 NOCH NICHT ausgefuehrt; Plattform y=-305, cam_id(angefordert)=4, cam_id_prev(gemerkt)=0, work_vars[0x0A]=4, Deckel z 0 / 0
+   Bild 10: Deckel z 10 / -10 (For laeuft)
+   Ende (Plattform geparkt y=-20224, Bild 395): cam_id nach Cut_old = 0, work_vars[0x0A] = 0 -> zurueck in die Raumkamera
+
+== 1150 GEGENPROBE Vorschalt: Halt-PC @0x0FC0, angezeigter Cut vor sub04 = 0 -> auf 4 gesetzt ==
+   Bild 9 (nach 10 VM-Takten): sub04-PC @0x0FC0 = For 15 NOCH NICHT ausgefuehrt; Plattform y=-305, cam_id(angefordert)=4, cam_id_prev(gemerkt)=4, work_vars[0x0A]=4, Deckel z 0 / 0
+   Bild 10: Deckel z 10 / -10 (For laeuft)
+   Ende (Plattform geparkt y=-20224, Bild 395): cam_id nach Cut_old = 4, work_vars[0x0A] = 4 -> BLEIBT AUF CUT 4 (Loch-Bild)
+
+== 1150 Kuppel unter Cut 4 (Engine-Projektion, H=257): 116 Punkte, Huelle 12 Ecken: (151,171) (163,161) (180,151) (206,148) (235,150) (248,156) (267,170) (265,190) (261,204) (214,210) (164,204) (151,191)
+   groesster Abstand Python-Ecke -> naechste Engine-Ecke: 2 px^2
+
+== 1151 sub04 aus der Raumkamera: Halt-PC @0x0F9E, angezeigter Cut vor sub04 = 0 ==
+   Bild 9 (nach 10 VM-Takten): sub04-PC @0x0F9E = For 15 NOCH NICHT ausgefuehrt; Plattform y=-305, cam_id(angefordert)=4, cam_id_prev(gemerkt)=0, work_vars[0x0A]=4, Deckel z 0 / 0
+   Bild 10: Deckel z 10 / -10 (For laeuft)
+   Ende (Plattform geparkt y=-20224, Bild 395): cam_id nach Cut_old = 0, work_vars[0x0A] = 0 -> zurueck in die Raumkamera
+
+== 1151 GEGENPROBE Vorschalt: Halt-PC @0x0F9E, angezeigter Cut vor sub04 = 0 -> auf 4 gesetzt ==
+   Bild 9 (nach 10 VM-Takten): sub04-PC @0x0F9E = For 15 NOCH NICHT ausgefuehrt; Plattform y=-305, cam_id(angefordert)=4, cam_id_prev(gemerkt)=4, work_vars[0x0A]=4, Deckel z 0 / 0
+   Bild 10: Deckel z 10 / -10 (For laeuft)
+   Ende (Plattform geparkt y=-20224, Bild 395): cam_id nach Cut_old = 4, work_vars[0x0A] = 4 -> BLEIBT AUF CUT 4 (Loch-Bild)
+
+== 1151 Kuppel unter Cut 4 (Engine-Projektion, H=257): 116 Punkte, Huelle 12 Ecken: (151,171) (163,161) (180,151) (206,148) (235,150) (248,156) (267,170) (265,190) (261,204) (214,210) (164,204) (151,191)
+   groesster Abstand Python-Ecke -> naechste Engine-Ecke: 2 px^2
+
+== 11F0 Cut 10: fov 26684 -> H 208, pos (-19628,-17442,22616) tgt (-19628,15928,22617)
+   Start              (-19554,22684): Oberseite y-1800 -> (160,119) z 15687 | Objektlage y-900 -> (160,119) z 16590
+   x+200 (RIGHT)      (-19354,22684): Oberseite y-1800 -> (163,119) z 15687 | Objektlage y-900 -> (163,119) z 16590
+   z+200 (UP)         (-19554,22884): Oberseite y-1800 -> (160,116) z 15687 | Objektlage y-900 -> (160,116) z 16590
+   Start-Kante x-900  (-20454,22684): Oberseite y-1800 -> (149,119) z 15687 | Objektlage y-900 -> (149,119) z 16590
+   Start-Kante x+900  (-18654,22684): Oberseite y-1800 -> (172,119) z 15687 | Objektlage y-900 -> (172,119) z 16590

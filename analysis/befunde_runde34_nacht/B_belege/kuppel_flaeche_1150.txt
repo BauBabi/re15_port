@@ -1,0 +1,6 @@
+ROOM1150.RDT Cut 4 @0xE0 pos (-21942, -2160, -18378) tgt (-19980, -1566, -18396) fov 32946 H 257 | Prop1 MD1 @0x138D4, Prop2 MD1 @0x13B88, Prop0 MD1 @0x11E40
+  deckel   20 Flaechen,  30700 Pixel (960x720), bbox320 (151.0, 149.0, 267.3, 188.3)
+  podest   11 Flaechen,  46748 Pixel (960x720), bbox320 (151.0, 158.0, 267.3, 211.3)
+  KONVEXE HUELLE (320x240, 12 Ecken): (151,171), (163,161), (180,151), (206,149), (234,151), (248,157), (267,171), (264,191), (261,205), (214,211), (164,205), (151,191)
+  Eckenmittel (320): (208.6, 176.2)
+  Deckung gegen Differenzmaske (Plattform da/nicht da): 52771 von 53020 Kuppel-Pixeln gerendert (99.53 %), 249 nicht

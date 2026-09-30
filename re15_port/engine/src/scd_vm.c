@@ -46,6 +46,10 @@
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
+#include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
+#include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
+#include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 
 scd_vm_t g_scd;
 
@@ -388,6 +392,15 @@ static void register_opcodes(void)
     s_op_table[0x51]                  = op_sce_key_ck;
     s_op_table[0x5E]                  = op_keep_item_ck;
     s_op_table[0x5D]                  = op_mizu_div_set;
+    /* Runde 34 Nacht, Spur A: 0x62 = RE2 Sce_item_lost (0x800a74c8[0x62] -> 0x800585e4) NUR im
+     * Port-Programm des Rolltors (PC-Schranke in rolltor_1050.c); fuer RDT-Bytecode bleibt es
+     * op_unknown-gleich (pc+1, s_opcode_sizes[0x62] = 1). */
+    s_op_table[RE15_ROLLTOR_OP_ITEM_LOST] = re15_rolltor_op_item_lost;
+    {   /* Runde 34 Nacht G2: 0x45 Col_chg_set — Tabelle @0x800745bc -> 0x800428d4 ->
+         * FUN_800396a8 (Sichtbarkeit je Maskengruppe, masken_gruppen.c / re15_masken_gruppen.h). */
+        extern int op_col_chg_set(scd_thread_t *t);
+        s_op_table[0x45]              = op_col_chg_set;
+    }
 }
 
 /* Internal: enqueue an audio event. Drops if full (ring buffer overflow). */
@@ -600,7 +613,14 @@ int scd_event_fire(uint8_t event_id)
         }
     }
     if (event_id >= RE15_RDT_MAX_SUB_SCD || !s_current_rdt) return -1;
-    const uint8_t *pc = s_current_rdt->sub_scd[event_id];
+    /* Runde 34 Nacht, Spur A (rolltor_1050.c): ROOM1050/1051 Ereignis 2 = Rolltor-Schalter ->
+     * Port-Programm "Sicherung einsetzen", solange (9,63)=0; sonst NULL = ausgelieferter sub. */
+    const uint8_t *pc = re15_rolltor_ereignis((uint16_t)g_current_room_id, event_id);
+    /* Runde 34 Nacht, Spur D (adaruf_1050.c): ROOM1050 Ereignis 13 = umgewidmete Tuer Slot 4 ->
+     * Port-Programm "Ada-Ruf", solange (9,65)=0 und (3,0xBB)=0; sonst NULL = ausgelieferter sub.
+     * Integration: A (Ereignis 2) und D (Ereignis 13) sind disjunkt, die Reihenfolge ist gleichgueltig. */
+    if (!pc) pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);
+    if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
         if (!g_scd.threads[slot].active) {
@@ -930,6 +950,12 @@ static int op_for(scd_thread_t *t)
      * count==0 → skip the block via block_len (kept as a defensive port early-out;
      * byte-true For would push count=0 → Next underflows to 0xFFFF = 65536 iters,
      * which no known RE1.5 script relies on and the dispatcher safety-cap bounds). */
+    /* Runde 34 Nacht B (include/re15_hebetisch_cursor.h): der Hebetisch-Cursor haelt sub04 VOR dem
+     * For 15 @0x0FC0 (1151 @0x0F9E) an, bis die Kuppel gedrueckt ist (Yield, PC bleibt), oder setzt
+     * beim Abbruch den PC auf die Aufraeumbytes @0x109A (weiter). Im Zustand AUS ein Vergleich. */
+    { const int hc = s_current_rdt ? re15_hebetisch_cursor_for(t, s_current_rdt->raw, s_current_rdt->raw_size) : 0;
+      if (hc == RE15_HC_HALT) return SCD_R_YIELD;
+      if (hc == RE15_HC_SPRUNG) return SCD_R_CONTINUE; }
     int16_t  block_len = scd_read_le_s16(t->pc + 2);
     uint16_t count     = (uint16_t)scd_read_le_s16(t->pc + 4);
     const uint8_t *body = t->pc + 6;
@@ -1766,6 +1792,12 @@ static int op_message_on(scd_thread_t *t)
             t->voice_wait = 0;
         }
     }
+
+    /* Runde 34 Nacht, Spur F: LEICHEN ROOM1110/1230 — an (1110/1111, msg 0) sub02 @0x00D04 bzw.
+     * (1230/1231, msg 10) sub21 @0x014BC nur die Nachricht tauschen (neuer Text, danach das
+     * Munitions-Angebot). HINTER dem Stimmen-Riegel, damit auch dieser Text eine laufende Aufnahme
+     * ausreden laesst. Herleitung: include/re15_leiche.h. */
+    if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

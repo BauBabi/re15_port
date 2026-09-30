@@ -1,0 +1,123 @@
+# Spur C, Abnahme 1 - Zustandswechsel je Lauf aus RE15_PANEL_LOG (nur Bilder, in denen sich etwas aendert)
+# Laeufe: analysis/befunde_runde34_nacht/C_belege/abn1_lauf.sh / abn1_lauf_11f1.sh, exe-Kopie re15_abn1c.exe (Spielcode 42baac77)
+
+## r1 - R1 11F0: 7,9,3,1,5 (wie S2), Meldung wegdruecken, Flackern, Steuerung zurueck
+F1     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F6     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F41    raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F447   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F448   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F465   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F467   raum=11F0 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F468   raum=11F0 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F532   raum=11F0 cut=10 aktiv=1 maske=040 ziel=20 wert=1 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F563   raum=11F0 cut=10 aktiv=1 maske=140 ziel=50 wert=21 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F618   raum=11F0 cut=10 aktiv=1 maske=144 ziel=40 wert=49 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F644   raum=11F0 cut=10 aktiv=1 maske=145 ziel=60 wert=41 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F693   raum=11F0 cut=10 aktiv=1 maske=155 ziel=80 wert=61 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=1 lampe_o=1 lampe_u=1 bestaet=0
+F743   raum=11F0 cut=10 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F744   raum=11F0 cut=8 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F784   raum=11F0 cut=8 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=0 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F786   raum=11F0 cut=13 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=0 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F798   raum=11F0 cut=14 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=0 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F837   raum=11F0 cut=14 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=0 msg=0 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F838   raum=11F0 cut=8 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=0 msg=0 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+Summe Bilder mit panelsperre=1: 50
+  RE15_STATE_LOG (Auszug):
+  F742 pad=0000 PL(250,250) rot=0 cam=10 msg=0 pf=A0000007
+  F743 pad=0000 PL(250,250) rot=0 cam=8 msg=1 pf=FFFF0007
+  F783 pad=8000 PL(250,250) rot=0 cam=8 msg=1 pf=FFFF0007
+  F785 pad=8000 PL(250,250) rot=0 cam=13 msg=0 pf=01000007
+  F800 pad=0000 PL(250,250) rot=0 cam=14 msg=0 pf=01000007
+  F837 pad=0000 PL(250,250) rot=0 cam=8 msg=0 pf=00000007
+  F838 pad=0000 PL(250,250) rot=0 cam=8 msg=0 pf=00000007
+  F980 pad=0000 PL(250,250) rot=0 cam=8 msg=0 pf=00000007
+  F984 pad=0020 PL(250,250) rot=96 cam=8 msg=0 pf=00000007
+  F1000 pad=0020 PL(250,250) rot=1632 cam=8 msg=0 pf=00000007
+  F1014 pad=0010 PL(229,321) rot=2880 cam=8 msg=0 pf=00000007
+  F1030 pad=0010 PL(-107,682) rot=2880 cam=8 msg=0 pf=00000007
+  F1059 pad=0000 PL(-695,682) rot=2880 cam=8 msg=0 pf=00000007
+
+## r2 - R2 11F0: rechts 9,7 (unten an), +6 (unten aus), -6 (unten an), START/Statusschirm, EXIT, Wiedereintritt (RE15_SUBSTART 16@930), Schalter 6
+F1     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F6     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F41    raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F447   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F448   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F465   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F467   raum=11F0 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F468   raum=11F0 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F534   raum=11F0 cut=10 aktiv=1 maske=100 ziel=30 wert=1 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F583   raum=11F0 cut=10 aktiv=1 maske=140 ziel=50 wert=31 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F626   raum=11F0 cut=10 aktiv=1 maske=160 ziel=10 wert=49 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F658   raum=11F0 cut=10 aktiv=1 maske=140 ziel=50 wert=19 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F885   raum=11F0 cut=10 aktiv=0 maske=000 ziel=0 wert=49 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F886   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=48 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F931   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=3 ruhe=0 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1105  raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1106  raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1173  raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1175  raum=11F0 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1176  raum=11F0 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F1238  raum=11F0 cut=10 aktiv=1 maske=020 ziel=0 wert=0 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+Summe Bilder mit panelsperre=1: 0
+
+## r3_11f1 - R3 ROOM11F1 (RE15_GOTO_ROOM=11F1): 7,9,3,1,5 wie R1
+F1     raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F6     raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F41    raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F447   raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F448   raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F465   raum=11F1 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F467   raum=11F1 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F468   raum=11F1 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F532   raum=11F1 cut=10 aktiv=1 maske=040 ziel=20 wert=1 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F563   raum=11F1 cut=10 aktiv=1 maske=140 ziel=50 wert=21 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F618   raum=11F1 cut=10 aktiv=1 maske=144 ziel=40 wert=49 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F644   raum=11F1 cut=10 aktiv=1 maske=145 ziel=60 wert=41 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F693   raum=11F1 cut=10 aktiv=1 maske=155 ziel=80 wert=61 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=1 lampe_o=1 lampe_u=1 bestaet=0
+F743   raum=11F1 cut=10 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F744   raum=11F1 cut=8 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+Summe Bilder mit panelsperre=1: 50
+
+## r4 - R4 11F0: 7,9,5,1 (=90, Zeiger faehrt durch 80 hinauf), dann 7 aus (=70, durch 80 hinab)
+F1     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F6     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F41    raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F447   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F448   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F465   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F467   raum=11F0 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F468   raum=11F0 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F534   raum=11F0 cut=10 aktiv=1 maske=040 ziel=20 wert=1 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F583   raum=11F0 cut=10 aktiv=1 maske=140 ziel=50 wert=21 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F655   raum=11F0 cut=10 aktiv=1 maske=150 ziel=70 wert=51 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F725   raum=11F0 cut=10 aktiv=1 maske=151 ziel=90 wert=71 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F869   raum=11F0 cut=10 aktiv=1 maske=111 ziel=70 wert=89 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+Summe Bilder mit panelsperre=1: 0
+  Durchfahrt F733 wert=79 ziel=90 panelsperre=0
+  Durchfahrt F734 wert=80 ziel=90 panelsperre=0
+  Durchfahrt F735 wert=81 ziel=90 panelsperre=0
+  Durchfahrt F877 wert=81 ziel=70 panelsperre=0
+  Durchfahrt F878 wert=80 ziel=70 panelsperre=0
+  Durchfahrt F879 wert=79 ziel=70 panelsperre=0
+
+## r5 - R5 11F0: 7,9,3,1,5 und SOFORT 4 (Kippung vor b*), dann 4 zurueck
+F1     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F6     raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F41    raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F447   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F448   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=1 msg=1 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F465   raum=11F0 cut=0 aktiv=0 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F467   raum=11F0 cut=0 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F468   raum=11F0 cut=10 aktiv=1 maske=000 ziel=0 wert=0 ruhe=30 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F532   raum=11F0 cut=10 aktiv=1 maske=040 ziel=20 wert=1 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=0 bestaet=0
+F563   raum=11F0 cut=10 aktiv=1 maske=140 ziel=50 wert=21 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F618   raum=11F0 cut=10 aktiv=1 maske=144 ziel=40 wert=49 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F644   raum=11F0 cut=10 aktiv=1 maske=145 ziel=60 wert=41 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F693   raum=11F0 cut=10 aktiv=1 maske=155 ziel=80 wert=61 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=1 lampe_o=1 lampe_u=1 bestaet=0
+F706   raum=11F0 cut=10 aktiv=1 maske=15D ziel=50 wert=72 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=0 lampe_o=0 lampe_u=1 bestaet=0
+F798   raum=11F0 cut=10 aktiv=1 maske=155 ziel=80 wert=51 ruhe=0 geloest=0 padsperre=0 msg=0 panelsperre=1 lampe_o=1 lampe_u=1 bestaet=0
+F858   raum=11F0 cut=10 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+F859   raum=11F0 cut=8 aktiv=0 maske=155 ziel=80 wert=80 ruhe=30 geloest=1 padsperre=1 msg=1 panelsperre=0 lampe_o=1 lampe_u=1 bestaet=1
+Summe Bilder mit panelsperre=1: 73

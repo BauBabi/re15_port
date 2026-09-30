@@ -1,0 +1,21 @@
+[maskgrp] F0 Raum 1150 wv0A=0 wv0C=0 Gruppe 6 := 0 (0 Treffer, Zahl 0)
+[maskgrp] F0 Raum 1150 wv0A=2 wv0C=0 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
+[maskgrp] F19 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F39 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F59 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F79 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F99 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F119 Raum 1150 wv0A=2 wv0C=0 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F124 Raum 1150 wv0A=6 wv0C=6 Aufbau Cut 6 pri_offset=0xBCC NULL-Sektion -> Zahl 0 Grund cut
+[maskgrp] F403 Raum 1150 wv0A=2 wv0C=2 Aufbau Cut 2 pri_offset=0x66C Zahl 54 Records 54 Grund cut
+[maskgrp] F417 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F437 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F457 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F477 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F497 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F517 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F537 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F557 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F577 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)
+[maskgrp] F597 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 0 (1 Treffer, Zahl 54)
+[maskgrp] F617 Raum 1150 wv0A=2 wv0C=2 Gruppe 6 := 1 (1 Treffer, Zahl 54)

@@ -1,0 +1,25 @@
+# Auflage 8a: CONTINUE-Laeufe der echten exe (re15_port/tools/r34n_d/kartenlauf.sh), Karte aus probe_r34n_d_karte (Stand ROOM1150)
+## Fall A: Karte 'gesehen' ((9,65)=1, (3,187)=0)
+Karte re15_card.mcr: Raum 0x1150, (3,121)=1, (9,65)=1, (3,187)=0   (probe_r34n_d_karte, Ruecklese-Gegenprobe)
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[room] PC loaded room1000.rdt (177032 bytes)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Text-Platz sce 1 / msg 25 (Sperre) (Flags (3,187)=0, (9,65)=1)
+[flow] EXIT_AT: Bild 260 in Raum 1050 erreicht -> exit
+## Fall B: Karte 'gesehen,gerettet' ((9,65)=1, (3,187)=1)
+Karte re15_card.mcr: Raum 0x1150, (3,121)=1, (9,65)=1, (3,187)=1   (probe_r34n_d_karte, Ruecklese-Gegenprobe)
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[room] PC loaded room1000.rdt (177032 bytes)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[room] PC loaded room1050.rdt (297324 bytes)
+[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0 spawn=(26200,-14400,24800)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 0 Bit7 0 Tuer 7 Seite S021 T013 Spender FF (9 Skripte)
+[room] PC loaded room10a0.rdt (101164 bytes)
+[flow] EXIT_AT: Bild 100 in Raum 10a0 erreicht -> exit

@@ -1,0 +1,130 @@
+Referenzen: AN vs AUS unterscheiden sich im Rechteck in 558 Pixeln
+F00300 cut  1  (nicht Cut 2)  Lebend -1
+F00301 cut  1  (nicht Cut 2)  Lebend 988
+F00302 cut  1  (nicht Cut 2)  Lebend 1027
+F00303 cut  1  (nicht Cut 2)  Lebend 1052
+F00304 cut  1  (nicht Cut 2)  Lebend 1072
+F00305 cut  1  (nicht Cut 2)  Lebend 1073
+F00306 cut  1  (nicht Cut 2)  Lebend 1053
+F00307 cut  1  (nicht Cut 2)  Lebend 1063
+F00308 cut  1  (nicht Cut 2)  Lebend 1077
+F00309 cut  1  (nicht Cut 2)  Lebend 1055
+F00310 cut  1  (nicht Cut 2)  Lebend 1043
+F00311 cut  1  (nicht Cut 2)  Lebend 1029
+F00312 cut  1  (nicht Cut 2)  Lebend 1136
+F00313 cut  1  (nicht Cut 2)  Lebend 1243
+F00314 cut  1  (nicht Cut 2)  Lebend 1335
+F00315 cut  1  (nicht Cut 2)  Lebend 1347
+F00316 cut  1  (nicht Cut 2)  Lebend 1375
+F00317 cut  1  (nicht Cut 2)  Lebend 1403
+F00318 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 75200 px
+F00319 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 2665 px
+F00320 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 2371 px
+F00321 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 2467 px
+F00322 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 1611 px
+F00323 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 1974 px
+F00324 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 2146 px
+F00325 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 2131 px
+F00326 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 1680 px
+F00327 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 1212 px
+F00328 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 574 px
+F00329 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 91 px
+F00330 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00331 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00332 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00333 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00334 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00335 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00336 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00337 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00338 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00339 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00340 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00341 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00342 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00343 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00344 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00345 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00346 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00347 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00348 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00349 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00350 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00351 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00352 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00353 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00354 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00355 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00356 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00357 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00358 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00359 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00360 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00361 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00362 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00363 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00364 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00365 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00366 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00367 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00368 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00369 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00370 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00371 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00372 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00373 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00374 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00375 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00376 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00377 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00378 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00379 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00380 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00381 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00382 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00383 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00384 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00385 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00386 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00387 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00388 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00389 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00390 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00391 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00392 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00393 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00394 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00395 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00396 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00397 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00398 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00399 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00400 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00401 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00402 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00403 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00404 cut  2  max|d| zu AN   0, zu AUS 195  -> AN(Masken)  Lebend 0 px
+F00405 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00406 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00407 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00408 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00409 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00410 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00411 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00412 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00413 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00414 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00415 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00416 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00417 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00418 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00419 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+F00420 cut  2  max|d| zu AN 195, zu AUS   0  -> AUS(BSS)    Lebend 0 px
+
+Laeufe gleichen Zustands (nur Cut 2):
+  AN(Masken) F318..F324 (7 Dumps), Lebend: 7 Dumps mit Aenderung ausserhalb
+  AUS(BSS)   F325..F344 (20 Dumps), Lebend: 5 Dumps mit Aenderung ausserhalb
+  AN(Masken) F345..F364 (20 Dumps), Lebend: 0 Dumps mit Aenderung ausserhalb
+  AUS(BSS)   F365..F384 (20 Dumps), Lebend: 0 Dumps mit Aenderung ausserhalb
+  AN(Masken) F385..F404 (20 Dumps), Lebend: 0 Dumps mit Aenderung ausserhalb
+  AUS(BSS)   F405..F420 (16 Dumps), Lebend: 0 Dumps mit Aenderung ausserhalb

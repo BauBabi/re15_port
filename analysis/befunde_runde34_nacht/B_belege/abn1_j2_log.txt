@@ -1,0 +1,56 @@
+# Abnahme 1, Lauf J2 (echte exe re15_abn1.exe, Sprung 1150, Ton an): Inventar im Cursor mit CROSS und mit START schliessen, Abbruch, erneute Aktion, Dreieck
+# SKRIPT=RE15_INPUT_SCRIPT="W1,A0.2,W0.5,S0.1,W2,X0.1,W1.5,R0.3,W0.5,S0.1,W2,S0.1,W1.5,L0.3,W0.5,X0.1,W2,A0.2,W1,T0.1,W0.5"
+# cursor.log: Ereignisse + Lagewechsel
+F230 verlangt x=-19554 z=22684 abbruch=0  
+F241 aktiv x=-19554 z=22684 abbruch=0  
+F242 takt x=-19554 z=22684 abbruch=0  
+F363 takt x=-19354 z=22684 abbruch=0  
+F364 takt x=-19154 z=22684 abbruch=0  
+F365 takt x=-18954 z=22684 abbruch=0  
+F366 takt x=-18754 z=22684 abbruch=0  
+F367 takt x=-18554 z=22684 abbruch=0  
+F368 takt x=-18354 z=22684 abbruch=0  
+F369 takt x=-18154 z=22684 abbruch=0  
+F370 takt x=-17954 z=22684 abbruch=0  
+F371 takt x=-17754 z=22684 abbruch=0  
+F498 takt x=-17954 z=22684 abbruch=0  
+F499 takt x=-18154 z=22684 abbruch=0  
+F500 takt x=-18354 z=22684 abbruch=0  
+F501 takt x=-18554 z=22684 abbruch=0  
+F502 takt x=-18754 z=22684 abbruch=0  
+F503 takt x=-18954 z=22684 abbruch=0  
+F504 takt x=-19154 z=22684 abbruch=0  
+F505 takt x=-19354 z=22684 abbruch=0  
+F506 takt x=-19554 z=22684 abbruch=0  
+F522 abbruch x=-19554 z=22684 abbruch=1  
+F584 verlangt x=-19554 z=22684 abbruch=1  
+F595 aktiv x=-19554 z=22684 abbruch=1  
+F596 takt x=-19554 z=22684 abbruch=1  
+# Luecken im VM-Takt (Menue offen)
+Luecke: 230 -> 241
+Luecke: 251 -> 328
+Luecke: 386 -> 463
+Luecke: 522 -> 584
+Luecke: 584 -> 595
+# debug.log Auszug
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[pri] cut=0 pri_offset=0x500 masks=2 fg_atlas=1
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[scd F236] Cut_chg(4)
+[pri] cut=4 pri_offset=0xAEC masks=18 fg_atlas=1
+[hebetisch-cursor] Sitzung 1: Cursor-Textur in TIM-Platz 28, Cut 4, Licht 11F0 Cut 10
+[input-script] Tick 51 -> F251 Tasten 0x0008
+[input-script] Tick 114 -> F314 Tasten 0x4000
+[input-script] Tick 162 -> F362 Tasten 0x0020
+[input-script] Tick 186 -> F386 Tasten 0x0008
+[input-script] Tick 249 -> F449 Tasten 0x0008
+[input-script] Tick 297 -> F497 Tasten 0x0080
+[input-script] Tick 321 -> F521 Tasten 0x4000
+[pri] cut=0 pri_offset=0x500 masks=2 fg_atlas=1
+[input-script] Tick 384 -> F584 Tasten 0x8000
+[scd F590] Cut_chg(4)
+[pri] cut=4 pri_offset=0xAEC masks=18 fg_atlas=1
+[hebetisch-cursor] Sitzung 2: Cursor-Textur in TIM-Platz 28, Cut 4, Licht 11F0 Cut 10
+[input-script] Tick 420 -> F620 Tasten 0x1000
+[flow] EXIT_AT: Bild 650 in Raum 1150 erreicht -> exit
+rc=0 Bilder=70

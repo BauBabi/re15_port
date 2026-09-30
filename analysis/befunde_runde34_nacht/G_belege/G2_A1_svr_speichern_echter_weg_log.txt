@@ -1,0 +1,8 @@
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[input-script] Tick 0 -> F105 Tasten 0x8000
+[save] room=1150 msg=1 card_slot=3 -> FRAGE (Memory Card benutzen?)
+[input-script] Tick 38 -> F143 Tasten 0x8000
+[input-script] Tick 137 -> F242 Tasten 0x8000
+[input-script] Tick 278 -> F383 Tasten 0x8000
+[save] Antwort: JA -> Speicherbildschirm
+[save] saved (room 1150) slot n=1 -> next=2; card=kept (slot 3 qty 2)

@@ -65,6 +65,27 @@ Parallel laeuft die Granaten-Runde (r34g_*, Zweige r34g/*) einer anderen Sitzung
 >
 > - In ROOM 1170 blinkt im Hintergrund die Schrift des Gebäudes. Bei uns nicht.
 
+## ⛔ Nutzer-Korrektur 2026-09-30 (nach Rundenstart) — gilt fuer Spur G, VERBINDLICH
+
+Auf die Rueckmeldung, dass in ROOM1170 (Heliport) nachweislich nichts blinkt (Dossier `G_schrift1170.md`:
+einzige Gebaeudeschrift "MAGAZINE CLUB", im Original konstant), schrieb der Nutzer woertlich:
+
+> Nein, nicht beim Heliport, sondern in Irons Office room 1150 blinkt die Schrift eigentlich im Hintergrund.
+
+Also: der Punkt betrifft **ROOM1150** (Irons' Buero; Elza-Variante ROOM1151 mitpruefen), nicht ROOM1170
+(bekannte 1150/1170-Verwechslung, memory reai-v2-runde33-memorycard-karte-tueren). Das 1170-Dossier bleibt
+als Beleg stehen; die neue Ermittlung steht in `G2_schrift1150.md`.
+## ⛔ Nutzer-Nachtrag 2026-09-30 (nach Rundenstart) — gilt fuer Spur D, VERBINDLICH
+
+Auf den Hinweis, dass RE1.5 Ada vor ihrer Rettung im Untertitel "Woman:" nennt (ROOM1090 msg00
+"Woman: Anyone! Can someone please get me out of here!?"), antwortete der Nutzer woertlich:
+
+> Du hast recht! Da muss woman: stehen statt Ada:
+
+Also: die Rufzeile der neuen Szene an der Tuer ROOM1050 -> ROOM10A0 traegt als Sprecher **"Woman:"**
+(Schreibweise und Sprecherfarbe wie ROOM1090 msg00), NICHT "Ada:". Der Satz selbst bleibt woertlich
+"Hello? Anyone? Please, get me out of here!". Die Leon-Zeile bleibt "Leon: …".
+
 ## Referenzbilder des Nutzers (Repo-Wurzel, 320x240 RGB)
 
 | Datei | Inhalt |

@@ -23,6 +23,9 @@
 #include "re15_irons_tisch.h" /* Irons Diary + Memory Card auf dem Schreibtisch (ROOM1150/1151) */
 #include "re15_granate.h"     /* Handgranate im Hebetisch von Irons' Buero (ROOM1150/1151) */
 #include "re15_tuer1120.h"    /* Tuer ROOM1130 -> ROOM1120 erst nach der Irons-Szene (Runde 33) */
+#include "re15_hebetisch_cursor.h" /* Hebetisch-Cursor ROOM1150/1151 (Runde 34 Nacht B) */
+#include "re15_dokumente.h"   /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
+#include "re15_adaruf.h"      /* Runde 34 Nacht Spur D: Ada-Ruf an der Tuer ROOM1050 -> ROOM10A0 */
 
 extern scd_vm_t g_scd;
 
@@ -430,11 +433,22 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (9,56) erst dann gelesen). Tut in jedem anderen Raum nichts. Herleitung:
      * include/re15_granate.h. */
     re15_granate_install((uint16_t)g_current_room_id);
+    /* Runde 34 Nacht B: Hebetisch-Cursor beim Raumaufbau AUS (auch main.c Boot-/CONTINUE-Weg,
+     * Auflage 2). Herleitung: include/re15_hebetisch_cursor.h. */
+    re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
+    /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — NACH dem Init-Lauf: main00 hat die Props und
+     * die Tisch-Nachricht ROOM1020/1021 angelegt, die Flags des Raums sind gelesen (Bits 57..60
+     * entscheiden). Tut in jedem anderen Raum nichts. Herleitung: include/re15_dokumente.h. */
+    re15_dokumente_install((uint16_t)g_current_room_id);
     /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
      * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade
      * angelegt hat, zum Text-Platz umgewidmet — deshalb NACH dem Init-Lauf. Tut in jedem anderen
      * Raum nichts. Herleitung: include/re15_tuer1120.h. */
     re15_tuer1120_install((uint16_t)g_current_room_id);
+    /* Runde 34 Nacht, Spur D: TUER ROOM1050 -> ROOM10A0 bis zur Ada-Rettung (3,0xBB) umwidmen
+     * (erster Druck = Szene, danach Sperrtext) — aus demselben Grund an derselben Stelle wie
+     * tuer1120: main00 @0x00B5A hat Slot 4 erst im Init-Lauf angelegt. Herleitung: re15_adaruf.h. */
+    re15_adaruf_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

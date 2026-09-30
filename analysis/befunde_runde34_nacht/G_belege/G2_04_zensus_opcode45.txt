@@ -1,0 +1,229 @@
+ROOM1150  (RDT+0x4C=0x14460, 9 Cuts, Stellen 12)
+   sub   5   @0x010B6  45 05 00  -> Gruppe 6 := 0
+   sub   5   @0x010B9  45 06 00  -> Gruppe 7 := 0
+   sub   5   @0x010BC  45 07 00  -> Gruppe 8 := 0
+   sub   5   @0x010BF  45 08 00  -> Gruppe 9 := 0
+   sub   5   @0x010C2  45 09 00  -> Gruppe 10 := 0
+   sub   5   @0x010C5  45 0a 00  -> Gruppe 11 := 0
+   sub   5   @0x010CC  45 05 01  -> Gruppe 6 := 1
+   sub   5   @0x010CF  45 06 01  -> Gruppe 7 := 1
+   sub   5   @0x010D2  45 07 01  -> Gruppe 8 := 1
+   sub   5   @0x010D5  45 08 01  -> Gruppe 9 := 1
+   sub   5   @0x010D8  45 09 01  -> Gruppe 10 := 1
+   sub   5   @0x010DB  45 0a 01  -> Gruppe 11 := 1
+   Gruppe 6 existiert in: Cut 2 (1 Rec)
+   Gruppe 7 existiert in: Cut 2 (1 Rec)
+   Gruppe 8 existiert in: Cut 2 (1 Rec)
+   Gruppe 9 existiert in: Cut 2 (1 Rec)
+   Gruppe 10 existiert in: Cut 2 (1 Rec)
+   Gruppe 11 existiert in: Cut 2 (1 Rec)
+ROOM1151  (RDT+0x4C=0x164D8, 9 Cuts, Stellen 12)
+   sub   5   @0x01094  45 05 00  -> Gruppe 6 := 0
+   sub   5   @0x01097  45 06 00  -> Gruppe 7 := 0
+   sub   5   @0x0109A  45 07 00  -> Gruppe 8 := 0
+   sub   5   @0x0109D  45 08 00  -> Gruppe 9 := 0
+   sub   5   @0x010A0  45 09 00  -> Gruppe 10 := 0
+   sub   5   @0x010A3  45 0a 00  -> Gruppe 11 := 0
+   sub   5   @0x010AA  45 05 01  -> Gruppe 6 := 1
+   sub   5   @0x010AD  45 06 01  -> Gruppe 7 := 1
+   sub   5   @0x010B0  45 07 01  -> Gruppe 8 := 1
+   sub   5   @0x010B3  45 08 01  -> Gruppe 9 := 1
+   sub   5   @0x010B6  45 09 01  -> Gruppe 10 := 1
+   sub   5   @0x010B9  45 0a 01  -> Gruppe 11 := 1
+   Gruppe 6 existiert in: Cut 2 (1 Rec)
+   Gruppe 7 existiert in: Cut 2 (1 Rec)
+   Gruppe 8 existiert in: Cut 2 (1 Rec)
+   Gruppe 9 existiert in: Cut 2 (1 Rec)
+   Gruppe 10 existiert in: Cut 2 (1 Rec)
+   Gruppe 11 existiert in: Cut 2 (1 Rec)
+ROOM1211  (RDT+0x4C=0x1E440, 9 Cuts, Stellen 2)
+   sub   1   @0x01F64  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x01F67  45 01 00  -> Gruppe 2 := 0
+   Gruppe 1 existiert in: Cut 1 (6 Rec), Cut 2 (9 Rec), Cut 3 (5 Rec), Cut 4 (5 Rec), Cut 5 (3 Rec), Cut 6 (5 Rec), Cut 7 (5 Rec), Cut 8 (4 Rec)
+   Gruppe 2 existiert in: Cut 1 (5 Rec), Cut 3 (5 Rec), Cut 4 (2 Rec), Cut 5 (3 Rec), Cut 6 (4 Rec), Cut 7 (5 Rec), Cut 8 (4 Rec)
+ROOM1270  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM1271  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20C0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20C1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20D0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20D1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20E0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20E1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20F0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM20F1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM3000  (RDT+0x4C=0xC5C8, 4 Cuts, Stellen 18)
+   sub   1   @0x015D6  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x015D9  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x015DC  45 02 00  -> Gruppe 3 := 0
+   sub   1   @0x015E8  45 07 00  -> Gruppe 8 := 0
+   sub   1   @0x015EB  45 08 00  -> Gruppe 9 := 0
+   sub   1   @0x015EE  45 09 00  -> Gruppe 10 := 0
+   sub   1   @0x015F1  45 0a 00  -> Gruppe 11 := 0
+   sub   1   @0x015F4  45 0b 00  -> Gruppe 12 := 0
+   sub   1   @0x01600  45 07 00  -> Gruppe 8 := 0
+   sub   1   @0x01603  45 08 00  -> Gruppe 9 := 0
+   sub   1   @0x01606  45 09 00  -> Gruppe 10 := 0
+   sub   1   @0x01609  45 0a 00  -> Gruppe 11 := 0
+   sub   1   @0x0160C  45 0b 00  -> Gruppe 12 := 0
+   sub   1   @0x01618  45 03 00  -> Gruppe 4 := 0
+   sub   1   @0x0161B  45 04 00  -> Gruppe 5 := 0
+   sub   1   @0x0161E  45 05 00  -> Gruppe 6 := 0
+   sub   1   @0x01621  45 06 00  -> Gruppe 7 := 0
+   sub   1   @0x01624  45 07 00  -> Gruppe 8 := 0
+   Gruppe 1 existiert in: Cut 0 (9 Rec), Cut 1 (5 Rec), Cut 2 (9 Rec), Cut 3 (26 Rec)
+   Gruppe 2 existiert in: Cut 0 (20 Rec), Cut 1 (5 Rec), Cut 2 (5 Rec), Cut 3 (23 Rec)
+   Gruppe 3 existiert in: Cut 0 (14 Rec), Cut 1 (4 Rec), Cut 2 (3 Rec), Cut 3 (9 Rec)
+   Gruppe 4 existiert in: Cut 1 (5 Rec), Cut 2 (11 Rec), Cut 3 (8 Rec)
+   Gruppe 5 existiert in: Cut 1 (9 Rec), Cut 2 (8 Rec), Cut 3 (1 Rec)
+   Gruppe 6 existiert in: Cut 1 (5 Rec), Cut 2 (1 Rec), Cut 3 (14 Rec)
+   Gruppe 7 existiert in: Cut 1 (1 Rec), Cut 2 (14 Rec), Cut 3 (18 Rec)
+   Gruppe 8 existiert in: Cut 1 (21 Rec), Cut 2 (12 Rec), Cut 3 (6 Rec)
+   Gruppe 9 existiert in: Cut 1 (15 Rec), Cut 2 (10 Rec)
+   Gruppe 10 existiert in: Cut 1 (7 Rec), Cut 2 (6 Rec)
+   Gruppe 11 existiert in: Cut 1 (1 Rec), Cut 2 (4 Rec)
+   Gruppe 12 existiert in: Cut 1 (6 Rec), Cut 2 (2 Rec)
+ROOM3001  (RDT+0x4C=0xC754, 4 Cuts, Stellen 18)
+   sub   1   @0x0160E  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x01611  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x01614  45 02 00  -> Gruppe 3 := 0
+   sub   1   @0x01620  45 07 00  -> Gruppe 8 := 0
+   sub   1   @0x01623  45 08 00  -> Gruppe 9 := 0
+   sub   1   @0x01626  45 09 00  -> Gruppe 10 := 0
+   sub   1   @0x01629  45 0a 00  -> Gruppe 11 := 0
+   sub   1   @0x0162C  45 0b 00  -> Gruppe 12 := 0
+   sub   1   @0x01638  45 07 00  -> Gruppe 8 := 0
+   sub   1   @0x0163B  45 08 00  -> Gruppe 9 := 0
+   sub   1   @0x0163E  45 09 00  -> Gruppe 10 := 0
+   sub   1   @0x01641  45 0a 00  -> Gruppe 11 := 0
+   sub   1   @0x01644  45 0b 00  -> Gruppe 12 := 0
+   sub   1   @0x01650  45 03 00  -> Gruppe 4 := 0
+   sub   1   @0x01653  45 04 00  -> Gruppe 5 := 0
+   sub   1   @0x01656  45 05 00  -> Gruppe 6 := 0
+   sub   1   @0x01659  45 06 00  -> Gruppe 7 := 0
+   sub   1   @0x0165C  45 07 00  -> Gruppe 8 := 0
+   Gruppe 1 existiert in: Cut 0 (9 Rec), Cut 1 (5 Rec), Cut 2 (9 Rec), Cut 3 (26 Rec)
+   Gruppe 2 existiert in: Cut 0 (20 Rec), Cut 1 (5 Rec), Cut 2 (5 Rec), Cut 3 (23 Rec)
+   Gruppe 3 existiert in: Cut 0 (14 Rec), Cut 1 (4 Rec), Cut 2 (3 Rec), Cut 3 (9 Rec)
+   Gruppe 4 existiert in: Cut 1 (5 Rec), Cut 2 (11 Rec), Cut 3 (8 Rec)
+   Gruppe 5 existiert in: Cut 1 (9 Rec), Cut 2 (8 Rec), Cut 3 (1 Rec)
+   Gruppe 6 existiert in: Cut 1 (5 Rec), Cut 2 (1 Rec), Cut 3 (14 Rec)
+   Gruppe 7 existiert in: Cut 1 (1 Rec), Cut 2 (14 Rec), Cut 3 (18 Rec)
+   Gruppe 8 existiert in: Cut 1 (21 Rec), Cut 2 (12 Rec), Cut 3 (6 Rec)
+   Gruppe 9 existiert in: Cut 1 (15 Rec), Cut 2 (10 Rec)
+   Gruppe 10 existiert in: Cut 1 (7 Rec), Cut 2 (6 Rec)
+   Gruppe 11 existiert in: Cut 1 (1 Rec), Cut 2 (4 Rec)
+   Gruppe 12 existiert in: Cut 1 (6 Rec), Cut 2 (2 Rec)
+ROOM3010  (RDT+0x4C=0x2378, 10 Cuts, Stellen 12)
+   sub   1   @0x02274  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x02277  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x02282  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x02285  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x02288  45 05 00  -> Gruppe 6 := 0
+   sub   1   @0x0228B  45 06 00  -> Gruppe 7 := 0
+   sub   1   @0x02296  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022A2  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022A5  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x022B0  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022BC  45 02 00  -> Gruppe 3 := 0
+   sub   1   @0x022BF  45 03 00  -> Gruppe 4 := 0
+   Gruppe 1 existiert in: Cut 0 (16 Rec), Cut 1 (21 Rec), Cut 2 (9 Rec), Cut 3 (13 Rec), Cut 4 (14 Rec), Cut 5 (4 Rec), Cut 6 (11 Rec)
+   Gruppe 2 existiert in: Cut 0 (10 Rec), Cut 1 (19 Rec), Cut 2 (5 Rec), Cut 3 (4 Rec), Cut 4 (4 Rec), Cut 5 (10 Rec), Cut 6 (12 Rec)
+   Gruppe 3 existiert in: Cut 0 (6 Rec), Cut 1 (10 Rec), Cut 2 (5 Rec), Cut 3 (1 Rec), Cut 4 (1 Rec), Cut 5 (3 Rec), Cut 6 (7 Rec)
+   Gruppe 4 existiert in: Cut 0 (1 Rec), Cut 1 (10 Rec), Cut 2 (5 Rec), Cut 3 (2 Rec), Cut 4 (3 Rec), Cut 5 (2 Rec), Cut 6 (19 Rec)
+   Gruppe 6 existiert in: Cut 0 (10 Rec), Cut 1 (7 Rec), Cut 2 (5 Rec), Cut 3 (8 Rec), Cut 4 (6 Rec), Cut 5 (4 Rec)
+   Gruppe 7 existiert in: Cut 1 (8 Rec), Cut 2 (3 Rec), Cut 3 (4 Rec), Cut 4 (7 Rec), Cut 5 (4 Rec)
+ROOM3011  (RDT+0x4C=0x23AC, 10 Cuts, Stellen 12)
+   sub   1   @0x022A8  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022AB  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x022B6  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022B9  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x022BC  45 05 00  -> Gruppe 6 := 0
+   sub   1   @0x022BF  45 06 00  -> Gruppe 7 := 0
+   sub   1   @0x022CA  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022D6  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022D9  45 01 00  -> Gruppe 2 := 0
+   sub   1   @0x022E4  45 00 00  -> Gruppe 1 := 0
+   sub   1   @0x022F0  45 02 00  -> Gruppe 3 := 0
+   sub   1   @0x022F3  45 03 00  -> Gruppe 4 := 0
+   Gruppe 1 existiert in: Cut 0 (16 Rec), Cut 1 (21 Rec), Cut 2 (9 Rec), Cut 3 (13 Rec), Cut 4 (14 Rec), Cut 5 (4 Rec), Cut 6 (11 Rec)
+   Gruppe 2 existiert in: Cut 0 (10 Rec), Cut 1 (19 Rec), Cut 2 (5 Rec), Cut 3 (4 Rec), Cut 4 (4 Rec), Cut 5 (10 Rec), Cut 6 (12 Rec)
+   Gruppe 3 existiert in: Cut 0 (6 Rec), Cut 1 (10 Rec), Cut 2 (5 Rec), Cut 3 (1 Rec), Cut 4 (1 Rec), Cut 5 (3 Rec), Cut 6 (7 Rec)
+   Gruppe 4 existiert in: Cut 0 (1 Rec), Cut 1 (10 Rec), Cut 2 (5 Rec), Cut 3 (2 Rec), Cut 4 (3 Rec), Cut 5 (2 Rec), Cut 6 (19 Rec)
+   Gruppe 6 existiert in: Cut 0 (10 Rec), Cut 1 (7 Rec), Cut 2 (5 Rec), Cut 3 (8 Rec), Cut 4 (6 Rec), Cut 5 (4 Rec)
+   Gruppe 7 existiert in: Cut 1 (8 Rec), Cut 2 (3 Rec), Cut 3 (4 Rec), Cut 4 (7 Rec), Cut 5 (4 Rec)
+ROOM3071  (RDT+0x4C=0x1223C, 13 Cuts, Stellen 32)
+   sub   1   @0x03542  45 02 00  -> Gruppe 3 := 0
+   sub   1   @0x03545  45 03 00  -> Gruppe 4 := 0
+   sub   1   @0x03548  45 04 00  -> Gruppe 5 := 0
+   sub   1   @0x0354B  45 05 00  -> Gruppe 6 := 0
+   sub   1   @0x0354E  45 06 00  -> Gruppe 7 := 0
+   sub   1   @0x03551  45 07 00  -> Gruppe 8 := 0
+   sub   1   @0x03554  45 08 00  -> Gruppe 9 := 0
+   sub   1   @0x03557  45 09 00  -> Gruppe 10 := 0
+   sub   1   @0x0355A  45 0a 00  -> Gruppe 11 := 0
+   sub   1   @0x0355D  45 0b 00  -> Gruppe 12 := 0
+   sub   1   @0x03560  45 0c 00  -> Gruppe 13 := 0
+   sub   2   @0x035C2  45 0c 01  -> Gruppe 13 := 1
+   sub   2   @0x035C9  45 0c 00  -> Gruppe 13 := 0
+   sub   2   @0x035CC  45 0b 01  -> Gruppe 12 := 1
+   sub   2   @0x035D3  45 0b 00  -> Gruppe 12 := 0
+   sub   2   @0x035D6  45 0a 01  -> Gruppe 11 := 1
+   sub   2   @0x035DD  45 0a 00  -> Gruppe 11 := 0
+   sub   2   @0x035E0  45 09 01  -> Gruppe 10 := 1
+   sub   2   @0x035E7  45 09 00  -> Gruppe 10 := 0
+   sub   2   @0x035EA  45 08 01  -> Gruppe 9 := 1
+   sub   2   @0x035F1  45 08 00  -> Gruppe 9 := 0
+   sub   2   @0x035F4  45 07 01  -> Gruppe 8 := 1
+   sub   2   @0x035FB  45 07 00  -> Gruppe 8 := 0
+   sub   2   @0x035FE  45 06 01  -> Gruppe 7 := 1
+   sub   2   @0x03605  45 06 00  -> Gruppe 7 := 0
+   sub   2   @0x03608  45 05 01  -> Gruppe 6 := 1
+   sub   2   @0x0360F  45 05 00  -> Gruppe 6 := 0
+   sub   2   @0x03612  45 04 01  -> Gruppe 5 := 1
+   sub   2   @0x03619  45 04 00  -> Gruppe 5 := 0
+   sub   2   @0x0361C  45 03 01  -> Gruppe 4 := 1
+   sub   2   @0x03623  45 03 00  -> Gruppe 4 := 0
+   sub   2   @0x03626  45 02 01  -> Gruppe 3 := 1
+   Gruppe 3 existiert in: Cut 0 (5 Rec), Cut 1 (2 Rec), Cut 2 (2 Rec), Cut 3 (1 Rec), Cut 4 (4 Rec), Cut 5 (3 Rec), Cut 6 (8 Rec), Cut 7 (4 Rec), Cut 8 (4 Rec), Cut 9 (1 Rec), Cut 10 (6 Rec), Cut 11 (1 Rec), Cut 12 (10 Rec)
+   Gruppe 4 existiert in: Cut 0 (8 Rec), Cut 1 (2 Rec), Cut 2 (4 Rec), Cut 3 (3 Rec), Cut 4 (4 Rec), Cut 5 (6 Rec), Cut 6 (8 Rec), Cut 7 (4 Rec), Cut 8 (2 Rec), Cut 9 (1 Rec), Cut 10 (6 Rec), Cut 11 (1 Rec), Cut 12 (7 Rec)
+   Gruppe 5 existiert in: Cut 0 (14 Rec), Cut 1 (2 Rec), Cut 2 (3 Rec), Cut 3 (2 Rec), Cut 4 (4 Rec), Cut 5 (3 Rec), Cut 6 (4 Rec), Cut 7 (14 Rec), Cut 8 (4 Rec), Cut 9 (1 Rec), Cut 11 (1 Rec), Cut 12 (7 Rec)
+   Gruppe 6 existiert in: Cut 0 (5 Rec), Cut 1 (2 Rec), Cut 2 (3 Rec), Cut 3 (2 Rec), Cut 4 (4 Rec), Cut 5 (2 Rec), Cut 6 (5 Rec), Cut 7 (3 Rec), Cut 8 (4 Rec), Cut 9 (1 Rec), Cut 11 (3 Rec), Cut 12 (2 Rec)
+   Gruppe 7 existiert in: Cut 0 (4 Rec), Cut 1 (2 Rec), Cut 2 (3 Rec), Cut 3 (3 Rec), Cut 4 (7 Rec), Cut 5 (1 Rec), Cut 6 (6 Rec), Cut 7 (7 Rec), Cut 8 (9 Rec), Cut 9 (1 Rec), Cut 11 (6 Rec), Cut 12 (2 Rec)
+   Gruppe 8 existiert in: Cut 0 (2 Rec), Cut 1 (2 Rec), Cut 2 (2 Rec), Cut 3 (3 Rec), Cut 4 (5 Rec), Cut 5 (3 Rec), Cut 6 (6 Rec), Cut 7 (13 Rec), Cut 8 (9 Rec), Cut 9 (1 Rec), Cut 11 (3 Rec), Cut 12 (4 Rec)
+   Gruppe 9 existiert in: Cut 0 (2 Rec), Cut 1 (1 Rec), Cut 2 (1 Rec), Cut 3 (2 Rec), Cut 4 (3 Rec), Cut 5 (13 Rec), Cut 6 (5 Rec), Cut 7 (11 Rec), Cut 8 (9 Rec), Cut 9 (1 Rec), Cut 11 (2 Rec), Cut 12 (2 Rec)
+   Gruppe 10 existiert in: Cut 0 (3 Rec), Cut 1 (1 Rec), Cut 2 (1 Rec), Cut 3 (1 Rec), Cut 4 (3 Rec), Cut 5 (9 Rec), Cut 6 (5 Rec), Cut 9 (1 Rec), Cut 11 (2 Rec)
+   Gruppe 11 existiert in: Cut 0 (3 Rec), Cut 1 (7 Rec), Cut 2 (1 Rec), Cut 3 (5 Rec), Cut 4 (1 Rec), Cut 5 (2 Rec), Cut 6 (3 Rec), Cut 9 (1 Rec), Cut 11 (2 Rec)
+   Gruppe 12 existiert in: Cut 0 (7 Rec), Cut 1 (5 Rec), Cut 2 (1 Rec), Cut 3 (3 Rec), Cut 4 (12 Rec), Cut 5 (3 Rec), Cut 6 (2 Rec), Cut 9 (1 Rec), Cut 11 (2 Rec)
+   Gruppe 13 existiert in: Cut 0 (2 Rec), Cut 1 (3 Rec), Cut 2 (2 Rec), Cut 4 (4 Rec), Cut 5 (7 Rec), Cut 6 (2 Rec), Cut 9 (1 Rec), Cut 11 (2 Rec)
+ROOM30F0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM30F1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM4060  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM4061  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40C0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40C1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40D0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40D1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40E0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40E1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40F0  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM40F1  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5060  (RDT+0x4C=0x4918, 13 Cuts, Stellen 1)
+   sub   1   @0x02ECA  45 00 00  -> Gruppe 1 := 0
+   Gruppe 1 existiert in: Cut 1 (18 Rec), Cut 2 (2 Rec), Cut 3 (5 Rec), Cut 4 (11 Rec), Cut 5 (3 Rec), Cut 6 (3 Rec), Cut 7 (6 Rec), Cut 8 (12 Rec), Cut 9 (9 Rec), Cut 10 (6 Rec), Cut 11 (1 Rec), Cut 12 (7 Rec)
+ROOM5061  (RDT+0x4C=0x4918, 13 Cuts, Stellen 1)
+   sub   1   @0x02ECA  45 00 00  -> Gruppe 1 := 0
+   Gruppe 1 existiert in: Cut 1 (18 Rec), Cut 2 (2 Rec), Cut 3 (5 Rec), Cut 4 (11 Rec), Cut 5 (3 Rec), Cut 6 (3 Rec), Cut 7 (6 Rec), Cut 8 (12 Rec), Cut 9 (9 Rec), Cut 10 (6 Rec), Cut 11 (1 Rec), Cut 12 (7 Rec)
+ROOM5150  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5151  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5160  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5161  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5170  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM5171  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6050  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6051  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6060  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6061  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6070  nur 4 Byte (Platzhalter-RDT), uebersprungen
+ROOM6071  nur 4 Byte (Platzhalter-RDT), uebersprungen
+
+RDTs gesamt 240, mit Opcode 0x45: 10 Raeume, 120 Stellen: ROOM1150 ROOM1151 ROOM1211 ROOM3000 ROOM3001 ROOM3010 ROOM3011 ROOM3071 ROOM5060 ROOM5061

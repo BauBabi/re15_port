@@ -1,0 +1,662 @@
+raum	thread	off	bytes	clip	flags	rueck	sleep	bilder	hash	msg	text
+ROOM1011	sub02	0x00B50	3f 01 0b 00	11	0x00	0	40	-	-	0	Officer: groans
+ROOM1011	sub02	0x00B66	3f 00 05 00	5	0x00	0	25	20	ad702e0ea41e	1	Elza: Hang in there! Are you the / only officer left in the building?
+ROOM1011	sub02	0x00B6E	3f 00 05 00	5	0x00	1	25	20	ad702e0ea41e	1	Elza: Hang in there! Are you the / only officer left in the building?
+ROOM1011	sub02	0x00B7A	3f 00 06 00	6	0x00	0	25	25	ae92fbdb1ba8	1	Elza: Hang in there! Are you the / only officer left in the building?
+ROOM1011	sub02	0x00B82	3f 00 06 00	6	0x00	1	26	25	ae92fbdb1ba8	1	Elza: Hang in there! Are you the / only officer left in the building?
+ROOM1011	sub02	0x00BBE	3f 00 07 00	7	0x00	0	25	20	739757c924bd	3	Elza: My name's Elza. / What's yours?
+ROOM1011	sub02	0x00BC6	3f 00 07 00	7	0x00	1	25	20	739757c924bd	3	Elza: My name's Elza. / What's yours?
+ROOM1011	sub02	0x00BD2	3f 00 05 00	5	0x00	0	25	20	ad702e0ea41e	3	Elza: My name's Elza. / What's yours?
+ROOM1011	sub02	0x00BDA	3f 00 05 00	5	0x00	1	26	20	ad702e0ea41e	3	Elza: My name's Elza. / What's yours?
+ROOM1011	sub02	0x00C14	3f 00 07 00	7	0x00	0	25	20	739757c924bd	5	Elza: That wound... did one of / those things get you? How horrible...
+ROOM1011	sub02	0x00C1C	3f 00 07 00	7	0x00	1	25	20	739757c924bd	5	Elza: That wound... did one of / those things get you? How horrible...
+ROOM1011	sub02	0x00C32	3f 00 05 00	5	0x00	0	25	20	ad702e0ea41e	5	Elza: That wound... did one of / those things get you? How horrible...
+ROOM1011	sub02	0x00C3A	3f 00 05 00	5	0x00	1	26	20	ad702e0ea41e	5	Elza: That wound... did one of / those things get you? How horrible...
+ROOM1011	sub02	0x00C9A	3f 00 06 00	6	0x00	0	50	25	ae92fbdb1ba8	9	Elza: ...What do you mean?
+ROOM1011	sub02	0x00CA2	3f 00 06 00	6	0x00	1	51	25	ae92fbdb1ba8	9	Elza: ...What do you mean?
+ROOM1011	sub02	0x00CBA	3f 00 05 00	5	0x00	0	50	20	ad702e0ea41e	11	Elza: Are you okay?
+ROOM1011	sub02	0x00CC2	3f 00 05 00	5	0x00	1	51	20	ad702e0ea41e	11	Elza: Are you okay?
+ROOM1011	sub02	0x00D0A	3f 00 05 00	5	0x00	0	50	20	ad702e0ea41e	14	Elza: But...
+ROOM1011	sub02	0x00D12	3f 00 05 00	5	0x00	1	51	20	ad702e0ea41e	14	Elza: But...
+ROOM1011	sub02	0x00D64	3f 00 05 00	5	0x00	0	25	20	ad702e0ea41e	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub02	0x00D6C	3f 00 05 00	5	0x00	1	25	20	ad702e0ea41e	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub02	0x00D78	3f 00 06 00	6	0x00	0	25	25	ae92fbdb1ba8	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub02	0x00D80	3f 00 06 00	6	0x00	1	75	25	ae92fbdb1ba8	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub02	0x00D9A	3f 00 08 00	8	0x00	0	101	18	1ccc5e3fe3a2	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub02	0x00DB4	3f 01 0b 00	11	0x00	1	40	-	-	17	Elza: Roy, wake up! Please wake up!
+ROOM1011	sub06	0x00E18	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1011	sub06	0x00E34	3f 01 0b 00	11	0x00	1	30	-	-	20	You've taken the Prison key.
+ROOM1011	sub07	0x00E5C	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1011	sub07	0x00E6A	3f 01 0b 00	11	0x00	1	30	-	-	18	He has passed out from his injuries.He is holding a slip.The numbers 0513" are / printed on the slip.
+ROOM1020	sub02	0x01F7E	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1020	sub02	0x01F8C	3f 01 0b 00	11	0x00	1	30	-	-	0	It's the RPD officer, Roy.He appears to have died recently.
+ROOM1021	sub02	0x02062	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	2	Elza: John, shoot! That thing isn't / Roy anymore!
+ROOM1021	sub02	0x0206A	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	2	Elza: John, shoot! That thing isn't / Roy anymore!
+ROOM1021	sub02	0x02076	3f 00 02 00	2	0x00	0	51	30	a891289fe964	2	Elza: John, shoot! That thing isn't / Roy anymore!
+ROOM1021	sub02	0x02126	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	4	Elza: John, I couldn't call for help / using the radio.
+ROOM1021	sub02	0x0212E	3f 00 00 00	0	0x00	1	51	20	3e20a32edca8	4	Elza: John, I couldn't call for help / using the radio.
+ROOM1021	sub02	0x0213E	3f 00 04 00	4	0x00	0	50	30	2baf4d018c78	5	Elza: The building's electric power / is starting to fail...
+ROOM1021	sub02	0x02146	3f 00 04 00	4	0x00	1	50	30	2baf4d018c78	5	Elza: The building's electric power / is starting to fail...
+ROOM1021	sub02	0x02152	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	5	Elza: The building's electric power / is starting to fail...
+ROOM1021	sub02	0x02166	3f 00 03 00	3	0x00	0	25	20	448e35e6af79	7	Elza: We're the only ones left. If we / don't do anything, we'll also be...
+ROOM1021	sub02	0x0216E	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	7	Elza: We're the only ones left. If we / don't do anything, we'll also be...
+ROOM1021	sub02	0x0217A	3f 00 04 00	4	0x00	0	25	30	2baf4d018c78	7	Elza: We're the only ones left. If we / don't do anything, we'll also be...
+ROOM1021	sub02	0x02182	3f 00 04 00	4	0x00	1	25	30	2baf4d018c78	7	Elza: We're the only ones left. If we / don't do anything, we'll also be...
+ROOM1021	sub02	0x0218E	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	7	Elza: We're the only ones left. If we / don't do anything, we'll also be...
+ROOM1021	sub06	0x021FA	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1021	sub06	0x02208	3f 01 0b 00	11	0x00	1	30	-	-	9	He's dead.Poor Roy...
+ROOM1031	sub13	0x029A4	3f 00 0b 00	11	0x00	0	40	2	dd206fbbba3f		
+ROOM1031	sub13	0x029BE	3f 00 00 00	0	0x00	1	30	20	3e20a32edca8		
+ROOM1031	sub13	0x029F8	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71		
+ROOM1031	sub13	0x02A00	3f 00 0c 00	12	0x00	0	100	50	d937f1cb065c		
+ROOM1031	sub13	0x02A0C	3f 00 0a 00	10	0x00	0	100	20	b723bfd38a73	18	Elza: That was close, this must / contain them for some time...
+ROOM1031	sub13	0x02A32	3f 00 09 00	9	0x00	0	105	24	358acb7d0d71	19	Elza: Hey, is anyone here?!
+ROOM1050	sub03	0x00DDA	3f 00 0f 00	15	0x00	0	30	20	fe313d415aee	8	Leon: Hey, wait!
+ROOM1050	sub03	0x00DE2	3f 00 0f 00	15	0x00	1	31	20	fe313d415aee	8	Leon: Hey, wait!
+ROOM1051	sub03	0x00DAC	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1051	sub03	0x00DC4	3f 01 0b 00	11	0x00	1	30	-	-	5	He's got a big bite on his neck, he / didn't give him a chance to avoid it.The weapon can be useful.Sorry, I'll just borrow this...
+ROOM1090	sub02	0x0248E	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	1	Leon: Hey! Who's that?!
+ROOM1090	sub02	0x02496	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	1	Leon: Hey! Who's that?!
+ROOM1090	sub02	0x024A2	3f 00 14 00	20	0x00	0	25	25	28617fb5751d	1	Leon: Hey! Who's that?!
+ROOM1090	sub02	0x024AA	3f 00 14 00	20	0x00	1	26	25	28617fb5751d	1	Leon: Hey! Who's that?!
+ROOM1090	sub03	0x0258E	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	3	Leon: There! Are you okay?
+ROOM1090	sub03	0x02596	3f 00 0f 00	15	0x00	1	51	20	fe313d415aee	3	Leon: There! Are you okay?
+ROOM1090	sub03	0x02648	3f 00 12 00	18	0x00	0	25	20	37bbc50056bc	5	Leon: We can talk later... It's not safe / here.
+ROOM1090	sub03	0x02650	3f 00 12 00	18	0x00	1	25	20	37bbc50056bc	5	Leon: We can talk later... It's not safe / here.
+ROOM1090	sub03	0x0265C	3f 00 13 00	19	0x00	0	25	30	fde929aa6e6b	5	Leon: We can talk later... It's not safe / here.
+ROOM1090	sub03	0x02664	3f 00 13 00	19	0x00	1	26	30	fde929aa6e6b	5	Leon: We can talk later... It's not safe / here.
+ROOM1090	sub03	0x02674	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	6	Leon: Besides, you need to get that / wound treated, right? Let's go.
+ROOM1090	sub03	0x0267C	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	6	Leon: Besides, you need to get that / wound treated, right? Let's go.
+ROOM1090	sub03	0x02688	3f 00 10 00	16	0x00	0	25	30	fec1ec970163	6	Leon: Besides, you need to get that / wound treated, right? Let's go.
+ROOM1090	sub03	0x02690	3f 00 10 00	16	0x00	1	25	30	fec1ec970163	6	Leon: Besides, you need to get that / wound treated, right? Let's go.
+ROOM1090	sub03	0x0269C	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	6	Leon: Besides, you need to get that / wound treated, right? Let's go.
+ROOM10B1	sub04	0x019A2	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	0	Elza: John, wait!
+ROOM10B1	sub04	0x019AA	3f 00 00 00	0	0x00	1	51	20	3e20a32edca8	0	Elza: John, wait!
+ROOM10B1	sub04	0x019BA	3f 00 05 00	5	0x00	0	50	25	44edec9b0cc7	1	Elza: There's still a little girl / trapped in there!
+ROOM10B1	sub04	0x019C2	3f 00 05 00	5	0x00	1	50	25	44edec9b0cc7	1	Elza: There's still a little girl / trapped in there!
+ROOM10B1	sub04	0x019CE	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	1	Elza: There's still a little girl / trapped in there!
+ROOM10B1	sub04	0x01A02	3f 00 03 00	3	0x00	0	25	20	448e35e6af79	3	Elza: I found her in the basement / garage! We can't just leave her behind!
+ROOM10B1	sub04	0x01A0A	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	3	Elza: I found her in the basement / garage! We can't just leave her behind!
+ROOM10B1	sub04	0x01A16	3f 00 02 00	2	0x00	0	50	30	a891289fe964	3	Elza: I found her in the basement / garage! We can't just leave her behind!
+ROOM10B1	sub04	0x01A1E	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	3	Elza: I found her in the basement / garage! We can't just leave her behind!
+ROOM10D0	sub21	0x01A64	3f 00 00 00	0	0x00	0	90	20	fe313d415aee	13	Leon: Wait don't shoot!
+ROOM10D0	sub21	0x01A86	3f 00 00 00	0	0x00	1	30	20	fe313d415aee	13	Leon: Wait don't shoot!
+ROOM10D0	sub21	0x01B10	3f 00 00 00	0	0x00	0	50	20	fe313d415aee	15	Leon: I'm glad to see that you're / still alive Marvin.
+ROOM10D0	sub21	0x01B18	3f 00 00 00	0	0x00	1	101	20	fe313d415aee	15	Leon: I'm glad to see that you're / still alive Marvin.
+ROOM10D0	sub21	0x01B54	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	17	Leon: Has everyone been eaten by / zombies? or have they turned into / zombies?
+ROOM10D0	sub21	0x01BA0	3f 00 01 00	1	0x00	0	30	30	fec1ec970163	20	Leon: You are the only one who I found, / the chief is injured, one of those / things bit him.
+ROOM10D0	sub21	0x01BA8	3f 00 01 00	1	0x00	1	90	30	fec1ec970163	20	Leon: You are the only one who I found, / the chief is injured, one of those / things bit him.
+ROOM10D0	sub21	0x01BDA	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	20	Leon: You are the only one who I found, / the chief is injured, one of those / things bit him.
+ROOM10D0	sub21	0x01C26	3f 00 00 00	0	0x00	0	30	20	fe313d415aee	22	Leon: The chief told me about using the / communication system and asking for / outside help.
+ROOM10D0	sub21	0x01C2E	3f 00 00 00	0	0x00	1	30	20	fe313d415aee	22	Leon: The chief told me about using the / communication system and asking for / outside help.
+ROOM10D0	sub21	0x01C3A	3f 00 05 00	5	0x00	0	30	25	28617fb5751d	22	Leon: The chief told me about using the / communication system and asking for / outside help.
+ROOM10D0	sub21	0x01C42	3f 00 05 00	5	0x00	1	30	25	28617fb5751d	22	Leon: The chief told me about using the / communication system and asking for / outside help.
+ROOM10D0	sub21	0x01C4E	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	22	Leon: The chief told me about using the / communication system and asking for / outside help.
+ROOM10D0	sub21	0x01C96	3f 00 04 00	4	0x00	0	30	30	fde929aa6e6b	24	Leon: I don't know, it remains to try, / the helicopter abandoned us, the phones
+ROOM10D0	sub21	0x01C9E	3f 00 04 00	4	0x00	1	30	30	fde929aa6e6b	24	Leon: I don't know, it remains to try, / the helicopter abandoned us, the phones
+ROOM10D0	sub21	0x01CAA	3f 00 00 00	0	0x00	0	30	20	fe313d415aee	24	Leon: I don't know, it remains to try, / the helicopter abandoned us, the phones
+ROOM10D0	sub21	0x01CB2	3f 00 00 00	0	0x00	1	31	20	fe313d415aee	24	Leon: I don't know, it remains to try, / the helicopter abandoned us, the phones
+ROOM10D0	sub21	0x01CC2	3f 00 01 00	1	0x00	0	30	30	fec1ec970163	25	are down and with the building besieged / by those things, I don't see any more / options.
+ROOM10D0	sub21	0x01CCA	3f 00 01 00	1	0x00	1	30	30	fec1ec970163	25	are down and with the building besieged / by those things, I don't see any more / options.
+ROOM10D0	sub21	0x01CD6	3f 00 05 00	5	0x00	0	30	25	28617fb5751d	25	are down and with the building besieged / by those things, I don't see any more / options.
+ROOM10D0	sub21	0x01CDE	3f 00 05 00	5	0x00	1	30	25	28617fb5751d	25	are down and with the building besieged / by those things, I don't see any more / options.
+ROOM10D0	sub21	0x01CEA	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	25	are down and with the building besieged / by those things, I don't see any more / options.
+ROOM10D0	sub21	0x01D32	3f 00 01 00	1	0x00	0	50	30	fec1ec970163	27	Leon: I agree, he's in his office.
+ROOM10D0	sub21	0x01D3A	3f 00 01 00	1	0x00	1	50	30	fec1ec970163	27	Leon: I agree, he's in his office.
+ROOM10D0	sub21	0x01D46	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	27	Leon: I agree, he's in his office.
+ROOM1110	sub02	0x00CFC	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1110	sub02	0x00D0A	3f 01 0b 00	11	0x00	1	30	-	-	0	It's a police officer, he's dead.He is holding a slip.The numbers 4312" are / printed on the slip.
+ROOM1111	sub02	0x00CFC	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1111	sub02	0x00D0A	3f 01 0b 00	11	0x00	1	30	-	-	0	It's a police officer, he's dead.He is holding a slip.The numbers 4312" are / printed on the slip.
+ROOM1141	sub02	0x00C88	3f 00 0f 00	15	0x00	0	40	20	3e20a32edca8	0	Elza: John, wait!
+ROOM1141	sub02	0x00CA4	3f 00 0f 00	15	0x00	1	21	20	3e20a32edca8	0	Elza: John, wait!
+ROOM1141	sub02	0x00D12	3f 00 12 00	18	0x00	0	25	20	448e35e6af79	2	Elza: Same here... are you okay? / what's happened?
+ROOM1141	sub02	0x00D1A	3f 00 12 00	18	0x00	1	25	20	448e35e6af79	2	Elza: Same here... are you okay? / what's happened?
+ROOM1141	sub02	0x00D26	3f 00 13 00	19	0x00	0	25	30	2baf4d018c78	2	Elza: Same here... are you okay? / what's happened?
+ROOM1141	sub02	0x00D2E	3f 00 13 00	19	0x00	1	25	30	2baf4d018c78	2	Elza: Same here... are you okay? / what's happened?
+ROOM1141	sub02	0x00D3A	3f 00 18 00	24	0x00	0	20	24	358acb7d0d71	2	Elza: Same here... are you okay? / what's happened?
+ROOM1141	sub02	0x00D82	3f 00 10 00	16	0x00	0	50	30	bae0d897d4ff	4	Elza: What is wrong?
+ROOM1141	sub02	0x00D8A	3f 00 10 00	16	0x00	1	50	30	bae0d897d4ff	4	Elza: What is wrong?
+ROOM1141	sub02	0x00D96	3f 00 18 00	24	0x00	0	20	24	358acb7d0d71	4	Elza: What is wrong?
+ROOM1141	sub02	0x00EF4	3f 00 11 00	17	0x00	0	101	30	a891289fe964	10	Elza: John! what will we do now?!
+ROOM1150	sub03	0x00F0E	3f 01 0b 00	11	0x00	0	70	25	f1983655aa45		
+ROOM1150	sub03	0x00F70	3f 01 0b 00	11	0x00	1	60	25	f1983655aa45	2	Irons: I'll be fine. Just worry about / yourself for now.
+ROOM1150	sub08	0x01170	3f 01 0b 00	11	0x00	0	60	25	f1983655aa45		
+ROOM1150	sub08	0x01182	3f 00 0a 00	10	0x00	0	60	20	d459bb5c46df	4	Leon: Sir... the helicopter is / gone... it was our only way out...
+ROOM1150	sub08	0x0118A	3f 00 0a 00	10	0x00	1	61	20	d459bb5c46df	4	Leon: Sir... the helicopter is / gone... it was our only way out...
+ROOM1150	sub08	0x011A2	3f 00 0b 00	11	0x00	0	60	25	f1983655aa45	6	Leon: The building is besieged by / those things, I don't see any option.
+ROOM1150	sub08	0x011AA	3f 00 0b 00	11	0x00	1	61	25	f1983655aa45	6	Leon: The building is besieged by / those things, I don't see any option.
+ROOM1150	sub08	0x011E6	3f 00 0a 00	10	0x00	0	50	20	d459bb5c46df	8	Leon: But the system is damaged.
+ROOM1150	sub08	0x011EE	3f 00 0a 00	10	0x00	1	51	20	d459bb5c46df	8	Leon: But the system is damaged.
+ROOM1150	sub08	0x0123E	3f 00 0b 00	11	0x00	0	60	25	f1983655aa45	10	Leon: Ok, I'll go see if I can / achieve something with that.
+ROOM1150	sub08	0x01246	3f 00 0b 00	11	0x00	1	61	25	f1983655aa45	10	Leon: Ok, I'll go see if I can / achieve something with that.
+ROOM1150	sub08	0x01286	3f 00 0c 00	12	0x00	0	101	20	335e77d44a14	14	Leon: Yes sir...
+ROOM1150	sub08	0x012B8	3f 00 0c 00	12	0x00	1	20	20	335e77d44a14	14	Leon: Yes sir...
+ROOM1150	sub08	0x012C6	3f 01 0b 00	11	0x00	1	60	25	f1983655aa45	14	Leon: Yes sir...
+ROOM1151	sub03	0x00EEC	3f 01 0b 00	11	0x00	0	70	20	739757c924bd		
+ROOM1151	sub03	0x00F4E	3f 01 0b 00	11	0x00	1	60	20	739757c924bd	2	Irons: I'll be fine. Just worry about / yourself for now.
+ROOM1170	sub02	0x01542	3f 00 0f 00	15	0x00	0	30	20	fe313d415aee	5	Leon: Hey! Hey wait! Down here!
+ROOM1170	sub02	0x0154A	3f 00 0f 00	15	0x00	1	30	20	fe313d415aee	5	Leon: Hey! Hey wait! Down here!
+ROOM1170	sub02	0x015E4	3f 00 19 00	25	0x00	0	100	82	abd68925a8b8	6	Leon: Oh, that's just freaking great...
+ROOM1170	sub02	0x015F0	3f 00 11 00	17	0x00	0	100	30	ce75d881cd9d	7	Leon: Now what am I gonna do?
+ROOM1170	sub14	0x01762	3f 00 12 00	18	0x00	0	90	20	37bbc50056bc	13	Leon: Damn it, there must be another / way out of here.
+ROOM1170	sub14	0x01782	3f 00 12 00	18	0x00	1	20	20	37bbc50056bc	13	Leon: Damn it, there must be another / way out of here.
+ROOM1170	sub14	0x01792	3f 00 17 00	23	0x00	0	100	24	b385706e1ff0	14	Leon: If only I could contact the / outside.
+ROOM1170	sub14	0x017A6	3f 00 12 00	18	0x00	0	50	20	37bbc50056bc	16	Leon: That's right! I have to report / this to the chief.
+ROOM1170	sub14	0x017AE	3f 00 12 00	18	0x00	1	51	20	37bbc50056bc	16	Leon: That's right! I have to report / this to the chief.
+ROOM11B0	sub04	0x01340	3f 00 0f 00	15	0x00	0	30	20	fe313d415aee	0	Leon: H-hey!
+ROOM11B0	sub04	0x01348	3f 00 0f 00	15	0x00	1	31	20	fe313d415aee	0	Leon: H-hey!
+ROOM11B0	sub04	0x01412	3f 01 0b 00	11	0x00	0	60	1	036945c77ae4	0	Leon: H-hey!
+ROOM11B0	sub04	0x0143E	3f 01 0b 00	11	0x00	1	60	1	036945c77ae4	0	Leon: H-hey!
+ROOM11B0	sub06	0x01516	3f 00 13 00	19	0x00	0	40	30	fde929aa6e6b	2	Leon: Those things broke through the / shutters and started getting inside.
+ROOM11B0	sub06	0x0151E	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	2	Leon: Those things broke through the / shutters and started getting inside.
+ROOM11B0	sub06	0x01526	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	2	Leon: Those things broke through the / shutters and started getting inside.
+ROOM11B0	sub06	0x015C0	3f 00 0f 00	15	0x00	0	40	20	fe313d415aee	6	Leon: Marvin, please come here!
+ROOM11B0	sub06	0x015C8	3f 00 0f 00	15	0x00	1	90	20	fe313d415aee	6	Leon: Marvin, please come here!
+ROOM11B0	sub06	0x0162A	3f 00 10 00	16	0x00	0	40	30	fec1ec970163	7	Leon: There's a manhole here. How / about an underground escape route?
+ROOM11B0	sub06	0x01632	3f 00 13 00	19	0x00	0	50	30	fde929aa6e6b	7	Leon: There's a manhole here. How / about an underground escape route?
+ROOM11B0	sub06	0x0163A	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	7	Leon: There's a manhole here. How / about an underground escape route?
+ROOM11B0	sub06	0x01796	3f 00 12 00	18	0x00	0	40	20	37bbc50056bc	11	Leon: Marvin, I'll climb down first, / you help her get down!
+ROOM11B0	sub06	0x0179E	3f 00 14 00	20	0x00	0	40	25	28617fb5751d	11	Leon: Marvin, I'll climb down first, / you help her get down!
+ROOM11B0	sub06	0x017A6	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	11	Leon: Marvin, I'll climb down first, / you help her get down!
+ROOM11B1	sub02	0x01238	3f 00 02 00	2	0x00	0	50	20	3e20a32edca8	0	Elza: Hey! What are you doing in a / place like this?
+ROOM11B1	sub02	0x01240	3f 00 02 00	2	0x00	1	51	20	3e20a32edca8	0	Elza: Hey! What are you doing in a / place like this?
+ROOM11B1	sub02	0x0127C	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	1	Elza: You got trapped in here, right?
+ROOM11B1	sub02	0x01284	3f 00 03 00	3	0x00	1	51	30	bae0d897d4ff	1	Elza: You got trapped in here, right?
+ROOM11B1	sub02	0x012A4	3f 01 0b 00	11	0x00	0	30	20	739757c924bd	1	Elza: You got trapped in here, right?
+ROOM11B1	sub02	0x012BC	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	2	Elza: What's your name?
+ROOM11B1	sub02	0x012C4	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	2	Elza: What's your name?
+ROOM11B1	sub02	0x012F4	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	4	Elza: Sherry, huh? That's a cute name. / I'm Elza.
+ROOM11B1	sub02	0x012FC	3f 00 0a 00	10	0x00	1	25	25	ae92fbdb1ba8	4	Elza: Sherry, huh? That's a cute name. / I'm Elza.
+ROOM11B1	sub02	0x01308	3f 00 0b 00	11	0x00	0	25	20	739757c924bd	4	Elza: Sherry, huh? That's a cute name. / I'm Elza.
+ROOM11B1	sub02	0x01310	3f 00 0b 00	11	0x00	1	26	20	739757c924bd	4	Elza: Sherry, huh? That's a cute name. / I'm Elza.
+ROOM11B1	sub02	0x01340	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	6	Elza: That's right! Okay Sherry, listen / up...
+ROOM11B1	sub02	0x01348	3f 00 0a 00	10	0x00	1	25	25	ae92fbdb1ba8	6	Elza: That's right! Okay Sherry, listen / up...
+ROOM11B1	sub02	0x01354	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	6	Elza: That's right! Okay Sherry, listen / up...
+ROOM11B1	sub02	0x0135C	3f 00 09 00	9	0x00	1	26	20	ad702e0ea41e	6	Elza: That's right! Okay Sherry, listen / up...
+ROOM11B1	sub02	0x0136C	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	7	Elza: Just wait there. / I'll come rescue you in a bit.
+ROOM11B1	sub02	0x01374	3f 00 09 00	9	0x00	1	25	20	ad702e0ea41e	7	Elza: Just wait there. / I'll come rescue you in a bit.
+ROOM11B1	sub02	0x01380	3f 00 0b 00	11	0x00	0	25	20	739757c924bd	7	Elza: Just wait there. / I'll come rescue you in a bit.
+ROOM11B1	sub02	0x01388	3f 00 0b 00	11	0x00	1	26	20	739757c924bd	7	Elza: Just wait there. / I'll come rescue you in a bit.
+ROOM11B1	sub02	0x01398	3f 00 0a 00	10	0x00	0	50	25	ae92fbdb1ba8	8	Elza: So just hold tight and wait for / me quietly in that car over there. Okay?
+ROOM11B1	sub02	0x013A0	3f 00 0a 00	10	0x00	1	51	25	ae92fbdb1ba8	8	Elza: So just hold tight and wait for / me quietly in that car over there. Okay?
+ROOM11B1	sub02	0x013CE	3f 01 0b 00	11	0x00	1	1	20	739757c924bd	8	Elza: So just hold tight and wait for / me quietly in that car over there. Okay?
+ROOM11B1	sub03	0x0146A	3f 00 04 00	4	0x00	0	70	24	358acb7d0d71		
+ROOM11B1	sub03	0x01484	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	10	Elza: Sherry!?
+ROOM11B1	sub03	0x0148C	3f 00 03 00	3	0x00	1	51	30	bae0d897d4ff	10	Elza: Sherry!?
+ROOM11B1	sub03	0x014D2	3f 00 01 00	1	0x00	0	50	30	2baf4d018c78	11	Elza: Where has she gone!?
+ROOM11B1	sub03	0x014DA	3f 00 01 00	1	0x00	1	51	30	2baf4d018c78	11	Elza: Where has she gone!?
+ROOM11C0	sub02	0x018A4	3f 00 0f 00	15	0x00	0	40	20	fe313d415aee	0	Leon: Ada! Where's Marvin? Wasn't / he with you?
+ROOM11C0	sub02	0x018AC	3f 00 13 00	19	0x00	0	40	30	fde929aa6e6b	0	Leon: Ada! Where's Marvin? Wasn't / he with you?
+ROOM11C0	sub02	0x018B4	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	0	Leon: Ada! Where's Marvin? Wasn't / he with you?
+ROOM11C0	sub02	0x0192C	3f 00 0f 00	15	0x00	0	40	20	fe313d415aee	4	Leon: What!?
+ROOM11C0	sub02	0x01934	3f 00 0f 00	15	0x00	1	60	20	fe313d415aee	4	Leon: What!?
+ROOM11C0	sub02	0x01A70	3f 00 0f 00	15	0x00	0	40	20	fe313d415aee	5	Leon: Ada, you hide inside that patrol / car.
+ROOM11C0	sub02	0x01A78	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	5	Leon: Ada, you hide inside that patrol / car.
+ROOM11C0	sub03	0x01B8E	3f 00 13 00	19	0x00	0	40	30	fde929aa6e6b	9	Leon: Yeah... Anyway, let's get / out of here.
+ROOM11C0	sub03	0x01B96	3f 00 0f 00	15	0x00	0	40	20	fe313d415aee	9	Leon: Yeah... Anyway, let's get / out of here.
+ROOM11C0	sub03	0x01B9E	3f 00 15 00	21	0x00	0	40	35	12f8c236fb59	9	Leon: Yeah... Anyway, let's get / out of here.
+ROOM11C0	sub03	0x01BA6	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	9	Leon: Yeah... Anyway, let's get / out of here.
+ROOM11D0	sub03	0x018A2	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM11D0	sub03	0x018BE	3f 01 0b 00	11	0x00	1	30	-	-		
+ROOM11D0	sub03	0x018D6	3f 01 0b 00	11	0x00	1	30	-	-		
+ROOM11D1	sub03	0x018A2	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM11D1	sub03	0x018BE	3f 01 0b 00	11	0x00	1	30	-	-		
+ROOM11D1	sub03	0x018D6	3f 01 0b 00	11	0x00	1	30	-	-		
+ROOM1211	sub02	0x01FD6	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	0	Elza: Hey! You must be John right? / Get up now!
+ROOM1211	sub02	0x01FDE	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	0	Elza: Hey! You must be John right? / Get up now!
+ROOM1211	sub02	0x01FEA	3f 00 04 00	4	0x00	0	25	30	2baf4d018c78	0	Elza: Hey! You must be John right? / Get up now!
+ROOM1211	sub02	0x01FF2	3f 00 04 00	4	0x00	1	25	30	2baf4d018c78	0	Elza: Hey! You must be John right? / Get up now!
+ROOM1211	sub02	0x01FFE	3f 00 02 00	2	0x00	0	30	30	a891289fe964	0	Elza: Hey! You must be John right? / Get up now!
+ROOM1211	sub02	0x020A0	3f 00 03 00	3	0x00	0	25	20	448e35e6af79	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x020A8	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x020B4	3f 00 01 00	1	0x00	0	25	30	bae0d897d4ff	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x020BC	3f 00 01 00	1	0x00	1	45	30	bae0d897d4ff	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x020F8	3f 00 00 00	0	0x00	0	60	20	3e20a32edca8	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x02100	3f 00 00 00	0	0x00	1	1	20	3e20a32edca8	4	Elza: My name's Elza. / Roy sent me to get you out of here.
+ROOM1211	sub02	0x02194	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	5	Elza: Listen. We're in serious trouble. / The whole station is crawling with / zombies!
+ROOM1211	sub02	0x0219C	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	5	Elza: Listen. We're in serious trouble. / The whole station is crawling with / zombies!
+ROOM1211	sub02	0x021A8	3f 00 01 00	1	0x00	0	25	30	bae0d897d4ff	5	Elza: Listen. We're in serious trouble. / The whole station is crawling with / zombies!
+ROOM1211	sub02	0x021B0	3f 00 01 00	1	0x00	1	25	30	bae0d897d4ff	5	Elza: Listen. We're in serious trouble. / The whole station is crawling with / zombies!
+ROOM1211	sub02	0x021BC	3f 00 02 00	2	0x00	0	30	30	a891289fe964	5	Elza: Listen. We're in serious trouble. / The whole station is crawling with / zombies!
+ROOM1211	sub02	0x021F0	3f 00 03 00	3	0x00	0	90	20	448e35e6af79	7	Elza: Roy was injured by one of them. / I left him in the Interrogation Room, but...
+ROOM1211	sub02	0x02210	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	7	Elza: Roy was injured by one of them. / I left him in the Interrogation Room, but...
+ROOM1211	sub02	0x0221C	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	7	Elza: Roy was injured by one of them. / I left him in the Interrogation Room, but...
+ROOM1211	sub02	0x02272	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	9	Elza: John. Wait!
+ROOM1211	sub02	0x0227A	3f 00 00 00	0	0x00	1	51	20	3e20a32edca8	9	Elza: John. Wait!
+ROOM1230	sub21	0x014B4	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1230	sub21	0x014C2	3f 01 0b 00	11	0x00	1	30	-	-	10	A miserable death...He is holding a slip.The numbers 5632" are / printed on the slip.
+ROOM1231	sub21	0x014B4	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM1231	sub21	0x014C2	3f 01 0b 00	11	0x00	1	30	-	-	10	A miserable death...He is holding a slip.The numbers 5632" are / printed on the slip.
+ROOM2000	sub02	0x01836	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	0	Leon: Ada, Marvin, hold on.
+ROOM2000	sub02	0x0183E	3f 00 0f 00	15	0x00	1	51	20	fe313d415aee	0	Leon: Ada, Marvin, hold on.
+ROOM2000	sub02	0x01876	3f 00 10 00	16	0x00	0	30	30	fec1ec970163	2	Leon: There is a little girl that / came in here, we have to find her!
+ROOM2000	sub02	0x0187E	3f 00 10 00	16	0x00	1	30	30	fec1ec970163	2	Leon: There is a little girl that / came in here, we have to find her!
+ROOM2000	sub02	0x0188A	3f 00 14 00	20	0x00	0	30	25	28617fb5751d	2	Leon: There is a little girl that / came in here, we have to find her!
+ROOM2000	sub02	0x01892	3f 00 14 00	20	0x00	1	31	25	28617fb5751d	2	Leon: There is a little girl that / came in here, we have to find her!
+ROOM2000	sub02	0x018D8	3f 00 13 00	19	0x00	0	50	30	fde929aa6e6b	4	Leon: Yes, before meeting Ada I saw / her coming in this way, if I hadn't
+ROOM2000	sub02	0x018E0	3f 00 13 00	19	0x00	1	51	30	fde929aa6e6b	4	Leon: Yes, before meeting Ada I saw / her coming in this way, if I hadn't
+ROOM2000	sub02	0x018F0	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	5	seen her maybe we wouldn't have / found this way out.
+ROOM2000	sub02	0x018F8	3f 00 0f 00	15	0x00	1	51	20	fe313d415aee	5	seen her maybe we wouldn't have / found this way out.
+ROOM2000	sub02	0x01908	3f 00 10 00	16	0x00	0	50	30	fec1ec970163	6	Leon: She must have thought I was / a zombie.
+ROOM2000	sub02	0x01910	3f 00 10 00	16	0x00	1	50	30	fec1ec970163	6	Leon: She must have thought I was / a zombie.
+ROOM2000	sub02	0x0191C	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	6	Leon: She must have thought I was / a zombie.
+ROOM2000	sub02	0x019B6	3f 00 0f 00	15	0x00	0	30	20	fe313d415aee	9	Leon: Okay, it will be better to / separate and cover more ground.
+ROOM2000	sub02	0x019BE	3f 00 0f 00	15	0x00	1	30	20	fe313d415aee	9	Leon: Okay, it will be better to / separate and cover more ground.
+ROOM2000	sub02	0x019CA	3f 00 14 00	20	0x00	0	30	25	28617fb5751d	9	Leon: Okay, it will be better to / separate and cover more ground.
+ROOM2000	sub02	0x019D2	3f 00 14 00	20	0x00	1	30	25	28617fb5751d	9	Leon: Okay, it will be better to / separate and cover more ground.
+ROOM2000	sub02	0x019E2	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	10	Leon: Marvin sees Ada up front.
+ROOM2000	sub02	0x019EA	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	10	Leon: Marvin sees Ada up front.
+ROOM2000	sub02	0x019F6	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	10	Leon: Marvin sees Ada up front.
+ROOM2001	sub02	0x018B6	3f 00 04 00	4	0x00	0	30	24	358acb7d0d71		
+ROOM2001	sub04	0x019A8	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71		
+ROOM2001	sub04	0x019DC	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	2	Elza: Okay, I'll go for her.
+ROOM2001	sub04	0x019E4	3f 00 03 00	3	0x00	1	50	30	bae0d897d4ff	2	Elza: Okay, I'll go for her.
+ROOM2001	sub04	0x019F0	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	2	Elza: Okay, I'll go for her.
+ROOM2001	sub04	0x01A38	3f 00 02 00	2	0x00	0	50	20	3e20a32edca8	4	Elza: Good idea, but be careful.
+ROOM2001	sub04	0x01A40	3f 00 02 00	2	0x00	1	50	20	3e20a32edca8	4	Elza: Good idea, but be careful.
+ROOM2001	sub04	0x01A4C	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	4	Elza: Good idea, but be careful.
+ROOM2001	sub05	0x01ADA	3f 00 02 00	2	0x00	0	25	20	3e20a32edca8	6	Elza: Sherry... thank god you're / fine! I was so worried!
+ROOM2001	sub05	0x01AE2	3f 00 02 00	2	0x00	1	25	20	3e20a32edca8	6	Elza: Sherry... thank god you're / fine! I was so worried!
+ROOM2001	sub05	0x01AEE	3f 00 00 00	0	0x00	0	61	20	448e35e6af79	6	Elza: Sherry... thank god you're / fine! I was so worried!
+ROOM2001	sub05	0x01B1C	3f 00 00 00	0	0x00	1	40	20	448e35e6af79	6	Elza: Sherry... thank god you're / fine! I was so worried!
+ROOM2001	sub05	0x01B2C	3f 00 01 00	1	0x00	0	25	30	2baf4d018c78	7	Elza: What happened? why didn't you / wait for me?
+ROOM2001	sub05	0x01B34	3f 00 01 00	1	0x00	1	25	30	2baf4d018c78	7	Elza: What happened? why didn't you / wait for me?
+ROOM2001	sub05	0x01B40	3f 00 02 00	2	0x00	0	25	20	3e20a32edca8	7	Elza: What happened? why didn't you / wait for me?
+ROOM2001	sub05	0x01B48	3f 00 02 00	2	0x00	1	25	20	3e20a32edca8	7	Elza: What happened? why didn't you / wait for me?
+ROOM2001	sub05	0x01B54	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	7	Elza: What happened? why didn't you / wait for me?
+ROOM2001	sub05	0x01BAE	3f 01 0b 00	11	0x00	0	30	20	739757c924bd	9	Sherry: I went down here to find him, / but I couldn't...
+ROOM2001	sub05	0x01BD0	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	10	Elza: I understand, don't worry honey, / if he's here we'll find him, okay?
+ROOM2001	sub05	0x01BD8	3f 00 09 00	9	0x00	1	25	20	ad702e0ea41e	10	Elza: I understand, don't worry honey, / if he's here we'll find him, okay?
+ROOM2001	sub05	0x01BE4	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	10	Elza: I understand, don't worry honey, / if he's here we'll find him, okay?
+ROOM2001	sub05	0x01BEC	3f 00 0a 00	10	0x00	1	26	25	ae92fbdb1ba8	10	Elza: I understand, don't worry honey, / if he's here we'll find him, okay?
+ROOM2001	sub05	0x01C2E	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	11	Elza: My, that's a nice pocket watch!
+ROOM2001	sub05	0x01C36	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	11	Elza: My, that's a nice pocket watch!
+ROOM2001	sub05	0x01C86	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	13	Elza: I see, I guess your mom is right.
+ROOM2001	sub05	0x01C8E	3f 00 0a 00	10	0x00	1	25	25	ae92fbdb1ba8	13	Elza: I see, I guess your mom is right.
+ROOM2001	sub05	0x01C9A	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	13	Elza: I see, I guess your mom is right.
+ROOM2001	sub05	0x01CA2	3f 00 09 00	9	0x00	1	26	20	ad702e0ea41e	13	Elza: I see, I guess your mom is right.
+ROOM2001	sub05	0x01CB2	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	14	Elza: Come on Sherry, let's look for / John and get out of here!
+ROOM2001	sub05	0x01CBA	3f 00 09 00	9	0x00	1	25	20	ad702e0ea41e	14	Elza: Come on Sherry, let's look for / John and get out of here!
+ROOM2001	sub05	0x01CC6	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	14	Elza: Come on Sherry, let's look for / John and get out of here!
+ROOM2001	sub05	0x01CCE	3f 00 0a 00	10	0x00	1	26	25	ae92fbdb1ba8	14	Elza: Come on Sherry, let's look for / John and get out of here!
+ROOM2001	sub05	0x01CDA	3f 01 0b 00	11	0x00	1	31	20	739757c924bd	14	Elza: Come on Sherry, let's look for / John and get out of here!
+ROOM2020	sub02	0x00A9C	3f 00 00 00	0	0x00	0	40	40	b3151201ece6	1	Will you use the Crank? 
+ROOM2021	sub02	0x00A9C	3f 00 00 00	0	0x00	0	40	40	37556888b486	1	Will you use the Crank? 
+ROOM2040	sub08	0x01722	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM2040	sub08	0x01734	3f 01 0b 00	11	0x00	1	30	-	-	3	The body of a sewer worker... / He has something in his hands.
+ROOM2041	sub08	0x01722	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM2041	sub08	0x01734	3f 01 0b 00	11	0x00	1	30	-	-	3	The body of a sewer worker... / He has something in his hands.
+ROOM3000	sub03	0x0169C	3f 00 08 00	8	0x00	0	0	24	b385706e1ff0		
+ROOM3000	sub03	0x016BE	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	2	Leon: Marvin! Aren't these... RPD / officers!?
+ROOM3000	sub03	0x016C6	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	2	Leon: Marvin! Aren't these... RPD / officers!?
+ROOM3000	sub03	0x016D2	3f 00 02 00	2	0x00	0	50	30	ce75d881cd9d	2	Leon: Marvin! Aren't these... RPD / officers!?
+ROOM3000	sub03	0x016DA	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	2	Leon: Marvin! Aren't these... RPD / officers!?
+ROOM3000	sub03	0x0173A	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	5	Leon: Marvin, what about that woman?
+ROOM3000	sub03	0x01742	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	5	Leon: Marvin, what about that woman?
+ROOM3000	sub03	0x0174E	3f 00 01 00	1	0x00	0	25	30	fec1ec970163	5	Leon: Marvin, what about that woman?
+ROOM3000	sub03	0x01756	3f 00 01 00	1	0x00	1	25	30	fec1ec970163	5	Leon: Marvin, what about that woman?
+ROOM3000	sub03	0x01762	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	5	Leon: Marvin, what about that woman?
+ROOM3000	sub03	0x017B6	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	8	Leon: There's a ton of things I need / to ask her the next time I see her...
+ROOM3000	sub03	0x017BE	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	8	Leon: There's a ton of things I need / to ask her the next time I see her...
+ROOM3000	sub03	0x017CA	3f 00 03 00	3	0x00	0	25	20	37bbc50056bc	8	Leon: There's a ton of things I need / to ask her the next time I see her...
+ROOM3000	sub03	0x017D2	3f 00 03 00	3	0x00	1	26	20	37bbc50056bc	8	Leon: There's a ton of things I need / to ask her the next time I see her...
+ROOM3001	sub03	0x016DC	3f 00 09 00	9	0x00	0	0	24	358acb7d0d71		
+ROOM3001	sub03	0x01706	3f 00 04 00	4	0x00	0	50	30	2baf4d018c78	3	Elza: Wh-what is this place...?
+ROOM3001	sub03	0x0170E	3f 00 04 00	4	0x00	1	50	30	2baf4d018c78	3	Elza: Wh-what is this place...?
+ROOM3001	sub03	0x0171A	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	3	Elza: Wh-what is this place...?
+ROOM3001	sub03	0x01784	3f 00 02 00	2	0x00	0	50	30	a891289fe964	6	Elza: What happened here?
+ROOM3001	sub03	0x0178C	3f 00 09 00	9	0x00	0	51	24	358acb7d0d71	6	Elza: What happened here?
+ROOM3001	sub03	0x017A2	3f 00 01 00	1	0x00	0	50	30	bae0d897d4ff	8	Elza: It'll be okay, just stick close to / me.
+ROOM3001	sub03	0x017AA	3f 00 01 00	1	0x00	1	50	30	bae0d897d4ff	8	Elza: It'll be okay, just stick close to / me.
+ROOM3001	sub03	0x017B6	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	8	Elza: It'll be okay, just stick close to / me.
+ROOM3020	sub02	0x00C48	3f 00 08 00	8	0x00	0	60	24	b385706e1ff0		
+ROOM3020	sub02	0x00C84	3f 00 00 00	0	0x00	0	60	20	fe313d415aee		
+ROOM3020	sub02	0x00C8C	3f 00 00 00	0	0x00	1	30	20	fe313d415aee		
+ROOM3020	sub02	0x00CC0	3f 00 02 00	2	0x00	0	40	30	ce75d881cd9d	0	Leon: Dammit! the door does not open!
+ROOM3020	sub02	0x00CC8	3f 00 08 00	8	0x00	0	50	24	b385706e1ff0	0	Leon: Dammit! the door does not open!
+ROOM3060	sub03	0x010BE	3f 02 06 00	6	0x00	0	40	-	-		
+ROOM3061	sub02	0x010A4	3f 00 00 00	0	0x00	0	0	20	3e20a32edca8	0	 / It's locked.
+ROOM3061	sub02	0x010EC	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	1	Elza: Sherry, come back!
+ROOM3061	sub02	0x010F4	3f 00 0a 00	10	0x00	0	0	20	b723bfd38a73	1	Elza: Sherry, come back!
+ROOM3061	sub02	0x01110	3f 00 09 00	9	0x00	0	40	24	358acb7d0d71	4	Elza: A secret entrance?
+ROOM3061	sub02	0x01122	3f 00 0a 00	10	0x00	0	22	20	b723bfd38a73	4	Elza: A secret entrance?
+ROOM3061	sub02	0x0114C	3f 00 00 00	0	0x00	0	40	20	3e20a32edca8	6	Elza: Sherry, wait!
+ROOM3061	sub02	0x011DE	3f 02 06 00	6	0x00	0	5	30	ef5e257ceec7	9	John: H-hey, you brat! That's dangerous, / get back here!
+ROOM3070	sub02	0x034D0	3f 00 17 00	23	0x00	0	121	24	b385706e1ff0		
+ROOM3070	sub02	0x0350C	3f 00 18 00	24	0x00	0	10	12	bac29abc19d3		
+ROOM3070	sub02	0x03514	3f 00 18 00	24	0x00	1	160	12	bac29abc19d3		
+ROOM3070	sub03	0x036A4	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	0	Leon: Get on the lift! It's our only / option...
+ROOM3070	sub03	0x036AC	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	0	Leon: Get on the lift! It's our only / option...
+ROOM3070	sub03	0x036B8	3f 00 10 00	16	0x00	0	25	30	fec1ec970163	0	Leon: Get on the lift! It's our only / option...
+ROOM3070	sub03	0x036C0	3f 00 10 00	16	0x00	1	25	30	fec1ec970163	0	Leon: Get on the lift! It's our only / option...
+ROOM3070	sub03	0x036CC	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	0	Leon: Get on the lift! It's our only / option...
+ROOM3070	sub03	0x03724	3f 00 11 00	17	0x00	0	130	30	ce75d881cd9d	4	Leon: Hurry up! They're coming!
+ROOM3071	sub02	0x03598	3f 00 17 00	23	0x00	0	80	24	358acb7d0d71		
+ROOM3071	sub02	0x035A0	3f 00 18 00	24	0x00	0	80	90	c555f7434c5f		
+ROOM3071	sub02	0x035A8	3f 00 18 00	24	0x00	1	340	90	c555f7434c5f		
+ROOM3071	sub05	0x03777	3f 00 12 00	18	0x00	0	25	20	448e35e6af79	0	Elza: I know it has to be somewhere...!
+ROOM3071	sub05	0x0377F	3f 00 12 00	18	0x00	1	25	20	448e35e6af79	0	Elza: I know it has to be somewhere...!
+ROOM3071	sub05	0x0378B	3f 00 10 00	16	0x00	0	25	30	bae0d897d4ff	0	Elza: I know it has to be somewhere...!
+ROOM3071	sub05	0x03793	3f 00 10 00	16	0x00	1	25	30	bae0d897d4ff	0	Elza: I know it has to be somewhere...!
+ROOM3071	sub05	0x0379F	3f 00 17 00	23	0x00	0	20	24	358acb7d0d71	0	Elza: I know it has to be somewhere...!
+ROOM3071	sub11	0x03A21	3f 00 0f 00	15	0x00	0	25	20	3e20a32edca8	2	Elza: This lift, this is where it / came from.
+ROOM3071	sub11	0x03A29	3f 00 0f 00	15	0x00	1	25	20	3e20a32edca8	2	Elza: This lift, this is where it / came from.
+ROOM3071	sub11	0x03A35	3f 00 10 00	16	0x00	0	25	30	bae0d897d4ff	2	Elza: This lift, this is where it / came from.
+ROOM3071	sub11	0x03A3D	3f 00 10 00	16	0x00	1	25	30	bae0d897d4ff	2	Elza: This lift, this is where it / came from.
+ROOM3071	sub11	0x03A49	3f 00 17 00	23	0x00	0	21	24	358acb7d0d71	2	Elza: This lift, this is where it / came from.
+ROOM3071	sub11	0x03AFB	3f 00 13 00	19	0x00	0	25	30	2baf4d018c78	6	Elza: No... It looks like it can be / operated only from the inside...
+ROOM3071	sub11	0x03B03	3f 00 13 00	19	0x00	1	25	30	2baf4d018c78	6	Elza: No... It looks like it can be / operated only from the inside...
+ROOM3071	sub11	0x03B0F	3f 00 17 00	23	0x00	0	20	24	358acb7d0d71	6	Elza: No... It looks like it can be / operated only from the inside...
+ROOM3071	sub11	0x03B77	3f 00 0f 00	15	0x00	0	25	20	3e20a32edca8	8	Elza: Sherry? What are you talking / about...?
+ROOM3071	sub11	0x03B7F	3f 00 0f 00	15	0x00	1	25	20	3e20a32edca8	8	Elza: Sherry? What are you talking / about...?
+ROOM3071	sub11	0x03B8B	3f 00 10 00	16	0x00	0	25	30	bae0d897d4ff	8	Elza: Sherry? What are you talking / about...?
+ROOM3071	sub11	0x03B93	3f 00 10 00	16	0x00	1	25	30	bae0d897d4ff	8	Elza: Sherry? What are you talking / about...?
+ROOM3071	sub11	0x03B9F	3f 00 17 00	23	0x00	0	21	24	358acb7d0d71	8	Elza: Sherry? What are you talking / about...?
+ROOM3071	sub11	0x03C0F	3f 00 13 00	19	0x00	0	50	30	2baf4d018c78	11	Elza: Are you insane!?
+ROOM3071	sub11	0x03C17	3f 00 13 00	19	0x00	1	51	30	2baf4d018c78	11	Elza: Are you insane!?
+ROOM3071	sub11	0x03C27	3f 00 0f 00	15	0x00	0	25	20	3e20a32edca8	12	Elza: I told you that weird monster / came from here!
+ROOM3071	sub11	0x03C2F	3f 00 0f 00	15	0x00	1	25	20	3e20a32edca8	12	Elza: I told you that weird monster / came from here!
+ROOM3071	sub11	0x03C3B	3f 00 11 00	17	0x00	0	50	30	a891289fe964	12	Elza: I told you that weird monster / came from here!
+ROOM3071	sub11	0x03C43	3f 00 17 00	23	0x00	0	20	24	358acb7d0d71	12	Elza: I told you that weird monster / came from here!
+ROOM3091	sub07	0x0170E	3f 00 0d 00	13	0x00	0	2	40	067568a0df16	32	You've used the Latch Key.
+ROOM3091	sub07	0x018EE	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x018F6	3f 00 0c 00	12	0x00	1	50	30	46c05281b43b	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x01902	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	15	Sherry: It's Sherry...
+ROOM3091	sub07	0x01A1E	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01A26	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01A32	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	20	Sherry: This is... where my dad used to / be...
+ROOM3091	sub07	0x01AF6	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	22	Sherry: What was that?
+ROOM3091	sub07	0x01AFE	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	22	Sherry: What was that?
+ROOM3091	sub07	0x01B0A	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	22	Sherry: What was that?
+ROOM3091	sub07	0x01B62	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01B6A	3f 00 0c 00	12	0x00	1	50	30	46c05281b43b	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01B76	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	24	Sherry: There wasn't anybody before.
+ROOM3091	sub07	0x01C46	3f 00 0c 00	12	0x00	0	50	30	46c05281b43b	28	Sherry: Yes sir.
+ROOM3091	sub07	0x01C58	3f 00 0c 00	12	0x00	1	70	30	46c05281b43b	28	Sherry: Yes sir.
+ROOM3091	sub07	0x01C88	3f 00 0b 00	11	0x00	0	50	15	72e61d973596	29	Sherry: Good luck!
+ROOM3091	sub07	0x01C90	3f 00 0b 00	11	0x00	1	50	15	72e61d973596	29	Sherry: Good luck!
+ROOM3091	sub07	0x01C9C	3f 00 0d 00	13	0x00	0	20	40	067568a0df16	29	Sherry: Good luck!
+ROOM30C1	sub03	0x00CB6	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	1	Elza: Who are you?
+ROOM30C1	sub03	0x00CBE	3f 00 00 00	0	0x00	1	50	20	3e20a32edca8	1	Elza: Who are you?
+ROOM30C1	sub03	0x00CCA	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	1	Elza: Who are you?
+ROOM30C1	sub03	0x00D12	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	3	Elza: Leon?! How is he? / We got separated back at the RPD.
+ROOM30C1	sub03	0x00D1A	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	3	Elza: Leon?! How is he? / We got separated back at the RPD.
+ROOM30C1	sub03	0x00D26	3f 00 01 00	1	0x00	0	25	30	bae0d897d4ff	3	Elza: Leon?! How is he? / We got separated back at the RPD.
+ROOM30C1	sub03	0x00D2E	3f 00 01 00	1	0x00	1	25	30	bae0d897d4ff	3	Elza: Leon?! How is he? / We got separated back at the RPD.
+ROOM30C1	sub03	0x00D3A	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	3	Elza: Leon?! How is he? / We got separated back at the RPD.
+ROOM30C1	sub03	0x00D82	3f 00 04 00	4	0x00	0	50	30	2baf4d018c78	5	Elza: Ada?
+ROOM30C1	sub03	0x00D8A	3f 00 04 00	4	0x00	1	50	30	2baf4d018c78	5	Elza: Ada?
+ROOM30C1	sub03	0x00D96	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	5	Elza: Ada?
+ROOM30C1	sub03	0x00DCA	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	7	Elza: Will you tell him that me and John / and Sherry are here and we're all right?
+ROOM30C1	sub03	0x00DD2	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	7	Elza: Will you tell him that me and John / and Sherry are here and we're all right?
+ROOM30C1	sub03	0x00DDE	3f 00 01 00	1	0x00	0	25	30	bae0d897d4ff	7	Elza: Will you tell him that me and John / and Sherry are here and we're all right?
+ROOM30C1	sub03	0x00DE6	3f 00 01 00	1	0x00	1	25	30	bae0d897d4ff	7	Elza: Will you tell him that me and John / and Sherry are here and we're all right?
+ROOM30C1	sub03	0x00DF2	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	7	Elza: Will you tell him that me and John / and Sherry are here and we're all right?
+ROOM30E0	sub02	0x00CE6	3f 00 17 00	23	0x00	0	1	24	b385706e1ff0		
+ROOM30E0	sub02	0x00D28	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	1	Leon: Y-you...!
+ROOM30E0	sub02	0x00D30	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	1	Leon: Y-you...!
+ROOM30E0	sub02	0x00D3C	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	1	Leon: Y-you...!
+ROOM30E0	sub02	0x00D70	3f 00 10 00	16	0x00	0	25	30	fec1ec970163	3	Leon: Y-yeah, Marvin is out in the / hall. He can't get out because of / all the monsters outside...
+ROOM30E0	sub02	0x00D78	3f 00 10 00	16	0x00	1	25	30	fec1ec970163	3	Leon: Y-yeah, Marvin is out in the / hall. He can't get out because of / all the monsters outside...
+ROOM30E0	sub02	0x00D84	3f 00 13 00	19	0x00	0	25	30	fde929aa6e6b	3	Leon: Y-yeah, Marvin is out in the / hall. He can't get out because of / all the monsters outside...
+ROOM30E0	sub02	0x00D8C	3f 00 13 00	19	0x00	1	25	30	fde929aa6e6b	3	Leon: Y-yeah, Marvin is out in the / hall. He can't get out because of / all the monsters outside...
+ROOM30E0	sub02	0x00D98	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	3	Leon: Y-yeah, Marvin is out in the / hall. He can't get out because of / all the monsters outside...
+ROOM30E0	sub02	0x00DA4	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	4	Leon: Ada... What have you been doing, / anyway!?
+ROOM30E0	sub02	0x00DAC	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	4	Leon: Ada... What have you been doing, / anyway!?
+ROOM30E0	sub02	0x00DBC	3f 00 13 00	19	0x00	0	25	30	fde929aa6e6b	5	Leon: And what happened in that / tunnel, what's with all the police / officer corpses?
+ROOM30E0	sub02	0x00DC4	3f 00 13 00	19	0x00	1	25	30	fde929aa6e6b	5	Leon: And what happened in that / tunnel, what's with all the police / officer corpses?
+ROOM30E0	sub02	0x00DD0	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	5	Leon: And what happened in that / tunnel, what's with all the police / officer corpses?
+ROOM30E0	sub02	0x00DD8	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	5	Leon: And what happened in that / tunnel, what's with all the police / officer corpses?
+ROOM30E0	sub03	0x00EC2	3f 00 14 00	20	0x00	0	50	25	28617fb5751d	9	Leon: Marvin!! Are you okay!?
+ROOM30E0	sub03	0x00ECA	3f 00 14 00	20	0x00	1	50	25	28617fb5751d	9	Leon: Marvin!! Are you okay!?
+ROOM30E0	sub03	0x00EDA	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	10	Leon: That wound... Did those things / get you? How careless...
+ROOM30E0	sub03	0x00EE2	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	10	Leon: That wound... Did those things / get you? How careless...
+ROOM30E0	sub03	0x00EEE	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	10	Leon: That wound... Did those things / get you? How careless...
+ROOM30E0	sub03	0x00EF6	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	10	Leon: That wound... Did those things / get you? How careless...
+ROOM30E0	sub03	0x00F3E	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	12	Leon: Say what!?
+ROOM30E0	sub03	0x00F46	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	12	Leon: Say what!?
+ROOM30E0	sub03	0x00F52	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	12	Leon: Say what!?
+ROOM30E1	sub02	0x00B9E	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	0	Elza: John!
+ROOM30E1	sub02	0x00BA6	3f 00 00 00	0	0x00	1	50	20	3e20a32edca8	0	Elza: John!
+ROOM30E1	sub02	0x00BB2	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	0	Elza: John!
+ROOM30E1	sub02	0x00C6E	3f 00 03 00	3	0x00	0	40	20	448e35e6af79	5	Elza: No, nothing like that...
+ROOM30E1	sub02	0x00C80	3f 00 03 00	3	0x00	1	60	20	448e35e6af79	5	Elza: No, nothing like that...
+ROOM30E1	sub02	0x00C8C	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	5	Elza: No, nothing like that...
+ROOM30E1	sub02	0x00D48	3f 00 03 00	3	0x00	0	25	20	448e35e6af79	10	Elza: I'm not sure what it is, but... / That can't be... human, can it...?
+ROOM30E1	sub02	0x00D50	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	10	Elza: I'm not sure what it is, but... / That can't be... human, can it...?
+ROOM30E1	sub02	0x00D5C	3f 00 04 00	4	0x00	0	25	30	2baf4d018c78	10	Elza: I'm not sure what it is, but... / That can't be... human, can it...?
+ROOM30E1	sub02	0x00D64	3f 00 04 00	4	0x00	1	25	30	2baf4d018c78	10	Elza: I'm not sure what it is, but... / That can't be... human, can it...?
+ROOM30E1	sub02	0x00D70	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	10	Elza: I'm not sure what it is, but... / That can't be... human, can it...?
+ROOM30E1	sub02	0x00DA4	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	12	Elza: Yes, I think so... But I believe / it got scared and hid when it was / attacked...
+ROOM30E1	sub02	0x00DAC	3f 00 00 00	0	0x00	1	25	20	3e20a32edca8	12	Elza: Yes, I think so... But I believe / it got scared and hid when it was / attacked...
+ROOM30E1	sub02	0x00DB8	3f 00 01 00	1	0x00	0	25	30	bae0d897d4ff	12	Elza: Yes, I think so... But I believe / it got scared and hid when it was / attacked...
+ROOM30E1	sub02	0x00DC0	3f 00 01 00	1	0x00	1	25	30	bae0d897d4ff	12	Elza: Yes, I think so... But I believe / it got scared and hid when it was / attacked...
+ROOM30E1	sub02	0x00DD0	3f 00 03 00	3	0x00	0	50	20	448e35e6af79	13	Elza: I don't know where it could've / gone, though.
+ROOM30E1	sub02	0x00DD8	3f 00 03 00	3	0x00	1	50	20	448e35e6af79	13	Elza: I don't know where it could've / gone, though.
+ROOM30E1	sub02	0x00DE8	3f 00 04 00	4	0x00	0	50	30	2baf4d018c78	14	Elza: ...Anyway, there are too many / walking corpses outside. We can't / really turn back.
+ROOM30E1	sub02	0x00DFA	3f 00 04 00	4	0x00	1	50	30	2baf4d018c78	14	Elza: ...Anyway, there are too many / walking corpses outside. We can't / really turn back.
+ROOM30E1	sub02	0x00E0A	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	15	Elza: We have no choice but to go / inside...
+ROOM30E1	sub02	0x00E12	3f 00 00 00	0	0x00	1	50	20	3e20a32edca8	15	Elza: We have no choice but to go / inside...
+ROOM30E1	sub02	0x00E1E	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	15	Elza: We have no choice but to go / inside...
+ROOM30E1	sub02	0x00E66	3f 00 03 00	3	0x00	0	25	20	448e35e6af79	17	Elza: We can probably deal with it if / we stay alert... Let's go!
+ROOM30E1	sub02	0x00E6E	3f 00 03 00	3	0x00	1	25	20	448e35e6af79	17	Elza: We can probably deal with it if / we stay alert... Let's go!
+ROOM30E1	sub02	0x00E7A	3f 00 02 00	2	0x00	0	80	30	a891289fe964	17	Elza: We can probably deal with it if / we stay alert... Let's go!
+ROOM4000	sub05	0x015DA	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	3	Leon: Ada, what is this place...?
+ROOM4000	sub05	0x015E2	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	3	Leon: Ada, what is this place...?
+ROOM4000	sub05	0x015EE	3f 00 13 00	19	0x00	0	25	30	fde929aa6e6b	3	Leon: Ada, what is this place...?
+ROOM4000	sub05	0x015F6	3f 00 13 00	19	0x00	1	25	30	fde929aa6e6b	3	Leon: Ada, what is this place...?
+ROOM4000	sub05	0x01602	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	3	Leon: Ada, what is this place...?
+ROOM4000	sub09	0x0191A	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	5	Leon: Go on ahead! / I'll take care of this!
+ROOM4000	sub09	0x01922	3f 00 12 00	18	0x00	0	25	20	37bbc50056bc	5	Leon: Go on ahead! / I'll take care of this!
+ROOM4000	sub09	0x0192A	3f 00 12 00	18	0x00	1	26	20	37bbc50056bc	5	Leon: Go on ahead! / I'll take care of this!
+ROOM4000	sub09	0x0195A	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	7	Leon: Just get going already!
+ROOM4000	sub09	0x01962	3f 00 0f 00	15	0x00	1	51	20	fe313d415aee	7	Leon: Just get going already!
+ROOM4000	sub09	0x01972	3f 00 14 00	20	0x00	0	50	25	28617fb5751d	8	Leon: Take care of Marvin!
+ROOM4000	sub09	0x0197A	3f 00 14 00	20	0x00	1	51	25	28617fb5751d	8	Leon: Take care of Marvin!
+ROOM4001	sub10	0x018D6	3f 00 04 00	4	0x00	0	50	30	2baf4d018c78	3	Elza: What? What is this place...!?
+ROOM4001	sub10	0x018F4	3f 00 04 00	4	0x00	1	50	30	2baf4d018c78	3	Elza: What? What is this place...!?
+ROOM4001	sub10	0x01900	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	3	Elza: What? What is this place...!?
+ROOM4001	sub10	0x0196E	3f 00 01 00	1	0x00	0	50	30	bae0d897d4ff	5	Elza: Sherry, what is this place?
+ROOM4001	sub10	0x01976	3f 00 01 00	1	0x00	1	50	30	bae0d897d4ff	5	Elza: Sherry, what is this place?
+ROOM4001	sub10	0x01982	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	5	Elza: Sherry, what is this place?
+ROOM4001	sub10	0x01A5C	3f 00 00 00	0	0x00	0	25	20	3e20a32edca8	11	Elza: Sherry!
+ROOM4001	sub10	0x01A64	3f 00 00 00	0	0x00	1	26	20	3e20a32edca8	11	Elza: Sherry!
+ROOM4001	sub12	0x01BDC	3f 00 09 00	9	0x00	0	1	24	358acb7d0d71		
+ROOM4010	sub02	0x007B6	3f 00 10 00	16	0x00	0	50	30	fec1ec970163	1	Leon: Yeah, we need to hurry.
+ROOM4010	sub02	0x007BE	3f 00 10 00	16	0x00	1	51	30	fec1ec970163	1	Leon: Yeah, we need to hurry.
+ROOM4010	sub02	0x007CE	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	2	Leon: Ada... Just who are you, anyway?
+ROOM4010	sub02	0x007D6	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	2	Leon: Ada... Just who are you, anyway?
+ROOM4010	sub02	0x007E2	3f 00 10 00	16	0x00	0	25	30	fec1ec970163	2	Leon: Ada... Just who are you, anyway?
+ROOM4010	sub02	0x007EA	3f 00 10 00	16	0x00	1	26	30	fec1ec970163	2	Leon: Ada... Just who are you, anyway?
+ROOM4010	sub02	0x007FA	3f 00 13 00	19	0x00	0	50	30	fde929aa6e6b	3	Leon: Don't tell me...
+ROOM4010	sub02	0x00802	3f 00 13 00	19	0x00	1	50	30	fde929aa6e6b	3	Leon: Don't tell me...
+ROOM4010	sub02	0x0080E	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	3	Leon: Don't tell me...
+ROOM4010	sub02	0x008FA	3f 00 13 00	19	0x00	0	50	30	fde929aa6e6b	7	Leon: What should we do?
+ROOM4010	sub02	0x00902	3f 00 13 00	19	0x00	1	50	30	fde929aa6e6b	7	Leon: What should we do?
+ROOM4010	sub02	0x0090E	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	7	Leon: What should we do?
+ROOM4010	sub02	0x00956	3f 00 14 00	20	0x00	0	50	25	28617fb5751d	9	Leon: And where's this vaccine?
+ROOM4010	sub02	0x0095E	3f 00 14 00	20	0x00	1	50	25	28617fb5751d	9	Leon: And where's this vaccine?
+ROOM4010	sub02	0x0096A	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	9	Leon: And where's this vaccine?
+ROOM4010	sub02	0x009CA	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	12	Leon: Ada? What's wrong?
+ROOM4010	sub02	0x009D2	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	12	Leon: Ada? What's wrong?
+ROOM4010	sub02	0x009DE	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	12	Leon: Ada? What's wrong?
+ROOM4010	sub02	0x00A4C	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	14	Leon: Wait, what!?
+ROOM4010	sub02	0x00A54	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	14	Leon: Wait, what!?
+ROOM4010	sub02	0x00A60	3f 00 11 00	17	0x00	0	50	30	ce75d881cd9d	14	Leon: Wait, what!?
+ROOM4010	sub02	0x00A68	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	14	Leon: Wait, what!?
+ROOM4010	sub02	0x00AE8	3f 00 12 00	18	0x00	0	50	20	37bbc50056bc	17	Leon: I'll...
+ROOM4010	sub02	0x00AF0	3f 00 12 00	18	0x00	1	51	20	37bbc50056bc	17	Leon: I'll...
+ROOM4010	sub02	0x00B00	3f 00 14 00	20	0x00	0	50	25	28617fb5751d	18	Leon: ...do it on my own if I have to!
+ROOM4010	sub02	0x00B08	3f 00 14 00	20	0x00	1	51	25	28617fb5751d	18	Leon: ...do it on my own if I have to!
+ROOM4010	sub02	0x00B18	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	19	Leon: So, please tell me! / What should I do!?
+ROOM4010	sub02	0x00B20	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	19	Leon: So, please tell me! / What should I do!?
+ROOM4010	sub02	0x00B2C	3f 00 12 00	18	0x00	0	25	20	37bbc50056bc	19	Leon: So, please tell me! / What should I do!?
+ROOM4010	sub02	0x00B34	3f 00 12 00	18	0x00	1	25	20	37bbc50056bc	19	Leon: So, please tell me! / What should I do!?
+ROOM4010	sub02	0x00B40	3f 00 17 00	23	0x00	0	20	24	b385706e1ff0	19	Leon: So, please tell me! / What should I do!?
+ROOM4010	sub02	0x00BE4	3f 00 14 00	20	0x00	0	50	25	28617fb5751d	24	Leon: Well, I have to give it a go.
+ROOM4010	sub02	0x00BEC	3f 00 14 00	20	0x00	1	50	25	28617fb5751d	24	Leon: Well, I have to give it a go.
+ROOM4010	sub02	0x00BF8	3f 00 17 00	23	0x00	0	22	24	b385706e1ff0	24	Leon: Well, I have to give it a go.
+ROOM4010	sub02	0x00C2A	3f 00 0f 00	15	0x00	0	25	20	fe313d415aee	25	Leon: Marvin... I'll save you!
+ROOM4010	sub02	0x00C32	3f 00 0f 00	15	0x00	1	25	20	fe313d415aee	25	Leon: Marvin... I'll save you!
+ROOM4010	sub02	0x00C3E	3f 00 12 00	18	0x00	0	25	20	37bbc50056bc	25	Leon: Marvin... I'll save you!
+ROOM4010	sub02	0x00C46	3f 00 12 00	18	0x00	1	26	20	37bbc50056bc	25	Leon: Marvin... I'll save you!
+ROOM4010	sub02	0x00D56	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	29	Leon: Ada, wait!
+ROOM4010	sub02	0x00D5E	3f 00 0f 00	15	0x00	1	51	20	fe313d415aee	29	Leon: Ada, wait!
+ROOM4010	sub02	0x00D6E	3f 00 17 00	23	0x00	0	101	24	b385706e1ff0	30	Leon: I probably won't survive...?
+ROOM4010	sub04	0x00DEA	3f 01 0b 00	11	0x00	0	60	1	036945c77ae4		
+ROOM4010	sub04	0x00E08	3f 01 0b 00	11	0x00	1	31	1	036945c77ae4	32	Leon: What's wrong, Marvin? Open your / eyes!!
+ROOM4010	sub04	0x00E5A	3f 00 0f 00	15	0x00	0	50	20	fe313d415aee	33	Leon: Ada!
+ROOM4010	sub04	0x00E62	3f 00 0f 00	15	0x00	1	50	20	fe313d415aee	33	Leon: Ada!
+ROOM4010	sub04	0x00E6E	3f 00 17 00	23	0x00	0	21	24	b385706e1ff0	33	Leon: Ada!
+ROOM4031	sub08	0x00790	3f 00 09 00	9	0x00	0	1	24	358acb7d0d71		
+ROOM4031	sub08	0x007F8	3f 00 00 00	0	0x00	0	50	20	3e20a32edca8	7	Elza: Let's split up and look for / her!
+ROOM4031	sub08	0x00800	3f 00 00 00	0	0x00	1	50	20	3e20a32edca8	7	Elza: Let's split up and look for / her!
+ROOM4031	sub08	0x0080C	3f 00 09 00	9	0x00	0	20	24	358acb7d0d71	7	Elza: Let's split up and look for / her!
+ROOM5011	sub02	0x005D0	3f 01 0b 00	11	0x00	0	30	20	739757c924bd		
+ROOM5011	sub02	0x005DE	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	0	Elza: Sherry! Wake up!
+ROOM5011	sub02	0x005E6	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	0	Elza: Sherry! Wake up!
+ROOM5011	sub02	0x0062C	3f 00 0b 00	11	0x00	0	50	20	739757c924bd	2	Elza: Ahh... Sherry...
+ROOM5011	sub02	0x00634	3f 00 0b 00	11	0x00	1	51	20	739757c924bd	2	Elza: Ahh... Sherry...
+ROOM5011	sub02	0x00652	3f 00 09 00	9	0x00	0	20	20	ad702e0ea41e	3	Elza: John. I read some files in this / research center, and I found out / some terrifying things.
+ROOM5011	sub02	0x00670	3f 00 09 00	9	0x00	1	25	20	ad702e0ea41e	3	Elza: John. I read some files in this / research center, and I found out / some terrifying things.
+ROOM5011	sub02	0x0067C	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	3	Elza: John. I read some files in this / research center, and I found out / some terrifying things.
+ROOM5011	sub02	0x00684	3f 00 0a 00	10	0x00	1	26	25	ae92fbdb1ba8	3	Elza: John. I read some files in this / research center, and I found out / some terrifying things.
+ROOM5011	sub02	0x00698	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	4	Elza: She's been infected by what / they were working on here.
+ROOM5011	sub02	0x006A0	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	4	Elza: She's been infected by what / they were working on here.
+ROOM5011	sub02	0x006F6	3f 01 0b 00	11	0x00	0	30	20	739757c924bd	5	John: Elza, have a look at this.
+ROOM5011	sub02	0x00734	3f 00 01 00	1	0x00	0	50	30	2baf4d018c78	6	Elza: What is this...?
+ROOM5011	sub02	0x0073C	3f 00 01 00	1	0x00	1	50	30	2baf4d018c78	6	Elza: What is this...?
+ROOM5011	sub02	0x00748	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	6	Elza: What is this...?
+ROOM5011	sub02	0x00790	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	8	Elza: Okay. I'll go get it.
+ROOM5011	sub02	0x00798	3f 00 03 00	3	0x00	1	50	30	bae0d897d4ff	8	Elza: Okay. I'll go get it.
+ROOM5011	sub02	0x007A4	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	8	Elza: Okay. I'll go get it.
+ROOM5011	sub02	0x007D8	3f 00 00 00	0	0x00	0	25	20	448e35e6af79	10	Elza: While we're talking, the virus / is spreading inside Sherry's body.
+ROOM5011	sub02	0x007E0	3f 00 00 00	0	0x00	1	25	20	448e35e6af79	10	Elza: While we're talking, the virus / is spreading inside Sherry's body.
+ROOM5011	sub02	0x007EC	3f 00 01 00	1	0x00	0	25	30	2baf4d018c78	10	Elza: While we're talking, the virus / is spreading inside Sherry's body.
+ROOM5011	sub02	0x007F4	3f 00 01 00	1	0x00	1	26	30	2baf4d018c78	10	Elza: While we're talking, the virus / is spreading inside Sherry's body.
+ROOM5011	sub02	0x00804	3f 00 02 00	2	0x00	0	25	20	3e20a32edca8	11	Elza: Even if it's just a chance, / I have to take it.
+ROOM5011	sub02	0x0080C	3f 00 02 00	2	0x00	1	25	20	3e20a32edca8	11	Elza: Even if it's just a chance, / I have to take it.
+ROOM5011	sub02	0x00818	3f 00 03 00	3	0x00	0	25	30	bae0d897d4ff	11	Elza: Even if it's just a chance, / I have to take it.
+ROOM5011	sub02	0x00820	3f 00 03 00	3	0x00	1	25	30	bae0d897d4ff	11	Elza: Even if it's just a chance, / I have to take it.
+ROOM5011	sub02	0x0082C	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	11	Elza: Even if it's just a chance, / I have to take it.
+ROOM5011	sub02	0x00860	3f 00 02 00	2	0x00	0	50	20	3e20a32edca8	13	Elza: John, keep a close eye on her.
+ROOM5011	sub02	0x00868	3f 00 02 00	2	0x00	1	51	20	3e20a32edca8	13	Elza: John, keep a close eye on her.
+ROOM5011	sub02	0x00878	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	14	Elza: Sherry needs you right now.
+ROOM5011	sub02	0x00880	3f 00 03 00	3	0x00	1	50	30	bae0d897d4ff	14	Elza: Sherry needs you right now.
+ROOM5011	sub02	0x0088C	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	14	Elza: Sherry needs you right now.
+ROOM5011	sub04	0x009AA	3f 01 0b 00	11	0x00	0	10	20	739757c924bd		
+ROOM5011	sub04	0x009CE	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	17	Elza: John, I've got the vaccine!
+ROOM5011	sub04	0x009D6	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	17	Elza: John, I've got the vaccine!
+ROOM5011	sub04	0x009E6	3f 00 0a 00	10	0x00	0	50	25	ae92fbdb1ba8	18	Elza: How's Sherry?
+ROOM5011	sub04	0x009EE	3f 00 0a 00	10	0x00	1	51	25	ae92fbdb1ba8	18	Elza: How's Sherry?
+ROOM5011	sub04	0x00A3A	3f 00 09 00	9	0x00	0	50	20	ad702e0ea41e	20	Elza: Sherry! Wake up!
+ROOM5011	sub04	0x00A42	3f 00 09 00	9	0x00	1	51	20	ad702e0ea41e	20	Elza: Sherry! Wake up!
+ROOM5011	sub04	0x00A86	3f 00 0a 00	10	0x00	0	50	25	ae92fbdb1ba8	22	Elza: Sherry, please... Wake up...!
+ROOM5011	sub04	0x00A8E	3f 00 0a 00	10	0x00	1	51	25	ae92fbdb1ba8	22	Elza: Sherry, please... Wake up...!
+ROOM5011	sub04	0x00ACC	3f 00 09 00	9	0x00	0	20	20	ad702e0ea41e	24	Elza: Sherry! You're awake!
+ROOM5011	sub04	0x00AEA	3f 00 09 00	9	0x00	1	81	20	ad702e0ea41e	24	Elza: Sherry! You're awake!
+ROOM5011	sub04	0x00B08	3f 00 0a 00	10	0x00	0	50	25	ae92fbdb1ba8	25	Elza: What a relief...
+ROOM5011	sub04	0x00B10	3f 00 0a 00	10	0x00	1	51	25	ae92fbdb1ba8	25	Elza: What a relief...
+ROOM5011	sub04	0x00B4E	3f 00 09 00	9	0x00	0	25	20	ad702e0ea41e	27	Elza: John, did you hear that / announcement?
+ROOM5011	sub04	0x00B56	3f 00 09 00	9	0x00	1	25	20	ad702e0ea41e	27	Elza: John, did you hear that / announcement?
+ROOM5011	sub04	0x00B62	3f 00 0a 00	10	0x00	0	25	25	ae92fbdb1ba8	27	Elza: John, did you hear that / announcement?
+ROOM5011	sub04	0x00B6A	3f 00 0a 00	10	0x00	1	26	25	ae92fbdb1ba8	27	Elza: John, did you hear that / announcement?
+ROOM5011	sub04	0x00BD4	3f 01 0b 00	11	0x00	0	30	20	739757c924bd	28	John: Yeah. What's going on!?
+ROOM5011	sub04	0x00C12	3f 00 02 00	2	0x00	0	25	20	3e20a32edca8	29	Elza: It seems like that beast broke / the place's power core.
+ROOM5011	sub04	0x00C1A	3f 00 02 00	2	0x00	1	25	20	3e20a32edca8	29	Elza: It seems like that beast broke / the place's power core.
+ROOM5011	sub04	0x00C26	3f 00 03 00	3	0x00	0	25	30	bae0d897d4ff	29	Elza: It seems like that beast broke / the place's power core.
+ROOM5011	sub04	0x00C2E	3f 00 03 00	3	0x00	1	26	30	bae0d897d4ff	29	Elza: It seems like that beast broke / the place's power core.
+ROOM5011	sub04	0x00C3E	3f 00 01 00	1	0x00	0	50	30	2baf4d018c78	30	Elza: And fire's starting to spread / all over the place.
+ROOM5011	sub04	0x00C46	3f 00 01 00	1	0x00	1	50	30	2baf4d018c78	30	Elza: And fire's starting to spread / all over the place.
+ROOM5011	sub04	0x00C52	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	30	Elza: And fire's starting to spread / all over the place.
+ROOM5011	sub04	0x00C9A	3f 00 01 00	1	0x00	0	25	30	2baf4d018c78	32	Elza: That's right! We can't stay / here, we need to hurry to the shelter!
+ROOM5011	sub04	0x00CA2	3f 00 01 00	1	0x00	1	25	30	2baf4d018c78	32	Elza: That's right! We can't stay / here, we need to hurry to the shelter!
+ROOM5011	sub04	0x00CAE	3f 00 00 00	0	0x00	0	25	20	448e35e6af79	32	Elza: That's right! We can't stay / here, we need to hurry to the shelter!
+ROOM5011	sub04	0x00CB6	3f 00 00 00	0	0x00	1	25	20	448e35e6af79	32	Elza: That's right! We can't stay / here, we need to hurry to the shelter!
+ROOM5011	sub04	0x00CC2	3f 00 04 00	4	0x00	0	20	24	358acb7d0d71	32	Elza: That's right! We can't stay / here, we need to hurry to the shelter!
+ROOM5011	sub04	0x00DBC	3f 00 03 00	3	0x00	0	50	30	bae0d897d4ff	37	Elza: Lead the way, Sherry!
+ROOM5011	sub04	0x00DC4	3f 00 03 00	3	0x00	1	50	30	bae0d897d4ff	37	Elza: Lead the way, Sherry!
+ROOM5011	sub04	0x00DD0	3f 00 04 00	4	0x00	0	21	24	358acb7d0d71	37	Elza: Lead the way, Sherry!
+ROOM5021	sub02	0x0138E	3f 01 0b 00	11	0x00	0	0	1	036945c77ae4		
+ROOM5031	sub03	0x0118C	3f 00 00 00	0	0x00	0	70	20	448e35e6af79		
+ROOM5031	sub03	0x011B8	3f 00 00 00	0	0x00	1	1	20	448e35e6af79		
+ROOM5031	sub03	0x011F4	3f 00 02 00	2	0x00	0	50	20	3e20a32edca8	3	Elza: Sherry!
+ROOM5031	sub03	0x011FC	3f 00 02 00	2	0x00	1	51	20	3e20a32edca8	3	Elza: Sherry!
+ROOM50B0	sub02	0x005F6	3f 00 08 00	8	0x00	0	1	24	b385706e1ff0		
+ROOM50B0	sub02	0x0066A	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	2	Leon: That's good. Who's Annette?
+ROOM50B0	sub02	0x00672	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	2	Leon: That's good. Who's Annette?
+ROOM50B0	sub02	0x0067E	3f 00 04 00	4	0x00	0	25	30	fde929aa6e6b	2	Leon: That's good. Who's Annette?
+ROOM50B0	sub02	0x00686	3f 00 04 00	4	0x00	1	25	30	fde929aa6e6b	2	Leon: That's good. Who's Annette?
+ROOM50B0	sub02	0x00692	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	2	Leon: That's good. Who's Annette?
+ROOM50B0	sub02	0x006DA	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	4	Leon: Who's Dr. Birkin, and where is he?
+ROOM50B0	sub02	0x006E2	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	4	Leon: Who's Dr. Birkin, and where is he?
+ROOM50B0	sub02	0x006EE	3f 00 04 00	4	0x00	0	25	30	fde929aa6e6b	4	Leon: Who's Dr. Birkin, and where is he?
+ROOM50B0	sub02	0x006F6	3f 00 04 00	4	0x00	1	25	30	fde929aa6e6b	4	Leon: Who's Dr. Birkin, and where is he?
+ROOM50B0	sub02	0x00702	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	4	Leon: Who's Dr. Birkin, and where is he?
+ROOM50B0	sub02	0x0077A	3f 00 00 00	0	0x00	0	50	20	fe313d415aee	7	Leon: What's with those?
+ROOM50B0	sub02	0x00782	3f 00 00 00	0	0x00	1	50	20	fe313d415aee	7	Leon: What's with those?
+ROOM50B0	sub02	0x0078E	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	7	Leon: What's with those?
+ROOM50B0	sub02	0x00816	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	10	Leon: Ada, why did you set the reactor / to blow up?
+ROOM50B0	sub02	0x0081E	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	10	Leon: Ada, why did you set the reactor / to blow up?
+ROOM50B0	sub02	0x0082A	3f 00 04 00	4	0x00	0	25	30	fde929aa6e6b	10	Leon: Ada, why did you set the reactor / to blow up?
+ROOM50B0	sub02	0x00832	3f 00 04 00	4	0x00	1	25	30	fde929aa6e6b	10	Leon: Ada, why did you set the reactor / to blow up?
+ROOM50B0	sub02	0x0083E	3f 00 08 00	8	0x00	0	20	24	b385706e1ff0	10	Leon: Ada, why did you set the reactor / to blow up?
+ROOM50B0	sub02	0x008A8	3f 00 08 00	8	0x00	1	2	24	b385706e1ff0	12	Ada: You've seen what they can do. / I had to do it, understand? It's...
+ROOM50B0	sub02	0x0092A	3f 00 00 00	0	0x00	0	5	20	fe313d415aee	12	Ada: You've seen what they can do. / I had to do it, understand? It's...
+ROOM50B0	sub02	0x00958	3f 00 00 00	0	0x00	1	40	20	fe313d415aee	12	Ada: You've seen what they can do. / I had to do it, understand? It's...
+ROOM50B0	sub04	0x00A38	3f 00 00 00	0	0x00	0	50	20	fe313d415aee	14	Leon: Ada...
+ROOM50B0	sub04	0x00A40	3f 00 00 00	0	0x00	1	51	20	fe313d415aee	14	Leon: Ada...
+ROOM50B0	sub04	0x00A76	3f 00 0d 00	13	0x00	0	120	84	5a292eb9f1fa	16	Ada: I... I so wanted... to escape... / you... will have... to do that... for me...
+ROOM50B0	sub04	0x00A88	3f 00 0e 00	14	0x00	0	120	3	3a0b5af4846c	16	Ada: I... I so wanted... to escape... / you... will have... to do that... for me...
+ROOM50B0	sub04	0x00AA8	3f 01 0b 00	11	0x00	1	31	25	f1983655aa45	16	Ada: I... I so wanted... to escape... / you... will have... to do that... for me...
+ROOM50B0	sub08	0x00B2E	3f 01 0b 00	11	0x00	0	30	25	f1983655aa45		
+ROOM50B0	sub08	0x00B3C	3f 01 0b 00	11	0x00	1	30	25	f1983655aa45	18	She's dead.
+ROOM50B1	sub02	0x00526	3f 01 0b 00	11	0x00	0	30	-	-		
+ROOM50B1	sub02	0x00534	3f 01 0b 00	11	0x00	1	30	-	-	0	It's Ada. She's dead.It looks like one of those / gorillas killed her.
+ROOM6000	sub03	0x0103C	3f 00 17 00	23	0x00	0	30	24	b385706e1ff0		
+ROOM6000	sub06	0x010BA	3f 00 17 00	23	0x00	0	5	24	b385706e1ff0		
+ROOM6030	sub02	0x00DC6	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DCE	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DDA	3f 00 02 00	2	0x00	0	50	30	ce75d881cd9d	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00DE2	3f 00 07 00	7	0x00	0	51	24	b385706e1ff0	0	Leon: Hang on, Marvin. / We're getting out of here.
+ROOM6030	sub02	0x00E64	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00E6C	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00E78	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	1	Leon: Where's Elza?
+ROOM6030	sub02	0x00ECE	3f 00 01 00	1	0x00	0	50	30	fec1ec970163	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00ED6	3f 00 01 00	1	0x00	1	50	30	fec1ec970163	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00EE2	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	4	Leon: Why aren't you out there?
+ROOM6030	sub02	0x00F2A	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F32	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F3E	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	6	Leon: Where's Annette?
+ROOM6030	sub02	0x00F86	3f 00 05 00	5	0x00	0	50	25	28617fb5751d	8	Leon: I see. Thanks.
+ROOM6030	sub02	0x00F8E	3f 00 05 00	5	0x00	1	50	25	28617fb5751d	8	Leon: I see. Thanks.
+ROOM6030	sub02	0x00F9A	3f 00 07 00	7	0x00	0	30	24	b385706e1ff0	8	Leon: I see. Thanks.
+ROOM6030	sub08	0x0119C	3f 00 01 00	1	0x00	0	25	30	fec1ec970163	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011A4	3f 00 01 00	1	0x00	1	25	30	fec1ec970163	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011B0	3f 00 00 00	0	0x00	0	25	20	fe313d415aee	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011B8	3f 00 00 00	0	0x00	1	25	20	fe313d415aee	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x011C4	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	12	Leon: Keeping the monsters at bay. / Can you start this thing?
+ROOM6030	sub08	0x01262	3f 00 04 00	4	0x00	0	50	30	fde929aa6e6b	15	Leon: What's wrong?
+ROOM6030	sub08	0x0126A	3f 00 04 00	4	0x00	1	50	30	fde929aa6e6b	15	Leon: What's wrong?
+ROOM6030	sub08	0x01276	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	15	Leon: What's wrong?
+ROOM6030	sub08	0x012C6	3f 00 03 00	3	0x00	0	50	20	37bbc50056bc	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x012CE	3f 00 03 00	3	0x00	1	50	20	37bbc50056bc	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x012DA	3f 00 07 00	7	0x00	0	20	24	b385706e1ff0	17	Leon: I'll take care of it!
+ROOM6030	sub08	0x0130E	3f 00 06 00	6	0x00	0	50	35	12f8c236fb59	19	Leon: Good luck to both of us!
+ROOM6030	sub08	0x01316	3f 00 07 00	7	0x00	0	50	24	b385706e1ff0	19	Leon: Good luck to both of us!
+ROOM6031	sub02	0x00DB6	3f 00 0d 00	13	0x00	0	50	30	2baf4d018c78	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DBE	3f 00 0d 00	13	0x00	1	50	30	2baf4d018c78	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DCA	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	0	Elza: Where's Leon?
+ROOM6031	sub02	0x00DDE	3f 00 0c 00	12	0x00	0	50	20	448e35e6af79	2	Elza: I'll do it!
+ROOM6031	sub02	0x00DE6	3f 00 0c 00	12	0x00	1	50	20	448e35e6af79	2	Elza: I'll do it!
+ROOM6031	sub02	0x00DF2	3f 00 10 00	16	0x00	0	50	24	358acb7d0d71	2	Elza: I'll do it!
+ROOM6031	sub08	0x0102E	3f 00 0d 00	13	0x00	0	50	30	2baf4d018c78	7	Elza: What's wrong?
+ROOM6031	sub08	0x01036	3f 00 0d 00	13	0x00	1	50	30	2baf4d018c78	7	Elza: What's wrong?
+ROOM6031	sub08	0x01042	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	7	Elza: What's wrong?
+ROOM6031	sub08	0x0104A	3f 00 11 00	17	0x00	0	0	20	b723bfd38a73	7	Elza: What's wrong?
+ROOM6031	sub08	0x010A2	3f 00 0c 00	12	0x00	0	25	20	448e35e6af79	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010AA	3f 00 0c 00	12	0x00	1	25	20	448e35e6af79	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010B6	3f 00 09 00	9	0x00	0	25	20	3e20a32edca8	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010BE	3f 00 09 00	9	0x00	1	25	20	3e20a32edca8	10	Elza: Let me take care of that. / You start the train once it's ready.
+ROOM6031	sub08	0x010CA	3f 00 10 00	16	0x00	0	20	24	358acb7d0d71	10	Elza: Let me take care of that. / You start the train once it's ready.

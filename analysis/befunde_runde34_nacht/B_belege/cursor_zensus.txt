@@ -1,0 +1,427 @@
+== ROOM1011.RDT
+   Bank5 Bit0 : sub04@0x00DEA Set(5,0,0); sub04@0x00DF2 Ck(5,0,0)
+== ROOM1030.RDT
+   Bank5 Bit0 : sub04@0x02232 Ck(5,0,1); sub04@0x02246 Set(5,0,0); sub06@0x024D4 Ck(5,0,0); sub06@0x024E8 Set(5,0,1)
+== ROOM1031.RDT
+   Bank5 Bit0 : sub04@0x0231E Ck(5,0,1); sub04@0x02332 Set(5,0,0); sub06@0x025C0 Ck(5,0,0); sub06@0x025D4 Set(5,0,1)
+== ROOM1040.RDT
+   Bank5 Bit0 : sub01@0x0156E Ck(5,0,0); sub01@0x01576 Set(5,0,1); sub01@0x015A2 Ck(5,0,0); sub01@0x015AA Set(5,0,1); sub02@0x0170C Set(5,0,0); sub03@0x01826 Set(5,0,0); sub04@0x01898 Set(5,0,0); sub07@0x01996 Set(5,0,0); sub08@0x01A4A Set(5,0,0); sub09@0x01A5C Ck(5,0,1); sub09@0x01A82 Set(5,0,0); sub10@0x01E50 Ck(5,0,0); sub10@0x01E70 Set(5,0,1)
+== ROOM1041.RDT
+   Bank5 Bit0 : sub01@0x01598 Ck(5,0,0); sub01@0x015A0 Set(5,0,1); sub01@0x015CC Ck(5,0,0); sub01@0x015D4 Set(5,0,1); sub02@0x01736 Set(5,0,0); sub03@0x01850 Set(5,0,0); sub04@0x018C2 Set(5,0,0); sub07@0x019C0 Set(5,0,0); sub08@0x01A74 Set(5,0,0); sub09@0x01A86 Ck(5,0,1); sub09@0x01AAC Set(5,0,0); sub10@0x01E7A Ck(5,0,0); sub10@0x01E9A Set(5,0,1)
+== ROOM1080.RDT
+   Bank5 Bit0 : sub01@0x00586 Ck(5,0,1); sub06@0x006C8 Set(5,0,1); sub07@0x006FA Set(5,0,0); sub08@0x0078C Set(5,0,0); sub09@0x0081E Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x0068A Set(2,0,1); sub01@0x0068E Set(2,2,1); sub07@0x0071E Set(2,0,0); sub07@0x00722 Set(2,2,0); sub08@0x007B0 Set(2,0,0); sub08@0x007B4 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0058E
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x005BE
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x005A6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x005D6
+   Sce_key_ck 0x0040 (AKTION) x4: sub01@0x005FC, sub01@0x00624, sub01@0x0064C, sub01@0x00674
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 4
+   Obj_model_set type4: sub00@0x004FA obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM1081.RDT
+   Bank5 Bit0 : sub01@0x00586 Ck(5,0,1); sub06@0x006C8 Set(5,0,1); sub07@0x006FA Set(5,0,0); sub08@0x0078C Set(5,0,0); sub09@0x0081E Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x0068A Set(2,0,1); sub01@0x0068E Set(2,2,1); sub07@0x0071E Set(2,0,0); sub07@0x00722 Set(2,2,0); sub08@0x007B0 Set(2,0,0); sub08@0x007B4 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0058E
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x005BE
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x005A6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x005D6
+   Sce_key_ck 0x0040 (AKTION) x4: sub01@0x005FC, sub01@0x00624, sub01@0x0064C, sub01@0x00674
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 4
+   Obj_model_set type4: sub00@0x004FA obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM1090.RDT
+   Obj_model_set type4: main00@0x0216E obj=0 pos=(-8136,-1800,4753) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x02190 obj=1 pos=(-5960,-9000,-15482) box_h=(900,900,900)
+== ROOM1091.RDT
+   Obj_model_set type4: main00@0x021BE obj=0 pos=(-8136,-1800,4753) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x021E0 obj=1 pos=(-5960,-9000,-15482) box_h=(900,900,900)
+== ROOM10D0.RDT
+   Bank5 Bit0 : sub01@0x012E8 Ck(5,0,1); sub01@0x01300 Ck(5,0,1); sub01@0x01318 Ck(5,0,1); sub01@0x01330 Ck(5,0,1); sub06@0x01562 Set(5,0,0); sub06@0x0159A Set(5,0,1); sub07@0x015AE Set(5,0,0); sub07@0x015E6 Set(5,0,1); sub08@0x015FA Set(5,0,0); sub08@0x01632 Set(5,0,1); sub09@0x01646 Set(5,0,0); sub09@0x0167E Set(5,0,1); sub10@0x01692 Set(5,0,0); sub10@0x016CA Set(5,0,1); sub11@0x016DE Set(5,0,0); sub11@0x01716 Set(5,0,1); sub12@0x0172A Set(5,0,0); sub12@0x01762 Set(5,0,1); sub13@0x01776 Set(5,0,0); sub13@0x017AE Set(5,0,1); sub14@0x017C2 Set(5,0,0); sub14@0x017FA Set(5,0,1); sub15@0x0180E Set(5,0,0); sub15@0x01846 Set(5,0,1); sub16@0x01874 Set(5,0,0); sub17@0x018EC Set(5,0,1); sub19@0x01960 Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x01504 Set(2,0,1); sub01@0x01508 Set(2,2,1); sub16@0x018C8 Set(2,0,0); sub16@0x018CC Set(2,2,0); sub19@0x0196C Set(2,0,0); sub19@0x01970 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x012F0
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x01320
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x01308
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x01338
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x0135E, sub01@0x01386, sub01@0x013AE, sub01@0x013D6 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: main00@0x0114E obj=1 pos=(-19554,0,-23216) box_h=(900,900,900)
+== ROOM10D1.RDT
+   Bank5 Bit0 : sub01@0x012D2 Ck(5,0,1); sub01@0x012EA Ck(5,0,1); sub01@0x01302 Ck(5,0,1); sub01@0x0131A Ck(5,0,1); sub06@0x0154C Set(5,0,0); sub06@0x01584 Set(5,0,1); sub07@0x01598 Set(5,0,0); sub07@0x015D0 Set(5,0,1); sub08@0x015E4 Set(5,0,0); sub08@0x0161C Set(5,0,1); sub09@0x01630 Set(5,0,0); sub09@0x01668 Set(5,0,1); sub10@0x0167C Set(5,0,0); sub10@0x016B4 Set(5,0,1); sub11@0x016C8 Set(5,0,0); sub11@0x01700 Set(5,0,1); sub12@0x01714 Set(5,0,0); sub12@0x0174C Set(5,0,1); sub13@0x01760 Set(5,0,0); sub13@0x01798 Set(5,0,1); sub14@0x017AC Set(5,0,0); sub14@0x017E4 Set(5,0,1); sub15@0x017F8 Set(5,0,0); sub15@0x01830 Set(5,0,1); sub16@0x0185E Set(5,0,0); sub17@0x018D6 Set(5,0,1); sub19@0x0194A Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x014EE Set(2,0,1); sub01@0x014F2 Set(2,2,1); sub16@0x018B2 Set(2,0,0); sub16@0x018B6 Set(2,2,0); sub19@0x01956 Set(2,0,0); sub19@0x0195A Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x012DA
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x0130A
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x012F2
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x01322
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x01348, sub01@0x01370, sub01@0x01398, sub01@0x013C0 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: main00@0x0114E obj=1 pos=(-19554,0,-23216) box_h=(900,900,900)
+== ROOM10F0.RDT
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: sub00@0x010F4 obj=0 pos=(-6050,0,4950) box_h=(675,900,600)
+   Obj_model_set type4: sub00@0x0111A obj=0 pos=(-4850,0,-850) box_h=(675,900,600)
+== ROOM10F1.RDT
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: sub00@0x010F4 obj=0 pos=(-6050,0,4950) box_h=(675,900,600)
+   Obj_model_set type4: sub00@0x0111A obj=0 pos=(-4850,0,-850) box_h=(675,900,600)
+== ROOM1100.RDT
+   Bank5 Bit0 : sub01@0x00BA8 Ck(5,0,1); sub02@0x00C6C Set(5,0,0); sub07@0x00D66 Set(5,0,1)
+   Pause(2,0/2): 4x  sub01@0x00C5C Set(2,0,1); sub01@0x00C60 Set(2,2,1); sub02@0x00C84 Set(2,0,0); sub02@0x00C88 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00BB0
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x00BE0
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x00BC8
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00BF8
+   Sce_key_ck 0x0040 (AKTION) x2: sub01@0x00C1E, sub01@0x00C46
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 2
+   Obj_model_set type4: sub00@0x00B64 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM1101.RDT
+   Bank5 Bit0 : sub01@0x00BA8 Ck(5,0,1); sub02@0x00C6C Set(5,0,0); sub07@0x00D66 Set(5,0,1)
+   Pause(2,0/2): 4x  sub01@0x00C5C Set(2,0,1); sub01@0x00C60 Set(2,2,1); sub02@0x00C84 Set(2,0,0); sub02@0x00C88 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00BB0
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x00BE0
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x00BC8
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00BF8
+   Sce_key_ck 0x0040 (AKTION) x2: sub01@0x00C1E, sub01@0x00C46
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 2
+   Obj_model_set type4: sub00@0x00B64 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM1141.RDT
+   Bank5 Bit0 : sub03@0x00FA4 Set(5,0,0); sub03@0x00FAC Ck(5,0,0)
+== ROOM1150.RDT
+   Bank5 Bit0 : sub04@0x010A6 Set(5,0,0)
+   Pause(2,0/2): 4x  sub04@0x00F96 Set(2,0,1); sub04@0x00F9A Set(2,2,1); sub04@0x010AA Set(2,0,0); sub04@0x010AE Set(2,2,0)
+== ROOM1151.RDT
+   Bank5 Bit0 : sub04@0x01084 Set(5,0,0)
+   Pause(2,0/2): 4x  sub04@0x00F74 Set(2,0,1); sub04@0x00F78 Set(2,2,1); sub04@0x01088 Set(2,0,0); sub04@0x0108C Set(2,2,0)
+== ROOM1171.RDT
+   Bank5 Bit0 : sub05@0x0169C Set(5,0,0); sub05@0x016A4 Ck(5,0,0)
+== ROOM1190.RDT
+   Bank5 Bit0 : sub01@0x023D2 Ck(5,0,0); sub01@0x023D6 Set(5,0,1); sub02@0x0252C Set(5,0,0); sub03@0x02576 Ck(5,0,0); sub04@0x025EE Ck(5,0,0); sub05@0x02666 Ck(5,0,0)
+== ROOM1191.RDT
+   Bank5 Bit0 : sub01@0x023D2 Ck(5,0,0); sub01@0x023D6 Set(5,0,1); sub02@0x0252C Set(5,0,0); sub03@0x02576 Ck(5,0,0); sub04@0x025EE Ck(5,0,0); sub05@0x02666 Ck(5,0,0)
+== ROOM11A0.RDT
+   Bank5 Bit0 : sub01@0x011A8 Ck(5,0,0); sub01@0x011BE Set(5,0,1); sub01@0x011E8 Set(5,0,0)
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x01058 obj=0 pos=(10050,-5400,8800) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0107E obj=0 pos=(-19300,0,3300) box_h=(900,900,900)
+== ROOM11A1.RDT
+   Bank5 Bit0 : sub01@0x011BC Ck(5,0,0); sub01@0x011D2 Set(5,0,1); sub01@0x011FC Set(5,0,0)
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x01058 obj=0 pos=(10050,-5400,8800) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0107E obj=0 pos=(-19300,0,3300) box_h=(900,900,900)
+== ROOM11B0.RDT
+   Bank5 Bit0 : sub09@0x0189A Set(5,0,0); sub09@0x018A2 Ck(5,0,0)
+   Sce_key_ck 0x0001 (UP) x2: sub03@0x0126A, sub03@0x01294
+== ROOM11B1.RDT
+   Sce_key_ck 0x0001 (UP) x1: sub04@0x0150E
+== ROOM11C0.RDT
+   Bank5 Bit0 : sub05@0x01C3E Set(5,0,0); sub05@0x01C46 Ck(5,0,0)
+== ROOM11D0.RDT
+   Bank5 Bit0 : sub01@0x0170C Ck(5,0,0); sub01@0x01716 Set(5,0,1)
+== ROOM11D1.RDT
+   Bank5 Bit0 : sub01@0x0170C Ck(5,0,0); sub01@0x01716 Set(5,0,1)
+== ROOM11E0.RDT
+   Bank5 Bit0 : sub01@0x01848 Ck(5,0,1); sub01@0x01860 Ck(5,0,1); sub01@0x01878 Ck(5,0,1); sub01@0x01890 Ck(5,0,1); sub06@0x01B4A Set(5,0,0); sub06@0x01B82 Set(5,0,1); sub07@0x01B96 Set(5,0,0); sub07@0x01BCE Set(5,0,1); sub08@0x01BE2 Set(5,0,0); sub08@0x01C1A Set(5,0,1); sub09@0x01C2E Set(5,0,0); sub09@0x01C66 Set(5,0,1); sub10@0x01C7A Set(5,0,0); sub10@0x01CB2 Set(5,0,1); sub11@0x01CC6 Set(5,0,0); sub11@0x01CFE Set(5,0,1); sub12@0x01D12 Set(5,0,0); sub12@0x01D4A Set(5,0,1); sub13@0x01D5E Set(5,0,0); sub13@0x01D96 Set(5,0,1); sub14@0x01DAA Set(5,0,0); sub14@0x01DE2 Set(5,0,1); sub15@0x01DF6 Set(5,0,0); sub15@0x01E2E Set(5,0,1); sub16@0x01E5C Set(5,0,0); sub17@0x01ED4 Set(5,0,1); sub19@0x01F48 Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x01A64 Set(2,0,1); sub01@0x01A68 Set(2,2,1); sub16@0x01EB0 Set(2,0,0); sub16@0x01EB4 Set(2,2,0); sub19@0x01F54 Set(2,0,0); sub19@0x01F58 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x2: sub01@0x01850, sub01@0x01A9C
+   Sce_key_ck 0x0002 (RIGHT) x2: sub01@0x01880, sub01@0x01ACC
+   Sce_key_ck 0x0004 (DOWN) x2: sub01@0x01868, sub01@0x01AB4
+   Sce_key_ck 0x0008 (LEFT) x2: sub01@0x01898, sub01@0x01AE4
+   Sce_key_ck 0x0040 (AKTION) x12: sub01@0x018BE, sub01@0x018E6, sub01@0x0190E, sub01@0x01936 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 12
+   Obj_model_set type4: main00@0x0169E obj=2 pos=(19446,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x017F8 obj=1 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM11E1.RDT
+   Bank5 Bit0 : sub01@0x01848 Ck(5,0,1); sub01@0x01860 Ck(5,0,1); sub01@0x01878 Ck(5,0,1); sub01@0x01890 Ck(5,0,1); sub06@0x01B4A Set(5,0,0); sub06@0x01B82 Set(5,0,1); sub07@0x01B96 Set(5,0,0); sub07@0x01BCE Set(5,0,1); sub08@0x01BE2 Set(5,0,0); sub08@0x01C1A Set(5,0,1); sub09@0x01C2E Set(5,0,0); sub09@0x01C66 Set(5,0,1); sub10@0x01C7A Set(5,0,0); sub10@0x01CB2 Set(5,0,1); sub11@0x01CC6 Set(5,0,0); sub11@0x01CFE Set(5,0,1); sub12@0x01D12 Set(5,0,0); sub12@0x01D4A Set(5,0,1); sub13@0x01D5E Set(5,0,0); sub13@0x01D96 Set(5,0,1); sub14@0x01DAA Set(5,0,0); sub14@0x01DE2 Set(5,0,1); sub15@0x01DF6 Set(5,0,0); sub15@0x01E2E Set(5,0,1); sub16@0x01E5C Set(5,0,0); sub17@0x01ED4 Set(5,0,1); sub19@0x01F48 Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x01A64 Set(2,0,1); sub01@0x01A68 Set(2,2,1); sub16@0x01EB0 Set(2,0,0); sub16@0x01EB4 Set(2,2,0); sub19@0x01F54 Set(2,0,0); sub19@0x01F58 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x2: sub01@0x01850, sub01@0x01A9C
+   Sce_key_ck 0x0002 (RIGHT) x2: sub01@0x01880, sub01@0x01ACC
+   Sce_key_ck 0x0004 (DOWN) x2: sub01@0x01868, sub01@0x01AB4
+   Sce_key_ck 0x0008 (LEFT) x2: sub01@0x01898, sub01@0x01AE4
+   Sce_key_ck 0x0040 (AKTION) x12: sub01@0x018BE, sub01@0x018E6, sub01@0x0190E, sub01@0x01936 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 12
+   Obj_model_set type4: main00@0x0169E obj=2 pos=(19446,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x017F8 obj=1 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM11F0.RDT
+   Bank5 Bit0 : sub01@0x01090 Ck(5,0,1); sub01@0x010A8 Ck(5,0,1); sub01@0x010C0 Ck(5,0,1); sub01@0x010D8 Ck(5,0,1); sub16@0x015C2 Set(5,0,1); sub17@0x0168C Set(5,0,0); sub18@0x016FA Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x012AC Set(2,0,1); sub01@0x012B0 Set(2,2,1); sub17@0x016E8 Set(2,0,0); sub17@0x016EC Set(2,2,0); sub18@0x0172E Set(2,0,0); sub18@0x01732 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x01098
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x010C8
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x010B0
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x010E0
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x01106, sub01@0x0112E, sub01@0x01156, sub01@0x0117E ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: sub00@0x00E54 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM11F1.RDT
+   Bank5 Bit0 : sub01@0x01090 Ck(5,0,1); sub01@0x010A8 Ck(5,0,1); sub01@0x010C0 Ck(5,0,1); sub01@0x010D8 Ck(5,0,1); sub16@0x015C2 Set(5,0,1); sub17@0x0168C Set(5,0,0); sub18@0x016FA Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x012AC Set(2,0,1); sub01@0x012B0 Set(2,2,1); sub17@0x016E8 Set(2,0,0); sub17@0x016EC Set(2,2,0); sub18@0x0172E Set(2,0,0); sub18@0x01732 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x01098
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x010C8
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x010B0
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x010E0
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x01106, sub01@0x0112E, sub01@0x01156, sub01@0x0117E ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: sub00@0x00E54 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM1200.RDT
+   Bank5 Bit0 : sub01@0x00986 Ck(5,0,0); sub01@0x00990 Set(5,0,1)
+== ROOM1201.RDT
+   Bank5 Bit0 : sub01@0x00986 Ck(5,0,0); sub01@0x00990 Set(5,0,1)
+== ROOM1211.RDT
+   Bank5 Bit0 : sub04@0x0230C Set(5,0,0); sub04@0x02314 Ck(5,0,0)
+== ROOM1230.RDT
+   Bank5 Bit0 : sub01@0x00DB0 Ck(5,0,1); sub01@0x00DC8 Ck(5,0,1); sub01@0x00DE0 Ck(5,0,1); sub01@0x00DF8 Ck(5,0,1); sub06@0x0102A Set(5,0,0); sub06@0x01062 Set(5,0,1); sub07@0x01076 Set(5,0,0); sub07@0x010AE Set(5,0,1); sub08@0x010C2 Set(5,0,0); sub08@0x010FA Set(5,0,1); sub09@0x0110E Set(5,0,0); sub09@0x01146 Set(5,0,1); sub10@0x0115A Set(5,0,0); sub10@0x01192 Set(5,0,1); sub11@0x011A6 Set(5,0,0); sub11@0x011DE Set(5,0,1); sub12@0x011F2 Set(5,0,0); sub12@0x0122A Set(5,0,1); sub13@0x0123E Set(5,0,0); sub13@0x01276 Set(5,0,1); sub14@0x0128A Set(5,0,0); sub14@0x012C2 Set(5,0,1); sub15@0x012D6 Set(5,0,0); sub15@0x0130E Set(5,0,1); sub16@0x0133C Set(5,0,0); sub17@0x013B4 Set(5,0,1); sub19@0x01428 Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x00FCC Set(2,0,1); sub01@0x00FD0 Set(2,2,1); sub16@0x01390 Set(2,0,0); sub16@0x01394 Set(2,2,0); sub19@0x01434 Set(2,0,0); sub19@0x01438 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00DB8
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x00DE8
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x00DD0
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00E00
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x00E26, sub01@0x00E4E, sub01@0x00E76, sub01@0x00E9E ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: main00@0x00CC0 obj=0 pos=(-19554,0,-23216) box_h=(900,900,900)
+== ROOM1231.RDT
+   Bank5 Bit0 : sub01@0x00DB0 Ck(5,0,1); sub01@0x00DC8 Ck(5,0,1); sub01@0x00DE0 Ck(5,0,1); sub01@0x00DF8 Ck(5,0,1); sub06@0x0102A Set(5,0,0); sub06@0x01062 Set(5,0,1); sub07@0x01076 Set(5,0,0); sub07@0x010AE Set(5,0,1); sub08@0x010C2 Set(5,0,0); sub08@0x010FA Set(5,0,1); sub09@0x0110E Set(5,0,0); sub09@0x01146 Set(5,0,1); sub10@0x0115A Set(5,0,0); sub10@0x01192 Set(5,0,1); sub11@0x011A6 Set(5,0,0); sub11@0x011DE Set(5,0,1); sub12@0x011F2 Set(5,0,0); sub12@0x0122A Set(5,0,1); sub13@0x0123E Set(5,0,0); sub13@0x01276 Set(5,0,1); sub14@0x0128A Set(5,0,0); sub14@0x012C2 Set(5,0,1); sub15@0x012D6 Set(5,0,0); sub15@0x0130E Set(5,0,1); sub16@0x0133C Set(5,0,0); sub17@0x013B4 Set(5,0,1); sub19@0x01428 Set(5,0,0)
+   Pause(2,0/2): 6x  sub01@0x00FCC Set(2,0,1); sub01@0x00FD0 Set(2,2,1); sub16@0x01390 Set(2,0,0); sub16@0x01394 Set(2,2,0); sub19@0x01434 Set(2,0,0); sub19@0x01438 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00DB8
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x00DE8
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x00DD0
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00E00
+   Sce_key_ck 0x0040 (AKTION) x11: sub01@0x00E26, sub01@0x00E4E, sub01@0x00E76, sub01@0x00E9E ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 11
+   Obj_model_set type4: main00@0x00CC0 obj=0 pos=(-19554,0,-23216) box_h=(900,900,900)
+== ROOM1240.RDT
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0054E
+== ROOM1241.RDT
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0054E
+== ROOM2000.RDT
+   Bank5 Bit0 : sub04@0x01AD0 Set(5,0,0); sub04@0x01AD8 Ck(5,0,0)
+== ROOM2030.RDT
+   Sce_key_ck 0x4152 (ANDERE) x1: sub06@0x020B0
+== ROOM2031.RDT
+   Sce_key_ck 0x4152 (ANDERE) x1: sub06@0x020B0
+== ROOM2040.RDT
+   Bank5 Bit0 : sub01@0x01514 Ck(5,0,1); sub02@0x01604 Set(5,0,0); sub07@0x016FE Set(5,0,1)
+   Pause(2,0/2): 4x  sub01@0x015A0 Set(2,0,1); sub01@0x015A4 Set(2,2,1); sub02@0x0161C Set(2,0,0); sub02@0x01620 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0151C
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x0154C
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x01534
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x01564
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0158A
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x0137A obj=1 pos=(-16575,-5400,1700) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x0139C obj=2 pos=(22925,-5400,-5400) box_h=(675,900,600)
+   Obj_model_set type4: sub00@0x0147E obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM2041.RDT
+   Bank5 Bit0 : sub01@0x01514 Ck(5,0,1); sub02@0x01604 Set(5,0,0); sub07@0x016FE Set(5,0,1)
+   Pause(2,0/2): 4x  sub01@0x015A0 Set(2,0,1); sub01@0x015A4 Set(2,2,1); sub02@0x0161C Set(2,0,0); sub02@0x01620 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0151C
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x0154C
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x01534
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x01564
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0158A
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x0137A obj=1 pos=(-16575,-5400,1700) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x0139C obj=2 pos=(22925,-5400,-5400) box_h=(675,900,600)
+   Obj_model_set type4: sub00@0x0147E obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM2050.RDT
+   Bank5 Bit0 : sub01@0x0200E Ck(5,0,1); sub01@0x0202A Ck(5,0,0); sub01@0x0203C Set(5,0,1); sub01@0x02048 Ck(5,0,0); sub01@0x0205A Set(5,0,1); sub01@0x02066 Ck(5,0,0); sub01@0x02078 Set(5,0,1)
+   Pause(2,0/2): 8x  sub01@0x02202 Set(2,0,1); sub01@0x02206 Set(2,2,1); sub02@0x0223C Set(2,2,1); sub02@0x022C4 Set(2,2,0); sub04@0x022FC Set(2,2,1); sub04@0x023B6 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0218E
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x021BE
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x021A6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x021D6
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x021EE
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 3
+   Obj_model_set type4: main00@0x01D0E obj=6 pos=(-1600,-5400,-9348) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01D4C obj=8 pos=(-19554,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DB4 obj=1 pos=(2052,0,-5552) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DD6 obj=2 pos=(-1256,0,-64) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DF8 obj=3 pos=(4248,0,1400) box_h=(900,900,900)
+== ROOM2051.RDT
+   Bank5 Bit0 : sub01@0x0200E Ck(5,0,1); sub01@0x0202A Ck(5,0,0); sub01@0x0203C Set(5,0,1); sub01@0x02048 Ck(5,0,0); sub01@0x0205A Set(5,0,1); sub01@0x02066 Ck(5,0,0); sub01@0x02078 Set(5,0,1)
+   Pause(2,0/2): 8x  sub01@0x02202 Set(2,0,1); sub01@0x02206 Set(2,2,1); sub02@0x0223C Set(2,2,1); sub02@0x022C4 Set(2,2,0); sub04@0x022FC Set(2,2,1); sub04@0x023B6 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x0218E
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x021BE
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x021A6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x021D6
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x021EE
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 3
+   Obj_model_set type4: main00@0x01D0E obj=6 pos=(-1600,-5400,-9348) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01D4C obj=8 pos=(-19554,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DB4 obj=1 pos=(2052,0,-5552) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DD6 obj=2 pos=(-1256,0,-64) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01DF8 obj=3 pos=(4248,0,1400) box_h=(900,900,900)
+== ROOM2060.RDT
+   Bank5 Bit0 : sub01@0x0115C Ck(5,0,1); sub01@0x01174 Ck(5,0,1); sub01@0x0118C Ck(5,0,1); sub01@0x011A4 Ck(5,0,1); sub12@0x015E6 Set(5,0,1); sub13@0x01608 Set(5,0,0); sub20@0x0171E Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x01288 Set(2,0,1); sub01@0x0128C Set(2,2,1); sub13@0x01624 Set(2,0,0); sub13@0x01628 Set(2,2,0); sub19@0x016B0 Set(2,0,0); sub19@0x016B4 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x2: sub01@0x01164, sub01@0x012C0
+   Sce_key_ck 0x0002 (RIGHT) x2: sub01@0x01194, sub01@0x012F0
+   Sce_key_ck 0x0004 (DOWN) x2: sub01@0x0117C, sub01@0x012D8
+   Sce_key_ck 0x0008 (LEFT) x2: sub01@0x011AC, sub01@0x01308
+   Sce_key_ck 0x0040 (AKTION) x6: sub01@0x011D2, sub01@0x011FA, sub01@0x01222, sub01@0x0124A ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 7
+   Obj_model_set type4: main00@0x00EA6 obj=2 pos=(-3125,0,2075) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x00ECC obj=2 pos=(475,0,-7375) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x00EF0 obj=3 pos=(-19554,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x00F12 obj=4 pos=(19571,0,-22542) box_h=(900,900,900)
+== ROOM2061.RDT
+   Bank5 Bit0 : sub01@0x0115C Ck(5,0,1); sub01@0x01174 Ck(5,0,1); sub01@0x0118C Ck(5,0,1); sub01@0x011A4 Ck(5,0,1); sub12@0x015E6 Set(5,0,1); sub13@0x01608 Set(5,0,0); sub20@0x0171E Set(5,0,0)
+   Pause(2,0/2): 8x  sub01@0x01288 Set(2,0,1); sub01@0x0128C Set(2,2,1); sub13@0x01624 Set(2,0,0); sub13@0x01628 Set(2,2,0); sub19@0x016B0 Set(2,0,0); sub19@0x016B4 Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x2: sub01@0x01164, sub01@0x012C0
+   Sce_key_ck 0x0002 (RIGHT) x2: sub01@0x01194, sub01@0x012F0
+   Sce_key_ck 0x0004 (DOWN) x2: sub01@0x0117C, sub01@0x012D8
+   Sce_key_ck 0x0008 (LEFT) x2: sub01@0x011AC, sub01@0x01308
+   Sce_key_ck 0x0040 (AKTION) x6: sub01@0x011D2, sub01@0x011FA, sub01@0x01222, sub01@0x0124A ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 7
+   Obj_model_set type4: main00@0x00EA6 obj=2 pos=(-3125,0,2075) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x00ECC obj=2 pos=(475,0,-7375) box_h=(675,900,600)
+   Obj_model_set type4: main00@0x00EF0 obj=3 pos=(-19554,0,22684) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x00F12 obj=4 pos=(19571,0,-22542) box_h=(900,900,900)
+== ROOM20A0.RDT
+   Bank5 Bit0 : sub00@0x01A78 Set(5,0,0); sub05@0x01E00 Ck(5,0,0); sub05@0x01E1E Set(5,0,1); sub07@0x01E90 Set(5,0,0); sub08@0x01FAC Set(5,0,0)
+   Sce_key_ck 0x4152 (ANDERE) x1: sub10@0x02050
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 3
+   Obj_model_set type4: main00@0x01854 obj=0 pos=(12250,-7200,-12400) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0187A obj=0 pos=(23150,0,-24400) box_h=(900,900,900)
+== ROOM20A1.RDT
+   Bank5 Bit0 : sub00@0x01A78 Set(5,0,0); sub05@0x01E00 Ck(5,0,0); sub05@0x01E1E Set(5,0,1); sub07@0x01E90 Set(5,0,0); sub08@0x01FAC Set(5,0,0)
+   Sce_key_ck 0x4152 (ANDERE) x1: sub10@0x02050
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 3
+   Obj_model_set type4: main00@0x01854 obj=0 pos=(12250,-7200,-12400) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0187A obj=0 pos=(23150,0,-24400) box_h=(900,900,900)
+== ROOM3000.RDT
+   Bank5 Bit0 : main00@0x014BE Set(5,0,1); main00@0x014C6 Set(5,0,0); sub01@0x015C8 Ck(5,0,0)
+== ROOM3001.RDT
+   Bank5 Bit0 : main00@0x014BE Set(5,0,1); main00@0x014C6 Set(5,0,0); sub01@0x01600 Ck(5,0,0)
+== ROOM3010.RDT
+   Bank5 Bit0 : main00@0x02116 Set(5,0,1); main00@0x0211E Set(5,0,0); sub01@0x02264 Ck(5,0,0)
+== ROOM3011.RDT
+   Bank5 Bit0 : main00@0x02116 Set(5,0,1); main00@0x0211E Set(5,0,0); sub01@0x02298 Ck(5,0,0)
+== ROOM3020.RDT
+   Bank5 Bit0 : sub03@0x00D82 Set(5,0,0); sub03@0x00D8A Ck(5,0,0)
+== ROOM3050.RDT
+   Bank5 Bit0 : sub01@0x021A2 Ck(5,0,1); sub10@0x02598 Set(5,0,1); sub15@0x025E4 Set(5,0,0)
+   Pause(2,0/2): 4x  sub01@0x0222E Set(2,0,1); sub01@0x02232 Set(2,2,1); sub15@0x025FC Set(2,0,0); sub15@0x02600 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x021AA
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x021DA
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x021C2
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x021F2
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x02218
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 2
+   Obj_model_set type4: main00@0x01F1A obj=1 pos=(-18000,-7200,-20800) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01F40 obj=1 pos=(-24000,0,-22200) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01FDC obj=3 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM3051.RDT
+   Bank5 Bit0 : sub01@0x021A2 Ck(5,0,1); sub10@0x02598 Set(5,0,1); sub15@0x025E4 Set(5,0,0)
+   Pause(2,0/2): 4x  sub01@0x0222E Set(2,0,1); sub01@0x02232 Set(2,2,1); sub15@0x025FC Set(2,0,0); sub15@0x02600 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x021AA
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x021DA
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x021C2
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x021F2
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x02218
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 2
+   Obj_model_set type4: main00@0x01F1A obj=1 pos=(-18000,-7200,-20800) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01F40 obj=1 pos=(-24000,0,-22200) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01FDC obj=3 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM3061.RDT
+   Bank5 Bit0 : sub06@0x01356 Set(5,0,0); sub06@0x0135E Ck(5,0,0)
+== ROOM3070.RDT
+   Bank5 Bit0 : sub10@0x03942 Set(5,0,0); sub10@0x0394A Ck(5,0,0)
+== ROOM3071.RDT
+   Bank5 Bit0 : sub14@0x03DAF Set(5,0,0); sub14@0x03DB7 Ck(5,0,0)
+== ROOM3090.RDT
+   Obj_model_set type4: main00@0x0140C obj=0 pos=(-23550,0,-8024) box_h=(900,900,900)
+== ROOM3091.RDT
+   Obj_model_set type4: sub00@0x01448 obj=0 pos=(-23550,0,-8024) box_h=(900,900,900)
+   Obj_model_set type4: sub00@0x01508 obj=1 pos=(-15072,950,-1010) box_h=(0,0,0)
+== ROOM30C0.RDT
+   Sce_key_ck 0x4152 (ANDERE) x1: sub01@0x00BE8
+== ROOM30E0.RDT
+   Bank5 Bit0 : sub01@0x00BF0 Ck(5,0,1); sub04@0x00FC0 Set(5,0,0); sub09@0x0103A Set(5,0,1)
+   Pause(2,0/2): 4x  sub01@0x00CA4 Set(2,0,1); sub01@0x00CA8 Set(2,2,1); sub04@0x00FD8 Set(2,0,0); sub04@0x00FDC Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00BF8
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x00C28
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x00C10
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00C40
+   Sce_key_ck 0x0040 (AKTION) x2: sub01@0x00C66, sub01@0x00C8E
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 2
+   Obj_model_set type4: main00@0x00A96 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM4000.RDT
+   Bank5 Bit0 : sub01@0x01382 Ck(5,0,0); sub01@0x0139C Ck(5,0,1); sub01@0x013A4 Set(5,0,0); sub02@0x0145E Set(5,0,1)
+== ROOM4001.RDT
+   Bank5 Bit0 : sub01@0x01342 Ck(5,0,0); sub01@0x0134A Set(5,0,1); sub01@0x01362 Ck(5,0,1); sub01@0x0136A Set(5,0,0)
+== ROOM4020.RDT
+   Bank5 Bit0 : sub01@0x0076A Ck(5,0,1); sub06@0x008D4 Set(5,0,1); sub07@0x0090A Set(5,0,0); sub08@0x009A0 Set(5,0,0); sub09@0x00A46 Set(5,0,0); sub12@0x00B14 Set(5,0,0); sub12@0x00B4A Set(5,0,1)
+   Pause(2,0/2): 10x  sub01@0x0086E Set(2,0,1); sub01@0x00872 Set(2,2,1); sub07@0x00932 Set(2,0,0); sub07@0x00936 Set(2,2,0); sub08@0x009C8 Set(2,0,0); sub08@0x009CC Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00772
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x007A2
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x0078A
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x007BA
+   Sce_key_ck 0x0040 (AKTION) x5: sub01@0x007E0, sub01@0x00808, sub01@0x00830, sub01@0x00858 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 5
+   Obj_model_set type4: sub00@0x006B6 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM4021.RDT
+   Bank5 Bit0 : sub01@0x0076A Ck(5,0,1); sub06@0x008D4 Set(5,0,1); sub07@0x0090A Set(5,0,0); sub08@0x009A0 Set(5,0,0); sub09@0x00A46 Set(5,0,0); sub12@0x00B14 Set(5,0,0); sub12@0x00B4A Set(5,0,1)
+   Pause(2,0/2): 10x  sub01@0x0086E Set(2,0,1); sub01@0x00872 Set(2,2,1); sub07@0x00932 Set(2,0,0); sub07@0x00936 Set(2,2,0); sub08@0x009C8 Set(2,0,0); sub08@0x009CC Set(2,2,0) ...
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x00772
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x007A2
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x0078A
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x007BA
+   Sce_key_ck 0x0040 (AKTION) x5: sub01@0x007E0, sub01@0x00808, sub01@0x00830, sub01@0x00858 ...
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 5
+   Obj_model_set type4: sub00@0x006B6 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM4030.RDT
+   Bank5 Bit0 : sub00@0x00578 Set(5,0,0); sub01@0x005AE Ck(5,0,0); sub01@0x005C4 Set(5,0,1); sub01@0x005D4 Set(5,0,1); sub01@0x005E4 Set(5,0,1); sub01@0x00602 Set(5,0,1); sub02@0x00662 Set(5,0,0); sub03@0x0066E Set(5,0,0); sub04@0x0067A Set(5,0,0); sub05@0x00686 Set(5,0,0)
+== ROOM4031.RDT
+   Bank5 Bit0 : sub00@0x005BA Set(5,0,0); sub01@0x005F0 Ck(5,0,0); sub01@0x00606 Set(5,0,1); sub01@0x00616 Set(5,0,1); sub01@0x00626 Set(5,0,1); sub01@0x00644 Set(5,0,1); sub02@0x006A4 Set(5,0,0); sub03@0x006B0 Set(5,0,0); sub04@0x006BC Set(5,0,0); sub05@0x006C8 Set(5,0,0)
+== ROOM4040.RDT
+   Bank5 Bit0 : sub00@0x00FCA Set(5,0,0); sub01@0x00FDC Ck(5,0,0); sub01@0x00FE4 Set(5,0,1); sub01@0x00FFA Ck(5,0,1); sub01@0x01002 Set(5,0,0)
+== ROOM4041.RDT
+   Bank5 Bit0 : sub00@0x00FCA Set(5,0,0); sub01@0x00FDC Ck(5,0,0); sub01@0x00FE4 Set(5,0,1); sub01@0x00FFA Ck(5,0,1); sub01@0x01002 Set(5,0,0)
+== ROOM4080.RDT
+   Bank5 Bit0 : sub00@0x00C4A Set(5,0,0); sub01@0x00C5C Ck(5,0,0); sub01@0x00C64 Set(5,0,1); sub01@0x00C7A Ck(5,0,1); sub01@0x00C82 Set(5,0,0)
+== ROOM4081.RDT
+   Bank5 Bit0 : sub00@0x00C4A Set(5,0,0); sub01@0x00C5C Ck(5,0,0); sub01@0x00C64 Set(5,0,1); sub01@0x00C7A Ck(5,0,1); sub01@0x00C82 Set(5,0,0)
+== ROOM5020.RDT
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x01242 obj=0 pos=(-11000,-7200,-23150) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01268 obj=0 pos=(-3400,0,-25300) box_h=(900,900,900)
+== ROOM5021.RDT
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: main00@0x01262 obj=0 pos=(-11000,-7200,-23150) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x01288 obj=0 pos=(-3400,0,-25300) box_h=(900,900,900)
+== ROOM5050.RDT
+   Bank5 Bit0 : sub01@0x007D6 Ck(5,0,1); sub02@0x00898 Set(5,0,1); sub03@0x008BC Set(5,0,0)
+   Pause(2,0/2): 4x  sub01@0x00862 Set(2,0,1); sub01@0x00866 Set(2,2,1); sub03@0x008D4 Set(2,0,0); sub03@0x008D8 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x007DE
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x0080E
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x007F6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00826
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0084C
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: sub00@0x00794 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM5051.RDT
+   Bank5 Bit0 : sub01@0x007D6 Ck(5,0,1); sub02@0x00898 Set(5,0,1); sub03@0x008BC Set(5,0,0)
+   Pause(2,0/2): 4x  sub01@0x00862 Set(2,0,1); sub01@0x00866 Set(2,2,1); sub03@0x008D4 Set(2,0,0); sub03@0x008D8 Set(2,2,0)
+   Sce_key_ck 0x0001 (UP) x1: sub01@0x007DE
+   Sce_key_ck 0x0002 (RIGHT) x1: sub01@0x0080E
+   Sce_key_ck 0x0004 (DOWN) x1: sub01@0x007F6
+   Sce_key_ck 0x0008 (LEFT) x1: sub01@0x00826
+   Sce_key_ck 0x0040 (AKTION) x1: sub01@0x0084C
+   Raster-Zellen (Aot_set sce5 + Objekt-Pool-Bit): 1
+   Obj_model_set type4: sub00@0x00794 obj=0 pos=(-19554,0,22684) box_h=(900,900,900)
+== ROOM5060.RDT
+   Bank5 Bit0 : sub00@0x02E2E Set(5,0,0); sub01@0x02E48 Ck(5,0,0); sub01@0x02E50 Set(5,0,1); sub01@0x02E66 Ck(5,0,1); sub01@0x02E6E Set(5,0,0)
+   Pause(2,0/2): 2x  sub06@0x030EE Set(2,2,1); sub06@0x0326C Set(2,2,0)
+== ROOM5061.RDT
+   Bank5 Bit0 : sub00@0x02E2E Set(5,0,0); sub01@0x02E48 Ck(5,0,0); sub01@0x02E50 Set(5,0,1); sub01@0x02E66 Ck(5,0,1); sub01@0x02E6E Set(5,0,0)
+   Pause(2,0/2): 2x  sub06@0x030EE Set(2,2,1); sub06@0x0326C Set(2,2,0)
+== ROOM50C0.RDT
+   Bank5 Bit0 : sub02@0x00AC8 Ck(5,0,0); sub02@0x00AD0 Set(5,0,1)
+== ROOM50C1.RDT
+   Bank5 Bit0 : sub02@0x00AC8 Ck(5,0,0); sub02@0x00AD0 Set(5,0,1)
+== ROOM50D0.RDT
+   Obj_model_set type4: main00@0x01276 obj=0 pos=(-18200,0,-19650) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0129C obj=0 pos=(-13950,0,-3210) box_h=(900,900,900)
+== ROOM50D1.RDT
+   Obj_model_set type4: main00@0x01276 obj=0 pos=(-18200,0,-19650) box_h=(900,900,900)
+   Obj_model_set type4: main00@0x0129C obj=0 pos=(-13950,0,-3210) box_h=(900,900,900)
+== ROOM6000.RDT
+   Bank5 Bit0 : sub04@0x01046 Set(5,0,0); sub04@0x0104E Ck(5,0,0)
+# 206 RDTs gelaufen

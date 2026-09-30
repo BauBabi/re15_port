@@ -1,0 +1,10 @@
+=== Sonde r34n_a_rolltor: geplanter Bytecode an der echten VM ===
+1050 ohne Sicherung, Schalter Ja   Frage@79   Cut7@81   msg2@81   msg20@-1   Item-weg@-1   Cut8@-1   msg21@-1   Cut3@149  Ende@150  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Fuse-Slot=-1 Zelle19 5->5 fremd=0 laeuft=0
+1050 ohne Sicherung, Schalter Nein Frage@79   Cut7@-1   msg2@-1   msg20@-1   Item-weg@-1   Cut8@-1   msg21@-1   Cut3@-1   Ende@82   | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Fuse-Slot=-1 Zelle19 5->5 fremd=0 laeuft=0
+1050 mit Sicherung, Ja/Ja          Frage@79   Cut7@81   msg2@81   msg20@149  Item-weg@196  Cut8@196  msg21@196  Cut3@240  Ende@241  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=1 Fuse-Slot=-1 Zelle19 5->5 fremd=0 laeuft=0
+1050 mit Sicherung, Ja/Nein        Frage@79   Cut7@81   msg2@81   msg20@149  Item-weg@-1   Cut8@-1   msg21@-1   Cut3@196  Ende@197  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Fuse-Slot=3 Zelle19 5->5 fremd=0 laeuft=0
+1051 ohne Sicherung, Schalter Ja   Frage@79   Cut7@81   msg2@81   msg20@-1   Item-weg@-1   Cut8@-1   msg21@-1   Cut3@149  Ende@150  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Fuse-Slot=-1 Zelle19 5->5 fremd=0 laeuft=0
+1051 mit Sicherung, Ja/Ja          Frage@79   Cut7@81   msg2@81   msg20@149  Item-weg@196  Cut8@196  msg21@196  Cut3@240  Ende@241  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=1 Fuse-Slot=-1 Zelle19 5->5 fremd=0 laeuft=0
+ERGEBNIS: Plan laeuft sauber
+GEGENPROBE 0x62 unregistriert      Frage@79   Cut7@81   msg2@81   msg20@149  Item-weg@-1   Cut8@-1   msg21@-1   Cut3@197  Ende@198  | cam 3->3 auto=1 (2,7)=0 (3,121)=0 (9,63)=0 Fuse-Slot=3 Zelle19 5->5 fremd=0 laeuft=0
+GEGENPROBE: fremd/laeuft=0, Einsetzen STILL VERSCHLUCKT (62 -> op_unknown pc+1, `40` = Plc_dest 8 B, Default @+0x31, im Plan erst wieder ab Endif @+0x36) - Haken 2 (Opcode 0x62) ist Pflicht

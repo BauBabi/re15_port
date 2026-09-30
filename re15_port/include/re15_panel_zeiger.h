@@ -117,17 +117,69 @@
  * => Der Port haelt die RE1.5-Abnahme (Evt_exec(sub18) @0x012E6 + Set(4,238,1) @0x012EA)
  *    zurueck, bis der ANGEZEIGTE Wert 80 ist und RE15_PANEL_RUHE_BILDER Bilder stand
  *    (re15_panel_zeiger_abnahme_haelt, gerufen aus op_evt_exec).
- * EINGABESPERRE WAEHREND DER FAHRT: RE2 setzt Bank 2 Bit 7 als ersten Befehl von sub04
- * (@0x01110 `22 02 07 01`) und loescht es erst am Ende (@0x01818 `22 02 07 00`); Bank 2 =
- * 0x800CFBDC (Bank-Tabelle @0x800A78C8), Bit 7 = 0x01000000, und @0x800391F8..0x80039224
- * maskiert das logische Pad dann auf 0x3C00 (`andi v0,v0,0x3c00`). Die Nachfuehrschleife
- * und der Sleep liegen vollstaendig darin. RE1.5 hat dasselbe Bit mit derselben Wirkung
- * (FUN_80030444 @0x800304f4..0x8003051c: virtuelles Pad `andi 0xf000`) — der Port legt
- * genau diese Maske auf die SCD-Pad-Woerter, solange der Zeiger faehrt oder steht, aber
- * die 30 Bilder noch nicht um sind (re15_panel_zeiger_sperrt).
+ * EINGABESPERRE — NUR NOCH AM ENDE (Runde 34 Nacht, ersetzt die Runde-31-Sperre nach JEDEM
+ * Schalter). Nutzer 2026-09-30, woertlich: "Bei den Generator in ROOM 11F0 moechte ich nicht,
+ * das nach den Klick eines Schalters, der Cursor eingefroren bleibt, bis die Anzeige dort
+ * steht wo sie hin soll, sondern man soll sich frei bewegen koennen Ausser ganz am Ende -
+ * ganz am Ende, bevor das "OK" kommt und die Lichter angehen, dann soll der Cursor zunaechst
+ * auf den finalen Wert - also die 80 gehen."
+ *   Lesart (analysis/befunde_runde34_nacht/C_generator.md §1.2): "Cursor eingefroren" = der
+ *   Auswahl-Cursor (obj 0x00, @0x00E54); "der Cursor ... auf die 80" = dieser rote Zeiger
+ *   (die 80 steht auf der Skala; der Nutzer nennt ihn schon in Runde 26 "Cursor").
+ *   "ganz am Ende" = die Schalterstellung, die zum "OK" fuehrt = die RE1.5-Loesung
+ *   @0x012BE..0x012E2 (Maske 0x155) — nur sie zielt auf 80 (alle 1024 Masken gezaehlt).
+ * RE1.5 selbst sperrt beim Schalten NIE: `22 02 07 xx` (Set Bank 2 Bit 7) steht in
+ * ROOM11F0.RDT genau viermal, @0x01736/@0x01784 (sub18, Abnahme) und @0x017B8/@0x0180A
+ * (sub19, Schublade) — in sub01..sub17 nicht. Die freie Bewegung waehrend der Zeigerfahrt ist
+ * damit RE1.5-Stand; die Nachfuehrfahrt braucht keine Sperre, weil das Ziel eine Funktion
+ * der Schalterbits ist (jedes Bild neu).
+ * Die ENDSPERRE bleibt RE2: RE2 setzt Bank 2 Bit 7 als ersten Befehl von sub04 (@0x01110
+ * `22 02 07 01`) und loescht es erst am Ende (@0x01818 `22 02 07 00`); Bank 2 = 0x800CFBDC
+ * (Bank-Tabelle @0x800A78C8), Bit 7 = 0x01000000, und @0x800391F8..0x80039224 maskiert das
+ * logische Pad dann auf 0x3C00 (`andi v0,v0,0x3c00`). RE1.5 hat dasselbe Bit mit derselben
+ * Wirkung (FUN_80030444 @0x800304f4..0x8003051c: virtuelles Pad `andi 0xf000`). Der Port
+ * legt diese Maske auf die SCD-Pad-Woerter, sobald die Schaltermaske die Loesung ist
+ * (Zeiger faehrt auf 80, 30 Ruhebilder, bis die Abnahme 4:238 setzt) —
+ * re15_panel_zeiger_sperrt.
  * ROOM11F1 ist byte-identisch zu ROOM11F0 (cmp: 152588 B, 0 Abweichungen) und ist der Raum
  * in Elzas Durchlauf (Varianten-Nibble, aot_common.c dest_id) — dort galt der Zeiger bisher
  * gar nicht. Beide Raeume tragen ihn jetzt (RE15_PANEL_IST_RAUM).
+ *
+ * ================= DIE ZWEI GRUENEN LAMPEN (Runde 34 Nacht) =========================
+ * Nutzer 2026-09-30, woertlich: "Dann moechte ich, das in ROOM 11F0 beim Generator Raetsel
+ * die Lichter gruen aufleuchten - siehe lights.bmp - Das obere Licht soll angehen, wenn links
+ * die 3 Schalter korrekt betaetigt sind. Das untere Licht soll angehen, wenn die 2 Schalter
+ * rechts korrekt betaetigt sind. Sobald eines der jeweiligen Schalter der jeweiligen Seite
+ * nicht mehr korrekt ist, dann soll das jeweilige Licht - (falscher Schalter links - das
+ * obere, falscher Schalter rechts - das untere) wieder aus gehen."
+ * RE1.5 hat dafuer KEIN Gegenstueck (die zwei Lampenrahmen rechts der Hebel sind in Cut 10
+ * nur gemalt, dunkel) -> NUTZER-VORGABE fuer das Ob/Wann.
+ * SPALTEN (aus den Bytes): Zellen @0x00D78..0x00DC8 x -27300 = Schalter 1..5 (Props obj
+ * 0x02..0x06 @0x00E76..0x00EFE, x -25975 = linke Hebelspalte), @0x00DDC..0x00E2C x -19700 =
+ * Schalter 6..10 (obj 0x07..0x0B @0x00F20..0x00FA8, x -18775 = rechte Spalte).
+ * REGEL: oben = alle fuenf Schalter LINKS in Loesungsstellung (1,0,1,0,1 — Ck @0x012BE
+ * `21 05 0d 01` .. @0x012CE `21 05 11 01`), unten = alle fuenf RECHTS (0,1,0,1,0 — Ck
+ * @0x012D2 `21 05 12 00` .. @0x012E2 `21 05 16 00`). Ein zusaetzlich eingeschalteter
+ * Schalter 2/4 bzw. 6/8/10 ist "nicht korrekt" (Folgesatz des Nutzers) -> Lampe aus.
+ * Zustand in JEDEM Bild aus den Schalterbits (kein Einrasten, kein eigenes Bit). Nach der
+ * Loesung KEINE Sonderregel: RE2 haelt seine gruenen Lampen nicht (ROOM2130 sub04 loescht sie
+ * @0x01814 `65 0d` / @0x01816 `65 0e`), und in RE1.5 ist Cut 10 nach der Loesung nicht mehr
+ * erreichbar (sub00 Else @0x0101A -> @0x0101E Slot 1 nur noch sce 1 = Text); sub18 laesst
+ * die Schalterbits 13..22 stehen (@0x016FA..0x0172A loescht nur 0..12), die Lampen bleiben
+ * also bis zum Schnitt auf Cut 8 (@0x0173A) von selbst gruen.
+ * KUNST = PORT-WAHL (Kombination), KEINE gefundene RE2-Kunst: Form = RE2-Schalterlampe
+ * ESP 0x16 Strom 2 / Anim-Satz 4 / Zellen 3,4 (ROOM2130 @0x01294 `64 01 16 02`, dort ROT,
+ * CLUT-Zeile 0); Palette = CLUT-Zeile 2 (gruen) aus dem Strom-0-Ereignis @0x017A8/@0x017B8
+ * (`64 0d 16 10` / `64 0e 16 10`, dort Rechteck-Lampe Zellen 0..2). RE2 zeigt die gruene
+ * Quadrat-Lampe nirgends (Zensus 250 RDTs, C_belege/gp_re2_esp16_zensus.txt). Der RE1.5-
+ * Kandidat ESP 0x01 gruen (ROOM5060 sub06 @0x03124) ist geprueft und bewusst NICHT genommen
+ * (Begruendung: C_generator.md §9.7). Zeichenart RE2: additiv B+F (Flags 0xBA03 & 0x1000 ->
+ * Prim 0x2E @0x80077a44..0x80077a50, TPAGE |= 0x20 @0x8001dc48..0x8001dc60), Zelle 3 im
+ * Einschaltbild, dann 4, 3, 4 ... je Bild (Anim-Saetze 4..6 `03 01 01 20` / `04 01 01 20` /
+ * `04 01 ff 20`, Fortschalten FUN_8001d68c @0x8001d7b8..0x8001d880). Kein Ton beim
+ * Aufleuchten: RE2 zuendet seine Schalterlampen still (@0x01294 folgt `09 0a 1e 00`, kein
+ * `36`); das einzige RE2-Gruen-Ereignis hat se_on 0x0F @0x01798 davor, gilt aber dem
+ * Waffenkammer-Schloss (Cut 8), nicht einer Schalterlampe.
  */
 #ifndef RE15_PANEL_ZEIGER_H
 #define RE15_PANEL_ZEIGER_H
@@ -156,9 +208,39 @@
 #define RE15_PANEL_SCHALTER    10
 #define RE15_PANEL_GEWICHTE  { 20, -20, -10, -30, 20, -40, 20, -50, 30, -60 }
 /* Die Maske, die die Gewichte oben auf genau 80 bringt (Schalter 1,3,5,7,9 = Bit 0,2,4,6,8)
- * UND die RE1.5 @0x012BE..0x012E2 als Loesung prueft. Nur Doku/Riegel, keine Spiellogik —
- * geloest wird weiterhin durch das SCD. */
+ * UND die RE1.5 @0x012BE..0x012E2 als Loesung prueft. Seit Runde 34 Nacht SPIELLOGIK: sie
+ * startet die Endsperre (re15_panel_zeiger_sperrt). Geloest wird weiterhin durch das SCD
+ * (@0x012E6 Evt_exec sub18 + @0x012EA Set(4,238,1)). */
 #define RE15_PANEL_LOESUNGSMASKE 0x155u
+
+/* Die zwei Lampen (Runde 34 Nacht, Belege im Kopf). Maske/Soll je Spalte aus den Ck-Bytes:
+ *   oben  = Schalter 1..5  (Bit 0..4): Ck @0x012BE/C2/C6/CA/CE = 1,0,1,0,1 -> 0x01F / 0x015
+ *   unten = Schalter 6..10 (Bit 5..9): Ck @0x012D2/D6/DA/DE/E2 = 0,1,0,1,0 -> 0x3E0 / 0x140 */
+#define RE15_PANEL_LAMPE_OBEN_MASKE   0x01Fu
+#define RE15_PANEL_LAMPE_OBEN_SOLL    0x015u
+#define RE15_PANEL_LAMPE_UNTEN_MASKE  0x3E0u
+#define RE15_PANEL_LAMPE_UNTEN_SOLL   0x140u
+/* Lage: die Lampenmitten = Mitte der gruenlichen Glasflaeche, am Original-Hintergrund
+ * ROOM11F10.bmp gemessen (oben (222.5, 75.5), unten (222.5, 135.5); C_generator.md §3.6) und
+ * im Port-Framedump identisch (§2.3). Ecke = floor(Mitte - KANTE/2 + 0.5), wie der Sprite-
+ * Bauer die Zelle um den Versatz -16/-16 (effect.esp @0x7C `60 00 f0 f0`) zentriert. */
+#define RE15_PANEL_LAMPE_X0           212
+#define RE15_PANEL_LAMPE_Y0_OBEN      65
+#define RE15_PANEL_LAMPE_Y0_UNTEN     125
+/* KANTE 22 px = PORT-WAHL (abgeleitet, keine Original-Adresse — RE1.5 hat keine ESP-Weltlage
+ * fuer diese Lampe, gezeichnet wird 2D wie der Zeiger): RE2-Bildgroesse der Schalterlampe
+ * 25,8 px (S*scale16*camf/(SZ*256), FUN_80077ed0 @0x80077f14..0x8007800c; S 32, scale16 0x02BA
+ * @ROOM2130 0x01294+6, camf 330, SZ 1116) x Verhaeltnis der Glasoeffnungen RE1.5/RE2
+ * ((14/17 + 13/15)/2 = 0,845) = 21,8 -> 22. */
+#define RE15_PANEL_LAMPE_KANTE        22
+/* Zellen der RE2-ESP-TIM (LAMPE2130.TIM = ROOM2130.RDT @0x0E398, 4256 B): Zelle 3 u 96 /
+ * Zelle 4 u 128, v 0, S 32 (Koordinatensaetze effect.esp @0x7C `60 00 f0 f0` /
+ * @0x80 `80 00 f0 f0`; Satzbyte 3 = 0x20). CLUT-Zeile 2 = gruen: Unterindex 0x10
+ * @0x017A8, (0x10 >> 3) * 64 @0x8001c9e0..0x8001c9fc. */
+#define RE15_PANEL_LAMPE_ZELLE_A      3
+#define RE15_PANEL_LAMPE_ZELLE_B      4
+#define RE15_PANEL_LAMPE_ZELLE_S      32
+#define RE15_PANEL_LAMPE_CLUT_ZEILE   2
 /* Deckel/Boden: RE2 sub04+0x00B8 (@0x011C8) bzw. +0x0130 (@0x01240). */
 #define RE15_PANEL_MAX         100
 #define RE15_PANEL_MIN         0
@@ -236,9 +318,27 @@ int  re15_panel_zeiger_abnahme_frei(void);
  * naechsten Bild neu (es wird je Bild neu gestartet). */
 int  re15_panel_zeiger_abnahme_haelt(const uint8_t *pc, const uint8_t *raw);
 
-/* 1 = Eingabesperre des Panels: Raetsel aktiv (Bank 5 Bit 0, sub16 @0x015C2), noch nicht
- * geloest, und der Zeiger faehrt oder die RE15_PANEL_RUHE_BILDER nach einer Aenderung sind
- * noch nicht um. Wirkung wie Bank 2 Bit 7 (RE2 @0x01110..0x01818 / RE1.5 @0x800304f8). */
+/* 1 = Eingabesperre des Panels — NUR NOCH DIE ENDSPERRE (Runde 34 Nacht): Raetsel aktiv
+ * (Bank 5 Bit 0, sub16 @0x015C2), noch nicht geloest (4:238, @0x012EA) und die Schaltermaske
+ * LIVE gleich der Loesung RE15_PANEL_LOESUNGSMASKE (@0x012BE..0x012E2). Dann faehrt der
+ * Zeiger auf 80, steht 30 Bilder, und die Abnahme setzt 4:238. Zwischenschalter sperren
+ * nicht (RE1.5: kein Set(2,7,1) in sub01..sub17). Wirkung wie Bank 2 Bit 7 (RE2
+ * @0x01110..0x01818 / RE1.5 @0x800304f8). */
 int  re15_panel_zeiger_sperrt(void);
+
+/* Die zwei gruenen Lampen (Runde 34 Nacht). Zustand des letzten Ticks:
+ * Bit 0 = obere Lampe an, Bit 1 = untere Lampe an. */
+int  re15_panel_lampen(void);
+
+/* Reine Regel (Riegel): 1 = Lampe `nr` (0 oben, 1 unten) ist bei dieser Schaltermaske an. */
+int  re15_panel_lampe_an_aus_maske(int nr, unsigned maske);
+
+/* Zeichner: 1 = Lampe `nr` jetzt zeichnen (Raum 11F0/11F1, Cut 10, Lampe an); dann
+ * *x0/*y0 = linke obere Ecke (320x240), *kante = Kantenlaenge, *zelle = RE2-Zelle 3 oder 4
+ * (Zelle 3 im Einschaltbild, dann Wechsel je Bild). */
+int  re15_panel_lampe_sicht(int nr, int *x0, int *y0, int *kante, int *zelle);
+
+/* Messhaken: Bilder seit dem Einschalten der Lampe `nr` (0 im Einschaltbild). */
+int  re15_panel_lampe_takt(int nr);
 
 #endif /* RE15_PANEL_ZEIGER_H */

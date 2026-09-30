@@ -467,6 +467,8 @@ void re15_render_pri_sprites(const re15_pri_cut_t *pri)
     render_buffer_t *buf = &s_ctx.buffers[s_ctx.active_buffer];
     for (int i = 0; i < pri->draw_count; i++) {
         const re15_pri_mask_t *m = &pri->masks[i];
+        /* Runde 34 Nacht G2: nur bei Record-Byte0 & 1 (FUN_80039590 @0x800395f0-f4). */
+        { extern int re15_mg_sichtbar(int i); if (!re15_mg_sichtbar(i)) continue; }
         if (!has_room_for(sizeof(SPRT) + sizeof(DR_TPAGE))) break;
         /* Per-mask OT bucket from the SHARED depth model (re15_pri.h): the raw
          * authored depth, x1 (@0x80039658 `sll a0,a0,2` = *4 BYTES = *1 WORD).

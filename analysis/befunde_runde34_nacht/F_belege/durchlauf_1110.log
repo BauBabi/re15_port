@@ -1,0 +1,33 @@
+39:[setflag] flag(3,103/0x67) = 1
+40:[setflag] flag(4,232/0xe8) = 1
+60:[debug-menu] AUTO-JUMP -> ROOM1100 (Frame 240)
+61:[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-25900,-10936) rot=2048 band=0
+62:[debug-menu] JUMP -> 110 EVID. CORRIDOR (ROOM1100) spawn=(-25900,0,-10936) cut=0
+64:[room] PC loaded room1100.rdt (181704 bytes)
+86:[tuer] Sequenz Archiv 2 DOOR19 Variante 0 Bit7 0 Tuer 25 Seite S050 T030 Spender FF (10 Skripte)
+87:[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+89:[room] PC loaded room1110.rdt (196360 bytes)
+188:[msg] room=1110 id=0 savepoint=0
+189:[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+206:[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+223:[leiche] No/voll: Munition bleibt bei der Leiche (Bit (9,61)=0), das naechste Untersuchen bietet sie wieder an
+238:[msg] room=1110 id=0 savepoint=0
+239:[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+258:[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+274:[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+288:[msg] room=1110 id=0 savepoint=0
+289:[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+F721 PL(-2400,-5000,rot=0,hp=100)
+F751 PL(-2400,-5000,rot=2784,hp=100)
+F781 PL(-2400,-4100,rot=3072,hp=100)
+F811 PL(-2400,-1850,rot=3072,hp=100)
+F841 PL(-2400,400,rot=3072,hp=100)
+F871 PL(-2400,2650,rot=3072,hp=100)
+F901 PL(-2400,3100,rot=3936,hp=100)
+F931 PL(-1438,3061,rot=4128,hp=100)
+F961 PL(782,2971,rot=4128,hp=100)
+F991 PL(3002,2881,rot=4128,hp=100)
+F1021 PL(5222,2791,rot=4128,hp=100)
+F1051 PL(7442,2701,rot=4128,hp=100)
+F1081 PL(9662,2611,rot=4128,hp=100)
+F1111 PL(10481,2442,rot=4128,hp=100)

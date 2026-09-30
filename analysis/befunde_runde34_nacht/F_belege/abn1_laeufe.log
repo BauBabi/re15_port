@@ -1,0 +1,224 @@
+## f1_1110
+[input-script] RE15_INPUT_SCRIPT="W11,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.2,X0.1,W0.2667,R0.1,W0.3,A0.1,W4.5,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.2333,A0.1,W4.5667,A0.1,W4.2333,A0.1,W2.5667,S0.1,W1" -> 1593 ticks @ 30 fps, start frame 0
+[msg] room=1240 id=0 savepoint=0
+[debug-menu] AUTO-JUMP -> ROOM1110 (Frame 240)
+[debug-menu] JUMP -> 111 EVIDENCE ROOM  (ROOM1110) spawn=(10580,0,2650) cut=0
+[room] PC loaded room1110.rdt (196360 bytes)
+[input-script] Tick 330 -> F330 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 470 -> F470 Tasten 0x8000
+[input-script] Tick 560 -> F560 Tasten 0x8000
+[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+[input-script] Tick 689 -> F689 Tasten 0x4000
+[input-script] Tick 700 -> F700 Tasten 0x0020
+[input-script] Tick 712 -> F712 Tasten 0x8000
+[leiche] No/voll: Munition bleibt bei der Leiche (Bit (9,61)=0), das naechste Untersuchen bietet sie wieder an
+[input-script] Tick 850 -> F850 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 990 -> F990 Tasten 0x8000
+[input-script] Tick 1080 -> F1080 Tasten 0x8000
+[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+[input-script] Tick 1210 -> F1210 Tasten 0x8000
+[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 1350 -> F1350 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+[input-script] Tick 1480 -> F1480 Tasten 0x8000
+[input-script] Tick 1560 -> F1560 Tasten 0x0008
+[flow] EXIT_AT: Bild 1700 in Raum 1110 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F561 state=2
+        1 F578 state=3
+        9 F579 state=4
+      124 F588 state=6
+       17 F712 state=8
+       17 F1081 state=2
+        1 F1098 state=3
+        9 F1099 state=4
+      102 F1108 state=6
+## f2a_1230
+[input-script] RE15_INPUT_SCRIPT="W18.1,A0.1,W13.7,U0.3667,W0.5,R1.0667,W0.5,U0.8,W1.1,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.2333,R0.1,W0.3,A0.1,W4.5,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.2333,A0.1,W4.5667,A0.1,W4.2333,A0.1,W1" -> 2260 ticks @ 
+[msg] room=1240 id=0 savepoint=0
+[debug-menu] AUTO-JUMP -> ROOM11B0 (Frame 240)
+[debug-menu] JUMP -> 11b GARAGE         (ROOM11B0) spawn=(-25800,0,-16890) cut=0
+[room] PC loaded room11b0.rdt (232492 bytes)
+[input-script] Tick 543 -> F300 Tasten 0x8000
+[aot] DOOR FIRE slot=0 rect=(-27830,-16890,hw=1600,hh=2050) target_cut=8 spawn=(4725,0,28650)
+[room] PC loaded room1230.rdt (166268 bytes)
+[input-script] Tick 957 -> F414 Tasten 0x0010
+[input-script] Tick 983 -> F440 Tasten 0x0020
+[input-script] Tick 1030 -> F487 Tasten 0x0010
+[input-script] Tick 1087 -> F544 Tasten 0x8000
+[msg] room=1230 id=10 savepoint=0
+[leiche] ROOM1230 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 1227 -> F684 Tasten 0x8000
+[input-script] Tick 1317 -> F774 Tasten 0x8000
+[leiche] ROOM1230 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+[input-script] Tick 1447 -> F904 Tasten 0x0020
+[input-script] Tick 1459 -> F916 Tasten 0x8000
+[leiche] No/voll: Munition bleibt bei der Leiche (Bit (9,62)=0), das naechste Untersuchen bietet sie wieder an
+[input-script] Tick 1597 -> F1054 Tasten 0x8000
+[msg] room=1230 id=10 savepoint=0
+[leiche] ROOM1230 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 1737 -> F1194 Tasten 0x8000
+[input-script] Tick 1827 -> F1284 Tasten 0x8000
+[leiche] ROOM1230 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+[input-script] Tick 1957 -> F1414 Tasten 0x8000
+[leiche] Yes: Bit (9,62) gesetzt, H. Gun Bullets 50 -> 57
+[flow] EXIT_AT: Bild 1500 in Raum 1230 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F775 state=2
+        1 F792 state=3
+        9 F793 state=4
+      114 F802 state=6
+       17 F916 state=8
+       17 F1285 state=2
+        1 F1302 state=3
+        9 F1303 state=4
+      102 F1312 state=6
+## f2b_1230_wieder
+[input-script] RE15_INPUT_SCRIPT="W18.1,A0.1,W13.7,U0.3667,W0.5,R1.0667,W0.5,U0.8,W1.1,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.2333,A0.1,W3.1,R1.0667,W0.6,U0.4667,W0.5333,A0.1,W13.2333,R0.7,W0.6333,A0.1,W13.7,U0.3667,W0.5,R1.0667,W0.5,U0.8
+[msg] room=1240 id=0 savepoint=0
+[debug-menu] AUTO-JUMP -> ROOM11B0 (Frame 240)
+[debug-menu] JUMP -> 11b GARAGE         (ROOM11B0) spawn=(-25800,0,-16890) cut=0
+[room] PC loaded room11b0.rdt (232492 bytes)
+[input-script] Tick 543 -> F300 Tasten 0x8000
+[aot] DOOR FIRE slot=0 rect=(-27830,-16890,hw=1600,hh=2050) target_cut=8 spawn=(4725,0,28650)
+[room] PC loaded room1230.rdt (166268 bytes)
+[input-script] Tick 957 -> F414 Tasten 0x0010
+[input-script] Tick 983 -> F440 Tasten 0x0020
+[input-script] Tick 1030 -> F487 Tasten 0x0010
+[input-script] Tick 1087 -> F544 Tasten 0x8000
+[msg] room=1230 id=10 savepoint=0
+[leiche] ROOM1230 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 1227 -> F684 Tasten 0x8000
+[input-script] Tick 1317 -> F774 Tasten 0x8000
+[leiche] ROOM1230 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+[input-script] Tick 1447 -> F904 Tasten 0x8000
+[leiche] Yes: Bit (9,62) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 1543 -> F1000 Tasten 0x0020
+[input-script] Tick 1593 -> F1050 Tasten 0x0010
+[input-script] Tick 1623 -> F1080 Tasten 0x8000
+[aot] DOOR FIRE slot=3 rect=(5706,28874,hw=436,hh=2311) target_cut=0 spawn=(-26483,0,-18094)
+[room] PC loaded room11b0.rdt (232492 bytes)
+[input-script] Tick 2023 -> F400 Tasten 0x0020
+[input-script] Tick 2063 -> F440 Tasten 0x8000
+[aot] DOOR FIRE slot=0 rect=(-27830,-16890,hw=1600,hh=2050) target_cut=8 spawn=(4725,0,28650)
+[room] PC loaded room1230.rdt (166268 bytes)
+[input-script] Tick 2477 -> F414 Tasten 0x0010
+[input-script] Tick 2503 -> F440 Tasten 0x0020
+[input-script] Tick 2550 -> F487 Tasten 0x0010
+[input-script] Tick 2607 -> F544 Tasten 0x8000
+[msg] room=1230 id=10 savepoint=0
+[leiche] ROOM1230 msg 10 -> Port-Nachricht 23 (Bit (9,62)=1)
+[input-script] Tick 2747 -> F684 Tasten 0x8000
+[flow] EXIT_AT: Bild 1700 in Raum 1230 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F775 state=2
+        1 F792 state=3
+        9 F793 state=4
+      102 F802 state=6
+## s1_1110_save
+[input-script] RE15_INPUT_SCRIPT="W11,A0.1,W4.5667,A0.1,W2.9,A0.1,W4.5667,A0.1,W4.9,A0.1,W4.2333,A0.1,W1" -> 1013 ticks @ 30 fps, start frame 0
+[msg] room=1240 id=0 savepoint=0
+[debug-menu] AUTO-JUMP -> ROOM1110 (Frame 240)
+[debug-menu] JUMP -> 111 EVIDENCE ROOM  (ROOM1110) spawn=(10580,0,2650) cut=0
+[room] PC loaded room1110.rdt (196360 bytes)
+[input-script] Tick 330 -> F330 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 470 -> F470 Tasten 0x8000
+[input-script] Tick 560 -> F560 Tasten 0x8000
+[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+[input-script] Tick 700 -> F700 Tasten 0x8000
+[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 850 -> F850 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+[input-script] Tick 980 -> F980 Tasten 0x8000
+[save] saved (room 1110) slot n=0 -> next=1; card=none (slot -1 qty 0)
+[flow] EXIT_AT: Bild 1300 in Raum 1110 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F561 state=2
+        1 F578 state=3
+        9 F579 state=4
+      112 F588 state=6
+## s2_1110_laden
+[input-script] RE15_INPUT_SCRIPT="W3,A0.1,W3.5667,A0.1,W3.2333,S0.1,W1" -> 333 ticks @ 30 fps, start frame 0
+[save] CONTINUE: resumed in room 1110 (hp=100)
+[input-script] Tick 90 -> F90 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+[input-script] Tick 200 -> F200 Tasten 0x8000
+[input-script] Tick 300 -> F300 Tasten 0x0008
+[flow] EXIT_AT: Bild 400 in Raum 1110 erreicht -> exit
+modal.log: leer (kein Aufnahme-Modal)
+## v1_1111
+[input-script] RE15_INPUT_SCRIPT="W3,A0.1,W3.5667,A0.1,W2.9,A0.1,W4.2333,A0.1,W4.5667,A0.1,W4.2333,A0.1,W1" -> 723 ticks @ 30 fps, start frame 0
+[save] CONTINUE: resumed in room 1111 (hp=100)
+[input-script] Tick 90 -> F90 Tasten 0x8000
+[msg] room=1111 id=0 savepoint=0
+[leiche] ROOM1111 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 200 -> F200 Tasten 0x8000
+[input-script] Tick 290 -> F290 Tasten 0x8000
+[leiche] ROOM1111 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+[input-script] Tick 420 -> F420 Tasten 0x8000
+[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 560 -> F560 Tasten 0x8000
+[msg] room=1111 id=0 savepoint=0
+[leiche] ROOM1111 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+[input-script] Tick 690 -> F690 Tasten 0x8000
+[flow] EXIT_AT: Bild 760 in Raum 1111 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F291 state=2
+        1 F308 state=3
+        9 F309 state=4
+      102 F318 state=6
+## v2_1231
+[input-script] RE15_INPUT_SCRIPT="W3,A0.1,W3.5667,A0.1,W2.9,A0.1,W4.2333,A0.1,W4.5667,A0.1,W4.2333,A0.1,W1" -> 723 ticks @ 30 fps, start frame 0
+[save] CONTINUE: resumed in room 1231 (hp=100)
+[input-script] Tick 90 -> F90 Tasten 0x8000
+[msg] room=1231 id=10 savepoint=0
+[leiche] ROOM1231 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 200 -> F200 Tasten 0x8000
+[input-script] Tick 290 -> F290 Tasten 0x8000
+[leiche] ROOM1231 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+[input-script] Tick 420 -> F420 Tasten 0x8000
+[leiche] Yes: Bit (9,62) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 560 -> F560 Tasten 0x8000
+[msg] room=1231 id=10 savepoint=0
+[leiche] ROOM1231 msg 10 -> Port-Nachricht 23 (Bit (9,62)=1)
+[input-script] Tick 690 -> F690 Tasten 0x8000
+[flow] EXIT_AT: Bild 760 in Raum 1231 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F291 state=2
+        1 F308 state=3
+        9 F309 state=4
+      102 F318 state=6
+## f3_1110_kreuz
+[input-script] RE15_INPUT_SCRIPT="W11,A0.1,W1.2333,A0.6667,W2.6667,X0.1,W2.9,X0.1,W4.5667,A0.1,W4.9,A0.1,W3.2333,X0.1,W1" -> 983 ticks @ 30 fps, start frame 0
+[msg] room=1240 id=0 savepoint=0
+[debug-menu] AUTO-JUMP -> ROOM1110 (Frame 240)
+[debug-menu] JUMP -> 111 EVIDENCE ROOM  (ROOM1110) spawn=(10580,0,2650) cut=0
+[room] PC loaded room1110.rdt (196360 bytes)
+[input-script] Tick 330 -> F330 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 20 (Bit (9,61)=0), Angebot H. Gun Bullets nach dem Text
+[input-script] Tick 370 -> F370 Tasten 0x8000
+[input-script] Tick 470 -> F470 Tasten 0x4000
+[input-script] Tick 560 -> F560 Tasten 0x4000
+[leiche] ROOM1110 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,61))
+[input-script] Tick 700 -> F700 Tasten 0x8000
+[leiche] Yes: Bit (9,61) gesetzt, H. Gun Bullets 50 -> 57
+[input-script] Tick 850 -> F850 Tasten 0x8000
+[msg] room=1110 id=0 savepoint=0
+[leiche] ROOM1110 msg 0 -> Port-Nachricht 21 (Bit (9,61)=1)
+[input-script] Tick 950 -> F950 Tasten 0x4000
+[flow] EXIT_AT: Bild 1000 in Raum 1110 erreicht -> exit
+modal.log (Zustandswechsel):
+       17 F561 state=2
+        1 F578 state=3
+        9 F579 state=4
+      112 F588 state=6

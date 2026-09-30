@@ -70,6 +70,8 @@ static inline int RNDI(float f) {
 #include "re15_sicherung.h"
 #include "re15_irons_tisch.h"   /* Runde 30 E2: Irons Diary + Memory Card (ROOM1150/1151) */
 #include "re15_granate.h"       /* Runde 30 Nachtrag K: Handgranate im Hebetisch (ROOM1150/1151) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Hebetisch-Cursor (ROOM1150/1151) */
+#include "re15_dokumente.h"     /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -1511,6 +1513,22 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
                       re15_render_pc_upload_tim_slot(
                           &tt, RE15_TIM_SLOT_PROP(RE15_GRANATE_OBJ_ID)); }
+    }
+
+    /* VIER DOKUMENTE (Runde 34 Nacht, Spur E): je Raum EIN zusaetzliches Prop mit eingebackenem
+     * RE2-MD1+TIM (gen/dokumente_props.inc) — die ausgelieferten RDTs bleiben byte-true.
+     * Dieselben zwei Riegel wie oben: nur im Dokument-Raum (obj_id >= 0) UND das nOmodel des
+     * Raums belegt den Slot nicht selbst. Herleitung: include/re15_dokumente.h. */
+    {
+        const int dok_oid = re15_dokumente_obj_id((uint16_t)g_current_room_id);
+        if (dok_oid >= 0 && dok_oid < RE15_RDT_MAX_PROPS && nprops <= dok_oid) {
+            int msz = 0, tsz = 0;
+            const uint8_t *mb = re15_dokumente_md1_bytes((uint16_t)g_current_room_id, &msz);
+            const uint8_t *tb = re15_dokumente_tim_bytes((uint16_t)g_current_room_id, &tsz);
+            if (mb && re15_md1_parse(mb, (size_t)msz, &md1[dok_oid]) == 0) ok[dok_oid] = 1;
+            if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
+                          re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(dok_oid)); }
+        }
     }
 }
 
@@ -3011,6 +3029,15 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
         active_cut_idx = (int)g_scd.cam_id;
         if (active_cut_idx >= active_cut_count)
             active_cut_idx = active_cut_count - 1;
+        /* Runde 34 Nacht G2: Cut-Apply FUN_80021bbc baut die Masken-Sichtbarkeit neu auf
+         * (FUN_800392d4 @0x80021c28). Dieser Zweig bildet die Dirty-1-Setzer @0x8001d5c8 (Laden),
+         * @0x80021514 (Cut-Abweichung), @0x800402f4 (Cut_chg), @0x80040354 (Cut_old) ab; den
+         * Raumlader @0x8001daec deckt room_common.c Schritt 9. Einen Dirty-2-Pfad (Statusschirm
+         * @0x800466fc, Kartenschirm @0x80026634 -> Sprung @0x80021bd4 ueber den Aufbau) hat der
+         * Port nicht und bekommt keinen. ⛔ RE15_FORCE_CUT setzt oben JEDES Bild pending -> Aufbau
+         * jedes Bild -> kein Blinken messbar (Dossier G2 §9). */
+        { extern void re15_mg_aufbauen(const re15_rdt_t *rdt, int cut, const char *grund);
+          re15_mg_aufbauen(rdt_ok ? rdt : NULL, active_cut_idx, "cut"); }
     }
     if (active_cut_idx != s_last_cut_idx) {
         { extern int re15_fade_log_on(void);
@@ -4849,6 +4876,22 @@ re_title:;
                 fprintf(stderr, "[granate] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         RE15_GRANATE_OBJ_ID, k, (unsigned)g_current_room_id);
+    /* HEBETISCH-CURSOR (Runde 34 Nacht B, Auflage 2) — derselbe Grund wie Sicherung/Granate: der
+     * Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter. Zustand AUS, Signatur-Cache leer.
+     * Herleitung: include/re15_hebetisch_cursor.h. */
+    re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
+    /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
+     * Granate darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN
+     * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem
+     * Restore der Flags: die Genommen-Bits (9,57..60) entscheiden. Die Logzeile ist reine
+     * Diagnose fuer den Lade-Riegel. Herleitung: include/re15_dokumente.h. */
+    re15_dokumente_install((uint16_t)g_current_room_id);
+    if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if ((int)g_scd.props[k].obj_id == re15_dokumente_obj_id((uint16_t)g_current_room_id))
+                fprintf(stderr, "[dokumente] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -5453,6 +5496,8 @@ re_title:;
                                        RE15_PANEL_ROT_R, RE15_PANEL_ROT_G, RE15_PANEL_ROT_B);
                   }
               } }
+            /* Spur C Runde 34 Nacht: die zwei gruenen Generator-Lampen (panel_lampen_pc.c). */
+            { extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
              * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,
@@ -10670,7 +10715,10 @@ re_title:;
                      * hat auf diesem Tisch kein Objekt. Der Schluessel wird hoechstens
                      * re15_pri_mask_camera_z(87) - 1; eine Figur VOR dem Tisch bleibt davor.
                      * Herleitung + Messung: include/re15_irons_tisch.h. -1 = keine Klemme. */
-                    const int irons_sort_max = re15_irons_tisch_sort_max(
+                    /* + Runde 34 Nacht, Spur E: Tiefen-Klemme der Dokumente (re15_dokumente.h),
+                     * sonst der Irons-Wert unveraendert. */
+                    const int irons_sort_max = re15_dokumente_sort_max_mit(re15_irons_tisch_sort_max(
+                        (uint16_t)g_current_room_id, active_cut_idx, oid),
                         (uint16_t)g_current_room_id, active_cut_idx, oid);
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
@@ -10859,6 +10907,9 @@ re_title:;
                                  cam_has_region, cam_region_xs, cam_region_zs);
             re2fx_pc_draw();
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
+            /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
+             * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */
+            re15_hebetisch_cursor_zeichnen_pc();
             /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
             s_cs_view = cam_view; s_cs_view_ok = 1;
             s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;

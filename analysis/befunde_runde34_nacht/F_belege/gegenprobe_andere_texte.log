@@ -1,0 +1,8 @@
+# Gegenprobe andere Texte (echte exe, Sprung + RE15_PLAYER_POS)
+## ROOM1230 Kartenleser (Slot 5 -> sub20) + Tastenfeld (sub17 msg 0), RE15_SET_FLAG=9:136
+88:[msg] room=1230 id=7 savepoint=0
+151:[msg] room=1230 id=7 savepoint=0
+152:[msg] room=1230 id=9 savepoint=0
+169:[msg] room=1230 id=0 savepoint=0
+## ROOM1110 Regal (Slot 14, sce 1, msg 3)
+[leiche]-Zeilen: 1230 0, 1110 0

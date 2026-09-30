@@ -1,0 +1,22 @@
+== 1. jal-Aufrufstellen
+  PSX.EXE    8001cdec jal SCD-Laeufer FUN_8003f038
+  PSX.EXE    8001ce54 jal Zeichnen FUN_80039590
+  PSX.EXE    80021558 jal Cut-Apply FUN_80021bbc
+  PSX.EXE    80021c28 jal Aufbau FUN_800392d4
+  PSX.EXE    800428f4 jal Setzen FUN_800396a8
+== 2. Stores auf DAT_800b5457 (sb rt,0x5457(at)) mit Wert
+  8001d5c8  sb r2 -> Dirty := 1 (ori @8001d5c0)
+  8001daec  sb r2 -> Dirty := 1 (ori @8001dae4)
+  80021514  sb r2 -> Dirty := 1 (ori @8002150c)
+  80021618  sb r0 -> Dirty := 0 (zero)
+  80021e98  sb r0 -> Dirty := 0 (zero)
+  80026634  sb r2 -> Dirty := 2 (ori @8002661c)
+  8002e730  sb r2 -> Dirty := 1 (ori @8002e728)
+  800402f4  sb r2 -> Dirty := 1 (ori @800402dc)
+  80040354  sb r2 -> Dirty := 1 (ori @80040348)
+  800466fc  sb r2 -> Dirty := 2 (ori @800466dc)
+== 3. Kopf FUN_80021bbc
+  80021bc4  90635457
+  80021bc8  34020002
+  80021bd4  10620088
+  beq v1(Dirty),v0(=2) -> 80021df8  (Aufbau-jal liegt bei 80021c28 DAZWISCHEN: True)

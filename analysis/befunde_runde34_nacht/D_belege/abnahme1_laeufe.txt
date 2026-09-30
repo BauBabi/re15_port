@@ -1,0 +1,170 @@
+# Abnahme 1 Spur D - Laeufe der echten exe (Kopie re15_pc_abn1d.exe, Stand 56e18333, RE15_WINDOW_SCALE=3)
+# Werkzeug: scratchpad abn1_lauf.sh (Kopie von tools/r34n_d/messlauf.sh mit eigenem exe-Namen, MSYS_NO_PATHCONV=1)
+
+## Lauf r1
+# Hauptszene: RE15_SET_FLAG=3:121 RE15_DEBUG_JUMP=1000@120 RE15_PLAYER_POS=22230,-13400,0,0 RE15_INPUT_SCRIPT_BASIS=spiel START=100 SCRIPT=U0.8,W14 RE15_PRESS=square@150
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[debug-menu] AUTO-JUMP -> ROOM1000 (Frame 120)
+[debug-menu] JUMP -> 100 BATH-LOCKERS   (ROOM1000) spawn=(22230,0,-13400) cut=0
+[room] PC loaded room1000.rdt (177032 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16500,-13500) Gierung 0 -> Blickpunkt (17255,-13500), Rueckschritt-Ziel (15745,-13500)
+[scd F480] letterbox closed -> gameplay (player_mode=0)
+[flow] EXIT_AT: Bild 500 in Raum 1050 erreicht -> exit
+
+## Lauf t1
+# Folgedruecke im selben Raum: wie r1 + SCRIPT=U0.8,W12,R0.4,U0.3,W10 PRESS=square@150,520,560,600,640,700
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[debug-menu] AUTO-JUMP -> ROOM1000 (Frame 120)
+[debug-menu] JUMP -> 100 BATH-LOCKERS   (ROOM1000) spawn=(22230,0,-13400) cut=0
+[room] PC loaded room1000.rdt (177032 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16500,-13500) Gierung 0 -> Blickpunkt (17255,-13500), Rueckschritt-Ziel (15745,-13500)
+[scd F480] letterbox closed -> gameplay (player_mode=0)
+[flow] EXIT_AT: Bild 760 in Raum 1050 erreicht -> exit
+
+## Lauf t2
+# Eingaben waehrend der Szene: START F199-201/F230/F300/F420, R1 F259-279, LU F310-339, XD F340-369, Dreieck F370-399, Quadrat F240/F320/F440, Kreuz F250/F380; danach U1.0 ab F481
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[debug-menu] AUTO-JUMP -> ROOM1000 (Frame 120)
+[debug-menu] JUMP -> 100 BATH-LOCKERS   (ROOM1000) spawn=(22230,0,-13400) cut=0
+[room] PC loaded room1000.rdt (177032 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16500,-13500) Gierung 0 -> Blickpunkt (17255,-13500), Rueckschritt-Ziel (15745,-13500)
+[scd F480] letterbox closed -> gameplay (player_mode=0)
+[flow] EXIT_AT: Bild 560 in Raum 1050 erreicht -> exit
+
+## Lauf t4b
+# ECHTE Rettung: RE15_SET_FLAG=3:121,3:128,3:129,3:132,3:133 RE15_DEBUG_JUMP=1090@120 (ROOM1090 sub00 @0x022A6 -> sub03 Rettung, setzt (3,187) @0x024D2 im VM), Quadrat F60..F180 (msg 9 FF FF), RE15_FIRE_AOT=0@1100#1090 -> ROOM1050 ('Hey, wait!' sub03), SCRIPT START=200 U3.0,R0.133,U1.33,R0.367 (Weg wie Adas Plc_dest (16250,-16650)), Quadrat F360
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[debug-menu] AUTO-JUMP -> ROOM1090 (Frame 120)
+[debug-menu] JUMP -> 109 REAR EXTERIOR  (ROOM1090) spawn=(-10200,-9000,1400) cut=0
+[room] PC loaded room1090.rdt (336440 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[scd F725] letterbox closed -> gameplay (player_mode=0)
+[fire-aot] slot=0 at F1100 (Raum 1090)
+[aot] DOOR FIRE slot=0 rect=(-10080,3060,hw=2350,hh=800) target_cut=6 spawn=(19850,0,-22300)
+[tuer] Sequenz Archiv 2 DOOR1D Port-Archiv P1DK Variante 3 Bit7 0 Tuer 29 Seite S030 T014 Spender 07 (17 Skripte)
+[tuer] Sequenz fertig: 311 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room1050.rdt (297324 bytes)
+[scd F134] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=4 rect=(17200,-13700,hw=500,hh=1000) target_cut=0 spawn=(26200,-14400,24800)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 0 Bit7 0 Tuer 7 Seite S021 T013 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room10a0.rdt (101164 bytes)
+[flow] EXIT_AT: Bild 60 in Raum 10a0 erreicht -> exit
+
+## Lauf t5
+# Elza (RE15_PSELECT_AUTO/_SWITCH wie integration_elza_vollstart) + RE15_DEBUG_JUMP=1050@gp + RE15_PLAYER_POS=16580,-13700,0,0
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[aot] DOOR FIRE slot=0 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[room] PC loaded room1031.rdt (219120 bytes)
+[aot] DOOR FIRE slot=19 rect=(0,0,hw=0,hh=0) target_cut=6 spawn=(-8200,0,-22500)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 999)
+[debug-menu] JUMP -> 105 EAST CORRIDOR  (ROOM1050) spawn=(16580,0,-13700) cut=0
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16580,-13700) Gierung 0 -> Blickpunkt (17335,-13700), Rueckschritt-Ziel (15825,-13700)
+[flow] EXIT_AT: Bild 600 in Raum 1050 erreicht -> exit
+
+## Lauf t6
+# Karte (tools/r34n_d/kartenlauf.sh gesehen): CONTINUE ROOM1150 -> 1000 -> Tuer -> 1050
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[debug-menu] AUTO-JUMP -> ROOM1000 (Frame 60)
+[debug-menu] JUMP -> 100 BATH-LOCKERS   (ROOM1000) spawn=(22230,0,-13400) cut=0
+[room] PC loaded room1000.rdt (177032 bytes)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[tuer] Sequenz Archiv 2 DOOR07 Port-Archiv P07G Variante 1 Bit7 0 Tuer 7 Seite S000 T002 Spender FF (9 Skripte)
+[tuer] Sequenz fertig: 301 Bilder + 1 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Text-Platz sce 1 / msg 25 (Sperre) (Flags (3,187)=0, (9,65)=1)
+[flow] EXIT_AT: Bild 300 in Raum 1050 erreicht -> exit
+
+## RE15_STATE_LOG t1: Folgedruecke F520/F560/F600/F640/F700 nach der Szene (nur Wechsel)
+F500 pad=0010 pos=(16170,-13515) rot=4125 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F501 pad=0010 pos=(16244,-13518) rot=4125 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F502 pad=0010 pos=(16318,-13521) rot=4125 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F503 pad=0010 pos=(16392,-13524) rot=4125 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F504 pad=0010 pos=(16466,-13527) rot=4125 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F505 pad=0000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F520 pad=8000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=1 id=25 pf=FFFF0007 pm=0
+F560 pad=8000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=1 id=25 pf=FFFF0007 pm=0
+F600 pad=8000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=1 id=25 pf=FFFF0007 pm=0
+F601 pad=0000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=0 id=25 pf=01000007 pm=0
+F640 pad=8000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=1 id=25 pf=FFFF0007 pm=0
+F700 pad=8000 pos=(16466,-13527) rot=4125 mo=200 cam=4 msg_aktiv=1 id=25 pf=FFFF0007 pm=0
+
+## RE15_STATE_LOG t2: Eingaben waehrend der Szene; danach Steuerung (U ab F481) (nur Wechsel)
+F140 pad=0000 pos=(16500,-13500) rot=0 mo=200 cam=4 msg_aktiv=0 id=0 pf=00000007 pm=0
+F151 pad=0000 pos=(16500,-13500) rot=0 mo=1 cam=4 msg_aktiv=0 id=0 pf=01000007 pm=2
+F166 pad=0000 pos=(16500,-13500) rot=0 mo=2 cam=4 msg_aktiv=0 id=0 pf=01000007 pm=2
+F171 pad=0000 pos=(16500,-13500) rot=0 mo=2 cam=4 msg_aktiv=1 id=22 pf=01000007 pm=2
+F271 pad=0800 pos=(16500,-13500) rot=4095 mo=105 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F272 pad=0800 pos=(16500,-13500) rot=4095 mo=1 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F273 pad=0800 pos=(16430,-13500) rot=4095 mo=236 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F282 pad=0000 pos=(15800,-13500) rot=4095 mo=1 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F292 pad=0000 pos=(15800,-13500) rot=3135 mo=105 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F294 pad=0000 pos=(15800,-13500) rot=2973 mo=1 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F309 pad=0000 pos=(15800,-13500) rot=2973 mo=2 cam=4 msg_aktiv=0 id=22 pf=01000007 pm=2
+F315 pad=0090 pos=(15800,-13500) rot=2973 mo=19 cam=4 msg_aktiv=1 id=23 pf=01000007 pm=2
+F366 pad=4040 pos=(15800,-13500) rot=2973 mo=17 cam=4 msg_aktiv=1 id=24 pf=01000007 pm=2
+F466 pad=0000 pos=(15800,-13500) rot=2973 mo=200 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=1
+F480 pad=0000 pos=(15800,-13500) rot=2973 mo=200 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F481 pad=0010 pos=(15789,-13426) rot=2973 mo=105 cam=4 msg_aktiv=0 id=24 pf=01000007 pm=0
+F508 pad=0010 pos=(15492,-11428) rot=2973 mo=105 cam=3 msg_aktiv=0 id=24 pf=01000007 pm=0
+F511 pad=0000 pos=(15470,-11280) rot=2973 mo=200 cam=3 msg_aktiv=0 id=24 pf=01000007 pm=0
+
+## Lauf t7
+# Gegen die Wand gelaufen, dann Quadrat: SCRIPT START=100 U0.8,W0.2,XU1.0 (Rennen F130-F159 gegen x=16732), PRESS square@150 (waehrend Rennen+Halten)
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[room] PC loaded room1000.rdt (177032 bytes)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[room] PC loaded room1050.rdt (297324 bytes)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16732,-13500) Gierung 0 -> Blickpunkt (17487,-13500), Rueckschritt-Ziel (15977,-13500)
+[flow] EXIT_AT: Bild 420 in Raum 1050 erreicht -> exit
+F128 pad=0000 PL(16500,-13500,rot=0,hp=100) pst=1 ps mo= 200 pm= 0
+F130 pad=4010 PL(16700,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F131 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F149 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F150 pad=c010 PL(16732,-13500,rot=0,hp=100) pst=1 ps mo= 100 pm= 0
+F151 pad=4010 PL(16732,-13500,rot=0,hp=100) pst=4 ps mo= 1 pm= 2
+F160 pad=0000 PL(16732,-13500,rot=0,hp=100) pst=4 ps mo= 1 pm= 2
+F272 pad=0000 PL(16732,-13500,rot=4095,hp=100) pst=4 mo= 1 pm= 2
+F276 pad=0000 PL(16452,-13500,rot=4095,hp=100) pst=4 mo= 236 pm= 2
+F280 pad=0000 PL(16172,-13500,rot=4095,hp=100) pst=4 mo= 236 pm= 2
+F284 pad=0000 PL(16032,-13500,rot=3903,hp=100) pst=4 mo= 1 pm= 2
+F296 pad=0000 PL(16032,-13500,rot=2947,hp=100) pst=4 mo= 1 pm= 2
+
+## PSX-Uebersetzung des Moduls (kein PSX-Gesamtbau, bekannte Luecke reai-v2-psx-build-gap)
+mipsel-none-elf-gcc 12.3 -c -O2 -G0 -march=r3000 -msoft-float -ffreestanding -DRE15_PLATFORM_PSX engine/src/adaruf_1050.c -> exit 0 (nur die vorbestehende Warnung re15_emd.h:37 '/*' in Kommentar)
