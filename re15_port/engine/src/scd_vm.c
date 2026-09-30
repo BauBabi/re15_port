@@ -46,6 +46,7 @@
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
+#include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 
 scd_vm_t g_scd;
 
@@ -1766,6 +1767,12 @@ static int op_message_on(scd_thread_t *t)
             t->voice_wait = 0;
         }
     }
+
+    /* Runde 34 Nacht, Spur F: LEICHEN ROOM1110/1230 — an (1110/1111, msg 0) sub02 @0x00D04 bzw.
+     * (1230/1231, msg 10) sub21 @0x014BC nur die Nachricht tauschen (neuer Text, danach das
+     * Munitions-Angebot). HINTER dem Stimmen-Riegel, damit auch dieser Text eine laufende Aufnahme
+     * ausreden laesst. Herleitung: include/re15_leiche.h. */
+    if (re15_leiche_message_on(t->pc, pause_mask)) { t->pc += 4; return 1; }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

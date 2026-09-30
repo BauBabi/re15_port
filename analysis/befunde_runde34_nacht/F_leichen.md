@@ -497,3 +497,34 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
    den Bau nicht noetig (RE1.5-Ereignisablauf bleibt).
 5. Keine offene RE-Frage fuer den Bau selbst: Text-Bytes, Nachrichten-Stelle, Faden-Stand, Modal-Weg,
    Item, Menge, Bits, Speicherstand und Varianten sind belegt bzw. gemessen.
+
+## 9 Umsetzung
+
+(Stufe BAU, Runde 34 Nacht, Spur F — Geruest, wird fortlaufend gefuellt)
+
+### 9.1 Dateien
+- (offen)
+
+### 9.2 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
+- (offen)
+
+### 9.3 Konstanten und Belege
+- (offen)
+
+### 9.4 Sonden/Pins + Mutationsprobe
+- (offen)
+
+### 9.5 Suite
+- (offen)
+
+### 9.6 Eigene Abnahme an der echten exe (Bilder unter F_belege/)
+- (offen)
+
+### 9.7 Abweichungen vom Plan (mit Grund)
+- (offen)
+
+### 9.8 Commits
+- (offen)
+
+### 9.9 Offene Punkte
+- (offen)
