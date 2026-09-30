@@ -1,0 +1,216 @@
+=== abnahme1_lauf.sh tuer_mash_mit (debug.log, gefiltert)
+[give] item 64 x1 -> slot 3
+[debug-menu] AUTO-JUMP -> ROOM1030 (Frame 120)
+[room] PC loaded room1030.rdt (191528 bytes)
+[fire-aot] slot=0 at F60 (Raum 1030)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm MIT (Sicherung im Inventar, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F912] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[rolltor] Sce_item_lost(0x40): Platz 3 geleert
+[scd F972] Cut_chg(8)
+[msg] room=1050 id=21 savepoint=0
+[scd F995] Cut_chg(3)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1050] Cut_chg(3)
+[se] SCD Se_on: bank=2 id=12 flags=0 origin=1/0
+[se] SCD Se_on: bank=2 id=10 flags=0 origin=3/0
+[se] SCD Se_on: bank=2 id=11 flags=0 origin=3/0
+[flow] EXIT_AT: Bild 1900 in Raum 1050 erreicht -> exit
+--- tuer_mash_mit (state.log: Wechsel von cam/msg/pf/pm, Zielraum)
+seg2 F641 pad=0010 pos=(15299,5192) rot=992 cam=2 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
+seg2 F729 pad=0010 pos=(15563,-1320) rot=992 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
+seg2 F874 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg2 F910 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg2 F912 pad=0000 pos=(16532,-8413) rot=32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg2 F946 pad=8000 pos=(16532,-8413) rot=32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg2 F947 pad=8000 pos=(16532,-8413) rot=32 cam=7 msg(a=1 fsm=1 id=20 q=1) pf=FFFF0007 pm=2
+seg2 F970 pad=8000 pos=(16532,-8413) rot=32 cam=7 msg(a=0 fsm=0 id=20 q=1) pf=01000007 pm=2
+seg2 F972 pad=0000 pos=(16532,-8413) rot=32 cam=8 msg(a=1 fsm=1 id=21 q=0) pf=FFFF0007 pm=2
+seg2 F994 pad=8000 pos=(16532,-8413) rot=32 cam=8 msg(a=0 fsm=0 id=21 q=0) pf=01000007 pm=2
+seg2 F995 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=2
+seg2 F1009 pad=0000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=0
+seg2 F1012 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg2 F1048 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg2 F1050 pad=0000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=01000007 pm=2
+seg2 F1270 pad=8000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=1
+seg2 F1284 pad=0000 pos=(16532,-8413) rot=32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
+=== abnahme1_lauf.sh ohne_mash (debug.log, gefiltert)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F644] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F679] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F734] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F769] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F824] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F859] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F914] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F949] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1004] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F1039] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1094] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F1129] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1184] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F1219] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1274] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F1309] Cut_chg(3)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[flow] EXIT_AT: Bild 1450 in Raum 1050 erreicht -> exit
+--- ohne_mash (state.log: Wechsel von cam/msg/pf/pm, Zielraum)
+seg1 F606 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F642 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F644 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F678 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F679 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F693 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F696 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F732 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F734 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F768 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F769 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F783 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F786 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F822 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F824 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F858 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F859 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F873 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F876 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F912 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F914 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F948 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F949 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F963 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F966 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F1002 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F1004 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F1038 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F1039 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F1053 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F1056 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F1092 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F1094 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F1128 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F1129 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F1143 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F1146 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F1182 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F1184 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F1218 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F1219 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F1233 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F1236 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F1272 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F1274 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F1308 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F1309 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=2
+seg1 F1323 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=2 q=0) pf=00000007 pm=0
+seg1 F1326 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+=== abnahme1_lauf.sh mit_status (debug.log, gefiltert)
+[give] item 64 x1 -> slot 3
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm MIT (Sicherung im Inventar, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F680] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[rolltor] Sce_item_lost(0x40): Platz 3 geleert
+[scd F770] Cut_chg(8)
+[msg] room=1050 id=21 savepoint=0
+[scd F805] Cut_chg(3)
+[flow] EXIT_AT: Bild 1500 in Raum 1050 erreicht -> exit
+--- mit_status (state.log: Wechsel von cam/msg/pf/pm, Zielraum)
+seg1 F606 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F678 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F680 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F732 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F733 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=20 q=1) pf=FFFF0007 pm=2
+seg1 F768 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=20 q=1) pf=01000007 pm=2
+seg1 F770 pad=0000 pos=(16556,-8313) rot=-32 cam=8 msg(a=1 fsm=1 id=21 q=0) pf=FFFF0007 pm=2
+seg1 F804 pad=8000 pos=(16556,-8313) rot=-32 cam=8 msg(a=0 fsm=0 id=21 q=0) pf=01000007 pm=2
+seg1 F805 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=2
+seg1 F819 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=0
+=== abnahme1_lauf.sh mit_erst_nein (debug.log, gefiltert)
+[give] item 64 x1 -> slot 3
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm MIT (Sicherung im Inventar, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm MIT (Sicherung im Inventar, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F965] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[rolltor] Sce_item_lost(0x40): Platz 3 geleert
+[scd F1211] Cut_chg(8)
+[msg] room=1050 id=21 savepoint=0
+[scd F1333] Cut_chg(3)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F1640] Cut_chg(3)
+[se] SCD Se_on: bank=2 id=12 flags=0 origin=1/0
+[se] SCD Se_on: bank=2 id=10 flags=0 origin=3/0
+[se] SCD Se_on: bank=2 id=11 flags=0 origin=3/0
+[flow] EXIT_AT: Bild 2300 in Raum 1050 erreicht -> exit
+--- mit_erst_nein (state.log: Wechsel von cam/msg/pf/pm, Zielraum)
+seg1 F606 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F777 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F810 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F963 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F965 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F1086 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F1087 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=20 q=1) pf=FFFF0007 pm=2
+seg1 F1209 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=20 q=1) pf=01000007 pm=2
+seg1 F1211 pad=0000 pos=(16556,-8313) rot=-32 cam=8 msg(a=1 fsm=1 id=21 q=0) pf=FFFF0007 pm=2
+seg1 F1332 pad=8000 pos=(16556,-8313) rot=-32 cam=8 msg(a=0 fsm=0 id=21 q=0) pf=01000007 pm=2
+seg1 F1333 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=2
+seg1 F1347 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=0
+seg1 F1485 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F1638 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F1640 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=01000007 pm=2
+seg1 F1860 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=1
+seg1 F1874 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
