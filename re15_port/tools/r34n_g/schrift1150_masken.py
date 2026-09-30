@@ -1,12 +1,17 @@
 """Spur G2 (Runde 34 Nacht) — ROOM1150/1151: die blinkenden sprite.pri-Gruppen sichtbar machen.
 
 Mess-Werkzeug, KEIN Port-Code. Liest die Kuenstler-Masken eines Cuts (Kamera +0x1C,
-Parser-Regeln wie FUN_800392d4) und den SLD-Atlas aus dem BSS-Chunk (Kette FUN_80021bbc,
-Helfer aus tools/maske/original.py), listet je Gruppe die Records und setzt zwei Bilder
-zusammen:
+Parser-Regeln wie FUN_800392d4) und den Vordergrundatlas des Cuts, listet je Gruppe die Records
+und setzt zwei Bilder zusammen:
   AN  = Hintergrund + alle Masken (so zeichnet FUN_80039590, wenn Record-Byte0 Bit0 = 1)
   AUS = Hintergrund + alle Masken AUSSER den Gruppen, die sub05 per Opcode 0x45 auf 0 setzt
 Der Unterschied AN/AUS ist genau das, was das Original im Takt von sub05 umschaltet.
+
+ATLAS: Standard = BSS/<ROOM>/PRI<cut>.TIM (fuer ROOM1151 die Datei von ROOM1150, gleiche BSS).
+Gemessen 2026-09-30: diese Datei ist BYTEGLEICH zum Atlas, den der Port im Spiel entpackt
+(probe_r34n_g_sld = re15_sld_used_len + re15_sld_atlas_from_chunk, 1:1-Port von FUN_800c47e8).
+⛔ NICHT tools/maske/original.atlas() benutzen: dessen Python-Entpacker weicht fuer ROOM1150 Cut 2
+in 11978 von 65536 Texeln vom Port-Entpacker ab (Befund G2, Abschnitt 8).
 
     python re15_port/tools/r34n_g/schrift1150_masken.py <bss-ppm-praefix> <ausgabe-ordner>
         [--room ROOM1150] [--cut 2] [--gruppen 6-11]
@@ -23,7 +28,8 @@ from PIL import Image, ImageDraw
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HIER, "..", "maske"))
-import original  # noqa: E402  (sld_decompress / atlas / artist_rects)
+import original  # noqa: E402  (nur load_rdt; der Atlas kommt aus der TIM-Datei, s. oben)
+import maskenbild  # noqa: E402  (lies_tim)
 
 CD = "re15_port/shared_assets/PSX"
 
@@ -67,6 +73,16 @@ def records(rdt, cam, cut):
     return po, out
 
 
+def lade_atlas(room, cut, pfad=None):
+    """(idx 256x256, clut) des Vordergrundatlas; Standard = Alt-Datei == Port-Entpacker."""
+    if pfad is None:
+        pfad = os.path.join(CD, "BSS", "ROOM%s0" % room[4:7], "PRI%02d.TIM" % cut)
+    t = maskenbild.lies_tim(pfad)
+    if t is None:
+        raise SystemExit("Atlas fehlt: %s" % pfad)
+    return t
+
+
 def blit(img, recs, idx, clut):
     """Masken wie FUN_80039590 (SPRT, ABE aus, Index 0 durchsichtig) auf ein RGB-Bild."""
     o = img.copy()
@@ -97,6 +113,7 @@ def main():
     ap.add_argument("--room", default="ROOM1150")
     ap.add_argument("--cut", type=int, default=2)
     ap.add_argument("--gruppen", default="6-11")
+    ap.add_argument("--atlas", default=None, help="TIM des Vordergrundatlas (Standard BSS/ROOMxxx0/PRIcc.TIM)")
     a = ap.parse_args()
     g0, g1 = [int(x) for x in a.gruppen.split("-")]
     blink = set(range(g0, g1 + 1))
@@ -104,10 +121,7 @@ def main():
     rdt, _ = original.load_rdt(CD, room)
     cam = struct.unpack_from("<I", rdt, 0x24)[0]
     po, recs = records(rdt, cam, a.cut)
-    at = original.atlas(room)
-    if a.cut not in at:
-        print("Cut %d hat keinen Atlas" % a.cut); return 1
-    idx, clut = at[a.cut]
+    idx, clut = lade_atlas(room, a.cut, a.atlas)
     bg = np.asarray(Image.open("%s_cut%02d.ppm" % (a.ppm_praefix, a.cut)).convert("RGB"), np.uint8)
     os.makedirs(a.out, exist_ok=True)
     print("%s Cut %d: sprite.pri @0x%05X, %d Records, Atlas %dx%d" % (room, a.cut, po, len(recs),
