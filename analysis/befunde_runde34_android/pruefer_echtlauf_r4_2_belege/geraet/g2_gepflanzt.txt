@@ -1,0 +1,5 @@
+-rw-rw---- 1 u0_a214 ext_data_rw 55908 2026-09-30 10:29 shared_assets/RE15DOOR/P07G.DO2
+-rw-rw---- 1 shell   ext_data_rw  1000 2026-09-30 10:29 shared_assets/RE15DOOR/P07G.DO2.neu
+-rw-rw---- 1 shell   ext_data_rw  1234 2026-09-30 10:29 shared_assets/extracted_fx/pe2_waise.tim
+-rw-rw---- 1 shell   ext_data_rw  4321 2026-09-30 10:29 synchro/STAGE7/room7000/pe2.wav
+af45d06a3555f997 3603 356678277

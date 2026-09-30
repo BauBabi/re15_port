@@ -1,0 +1,25 @@
+== g3 2026-09-30 12:30:06
+install -r: Performing Streamed Install Success 
+installiert: sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+Abgleich-Zeile gesehen 12:30:21.651
+force-stop 12:30:25.108
+pidof: []
+09-30 10:30:20.054 I/re15    (13758): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:30:20.769 I/re15    (13758): [android] Waise entfernt (steht in keiner Liste): shared_assets/extracted_fx/pe2_waise.tim
+09-30 10:30:20.781 I/re15    (13758): [android] Waise entfernt (steht in keiner Liste): shared_assets/RE15DOOR/P07G.DO2.neu
+09-30 10:30:20.855 I/re15    (13758): [android] Waise entfernt (steht in keiner Liste): synchro/STAGE7/room7000/pe2.wav
+09-30 10:30:20.856 I/re15    (13758): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+Zustand:
+   .
+   ..
+   debug.log
+   re15_assets_ok.txt
+   shared_assets
+   synchro
+   af45d06a3555f997 3603 356678277
+   ls: shared_assets/extracted_fx/pe2_waise.tim: No such file or directory
+   ls: synchro/STAGE7: No such file or directory
+   ls: shared_assets/RE15DOOR/P07G.DO2.neu: No such file or directory
+   0
+   d6e26832b45c87af3c364d5d1d1ce559d2029582e1204b5ce005d2e74064ba72  synchro/STAGE1/room1240/main04.wav

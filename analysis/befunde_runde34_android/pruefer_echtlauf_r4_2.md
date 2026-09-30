@@ -165,3 +165,30 @@ Geraet wartet auf `<ziel>.neu >= Schwelle` und ruft sofort `am force-stop de.re1
   `.neu-Reste` bleibt 0 - er greift nur noch fuer `.neu` zu Pfaden, die ein Lauf MIT gueltiger alter Liste vorfindet,
   und den gibt es nach einem Abbruch nicht mehr (die Liste wird vor jedem aendernden Lauf zuerst geloescht).
 
+### 3.8 Zusatz: Uebergang v0.8.19 -> M mit Waisen und Abbruch in der Pruefphase (`geraet/g*.txt`)
+Warum: im Uebergang 3.2 hatte N dieselben Assets wie v0.8.19. Hier traegt das Ziel M genau die gleich grosse Aenderung,
+die der alte Entpacker nie saehe (N1a), der neue Waisen-Durchgang (Nachbesserung R4-1) laeuft im Uebergang, und der
+Lauf wird mitten in der Pruefphase beendet.
+- g1: deinstalliert, REF v0.8.19 frisch: `Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler`.
+- g2: per adb gepflanzt (als Benutzer shell): `shared_assets/extracted_fx/pe2_waise.tim` (1234 B),
+  `synchro/STAGE7/room7000/pe2.wav` (4321 B, neue Ordnerkette) und ein falscher Rest `shared_assets/RE15DOOR/P07G.DO2.neu`
+  (1000 B); Marker `af45d06a3555f997 3603 356678277` liegt.
+- g3: M als Update (`Success`, installiert `222c4bd8...`), Start, 3,5 s nach der Abgleich-Zeile `am force-stop`:
+```
+10:30:20.769 [android] Waise entfernt (steht in keiner Liste): shared_assets/extracted_fx/pe2_waise.tim
+10:30:20.781 [android] Waise entfernt (steht in keiner Liste): shared_assets/RE15DOOR/P07G.DO2.neu
+10:30:20.855 [android] Waise entfernt (steht in keiner Liste): synchro/STAGE7/room7000/pe2.wav
+10:30:20.856 [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+```
+  Zustand danach: Prozess weg, keine Abschlusszeile; alle drei gepflanzten Dateien weg, `synchro/STAGE7` (leere Ordner)
+  weg, 0 `.neu`; Marker **noch da**, keine `re15_assets_entpackt.txt`; main04.wav noch alt (`d6e26832...`).
+- g4: Neustart (keine neue APK):
+```
+10:30:41.212 [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+10:30:51.131 [android] Summe weicht ab -> neu: synchro/STAGE1/room1240/main04.wav
+10:30:51.413 [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 1 kopiert (2017588 B, 107 ms), 3603 per SHA-256 geprueft
+             (356678277 B, 8279 ms, 1 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 10405 ms
+```
+  `adb pull` main04.wav = Inhalt in M (`a1d533bf...`, `cmp` rc 0); `pe2_geraet.py M`: 3603/0/0/0, 0 `.neu`, 0 leere
+  Ordner, Liste = M (`1b017f2b...`), Marker weg -> **GERAET-KONSISTENT**.
+

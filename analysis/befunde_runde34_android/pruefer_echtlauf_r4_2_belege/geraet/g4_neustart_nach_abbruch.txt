@@ -1,0 +1,15 @@
+== g4_neustart_nach_abbruch 2026-09-30 12:30:36
+   firstInstallTime=2026-09-30 10:29:25
+   lastUpdateTime=2026-09-30 10:30:13
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe2m
+installiert: /data/app/~~zhY0fwhFsooaP_qXSIbheQ==/de.re15.port-4Vc1bAFJ8Lsu_axzh6GnjA==/base.apk sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+Status: ok
+LaunchState: COLD
+TotalTime: 1477
+warten rc=0 (11475 ms ab am start)
+09-30 10:30:40.848 I/re15    (13838): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:30:41.212 I/re15    (13838): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 10:30:51.131 I/re15    (13838): [android] Summe weicht ab -> neu: synchro/STAGE1/room1240/main04.wav
+09-30 10:30:51.413 I/re15    (13838): [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 1 kopiert (2017588 B, 107 ms), 3603 per SHA-256 geprueft (356678277 B, 8279 ms, 1 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 10405 ms
+pidof: 13838
