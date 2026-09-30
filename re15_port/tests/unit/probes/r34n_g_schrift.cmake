@@ -27,3 +27,18 @@ target_compile_definitions(probe_r34n_g_maskgrp PRIVATE
 add_test(NAME unit_r34n_g_maskgrp COMMAND probe_r34n_g_maskgrp
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r34n_g_maskgrp PROPERTIES TIMEOUT 120)
+#   integration_r34n_g_schrift1150  echte exe am Lade-Weg (CONTINUE, Cut 2), ROOM1150 + ROOM1151:
+#                        jedes Bild F100..F200 zeigt den Zustand aus Aufbau/Opcode 0x45 (RE15_MG_LOG),
+#                        AUS == Bild ohne Masken (RE15_NO_PRI), Laeufe genau 20 Bilder.
+# AUSWERTER (kein add_test) fuer den Integrations-Riegel.
+add_executable(probe_r34n_g_schrift_eval probe_r34n_g_schrift_eval.c)
+if(TARGET re15_pc)
+    add_test(NAME integration_r34n_g_schrift1150
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r34n_g_karte>
+                     -DRE15_EVAL_TOOL=$<TARGET_FILE:probe_r34n_g_schrift_eval>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r34n_g_schrift1150_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r34n_g_schrift1150.cmake)
+    set_tests_properties(integration_r34n_g_schrift1150 PROPERTIES TIMEOUT 600)
+endif()
