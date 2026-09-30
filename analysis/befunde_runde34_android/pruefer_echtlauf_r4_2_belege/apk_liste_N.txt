@@ -1,0 +1,5 @@
+Liste: # re15 assets v2 3603 356678277 | 3603 Zeilen | Liste 398099 B sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+APK: 3603/3603 Eintraege STORED mit Groesse+sha256 = Liste; assets/-Eintraege 3604 (= Liste + re15_assets.txt: True)
+Quellbaum: 3603 Dateien in den 5 Baeumen, 3603/3603 mit Groesse+sha256 = Liste
+Tuerarchive in der Liste: RE15DOOR 30 x *.DO2, RE2/DOOR 27 x *.DO2
+LISTE-OK
