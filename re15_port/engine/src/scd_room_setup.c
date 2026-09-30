@@ -17,6 +17,7 @@
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* re15_re2z_rng_reset — Reenter-Clear des 0x800CFBF4-Analogs */
 #include "re15_esp.h"   /* re15_esp_fx_reset — Effekt-Pool beim Raumladen wischen */
+#include "re2_fx.h"     /* re2fx_reset — RE2-FX-Pool teilt die Lebensdauer (Runde 34 Integration W4) */
 #include "re15_room.h"  /* g_current_room_id — Schlafender-Content-Trigger je Raum */
 #include "re15_sicherung.h" /* Sicherung im Hebetisch von Irons' Buero (ROOM1150/1151) */
 #include "re15_irons_tisch.h" /* Irons Diary + Memory Card auf dem Schreibtisch (ROOM1150/1151) */
@@ -197,6 +198,14 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * FUN_8003ef6c). Er ist idempotent, der Raumwechsel-Pfad darf ihn also weiter zusaetzlich
      * machen. */
     re15_esp_fx_reset();
+    /* Runde 34 Integration W4 (bau_c.md INTEGRATIONSWUNSCH 1, bau_d.md 5): der RE2-FX-Pool
+     * (Saeure-/Brand-Aufschlag, Bodenflammen) teilt im Port die Lebensdauer des RE1.5-ESP-Pools —
+     * PORT-ZUORDNUNG nach dem RE1.5-Wisch oben (`sb zero,0(at)` @0x80019378, einziger Aufrufer
+     * @0x8003996c im Raumlader). RE2 selbst leert den Pool nur ueber FUN_8001d07c (SCD-Op,
+     * einziger Rufer @0x800569a8) bzw. beim Boot (FUN_8001babc @0x8001bac4-e4). Ohne diesen
+     * zweiten Weg ueberlebte eine brennende Bodenflamme die Selbst-Tuer (z.B. ROOM1090) und
+     * jeden Raumaufbau, der nicht ueber re15_room_reset_render_pc (room_pc.c) laeuft. */
+    re2fx_reset();
 
     /* ⛔ work_vars[0x10] UEBERLEBT DEN RAUM-RESET. Es ist die SPIELERMODELL-VARIANTE
      * (DAT_800b0ff0), aus der der Raumlader das Modell zieht (FUN_800396fc @0x80039768).

@@ -139,6 +139,12 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
  * Blaetter 20..23/44 bleiben geladen (Rueckfall + Zustands-Log sl=). render_pc.c: MAX 50 -> 56. */
 #define RE15_TIM_SLOT_FX_SEITE_1E 50
 #define RE15_TIM_SLOT_FX_SEITE_1F 51
+/* Integration Runde 34 (W1): die RE2-FX-Seiten (re2fx_pc.h RE2FX_TIM_SLOT) duerfen die RE1.5-Seiten nicht
+ * ueberschreiben (Spur D hatte 50 gewaehlt, bevor Spur C 50/51 belegte; render_pc.c RE15_TIM_SLOT_MAX 56). */
+_Static_assert(RE2FX_TIM_SLOT != RE15_TIM_SLOT_FX_SEITE_1E && RE2FX_TIM_SLOT != RE15_TIM_SLOT_FX_SEITE_1F,
+               "RE2FX_TIM_SLOT kollidiert mit einer RE1.5-Effektseite (50/51)");
+_Static_assert(RE2FX_TIM_SLOT >= 52 && RE2FX_TIM_SLOT <= 55,
+               "RE2FX_TIM_SLOT ausserhalb des freien Bereichs 52..55 (render_pc.c RE15_TIM_SLOT_MAX 56)");
 #define RE15_TIM_SLOT_FX_FIRE   44 /* global effect-id 8 — FEUER/Explosion. Fuenftes und letztes
                                     * Sheet der CORE00-Bank; ROOM1090 zieht daraus die Flammen der
                                     * Truemmer-Varianten 0 und 3 (Sprungtabelle @0x80100364, s.
@@ -3860,6 +3866,20 @@ re_title:;
         int rc = s_re2_core ? re2fx_register_core(s_re2_core, (size_t)s_re2_core_sz) : -9;
         fprintf(stderr, "[re2fx] RE2 CORE00.ESP %d B -> re2fx_register_core rc=%d\n", s_re2_core_sz, rc);
     }
+    /* Integration Runde 34 (W2, bau_d.md INTEGRATIONSWUNSCH 2): die RE2-Effektseiten fuer den RE2-FX-Zeichner.
+     * RE2 TEX.TIM (shared_assets/RE2/TEX.TIM, 132320 B) -> re2fx_pc_lade_tex: Bildlage wie der RE2-Lader
+     * FUN_80076a40 (x = 28*64 - 1024 = 768 @0x80076a64-80, y = 256 @0x80076a9c-a8), CLUT-Zeilen 480..484
+     * (@0x80076b00-0c) -> Slot RE2FX_TIM_SLOT (52). Genau EINMAL, hier nach dem Renderer-Start
+     * (re15_render_init oben) und nach dem Hochladen der RE1.5-Seiten 50/51; re2fx_pc_lade_tex kopiert
+     * Pixel und CLUT, der Dateipuffer ist danach frei. Ohne Datei bleibt der RE2-FX-Zeichner stumm (rc < 0). */
+    {
+        int rsz = 0;
+        uint8_t *rtex = re15_pc_read_re2("TEX.TIM", &rsz);
+        int rc = rtex ? re2fx_pc_lade_tex(rtex, (size_t)rsz) : -9;
+        fprintf(stderr, "[re2fx] RE2 TEX.TIM %d B -> re2fx_pc_lade_tex rc=%d (Slot %d)\n",
+                rsz, rc, RE2FX_TIM_SLOT);
+        free(rtex);
+    }
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -7284,7 +7304,18 @@ re_title:;
                         fprintf(stderr, "[debug-menu] DIAG raw=%04x cfg=%04x frame=%u\n",
                                 g_engine.pad_pressed, gctx.pad_pressed, g_engine.frame_count);
                     if (!re15_debug_menu_open()) {
-                        if (gctx.pad_pressed & RE15_PAD_BIT_SELECT) {
+                        /* Runde 34 Integration W5 (bau_a.md INTEGRATIONSWUNSCH 6): das UTILITY/DEBUG-MENU
+                         * FUN_8001443c (SELECT-Test `lhu 0x800ac762` / `andi v0,v0,0x100` @0x80014440-4c) hat
+                         * genau EINEN Aufrufer, `jal 0x8001443c` @0x8001c988 in der Spielschleife (Task 0;
+                         * Wort-Scan PSX.EXE + STAGE1..6/DEBUG/TITLE.BIN: nur diese Stelle). Oeffnet der
+                         * Statusschirm, startet die Schleife Task 1 = 0x8004603c (`jal 0x80029a98`
+                         * @0x8001cb40) und parkt sich selbst (`jal 0x80029ac8` @0x8001cb48: Task-Status
+                         * `sh v0,0(v1)` = 1 @0x80029ae8, Warten auf Task a0 = 1 @0x80029adc, Wechsel
+                         * `jal 0x8006e3c8` @0x80029ae4) — waehrend des Statusschirms laeuft FUN_8001443c
+                         * also NIE. Der Port prueft hier jedes Bild: ohne das Tor oeffnete SELECT im
+                         * ITEM-Raster (= Item-Debug @0x8004a138-5c) zusaetzlich dieses Menue (gemessen
+                         * bau_a a_debug1: `[debug-menu] OPEN (frame 396)` ueber dem Inventar). */
+                        if ((gctx.pad_pressed & RE15_PAD_BIT_SELECT) && !re15_menu_gameplay_frozen()) {
                             re15_debug_menu_toggle();
                             /* Open-Block @0x80014490-0x800144E0: Cursor auf den AKTUELLEN Raum
                              * (DAT_800bbe5e := DAT_800b0fe0, (&DAT_800bbe5f)[st] := DAT_800b0fe2). */
@@ -10727,16 +10758,21 @@ re_title:;
              * projizierten die Effekte im Anforderungsbild schon mit dem neuen H (Runde 30,
              * cut-blitz). */
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
-            /* Runde 34 C4: dieselbe Ansicht fuer den RE2-FX-Zeichner (Vertrag V3: re2fx_pc_draw(void))
-             * ablegen — fx_plattform_pc.h re15_pc_fx_kamera(). */
-            re15_pc_fx_kamera_setzen(&cam_view, cx, cy, cam_has_region, cam_region_xs, cam_region_zs,
-                                     pc_fx_camf());
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
             /* Runde 34 C4: die RE2-FX-Plaetze (Saeure-/Brand-Aufschlag, Bodenflammen) im selben
-             * Effekt-Zeichenpass, hinter den RE1.5-Partikeln in die Tiefenliste (Spur D, re2fx_pc.c). */
+             * Effekt-Zeichenpass, hinter den RE1.5-Partikeln in die Tiefenliste (Spur D, re2fx_pc.c).
+             * Integration W3 — EIN Weg fuer die Kamera: der RE2-Zeichner bekommt GENAU die Werte, mit
+             * denen pc_draw_effects dieses Bild projiziert (cam_view, Bildmitte cx/cy, camf des
+             * angezeigten Cuts = pc_fx_camf() nach pc_fx_set_camf oben, Regions-Viereck
+             * cam_region_xs/zs des Cuts = der Region-Test FUN_8002c820, den re2fx_quads wie RE2
+             * @0x80077a30 anwendet). Die fruehere Zwischenablage re15_pc_fx_kamera_* (fx_plattform_pc)
+             * hatte keinen Leser; re2fx_pc_set_ansicht wurde nie gerufen -> re2fx_pc_draw zeichnete
+             * nichts. Ausserhalb des Passes ungueltig (kein Zeichnen mit einer alten Ansicht). */
+            re2fx_pc_set_ansicht(&cam_view, cx, cy, pc_fx_camf(),
+                                 cam_has_region, cam_region_xs, cam_region_zs);
             re2fx_pc_draw();
-            re15_pc_fx_kamera_ungueltig();
+            re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
             s_cs_view = cam_view; s_cs_view_ok = 1;
             s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;

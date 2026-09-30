@@ -268,29 +268,8 @@ void re15_pc_r34_haken_binden(void)
     re2fx_applier           = re15_re2_gl_apply;   /* V2b/V3: Op 40 -> FUN_800470C0-Zwilling (Spur B) */
 }
 
-/* ===== Zeichenkamera des Effektpasses (fuer re2fx_pc_draw, Spur D) ========================= */
-
-static re15_pc_fx_kamera_t s_fx_kamera;
-
-void re15_pc_fx_kamera_setzen(const re15_camera_view_t *cam, int cx, int cy, int has_region,
-                              const int16_t rxs[4], const int16_t rzs[4], int camf)
-{
-    if (!cam) { s_fx_kamera.gueltig = 0; return; }
-    s_fx_kamera.cam = *cam;
-    s_fx_kamera.cx = cx;
-    s_fx_kamera.cy = cy;
-    s_fx_kamera.has_region = has_region;
-    for (int i = 0; i < 4; i++) {
-        s_fx_kamera.rxs[i] = rxs ? rxs[i] : 0;
-        s_fx_kamera.rzs[i] = rzs ? rzs[i] : 0;
-    }
-    s_fx_kamera.camf = camf;
-    s_fx_kamera.gueltig = 1;
-}
-
-void re15_pc_fx_kamera_ungueltig(void) { s_fx_kamera.gueltig = 0; }
-
-const re15_pc_fx_kamera_t *re15_pc_fx_kamera(void) { return &s_fx_kamera; }
+/* ===== Zeichenkamera des Effektpasses: entfallen (Integration W3) — main.c ruft
+ * re2fx_pc_set_ansicht mit den Werten von pc_draw_effects (fx_plattform_pc.h). ================= */
 
 /* ===== C8 — Harness RE15_FORCE_AUFSCHLAG ===================================================== */
 

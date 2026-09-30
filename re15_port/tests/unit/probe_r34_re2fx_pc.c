@@ -11,12 +11,12 @@
  * @0x80076b00-0c; 4-bpp-Abruf aus TPage/CLUT-Wort).
  *
  * Pruefungen (Rueckgabe 0 = gruen, sonst die Nummer):
- *   1  re2fx_pc_lade_tex laedt; Slot 50; Masse 512 x 256, 5 CLUT-Zeilen ab 480 -> Texturhoehe 1280 <= 4096 (M8)
+ *   1  re2fx_pc_lade_tex laedt; Slot RE2FX_TIM_SLOT (52, Integration W1); Masse 512 x 256, 5 CLUT-Zeilen ab 480 -> Texturhoehe 1280 <= 4096 (M8)
  *   2  vor dem Aufschlag zeichnet re2fx_pc_draw nichts (Negativ-Kontrolle)
  *   3  je Bild: Zahl der Dreieckspaare == re2fx_quads (Saeure/Brand lassen nichts aus), Rueckwaerts-Reihenfolge
  *      (FUN_80077ed0 haengt vorn an den OT-Bucket @0x80077f94-fac)
  *   4  Dreiecke = Rechteck des Quads, u + 256 fuer Seite 0x1F, v unveraendert, TPage/CLUT/z durchgereicht,
- *      Farbe 255 (Paketfarbe 0x808080 @0x800783cc-d0), Slot 50 gebunden
+ *      Farbe 255 (Paketfarbe 0x808080 @0x800783cc-d0), Slot RE2FX_TIM_SLOT gebunden
  *   5  JEDES Texel jedes Quads: PC-Slot-Texel == VRAM-Modell-Texel (roher 16-Bit-CLUT-Wert)
  *   6  Mischmodus je ABR wie pc_draw_effects (main.c:436-448): 0 -> alpha 128, 1 -> blend 1, 2 -> blend 2,
  *      3 -> blend 1 alpha 64; danach blend 0 / alpha 255

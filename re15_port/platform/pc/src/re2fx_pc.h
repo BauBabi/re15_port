@@ -24,9 +24,12 @@ void re2fx_pc_draw(void);
 
 /* ---- ADDITIV (Spur D) ------------------------------------------------------------------------ */
 
-/** TIM-Slot der RE2-FX-Seiten. render_pc.c kennt 50 Slots (0..49, RE15_TIM_SLOT_MAX @render_pc.c:204);
- *  Slot 50 braucht RE15_TIM_SLOT_MAX 51 (INTEGRATIONSWUNSCH). Bis dahin laedt/zeichnet nichts. */
-#define RE2FX_TIM_SLOT 50
+/** TIM-Slot der RE2-FX-Seiten. Integration Runde 34 (W1, integration.md): Spur C belegt 50/51 mit den
+ *  RE1.5-Effektseiten aus DATA/TEX.TIM (main.c RE15_TIM_SLOT_FX_SEITE_1E/_1F) und hob RE15_TIM_SLOT_MAX
+ *  (render_pc.c:204) auf 56 (52..55 fuer Spur D frei) -> die RE2-FX-Seiten liegen auf 52. Die fruehere 50
+ *  haette die RE1.5-Seite 0x1E ueberschrieben (Muendung/Rauch/Huelse/Granate zeichnen daraus).
+ *  main.c prueft die Trennung per _Static_assert. */
+#define RE2FX_TIM_SLOT 52
 
 /** RE2 TEX.TIM (shared_assets/RE2/TEX.TIM, 132320 B) in den Slot laden: die Seiten 0x1E (VRAM x 896)
  *  und 0x1F (x 960) nebeneinander (512 x 256 Texel, 4 bpp) mit den CLUT-Zeilen (272, 480..484) der

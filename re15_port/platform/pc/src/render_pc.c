@@ -204,8 +204,9 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 #define RE15_TIM_SLOT_MAX 56   /* 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
                                 *      (tpage 0x1e / 0x1f, je 16 Paletten 480..495 -> 256x4096;
                                 *      main.c RE15_TIM_SLOT_FX_SEITE_1E/_1F)
-                                * 52..55 = frei (Runde 34: vorgesehen fuer die RE2-FX-Seiten der
-                                *      Spur D, re2fx_pc.c — Belegung dort dokumentieren)
+                                * 52 = RE2-FX-Seiten 0x1E/0x1F aus RE2 TEX.TIM (Runde 34 Spur D,
+                                *      re2fx_pc.h RE2FX_TIM_SLOT; 512 x 256 Texel, CLUT 480..484)
+                                * 53..55 = frei
                                 * 46..49 = RE2-GORE-TIM je Enemy-Bank (g_enemy 0..3,
                                 *      gore-vollausbau.md 4.2: der Stumpf-Mesh 15
                                 *      sampelt eine in RE1.5 UNBELEGTE Atlas-Region,

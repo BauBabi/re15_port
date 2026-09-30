@@ -187,24 +187,12 @@ void re15_pc_r34_haken_binden(void);
 void re15_audio_arms_zusatz_se(int arms_id, int satz);
 
 /* ===== Zeichenkamera des Effektpasses — fuer re2fx_pc_draw() (Spur D) ======================
- * re2fx_pc_draw(void) hat laut Vertrag V3 keine Parameter; main.c setzt deshalb unmittelbar vor
- * dem Effekt-Zeichenpass (pc_draw_effects, danach re2fx_pc_draw) die Ansicht DIESES Bilds hier ab:
- * dieselbe cam_view, Bildmitte, Regions-Viereck des angezeigten Cuts (DAT_800ac790-Analogon) und
- * camf (RDT-Kamera +0x62 >> 7 des angezeigten Cuts, wie FUN_800534c4 `srl fp,v0,7` @0x800532e4).
- * gueltig = 0 ausserhalb des Zeichenblocks (kein Spielmodell / Menue). */
-#include "re15_camera.h"
-typedef struct {
-    re15_camera_view_t cam;
-    int     cx, cy;
-    int     has_region;
-    int16_t rxs[4], rzs[4];
-    int     camf;
-    int     gueltig;
-} re15_pc_fx_kamera_t;
-void re15_pc_fx_kamera_setzen(const re15_camera_view_t *cam, int cx, int cy, int has_region,
-                              const int16_t rxs[4], const int16_t rzs[4], int camf);
-void re15_pc_fx_kamera_ungueltig(void);
-const re15_pc_fx_kamera_t *re15_pc_fx_kamera(void);
+ * Integration Runde 34 (W3): EIN Weg. main.c uebergibt die Ansicht DIESES Bilds direkt an
+ * re2fx_pc_set_ansicht (re2fx_pc.h) — mit genau den Werten, die pc_draw_effects bekommt (cam_view,
+ * Bildmitte, Regions-Viereck des angezeigten Cuts = DAT_800ac790-Analogon, camf = RDT-Kamera
+ * +0x62 >> 7 des angezeigten Cuts wie FUN_800534c4 `srl fp,v0,7` @0x800532e4) — und macht sie nach
+ * re2fx_pc_draw wieder ungueltig. Die fruehere Zwischenablage re15_pc_fx_kamera_* hatte keinen Leser
+ * und ist entfallen. */
 
 /* ===== C7 — RE2-Part-Farbwort +0x70 (O-VB3, V4) ============================================
  * O-VB3 GEKLAERT (RE2 PSX.EXE, selbst disassembliert): die Entity-Hauptschleife ruft fuer JEDE
