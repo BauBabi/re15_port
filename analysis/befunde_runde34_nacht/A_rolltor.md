@@ -631,12 +631,55 @@ Probe mit Datei-Sicherungskopien wiederholt (die Tabelle oben ist der zweite, sa
 
 ### 9.6 Eigene Abnahme an der echten exe (Bilder)
 
-(folgt)
+Echte `re15_pc.exe` dieses Baums (Kopie `re15_pc_r34n_a.exe`), beschleunigter Renderer, echter
+Eingabepfad (RE15_INPUT_SCRIPT, Viereck = Aktion/Bestaetigen, Rechts = "No"), RE15_FRAMEDUMP (960x720,
+ALLE Bilder angesehen, Kontaktblaetter in `A_belege/`), state.log/debug.log (Auszuege
+`A_belege/bau_laeufe.txt`, `bau_laden_lauf.txt`, `bau_1090_lauf.txt`).
+
+| # | Nutzerpunkt | Lauf | Gemessen | Bild |
+|---|---|---|---|---|
+| 1 | "nicht mehr einfach so geoeffnet" | `lauf.sh ohne` | F606 Frage, F758 Ja -> F761 `Cut_chg(7)` + msg 2, F882 geschlossen -> F883 `Cut_chg(3)`, Steuerung F897; KEIN Se_on, KEINE Letterbox, Tor zu bis F1500 | `bau_1050_ohne.jpg` |
+| 2 | "Nahansicht fuer Nachricht" | dieselbe | cam=7 genau F761..F882 = solange msg 2 offen; zweiter Druck F1004 -> Frage -> Nein (F1176): kein Cut 7 | `bau_1050_ohne.jpg` (F1150/F1190) |
+| 3 | "erst geoeffnet, wenn eingesetzt" / "Nahansicht fuer die Sicherung" | `lauf.sh mit` (RE15_GIVE=0x40:1) | F761 Cut 7 + msg 2, F883 msg 20 "Will you use the **Fuse**?" (Name gruen) in Cut 7, F1005 Ja -> `[rolltor] Sce_item_lost(0x40): Platz 3 geleert` -> F1007 `Cut_chg(8)` (beide Leuchten gruen) + msg 21 "You've used the **Fuse**.", F1129 Cut 3; Statusschirm F1300: Knife/Browning/Bullets, KEINE Sicherung, kein Loch | `bau_1050_mit.jpg` |
+| 3N | Nein auf die Einsetz-Frage | `lauf.sh mit_nein` | Nein -> F1025 Cut 3, Statusschirm F1170/F1200 MIT Sicherung (4. Platz) | `bau_1050_mit_nein.jpg` |
+| 4 | "danach oeffnet es" | `lauf.sh mit` 2. Druck; `lauf.sh danach` ((9,63) per Messhaken) | 2. Druck F1407 -> ausgelieferter sub02 (KEINE `[rolltor]`-Zeile), F1562 Sperre/Letterbox, Tor faehrt, F2050 offen; `danach`: `Se_on 2/0x0C, 0x0A, 0x0B` (= sub02 @0x0CD2/@0x0CE2/@0x0D3C). Das Einsetzen selbst hat KEINEN Raum-SE (kein SCD-`Se_on` zwischen Cut 7 und Cut 3 im Elza-Lauf mit RE15_SE_DEBUG; die Ja/Nein-Toene der Dialog-FSM bleiben, wie bei jeder Frage) | `bau_1050_mit.jpg` (F1450..F2050) |
+| 5 | ROOM1051 | `lauf.sh elza_ohne` / `elza_mit` (Charakterwahl -> 1241 -> 1031 -> Tuer Slot 0 -> 1051) | identisch: `[rolltor] ROOM1051 … OHNE/MIT`, F1029 Cut 7, F1275 Cut 8, F1397 Cut 3, 2. Druck F1830 = ausgelieferte Fahrt + Se_on | `bau_1051_ohne.jpg`, `bau_1051_mit.jpg` |
+| 6 | Laden/Speichern/Wiederbetreten | `lauf_laden.sh` + Riegel W/L | s1: CONTINUE in 1150, (9,63) gesetzt, "Memory Card benutzen?" Ja -> `[save] saved (room 1150)`; s2: CONTINUE aus dem neuen Platz -> 1050 -> Schalter = ausgelieferter sub02, Se_on, Tor offen; s2g (Platz ohne Bit): Port-Programm OHNE | `bau_laden_continue.jpg` |
+| 7 | kein Softlock / Fortschritt | `lauf_1090.sh` + §7 | der Suedteil ist NUR durch das Rolltor erreichbar (Laufsteg 1090 abgeschlossen, fest bei (-9900,3358)); Sicherung vor dem Tor; nicht wegwerfbar (keine discard-Stelle fuer 1050/1051, im Lauf keine Abfrage nach msg 21) | `bau_1090_oben_abgeschlossen.jpg` |
+
+**Doppelausloesen (Auflage 4c):** je Druck genau eine `[rolltor]`-Zeile; das Viereck, das msg 2 (F881..F883)
+bzw. msg 21 (F1128..F1130) schliesst, loest den Schalter NICHT neu aus (state.log: nach F883/F1129 bis zum
+naechsten Skriptdruck kein msg 0). Spieler waehrend der Nahansicht unsichtbar (Regions-Cull, §2), Leon/Elza
+im Rueckweg-Bild Cut 3 wieder sichtbar.
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
 
-(folgt)
+1. `local_build.sh` NICHT angepasst (Auflage 6) — Suite mit `RE15_MIN_TESTS=429` als Umgebung.
+2. Riegel UEBER den Plan hinaus: Faelle W (Wiederbetreten) und L (capture/restore) statt nur "Fall C";
+   Raster-Nachruecken (Platz 3 = Sicherung, Platz 4 = Memory Card -> danach 3 = Memory Card, 4 leer);
+   PC-Schranke synthetisch (`62 02 00 01 00`: pc+1 auf Evt_next, nichts entfernt).
+3. `Sce_item_lost` bei NICHT gefundenem Gegenstand ruft `re15_inv_compact` (RE2 @0x80058608 `bltz` springt
+   auf @0x80058634 `jal 0x80069714`) — im Plan nicht ausgeschrieben, RE2-treu ergaenzt; im Spiel nie
+   erreicht (die Weiche waehlt MIT nur bei vorhandener Sicherung).
+4. Zweite Protokollzeile `[rolltor] Sce_item_lost(...)` (nur PC, stderr = debug.log) — fuer die Abnahme.
+5. Elza an der echten exe ueber den ECHTEN Tuerweg statt Debug-Sprung: der Sprung laedt auch im Elza-Spiel
+   die Basis-Datei (gemessen: "JUMP -> 105 … PC loaded room1050.rdt" mit Elza-Figur) — Messhaken-Grenze,
+   §9.8.
+6. `test_room1050_sicherung.c` (6) in drei Schritte geteilt (6i/6ii/6iii) statt "zuerst Fall B, dann sub02" —
+   gleiche Aussage plus der Nachweis, dass OHNE Sicherung das Tor zu bleibt.
+7. Nichts vom Plan gestrichen; Bytecode, Texte, Weiche und Haken sind Byte fuer Byte §5.3/§5.2.
 
 ### 9.8 Offene Punkte / bekannte Grenzen
 
-(folgt)
+1. **Bekannte Grenze:** Cut 3 zeigt den Kasten nach dem Einsetzen weiter mit roter Leuchte (~17x28 px,
+   keine Kunstvariante in ROOM105.BSS; RE1.5 loest das in ROOM2060 mit Varianten-Cuts, §8.1).
+2. **Sprachaufnahmen** (Nutzer, MiniMax): `synchro/STAGE1/room1050/main20.wav`, `main21.wav` (+ optional
+   `main02.wav`), dieselben unter `room1051/`. Ohne Datei stumm mit Untertitel (so abgenommen).
+3. **Integration:** `RE15_MIN_TESTS` einmal fuer alle Spuren heben (A: +1); HAKEN 1 in `scd_event_fire`
+   neben einer etwaigen D-Umleitung (§9.1 Auflage 7).
+4. **Nebenbefund (nicht Spur A, nicht angefasst):** der Statusschirm zeigt im Elza-Spiel Leons Ausweis
+   ("POLICE Leon S. Kennedy", `bau_1051_mit.jpg` F1570).
+5. **Nebenbefund (Messhaken):** `RE15_DEBUG_JUMP` laedt im Elza-Spiel die Leon-Datei (ROOM1050 statt 1051);
+   ob der Original-JUMP-Zweig (FUN_8001d600 DEBUG-Zweig) die Variante anhaengt, ist NICHT geprueft — fuer
+   Messungen in 1051 den Tuerweg nehmen (`lauf.sh elza_*`).
+6. **Spur D** bekommt die Uebergabe aus §7 (Suedteil nur ueber das Rolltor, Cut-4-Bild nur per Debug-Sprung).
