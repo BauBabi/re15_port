@@ -33,7 +33,11 @@ Werkzeuge: `re15_port/tools/r34n_a/` (belege.py, raumgraph.py, lauf.sh), Sonde
   RVD-Tabelle um (@0x80040414..@0x800404a8), Cut 7/8 sind reine Skript-Cuts. Die Nahansicht waehlt
   `Cut_chg 7`/`Cut_chg 8`, wie ROOM2060 selbst (sub18 @0x0168C, sub19 @0x016A2).
 * Kein Softlock: Sicherung ab Spielbeginn erreichbar (1170 -> 1130 -> 1150), nicht wegwerfbar, nicht
-  kombinierbar (Item 0x40 @0x800750a8: 0 Paare), Kiste = nur Ablage.
+  kombinierbar (Item 0x40 @0x800750a8: 0 Paare), Kiste = nur Ablage. **Bau-Stufe:** das Rolltor ist der
+  EINZIGE Weg in den Suedteil (ROOM1090-Laufsteg aus 10F0 hat keinen Abstieg, gemessen, §7) -> die
+  Sicherung ist Pflicht; die Cut-4-Folge aus der Gegenpruefung tritt im normalen Spiel nicht auf.
+* **GEBAUT (§9):** `engine/src/rolltor_1050.c` + 2 Haken in `scd_vm.c`, Riegel `unit_r34n_a_rolltor`
+  (mit Mutationsprobe), echte exe 1050 + 1051 (ohne/mit/mit_nein/danach, Laden) abgenommen.
 
 ## 1 Nutzerwortlaut + Lesart
 
@@ -465,17 +469,38 @@ sicherung_laden, boot_bg_pin im 1. Anlauf; granate_laden und irons_tisch_licht i
   1121 -> 1131 -> ROOM1151, alle "immer" — beide Male OHNE das Rolltor. Der Hebetisch-Ausloeser ROOM1150/1151
   main00 @0x0D7E steht in keinem If und wird port-seitig unbedingt armiert (scd_vm.c op_aot_set, Slot 1);
   "No" im Aufnahme-Modal armiert neu (Runde 30 nachschliff).
-* **Rolltor fuer den Fortschritt noetig?** Der Suedteil (Tueren 10A0/1090/Umkleide mit dem Feuerloescher)
-  ist laut Tuergraph auch ueber ROOM10D0 -> 10F0 -> 1090 erreichbar (Ankunft ROOM1090 auf y=-9000); ob die
-  obere Ebene von ROOM1090 zur Tuer nach 1050 fuehrt, ist NICHT gemessen (§8). Unabhaengig davon ist die
-  Sicherung vor dem Rolltor immer erreichbar -> kein Softlock in beiden Faellen.
+* **Rolltor fuer den Fortschritt noetig? — JA, gemessen in der Bau-Stufe (Auflage 3, §9.6 (3)).** Der
+  Tuergraph fuehrt ROOM10F0 Slot 1 -> ROOM1090 -> Slot 0 -> ROOM1050-Sued, aber ROOM1090 besteht aus ZWEI
+  getrennten Ebenen: die Ankunft aus 10F0 liegt auf dem Laufsteg y=-9000 (Band 5, 10F0 main00 @0x00F52
+  Ziel (-13600,-9000,1300)), die Tuer nach 1050 (main00 @0x0211A, Band-Gate floor=1) im Hof y=-1800. In
+  KEINEM 1090-Skript gibt es einen Treppen-/Rampen-Platz (Zensus aller Aot_set/Door_aot_set/Aot_reset:
+  nur Tueren 0/1/3, Slot 2 sce 1/3, Slot 3 sce 3 -> sub07; kein sce 7/12/13), und die Nordkante des
+  Stegs ist fuer den SPIELER geschlossen: Band-5-Zellen p1 i5 (x -16400..-11504, z >= 3404), p1 i1
+  (x -11752..-8058, z 3826..8129, u0 0x01) und p1 i4 (x -8191..-2726, z >= 3432); FUN_8003b0a4 haelt eine
+  Zelle solide, wenn (Maske & u0) != 0 (@0x8003b244 `lhu` Typ|u0, @0x8003b250 `sra 24`, @0x8003b254
+  `and`, @0x8003b258 `bne` -> Push), und BEIDE Spieler-Aufrufe geben Maske 1 (@0x80031d74 und @0x800384c8
+  `ori a2,zero,0x1`). An der echten exe (lauf_1090.sh): Leon laeuft bei (-9900, 3358) fest = 3826 - 468
+  (Spielerradius). Folge: der Suedteil (Hof 1090 mit Ada/Feuer, Umkleide 1000 mit dem Feuerloescher,
+  10A0) ist NUR durch das Rolltor erreichbar -> **die Sicherung wird Pflicht**. Kein Softlock: sie liegt
+  vor dem Rolltor (ROOM1150, ab Spielbeginn erreichbar).
+* **Cut-4-Folge (Gegenpruefung (c), Spur D §2.3) — tritt im normalen Spiel NICHT auf.** Das Tor-Prop obj 0
+  (sub00 @0x0C36) steht nur, solange (3,121)=0 (If-Zweig @0x0C1A..@0x0C58); im Else-Zweig (Tor offen)
+  wird es nicht angelegt. Suedlich des Tors (Zone 3->4 @0x278 bei z -12500..-11500, hinter der Torzelle 19
+  bei z -10600..-10200) steht man nur, nachdem das Tor geoeffnet wurde — also nie mit Prop. Das von D
+  gemessene Bild (Cut 4 voll Torrueckseite) entsteht nur ueber Debug-Sprung/Flag-Manipulation. Dasselbe galt
+  schon im Auslieferungsstand; die Sperre aendert daran nichts.
 * **Alte Spielstaende:** (3,121)=1 aus v0.8.19 -> Tor offen, Schalter weg, Sicherung bleibt nutzlos im
   Inventar (nicht wegwerfbar). Kein Fehler, nur ein ueberzaehliger Gegenstand.
 * **Spur B (Hebetisch 1150/1151):** A setzt voraus, dass die Sicherung dort erhaeltlich bleibt (Bit 53,
   `sicherung_1150.c`). B aendert nur die Bedienung — bitte Aufnahme nicht unerreichbar machen.
-* **Spur D (Tuer Slot 4 nach 10A0):** keine Ueberschneidung (Slot 4 liegt suedlich des Rolltors). Braucht D
-  ebenfalls Port-Bytecode ueber `scd_event_fire`, dann eine EIGENE Zeile neben HAKEN 1 — beim Zusammenfuehren
-  zwei Nachbarzeilen.
+* **Spur D (Tuer Slot 4 nach 10A0):** ~~keine Ueberschneidung (Slot 4 liegt suedlich des Rolltors)~~ —
+  berichtigt (Gegenpruefung): die Wechselwirkung laeuft ueber Cut 4, nicht ueber Slots/IDs; gemessen (s. o.)
+  kann sie im normalen Spiel nicht auftreten. UEBERGABE AN D: (1) Ds Praemisse "Suedteil ueber ROOM1000
+  erreicht" ist falsch (ROOM1000-RVD @0x190..@0x348: drei getrennte Kameragruppen, die Umkleide haengt nur am
+  Suedteil); (2) auch ueber 10F0 -> 1090 kommt man NICHT in den Suedteil (Laufsteg Band 5 abgeschlossen,
+  s. o.) — Ds Szene an Slot 4 setzt also immer ein offenes Rolltor voraus, (3,121)=1, kein Tor-Prop in Cut 4;
+  (3) Ds Messbild `ist_cut4_rolltor_zu_offen_cut5.png` (Tor zu) ist ein Debug-Sprung-Zustand. Braucht D
+  ebenfalls Port-Bytecode ueber `scd_event_fire`, dann eine EIGENE Zeile neben HAKEN 1 (§9.1 Auflage 7).
 * **Spur E (Dokument an der sitzenden Leiche):** Leiche an der Ostwand noerdlich des Schalters (Cut 3,
   Kollision i12 x 15700..17200 z -7850..-5950). Ueberlappt Es Zone das Schalter-Rechteck (x 16800..17600
   z -8950..-8150), gewinnt Slot 7 (Scan-Reihenfolge aufsteigend, erster Treffer verbraucht die Taste —
@@ -500,18 +525,15 @@ sicherung_laden, boot_bg_pin im 1. Anlauf; granate_laden und irons_tisch_licht i
    — im Liefertext als Grenze genannt.
 2. **Ton beim Einsetzen:** RE1.5 (ROOM2060) stumm, RE2 spielt einen Raum-SE (room1110 sub04 +0x2C Se_on
    2/0x0F). ROOM1050s snd0 hat nur die drei Rolltor-SE. Plan: stumm (RE1.5 fertig -> massgeblich).
-3. **Nicht gemessen:** ob ROOM1090s obere Ebene (Ankunft aus 10F0, y=-9000) zur Tuer nach ROOM1050 fuehrt —
-   nur fuer die Frage "Rolltor fortschrittsnoetig?" relevant, nicht fuer einen Softlock. Hinweis aus den
-   Daten: die RVD verbindet die hohe Kameragruppe (Cut 0..2, Kamera y -12798/-11088) mit der unteren
-   (Cut 3..7) ueber die Zone @0x2A8 (Cut 0 -> 3, x -14889..-4999 z 3400..8400), die SCA fuehrt Schraeg-/
-   Treppenzellen (Typ 3/4, floor 18/19); ob die Feuer-Emitter (sub00 @0x02214.., Typ 0x26) den Weg
-   sperren, waere ein Lauf im echten Spiel.
+3. ~~Nicht gemessen~~ **GESCHLOSSEN (Bau-Stufe, Auflage 3):** ROOM1090s obere Ebene fuehrt NICHT zur Tuer
+   nach ROOM1050 — nicht wegen des Feuers (die Emitter stehen im Hof bei x 1374..3104), sondern weil der
+   Laufsteg (Band 5) keinen Uebergang zum Hof (Band 1) hat; Belege §7 und §9.6 (3). Das Rolltor ist damit
+   fortschrittsnoetig, die Sicherung Pflicht, ein Softlock bleibt ausgeschlossen (Fundstelle vor dem Tor).
 4. ~~Nebenbefund~~ geprueft, KEIN Befund: `re15_tuer1120_install` steht nur am Tuerweg
    (scd_room_setup.c:428), nicht am Boot-/CONTINUE-Weg (main.c 4658..4685) — aber STAGE1 speichert nur in
    ROOM1120/1150 (`re15_savepoint.c:46/47`), ein Laden startet also nie in ROOM1130. Spur A braucht den
    Boot-Weg ebenfalls nicht (Texte 20/21 werden beim Ausloesen eingesetzt, §5.1).
-5. Der Bau muss die Kopfkommentare von `test_room1050_sicherung.c` (Cut_replace-These, "keine
-   Sicherungs-Bedingung") nachziehen (§3.5).
+5. ~~Der Bau muss die Kopfkommentare von `test_room1050_sicherung.c` nachziehen~~ — erledigt (§9.2).
 
 ## 9 Umsetzung (Stufe BAU)
 
