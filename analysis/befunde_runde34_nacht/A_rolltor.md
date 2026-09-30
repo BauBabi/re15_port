@@ -407,6 +407,13 @@ Rechts = "No"), Bilder per RE15_FRAMEDUMP ansehen, state.log/debug.log. Je Nutze
 
 Zusaetzlich: Suite im eigenen Baum (429 Tests), GUI-Haken einzeln nachfahren (memory gui-tests-flattern).
 
+**Suite dieses Baums, Stand Ermittlung (kein Engine-/Plattform-Code geaendert — `git diff cf0e68ba..HEAD`:
+nur analysis/, tools/r34n_a/, Sonde + probes/r34n_a_rolltor.cmake ohne add_test):** Volllauf
+`local_build.sh test` 420/428 (728 s, parallel bauende Agenten). Die 8 roten sind GUI-Integrationshaken
+mit echter exe; einzeln nachgefahren sind ALLE gruen: elza_vollstart, irons_tisch_laden, irons_tisch_bild,
+sicherung_laden, boot_bg_pin im 1. Anlauf; granate_laden und irons_tisch_licht im 2.; titel_puls im 3.
+(die ersten beiden Anlaeufe rot mit Bilddauern bis 139 ms — Pruefung (D) haengt an der Wanduhr).
+
 ## 7 Risiken, Softlocks, Wechselwirkungen
 
 * **Softlock — Sicherung verloren?** Nein. (a) Wegwerfen: nur an `discard_sites.inc`-Stellen; die Sicherung
