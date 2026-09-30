@@ -1,6 +1,10 @@
 # Spur D — Ada-Ruf an der Tuer ROOM1050 -> ROOM10A0 (Runde 34 Nacht)
 
 Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code). Arbeitsbaum `.claude/worktrees/r34n_adaruf`, Zweig `r34n/adaruf`.
+**BAU-Stand (§9):** gebaut wie geplant plus EINE Abweichung (Gegenpruefung Auflage 7): nach dem Rueckschritt
+dreht sich Leon zur Kamera Cut 4, erst dann die zwei Leon-Zeilen mit den Gesten — nur so geht der Gestenarm im
+Bild "nach rechts" (Programm 162 statt 142 Bytes). Riegel `unit_r34n_d_adaruf_*` (8 Teile), Suite §9.4, Abnahme
+an der echten exe §9.5.
 Werkzeuge: `re15_port/tools/r34n_d/` (rbj_zensus.py, plc_motion_zensus.py, gesten_streifen.py, gesten_arme.py,
 tuer_graph.py, texte_bauen.py, messlauf.sh). Sonde: `re15_port/tests/unit/probe_r34n_d_adaruf.c`
 (+ `probes/r34n_d_adaruf.cmake`, kein add_test). Belege: `analysis/befunde_runde34_nacht/D_belege/`.
@@ -281,8 +285,18 @@ endete nie (3 von 7 Stellen) — Modus 8 dreht nur 48/Bild bei 70 Vortrieb (Wend
 vermeidet das, indem es Leon vorher per `Member_set` auf Ort UND Richtung stellt (ROOM1090 sub02 @0x0246C-74,
 hinter einem Cut_chg); hier ohne Schnitt uebernimmt die sichtbare Drehung (Modus 9) diese Aufgabe.
 
+**BAU (gebaut, gemessen mit dem Riegel `unit_r34n_d_adaruf_szene`, echte VM + Spielschritt):** mit der Drehung zur
+Kamera (+0x4C) verschiebt sich alles ab dem Rueckschritt um 12 Bilder: Ruf B21 (bis B120), Drehung zur Tuer ab
+B121, Rueckschritt B123..B133 (Weg 700, dz 0), Drehung zur Kamera bis B145 (cos 1,000), "Leon: Another civilian
+survivor." + Clip 19 B165, Clip 19 rueckwaerts B190, "Leon: I have to help her!" + Clip 17 B216, Faden-Ende B316,
+Balken voll B15 / weg B330. An der echten exe (Druck bei Bild 150 in ROOM1050, also F = B + 150): Ruf ab F171,
+Schritt F273..F283, zur Kamera bis F295, Leon-Zeilen ab F315/F366, Balken weg F480 — im Bild bestaetigt
+(`D_belege/bau_abnahme_ueberblick.png`; die Nachrichten-Bilder im Log `[msg] room=1050 id=22/23/24`).
+
 Mit Sprachdateien: `voice_wait` haelt Message_on 23 bis main22.wav zu Ende ist und Message_on 24 bis main23.wav
 zu Ende ist; die Gesten haengen jeweils direkt hinter ihrem Message_on und bleiben dadurch am Satz.
+**BAU gemessen (Auflage 9, Platzhalter-WAVs, §9.5):** Message_on 24 wartete 61 Bilder auf main23 (3,76 s), Clip 17
+kam mit dem zweiten Satz; main22 mit 4,38 s reichte 29 Bilder in Rueckschritt und Drehung hinein.
 Weitere Faelle (Sonde): (9,65)=1 -> Slot 4 = Text msg 25, Druck zeigt msg 25, kein Raumwechsel;
 (3,0xBB)=1 (mit oder ohne (9,65)) -> Slot 4 bleibt Tuer, Druck fordert Raumwechsel 0x10A0 an (Tuersequenz P07G).
 
@@ -332,7 +346,9 @@ freien Ereignis-Slot (10..23) wie jedes Raum-Sub.
 | +2C | `11 00 08 00` `02 00` `12 04` `21 05 20 00` | Do / Evt_next / Edwhile Ck(5,32)==0 | ROOM1050 sub03 @0x0DCA..0x0DD5 |
 | +38 | `40 00 08 20 xx xx zz zz` | Plc_dest Modus 8, Bit 0x20, Ziel zur Laufzeit | Form ROOM1090 sub02 @0x0247C |
 | +40 | `11 00 08 00` `02 00` `12 04` `21 05 20 00` | Do / Evt_next / Edwhile Ck(5,32)==0 | ROOM1090 sub04 @0x026E6..0x026F1 (inline: ROOM1050 sub04 ist Adas Weg, kein Gosub moeglich) |
-| +4C | `09 0a 14 00` | Sleep 20 | ROOM1090 sub02 @0x02486 |
+| **+4C** | `40 00 09 20 97 3a 34 e0` | **BAU:** Plc_dest Modus 9 zur Kamera Cut 4 (14999,-8140) | Standort ROOM1050.RDT @0x000E4/@0x000EC; Form wie +24. PORT-WAHL (Auflage 7, L9) |
+| **+54** | `11 00 08 00` `02 00` `12 04` `21 05 20 00` | **BAU:** Do / Evt_next / Edwhile Ck(5,32)==0 | ROOM1050 sub03 @0x0DCA..0x0DD5 |
+| +4C -> **+60** | `09 0a 14 00` | Sleep 20 | ROOM1090 sub02 @0x02486 (ab hier alle Versaetze +0x14: Message_on 23 +64, Clip 19 +68/+70, Plc_flg +74, Message_on 24 +7C, Clip 17 +80, Ende +88..+94, Aot_reset +96, Evt_end +A0; zusammen 162 Bytes) |
 | +50 | `2b 17 00 00` | Message_on 23 | Form @0x0248A |
 | +54 | `3f 00 13 00` | Plc_motion(0,19,0) | ROOM1090 sub03 @0x0265C |
 | +58 | `09 0a 19 00` | Sleep 25 | @0x02660 |
@@ -400,7 +416,7 @@ msg 13 @0x1154 · " first" ROOM11B0 msg 11 @0x1BAE. Glyphentabelle = Umkehrung m
 
 | Datei | Wortlaut | Hinweis |
 |---|---|---|
-| `synchro/STAGE1/room1050/main22.wav` | Woman: "Hello? Anyone? Please, get me out of here!" | <= 100 Bilder (3,3 s): der Rueckschritt folgt nach Sleep 100 und wartet nicht auf die Stimme |
+| `synchro/STAGE1/room1050/main22.wav` | Woman: "Hello? Anyone? Please, get me out of here!" | <= 100 Bilder (3,3 s): der Rueckschritt folgt nach Sleep 100 und wartet nicht auf die Stimme (BAU gemessen: eine 4,38-s-Aufnahme reicht 29 Bilder in Rueckschritt und Drehung) |
 | `synchro/STAGE1/room1050/main23.wav` | Leon: "Another civilian survivor." | Message_on 24 wartet ihr Ende ab |
 | `synchro/STAGE1/room1050/main24.wav` | Leon: "I have to help her!" | laeuft ueber das Szenenende hinaus weiter, wenn > 3,3 s |
 | (`main25.wav`) | "I have to help the Survivor first!" | wird NICHT abgespielt: Text-Platz (sce 1) ohne Sprachausgabe, wie tuer1120 und alle Untersuchungstexte (scd_vm.c re15_scd_show_message) |
@@ -493,22 +509,148 @@ nachfahren (memory reai-v2-gui-tests-flattern).
 
 ## 9 Umsetzung (Stufe BAU, Runde 34 Nacht)
 
-_Stand: Geruest angelegt, wird fortlaufend gefuellt._
+Stand: gebaut, Riegel gruen, an der echten exe abgenommen. Die Suite-Zeile steht in 9.4. Alle Konstanten
+stehen mit Beleg in `include/re15_adaruf.h` bzw. im Programm `k_ruf` (`engine/src/adaruf_1050.c`, eine Zeile je
+Opcode mit Vorbild-Offset). Fuer den Bau selbst nachgeprueft (Bytes/Instruktionen):
+ROOM1050 @0x00B5A (Tuer Slot 4, Stage 0x00 @0x00B70, Raum 0x0A @0x00B71), ROOM1090 @0x024CE..@0x024D9
+(`22 03 84 00 22 03 bb 01 22 03 6e 01`), ROOM1050 @0x00D88 (`22 03 6e 00`), ROOM1090 sub02 @0x02414..@0x024CD,
+ROOM1050 sub03 @0x00DC2 (`40 00 09 20 7a 3f f6 be` + Warteschleife), ROOM1130 @0x00A1C, ROOM1170 @0x015F0,
+ROOM1090 sub03 @0x02640..@0x02673, ROOM1050 @0x00C22, ROOM1050.RDT Kamera Cut 4 @0x000E0; PSX.EXE (`re15_disasm.py`):
+Typtabelle @0x8007469c, sce-3-Handler @0x800430f0..@0x80043114, sce-1-Handler @0x80043084..@0x800430b8,
+Plc_dest-Tabelle @0x80073e30, Modus 8 @0x800311f0..@0x8003132c, Modus 9 @0x80031360..@0x8003145c, Plc_motion
+@0x80041b90..@0x80041bdc, Plc_flg @0x80041fb8..@0x80042014, Flag-Banktabelle @0x80074664, Marker-Binder
+@0x8001b3f8..@0x8001b4e0. Eigener Walker-Zensus (206 RDTs, 40674 Opcodes): (3,187) gesetzt nur ROOM1090 sub03
+@0x024D2, gelesen nur ROOM1090 sub00 @0x0237A; (3,110) gesetzt @0x024D6, geloescht ROOM1050 sub03 @0x00D88; kein
+Ck/Set (9,65)/(9,66).
 
 ### 9.1 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
 
+| # | Auflage | Stand | Wo / Beleg |
+|---|---|---|---|
+| 1 | Tuergraph mit Stage-Byte | ERLEDIGT | `tools/r34n_d/tuer_graph.py` liest Byte 22 (Viereck-Saetze Byte 30); `D_belege/tuergraph_stage1_leon.txt` neu; §7 mit den Eingaengen 1050 S4 @0x00B5A, 1180 S1 @0x00A34, 11E0 S2 @0x01552, 1230 S1 @0x00B34 und dem toten 1170 S1 @0x01226 (sce 0) |
+| 2 | Gestenkatalog vervollstaendigen, ROOM6030 ueber rec2 | ERLEDIGT | §3.5 Nachtrag: Clip 24/25 (1050), 1170 Clip 25, 1150 Clip 10-12 (Bild des Gegenpruefers), 50B0 Clip 13/14 und 2020 Clip 0 selbst gerendert (`bau_weitere_leon_clips_50b0_2020.png`) — alle verworfen. Spieler-Record = LETZTER mit Bit 0 (Binder @0x8001b42c..@0x8001b4d4, Bindung @0x8001b450/@0x8001b460); `plc_motion_zensus.tsv` neu |
+| 3 | Softlock-Kette mit Bedingungen, Alt-Spielstaende | ERLEDIGT | §7 (Offsets selbst gelesen); dazu: ROOM1050 ist keine Speicherstelle (re15_savepoint.c:45-47), jede Ankunft laeuft durch scd_room_reenter |
+| 4 | L2b neu entscheiden | ERLEDIGT: zwei Nachrichten als PORT-WAHL | §1 L2b mit Gegenbeleg ROOM1090 msg 5 @0x2861; Lesbarkeit am Zensus `tools/r34n_d/dialog_budget.py` -> `D_belege/dialog_budget.txt` (Original-Minimum 51 Bilder ROOM4001 sub10 @0x01A24/@0x01A3C; msg 23 = 1,96 Bilder/Zeichen gegen Original-Minimum 0,99 ROOM1141 @0x00EBC) und am Framedump (msg 23 steht ab F315 ganz). Keine Verlaengerung der Sleep-Kette |
+| 5 | Weiche absichern | ERLEDIGT | `re15_adaruf_ereignis`: Raum 0x1050, Ereignis 13, (9,65)=0, (3,0xBB)=0 UND kein Faden fuehrt das Programm schon aus (`programm_laeuft`). Riegel `unit_r34n_d_adaruf_doppel` (Quadrat alle 10 Bilder + zweiter `scd_event_fire(13)` nach dem ersten VM-Takt UND im Druckbild selbst): genau 1 Faden, Ziele unveraendert. Mutationsproben c/c2 (9.6) |
+| 6 | Raster statt 7 Punkte | ERLEDIGT | `unit_r34n_d_adaruf_raster`: 100 x 100, Gierung je 256; die Begehbarkeit misst der Teil selbst (Lauf mit Pad UP je Zeile: Ostgrenze 16482 bei z -15700, 16732 sonst — wie vom Gegenpruefer gemessen); 735/735 Druckstellen: Ereignis 13, Faden endet (max B326), Schritt <= 10 Bilder, Weg 632..700, dz 0, Blick zur Kamera cos 1,000; 15 s |
+| 7 | Gesten am echten Bild, Suedwest-Druckstelle | ERLEDIGT, mit Folge | Zur Tuer gewandt: Clip 19 geht im Bild nach LINKS, Clip 17 halb verdeckt (`bau_gesten_zur_tuer_verworfen.png`) -> **Drehung zur Kamera** (L9 neu begruendet, 9.7 Nr. 1); danach liegt der Arm rechts im Bild, geht nach rechts hinaus, die Hand dreht auf, derselbe Weg zurueck; der Schwung ist voll sichtbar (`bau_gesten_zur_kamera.png`). Suedwest (16300,-15100), Gierung 3584 an der exe: Drehung zur Wand, Schritt, Drehung zur Kamera, Geste (`bau_druckstelle_suedwest.png`) |
+| 8a | Kartenlauf Speichern/CONTINUE | ERLEDIGT | Riegel `unit_r34n_d_adaruf_speicher` (Karte schreiben -> Init -> laden -> Sperrtext; Rettung -> speichern -> laden -> Tuer S021). Echte exe `tools/r34n_d/kartenlauf.sh` mit `probe_r34n_d_karte`: CONTINUE aus ROOM1150 -> 1000 -> 1050: Karte "gesehen" -> Sperrtext (`bau_karte_continue_sperrtext.png`), "gerettet" -> DOOR FIRE Slot 4, Sequenz P07G S021 T013, room10a0 (`bau_karte_continue.txt`) |
+| 8b | echter Raumwechsel statt RE15_SET_FLAG | ERLEDIGT | echte exe: Szene -> links drehen, nach Westen -> ROOM1050 Slot 3 -> ROOM1000 -> umdrehen -> Slot 0 -> ROOM1050: `[adaruf] ... Text-Platz sce 1 / msg 25 (Sperre)`, Druck -> "I have to help the Survivor first!" (`bau_sperrtext_nach_raumwechsel.png`); Riegel `unit_r34n_d_adaruf_sperre` ebenso |
+| 8c | Quadrat waehrend der Szene | ERLEDIGT | echte exe, 19 Druecke von F150 bis F475: eine Szene, ein Faden, kein DOOR FIRE, kein DROPPED (`bau_quadrat_waehrend_szene.txt`) |
+| 8d | A+D-Lauf nach der Zusammenfuehrung | OFFEN (Integration) | Spur A liegt nicht in diesem Zweig; 9.8 |
+| 9 | Stimme gegen Zeitlinie | ERLEDIGT | Platzhalter-WAVs (1090 main02 4,38 s / 1090 main06 3,76 s / 1150 main04 4,25 s), danach geloescht, nicht committet: stimme.log `nachricht=24 laeuft=1 ... 61 gewartet` — Clip 17 kommt mit dem zweiten Satz (F430); main22 reicht 29 Bilder in Rueckschritt + Drehung -> Laengenhinweis <= 3,3 s in 9.9 (`bau_stimme_platzhalter.png/.txt`) |
+| 10 | local_build.sh nicht anfassen | ERLEDIGT | unveraendert; RE15_MIN_TESTS bleibt 428 (Untergrenze) |
+| 11 | Folgetext-Vorbild zitieren | ERLEDIGT | §5.4 Text-Platz: ROOM1090 sub00 @0x0230A/@0x0230E msg 7 |
+
 ### 9.2 Dateien
+
+| Datei | Art | Inhalt |
+|---|---|---|
+| `re15_port/include/re15_adaruf.h` | NEU | Konstanten mit Beleg, API (`re15_adaruf_install`, `re15_adaruf_ereignis`, Pruefhaken) |
+| `re15_port/engine/src/adaruf_1050.c` | NEU | Programm `k_ruf` (162 B), Nachrichten 22..25, Installation, Weiche mit Waechtern, `[adaruf]`-Protokoll (nur PC) |
+| `re15_port/engine/src/scd_room_setup.c` | HAKEN 1 | +1 include, +1 Aufruf `re15_adaruf_install` direkt nach `re15_tuer1120_install` |
+| `re15_port/engine/src/scd_vm.c` | HAKEN 2 | +1 include; `scd_event_fire`: `pc = re15_adaruf_ereignis(...)`, sonst `sub_scd[event_id]` |
+| `re15_port/tests/unit/test_r34n_d_adaruf.c` | NEU (Riegel) | 8 Teile: szene, doppel, sperre, frei, rettung, speicher, elza, raster |
+| `re15_port/tests/unit/probes/r34n_d_adaruf.cmake` | GEAENDERT | 8 add_test + Kartenwerkzeug (die Sonde der Ermittlung bleibt, ohne add_test) |
+| `re15_port/tests/unit/probe_r34n_d_karte.c` | NEU (Werkzeug) | Speicherkarte mit Stand ROOM1150 fuer den CONTINUE-Lauf |
+| `re15_port/tools/r34n_d/` | GEAENDERT/NEU | `tuer_graph.py` (Stage-Byte), `plc_motion_zensus.py` (letzter Record), `dialog_budget.py`, `kameras.py`, `kartenlauf.sh` |
+| `analysis/befunde_runde34_nacht/D_belege/` | NEU | `bau_*.png/.txt`, `dialog_budget.txt`, `kameras_1050.txt`, neu erzeugt `tuergraph_stage1_leon.txt`, `plc_motion_zensus.tsv` |
+
+**Fuer die Zusammenfuehrung mit Spur A** (beide Weichen in `scd_event_fire`, dieselbe Zeile) so zusammensetzen:
+
+    const uint8_t *pc = re15_rolltor_ereignis((uint16_t)g_current_room_id, event_id);   /* Spur A */
+    if (!pc) pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);          /* Spur D */
+    if (!pc) pc = s_current_rdt->sub_scd[event_id];
+
+Die Ereignisse sind disjunkt (A: 2, D: 13). In `scd_room_setup.c` stehen E (`re15_dokumente_install`) und B
+(`re15_hebetisch_cursor_install`) VOR, D NACH `re15_tuer1120_install` — nur die include-Zeilen liegen nebeneinander.
 
 ### 9.3 Commits
 
+e6f46443 (Modul + zwei Haken + Riegel), 5e9d089a (Drehung zur Kamera), e77d5b2e (Kommentar), efdb343f (Riegel
+doppel im Druckbild), 7fa67079 (Auflagen 1-4/11: Doku + Werkzeuge), 76e43499 (Belegbilder), f35f2744 (Auflage 8:
+speicher, Kartenwerkzeug, CONTINUE-/Quadrat-Laeufe), dazu der Abschluss-Commit dieses Abschnitts.
+
 ### 9.4 Suite-Zeile
+
+SUITE_ZEILE_PLATZHALTER
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder)
 
-### 9.6 Mutationsproben
+Alle Laeufe mit der exe dieses Baums (eigene Kopie `re15_pc_r34n_d.exe`), RE15_WINDOW_SCALE=3, RE15_FRAMEDUMP
+(komponiert vor dem Present, mit Balken und Text). Weg wie im Spiel: Debug-Sprung in die Umkleide ROOM1000,
+Quadrat an deren Tuer Slot 0 (Tuersequenz P07G), ROOM1050 im Eintritts-Cut 4, 0,8 s vorwaerts, Quadrat bei Bild 150.
+Alle Bilder angesehen.
+
+* `bau_abnahme_ueberblick.png` — die ganze Szene: F140 ohne Balken an der Tuer; ab F152 Balken; F172..F268
+  "Woman: Hello? Anyone? Please, / get me out of here!" (Sprecher rot = Farbe 02); F272..F284 Drehung zur Wand und
+  Schritt zurueck (Beine im Schritt, Blick zur Tuer); F288..F308 Drehung zur Kamera; F316..F352 "Leon: Another
+  civilian survivor." mit Clip 19; F368..F460 "Leon: I have to help her!" mit Clip 17; F472 Balken gehen; F484 Spiel.
+* `bau_gesten_zur_kamera.png` — Ausschnitt Leon: Clip 19 F318..F348 (Arm rechts im Bild geht nach rechts hinaus,
+  Hand dreht auf, derselbe Weg zurueck), Clip 17 F369..F399 (Arm quer vor die Brust, dann ganz nach rechts
+  hinaus, zurueck in die Ruhe).
+* `bau_gesten_zur_tuer_verworfen.png` — dieselben Gesten mit Blick zur Tuer (erste Bauform): der Arm geht nach
+  LINKS, der Schwung verschwindet hinter dem Koerper -> Grund fuer die Drehung (9.7 Nr. 1).
+* `bau_druckstelle_suedwest.png` — Druck schraeg von Suedwest (16300,-15100), Gierung 3584 (Debug-Sprung direkt nach
+  ROOM1050 + RE15_FORCE_CUT=4, weil der Sprung Cut 0 setzt; im Spiel ist dort Cut 4 aktiv, §2.2): Drehung zur
+  Ostwand, Schritt, Drehung zur Kamera, Geste — endet normal.
+* `bau_sperrtext_nach_raumwechsel.png` — nach echtem Wechsel 1050 -> 1000 -> 1050 (8b): Schreibmaschinentext
+  "I have to help the Survivor first!", keine Szene; ebenso im selben Raum nach der Szene (erster Lauf, F510..F560).
+* `bau_karte_continue_sperrtext.png` + `bau_karte_continue.txt` — CONTINUE von Karte (8a): Fall A Sperrtext,
+  Fall B Tuer mit Sequenz S021 nach ROOM10A0.
+* `bau_quadrat_waehrend_szene.txt` — 19 Quadrat-Druecke waehrend der Szene: eine Szene, kein Raumwechsel.
+* `bau_stimme_platzhalter.png` + `.txt` — Platzhalter-Stimmen (9): msg 23 steht, bis main23 zu Ende ist
+  (F315..F425), msg 24 + Clip 17 ab F430.
+* Elza: Riegel `unit_r34n_d_adaruf_elza` (ROOM1051 Slot 4 bleibt Tuer, Druck -> ROOM10A1); kein exe-Lauf mit
+  Elza-Start (die Installation kehrt fuer jeden Raum ausser 0x1050 in ihrer ersten Zeile zurueck).
+
+### 9.6 Mutationsproben (Fix raus -> Riegel rot, danach zurueck, Riegel wieder gruen)
+
+| Probe | Aenderung | Ergebnis |
+|---|---|---|
+| a | HAKEN 2 raus (`pc = NULL` statt Weiche) | `szene` ROT, 14 Fehler; Log `event 13 DROPPED` |
+| b | Freigabe auf (3,0x6E) | `rettung` ROT, 3 Fehler — schon das ERSTE Betreten nach der Rettung ist gesperrt (ROOM1050 sub03 loescht (3,0x6E) @0x00D88 noch im Init-Lauf) |
+| c | nur Waechter `programm_laeuft` raus | `doppel` ROT (2 Faeden bei zweitem Ausloeser im Druckbild) |
+| c2 | alle drei Waechter raus | `doppel` ROT (2 Faeden auch nach dem ersten VM-Takt) |
+| d | Drehung vor dem Schritt raus (+0x24..+0x37 Nop) | `raster` ROT: 253 von 735 Druckstellen HAENGEN (Szene endet nie) |
+| e | HAKEN 1 raus | `szene` ROT, 18 Fehler (Slot 4 bleibt Tuer, Druck wechselt den Raum) |
+| f | Blickpunkt (30000,-13700) statt Kamera | `szene` ROT, 2 Fehler (Drehung/Gesten nicht zur Kamera) |
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
 
+1. **Drehung zur Kamera nach dem Rueckschritt** (+20 Bytes: +0x4C Plc_dest Modus 9 auf den Cut-4-Standort, +0x54
+   Warteschleife; Programm 162 statt 142 Bytes). Grund: Auflage 7 am echten Bild — zur Tuer gewandt geht der
+   Gestenarm im Bild nach links; der Nutzer beschreibt "den rechten Arm ... nach rechts", das ist die Sicht von
+   vorn; eine Kamera von vorn gibt es an der Tuer nicht (`kameras_1050.txt`). PORT-WAHL, belegt mit dem Kamerasatz
+   @0x000E0 und dem Modus-9-Handler @0x80031360.
+2. Riegel-Schranke Szenendauer 360 statt 330 (Sleep-Summe 291 + zwei Drehungen je <= 0x800/0x60 = 22 Bilder +
+   Schritt <= 12 + Uebergaenge); gemessen max 326.
+3. Riegel mit 8 Teilen statt der geplanten Faelle A..E: dazu `doppel` (Auflage 5), `raster` (6), `speicher` (8a).
+4. `local_build.sh` NICHT geaendert (Auflage 10 statt Plan 5.1).
+5. Nebenbei berichtigt: RDT-Zahl 206 (nicht 240) in den neuen Belegen; `tuer_graph.py`, `plc_motion_zensus.py`.
+
 ### 9.8 Offene Punkte
 
+* **Zusammenfuehrung mit Spur A** (Auflage 8d): `scd_event_fire` wie in 9.2 zusammensetzen; danach ein Lauf
+  Sicherung -> Tor -> Szene an der 10A0-Tuer (erst dann ist der Suedteil im Spiel ohne RE15_SET_FLAG=3:121
+  erreichbar).
+* **Sprachdateien** fehlen (Nutzer, 9.9); bis dahin laufen die Zeilen stumm mit Untertitel.
+* **Lesart der Gesten** (L4/L5) bleibt eine Lesart; nach der Drehung stimmen Arm-Seite und Richtung mit der
+  Beschreibung. Umstellung falls gewuenscht: Clip-Bytes jetzt an +0x6A/+0x72 (Clip 19) und +0x82 (Clip 17).
+* **PSX-Ziel** nicht gebaut (kein PSn00bSDK-Lauf in dieser Runde); `adaruf_1050.c` nutzt ausserhalb von
+  `#ifdef RE15_PLATFORM_PC` nur memcpy und Engine-Aufrufe.
+* **Nebenbefund (nicht Spur D, ungeprueft):** der Marker-Binder FUN_8001b3f8 zaehlt den Gegner-Index a3 ueber alle
+  Records hinweg (`addu a3,zero,zero` einmal @0x8001b410, `addiu a3,a3,1` @0x8001b4c4); der Port
+  (enemy_common.c rbj_resolve_slot) nimmt "erster Record mit Bit == Slot". Bei Raeumen mit mehreren
+  Gegner-Records koennten Clips beim falschen Gegner landen — nachmessen.
+
 ### 9.9 Sprachdateien fuer den Nutzer
+
+| Datei | Sprecher / Wortlaut | Laenge |
+|---|---|---|
+| `synchro/STAGE1/room1050/main22.wav` | Woman: "Hello? Anyone? Please, get me out of here!" | **hoechstens 3,3 s** (100 Bilder) — sonst spricht sie noch, waehrend Leon zurueckweicht (gemessen: 4,38 s -> 29 Bilder Ueberlappung) |
+| `synchro/STAGE1/room1050/main23.wav` | Leon: "Another civilian survivor." | frei — "I have to help her!" wartet auf ihr Ende (voice_wait) |
+| `synchro/STAGE1/room1050/main24.wav` | Leon: "I have to help her!" | bis 3,3 s endet sie mit der Szene; laenger laeuft sie ueber die Balken hinaus weiter |
+| (kein main25) | "I have to help the Survivor first!" | Text-Platz — spielt keine Stimme (wie alle Untersuchungstexte) |
+
+Aus `synchro/unused` wurde nichts zugeordnet; die Platzhalter des Messlaufs sind geloescht.
