@@ -277,6 +277,15 @@ static int pruef_brand(void)
         if (u16(f, 0x18) != 0xB003 || f[0] != 58 || f[1] != 28 || f[0x1B] != 2)
             return fail(334 + n, "Flamme nach Op 27 nicht 0xB003 / Op A 58 / Op B 28 / Zustand 2");
     }
+    /* (Gegenpruefung M6) Op 27 zieht in X+1 je Flamme zwei Zahlen, der Draw-Pass laeuft AUFSTEIGEND
+     * (@0x8001d5d0-668: Flammen 90, 91, 92 vor den Kindern 93/94): Anim r%3 (`0x55555556` @0x8001faa4-f4)
+     * und Luftzaehler 8 + r%3 (`addiu v0,v0,8 / sh v0,66` @0x8001fbb4-b8). */
+    for (int n = 2; n >= 0; n--) {
+        const uint8_t *f = re2fx_platz(92 - n);
+        uint32_t ra = rnd(), rb = rnd();
+        if (f[0x21] != ra % 3u) return fail(337, "Op 27 Anim != r%3");
+        if (s16(f, 0x42) != (int32_t)(rb % 3u) + 8) return fail(338, "Op 27 Luftzaehler != 8 + r%3");
+    }
     return 0;
 }
 
@@ -317,7 +326,12 @@ static int pruef_flamme(int app_treffer, int *lebenszeit, int *folge, int *folge
         if (opb_vor == 29 && vx_vor >= 61 && (s2_vor % 15) == 0) (*folge_soll)++;
         if (gelandet < 0 && f[0] == 19) {
             gelandet = t;
-            if (f[1] != 29 || s16(f, 0x0C) > 180 || s16(f, 0x0E) != 0) return fail(401, "Landung: Op B 29 / vel.x <= 180 / vel.y 0 (@0x80020b60)");
+            /* (Gegenpruefung M5) Op 46 setzt vel.x 180 (`addiu v0,zero,180 / sh v0,12` @0x80020ba4-ac) und
+             * acc.x -10 - r%11 (@0x80020bb0-f4); die Physik DESSELBEN Bilds addiert acc danach (@0x8001d70c-798)
+             * -> nach dem Landebild vel.x = 180 + acc.x exakt. */
+            if (f[1] != 29 || s16(f, 0x0C) != 180 + (int8_t)f[0x08] || s16(f, 0x0E) != 0)
+                return fail(401, "Landung: Op B 29 / vel.x != 180 + acc.x / vel.y 0 (@0x80020b60)");
+            if ((int8_t)f[0x08] > -10 || (int8_t)f[0x08] < -20) return fail(408, "Landung: acc.x nicht -10 - r%11");
             c2 = s16(f, 0x42);
             if (c2 < 38 || c2 > 45) return fail(402, "Landezaehler != 38 + r%8");
         }
@@ -528,6 +542,118 @@ static int pruef_pause(void)
     return 0;
 }
 
+/* ============================================================================================ */
+/* 8xx Weltlage-NORMALZWEIG FUN_8001d894 ohne Bit 0x400 (Gegenpruefung M4): +0x34 := RotY(+0x22)*lokal
+ * (`lh a0,34(a2)` / `jal 0x8008e8b4` @0x8001dac8-cc, `sh` @0x8001db50-70), dann += M.t + M.rot*Versatz
+ * (`lhu +0x34 / addu +0x60 / addu MAC / sh` @0x8001dbd0-dc1c). RotMatrixY FUN_8008e8b4 auf die Einheit
+ * (a >= 0: t1 = -sin `subu t1,zero,t7` @0x8008e910; m0j' = (c*m0j - t1*m2j)>>12, m2j' = (t1*m0j + c*m2j)>>12
+ * @0x8008e918-a40) = [[c,0,s],[0,1,0],[-s,0,c]]; die Viertel sind exakt (sin/cos 0 oder 4096):
+ *   Gier 1024 -> (l.z, l.y, -l.x), 2048 -> (-l.x, l.y, -l.z), 3072 -> (-l.z, l.y, l.x).
+ * Die Erwartung kommt NICHT aus re2_fx.c: Viertel-Drehung von Hand, lokal/M.t aus dem Abbild. */
+static void viertel(int16_t gier, const int32_t l[3], int32_t e[3])
+{
+    switch (gier) {
+    case 1024: e[0] =  l[2]; e[1] = l[1]; e[2] = -l[0]; break;
+    case 2048: e[0] = -l[0]; e[1] = l[1]; e[2] = -l[2]; break;
+    case 3072: e[0] = -l[2]; e[1] = l[1]; e[2] =  l[0]; break;
+    default:   e[0] =  l[0]; e[1] = l[1]; e[2] =  l[2]; break;   /* 0 */
+    }
+}
+/* Eine Bodenflamme (Platz 92) mit genau ziel_gier gleiten lassen: Aufschlag-Gier so waehlen, dass
+ * Gier + r%40 (Flamme 0, zweiter Zug nach dem Skala-Zug @0x80021104-164) das Ziel trifft. Jedes Bild ab
+ * X+1: Weltlage == M.t + Viertel(lokal VOR dem Bild) (Weltlage vor Op B und Physik, @0x8001d6c8). */
+static int gleit_lage(int16_t ziel_gier, int nr, int32_t *weg_soll)
+{
+    start();
+    (void)rnd(); uint32_t r2 = rnd();
+    const int16_t gier_a = (int16_t)(ziel_gier - (int16_t)(r2 % 40u));
+    const int32_t q[3] = { 700, 10, -1300 };
+    re2fx_aufschlag(1, q, gier_a);
+    re2fx_tick();                                       /* X: Flamme 92 gespawnt (0x4000) */
+    const uint8_t *f = re2fx_platz(92);
+    if (s16(f, 0x22) != ziel_gier) return fail(nr, "Flammen-Gier != Ziel (Strom-Nachbau)");
+    int bilder = 0, gleit = 0;
+    int32_t l0x = 0;
+    for (int t = 1; t < 40 && u16(re2fx_platz(92), 0x18); t++) {
+        f = re2fx_platz(92);
+        const int32_t l[3] = { s16(f, 0x24), s16(f, 0x26), s16(f, 0x28) };
+        const int16_t vx = s16(f, 0x0C);
+        const int war_19 = (f[0] == 19);
+        re2fx_tick();
+        f = re2fx_platz(92);
+        const int32_t t3[3] = { (int32_t)u32(f, 0x60), (int32_t)u32(f, 0x64), (int32_t)u32(f, 0x68) };
+        if (t3[0] != q[0] || t3[1] != q[1] || t3[2] != q[2]) return fail(nr + 1, "Flammen-M.t != Q (Op 48 a2 = Platz+0x4C)");
+        int32_t e[3]; viertel(ziel_gier, l, e);
+        if (s16(f, 0x34) != (int16_t)(t3[0] + e[0]) || s16(f, 0x36) != (int16_t)(t3[1] + e[1]) ||
+            s16(f, 0x38) != (int16_t)(t3[2] + e[2])) {
+            printf("  Gier %d Bild %d: Welt (%d,%d,%d), erwartet (%d,%d,%d) aus lokal (%d,%d,%d)\n", ziel_gier, t,
+                   s16(f, 0x34), s16(f, 0x36), s16(f, 0x38), t3[0] + e[0], t3[1] + e[1], t3[2] + e[2], l[0], l[1], l[2]);
+            return fail(nr + 2, "Weltlage != M.t + RotY(Gier)*lokal (Normalzweig @0x8001dac8-dc1c)");
+        }
+        bilder++;
+        if (war_19) {                                   /* gleitet: lokal.x waechst um vel.x (Physik @0x8001d720-794) */
+            if (!gleit) l0x = l[0];
+            gleit++;
+            if (vx > 0) *weg_soll += vx;
+            if (s16(f, 0x24) != (int16_t)(l0x + *weg_soll)) return fail(nr + 3, "lokal.x != Start + Summe vel.x");
+        }
+    }
+    if (bilder < 20 || gleit < 8) return fail(nr + 4, "zu wenige Gleitbilder geprueft");
+    return 0;
+}
+static int pruef_weltlage(void)
+{
+    static const int16_t g[3] = { 1024, 2048, 3072 };
+    for (int k = 0; k < 3; k++) {
+        int32_t weg = 0;
+        int rc = gleit_lage(g[k], 801 + 10 * k, &weg);
+        if (rc) return rc;
+        /* Gleitrichtung ausdruecklich: Gier 1024 -> Welt -z, 2048 -> -x, 3072 -> +z (RotMatrixY-Konvention). */
+        const uint8_t *f = re2fx_platz(92);
+        int32_t dx = s16(f, 0x34) - 700, dz = s16(f, 0x38) - (-1300);
+        if (weg < 500) return fail(831, "Gleitweg < 500");
+        if (g[k] == 1024 && !(dz < -500 && dx > -60 && dx < 60)) return fail(832, "Gier 1024 gleitet nicht nach -z");
+        if (g[k] == 2048 && !(dx < -500 && dz > -60 && dz < 60)) return fail(833, "Gier 2048 gleitet nicht nach -x");
+        if (g[k] == 3072 && !(dz >  500 && dx > -60 && dx < 60)) return fail(834, "Gier 3072 gleitet nicht nach +z");
+        printf("  Gier %d: Gleitweg %d, Lage-Versatz (%d,%d)\n", g[k], weg, dx, dz);
+    }
+    /* M.rot*Versatz mit NICHT-Einheitsmatrix (kein Aufschlag-Kind nutzt das; der Normalzweig rechnet es
+     * trotzdem @0x8001db78-dc1c): Flamme direkt gespawnt, M.rot = [[0,0,4096],[0,4096,0],[-4096,0,0]],
+     * M.t = (1000,20,-2000), Versatz (100,5,300) -> M.rot*Versatz = (300,5,-100), Gier 1024. */
+    start();
+    uint8_t m[32]; memset(m, 0, sizeof m);
+    static const int16_t rot[9] = { 0, 0, 4096, 0, 4096, 0, -4096, 0, 0 };
+    for (int k = 0; k < 9; k++) { m[2 * k] = (uint8_t)rot[k]; m[2 * k + 1] = (uint8_t)((uint16_t)rot[k] >> 8); }
+    static const int32_t mt[3] = { 1000, 20, -2000 };
+    for (int k = 0; k < 3; k++) for (int j = 0; j < 4; j++) m[20 + 4 * k + j] = (uint8_t)((uint32_t)mt[k] >> (8 * j));
+    static const int16_t ofs[4] = { 100, 5, 300, 0 };
+    int i = re2fx_spawn(0x05051C00u, 1024, m, ofs);
+    if (i != 95) return fail(840, "Spawn nicht auf Platz 95");
+    int bilder = 0;
+    for (int t = 0; t < 30 && u16(re2fx_platz(i), 0x18); t++) {
+        const uint8_t *f = re2fx_platz(i);
+        const int32_t l[3] = { s16(f, 0x24), s16(f, 0x26), s16(f, 0x28) };
+        re2fx_tick();
+        f = re2fx_platz(i);
+        int32_t e[3]; viertel(1024, l, e);
+        const int32_t soll[3] = { 1000 + e[0] + 300, 20 + e[1] + 5, -2000 + e[2] - 100 };
+        if (s16(f, 0x34) != soll[0] || s16(f, 0x36) != soll[1] || s16(f, 0x38) != soll[2]) {
+            printf("  Versatz Bild %d: Welt (%d,%d,%d), erwartet (%d,%d,%d)\n", t, s16(f, 0x34), s16(f, 0x36), s16(f, 0x38), soll[0], soll[1], soll[2]);
+            return fail(841, "Weltlage != M.t + RotY*lokal + M.rot*Versatz");
+        }
+        bilder++;
+    }
+    if (bilder < 20) return fail(842, "Versatz-Lauf zu kurz");
+    /* Negativ-Kontrolle: dieselbe Flamme mit Versatz 0 liegt um genau (300,5,-100) anders. */
+    start();
+    static const int16_t null4[4] = { 0, 0, 0, 0 };
+    i = re2fx_spawn(0x05051C00u, 1024, m, null4);
+    re2fx_tick();
+    if (s16(re2fx_platz(i), 0x34) != 1000 || s16(re2fx_platz(i), 0x36) != 20 || s16(re2fx_platz(i), 0x38) != -2000)
+        return fail(843, "Negativ-Kontrolle: ohne Versatz nicht M.t");
+    return 0;
+}
+
 int main(void)
 {
     if (laden() != 0) return fail(1, "CORE00.ESP fehlt");
@@ -540,6 +666,7 @@ int main(void)
     if ((rc = pruef_aspekte())) return rc;
     if ((rc = pruef_landung_zustand1())) return rc;
     if ((rc = pruef_pause())) return rc;
+    if ((rc = pruef_weltlage())) return rc;
     printf("probe_r34_re2fx: alle Pruefungen gruen\n");
     return 0;
 }
