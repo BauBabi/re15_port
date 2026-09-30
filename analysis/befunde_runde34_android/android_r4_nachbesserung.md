@@ -243,3 +243,10 @@ synchro/ gegen die Liste der APK, Waisen, `.neu` ueberall, leere Ordner, Liste "
 
 Danach `adb uninstall` (kein `Android/data/de.re15.port` mehr), `adb emu kill` (`EMULATOR EXIT=0`), kein qemu/emulator,
 `adb devices` leer; Datenabbilder der AVD-Kopie geloescht (6,8 GB, config.ini bleibt). Nutzer-AVD nie gestartet.
+
+### 7.4 Gradle-Regel negativ (`nb_gradle_regel.sh`, Beleg `gradle_regel.txt`)
+
+Eine Datei `re15_port/shared_assets/PSX/<U+212A>.bin` (Name nur in Python erzeugt; der erste Anlauf pflanzte nichts,
+weil die Konsole U+212A nicht ausgeben kann - bemerkt, weil Gradle danach EXIT 0 meldete, und wiederholt):
+`gradlew writeAssetManifest` -> **EXIT 1**, `Asset-Pfad verletzt die Regeln der Liste v2 (nur druckbares ASCII, Segment
+1-251 B, ...): 'shared_assets/PSX/?.bin'`. Datei entfernt -> EXIT 0, `git status re15_port/shared_assets` leer.
