@@ -415,8 +415,10 @@ Zusaetzlich: Suite im eigenen Baum (429 Tests), GUI-Haken einzeln nachfahren (me
   Sperrliste); die Weiche sieht nur das Inventar -> "I need a fuse…" statt Frage. In ROOM1050 gibt es keine
   Kiste und keine Fundstelle — der Besitz kann sich dort zwischen Ausloesen und Frage nicht aendern.
   (c) Kombinieren: 0 Paare (@0x800750a8). (d) Tod/Laden: Flags und Inventar werden zusammen gespeichert.
-* **Fundstelle erreichbar?** ROOM1150 ab Spielbeginn: ROOM1170 -> ROOM1130 (Slot 4) -> ROOM1150 (Slot 2),
-  beide "immer" (raumgraph.py); der Hebetisch ist unbedingt armiert (scd_vm.c op_aot_set, ROOM1150 Slot 1).
+* **Fundstelle erreichbar?** Leon: ROOM1170 -> ROOM1130 (Slot 4) -> ROOM1150 (Slot 2), beide "immer"
+  (raumgraph.py). Elza (Szenario-Varianten …1, Start ueber ROOM1241 -> ROOM1031): ROOM1031 -> 1041 -> 1061 ->
+  1121 -> 1131 -> ROOM1151, alle "immer" — beide Male OHNE das Rolltor. Der Hebetisch-Ausloeser ROOM1150/1151
+  main00 @0x0D7E steht in keinem If und wird port-seitig unbedingt armiert (scd_vm.c op_aot_set, Slot 1);
   "No" im Aufnahme-Modal armiert neu (Runde 30 nachschliff).
 * **Rolltor fuer den Fortschritt noetig?** Der Suedteil (Tueren 10A0/1090/Umkleide mit dem Feuerloescher)
   ist laut Tuergraph auch ueber ROOM10D0 -> 10F0 -> 1090 erreichbar (Ankunft ROOM1090 auf y=-9000); ob die
