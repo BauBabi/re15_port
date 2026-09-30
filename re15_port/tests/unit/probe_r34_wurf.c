@@ -422,7 +422,8 @@ static void abschnitt_boden(void)
         PRUEF(179, fc == 0 && k == 0, "RE2-Basis 0 (RE2 @0x8004fc34-58), P.y -1700: Rueckgabe %d Kontakt %d (soll 0/0)", fc, k);
         g_room_rdt_ok = alt_ok;
     }
-    printf("  Boden -1800: L %d X %d frei %d Welt-y beim Liegen %d\n", w.L, w.X, w.frei, (int)w.wl[1]);
+    printf("  Negativ-Kontrolle Ebene 0 (Wurf 1800 hoeher): L %d X %d frei %d Welt-y beim Liegen %d\n",
+           w.L, w.X, w.frei, (int)w.wl[1]);
 }
 
 /* ================================================================================================
