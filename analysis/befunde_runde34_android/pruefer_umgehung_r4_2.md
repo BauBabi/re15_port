@@ -184,6 +184,48 @@ Bestaetigt: F-Y4 am echten Code (dauerhaft fail closed). **Neu F-Y6 (niedrig):**
 `if (unlink(dst) == 0) {...}` ohne else) verschluckt jeden Fehler ausser dem Erfolg - kein Zaehler, keine Zeile, "0 Fehler", die Liste
 wird geschrieben und die Datei nie mehr angefasst. Gleiche Klasse wie U1 der Runde 1 (dort fuer `unlink(pf_liste)` behoben: "ausser
 ENOENT -> Fehler"), und gegenlaeufig zu `re15_abgleich_waisen`, das nicht loeschbare Waisen wenigstens als WARNUNG meldet. Folge nur,
-wenn die Engine eine gestrichene Datei noch oeffnet (sie probiert optionale Pfade) - dann laedt sie den alten Stand. Auf dem Geraet
+wenn die Engine eine gestrichene Datei noch oeffnet - z.B. die Stimmen: audio_pc.c `re15_voice_load_clip` baut `synchro/STAGE%u/room%04X/main%02d.wav` aus dem Raum und spielt, was DA ist; eine gestrichene Aufnahme bliebe hoerbar. Auf dem Geraet
 schwer herbeizufuehren (App-eigener Speicher); am Pruefstand eindeutig.
 (Randnotiz ohne Befund: gcc meldet in draw_progress :313 `-Wmisleading-indentation` fuer `if (frac < 0) frac = 0; if (frac > 1) frac = 1;` - Verhalten richtig.)
+
+## 2. Pin und Urteil (Y2, Y3)
+
+- **Pin-Datei** (`kette_P.txt`, `gate_pin_pruefen` aus der Sandbox-Kopie von apk_pruefen.sh, echtes Gate): Grossbuchstaben + CRLF +
+  Kommentare werden angenommen (Normalisierung wie dokumentiert); alter + neuer Wert je Zeile ("Nachtragen statt Ersetzen"), die ganze
+  `sha256sum`-Zeile (`<wert> *release/...`), Wert zweimal, leer, nur als Kommentar, Praefix `sha256:` -> je Abbruch "kein SHA-256";
+  Wert des Gates von be8b60f3 -> "NICHT das festgehaltene". Haltbar.
+- **apk_pruefen.sh abgeschnitten** (`kette_T_abgeschnitten.txt`, --gate-only NB1): 0 B -> EXIT 127 (`apk_werkzeuge_finden: command not
+  found`), mitten in gate_urteil -> EXIT 2 (`syntax error: unexpected end of file`), vor gate_laufen -> EXIT 127. Fail closed.
+- **Urteil = einzige Instanz** (A4 in Abschnitt 5): `gate_laufen` gibt NUR das Urteil zurueck; die Rueckgabe des Gates geht als
+  Eingabe in `gate_urteil` ein, aber nicht als eigene UND-Bedingung. Eine 1-Zeichen-Aenderung im (weder gepinnten noch zur Laufzeit
+  selbstgeprueften) Urteilscode - `ende(1, "das Gate meldet ...` -> `ende(0, ...` - macht aus dem richtigen `APK-ASSET-GATE-ABWEICHUNG`
+  (Rueckgabe 1) des ECHTEN, gepinnten Gates ein `ANDROID-GATES-OK` fuer das falsche Tuerarchiv; im selben Log steht "das Gate meldet
+  ABWEICHUNG" - dasselbe Bild wie H1 der Runde 1, nur eine Stufe weiter. Eine nachsichtige Regression im Urteil ist STILL (jeder gute
+  Lauf bleibt gruen), und das Urteil MUSS bei jeder Wortlaut-Aenderung des Gates mitgezogen werden (android_r4_nachbesserung.md 8).
+  Der Urteilstest der Nachbesserung (`nb_urteil_test.sh`) laeuft in keiner Kette und keinem ctest. Abschneiden faellt (oben), eine
+  Logik-Aenderung nicht. **Befund F-Y2 (niedrig)**; Abhilfe-Richtung: in `gate_laufen` zusaetzlich `rc == 0` verlangen (ein richtiges
+  Gate kann dann nicht mehr ueberstimmt werden) und/oder den Urteilstest mit festen Logs vor jeder Nutzung laufen lassen bzw. apk_pruefen.sh
+  mitpinnen.
+- Umgebung (Y3), gelesen: `RE15_PYTHON` (python_finden.sh), `RE15_APK_SIGNER_SHA256`, `APK_BUILD_TOOLS`, `JAVA_HOME`, `ANDROID_SDK_ROOT`
+  steuern Interpreter/Signer/Werkzeuge - jeweils dokumentiert und im Log angezeigt (`Python: ...`, `erwarteter Signer: ... (Quelle)`,
+  `APK-Werkzeuge: ...`); das Gate laeuft ohne `-I`/`-E`, `PYTHONPATH` wirkt also. Grenze (bewusste Bedienung), kein Befund.
+
+## 5. Kette (Y7) in eigener Sandbox
+
+Sandbox `build/r34a/pruefer_u2/sb` (R4-Werkzeug `r4_sandbox_anlegen.sh`, Quellbaum per Hardlink, eigenes git-Repo mit Commit
+2026-09-29 12:00; Skripte + Pin vor jedem Teil = Arbeitsbaum per `cmp`). Werkzeug `u2_kette.sh`, Faelschungen `u2_faelschen.sh` aus
+NB1.apk (v0.8.20-nb1, Liste v2, d6921014...; zipalign + derselbe Debug-Schluessel, verify rc 0, Signer 432bc749...):
+FS_sig (c9b5785e...: Liste - sha256 von RE15DOOR/P07G.DO2 -> `f` x 64, Daten unveraendert), FD_sig (6bdf017a...: P07G.DO2 1 Byte
+gekippt + passende Listen-Summe). Beleg `kette_A.txt`.
+
+### 5.1 build_android.sh --gate-only
+
+| Lauf | Gate / Urteil | APK | EXIT | Ergebnis |
+|---|---|---|---|---|
+| A0 | echt, Pin echt | NB1 | 0 | 258/258, `APK-ASSET-GATE-OK`, `ANDROID-GATES-OK` (Kontrolle) |
+| A1 | echt | FS_sig | 1 | `Manifest-Pruefsumme falsch: .../P07G.DO2 Manifest ffff.., APK 68306346..` |
+| A2 | echt | FD_sig | 1 | `Inhalt weicht ab (sha256, gleiche Groesse 55908 B)` |
+| **A3** | **Ueberlebender E_manifest_pruefen_Z1247_gt, NEU GEPINNT** | FS_sig | **0** | Selbsttest-Urteil 0 (258/258), APK-Urteil 0, **`ANDROID-GATES-OK`** - das Geraet verwirft P07G.DO2 bei JEDEM Start (Pruefstand S11) |
+| A3b | derselbe Mutant | FD_sig | 1 | der schaedliche Fall faellt weiter (Quellbaum-Vergleich) |
+| **A4** | echt + Pin echt, **Urteil 1 Zeichen geaendert** | FD_sig | **0** | Gate: `APK-ASSET-GATE-ABWEICHUNG`, Rueckgabe 1; Urteil 0 -> `APK-PRUEFUNG-OK`, `ANDROID-GATES-OK` fuer das falsche Tuerarchiv |
+Danach Sandbox-Gate + Pin + apk_pruefen.sh = Arbeitsbaum, 0 Pruefkopien, 0 Temp-Reste.

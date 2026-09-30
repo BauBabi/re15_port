@@ -1,0 +1,56 @@
+Sandbox-Skripte = Arbeitsbaum (Pin 8a0e3f152f508690...)
+=== A: build_android.sh --gate-only (Sandbox) ===
+--- Sandbox-Gate := ECHT (195702 B), Pin: echt
+== A A0_echt_NB1 (NB1.apk --version v0.8.20-nb1): EXIT=0 (54 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+     == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+        Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 3603 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS gleich, 2 Tuer-Soll-Zeilen g/g
+     == APK-PRUEFUNG-OK: build/r34a/nb/apk/NB1.apk (sha256 crc32 Bytes: d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079 3ed12259 363483287) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/nb/apk/NB1.apk (geprueft: sha256 crc32 Bytes d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079 3ed12259 363483287) ==
+== A A1_echt_FS (FS_sig.apk --version v0.8.20-nb1): EXIT=1 (52 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+           Manifest-Pruefsumme falsch: shared_assets/RE15DOOR/P07G.DO2 Manifest ffffffffffffffff.., APK 68306346be85f0e2.. (das Geraet verwirft die entpackte Datei, android_glue.c entpacken)
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A2_echt_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (48 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2  Quelle 68306346be85f0e2.., APK 0f75724b958a4df8..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+--- Sandbox-Gate := E_manifest_pruefen_Z1247_gt.py (195701 B), Pin: umpinnen
+== A A3_Zgt_um_FS (FS_sig.apk --version v0.8.20-nb1): EXIT=0 (32 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+     == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+        Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 3603 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS gleich, 2 Tuer-Soll-Zeilen g/g
+     == APK-PRUEFUNG-OK: build/r34a/pruefer_u2/apk/FS_sig.apk (sha256 crc32 Bytes: c9b5785efb3a7e2d720a590df48bb62c8bf7413b5110edc8d848f119497b3d6d 27a551a8 363715670) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_u2/apk/FS_sig.apk (geprueft: sha256 crc32 Bytes c9b5785efb3a7e2d720a590df48bb62c8bf7413b5110edc8d848f119497b3d6d 27a551a8 363715670) ==
+== A A3b_Zgt_um_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (48 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2  Quelle 68306346be85f0e2.., APK 0f75724b958a4df8..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+--- Sandbox-Gate := ECHT (195702 B), Pin: echt
+--- Sandbox apk_pruefen.sh: gate_urteil 'ende(1, "das Gate meldet' -> 'ende(0,' (1 Zeichen)
+== A A4_urteil0_echt_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=0 (132 s)
+     == SELBSTTEST-OK: 258/258 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+        Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2  Quelle 68306346be85f0e2.., APK 0f75724b958a4df8..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     == APK-PRUEFUNG-OK: build/r34a/pruefer_u2/apk/FD_sig.apk (sha256 crc32 Bytes: 6bdf017a4a37d7da6fe176dd362cd19e234429d0107d5091e2e388956acc13fd e0053c61 363715670) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_u2/apk/FD_sig.apk (geprueft: sha256 crc32 Bytes 6bdf017a4a37d7da6fe176dd362cd19e234429d0107d5091e2e388956acc13fd e0053c61 363715670) ==
+   Sandbox-Gate + Pin + apk_pruefen.sh = Arbeitsbaum
+Pruefkopien uebrig: 0
+Temp-Reste: 0
+EXIT=0
