@@ -1,0 +1,58 @@
+   Python: /c/Python310/python (3.10.11)
+== Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) ==
+== APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_r3\sb_mp
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   shared_assets/PSX               3193 Dateien
+   shared_assets/extracted_fx        13 Dateien
+   shared_assets/RE2                277 Dateien
+   shared_assets/RE15DOOR            30 Dateien
+   synchro                           90 Dateien
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+== APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+== Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+   Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+   hoechste glibc-Anforderung: GLIBC_2.29
+   Assets kopieren (shared_assets/PSX, ~283 MB) ...
+   Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+   Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+   Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+   Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   Paket:     C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_r3\sb_mp\release\pkg-linux\re15_port_v0.8.19
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\pruefer_r3\sb_mp
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   Baum                          Quelle  gleich
+   shared_assets/PSX               3193    3193
+   shared_assets/extracted_fx        13      13
+   shared_assets/RE2                277     277
+   shared_assets/RE15DOOR            30      30
+   synchro                           90      90
+   Laufzeit:  7.3 s
+== APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   Zeilenenden-Gate: alle Skripte im Paket sind LF
+   (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+   OK: 349M, 3606 Dateien
+== Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+   x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+   x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+   1 Eintrag/Eintraege im Zentralverzeichnis angepasst
+   x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+   x-Bit ok: re15_port_v0.8.19/run.sh  100755
+   (kein Android-Paket: re15_port_v0.8.19_android.apk fehlt — release/build_android.sh laeuft getrennt)
+
+-rw-r--r-- 1 mjoedicke Kein 94371840 Sep 30 03:48 re15_port_v0.8.19_android.z01
+-rw-r--r-- 1 mjoedicke Kein 75105247 Sep 30 03:48 re15_port_v0.8.19_android.zip
+-rw-r--r-- 1 mjoedicke Kein 94371840 Sep 30 03:49 re15_port_v0.8.19_linux_steamdeck_x64.z01
+-rw-r--r-- 1 mjoedicke Kein 75236326 Sep 30 03:49 re15_port_v0.8.19_linux_steamdeck_x64.zip
+== SHA256SUMS.txt geschrieben ==
+== Git: alte Pakete austauschen ==
+   0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+   (noch nicht committet — das macht der Release-Commit)
+== Fertig ==

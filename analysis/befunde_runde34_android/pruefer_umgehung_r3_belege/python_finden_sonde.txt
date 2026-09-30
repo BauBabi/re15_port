@@ -1,0 +1,44 @@
+diff release/python_finden.sh <-> Sonde (nur die zwei Startzeilen duerfen abweichen):
+<             if ver="$(timeout 30 "$kand" -c "$probe" </dev/null 2>/dev/null)"; then rc=0; else rc=$?; fi
+>             echo "   SONDE: WUERDE STARTEN (mit timeout): $kand" >&2; ver=""; rc=99
+<             if ver="$("$kand" -c "$probe" </dev/null 2>/dev/null)"; then rc=0; else rc=$?; fi
+>             echo "   SONDE: WUERDE STARTEN (ohne timeout): $kand" >&2; ver=""; rc=99
+--- a PATH = nur WindowsApps (Langname), NUR_PATH (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- b PATH = nur WindowsApps (8.3), NUR_PATH (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- c PATH = 8.3 + /usr/bin (readlink, cygpath da) (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (Langname C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe = WindowsApps-Alias, NICHT gestartet): /c/Users/MJOEDI~1/AppD
+      Python-Kandidat verworfen (Langname C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python.exe = WindowsApps-Alias, NICHT gestartet): /c/Users/MJOEDI~1/AppDa
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- d RE15_PYTHON = Alias (Langname .exe), PATH leer (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- e RE15_PYTHON = Alias (8.3 ohne .exe), PATH leer (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- f RE15_PYTHON = Alias gross geschrieben (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /C/USERS/MJOEDICKE/APPDATA/LOCAL/MICROSOFT/WINDOWSAPPS/PYTHON.EXE
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- g kein Python im PATH, NUR_PATH (fail closed) (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 0 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- h RE15_PYTHON = fehlt (rc=1, cwd=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android)
+      Python-Kandidat verworfen (fehlt oder 0 Byte - App-Alias?, NICHT gestartet): /c/gibt/es/nicht/python.exe
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- i PATH = '.', cwd = WindowsApps, NUR_PATH (rc=1, cwd=/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps)
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): ./python3
+      Python-Kandidat verworfen (Link, Ziel ohne readlink nicht pruefbar - NICHT gestartet): ./python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- j PATH = '.:/usr/bin', cwd = WindowsApps, NUR_PATH (rc=1, cwd=/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps)
+      Python-Kandidat verworfen (Link auf WindowsApps oder Ziel unlesbar: '/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8
+      Python-Kandidat verworfen (Link auf WindowsApps oder Ziel unlesbar: '/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+--- k RE15_PYTHON = python3 (relativ), cwd = WindowsApps (rc=1, cwd=/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps)
+      Python-Kandidat verworfen (Link auf WindowsApps oder Ziel unlesbar: '/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. 
+FERTIG
+EXIT=0

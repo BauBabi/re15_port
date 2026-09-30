@@ -1,0 +1,23 @@
+Linkzahl Paket-TEX.TIM: 1 (1 = eigene Kopie)
+Paket-TEX.TIM jetzt 2daac7552af5fb50..., Quelle 7f10f1af755c5280...
+== laufA_echtes_gate: EXIT=1
+      [Inhalt weicht ab (sha256)] 1
+         Inhalt weicht ab: shared_assets/PSX/DATA/TEX.TIM  Quelle 165408 B 7f10f1af755c5280.., Paket 165408 B 2daac7552af5fb50..
+   == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+   ABBRUCH: Paket /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_r3/sb_mp/release/pkg-linux/re15_port_v0.8.19 weicht von der Asset-Liste ab (Befunde oben) - APK u
+761c761
+<         if q_sha != p_sha:
+---
+>         if False:
+Selbsttest MUP: rc=1 == SELBSTTEST-FEHLER: 3 von 202 Faellen falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] 132 --paket: gleiche Groesse, anderer Inhalt                   rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: synchro/STAGE2/room
+      [FEHLER] 185 --paket: sha256 kleiner als die Quelle                     rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: shared_assets/RE2/C
+      [FEHLER] 186 --paket: sha256 groesser als die Quelle                    rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: shared_assets/RE2/C
+== laufB_gate_MUP_ohne_selbsttest: EXIT=0
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      (kein Android-Paket: re15_port_v0.8.19_android.apk fehlt — release/build_android.sh laeuft getrennt)
+   == Fertig ==
+Sandbox-Gate wieder = Arbeitsbaum
+Paket-TEX.TIM zurueck: 7f10f1af755c5280...
+FERTIG
+EXIT=0

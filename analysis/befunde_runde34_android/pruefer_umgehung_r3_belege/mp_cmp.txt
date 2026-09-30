@@ -1,0 +1,5 @@
+torse_vbs              EXIT=1 | ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS
+re2_door04             EXIT=1 | ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR04.DO2
+re15_p07g              EXIT=1 | ABBRUCH: Port-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE15DOOR/P07G.DO2
+FERTIG
+EXIT=0
