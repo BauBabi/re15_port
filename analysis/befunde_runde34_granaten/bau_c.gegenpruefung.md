@@ -6,7 +6,8 @@ Bauverzeichnis `re15_port/build_r34_c`). Gegenstand: `git diff master...HEAD` (C
 Dossier `bau_c.md`, Orchestrator-Teilung C/D. Kein Code geaendert (Mutationsproben zurueckgesetzt, `git diff` danach leer).
 Werkzeuge dieser Gegenpruefung: `bau_c_gegen_werkzeug/` (Liste §9). Laufzeit-Ausgaben: `build/r34g_c/gp_*` (unversioniert).
 
-STATUS: laufend (Volllauf der Suite §5.3 laeuft noch).
+STATUS: ABGESCHLOSSEN — Urteil: Spur C ist korrekt belegt und gebaut; 2 Maengel "mittel" (M1 Dokumentation/Kollateral,
+M2 fehlender Pin), 7 Hinweise, kein kritischer Befund. Suite-Zielzeile auch hier nicht erreicht (nur Last-Abrisse, §5.3/§5.4).
 
 ---
 
@@ -18,11 +19,14 @@ STATUS: laufend (Volllauf der Suite §5.3 laeuft noch).
 * **Sonden: gruen, nicht selbstbestaetigend** (Literale aus Disasm/Datei, Negativ-Kontrollen vorhanden). Eigene
   Mutationsproben: 4/4 rot und nach dem Zuruecksetzen gruen (§3).
 * **Zwei Maengel "mittel"**: (M1) die Verallgemeinerung defW/defH aus der Zeile (C2) wirkt auch auf RAUM-Bank-Effekte mit
-  im Port nicht portierten Routinen — gemessen: Effekt 0x0b in ROOM2000/2001/20B0/20B1 wird dadurch unsichtbar (vorher
-  sichtbar); das Dossier fuehrt die Abweichungen nur fuer CORE00. (M2) die tragende C1-Aussage (Takt HINTER
+  im Port nicht portierten Routinen — gemessen: Effekt 0x0b in ROOM2000/2001/20B0/20B1 wird dadurch nicht mehr gezeichnet
+  (master: Nenngroesse; am Bildschirm nur, wenn der angezeigte Schnitt die Lage deckt); das Dossier fuehrt die
+  Abweichungen nur fuer CORE00. (M2) die tragende C1-Aussage (Takt HINTER
   `re15_game_step` in `main.c`) hat keine automatisierte Pruefung — ein Zurueckschieben bliebe gruen.
 * Dazu Hinweise (Bank-5-Satz-Tor, FX-Log blind fuer unsichtbare Plaetze, Part=Bone-Annahme ungesichert, uninitialisierte
-  Gore-Tinte (Altbestand), C9-exe-Test unbesetzt, Suite-Zielzeile).
+  Gore-Tinte (Altbestand), Suite-Zielzeile, C9-exe-Test unbesetzt, Zitat Props @0x8001d1b8).
+* Eigene Messungen: C1 an der exe reproduziert (Muendung F360 `frame=1 fl=93`), C3 bei Fenster x3 nachgemessen (nur F330
+  anders, 16434 px, nur Leon + Zombie), Suite 423/430 mit sieben Last-Abrissen, alle sieben einzeln gruen.
 
 ---
 
@@ -102,6 +106,22 @@ Commit-Messages `589b1dc7`, `a673951e`, `6c23c273`, `e56332a2`, `6b8e6f16` trage
 * Port-Lichtmodell: Typ 0 = positional, Reichweite = Helligkeit >> 4 (`light_common.c:131-151`) — der Umbau wirkt also
   wie im Original ueber die Lichtrechnung je Figur. Satzlayout `re15_light_cut_t` passt zu den Stores (+3, +10..12,
   +0x1c/1e/20, +0x26).
+* Lichtrechnung je Figur im Original: `FUN_8001e8c8` ruft `jal 0x80053fc0` @0x8001e94c (Spieler @0x8001d09c, Entitaeten
+  @0x8001d108). Nach der Latch-Loeschung folgt als ERSTES `jal 0x80039ca0` @0x8001d1b8 (Tabelle 0x800af33c, Anzahl
+  0x800afbb7, Eintraege aus FUN_80039b2c, je `FUN_80053fc0`; Katalog: "NPC render"), erst danach die Props
+  `jal 0x8002c18c` @0x8001d1c0 (Obj-Pool 0x800b3f98). Die Port-Kommentare nennen
+  fuer "Props danach" nur @0x8001d1c0 — die Aussage stimmt, das genauere Zitat beginnt bei @0x8001d1b8 (H7).
+* Delay-Slots des Lesers (selbst nachgelesen, alle vom Port richtig abgebildet): `8001ce6c ori a2,zero,0x28` im Slot des
+  `beq` (Kopiergroesse 40, wird auch im Latch-0-Pfad ausgefuehrt); `8001cea4 addu a1,a1,v0` (QUELLE = Satz, Ziel
+  [0x800ac77c] = Sicherung); `8001ced0 ori a2,a2,0x2c` (Ausgabe SVECTOR 0x1f80002c); `8001d0a0 sw a0,0(s0)` (aktuelle
+  Entitaet = Spieler 0x800aca54 vor `jal 0x8001e8c8`); `8001d10c addiu s0,s0,-1` (Zaehler nur fuer AKTIVE Entitaeten);
+  `8001d1b0 addu a0,a0,v0` (Rueckkopie: Ziel = Satz, Quelle = Sicherung); `8001d1b4 sb zero,0(s0)` liegt HINTER dem Slot,
+  also nach der Rueckkopie.
+* **Nachgemessen bei Fenster x3** (Regel: FRAMEDUMP + `RE15_WINDOW_SCALE=3`; der Bauer mass bei x1): Laeufe
+  `gp_c3_licht_x3` (`RE15_FORCE_LICHT=330`) gegen `gp_c3_ohne_x3`, ROOM1140, Bilder 328..332 (960x720): F328/329/331/332
+  **0 px**, **F330 16434 px** (bbox x 20..543, y 214..510; ~9 x 1828 des Bauers). debug.log: `[licht] F330 Latch -> Cut 0
+  Licht2 Typ 0 Farbe (210,140,80) Lage (-6400,-800,-17600) Hell 6000`. Differenzbild `build/r34g_c/gp_c3_F330_ohne_mit_
+  diff_x3.png`: nur Leon und der fressende Zombie heller/orange, Tisch, Tassen, Aschenbecher, Pflanze unveraendert.
 
 ### 2.4 C4 Ton, C7, C8
 * C4: Bindung aller vier Haken beim Start (`main.c:3826`), Weiche wie §1; Zusatzbaenke = Kopie des ARMS-Laders
@@ -156,8 +176,22 @@ faellt aber unter die im Dossier genannte Regel `platform/pc/src/*.c` ausser `re
 unit_re2_gore_render, unit_1090_fire_pin, probe_1090_flame_touch, unit_1090_flame_out_pin, unit_autofire_pin,
 unit_r26_mg_blut, unit_r30_granate, unit_r30_irons_tisch_licht, r30b_muendungshoehe` — 15/15 gruen;
 `integration_r30_granate_laden` (218.6 s) und `integration_fx_region_cull` — gruen.
-### 5.3 Volllauf
-(laeuft — Ergebnis folgt)
+### 5.3 Volllauf (Gegenpruefung, `local_build.sh test`, Stand 75d73484)
+Log des Bauers vorher gesichert (`build/r34g_c/gp_sicherung_bauer_endlauf5_ctest.log`), eigener Lauf
+`build/r34g_c/gp_suite_lauf1_ctest.log`: `98% tests passed, 7 tests failed out of 430`, 576.90 s, Abschluss
+`!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8)`. Rot NUR exe-Tests, alle mit dem Abrissbild "exit=1 ohne
+Logmeldung": `integration_r30_cut_blitz` (Lauf A exit=1 nach 13.6 s), `integration_elza_vollstart` (19.7 s, PL04 nie
+geladen), `integration_r30_granate_laden` ("abgerissen (exit=1"), `integration_r30_irons_tisch_laden`/`_bild`/`_licht`
+(exit=1), `integration_r30_sicherung_laden` (exit=1). Waehrend des Laufs liefen die Suiten der Spuren A und B parallel
+(`ctest --test-dir re15_port/build_r34_b`, zwei fremde `re15_pc.exe`). `integration_r30_granate_laden` war 20 min vorher
+EINZELN gruen (218.6 s, §5.2). Einzel-Wiederholung der sieben: §5.4.
+
+### 5.4 Einzel-Wiederholung der sieben Roten (`build/r34g_c/gp_suite_lauf1_rote_einzeln.log`)
+`cut_blitz` Passed 70.85 s, `granate_laden` 95.57 s, `irons_tisch_laden` 30.71 s, `irons_tisch_bild` 56.49 s,
+`irons_tisch_licht` 47.74 s, `sicherung_laden` 46.96 s; `elza_vollstart` erst erneut exit=1 nach 14.8 s (debug.log endet bei
+`[flow] pselect enter`, kein Absturzcode), im naechsten Einzellauf `Passed 100.22 sec`. Damit: kein reproduzierbares Rot,
+dasselbe Bild wie beim Bauer (5 Laeufe). Die Zielzeile `LOCAL-BUILD-OK (all)` ist auch in der Gegenpruefung NICHT erreicht
+(H5).
 
 ---
 
@@ -185,7 +219,14 @@ t= 0..27  slot 0..5  id=0b A=41 cursor=0 flags=03 sichtbar(neu)=1 sichtbar(maste
 = master zeichnete diese 18 Plaetze 28 Takte lang in Nenngroesse (falsch: quadratisch, ohne Halte-Phase und ohne
 Routine 42), der neue Stand zeichnet sie mit defW 1 (0-Pixel-Quad) GAR NICHT. Im Original werden sie nach der Halte-
 Zaehlung (row[0x16] = 0/5/10/15/20/25) sichtbar (Zeile 1, h 0x19c4, Routine 42). Beides weicht vom Original ab; der
-neue Stand macht einen vorher sichtbaren Raumeffekt unsichtbar, und das Dossier nennt es nicht (M1).
+neue Stand macht einen vorher gezeichneten Raumeffekt unsichtbar, und das Dossier nennt es nicht (M1).
+
+Umfang (vollstaendig gezaehlt): `Sce_espr_on` mit Effekt 0x0b/0x0d steht in genau 4 RDTs (ROOM2000/2001/20B0/20B1, je 3x
+0x0b); kein Engine-Code spawnt 0x06/0x0b/0x0d direkt (grep; die RE2-Gore-Bruecken nutzen Ids 0/5/7/8, deren Zeilen alle
+0x1000 tragen). Die Textur ist da (`[esp] effect TIM (id 0x0b) -> slot 39: 256x104`, eigener Lauf `gp_2000`). Ob die 18
+Plaetze am Bildschirm erscheinen, entscheidet der Region-Test des angezeigten Schnitts: beim Debug-Sprung (Ankunft
+(4350,−1800,−20500)) liegen sie ausserhalb (FX-Log leer, auf master ebenso gecullt); die Lage (−23900..−22700, −5300,
+11200) liegt bei Tuer-AOT slot 4 (−27600, 9800) — eine Ankunft dort ist NICHT an der exe gemessen.
 
 ### 6.3 Weitere Wirkungen
 * E10 verschiebt ALLE Partikel um ein Bild nach vorn (gewollt); damit auch den BANG der Routine 9 (Pistolen-Schuss-SE ein
@@ -207,7 +248,7 @@ Waffen-Log, Explosionslicht, RE2-Aufschlaege — brauchen Spur A/D. Nicht zugeor
 
 | Nr | Schwere | Ort | Befund | Beleg | Vorschlag |
 |---|---|---|---|---|---|
-| M1 | mittel | `platform/pc/src/fx_plattform_pc.c:81-91`, `main.c:406-424` | defW/defH jetzt fuer JEDEN Row-VM-Platz aus der Zeile. Fuer Raum-Effekte mit im Port nicht portierten Routinen friert das die Anfangsgroesse der Zeile ein; Effekt 0x0b (ROOM2000/2001/20B0/20B1, beim Betreten) wird dadurch unsichtbar (vorher sichtbar). Das Dossier (`bau_c.md` §C2, "Abweichungen") listet nur CORE00. | §6.1/§6.2; Routine 41 @0x80018ef4, 42 @0x80018f98 (`sh v0,6(v1)` @0x80019064), 25 @0x80017fa4 (`sh … 4/6(v1)` @0x80017fc8/d8); Messung defW 1 gegen 4096, t 0..27 | Nicht zurueckbauen (Zeichenpfad ist byte-true). Kollaterale Wirkung im Dossier fuehren; INTEGRATIONSWUNSCH an Spur A (Routinen 41/42, 24/25, 13/19 portieren — `re15_esp.c` gehoert A); Sichtabnahme ROOM2000 nach A. |
+| M1 | mittel | `platform/pc/src/fx_plattform_pc.c:81-91`, `main.c:406-424` | defW/defH jetzt fuer JEDEN Row-VM-Platz aus der Zeile. Fuer Raum-Effekte mit im Port nicht portierten Routinen friert das die Anfangsgroesse der Zeile ein; Effekt 0x0b (ROOM2000/2001/20B0/20B1, beim Betreten, 18 Plaetze) wird dadurch nicht mehr gezeichnet (master: Nenngroesse 0x1000; am Bildschirm nur, wenn der angezeigte Schnitt die Lage deckt — beim Debug-Sprung nicht). Das Dossier (`bau_c.md` §C2, "Abweichungen") listet nur CORE00. | §6.1/§6.2; Routine 41 @0x80018ef4, 42 @0x80018f98 (`sh v0,6(v1)` @0x80019064), 25 @0x80017fa4 (`sh … 4/6(v1)` @0x80017fc8/d8); Messung defW 1 gegen 4096, t 0..27 | Nicht zurueckbauen (Zeichenpfad ist byte-true). Kollaterale Wirkung im Dossier fuehren; INTEGRATIONSWUNSCH an Spur A (Routinen 41/42, 24/25, 13/19 portieren — `re15_esp.c` gehoert A); Sichtabnahme ROOM2000 nach A. |
 | M2 | mittel | `platform/pc/main.c:5439/5522/7516/10703` | Die tragende C1-Aussage (ESP-Takt hinter `re15_game_step`) ist durch keinen Test gesichert; T1-T6 pruefen nur den Wrapper. Ein Zurueckschieben (Merge-Aufloesung mit A/D) bliebe gruen. | `grep` tests/: 0 Treffer fuer RE15_FX_LOG; Bauer: "Kein Pin gebrochen" | exe-Pin (integration, RE15_FX_LOG): ROOM1140, `RE15_GIVE=3:15 RE15_EQUIP=3`, Schuss F360 -> erste Zeile `id=2 sub=0` im Spawnbild mit `frame=1` und `fl=93` (reproduziert `gp_c1_hg`). Mutationsprobe: Takt vor den Schritt -> rot. |
 | H1 | hinweis | `fx_plattform_pc.c:216-217` | Satz-Tor 0x21 wird auch auf Bank 5 angewandt; im Original springt Tabelleneintrag [5] (0x80045130) ohne Tor direkt auf `lw a0,8(v0)`. | `table 0x80010e70 6`; `dis 0x80045024`: Tore nur @0x800450bc/d0/e4/f8/11c | Tor nach BANKNUMMER (0/1/2/4: 0x21, 3: 0x19, 5: keins); W27 um Satz ≥ 0x21 fuer Bank 5 ergaenzen. Fuer die Granate (Bank 1/4) ohne Folge. |
 | H2 | hinweis | `main.c:259-360` (V5-FX-Log aus C0) | Die FX-Log-Zeile steht HINTER Sichtbarkeits-, Regions- und Slot-Test: unsichtbare Plaetze (Granate nach der Explosion Flags 0x61, Zuender 6..0; Kinder 0x0a) erscheinen nicht. Die Spur-A-Abnahme "Zuender 2 / Platz frei" ist an der exe damit nicht beobachtbar. | Code-Reihenfolge `pc_draw_effects` | Log-Zeile vor die Gates ziehen (mit Feld `gez=0/1`) oder die Zuender-Phasen nur per Unit-Sonde abnehmen. |
@@ -215,6 +256,7 @@ Waffen-Log, Explosionslicht, RE2-Aufschlaege — brauchen Spur A/D. Nicht zugeor
 | H4 | hinweis | `main.c:9872-9901` (Altbestand, Makro beruehrt) | Im Gore-Pfad fuellt `re15_re2z_gore_resolve` nur `min(npc_bones,16)` Eintraege von `gore_tint[32]`; das Makro liest bis `npc_zeichen_n` (≤ 32) — uninitialisierter Stapel bei mehr Meshes als Bones. | `enemy_ai_re2_zombie.c:4348-4371`, `main.c:9855-9860` | `gore_tint` vor dem Aufruf neutral (0x808080) fuellen. Nicht durch C verursacht. |
 | H5 | hinweis | `re15_port/build_r34_c` | Zielzeile `LOCAL-BUILD-OK (all)` nicht erreicht (Bauer 5 Laeufe, Gegenpruefung §5.3); alle Roten exit=1 ohne Logmeldung bzw. Wandzeit, einzeln gruen. `scripts/green.sh:20` beendet weiter `re15_pc.exe` maschinenweit. | Logs | Integration auf ruhiger Maschine; `green.sh` wie `local_build.sh:290-296` auf das eigene Bauverzeichnis begrenzen (fremde Datei). |
 | H6 | hinweis | BAUPLAN §3.3 C9 | exe-Test `test_r34_granaten` / `r34_granaten_exe.cmake` weder C noch D zugeordnet. | Orchestrator-Teilung | In der Integration anlegen (BAUPLAN §4 beschreibt den Ablauf). |
+| H7 | hinweis | `platform/pc/src/fx_plattform_pc.h` (C3-Block), `main.c:8681`, `main.c:10376` | "Props erst danach" zitiert nur `jal 0x8002c18c` @0x8001d1c0 (Obj-Pool 0x800b3f98). Das ERSTE Zeichnen nach der Latch-Loeschung ist `jal 0x80039ca0` @0x8001d1b8: Tabelle 0x800af33c (Schritt 0x6c, Zaehler 0x800afbb7, Eintraege aus FUN_80039b2c, Aufrufer @0x80042144), je `FUN_80053fc0` — Katalog und `main.c:2865` nennen es "NPC render". Es sieht das Licht ebenfalls nicht. Die NPC-Typen 0x40..0x4D selbst sind Entitaeten der Liste 0x800acc2c (Figuren-Schleife, MIT Licht) — die Port-Lage stimmt. | `dis 0x8001d184 20`, `dis 0x800396fc`, `RE_15_Quellcode_V2/FUN_80039ca0.c`/`FUN_80039b2c.c`, ghidra1 XREF 0x800afbb7 | Zitat um @0x8001d1b8 ergaenzen; welche Port-Objekte FUN_80039ca0 entsprechen, ist offen (falls sie im Port in der Figuren-Schleife laufen, bekaemen sie das Licht faelschlich). |
 
 ---
 
