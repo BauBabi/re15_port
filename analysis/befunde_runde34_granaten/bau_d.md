@@ -440,3 +440,14 @@ Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck 
   Schritte), nach drei Lastproben < 50 % (63 → 22/16/7 %) gestartet **Passed** (02:37:56-02:38:24). Ueber drei Laeufe:
   kein Test ist reproduzierbar rot, die rote Menge wechselt von Lauf zu Lauf, jeder rote Test ist ein exe-Test ohne
   Spur-D-Aufrufer (`grep re2fx platform/pc/main.c` leer; Diff zu C0 nur in den Spur-D-Dateien).
+* **Lauf 4** (`local_build.sh` all auf d3eb4fc8, Start 02:38 bei 30-47 % Last, ab 02:41 wieder 88-100 %; Suite B, ein
+  Android-Bau und weitere Baeume parallel): `99% tests passed, 3 tests failed out of 431`, `Total Test time (real) =
+  1103.50 sec`, Abschlusszeile `!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8), Log:
+  re15_port/build_r34_d/local_build_ctest.log`. Rot NUR exe-Tests, wieder eine andere Menge:
+  `integration_elza_vollstart` ((c) Szene nicht bis zur Spielfreigabe im Zeitbudget), `integration_r30_irons_tisch_licht`
+  ([P2] exit=1 vor dem Laden), `integration_r33_speichern` ([c] exit=1, Lauf unvollstaendig). Die drei Spur-D-Sonden
+  `unit_r34_re2fx`, `unit_r34_re2fx_knochen`, `unit_r34_re2fx_bild` sind in allen vier Laeufen gruen.
+* **Einzelwiederholung** nach Lauf 4 (nacheinander): irons_tisch_licht **Passed** (Last 97-100 %), r33_speichern
+  **Passed** (100 %), elza_vollstart **Passed** (100 → 76 %). Stand ueber vier Laeufe: 13 rote Eintraege in 10 verschiedenen
+  exe-Tests, KEINER reproduzierbar (jeder einzeln gruen, titel_puls bei niedriger Last); die Ziel-Zeile
+  `=== LOCAL-BUILD-OK (all)` kam unter der Dauerlast der parallelen Spuren in keinem Lauf zustande.
