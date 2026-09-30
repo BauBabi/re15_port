@@ -1,8 +1,9 @@
 # Spur G2 — ROOM1150 Irons' Buero: blinkende Schrift im Hintergrund
 
-Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code). Zweig r34n/schrift1170, Baum .claude/worktrees/r34n_schrift.
+Stufe: ERMITTLUNG + BAUPLAN + BAU. Zweig r34n/schrift1170, Baum .claude/worktrees/r34n_schrift.
 Status: Ermittlung abgeschlossen (Original gemessen, Port gemessen, Mechanismus disassembliert);
-Bauplan Abschnitt 5, Abnahmeplan 6. Stand 2026-09-30 ~09:40.
+Bauplan Abschnitt 5, Abnahmeplan 6; **Bau umgesetzt und an der echten exe abgenommen: Abschnitt 9**
+(Abschnitte 4, 5.2, 5.4, 6.5, 7.2 nach der Gegenpruefung berichtigt). Stand 2026-09-30 ~10:20.
 
 ## 0 Kurzfassung
 
@@ -258,12 +259,18 @@ Takt = SCD-Takt des Spiels (Original 2 VBlanks = VSync(2); Port 1 Bild der 30-Hz
 * In anderen Cuts: 0x45 findet keine Records mit Byte1 6..11 -> keine Wirkung.
 * Pause (g_pauseflags & 0x02000000, z.B. Item-Modal): kein SCD-Takt -> Zustand steht.
 * Zwischenszenen sub03/sub04/sub08 (eigene Faeden) laufen parallel; sub05 laeuft weiter.
-* Nach dem Statusschirm (Inventar) setzt das Original DAT_800b5457 := 2 (@0x800466dc/@0x800466fc,
-  Normalfall DAT_800b25c0 != 1) -> naechster Present ruft FUN_80021bbc mit DEMSELBEN Cut -> alle
-  Masken wieder an (Buchstaben sichtbar bis zum naechsten :=0). Ebenso nach dem Optionsschirm
-  (@0x8002e730, nur bei DAT_800aca38 & 0x40000000) und nach dem Speicherkarten-Schirm
-  (@0x80026634 in FUN_80026594, Parameter 0). Auch Cut_chg/Cut_old (Opcode 0x29/0x2a) setzen den
-  Dirty-Schalter (@0x800402f4/@0x80040354) und bauen damit neu auf.
+* ⛔ BERICHTIGT (Gegenpruefung Auflage 1, im Bau nachgemessen §9.5): Nach dem Statusschirm
+  (Inventar) setzt das Original DAT_800b5457 := **2** (@0x800466fc, Wert @0x800466dc), nach dem
+  Speicherkarten-Schirm ebenfalls := 2 (@0x80026634, Wert @0x8002661c). FUN_80021bbc springt bei
+  Dirty == 2 (@0x80021bc4 `lbu v1,21591(v1)` / @0x80021bc8 `ori v0,zero,0x2` / @0x80021bd4
+  `beq v1,v0,0x80021df8`) UEBER den Aufbau @0x80021c28 und die Cut-Schreiber @0x80021bf4/@0x80021bfc:
+  **kein Neuaufbau, Zustand bleibt stehen, work_vars[0x0C] unveraendert**; da der SCD-Laeufer im
+  Menue steht (@0x8003f040-4c), laeuft der Sleep-Rest danach weiter. Der Optionsschirm (Dirty := 1
+  @0x8002e730, nur bei DAT_800aca38 & 0x40000000) ist im Spiel nur ueber SELECT+START erreichbar
+  (@0x8001cd24-60 -> Transitions-FSM @0x8001cb08-30 startet Task 0x8002dde4 STATT des Statusschirms)
+  — dieser Weg ist im Port nicht portiert (menu_common.c:179/2395), siehe §9.1 Auflage 2.
+  Cut_chg/Cut_old (Opcode 0x29/0x2a) setzen den Dirty-Schalter := 1 (@0x800402f4/@0x80040354) und
+  bauen damit neu auf.
 
 ## 5 Bauplan
 
@@ -312,8 +319,8 @@ Die Runde-30-Fehlerklasse (Zaehler je MONITOR-Bild) tritt hier nicht auf.
 | `engine/src/room_common.c` Schritt (9), direkt nach `c->load_bg_cut(cut);` (Z. 381) | `re15_mg_aufbauen(c->rdt, cut);` | Raumlader FUN_8001d600 -> `DAT_800b5457 = 1` @0x8001daec -> FUN_80021bbc; SCD-Init (scd_room_reenter) VOR dem Aufbau wie im Original |
 | `platform/pc/main.c` Boot/CONTINUE nach `re15_bg_load_cut((int)g_scd.cam_id)` (Z. ~4739) und Sonderweg `re15_bg_load_cut(0)` (Z. ~8026) | `re15_mg_aufbauen(&rdt, <cut>);` | Session-Start/LOAD `DAT_800b5457 = 1` @0x8001d5c8 |
 | `platform/pc/src/render_pc.c` Maskenliste (Z. ~984-987, `mask_order[i] = i`) | nur sichtbare Indizes einsortieren: `if (!re15_mg_sichtbar(i)) continue;` (mask_n = Zahl der eingetragenen) | FUN_80039590 @0x800395e8-f4 |
-| `engine/src/menu_common.c` `close_phase`, gemeinsamer Abbau (Z. ~1420) | `g_scd.cam_change_pending = 1;` (Normalzweig) | @0x800466d0-fc: DAT_800b25c0 != 1 -> `sb 2,DAT_800b5457` |
-| Options-/Kartenschirm-Rueckkehr im Spiel (Port-Stellen im Bau suchen: Nachbauten von FUN_8002dfb0 / FUN_80026594, main.c ~1765 / ~2252) | `g_scd.cam_change_pending = 1;` | @0x8002e730 (nur DAT_800aca38 & 0x40000000), @0x80026634 (Parameter 0) |
+| ~~`engine/src/menu_common.c` `close_phase`~~ | ⛔ ENTFAELLT (Auflage 1): Original schreibt Dirty := 2 | @0x800466fc (Wert @0x800466dc) -> Sprung @0x80021bd4 ueber @0x80021c28 |
+| ~~Options-/Kartenschirm-Rueckkehr~~ | ⛔ ENTFAELLT (Auflagen 1/2): Kartenschirm Dirty := 2; Optionsschirm im Spiel im Port nicht portiert | @0x80026634 (Wert @0x8002661c); @0x8002e730 nur ueber SELECT+START @0x8001cd24-60 |
 | PSX: `platform/psx/src/render.c` Maskenschleife (Z. ~466-469) | `if (!re15_mg_sichtbar(i)) continue;` | wie oben; PSX-Bau hier nicht pruefbar (memory reai-v2-psx-build-gap) |
 
 Nicht anfassen: `pri_common.c` / `re15_pri.h` (die Gruppenkoepfe liest das neue Modul selbst),
@@ -350,8 +357,8 @@ Buchstaben haben Tiefe 0 = kleinster Schluessel = zuletzt gezeichnet (im Origina
 | NULL-Sektion | Zahl 0 | `addiu v0,zero,-1` / `bne` / `sb zero,0(a0)` @0x80039328-38 |
 | Gruppen 6..11, Cut 2 | die Buchstaben H E A V E N | ROOM1150/1151.RDT sprite.pri @0x0066C, Records @0x0089C..0x008C8 (Daten, nicht im Code) |
 | Sleep 20 / Periode 40 Takte | Blinktakt | ROOM1150 @0x010C8 / @0x010DE `09 0a 14 00` (Daten); gemessen 40 VBlanks je Zustand (G2_06) |
-| Neuaufbau nach Statusschirm | Dirty := 2 | `ori v0,zero,0x2` @0x800466dc, `sb` @0x800466fc |
-| Neuaufbau nach Options-/Kartenschirm | Dirty := 1 bzw. 2 | @0x8002e728/30, @0x8002661c/@0x80026634 |
+| ⛔ KEIN Neuaufbau nach Statusschirm | Dirty := 2 -> FUN_80021bbc springt @0x80021bd4 ueber den Aufbau | `ori v0,zero,0x2` @0x800466dc, `sb` @0x800466fc; @0x80021bc4/c8/d4 |
+| ⛔ KEIN Neuaufbau nach Kartenschirm; Optionsschirm (Dirty := 1) im Port nicht vorhanden | Dirty := 2 bzw. 1 | @0x8002661c/@0x80026634; @0x8002e728/30 (Weg SELECT+START @0x8001cd24-60) |
 
 Keine PORT-WAHL und keine NUTZER-VORGABE im Kern. Einzige Port-Konstruktion: `re15_mg_sichtbar(i) = 1`
 fuer i >= Zahl (nachgezeichnete R15M-Masken, die es im Original nicht gibt — Grund: das Original hat
@@ -373,10 +380,14 @@ dort RDT[0] = 0, der Opcode findet also nichts; die Port-Masken sollen unveraend
    AN- und AUS-Laeufe wechseln sich ab, jeder volle Lauf **genau 20 Bilder**, Umschaltbild = Bild der
    0x45-Zeile im Trace; max |d| 0 gegen die jeweilige Referenz. Dasselbe fuer 1151. (Vorher: 101/101 AN.)
 4. **Debug-Sprung + Cut-Wechsel:** `RE15_DEBUG_JUMP=1150@240`, in Cut 1 und ueber RVD-Satz 6 (1 -> 2)
-   nach Cut 2 laufen (`RE15_PLAYER_POS` + `RE15_INPUT_SCRIPT`) oder `RE15_FORCE_CUT`: nach dem Eintritt
-   in Cut 2 zuerst AN (Aufbau), erstes AUS erst beim naechsten :=0 von sub05.
-5. **Statusschirm:** in Cut 2 waehrend eines AUS-Laufs das Inventar oeffnen/schliessen
-   (`RE15_INV_OPEN_AT`): nach dem Schliessen AN bis zum naechsten :=0 (Original @0x800466fc).
+   nach Cut 2 laufen (`RE15_PLAYER_POS` + `RE15_INPUT_SCRIPT`): nach dem Eintritt
+   in Cut 2 zuerst AN (Aufbau), erstes AUS erst beim naechsten :=0 von sub05. ⛔ BERICHTIGT
+   (Auflage 4): NICHT mit `RE15_FORCE_CUT` — der setzt in pc_cam_present_apply JEDES Bild pending,
+   baut also jedes Bild neu auf, das Blinken ist darunter unsichtbar.
+5. **Statusschirm (BERICHTIGT, Auflage 5):** in Cut 2 waehrend eines AUS- und eines AN-Laufs das
+   Inventar oeffnen/schliessen: der Zustand beim Schliessen == Zustand beim Oeffnen, das naechste
+   Umschalten kommt nach dem REST des Sleep (SCD stand im Menue), kein Aufbau, work_vars[0x0C]
+   unveraendert (Original Dirty := 2 @0x800466fc -> Sprung @0x80021bd4). Gemessen §9.5.
 6. **Andere Raeume (7.1), je ein Messlauf mit `RE15_MG_LOG` + `RE15_PRI_LOG` + Framedump:** ROOM3000
    Cut 0 in der Zombie-Variante (Flag (4,9) = 1 -> (5,0) = 0) -> 0 von 43 Masken gezeichnet;
    ROOM3071 sub02 (Elza-Szene) -> Lichtfolge Gruppe 13..3 je 20 Takte in Cut 9; ROOM1211 Cut 7 nach
@@ -415,10 +426,11 @@ neuer Softlock, der bestehende bleibt unberuehrt.
 
 * **Kein Softlock:** Opcode 0x45 laeuft weiter im selben Takt (wie heute `op_unknown`), keine Wartebedingung
   haengt an Masken. Die Pfadlaenge (3) ist unveraendert.
-* **Dirty-Schalter nach Menues** (Haken menu_common.c / Options / Karte): setzt wie das Original
-  work_vars[0x0C] (alter Cut) := gezeigter Cut (@0x80021bf4). Ein spaeteres `Cut_old` nach einem
-  Inventarbesuch kehrt damit zum gezeigten Cut zurueck — Original-Verhalten; Zwischenszenen, die
-  Cut_old benutzen, lassen kein Inventar zu. Ein Pin sollte work_vars[0x0C] nach dem Schliessen pruefen.
+* ⛔ BERICHTIGT (Auflage 1): **kein Dirty-Schalter nach Menues.** Das Original schreibt nach dem
+  Statusschirm und dem Kartenschirm Dirty := 2 und ueberspringt damit Aufbau UND die Cut-Schreiber
+  (@0x80021bd4 -> 0x80021df8): work_vars[0x0C] bleibt, ein spaeteres `Cut_old` kehrt zum Cut VOR dem
+  letzten Dirty-1-Apply zurueck. Der Port hat keinen Menue-Haken und bekommt keinen; gemessen:
+  wv0C vor und nach dem Inventar gleich (§9.5).
 * **Nachgezeichnete Masken (R15M):** bleiben unberuehrt (Zahl 0 -> sichtbar). R15M gibt es nur bei
   NULL-Sektion (main.c ~5697), also nie gemischt mit Original-Records im selben Cut.
 * **Spur B (Hebetisch ROOM1150/1151):** keine Ueberschneidung — die Blink-Gruppen gibt es nur in Cut 2,
@@ -451,35 +463,117 @@ neuer Softlock, der bestehende bleibt unberuehrt.
 
 ## 9 Umsetzung (Stufe BAU)
 
-Stand: Bau begonnen 2026-09-30. Abschnitte werden fortlaufend gefuellt.
+Stand 2026-09-30 ~10:30. Bau im Baum `.claude/worktrees/r34n_schrift`, Zweig `r34n/schrift1170`.
+Ergebnis: **die Leuchtschrift "HEAVEN" in ROOM1150/1151 Cut 2 blinkt jetzt wie im Original** —
+20 Bilder AN / 20 Bilder AUS, Umschaltbild = Bild des Opcode-0x45-Takts von sub05, am Lade-Weg und
+nach Debug-Sprung mit Zonen-Kamerawechsel an der echten exe gemessen (§9.5).
 
 ### 9.1 Auflagen der Gegenpruefung (abgehakt / abgelehnt mit Beleg)
 
-(in Arbeit)
+| Nr | Auflage | Umsetzung / Beleg |
+|---|---|---|
+| 1 | Kein Neuaufbau nach Statusschirm und Kartenschirm | **erfuellt.** Kein Haken in menu_common.c und am Karten-/Speicherschirm. Beleg im Code (Kopf `re15_masken_gruppen.h`, Kommentar am Haken in main.c): Dirty := 2 @0x800466fc (Wert @0x800466dc) bzw. @0x80026634 (Wert @0x8002661c), FUN_80021bbc @0x80021bc4/@0x80021bc8/@0x80021bd4 springt bei 2 nach 0x80021df8 ueber @0x80021bf4, @0x80021bfc, @0x80021c28. Dossier 4, 5.2, 5.4, 6.5, 7.2 berichtigt. Gemessen (§9.5, G2_12): Inventar in AUS- und AN-Phase -> kein Aufbau, Zustand bleibt, wv0C unveraendert. |
+| 2 | Optionsschirm-Haken nur mit Nachweis | **kein Haken (abgelehnt: im Port gibt es keinen Ort dafuer).** Selbst disassembliert: im Spiel erreicht man den Optionsschirm nur ueber SELECT+START — @0x8001cd24 `ori v1,zero,0x900`, @0x8001cd2c `lhu v0,DAT_800ac760`, @0x8001cd34 `andi v0,v0,0x900`, @0x8001cd38 `bne`; @0x8001cd48 aca3c \|= 0x8000, @0x8001cd58-60 aca38 \|= 0x08000000; die Transitions-FSM startet dann @0x8001cb08-30 Task 1 = 0x8002dde4 (Optionen) STATT 0x8004603c (Statusschirm, @0x8001cb38-3c). Die 1 @0x8002e730 kommt also nicht aus dem Statusschirm, und keine 2 folgt ihr (Dirty-Store-Zensus G2g). Ob sie den Apply erreicht, haengt zusaetzlich am Gate @0x8002151c (DAT_800b536c, einziger Schreiber FUN_80021634 @0x80021638) — nicht zu Ende belegt. Der Port hat diesen Weg nicht: menu_common.c:179/2395 "SELECT+START ... alternate task 0x8002dde4 ... not ported". Wer ihn portiert, muss @0x8002e730 (+ Gate) mitnehmen (§9.8). |
+| 3 | PSX vollstaendig oder gar nicht | **erfuellt:** `platform/psx/src/render.c` Maskenschleife `if (!re15_mg_sichtbar(i)) continue;` UND `platform/psx/main.c` im `re15_cam_present_tick()`-Zweig `re15_mg_aufbauen(...)`; den Raumlader deckt das gemeinsame room_common.c. PSX-Bau hier nicht pruefbar (bekannte Luecke, memory reai-v2-psx-build-gap). |
+| 4 | Blink-Abnahme ohne RE15_FORCE_CUT | **erfuellt:** Integrations-Riegel ohne FORCE_CUT (Lade-Weg-Karte); 6.4 ueber Debug-Sprung + zu Fuss (RVD). Festgehalten in 6.4, im Kopf des Riegels und am Haken in main.c: FORCE_CUT (main.c pc_cam_present_apply) setzt jedes Bild pending -> Aufbau jedes Bild -> Blinken unsichtbar; die r30-Tisch-Riegel (FORCE_CUT=2) sind deshalb kein Blink-Beleg (Stand in der Suite §9.4). |
+| 5 | 6.5 mit richtiger Erwartung | **erfuellt, gemessen** (§9.5, G2_12): AUS-Phase: := 0 F119, Menue F126..F176, AUS bis F190, := 1 F191 = 20 SCD-Takte nach F119; AN-Phase: := 1 F139, Menue F146..F196, AN bis F210, := 0 F211. wv0C = 0 vor und nach dem Menue (Mess-Zeile traegt wv0A/wv0C). Als Riegel: Lauf C des Integrations-Riegels. |
+| 6 | Aufbau-Zaehler als Pin | **erfuellt:** `RE15_MG_LOG` schreibt je Aufbau Bild, Raum, wv0A/wv0C, Cut, pri_offset, Zahl, Grund (raum/cut). Gemessen: CONTINUE genau 1 Aufbau (F0); Debug-Sprung 1240->1150: je Cut-Ereignis einer (1240 F0/F162, 1150 Eintritt "raum", F2 RVD 0->1, F318 RVD 1->2), nie zwei in Folge ohne Ereignis; Inventar: keiner. ROT/GRUEN im Integrations-Riegel: `--aufbau 1` in den Laeufen A, B und C (C = mit Statusschirm). |
+| 7 | Tabelle == gezeigter (Raum, Cut) | **erfuellt:** Aufbau liest `rdt->raw`/`raw_size`/`cuts[cut].pri_offset` des AKTUELLEN Parse (masken_gruppen.c), kein eigener Puffer. Aufbau-Zeile == `[pri]`-Zeile in allen Laeufen: Debug-Sprung aus ROOM1240 -> 1150 Eintritts-Cut 0 `pri_offset=0x500 Zahl 2` / `[pri] cut=0 pri_offset=0x500 masks=2`; RVD Cut 1 0x51C/28; Cut 2 0x66C/54; CONTINUE 1150 und 1151 Cut 0 0x500/2 (Opcode 0x45 dort 0 Treffer, beide Masken an) und Cut 2 0x66C/54. |
+| 8 | local_build.sh nicht anfassen | **erfuellt** (unveraendert; Suite 430 >= 428). |
+| 9 | Sichtbare Aenderung in acht weiteren Raeumen ankuendigen | **teilweise:** Raeume in Dossier (7.1, §9.6), Commit-Text und Versionshinweis-Vorschlag (§9.6); Vorher/Nachher-Bilder §9.5; DuckStation-Gegenprobe ROOM3000 Cut 0 siehe §9.8. |
+| 10 | Begruendung im Code-Kommentar praezisieren | **erfuellt:** Kommentar am Haken in main.c nennt die Dirty-1-Setzer @0x8001d5c8/@0x80021514/@0x800402f4/@0x80040354, room_common.c den Raumlader @0x8001daec; "einen Dirty-2-Pfad hat der Port nicht und bekommt keinen". |
 
 ### 9.2 Dateien und Haken
 
-(in Arbeit)
+Neu (Spur G2):
+* `re15_port/include/re15_masken_gruppen.h`, `re15_port/engine/src/masken_gruppen.c` — Record-Tabelle
+  DAT_800b2584 (Byte0/Byte1), Zahl = RDT[0]; `re15_mg_aufbauen` (FUN_800392d4), `re15_mg_setzen`
+  (FUN_800396a8), `re15_mg_sichtbar` (FUN_80039590 @0x800395f0-f4), `op_col_chg_set` (Opcode 0x45,
+  @0x800428d4). Dateiname nicht `<thema>_<raum>.c`, weil raumuebergreifend (Gegenpruefung §4).
+* Pin `tests/unit/probe_r34n_g_maskgrp.c` -> `unit_r34n_g_maskgrp`; Auswerter
+  `tests/unit/probe_r34n_g_schrift_eval.c`; Integrations-Riegel
+  `tests/integration/test_r34n_g_schrift1150.cmake` -> `integration_r34n_g_schrift1150`; beide
+  registriert in `tests/unit/probes/r34n_g_schrift.cmake`.
+* Werkzeuge `re15_port/tools/r34n_g/beleg_blinkt.py` (Belegbild), `ss_masken_records.py`
+  (Record-Tabelle eines Savestates), `ss_zensus_raeume.py` (Stage/Raum/Cut aller Savestates).
+* `tests/unit/probe_r34n_g_karte.c` erweitert: jeder Raum, `p=x,z`, `f=bank:bit` (fuer 6.6).
+
+Haken in gemeinsamen Dateien (je 1-6 Zeilen, keine fremde Zeile umformatiert):
+
+| Datei | Haken | Beleg |
+|---|---|---|
+| `engine/src/scd_vm.c` register_opcodes | `s_op_table[0x45] = op_col_chg_set;` (Block mit extern) | Tabelle @0x800745bc -> 0x800428d4 |
+| `engine/src/room_common.c` Schritt 9 | `re15_mg_aufbauen(c->rdt, cut, "raum");` + include | Raumlader Dirty := 1 @0x8001daec -> @0x80021c28 |
+| `platform/pc/main.c` pc_cam_present_apply, Zweig `re15_cam_present_tick()` | `re15_mg_aufbauen(rdt_ok ? rdt : NULL, active_cut_idx, "cut");` | Dirty-1-Setzer @0x8001d5c8/@0x80021514/@0x800402f4/@0x80040354 |
+| `platform/pc/src/render_pc.c` Maskenliste | nur `re15_mg_sichtbar(i)` in `mask_order` | FUN_80039590 @0x800395f0-f4 |
+| `platform/psx/main.c` Zweig `re15_cam_present_tick()` | `re15_mg_aufbauen(re15_test_rdt_ok ? &re15_test_rdt : NULL, target_cut, "cut");` | wie PC |
+| `platform/psx/src/render.c` Maskenschleife | `if (!re15_mg_sichtbar(i)) continue;` | wie PC |
+
+Kein Haken am Boot-/CONTINUE-Weg (Plan 5.2 Zeile 4): der setzt schon `g_scd.cam_change_pending = 1`
+(main.c ~4451 Neues Spiel, ~4701 CONTINUE), der erste Praesentations-Apply baut also im ersten Bild
+auf — gemessen: `[maskgrp] F0 ... Aufbau Cut 2 ... Grund cut` nach CONTINUE. Auch kein Haken am
+Sonderweg `re15_bg_load_cut(0)` (main.c ~8026): der gehoert zur Mess-Schiene RE15_CLIP_TEST in
+ROOM1170 (keine 0x45-Stelle).
+
+Reihenfolge im Bild (Plan 5.3) eingehalten: Aufbau im Praesentations-Apply am Bildanfang -> SCD-Takt
+(0x45) -> pri-Block -> end_frame. Beim Tuerweg baut Schritt 9 im Bild des Raumwechsels auf; dieses
+Bild ist wegen der Tuer-Blende (Pegel 0x7FFF, Schwarz) nicht sichtbar, ab dem naechsten Bild passen
+Maskenliste und Tabelle zum neuen (Raum, Cut) (gemessen §9.1 Nr 7).
 
 ### 9.3 Pins und Mutationsproben
 
-(in Arbeit)
+* `unit_r34n_g_maskgrp` (echte RDT-Bytes, echte VM, echter Raumstart): Teil A Aufbau/Opcode (13
+  Pruefungen), Teil B Takt 1150 und 1151 (Wechsel bei Takt 39 59 79 ... 199 = exakt 20),
+  Teil C Cut 2 -> 0 -> 2 in einer AUS-Phase (sofort AN, naechstes AUS erst beim naechsten := 0).
+  **Mutation:** `s_op_table[0x45] = op_col_chg_set` entfernt -> 8 FAIL; zurueck -> OK.
+* `integration_r34n_g_schrift1150` (echte exe, Lade-Weg, ohne FORCE_CUT): 1150 und 1151 je 101 Bilder
+  gegen Log-Orakel und NO_PRI-Referenz, 4 volle Laeufe je 20 Bilder, AN-Bild 558 Bildpunkte
+  Unterschied (== Dossier 3.3). **Mutationen:** Filter in render_pc.c aus -> 42 Bilder falsch, 0 AUS,
+  ROT; Aufbau-Haken in main.c aus -> "kein Aufbau Cut 2", 101 Bilder falsch, ROT. Beide zurueckgesetzt
+  und neu gebaut.
 
 ### 9.4 Suite
 
-(in Arbeit)
+(laeuft)
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder)
 
-(in Arbeit)
+Alle Laeufe mit einer KOPIE der exe (re15_pc_g2b/c/d.exe), `RE15_WINDOW_SCALE=3`, beschleunigter
+Renderer, `RE15_FRAMEDUMP` (Readback des fertig komponierten Bilds vor Present). Auswertung
+`port_schrift1150_eval.py` (Referenzen AN/AUS aus BSS + Atlas, max|d| 0) bzw. der Riegel-Auswerter.
 
-### 9.6 Abweichungen vom Plan (mit Grund)
+| Lauf | Weg | Ergebnis | Beleg |
+|---|---|---|---|
+| Lade-Weg 1150 | CONTINUE, Karte Cut 2 | 121/121 Dumps F100..F220 exakt AN oder AUS; AN F100-118, AUS 119-138, AN 139-158, AUS 159-178, AN 179-198, AUS 199-218; Log: := 0 F119/F159/F199, := 1 F139/F179/F219; 1 Aufbau | `G2_10_port_blinkt_1150_ladeweg.png`, `G2_10_eval_ladeweg_1150.txt` |
+| Lade-Weg 1151 | wie oben | identisch (gleiche Bilder, gleiche Takte) | `G2_10_eval_ladeweg_1151.txt` |
+| Debug-Sprung + zu Fuss | JUMP 1150@240, `RE15_PLAYER_POS=-19000,-13700,1684`, `RE15_INPUT_SCRIPT=U2.4` (Basis Spielbilder, Start 250) | Cut 0 (Aufbau raum, Zahl 2) -> F2 RVD Cut 1 (Zahl 28) -> F318 RVD Cut 2 (Zahl 54): AN F318-324 (Aufbau), AUS ab F325 (:= 0 von sub05), dann 20/20 | `G2_11_port_debugsprung_rvd_cut2.png`, `G2_11_eval_debugsprung.txt` |
+| Inventar AUS-Phase | CONTINUE, START F125 / nach 36 Bildern zu | AUS F119-125, Schirm F126-176, AUS F177-190, AN ab F191 (20 SCD-Takte nach F119), kein Aufbau, wv0C 0/0 | `G2_12_port_inventar_in_aus_phase.png`, `G2_12_eval_inventar_aus.txt`, `G2_12_mglog_inventar_aus.txt` |
+| Inventar AN-Phase | START F145 | AN F139-145, Schirm F146-196, AN F197-210, AUS ab F211 | `G2_12_eval_inventar_an.txt`, `G2_12_mglog_inventar_an.txt` |
+| Eintritts-Cut 0 | CONTINUE 1150/1151 Cut 0 | Aufbau `pri_offset=0x500 Zahl 2`, 0x45 dort 0 Treffer | (Log, §9.1 Nr 7) |
 
-(in Arbeit)
+Selbst angesehen: G2_10/G2_11/G2_12 — die Buchstaben erscheinen im AN-Zustand als dunkle Lamellen
+auf Rot, im AUS-Zustand gleichmaessiges Rotlicht, wie im Original-Bildspeicher (G2_05).
+
+### 9.6 Abweichungen vom Plan (mit Grund) und sichtbare Aenderung in anderen Raeumen
+
+* Menue-/Karten-/Options-Haken entfallen (Auflagen 1/2, §9.1).
+* Boot-/CONTINUE-Haken entfaellt (§9.2: der Weg setzt schon pending, der erste Apply baut auf; gemessen).
+* `re15_mg_aufbauen` hat einen dritten Parameter `grund` (nur fuer die Mess-Zeile, Auflage 6).
+* Mess-Zeile schreibt zusaetzlich wv0A/wv0C (Auflage 5).
+* Byte0 bekommt das GANZE op2-Byte (@0x800396e0 `sb a1,0(v1)`), gezeichnet wird Bit 0
+  (@0x800395f0) — wie im Original (Pin Teil A: `45 06 02` -> Byte0 2 -> unsichtbar).
+
+**Sichtbare Aenderung in acht weiteren Raeumen (Auflage 9), Vorschlag fuer den Versionshinweis:**
+"Vordergrund-Masken, die ein Raumskript per Opcode 0x45 ausschaltet, werden jetzt wie im Original
+nicht mehr gezeichnet: ROOM1150/1151 Cut 2 (Leuchtschrift blinkt), ROOM1211 Cut 7 (nach Flag (5,2)),
+ROOM3000/3001 und ROOM3010/3011 in der Zombie-Variante (Flag (4,9)/(4,10) -> Figuren vor sonst
+verdeckenden Vordergrundteilen), ROOM3071 Cut 9 (Lichtfolge der Elza-Szene), ROOM5060/5061 Cut 11
+(nach Flag (5,4))."
 
 ### 9.7 Commits
 
-(in Arbeit)
+20a7761d (Modul + Haken), f52dc5ce (Pin), 97e47445 (Abnahme exe), b0fc996a (Auflage 5),
+cdea3286 (Integrations-Riegel) — weitere siehe `git log`.
 
 ### 9.8 Offene Punkte
 
