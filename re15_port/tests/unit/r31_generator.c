@@ -19,8 +19,11 @@
  *      Abnahme (4:238, sub18 = 4:243, Bestaetigungston) genau im Bild k+31; Zeiger bleibt 80.
  *   C  Falsche Stellungen loesen nie aus — auch nicht, wenn der Zeiger auf dem Weg nach 90
  *      durch die 80 faehrt; eine Aenderung im Stillstandsfenster startet die 30 neu.
- *   D  Eingabesperre: waehrend der Fahrt und der 30 Bilder bewegt der D-Pad den Cursor
- *      nicht und Quadrat legt keinen Schalter um; danach wieder.
+ *   D  Eingabesperre — SEIT RUNDE 34 NACHT NUR DIE ENDSPERRE (Nutzer 2026-09-30: "man soll
+ *      sich frei bewegen koennen Ausser ganz am Ende"): nach einem ZWISCHEN-Schalter bewegt
+ *      der D-Pad den Cursor waehrend Fahrt und Ruhe (keine Sperre; RE1.5 setzt Bank 2 Bit 7
+ *      in sub01..sub17 nie, nur @0x01736/@0x017B8); ist die Maske die Loesung (0x155,
+ *      @0x012BE..0x012E2), steht der Cursor und Quadrat legt nichts um, bis zur Abnahme.
  *   E  Wiedereintritt nach dem Loesen: Zeiger sofort 80, keine Sperre, kein zweiter Ton.
  *   F  ROOM11F1 (Elzas Variante) verhaelt sich wie ROOM11F0.
  *
@@ -28,6 +31,9 @@
  *   op_evt_exec-Haken entfernt                   => B ROT (Abnahme im Bild nach dem Bit)
  *   RE15_PANEL_RUHE_BILDER 30 -> 0               => B ROT (Abnahme bei k+1 statt k+31)
  *   Pad-Maske in game_step_common.c entfernt     => D ROT
+ * Runde 34 Nacht (Teil D neu, Nachweis in analysis/befunde_runde34_nacht/C_generator.md §9.4):
+ *   Endsperre aus (sperrt() = 0)                 => D ROT (Cursor faehrt bei Maske 0x155)
+ *   alte Runde-31-Zwischensperre wieder an       => D ROT (Cursor steht nach Schalter 7)
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -276,10 +282,17 @@ static void teil_c(void)
           b80 >= 0 && abnahme == b80 + 1 + RE2_SLEEP_BILDER);
 }
 
-/* ================= D: Eingabesperre ============================================== */
+/* ================= D: Eingabesperre — nur am Ende (Runde 34 Nacht) ================ */
+static unsigned maske_lesen(void)
+{
+    unsigned m = 0;
+    for (int i = 0; i < 10; i++) if (re15_game_flag_get(5, (uint8_t)(13 + i))) m |= 1u << i;
+    return m;
+}
+
 static void teil_d(void)
 {
-    printf("\n=== D: Eingabesperre (RE2 Bank 2 Bit 7 @0x01110..@0x01818) ===\n");
+    printf("\n=== D: Eingabesperre nur am Ende (Runde 34 Nacht; Endsperre = RE2 Bank 2 Bit 7 @0x01110..@0x01818) ===\n");
     if (!room_boot(0x11F0)) { printf("FAIL: RDT fehlt\n"); g_fail++; return; }
     re15_game_flag_set(4, 238, 0);
     raetsel_scharf();
@@ -289,51 +302,62 @@ static void teil_d(void)
     CHECK("Cursor-Prop obj 0 vorhanden (@0x00E54)", ci >= 0);
     if (ci < 0) return;
 
-    /* Freie Probe: HOCH bewegt den Cursor (sub02 @0x012F6 Speed_set(2,+200)). */
-    int32_t z0 = g_scd.props[ci].z;
-    for (int f = 0; f < 3; f++) frame(RE15_PAD_BIT_UP, (uint16_t)(f == 0 ? RE15_PAD_BIT_UP : 0));
-    for (int f = 0; f < 2; f++) frame(0, 0);
-    int32_t frei_dz = g_scd.props[ci].z - z0;
-    printf("  ohne Fahrt: 3 Bilder HOCH -> dz=%d\n", (int)frei_dz);
-    CHECK("GEGENPROBE: ohne Fahrt bewegt HOCH den Cursor", frei_dz > 0);
-    for (int f = 0; f < 3; f++) frame(RE15_PAD_BIT_DOWN, (uint16_t)(f == 0 ? RE15_PAD_BIT_DOWN : 0));
-    for (int f = 0; f < 2; f++) frame(0, 0);
-
-    /* Schalter 7 (+20): Fahrt 20 Bilder, dann 30 Ruhe. Waehrend der ganzen Zeit HOCH halten. */
+    /* (1) ZWISCHEN-Schalter 7 (+20): Fahrt 20 Bilder, dann 30 Ruhe. Die ganze Zeit HOCH
+     * halten — der Cursor faehrt (sub02 @0x012F6 Speed_set(2,+200)), keine Sperre. */
     maske_setzen(1u << 6);
     int32_t z1 = g_scd.props[ci].z;
-    int sperr_bilder = 0, bilder = 0;
-    unsigned m_vor = 1u << 6;
-    int umgelegt = 0;
+    int sperr_bilder = 0, bilder = 0, steh = 0;
     for (int f = 0; f < 20 + RE2_SLEEP_BILDER - 1; f++) {
-        uint16_t b = (uint16_t)(RE15_PAD_BIT_UP | RE15_PAD_BIT_SQUARE);
-        frame(b, (uint16_t)(f == 0 ? b : 0));
+        int32_t zv = g_scd.props[ci].z;
+        frame(RE15_PAD_BIT_UP, (uint16_t)(f == 0 ? RE15_PAD_BIT_UP : 0));
         bilder++;
         if (re15_panel_zeiger_sperrt()) sperr_bilder++;
-        unsigned m = 0;
-        for (int i = 0; i < 10; i++) if (re15_game_flag_get(5, (uint8_t)(13 + i))) m |= 1u << i;
-        if (m != m_vor) { umgelegt++; m_vor = m; }
+        if (f > 0 && g_scd.props[ci].z == zv) steh++;       /* Bild 0: Pad wirkt ab der naechsten VM */
     }
-    int32_t gesperrt_dz = g_scd.props[ci].z - z1;
-    printf("  Fahrt + Ruhe (%d Bilder) HOCH+QUADRAT gehalten: dz=%d, Sperrbilder %d, "
-           "Schalterwechsel %d\n", bilder, (int)gesperrt_dz, sperr_bilder, umgelegt);
-    CHECK("waehrend Fahrt und Ruhe bewegt sich der Cursor nicht", gesperrt_dz == 0);
-    CHECK("und Quadrat legt keinen Schalter um", umgelegt == 0);
-    CHECK("die Sperre stand in jedem dieser Bilder", sperr_bilder == bilder);
-    /* Danach frei. */
-    for (int f = 0; f < 3; f++) frame(0, 0);
-    CHECK("nach Fahrt + 30 Bildern ist die Sperre weg", re15_panel_zeiger_sperrt() == 0);
-    int32_t z2 = g_scd.props[ci].z;
-    for (int f = 0; f < 3; f++) frame(RE15_PAD_BIT_UP, (uint16_t)(f == 0 ? RE15_PAD_BIT_UP : 0));
-    for (int f = 0; f < 2; f++) frame(0, 0);
-    printf("  danach 3 Bilder HOCH -> dz=%d\n", (int)(g_scd.props[ci].z - z2));
-    CHECK("danach bewegt HOCH den Cursor wieder", g_scd.props[ci].z - z2 > 0);
-    /* Ausserhalb des Raetsels (Bank 5 Bit 0 aus) sperrt nichts, auch bei fahrendem Zeiger. */
+    printf("  Zwischenschalter 7, Fahrt + Ruhe (%d Bilder) HOCH gehalten: dz=%d, Stillstandsbilder %d, "
+           "Sperrbilder %d, Zeiger %d\n", bilder, (int)(g_scd.props[ci].z - z1), steh, sperr_bilder,
+           re15_panel_zeiger_wert());
+    CHECK("nach einem Zwischenschalter bewegt sich der Cursor in jedem Bild (keine Sperre)",
+          steh == 0 && g_scd.props[ci].z - z1 > 0);
+    CHECK("und die Sperre stand in keinem Bild", sperr_bilder == 0);
+    CHECK("der Zeiger ist trotzdem auf 20 gefahren (1 Punkt je Bild, @0x01216)", re15_panel_zeiger_wert() == 20);
+
+    /* (2) ENDSPERRE: 60 einschwingen, dann Schalter 5 -> Maske = Loesung 0x155. Ab diesem
+     * Bild HOCH+QUADRAT halten: Cursor steht, kein Schalterwechsel, Sperre in jedem Bild bis
+     * zur Abnahme (k+31). */
+    maske_setzen(0x145u);
+    einschwingen();
+    maske_setzen(RE15_PANEL_LOESUNGSMASKE);
+    int32_t x2 = g_scd.props[ci].x, z2 = g_scd.props[ci].z;
+    int k = -1, ab = -1, luecke = 0, umgelegt = 0, n = 0;
+    for (int f = 0; f < 200; f++) {
+        uint16_t b = (uint16_t)(RE15_PAD_BIT_UP | RE15_PAD_BIT_SQUARE);
+        int gesperrt_vor = re15_panel_zeiger_sperrt();
+        frame(b, (uint16_t)(f == 0 ? b : 0));
+        if (k < 0 && re15_panel_zeiger_wert() == RE15_PANEL_ZIEL) k = f;
+        if (ab < 0 && re15_game_flag_get(4, 238)) ab = f;
+        if (ab < 0) {
+            n++;
+            if (!gesperrt_vor || !re15_panel_zeiger_sperrt()) luecke++;
+            if (maske_lesen() != RE15_PANEL_LOESUNGSMASKE) umgelegt++;
+        }
+        if (ab >= 0) break;
+    }
+    printf("  Loesungsmaske: Zeiger 80 im Bild %d, Abnahme %d, %d Bilder davor: Sperrluecken %d, "
+           "Schalterwechsel %d, Cursor dx=%d dz=%d\n", k, ab, n, luecke, umgelegt,
+           (int)(g_scd.props[ci].x - x2), (int)(g_scd.props[ci].z - z2));
+    CHECK("Endsperre: gesperrt in jedem Bild ab Maske 0x155 bis zur Abnahme", k >= 0 && ab > 0 && luecke == 0);
+    CHECK("Endsperre: der Cursor steht trotz HOCH", g_scd.props[ci].x == x2 && g_scd.props[ci].z == z2);
+    CHECK("Endsperre: gehaltenes Quadrat legt keinen Schalter um", umgelegt == 0);
+    CHECK("Abnahme genau im Bild k+31 (RE2 sleep 30 @0x0171D)", ab == k + 1 + RE2_SLEEP_BILDER);
+    CHECK("nach der Abnahme keine Panel-Sperre mehr (4:238 @0x012EA)", re15_panel_zeiger_sperrt() == 0);
+    /* (3) Ausserhalb des Raetsels (Bank 5 Bit 0 aus) sperrt nichts, selbst bei Maske 0x155. */
+    re15_game_flag_set(4, 238, 0);
     re15_game_flag_set(5, 0, 0);
-    maske_setzen(0);
+    maske_setzen(RE15_PANEL_LOESUNGSMASKE);
     frame(0, 0);
-    CHECK("Raetsel aus (5:0 = 0): keine Sperre, auch wenn der Zeiger zurueckfaehrt",
-          re15_panel_zeiger_sperrt() == 0 && re15_panel_zeiger_wert() != re15_panel_zeiger_ziel());
+    CHECK("Raetsel aus (5:0 = 0): keine Sperre, auch bei Loesungsmaske", re15_panel_zeiger_sperrt() == 0);
+    re15_game_flag_set(4, 238, 0);
 }
 
 /* ================= E: Wiedereintritt nach dem Loesen ============================= */
