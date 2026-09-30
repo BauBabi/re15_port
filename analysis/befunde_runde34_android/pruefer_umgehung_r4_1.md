@@ -10,14 +10,14 @@ Ziel: ein falsches Ergebnis erzwingen (Umgehung) oder einen verschluckten Fehler
 
 ## 0. Stand / Fortschritt
 
-- [ ] 0.1 Commit-Liste und Stand aufnehmen
-- [ ] 1 Kette: veralteter Android-Satz (nur PC, abgelehnte APK, APK geloescht, --ohne-android, --only)
-- [ ] 2 Kette: sha256-Kennung der APK im Split-Satz
-- [ ] 3 Kette: make_package-PC-Pfad mit kaputtem Gate (Mutant) -> Abbruch?
-- [ ] 4 Selbsttest: eigene neue Ein-Zeilen-Mutanten (auch v2-Manifest-Teil)
-- [ ] 5 Format v2: Faelschungen
-- [ ] 6 Entpacker: Code + PC-Unit-Test + Zusatzfaelle (Pfade, Abbruch/Neustart, JNI-Fehlerpfade, SHA-256)
-- [ ] 7 Urteil
+- [x] 0.1 Commit-Liste und Stand aufnehmen
+- [x] 1 Kette: veralteter Android-Satz (nur PC, abgelehnte APK, APK geloescht, --ohne-android, --only)
+- [x] 2 Kette: sha256-Kennung der APK im Split-Satz
+- [x] 3 Kette: make_package-PC-Pfad mit kaputtem Gate (Mutant) -> Abbruch?
+- [x] 4 Selbsttest: eigene neue Ein-Zeilen-Mutanten (auch v2-Manifest-Teil)
+- [x] 5 Format v2: Faelschungen
+- [x] 6 Entpacker: Code + PC-Unit-Test + Zusatzfaelle (Pfade, Abbruch/Neustart, JNI-Fehlerpfade, SHA-256)
+- [x] 7 Urteil
 
 
 ## 0.1 Ausgangslage (gelesen, nicht gemessen)
@@ -296,3 +296,38 @@ Geraete-Leser - und liefert auf dem Geraet still den falschen Inhalt, den der sc
 Groesse). Heute ohne Folge: alle 3603 Pfade sind ASCII (Gradle-Kommentar "die Pfade sind ASCII", aber nirgends erzwungen).
 Abhilfe-Richtung: Pfade auf druckbares ASCII (0x21-0x7e plus Leerzeichen) beschraenken - in Gradle, Gate und
 `re15_abgleich_pfad_ok` - statt Unicode nachzufalten; dazu Segmentlaenge <= 251 B (U3).
+
+## 7. Endstand, Urteil
+
+Aufgeraeumt: Sandbox `build/r34a/pruefer_u1/sb` (Hardlinks - Linkzahl der Originale wieder 1; TEX.TIM 7f10f1af...,
+P07G.DO2 68306346... unveraendert), APK-Kopien und Faelschungen, Binary-Kopie. Liegen gelassen: `build/r34a/pruefer_u1/`
+{logs, mut, pc, korpus} (5 MB). Keine Temp-Reste (`re15_make_package.*`, `re15_apk_pruefen.*`, `re15_apk_satz.*`,
+`apk_gate_selbsttest_*`: 0). `git status --short release/ re15_port/ synchro/` leer. Nutzer-AVD nach kurzem Kontroll-Start:
+`/data` 4,1 G belegt / 1,5 G frei wie zu Beginn, kein re15-Paket, kein `Android/data`-Eintrag, keine u1-Dateien; Emulator
+beendet, kein qemu. Python-Schnappschuss Ende (`py_zustand_ende.txt`) == R4-Endstand (diff rc 0) - auch nach dem
+versehentlichen Alias-Aufruf (0.3).
+
+Grenze, nicht als Befund gezaehlt: B3 (sha256 aus dem Split-Satz) prueft mit DEMSELBEN `zip`, das den Satz schrieb
+(`zip -s 0`); eine zip-Attrappe im PATH, die auch `-s 0` bedient, bliebe unerkannt. Im Bedrohungsmodell von B3
+(CRC-gleiche Faelschung im Satz) haelt die Pruefung.
+
+### Befunde (schwerste zuerst)
+
+| # | Schwere | Befund | Beleg |
+|---|---|---|---|
+| H1 | hoch | Selbsttest (B4) und jede Gate-Pruefung werden NUR am Exit-Code gemessen, den der gepruefte Code erzeugt. 0-Byte-Gate / abgeschnittenes Gate / Ein-Zeilen-Mutant im Ausgangspfad: Selbsttest EXIT 0 (G1-G3 drucken dabei `SELBSTTEST-FEHLER`), make_package liefert ein veraendertes Paket aus (B2/B3), build_android `ANDROID-GATES-OK` fuer ein falsches Tuerarchiv (A9/A10) und eine v1-Liste (A2/A3) | 1, 2.1, 2.2; `selbsttests_h1h4.txt`, `kette_A.txt`, `kette_A2.txt`, `kette_B.txt` |
+| H5 | mittel | Dublettenregel faltet nur ASCII, der App-Speicher faltet Unicode/NFC-NFD/ß-ss. Kelvin-Paar besteht das ECHTE Gate (A12) und den Geraete-Leser; auf dem Geraet eine Datei mit falschem Inhalt, schneller Weg meldet `Assets aktuell` | 4, 2.3, 6; `korpus_ergebnis.txt`, `kette_A12.txt`, `emu.txt` |
+| H3 | mittel | B1 schuetzt nur `${NAME}_android.z*`; SHA256SUMS.txt + git add nehmen jede Datei `${NAME}_*.z*` ungeprueft, auch mit `--ohne-android` | 2.2 B4/B5; `kette_B.txt` |
+| H2 | mittel | build_android.sh uebernimmt `APK_GATE_DATEI` aus der Umgebung, ohne Anzeige; leeres bzw. altes Gate -> `ANDROID-GATES-OK` fuer die v1-APK | 2.1 A4/A5; `kette_A.txt` |
+| V1/V2 | niedrig | zwei neue Ein-Zeilen-Mutanten im v2-Teil bestehen den Selbsttest 248/248; V1 + signierte Faelschung -> `ANDROID-GATES-OK`, das Geraet verwirft die Liste | 4, 2.1 A7 |
+| U4 | niedrig | Fehlerpfade nicht fail closed: ~3 s Meldung, dann startet das Spiel mit altem/gemischtem Baum | 5; android_glue.c:321/:517, main.c:3075 |
+| U3 | niedrig | Segmente bis 512 B erlaubt, Geraet 255 B (mit `.neu` 251 B) - nie entpackbar, Gate/Gradle lassen es durch | 5, 6 |
+| U2 | niedrig | Waisen nach Abbruch/Uebergang werden nie entfernt (auch Pruefer ECHTER LAUF 3.9); ohne Funktionsfolge (Engine zaehlt keine Ordner auf) | 5 |
+| U1 | niedrig | `unlink(pf_liste)` ohne Rueckgabepruefung | 5; android_glue.c:415 |
+
+Haltbar (gemessen): SHA-256 (3), Gate == Geraete-Leser auf 57 eigenen Faelschungen (4), B3 (Grenze oben), B1 fuer den
+kanonischen Namen inkl. APK zwischendurch geloescht (2.4), Pfad-/Puffer-/Symlink-Grenzen, Abbruch/Neustart-Konsistenz (5).
+
+**Urteil: nicht haltbar.** Mit H1 kommt ein falsches Ergebnis durch die ganze Kette (PC-Pfad und APK-Kette), obwohl
+das Log den Fehler zeigt; H5 liefert mit dem echten Gate still falschen Inhalt auf das Geraet; H2/H3 sind stille
+Umgehungen.
