@@ -13,7 +13,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
-| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 Code (5b7d3dc9), W9 (c49f20fe); W6-Sicht, W7, W8, W10, W11 in Arbeit |
+| S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W8 (7fbd45a0, 6e320214), W9 (c49f20fe); W7, W10, W11 in Arbeit |
 | S3 volle Suite | offen |
 
 ## 1. Merges (Schritt 1)
@@ -150,6 +150,35 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   | M4 | `re2z_row_from_atktype[3]` 11 -> 10 | g10_re2 | GRUEN — diese Tabelle speist nur den Direktaufruf; der Explosionsstempel nimmt `re15_react_table[Art]` + Tausch 10/11 (re15_damage.c `re2_gl_explosion_stempel`) |
   | M4b | Tausch 10/11 in `re2_gl_explosion_stempel` entfernt | g10_re2 | ROT "Reaktionszeile +0x5 = 10, erwartet 11" |
   | M5 | RE1.5-Todeshandler kehrt fuer Zeile 9..11 sofort zurueck (Nachbau des Original-Haengers: Zeile NULL) | g9_re15 | ROT "keine Reaktion im Bild X+1" |
+
+### W6 — Sichtabnahme (erledigt 62d52d33, 9c58453b)
+* Weg: der Wurf trifft einen Hund/eine Spinne nicht verlaesslich (Hunde in ROOM11D0 rennen sofort los; die ruhenden Hunde
+  in ROOM1190 liegen ausserhalb des Kastens/Bands — `eingriffe=0` bei 577 Abstand gemessen; MITTE landet wegen der
+  Seitendrift 1752 immer ~1400 neben dem Ziel der Auto-Nachfuehrung). Deshalb ein MESS-HAKEN ohne Spielverhalten:
+  `RE15_FORCE_EXPLOSION="<art>@<bild>:<slot>"` (fx_plattform_pc.c) = Routine 31 am Gegner: P.y = y - 500 (`lh v0,42(v1)`
+  @0x800185a0 / `addiu v0,v0,-500` @0x800185a8), FUN_80012d60(0x1f4 @0x80018598, `jal` @0x800185b8), Art 3/4 + RE2-Aufschlag
+  (E8). Parse-Sonde `unit_r34_plattform` 104-106. Wurf/Flug selbst nimmt W9 ab.
+* Framedumps (x3): ROOM11D0 + `RE15_SET_FLAG=3:152`, Hund Slot 5, Bild 35: Art 3 -> HP 95 -> -205, +0x5 = 10 (Spur-B-
+  Konvention des Hundes: RE1.5-Waffen-Id 10 = Saeure -> RE2-Zeile 11, bau_b Sonde 140), Koerper ab F36 einheitlich
+  dunkel-oliv (0x00003F2F) statt braun/hellbraun (F34) — `integration_werkzeug/w6_hund_saeure_crop.png`; Art 4 -> +0x5 11
+  (-> Zeile 10), Koerper schwarz verkohlt (0x00202020) mit Flammen — `w6_hund_brand_crop.png`. ROOM2060 Spinne Slot 1
+  (Decke), Bild 40: Art 4 -> HP 111 -> -19, +0x5 11 -> 10, Koerper dunkel (0x00202F2F) — `w6_spinne_brand_sheet.png`.
+  (Der Haken setzt die "Granate" auf die Deckenhoehe der Spinne; ein echter Wurf liegt am Boden und erreicht sie dort nicht.)
+
+### W8 — Helligkeit der RE1.5-ESP-Effekte (Befund BESTAETIGT, behoben 7fbd45a0, Pin 6e320214)
+* Messung (Framedump x1, HE-Explosion am Tuer-Sprungpunkt, Feuerball 0x03195000: Routine 10 Flags 0x13 = ABE, ABR 0,
+  Palette 483 Index 1 = (248,248,248) aus DATA/TEX.TIM): wirksamer Beitrag 2*out - B im Feuerball-Ausschnitt max
+  **125/125/125** (905 Pixel) = 248 x 128/255.
+* Original (selbst disassembliert): FUN_800537e4 (Aufrufer `jal 0x800537e4` @0x800212fc) setzt die Primitivfarbe aller
+  1024 ESP-POLY_FT4 ab 0x80093394 auf 0x80 (`ori s3,zero,0x80` @0x800537ec, `sb s3,4/5/6(s0)` @0x800538fc/900/908); der
+  Sprite-Bau FUN_800534c4 schreibt je Quad nur das Code-Byte (`sb v0,7(t2)` @0x8005369c; Code 0x2C/0x2E = moduliert) ->
+  Texel x 0x80/0x80 = x 1.0. Port: `pc_draw_effects` gab 128 an den unbeleuchteten Queue-Weg, der die Farbe als SDL-
+  Faktor /255 nutzt (render_pc.c `re15_render_textured_tri`: `SDL_Color tint = { r, g, b, ... }`).
+* Fix: 255 (PSX 0x80 = SDL 0xFF wie `psx_prim_to_sdl_vert` im beleuchteten Weg; re2fx_pc nutzt dieselbe 255 fuer die RE2-
+  Paketfarbe 0x808080 @0x800783cc-d0). Nachmessung: **249/249/249**, dieselben 905 Pixel. Wirkt auf ALLE RE1.5-ESP-Effekte
+  (Muendung, Rauch, Huelse, Blut, Feuer, Feuerball) — sie waren seit jeher halb so hell (Release-Hinweis).
+* Pin: Lauf "debug" von `integration_r34_granaten` misst denselben Beitrag (Werkzeug `probe_r34_ppm_beitrag`, Schranke
+  >= 240 je Kanal, >= 200 Pixel). Mutation M6 (Farbe wieder 128): ROT "Feuerball im Explosionsbild zu dunkel".
 
 ## 3. Volle Suite (Schritt 3)
 
