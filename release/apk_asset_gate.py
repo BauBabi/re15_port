@@ -110,6 +110,10 @@ SELBSTTEST-ABDECKUNG (Nachbesserung R2, Gegenpruefung B1): die Faelle treffen je
   1 B hinter dem EOCD, Digest kleiner/groesser, Tabellenwert +-1, ...). Belegt mit der Teil-Mutanten-Probe
   analysis/befunde_runde34_android/nachbesserung_r2_belege/mutanten_teil.py (jede Vergleichsrichtung,
   Grenze +-1, jeder Teil eines and/or, not, Tupelpaare; dazu Ganz-Abschaltungen und Hand-Mutanten).
+  Runde 4 (Gegenpruefung R3, B2): dazu Zeichenklassen, strip-/split-Varianten, Konstante und Methodenmenge
+  (Mutanten MU1-MU8 aus pruefer_umgehung_r3_belege/r3_mutanten.py): Leerraum/VT/FF/NBSP an Pfad und Kopfzeile,
+  andere Zeilentrenner (U+2028, '\\r', FS, NEL), Nicht-ASCII-Ziffern, Methoden 1/7, Manifest 64 MiB + 1 B
+  ohne Pruefhaken und die Geraete-Grenze als innere Probe.
 """
 import argparse
 import concurrent.futures
@@ -1327,6 +1331,10 @@ _FIXTURE = (   # Pfad relativ zum Repo, Groesse (0 wie shared_assets/PSX/STAGE1/
 )
 # Datei > BLOCK: nur die "gross"-Faelle (sonst kaeme ein Vergleich nur ueber den 1. Block durch)
 _GROSS = ("re15_port/shared_assets/PSX/MOVIE/GROSS.STR", BLOCK + 4096 + 37)
+# Manifest-Grenze DES GERAETS, als eigene Zahl der Fixture (Runde 4, Gegenpruefung R3 MU4): android_glue.c:80
+# read_apk_asset verwirft das Manifest bei sz > (64u << 20). Bewusst NICHT die Konstante des Gates - sonst
+# wanderte ein Fall mit einer verschobenen Konstante (64 << 30) einfach mit und bestaetigte sich selbst.
+_FX_GERAET_MANIFEST = 64 * 1024 * 1024
 # wie AGP: Manifest/dex komprimiert (Deflate), .so und resources.arsc Stored (Nachbesserung R2, M16:
 # vorher waren ALLE Nicht-Assets Stored - ein Gate, das Deflate-Eintraege ausserhalb assets/ nie las,
 # bestand den Selbsttest)
@@ -2426,6 +2434,65 @@ def _faelle():
             _fx_eocd(apk, (12, "<I"), plus=14)
         f.roh.append(e)
 
+    # --- Runde 4 (Gegenpruefung R3, B2): natuerliche Ein-Zeilen-Abschwaechungen des Manifestlesers und der
+    # Methodenpruefung, die der Selbsttest bis dahin NICHT fing (Mutanten MU1-MU8 der Gegenpruefung:
+    # rstrip() statt rstrip('\r'), '\d' bzw. isdigit() statt [0-9], splitlines(), 64 << 30, Methode <= 8,
+    # strip() an Kopfzeile bzw. Pfad). Das echte Gate lehnt jede dieser Faelschungen ab (wie das Geraet sie
+    # liest, android_glue.c:196-206: Trennung NUR an '\n', nur angehaengte '\r' weg, atoll/sscanf nur 0-9);
+    # je Mutant trifft mindestens ein Fall GENAU seine Abschwaechung - der Mutant nimmt die Faelschung an.
+    P07M = P07[len("assets/"):]                  # Manifestpfad der Fixture: shared_assets/RE15DOOR/P07G.DO2, 2748 B
+
+    def man_ersetzen(alt, neu):
+        """Manifest wie writeAssetManifest, dann GENAU EINE Textstelle ersetzen (Kopfzeile bleibt)."""
+        def faelschen(f):
+            t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+            if t.count(alt) != 1:
+                raise AssertionError("Selbsttest-Fixture: %r %d-mal im Manifest" % (alt, t.count(alt)))
+            f.manifest_roh = t.replace(alt, neu).encode("utf-8")
+        return faelschen
+
+    def pfad_ende(zeichen):              # MU1 rstrip() / MU8 strip(): Zeichen am Ende von Pfad bzw. Zeile
+        return man_ersetzen("\t%s\n" % P07M, "\t%s%s\n" % (P07M, zeichen))
+
+    def trenner(zeichen):                # MU3 splitlines(): anderer Zeilentrenner statt '\n' VOR der P07G-Zeile
+        return man_ersetzen("\n2748\t%s\n" % P07M, "%s2748\t%s\n" % (zeichen, P07M))
+
+    def groesse_ziffern(ziffern):        # MU2 '\d' / MU6 isdigit(): Groesse 2748 in anderen Ziffern (ziffern[0..9])
+        return man_ersetzen("\n2748\t%s\n" % P07M, "\n%s\t%s\n" % ("".join(ziffern[int(c)] for c in "2748"), P07M))
+
+    def kopf_ziffern(ziffern):           # KOPF_RE nur [0-9]: Kopfzeile in anderen Ziffern
+        def faelschen(f):
+            t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+            kopf_, rest = t.split("\n", 1)
+            zahlen = kopf_[len("# re15 assets "):]
+            f.manifest_roh = ("# re15 assets " + "".join(ziffern[int(c)] if "0" <= c <= "9" else c for c in zahlen)
+                              + "\n" + rest).encode("utf-8")
+        return faelschen
+
+    def kopf_rand(vorn, hinten):         # MU7 strip(): Leerraum vor bzw. hinter der Kopfzeile
+        def faelschen(f):
+            t = _Fall.manifest_text(f.manifest_aus_eintraegen())
+            kopf_, rest = t.split("\n", 1)
+            f.manifest_roh = (vorn + kopf_ + hinten + "\n" + rest).encode("utf-8")
+        return faelschen
+
+    def methode_nr(nr, deflate):         # MU5 'methode > 8': Methode 1..7 in Local Header UND Zentralverzeichnis
+        def faelschen(f):
+            if deflate:                  # Deflate-Daten: ein Leser, der jede Methode != 0 entpackt, liest sie fehlerfrei
+                f.eintrag(TEX)[2] = zipfile.ZIP_DEFLATED
+
+            def e(apk):
+                lho, p, _d = _fx_stelle(apk, TEX)
+                _fx_patch(apk, [(lho + 8, struct.pack("<H", nr)), (p + 10, struct.pack("<H", nr))])
+            f.roh.append(e)
+        return faelschen
+
+    def man_geraet_grenze(f):            # MU4 '64 << 30': Manifest 1 B ueber der GERAETE-Grenze, OHNE Pruefhaken
+        roh = _Fall.manifest_text(f.manifest_aus_eintraegen()).encode("utf-8")
+        # Polster = EINE Zeile aus '\r' vor dem letzten '\n' (Geraet und Gate: leer -> uebersprungen); 64 Mi
+        # Leerzeilen waeren 64 Mi Listenelemente
+        f.manifest_roh = roh + b"\r" * (_FX_GERAET_MANIFEST - len(roh)) + b"\n"
+
     return (
         ("gute APK", nichts, 0, ["APK-ASSET-GATE-OK", "RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2",
                                  "RE2/DOOR:  Quelle 4, APK 4, sha256 gleich 4/4",
@@ -2741,6 +2808,50 @@ def _faelle():
          ["beschaedigt (CRC", "assets/re15_assets.txt"], False, ["Manifest-Groesse falsch", "Manifest-Kopfzeile passt nicht"]),
         ("Manifest-Eintrag mit falscher LFH-CRC: nicht gelesen", manifest_lfh_crc, 1,
          ["CRC/Groessen im Local Header weichen", "assets/re15_assets.txt"]),
+        # --- ab hier Runde 4 (Gegenpruefung R3, B2: Mutanten MU1-MU8); erwartete Texte nur ASCII (die Ausgabe
+        # des Gates ist unter Windows in der ANSI-Codepage kodiert)
+        ("R4 MU1/MU8: Manifestpfad mit Leerzeichen am Ende", pfad_ende(" "), 1,
+         ["Manifest nennt %s  (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU1/MU8: Manifestpfad mit Tab am Ende", pfad_ende("\t"), 1,
+         ["Manifest nennt %s\t (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU1/MU3: Manifestzeile endet mit VT (\\x0b)", pfad_ende("\x0b"), 1,
+         ["Manifest nennt %s\x0b (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU1/MU3: Manifestzeile endet mit FF (\\x0c)", pfad_ende("\x0c"), 1,
+         ["Manifest nennt %s\x0c (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU1/MU8: Manifestpfad mit NBSP (U+00A0) am Ende", pfad_ende(" "), 1,
+         ["Manifest nennt %s" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU8: Manifestpfad mit Leerzeichen am Anfang", man_ersetzen("\t%s\n" % P07M, "\t %s\n" % P07M), 1,
+         ["Manifest nennt  %s (2748 B), die APK hat keinen Eintrag" % P07M, "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU3: U+2028 statt '\\n' vor einer Zeile", trenner(" "), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU3: '\\r' allein als Zeilentrenner", trenner("\r"), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU3: FS (\\x1c) als Zeilentrenner", trenner("\x1c"), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU3: NEL (U+0085) als Zeilentrenner", trenner("\u0085"), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU2/MU6: Groessenfeld in Vollbreit-Ziffern", groesse_ziffern("０１２３４５６７８９"),
+         1, ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU2/MU6: Groessenfeld in arabisch-indischen Ziffern",
+         groesse_ziffern("٠١٢٣٤٥٦٧٨٩"), 1,
+         ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4 MU6: Groessenfeld hochgestellt (isdigit, nicht Nd)",
+         groesse_ziffern("⁰¹²³⁴⁵⁶⁷⁸⁹"), 1,
+         ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
+        ("R4: Manifest-Kopfzeile in Vollbreit-Ziffern",
+         kopf_ziffern("０１２３４５６７８９"), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("R4 MU7: Kopfzeile mit Leerzeichen davor", kopf_rand(" ", ""), 1,
+         ["Manifest-Kopfzeile fehlt/unlesbar", "Manifest-Zeile 1 ohne Tab"]),
+        ("R4 MU7: Kopfzeile mit Leerzeichen dahinter", kopf_rand("", " "), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("R4 MU7: Kopfzeile mit Tab dahinter", kopf_rand("", "\t"), 1, ["Manifest-Kopfzeile fehlt/unlesbar"]),
+        ("R4 MU5: Methode 1 auf Deflate-Daten", methode_nr(1, True), 1,
+         ["Methode 1 (lesbar sind 0 = Stored, 8 = Deflate): " + TEX]),
+        ("R4 MU5: Methode 7 auf Deflate-Daten", methode_nr(7, True), 1,
+         ["Methode 7 (lesbar sind 0 = Stored, 8 = Deflate): " + TEX]),
+        ("R4 MU5: Methode 1 auf Stored-Daten", methode_nr(1, False), 1,
+         ["Methode 1 (lesbar sind 0 = Stored, 8 = Deflate): " + TEX]),
+        ("R4 MU4: Manifest 1 B ueber 64 MiB, OHNE Pruefhaken", man_geraet_grenze, 1,
+         ["Manifest %d B > %d B (64 MiB): das Geraet liest es nicht" % (_FX_GERAET_MANIFEST + 1, _FX_GERAET_MANIFEST)]),
     )
 
 
@@ -2845,6 +2956,27 @@ def _innere_proben():
             ist = "Ausnahme %r" % (ex,)
         if not isinstance(ist, str) or (soll not in ist if soll else ist != ""):
             falsch.append("_auslass_hinweis(%r) = %r, soll %s" % (rel, ist, repr(soll) if soll else "''"))
+    # Manifest-Grenze = die des Geraets (Runde 4, Gegenpruefung R3 MU4: android_glue.c:80 sz > (64u << 20) -> NULL);
+    # die Fall-Laeufe pruefen die Grenze sonst nur ueber den Pruefhaken, der sie senkt. Der Haken darf nie anheben.
+    haken_vorher = os.environ.pop("RE15_GATE_MANIFEST_MAX", None)
+    try:
+        for haken, soll in ((None, _FX_GERAET_MANIFEST), (str(_FX_GERAET_MANIFEST + 1), _FX_GERAET_MANIFEST),
+                            (str(_FX_GERAET_MANIFEST - 1), _FX_GERAET_MANIFEST - 1)):
+            if haken is None:
+                os.environ.pop("RE15_GATE_MANIFEST_MAX", None)
+            else:
+                os.environ["RE15_GATE_MANIFEST_MAX"] = haken
+            try:
+                ist = _manifest_grenze()
+            except Exception as ex:
+                ist = "Ausnahme %r" % (ex,)
+            if ist != soll:
+                falsch.append("_manifest_grenze() mit Pruefhaken %r = %r, soll %r (Geraet: 64 MiB)" % (haken, ist, soll))
+    finally:
+        if haken_vorher is None:
+            os.environ.pop("RE15_GATE_MANIFEST_MAX", None)
+        else:
+            os.environ["RE15_GATE_MANIFEST_MAX"] = haken_vorher
     return falsch
 
 
@@ -2864,9 +2996,9 @@ def selbsttest():
     # Ergebnis aendert das nichts (ein falscher Fall = SELBSTTEST-FEHLER), es spart nur die Laufzeit
     schnell = os.environ.get("RE15_GATE_SELBSTTEST_SCHNELL") == "1"
     falsch = _innere_proben()
-    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7
-    print("   Innere Proben: %d/%d (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)"
-          % (n_innen - len(falsch), n_innen))
+    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7 + 3
+    print("   Innere Proben: %d/%d (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende, "
+          "Manifest-Grenze)" % (n_innen - len(falsch), n_innen))
     if falsch:
         for z in falsch:
             print("   [FEHLER] " + z)
