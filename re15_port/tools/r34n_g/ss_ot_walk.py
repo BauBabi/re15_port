@@ -8,10 +8,20 @@ FUN_8002137c.c):
     DrawOTag(0x800aa6b4 + buf*0x20)     (klein)
 buf = DAT_800aca34 (Doppelpuffer). Jedes OT-Wort = (Laenge<<24) | naechste Adresse (24 Bit),
 Ende = 0xFFFFFF. Das Werkzeug listet jedes Primitiv mit Bildschirm-Rechteck und markiert die, die
-ein Pruefrechteck (Default: Schild MAGAZINE CLUB in Cut 2) schneiden. Zweck: belegen, ob im
-Original ueberhaupt etwas ueber die Schrift gezeichnet wird.
+ein Pruefrechteck schneiden. Zweck: belegen, ob im Original ueberhaupt etwas ueber die Schrift
+gezeichnet wird.
 
-  C:/Python310/python.exe re15_port/tools/r34n_g/ss_ot_walk.py <sav> [--box x0,y0,x1,y1] [--all]
+  C:/Python310/python.exe re15_port/tools/r34n_g/ss_ot_walk.py <sav> [--box auto|x0,y0,x1,y1] [--all]
+
+⛔ Pruefrechteck (Auflage 4 der Gegenpruefung, Stufe BAU): das Schild steht in jedem Cut an einer
+ANDEREN Stelle. Bis zur Stufe BAU war der Default fest das Cut-2-Rechteck 283,48,315,66 - ein
+Cut-3-Stand wurde damit gegen die falsche Stelle geprueft (G11: lamp_behind1/orig_lamp_start).
+Default ist jetzt `--box auto`: das Rechteck wird aus dem Cut des Stands gewaehlt (DAT_800b0fe4,
+lh @0x80021d44), inklusive Grenzen:
+    Cut 2: 283,48,314,65   Cut 3: 290,4,319,23   Cut 4: 315,10,319,23   Cut 10: 260,0,289,12
+(Blau-Maske der BSS-Dekodierung + 2 px Rand, G15 F). In anderen Cuts zeigt der Hintergrund das
+Schild nicht; dann muss `--box` ausdruecklich gesetzt werden. Der Vollzensus ueber alle
+ROOM1170-Staende steht in ss_zensus_1170.py.
 """
 import argparse, os, struct, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +30,8 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "..", ".claude", "skills",
 import re15_ss  # noqa: E402
 
 OTS = [(0x800ac714, 0x40), (0x800ab6d4, 0x1000), (0x800aa6b4, 0x20)]
+# Schild-Rechteck je Cut, INKLUSIVE Grenzen (siehe Kopf; identisch zu ss_zensus_1170.SIGN).
+SIGN_BOX = {2: (283, 48, 314, 65), 3: (290, 4, 319, 23), 4: (315, 10, 319, 23), 10: (260, 0, 289, 12)}
 
 
 def s11(v):
@@ -100,13 +112,22 @@ def walk(r, head, limit=20000):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("sav")
-    ap.add_argument("--box", default="283,48,315,66")
+    ap.add_argument("--box", default="auto")
     ap.add_argument("--all", action="store_true")
     a = ap.parse_args()
-    bx = [int(v) for v in a.box.split(",")]
     r = re15_ss.Ram(a.sav)
     buf = r.u8(0x800aca34)
-    print("%s  cut=%d  aca34(buf)=%d" % (os.path.basename(a.sav), r.u16(0x800b0fe4), buf))
+    cut = r.u16(0x800b0fe4)
+    if a.box == "auto":
+        if cut not in SIGN_BOX:
+            print("%s  cut=%d: der Hintergrund dieses Cuts zeigt das Schild nicht - --box setzen"
+                  % (os.path.basename(a.sav), cut))
+            return
+        bx = list(SIGN_BOX[cut])
+    else:
+        bx = [int(v) for v in a.box.split(",")]
+    print("%s  cut=%d  aca34(buf)=%d  box=%s" % (os.path.basename(a.sav), cut, buf,
+                                                  ",".join(str(v) for v in bx)))
     for base, stride in OTS:
         for b in (0, 1):
             head = (base + b * stride) & 0xffffff

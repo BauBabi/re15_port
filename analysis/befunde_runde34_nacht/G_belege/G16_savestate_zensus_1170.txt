@@ -1,0 +1,38 @@
+# Spur G, Stufe BAU (Auflage 4): Vollzensus aller Savestates unter stage_saves/ (Hauptbaum, nur gelesen), 2026-09-30
+# Werkzeug: re15_port/tools/r34n_g/ss_zensus_1170.py stage_saves <bss-praefix>; BSS = probe_r34n_g_bss auf STAGE1/ROOM117.BSS
+# Sauberkeit je Stand per Wort @0x80026e4c (0x03e00008 = jr ra = Auslieferung; PATCHED-EXE = 0x0801c224) + Dateiname
+# RAM-Kopie vs BSS: Kanal = 5-Bit-Wert << 3 gegen die 8-Bit-Dekodierung des Ports (Quantisierung <= 7 + MDEC-Rundung)
+# fbN vs RAM: Schild-Rechteck im Bildspeicher VRAM y=N gegen dieselbe Stelle der RAM-Kopie 0x80198000
+# OT: alle drei OTs beider Puffer (DrawOTag @0x800215bc/@0x800215d0/@0x800215e4), Treffer = Primitiv-Rechteck schneidet das Schild-Rechteck DES CUTS
+
+FEHLER boot_16.sav: PSX.EXE signature not found in savestate RAM
+lamp_1170_run2.sav                 Vcount=  8604 cut= 2 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 2252 Pakete, 0 ueber dem Schild
+lamp_1170_run3.sav                 Vcount=  9887 cut= 1 buf=0 | RAM-Kopie vs BSS max|d|  10 | (Cut zeigt das Schild nicht)
+lamp_1170_run4.sav                 Vcount= 11994 cut= 3 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT  998 Pakete, 0 ueber dem Schild
+lamp_behind1.sav                   Vcount= 13164 cut= 3 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1008 Pakete, 0 ueber dem Schild
+lamp_behind2.sav                   Vcount= 14258 cut= 3 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1008 Pakete, 0 ueber dem Schild
+lamp_behind3.sav                   Vcount= 14362 cut= 3 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT  978 Pakete, 0 ueber dem Schild
+lamp_fwd1.sav                      Vcount= 13122 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1084 Pakete, 0 ueber dem Schild
+lamp_left1.sav                     Vcount= 13142 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1080 Pakete, 0 ueber dem Schild
+lamp_near.sav                      Vcount= 14322 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1034 Pakete, 0 ueber dem Schild
+lamp_near_0.5.sav                  Vcount= 15353 cut= 2 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1012 Pakete, 0 ueber dem Schild
+lamp_near_0.9.sav                  Vcount= 15369 cut= 2 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1014 Pakete, 0 ueber dem Schild
+lampwalk_1.2.sav                   Vcount= 14197 cut= 2 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1098 Pakete, 0 ueber dem Schild
+lampwalk_2.4.sav                   Vcount= 14266 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1080 Pakete, 0 ueber dem Schild
+lampwalk_3.4.sav                   Vcount= 14322 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1034 Pakete, 0 ueber dem Schild
+lampwalk_4.2.sav                   Vcount= 14365 cut= 1 buf=0 | RAM-Kopie vs BSS max|d|  10 | (Cut zeigt das Schild nicht)
+lampwalk_base.sav                  Vcount= 13122 cut= 2 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1084 Pakete, 0 ueber dem Schild
+orig_1170_gp.sav                   Vcount=  8049 cut= 2 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 359, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 2233 Pakete, 0 ueber dem Schild
+orig_1170_gp2.sav                  Vcount= 10660 cut= 1 buf=1 | RAM-Kopie vs BSS max|d|  10 | (Cut zeigt das Schild nicht)
+orig_lamp_start.sav                Vcount= 13164 cut= 3 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1008 Pakete, 0 ueber dem Schild
+orig_lamp_walk.sav                 Vcount= 14319 cut= 3 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT  446 Pakete, 0 ueber dem Schild
+orig_lamp_z3500.sav                Vcount= 13164 cut= 3 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1008 Pakete, 0 ueber dem Schild
+orig_lamp_z4500.sav                Vcount= 13164 cut= 3 buf=0 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT 1008 Pakete, 0 ueber dem Schild
+orig_lamp_z4500_out.sav            Vcount= 14235 cut= 3 buf=1 | RAM-Kopie vs BSS max|d|  10 | Schild blau 428, RAM vs BSS  10, fb0 vs RAM   0, fb240 vs RAM   0 | OT  446 Pakete, 0 ueber dem Schild
+
+Dateien 104, davon PATCHED-EXE (Name) 6, gepatcht per Stub 0, unlesbar 1
+ROOM1170-Staende (STAGE 1, Raum 0x17, saubere EXE): 23
+  Cut  1:  3 Staende (Schild nicht im Bild)
+  Cut  2: 11 Staende, OT-Walks mit Schild-Rechteck: 11, Treffer gesamt: 0
+  Cut  3:  9 Staende, OT-Walks mit Schild-Rechteck: 9, Treffer gesamt: 0
+Andere Raeume (Fingerabdruck, Raum): 005192a9/00:1, 011ffca6/00:1, 1243eeef/00:1, 14e02dc7/00:1, 17f88d4a/00:1, 1c0394d0/00:1, 2bbaca15/00:1, 3b39bf3a/00:1, 3d9437d6/00:1, 3e8c975b/00:1, 44884d38/00:1, 799629e3/00:4, 889e81ac/00:1, 90170b6a/00:1, 96290818/06:10, 96290818/09:2, 96290818/13:1, 96290818/14:21, 96290818/1a:1, 96290818/1b:1, 96290818/1c:2, 96290818/24:5, 96290818/25:1, 96290818/26:1, 9f496c52/00:1, a3ae18b4/00:1, be8965cd/00:3, c0ffa89e/00:1, c82d8a5e/00:1, d9e35420/00:1, f1d4aea4/00:1, fb145a8b/00:1, fb949980/00:1, fe5619d9/00:1
