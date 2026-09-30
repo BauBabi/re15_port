@@ -12,7 +12,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/b-schaden | erledigt 94c7d41d — konfliktfrei, Bau OK, unit_r34_schaden + unit_r34_reaktion gruen (430 Tests) |
 | S1 Merge r34g/a-granate | erledigt c4ebd472 — konfliktfrei, Bau OK, unit_r34_wurf + B-Sonden + ESP-/Waffen-Pins gruen (431 Tests) |
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
-| S1 Merge r34g/d-re2fx | offen |
+| S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
 | S2 W1..W11 | offen |
 | S3 volle Suite | offen |
 
@@ -41,6 +41,14 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 * Sonden: `unit_r34_plattform`, `unit_r34_plattform_ton`, `integration_r34_plattform_takt` (23.0 s),
   `integration_r34_plattform_esp_eintritt` (9.7 s), dazu `unit_r34_schaden`, `unit_r34_reaktion`, `unit_r34_wurf` —
   7/7 gruen. `ctest -N`: 435.
+### 1.4 r34g/d-re2fx — Merge-Commit 3086da7e
+* `git merge --no-ff r34g/d-re2fx`: **keine Konflikte** (re2_fx.c, re2_fx.h, re2fx_pc.c/.h, fuenf Sonden, zwei
+  Werkzeuge unter `tools/`).
+* Bau: `configure` + `build` -> `LOCAL-BUILD-OK`; keine neuen Warnungen.
+* Sonden: `unit_r34_re2fx`, `_knochen`, `_bild` (1.1 s), `_raum`, `_pc` + alle frueheren r34-Sonden (A/B/C inkl. der
+  zwei exe-Pins) — **12/12 gruen**. `ctest -N`: **440** (= 428 + B 2 + A 1 + C 4 + D 5).
+* Befund zum Merge insgesamt: die Spuren hielten den Dateibesitz aus BAUPLAN §3.0 ein; git fand in keinem der vier
+  Merges eine Ueberschneidung. Kein Verhalten ging verloren (keine Konfliktaufloesung noetig).
 
 ## 2. Integrationswuensche (Schritt 2)
 
