@@ -8802,6 +8802,21 @@ static void re15_maggot_c024(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 
  * rotate (hspd,0,0) by rot_y and add to x/z (@0x8001c1e8-248), s1 = (s16)(vimp + grav * +0x9c),
  * y -= s1 (@0x8001c258-7c); floor < y -> LAND: y = floor, return s1 (@0x8001c294-b4); else
  * +0x9c++ and return 0 (@0x8001c2a0-b0). +0x9c is the airtime counter. */
+/* RUNDE 34 B8 — die SPUR-TABELLEN der +0x5-Dispatcher (Made/Gorilla 0x27 STAGE1 und Kakerlake 0x29
+ * STAGE3 teilen dieselbe Belegung), selbst gelesen (re15_disasm.py `read ... 22`):
+ *   0x27 HURT  @0x801214a8 (`lbu v0,5(v0)` @0x8011afe0, `jalr` @0x8011b000): b018 / b1ec / b400
+ *   0x27 DEATH @0x80121500 (`lbu v0,5(v0)` @0x8011b780, `jalr` @0x8011b7a0): b7b8 / b998 / bb9c
+ *   0x29 HURT  @0x8011ed84 (`lbu v0,5(v0)` @0x80114814, `jalr` @0x80114834): 484c / 4a40 / 4cb8
+ *   0x29 DEATH @0x8011eddc (`lbu v0,5(v0)` @0x80115038, `jalr` @0x80115058): 5070 / 5280 / 54b4
+ * 0 = Boden/Zucken, 1 = Luft, 2 = Explosion. HURT und DEATH unterscheiden sich NUR in [21]
+ * (HURT: Luft, DEATH: Boden). Vorher pruefte der Port `< 7 / < 9 / sonst` und schickte 12, 13, 14,
+ * 19, 20, 21 in die Explosionsspur — darunter +0x5 = 14, die Flaechenfeuer-Zeile (DAT_8006f430[5]
+ * @0x8006f435) des Bodenfeuers der Brandgranate (O-VB4). Werte >= 22 liest das Original hinter der
+ * Tabelle; die Port-Reaktionswerte sind alle < 22 (DAT_8006f430 = 3..20) — PORT-SICHERUNG Spur 0. */
+static const uint8_t s_spur_hurt[22]  = { 0,0,0,0,0,0,0, 1,1, 2,2,2, 0, 1, 0, 2,2,2,2, 0,0, 1 };
+static const uint8_t s_spur_death[22] = { 0,0,0,0,0,0,0, 1,1, 2,2,2, 0, 1, 0, 2,2,2,2, 0,0, 0 };
+static uint8_t re15_spur(const uint8_t *tab, uint8_t zeile) { return (zeile < 22u) ? tab[zeile] : 0u; }
+
 static int re15_maggot_ballistic(re15_actor_t *e, int hspd, int vimp, int grav)
 {
     if (hspd) re15_dog_advance(e, hspd);
@@ -9346,7 +9361,8 @@ static void re15_maggot_ai_tick(int slot)
                 re15_audio_room_se(2);                        /* Se(2) @0x8011af90/cc (+ box restore @0x80121368[+0x1e2] — port hitbox is static) */
             }
         }
-        if (e->sub_state_1 < 7) {                             /* lanes @0x801214a8: [0-6] = 0x8011b018 FLINCH */
+        const uint8_t spur_h = re15_spur(s_spur_hurt, e->sub_state_1);   /* @0x801214a8 (Runde 34 B8) */
+        if (spur_h == 0u) {                                   /* 0x8011b018 FLINCH: 0..6/12/14/19/20 */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2;                            /* @0x8011b064-70 */
@@ -9365,7 +9381,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
-        } else if (e->sub_state_1 < 9) {                      /* [7-8] = 0x8011b1ec AIR-HIT lane */
+        } else if (spur_h == 1u) {                            /* 0x8011b1ec AIR-HIT: 7/8/13/21 */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b238-54 */
@@ -9381,7 +9397,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
-        } else {                                              /* [9-11] = 0x8011b400 CRASH lane, phases @0x801003ec */
+        } else {                                              /* 0x8011b400 CRASH: 9..11/15..18, phases @0x801003ec */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b44c-68 */
@@ -9416,7 +9432,8 @@ static void re15_maggot_ai_tick(int slot)
         if (e->mag_airborne) {
             if (re15_maggot_ballistic(e, 0, 0, -50) != 0) { e->mag_airborne = 0; re15_audio_room_se(2); }
         }
-        if (e->sub_state_1 < 7) {                             /* [0-6] ground death 0x8011b7b8 */
+        const uint8_t spur_d = re15_spur(s_spur_death, e->sub_state_1);  /* @0x80121500 (Runde 34 B8) */
+        if (spur_d == 0u) {                                   /* 0x8011b7b8 ground death: 0..6/12/14/19..21 */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b804-20 */
@@ -9436,7 +9453,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sw 7 @0x8011b984-88 */
                 break;
             }
-        } else if (e->sub_state_1 < 9) {                      /* [7-8] mid-air death 0x8011b998 */
+        } else if (spur_d == 1u) {                            /* 0x8011b998 mid-air death: 7/8/13 */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b9e4-a00 */
@@ -9453,7 +9470,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
-        } else {                                              /* [9] crash-death 0x8011bb9c (crit-shot finisher) */
+        } else {                                              /* 0x8011bb9c crash-death: 9..11/15..18 */
             switch (e->sub_state_3) {
             case 0:
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011bbe8-c04 */
@@ -11364,29 +11381,143 @@ static void re15_cockroach_ai_tick(int slot)
         break;
     }
 
-    case 2:   /* HURT 0x80114790: flinch (clip 7, airborne clip 8) + Se(2) -> FLY-AWAY escape (sub 7/5/9) */
-        if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x8011484c */
-            re15_roach_clip(e, e->roach_air ? 8 : 7); re15_audio_room_se(2);          /* flinch clip 7 / airborne 8 @0x80114a40 */
-            e->sub_state_3 = 1;                                                        /* OPEN: blood FX 0x80019700 @0x80114960 */
-        } else if (re15_roach_anim(e)) {                                              /* phase 2 recovery @0x801149ac */
-            e->hit_react = 0;                                                          /* clears the WHOLE +0x93 (sb zero,147 @0x801149ac), not just bit0 */
-            e->state = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
-            uint8_t nsub = 7;                                                          /* default sub=7 leap @0x801149c8 */
-            if (e->roach_beh2) nsub = 5;                                              /* sub=5 if +0x1e2 @0x801149fc-a0c */
-            if (e->roach_esc)  nsub = 9;                                              /* sub=9 fly-away if +0x1e3 @0x80114a1c-2c (default) */
-            e->sub_state_1 = nsub;
+    case 2: {  /* HURT 0x80114790 — RUNDE 34 B8: drei Spuren nach +0x5 (Tabelle @0x8011ed84, selbst
+                * disassembliert STAGE3.BIN). Vorher: EIN Zucken fuer alle +0x5, Clip 8 nach roach_air —
+                * Clip 8/9 gehoert aber der LUFT-SPUR, gewaehlt ueber +0x5, nicht ueber den Flugzustand.
+                * Die Luft-Landung des Wurzelkopfs (+0x1e0 != 0 -> 0x8001c1a4(0,0,-50,+0x1ba), Kasten
+                * @0x8011ec44[+0x1e4], SE 1 @0x801147a0-804) bleibt OFFEN (Flug-Subsystem, s. Kopf). */
+        const uint8_t spur = re15_spur(s_spur_hurt, e->sub_state_1);   /* @0x80114814-34 */
+        if (spur == 0u) {                                     /* 0x8011484c ZUCKEN (+0x7-Phasen) */
+            switch (e->sub_state_3) {
+            case 0:                                           /* @0x80114898 */
+                e->hit_react |= 2;                            /* `ori v0,v0,0x2` @0x801148a0-a4 */
+                e->sub_state_3 = 1;                           /* @0x801148b4 */
+                re15_roach_clip(e, 7);                        /* Clip 7 @0x801148c0-c4, +0x95 = 0
+                                                               * @0x801148d4, Crossfade 7 @0x801148e4 */
+                re15_audio_room_se(2);                        /* `jal 0x800453d0` a0 = 2 @0x80114968-6c
+                                                               * (Blut 0x80019700 @0x80114960: Render OFFEN) */
+                /* fall through — Phase 0 laeuft ohne Sprung in Phase 1 (@0x80114970) */
+            case 1:
+                if (re15_roach_anim(e)) e->sub_state_3 = 2;   /* anim_set @0x80114984, +0x7 += fertig
+                                                               * @0x801149a0-a8 */
+                break;
+            default:                                          /* @0x801149ac-a2c */
+                e->hit_react = 0;                             /* `sb zero,147` @0x801149ac */
+                e->state = 1; e->sub_state_1 = 7;             /* +0x4 = 1 / +0x5 = 7 @0x801149bc-cc */
+                e->sub_state_2 = 0; e->sub_state_3 = 0;       /* @0x801149dc / @0x801149ec */
+                if (e->roach_beh2) e->sub_state_1 = 5;        /* +0x1e2 @0x801149fc-a0c */
+                if (e->roach_esc)  e->sub_state_1 = 9;        /* +0x1e3 @0x80114a1c-2c */
+                break;
+            }
+        } else if (spur == 1u) {                              /* 0x80114a40 LUFT-TREFFER */
+            switch (e->sub_state_3) {
+            case 0:                                           /* @0x80114a8c */
+                e->hit_react |= 2;                            /* @0x80114a94-98 */
+                e->sub_state_3 = 1;                           /* @0x80114aa8 */
+                re15_roach_clip(e, (uint8_t)((e->hit_react & 0x80) ? 9 : 8));   /* Clip 8 @0x80114ab4-b8,
+                                                               * 9 bei +0x93 & 0x80 @0x80114ad0-e0; +0x95 = 0
+                                                               * @0x80114af0, Crossfade 7 @0x80114b00 */
+                re15_audio_room_se(2);                        /* @0x80114b84-88 */
+                /* fall through (@0x80114b8c) */
+            case 1:
+                if (re15_roach_anim(e)) e->sub_state_3 = 2;   /* @0x80114ba0-c0 */
+                /* Lokator-Wurzelbewegung FUN_80115b68(0, Clip == 8 ? 0 : 1) @0x80114be0/@0x80114bf0 —
+                 * OFFEN wie im ACTIVE-Kopf (Lokator-Subsystem) */
+                break;
+            default:                                          /* @0x80114c00-ca4 */
+                e->hit_react = 0;                             /* @0x80114c00 */
+                e->state = 1; e->sub_state_1 = 3;             /* +0x4 = 1 / +0x5 = 3 @0x80114c10-20 */
+                e->sub_state_2 = 0; e->sub_state_3 = 0;
+                if (e->hp < 50) {                             /* `slti v0,v0,50` @0x80114c58 */
+                    e->sub_state_1 = 7;                       /* @0x80114c64 */
+                    if (e->roach_beh2) e->sub_state_1 = 5;    /* @0x80114c74-84 */
+                    if (e->roach_esc)  e->sub_state_1 = 9;    /* @0x80114c94-a4 */
+                }
+                break;
+            }
+        } else {                                              /* 0x80114cb8 EXPLOSIONS-TREFFER, Phasen
+                                                               * `table 0x8010034c` = {4cf8, 4e28, 4eb4,
+                                                               * 4f18, 4f54} */
+            switch (e->sub_state_3) {
+            case 0:                                           /* @0x80114cf8 */
+                e->hit_react |= 2;                            /* @0x80114d0c-10 */
+                e->sub_state_3 = 1;                           /* @0x80114d20 */
+                re15_roach_clip(e, (uint8_t)((e->hit_react & 0x80) ? 0x0b : 0x0a));   /* @0x80114d2c-54 */
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* +0x8c @0x80114d74-8c */
+                e->ai_timer = 0;                              /* +0x9c @0x80114d9c */
+                re15_audio_room_se(2);                        /* @0x80114e20-24 (Blut @0x80114e18 OFFEN) */
+                /* fall through (@0x80114e28) */
+            case 1:
+                if (re15_roach_anim(e)) e->sub_state_3 = 2;   /* @0x80114e3c-5c */
+                e->crow_speed = (int16_t)(0x50 - ((int)e->ai_timer << 2));   /* @0x80114e6c-80 */
+                re15_dog_advance_ofs(e, 0x800);               /* `ori a0,zero,0x800` / `jal 0x800245d8`
+                                                               * @0x80114e68/7c — Rueckstoss nach hinten */
+                if (e->hit_react & 0x80) re15_dog_advance_ofs(e, 0);   /* @0x80114e90-a8 (von hinten
+                                                               * netto ~0) */
+                break;
+            case 2:                                           /* @0x80114eb4 */
+                e->sub_state_3 = 3;                           /* @0x80114ec0 */
+                re15_roach_clip(e, (uint8_t)((e->hit_react & 0x80) ? 0x11 : 0x10));   /* Aufstehen @0x80114ecc-f4 */
+                /* fall through (@0x80114f18) */
+            case 3:
+                if (re15_roach_anim(e)) e->sub_state_3 = 4;   /* @0x80114f2c-50 */
+                break;
+            default:                                          /* @0x80114f54-a0 */
+                e->hit_react = 0;
+                e->state = 1; e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
         }
-        break;
+        break; }
 
-    case 3:   /* DEATH 0x80114fb4: collapse clip 0xe (70f) + Se(7) + SE(1)@frame 0x3d -> CORPSE (state 7) */
-        if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x801150e8 */
-            re15_roach_clip(e, 0x0e); re15_audio_room_se(7); e->hit_react |= 2;       /* clip 0xe @0x801150e8 (OPEN: blood 0x80019700 @0x80115184) */
+    case 3: {  /* DEATH 0x80114fb4 — RUNDE 34 B8: drei Spuren nach +0x5 (Tabelle @0x8011eddc). Die
+                * Luft-Landung des Wurzelkopfs (@0x80114fc4-5028) bleibt OFFEN wie im HURT. Todes-Flag
+                * `jal 0x8004ef90` je Spur (@0x801151dc / @0x80115414 / @0x8011566c) = em_flag-Commit
+                * von run_all; Blut 0x80019700 = Render OFFEN. Der letzte Bild wird GEHALTEN (die Leiche
+                * posiert nicht neu, s. case 7). */
+        const uint8_t spur = re15_spur(s_spur_death, e->sub_state_1);  /* @0x80115038-58 */
+        switch (e->sub_state_3) {
+        case 0:
+            e->hit_react |= 2;                                /* @0x801150c4-c8 / @0x801152d4-d8 /
+                                                               * @0x80115508-0c */
             e->sub_state_3 = 1;
-        } else {
-            if (e->anim_frame == 0x3d) re15_audio_room_se(1);                         /* SE(1) at frame 61 @0x80115230-40 */
-            if (re15_roach_anim(e)) { e->state = 7; e->sub_state_3 = 0; e->roach_fade = 0; }
+            if (spur == 0u)      re15_roach_clip(e, 0x0e);    /* Boden 0x80115070: Clip 0xe @0x801150e4-e8 */
+            else                 re15_roach_clip(e, (uint8_t)((e->hit_react & 0x80) ? 0x0b : 0x0a));
+                                                              /* Luft 0x80115280: @0x801152f4-320;
+                                                               * Explosion 0x801154b4: @0x80115528-50 */
+            if (spur == 2u) {
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* @0x80115570-88 */
+                e->ai_timer = 0;                              /* +0x9c @0x80115598 */
+            }
+            re15_audio_room_se(7);                            /* a0 = 7 @0x8011518c-90 / @0x801153c4-c8 /
+                                                               * @0x8011561c-20 */
+            /* fall through */
+        case 1:
+            if (re15_roach_anim(e)) {                         /* anim_set @0x801151f8 / @0x80115430 /
+                                                               * @0x80115688, +0x7 += fertig */
+                e->sub_state_3 = 2;
+                e->anim_frame = (int32_t)s_roach_clip_len[e->motion & 0x1f] - 1;   /* letztes Bild halten */
+            }
+            if (spur == 0u) {
+                /* FUN_80115b68(0,0) @0x80115218 = Lokator OFFEN */
+                if (e->anim_frame == 0x3d) re15_audio_room_se(1);   /* +0x95 == 0x3d NACH anim_set
+                                                               * @0x8011522c-40 */
+            } else if (spur == 1u) {
+                if (e->anim_frame == 0x13) re15_audio_room_se(1);   /* +0x95 == 0x13 @0x80115460-74 */
+            } else {
+                e->crow_speed = (int16_t)(0x50 - ((int)e->ai_timer << 2));   /* @0x801156b8-cc */
+                re15_dog_advance_ofs(e, 0x800);               /* @0x801156b4/c8 */
+                if (e->hit_react & 0x80) re15_dog_advance_ofs(e, 0);   /* @0x801156dc-f4 */
+            }
+            break;
+        default:                                              /* Phase 2 @0x8011524c / @0x80115480 /
+                                                               * @0x80115700: Blut (OFFEN), dann
+                                                               * Zustandswort 7 (`sw v0,4`) */
+            e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            e->roach_fade = 0;
+            break;
         }
-        break;
+        break; }
 
     case 7:   /* CORPSE 0x80115a6c: flags|0x2|0x40, 0x5a fade counter, then inert */
         if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x80115a98 */
@@ -11394,8 +11525,11 @@ static void re15_cockroach_ai_tick(int slot)
             e->flags |= (uint8_t)(0x2 | 0x40);                                         /* entity flags |=0x2 @0x80115ac4, |=0x40 @0x80115ae0 (OPEN: colour dim +0xc4/+0xec) */
             e->sub_state_3 = 1;
         }
-        if (e->roach_fade > 0) { e->roach_fade--; re15_roach_anim(e); }               /* fade + pool spread (spread OPEN); expiry -> inert */
-        else e->sub_state_3 = 2;                                                       /* phase 2 inert — stop ticking @0x80115b58 */
+        /* RUNDE 34 B8: KEIN Anim-Vorschub — die Leiche 0x80115a6c-b60 ruft kein anim_set
+         * (kein `jal` im ganzen Handler); vorher spielte der Port den Todesclip 90 Bilder lang
+         * erneut ab. */
+        if (e->roach_fade > 0) e->roach_fade--;                                       /* +0x9e-- @0x80115b44-4c; pool spread OPEN */
+        else e->sub_state_3 = 2;                                                       /* phase 2 inert @0x80115b50-5c */
         break;
 
     default:
@@ -11461,6 +11595,16 @@ static int re15_birkin_anim(re15_actor_t *e)
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
+}
+/* Clip-Laenge wie re15_birkin_anim (Bank, sonst deren Rueckfall 40) — zum Halten des letzten
+ * Bildes am Todesende (Runde 34 B8). */
+static int re15_birkin_fc(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *bb = re15_enemy_find(e->type);
+    int fc = 40;
+    if (bb && bb->ok && e->motion < bb->anim.clip_count && bb->anim.clips[e->motion].frame_count > 0)
+        fc = bb->anim.clips[e->motion].frame_count;
+    return fc;
 }
 /* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
  * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
@@ -13170,8 +13314,45 @@ static void re15_alligator_ai_tick(int slot)
         e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
-    case 3:   /* DEATH (take_damage +0x4=3): -> corpse. Exact death-topple clip = faithful-line. */
-        e->state = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    case 3:   /* DEATH 0x8010e9e8 — RUNDE 34 B8 (selbst disassembliert STAGE2.BIN): die Tabelle
+               * @0x80118cc4 (`lbu v0,5` @0x8010e9f8, `jalr` @0x8010ea18) fuehrt ALLE 22 Zeilen auf
+               * 0x8010ea30. Phasen auf +0x7 (sub_state_3):
+               *   0 @0x8010ea7c: +0x93 |= 2 (@0x8010ea84-88), +0x7 = 1, Clip 13 (@0x8010eaa4-a8), +0x95 = 0,
+               *     Crossfade 7 (@0x8010eac4-c8), +0x8c = 0 (@0x8010ead8), +0x9c = 0 (@0x8010eae8),
+               *     +0x1ba = -(+0x82 * 1800) (@0x8010eaf8-b18), Blut an (+0x188)+2644 (Render OFFEN),
+               *     Todes-Flag 0x8004ef90 (@0x8010eb50, em_flag-Commit von run_all); faellt in Phase 1
+               *   1 @0x8010eb58: anim_set (+0x7 += fertig); bei +0x1e0 == 0 und +0x95 == 20 -> +0x7 = 2
+               *     (@0x8010eb9c-bc); ab +0x95 >= 21 0x8001c1a4(+0x8c, 0, -80, +0x1ba) (@0x8010ebd4-e8)
+               *   2 @0x8010ebf8: Blut, Zustandswort 7 (@0x8010ec14-18).
+               * MODELL-LUECKE: EM023 steht in keinem RE1.5-EMS (re15_ems.c s_ems_order), die Laenge von
+               * Clip 13 ist unbekannt -> "anim_set fertig" liest die geladene Bank (re15_actor_clip_len);
+               * ohne Bank bleibt nur die Bild-20-Regel (OFFEN fuer den Wasser-Fall +0x1e0 != 0). */
+        switch (e->sub_state_3) {
+        case 0:
+            e->hit_react = (uint8_t)(e->hit_react | 2);
+            e->sub_state_3 = 1;
+            e->motion = 0xd; e->anim_frame = 0; e->anim_frac = 7;
+            e->ai_timer = 0;
+            e->dog_floor_y = (int16_t)(-(int32_t)e->floor * 1800);
+            /* fall through */
+        case 1: {
+            e->anim_frame++;                                  /* anim_set: +0x95 nach dem Vorschub */
+            if (e->anim_frac > 0) e->anim_frac--;
+            const int fc = re15_actor_clip_len(e);
+            if (fc > 0 && (int)e->anim_frame >= fc) {        /* +0x7 += fertig */
+                e->anim_frame = fc - 1;
+                e->sub_state_3 = 2;
+            }
+            if (e->anim_frame == 20 && (e->dog_atk_cd == 0 || fc <= 0))   /* @0x8010eb9c-bc; ohne Bank
+                                                               * PORT-SICHERUNG (OFFEN, s.o.) */
+                e->sub_state_3 = 2;
+            if (e->anim_frame >= 21)                          /* `sltiu v0,v0,0x15` @0x8010ebd4 */
+                (void)re15_maggot_ballistic(e, 0, 0, -80);   /* 0x8001c1a4(+0x8c=0, 0, -80, +0x1ba) @0x8010ebe8 */
+            break; }
+        default:                                              /* @0x8010ebf8-ec18 */
+            e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            break;
+        }
         break;
 
     case 7:   /* CORPSE 0x8010eca4 (audit #11): phase0 seeds +0x9e=0x5a, flags|=2, flags|=0x40; phase1
@@ -13186,7 +13367,7 @@ static void re15_alligator_ai_tick(int slot)
             if (e->grab_kill_ctr > 0) e->grab_kill_ctr--;   /* 90-frame countdown @0x8010ed74-90 */
             else e->sub_state_2 = 2;                    /* -> inert */
         }
-        e->anim_frame++;
+        /* RUNDE 34 B8: kein Bildvorschub — CORPSE 0x8010eca4-ed98 ruft kein anim_set (kein `jal`). */
         break;
 
     default:
@@ -13572,26 +13753,49 @@ static void re15_tyrant_ai_tick(int slot)
         break;
     }
 
-    case 3:   /* DEATH 0x80114cb0 (audit #12): two-stage. Phase 0/1 fall clip 8 (gib clip 9 if +0x93&0x80)
-               * + blood FX + SE 2, SE 7 @frame 0x18 -> phase 2 settle clip 0xa (0xb if gore +0x93&2) ->
-               * CORPSE (state 7). */
+    case 3:   /* DEATH 0x80114cb0 — RUNDE 34 B8 neu gegen STAGE4.BIN gelesen (Phasen `table 0x80100344`
+               * = {4cf0, 4e2c, 4f00, 4f64, 4fa0}; die Tabelle @0x8011a218 fuehrt alle 22 Zeilen hierher):
+               *   0 @0x80114cf0: +0x93 |= 2 (@0x80114d04-08 — fehlte), +0x7 = 1, Clip 8 (9 bei +0x93 & 0x80,
+               *     @0x80114d24-50), +0x95 = +0x96 = 0, Crossfade +0x8f = 0 (`sb zero,143` @0x80114d80 — der
+               *     Port setzte 7), Blut (OFFEN), SE 2 (@0x80114e04-08), Todes-Flag @0x80114e24; faellt in 1
+               *   1 @0x80114e2c: anim_set (+0x7 += fertig), Fussanker FUN_80115bec (OFFEN), bei +0x95 == 24
+               *     NACH dem Vorschub SE 7 und +0x7 = 2 (@0x80114ed4-efc — der Port wartete aufs Clip-Ende)
+               *   2 @0x80114f00: +0x7 = 3, Clip 0xa, 0xb NUR bei +0x93 & 0x80 (`andi v0,v0,0x80`
+               *     @0x80114f34 — der Port las Bit 2), +0x95 = 0, Crossfade 7 (@0x80114f5c-60); faellt in 3
+               *   3 @0x80114f64: anim_set (+0x7 += fertig)
+               *   4 @0x80114fa0: Blut (OFFEN), Zustandswort 7 (@0x80114fcc-d0). */
         switch (e->sub_state_3) {
-        case 0:   /* phase 0: fall/gib clip + SE 2 */
-            re15_birkin_clip(e, (uint8_t)((e->hit_react & 0x80) ? 9 : 8)); e->anim_frac = 7;  /* clip 8 / gib 9 @0x80114d28-50 */
-            re15_audio_room_se(2);                                                 /* SE 2 @0x80114e04 */
-            /* blood FX 0x80019700 @0x80114dfc — render-side, OPEN */
+        case 0:
+            e->hit_react |= 2;
             e->sub_state_3 = 1;
+            re15_birkin_clip(e, (uint8_t)((e->hit_react & 0x80) ? 9 : 8));
+            e->anim_frac = 0;                                 /* +0x8f = 0 @0x80114d80 */
+            re15_audio_room_se(2);
+            /* fall through */
+        case 1:
+            if (re15_birkin_anim(e)) {
+                e->sub_state_3 = 2;
+                e->anim_frame = re15_birkin_fc(e) - 1;                /* letztes Bild halten */
+            }
+            if (e->anim_frame == 0x18) {                      /* @0x80114ed4-dc */
+                re15_audio_room_se(7);                        /* @0x80114ee4-e8 */
+                e->sub_state_3 = 2;                           /* @0x80114ef4-fc */
+            }
             break;
-        case 1:   /* phase 1: play the fall; SE 7 @frame 0x18 -> phase 2 */
-            if (e->anim_frame == 0x18) re15_audio_room_se(7);                       /* SE 7 @0x80114ee4-e8 */
-            if (re15_birkin_anim(e)) e->sub_state_3 = 2;
+        case 2:
+            e->sub_state_3 = 3;                               /* @0x80114f08-0c */
+            re15_birkin_clip(e, (uint8_t)((e->hit_react & 0x80) ? 0x0b : 0x0a));   /* Crossfade 7 */
+            /* fall through */
+        case 3:
+            if (re15_birkin_anim(e)) {
+                e->sub_state_3 = 4;
+                e->anim_frame = re15_birkin_fc(e) - 1;                /* letztes Bild halten */
+            }
             break;
-        case 2:   /* phase 2: settle clip 0xa (0xb if gore) */
-            re15_birkin_clip(e, (uint8_t)((e->hit_react & 2) ? 0x0b : 0x0a)); e->anim_frac = 7;  /* clip 0xa/0xb @0x80114f18-40 */
-            e->sub_state_3 = 3;
-            break;
-        default:  /* phase 3/4: play settle -> CORPSE */
-            if (re15_birkin_anim(e)) { e->state = 7; e->ai_timer = 0x5a; e->sub_state_3 = 0; }  /* -> state 7, corpse fade 90f @0x80114fcc-d0 / @0x80115b1c */
+        default:                                              /* 4 @0x80114fa0 */
+            e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            e->ai_timer = 0x5a;                               /* Port-Leichenzaehler (Original +0x9e := 0x5a
+                                                               * in CORPSE-Phase 0 @0x80115b1c) */
             break;
         }
         break;
@@ -13611,7 +13815,7 @@ static void re15_tyrant_ai_tick(int slot)
     case 7:   /* CORPSE (state table [7] 0x80115af0): 90-frame timer then inert. The +0xc4/+0xec tint and
                * +0xbc/+0xbe sink (@0x80115b6c-b0) are render-side (same channel as zombie-girl L4608). */
         if (e->ai_timer > 0) e->ai_timer--;                                        /* +0x9c-- corpse fade @0x80115b1c */
-        re15_birkin_anim(e);
+        /* RUNDE 34 B8: kein Anim-Vorschub — CORPSE 0x80115af0 ruft kein anim_set (kein `jal`). */
         break;
 
     default:

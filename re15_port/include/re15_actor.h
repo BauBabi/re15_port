@@ -515,8 +515,13 @@ typedef struct {
      * plus die Eltern-Kaskade `(Eltern & 0x21) == 0x20` @0x80027480-94; die Tinte MULTIPLIZIERT
      * das Beleuchtungsergebnis (GTE `ldrgb`@0x80027C2C + `NCCT`@0x80027D10). Vollstaendige
      * Belegkette im Kopfkommentar der Bruecke in engine/src/enemy_ai_re2_zombie.c. */
-    uint16_t re2z_part_flags[16];
-    uint32_t re2z_part_tint[16];
+    /* ⛔ RUNDE 34 B6/B7: 20 statt 16 Eintraege. Der Hund faerbt 17 Parts (`sltiu v0,s0,0x11`
+     * @0x801047f8 / @0x8010485c EMD0G_MOD0.BIN), die Spinne 20 (FUN_8010609C `sltiu v0,a2,0x14`
+     * @0x801060bc EMS25.BIN) und laesst Part 19 fliegen (@0x80104bc8-f4). Der Zombie nutzt
+     * weiter nur 0..15. Wert 0 = "nicht gesetzt" (Hund/Spinne laufen nicht durch
+     * re15_re2z_part_reset, das Neutral 0x00808080 setzt). */
+    uint16_t re2z_part_flags[20];
+    uint32_t re2z_part_tint[20];
     /* [i] = welcher MD1-Objektindex die GEOMETRIE dieses Parts liefert. Im Original sind das
      * die vier Wörter [i][+0x08/+0x0C/+0x10/+0x14] (Geometrie- und Paketzeiger, gelesen vom
      * Zeichner FUN_80027434 @0x80027AD4-B04); der Zerleger TAUSCHT sie:
@@ -556,10 +561,10 @@ typedef struct {
     int8_t   re2z_part_grav[16];    /* +0x79 */
     int8_t   re2z_part_blend[16];   /* +0x7A */
     int16_t  re2z_part_st86[16];    /* +0x86 */
-    int16_t  re2z_part_yaw98[16];   /* +0x98 */
-    int16_t  re2z_part_w9a[16];     /* +0x9A */
-    int16_t  re2z_part_w9c[16];     /* +0x9C */
-    int16_t  re2z_part_w9e[16];     /* +0x9E */
+    int16_t  re2z_part_yaw98[20];   /* +0x98 */
+    int16_t  re2z_part_w9a[20];     /* +0x9A */
+    int16_t  re2z_part_w9c[20];     /* +0x9C */
+    int16_t  re2z_part_w9e[20];     /* +0x9E */
     uint16_t re2z_part_life[16];    /* +0xA0 */
     uint16_t re2z_part_burst_draw;  /* Bitmaske: Part war DIESES Frame vor der
                                      * Physik im Burst-Zustand (0x08|0x01) - am
@@ -741,6 +746,21 @@ typedef struct {
                                  * gestempelt? Wird beim Zustand 0 (INIT steht aus) und beim
                                  * Deaktivieren des Slots wieder geloescht. NUR im RE2-Flavor
                                  * gelesen — der RE1.5-Pfad fasst das Feld nie an.              */
+    uint16_t re2z_c236;         /* +0x236 Bildzaehler der RE2-Zombie-Wurzel (Runde 34 B5): +1 je
+                                 * Wurzel-Aufruf NACH dem Zustands-Dispatch (`lhu v0,566(s0)` /
+                                 * `addiu v0,v0,1` / `sh v0,566(s0)` @0x801004F8-508 EMZ0.BIN),
+                                 * INIT 0 (`sh zero,566(s2)` @0x801008AC). Einzige Leser: der
+                                 * Brand-/Saeure-DoT-Takt `andi v0,v0,0x7` in EXEC[1] @0x80101DE8-F0
+                                 * und EXEC[2] @0x8010249C-A4 (1 HP je 8 Bilder).               */
+    uint8_t  re2_gl_stamp;      /* PORT-Feld (Runde 34 B3/B4, re15_damage.c re2_gl_stempel): 1 = der
+                                 * Applier-Stempel des LETZTEN Treffers kam aus dem GL-Pfad
+                                 * (FUN_800470C0-Zwilling bzw. Explosion E6): Richtung +0x1D0 aus
+                                 * dem Treffpunkt P (@0x80047350-3d8), KEINE Zonen-Reserve (der
+                                 * GL-Applier schreibt +0x151..0x153 nie — Store-Liste
+                                 * @0x800471f8-0x800473d8). re2z_hurt (enemy_ai_re2_zombie.c)
+                                 * stempelt dann NICHT noch einmal aus der Spielerpeilung
+                                 * (re2z_stamp_hit = Hitscan-Applier FUN_800410CC @0x80041954-88).
+                                 * Der Schusspfad (re15_re2_stamp_hit, row_src 0) loescht es.   */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
@@ -1227,5 +1247,11 @@ int re15_re2z_gore_part_burst(const re15_actor_t *e, int bone_slot,
  * Treffer (der Zerleger sitzt im HURT, das DEATH hat seinen eigenen Gore-Zweig @0x80108250). */
 void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl,
                              int row_src, unsigned row_id);
+/* Runde 34 NACHBESSERUNG M1: derselbe Einstieg fuer einen Treffer des RE2-GL-Appliers FUN_800470C0
+ * (Bodenfeuer an einem RE1.5-KI-Import-Zombie, O-VB4): GL-Stempel (Richtung aus dem Treffpunkt `p`,
+ * +0x1D2 = `spalte` = Zone + 3K, KEIN Reserve-Abzug — Store-Liste @0x80047184-0x8004749c), dann
+ * Zerleger und Gore-Zweig mit der Hitcode-Zeile `zeile`. Gates wie oben. */
+void re15_re15_re2z_gore_hit_gl(re15_actor_t *e, const int32_t p[3], unsigned zeile,
+                                unsigned spalte);
 
 #endif /* RE15_ACTOR_H */

@@ -739,6 +739,16 @@ static void esp_fx_dispatch_b(re15_esp_fx_t *f)
  * shotgun-shell 0x01090001 variant is a stage-3 refinement). NULL = silent (engine tests). */
 void (*re15_esp_shell_clink_hook)(void) = NULL;
 
+/* Runde 34 VERTRAG V1 (C0): nur die Definitionen — Belege je Symbol an der Deklaration in
+ * include/re15_esp.h. In C0 setzt/liest/ruft sie niemand (keine Verhaltensaenderung).
+ *   g_re15_licht_latch       = 0x800b5358 (Setzer @0x8001857c/@0x80017694, Leser @0x8001ce60,
+ *                              Loeschung @0x8001d1b4)
+ *   re15_esp_se_hook         = FUN_80045024-Analogon (Rufer @0x80018424/@0x80018358/@0x800185ec)
+ *   re15_esp_aufschlag_hook  = Uebergabe an die RE2-FX-Maschine (E8; RE2-Art-Byte @0x8001f1a8-b8) */
+uint8_t g_re15_licht_latch = 0;
+void (*re15_esp_se_hook)(uint32_t code, const int32_t pos[3]) = NULL;
+void (*re15_esp_aufschlag_hook)(int re2_art, const int32_t q[3], int16_t gier) = NULL;
+
 /* FUN_80019700 header seed (decompile lines 85-88): per spawned slot
  *   slot+0x32 (CLUT)  = EFF hdr u16 @+4  + ((sub & 0xff) >> 3) * 0x40
  *   slot+0x30 (TPAGE) = EFF hdr u16 @+6

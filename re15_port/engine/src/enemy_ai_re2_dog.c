@@ -56,6 +56,7 @@
 #include <stdint.h>
 #include <stdlib.h>   /* getenv */
 #include <stdio.h>
+#include <string.h>   /* memset (Testhaken FX-Zaehler) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 / re15_atan2_q12 */
@@ -66,6 +67,7 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
 #include "re15_gameflow.h"   /* re15_char_variant — Port-Zwilling von PL+0x8 & 1 (@0x80102010-18) */
 #include <stdio.h>
+#include <string.h>   /* memset (Testhaken FX-Zaehler) */
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
 /* zombie-file shims reused verbatim (enemy_ai_common.c / enemy_ai_re2_zombie.c) */
@@ -330,14 +332,26 @@ static const uint8_t re2d_fx_tbl[10][6] = {                /* @0x801056AC (60 B 
     { 0x85,   4, 0,0,  0x00,0x10 },   /* 8 Gore                       */
     { 0x84, 0x0F, 0,0,  0x00,0x14 },  /* 9                            */
 };
+/* Testhaken (Runde 34 B6): Spawns je Effekt-Nummer, die das Budget-Tor passiert haben. Reine
+ * Zaehlung, kein Verhalten. */
+static unsigned s_re2d_fx_zaehler[16];
+void re15_re2dog_fx_zaehler_reset(void) { memset(s_re2d_fx_zaehler, 0, sizeof s_re2d_fx_zaehler); }
+unsigned re15_re2dog_fx_zaehler(int fx) { return ((unsigned)fx < 16u) ? s_re2d_fx_zaehler[fx] : 0u; }
+
 static void re2d_fx(re15_actor_t *e, int part, int fx)
 {
     if (e->re2d_budget21f == 0) return;                    /* @0x80105090-98 */
+    if ((unsigned)fx < 16u) s_re2d_fx_zaehler[fx]++;       /* Testhaken */
     uint32_t r = re15_re2_rand();                          /* @0x801050D4 yaw spread draw */
     e->re2d_budget21f--;                                   /* @0x8010518C-98 */
-    if (fx == 6 || fx == 9 || fx >= 10) return;            /* Sabber/0x84/Glas: kein RE1.5-Pendant
-                                                            * (OPEN; fx 11 laege ohnehin hinter dem
-                                                            * Tabellenende @0x801056AC+60) */
+    if (fx == 6 || fx >= 9) return;                        /* Sabber / Arten 0x84/0x86: kein RE1.5-
+                                                            * Pendant (OPEN, stumm). Die Tabelle
+                                                            * @0x801056AC hat 13 Eintraege (Runde 34
+                                                            * B6 nachgelesen): [9] 84 0f/0x14,
+                                                            * [10] 84 0f/0x0c @0x801056E8 (Saeure-Tod
+                                                            * @0x8010489c), [11] 86 00/0x10
+                                                            * @0x801056EE (Glas, HURT 14), [12] 84 0c
+                                                            * /0x10 @0x801056F4. */
     const re15_actor_t *at = (fx == 4) ? &g_actors[RE15_ACTOR_SLOT_PLAYER] : e;  /* @0x801050C4-D0 */
     int spread = (int)re2d_fx_tbl[fx][2] | ((int)re2d_fx_tbl[fx][3] << 8);   /* lhu 2(s1) @0x80105100 */
     int off    = (int)(r & (uint32_t)((spread << 1) - 1)) - spread;          /* @0x8010510C-120 */
@@ -2023,6 +2037,26 @@ static const uint8_t s_re2d_row_von_waffe[22] = {
     1, 1, 1, 3, 2, 4, 4, 5, 7, 9, 11, 10, 15, 8, 16, 9, 11, 10, 17, 18, 13, 1
 };
 
+/* RUNDE 34 B6 — die FX-8-Schleife der HURT-Zeilen 9/10 (0x80103CE4 / 0x80103D9C), selbst
+ * disassembliert (EMD0G_MOD0.BIN):
+ *   80103d28  sb v0,543(s1)          ; +0x21F = n (Budget)
+ *   80103d2c  andi v0,v0,0xff / beq v0,zero -> Ende ; n == 0: keine Schleife
+ *   80103d38  jal 0x80015fe8         ; Part = rand & 0xF   (Delay-Slot: s0 += 1)
+ *   80103d48  jal 0x80105070         ; FX 8 — der Spawner zieht +0x21F ab (@0x8010518c-98)
+ *   80103d50  lbu v0,543(s1) / sltu v0,s0,v0 / bne -> 80103d38 ; weiter, solange s0 < Budget
+ * Der ZAEHLER waechst, das BUDGET schrumpft -> ceil(n/2) Wuerfe (n = 1/2/3/4 -> 1/1/2/2;
+ * RE2-GP §6.1 W3). Der Port warf vorher n. */
+static void re2d_fx8_schleife(re15_actor_t *e)
+{
+    if (e->re2d_budget21f == 0u) return;
+    unsigned zaehler = 0;
+    do {
+        uint32_t r = re15_re2_rand();
+        zaehler++;
+        re2d_fx(e, (int)(r & 0xfu), 8);
+    } while (zaehler < (unsigned)e->re2d_budget21f);
+}
+
 static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->re2d_dbl223 & 0x80u) { re2d_knockdown(e, pl); return; }   /* Router @0x801032B0-BC */
@@ -2051,9 +2085,9 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
              * spezifisch, RE1.5-Mapping nicht RE'd). Das /3 hier extrahiert das BRACKET →
              * mit Bracket 0 laufen die Budgets auf Maximum (= RE2-Nah-Treffer-Verhalten). */
             int n = 2 - (int)(e->re2z_hits1d2 / 3u);       /* @0x80103D00-28 */
-            e->re2d_budget21f = (uint8_t)((n > 0) ? n : 0);
-            for (int i = 0; i < n; i++)
-                re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 8);   /* FX 8 @0x80103D38-5C */
+            e->re2d_budget21f = (uint8_t)n;                /* sb v0,543 @0x80103d28 */
+            re2d_fx8_schleife(e);                          /* @0x80103D30-5C: ceil(n/2) Wuerfe */
+            e->sub_state_1 = 1;                            /* sb v0(=1),5(s1) @0x80103d64-68 */
             break;
         }
         case 10: case 16:                                  /* [10]/[16] 0x80103D9C */
@@ -2061,16 +2095,30 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
             int n = 4 - (int)(e->re2z_hits1d2 / 3u);       /* @0x80103DB8-E0 (/3 = BRACKET;
                                                             * Produzent re15_re2_stamp_1d2,
                                                             * s. Zeile-9-Block oben) */
-            e->re2d_budget21f = (uint8_t)((n > 0) ? n : 0);
-            for (int i = 0; i < n; i++)
-                re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 8);
-            e->re2z_self1d3 |= 0x80u;                      /* @0x80103E28-3C */
+            e->re2d_budget21f = (uint8_t)n;                /* sb v0,543 @0x80103de0 */
+            re2d_fx8_schleife(e);                          /* @0x80103DE8-E14: ceil(n/2) Wuerfe */
+            e->sub_state_1 = 1;                            /* sb v1(=1),5(a0) @0x80103e30 */
+            e->re2z_self1d3 |= 0x80u;                      /* @0x80103E28-3C: Gate 2 des Appliers
+                                                            * (@0x80047138-40) ist damit zu, bis ein
+                                                            * `&= 0x7F` laeuft (Hund-Overlay
+                                                            * @0x80100600/0x80100890/0x80100c00/
+                                                            * 0x80102e3c/0x80102fa0/0x801030ac/
+                                                            * 0x8010327c/0x80103710, RE2-GP §6.1) */
             break;
         }
         case 11:                                           /* [11] 0x80103E60 */
+        {
+            /* RUNDE 34 B6: EIN Zufalls-Part wird geaetzt — `jal rand` @0x80103e80, `andi a1,v0,0xf`
+             * @0x80103e8c, Part = +0x198 + a1*172, `addiu v1,zero,16175` / `sw v1,112(v0)`
+             * @0x80103ebc-c0 (+0x70 := 0x00003F2F), Budget 1 im Delay-Slot @0x80103ec8, FX 9 an
+             * diesem Part @0x80103ec4, +0x5 := 1 @0x80103edc. */
+            int part = (int)(re15_re2_rand() & 0xfu);
+            e->re2z_part_tint[part] = 0x00003F2Fu;
             e->re2d_budget21f = 1;                         /* @0x80103EC8 */
-            re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 9);  /* FX 9 (0x84 — OPEN, stumm) @0x80103E80-C4 */
+            re2d_fx(e, part, 9);                           /* FX 9 (0x84 — OPEN, stumm) @0x80103EC4 */
+            e->sub_state_1 = 1;                            /* sb s0(=1),5(a0) @0x80103edc */
             break;
+        }
         case 14:                                           /* [14] 0x80103F00: Glas-Schauer */
             e->re2d_budget21f = 8;                         /* sb 8,543 @0x80103F34-3C */
             re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 11); /* FX 11 (OPEN) @0x80103F40-4C */
@@ -2117,6 +2165,54 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
 /* Kern 0x80104178: EXE 0x80018FB0 (Kill-Buchhaltung — kein Port-Pendant), P0-Reuse (Knock-
  * Richtung + Clip 17), SE 7 einmalig über +0x231 (@0x801041B8-D4; die Gore-Variante 0x80104694
  * SETZT +0x231 vor dem Kern und unterdrückt so den Schrei @0x801046E8). */
+/* Der Kern 0x80104178 (Port-Buchfuehrung wie bisher; nur als Funktion ausgelagert, damit die
+ * Zeilen-Handler ihn an der ORIGINAL-Stelle rufen koennen). */
+static void re2d_kern(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (e->re2d_se231 == 0) { re2d_se(7); }                /* SE 7 Todesschrei @0x801041C8-CC */
+    e->re2d_se231 = 1;                                     /* Latch */
+    uint8_t d223 = e->re2d_dbl223;
+    e->re2d_dbl223 = 0;                                    /* sb zero,547 @0x801041AC */
+    re2d_hurt_p0(e, pl);                                   /* jal 0x80103344 @0x801041B0 */
+    if ((d223 & 0x3fu) == 2) e->speed_h = 0;               /* @0x801041D8-E0 */
+}
+
+/* RUNDE 34 B6 — der TEILE-WURF 0x80104440 (selbst disassembliert, EMD0G_MOD0.BIN): 7 Parts aus
+ * der Tabelle @0x80105680 = `02 03 04 07 08 09 0a` (`lbu v1,22144(at)` @0x80104470), je Part
+ * (Record +0x198 + p*172):
+ *   +0x00 |= 0x4A (`ori v0,v0,0x4a` / `sw` @0x801044a4-a8)   +0xA0 := 0 (`sh zero,160` @0x801044b4)
+ *   +0x9C := 800 (`sh t2,156` @0x801044b8)   +0x9A := -150 (`sh t1,154` @0x801044bc)
+ *   +0x9E := 10 (`sh t0,158` @0x801044c0)     +0xA4 := -100 (`sh a3,164` @0x801044c4)
+ *   +0x70 := 0x00101040 (`sw a2,112` @0x801044c8)  +0x98 := Hund-Gier +0x76 (`sh v0,152` @0x801044cc)
+ * Dazu Hund +0x1C0 |= 1 (@0x80104458-64) — Modell-/Kollisionsbyte ohne Port-Feld (OFFEN, wie beim
+ * Zombie). Den Flug der Parts (Integrator) hat der Port nicht (BAUPLAN O7, Render-OPEN). */
+static void re2d_teile_wurf(re15_actor_t *e)
+{
+    static const uint8_t parts[7] = { 2, 3, 4, 7, 8, 9, 10 };   /* @0x80105680 */
+    for (int i = 0; i < 7; i++) {
+        int p = parts[i];
+        e->re2z_part_flags[p] = (uint16_t)(e->re2z_part_flags[p] | 0x4Au);
+        e->re2z_part_life[p]  = 0;
+        e->re2z_part_w9c[p]   = 800;
+        e->re2z_part_w9a[p]   = -150;
+        e->re2z_part_w9e[p]   = 10;
+        e->re2z_part_wa4[p]   = -100;
+        e->re2z_part_tint[p]  = 0x00101040u;
+        e->re2z_part_yaw98[p] = e->rot_y;
+    }
+}
+
+/* Die drei Effekte je Bild des Routers 0x80104610 (@0x80104644-7C):
+ *   80104648/4c/50  a1 = 3, jal 0x80105070, a2 = 0      -> FX(Part 3, 0)
+ *   80104658/5c/60  a1 = 2, jal 0x80105070, a2 = 0      -> FX(Part 2, 0)
+ *   80104664  jal rand ; 80104674 andi v0,v0,0x1 ; 8010467c addiu a2,v0,1 -> FX(Part 2, 1 + (rand&1)) */
+static void re2d_router9_blut(re15_actor_t *e)
+{
+    re2d_fx(e, 3, 0);
+    re2d_fx(e, 2, 0);
+    re2d_fx(e, 2, 1 + (int)(re15_re2_rand() & 1u));
+}
+
 static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                             /* frischer Kill → Kern/Variante */
@@ -2142,43 +2238,78 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
         if (re15_player_victim_state() == 1 &&
             (e->re2z_prev_sub == 7 || e->re2z_prev_sub == 12))
             re15_player_victim_throwoff();
-        /* Todes-Tabelle @0x80105618 (selbst decodiert 2026-08-29):
-         *   {1,2,3,4,12,13,14,15,18} → Kern 0x80104178 = SE-7-Schrei @0x801041C8-CC
-         *   {0,5,6,9,17,19}          → Gore 0x80104610/94: `sb s1,561` im Delay-Slot
-         *                              @0x801046E8 setzt +0x231 VOR dem Kern = STUMM.
-         *                              Zeile 9: NUR bei +0x1D2 < 3 Gore (@0x801046A8-C4
-         *                              `bne v1,9` + `sltiu v0,3`), sonst Kern MIT Schrei
-         *                              (@0x801046CC).
-         *   {7,8} → 0x801042B0 (eigener Phasen-Dispatch @0x80105678 + Gore-FX-Tail
-         *           @0x801042E4-31C), {10,16} → 0x80104774, {11} → 0x8010481C — alle
-         *           UNPORTIERT: dokumentiert auf den KERN (Schrei) gefallen, nicht stumm. */
-        int gore = (row == 0 || row == 5 || row == 6 || row == 17 || row == 19 ||
-                    (row == 9 && e->re2z_hits1d2 < 3));
-        if (gore) {
-            e->re2d_se231 = 1;                             /* sb 1,561 @0x801046E8 (kein SE 7) */
-            /* Part-Scatter 0x80104440 (7 Parts @0x80105680 {2,3,4,7,8,9,10}, Flags|0x4A,
-             * Vel 800/−150/10/−100) = GIB-Dismember — Render-seitig OPEN, dokumentiert. */
+        /* Todes-Dispatch (Runde 34 B6 neu gelesen, EMD0G_MOD0.BIN): die WURZEL 0x801040DC liest
+         * +0x5 (`lbu v0,5(a0)` @0x801040E4) und springt ueber @0x801055CC:
+         *   [0] 0x801037E8, [1..4]/[10..13]/[15]/[16]/[18] 0x80104118 (Unter-Router: +0x6 == 0
+         *   -> P0-Tabelle @0x80105618[+0x5], sonst Phasen @0x80105668[+0x6]),
+         *   [5]/[6]/[9]/[17]/[19] 0x80104610 (Router: Phasen @0x80105688 + Blut je Bild),
+         *   [7]/[8] 0x801042B0, [14] 0x801048B4, [20]/[21] 0x80104178.
+         * P0-Tabelle @0x80105618: [10]/[16] 0x80104774 (Brand), [11] 0x8010481C (Saeure), sonst
+         * der Kern 0x80104178 (SE-7-Schrei @0x801041C8-CC). Die Gore-Variante 0x80104694 setzt
+         * +0x231 VOR dem Kern (`sb s1,561` im Delay-Slot @0x801046E8) = STUMM; Zeile 9 nur bei
+         * +0x1D2 < 3 (@0x801046A8-C4), sonst Kern MIT Schrei (@0x801046CC).
+         * Zeile 0 und 14 bildet die Port-Uebersetzung nie (s_re2d_row_von_waffe);
+         * {7,8} (0x801042B0, eigener Phasen-Dispatch @0x80105678 + FX-Schwanz @0x801042E4-31C)
+         * bleibt UNPORTIERT und faellt dokumentiert auf den Kern (Schrei), nicht stumm. */
+        /* ⛔ RUNDE 34 B6 — DIE REIHENFOLGE DES ORIGINALS (selbst disassembliert, EMD0G_MOD0.BIN;
+         * Wurzel-Tabelle @0x801055CC, Router 0x80104118 -> @0x80105618[+0x5]):
+         *   Zeilen {5,6,9,17,19} -> Router 0x80104610 (Phasen @0x80105688, P0 = 0x80104694):
+         *     Zeile 9 mit +0x1D2 >= 3: NUR der Kern (@0x801046A8-D4, Schrei)
+         *     sonst: +0x231 := 1 (`sb s1,561` im Delay-Slot @0x801046E8 = VOR dem Kern), Kern
+         *            (@0x801046E4), Teile-Wurf 0x80104440 (@0x801046EC), bei Zeile 9: Budget 1
+         *            (@0x80104708), Part = rand & 0xF, FX 7 nur wenn Part-Flags & 0x4A == 0
+         *            (@0x8010473C-50), danach IMMER +0x21F := 18 (@0x80104754-58)
+         *     JEDES Bild danach im Router: FX(3,0), FX(2,0), FX(2,1+(rand&1)) (@0x80104644-7C)
+         *   Zeilen {10,16} -> 0x80104774: Kern, dann bei +0x1D2 < 3 oder Zeile 16: +0x21F := 6
+         *     (@0x801047b0), 6x FX 7 an Zufalls-Parts (@0x801047b4-d4), 17 Parts +0x70 :=
+         *     0x00202020 (@0x801047d8-800)
+         *   Zeile 11 -> 0x8010481C: Kern, dann bei +0x1D2 < 3: 17 Parts +0x70 := 0x00003F2F
+         *     (@0x80104844-64), +0x21F := 2 (@0x80104870), FX 9 an Part rand&7 (@0x8010486c-80),
+         *     FX 10 an Part (rand&7)|8 (@0x80104884-9c)
+         *   alle uebrigen Zeilen: nur der Kern ({7,8} = 0x801042B0 bleibt unportiert, s.u.).
+         * Vorher lief der Port-Kern NACH dem Gore-Block: sein Treffer-P0 (re2d_hurt_p0 setzt
+         * Budget 1 und verbraucht es mit FX(0,0)) machte das Budget 18 zunichte. */
+        int router9 = (row == 5 || row == 6 || row == 9 || row == 17 || row == 19);   /* @0x801055CC */
+        if (router9 && !(row == 9 && e->re2z_hits1d2 >= 3)) {
+            e->re2d_se231 = 1;                             /* sb s1,561 @0x801046E8 (kein SE 7) */
+            re2d_kern(e, pl);                              /* jal 0x80104178 @0x801046E4 */
+            re2d_teile_wurf(e);                            /* jal 0x80104440 @0x801046EC */
             if (row == 9) {                                /* @0x801046F4-754 (nur Zeile 9) */
-                e->re2d_budget21f = 1;                     /* sb 1,543 @0x80104708 (transient) */
-                re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 7);   /* Gore FX 7 @0x80104748-50
-                                                            * (Part-Flag-&0x4A-Gate @0x8010473C
-                                                            * nicht modelliert — Scatter OPEN) */
+                e->re2d_budget21f = 1;                     /* sb s1,543 @0x80104708 (Delay-Slot) */
+                int part = (int)(re15_re2_rand() & 0xfu);  /* jal rand @0x80104704 / andi 0xf */
+                if (!(e->re2z_part_flags[part] & 0x4Au))   /* lw 0(part) / andi 0x4a @0x80104734-40 */
+                    re2d_fx(e, part, 7);                   /* jal 0x80105070 a2 = 7 @0x8010474c */
             }
-            e->re2d_budget21f = 18;                        /* sb v0=18,543 @0x80104758 — läuft
-                                                            * für JEDE Gore-Zeile (Join; der
-                                                            * alte Port schrieb es nur bei 9) */
-        }
-        if (e->re2d_se231 == 0) { re2d_se(7); }            /* SE 7 Todesschrei @0x801041C8-CC */
-        e->re2d_se231 = 1;                                 /* Latch */
-        {
-            uint8_t d223 = e->re2d_dbl223;
-            e->re2d_dbl223 = 0;                            /* sb zero,547 @0x801041AC */
-            re2d_hurt_p0(e, pl);                           /* jal 0x80103344 @0x801041B0 */
-            if ((d223 & 0x3fu) == 2) e->speed_h = 0;       /* @0x801041D8-E0 */
+            e->re2d_budget21f = 18;                        /* sb v0=18,543 @0x80104758 */
+        } else if (row == 10 || row == 16) {
+            re2d_kern(e, pl);                              /* jal 0x80104178 @0x80104784 */
+            if (e->re2z_hits1d2 < 3u || row == 16) {       /* @0x8010478c-a8 */
+                e->re2d_budget21f = 6;                     /* sb v0(=6),543 @0x801047b0 */
+                for (int k = 0; k < 6; k++)                /* sltiu v0,s0,0x6 @0x801047d0 */
+                    re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 7);   /* @0x801047b8-c8 */
+                for (int k = 0; k < 17; k++)               /* sltiu v0,s0,0x11 @0x801047f8 */
+                    e->re2z_part_tint[k] = 0x00202020u;    /* lui a0,0x20 / ori 0x2020 / sw 112 */
+            }
+        } else if (row == 11) {
+            re2d_kern(e, pl);                              /* jal 0x80104178 @0x80104828 */
+            if (e->re2z_hits1d2 < 3u) {                    /* @0x80104830-3c */
+                for (int k = 0; k < 17; k++)               /* sltiu v0,a0,0x11 @0x8010485c */
+                    e->re2z_part_tint[k] = 0x00003F2Fu;    /* addiu a1,zero,16175 / sw 112 */
+                e->re2d_budget21f = 2;                     /* sb v0(=2),543 @0x80104870 */
+                re2d_fx(e, (int)(re15_re2_rand() & 7u), 9);            /* @0x8010486c-80 */
+                re2d_fx(e, (int)((re15_re2_rand() & 7u) | 8u), 10);    /* @0x80104884-9c */
+            }
+        } else {
+            re2d_kern(e, pl);                              /* Kern 0x80104178 (Schrei) */
         }
         if (e->sub_state_2 == 0) e->sub_state_2 = 2;       /* Kern erzwingt die Phasen-Kette */
+        if (router9) re2d_router9_blut(e);                 /* @0x80104644-7C, auch im P0-Bild */
         return;
     }
+    /* RUNDE 34 B6: die Zeile VOR der Phase lesen — der Router 0x80104610 wirft seine drei
+     * Effekte nach dem Phasen-`jalr` @0x8010463c auch in dem Bild, in dem Phase 2 auf CORPSE
+     * schaltet (das Zustandswort nullt +0x5 erst fuer das naechste Bild). */
+    const uint8_t row_ph = (e->sub_state_1 < 22u) ? s_re2d_row_von_waffe[e->sub_state_1] : 1u;
     switch (e->sub_state_2) {                              /* Phasen @0x80105668 */
     case 1: re2d_hurt_p1(e); break;                        /* Luft 0x801034C8 */
     case 2:                                                /* Rutschen 0x80104200 → CORPSE */
@@ -2225,6 +2356,11 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
         re2d_hurt_p4_reroll(e);
         break;
     }
+    /* RUNDE 34 B6: der Router 0x80104610 (Zeilen {5,6,9,17,19}, Wurzel-Tabelle @0x801055CC)
+     * wirft nach JEDER Phase drei Effekte (@0x80104644-7C); Budget-begrenzt (+0x21F, Spawner
+     * @0x80105090/@0x8010518c-98). */
+    if (row_ph == 5 || row_ph == 6 || row_ph == 9 || row_ph == 17 || row_ph == 19)
+        re2d_router9_blut(e);
 }
 
 /* ================================ CORPSE (state 7) ========================================= */

@@ -31,6 +31,19 @@
 #include "re15_room_spawns.h"/* re15_room_spawns[] — the current room's entry spawn for the continue-reload */
 #include "re15_enemy.h"      /* re15_enemy_find — the per-type EMD bank (skel/anim) for the gore-bone pose */
 #include "re15_ai_flavor.h"  /* re15_re2_owns_type — der +0x1D2-Stempel des RE2-Flavors (s.u.) */
+#include "re15_door_seq.h"   /* re15_door_rotmatrix = RE2 libgte RotMatrix @0x8008e1f4 (Runde 34 B4) */
+#include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
+
+/* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
+static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
+/* Runde 34 NACHBESSERUNG M1 — ein Treffer des RE2-GL-Appliers FUN_800470C0 an einem RE1.5-KI-
+ * Kandidaten (O-VB4): Zeile (Hitcode & 0xFFFF, `andi v1,s5,0xffff` @0x80047214), Klammer
+ * (`srl s6,s5,28` @0x80047114) und die Spalte Zone + 3K, die der Applier einem RE2-Typ stempeln
+ * wuerde (@0x80047294-330). NULL = kein GL-Treffer (Resolver FUN_80012d60, Direktaufruf). */
+typedef struct { unsigned zeile, k, spalte; } re2gl_treffer_t;
+/* Die GL-Records (Zeilen 9/10/11) eines Typs, UNABHAENGIG vom KI-Besitz (Definition am Dateiende
+ * bei den Records): Zeiger *(0x800A6A88 + Typ*4). NULL = kein RE2-Record fuer den Typ. */
+static const uint32_t *re2_gl_rec_typ(uint8_t type);
 
 /* fix_1d2_spec — Definition vor take_damage. `row_src`/`row_id`: welcher Port-Erzeuger die
  * RE2-Trefferreaktions-ZEILE (+0x5) speist (0 = RE1.5-Waffen-Id, 1 = RE1.5-Angriffstyp). */
@@ -2868,6 +2881,7 @@ retry_after_latch:
  * dem `+0x4 = 2/3` — `survived` kann damit aus e->state gelesen werden. */
 static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
 {
+    e->re2_gl_stamp = 0;   /* Runde 34: der NICHT-GL-Stempel — re2z_hurt stempelt selbst (s. Feld) */
     /* MIXED (2026-08-23): typ-bezogen. Im MIXED-Modus passiert GENAU der Hund dieses Tor und
      * bekommt damit denselben Stempel wie im RE2-Modus (+0x1D2 Basis-Zone, +0x6 = 0). Die
      * ZEILE +0x5 unten bleibt der Zombie-Familie vorbehalten — der Hund benutzt +0x5 als
@@ -2955,8 +2969,25 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
  * the FUN_8001a7a8 collision-confirm → +0x93 bit0x80 (@80012fa8), the self-exclusion
  * vs the attacker +0x188 (@80012f40), and the +0x90 0x3000000 state-mask gate
  * (@80012f54). This applies the per-enemy damage ONCE per attack window.
- * Returns 1 if the hit landed, 0 if the enemy was already hit this attack. */
+ * Returns 1 if the hit landed, 0 if the enemy was already hit this attack.
+ * RUNDE 34: `p` = der Angriffspunkt des Resolver-Aufrufs (FUN_80012d60 a1, s5 — z.B. der
+ * Explosionspunkt der Granate @0x80018594-bc) oder NULL, wenn der Aufrufer keinen hat
+ * (Direktaufrufe aus Sonden/Tests). */
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
+                                     const re2gl_treffer_t *gl);
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
+{
+    return re15_enemy_take_damage_at(e, attack_type, NULL, NULL);
+}
+/* E4-Bedingung: steht der Typ unter dem RE2-Schadens-/HP-Modell ("HP UND SCHADEN GEHEN NUR
+ * ZUSAMMEN", Block ueber re15_re15_import_owns)? 0x26 NACH HERKUNFT (s. unten). */
+static int re15_e4_modell(const re15_actor_t *e)
+{
+    return (e->type != 0x26u || re15_re2spider_baby_owns(e)) &&
+           (re15_re2_model_owns(e->type) || re15_re15_import_owns(e->type));
+}
+static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
+                                     const re2gl_treffer_t *gl)
 {
     /* RE2-Adult/Baby-Spinne (Runde 7, spinne-todeszyklus.md 5.2): HP<0 = kein
      * gueltiges Ziel (@0x80047148-50) - auch der Messer-/Hitbox-Pfad laeuft im
@@ -2971,19 +3002,80 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
     }
     uint8_t type = (uint8_t)(attack_type & 0xff);
     int16_t dmg  = (type < 11) ? re15_damage_table[type] : 0;
+    /* ⛔ RUNDE 34 B3 / BAUPLAN E4 — "HP UND SCHADEN GEHEN NUR ZUSAMMEN" (Block ueber
+     * re15_re15_import_owns). Fuer die Typen unter dem RE2-Schadens-/HP-Modell (RE2-KI mit
+     * Modell-Schalter bzw. RE1.5-KI-Zombie mit Import-Option) ist die RE1.5-Flachzahl
+     * DAT_8006f418[Art] (1000 fuer Art 2/3/4 @0x8006f41c/1e/20) die verbotene Haelften-Mischung
+     * (RE2-HP 50..250 gegen RE1.5-1000). Sie bekommen die BESTEHENDE Modell-Auswahl der
+     * Waffen-Id DAT_8006f430[Art] (@0x8006f432..34 = 9/10/11):
+     * re15_enemy_dmg_row(e)[waffe] = Klammer 0 der RE2-Zeile (Zombie Zeile 9 @0x800A41CC = 200,
+     * Zeile 11 @0x800A41F4 = 200, Zeile 10 @0x800A41E0 = 200; Belege an den Tabellen oben).
+     * Art 0/1 (Gegnerangriffe) bleiben unberuehrt.
+     * ⛔ NUR ART 2..4 (NACHBESSERUNG M1): BAUPLAN E4 nennt genau die drei Granaten; die fruehere
+     * Ausdehnung auf `type < 11` gab Art 5 (Bodenfeuer, O-VB4) die Waffen-Id 14 = RE2-FLAMMENWERFER-
+     * Zeile 16 (s_re2_wpn_dmg_zombie[14] = 15 @0x800A4258) — weder O-VB4 (50) noch RE2 (5). */
+    /* 0x26 NACH HERKUNFT (wie re15_re2_stamp_hit): die sieben RDT-Feuer-Emitter von ROOM1090
+     * (Typ 0x26, Wurzel 0x80116288) sind RE1.5-Typen und behalten 1000 (BAUPLAN 1.6 "Feuer 0x26");
+     * nur echte RE2-Babys (re15_re2spider_baby_owns) stehen unter dem RE2-Modell. Vorher bekam
+     * der Emitter im RE2-Flavor die Baby-Zeile = 0 Schaden (Zensus Runde 34 B12). */
+    if (type >= 2u && type <= 4u && re15_e4_modell(e))
+        dmg = (int16_t)re15_enemy_dmg_row(e)[re15_react_table[type]];
+    /* ⛔ NACHBESSERUNG M1 — das Bodenfeuer (RE2-GL-Applier, O-VB4 Art 5) an einem RE1.5-KI-Typ
+     * UNTER DEM RE2-MODELL (Import-Zombies im RE1.5-Flavor = Vorgabe): RE2-HP gegen die RE1.5-Zahl
+     * 50 (@0x8006f422) waere dieselbe verbotene Haelften-Mischung wie oben. Er bekommt deshalb den
+     * RE2-Record-Wert DESSELBEN Hitcodes — genau den Schaden, den ein RE2-KI-Gegner desselben Typs
+     * fuer dieselbe Flamme erleidet: HP -= (w0 >> 10*K) & 0x3FF (`srlv` @0x80047254 /
+     * `andi v1,v1,0x3ff` @0x8004725c), Record *(0x800A6A88 + Typ*4) + (Zeile-1)*20
+     * (`lw a1,27272(at)` @0x8004722c). Op 40 (0x2002000A) am Zombie: Z10 w0 0x0050C8C8 @0x800A41E0
+     * -> K2 = 5. Ohne RE2-Modell (Import AUS, Made, Kakerlake, ...) bleibt O-VB4 = 50. */
+    if (gl && re15_e4_modell(e)) {
+        const uint32_t *rec = re2_gl_rec_typ(e->type);
+        if (rec && gl->zeile >= 9u && gl->zeile <= 11u && gl->k < 3u)
+            dmg = (int16_t)((rec[(gl->zeile - 9u) * 2u] >> (10u * gl->k)) & 0x3FFu);
+    }
+    /* ⛔ RUNDE 34 B9 / BAUPLAN E16 — G5 im Endkampf (ROOM5090/5091, RE2-Modul em36, RE2-HP 600
+     * @0x801003fc) bekommt fuer die Granaten die RE2-Records, Klammer 0: Zeile 9 = 80
+     * (w0 0x05014050 @0x800A5F7C), Zeile 11 = 70 (0x00A11846 @0x800A5FA4), Zeile 10 = 70
+     * (0x00511846 @0x800A5F90); Zeiger *(0x800A6A88 + 0x36*4) = 0x800A5EDC. Art 3 = Saeure =
+     * RE2-Zeile 11, Art 4 = Brand = Zeile 10 (Item-Namen RE1.5 0x0A "Acid" / 0x0B "Incendiary",
+     * RE2 Zeile 10 = Brand / 11 = Saeure — Bosse-GP §12). */
+    if (e->type == 0x36u && (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
+        type >= 2u && type <= 4u)
+        dmg = (type == 2u) ? 80 : 70;
     e->sub_state_3 = 0;                                            /* +0x7 = 0 (@80012fd4) */
     e->sub_state_2 = 1;                                            /* +0x6 = 1 (@80012fd8) */
-    e->sub_state_1 = (type < 11) ? re15_react_table[type] : 0;     /* +0x5 = reaction clip (@80012fe8) */
+    e->sub_state_1 = (type < 11) ? re15_react_table[type] : 0;     /* +0x5 = RE1.5-WAFFEN-Id
+                                                                    * DAT_8006f430[Art] (@80012fe8;
+                                                                    * Art 2 -> 9 = Hand Grenade) */
     e->hp = (int16_t)(e->hp - dmg);                               /* +0x9a -= dmg (@80012ffc) */
     e->hit_react |= 0x1;                                           /* +0x93 |= 1 (@8001300c) */
     e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
     if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
-    re15_re2_stamp_hit(e, 1, (unsigned)type);                     /* RE2-Flavor: +0x1D2 + ZEILE (s.o.) */
-    /* ⛔ PORT-OPTION (Nutzer-Auftrag): der RE2-Zerleger auch aus dem Trefferbox-Pfad. Der
-     * Treffer-URSPRUNG dieses Appliers ist der Spieler-Angriff (FUN_80012d60-Gegner-Zweig wird
-     * ausschliesslich aus re15_resolve_attack fuer Spieler-Angriffe erreicht), also ist der
-     * Spieler-Aktor die Peilungsquelle des +0x1D0-Stempels. */
-    re15_re15_re2z_gore_hit(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 1, (unsigned)type);
+    /* RUNDE 34 B3 / E6: der Explosionstreffer (Art >= 2 MIT Angriffspunkt P) stempelt fuer
+     * RE2-KI-Typen den RE2-GL-Applier-Stempel (Zone/Richtung aus P, Sperre 15, keine Reserve);
+     * sonst — und fuer alle RE1.5-KI-Typen — bleibt der bisherige Stempel. */
+    if (!(p && re2_gl_explosion_stempel(e, type, p)))
+        re15_re2_stamp_hit(e, 1, (unsigned)type);                 /* RE2-Flavor: +0x1D2 + ZEILE (s.o.) */
+    /* ⛔ PORT-OPTION (Nutzer-Auftrag): der RE2-Zerleger auch aus dem Trefferbox-Pfad. Die
+     * Peilungsquelle des +0x1D0-Stempels ist der TREFFPUNKT: beim Spieler-Angriff ohne Punkt
+     * der Spieler, beim Resolver-Aufruf mit Punkt (Explosion, Runde 34 B3) der Punkt P selbst
+     * — RE2 peilt `jal 0x800154ac` mit a0/a1 = P (`lw a0,0(s4)` / `lw a1,8(s4)` @0x80047350-54),
+     * RE1.5 nimmt fuer Bit 0x80 ebenfalls P (`lw a1,0(s5)` / `lw a2,8(s5)` @0x80012f8c-90).
+     * ⛔ NACHBESSERUNG M1: ein GL-Treffer (Bodenfeuer, O-VB4) laeuft als GL-STEMPEL durch die Bruecke
+     * — Zeile = Hitcode-Zeile, Spalte = Zone + 3K, Richtung aus P, KEIN Reserve-Abzug (FUN_800470C0
+     * schreibt +0x151..+0x153 nicht: Store-Liste @0x80047184-0x8004749c ohne Offset 337..339). Vorher
+     * lief er ueber re2z_row_from_atktype[5] = 9 (GL-EXPLOSIV) mit dem Hitscan-Reserve-Abzug
+     * (@0x80041954-88): nach 7 Flammen riss der Zerleger ein Bein ab (Gegenpruefung mess3). */
+    if (gl && p) {
+        re15_re15_re2z_gore_hit_gl(e, p, gl->zeile, gl->spalte);
+    } else if (p) {
+        static re15_actor_t s_quelle;                              /* nur x/z werden gelesen */
+        memset(&s_quelle, 0, sizeof s_quelle);
+        s_quelle.x = p[0]; s_quelle.y = p[1]; s_quelle.z = p[2];
+        re15_re15_re2z_gore_hit(e, &s_quelle, 1, (unsigned)type);
+    } else {
+        re15_re15_re2z_gore_hit(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 1, (unsigned)type);
+    }
     e->anim_flags &= (uint16_t)~0x80u;   /* same port-bookkeeping REVERSE drop as the gun path —
                                           * reverse is a per-call f314 argument (@0x80102aec), not
                                           * entity state; the hijacked state sets a new forward clip
@@ -3270,19 +3362,79 @@ int re15_hitbox_overlap(int32_t cx, int32_t cy, int32_t cz,
  * ratan2 + rsin/rcos (@0x8002b65c) — byte-identical to the body-push ellipse, so it
  * routes through the shared re15_ellipse_radius. Circular boxes take radius_min directly
  * (the beq @0x8002b61c). */
+/* ⛔ RUNDE 34 B2 — FUN_8002b498 (selbst disassembliert, RE1.5 PSX.EXE): der Kasten-Versatz +0x7c
+ * wird JEDES Bild aus dem Kasten +0x78 GEDREHT neu geschrieben (Aufruf in jeder Wurzel nach dem
+ * Zustands-Dispatch, z.B. Hund `jal 0x8002b498` @0x8010d870 STAGE1, Alligator @0x8010c4e4 STAGE2):
+ *   8002b4bc  lw   s0,120(s1)        ; Kasten +0x78
+ *   8002b4c0  lw   s2,124(s1)        ; Versatz-Puffer +0x7c
+ *   8002b4c4  lhu  v0,106(s1)        ; Gier +0x6a (roh) -> SVECTOR (0, Gier, 0) @0x8002b4cc-d8
+ *   8002b4d4  jal  0x80068098        ; RotMatrix (Tabelle 0x800794c4 == RE2 rcossin 0x800adeac,
+ *                                    ;  eigener Vergleich 16384 B bytegleich -> re15_door_rotmatrix)
+ *   8002b4e0  lhu  v0,0(s0) / 8002b4ec lhu v0,4(s0)   ; (Kasten.x, [Gier], Kasten.z)
+ *   8002b4f4  jal  0x800661c0        ; ApplyMatrix: MVMVA sf=1 `4a486012` @0x800661f4, MAC -> VECTOR
+ *   8002b504  sh   v0,0(s2)          ; +0x7c[0] = gedrehtes x (untere 16 Bit)
+ *   8002b508  lhu  v0,2(s0) / 8002b510 sh v0,2(s2)    ; +0x7c[1] = Kasten.y UNGEDREHT
+ *   8002b51c  sh   v0,4(s2)          ; +0x7c[2] = gedrehtes z
+ * Der y-Eintrag des Drehvektors ist die Gier-Zahl selbst; bei der reinen Y-Drehmatrix
+ * (m[0][1] = m[2][1] = 0) wirkt er nur auf das verworfene Ausgangs-y. Der Port rechnet den
+ * Versatz beim Test (derselbe Stand der Gier: FUN_8002b498 laeuft nach dem Dispatch, der
+ * Resolver danach). hit_offset_x/y/z sind damit der LOKALE Kasten (+0x78 [0..2]). */
+static void re15_hitbox_versatz(const re15_actor_t *t, int32_t *ox, int32_t *oz)
+{
+    *ox = t->hit_offset_x; *oz = t->hit_offset_z;
+    if (!*ox && !*oz) return;
+    int16_t R[9];
+    const uint16_t rot[3] = { 0u, (uint16_t)t->rot_y, 0u };
+    re15_door_rotmatrix(rot, R);
+    const int32_t vx = t->hit_offset_x, vy = (int16_t)t->rot_y, vz = t->hit_offset_z;
+    *ox = (int16_t)(((int64_t)R[0] * vx + (int64_t)R[1] * vy + (int64_t)R[2] * vz) >> 12);
+    *oz = (int16_t)(((int64_t)R[6] * vx + (int64_t)R[7] * vy + (int64_t)R[8] * vz) >> 12);
+}
+
+/* Der Kasten, den der RESOLVER (FUN_8002b5d0-Zwilling) fuer ein Ziel nimmt: der Aktor-Kasten,
+ * gedreht nach FUN_8002b498 — mit EINER Ausnahme:
+ * ⛔ RUNDE 34 B2 — HUND 0x20. Sein Original-Kasten ist BYTE-GELESEN {0,-720,0, 900,720,450}:
+ * INIT 0x8010d93c `lw v0,3952(v0)` @0x8010da68 (*(0x80120f70) = 0x80120f64) / `sw v0,120(v1)`
+ * @0x8010da70; @0x80120f64 = `00 00 30 fd 00 00 84 03 d0 02 c2 01` = SEKTOR (+6 = 900 laengs der
+ * Blickrichtung, +0xa = 450 quer; @0x8002b61c `beq v1,v0` nicht genommen). Dieselben Bytes in
+ * STAGE3 @0x8011ea7c (Resolver-GP K17). Der Port fuehrt den Hund fuer Koerper-Schub und Schuss
+ * weiter mit 500/600: der Original-Kasten dort eingesetzt trieb den Spieler im ROOM11D0-Riegel in
+ * die Wand (unit_r27_hund_wandtrieb: 469 Bilder in einer soliden Zelle, gemessen Runde 34) — das ist
+ * eine eigene Runde (Koerper-Schub, FUN_8002aec4), hier nicht angefasst. Der Resolver-Kasten ist
+ * damit fuer den Hund getrennt gefuehrt (PORT-ZUORDNUNG, benannt). */
+static void re15_resolver_kasten(const re15_actor_t *t, int32_t *ox, int32_t *oy, int32_t *oz,
+                                 uint16_t *r1, uint16_t *r2, uint16_t *h)
+{
+    re15_hitbox_versatz(t, ox, oz);                         /* FUN_8002b498 (s.o.) */
+    *oy = t->hit_offset_y;
+    *r1 = t->hit_radius_min; *r2 = t->hit_radius_max; *h = t->hit_height;
+    if (t->type == 0x20u) {
+        *ox = 0; *oz = 0;                                   /* Kasten.x/.z = 0 -> gedreht 0 */
+        *oy = -720; *r1 = 900; *r2 = 450; *h = 720;         /* @0x80120f64: fd30 / 0384 / 02d0 / 01c2 */
+    }
+}
+
 int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
 {
     if (!target || !atk) return 0;
-    int32_t cx = target->x + target->hit_offset_x;          /* +0x34 + offset[0] */
-    int32_t cy = target->y + target->hit_offset_y;          /* +0x38 + offset[1] */
-    int32_t cz = target->z + target->hit_offset_z;          /* +0x3c + offset[2] */
+    int32_t ox, oy, oz;
+    uint16_t r1, r2, h;
+    re15_resolver_kasten(target, &ox, &oy, &oz, &r1, &r2, &h);
+    int32_t cx = target->x + ox;                            /* +0x34 + offset[0] */
+    int32_t cy = target->y + oy;                            /* +0x38 + offset[1] */
+    int32_t cz = target->z + oz;                            /* +0x3c + offset[2] */
+    /* ⛔ RUNDE 34 B2 — SPAWN-VOREINSTELLUNG. Sce_em_set schreibt JEDEM Gegner zuerst den Kasten
+     * 0x80072be0 (`lui v0,0x8007` / `addiu v0,v0,11232` / `sw v0,120(s0)` @0x800422c8-d0) =
+     * `00 00 00 00 00 00 01 00 01 00 01 00` = {0,0,0,1,1,1}; nur Typen, deren INIT +0x78 selbst
+     * setzt, ueberschreiben ihn. Ein kastenloser Typ (FX-Emitter 0x24, Ivy 0x2d) ist fuer den
+     * Resolver also NICHT unsichtbar (R = 1 + Angriffsradius). Der Port fuehrt diese Typen ohne
+     * Kasten (hit_radius_min = 0 schaltet dort Koerper-Schub und Zielhilfe ab, Audit wf_efd92a2c
+     * ivy #77) — die Voreinstellung gilt deshalb NUR hier, im FUN_8002b5d0-Zwilling. */
+    if (r1 == 0u && r2 == 0u && h == 0u) { r1 = 1u; r2 = 1u; h = 1u; }
     /* eff radius: circular -> radius_min; sector -> ellipse toward the attack point (@0x8002b65c). */
-    int32_t radius = re15_ellipse_radius((int32_t)target->hit_radius_min,
-                                         (int32_t)target->hit_radius_max,
-                                         (int32_t)target->rot_y,
+    int32_t radius = re15_ellipse_radius((int32_t)r1, (int32_t)r2, (int32_t)target->rot_y,
                                          atk->z - cz, atk->x - cx);
-    return re15_hitbox_overlap(cx, cy, cz, radius, target->hit_height,
-                               atk->x, atk->y, atk->z, atk->radius);
+    return re15_hitbox_overlap(cx, cy, cz, radius, h, atk->x, atk->y, atk->z, atk->radius);
 }
 
 /* ====================================================================== *
@@ -3291,6 +3443,43 @@ int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
  *  and applies the damage. The two branches (player/enemy take_damage)    *
  *  are ported above; this is the iteration + gating around them.          *
  * ====================================================================== */
+/* Der Gegnerzweig von FUN_80012d60 fuer EINEN gesammelten Kandidaten, ab Gate B
+ * (@0x80012f54-0x80013024). Rueckgabe -1 = Gate B (uebersprungen, NICHT gezaehlt), sonst 1
+ * (gezaehlt, `addiu s4,s4,1` @0x80013024 — auch der Riegel-Fall "Bit 0 schon gesetzt").
+ * Runde 34: ausgelagert, weil der RE2-GL-Applier (re15_re2_gl_apply) RE1.5-KI-Kandidaten ueber
+ * GENAU diesen Zweig schickt (O-VB4, Art 5). */
+static int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3],
+                                     const re2gl_treffer_t *gl)
+{
+    /* GATE B (@0x80012f54-60, RUNDE 34 B1 — war hier als "Tod/Despawn-Flags, inert"
+     * AUSGELASSEN; das war falsch gelesen):
+     *     80012f54  lw   v0,144(s1)          ; WORT +0x90..+0x93 (little endian)
+     *     80012f58  lui  v1,0x300            ; Maske 0x03000000 = Bits 24/25 = BYTE +0x93 Bit 0|1
+     *     80012f5c  and  v0,v0,v1
+     *     80012f60  beq  v0,v1,0x8001302c    ; beide gesetzt -> naechster Kandidat
+     * Das Byte +0x93 ist im Port `hit_react` (der vorhandene Ein-Treffer-Riegel). Das
+     * Sprungziel 0x8001302c liegt HINTER dem Zaehler `addiu s4,s4,1` @0x80013024 -> ein
+     * uebersprungener Gegner zaehlt NICHT, und sein +0x93 bleibt UNBERUEHRT (auch Bit 0x80,
+     * das der Seitentest unten sonst neu berechnen wuerde). FUN_80011f50 prueft dieselbe
+     * Maske (`lui s4,0x300` @0x800120c0 / `beq v0,s4` @0x80012100). */
+    if ((e->hit_react & 3u) == 3u) return -1;
+
+    /* Per-attack collision bits (@80012f70-fac): clear all but the hit-once bit,
+     * then set bit0x80 when the hit came from the target's FRONT (FUN_8001a7a8). */
+    e->hit_react &= 1;
+    if (hit_from_front(e, p[0], p[2]))
+        e->hit_react |= 0x80;
+
+    /* type<2 → hit SE FUN_800453d0(10) @80012f80 — DEFERRED (audio SE-id table). */
+
+    /* Enemy branch (@80012fb4-3034): applies the hit once per window (bit0 guard),
+     * else marks the re-hit bit0x2. RUNDE 34: der Angriffspunkt P geht mit — der
+     * RE2-Stempel (E6) braucht ihn fuer Zone (+0x1D2) und Richtung (+0x1D0). `gl` != NULL nur aus
+     * dem RE2-GL-Applier (O-VB4, NACHBESSERUNG M1). */
+    re15_enemy_take_damage_at(e, attack_type, p, gl);
+    return 1;
+}
+
 int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
                         int attacker_slot)
 {
@@ -3307,6 +3496,25 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
     for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
         if (!e->active) continue;                              /* (*puVar6 & 1) @80012d9c */
+        /* ⛔ RUNDE 34 B1 / BAUPLAN E7 — NPCs 0x40..0x4D mit HP < 0 sind KEIN Kandidat.
+         * RE1.5 selbst hat hier KEINEN Typfilter (FUN_80012d60 prueft nur Wort 0 Bit 0 und
+         * den Kasten; der Waffen-Resolver FUN_80011f50 filtert `sltiu v0,v0,0x40`
+         * @0x80012180) — ein getroffenes NPC faellt im Original aus seinem Skript und steht
+         * danach fuer immer in Zustand 3 (0x80050ddc spielt den laufenden Clip zu Ende,
+         * 0x80050f00 kehrt bei +0x6 == 2 sofort zurueck, @0x80050f10-24) = UNFERTIG.
+         * Ziel ist deshalb RE2 (Beta->Retail): dessen Applier schliesst jeden Kandidaten mit
+         * HP < 0 aus (`lh v0,342(s0)` / `bltz v0,0x8004740c` @0x80047148-50), und RE2-NPCs
+         * tragen HP -1 (`addiu v0,zero,-1` / `sh v0,342(s0)` @0x8005d7b4-b8). Die RE1.5-NPCs
+         * tragen dieselbe Kennung aus ihrem INIT (Typ 0x45: `addiu v0,zero,-1` @0x8011d320 /
+         * `sh v0,154(v1)` @0x8011d324, STAGE1) — es fehlte nur die Abfrage.
+         * PORT-ZUORDNUNG: der Typbereich 0x40..0x4D ist die NPC-Familie des Ports
+         * (re15_npc_ai_tick, enemy_ai_common.c); nur HP < 0 schliesst aus (RE2 Gate 3). */
+        if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;
+        /* Dieselbe Regel fuer den G5-TENTAKEL 0x37 (RE2-Modul em37, Port enemy_ai_tentakel_g5.c):
+         * Ctor HP -1 `addiu v0,zero,-1` / `sh v0,342(s1)` @0x80100530/34 -> vom RE2-Applier nie
+         * getroffen (Gate 3 @0x80047148-50). Er traegt im Port keinen Kasten, faende ueber die
+         * Spawn-Voreinstellung (s. re15_hitbox_test) aber einen. */
+        if (e->type == 0x37u && e->hp < 0) continue;
         if (re15_hitbox_test(e, atk))                          /* FUN_8002b5d0 @80012db4 */
             collected[ncol++] = i;                             /* local_78[] @80012dc8 */
     }
@@ -3331,24 +3539,10 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
          * pointer ↔ the same actor; the port maps that identity to slot equality. */
         if (slot == attacker_slot) continue;
 
-        /* GATE B — terminal-state skip (@80012f54): the original skips when
-         * (e+0x90 & 0x3000000) == 0x3000000 (the enemy's death / despawn terminal
-         * flags). The bit WRITER is the enemy death/lifecycle FSM, which the port has
-         * not yet implemented, so no enemy can be in that state today → the gate is
-         * inert and is OMITTED here (behaviourally identical now, same documented-
-         * deferral stance as the hit-SE below). FUN_80011f50 reads the same gate. */
-
-        /* Per-attack collision bits (@80012f70-fac): clear all but the hit-once bit,
-         * then set bit0x80 when the hit came from the target's FRONT (FUN_8001a7a8). */
-        e->hit_react &= 1;
-        if (hit_from_front(e, atk->x, atk->z))
-            e->hit_react |= 0x80;
-
-        /* type<2 → hit SE FUN_800453d0(10) @80012f80 — DEFERRED (audio SE-id table). */
-
-        /* Enemy branch (@80012fb4-3034): applies the hit once per window (bit0 guard),
-         * else marks the re-hit bit0x2. */
-        re15_enemy_take_damage(e, attack_type);
+        {
+            const int32_t p[3] = { atk->x, atk->y, atk->z };
+            if (re15_resolver_gegnerzweig(e, attack_type, p, NULL) < 0) continue;   /* Gate B */
+        }
         hits++;                                                /* cVar9 += 1 @80012fec */
     }
     return hits;
@@ -3485,9 +3679,18 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
          * `lw [0x8011a2d4] -> +0x78` @0x80116d60-68 — s. den IVY-Kommentar weiter unten, der
          * genau diese {450,1530}-Daten dem NPC zuordnet). 0x47 stand hier schon mit
          * denselben Werten aus einem Savestate. */
-        case 0x40: case 0x42: case 0x45:
-        case 0x47: case 0x49: case 0x4b:
+        case 0x40: case 0x42:
+        case 0x47: case 0x49:
         case 0x4d: r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
+        /* ⛔ RUNDE 34 B2: 0x45 und 0x4b haben EIGENE Kaesten (INIT-Zeiger selbst gelesen):
+         *   0x45: `lw v0,5940(v0)` @0x8011d2f8 (*(0x80121734) = 0x80121728) / `sw v0,120(v1)`
+         *         @0x8011d300; @0x80121728 = `00 00 60 fa 00 00 f4 01 a0 05 f4 01`
+         *         = {0,-1440,0, 500,1440,500}
+         *   0x4b: *(0x801218d4) = 0x801218c8 / `sw v0,120(...)` @0x8011e3b8;
+         *         @0x801218c8 = `00 00 60 fa 00 00 2c 01 a0 05 2c 01` = {0,-1440,0, 300,1440,300}
+         * (live bestaetigt mzd_stage1_npc Slot 2, Bosse-GP §10). */
+        case 0x45: r = 500;  h = 1440; break;
+        case 0x4b: r = 300;  h = 1440; break;
         /* The LIVE STAGE1 briefing zombies (0x10/0x11/0x16) all read 400/1440 — byte-true
          * from the live combat RAM (stage_saves/mzd_stage1_combat_death.sav, Phase 8.7: every
          * active 0x10/0x11 entity's *(+0x78) hitbox struct = radius 400 / height 1440, the
@@ -3506,7 +3709,10 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * 0x36 (form-5 EM036) shares the boss root (no +0x8 branch) so
                                                 * it uses the same box.  */
         case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
-                                                * (faithful-line: exact +0x78 dims deferred to Wave 2) */
+                                                * (faithful-line fuer Koerper-Schub/Schuss). Der
+                                                * byte-gelesene RESOLVER-Kasten {0,-720,0,900,720,450}
+                                                * @0x80120f64 gilt seit Runde 34 B2 im FUN_8002b5d0-
+                                                * Zwilling (re15_resolver_kasten), s. dort. */
         case 0x23: r = 2200; h = 720;  break;  /* ALLIGATOR (EM023, STAGE2) — byte-true box @0x80118b98 =
                                                 * {1000,-720,0,2200,720,800}: x_max 2200 (wide), y_max 720
                                                 * (low, giant) — INIT +0x78 @0x8010c708 */
@@ -3559,6 +3765,15 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                    * file 0x210fc, byte-verifiziert 2026-08-02) =
                                                    * {0,0,0,200,180,200} — ofs_y ist 0, NICHT -h */
         a->hit_offset_y = 0;
+    /* ⛔ RUNDE 34 B2: die beiden weiteren Kaesten, deren Versatz NICHT (0,-h,0) ist:
+     *   0x23 ALLIGATOR {1000,-720,0, 2200,720,800} @0x80118b98 (STAGE2, `e8 03 30 fd 00 00 98 08
+     *        d0 02 20 03`) — Kasten.x = 1000 = die Trefferzone liegt 1000 VOR dem Koerper (vor dem
+     *        Maul); FUN_8002b498 dreht sie jedes Bild mit der Gier (re15_hitbox_versatz).
+     *   0x26 (ROOM1090 RE1.5-FEUER-EMITTER, Kasten *(0x80121264) = 0x80121258 = `00 00 00 00 00 00
+     *        58 02 d0 02 58 02` = {0,0,0, 600,720,600}) — Versatz y = 0, NICHT -720 (RAM bestaetigt
+     *        room1090_orig, Bosse-GP §3/§9). */
+    if (type == 0x23) a->hit_offset_x = 1000;
+    if (type == 0x26) a->hit_offset_y = 0;
 }
 
 /* ====================================================================== *
@@ -3667,4 +3882,438 @@ void re15_re2_pause_filter_apply(int slot)
      * Bilder, exakt der Original-Wert); wo es ausfaellt, bleibt der Gegner hoechstens
      * frueher treffbar statt fuer immer unverwundbar. */
     if ((e->re2z_self1d3 & 0x7fu) == 0u) e->hit_react &= (uint8_t)~1u;
+}
+
+/* ============================================================================================
+ * Runde 34 B3/B4 — DER RE2-GL-APPLIER FUN_800470C0 (info/re2leon/PSX.EXE), VERTRAG V2b.
+ * --------------------------------------------------------------------------------------------
+ * Selbst disassembliert (Mitschnitt build/r34g_b/re2_800470c0.dis, 420 Instruktionen bis
+ * `jr ra` @0x8004765c), Argumente a0 = &P (s32), a1 = Gier, a2 = Box {p0,p1,p2,p3} (s16),
+ * a3 = Hitcode (`addu s4,a0` @0x800470d0 / `addu fp,a1` @0x800470f0 / `addu s3,a2` @0x800470e0 /
+ * `addu s5,a3` @0x800470e8). Ablauf:
+ *   Leerliste      `lbu v0,-1037(0x800d)` (0x800CFBF3) / `beq v0,zero,0x8004762c` @0x800470c4/0x8004710c
+ *   Klammer        `srl s6,s5,28` @0x80047114
+ *   Liste          0x800CFE1C .. *(0x800CE334) (`addiu s2,s7,15412` @0x80047118, `lw v0,8524(s7)`
+ *                  @0x80047410) — im Port die aktiven Gegner-Slots 1.. in aufsteigender Folge
+ *   Gate 1         Wort 0 Bit 0 (`andi v0,v0,0x1` / `beq` @0x8004712c-30)
+ *   Gate 2         +0x1D3 != 0, GANZES Byte (`lbu v0,467(s0)` / `bne` @0x80047138-40)
+ *   Gate 3         HP < 0 (`lh v0,342(s0)` / `bltz` @0x80047148-50)
+ *   Gate 4         +0x10E & 0xC000 (`lhu v0,270` / `andi 0xc000` / `bne` @0x80047158-64)
+ *   Richtung loeschen  +0x1D0 &= 0xFF00 (`andi v1,v1,0xff00` / `sh v1,464(s0)` @0x80047178/84)
+ *   Band           (Y + (s16)+0x98 + 100 + (u16)+0x9E - P.y) <u 2*(+0x9E + 100) (@0x8004716c-a4)
+ *   Radius         p3 += (s16)+0x1EE >> 2, p2 += dto. (`lhu 494 / sll 16 / sra 18` @0x800471bc-ec,
+ *                  `sh v0,6(s3)` / `sh v0,4(s3)`) — in den PUFFER; Ruecknahme NUR im Nicht-Treffer-
+ *                  Zweig (`beq v0,zero,0x800473dc` @0x800471f0, @0x800473dc-408). Vertrag V2b:
+ *                  box ist const -> lokale Kopie (Op 40 kopiert vor jedem Aufruf frisch,
+ *                  lwl/lwr @0x80020770-8c; bau_c0.md §3.6).
+ *   Box            FUN_80041EF8(P, (s16)Gier, &+0x84, box) (`addiu a2,s0,132` @0x800471b4) — s. unten
+ *   Treffer        +0x1D0 |= 1 (@0x800471f8-204); Bit 0x10000 = ALLE, sonst der ERSTE
+ *                  (`lui v0,0x1` / `and` / `beq v0,zero,0x80047434` @0x80047208-10)
+ *   Schaden        Record = *(0x800A6A88 + Typ*4) + (Zeile*5*4 - 20), Zeile = Hitcode & 0xFFFF
+ *                  (`andi v1,s5,0xffff` @0x80047214, `lw a1,27272(at)` @0x8004722c,
+ *                  `addiu v0,v0,-20` @0x8004723c); HP -= (w0 >> 10*K) & 0x3FF (`srlv` @0x80047254,
+ *                  `andi v1,v1,0x3ff` @0x8004725c, `sh v0,342(s1)` @0x80047268)
+ *   +0x1FC         altes Zustandswort (@0x80047264-78) — NICHT GEFUEHRT: kein Leser in EMZ0 /
+ *                  EMD0G_MOD0 / EMOVL21_S0 / EMS25 / EMS26 (eigener Lade-Scan auf Immediate 508,
+ *                  build/r34g_b/ladescan.py; Hund-Modul-Befund enemy_ai_re2_dog.c:1849)
+ *   Zustand        +0x4-WORT = 2, bei HP < 0 = 3 (`sw v0,4(s1)` @0x80047288 Delay-Slot / @0x80047290)
+ *                  -> +0x5/+0x6/+0x7 = 0
+ *   Zone           1 (@0x80047294-98); Bit 0x20000: a0 = (s16)+0x98 >> 1 (`sll 16 / sra 17`
+ *                  @0x800472b4-b8), Y + a0 < P.y -> 0 (`slt` @0x800472c8, `sb zero,466` @0x800472d4);
+ *                  Wort0 & 0x10000000: P.y < Y + 3*a0 -> 2 (@0x800472d8-30c). Nur im Einzel-Zweig
+ *                  zusaetzlich Bit 0x40000 + gleiche Etage -> 0 (@0x80047534-60)
+ *   +0x1D2         Zone + 3*K (`sll v1,s6,1` / `addu v1,v1,s6` / `sb v0,466` @0x80047310-30)
+ *   +0x5           Hitcode & 0xFF (`sb s5,5(s1)` @0x80047324)
+ *   Sperre         +0x1D3 = (alt & 0x80) | ((w1 >> 9) & 0x7F) (@0x8004731c-4c)
+ *   Richtung       a = FUN_800154AC(P.x,P.z,+0x38,+0x40) - (s16)+0x76 (@0x80047350-68):
+ *                  (a+1024)&0xfff < 2048 -> |0x20, (a+1536)&0xfff < 1024 -> |0x40,
+ *                  (a-512)&0xfff < 1024 -> |0x80 (@0x8004736c-3d8)
+ *   Rueckgabe      der (letzte) getroffene Gegner, sonst 0 (@0x8004742c-30 / @0x8004762c)
+ * ========================================================================================== */
+
+/* ---- Records (w0, w1) der GL-Zeilen 9/10/11 je RE2-Typ, selbst gelesen aus info/re2leon/PSX.EXE
+ *      (Zeiger *(0x800A6A88 + Typ*4), Zeile = Basis + (Zeile-1)*20). w0 = drei 10-Bit-Schaeden
+ *      (Klammer 0/1/2), w1 Bits 9..15 = Sperre (in allen Zeilen 15). */
+static const uint32_t s_re2gl_rec_zombie[6]   = {   /* 0x10..0x14/0x18../0x2C -> 0x800A412C */
+    0x00a0c8c8u, 0x078f1e0au,     /* Z9  @0x800A41CC  200/50/10 */
+    0x0050c8c8u, 0x078f1e0au,     /* Z10 @0x800A41E0  200/50/5  */
+    0x00a0c8c8u, 0x078f1e0au };   /* Z11 @0x800A41F4  200/50/10 */
+static const uint32_t s_re2gl_rec_zombie16[6] = {   /* 0x15/0x16/0x17 -> 0x800A42A8 */
+    0x00a0c850u, 0x078f1e0au,     /* Z9  @0x800A4348   80/50/10 */
+    0x0050c850u, 0x078f1e0au,     /* Z10 @0x800A435C   80/50/5  */
+    0x00a0c8c8u, 0x078f1e0au };   /* Z11 @0x800A4370  200/50/10 */
+static const uint32_t s_re2gl_rec_dog[6]      = {   /* 0x20 -> 0x800A4424 */
+    0x00a0c92cu, 0x078f1e0au,     /* Z9  @0x800A44C4  300/50/10 */
+    0x0050c92cu, 0x078f1e0au,     /* Z10 @0x800A44D8  300/50/5  */
+    0x00a0c92cu, 0x078f1e0au };   /* Z11 @0x800A44EC  300/50/10 */
+static const uint32_t s_re2gl_rec_crow[6]     = {   /* 0x21 -> 0x800A45A0 */
+    0x00f0f03cu, 0x078f1e0au,     /* Z9  @0x800A4640   60/60/15 */
+    0x00f0f03cu, 0x078f1e0au,     /* Z10 @0x800A4654   60/60/15 */
+    0x00f0f03cu, 0x078f1e0au };   /* Z11 @0x800A4668   60/60/15 */
+static const uint32_t s_re2gl_rec_spider[6]   = {   /* 0x25 UND 0x26 -> 0x800A4B90 */
+    0x0140f03cu, 0x078f1fb4u,     /* Z9  @0x800A4C30   60/60/20 */
+    0x00520882u, 0x078f1f68u,     /* Z10 @0x800A4C44  130/130/5 */
+    0x00a0f05au, 0x078f1f68u };   /* Z11 @0x800A4C58   90/60/10 */
+static const uint32_t s_re2gl_rec_g5[6]       = {   /* 0x36 G5 -> 0x800A5EDC (Runde 34 B9) */
+    0x05014050u, 0x078f1e0au,     /* Z9  @0x800A5F7C   80/80/80 */
+    0x00511846u, 0x078f1e0au,     /* Z10 @0x800A5F90   70/70/5  */
+    0x00a11846u, 0x078f1e0au };   /* Z11 @0x800A5FA4   70/70/10 */
+static const uint32_t s_re2gl_rec_arm[6]      = {   /* RE2 0x2D (Port 0x1A) -> 0x800A5180 */
+    0x0140f03cu, 0x078f1e0au,     /* Z9  @0x800A5220   60/60/20 */
+    0x00a0f03cu, 0x078f1e0au,     /* Z10 @0x800A5234   60/60/10 */
+    0x00a0f03cu, 0x078f1e0au };   /* Z11 @0x800A5248   60/60/10 */
+
+/* NACHBESSERUNG M1 — die Records eines Typs OHNE Besitz-Test (die Zeiger oben, *(0x800A6A88 +
+ * Typ*4)), fuer den RE2-Modell-Schaden eines RE1.5-KI-Kandidaten des Appliers. Nur die Typen, die
+ * re15_enemy_dmg_row unter dem RE2-Modell fuehrt (Zombie-Familie, 0x16, Hund, Kraehe, Spinne/Baby);
+ * Arm/G5 sind RE2-Modul-Typen ohne RE1.5-Gegenstueck unter dem Modell. */
+static const uint32_t *re2_gl_rec_typ(uint8_t type)
+{
+    switch (type) {
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x18: return s_re2gl_rec_zombie;
+    case 0x16:                                             return s_re2gl_rec_zombie16;
+    case 0x20:                                             return s_re2gl_rec_dog;
+    case 0x21:                                             return s_re2gl_rec_crow;
+    case 0x25: case 0x26:                                  return s_re2gl_rec_spider;
+    default:                                               return NULL;
+    }
+}
+
+/* ---- Je-Typ-Eingaben des Appliers, die der Port nicht ueberall als Feld fuehrt ------------ *
+ * r1ee = +0x1EE (Zielradius), o94/o96 = +0x94/+0x96 (Mittelpunkt-Versatz fuer FUN_80036E30),
+ * b98/h9e = +0x98/+0x9E (Band; wo der Port re2_hit_box_set fuehrt, gilt das Feld), kopf =
+ * Wort0 & 0x10000000. Alle Werte aus den INITs der RE2-Overlays (eigener Store-Scan
+ * build/r34g_b/feldscan.py; die Adresse ist die des Stores bzw. des Wert-Ladens):
+ *   Zombie EMZ0.BIN        r 500 `addiu v1,zero,500` @0x8010096C / `sh v1,494` @0x80100980;
+ *                          +0x94/+0x96 = 0 @0x80100990/94; Box -1500/1500 @0x8010095C-64;
+ *                          Wort0 |= 0x0C000000 @0x80100984-98 (KEIN Kopf-Bit)
+ *   Hund EMD0G_MOD0.BIN    r 600 `addiu v1,zero,600` @0x80100290 / `sh v1,494` @0x801002c4;
+ *                          +0x94 = 500 @0x80100284/88, +0x96 = 0 @0x801002b0; Box -1000/1000
+ *                          @0x8010028c-9c
+ *   Kraehe EMOVL21_S0.BIN  r 300 `addiu v0,zero,300` @0x801003f4 / `sh v0,494` @0x801003fc
+ *                          (Delay-Slot); +0x94/+0x96 = 0 @0x801003d0/d4; +0x98 = -350
+ *                          @0x801003b8/c4, +0x9E = 530 @0x801003c8/dc (Flug setzt +0x98 auch
+ *                          auf 0/-350 @0x80100204/08 — der Port fuehrt das Feld fuer die Kraehe
+ *                          nicht, es gilt der INIT-Wert; OFFEN im Dossier)
+ *   Spinne EMS25.BIN       r 800 `addiu v0,zero,800` @0x80100414 / `sh v0,494` @0x80100420;
+ *                          +0x94/+0x96 = 0 aus der Tabelle @0x801063A0 (Wort 4, `sw v1,148`
+ *                          @0x801003ec); Box ueber re2_hit_box_set (enemy_ai_re2_spider.c)
+ *   Baby EMS26.BIN         r 20 @0x80100188/8c; +0x94/+0x96 = 0 @0x80100194/98; +0x98 = -10
+ *                          @0x80100168/6c, +0x9E = 10 @0x80100170/78
+ *   Arm CDEMD0_EM2D_ai1    r 800 (@0x80100338 / `sh v1,494` @0x8010034c); +0x94/+0x96 = 0
+ *                          @0x8010035c/64; +0x98 = 0 @0x80100360, +0x9E = 500 @0x8010032c/30;
+ *                          Wort0 |= 0x0C000000 @0x80100350-74 (KEIN Kopf-Bit)
+ * Das Kopf-Bit ist fuer Hund/Kraehe/Spinne/Baby auf 0 gesetzt: deren Port-Gehirne lesen +0x1D2
+ * nur als /3 (Klammer) — Zone 1 vs. 2 aendert dort nichts (OFFEN im Dossier, verhaltensneutral). */
+typedef struct {
+    int16_t  r1ee, o94, o96, b98;
+    uint16_t h9e;
+    uint8_t  kopf;
+    uint8_t  zombie;              /* 1 = +0x5 traegt die RE2-Zeile direkt (Zombie-Familie) */
+    const uint32_t *rec;          /* Zeilen 9/10/11 */
+} re2_gl_typ_t;
+
+/* 1 = dieser Aktor ist ein RE2-KI-Kandidat des Appliers (mit seinen Eingaben), 0 = RE1.5-KI. */
+static int re2_gl_typ(const re15_actor_t *e, re2_gl_typ_t *t)
+{
+    memset(t, 0, sizeof *t);
+    switch (e->type) {
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x16: case 0x18:
+        if (!re15_ai_re2_for_type(e->type) || !re15_re2z_owns_type(e->type)) return 0;
+        t->r1ee = 500; t->b98 = -1500; t->h9e = 1500; t->zombie = 1;
+        t->rec = (e->type == 0x16u) ? s_re2gl_rec_zombie16 : s_re2gl_rec_zombie;
+        break;
+    case 0x20:
+        if (!re15_ai_re2_for_type(0x20u)) return 0;
+        t->r1ee = 600; t->o94 = 500; t->b98 = -1000; t->h9e = 1000; t->rec = s_re2gl_rec_dog;
+        break;
+    case 0x21:
+        if (!re15_ai_re2_for_type(0x21u)) return 0;
+        t->r1ee = 300; t->b98 = -350; t->h9e = 530; t->rec = s_re2gl_rec_crow;
+        break;
+    case 0x25:
+        if (!re15_ai_re2_for_type(0x25u) || !re15_re2spider_owns(e)) return 0;
+        t->r1ee = 800; t->b98 = 0; t->h9e = 1400; t->rec = s_re2gl_rec_spider;
+        break;
+    case 0x26:
+        if (!re15_ai_re2_for_type(0x26u) || !re15_re2spider_baby_owns(e)) return 0;
+        t->r1ee = 20; t->b98 = -10; t->h9e = 10; t->rec = s_re2gl_rec_spider;
+        break;
+    case 0x1A:
+        if (!re15_re2arm_owns(e)) return 0;
+        t->r1ee = 800; t->b98 = 0; t->h9e = 500; t->rec = s_re2gl_rec_arm;
+        break;
+    case 0x36:
+        /* RUNDE 34 B9 — der Endkampf-G5 (ROOM5090/5091) laeuft im RE2-Modul enemy_ai_boss_g5.c
+         * (Dispatch enemy_ai_common.c: `t == 0x36 && (room & 0xFFFE) == 0x5090`, in beiden
+         * Flavors). em36-Ctor, selbst disassembliert (CDEMD0_EM36_ai1.BIN aus re2_ems_cut.py):
+         *   +0x1EE 5700   `addiu v0,zero,5700` @0x80100578 / `sh v0,494(s0)` @0x8010058c
+         *   +0x94 -2000   `addiu v0,zero,-2000` @0x80100534 / `sh v0,148(s0)` @0x80100538
+         *   +0x96 0       `sh zero,150(s0)` @0x8010057c
+         *   +0x98 -1500   `addiu v1,zero,-1500` @0x80100470 / `sh v1,152(s0)` @0x80100520
+         *   +0x9E 1500    `addiu t0,zero,1500` @0x80100448 / `sh t0,158(s0)` @0x80100580
+         *   Wort0 |= 0x0C000000 (`lui v1,0xc00` / `or` @0x801005a0-ac) -> KEIN Kopf-Bit. */
+        if ((g_current_room_id & 0xFFFEu) != 0x5090u) return 0;
+        t->r1ee = 5700; t->o94 = -2000; t->o96 = 0; t->b98 = -1500; t->h9e = 1500;
+        t->rec = s_re2gl_rec_g5;
+        break;
+    default:
+        return 0;
+    }
+    if (e->re2_hit_box_set) { t->b98 = e->re2_hit_b98; t->h9e = e->re2_hit_h9e; }
+    return 1;
+}
+
+/* ---- FUN_80041EF8 (RE2): der gedrehte Rechteck-Test im Viertel-Raster ---------------------
+ * Selbst disassembliert (build/r34g_b/re2_80041ef8.dis) samt der drei GTE-Helfer:
+ *   RotMatrix 0x8008e1f4 auf SVECTOR (0, Gier, 0) (`sh a1,162(sp)` @0x80041f44, `jal` @0x80041f74)
+ *     -> re15_door_rotmatrix (RE2-libgte-Zwilling, door_seq_common.c)
+ *   0x8002ce94: out.t = (R * lokal.t) >> 12 + (P.x, 0, P.z) — MVMVA sf=1 cv=TR `4a480012`
+ *     @0x8002cfbc auf VXY0/VZ0 = untere 16 Bit von lokal.t (@0x8002cf9c-b0), Ablage MAC1..3
+ *     (`swc2` @0x8002cfc4-cc); lokal.t = (p0, 0, -p1 - 4*p3) (`sw v0,84(sp)` @0x80041f34,
+ *     `subu v1,zero,v1` / `sll a3,a3,2` / `subu v1,v1,a3` @0x80041f68-70)
+ *   Ecke C4 = (C.x >> 2, C.z >> 2) als s16 (`sra 2` / `sh` @0x80041fbc-c8)
+ *   Kanten e1 = sat16(R*(p2, hi16(p2), 0) >> 12), e2 = sat16(R*(0, 0, lo16(2*p3)) >> 12)
+ *     (ApplyMatrixSV 0x8008dba4: MVMVA `4a486012` lm=0 @0x8008dbd8, Eingaben @0x80041fcc-ffc)
+ *   Differenzen im Viertel-Raster, alle als s16 abgelegt (@0x80042044-e8), G = (+0x84, +0x8C)
+ *   MulMatrix0 0x8008d6c4 (je Spalte MVMVA sf=1 lm=0) mit
+ *     m0 = [[e1.x, S1, e1.z], [e2.x, 0, e2.z], [0, 0, 4096]]   S1 = Oberhalbwort von
+ *          `sw t1,64(sp)` @0x80042040 (t1 = lh e1.x) = e1.x < 0 ? -1 : 0
+ *     m1 = [[d0.x, d1.x, d2.x], [S2, 0, 0], [d0.z, d1.z, d2.z]] S2 = Oberhalbwort von
+ *          `sw v1,100(sp)` @0x800420d4 (v1 = lh d2.x) = d2.x < 0 ? -1 : 0
+ *   Treffer: Vorzeichen(m2[0][0]) != Vorzeichen(m2[0][1]) (@0x800420ec-fc) UND
+ *            Vorzeichen(m2[1][0]) != Vorzeichen(m2[1][2]) (@0x80042104-18). Vorzeichen = Bit 15. */
+static int16_t re2gl_sat16(int64_t v)
+{
+    return (int16_t)(v < -32768 ? -32768 : (v > 32767 ? 32767 : v));
+}
+static int re2gl_box_test(const int32_t p[3], int16_t gier, int32_t gx, int32_t gz,
+                          const int16_t box[4])
+{
+    int16_t R[9];
+    const uint16_t rot[3] = { 0u, (uint16_t)gier, 0u };
+    re15_door_rotmatrix(rot, R);
+    const int16_t lx = box[0];
+    const int16_t lz = (int16_t)(-(int32_t)box[1] - ((int32_t)box[3] << 2));
+    const int32_t cx = (int32_t)(((int64_t)R[0] * lx + (int64_t)R[2] * lz) >> 12) + p[0];
+    const int32_t cz = (int32_t)(((int64_t)R[6] * lx + (int64_t)R[8] * lz) >> 12) + p[2];
+    const int16_t c4x = (int16_t)(cx >> 2), c4z = (int16_t)(cz >> 2);
+    const int16_t v1x = box[2], v1y = (int16_t)((box[2] < 0) ? -1 : 0);
+    const int16_t e1x = re2gl_sat16(((int64_t)R[0] * v1x + (int64_t)R[1] * v1y) >> 12);
+    const int16_t e1z = re2gl_sat16(((int64_t)R[6] * v1x + (int64_t)R[7] * v1y) >> 12);
+    const int16_t v2z = (int16_t)((int32_t)box[3] << 1);
+    const int16_t e2x = re2gl_sat16(((int64_t)R[2] * v2z) >> 12);
+    const int16_t e2z = re2gl_sat16(((int64_t)R[8] * v2z) >> 12);
+    const int32_t gx4 = gx >> 2, gz4 = gz >> 2;
+    const int16_t d0x = (int16_t)(gx4 - c4x),                   d0z = (int16_t)(gz4 - c4z);
+    const int16_t d1x = (int16_t)(gx4 - (int16_t)(c4x + e1x)),  d1z = (int16_t)(gz4 - (c4z + e1z));
+    const int16_t d2x = (int16_t)(gx4 - (int16_t)(c4x + e2x)),  d2z = (int16_t)(gz4 - (c4z + e2z));
+    const int32_t s1 = (e1x < 0) ? -1 : 0, s2 = (d2x < 0) ? -1 : 0;
+    const int16_t m00 = re2gl_sat16(((int64_t)e1x * d0x + (int64_t)s1 * s2 + (int64_t)e1z * d0z) >> 12);
+    const int16_t m01 = re2gl_sat16(((int64_t)e1x * d1x + (int64_t)e1z * d1z) >> 12);
+    const int16_t m10 = re2gl_sat16(((int64_t)e2x * d0x + (int64_t)e2z * d0z) >> 12);
+    const int16_t m12 = re2gl_sat16(((int64_t)e2x * d2x + (int64_t)e2z * d2z) >> 12);
+    if ((m00 & 0x8000) == (m01 & 0x8000)) return 0;
+    return ((m10 & 0x8000) ^ (m12 & 0x8000)) != 0;
+}
+
+/* FUN_800154AC (RE2): Peilung P -> G, 0 = +X. Alle vier Argumente auf s16 gekuerzt
+ * (`sll 16 / sra 16` @0x800154b4-d8); dx == 0 -> 1024 bzw. 3072 bei dz > 0 (@0x800154b0/e0-e8);
+ * sonst (dx >= 0 ? 4096 : 2048) - catan((dz<<12)/dx) & 0xfff (@0x800154f0-540). Port-Zwilling:
+ * re15_atan2_q12(dz,dx) - 1024 (derselbe wie re2z_stamp_hit_row); catan RE2 @0x8008d190 ist die
+ * CORDIC-Routine von RE1.5 @0x800658fc mit bytegleicher Tabelle (RE2 @0x800adb4c = RE1.5
+ * @0x80078c90 = {511,302,159,81,41,20,10,5,3,1,0,0}, eigener Vergleich). */
+static int re2gl_peilung(int32_t px, int32_t pz, int32_t gx, int32_t gz)
+{
+    int32_t dx = (int32_t)(int16_t)gx - (int32_t)(int16_t)px;
+    int32_t dz = (int32_t)(int16_t)gz - (int32_t)(int16_t)pz;
+    return ((int)re15_atan2_q12(dz, dx) - 1024) & 0xfff;
+}
+
+/* Die Richtungsbits (@0x800471f8-204 und @0x80047350-3d8). */
+static void re2gl_richtung(re15_actor_t *e, const int32_t p[3])
+{
+    int a = re2gl_peilung(p[0], p[2], e->x, e->z) - (int)e->rot_y;   /* lh v1,118(s1) / subu */
+    uint16_t dir = (uint16_t)(e->re2z_hitdir1d0 | 1u);                /* ori 0x1 @0x80047200 */
+    if (((a + 1024) & 0xfff) < 2048) dir |= 0x20u;                     /* @0x8004736c-8c */
+    if (((a + 1536) & 0xfff) < 1024) dir |= 0x40u;                     /* @0x80047390-b0 */
+    if (((a -  512) & 0xfff) < 1024) dir |= 0x80u;                     /* @0x800473b4-d8 */
+    e->re2z_hitdir1d0 = dir;
+}
+
+/* Der GEMEINSAME Stempel nach dem Schaden (Zone, +0x5, +0x6/+0x7, Sperre, Richtung).
+ * `zeile` = RE2-Zeile, `k` = Klammer, `w1` = Record-Wort 1, `bits` = Hitcode-Bit 0x20000.
+ * +0x5: die Zombie-Familie traegt die RE2-Zeile direkt (ihr Dispatch liest sie so,
+ * enemy_ai_re2_zombie.c re2z_hit_tbl/re2z_death_tbl); Hund/Kraehe/Spinne/Baby lesen +0x5 im Port als
+ * RE1.5-Waffen-Id und uebersetzen selbst (s_re2d_row_von_waffe / s_re2c_row_from_weapon /
+ * s_re2s_row_from_weapon: w9 -> 9, w10 -> 11, w11 -> 10) — fuer sie wird die RE2-Zeile deshalb
+ * auf die Waffen-Id zurueckgebildet (9 -> 9, 10 -> 11, 11 -> 10), ihre Uebersetzung ergibt dann
+ * GENAU die RE2-Zeile des Originals (`sb s5,5(s1)` @0x80047324). */
+static void re2_gl_stempel(re15_actor_t *e, const re2_gl_typ_t *t, const int32_t p[3],
+                           unsigned zeile, unsigned k, uint32_t w1, uint32_t bits)
+{
+    /* Zone (@0x80047294-30c) */
+    unsigned zone = 1u;
+    if (bits & 0x20000u) {
+        int32_t a0 = (int32_t)(int16_t)t->b98 >> 1;                    /* sll 16 / sra 17 */
+        if (e->y + a0 < p[1]) zone = 0u;                               /* slt @0x800472c8 */
+        if (t->kopf && p[1] < e->y + 3 * a0) zone = 2u;                /* @0x800472d8-30c */
+    }
+    e->re2z_hits1d2 = (uint8_t)(zone + 3u * k);                        /* @0x80047310-30 */
+    if (t->zombie) {
+        e->sub_state_1 = (uint8_t)zeile;                               /* sb s5,5(s1) @0x80047324 */
+    } else {
+        e->sub_state_1 = (uint8_t)((zeile == 10u) ? 11u : (zeile == 11u) ? 10u : zeile);
+    }
+    e->sub_state_2 = 0;                                                /* Wort-`sw` @0x80047288/90 */
+    e->sub_state_3 = 0;
+    e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | ((w1 >> 9) & 0x7Fu));  /* @0x8004731c-4c */
+    re2gl_richtung(e, p);
+    e->re2_gl_stamp = 1u;                                              /* re2z_hurt: kein 2. Stempel */
+    e->anim_flags &= (uint16_t)~0x80u;                                 /* Port-Buchfuehrung wie die
+                                                                        * beiden anderen Applier */
+}
+
+/* B3 / E6 — der Explosionstreffer (RE1.5-Resolver, Art >= 2 mit Punkt P) an einem RE2-KI-Typ.
+ * Schaden, +0x4 und +0x93 hat der RE1.5-Gegnerzweig schon geschrieben (E4/E5). Hier der
+ * RE2-Stempel: Zeile = re2z_row_from_weapon[DAT_8006f430[Art]] (Art 2 -> 9, 3 -> 11, 4 -> 10;
+ * @0x8006f432..34 = 09 0a 0b), Schadens-Klammer 0 (E4), Zone aus P mit der Zonen-Regel der
+ * GL-Hitcodes (Bit 0x20000, Port-Zuordnung E6), Spalte = Zone + 3*K mit K = 0 — ausser HE an der
+ * Zombie-Familie: K = 1 wie RE2 Op 47 (NACHBESSERUNG K1, Beleg im Rumpf), Sperre = (w1 >> 9) & 0x7F
+ * = 15 (alle GL-Zeilen, s. Records), +0x1D0 &= 0xFF00 und Richtung aus P, KEINE Zonen-Reserve.
+ * Rueckgabe 1 = gestempelt. */
+static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3])
+{
+    re2_gl_typ_t t;
+    if (attack_type < 2u || attack_type > 4u) return 0;
+    if (!re2_gl_typ(e, &t)) return 0;
+    if (e->type == 0x1Au) return 0;        /* Zellenarm: zeilen-/spaltenunabhaengig (DEATH/HURT ueber
+                                            * +0x1D2 @0x80100F58/@0x80100FE8, alle erreichbaren Spalten
+                                            * gleich), ohne Sperren-Dekrement — bleibt beim alten Weg */
+    unsigned zeile = (unsigned)re15_react_table[attack_type];         /* 9/10/11 = RE1.5-Waffe */
+    zeile = (zeile == 10u) ? 11u : (zeile == 11u) ? 10u : zeile;      /* re2z_row_from_weapon */
+    /* ⛔ NACHBESSERUNG K1 (Gegenpruefung Spur B) — die SPALTEN-Klammer der HE-Explosion an der
+     * RE2-ZOMBIE-FAMILIE ist die der RE2-EXPLOSION Op 47, nicht die des Schadens (E4 bleibt K0 = 200):
+     *   80020d54 lui a3,0x1002 / 80020d58 ori a3,a3,0x9 / 80020d78 jal 0x800470c0   (Hitcode 0x10020009)
+     *   80020d84 lui a3,0x1002 / 80020d88 ori a3,a3,0x9 / 80020db0 jal 0x800470c0   (P.y + 900)
+     *   80047114 srl s6,s5,28 (K = 1) -> 80047310 sll v1,s6,1 / 80047320 addu v1,v1,s6 /
+     *   80047328 addu v0,v0,v1 / 80047330 sb v0,466(s1)  => +0x1D2 = Zone + 3.
+     * Warum: mit Spalte 0 (Beine) laeuft DEATH[9][0] = 0x80107438 (`table 0x8010CD68`), dessen Tod-
+     * Zweig belebt als KRIECHER mit HP 10 wieder (`8010778c jal 0x80015fe8` / `80107794 andi 0x3` /
+     * `80107798 bne v0,zero,0x801077b0` / `801077b0 sh v0(=10),342(s2)`) — gemessen 24/24 (mess5).
+     * Das gehoert in RE2 zum FLUG-Kontakt des Geschosses (0x00030009 = K0, `8001ee90 lui s2,0x3` /
+     * `8001ee9c ori s2,s2,0x9` / `8001eed8 jal 0x800470c0`), den die Handgranate nicht hat (E2).
+     * Spalte 3 -> DEATH[9][3] = 0x80108530 (Sturz-Tod, P2 `8010891c sw v0(=7),4(s1)` = Leiche),
+     * HURT[9][3] = 0x80105438 (`table 0x8010CA84`). NUR Zeile 9 der Zombie-Familie: Zeilen 10/11
+     * sterben spaltenunabhaengig (`table 0x8010CD8C 18` = 0x80108530) und ueberleben mit Spalte 0 in
+     * 0x80105BC0 (Taumeln + Element-Leiter, BAUPLAN §1.6; Brand = Op 48 0x0002000A = K0 @0x80021058-70);
+     * der Hund behaelt K0 (Spalte >= 3 = nur Kern/Schrei @0x801046a8-d4 statt "zerplatzt", §1.6). */
+    const unsigned k_spalte = (t.zombie && zeile == 9u) ? 1u : 0u;
+    e->re2z_hitdir1d0 &= 0xFF00u;                                      /* @0x8004716c-84 */
+    re2_gl_stempel(e, &t, p, zeile, k_spalte, t.rec[(zeile - 9u) * 2u + 1u], 0x20000u);
+    return 1;
+}
+
+/* Runde 34 B4 — der Applier selbst (Vertrag V2b, Aufrufer: Op 40 der RE2-FX-Maschine). */
+int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4], uint32_t hitcode)
+{
+    if (!p || !box_in) return 0;
+    int16_t box[4] = { box_in[0], box_in[1], box_in[2], box_in[3] };   /* Puffer des Aufrufers */
+    const unsigned k     = hitcode >> 28;                              /* srl s6,s5,28 @0x80047114 */
+    const unsigned zeile = hitcode & 0xFFFFu;                          /* andi v1,s5,0xffff @0x80047214 */
+    const int alle = (hitcode & 0x10000u) != 0u;                       /* @0x80047208-10 */
+    int getroffen = 0;
+
+    /* Leerliste (@0x800470c4 / @0x8004710c): 0x800CFBF3 = Gegnerzahl des Raums (Port-Analogon
+     * re15_re2_room_enemy_count, Beleg dort). */
+    if (re15_re2_room_enemy_count() == 0) return 0;
+
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        re2_gl_typ_t t;
+        if (!e->active) continue;                                      /* Gate 1 @0x8004712c-30 */
+        const int re2 = re2_gl_typ(e, &t);
+        if (re2 && e->re2z_self1d3 != 0u) continue;                    /* Gate 2 @0x80047138-40 */
+        if (e->hp < 0) continue;                                       /* Gate 3 @0x80047148-50 */
+        if (re2 && (e->re2z_f10e & 0xC000u)) continue;                 /* Gate 4 @0x80047158-64 */
+        /* RE1.5-KI-Kandidaten (O-VB4, PORT-ZUORDNUNG): ihr Band/Radius/Mittelpunkt ist der eigene
+         * RE1.5-Kasten (+0x78/+0x7c, FUN_8002b5d0-Eingaben): Mitte = Lage + Versatz, Halbhoehe =
+         * Kastenhoehe, Radius = der winkelabhaengige Kastenradius zum Punkt (wie re15_hitbox_test). */
+        int16_t  b98, r1ee; uint16_t h9e; int32_t gx, gz;
+        if (re2) {
+            b98 = t.b98; h9e = t.h9e; r1ee = t.r1ee;
+            /* FUN_80036E30: +0x84 = +0x38 + (s16)+0xA0, +0x8C = +0x40 + (s16)+0xA2 mit
+             * +0xA0/+0xA2 = +0x94/+0x96, bei Gier & 0x400 vertauscht (@0x80036e34-80, eigener
+             * Mitschnitt; Aufrufer @0x80036030/@0x8003631c je Bild). */
+            if ((uint16_t)e->rot_y & 0x400u) { gx = e->x + t.o96; gz = e->z + t.o94; }
+            else                             { gx = e->x + t.o94; gz = e->z + t.o96; }
+        } else {
+            int32_t ox, oy, oz;
+            uint16_t kr1, kr2, kh;
+            re15_resolver_kasten(e, &ox, &oy, &oz, &kr1, &kr2, &kh);   /* FUN_8002b498 + Kasten */
+            if (kr1 == 0u && kr2 == 0u && kh == 0u) { kr1 = 1u; kr2 = 1u; kh = 1u; }  /* @0x80072be0 */
+            b98  = (int16_t)oy;
+            h9e  = kh;
+            gx   = e->x + ox;
+            gz   = e->z + oz;
+            r1ee = (int16_t)re15_ellipse_radius((int32_t)kr1, (int32_t)kr2,
+                                                (int32_t)e->rot_y, p[2] - gz, p[0] - gx);
+        }
+        e->re2z_hitdir1d0 &= 0xFF00u;                                  /* @0x8004716c-84 */
+        {   /* Band (@0x8004716c-a4) */
+            int32_t v = e->y + (int32_t)b98 + 100 + (int32_t)h9e - p[1];
+            if (!((uint32_t)v < (uint32_t)(2 * ((int32_t)h9e + 100)))) continue;
+        }
+        {   /* Radius in den Puffer (@0x800471bc-ec) */
+            int16_t add = (int16_t)(r1ee >> 2);                        /* sll 16 / sra 18 */
+            box[3] = (int16_t)(box[3] + add);
+            box[2] = (int16_t)(box[2] + add);
+            if (!re2gl_box_test(p, gier, gx, gz, box)) {               /* jal 0x80041ef8 */
+                box[3] = (int16_t)(box[3] - add);                      /* Ruecknahme @0x800473dc-408 */
+                box[2] = (int16_t)(box[2] - add);
+                continue;
+            }
+        }
+        if (!re2) {
+            /* O-VB4 (Orchestrator-Entscheidung): RE1.5-Angriffsart 5 "Flaechenfeuer" ueber den
+             * RE1.5-Gegnerzweig — DAT_8006f418[5] = 50 (@0x8006f422), DAT_8006f430[5] = 14
+             * (@0x8006f435). Gate B -> kein Treffer (wie @0x80012f60), sonst gezaehlt (@0x80013024).
+             * NACHBESSERUNG M1: der Hitcode geht mit (Zeile, Klammer, Spalte) — fuer Typen unter dem
+             * RE2-Modell der RE2-Record-Schaden (s. re15_enemy_take_damage_at) und der GL-Stempel der
+             * Import-Bruecke. Spalte = Zone + 3K wie @0x80047294-330: Zone 1, mit Bit 0x20000 und
+             * Y + (b98 >> 1) < P.y -> 0 (`sra a0,v0,17` @0x800472b8 / `slt` @0x800472c8); b98 = der
+             * Band-Versatz DIESES Kandidaten (oben, Port-Zuordnung O-VB4); kein Kopf-Bit. */
+            re2gl_treffer_t gl;
+            unsigned zone = 1u;
+            if ((hitcode & 0x20000u) && e->y + ((int32_t)b98 >> 1) < p[1]) zone = 0u;
+            gl.zeile = zeile; gl.k = k; gl.spalte = zone + 3u * k;
+            if (re15_resolver_gegnerzweig(e, 5u, p, &gl) < 0) continue;
+            getroffen = s + 1;
+            if (!alle) break;
+            continue;
+        }
+        e->re2z_hitdir1d0 |= 1u;                                       /* ori 0x1 @0x80047200 */
+        getroffen = s + 1;
+        if (zeile >= 9u && zeile <= 11u) {
+            const uint32_t w0 = t.rec[(zeile - 9u) * 2u];
+            const uint32_t w1 = t.rec[(zeile - 9u) * 2u + 1u];
+            int dmg = (int)((w0 >> (10u * k)) & 0x3FFu);               /* srlv / andi 0x3ff */
+            e->hp = (int16_t)((uint16_t)e->hp - (uint16_t)dmg);        /* lhu / subu / sh */
+            e->state = (e->hp < 0) ? 3u : 2u;                          /* sw 2 / sw 3 @0x80047288/90 */
+            re2_gl_stempel(e, &t, p, zeile, k, w1, hitcode & 0x20000u);
+            if (!alle && (hitcode & 0x40000u) &&
+                e->floor == g_actors[RE15_ACTOR_SLOT_PLAYER].floor)
+                e->re2z_hits1d2 = (uint8_t)(3u * k);                   /* Einzel-Zweig, gleiche Etage
+                                                                        * -> Zone 0 (@0x80047534-60);
+                                                                        * kein GL-Hitcode setzt 0x40000 */
+            /* PORT-BUCHFUEHRUNG: die Trefferpause wirkt auf den RE1.5-Schuss-Riegel +0x93 Bit 0
+             * (re15_re2_pause_filter_apply / re15_re2z_hit_filter_apply geben ihn frei, sobald
+             * +0x1D3 & 0x7F == 0) — "der Treffer selbst setzt Bit 0" (@0x800124F0-Analogon). */
+            e->hit_react |= 1u;
+        }
+        /* Andere Zeilen als 9/10/11 sind im Port nicht hinterlegt (einziger Aufrufer Op 40 =
+         * Zeile 10): Treffer ohne Anwendung, gemeldet im Dossier. */
+        if (!alle) break;
+    }
+    return getroffen;
 }

@@ -304,11 +304,25 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
             FILE *fl = pc_fx_log_handle();
             if (fl) {
                 extern int re15_render_pc_dbg_textri_count(void);
-                fprintf(fl, "id=%d sub=%d eidx=%d frame=%d w(%d,%d,%d) phys=%d xlat=(%d,%d,%d) drift=(%d,%d,%d) slot=%d q=%d\n",
+                /* Runde 34 VERTRAG V5 (C0): die alte Zeile bleibt bis "q=%d" unveraendert (Auswerter
+                 * verankern auf ihrem Anfang, z.B. startswith('id=4 sub=13')); ANGEHAENGT werden die
+                 * Granaten-Felder des Platzes: wpos = slot+0x28/2a/2c (V1a), A/B = Routinen-Waehler
+                 * row+0x00/+0x02, zuender = slot+0x1e (Routine 30 `ori v0,zero,0x2a; sh v0,30(v1)`
+                 * @0x80018474/7c), zaehler = slot+0x26 (Routine 30 `sh v0,38(a0)` @0x8001850c, Routine 29
+                 * `sh v1,38(t0)` @0x800183d4), fl = Flags slot+0x6c, art = granate_art (V1), F = Spielbild. */
+                fprintf(fl, "id=%d sub=%d eidx=%d frame=%d w(%d,%d,%d) phys=%d xlat=(%d,%d,%d) drift=(%d,%d,%d) slot=%d q=%d"
+                            " wpos=(%d,%d,%d) A=%u B=%u zuender=%u zaehler=%u fl=%02x art=%u F=%u\n",
                         f->effect_id, f->sub_index, f->eff_idx, f->frame,
                         f->x, f->y, f->z, f->phys, f->xlat_x, f->xlat_y, f->xlat_z,
                         f->drift_x, f->drift_y, f->drift_z, slot,
-                        re15_render_pc_dbg_textri_count());
+                        re15_render_pc_dbg_textri_count(),
+                        (int)f->wpos[0], (int)f->wpos[1], (int)f->wpos[2],
+                        (unsigned)(f->row[0x00] | (f->row[0x01] << 8)),
+                        (unsigned)(f->row[0x02] | (f->row[0x03] << 8)),
+                        (unsigned)(f->row[0x1e] | (f->row[0x1f] << 8)),
+                        (unsigned)(f->row[0x26] | (f->row[0x27] << 8)),
+                        (unsigned)f->flags, (unsigned)f->granate_art,
+                        (unsigned)g_engine.frame_count);
                 fflush(fl);
             }
         }
@@ -4249,6 +4263,14 @@ re_title:;
             re15_player_set_equipped_weapon((int)strtol(eqe, NULL, 0));
             fprintf(stderr, "[equip] RE15_EQUIP -> item %ld (slot %d)\n",
                     strtol(eqe, NULL, 0), re15_inv_equipped_slot());
+            /* Runde 34 VERTRAG V5 (C0, P13): RE15_EQUIP laedt jetzt auch die ARMS-SE-Bank der Waffe,
+             * wie der Menue-Commit des Originals: DAT_800aca5d := Id (`sb v0,-13731(at)` @0x80046688),
+             * dann `lbu a0,-13731(a0)` @0x800466c0 + `jal 0x80043d8c` @0x800466c4 (Bank-Lader, a1 =
+             * 0x80198000 @0x800466b8/c8) — im Port menu_common.c (re15_audio_prime_weapon nach
+             * re15_player_set_equipped_weapon) und der CONTINUE-Pfad weiter unten. Vorher blieb die
+             * beim Audio-Start geladene ARMS01 stehen, und die Granaten-SEs (ARMS-Satz 0x0A, Routine 29
+             * @0x80018410-28) lagen ausserhalb ihrer 10 Saetze. Nur Debug-Harness (RE15_EQUIP). */
+            re15_audio_prime_weapon(re15_player_equipped_weapon());   /* re15_audio.h / re15_damage.h */
         }
     }
     /* Load the item-icon sheet via the cwd-independent asset root (pc_read_shared) and hand it to the
@@ -7435,14 +7457,21 @@ re_title:;
                          * (s_player_grabbed), damit Halte-Laeufe im Echtlauf direkt zaehlbar sind. */
                         fprintf(s_state_log, " gr=%d", re15_player_is_grabbed());
                     }
+                    /* Runde 34 VERTRAG V5 (C0): je Gegner " hp=<HP>" DIREKT HINTER seiner schliessenden
+                     * Klammer — die Klammer selbst bleibt Zeichen fuer Zeichen wie bisher, weil drei
+                     * Auswerter sie bis zum `)]` verankern (runde34 port_inventar_werkzeug/auswertung.py
+                     * RX_EN, runde30 birkin_frost_echtlauf.py / birkin_vor_folge.py). Die Spieler-HP
+                     * steht schon in PL(...,hp=...) oben. HP = e->hp (+0x9a: der Resolver schreibt
+                     * `sh v1,154(s1)` @0x80013000 und liest signiert `lh v1,154(s1)` @0x80013004;
+                     * der RE2-Modellwert +0x156 landet ueber re15_re2_hp_sync im selben Feld). */
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
                         if (!e->active || e->type == 0) continue;
                         fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d ss2=%d ss3=%d g=%02x mo=%d af=%d "
-                                             "stun=%d d=%u @(%d,%d,r%d)]",
+                                             "stun=%d d=%u @(%d,%d,r%d)] hp=%d",
                                 si, e->type, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
                                 e->grid_id, e->motion, e->anim_frame, (int)e->hit_stun,
-                                e->ai_dist, e->x, e->z, e->rot_y);
+                                e->ai_dist, e->x, e->z, e->rot_y, (int)e->hp);
                     }
                     fputc('\n', s_state_log); fflush(s_state_log);
                 }

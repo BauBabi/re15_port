@@ -189,9 +189,12 @@ typedef struct {
     uint8_t  ph;             /* +0x06 Phase */
     int32_t  timer;          /* +0x158/+0x15A je Zustand */
     int32_t  rampe;          /* sub3-Dreiecksrampe (+0x158) */
-    int32_t  flinch_akku;    /* +0x222 Flinch-Akkumulator (Schwelle 15, Zerfall 1/15F) */
-    int32_t  flinch_takt;
-    uint32_t busy;           /* +0x226 Bit 1 (busy) / Bit 2 (HP<=0) / Bit 8 (Tracking aus) */
+    int32_t  flinch_akku;    /* +0x222 Flinch-Akkumulator (Schwelle 15, Zerfall 1/16F im Fenster) */
+    int32_t  flinch_takt;    /* +0x221 Fenster-Zaehler 15..0 (Runde 34 B9) */
+    uint32_t busy;           /* +0x226 Bit 0 (Akku-Fenster offen, Runde 34 B9) / Bit 1 (busy) /
+                              * Bit 2 (HP<=0) / Bit 8 (Tracking aus) */
+    uint8_t  treffer_offen;  /* PORT: Treffer gesehen, Bit 0 von +0x93 bleibt bis zum Ende der
+                              * Sperre +0x1D3 stehen (Runde 34 B9) */
     int32_t  gewicht[4];     /* Blob-Morph-Gewichte (part2+0x88+12..24) — exakte Simulation */
     uint8_t  blob;           /* +0x218 Blob-Zustand: 0 Puls / 1 Biss / 3 Vorkampf /
                               * 4 Devour / 5 Tod */
@@ -778,6 +781,17 @@ static int32_t s_blut_diag[4];
 static int32_t s_blut_ort[3];
 int32_t re15_g5_blut_diag(int idx) { return (idx >= 0 && idx < 4) ? s_blut_diag[idx] : 0; }
 int re15_g5_blut_zaehler(int idx) { return (idx >= 0 && idx < 4) ? s_blut_zaehler[idx] : -1; }
+/* Testhaken (Runde 34 B9): Flinch-Akku +0x222, Fenster-Zaehler +0x221, Fenster (+0x226 Bit 0) und
+ * der aktuelle Sub (0xF = STAGGER). Nur Messung, kein Verhalten. */
+void re15_g5_flinch_zustand(int *akku, int *takt, int *fenster, int *sub)
+{
+    if (akku)    *akku    = (int)s_g5.flinch_akku;
+    if (takt)    *takt    = (int)s_g5.flinch_takt;
+    if (fenster) *fenster = (int)(s_g5.busy & 1u);
+    if (sub)     *sub     = (int)s_g5.sub;
+}
+/* Testhaken (Runde 34 B12, Zensus): Modul-Routine (1 AKTIV / 3 TOD). */
+int re15_g5_routine(void) { return (int)s_g5.routine; }
 
 /* Diagnose fuer die Sonde: Spieler-Gierung + die beiden gedrehten Komponenten. */
 int re15_g5_blut_kamera(int32_t *yaw, int32_t *dirx, int32_t *dirz)
@@ -1496,8 +1510,26 @@ void re15_g5_boss_tick(int slot)
     dist = re15_enemy_player_dist(e, pl);
     e->dog_dist = (int16_t)dist;
 
-    /* Flinch-Zerfall (Main-Tick §1.2): -1 je 15 Frames. */
-    if (g->flinch_akku > 0 && ++g->flinch_takt >= 15) { g->flinch_takt = 0; g->flinch_akku--; }
+    /* RUNDE 34 B9 — Kopf des G5-Mains, selbst disassembliert (CDEMD0_EM36_ai1.BIN):
+     *   801000ec  lbu v1,467(s3) / andi v0,v1,0x7f / beq / addiu v0,v1,-1 / sb v0,467(s3)
+     *             -> Treffersperre +0x1D3 -1 je Bild (Bit 0x80 bleibt)
+     *   80100104  lhu v0,550(s3) / andi v0,v0,0x1 / beq -> 0x80100160    ; nur bei offenem Fenster
+     *   80100118  lbu v1,545(s3) / addiu v0,v1,255 / bne v1,zero / sb v0,545(s3)   ; +0x221 -= 1
+     *   8010012c  lbu v0,546(s3) / beq / addiu v0,v0,-1 / sb v0,546(s3)            ; Akku -1
+     *   80100140  lbu v1,546 / addiu v0,zero,15 / bne v1,zero / sb v0,545(s3)      ; +0x221 = 15
+     *   80100150  andi v0,v0,0xfffe / sh v0,550(s3)                              ; Akku 0 -> zu
+     * => Akku -1 je 16 Bilder und NUR bei offenem Fenster (+0x226 Bit 0). Vorher: -1 je 15 Bilder,
+     *    immer. */
+    if (e->re2z_self1d3 & 0x7fu) e->re2z_self1d3 = (uint8_t)(e->re2z_self1d3 - 1u);
+    if (g->busy & 1u) {
+        const int32_t t = g->flinch_takt;
+        g->flinch_takt = (t - 1) & 0xff;
+        if (t == 0) {
+            if (g->flinch_akku != 0) g->flinch_akku--;
+            g->flinch_takt = 15;
+            if (g->flinch_akku == 0) g->busy &= ~1u;
+        }
+    }
 
     /* Blut-Serie des Biss-Treffers (+0x21B). */
     if (g->blut_serie > 0) g->blut_serie--;
@@ -1518,11 +1550,33 @@ void re15_g5_boss_tick(int slot)
         return;
     }
 
-    /* TREFFER-Flinch (r0=2, inline): Akkumulator + Tabelle @0x801056B4; die Waffen-
-     * Zuordnung ist die dokumentierte Port-Entscheidung aus §7 (Handfeuer 5,
-     * Schrot/Bogen 14, Magnum/Granate 20, Messer 1); Schwelle 15 -> STAGGER Clip 8. */
-    if (e->hit_react & 1u) {
-        e->hit_react &= (uint8_t)~1u;
+    /* TREFFER-Flinch (r0=2, inline) — RUNDE 34 B9 nach der TREFFER-ZEILE statt nach der
+     * ausgeruesteten Waffe (selbst disassembliert, CDEMD0_EM36_ai1.BIN):
+     *   801029b0  lbu v0,5(s3) / 801029bc lbu v0,22195(at)   ; Byte[Zeile] @0x801056B3 + Zeile
+     *   801029c4  sltiu v0,v0,0xb / 801029cc addiu v0,zero,7 / 801029d0 sb v0,549(s3)
+     *             ; Byte >= 11 -> +0x225 := 7 (Ruettler — im Port OFFEN, s. Dossier)
+     *   801029dc  andi v0,v0,0x2 / beq                       ; +0x226 Bit 1 (busy) -> kein Akku
+     *   80102a28  lbu v1,22195(at) / addu / sb v0,546(s3)    ; +0x222 += Byte
+     *   80102a38  andi v0,a0,0x1 / bne / ori 0x1 / sh ; 80102a48 addiu v0,zero,15 / sb v0,545(s3)
+     *             ; erster Akku-Treffer: Fenster auf, +0x221 = 15
+     *   80102a58  sltiu v0,v0,0xf / beq -> 80102a80          ; >= 15 -> STAGGER 0x80102AD0
+     *   80102a84  sb zero,546 / sb zero,545 / andi 0xfffe    ; Akku, Zaehler, Fenster zurueck
+     * Byte-Tabelle (`bytes 0x801056b0 32` = 01 0d 00 00 05 05 05 05 0e 14 0e 14 0e 0e 0e 05 05 14
+     * 01 01 14 01 00 00 ..): Zeile 0 = 0, 1..4 = 5, 5 = 14, 6 = 20, 7 = 14, 8 = 20, 9/10/11 = 14,
+     * 12/13 = 5, 14 = 20, 15/16 = 1, 17 = 20, 18 = 1, 19/20 = 0. Die Zeile ist +0x5 des Treffers:
+     * der Stempel des RE2-Appliers bzw. der Explosion (re15_damage.c re2_gl_stempel) oder die
+     * RE1.5-Waffen-Id des Schuss-Pfads, uebersetzt mit derselben Tabelle wie Zombie/Hund/Spinne
+     * (re2z_row_from_weapon, enemy_ai_re2_zombie.c — Belege je Waffe dort).
+     * SPERRE: +0x1D3 = 15 stempelt der Treffer (Records w1 @0x800A5F80/94/A8, (w1 >> 9) & 0x7F);
+     * solange sie laeuft, bleibt Bit 0 von +0x93 stehen (RE1.5-Resolver: nur |= 2, kein Schaden) —
+     * das Gegenstueck von Gate 2 des Appliers (@0x80047138-40). Ohne Sperre (Schuss-Pfad)
+     * faellt Bit 0 wie bisher im selben Bild. */
+    if ((e->hit_react & 1u) && !g->treffer_offen) {
+        static const uint8_t s_g5_flinch_byte[21] = {        /* @0x801056B3 + Zeile */
+            0, 5, 5, 5, 5, 14, 20, 14, 20, 14, 14, 14, 5, 5, 20, 1, 1, 20, 1, 0, 0 };
+        static const uint8_t s_g5_zeile_von_waffe[22] = {    /* == re2z_row_from_weapon */
+            1, 1, 1, 3, 2, 4, 4, 5, 7, 9, 11, 10, 15, 8, 16, 9, 11, 10, 17, 18, 13, 1 };
+        g->treffer_offen = 1u;
         /* BLUT-AUSWURF an der Trefferstelle (RE2-Routine 2). Wache `lbu v0,6(s3)` +
          * `bne v0,zero,0x80102a94` @0x801025e8-f0: nur in Phase 0. Die beiden weiteren
          * RE2-Wachen auf `+0x05` (== 16 @0x80102658, 9..12 @0x80102660-64) betreffen
@@ -1531,16 +1585,23 @@ void re15_g5_boss_tick(int slot)
         s_blut_zaehler[0]++;
         if (g->ph == 0 && g->sub != 0xF) g5_treffer_blut(e, pl);
         if (!(g->busy & 2u)) {
-            int w = re15_player_equipped_weapon();
-            int add = (w == 1) ? 1 : (w == 5 || w == 6 || w == 9 || w == 15 || w == 18) ? 20
-                    : (w == 8 || w == 13 || w == 12) ? 14 : 5;
+            const uint8_t w = e->sub_state_1;
+            const uint8_t zeile = (w < 22u) ? s_g5_zeile_von_waffe[w] : 1u;   /* PORT-SICHERUNG */
+            const int add = (zeile < 21u) ? (int)s_g5_flinch_byte[zeile] : 0;
             g->flinch_akku += add;
-            if (g->flinch_akku >= 15) {                /* STAGGER 0x80102AD0 */
-                g->flinch_akku = 0;
+            if (!(g->busy & 1u)) { g->busy |= 1u; g->flinch_takt = 15; }   /* @0x80102a38-4c */
+            if (g->flinch_akku >= 15) {                /* STAGGER 0x80102AD0 (@0x80102a58) */
+                g->flinch_akku = 0;                    /* @0x80102a84 */
+                g->flinch_takt = 0;                    /* @0x80102a88 */
+                g->busy &= ~1u;                        /* @0x80102a8c-90 */
                 g->sub = 0xF;                          /* Flinch-Pseudo-Sub */
                 g->ph = 0;
             }
         }
+    }
+    if (g->treffer_offen && (e->re2z_self1d3 & 0x7fu) == 0u) {   /* Sperre abgelaufen */
+        e->hit_react &= (uint8_t)~1u;
+        g->treffer_offen = 0u;
     }
 
     if (g->sub == 0xF) {                               /* FLINCH: Clip 8 (50 F), SE 12/9 */

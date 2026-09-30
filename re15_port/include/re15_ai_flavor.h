@@ -127,6 +127,10 @@ int  re15_re2dog_tick(int slot);                  /* 1 = handled (RE2 dog brain 
 void re15_re2dog_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
 void re15_re2dog_room_reset(void);                /* room load: 0x800CFBF4-Analog-Bits löschen
                                                    * (einziger EXE-Clear: FUN_80052f3c @0x80052f3c) */
+/* Testhaken (Runde 34 B6): Zahl der Spawns je Effekt-Nummer 0..15, die das Budget-Tor +0x21F des
+ * Spawners 0x80105070 (@0x80105090-98) passiert haben. Nur Messung, kein Verhalten. */
+void     re15_re2dog_fx_zaehler_reset(void);
+unsigned re15_re2dog_fx_zaehler(int fx);
 
 /* The shared RE2 PRNG @0x80015FE8 (state 0x800CE318 — ONE generator for every RE2 overlay;
  * the dog draws from the same stream as the zombie). Defined in enemy_ai_re2_zombie.c. */

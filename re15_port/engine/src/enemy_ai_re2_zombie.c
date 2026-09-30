@@ -1434,6 +1434,62 @@ static void re2z_fat_cadence_tick(re15_actor_t *e, int steer8)
     e->anim_frame = (uint16_t)(((uint32_t)e->anim_frame + 1u) % (uint32_t)c->frame_count);
 }
 
+/* ============================================================================================
+ * RUNDE 34 B5 — BRAND-/SAEURE-DoT der Gang-Executoren (BAUPLAN K7 Z_DOT_*; RE2-GP §5.3).
+ * --------------------------------------------------------------------------------------------
+ * Hier stand "WALK edge-fall death commits 0xA03/0xB03 ... no reachable cliff geometry" bzw.
+ * "Kanten-Sturz-/Jitter-Zweige" — FALSCH GELESEN. Der Block ist der Tod durch Verkohlung/Aetzung
+ * UEBER ZEIT, selbst disassembliert (EMZ0.BIN):
+ *   EXEC[1] (Gang, 0x80101A40):
+ *     80101dc0  lhu v0,270(s1) / andi 0x80 / bne -> 80101de8   ; verkohlt (+0x10E Bit 0x80)
+ *     80101dd4  lhu v0,538(s1) / andi 0x1000 / beq -> 80101ec4 ; ODER geaetzt (+0x21A Bit 0x1000)
+ *     80101de8  lhu v0,566(s1) / andi 0x7 / bne -> 80101e94     ; nur jedes 8. Bild (+0x236 & 7 == 0)
+ *     80101dfc  lhu v0,538(s1) / andi 0x800 / beq -> 80101e94   ; und +0x21A Bit 0x800 (brennt/aetzt)
+ *     80101e10  jal 0x80015fe8 ; 80101e18 jal 0x80015fe8 (addu s0,v0 = 1. Wurf im Delay-Slot)
+ *     80101e20  andi v0,v0,0x3 ; 80101e24 srav s0,s0,v0 (Rohwort 0x00508007)
+ *     80101e28  andi s0,s0,0x1 ; 80101e2c sll s0,s0,7          ; j = ((r1 >> (r2&3)) & 1) * 128
+ *     80101e30-3c  +0x76 = +0x76 + 64 - j                        ; Gier-Zucken, `sh v1,118(s1)` im
+ *                                                                ; Delay-Slot @0x80101e50 (IMMER)
+ *     80101e34-44  lhu 342 / addiu -1 / sh 342                   ; HP -= 1
+ *     80101e48/4c  sll v0,v0,16 / bgez -> 80101e94               ; HP >= 0 (s16) -> weiter
+ *     80101e58/64  addiu v1,zero,2563 / sw v1,4(s1)              ; Wort 0x0A03 (DEATH, Zeile 10)
+ *     80101e5c-6c  +0x21A & 0x1000 -> addiu v0,zero,2819 / sw    ; 0x0B03 (DEATH, Zeile 11)
+ *     80101e70/74  addiu v0,zero,4 / sb v0,466(s1)               ; +0x1D2 = 4
+ *     80101e78-88  +0x1D3 |= 0x80 (`ori v0,v0,0x80` / `sb v0,467`)
+ *     80101e84/90  +0x21A |= 0x2000 (`ori v1,v1,0x2000` / `sh v1,538`) ; Sturz-Tod liest es
+ *     80101e8c  j 0x80101f64                                     ; EPILOG (Rest des Gangs entfaellt)
+ *     80101e94-c0  +0x21A & 0x1000: jal rand / sra v0,v0,1 / +0x76 = +0x76 + 64 - v0 ; Saeure-Zucken
+ *   EXEC[2] (zweiter Gang, 0x80102260) @0x80102474-54C: derselbe Block OHNE die zwei Wuerfe und
+ *   OHNE das +-64-Zucken im 8er-Takt (@0x801024c4-d0 nur HP -1), Tod @0x801024dc-51c,
+ *   `j 0x801025d0` = Epilog; Saeure-Zucken @0x80102520-4c identisch.
+ * Rueckgabe 1 = der Zombie ist an Brand/Saeure gestorben (Epilog folgt). */
+static int re2z_dot_tick(re15_actor_t *e, int mit_zucken)
+{
+    if (!((e->re2z_f10e & 0x80u) || (e->re2z_flags21a & 0x1000u))) return 0;   /* @0x80101dc0-e0 */
+    if ((e->re2z_c236 & 7u) == 0u && (e->re2z_flags21a & 0x800u)) {             /* @0x80101de8-08 */
+        if (mit_zucken) {
+            uint32_t r1 = re2z_rand();                                          /* @0x80101e10 */
+            uint32_t r2 = re2z_rand();                                          /* @0x80101e18 */
+            int j = (int)((((int32_t)r1 >> (r2 & 3u)) & 1) << 7);               /* @0x80101e20-2c */
+            e->rot_y = (int16_t)((int)e->rot_y + 64 - j);                       /* @0x80101e30-50 */
+        }
+        e->hp = (int16_t)(e->hp - 1);                                           /* @0x80101e34-44 */
+        if (e->hp < 0) {                                                        /* @0x80101e48-4c */
+            re15_ai_set_state_word(e, (e->re2z_flags21a & 0x1000u) ? 0x0B03u    /* @0x80101e68-6c */
+                                                                   : 0x0A03u);  /* @0x80101e58/64 */
+            e->re2z_hits1d2  = 4u;                                              /* @0x80101e70-74 */
+            e->re2z_self1d3 |= 0x80u;                                           /* @0x80101e78-88 */
+            e->re2z_flags21a |= 0x2000u;                                        /* @0x80101e84-90 */
+            return 1;                                                           /* j 0x80101f64 */
+        }
+    }
+    if (e->re2z_flags21a & 0x1000u) {                                           /* @0x80101e94-a0 */
+        uint32_t r = re2z_rand();                                               /* @0x80101ea8 */
+        e->rot_y = (int16_t)((int)e->rot_y + 64 - (int)((int32_t)r >> 1));      /* @0x80101eb0-c0 */
+    }
+    return 0;
+}
+
 static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
@@ -1490,8 +1546,9 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
         }
     }
     (void)slot; (void)pl;
-    /* WALK edge-fall death commits 0xA03/0xB03 (@0x80101E64/6C) — no reachable cliff geometry
-     * in the RE1.5 rooms the port ships; OPEN, documented. */
+    /* RUNDE 34 B5: der Brand-/Saeure-DoT @0x80101DC0-EC0 (s. re2z_dot_tick). Stirbt der Zombie
+     * daran, springt das Original in den Epilog @0x80101f64 (`j 0x80101f64` @0x80101e8c). */
+    if (re2z_dot_tick(e, 1)) return;
 
     /* ========================================================================================
      * ⛔ OFFEN, VOLLSTAENDIG DISASSEMBLIERT, BEWUSST NOCH NICHT SCHARF:
@@ -1601,9 +1658,10 @@ static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
  *   801025b8-cc  lh v0,344 ; slti 120 ; beq -> Epilog ; sw 257,4      ; sonst ab 60 verbrauchten
  *                                                                      Bildern zurueck in den Gang
  * NICHT modelliert (benannt, nicht erfunden): der Drei-Bild-Zweig @0x801023F8-468
- * (+0x10E & 0x80 || +0x21A & 0x8000 -> 0x801016C8 + 0x8002A9C8) und die Kanten-Sturz-/
- * Jitter-Zweige @0x80102474-54C (+0x21A & 0x800 / & 0x1000) — dieselben Zweige, die auch der
- * Gang-Executor traegt und die in den ausgelieferten RE1.5-Raeumen kein Datum setzen. */
+ * (+0x10E & 0x80 || +0x21A & 0x8000 -> 0x801016C8 + 0x8002A9C8).
+ * ⛔ RUNDE 34 B5 — KORRIGIERT: die Zweige @0x80102474-54C (+0x21A & 0x800 / & 0x1000) sind KEIN
+ * "Kanten-Sturz/Jitter", sondern der Brand-/Saeure-DoT (1 HP je 8 Bilder, Tod 0x0A03/0x0B03);
+ * gebaut in re2z_dot_tick, Aufruf unten nach re15_re2z_move_root. */
 static void re2z_exec_bump(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                                     /* P0 @0x80102290 */
@@ -1654,6 +1712,9 @@ static void re2z_exec_bump(re15_actor_t *e, re15_actor_t *pl)
                                                                     * @0x801023F0 + 152c8
                                                                     * @0x8010246C — dasselbe
                                                                     * Bewegungs-PAAR wie im Gang */
+    /* RUNDE 34 B5: Brand-/Saeure-DoT @0x80102474-54C (ohne Wuerfe/Zucken im 8er-Takt); Tod ->
+     * `j 0x801025d0` = Epilog. */
+    if (re2z_dot_tick(e, 0)) return;
     {   /* Ausstiegs-Leiter @0x80102550-CC */
         int16_t t = e->re2z_t158;                                  /* lhu 344 @0x80102550 */
         e->re2z_t158 = (int16_t)(t - 1);                           /* sh @0x80102560 */
@@ -3838,13 +3899,27 @@ static const uint8_t re2z_row_from_weapon[22] = {
  * dritter Id-Raum. Kriterium hier ist die SCHADENSKLASSE aus re15_damage_table @0x8006F418
  * {10,20,1000,1000,1000,50,100,200,300,1000,0}:
  *   Typ 0/1  (10/20, Nahkampf-Angriff eines Gegners) -> RE2 1  (Nahkampfzeile)
- *   Typ 2/3/4/9 (1000 = Instakill)                   -> RE2 17 (900er-Klasse; toetet ohnehin)
- *   Typ 5/6  (50/100, Sprengstoff)                   -> RE2 9
+ *   Typ 2/3/4 (Granaten, Runde 34)                   -> RE2 9/11/10 (s. unten, DAT_8006F430)
+ *   Typ 9 (1000 = Instakill)                         -> RE2 17 (900er-Klasse; toetet ohnehin)
+ *   Typ 5    (50, Bodenfeuer seit O-VB4)             -> RE2 10 (Op-40-Zeile, NACHBESSERUNG M1)
+ *   Typ 6    (100, Sprengstoff)                      -> RE2 9
  *   Typ 7    (200)                                   -> RE2 10
  *   Typ 8    (300)                                   -> RE2 11 (RE2-Id 8 traegt genau 300/80/60)
  *   Typ 10   (0)                                     -> RE2 1
  * [PORT-ZUORDNUNG] — im Original gibt es diesen Pfad nicht, dort kommt jede Zeile aus +0x10E. */
-static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 17, 17, 17, 9, 9, 10, 11, 17, 1 };
+/* ⛔ RUNDE 34 B3: Art 2/3/4 sind die drei GRANATEN (Resolver-Aufruf @0x800185b4 `ori a2,zero,0x2`
+ * fuer 0x09; 3/4 Port-Zuordnung E3). Ihr +0x5 ist im Original die RE1.5-WAFFEN-Id
+ * DAT_8006F430[Art] = 9/10/11 (@0x8006f432..34 `09 0a 0b`, Leser `lbu v0,0(at)` @0x80012fe8 /
+ * `sb v0,5(s1)` @0x80012ff0) — also dieselbe Uebersetzung wie jeder Waffentreffer:
+ * re2z_row_from_weapon[9/10/11] = 9 (GL Explosiv) / 11 (Saeure) / 10 (Brand). Die fruehere
+ * "Schadensklassen"-Zuordnung 17 (Rakete) fuer 2..4 ist damit ersetzt (BAUPLAN P18; RE2-GP §7).
+ * ⛔ NACHBESSERUNG M1: Art 5 ist seit O-VB4 (Orchestrator) das BODENFEUER (RE1.5 "Flaechenfeuer",
+ * DAT_8006f418[5] = 50 @0x8006f422) — seine RE2-Zeile ist die des Op-40-Hitcodes 0x2002000A
+ * (`lui a3,0x2002` @0x80020794 / `ori a3,a3,0xa` @0x800207a0) = 10, nicht die GL-EXPLOSIV-Zeile 9
+ * der alten Schadensklassen-Zuordnung. Im Spiel kommt Art 5 nur ueber den Applier (GL-Bruecke
+ * re15_re15_re2z_gore_hit_gl mit der Hitcode-Zeile); der Eintrag hier deckt den Direktaufruf.
+ * Die uebrigen Eintraege (0/1, 6..10) bleiben die dokumentierte Klassen-Zuordnung. */
+static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 10, 9, 10, 11, 17, 1 };
 
 /* INVARIANTE "kein stummer Treffer": faellt die gewaehlte Zeile in der TATSAECHLICH gestempelten
  * Spalte auf NULL, obwohl der Zombie den Treffer UEBERLEBT hat (also die HURT-Wurzel wirklich
@@ -6690,18 +6765,13 @@ static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
  *      bleibt INTAKT. Schienbein + Fuss fliegen trotzdem weg — genau das Ergebnis, das der
  *      Nutzer im Modus "RE2 AI" (= RE1.5-Modelle!) als korrekt bestaetigt hat.
  * ========================================================================================== */
-void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_src, unsigned row_id)
+/* --- der LAZY-INIT der RE2-Zerleger-Felder (beide Bruecken-Einstiege) ------------------------
+ * Im RE2-Modus macht das re2z_init (Zustand 0, Tabelle @0x8010C830). Im RE1.5-Modus laeuft
+ * dieser INIT nie, also seedet der erste Treffer. Bit 0 von part_flags[0] ist der Marker:
+ * ein frisch gespawnter Aktor ist genullt (re15_actor_init/Spawn-memset), also feuert der
+ * Seed nach JEDEM Respawn genau einmal. */
+static void re2z_import_seed(re15_actor_t *e)
 {
-    if (!e || !pl) return;
-    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
-    if (e->state == 3) return;                             /* toedlicher Treffer -> DEATH-Wurzel,
-                                                            * der Zerleger sitzt im HURT (s.o. c) */
-
-    /* --- der LAZY-INIT der RE2-Zerleger-Felder ------------------------------------------------
-     * Im RE2-Modus macht das re2z_init (Zustand 0, Tabelle @0x8010C830). Im RE1.5-Modus laeuft
-     * dieser INIT nie, also seedet der erste Treffer. Bit 0 von part_flags[0] ist der Marker:
-     * ein frisch gespawnter Aktor ist genullt (re15_actor_init/Spawn-memset), also feuert der
-     * Seed nach JEDEM Respawn genau einmal. */
     if (!(e->re2z_part_flags[0] & 1u)) {
         re15_re2z_part_reset(e);                           /* Modellblock (PORT-MAPPING) */
         e->re2z_pool151 = e->re2z_pool152 = e->re2z_pool153 = 13;  /* `addiu v0,zero,13`
@@ -6712,6 +6782,17 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
         e->re2z_hits1d2   = 0;                             /* +0x1D2 (Applier stempelt gleich)   */
         e->re2z_gaitrow   = 0;
     }
+}
+
+static void re2z_import_gore_dispatch(re15_actor_t *e, unsigned row);
+
+void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_src, unsigned row_id)
+{
+    if (!e || !pl) return;
+    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
+    if (e->state == 3) return;                             /* toedlicher Treffer -> DEATH-Wurzel,
+                                                            * der Zerleger sitzt im HURT (s.o. c) */
+    re2z_import_seed(e);
 
     /* --- der Applier-Stempel (re15_re2_stamp_hit-Zwilling, dieselben zwei Belege) ------------ */
     e->re2z_hits1d2 = 1u;                                  /* Basis-Zone 1 @0x80047294-98 +
@@ -6724,6 +6805,54 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
     /* --- (2) DER ZERLEGER @0x80105288-3D8 ---------------------------------------------------- */
     re2z_leg_gore(e);
 
+    /* --- (3) */
+    re2z_import_gore_dispatch(e, row);
+}
+
+/* ============================================================================================
+ * ⛔ RUNDE 34 NACHBESSERUNG M1 — DIE BRUECKE FUER EINEN TREFFER DES RE2-GL-APPLIERS
+ *    (Bodenfeuer Op 40 an einem RE1.5-KI-Import-Zombie, O-VB4; Aufrufer re15_damage.c
+ *    re15_enemy_take_damage_at mit dem Hitcode des Appliers)
+ * --------------------------------------------------------------------------------------------
+ * Im RE2-Modus stempelt FUN_800470C0 selbst (Richtung aus dem Treffpunkt P, Spalte Zone + 3K,
+ * KEINE Zonen-Reserve — Store-Liste @0x80047184-0x8004749c ohne Offset 337..339), und re2z_hurt
+ * laesst den Hitscan-Stempel dann aus (Wache re2_gl_stamp). Die fruehere Bruecke fuhr fuer den
+ * GL-Treffer den HITSCAN-Stempel (re2z_row_from_atktype[5] = 9, Reserve-Abzug @0x80041954-88)
+ * und riss nach sieben Flammen ein Bein ab (Gegenpruefung Spur B, mess3). Hier dieselbe Reihen-
+ * folge wie im RE2-Modus fuer einen GL-Treffer:
+ *   (1') GL-Stempel: +0x1D2 = spalte (@0x80047330); +0x1D0 &= 0xFF00 (`andi v1,v1,0xff00`
+ *        @0x80047178 / `sh v1,464(s0)` @0x80047184), |= 1 (`ori v0,v0,0x1` @0x80047200),
+ *        Richtungsbits aus a = FUN_800154AC(P -> Ziel) - (s16)+0x76 (`jal 0x800154ac` /
+ *        `lh v1,118(s1)` @0x80047350-68; Tests @0x8004736c-3d8); KEINE Reserve.
+ *   (2)  der Zerleger @0x80105288-3D8 (sein Reserve-Tor `(s8)+0x152 < 0` oeffnet nur, wenn
+ *        Schuesse die Reserve vorher geleert haben — wie im RE2-Flavor),
+ *   (3)  der Gore-Zweig des Dispatch mit der Hitcode-Zeile.
+ * `zeile` = Hitcode & 0xFFFF (Op 40: 10), `spalte` = Zone + 3K (Op 40: K = 2). */
+void re15_re15_re2z_gore_hit_gl(re15_actor_t *e, const int32_t p[3], unsigned zeile, unsigned spalte)
+{
+    if (!e || !p) return;
+    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
+    if (e->state == 3) return;                             /* toedlich -> DEATH (s. Bruecke oben) */
+    re2z_import_seed(e);
+
+    e->re2z_hits1d2 = (uint8_t)spalte;                     /* sb v0,466(s1) @0x80047330 */
+    {   /* FUN_800154AC: alle vier Argumente s16 (`sll 16 / sra 16` @0x800154b4-d8), Peilung P -> Ziel,
+         * 0 = +X; Port-Zwilling re15_atan2_q12(dz,dx) - 1024 (derselbe wie re2z_stamp_hit_row). */
+        int32_t dx = (int32_t)(int16_t)e->x - (int32_t)(int16_t)p[0];
+        int32_t dz = (int32_t)(int16_t)e->z - (int32_t)(int16_t)p[2];
+        int a = ((((int)re15_atan2_q12(dz, dx) - 1024) & 0xfff) - (int)e->rot_y);
+        uint16_t dir = (uint16_t)((e->re2z_hitdir1d0 & 0xFF00u) | 1u);   /* @0x80047178-84, @0x80047200 */
+        if (((a + 1024) & 0xfff) < 2048) dir |= 0x20u;                   /* @0x8004736c-8c */
+        if (((a + 1536) & 0xfff) < 1024) dir |= 0x40u;                   /* @0x80047390-b0 */
+        if (((a -  512) & 0xfff) < 1024) dir |= 0x80u;                   /* @0x800473b4-d8 */
+        e->re2z_hitdir1d0 = dir;
+    }
+    re2z_leg_gore(e);                                      /* (2) @0x80105288-3D8 */
+    re2z_import_gore_dispatch(e, zeile);                   /* (3) */
+}
+
+static void re2z_import_gore_dispatch(re15_actor_t *e, unsigned row)
+{
     /* --- (3) der Dispatch-Zweig, der Gore erzeugt: Handler 0x80107438 (Knockdown) reisst in
      *     seiner Phase 0 die ARME ab (@0x80107514-708, `beq v1,12` @0x8010750C schliesst nur
      *     Zeile 12 aus). Die Bruecke fragt DIESELBE Tabelle @0x8010C940 wie re2z_hurt, damit
@@ -7001,7 +7130,15 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
      * oder mit einem Zustandswort ungleich 2 (Flinch 0x501 @0x801050A4, Liegend 0x60501
      * @0x8010517C, NULL-Zelle 0x101). Eine zweite Stempelung im selben Treffer ist damit
      * ausgeschlossen — ohne Zusatz-Latch. */
-    if (e->sub_state_2 == 0u) re2z_stamp_hit(e, pl);
+    /* RUNDE 34 B3/B4: kam der Treffer aus dem GL-Applier-Zwilling (re15_re2_gl_apply bzw. dem
+     * Explosions-Stempel E6, re15_damage.c), stehen Richtung (+0x1D0 aus dem Treffpunkt P,
+     * @0x80047350-3d8) und Sperre schon; FUN_800470C0 zieht KEINE Zonen-Reserve ab (Store-Liste
+     * @0x800471f8-0x800473d8 ohne +0x151..0x153) — der Hitscan-Stempel hier (Reserve
+     * @0x80041954-88, Peilung SPIELER -> Gegner) darf dann nicht noch einmal laufen. */
+    if (e->sub_state_2 == 0u) {
+        if (e->re2_gl_stamp) e->re2_gl_stamp = 0u;
+        else                 re2z_stamp_hit(e, pl);
+    }
 
     re2z_grab_abort(e, pl);                                        /* @0x80104F68-FDC */
 
@@ -7860,7 +7997,20 @@ static void re2z_corpse(re15_actor_t *e)
     default:
     tail:
         e->re2z_t15a = (int16_t)(e->re2z_t15a + 1);                /* +0x15A += 1 @0x8010a80c-20 */
-        /* Farb-Ausblender @0x8010a818-68 und ABSACKEN @0x8010a86c-8f0: OPEN (s. Blockkopf) */
+        /* ⛔ RUNDE 34 B5 — der LEICHEN-FARBAUSBLENDER @0x8010a810-868 (selbst disassembliert):
+         *   8010a810  lhu v0,270(s0) / andi v0,v0,0x80 / beq -> 8010a86c ; nur verkohlt (+0x10E&0x80)
+         *   8010a824  lw a2,408(s0) ; 8010a82c lbu v1,112(a2)            ; Part 0 +0x70, UNTERES Byte
+         *   8010a830  addiu v0,zero,16 / beq v1,v0 -> 8010a86c            ; Stopp bei 16
+         *   8010a838  addiu a0,zero,15                                     ; 15 Parts
+         *   8010a83c  andi v0,a1,0x3 / bne -> 8010a86c                     ; a1 = NEUES +0x15A: jedes 4. Bild
+         *   8010a848/4c lui a1,0xfffe / ori a1,a1,0xfeff                   ; += 0xFFFEFEFF (= -0x010101)
+         *   8010a854-68 lw / addiu a0,-1 / addu / sw / bne / addiu v1,v1,172 ; Part 0..14, Stride 172
+         * Das ABSACKEN @0x8010a86c-8f0 bleibt OFFEN (Gate +0x10C ohne Port-Feld, s. Blockkopf). */
+        if ((e->re2z_f10e & 0x80u) && (e->re2z_part_tint[0] & 0xffu) != 16u &&
+            ((uint16_t)e->re2z_t15a & 3u) == 0u) {
+            for (int i = 0; i < 15; i++)
+                e->re2z_part_tint[i] = e->re2z_part_tint[i] + 0xFFFEFEFFu;
+        }
         break;
     }
 }
@@ -8062,8 +8212,10 @@ static void re2z_init(int slot, re15_actor_t *e)
      *   `sh zero,566` @0x801008AC (+0x236), `sb zero,569/570/571/572` @0x801008B0/B4/B8/C0
      *   (+0x239/+0x23A/+0x23B/+0x23C): davon hat der Port NUR +0x239 (re2z_cd239, direkt darunter
      *   genullt) und +0x219 (re2d_air219, ein HUND-Feld derselben Union — der Zombie-INIT nullt es
-     *   im Original mit, der Port haelt die Flavor-Felder getrennt). +0x230/+0x231/+0x236/+0x23A/
-     *   +0x23B/+0x23C haben im Port GAR KEIN Feld und auch keinen Leser -> nichts zu nullen. */
+     *   im Original mit, der Port haelt die Flavor-Felder getrennt). +0x230/+0x231/+0x23A/
+     *   +0x23B/+0x23C haben im Port GAR KEIN Feld und auch keinen Leser -> nichts zu nullen.
+     *   ⛔ RUNDE 34 B5: +0x236 HAT jetzt ein Feld (re2z_c236, DoT-Takt) -> genullt: */
+    e->re2z_c236 = 0;                                              /* sh zero,566(s2) @0x801008AC */
     if (e->type == 0x11) e->re2z_flags21a |= 0x8000u;              /* @0x801008BC-D4 — ZWILLING
                                                                     * der 250-HP-Zeile
                                                                     * @0x801008C8-CC (dieselbe
@@ -8559,6 +8711,10 @@ int re15_re2z_tick(int slot)
     default: re15_ai_set_state_word(e, 0x101); break;              /* [4] EXE-shared nav / [5][6]
                                                                     * NULL -> recover to walk */
     }
+    /* RUNDE 34 B5: +0x236 = Bildzaehler, +1 je Wurzel-Aufruf NACH dem Dispatch
+     * (`lhu v0,566(s0)` @0x801004F8 / `addiu v0,v0,1` @0x80100504 / `sh v0,566(s0)` @0x80100508).
+     * Leser: der DoT-Takt (re2z_dot_tick). */
+    e->re2z_c236 = (uint16_t)(e->re2z_c236 + 1u);
 
     /* DIE ABGETRENNTE UNTERHAELFTE (FUN_8010B7D4): das Original ruft sie PRO FRAME neben dem
      * Routine-Dispatch (@0x80100550, nach dem Routine-Call). Sie tut nichts, solange der

@@ -199,7 +199,55 @@ typedef struct {
      * Position jeden Tick uebernommen wird (EM26 hat 1 Bone — Part-Position == Entity-
      * Position). -1 = kein Eltern-Anker. */
     int8_t   follow_slot;
+    /* ===== Runde 34 VERTRAG V1 (C0, BAUPLAN §3.0) — nur Felder, KEIN Verhalten in C0 =====
+     * wpos = slot+0x28/+0x2a/+0x2c, die s16-WELTLAGE des Platzes. Das Original rechnet sie je
+     * Tick im Hauptlauf von FUN_80019e20 neu (@0x8001a118-2a4: `jal 0x80068098` @0x8001a1a0,
+     * `jal 0x800661c0` @0x8001a1e4, `sh v0,40/42/44(a0)` @0x8001a1fc/@0x8001a210/@0x8001a220,
+     * Addition des Ankers `lhu`/`sh` @0x8001a260-2a4) und liest sie s16 (`lh v0,40/42/44(v1)`
+     * @0x80018594/@0x800185a0/@0x800185b0 im Zuender-7-Bild der Routine 31; Routine 29 `lh t1,42(t0)`
+     * @0x80018330 = Bodentest). Schreiber = Spur A (Zwei-Durchgang-Tick A2); Leser = Plattform-
+     * Zeichner (Spur C2). Bis Spur A gemergt ist, bleibt wpos 0 (memset beim Spawn) — der
+     * Zeichner nimmt bis dahin weiter x + xlat. */
+    int16_t  wpos[3];
+    /* granate_art = die RESOLVER-ART a2 von FUN_80012d60 fuer diesen Granatenplatz:
+     *   0 = keine Granate, 2 = HE (Item 0x09), 3 = Saeure (0x0A), 4 = Brand (0x0B).
+     * Art 2 = Original (`ori a2,zero,0x2` @0x800185b4 vor `jal 0x80012d60` @0x800185b8); Art 3/4 =
+     * Port-Zuordnung E3 (nur das Argument a2): DAT_8006f418[2..4] = 1000/1000/1000 (@0x8006f41c/1e/20),
+     * DAT_8006f430[2..4] = 9/10/11 (@0x8006f432/33/34) — beide Tabellen ohne Aufrufer fuer 3/4.
+     * RE1.5 selbst fuehrt KEIN solches Feld (Routine 31 liest weder +0x70/+0x71/+0x72: Spawner
+     * `sb t8,112(t0)` @0x800197d4 / `sb t7,113(t0)` @0x800197d8 / `sh s1,114(t0)` @0x800197dc);
+     * Setzer = Spur A8 (Spawn-Gate 9/10/11 @0x80033688-8c erweitert, E1). */
+    uint8_t  granate_art;
 } re15_esp_fx_t;
+
+/* ===== Runde 34 VERTRAG V1 (C0) — Latch und Plattform-Haken ================================
+ * Definitionen (0/NULL) in engine/src/re15_esp.c. In C0 setzt, liest und ruft sie NIEMAND —
+ * reiner Vertrag fuer die Spuren A (Setzer/Rufer) und C (Leser/Bindung). */
+
+/** 0x800b5358 = der EIN-BILD-LICHT-LATCH. Setzer: Routine 31 (Zuender 7) `sb v0,21336(at)`
+ *  @0x8001857c und Routine 9 @0x80017694 (je nach `ori v0,zero,0x1`); Leser: Hauptschleife
+ *  `lbu v0,21336(v0)` @0x8001ce60 (-> Licht 2 der aktiven Kamera fuer dieses Bild, K2 LICHT_LESER);
+ *  Loeschung nach dem Zeichnen `sb zero,0(s0)` @0x8001d1b4 mit s0 = 0x800b5358 (@0x8001d16c-70).
+ *  Spur A setzt, der Plattform-Zeichner (Spur C3) liest und loescht. */
+extern uint8_t g_re15_licht_latch;
+
+/** FUN_80045024-Analogon fuer ESP-Routinen-SEs mit Lage: code = das a0-Wort des Originals
+ *  (Byte3 Bank, Byte2 Satz, Byte0 Lage-Flag, Byte1 wirkungslos), pos = die Emitter-Lage (a1).
+ *  Rufer (Spur A): Routine 29 Abprall `jal 0x80045024` @0x80018424 mit 0x010A0001 | (n<<8)
+ *  (@0x80018410-28), Liegen @0x80018350-58 mit 0x010A0001; Routine 31 @0x800185ec mit 0x04080001
+ *  (@0x800185e4-e8). Bindung: Plattform (Spur C4). NULL = stumm (Engine-Tests). */
+extern void (*re15_esp_se_hook)(uint32_t code, const int32_t pos[3]);
+
+/** Aufschlag-Uebergabe Granatenplatz -> RE2-FX-Maschine (E8, Port-Zuordnung): im Zuender-7-Bild
+ *  der Routine 31 fuer granate_art 3/4 statt der HE-Inhalte. re2_art = das RE2-Art-Byte +0x1B
+ *  (`lbu v0,0(a1)` / `addiu v0,v0,-9` / `sb v0,27(v1)` @0x8001f1a8-b8 im RE2-PSX.EXE: Id - 9 =
+ *  0 Explosiv, 1 Brand, 2 Saeure; Aufschlag-Op = 47 + Art):
+ *    re2_art 2 = Saeure -> Op 49 (Optab @0x8009D868[49] = 0x800215C8)  <- Item 0x0A
+ *    re2_art 1 = Brand  -> Op 48 (Optab @0x8009D868[48] = 0x80020F3C)  <- Item 0x0B
+ *  Explizite Tabelle, NIE "Item - 9" (RE1.5 0x0A - 9 = 1 = RE2-Brand; Saeure-GP §15).
+ *  q = Granaten-Weltlage (wpos), gier = slot+0x2e. Rufer: Spur A5; Bindung an re2fx_aufschlag
+ *  (include/re2_fx.h): Plattform (Spur C). NULL = kein Aufschlag. */
+extern void (*re15_esp_aufschlag_hook)(int re2_art, const int32_t q[3], int16_t gier);
 
 void           re15_esp_fx_reset(void);
 int            re15_esp_fx_count(void);
