@@ -159,6 +159,45 @@ def main():
     pruefe("RE2 @0x80058634 jal 0x80069714 (Nachruecken)", RE2.bytes(0x80058634, 4), "c5 a5 01 0c")
     pruefe("RE2 @0x80058644 addiu v1,v1,2 (Satzlaenge 2)", RE2.bytes(0x80058644, 4), "02 00 63 24")
 
+    print("== RE2 Retail Raumskripte - 'Item einsetzen + Nahansicht' (Rohbytes der .scd)")
+    r2 = os.path.join(BAUM, "info", "re2leon", "PL0", "RDT")
+    s1110 = lies(os.path.join(r2, "room1110", "scd", "sub04.scd"))
+    s10b0 = lies(os.path.join(r2, "room10B0", "scd", "sub10.scd"))
+    s60d0 = lies(os.path.join(r2, "room60D0", "scd", "sub06.scd"))
+    pruefe("RE2 room1110 sub04 +0x04 Set(2,7,1)", s1110[0x04:0x08], "22 02 07 01")
+    pruefe("RE2 room1110 sub04 +0x14 Cut_chg 7 (Nahansicht)", s1110[0x14:0x16], "29 07")
+    pruefe("RE2 room1110 sub04 +0x38 Sce_item_lost(0x4A) + Sleep 30", s1110[0x38:0x3E], "62 4a 09 0a 1e 00")
+    pruefe("RE2 room1110 sub04 +0x40 Cut_chg 6 + Cut_auto 1 (zurueck)", s1110[0x40:0x44], "29 06 3c 01")
+    pruefe("RE2 room10B0 sub10 +0x00 Set(2,7,1)", s10b0[0x00:0x04], "22 02 07 01")
+    pruefe("RE2 room10B0 sub10 +0x0C Cut_chg 9 + Sce_item_lost(0x33)", s10b0[0x0C:0x10], "29 09 62 33")
+    pruefe("RE2 room10B0 sub10 +0x3A Cut_chg 3 + Cut_auto 1 (zurueck)", s10b0[0x3A:0x3E], "29 03 3c 01")
+    pruefe("RE2 room60D0 sub06 +0xDC Sce_item_lost(0x4D Fuse Case) + Aot_on 1", s60d0[0xDC:0xE0], "62 4d 47 01")
+
+    print("== ROOM1090 / ROOM1000 - der Feuerloescher (RE1.5-Vorbild 'Gegenstand an der Welt benutzen')")
+    r1090, r1000 = rdt(1, "ROOM1090"), rdt(1, "ROOM1000")
+    pruefe("1000 sub00 @0x0C24 Item_aot_set Feuerloescher 0x31, taken-Bit 0x86",
+           r1000[0xC24:0xC3A], "50 03 09 31 00 00 14 50 e0 fc 20 03 20 03 31 00 01 00 86 00 ff 00")
+    pruefe("1000 sub01 @0x0D00 Ck(9,134,1) / @0x0D08 Ck(3,133,0) / @0x0D0C Set(3,133,1)",
+           r1000[0xD00:0xD04] + r1000[0xD08:0xD10], "21 09 86 01 21 03 85 00 22 03 85 01")
+    pruefe("1090 sub00 @0x0230A Ck(3,133,0) -> Slot 2 nur Text msg 7", r1090[0x230A:0x230E], "21 03 85 00")
+    pruefe("1090 sub06 @0x02702 Message_on 7 / Evt_next / Message_on 8 (Frage)",
+           r1090[0x2702:0x270C], "2b 07 ff ff 02 00 2b 08 ff ff")
+    pruefe("1090 sub06 @0x02712 Ck(12,31,0) Set(2,7,1) Sleep 10 Set(3,129,1) Set(3,132,1) Aot_on 3",
+           r1090[0x2712:0x2728], "21 0c 1f 00 22 02 07 01 09 0a 0a 00 22 03 81 01 22 03 84 01 47 03")
+    pruefe("1090 sub03 @0x02502 Message_on 9 'You've used the Fire Extinguisher.'",
+           r1090[0x2502:0x2506], "2b 09 ff ff")
+    pruefe("1050 msg 0 @0x0E56 == 1051 msg 0 @0x0DEC (Schalterfrage)", rdt(1, "ROOM1051")[0xDEC:0xE1A],
+           rdt(1, "ROOM1050")[0xE56:0xE84])
+
+    print("== Ereignis-Handler sce 3 und Ja/Nein-Toene")
+    pruefe("1050 Slot-7-Nutzlast @0x0C30 ff 00 18 02 (cond 0x00ff, sub 2)", r1050[0xC30:0xC34], "ff 00 18 02")
+    pruefe("RE1.5 sce-3-Handler @0x800430fc lhu a0,0(v0) (cond)", RE15.bytes(0x800430FC, 4), "00 00 44 94")
+    pruefe("RE1.5 sce-3-Handler @0x80043100 lbu a1,3(v0) (sub)", RE15.bytes(0x80043100, 4), "03 00 45 90")
+    pruefe("RE1.5 sce-3-Handler @0x80043104 jal 0x8003ee3c", RE15.bytes(0x80043104, 4), "8f fb 00 0c")
+    pruefe("RE2 @0x80030944 lui a0,0x406 (Ja-Ton CORE 6)", RE2.bytes(0x80030944, 4), "06 04 04 3c")
+    pruefe("RE2 @0x8003093c lui a0,0x405 (Nein-Ton CORE 5)", RE2.bytes(0x8003093C, 4), "05 04 04 3c")
+    pruefe("RE2 @0x80030968 lui a0,0x404 (Cursor-Ton CORE 4)", RE2.bytes(0x80030968, 4), "04 04 04 3c")
+
     print("\nSUMME: %d OK, %d FEHLT" % (N_OK, N_FEHL))
     return 1 if N_FEHL else 0
 
