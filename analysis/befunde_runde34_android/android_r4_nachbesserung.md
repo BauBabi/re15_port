@@ -15,8 +15,8 @@ Gegenstand: Gegenpruefer-Befunde `pruefer_umgehung_r4_1.md` (H1 hoch; H5, H3, H2
 - [x] 4 H3: SHA256SUMS.txt + git add aus einer Positivliste, fremde Versionsdateien -> Abbruch
 - [x] 5 H5 (+U3, V1/V2): Pfade nur druckbares ASCII, Segment <= 251 B - Gradle, Gate, Geraete-Leser, Tests
 - [x] 6 niedrig: U1, U2/E1 (Waisen), U4 (fail closed) im Entpacker
-- [~] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
-- [ ] 8 Endstand
+- [x] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
+- [x] 8 Endstand
 
 ## 1. Befunde selbst nachgemessen (Stand HEAD, vor jeder Aenderung)
 
@@ -250,3 +250,51 @@ Eine Datei `re15_port/shared_assets/PSX/<U+212A>.bin` (Name nur in Python erzeug
 weil die Konsole U+212A nicht ausgeben kann - bemerkt, weil Gradle danach EXIT 0 meldete, und wiederholt):
 `gradlew writeAssetManifest` -> **EXIT 1**, `Asset-Pfad verletzt die Regeln der Liste v2 (nur druckbares ASCII, Segment
 1-251 B, ...): 'shared_assets/PSX/?.bin'`. Datei entfernt -> EXIT 0, `git status re15_port/shared_assets` leer.
+
+### 7.5 PC-Suite, Python
+
+- `RE15_BUILD_DIR=<baum>/build/r34a/nb/pc_build bash re15_port/tools/local_build.sh all` (eigener Bauordner):
+  cc1-Preflight ok, configure, 1618/1618, ctest **429/429** (720 s), darin `unit_r34a_asset_abgleich Passed`,
+  `=== LOCAL-BUILD-OK (all) - Tests 429/429`, **EXIT 0** (lief teils parallel zu Emulator und Kette; kein roter Test,
+  keine Einzelwiederholung noetig). `RE15_MIN_TESTS` bleibt 429 (kein neuer ctest, der Unit-Test ist erweitert).
+- Python nur `/c/Python310/python` bzw. `release/python_finden.sh` (alle Skriptlaeufe melden `/c/Python310/python
+  (3.10.11)`). Schnappschuss am Ende (`py_zustand.ps1` aus R4, liest nur; Beleg `py_zustand_ende.txt`, 121 Zeilen) ==
+  Endstand des Pruefers ECHTER LAUF (10:37, direkt vor meinem Start 10:40): `diff` leer - kein PythonCore-Schluessel,
+  kein Startmenue-Eintrag neu.
+
+## 8. Endstand
+
+Befunde der Runde 1 (schwerste zuerst) - alle behoben, jede Behauptung vorher selbst nachgemessen (Abschnitt 1):
+
+| Befund | Schwere | Behebung | Nachweis |
+|---|---|---|---|
+| H1 Urteil nur aus der Rueckgabe | hoch | Gate-Pin `release/apk_asset_gate.sha256` (private Kopie, vor jedem Lauf geprueft) + Urteil aus Rueckgabe UND Ausgabe (`gate_laufen`/`gate_urteil`: Schlusszeile, genau eine Urteilszeile, Zaehlzeilen, jede Selbsttest-Fallzeile rc = soll, Mindestzahlen) | 3; `urteil_test.txt` (FEHLER=0); 7.2 A2/A2b/A2c/A3/A3b/A10/A13, B2/B2b/B3 (alle EXIT 1, vorher 0) |
+| H5 Unicode-Faltung | mittel | Pfade nur druckbares ASCII + Segment <= 251 B in Gradle, Gate (+ Quellbaum-Pruefung) und Geraete-Leser | 5; 7.2 A11/A12; 7.3 e6 (Liste abgelehnt, kein `K.bin`); 7.4 |
+| H3 Fremdnamen in SUMS/git | mittel | Positivliste fuer SHA256SUMS.txt + `git add`, jede fremde `<NAME>_*.z*` bricht ab | 4; 7.2 B4/B5 (EXIT 1), B6/B7 (Positivliste), B8 |
+| H2 `APK_GATE_DATEI` aus der Umgebung | mittel | beim Laden verworfen (Hinweis), Kopie nur intern `APK_GATE_KOPIE`; Pfad + volle sha256 des Gates werden angezeigt | 3; 7.2 A4/A5 |
+| V1/V2 Mutanten ueberleben | niedrig | 16 innere Proben + 10 Faelle | 5; `mutanten_regeln.txt` (11/11 FEHLER); 7.2 A7 |
+| U4 nicht fail closed | niedrig | `fehler_halten`: Meldung bleibt, kein Spielstart, `exit(1)` bei SDL_QUIT | 6; 7.3 e6, e8 |
+| U3 Segment > 255 B | niedrig | Segment <= 251 B (mit H5) | 5 |
+| U2 / E1 Waisen nach Abbruch/Uebergang | niedrig | `re15_abgleich_waisen` ohne gueltige alte Liste, vor dem Entpacken | 6; Unit-Test; 7.3 e3/e4/e5 |
+| U1 `unlink` ungeprueft | niedrig | Fehler (ausser ENOENT) -> kein Lauf | 6 (Code; auf dem Geraet wie beim Pruefer nicht provozierbar) |
+
+Commits dieser Nachbesserung: `e777d796`, `bc9d9ac4`, `71d2fc73` (Dossier), `e7b7584f` (Gate), `587e6cdf` (Skripte +
+Pin), `7f91e18f` (Dossier), `ef5fa0fe` (Entpacker/Gradle/Test/README), `fe69b4f7`, `8d14739d`, `a771e3f8`, `f94a6af7`,
+`25bf04b8` (Dossier/Belege) und der Abschluss-Commit.
+
+Offen / Grenzen (nicht als Befund, fuer die naechste Gegenpruefung):
+- **Jede Gate-Aenderung verlangt einen neuen Pin** (`sha256sum release/apk_asset_gate.py` in
+  `release/apk_asset_gate.sha256`, im Gate-Kopf, in apk_pruefen.sh, README und im Pin selbst beschrieben). Aendert
+  jemand den WORTLAUT der Schluss-/Zaehlzeilen des Gates, muss `gate_urteil` (apk_pruefen.sh) mitgezogen werden - sonst
+  bricht die Kette mit "keine Aussage" ab (fail closed). Werden Selbsttest-Faelle entfernt, sind die Mindestzahlen
+  (258/132) bewusst zu senken.
+- Die zweite Schicht (Urteil) prueft die AUSGABE: ein absichtlich gefaelschtes Gate, das eine vollstaendige OK-Ausgabe
+  druckt UND umgepinnt wird, ist nicht abzufangen - dagegen steht der versionierte Pin (Aenderung sichtbar im Diff).
+- U1 auf dem Geraet nicht provoziert (wie beim Pruefer). B3-Grenze (`zip -s 0` mit demselben zip) unveraendert.
+- Nicht loeschbare Waisen melden nur eine Warnung (kein Abbruch: die Engine oeffnet sie nie). Im Log steht die Zeile
+  "Waise entfernt" vor der "Abgleich"-Zeile (kosmetisch).
+- `build/r34a/nb/` enthielt schon Arbeitsdateien der Nachbesserung R1 (nicht versioniert); meine liegen daneben
+  (`logs/`, `apk/`, `emu/`, `avd/`, `nb_*.sh|py`). Aufgeraeumt: Sandbox (Hardlinks - Linkzahl der Originale wieder 1,
+  TEX.TIM `7f10f1af...`, P07G.DO2 `68306346...`), Faelschungen, PC-Bauordner, AVD-Datenabbilder. Liegen gelassen:
+  `build/r34a/nb/apk/NB1.apk` (`d6921014...`, fuer die naechste Runde) und die N1-APKs `release/*n1[a-f]_android.apk`
+  (gitignoriert, ~2,2 GB, nicht von mir). `git status --short release/ re15_port/ synchro/` leer, keine Temp-Reste.
