@@ -42,6 +42,21 @@ include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 
+# ⛔ EIGENER EXE-NAME (gemessen 2026-09-30): zwei Laeufe dieses Hakens endeten mitten im Spiel mit
+# exit=1 (Bild ~300 bzw. ~500, kein Absturzeintrag), waehrend dieselben Laeufe unter einem anderen
+# exe-Namen (tools/r34n_b/lauf_laden.sh) 5 von 5 durchliefen. Ursache: local_build.sh faellt ohne
+# powershell/cygpath im Minimal-PATH auf `taskkill //F //IM re15_pc.exe` zurueck (local_build.sh:298-299)
+# und beendet damit JEDE re15_pc.exe der Maschine, sobald ein paralleler Agent baut. Die Kopie liegt
+# neben der exe (Asset-Wurzel = exe-Verzeichnis) und traegt einen eigenen Namen.
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r34nb_haken_*.exe")   # Reste abgebrochener Laeufe
+foreach(_k IN LISTS _alte_kopien)
+    file(REMOVE "${_k}")
+endforeach()
+set(_exe_kopie "${_exe_dir}/re15_pc_r34nb_haken_${_lauf_id}.exe")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+set(RE15_PC_EXE "${_exe_kopie}")
+
 # Ein Lauf: Karte schreiben, exe starten. Liefert cursor.log / debug.log / hebetisch.log als Text.
 function(cursor_lauf _name _raum _karte _skript _ende _extra _out_cursor _out_debug _out_heb)
     set(WORKDIR "${_basis}_${_name}")
@@ -200,5 +215,6 @@ if(_pr LESS 0)
     message(FATAL_ERROR "r34n_b_cursor[D]: ohne Cursor erreicht die Fahrt die Ruhe oben nicht")
 endif()
 
+file(REMOVE "${_exe_kopie}")
 message(STATUS "r34n_b_cursor: OK - Nutzerweg 1150 bis zum Ende, Abbruch + erneut 1151, Inventar im "
                "Cursor, Harness ohne Cursor")
