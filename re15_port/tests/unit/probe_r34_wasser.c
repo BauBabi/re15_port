@@ -15,6 +15,10 @@
  *   Spawn-Anim (FUN_80019700 @0x8001989c-bc): +0x6e := 1, +0x6d := Satz[0].Byte2 (Effekt 0x0b: 3).
  *   Kein Bodenklemmen im Takt (@0x8001a2fc-388) -> der Strahl faellt.
  *
+ * Dazu Integration W4 (Abschnitt 8): scd_room_reenter (der SCD-Raumaufbau, zweiter Raum-Reset-Weg neben
+ * room_pc.c) leert auch den RE2-FX-Pool — Port-Zuordnung nach dem RE1.5-Wisch `sb zero,0(at)` @0x80019378
+ * (einziger Aufrufer `jal 0x80019354` @0x8003996c im Raumlader).
+ *
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten verletzten Pruefung.
  */
 #include <stdio.h>
@@ -24,6 +28,9 @@
 #include "re15_esp.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
+#include "re15_aot.h"
+#include "re15_rdt.h"
+#include "re2_fx.h"
 
 static int s_fail = 0, s_pass = 0;
 #define PRUEF(nr, cond, ...) do { if (cond) { s_pass++; printf("  ok   %3d: ", nr); printf(__VA_ARGS__); printf("\n"); } \
@@ -202,6 +209,37 @@ int main(void)
     s0 = re15_esp_fx_get(0);
     PRUEF(62, s0 && s0->flags == 0x13 && s0->xlat_x != xl3, "NEGATIV: ohne Treffer Flags := 0x13, Physik laeuft (%02x, xlat %d)",
           s0 ? s0->flags : 0, s0 ? s0->xlat_x : 0);
+
+    /* ---- 8: Integration W4 — der SCD-Raumaufbau leert den RE2-FX-Pool -------------------------- */
+    {
+        size_t n2 = 0;
+        char q2[600];
+        snprintf(q2, sizeof q2, "%s/../RE2/CORE00.ESP", RE15_ASSET_PSX_DIR);
+        uint8_t *re2core = slurp(q2, &n2);                  /* bleibt gehalten (register_core leiht) */
+        int reg = re2core ? re2fx_register_core(re2core, n2) : -9;
+        re2fx_reset();
+        const int32_t q[3] = { -23000, 0, 11000 };
+        re2fx_aufschlag(1, q, 0);                           /* Brand-Aufschlag: Runden-Platz (Status 0xB403) */
+        re2fx_tick();                                       /* Op 48 Phase 0: Kinder + drei Bodenflammen */
+        int vorher = 0, nachher = 0;
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *pl = re2fx_platz(i);
+            if (pl && (pl[0x18] | (pl[0x19] << 8)) != 0) vorher++;
+        }
+        static re15_rdt_t rdt;
+        int rp = re15_rdt_parse(s_rdt, s_rdt_n, &rdt);
+        re15_actor_init(); re15_aot_init(); scd_vm_init();
+        g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = -26450; g_actors[RE15_ACTOR_SLOT_PLAYER].z = 10250;
+        scd_room_reenter(&rdt, -26450, 10250, 0);
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *pl = re2fx_platz(i);
+            if (pl && (pl[0x18] | (pl[0x19] << 8)) != 0) nachher++;
+        }
+        PRUEF(70, reg == 0 && rp == 0 && vorher >= 4 && nachher == 0,
+              "scd_room_reenter leert den RE2-FX-Pool: belegt vorher %d (>= 4: Runde + Kinder/Flammen), nachher %d "
+              "(register %d, rdt %d)", vorher, nachher, reg, rp);
+    }
 
     printf("probe_r34_wasser: %s (%d ok, erste Verletzung %d)\n", s_fail ? "ROT" : "ALLE PRUEFUNGEN GRUEN", s_pass, s_fail);
     return s_fail;

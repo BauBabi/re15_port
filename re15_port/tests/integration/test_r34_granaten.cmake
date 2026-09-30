@@ -28,6 +28,9 @@
 #     (g) KEIN HAENGER (Original: Reaktionszeile 9 NULL -> `jalr v0` mit v0 = 0 @0x80106c00, Absturz-
 #         Dossier §2.7): jeder getoetete Gegner erreicht Zustand 7 (Leiche), und die exe laeuft bis
 #         RE15_EXIT_AT weiter (Zeile "[flow] EXIT_AT", exit 0). Spieler-HP im Bild X unveraendert.
+#     (h) Toene im Waffen-Log: 6x 0x010A..01 (TIEF: 5 Abpraller + Liegen, @0x800183d0-28 / @0x80018350-58),
+#         0x04080001 genau einmal nur bei Art 2 (@0x800185e4-ec), RE2-Aufschlag 0x01130001 / 0x01120001 genau
+#         einmal nur bei Art 3 / 4 (E9 -> ARMS10/ARMS11 Satz 10).
 #   debug   Item-Debug des Statusschirms (Original FUN_8004a0cc @0x8004a138-35c): Inventar auf, ITEM-
 #           Raster, SELECT, 9x R1 (Id 0 -> 9), Kreis/Schliessen = ausgeruestet, werfen. Pruefungen:
 #           Menge 255 (@0x8004a1f8/204), Waffenbank W09 nach dem Schliessen, KEIN "[debug-menu] OPEN"
@@ -313,6 +316,44 @@ function(r34_pruef_treffer _zv _zx _zn _zeile_soll _aus_slots _aus_fehler)
     set(${_aus_slots} "${_treffer}" PARENT_SCOPE)
 endfunction()
 
+# (h) TOENE des Wurfs aus dem Waffen-Log (RE15_WAFFEN_LOG, Zeilen "SE  esp code=..." bzw. "SE  re2fx code=...";
+#     Weiche fx_plattform_pc.c, Spur C4): Abprall/Liegen `jal 0x80045024` mit 0x010A0001 | (n<<8) @0x800183d0-28 /
+#     @0x80018350-58 (TIEF: Zaehler 5 -> 5 Abpraller + Liegen = 6 Toene 0x010a....), Explosion 0x04080001 @0x800185e4-ec
+#     nur Art 2, RE2-Aufschlag Saeure 0x01130001 (RE2 @0x80021678-7c) / Brand 0x01120001 (RE2 @0x80020fd4/0x80021028)
+#     -> ARMS10/ARMS11 Satz 10 (E9) nur Art 3/4. Rueckgabe: Fehlertext oder leer.
+function(r34_pruef_toene _datei _art _aus)
+    set(${_aus} "" PARENT_SCOPE)
+    file(STRINGS "${_datei}" _w REGEX "SE  (esp|re2fx) code=")
+    set(_n010a 0)
+    set(_n0408 0)
+    set(_n0113 0)
+    set(_n0112 0)
+    foreach(_l IN LISTS _w)
+        if(_l MATCHES "SE  esp code=0x010a0[0-4]01 ")
+            math(EXPR _n010a "${_n010a} + 1")
+        elseif(_l MATCHES "SE  esp code=0x04080001 ")
+            math(EXPR _n0408 "${_n0408} + 1")
+        elseif(_l MATCHES "SE  re2fx code=0x01130001 ")
+            math(EXPR _n0113 "${_n0113} + 1")
+        elseif(_l MATCHES "SE  re2fx code=0x01120001 ")
+            math(EXPR _n0112 "${_n0112} + 1")
+        endif()
+    endforeach()
+    set(_soll0408 0)
+    set(_soll0113 0)
+    set(_soll0112 0)
+    if(_art EQUAL 2)
+        set(_soll0408 1)
+    elseif(_art EQUAL 3)
+        set(_soll0113 1)
+    else()
+        set(_soll0112 1)
+    endif()
+    if(NOT _n010a EQUAL 6 OR NOT _n0408 EQUAL _soll0408 OR NOT _n0113 EQUAL _soll0113 OR NOT _n0112 EQUAL _soll0112)
+        set(${_aus} "Toene: ${_n010a}x 0x010a....(Soll 6), ${_n0408}x 0x04080001 (Soll ${_soll0408}), ${_n0113}x 0x01130001 (Soll ${_soll0113}), ${_n0112}x 0x01120001 (Soll ${_soll0112})" PARENT_SCOPE)
+    endif()
+endfunction()
+
 # ---------------------------------------------------------------------------------------------------
 # NEGATIV-KONTROLLE der Auswerter (vor jedem exe-Lauf): erfundene Zeilen, die fallen MUESSEN.
 # ---------------------------------------------------------------------------------------------------
@@ -416,6 +457,11 @@ foreach(_ki re2 re15)
             if(NOT _he EQUAL 0 OR NOT "${_aufs}" STREQUAL "${_re2_soll}")
                 r34_fehler("${_lauf}" "Aufschlagbild: ${_he} HE-Inhalte (erwartet 0), re2_art '${_aufs}' (erwartet ${_re2_soll}, E8)")
             endif()
+        endif()
+        # (h) Toene des Wurfs
+        r34_pruef_toene("${_dir}/wf.log" ${_art} _ft)
+        if(NOT "${_ft}" STREQUAL "")
+            r34_fehler("${_lauf}" "${_ft}")
         endif()
         # (a) Abzugsbild ohne Schaden
         math(EXPR _av "${_A} - 1")
@@ -528,6 +574,10 @@ r34_abzug(_A)
 r34_granatenlog("${_dir}/gr.log" _G)
 if("${_A}" STREQUAL "" OR NOT _G_SPAWN_N EQUAL 1 OR NOT _G_ART EQUAL 2)
     r34_fehler("${_lauf}" "Abzug '${_A}', ${_G_SPAWN_N} Spawns, Art '${_G_ART}' (erwartet Abzug, 1 Spawn, Art 2)")
+endif()
+r34_pruef_toene("${_dir}/wf.log" 2 _ft)
+if(NOT "${_ft}" STREQUAL "")
+    r34_fehler("${_lauf}" "${_ft}")
 endif()
 math(EXPR _s_soll "${_A} + 24")
 math(EXPR _x_soll "${_G_L} + 36")
