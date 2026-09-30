@@ -463,24 +463,25 @@ neuer Softlock, der bestehende bleibt unberuehrt.
 
 ## 9 Umsetzung (Stufe BAU)
 
-Stand 2026-09-30 ~10:30. Bau im Baum `.claude/worktrees/r34n_schrift`, Zweig `r34n/schrift1170`.
+Stand 2026-09-30 ~10:45. Bau im Baum `.claude/worktrees/r34n_schrift`, Zweig `r34n/schrift1170`.
 Ergebnis: **die Leuchtschrift "HEAVEN" in ROOM1150/1151 Cut 2 blinkt jetzt wie im Original** —
 20 Bilder AN / 20 Bilder AUS, Umschaltbild = Bild des Opcode-0x45-Takts von sub05, am Lade-Weg und
-nach Debug-Sprung mit Zonen-Kamerawechsel an der echten exe gemessen (§9.5).
+nach Debug-Sprung mit Zonen-Kamerawechsel an der echten exe gemessen (§9.5). Dieselbe Korrektur
+wirkt in acht weiteren Raeumen (§9.6), fuer ROOM3000 Cut 0 gegen DuckStation gegengeprueft.
 
 ### 9.1 Auflagen der Gegenpruefung (abgehakt / abgelehnt mit Beleg)
 
 | Nr | Auflage | Umsetzung / Beleg |
 |---|---|---|
-| 1 | Kein Neuaufbau nach Statusschirm und Kartenschirm | **erfuellt.** Kein Haken in menu_common.c und am Karten-/Speicherschirm. Beleg im Code (Kopf `re15_masken_gruppen.h`, Kommentar am Haken in main.c): Dirty := 2 @0x800466fc (Wert @0x800466dc) bzw. @0x80026634 (Wert @0x8002661c), FUN_80021bbc @0x80021bc4/@0x80021bc8/@0x80021bd4 springt bei 2 nach 0x80021df8 ueber @0x80021bf4, @0x80021bfc, @0x80021c28. Dossier 4, 5.2, 5.4, 6.5, 7.2 berichtigt. Gemessen (§9.5, G2_12): Inventar in AUS- und AN-Phase -> kein Aufbau, Zustand bleibt, wv0C unveraendert. |
+| 1 | Kein Neuaufbau nach Statusschirm und Kartenschirm | **erfuellt.** Kein Haken in menu_common.c und am Karten-/Speicherschirm. Beleg im Code (Kopf `re15_masken_gruppen.h`, Kommentar am Haken in main.c): Dirty := 2 @0x800466fc (Wert @0x800466dc) bzw. @0x80026634 (Wert @0x8002661c), FUN_80021bbc @0x80021bc4/@0x80021bc8/@0x80021bd4 springt bei 2 nach 0x80021df8 ueber @0x80021bf4, @0x80021bfc, @0x80021c28. Dossier 4, 5.2, 5.4, 6.5, 7.2 berichtigt. Gemessen (§9.5, G2_12): Inventar in AUS- und AN-Phase -> kein Aufbau, Zustand bleibt, wv0C unveraendert. Als Riegel: Lauf C von `integration_r34n_g_schrift1150`; Mutation "pending = 1 in close_phase" -> ROT (§9.3). |
 | 2 | Optionsschirm-Haken nur mit Nachweis | **kein Haken (abgelehnt: im Port gibt es keinen Ort dafuer).** Selbst disassembliert: im Spiel erreicht man den Optionsschirm nur ueber SELECT+START — @0x8001cd24 `ori v1,zero,0x900`, @0x8001cd2c `lhu v0,DAT_800ac760`, @0x8001cd34 `andi v0,v0,0x900`, @0x8001cd38 `bne`; @0x8001cd48 aca3c \|= 0x8000, @0x8001cd58-60 aca38 \|= 0x08000000; die Transitions-FSM startet dann @0x8001cb08-30 Task 1 = 0x8002dde4 (Optionen) STATT 0x8004603c (Statusschirm, @0x8001cb38-3c). Die 1 @0x8002e730 kommt also nicht aus dem Statusschirm, und keine 2 folgt ihr (Dirty-Store-Zensus G2g). Ob sie den Apply erreicht, haengt zusaetzlich am Gate @0x8002151c (DAT_800b536c, einziger Schreiber FUN_80021634 @0x80021638) — nicht zu Ende belegt. Der Port hat diesen Weg nicht: menu_common.c:179/2395 "SELECT+START ... alternate task 0x8002dde4 ... not ported". Wer ihn portiert, muss @0x8002e730 (+ Gate) mitnehmen (§9.8). |
 | 3 | PSX vollstaendig oder gar nicht | **erfuellt:** `platform/psx/src/render.c` Maskenschleife `if (!re15_mg_sichtbar(i)) continue;` UND `platform/psx/main.c` im `re15_cam_present_tick()`-Zweig `re15_mg_aufbauen(...)`; den Raumlader deckt das gemeinsame room_common.c. PSX-Bau hier nicht pruefbar (bekannte Luecke, memory reai-v2-psx-build-gap). |
-| 4 | Blink-Abnahme ohne RE15_FORCE_CUT | **erfuellt:** Integrations-Riegel ohne FORCE_CUT (Lade-Weg-Karte); 6.4 ueber Debug-Sprung + zu Fuss (RVD). Festgehalten in 6.4, im Kopf des Riegels und am Haken in main.c: FORCE_CUT (main.c pc_cam_present_apply) setzt jedes Bild pending -> Aufbau jedes Bild -> Blinken unsichtbar; die r30-Tisch-Riegel (FORCE_CUT=2) sind deshalb kein Blink-Beleg (Stand in der Suite §9.4). |
+| 4 | Blink-Abnahme ohne RE15_FORCE_CUT | **erfuellt:** Integrations-Riegel ohne FORCE_CUT (Lade-Weg-Karte); 6.4 ueber Debug-Sprung + zu Fuss (RVD). Festgehalten in 6.4, im Kopf des Riegels und am Haken in main.c: FORCE_CUT (main.c pc_cam_present_apply) setzt jedes Bild pending -> Aufbau jedes Bild -> Blinken unsichtbar; die r30-Tisch-Riegel (FORCE_CUT=2) sind deshalb kein Blink-Beleg (sie bleiben gruen, §9.4). Fuer die per-Bild-sub01-Raeume (§9.6) ist FORCE_CUT unschaedlich: sub01 schaltet im selben Takt nach dem Aufbau wieder aus. |
 | 5 | 6.5 mit richtiger Erwartung | **erfuellt, gemessen** (§9.5, G2_12): AUS-Phase: := 0 F119, Menue F126..F176, AUS bis F190, := 1 F191 = 20 SCD-Takte nach F119; AN-Phase: := 1 F139, Menue F146..F196, AN bis F210, := 0 F211. wv0C = 0 vor und nach dem Menue (Mess-Zeile traegt wv0A/wv0C). Als Riegel: Lauf C des Integrations-Riegels. |
 | 6 | Aufbau-Zaehler als Pin | **erfuellt:** `RE15_MG_LOG` schreibt je Aufbau Bild, Raum, wv0A/wv0C, Cut, pri_offset, Zahl, Grund (raum/cut). Gemessen: CONTINUE genau 1 Aufbau (F0); Debug-Sprung 1240->1150: je Cut-Ereignis einer (1240 F0/F162, 1150 Eintritt "raum", F2 RVD 0->1, F318 RVD 1->2), nie zwei in Folge ohne Ereignis; Inventar: keiner. ROT/GRUEN im Integrations-Riegel: `--aufbau 1` in den Laeufen A, B und C (C = mit Statusschirm). |
-| 7 | Tabelle == gezeigter (Raum, Cut) | **erfuellt:** Aufbau liest `rdt->raw`/`raw_size`/`cuts[cut].pri_offset` des AKTUELLEN Parse (masken_gruppen.c), kein eigener Puffer. Aufbau-Zeile == `[pri]`-Zeile in allen Laeufen: Debug-Sprung aus ROOM1240 -> 1150 Eintritts-Cut 0 `pri_offset=0x500 Zahl 2` / `[pri] cut=0 pri_offset=0x500 masks=2`; RVD Cut 1 0x51C/28; Cut 2 0x66C/54; CONTINUE 1150 und 1151 Cut 0 0x500/2 (Opcode 0x45 dort 0 Treffer, beide Masken an) und Cut 2 0x66C/54. |
+| 7 | Tabelle == gezeigter (Raum, Cut) | **erfuellt:** Aufbau liest `rdt->raw`/`raw_size`/`cuts[cut].pri_offset` des AKTUELLEN Parse (masken_gruppen.c), kein eigener Puffer. Aufbau-Zeile == `[pri]`-Zeile in allen Laeufen: Debug-Sprung aus ROOM1240 -> 1150 Eintritts-Cut 0 `pri_offset=0x500 Zahl 2` / `[pri] cut=0 pri_offset=0x500 masks=2`; RVD Cut 1 0x51C/28; Cut 2 0x66C/54; CONTINUE 1150 und 1151 Cut 0 0x500/2 (Opcode 0x45 dort 0 Treffer, beide Masken an) und Cut 2 0x66C/54; ROOM3000 Cut 0 0x288/43, ROOM3010 0x564/56, ROOM1211 Cut 7 0x1464/70, ROOM5060 Cut 11 0x26EC/1. |
 | 8 | local_build.sh nicht anfassen | **erfuellt** (unveraendert; Suite 430 >= 428). |
-| 9 | Sichtbare Aenderung in acht weiteren Raeumen ankuendigen | **teilweise:** Raeume in Dossier (7.1, §9.6), Commit-Text und Versionshinweis-Vorschlag (§9.6); Vorher/Nachher-Bilder §9.5; DuckStation-Gegenprobe ROOM3000 Cut 0 siehe §9.8. |
+| 9 | Sichtbare Aenderung in acht weiteren Raeumen ankuendigen | **erfuellt:** Raeume in Dossier (7.1, §9.6), Commit-Texten und Versionshinweis-Vorschlag (§9.6); Vorher/Nachher-Bilder fuer ROOM3000, 3010, 5060, 1211, 3071 (G2_13..G2_18), Elza-Varianten 3001/3011/5061 per Log; **DuckStation-Gegenprobe ROOM3000 Cut 0 liegt vor** (G2_16): Original normal 43/43 Records Byte0 = 1, Zombie-Variante 0/43, Bildspeicher ohne die Leichen — gleich dem Port. |
 | 10 | Begruendung im Code-Kommentar praezisieren | **erfuellt:** Kommentar am Haken in main.c nennt die Dirty-1-Setzer @0x8001d5c8/@0x80021514/@0x800402f4/@0x80040354, room_common.c den Raumlader @0x8001daec; "einen Dirty-2-Pfad hat der Port nicht und bekommt keinen". |
 
 ### 9.2 Dateien und Haken
@@ -494,8 +495,9 @@ Neu (Spur G2):
   `tests/unit/probe_r34n_g_schrift_eval.c`; Integrations-Riegel
   `tests/integration/test_r34n_g_schrift1150.cmake` -> `integration_r34n_g_schrift1150`; beide
   registriert in `tests/unit/probes/r34n_g_schrift.cmake`.
-* Werkzeuge `re15_port/tools/r34n_g/beleg_blinkt.py` (Belegbild), `ss_masken_records.py`
-  (Record-Tabelle eines Savestates), `ss_zensus_raeume.py` (Stage/Raum/Cut aller Savestates).
+* Werkzeuge `re15_port/tools/r34n_g/beleg_blinkt.py` (Belegbild Takt), `vorher_nachher.py` (alte gegen
+  neue exe), `ss_masken_records.py` (Record-Tabelle + Codevergleich + Bildspeicher eines Savestates),
+  `ss_zensus_raeume.py` (Stage/Raum/Cut aller Savestates).
 * `tests/unit/probe_r34n_g_karte.c` erweitert: jeder Raum, `p=x,z`, `f=bank:bit` (fuer 6.6).
 
 Haken in gemeinsamen Dateien (je 1-6 Zeilen, keine fremde Zeile umformatiert):
@@ -518,27 +520,36 @@ ROOM1170 (keine 0x45-Stelle).
 Reihenfolge im Bild (Plan 5.3) eingehalten: Aufbau im Praesentations-Apply am Bildanfang -> SCD-Takt
 (0x45) -> pri-Block -> end_frame. Beim Tuerweg baut Schritt 9 im Bild des Raumwechsels auf; dieses
 Bild ist wegen der Tuer-Blende (Pegel 0x7FFF, Schwarz) nicht sichtbar, ab dem naechsten Bild passen
-Maskenliste und Tabelle zum neuen (Raum, Cut) (gemessen §9.1 Nr 7).
+Maskenliste und Tabelle zum neuen (Raum, Cut) (gemessen §9.1 Nr 7). Eine 0x45 in der SCD-Init eines
+neuen Raums trifft vor Schritt 9 noch die alte Tabelle und wird von Schritt 9 ueberschrieben — im
+Original findet sie RDT[0] = 0 der frisch geladenen RDT (206/206 RDTs Byte 0 == 0): beide ohne Wirkung.
 
 ### 9.3 Pins und Mutationsproben
 
 * `unit_r34n_g_maskgrp` (echte RDT-Bytes, echte VM, echter Raumstart): Teil A Aufbau/Opcode (13
   Pruefungen), Teil B Takt 1150 und 1151 (Wechsel bei Takt 39 59 79 ... 199 = exakt 20),
   Teil C Cut 2 -> 0 -> 2 in einer AUS-Phase (sofort AN, naechstes AUS erst beim naechsten := 0).
-  **Mutation:** `s_op_table[0x45] = op_col_chg_set` entfernt -> 8 FAIL; zurueck -> OK.
-* `integration_r34n_g_schrift1150` (echte exe, Lade-Weg, ohne FORCE_CUT): 1150 und 1151 je 101 Bilder
-  gegen Log-Orakel und NO_PRI-Referenz, 4 volle Laeufe je 20 Bilder, AN-Bild 558 Bildpunkte
-  Unterschied (== Dossier 3.3). **Mutationen:** Filter in render_pc.c aus -> 42 Bilder falsch, 0 AUS,
-  ROT; Aufbau-Haken in main.c aus -> "kein Aufbau Cut 2", 101 Bilder falsch, ROT. Beide zurueckgesetzt
-  und neu gebaut.
+  **Mutation 1:** `s_op_table[0x45] = op_col_chg_set` entfernt -> 8 FAIL; zurueck -> OK.
+* `integration_r34n_g_schrift1150` (echte exe, Lade-Weg, ohne FORCE_CUT): Referenz ohne Masken
+  (RE15_NO_PRI), Lauf A 1150 und B 1151 je 101 Bilder gegen das Log-Orakel, genau 1 Aufbau, 4 volle
+  Laeufe je 20 Bilder, AN-Bild 558 Bildpunkte Unterschied (== Dossier 3.3); Lauf C 1150 mit
+  Statusschirm in der AUS-Phase (genau 1 Aufbau, Zustand vor/nach dem Schirm gleich, 3 volle Laeufe).
+  **Mutation 2:** Filter in render_pc.c aus -> 42 Bilder falsch, 0 AUS, ROT. **Mutation 3:**
+  Aufbau-Haken in main.c aus -> "kein Aufbau Cut 2", 101 Bilder falsch, ROT. **Mutation 4
+  (Auflage 1):** `g_scd.cam_change_pending = 1` im gemeinsamen Abbau von close_phase (menu_common.c)
+  -> "2 Aufbau-Zeilen", Lauflaenge falsch, ROT. Alle zurueckgesetzt (git diff leer) und neu gebaut.
 
 ### 9.4 Suite
 
-(laeuft)
+* Lauf 1 (10:10-10:30, parallel zu eigenen exe-Messlaeufen): **429/430**; der eine Ausfall war
+  `integration_r34n_g_schrift1150` selbst — das Skript war waehrend des Laufs um Lauf C erweitert
+  worden, der Auswerter aber noch der alte (ohne `--menue`, verglich die Schirm-Bilder). Nach dem
+  Neubau einzeln gruen (75 s), auch nach Mutation 4 + Ruecknahme.
+* Lauf 2 (Endstand): siehe unten.
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder)
 
-Alle Laeufe mit einer KOPIE der exe (re15_pc_g2b/c/d.exe), `RE15_WINDOW_SCALE=3`, beschleunigter
+Alle Laeufe mit einer KOPIE der exe (re15_pc_g2b..e.exe), `RE15_WINDOW_SCALE=3`, beschleunigter
 Renderer, `RE15_FRAMEDUMP` (Readback des fertig komponierten Bilds vor Present). Auswertung
 `port_schrift1150_eval.py` (Referenzen AN/AUS aus BSS + Atlas, max|d| 0) bzw. der Riegel-Auswerter.
 
@@ -554,6 +565,23 @@ Renderer, `RE15_FRAMEDUMP` (Readback des fertig komponierten Bilds vor Present).
 Selbst angesehen: G2_10/G2_11/G2_12 — die Buchstaben erscheinen im AN-Zustand als dunkle Lamellen
 auf Rot, im AUS-Zustand gleichmaessiges Rotlicht, wie im Original-Bildspeicher (G2_05).
 
+**Andere Raeume (Abnahme 6.6, alte exe = Stand cf0e68ba ohne Opcode 0x45, neue exe, gleiche Umgebung):**
+
+| Raum / Cut | Weg | RE15_MG_LOG (neue exe) | sichtbar (selbst angesehen) | Beleg |
+|---|---|---|---|---|
+| ROOM3000 Cut 0, Zombie | Debug-Sprung, RE15_SET_FLAG 4:9 | je Bild Gruppen 1..3 := 0 (9+20+14 = 43/43) | die 43 Masken sind die vorgerenderten LEICHEN der Polizisten; alt: Leichen UND Zombies, neu: nur der Blutfleck des Hintergrunds | `G2_13_raum3000_zombie_vorher_nachher.jpg` |
+| ROOM3000 Cut 0, normal | Debug-Sprung ohne Flag | kein 0x45 (43/43 an) | unveraendert (Leichen da) | Log |
+| ROOM3000 Cut 0, **Original** | DuckStation, sauberer Stand per RAM-Patch des Debug-Sprungs | Records normal 43/43 Byte0 = 1, Zombie 0/43 | Original-Bildspeicher Zombie: keine Leichen | `G2_16_original_raum3000_normal_zombie.png`, `G2_16_original_raum3000_records.txt`, `G2_16_protokoll.txt` |
+| ROOM3010 Cut 0, Zombie | Debug-Sprung, 4:10 | Gruppen 1,2 := 0 (16+10 = 26/56) | Leichen-Masken in der Mitte weg | `G2_14_raum3010_zombie_vorher_nachher.jpg` |
+| ROOM5060 Cut 11 | Debug-Sprung, FORCE_CUT 11, SET_FLAG_AT 5:4@300 | ab F300 Gruppe 1 := 0 (1/1) | Hebel/Einsatz im Schacht weg, roter Pfeil des Hintergrunds | `G2_15_raum5060_cut11_vorher_nachher.jpg` |
+| ROOM1211 Cut 7 | Karte 1211/7, FORCE_CUT 7, SET_FLAG_AT 5:2@60 | ab F60 Gruppen 1,2 := 0 (5+5 = 10/70) | Bett im Hintergrund-Zustand (heller) statt der dunkleren Masken-Fassung | `G2_17_raum1211_cut7_vorher_nachher.jpg` |
+| ROOM3071 Cut 9 | Karte 3071/9, FORCE_CUT 9, (5,3) = 0 | Gruppen 3..13 := 0 (11/30) | blaue Lichtleiste an der Wand AUS (alt: dauernd an); die Elza-Szene sub02 schaltet sie nacheinander an | `G2_18_raum3071_cut9_vorher_nachher.jpg` |
+| ROOM3001 / 3011 / 5061 | Karte + f=4:9 / f=4:10 / 5:4 | 43/43, 26/56, 1/1 wie die Grundvarianten | — | Log |
+
+⛔ `stage_saves/PATCHED-EXE_HASH-881C08B8082E53B6_3.sav` (ROOM3000) taugt fuer diese Frage NICHT: dort sind
+der SCD-Laeufer (@0x8003f088 `jal 0x8007153c`) und der Cut-Apply (@0x80021bf8/@0x80021c08) gepatcht
+(`ss_masken_records.py`: Code != PSX.EXE). Deshalb der neue saubere Stand per RAM-Patch.
+
 ### 9.6 Abweichungen vom Plan (mit Grund) und sichtbare Aenderung in anderen Raeumen
 
 * Menue-/Karten-/Options-Haken entfallen (Auflagen 1/2, §9.1).
@@ -562,19 +590,35 @@ auf Rot, im AUS-Zustand gleichmaessiges Rotlicht, wie im Original-Bildspeicher (
 * Mess-Zeile schreibt zusaetzlich wv0A/wv0C (Auflage 5).
 * Byte0 bekommt das GANZE op2-Byte (@0x800396e0 `sb a1,0(v1)`), gezeichnet wird Bit 0
   (@0x800395f0) — wie im Original (Pin Teil A: `45 06 02` -> Byte0 2 -> unsichtbar).
+* Kein Takt-Pin mit den Original-VBlanks noetig: der Takt ist Skript-Daten (Sleep 20) auf der
+  vorhandenen 30-Hz-SCD-Basis (1 SCD-Takt je Bild; Original VSync(2), G2_06: 40 VBlanks je Zustand).
 
 **Sichtbare Aenderung in acht weiteren Raeumen (Auflage 9), Vorschlag fuer den Versionshinweis:**
 "Vordergrund-Masken, die ein Raumskript per Opcode 0x45 ausschaltet, werden jetzt wie im Original
-nicht mehr gezeichnet: ROOM1150/1151 Cut 2 (Leuchtschrift blinkt), ROOM1211 Cut 7 (nach Flag (5,2)),
-ROOM3000/3001 und ROOM3010/3011 in der Zombie-Variante (Flag (4,9)/(4,10) -> Figuren vor sonst
-verdeckenden Vordergrundteilen), ROOM3071 Cut 9 (Lichtfolge der Elza-Szene), ROOM5060/5061 Cut 11
-(nach Flag (5,4))."
+nicht mehr gezeichnet: ROOM1150/1151 Cut 2 (die Leuchtschrift HEAVEN hinter Irons' Schreibtisch
+blinkt), ROOM3000/3001 und ROOM3010/3011 in der Zombie-Variante (die vorgerenderten Leichen der
+Polizisten verschwinden, wenn sie als Zombies aufstehen), ROOM3071 Cut 9 (Lichtleiste aus bis zur
+Elza-Szene, dort Lichtfolge), ROOM1211 Cut 7 (nach Flag (5,2)), ROOM5060/5061 Cut 11 (nach Flag (5,4))."
 
 ### 9.7 Commits
 
 20a7761d (Modul + Haken), f52dc5ce (Pin), 97e47445 (Abnahme exe), b0fc996a (Auflage 5),
-cdea3286 (Integrations-Riegel) — weitere siehe `git log`.
+cdea3286 (Integrations-Riegel), 0488fdb8 (Dossier), 308dbd28 (6.6 3000/3010/5060), 20ce50da
+(DuckStation-Gegenprobe ROOM3000), 47a75ba9 (Riegel Lauf C + Kartenwerkzeug), 53fee0cf (6.6 1211/3071),
+danach der Abschluss-Commit dieses Abschnitts.
 
 ### 9.8 Offene Punkte
 
-(in Arbeit)
+1. **PSX-Ziel nicht gebaut** (bekannte Luecke): die zwei PSX-Zeilen sind nur gelesen, nicht kompiliert.
+2. **Optionsschirm im Spiel** (SELECT+START, Task 0x8002dde4) ist im Port nicht portiert. Wer ihn
+   portiert: Original schreibt beim Verlassen Dirty := 1 (@0x8002e730, nur bei DAT_800aca38 &
+   0x40000000) -> Neuaufbau "alle an", sofern das Gate @0x8002151c (DAT_800b536c) es durchlaesst —
+   dieses Gate ist noch zu belegen.
+3. **Zustand der ANDEREN Raeume im Original** nur fuer ROOM3000 Cut 0 gemessen (DuckStation, Records +
+   Bildspeicher). ROOM1211/3010/3071/5060 sind statisch (SCD-Dumps, Gegenpruefung §3) und im Port
+   gemessen, nicht im Original.
+4. Aus der Ermittlung (§8) unveraendert offen: Werkzeugfehler `tools/maske/original.py atlas()`
+   (11978/65536 Texel falsch fuer ROOM1150 Cut 2); Raum-ESP ROOM1150 (Effekt 0x01) — nicht Teil
+   dieses Punkts.
+5. Mess-Schiene RE15_FORCE_CUT: unter ihr ist das Blinken in ROOM1150 unsichtbar (Aufbau jedes Bild) —
+   gewollt, dokumentiert; wer den Blink-Zustand pruefen will, nimmt die Lade-Weg-Karte.
