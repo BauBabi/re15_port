@@ -70,8 +70,9 @@ Merksätze:
 ## Gotchas
 
 - **`re15_pc.exe` sperrt die eigene Datei, solange sie läuft** → ein Build nach einem Exe-Lauf scheitert mit
-  `cannot open output file … re15_pc.exe: Permission denied` (KEIN Code-Fehler). Vor dem Build:
-  `taskkill //F //IM re15_pc.exe 2>/dev/null; true`.
+  `cannot open output file … re15_pc.exe: Permission denied` (KEIN Code-Fehler). Deshalb über
+  `tools/local_build.sh` bauen — es beendet seit Runde 34 NUR die exe des eigenen Bauverzeichnisses.
+  ⛔ NIE `taskkill /IM re15_pc.exe` (trifft die exe des Nutzers und parallele Messläufe).
 - **Ninja rebaut manchmal nicht nach `.inc`/Header-Änderungen** → betroffene `.c` `touch`en, um den Rebuild zu erzwingen.
 - Neuer HUD-/Overlay-Layer? Entscheide bewusst, in welche Ebene (Framebuffer für 2D-Tiles unter den Meshes;
   `s_text_overlay` oder ein eigener FillRect/Copy nach den Meshes für „immer oben") — und ob Cinematic-Balken
