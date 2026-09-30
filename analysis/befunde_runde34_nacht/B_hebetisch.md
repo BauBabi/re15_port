@@ -463,13 +463,15 @@ void re15_hebetisch_cursor_tick(void);                    /* je Spielbild */
 int  re15_hebetisch_cursor_sicht(int32_t *x11f0, int32_t *z11f0); /* fuers Zeichnen: 1 = zeigen */
 ```
 
-Zustaende: `AUS` -> (aktion 4) `VERLANGT` -> (op_for am Halt-PC) `AKTIV` -> (Kuppeldruck) `FREI` -> (sub04-PC hinter
-@0x0FC0 bzw. Thread weg) `AUS`. `haelt()` liefert 1 genau bei (VERLANGT|AKTIV) && pc == Halt-PC; der erste solche
+Zustaende: `AUS` -> (aktion 4, sub04 gestartet) `VERLANGT` -> (erster op_for am Halt-PC) `AKTIV` -> (Kuppeldruck)
+`FREI` -> (naechster op_for am Halt-PC wird durchgelassen, im selben Aufruf) `AUS`; `install()` beim Raumaufbau setzt
+immer `AUS` (Raumwechsel/Laden mitten im Halt). `haelt()` liefert 1 genau bei (VERLANGT|AKTIV) && pc == Halt-PC; der erste solche
 Aufruf setzt AKTIV und den Cursor auf den Start. `tick()` nur in AKTIV und nur wenn weder Text offen noch SCD-Pause
 (`g_re15_pauseflags & RE15_PAUSE_SCD`, dieselbe Schranke wie scd_vm_tick) — dann:
 1. Bewegen aus `g_scd_pad_held` (virtuell; unter der Pad-Sperre 0xf000 automatisch tot): 0x0001 -> z += 200,
    0x0004 -> z -= 200, 0x0002 -> x += 200, 0x0008 -> x -= 200 (jede Richtung einzeln, wie sub01).
-2. Druck `g_scd_pad_edge & 0x0040`: Heisspunkt projizieren; in der Huelle -> `re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK)`,
+2. Druck `g_scd_pad_edge & 0x0040`: Heisspunkt projizieren; in der Huelle -> Zaehler `g_re15_hebetisch_klick_zaehler++`
+   (Messschiene fuer Riegel, wie `g_re15_panel_klick_zaehler` in scd_vm.c) + `re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK)`,
    Zustand FREI (naechster op_for laeuft durch); sonst `re15_msg_install_text(20, k_nichts, sizeof k_nichts)` +
    `re15_msg_install_durations(20, re15_msg_compute_duration(...))` + `re15_dialog_open_mask(20, 0, 0xFFFF0000u)`.
 Protokoll (nur PC, eigener Schalter `RE15_HEBETISCH_CURSOR_LOG=<datei>` — hebetisch_1150.c bleibt unberuehrt): je Bild `cursor=<zustand> x=<x> z=<z> sx=<px> sy=<px> treffer=<0|1>`
@@ -520,7 +522,7 @@ Trefferflaeche: die 12 Ecken als Konstanten im Kopf (Werte oben), Riegel R2 rech
 |---|---|---|---|
 | R1 | `unit_r34n_b_halt` | ROOM1150+1151: Signatur gefunden (Halt @0x0FC0 / @0x0F9E); Aktion 4 + sub04 -> Thread steht nach 10 VM-Takten auf dem Halt-PC (Sonde §3.7), Plattform y=-305, angefordert Cut 4, Deckel lokal z=0; 60 weitere Bilder: PC und Deckel unveraendert | Haken in op_for entfernt -> Deckel bewegen sich |
 | R2 | `unit_r34n_b_kuppel` | Engine-Projektion (camera_common.c) der Kuppel unter Cut 4 = Huelle §3.6 (+-1 px); Heisspunkt am Start (160,119) liegt NICHT drin, (209,176) liegt drin; 1151 gleich | Huelle aus Prop 0 statt 1/2 -> rot |
-| R3 | `unit_r34n_b_ablauf` | Kuppeldruck: Klickzaehler +1, naechstes Bild For ausgefuehrt, nach 15 Bildern Deckel offen (+-150), Ruhe-Fenster und Items wie unit_r31_hebetisch; Fehldruck: Text 20 offen, Bytes = §5.4, Klickzaehler unveraendert, Halt bleibt | Treffertest invertiert -> rot |
+| R3 | `unit_r34n_b_ablauf` | Kuppeldruck: Klickzaehler +1 (im Unit-Lauf faengt `tests/test_support.c:85` den Aufruf ab: `g_test_panel_se_count`/`g_test_panel_se_last` == 0x0A), naechstes Bild For ausgefuehrt, nach 15 Bildern Deckel offen (+-150), Ruhe-Fenster und Items wie unit_r31_hebetisch; Fehldruck: Text 20 offen, Bytes = §5.4, Klickzaehler unveraendert, Halt bleibt | Treffertest invertiert -> rot |
 | R4 | `unit_r34n_b_cut_old` | nach komplettem Durchlauf mit Cursor: `Cut_old` stellt die Raumkamera her (cam_id_prev != 4) | Vorschalt-Variante (Port zeigt Cut 4 selbst) -> cam_id_prev == 4 -> rot |
 | R5 | `unit_r34n_b_harness` | `re15_aot_fire_slot(1)` / `scd_event_fire(4)` ohne Aktion -> KEIN Halt (Fahrt wie heute) | Armieren im scd_event_fire -> rot |
 | R6 | `unit_r34n_b_cursor_bytes` | eingebackenes MD1/TIM == ROOM11F0.RDT @0x001928/@0x018DAC | ein Byte geaendert -> rot |
