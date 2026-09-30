@@ -4,7 +4,7 @@ Stand: 2026-09-30, Zweig `r34g/a-granate`, Arbeitsbaum `.claude/worktrees/r34g_a
 Bauverzeichnis `re15_port/build_r34_a`, Laufzeit-Ausgaben (unversioniert) `build/r34g_a/`.
 Auftrag: BAUPLAN §3.1 A1-A10, K1-K3, K9, P1-P10, P31; Orchestrator-Vorgaben (O-VB4 entschieden, "alle Gegner").
 
-STATUS: FERTIG (Code + Sonde + Mutationsproben + exe-Messung); Suite: siehe §8.
+STATUS: FERTIG (Code + Sonde + 18 Mutationsproben + exe-Messung); Suite: kein reproduzierbares Rot, Zielzeile unter Fremd-Kills nicht erreicht (§8).
 
 ---
 
@@ -230,6 +230,10 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
    der Spielschleife (Task 0), die waehrend des Statusschirms geparkt ist (menu_common.c Stufe 2, Task-Start
    @0x8001cb34-44). Gemessen (a_debug1): SELECT im ITEM-Raster oeffnet im Port BEIDE (Item-Debug und DEBUG MENU).
 7. Integrationstest `test_r34_granaten` (C9): Item-Debug-Weg als exe-Abnahme (Skript wie a_debug1, nach Wunsch 6).
+8. ⛔ `re15_port/tools/local_build.sh:293-300` (Integration, DRINGEND): powershell per absolutem Pfad aufrufen
+   (`/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`) und den Rueckfall `taskkill //F //IM re15_pc.exe`
+   streichen (lieber gar nicht beenden als alle). Gemessen: unter CLEAN_PATH (`:147`) fehlt powershell, jeder
+   build-Schritt beendet jede re15_pc.exe der Maschine (Waechter: 9 Fremd-Kills in 12 min, §8).
 
 ## OFFEN
 
@@ -280,4 +284,36 @@ e15_pc.exe: Permission denied`
   (`build/r34g_a/sl_b`): 3x rc 0, je `EXIT_AT: Bild 280`, 26-27 s. Waehrenddessen liefen die Suiten der Spuren B, C
   und D (Prozessliste: ctest + re15_pc.exe aus r34g_b/r34g_c/r34g_d).
   -> Kein reproduzierbares Rot; jedes Rot wurde einzeln gruen wiederholt.
-* **Lauf 4**: siehe unten.
+* **Lauf 4** (all): `98% tests passed, 7 tests failed out of 429`, 1025.45 s. Rot nur exe-Tests: `integration_r30_cut_blitz`,
+  `integration_elza_vollstart` (Szene im Zeitlimit nicht fertig), `integration_r30_granate_laden`, `..._irons_tisch_bild`,
+  `..._irons_tisch_licht`, `..._sicherung_bild` (exit=1 bzw. abgerissen), `integration_r33_speichern` (exit=1).
+  Einzeln nacheinander (`build/r34g_a/rerun_lauf4.txt`): die ersten sechs **gruen**; `r33_speichern` 3x rot (exit=1,
+  Abriss an wechselnden Stellen: Bild 120, gleich nach dem Start), dann **gruen** (92.08 s). Von Hand 3x nachgestellt
+  (`build/r34g_a/r33a`, gleiche Umgebung ohne ctest): 3x rc 0, `EXIT_AT: Bild 460`, Hinweis-Zeile vorhanden.
+* **URSACHE DER exit=1-ABRISSE, GEMESSEN**: ein Prozess-Waechter (`build/r34g_a/watch_kill.ps1`, fragt je 150 ms nach
+  taskkill.exe) fing waehrend eines roten r33_speichern-Laufs
+  `02:16:13.099 KILL pid=4248 cmd=C:\Windows\System32	askkill.exe /F /IM re15_pc.exe parent=26880`
+  (`build/r34g_a/watch_kill.txt`) — eine FREMDE Sitzung beendet re15_pc.exe per Bildname (taskkill /F -> exit 1) und
+  trifft damit die exe-Tests aller Baeume. Kein Absturz: das Anwendungs-Ereignisprotokoll der letzten 2 h enthaelt keinen
+  Eintrag zu re15_pc.exe. Der Elternprozess 26880 war beim Nachsehen schon beendet (nicht zuordenbar).
+* **Lauf 5** (all, Waechter aktiv): `99% tests passed, 5 tests failed out of 429`, 978.61 s. Rot: `irons_tisch_bild`,
+  `irons_tisch_licht`, `titel_puls`, `boot_bg_pin`, `relatch_pin`. Einzeln (`build/r34g_a/rerun_lauf5.txt`): `boot_bg_pin`,
+  `relatch_pin` gruen; `irons_tisch_bild`, `titel_puls` im zweiten Anlauf gruen; `irons_tisch_licht` im dritten Anlauf
+  gruen (der zweite wurde nachweislich von `02:39:14.957 taskkill /F /IM re15_pc.exe` getroffen). Waechter-Log
+  `build/r34g_a/watch_kill_lauf5.txt`: 9 Fremd-Kills zwischen 02:27:57 und 02:39:14, Elternprozesse u. a.
+  `bash.exe re15_port/tools/local_build.sh test` und `... local_build.sh build` (parallele Spuren).
+* **ERGEBNIS**: kein Test ist reproduzierbar rot. Alle Nicht-exe-Tests (Unit, Sonden inkl. `unit_r34_wurf`, Property)
+  waren in JEDEM der Laeufe 2-5 gruen; jedes exe-Rot wurde einzeln gruen wiederholt. Eine Zielzeile
+  `=== LOCAL-BUILD-OK (all) — Tests 429/429` war unter den Fremd-Kills nicht erreichbar.
+* ⛔ **SELBSTBEFUND — local_build.sh toetet fremde exe-Laeufe (auch meine Laeufe haben das getan)**:
+  `tools/local_build.sh:293-300` will seit Runde 31 nur die exe des EIGENEN Bauverzeichnisses beenden
+  (`Get-Process re15_pc | Where Path ... | Stop-Process`), prueft dafuer aber `command -v powershell` — unter dem
+  CLEAN_PATH des Skripts (`:147`: msys64, CMake, Ninja, /usr/bin, System32, Windows, Wbem) liegt powershell.exe
+  NICHT (es liegt in `System32\WindowsPowerShell1.0`). GEMESSEN mit genau diesem PATH: `powershell: FEHLT`,
+  `cygpath: /usr/bin/cygpath`, `taskkill: /c/Windows/System32/taskkill`. Damit laeuft IMMER der Rueckfall
+  `taskkill //F //IM re15_pc.exe` = jede re15_pc.exe der Maschine (alle Baeume UND die exe des Nutzers im Hauptbaum)
+  wird in jedem `build`-Schritt beendet. Meine eigenen Aufrufe (build 0/1/2 und die Suite-Laeufe 1-5 = 8
+  build-Schritte, 2026-09-30 00:05-02:25) haben das ebenso ausgeloest; die exe des Nutzers
+  (`C:\workspace\giteAi_v2e15_portuild\platform\pce15_pc.exe`, pid 28632, um 00:47 laufend) war um
+  01:17 nicht mehr in der Prozessliste. -> INTEGRATIONSWUNSCH 8. Seit dem Befund keine weiteren local_build.sh-Laeufe
+  von mir (Wiederholungen nur per ctest, ohne Bauschritt).
