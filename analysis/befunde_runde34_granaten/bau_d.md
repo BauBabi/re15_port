@@ -587,3 +587,98 @@ Mutationsproben (alle rot, danach `git diff` leer):
 | C2 | Op 46 vel.x 180 → 189 (= Pruefer-Mutation C2) | `FAIL 401` (raum: `FAIL 305`) |
 | D | Op 27 Luftzaehler 8 → 9 (= Pruefer-Mutation D) | `FAIL 338` |
 | P | Physik: vel += acc VOR lokal += vel | `FAIL 216` |
+
+### N4 — M3 behoben: Billboard-Geometrie und Sprite-Wahl in ctest (`unit_r34_re2fx_bild`)
+
+**FUN_80077ed0, selbst disassembliert** (0x80077ed0-0x80078170; Aufruf aus FUN_80077924 @0x80077d3c-58:
+a2 = Groesse, a3 = Anzahl, [sp+16] = camf, [sp+20] = OT, [sp+24] = Code, [sp+28] = Zelle):
+
+```
+80077a04 lbu v0,33(s0) / 80077a08 lw v1,112(s0) / 80077a14 addu s1,v1,v0*8   ; Anim-Eintrag +0x70 + Anim*8
+80077a20 lbu s3,1(s1) (Anzahl) / 80077a58 lbu s6,3(s1) (Groesse) / 80077a5c lbu s7,0(s1) (Zelle)
+80077f0c 0x4a180001 RTPS ; 80077f14 mult a2,t0 (Groesse*Skala +0x3A) ; 80077f24 mult t0,a0 (*camf) -> t1
+80077f2c lw v0,116(a1) / sll v1,v1,2 / addu t4 ; UV-Zeiger +0x74 + Zelle*4
+80077f58 sra v0,v1,9 / beq -> Ende          ; SZ3 >> 9 == 0 -> kein Sprite
+80077f64 addiu a0,zero,32767 / sltu / sw    ; SZ <= 32767
+80077fd4 sll v0,v0,4 / 80077fd8 div t1,v0   ; step = t1 / (SZ << 4)
+80078004 lhu v1,4(a1) / mult v0,v1 -> t3 (w) ; 8007801c divu t3,a2 -> t7 (Texelschritt x)
+80078030 lhu v1,6(a1) / mult v0,v1 -> a1 (h) ; 8007805c divu a1,a2 -> t6
+80078070 sltu v0,a0(0x1ffff),t7 / 8007807c addiu a2,a2,-1 ; 80078088 addiu t5,t5,-256   ; Kanten-Trim
+80078090 lb t1,2(t4) / mult t1,t7 ; 800780ac addu a0,t9(SX<<16),v1 ; 800780b0 addu t1,a0,t3 / srl 16 (x1) ; 800780c0 srl a0,a0,16 (x0)
+800780a0 lb t0,3(t4) / mult t0,t6 ; 800780cc addu v0,t8(SY<<16),v0 ; 800780d0 addu t0,v0,a1 / and (y1) ; 800780dc and (y0)
+80078104 lbu a0,0(t4) (u) / 8007810c addu t1,a0,a2 (u1) / 80078114 lbu v1,1(t4) (v) / 80078120 addu t0,v1<<8,t5 (v1)
+```
+
+**Neu in der Sonde** (tests/unit/probe_r34_re2fx_bild.c, laeuft in ctest):
+
+| Pruefung | Inhalt |
+|---|---|
+| 20 | JEDES Quad jedes Bilds (1060) == unabhaengige Handrechnung: eigener CORE00.ESP-Leser (Bank-Offsets rueckwaerts FUN_8001bca0 @0x8001bcc8-2c, Anim-Tafel Bank+8, UV-Tafel Bank+8+8·n1 @0x8001cd54-64 — NICHT die Zeiger +0x70/+0x74 der Maschine), eigene RTPS (psx-spx, sf 1, lm 0, UNR-Division ueber re15_gte_divide), FUN_80077ed0 aus der Disasm oben; Zahl, Reihenfolge (Platz 95 → 0, Zelle aufsteigend), x0 y0 x1 y1 u0 v0 u1 v1, CLUT, TPage, Code |
+| 21 | Literal-Pins: erstes Quad je Kind-Code (10 Codes, darunter Kanten-Trim 0x040D/0x041D-Brand mit u1 = u0 + 15); 030F, 0505 und 040D von Hand nachgerechnet mit `tools/re2fx_billboard_hand.py` (eigene UNR-Tabelle nach psx-spx, kein Port-Code): z. B. 030F: SX 126 SY 137 SZ3 5618 n 2426, t1 27262976, step 303, w = h 1241088, tx = ty 77568 → (97,113)-(116,132) uv (0,32)-(16,48); 040D: step 358, tx 148928 > 0x1FFFF → Trim → uv (0,72)-(15,87) |
+| 22 | Anim-Start je Platz aus der Skript-Startmenge in CORE00.ESP (Schritt 0: Op A 1 → step[2] @0x8001dc40-4c; Op B 27 → r%3 @0x8001faa4-f4; Op A 30 → Op 2: step[2] + r%(step[0x16]+1) @0x8001dd70-a8) |
+| 23 | je Bild genau der naechste Tafel-Eintrag (Dauer 1), LOOP (Dauer 0xFF → Zelle) @0x8001d824-50 |
+| 24/25 | Aufschlag-Kinder verschwinden nur am ENDE-Eintrag (Dauer 0, Zelle 0 @0x8001d814-20), Lebensdauer = Folgenlaenge; jede Folge vollstaendig gezeichnet (030F/031F: Anim 11..22, 040C: 3..22, 041D/040D: 32..35, 0314: 38..46; Bodenflamme Zyklus 0..9) |
+| 26 | Negativ-Kontrolle: Handrechnung mit SZ<<3 weicht ab (60 Bilder) |
+| 27-29 | Datenannahmen (Kind-Code bekannt, Dauer 1, Start-Op bekannt) |
+| 30/31 | O9-Texelabgleich jetzt in ctest: jedes Texel jedes Ausschnitts (185030) VRAM-Modell == direkte TIM-Dekodierung (0 abweichend); Negativ-Kontrolle CLUT-Zeile + 1 |
+
+Die aus CORE00.ESP abgeleiteten Kind-Skripte (eigener Dump, Bank-Offsets 3: 0x8, 5: 0x5F0, 4: 0x1BCC): jedes
+Aufschlag-Kind hat Schritt 0 = Op A 1 (Status 0xB003, Anim := step[2], TPage |= 0x20/0x40/0x60, Schritt 1 = Op A/B 0),
+danach spielt die Anim-Tafel mit Dauer 1 bis ENDE; Bodenflamme 0x0505: Op B 27, Anim 0..9 mit LOOP (Eintrag 10);
+Folgeflamme 0x0504: Op A 30 (Op 2, step[0x16] = 4 → Start 0..4).
+
+| # | Mutation | Ergebnis |
+|---|---|---|
+| G1 | step `szk << 4` → `szk << 3` (= Pruefer-Mutation A, vorher gruen) | `FAIL 20` |
+| G2 | Trim-Schwelle 0x1FFFF → 0x2FFFF | `FAIL 20` |
+| G3 | Ecke x mit cy statt cx | `FAIL 20` |
+| G4 | UV-Tafel um eine Zelle verschoben | `FAIL 20` |
+| G5 | Anim-Vorschub +2 fuer Bank 3 (schritt) | `FAIL 23` (Handrechnung folgt dem Index — die ESP-Folge faengt es) |
+| G6 | Groesse + 1 | `FAIL 20` |
+| G7 | camf 208 → 209 IN DER SONDE (Gleichtakt: Maschine und Handrechnung) | `FAIL 21` (nur die Literal-Pins fangen es) |
+
+`re2fx_katalog.py --vergleich` meldet weiterhin 626 Ausschnitte / 0 abweichende Texel; das belegt jetzt nur noch die
+Texel (Pruefung 30 in ctest), die Rechtecke/Lage belegen 20-25.
+
+### N5 — Hinweise M7/M8: PC-Zeichner mit Sonde, Slot nur CLUT-Zeilen 480..484
+
+* **M8** (re2fx_pc.c): der Slot war 512 × 4864 Texel (render_pc.c stapelt je CLUT-Zeile eine Kopie der Seite,
+  19 Zeilen) — ueber der 4096er Grenze aelterer GLES-Geraete; Android baut re2fx_pc.c per GLOB mit. Jetzt nur die
+  Zeilen 480..484 (**512 × 1280**, 2,6 MB statt 10 MB). Beleg: CLUT = Bankkopf + (Sub>>3)·0x40 (`srl v0,t5,3 /
+  sll v0,v0,6 / addu v1,v1,v0 / sh v1,50(t0)` @0x8001ccf4-d10); Bankkoepfe aus CORE00.ESP (eigener Dump): Bank 3/4
+  0x7811 (Zeile 480), Bank 5 0x7911 (484), Bank 0 0x7A11 (488), 1 0x7B11 (492), 2 0x7B91 (494), 6 0x7C51 (497),
+  7 0x7C91 (498); die Aufschlag-Kinder liegen auf 481..484 (Pruefung 5 der neuen Sonde ueber alle 1060 Quads).
+  Quads mit einer anderen Zeile laesst re2fx_pc_draw aus (render_pc.c:2474 faellt sonst still auf Zeile 0 zurueck).
+* **M7**: neue Sonde `unit_r34_re2fx_pc` (tests/unit/probe_r34_re2fx_pc.c) uebersetzt re2fx_pc.c mit Attrappen der
+  sechs render_pc.c-APIs (kein SDL; Vorbild r31_tueren): 1 Slot 50, 512 × 1280, 5 Zeilen ab 480; 3 je Bild
+  Dreieckspaare == re2fx_quads, rueckwaerts eingereiht (@0x80077f94-fac); 4 Dreiecke = Quad-Rechteck, u + 256 fuer
+  Seite 0x1F, TPage/CLUT/z, Farbe 255 (Paketfarbe 0x808080 @0x800783cc-d0), Slot gebunden; 5 JEDES Texel
+  (625214) PC-Slot == VRAM-Modell; 6 Mischmodus je ABR wie pc_draw_effects (ABR 1/2/3 durchlaufen); 7 CLUT-Zeile
+  485 ausgelassen; 8 Negativ-Kontrolle ohne +256 (3060 Texel abweichend).
+  **Befund**: alle Aufschlag-Kinder liegen auf Seite 0x1E (Bankkopf-TPage 0x001E; step[0x14] setzt nur die ABR-Bits
+  0x20/0x40/0x60) — der Zweig u + 256 (Seite 0x1F) ist mit echten Daten unerreichbar und wird synthetisch geprueft
+  (TPage aller lebenden Plaetze auf 0x1F umgestellt).
+
+| # | Mutation in re2fx_pc.c | Ergebnis |
+|---|---|---|
+| P1 | nur 4 CLUT-Zeilen | `FAIL 1` |
+| P2 | Seite 0x1F: u + 128 statt + 256 | `FAIL 4` |
+| P3 | CLUT-Spalte 256 statt 272 | `FAIL 5` |
+| P4 | ABR 3: alpha 128 statt 64 | `FAIL 6` |
+| P5 | Quads vorwaerts statt rueckwaerts eingereiht | `FAIL 4` |
+| P6 | Zeilenfilter 480..484 entfernt | `FAIL 7` |
+
+(Arbeitsfehler dabei, festgehalten: der erste P-Lauf setzte per `git checkout` die noch NICHT committete M8-Aenderung
+zurueck; sie wurde neu eingetragen, committet (87a7e34e) und der Lauf wiederholt. `mut.py` verweigert seitdem
+Dateien mit uncommitteten Aenderungen.)
+
+### Stand der OFFEN-Liste nach der Nachbesserung
+
+* §2.5 ("einzige Abweichung = Luft-Wand, unerreichbar") ist durch N1 UEBERHOLT: die Abbildung folgt jetzt der
+  RE2-Vergleichsregel; Luft-Wand und Boden-unter-Zelle verhalten sich wie in RE2.
+* OFFEN bleibt (unveraendert): RE2-Formtyp-Tests 1..13 (Kreise/Schraegen/Treppen) und die Oberkanten-Feinstufe
+  (+10 >> 11)·100 (@0x8004ffb0-d0) — RE1.5-Zellen sind Rechtecke ganzer Bandhoehe; Weg: RE1.5-Formtests
+  (re15_collision.c "SCA DIAGONAL / SLOPE cells") fuer Punkt-Tests exportieren (fremde Datei).
+* OFFEN bleibt: RE2-Paketpuffer-Ueberlauf (@0x80077e40-54), Mischreihenfolge innerhalb eines OT-Buckets bei
+  verschiedenem View-Z (§OFFEN oben).
+* Unerreichbar mit echten Daten, synthetisch geprueft: Seite 0x1F (N5), M.rot·Versatz mit M.rot ≠ I (N3).
