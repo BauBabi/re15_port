@@ -15,6 +15,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
 | S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W7 (6f7aa99f), W8 (7fbd45a0, 6e320214), W9 (c49f20fe), W10 (b787f722), W11 (Dossier) — alle erledigt |
 | S3 volle Suite | Lauf 1: LOCAL-BUILD-OK (all) — Tests 442/442 (Stand 3b189506); Lauf 2 (Endstand c8cb4040): LOCAL-BUILD-OK (all) — Tests 442/442 |
+| NACHBESSERUNG (Messer) | Mess-Dossiers 0e13eac6; Nr. 1-6 behoben 9b226eb7 (Abschnitt 5); Mutationsproben + volle Suite: Abschnitt 5.5/5.6 |
 
 ## 1. Merges (Schritt 1)
 
@@ -266,6 +267,130 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
   `r34n_dokumente` — Prozessliste gemessen): Bau `ninja: no work to do` (7cdd0c73 war schon gebaut), **`100% tests passed,
   0 tests failed out of 442`**, Abschlusszeile **`=== LOCAL-BUILD-OK (all) — Tests 442/442`**; `integration_r34_granaten`
   151.7 s, `unit_r34_wasser` 0.03 s. Kein exe-Rot, keine Wiederholung noetig.
+
+## 5. NACHBESSERUNG (Befunde der Messer mess_he / mess_sb / mess_geg / mess_reg)
+
+Stand: 2026-09-30. Mess-Dossiers eingecheckt 0e13eac6 (`doc(r34g): Messung ...`). Code + Sonden 9b226eb7.
+Alle Adressen selbst nachgelesen (`re15_disasm.py` auf info/Re1.5/PSX.EXE bzw. STAGE3/STAGE5.BIN, `re2_disasm.py` auf
+info/re2leon/PSX.EXE bzw. COMMON/BIN/EMZ0.BIN). Messlaeufe gegen die byte-gleiche Kopie `re15_pc_m1.exe`.
+
+| Nr | Befund (Messer) | Ergebnis |
+|---|---|---|
+| 1 + 5 | Wurf-Anker haengt am Zeichnen (mess_he M-HE-1, mess_reg M-H1) | BEHOBEN 9b226eb7 — gemessen gr.log byte-gleich sichtbar/gecullt |
+| 2 | Bodenfeuer an RE1.5-KI: Treffer alle 6 statt 15 Bilder (mess_sb 3.1) | BEHOBEN 9b226eb7 — RE2-Sperre 15 (Beta->Retail, Beleg RE2) |
+| 3 | gesperrter RE1.5-KI-Kandidat: Riegel-Zweig je Bild, Blut, Flamme bricht ab (mess_sb 3.2) | BEHOBEN 9b226eb7 — RE2 Gate 2: uebersprungen, nicht gezaehlt |
+| 4 | Birkin 0x30 steht in Todesphase 3 wieder auf (mess_geg M-B1) | BEHOBEN 9b226eb7 — letztes Bild gehalten (Phase 1 und 5) |
+| 6 | Messer-Hieb dreht 24 je Bild (mess_reg M-Z1) | BEHOBEN 9b226eb7 — Hieb dreht nicht, Halten weiter 48 |
+
+### 5.1 Nr. 1 + 5 — Wurf-/Muendungs-Anker unabhaengig vom Zeichnen
+
+* **Gemessen (Messer)**: ROOM1140 derselbe MITTE-Wurf, Cut 0/7 (Leon im Bild) `anker=(-6851,-2474,-18279)`, Cut 1..6
+  (Leon ausserhalb der Region des aktiven Cuts) `anker=(-7606,-1693,-17553)` (mess_reg §4.1, Laeufe `int_anker_cut0..7`,
+  hier nachgelesen: gr.log cut0 == cut7, cut1 != cut0); `re2_mitte_fern` (unsichtbar) gegen `_cut5` 519 Einheiten /
+  2 Bilder (mess_he §2.7).
+* **Original (selbst)**: `addiu a0,s0,720` @0x8001d098 (= 0x800aca54, Spieler) / `jal 0x8001e8c8` @0x8001d09c —
+  unbedingt, direkt hinter dem Licht-Latch (`ori v1,zero,0x1770` / `sh v1,38(v0)` @0x8001d080-84). In FUN_8001e8c8:
+  `lbu s0,131(s0)` @0x8001e964 (Teilezahl), `lw a1,-14448(a1)` @0x8001e970 (= 0x800ac790), `jal 0x80014368` @0x8001e974,
+  `beq v0,zero,0x8001e9c0` @0x8001e97c; innen Schleife `jal 0x8001e9ec` @0x8001e990, aussen `jal 0x8001ef54` @0x8001e9b4,
+  je `addiu s1,s1,172`. Kein Tor davor. FUN_8001e9ec: `lw s0,108(s2)` @0x8001ea0c, `andi v0,v0,0x40` @0x8001ea10,
+  `addiu a1,s2,24` @0x8001ea20, `jal 0x80022da0` @0x8001ea24, a2 = s2+64 @0x8001ea18/28. FUN_8001ef54: `lw a0,108(s0)`
+  @0x8001ef6c, `andi v0,v0,0x40` @0x8001ef70, `addiu a1,s0,24` @0x8001ef7c, `jal 0x80022da0` @0x8001ef80, a2 = s0+64
+  @0x8001ef78/84 — dieselbe Zusammensetzung, ohne Zeichnen. Teil 11 + 0x40 = 0x7a4 = Anker (Spieler+0x188 = 0x800acbdc).
+* **Port vorher**: Pose + Fuetterung `re15_player_set_hand_world/_rot` nur im Zeichen-Loop (main.c, `player_visible`);
+  gecullt -> Ersatzrechnung `muzzle_bone_world` (ohne Crossfade) bzw. alter Stand, `s_hand_valid` nie zurueckgesetzt.
+* **Gebaut** (platform/pc/main.c): `re15_compute_actor_kf` + `re15_skel_compute_pose` (mit `g_anim_pose_actor`, also
+  Crossfade-Schnappschuss und Nacken-FSM) JEDES Bild bei `skel_ok`; eigener Block nach `yaw_rot_q12` rechnet Knochen 11
+  genau wie der Loop (R_y x Pose, + Lage; dieselbe Knochen-Grenze `skel.bone_count`/`md1.mesh_count`) und fuettert
+  Hand-Welt/-Rotation; der Zeichen-Loop laeuft nur noch bei `player_visible` (`n_bones`). Muster: NPC-Zweig "GECULLT =
+  NICHT ZEICHNEN, ABER POSIEREN" (Runde 30, dieselben Adressen). Nebenwirkung (gewollt, wie Original): Crossfade und
+  Nacken-FSM des Spielers laufen auch in Bildern, in denen er nicht gezeichnet wird (FUN_8001f3bc / FUN_80037358
+  @0x80031d78 sind Spiellogik).
+* **Gemessen nachher** (Lauf `integration_r34_granaten` Auswahl `anker_c0;anker_c1`, 58 s): Tuer-Sprungpunkt, MITTE ab
+  Spielbild 260; c0 (Cut 0, `[vis] F342 ... vis=1`) und c1 (`RE15_FORCE_CUT=1`, `vis=0`) beide
+  `F=342 SPAWN granate art=2 slot=0 anker=(-6851,-2474,-18279) gier=215`, L 415 = S+73, X 451 = S+109 (BAUPLAN 1.1),
+  **gr.log byte-gleich**.
+* **Pin**: `integration_r34_granaten` Laeufe `anker_c0`/`anker_c1`: Vorbedingung vis=1/vis=0 im Spawnbild (sonst
+  "AUFSTELLUNG"), Anker-y < -2000 im sichtbaren Lauf (die alte Ersatzrechnung lieferte -1693), gr.log byte-gleich.
+
+### 5.2 Nr. 2 + 3 — Bodenfeuer (Op 40) an RE1.5-KI-Kandidaten: RE2-Sperre statt Riegel-Zweig
+
+* **Gemessen (Messer)**: m4 Brad (RE1.5-KI, Import AN) HP -5 in F138, 144, ..., 198 (alle 6 Bilder), st 2 durchgehend;
+  m5 (Import AUS) -50 in F138/F144; RE2-KI (n1, r1) genau alle 15 Bilder. Flamme P91 meldet in JEDEM Bild `treffer=2`
+  am liegenden Fresser (HP gleich), fx.log +2 Blut-Teilchen je Bild, Bild `mess_sb_belege/m4_re15ki_brad_blut_je_bild.png`.
+* **Einordnung (Regel Beta -> Retail)**: RE1.5 hat fuer Art 5 ("Flaechenfeuer", 50 @0x8006f422 / Reaktion 14 @0x8006f435)
+  KEINEN Aufrufer (bau_b M1) — das Bodenfeuer ist ein RE2-System (Op 40 -> FUN_800470C0). Wo RE1.5 unfertig ist, ist RE2
+  das Ziel; deshalb keine Wahlfrage, sondern die RE2-Mechanik fuer die RE1.5-KI-Kandidaten (Port-Zuordnung O-VB4 bleibt
+  fuer Schaden/Reaktion).
+* **RE2 (selbst)**: Gate 2 `lbu v0,467(s0)` @0x80047138 / `bne v0,zero,0x8004740c` @0x80047140 (0x8004740c =
+  `addiu s2,s2,4`, naechster Eintrag) — VOR `lhu v1,464(s0)` @0x8004716c, also uebersprungen ohne Schreiben und ohne
+  Zaehlen. Stempel `lbu a0,467(s1)` @0x8004731c, `andi a0,a0,0x80` @0x8004732c, `lw v0,4(a1)` @0x80047338,
+  `srl v0,v0,9` @0x80047340, `andi v0,v0,0x7f` @0x80047344, `or` / `sb a0,467(s1)` @0x80047348-4c. Abzug im
+  Wurzel-Prolog EMZ0.BIN `lbu v1,467(s0)` @0x80100484 / `andi v0,v1,0x7f` @0x8010048c / `beq` @0x80100490 /
+  `addiu v0,v1,-1` @0x80100494 / `sb v0,467(s0)` @0x80100498 — HINTER dem Freeze-Tor `lw v0,-1060(v0)` (0x800cfbdc) /
+  `lui v1,0x2000` / `and` / `bne v0,zero,0x80100640` @0x80100360-6c (0x80100640 = Epilog).
+* **Sperrwert-Zensus** (Werkzeug `nachbesserung_werkzeug/re2_gl_sperre.py`; Zeiger *(0x800A6A88 + Typ*4), Zeile z =
+  Basis + (z-1)*20, w1 = +4): ALLE 48 RE2-Gegnertypen 0x10..0x3F tragen in den Zeilen 9/10/11 (w1 >> 9) & 0x7F = **15**
+  (w1 0x078F1E0A, 0x078F1FB4, 0x078F1F68, 0x078F1EDA), z.B. Zombie Z10 @0x800A41E4, Hund @0x800A44DC, Spinne
+  @0x800A4C48, Typ 0x27 @0x800A4DC4. (Typen 0x00..0x0F sind keine Gegner-Records.) -> `#define RE2_GL_SPERRE 15u` gilt
+  fuer jeden Kandidaten, auch fuer Typen ohne Port-Record.
+* **Zwei RE1.5-Entsprechungen der RE2-Sperre** (re15_damage.c `re15_re2_gl_apply`, Position Gate 2):
+  (a) +0x93 Bit 0 = "jetzt nicht treffbar" (Treffer-Riegel `ori v0,v0,0x1` @0x800124f0 / @0x8001300c, Ruhe-Riegel des
+  liegenden Fressers @0x80103AAC-AB8) — vorher lief er durch den Riegel-Zweig des Resolvers (`ori v0,v1,0x2`
+  @0x80012fc8-cc, gezaehlt @0x80013024), der fuer EINEN Schuss gebaut ist; im Dauerfeuer: Blut je Bild (Gore-Tick
+  @0x80106a98 loescht Bit 1 @0x80106abc sofort wieder, Gate B @0x80012f54-60 greift nie), Abbruch im Modus "erster";
+  (b) die GL-Sperre im neuen Port-Feld `re2_gl_sperre` (include/re15_actor.h), gestempelt nach jedem RE1.5-Treffer des
+  Appliers, abgezogen je Spielbild in `re15_re2_gl_sperre_tick` (re15_damage.c), gerufen in `re15_game_step` direkt hinter
+  `re15_enemy_ai_run_all` im selben `RE15_PAUSE_AI`-Tor und VOR dem FX-Takt (RE2: Pumpe `jal 0x8001d300` @0x80026980
+  hinter der Gegner-Schleife). Kein Tor auf Typ/Variante/Per-Entity-Bit (Runde-14-Falle: ein ausfallender Abzug sperrt
+  dauerhaft).
+* **Sonden**: `unit_r34_schaden` 100 (Made 0x27 mit Bit 0 + RE2-Zombie dahinter: r 3, Made HP/+0x93 unveraendert, Zombie
+  -5), 101 (frei: -50, Sperre 15), 102 (Takt am RE1.5-KI-Import-Zombie, Abzug -> Flamme je Bild, Bit 0 nach 6 Bildern frei
+  wie die Port-HURT-Reaktion: Treffer in Bild 0/15/30/45 je -5, nie Bit 1), 103 (Abzug 2 -> 1 -> 0 -> 0, auch Typ 0x26
+  mit grid 0x20); 96/98 lassen zwischen zwei Treffern die Sperre ablaufen (15 Abzuege); `unit_r34_wurf` 182 (Spielschritt:
+  5 Bilder `RE15_PAUSE_AI` -> 15 bleibt, danach 14 Bilder -> 1, 15 -> 0).
+
+### 5.3 Nr. 4 — Birkin 0x30: letztes Bild am Ende von Todesphase 1 und 5 halten
+
+* **Gemessen (Messer)**: `birkin3070a_g9_bild` F235 liegt, F240/F260 steht; Zustandslog ab F240 `st=3 ss1=9 ss2=1 ss3=3
+  mo=9 af=0` (alle drei Granaten, beide KI-Varianten), Bild `mess_geg_belege/birkin_3070_he_steht_wieder_auf.png`.
+* **Original (selbst, STAGE3.BIN FUN_8011a5d8, Sprungtabelle @0x8010046c = {0x8011a618, 0x8011a678, 0x8011a690,
+  0x8011a6c0, 0x8011a6e8, 0x8011a728, 0x8011a788})**: Phase 0 setzt Clip 9 / +0x95 0 / +0x8f 7 / +0x93 |= 1 / Se(1)
+  (@0x8011a618-74) und faellt in Phase 1; Phase 1 `jal 0x8001f314` @0x8011a760 (a3 0x200), `+0x7 += v0` @0x8011a77c-84;
+  Phase 2 (@0x8011a690-bc, Flag z5:0x1c `jal 0x8004ef90` @0x8011a6b8) faellt in Phase 3; Phase 3 @0x8011a6c0-e4 nur
+  `lbu v0,9(a0)` / `andi v0,v0,0xf` / `bne` — KEIN anim_set. FUN_8001f314 -> FUN_8001f3bc posiert das Bild +0x95
+  (`lbu v0,149(t0)` @0x8001f35c) und zaehlt DANACH hoch (`addiu v0,v0,1` / `sb v0,149(v1)` @0x8001f618-1c); erst bei
+  >= Laenge `sb zero,149(v1)` + v0 = 1 (@0x8001f624-3c). Im Ende-Aufruf steht also das LETZTE Bild im Posen-Puffer, und
+  der bleibt, weil Phase 2/3 kein anim_set rufen. Phase 4 (@0x8011a6e8-724) faellt in Phase 5 (dasselbe anim_set),
+  Phase 6 @0x8011a788 schreibt nur 0xb01. STAGE5 identisch (+0x814: anim_set @0x8011af74, Phase 3 @0x8011aed4).
+* **Port vorher**: `re15_birkin_anim` laesst anim_frame beim Clip-Ende auf 0 umlaufen (`% fc`), der Renderer posiert
+  daraus Bild 0 = stehend.
+* **Gebaut** (enemy_ai_common.c): Phase 1 und Phase 5 setzen beim Clip-Ende `anim_frame = re15_birkin_fc(e) - 1`
+  (wie Tyrant B8).
+* **Sonde**: `unit_r34_reaktion` 197 (Arena Birkin grid 0x13, Explosion Art 2: Phase 3 Clip 9 Bild 39 = Phase-1-Maximum,
+  60 Bilder unveraendert; nach dem Morph-Signal Phase 6 mit Bild 39 = Phase-5-Maximum; Bank fehlt -> Rueckfall-Laenge 40).
+* **Hinweis (nicht geaendert)**: der Port faellt aus Phase 0 nicht in Phase 1 (und aus 4 nicht in 5) — das Original schon
+  (kein Sprung zwischen @0x8011a674 und @0x8011a678). Im Port-Schema "anim_frame nach dem Tick zeichnen" ist die Bildfolge
+  dadurch GLEICH (Original: Bild k im Tick T+k posiert, dann +1; Port: Tick T setzt 0 und zeichnet 0, Tick T+k zeichnet k);
+  verschoben ist nur der Phasenwechsel 1 -> 2 um einen Tick (Flag z5:0x1c ein Bild spaeter). Das ist die port-weite
+  Zaehlkonvention (Vorschub vor dem Zeichnen), keine Birkin-Frage — nicht Teil dieses Auftrags.
+
+### 5.4 Nr. 6 — Messer-Hieb ohne Handdrehung
+
+* **Gemessen (Messer)**: `int_dreh_w1` Hieb (Clip 7) F71-94 -24 je Bild, danach F95-102 -48 (Halten).
+* **Original (selbst)**: Nahkampf-Verteiler 0x80034e70 (`addiu at,at,16740` = 0x80074164 @0x80034ec0, `jalr` @0x80034ed0),
+  Tabelle @0x80074164 = {0x80034ee8 Heben, 0x800350c4 Halten, 0x80035314 Hieb, 0x80035424 Senken, 0x80035538 Ziehen}.
+  Hieb 0x80035314..0x8003541c: Einstieg Clip 7+2*hoch+4*tief (@0x8003535c-78), SE 0x01050001 (@0x8003537c), Treffer-Fenster
+  Bild 6..11 (@0x80035390-94, `jal 0x80011f50` @0x800353cc), anim_set @0x800353e8, Ende `sh v0(=1),-13734(at)` @0x80035400,
+  `jal 0x800369f8` @0x80035404 — KEIN Store auf 0x800acabe. Scan der ganzen Nahkampf-FSM nach `-13634` (0x800acabe):
+  Heben @0x80035018/@0x80035064, Halten @0x80035290/@0x800352dc (Byte1 `addiu at,at,16529` = 0x80074091 @0x80035270,
+  Messer-Zeile `18 30 00 01 01` -> 48), Senken @0x800354a8/@0x800354cc, Ziehen @0x8003567c/@0x800356c8 — Hieb nie.
+* **Gebaut** (player_common.c Zielblock): `if (s_aim_melee && s_aim_recoil) rate = 0;`. Das Halten nach dem Hieb dreht
+  weiter 48 (Original Sub 1 @0x800350c4 dreht auch im Einstiegsbild, wenn Hoehe und Abzug unveraendert bleiben).
+* **Sonde**: `unit_r34_wurf` 180 (34 Hieb-Bilder, 0 mit Drehung), 181 (NEGATIV-KONTROLLE: 25 Halte-Bilder mit -48).
+* **Hinweis (nicht geaendert, nicht beauftragt)**: Sub 1 setzt beim Wiedereintritt nach dem Hieb (aca5b == 0) den
+  Halte-Clip 8/10/12 mit Crossfade 7 (@0x800350e4-0x80035120); der Port laesst beim Messer nach dem Hieb Clip 7 stehen
+  (player_common.c `if (!s_aim_melee)`-Zweig) — Pose, nicht Drehung; die Messer benennen es als "Clip-7-Rest". OFFEN N-1.
+
 
 ## 4. OFFEN
 
