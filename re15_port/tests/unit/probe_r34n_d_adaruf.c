@@ -52,7 +52,9 @@ void re15_actor_step_all_walkers(void);
 void scd_register_current_rdt(const re15_rdt_t *rdt);
 
 /* ---- Der geplante Bytecode (Dossier §5.3). Jede Zeile mit ihrem Vorbild. ------------------ */
-#define OFF_ZIEL 0x28   /* x/z-Operand des Plc_dest Modus 8 (wird beim Ausloesen eingesetzt) */
+#define OFF_DREH 0x28   /* x/z-Operand des Plc_dest Modus 9 (Blickpunkt, beim Ausloesen eingesetzt) */
+#define OFF_ZIEL 0x3C   /* x/z-Operand des Plc_dest Modus 8 (Rueckschritt-Ziel, beim Ausloesen)     */
+#define SCHRITT  755    /* |(613,-2123)-(-130,-1988)| ROOM1090 sub02 @0x0246C/@0x02470 -> @0x0247C  */
 static const uint8_t k_ruf[] = {
     /* +00 */ 0x22, 0x09, 0x41, 0x01,             /* Set(9,65)=1  Szene gesehen (Einmal-Riegel am Anfang
                                                       wie ROOM11B0 sub06 @0x1478 `22 03 83 01`)          */
@@ -64,37 +66,55 @@ static const uint8_t k_ruf[] = {
     /* +18 */ 0x09, 0x0a, 0x14, 0x00,             /* Sleep 20                  = ROOM1090 sub02 @0x02434 */
     /* +1C */ 0x2b, 0x16, 0x00, 0x00,             /* Message_on 22 "Woman: Hello? ..." (Form @0x02438)   */
     /* +20 */ 0x09, 0x0a, 0x64, 0x00,             /* Sleep 100                 = ROOM1090 sub02 @0x0243C */
-    /* +24 */ 0x40, 0x00, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00,
-                                                  /* Plc_dest Modus 8, Bit 0x20, Ziel eingesetzt
+    /* +24 */ 0x40, 0x00, 0x09, 0x20, 0x00, 0x00, 0x00, 0x00,
+                                                  /* Plc_dest Modus 9 (auf der Stelle zur Tuerwand +X
+                                                     drehen), Bit 0x20 = ROOM1050 sub03 @0x0DC2        */
+    /* +2C */ 0x11, 0x00, 0x08, 0x00,             /* Do                        = ROOM1050 sub03 @0x0DCA  */
+    /* +30 */ 0x02, 0x00,                         /* Evt_next + Nop            = @0x0DCE                  */
+    /* +32 */ 0x12, 0x04,                         /* Edwhile                   = @0x0DD0                  */
+    /* +34 */ 0x21, 0x05, 0x20, 0x00,             /* Ck(5,32)==0               = @0x0DD2                  */
+    /* +38 */ 0x40, 0x00, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00,
+                                                  /* Plc_dest Modus 8 rueckwaerts, Bit 0x20
                                                      (Form = ROOM1090 sub02 @0x0247C)                   */
-    /* +2C */ 0x11, 0x00, 0x08, 0x00,             /* Do                        = ROOM1090 sub04 @0x026E6 */
-    /* +30 */ 0x02, 0x00,                         /* Evt_next + Nop            = sub04 @0x026EA          */
-    /* +32 */ 0x12, 0x04,                         /* Edwhile                   = sub04 @0x026EC          */
-    /* +34 */ 0x21, 0x05, 0x20, 0x00,             /* Ck(5,32)==0 (Ankunft)     = sub04 @0x026EE          */
-    /* +38 */ 0x09, 0x0a, 0x14, 0x00,             /* Sleep 20                  = ROOM1090 sub02 @0x02486 */
-    /* +3C */ 0x2b, 0x17, 0x00, 0x00,             /* Message_on 23 "Leon: Another civilian survivor."  */
-    /* +40 */ 0x3f, 0x00, 0x13, 0x00,             /* Plc_motion(0,19,0)        = ROOM1090 sub03 @0x0265C */
-    /* +44 */ 0x09, 0x0a, 0x19, 0x00,             /* Sleep 25                  = sub03 @0x02660          */
-    /* +48 */ 0x3f, 0x00, 0x13, 0x00,             /* Plc_motion(0,19,0)        = sub03 @0x02664          */
-    /* +4C */ 0x43, 0x00, 0x80, 0x00,             /* Plc_flg(0,0x80,0) rueckw. = sub03 @0x02668          */
-    /* +50 */ 0x09, 0x0a, 0x1a, 0x00,             /* Sleep 26                  = sub03 @0x0266C          */
-    /* +54 */ 0x2b, 0x18, 0x00, 0x00,             /* Message_on 24 "Leon: I have to help her!"          */
-    /* +58 */ 0x3f, 0x00, 0x11, 0x00,             /* Plc_motion(0,17,0)        = ROOM1170 sub02 @0x015F0 */
-    /* +5C */ 0x09, 0x0a, 0x64, 0x00,             /* Sleep 100                 = ROOM1170 sub02 @0x015F4 */
-    /* +60 */ 0x22, 0x02, 0x07, 0x00,             /* Set(2,7)=0                = ROOM1090 sub02 @0x024BE */
-    /* +64 */ 0x22, 0x01, 0x1b, 0x00,             /* Set(1,27)=0               = ROOM1090 sub02 @0x024C2 */
-    /* +68 */ 0x2e, 0x01, 0x00, 0x00,             /* Work_set(1,0)+Nop         = ROOM1090 sub02 @0x024C6 */
-    /* +6C */ 0x42, 0x00,                         /* Plc_ret + Nop             = ROOM1090 sub02 @0x024CA */
-    /* +6E */ 0x46, 0x04, 0x01, 0x31, 0x19, 0x00, 0xff, 0xff, 0x00, 0x00,
+    /* +40 */ 0x11, 0x00, 0x08, 0x00,             /* Do                        = ROOM1090 sub04 @0x026E6 */
+    /* +44 */ 0x02, 0x00,                         /* Evt_next + Nop            = sub04 @0x026EA          */
+    /* +46 */ 0x12, 0x04,                         /* Edwhile                   = sub04 @0x026EC          */
+    /* +48 */ 0x21, 0x05, 0x20, 0x00,             /* Ck(5,32)==0 (Ankunft)     = sub04 @0x026EE          */
+    /* +4C */ 0x09, 0x0a, 0x14, 0x00,             /* Sleep 20                  = ROOM1090 sub02 @0x02486 */
+    /* +50 */ 0x2b, 0x17, 0x00, 0x00,             /* Message_on 23 "Leon: Another civilian survivor."  */
+    /* +54 */ 0x3f, 0x00, 0x13, 0x00,             /* Plc_motion(0,19,0)        = ROOM1090 sub03 @0x0265C */
+    /* +58 */ 0x09, 0x0a, 0x19, 0x00,             /* Sleep 25                  = sub03 @0x02660          */
+    /* +5C */ 0x3f, 0x00, 0x13, 0x00,             /* Plc_motion(0,19,0)        = sub03 @0x02664          */
+    /* +60 */ 0x43, 0x00, 0x80, 0x00,             /* Plc_flg(0,0x80,0) rueckw. = sub03 @0x02668          */
+    /* +64 */ 0x09, 0x0a, 0x1a, 0x00,             /* Sleep 26                  = sub03 @0x0266C          */
+    /* +68 */ 0x2b, 0x18, 0x00, 0x00,             /* Message_on 24 "Leon: I have to help her!"          */
+    /* +6C */ 0x3f, 0x00, 0x11, 0x00,             /* Plc_motion(0,17,0)        = ROOM1170 sub02 @0x015F0 */
+    /* +70 */ 0x09, 0x0a, 0x64, 0x00,             /* Sleep 100                 = ROOM1170 sub02 @0x015F4 */
+    /* +74 */ 0x22, 0x02, 0x07, 0x00,             /* Set(2,7)=0                = ROOM1090 sub02 @0x024BE */
+    /* +78 */ 0x22, 0x01, 0x1b, 0x00,             /* Set(1,27)=0               = ROOM1090 sub02 @0x024C2 */
+    /* +7C */ 0x2e, 0x01, 0x00, 0x00,             /* Work_set(1,0)+Nop         = ROOM1090 sub02 @0x024C6 */
+    /* +80 */ 0x42, 0x00,                         /* Plc_ret + Nop             = ROOM1090 sub02 @0x024CA */
+    /* +82 */ 0x46, 0x04, 0x01, 0x31, 0x19, 0x00, 0xff, 0xff, 0x00, 0x00,
                                                   /* Aot_reset(4, sce 1, 0x31, msg 25, 0xffff) — Form
                                                      ROOM1130 sub01 @0x00A1C `46 03 01 31 01 00 ff ff`  */
-    /* +78 */ 0x01, 0x00,                         /* Evt_end                                              */
+    /* +8C */ 0x01, 0x00,                         /* Evt_end                                              */
 };
 static uint8_t s_prog[sizeof k_ruf];
 
 static const int k_plan[] = { 0x00,0x04,0x08,0x0C,0x10,0x18,0x19,0x1C,0x20,0x21,0x24,0x2C,0x30,0x31,
-                              0x32,0x34,0x38,0x39,0x3C,0x40,0x44,0x45,0x48,0x4C,0x50,0x51,0x54,0x58,
-                              0x5C,0x5D,0x60,0x64,0x68,0x6C,0x6E,0x78 };
+                              0x32,0x34,0x38,0x40,0x44,0x45,0x46,0x48,0x4C,0x4D,0x50,0x54,0x58,0x59,
+                              0x5C,0x60,0x64,0x65,0x68,0x6C,0x70,0x71,0x74,0x78,0x7C,0x80,0x82,0x8C };
+
+/* Die geplante Weiche setzt beide Ziele aus der Spielerposition im Druckbild. */
+static void ziele_einsetzen(const re15_actor_t *pl)
+{
+    memcpy(s_prog, k_ruf, sizeof k_ruf);
+    int32_t dx = pl->x + SCHRITT, zx = pl->x - SCHRITT, zz = pl->z;
+    s_prog[OFF_DREH + 0] = (uint8_t)(dx & 0xff); s_prog[OFF_DREH + 1] = (uint8_t)((dx >> 8) & 0xff);
+    s_prog[OFF_DREH + 2] = (uint8_t)(zz & 0xff); s_prog[OFF_DREH + 3] = (uint8_t)((zz >> 8) & 0xff);
+    s_prog[OFF_ZIEL + 0] = (uint8_t)(zx & 0xff); s_prog[OFF_ZIEL + 1] = (uint8_t)((zx >> 8) & 0xff);
+    s_prog[OFF_ZIEL + 2] = (uint8_t)(zz & 0xff); s_prog[OFF_ZIEL + 3] = (uint8_t)((zz >> 8) & 0xff);
+}
 
 /* ---- Die vier Nachrichten (Dossier §5.4, Worte belegt mit tools/r34n_d/texte_bauen.py) ------ */
 static const uint8_t k_msg22[] = { 0x04,0x00,0x05,0x02, 0x33,0x4b,0x49,0x3d,0x4a,0x16, 0x05,0x00, 0x00,
@@ -223,10 +243,8 @@ static void fall_szene(void)
     if (ev != 13) { printf("FAIL: Ereignis nicht gemeldet\n"); return; }
 
     /* (2) geplante Weiche: Ziel = Spielerposition - 755 in x (weg von der Tuer auf der Ostwand) */
-    memcpy(s_prog, k_ruf, sizeof k_ruf);
-    int32_t zx = pl->x - 755, zz = pl->z;
-    s_prog[OFF_ZIEL + 0] = (uint8_t)(zx & 0xff); s_prog[OFF_ZIEL + 1] = (uint8_t)((zx >> 8) & 0xff);
-    s_prog[OFF_ZIEL + 2] = (uint8_t)(zz & 0xff); s_prog[OFF_ZIEL + 3] = (uint8_t)((zz >> 8) & 0xff);
+    ziele_einsetzen(pl);
+    int32_t zx = pl->x - SCHRITT, zz = pl->z;
     int32_t sx = pl->x, sz = pl->z; int16_t srot = pl->rot_y;
     if (scd_thread_start(SCD_EVENT_SLOT_FIRST, s_prog) != 0) { printf("FAIL: Slot belegt\n"); return; }
     printf("  Start: Spieler (%d,%d) rot %d, Ziel Rueckschritt (%d,%d)\n",
@@ -258,7 +276,7 @@ static void fall_szene(void)
             printf("  B%3d        Nachricht %d sichtbar\n", f, g_scd.message_id);
             last_msg = g_scd.message_id;
         }
-        if (ankunft < 0 && off > 0x34) { ankunft = f;
+        if (ankunft < 0 && off > 0x48) { ankunft = f;
             double w = sqrt((double)(pl->x - sx) * (pl->x - sx) + (double)(pl->z - sz) * (pl->z - sz));
             printf("  B%3d        Rueckschritt fertig: Weg %.0f, jetzt (%d,%d) rot %d\n",
                    f, w, (int)pl->x, (int)pl->z, pl->rot_y); }
@@ -301,6 +319,48 @@ static void fall_install(const char *titel, int bb, int b65)
            (unsigned)g_room_change.room_id);
 }
 
+/* Fall E: Druck von den Raendern des Druckbereichs (Punkt 620 voraus im Rechteck
+ * (16700..17700, -14700..-12700), FUN_80042bac / aot_common.c) — haengt der Rueckschritt irgendwo? */
+static void fall_ecken(void)
+{
+    static const struct { int32_t x, z; int16_t rot; const char *n; } st[] = {
+        { 16580, -13700,    0, "Standplatz, Blick +X" },
+        { 16100, -12750,    0, "Nordrand, Blick +X" },
+        { 16100, -14650,    0, "Suedrand, Blick +X" },
+        { 16300, -12300,  512, "Nordwest, Blick SO (+X-Z)" },
+        { 16300, -15100, 3584, "Suedwest, Blick NO (+X+Z)" },
+        { 17000, -12200, 1024, "im Rechteck-Norden, Blick -Z" },
+        { 17000, -15150, 3072, "im Rechteck-Sueden, Blick +Z" },
+    };
+    printf("\n=== Fall E: Rueckschritt von verschiedenen Druckstellen ===\n");
+    for (unsigned k = 0; k < sizeof st / sizeof st[0]; k++) {
+        raum_hoch(st[k].x, st[k].z, st[k].rot, 0, 0);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        int32_t x0 = pl->x, z0 = pl->z;
+        (void)installieren();
+        frame_step(RE15_PAD_BIT_SQUARE);
+        int ev = g_aot.fired_event_id_this_frame;
+        if (ev != 13) { printf("  %-32s (%d,%d): kein Ereignis (Punkt 620 voraus nicht im Rechteck), Spieler (%d,%d)\n",
+                               st[k].n, (int)x0, (int)z0, (int)pl->x, (int)pl->z); continue; }
+        ziele_einsetzen(pl);
+        int32_t sx = pl->x, sz = pl->z;
+        scd_thread_start(SCD_EVENT_SLOT_FIRST, s_prog);
+        int start8 = -1, ankunft = -1, ende = -1;
+        for (int f = 1; f <= 700 && ende < 0; f++) {
+            scd_thread_t *t = &g_scd.threads[SCD_EVENT_SLOT_FIRST];
+            int off = (t->active && t->pc) ? (int)(t->pc - s_prog) : -1;
+            if (start8 < 0 && off > 0x38) start8 = f;
+            if (ankunft < 0 && off > 0x48) ankunft = f;
+            if (off < 0) ende = f;
+            frame_step(0);
+        }
+        double w = sqrt((double)(pl->x - sx) * (pl->x - sx) + (double)(pl->z - sz) * (pl->z - sz));
+        printf("  %-32s Druck bei (%d,%d): Schritt B%d..B%d (%d Bilder), Weg %.0f, Ende (%d,%d) rot %d, Faden-Ende B%d\n",
+               st[k].n, (int)sx, (int)sz, start8, ankunft, ankunft - start8, w, (int)pl->x, (int)pl->z,
+               pl->rot_y, ende);
+    }
+}
+
 int main(void)
 {
     size_t n = 0;
@@ -326,5 +386,6 @@ int main(void)
     fall_install("Fall B: Szene schon gesehen (9,65)=1, Ada nicht gerettet", 0, 1);
     fall_install("Fall C: Ada gerettet (3,0xBB)=1 -> Originaltuer", 1, 0);
     fall_install("Fall D: Ada gerettet UND Szene gesehen", 1, 1);
+    fall_ecken();
     return 0;
 }
