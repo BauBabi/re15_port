@@ -5,7 +5,14 @@ Auftrag: den vollen Android-Bau mit den neuen Gates echt laufen lassen, die geba
 vergleichen, `make_package.sh` echt laufen lassen (Python-Finder, kein Installer, neue cmp-Gates), das Gate-Skript unter
 Linux (Docker) pruefen. Ich aendere KEINE Werkzeuge.
 
-Status: IN ARBEIT (laufend fortgeschrieben).
+Status: **fertig - Urteil: haltbar** (Befund B1 niedrig, siehe Ende). Pruefgegenstand: Bauer-Stand eff38fc1.
+
+Kurz: voller Android-Bau EXIT=0 `ANDROID-BUILD-OK` (Kette 25,5 s = 11,6 %; Selbsttest 202/202 in 12,7 s, Gate 3603/3603 je
+Baum in 6,9 s); gebaute APK = Referenz v0.8.19 unter assets/ (eigener, gate-unabhaengiger Vergleich, auch gegen den
+Quellbaum); make_package.sh ohne Shim/touch EXIT=0, Python = C:/Python310, kein Installer (Schnappschuesse 0-4 gleich),
+cmp-Gates RE2/DOOR + TORSE.VBS rc 1 im echten Fluss, Endstand-make_package mit Stolperdraht: 0 Aufrufe am Finder vorbei;
+Linux (Debian 11, Python 3.9.2): Selbsttest 202/202, Referenz + neue APK rc 0 (Mount und Kopie), Negativfaelle rc 1/2;
+Integration: die zwei neuen RE2-Dateien der Granaten-Zweige blockieren nichts, eine vorher gebaute APK wird abgelehnt.
 
 ## 0. Ausgangslage (03:24-03:29)
 - Pruefgegenstand: Bauer-Stand **eff38fc1** (a358fd5d..eff38fc1; Nachbesserung R2 = Gate v6, Selbsttest 202 Faelle
@@ -225,8 +232,65 @@ int.to_bytes ohne byteorder, cancel_futures, ignore_cleanup_errors, eingebaute G
   v0.8.7-v0.8.15 (je ~358 MB, zusammen ~3,2 GB). make_package.sh raeumt nur alte Split-Volumes (`re15_port_v0*.z*`),
   keine alten APKs; das Gate sieht nur `<NAME>_android.apk` der angegebenen Version und wird davon nicht beeinflusst.
 
+## 6. Aufraeumen + Endstand (03:52)
+- Gradle-Ausgaben meines Baus geloescht (gitignoriert; vorher kein java/gradle-Prozess): `re15_port/platform/android/
+  {app/build (1,5 GB), app/.cxx (62 MB), .gradle, build, local.properties}` - Ausgangszustand wie vor dem Lauf;
+  `_deps` (vom Bauer, schon vorher da) liegen gelassen. `git status --short re15_port/` leer.
+- Eigene Laufreste geloescht: `build/r34a/pruefer_echtlauf_r3/{ref_v0.8.19.apk, neu_v0.8.19.apk, pakete (2,0 GB),
+  git_iso (489 MB), stolperdraht, r34g_assets}`; liegen gelassen: die Logs dort (~360 KB).
+- release/: 8/8 versionierte Dateien sha256 = Stand vor den Laeufen, `git status --short --ignored release/` leer, echter
+  Index leer; keine `%TEMP%\apk_gate_selbsttest_*`/`re15_apk_pruefen.*` uebrig.
+- **Python-Schnappschuss 4** (03:52:23) == Schnappschuss 0 (alle fuenf gleich, 125 Zeilen): kein Installer in keinem Lauf;
+  kein pymanager/msiexec-Prozess. Altlast Uninstall-Eintrag `pymanager-pythoncore-3.14-64` unveraendert (Basislinie).
+
 ## Befunde
-(folgt)
+
+- **B1 (niedrig) - `re15_port/platform/android/README.md` beschreibt die alte Kette.** Wer nach dem README baut, erfaehrt
+  nichts von den neuen Pflichten; die Kette bricht dann mit klarer Meldung ab (fail closed, kein falsches Paket):
+  - `README.md:15` "Voraussetzungen auf dem Bau-Rechner: JDK 17, ein Android-SDK-Ordner ..., Internet" - Python >= 3.8
+    fehlt (0 Treffer "python" im README); build_android.sh verlangt es seit Runde 34a vor Gradle
+    (`build_android.sh:152` `source "$HERE/python_finden.sh" || die ...`).
+  - `README.md:29-30` "kopiert das Ergebnis nach `release/...apk`, prueft den Inhalt (beide ABIs, alle Asset-Baeume,
+    `aapt dump badging`)" - beschreibt die Stichproben bis v0.8.19; tatsaechlich: `.ungeprueft`-Kopie, Pruefkopie,
+    zipalign, apksigner mit Signer-Pin, Selbsttest + volle Asset-Pruefung + Tuer-Soll, erst danach der Auslieferungsname.
+  - `README.md:44-45` "Eigener Schluessel: `RE15_KEYSTORE`, ..." - ohne Hinweis auf den Signer-Pin: ein Bau mit eigenem
+    Schluessel bricht in `apk_pruefen.sh:220` (`Signer-Zertifikat ..., erwartet 432bc749...`) ab, bis
+    `release/apk_signer.sha256` bzw. `RE15_APK_SIGNER_SHA256` angepasst ist (0 Treffer "apk_signer" im README).
+  - `README.md:38-39` nennt vier Baeume ohne RE15DOOR (vorbestehend seit Runde 33; der Kopf von app/build.gradle wurde in
+    dieser Runde auf "fuenf" korrigiert, das README nicht).
+  Ursache: README.md liegt ausserhalb des Dateibereichs des Bauers (release/*, app/build.gradle); letzter README-Commit
+  659420fc. Vorschlag: beim naechsten Paket README-Abschnitt "Bauen" an build_android.sh-Kopf :62-91 angleichen.
+
+Keine weiteren Befunde in dieser Linse. Widerlegt/bestaetigt ohne Befund:
+- Der echte Android-Bau laeuft mit Selbsttest (202/202 + 58 Proben) und voller Pruefung (Zaehlung je Baum, RE2/DOOR 27/27,
+  RE15DOOR 30/30, TORSE.VBS) gruen, `ANDROID-BUILD-OK`; die Kette veraendert die Bytes nicht (Gradle-Ausgabe == APK).
+- Die gebaute APK traegt dieselben 3604 Asset-Eintraege bytegleich und in derselben Reihenfolge wie die Referenz v0.8.19;
+  unabhaengig vom Gate auch gegen den Quellbaum 3603/3603 (Abschnitt 2) - das Gate nimmt nichts weg.
+- make_package.sh laeuft ohne Shim und ohne touch durch; Finder = C:/Python310; kein Installer (fuenf Schnappschuesse
+  gleich); die cmp-Gates RE2/DOOR und TORSE.VBS brechen im echten Fluss ab (N1/N2); Pakete win64/linux identisch mit
+  v0.8.19, APK im Satz = gepruefte APK; Endstand-make_package mit Stolperdraht: 0 Python-Aufrufe am Finder vorbei.
+- Unter Linux (Debian 11, Python 3.9.2) laufen Selbsttest, Pruefung (Mount und Kopie), `--quellbaum`, `--paket` und der
+  Direktaufruf mit denselben Zahlen; Negativfaelle rc 1/2; volle Kette ohne SDK geschlossen rc 1.
+
+Hinweise (kein Befund):
+- Laufzeit: die Kette braucht im Bau 25,5 s (11,6 % von 220 s; Selbsttest 12,7 s, Gate 6,9 s), in make_package 21,6 s +
+  0,9 s `--quellbaum` + 2 x 6,7 s `--paket` (von 129 s). Gegenueber R2 (Kette 12,5 s) etwa verdoppelt - der Selbsttest
+  (202 Faelle) laeuft in JEDEM build_android- und make_package-Lauf, auch bei `--zip-only`. Maschine unter Last gemessen.
+- Naechstes Paket: nach dem Zusammenfuehren der Granaten-Zweige (RE2/CORE00.ESP, RE2/TEX.TIM) lehnt make_package.sh
+  jede vorher gebaute APK ab (Abschnitt 5, I2/I3) - APK nach dem Zusammenfuehren neu bauen. Gewollt, nur Reihenfolge.
+- Code gelesen, NICHT gemessen, vorbestehend (nicht dieser Zweig): `build_android.sh --debug` legt die Debug-APK unter
+  demselben Auslieferungsnamen ab (`:189` NAME ohne Bautyp, `:276-277`, `:283`); die Kette prueft `application-debuggable`
+  nicht, der Signer-Pin passt (gleicher Debug-Schluessel) - make_package.sh wuerde sie wie eine Release-APK zippen.
+- Vorbestehend: `.apk.ungeprueft` ist nicht gitignoriert; die EXIT-Falle raeumt sie bei jedem Abbruch mit Shell-Beteiligung
+  (in meinem Lauf keine uebrig), nicht bei hartem Prozessende (TerminateProcess/Stromausfall) - bekannt seit R1, akzeptiert.
 
 ## Urteil
-(folgt)
+
+**haltbar.** Der echte Android-Bau lief mit den neuen Gates gruen (EXIT=0, `ANDROID-BUILD-OK`; Selbsttest 202/202 in
+12,7 s, volle Pruefung 3603/3603 mit Zaehlung je Baum in 6,9 s, Kette gesamt 25,5 s = 11,6 %); die gebaute APK hat
+dieselben 3604 Asset-Eintraege bytegleich wie die Referenz-APK v0.8.19 (Unterschied nur in den vier `.so`: Baupfad/Datum)
+und stimmt unabhaengig geprueft mit dem Quellbaum; make_package.sh lief ohne Shim, ohne touch und ohne Installer durch
+(Python C:/Python310, fuenf Schnappschuesse gleich, Stolperdraht im Endstand: nur die Finder-Proben), die neuen cmp-Gates
+fuer RE2/DOOR und TORSE.VBS brechen im echten Fluss ab, die Pakete sind identisch mit v0.8.19 und die APK im Satz ist die
+gepruefte; unter Linux laufen Selbsttest und Pruefung portabel mit denselben Zahlen. B1 (README) ist niedrig und
+blockiert die Uebernahme nicht.
