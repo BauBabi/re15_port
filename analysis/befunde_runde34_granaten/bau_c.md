@@ -463,10 +463,10 @@ Platz bleibt in Zeile 0 mit den Spawner-Flags 0x03 (sichtbar) und w/h 1, bis die
 * Messung vorher (Mutationsbau = alte Reihenfolge) / nachher, echte exe, Framedumps F0-F40, `ppmdiff.py`:
   | Lauf | Waffen-Log vorher | nachher | Pixel |
   |---|---|---|---|
-  | ROOM20A0 Sprung | 5x `streams=-1`, 39x `=1`; FX id 6 ab F10 | 44x `streams=1`; FX id 6 ab F0 | 0 (ausserhalb des Bilds) |
+  | ROOM20A0 Sprung | 5x `streams=-1`, 39x `=1`; FX id 6 ab F10 | 44x `streams=1`; FX id 6 ab F0 | 0 (Near-Gate: im Sprung-Cut hinter der Kamera, keine `->`-Zeile) |
   | ROOM11E0 Sprung | 1x `-1`, 1x `1` | 2x `1` | 0 (gecullt) |
   | ROOM2000 Sprung, Cut 0 | 6x `-1` | 3x `6`, 3x `1` | 0 (gecullt) |
-  | ROOM2000 Tuer-Lage, `RE15_FORCE_CUT=9` | 6x `-1`, kein FX-Log | 3x `6`, 3x `1`; FX id 11 F1..32 (w16 180), id 6 | **18** = 3 Punkte je 1 Pixel in F18-20/F24-26 bei (138..154, 71) |
+  | ROOM2000 Tuer-Lage, `RE15_FORCE_CUT=9` | 6x `-1`, kein FX-Log | 3x `6`, 3x `1`; FX id 11 F1..32 (w16 177..225 je Lage), id 6 | **18** = 3 Punkte je 1 Pixel in F18-20/F24-26 bei (138..154, 71) |
   Die 18 Pixel sind die drei Spawn-Lagen von 0x0b in Zeile 0 (w/h 1, Flags 0x03, Routine 41 fehlt) — dasselbe Bild wie auf
   dem Ladeweg seit C2; das Original zeigt dort (Strom 0) den Strahl bzw. (Stroeme 1-5, Flags 0x61) nichts. Weg damit erst
   mit Routine 41/42 (INTEGRATIONSWUNSCH 6).
@@ -531,7 +531,22 @@ Tuerweg gegen Ladeweg), `nb_mut_takt_exe.sh`, `nb_mut_oc7.py` (Mutationsproben).
 `integration_r34_plattform_esp_eintritt` — alle gruen; Suite 430 -> 432 Tests.
 
 ### N6 — Volle Suite
-(folgt)
+* **Lauf N1** (`local_build.sh` = all, Stand `41523b8f`, 432 Tests, Log `build/r34g_c/nb/suite1_ctest.log`):
+  `98% tests passed, 9 tests failed out of 432`, ctest 670.50 s, gesamt 11m19s, Abschluss
+  `!!! [local_build] FEHLER: ctest fehlgeschlagen (exit=8)`. Die vier Tests dieser Spur gruen (`unit_r34_plattform`,
+  `unit_r34_plattform_ton`, `integration_r34_plattform_takt` 27.5 s, `integration_r34_plattform_esp_eintritt` 14.5 s).
+  Rot NUR exe-Tests: `integration_r30_cut_blitz` (Lauf A exit=1 nach 1.7 s), `integration_elza_vollstart` (ROOM1031 nie
+  geladen), `integration_r30_granate_laden` (b exit=1), `integration_r30_irons_tisch_bild` (P0 exit=1),
+  `integration_r30_titel_puls` (Periode (D) am Bild verfehlt — Bilddauer unter Last), `integration_r33_speichern`
+  (a exit=1), `integration_boot_bg_pin` (exit=1), `integration_relatch_pin` (exit=1 nach 106 Log-Zeilen),
+  `integration_save_counter_pin` (Lauf 3 exit=1). Parallel liefen die exe-Tests der Spuren A und B und eines
+  r34n-Baums; zwei Sitzungen hatten ihre exe schon umbenannt (`re15_pc_nb.exe`, `re15_pc_r34n_a.exe`) — gegen den
+  `taskkill /IM re15_pc.exe` aus INTEGRATIONSWUNSCH 7.
+* **Einzel-Wiederholung** (`build/r34g_c/nb/suite1_rote_einzeln.log`, seriell): alle neun gruen — cut_blitz 75.50 s,
+  elza_vollstart 100.70 s, granate_laden 152.26 s, irons_tisch_bild 63.80 s, titel_puls 28.82 s, r33_speichern 83.02 s,
+  boot_bg_pin 3.69 s, relatch_pin 26.25 s, save_counter_pin 49.35 s. Kein reproduzierbares Rot.
+* **Lauf N2** (`local_build.sh test` — ohne Bau-Schritt, damit dessen `taskkill` die Laeufe der Parallel-Sitzungen nicht
+  trifft; derselbe Bau): (folgt)
 
 ---
 
