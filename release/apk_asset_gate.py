@@ -1192,7 +1192,7 @@ def manifest_pruefen(roh, apk_dateien, befund):
     for text in fehler:
         befund("Manifest", text)
     if v1:
-        return 0, 0
+        return None, None                           # nicht gelesen - keine Zaehlzeile "gegen die APK geprueft"
     for pfad in sorted(eintraege):
         m_groesse, m_sha = eintraege[pfad]
         if pfad not in apk_dateien:
