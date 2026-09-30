@@ -695,3 +695,11 @@ Dateien mit uncommitteten Aenderungen.)
 * **Einzelwiederholung** (nacheinander): irons_tisch_laden **Passed** 34,52 s (Last 96 %), irons_tisch_bild **Passed**
   48,05 s (Last 85 %). Kein reproduzierbares Rot; beide exe-Tests fuehren keinen Spur-D-Code aus
   (`grep re2fx platform/pc/main.c` leer).
+* **Lauf 6** (auf 11c181c5, 04:55:29-05:10:10): `99% tests passed, 1 tests failed out of 433`, `Total Test time (real) =
+  869.79 sec`. Rot NUR `integration_r30_irons_tisch_laden`, diesmal Teillauf [c1151] ("Bild 120 in ROOM1151 nicht
+  erreicht (keine EXIT_AT-Zeile, exit=1)", debug.log 67 Zeilen, endet nach `[walk] F30`). Windows-Anwendungsprotokoll
+  seit 04:26: KEIN Ereignis 1000/1001/1002 (Kontrolle: 78 Ereignisse 1000 in 30 Tagen) → kein Absturz, Prozessende von
+  aussen. Alle `local_build.sh` der parallelen Baeume (r34g_a/b/c, r34n_*, r34a_android, master) haben den Pfadfilter
+  (nur lesend geprueft); zur Zeit liefen re15_pc.exe aus r34g_b, r34g_c und r34n_hebetisch. ctest laeuft sequenziell.
+  Aufrufer von Spur-D-Funktionen ausserhalb der Sonden: keine (re15_damage.c:3682 nur Kommentar).
+* **Einzelwiederholung** irons_tisch_laden zweimal: **Passed** 30,83 s (Last 59 %), **Passed** 30,83 s (Last 37 %).
