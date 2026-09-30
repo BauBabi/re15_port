@@ -12,6 +12,7 @@
  *   genommen    setzt das Genommen-Bit des Raum-Dokuments (9, 56 + Nr) im Spielstand
  *   pos=x,z,rot Spielerlage im Spielstand (Standard 0,0,0)
  *   cut=N       gespeicherter Kamera-Cut (re15_savedata_t.camera_cut, Standard 0)
+ *   files=a,b,..  FILE-Liste des Spielstands (Dokument-Nummern, re15_files_add; Abnahme der Liste)
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -20,6 +21,7 @@
 #include "re15_memcard.h"
 #include "re15_aot.h"
 #include "re15_dokumente.h"
+#include "re15_files.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,11 +33,16 @@ int main(int argc, char **argv)
     const char *path = argv[1];
     unsigned room = (unsigned)strtoul(argv[2], NULL, 16);
     int genommen = 0, px = 0, pz = 0, prot = 0, cut = 0;
+    int files[24], nfiles = 0;
     for (int a = 3; a < argc; a++) {
         if (strcmp(argv[a], "genommen") == 0) genommen = 1;
         else if (strncmp(argv[a], "pos=", 4) == 0 &&
                  sscanf(argv[a] + 4, "%d,%d,%d", &px, &pz, &prot) == 3) { }
         else if (strncmp(argv[a], "cut=", 4) == 0 && sscanf(argv[a] + 4, "%d", &cut) == 1) { }
+        else if (strncmp(argv[a], "files=", 6) == 0) {
+            const char *q = argv[a] + 6;
+            while (*q && nfiles < 24) { files[nfiles++] = (int)strtol(q, (char **)&q, 10); if (*q == ',') q++; }
+        }
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     int nr = re15_dokumente_nr((uint16_t)room);
@@ -51,6 +58,8 @@ int main(int argc, char **argv)
     pl->active = 1; pl->type = 0; pl->hp = 100;
     pl->x = px; pl->y = 0; pl->z = pz; pl->rot_y = (int16_t)prot;
     if (genommen) re15_game_flag_set(9, (uint8_t)bit, 1);
+    re15_files_reset();
+    for (int i = 0; i < nfiles; i++) re15_files_add(files[i]);
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);

@@ -848,7 +848,32 @@ Schloessern, kein Text geaendert.** Kopplung mit Spur F bleibt (7.5): F ersetzt 
 stehen die Codes nur noch in Dok 3/Dok 4 — E und F zusammen ausliefern.
 
 ### 9.6 Dateien und Commits
-(offen)
+
+NEU (Datei-Hoheit Spur E):
+
+| Datei | Inhalt |
+|---|---|
+| `re15_port/include/re15_dokumente.h` | alle Welt-Konstanten der vier Dokumente mit Beleg (Item/Bit/Slot/obj, Lage, Rechteck, Vorrang-Umzug + Satz-Waechter, Klemmen) |
+| `re15_port/engine/src/dokumente_r34.c` | Tabelle der vier Dokumente, `anlegen()` (Muster irons_tisch_1150.c), `tisch_nachricht_umziehen()`, Klemmen-Tabelle, `re15_dokumente_sort_max_mit`, Modell-Bytes |
+| `re15_port/engine/src/gen/dokumente_props.inc` | vier RE2-Modelle (MD1+TIM) unveraendert, erzeugt von … |
+| `re15_port/tools/r34n_e/dokumente_engine_export.py` | … diesem Werkzeug (8 Quellen, je md5-geprueft) |
+| `re15_port/shared_assets/RE2/FILES/FILE26..29_*.TIM` | 23 gesetzte Seiten (md5 = `E_belege/satz_md5.txt`) |
+| `re15_port/tests/unit/test_r34n_e_dokumente.c` | Riegel `unit_r34n_e_dokumente` (166 Pruefungen) |
+| `re15_port/tests/integration/test_r34n_e_dokumente_bild.cmake` + `tests/unit/probe_r34n_e_karte.c`, `probe_r34n_e_bild.c` | Riegel `integration_r34n_e_dokumente_bild` (echte exe, Lade-Weg, 5 Faelle) |
+| `re15_port/tools/r34n_e/selbstpruefung.py`, `bau_lauf.sh` | Selbstpruefung 9.0, Abnahme-Laeufe an der echten exe |
+
+GEAENDERT (minimale Haken, VERTRAG 2):
+
+| Datei | Haken |
+|---|---|
+| `engine/src/re15_files.c` | 4 Namensfelder + 4 Tabellenzeilen (Item, Bildsatz, max_page, H, Name) |
+| `engine/src/scd_room_setup.c` | 1 include + `re15_dokumente_install(room)` hinter `re15_granate_install` (Tuerweg, nach dem Init-Lauf) |
+| `platform/pc/main.c` | 1 include; Boot/CONTINUE-Weg `re15_dokumente_install` + Diagnosezeile `[dokumente] Boot-Weg`; Prop-Lader-Block (MD1+TIM, zwei Riegel wie Irons); Initialisierer der Sortier-Klemme `re15_dokumente_sort_max_mit(re15_irons_tisch_sort_max(…), …)` |
+| `tests/unit/probes/r34n_e_dokumente.cmake` | Riegel + Werkzeuge registriert (GLOB-Include, keine gemeinsame CMakeLists angefasst) |
+
+Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpruefung · `16f19248` Dok 1 ·
+`a19a9dae` 9.1 · `34838629` Dok 2 · `bbdd45b5` Dok 3 · `2d7ede7b` Dok 4 · `1d1623aa` 9.2–9.5 ·
+`5e50910c` Bild-Riegel + Mutationsproben · (Suite/Abnahme: s. 9.7/9.8).
 
 ### 9.7 Suite
 (offen)
@@ -857,7 +882,38 @@ stehen die Codes nur noch in Dok 3/Dok 4 — E und F zusammen ausliefern.
 (offen)
 
 ### 9.9 Abweichungen vom Plan
-(offen)
+
+1. **Tabelle 2.2 berichtigt:** ROOM1021 nOmodel = 7 (nicht 6); obj 7 bleibt richtig (9.0).
+2. **Regions-Test nicht eingeplant:** Props werden je Cut gegen den Anker des Cuts verworfen
+   (FUN_8002c18c → FUN_80014368, `re15_prop_culled`). Dok 1 ist in ROOM1050 Cut 5 und Cut 9 (Plan 3.6 /
+   6.2: „Cut 9 sichtbar") NICHT zu sehen, Dok 3 nicht in ROOM1020 Cut 8, Dok 4 nicht in ROOM1010 Cut 7 —
+   dieselbe Regel wie fuer jedes Original-Objekt; die Nutzer-Cuts (1050 C3, 1000 C0, 1020 C6, 1010 C0)
+   behalten ihr Dokument (Riegel V).
+3. **Wirkung der ROOM1010-Klemme kleiner als im Plan:** Plan 6.2 erwartete ohne Klemme „fernes
+   Blattdrittel fehlt"; gemessen (Mutationsprobe M1) fehlen in Cut 0 nur 38 von 1603 Pixeln (ein
+   schmaler Streifen an der fernen Kante). Die Klemme bleibt (sie stellt fuer das Blatt das Original her:
+   dort verdeckt nichts); der Bild-Riegel pinnt die Klemme deshalb an ROOM1020 Cut 3 (Tischmaske 258:
+   ohne Klemme 0 Pixel).
+4. **Riegel-Umfang:** Plan 6.1 k („kein Original-Skript nutzt 0x49..0x4C") ist KEIN ctest geworden — der
+   Bytescan braucht den SCD-Walker samt Opcode-Laengen; er liegt reproduzierbar als
+   `tools/r34n_e/id_zensus.py` (Ergebnis `E_belege/id_zensus.txt`, 0 Treffer). 6.1 l (Meldungstext) prueft
+   der Riegel nur ueber die Id der Meldung; den Text zeigen die Framedumps aller vier Aufnahmen. 6.1 j ist
+   in Teil K aufgegangen (Huellen-Pruefung gegen Original- und MSK-Masken).
+5. **Werkzeugort:** `dokumente_engine_export.py` liegt unter `tools/r34n_e/` (VERTRAG 2 „Werkzeuge unter
+   tools/<thema>/"), nicht unter `tools/` wie im Plan 5.1.
+6. **Integrations-Riegel** ist in `tests/unit/probes/r34n_e_dokumente.cmake` registriert (Muster
+   r30_irons-diary-welt.cmake), das Skript liegt wie geplant unter `tests/integration/`.
+7. **6.2 Punkt 7 (Codes an der exe eingeben) nicht gefahren:** die Schloss-Skripte sind unveraendert
+   Original, `test_keypad.c` faehrt „5632"; die Codes der Nutzertexte = die Zettel des Originals (9.5).
 
 ### 9.10 Offene Punkte
-(offen)
+
+1. **Drehung** der Buecher/Blaetter (Dok 1–3 rot 0, Dok 4 3840): PORT-WAHL, optische Nutzer-Abnahme
+   (Plan 8.1, `E_belege/drehung_bogen.png`).
+2. **Helligkeit:** die Dokumente sind so dunkel wie die Original-Items ihrer Raeume (byte-true Lichtsatz,
+   2.8/3.8). Wirkt es dem Nutzer zu dunkel, ist das eine neue Vorgabe (Irons-Muster: Lichtsatz-Wahl).
+3. **Auslieferung E + F zusammen** (7.5): F entfernt die Code-Zettel.
+4. **PSX:** der Prop-Lader fuer portseitige Props fehlt dort generell (wie Irons, 7.10).
+5. **Android:** GLOB-Liste neu konfigurieren (`dokumente_r34.c`, 7.9).
+6. **GUI-Riegel unter Last:** `integration_r34n_e_dokumente_bild` startet die echte exe zehnmal — faellt er
+   waehrend paralleler Agenten-Laeufe, einzeln nachfahren (memory reai-v2-gui-tests-flattern…).
