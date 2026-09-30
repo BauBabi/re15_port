@@ -1,0 +1,39 @@
+M1 Halt-Haken in op_for entfernt                                            Riegel unit_r34n_b_halt       -> ROT (rc=1)
+      [FEHL] 1. Halt im 11. VM-Takt nach dem Tischdruck, PC = For 15 (1150 @0x0FC0 / 1151 @0x0F9E)
+      [FEHL] 2. Cursor-Zustand: Plattform y -305 (@0x0FB4), Cut 4 angefordert, Raumkamera gemerkt, Deckel 0/0
+      [FEHL] 3. 110 Bilder spaeter: PC, Deckel, Plattform unveraendert, Cursor sichtbar am Start (160,119)
+      [FEHL] 1. Halt im 11. VM-Takt nach dem Tischdruck, PC = For 15 (1150 @0x0FC0 / 1151 @0x0F9E)
+      [FEHL] 2. Cursor-Zustand: Plattform y -305 (@0x0FB4), Cut 4 angefordert, Raumkamera gemerkt, Deckel 0/0
+      [FEHL] 3. 110 Bilder spaeter: PC, Deckel, Plattform unveraendert, Cursor sichtbar am Start (160,119)
+M2 Treffertest invertiert                                                   Riegel unit_r34n_b_ablauf     -> ROT (rc=6)
+      [FEHL] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+      [FEHL] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+      [FEHL] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+      [FEHL] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+      [FEHL] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+      [FEHL] 6. Fehldruck: "Nothing happened." (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt
+      [FEHL] 7. Text mit SQUARE zu: kein zweiter Text, Cursor weiter aktiv, Spieler/KI weiter angehalten (sub04)
+      [FEHL] 8. D-Pad: 18x RIGHT+DOWN, 4x DOWN = je 200 (sub02..05) -> (-15954,18284), Heisspunkt (208,177)
+      [FEHL] 9. Kuppeldruck: RE2-Klick 0x0A (einmal), Cursor aus, For im selben Takt (Deckel +10/-10)
+      [FEHL] 11. Sicherung, dann Granate in der Ruhe oben (y -1205); Yes/Yes -> Flags (9,53)/(9,56), Inventar
+M3 Huellenecke (151,171) -> (140,171)                                       Riegel unit_r34n_b_kuppel     -> ROT (rc=4)
+      [FEHL] 4. Huelle im Modul = Engine-Projektion der ausgelieferten Kuppel (+-1 px, beide Richtungen)
+      [FEHL] 5. Start (160,119) NICHT in der Kuppel; Mitte (209,176) und (208,177) drin; (150,180) (268,180) (208,147) (208,212) draussen
+      [FEHL] 4. Huelle im Modul = Engine-Projektion der ausgelieferten Kuppel (+-1 px, beide Richtungen)
+      [FEHL] 5. Start (160,119) NICHT in der Kuppel; Mitte (209,176) und (208,177) drin; (150,180) (268,180) (208,147) (208,212) draussen
+M4 Armieren auch ueber scd_event_fire (Harness bekaeme den Cursor)          Riegel unit_r34n_b_harness    -> ROT (rc=13)
+      [FEHL] 13. Harness-Weg ohne Aktion: kein Cursor, die Deckel laufen im 11. Takt wie bisher (+10/-10)
+      [FEHL] 13. Harness-Weg ohne Aktion: kein Cursor, die Deckel laufen im 11. Takt wie bisher (+10/-10)
+M5 Vorschalt statt Halt: Port zeigt Cut 4 schon vor sub04 (work_vars[0x0A] = 4) Riegel unit_r34n_b_cut_old    -> ROT (rc=12)
+      [FEHL] 12. R4: sub04 zu Ende, Plattform geparkt (-20224 @0x109E), Cut_old @0x10B2 = Raumkamera (nicht 4)
+      [FEHL] 12. R4: sub04 zu Ende, Plattform geparkt (-20224 @0x109E), Cut_old @0x10B2 = Raumkamera (nicht 4)
+M6 Abbruch springt 4 Byte zu weit (ohne Work_set @0x109A)                   Riegel unit_r34n_b_abbruch    -> ROT (rc=15)
+      [FEHL] 15. CROSS: Aufraeumbytes gelaufen (sub04 zu Ende, Plattform -20224, Spieler+KI frei, Raumkamera, Deckel zu), kein Text, kein Klick
+      [FEHL] 15. CROSS: Aufraeumbytes gelaufen (sub04 zu Ende, Plattform -20224, Spieler+KI frei, Raumkamera, Deckel zu), kein Text, kein Klick
+M7 Abbruch auf der GEHALTENEN Taste statt der Flanke (Schliess-CROSS sickert durch) Riegel unit_r34n_b_kreuztext  -> ROT (rc=18)
+      [FEHL] 18. "Nothing happened." mit CROSS geschlossen: KEIN Abbruch, Cursor bleibt, sub04 steht am Halt
+      [FEHL] 18. "Nothing happened." mit CROSS geschlossen: KEIN Abbruch, Cursor bleibt, sub04 steht am Halt
+M8 ein Byte der eingebackenen TIM geaendert                                 Riegel unit_r34n_b_cursor_bytes -> ROT (rc=14)
+      [FEHL] 14. MD1 == ROOM11F0.RDT @0x001928 (5556 B), TIM == @0x018DAC (33312 B), Licht == @0x000718 (40 B)
+
+Zurueckgesetzt und neu gebaut: alle Teil-Riegel GRUEN [('halt', 0), ('kuppel', 0), ('ablauf', 0), ('cut_old', 0), ('harness', 0), ('abbruch', 0), ('kreuztext', 0), ('bytes', 0)]

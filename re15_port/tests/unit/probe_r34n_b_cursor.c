@@ -178,8 +178,11 @@ static int text_schliessen(uint16_t roh, int max)
     for (int f = 0; f < max && g_scd.message_fsm != 4; f++) bild(0, 0);
     if (g_scd.message_fsm != 4) return 0;
     bild(roh, roh);                  /* die Flanke liegt an ...                                  */
-    bild(0, 0);                      /* ... VM steht noch (Text offen), der Text-Takt schliesst */
-    return !g_scd.message_active;
+    bild(roh, 0);                    /* ... VM steht noch (Text offen), der Text-Takt schliesst */
+    bild(roh, 0);                    /* Taste noch 3 Bilder gehalten wie das Skript "X0.1"       */
+    int zu = !g_scd.message_active;
+    bild(0, 0);
+    return zu;
 }
 
 /* ------------------------------------------------------------------ R1 halt ---------------- */
