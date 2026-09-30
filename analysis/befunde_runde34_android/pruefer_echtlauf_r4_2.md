@@ -218,3 +218,39 @@ Lauf wird mitten in der Pruefphase beendet.
   `adb pull` main04.wav = Inhalt in M (`a1d533bf...`, `cmp` rc 0); `pe2_geraet.py M`: 3603/0/0/0, 0 `.neu`, 0 leere
   Ordner, Liste = M (`1b017f2b...`), Marker weg -> **GERAET-KONSISTENT**.
 
+### 3.9 Zusatz: Fortschritts- und Fehlerbild im echten Lauf; fail closed (U4) mit echtem Dateifehler (`geraet/h*`, `geraet/i*`)
+- h1 (N frisch, Bild nach 10 s, `geraet/h1_fortschritt_frisch.png`): `RE1.5 PORT - ASSETS WERDEN ENTPACKT`, Balken,
+  `2392 / 3603 DATEIEN (44%) 150 MB` - vollstaendig lesbar; Abschluss `3603 kopiert ... 0 Fehler, 17440 ms`.
+- h2/h3 (REF frisch, dann N als Update, Bild nach 9 s, `geraet/h3_fortschritt_uebergang_titel_abgeschnitten.png`):
+  der Titel des Uebergangs lautet laut Code `RE1.5 PORT - ASSETS WERDEN EINMALIG GEPRUEFT` (44 Zeichen), auf dem
+  Schirm (2400x1080 quer) steht nur **`1.5 PORT - ASSETS WERDEN EINMALIG GEPRUE`** - links "RE" und rechts "FT"
+  abgeschnitten. Abschluss `Entpacken fertig (Uebergang v0.8.19): ... 3603 per SHA-256 geprueft (0 abweichend) ... 0 Fehler`.
+- i1 **fail closed mit echtem Dateifehler**: Geraet = N (konsistent, Liste N); per adb ein ORDNER
+  `synchro/STAGE1/room1240/main04.wav.neu` angelegt; M als Update. Der Lauf (Modus Update, kein Waisen-Durchgang):
+```
+10:39:51.228 [android] entpacke synchro/STAGE1/room1240/main04.wav (geaendert)
+10:39:51.238 E [android] Entpacken: .../synchro/STAGE1/room1240/main04.wav.neu nicht anlegbar: Is a directory
+10:39:51.281 [android] Entpacken fertig (Update): 3603 geprueft, 0 kopiert ..., 1 Fehler, 1451 ms
+10:39:51.281 E [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (Meldung bleibt stehen)
+```
+  Nach 5 s und 20 s: Prozess lebt (pidof 14484), beide Bilder bytegleich (kein Spielstart), `re15_assets_entpackt.txt`
+  weg (vor dem Lauf geloescht), main04.wav unveraendert alt (`d6e26832...`), debug.log mit derselben Ursache. Das Bild
+  (`geraet/i1_fehlermeldung_abgeschnitten.png`) zeigt als Meldung aber nur
+  **`IEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEB`** - die Anzahl ("1 DAT...") und der Hinweis "...UG.LOG" fehlen.
+- i2 Neustart (Ordner liegt noch): `Abgleich (ohne Liste) ... pruefen 3603` (der Waisen-Durchgang entfernt den leeren
+  Ordner `main04.wav.neu` still - leere Ordner zaehlen nicht als Waise), `Summe weicht ab -> neu: .../main04.wav`,
+  `1 kopiert ... 3603 per SHA-256 geprueft (1 abweichend) ... 0 Fehler` -> Ordner weg, GERAET-KONSISTENT mit M.
+  Fail closed + Erholung beim naechsten Start funktionieren im echten Lauf.
+- Ursache der Abschneidung (Code, android_glue.c `draw_progress`): Schriftgroesse nur aus der Hoehe (`u = H/12`,
+  `fs = u/9`, Zeile 2 `fs-1`), Textbreite = Zeichen x 6 x fs, keine Begrenzung auf die Breite. Bei H = 1080: Titel
+  60 px/Zeichen (passt bis 40 Zeichen bei 2400 px), Zeile 2 54 px/Zeichen (bis 44 Zeichen). Betroffen auf 20:9
+  (gemessen): der Uebergangstitel (44) und die beiden 58-Zeichen-Fehlertexte `%ld DATEIEN KONNTEN NICHT ENTPACKT
+  WERDEN - SIEHE DEBUG.LOG` und `FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG`; auf 16:9 (1920x1080,
+  gerechnet, nicht gemessen) zusaetzlich `ASSETS WERDEN ENTPACKT` (35) und die meisten Fehlertexte (>= 36).
+  -> **Befund E2-1 (niedrig)**, siehe 6.
+
+### 3.10 Emulator beendet, aufgeraeumt
+`adb uninstall de.re15.port` (Speicherordner danach weg), `adb -s emulator-5586 emu kill` (Log: `EMULATOR EXIT=0`,
+12:41:25), danach kein qemu-/emulator-Prozess (Win32_Process leer), `adb devices` leer. Datenabbilder meiner AVD-Kopie
+geloescht (7,1 GB; config.ini bleibt). Nutzer-AVD nie gestartet.
+

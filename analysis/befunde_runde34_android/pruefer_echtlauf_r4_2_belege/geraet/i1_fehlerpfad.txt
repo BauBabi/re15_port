@@ -1,0 +1,28 @@
+== i1 2026-09-30 12:39:32
+zuletzt entpackt: 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd (= Liste der APK) | alter Marker re15_assets_ok.txt: weg
+GERAET-KONSISTENT
+drwxrws--- 2 shell ext_data_rw 4096 2026-09-30 10:39 synchro/STAGE1/room1240/main04.wav.neu
+install -r M: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+-rw-r--r-- 1 mjoedicke 197121 13749 Sep 30 12:39 build/r34a/pruefer_e2/bilder/i1_fehler_a.png
+-rw-r--r-- 1 mjoedicke 197121 13749 Sep 30 12:40 build/r34a/pruefer_e2/bilder/i1_fehler_b.png
+pidof nach 20 s: [14484]
+09-30 10:39:49.724 I/re15    (14484): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:39:49.881 I/re15    (14484): [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 0
+09-30 10:39:51.228 I/re15    (14484): [android] entpacke synchro/STAGE1/room1240/main04.wav (geaendert)
+09-30 10:39:51.238 E/re15    (14484): [android] Entpacken: /storage/emulated/0/Android/data/de.re15.port/files/synchro/STAGE1/room1240/main04.wav.neu nicht anlegbar: Is a directory
+09-30 10:39:51.281 I/re15    (14484): [android] Entpacken fertig (Update): 3603 geprueft, 0 kopiert (0 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 1451 ms
+09-30 10:39:51.281 E/re15    (14484): [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (Meldung bleibt stehen)
+Zustand:
+   .
+   ..
+   debug.log
+   shared_assets
+   synchro
+   d6e26832b45c87af3c364d5d1d1ce559d2029582e1204b5ce005d2e74064ba72  synchro/STAGE1/room1240/main04.wav
+   drwxrws--- 2 shell ext_data_rw 4096 2026-09-30 10:39 synchro/STAGE1/room1240/main04.wav.neu
+   s_glBindAttribLocation: bind attrib 1 name color
+   [android] entpacke synchro/STAGE1/room1240/main04.wav (geaendert)
+   [android] FEHLER beim Entpacken: /storage/emulated/0/Android/data/de.re15.port/files/synchro/STAGE1/room1240/main04.wav.neu nicht anlegbar: Is a directory
+   [android] Entpacken fertig (Update): 3603 geprueft, 0 kopiert (0 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 1451 ms
+   [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)

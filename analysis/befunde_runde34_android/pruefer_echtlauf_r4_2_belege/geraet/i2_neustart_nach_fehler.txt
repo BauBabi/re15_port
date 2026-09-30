@@ -1,0 +1,15 @@
+== i2_neustart_nach_fehler 2026-09-30 12:40:40
+   firstInstallTime=2026-09-30 10:37:55
+   lastUpdateTime=2026-09-30 10:39:47
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe2m
+installiert: /data/app/~~LLb4GD7ugITlINdT7GWiJg==/de.re15.port-ogJjMks-sP5Ne7yL-HdV6Q==/base.apk sha256 222c4bd8970039fec2f478e0264e2fa9f898221319dbcfae5f56f79280b7f6e8
+Status: ok
+LaunchState: COLD
+TotalTime: 1348
+warten rc=0 (11816 ms ab am start)
+09-30 10:40:44.770 I/re15    (14599): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:40:45.848 I/re15    (14599): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 10:40:55.339 I/re15    (14599): [android] Summe weicht ab -> neu: synchro/STAGE1/room1240/main04.wav
+09-30 10:40:55.520 I/re15    (14599): [android] Entpacken fertig (ohne Liste): 3603 geprueft, 1 kopiert (2017588 B, 77 ms), 3603 per SHA-256 geprueft (356678277 B, 8352 ms, 1 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 10584 ms
+pidof: 14599
