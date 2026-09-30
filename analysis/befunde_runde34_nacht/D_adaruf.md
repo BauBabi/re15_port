@@ -569,11 +569,19 @@ Die Ereignisse sind disjunkt (A: 2, D: 13). In `scd_room_setup.c` stehen E (`re1
 
 e6f46443 (Modul + zwei Haken + Riegel), 5e9d089a (Drehung zur Kamera), e77d5b2e (Kommentar), efdb343f (Riegel
 doppel im Druckbild), 7fa67079 (Auflagen 1-4/11: Doku + Werkzeuge), 76e43499 (Belegbilder), f35f2744 (Auflage 8:
-speicher, Kartenwerkzeug, CONTINUE-/Quadrat-Laeufe), dazu der Abschluss-Commit dieses Abschnitts.
+speicher, Kartenwerkzeug, CONTINUE-/Quadrat-Laeufe), 7d2b735c/fd35e68a/26e6bf49 (Doku), dazu der Abschluss-Commit mit der Suite-Zeile.
 
 ### 9.4 Suite-Zeile
 
-SUITE_ZEILE_PLATZHALTER
+`bash re15_port/tools/local_build.sh` (configure + build + test) im eigenen Baum, Code-Stand f35f2744 (alle
+spaeteren Commits aendern nur Doku/Belege):
+
+    100% tests passed, 0 tests failed out of 436
+    === LOCAL-BUILD-OK (all) — Tests 436/436
+
+436 = Basis 428 + 8 neue (`unit_r34n_d_adaruf_szene/_doppel/_sperre/_frei/_rettung/_speicher/_elza/_raster`).
+Ein erster Volllauf (Stand efdb343f, 7 Teile) lief ebenfalls durch: `LOCAL-BUILD-OK (all) — Tests 435/435`. In keinem
+der beiden Laeufe fiel ein GUI-Haken aus (andere Agenten bauten parallel), also kein Nachfahren noetig.
 
 ### 9.5 Eigene Abnahme an der echten exe (Bilder)
 
