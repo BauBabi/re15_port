@@ -220,6 +220,17 @@ const uint8_t *re15_hebetisch_cursor_tim_bytes(int *out_size)
 #endif
 }
 
+const uint8_t *re15_hebetisch_cursor_licht_bytes(int *out_size)
+{
+#ifdef RE15_PLATFORM_PC
+    if (out_size) *out_size = (int)sizeof re15_hc_cursor_licht;
+    return re15_hc_cursor_licht;
+#else
+    if (out_size) *out_size = 0;
+    return NULL;
+#endif
+}
+
 /* ------------------------------------------------------------------ Zustand ---------------- */
 void re15_hebetisch_cursor_install(uint16_t room_id)
 {

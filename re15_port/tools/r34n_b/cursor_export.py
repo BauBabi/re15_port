@@ -7,6 +7,9 @@ QUELLE (unveraendert, Byte fuer Byte): re15_port/shared_assets/PSX/STAGE1/ROOM11
   Prop-Tabelle @0x0240 (RDT-Kopf +0x30 zeigt dorthin), Eintrag 0 = (TIM, MD1):
     TIM @0x018DAC, 33312 B (bis zum TIM von Prop 1 @0x020FCC), 8bpp 128x256, CLUT @VRAM(0,480)
     MD1 @0x001928,  5556 B (bis zum MD1 von Prop 1 @0x002EDC)
+  Lichtsatz der Abbildungskamera: RDT+0x2C -> @0x0588, 40 B je Cut, Cut 10 @0x0718 (40 B) —
+    der Satz, mit dem die Raum-Prop-Schleife den Cursor in 11F0 unter Cut 10 beleuchtet
+    (main.c: licht_cut = g_re15_active_cut; Parser light_common.c re15_light_parse).
   Derselbe Cursor steht bytegleich in acht Raeumen (Gegenpruefung (b)).
 WARUM EINGEBACKEN: die ausgelieferten RDTs bleiben byte-true, ROOM1150/1151 bekommen kein
 neues Prop (Linie von gen/sicherung_prop.inc / gen/irons_tisch_props.inc). Eingebunden nur auf
@@ -30,6 +33,7 @@ ZIEL = os.path.join(REPO, "re15_port", "engine", "src", "gen", "hebetisch_cursor
 TABELLE = 0x0240
 MD1_OFF, MD1_LEN = 0x001928, 5556
 TIM_OFF, TIM_LEN = 0x018DAC, 33312
+LICHT_TAB, LICHT_CUT, LICHT_LEN = 0x0588, 10, 40
 
 
 def block(name, data):
@@ -50,6 +54,11 @@ def main():
         sys.exit("Prop 0 = (TIM 0x%X, MD1 0x%X), erwartet (0x%X, 0x%X)" % (tim0, md10, TIM_OFF, MD1_OFF))
     if md11 - md10 != MD1_LEN or tim1 - tim0 != TIM_LEN:
         sys.exit("Laengen MD1 %d / TIM %d, erwartet %d / %d" % (md11 - md10, tim1 - tim0, MD1_LEN, TIM_LEN))
+    lt = struct.unpack_from("<I", d, 0x2C)[0]
+    if lt != LICHT_TAB:
+        sys.exit("RDT+0x2C = 0x%X, erwartet 0x%X" % (lt, LICHT_TAB))
+    licht_off = LICHT_TAB + LICHT_CUT * LICHT_LEN
+    licht = d[licht_off:licht_off + LICHT_LEN]
     md1 = d[MD1_OFF:MD1_OFF + MD1_LEN]
     tim = d[TIM_OFF:TIM_OFF + TIM_LEN]
     m_md1 = hashlib.md5(md1).hexdigest()
@@ -61,10 +70,14 @@ def main():
         " * Quelle unveraendert: STAGE1/ROOM11F0.RDT, Prop-Tabelle @0x%04X Eintrag 0\n"
         " *   MD1 @0x%06X, %d B, md5 %s\n"
         " *   TIM @0x%06X, %d B, md5 %s\n"
-        " */\n\n" % (TABELLE, MD1_OFF, MD1_LEN, m_md1, TIM_OFF, TIM_LEN, m_tim))
-    text = kopf + block("re15_hc_cursor_md1", md1) + "\n" + block("re15_hc_cursor_tim", tim)
+        " *   Lichtsatz Cut %d @0x%05X (RDT+0x2C -> @0x%04X + %d*%d), %d B:\n"
+        " *     %s\n"
+        " */\n\n" % (TABELLE, MD1_OFF, MD1_LEN, m_md1, TIM_OFF, TIM_LEN, m_tim,
+                     LICHT_CUT, licht_off, LICHT_TAB, LICHT_CUT, LICHT_LEN, LICHT_LEN, licht.hex(" ")))
+    text = (kopf + block("re15_hc_cursor_md1", md1) + "\n" + block("re15_hc_cursor_tim", tim) + "\n"
+            + block("re15_hc_cursor_licht", licht))
     os.makedirs(os.path.dirname(ZIEL), exist_ok=True)
-    with open(ZIEL, "w", newline="\n") as f:
+    with open(ZIEL, "w", newline="\n", encoding="ascii") as f:
         f.write(text)
     print("geschrieben: %s (MD1 %d B md5 %s, TIM %d B md5 %s)" % (ZIEL, len(md1), m_md1, len(tim), m_tim))
 

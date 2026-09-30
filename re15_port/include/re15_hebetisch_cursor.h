@@ -68,8 +68,13 @@
  *   1080 Cut 1, 4020 Cut 4, 30E0 Cut 2, 2040 Cut 14, 5050 Cut 4, 1100 Cut 12, 3050 Cut 15). Das Bild
  *   liegt ueber dem Cut-4-Bild von ROOM1150 — gleiche Pixel, Groesse (23,7 x 22,3 px) und
  *   Geschwindigkeit (2,67 px je Bild) wie in 11F0; Start in der Bildmitte (160,119).
- * Farbe: PORT-WAHL "wie 11F0 im Port" — gemessen rendert der 11F0-Cursor genau CLUT[3]/[4] seiner
- *   Textur (Tint 0x80, Dossier §2.3); die Raumlichter von 11F0 gibt es in 1150 nicht.
+ * Licht: der Lichtsatz, mit dem die Raum-Prop-Schleife den Cursor in 11F0 unter Cut 10 beleuchtet
+ *   (main.c: licht_cut = g_re15_active_cut) — ROOM11F0.RDT RDT+0x2C -> @0x0588, 40 B je Cut,
+ *   Cut 10 @0x0718: `01 01 01 01 80 80 80 80 80 80 80 80 80 3f 3f 3f d0 07 ...` = drei gerichtete
+ *   Lichter (2000,2000,2000) Farbe 0x80, Umgebung 0x3f; eingebacken wie MD1/TIM. BAU-BEFUND: mit
+ *   dem im Plan vorgesehenen neutralen Tint 0x80 lagen die 524 hellen 11F0-Cursorpunkte zwar
+ *   deckungsgleich, aber 206 weitere Punkte waren hell statt dunkel (die abgewandten Seitenflaechen,
+ *   Dossier §9.7) — der Plan hatte nur die HELLEN Farben gemessen.
  * Tiefe: PORT-WAHL — die eigene Kameratiefe minus 65536, also vor jedem Raum-Dreieck und jeder
  *   PRI-Maske (render_pc.c sortiert fallend), untereinander wie in 11F0 nach Tiefe.
  *
@@ -187,7 +192,8 @@
 #define RE15_HC_TIM_SLOT         28        /* main.c RE15_TIM_SLOT_PROP(8) = 26 + (8 - 6); obj_id 8 =
                                             * VERTRAG §1.5 Spur B; in 1150/1151 frei (nOmodel 4,
                                             * Port-Props 4..7 = Slots 8/9/26/27) */
-#define RE15_HC_TINT             0x80      /* PORT-WAHL "wie 11F0 im Port" (Dossier §2.3) */
+#define RE15_HC_LICHT_CUT        10        /* Lichtsatz ROOM11F0 Cut 10 @0x0718 (s.o.) */
+#define RE15_HC_TINT_OHNE_NORMALE 0x80     /* nur falls eine Flaeche keine Normale traegt (neutral) */
 #define RE15_HC_TIEFE_VERSATZ    65536     /* PORT-WAHL: vor allem (s.o.) */
 
 /* ---- Zustaende / Rueckgaben ---------------------------------------------------------------- */
@@ -234,9 +240,10 @@ const int16_t *re15_hebetisch_cursor_kuppel(void);   /* 2*RE15_HC_KUPPEL_N Werte
 /* "Nothing happened." als .msg-Rohbytes. */
 const uint8_t *re15_hebetisch_cursor_text(int *out_len);
 
-/* Eingebackene Cursor-Bytes (nur PC; sonst NULL). */
+/* Eingebackene Cursor-Bytes (nur PC; sonst NULL): MD1, TIM, Lichtsatz Cut 10 (40 B). */
 const uint8_t *re15_hebetisch_cursor_md1_bytes(int *out_size);
 const uint8_t *re15_hebetisch_cursor_tim_bytes(int *out_size);
+const uint8_t *re15_hebetisch_cursor_licht_bytes(int *out_size);
 
 /* Messschienen (Riegel, Integrations-Haken). */
 extern unsigned g_re15_hebetisch_klick_zaehler;

@@ -1,0 +1,3 @@
+Fussabdruck 11F0: 1905  1150: 1922  gemeinsam: 1905  nur 11F0: 0  nur 1150: 17
+farbgleich in der Schnittmenge: 1905 von 1905
+Bild: analysis/befunde_runde34_nacht/B_belege/bau_cursor_11f0_gegen_1150.png
