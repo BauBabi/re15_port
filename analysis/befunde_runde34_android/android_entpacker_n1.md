@@ -416,7 +416,22 @@ ausgeschlossen:
   auf den Asset-Pfad der APK (SDL selbst nimmt diesen Weg erst nach dem Dateisystem-Versuch, 1.1). Dazu schreibt
   der Entpacker nie in die Zieldatei selbst, sondern in `<ziel>.neu` - selbst eine (hypothetische) Quelle gleich
   dem Ziel wuerde nicht mehr vor dem Lesen geleert.
-- **dynamisch** (debuggable Bau N0d, `run-as`): siehe unten.
+- **dynamisch** (debuggable Bau N0d = `build_android.sh --debug --version v0.8.20-n1e`, EXIT 0, Selbsttest 248/248,
+  Gate gruen; `pkgFlags=[ DEBUGGABLE ... ]`; Stand vor dem Fix 2.5, fuer diese Frage ohne Belang),
+  `build/r34a/n1/intern_pflanzen.sh`: frisch installiert und VOR dem ersten Start per `run-as` im internen
+  Speicher (`/data/user/0/de.re15.port/files` = `getFilesDir()` = `SDL_AndroidGetInternalStoragePath()`, genau
+  dort suchte `SDL_RWFromFile(<relativ>)` zuerst) angelegt:
+  `files/re15_assets.txt` = falsche Liste `# re15 assets v2 1 5` / `synchro/gepflanzt.bin` (sha256 `1d4d9200...`)
+  und `files/synchro/STAGE1/room1090/main03.wav` = 109306 Null-Bytes (gleiche Groesse, sha256 `0a3bdf0d...`).
+  Start (`s3b_intern_gepflanzt`):
+  ```
+  [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - ... pruefen 3603, weg 0      <- Liste der APK, nicht die gepflanzte
+  [android] Entpacken fertig (ohne Liste): 3603 geprueft, 3603 kopiert (356678277 B, 14496 ms), ... 0 Fehler, 17072 ms
+  extern main03.wav: sha256 0fac8b2a...96ba (= APK), nicht 0a3bdf0d... (gepflanzt)
+  intern danach: beide gepflanzten Dateien unveraendert (gleiche sha256) - weder gelesen noch geleert
+  ```
+  GERAET-KONSISTENT. Der alte Entpacker haette an dieser Stelle die gepflanzte Liste gelesen (`:77`, SDL-Quelle
+  1.1); das ist nicht dynamisch nachgestellt (dafuer waere ein debuggable Bau des ALTEN Stands noetig gewesen).
 
 ## 4. Gates / Suite
 
