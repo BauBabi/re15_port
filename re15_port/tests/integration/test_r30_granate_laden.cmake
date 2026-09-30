@@ -1,6 +1,11 @@
 # =============================================================================
 # GRANATEN-RIEGEL MIT DER ECHTEN EXE (Runde 30, Nachtrag K: Handgranate im Hebetisch).
 #
+# ⛔ SEIT RUNDE 34 NACHT (Spur B, include/re15_hebetisch_cursor.h): RE15_FIRE_AOT=1 (re15_aot_fire_slot ->
+# scd_event_fire direkt) prueft den HARNESS-Weg OHNE Hebetisch-Cursor — die Fahrt laeuft sofort. Der
+# Spieler hat diesen Weg nicht mehr: die Aktionstaste am Tisch bringt erst den Cursor (Kuppel-Klick ->
+# Fahrt). Den Spielerweg bis zu den Aufnahmen prueft integration_r34n_b_cursor.
+#
 # Dossier analysis/befunde_runde30/nachtrag-granate.md, Konstanten include/re15_granate.h.
 # Der Engine-Riegel unit_r30_granate prueft Modell, Sitz und die Fahrten Bild fuer Bild; dieser
 # Riegel prueft, was nur die exe zeigt: den LADE-Weg (Boot/CONTINUE geht nicht durch
