@@ -2268,8 +2268,14 @@ void re15_game_step(const re15_game_ctx_t *c)
      * sie durch re15_enemy_ai_run_all, also steht das Gate hier am Sammel-Aufruf; Wirkung
      * identisch (kein Root laeuft). Der bereits vorhandene, aber NIE verdrahtete Hebel
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
-    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) {
         re15_enemy_ai_run_all(g_scd.combat_active);
+        /* Runde 34 NACHBESSERUNG (mess_sb 3.1): Abzug der RE2-GL-Sperre der RE1.5-KI-Kandidaten des
+         * Bodenfeuers — wie der RE2-Wurzel-Prolog (EMZ0 @0x80100484-98) hinter dem Freeze-Tor
+         * (@0x80100360-6c) und vor der FX-Pumpe (@0x80026980). Beleg/Begruendung: re15_damage.c. */
+        extern void re15_re2_gl_sperre_tick(void);
+        re15_re2_gl_sperre_tick();
+    }
     schritt_station(RE15_SCHRITT_NACHKI, pl->x, pl->z);
 
     /* OBJEKT-AUSSCHIEBUNG DER AKTOREN — die zweite Haelfte von FUN_8002bd44 (@0x8002be0c-4c).

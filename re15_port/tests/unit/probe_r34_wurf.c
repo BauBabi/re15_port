@@ -51,6 +51,7 @@ extern int  re15_player_aim_elevation(void);
 extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
 extern int  re15_player_aim_ready(void);
+extern int  re15_player_aim_phase_debug(void);   /* Phase | 0x10 = Rueckstoss/Hieb (player_common.c) */
 extern int  re15_player_granate_frame(void);
 extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
 extern void re15_player_set_hand_rot(const int32_t r[9]);
@@ -773,6 +774,59 @@ static void abschnitt_spielschritt(void)
                              spawn_gier == 1000 + 22 * soll_d,
               "Drehen %s: Spawn %d Gier %d (soll Bild 22, Gier %d = 1000 + 22 Bilder x %d)", dir ? "RECHTS" : "LINKS",
               spawn, spawn_gier, 1000 + 22 * soll_d, soll_d);
+    }
+
+    /* 6c2 — NACHBESSERUNG der Integration (mess_reg M-Z1): der MESSER-HIEB dreht NICHT. Nahkampf-
+     * Verteiler `addiu at,at,16740` = 0x80074164 @0x80034ec0, Eintrag [2] = Sub 2 0x80035314..0x8003541c
+     * (Hieb: `jal 0x80011f50` @0x800353cc, `jal 0x8001f314` @0x800353e8, `sh v0(=1)` @0x80035400) ohne
+     * Zugriff auf 0x800acabe; das HALTEN (Sub 1) dreht mit Byte1 (`addiu at,at,16529` = 0x80074091
+     * @0x80035270, Zeile Messer `18 30 00 01 01` -> 48, `subu` / `sh v0,-13634(at)` @0x80035288-90).
+     * Gemessen vorher (int_dreh_w1): Hieb -24 je Bild. Clip-Laengen = Sonden-Mock (Hieb Clip 7 = 35). */
+    {
+        if (sp_bringup(1, 1) != 0) { PRUEF(180, 0, "Bringup 6c2"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        const int n_ziel = sp_zielen();
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->rot_y = 1000;
+        int hieb = 0, hieb_dreh = 0, halten = 0, halten_bad = 0, d_hieb = 0, d_halten = 0;
+        for (int b = 0; b < 60; b++) {
+            const int vor = pl->rot_y;
+            const int ph_vor = re15_player_aim_phase_debug();       /* Phase | 0x10 = Hieb laeuft */
+            uint16_t pad = RE15_PAD_BIT_R1 | (b >= 1 ? RE15_PAD_BIT_LEFT : 0);
+            if (b == 0) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            const int d = (((int)pl->rot_y - vor + 0x800) & 0xfff) - 0x800;
+            if (b < 1) continue;
+            if (ph_vor & 0x10) { hieb++; if (d != 0) { hieb_dreh++; d_hieb = d; } }
+            else if ((ph_vor & 0xf) == 2) { halten++; if (d != -48) { halten_bad++; d_halten = d; } }   /* READY */
+        }
+        printf("  Messer-Hieb: %d Hieb-Bilder (%d mit Drehung, z.B. %d), %d Halte-Bilder (%d != -48, z.B. %d)\n",
+               hieb, hieb_dreh, d_hieb, halten, halten_bad, d_halten);
+        PRUEF(180, n_ziel >= 0 && hieb >= 30 && hieb_dreh == 0,
+              "Messer-Hieb dreht: %d von %d Hieb-Bildern mit Delta != 0 (z.B. %d; Sub 2 @0x80035314-41c ohne 0x800acabe)",
+              hieb_dreh, hieb, d_hieb);
+        PRUEF(181, halten >= 10 && halten_bad == 0,
+              "NEGATIV-KONTROLLE Halten nach dem Hieb: %d von %d Bildern mit Delta != -48 (z.B. %d; Sub 1 @0x80035288-90)",
+              halten_bad, halten, d_halten);
+    }
+
+    /* 6c3 — NACHBESSERUNG der Integration (mess_sb 3.1): die RE2-GL-Sperre der RE1.5-KI-Kandidaten
+     * (re2_gl_sperre) zieht der SPIELSCHRITT je Bild ab — hinter der Gegner-Schleife, im selben KI-Freeze-
+     * Tor wie der RE2-Wurzel-Prolog (Freeze `lw v0,-1060(v0)` / `lui v1,0x2000` / `bne` @0x80100360-6c VOR
+     * dem Abzug @0x80100484-98, EMZ0.BIN). 15 Bilder -> 0; mit gesetztem RE15_PAUSE_AI kein Abzug. */
+    {
+        if (sp_bringup(9, 5) != 0) { PRUEF(182, 0, "Bringup 6c3"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        g_actors[5].re2_gl_sperre = 15;
+        g_re15_pauseflags |= RE15_PAUSE_AI;
+        for (int b = 0; b < 5; b++) sp_bild(0, 0);
+        const int eingefroren = g_actors[5].re2_gl_sperre;
+        g_re15_pauseflags &= ~RE15_PAUSE_AI;
+        int nach14 = -1;
+        for (int b = 0; b < 15; b++) { sp_bild(0, 0); if (b == 13) nach14 = g_actors[5].re2_gl_sperre; }
+        PRUEF(182, eingefroren == 15 && nach14 == 1 && g_actors[5].re2_gl_sperre == 0,
+              "GL-Sperre im Spielschritt: 5 Bilder KI-Freeze -> %d (15), nach 14 Bildern %d (1), nach 15 %d (0)",
+              eingefroren, nach14, g_actors[5].re2_gl_sperre);
     }
 
     /* 6d — NACHBESSERUNG M-4 (G4/G5): ZIELHOEHE aus der Ziel-FSM (Steuerkreuz im HALTEN) und GIFT-

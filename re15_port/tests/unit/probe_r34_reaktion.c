@@ -836,6 +836,38 @@ static void teil_re15(void)
               "0x27: Zeile 9 Clip 0x%x (0xa/0xb Crash @0x8011bc10), Art 5 st=%d +5=%d Clip 0x%x (0xe Boden-Tod, "
               "Spur @0x80121500[14])", clip9, st14, z14, e->motion);
     }
+    /* ---- 0x30 Birkin (Form 2, grid 0x13): Todes-Schwanz 0x8011a5d8 haelt das LETZTE Bild ----
+     * NACHBESSERUNG der Integration (mess_geg M-B1: "steht in Todesphase 3 wieder auf", af 0).
+     * Phase 1 `jal 0x8001f314` @0x8011a760 posiert das Bild +0x95 und zaehlt DANACH hoch
+     * (@0x8001f618-1c), am Ende `sb zero,149` + Rueckgabe 1 (@0x8001f624-3c) -> im Posen-Puffer
+     * steht das letzte Bild; Phase 2/3 (@0x8011a690-e4) rufen kein anim_set. Phase 5 dasselbe
+     * anim_set (Clip 0xc), Phase 6 @0x8011a788 nur das Zustandswort 0xb01. Bank fehlt in der Arena ->
+     * Rueckfall-Laenge 40 (re15_birkin_fc) -> gehalten wird Bild 39. */
+    {
+        re15_actor_t *e = re15_arena(0x30, 0x13);
+        e->birkin_flags = 0; e->birkin_grab = 0;                  /* kein Mutations-Riegel (+0x1dd & 8) wie test_birkin_ai (3) */
+        explosion_rel(e, 300, 2);
+        const int st = e->state;
+        int max_p1 = -1, af3 = -1, halt3 = 1, max_p5 = -1, af6 = -1, clip3 = -1;
+        for (int f = 0; f < 400 && af3 < 0; f++) {
+            re15_enemy_ai_run_all(0);
+            if (e->state == 3 && e->sub_state_3 == 1 && (int)e->anim_frame > max_p1) max_p1 = (int)e->anim_frame;
+            if (e->state == 3 && e->sub_state_3 == 3) { af3 = (int)e->anim_frame; clip3 = e->motion; }
+        }
+        for (int f = 0; f < 60; f++) {
+            re15_enemy_ai_run_all(0);
+            if (!(e->state == 3 && e->sub_state_3 == 3 && (int)e->anim_frame == af3)) halt3 = 0;
+        }
+        e->grid_id = (uint8_t)((e->grid_id & ~0xfu) | 2u);        /* Raum-SCD-Morph-Signal (grid & 0xf == 2) */
+        for (int f = 0; f < 400 && af6 < 0; f++) {
+            re15_enemy_ai_run_all(0);
+            if (e->state == 3 && e->sub_state_3 == 5 && (int)e->anim_frame > max_p5) max_p5 = (int)e->anim_frame;
+            if (e->state == 3 && e->sub_state_3 == 6) af6 = (int)e->anim_frame;
+        }
+        CHECK(197, st == 3 && clip3 == 9 && af3 == 39 && max_p1 == 39 && halt3 && af6 == 39 && max_p5 == 39,
+              "0x30 Birkin Tod: st=%d, Phase 3 Clip %d (9) Bild %d (39 = letztes, Phase-1-Max %d), 60 Bilder gehalten %d; "
+              "Phase 6 Bild %d (39, Phase-5-Max %d)", st, clip3, af3, max_p1, halt3, af6, max_p5);
+    }
     /* ---- 0x16 liegender Fresser (RE1.5-KI, ROOM1140): +0x93 = 1 in Ruhe -> nur |= 2, kein Schaden ---- */
     {
         if (room_load(0x1140, "STAGE1") != 0) { CHECK(189, 0, "ROOM1140 fehlt"); return; }

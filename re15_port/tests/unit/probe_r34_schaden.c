@@ -350,6 +350,9 @@ static void teil_applier(void)
             if (h0 - a->hp != 5) dmg_ok = 0;
             if (a->re2z_pool152 < pool_min) pool_min = a->re2z_pool152;
             a->hit_react = 0; a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 0; a->sub_state_3 = 0;
+            /* NACHBESSERUNG mess_sb 3.1: zwischen zwei Treffern laeuft die RE2-GL-Sperre (15 Bilder,
+             * @0x8004731c-4c) ab — 15 Spielbilder = 15 Abzuege. */
+            for (int k = 0; k < 15; k++) re15_re2_gl_sperre_tick();
         }
         const int bein = (a->re2z_flags21a & 0x60u) != 0u;
         const int p151 = a->re2z_pool151, p152 = a->re2z_pool152, p153 = a->re2z_pool153;
@@ -377,6 +380,7 @@ static void teil_applier(void)
         int32_t Q[3] = { 0, -100, 300 };
         re15_re2_gl_apply(Q, 0, k_box_op40, HIT_OP40);          /* 1. Treffer saet die Felder */
         a->hit_react = 0; a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 0;
+        for (int k = 0; k < 15; k++) re15_re2_gl_sperre_tick();  /* GL-Sperre abgelaufen (mess_sb 3.1) */
         a->re2z_pool152 = -1;                                    /* Reserve von Schuessen geleert */
         re15_re2_gl_apply(Q, 0, k_box_op40, HIT_OP40);
     }
@@ -397,6 +401,66 @@ static void teil_applier(void)
         const int d2 = 2000 - a->hp;
         CHECK(99, d5 == 50 && d2 == 200, "Import-Zombie Direktaufruf: Art 5 -> %d (50), Art 2 -> %d (200)", d5, d2);
     }
+
+    /* ---- Runde 34 NACHBESSERUNG der Integration (mess_sb 3.1 / 3.2) — Gate 2 fuer RE1.5-KI-
+     *      Kandidaten (RE2 `lbu v0,467(s0)` / `bne v0,zero,0x8004740c` @0x80047138-40) ---------- */
+    /* (100) mess_sb 3.2: ein GESPERRTER RE1.5-KI-Kandidat (nur +0x93 Bit 0, kein Gate B) wird wie in
+     *       RE2 uebersprungen und NICHT gezaehlt: kein Riegel-Zweig (`ori v0,v1,0x2` @0x80012fc8-cc ->
+     *       Blut-Effekt im Gore-Tick @0x80106a98), +0x93 bleibt 1, und die Flamme prueft den naechsten
+     *       Kandidaten (RE2-Zombie in Slot 2, -5). Vorher: gezaehlt (r = 2), |= 2, Abbruch (b.hp 80). */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x27, 0, 0, 0, 180); a->hit_react = 1;
+    re15_actor_t *b2 = mk_re2z(2, 0x10, 200, 0, 0, 80);
+    r = re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40);
+    CHECK(100, r == 3 && a->hp == 180 && a->hit_react == 1 && a->re2_gl_sperre == 0 && b2->hp == 75,
+          "gesperrter RE1.5-Kandidat: r=%d (3) a.hp=%d (180) a.hr=0x%02X (0x01) a.sperre=%d (0) b.hp=%d (75)",
+          r, a->hp, a->hit_react, a->re2_gl_sperre, b2->hp);
+    /* (101) NEGATIV-KONTROLLE zu 100 + mess_sb 3.1: derselbe Kandidat FREI -> Treffer (O-VB4 -50) und
+     *       die RE2-Sperre 15 ((w1 >> 9) & 0x7F @0x80047338-4c; Zensus aller RE2-Gegnertypen). */
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x27, 0, 0, 0, 180);
+    r = re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40);
+    CHECK(101, r == 2 && a->hp == 130 && (a->hit_react & 1u) && a->re2_gl_sperre == 15,
+          "freier RE1.5-Kandidat: r=%d (2) hp=%d (130) hr=0x%02X sperre=%d (15)", r, a->hp, a->hit_react,
+          a->re2_gl_sperre);
+    /* (102) mess_sb 3.1 — der TAKT am Import-Zombie (RE1.5-Flavor, wie m4 "Brad", hier Typ 0x10 wie Pruefung 95): je Spielbild
+     *       erst der Sperr-Abzug (re15_game_step hinter der Gegner-Schleife), dann die Flamme (FX-Takt);
+     *       die Port-HURT-Reaktion gibt Bit 0 nach 6 Bildern frei (gemessen m4, re15_enemy_ai_live_hurt).
+     *       Soll wie RE2 (n1/r1 gemessen): Treffer im Bild 0, 15, 30, 45 — je -5 (Z10 K2 @0x800A41E0).
+     *       Vorher: Treffer alle 6 Bilder. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_re15_re2z_import_set(1);
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x10, 0, 0, 0, 250);
+    {
+        int treffer[8], nt = 0, frei_bei = -1, riegel2 = 0;
+        for (int f = 0; f < 50; f++) {
+            re15_re2_gl_sperre_tick();
+            if (f == frei_bei) { a->hit_react = 0; a->state = 1; a->sub_state_1 = 0; a->sub_state_2 = 0; }
+            const int16_t h0 = a->hp;
+            if (re15_re2_gl_apply(P, 0, k_box_op40, HIT_OP40) != 0) {
+                if (nt < 8) treffer[nt] = f;
+                nt++;
+                frei_bei = f + 6;
+                if (h0 - a->hp != 5) treffer[0] = -1000;
+            }
+            if (a->hit_react & 2u) riegel2 = 1;
+        }
+        CHECK(102, nt == 4 && treffer[0] == 0 && treffer[1] == 15 && treffer[2] == 30 && treffer[3] == 45 &&
+                   a->hp == 230 && !riegel2,
+              "Takt am RE1.5-KI-Import-Zombie: %d Treffer in Bild %d/%d/%d/%d (0/15/30/45), hp %d (230), Bit 1 %d (0)",
+              nt, nt > 0 ? treffer[0] : -1, nt > 1 ? treffer[1] : -1, nt > 2 ? treffer[2] : -1,
+              nt > 3 ? treffer[3] : -1, a->hp, riegel2);
+    }
+    /* (103) Die Sperre haengt an keinem KI-Tick: re15_re2_gl_sperre_tick zieht fuer JEDEN Aktor ab (auch
+     *       einen, dessen Wurzel nicht laeuft) und bleibt bei 0 stehen (kein Unterlauf). */
+    re15_actor_init(); pl_far();
+    a = mk(1, 0x26, 0, 0, 0, 100); a->re2_gl_sperre = 2; a->grid_id = 0x20;
+    re15_re2_gl_sperre_tick(); const int s1 = a->re2_gl_sperre;
+    re15_re2_gl_sperre_tick(); const int s2 = a->re2_gl_sperre;
+    re15_re2_gl_sperre_tick(); const int s3 = a->re2_gl_sperre;
+    CHECK(103, s1 == 1 && s2 == 0 && s3 == 0, "Sperr-Abzug: 2 -> %d -> %d -> %d (1/0/0)", s1, s2, s3);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 }
 

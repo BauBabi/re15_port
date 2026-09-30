@@ -38,6 +38,9 @@
 #           beim Statusschirm geparkt ist @0x8001cb40-48), Wurf S = A + 24, X = L + 36, exe bis EXIT_AT.
 #   abzug   Zombie 0x10 in <= 1000 vor Leon im Abzugsbild (Reichweite der alten Bruecke, Waffe 9 =
 #           1000): kein HP-Verlust in Zeile A. Faengt die Mutation "ENT[9].resolve wieder 1".
+#   anker_c0/anker_c1  (NACHBESSERUNG, mess_he M-HE-1 / mess_reg M-H1) derselbe MITTE-Wurf mit Leon im Bild
+#           und mit Leon ausserhalb der Region des angezeigten Cuts (RE15_FORCE_CUT=1): gr.log BYTE-GLEICH —
+#           die Teil-11-Weltmatrix entsteht im Original auch ungezeichnet (FUN_8001ef54 @0x8001ef80).
 #
 # HARNESS (Mess-Umgebung, kein Spielverhalten): Titel-Autostart, Debug-Sprung im Bild 250 (der
 # Bildzaehler beginnt nach dem Sprung neu), Eingabe-Skript auf der Spielbild-Achse. Die Startraum-
@@ -652,5 +655,69 @@ if(NOT "${_fa}" STREQUAL "")
     r34_fehler("${_lauf}" "${_fa}")
 endif()
 message(STATUS "${_tag} [${_lauf}]: ok — Abzugsbild ${_A}, Gegner ${_nah} in ${_AB_${_nah}_D} vor Leon, kein HP-Verlust")
+endif()
+
+# ---------------------------------------------------------------------------------------------------
+# Laeufe "anker_c0" / "anker_c1" (NACHBESSERUNG der Integration, mess_he M-HE-1 / mess_reg M-H1): derselbe
+# MITTE-Wurf am Tuer-Sprungpunkt einmal mit Leon IM Bild (Cut 0 des Sprungs) und einmal mit Leon AUSSERHALB
+# der Region des angezeigten Cuts (RE15_FORCE_CUT=1, Anzeige-Haken). Das Original rechnet die Teil-Weltmatrix
+# (Teil 11 + 0x40 = 0x7a4 = Wurf-Anker) in JEDEM Bild: FUN_8001e8c8 (`jal` @0x8001d09c) waehlt nach dem
+# Regionstest (`jal 0x80014368` @0x8001e974, `beq` @0x8001e97c) nur zwischen FUN_8001e9ec (zeichnen) und
+# FUN_8001ef54 (nicht zeichnen); beide rufen `jal 0x80022da0` mit a2 = Teil+64 (@0x8001ea24 / @0x8001ef80).
+# Soll: gr.log BYTE-GLEICH. Vorher gemessen: Cut 1..6 Anker (-7606,-1693,-17553) statt (-6851,-2474,-18279).
+# Vorbedingung (RE15_VIS_TRACE): im Spawnbild vis=1 bzw. vis=0 — sonst prueft der Lauf nichts (AUFSTELLUNG).
+# ---------------------------------------------------------------------------------------------------
+set(_skript_mitte "W1,M1,MA0.2,M2.5,W4")          # ab Spielbild 260 (> Sprungbild 250): Heben, Abzug, MITTE
+set(_anker_ok 1)
+foreach(_c c0 c1)
+    set(_lauf "anker_${_c}")
+    r34_laeuft("${_lauf}" _an_anker)
+    if(NOT _an_anker)
+        set(_anker_ok 0)
+        continue()
+    endif()
+    set(_dir "${_wurzel}/${_lauf}")
+    set(_fc "")
+    if(_c STREQUAL "c1")
+        set(_fc "RE15_FORCE_CUT=1")
+    endif()
+    r34_exe("${_lauf}" "${_dir}" 240
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+        RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 RE15_AI_FLAVOR=re2 RE15_VIS_TRACE=1 ${_fc}
+        RE15_GIVE=9:5 RE15_EQUIP=9
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=260 "RE15_INPUT_SCRIPT=${_skript_mitte}"
+        RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log
+        "RE15_EXIT_AT=480#1140")
+    r34_granatenlog("${_dir}/gr.log" _G)
+    if(NOT _G_SPAWN_N EQUAL 1 OR "${_G_L}" STREQUAL "" OR "${_G_X}" STREQUAL "")
+        r34_fehler("${_lauf}" "${_G_SPAWN_N} Spawns, Liegen '${_G_L}', Explosion '${_G_X}' — erwartet 1 Wurf bis zur Explosion")
+    endif()
+    file(STRINGS "${_dir}/debug.log" _vis REGEX "^\\[vis\\] F${_G_S} room=1140 ")
+    set(_vsoll 1)
+    if(_c STREQUAL "c1")
+        set(_vsoll 0)
+    endif()
+    if(NOT _vis MATCHES " vis=${_vsoll} ")
+        r34_fehler("${_lauf}" "AUFSTELLUNG: im Spawnbild ${_G_S} nicht vis=${_vsoll} ('${_vis}') — Cut/Region geaendert, Laeufe neu aufstellen")
+    endif()
+    file(STRINGS "${_dir}/gr.log" _sp REGEX "^F=[0-9]+ SPAWN granate ")
+    if(NOT _sp MATCHES "anker=\\(-?[0-9]+,(-?[0-9]+),-?[0-9]+\\)")
+        r34_fehler("${_lauf}" "SPAWN-Zeile ohne Anker: '${_sp}'")
+    endif()
+    set(_ay_${_c} "${CMAKE_MATCH_1}")
+    set(_sp_${_c} "${_sp}")
+    file(READ "${_dir}/gr.log" _gr_${_c})
+    message(STATUS "${_tag} [${_lauf}]: ${_sp} (vis=${_vsoll} im Spawnbild, L ${_G_L}, X ${_G_X})")
+endforeach()
+if(_anker_ok)
+    # Zaehne gegen die alte Ersatzrechnung: die lieferte bei unsichtbarem Leon die Bindpose-Hoehe -1693
+    # (gemessen); der MITTE-Wurf haelt die Hand bei ~-2474 (Tabelle BAUPLAN 1.1).
+    if(NOT _ay_c0 LESS -2000)
+        r34_fehler("anker_c0" "Anker-Hoehe ${_ay_c0} im SICHTBAREN Lauf — erwartet ueber der Hand (< -2000)")
+    endif()
+    if(NOT "${_gr_c0}" STREQUAL "${_gr_c1}")
+        r34_fehler("anker" "gr.log NICHT byte-gleich: sichtbar '${_sp_c0}' / gecullt '${_sp_c1}' — der Anker haengt am Zeichnen (M-HE-1, FUN_8001ef54 @0x8001ef80)")
+    endif()
+    message(STATUS "${_tag} [anker]: ok — gr.log byte-gleich mit und ohne Leon im Bild (Anker-y ${_ay_c0})")
 endif()
 message(STATUS "${_tag}: ALLE LAEUFE GRUEN (${_wurzel})")

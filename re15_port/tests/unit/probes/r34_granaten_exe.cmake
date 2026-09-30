@@ -5,7 +5,8 @@
 #                              Abzugsbild, Explosion im Bild Liegen + 36, Treffer im Explosionsbild mit der
 #                              Reaktionszeile je KI, Reaktion im Folgebild, Leiche statt Haenger, exe laeuft
 #                              bis RE15_EXIT_AT; dazu der Item-Debug-Weg des Statusschirms (SELECT, 9x R1)
-#                              und ein Abzugs-Lauf mit Zombie in <= 1000. Skript und Belege:
+#                              und ein Abzugs-Lauf mit Zombie in <= 1000; NACHBESSERUNG: derselbe MITTE-
+#                              Wurf mit/ohne Leon im Bild -> gr.log byte-gleich (Anker M-HE-1). Skript und Belege:
 #                              tests/integration/test_r34_granaten.cmake.
 # MESS-WERKZEUG (kein add_test): wirksamer Effekt-Beitrag aus zwei Framedumps (Integration W8).
 add_executable(probe_r34_ppm_beitrag ${CMAKE_CURRENT_LIST_DIR}/../probe_r34_ppm_beitrag.c)

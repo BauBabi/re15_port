@@ -8555,7 +8555,30 @@ re_title:;
             }
             int kf_idx = 0;
             { extern void re15_render_pc_tri_z_reset(void); re15_render_pc_tri_z_reset(); }
-            if (player_visible && skel_ok && p_anim->clip_count > 0) {
+            /* ⛔ RUNDE 34 NACHBESSERUNG (mess_he M-HE-1 / mess_reg M-H1) — GECULLT = NICHT ZEICHNEN,
+             * ABER POSIEREN, jetzt auch fuer den SPIELER (fuer die NPCs seit Runde 30, s. unten beim
+             * NPC-Zweig `npc_region_culled`). Selbst disassembliert (info/Re1.5/PSX.EXE):
+             *   8001d098 addiu a0,s0,720      a0 = 0x800aca54 = der Spieler
+             *   8001d09c jal   0x8001e8c8     UNBEDINGT, jedes Bild
+             *   8001e970 lw    a1,-14448(a1)  a1 = 0x800ac790 (Region-Viereck des aktiven Cuts)
+             *   8001e974 jal   0x80014368     Punkt-im-Viereck
+             *   8001e97c beq   v0,zero,0x8001e9c0
+             *     innen : 8001e990 jal 0x8001e9ec  je Part (zusammensetzen + zeichnen)
+             *     aussen: 8001e9b4 jal 0x8001ef54  je Part (NUR zusammensetzen)
+             *   8001ea1c-28 / 8001ef7c-84: BEIDE rufen jal 0x80022da0 mit a0 = [Part+108] (Eltern),
+             *               a1 = Part+24 (lokal), a2 = Part+64 (Welt) — hinter demselben 0x40-Tor
+             *               (`andi v0,v0,0x40` @0x8001ea10 / @0x8001ef70).
+             * Teil 11 + 0x40 = 11*0xAC + 0x40 = 0x7a4 = der Wurf-/Muendungs-Anker (Spieler+0x188 =
+             * 0x800acbdc). Das Original schreibt ihn also in JEDEM Bild fort, auch wenn Leon ausserhalb
+             * der Cut-Region steht. Der Port posierte ihn nur im Zeichenzweig (`player_visible`): dann
+             * kam der Anker aus der Ersatzrechnung muzzle_bone_world (ohne Ueberblendung) bzw. aus dem
+             * zuletzt gezeichneten Bild — GEMESSEN 519 Einheiten / 2 Bilder daneben (mess_he §2.7),
+             * ROOM1140 Cut 1..6 781 tiefer als Cut 0/7 (mess_reg §4.1). Jetzt: Pose (inkl. Crossfade-
+             * Schnappschuss und Nacken-FSM, die der Port in re15_skel_compute_pose fuehrt — im Original
+             * Animationsschritt FUN_8001f3bc bzw. FUN_80037358 @0x80031d78, beide Spiellogik) JEDES Bild,
+             * Knochen 11 -> re15_player_set_hand_world/_rot (Block unten nach yaw_rot_q12), gezeichnet
+             * wird weiter nur bei player_visible (n_bones). */
+            if (skel_ok && p_anim->clip_count > 0) {
                 /* The platform owns the fps policy: at 30fps target anim_frame is
                  * already 30Hz; at 60fps halve to PSX-canonical 30Hz. */
                 uint32_t cur = (target_fps == 30)
@@ -8566,7 +8589,7 @@ re_title:;
             }
             re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
             int pose_ok = 0;
-            if (player_visible && skel_ok) {
+            if (skel_ok) {                        /* NACHBESSERUNG M-HE-1: auch gecullt (s.o.) */
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
                 /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
@@ -8673,6 +8696,36 @@ re_title:;
                 for (_k = 0; _k < 9; _k++)
                     yaw_rot_q12[_k] = (yaw_rot_q12[_k]
                                        * (int32_t)player_ref->render_scale_q12) >> 12;
+            }
+
+            /* BLADE/HAND WORLD POINT capture — Knochen 11 = Teil 11 + 0x40 (0x7a4; Klinge liest
+             * *(0x800acbdc)+0x7b8 = 11*0xAC + 0x40 + 0x14, LAB_80040b88). ⛔ NACHBESSERUNG M-HE-1:
+             * JEDES Bild aus DERSELBEN Pose und DERSELBEN Rechnung wie der Zeichenzweig (R_y(Gier) x
+             * Pose, + Lage), unabhaengig von player_visible — wie FUN_8001ef54 (@0x8001e9b4 ->
+             * `jal 0x80022da0` @0x8001ef80, a2 = Part+64). Bisher stand die Fuetterung IM Zeichen-
+             * Loop (nur sichtbar). Dieselbe Knochen-Grenze wie der Loop (n_bones: skel.bone_count
+             * und md1.mesh_count), damit der sichtbare Fall byte-gleich bleibt. (Der Anker ist
+             * weiterhin ein Bild alt gegen den PSX-Posenlauf — Reihenfolge Spielschritt -> Zeichnen.) */
+            if (pose_ok && skel.bone_count > 11 && md1.mesh_count > 11) {
+                extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
+                extern void re15_player_set_hand_rot(const int32_t r[9]);
+                const re15_skel_pose_t *p11 = &poses[11];
+                int32_t hand_rot[9], hand_tr[3];
+                for (int r = 0; r < 3; r++) {
+                    for (int c = 0; c < 3; c++) {
+                        int64_t s = 0;
+                        for (int k = 0; k < 3; k++)
+                            s += (int64_t)yaw_rot_q12[r*3 + k] * (int64_t)p11->rot[k*3 + c];
+                        hand_rot[r*3 + c] = (int32_t)(s >> 12);
+                    }
+                    int64_t t = 0;
+                    for (int k = 0; k < 3; k++)
+                        t += (int64_t)yaw_rot_q12[r*3 + k] * (int64_t)p11->trans[k];
+                    hand_tr[r] = (int32_t)(t >> 12);
+                }
+                re15_player_set_hand_world(hand_tr[0] + model_pos_x, hand_tr[1] + model_pos_y,
+                                           hand_tr[2] + model_pos_z);
+                re15_player_set_hand_rot(hand_rot);   /* R_gunbone (WORLD rot) for the discharge-FX anchor */
             }
 
             /* RE1.5 CHARACTER SHADOW (FUN_8001b064 + FUN_8001af5c, 2026-05-29).
@@ -8821,7 +8874,9 @@ re_title:;
 
             /* 1:1 mesh_idx == bone_idx (PL00 convention; meshes 15..16
              * are weapon slots). See mesh_psx.c for the rationale. */
-            int n_bones = pose_ok ? skel.bone_count : 0;
+            /* NACHBESSERUNG M-HE-1: die Pose laeuft jetzt auch gecullt (s. kf_idx oben); GEZEICHNET wird
+             * nur im Viereck (innen-Zweig FUN_8001e9ec @0x8001e990), aussen nichts (FUN_8001ef54). */
+            int n_bones = (pose_ok && player_visible) ? skel.bone_count : 0;
             if (n_bones > md1.mesh_count) n_bones = md1.mesh_count;
             for (int bi = 0; bi < n_bones; bi++) {
                 /* Phase 4.5.10-L: revert to 1:1 mesh-bone mapping.
@@ -8860,18 +8915,9 @@ re_title:;
                     yawed_trans[1] + model_pos_y,
                     yawed_trans[2] + model_pos_z,
                 };
-                /* BLADE/HAND WORLD POINT capture (byte-true kine layout: the melee SLASH reads
-                 * *(0x800acbdc)+0x7b8 = bone-11 matrix translation — per-bone stride 0xAC, matrix
-                 * @+0x40, translation @+0x14 -> 11*0xAC+0x40+0x14 = 0x7b8; resolver LAB_80040b88).
-                 * Hand the player's bone-11 world origin to the damage resolver each rendered
-                 * frame (1-frame-stale vs the PSX in-frame pose pass — faithful-line). */
-                if (bi == 11) {
-                    extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
-                    extern void re15_player_set_hand_rot(const int32_t r[9]);
-                    re15_player_set_hand_world(bone_world_trans[0], bone_world_trans[1],
-                                               bone_world_trans[2]);
-                    re15_player_set_hand_rot(yawed_rot);   /* R_gunbone (WORLD rot) for the discharge-FX anchor */
-                }
+                /* (Knochen-11-Fuetterung re15_player_set_hand_world/_rot: seit der NACHBESSERUNG
+                 * M-HE-1 VOR diesem Loop, jedes Bild aus derselben Pose — s. "BLADE/HAND WORLD POINT"
+                 * oben. Hier nur noch Zeichnen.) */
                 /* CANONICAL per-bone light fold (2026-06-02): rotate the world
                  * light dirs into THIS bone's frame so the raw bone-local normals
                  * shade as L_world · N_world. yawed_rot = R_y(yaw) × pose.rot is the

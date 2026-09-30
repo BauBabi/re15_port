@@ -761,6 +761,17 @@ typedef struct {
                                  * stempelt dann NICHT noch einmal aus der Spielerpeilung
                                  * (re2z_stamp_hit = Hitscan-Applier FUN_800410CC @0x80041954-88).
                                  * Der Schusspfad (re15_re2_stamp_hit, row_src 0) loescht es.   */
+    uint8_t  re2_gl_sperre;     /* PORT-Feld (Runde 34 NACHBESSERUNG mess_sb 3.1): die RE2-GL-Sperre
+                                 * +0x1D3 fuer einen RE1.5-KI-Kandidaten des Appliers (O-VB4) —
+                                 * RE2 stempelt nach JEDEM GL-Treffer (w1 >> 9) & 0x7F (@0x80047338-4c;
+                                 * in den Zeilen 9..11 ALLER RE2-Gegnertypen 0x10..0x3F = 15) und
+                                 * ueberspringt den Kandidaten, solange +0x1D3 != 0 (Gate 2
+                                 * @0x80047138-40). RE1.5-KI-Aktoren haben keinen RE2-Wurzel-Prolog,
+                                 * der +0x1D3 abzieht (EMZ0 @0x80100484-98) — deshalb ein eigenes
+                                 * Feld, abgezogen je Spielbild in re15_re2_gl_sperre_tick
+                                 * (re15_damage.c), gerufen aus re15_game_step hinter der
+                                 * Gegner-Schleife. Nur der RE1.5-Zweig von re15_re2_gl_apply liest
+                                 * und schreibt es.                                              */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

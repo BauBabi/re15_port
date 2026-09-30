@@ -12008,7 +12008,21 @@ static void re15_birkin_ai_tick(int slot)
             break;
         case 1:   /* phase 1 @0x8011a678: play clip 9, Se(10)@frame 0x50, -> phase 2 */
             if (e->anim_frame == 0x50) re15_audio_room_se(10);        /* Se(10) @0x8011a744 */
-            if (re15_birkin_anim(e)) e->sub_state_3 = 2;
+            /* ⛔ RUNDE 34 NACHBESSERUNG (mess_geg M-B1: "Birkin steht in Todesphase 3 wieder auf",
+             * F235 liegt, F240/F260 steht, Zustandslog st 3/9/1/3 mo 9 af 0). Selbst disassembliert:
+             * Phase 1 ruft `jal 0x8001f314` @0x8011a760 (+0x7 += v0 @0x8011a77c-84); FUN_8001f314 ->
+             * FUN_8001f3bc posiert ZUERST das Bild +0x95 (`lbu v0,149(t0)` @0x8001f35c) und zaehlt
+             * DANACH hoch (`addiu v0,v0,1` / `sb v0,149(v1)` @0x8001f618-1c); erst bei >= Laenge
+             * `sb zero,149(v1)` + Rueckgabe 1 (@0x8001f624-3c). Im Ende-Aufruf steht also das LETZTE
+             * Bild im Posen-Puffer, und Phase 3 (@0x8011a6c0-e4: nur `lbu v0,9(a0)` / `andi 0xf` /
+             * `bne`) und Phase 2 (@0x8011a690-bc) rufen kein anim_set -> er bleibt liegen. Der Port
+             * posiert aus anim_frame, das re15_birkin_anim auf 0 umlaufen laesst -> Bild 0 (stehend).
+             * Deshalb das letzte Bild halten (wie der Tyrant, Runde 34 B8). STAGE5 identisch
+             * (@0x8011af74 anim_set, Phase 3 @0x8011aed4 ohne). */
+            if (re15_birkin_anim(e)) {
+                e->sub_state_3 = 2;
+                e->anim_frame = re15_birkin_fc(e) - 1;                    /* letztes Bild halten */
+            }
             break;
         case 2:   /* phase 2 @0x8011a690: ESP 0x1c gore, +0x9c=300, -> phase 3 (or 4 if grid&0xf already 2) */
             e->ai_timer = 300;                         /* +0x9c = 0x12c @0x8011a6a8 */
@@ -12037,7 +12051,13 @@ static void re15_birkin_ai_tick(int slot)
             break;
         case 5:   /* phase 5 @0x8011a728: play clip 0xc, Se(10)@frame 0x3c, -> phase 6 */
             if (e->anim_frame == 0x3c) re15_audio_room_se(10);        /* Se(10)@0x3c @0x8011a744 */
-            if (re15_birkin_anim(e)) e->sub_state_3 = 6;
+            /* NACHBESSERUNG M-B1: dasselbe anim_set @0x8011a760 (Phase 4 faellt @0x8011a724 in den
+             * Phase-5-Code); Phase 6 @0x8011a788 schreibt nur das Zustandswort 0xb01 -> bis zum
+             * naechsten Clip bleibt das letzte Bild von Clip 0xc stehen. */
+            if (re15_birkin_anim(e)) {
+                e->sub_state_3 = 6;
+                e->anim_frame = re15_birkin_fc(e) - 1;                    /* letztes Bild halten */
+            }
             break;
         default:  /* phase 6 @0x8011a788: -> ACTIVE sub 11 RUN-OFF (state1 sub11 = 0xb01) @0x8011a790 */
             e->state = 1; e->sub_state_1 = 11; e->sub_state_2 = 0; e->sub_state_3 = 0;

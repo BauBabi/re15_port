@@ -1020,6 +1020,16 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
              * recoiling, 48 in steady HOLD. (Sustained handgun fire keeps Leon in recoil most frames,
              * so this is the common STAGE1 case.) */
             int rate = (s_player_aim_phase == RE15_AIM_READY) ? (s_aim_recoil ? 24 : 48) : 24;
+            /* ⛔ RUNDE 34 NACHBESSERUNG (mess_reg M-Z1) — der MESSER-HIEB dreht NICHT. Nahkampf-
+             * Verteiler 0x80034e70 (`addiu at,at,16740` = 0x80074164 @0x80034ec0, `jalr` @0x80034ed0),
+             * Eintrag [2] = Sub 2 (Hieb) 0x80035314..0x8003541c, selbst disassembliert: Einstieg
+             * (Clip 7+2*hoch+4*tief @0x8003535c-78, SE 0x01050001 @0x8003537c), Treffer-Fenster
+             * Bild 6..11 (`addiu v0,v0,-6` / `sltiu v0,v0,0x6` @0x80035390-94, `jal 0x80011f50`
+             * @0x800353cc), `jal 0x8001f314` @0x800353e8, Ende `sh v0(=1),-13734(at)` @0x80035400 —
+             * KEIN Zugriff auf 0x800acabe (die Gier; Schreiber im Halten Sub 1 `sh v0,-13634(at)`
+             * @0x80035290 / @0x800352dc mit Byte1 @0x80074091). Die A8-Regel "Abzug 24 fuer alle
+             * Waffen" (Gun-FSM Sub 2 @0x8003555c-fc) gilt fuer das Messer nicht. */
+            if (s_aim_melee && s_aim_recoil) rate = 0;
             /* Runde 34 A8 — RICHTUNG und WERTEBEREICH nach der Gun-FSM (selbst disassembliert):
              *   RAISE  Sub 0 @0x80033000-98: `andi v0,a0,0x8` (virtuell LINKS) -> `subu` Byte0 (24,
              *          `addiu at,at,16528` @0x80033028); `andi v0,a0,0x2` (RECHTS) -> `addu`

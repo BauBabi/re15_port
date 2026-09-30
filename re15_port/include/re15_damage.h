@@ -343,6 +343,10 @@ void    re15_re2_hp_sync(void);
  * wertig. Umsetzung (Leerliste, Gates, Band, Box FUN_80041EF8, Records, Stempel): Spur B4.
  * C0 = STUB: trifft nichts, Rueckgabe 0. */
 int     re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode);
+/* Runde 34 NACHBESSERUNG (mess_sb 3.1): EIN Abzug je Spielbild der RE2-GL-Sperre (re2_gl_sperre) der
+ * RE1.5-KI-Kandidaten des Appliers — Gegenstueck zum RE2-Wurzel-Prolog (EMZ0 @0x80100484-98).
+ * Aufrufer: re15_game_step hinter re15_enemy_ai_run_all (selbes KI-Freeze-Tor). */
+void    re15_re2_gl_sperre_tick(void);
 
 /* MECHANISMUS-ZAEHLER (Runde 34, nur fuer Sonden — sie aendern kein Spielverhalten).
  * gate5   = wie oft das fuenfte Tor des Kandidatenfilters FUN_800470C0 (@0x8004716C-A4)

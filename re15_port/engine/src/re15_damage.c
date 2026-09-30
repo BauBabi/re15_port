@@ -3963,6 +3963,29 @@ static const uint32_t s_re2gl_rec_arm[6]      = {   /* RE2 0x2D (Port 0x1A) -> 0
     0x00a0f03cu, 0x078f1e0au,     /* Z10 @0x800A5234   60/60/10 */
     0x00a0f03cu, 0x078f1e0au };   /* Z11 @0x800A5248   60/60/10 */
 
+/* NACHBESSERUNG mess_sb 3.1 — der Sperrwert der GL-Zeilen, (w1 >> 9) & 0x7F (`srl v0,v0,9` /
+ * `andi v0,v0,0x7f` @0x80047340-44). Zensus ueber ALLE RE2-Gegnertypen 0x10..0x3F (Zeiger
+ * *(0x800A6A88 + Typ*4), Zeilen 9/10/11 = Basis + 8*20 / 9*20 / 10*20, w1 = +4; selbst gelesen aus
+ * info/re2leon/PSX.EXE): jeder der 144 Eintraege traegt 15 (w1 0x078F1E0A, 0x078F1FB4, 0x078F1F68,
+ * 0x078F1EDA). Fuer RE1.5-KI-Kandidaten des Appliers (re2_gl_sperre) gilt deshalb dieser eine Wert. */
+#define RE2_GL_SPERRE 15u
+
+/* Je Spielbild EIN Abzug der GL-Sperre der RE1.5-KI-Aktoren — Gegenstueck zum Wurzel-Prolog der
+ * RE2-Gegner (EMZ0.BIN, selbst disassembliert: `lbu v1,467(s0)` @0x80100484 / `andi v0,v1,0x7f`
+ * @0x8010048c / `beq v0,zero` @0x80100490 / `addiu v0,v1,-1` @0x80100494 / `sb v0,467(s0)`
+ * @0x80100498) HINTER dem globalen KI-Freeze-Tor (`lw v0,-1060(v0)` = 0x800cfbdc / `lui v1,0x2000` /
+ * `and` / `bne v0,zero,0x80100640` = Epilog @0x80100360-6c). Aufrufer: re15_game_step direkt hinter
+ * der Gegner-Schleife, im SELBEN Tor (RE15_PAUSE_AI) und VOR dem FX-Takt (RE2: Gegner-Schleife vor
+ * der Pumpe `jal 0x8001d300` @0x80026980) — damit trifft die Flamme nach einem Treffer im Bild F
+ * erst wieder im Bild F + 15. KEIN Tor auf Typ/KI-Variante/Per-Entity-Bit: eine Sperre, deren
+ * Abzug auf einem Nebenweg ausfaellt, sperrt dauerhaft (Runde-14-Falle, s.
+ * re15_re2_pause_filter_apply); der globale Freeze endet dagegen immer. */
+void re15_re2_gl_sperre_tick(void)
+{
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].re2_gl_sperre != 0u) g_actors[s].re2_gl_sperre--;
+}
+
 /* NACHBESSERUNG M1 — die Records eines Typs OHNE Besitz-Test (die Zeiger oben, *(0x800A6A88 +
  * Typ*4)), fuer den RE2-Modell-Schaden eines RE1.5-KI-Kandidaten des Appliers. Nur die Typen, die
  * re15_enemy_dmg_row unter dem RE2-Modell fuehrt (Zombie-Familie, 0x16, Hund, Kraehe, Spinne/Baby);
@@ -4234,6 +4257,26 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
         if (!e->active) continue;                                      /* Gate 1 @0x8004712c-30 */
         const int re2 = re2_gl_typ(e, &t);
         if (re2 && e->re2z_self1d3 != 0u) continue;                    /* Gate 2 @0x80047138-40 */
+        /* ⛔ RUNDE 34 NACHBESSERUNG (mess_sb 3.1 / 3.2) — Gate 2 AUCH fuer RE1.5-KI-Kandidaten.
+         * RE2 (info/re2leon/PSX.EXE, selbst nachgelesen): `lbu v0,467(s0)` @0x80047138 /
+         * `bne v0,zero,0x8004740c` @0x80047140 — ein gesperrter Kandidat wird VOR jedem Schreiben
+         * (+0x1D0 erst @0x8004716c) uebersprungen und NICHT gezaehlt (0x8004740c = `addiu s2,s2,4`,
+         * naechster Listeneintrag). Das Bodenfeuer (Op 40, einziger Aufrufer) ist ein RE2-System;
+         * RE1.5 hat fuer Art 5 KEINEN Aufrufer (unfertig -> RE2 ist das Ziel, Beta->Retail).
+         * Zwei RE1.5-Entsprechungen der RE2-Sperre:
+         *  (a) +0x93 Bit 0 = "jetzt nicht treffbar" (Schuss-/Treffer-Riegel `ori v0,v0,0x1`
+         *      @0x800124f0 / @0x8001300c, Ruhe-Riegel des liegenden Fressers @0x80103AAC-AB8) —
+         *      vorher lief so ein Kandidat durch den Riegel-ZWEIG des Resolvers (`ori v0,v1,0x2`
+         *      @0x80012fc8-cc, gezaehlt @0x80013024): je Flamme und Bild ein Blut-Effekt
+         *      (Gore-Tick @0x80106a98, der Bit 1 @0x80106abc sofort wieder loescht -> Gate B
+         *      @0x80012f54-60 griff nie), und im Modus "erster" brach die Flamme ab, ohne weitere
+         *      Gegner zu pruefen. GEMESSEN m4/m5: Flamme P91 `treffer=2` in JEDEM Bild am liegenden
+         *      Fresser (HP unveraendert), fx.log +2 Blut-Teilchen je Bild.
+         *  (b) die GL-Sperre re2_gl_sperre (Stempel unten nach einem Treffer, Abzug je Bild in
+         *      re15_re2_gl_sperre_tick) — vorher gab nur die Port-HURT-Reaktion Bit 0 nach 6 Bildern
+         *      frei: Treffer alle 6 statt 15 Bilder (GEMESSEN m4 Brad F138,144,...,198; RE2-KI n1/r1
+         *      genau 15). */
+        if (!re2 && ((e->hit_react & 1u) || e->re2_gl_sperre != 0u)) continue;
         if (e->hp < 0) continue;                                       /* Gate 3 @0x80047148-50 */
         if (re2 && (e->re2z_f10e & 0xC000u)) continue;                 /* Gate 4 @0x80047158-64 */
         /* RE1.5-KI-Kandidaten (O-VB4, PORT-ZUORDNUNG): ihr Band/Radius/Mittelpunkt ist der eigene
@@ -4288,6 +4331,15 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
             if ((hitcode & 0x20000u) && e->y + ((int32_t)b98 >> 1) < p[1]) zone = 0u;
             gl.zeile = zeile; gl.k = k; gl.spalte = zone + 3u * k;
             if (re15_resolver_gegnerzweig(e, 5u, p, &gl) < 0) continue;
+            /* NACHBESSERUNG (mess_sb 3.1): die RE2-Sperre nach dem Treffer — +0x1D3 =
+             * (+0x1D3 & 0x80) | ((w1 >> 9) & 0x7F) (`lbu a0,467(s1)` @0x8004731c / `andi a0,a0,0x80`
+             * @0x8004732c / `lw v0,4(a1)` @0x80047338 / `srl v0,v0,9` @0x80047340 / `andi v0,v0,0x7f`
+             * @0x80047344 / `sb a0,467(s1)` @0x8004734c). w1 der Zeilen 9..11 ist bei ALLEN RE2-
+             * Gegnertypen 0x10..0x3F derselbe Sperrwert 15 (Zensus *(0x800A6A88 + Typ*4) + (Zeile-1)*20,
+             * z.B. Zombie Z10 w1 0x078F1E0A @0x800A41E4, Hund @0x800A44DC, Spinne 0x078F1F68
+             * @0x800A4C48, RE2-Typ 0x27 @0x800A4DC4) — deshalb gilt er fuer jeden RE1.5-KI-Kandidaten,
+             * auch fuer Typen ohne Port-Record. */
+            e->re2_gl_sperre = RE2_GL_SPERRE;
             getroffen = s + 1;
             if (!alle) break;
             continue;
