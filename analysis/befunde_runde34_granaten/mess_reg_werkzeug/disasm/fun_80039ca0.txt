@@ -1,0 +1,91 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x80039ca0 (90 instr)
+  80039ca0: addiu sp,sp,-80                    
+  80039ca4: sw s5,68(sp)                       
+  80039ca8: lui s5,0x800b                      
+  80039cac: lbu s5,-1097(s5)                   0x800afbb7
+  80039cb0: sw s3,60(sp)                       
+  80039cb4: lui s3,0x800b                      
+  80039cb8: addiu s3,s3,-3268                  0x800af33c
+  80039cbc: sw ra,76(sp)                       
+  80039cc0: sw s6,72(sp)                       
+  80039cc4: sw s4,64(sp)                       
+  80039cc8: sw s2,56(sp)                       
+  80039ccc: sw s1,52(sp)                       
+  80039cd0: beq s5,zero,0x80039e50             
+  80039cd4: sw s0,48(sp)                       
+  80039cd8: addiu s6,s3,-11180                 0x800ad454
+  80039cdc: addiu s2,s3,12                     0x800b000c
+  80039ce0: addiu s4,s3,100                    0x800b0064
+  80039ce4: addiu a0,s3,92                     0x800b005c
+  80039ce8: addiu s0,s3,20                     0x800b0014
+  80039cec: jal 0x80068098                     
+  80039cf0: addu a1,s0,zero                    
+  80039cf4: addu a1,s0,zero                    
+  80039cf8: addiu s0,s3,60                     0x800b003c
+  80039cfc: lw a0,92(s2)                       
+  80039d00: jal 0x80022da0                     
+  80039d04: addu a2,s0,zero                    
+  80039d08: addiu s1,s3,80                     0x800b0050
+  80039d0c: jal 0x80053fc0                     
+  80039d10: addu a0,s1,zero                    
+  80039d14: lui a0,0x8007                      
+  80039d18: addiu a0,a0,27956                  0x80076d34
+  80039d1c: jal 0x80068068                     
+  80039d20: nop                                
+  80039d24: lui a0,0x8007                      
+  80039d28: addiu a0,a0,27924                  0x80076d14
+  80039d2c: addu a1,s0,zero                    
+  80039d30: jal 0x80066ee0                     
+  80039d34: addiu a2,sp,16                     
+  80039d38: jal 0x80067f28                     
+  80039d3c: addiu a0,sp,16                     
+  80039d40: lui a0,0x800b                      
+  80039d44: addiu a0,a0,21128                  0x800b5288
+  80039d48: addu a1,s0,zero                    
+  80039d4c: jal 0x80022da0                     
+  80039d50: addiu a2,sp,16                     
+  80039d54: jal 0x80066960                     
+  80039d58: addiu a0,sp,16                     
+  80039d5c: jal 0x80068328                     
+  80039d60: addiu a0,sp,16                     
+  80039d64: lw a1,0(s6)                        
+  80039d68: jal 0x80014368                     
+  80039d6c: addu a0,s1,zero                    
+  80039d70: beq v0,zero,0x80039e3c             
+  80039d74: nop                                
+  80039d78: lw v0,0(s3)                        0x800b0000
+  80039d7c: nop                                
+  80039d80: andi v0,v0,0x10                    
+  80039d84: beq v0,zero,0x80039de8             
+  80039d88: addu a2,s4,zero                    
+  80039d8c: addu a3,zero,zero                  
+  80039d90: lbu v0,676(s6)                     
+  80039d94: lw a0,-8(s2)                       
+  80039d98: sll a1,v0,2                        
+  80039d9c: addu a1,a1,v0                      
+  80039da0: lw v0,-4(s2)                       
+  80039da4: sll a1,a1,3                        
+  80039da8: jal 0x80022f0c                     
+  80039dac: addu a1,a1,v0                      
+  80039db0: addu a2,s4,zero                    
+  80039db4: addu a3,zero,zero                  
+  80039db8: lbu v0,676(s6)                     
+  80039dbc: lw a0,0(s2)                        
+  80039dc0: sll a1,v0,1                        
+  80039dc4: addu a1,a1,v0                      
+  80039dc8: sll a1,a1,2                        
+  80039dcc: addu a1,a1,v0                      
+  80039dd0: lw v0,4(s2)                        
+  80039dd4: sll a1,a1,2                        
+  80039dd8: jal 0x80023098                     
+  80039ddc: addu a1,a1,v0                      
+  80039de0: j 0x80039e40                       
+  80039de4: addiu s5,s5,-1                     0x800affff
+  80039de8: addu a3,zero,zero                  
+  80039dec: lbu v0,676(s6)                     
+  80039df0: lw a0,-8(s2)                       
+  80039df4: sll a1,v0,2                        
+  80039df8: addu a1,a1,v0                      
+  80039dfc: lw v0,-4(s2)                       
+  80039e00: sll a1,a1,3                        
+  80039e04: jal 0x800254a0                     

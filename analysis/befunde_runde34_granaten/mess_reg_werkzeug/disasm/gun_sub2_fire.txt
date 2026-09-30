@@ -1,0 +1,61 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x80033540 (60 instr)
+  80033540: lui v0,0x800b                      
+  80033544: lw v0,-14460(v0)                   g_entity(cur)
+  80033548: lui a0,0x800b                      
+  8003354c: lbu a0,-13731(a0)                  0x800aca5d
+  80033550: lw a1,124(v0)                      0x800b007c
+  80033554: jal 0x80011f50                     
+  80033558: nop                                
+  8003355c: lui a0,0x800b                      
+  80033560: lw a0,-14488(a0)                   0x800ac768
+  80033564: nop                                
+  80033568: andi v0,a0,0x8                     
+  8003356c: beq v0,zero,0x800335b8             
+  80033570: andi v0,a0,0x2                     
+  80033574: lui v1,0x800b                      
+  80033578: lbu v1,-13731(v1)                  0x800aca5d
+  8003357c: nop                                
+  80033580: addiu v1,v1,-1                     0x800affff
+  80033584: sll v0,v1,2                        
+  80033588: addu v0,v0,v1                      
+  8003358c: lui at,0x8007                      
+  80033590: addiu at,at,16529                  0x80074091
+  80033594: addu at,at,v0                      
+  80033598: lbu v0,0(at)                       0x80070000
+  8003359c: lui v1,0x800b                      
+  800335a0: lhu v1,-13634(v1)                  0x800acabe
+  800335a4: srl v0,v0,1                        
+  800335a8: subu v1,v1,v0                      
+  800335ac: lui at,0x800b                      
+  800335b0: sh v1,-13634(at)                   0x800acabe
+  800335b4: andi v0,a0,0x2                     
+  800335b8: beq v0,zero,0x80033604             
+  800335bc: andi v0,a0,0x100                   
+  800335c0: lui v1,0x800b                      
+  800335c4: lbu v1,-13731(v1)                  0x800aca5d
+  800335c8: nop                                
+  800335cc: addiu v1,v1,-1                     0x800affff
+  800335d0: sll v0,v1,2                        
+  800335d4: addu v0,v0,v1                      
+  800335d8: lui at,0x8007                      
+  800335dc: addiu at,at,16529                  0x80074091
+  800335e0: addu at,at,v0                      
+  800335e4: lbu v0,0(at)                       0x80070000
+  800335e8: lui v1,0x800b                      
+  800335ec: lhu v1,-13634(v1)                  0x800acabe
+  800335f0: srl v0,v0,1                        
+  800335f4: addu v0,v0,v1                      
+  800335f8: lui at,0x800b                      
+  800335fc: sh v0,-13634(at)                   0x800acabe
+  80033600: andi v0,a0,0x100                   
+  80033604: bne v0,zero,0x80033658             
+  80033608: addu a2,zero,zero                  
+  8003360c: lui v0,0x800b                      
+  80033610: lbu v0,-13731(v0)                  0x800aca5d
+  80033614: lui a0,0x800b                      
+  80033618: lbu a0,-13591(a0)                  0x800acae9
+  8003361c: addiu v0,v0,-1                     0x800affff
+  80033620: sll v1,v0,2                        
+  80033624: addu v1,v1,v0                      
+  80033628: lui at,0x8007                      
+  8003362c: addiu at,at,16530                  0x80074092

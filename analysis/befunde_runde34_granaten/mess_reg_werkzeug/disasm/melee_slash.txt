@@ -1,0 +1,121 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x80035560 (120 instr)
+  80035560: nop                                
+  80035564: beq v1,zero,0x80035588             
+  80035568: ori v0,zero,0x1                    
+  8003556c: j 0x80035780                       
+  80035570: addu a0,zero,zero                  
+  80035574: ori v0,zero,0x2                    
+  80035578: beq v1,v0,0x80035774               
+  8003557c: ori v0,zero,0x1                    
+  80035580: j 0x80035780                       
+  80035584: addu a0,zero,zero                  
+  80035588: sb v0,0(s0)                        
+  8003558c: ori v0,zero,0xd                    
+  80035590: lui at,0x800b                      
+  80035594: sb v0,-13592(at)                   0x800acae8
+  80035598: lui v0,0x800b                      
+  8003559c: lhu v0,-13588(v0)                  0x800acaec
+  800355a0: ori v1,zero,0x7                    
+  800355a4: lui at,0x800b                      
+  800355a8: sb zero,-13591(at)                 0x800acae9
+  800355ac: lui at,0x800b                      
+  800355b0: sb v1,-13597(at)                   0x800acae3
+  800355b4: lui at,0x800b                      
+  800355b8: sh zero,-13600(at)                 0x800acae0
+  800355bc: andi v0,v0,0x1fff                  
+  800355c0: ori v0,v0,0x4000                   
+  800355c4: lui at,0x800b                      
+  800355c8: sh v0,-13588(at)                   0x800acaec
+  800355cc: jal 0x8003703c                     
+  800355d0: ori a0,zero,0x7d0                  
+  800355d4: lui a0,0x108                       
+  800355d8: ori a0,a0,0x1                      
+  800355dc: lui v1,0x800b                      
+  800355e0: lw v1,-13764(v1)                   0x800aca3c
+  800355e4: lui at,0x800b                      
+  800355e8: sb v0,-13581(at)                   0x800acaf3
+  800355ec: ori v1,v1,0xc0                     
+  800355f0: lui at,0x800b                      
+  800355f4: sw v1,-13764(at)                   0x800aca3c
+  800355f8: jal 0x80045024                     
+  800355fc: addiu a1,s0,45                     
+  80035600: lui v0,0x800b                      
+  80035604: lbu v0,-13581(v0)                  0x800acaf3
+  80035608: nop                                
+  8003560c: andi v0,v0,0x1                     
+  80035610: beq v0,zero,0x80035628             
+  80035614: ori a1,zero,0xc0                   
+  80035618: lui a0,0x800b                      
+  8003561c: lw a0,-13316(a0)                   0x800acbfc
+  80035620: jal 0x8001a8f8                     
+  80035624: addiu a0,a0,52                     0x800b0034
+  80035628: lui a0,0x800b                      
+  8003562c: lw a0,-14488(a0)                   0x800ac768
+  80035630: nop                                
+  80035634: andi v0,a0,0x8                     
+  80035638: beq v0,zero,0x80035684             
+  8003563c: andi v0,a0,0x2                     
+  80035640: lui v1,0x800b                      
+  80035644: lbu v1,-13731(v1)                  0x800aca5d
+  80035648: nop                                
+  8003564c: addiu v1,v1,-1                     0x800affff
+  80035650: sll v0,v1,2                        
+  80035654: addu v0,v0,v1                      
+  80035658: lui at,0x8007                      
+  8003565c: addiu at,at,16528                  0x80074090
+  80035660: addu at,at,v0                      
+  80035664: lbu v1,0(at)                       0x80070000
+  80035668: lui v0,0x800b                      
+  8003566c: lhu v0,-13634(v0)                  0x800acabe
+  80035670: nop                                
+  80035674: subu v0,v0,v1                      
+  80035678: lui at,0x800b                      
+  8003567c: sh v0,-13634(at)                   0x800acabe
+  80035680: andi v0,a0,0x2                     
+  80035684: beq v0,zero,0x800356cc             
+  80035688: addu a2,zero,zero                  
+  8003568c: lui v1,0x800b                      
+  80035690: lbu v1,-13731(v1)                  0x800aca5d
+  80035694: nop                                
+  80035698: addiu v1,v1,-1                     0x800affff
+  8003569c: sll v0,v1,2                        
+  800356a0: addu v0,v0,v1                      
+  800356a4: lui at,0x8007                      
+  800356a8: addiu at,at,16528                  0x80074090
+  800356ac: addu at,at,v0                      
+  800356b0: lbu v0,0(at)                       0x80070000
+  800356b4: lui v1,0x800b                      
+  800356b8: lhu v1,-13634(v1)                  0x800acabe
+  800356bc: nop                                
+  800356c0: addu v0,v0,v1                      
+  800356c4: lui at,0x800b                      
+  800356c8: sh v0,-13634(at)                   0x800acabe
+  800356cc: lui a0,0x800b                      
+  800356d0: lw a0,-13372(a0)                   0x800acbc4
+  800356d4: lui a1,0x800b                      
+  800356d8: lw a1,-13368(a1)                   0x800acbc8
+  800356dc: jal 0x8001f314                     anim_set
+  800356e0: ori a3,zero,0x200                  
+  800356e4: lui v1,0x800b                      
+  800356e8: lbu v1,-13733(v1)                  0x800aca5b
+  800356ec: lui a0,0x800b                      
+  800356f0: lw a0,-13380(a0)                   0x800acbbc
+  800356f4: addu v1,v1,v0                      
+  800356f8: lui at,0x800b                      
+  800356fc: sb v1,-13733(at)                   0x800aca5b
+  80035700: lw v0,0(a0)                        0x800b0000
+  80035704: lui v1,0x1                         
+  80035708: and v0,v0,v1                       
+  8003570c: beq v0,zero,0x80035780             
+  80035710: addu a0,zero,zero                  
+  80035714: lui v0,0x800b                      
+  80035718: lw v0,-13348(v0)                   0x800acbdc
+  8003571c: lui v1,0x800c                      
+  80035720: lw v1,-19276(v1)                   0x800bb4b4
+  80035724: lui a0,0x800c                      
+  80035728: lw a0,-16892(a0)                   0x800bbe04
+  8003572c: lui a1,0x800c                      
+  80035730: lw a1,-30328(a1)                   0x800b8988
+  80035734: lui a2,0x800c                      
+  80035738: lw a2,-17008(a2)                   0x800bbd90
+  8003573c: sw v1,1900(v0)                     0x800b076c

@@ -1,0 +1,93 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x8004a0cc (92 instr)
+  8004a0cc: addiu sp,sp,-68                    
+  8004a0d0: sw ra,56(sp)                       
+  8004a0d4: sw s0,60(sp)                       
+  8004a0d8: sw s1,64(sp)                       
+  8004a0dc: lui v1,0x800b                      
+  8004a0e0: lbu v1,9672(v1)                    0x800b25c8
+  8004a0e4: lui a0,0x800b                      
+  8004a0e8: addiu a0,a0,-14490                 0x800ac766
+  8004a0ec: lhu v0,0(a0)                       0x800b0000
+  8004a0f0: sll v1,v1,2                        
+  8004a0f4: andi v0,v0,0x10                    
+  8004a0f8: lui s1,0x800b                      
+  8004a0fc: addiu s1,s1,4268                   0x800b10ac
+  8004a100: addu at,s1,v1                      
+  8004a104: lbu a1,0(at)                       
+  8004a108: beq v0,zero,0x8004a134             
+  8004a10c: sll v0,a1,1                        
+  8004a110: addu v0,v0,a1                      
+  8004a114: sll v0,v0,2                        
+  8004a118: lui at,0x8007                      
+  8004a11c: addiu at,at,19880                  0x80074da8
+  8004a120: addu at,at,v0                      
+  8004a124: lbu v0,0(at)                       0x80070000
+  8004a128: nop                                
+  8004a12c: addu at,s1,v1                      
+  8004a130: sb v0,1(at)                        0x80070001
+  8004a134: lui a1,0x800b                      
+  8004a138: lhu a1,-14494(a1)                  0x800ac762
+  8004a13c: nop                                
+  8004a140: andi v0,a1,0x100                   
+  8004a144: beq v0,zero,0x8004a160             
+  8004a148: ori v0,zero,0x1                    
+  8004a14c: lui at,0x800b                      
+  8004a150: sh v0,9832(at)                     0x800b2668
+  8004a154: lui a0,0x409                       
+  8004a158: jal 0x80045024                     
+  8004a15c: ori a1,zero,0x0                    
+  8004a160: lui v1,0x800b                      
+  8004a164: lbu v1,9832(v1)                    0x800b2668
+  8004a168: ori v0,zero,0x1                    
+  8004a16c: beq v1,v0,0x8004a194               
+  8004a170: slti v0,v1,2                       
+  8004a174: bne v0,zero,0x8004a360             
+  8004a178: ori v0,zero,0x2                    
+  8004a17c: beq v1,v0,0x8004a1a4               
+  8004a180: ori v0,zero,0x3                    
+  8004a184: beq v1,v0,0x8004a238               
+  8004a188: addu v1,a1,zero                    
+  8004a18c: j 0x8004a360                       
+  8004a190: nop                                
+  8004a194: ori a0,zero,0xb                    
+  8004a198: lui a1,0x801a                      
+  8004a19c: jal 0x80013b60                     
+  8004a1a0: addu a2,zero,zero                  
+  8004a1a4: addu a1,zero,zero                  
+  8004a1a8: lui s0,0x800b                      
+  8004a1ac: addiu s0,s0,9661                   0x800b25bd
+  8004a1b0: lui v1,0x800b                      
+  8004a1b4: lbu v1,9833(v1)                    0x800b2669
+  8004a1b8: lbu a0,0(s0)                       0x800b0000
+  8004a1bc: sll v0,v1,2                        
+  8004a1c0: addu v0,v0,v1                      
+  8004a1c4: sll a2,v0,4                        
+  8004a1c8: subu a2,a2,v0                      
+  8004a1cc: sll a2,a2,4                        
+  8004a1d0: lui v0,0x801a                      
+  8004a1d4: jal 0x800492b8                     
+  8004a1d8: addu a2,a2,v0                      
+  8004a1dc: lbu v0,0(s0)                       0x800b0000
+  8004a1e0: lui v1,0x800b                      
+  8004a1e4: lbu v1,9833(v1)                    0x800b2669
+  8004a1e8: sll v0,v0,2                        
+  8004a1ec: addu at,s1,v0                      
+  8004a1f0: sb v1,0(at)                        0x800b0000
+  8004a1f4: lbu v0,0(s0)                       0x800b0000
+  8004a1f8: ori v1,zero,0xff                   
+  8004a1fc: sll v0,v0,2                        
+  8004a200: addu at,s1,v0                      
+  8004a204: sb v1,1(at)                        0x800b0001
+  8004a208: lbu v0,0(s0)                       0x800b0000
+  8004a20c: nop                                
+  8004a210: sll v0,v0,2                        
+  8004a214: lui at,0x800b                      
+  8004a218: addiu at,at,4270                   0x800b10ae
+  8004a21c: addu at,at,v0                      
+  8004a220: sb zero,1(at)                      0x800b0001
+  8004a224: ori v0,zero,0x3                    
+  8004a228: lui at,0x800b                      
+  8004a22c: sb v0,9832(at)                     0x800b2668
+  8004a230: j 0x8004a360                       
+  8004a234: nop                                
+  8004a238: andi v0,v1,0x8                     

@@ -1,0 +1,121 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x8001e8c8 (120 instr)
+  8001e8c8: addiu sp,sp,-48                    
+  8001e8cc: sw s0,32(sp)                       
+  8001e8d0: addu s0,a0,zero                    
+  8001e8d4: sw s2,40(sp)                       
+  8001e8d8: lui s2,0x800b                      
+  8001e8dc: addiu s2,s2,-14460                 g_entity(cur)
+  8001e8e0: sw ra,44(sp)                       
+  8001e8e4: sw s1,36(sp)                       
+  8001e8e8: lw a1,0(s2)                        0x800b0000
+  8001e8ec: lw s1,392(s0)                      
+  8001e8f0: addiu a0,a1,104                    
+  8001e8f4: jal 0x80068098                     
+  8001e8f8: addiu a1,a1,32                     
+  8001e8fc: lw v0,0(s0)                        
+  8001e900: nop                                
+  8001e904: andi v0,v0,0x800                   
+  8001e908: beq v0,zero,0x8001e948             
+  8001e90c: addiu a1,sp,16                     
+  8001e910: lui v1,0x800b                      
+  8001e914: lw v1,-14460(v1)                   g_entity(cur)
+  8001e918: nop                                
+  8001e91c: lh v0,358(v1)                      0x800b0166
+  8001e920: nop                                
+  8001e924: sw v0,16(sp)                       
+  8001e928: lh v0,358(v1)                      0x800b0166
+  8001e92c: nop                                
+  8001e930: sw v0,20(sp)                       
+  8001e934: lw a0,0(s2)                        0x800b0000
+  8001e938: lh v0,358(v1)                      0x800b0166
+  8001e93c: addiu a0,a0,32                     
+  8001e940: jal 0x80065ff0                     
+  8001e944: sw v0,24(sp)                       
+  8001e948: lw a0,0(s2)                        0x800b0000
+  8001e94c: jal 0x80053fc0                     
+  8001e950: addiu a0,a0,52                     
+  8001e954: lui a0,0x8007                      
+  8001e958: addiu a0,a0,27956                  0x80076d34
+  8001e95c: jal 0x80068068                     
+  8001e960: nop                                
+  8001e964: lbu s0,131(s0)                     
+  8001e968: lw a0,0(s2)                        0x800b0000
+  8001e96c: lui a1,0x800b                      
+  8001e970: lw a1,-14448(a1)                   0x800ac790
+  8001e974: jal 0x80014368                     
+  8001e978: addiu a0,a0,52                     0x80070034
+  8001e97c: beq v0,zero,0x8001e9c0             
+  8001e980: addu v0,s0,zero                    
+  8001e984: andi v0,v0,0xff                    
+  8001e988: beq v0,zero,0x8001e9d0             
+  8001e98c: addiu s0,s0,-1                     
+  8001e990: jal 0x8001e9ec                     
+  8001e994: addu a0,s1,zero                    
+  8001e998: addiu s1,s1,172                    
+  8001e99c: addu v0,s0,zero                    
+  8001e9a0: andi v0,v0,0xff                    
+  8001e9a4: bne v0,zero,0x8001e990             
+  8001e9a8: addiu s0,s0,-1                     
+  8001e9ac: j 0x8001e9d0                       
+  8001e9b0: nop                                
+  8001e9b4: jal 0x8001ef54                     
+  8001e9b8: addu a0,s1,zero                    
+  8001e9bc: addiu s1,s1,172                    
+  8001e9c0: addu v0,s0,zero                    
+  8001e9c4: andi v0,v0,0xff                    
+  8001e9c8: bne v0,zero,0x8001e9b4             
+  8001e9cc: addiu s0,s0,-1                     
+  8001e9d0: lw ra,44(sp)                       
+  8001e9d4: lw s2,40(sp)                       
+  8001e9d8: lw s1,36(sp)                       
+  8001e9dc: lw s0,32(sp)                       
+  8001e9e0: addiu sp,sp,48                     
+  8001e9e4: jr ra                              
+  8001e9e8: nop                                
+  8001e9ec: addiu sp,sp,-88                    
+  8001e9f0: sw s2,72(sp)                       
+  8001e9f4: addu s2,a0,zero                    
+  8001e9f8: sw s1,68(sp)                       
+  8001e9fc: sw ra,80(sp)                       
+  8001ea00: sw s3,76(sp)                       
+  8001ea04: sw s0,64(sp)                       
+  8001ea08: lw v0,0(s2)                        0x800b0000
+  8001ea0c: lw s0,108(s2)                      0x800b006c
+  8001ea10: andi v0,v0,0x40                    
+  8001ea14: bne v0,zero,0x8001ea2c             
+  8001ea18: addiu s1,s2,64                     0x800b0040
+  8001ea1c: addu a0,s0,zero                    
+  8001ea20: addiu a1,s2,24                     0x800b0018
+  8001ea24: jal 0x80022da0                     
+  8001ea28: addu a2,s1,zero                    
+  8001ea2c: lw v0,0(s2)                        0x800b0000
+  8001ea30: nop                                
+  8001ea34: andi v0,v0,0x800                   
+  8001ea38: beq v0,zero,0x8001eb0c             
+  8001ea3c: nop                                
+  8001ea40: lw v0,24(s2)                       0x800b0018
+  8001ea44: lw v1,28(s2)                       0x800b001c
+  8001ea48: lw a0,32(s2)                       0x800b0020
+  8001ea4c: lw a1,36(s2)                       0x800b0024
+  8001ea50: sw v0,16(sp)                       
+  8001ea54: sw v1,20(sp)                       
+  8001ea58: sw a0,24(sp)                       
+  8001ea5c: sw a1,28(sp)                       
+  8001ea60: lw v0,40(s2)                       0x800b0028
+  8001ea64: lw v1,44(s2)                       0x800b002c
+  8001ea68: lw a0,48(s2)                       0x800b0030
+  8001ea6c: lw a1,52(s2)                       0x800b0034
+  8001ea70: sw v0,32(sp)                       
+  8001ea74: sw v1,36(sp)                       
+  8001ea78: sw a0,40(sp)                       
+  8001ea7c: sw a1,44(sp)                       
+  8001ea80: lw v0,144(s2)                      0x800b0090
+  8001ea84: nop                                
+  8001ea88: lh v1,136(v0)                      
+  8001ea8c: lw v0,44(s2)                       0x800b002c
+  8001ea90: nop                                
+  8001ea94: mult v1,v0                         
+  8001ea98: mflo v0                            
+  8001ea9c: sra v0,v0,12                       
+  8001eaa0: sw v0,36(sp)                       
+  8001eaa4: lw v0,144(s2)                      0x800b0090

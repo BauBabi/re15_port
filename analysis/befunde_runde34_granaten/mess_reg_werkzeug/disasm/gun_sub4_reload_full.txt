@@ -1,0 +1,96 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x80033d7c (95 instr)
+  80033d7c: addiu sp,sp,-40                    
+  80033d80: lui v1,0x800b                      
+  80033d84: addiu v1,v1,-13733                 0x800aca5b
+  80033d88: sw ra,36(sp)                       
+  80033d8c: sw s0,32(sp)                       
+  80033d90: lbu v0,0(v1)                       0x800b0000
+  80033d94: nop                                
+  80033d98: bne v0,zero,0x80033ddc             
+  80033d9c: ori v0,zero,0x1                    
+  80033da0: sb v0,0(v1)                        0x800b0000
+  80033da4: ori v0,zero,0xd                    
+  80033da8: lui at,0x800b                      
+  80033dac: sb v0,-13592(at)                   0x800acae8
+  80033db0: lui v0,0x800b                      
+  80033db4: lhu v0,-13588(v0)                  0x800acaec
+  80033db8: ori v1,zero,0x7                    
+  80033dbc: lui at,0x800b                      
+  80033dc0: sb zero,-13591(at)                 0x800acae9
+  80033dc4: lui at,0x800b                      
+  80033dc8: sb v1,-13597(at)                   0x800acae3
+  80033dcc: andi v0,v0,0x1fff                  
+  80033dd0: ori v0,v0,0x4000                   
+  80033dd4: lui at,0x800b                      
+  80033dd8: sh v0,-13588(at)                   0x800acaec
+  80033ddc: lui v1,0x800b                      
+  80033de0: lw v1,-14488(v1)                   0x800ac768
+  80033de4: nop                                
+  80033de8: andi v0,v1,0x8                     
+  80033dec: beq v0,zero,0x80033e10             
+  80033df0: andi v0,v1,0x2                     
+  80033df4: lui v0,0x800b                      
+  80033df8: lhu v0,-13634(v0)                  0x800acabe
+  80033dfc: nop                                
+  80033e00: addiu v0,v0,-24                    0x800affe8
+  80033e04: lui at,0x800b                      
+  80033e08: sh v0,-13634(at)                   0x800acabe
+  80033e0c: andi v0,v1,0x2                     
+  80033e10: beq v0,zero,0x80033e30             
+  80033e14: nop                                
+  80033e18: lui v0,0x800b                      
+  80033e1c: lhu v0,-13634(v0)                  0x800acabe
+  80033e20: nop                                
+  80033e24: addiu v0,v0,24                     0x800b0018
+  80033e28: lui at,0x800b                      
+  80033e2c: sh v0,-13634(at)                   0x800acabe
+  80033e30: lui v1,0x800b                      
+  80033e34: lbu v1,-13731(v1)                  0x800aca5d
+  80033e38: ori v0,zero,0x7                    
+  80033e3c: bne v1,v0,0x80033e94               
+  80033e40: addu a2,zero,zero                  
+  80033e44: lui v1,0x800b                      
+  80033e48: lbu v1,-13591(v1)                  0x800acae9
+  80033e4c: ori v0,zero,0xa                    
+  80033e50: bne v1,v0,0x80033e94               
+  80033e54: lui a0,0x406                       
+  80033e58: ori a0,a0,0x800                    
+  80033e5c: addiu a3,sp,16                     
+  80033e60: lui a1,0x800b                      
+  80033e64: lh a1,-13634(a1)                   0x800acabe
+  80033e68: lui a2,0x800b                      
+  80033e6c: lw a2,-13348(a2)                   0x800acbdc
+  80033e70: ori v0,zero,0x91                   
+  80033e74: sw v0,16(sp)                       
+  80033e78: ori v0,zero,0x1f4                  
+  80033e7c: sw v0,20(sp)                       
+  80033e80: addiu v0,zero,-25                  
+  80033e84: sw v0,24(sp)                       
+  80033e88: jal 0x80019700                     
+  80033e8c: addiu a2,a2,1956                   0x800b07a4
+  80033e90: addu a2,zero,zero                  
+  80033e94: lui s0,0x800b                      
+  80033e98: addiu s0,s0,-13372                 0x800acbc4
+  80033e9c: lw a0,0(s0)                        0x800b0000
+  80033ea0: lui a1,0x800b                      
+  80033ea4: lw a1,-13368(a1)                   0x800acbc8
+  80033ea8: jal 0x8001f314                     anim_set
+  80033eac: ori a3,zero,0x200                  
+  80033eb0: beq v0,zero,0x80033ed8             
+  80033eb4: ori v0,zero,0x1                    
+  80033eb8: lui at,0x800b                      
+  80033ebc: sh v0,-13734(at)                   0x800aca5a
+  80033ec0: jal 0x8004ebdc                     
+  80033ec4: nop                                
+  80033ec8: lui a0,0x103                       
+  80033ecc: ori a0,a0,0x1                      
+  80033ed0: jal 0x80045024                     
+  80033ed4: addiu a1,s0,-316                   0x800afec4
+  80033ed8: lw ra,36(sp)                       
+  80033edc: lw s0,32(sp)                       
+  80033ee0: addiu sp,sp,40                     
+  80033ee4: jr ra                              
+  80033ee8: nop                                
+  80033eec: addiu sp,sp,-24                    
+  80033ef0: lui a1,0x800b                      
+  80033ef4: addiu a1,a1,-13733                 0x800aca5b

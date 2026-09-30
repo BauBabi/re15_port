@@ -1,0 +1,41 @@
+; C:\workspace\git\reAi_v2\.claude\worktrees\r34g_int\info\Re1.5\PSX.EXE  @0x80033db0 (40 instr)
+  80033db0: lui v0,0x800b                      
+  80033db4: lhu v0,-13588(v0)                  0x800acaec
+  80033db8: ori v1,zero,0x7                    
+  80033dbc: lui at,0x800b                      
+  80033dc0: sb zero,-13591(at)                 0x800acae9
+  80033dc4: lui at,0x800b                      
+  80033dc8: sb v1,-13597(at)                   0x800acae3
+  80033dcc: andi v0,v0,0x1fff                  
+  80033dd0: ori v0,v0,0x4000                   
+  80033dd4: lui at,0x800b                      
+  80033dd8: sh v0,-13588(at)                   0x800acaec
+  80033ddc: lui v1,0x800b                      
+  80033de0: lw v1,-14488(v1)                   0x800ac768
+  80033de4: nop                                
+  80033de8: andi v0,v1,0x8                     
+  80033dec: beq v0,zero,0x80033e10             
+  80033df0: andi v0,v1,0x2                     
+  80033df4: lui v0,0x800b                      
+  80033df8: lhu v0,-13634(v0)                  0x800acabe
+  80033dfc: nop                                
+  80033e00: addiu v0,v0,-24                    0x800affe8
+  80033e04: lui at,0x800b                      
+  80033e08: sh v0,-13634(at)                   0x800acabe
+  80033e0c: andi v0,v1,0x2                     
+  80033e10: beq v0,zero,0x80033e30             
+  80033e14: nop                                
+  80033e18: lui v0,0x800b                      
+  80033e1c: lhu v0,-13634(v0)                  0x800acabe
+  80033e20: nop                                
+  80033e24: addiu v0,v0,24                     0x800b0018
+  80033e28: lui at,0x800b                      
+  80033e2c: sh v0,-13634(at)                   0x800acabe
+  80033e30: lui v1,0x800b                      
+  80033e34: lbu v1,-13731(v1)                  0x800aca5d
+  80033e38: ori v0,zero,0x7                    
+  80033e3c: bne v1,v0,0x80033e94               
+  80033e40: addu a2,zero,zero                  
+  80033e44: lui v1,0x800b                      
+  80033e48: lbu v1,-13591(v1)                  0x800acae9
+  80033e4c: ori v0,zero,0xa                    
