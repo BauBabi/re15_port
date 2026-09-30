@@ -593,3 +593,40 @@ Kuppeldruck-Klick, Deckelfahrt, Cut_old-Ziel). Bestehende Riegel unveraendert gr
 4. **Klick-Stimme parallel zu sub04-Laut:** beim Kuppeldruck spielt nur der Klick; der ROOM1150-Laut 0x0A kam schon beim
    Druck am Tisch (@0x0FA2). Falls der Nutzer beides beim Kuppeldruck hoeren will, muesste der Halt VOR @0x0FA2 liegen
    (dann aber ohne Cut 4/Plattform — nicht moeglich, §2.2). Bleibt so.
+
+
+## 9 Umsetzung
+
+(BAU-Stufe, in Arbeit - Geruest, wird fortlaufend gefuellt)
+
+### 9.1 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
+
+(offen)
+
+### 9.2 Dateien
+
+(offen)
+
+### 9.3 Commits
+
+(offen)
+
+### 9.4 Suite
+
+(offen)
+
+### 9.5 Eigene Abnahme an der echten exe (Bilder)
+
+(offen)
+
+### 9.6 Mutationsproben
+
+(offen)
+
+### 9.7 Abweichungen vom Plan (mit Grund)
+
+(offen)
+
+### 9.8 Offene Punkte
+
+(offen)

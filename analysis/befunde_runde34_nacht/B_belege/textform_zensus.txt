@@ -1,0 +1,194 @@
+# 668 Untersuchungstexte (Kopf 04 02, ohne Auswahl) in allen RDTs
+
+## Schluss (alle)
+  '.'           531 (79.5 %)
+  '...'          75 (11.2 %)
+  '!'            21 (3.1 %)
+  sonst(19)      14 (2.1 %)
+  '?'            13 (1.9 %)
+  sonst(49)       4 (0.6 %)
+  sonst(0d)       4 (0.6 %)
+  sonst(55)       2 (0.3 %)
+  sonst(4f)       2 (0.3 %)
+  sonst(3f)       2 (0.3 %)
+
+## Schluss (nur EINZEILIGE, 299)
+  '.'           256 (85.6 %)
+  '...'          39 (13.0 %)
+  '!'             4 (1.3 %)
+
+## fuehrendes 0x08: alle 45 von 668, einzeilige 41 von 299
+
+## Misserfolgs-/Leer-Texte (172, davon 13 mit fuehrendem 08)
+  ROOM1000.RDT msg 0 @0x00D22 lead08=0 zeilen=1 schluss='.'  'Nothing unusual.'
+  ROOM1001.RDT msg 0 @0x00D0A lead08=0 zeilen=1 schluss='.'  'Nothing unusual.'
+  ROOM1010.RDT msg 0 @0x00A52 lead08=0 zeilen=2 schluss='.'  'Several books of testimonies / and cases.Nothing useful.'
+  ROOM1011.RDT msg 21 @0x012E3 lead08=0 zeilen=2 schluss='.'  'Several books of testimonies / and cases.Nothing useful.'
+  ROOM1020.RDT msg 1 @0x02075 lead08=0 zeilen=2 schluss='.'  'There are only reports among / other office objects.Nothing that can be of help.'
+  ROOM1021.RDT msg 10 @0x02516 lead08=0 zeilen=2 schluss='.'  'There are only reports among / other office objects.Nothing that can be of help.'
+  ROOM1030.RDT msg 5 @0x029C5 lead08=0 zeilen=2 schluss='.'  'This ?61emergency severity" chart / gives more confusion than it prevents.There\'s nothing useful on the counter.'
+  ROOM1030.RDT msg 6 @0x02A0D lead08=0 zeilen=1 schluss='.'  "There's nothing useful on the counter."
+  ROOM1030.RDT msg 17 @0x02CBB lead08=0 zeilen=2 schluss='.'  'There are some words carved here... / ?61I    C  A  N  \'  T    E  S  C  A  P  E  !  !  !"The door is locked, I can\'t open it.'
+  ROOM1031.RDT msg 5 @0x02BE9 lead08=0 zeilen=2 schluss='.'  'This ?61emergency severity" chart / gives more confusion than it prevents.There\'s nothing useful on the counter.'
+  ROOM1031.RDT msg 6 @0x02C31 lead08=0 zeilen=1 schluss='.'  "There's nothing useful on the counter."
+  ROOM1031.RDT msg 17 @0x02EDF lead08=0 zeilen=2 schluss='.'  'There are some words carved here... / ?61I    C  A  N  \'  T    E  S  C  A  P  E  !  !  !"The door is locked, I can\'t open it.'
+  ROOM1050.RDT msg 3 @0x00EF7 lead08=0 zeilen=1 schluss='.'  'Just scattered papers and books.Nothing relevant.'
+  ROOM1051.RDT msg 3 @0x00E8D lead08=0 zeilen=1 schluss='.'  'Just scattered papers and books.Nothing relevant.'
+  ROOM1070.RDT msg 2 @0x01807 lead08=0 zeilen=2 schluss='.'  'A cabinet full of binders containing / police reports.Nothing useful.'
+  ROOM1070.RDT msg 3 @0x01852 lead08=0 zeilen=1 schluss='.'  'These boxes contain nothing of use.'
+  ROOM1070.RDT msg 4 @0x01879 lead08=0 zeilen=1 schluss='.'  'The lockers all appear to be locked.'
+  ROOM1070.RDT msg 8 @0x0199E lead08=0 zeilen=1 schluss='.'  'A messy desk. Nothing useful here.'
+  ROOM1070.RDT msg 15 @0x01B78 lead08=0 zeilen=2 schluss='.'  'These desks all appear quite messy / and seem to contain nothing of use.'
+  ROOM1071.RDT msg 2 @0x01807 lead08=0 zeilen=2 schluss='.'  'A cabinet full of binders containing / police reports.Nothing useful.'
+  ROOM1071.RDT msg 3 @0x01852 lead08=0 zeilen=1 schluss='.'  'These boxes contain nothing of use.'
+  ROOM1071.RDT msg 4 @0x01879 lead08=0 zeilen=1 schluss='.'  'The lockers all appear to be locked.'
+  ROOM1071.RDT msg 8 @0x0199E lead08=0 zeilen=1 schluss='.'  'A messy desk. Nothing useful here.'
+  ROOM1071.RDT msg 15 @0x01B78 lead08=0 zeilen=2 schluss='.'  'These desks all appear quite messy / and seem to contain nothing of use.'
+  ROOM10C0.RDT msg 2 @0x010E3 lead08=0 zeilen=2 schluss='.'  'Wanted posters and reports, / nothing relevant.'
+  ROOM10C0.RDT msg 4 @0x01138 lead08=0 zeilen=1 schluss='.'  'Nothing useful.'
+  ROOM10C0.RDT msg 6 @0x01176 lead08=0 zeilen=2 schluss='.'  'Papers of various cases and / forms, nothing important.'
+  ROOM10C1.RDT msg 2 @0x010E3 lead08=0 zeilen=2 schluss='.'  'Wanted posters and reports, / nothing relevant.'
+  ROOM10C1.RDT msg 4 @0x01138 lead08=0 zeilen=1 schluss='.'  'Nothing useful.'
+  ROOM10C1.RDT msg 6 @0x01176 lead08=0 zeilen=2 schluss='.'  'Papers of various cases and / forms, nothing important.'
+  ROOM10D0.RDT msg 6 @0x01F3B lead08=0 zeilen=3 schluss='.'  '?61Communication Room"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM10D1.RDT msg 6 @0x01B77 lead08=0 zeilen=3 schluss='.'  '?61Communication Room"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM10F0.RDT msg 0 @0x01174 lead08=0 zeilen=2 schluss='.'  "A large communications device.It's out of commission.I can't send any messages from / here."
+  ROOM10F0.RDT msg 1 @0x011D5 lead08=0 zeilen=2 schluss='.'  'Nothing suspicious nor / out of the ordinary.'
+  ROOM10F0.RDT msg 4 @0x0127E lead08=0 zeilen=2 schluss='.'  'Several files from past / cases.Nothing useful here.'
+  ROOM10F0.RDT msg 5 @0x012B6 lead08=0 zeilen=1 schluss='.'  "It's a small office.It's locked."
+  ROOM10F1.RDT msg 0 @0x01174 lead08=0 zeilen=2 schluss='.'  "A large communications device.It's out of commission.I can't send any messages from / here."
+  ROOM10F1.RDT msg 1 @0x011D5 lead08=0 zeilen=2 schluss='.'  'Nothing suspicious nor / out of the ordinary.'
+  ROOM10F1.RDT msg 4 @0x0127E lead08=0 zeilen=2 schluss='.'  'Several files from past / cases.Nothing useful here.'
+  ROOM10F1.RDT msg 5 @0x012B6 lead08=0 zeilen=1 schluss='.'  "It's a small office.It's locked."
+  ROOM1100.RDT msg 0 @0x00DA8 lead08=0 zeilen=1 schluss='.'  "It's electronically locked."
+  ROOM1101.RDT msg 0 @0x00DA8 lead08=0 zeilen=1 schluss='.'  "It's electronically locked."
+  ROOM1120.RDT msg 4 @0x00E9B lead08=0 zeilen=2 schluss='.'  'Various reports and case / information.Nothing useful.'
+  ROOM1121.RDT msg 4 @0x00E9B lead08=0 zeilen=2 schluss='.'  'Various reports and case / information.Nothing useful.'
+  ROOM1140.RDT msg 5 @0x00E60 lead08=0 zeilen=1 schluss='...'  'The switch is not responding...'
+  ROOM1170.RDT msg 12 @0x01B87 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM1171.RDT msg 4 @0x01868 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM1180.RDT msg 0 @0x00B66 lead08=0 zeilen=3 schluss='.'  '?61Weapon Storage"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM1181.RDT msg 0 @0x00B66 lead08=0 zeilen=3 schluss='.'  '?61Weapon Storage"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM1190.RDT msg 2 @0x02E5E lead08=0 zeilen=2 schluss='.'  'I have nothing else to do / here.'
+  ROOM1191.RDT msg 2 @0x02E5E lead08=0 zeilen=2 schluss='.'  'I have nothing else to do / here.'
+  ROOM11A0.RDT msg 1 @0x0141C lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM11A0.RDT msg 2 @0x0142C lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM11A1.RDT msg 1 @0x01430 lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM11A1.RDT msg 2 @0x01440 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM11B0.RDT msg 13 @0x01BFE lead08=0 zeilen=2 schluss='.'  "It doesn't seem like you could move / this on your own."
+  ROOM11B1.RDT msg 9 @0x0172A lead08=0 zeilen=2 schluss='.'  "It doesn't seem like you could move / this on your own."
+  ROOM11B1.RDT msg 12 @0x0179F lead08=0 zeilen=1 schluss='.'  'The door is locked.'
+  ROOM11D0.RDT msg 1 @0x01946 lead08=0 zeilen=2 schluss='.'  'The road is blocked and the knob / is broken.'
+  ROOM11D0.RDT msg 2 @0x01975 lead08=0 zeilen=1 schluss='.'  'Boxes and dog food.Nothing useful.'
+  ROOM11D1.RDT msg 1 @0x01946 lead08=0 zeilen=2 schluss='.'  'The road is blocked and the knob / is broken.'
+  ROOM11D1.RDT msg 2 @0x01975 lead08=0 zeilen=1 schluss='.'  'Boxes and dog food.Nothing useful.'
+  ROOM11E0.RDT msg 6 @0x021D9 lead08=0 zeilen=3 schluss='.'  '?61Prisons"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM11E1.RDT msg 6 @0x021D9 lead08=0 zeilen=3 schluss='.'  '?61Prisons"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM1211.RDT msg 10 @0x0259D lead08=0 zeilen=2 schluss='...'  "It's locked.It seems that there is someone / inside..."
+  ROOM1230.RDT msg 6 @0x015BF lead08=0 zeilen=3 schluss='.'  '?61Weapon Storage"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM1231.RDT msg 6 @0x015BF lead08=0 zeilen=3 schluss='.'  '?61Weapon Storage"It\'s electronically / locked.There\'s a card reader / on the right.'
+  ROOM2020.RDT msg 3 @0x00B9F lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM2021.RDT msg 3 @0x00B9F lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM2030.RDT msg 0 @0x02014 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM2030.RDT msg 1 @0x02038 lead08=0 zeilen=2 schluss='.'  'The elevator is not responding...Maybe it should be activated / from somewhere.'
+  ROOM2031.RDT msg 0 @0x02014 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM2031.RDT msg 1 @0x02038 lead08=0 zeilen=2 schluss='.'  'The elevator is not responding...Maybe it should be activated / from somewhere.'
+  ROOM2040.RDT msg 0 @0x0175C lead08=0 zeilen=7 schluss='.'  "Notice of damage door:While doing maintenance and / construction work on the Raccoonsewage system we found a problem / with a door, it seems that itrusted due to water leaks, we tried / everything and nothing works!Unless we use explosives or something / heavy it doesn't seem I'm going togive in, I'll have to ask the manager / for options for this problem.Bill Johnson, / Knights Construction Company."
+  ROOM2041.RDT msg 0 @0x0175C lead08=0 zeilen=7 schluss='.'  "Notice of damage door:While doing maintenance and / construction work on the Raccoonsewage system we found a problem / with a door, it seems that itrusted due to water leaks, we tried / everything and nothing works!Unless we use explosives or something / heavy it doesn't seem I'm going togive in, I'll have to ask the manager / for options for this problem.Bill Johnson, / Knights Construction Company."
+  ROOM2050.RDT msg 2 @0x024A5 lead08=0 zeilen=2 schluss='.'  'I have nothing else to do / here.'
+  ROOM2051.RDT msg 2 @0x024A5 lead08=0 zeilen=2 schluss='.'  'I have nothing else to do / here.'
+  ROOM2080.RDT msg 1 @0x00D4C lead08=0 zeilen=1 schluss='.'  "The water level is very high...I can't get down to the floor below."
+  ROOM2081.RDT msg 1 @0x00D4C lead08=0 zeilen=1 schluss='.'  "The water level is very high...I can't get down to the floor below."
+  ROOM20A0.RDT msg 1 @0x0203C lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM20A1.RDT msg 1 @0x0203C lead08=0 zeilen=1 schluss='.'  "It's locked."
+  ROOM3010.RDT msg 0 @0x0231C lead08=0 zeilen=1 schluss='.'  "It's locked.An ID card is required to open it."
+  ROOM3011.RDT msg 0 @0x02350 lead08=0 zeilen=1 schluss='.'  "It's locked.An ID card is required to open it."
+  ROOM3020.RDT msg 3 @0x00EBD lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM3020.RDT msg 4 @0x00EE1 lead08=0 zeilen=1 schluss='.'  "The car is locked, I can't get inside."
+  ROOM3020.RDT msg 5 @0x00F0B lead08=0 zeilen=1 schluss='.'  "The panel is smashed and doesn't work."
+  ROOM3020.RDT msg 6 @0x00F35 lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM3021.RDT msg 0 @0x00C06 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM3021.RDT msg 1 @0x00C2A lead08=0 zeilen=1 schluss='.'  "The car is locked, I can't get inside."
+  ROOM3021.RDT msg 3 @0x00CC9 lead08=0 zeilen=1 schluss='.'  "The panel is smashed and doesn't work."
+  ROOM3021.RDT msg 4 @0x00CF3 lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM3040.RDT msg 3 @0x01657 lead08=0 zeilen=3 schluss='.'  'The control panel is not / responding...Maybe it should be activated / from somewhere.'
+  ROOM3041.RDT msg 3 @0x01657 lead08=0 zeilen=3 schluss='.'  'The control panel is not / responding...Maybe it should be activated / from somewhere.'
+  ROOM3050.RDT msg 1 @0x0266D lead08=0 zeilen=3 schluss='.'  'The control panel is not / responding...Maybe it should be activated / from somewhere.'
+  ROOM3050.RDT msg 2 @0x026C5 lead08=0 zeilen=2 schluss='.'  'The elevator is not responding...Maybe it should be activated / from somewhere.'
+  ROOM3051.RDT msg 1 @0x0266D lead08=0 zeilen=3 schluss='.'  'The control panel is not / responding...Maybe it should be activated / from somewhere.'
+  ROOM3051.RDT msg 2 @0x026C5 lead08=0 zeilen=2 schluss='.'  'The elevator is not responding...Maybe it should be activated / from somewhere.'
+  ROOM3060.RDT msg 0 @0x01106 lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM3060.RDT msg 9 @0x012A7 lead08=0 zeilen=2 schluss='...'  "For some reason the door isn't / locked anymore..."
+  ROOM3060.RDT msg 10 @0x012DB lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM3061.RDT msg 0 @0x013E6 lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM3061.RDT msg 10 @0x015B3 lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM3090.RDT msg 3 @0x01579 lead08=0 zeilen=1 schluss='.'  "The door is latched shut and won't open."
+  ROOM3091.RDT msg 3 @0x01F36 lead08=1 zeilen=1 schluss='...'  " / I can't reach the breaker switch..."
+  ROOM3091.RDT msg 6 @0x01FC6 lead08=0 zeilen=1 schluss='...'  "The door is latched shut and won't open.I'd need a key to open this..."
+  ROOM3091.RDT msg 7 @0x02012 lead08=0 zeilen=1 schluss='.'  "The door is latched shut and won't open."
+  ROOM30A0.RDT msg 5 @0x0099C lead08=0 zeilen=1 schluss='.'  'There is nothing useful.'
+  ROOM30A0.RDT msg 8 @0x009EE lead08=0 zeilen=2 schluss='.'  'There is nothing more than / papers thrown everywhere.I do not see that it is useful.'
+  ROOM30A1.RDT msg 5 @0x0099C lead08=0 zeilen=1 schluss='.'  'There is nothing useful.'
+  ROOM30A1.RDT msg 8 @0x009EE lead08=0 zeilen=2 schluss='.'  'There is nothing more than / papers thrown everywhere.I do not see that it is useful.'
+  ROOM30C0.RDT msg 1 @0x00BFF lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM30C1.RDT msg 10 @0x010BE lead08=1 zeilen=1 schluss='.'  " / It's locked."
+  ROOM30D0.RDT msg 0 @0x013C0 lead08=0 zeilen=1 schluss='.'  "The car is locked, I can't get inside."
+  ROOM30D0.RDT msg 1 @0x013EA lead08=0 zeilen=1 schluss='.'  "The panel is smashed and doesn't work."
+  ROOM30D1.RDT msg 0 @0x013C0 lead08=0 zeilen=1 schluss='.'  "The car is locked, I can't get inside."
+  ROOM30D1.RDT msg 1 @0x013EA lead08=0 zeilen=1 schluss='.'  "The panel is smashed and doesn't work."
+  ROOM4000.RDT msg 0 @0x01BA0 lead08=0 zeilen=3 schluss=sonst(19)  'The door is locked. The text on the / panel reads:?61Door is under emergency lockdown. / An ID card is required to unlock it."'
+  ROOM4001.RDT msg 0 @0x01CA2 lead08=0 zeilen=3 schluss=sonst(19)  'The door is locked. The text on the / panel reads:?61Door is under emergency lockdown. / An ID card is required to unlock it."'
+  ROOM4001.RDT msg 14 @0x01F8A lead08=0 zeilen=1 schluss='.'  '?61Security Room"It\'s locked.'
+  ROOM4010.RDT msg 40 @0x018AB lead08=1 zeilen=1 schluss='.'  " / There's nothing useful in this locker."
+  ROOM4011.RDT msg 4 @0x0077C lead08=1 zeilen=1 schluss='.'  " / There's nothing useful in this locker."
+  ROOM4020.RDT msg 1 @0x00BAA lead08=1 zeilen=1 schluss='...'  " / The button doesn't respond..."
+  ROOM4021.RDT msg 1 @0x00BAA lead08=1 zeilen=1 schluss='...'  " / The button doesn't respond..."
+  ROOM4050.RDT msg 0 @0x02048 lead08=0 zeilen=2 schluss='.'  "There's nothing useful in this / locker."
+  ROOM4051.RDT msg 0 @0x02048 lead08=0 zeilen=2 schluss='.'  "There's nothing useful in this / locker."
+  ROOM4070.RDT msg 0 @0x0135E lead08=0 zeilen=1 schluss='!'  "The door won't open!"
+  ROOM4071.RDT msg 0 @0x0135E lead08=0 zeilen=1 schluss='!'  "The door won't open!"
+  ROOM4080.RDT msg 0 @0x00F02 lead08=0 zeilen=1 schluss='.'  '?61Cell Cultivation Room"It\'s electronically locked.'
+  ROOM4081.RDT msg 0 @0x00F02 lead08=0 zeilen=1 schluss='.'  '?61Cell Cultivation Room"It\'s electronically locked.'
+  ROOM40A0.RDT msg 3 @0x011CA lead08=0 zeilen=2 schluss='.'  "It's securely locked. An ID card is / required to open it."
+  ROOM40A1.RDT msg 3 @0x011CA lead08=0 zeilen=2 schluss='.'  "It's securely locked. An ID card is / required to open it."
+  ROOM40B0.RDT msg 0 @0x007D4 lead08=0 zeilen=2 schluss='...'  "It looks like a large vat used to / store research specimens butthere's nothing inside..."
+  ROOM40B1.RDT msg 0 @0x007D4 lead08=0 zeilen=2 schluss='...'  "It looks like a large vat used to / store research specimens butthere's nothing inside..."
+  ROOM5010.RDT msg 0 @0x0051A lead08=0 zeilen=3 schluss='.'  "There's a bunch of footprints going / in circles.There doesn't seem to be anything / useful here."
+  ROOM5010.RDT msg 1 @0x0057D lead08=1 zeilen=1 schluss='.'  " / This desk is very dusty.There's nothing useful on it."
+  ROOM5011.RDT msg 38 @0x015A6 lead08=0 zeilen=3 schluss='.'  "There's a bunch of footprints going / in circles.There doesn't seem to be anything / useful here."
+  ROOM5011.RDT msg 39 @0x01609 lead08=1 zeilen=1 schluss='.'  " / This desk is very dusty.There's nothing useful on it."
+  ROOM5060.RDT msg 0 @0x032A2 lead08=0 zeilen=1 schluss='.'  "A locker used to hold containment suits.It's broken, and can't be opened."
+  ROOM5060.RDT msg 1 @0x032F1 lead08=0 zeilen=1 schluss='.'  "There's nothing inside.It looks like it was emptied in a hurry."
+  ROOM5060.RDT msg 4 @0x033AA lead08=0 zeilen=1 schluss='.'  'The security bolt has been removed.I hope nothing dangerous was inside.'
+  ROOM5060.RDT msg 5 @0x033F7 lead08=0 zeilen=3 schluss='.'  "Something must've happened inside / this building. These footprints look / like those of an injured person."
+  ROOM5060.RDT msg 7 @0x0347D lead08=0 zeilen=3 schluss='.'  "It's a draft chamber, for use if a gas / outbreak occurs.It's very clean. I can't tell if it's ever / been used."
+  ROOM5060.RDT msg 14 @0x03604 lead08=0 zeilen=2 schluss='.'  'There is nothing left for me to do / here.'
+  ROOM5061.RDT msg 0 @0x032A2 lead08=0 zeilen=1 schluss='.'  "A locker used to hold containment suits.It's broken, and can't be opened."
+  ROOM5061.RDT msg 1 @0x032F1 lead08=0 zeilen=1 schluss='.'  "There's nothing inside.It looks like it was emptied in a hurry."
+  ROOM5061.RDT msg 4 @0x033AA lead08=0 zeilen=1 schluss='.'  'The security bolt has been removed.I hope nothing dangerous was inside.'
+  ROOM5061.RDT msg 5 @0x033F7 lead08=0 zeilen=3 schluss='.'  "Something must've happened inside / this building. These footprints look / like those of an injured person."
+  ROOM5061.RDT msg 7 @0x0347D lead08=0 zeilen=3 schluss='.'  "It's a draft chamber, for use if a gas / outbreak occurs.It's very clean. I can't tell if it's ever / been used."
+  ROOM5061.RDT msg 14 @0x03604 lead08=0 zeilen=2 schluss='.'  'There is nothing left for me to do / here.'
+  ROOM5070.RDT msg 1 @0x00DB8 lead08=0 zeilen=2 schluss='...'  '?61Shelter 01"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5070.RDT msg 2 @0x00E27 lead08=0 zeilen=2 schluss='...'  '?61Shelter 02"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5071.RDT msg 1 @0x00DB8 lead08=0 zeilen=2 schluss='...'  '?61Shelter 01"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5071.RDT msg 2 @0x00E27 lead08=0 zeilen=2 schluss='...'  '?61Shelter 02"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5080.RDT msg 2 @0x00996 lead08=0 zeilen=2 schluss='!'  "The door won't open until / the power is restored!"
+  ROOM5081.RDT msg 2 @0x0098E lead08=0 zeilen=2 schluss='!'  "The door won't open until / the power is restored!"
+  ROOM5090.RDT msg 1 @0x01383 lead08=0 zeilen=3 schluss='!'  "I can't put my friends / in danger.I have no choice but to / stop that creature here!"
+  ROOM5091.RDT msg 1 @0x01367 lead08=0 zeilen=3 schluss='!'  "I can't put my friends / in danger.I have no choice but to / stop that creature here!"
+  ROOM50A0.RDT msg 0 @0x019D4 lead08=0 zeilen=1 schluss='.'  "It's the shutter control panel.I can't use it without an ID Card."
+  ROOM50A0.RDT msg 2 @0x01A53 lead08=0 zeilen=2 schluss='.'  "There's a maintenance panel here, but / it doesn't look like it has seen any use."
+  ROOM50A1.RDT msg 0 @0x019D4 lead08=0 zeilen=1 schluss='.'  "It's the shutter control panel.I can't use it without an ID Card."
+  ROOM50A1.RDT msg 2 @0x01A53 lead08=0 zeilen=2 schluss='.'  "There's a maintenance panel here, but / it doesn't look like it has seen any use."
+  ROOM50B0.RDT msg 17 @0x00F88 lead08=0 zeilen=1 schluss='!'  "I can't leave Ada alone!"
+  ROOM5120.RDT msg 1 @0x0172B lead08=0 zeilen=2 schluss='!'  'The door is locked because of / the fire!'
+  ROOM5121.RDT msg 1 @0x0172B lead08=0 zeilen=2 schluss='!'  'The door is locked because of / the fire!'
+  ROOM5130.RDT msg 1 @0x00C0C lead08=0 zeilen=2 schluss='...'  '?61Shelter 01"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5130.RDT msg 2 @0x00C7B lead08=0 zeilen=2 schluss='...'  '?61Shelter 02"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5131.RDT msg 1 @0x00C0C lead08=0 zeilen=2 schluss='...'  '?61Shelter 01"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM5131.RDT msg 2 @0x00C7B lead08=0 zeilen=2 schluss='...'  '?61Shelter 02"The door is tightly locked.It doesn\'t look like it will open / unless there\'s an emergency...'
+  ROOM6000.RDT msg 6 @0x0138B lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM6001.RDT msg 1 @0x00FEB lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
+  ROOM6030.RDT msg 20 @0x01792 lead08=0 zeilen=2 schluss='.'  "You can't get off the / train right now."
+  ROOM6031.RDT msg 11 @0x0139E lead08=0 zeilen=2 schluss='.'  "You can't get off the / train right now."
