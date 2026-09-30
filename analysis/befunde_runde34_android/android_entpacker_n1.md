@@ -9,6 +9,8 @@ Dieses Dossier wird laufend fortgeschrieben (Sitzungslimit-Regel).
 ## 0. Laufprotokoll
 
 - [start] Dossier angelegt.
+- [sitzung 2] Fortsetzung ab 1.3 (1.1/1.2 aus Sitzung 1 uebernommen, nicht neu gemessen). Entwurf
+  `jni/asset_abgleich.h` wird geprueft und fertiggestellt.
 
 ## 1. Messen / Belegen
 
@@ -65,7 +67,36 @@ Port (Stand HEAD = v0.8.19, `android_glue.c` seit 4ccb96e6 unveraendert):
 - Folge: aendert ein Update eine Datei bei gleicher Groesse (P07G.DO2 in Runde 33 dreimal bei 55908 B), bleibt
   die Liste bytegleich, der Marker passt, und die ALTE Datei bleibt auf dem Geraet.
 
-(folgt: 1.3 Nachstellen im Emulator)
+### 1.3 Nachstellen im Emulator (Stand VOR dem Umbau)
+
+Emulator: `emulator -avd Medium_Phone_API_36 -no-window -no-audio -gpu swiftshader_indirect -no-snapshot`
+(Log `build/r34a/n1/logs/emulator_s2.log`), Android 16 (API 36), x86_64, Image `google_apis_playstore`
+(`ro.build.type=user`, `ro.debuggable=0` -> kein `adb root`; `run-as` nur mit debuggable APK). `/data` 5,8 G,
+1,5 G frei. Gemessen nebenbei:
+- die Shell darf `/sdcard/Android/data/<paket>` lesen (`ls`, `sha256sum`, `adb pull` gehen ohne run-as);
+- der externe App-Speicher ist **case-insensitiv**: `touch /sdcard/Download/cs_test/Aa; ls .../aa` -> rc 0,
+  gefunden wird `Aa`. Folge fuer Format v2: zwei Pfade, die sich nur in Gross/klein unterscheiden, waeren auf
+  dem Geraet EINE Datei, und `X.NEU` kollidiert mit der Zwischendatei von `X` (Regel im Kopf von
+  `asset_abgleich.h`).
+
+APK A = `release/re15_port_v0.8.20-n1a_android.apk` (Sitzung 1, `build_A_alt.log`: build_android.sh EXIT 0,
+Gates gruen, sha256 `65301b5f...e7db`), `android_glue.c` = HEAD-Stand (seit 4ccb96e6 unveraendert).
+`aapt dump badging`: `de.re15.port`, versionCode 82000, versionName v0.8.20-n1a,
+launchable-activity `de.re15.port.RE15Activity`.
+
+1. `adb install -r` A (6,5 s), `am start -W -n de.re15.port/.RE15Activity`, logcat (`s13_A_erststart.logcat`):
+   ```
+   06:18:52.915 [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+   06:18:53.269 [android] Entpacke 3603 Dateien (356678277 Bytes) nach /storage/emulated/0/Android/data/de.re15.port/files
+   06:19:17.533 [android] Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler
+   ```
+   Vollstaendiges Entpacken alter Stand: **24,3 s** (Emulator). Danach Capcom-Logo (`s13_A_nach_entpacken.png`).
+   Marker `re15_assets_ok.txt` = `af45d06a3555f997 3603 356678277`.
+   Testdatei `synchro/STAGE1/room1090/main03.wav` (109306 B) auf dem Geraet: sha256 `0fac8b2a...96ba` = Quelle.
+2. APK B: dieselbe Datei im Quellbaum VORUEBERGEHEND geaendert (`build/r34a/n1/byte_kippen.py`: Byte 109206
+   0x00 -> 0x01, gleiche Groesse, sha256 neu `41edb173...d1ef`; Original gesichert unter
+   `build/r34a/n1/orig/main03.wav`, git-Blob `18a44b01`), `build_android.sh --version v0.8.20-n1b` (Log
+   `build_B_alt.log`) - Ergebnis unten.
 
 ## 2. Bau (PORT-WAHL, kein Originalverhalten)
 

@@ -8,25 +8,27 @@
  * ohne SDL, ohne Android -, damit ein PC-Unit-Test (tests/unit/test_r34a_asset_abgleich.c,
  * Sonde probes/r34a_android.cmake) GENAU diesen Code uebersetzt und prueft.
  *
- * WARUM (Befund N1, Nachbesserung R2): bis v0.8.19 trug die Liste nur "<bytes>\t<pfad>", und der
- * Marker re15_assets_ok.txt war ein FNV-1a ueber diese Liste. Aenderte ein Update eine Datei bei
+ * WARUM (Befund N1a): bis v0.8.19 trug die Liste nur "<bytes>\t<pfad>", und der Marker
+ * re15_assets_ok.txt war ein FNV-1a ueber diese Liste. Aenderte ein Update eine Datei bei
  * GLEICHER Groesse (P07G.DO2 in Runde 33 dreimal bei 55908 B), blieb die Liste bytegleich, das
  * Entpacken wurde ganz uebersprungen, und die alte Datei blieb auf dem Geraet.
  *
  * FORMAT v2 (Schreiber: platform/android/app/build.gradle writeAssetManifest; Pruefer:
- * release/apk_asset_gate.py manifest_pruefen - liest nach DENSELBEN Regeln wie re15_abgleich_lesen):
+ * release/apk_asset_gate.py manifest_lesen - liest nach DENSELBEN Regeln wie re15_abgleich_lesen):
  *     # re15 assets v2 <anzahl> <bytes>\n              Kopfzeile, IMMER die erste Zeile
  *     <bytes>\t<sha256, 64 Zeichen 0-9a-f>\t<pfad>\n  je Datei (Schreiber sortiert nach Pfad)
  *   - Zeilen an '\n' getrennt; angehaengte '\r' werden abgeschnitten, leere Zeilen uebersprungen.
  *   - Kopfzeile: genau "# re15 assets v2 " + 1-18 Ziffern + ' ' + 1-18 Ziffern. Die alte Kopfzeile
- *     "# re15 assets <n> <b>" (v1, bis v0.8.19) wird erkannt und ABGELEHNT (eigene Meldung).
+ *     "# re15 assets <n> <b>" (v1, bis v0.8.19) wird erkannt und ABGELEHNT (eigene Rueckgabe).
  *   - Datenzeile: 1-18 Ziffern, Tab, 64 Zeichen [0-9a-f] (Grossbuchstaben NICHT), Tab, Pfad.
- *   - Pfad: nicht leer, relativ, mindestens ein '/' (Assets liegen nie direkt im Speicherordner -
+ *   - Pfad: 1-512 Bytes, relativ, mindestens ein '/' (Assets liegen nie direkt im Speicherordner -
  *     dort liegen Logs, Spielstand und diese Listen), kein '\\', keine Steuerzeichen (< 0x20,
- *     0x7f), kein leeres/'.'/'..'-Segment, endet nicht auf ".neu" (Endung der Zwischendatei).
- *   - weitere '#'-Zeilen, doppelte Pfade, NUL-Bytes, Kopfzeile passt nicht zu den Zeilen,
- *     Liste > 64 MiB -> die GANZE Liste ist ungueltig (fail closed: lieber gar nicht starten als
- *     still mit einem Loch im Asset-Baum).
+ *     0x7f), kein leeres/'.'/'..'-Segment, gueltiges UTF-8 (wie libziparchive die APK-Namen
+ *     verlangt), endet nicht auf ".neu" (ASCII, Gross/klein egal: Endung der Zwischendatei).
+ *   - weitere '#'-Zeilen, doppelte Pfade (auch nur in ASCII-Gross/klein verschieden: der
+ *     App-Speicher ist case-insensitiv), NUL-Bytes, keine Datei, Kopfzeile passt nicht zu den
+ *     Zeilen, Liste > 64 MiB -> die GANZE Liste ist ungueltig (fail closed: lieber gar nicht
+ *     entpacken als still mit einem Loch im Asset-Baum).
  * ============================================================================================= */
 #ifndef RE15_ASSET_ABGLEICH_H
 #define RE15_ASSET_ABGLEICH_H
@@ -42,6 +44,7 @@ extern "C" {
 #define RE15_ABGLEICH_KOPF_V1     "# re15 assets "      /* bis v0.8.19: ohne Pruefsumme */
 #define RE15_ABGLEICH_LISTE_MAX   (64u << 20)           /* wie bisher read_apk_asset: > 64 MiB -> abgelehnt */
 #define RE15_ABGLEICH_ZAHL_MAX    18                    /* Ziffern je Zahl (< 2^63, kein Ueberlauf) */
+#define RE15_ABGLEICH_PFAD_MAX    512                   /* Bytes je Pfad (Puffer im Entpacker: PATH_MAX) */
 #define RE15_ABGLEICH_NEU_ENDUNG  ".neu"                /* Zwischendatei <ziel>.neu, danach rename() */
 
 /* ---------------------------------------------------------------------------- SHA-256 (FIPS 180-4) */
@@ -55,6 +58,9 @@ typedef struct {
 void re15_sha256_start(re15_sha256_t *c);
 void re15_sha256_dazu(re15_sha256_t *c, const void *daten, size_t n);
 void re15_sha256_ende(re15_sha256_t *c, char hex[65]);      /* 64 Zeichen 0-9a-f + NUL */
+
+/* sha256 einer Datei (stdio). 0 = ok (hex + *groesse gesetzt), -1 = nicht lesbar. */
+int  re15_sha256_datei(const char *pfad, char hex[65], long long *groesse);
 
 /* ---------------------------------------------------------------------------- Liste */
 typedef struct {
@@ -97,7 +103,8 @@ typedef struct {
 } re15_abgleich_plan_t;
 
 /* alt == NULL: keine gueltige "zuletzt entpackt"-Liste (Erstinstallation, v0.8.19-Marker, Liste
- * unlesbar) -> jede Datei RE15_ABGLEICH_PRUEFEN, nichts zu loeschen. 0 = ok, < 0 = kein Speicher. */
+ * unlesbar, abgebrochener Lauf) -> jede Datei RE15_ABGLEICH_PRUEFEN, nichts zu loeschen.
+ * 0 = ok, < 0 = kein Speicher (p ist dann leer). */
 int  re15_abgleich_planen(re15_abgleich_plan_t *p, const re15_abgleich_liste_t *neu,
                           const re15_abgleich_liste_t *alt);
 void re15_abgleich_plan_frei(re15_abgleich_plan_t *p);
