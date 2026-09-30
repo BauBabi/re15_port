@@ -133,7 +133,92 @@ launchable-activity `de.re15.port.RE15Activity`.
 
 ## 2. Bau (PORT-WAHL, kein Originalverhalten)
 
-(folgt)
+Die PSX las von CD, der PC-Port liest den Paketordner; das Entpacken aus der APK gibt es nur auf Android. Es
+gibt daher keine `@0x...`-Adresse - jede Entscheidung unten ist eine Port-Wahl mit Begruendung und Messung.
+
+### 2.1 Dateien
+
+| Datei | Inhalt |
+|---|---|
+| `re15_port/platform/android/jni/asset_abgleich.{h,c}` | reines C99 (kein SDL/Android): SHA-256 nach FIPS 180-4, Liste v2 lesen (`re15_abgleich_lesen`), Pfadregel, Abgleich gegen "zuletzt entpackt" (`re15_abgleich_planen`), Entscheidung je Datei (`re15_abgleich_tun`), `re15_sha256_datei` |
+| `re15_port/platform/android/jni/android_glue.c` | `re15_android_bootstrap_assets()` neu: Quelle AAssetManager, `.neu` + `rename()`, Liste "zuletzt entpackt", schneller Weg, Uebergang |
+| `re15_port/platform/android/jni/CMakeLists.txt` | `asset_abgleich.c` in `libmain.so` (libandroid war schon gelinkt) |
+| `re15_port/platform/android/app/build.gradle` | `writeAssetManifest` schreibt Format v2 (sha256 je Datei, nach Pfad sortiert, UTF-8), Grundregeln der Pfade -> Bauabbruch |
+| `release/apk_asset_gate.py` | `manifest_lesen` (= Regeln von `re15_abgleich_lesen`, auf Bytes), `manifest_pruefen` (Summe je Zeile == sha256 der APK-Daten), v1 abgelehnt, Selbsttest +21 Faelle, +55 innere Proben |
+| `re15_port/tests/unit/test_r34a_asset_abgleich.c`, `probes/r34a_android.cmake` | PC-Unit-Test, uebersetzt `asset_abgleich.c` direkt (`unit_r34a_asset_abgleich`) |
+
+### 2.2 Format v2 (Kopf von `asset_abgleich.h`)
+
+```
+# re15 assets v2 <anzahl> <bytes>
+<bytes>\t<sha256, 64 x 0-9a-f>\t<pfad>          je Datei, Schreiber sortiert nach Pfad
+```
+Zeilen nur an `\n`, angehaengte `\r` weg, Leerzeilen uebersprungen; Kopfzeile genau `# re15 assets v2 ` + 1-18
+Ziffern + ` ` + 1-18 Ziffern; Datenzeile 1-18 Ziffern, Tab, 64 x `[0-9a-f]` (Grossbuchstaben NICHT), Tab, Pfad.
+Pfad: 1-512 Bytes, relativ, mindestens ein `/`, kein `\`, keine Steuerzeichen (< 0x20, 0x7f), kein leeres/`.`/
+`..`-Segment, gueltiges UTF-8, endet nicht auf `.neu` (ASCII, Gross/klein egal). Weitere `#`-Zeilen, doppelte
+Pfade (auch nur in ASCII-Gross/klein verschieden - der App-Speicher ist case-insensitiv, 1.3), NUL, keine
+Datei, Kopfzeile passt nicht, > 64 MiB -> die GANZE Liste ist ungueltig. Die v1-Kopfzeile wird erkannt und
+mit eigener Rueckgabe abgelehnt (`RE15_ABGLEICH_ALTES_FORMAT`, Schirm "ASSET-LISTE IM ALTEN FORMAT").
+Warum fail closed statt "ungueltige Zeile ueberspringen" (v1): eine uebersprungene Zeile ist eine Datei, die
+nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht die Meldung auf dem Schirm.
+
+### 2.3 Entpacker (`android_glue.c`)
+
+1. **Quelle nur der AAssetManager** (N1b): `SDL_AndroidGetActivity()` -> `getAssets()` per JNI -> globale
+   Referenz -> `AAssetManager_fromJava`; Liste und Dateien per `AAssetManager_open(..., AASSET_MODE_STREAMING)`.
+   `AAssetManager_open` liest nur aus den Asset-Pfaden der APK (derselbe Weg, den SDL erst NACH dem
+   Dateisystem-Versuch nimmt: `Android_JNI_FileOpen`, SDL_android.c:1931-1953) - ein Dateisystem-Pfad, der die
+   Zieldatei selbst treffen koennte, kommt nicht mehr vor.
+2. **Ziel `<ziel>.neu`**, beim Schreiben gehasht; nur wenn Groesse UND sha256 der Liste entsprechen `rename()`
+   an den Platz, sonst `.neu` loeschen und Fehler. Die Liste "zuletzt entpackt" behauptet damit nie eine Summe,
+   die die Datei nicht hat (die Summe ist beim Schreiben gemessen, nicht aus der Liste abgeschrieben).
+3. **"zuletzt entpackt"** = bytegenaue Kopie von `assets/re15_assets.txt` als `<speicher>/re15_assets_entpackt.txt`,
+   geschrieben erst nach vollstaendigem Erfolg: `sync()`, dann `.neu` + `fsync` + `rename` + `fsync` des Ordners.
+   Ein Lauf, der etwas aendern kann, loescht diese Kopie ZUERST und macht das Loeschen per `fsync` des Ordners
+   haltbar. Folge: nach JEDEM Abbruch (Prozess beendet oder Strom weg) gibt es keine alte Liste, und der naechste
+   Start prueft jede gleich grosse Datei per SHA-256 (inhaltlich richtig, egal was halb geschrieben wurde) -
+   darum kein `fsync` je Datei noetig.
+4. **Start**: Liste bytegleich der zuletzt entpackten -> **schneller Weg**: nur `stat()` je Datei (Groesse);
+   stimmt eine nicht (Datei geloescht), werden genau diese neu entpackt. Sonst Abgleich
+   (`re15_abgleich_planen` + `re15_abgleich_tun`):
+
+   | alte Liste | Eintrag | Datei im Speicher | Tun |
+   |---|---|---|---|
+   | gueltig | gleiche Groesse UND Summe (BEHALTEN) | Groesse stimmt | nichts |
+   | gueltig | BEHALTEN | fehlt / andere Groesse | entpacken |
+   | gueltig | Groesse oder Summe anders (GEAENDERT) | egal | entpacken (Befund N1a) |
+   | gueltig | nicht in der alten Liste (NEU) | egal | entpacken |
+   | gueltig | nur in der alten Liste | - | Datei loeschen (Regeln wie jede Zeile: nie ausserhalb) |
+   | keine/unlesbar (PRUEFEN) | - | gleiche Groesse | sha256 der Datei gegen die Liste; anders -> entpacken |
+   | keine/unlesbar (PRUEFEN) | - | fehlt / andere Groesse | entpacken |
+
+   "keine" = Erstinstallation, **v0.8.19-Geraet** (nur `re15_assets_ok.txt`, keine v2-Liste), abgebrochener Lauf.
+   Nach Erfolg wird der alte Marker `re15_assets_ok.txt` geloescht. `.neu`-Reste eines Abbruchs werden in jedem
+   Lauf, der etwas aendern kann, je Datei entfernt.
+5. **Uebergang v0.8.19**: einmal jede gleich grosse Datei per SHA-256 pruefen statt alles neu zu schreiben -
+   Pruefen ist eine echte Teilmenge des Entpackens (Entpacken = APK lesen + schreiben + hashen), also nie
+   teurer; gemessen in Abschnitt 3 (iv). Fortschrittsbalken bleibt ("ASSETS WERDEN EINMALIG GEPRUEFT").
+6. Protokoll: je Datei nur im Update (`entpacke <pfad> (geaendert|neu|Groesse falsch/fehlt)`, `Summe weicht ab
+   -> neu: <pfad>`, `entfernt ...`), bei der Erstinstallation nur die Summe. Abschlusszeile
+   `[android] Entpacken fertig (<modus>): ... kopiert (B, ms), ... per SHA-256 geprueft (B, ms, abweichend),
+   ... entfernt, ... .neu-Reste, ... Fehler, <ms>` bzw. `[android] Assets aktuell (schneller Weg): ...`.
+
+### 2.4 Pruefung des C-Teils (PC)
+
+- `unit_r34a_asset_abgleich`: 272 Pruefungen, 0 Fehler (`gcc -std=c11 -Wall -Wextra -Wpedantic -Wshadow
+  -Wconversion`, ohne Warnung). SHA-256: FIPS-180-2-Vektoren (`""`, `abc`, 448/896 Bit, 10^6 x `a` in 9
+  Stueckelungen), Kette ueber die Laengen 0..300 (Python hashlib: `9ab015b3...653b`), Datei; Liste: gut/CRLF/
+  Leerzeilen/ohne Schluss-`\n`/UTF-8, v1 -> ALTES_FORMAT, 18 Kopf-, 40 Zeilen-/Pfadfaelle, 512/513 Bytes, NUL,
+  Ueberlauf, 64 MiB/+1; Abgleich BEHALTEN/GEAENDERT (gleiche Groesse, andere Summe)/NEU/weg/PRUEFEN; `tun`-Tabelle.
+- **Mutanten-Probe** (`build/r34a/n1/pc/mutanten.py`): 14 Abschwaechungen von `asset_abgleich.c` - darunter M3
+  "BEHALTEN nur nach Groesse" = genau Befund N1a - machen den Test alle ROT (0 von 14 nicht gefangen).
+- **Differenz-Test Geraet <-> Gate** (`build/r34a/n1/diff/`): derselbe Byte-Korpus durch `asset_abgleich.c`
+  (PC-uebersetzt) und `manifest_lesen` des Gates - 20257 Listen (die 55 inneren Proben + 20000 Zufalls-Mutanten
+  einer gueltigen Liste: Bytes ersetzen/einfuegen/loeschen aus einem Alphabet mit `\n \r \t \0 # / . \ `, Ziffern,
+  Hex-Buchstaben gross/klein, `0x7f`, UTF-8-Start-/Folgebytes; Zeilen verdoppeln/loeschen, Gross/klein tauschen):
+  4769 x beide gueltig, 15488 x beide ungueltig, **0 Abweichungen** (bei gueltig auch dieselben Eintraege:
+  sha256 ueber `pfad\tgroesse\tsha` aller Zeilen gleich).
 
 ## 3. Nachweis im Emulator
 
