@@ -1,0 +1,15 @@
+vorher: 363212403 10:00:00 release/re15_port_v0.8.19-nbneg_android.apk | Probe 21 B
+bei '== Gradle:' (23:00:57): alte APK schon entfernt
+build_android.sh EXIT=1 (Logende: EXIT=1)
+danach: release/re15_port_v0.8.19-nbneg_android.apk fehlt; release/re15_port_v0.8.19-nbneg_android.apk.ungeprueft fehlt
+release/*.ungeprueft: 0
+SHA256SUMS_android.txt: unveraendert
+Gate-Zeilen:
+   re15_assets.txt: 3604 Dateien, 356678298 Bytes
+      [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)
+      [fehlt in der APK] 1
+         fehlt in der APK: assets/shared_assets/RE15DOOR/.r34a_nb_probe.bin  (Quelle re15_port/shared_assets/RE15DOOR/.r34a_nb_probe.bin)  - Name beginnt mit '.' (Gradle/AAPT lassen ihn aus)
+         Manifest nennt shared_assets/RE15DOOR/.r34a_nb_probe.bin (21 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/.r34a_nb_probe.bin
+   ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+      (Gate-Abbruch: re15_port_v0.8.19-nbneg_android.apk.ungeprueft geloescht; dieselben Bytes liegen weiter unter /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/app/build/outputs/apk/release/app-release.apk)
+Probe entfernt; git status re15_port/: ''

@@ -1,0 +1,11 @@
+mut2_N1_ascii_grenze_80                  == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N2_ascii_aus                        == SELBSTTEST-FEHLER: 12 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N3_segment_252                      == SELBSTTEST-FEHLER: 3 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N4_segment_aus                      == SELBSTTEST-FEHLER: 3 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N5_segment_konstante                == SELBSTTEST-FEHLER: 3 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N6_quellpfad_aus                    == SELBSTTEST-FEHLER: 2 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N7_quelldublette_aus                == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_N8_quellpfad_nicht_gerufen          == SELBSTTEST-FEHLER: 1 von 247 Faellen falsch, 11 nicht gelaufen (Schnellmodus) - das Gate ist NICHT verlaesslich ==
+mut2_V1_leerzeile_strip                  == SELBSTTEST-FEHLER: 2 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_V2_steuer_1f                        == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+mut2_V3_del_7e                           == SELBSTTEST-FEHLER: 3 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==

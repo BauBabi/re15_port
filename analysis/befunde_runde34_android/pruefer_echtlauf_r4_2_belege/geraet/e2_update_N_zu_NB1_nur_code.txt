@@ -1,0 +1,15 @@
+== e2_update_N_zu_NB1_nur_code 2026-09-30 12:21:25
+APK: build/r34a/pruefer_e2/apk/NB1.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+install -r rc=0 (11810 ms): Performing Streamed Install Success 
+   firstInstallTime=2026-09-30 10:07:38
+   lastUpdateTime=2026-09-30 10:21:39
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+installiert: /data/app/~~uXPJnrv29wrv4WFX4AUbXw==/de.re15.port-maUc_gW-Zy1lMOB20SbQbQ==/base.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+Status: ok
+LaunchState: COLD
+TotalTime: 3461
+warten rc=0 (5932 ms ab am start)
+09-30 10:21:56.599 I/re15    ( 9004): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:21:57.454 I/re15    ( 9004): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 538 ms
+pidof: 9004

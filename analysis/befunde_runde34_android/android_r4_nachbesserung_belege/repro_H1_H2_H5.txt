@@ -1,0 +1,47 @@
+G0_leer                             0 B
+G1_kein_sys_exit               186961 B
+    sys.exit(main()) -> main()  (Exit-Code immer 0)
+V1_leerzeile_strip             186979 B
+    manifest_lesen: 'if not z:' -> 'if not z.strip():' (Zeile nur aus Leerraum gilt als leer)
+V2_steuer_1f                   186971 B
+    _pfad_fehler: 'c < 0x20' -> 'c < 0x1f' (0x1f nicht mehr Steuerzeichen)
+== Selbsttest G0_leer: EXIT=0 (0 s), Ausgabe 0 B
+== Selbsttest G1_kein_sys_exit: EXIT=0 (15 s), Ausgabe 361127 B
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+        [FEHLER] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=0 (soll 1)
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     --- Ausgabe Fall 227 (N1: Manifest im alten Format v1 (wie v0.8.19)) ---
+           Manifest im alten Format v1 ('# re15 assets 16 30398', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 assets
+     == SELBSTTEST-FEHLER: 234 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
+Sandbox-Commit 53182ad 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+--- Sandbox-Gate := build/r34a/nb/mut/G0_leer/apk_asset_gate.py (0 B)
+== A A2_G0_ref0819 (ref_v0.8.19.apk --version v0.8.19): EXIT=0 (6 s)
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+--- Sandbox-Gate := ECHT (186971 B)
+== A A4_env_G0_ref0819 (ref_v0.8.19.apk --version v0.8.19, env APK_GATE_DATEI=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb/mut/G0_leer/apk_asset_gate.py): EXIT=0 (6 s)
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+   H5 Kelvin/K  Gate manifest_lesen: 2 Eintraege, Fehler [] -> ANGENOMMEN
+   H5 NFC/NFD   Gate manifest_lesen: 2 Eintraege, Fehler [] -> ANGENOMMEN
+   H5 sz/ss     Gate manifest_lesen: 2 Eintraege, Fehler [] -> ANGENOMMEN
+   H5 Ae/ae     Gate manifest_lesen: 2 Eintraege, Fehler [] -> ANGENOMMEN
+FERTIG
+EXIT=0

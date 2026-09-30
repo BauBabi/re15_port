@@ -1,0 +1,17 @@
+Mutanten: 449, ueberlebt: 4, davon Zeitgrenze erkannt: 1
+  Klasse A:  47 gesamt,  47 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse B:  45 gesamt,  45 erkannt,   0 ueberlebt,   1 per Zeitgrenze
+  Klasse C:   5 gesamt,   5 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse D:  35 gesamt,  35 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse E: 173 gesamt, 169 erkannt,   4 ueberlebt,   0 per Zeitgrenze
+  Klasse F:  71 gesamt,  71 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse G:   5 gesamt,   5 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse H:  42 gesamt,  42 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse I:  26 gesamt,  26 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+Ueberlebende:
+  E__ant_passt_Z378_ge                           i == len(mt)  [== -> >=]
+  E__ant_passt_Z379_ge                           j == len(pt)  [== -> >=]
+  E_tuer_soll_Z669_ge                            z["spender"] == kein_spender  [== -> >=]
+  E__eintrag_pruefen_Z1037_lt_2                  n != e.usize  [!= -> <]
+Zeitgrenze (Gate haengt -> Selbsttest faellt ebenfalls):
+  B__eintrag_lesen_Z1012                         raise _Lesefehler("Datei endet mitten im Eintrag")

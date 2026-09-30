@@ -1,0 +1,9 @@
+N1_linux_door13: gekippt release/pkg-linux/re15_port_v0.8.19/shared_assets/RE2/DOOR/DOOR13.DO2 @ 1500 -> cmp 1 ; Groesse 54532/54532
+N1_linux_door13: EXIT=1 ; Abbruchzeile: ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR13.DO2
+N1_linux_door13: gezippt? 0 Zeilen '== Zippen'; APK-Kette vorher: 1 x OK
+N1_linux_door13: zurueck -> cmp 0
+N2_win_torse: gekippt release/pkg-win/re15_port_v0.8.19/shared_assets/RE2/TORSE.VBS @ 9000 -> cmp 1 ; Groesse 19176/19176
+N2_win_torse: EXIT=1 ; Abbruchzeile: ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS
+N2_win_torse: gezippt? 0 Zeilen '== Zippen'; APK-Kette vorher: 1 x OK
+N2_win_torse: zurueck -> cmp 0
+RC_SKRIPT=0

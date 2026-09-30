@@ -1,0 +1,22 @@
+== k1_abbruch_frisch_M_nach_CDEMD0 2026-09-30 10:25:15 APK 56ef3d26b9328097... Ausloeser: shared_assets/RE2/ENEMSE.VBS.neu
+Success
+externer Ordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+AUSLOESER i=569759
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/ENEMSE.VBS: No such file or directory
+-rw-rw---- 1 u0_a215 ext_data_rw 5242880 2026-09-30 08:25 /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/ENEMSE.VBS.neu
+Prozess: beendet
+--- Zustand nach dem Abbruch:
+.
+..
+debug.log
+shared_assets
+Dateien: 3258
+.neu:
+-rw-rw---- 1 u0_a215 ext_data_rw 5242880 2026-09-30 08:25 ./shared_assets/RE2/ENEMSE.VBS.neu
+ls: shared_assets/RE2/ENEMSE.VBS: No such file or directory
+ls: re15_assets_entpackt.txt: No such file or directory
+ls: re15_assets_ok.txt: No such file or directory
+09-30 08:25:29.728 I/re15    (10943): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:25:29.948 I/re15    (10943): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0

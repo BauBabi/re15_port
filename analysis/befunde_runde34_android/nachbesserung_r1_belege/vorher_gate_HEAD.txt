@@ -1,0 +1,13 @@
+# Gate-Stand HEAD 568e9b88 (vor der Nachbesserung), 2026-09-29 21:50:36
+3.10.11  K0_neu         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.10.11  F1_crc_koll    EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+3.10.11  F2_backslash   EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.10.11  F3_nul         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.10.11  F4_lfh_crc     EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.10.11  F5_lfh_usize   EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.14.7   K0_neu         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.14.7   F1_crc_koll    EXIT=1 | == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+3.14.7   F2_backslash   EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.14.7   F3_nul         EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.14.7   F4_lfh_crc     EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+3.14.7   F5_lfh_usize   EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==

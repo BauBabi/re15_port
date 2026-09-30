@@ -1,0 +1,259 @@
+######## e1
+== e1_frisch_nb1 2026-09-30 11:23:14
+APK: build/r34a/nb/apk/NB1.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+install rc=0 (32319 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:23:46
+   firstInstallTime=2026-09-30 09:23:46
+installiert: /data/app/~~CdkEaLtsDLfC-9jTURQCHg==/de.re15.port-eT7i9cAFpiJjpRFJZh6l4w==/base.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+Status: ok
+LaunchState: COLD
+TotalTime: 8509
+warten rc=0 (67915 ms ab am start)
+09-30 09:24:07.487 I/re15    ( 3956): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:24:08.661 I/re15    ( 3956): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 09:25:07.037 I/re15    ( 3956): [android] Entpacken fertig (ohne Liste): 3603 geprueft, 3603 kopiert (356678277 B, 47910 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 58786 ms
+Prozess: 3956
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+Bild e1_bild_1.png (82085 B, 11:26:09)
+Bild e1_bild_2.png (82085 B, 11:26:19)
+Bild e1_bild_3.png (82085 B, 11:26:30)
+Bild e1_bild_4.png (82085 B, 11:26:40)
+Bild e1_bild_5.png (82085 B, 11:26:50)
+Bild e1_bild_6.png (82085 B, 11:27:01)
+######## e2
+== e2_neustart 2026-09-30 11:27:01
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:23:46
+   firstInstallTime=2026-09-30 09:23:46
+installiert: /data/app/~~CdkEaLtsDLfC-9jTURQCHg==/de.re15.port-eT7i9cAFpiJjpRFJZh6l4w==/base.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+Status: ok
+LaunchState: COLD
+TotalTime: 1986
+warten rc=0 (3135 ms ab am start)
+09-30 09:27:19.508 I/re15    ( 6583): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:27:20.714 I/re15    ( 6583): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 989 ms
+Prozess: 6583
+######## e3
+Success
+== e3a_ref0819_frisch 2026-09-30 11:27:26
+APK: build/r34a/ref_v0.8.19.apk sha256 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+install rc=0 (17357 ms): Performing Streamed Install Success 
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+   lastUpdateTime=2026-09-30 09:27:46
+   firstInstallTime=2026-09-30 09:27:46
+installiert: /data/app/~~FOmTmKDebbAfHRhZoCI_3w==/de.re15.port-79ZEI7V16jnCZcf3fPC-Kw==/base.apk sha256 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+Status: ok
+LaunchState: COLD
+TotalTime: 1198
+warten rc=0 (23320 ms ab am start)
+09-30 09:27:54.496 I/re15    ( 7284): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:27:55.003 I/re15    ( 7284): [android] Entpacke 3603 Dateien (356678277 Bytes) nach /storage/emulated/0/Android/data/de.re15.port/files
+09-30 09:28:16.013 I/re15    ( 7284): [android] Entpacken fertig: 3603 geprueft, 3603 kopiert, 0 Fehler
+Prozess: 7284
+-rw-rw---- 1 shell ext_data_rw 6 2026-09-30 09:28 /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/ALT_WAISE.BIN
+-rw-rw---- 1 shell ext_data_rw 5 2026-09-30 09:28 /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/DATA/TEX.TIM.neu
+-rw-rw---- 1 shell ext_data_rw 2 2026-09-30 09:28 /sdcard/Android/data/de.re15.port/files/synchro/STAGE9/room9999/alt.wav
+== e3b_uebergang_nb1 2026-09-30 11:28:20
+APK: build/r34a/nb/apk/NB1.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+install rc=0 (9939 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:28:33
+   firstInstallTime=2026-09-30 09:27:46
+installiert: /data/app/~~nJYF2OOtrHyAd49RMVVaww==/de.re15.port-Q3CXHYg68wtU2mRnM3co3w==/base.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+Status: ok
+LaunchState: COLD
+TotalTime: 2269
+warten rc=0 (14590 ms ab am start)
+09-30 09:28:41.147 I/re15    ( 7529): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:28:41.642 I/re15    ( 7529): [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/DATA/TEX.TIM.neu
+09-30 09:28:42.205 I/re15    ( 7529): [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/ALT_WAISE.BIN
+09-30 09:28:42.284 I/re15    ( 7529): [android] Waise entfernt (steht in keiner Liste): synchro/STAGE9/room9999/alt.wav
+09-30 09:28:42.287 I/re15    ( 7529): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 09:28:53.849 I/re15    ( 7529): [android] Entpacken fertig (Uebergang v0.8.19): 3603 geprueft, 0 kopiert (0 B, 0 ms), 3603 per SHA-256 geprueft (356678277 B, 9920 ms, 0 abweichend), 0 entfernt, 3 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 12386 ms
+Prozess: 7529
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+ls: /sdcard/Android/data/de.re15.port/files/synchro/STAGE9: No such file or directory
+######## e4
+== e4a_abbruch_cdemd0 2026-09-30 11:29:26 APK d6921014c580c4e8... Ausloeser: shared_assets/RE2/CDEMD0.EMS.neu
+Success
+externer Ordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+AUSLOESER i=745687
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/CDEMD0.EMS: No such file or directory
+-rw-rw---- 1 u0_a213 ext_data_rw 9437184 2026-09-30 09:30 /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/CDEMD0.EMS.neu
+Prozess: beendet
+--- Zustand nach dem Abbruch:
+.
+..
+debug.log
+shared_assets
+Dateien: 3226
+.neu:
+-rw-rw---- 1 u0_a213 ext_data_rw 9437184 2026-09-30 09:30 ./shared_assets/RE2/CDEMD0.EMS.neu
+ls: shared_assets/RE2/CDEMD0.EMS: No such file or directory
+ls: re15_assets_entpackt.txt: No such file or directory
+ls: re15_assets_ok.txt: No such file or directory
+09-30 09:30:06.428 I/re15    ( 8149): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:30:06.752 I/re15    ( 8149): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+== e4b_update_R 2026-09-30 11:30:40
+APK: build/r34a/nb/faelsch/R_sig.apk sha256 a128a930cb6aa6c13c42bf14a2b176101ff33f536eed2a741349d4d8c83b5c65
+install rc=0 (10966 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:30:53
+   firstInstallTime=2026-09-30 09:29:53
+installiert: /data/app/~~vCvgHX8uLfsdxjkUfVWFfw==/de.re15.port-JxIOscswWJnIKLy1GvXA1g==/base.apk sha256 a128a930cb6aa6c13c42bf14a2b176101ff33f536eed2a741349d4d8c83b5c65
+Status: ok
+LaunchState: COLD
+TotalTime: 2068
+warten rc=0 (17723 ms ab am start)
+09-30 09:31:01.599 I/re15    ( 9036): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:31:02.633 I/re15    ( 9036): [android] Waise entfernt (steht in keiner Liste): shared_assets/RE2/CDEMD0.EMS.neu
+09-30 09:31:02.634 I/re15    ( 9036): [android] Abgleich (ohne Liste): 3602 Dateien (345553541 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3602, weg 0
+09-30 09:31:17.891 I/re15    ( 9036): [android] Entpacken fertig (ohne Liste): 3602 geprueft, 377 kopiert (43032925 B, 1430 ms), 3225 per SHA-256 geprueft (302520616 B, 10780 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 16079 ms
+Prozess: 9036
+APK-Liste: # re15 assets v2 3602 345553541 | 3602 Eintraege | sha256 d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3602 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1 (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+== e4c_neustart_R 2026-09-30 11:31:25
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:30:53
+   firstInstallTime=2026-09-30 09:29:53
+installiert: /data/app/~~vCvgHX8uLfsdxjkUfVWFfw==/de.re15.port-JxIOscswWJnIKLy1GvXA1g==/base.apk sha256 a128a930cb6aa6c13c42bf14a2b176101ff33f536eed2a741349d4d8c83b5c65
+Status: ok
+LaunchState: COLD
+TotalTime: 1473
+warten rc=0 (2475 ms ab am start)
+09-30 09:31:33.797 I/re15    ( 9178): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:31:34.261 I/re15    ( 9178): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3602 Dateien, Groessen geprueft, 238 ms
+Prozess: 9178
+######## e5
+== e5a_abbruch_enemse 2026-09-30 11:31:39 APK d6921014c580c4e8... Ausloeser: shared_assets/RE2/ENEMSE.VBS.neu
+Success
+externer Ordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+AUSLOESER i=575836
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/ENEMSE.VBS: No such file or directory
+-rw-rw---- 1 u0_a214 ext_data_rw 3145728 2026-09-30 09:32 /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/ENEMSE.VBS.neu
+Prozess: beendet
+--- Zustand nach dem Abbruch:
+.
+..
+debug.log
+shared_assets
+Dateien: 3258
+.neu:
+-rw-rw---- 1 u0_a214 ext_data_rw 3145728 2026-09-30 09:32 ./shared_assets/RE2/ENEMSE.VBS.neu
+ls: shared_assets/RE2/ENEMSE.VBS: No such file or directory
+ls: re15_assets_entpackt.txt: No such file or directory
+ls: re15_assets_ok.txt: No such file or directory
+09-30 09:31:54.012 I/re15    ( 9408): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:31:54.134 I/re15    ( 9408): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+== e5b_update_R 2026-09-30 11:32:11
+APK: build/r34a/nb/faelsch/R_sig.apk sha256 a128a930cb6aa6c13c42bf14a2b176101ff33f536eed2a741349d4d8c83b5c65
+install rc=0 (5367 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:32:17
+   firstInstallTime=2026-09-30 09:31:50
+installiert: /data/app/~~m7JdhycdolsEm-H28Pj0fg==/de.re15.port-Q5bhWJMUDbdw17U87V9uHg==/base.apk sha256 a128a930cb6aa6c13c42bf14a2b176101ff33f536eed2a741349d4d8c83b5c65
+Status: ok
+LaunchState: COLD
+TotalTime: 1356
+warten rc=0 (11677 ms ab am start)
+09-30 09:32:25.227 I/re15    ( 9597): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:32:25.757 I/re15    ( 9597): [android] Waise entfernt (steht in keiner Liste): shared_assets/RE2/CDEMD0.EMS
+09-30 09:32:25.757 I/re15    ( 9597): [android] Waise entfernt (steht in keiner Liste): shared_assets/RE2/ENEMSE.VBS.neu
+09-30 09:32:25.757 I/re15    ( 9597): [android] Abgleich (ohne Liste): 3602 Dateien (345553541 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3602, weg 0
+09-30 09:32:35.899 I/re15    ( 9597): [android] Entpacken fertig (ohne Liste): 3602 geprueft, 346 kopiert (40887529 B, 1547 ms), 3256 per SHA-256 geprueft (304666012 B, 7026 ms, 0 abweichend), 0 entfernt, 2 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 10472 ms
+Prozess: 9597
+APK-Liste: # re15 assets v2 3602 345553541 | 3602 Eintraege | sha256 d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3602 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1 (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+######## e6
+== e6_kelvin 2026-09-30 11:33:00
+APK: build/r34a/nb/faelsch/FK_sig.apk sha256 ea5a7327a715995a0fbfcec00403e5f3f62537825f0b69b02a959ab8d43459cc
+install rc=0 (7478 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:33:10
+   firstInstallTime=2026-09-30 09:31:50
+installiert: /data/app/~~JQ908UsMR55iVFDpkmbjnQ==/de.re15.port-W2xA8l30MyKtfYK88tgwyA==/base.apk sha256 ea5a7327a715995a0fbfcec00403e5f3f62537825f0b69b02a959ab8d43459cc
+Status: ok
+LaunchState: COLD
+TotalTime: 1444
+warten rc=0 (2144 ms ab am start)
+09-30 09:33:18.680 I/re15    ( 9907): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:33:18.830 E/re15    ( 9907): [android] assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad
+09-30 09:33:18.830 E/re15    ( 9907): [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)
+Prozess: 9907
+Bild e6_fehler_nach_10s.png (13671 B, 11:33:33)
+Prozess nach 10 s: 9907
+Bild e6_fehler_nach_30s.png (13671 B, 11:33:54)
+Prozess nach 30 s: 9907
+logcat re15 nach 30 s: 3 Zeilen
+09-30 09:33:18.680 I/re15    ( 9907): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:33:18.830 E/re15    ( 9907): [android] assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad
+09-30 09:33:18.830 E/re15    ( 9907): [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)
+debug.log: 15 Zeilen, letzte:
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+K.bin/Kelvin im Baum: 0
+APK-Liste: # re15 assets v2 3602 345553541 | 3602 Eintraege | sha256 d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3602 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: d9f7c9e50fa1767068d152ce616f926fac17b142fe7f29ceafb9823e1eff2ce1 (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+######## e7
+== e7_update_nb1 2026-09-30 11:34:06
+APK: build/r34a/nb/apk/NB1.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+install rc=0 (5398 ms): Performing Streamed Install Success 
+   versionCode=82000 minSdk=24 targetSdk=35
+   versionName=v0.8.20-nb1
+   lastUpdateTime=2026-09-30 09:34:13
+   firstInstallTime=2026-09-30 09:31:50
+installiert: /data/app/~~gvgsTjEZFbXftTVe7ldKqA==/de.re15.port-1aoskTMgyTCR71noaJxPyQ==/base.apk sha256 d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079
+Status: ok
+LaunchState: COLD
+TotalTime: 1065
+warten rc=0 (2368 ms ab am start)
+09-30 09:34:20.872 I/re15    (10111): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:34:21.052 I/re15    (10111): [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 0, neu 1, pruefen 0, weg 0
+09-30 09:34:22.411 I/re15    (10111): [android] entpacke shared_assets/RE2/CDEMD0.EMS (neu)
+09-30 09:34:22.674 I/re15    (10111): [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (11124736 B, 95 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 1696 ms
+Prozess: 10111
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich (Waisen) 0 | .neu-Reste 0 | leere Ordner 0
+re15_assets_entpackt.txt sha256: 95770eb527a60ab5f3265e049f85ca76ceeb0a93513cf27a4605fd34a5d815dd (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT
+Bild e7_bild.png (79662 B, 11:35:08)
+FOLGE-ENDE 11:35:08
+EXIT=0

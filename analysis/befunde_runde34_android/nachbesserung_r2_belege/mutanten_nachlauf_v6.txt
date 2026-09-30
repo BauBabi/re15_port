@@ -1,0 +1,14 @@
+# 6 Mutanten {'E': 6} aus build/r34a/nb2/mut/gate_neu_6.py, Python C:/Python310/python.exe
+# davon schon erledigt (ergebnis.tsv): 0, zu laufen: 6
+ERKANNT   rc=1       1s E__ant_passt_Z370_le_2                       c == "?"  [== -> <=]
+ERKANNT   rc=1       1s E__ant_passt_Z370_le                         c == "*"  [== -> <=]
+UEBERLEBT rc=0     104s E__eintrag_pruefen_Z1033_lt_2                n != e.usize  [!= -> <]
+UEBERLEBT rc=0     104s E__ant_passt_Z374_ge                         i == len(mt)  [== -> >=]
+UEBERLEBT rc=0     105s E__ant_passt_Z375_ge                         j == len(pt)  [== -> >=]
+UEBERLEBT rc=0     105s E_tuer_soll_Z665_ge                          z["spender"] == kein_spender  [== -> >=]
+# erkannt: 2 / 6, ueberlebt: 4, Laufzeit 105 s
+#   UEBERLEBT E__ant_passt_Z374_ge: i == len(mt)  [== -> >=]
+#   UEBERLEBT E__ant_passt_Z375_ge: j == len(pt)  [== -> >=]
+#   UEBERLEBT E_tuer_soll_Z665_ge: z["spender"] == kein_spender  [== -> >=]
+#   UEBERLEBT E__eintrag_pruefen_Z1033_lt_2: n != e.usize  [!= -> <]
+EXIT=0

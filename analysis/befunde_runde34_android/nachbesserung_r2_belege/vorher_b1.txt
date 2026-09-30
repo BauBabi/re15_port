@@ -1,0 +1,22 @@
+M1_manifest_nur_zu_gross       Manifest-Groesse: nur 'Manifest groesser als APK' wird gemeldet, 'kleiner' nicht
+M9_laenge_nicht_gegen_cd       Eintrag lesen: nur CRC32 gegen das Zentralverzeichnis, die entpackte Laenge nicht
+M5_eocd_nur_muell_hinten       EOCD: nur Bytes HINTER dem Kommentar gemeldet, zu grosse Kommentarlaenge nicht
+M14_dd_bit_aus_cd              Data-Descriptor-Bit aus dem Zentralverzeichnis statt aus dem Local Header (libziparchive nimmt LFH)
+M16_nicht_assets_nur_stored    uebrige Eintraege (classes.dex, lib/, ...): CRC nur fuer Stored-Eintraege, Deflate uebersprungen
+analysis/befunde_runde34_android/nachbesserung_r2_belege/vorher_b1.sh: line 15: bc: command not found
+SELBSTTEST M1_manifest_nur_zu_gross rc=0 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == (0.0 s)
+analysis/befunde_runde34_android/nachbesserung_r2_belege/vorher_b1.sh: line 15: bc: command not found
+SELBSTTEST M9_laenge_nicht_gegen_cd rc=0 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == (0.0 s)
+analysis/befunde_runde34_android/nachbesserung_r2_belege/vorher_b1.sh: line 15: bc: command not found
+SELBSTTEST M5_eocd_nur_muell_hinten rc=0 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == (0.0 s)
+analysis/befunde_runde34_android/nachbesserung_r2_belege/vorher_b1.sh: line 15: bc: command not found
+SELBSTTEST M14_dd_bit_aus_cd rc=0 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == (0.0 s)
+analysis/befunde_runde34_android/nachbesserung_r2_belege/vorher_b1.sh: line 15: bc: command not found
+SELBSTTEST M16_nicht_assets_nur_stored rc=0 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == (0.0 s)
+FAELSCHUNG F_M1: echtes Gate rc=1 | Mutant M1_manifest_nur_zu_gross rc=2 | echt:       Manifest-Groesse falsch: shared_assets/RE15DOOR/P2DS.DO2 Manifest 78243 B, APK 78244 B (Entpacken scheitert bei jedem Start, android_glue.c:225)
+FAELSCHUNG F_M9: echtes Gate rc=1 | Mutant M9_laenge_nicht_gegen_cd rc=2 | echt:    [APK: beschaedigt (CRC)] 1
+FAELSCHUNG F_M5: echtes Gate rc=2 | Mutant M5_eocd_nur_muell_hinten rc=2 | echt: ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb2/apk/F_M5.apk (-10 Bytes hinter dem End
+FAELSCHUNG F_M14: echtes Gate rc=1 | Mutant M14_dd_bit_aus_cd rc=2 | echt:       CRC/Groessen im Local Header weichen vom Zentralverzeichnis ab: assets/shared_assets/RE15DOOR/P07G.DO2 (Local Header 2c23d998/55908/55908, Zentr
+FAELSCHUNG F_M16: echtes Gate rc=1 | Mutant M16_nicht_assets_nur_stored rc=2 | echt:    [APK: beschaedigt (CRC)] 1
+KONTROLLE K0 (unsigniert, Inhalt gleich) echtes Gate rc=0
+EXIT=0

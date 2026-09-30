@@ -1,0 +1,11 @@
+alt build/r34a/pruefer_echtlauf_r2/pakete/win64_ganz.zip: 3801 Eintraege | neu build/r34a/pruefer_echtlauf_r2/pakete/neu_win64_ganz.zip: 3801 Eintraege
+nur alt 0, nur neu 0, anders 0
+rc=0
+alt build/r34a/pruefer_echtlauf_r2/pakete/linux_ganz.zip: 3800 Eintraege | neu build/r34a/pruefer_echtlauf_r2/pakete/neu_linux_ganz.zip: 3800 Eintraege
+nur alt 0, nur neu 0, anders 0
+rc=0
+alt build/r34a/pruefer_echtlauf_r2/pakete/alt_android_ganz.zip: 1 Eintraege | neu build/r34a/pruefer_echtlauf_r2/pakete/neu_android_ganz.zip: 1 Eintraege
+nur alt 0, nur neu 0, anders 1
+   ANDERS re15_port_v0.8.19_android.apk: CRC d16ad30a/99a4f42a
+sha256 neu:re15_port_v0.8.19_android.apk = 9be7e512e14b8dcff7916dcafc55e524e767474eec4e457baf95fbd17e8865fd
+rc=1

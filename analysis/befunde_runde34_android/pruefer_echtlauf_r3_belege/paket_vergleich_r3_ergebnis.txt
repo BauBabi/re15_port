@@ -1,0 +1,20 @@
+=== win64
+build/r34a/pruefer_echtlauf_r3/pakete/win64_ganz.zip: 3801 Eintraege | build/r34a/pruefer_echtlauf_r3/pakete/neu/win64_ganz.zip: 3801 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse, CRC32, Modus): 0
+Modi neu (re15_pc/run.sh): []
+=== linux_steamdeck_x64
+build/r34a/pruefer_echtlauf_r3/pakete/linux_ganz.zip: 3800 Eintraege | build/r34a/pruefer_echtlauf_r3/pakete/neu/linux_steamdeck_x64_ganz.zip: 3800 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse, CRC32, Modus): 0
+Modi neu (re15_pc/run.sh): [('re15_pc', '0o100755'), ('run.sh', '0o100755')]
+=== android
+build/r34a/pruefer_echtlauf_r3/pakete/android_ganz.zip: 1 Eintraege | build/r34a/pruefer_echtlauf_r3/pakete/neu/android_ganz.zip: 1 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse, CRC32, Modus): 1
+   re15_port_v0.8.19_android.apk: alt (363212403, 'd16ad30a', '0o100644') / neu (363212403, '6d7117f4', '0o100644')
+Modi neu (re15_pc/run.sh): []
+APK im neuen Satz: re15_port_v0.8.19_android.apk sha256 b7bfb6996a1fd9d0 = gepruefte APK: True

@@ -1,0 +1,13 @@
+Eingriff 23:10:25: F1_crc_koll_sig -> release/re15_port_v0.8.19_android.apk
+altes make_package.sh RC=0
+   == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M) ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+   == Fertig ==
+Katalog des gezippten Android-Satzes (verify_apk_im_zip aus dem NEUEN make_package, gegen die Kennung der Faelschung und der gepruefte APK):
+   Faelschung F1_sig: 30d50681cd7018fad132a07b30d63d12716617897bfe2aa8b52863cc9309cb6c 29b152c3 363469910
+   APK im Split-Satz = gepruefte APK (CRC32 29b152c3, 363469910 B)
+   -> rc 0
+   gepruefte APK:     5ec3a0ebdda5c3ae260e057f85dbb192606d5ea5308e8cd0ef6cb3420736614c afc43f3a 363212403
+APK-Satz: Eintrag hat CRC32 29b152c3 / 363469910 B, gepruefte APK afc43f3a / 363212403 B - NICHT die gepruefte Datei
+   -> rc 1

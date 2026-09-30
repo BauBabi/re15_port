@@ -1,0 +1,18 @@
+== c nachher 2026-09-30 10:06:13
+Dateien nachher: 3603
+Dateien mit geaenderter mtime (diff vorher/nachher):
+< 1790755204.2026-09-30 08:00:04.928000000 +0000 shared_assets/PSX/STAGE4/ROOM4010.RDT
+> 1790755558.2026-09-30 08:05:58.908000000 +0000 shared_assets/PSX/STAGE4/ROOM4010.RDT
+/sdcard/Android/data/de.re15.port/files/shared_assets/PSX/STAGE4/ROOM4010.RDT: 1 file pulled, 0 skipped. 31.2 MB/s (297112 bytes in 0.009s)
+adb pull sha256: c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da (297112 B)
+in APK M:        c065442bcfc4e2630c20274b89b56706dcf61597b34df402bc0ded8e20f026da
+cmp pull == APK-M-Inhalt: rc 0
+cmp -l pull gegen Original (Sicherung vor der Aenderung):
+148557 250 362
+-- Geraet gegen die Liste von M:
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 ed0433e3f16d9069b1424f1de3188b006e9715420b67898d51b623777d60aac8
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich 0 | .neu-Reste (ueberall) 0
+re15_assets_entpackt.txt sha256: ed0433e3f16d9069b1424f1de3188b006e9715420b67898d51b623777d60aac8 (= APK-Liste)
+alter Marker re15_assets_ok.txt vorhanden: False
+GERAET-KONSISTENT

@@ -1,0 +1,22 @@
+== f1_abbruch_frisch_N 2026-09-30 10:09:41 APK a340a32585580130... Ausloeser: shared_assets/PSX/MOVIE/CAPCOM.STR.neu
+Success
+externer Ordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+AUSLOESER i=359120
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/MOVIE/CAPCOM.STR: No such file or directory
+-rw-rw---- 1 u0_a212 ext_data_rw 3145728 2026-09-30 08:10 /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/MOVIE/CAPCOM.STR.neu
+Prozess: beendet
+--- Zustand nach dem Abbruch:
+.
+..
+debug.log
+shared_assets
+Dateien: 2484
+.neu:
+-rw-rw---- 1 u0_a212 ext_data_rw 3145728 2026-09-30 08:10 ./shared_assets/PSX/MOVIE/CAPCOM.STR.neu
+ls: shared_assets/PSX/MOVIE/CAPCOM.STR: No such file or directory
+ls: re15_assets_entpackt.txt: No such file or directory
+ls: re15_assets_ok.txt: No such file or directory
+09-30 08:10:02.404 I/re15    ( 7692): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:10:02.938 I/re15    ( 7692): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0

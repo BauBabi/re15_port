@@ -1,0 +1,21 @@
+   Python: /c/Python310/python (3.10.11)
+   APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+   Pruefkopie (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.thE6iq/
+   package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodena
+   zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+   Verified using v2 scheme (APK Signature Scheme v2): true
+   Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+   Innere Proben: 61/61 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende, Manifest-Grenze)
+== SELBSTTEST-OK: 223/223 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+== APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+== ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+EXIT=0 (62 s)

@@ -1,0 +1,10 @@
+FAELSCHUNG F_M1: Mutant M1_manifest_nur_zu_gross rc=0 (== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur )
+FAELSCHUNG F_M9: Mutant M9_laenge_nicht_gegen_cd rc=0 (== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur )
+FAELSCHUNG F_M5: Mutant M5_eocd_nur_muell_hinten rc=0 (== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur )
+FAELSCHUNG F_M14: Mutant M14_dd_bit_aus_cd rc=0 (== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur )
+FAELSCHUNG F_M16: Mutant M16_nicht_assets_nur_stored rc=0 (== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur )
+F_M1 signiert rc=0
+F_M1_sig apksigner: Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+F_M1_sig: Mutant M1 rc=0
+F_M1_sig: echtes Gate rc=1 (      Manifest-Groesse falsch: shared_assets/RE15DOOR/P2DS.DO2 Manifest 78243 B, APK 78244 B (Entpac)
+EXIT=0

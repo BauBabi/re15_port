@@ -1,0 +1,6 @@
+FK: Kopf b'# re15 assets v2 3603 356678277' -> b'# re15 assets v2 3605 356678287', angehaengt:
+   b'5\t11770b3ea657fe68cba19675143e4715c8de9d763d3c21a85af6b7513d43997d\tshared_assets/PSX/K.bin'
+   b'5\t0fad32b1e81a318bb7ec37b8b6cd180d1b86cb279240142348a3ecd435cd0742\tshared_assets/PSX/\xe2\x84\xaa.bin'
+geschrieben: build/r34a/pruefer_u1/apk/FK.apk (3618 Eintraege)
+rc=0
+FK_sig.apk: verify rc=0 zipalign-c rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 

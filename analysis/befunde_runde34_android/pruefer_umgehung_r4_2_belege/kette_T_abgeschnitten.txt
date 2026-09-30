@@ -1,0 +1,9 @@
+T1_leer: == Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+T1_leer: build/r34a/pruefer_u2/sb/release/build_android.sh: line 177: apk_werkzeuge_finden: command not found
+T1_leer: build/r34a/pruefer_u2/sb/release/build_android.sh: line 1: apk_pruefen_aufraeumen: command not found
+T2_mitten_in_gate_urteil:    Python: /c/Python310/python (3.10.11)
+T2_mitten_in_gate_urteil: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u2/sb/release/apk_pruefen.sh: line 267: warning: here-document at line 228 delimited by end-of-file (wanted `PY')
+T2_mitten_in_gate_urteil: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u2/sb/release/apk_pruefen.sh: line 268: syntax error: unexpected end of file
+T3_vor_gate_laufen:    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+T3_vor_gate_laufen:    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+T3_vor_gate_laufen: build/r34a/pruefer_u2/sb/release/build_android.sh: line 168: apk_pruefen: command not found

@@ -1,0 +1,129 @@
+== Umgebung ==
+Linux 5.15.167.4-microsoft-standard-WSL2 x86_64
+PRETTY_NAME="Steam Runtime 3 (sniper)"
+Python 3.9.2
+/usr/bin/unzip
+== L7 build_android.sh --gate-only Referenz-APK ==
+   Python: /usr/bin/python3 (3.9.2)
+   (Android-SDK-Ordner fehlt: /root/Android/Sdk - ohne aapt)
+== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+== Gates: /archiv/re15_port_v0.8.19_android.apk ==
+   Inhalt: 3604 Asset-Eintraege, native libs fuer arm64-v8a + x86_64
+   (aapt nicht gefunden - badging-Gate uebersprungen)
+== Volle Asset-Pruefung 1/2: Selbsttest des Gates (/usr/bin/python3) ==
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   [ok] 01 gute APK                                           rc=0 (soll 0)
+   [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+   [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+   [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+   [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+   [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+   [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+   [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+   [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+   [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+   [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+   [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+   [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+   [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+   [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+   [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+   [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+   [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+   [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+   [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+   [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+   [ok] 23 APK fehlt                                          rc=2 (soll 2)
+   [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+   [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+   [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+   [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+   [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+   Laufzeit: 4.3 s
+== SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+== Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /archiv/re15_port_v0.8.19_android.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  31.3 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+== ANDROID-GATES-OK (--gate-only): /archiv/re15_port_v0.8.19_android.apk ==
+L7_RC=0  Dauer 36.166 s
+== L7n build_android.sh --gate-only Negativ-Kopie ohne RE15DOOR/P2DS.DO2 ==
+   Python: /usr/bin/python3 (3.9.2)
+   (Android-SDK-Ordner fehlt: /root/Android/Sdk - ohne aapt)
+== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+== Gates: /tmp/neg_ohne_p2ds.apk ==
+   Inhalt: 3603 Asset-Eintraege, native libs fuer arm64-v8a + x86_64
+   (aapt nicht gefunden - badging-Gate uebersprungen)
+== Volle Asset-Pruefung 1/2: Selbsttest des Gates (/usr/bin/python3) ==
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   [ok] 01 gute APK                                           rc=0 (soll 0)
+   [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+   [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+   [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+   [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+   [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+   [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+   [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+   [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+   [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+   [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+   [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+   [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+   [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+   [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+   [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+   [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+   [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+   [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+   [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+   [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+   [ok] 23 APK fehlt                                          rc=2 (soll 2)
+   [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+   [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+   [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+   [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+   [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+   Laufzeit: 3.0 s
+== SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+== Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /tmp/neg_ohne_p2ds.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      29       29      1836688
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3602     3602    356600033
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 29, sha256 gleich 29/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  44.5 s
+--- Abweichungen: 2 ---
+   [fehlt in der APK] 1
+      fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P2DS.DO2)
+   [Manifest: Zeile ohne APK-Eintrag] 1
+      Manifest nennt shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P2DS.DO2
+== APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+L7n_RC=1
+DOCKER_RC=0

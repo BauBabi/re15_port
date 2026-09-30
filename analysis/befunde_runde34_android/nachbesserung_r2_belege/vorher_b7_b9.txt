@@ -1,0 +1,18 @@
+B7 Sonde = python_finden.sh bis auf die zwei Startzeilen: 4 geaenderte Zeilen
+--- B7 (a) PATH=<8.3 WindowsApps>, RE15_PYTHON_NUR_PATH=1:
+      SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+      Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- B7 (d) RE15_PYTHON=<8.3>/python3.exe, PATH leer:
+      SONDE: WUERDE STARTEN (ohne timeout): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+      Python-Kandidat verworfen (Pruefung rc=99, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 1 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- B7 (b) wie (a), aber /usr/bin dahinter (readlink erreichbar):
+      Python-Kandidat verworfen (Link auf WindowsApps: /c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3
+      Python-Kandidat verworfen (Link auf WindowsApps: /c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python.exe, NICHT gestartet): /c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python
+   FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+--- B9: check_binary_fresh ohne passenden Commit (Mini-Repo):
+warning: in the working copy of 'a.txt', LF will be replaced by CRLF the next time Git touches it
+   EXIT=1 Ausgabe: vor check_binary_fresh|

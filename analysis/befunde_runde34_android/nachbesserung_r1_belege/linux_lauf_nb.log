@@ -1,0 +1,16 @@
+== Debian GNU/Linux 11 (bullseye), Python 3.9.2, bash 5.1.4(1)-release
+== L1 python_finden
+PY=/usr/bin/python3
+PY_VERSION=3.9.2
+   Python: /usr/bin/python3 (3.9.2)
+rc=0
+== L2 Selbsttest
+== SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+rc=0 (4 s)
+== ref_v0.8.19.apk: rc=0 (54 s) | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==#
+== F2_signiert.apk: rc=1 (52 s) |       unzulaessiger Eintragsname b'assets\\shared_assets\\RE15DOOR\\P07G.DO2': '\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet k#      fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)#
+== F3_nul.apk: rc=1 (57 s) |       unzulaessiger Eintragsname b'assets/shared_assets/RE15DOOR/P07G.DO2\x00abc': NUL-Byte im Namen (libziparchive: 'Invalid entry name' - die GANZE #      fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)#
+== F4_lfh_crc.apk: rc=1 (54 s) |       CRC/Groessen im Local Header weichen vom Zentralverzeichnis ab: assets/shared_assets/RE15DOOR/P07G.DO2 (Local Header 2c23d998/55908/55908, Zentr#== APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==#
+== F5_lfh_usize.apk: rc=1 (62 s) |       CRC/Groessen im Local Header weichen vom Zentralverzeichnis ab: assets/shared_assets/RE15DOOR/P07G.DO2 (Local Header 2c23d999/55908/55909, Zentr#== APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==#
+== N5_weniger.apk: rc=2 (0 s) | ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/nb/apk/N5_weniger.apk (Zentralverzeichnis: 330617 B laut End-of-Central-Directory, die 3615 Eintra#
+EXIT=0

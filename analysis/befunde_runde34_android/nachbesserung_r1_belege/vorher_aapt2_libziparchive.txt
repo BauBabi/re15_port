@@ -1,0 +1,26 @@
+# aapt2 35.0.0 dump xmltree --file assets/shared_assets/RE15DOOR/P07G.DO2 <apk> ('failed to parse file as binary XML' = Eintrag gefunden UND gelesen)
+=== ref_v0.8.19
+09-29 21:51:45.825 17432 25036 W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 55908
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+rc=1
+=== K0_neu
+09-29 21:51:45.979 11512 16028 W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 55908
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+rc=1
+=== F2_backslash
+error: failed to find file.
+rc=1
+=== F3_nul
+09-29 21:51:46.302  7120 23560 W ziparchive: Zip: invalid file name at entry 3205
+build/r34a/nb/apk/F3_nul.apk: error: failed opening zip: Invalid entry name.
+rc=1
+=== F4_lfh_crc
+09-29 21:51:46.455  3680 24616 W ziparchive: Zip: size/crc32 mismatch. expected {55908, 55908, 2c23d999}, was {55908, 55908, 2c23d998}
+build/r34a/nb/apk/F4_lfh_crc.apk: error: failed opening zip: Inconsistent information.
+rc=1
+=== F5_lfh_usize
+09-29 21:51:46.627 24448 21256 W ziparchive: Zip: size/crc32 mismatch. expected {55908, 55908, 2c23d999}, was {55908, 55909, 2c23d999}
+build/r34a/nb/apk/F5_lfh_usize.apk: error: failed opening zip: Inconsistent information.
+rc=1

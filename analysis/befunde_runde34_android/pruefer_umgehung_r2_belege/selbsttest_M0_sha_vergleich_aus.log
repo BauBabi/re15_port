@@ -1,0 +1,132 @@
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   [ok] 01 gute APK                                                   rc=0 (soll 0)
+   [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)                 rc=0 (soll 0)
+   [ok] 03 Eintrag komprimiert (Inhalt gleich)                        rc=0 (soll 0)
+   [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt                  rc=1 (soll 1)
+   [FEHLER] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte           rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab (sha256', 'assets/shared_assets/RE2/DOOR/DOOR07.DO2']
+   [ok] 06 Zusatzeintrag unter assets/                                rc=1 (soll 1)
+   [ok] 07 synchro/unused in der APK                                  rc=1 (soll 1)
+   [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+   [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+   [ok] 10 Datei nur im Quellbaum                                     rc=1 (soll 1)
+   [ok] 11 APK-Eintrag kuerzer als die Quelle                         rc=1 (soll 1)
+   [ok] 12 Byte im APK-Datenstrom gekippt (CRC)                       rc=1 (soll 1)
+   [ok] 13 doppelter APK-Eintrag                                      rc=1 (soll 1)
+   [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+   [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+   [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)
+   [ok] 17 Manifest: Zeile ohne Tab                                   rc=1 (soll 1)
+   [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+   [ok] 19 RE15DOOR leer (Quelle und APK)                             rc=1 (soll 1)
+   [ok] 20 RE15DOOR-Ordner fehlt ganz                                 rc=1 (soll 1)
+   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+   [ok] 22 APK ist kein ZIP                                           rc=2 (soll 2)
+   [ok] 23 APK fehlt                                                  rc=2 (soll 2)
+   [ok] 24 build.gradle: zusaetzlicher Baum                           rc=2 (soll 2)
+   [ok] 25 build.gradle: Baum RE15DOOR fehlt                          rc=2 (soll 2)
+   [ok] 26 build.gradle: include geaendert                            rc=2 (soll 2)
+   [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)
+   [ok] 28 build.gradle fehlt                                         rc=2 (soll 2)
+   [ok] 29 gute APK mit Datei > 1 MiB                                 rc=0 (soll 0)
+   [FEHLER] 30 Datei > 1 MiB: 1 Byte hinter dem 1. MiB                    rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab (sha256', 'assets/shared_assets/PSX/MOVIE/GROSS.STR']
+   [FEHLER] 31 CRC32-erhaltende Aenderung (gleiche Groesse)               rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab (sha256', 'assets/shared_assets/RE15DOOR/P2DS.DO2']
+   [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+   [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+   [ok] 34 Manifest: Groessenfeld '1_800'                             rc=1 (soll 1)
+   [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+   [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+   [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+   [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+   [ok] 39 Eintragsname mit '\' (F2)                                  rc=1 (soll 1)
+   [ok] 40 Eintragsname mit NUL-Anhang (F3)                           rc=1 (soll 1)
+   [ok] 41 Eintragsname kein UTF-8                                    rc=1 (soll 1)
+   [ok] 42 Eintragsname mit Steuerzeichen                             rc=1 (soll 1)
+   [ok] 43 Eintragsname mit '..'                                      rc=1 (soll 1)
+   [ok] 44 Local Header: CRC falsch, Zentralverzeichnis richtig (F4)  rc=1 (soll 1)
+   [ok] 45 Local Header: Groesse falsch, Zentralverzeichnis richtig (F5) rc=1 (soll 1)
+   [ok] 46 Local Header: anderer Name                                 rc=1 (soll 1)
+   [ok] 47 Local Header: Signatur zerstoert                           rc=1 (soll 1)
+   [ok] 48 Eintrag verschluesselt                                     rc=1 (soll 1)
+   [ok] 49 Eintrag mit Methode 99                                     rc=1 (soll 1)
+   [ok] 50 Daten ragen ins Zentralverzeichnis                         rc=1 (soll 1)
+   [ok] 51 classes.dex: Byte gekippt (kein Asset)                     rc=1 (soll 1)
+   [ok] 52 Deflate-Strom mit Muell dahinter                           rc=1 (soll 1)
+   [ok] 53 Verzeichniseintrag unter assets/                           rc=1 (soll 1)
+   [ok] 54 APK abgeschnitten (F7)                                     rc=2 (soll 2)
+   [ok] 55 Bytes hinter dem End-of-Central-Directory                  rc=2 (soll 2)
+   [ok] 56 ZIP64-Markierung im End-of-Central-Directory               rc=2 (soll 2)
+   [ok] 57 Zentralverzeichnis-Signatur zerstoert (F8)                 rc=2 (soll 2)
+   [ok] 58 Zentralverzeichnis-Offset zu gross                         rc=2 (soll 2)
+   [ok] 59 End-of-Central-Directory nennt einen Eintrag zu wenig      rc=2 (soll 2)
+   [ok] 60 Deflate-Strom kaputt (Blocktyp 3)                          rc=1 (soll 1)
+   [ok] 61 gute APK: End-of-Central-Directory-Signatur in Asset-Daten rc=0 (soll 0)
+   [ok] 62 build.gradle: stageAssets fehlt                            rc=2 (soll 2)
+   [ok] 63 build.gradle: stageAssets zweimal                          rc=2 (soll 2)
+   [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2)
+   [ok] 65 build.gradle: unbekannte Anweisung im from-Block           rc=2 (soll 2)
+   [ok] 66 build.gradle: from ohne into                               rc=2 (soll 2)
+   [ok] 67 build.gradle: preserve fehlt                               rc=2 (soll 2)
+   [ok] 68 build.gradle: Klammern passen nicht                        rc=2 (soll 2)
+   [ok] 69 build.gradle: stageAssets-Block ohne Ende                  rc=2 (soll 2)
+   [ok] 70 build.gradle: Zeichenkette ohne Ende                       rc=2 (soll 2)
+   [ok] 71 build.gradle: Kommentar /* ohne Ende                       rc=2 (soll 2)
+   [ok] 72 Stored-Eintrag: csize 5 B groesser als usize               rc=1 (soll 1)
+   Laufzeit: 59.7 s
+--- Ausgabe Fall 05 (gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte) ---
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f05\mini.apk
+   Quellbaum: C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f05\repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   ZIP-Struktur: 17 Eintraege roh gelesen, 17 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX                  3       3        3         8000
+   shared_assets/extracted_fx         1       1        1          700
+   shared_assets/RE2                  4       4        4         5200
+   shared_assets/RE15DOOR             2       2        2         3500
+   synchro                            2       2        2         4100
+   SUMME                             12      12       12        21500
+   RE2/DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   TORSE.VBS: Quelle 900 B, APK 900 B, sha256 gleich
+   Manifest:  12 Zeilen / 21500 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  0.3 s
+== APK-ASSET-GATE-OK: 12 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+--- Ausgabe Fall 30 (Datei > 1 MiB: 1 Byte hinter dem 1. MiB) ---
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f30\mini.apk
+   Quellbaum: C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f30\repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   ZIP-Struktur: 18 Eintraege roh gelesen, 18 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX                  4       4        4      1060709
+   shared_assets/extracted_fx         1       1        1          700
+   shared_assets/RE2                  4       4        4         5200
+   shared_assets/RE15DOOR             2       2        2         3500
+   synchro                            2       2        2         4100
+   SUMME                             13      13       13      1074209
+   RE2/DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   TORSE.VBS: Quelle 900 B, APK 900 B, sha256 gleich
+   Manifest:  13 Zeilen / 1074209 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  0.5 s
+== APK-ASSET-GATE-OK: 13 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+--- Ausgabe Fall 31 (CRC32-erhaltende Aenderung (gleiche Groesse)) ---
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f31\mini.apk
+   Quellbaum: C:\Users\MJOEDI~1\AppData\Local\Temp\apk_gate_selbsttest_kxy5jvuq\f31\repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   ZIP-Struktur: 17 Eintraege roh gelesen, 17 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX                  3       3        3         8000
+   shared_assets/extracted_fx         1       1        1          700
+   shared_assets/RE2                  4       4        4         5200
+   shared_assets/RE15DOOR             2       2        2         3500
+   synchro                            2       2        2         4100
+   SUMME                             12      12       12        21500
+   RE2/DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   RE15DOOR:  Quelle 2, APK 2, sha256 gleich 2/2
+   TORSE.VBS: Quelle 900 B, APK 900 B, sha256 gleich
+   Manifest:  12 Zeilen / 21500 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  0.3 s
+== APK-ASSET-GATE-OK: 12 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+== SELBSTTEST-FEHLER: 3 von 72 Faellen falsch - das Gate ist NICHT verlaesslich ==

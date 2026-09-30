@@ -1,0 +1,8 @@
+# apksigner 35.0.0 (java -jar lib/apksigner.jar), JDK 17.0.15, 2026-09-29 21:52:04
+verify ref_v0.8.19: rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true 
+verify K0_neu: rc=1 | DOES NOT VERIFY ERROR: Missing META-INF/MANIFEST.MF 
+verify F2_backslash: rc=1 | DOES NOT VERIFY ERROR: APK Signature Scheme v2 signer #1: APK integrity check failed. CHUNKED_SHA256 digest mismatch. Expected: <68f4088373f8f17816591e4b11d9cd426586175f11a9013bf01bd7eea4e6fd3a>, actual: <fdf7bf4246819481fa3a8bd20da79f0abc81a21d0091ca66d187eba599f4d896> 
+verify F4_lfh_crc: rc=1 | DOES NOT VERIFY ERROR: APK Signature Scheme v2 signer #1: APK integrity check failed. CHUNKED_SHA256 digest mismatch. Expected: <68f4088373f8f17816591e4b11d9cd426586175f11a9013bf01bd7eea4e6fd3a>, actual: <427f5b6f478ad90e5e22d54fa6dac19efbc51f3849b49e11ace08fbe14f1394e> 
+sign F2 -> F2_signiert: rc=0
+verify F2_signiert: rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 Signer #1 public key SHA-256 digest: 951eafb70dbac1a527e6185c1015820d6ee233804edeabc0349d7f86dbba4967 
+verify ref (certs): rc=0 | Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18

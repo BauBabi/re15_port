@@ -1,0 +1,54 @@
+2:1790732111.061616    Python: /c/Python310/python (3.10.11)
+3:1790732111.101653 == Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) ==
+4:1790732111.360492 == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+14:1790732111.949070 == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+15:1790732111.949712 == Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+18:1790732112.215169 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+33:1790732115.448487 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+34:1790732115.599283 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+239:1790732127.115432 == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+240:1790732127.115632 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+241:1790732127.312875 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+260:1790732131.870929 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+261:1790732133.417727 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc
+262:1790732133.495513    gepruefte APK (sha256 crc32 Bytes): b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403
+263:1790732133.495872 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+264:1790732134.128742    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+265:1790732134.472410    hoechste glibc-Anforderung: GLIBC_2.29
+266:1790732134.712956    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+269:1790732138.294790    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+271:1790732141.501186    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+272:1790732144.338578    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+273:1790732144.742294 == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+286:1790732151.308476 == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+287:1790732151.408036    Zeilenenden-Gate: alle Skripte im Paket sind LF
+288:1790732151.482871    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+289:1790732151.920695    OK: 349M, 3606 Dateien
+290:1790732151.920981 == Windows-Paket: re15_port_v0.8.19 ==
+291:1790732152.426292    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+292:1790732152.631712    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+295:1790732156.314851    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+297:1790732159.370854    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+298:1790732162.628924    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+299:1790732163.043081 == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+312:1790732169.819867 == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+313:1790732171.000497    Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+314:1790732172.059122    Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+315:1790732172.524323    OK: 350M, 3607 Dateien
+316:1790732172.530002 == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+317:1790732186.859739    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+318:1790732187.079029    x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+319:1790732187.079249    x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+321:1790732187.245251    x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+322:1790732187.245506    x-Bit ok: re15_port_v0.8.19/run.sh  100755
+323:1790732187.245712 == Zippen: re15_port_v0.8.19_win64 ==
+324:1790732201.571536    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+325:1790732202.412471 == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+326:1790732213.949534    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+327:1790732214.136473    APK im Split-Satz = gepruefte APK (CRC32 6d7117f4, 363212403 B)
+335:1790732216.717525 == SHA256SUMS.txt geschrieben ==
+336:1790732216.759395 == Git: alte Pakete austauschen ==
+337:1790732239.610966    0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+339:1790732239.611351 == Fertig ==
+341:EXIT=0
+342:EXIT_AUSSEN=0

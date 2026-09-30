@@ -1,0 +1,21 @@
+# apksigner 35.0.0 (JDK 17.0.15) - Signaturpruefung und Neusignieren mit DEMSELBEN Schluessel wie der Release-Bau
+# (build.gradle:205-226: ohne RE15_KEYSTORE signiert der Release-Bau mit ~/.android/debug.keystore)
+apksigner verify ref_v0.8.19.apk                      -> rc 0, Signer #1 SHA-256 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+apksigner verify K0_neu_identisch.apk                 -> rc 1, DOES NOT VERIFY ERROR: Missing META-INF/MANIFEST.MF
+apksigner verify F2_backslash_p07g.apk                -> rc 1, APK Signature Scheme v2 signer #1: APK integrity check failed. CHUNKED_SHA256 digest mismatch
+apksigner verify F4_lfh_crc_p07g.apk                  -> rc 1, dito
+apksigner sign --ks debug.keystore ... F2 -> F2_backslash_p07g_signiert.apk  -> rc 0
+apksigner verify --print-certs F2_backslash_p07g_signiert.apk -> rc 0, Signer #1 SHA-256 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 (= Referenz)
+apksigner sign ... F4 -> rc 1: com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: assets/shared_assets/RE15DOOR/P07G.DO2
+
+# F2_signiert: roher Eintragsname (umgehung_werkzeug.py): [b'assets\shared_assets\RE15DOOR\P07G.DO2']
+# aapt2 dump xmltree --file assets/shared_assets/RE15DOOR/P07G.DO2 F2_signiert -> error: failed to find file.
+# build_android.sh --gate-only F2_signiert --version v0.8.19:
+   Inhalt: 3603 Asset-Eintraege, native libs fuer arm64-v8a + x86_64
+   package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+   [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+== SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+== ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_umgehung_r1/apk/F2_backslash_p07g_signiert.apk ==
+EXIT=0

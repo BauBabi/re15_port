@@ -1,0 +1,2 @@
+vor check_binary_fresh
+EXIT=1

@@ -1,0 +1,95 @@
+1790709417.136203 START 2026-09-29 21:16:57 :: bash release/build_android.sh --version v0.8.19 --no-toolchain
+1790709417.725160    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790709418.009153    Python: /c/msys64/mingw64/bin/python3 (3.14.7)
+1790709418.381767 == Android-Bau re15_port_v0.8.19_android ==
+1790709418.381935    Host:    win
+1790709418.382232    SDK:     C:/Users/mjoedicke/AppData/Local/Android/Sdk
+1790709418.382617    JDK:     C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\
+1790709418.383096    Projekt: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android
+1790709418.384967    NDK:     /c/Users/mjoedicke/AppData/Local/Android/Sdk/ndk/27.2.12479018
+1790709418.438661 == CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) ==
+1790709418.438993 == Gradle: fetchSdl2 assembleRelease (Version v0.8.19) ==
+1790709421.471890 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+1790709427.857129 Daemon will be stopped at the end of the build 
+1790709457.080676 
+1790709457.080776 > Task :app:fetchSdl2
+1790709457.081073 SDL2 2.28.5 liegt bereits unter C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\_deps\SDL2-2.28.5
+1790709459.082749 
+1790709459.082900 > Task :app:stageAssets
+1790709459.083121 stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+1790709459.083336 stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+1790709465.180985 
+1790709465.181162 > Task :app:writeAssetManifest
+[... Gradle-Ausgabe Zeilen 23-1154 ausgelassen, vollstaendiges Log: build/r34a/pruefer_echtlauf_r1/android_voll.log (1226 Zeilen) ...]
+1790709633.776549 > Task :app:createReleaseApkListingFileRedirect
+1790709639.374701 > Task :app:lintVitalAnalyzeRelease
+1790709639.487265 > Task :app:lintVitalReportRelease
+1790709639.487688 > Task :app:lintVitalRelease
+1790709639.487948 > Task :app:assembleRelease
+1790709639.586097 [Incubating] Problems report is available at: file:///C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/build/reports/problems/problems-report.html
+1790709639.586162 
+1790709639.586250 BUILD SUCCESSFUL in 3m 40s
+1790709639.586343 54 actionable tasks: 54 executed
+1790709639.904642 == Gates: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk.ungeprueft ==
+1790709640.515203    Inhalt: 3604 Asset-Eintraege, native libs fuer arm64-v8a + x86_64
+1790709640.741005    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790709640.741098    sdkVersion:'24'
+1790709640.741174    targetSdkVersion:'35'
+1790709640.741370    launchable-activity: name='de.re15.port.RE15Activity'  label='RE1.5 Port' icon=''
+1790709640.741468    native-code: 'arm64-v8a' 'x86_64'
+1790709640.883406 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/msys64/mingw64/bin/python3) ==
+1790709641.009595 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790709641.152584    [ok] 01 gute APK                                           rc=0 (soll 0)
+1790709641.284614    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+1790709641.411599    [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+1790709641.553885    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+1790709641.679999    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+1790709641.811018    [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+1790709641.938527    [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+1790709642.080797    [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+1790709642.206348    [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+1790709642.345253    [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+1790709642.471735    [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+1790709642.646076    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+1790709642.789218    [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+1790709642.924260    [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+1790709643.066369    [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+1790709643.192909    [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+1790709643.309288    [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+1790709643.435077    [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+1790709643.562121    [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+1790709643.680318    [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+1790709643.807313    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+1790709643.921603    [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+1790709644.047594    [ok] 23 APK fehlt                                          rc=2 (soll 2)
+1790709644.173844    [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+1790709644.284590    [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+1790709644.402797    [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+1790709644.502577    [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+1790709644.627611    [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+1790709644.753709    Laufzeit: 3.7 s
+1790709644.753940 == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+1790709644.758888 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790709644.944274 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790709644.944577    APK:       C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk.ungeprueft
+1790709644.944759    Quellbaum: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android
+1790709644.944940    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790709648.187884    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790709648.188151    shared_assets/PSX               3193    3193     3193    300522652
+1790709648.188319    shared_assets/extracted_fx        13      13       13      1079875
+1790709648.188488    shared_assets/RE2                277     277      277     25482039
+1790709648.188652    shared_assets/RE15DOOR            30      30       30      1914932
+1790709648.188816    synchro                           90      90       90     27678779
+1790709648.188982    SUMME                           3603    3603     3603    356678277
+1790709648.189110    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790709648.189250    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790709648.189387    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790709648.189594    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790709648.189657    Laufzeit:  3.2 s
+1790709648.189837 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+1790709649.627219 
+1790709649.650630 -rw-r--r-- 1 mjoedicke 197121 363212403 Sep 29 21:20 /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790709649.673957 e3b203ee76b795e5c56291e2579838aa358af3be66f242c59a11644be16c21b2 *re15_port_v0.8.19_android.apk
+1790709649.674556 == ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ==
+1790709650.693837 ENDE 2026-09-29 21:20:50
+EXIT=0

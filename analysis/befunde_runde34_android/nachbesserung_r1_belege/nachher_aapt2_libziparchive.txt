@@ -1,0 +1,33 @@
+# aapt2 35.0.0 (libziparchive) als Orakel fuer die zusaetzlichen Faelschungen: dump xmltree --file <gefaelschter Eintrag> ('failed to parse file as binary XML' = gefunden UND gelesen) - 2026-09-29 22:53:30
+=== F1_crc_koll_sig (assets/shared_assets/RE2/ENEMSE.VBS)
+W ResourceType: Bad XML block: header size 1049 or total size 35717120 is larger than data size 6694912
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+=== F6_case_sig (assets/shared_assets/RE15DOOR/P07G.DO2)
+error: failed to find file.
+=== F7_abgeschnitten (assets/shared_assets/RE15DOOR/P07G.DO2)
+build/r34a/nb/apk/F7_abgeschnitten.apk: error: failed opening zip: Invalid file.
+=== F8_cd_sig (assets/shared_assets/PSX/DATA/TEX.TIM)
+W ziparchive: Zip: missed a central dir sig (at 2149)
+build/r34a/nb/apk/F8_cd_sig.apk: error: failed opening zip: Invalid file.
+=== N1_lfh_name (assets/shared_assets/RE15DOOR/P1AP.DO2)
+W ziparchive: Zip: lfh name did not match central directory
+build/r34a/nb/apk/N1_lfh_name.apk: error: failed opening zip: Inconsistent information.
+=== N2_utf8_sig (assets/shared_assets/RE15DOOR/P24B.DO2)
+W ziparchive: Zip: invalid file name at entry 3224
+build/r34a/nb/apk/N2_utf8_sig.apk: error: failed opening zip: Invalid entry name.
+=== N3_verschl_sig (assets/shared_assets/RE15DOOR/P27S.DO2)
+W ResourceType: Bad XML block: header size 5652 or total size 388235264 is larger than data size 78508
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+=== N4_meth99 (assets/shared_assets/RE2/DOOR/DOOR36.DO2)
+error: failed to open file.
+=== N5_weniger (assets/re15_assets.txt)
+W ResourceType: Bad XML block: header size 25970 or total size 1629500721 is larger than data size 163901
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+== ../../ref_v0.8.19
+
+error: failed to parse file as binary XML: failed to initialize ResXMLTree.
+== N5_weniger
+error: failed to find file.

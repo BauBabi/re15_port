@@ -1,0 +1,21 @@
+Referenz: build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk (363212403 B, 3616 Eintraege)
+Neu:      build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk (363212403 B, 3616 Eintraege)
+Namen eindeutig: ref True, neu True
+assets/: ref 3604, neu 3604; Reihenfolge gleich: True
+nur Referenz: 0 []
+nur neu:      0 []
+assets/ mit Abweichung (Methode/CRC/Groessen/sha256/Flags): 0 []
+ausserhalb assets/ gleich: 8  anders: 4
+   anders: lib/arm64-v8a/libSDL2.so ['crc', 'csize', 'usize', 'sha'] (1420920 B -> 1420888 B)
+   anders: lib/arm64-v8a/libmain.so ['crc', 'sha'] (1336832 B -> 1336832 B)
+   anders: lib/x86_64/libSDL2.so ['crc', 'csize', 'usize', 'sha'] (1537048 B -> 1537032 B)
+   anders: lib/x86_64/libmain.so ['crc', 'sha'] (1398200 B -> 1398200 B)
+assets/ Stored: ref 3604/3604, neu 3604/3604
+neu: Stored-Assets nicht 4-B-ausgerichtet: 0; .so nicht 16-KiB-ausgerichtet: 0
+Manifest bytegleich: True (sha256 5f5acfdb062a8ee0 / 5f5acfdb062a8ee0), Kopf neu: b'# re15 assets 3603 356678277'
+Manifest: 3603 Zeilen, ohne passenden Eintrag: 0 []
+Quellbaum: 3603 Dateien; je Baum (Quelle/gleich in neu): {'PSX': (3193, 3193), 'RE15DOOR': (30, 30), 'RE2': (277, 277), 'extracted_fx': (13, 13), 'synchro': (90, 90)}
+Quellbaum: fehlt in neu 0, anders 0, APK-Asset ohne Quelle 0
+RE2/DOOR: 27 Quelle, 27 gleich in neu; RE15DOOR: 30 Quelle, 30 gleich in neu; TORSE.VBS gleich: True
+ERGEBNIS rc=0
+rc=0 dauer=6.1 s

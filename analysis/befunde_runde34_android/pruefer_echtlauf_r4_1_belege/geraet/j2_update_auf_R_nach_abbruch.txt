@@ -1,0 +1,15 @@
+== j2_update_auf_R_nach_abbruch 2026-09-30 10:23:59
+APK: build/r34a/pruefer_e1/apk/R_ohne_CDEMD0.apk sha256 2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195
+install rc=0 (7561 ms): Performing Streamed Install Success 
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe1m
+   lastUpdateTime=2026-09-30 08:24:09
+   firstInstallTime=2026-09-30 08:23:16
+installiert: /data/app/~~F-Ep9UlLXeYcHBNPoH5NZA==/de.re15.port-0OlKWsEm8Tlz9L-FNMKBCQ==/base.apk sha256 2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195
+Status: ok
+LaunchState: COLD
+TotalTime: 4108
+warten rc=0 (21502 ms ab am start)
+09-30 08:24:20.312 I/re15    (10686): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:24:20.550 I/re15    (10686): [android] Abgleich (ohne Liste): 3602 Dateien (345553541 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3602, weg 0
+09-30 08:24:38.376 I/re15    (10686): [android] Entpacken fertig (ohne Liste): 3602 geprueft, 377 kopiert (43032925 B, 1993 ms), 3225 per SHA-256 geprueft (302520616 B, 11271 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 17847 ms

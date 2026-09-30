@@ -1,0 +1,265 @@
+START 2026-09-30 03:43:37
+=== Umgebung ===
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+NAME="Debian GNU/Linux"
+Linux 5.15.167.4-microsoft-standard-WSL2 x86_64
+GNU bash, version 5.1.4(1)-release (x86_64-pc-linux-gnu)
+OSTYPE=linux-gnu
+which: /usr/bin/python3
+which: /bin/readlink
+which: /usr/bin/timeout
+Python 3.9.2
+514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9  /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc  /src/build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk
+CR im Gate: 0, erste Zeile: #!/bin/bash, Modus: 777
+
+### L1 python_finden.sh (Diagnoseaufruf)
+### $ bash /src/release/python_finden.sh
+   Python: /usr/bin/python3 (3.9.2)
+PY=/usr/bin/python3
+PY_VERSION=3.9.2
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=0.1 s
+
+### L2 --selbsttest (python3)
+### $ python3 /src/release/apk_asset_gate.py --selbsttest
+== APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   Innere Proben: 58/58 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)
+   Laufzeit: 19.6 s
+== SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+### (Zeilen [ok] ausgeblendet: 202)
+### -> rc=0  dauer=19.9 s
+
+### L3 --quellbaum gegen den Mount /src (9p)
+### $ python3 /src/release/apk_asset_gate.py --repo /src --quellbaum
+== APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   shared_assets/PSX               3193 Dateien
+   shared_assets/extracted_fx        13 Dateien
+   shared_assets/RE2                277 Dateien
+   shared_assets/RE15DOOR            30 Dateien
+   synchro                           90 Dateien
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+== APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=3.0 s
+
+### L4 Referenz-APK gegen den Mount /src (9p)
+### $ python3 /src/release/apk_asset_gate.py --repo /src /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  124.2 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=124.4 s
+
+Kopie nach /tmp/repo: 40.0 s, 346M
+
+### L5 Referenz-APK gegen die Kopie /tmp/repo
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  10.6 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=10.8 s
+
+### L6 NEUE APK (Bau Abschnitt 1) gegen die Kopie /tmp/repo
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /src/build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  5.5 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=5.7 s
+
+### L7 Direktaufruf /src/release/apk_asset_gate.py (Kopf als Bash) --repo /tmp/repo --quellbaum
+### $ /src/release/apk_asset_gate.py --repo /tmp/repo --quellbaum
+   Python: /usr/bin/python3 (3.9.2)
+== APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   shared_assets/PSX               3193 Dateien
+   shared_assets/extracted_fx        13 Dateien
+   shared_assets/RE2                277 Dateien
+   shared_assets/RE15DOOR            30 Dateien
+   synchro                           90 Dateien
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+== APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=0.6 s
+gekippt: Offset 321534605 in assets/shared_assets/RE2/DOOR/DOOR36.DO2
+
+### L8 Negativ: 1 Byte in RE2/DOOR/DOOR36.DO2 gekippt
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /tmp/neg_door36.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /tmp/neg_door36.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      276     25423643
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3602    356619881
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 26/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  1.5 s
+--- Abweichungen: 1 ---
+   [APK: beschaedigt (CRC)] 1
+      APK-Eintrag beschaedigt (CRC/Entpacken): assets/shared_assets/RE2/DOOR/DOOR36.DO2: gelesen 58396 B, CRC 037fa8f1 - Zentralverzeichnis 58396 B, CRC 81150628
+== APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=1  dauer=1.7 s
+
+### L9 Negativ: Quellbaum hat RE15DOOR/P99X.DO2 zusaetzlich
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            31      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3604    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 31, APK 30, sha256 gleich 30/31
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  7.5 s
+--- Abweichungen: 2 ---
+   [Quellbaum: Tuerarchiv] 1
+      re15_port/shared_assets/RE15DOOR/P99X.DO2 steht in keiner Engine-Tabelle (re15_port/engine/src/gen/re15_tuer_eigen.inc) - Ordner und Tabellen passen nicht zusammen
+   [fehlt in der APK] 1
+      fehlt in der APK: assets/shared_assets/RE15DOOR/P99X.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P99X.DO2)
+== APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=1  dauer=7.7 s
+
+### L10 Negativ: APK abgeschnitten (100 MB)
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /tmp/neg_kurz.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /tmp/neg_kurz.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+ABBRUCH (Rueckgabe 2): APK nicht lesbar: /tmp/neg_kurz.apk (kein End-of-Central-Directory - kein ZIP oder abgeschnitten)
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=2  dauer=0.2 s
+
+### L11a --paket (wie copy_common)
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo --paket /tmp/paket
+== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   Paket:     /tmp/paket
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   Baum                          Quelle  gleich
+   shared_assets/PSX               3193    3193
+   shared_assets/extracted_fx        13      13
+   shared_assets/RE2                277     277
+   shared_assets/RE15DOOR            30      30
+   synchro                           90      90
+   Laufzeit:  1.1 s
+== APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=0  dauer=1.3 s
+
+### L11b --paket, 1 Byte in RE2/TORSE.VBS gekippt
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo --paket /tmp/paket
+== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   Paket:     /tmp/paket
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   Baum                          Quelle  gleich
+   shared_assets/PSX               3193    3193
+   shared_assets/extracted_fx        13      13
+   shared_assets/RE2                277     276
+   shared_assets/RE15DOOR            30      30
+   synchro                           90      90
+   Laufzeit:  1.1 s
+--- Abweichungen: 1 ---
+   [Inhalt weicht ab (sha256)] 1
+      Inhalt weicht ab: shared_assets/RE2/TORSE.VBS  Quelle 19176 B d84c806fbd2b171d.., Paket 19176 B 1230ec58c0b6b635..
+== APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=1  dauer=1.3 s
+
+### L12 build_android.sh --gate-only ohne Android-SDK (muss geschlossen abbrechen)
+### $ bash /src/release/build_android.sh --gate-only /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk --version v0.8.19
+   Python: /usr/bin/python3 (3.9.2)
+== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+ABBRUCH: APK-Pruefung: Android-SDK-Ordner fehlt: /root/Android/Sdk (ANDROID_SDK_ROOT setzen) - ohne aapt,
+        zipalign und apksigner gibt es keine Pruefung von Version, Paketname, ABIs, Ausrichtung und Signatur.
+        Nur die Assets: "$PY" release/apk_asset_gate.py --repo . <apk>
+### (Zeilen [ok] ausgeblendet: 0)
+### -> rc=1  dauer=0.0 s
+
+=== Ende 2026-09-30 01:47:42 ===
+EXIT_DOCKER=0
+ENDE 2026-09-30 03:47:43

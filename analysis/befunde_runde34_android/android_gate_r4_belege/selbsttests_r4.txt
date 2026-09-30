@@ -1,0 +1,64 @@
+MU0_sha_vergleich_aus          geschrieben (Auftragsbeispiel: sha256-Vergleich Quelle/APK abgeschaltet (else zaehlt dann alles als gleich))
+MU1_manifest_rstrip_alles      geschrieben (Manifestzeile: rstrip() statt rstrip('\r') - schneidet auch Leerzeichen/Tab/FF/VT ab (Geraet nur '\r'))
+MU2_groesse_unicode_ziffern    geschrieben (Groessenfeld: \d statt [0-9] - nimmt Unicode-Ziffern (int() rechnet sie um, atoll liest 0))
+MU3_splitlines                 geschrieben (Manifest: splitlines() statt split('\n') - trennt auch an \r, \x0b, \x0c, \x1c-\x1e, \x85, U+2028/9)
+MU4_manifest_max_64GiB         geschrieben (Konstante: 64 GiB statt 64 MiB (Selbsttest prueft die Grenze nur ueber den Pruefhaken))
+MU5_methode_bis_8              geschrieben (Methode: jede <= 8 lesbar (Geraet behandelt alles ausser 8 als Stored))
+MU6_groesse_isdigit            geschrieben (Groessenfeld: str.isdigit() statt [0-9]+ (Unicode-Ziffern, hochgestellte Ziffern))
+MU7_kopf_strip                 geschrieben (Kopfzeile: strip() statt rstrip('\r'))
+MU8_pfad_strip                 geschrieben (Manifestpfad zusaetzlich gestrippt (Leerzeichen am Pfadende/-anfang))
+MUP_paket_sha_aus              geschrieben (paket_pruefen: sha256-Vergleich aus)
+Gate: sha256 d89512466f64811d...
+ECHT                           rc=0   14s | == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU0_sha_vergleich_aus          rc=1   17s | == SELBSTTEST-FEHLER: 5 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte           rc=0 (soll 1)  fehlende Meldung: ['I
+         [FEHLER] 30 Datei > 1 MiB: 1 Byte hinter dem 1. MiB                    rc=0 (soll 1)  fehlende Meldung: ['I
+         [FEHLER] 31 CRC32-erhaltende Aenderung (gleiche Groesse)               rc=0 (soll 1)  fehlende Meldung: ['I
+         [FEHLER] 167 APK-Inhalt: sha256 kleiner als die Quelle                  rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 168 APK-Inhalt: sha256 groesser als die Quelle                 rc=0 (soll 1)  fehlende Meldung: ['
+MU1_manifest_rstrip_alles      rc=1   21s | == SELBSTTEST-FEHLER: 5 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 203 R4 MU1/MU8: Manifestpfad mit Leerzeichen am Ende           rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 204 R4 MU1/MU8: Manifestpfad mit Tab am Ende                   rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 205 R4 MU1/MU3: Manifestzeile endet mit VT (\x0b)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 206 R4 MU1/MU3: Manifestzeile endet mit FF (\x0c)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 207 R4 MU1/MU8: Manifestpfad mit NBSP (U+00A0) am Ende         rc=0 (soll 1)  fehlende Meldung: ['
+MU2_groesse_unicode_ziffern    rc=1   23s | == SELBSTTEST-FEHLER: 2 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 216 R4 MU2/MU6: Groessenfeld in Vollbreit-Ziffern              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 217 R4 MU2/MU6: Groessenfeld in arabisch-indischen Ziffern     rc=0 (soll 1)  fehlende Meldung: ['
+MU3_splitlines                 rc=1   26s | == SELBSTTEST-FEHLER: 8 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 205 R4 MU1/MU3: Manifestzeile endet mit VT (\x0b)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 206 R4 MU1/MU3: Manifestzeile endet mit FF (\x0c)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 209 R4 MU3: U+2028 statt '\n' vor einer Zeile                  rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 210 R4 MU3: '\r' allein als Zeilentrenner                      rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 211 R4 MU3: FS (\x1c) als Zeilentrenner                        rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 212 R4 MU3: NEL (U+0085) als Zeilentrenner                     rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 213 R4 MU3: VT (\x0b) als Zeilentrenner                        rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 214 R4 MU3: FF (\x0c) als Zeilentrenner                        rc=0 (soll 1)  fehlende Meldung: ['
+MU4_manifest_max_64GiB         rc=1    1s | == SELBSTTEST-FEHLER: 2 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] _manifest_grenze() mit Pruefhaken None = 68719476736, soll 67108864 (Geraet: 64 MiB)
+         [FEHLER] _manifest_grenze() mit Pruefhaken '67108865' = 67108865, soll 67108864 (Geraet: 64 MiB)
+MU5_methode_bis_8              rc=1   16s | == SELBSTTEST-FEHLER: 3 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 223 R4 MU5: Methode 1 auf Deflate-Daten                        rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 224 R4 MU5: Methode 7 auf Deflate-Daten                        rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 225 R4 MU5: Methode 1 auf Stored-Daten                         rc=1 (soll 1)  fehlende Meldung: ['
+MU6_groesse_isdigit            rc=1   15s | == SELBSTTEST-FEHLER: 3 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 216 R4 MU2/MU6: Groessenfeld in Vollbreit-Ziffern              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 217 R4 MU2/MU6: Groessenfeld in arabisch-indischen Ziffern     rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 218 R4 MU6: Groessenfeld hochgestellt (isdigit, nicht Nd)      rc=2 (soll 1)  fehlende Meldung: ['
+MU7_kopf_strip                 rc=1   17s | == SELBSTTEST-FEHLER: 3 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 220 R4 MU7: Kopfzeile mit Leerzeichen davor                    rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 221 R4 MU7: Kopfzeile mit Leerzeichen dahinter                 rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 222 R4 MU7: Kopfzeile mit Tab dahinter                         rc=0 (soll 1)  fehlende Meldung: ['
+MU8_pfad_strip                 rc=1   18s | == SELBSTTEST-FEHLER: 6 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 203 R4 MU1/MU8: Manifestpfad mit Leerzeichen am Ende           rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 204 R4 MU1/MU8: Manifestpfad mit Tab am Ende                   rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 205 R4 MU1/MU3: Manifestzeile endet mit VT (\x0b)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 206 R4 MU1/MU3: Manifestzeile endet mit FF (\x0c)              rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 207 R4 MU1/MU8: Manifestpfad mit NBSP (U+00A0) am Ende         rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 208 R4 MU8: Manifestpfad mit Leerzeichen am Anfang             rc=0 (soll 1)  fehlende Meldung: ['
+MUP_paket_sha_aus              rc=1   20s | == SELBSTTEST-FEHLER: 3 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+         [FEHLER] 132 --paket: gleiche Groesse, anderer Inhalt                   rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 185 --paket: sha256 kleiner als die Quelle                     rc=0 (soll 1)  fehlende Meldung: ['
+         [FEHLER] 186 --paket: sha256 groesser als die Quelle                    rc=0 (soll 1)  fehlende Meldung: ['
+FERTIG
+EXIT=0

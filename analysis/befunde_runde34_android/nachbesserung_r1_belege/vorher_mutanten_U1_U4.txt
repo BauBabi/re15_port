@@ -1,0 +1,7 @@
+# Mutanten U1-U4 des Pruefers auf dem Gate-Stand HEAD 568e9b88, Python 3.10.11, 2026-09-29 21:53:02
+U1_geisterzeile_aus --selbsttest: EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+U2_doppelzeile_aus --selbsttest: EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+U3_nur_erster_block --selbsttest: EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+U4_crc_statt_sha256 --selbsttest: EXIT=0 | == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+U3_nur_erster_block gegen F1_crc_koll: EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==
+U4_crc_statt_sha256 gegen F1_crc_koll: EXIT=0 | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt ==

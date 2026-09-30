@@ -1,0 +1,121 @@
+﻿BAUM C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\Python vorhanden=False
+BAUM C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\Python vorhanden=False
+BAUM C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\Python vorhanden=False
+BAUM C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\Python vorhanden=False
+DIR (fehlt) C:\Users\mjoedicke\AppData\Local\Programs\Python
+DIR C:\Users\mjoedicke\AppData\Local\Python eintraege=2 neuester=C:\Users\mjoedicke\AppData\Local\Python\_cache\last_welcome.txt 2026-09-29T15:39:13
+DIR1 C:\Users\mjoedicke\AppData\Local\Python\_cache 2026-09-29T15:39:13
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10 2025-09-25T08:38:21
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10\IDLE (Python 3.10 64-bit).lnk 2025-09-25T08:38:21
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10\Python 3.10 (64-bit).lnk 2025-09-25T08:37:59
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10\Python 3.10 Manuals (64-bit).lnk 2025-09-25T08:38:12
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.10\Python 3.10 Module Docs (64-bit).lnk 2025-09-25T08:38:21
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12 2025-02-22T16:08:12
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12\IDLE (Python 3.12 64-bit).lnk 2024-09-20T02:03:23
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12\Python 3.12 (64-bit).lnk 2024-09-20T02:03:15
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12\Python 3.12 Manuals (64-bit).lnk 2024-09-20T02:03:21
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.12\Python 3.12 Module Docs (64-bit).lnk 2024-09-20T02:03:23
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9 2025-09-25T08:03:07
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9\IDLE (Python 3.9 64-bit).lnk 2025-09-25T08:03:07
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9\Python 3.9 (64-bit).lnk 2025-09-25T08:02:48
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9\Python 3.9 Manuals (64-bit).lnk 2025-09-25T08:02:59
+MENU C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Python 3.9\Python 3.9 Module Docs (64-bit).lnk 2025-09-25T08:03:07
+REG HKEY_CURRENT_USER\Software\Python\PythonCore
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Help
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Help\Main Python Documentation
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstallPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\PythonPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\PythonPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Help
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Help\Main Python Documentation
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Idle
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\IdleShortcuts
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstallPath
+REG HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\PythonPath
+REG HKEY_LOCAL_MACHINE\Software\WOW6432Node\Python\PyLauncher
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore [DisplayName]=Python Software Foundation
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore [SupportUrl]=https://www.python.org/
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10 [DisplayName]=Python 3.10 (64-bit)
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10 [SupportUrl]=https://www.python.org/
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10 [SysArchitecture]=64bit
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10 [SysVersion]=3.10
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10 [Version]=3.10.11
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Help\Main Python Documentation []=C:\Python310\Doc\python31011.chm
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\Idle []=C:\Python310\Lib\idlelib\idle.pyw
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\IdleShortcuts []=1
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [dev]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [doc]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [doc_shortcut]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [exe]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [lib]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [path]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [pip]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [Shortcuts]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [tcltk]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [test]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstalledFeatures [tools]=3.10.11150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstallPath []=C:\Python310\
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstallPath [ExecutablePath]=C:\Python310\python.exe
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\InstallPath [WindowedExecutablePath]=C:\Python310\pythonw.exe
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.10\PythonPath []=C:\Python310\Lib\;C:\Python310\DLLs\
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\Idle []=C:\Python312\Lib\idlelib\idle.pyw
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\IdleShortcuts []=1
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [dev]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [doc]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [doc_shortcut]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [exe]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [lib]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [path]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [pip]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [Shortcuts]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [tcltk]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\InstalledFeatures [test]=3.12.6150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.12\PythonPath []=C:\Python312\Lib\;C:\Python312\DLLs\
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9 [DisplayName]=Python 3.9 (64-bit)
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9 [SupportUrl]=http://www.python.org/
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9 [SysArchitecture]=64bit
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9 [SysVersion]=3.9
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9 [Version]=3.9.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Help\Main Python Documentation []=C:\Python39\Doc\python390.chm
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\Idle []=C:\Python39\Lib\idlelib\idle.pyw
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\IdleShortcuts []=1
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [dev]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [doc]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [doc_shortcut]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [exe]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [lib]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [path]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [pip]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [Shortcuts]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [tcltk]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [test]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstalledFeatures [tools]=3.9.150.0
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstallPath []=C:\Python39\
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstallPath [ExecutablePath]=C:\Python39\python.exe
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\InstallPath [WindowedExecutablePath]=C:\Python39\pythonw.exe
+REGVAL HKEY_LOCAL_MACHINE\Software\Python\PythonCore\3.9\PythonPath []=C:\Python39\Lib\;C:\Python39\DLLs\
+REGVAL HKEY_LOCAL_MACHINE\Software\WOW6432Node\Python\PyLauncher []=C:\Windows\py.exe
+REGVAL HKEY_LOCAL_MACHINE\Software\WOW6432Node\Python\PyLauncher [AssociateFiles]=1
+REGVAL HKEY_LOCAL_MACHINE\Software\WOW6432Node\Python\PyLauncher [InstallDir]=C:\Windows\
+UNINST {a10fbb63-03ff-4b8c-a176-f5fd355f715b} Python 3.10.11 (64-bit)
+UNINST {a2a37ca0-8ebd-4d7e-b4b8-e6b1740c2ce0} Python 3.9.0 (64-bit)
+UNINST pymanager-pythoncore-3.14-64 Python 3.14.7
+WINAPPS py.exe 2026-07-07T14:28:40 0
+WINAPPS pymanager.exe 2026-07-07T14:28:40 0
+WINAPPS python.exe 2026-07-07T14:28:40 0
+WINAPPS python3.exe 2026-07-07T14:28:40 0
+WINAPPS PythonSoftwareFoundation.PythonManager_qbz5n2kfra8p0 2026-07-07T14:28:40 1
+WINAPPS pythonw.exe 2026-07-07T14:28:40 0
+WINAPPS pyw.exe 2026-07-07T14:28:40 0
+WINAPPS pywmanager.exe 2026-07-07T14:28:40 0

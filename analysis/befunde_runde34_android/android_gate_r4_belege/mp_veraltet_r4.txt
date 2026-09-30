@@ -1,0 +1,184 @@
+Sandbox-Commit 82c1ab5 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+Sandbox: 82c1ab5 2026-09-29 12:00:00 +0200
+== L1_mit_apk (): EXIT=0 (149 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_mp/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+      APK im Split-Satz = gepruefte APK (entpackt: sha256 514bebd55bd6b8ec... = Pruefkopie)
+   == SHA256SUMS.txt geschrieben (4 Volumes, Android-Satz aus diesem Lauf) ==
+      0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+   == Fertig ==
+--- Stand nach L1 ---
+   19:42:10 363212403 re15_port_v0.8.19_android.apk
+   04:54:05 94371840 re15_port_v0.8.19_android.z01
+   04:54:05 75105247 re15_port_v0.8.19_android.zip
+   04:53:41 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:53:49 75236322 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      52cba344f89818d950e0e451fd8c0b0c2421cccaf027a6a6c5cd2dc0812ecc5f *re15_port_v0.8.19_android.z01
+      9d69b62a29e8a10d5f87d54b00e5ce66cc66ba2ad2f0b9328ecba72d5cbfe519 *re15_port_v0.8.19_android.zip
+      579e45c049c102ca53a26f83e36d1155935870394317cc690cb27140b7d09826 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a8c27418244f0eeb7fb48e9c877f062f0d2e7a4956d6da947dae4a6340ef1459 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      A	release/re15_port_v0.8.19_android.z01
+      A	release/re15_port_v0.8.19_android.zip
+      A	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      A	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+   versioniert: release/re15_port_v0.8.19_android.z01 release/re15_port_v0.8.19_android.zip release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+--- Release-Commit in der Sandbox: 186691f
+--- Quellbaum-Aenderung: re15_port/shared_assets/extracted_fx/effect0_blood.tim in der Sandbox ecb6f021d27619ec..., Original im Arbeitsbaum unveraendert
+== L2_apk_veraltet (): EXIT=1 (55 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+--- APK aus release/ der Sandbox entfernt
+== L3n_ohne_apk_neu (): EXIT=1 (23 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+               release/make_package.sh --version v0.8.19 --ohne-android ...
+--- Stand nach L3n ---
+   04:54:05 94371840 re15_port_v0.8.19_android.z01
+   04:54:05 75105247 re15_port_v0.8.19_android.zip
+   04:53:41 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:53:49 75236322 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      52cba344f89818d950e0e451fd8c0b0c2421cccaf027a6a6c5cd2dc0812ecc5f *re15_port_v0.8.19_android.z01
+      9d69b62a29e8a10d5f87d54b00e5ce66cc66ba2ad2f0b9328ecba72d5cbfe519 *re15_port_v0.8.19_android.zip
+      579e45c049c102ca53a26f83e36d1155935870394317cc690cb27140b7d09826 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a8c27418244f0eeb7fb48e9c877f062f0d2e7a4956d6da947dae4a6340ef1459 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+   versioniert: release/re15_port_v0.8.19_android.z01 release/re15_port_v0.8.19_android.zip release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+--- SUMS + Satz gegen den Release-Commit:
+   build/r34a/r4/sb_mp/release/re15_port_v0.8.19_android.z01: OK
+   build/r34a/r4/sb_mp/release/re15_port_v0.8.19_android.zip: OK
+   build/r34a/r4/sb_mp/release/SHA256SUMS.txt: OK
+== L3a_ohne_apk_ALTES_skript (): EXIT=0 (64 s)
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      (kein Android-Paket: re15_port_v0.8.19_android.apk fehlt — release/build_android.sh laeuft getrennt)
+   == SHA256SUMS.txt geschrieben ==
+      0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+   == Fertig ==
+--- Stand nach L3a (altes Skript) ---
+   04:54:05 94371840 re15_port_v0.8.19_android.z01
+   04:54:05 75105247 re15_port_v0.8.19_android.zip
+   04:56:38 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:56:47 75236326 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      52cba344f89818d950e0e451fd8c0b0c2421cccaf027a6a6c5cd2dc0812ecc5f *re15_port_v0.8.19_android.z01
+      9d69b62a29e8a10d5f87d54b00e5ce66cc66ba2ad2f0b9328ecba72d5cbfe519 *re15_port_v0.8.19_android.zip
+      f87259fcd08f9d826f3270c53eb4a6542bfc363a1def1f6edc08b817423ad23a *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a8f59012e854fe8aff61e84d647d5d0cad017ffbefe1b2fb654ff04f39d4f687 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+   versioniert: release/re15_port_v0.8.19_android.z01 release/re15_port_v0.8.19_android.zip release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+--- Sandbox zurueck auf den Release-Commit (reset --hard; Quellbaum/APK sind gitignoriert)
+   make_package.sh = Arbeitsbaum
+   apk_pruefen.sh = Arbeitsbaum
+== L4_ohne_android (--ohne-android): EXIT=0 (89 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip ==
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.z01)
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.zip)
+   == SHA256SUMS.txt geschrieben (2 Volumes) ==
+      2 alte Paketdatei(en) aus dem Repo entfernt, 2 neue vorgemerkt
+   == Fertig ==
+--- Stand nach L4 ---
+   04:58:16 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:58:23 75236326 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      1102d2277fd9bde4229c5f91c57c480ff2a760297d1c7e98548423b6ab3af444 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a7220efbf397a418b76fb91e7ac8f636e3463dba5f4c6b49313864b81c288cd5 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      D	release/re15_port_v0.8.19_android.z01
+      D	release/re15_port_v0.8.19_android.zip
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+   versioniert: release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+--- Satz unversioniert (Datei bleibt), dann wieder vorgemerkt:
+--- Stand vor L5 ---
+   04:58:36 94371840 re15_port_v0.8.19_android.z01
+   04:58:37 75105247 re15_port_v0.8.19_android.zip
+   04:58:37 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:58:38 75236322 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      52cba344f89818d950e0e451fd8c0b0c2421cccaf027a6a6c5cd2dc0812ecc5f *re15_port_v0.8.19_android.z01
+      9d69b62a29e8a10d5f87d54b00e5ce66cc66ba2ad2f0b9328ecba72d5cbfe519 *re15_port_v0.8.19_android.zip
+      579e45c049c102ca53a26f83e36d1155935870394317cc690cb27140b7d09826 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      a8c27418244f0eeb7fb48e9c877f062f0d2e7a4956d6da947dae4a6340ef1459 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      A	release/re15_port_v0.8.19_android.z01
+      A	release/re15_port_v0.8.19_android.zip
+   versioniert: release/re15_port_v0.8.19_android.z01 release/re15_port_v0.8.19_android.zip release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+== L5_vorgemerkt_ohne_android_zip_only (--ohne-android --zip-only): EXIT=0 (75 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip ==
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.z01)
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.zip)
+   == SHA256SUMS.txt geschrieben (2 Volumes) ==
+      2 alte Paketdatei(en) aus dem Repo entfernt, 2 neue vorgemerkt
+   == Fertig ==
+--- Stand nach L5 ---
+   04:59:36 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:59:43 75236326 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      4dda2c915cc472bfda16d0ff50d1b678f7d2fda1c29cb053dbcf2a52f69ecbf4 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      3e2eb4e004392192b43fd8332a2449bf41e873514cb0672f42b4931921282496 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+   versioniert: release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+--- Stand vor L6 (Satz unversioniert, nicht vorgemerkt) ---
+   04:54:05 94371840 re15_port_v0.8.19_android.z01
+   04:54:05 75105247 re15_port_v0.8.19_android.zip
+   04:59:36 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:59:43 75236326 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      4dda2c915cc472bfda16d0ff50d1b678f7d2fda1c29cb053dbcf2a52f69ecbf4 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      3e2eb4e004392192b43fd8332a2449bf41e873514cb0672f42b4931921282496 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+   versioniert: release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+== L6_no_zip (--no-zip): EXIT=0 (90 s)
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      0 alte Paketdatei(en) aus dem Repo entfernt, 2 neue vorgemerkt
+   == Fertig ==
+--- Stand nach L6 ---
+   04:54:05 94371840 re15_port_v0.8.19_android.z01
+   04:54:05 75105247 re15_port_v0.8.19_android.zip
+   04:59:36 94371840 re15_port_v0.8.19_linux_steamdeck_x64.z01
+   04:59:43 75236326 re15_port_v0.8.19_linux_steamdeck_x64.zip
+   SHA256SUMS.txt:
+      4dda2c915cc472bfda16d0ff50d1b678f7d2fda1c29cb053dbcf2a52f69ecbf4 *re15_port_v0.8.19_linux_steamdeck_x64.z01
+      3e2eb4e004392192b43fd8332a2449bf41e873514cb0672f42b4931921282496 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+   Index gegen HEAD (Sandbox):
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.z01
+      M	release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+   versioniert: release/re15_port_v0.8.19_linux_steamdeck_x64.z01 release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+FERTIG
+EXIT=0

@@ -1,0 +1,13 @@
+Gate im Arbeitsbaum: sha256 72cfa6b248e3a243...
+echt_K0_sig                                  EXIT=0   21s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur  == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_r3/apk/K0_sig.apk (geprueft: sha256 crc32 Bytes 52484166 
+echt_F1_leerzeichen_sig                      EXIT=1   20s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde == ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben) 
+echt_F2_vollbreit_sig                        EXIT=1   23s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde == ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben) 
+   Sandbox-Gate := MU1_manifest_rstrip_alles (sha256 890b6cf23e2a1068...)
+MU1_K0_sig                                   EXIT=0   24s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur  == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_r3/apk/K0_sig.apk (geprueft: sha256 crc32 Bytes 52484166 
+MU1_F1_leerzeichen_sig                       EXIT=0   22s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur  == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_r3/apk/F1_leerzeichen_sig.apk (geprueft: sha256 crc32 By 
+   Sandbox-Gate := MU2_groesse_unicode_ziffern (sha256 71f3e80a0e88443a...)
+MU2_F2_vollbreit_sig                         EXIT=0   42s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur  == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_r3/apk/F2_vollbreit_sig.apk (geprueft: sha256 crc32 Byte 
+   Sandbox-Gate zurueck auf das echte (sha256 72cfa6b248e3a243...)
+sandbox_echt_F1_leerzeichen_sig              EXIT=1   23s | == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) == == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde == ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben) 
+FERTIG
+EXIT=0

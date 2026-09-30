@@ -1,0 +1,9 @@
+gekippt: Byte 100 in release/pkg-linux/re15_port_v0.8.19/shared_assets/RE2/DOOR/DOOR04.DO2
+N1_linux_door04: EXIT=1  Meldung-gefunden=ja  zurueck=gleich  (ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR04.DO2)
+gekippt: Byte 100 in release/pkg-linux/re15_port_v0.8.19/shared_assets/RE2/TORSE.VBS
+N2_linux_torse: EXIT=1  Meldung-gefunden=ja  zurueck=gleich  (ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS)
+gekippt: Byte 100 in release/pkg-win/re15_port_v0.8.19/shared_assets/RE2/DOOR/DOOR36.DO2
+N3_win_door36: EXIT=1  Meldung-gefunden=ja  zurueck=gleich  (ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR36.DO2)
+gekippt: Byte 100 in release/pkg-win/re15_port_v0.8.19/shared_assets/RE2/TORSE.VBS
+N4_win_torse: EXIT=1  Meldung-gefunden=ja  zurueck=gleich  (ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS)
+EXIT_SKRIPT=0

@@ -1,0 +1,13 @@
+Schatten mit neuem Baum RE15NEU (nicht in build.gradle), APK = Referenz: rc=0
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+--- liest das Gate make_package.sh/copy_common?
+50:  vorhanden (make_package.sh check_tree verlangt dasselbe fuer die PC-Pakete).
+52:  release/apk_pruefen.sh (dieselbe Kette fuer build_android.sh und make_package.sh).
+67:  Aufrufer: release/apk_pruefen.sh (aus build_android.sh und make_package.sh).
+296:        zeilen.append("  -> BAEUME in release/apk_asset_gate.py nachziehen (und make_package.sh copy_common "
+--- copy_common-Liste (make_package.sh:470-495) vs BAEUME:
+    cp -r "$ASSETS" "$out/shared_assets/PSX"
+    cp -r "$FX" "$out/shared_assets/extracted_fx"
+    cp -r "$RE2" "$out/shared_assets/RE2"
+    cp -r "$RE15DOOR" "$out/shared_assets/RE15DOOR"
+        cp -r "$stagedir" "$out/synchro/$(basename "$stagedir")"

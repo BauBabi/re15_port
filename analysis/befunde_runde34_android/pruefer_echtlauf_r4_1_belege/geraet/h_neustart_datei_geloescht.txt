@@ -1,0 +1,15 @@
+== h_neustart_datei_geloescht 2026-09-30 10:16:53
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe1m
+   lastUpdateTime=2026-09-30 08:15:01
+   firstInstallTime=2026-09-30 08:13:41
+installiert: /data/app/~~7xGks3IwgxcWQo-oh-l3LA==/de.re15.port-h3s3Fz0_hSftcoupN3kdxA==/base.apk sha256 56ef3d26b9328097cf16576b14a6887ed70e2e959d909b980e661fbdfecb7ca9
+Status: ok
+LaunchState: COLD
+TotalTime: 1239
+warten rc=0 (2321 ms ab am start)
+09-30 08:16:59.687 I/re15    ( 9892): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:17:00.136 I/re15    ( 9892): [android] Liste = zuletzt entpackt, aber 1 Dateien fehlen/falsche Groesse -> neu entpacken
+09-30 08:17:00.147 I/re15    ( 9892): [android] Abgleich (Groessen-Nachlauf): 3603 Dateien (356678277 Bytes) - behalten 3603, geaendert 0, neu 0, pruefen 0, weg 0
+09-30 08:17:00.984 I/re15    ( 9892): [android] entpacke shared_assets/PSX/STAGE4/ROOM4011.RDT (Groesse falsch/fehlt)
+09-30 08:17:01.076 I/re15    ( 9892): [android] Entpacken fertig (Groessen-Nachlauf): 3603 geprueft, 1 kopiert (194208 B, 3 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 1099 ms

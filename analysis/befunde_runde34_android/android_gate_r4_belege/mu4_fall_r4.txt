@@ -1,0 +1,6 @@
+geschrieben: K_ohne_innen, MU4_ohne_innen
+K_ohne_innen rc=0 | == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+MU4_ohne_innen rc=1 | == SELBSTTEST-FEHLER: 1 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] 226 R4 MU4: Manifest 1 B ueber 64 MiB, OHNE Pruefhaken         rc=0 (soll 1)  fehlende Meldung: ['Manifest 67108865 B > 67108864 B (64 MiB
+FERTIG
+EXIT=0

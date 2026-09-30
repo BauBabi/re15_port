@@ -1,0 +1,8 @@
+23:37:38 apk_asset_gate selbsttest rc=0 (7 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+23:37:44 M1_manifest_nur_zu_gross selbsttest rc=0 (6 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+23:37:51 M9_laenge_nicht_gegen_cd selbsttest rc=0 (7 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+23:37:57 M5_eocd_nur_muell_hinten selbsttest rc=0 (6 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+23:38:04 M14_dd_bit_aus_cd selbsttest rc=0 (7 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+23:38:11 M16_nicht_assets_nur_stored selbsttest rc=0 (7 s) == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+ENDE
+EXIT=0

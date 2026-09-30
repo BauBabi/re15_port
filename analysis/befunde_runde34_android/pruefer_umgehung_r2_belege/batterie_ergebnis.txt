@@ -1,0 +1,19 @@
+b01_STR_6MB_letztes_Byte                     soll 1 ist 1 ok | Inhalt weicht ab (sha256, gleiche Groesse 6148352 B): assets/shared_assets/PSX/MOVIE/CAPCOM.STR  Quelle 9f9a67204d789cc7.., APK 34c52faa8e11c61e..
+b02_BSS_mittleres_Byte                       soll 1 ist 1 ok | Inhalt weicht ab (sha256, gleiche Groesse 65536 B): assets/shared_assets/PSX/BSS/ROOM1000/BG00.BSS  Quelle 88ed884e154cf9c9.., APK 278bbc2e184cb2ba..
+b03_Ordner_kleingeschrieben                  soll 1 ist 1 ok | fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)
+b04_doppelt_erster_richtig                   soll 1 ist 1 ok | doppelter Eintrag in der APK (2x): assets/shared_assets/RE15DOOR/P07G.DO2 - libziparchive: 'Duplicate entry'
+b05_Verzeichnis_shared_assets                soll 1 ist 1 ok | Verzeichniseintrag in der APK: assets/shared_assets/
+b06_Backslash_nur_CD                         soll 1 ist 1 ok | unzulaessiger Eintragsname b'assets\\shared_assets\\RE15DOOR\\P07G.DO2': '\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet kein Le
+b07_Manifest_CRLF                            soll 0 ist 0 ok | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+b08_Manifest_Leerzeilen                      soll 0 ist 0 ok | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+b09_Manifest_Geisterzeile                    soll 1 ist 1 ok | Manifest nennt shared_assets/RE15DOOR/GEIST.DO2 (5 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/GEIST.DO2
+b10_Manifest_Tab_im_Pfad                     soll 1 ist 1 ok | Manifest nennt shared_assets/RE15DOOR/X	Y.DO2 (5 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/X	Y.DO2
+b11_synchro_ausserhalb_STAGE                 soll 1 ist 1 ok | zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/synchro/README.md
+b12_APK_abgeschnitten                        soll 2 ist 2 ok | ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/pruefer_umgehung_r2/apk/bat/b12.apk (kein End-of-Central-Directory - kein ZIP oder abgeschnitten)
+b13_APK_0_Byte                               soll 2 ist 2 ok | ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/pruefer_umgehung_r2/apk/bat/b13.apk (kein End-of-Central-Directory - kein ZIP oder abgeschnitten)
+b14_Quellbaum_extracted_fx_fehlt             soll 1 ist 1 ok | Quellbaum fehlt: re15_port/shared_assets/extracted_fx (Gradle kopiert aus einem fehlenden Ordner still NICHTS)
+b15_RE15DOOR_nur_leerer_Unterordner          soll 1 ist 1 ok | Quellbaum leer: re15_port/shared_assets/RE15DOOR
+b16_build.gradle_zusaetzlicher_Baum          soll 2 ist 2 ok | ABBRUCH (Rueckgabe 2): build.gradle stageAssets weicht von der Baumliste des Gates ab (re15_port/platform/android/app/build.gradle):
+Schatten wiederhergestellt (RE15DOOR, build.gradle, extracted_fx)
+ENDE
+EXIT=0

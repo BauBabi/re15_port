@@ -1,0 +1,17 @@
+== e_update_M_zu_N 2026-09-30 12:19:35
+APK: build/r34a/pruefer_e2/apk/N.apk sha256 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+install -r rc=0 (11373 ms): Performing Streamed Install Success 
+   firstInstallTime=2026-09-30 10:07:38
+   lastUpdateTime=2026-09-30 10:19:49
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+installiert: /data/app/~~_d6cZzJMBt-KhMRej7ktTQ==/de.re15.port-feditn7Qy_0WPBeEBA7q4Q==/base.apk sha256 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+Status: ok
+LaunchState: COLD
+TotalTime: 3380
+warten rc=0 (6742 ms ab am start)
+09-30 10:20:06.697 I/re15    ( 8839): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:20:07.030 I/re15    ( 8839): [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 0
+09-30 10:20:10.225 I/re15    ( 8839): [android] entpacke synchro/STAGE1/room1240/main04.wav (geaendert)
+09-30 10:20:10.504 I/re15    ( 8839): [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (2017588 B, 109 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 3513 ms
+pidof: 8839

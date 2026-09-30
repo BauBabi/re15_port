@@ -1,0 +1,38 @@
+1790715831.824158 START 2026-09-29 23:03:51 :: bash release/build_android.sh --version v0.8.19-nbgradle --no-toolchain
+1790715832.162223    Python: /c/Python310/python (3.10.11)
+1790715832.301817 == Android-Bau re15_port_v0.8.19-nbgradle_android ==
+1790715832.301928    Host:    win
+1790715832.302074    SDK:     C:/Users/mjoedicke/AppData/Local/Android/Sdk
+1790715832.302245    JDK:     C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\
+1790715832.302519    Projekt: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android
+1790715832.302705    NDK:     /c/Users/mjoedicke/AppData/Local/Android/Sdk/ndk/27.2.12479018
+1790715832.379579    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790715832.638546 == CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) ==
+1790715832.638795 == Gradle: fetchSdl2 assembleRelease (Version v0.8.19-nbgradle) ==
+1790715833.664197 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+1790715835.768778 Daemon will be stopped at the end of the build 
+1790715845.077743 > Task :app:fetchSdl2 UP-TO-DATE
+1790715845.876118 
+1790715845.876282 > Task :app:stageAssets FAILED
+1790715845.877135 stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+1790715845.968701 
+1790715845.968850 FAILURE: Build failed with an exception.
+1790715845.968880 
+1790715845.968923 * Where:
+1790715845.969210 Build file 'C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\app\build.gradle' line: 126
+1790715845.969237 
+1790715845.969299 * What went wrong:
+1790715845.969421 Execution failed for task ':app:stageAssets'.
+1790715845.969619 > Tuerarchive fehlen im Repo: re15_port/shared_assets/RE15DOOR/*.DO2 (0 Dateien)
+1790715845.969645 
+1790715845.969681 * Try:
+1790715845.969818 > Run with --stacktrace option to get the stack trace.
+1790715845.969968 > Run with --info or --debug option to get more log output.
+1790715845.970082 > Run with --scan to get full insights.
+1790715845.970196 > Get more help at https://help.gradle.org.
+1790715845.970220 
+1790715845.970283 BUILD FAILED in 13s
+1790715845.970413 2 actionable tasks: 1 executed, 1 up-to-date
+1790715846.158057 ABBRUCH: Gradle-Bau fehlgeschlagen
+1790715847.196092 ENDE 2026-09-29 23:04:07
+EXIT=1

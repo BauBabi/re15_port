@@ -1,0 +1,144 @@
+echter Index vorher: 0 Eintraege
+letzter Commit PC-Pfade:  cf386e32 2026-09-29 19:02:06 +0200
+letzter Commit APK-Pfade: 026632a4 2026-09-30 09:22:10 +0200
+   -rw-r--r-- 1 mjoedicke 197121 363479879 2026-09-30 09:54:28.675173300 +0200 build/r34a/pruefer_e1/apk/N_geparkt.apk
+   -rw-r--r-- 1 mjoedicke 197121   3834872 2026-09-29 19:34:13.000000000 +0200 release/linux_out/re15_pc
+   -rwxr-xr-x 1 mjoedicke 197121   4381178 2026-09-29 19:34:23.000000000 +0200 release/win_out/re15_pc.exe
+--- E0a: keine APK, der VERSIONIERTE Android-Satz v0.8.19 (HEAD, enthaelt die v1-APK) liegt da
+== E0a_ohne_apk_alter_satz: make_package.sh --version v0.8.19 (andere make_package-Prozesse vorher: 0)
+   START 2026-09-30 10:20:31 make_package.sh --version v0.8.19
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+               release/make_package.sh --version v0.8.19 --ohne-android ...
+   ENDE 2026-09-30 10:21:39
+   EXIT=1
+   Wegwerf-Index gegen HEAD: [M analysis/befunde_runde34_android/pruefer_umgehung_r4_1.md D analysis/befunde_runde34_android/pruefer_umgehung_r4_1_belege/kette_B.txt D analysis/befunde_runde34_android/pruefer_umgehung_r4_1_belege/u1_kette_b1.sh ]
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: [*re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip ]
+   Android-Volumes: [c406bbfede0759ca 2e1697d9112986ad ]
+   'Assets kopieren' im Log: 0
+--- E0b: die ALTE v0.8.19-APK (Liste v1) als frische Kopie unter dem Auslieferungsnamen
+== E0b_alte_apk_v1: make_package.sh --version v0.8.19 (andere make_package-Prozesse vorher: 0)
+   START 2026-09-30 10:21:48 make_package.sh --version v0.8.19
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+         Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 assets v2 <anzahl> <bytes>' + '<byt
+   == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+   ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+   ENDE 2026-09-30 10:23:29
+   EXIT=1
+   Wegwerf-Index gegen HEAD: [M analysis/befunde_runde34_android/pruefer_umgehung_r4_1.md D analysis/befunde_runde34_android/pruefer_umgehung_r4_1_belege/kette_A12.txt D analysis/befunde_runde34_android/pruefer_umgehung_r4_1_belege/u1_kette_fk.sh ]
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: [*re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip ]
+   Android-Volumes: [c406bbfede0759ca 2e1697d9112986ad ]
+   'Assets kopieren' im Log: 0
+   APK nach dem Lauf: -rw-r--r-- 1 mjoedicke 197121 363212403 Sep 30 10:21 release/re15_port_v0.8.19_android.apk
+--- E1: APK N
+== E1_voll: make_package.sh --version v0.8.19 (andere make_package-Prozesse vorher: 0)
+   START 2026-09-30 10:23:32 make_package.sh --version v0.8.19
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc e9f8cf9d 363479879) ==
+      gepruefte APK (sha256 crc32 Bytes): a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc e9f8cf9d 363479879
+      Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+      hoechste glibc-Anforderung: GLIBC_2.29
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+      Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+      Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+   == Zippen: re15_port_v0.8.19_win64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+      APK im Split-Satz = gepruefte APK (entpackt: sha256 a340a32585580130... = Pruefkopie)
+   == SHA256SUMS.txt geschrieben (6 Volumes, Android-Satz aus diesem Lauf) ==
+      0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+   == Fertig ==
+   ENDE 2026-09-30 10:27:53
+   EXIT=0
+   Wegwerf-Index gegen HEAD: [M analysis/befunde_runde34_android/pruefer_echtlauf_r4_1.md D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/h_geraet.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/h_neustart_datei_geloescht.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/h_vorher.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/i_geraet.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/i_update_M_zu_R_datei_weg.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/j1_abbruch_frisch_M.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/j1_abbruch_frisch_M_ausloeser.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/j2_geraet.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/j2_update_auf_R_nach_abbruch.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/j3_neustart_R.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/k1_abbruch_frisch_M_nach_CDEMD0.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/k2_geraet.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/geraet/k2_update_auf_R_nach_abbruch.txt D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/pe1_apk_ohne_datei.py D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/pe1_mp.sh D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/pe1_mp_folge.sh D analysis/befunde_runde34_android/pruefer_echtlauf_r4_1_belege/pe1_signieren.sh M analysis/befunde_runde34_android/pruefer_umgehung_r4_1.md M release/re15_port_v0.8.19_android.z01 M release/re15_port_v0.8.19_android.zip M release/re15_port_v0.8.19_linux_steamdeck_x64.z01 M release/re15_port_v0.8.19_linux_steamdeck_x64.zip M release/re15_port_v0.8.19_win64.z01 M release/re15_port_v0.8.19_win64.zip ]
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: [*re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip ]
+   Android-Volumes: [db98326a5ad4dbd4 be12361e762afa48 ]
+   'Assets kopieren' im Log: 4
+   sums -c: re15_port_v0.8.19_android.z01: OK
+   sums -c: re15_port_v0.8.19_android.zip: OK
+   sums -c: re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+   sums -c: re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+   sums -c: re15_port_v0.8.19_win64.z01: OK
+   sums -c: re15_port_v0.8.19_win64.zip: OK
+   unabhaengig: APK aus dem neuen Android-Satz (zip -s 0 + unzip -p) gegen die gebaute APK
+   im Satz: re15_port_v0.8.19_android.apk  sha256 a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+   gebaut:  a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+--- E2: APK weg, Satz aus E1 liegt, nur PC (--only win --zip-only)
+== E2_ohne_apk_satz_E1: make_package.sh --version v0.8.19 --only win --zip-only (andere make_package-Prozesse vorher: 0)
+   START 2026-09-30 10:28:56 make_package.sh --version v0.8.19 --only win --zip-only
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+               release/make_package.sh --version v0.8.19 --ohne-android ...
+   ENDE 2026-09-30 10:29:12
+   EXIT=1
+   Wegwerf-Index gegen HEAD: []
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: [*re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip ]
+   Android-Volumes: [db98326a5ad4dbd4 be12361e762afa48 ]
+   'Assets kopieren' im Log: 0
+--- E3: dasselbe + --ohne-android
+== E3_ohne_android: make_package.sh --version v0.8.19 --only win --zip-only --ohne-android (andere make_package-Prozesse vorher: 0)
+   START 2026-09-30 10:29:14 make_package.sh --version v0.8.19 --only win --zip-only --ohne-android
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == --ohne-android: keine APK-Pruefung, kein Android-Satz; der Satz dieser Version wird entfernt: re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip ==
+      Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+      Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+   == Zippen: re15_port_v0.8.19_win64 ==
+      Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.z01)
+      (--ohne-android: alter Android-Satz entfernt: re15_port_v0.8.19_android.zip)
+   == SHA256SUMS.txt geschrieben (4 Volumes) ==
+      2 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+   == Fertig ==
+   ENDE 2026-09-30 10:31:12
+   EXIT=0
+   Wegwerf-Index gegen HEAD: [D release/re15_port_v0.8.19_android.z01 D release/re15_port_v0.8.19_android.zip M release/re15_port_v0.8.19_linux_steamdeck_x64.z01 M release/re15_port_v0.8.19_linux_steamdeck_x64.zip M release/re15_port_v0.8.19_win64.z01 M release/re15_port_v0.8.19_win64.zip ]
+   echter Index: 0 Eintraege
+   SHA256SUMS.txt: [*re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.z01 *re15_port_v0.8.19_win64.zip ]
+   Android-Volumes: []
+   'Assets kopieren' im Log: 0
+   noch da: []
+--- Aufraeumen release/
+   release/: alle versionierten Dateien = Stand vor den Laeufen
+   git status --short release/ re15_port/: []
+   echter Index: 0 Eintraege
+   APK N geparkt: build/r34a/pruefer_e1/apk/N_geparkt.apk (a340a32585580130...)
+FERTIG
+FOLGE-EXIT=0

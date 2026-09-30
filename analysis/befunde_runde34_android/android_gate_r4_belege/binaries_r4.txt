@@ -1,0 +1,12 @@
+re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+re15_port_v0.8.19_win64.z01: OK
+re15_port_v0.8.19_win64.zip: OK
+-rw-r--r-- 1 mjoedicke 197121 3834872 2026-09-29 19:34:13.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/bin/linux/re15_pc
+-rwxr-xr-x 1 mjoedicke 197121 4381178 2026-09-29 19:34:23.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/bin/win/re15_pc.exe
+30d5b67b0b03f64e6fa3ce59528e36c30fbad0a4e29387beb78a22761d6fd41b *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/bin/win/re15_pc.exe
+abfbe7c517bf98ce4cdd31607b81a8e555f0ce23af1c22e84f89ba76f5cf0dc3 *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/bin/linux/re15_pc
+Referenz-APK: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+Archiv-SUMS:  514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9
+Referenz-APK = Archiv
+EXIT=0

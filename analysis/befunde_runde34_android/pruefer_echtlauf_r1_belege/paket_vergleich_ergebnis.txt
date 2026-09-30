@@ -1,0 +1,16 @@
+alt build/r34a/pruefer_echtlauf_r1/pakete/ganz_win64.zip: 3801 Eintraege | neu build/r34a/pruefer_echtlauf_r1/pakete/neu/ganz_win64.zip: 3801 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse/CRC/Modus): 0
+vergleich win64 rc=0
+alt build/r34a/pruefer_echtlauf_r1/pakete/ganz_linux_steamdeck_x64.zip: 3800 Eintraege | neu build/r34a/pruefer_echtlauf_r1/pakete/neu/ganz_linux_steamdeck_x64.zip: 3800 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse/CRC/Modus): 0
+vergleich linux_steamdeck_x64 rc=0
+alt build/r34a/pruefer_echtlauf_r1/pakete/ganz_android.zip: 1 Eintraege | neu build/r34a/pruefer_echtlauf_r1/pakete/neu/ganz_android.zip: 1 Eintraege
+nur alt: 0 []
+nur neu: 0 []
+anders (Groesse/CRC/Modus): 1
+   re15_port_v0.8.19_android.apk: alt 363212403 B crc d16ad30a mode 100644 | neu 363212403 B crc bf8bd744 mode 100644
+vergleich android rc=1

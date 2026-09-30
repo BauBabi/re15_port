@@ -1,0 +1,8 @@
+   Python: /c/Python310/python (3.10.11)
+Kennung build/r34a/ref_v0.8.19.apk: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+   APK im Split-Satz = gepruefte APK (CRC32 d16ad30a, 363212403 B)
+verify_apk_im_zip (richtige Kennung): rc=0
+APK-Satz: Eintrag hat CRC32 d16ad30a / 363212403 B, gepruefte APK 00000000 / 363212403 B - NICHT die gepruefte Datei
+verify_apk_im_zip (CRC 00000000): rc=1
+APK-Satz: erwartet genau den Eintrag b'anderer_name.apk', Katalog: [b're15_port_v0.8.19_android.apk']
+verify_apk_im_zip (anderer Name): rc=1

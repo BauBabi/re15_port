@@ -1,0 +1,23 @@
+ref                          EXIT=0 ( 45 s) == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 3632
+K0_unsigniert                EXIT=1 (  7 s) ABBRUCH: apksigner: Signatur ungueltig (rc=1) - die APK waere nicht installierbar oder nach dem Signieren veraendert
+K0_fremder_schluessel        EXIT=1 (  7 s) ABBRUCH: apksigner: Signer-Zertifikat 85ad070a6ac5b6cfa9b6e65c4db8644d637cf4b307bae3ed864eb3400df1c164, erwartet 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b8
+K0_unausgerichtet            EXIT=1 (  6 s) ABBRUCH: zipalign: Ausrichtung falsch (rc=1) - mit targetSdk 35 installiert Android 11+
+F_M1_signiert                EXIT=1 ( 45 s) ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+F_praefix_signiert           EXIT=0 ( 51 s) == ANDROID-GATES-OK (--gate-only): build/r34a/nb2/apk/F_praefix_sig.apk (geprueft: sha256 crc32 Bytes d587925b923fb80c60e40516f3d90a3fdd37d83e0c23dea1f70cd0e4e637da58 53a
+F_kopf_arabisch_signiert     EXIT=1 ( 50 s) ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+B3 01:29:10: gegen K0 getauscht (waehrend des Selbsttests)
+B3_tausch                    EXIT=1 | ABBRUCH: APK wurde WAEHREND der Pruefung veraendert oder ersetzt: build/r34a/nb2/apk/toctou.apk         geprueft (Kopie vom Anfang): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403         jetzt unter dem Pfad:        2110be
+ABA 01:30:07: hin (K0)
+ABA 01:30:32: zurueck (Referenz)
+B3_ABA                       EXIT=0 | == ANDROID-GATES-OK (--gate-only): build/r34a/nb2/apk/aba.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+schatten_ref                 EXIT=0 ( 48 s) == ANDROID-GATES-OK (--gate-only): C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd
+schatten_ohne_P2DS           EXIT=1 ( 40 s) ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+         [ok] 83 B2: Port-Tuerarchiv fehlt in Quelle UND APK                rc=1 (soll 1)
+         RE15DOOR:  Quelle 29, APK 29, sha256 gleich 29/29
+            Port-Tuerarchiv fehlt: re15_port/shared_assets/RE15DOOR/P2DS.DO2 (verlangt von: re15_port/engine/src/gen/re15_tuer_eigen.inc; ohne die Datei laeuft an diesen Tueren still der RE1.5-Uebergang)
+schatten_P07G_leer           EXIT=1 ( 40 s) ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+            Port-Tuerarchiv passt nicht zur Engine-Tabelle: re15_port/shared_assets/RE15DOOR/P07G.DO2 hat 0 B, Tabelle 55908 B (Tonteil 19608, Modellteil 35428 ab Sektor 10) - die Engine verwirft es
+schatten_neuer_baum          EXIT=1 ( 40 s) ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+            re15_port/shared_assets/RE15NEU liegt in keinem Asset-Baum (build.gradle stageAssets = BAEUME des Gates = make_package.sh copy_common) - der Port liest nur aus shared_assets, APK und Pakete haetten es nicht
+uebrige Pruefkopien in /tmp: 0
+EXIT=0

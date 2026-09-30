@@ -1,0 +1,9 @@
+zufall: 300 Nachrichten (Laengen 2..1046990, 136 davon < 300 B, 94 >= 64 KiB), 0 falsch
+strom 536870911 B (0.50 GiB): C 2f57abf1ef877fb5.. Python 2f57abf1ef877fb5.. gleich
+strom 536870912 B (0.50 GiB): C d4b3f6ca4556c33b.. Python d4b3f6ca4556c33b.. gleich
+strom 536870913 B (0.50 GiB): C 32acc246fe4d82a6.. Python 32acc246fe4d82a6.. gleich
+strom 4831838208 B (4.50 GiB): C ef852d1adecea111.. Python ef852d1adecea111.. gleich
+datei re15_port/shared_assets/RE2/CDEMD0.EMS: C rc 0, 11124736 B, 8724200c1ed5e8d3.. / Python 11124736 B, 8724200c1ed5e8d3.. gleich
+datei build/r34a/ref_v0.8.19.apk: C rc 0, 363212403 B, 514bebd55bd6b8ec.. / Python 363212403 B, 514bebd55bd6b8ec.. gleich
+ERGEBNIS: 0 falsch
+EXIT=0

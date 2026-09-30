@@ -1,0 +1,5 @@
+== Ende 11:37:40
+Success
+Android/data nach uninstall: 0
+OK: killing emulator, bye bye
+OK

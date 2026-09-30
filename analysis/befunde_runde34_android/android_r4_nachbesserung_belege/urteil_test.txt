@@ -1,0 +1,31 @@
+   Python: /c/Python310/python (3.10.11)
+ok    echter Selbsttest-Log, rc 0 -> 0      Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+ok    echter Selbsttest-Log, rc 1 -> 2      Gate-Urteil (selbsttest, Rueckgabe 1): Schlusszeile OK, aber Rueckgabe 1 - Ausgangspfad des Gates defekt
+ok    echter Selbsttest-Log, rc 2 -> 2      Gate-Urteil (selbsttest, Rueckgabe 2): Schlusszeile OK, aber Rueckgabe 2 - Ausgangspfad des Gates defekt
+ok    leere Ausgabe (G0), rc 0 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+ok    nur Leerzeilen, rc 0 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+ok    ohne Schlusszeile, rc 0 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): letzte Zeile ist nicht '== SELBSTTEST-OK: ... ==', sondern '   Laufzeit: 14.4 s' - keine Aussage
+ok    FEHLER-Schluss (G1), rc 0 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+ok    FEHLER-Schluss, rc 1 -> 1      Gate-Urteil (selbsttest, Rueckgabe 1): das Gate meldet FEHLER - Schlusszeile und Rueckgabe stimmen ueberein
+ok    OK 257/258 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK meldet 257/258 Faelle, verlangt n/n mit n >= 258 (release/apk_pruefen.sh GATE_SELBSTTEST_MIN_F
+ok    OK 202/202 (altes Gate) -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK meldet 202/202 Faelle, verlangt n/n mit n >= 258 (release/apk_pruefen.sh GATE_SELBSTTEST_MIN_F
+ok    Fallzeile 17 fehlt -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): 257 Fallzeilen, Nummern nicht genau 1..258 - keine Aussage
+ok    eine Fallzeile [ok] rc=0 (soll 1) -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): Fallzeile 04 nicht [ok] mit rc = soll: '[ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt                  r
+ok    eine Fallzeile [FEHLER] -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): OK-Schlusszeile, aber im selben Lauf '   [FEHLER] 01 gute APK                                               
+ok    Fallzeile 2 doppelt -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): 259 Fallzeilen, Nummern nicht genau 1..258 - keine Aussage
+ok    Innere Proben 131/132 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): Innere Proben 131/132, verlangt m/m mit m >= 132 (GATE_SELBSTTEST_MIN_INNEN)
+ok    Innere Proben 116/116 -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): Innere Proben 116/116, verlangt m/m mit m >= 132 (GATE_SELBSTTEST_MIN_INNEN)
+ok    Traceback NACH der Schlusszeile -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): letzte Zeile ist nicht '== SELBSTTEST-OK: ... ==', sondern 'Traceback (most recent call last):' - keine Auss
+ok    ABBRUCH-Zeile im Lauf -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): OK-Schlusszeile, aber im selben Lauf 'ABBRUCH (Rueckgabe 2): x' - keine Aussage
+ok    zwei Urteilszeilen -> 2      Gate-Urteil (selbsttest, Rueckgabe 0): 2 Urteilszeilen statt genau einer - keine Aussage
+ok    Selbsttest-Log als APK-Urteil -> 2      Gate-Urteil (apk, Rueckgabe 0): letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern '== SELBSTTEST-OK: 258/258 Faelle (gute APKs angenom
+--- Pin
+ok    gate_festhalten (echtes Gate):          sha256 8a0e3f152f508690fcd4478a46961033e964e132a04eff2a7a4d2821ffbbedcb = festgehalten (release/apk_a
+ok    Pin lehnt G0 (0 B) ab: DIE: Asset-Gate ist NICHT das festgehaltene: build/r34a/nb/urteil_tmp/G0.py
+ok    Pin lehnt G1 ab
+ok    Pin lehnt das Gate von HEAD vor R4-1 ab
+--- gate_laufen
+ok    gate_laufen selbsttest (echt) -> 0:    Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 258/258, jede Fallzeile [ok] mit rc = soll, innere Proben 132/132 (Mindestzahlen 258/132)
+ok    gate_laufen selbsttest G1 umgepinnt -> 2: Binary file build/r34a/nb/urteil_tmp/lauf_g1.txt matches
+ok    gate_laufen selbsttest G0 umgepinnt -> 2:    Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+FEHLER=0

@@ -1,0 +1,8 @@
+lib/arm64-v8a/libSDL2.so: 1420920 -> 1420888 B; Baupfade ref [b'eAi_v2/.claude/worktrees/r33_integration'] / neu [b't/reAi_v2/.claude/worktrees/r34a_android']; Datum ref [] / neu []
+   nach Normalisierung (Baupfad, __DATE__, __TIME__): gleich lang False, Bytes verschieden -1
+lib/arm64-v8a/libmain.so: 1336832 -> 1336832 B; Baupfade ref [b'eAi_v2/.claude/worktrees/r33_integration'] / neu [b't/reAi_v2/.claude/worktrees/r34a_android']; Datum ref [b'Sep 29 2026'] / neu [b'Sep 30 2026']
+   nach Normalisierung (Baupfad, __DATE__, __TIME__): gleich lang False, Bytes verschieden -1
+lib/x86_64/libSDL2.so: 1537048 -> 1537032 B; Baupfade ref [b'eAi_v2/.claude/worktrees/r33_integration'] / neu [b't/reAi_v2/.claude/worktrees/r34a_android']; Datum ref [] / neu []
+   nach Normalisierung (Baupfad, __DATE__, __TIME__): gleich lang False, Bytes verschieden -1
+lib/x86_64/libmain.so: 1398200 -> 1398200 B; Baupfade ref [b'eAi_v2/.claude/worktrees/r33_integration'] / neu [b't/reAi_v2/.claude/worktrees/r34a_android']; Datum ref [b'Sep 29 2026'] / neu [b'Sep 30 2026']
+   nach Normalisierung (Baupfad, __DATE__, __TIME__): gleich lang False, Bytes verschieden -1

@@ -1,0 +1,122 @@
+START 2026-09-30 03:47:58
+=== Umgebung ===
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+NAME="Debian GNU/Linux"
+Python 3.9.2
+f07072b12c91792ba08b0415661dbf2b1e351cfdbc355c6ec913e02d427716b3  /src/build/r34a/pruefer_echtlauf_r3/r34g_assets/CORE00.ESP
+4c793022b570c1bf56722a744b16fb7fb7a11894b311a0ecc45c0fdef569c58d  /src/build/r34a/pruefer_echtlauf_r3/r34g_assets/TEX.TIM
+
+### I1 --quellbaum mit den zwei neuen RE2-Dateien
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo --quellbaum
+== APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   shared_assets/PSX               3193 Dateien
+   shared_assets/extracted_fx        13 Dateien
+   shared_assets/RE2                279 Dateien
+   shared_assets/RE15DOOR            30 Dateien
+   synchro                           90 Dateien
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+== APK-ASSET-GATE-QUELLBAUM-OK: 3605 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+### -> rc=0  dauer=0.8 s
+
+### I2 Referenz-APK v0.8.19 (ohne die neuen Dateien) gegen den neuen Quellbaum = veraltete APK
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/ref_v0.8.19.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                279     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3605    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  7.3 s
+--- Abweichungen: 2 ---
+   [fehlt in der APK] 2
+      fehlt in der APK: assets/shared_assets/RE2/CORE00.ESP  (Quelle re15_port/shared_assets/RE2/CORE00.ESP)
+      fehlt in der APK: assets/shared_assets/RE2/TEX.TIM  (Quelle re15_port/shared_assets/RE2/TEX.TIM)
+== APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+### -> rc=1  dauer=7.9 s
+
+### I3 NEUE APK (Bau Abschnitt 1, ohne die neuen Dateien) gegen den neuen Quellbaum
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo /src/build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /src/build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                279     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3605    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  7.6 s
+--- Abweichungen: 2 ---
+   [fehlt in der APK] 2
+      fehlt in der APK: assets/shared_assets/RE2/CORE00.ESP  (Quelle re15_port/shared_assets/RE2/CORE00.ESP)
+      fehlt in der APK: assets/shared_assets/RE2/TEX.TIM  (Quelle re15_port/shared_assets/RE2/TEX.TIM)
+== APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+### -> rc=1  dauer=7.8 s
+
+### I4 --paket: neues Paket (mit den neuen Dateien)
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo --paket /tmp/paket_neu
+== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   Paket:     /tmp/paket_neu
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   Baum                          Quelle  gleich
+   shared_assets/PSX               3193    3193
+   shared_assets/extracted_fx        13      13
+   shared_assets/RE2                279     279
+   shared_assets/RE15DOOR            30      30
+   synchro                           90      90
+   Laufzeit:  1.0 s
+== APK-ASSET-GATE-PAKET-OK: 3605 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+### -> rc=0  dauer=1.2 s
+
+### I5 --paket: altes Paket (ohne die neuen Dateien) gegen den neuen Quellbaum
+### $ python3 /src/release/apk_asset_gate.py --repo /tmp/repo --paket /tmp/paket_alt
+== APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+   Paket:     /tmp/paket_alt
+   Quellbaum: /tmp/repo
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   Baum                          Quelle  gleich
+   shared_assets/PSX               3193    3193
+   shared_assets/extracted_fx        13      13
+   shared_assets/RE2                279     277
+   shared_assets/RE15DOOR            30      30
+   synchro                           90      90
+   Laufzeit:  1.1 s
+--- Abweichungen: 2 ---
+   [fehlt im Paket] 2
+      fehlt im Paket: shared_assets/RE2/CORE00.ESP  (Quelle re15_port/shared_assets/RE2/CORE00.ESP)
+      fehlt im Paket: shared_assets/RE2/TEX.TIM  (Quelle re15_port/shared_assets/RE2/TEX.TIM)
+== APK-ASSET-GATE-PAKET-ABWEICHUNG: 2 Befunde ==
+### -> rc=1  dauer=1.6 s
+
+=== Ende 2026-09-30 01:49:12 ===
+EXIT_DOCKER=0
+ENDE 2026-09-30 03:49:13

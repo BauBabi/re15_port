@@ -1,0 +1,15 @@
+RE15DOOR-Eintraege nach zip -d: 29
+Verifies
+Verified using v2 scheme (APK Signature Scheme v2): true
+Kette rc=1
+1790718261.708520    Stichproben ok; unzip zaehlt 3603 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790718261.833329    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790718263.335165    Verified using v2 scheme (APK Signature Scheme v2): true
+1790718270.378518 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790718274.831921    shared_assets/RE15DOOR            30      29       29      1836688
+1790718274.832536    RE15DOOR:  Quelle 30, APK 29, sha256 gleich 29/30
+1790718274.833107    [fehlt in der APK] 1
+1790718274.833376       fehlt in der APK: assets/shared_assets/RE15DOOR/P2DS.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P2DS.DO2)
+1790718274.833778       Manifest nennt shared_assets/RE15DOOR/P2DS.DO2 (78244 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P2DS.DO2
+1790718274.838643 ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+EXIT=1

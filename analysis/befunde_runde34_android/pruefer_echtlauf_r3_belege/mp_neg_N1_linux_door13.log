@@ -1,0 +1,66 @@
+1790732311.596086 START 2026-09-30 03:38:31 :: bash release/make_package.sh --version v0.8.19 --zip-only --only linux
+1790732312.263081    Python: /c/Python310/python (3.10.11)
+1790732312.318516 == Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) ==
+1790732312.688159 == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+1790732312.688496    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732312.688821    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732313.359561    shared_assets/PSX               3193 Dateien
+1790732313.360232    shared_assets/extracted_fx        13 Dateien
+1790732313.360430    shared_assets/RE2                277 Dateien
+1790732313.360618    shared_assets/RE15DOOR            30 Dateien
+1790732313.360858    synchro                           90 Dateien
+1790732313.361262    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732313.361656    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732313.361951 == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+1790732313.375682 == Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790732313.722724    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790732313.722998    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+1790732313.723427 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790732315.015011    Pruefkopie (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.AgGjYy/re15_port_v0.8.19_android.apk
+1790732315.760153    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+1790732315.983292    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790732315.983417    sdkVersion:'24'
+1790732315.983521    targetSdkVersion:'35'
+1790732315.983654    native-code: 'arm64-v8a' 'x86_64'
+1790732316.331391    zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+1790732317.619698    Verified using v1 scheme (JAR signing): false
+1790732317.620098    Verified using v2 scheme (APK Signature Scheme v2): true
+1790732317.620392    Verified using v3 scheme (APK Signature Scheme v3): false
+1790732317.620636    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790732317.620852    Verified using v4 scheme (APK Signature Scheme v4): false
+1790732317.620955    Number of signers: 1
+1790732317.621302    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790732317.896548 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790732318.193733 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790732318.194093    Innere Proben: 58/58 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)
+1790732333.866637    Laufzeit: 15.6 s
+1790732333.866934 == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790732333.867153 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790732334.206915 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790732334.207422    APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\re15_apk_pruefen.AgGjYy\re15_port_v0.8.19_android.apk
+1790732334.208011    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732334.210777    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732335.039169    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732335.039700    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732335.132368    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790732340.080607    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790732340.080885    shared_assets/PSX               3193    3193     3193    300522652
+1790732340.081143    shared_assets/extracted_fx        13      13       13      1079875
+1790732340.081394    shared_assets/RE2                277     277      277     25482039
+1790732340.081647    shared_assets/RE15DOOR            30      30       30      1914932
+1790732340.081904    synchro                           90      90       90     27678779
+1790732340.082212    SUMME                           3603    3603     3603    356678277
+1790732340.082472    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790732340.082657    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790732340.083024    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790732340.083324    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790732340.083417    Laufzeit:  5.9 s
+1790732340.083841 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790732342.188917 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) ==
+1790732342.270851    gepruefte APK (sha256 crc32 Bytes): b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403
+1790732342.271245 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790732342.837054    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790732342.941980    hoechste glibc-Anforderung: GLIBC_2.29
+1790732344.063966 ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR13.DO2
+1790732345.101658 ENDE 2026-09-30 03:39:05
+EXIT=1

@@ -1,0 +1,5 @@
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\build\r34a\nb2\apk\F_praefix.apk
+   Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+ABBRUCH (Rueckgabe 2): APK nicht lesbar: build/r34a/nb2/apk/F_praefix.apk (beginnt nicht mit einem Local Header - Bytes vor dem ersten Eintrag? libziparchive: 'Entry at offset zero has invalid LFH signature')

@@ -1,0 +1,27 @@
+Mutanten: 62, ueberlebt: 19, davon Zeitgrenze erkannt: 0
+  Klasse B:   8 gesamt,   6 erkannt,   2 ueberlebt,   0 per Zeitgrenze
+  Klasse E:  31 gesamt,  24 erkannt,   7 ueberlebt,   0 per Zeitgrenze
+  Klasse F:   6 gesamt,   4 erkannt,   2 ueberlebt,   0 per Zeitgrenze
+  Klasse H:   2 gesamt,   2 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse I:  15 gesamt,   7 erkannt,   8 ueberlebt,   0 per Zeitgrenze
+Ueberlebende:
+  I__ohne_kommentare_Z209_plus1                  j < 0  [0 -> 1]
+  E__ohne_kommentare_Z209_le                     j < 0  [< -> <=]
+  I__ohne_kommentare_Z209_minus1                 j < 0  [0 -> -1]
+  E__ohne_kommentare_Z212_le                     j < 0  [< -> <=]
+  I__ohne_kommentare_Z212_plus1                  j < 0  [0 -> 1]
+  I__ohne_kommentare_Z212_minus1                 j < 0  [0 -> -1]
+  B__ohne_kommentare_Z214                        raise Bedienfehler("build.gradle: Kommentar /* ohne Ende")
+  E__klammer_ende_Z239_le                        k < 0  [< -> <=]
+  I__klammer_ende_Z239_plus1                     k < 0  [0 -> 1]
+  E__klammer_ende_Z235_le                        k < 0  [< -> <=]
+  I__klammer_ende_Z235_plus1                     k < 0  [0 -> 1]
+  I__klammer_ende_Z235_minus1                    k < 0  [0 -> -1]
+  F__klammer_ende_Z246_ohne0                     not stapel or stapel.pop() != c  [Operand 0 weg: not stapel]
+  E__klammer_ende_Z246_lt                        stapel.pop() != c  [!= -> <]
+  I__anweisungen_Z266_minus1                     tiefe < 0  [0 -> -1]
+  B__anweisungen_Z268                            raise Bedienfehler("build.gradle: Klammern passen nicht im stageAssets-Block")
+  E__anweisungen_Z269_le                         tiefe == 0  [== -> <=]
+  F_gradle_baeume_Z327_ohne0                     into_stage != 1 or preserve != 1  [Operand 0 weg: into_stage != 1]
+  E_gradle_baeume_Z327_lt                        into_stage != 1  [!= -> <]
+Zeitgrenze (Gate haengt -> Selbsttest faellt ebenfalls):

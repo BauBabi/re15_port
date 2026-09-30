@@ -1,0 +1,16 @@
+== i_update_M_zu_R_datei_weg 2026-09-30 10:21:59
+APK: build/r34a/pruefer_e1/apk/R_ohne_CDEMD0.apk sha256 2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195
+install rc=0 (8316 ms): Performing Streamed Install Success 
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe1m
+   lastUpdateTime=2026-09-30 08:22:09
+   firstInstallTime=2026-09-30 08:13:41
+installiert: /data/app/~~xUBPT9axbE92fdNIY7JzFg==/de.re15.port-Fdoq1D5UwFWgJ0itXKK-HQ==/base.apk sha256 2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195
+Status: ok
+LaunchState: COLD
+TotalTime: 3860
+warten rc=0 (5538 ms ab am start)
+09-30 08:22:22.116 I/re15    (10318): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:22:22.374 I/re15    (10318): [android] Abgleich (Update): 3602 Dateien (345553541 Bytes) - behalten 3602, geaendert 0, neu 0, pruefen 0, weg 1
+09-30 08:22:22.378 I/re15    (10318): [android] entfernt (nicht mehr in der Liste): shared_assets/RE2/CDEMD0.EMS
+09-30 08:22:24.374 I/re15    (10318): [android] Entpacken fertig (Update): 3602 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 .neu-Reste, 0 Fehler, 2034 ms

@@ -1,0 +1,12 @@
+(1) PATH=WindowsApps(lang):/usr/bin, RE15_PYTHON_NUR_PATH=1 -> /usr/bin/bash build_android.sh --gate-only
+rc=1
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+FEHLER: kein echtes Python >= 3.8 gefunden (geprueft: 2 Kandidat(en); WindowsApps-Aliase werden nie gestartet). Abhilfe: RE15_PYTHON=<pfad zu python.exe> setzen, z.B. RE15_PYTHON=/c/Python310/python.exe
+ABBRUCH: kein echtes Python >= 3.8 (release/python_finden.sh) - die volle Asset-Pruefung braucht es
+
+(2) PATH=/usr/bin (kein Python im PATH), Standard -> python_finden.sh
+   Python: /c/Python310/python.exe (3.10.11)
+PY=/c/Python310/python.exe
+PY_VERSION=3.10.11
+rc=0

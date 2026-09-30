@@ -1,0 +1,5 @@
+APK-Liste: # re15 assets v2 3603 356678277 | 3603 Eintraege | sha256 1b017f2bd6eab0c7d8045d0037dbfc528ec60b9d1d6945fa0f2ab714cb7dc2a4
+oberste Ebene: debug.log re15_assets_entpackt.txt shared_assets synchro
+Dateien in den Asset-Baeumen: 3603 | fehlen 0 | sha256 falsch 0 | zusaetzlich 0 | .neu (ueberall) 0 | leere Ordner 0
+zuletzt entpackt: 1b017f2bd6eab0c7d8045d0037dbfc528ec60b9d1d6945fa0f2ab714cb7dc2a4 (= Liste der APK) | alter Marker re15_assets_ok.txt: weg
+GERAET-KONSISTENT

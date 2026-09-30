@@ -1,0 +1,50 @@
+=== Umgebung ===
+PRETTY_NAME="Steam Runtime 3 (sniper)"
+NAME="Steam Runtime"
+VERSION_ID="3"
+Linux 5.15.167.4-microsoft-standard-WSL2 x86_64
+GNU bash, version 5.1.4(1)-release (x86_64-pc-linux-gnu)
+Python 3.9.2
+which: /usr/bin/unzip
+HOME=/root
+ls: cannot access '/root/Android/Sdk': No such file or directory
+
+### D1 build_android.sh --gate-only ohne Android-SDK (muss rc 1 liefern)
+### $ bash /src/release/build_android.sh --gate-only /archiv/re15_port_v0.8.19_android.apk --version v0.8.19
+   Python: /usr/bin/python3 (3.9.2)
+== Android-Gates auf eine vorhandene APK (--gate-only: kein Bau, schreibt nichts) ==
+ABBRUCH: APK-Pruefung: Android-SDK-Ordner fehlt: /root/Android/Sdk (ANDROID_SDK_ROOT setzen) - ohne aapt und
+        apksigner gibt es keine Pruefung von Version, Paketname, ABIs und Signatur. Nur die Assets:
+        "$PY" release/apk_asset_gate.py --repo . <apk>
+### -> rc=1  dauer=0.2 s
+
+### D2 build_android.sh --gate-only ohne --version (Bedienfehler, rc 2)
+### $ bash /src/release/build_android.sh --gate-only /archiv/re15_port_v0.8.19_android.apk
+   Python: /usr/bin/python3 (3.9.2)
+--gate-only braucht --version <versionName der APK> (Nachbesserung R1: kein Lauf mehr mit ungeprueftem Feld)
+### -> rc=2  dauer=0.1 s
+
+### D3 Gate direkt (Python des Images)
+### $ python3 /src/release/apk_asset_gate.py --repo /src /archiv/re15_port_v0.8.19_android.apk
+== APK-Asset-Gate (release/apk_asset_gate.py) ==
+   APK:       /archiv/re15_port_v0.8.19_android.apk
+   Quellbaum: /src
+   Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+   ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+   Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+   shared_assets/PSX               3193    3193     3193    300522652
+   shared_assets/extracted_fx        13      13       13      1079875
+   shared_assets/RE2                277     277      277     25482039
+   shared_assets/RE15DOOR            30      30       30      1914932
+   synchro                           90      90       90     27678779
+   SUMME                           3603    3603     3603    356678277
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Laufzeit:  53.9 s
+== APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+### -> rc=0  dauer=54.1 s
+
+=== Ende 2026-09-29 21:42:30 ===
+EXIT_DOCKER=0

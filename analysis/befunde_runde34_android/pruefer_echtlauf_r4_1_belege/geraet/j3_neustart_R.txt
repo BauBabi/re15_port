@@ -1,0 +1,13 @@
+== j3_neustart_R 2026-09-30 10:24:50
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19-pe1m
+   lastUpdateTime=2026-09-30 08:24:09
+   firstInstallTime=2026-09-30 08:23:16
+installiert: /data/app/~~F-Ep9UlLXeYcHBNPoH5NZA==/de.re15.port-0OlKWsEm8Tlz9L-FNMKBCQ==/base.apk sha256 2dcce6d5f80699cca44c8c718d03c8a02103a5da8b8e98c7db9cc1aa74a56195
+Status: ok
+LaunchState: COLD
+TotalTime: 1263
+warten rc=0 (2272 ms ab am start)
+09-30 08:24:56.765 I/re15    (10778): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:24:57.264 I/re15    (10778): [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3602 Dateien, Groessen geprueft, 242 ms
+-rw-rw---- 1 u0_a214 ext_data_rw 7340032 2026-09-30 08:23 /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/CDEMD0.EMS.neu

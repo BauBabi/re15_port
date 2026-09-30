@@ -1,0 +1,9 @@
+K0 rc=0
+F_M1_man_kleiner rc=1
+F_M9_dex_usize rc=1
+F_M5_kommentar rc=2
+F_praefix rc=0
+F_kopf_arabisch rc=0
+F_ohne_P2DS rc=1
+F_M14_cd_dd rc=1
+F_M16_dex_kippen rc=1

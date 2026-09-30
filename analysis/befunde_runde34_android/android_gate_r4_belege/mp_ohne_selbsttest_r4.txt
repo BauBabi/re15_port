@@ -1,0 +1,51 @@
+Sandbox-Commit 82c1ab5 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+== L0_no_zip (--no-zip): EXIT=0 (47 s)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+      Assets kopieren (shared_assets/PSX, ~283 MB) ...
+      RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == Fertig ==
+Linkzahl Paket-TEX.TIM: 1 (1 = eigene Kopie)
+Paket-TEX.TIM jetzt 2daac7552af5fb50..., Quelle 7f10f1af755c5280...
+== LA_echtes_gate (--zip-only): EXIT=1 (51 s)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+   == SELBSTTEST-OK: 226/226 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+      [Inhalt weicht ab (sha256)] 1
+         Inhalt weicht ab: shared_assets/PSX/DATA/TEX.TIM  Quelle 165408 B 7f10f1af755c5280.., Paket 165408 B 2daac7552af5fb50..
+   == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+   ABBRUCH: Paket /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b4/release/pkg-linux/re15_port_v0.8.19 weicht von der Asset-Liste ab (Befunde oben) - APK und PC-Pa
+--- Sandbox-Gate := MUP (02d1ecc382a6b106...)
+   765c765
+   <         if q_sha != p_sha:
+   ---
+   >         if False:
+== LB_MUP_neues_skript (--zip-only): EXIT=1 (17 s)
+   == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+   == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+      [FEHLER] 132 --paket: gleiche Groesse, anderer Inhalt                   rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: synchro/STAGE2/room2000/main00.wav']
+      [FEHLER] 185 --paket: sha256 kleiner als die Quelle                     rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: shared_assets/RE2/CDEMD0.EMS']
+      [FEHLER] 186 --paket: sha256 groesser als die Quelle                    rc=0 (soll 1)  fehlende Meldung: ['Inhalt weicht ab: shared_assets/RE2/CDEMD0.EMS']
+   == APK-ASSET-GATE-PAKET-OK: 16 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == APK-ASSET-GATE-PAKET-OK: 16 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == APK-ASSET-GATE-PAKET-OK: 16 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+   == SELBSTTEST-FEHLER: 3 von 226 Faellen falsch - das Gate ist NICHT verlaesslich ==
+   ABBRUCH: Selbsttest des Asset-Gates fehlgeschlagen (rc=1) - dem Gate ist nicht zu trauen;
+--- Sandbox-Skripte := ALT (9d2337e4)
+== LC_MUP_altes_skript (--zip-only): EXIT=0 (44 s)
+   == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+   == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+      (kein Android-Paket: re15_port_v0.8.19_android.apk fehlt — release/build_android.sh laeuft getrennt)
+   == Fertig ==
+   apk_asset_gate.py = Arbeitsbaum
+   make_package.sh = Arbeitsbaum
+   apk_pruefen.sh = Arbeitsbaum
+Paket-TEX.TIM zurueck: 7f10f1af755c5280...
+FERTIG
+EXIT=0

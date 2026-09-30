@@ -1,0 +1,6 @@
+# Python-Werkzeuge der Release-Kette (Runde 34a, Nachbesserung R2): der Kopf von apk_asset_gate.py und
+# zip_exec_bit.py laeuft beim Direktaufruf (./release/<name>.py) als Bash-Skript und holt den Interpreter
+# aus python_finden.sh - der alte Kopf '#!/usr/bin/env python3' startete unter Git-Bash den WindowsApps-
+# Alias (v0.8.17: ungefragte Installation von Python 3.14). core.autocrlf=true zoege die Dateien beim
+# Auschecken auf CRLF, und Bash laese das '\r' als Teil von Shebang und Befehlen. Immer LF.
+*.py text eol=lf

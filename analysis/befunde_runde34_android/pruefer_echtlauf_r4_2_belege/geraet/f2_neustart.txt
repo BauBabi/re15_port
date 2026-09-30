@@ -1,0 +1,15 @@
+== f2_neustart 2026-09-30 12:26:39
+   firstInstallTime=2026-09-30 10:25:53
+   lastUpdateTime=2026-09-30 10:25:53
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+installiert: /data/app/~~Sgm-Ss_R1i_GH2_hUHkx3A==/de.re15.port-9modhzDItvMX0qoX97GE-w==/base.apk sha256 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+Status: ok
+LaunchState: COLD
+TotalTime: 2616
+warten rc=0 (28286 ms ab am start)
+09-30 10:26:45.251 I/re15    (13378): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:26:45.513 I/re15    (13378): [android] Waise entfernt (steht in keiner Liste): shared_assets/RE2/CDEMD0.EMS.neu
+09-30 10:26:45.514 I/re15    (13378): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 10:27:11.463 I/re15    (13378): [android] Entpacken fertig (ohne Liste): 3603 geprueft, 378 kopiert (54157661 B, 2908 ms), 3225 per SHA-256 geprueft (302520616 B, 15489 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 26092 ms
+pidof: 13378

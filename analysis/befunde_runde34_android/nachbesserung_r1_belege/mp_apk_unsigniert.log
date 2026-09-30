@@ -1,0 +1,15 @@
+1790716014.638136 START 2026-09-29 23:06:54 :: bash release/make_package.sh --version v0.8.19
+1790716014.917247    Python: /c/Python310/python (3.10.11)
+1790716014.918529 == Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790716015.090652    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790716015.091515 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790716015.779464    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790716015.958676    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790716015.958852    sdkVersion:'24'
+1790716015.958998    targetSdkVersion:'35'
+1790716015.959190    native-code: 'arm64-v8a' 'x86_64'
+1790716016.450105    DOES NOT VERIFY
+1790716016.450453    ERROR: Missing META-INF/MANIFEST.MF
+1790716016.452032 ABBRUCH: apksigner: Signatur ungueltig (rc=1) - die APK waere nicht installierbar oder nach dem Signieren veraendert
+1790716017.506094 ENDE 2026-09-29 23:06:57
+EXIT=1

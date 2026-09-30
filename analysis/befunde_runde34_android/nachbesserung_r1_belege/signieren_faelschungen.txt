@@ -1,0 +1,9 @@
+# Faelschungen mit dem Release-Schluessel (~/.android/debug.keystore, build.gradle:205-218) neu signiert - 2026-09-29 22:26:29
+F1_crc_koll: sign rc=0, verify rc=0
+F3_nul: sign rc=1 | Exception in thread "main" com.android.apksig.apk.ApkFormatException: Unsupported character 0x00 in ZIP entry name "assets/shared_assets/RE15DOOR/P07G.DO2abc"
+F6_case: sign rc=0, verify rc=0
+N2_utf8: sign rc=0, verify rc=0
+N3_verschl: sign rc=0, verify rc=0
+N4_meth99: sign rc=1 | Exception in thread "main" com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: assets/shared_assets/RE2/DOOR/DOOR36.DO2
+N5_weniger: sign rc=1 | Exception in thread "main" com.android.apksig.apk.ApkFormatException: Unused space at the end of ZIP Central Directory: 60 bytes starting at file offset 3632123
+N1_lfh_name: sign rc=1 | Exception in thread "main" com.android.apksig.apk.ApkFormatException: Malformed ZIP entry: assets/shared_assets/RE15DOOR/P1AP.DO2

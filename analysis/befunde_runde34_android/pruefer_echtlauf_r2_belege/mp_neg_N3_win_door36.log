@@ -1,0 +1,54 @@
+1790717390.982905 START 2026-09-29 23:29:51 :: bash release/make_package.sh --version v0.8.19 --zip-only
+1790717391.954291    Python: /c/Python310/python (3.10.11)
+1790717391.956117 == Android-APK: Frische, Version, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790717392.503737    APK-Werkzeuge: aapt + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790717392.504234 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790717393.537276    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 4)
+1790717393.883586    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790717393.883713    sdkVersion:'24'
+1790717393.883866    targetSdkVersion:'35'
+1790717393.884007    native-code: 'arm64-v8a' 'x86_64'
+1790717395.505995    Verified using v1 scheme (JAR signing): false
+1790717395.506242    Verified using v2 scheme (APK Signature Scheme v2): true
+1790717395.506466    Verified using v3 scheme (APK Signature Scheme v3): false
+1790717395.506692    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790717395.506927    Verified using v4 scheme (APK Signature Scheme v4): false
+1790717395.507302    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790717395.627561 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790717395.990596 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790717410.618491    Laufzeit: 14.6 s
+1790717410.618794 == SELBSTTEST-OK: 72/72 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790717410.622827 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790717411.087467 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790717411.087867    APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\re15_port_v0.8.19_android.apk
+1790717411.088169    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790717411.088486    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790717411.435841    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790717416.036579    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790717416.036845    shared_assets/PSX               3193    3193     3193    300522652
+1790717416.037076    shared_assets/extracted_fx        13      13       13      1079875
+1790717416.037320    shared_assets/RE2                277     277      277     25482039
+1790717416.037541    shared_assets/RE15DOOR            30      30       30      1914932
+1790717416.037765    synchro                           90      90       90     27678779
+1790717416.037992    SUMME                           3603    3603     3603    356678277
+1790717416.038185    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790717416.038365    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790717416.038551    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790717416.038822    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790717416.038906    Laufzeit:  5.0 s
+1790717416.039208 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790717416.040084 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ==
+1790717416.775692    gepruefte APK (sha256 crc32 Bytes): 9be7e512e14b8dcff7916dcafc55e524e767474eec4e457baf95fbd17e8865fd 99a4f42a 363212403
+1790717416.775982 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790717417.165502    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790717417.236866    hoechste glibc-Anforderung: GLIBC_2.29
+1790717420.070037    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790717422.992186    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790717423.237137    Zeilenenden-Gate: alle Skripte im Paket sind LF
+1790717423.334213    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+1790717423.733584    OK: 349M, 3606 Dateien
+1790717423.733892 == Windows-Paket: re15_port_v0.8.19 ==
+1790717424.172335    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790717427.069530 ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR36.DO2
+1790717428.099008 ENDE 2026-09-29 23:30:28
+EXIT=1

@@ -1,0 +1,21 @@
+q = 306928668 (Byte 1000 der Daten von assets/shared_assets/RE15DOOR/P07G.DO2)
+Quelle: sha256 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 crc32 d16ad30a 363212403 B
+Ziel:   sha256 2dd9497b3475ffcc3a5b619ab86bccbc3d2d6ccf392894716f5f97e731bd9958 crc32 d16ad30a 363212403 B
+Bytes ab Offset 306928668: vorher ffffffffff, nachher fe69cff888
+OK: gleiche Groesse und CRC32, anderer Inhalt
+Kennung der geprueften APK (Referenz): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+total 165508
+drwxr-xr-x 1 mjoedicke 197121        0 Sep 30 03:46 .
+drwxr-xr-x 1 mjoedicke 197121        0 Sep 30 03:46 ..
+-rw-r--r-- 1 mjoedicke 197121 94371840 Sep 30 03:46 re15_port_v0.8.19_android.z01
+-rw-r--r-- 1 mjoedicke 197121 75105224 Sep 30 03:46 re15_port_v0.8.19_android.zip
+ausgeschnitten: 42 Zeilen (verify_split() {         # $1 = .zip (letztes Volume), $2 = erwartete Dateizahl verify_apk_im_zip() {    # $1 = .zip (letztes Volume), $2 = Eintragsname, $3 = "sha256 crc32 groesse" )
+   Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+verify_split rc=0
+   APK im Split-Satz = gepruefte APK (CRC32 d16ad30a, 363212403 B)
+verify_apk_im_zip rc=0
+--- was im Satz steckt:
+Gate rc=1: Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2  Quelle 68306346be85f0e2.., APK 5062b83611e89c99.. 
+apksigner verify rc=1: DOES NOT VERIFY ERROR: APK Signature Scheme v2 signer #1: APK integrity check failed. CHUNKED_SHA256 digest mismatch. Expected: <68f4088373f8f17816591e4b11d9cd426586175f11a9013bf01bd7eea4e6fd3a>, actu
+FERTIG
+EXIT=0

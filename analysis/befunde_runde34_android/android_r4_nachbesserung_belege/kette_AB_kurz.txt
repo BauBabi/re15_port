@@ -1,0 +1,95 @@
+== A A0_echt_NB1 (NB1.apk --version v0.8.20-nb1): EXIT=0 (25 s)
+     == ANDROID-GATES-OK (--gate-only): build/r34a/nb/apk/NB1.apk (geprueft: sha256 crc32 Bytes d6921014c580c4e87b104acab4e442263d52b3878faa42d006239992c2401079 3ed12259 363483287) ==
+== A A1_echt_REF (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (26 s)
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A8_echt_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (25 s)
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A11_echt_FK (FK_sig.apk --version v0.8.20-nb1): EXIT=1 (26 s)
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A6_echt_FW (FW_sig.apk --version v0.8.20-nb1): EXIT=1 (28 s)
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A2_G0_pin_REF (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (4 s)
+     ABBRUCH: Asset-Gate ist NICHT das festgehaltene: C:/Users/MJOEDI~1/AppData/Local/Temp/re15_apk_pruefen.dLtDvG/apk_asset_gate.py
+== A A2b_G0_um_REF (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (5 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A2c_G4_um_REF (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (5 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A3_G1_um_REF (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (36 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A3b_G1_um_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (29 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A10_G2_um_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (33 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A13_G3_um_FD (FD_sig.apk --version v0.8.20-nb1): EXIT=1 (31 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist nicht zu trauen
+== A A7_V1_um_FW (FW_sig.apk --version v0.8.20-nb1): EXIT=1 (7 s)
+     Gate-Urteil (selbsttest, Rueckgabe 1): das Gate meldet FEHLER - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: Selbsttest des APK-Asset-Gates nicht bestanden (Urteil 1, Meldung oben) - dem Gate ist nicht zu trauen
+== A A4_env_G0_REF (ref_v0.8.19.apk --version v0.8.19, env APK_GATE_DATEI=.../G0.py): EXIT=1 (62 s)
+     (Umgebung APK_GATE_DATEI=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb/mut3/G0.py wird IGNORIERT - geprueft wird immer mit release/apk_asset_gate.py, festgehalten in release/apk_asset_gate.sha256; G
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A5_env_ALT_REF (ref_v0.8.19.apk --version v0.8.19, env APK_GATE_DATEI=.../ALT.py): EXIT=1 (70 s)
+     (Umgebung APK_GATE_DATEI=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb/mut3/ALT.py wird IGNORIERT - geprueft wird immer mit release/apk_asset_gate.py, festgehalten in release/apk_asset_gate.sha256;
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A12_echt_FK_quelle (FK_sig.apk --version v0.8.20-nb1): EXIT=1 (42 s)
+     Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== B B0_no_zip (--no-zip): EXIT=0 (63 s)
+     == Fertig ==
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B1_echt_paket_kaputt (--zip-only): EXIT=1 (62 s)
+     Gate-Urteil (paket, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+     ABBRUCH: Paket /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb/sb/release/pkg-linux/re15_port_v0.8.19 weicht von der Asset-Liste ab (Befunde oben) - APK und PC-Pakete muessen dieselben Assets tragen
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B2_G0_pin_paket_kaputt (--zip-only): EXIT=1 (1 s)
+     ABBRUCH: Asset-Gate ist NICHT das festgehaltene: C:/Users/MJOEDI~1/AppData/Local/Temp/re15_make_package.9TnE0O/apk_asset_gate.py
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B2b_G0_um_paket_kaputt (--zip-only): EXIT=1 (1 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)
+     ABBRUCH: Selbsttest des Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B3_G1_um_paket_kaputt (--zip-only): EXIT=1 (25 s)
+     Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+     ABBRUCH: Selbsttest des Asset-Gates nicht bestanden (Urteil 2, Meldung oben) - dem Gate ist
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B4_fremdname (--zip-only): EXIT=1 (30 s)
+     ABBRUCH: fremde Datei(en) mit dem Versions-Praefix in release/ (vor den Kopierminuten): re15_port_v0.8.19_ANDROID.zip re15_port_v0.8.19_android.apk.zip
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B5_fremdname_ohne_android (--zip-only --ohne-android): EXIT=1 (22 s)
+     ABBRUCH: fremde Datei(en) mit dem Versions-Praefix in release/ (vor den Kopierminuten): re15_port_v0.8.19_ANDROID.zip re15_port_v0.8.19_android.apk.zip
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):
+== B B6_kontrolle (--zip-only): EXIT=0 (73 s)
+     Satz re15_port_v0.8.19_linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf
+     == Fertig ==
+     SHA256SUMS.txt: *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip
+     git-Index (Sandbox): A:release/re15_port_v0.8.19_linux_steamdeck_x64.z01 A:release/re15_port_v0.8.19_linux_steamdeck_x64.zip
+== B B7_andere_plattform (--zip-only): EXIT=0 (75 s)
+     Satz re15_port_v0.8.19_linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf
+     Satz re15_port_v0.8.19_win64: 1 Volume(s), andere Plattform aus einem frueheren Lauf - in diesem Lauf nicht neu geprueft, unveraendert mitgefuehrt
+     == Fertig ==
+     SHA256SUMS.txt: *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip *re15_port_v0.8.19_win64.zip
+     git-Index (Sandbox): A:release/re15_port_v0.8.19_linux_steamdeck_x64.z01 A:release/re15_port_v0.8.19_linux_steamdeck_x64.zip A:release/re15_port_v0.8.19_win64.zip
+== B B8_andere_plattform_ohne_zip (--zip-only): EXIT=1 (57 s)
+     Satz re15_port_v0.8.19_linux_steamdeck_x64: 2 Volume(s), aus diesem Lauf
+     ABBRUCH: Satz re15_port_v0.8.19_win64.z* ohne letztes Volume re15_port_v0.8.19_win64.zip - unvollstaendig
+     SHA256SUMS.txt: (keine)
+     git-Index (Sandbox):

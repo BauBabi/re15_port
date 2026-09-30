@@ -1,0 +1,9 @@
+gepflanzt: 1 Name(n) ausserhalb ASCII in re15_port/shared_assets/PSX/
+Gradle writeAssetManifest mit Kelvin-Datei: EXIT=1
+* What went wrong:
+> Asset-Pfad verletzt die Regeln der Liste v2 (nur druckbares ASCII, Segment 1-251 B, siehe jni/asset_abgleich.h): 'shared_assets/PSX/?.bin'
+BUILD FAILED in 30s
+entfernt: 0 Name(n) ausserhalb ASCII; git status shared_assets: 0 Aenderungen
+Gradle writeAssetManifest danach: EXIT=0
+BUILD SUCCESSFUL in 22s
+EXIT=0

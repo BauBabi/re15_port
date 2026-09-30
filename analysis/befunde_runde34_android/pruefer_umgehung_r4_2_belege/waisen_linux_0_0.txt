@@ -1,0 +1,31 @@
+--- W1_baum_symlink
+ok     W1 Ziel des Baum-Symlinks unberuehrt (geloescht 0, Fehler 0)
+ok     W1 Baum-Symlink selbst bleibt (kein Baum -> uebersprungen)
+--- W2_unterordner_symlink
+ok     W2 Ziel des Unterordner-Symlinks unberuehrt
+ok     W2 der Link selbst ist weg (Waise, geloescht 1, Fehler 0)
+--- W3_datei_symlink
+ok     W3 gelisteter Symlink bleibt (Entpacker: stat folgt, rename ersetzt nur den Link)
+ok     W3 ungelisteter Link weg, Ziel bleibt (geloescht 1)
+--- W4_tiefe_70
+ok     W4 Waise in Tiefe 63 geloescht
+ok     W4 Waise in Tiefe 70 bleibt, Fehler gezaehlt (1) - kein Loeschen jenseits der Grenze
+--- W5_pfad_lang
+   (Pfadlaenge Tiefe 17: 3671 B, Tiefe 23: 4877 B unter /tmp/u2w/W5_pfad_lang/wurzel)
+ok     W5 Waise mit Pfad < 4096 B geloescht (noch da: 0)
+ok     W5 Waise mit Pfad > 4096 B bleibt, Fehler 1 (noch da: 1, geloescht gesamt 1)
+--- W6_typ_vertauscht
+ok     W6 Ordner 'A.BIN' (gelistet als Datei) samt Inhalt weg -> Entpacker kann schreiben
+ok     W6 Datei 'DATA' (gelistet als Ordner) weg (geloescht 2, Fehler 0)
+--- W7_rechte
+   (uid 0; geloescht 2, Fehler 0, melde ok 2 / nicht loeschbar 0)
+   (root: Rechte-Faelle nicht aussagekraeftig, uebersprungen)
+--- W8_reste
+ok     W8 gelistete Datei bleibt
+ok     W8 .neu-Rest, Gross/klein-Variante, Nicht-UTF-8-Name, .nomedia, FIFO weg (geloescht 5, Fehler 0)
+ok     W8/Y9 zweiter Lauf (= Neustart nach Abbruch) loescht nichts mehr (0/0)
+--- W9_wurzel
+ok     W9 Wurzel-Dateien unberuehrt
+ok     W9 Waise in synchro weg, Baum bleibt; shared_assets fehlt = kein Fehler (1/0)
+ERGEBNIS: 17 ok, 0 FEHLER
+EXIT=0

@@ -1,0 +1,9 @@
+vorher: release/re15_port_v0.8.19-nbgradle_android.apk 363212403 B 2026-09-29 10:00:00.000000000 +0200; RE15DOOR/*.DO2 im Quellbaum: 0
+build_android.sh EXIT=1
+   > Task :app:stageAssets FAILED
+   > Tuerarchive fehlen im Repo: re15_port/shared_assets/RE15DOOR/*.DO2 (0 Dateien)
+   BUILD FAILED in 13s
+   ABBRUCH: Gradle-Bau fehlgeschlagen
+danach: release/re15_port_v0.8.19-nbgradle_android.apk fehlt; .ungeprueft: 0
+RE15DOOR zurueck: 30/30 sha256 gleich
+git status re15_port/: ''

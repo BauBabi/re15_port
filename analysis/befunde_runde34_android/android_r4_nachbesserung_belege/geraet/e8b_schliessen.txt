@@ -1,0 +1,8 @@
+== e8b App schliessen waehrend der Fehlermeldung (cmd activity stack remove 19) 11:36:59
+Prozess vorher: 10373
+Prozess nachher (nach 2 s): beendet
+09-30 09:36:42.740 I/re15    (10373): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:36:42.951 E/re15    (10373): [android] assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad
+09-30 09:36:42.953 E/re15    (10373): [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)
+[android] FEHLER: assets/re15_assets.txt ungueltig (Zeile 3606: unzulaessiger Pfad) - es wird NICHTS entpackt.
+[android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)

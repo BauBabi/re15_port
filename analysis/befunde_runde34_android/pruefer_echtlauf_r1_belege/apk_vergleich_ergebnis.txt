@@ -1,0 +1,12 @@
+Referenz: C:/workspace/Re15Data/re15_packages_archiv/v0.8.19/re15_port_v0.8.19_android.apk  Eintraege 3616 (Namen eindeutig: 3616)
+Neu:      release/re15_port_v0.8.19_android.apk  Eintraege 3616 (Namen eindeutig: 3616)
+assets/-Eintraege: Referenz 3604, neu 3604, gemeinsam 3604, nur Referenz 0, nur neu 0
+assets/: 3604 gemeinsame Eintraege per sha256 verglichen (356842178 Bytes), Abweichungen unter assets/: 0
+assets/ Stored: Referenz 3604/3604, neu 3604/3604
+Manifest sha256: Referenz 5f5acfdb062a8ee06c8df003fe62a28450444f84b2bf7e99c12ed5543c481d81, neu 5f5acfdb062a8ee06c8df003fe62a28450444f84b2bf7e99c12ed5543c481d81
+--- ausserhalb assets/ ---
+   anders:       lib/arm64-v8a/libSDL2.so (Referenz 1420920 B crc 3d9c89b7, neu 1420888 B crc e3140fe8)
+   anders:       lib/arm64-v8a/libmain.so (Referenz 1336832 B crc 6cdb196d, neu 1336832 B crc 57909365)
+   anders:       lib/x86_64/libSDL2.so (Referenz 1537048 B crc 6c50a61b, neu 1537032 B crc 532898ee)
+   anders:       lib/x86_64/libmain.so (Referenz 1398200 B crc 8de4cb1b, neu 1398200 B crc dadaa159)
+   gleich (Groesse+CRC): 8 von 12/12

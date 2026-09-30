@@ -1,0 +1,282 @@
+1790731746.123933 START 2026-09-30 03:29:06 :: bash release/build_android.sh --version v0.8.19 --no-toolchain
+1790731746.566781    Python: /c/Python310/python (3.10.11)
+1790731746.787674 == Android-Bau re15_port_v0.8.19_android ==
+1790731746.787784    Host:    win
+1790731746.787933    SDK:     C:/Users/mjoedicke/AppData/Local/Android/Sdk
+1790731746.788112    JDK:     C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\
+1790731746.788340    Projekt: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android
+1790731746.788526    NDK:     /c/Users/mjoedicke/AppData/Local/Android/Sdk/ndk/27.2.12479018
+1790731746.937031    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790731746.937238    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+1790731746.989706 == CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) ==
+1790731746.989955 == Gradle: fetchSdl2 assembleRelease (Version v0.8.19) ==
+1790731748.511218 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+1790731751.624713 Daemon will be stopped at the end of the build 
+1790731770.322000 
+1790731770.322156 > Task :app:fetchSdl2
+1790731770.322497 SDL2 2.28.5 liegt bereits unter C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\re15_port\platform\android\_deps\SDL2-2.28.5
+1790731772.418131 
+1790731772.418236 > Task :app:stageAssets
+1790731772.418416 stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+1790731772.418640 stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+1790731780.425325 
+1790731780.425639 > Task :app:writeAssetManifest
+1790731780.425836 re15_assets.txt: 3603 Dateien, 356678277 Bytes
+1790731780.425883 
+[... Gradle-Ausgabe (Zeilen 26-1159) ausgelassen, voll unter build/r34a/pruefer_echtlauf_r3/android_voll.log ...]
+1790731935.315869 > Task :app:assembleRelease
+1790731935.409953 [Incubating] Problems report is available at: file:///C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/re15_port/platform/android/build/reports/problems/problems-report.html
+1790731935.410038 
+1790731935.410148 BUILD SUCCESSFUL in 3m 8s
+1790731935.410275 54 actionable tasks: 54 executed
+1790731935.760083 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk.ungeprueft (Version v0.8.19) ==
+1790731936.732189    Pruefkopie (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.4AMbL7/re15_port_v0.8.19_android.apk.ungeprueft
+1790731937.257050    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+1790731937.390998    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790731937.391127    sdkVersion:'24'
+1790731937.391237    targetSdkVersion:'35'
+1790731937.391385    native-code: 'arm64-v8a' 'x86_64'
+1790731937.627363    zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+1790731938.656471    Verified using v1 scheme (JAR signing): false
+1790731938.656679    Verified using v2 scheme (APK Signature Scheme v2): true
+1790731938.656860    Verified using v3 scheme (APK Signature Scheme v3): false
+1790731938.657110    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790731938.657276    Verified using v4 scheme (APK Signature Scheme v4): false
+1790731938.657357    Number of signers: 1
+1790731938.657633    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790731938.836703 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790731939.025447 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790731939.025704    Innere Proben: 58/58 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)
+1790731951.418209    [ok] 01 gute APK                                                   rc=0 (soll 0)
+1790731951.424561    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)                 rc=0 (soll 0)
+1790731951.424973    [ok] 03 Eintrag komprimiert (Inhalt gleich)                        rc=0 (soll 0)
+1790731951.425487    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt                  rc=1 (soll 1)
+1790731951.425986    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte           rc=1 (soll 1)
+1790731951.426487    [ok] 06 Zusatzeintrag unter assets/                                rc=1 (soll 1)
+1790731951.426880    [ok] 07 synchro/unused in der APK                                  rc=1 (soll 1)
+1790731951.427274    [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+1790731951.427671    [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+1790731951.428072    [ok] 10 Datei nur im Quellbaum                                     rc=1 (soll 1)
+1790731951.428574    [ok] 11 APK-Eintrag kuerzer als die Quelle                         rc=1 (soll 1)
+1790731951.428999    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)                       rc=1 (soll 1)
+1790731951.429495    [ok] 13 doppelter APK-Eintrag                                      rc=1 (soll 1)
+1790731951.429937    [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+1790731951.430360    [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+1790731951.430760    [ok] 16 Manifest fehlt in der APK                                  rc=1 (soll 1)
+1790731951.431164    [ok] 17 Manifest: Zeile ohne Tab                                   rc=1 (soll 1)
+1790731951.431544    [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+1790731951.431949    [ok] 19 RE15DOOR leer (Quelle und APK)                             rc=1 (soll 1)
+1790731951.432361    [ok] 20 RE15DOOR-Ordner fehlt ganz                                 rc=1 (soll 1)
+1790731951.432765    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+1790731951.433164    [ok] 22 APK ist kein ZIP                                           rc=2 (soll 2)
+1790731951.433558    [ok] 23 APK fehlt                                                  rc=2 (soll 2)
+1790731951.433960    [ok] 24 build.gradle: zusaetzlicher Baum                           rc=2 (soll 2)
+1790731951.434350    [ok] 25 build.gradle: Baum RE15DOOR fehlt                          rc=2 (soll 2)
+1790731951.434736    [ok] 26 build.gradle: include geaendert                            rc=2 (soll 2)
+1790731951.435115    [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)
+1790731951.435508    [ok] 28 build.gradle fehlt                                         rc=2 (soll 2)
+1790731951.435907    [ok] 29 gute APK mit Datei > 1 MiB                                 rc=0 (soll 0)
+1790731951.436283    [ok] 30 Datei > 1 MiB: 1 Byte hinter dem 1. MiB                    rc=1 (soll 1)
+1790731951.436667    [ok] 31 CRC32-erhaltende Aenderung (gleiche Groesse)               rc=1 (soll 1)
+1790731951.437057    [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+1790731951.437392    [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+1790731951.437744    [ok] 34 Manifest: Groessenfeld '4_396'                             rc=1 (soll 1)
+1790731951.438174    [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+1790731951.438535    [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+1790731951.438926    [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+1790731951.439281    [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+1790731951.439637    [ok] 39 Eintragsname mit '\' (F2)                                  rc=1 (soll 1)
+1790731951.440001    [ok] 40 Eintragsname mit NUL-Anhang (F3)                           rc=1 (soll 1)
+1790731951.440350    [ok] 41 Eintragsname kein UTF-8                                    rc=1 (soll 1)
+1790731951.440713    [ok] 42 Eintragsname mit Steuerzeichen                             rc=1 (soll 1)
+1790731951.441098    [ok] 43 Eintragsname mit '..'                                      rc=1 (soll 1)
+1790731951.441479    [ok] 44 Local Header: CRC falsch, Zentralverzeichnis richtig (F4)  rc=1 (soll 1)
+1790731951.441897    [ok] 45 Local Header: Groesse falsch, Zentralverzeichnis richtig (F5) rc=1 (soll 1)
+1790731951.442272    [ok] 46 Local Header: anderer Name                                 rc=1 (soll 1)
+1790731951.442652    [ok] 47 Local Header: Signatur zerstoert                           rc=1 (soll 1)
+1790731951.443015    [ok] 48 Eintrag verschluesselt                                     rc=1 (soll 1)
+1790731951.443366    [ok] 49 Eintrag mit Methode 99                                     rc=1 (soll 1)
+1790731951.443703    [ok] 50 Daten ragen ins Zentralverzeichnis                         rc=1 (soll 1)
+1790731951.444096    [ok] 51 M16: classes.dex (Deflate, kein Asset) Byte im Strom gekippt rc=1 (soll 1)
+1790731951.444465    [ok] 52 Deflate-Strom mit Muell dahinter                           rc=1 (soll 1)
+1790731951.444862    [ok] 53 Verzeichniseintrag unter assets/                           rc=1 (soll 1)
+1790731951.445230    [ok] 54 APK abgeschnitten (F7)                                     rc=2 (soll 2)
+1790731951.445607    [ok] 55 Bytes hinter dem End-of-Central-Directory                  rc=2 (soll 2)
+1790731951.445992    [ok] 56 ZIP64-Markierung im End-of-Central-Directory               rc=2 (soll 2)
+1790731951.446357    [ok] 57 Zentralverzeichnis-Signatur zerstoert (F8)                 rc=2 (soll 2)
+1790731951.446706    [ok] 58 Zentralverzeichnis-Offset zu gross                         rc=2 (soll 2)
+1790731951.447020    [ok] 59 End-of-Central-Directory nennt einen Eintrag zu wenig      rc=2 (soll 2)
+1790731951.447369    [ok] 60 Deflate-Strom kaputt (Blocktyp 3)                          rc=1 (soll 1)
+1790731951.447715    [ok] 61 gute APK: End-of-Central-Directory-Signatur in Asset-Daten rc=0 (soll 0)
+1790731951.448075    [ok] 62 build.gradle: stageAssets fehlt                            rc=2 (soll 2)
+1790731951.448431    [ok] 63 build.gradle: stageAssets zweimal                          rc=2 (soll 2)
+1790731951.448797    [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2)
+1790731951.449151    [ok] 65 build.gradle: unbekannte Anweisung im from-Block           rc=2 (soll 2)
+1790731951.449524    [ok] 66 build.gradle: from ohne into                               rc=2 (soll 2)
+1790731951.449938    [ok] 67 build.gradle: from ohne Block                              rc=2 (soll 2)
+1790731951.450355    [ok] 68 build.gradle: into("...") mit Klammern (gut)               rc=0 (soll 0)
+1790731951.450738    [ok] 69 build.gradle: preserve fehlt                               rc=2 (soll 2)
+1790731951.451065    [ok] 70 build.gradle: Klammern passen nicht                        rc=2 (soll 2)
+1790731951.451383    [ok] 71 build.gradle: '{' mit ')' geschlossen                      rc=2 (soll 2)
+1790731951.451716    [ok] 72 build.gradle: stageAssets-Block ohne Ende                  rc=2 (soll 2)
+1790731951.452066    [ok] 73 build.gradle: Zeichenkette ohne Ende                       rc=2 (soll 2)
+1790731951.452482    [ok] 74 build.gradle: Kommentar /* ohne Ende                       rc=2 (soll 2)
+1790731951.452830    [ok] 75 Stored-Eintrag: csize 5 B groesser als usize               rc=1 (soll 1)
+1790731951.453134    [ok] 76 M1: Manifest-Groesse 1 B KLEINER als die APK               rc=1 (soll 1)
+1790731951.453478    [ok] 77 M9: classes.dex (Deflate) Laenge +100, CRC richtig         rc=1 (soll 1)
+1790731951.453847    [ok] 78 M9: libmain.so (Stored) Laenge +100, CRC richtig           rc=1 (soll 1)
+1790731951.454176    [ok] 79 M5: EOCD-Kommentarlaenge reicht ueber das Dateiende        rc=2 (soll 2)
+1790731951.454539    [ok] 80 M14: Data-Descriptor-Bit nur im Zentralverzeichnis, LFH-CRC falsch rc=1 (soll 1)
+1790731951.454873    [ok] 81 M14: Data-Descriptor-Bit nur im Local Header               rc=1 (soll 1)
+1790731951.455199    [ok] 82 M14: Data-Descriptor-Bit in beiden Koepfen                 rc=1 (soll 1)
+1790731951.455520    [ok] 83 M16: libmain.so (Stored, kein Asset) Byte gekippt          rc=1 (soll 1)
+1790731951.455879    [ok] 84 B8: Praefix vor dem ersten Local Header, Offsets verschoben rc=2 (soll 2)
+1790731951.456186    [ok] 85 B8: Manifest-Kopfzeile mit arabisch-indischen Ziffern      rc=1 (soll 1)
+1790731951.456492    [ok] 86 B2: Port-Tuerarchiv fehlt in Quelle UND APK                rc=1 (soll 1)
+1790731951.456798    [ok] 87 B2: Port-Tuerarchiv 0 Byte in Quelle UND APK               rc=1 (soll 1)
+1790731951.457113    [ok] 88 B2: Port-Tuerarchiv gleiche Groesse, anderer Inhalt (FNV-1a) rc=1 (soll 1)
+1790731951.457450    [ok] 89 B2: Port-Tuerarchiv ohne Tabellenzeile (Quelle + APK)      rc=1 (soll 1)
+1790731951.457791    [ok] 90 B2: RE2-Tuerarchiv fehlt in Quelle UND APK                 rc=1 (soll 1)
+1790731951.458116    [ok] 91 B2: RE2-Tuerarchiv 1 B kuerzer (Quelle + APK)              rc=1 (soll 1)
+1790731951.458426    [ok] 92 B2: RE2-Tabelle Tonteil > Sektor * 0x800                   rc=1 (soll 1)
+1790731951.458749    [ok] 93 B2: RE2-Tabelle Sektor * 0x800 + Modellteil != Groesse     rc=1 (soll 1)
+1790731951.459072    [ok] 94 B2: Port-Tabelle Modellteil passt nicht                    rc=1 (soll 1)
+1790731951.459412    [ok] 95 B2: Port-Tabelle Tonteil 1 B ueber Sektor * 0x800          rc=1 (soll 1)
+1790731951.459757    [ok] 96 B2: RE2-Archiv nur als Griff-Spender verlangt, fehlt       rc=1 (soll 1)
+1790731951.460113    [ok] 97 B2: RE2-Spender nur ueber den Rueckfall in die Port-Tabelle, fehlt rc=1 (soll 1)
+1790731951.460446    [ok] 98 B2: RE2-Archiv nur als Basis eines Port-Archivs verlangt, fehlt rc=1 (soll 1)
+1790731951.460773    [ok] 99 B2: Tuerzeile mit Port-Archiv anderer Basis                rc=1 (soll 1)
+1790731951.461082    [ok] 100 B2: Tuerzeile nennt Port-Archiv ausserhalb der Tabelle     rc=1 (soll 1)
+1790731951.461431    [ok] 101 B2: Griff-Tausch nennt Port-Archiv ausserhalb der Tabelle  rc=1 (soll 1)
+1790731951.461779    [ok] 102 B2: Tuerzeile nennt RE2-Archiv ausserhalb der RE2-Tabelle  rc=1 (soll 1)
+1790731951.462114    [ok] 103 B2: Tabelle re15_tuer_eigen[3] mit 2 Zeilen                rc=2 (soll 2)
+1790731951.462429    [ok] 104 B2: typedef ohne Feld fnv                                  rc=2 (soll 2)
+1790731951.462753    [ok] 105 B2: Tabellenzeile mit mehr Werten als Feldern              rc=2 (soll 2)
+1790731951.463080    [ok] 106 B2: Tabellenzeile fuellt auch das skalare char-Feld (gut)  rc=0 (soll 0)
+1790731951.463400    [ok] 107 B2: Engine-Tabelle re2_tuer_tabelle.inc fehlt              rc=2 (soll 2)
+1790731951.463734    [ok] 108 B2: Kennung doppelt                                        rc=2 (soll 2)
+1790731951.464060    [ok] 109 B2: Kennung leer                                           rc=2 (soll 2)
+1790731951.464373    [ok] 110 C-Leser: typedef fehlt                                     rc=2 (soll 2)
+1790731951.464708    [ok] 111 C-Leser: typedef doppelt                                   rc=2 (soll 2)
+1790731951.465050    [ok] 112 C-Leser: Feldtyp unbekannt                                 rc=2 (soll 2)
+1790731951.465370    [ok] 113 C-Leser: Deklarator unlesbar                               rc=2 (soll 2)
+1790731951.465747    [ok] 114 C-Leser: Makroname statt Zahl                              rc=2 (soll 2)
+1790731951.466083    [ok] 115 C-Leser: Tabelle ohne schliessende Klammer                 rc=2 (soll 2)
+1790731951.466408    [ok] 116 C-Leser: ';' nach der Tabelle fehlt                        rc=2 (soll 2)
+1790731951.466763    [ok] 117 C-Leser: Zeile ist kein { ... }                            rc=2 (soll 2)
+1790731951.467107    [ok] 118 C-Leser: Kennung ist keine Zeichenkette                    rc=2 (soll 2)
+1790731951.467433    [ok] 119 C-Leser: Kennung 8 Bytes (char[8] braucht das NUL)         rc=2 (soll 2)
+1790731951.467749    [ok] 120 C-Leser: Feld qx ist keine Liste                           rc=2 (soll 2)
+1790731951.468080    [ok] 121 C-Leser: Feld qx mit 5 Zahlen                              rc=2 (soll 2)
+1790731951.468408    [ok] 122 C-Leser: Feld qx mit Zeichenkette                          rc=2 (soll 2)
+1790731951.468760    [ok] 123 C-Leser: Feld re2_nr ist keine Zahl                        rc=2 (soll 2)
+1790731951.469136    [ok] 124 C-Leser: Zeichenkette ohne Ende                            rc=2 (soll 2)
+1790731951.469475    [ok] 125 C-Leser: Kommentar /* ohne Ende                            rc=2 (soll 2)
+1790731951.469825    [ok] 126 C-Leser: Tabelle doppelt                                   rc=2 (soll 2)
+1790731951.470160    [ok] 127 C-Leser: Tabelle fehlt                                     rc=2 (soll 2)
+1790731951.470498    [ok] 128 B6: Ordner unter shared_assets in keiner Liste             rc=1 (soll 1)
+1790731951.470831    [ok] 129 --paket: gutes PC-Paket                                    rc=0 (soll 0)
+1790731951.471153    [ok] 130 --paket: Datei fehlt im Paket                              rc=1 (soll 1)
+1790731951.471480    [ok] 131 --paket: Zusatzbaum im Paket (copy_common weicht ab)       rc=1 (soll 1)
+1790731951.471897    [ok] 132 --paket: gleiche Groesse, anderer Inhalt                   rc=1 (soll 1)
+1790731951.472306    [ok] 133 --paket: synchro/unused im Paket                           rc=1 (soll 1)
+1790731951.472680    [ok] 134 --paket: Tuer-Soll greift auch hier                        rc=1 (soll 1)
+1790731951.473053    [ok] 135 --paket: Paketordner fehlt                                 rc=2 (soll 2)
+1790731951.473410    [ok] 136 --quellbaum: gut                                           rc=0 (soll 0)
+1790731951.473782    [ok] 137 --quellbaum: RE2-Tuerarchiv fehlt                          rc=1 (soll 1)
+1790731951.474175    [ok] 138 Manifest genau an der Grenze (Pruefhaken senkt 64 MiB)     rc=0 (soll 0)
+1790731951.474549    [ok] 139 Manifest 1 B ueber der Grenze                              rc=1 (soll 1)
+1790731951.474918    [ok] 140 EOCD: Datentraeger-Nummer 1                                rc=2 (soll 2)
+1790731951.475280    [ok] 141 EOCD: Zentralverzeichnis auf Datentraeger 1                rc=2 (soll 2)
+1790731951.475727    [ok] 142 EOCD: Eintraege hier != Eintraege gesamt                   rc=2 (soll 2)
+1790731951.476134    [ok] 143 ZIP64-Locator vor dem EOCD (Zaehler normal)                rc=2 (soll 2)
+1790731951.476492    [ok] 144 Zentralverzeichnis endet mitten im Kopf                    rc=2 (soll 2)
+1790731951.476794    [ok] 145 RE2-Tabelle: Groesse 1 B ueber der Datei                   rc=1 (soll 1)
+1790731951.477197    [ok] 146 RE2-Tabelle: Groesse 1 B unter der Datei                   rc=1 (soll 1)
+1790731951.477618    [ok] 147 RE2-Tabelle: Modellteil 1 B zu gross                       rc=1 (soll 1)
+1790731951.477956    [ok] 148 Port-Archiv: FNV-1a kleiner als die Tabelle                rc=1 (soll 1)
+1790731951.478346    [ok] 149 Port-Archiv: FNV-1a groesser als die Tabelle               rc=1 (soll 1)
+1790731951.478678    [ok] 150 Tuerzeile nennt DOOR00 (erste Tabellenzeile)               rc=1 (soll 1)
+1790731951.479021    [ok] 151 Tuerzeile mit Port-Archiv kleinerer Basis                  rc=1 (soll 1)
+1790731951.479349    [ok] 152 Tabelle re15_tuer_eigen[1] mit 2 Zeilen                    rc=2 (soll 2)
+1790731951.479717    [ok] 153 C-Leser: Zeichenkette am Dateiende ohne Ende               rc=2 (soll 2)
+1790731951.480046    [ok] 154 C-Leser: //-Kommentar am Dateiende ohne Zeilenumbruch (gut) rc=0 (soll 0)
+1790731951.480369    [ok] 155 Eintragsname mit Steuerzeichen 0x1F                        rc=1 (soll 1)
+1790731951.480700    [ok] 156 Eintragsname mit DEL (0x7F)                                rc=1 (soll 1)
+1790731951.481030    [ok] 157 Eintragsname beginnt mit '/'                               rc=1 (soll 1)
+1790731951.481350    [ok] 158 Eintragsname mit '//'                                      rc=1 (soll 1)
+1790731951.481693    [ok] 159 Eintragsname mit '.'-Teil                                  rc=1 (soll 1)
+1790731951.482018    [ok] 160 Manifest: Geisterzeile, die vor dem Manifest sortiert      rc=1 (soll 1)
+1790731951.482343    [ok] 161 Manifest: Pfad mit Backslash                               rc=1 (soll 1)
+1790731951.482664    [ok] 162 Manifest: Kopfzeile Bytes 1 zu gross                       rc=1 (soll 1)
+1790731951.482983    [ok] 163 Manifest: Kopfzeile Anzahl 1 zu klein                      rc=1 (soll 1)
+1790731951.483303    [ok] 164 Manifest: Kommentarzeile direkt nach dem Kopf              rc=1 (soll 1)
+1790731951.483626    [ok] 165 APK-Eintrag laenger als die Quelle                         rc=1 (soll 1)
+1790731951.483940    [ok] 166 Zusatzeintrag assets/AAA.BIN (sortiert vor dem Manifest)   rc=1 (soll 1)
+1790731951.484263    [ok] 167 APK-Inhalt: sha256 kleiner als die Quelle                  rc=1 (soll 1)
+1790731951.484584    [ok] 168 APK-Inhalt: sha256 groesser als die Quelle                 rc=1 (soll 1)
+1790731951.484963    [ok] 169 Local Header zeigt auf die letzten 8 Bytes ('PK\3\4' im EOCD-Kommentar) rc=1 (soll 1)
+1790731951.485310    [ok] 170 Local Header: Name kleiner (DO1)                           rc=1 (soll 1)
+1790731951.485631    [ok] 171 Local Header: CRC - 1                                      rc=1 (soll 1)
+1790731951.485942    [ok] 172 Local Header: CRC + 1                                      rc=1 (soll 1)
+1790731951.486278    [ok] 173 Local Header: csize + 1                                    rc=1 (soll 1)
+1790731951.486599    [ok] 174 Local Header: usize - 1                                    rc=1 (soll 1)
+1790731951.486947    [ok] 175 verschluesselt: Bit 0 nur im Local Header                  rc=1 (soll 1)
+1790731951.487263    [ok] 176 verschluesselt: Bit 0 nur im Zentralverzeichnis            rc=1 (soll 1)
+1790731951.487554    [ok] 177 verschluesselt: Bit 6 (starke Verschluesselung)            rc=1 (soll 1)
+1790731951.487865    [ok] 178 verschluesselt: Bit 13 (maskierter Kopf)                   rc=1 (soll 1)
+1790731951.488173    [ok] 179 EOCD: Zentralverzeichnis-Offset 0xFFFFFFFF                 rc=2 (soll 2)
+1790731951.488497    [ok] 180 Deflate-Strom um 10 B gekuerzt                             rc=1 (soll 1)
+1790731951.488817    [ok] 181 build.gradle: zwei into im from-Block                      rc=2 (soll 2)
+1790731951.489201    [ok] 182 build.gradle: into(assetStage) fehlt                       rc=2 (soll 2)
+1790731951.489539    [ok] 183 build.gradle: into(assetStage) zweimal                     rc=2 (soll 2)
+1790731951.489885    [ok] 184 build.gradle: preserve zweimal                             rc=2 (soll 2)
+1790731951.490203    [ok] 185 --paket: sha256 kleiner als die Quelle                     rc=1 (soll 1)
+1790731951.490510    [ok] 186 --paket: sha256 groesser als die Quelle                    rc=1 (soll 1)
+1790731951.490833    [ok] 187 Befundliste gekuerzt (--max-zeilen 1, 2 Befunde einer Art) rc=1 (soll 1)
+1790731951.491149    [ok] 188 --max-zeilen 1 bei genau 1 Befund: nicht gekuerzt          rc=1 (soll 1)
+1790731951.491478    [ok] 189 Kopf ohne #define RE15_DOOR_KEIN_SPENDER                   rc=2 (soll 2)
+1790731951.491786    [ok] 190 Praefix aus 'Z' vor dem ersten Local Header                rc=2 (soll 2)
+1790731951.492141    [ok] 191 EOCD mit 65535 B Kommentar (gut)                           rc=0 (soll 0)
+1790731951.492572    [ok] 192 TORSE.VBS 0 B in Quelle UND APK                            rc=1 (soll 1)
+1790731951.492989    [ok] 193 RE15DOOR nur mit liesmich.txt und alt/P99X.DO2             rc=1 (soll 1)
+1790731951.493522    [ok] 194 EOCD: Zentralverzeichnis 3 B kleiner als belegt            rc=2 (soll 2)
+1790731951.493878    [ok] 195 EOCD: Eintraege hier > Eintraege gesamt                    rc=2 (soll 2)
+1790731951.494281    [ok] 196 letzter Eintrag ohne Name (Kopf endet genau am Ende des Zentralverzeichnisses, gut) rc=0 (soll 0)
+1790731951.494585    [ok] 197 Zentralverzeichnis-Signatur durch kleinere Bytes ersetzt   rc=2 (soll 2)
+1790731951.494938    [ok] 198 Local-Header-Signatur durch kleinere Bytes ersetzt         rc=1 (soll 1)
+1790731951.495310    [ok] 199 libmain.so: CRC32 der Daten kleiner als im Zentralverzeichnis rc=1 (soll 1)
+1790731951.495650    [ok] 200 libmain.so: CRC32 der Daten groesser als im Zentralverzeichnis rc=1 (soll 1)
+1790731951.496001    [ok] 201 Manifest-Eintrag beschaedigt: kein Manifest-Befund aus kaputten Daten rc=1 (soll 1)
+1790731951.496342    [ok] 202 Manifest-Eintrag mit falscher LFH-CRC: nicht gelesen       rc=1 (soll 1)
+1790731951.496460    Laufzeit: 12.4 s
+1790731951.496794 == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790731951.497035 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790731952.226801 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790731952.227239    APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\re15_apk_pruefen.4AMbL7\re15_port_v0.8.19_android.apk.ungeprueft
+1790731952.227524    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790731952.227838    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790731952.943819    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790731952.944241    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790731953.034823    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790731958.381299    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790731958.381659    shared_assets/PSX               3193    3193     3193    300522652
+1790731958.381960    shared_assets/extracted_fx        13      13       13      1079875
+1790731958.382600    shared_assets/RE2                277     277      277     25482039
+1790731958.382921    shared_assets/RE15DOOR            30      30       30      1914932
+1790731958.383205    synchro                           90      90       90     27678779
+1790731958.383845    SUMME                           3603    3603     3603    356678277
+1790731958.384182    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790731958.384417    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790731958.384656    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790731958.385003    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790731958.385116    Laufzeit:  6.2 s
+1790731958.385603 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790731961.222377 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk.ungeprueft (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) ==
+1790731965.057789 
+1790731965.159071 -rw-r--r-- 1 mjoedicke 197121 363212403 Sep 30 03:32 /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790731965.212501 b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc *re15_port_v0.8.19_android.apk
+1790731965.216878 == ANDROID-BUILD-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk ==
+1790731966.312794 ENDE 2026-09-30 03:32:46
+EXIT=0
+EXIT_AUSSEN=0

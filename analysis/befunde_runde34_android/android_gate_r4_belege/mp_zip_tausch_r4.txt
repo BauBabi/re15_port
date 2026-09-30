@@ -1,0 +1,30 @@
+Sandbox-Commit bf4d70c 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+Faelschung fuer die Attrappe: C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/b3_attrappe/faelschung/re15_port_v0.8.19_android.apk
+Referenz: 514bebd55bd6b8ec..., Faelschung: 2dd9497b3475ffcc..., Groesse 363212403/363212403
+== LN_neues_skript: EXIT=1 (94 s)
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d
+      gepruefte APK (sha256 crc32 Bytes): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+   [zip-attrappe] /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk -> Faelschung (gleiche Groesse/CRC32)
+      APK-Satz, Katalog: genau re15_port_v0.8.19_android.apk, CRC32 d16ad30a, 363212403 B = gepruefte Kennung
+   APK-Satz: die entpackte APK hat sha256 2dd9497b3475ffcc3a5b619ab86bccbc3d2d6ccf392894716f5f97e731bd9958, die gepruefte 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 - NICHT die g
+   ABBRUCH: Android-Satz re15_port_v0.8.19_android.z* enthaelt NICHT die gepruefte APK (Meldung oben) - nicht ausgeliefert
+   SHA256SUMS.txt (Sandbox): fehlt Zeilen, Android: 0
+--- Sandbox-Skripte := ALT (9d2337e4)
+== LA_altes_skript: EXIT=0 (85 s)
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d
+      gepruefte APK (sha256 crc32 Bytes): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+   [zip-attrappe] /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk -> Faelschung (gleiche Groesse/CRC32)
+      APK im Split-Satz = gepruefte APK (CRC32 d16ad30a, 363212403 B)
+   == SHA256SUMS.txt geschrieben ==
+   == Fertig ==
+   SHA256SUMS.txt (Sandbox): 4 Zeilen, Android: 2
+--- was im Satz von LA steckt (zusammenfuehren + entpacken):
+   sha256 der APK im Satz: 2dd9497b3475ffcc... (Faelschung: 2dd9497b3475ffcc...)
+FERTIG
+EXIT=0

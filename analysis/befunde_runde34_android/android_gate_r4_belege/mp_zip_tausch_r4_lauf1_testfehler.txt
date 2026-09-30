@@ -1,0 +1,25 @@
+Sandbox-Commit 82c1ab5 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+Referenz: 514bebd55bd6b8ec..., Faelschung: 2dd9497b3475ffcc..., Groesse 363212403/363212403
+== LN_neues_skript: EXIT=12 (71 s)
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d
+      gepruefte APK (sha256 crc32 Bytes): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+   [zip-attrappe] /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk -> Faelschung (gleiche Groesse/CRC32)
+   SHA256SUMS.txt (Sandbox): fehlt Zeilen, Android: 0
+--- Sandbox-Skripte := ALT (9d2337e4)
+== LA_altes_skript: EXIT=12 (74 s)
+   == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d
+      gepruefte APK (sha256 crc32 Bytes): 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403
+   == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+   == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+   [zip-attrappe] /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/r4/sb_b3/release/re15_port_v0.8.19_android.apk -> Faelschung (gleiche Groesse/CRC32)
+   SHA256SUMS.txt (Sandbox): fehlt Zeilen, Android: 0
+--- was im Satz von LA steckt (zusammenfuehren + entpacken):
+zip I/O error: No such file or directory
+zip error: File not found or no read permission (re15_port_v0.8.19_android.zip)
+   sha256 der APK im Satz: e3b0c44298fc1c14... (Faelschung: 2dd9497b3475ffcc...)
+FERTIG
+EXIT=0

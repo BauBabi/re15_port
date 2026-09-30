@@ -1,0 +1,63 @@
+1790710123.255104 START 2026-09-29 21:28:43 :: bash release/make_package.sh --version v0.8.19
+1790710123.497761    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790710123.498457    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+1790710123.653152    Python: /c/Python310/python.exe (3.10.11)
+1790710123.653628 == Android-APK: Selbsttest + volle Asset-Pruefung gegen den Quellbaum ==
+1790710123.808817 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790710124.065484    [ok] 01 gute APK                                           rc=0 (soll 0)
+1790710124.209291    [ok] 02 Manifest mit CRLF (Geraet schneidet \r ab)         rc=0 (soll 0)
+1790710124.351705    [ok] 03 Eintrag komprimiert (Inhalt gleich)                rc=0 (soll 0)
+1790710124.494025    [ok] 04 fehlende Datei: RE15DOOR-Eintrag entfernt          rc=1 (soll 1)
+1790710124.657036    [ok] 05 gleiche Groesse, anderer Inhalt: RE2/DOOR 1 Byte   rc=1 (soll 1)
+1790710124.830534    [ok] 06 Zusatzeintrag unter assets/                        rc=1 (soll 1)
+1790710124.990426    [ok] 07 synchro/unused in der APK                          rc=1 (soll 1)
+1790710125.138907    [ok] 08 Manifest: falsche Groesse                          rc=1 (soll 1)
+1790710125.313237    [ok] 09 Manifest: fehlende Zeile                           rc=1 (soll 1)
+1790710125.472269    [ok] 10 Datei nur im Quellbaum                             rc=1 (soll 1)
+1790710125.627181    [ok] 11 APK-Eintrag kuerzer als die Quelle                 rc=1 (soll 1)
+1790710125.792726    [ok] 12 Byte im APK-Datenstrom gekippt (CRC)               rc=1 (soll 1)
+1790710125.950617    [ok] 13 doppelter APK-Eintrag                              rc=1 (soll 1)
+1790710126.123660    [ok] 14 Manifest: Kopfzeile Anzahl falsch                  rc=1 (soll 1)
+1790710126.270452    [ok] 15 Manifest: BOM                                      rc=1 (soll 1)
+1790710126.397612    [ok] 16 Manifest fehlt in der APK                          rc=1 (soll 1)
+1790710126.586204    [ok] 17 Manifest: Zeile ohne Tab                           rc=1 (soll 1)
+1790710126.791248    [ok] 18 Manifest: Pfad mit '..'                            rc=1 (soll 1)
+1790710126.965464    [ok] 19 RE15DOOR leer (Quelle und APK)                     rc=1 (soll 1)
+1790710127.124091    [ok] 20 RE15DOOR-Ordner fehlt ganz                         rc=1 (soll 1)
+1790710127.289023    [ok] 21 TORSE.VBS fehlt (Quelle und APK)                   rc=1 (soll 1)
+1790710127.447970    [ok] 22 APK ist kein ZIP                                   rc=2 (soll 2)
+1790710127.575184    [ok] 23 APK fehlt                                          rc=2 (soll 2)
+1790710127.702902    [ok] 24 build.gradle: zusaetzlicher Baum                   rc=2 (soll 2)
+1790710127.846083    [ok] 25 build.gradle: Baum RE15DOOR fehlt                  rc=2 (soll 2)
+1790710128.020905    [ok] 26 build.gradle: include geaendert                    rc=2 (soll 2)
+1790710128.179958    [ok] 27 build.gradle: unbekannte Anweisung                 rc=2 (soll 2)
+1790710128.291119    [ok] 28 build.gradle fehlt                                 rc=2 (soll 2)
+1790710128.436529    Laufzeit: 4.6 s
+1790710128.436811 == SELBSTTEST-OK: 28/28 Faelle (gute APK angenommen, jede Faelschung abgelehnt) ==
+1790710128.704751 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790710128.705049    APK:       C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\re15_port_v0.8.19_android.apk
+1790710128.705233    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790710128.705434    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790710132.447103    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790710132.447352    shared_assets/PSX               3193    3193     3193    300522652
+1790710132.447597    shared_assets/extracted_fx        13      13       13      1079875
+1790710132.447778    shared_assets/RE2                277     277      277     25482039
+1790710132.448060    shared_assets/RE15DOOR            30      29       29      1859024
+1790710132.448291    synchro                           90      90       90     27678779
+1790710132.448463    SUMME                           3603    3602     3602    356622369
+1790710132.448611    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790710132.448743    RE15DOOR:  Quelle 30, APK 29, sha256 gleich 29/30
+1790710132.449000    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790710132.449346    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790710132.449473    Laufzeit:  3.7 s
+1790710132.449587 --- Abweichungen: 2 ---
+1790710132.449707    [fehlt in der APK] 1
+1790710132.450082       fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2)
+1790710132.450245    [Manifest: Zeile ohne APK-Eintrag] 1
+1790710132.450687       Manifest nennt shared_assets/RE15DOOR/P07G.DO2 (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2
+1790710132.450867 == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+1790710132.457474 ABBRUCH: Android-APK passt nicht zum Quellbaum (apk_asset_gate.py rc=1):
+1790710132.457812         /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk
+1790710132.458033         release/build_android.sh neu laufen lassen, dann erst paketieren.
+1790710133.485288 ENDE 2026-09-29 21:28:53
+EXIT=1

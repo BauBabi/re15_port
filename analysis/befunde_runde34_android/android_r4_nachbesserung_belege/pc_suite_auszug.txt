@@ -1,0 +1,9 @@
+build/r34a/nb/pc_build/local_build_ctest.log:        Start 406: unit_r34a_asset_abgleich
+build/r34a/nb/pc_build/local_build_ctest.log:406/429 Test #406: unit_r34a_asset_abgleich ............   Passed    1.04 sec
+build/r34a/nb/pc_build/local_build_ctest.log:100% tests passed, 0 tests failed out of 429
+build/r34a/nb/pc_build/local_build_ctest.log:Total Test time (real) = 720.48 sec
+build/r34a/nb/logs/pc_suite.log:        Start 406: unit_r34a_asset_abgleich
+build/r34a/nb/logs/pc_suite.log:406/429 Test #406: unit_r34a_asset_abgleich ............   Passed    1.04 sec
+build/r34a/nb/logs/pc_suite.log:100% tests passed, 0 tests failed out of 429
+build/r34a/nb/logs/pc_suite.log:Total Test time (real) = 720.48 sec
+build/r34a/nb/logs/pc_suite.log:=== LOCAL-BUILD-OK (all) — Tests 429/429

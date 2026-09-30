@@ -1,0 +1,26 @@
+--- echtes Gate ---
+K0                                                   soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F1_leerzeichen                                       soll 1 ist 1 ok         | Manifest nennt shared_assets/RE15DOOR/P07G.DO2  (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2  fehlt im Manifest: shared_assets/RE15DOOR/P07G.DO2 (wird auf dem Geraet nie entpackt) 
+F2_vollbreit                                         soll 1 ist 1 ok         | Manifest-Zeile 1114: Groessenfeld '\uff15\uff15\uff19\uff10\uff18' ist keine Zahl (atoll, :205) Manifest-Kopfzeile passt nicht: nennt 3603 Dateien / 356678277 Bytes, die Zeilen ergeben 3602 / 356622369 
+F2b_arabisch                                         soll 1 ist 1 ok         | Manifest-Zeile 1114: Groessenfeld '\u0665\u0665\u0669\u0660\u0668' ist keine Zahl (atoll, :205) Manifest-Kopfzeile passt nicht: nennt 3603 Dateien / 356678277 Bytes, die Zeilen ergeben 3602 / 356622369 
+F3_nul_ende                                          soll 1 ist 1 ok         | Binary file build/r34a/pruefer_r3/logs/bat/F3_nul_ende.log matches 
+F4_ff_ende                                           soll 1 ist 1 ok         | Manifest nennt shared_assets/RE15DOOR/P07G.DO2 (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2 fehlt im Manifest: shared_assets/RE15DOOR/P07G.DO2 (wird auf dem Geraet nie entpackt) 
+F5_fuehrende_0                                       soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F6_u2028                                             soll 1 ist 1 ok         | Manifest-Kopfzeile passt nicht: nennt 3603 Dateien / 356678277 Bytes, die Zeilen ergeben 3602 / 356622369 Manifest nennt shared_assets/RE15DOOR/P07D.DO2\u202855908	shared_assets/RE15DOOR/P07G.DO2 (55908 B), die APK hat keinen Eint
+F7_kleinschrift                                      soll 1 ist 1 ok         | zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/shared_assets/RE15DOOR/p07g.do2 
+F8_leerer_name                                       soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F9_vt_ende                                           soll 1 ist 1 ok         | Manifest nennt shared_assets/RE15DOOR/P07G.DO2 (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2 fehlt im Manifest: shared_assets/RE15DOOR/P07G.DO2 (wird auf dem Geraet nie entpackt) 
+F10_nbsp_ende                                        soll 1 ist 1 ok         | Manifest nennt shared_assets/RE15DOOR/P07G.DO2  (55908 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/P07G.DO2  fehlt im Manifest: shared_assets/RE15DOOR/P07G.DO2 (wird auf dem Geraet nie entpackt) 
+--- Mutanten gegen ihre Faelschungen (soll = was das ECHTE Gate sagt) ---
+F1_leerzeichen@MU1_manifest_rstrip_alles             soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F4_ff_ende@MU1_manifest_rstrip_alles                 soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F9_vt_ende@MU1_manifest_rstrip_alles                 soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F2_vollbreit@MU2_groesse_unicode_ziffern             soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F2b_arabisch@MU2_groesse_unicode_ziffern             soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F2_vollbreit@MU6_groesse_isdigit                     soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F4_ff_ende@MU3_splitlines                            soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F6_u2028@MU3_splitlines                              soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F1_leerzeichen@MU8_pfad_strip                        soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+F10_nbsp_ende@MU8_pfad_strip                         soll 1 ist 0 ABWEICHUNG | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+FERTIG
+EXIT=0

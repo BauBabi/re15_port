@@ -1,0 +1,14 @@
+/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+   pfad-guard=JA  link-guard=JA (/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe)  leer-guard=nein  -> verworfen OHNE Start
+/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe
+   pfad-guard=JA  link-guard=JA (/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe)  leer-guard=nein  -> verworfen OHNE Start
+/c/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+   pfad-guard=nein  link-guard=JA (/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe)  leer-guard=nein  -> verworfen OHNE Start
+C:/Users/MJOEDI~1/AppData/Local/MICROS~1/WINDOW~1/python3.exe
+   pfad-guard=nein  link-guard=JA (/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python3.exe)  leer-guard=nein  -> verworfen OHNE Start
+/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python.exe
+   pfad-guard=JA  link-guard=JA (/c/Program Files/WindowsApps/PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0/python.exe)  leer-guard=nein  -> verworfen OHNE Start
+/c/Python310/python.exe
+   pfad-guard=nein  link-guard=nein (kein Link)  leer-guard=nein  -> WUERDE GESTARTET
+/c/msys64/mingw64/bin/python3.exe
+   pfad-guard=nein  link-guard=nein (kein Link)  leer-guard=nein  -> WUERDE GESTARTET

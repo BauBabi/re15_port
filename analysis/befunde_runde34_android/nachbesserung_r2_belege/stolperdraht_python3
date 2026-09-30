@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Stolperdraht (Nachbesserung R2, nach dem Pruefer echtlauf r2): jeder Aufruf wird protokolliert und
+# scheitert mit rc 97. Erwartet sind NUR die Probe-Aufrufe von release/python_finden.sh.
+LOGF="C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb2/logs/stolperdraht.log"
+eltern="$(tr '\0\n' '  ' < /proc/$PPID/cmdline 2>/dev/null | cut -c1-160)"
+printf '%s %s ARGS=[%.80s] ELTERN=[%s]\n' "$(date '+%T.%N' | cut -c1-12)" "$0" "$*" "$eltern" >> "$LOGF"
+exit 97

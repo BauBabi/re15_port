@@ -1,0 +1,3 @@
+# build_android.sh --gate-only, Stand HEAD 568e9b88, 2026-09-29 21:52:27
+F2_signiert --version v0.8.19: EXIT=0 | == ANDROID-GATES-OK (--gate-only): build/r34a/nb/apk/F2_signiert.apk ==
+B4 SDK fehlt, ref --version v9.9.9: EXIT=0 |    (Android-SDK-Ordner fehlt: /c/gibt_es_nicht - ohne aapt)    (aapt nicht gefunden - badging-Gate uebersprungen)  | == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk ==

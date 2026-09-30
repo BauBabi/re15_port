@@ -1,0 +1,18 @@
+== g2_uebergang_abbruch 2026-09-30 10:14:34
+install M: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+09-30 08:15:06.480 I/re15    ( 9520): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+force-stop 10:15:13; Prozess: beendet
+.
+..
+debug.log
+re15_assets_ok.txt
+shared_assets
+synchro
+.neu:
+af45d06a3555f997 3603 356678277
+
+23d5fdc1caff80786ff855e59450f09e2ab810b8ad0a1cb08494033ec79e8174  shared_assets/PSX/STAGE4/ROOM4010.RDT
+ls: re15_assets_entpackt.txt: No such file or directory
+09-30 08:15:06.037 I/re15    ( 9520): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:15:06.480 I/re15    ( 9520): [android] Abgleich (Uebergang v0.8.19): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0

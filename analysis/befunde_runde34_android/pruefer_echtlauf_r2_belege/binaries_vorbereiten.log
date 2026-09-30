@@ -1,0 +1,12 @@
+re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+re15_port_v0.8.19_win64.z01: OK
+re15_port_v0.8.19_win64.zip: OK
+-rw-r--r-- 1 mjoedicke Kein 3834872 2026-09-29 19:34:13.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/re15_pc
+-rwxr-xr-x 1 mjoedicke Kein 4381178 2026-09-29 19:34:23.000000000 +0200 C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/win_out/re15_pc.exe
+30d5b67b0b03f64e6fa3ce59528e36c30fbad0a4e29387beb78a22761d6fd41b *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/win_out/re15_pc.exe
+abfbe7c517bf98ce4cdd31607b81a8e555f0ce23af1c22e84f89ba76f5cf0dc3 *C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/linux_out/re15_pc
+letzter PC-Code-Commit (make_package-Standardpfade):
+cf386e32 2026-09-29 19:02:06 +0200 merge: r33/tueren in r33/integration (141 von 144 Tueren mit Sequenz)
+letzter Commit an den APK-Pfaden:
+f2d26986 2026-09-29 20:55:26 +0200 wip(r34a): build.gradle stageAssets - RE2/DOOR + RE15DOOR muessen *.DO2 enthalten (statt nur P07G.DO2)

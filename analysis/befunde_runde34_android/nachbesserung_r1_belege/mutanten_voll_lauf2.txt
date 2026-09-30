@@ -1,0 +1,93 @@
+# 84 Mutanten (A befund, B raise, C Namensregel, D Hand) aus release/apk_asset_gate.py, Python C:/Python310/python.exe
+ERKANNT   rc=1 rot=70                       B__zeichenkette_ende_Z144                    raise Bedienfehler("build.gradle: Zeichenkette ohne Ende ab Zeichen %d" % i)
+UEBERLEBT rc=0 rot=-                        B__ohne_kommentare_Z163                      raise Bedienfehler("build.gradle: Kommentar /* ohne Ende")
+ERKANNT   rc=1 rot=69                       B__klammer_ende_Z200                         raise Bedienfehler("build.gradle: Klammer ohne Ende")
+ERKANNT   rc=1 rot=71                       B__klammer_ende_Z189                         raise Bedienfehler("build.gradle: Kommentar /* ohne Ende (ab Zeichen %d)" % j)
+ERKANNT   rc=1 rot=68                       B__klammer_ende_Z196                         raise Bedienfehler("build.gradle: Klammern passen nicht (Zeichen %d)" % j)
+UEBERLEBT rc=0 rot=-                        B__anweisungen_Z217                          raise Bedienfehler("build.gradle: Klammern passen nicht im stageAssets-Block")
+ERKANNT   rc=1 rot=62,63                    B_gradle_baeume_Z237                         raise Bedienfehler('build.gradle: tasks.register("stageAssets", Sync) { ... } %s' % ("nicht gefunden" if not t
+ERKANNT   rc=1 rot=67                       B_gradle_baeume_Z277                         raise Bedienfehler("build.gradle stageAssets: erwartet genau ein 'into(assetStage)' und ein " "'preserve { inc
+ERKANNT   rc=1 rot=64                       B_gradle_baeume_Z250                         raise Bedienfehler("build.gradle stageAssets: from-Anweisung nicht im bekannten " "Format 'from(new File(<port
+ERKANNT   rc=1 rot=66                       B_gradle_baeume_Z265                         raise Bedienfehler("build.gradle stageAssets: from '%s' ohne into" % quelle)
+ERKANNT   rc=1 rot=65                       B_gradle_baeume_Z262                         raise Bedienfehler("build.gradle stageAssets: unbekannte Anweisung im from-Block " "von '%s': %s" % (quelle, "
+ERKANNT   rc=1 rot=27                       B_gradle_baeume_Z274                         raise Bedienfehler("build.gradle stageAssets: unbekannte Anweisung (das Gate kennt ihre " "Wirkung auf den APK
+ERKANNT   rc=1 rot=28                       B_gradle_baeume_pruefen_Z285                 raise Bedienfehler("build.gradle fehlt: %s (zeigt --repo auf das Repo?)" % pfad)
+ERKANNT   rc=1 rot=24,25,26                 B_gradle_baeume_pruefen_Z298                 raise Bedienfehler("\n".join(zeilen))
+UEBERLEBT rc=0 rot=-                        B_quelldateien_Z347                          raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
+ERKANNT   rc=1 rot=20                       A_quelldateien_Z354                          befund("Quellbaum", "Quellbaum fehlt: %s (Gradle kopiert aus einem fehlenden Ordner " "still NICHTS)" % rel_ba
+ERKANNT   rc=1 rot=19                       A_quelldateien_Z367                          befund("Quellbaum", "Quellbaum leer: %s" % rel_baum)
+ERKANNT   rc=1 rot=19                       A_quelldateien_Z372                          befund("Quellbaum", "Pflichtinhalt fehlt: re15_port/%s/*%s (0 Dateien)" % (ordner, endung))
+ERKANNT   rc=1 rot=21                       A_quelldateien_Z376                          befund("Quellbaum", "Pflichtdatei fehlt/leer: re15_port/%s" % datei)
+ERKANNT   rc=1 rot=59                       B_zip_verzeichnis_Z434                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis: %d B laut End-of-Central-Directory, " "die %d Ei
+ERKANNT   rc=1 rot=22,54                    B_zip_verzeichnis_Z405                       raise Bedienfehler("APK nicht lesbar: %s (kein End-of-Central-Directory - kein ZIP oder " "abgeschnitten)" % p
+ERKANNT   rc=1 rot=55                       B_zip_verzeichnis_Z411                       raise Bedienfehler("APK nicht lesbar: %s (%d Bytes hinter dem End-of-Central-Directory - " "libziparchive lehn
+ERKANNT   rc=1 rot=56                       B_zip_verzeichnis_Z417                       raise Bedienfehler("APK nicht lesbar: %s (ZIP64/mehrteiliges Archiv - so baut AGP die APK nicht, " "das Gate l
+ERKANNT   rc=1 rot=58                       B_zip_verzeichnis_Z420                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis ausserhalb der Datei: Offset %d + " "%d B > End-o
+ERKANNT   rc=1 rot=57                       B_zip_verzeichnis_Z427                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis kaputt bei Eintrag %d von %d, " "Datei-Offset %d)
+ERKANNT   rc=1 rot=40                       C__name_fehler_Z443                          return "NUL-Byte im Namen (libziparchive: 'Invalid entry name' - die GANZE APK ist unlesbar)"
+ERKANNT   rc=1 rot=39                       C__name_fehler_Z449                          return ("'\\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet kein Leser den " "Eintrag; zip
+ERKANNT   rc=1 rot=42                       C__name_fehler_Z452                          return "Steuerzeichen im Namen"
+ERKANNT   rc=1 rot=43                       C__name_fehler_Z455                          return "absoluter Pfad, '.'/'..' oder '//' im Namen"
+ERKANNT   rc=1 rot=41                       C__name_fehler_Z447                          return "Eintragsname kein gueltiges UTF-8 (libziparchive: 'Invalid entry name' - die GANZE APK ist unlesbar)"
+ERKANNT   rc=1 rot=39,40,41,42,43           A_struktur_pruefen_Z466                      befund("APK-Struktur: Eintragsname", "unzulaessiger Eintragsname %r: %s" % (e.name_roh, grund))
+ERKANNT   rc=1 rot=47                       A_struktur_pruefen_Z473                      befund("APK-Struktur: Local Header", "Local Header fehlt bei Offset %d: %s" % (e.lho, e.name))
+ERKANNT   rc=1 rot=46                       A_struktur_pruefen_Z478                      befund("APK-Struktur: Local Header", "Name im Local Header weicht vom Zentralverzeichnis ab: %s " "(Local Head
+ERKANNT   rc=1 rot=44,45                    A_struktur_pruefen_Z482                      befund("APK-Struktur: Local Header", "CRC/Groessen im Local Header weichen vom Zentralverzeichnis " "ab: %s (L
+ERKANNT   rc=1 rot=50                       A_struktur_pruefen_Z489                      befund("APK-Struktur: Lage", "Daten ragen ins Zentralverzeichnis: %s (Daten %d + %d B > " "Zentralverzeichnis 
+ERKANNT   rc=1 rot=48                       A_struktur_pruefen_Z493                      befund("APK-Struktur: Methode/Flags", "verschluesselter Eintrag: %s" % e.name)
+ERKANNT   rc=1 rot=49                       A_struktur_pruefen_Z496                      befund("APK-Struktur: Methode/Flags", "Methode %d (lesbar sind 0 = Stored, 8 = Deflate): %s" % (e.methode, e.n
+ERKANNT   rc=1 rot=13                       A_struktur_pruefen_Z502                      befund("APK: doppelt/Verzeichnis", "doppelter Eintrag in der APK (%dx): %s - libziparchive: " "'Duplicate entr
+ERKANNT   rc=1 rot=72                       B__eintrag_lesen_Z518                        raise _Lesefehler("entpackt mehr als die %d B des Zentralverzeichnisses" % e.usize)
+ERKANNT   rc=1 rot=60                       B__eintrag_lesen_Z546                        raise _Lesefehler("Deflate-Strom kaputt: %s" % ex)
+UEBERLEBT rc=0 rot=-                        B__eintrag_lesen_Z532                        raise _Lesefehler("Datei endet mitten im Eintrag")
+ERKANNT   rc=1 rot=52                       B__eintrag_lesen_Z543                        raise _Lesefehler("Deflate-Strom endet nicht genau am Eintragsende (%s)" % ( "unvollstaendig" if not d.eof els
+ERKANNT   rc=1 rot=12,51                    A__eintrag_pruefen_Z558                      befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: gelesen %d B, CRC %08x - " "Zen
+ERKANNT   rc=1 rot=52,60,72                 A__eintrag_pruefen_Z555                      befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: %s" % (e.name, ex))
+UEBERLEBT rc=0 rot=-                        A_manifest_pruefen_Z580                      befund("Manifest", "Manifest %d B > 64 MiB: das Geraet liest es nicht (android_glue.c:80)" % len(roh))
+ERKANNT   rc=1 rot=15                       A_manifest_pruefen_Z582                      befund("Manifest", "Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar " "(sscanf am Pufferanfang, an
+ERKANNT   rc=1 rot=38                       A_manifest_pruefen_Z628                      befund("Manifest", "Manifest-Kopfzeile fehlt/unlesbar: '%s' (erwartet '# re15 assets <anzahl> <bytes>', " "bui
+ERKANNT   rc=1 rot=35                       A_manifest_pruefen_Z587                      befund("Manifest", "Manifest ist kein gueltiges UTF-8 (%s) - Pfade treffen die APK-Namen nicht" % e)
+ERKANNT   rc=1 rot=17                       A_manifest_pruefen_Z605                      befund("Manifest", "Manifest-Zeile %d ohne Tab (das Geraet ueberspringt sie still, " "android_glue.c:203): '%s
+ERKANNT   rc=1 rot=34                       A_manifest_pruefen_Z610                      befund("Manifest", "Manifest-Zeile %d: Groessenfeld '%s' ist keine Zahl (atoll, :205)" % (nr, groesse[:40]))
+ERKANNT   rc=1 rot=18                       A_manifest_pruefen_Z614                      befund("Manifest", "Manifest-Zeile %d: unzulaessiger Pfad '%s' (leer, absolut, '\\\\', " "'.'/'..' oder '//': 
+ERKANNT   rc=1 rot=37                       A_manifest_pruefen_Z618                      befund("Manifest", "Manifest-Zeile %d nennt das Manifest selbst" % nr)
+ERKANNT   rc=1 rot=33                       A_manifest_pruefen_Z621                      befund("Manifest", "Manifest nennt %s mehrfach (Zeilen %d und %d)" % (pfad, zeile_von[pfad], nr))
+ERKANNT   rc=1 rot=14                       A_manifest_pruefen_Z634                      befund("Manifest", "Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeilen " "ergeben %d / %d
+ERKANNT   rc=1 rot=32                       A_manifest_pruefen_Z639                      befund("Manifest: Zeile ohne APK-Eintrag", "Manifest nennt %s (%d B), die APK hat keinen Eintrag assets/%s" % 
+ERKANNT   rc=1 rot=09,17                    A_manifest_pruefen_Z647                      befund("Manifest: Datei fehlt im Manifest", "fehlt im Manifest: %s (wird auf dem Geraet nie entpackt)" % pfad)
+ERKANNT   rc=1 rot=36                       A_manifest_pruefen_Z601                      befund("Manifest", "Manifest-Zeile %d: unerwartete Kommentarzeile '%s' (der Schreiber " "schreibt nur die Kopf
+ERKANNT   rc=1 rot=08                       A_manifest_pruefen_Z642                      befund("Manifest: falsche Groesse", "Manifest-Groesse falsch: %s Manifest %d B, APK %d B (Entpacken scheitert 
+ERKANNT   rc=1 rot=23                       B_pruefen_Z672                               raise Bedienfehler("APK fehlt: %s" % apk)
+UEBERLEBT rc=0 rot=-                        B_pruefen_Z788                               raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (len(quellen), len
+ERKANNT   rc=1 rot=16                       A_pruefen_Z747                               befund("Manifest", "Manifest fehlt in der APK: %s (das Geraet entpackt dann NICHTS, " "android_glue.c:153)" % 
+ERKANNT   rc=1 rot=53                       A_pruefen_Z687                               befund("APK: doppelt/Verzeichnis", "Verzeichniseintrag in der APK: %s" % name)
+ERKANNT   rc=1 rot=04,10,39,40              A_pruefen_Z706                               befund("fehlt in der APK", "fehlt in der APK: %s (Quelle %s)%s" % (name, rel, (" - " + hinweis) if hinweis els
+ERKANNT   rc=1 rot=11                       A_pruefen_Z713                               befund("Groesse weicht ab", "Groesse weicht ab: %s Quelle %d B, APK %d B" % (name, q_groesse, e.usize))
+ERKANNT   rc=1 rot=05,30,31                 A_pruefen_Z724                               befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s Quelle %s.., APK %s.." % (("gleiche Gro
+ERKANNT   rc=1 rot=06,07                    A_pruefen_Z741                               befund("zusaetzlich in der APK", "zusaetzlich in der APK (kein Asset-Baum liefert ihn): %s" % name)
+ERKANNT   rc=1 rot=29,30                    D1_U3_nur_erster_block                       Hand-Mutant
+ERKANNT   rc=1 rot=31                       D2_U4_crc32_statt_sha256                     Hand-Mutant
+ERKANNT   rc=1 rot=01,02,03,05,08,09,14,15,17,18,29,30,31,32,33,34,35,36,37,38,52,61 D3_offset_aus_zentralverzeichnis             Hand-Mutant
+ERKANNT   rc=1 rot=39,40                    D4_namen_wie_zipfile                         Hand-Mutant
+ERKANNT   rc=1 rot=44,45                    D5_lfh_nur_name                              Hand-Mutant
+ERKANNT   rc=1 rot=02                       D6_manifest_cr_bleibt                        Hand-Mutant
+ERKANNT   rc=1 rot=52                       D7_deflate_ende_egal                         Hand-Mutant
+ERKANNT   rc=1 rot=12,51                    D8_nur_laenge_statt_crc                      Hand-Mutant
+ERKANNT   rc=1 rot=61                       D9_eocd_von_vorn                             Hand-Mutant
+ERKANNT   rc=1 rot=55                       D10_kommentarlaenge_egal                     Hand-Mutant
+ERKANNT   rc=1 rot=59                       D11_zentralverzeichnis_rest_egal             Hand-Mutant
+ERKANNT   rc=1 rot=50                       D12_lage_egal                                Hand-Mutant
+ERKANNT   rc=1 rot=13                       D13_doppelte_namen_egal                      Hand-Mutant
+ERKANNT   rc=1 rot=03,52,60                 D14_nur_stored_gelesen                       Hand-Mutant
+ERKANNT   rc=1 rot=51                       D15_nicht_assets_nicht_gelesen               Hand-Mutant
+ERKANNT   rc=1 rot=29,30                    D16_sha_nur_quelle_ganz                      Hand-Mutant
+ERKANNT   rc=1 rot=08,32                    D17_manifest_nur_kopf                        Hand-Mutant
+ERKANNT   rc=1 rot=06,07                    D18_zusatz_nur_ausserhalb_assets             Hand-Mutant
+# erkannt: 78 / 84, ueberlebt: 6
+#   UEBERLEBT B__ohne_kommentare_Z163: raise Bedienfehler("build.gradle: Kommentar /* ohne Ende")
+#   UEBERLEBT B__anweisungen_Z217: raise Bedienfehler("build.gradle: Klammern passen nicht im stageAssets-Block")
+#   UEBERLEBT B_quelldateien_Z347: raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
+#   UEBERLEBT B__eintrag_lesen_Z532: raise _Lesefehler("Datei endet mitten im Eintrag")
+#   UEBERLEBT A_manifest_pruefen_Z580: befund("Manifest", "Manifest %d B > 64 MiB: das Geraet liest es nicht (android_glue.c:80)" % len(roh))
+#   UEBERLEBT B_pruefen_Z788: raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (len(quellen), len
+EXIT=0

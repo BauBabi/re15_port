@@ -1,0 +1,13 @@
+      87 META-INF/com/android/build/gradle/app-metadata.properties (OK - compressed)
+     208 META-INF/version-control-info.textproto (OK - compressed)
+     297 classes.dex (OK - compressed)
+   40747 lib/arm64-v8a/libSDL2.so (BAD - 7979)
+ 1461721 lib/arm64-v8a/libmain.so (BAD - 3545)
+ 2798604 lib/x86_64/libSDL2.so (BAD - 13324)
+ 4335703 lib/x86_64/libmain.so (BAD - 10327)
+ 5733955 assets/re15_assets.txt (BAD - 3)
+ 6160137 assets/shared_assets/PSX/BIN/STAGE1.BIN (BAD - 1)
+ 6297854 assets/shared_assets/PSX/BIN/STAGE2.BIN (BAD - 2)
+ 6401139 assets/shared_assets/PSX/BIN/STAGE3.BIN (BAD - 3)
+ 6638377 assets/shared_assets/PSX/BIN/STAGE5.BIN (BAD - 1)
+Verification FAILED

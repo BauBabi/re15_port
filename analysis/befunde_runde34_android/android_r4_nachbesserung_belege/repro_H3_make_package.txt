@@ -1,0 +1,59 @@
+re15_port_v0.8.19_linux_steamdeck_x64.z01: OK
+re15_port_v0.8.19_linux_steamdeck_x64.zip: OK
+-rw-r--r-- 1 mjoedicke 197121 3834872 2026-09-29 19:34:13.000000000 +0200 build/r34a/nb/bin/linux/re15_pc
+--- Sandbox-Gate := ECHT (186971 B)
+== B B0_no_zip (--no-zip): EXIT=0 (36 s)
+     == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+        Gate: 8f84f136c4cf5edd... (Kopie von release/apk_asset_gate.py)
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+        [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+     == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+        Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+        Zeilenenden-Gate: alle Skripte im Paket sind LF
+        0 alte Paketdatei(en) aus dem Repo entfernt, 0 neue vorgemerkt
+     == Fertig ==
+     git-Index (Sandbox): 
+   angelegt: re15_port_v0.8.19_ANDROID.zip (193 B)
+   angelegt: re15_port_v0.8.19_android.apk.zip (193 B)
+== B B4_fremdname_ohne_apk (--zip-only): EXIT=0 (56 s)
+     == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+        Gate: 8f84f136c4cf5edd... (Kopie von release/apk_asset_gate.py)
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+        [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+     == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+        Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+        Zeilenenden-Gate: alle Skripte im Paket sind LF
+        (kein Android-Paket: re15_port_v0.8.19_android.apk fehlt — release/build_android.sh laeuft getrennt)
+     == SHA256SUMS.txt geschrieben (4 Volumes) ==
+        0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+     == Fertig ==
+     SHA256SUMS.txt: *re15_port_v0.8.19_ANDROID.zip *re15_port_v0.8.19_android.apk.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip 
+     git-Index (Sandbox): A:release/re15_port_v0.8.19_ANDROID.zip A:release/re15_port_v0.8.19_android.apk.zip A:release/re15_port_v0.8.19_linux_steamdeck_x64.z01 A:release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+== B B5_fremdname_ohne_android (--zip-only --ohne-android): EXIT=0 (58 s)
+     == Asset-Gate: Selbsttest der privaten Kopie (release/apk_asset_gate.py --selbsttest) ==
+        Gate: 8f84f136c4cf5edd... (Kopie von release/apk_asset_gate.py)
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+        [ok] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=1 (soll 1)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+     == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+     == --ohne-android: keine APK-Pruefung, kein Android-Satz (keiner dieser Version vorhanden) ==
+        Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+     == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+     == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+        Zeilenenden-Gate: alle Skripte im Paket sind LF
+     == SHA256SUMS.txt geschrieben (4 Volumes) ==
+        0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+     == Fertig ==
+     SHA256SUMS.txt: *re15_port_v0.8.19_ANDROID.zip *re15_port_v0.8.19_android.apk.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip 
+     git-Index (Sandbox): A:release/re15_port_v0.8.19_ANDROID.zip A:release/re15_port_v0.8.19_android.apk.zip A:release/re15_port_v0.8.19_linux_steamdeck_x64.z01 A:release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+FERTIG
+EXIT=0

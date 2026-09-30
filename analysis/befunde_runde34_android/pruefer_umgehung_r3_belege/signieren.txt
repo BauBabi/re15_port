@@ -1,0 +1,3 @@
+F1_leerzeichen_sig.apk: verify rc=0 zipalign-c rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 
+F2_vollbreit_sig.apk: verify rc=0 zipalign-c rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 
+K0_sig.apk: verify rc=0 zipalign-c rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 

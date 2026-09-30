@@ -1,0 +1,21 @@
+== f1_abbruch_N_frisch 2026-09-30 12:23:18 Ziel: shared_assets/PSX/EMD/CDEMD1.EMS.neu >= 1048576 B -> force-stop
+uninstall: Success
+Speicherordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+installiert: package:/data/app/~~h5HadUCQgpvvoPRlcTWgUw==/de.re15.port-PR3i8tOXcQL2y1b4xhB5-A==/base.apk     versionName=v0.8.19
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+Waechter: WAECHTER: force-stop bei B (19 s nach am start)
+pidof nach Abbruch: []
+09-30 10:23:40.781 I/re15    ( 9385): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:23:41.414 I/re15    ( 9385): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+Zustand nach Abbruch:
+   .
+   ..
+   debug.log
+   shared_assets
+   
+   ls: shared_assets/PSX/EMD/CDEMD1.EMS.neu: No such file or directory
+   -rw-rw---- 1 u0_a212 ext_data_rw 4739072 2026-09-30 10:23 shared_assets/PSX/EMD/CDEMD1.EMS
+   
+   Dateien: 2151
+   neu-Dateien:

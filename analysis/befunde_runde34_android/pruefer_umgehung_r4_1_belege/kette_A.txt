@@ -1,0 +1,294 @@
+Sandbox-Commit 53182ad 2026-09-29 12:00:00 +0200
+Skripte = Arbeitsbaum: make_package.sh apk_pruefen.sh python_finden.sh apk_asset_gate.py zip_exec_bit.py apk_signer.sha256 build_android.sh
+Dateien: PSX 3193, fx 13, RE2 277, RE15DOOR 30, synchro 90
+N2-Kopie: c393a18ec664c300... (release/re15_port_v0.8.20-n1f_android.apk, N1-Endstand)
+FW_sig.apk: verify rc=0 zipalign-c rc=0 | Verified using v2 scheme (APK Signature Scheme v2): true Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18 
+   FW_sig Manifest: 398103 B, Kopf b'# re15 assets v2 3603 356678277', letzte 2 Zeilen [b'306954\tf6bafac25317e3acbdc25797595bce3d04bb166a0826a9aa8abc7969d6ae3f34\tsynchro/STAGE2/room2000/main11.wav', b'   ', b'']
+--- Sandbox-Gate := ECHT (8f84f136c4cf5edd..., 186971 B)
+== A A0_echt_N2 (N2.apk --version v0.8.20-n1f): EXIT=0 (39 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+     == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+     == APK-PRUEFUNG-OK: build/r34a/pruefer_u1/apk/N2.apk (sha256 crc32 Bytes: c393a18ec664c30004c99b6d8e0df7ea32a6c77e9dbd8902cee0c8d79ca2c4e6 7c131ddf 363479879) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_u1/apk/N2.apk (geprueft: sha256 crc32 Bytes c393a18ec664c30004c99b6d8e0df7ea32a6c77e9dbd8902cee0c8d79ca2c4e6 7c131ddf 363479879) ==
+== A A1_echt_ref0819 (ref_v0.8.19.apk --version v0.8.19): EXIT=1 (39 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+           Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+== A A6_echt_FW (FW_sig.apk --version v0.8.20-n1f): EXIT=1 (42 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+           Manifest-Zeile 3605: erwartet '<bytes>\t<sha256>\t<pfad>', 0 Tab(s): '   '
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     ABBRUCH: APK-Asset-Gate: die APK weicht vom Quellbaum ab (Befunde oben)
+--- Sandbox-Gate := build/r34a/pruefer_u1/mut/G0_leer/apk_asset_gate.py (e3b0c44298fc1c14..., 0 B)
+== A A2_G0_ref0819 (ref_v0.8.19.apk --version v0.8.19): EXIT=0 (9 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+--- Sandbox-Gate := build/r34a/pruefer_u1/mut/G1_kein_sys_exit/apk_asset_gate.py (d4ced0b5b871ec7d..., 186961 B)
+== A A3_G1_ref0819 (ref_v0.8.19.apk --version v0.8.19): EXIT=0 (43 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+        [FEHLER] 227 N1: Manifest im alten Format v1 (wie v0.8.19)              rc=0 (soll 1)
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 2548 B): assets/shared_assets/RE2/DOOR/DOOR07.DO2  Quelle a35db7187dd003ef.., APK 0813e9c1f4b187a5..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 1: erwartet '<bytes>\t<sha256>\t<pfad>', 0 Tab(s): '\ufeff# re15 assets v2 16 30398'
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 7: erwartet '<bytes>\t<sha256>\t<pfad>', 1 Tab(s): '1200	71a64f8e5179a81f4f53f37c2e1ef0853194fa6b4ccd4f8adb3d3d9b3ef15eb7 shared_assets/RE2/CDEMD0.EMS'
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 2: unzulaessiger Pfad 'shared_assets/../../boese.bin' (absolut, '//', '/' am Ende, '.' oder '..' - landet ausserhalb des Ankers)
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 1052709 B): assets/shared_assets/PSX/MOVIE/GROSS.STR  Quelle e68963a601bbad7c.., APK d7a1a18fa7af17d6..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 4396 B): assets/shared_assets/RE15DOOR/P2DS.DO2  Quelle 8d8a934ca4b879f4.., APK b2c456d4a4e91387..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 6: Groessenfeld '4_396' ist keine Zahl (1-18 Ziffern 0-9)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 6: unzulaessiger Pfad 'shared_assets/RE15DOOR/P2DS.D\ufffd2' (kein gueltiges UTF-8)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 18: unerwartete Kommentarzeile '# Notiz' (der Schreiber schreibt nur die Kopfzeile)
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 18: unzulaessiger Pfad 're15_assets.txt' (ohne '/' (Assets liegen nie direkt im Speicherordner))
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab: synchro/STAGE2/room2000/main00.wav  Quelle 2100 B 52d8228d36968872.., Paket 2100 B 772835eda329a580..
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 16: unzulaessiger Pfad 'shared_assets\RE2\X.BIN' ('\')
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 2: unerwartete Kommentarzeile '# Notiz' (der Schreiber schreibt nur die Kopfzeile)
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 2: unzulaessiger Pfad 'AAA.BIN' (ohne '/' (Assets liegen nie direkt im Speicherordner))
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 2548 B): assets/shared_assets/RE2/DOOR/DOOR07.DO2  Quelle a35db7187dd003ef.., APK 11fb7f2f834f7e92..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab (sha256, gleiche Groesse 2548 B): assets/shared_assets/RE2/DOOR/DOOR07.DO2  Quelle a35db7187dd003ef.., APK e68406a438abc40a..
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab: shared_assets/RE2/CDEMD0.EMS  Quelle 1200 B 71a64f8e5179a81f.., Paket 1200 B 0eb85037d5a71a08..
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+        [Inhalt weicht ab (sha256)] 1
+           Inhalt weicht ab: shared_assets/RE2/CDEMD0.EMS  Quelle 1200 B 71a64f8e5179a81f.., Paket 1200 B 9bb2b41740c2de49..
+     == APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 5 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/RE15DOOR/P07G.DO2	' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/RE15DOOR/P07G.DO2' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/RE15DOOR/P07G.DO2' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin\u20282748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_asset' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin2748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_assets/' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin2748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_assets/' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin\x852748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_assets' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin2748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_assets/' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+           Manifest-Zeile 4: unzulaessiger Pfad 'shared_assets/PSX/STAGE1/wincfg.bin2748	4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301	shared_assets/' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 5: Groessenfeld '\uff12\uff17\uff14\uff18' ist keine Zahl (1-18 Ziffern 0-9)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Groessenfeld '\u0662\u0667\u0664\u0668' ist keine Zahl (1-18 Ziffern 0-9)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Groessenfeld '\ufffd\u2077\u2074\u2078' ist keine Zahl (1-18 Ziffern 0-9)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 1: erwartet '<bytes>\t<sha256>\t<pfad>', 0 Tab(s): ' # re15 assets v2 16 30398'
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     --- Ausgabe Fall 227 (N1: Manifest im alten Format v1 (wie v0.8.19)) ---
+           Manifest im alten Format v1 ('# re15 assets 16 30398', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 assets
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 5: erwartet '<bytes>\t<sha256>\t<pfad>', 1 Tab(s): '2748	shared_assets/RE15DOOR/P07G.DO2'
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme '4B1E96E753DB3BAA01ED879C33C00343D6706CB7569AF8F382973BDBA5A78301' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme '4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301 ' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme ' 4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a78301' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme '4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a7830' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme '4b1e96e753db3baa01ed879c33c00343d6706cb7569af8f382973bdba5a783010' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Pruefsumme '' ist kein sha256 (genau 64 Zeichen 0-9a-f, Kleinbuchstaben)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 5: Groessenfeld '0000000000000002748' ist keine Zahl (1-18 Ziffern 0-9)
+     == APK-ASSET-GATE-ABWEICHUNG: 3 Befunde ==
+           Manifest-Zeile 2: unzulaessiger Pfad 'GEIST.BIN' (ohne '/' (Assets liegen nie direkt im Speicherordner))
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/PSX/X.neu' (endet auf .neu (Endung der Zwischendatei beim Entpacken))
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/PSX/X.NEU' (endet auf .neu (Endung der Zwischendatei beim Entpacken))
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 16: unzulaessiger Pfad 'shared_assets/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' (513 Bytes > 512)
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+           Manifest-Zeile 5: unzulaessiger Pfad 'shared_assets/RE15DOOR/P07G.DO2 x' (Steuerzeichen)
+     == APK-ASSET-GATE-ABWEICHUNG: 4 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 17 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+           Manifest-Zeile 12: Summe der Groessen > 2^63-1 (asset_abgleich.c: laeuft ueber)
+     == APK-ASSET-GATE-ABWEICHUNG: 12 Befunde ==
+     == APK-ASSET-GATE-ABWEICHUNG: 2 Befunde ==
+     == SELBSTTEST-FEHLER: 234 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+           Manifest im alten Format v1 ('# re15 assets 3603 356678277', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab und entpackt NICHTS (RE15_ABGLEICH_ALTES_FORMAT); erwartet Format v2 '# re15 
+     == APK-ASSET-GATE-ABWEICHUNG: 1 Befunde ==
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+--- Sandbox-Gate := build/r34a/pruefer_u1/mut/V1_leerzeile_strip/apk_asset_gate.py (94bc13dba56b35db..., 186979 B)
+== A A7_V1_FW (FW_sig.apk --version v0.8.20-n1f): EXIT=0 (33 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+     == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+     == APK-PRUEFUNG-OK: build/r34a/pruefer_u1/apk/FW_sig.apk (sha256 crc32 Bytes: cee66a12c6da83d073b5c8905ca6d89cc30fc5feb09a98a5ebf29b6af6460253 240f2000 363711574) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/pruefer_u1/apk/FW_sig.apk (geprueft: sha256 crc32 Bytes cee66a12c6da83d073b5c8905ca6d89cc30fc5feb09a98a5ebf29b6af6460253 240f2000 363711574) ==
+--- Sandbox-Gate := ECHT (8f84f136c4cf5edd..., 186971 B)
+== A A4_env_G0_ref0819 (ref_v0.8.19.apk --version v0.8.19, env APK_GATE_DATEI=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u1/mut/G0_leer/apk_asset_gate.py): EXIT=0 (7 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+== A A5_env_ALT_ref0819 (ref_v0.8.19.apk --version v0.8.19, env APK_GATE_DATEI=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u1/mut/ALT_be8b60f3/apk_asset_gate.py): EXIT=0 (44 s)
+     == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+     == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+     == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+     == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+     == APK-PRUEFUNG-OK: build/r34a/ref_v0.8.19.apk (sha256 crc32 Bytes: 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+     == ANDROID-GATES-OK (--gate-only): build/r34a/ref_v0.8.19.apk (geprueft: sha256 crc32 Bytes 514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 d16ad30a 363212403) ==
+   Sandbox-Gate = Arbeitsbaum
+Pruefkopien uebrig: 0
+FERTIG
+EXIT=0

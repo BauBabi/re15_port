@@ -1,0 +1,3 @@
+AUSLOESER i=359120
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/MOVIE/CAPCOM.STR: No such file or directory
+-rw-rw---- 1 u0_a212 ext_data_rw 3145728 2026-09-30 08:10 /sdcard/Android/data/de.re15.port/files/shared_assets/PSX/MOVIE/CAPCOM.STR.neu

@@ -1,0 +1,34 @@
+=== A: --gate-only ===
+A_01_pfad_fehlt                                    soll 1 ist 1 ok         | ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_r3/apk/gibt_es_nicht.apk 
+A_02_pfad_ordner                                   soll 1 ist 1 ok         | ABBRUCH: --gate-only: APK fehlt: build/r34a/pruefer_r3/apk 
+A_03_pfad_leer                                     soll 2 ist 2 ok         | --gate-only braucht den Pfad der APK 
+A_04_textdatei                                     soll 1 ist 1 ok         | ABBRUCH: APK nicht lesbar (unzip -Z1): build/r34a/pruefer_r3/apk/text.apk 
+A_05_null_byte                                     soll 1 ist 1 ok         | ABBRUCH: APK nicht lesbar (unzip -Z1): build/r34a/pruefer_r3/apk/null.apk 
+A_06_abgeschnitten                                 soll 1 ist 1 ok         | ABBRUCH: APK nicht lesbar (unzip -Z1): build/r34a/pruefer_r3/apk/K0_sig_abgeschnitten.apk 
+A_07_leerzeichen_im_pfad                           soll 0 ist 0 ok         |    [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)    [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2) 
+A_08_version_leerzeichen                           soll 1 ist 1 ok         | ABBRUCH: aapt: versionName ist nicht 'v0.8.19 ' 
+A_09_version_praefix                               soll 1 ist 1 ok         | ABBRUCH: aapt: versionName ist nicht 'v0.8.1' 
+A_10_version_vor_pfad                              soll 0 ist 0 ok         |    [ok] 27 build.gradle: unbekannte Anweisung                         rc=2 (soll 2)    [ok] 64 build.gradle: from in unbekanntem Format                   rc=2 (soll 2) 
+A_11_ohne_version                                  soll 2 ist 2 ok         | --gate-only braucht --version <versionName der APK> (Nachbesserung R1: kein Lauf mehr mit ungeprueftem Feld) 
+A_12_version_ohne_wert                             soll 1 ist 1 ok         | release/build_android.sh: line 107: $2: unbound variable 
+=== B: Quellbaum-Varianten (Sandbox build/r34a/pruefer_r3/sb_kette) gegen die Referenz-APK ===
+B00_sandbox_unveraendert                           soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+B01_RE15DOOR_leer                                  soll 1 ist 1 ok         | Quellbaum leer: re15_port/shared_assets/RE15DOOR Pflichtinhalt fehlt: re15_port/shared_assets/RE15DOOR/*.DO2 (0 Dateien) 
+B02_RE15DOOR_fehlt                                 soll 1 ist 1 ok         | Quellbaum fehlt: re15_port/shared_assets/RE15DOOR (Gradle kopiert aus einem fehlenden Ordner still NICHTS) Pflichtinhalt fehlt: re15_port/shared_assets/RE15DOOR/*.DO2 (0 Dateien) 
+B03_synchro_STAGE2_nach_unused2                    soll 1 ist 1 ok         | zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/synchro/STAGE2/room2000/main00.wav zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/synchro/STAGE2/room2000/main01.wav 
+B04_synchro_README_ausserhalb                      soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+B05_synchro_STAGEX_datei_oben                      soll 1 ist 1 ok         | fehlt in der APK: assets/synchro/STAGEX.txt  (Quelle synchro/STAGEX.txt) 
+B06_build_gradle_zusatzbaum                        soll 2 ist 2 ok         | ABBRUCH (Rueckgabe 2): build.gradle stageAssets weicht von der Baumliste des Gates ab (re15_port/platform/android/app/build.gradle): 
+B07_neuer_baum_unter_shared_assets                 soll 1 ist 1 ok         | re15_port/shared_assets/RE15NEU liegt in keinem Asset-Baum (build.gradle stageAssets = BAEUME des Gates = make_package.sh copy_common) - der Port lies 
+B08_punktdatei_in_PSX                              soll 1 ist 1 ok         | fehlt in der APK: assets/shared_assets/PSX/.versteckt  (Quelle re15_port/shared_assets/PSX/.versteckt)  - Name beginnt mit '.' (Gradle/AAPT lassen ihn 
+B09_null_byte_datei_in_RE2                         soll 1 ist 1 ok         | fehlt in der APK: assets/shared_assets/RE2/LEER.BIN  (Quelle re15_port/shared_assets/RE2/LEER.BIN) 
+B10_sandbox_wieder_unveraendert                    soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+=== C: Regression mit r2_faelschen.py (R2-Werkzeug) ===
+C1_doppelt_zweiter_falsch                          soll 1 ist 1 ok         | doppelter Eintrag in der APK (2x): assets/shared_assets/RE15DOOR/P07G.DO2 - libziparchive: 'Duplicate entry' Inhalt weicht ab (sha256, gleiche Groesse 55908 B): assets/shared_assets/RE15DOOR/P07G.DO2  Quelle 68306346be85f0e2.., APK 2e25a4aa5d0bdc8c.. 
+C2_verzeichnis                                     soll 1 ist 1 ok         | Verzeichniseintrag in der APK: assets/shared_assets/ 
+C3_backslash_nur_CD                                soll 1 ist 1 ok         | unzulaessiger Eintragsname b'assets\\shared_assets\\RE15DOOR\\P07G.DO2': '\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet kein Le fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2) 
+C4_ordner_kleingeschrieben                         soll 1 ist 1 ok         | fehlt in der APK: assets/shared_assets/RE15DOOR/P07G.DO2  (Quelle re15_port/shared_assets/RE15DOOR/P07G.DO2) zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/shared_assets/re15door/P07G.DO2 
+C5_manifest_crlf                                   soll 0 ist 0 ok         | == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest == 
+C6_geisterzeile                                    soll 1 ist 1 ok         | Manifest nennt shared_assets/RE15DOOR/GEIST.DO2 (5 B), die APK hat keinen Eintrag assets/shared_assets/RE15DOOR/GEIST.DO2 
+FERTIG
+EXIT=0
