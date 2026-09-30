@@ -247,3 +247,15 @@ Was das Geraet daraus macht: Abschnitt 6 (Emulator).
 - **Geaenderte Datei wird NICHT neu entpackt:** der schnelle Weg prueft bewusst nur Groessen (dokumentiert); alle anderen
   Wege vergleichen Summen. Einzige gefundene Luecke: zwei Listenzeilen, die der App-Speicher zu EINER Datei faltet, ohne
   dass die ASCII-Dublettenregel greift (H5) - Messung Abschnitt 6.
+
+### 2.4 B1-Varianten mit echter APK (`u1_kette_b1.sh`, Beleg `kette_B1var.txt`)
+
+APK = Kopie des frischen v0.8.19-Baus des Pruefers ECHTER LAUF (`release/re15_port_v0.8.19_android.apk`, 09:54, Liste v2,
+a340a325...; nur gelesen), Sandbox wie oben, `--zip-only --only linux`:
+| Lauf | Lage | EXIT | Ergebnis |
+|---|---|---|---|
+| P1 | APK da | 0 (205 s) | APK-Kette 248/248, `APK im Split-Satz = gepruefte APK (entpackt: sha256 a340a325... = Pruefkopie)`, `SHA256SUMS.txt geschrieben (4 Volumes, Android-Satz aus diesem Lauf)`, 4 vorgemerkt; danach Release-Commit in der Sandbox |
+| P2 | APK nach `APK-PRUEFUNG-OK` geloescht (Waechter, 10:27:09) | **1** (115 s) | `ABBRUCH: Android-APK verschwand zwischen Pruefung und Zippen`; SHA256SUMS.txt unveraendert (cf9a75ba...), Index leer - haelt |
+| P3 | ohne APK, Satz versioniert | **1** (26 s) | B1-Abbruch vor den Kopierminuten; SUMS unveraendert, Index leer - haelt |
+Zusammen mit R4 L1-L6/E1-E3 (nur PC, abgelehnte APK, `--ohne-android`, `--only win`) haelt B1 fuer den KANONISCHEN
+Namen in allen Varianten; die Luecke ist der Name (H3, 2.2).

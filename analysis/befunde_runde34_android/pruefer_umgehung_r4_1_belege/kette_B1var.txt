@@ -1,0 +1,34 @@
+APK in der Sandbox: a340a32585580130... (2026-09-30 09:54:28.675173300 +0200)
+== P1_mit_apk (--zip-only): EXIT=0 (205 s)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u1/sb/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: a340a325855801302a6f91606
+        APK im Split-Satz = gepruefte APK (entpackt: sha256 a340a32585580130... = Pruefkopie)
+     == SHA256SUMS.txt geschrieben (4 Volumes, Android-Satz aus diesem Lauf) ==
+        0 alte Paketdatei(en) aus dem Repo entfernt, 4 neue vorgemerkt
+     == Fertig ==
+     release/*android*: build_android.sh re15_port_v0.8.19_android.apk re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip 
+     SHA256SUMS.txt: *re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip  (sha cf9a75bab7fa)
+     git-Index gegen HEAD: A:release/re15_port_v0.8.19_android.z01 A:release/re15_port_v0.8.19_android.zip A:release/re15_port_v0.8.19_linux_steamdeck_x64.z01 A:release/re15_port_v0.8.19_linux_steamdeck_x64.zip 
+   Sandbox: Release-Commit 3eecf4e
+     versioniert: release/SHA256SUMS.txt
+     versioniert: release/build_android.sh
+     versioniert: release/re15_port_v0.8.19_android.z01
+     versioniert: release/re15_port_v0.8.19_android.zip
+   [Waechter 10:27:09] APK nach APK-PRUEFUNG-OK geloescht
+== P2_apk_geloescht (--zip-only): EXIT=1 (115 s)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u1/sb/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: a340a325855801302a6f91606
+     ABBRUCH: Android-APK verschwand zwischen Pruefung und Zippen: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_u1/sb/release/re15_port_v0.8.19_android.apk
+     release/*android*: build_android.sh re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip 
+     SHA256SUMS.txt: *re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip  (sha cf9a75bab7fa)
+     git-Index gegen HEAD: 
+== P3_ohne_apk_satz_versioniert (--zip-only): EXIT=1 (26 s)
+     == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+     ABBRUCH: Android-Satz DIESER Version liegt vor, aber in diesem Lauf gibt es keine gepruefte APK
+     release/*android*: build_android.sh re15_port_v0.8.19_android.z01 re15_port_v0.8.19_android.zip 
+     SHA256SUMS.txt: *re15_port_v0.8.19_android.z01 *re15_port_v0.8.19_android.zip *re15_port_v0.8.19_linux_steamdeck_x64.z01 *re15_port_v0.8.19_linux_steamdeck_x64.zip  (sha cf9a75bab7fa)
+     git-Index gegen HEAD: 
+FERTIG
+EXIT=0
