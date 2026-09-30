@@ -144,7 +144,7 @@ gibt daher keine `@0x...`-Adresse - jede Entscheidung unten ist eine Port-Wahl m
 | `re15_port/platform/android/jni/android_glue.c` | `re15_android_bootstrap_assets()` neu: Quelle AAssetManager, `.neu` + `rename()`, Liste "zuletzt entpackt", schneller Weg, Uebergang |
 | `re15_port/platform/android/jni/CMakeLists.txt` | `asset_abgleich.c` in `libmain.so` (libandroid war schon gelinkt) |
 | `re15_port/platform/android/app/build.gradle` | `writeAssetManifest` schreibt Format v2 (sha256 je Datei, nach Pfad sortiert, UTF-8), Grundregeln der Pfade -> Bauabbruch |
-| `release/apk_asset_gate.py` | `manifest_lesen` (= Regeln von `re15_abgleich_lesen`, auf Bytes), `manifest_pruefen` (Summe je Zeile == sha256 der APK-Daten), v1 abgelehnt, Selbsttest +21 Faelle, +55 innere Proben |
+| `release/apk_asset_gate.py` | `manifest_lesen` (= Regeln von `re15_abgleich_lesen`, auf Bytes), `manifest_pruefen` (Summe je Zeile == sha256 der APK-Daten), v1 abgelehnt, Selbsttest 226 -> 248 Faelle (+21 fuer v2, +1 aus der Mutanten-Probe), innere Proben 61 -> 116 |
 | `re15_port/tests/unit/test_r34a_asset_abgleich.c`, `probes/r34a_android.cmake` | PC-Unit-Test, uebersetzt `asset_abgleich.c` direkt (`unit_r34a_asset_abgleich`) |
 
 ### 2.2 Format v2 (Kopf von `asset_abgleich.h`)
@@ -218,7 +218,22 @@ nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht
   einer gueltigen Liste: Bytes ersetzen/einfuegen/loeschen aus einem Alphabet mit `\n \r \t \0 # / . \ `, Ziffern,
   Hex-Buchstaben gross/klein, `0x7f`, UTF-8-Start-/Folgebytes; Zeilen verdoppeln/loeschen, Gross/klein tauschen):
   4769 x beide gueltig, 15488 x beide ungueltig, **0 Abweichungen** (bei gueltig auch dieselben Eintraege:
-  sha256 ueber `pfad\tgroesse\tsha` aller Zeilen gleich).
+  sha256 ueber `pfad\tgroesse\tsha` aller Zeilen gleich). Zweiter Lauf mit der ECHTEN v2-Liste von N0 (3603
+  Zeilen) + 200 Mutanten davon (vorher lag dort noch die v1-Liste aus dem B-Bau): 20257 Listen, 4808 / 15449,
+  **0 Abweichungen**.
+- **Gate-Selbsttest**: 248/248 Faelle, innere Proben 116/116 (`gate_selbsttest_2.log`); die Faelle 203-226 (R4,
+  MU1-MU8) auf v2 umgestellt: Tab/VT/FF am Pfadende sind jetzt Steuerzeichen im Pfad ("unzulaessiger Pfad
+  (Steuerzeichen)" statt "Manifest nennt ..."), fremde Ziffern "ist keine Zahl (1-18 Ziffern 0-9)", Zeile 1 mit
+  Leerzeichen davor "Manifest-Zeile 1: erwartet ...", Trenner-Faelle mit der sha256-Spalte.
+- **Gate-Mutanten-Probe** (`build/r34a/n1/gate_mutanten.py`, Selbsttest im Schnellmodus je Mutant): 22
+  Abschwaechungen von `manifest_lesen`/`manifest_pruefen`/`_pfad_fehler` (Summe gross erlaubt, Summenvergleich mit
+  der APK weg, v1 nicht erkannt, `.neu` weg/nur klein, Gross/klein-Dubletten, 513 Bytes, NUL, leere Liste, 19
+  Ziffern in Groesse bzw. Kopf, `rstrip()`, `splitlines()`, UTF-8-Regel weg, Steuerzeichen erst ab 0x09, DEL,
+  Ueberlauf, ohne `/`, `..`, Kommentarzeile, Kopf-Abgleich weg, APK-Summe fuer Eintraege ohne Quelle): Lauf 1
+  (`gate_mutanten_1.log`) 21 ROT, **G22 blieb GRUEN** (die sha256 von APK-Eintraegen ohne Quelle wurde nicht
+  erfasst - Urteil unveraendert, weil solche Eintraege immer "zusaetzlich in der APK" ausloesen, aber die Meldung
+  "Manifest-Pruefsumme falsch" fehlte) -> Fall 248 "Zusatzeintrag ohne Quelle, Manifest-Summe falsch" ergaenzt ->
+  G22 ROT. Endstand 0 von 22 nicht gefangen.
 
 ## 3. Nachweis im Emulator
 
@@ -377,6 +392,19 @@ entpackt" (sie entsteht erst nach vollem Erfolg). Nach v-c laeuft das Spiel (`s3
 Hinweisbild "This game contains scenes of explicit violence and gore." vor dem Intro).
 (Der Ausloeser von v-c legte vorab `mkdir -p <files>` an; die Ordner gehoeren danach trotzdem der App
 `u0_a216`, der Lauf ist davon unberuehrt.)
+
+### 3.7 Befund N1b (interner Speicher)
+
+Ganz nachstellen laesst er sich hier nicht (1.3 Punkt 5: Speicherordner extern, kein `adb root`). Belegt ist er
+ausgeschlossen:
+- **statisch**: im alten Glue waren `:77` (`read_apk_asset` -> Liste) und `:212` (je Datei) die einzigen
+  `SDL_RWFromFile`-Aufrufe des Ports (`git show eda2360b:.../android_glue.c | grep -n SDL_RWFromFile`); nach dem
+  Umbau gibt es in `re15_port/engine`, `platform/pc`, `platform/android/jni`, `include` KEINEN Aufruf von
+  `SDL_RWFromFile`/`SDL_RWFromFP`/`SDL_LoadFile` mehr (grep rc 1). Die Quelle ist nur noch `AAssetManager_open`
+  auf den Asset-Pfad der APK (SDL selbst nimmt diesen Weg erst nach dem Dateisystem-Versuch, 1.1). Dazu schreibt
+  der Entpacker nie in die Zieldatei selbst, sondern in `<ziel>.neu` - selbst eine (hypothetische) Quelle gleich
+  dem Ziel wuerde nicht mehr vor dem Lesen geleert.
+- **dynamisch** (debuggable Bau N0d, `run-as`): siehe unten.
 
 ## 4. Gates / Suite
 
