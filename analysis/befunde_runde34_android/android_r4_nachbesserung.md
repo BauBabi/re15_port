@@ -13,8 +13,8 @@ Gegenstand: Gegenpruefer-Befunde `pruefer_umgehung_r4_1.md` (H1 hoch; H5, H3, H2
 - [x] 2 Bauplan
 - [x] 3 H1 + H2: Gate-Urteil aus Rueckgabe UND Ausgabe, Gate-Pin, keine Umgebungsvariable mehr
 - [x] 4 H3: SHA256SUMS.txt + git add aus einer Positivliste, fremde Versionsdateien -> Abbruch
-- [ ] 5 H5 (+U3, V1/V2): Pfade nur druckbares ASCII, Segment <= 251 B - Gradle, Gate, Geraete-Leser, Tests
-- [ ] 6 niedrig: U1, U2/E1 (Waisen), U4 (fail closed) im Entpacker
+- [x] 5 H5 (+U3, V1/V2): Pfade nur druckbares ASCII, Segment <= 251 B - Gradle, Gate, Geraete-Leser, Tests
+- [x] 6 niedrig: U1, U2/E1 (Waisen), U4 (fail closed) im Entpacker
 - [ ] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
 - [ ] 8 Endstand
 
@@ -125,3 +125,49 @@ dem Schreiben der SUMS; auch mit `--ohne-android`). SHA256SUMS.txt und `git add`
 (`AUSLIEFERN` = PC-Saetze dieses Laufs + kanonischer Satz der anderen PC-Plattform nach `verify_split`, gemeldet als
 "frueherer Lauf, nicht neu geprueft"; `ANDROID_VOLUMES` nur mit `ANDROID_GEZIPPT`); ein scheiterndes `git add` bricht
 ab. Mit `--no-zip` wird nichts mehr vorgemerkt. Nachweis in der Sandbox: Abschnitt 7.
+
+## 5. H5 (+U3, V1/V2) behoben (Commits `e7b7584f`, `ef5fa0fe`)
+
+Regel der Liste v2 an ALLEN drei Stellen gleich: Pfad nur druckbares ASCII 0x20-0x7e ohne `\`, jedes Segment 1-251 B
+(Geraet: Name <= 255 B, der Entpacker schreibt `<name>.neu`), sonst wie bisher. Damit ist die ASCII-Faltung der
+Dublettenregel vollstaendig (Unicode-Paare kommen gar nicht erst in die Liste).
+- Gate `_pfad_fehler` ("Nicht-ASCII-Byte ...", "Segment mit n Bytes > 251"); neu `quellpfade_pruefen`: jeder Pfad des
+  Quellbaums nach derselben Regel + ASCII-Gross/klein-Dubletten, also melden auch `--quellbaum`/`--paket` ein
+  Kelvin-Paar (vor den Kopierminuten).
+- Geraete-Leser `re15_abgleich_pfad_ok` (`c < 0x20 || c > 0x7e || c == '\'`, Segment <= `RE15_ABGLEICH_SEGMENT_MAX`),
+  `utf8_ok` entfaellt (folgt aus ASCII).
+- Gradle `writeAssetManifest`: bricht bei Nicht-ASCII, Segment leer/./../> 251 und ASCII-Gross/klein-Dubletten ab.
+- Quellbaum heute: 3603 Pfade, 0 ausserhalb 0x20-0x7e, laengster Pfad 53 B, laengstes Segment 27 B, kein Leerzeichen
+  (gemessen) - die Regel aendert am Bestand nichts.
+- Selbsttest 258/258 (+10 Faelle: Kelvin-Paar in APK / `--quellbaum` / `--paket`, 0x80, `~`, Segment 251/252, Zeile nur
+  Leerzeichen/Tab (V1), 0x1f (V2)) und 132 innere Proben (+16, u.a. `quellpfade_pruefen` mit Gross/klein-Dublette, die
+  sich auf NTFS nicht als Datei anlegen laesst). Die Fixture verliert ihren UTF-8-Asset-Namen; den rohen UTF-8-Namen in
+  der APK prueft jetzt ein Nicht-Asset-Eintrag `res/raw/gr<u-Umlaut>n.bin`. Fall 207 (NBSP am Pfadende) erwartet jetzt
+  die Ablehnung an der Pfadregel (+ "fehlt im Manifest", das ein strip()-Mutant verlieren wuerde).
+- Mutanten (Werkzeug `build/r34a/nb/nb_mutanten.py`, Logs `build/r34a/nb/logs/mut2_*.log`): Pruefer-V1
+  (`if not z.strip()`), Pruefer-V2 (`c < 0x1f`), `c == 0x7e`, ASCII-Grenze `> 0x80`, ASCII-Pruefung aus, Segment
+  `> 252`, Segment aus, `SEGMENT_MAX = 255`, Quellpfad-Regel aus, Quell-Dublette aus, `quellpfade_pruefen` nicht
+  gerufen: **alle 11 -> SELBSTTEST-FEHLER** (Rueckgabe 1).
+- PC-Unit-Test `test_r34a_asset_abgleich`: **324 Pruefungen, 0 Fehler** (vorher 272) - ASCII-Grenzen 0x1f/0x20/0x7e/
+  0x7f/0x80/0xff, Kelvin/NFD/U+00DF/4-Byte, Kelvin-Paar als Liste, Segment 251/252 (Datei und Ordner), Pfad 512 B aus
+  Segmenten 9/251/250, Zeile nur Leerzeichen/Tab (ungueltig) bzw. nur `\r` (leer). Mit `-std=c11 -Wall -Wextra
+  -Wpedantic -Wshadow -Wconversion` ohne Warnung.
+
+## 6. Niedrige Befunde im Entpacker (Commit `ef5fa0fe`)
+
+- **U2/E1 Waisen**: neu `re15_abgleich_waisen` (asset_abgleich.c, POSIX `opendir/lstat/unlink/rmdir`, Namen erst ganz
+  einlesen, dann loeschen; Symlinks nie gefolgt; Baumnamen nur einfache Ordnernamen). android_glue.c ruft es, wenn es
+  KEINE gueltige "zuletzt entpackt"-Liste gibt (Modi "ohne Liste" und "Uebergang v0.8.19" - genau die Faelle, in denen
+  bis dahin niemand wusste, was frueher entpackt wurde), fuer `shared_assets` und `synchro`, VOR dem Entpacken. Die
+  Engine schreibt in beide Baeume nichts (alle `fopen(..."w"/"a")` in engine/ und platform/pc/: nur Logs/Dumps im
+  Arbeitsverzeichnis bzw. per Umgebungsvariable). Nicht loeschbare Waise = Warnung (die Engine oeffnet sie nie), kein
+  Abbruch. Unit-Test auf einem echten Ordner: gelistete Dateien bleiben, Waise, `.neu`-Rest, Waise in eigenem Ordner
+  und leere Ordner weg, Wurzel-Dateien (Spielstand) und Ordner ausserhalb der Baeume unberuehrt, zweiter Lauf 0,
+  schlechte Baumnamen (`""`, `.`, `..`, `a/b`, `../x`) je Fehler ohne Loeschung, ohne Liste nichts.
+- **U4 fail closed**: `fehler_halten` ersetzt die 3-s-Anzeige in allen Fehlerpfaden (kein AssetManager, Liste fehlt/
+  ungueltig/v1, kein Speicher, alte Liste nicht loeschbar, Dateifehler beim Entpacken): die Meldung bleibt, bis die App
+  geschlossen wird (`SDL_QUIT`/`SDL_APP_TERMINATING` -> `exit(1)`), main() laeuft nicht weiter (main.c unberuehrt).
+- **U1**: `unlink(re15_assets_entpackt.txt)` wird geprueft; scheitert es mit etwas anderem als `ENOENT`, laeuft kein Lauf.
+- **U3**: mit H5 (Segment <= 251 B).
+- Abschlusszeile des Entpackers nennt zusaetzlich `n Waisen entfernt (m nicht loeschbar)`.
+- README (platform/android): Gate-Pin, Positivliste, ASCII-Regel, Waisen, fail closed.
