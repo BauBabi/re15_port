@@ -305,7 +305,7 @@ Auftrag: jeden Befund B1..B9, N1 und die zwei Echtlauf-Befunde erst selbst pruef
 dann beheben (hoch/mittel Pflicht, niedrig wo ohne Risiko), Selbsttest + Positiv-/Negativ-
 Kontrollen erneut fahren, committen. Dieses Kapitel wird laufend fortgeschrieben.
 
-Stand: angelegt, noch nichts geprueft.
+Stand: abgeschlossen (siehe R2-6).
 
 ## R2-0. Laufprotokoll (fortlaufend)
 
@@ -315,7 +315,18 @@ Stand: angelegt, noch nichts geprueft.
 - 00:45-01:05 alle Pruefer-Behauptungen am UNVERAENDERTEN Werkzeugstand (HEAD e1640cd0 = 35d25455) selbst
   nachgemessen (R2-1). Arbeitsordner `build/r34a/nb2/` (Referenz-APK-Kopie `build/r34a/ref_v0.8.19.apk`,
   sha256 514bebd5... = Archiv-SUMS; Faelschungen mit dem Rohbyte-Werkzeug des Pruefers `r2_faelschen.py`).
-- 00:58 Grundlinie der systematischen Teil-Mutanten-Probe am HEAD-Gate gestartet (R2-3.1).
+- 00:58 Grundlinie der systematischen Teil-Mutanten-Probe am HEAD-Gate gestartet (R2-3.1) - bei ~175/304
+  abgebrochen: das Werkzeug schrieb Ergebnisse erst am Ende, und haengende Mutanten hinterliessen verwaiste
+  Gate-Prozesse (01:31-02:01 vier davon auf je einem Kern, dann beendet). Werkzeug umgebaut (laufende
+  Ergebnisse, Prozessbaum beenden); Grundlinie nicht wiederholt - B1 ist mit den fuenf Mutanten der
+  Gegenpruefung und Kampagne 1 (19 Ueberlebende in 62 Mutanten am ersten R2-Stand) belegt.
+- 01:05-01:30 Gate-Aenderungen (B2 Tuer-Soll, B6, B8, DD-Bit), Selbsttest 72 -> 140; Kette (B3/B4/B5/B7/B9,
+  build.gradle); Commits 896bf8e7, 9d2337e4.
+- 01:10-01:55 Kette --gate-only-Kontrollen, voller Android-Bau, make_package echt (P/N1-N4) mit Gate v2.
+- 01:55-02:40 Kampagnen 1-3 der Teil-Mutanten-Probe, Gate v3 -> v5 (Selbsttest 202 + 53 innere Proben);
+  Linux-Docker, Stolperdraht.
+- 02:40-03:15 Kampagne 4 (v5) parallel zum Endlauf (Kette, Android-Baue negativ/positiv, make_package positiv).
+- 03:15-03:30 Nachlauf der Ueberlebenden an v6, Messung gegen die Referenz, Python-Schnappschuss 1, Aufraeumen.
 
 ## R2-1. Nachpruefung der Befunde (vor jeder Aenderung)
 
@@ -502,3 +513,114 @@ C:/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3.exe = WindowsApps
 ### R2-3.7 check_binary_fresh (B9) - `nachher_b9.txt`
 Sonde der Gegenpruefung unveraendert gegen die neue Funktion: EXIT=1 mit `ABBRUCH: Frische-Gate (Android-APK): git log
 findet keinen Commit fuer ... (kein Git-Repo, flacher Klon?) - nicht pruefbar, ob .../x.apk aktuell ist`.
+
+### R2-3.8 Linux (Docker `re15-linux-build:deb11`, Debian 11, Python 3.9.2; Baum nur lesend) - `linux_lauf_nb2.txt`
+Gate-Stand v4 (vor den letzten Faellen; die Pruefungen selbst unveraendert bis auf R2-3.1-Vereinfachungen):
+| Schritt | Ergebnis |
+|---|---|
+| L1 python_finden.sh | `/usr/bin/python3 (3.9.2)` (Link -> readlink prueft das Ziel, gestartet) |
+| L2 `--selbsttest` | 187/187, 51,7 s |
+| L3 `--quellbaum` (9p) | QUELLBAUM-OK, Tuer-Soll 30/30 + 27/27, 9,5 s |
+| L4 Referenz-APK gegen /src (9p) | APK-ASSET-GATE-OK, 385,6 s (9p-Mount unter Last) |
+| L5 Direktaufruf `/src/release/apk_asset_gate.py --quellbaum` | Kopf laeuft als Bash, `Python: /usr/bin/python3 (3.9.2)`, QUELLBAUM-OK |
+| L6a `--paket` auf einer Kopie wie copy_common | PAKET-OK, 3603 Dateien bytegleich |
+| L6b dasselbe, 1 Byte in RE15DOOR/P2DS.DO2 | rc 1 `APK-ASSET-GATE-PAKET-ABWEICHUNG: 1 Befunde` |
+| L7 `build_android.sh --gate-only` ohne Android-SDK | rc 1 `APK-Pruefung: Android-SDK-Ordner fehlt ... - ohne aapt, zipalign und apksigner ...` (geschlossen) |
+
+### R2-3.9 Stolperdraht (echtlauf B1) - `nachher_stolperdraht.txt`
+PATH = `<draht>:/usr/bin:/mingw64/bin:<WindowsApps>:<Rest>`, im Draht `python3`/`python`/`py`, die jeden Aufruf
+protokollieren und mit rc 97 scheitern: (1) `./release/apk_asset_gate.py --quellbaum` -> rc 0 ueber
+`/c/Python310/python` (vorher: landete beim Draht bzw. ohne Draht beim WindowsApps-Alias); (2)
+`./release/zip_exec_bit.py` -> Hilfe ueber `/c/Python310/python`; (3) `build_android.sh --gate-only <referenz>` ->
+EXIT 0, WindowsApps-Kandidaten `verworfen (WindowsApps-Alias, NICHT gestartet)`. Drahtprotokoll: 6 Eintraege, ALLE
+die Probe des Finders (`-c import sys, zipfile, hashlib ...`, Eltern `timeout 30 ...`) - kein Aufruf am Finder
+vorbei. (Lauf 1 meines Skripts hatte den Draht als `C:/...` in den PATH gesetzt - der ':' zerlegte den Eintrag,
+0 Eintraege; korrigiert auf den POSIX-Pfad.)
+
+### R2-3.10 Selbsttest des Endstands unter drei Interpretern
+`== SELBSTTEST-OK: 202/202` (+ 53/53 innere Proben) unter /c/Python310 3.10.11 (11,5 s, ruhige Maschine),
+/c/Python39 3.9.0 (27,4 s) und MSYS2 3.14.7 (17,5 s; beide unter Last der Mutanten-Probe).
+
+### R2-3.1 Teil-Mutanten-Probe (B1) - `mutanten_teil.py`, `hand_r2.py`, `mutanten_auswertung.py`
+Werkzeug: erzeugt aus dem Gate-Quelltext per ast fuer JEDE Pruefstelle (alle Funktionen in PRUEFCODE, auch die
+neuen der R2) A befund->pass, B raise->pass, C Namensregel->pass (wie R1) und neu die Teil-Abschwaechungen
+E (Vergleich in eine Richtung, Grenze um eins, in<->not in, auch je Operator einer Kette), F (je ein Operand
+eines and/or weg), G (je ein Paar eines Tupelvergleichs weg), H (not weg), I (Zahl im Vergleich +-1), dazu
+35 Hand-Mutanten (`hand_r2.py`: die der R1 in heutiger Form und M14/M16 der Gegenpruefung, Verschluesselung
+nur eine Seite / nur Bit 0, Paket nur Groesse, FNV nur 1. Block, Griff-Rueckfall/fuer_eigen, Basis,
+Wurzel, Unicode-Ziffern in der Kopfzeile, Praefix). Je Mutant ein eigener Prozess `<python> <mutant> --selbsttest`
+(Schnellmodus); ein Mutant, der das Gate haengen laesst, wird nach der Zeitgrenze samt Prozessbaum beendet
+(taskkill /T) und zaehlt als erkannt - der Selbsttest liefert dann nie OK.
+
+| Kampagne | Gate-Stand | Mutanten | erkannt | ueberlebt | Folge |
+|---|---|---|---|---|---|
+| 1 | v2 (Selbsttest 140) | 62 von 565 (abgebrochen) | 43 | 19 (`mutanten_kampagne1_gate_v2_teil.txt`) | find()-Grenzen, tote Pruefungen, Klammer-Richtung, into(assetStage) -> Umbau + Faelle |
+| 2 | v3 | abgebrochen | - | - | WERKZEUGFEHLER: zwei Vergleiche in einer Zeile ergaben denselben Mutanten-Namen, die zweite Kopie ueberschrieb die erste, `os.remove` scheiterte und die Ergebnisschleife starb - Ergebnisse verworfen; Werkzeug: eindeutige Namen, Fehler als Status 99 |
+| 3 | v4 (187) | 490 | 427 | 63 (`mutanten_kampagne3_gate_v4.txt`) | _ant_passt/_auslass_hinweis (die Fixture erreicht sie nur mit EINEM Muster) -> innere Proben; Sicherheitsnetz/walk-Fehler als eigene Funktionen; Richtungs-/Grenzfaelle; Vereinfachungen |
+| 4 | v5 (202 + 53 innere Proben) | **449** | **443** (1 per Zeitgrenze) | 6 (`mutanten_kampagne4_gate_v5.txt`, `_protokoll.txt`, `_ergebnis.tsv`) | 2 Literal-Proben fuer _ant_passt ergaenzt (v6) |
+| Nachlauf | **v6 = Endstand** (202 + 58) | die 6 Ueberlebenden (`--nur-namen`) | 2 | **4 - alle aequivalent** (`mutanten_nachlauf_v6.txt`) | Pruefcode v5 == v6 (diff bis `_ANT_PROBEN` leer) |
+
+**Endstand: 449 Mutanten, 445 erkannt, 4 aequivalent** - je Klasse A 47/47, B 45/45, C 5/5, D 35/35,
+E 169/173, F 71/71, G 5/5, H 42/42, I 26/26. Die fuenf Mutanten der Gegenpruefung in heutiger Form sind alle
+erkannt (M1 = E-Mutant auf `apk_dateien[pfad] != eintraege[pfad]`, M9 = F-Mutant `crc != e.crc or n != e.usize`
+ohne Laenge, M5 = E/I-Mutanten auf `rest > 0`/`rest < 0`, M14 = DM14a/b/c, M16 = DM16a/b).
+Die vier aequivalenten (sie weichen nur fuer Werte ab, die an der Stelle nicht vorkommen koennen):
+| Mutant | warum aequivalent |
+|---|---|
+| E__ant_passt_Z374_ge `i == len(mt)` -> `>=` | i waechst in Einerschritten nur, solange `mt[i]` existiert: i <= len(mt) |
+| E__ant_passt_Z375_ge `j == len(pt)` -> `>=` | j waechst nur ueber `j < len(pt)` bzw. `range(j, len(pt) + 1)`: j <= len(pt) |
+| E_tuer_soll_Z665_ge `z["spender"] == kein_spender` -> `>=` | `spender` ist uint8_t, KEIN_SPENDER = 0xFF ist der groesste Wert |
+| E__eintrag_pruefen_Z1033_lt_2 `n != e.usize` -> `<` | `nimm()` bricht ab, sobald n > usize: hier gilt immer n <= usize; `!=` bewusst belassen (haengt so nicht an der Schranke) |
+
+Per Zeitgrenze erkannt: B__eintrag_lesen_Z1008 (ohne den raise liest die innere Probe "Datei endet mitten im
+Eintrag" endlos weiter - der Selbsttest endet nie mit OK).
+Selbsttest: 72 -> **202 Faelle + 58 innere Proben**; 11,4 s auf der ruhigeren Maschine (vorher 5,6-7,6 s).
+
+### R2-3.11 Endlauf mit dem Endstand der Kette (Gate v5; v6 unterscheidet sich nur in Proben-Daten) - `nachher_final.txt`
+- Kette `--gate-only`: Referenz EXIT 0; K0 / fremder Schluessel / unausgerichtet / F_M1 / F_kopf_arabisch /
+  Tausch waehrend des Selbsttests / Schatten ohne P2DS / P07G 0 B / RE15NEU -> je EXIT 1 (wie R2-3.3); ABA EXIT 0.
+- **Echter Android-Bau mit Quellbaum OHNE RE15DOOR/P2DS.DO2 (B2):** stageAssets `RE15DOOR: 29 x *.DO2`,
+  `BUILD SUCCESSFUL in 7m 19s`, dann Gate `RE15DOOR: Quelle 29, APK 29` und `Port-Tuerarchiv fehlt: .../P2DS.DO2
+  (verlangt von: .../re15_tuer_eigen.inc ...)` -> **EXIT 1**; danach APK 0, .ungeprueft 0, Pruefkopien 0, P2DS
+  zurueck (sha256 0aed093e... unveraendert), `git status re15_port/` leer. Vorher lief genau das gruen durch.
+- **Android-Bau mit `RE15_KEYSTORE=C:/gibt/es/nicht.jks` (B4):** Gradle `RE15_KEYSTORE=... existiert nicht - kein
+  stiller Rueckfall auf den Debug-Schluessel`, `BUILD FAILED` -> EXIT 1; die vorige APK war schon vor Gradle weg.
+- Voller Android-Bau positiv: EXIT 0 `ANDROID-BUILD-OK` (Gradle 7m 1s unter Last; zipalign ok, Signer 432bc749...,
+  Selbsttest 202/202, Tuer-Soll 30/30 + 27/27, Gate 3603/3603).
+- make_package.sh positiv: EXIT 0 `== Fertig ==` (QUELLBAUM-OK, APK-PRUEFUNG-OK, PAKET-OK fuer beide Pakete,
+  `APK im Split-Satz = gepruefte APK`); danach `git restore` der Split-Volumes/SUMS, `git status release/ re15_port/` leer.
+
+### R2-3.12 Endstand gegen die Referenz-APK (`kette_ref_endstand.txt`, Gate v6)
+`build_android.sh --gate-only build/r34a/ref_v0.8.19.apk --version v0.8.19` -> EXIT 0 in **24,6 s** gesamt
+(Pruefkopie 514bebd5... = Archiv-SUMS, aapt v0.8.19 + beide ABIs, zipalign ok, Signer 432bc749..., Selbsttest
+202/202 + 58/58 in 11,4 s, Gate 7,0 s): ZIP 3616/3616 fuer Android lesbar; je Baum Quelle/APK/gleich PSX
+3193/3193/3193 (300522652 B), extracted_fx 13/13/13, RE2 277/277/277, RE15DOOR 30/30/30, synchro 90/90/90 =
+3603/3603/3603 (356678277 B); RE2/DOOR 27/27, RE15DOOR 30/30, TORSE.VBS 19176 B gleich; Tuer-Soll RE15DOOR 30/30
+(Groesse, Aufbau, FNV-1a) + RE2/DOOR 27/27 (Groesse, Aufbau); Manifest 3603 Zeilen.
+
+## R2-4. Offen / Hinweise
+- **N1 (Geraete-Entpacker, android_glue.c)** - bestaetigt und verschaerft (R2-1, R2-5), NICHT geaendert: Geraete-
+  Code liegt ausserhalb meines Bereichs (release/*, build.gradle). Braucht eine Entscheidung; Vorschlag R2-5.
+- **Signer-Pin:** release/apk_signer.sha256 haelt den Debug-Schluessel DIESER Bau-Maschine fest. Ein Bau auf einer
+  anderen Maschine (anderer debug.keystore) bricht jetzt am Signer ab - gewollt (sonst kein Update ueber v0.8.19);
+  ob ein echter Release-Schluessel (RE15_KEYSTORE) kommen soll, ist eine Nutzerentscheidung.
+- make_package.sh braucht jetzt IMMER Python >= 3.8 (auch mit --no-zip) und bei vorhandener APK aapt/zipalign/
+  apksigner + JDK (Kopf dokumentiert; fehlt etwas, bricht es mit Meldung ab).
+- Python 3.8 selbst nicht gemessen (kleinste verfuegbare: 3.9.0); keine Sprachmittel ab 3.9 verwendet.
+- Altlasten aus R1 unveraendert: Uninstall-Eintrag `pymanager-pythoncore-3.14-64` (nicht per "Deinstallieren"
+  entfernen), `.gitignore` fuer `*.apk.ungeprueft` (durch die EXIT-Falle unnoetig).
+- 4 aequivalente Mutanten (R2-3.1) bleiben; ein Mutant wird nur per Zeitgrenze erkannt.
+
+## R2-6. Endstand
+- Commits (Zweig r34a/android-gate): 6edd6e78 (Nachmessung), 896bf8e7 (Gate B2/B6/B8/DD), 9d2337e4 (Kette B3/B4/B5/
+  B6/B7/B9, build.gradle), b7e99ef0 (Messungen), a422bf16 (Gate v4), 58874fa0 (Gate v5), dazu der Abschluss-Commit
+  (Gate v6, Dossier, Belege). Werkzeugdateien: release/apk_asset_gate.py, apk_pruefen.sh, build_android.sh,
+  make_package.sh, python_finden.sh, zip_exec_bit.py, neu release/apk_signer.sha256 und release/.gitattributes;
+  re15_port/platform/android/app/build.gradle (nur signingConfigs). Kein Spielcode.
+- Python-Schnappschuss 1 (`py_zustand_1_nach_allen_laeufen.txt`, 121 Zeilen) == Schnappschuss 0: kein Installer,
+  kein neuer Schluessel, kein Startmenue-Eintrag, kein pymanager/msiexec-Prozess.
+- Aufgeraeumt: build/r34a/nb2 (APK-Kopien/Faelschungen 7,5 GB, Pakete, Schatten - Hardlinks, Originale unberuehrt:
+  TEX.TIM Linkzahl 2 -> 1, RE15DOOR sha256 unveraendert), release/{pkg-*,win_out,linux_out,APK}, Gradle-Ausgaben
+  (platform/android/{app/build,app/.cxx,.gradle,build,local.properties}), 11 Temp-Ordner abgebrochener Mutanten-
+  Selbsttests. Liegen gelassen: build/r34a/ref_v0.8.19.apk (sha256 514bebd5... unveraendert), build/r34a/nb2/logs.
+- `git status --short release/ re15_port/` nach dem Abschluss-Commit leer.

@@ -2786,6 +2786,8 @@ _ANT_PROBEN = (
     ("a/**/b", "a/b", True), ("a/**/b", "a/x/y/b", True), ("a/**/b", "a/x/y/c", False), ("a/**", "a", True),
     ("a/**", "b", False), ("a/b", "a", False), ("a", "a/b", False), ("A*", "a1", False), ("#*", "#1", True),
     ("(*)", "(1)", True), ("x*y", "x/y", False),
+    # Zeichen UNTER '*' bzw. '?' sind Literale (kein Platzhalter): '#', '(', '1'
+    ("#x", "ax", False), ("#x", "#x", True), ("(x)", "axb", False), ("1x", "2x", False), ("1x", "1x", True),
 )
 
 

@@ -1,0 +1,476 @@
+# 449 Mutanten {'A': 47, 'B': 45, 'C': 5, 'D': 35, 'E': 173, 'F': 71, 'G': 5, 'H': 42, 'I': 26} aus build/r34a/nb2/mut/gate_neu_5.py, Python C:/Python310/python.exe
+# davon schon erledigt (ergebnis.tsv): 0, zu laufen: 449
+ERKANNT   rc=1       1s E__zeichenkette_ende_Z195_notin              text[i:i + 3] in ('"""', "'''")  [in -> not in]
+ERKANNT   rc=1       1s E__zeichenkette_ende_Z198_le                 text[j] == "\\"  [== -> <=]
+ERKANNT   rc=1       2s E__zeichenkette_ende_Z198_ge                 text[j] == "\\"  [== -> >=]
+ERKANNT   rc=1       2s E__ohne_kommentare_Z210_le                   i < n  [< -> <=]
+ERKANNT   rc=1       2s E__ohne_kommentare_Z212_notin                c in "\"'"  [in -> not in]
+ERKANNT   rc=1      10s B__zeichenkette_ende_Z204                    raise Bedienfehler("build.gradle: Zeichenkette ohne Ende ab Zeichen %d" % i)
+ERKANNT   rc=1      10s E__zeichenkette_ende_Z197_le                 j < len(text)  [< -> <=]
+ERKANNT   rc=1       2s E__klammer_ende_Z240_notin                   c in "\"'"  [in -> not in]
+ERKANNT   rc=1       2s E__klammer_ende_Z255_notin                   c in paar  [in -> not in]
+ERKANNT   rc=1       2s E__klammer_ende_Z257_notin                   c in ")}]"  [in -> not in]
+ERKANNT   rc=1      11s B__klammer_ende_Z263                         raise Bedienfehler("build.gradle: Klammer ohne Ende")
+ERKANNT   rc=1      11s E__klammer_ende_Z238_le                      j < len(code)  [< -> <=]
+ERKANNT   rc=1      11s E__klammer_ende_Z258_lt                      stapel.pop() != c  [!= -> <]
+ERKANNT   rc=1      11s E__klammer_ende_Z258_gt                      stapel.pop() != c  [!= -> >]
+ERKANNT   rc=1       1s H__klammer_ende_Z260                         not stapel  [not weg]
+ERKANNT   rc=1       1s E__anweisungen_Z269_le                       j < len(code)  [< -> <=]
+ERKANNT   rc=1       2s E__anweisungen_Z271_notin                    c in "\"'"  [in -> not in]
+ERKANNT   rc=1       3s E__anweisungen_Z274_notin                    c in "({["  [in -> not in]
+ERKANNT   rc=1       2s E__anweisungen_Z276_notin                    c in ")}]"  [in -> not in]
+ERKANNT   rc=1      12s B__klammer_ende_Z259                         raise Bedienfehler("build.gradle: Klammern passen nicht (Zeichen %d)" % j)
+ERKANNT   rc=1       2s F__anweisungen_Z278_ohne0                    not tiefe and c in "\n;"  [Operand 0 weg: not tiefe]
+ERKANNT   rc=1       2s F__anweisungen_Z278_ohne1                    not tiefe and c in "\n;"  [Operand 1 weg: c in "\n;"]
+ERKANNT   rc=1       2s H__anweisungen_Z278                          not tiefe  [not weg]
+ERKANNT   rc=1       2s E__anweisungen_Z278_notin                    c in "\n;"  [in -> not in]
+ERKANNT   rc=1       9s E_gradle_baeume_Z296_lt                      len(treffer) != 1  [!= -> <]
+# ... 25/449 (55 s)
+ERKANNT   rc=1       8s E_gradle_baeume_Z296_gt                      len(treffer) != 1  [!= -> >]
+ERKANNT   rc=1       1s I_gradle_baeume_Z296_plus1                   len(treffer) != 1  [1 -> 2]
+ERKANNT   rc=1       1s I_gradle_baeume_Z296_minus1                  len(treffer) != 1  [1 -> 0]
+ERKANNT   rc=1       7s B_gradle_baeume_Z297                         raise Bedienfehler('build.gradle: tasks.register("stageAssets", Sync) { ... } %s' % ("nich
+ERKANNT   rc=1       8s F_gradle_baeume_Z336_ohne1                   into_stage != 1 or preserve != 1  [Operand 1 weg: preserve != 1]
+ERKANNT   rc=1      18s F_gradle_baeume_Z336_ohne0                   into_stage != 1 or preserve != 1  [Operand 0 weg: into_stage != 1]
+ERKANNT   rc=1       1s E_gradle_baeume_Z307_le                      wort == "from"  [== -> <=]
+ERKANNT   rc=1       1s E_gradle_baeume_Z307_ge                      wort == "from"  [== -> >=]
+ERKANNT   rc=1       8s B_gradle_baeume_Z337                         raise Bedienfehler("build.gradle stageAssets: erwartet genau ein 'into(assetStage)' und ei
+ERKANNT   rc=1      19s E_gradle_baeume_Z336_lt                      into_stage != 1  [!= -> <]
+ERKANNT   rc=1       1s I_gradle_baeume_Z336_plus1                   into_stage != 1  [1 -> 2]
+ERKANNT   rc=1       1s I_gradle_baeume_Z336_minus1                  into_stage != 1  [1 -> 0]
+ERKANNT   rc=1      18s E_gradle_baeume_Z336_gt                      into_stage != 1  [!= -> >]
+ERKANNT   rc=1      11s E_gradle_baeume_Z336_gt_2                    preserve != 1  [!= -> >]
+ERKANNT   rc=1       2s I_gradle_baeume_Z336_plus1_2                 preserve != 1  [1 -> 2]
+ERKANNT   rc=1       1s I_gradle_baeume_Z336_minus1_2                preserve != 1  [1 -> 0]
+ERKANNT   rc=1       1s H_gradle_baeume_Z309                         not m  [not weg]
+ERKANNT   rc=1      22s E_gradle_baeume_Z336_lt_2                    preserve != 1  [!= -> <]
+ERKANNT   rc=1       6s B_gradle_baeume_Z310                         raise Bedienfehler("build.gradle stageAssets: from-Anweisung nicht im bekannten " "Format 
+ERKANNT   rc=1       1s E_gradle_baeume_Z324_isnot                   ziel is None  [is -> is not]
+ERKANNT   rc=1       1s F_gradle_baeume_Z313_ohne0                   m.group(3) or ""  [Operand 0 weg: m.group(3)]
+ERKANNT   rc=1       8s B_gradle_baeume_Z325                         raise Bedienfehler("build.gradle stageAssets: from '%s' ohne into" % quelle)
+ERKANNT   rc=1       7s F_gradle_baeume_Z313_ohne1                   m.group(3) or ""  [Operand 1 weg: ""]
+ERKANNT   rc=1       7s F_gradle_baeume_Z317_ohne0                   mi and ziel is None  [Operand 0 weg: mi]
+ERKANNT   rc=1      10s H_gradle_baeume_Z298                         not treffer  [not weg]
+# ... 50/449 (144 s)
+ERKANNT   rc=1       2s E_gradle_baeume_Z317_isnot                   ziel is None  [is -> is not]
+ERKANNT   rc=1     134s B__klammer_ende_Z253                         raise Bedienfehler("build.gradle: Kommentar /* ohne Ende (ab Zeichen %d)" % j)
+ERKANNT   rc=1       3s F_gradle_baeume_Z318_ohne1                   mi.group(1) or mi.group(2)  [Operand 1 weg: mi.group(2)]
+ERKANNT   rc=1      25s F_gradle_baeume_Z317_ohne1                   mi and ziel is None  [Operand 1 weg: ziel is None]
+ERKANNT   rc=1       4s E_gradle_baeume_Z331_notin                   wort in ("description", "duplicatesStrategy", "doFirst", "doLast")  [in -> not in]
+ERKANNT   rc=1      20s F_gradle_baeume_Z318_ohne0                   mi.group(1) or mi.group(2)  [Operand 0 weg: mi.group(1)]
+ERKANNT   rc=1      11s B_gradle_baeume_Z334                         raise Bedienfehler("build.gradle stageAssets: unbekannte Anweisung (das Gate kennt ihre " 
+ERKANNT   rc=1       3s H_gradle_baeume_pruefen_Z344                 not os.path.isfile(pfad)  [not weg]
+ERKANNT   rc=1      21s B_gradle_baeume_Z322                         raise Bedienfehler("build.gradle stageAssets: unbekannte Anweisung im from-Block " "von '%
+ERKANNT   rc=1       9s E_gradle_baeume_pruefen_Z350_lt              ist != soll  [!= -> <]
+ERKANNT   rc=1      10s B_gradle_baeume_pruefen_Z345                 raise Bedienfehler("build.gradle fehlt: %s (zeigt --repo auf das Repo?)" % pfad)
+ERKANNT   rc=1       1s E__ant_passt_Z371_is                         re.fullmatch(rx, s) is not None  [is not -> is]
+ERKANNT   rc=1       1s E__ant_passt_Z374_le                         i == len(mt)  [== -> <=]
+ERKANNT   rc=1       9s E_gradle_baeume_pruefen_Z350_gt              ist != soll  [!= -> >]
+ERKANNT   rc=1       1s E__ant_passt_Z376_le                         mt[i] == "**"  [== -> <=]
+ERKANNT   rc=1       1s E__ant_passt_Z376_ge                         mt[i] == "**"  [== -> >=]
+ERKANNT   rc=1       1s F__ant_passt_Z378_ohne0                      j < len(pt) and seg(mt[i], pt[j]) and geht(i + 1, j + 1)  [Operand 0 weg: j < len(pt)]
+ERKANNT   rc=1       1s F__ant_passt_Z378_ohne1                      j < len(pt) and seg(mt[i], pt[j]) and geht(i + 1, j + 1)  [Operand 1 weg: seg(mt[i], pt[j]
+ERKANNT   rc=1       1s F__ant_passt_Z378_ohne2                      j < len(pt) and seg(mt[i], pt[j]) and geht(i + 1, j + 1)  [Operand 2 weg: geht(i + 1, j + 
+ERKANNT   rc=1       1s E__ant_passt_Z375_le                         j == len(pt)  [== -> <=]
+ERKANNT   rc=1       8s B_gradle_baeume_pruefen_Z358                 raise Bedienfehler("\n".join(zeilen))
+ERKANNT   rc=1       1s E__ant_passt_Z378_le                         j < len(pt)  [< -> <=]
+UEBERLEBT rc=0      47s E__ant_passt_Z374_ge                         i == len(mt)  [== -> >=]
+ERKANNT   rc=1       0s E__ant_passt_Z370_ge                         c == "*"  [== -> >=]
+UEBERLEBT rc=0      45s E__ant_passt_Z375_ge                         j == len(pt)  [== -> >=]
+# ... 75/449 (232 s)
+UEBERLEBT rc=0      45s E__ant_passt_Z370_le                         c == "*"  [== -> <=]
+ERKANNT   rc=1       0s E__ant_passt_Z370_ge_2                       c == "?"  [== -> >=]
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne0                n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne1                n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne2                n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+ERKANNT   rc=1       0s F__auslass_hinweis_Z395_ohne0                n.lower() in ("thumbs.db", "picasa.ini") or n.lower().endswith(".scc")  [Operand 0 weg: n.
+ERKANNT   rc=1       0s F__auslass_hinweis_Z395_ohne1                n.lower() in ("thumbs.db", "picasa.ini") or n.lower().endswith(".scc")  [Operand 1 weg: n.
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne0_2              n.startswith("#") and n.endswith("#")  [Operand 0 weg: n.startswith("#")]
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne1_2              n.startswith("#") and n.endswith("#")  [Operand 1 weg: n.endswith("#")]
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne0_3              n.startswith("%") and n.endswith("%")  [Operand 0 weg: n.startswith("%")]
+ERKANNT   rc=1       0s F__auslass_hinweis_Z393_ohne1_3              n.startswith("%") and n.endswith("%")  [Operand 1 weg: n.endswith("%")]
+ERKANNT   rc=1       0s E__auslass_hinweis_Z395_notin                n.lower() in ("thumbs.db", "picasa.ini")  [in -> not in]
+ERKANNT   rc=1       2s H_quelldateien_Z414                          not os.path.isdir(wurzel)  [not weg]
+ERKANNT   rc=1       2s H_quelldateien_Z427                          not zahl[ziel]  [not weg]
+ERKANNT   rc=1       3s A_quelldateien_Z415                          befund("Quellbaum", "Quellbaum fehlt: %s (Gradle kopiert aus einem fehlenden Ordner " "sti
+ERKANNT   rc=1       2s H_quelldateien_Z432                          not n  [not weg]
+ERKANNT   rc=1       4s A_quelldateien_Z428                          befund("Quellbaum", "Quellbaum leer: %s" % rel_baum)
+ERKANNT   rc=1       3s A_quelldateien_Z433                          befund("Quellbaum", "Pflichtinhalt fehlt: re15_port/%s/*%s (0 Dateien)" % (ordner, endung)
+ERKANNT   rc=1       4s F_quelldateien_Z436_ohne0                    not q or not os.path.getsize(q[0])  [Operand 0 weg: not q]
+ERKANNT   rc=1       3s A_quelldateien_Z437                          befund("Quellbaum", "Pflichtdatei fehlt/leer: re15_port/%s" % datei)
+UEBERLEBT rc=0      21s E__ant_passt_Z370_le_2                       c == "?"  [== -> <=]
+ERKANNT   rc=1       2s H_quelldateien_Z436                          not q  [not weg]
+ERKANNT   rc=1       2s H_quelldateien_Z436_2                        not os.path.getsize(q[0])  [not weg]
+ERKANNT   rc=1       2s F_quelldateien_Z423_ohne0                    muster and not any(_ant_passt(m, rel) for m in muster)  [Operand 0 weg: muster]
+ERKANNT   rc=1       2s F_quelldateien_Z423_ohne1                    muster and not any(_ant_passt(m, rel) for m in muster)  [Operand 1 weg: not any(_ant_passt
+# ... 100/449 (253 s)
+ERKANNT   rc=1       2s H_quelldateien_Z423                          not any(_ant_passt(m, rel) for m in muster)  [not weg]
+ERKANNT   rc=1       4s F_quelldateien_Z430_ohne0                    a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand
+ERKANNT   rc=1      25s F_quelldateien_Z436_ohne1                    not q or not os.path.getsize(q[0])  [Operand 1 weg: not os.path.getsize(q[0])]
+ERKANNT   rc=1       3s E_quelldateien_Z431_in                       "/" not in a[len("assets/%s/" % ordner):]  [not in -> in]
+ERKANNT   rc=1       3s E_wurzel_pruefen_Z446_in                     name not in SHARED_WURZEL  [not in -> in]
+ERKANNT   rc=1      29s F_quelldateien_Z430_ohne1                    a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand
+ERKANNT   rc=1       1s H__c_lesen_Z455                              not os.path.isfile(p)  [not weg]
+ERKANNT   rc=1      28s F_quelldateien_Z430_ohne2                    a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand
+ERKANNT   rc=1       1s E__c_ohne_kommentare_Z464_le                 i < n  [< -> <=]
+ERKANNT   rc=1      16s A_wurzel_pruefen_Z447                        befund("Quellbaum: in keiner Liste", "re15_port/shared_assets/%s liegt in keinem Asset-Bau
+ERKANNT   rc=1       1s E__c_ohne_kommentare_Z466_le                 c == '"'  [== -> <=]
+ERKANNT   rc=1       2s E__c_ohne_kommentare_Z466_ge                 c == '"'  [== -> >=]
+ERKANNT   rc=1       2s H__c_ohne_kommentare_Z468                    not m  [not weg]
+ERKANNT   rc=1      16s B__c_lesen_Z456                              raise Bedienfehler("Engine-Tabelle fehlt: %s (die Soll-Liste der Tuerarchive steht dort)" 
+ERKANNT   rc=1      20s B__c_ohne_kommentare_Z469                    raise Bedienfehler("%s: Zeichenkette ohne Ende (Zeichen %d)" % (datei, i))
+ERKANNT   rc=1      18s E_c_struktur_Z499_lt                         len(t) != 1  [!= -> <]
+ERKANNT   rc=1       2s I_c_struktur_Z499_plus1                      len(t) != 1  [1 -> 2]
+ERKANNT   rc=1       2s I_c_struktur_Z499_minus1                     len(t) != 1  [1 -> 0]
+ERKANNT   rc=1      17s E_c_struktur_Z499_gt                         len(t) != 1  [!= -> >]
+ERKANNT   rc=1       2s H_c_struktur_Z504                            not dekl  [not weg]
+ERKANNT   rc=1       2s H_c_struktur_Z507                            not m  [not weg]
+ERKANNT   rc=1      15s B_c_struktur_Z500                            raise Bedienfehler("%s: 'typedef struct { ... } %s;' %s" % (datei, typname, "mehrfach" if 
+ERKANNT   rc=1       1s H_c_struktur_Z511                            not md  [not weg]
+ERKANNT   rc=1      13s B_c_struktur_Z508                            raise Bedienfehler("%s: %s - Feld nicht lesbar: '%s'" % (datei, typname, dekl))
+ERKANNT   rc=1      12s B_c_struktur_Z512                            raise Bedienfehler("%s: %s - Deklarator nicht lesbar: '%s'" % (datei, typname, d.strip()))
+# ... 125/449 (350 s)
+ERKANNT   rc=1      13s B__c_werte_Z546                              raise Bedienfehler("%s: Tabelle %s ohne Ende (schliessende '}' fehlt)" % (datei, name))
+ERKANNT   rc=1       2s H__c_werte_Z530                              not m  [not weg]
+ERKANNT   rc=1      13s E__c_werte_Z525_le                           i < len(code)  [< -> <=]
+ERKANNT   rc=1       2s H__c_werte_Z540                              not stapel  [not weg]
+ERKANNT   rc=1       2s E__c_werte_Z542_is                           s is not None  [is not -> is]
+ERKANNT   rc=1       2s E__c_werte_Z544_is                           zahl is not None  [is not -> is]
+ERKANNT   rc=1      14s B__c_werte_Z531                              raise Bedienfehler("%s: %s - unerwartetes Zeichen im Initialisierer: '%s'" % (datei, name,
+ERKANNT   rc=1      16s E_c_tabelle_Z554_lt                          len(treffer) != 1  [!= -> <]
+ERKANNT   rc=1       1s I_c_tabelle_Z554_plus1                       len(treffer) != 1  [1 -> 2]
+ERKANNT   rc=1      14s E_c_tabelle_Z554_gt                          len(treffer) != 1  [!= -> >]
+ERKANNT   rc=1       1s I_c_tabelle_Z554_minus1                      len(treffer) != 1  [1 -> 0]
+ERKANNT   rc=1       1s H_c_tabelle_Z559                             not re.match(r"\s*;", code[j:])  [not weg]
+ERKANNT   rc=1      14s B_c_tabelle_Z555                             raise Bedienfehler("%s: 'static const %s %s[N] = {' %s" % (datei, typname, name, "mehrfach
+ERKANNT   rc=1      14s B_c_tabelle_Z560                             raise Bedienfehler("%s: Tabelle %s: nach der schliessenden '}' fehlt ';'" % (datei, name))
+ERKANNT   rc=1      17s E_c_tabelle_Z562_gt                          len(zeilen) != n_soll  [!= -> >]
+ERKANNT   rc=1      22s E_c_tabelle_Z562_lt                          len(zeilen) != n_soll  [!= -> <]
+ERKANNT   rc=1       1s H_c_tabelle_Z567                             not isinstance(z, list)  [not weg]
+ERKANNT   rc=1     140s B__c_ohne_kommentare_Z476                    raise Bedienfehler("%s: Kommentar /* ohne Ende (Zeichen %d)" % (datei, i))
+ERKANNT   rc=1      12s B_c_tabelle_Z563                             raise Bedienfehler("%s: %s[%d] hat %d Zeilen (der Generator schreibt alle; fehlende fuellt
+ERKANNT   rc=1       1s E_c_tabelle_Z569_ge                          len(z) > len(felder)  [> -> >=]
+ERKANNT   rc=1       1s F_c_tabelle_Z574_ohne0                       typ in _C_ZEICHENTYPEN and anz  [Operand 0 weg: typ in _C_ZEICHENTYPEN]
+ERKANNT   rc=1       2s F_c_tabelle_Z574_ohne1                       typ in _C_ZEICHENTYPEN and anz  [Operand 1 weg: anz]
+ERKANNT   rc=1       2s E_c_tabelle_Z573_le                          idx < len(z)  [< -> <=]
+ERKANNT   rc=1      13s B_c_tabelle_Z568                             raise Bedienfehler("%s: %s Zeile %d ist kein { ... }" % (datei, name, k))
+ERKANNT   rc=1       1s E_c_tabelle_Z574_notin                       typ in _C_ZEICHENTYPEN  [in -> not in]
+# ... 150/449 (438 s)
+ERKANNT   rc=1      14s B_c_tabelle_Z570                             raise Bedienfehler("%s: %s Zeile %d: %d Werte, %s hat %d Felder" % (datei, name, k, len(z)
+ERKANNT   rc=1      15s F_c_tabelle_Z576_ohne0                       not isinstance(w, str) or len(w.encode("utf-8")) >= anz  [Operand 0 weg: not isinstance(w,
+ERKANNT   rc=1      16s F_c_tabelle_Z576_ohne1                       not isinstance(w, str) or len(w.encode("utf-8")) >= anz  [Operand 1 weg: len(w.encode("utf
+ERKANNT   rc=1       2s E_c_tabelle_Z575_isnot                       w is None  [is -> is not]
+ERKANNT   rc=1       2s H_c_tabelle_Z576                             not isinstance(w, str)  [not weg]
+ERKANNT   rc=1      17s B_c_tabelle_Z577                             raise Bedienfehler("%s: %s Zeile %d Feld %s: Zeichenkette mit < %d Bytes erwartet" % (date
+ERKANNT   rc=1      20s E_c_tabelle_Z576_gt                          len(w.encode("utf-8")) >= anz  [>= -> >]
+ERKANNT   rc=1      19s F_c_tabelle_Z580_ohne0                       not isinstance(w, list) or len(w) > anz or not all(isinstance(x, int) for x in w  [Operand
+ERKANNT   rc=1      17s F_c_tabelle_Z580_ohne1                       not isinstance(w, list) or len(w) > anz or not all(isinstance(x, int) for x in w  [Operand
+ERKANNT   rc=1       2s H_c_tabelle_Z585                             not isinstance(w, int)  [not weg]
+ERKANNT   rc=1      16s B_c_tabelle_Z581                             raise Bedienfehler("%s: %s Zeile %d Feld %s: { bis zu %d Zahlen } erwartet" % (datei, name
+ERKANNT   rc=1      17s F_c_tabelle_Z580_ohne2                       not isinstance(w, list) or len(w) > anz or not all(isinstance(x, int) for x in w  [Operand
+ERKANNT   rc=1       2s E_c_tabelle_Z579_isnot                       w is None  [is -> is not]
+ERKANNT   rc=1       2s H_c_tabelle_Z580                             not isinstance(w, list)  [not weg]
+ERKANNT   rc=1       2s E_c_tabelle_Z580_ge                          len(w) > anz  [> -> >=]
+ERKANNT   rc=1       2s H_c_tabelle_Z580_2                           not all(isinstance(x, int) for x in w)  [not weg]
+ERKANNT   rc=1       1s E_c_tabelle_Z584_isnot                       w is None  [is -> is not]
+ERKANNT   rc=1       1s H_tuer_soll_Z610                             not m  [not weg]
+ERKANNT   rc=1      16s B_c_tabelle_Z586                             raise Bedienfehler("%s: %s Zeile %d Feld %s: Zahl erwartet" % (datei, name, k, feld))
+ERKANNT   rc=1      16s B_tuer_soll_Z623                             raise Bedienfehler("Engine-Tabellen: %s ohne Feld(er) %s - Gate (tuer_soll) nachziehen" % 
+ERKANNT   rc=1      17s F_tuer_soll_Z633_ohne0                       not re.fullmatch(r"[A-Za-z0-9_]+", e["kennung"]) or e["kennung"] in kenn  [Operand 0 weg: 
+ERKANNT   rc=1      28s B_tuer_soll_Z611                             raise Bedienfehler("%s: #define RE15_DOOR_KEIN_SPENDER nicht gefunden (Tuerzeilen ohne Gri
+ERKANNT   rc=1      18s F_tuer_soll_Z633_ohne1                       not re.fullmatch(r"[A-Za-z0-9_]+", e["kennung"]) or e["kennung"] in kenn  [Operand 1 weg: 
+ERKANNT   rc=1      18s B_tuer_soll_Z634                             raise Bedienfehler("%s: re15_tuer_eigen Zeile %d: Kennung '%s' leer, doppelt oder kein Dat
+ERKANNT   rc=1      14s E_tuer_soll_Z640_le_op1                      0 <= nr < len(arch)  [< -> <=]
+# ... 175/449 (544 s)
+ERKANNT   rc=1      21s E_tuer_soll_Z640_lt_op0                      0 <= nr < len(arch)  [<= -> <]
+ERKANNT   rc=1       1s H_tuer_soll_Z657                             not z["eigen"]  [not weg]
+ERKANNT   rc=1      13s A_tuer_soll_Z643                             befund("Engine-Tabelle", "%s nennt RE2-Tuerarchiv %d, re2_tuer_arch hat %d Zeilen - die En
+ERKANNT   rc=1       1s E_tuer_soll_Z665_le                          z["spender"] == kein_spender  [== -> <=]
+ERKANNT   rc=1       2s E_tuer_soll_Z668_isnot                       g is None  [is -> is not]
+ERKANNT   rc=1       3s H_tuer_soll_Z670                             not g["spender_eigen"]  [not weg]
+ERKANNT   rc=1       2s H_tuer_soll_Z633                             not re.fullmatch(r"[A-Za-z0-9_]+", e["kennung"])  [not weg]
+ERKANNT   rc=1       1s E_tuer_soll_Z633_notin                       e["kennung"] in kenn  [in -> not in]
+ERKANNT   rc=1       1s F_tuer_soll_Z652_ohne0                       g["archiv"] == z["re2_nr"] and g["spender"] == z["spender"]  [Operand 0 weg: g["archiv"] =
+ERKANNT   rc=1       2s F_tuer_soll_Z652_ohne1                       g["archiv"] == z["re2_nr"] and g["spender"] == z["spender"]  [Operand 1 weg: g["spender"] 
+ERKANNT   rc=1       2s E_tuer_soll_Z659_ge                          z["eigen"] > len(eigen)  [> -> >=]
+ERKANNT   rc=1       2s E_tuer_soll_Z672_ge                          g["spender_eigen"] > len(eigen)  [> -> >=]
+ERKANNT   rc=1      13s A_tuer_soll_Z660                             befund("Engine-Tabelle", "Tuerzeile nennt Port-Archiv %d, re15_tuer_eigen hat %d" % (z["ei
+ERKANNT   rc=1       2s E_tuer_soll_Z621_in                          x not in [f[0] for f in felder]  [not in -> in]
+ERKANNT   rc=1      14s A_tuer_soll_Z673                             befund("Engine-Tabelle", "Griff-Tausch nennt Port-Archiv %d, re15_tuer_eigen hat %d" % (g[
+UEBERLEBT rc=0      23s E_tuer_soll_Z665_ge                          z["spender"] == kein_spender  [== -> >=]
+ERKANNT   rc=1       2s E_tuer_soll_Z652_ge                          g["archiv"] == z["re2_nr"]  [== -> >=]
+ERKANNT   rc=1       2s E_tuer_soll_Z652_le_2                        g["spender"] == z["spender"]  [== -> <=]
+ERKANNT   rc=1       2s E_tuer_soll_Z652_ge_2                        g["spender"] == z["spender"]  [== -> >=]
+ERKANNT   rc=1      14s E_tuer_soll_Z652_le                          g["archiv"] == z["re2_nr"]  [== -> <=]
+ERKANNT   rc=1      14s E_tuer_soll_Z661_lt                          eigen[z["eigen"] - 1]["basis"] != z["re2_nr"]  [!= -> <]
+ERKANNT   rc=1       2s E_tuer_soll_Z648_le                          g["fuer_eigen"] == z["eigen"]  [== -> <=]
+ERKANNT   rc=1       2s E_tuer_soll_Z648_ge                          g["fuer_eigen"] == z["eigen"]  [== -> >=]
+ERKANNT   rc=1      19s E_tuer_soll_Z661_gt                          eigen[z["eigen"] - 1]["basis"] != z["re2_nr"]  [!= -> >]
+ERKANNT   rc=1      12s A_tuer_soll_Z663                             befund("Engine-Tabelle", "Tuerzeile nennt DOOR%02X mit Port-Archiv %s (Basis DOOR%02X) - d
+# ... 200/449 (592 s)
+ERKANNT   rc=1       2s H_tueren_pruefen_Z697                        not os.path.isfile(p)  [not weg]
+ERKANNT   rc=1      12s A_tueren_pruefen_Z715                        befund("Quellbaum: Tuerarchiv", "%s/%s steht in keiner Engine-Tabelle (%s) - Ordner und Ta
+ERKANNT   rc=1      13s A_tueren_pruefen_Z698                        befund("Quellbaum: Tuerarchiv", "%s fehlt: %s/%s (verlangt von: %s; ohne die Datei laeuft 
+ERKANNT   rc=1      20s F_tueren_pruefen_Z702_ohne0                  n != z["datei"] or z["sektor"] * SEKTOR + z["modell"] != n or z["ton"] > z["sekt  [Operand
+ERKANNT   rc=1      14s F_tueren_pruefen_Z702_ohne1                  n != z["datei"] or z["sektor"] * SEKTOR + z["modell"] != n or z["ton"] > z["sekt  [Operand
+ERKANNT   rc=1      15s F_tueren_pruefen_Z702_ohne2                  n != z["datei"] or z["sektor"] * SEKTOR + z["modell"] != n or z["ton"] > z["sekt  [Operand
+ERKANNT   rc=1      27s A_tueren_pruefen_Z703                        befund("Quellbaum: Tuerarchiv", "%s passt nicht zur Engine-Tabelle: %s/%s hat %d B, Tabell
+ERKANNT   rc=1      45s E_tueren_pruefen_Z702_lt                     n != z["datei"]  [!= -> <]
+ERKANNT   rc=1      42s E_tueren_pruefen_Z702_gt                     n != z["datei"]  [!= -> >]
+ERKANNT   rc=1       2s E_tueren_pruefen_Z702_ge                     z["ton"] > z["sektor"] * SEKTOR  [> -> >=]
+ERKANNT   rc=1      28s E_tueren_pruefen_Z702_lt_2                   z["sektor"] * SEKTOR + z["modell"] != n  [!= -> <]
+ERKANNT   rc=1      10s E_tueren_pruefen_Z702_gt_2                   z["sektor"] * SEKTOR + z["modell"] != n  [!= -> >]
+ERKANNT   rc=1      11s E_tueren_pruefen_Z709_lt                     h != z["fnv"]  [!= -> <]
+ERKANNT   rc=1      13s A_tueren_pruefen_Z710                        befund("Quellbaum: Tuerarchiv", "%s passt nicht zur Engine-Tabelle: %s/%s FNV-1a %08x, Tab
+ERKANNT   rc=1      20s E_tueren_pruefen_Z709_gt                     h != z["fnv"]  [!= -> >]
+ERKANNT   rc=1      42s H_paket_pruefen_Z748                         not os.path.isdir(paket)  [not weg]
+ERKANNT   rc=1      52s B_paket_pruefen_Z749                         raise Bedienfehler("Paketordner fehlt: %s" % paket)
+ERKANNT   rc=1      50s H_paket_pruefen_Z756                         not os.path.isfile(ziel)  [not weg]
+ERKANNT   rc=1      31s A_paket_pruefen_Z757                         befund("fehlt im Paket", "fehlt im Paket: %s (Quelle %s)" % (name[len("assets/"):], rel))
+ERKANNT   rc=1      23s E_paket_pruefen_Z761_gt                      q_sha != p_sha  [!= -> >]
+ERKANNT   rc=1      29s E_paket_pruefen_Z761_lt                      q_sha != p_sha  [!= -> <]
+ERKANNT   rc=1      18s A_paket_pruefen_Z762                         befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab: %s Quelle %d B %s.., Paket %d B %s.
+ERKANNT   rc=1       2s E__sammler_Z815_in                           art not in befunde  [not in -> in]
+ERKANNT   rc=1      13s E_paket_pruefen_Z772_in                      "assets/" + rel not in quellen  [not in -> in]
+ERKANNT   rc=1      13s A_paket_pruefen_Z773                         befund("zusaetzlich im Paket", "zusaetzlich im Paket (kein Asset-Baum liefert es; make_pac
+# ... 225/449 (777 s)
+ERKANNT   rc=1       8s E_zip_verzeichnis_Z901_gt                    p != len(cd)  [!= -> >]
+ERKANNT   rc=1      20s E__befunde_ausgeben_Z832_ge                  len(liste) > max_zeilen  [> -> >=]
+ERKANNT   rc=1       3s F_zip_verzeichnis_Z864_ohne0                 i < 0 or n_ende - i < EOCD_LEN  [Operand 0 weg: i < 0]
+ERKANNT   rc=1       7s B_zip_verzeichnis_Z902                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis: %d B laut End-of-Central-Dir
+ERKANNT   rc=1      20s E_zip_verzeichnis_Z901_lt                    p != len(cd)  [!= -> <]
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z871_ge                    rest > 0  [> -> >=]
+ERKANNT   rc=1       3s B_zip_verzeichnis_Z865                       raise Bedienfehler("APK nicht lesbar: %s (kein End-of-Central-Directory - kein ZIP oder " 
+ERKANNT   rc=1       1s I_zip_verzeichnis_Z871_minus1                rest > 0  [0 -> -1]
+ERKANNT   rc=1       6s F_zip_verzeichnis_Z864_ohne1                 i < 0 or n_ende - i < EOCD_LEN  [Operand 1 weg: n_ende - i < EOCD_LEN]
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z874_le                    rest < 0  [< -> <=]
+ERKANNT   rc=1       2s I_zip_verzeichnis_Z874_plus1                 rest < 0  [0 -> 1]
+ERKANNT   rc=1      10s I_zip_verzeichnis_Z871_plus1                 rest > 0  [0 -> 1]
+ERKANNT   rc=1      24s B_zip_verzeichnis_Z872                       raise Bedienfehler("APK nicht lesbar: %s (%d Bytes hinter dem End-of-Central-Directory - "
+ERKANNT   rc=1      51s I_zip_verzeichnis_Z874_minus1                rest < 0  [0 -> -1]
+ERKANNT   rc=1      57s B_zip_verzeichnis_Z875                       raise Bedienfehler("APK nicht lesbar: %s (Kommentarlaenge %d des End-of-Central-Directory 
+ERKANNT   rc=1      40s E_zip_verzeichnis_Z878_gt                    f.read(4) != LFH_SIG  [!= -> >]
+ERKANNT   rc=1      31s B_zip_verzeichnis_Z879                       raise Bedienfehler("APK nicht lesbar: %s (beginnt nicht mit einem Local Header - Bytes vor
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z882_le                    f.read(4) == Z64_LOC_SIG  [== -> <=]
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z882_ge                    f.read(4) == Z64_LOC_SIG  [== -> >=]
+ERKANNT   rc=1      74s E_zip_verzeichnis_Z878_lt                    f.read(4) != LFH_SIG  [!= -> <]
+ERKANNT   rc=1       7s F_zip_verzeichnis_Z883_ohne1                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1      16s F_zip_verzeichnis_Z883_ohne0                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1      20s F_zip_verzeichnis_Z883_ohne2                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1      16s F_zip_verzeichnis_Z883_ohne3                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1       8s B_zip_verzeichnis_Z885                       raise Bedienfehler("APK nicht lesbar: %s (ZIP64/mehrteiliges Archiv - so baut AGP die APK 
+# ... 250/449 (924 s)
+ERKANNT   rc=1      16s F_zip_verzeichnis_Z883_ohne4                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z887_ge                    cd_off + cd_groesse > eocd_pos  [> -> >=]
+ERKANNT   rc=1      16s F_zip_verzeichnis_Z883_ohne5                 z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off) or disk o  [Operand
+ERKANNT   rc=1       7s B_zip_verzeichnis_Z888                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis ausserhalb der Datei: Offset 
+ERKANNT   rc=1       9s F_zip_verzeichnis_Z894_ohne1                 p + CD_LEN > len(cd) or cd[p:p + 4] != CD_SIG  [Operand 1 weg: cd[p:p + 4] != CD_SIG]
+ERKANNT   rc=1       8s B_zip_verzeichnis_Z895                       raise Bedienfehler("APK nicht lesbar: %s (Zentralverzeichnis kaputt bei Eintrag %d von %d,
+ERKANNT   rc=1      16s F_zip_verzeichnis_Z894_ohne0                 p + CD_LEN > len(cd) or cd[p:p + 4] != CD_SIG  [Operand 0 weg: p + CD_LEN > len(cd)]
+ERKANNT   rc=1       4s I_zip_verzeichnis_Z864_minus1                i < 0  [0 -> -1]
+ERKANNT   rc=1       4s E_zip_verzeichnis_Z864_le_2                  n_ende - i < EOCD_LEN  [< -> <=]
+ERKANNT   rc=1       3s E_zip_verzeichnis_Z883_notin                 0xFFFF in (n_hier, n_ges)  [in -> not in]
+ERKANNT   rc=1      16s I_zip_verzeichnis_Z883_plus1                 0xFFFF in (n_hier, n_ges)  [65535 -> 65536]
+ERKANNT   rc=1      35s E_zip_verzeichnis_Z864_le                    i < 0  [< -> <=]
+ERKANNT   rc=1      35s I_zip_verzeichnis_Z864_plus1                 i < 0  [0 -> 1]
+ERKANNT   rc=1       6s I_zip_verzeichnis_Z883_minus1                0xFFFF in (n_hier, n_ges)  [65535 -> 65534]
+ERKANNT   rc=1       1s E_zip_verzeichnis_Z883_notin_2               0xFFFFFFFF in (cd_groesse, cd_off)  [in -> not in]
+ERKANNT   rc=1      19s I_zip_verzeichnis_Z883_minus1_2              0xFFFFFFFF in (cd_groesse, cd_off)  [4294967295 -> 4294967294]
+ERKANNT   rc=1      20s I_zip_verzeichnis_Z883_plus1_2               0xFFFFFFFF in (cd_groesse, cd_off)  [4294967295 -> 4294967296]
+ERKANNT   rc=1      21s E_zip_verzeichnis_Z884_lt                    n_hier != n_ges  [!= -> <]
+ERKANNT   rc=1       8s E_zip_verzeichnis_Z894_lt                    cd[p:p + 4] != CD_SIG  [!= -> <]
+ERKANNT   rc=1      15s E_zip_verzeichnis_Z884_gt                    n_hier != n_ges  [!= -> >]
+ERKANNT   rc=1       2s E__name_fehler_Z910_notin                    b"\x00" in roh  [in -> not in]
+ERKANNT   rc=1      19s E_zip_verzeichnis_Z894_ge                    p + CD_LEN > len(cd)  [> -> >=]
+ERKANNT   rc=1       5s C__name_fehler_Z911                          return "NUL-Byte im Namen (libziparchive: 'Invalid entry name' - die GANZE APK ist unlesba
+ERKANNT   rc=1       1s E__name_fehler_Z916_notin                    "\\" in s  [in -> not in]
+ERKANNT   rc=1       5s C__name_fehler_Z917                          return ("'\\' im Namen (Android liest ihn woertlich - unter dem '/'-Pfad findet kein Leser
+# ... 275/449 (1020 s)
+ERKANNT   rc=1       5s C__name_fehler_Z920                          return "Steuerzeichen im Namen"
+ERKANNT   rc=1      18s E_zip_verzeichnis_Z894_gt                    cd[p:p + 4] != CD_SIG  [!= -> >]
+ERKANNT   rc=1       5s F__name_fehler_Z922_ohne0                    any(t in (".", "..") for t in teile) or "" in teile[:-1]  [Operand 0 weg: any(t in (".", "
+ERKANNT   rc=1       6s C__name_fehler_Z923                          return "absoluter Pfad, '.'/'..' oder '//' im Namen"
+ERKANNT   rc=1       2s E__name_fehler_Z922_notin                    "" in teile[:-1]  [in -> not in]
+ERKANNT   rc=1       5s C__name_fehler_Z915                          return "Eintragsname kein gueltiges UTF-8 (libziparchive: 'Invalid entry name' - die GANZE
+ERKANNT   rc=1       5s F__name_fehler_Z919_ohne0                    ord(c) < 0x20 or ord(c) == 0x7F  [Operand 0 weg: ord(c) < 0x20]
+ERKANNT   rc=1      16s F__name_fehler_Z922_ohne1                    any(t in (".", "..") for t in teile) or "" in teile[:-1]  [Operand 1 weg: "" in teile[:-1]
+ERKANNT   rc=1       2s E__name_fehler_Z919_le                       ord(c) < 0x20  [< -> <=]
+ERKANNT   rc=1       2s I__name_fehler_Z919_plus1                    ord(c) < 0x20  [32 -> 33]
+ERKANNT   rc=1       1s E__name_fehler_Z919_le_2                     ord(c) == 0x7F  [== -> <=]
+ERKANNT   rc=1       2s E__name_fehler_Z919_ge                       ord(c) == 0x7F  [== -> >=]
+ERKANNT   rc=1      15s F__name_fehler_Z919_ohne1                    ord(c) < 0x20 or ord(c) == 0x7F  [Operand 1 weg: ord(c) == 0x7F]
+ERKANNT   rc=1       2s I__name_fehler_Z919_minus1_2                 ord(c) == 0x7F  [127 -> 126]
+ERKANNT   rc=1       1s E__name_fehler_Z922_notin_2                  t in (".", "..")  [in -> not in]
+ERKANNT   rc=1      15s I__name_fehler_Z919_minus1                   ord(c) < 0x20  [32 -> 31]
+ERKANNT   rc=1       5s A_struktur_pruefen_Z934                      befund("APK-Struktur: Eintragsname", "unzulaessiger Eintragsname %r: %s" % (e.name_roh, gr
+ERKANNT   rc=1      15s I__name_fehler_Z919_plus1_2                  ord(c) == 0x7F  [127 -> 128]
+ERKANNT   rc=1       7s F_struktur_pruefen_Z940_ohne1                len(kopf) < LFH_LEN or kopf[:4] != LFH_SIG  [Operand 1 weg: kopf[:4] != LFH_SIG]
+ERKANNT   rc=1       7s A_struktur_pruefen_Z941                      befund("APK-Struktur: Local Header", "Local Header fehlt bei Offset %d: %s" % (e.lho, e.na
+ERKANNT   rc=1       6s E_struktur_pruefen_Z945_lt                   l_name != e.name_roh  [!= -> <]
+ERKANNT   rc=1      18s F_struktur_pruefen_Z940_ohne0                len(kopf) < LFH_LEN or kopf[:4] != LFH_SIG  [Operand 0 weg: len(kopf) < LFH_LEN]
+ERKANNT   rc=1       7s A_struktur_pruefen_Z946                      befund("APK-Struktur: Local Header", "Name im Local Header weicht vom Zentralverzeichnis a
+ERKANNT   rc=1       9s A_struktur_pruefen_Z952                      befund("APK-Struktur: Methode/Flags", "Data-Descriptor-Bit gesetzt (%s): %s - AGP setzt es
+ERKANNT   rc=1       6s E_struktur_pruefen_Z957_lt                   (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize)  [!= -> <]
+# ... 300/449 (1079 s)
+ERKANNT   rc=1      18s E_struktur_pruefen_Z945_gt                   l_name != e.name_roh  [!= -> >]
+ERKANNT   rc=1      15s E_struktur_pruefen_Z957_gt                   (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize)  [!= -> >]
+ERKANNT   rc=1      17s G_struktur_pruefen_Z957_ohne0                (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize)  [Paar 0 weg]
+ERKANNT   rc=1      10s G_struktur_pruefen_Z957_ohne2                (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize)  [Paar 2 weg]
+ERKANNT   rc=1       8s A_struktur_pruefen_Z958                      befund("APK-Struktur: Local Header", "CRC/Groessen im Local Header weichen vom Zentralverz
+ERKANNT   rc=1       2s E_struktur_pruefen_Z964_ge                   e.daten_off + e.csize > cd_off  [> -> >=]
+ERKANNT   rc=1      31s G_struktur_pruefen_Z957_ohne1                (l_crc, l_csize, l_usize) != (e.crc, e.csize, e.usize)  [Paar 1 weg]
+ERKANNT   rc=1       8s A_struktur_pruefen_Z965                      befund("APK-Struktur: Lage", "Daten ragen ins Zentralverzeichnis: %s (Daten %d + %d B > " 
+ERKANNT   rc=1       7s A_struktur_pruefen_Z969                      befund("APK-Struktur: Methode/Flags", "verschluesselter Eintrag: %s" % e.name)
+ERKANNT   rc=1       2s E_struktur_pruefen_Z971_in                   e.methode not in (0, 8)  [not in -> in]
+ERKANNT   rc=1       2s E_struktur_pruefen_Z977_ge                   len(je_name[name]) > 1  [> -> >=]
+ERKANNT   rc=1       2s I_struktur_pruefen_Z977_minus1               len(je_name[name]) > 1  [1 -> 0]
+ERKANNT   rc=1       3s I_struktur_pruefen_Z977_plus1                len(je_name[name]) > 1  [1 -> 2]
+ERKANNT   rc=1       2s E_struktur_pruefen_Z940_le                   len(kopf) < LFH_LEN  [< -> <=]
+ERKANNT   rc=1       7s A_struktur_pruefen_Z972                      befund("APK-Struktur: Methode/Flags", "Methode %d (lesbar sind 0 = Stored, 8 = Deflate): %
+ERKANNT   rc=1       3s A_struktur_pruefen_Z978                      befund("APK: doppelt/Verzeichnis", "doppelter Eintrag in der APK (%dx): %s - libziparchive
+ERKANNT   rc=1       2s H__eintrag_lesen_Z990                        not b  [not weg]
+ERKANNT   rc=1       2s E__eintrag_lesen_Z993_ge                     st[1] > e.usize  [> -> >=]
+ERKANNT   rc=1       8s E_struktur_pruefen_Z940_lt                   kopf[:4] != LFH_SIG  [!= -> <]
+ERKANNT   rc=2       0s E__eintrag_lesen_Z997_is                     teile is not None  [is not -> is]
+ERKANNT   rc=1       2s E__eintrag_lesen_Z1016_is                    d is not None  [is not -> is]
+ERKANNT   rc=1      13s B__eintrag_lesen_Z994                        raise _Lesefehler("entpackt mehr als die %d B des Zentralverzeichnisses" % e.usize)
+ERKANNT   rc=1       2s H__eintrag_lesen_Z1006                       not b  [not weg]
+ERKANNT   rc=1      11s B__eintrag_lesen_Z1022                       raise _Lesefehler("Deflate-Strom kaputt: %s" % ex)
+ERKANNT   rc=2       0s E__eintrag_lesen_Z1010_isnot                 d is None  [is -> is not]
+# ... 325/449 (1141 s)
+ERKANNT   rc=1      26s E_struktur_pruefen_Z940_gt                   kopf[:4] != LFH_SIG  [!= -> >]
+ERKANNT   rc=1       7s F__eintrag_lesen_Z1018_ohne1                 not d.eof or d.unused_data  [Operand 1 weg: d.unused_data]
+ERKANNT   rc=1      24s B__eintrag_lesen_Z1019                       raise _Lesefehler("Deflate-Strom endet nicht genau am Eintragsende (%s)" % ( "unvollstaend
+ERKANNT   rc=1      37s F__eintrag_lesen_Z1018_ohne0                 not d.eof or d.unused_data  [Operand 0 weg: not d.eof]
+ERKANNT   rc=1       6s E__eintrag_lesen_Z1023_is                    teile is not None  [is not -> is]
+ERKANNT   rc=1       6s H__eintrag_lesen_Z1018                       not d.eof  [not weg]
+ERKANNT   rc=1      15s F__eintrag_pruefen_Z1033_ohne0               crc != e.crc or n != e.usize  [Operand 0 weg: crc != e.crc]
+ERKANNT   rc=1      51s F__eintrag_pruefen_Z1033_ohne1               crc != e.crc or n != e.usize  [Operand 1 weg: n != e.usize]
+ERKANNT   rc=1      13s A__eintrag_pruefen_Z1034                     befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: gelesen %d 
+ERKANNT   rc=1     102s H__eintrag_lesen_Z1020                       not d.eof  [not weg]
+ERKANNT   rc=1      29s A__eintrag_pruefen_Z1031                     befund("APK: beschaedigt (CRC)", "APK-Eintrag beschaedigt (CRC/Entpacken): %s: %s" % (e.na
+ERKANNT   rc=1      11s E__eintrag_pruefen_Z1033_lt                  crc != e.crc  [!= -> <]
+ERKANNT   rc=1      87s E__eintrag_pruefen_Z1033_gt                  crc != e.crc  [!= -> >]
+UEBERLEBT rc=0      85s E__eintrag_pruefen_Z1033_lt_2                n != e.usize  [!= -> <]
+ERKANNT   rc=1      47s E__eintrag_pruefen_Z1033_gt_2                n != e.usize  [!= -> >]
+ERKANNT   rc=1      62s E_manifest_pruefen_Z1061_ge                  len(roh) > grenze  [> -> >=]
+ERKANNT   rc=1      22s A_manifest_pruefen_Z1062                     befund("Manifest", "Manifest %d B > %d B (64 MiB): das Geraet liest es nicht (android_glue
+ERKANNT   rc=1       3s A_manifest_pruefen_Z1065                     befund("Manifest", "Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar " "(sscanf
+ERKANNT   rc=1       1s H_manifest_pruefen_Z1110                     not m  [not weg]
+ERKANNT   rc=1       4s A_manifest_pruefen_Z1111                     befund("Manifest", "Manifest-Kopfzeile fehlt/unlesbar: '%s' (erwartet '# re15 assets <anza
+ERKANNT   rc=1       3s A_manifest_pruefen_Z1070                     befund("Manifest", "Manifest ist kein gueltiges UTF-8 (%s) - Pfade treffen die APK-Namen n
+ERKANNT   rc=1       1s H_manifest_pruefen_Z1081                     not z  [not weg]
+ERKANNT   rc=1       4s A_manifest_pruefen_Z1084                     befund("Manifest", "Manifest-Zeile %d: unerwartete Kommentarzeile '%s' (der Schreiber " "s
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1087_in                  "\t" not in z  [not in -> in]
+ERKANNT   rc=1       2s A_manifest_pruefen_Z1088                     befund("Manifest", "Manifest-Zeile %d ohne Tab (das Geraet ueberspringt sie still, " "andr
+# ... 350/449 (1530 s)
+ERKANNT   rc=1       1s H_manifest_pruefen_Z1092                     not re.fullmatch(r"[0-9]+", groesse)  [not weg]
+ERKANNT   rc=1       4s A_manifest_pruefen_Z1093                     befund("Manifest", "Manifest-Zeile %d: Groessenfeld '%s' ist keine Zahl (atoll, :205)" % (
+ERKANNT   rc=1      15s F_manifest_pruefen_Z1096_ohne0               "\\" in pfad or any(t in ("", ".", "..") for t in teile)  [Operand 0 weg: "\\" in pfad]
+ERKANNT   rc=1       2s F_manifest_pruefen_Z1096_ohne1               "\\" in pfad or any(t in ("", ".", "..") for t in teile)  [Operand 1 weg: any(t in ("", ".
+ERKANNT   rc=1       3s A_manifest_pruefen_Z1097                     befund("Manifest", "Manifest-Zeile %d: unzulaessiger Pfad '%s' (leer, absolut, '\\\\', " "
+ERKANNT   rc=1      12s E_manifest_pruefen_Z1100_le                  pfad == MANIFEST  [== -> <=]
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1100_ge                  pfad == MANIFEST  [== -> >=]
+ERKANNT   rc=1       3s A_manifest_pruefen_Z1101                     befund("Manifest", "Manifest-Zeile %d nennt das Manifest selbst" % nr)
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1103_notin               pfad in eintraege  [in -> not in]
+ERKANNT   rc=1       3s A_manifest_pruefen_Z1104                     befund("Manifest", "Manifest nennt %s mehrfach (Zeilen %d und %d)" % (pfad, zeile_von[pfad
+ERKANNT   rc=1       2s E_manifest_pruefen_Z1116_lt                  (n_kopf, b_kopf) != (n_ist, b_ist)  [!= -> <]
+ERKANNT   rc=1      21s E_manifest_pruefen_Z1116_gt                  (n_kopf, b_kopf) != (n_ist, b_ist)  [!= -> >]
+ERKANNT   rc=1       8s G_manifest_pruefen_Z1116_ohne0               (n_kopf, b_kopf) != (n_ist, b_ist)  [Paar 0 weg]
+ERKANNT   rc=1      17s G_manifest_pruefen_Z1116_ohne1               (n_kopf, b_kopf) != (n_ist, b_ist)  [Paar 1 weg]
+ERKANNT   rc=1     242s H__sha_datei_Z1045                           not b  [not weg]
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1121_in                  pfad not in apk_dateien  [not in -> in]
+ERKANNT   rc=1       2s A_manifest_pruefen_Z1117                     befund("Manifest", "Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeile
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1129_in                  pfad not in eintraege  [not in -> in]
+ERKANNT   rc=1       4s A_manifest_pruefen_Z1122                     befund("Manifest: Zeile ohne APK-Eintrag", "Manifest nennt %s (%d B), die APK hat keinen E
+ERKANNT   rc=1       2s A_manifest_pruefen_Z1130                     befund("Manifest: Datei fehlt im Manifest", "fehlt im Manifest: %s (wird auf dem Geraet ni
+ERKANNT   rc=1       1s E_manifest_pruefen_Z1096_notin               "\\" in pfad  [in -> not in]
+ERKANNT   rc=1       2s E_manifest_pruefen_Z1124_gt                  apk_dateien[pfad] != eintraege[pfad]  [!= -> >]
+ERKANNT   rc=1       2s A_manifest_pruefen_Z1125                     befund("Manifest: falsche Groesse", "Manifest-Groesse falsch: %s Manifest %d B, APK %d B (
+ERKANNT   rc=1       2s E_manifest_pruefen_Z1096_notin_2             t in ("", ".", "..")  [in -> not in]
+ERKANNT   rc=1       1s H_pruefen_Z1147                              not os.path.isfile(apk)  [not weg]
+# ... 375/449 (1635 s)
+ERKANNT   rc=1       7s E_manifest_pruefen_Z1124_lt                  apk_dateien[pfad] != eintraege[pfad]  [!= -> <]
+ERKANNT   rc=1       3s E_pruefen_Z1254_is                           n_man is not None  [is not -> is]
+ERKANNT   rc=1       3s B_pruefen_Z1148                              raise Bedienfehler("APK fehlt: %s" % apk)
+ERKANNT   rc=1       2s E_pruefen_Z1222_isnot                        e_man is None  [is -> is not]
+ERKANNT   rc=1       3s A_pruefen_Z1223                              befund("Manifest", "Manifest fehlt in der APK: %s (das Geraet entpackt dann NICHTS, " "and
+ERKANNT   rc=1       1s H_pruefen_Z1161                              not name.startswith("assets/")  [not weg]
+ERKANNT   rc=1       2s E_pruefen_Z1181_isnot                        e is None  [is -> is not]
+ERKANNT   rc=1       2s A_pruefen_Z1183                              befund("fehlt in der APK", "fehlt in der APK: %s (Quelle %s)%s" % (name, rel, (" - " + hin
+ERKANNT   rc=1       2s H_pruefen_Z1186                              not e.lesbar  [not weg]
+ERKANNT   rc=1       6s A_pruefen_Z1164                              befund("APK: doppelt/Verzeichnis", "Verzeichniseintrag in der APK: %s" % name)
+ERKANNT   rc=1       2s E_pruefen_Z1189_gt                           e.usize != q_groesse  [!= -> >]
+ERKANNT   rc=1       3s A_pruefen_Z1190                              befund("Groesse weicht ab", "Groesse weicht ab: %s Quelle %d B, APK %d B" % (name, q_groes
+ERKANNT   rc=1       1s E_pruefen_Z1195_isnot                        r is None  [is -> is not]
+ERKANNT   rc=1       4s E_pruefen_Z1200_lt                           a_sha != q_sha  [!= -> <]
+ERKANNT   rc=1       1s E_pruefen_Z1200_gt                           a_sha != q_sha  [!= -> >]
+ERKANNT   rc=1      15s E_pruefen_Z1189_lt                           e.usize != q_groesse  [!= -> <]
+ERKANNT   rc=1       1s A_pruefen_Z1201                              befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s Quelle %s.., APK %s
+ERKANNT   rc=1       2s E_pruefen_Z1211_isnot                        _eintrag_pruefen(fa, e, befund) is None  [is -> is not]
+ERKANNT   rc=1       1s F_pruefen_Z1216_ohne0                        name != man_name and name not in quellen  [Operand 0 weg: name != man_name]
+ERKANNT   rc=1       1s F_pruefen_Z1216_ohne1                        name != man_name and name not in quellen  [Operand 1 weg: name not in quellen]
+ERKANNT   rc=1       1s A_pruefen_Z1217                              befund("zusaetzlich in der APK", "zusaetzlich in der APK (kein Asset-Baum liefert ihn): %s
+ERKANNT   rc=1      19s F_pruefen_Z1225_ohne1                        e_man.lesbar and e_man.nr not in kaputt  [Operand 1 weg: e_man.nr not in kaputt]
+ERKANNT   rc=1      19s F_pruefen_Z1225_ohne0                        e_man.lesbar and e_man.nr not in kaputt  [Operand 0 weg: e_man.lesbar]
+ERKANNT   rc=1       2s E_pruefen_Z1216_lt                           name != man_name  [!= -> <]
+ERKANNT   rc=1       1s E_pruefen_Z1216_in                           name not in quellen  [not in -> in]
+# ... 400/449 (1685 s)
+ERKANNT   rc=1       2s E_pruefen_Z1225_in                           e_man.nr not in kaputt  [not in -> in]
+ERKANNT   rc=1       2s E_pruefen_Z1249_notin                        name in quellen  [in -> not in]
+ERKANNT   rc=1       2s E_pruefen_Z1250_notin                        name in asset_infos  [in -> not in]
+ERKANNT   rc=1       1s E_pruefen_Z1176_is                           e is not None  [is not -> is]
+ERKANNT   rc=1       4s F_pruefen_Z1210_ohne0                        x.lesbar and x.nr not in gelesen  [Operand 0 weg: x.lesbar]
+ERKANNT   rc=1      14s E_pruefen_Z1216_gt                           name != man_name  [!= -> >]
+ERKANNT   rc=1       2s F_pruefen_Z1210_ohne1                        x.lesbar and x.nr not in gelesen  [Operand 1 weg: x.nr not in gelesen]
+ERKANNT   rc=1       2s E_pruefen_Z1210_in                           x.nr not in gelesen  [not in -> in]
+ERKANNT   rc=1       1s E_pruefen_Z1227_lt                           n != man_name  [!= -> <]
+ERKANNT   rc=1       2s E_pruefen_Z1252_is                           q is not None  [is not -> is]
+ERKANNT   rc=1       2s E_pruefen_Z1252_is_2                         a is not None  [is not -> is]
+ERKANNT   rc=1       4s E_pruefen_Z1253_notin                        name in gleich  [in -> not in]
+ERKANNT   rc=1       1s D1_U3_nur_erster_block                       Hand-Mutant
+ERKANNT   rc=1      14s D2_U4_crc32_statt_sha256                     Hand-Mutant
+ERKANNT   rc=1       2s D3_offset_aus_zentralverzeichnis             Hand-Mutant
+ERKANNT   rc=1      31s E_pruefen_Z1227_gt                           n != man_name  [!= -> >]
+ERKANNT   rc=1       6s D4_namen_wie_zipfile                         Hand-Mutant
+ERKANNT   rc=1       2s D6_manifest_cr_bleibt                        Hand-Mutant
+ERKANNT   rc=1       5s D5_lfh_nur_name                              Hand-Mutant
+ERKANNT   rc=1       3s D8_nur_laenge_statt_crc                      Hand-Mutant
+ERKANNT   rc=1       7s D7_deflate_ende_egal                         Hand-Mutant
+ERKANNT   rc=1       9s D9_eocd_von_vorn                             Hand-Mutant
+ERKANNT   rc=1       9s D11_zentralverzeichnis_rest_egal             Hand-Mutant
+ERKANNT   rc=1       4s D13_doppelte_namen_egal                      Hand-Mutant
+ERKANNT   rc=1       2s D14_nur_stored_gelesen                       Hand-Mutant
+# ... 425/449 (1754 s)
+ERKANNT   rc=1       8s D12_lage_egal                                Hand-Mutant
+ERKANNT   rc=1       5s D16_sha_nur_quelle_ganz                      Hand-Mutant
+ERKANNT   rc=1       7s D15_nicht_assets_nicht_gelesen               Hand-Mutant
+ERKANNT   rc=1       1s D17_manifest_nur_kopf                        Hand-Mutant
+ERKANNT   rc=1       1s D18_zusatz_nur_ausserhalb_assets             Hand-Mutant
+ERKANNT   rc=1       9s DM14a_dd_nur_aus_cd                          Hand-Mutant
+ERKANNT   rc=1       9s DM14b_dd_nur_aus_lfh                         Hand-Mutant
+ERKANNT   rc=1       7s DM16a_nicht_assets_nur_stored                Hand-Mutant
+ERKANNT   rc=1       9s DM14c_dd_nur_wenn_beide                      Hand-Mutant
+ERKANNT   rc=1      10s DM16b_nicht_assets_nur_deflate               Hand-Mutant
+ERKANNT   rc=1      22s DV1_verschluesselt_nur_cd                    Hand-Mutant
+ERKANNT   rc=1      24s DV2_verschluesselt_nur_lfh                   Hand-Mutant
+ERKANNT   rc=1      19s DV3_verschluesselt_nur_bit0                  Hand-Mutant
+ERKANNT   rc=1      13s DP1_paket_nur_groesse                        Hand-Mutant
+ERKANNT   rc=1       2s DT2_tuer_fnv_ueber_erste_block               Hand-Mutant
+ERKANNT   rc=1       2s DT3_griff_ohne_rueckfall                     Hand-Mutant
+ERKANNT   rc=1       9s DT1_tuer_ohne_fnv                            Hand-Mutant
+ERKANNT   rc=1       1s DT4_griff_ohne_fuer_eigen                    Hand-Mutant
+ERKANNT   rc=1       9s DT6_zusatzdateien_egal                       Hand-Mutant
+ERKANNT   rc=1      10s DT5_basis_nicht_verlangt                     Hand-Mutant
+ERKANNT   rc=1      10s DK1_kopf_mit_unicode_ziffern                 Hand-Mutant
+ERKANNT   rc=1      13s DW1_wurzel_egal                              Hand-Mutant
+ERKANNT   rc=1       7s DZ1_praefix_egal                             Hand-Mutant
+ERKANNT   rc=-9    900s B__eintrag_lesen_Z1008                       raise _Lesefehler("Datei endet mitten im Eintrag")
+# erkannt: 443 / 449, ueberlebt: 6, Laufzeit 2040 s
+#   UEBERLEBT E__ant_passt_Z374_ge: i == len(mt)  [== -> >=]
+#   UEBERLEBT E__ant_passt_Z375_ge: j == len(pt)  [== -> >=]
+#   UEBERLEBT E__ant_passt_Z370_le: c == "*"  [== -> <=]
+#   UEBERLEBT E__ant_passt_Z370_le_2: c == "?"  [== -> <=]
+#   UEBERLEBT E_tuer_soll_Z665_ge: z["spender"] == kein_spender  [== -> >=]
+#   UEBERLEBT E__eintrag_pruefen_Z1033_lt_2: n != e.usize  [!= -> <]
+EXIT=0
