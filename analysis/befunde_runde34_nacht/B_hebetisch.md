@@ -606,7 +606,7 @@ Podest), Nr. 3 entfaellt (keine Sprache auf dem Untersuchungsweg). Stand der Erm
 ## 9 Umsetzung
 
 BAU-Stufe 2026-09-30, Zweig `r34n/hebetisch` (Basis 1143dd6d). Stand: FERTIG bis auf die Suite-Zeile in §9.4
-(wird nach dem Lauf eingetragen).
+(Lauf 2 unten).
 
 ### 9.0 Kurzfassung fuer den Nutzer
 
@@ -633,7 +633,7 @@ BAU-Stufe 2026-09-30, Zweig `r34n/hebetisch` (Basis 1143dd6d). Stand: FERTIG bis
 | 4 | Ausgang ohne Kuppel bauen (Vorbild 11F0 sub17 @0x015FA) | CROSS = virtuell 0x8000 (Preset @0x80073dbc[15] = 64 = roh 0x40, selbst gelesen) als PORT-WAHL (Cut 4 hat kein gemaltes EXIT). Wirkung: PC des haltenden sub04-Threads auf Halt + 0xDA = @0x109A (1151 @0x1078), Anker = die 28 Aufraeumbytes `2e 03 00 00 32 00 24 af 00 b1 cc bb 22 05 00 00 22 02 00 00 22 02 02 00 2a 00 01 00` (in beiden RDTs selbst gelesen), sonst kein Abbruch. Kein Klick, kein Text | Riegel R7 (Parklage -20224, Pause 0, Raumkamera, Deckel 0, Items unberuehrt, erneut aktivierbar); exe b5 (F258 Abbruch, F260 Raumkamera, F305 erneut, F342 zweiter Abbruch); Integrations-Lauf B |
 | 5 | Offene Nutzerfragen §8.1/§8.2 schliessen | Trefferflaeche = Deckel + Podest (ein sichtbares Achteck); Ausgang nach Auflage 4. §8 unten berichtigt | — |
 | 6 | Vorbild ROOM4020 sub12 zitieren, §3.4 berichtigen, Textform begruenden | Kopf re15_hebetisch_cursor.h zitiert sub12 @0x00B14, `2b 01 ff ff` @0x00B44, msg 1 @0x0BAA; §3.4 unten berichtigt. Textform `04 02` ohne fuehrendes 0x08 und EIN Punkt: Zensus `tools/r34n_b/textform_zensus.py` (`B_belege/textform_zensus.txt`): STAGE1 fuehrt 0x08 in 6 von 360 Untersuchungstexten, ROOM1150 msg 0/1/3 (@0x1316/@0x1385/@0x1426) nie; einzeilige Texte 256x '.' gegen 39x '...'; der Nutzer schreibt ohne Auslassungspunkte | Riegel R3 Pruefung 6 (Bytes) |
-| 7 | Halte-Bedingung am Anker | `re15_hebetisch_cursor_for` haelt nur, wenn t = der armierte Thread, pc == Halt UND die 20 Signaturbytes ab Halt-14 stimmen (`memcmp`) | Riegel R1; Mutation M1 |
+| 7 | Halte-Bedingung am Anker | `re15_hebetisch_cursor_for` haelt nur, wenn t = der armierte Thread, pc == Halt UND die 20 Signaturbytes ab Halt-14 stimmen (`memcmp`); der Abbruch prueft ebenso die 28 Aufraeumbytes | Riegel R1/R7 |
 | 8 | Abnahme-Luecken schliessen, alte FIRE_AOT-Koepfe vermerken | `integration_r34n_b_cursor` (4 exe-Laeufe: A Nutzerweg 1150 bis Raumkamera, B Abbruch 1151 + erneut, C Inventar, D Harness ohne Cursor); Notiz in test_r30_sicherung_laden.cmake und test_r30_granate_laden.cmake | §9.4 |
 | 9 | Uebergabetext: Motor-Laut | §9.0 Hinweis | — |
 

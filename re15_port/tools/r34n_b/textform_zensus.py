@@ -137,6 +137,39 @@ def main():
     for e in misserfolg:
         print("  " + e)
 
+    # Je Stage: ALLE Texte mit Kopf `04 02` (auch die mit Auswahl), fuehrendes 0x08 ja/nein; dazu die
+    # Untersuchungstexte von ROOM1150/1151 selbst (Kopf + erste Glyphe).
+    st_alle = collections.Counter()
+    st_08 = collections.Counter()
+    eigene = []
+    for p in sorted(glob.glob(os.path.join(REPO, "re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT"))):
+        d = open(p, "rb").read()
+        if len(d) < 0x60:
+            continue
+        ms = struct.unpack_from("<I", d, 0x3C)[0]
+        if ms == 0 or ms >= len(d):
+            continue
+        cnt = (d[ms] | (d[ms + 1] << 8)) // 2
+        if cnt == 0 or cnt > 64:
+            continue
+        stage = os.path.basename(os.path.dirname(p))
+        for idx in range(cnt):
+            st = ms + (d[ms + 2 * idx] | (d[ms + 2 * idx + 1] << 8))
+            if d[st:st + 2] != b"\x04\x02":
+                continue
+            st_alle[stage] += 1
+            if d[st + 2] == 0x08:
+                st_08[stage] += 1
+            if os.path.basename(p) in ("ROOM1150.RDT", "ROOM1151.RDT"):
+                eigene.append("%s msg %d @0x%04X: %s" % (os.path.basename(p), idx, st,
+                                                         d[st:st + 4].hex(" ")))
+    print("\n## fuehrendes 0x08 je Stage (alle Texte mit Kopf 04 02, auch mit Auswahl)")
+    for s in sorted(st_alle):
+        print("  %s: %d von %d" % (s, st_08[s], st_alle[s]))
+    print("\n## Untersuchungstexte ROOM1150/1151 (Kopf + erste Glyphe)")
+    for e in eigene:
+        print("  " + e)
+
 
 if __name__ == "__main__":
     main()

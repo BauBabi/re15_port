@@ -192,3 +192,19 @@
   ROOM6001.RDT msg 1 @0x00FEB lead08=0 zeilen=1 schluss='.'  "It's locked from the other side."
   ROOM6030.RDT msg 20 @0x01792 lead08=0 zeilen=2 schluss='.'  "You can't get off the / train right now."
   ROOM6031.RDT msg 11 @0x0139E lead08=0 zeilen=2 schluss='.'  "You can't get off the / train right now."
+
+## fuehrendes 0x08 je Stage (alle Texte mit Kopf 04 02, auch mit Auswahl)
+  STAGE1: 6 von 360
+  STAGE2: 0 von 70
+  STAGE3: 15 von 99
+  STAGE4: 21 von 106
+  STAGE5: 3 von 107
+  STAGE6: 0 von 16
+
+## Untersuchungstexte ROOM1150/1151 (Kopf + erste Glyphe)
+  ROOM1150.RDT msg 0 @0x1316: 04 02 30 44
+  ROOM1150.RDT msg 1 @0x1385: 04 02 25 50
+  ROOM1150.RDT msg 3 @0x1426: 04 02 25 50
+  ROOM1151.RDT msg 0 @0x10F4: 04 02 30 44
+  ROOM1151.RDT msg 1 @0x1163: 04 02 25 50
+  ROOM1151.RDT msg 3 @0x1204: 04 02 25 50
