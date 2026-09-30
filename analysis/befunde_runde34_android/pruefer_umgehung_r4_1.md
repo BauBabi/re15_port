@@ -55,3 +55,14 @@ Ziel: ein falsches Ergebnis erzwingen (Umgehung) oder einen verschluckten Fehler
   Liste; `.neu` nur fuer Pfade der neuen Liste), `unlink(pf_liste)` ohne Rueckgabepruefung, nach Fehlern laeuft das
   Spiel nach 3 s Meldung mit altem/halbem Baum weiter (main.c:3075 hat keine Rueckgabe), SHA-256 gegen Python
   (Zufallslaengen/Stueckelungen, Datei > 4 GiB).
+
+## 0.3 Laufprotokoll (fortlaufend)
+
+- ⛔ Eigener Regelverstoss, sofort geprueft: beim Anlegen von 0.1 lief EINMAL `python3 --version` (nur Versionsabfrage).
+  `type -a python3` zeigt danach: erster Treffer ist der WindowsApps-Alias
+  (`AppData/Local/Microsoft/WindowsApps/python3` -> PythonManager 26.3), er gab "Python 3.10.11" aus (bestehende
+  Installation). Schnappschuss mit dem R4-Werkzeug `py_zustand.ps1` direkt danach
+  (`build/r34a/pruefer_u1/py_zustand_nach_python3.txt`, 121 Zeilen) == R4-Endstand `py_zustand_2_ende.txt`
+  (`diff` rc 0): kein neuer PythonCore-Schluessel, kein Startmenue-Eintrag, `LocalAppData\Python` unveraendert
+  (neuester Eintrag `_cache/last_welcome.txt` 2026-09-29T15:39:13), kein pymanager/msiexec-Prozess. Ab hier nur
+  `/c/Python310/python`.
