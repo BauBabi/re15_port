@@ -647,3 +647,92 @@ NULL-Zeile) -> 210 rot (10 Haenger).
     es frei (gemessen: Mutation M49 laesst 203 gruen).
 15. Sichtpruefung am echten Programm (RE15_FRAMEDUMP) fuer Hund/Spinne/Kakerlake/Tyrant/Alligator nicht gemacht: die
     Part-Farben werden nicht gezeichnet (INTEGRATIONSWUNSCH 1), die Clip-Wahl ist per Sonde belegt.
+
+---
+
+## NACHBESSERUNG (nach der Gegenpruefung `bau_b.gegenpruefung.md`: K1, M1, M2)
+
+Stand: 2026-09-30, Arbeitsbaum `.claude/worktrees/r34g_b`, Zweig `r34g/b-schaden` (Basis 8dcd2995). Laufzeit-Ausgaben
+`build/r34g_b/nb/` (unversioniert). Gebaut ausschliesslich ueber `build/r34g_b/nb/lb.sh` = `local_build.sh` mit
+`RE15_BUILD_DIR=re15_port/build_r34_b` und einer exportierten Shell-Funktion `powershell` (-> echtes
+`powershell.exe`) plus neutralisiertem `taskkill`: `local_build.sh` ersetzt PATH durch CLEAN_PATH ohne
+WindowsPowerShell, dann faellt `do_build` auf `taskkill //F //IM re15_pc.exe` zurueck (Gegenpruefung §6) — mit dem
+Wrapper laeuft der GEZIELTE Zweig (nur exe dieses Bauverzeichnisses), keine fremde re15_pc.exe wird beendet.
+
+### N0 Reproduktion (Schritt 1 des RE-Gates, gegen HEAD 8dcd2995)
+| Messung | Ergebnis |
+|---|---|
+| mess5 (Gegenpruefer, ROOM1140, RE2-Flavor, HE neben stehendem 0x10, RE2-Strom k = 0..23) | 24/24 `st=3 col=0 -> Ende 1 (st=1 hp=10 f10e=0x2001)` = Kriecher |
+| mess1 M1 / M1b / M2 | Import AN -15, Import AUS -50, RE2-KI -5 |
+| mess3 (12 Bodenfeuer-Treffer seitlich, Import AN) | je -15, +0x152 13 -> 11 -> ... -> -1, Treffer 7: `21a&0x60=0x20`, `mesh9=15` |
+
+### N1 RE-Belege (selbst disassembliert in dieser Sitzung)
+**K1 — welche Spalte stempelt RE2 bei einer EXPLOSION?**
+* RE2 Op 47 (GL-Explosion, PSX.EXE): `80020d54 lui a3,0x1002` / `80020d58 ori a3,a3,0x9` / `80020d78 jal 0x800470c0`;
+  zweiter Aufruf `80020d84 lui a3,0x1002` / `80020d88 ori a3,a3,0x9` / `80020d98 addiu v0,v0,900` (P.y + 900) /
+  `80020db0 jal 0x800470c0` -> Hitcode **0x10020009** (Klammer 1, Zonenbit 0x20000, Zeile 9, Einzelmodus).
+* RE2 Flug-Kontakt der GL-Runde (PSX.EXE): `8001ee90 lui s2,0x3` / `8001ee9c ori s2,s2,0x9` / `8001eed0 lb a3,27(v1)` /
+  `8001eed8 jal 0x800470c0` mit Delay `8001eedc addu a3,a3,s2` -> 0x00030009 + (s8)+0x1B = **Klammer 0** — nur der
+  Kontakt des FLIEGENDEN Geschosses; die Handgranate hat keinen (E2).
+* Alle Aufrufer von 0x800470C0 (eigener Wort-Scan `jal 0x800470c0`, 17 Stellen): Op 47 0x10020009 (K1) @0x80020d78/db0,
+  Op 48 Brand 0x0002000A (K0) @0x80021060/8c/0x800214f8/524, Op 49 Saeure 0x1002000B (K1) @0x800216ec/718, Op 40
+  0x2002000A (K2) @0x800207bc.
+* Spalte = Zone + 3K: `80047114 srl s6,s5,28`, `800472a8 sll v1,s6,1` (Delay) bzw. `80047310 sll v1,s6,1`,
+  `80047320 addu v1,v1,s6`, `80047328 addu v0,v0,v1`, `80047330 sb v0,466(s1)`.
+* EMZ0 DEATH Zeile 9 `table 0x8010CD68 9` = {0x80107438, 0x80108BEC, 0x80108BEC, 0x80108530 x6}; Zeilen 10/11
+  `table 0x8010CD8C 18` = 0x80108530 x18 (spaltenunabhaengig). HURT Zeile 9 `table 0x8010CA84 9` = {0x80107438,
+  0x80105BC0, 0x80105BC0, 0x80105438 x6}; Zeilen 10/11 = {0x80105BC0 x3, 0x80105438 x6}.
+* Spalte 0 -> 0x80107438 (Knockdown) mit `+0x4 == 3`: `801074a0 beq v1,v0(=2),0x8010777c` / Delay `801074a4 addiu
+  v0,zero,3`; `8010777c lbu v1,4(s2)` / `80107784 bne v1,v0`; `8010778c jal 0x80015fe8` / `80107794 andi v0,v0,0x3` /
+  `80107798 bne v0,zero,0x801077b0` (Delay `addiu v0,zero,10`); `801077a0 lb v0,363(s2)` / `801077a8 bne v0,zero,
+  0x801077dc`; `801077b0 sh v0(=10),342(s2)`; Leiche nur ueber `801077b4 lh v0,268(s2)` / `801077bc bne` oder
+  `801077c8 lw v0,-1064(0x800d)` & 0x10000000 (`801077d4 beq v0,zero,0x801077f4` = Kriecher). Das Bit 0x10000000 von
+  0x800CFBD8 setzt im ganzen RE2-PSX.EXE nur EIN Schreiber (`80058dcc lui v1,0x1000` / `80058df0 or` / `80058df8 sw
+  v0,-1064(at)`, ein SCD-Opcode-Rumpf mit `lw v0,28(a0)`-Vorschub; eigener Xref-Scan `build/r34g_b/nb/xref_cfbd8.txt`)
+  — im normalen Spiel frei, also Kriecher. Ergebnis: Spalte 0 = Wiederbelebung als Kriecher mit HP 10 (Port
+  `re2z_hit_knockdown(death=1)` richtig).
+* Spalte 3 -> 0x80108530 (Sturz-Tod): P2 `80108918 jal 0x80015fe8` mit Delay `8010891c sw v0(=7),4(s1)` = Leiche;
+  Wiederbelebung nur hinter fuenf Toren (`80108920 andi 0x3 / bne`, `80108934 andi 0x4 / bne`, `80108940 lh 268`,
+  `80108950 lb 363`, `80108964-70` 0x800CFBD8 & 0x10000000) mit HP 1 (`8010897c addiu v0,zero,1` / `80108980 sh
+  v0,342`). Port `re2z_death_main` P2 = Leiche, die Wiederbelebung ist dort seit jeher OFFEN (benannt, alle Waffen).
+* HURT Spalte 3 = 0x80105438 (Haupt-Treffer): P0 ruft die Element-Leiter nur fuer Zeile 16 (`8010551c addiu v0,zero,16`
+  / `80105520 bne` / `80105550 jal 0x80106128`) und 14 (`80105728 addiu v0,zero,14` / `80105734 jal 0x80106510`).
+
+**M1 — was darf das Bodenfeuer an einem RE1.5-KI-Kandidaten?**
+* RE1.5-Tabellen (`re15_disasm.py read 0x8006f418 11 --w 2 --signed` = [10,20,1000,1000,1000,50,100,200,300,1000,0],
+  `read 0x8006f430 11` = [3,3,9,10,11,14,15,16,17,18,20]): Art 5 = 50 @0x8006f422, Reaktion 14 @0x8006f435.
+* RE2-Wert DESSELBEN Hitcodes am Zombie: Z10 w0 0x0050C8C8 @0x800A41E0 (0x16: 0x0050C850 @0x800A435C), K2 = `srlv`
+  @0x80047254 um 20 / `andi v1,v1,0x3ff` @0x8004725c = **5**.
+* Store-Liste FUN_800470C0 (eigene Auswertung `build/r34g_b_gp/re2_800470c0.dis`): +0x156 @0x80047268/488, +0x4
+  @0x80047288/90, +0x1D0 @0x80047184/204, +0x1D2 @0x80047298/2d4/30c/330, +0x1D3 @0x80047334(+Folge), +0x5 @0x80047324,
+  +0x1FC @0x80047278/49c, Puffer (s3) — **kein** Store auf 337/338/339 (+0x151..+0x153): der GL-Applier zieht keine
+  Zonen-Reserve ab.
+* BAUPLAN E4 nennt die Modell-Ausnahme NUR fuer Art 2/3/4 (`react_table[Art]` = 9/10/11); der Bau hatte sie auf
+  `type < 11` ausgedehnt -> Art 5 an Import-Zombies = `s_re2_wpn_dmg_zombie[14]` = 15 (RE2-FLAMMENWERFER-Zeile 16
+  @0x800A4258) — weder O-VB4 (50) noch RE2 (5).
+
+**M2 — was pinnen?** Wache `if (e->re2_gl_stamp)` in `re2z_hurt` (Konsument im Bild X+1) und `+0x1D0 &= 0xFF00` je
+Kandidat (`8004716c lhu v1,464(s0)` / `80047178 andi v1,v1,0xff00` / `80047184 sh v1,464(s0)`, VOR dem Band — also
+auch fuer Kandidaten, die das Band/den Kasten verfehlen).
+
+### N2 Entscheidungen (von Spur B getroffen, mit Beleg; zur Abnahme durch Orchestrator/Nutzer)
+* **K1 -> Option (a), nur Zombie-Familie, nur Zeile 9 (HE).** Die Explosion der Handgranate stempelt fuer die
+  RE2-Zombie-Familie die Spalte mit der Klammer der RE2-Explosion Op 47 (K1): +0x1D2 = Zone(P) + 3. Der Schaden bleibt
+  E4 (K0 = 200 @0x800A41CC). Begruendung: (1) BAUPLAN §1.6 Soll "Tod"; (2) RE2s eigene Explosion stempelt K1 -> DEATH[9][3]
+  = 0x80108530 (Sturz-Tod -> Leiche), die Kriecher-Wiederbelebung gehoert zum Flug-KONTAKT (K0), den die Handgranate nicht
+  hat; (3) die BAUPLAN-Wahl "Spalte mit K0" war als "Folge" von E4 begruendet und ging von "DEATH[9][0] = Knockdown-TOD"
+  aus — das ist widerlegt (Wiederbelebung, s. N1). NICHT geaendert: Saeure/Brand (DEATH 10/11 spaltenunabhaengig; HURT
+  Spalte 0 = 0x80105BC0 mit Aetzung/Bein-Wegaetzen/Verkohlung = §1.6-Soll, Brand deckt sich mit Op 48 = K0; Saeure-Op 49
+  waere K1 -> 0x80105438 ohne die Aetzung im P0 — benannt, nicht uebernommen), Hund (Spalte >= 3 -> nur Kern/Schrei
+  @0x801046a8-d4 statt "zerplatzt", §1.6), Spinne/Kraehe/G5 (unveraendert K0). FOLGE fuer Brad 0x11 (ueberlebt HE):
+  HURT[9][3] = 0x80105438 (Haupt-Treffer) statt HURT[9][0] = 0x80107438 (Knockdown) — die RE2-Reaktion eines Zombies,
+  der die GL-Explosion ueberlebt; §1.6 "Brad HE HURT[9][0]" ist damit ersetzt.
+* **M1 -> E4 auf Art 2..4 begrenzt; Bodenfeuer an RE1.5-KI-Kandidaten:** Typen unter dem RE2-Schadens-/HP-Modell
+  (Import-Zombies im RE1.5-Flavor = Vorgabe; dieselbe Bedingung wie E4) bekommen den RE2-Record-Wert des Hitcodes, also
+  genau das, was ein RE2-KI-Gegner desselben Typs fuer dieselbe Flamme bekommt (Zombie Z10 K2 = 5 @0x800A41E0); alle
+  anderen RE1.5-KI-Kandidaten O-VB4 = 50 @0x8006f422. Grund: Nutzer-Auftrag der Import-Option ("die Schadenswerte fuer
+  Zombies ... auch in RE1.5 AI", Kopf `re15_damage.c` 675-697, "HP UND SCHADEN GEHEN NUR ZUSAMMEN") — RE2-HP mit der
+  RE1.5-Zahl 50 waere die verbotene Haelften-Mischung. Die Import-Bruecke laeuft fuer GL-Treffer als GL-Stempel: Zeile =
+  Hitcode-Zeile (10), Spalte = Zone(P) + 3K, Richtung aus P mit `|= 1`, KEIN Reserve-Abzug; der Zerleger bleibt (sein
+  Reserve-Tor oeffnet nur, wenn Schuesse die Reserve vorher geleert haben — wie im RE2-Flavor).
+* **M2 -> Sonden**, kein Engine-Eingriff (Verhalten war richtig, gemessen mess4).
