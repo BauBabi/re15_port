@@ -251,6 +251,58 @@ s3i_N0_frisch <N0>`:
 NEW GAME / LOAD GAME / OPTION (vorher lag Androids Einmal-Hinweis "Viewing full screen" darueber -
 Systemdialog des frischen AVD, per `settings put secure immersive_mode_confirmations confirmed` abgestellt).
 
+### 3.2 (iii) Neustart und Update ohne Aenderung -> schneller Weg
+
+```
+Neustart (force-stop + start, s3iii_N0_neustart):
+  07:03:43.907 [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 120 ms
+dieselbe APK als Update (adb install -r N0, s3iii_N0_gleiche_apk):
+  07:04:07.099 [android] Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 238 ms
+```
+(Das Update mit einer ANDEREN APK ohne Asset-Aenderung - N1 -> N1 - steht unter 3.3.)
+
+### 3.3 Weitere Wege des Entpackers auf dem Geraet (N0, Speicherordner per adb-Shell veraendert)
+
+Die Shell darf im Speicherordner schreiben (`touch`/`rm`/`dd`/`adb push` gehen; Datei gehoert dann `shell`,
+die App liest/loescht sie trotzdem - gemessen unten).
+
+- **(vi) eine entpackte Datei geloescht** (`rm synchro/STAGE1/room1090/main04.wav`, 298780 B), Neustart
+  (`s3vi_datei_geloescht`):
+  ```
+  [android] Liste = zuletzt entpackt, aber 1 Dateien fehlen/falsche Groesse -> neu entpacken
+  [android] Abgleich (Groessen-Nachlauf): ... behalten 3603, geaendert 0, neu 0, pruefen 0, weg 0
+  [android] entpacke synchro/STAGE1/room1090/main04.wav (Groesse falsch/fehlt)
+  [android] Entpacken fertig (Groessen-Nachlauf): 3603 geprueft, 1 kopiert (298780 B, 15 ms), ... 0 Fehler, 937 ms
+  ```
+  danach GERAET-KONSISTENT.
+- **(vii) "zuletzt entpackt" nennt einen anderen Stand** (`build/r34a/n1/liste_manipulieren.py`: in der Liste auf
+  dem Geraet `main05.wav` mit anderer sha256 bei gleicher Groesse, dazu eine Zeile `synchro/STAGE1/room1090/geist.bin`
+  (5 B) + die Datei selbst; Kopfzeile 3604/356678282 nachgerechnet, nach `manifest_lesen` gueltig), Neustart
+  (`s3vii_liste_anders`):
+  ```
+  [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 1
+  [android] entpacke synchro/STAGE1/room1090/main05.wav (geaendert)
+  [android] entfernt (nicht mehr in der Liste): synchro/STAGE1/room1090/geist.bin
+  [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (164290 B, 7 ms), ..., 1 entfernt, 0 .neu-Reste, 0 Fehler, 1167 ms
+  ```
+  `main05.wav` neu geschrieben (Zeit 07:05, sha256 wieder `d905e992...`), `geist.bin` weg, Liste wieder = APK
+  (`95770eb5...`), GERAET-KONSISTENT. Das ist derselbe Weg wie (ii), nur ohne neue APK.
+- **(viii) Zustand nach einem Abbruch** (Liste geloescht, `.neu`-Rest `shared_assets/PSX/STAGE1/ROOM1240.RDT.neu`
+  angelegt, `main06.wav` per `dd conv=notrunc` an Stelle 1000 veraendert: gleiche Groesse 240824 B, sha256
+  `f84f76dd...` -> `e0bf118d...`), Neustart (`s3viii_ohne_liste_rest_kaputt`):
+  ```
+  [android] Abgleich (ohne Liste): ... behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+  [android] Summe weicht ab -> neu: synchro/STAGE1/room1090/main06.wav
+  [android] Entpacken fertig (ohne Liste): 3603 geprueft, 1 kopiert (240824 B, 9 ms), 3603 per SHA-256 geprueft
+            (356678277 B, 3130 ms, 1 abweichend), 0 entfernt, 1 .neu-Reste, 0 Fehler, 4441 ms
+  ```
+  GERAET-KONSISTENT (kein `.neu`, `main06.wav` wieder richtig).
+
+**Aufwand Pruefen gegen Entpacken (Wahl fuer den Uebergang v0.8.19):** alle 3603 Dateien per SHA-256 pruefen
+4,4 s (3,1 s reines Hashen von 356678277 B) gegen vollstaendiges Entpacken 18,2 s (15,5 s Kopieren+Hashen) auf
+demselben AVD -> Pruefen ist ~4x schneller und schreibt nichts; gewaehlt: gleich grosse Dateien pruefen, nur
+abweichende neu entpacken. Bestaetigung mit der echten v0.8.19-APK unter 3.5.
+
 ## 4. Gates / Suite
 
 (folgt)
