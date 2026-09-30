@@ -1,0 +1,16 @@
+== e_update_M_zu_N_zurueck 2026-09-30 10:07:39
+APK: build/r34a/pruefer_e1/apk/N_v0.8.19.apk sha256 a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+install rc=0 (14774 ms): Performing Streamed Install Success 
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+   lastUpdateTime=2026-09-30 08:07:56
+   firstInstallTime=2026-09-30 07:59:33
+installiert: /data/app/~~IB18LwkX-vN6bahKLNKQug==/de.re15.port-ss9yxWA2Q0dm9EHGUmWZyw==/base.apk sha256 a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc
+Status: ok
+LaunchState: COLD
+TotalTime: 2595
+warten rc=0 (4217 ms ab am start)
+09-30 08:08:04.322 I/re15    ( 7336): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:08:04.535 I/re15    ( 7336): [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 0
+09-30 08:08:05.896 I/re15    ( 7336): [android] entpacke shared_assets/PSX/STAGE4/ROOM4010.RDT (geaendert)
+09-30 08:08:06.037 I/re15    ( 7336): [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (297112 B, 29 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 1541 ms

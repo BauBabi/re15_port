@@ -85,6 +85,31 @@ Liste von N (`95770eb5...`), Marker weg -> **GERAET-KONSISTENT**. Bildschirm (8 
 ANGESEHEN): Bild 1 Intro-Effekt, Bild 8 (10:04:10, `geraet/b_titelbild_nach_uebergang.png`) **Titelbild "BIOHAZARD 2
 Sample Ver.2025.01.25", NEW GAME / LOAD GAME / OPTION**, Touch-Overlay; Prozess laeuft (pidof 6277).
 
+### 3.3 Zweites Update N -> M: gleich grosse Inhaltsaenderung (`geraet/c_*.txt`)
+Vorher auf dem Geraet: ROOM4010.RDT sha256 `23d5fdc1...` (mtime 08:00:04 UTC), mtime aller 3603 Dateien festgehalten.
+install -r M `Success` (10,0 s), installiert `56ef3d26...` (= M), versionName v0.8.19-pe1m:
+```
+08:05:57.634 [android] Abgleich (Update): 3603 Dateien (356678277 Bytes) - behalten 3602, geaendert 1, neu 0, pruefen 0, weg 0
+08:05:58.864 [android] entpacke shared_assets/PSX/STAGE4/ROOM4010.RDT (geaendert)
+08:05:59.048 [android] Entpacken fertig (Update): 3603 geprueft, 1 kopiert (297112 B, 56 ms), 0 per SHA-256 geprueft (0 B, 0 ms,
+             0 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 1456 ms
+```
+- mtime-Vergleich vorher/nachher ueber alle 3603 Dateien: **genau eine** Datei neu geschrieben (ROOM4010.RDT, 08:05:58).
+- `adb pull`: sha256 **`c065442b...` = Inhalt in APK M**, `cmp` gegen die aus M gelesenen Bytes rc 0; `cmp -l` gegen die
+  Original-Sicherung: genau `148557 250 362` (Byte 148556 0-basiert: 0xa8 statt 0xf2) - der neue Inhalt ist auf dem Geraet.
+- `pe1_geraet.py M`: 3603/0/0/0, 0 `.neu`, Liste "zuletzt entpackt" = Liste von M (`ed0433e3...`) -> **GERAET-KONSISTENT**.
+
+### 3.4 Update ohne Aenderung -> schneller Weg (`geraet/d1_*.txt`, `geraet/d2_*.txt`)
+- dieselbe APK M noch einmal als Update (install -r `Success`, neuer /data/app-Pfad, lastUpdateTime 08:06:50):
+  `Assets aktuell (schneller Weg): Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 134 ms`;
+- Neustart (force-stop + start): `Assets aktuell (schneller Weg): ... 349 ms`;
+- mtime aller 3603 Dateien danach unveraendert (0 Aenderungen).
+
+### 3.5 Gegenrichtung M -> N (`geraet/e_*.txt`)
+`Abgleich (Update): ... behalten 3602, geaendert 1` -> `entpacke shared_assets/PSX/STAGE4/ROOM4010.RDT (geaendert)` ->
+`Entpacken fertig (Update): 3603 geprueft, 1 kopiert (297112 B, 29 ms), ... 0 Fehler, 1541 ms`; genau diese eine mtime
+neu; `adb pull` == Original-Sicherung (`cmp` rc 0, `23d5fdc1...`); `pe1_geraet.py N` -> GERAET-KONSISTENT.
+
 ## 4. PC-Suite local_build.sh all
 
 ## 5. Kein Python-Installer
