@@ -546,7 +546,10 @@ Tuerweg gegen Ladeweg), `nb_mut_takt_exe.sh`, `nb_mut_oc7.py` (Mutationsproben).
   elza_vollstart 100.70 s, granate_laden 152.26 s, irons_tisch_bild 63.80 s, titel_puls 28.82 s, r33_speichern 83.02 s,
   boot_bg_pin 3.69 s, relatch_pin 26.25 s, save_counter_pin 49.35 s. Kein reproduzierbares Rot.
 * **Lauf N2** (`local_build.sh test` — ohne Bau-Schritt, damit dessen `taskkill` die Laeufe der Parallel-Sitzungen nicht
-  trifft; derselbe Bau): (folgt)
+  trifft; derselbe Bau, Log `build/r34g_c/nb/suite2_ctest.log`): `99% tests passed, 1 tests failed out of 432`, ctest
+  897.48 s. Rot nur `integration_r30_sicherung_laden` (Lauf a: "Bild 280 in ROOM1150 wurde nicht erreicht ... exit=1" =
+  von aussen beendet); einzeln `Passed 55.81 sec`. Die vier Tests der Spur gruen (takt 23.4 s, esp_eintritt 9.7 s).
+* **Lauf N3** (`local_build.sh test`): (folgt)
 
 ---
 
