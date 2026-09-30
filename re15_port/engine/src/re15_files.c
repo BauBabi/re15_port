@@ -45,8 +45,29 @@ static const uint8_t s_name_irons_diary[] = {
     0x25, 0x4e, 0x4b, 0x4a, 0x4f, 0x00, 0x20, 0x45, 0x3d, 0x4e, 0x55, 0x07
 };
 
+/* RUNDE 34 NACHT, SPUR E — Dokumente 1..4 (Welt, Aufhebe-Zone: include/re15_dokumente.h;
+ * Dossier analysis/befunde_runde34_nacht/E_dokumente.md 5.2 / 9.0). Je Eintrag:
+ *   Item-Id        0x48 + Nr (VERTRAG 1.4; RE2 `addiu a0,a3,-104` @0x80071d04).
+ *   Bild-Satz      26..29: PORT-WAHL, die naechsten freien Saetze hinter FILE25 (VERTRAG 1.4).
+ *                  Seiten gesetzt von tools/r34n_e/doc_satz_brief.py aus dem Nutzertext
+ *                  (AUFTRAG.md, woertlich), reproduzierbar mit tools/r34n_e/satz_bauen.sh.
+ *   max_page       PORT-WAHL, gemessen am Satz: FILEnn_p<max> vorhanden, p<max+1> nicht
+ *                  (selbstpruefung.py) — 3 / 4 / 2 / 2.
+ *   H              TIM-Kopf der gesetzten Titelseite (Bildhoehe) = Vorlage: 144 (FILE00/FILE08)
+ *                  bzw. 176 (FILE02/FILE06).
+ *   Name           NUTZER-VORGABE (AUFTRAG.md Z. 22/29/41/55, gemischte Schreibung wie
+ *                  RE2s Listennamen, Runde-30-Regel), kodiert wie "Chris' Diary" @0x800c4e04
+ *                  (DEBUG.BIN 0x04e04 `1f 44 4e 45 4f 3a 00 20 45 3d 4e 55 07`): Code =
+ *                  ASCII - 0x24, Leerzeichen 0x00, Apostroph 0x3A, Ende 0x07. */
+static const uint8_t s_name_dok1[] = {     /* "Police Officer's Final Diary Entry" */
+    0x2c, 0x4b, 0x48, 0x45, 0x3f, 0x41, 0x00, 0x2b, 0x42, 0x42, 0x45, 0x3f, 0x41, 0x4e,
+    0x3a, 0x4f, 0x00, 0x22, 0x45, 0x4a, 0x3d, 0x48, 0x00, 0x20, 0x45, 0x3d, 0x4e, 0x55,
+    0x00, 0x21, 0x4a, 0x50, 0x4e, 0x55, 0x07
+};
+
 static const re15_file_doc_t s_docs[] = {
     { RE15_FILES_FIRST_ITEM_ID + 0, 25, 15, 144, s_name_irons_diary },
+    { RE15_FILES_FIRST_ITEM_ID + 1, 26,  3, 144, s_name_dok1 },   /* Runde 34 Nacht, Spur E */
 };
 #define DOC_COUNT ((int)(sizeof s_docs / sizeof s_docs[0]))
 
