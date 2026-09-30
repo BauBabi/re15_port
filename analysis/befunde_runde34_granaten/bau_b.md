@@ -826,7 +826,15 @@ gruen, `git diff` leer.
   folgen dem RE2-Modell.
 
 ### N8 Volle Suite
-Lauf 1 (all, ab 05:10): laeuft — Ergebnis folgt im naechsten Commit.
+* **Lauf 1** (all, 05:10-05:21, Stand 0cc7227f = K1/M1 ohne den Nachtrag N3b; parallel liefen die Suiten/Baue anderer
+  Arbeitsbaeume): `99% tests passed, 3 tests failed out of 430` — rot nur die GUI-/exe-Integrationen
+  `integration_r30_cut_blitz`, `integration_r30_sicherung_laden` ("Bild 280 ... nicht erreicht (keine EXIT_AT-Zeile,
+  exit=1) — der Lauf ist vorher abgerissen"), `integration_r30_titel_puls` — dieselbe Klasse wie beim Bauer und beim
+  Gegenpruefer (Gegenpruefung §6: `taskkill //IM` fremder `local_build.sh build`). Einzeln wiederholt (`ctest -R ...
+  --repeat until-pass:3 -j 1`, 05:21-05:25): sicherung_laden und titel_puls sofort gruen, cut_blitz im 3. Versuch
+  (Versuch 1/2: "0 mit 3D" bzw. "nur 1 sichtbare Kamerawechsel" — Kamera-Weg, kein Schadenspfad). Kein
+  reproduzierbares Rot; unit_r34_schaden / unit_r34_reaktion gruen.
+* **Lauf 2**: nach dem Nachtrag N3b (s. unten).
 
 ### INTEGRATIONSWUNSCH (Nachbesserung)
 * **N-1** `re15_port/tools/local_build.sh:147` (Integration): `/c/Windows/System32/WindowsPowerShell/v1.0` in `CLEAN_PATH`
@@ -848,3 +856,19 @@ Lauf 1 (all, ab 05:10): laeuft — Ergebnis folgt im naechsten Commit.
 * **H1-H8** der Gegenpruefung (Gator-Boss-Versatz, Hund-Immunitaet 0x80, Kraehe +0x98, Vier-Quadranten, ungepinnte Details
   G02/G05/G08-G11/G15, Treppen-Sonde ueber `re15_game_step`, Kakerlaken-Tabellen STAGE4/5, Unterzustand 13) waren nicht
   Teil dieses Nachbesserungsauftrags und bleiben wie in `bau_b.gegenpruefung.md` §5 beschrieben offen.
+
+### N3b Nachtrag M1 — Art 5 auch im Direktaufruf nicht mehr ueber die GL-Explosiv-Zeile 9
+| Datei:Zeile | Inhalt | Beleg |
+|---|---|---|
+| `enemy_ai_re2_zombie.c` `re2z_row_from_atktype[5]` | 9 -> **10**: Art 5 ist seit O-VB4 das Bodenfeuer, seine RE2-Zeile = die des Op-40-Hitcodes 0x2002000A | `lui a3,0x2002` @0x80020794 / `ori a3,a3,0xa` @0x800207a0 |
+| `probe_r34_schaden.c` (39) | Direktaufruf Art 2/3/4/5 -> 9/11/10/**10** | — |
+| Mutation **MN13** | `[5]` zurueck auf 9 -> 39 rot | s. N5b |
+
+Im Spiel kommt Art 5 nur ueber den Applier (GL-Bruecke mit der Hitcode-Zeile, N3); der Tabelleneintrag deckt den
+Direktaufruf (Zensus, Sonden). Damit laeuft Art 5 nirgends mehr ueber die GL-Explosiv-Zeile 9 (Gegenpruefung M1:
+"nicht ueber die Explosivzeile 9").
+
+### N5b Mutationsprobe MN13
+| Id | Mutation (Datei) | erwartet rot | Ergebnis |
+|---|---|---|---|
+| MN13 | `re2z_row_from_atktype[5]` zurueck auf 9 (enemy_ai_re2_zombie.c) | 39 | 39 rot (`atktype 2/3/4/5 -> 9/11/10/9`), zurueckgesetzt, danach gruen |

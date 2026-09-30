@@ -3901,7 +3901,8 @@ static const uint8_t re2z_row_from_weapon[22] = {
  *   Typ 0/1  (10/20, Nahkampf-Angriff eines Gegners) -> RE2 1  (Nahkampfzeile)
  *   Typ 2/3/4 (Granaten, Runde 34)                   -> RE2 9/11/10 (s. unten, DAT_8006F430)
  *   Typ 9 (1000 = Instakill)                         -> RE2 17 (900er-Klasse; toetet ohnehin)
- *   Typ 5/6  (50/100, Sprengstoff)                   -> RE2 9
+ *   Typ 5    (50, Bodenfeuer seit O-VB4)             -> RE2 10 (Op-40-Zeile, NACHBESSERUNG M1)
+ *   Typ 6    (100, Sprengstoff)                      -> RE2 9
  *   Typ 7    (200)                                   -> RE2 10
  *   Typ 8    (300)                                   -> RE2 11 (RE2-Id 8 traegt genau 300/80/60)
  *   Typ 10   (0)                                     -> RE2 1
@@ -3912,8 +3913,13 @@ static const uint8_t re2z_row_from_weapon[22] = {
  * `sb v0,5(s1)` @0x80012ff0) — also dieselbe Uebersetzung wie jeder Waffentreffer:
  * re2z_row_from_weapon[9/10/11] = 9 (GL Explosiv) / 11 (Saeure) / 10 (Brand). Die fruehere
  * "Schadensklassen"-Zuordnung 17 (Rakete) fuer 2..4 ist damit ersetzt (BAUPLAN P18; RE2-GP §7).
- * Die uebrigen Eintraege (0/1, 5..10) bleiben die dokumentierte Klassen-Zuordnung. */
-static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 9, 9, 10, 11, 17, 1 };
+ * ⛔ NACHBESSERUNG M1: Art 5 ist seit O-VB4 (Orchestrator) das BODENFEUER (RE1.5 "Flaechenfeuer",
+ * DAT_8006f418[5] = 50 @0x8006f422) — seine RE2-Zeile ist die des Op-40-Hitcodes 0x2002000A
+ * (`lui a3,0x2002` @0x80020794 / `ori a3,a3,0xa` @0x800207a0) = 10, nicht die GL-EXPLOSIV-Zeile 9
+ * der alten Schadensklassen-Zuordnung. Im Spiel kommt Art 5 nur ueber den Applier (GL-Bruecke
+ * re15_re15_re2z_gore_hit_gl mit der Hitcode-Zeile); der Eintrag hier deckt den Direktaufruf.
+ * Die uebrigen Eintraege (0/1, 6..10) bleiben die dokumentierte Klassen-Zuordnung. */
+static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 10, 9, 10, 11, 17, 1 };
 
 /* INVARIANTE "kein stummer Treffer": faellt die gewaehlte Zeile in der TATSAECHLICH gestempelten
  * Spalte auf NULL, obwohl der Zombie den Treffer UEBERLEBT hat (also die HURT-Wurzel wirklich

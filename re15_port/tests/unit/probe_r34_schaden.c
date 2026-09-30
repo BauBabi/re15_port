@@ -505,16 +505,19 @@ static void teil_stempel(void)
           a->re2z_self1d3);
     /* (39) Direktaufruf OHNE Punkt (re15_enemy_take_damage, Sonden-/Altpfad) im RE2-Flavor: der
      *      Zeilen-Stempel re15_re2_stamp_hit(row_src 1) liest re2z_row_from_atktype -> Art 2/3/4 =
-     *      9/11/10 (DAT_8006F430 @0x8006f432..34 ueber re2z_row_from_weapon), nicht mehr 17. */
+     *      9/11/10 (DAT_8006F430 @0x8006f432..34 ueber re2z_row_from_weapon), nicht mehr 17;
+     *      Art 5 (Bodenfeuer, O-VB4) = 10 = Zeile des Op-40-Hitcodes 0x2002000A (`ori a3,a3,0xa`
+     *      @0x800207a0), nicht mehr die GL-Explosiv-Zeile 9 (NACHBESSERUNG M1). */
     {
-        int z[3]; const uint8_t art[3] = { 2, 3, 4 };
-        for (int i = 0; i < 3; i++) {
+        int z[4]; const uint8_t art[4] = { 2, 3, 4, 5 };
+        for (int i = 0; i < 4; i++) {
             re15_actor_init(); pl_far();
             a = mk_re2z(1, 0x11, 0, 0, 0, 2000);
             re15_enemy_take_damage(a, art[i]);
             z[i] = a->sub_state_1;
         }
-        CHECK(39, z[0] == 9 && z[1] == 11 && z[2] == 10, "atktype 2/3/4 -> %d/%d/%d (9/11/10)", z[0], z[1], z[2]);
+        CHECK(39, z[0] == 9 && z[1] == 11 && z[2] == 10 && z[3] == 10, "atktype 2/3/4/5 -> %d/%d/%d/%d (9/11/10/10)",
+              z[0], z[1], z[2], z[3]);
     }
     /* (37) NEGATIV: RE1.5-Flavor, Import AUS -> 1000 flach, kein RE2-Stempel (+0x6 = 1). */
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
