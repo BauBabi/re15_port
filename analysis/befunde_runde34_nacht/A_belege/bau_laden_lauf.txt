@@ -1,0 +1,30 @@
+=== lauf_laden.sh Schritt s1
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[setflag-at] Frame 100: flag(9,63/0x3f) = 1
+[scd F151] Cut_chg(6)
+[save] room=1150 msg=1 card_slot=0 -> FRAGE (Memory Card benutzen?)
+[save] Antwort: JA -> Speicherbildschirm
+[save] saved (room 1150) slot n=2 -> next=3; card=kept (slot 0 qty 1)
+[flow] EXIT_AT: Bild 460 in Raum 1150 erreicht -> exit
+=== lauf_laden.sh Schritt s2
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(3)
+[se] SCD Se_on: bank=2 id=12 flags=0 origin=1/0
+[se] SCD Se_on: bank=2 id=10 flags=0 origin=3/0
+[se] SCD Se_on: bank=2 id=11 flags=0 origin=3/0
+[flow] EXIT_AT: Bild 1400 in Raum 1050 erreicht -> exit
+=== lauf_laden.sh Schritt s2g
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F883] Cut_chg(3)
+[flow] EXIT_AT: Bild 1000 in Raum 1050 erreicht -> exit

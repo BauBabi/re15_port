@@ -1,0 +1,47 @@
+# Spur G2: Original ROOM1150 Cut 2 in DuckStation (MZD-Disk = info/Re1.5, Software-Renderer 1x), 2026-09-30 08:5x
+# Weg (ohne Pad-Eingabe, settings.ini unveraendert): stage_saves/mzd_debugmenu.sav per re15_quickload (Menue-Eingaben wirkungslos) -> Endstand im Debug-Menue (DUCCT)
+#   -> RAM-Patch wie der Quadrat-Zweig @0x80014a44-0x80014a58: DAT_800bbe5f[0]:=0x15, DAT_800b5359:=1, DAT_800ac9a8:=0, DAT_800bbe5c:=0
+#   -> FUN_8001d600 laedt mit DAT_800ac9a8==0 den Cursor-Raum (Decompilat Z.6-24) -> orig_1150_a.sav (Raum 0x15, Cut 0, Vcount 7002)
+#   -> RAM-Patch DAT_800aca3c:=0x100 (Zonen-Scan aus), DAT_800afbb5:=2 -> cut2_base.sav; 6 Laeufe verschiedener Dauer (ds_lauf.py), deterministisch ab demselben Stand
+# Auswertung: re15_port/tools/r34n_g/ss_schrift1150.py
+
+orig_1150_a.sav
+  EXE sauber  Raum 15 Cut 0  Vcount 7002  VSync-Modus 2  Puffer(aca34) 1  RDT[0] 2
+  Records Gruppen 6..11 Byte0: -
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10DF Sleep#2 (nach :=1)  Tiefe 0  Zaehlerindex 0  Rest 15
+c2_w9.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7050  VSync-Modus 2  Puffer(aca34) 1  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=1 g7=1 g8=1 g9=1 g10=1 g11=1
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10E2 ?  Tiefe 0  Zaehlerindex -1  Rest None
+  Bildspeicher y=  0: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+  Bildspeicher y=240: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+c2_w10.5.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7499  VSync-Modus 2  Puffer(aca34) 1  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=1 g7=1 g8=1 g9=1 g10=1 g11=1
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10DF Sleep#2 (nach :=1)  Tiefe 0  Zaehlerindex 0  Rest 16
+  Bildspeicher y=  0: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+  Bildspeicher y=240: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+c2_w11.2.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7567  VSync-Modus 2  Puffer(aca34) 1  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=0 g7=0 g8=0 g9=0 g10=0 g11=0
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10C9 Sleep#1 (nach :=0)  Tiefe 0  Zaehlerindex 0  Rest 2
+  Bildspeicher y=  0: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558
+  Bildspeicher y=240: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558
+c2_w12.7.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7600  VSync-Modus 2  Puffer(aca34) 0  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=1 g7=1 g8=1 g9=1 g10=1 g11=1
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10DF Sleep#2 (nach :=1)  Tiefe 0  Zaehlerindex 0  Rest 5
+  Bildspeicher y=  0: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+  Bildspeicher y=240: max|d| zu AN  16, zu AUS 192; Maskenpixel bitgleich AN 558/558
+c2_w12.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7647  VSync-Modus 2  Puffer(aca34) 1  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=0 g7=0 g8=0 g9=0 g10=0 g11=0
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10C9 Sleep#1 (nach :=0)  Tiefe 0  Zaehlerindex 0  Rest 2
+  Bildspeicher y=  0: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558
+  Bildspeicher y=240: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558
+c2_w13.5.sav
+  EXE sauber  Raum 15 Cut 2  Vcount 7697  VSync-Modus 2  Puffer(aca34) 0  RDT[0] 54
+  Records Gruppen 6..11 Byte0: g6=0 g7=0 g8=0 g9=0 g10=0 g11=0
+  sub05-Faden 3 @800b2f9c (falls ROOM1150): pc=RDT+0x10C9 Sleep#1 (nach :=0)  Tiefe 0  Zaehlerindex 0  Rest 17
+  Bildspeicher y=  0: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558
+  Bildspeicher y=240: max|d| zu AN 192, zu AUS  16; Maskenpixel bitgleich AN 13/558

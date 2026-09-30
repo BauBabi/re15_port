@@ -1,0 +1,57 @@
+### Szenario 0 (Leon), Start ROOM1170
+== ROOM1150 erreichbar
+    ROOM1170 -[ROOM1170 slot 4 main00@0x012F8 y=0 {immer}]-> ROOM1130
+    ROOM1130 -[ROOM1130 slot 2 main00@0x008CE y=0 {immer}]-> ROOM1150
+== ROOM1050N erreichbar
+    ROOM1170 -[ROOM1170 slot 4 main00@0x012F8 y=0 {immer}]-> ROOM1130
+    ROOM1130 -[ROOM1130 slot 1 main00@0x008AE y=0 {immer}]-> ROOM1120
+    ROOM1120 -[ROOM1120 slot 0 main00@0x00C76 y=-14400 {immer}]-> ROOM1060
+    ROOM1060 -[ROOM1060 slot 2 main00@0x00D52 y=0 {immer}]-> ROOM1040
+    ROOM1040 -[ROOM1040 slot 1 main00@0x010B8 y=0 {immer}]-> ROOM1030
+    ROOM1030 -[ROOM1030 slot 0 main00@0x01C6A y=0 {immer}]-> ROOM1050N
+== ROOM1050S erreichbar
+    ROOM1170 -[ROOM1170 slot 4 main00@0x012F8 y=0 {immer}]-> ROOM1130
+    ROOM1130 -[ROOM1130 slot 1 main00@0x008AE y=0 {immer}]-> ROOM1120
+    ROOM1120 -[ROOM1120 slot 0 main00@0x00C76 y=-14400 {immer}]-> ROOM1060
+    ROOM1060 -[ROOM1060 slot 1 main00@0x00D32 y=0 {immer}]-> ROOM10C0
+    ROOM10C0 -[ROOM10C0 slot 2 main00@0x00EA4 y=0 {immer}]-> ROOM10D0
+    ROOM10D0 -[ROOM10D0 slot 0 main00@0x01174 y=0 {NICHT(Ck(3,50,0))}]-> ROOM10F0
+    ROOM10F0 -[ROOM10F0 slot 1 main00@0x00F52 y=-9000 {immer}]-> ROOM1090
+    ROOM1090 -[ROOM1090 slot 0 main00@0x0211A y=0 {immer}]-> ROOM1050S
+== ROOM1000-Umkleide erreichbar
+    ROOM1170 -[ROOM1170 slot 4 main00@0x012F8 y=0 {immer}]-> ROOM1130
+    ROOM1130 -[ROOM1130 slot 1 main00@0x008AE y=0 {immer}]-> ROOM1120
+    ROOM1120 -[ROOM1120 slot 0 main00@0x00C76 y=-14400 {immer}]-> ROOM1060
+    ROOM1060 -[ROOM1060 slot 1 main00@0x00D32 y=0 {immer}]-> ROOM10C0
+    ROOM10C0 -[ROOM10C0 slot 2 main00@0x00EA4 y=0 {immer}]-> ROOM10D0
+    ROOM10D0 -[ROOM10D0 slot 0 main00@0x01174 y=0 {NICHT(Ck(3,50,0))}]-> ROOM10F0
+    ROOM10F0 -[ROOM10F0 slot 1 main00@0x00F52 y=-9000 {immer}]-> ROOM1090
+    ROOM1090 -[ROOM1090 slot 0 main00@0x0211A y=0 {immer}]-> ROOM1050S
+    ROOM1050S -[ROOM1050 slot 3 main00@0x00B3A y=0 {immer}]-> ROOM1000-Umkleide
+== ROOM10A0 erreichbar
+    ROOM1170 -[ROOM1170 slot 4 main00@0x012F8 y=0 {immer}]-> ROOM1130
+    ROOM1130 -[ROOM1130 slot 1 main00@0x008AE y=0 {immer}]-> ROOM1120
+    ROOM1120 -[ROOM1120 slot 0 main00@0x00C76 y=-14400 {immer}]-> ROOM1060
+    ROOM1060 -[ROOM1060 slot 1 main00@0x00D32 y=0 {immer}]-> ROOM10C0
+    ROOM10C0 -[ROOM10C0 slot 2 main00@0x00EA4 y=0 {immer}]-> ROOM10D0
+    ROOM10D0 -[ROOM10D0 slot 0 main00@0x01174 y=0 {NICHT(Ck(3,50,0))}]-> ROOM10F0
+    ROOM10F0 -[ROOM10F0 slot 1 main00@0x00F52 y=-9000 {immer}]-> ROOM1090
+    ROOM1090 -[ROOM1090 slot 0 main00@0x0211A y=0 {immer}]-> ROOM1050S
+    ROOM1050S -[ROOM1050 slot 4 main00@0x00B5A y=-14400 {immer}]-> ROOM10A0
+### Szenario 1 (Elza), Start ROOM1031
+== ROOM1151 erreichbar
+    ROOM1031 -[ROOM1031 slot 2 main00@0x01D18 y=0 {immer}]-> ROOM1041
+    ROOM1041 -[ROOM1041 slot 2 main00@0x010D8 y=0 {immer}]-> ROOM1061
+    ROOM1061 -[ROOM1061 slot 0 main00@0x00D12 y=0 {immer}]-> ROOM1121
+    ROOM1121 -[ROOM1121 slot 2 main00@0x00CD8 y=0 {immer}]-> ROOM1131
+    ROOM1131 -[ROOM1131 slot 2 main00@0x008CE y=0 {immer}]-> ROOM1151
+== ROOM1051N erreichbar
+    ROOM1031 -[ROOM1031 slot 0 main00@0x01CD8 y=0 {immer}]-> ROOM1051N
+== ROOM1051S erreichbar
+    ROOM1031 -[ROOM1031 slot 2 main00@0x01D18 y=0 {immer}]-> ROOM1041
+    ROOM1041 -[ROOM1041 slot 2 main00@0x010D8 y=0 {immer}]-> ROOM1061
+    ROOM1061 -[ROOM1061 slot 1 main00@0x00D32 y=0 {immer}]-> ROOM10C1
+    ROOM10C1 -[ROOM10C1 slot 2 main00@0x00EA4 y=0 {immer}]-> ROOM10D1
+    ROOM10D1 -[ROOM10D1 slot 0 main00@0x01174 y=0 {NICHT(Ck(3,50,0))}]-> ROOM10F1
+    ROOM10F1 -[ROOM10F1 slot 1 main00@0x00F52 y=-9000 {immer}]-> ROOM1091
+    ROOM1091 -[ROOM1091 slot 0 main00@0x0211A y=0 {immer}]-> ROOM1051S

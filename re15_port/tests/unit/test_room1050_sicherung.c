@@ -7,11 +7,12 @@
  * herausgenommen, wo eine Sicherung eingesetzt werden muss, die Bilder/Cuts dafuer aber
  * bereits existieren."
  *
- * Dieser Haken baut das Raetsel NICHT. Er nagelt die gemessenen Tatsachen fest, auf
- * denen eine spaetere Wiederherstellung aufsetzen muss, und er sichert, dass der Raum
- * bis dahin loesbar bleibt. Alle Zahlen sind Datei-Byte-Offsets in den AUSGELIEFERTEN
- * RDTs unter shared_assets/PSX — sie aendern sich nie, weil der Port keine Original-
- * Assets patcht (Eingriffe laufen port-seitig, s. scd_vm.c op_aot_set ROOM1150 Slot 1).
+ * Dieser Haken nagelt die gemessenen Tatsachen der AUSGELIEFERTEN Dateien fest und sichert,
+ * dass der Raum loesbar bleibt. Seit Runde 34 Nacht (Spur A) ist das Raetsel portseitig
+ * WIEDERHERGESTELLT (engine/src/rolltor_1050.c, Riegel unit_r34n_a_rolltor): das Tor laeuft
+ * erst, wenn die Sicherung eingesetzt ist. Alle Zahlen sind Datei-Byte-Offsets in den
+ * AUSGELIEFERTEN RDTs unter shared_assets/PSX — sie aendern sich nie, weil der Port keine
+ * Original-Assets patcht (Eingriffe laufen port-seitig, s. scd_vm.c scd_event_fire).
  *
  * WAS BELEGT IST (Dossier: analysis/befunde_2026-09-27/sicherung-verdrahtung.md):
  *
@@ -23,15 +24,22 @@
  *     Sicherung eingesetzt + BEIDE GRUEN (gemessen ueber probe_bg_dump, Schwelle >4
  *     der Kanalabweichung: 2761 Pixel, bbox x123..268 y16..181).
  *
- *  2. DER MECHANISMUS IST Cut_replace (0x4B), NICHT Cut_chg. Das Schwesterraetsel
- *     ROOM2060 (Generator-Sicherung) fuehrt es vollstaendig vor:
+ *  2. DAS SCHWESTERRAETSEL ROOM2060 (Generator-Sicherung) hat dieselbe Form: die Paare
+ *     5/11, 6/10, 8/9 sind je EIN Blick in zwei Zustaenden (28 Byte gleich, nur der
+ *     pri-Offset verschieden), und es tauscht zwei davon beim Einsetzen:
  *       sub19 @0x0169E  22 03 90 01   Set(3,144,1)   "Sicherung eingesetzt"
  *       sub19 @0x016C2  4b 05 0b      Cut_replace 5,11
  *       sub19 @0x016C5  4b 06 0a      Cut_replace 6,10
  *       sub00 @0x010F2  4b 05 0b      dasselbe Paar beim WIEDERbetreten
  *       sub00 @0x010F5  4b 06 0a
- *     und die getauschten Paare 5/11, 6/10, 8/9 haben dieselbe Form wie ROOM1050s 7/8:
- *     28 Byte gleich, nur der pri-Offset verschieden.
+ *     ⛔ KORRIGIERT (Runde 34 Nacht, Dossier A_rolltor.md §3.5): Cut_replace ist NICHT der
+ *     Mechanismus der Nahansicht. Es etikettiert nur die RVD-ZONEN um (LAB_80040414
+ *     @0x80040434 `lw a3,40(v0)` = RDT+0x28, Tauschschleife ueber cam_from/cam_to,
+ *     Schritt 20 @0x80040498) — ROOM2060 tauscht damit seine NORMALEN Raumblicke 5/11
+ *     und 6/10. Die Nahansicht selbst waehlt es mit `Cut_chg 8` (sub18 @0x0168C) und
+ *     `Cut_chg 9` (sub19 @0x016A2). ROOM1050s Cut 7/8 sind reine Skript-Cuts (RVD nur
+ *     Anker @0x32C/@0x340 auf einem Blindrechteck) -> Cut_replace 7,8 waere wirkungslos;
+ *     der Port waehlt sie mit Cut_chg 7 / Cut_chg 8 (rolltor_1050.c).
  *
  *  3. DIE SICHERUNG IST IM SPIEL — als FLAG, nicht als Inventar-Gegenstand:
  *       ROOM2030 sub06 @0x01FE4  2b 02 ff ff   Message_on 2 "Will you take the Fuse? "
@@ -44,12 +52,15 @@
  *     liegt im Nachrichtenblock, aber im ganzen Raum gibt es kein `Message_on 2`
  *     (Opcode 0x2B, pc[1]==2) und kein Cut_chg/Cut_replace auf 7 oder 8.
  *
- *  5. DURCHSPIELBARKEIT (der harte Riegel): der Shutter-Schalter oeffnet im
- *     Auslieferungsstand OHNE jede Bedingung. Das wird hier LIVE gefahren, nicht
- *     behauptet: Raum hochfahren -> auf AOT-Slot 7 stellen -> Aktion -> Ja ->
- *     flag(3,121)==1 und die SCA-Zelle 19 aller fuenf Partitionen ist frei (u0==0).
- *     Wer spaeter eine Sicherungs-Bedingung einbaut, MUSS diesen Haken mitziehen —
- *     ohne auffindbare Sicherung waere der Raum sonst unloesbar.
+ *  5. DURCHSPIELBARKEIT (der harte Riegel): im Auslieferungsstand oeffnet der Schalter
+ *     OHNE jede Bedingung. Seit Runde 34 Nacht haengt davor die Sicherung (Item 0x40,
+ *     portseitige Fundstelle Hebetisch ROOM1150/1151, sicherung_1150.c, gepinnt von
+ *     unit_r31_hebetisch / unit_r30_sicherung_*). Das wird hier LIVE gefahren, nicht
+ *     behauptet: Raum hochfahren -> Aktion am AOT-Slot 7 -> Ja ->
+ *       (6i)   OHNE Sicherung bleibt das Tor zu (flag(3,121)==0, Zelle 19 solide);
+ *       (6ii)  MIT Sicherung: Einsetzen (Ja/Ja) -> flag(9,63)==1, Sicherung weg;
+ *       (6iii) erneut Aktion -> ausgelieferter sub02 -> Ja -> flag(3,121)==1 und die
+ *              SCA-Zelle 19 aller fuenf Partitionen ist frei (u0==0).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -57,6 +68,9 @@
 #include "re15_aot.h"
 #include "re15_room.h"
 #include "re15_msg.h"
+#include "re15_inventory.h"
+#include "re15_rolltor.h"
+#include "re15_sicherung.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -125,6 +139,53 @@ static int bytes_bei(const uint8_t *d, long sz, long off, const uint8_t *soll, i
     return 0;
 }
 
+/* SCA-Zelle 19 (Rolltor-Sperre) je Partition solide (u0=0xFF)? 5 = Tor zu. */
+static int zelle19_solide(const re15_rdt_t *r)
+{
+    int n = 0, basis = 0;
+    for (int g = 0; g < 5; g++) {
+        int fi = basis + 19;
+        basis += r->sca_rgn[g];
+        if (fi < r->sca_count && r->sca[fi].u0 == 0xFF) n++;
+    }
+    return n;
+}
+
+/* Aktion am Schalter — derselbe Weg wie im Spiel (Scan -> Ereignis 2 -> scd_event_fire, der
+ * Haken von Spur A) —, dann Bilder fahren: Nachrichten-FSM + VM; jede Frage mit Ja (0x4000 im
+ * Auswahlzustand 3), jeder Text mit Bestaetigen (Wartezustand 4) beantworten. `min_bilder` haelt
+ * die VM auch nach dem Ende des Fadens noch am Laufen (die Torfahrt von sub02). */
+static int schalter_ja(const re15_actor_t *pl, int min_bilder)
+{
+    extern uint8_t  g_aot_action_pressed;
+    extern uint16_t g_scd_pad_edge;
+    extern uint16_t g_scd_pad_held;
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(pl->x, pl->z, 0xFF);
+    g_aot_action_pressed = 0;
+    if (g_aot.fired_event_id_this_frame != 2) {
+        fprintf(stderr, "FAIL: Aktion am Schalter feuert Event %d (erwartet 2)\n",
+                g_aot.fired_event_id_this_frame);
+        return 1;
+    }
+    int slot = scd_event_fire(2);
+    if (slot < 0) { fprintf(stderr, "FAIL: Ereignis 2 startet keinen Faden\n"); return 1; }
+    int frage = 0;
+    for (int i = 0; i < 4000 && (g_scd.threads[slot].active || i < min_bilder); i++) {
+        g_scd_pad_edge = 0; g_scd_pad_held = 0;
+        if (g_scd.message_active && (g_scd.message_fsm == 3 || g_scd.message_fsm == 4))
+            g_scd_pad_edge = 0x4000;
+        if (g_scd.message_active && g_scd.message_id == 0) frage = 1;
+        re15_msg_tick(0, 0, 0);
+        g_scd_pad_edge = 0;
+        scd_vm_tick();
+    }
+    if (!frage) { fprintf(stderr, "FAIL: Schalterfrage msg 0 kam nicht\n"); return 1; }
+    if (g_scd.threads[slot].active) { fprintf(stderr, "FAIL: Faden endet nicht\n"); return 1; }
+    return 0;
+}
+
 /* Byte-Anker-Suche nach einem Item_aot_set-Record (Opcode 0x50, sce=9) mit dieser
  * Item-Id — ignoriert die Opcode-Struktur und kann deshalb nichts uebersehen.
  * Feldlage wie tools/scd_dump_room.py: +14 i_item, +16 n_item, +18 flag, +20 md1. */
@@ -186,10 +247,10 @@ int main(void)
     }
 
     /* (4) Item 0x40 "Fuse" hat im ausgelieferten Bestand KEINEN Ausgabe-Record —
-     *     weder in ROOM1050 noch in den beiden Sicherungsraeumen. Genau deshalb darf
-     *     an ROOM1050s Shutter keine Sicherungs-Bedingung haengen: es gaebe nichts
-     *     zu finden. (Ein spaeterer Einbau laeuft port-seitig und laesst diese
-     *     Original-Bytes unberuehrt.) */
+     *     weder in ROOM1050 noch in den beiden Sicherungsraeumen. Die Sicherungs-
+     *     Bedingung am Schalter setzt deshalb die PORTSEITIGE Fundstelle voraus
+     *     (Hebetisch ROOM1150/1151, sicherung_1150.c); diese Original-Bytes bleiben
+     *     unberuehrt. */
     {
         int n1 = item_records(d1050, sz1050, 0x40);
         int n2 = item_records(d2030, sz2030, 0x40);
@@ -234,7 +295,8 @@ int main(void)
                                 "doch verdrahtet\n", treffer);
                 fail = 1;
             } else {
-                printf("  ROOM1050 SCD 0xAD8..0xE3C: 0 x Message_on 2 — die Zeile ist verwaist\n");
+                printf("  ROOM1050 SCD 0xAD8..0xE3C: 0 x Message_on 2 — im Auslieferungsstand "
+                       "verwaist (portseitig: rolltor_1050.c)\n");
             }
         }
         /* Kein Cut_chg/Cut_replace auf 7 oder 8 im SCD. */
@@ -250,7 +312,7 @@ int main(void)
                 fail = 1;
             } else {
                 printf("  ROOM1050 SCD: kein Cut_chg/Cut_replace auf 7 oder 8 — beide Cuts "
-                       "sind unerreichbar\n");
+                       "sind im Auslieferungsstand unerreichbar (portseitig: rolltor_1050.c)\n");
             }
         }
 
@@ -359,47 +421,33 @@ int main(void)
             }
         }
 
-        /* Aktion druecken — derselbe Weg wie im Spiel (game_step_common.c:496). */
-        {
-            extern uint8_t g_aot_action_pressed;
-            g_aot.fired_event_id_this_frame = 0;
-            g_aot_action_pressed = 1;
-            re15_aot_scan(pl->x, pl->z, 0xFF);
-            g_aot_action_pressed = 0;
-            if (g_aot.fired_event_id_this_frame != 2) {
-                fprintf(stderr, "FAIL: Aktion am Schalter feuert Event %d (erwartet 2)\n",
-                        g_aot.fired_event_id_this_frame);
-                fail = 1;
-            } else if (scd_event_fire(2) < 0) {
-                fprintf(stderr, "FAIL: sub02 startet nicht\n");
-                fail = 1;
-            }
-        }
-        for (int i = 0; i < 8; i++) scd_vm_tick();
-
-        /* sub02 @0x00CAC: Message_on 0 "It's a shutter switch. / Will you push it?" */
-        if (!g_scd.message_active || g_scd.message_id != 0) {
-            fprintf(stderr, "FAIL: Shutter-Frage fehlt (active=%d id=%d)\n",
-                    g_scd.message_active, g_scd.message_id);
+        /* (6i) OHNE Sicherung: Aktion -> Frage -> Ja -> Nahansicht + "I need a fuse ..." -> das
+         * Tor bleibt zu (Port-Programm rolltor_1050.c statt sub02). */
+        if (schalter_ja(pl, 8) != 0) fail = 1;
+        if (re15_game_flag_get(3, 121) || re15_game_flag_get(9, 63) || zelle19_solide(&rdt) != 5) {
+            fprintf(stderr, "FAIL: (6i) ohne Sicherung oeffnet das Tor ((3,121)=%d (9,63)=%d)\n",
+                    re15_game_flag_get(3, 121), re15_game_flag_get(9, 63));
             fail = 1;
         } else {
-            printf("  Frage: msg 0 \"It's a shutter switch. / Will you push it?\"\n");
+            printf("  (6i)  ohne Sicherung: Frage -> Ja -> Tor bleibt zu, Zelle 19 solide\n");
         }
 
-        /* Mit JA beantworten: message_choice 0 = JA -> flag(12,31)=0 -> Ck(12,31,0) wahr
-         * (msg_common.c:578). Danach die VM weiterlaufen lassen. */
-        {
-            extern uint16_t g_scd_pad_edge;
-            extern uint16_t g_scd_pad_held;
-            for (int i = 0; i < 900 && g_scd.message_active; i++) {
-                g_scd_pad_held = 0x4000;
-                g_scd_pad_edge = 0x4000;
-                re15_msg_tick(0, 0, 0);
-            }
-            g_scd_pad_held = 0;
-            g_scd_pad_edge = 0;
+        /* (6ii) MIT Sicherung (Fundstelle Hebetisch ROOM1150, sicherung_1150.c): Aktion -> Ja ->
+         * "Will you use the Fuse?" -> Ja -> eingesetzt. */
+        g_inv.slots[0].id = RE15_SICHERUNG_ITEM; g_inv.slots[0].qty = 1; g_inv.slots[0].flags = 0;
+        if (schalter_ja(pl, 8) != 0) fail = 1;
+        if (!re15_game_flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT) ||
+            re15_inv_find_item(RE15_SICHERUNG_ITEM) >= 0 || re15_game_flag_get(3, 121)) {
+            fprintf(stderr, "FAIL: (6ii) Einsetzen: (9,63)=%d Sicherung-Platz=%d (3,121)=%d\n",
+                    re15_game_flag_get(9, 63), re15_inv_find_item(RE15_SICHERUNG_ITEM),
+                    re15_game_flag_get(3, 121));
+            fail = 1;
+        } else {
+            printf("  (6ii) mit Sicherung: Ja/Ja -> eingesetzt, (9,63)=1, Sicherung aus dem Inventar\n");
         }
-        for (int i = 0; i < 1200; i++) scd_vm_tick();
+
+        /* (6iii) danach: der ausgelieferte sub02 — Frage -> Ja -> das Tor faehrt. */
+        if (schalter_ja(pl, 1500) != 0) fail = 1;
 
         /* sub02 @0x00CBA Set(3,121,1) = Shutter offen. */
         if (!re15_game_flag_get(3, 121)) {

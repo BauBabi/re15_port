@@ -1,0 +1,13 @@
+suite1.log:99% tests passed, 4 tests failed out of 429
+suite1.log:The following tests FAILED:
+suite1.log:	340 - integration_r30_cut_blitz (Failed)
+suite1.log:	342 - integration_elza_vollstart (Failed)
+suite1.log:	344 - integration_r30_granate_laden (Failed)
+suite1.log:	398 - integration_r33_speichern (Failed)
+suite2.log:99% tests passed, 1 tests failed out of 429
+suite2.log:The following tests FAILED:
+suite2.log:	354 - integration_r30_irons_tisch_licht (Failed)
+suite3.log:99% tests passed, 2 tests failed out of 429
+suite3.log:The following tests FAILED:
+suite3.log:	340 - integration_r30_cut_blitz (Failed)
+suite3.log:	354 - integration_r30_irons_tisch_licht (Failed)

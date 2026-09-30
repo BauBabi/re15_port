@@ -1,0 +1,19 @@
+PSX.EXE t_addr=80010000 t_size=af000
+LoadImage                  jal=0c01a322 EXE 22: 800141a4 80014210 800195d8 80019618 8001dbfc 8002a154 8002aaa0 80036c74 80036cb8 80036ed8 80036f1c 800438b0 80049370 8004c1ac 8004c2e0 8004eee0 8004ef48 80053b60 80053c54 8006d404 8006d47c 8006d4e4
+    DEBUG.BIN: 2
+    TITLE.BIN: 2
+    STAGE1..6.BIN gesamt: 0
+StoreImage                 jal=0c01a33b EXE  4: 80021e44 8002a088 8004c174 8004d7fc
+    STAGE1..6.BIN gesamt: 0
+MoveImage                  jal=0c01a354 EXE  2: 8004945c 80049504
+    STAGE1..6.BIN gesamt: 0
+ClearImage                 jal=0c01a2fd EXE  4: 8001dbd4 80020cd8 8002ad90 8004ee20
+    STAGE1..6.BIN gesamt: 0
+FUN_80043870(BG-Upload)    jal=0c010e1c EXE  1: 8002157c
+    STAGE1..6.BIN gesamt: 0
+FUN_80021bbc(Cut-Wechsel)  jal=0c0086ef EXE  1: 80021558
+    STAGE1..6.BIN gesamt: 0
+FUN_80021634(Modus)        jal=0c00858d EXE 12: 80015204 8001642c 8001ca30 8001d24c 8001d5cc 8001d624 8001d830 8001dadc 80021184 80046704 8004957c 8004d848
+    TITLE.BIN: 7
+    STAGE1..6.BIN gesamt: 0
+Stores imm 0x536c EXE: [('80021638', 'sb', 'lui800b')]

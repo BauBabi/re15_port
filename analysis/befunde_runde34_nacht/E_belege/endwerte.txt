@@ -1,0 +1,257 @@
+=== Dok 1 (ROOM1050/1051) Ursprung (16474,-360,-6592) rot_y 0, Slot 15, Rechteck (15250,-7250,1000,1000)
+
+### huelle 1050 16474 -360 -6592 0 137 13 189
+HUELLE cut=3 Bild x 131.3..140.6 y 139.8..144.8 vz 7831..8229 (Bucket 122..128) | Masken im Cut 20 (NACHGEZEICHNET)
+HUELLE cut=5 Bild x 158.4..162.9 y 106.3..107.8 vz 16133..16554 (Bucket 251..258) | Masken im Cut 83 (NACHGEZEICHNET)
+   Maske  64 x 133..178 y 98..113 Tiefe 93 (verdeckt ab vz 6022): naechste Ecke VERDECKT, fernste VERDECKT
+HUELLE cut=9 Bild x 131.4..186.0 y 158.1..174.9 vz 1521..1914 (Bucket 23..29) | Masken im Cut 0
+
+### abdeckung 1050 15250 -7250 1000 1000 15 12000 18500 -11000 -3000 50
+RECHTECK Ecke(15250,-7250) Groesse(1000,1000) Slot 15 sat 0x31 band 0 -> x[15250..16250] z[-7250..-6250]
+Raster 50: x 12000..18500, z -11000..-3000; gueltige Standorte: 5481
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 709   Huelle x[14650..16650] z[-7850..-5650]
+Standort x Blickrichtung (64 je Standort): 350784, Treffer: 8239, von einem FRUEHEREN Satz abgefangen: 0
+
+### licht 1050 16474 -360 -6592
+CUT 0 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 1 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 2 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 3 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 4 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 5 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 6 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 7 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 8 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 9 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+
+### huelle 1051 16474 -360 -6592 0 137 13 189
+HUELLE cut=3 Bild x 131.3..140.6 y 139.8..144.8 vz 7831..8229 (Bucket 122..128) | Masken im Cut 0
+HUELLE cut=5 Bild x 158.4..162.9 y 106.3..107.8 vz 16133..16554 (Bucket 251..258) | Masken im Cut 0
+HUELLE cut=9 Bild x 131.4..186.0 y 158.1..174.9 vz 1521..1914 (Bucket 23..29) | Masken im Cut 0
+
+### abdeckung 1051 15250 -7250 1000 1000 15 12000 18500 -11000 -3000 50
+RECHTECK Ecke(15250,-7250) Groesse(1000,1000) Slot 15 sat 0x31 band 0 -> x[15250..16250] z[-7250..-6250]
+Raster 50: x 12000..18500, z -11000..-3000; gueltige Standorte: 5481
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 0
+Standort x Blickrichtung (64 je Standort): 350784, Treffer: 0, von einem FRUEHEREN Satz abgefangen: 8239
+   abgefangen von Slot 11 (GENERIC, evt 3): 8239
+
+### licht 1051 16474 -360 -6592
+CUT 0 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 1 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 2 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 3 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 4 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 5 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 6 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 7 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 8 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 9 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+
+### druck 1050 14900 -6750 0 15250 -7250 1000 1000 15 0x48
+DRUCK Stand (14900,-6750) rot=0 -> Item-Modal=0 Leser=1 msg_frames=0 msg_id=0 event=0
+
+=== Dok 2 (ROOM1000/1001) Ursprung (19226,-398,-11723) rot_y 0, Slot 10, Rechteck (18726,-12223,1000,1000)
+
+### huelle 1000 19226 -398 -11723 0 137 13 189
+HUELLE cut=0 Bild x 187.0..198.7 y 167.7..176.7 vz 5402..5830 (Bucket 84..91) | Masken im Cut 105 (NACHGEZEICHNET)
+   Maske  74 x 174..207 y 175..176 Tiefe 96 (verdeckt ab vz 6214): naechste Ecke frei, fernste frei
+   Maske  75 x 175..207 y 173..174 Tiefe 98 (verdeckt ab vz 6342): naechste Ecke frei, fernste frei
+   Maske  77 x 175..199 y 172..172 Tiefe 99 (verdeckt ab vz 6406): naechste Ecke frei, fernste frei
+   Maske  78 x 176..202 y 160..171 Tiefe 100 (verdeckt ab vz 6470): naechste Ecke frei, fernste frei
+
+### abdeckung 1000 18726 -12223 1000 1000 10 16000 23000 -15000 -9000 50
+RECHTECK Ecke(18726,-12223) Groesse(1000,1000) Slot 10 sat 0x31 band 0 -> x[18726..19726] z[-12223..-11223]
+Raster 50: x 16000..23000, z -15000..-9000; gueltige Standorte: 5335
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 134   Huelle x[18150..18300] z[-12650..-10800]
+Standort x Blickrichtung (64 je Standort): 341440, Treffer: 1000, von einem FRUEHEREN Satz abgefangen: 0
+
+### huelle 1001 19226 -398 -11723 0 137 13 189
+HUELLE cut=0 Bild x 187.0..198.7 y 167.7..176.7 vz 5402..5830 (Bucket 84..91) | Masken im Cut 0
+
+### abdeckung 1001 18726 -12223 1000 1000 10 16000 23000 -15000 -9000 50
+RECHTECK Ecke(18726,-12223) Groesse(1000,1000) Slot 10 sat 0x31 band 0 -> x[18726..19726] z[-12223..-11223]
+Raster 50: x 16000..23000, z -15000..-9000; gueltige Standorte: 5335
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 134   Huelle x[18150..18300] z[-12650..-10800]
+Standort x Blickrichtung (64 je Standort): 341440, Treffer: 1000, von einem FRUEHEREN Satz abgefangen: 0
+
+### licht 1000 19226 -398 -11723
+CUT 0 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 1 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 2 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 3 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 4 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 5 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 6 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 7 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 8 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+
+### strahl 1000 0 193.0 172.5 -385
+STRAHL cut=0 bild=(193.00,172.50) ebene y=-385.0 -> welt=(19226.4,-385.0,-11723.4) | gerundet zurueck (192.98,172.49) vz=5619, Abstand 0.02 px | Kamera-Ursprung (18797.3,-3209.3,-6621.5)
+
+### druck 1000 18250 -11723 0 18726 -12223 1000 1000 10 0x48
+DRUCK Stand (18250,-11723) rot=0 -> Item-Modal=0 Leser=1 msg_frames=0 msg_id=0 event=0
+
+### druck 1000 18250 -11723 1024 18726 -12223 1000 1000 10 0x48
+DRUCK Stand (18250,-11723) rot=1024 -> Item-Modal=0 Leser=0 msg_frames=0 msg_id=0 event=0
+
+### druck 1000 18250 -11723 2048 18726 -12223 1000 1000 10 0x48
+DRUCK Stand (18250,-11723) rot=2048 -> Item-Modal=0 Leser=0 msg_frames=0 msg_id=0 event=0
+
+### druck 1000 18250 -11723 3072 18726 -12223 1000 1000 10 0x48
+DRUCK Stand (18250,-11723) rot=3072 -> Item-Modal=0 Leser=0 msg_frames=0 msg_id=0 event=0
+
+=== Dok 3 (ROOM1020/1021) Ursprung (-9975,-1410,-16428) rot_y 0, Slot 14, Rechteck (-11100,-16928,2200,1000)
+    Tisch-Nachricht: ROOM1020 Slot 10 -> 15, ROOM1021 Slot 11 -> 15
+
+### huelle 1020 -9976 -1459 -16435 0 143 49 218
+HUELLE cut=3 Bild x 142.2..148.2 y 96.6..98.3 vz 17020..17395 (Bucket 265..271) | Masken im Cut 44 (Original)
+   Maske  35 x 127..166 y 91..114 Tiefe 258 (verdeckt ab vz 16592): naechste Ecke VERDECKT, fernste VERDECKT
+HUELLE cut=5 Bild x 158.7..164.6 y 94.3..95.9 vz 17482..17900 (Bucket 272..279) | Masken im Cut 36 (Original)
+   Maske   1 x 138..201 y 94..101 Tiefe 324 (verdeckt ab vz 20820): naechste Ecke frei, fernste frei
+   Maske  24 x 145..176 y 88..95 Tiefe 324 (verdeckt ab vz 20820): naechste Ecke frei, fernste frei
+HUELLE cut=6 Bild x 151.3..161.6 y 102.2..106.9 vz 9624..9993 (Bucket 150..155) | Masken im Cut 36 (Original)
+   Maske  32 x 125..188 y 101..108 Tiefe 156 (verdeckt ab vz 10058): naechste Ecke frei, fernste frei
+HUELLE cut=8 Bild x 285.9..296.3 y 103.2..105.8 vz 12198..12581 (Bucket 190..196) | Masken im Cut 12 (Original)
+
+### huelle 1021 -9976 -1459 -16435 0 143 49 218
+HUELLE cut=3 Bild x 142.2..148.2 y 96.6..98.3 vz 17020..17395 (Bucket 265..271) | Masken im Cut 44 (Original)
+   Maske  35 x 127..166 y 91..114 Tiefe 258 (verdeckt ab vz 16592): naechste Ecke VERDECKT, fernste VERDECKT
+HUELLE cut=5 Bild x 158.7..164.6 y 94.3..95.9 vz 17482..17900 (Bucket 272..279) | Masken im Cut 36 (Original)
+   Maske   1 x 138..201 y 94..101 Tiefe 324 (verdeckt ab vz 20820): naechste Ecke frei, fernste frei
+   Maske  24 x 145..176 y 88..95 Tiefe 324 (verdeckt ab vz 20820): naechste Ecke frei, fernste frei
+HUELLE cut=6 Bild x 151.3..161.6 y 102.2..106.9 vz 9624..9993 (Bucket 150..155) | Masken im Cut 36 (Original)
+   Maske  32 x 125..188 y 101..108 Tiefe 156 (verdeckt ab vz 10058): naechste Ecke frei, fernste frei
+HUELLE cut=8 Bild x 285.9..296.3 y 103.2..105.8 vz 12198..12581 (Bucket 190..196) | Masken im Cut 12 (Original)
+
+### abdeckung 1020 -11100 -16928 2200 1000 14 -14000 -6000 -21000 -12000 50 10 15
+VERSCHOBEN: Slot 10 -> Slot 15 (MESSAGE evt 3)
+RECHTECK Ecke(-11100,-16928) Groesse(2200,1000) Slot 14 sat 0x31 band 0 -> x[-11100..-8900] z[-16928..-15928]
+Raster 50: x -14000..-6000, z -21000..-12000; gueltige Standorte: 15658
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 611   Huelle x[-11700..-8300] z[-17500..-15400]
+Standort x Blickrichtung (64 je Standort): 1002112, Treffer: 5384, von einem FRUEHEREN Satz abgefangen: 0
+
+### abdeckung 1021 -11100 -16928 2200 1000 14 -14000 -6000 -21000 -12000 50 11 15
+VERSCHOBEN: Slot 11 -> Slot 15 (MESSAGE evt 12)
+RECHTECK Ecke(-11100,-16928) Groesse(2200,1000) Slot 14 sat 0x31 band 0 -> x[-11100..-8900] z[-16928..-15928]
+Raster 50: x -14000..-6000, z -21000..-12000; gueltige Standorte: 15658
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 611   Huelle x[-11700..-8300] z[-17500..-15400]
+Standort x Blickrichtung (64 je Standort): 1002112, Treffer: 5384, von einem FRUEHEREN Satz abgefangen: 0
+
+### abdeckung 1020 -11100 -16928 2200 1000 14 -14000 -6000 -21000 -12000 50
+RECHTECK Ecke(-11100,-16928) Groesse(2200,1000) Slot 14 sat 0x31 band 0 -> x[-11100..-8900] z[-16928..-15928]
+Raster 50: x -14000..-6000, z -21000..-12000; gueltige Standorte: 15658
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 0
+Standort x Blickrichtung (64 je Standort): 1002112, Treffer: 0, von einem FRUEHEREN Satz abgefangen: 5384
+   abgefangen von Slot 10 (MESSAGE, evt 3): 5384
+
+### licht 1020 -9975 -1410 -16428
+CUT 0 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(31,34,34) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(31,34,34) +Z=(31,34,34) -Z=(31,34,34)
+CUT 1 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(40,42,42) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(78,81,81) +Z=(43,46,46) -Z=(34,37,37)
+CUT 2 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(40,42,42) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(78,81,81) +Z=(43,46,46) -Z=(34,37,37)
+CUT 3 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(40,42,42) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(78,81,81) +Z=(43,46,46) -Z=(34,37,37)
+CUT 4 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(40,42,42) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(78,81,81) +Z=(43,46,46) -Z=(34,37,37)
+CUT 5 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(52,55,55) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(89,92,92) +Z=(50,52,52) -Z=(31,34,34)
+CUT 6 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(50,52,52) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(89,91,91) +Z=(31,34,34) -Z=(55,57,57)
+CUT 7 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(31,34,34) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(33,36,36) +Z=(32,35,35) -Z=(31,34,34)
+CUT 8 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(48,50,50) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(45,48,48) +Z=(67,69,69) -Z=(31,34,34)
+CUT 9 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(49,52,52) unten(+Y)=(31,34,34) +X=(36,39,39) -X=(31,34,34) +Z=(70,73,73) -Z=(31,34,34)
+CUT 10 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(61,63,63) unten(+Y)=(31,34,34) +X=(50,53,53) -X=(31,34,34) +Z=(67,70,70) -Z=(31,34,34)
+CUT 11 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(61,63,63) unten(+Y)=(31,34,34) +X=(50,53,53) -X=(31,34,34) +Z=(67,70,70) -Z=(31,34,34)
+CUT 12 ambient=(63,68,68) aktive Lichter am Ort: 3 | oben(-Y)=(50,52,52) unten(+Y)=(31,34,34) +X=(31,34,34) -X=(89,91,91) +Z=(31,34,34) -Z=(55,57,57)
+
+### strahl 1020 6 156.5 105.5 -1410
+STRAHL cut=6 bild=(156.50,105.50) ebene y=-1410.0 -> welt=(-9975.9,-1410.0,-16434.6) | gerundet zurueck (156.49,105.48) vz=9829, Abstand 0.02 px | Kamera-Ursprung (-18971.8,-4967.5,-18288.9)
+
+### druck 1020 -11500 -16428 0 -11100 -16928 2200 1000 14 0x48 10 15
+VERSCHOBEN: Slot 10 -> Slot 15
+DRUCK Stand (-11500,-16428) rot=0 -> Item-Modal=0 Leser=1 msg_frames=0 msg_id=0 event=0
+
+### druck 1020 -11500 -16428 0 -11100 -16928 2200 1000 14 0x48
+DRUCK Stand (-11500,-16428) rot=0 -> Item-Modal=0 Leser=0 msg_frames=2 msg_id=3 event=0
+
+### druck 1021 -11500 -16428 0 -11100 -16928 2200 1000 14 0x48 11 15
+VERSCHOBEN: Slot 11 -> Slot 15
+DRUCK Stand (-11500,-16428) rot=0 -> Item-Modal=0 Leser=1 msg_frames=0 msg_id=0 event=0
+
+=== Dok 4 (ROOM1010/1011) Ursprung (450,-1600,5600) rot_y 3840, Slot 9, Rechteck (-50,5100,1000,1000)
+
+### huelle 1010 452 -1649 5593 3840 143 49 218
+HUELLE cut=0 Bild x 192.6..229.8 y 156.9..179.0 vz 2603..3111 (Bucket 40..48) | Masken im Cut 100 (NACHGEZEICHNET)
+   Maske  14 x 197..290 y 178..185 Tiefe 40 (verdeckt ab vz 2627): naechste Ecke frei, fernste VERDECKT
+   Maske  18 x 192..317 y 173..180 Tiefe 42 (verdeckt ab vz 2755): naechste Ecke frei, fernste VERDECKT
+   Maske  21 x 188..319 y 169..184 Tiefe 44 (verdeckt ab vz 2883): naechste Ecke frei, fernste VERDECKT
+   Maske  25 x 184..319 y 165..172 Tiefe 46 (verdeckt ab vz 3011): naechste Ecke frei, fernste VERDECKT
+   Maske  33 x 180..319 y 161..168 Tiefe 48 (verdeckt ab vz 3139): naechste Ecke frei, fernste frei
+   Maske  39 x 177..319 y 158..165 Tiefe 50 (verdeckt ab vz 3267): naechste Ecke frei, fernste frei
+   Maske  44 x 174..319 y 155..162 Tiefe 52 (verdeckt ab vz 3395): naechste Ecke frei, fernste frei
+   Maske  51 x 171..319 y 152..159 Tiefe 54 (verdeckt ab vz 3523): naechste Ecke frei, fernste frei
+   Maske  58 x 168..319 y 150..157 Tiefe 56 (verdeckt ab vz 3652): naechste Ecke frei, fernste frei
+HUELLE cut=1 Bild x 60.4..90.8 y 154.1..169.4 vz 3462..3827 (Bucket 54..59) | Masken im Cut 88 (NACHGEZEICHNET)
+   Maske  46 x 0..88 y 168..183 Tiefe 53 (verdeckt ab vz 3459): naechste Ecke VERDECKT, fernste VERDECKT
+   Maske  48 x 0..90 y 166..181 Tiefe 54 (verdeckt ab vz 3523): naechste Ecke frei, fernste VERDECKT
+   Maske  50 x 0..92 y 164..179 Tiefe 55 (verdeckt ab vz 3588): naechste Ecke frei, fernste VERDECKT
+   Maske  52 x 0..95 y 162..177 Tiefe 56 (verdeckt ab vz 3652): naechste Ecke frei, fernste VERDECKT
+   Maske  54 x 0..97 y 160..175 Tiefe 57 (verdeckt ab vz 3716): naechste Ecke frei, fernste VERDECKT
+   Maske  56 x 0..98 y 158..173 Tiefe 58 (verdeckt ab vz 3780): naechste Ecke frei, fernste VERDECKT
+   Maske  59 x 0..100 y 156..171 Tiefe 59 (verdeckt ab vz 3844): naechste Ecke frei, fernste frei
+   Maske  62 x 0..102 y 155..170 Tiefe 60 (verdeckt ab vz 3908): naechste Ecke frei, fernste frei
+   Maske  66 x 0..104 y 153..168 Tiefe 61 (verdeckt ab vz 3972): naechste Ecke frei, fernste frei
+   Maske  71 x 0..113 y 151..166 Tiefe 62 (verdeckt ab vz 4036): naechste Ecke frei, fernste frei
+   Maske  75 x 0..114 y 150..165 Tiefe 63 (verdeckt ab vz 4100): naechste Ecke frei, fernste frei
+   Maske  79 x 0..112 y 148..163 Tiefe 64 (verdeckt ab vz 4164): naechste Ecke frei, fernste frei
+HUELLE cut=6 Bild x 285.7..318.6 y 150.6..168.9 vz 3670..4192 (Bucket 57..65) | Masken im Cut 86 (NACHGEZEICHNET)
+   Maske  14 x 193..319 y 162..177 Tiefe 60 (verdeckt ab vz 3908): naechste Ecke frei, fernste VERDECKT
+   Maske  20 x 187..319 y 155..170 Tiefe 64 (verdeckt ab vz 4164): naechste Ecke frei, fernste VERDECKT
+   Maske  26 x 181..314 y 149..164 Tiefe 68 (verdeckt ab vz 4420): naechste Ecke frei, fernste frei
+   Maske  31 x 177..302 y 143..158 Tiefe 72 (verdeckt ab vz 4677): naechste Ecke frei, fernste frei
+   Maske  37 x 172..290 y 138..153 Tiefe 76 (verdeckt ab vz 4933): naechste Ecke frei, fernste frei
+HUELLE cut=7 Bild x 171.2..178.1 y 97.2..100.6 vz 10892..11368 (Bucket 170..177) | Masken im Cut 0
+HUELLE cut=8 Bild x 85.8..107.0 y 162.4..183.1 vz 3295..3776 (Bucket 51..58) | Masken im Cut 88 (NACHGEZEICHNET)
+   Maske   2 x 70..122 y 182..197 Tiefe 51 (verdeckt ab vz 3331): naechste Ecke frei, fernste VERDECKT
+   Maske   6 x 25..127 y 175..190 Tiefe 54 (verdeckt ab vz 3523): naechste Ecke frei, fernste VERDECKT
+   Maske  11 x 0..131 y 168..183 Tiefe 57 (verdeckt ab vz 3716): naechste Ecke frei, fernste VERDECKT
+   Maske  15 x 0..134 y 178..193 Tiefe 60 (verdeckt ab vz 3908): naechste Ecke frei, fernste frei
+   Maske  16 x 0..135 y 162..177 Tiefe 60 (verdeckt ab vz 3908): naechste Ecke frei, fernste frei
+   Maske  20 x 2..139 y 157..172 Tiefe 63 (verdeckt ab vz 4100): naechste Ecke frei, fernste frei
+
+### abdeckung 1010 -50 5100 1000 1000 9 -3000 4000 3000 9000 50
+RECHTECK Ecke(-50,5100) Groesse(1000,1000) Slot 9 sat 0x31 band 0 -> x[-50..950] z[5100..6100]
+Raster 50: x -3000..4000, z 3000..9000; gueltige Standorte: 6381
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 201   Huelle x[-650..1450] z[4800..6700]
+Standort x Blickrichtung (64 je Standort): 408384, Treffer: 786, von einem FRUEHEREN Satz abgefangen: 2202
+   abgefangen von Slot 2 (ITEM, evt 0): 2202
+
+### huelle 1011 452 -1649 5593 3840 143 49 218
+HUELLE cut=0 Bild x 192.6..229.8 y 156.9..179.0 vz 2603..3111 (Bucket 40..48) | Masken im Cut 0
+HUELLE cut=1 Bild x 60.4..90.8 y 154.1..169.4 vz 3462..3827 (Bucket 54..59) | Masken im Cut 0
+HUELLE cut=6 Bild x 285.7..318.6 y 150.6..168.9 vz 3670..4192 (Bucket 57..65) | Masken im Cut 0
+HUELLE cut=7 Bild x 171.2..178.1 y 97.2..100.6 vz 10892..11368 (Bucket 170..177) | Masken im Cut 0
+HUELLE cut=8 Bild x 85.8..107.0 y 162.4..183.1 vz 3295..3776 (Bucket 51..58) | Masken im Cut 0
+
+### abdeckung 1011 -50 5100 1000 1000 9 -3000 4000 3000 9000 50
+RECHTECK Ecke(-50,5100) Groesse(1000,1000) Slot 9 sat 0x31 band 0 -> x[-50..950] z[5100..6100]
+Raster 50: x -3000..4000, z 3000..9000; gueltige Standorte: 6381
+Standorte mit MINDESTENS einer treffenden Blickrichtung (ohne fruehere Saetze): 201   Huelle x[-650..1450] z[4800..6700]
+Standort x Blickrichtung (64 je Standort): 408384, Treffer: 786, von einem FRUEHEREN Satz abgefangen: 2202
+   abgefangen von Slot 2 (ITEM, evt 0): 2202
+
+### licht 1010 450 -1600 5600
+CUT 0 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 1 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 2 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 3 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 4 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 5 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 6 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 7 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+CUT 8 ambient=(83,78,78) aktive Lichter am Ort: 3 | oben(-Y)=(41,39,39) unten(+Y)=(41,39,39) +X=(41,39,39) -X=(41,39,39) +Z=(41,39,39) -Z=(41,39,39)
+
+### strahl 1010 0 220.0 177.0 -1600
+STRAHL cut=0 bild=(220.00,177.00) ebene y=-1600.0 -> welt=(246.3,-1600.0,5585.2) | gerundet zurueck (220.01,176.97) vz=2676, Abstand 0.03 px | Kamera-Ursprung (-1892.6,-2855.0,7040.9)
+
+### druck 1010 700 6400 1024 -50 5100 1000 1000 9 0x48
+DRUCK Stand (700,6400) rot=1024 -> Item-Modal=0 Leser=1 msg_frames=0 msg_id=0 event=0
+
+### druck 1010 300 6400 1024 -50 5100 1000 1000 9 0x48
+DRUCK Stand (300,6400) rot=1024 -> Item-Modal=1 Leser=0 msg_frames=0 msg_id=0 event=0

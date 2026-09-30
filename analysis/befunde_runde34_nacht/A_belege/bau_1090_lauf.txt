@@ -1,0 +1,19 @@
+=== lauf_1090.sh (10F0 -> 1090 obere Ebene, Feuer brennt)
+[scd F0] Cut_chg(0)
+[debug-menu] AUTO-JUMP -> ROOM10F0 (Frame 120)
+[room] PC loaded room10f0.rdt (225092 bytes)
+[fire-aot] slot=1 at F200 (Raum 10F0)
+[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500) target_cut=0 spawn=(-13600,-9000,1300)
+[room] PC loaded room1090.rdt (336440 bytes)
+[scd F200] Cut_chg(8)
+[flow] EXIT_AT: Bild 820 in Raum 1090 erreicht -> exit
+  F300 pad=0000 PL(-13600,1300,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0
+  F340 pad=0020 PL(-13600,1300,rot=4128,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0
+  F360 pad=0010 PL(-12120,1240,rot=4128,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0
+  F380 pad=0010 PL(-10640,1180,rot=4128,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0
+  F400 pad=0080 PL(-9900,1150,rot=3168,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 
+  F420 pad=0010 PL(-9900,2575,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 
+  F440 pad=0010 PL(-9900,3358,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 
+  F500 pad=0010 PL(-9900,3358,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 
+  F600 pad=0000 PL(-9900,3358,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 
+  F820 pad=0000 PL(-9900,3358,rot=3072,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=14 mg=0 bx=50 sl=1111 cam=8 msg(a=0 fsm=0 

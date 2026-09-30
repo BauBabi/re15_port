@@ -1,0 +1,14 @@
+cap_000_lamp_near.sav Vcount=   14322 dV=      room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_001_lamp_near_0.5.sav Vcount=   15353 dV= 1031 room=17 cut= 2 aca34=1 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_002_lamp_fwd1.sav Vcount=   13122 dV=-2231 room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_003_lamp_left1.sav Vcount=   13142 dV=   20 room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_004_lampwalk_1.2.sav Vcount=   14197 dV= 1055 room=17 cut= 2 aca34=1 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_005_lampwalk_3.4.sav Vcount=   14322 dV=  125 room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_006_lampwalk_base.sav Vcount=   13122 dV=-1200 room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_007_lamp_1170_run2.sav Vcount=    8604 dV=-4518 room=17 cut= 2 aca34=1 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_008_orig_1170_gp.sav Vcount=    8049 dV= -555 room=17 cut= 2 aca34=1 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_009_lamp_behind1.sav Vcount=   13164 dV= 5115 room=17 cut= 3 aca34=0 | fb0 L=107.0 w= 16 b=428 | fb240 L=107.0 w= 16 b=428 | ram L=107.0 w= 16 b=428
+cap_010_lamp_1170_run4.sav Vcount=   11994 dV=-1170 room=17 cut= 3 aca34=1 | fb0 L=107.0 w= 16 b=428 | fb240 L=107.0 w= 16 b=428 | ram L=107.0 w= 16 b=428
+cap_011_orig_lamp_start.sav Vcount=   13164 dV= 1170 room=17 cut= 3 aca34=0 | fb0 L=107.0 w= 16 b=428 | fb240 L=107.0 w= 16 b=428 | ram L=107.0 w= 16 b=428
+cap_012_lampwalk_2.4.sav Vcount=   14266 dV= 1102 room=17 cut= 2 aca34=0 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360
+cap_013_lamp_near_0.9.sav Vcount=   15369 dV= 1103 room=17 cut= 2 aca34=1 | fb0 L= 94.9 w= 16 b=360 | fb240 L= 94.9 w= 16 b=360 | ram L= 94.9 w= 16 b=360

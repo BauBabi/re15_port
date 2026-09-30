@@ -2,6 +2,11 @@
 # SICHERUNG-LADE-PIN (Runde 30, Thema H; Nutzer: "in ROOM 1150 im Modell das
 # hochgeht ist es nicht sichtbar").
 #
+# ⛔ SEIT RUNDE 34 NACHT (Spur B, include/re15_hebetisch_cursor.h): RE15_FIRE_AOT=1 (re15_aot_fire_slot ->
+# scd_event_fire direkt) prueft den HARNESS-Weg OHNE Hebetisch-Cursor — die Fahrt laeuft sofort. Der
+# Spieler hat diesen Weg nicht mehr: die Aktionstaste am Tisch bringt erst den Cursor (Kuppel-Klick ->
+# Fahrt). Den Spielerweg bis zu den Aufnahmen prueft integration_r34n_b_cursor.
+#
 # GEMESSEN (echte exe, vor dem Bau, Spielstand in ROOM1150, RE15_FIRE_AOT=1@90):
 # der Lade-Lauf war ueber alle 25 Stichbilder F90..F330 PIXELGLEICH mit dem Lauf
 # ohne Sicherung. Im debug.log standen nach

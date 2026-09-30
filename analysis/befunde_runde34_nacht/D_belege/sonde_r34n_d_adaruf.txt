@@ -1,0 +1,102 @@
+probe_r34n_d_adaruf: k_ruf 142 Bytes, RBJ 53112 Bytes
+  RBJ rec0: rc=0, 26 Clips; Clip 17 = 30 Bilder, Clip 19 = 30 Bilder
+
+=== Fall A: erster Druck, Ada NICHT gerettet, Rolltor offen (3,121)=1 ===
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Installation: Slot 4 -> sce 3 / Ereignis 13 (Szene)
+  Slot 4 danach: type=0 event_id=13 band=0
+  Quadrat-Druck: Aktions-Scan meldet Ereignis 13 (Soll 13)
+  Start: Spieler (16580,-13700) rot 0, Ziel Rueckschritt (15825,-13700)
+  B  1  PC +00  Spieler (16580,-13700) rot    0  st=1 walk=0 mo=200 fl=0x00  (2,7)=0 (1,27)=0 pm=0 lb=0 msg=-0
+  B  1        Clip 200 Flags 0x00
+  B  2  PC +19  Spieler (16580,-13700) rot    0  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=16 msg=-0
+  B  2        Clip 2 Flags 0x00
+  B 21  PC +1C  Spieler (16580,-13700) rot    0  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=-0
+  B 22  PC +21  Spieler (16580,-13700) rot    0  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=22
+  B 22        Nachricht 22 sichtbar
+  B121  PC +24  Spieler (16580,-13700) rot    0  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=22
+  B122  PC +31  Spieler (16580,-13700) rot 4095  st=4 walk=1 mo=105 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=-0
+  B122        Clip 105 Flags 0x00
+  B123        Clip 2 Flags 0x00
+  B124  PC +45  Spieler (16510,-13700) rot 4095  st=4 walk=1 mo=236 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=-0
+  B124        Clip 236 Flags 0x00
+  B133        Clip 2 Flags 0x00
+  B134  PC +4D  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=-0
+  B134        Rueckschritt fertig: Weg 700, jetzt (15880,-13700) rot 4095
+  B153  PC +50  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=2 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=-0
+  B154  PC +59  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=19 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=23
+  B154        Clip 19 Flags 0x00
+  B154        Nachricht 23 sichtbar
+  B178  PC +5C  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=19 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=23
+  B179  PC +65  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=19 fl=0x80  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=23
+  B179        Clip 19 Flags 0x80
+  B204  PC +68  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=19 fl=0x80  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=23
+  B205  PC +71  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=17 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=24
+  B205        Clip 17 Flags 0x00
+  B205        Nachricht 24 sichtbar
+  B304  PC +74  Spieler (15880,-13700) rot 4095  st=4 walk=0 mo=17 fl=0x00  (2,7)=1 (1,27)=1 pm=2 lb=240 msg=24
+  B305  PC +FF  Spieler (15880,-13700) rot 4095  st=1 walk=0 mo=200 fl=0x00  (2,7)=0 (1,27)=0 pm=1 lb=224 msg=-0
+  B305        Clip 200 Flags 0x00
+  Faden-Ende Bild 305, Fremd-PC 0, Letterbox voll ab Bild 16 (max 0xF0), jetzt 0x00
+  Flags: (9,65)=1 (2,7)=0 (1,27)=0  player_mode=0  state=1
+  Slot 4 danach: type=5 (MESSAGE=5) event_id=25 maske=0xFFFF band=0
+  Folgedruck: Nachricht aktiv=1 id=25 (Soll 25), Raumwechsel angefordert=0
+
+=== Fall B: Szene schon gesehen (9,65)=1, Ada nicht gerettet ===
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Installation: Slot 4 -> sce 1 / msg 25 (Text)
+  Slot 4: type=5 (DOOR=1, MESSAGE=5, GENERIC=0) event_id=25
+  Druck: Nachricht aktiv=1 id=25, Raumwechsel angefordert=0 (Ziel 0x0000)
+
+=== Fall C: Ada gerettet (3,0xBB)=1 -> Originaltuer ===
+  Installation: (3,0xBB)=1 -> Tuer bleibt
+  Slot 4: type=1 (DOOR=1, MESSAGE=5, GENERIC=0) event_id=0
+  Druck: Nachricht aktiv=0 id=0, Raumwechsel angefordert=1 (Ziel 0x10A0)
+
+=== Fall D: Ada gerettet UND Szene gesehen ===
+  Installation: (3,0xBB)=1 -> Tuer bleibt
+  Slot 4: type=1 (DOOR=1, MESSAGE=5, GENERIC=0) event_id=0
+  Druck: Nachricht aktiv=0 id=0, Raumwechsel angefordert=1 (Ziel 0x10A0)
+
+=== Fall E: Rueckschritt von verschiedenen Druckstellen ===
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Standplatz, Blick +X             Druck bei (16580,-13700): Schritt B124..B134 (10 Bilder), Weg 700, Ende (15880,-13700) rot 4095, Faden-Ende B305
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Nordrand, Blick +X               Druck bei (16100,-12750): Schritt B124..B134 (10 Bilder), Weg 700, Ende (15400,-12750) rot 4095, Faden-Ende B305
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Suedrand, Blick +X               Druck bei (16100,-14650): Schritt B124..B134 (10 Bilder), Weg 703, Ende (15400,-14582) rot 4095, Faden-Ende B305
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Nordwest, Blick SO (+X-Z)        Druck bei (16300,-12300): Schritt B128..B138 (10 Bilder), Weg 700, Ende (15600,-12300) rot 4095, Faden-Ende B309
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  Suedwest, Blick NO (+X+Z)        Druck bei (16300,-15100): Schritt B128..B138 (10 Bilder), Weg 700, Ende (15600,-15100) rot 4095, Faden-Ende B309
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  im Rechteck-Norden, Blick -Z     Druck bei (16732,-12200): Schritt B133..B143 (10 Bilder), Weg 700, Ende (16032,-12200) rot 4095, Faden-Ende B314
+  msg 22: 59 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 23: 42 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 24: 35 Bytes, Standzeit re15_msg_compute_duration = 99 Bilder
+  msg 25: 38 Bytes, Standzeit re15_msg_compute_duration = 60 Bilder
+  im Rechteck-Sueden, Blick +Z     Druck bei (17000,-15150): Schritt B133..B139 (6 Bilder), Weg 658, Ende (16342,-15150) rot 4095, Faden-Ende B310

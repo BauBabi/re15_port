@@ -1,0 +1,140 @@
+ROOM1000: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+   slot  0: Door_aot_set main00@0x00BBE
+   slot  1: Door_aot_set main00@0x00BDE
+   slot  2: Door_aot_set main00@0x00BFE
+   slot  3: Item_aot_set sub00@0x00C24
+   slot  4: Item_aot_set sub00@0x00C3A
+   slot  5: Item_aot_set sub00@0x00C50
+   slot  6: Aot_set sub00@0x00CAA
+   slot  7: Aot_set sub00@0x00CBE
+   slot  8: Aot_set sub00@0x00CD2
+   slot  9: Aot_set sub00@0x00CE6
+   obj_ids [0, 1]
+   obj  0: sub00@0x00C66
+   obj  1: sub00@0x00C88
+   abgebrochene Bloecke: keine
+ROOM1001: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+   slot  0: Door_aot_set main00@0x00BBE
+   slot  1: Door_aot_set main00@0x00BDE
+   slot  2: Door_aot_set main00@0x00BFE
+   slot  3: Item_aot_set sub00@0x00C24
+   slot  4: Item_aot_set sub00@0x00C3A
+   slot  5: Item_aot_set sub00@0x00C50
+   slot  6: Aot_set sub00@0x00CAA
+   slot  7: Aot_set sub00@0x00CBE
+   slot  8: Aot_set sub00@0x00CD2
+   slot  9: Aot_set sub00@0x00CE6
+   obj_ids [0, 1]
+   obj  0: sub00@0x00C66
+   obj  1: sub00@0x00C88
+   abgebrochene Bloecke: keine
+ROOM1010: Slots [0, 1, 2, 3, 4, 5, 6, 7]
+   slot  0: Door_aot_set main00@0x008AE
+   slot  1: Door_aot_set main00@0x008CE
+   slot  2: Item_aot_set sub00@0x00996
+   slot  3: Item_aot_set sub00@0x009AC
+   slot  4: Item_aot_set sub00@0x009C2
+   slot  5: Aot_set main00@0x008EE
+   slot  6: Aot_set main00@0x00902
+   slot  7: Aot_set main00@0x00916
+   obj_ids [0, 1, 2]
+   obj  0: sub00@0x00930
+   obj  1: sub00@0x00952
+   obj  2: sub00@0x00974
+   abgebrochene Bloecke: keine
+ROOM1011: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8]
+   slot  0: Door_aot_set main00@0x008AE
+   slot  1: Door_aot_set main00@0x008CE
+   slot  2: Item_aot_set main00@0x00954
+   slot  3: Item_aot_set main00@0x0096A
+   slot  4: Item_aot_set main00@0x00980
+   slot  5: Aot_set sub00@0x00A0A; Aot_set sub00@0x00A52; Aot_reset sub00@0x00A78; Aot_reset sub02@0x00DC0; Aot_reset sub06@0x00E0A; Aot_reset sub06@0x00E42; Aot_reset sub07@0x00E4E; Aot_reset sub07@0x00E78
+   slot  6: Aot_set main00@0x00996
+   slot  7: Aot_set main00@0x009AA
+   slot  8: Aot_set main00@0x009BE
+   obj_ids [0, 1, 2]
+   obj  0: main00@0x008EE
+   obj  1: main00@0x00910
+   obj  2: main00@0x00932
+   abgebrochene Bloecke: keine
+ROOM1020: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+   slot  0: Door_aot_set main00@0x01C82
+   slot  1: Door_aot_set main00@0x01CA2
+   slot  2: Door_aot_set main00@0x01CC2
+   slot  3: Item_aot_set main00@0x01D6A
+   slot  4: Item_aot_set main00@0x01D80
+   slot  5: Aot_set main00@0x01DDA; Aot_reset sub02@0x01F70; Aot_reset sub02@0x01F9A
+   slot  6: Aot_set main00@0x01E18; Aot_reset sub03@0x01FAA
+   slot  7: Aot_set main00@0x01ED2
+   slot  8: Aot_set main00@0x01EE6
+   slot  9: Aot_set main00@0x01EFA
+   slot 10: Aot_set main00@0x01F0E
+   slot 11: Aot_set main00@0x01F22
+   slot 12: Aot_set main00@0x01F36
+   obj_ids [0, 1, 2, 3, 4, 5, 6]
+   obj  0: main00@0x01CE2
+   obj  1: main00@0x01D04
+   obj  2: main00@0x01D26
+   obj  3: main00@0x01D48
+   obj  4: main00@0x01D96
+   obj  5: main00@0x01DB8
+   obj  6: main00@0x01DEE
+   abgebrochene Bloecke: keine
+ROOM1021: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+   slot  0: Door_aot_set main00@0x01C82
+   slot  1: Door_aot_set main00@0x01CA2
+   slot  2: Door_aot_set main00@0x01CC2
+   slot  3: Item_aot_set main00@0x01D6A
+   slot  4: Item_aot_set main00@0x01D80
+   slot  5: Aot_set main00@0x01DE2; Aot_reset sub02@0x01FE8
+   slot  6: Aot_set main00@0x01E2C; Aot_reset sub06@0x021EC; Aot_reset sub06@0x02216
+   slot  7: Aot_set main00@0x01E74; Aot_reset sub07@0x02226
+   slot  8: Aot_set main00@0x01F30
+   slot  9: Aot_set main00@0x01F44
+   slot 10: Aot_set main00@0x01F58
+   slot 11: Aot_set main00@0x01F6C
+   slot 12: Aot_set main00@0x01F80
+   slot 13: Aot_set main00@0x01F94
+   obj_ids [0, 1, 2, 3, 4, 5, 6]
+   obj  0: main00@0x01CE2
+   obj  1: main00@0x01D04
+   obj  2: main00@0x01D26
+   obj  3: main00@0x01D48
+   obj  4: main00@0x01D96
+   obj  5: main00@0x01DB8
+   obj  6: main00@0x01E40
+   abgebrochene Bloecke: keine
+ROOM1050: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+   slot  0: Door_aot_set main00@0x00ADA
+   slot  1: Door_aot_set main00@0x00AFA
+   slot  2: Door_aot_set main00@0x00B1A
+   slot  3: Door_aot_set main00@0x00B3A
+   slot  4: Door_aot_set main00@0x00B5A
+   slot  5: Door_aot_set main00@0x00B7A
+   slot  6: Item_aot_set main00@0x00B9A
+   slot  7: Aot_set sub00@0x00C22; Aot_reset sub02@0x00CBE
+   slot  8: Aot_set main00@0x00BD2
+   slot  9: Aot_set main00@0x00BE6
+   slot 10: Aot_set main00@0x00BFA
+   obj_ids [0, 1]
+   obj  0: sub00@0x00C36
+   obj  1: main00@0x00BB0
+   abgebrochene Bloecke: keine
+ROOM1051: Slots [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+   slot  0: Door_aot_set main00@0x00ADA
+   slot  1: Door_aot_set main00@0x00AFA
+   slot  2: Door_aot_set main00@0x00B1A
+   slot  3: Door_aot_set main00@0x00B3A
+   slot  4: Door_aot_set main00@0x00B5A
+   slot  5: Door_aot_set main00@0x00B7A
+   slot  6: Item_aot_set main00@0x00B9A
+   slot  7: Aot_set sub00@0x00C4C; Aot_reset sub02@0x00CDA
+   slot  8: Aot_set main00@0x00BD2
+   slot  9: Aot_set main00@0x00BE6
+   slot 10: Aot_set main00@0x00BFA
+   slot 11: Aot_set main00@0x00C0E; Aot_reset sub01@0x00CBA
+   slot 12: Item_aot_set main00@0x00C22; Aot_on sub03@0x00DBC
+   obj_ids [0, 1]
+   obj  0: sub00@0x00C60
+   obj  1: main00@0x00BB0
+   abgebrochene Bloecke: keine

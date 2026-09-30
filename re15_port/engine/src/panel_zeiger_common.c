@@ -29,6 +29,11 @@ static int s_eingeschwungen   = 0;   /* erster Tick im Raum: ohne Nachfuehr-Anim
  * (RE2 ROOM2130.RDT sub04 @0x0171C/@0x0171D sleep 0x1E). */
 static unsigned s_maske = 0;
 static int      s_ruhe  = RE15_PANEL_RUHE_BILDER;
+/* DIE ZWEI GRUENEN LAMPEN (Runde 34 Nacht, Belege im Kopf von re15_panel_zeiger.h):
+ * s_lampe_an[i] = Zustand im letzten Tick (0 oben, 1 unten), s_lampe_takt[i] = Bilder seit
+ * dem Einschalten (0 im Einschaltbild -> RE2-Zelle 3, dann 4, 3, 4 ...). */
+static int      s_lampe_an[2]   = { 0, 0 };
+static int      s_lampe_takt[2] = { 0, 0 };
 
 /* Messhaken fuer die Sonde. */
 unsigned g_re15_panel_bestaet_zaehler = 0;
@@ -102,6 +107,23 @@ void re15_panel_zeiger_reset(void)
     s_wert = 0; s_ziel = 0; s_roh = 0; s_aktiv = 0;
     s_geloest_vorframe = 0; s_eingeschwungen = 0;
     s_maske = 0; s_ruhe = RE15_PANEL_RUHE_BILDER;
+    s_lampe_an[0] = s_lampe_an[1] = 0;
+    s_lampe_takt[0] = s_lampe_takt[1] = 0;
+}
+
+/* Die Lampenregel — NUTZER-VORGABE Runde 34 Nacht ("Das obere Licht soll angehen, wenn links
+ * die 3 Schalter korrekt betaetigt sind ... Sobald eines der jeweiligen Schalter der
+ * jeweiligen Seite nicht mehr korrekt ist ... wieder aus"). "Korrekt" = die RE1.5-Loesung:
+ *   oben  (linke Spalte, Schalter 1..5):  Ck @0x012BE `21 05 0d 01`, @0x012C2 `21 05 0e 00`,
+ *         @0x012C6 `21 05 0f 01`, @0x012CA `21 05 10 00`, @0x012CE `21 05 11 01`
+ *   unten (rechte Spalte, Schalter 6..10): Ck @0x012D2 `21 05 12 00`, @0x012D6 `21 05 13 01`,
+ *         @0x012DA `21 05 14 00`, @0x012DE `21 05 15 01`, @0x012E2 `21 05 16 00`
+ * Beide zusammen <=> Maske 0x155 <=> Zeigerziel 80 <=> die Kette zieht. */
+int re15_panel_lampe_an_aus_maske(int nr, unsigned maske)
+{
+    if (nr == 0) return (maske & RE15_PANEL_LAMPE_OBEN_MASKE)  == RE15_PANEL_LAMPE_OBEN_SOLL;
+    if (nr == 1) return (maske & RE15_PANEL_LAMPE_UNTEN_MASKE) == RE15_PANEL_LAMPE_UNTEN_SOLL;
+    return 0;
 }
 
 void re15_panel_zeiger_tick(void)
@@ -154,6 +176,21 @@ void re15_panel_zeiger_tick(void)
         s_maske = maske;
     }
 
+    /* DIE ZWEI LAMPEN, je Bild aus den Schalterbits (kein Einrasten): wirksam im Bild, in dem
+     * das Schalterbit wechselt (sub06..15 setzen es erst NACH der 16-Bild-Kippung, z.B.
+     * @0x01340 `22 05 0d 01`), an UND aus. Takt 0 im Einschaltbild = RE2-Zelle 3 (Routine 1
+     * @0x8001dc40/0x8001dc4c setzt Satz 4 im Zuendbild, Satz 4 `03 01 01 20`), dann je Bild
+     * weiter (Dauer 1, FUN_8001d68c @0x8001d7b8..0x8001d880). */
+    {
+        unsigned maske = panel_maske();
+        for (int i = 0; i < 2; i++) {
+            int an = re15_panel_lampe_an_aus_maske(i, maske);
+            s_lampe_takt[i] = (an && !s_lampe_an[i]) ? 0 : s_lampe_takt[i] + 1;
+            if (s_lampe_takt[i] > 0x3FFF) s_lampe_takt[i] &= 1;   /* nur die Paritaet zaehlt */
+            s_lampe_an[i] = an;
+        }
+    }
+
     /* Die BESTAETIGUNG. RE2 spielt sie unmittelbar hinter dem Geloest-Flag:
      *   sub04+0x064E (@ROOM2130.RDT 0x0175E)  22 04 3c 01   Raetsel geloest
      *   sub04+0x0652 (@ROOM2130.RDT 0x01762)  36 02 0c 01   se_on(Gruppe 2, 0x0C)
@@ -178,7 +215,8 @@ void re15_panel_zeiger_tick(void)
       if (!init) { init = 1; const char *e = getenv("RE15_PANEL_LOG");
                    if (e && *e) lf = fopen(e, "w"); }
       if (lf) { fprintf(lf, "F%u raum=%04X cut=%d aktiv=%d maske=%03X ein=%d roh=%d ziel=%d wert=%d geloest=%d "
-                            "strom=%d padsperre=%d msg=%d bestaet=%u ruhe=%d panelsperre=%d\n",
+                            "strom=%d padsperre=%d msg=%d bestaet=%u ruhe=%d panelsperre=%d "
+                            "lampe_o=%d lampe_u=%d lzelle_o=%d lzelle_u=%d\n",
                         (unsigned)g_engine.frame_count,
                         g_current_room_id, g_re15_active_cut, s_aktiv,
                         panel_maske(), panel_ein_zaehlen(), s_roh, s_ziel,
@@ -186,7 +224,10 @@ void re15_panel_zeiger_tick(void)
                         re15_game_flag_get(4, 243),                        /* sub18 @0x016F6 */
                         (g_re15_pauseflags & RE15_PAUSE_PAD) ? 1 : 0,
                         (int)g_scd.message_active, g_re15_panel_bestaet_zaehler,
-                        s_ruhe, re15_panel_zeiger_sperrt());
+                        s_ruhe, re15_panel_zeiger_sperrt(),
+                        s_lampe_an[0], s_lampe_an[1],
+                        s_lampe_an[0] ? RE15_PANEL_LAMPE_ZELLE_A + (s_lampe_takt[0] & 1) : 0,
+                        s_lampe_an[1] ? RE15_PANEL_LAMPE_ZELLE_A + (s_lampe_takt[1] & 1) : 0);
                 fflush(lf); } }
 }
 
@@ -221,25 +262,51 @@ int re15_panel_zeiger_abnahme_haelt(const uint8_t *pc, const uint8_t *raw)
 
 int re15_panel_zeiger_sperrt(void)
 {
+    /* NUR DIE ENDSPERRE (Runde 34 Nacht, NUTZER-VORGABE "man soll sich frei bewegen koennen
+     * Ausser ganz am Ende", Belege im Kopf von re15_panel_zeiger.h). Die Runde-31-Zweige
+     * "Maske geaendert / Zeiger faehrt / Ruhe < 30" sperrten nach JEDEM Schalter — das nimmt
+     * der Nutzer zurueck, und RE1.5 hat es nie getan (kein `22 02 07 01` in sub01..sub17). */
     if (!RE15_PANEL_IST_RAUM(g_current_room_id) || !s_eingeschwungen) return 0;
     if (!re15_game_flag_get(5, 0)) return 0;        /* Raetsel nicht aktiv (sub16 @0x015C2) */
-    if (re15_game_flag_get(4, 238)) return 0;       /* geloest: sub18 sperrt selbst @0x01736 */
-    {
-        unsigned maske = panel_maske();
-        /* LIVE: das Schalterbit, das die VM in DIESEM Bild gesetzt hat (sub06 @0x01340),
-         * sperrt schon die Pad-Woerter, die in diesem Bild fuer die naechste VM entstehen —
-         * sonst rutschte ein gehaltener Knopf fuer ein Bild durch. */
-        if (maske != s_maske) return 1;
-        if (s_wert != re15_panel_zeiger_ziel_aus_maske(maske)) return 1;   /* Fahrt */
-    }
-    if (s_ruhe < RE15_PANEL_RUHE_BILDER) return 1;                        /* Stillstand */
-    /* Steht der Zeiger auf 80, ist die Abnahme faellig: RE2 haelt Bit 7 bis NACH der
-     * Pruefung (@0x01752 cmp, Freigabe erst @0x01818), der Spieler kann also zwischen
-     * Stillstand und "OK" nichts mehr tun. Ohne diese Zeile waeren die Pad-Woerter des
-     * Freigabe-Bildes offen, und ein Tastendruck liefe in derselben VM-Runde wie
-     * Evt_exec(sub18). Die Sperre endet von selbst: sub18 loescht Bank 5 Bit 0 (@0x016FA)
-     * und setzt 4:238 (@0x012EA) — beides beendet diese Funktion oben. */
-    return (s_wert == RE15_PANEL_ZIEL && s_ziel == RE15_PANEL_ZIEL) ? 1 : 0;
+    if (re15_game_flag_get(4, 238)) return 0;       /* abgenommen: sub18 sperrt selbst @0x01736 */
+    /* LIVE (nicht s_maske des letzten Ticks): das Schalterbit, das die VM in DIESEM Bild
+     * gesetzt hat (sub06..15, z.B. @0x01340 `22 05 0d 01`), sperrt schon die Pad-Woerter, die
+     * in diesem Bild fuer die naechste VM entstehen — sonst rutschte ein gehaltener Knopf fuer
+     * ein Bild durch. Die Maske 0x155 ist die EINZIGE, die auf 80 zielt (r27-Riegel: 1 von
+     * 1024), und genau die RE1.5-Loesung @0x012BE..0x012E2. Damit umfasst diese eine Bedingung
+     * die ganze RE2-Endstrecke: Fahrt auf 80 (@0x011E0..0x01218), Stillstand 30 (@0x0171C),
+     * Pruefung (@0x01752) — RE2 haelt Bank 2 Bit 7 bis @0x01818. Die Sperre endet von selbst:
+     * die Abnahme setzt 4:238 (@0x012EA, Zeile oben) und sub18 legt im selben Bild seine
+     * eigene Sperre (@0x01736 `22 02 07 01`); aendert eine vorher begonnene Kippung die
+     * Maske, faellt sie im Bild des Bits. */
+    return panel_maske() == RE15_PANEL_LOESUNGSMASKE;
+}
+
+int re15_panel_lampen(void)
+{
+    return (s_lampe_an[0] ? 1 : 0) | (s_lampe_an[1] ? 2 : 0);
+}
+
+int re15_panel_lampe_takt(int nr)
+{
+    return (nr == 0 || nr == 1) ? s_lampe_takt[nr] : 0;
+}
+
+int re15_panel_lampe_sicht(int nr, int *x0, int *y0, int *kante, int *zelle)
+{
+    /* Sichtbar wie der Zeiger: Raum 11F0/11F1 und die Raetselbuehne Cut 10 (sub16 @0x015C0
+     * `29 0a`). Die Lampen sind im Hintergrund dieses Cuts gemalt (Rahmen x 213..231 /
+     * y 67..85 und y 126..143, C_generator.md §3.6); Cut 12 zeigt sie zwar schraeg, wird aber
+     * nie angefahren (kein `29 0c`, keine RVD-Zone). */
+    if (nr != 0 && nr != 1) return 0;
+    if (!RE15_PANEL_IST_RAUM(g_current_room_id)) return 0;
+    if (g_re15_active_cut != RE15_PANEL_CUT) return 0;
+    if (!s_lampe_an[nr]) return 0;
+    if (x0)    *x0    = RE15_PANEL_LAMPE_X0;
+    if (y0)    *y0    = nr ? RE15_PANEL_LAMPE_Y0_UNTEN : RE15_PANEL_LAMPE_Y0_OBEN;
+    if (kante) *kante = RE15_PANEL_LAMPE_KANTE;
+    if (zelle) *zelle = RE15_PANEL_LAMPE_ZELLE_A + (s_lampe_takt[nr] & 1);
+    return 1;
 }
 
 int re15_panel_zeiger_sicht(int *sx, int *sy)

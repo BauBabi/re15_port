@@ -1,0 +1,59 @@
+# Spur G Gegenpruefung (Skeptiker) - eigene Messungen, 2026-09-30
+
+## A. Port im ECHTEN Durchlauf (kein Debug-Sprung)
+exe: re15_port/build/platform/pc/re15_pc.exe (Bau 02:36, Stand cf0e68ba; Kopie re15_pc_skg.exe)
+env: RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_PSELECT_AUTO=1 RE15_WINDOW_SCALE=3 RE15_INPUT_SCRIPT="W2,S1,W900"
+     RE15_INPUT_SCRIPT_START=30 RE15_CUT_SYNC_LOG=cutsync.log RE15_FRAMEDUMP="0-5200/10:f" RE15_EXIT_AT="5200#1170"
+Weg: Titel -> NEW GAME -> Leon -> ROOM1240 (1421 Bilder Montage) -> ROOM1170 (Bild 0..5200; frame_count beginnt je Raum bei 0)
+Auswertung: Framedump 960x720, Mitte jedes 3x3-Blocks = logisches Pixel; Cut aus cutsync.log (view=);
+Referenz = BSS-Dekodierung (probe_r34n_g_bss auf STAGE1/ROOM117.BSS).
+Kamera-Zeitleiste ROOM1170 (Bild von..bis: Cut): 0..445:7, 446..479:0, 480..982:2, 983..1043:1, 1044..1230:2, 1231..1324:0, 1325..1360:1, 1361..1392:2, 1393..1413:3, 1414..1548:6, 1549..1768:4, 1769..5200:3
+
+Zusammenfassung je Kamera-Abschnitt (jedes 10. Bild):
+  Cut  2 F480..F980 (51 Bilder): blau 356..356, L 130.4..130.4, max|Port-BSS| 0..0
+  Cut  2 F1050..F1230 (19 Bilder): blau 356..356, L 130.4..130.4, max|Port-BSS| 0..0
+  Cut  2 F1370..F1390 (3 Bilder): blau 356..356, L 130.4..130.4, max|Port-BSS| 0..0
+  Cut  3 F1400..F1410 (2 Bilder): blau 0..0, L 1.3..1.3, max|Port-BSS| 240..240
+     Bilder mit Abweichung (Kinobalken ueber dem Schild, y0..24): F1400 L1.3 d240, F1410 L1.3 d240
+  Cut  4 F1550..F1760 (22 Bilder): blau 0..0, L 0.1..0.1, max|Port-BSS| 240..240
+     Bilder mit Abweichung (Kinobalken ueber dem Schild, y0..24): F1550 L0.1 d240, F1560 L0.1 d240, F1570 L0.1 d240, F1580 L0.1 d240, F1590 L0.1 d240, F1600 L0.1 d240, F1610 L0.1 d240, F1620 L0.1 d240, F1630 L0.1 d240, F1640 L0.1 d240, F1650 L0.1 d240, F1660 L0.1 d240, F1670 L0.1 d240, F1680 L0.1 d240, F1690 L0.1 d240, F1700 L0.1 d240, F1710 L0.1 d240, F1720 L0.1 d240, F1730 L0.1 d240, F1740 L0.1 d240, F1750 L0.1 d240, F1760 L0.1 d240
+  Cut  3 F1770..F5200 (344 Bilder): blau 0..427, L 13.1..135.5, max|Port-BSS| 0..192
+     Bilder mit Abweichung (Kinobalken ueber dem Schild, y0..24): F1770 L13.1 d192, F1780 L104.5 d32
+
+## B. Original-Aufnahme rec4 (Vorspann, 30 B/s) selbst nachgerechnet (rec4_small.raw, 4500 x 320x240)
+cut2 Lauf 1409..1918 (510 Bilder): Bilder mit Aenderung gegen das vorige = 0 []
+cut2 Lauf 1985..2177 (193 Bilder): Bilder mit Aenderung gegen das vorige = 0 []
+cut2 Lauf 2319..2355 (37 Bilder): Bilder mit Aenderung gegen das vorige = 0 []
+cut3 Lauf 2759..4499 (1741 Bilder): Bilder mit Aenderung gegen das vorige = 2 [2760, 2763]
+
+## C. MZD-Disk gegen Auslieferungsstand (ISO9660 aus 'Biohazard 1.5 (MZD Mod) Update 25-01-2025.bin' gelesen)
+PSX.EXE       MZD sha256 e6b340fd12ec43be  info/Re1.5/PSX.EXE sha256 e6b340fd12ec43be  BYTEGLEICH
+STAGE1.BIN    MZD sha256 50dffb0e03a46a5d  info/Re1.5/PSX/BIN/STAGE1.BIN sha256 50dffb0e03a46a5d  BYTEGLEICH
+ROOM117.BSS   MZD sha256 a1667e0dcc3562d4  info/Re1.5/PSX/STAGE1/ROOM117.BSS sha256 a1667e0dcc3562d4  BYTEGLEICH
+ROOM1170.RDT  MZD sha256 bcd0b0aac6e60d2c  info/Re1.5/PSX/STAGE1/ROOM1170.RDT sha256 bcd0b0aac6e60d2c  BYTEGLEICH
+ROOM1171.RDT  MZD sha256 10808ab1ce8304e0  info/Re1.5/PSX/STAGE1/ROOM1171.RDT sha256 10808ab1ce8304e0  BYTEGLEICH
+Wort @0x80013b7c in der Disk-Datei: 0x3c01800c (= lui at,0x800c) -> der 'Lade-Haken j 0x800c02c0' existiert nur im RAM zur Laufzeit.
+Voller Baumvergleich MZD-Disk gegen info/Re1.5 (ohne ZNULL.DAT): 689 von 692 Dateien bytegleich; verschieden nur
+  /PSX/MOVIE/CAPCOM.STR (Form-2-Sektoren, der Leser liest nur 2048 B je Sektor), /README.TXT, /SYSTEM.CNF (Zeilenenden);
+  beide README-Koepfe: '-=Resident Evil 1.5 (Magic Zombie Door) Update 25-01-2025=-' -> info/Re1.5 IST die MZD-Disk des Nutzers.
+MZD README.TXT (Disk-Wurzel), Zeilen zu Raum 117: 'Added sound effect to the helicopter of Leon's first cutscene in room 117',
+  'Added new cutscene in room 117 (Leon) (Texts By Juvenal)' - nichts zu Schild/Blinken/Hintergrund.
+
+## D. Vollstaendige Aufrufstellen der GPU-Bildtransfers (jal-Wort 0x0C000000|(ziel>>2) in PSX.EXE und BIN/*.BIN gesucht)
+LoadImage 0x80068c88 (Name 'LoadImage' @0x80011b9c): EXE 22 Stellen - 0x800141a4 0x80014210 (tote Helfer 0x80014144/0x800141c4, 0 Verweise),
+  0x800195d8 0x80019618 (ESP-TIM-Install FUN_800194f8), 0x8001dbfc (Blende FUN_8001db28, 1 Pixel @(0,0x1e9)), 0x8002a154 0x8002aaa0 (Film),
+  0x80036c74..0x80036f1c (Waffen-TIM y=0x1e0), 0x800438b0 (HINTERGRUND FUN_80043870), 0x80049370 (Statusschirm x>=0x2c0),
+  0x8004c1ac 0x8004c2e0 (Menue-Seite x=0x1c0 y=0x100), 0x8004eee0 0x8004ef48 (TIM-Lader, Raumladen), 0x80053b60 0x80053c54 (MDEC beim Cut-Wechsel),
+  0x8006d404 0x8006d47c 0x8006d4e4 (libgpu). STAGE1..6.BIN: 0. TITLE.BIN 2, DEBUG.BIN 2 (nicht im Spielbetrieb).
+MoveImage 0x80068d50: EXE 2 (0x8004945c 0x80049504 Statusschirm-Symbole). StoreImage 0x80068cec: EXE 4. ClearImage 0x80068bf4: EXE 4. Overlays: 0.
+Kein Overlay ruft eine der Huellen (FUN_80043870/80021bbc/80021634/8004ee78/80053a8c/800194f8/...) auf.
+Einzige Bedingung, die den Hintergrund-Upload je Bild auslaesst: DAT_800b536c != 0 (bne @0x80021524), gesetzt nur von
+  FUN_80021634 (Bildschirm-Modus; Aufrufer 0x80015204 0x8001642c 0x8001ca30 0x8001d624 0x8001d830 0x8001dadc 0x80021184 0x80046704 0x8004957c 0x8004d848).
+
+## E. OT-Walk Cut 3 mit dem Cut-3-Rechteck (--box 290,4,320,24; das Werkzeug-Default ist das Cut-2-Rechteck)
+lamp_behind1/2/3, orig_lamp_start, lamp_1170_run4, orig_lamp_walk, orig_lamp_z4500_out: 0 Treffer in allen drei OTs beider Puffer.
+orig_1170_gp2 (Cut 1, Vorspann): einziger Treffer = Kinobalken POLY_F4 @0x80072ecc/@0x80072ee4 bbox (0,0,320,24) rgb f0f0f0 abe=1.
+
+## F. BSS-Zensus ergaenzt
+Blau-Maske (b>150, b>r+60, b>g+40) je Cut: 2: 356 px x285..312 y50..63 | 3: 427 px x292..319 y6..21 | 4: 18 px x317..319 y12..21 (Rand) | 10: 248 px x262..287 y0..10 | sonst 0.
+Chunks: Daten enden bei 4..48 % von 0x10000, danach Nullen; kein zweiter 0x3800-Kopf in irgendeinem der 13 Chunks.

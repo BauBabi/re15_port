@@ -60,7 +60,7 @@
 #   RE15_FRESH=1    Configure erzwingt frischen Cache
 #   RE15_TESTS      Standard: ON  (-DRE15_BUILD_TESTS)
 #   RE15_TOOLS      Standard: OFF (-DRE15_BUILD_TOOLS, alte API)
-#   RE15_MIN_TESTS  Standard: 429 (untere Schranke gegen eine KOLLABIERTE Suite,
+#   RE15_MIN_TESTS  Standard: 464 (untere Schranke gegen eine KOLLABIERTE Suite,
 #                   nicht nur gegen 0 Tests. Stand 2026-08-27 = 238 Tests (+8:
 #                   integration_item_name_census, integration_fx_region_cull,
 #                   unit_re2z_bandlock_pin, unit_re2z_rise_hittable, unit_writher_kill_flag, unit_rig_root_fix, unit_1090_flame_out_pin, unit_1210_gitterhaende); wird
@@ -85,7 +85,12 @@
 #                   2026-09-29 (Runde 33 S): +2 (unit_r33_speichern, integration_r33_speichern) -> 418.
 #                   2026-09-29: +3 (unit_r33_karte_etage, _markierung, _speicher, Runde 33 Karte) -> 421.
 #                   2026-09-29: +4 (unit_r33_tuer1120_gesperrt/_frei/_szene/_elza, Runde 33 Tuer 1130->1120) -> 425.
-#                   2026-09-30: +1 (unit_r34a_asset_abgleich, Runde 34a N1 Android-Entpacker) -> 429.)
+#                   2026-09-30 (Runde 34 Nacht, r34n/integration, gemessen 463/463): +35 = A 1
+#                   (unit_r34n_a_rolltor), B 9 (Hebetisch-Cursor), C 1 (unit_r34n_c_generator), D 8
+#                   (unit_r34n_d_adaruf_*), E 2 (unit_r34n_e_dokumente, integration_r34n_e_dokumente_bild),
+#                   F 12 (unit_r34n_f_leiche_*), G2 2 (unit_r34n_g_maskgrp, integration_r34n_g_schrift1150)
+#                   -> 463. (Basis war 428, nicht 425: drei Tests der Runde 33 fehlten in dieser Liste.)
+#                   2026-09-30: +1 (unit_r34a_asset_abgleich, Runde 34a N1 Android-Entpacker) -> 464.)
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------
@@ -343,8 +348,8 @@ do_test() {
     # Nicht nur "0 Tests" abfangen: auch eine auf wenige Tests KOLLABIERTE Suite
     # ist ein falsches Gruen (genau die Klasse, die hier schon einmal ein
     # erfundenes "224/224" erzeugt hat). Untergrenze deshalb = volle Suite.
-    [ "$total" -ge "${RE15_MIN_TESTS:-429}" ] \
-      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-429} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
+    [ "$total" -ge "${RE15_MIN_TESTS:-464}" ] \
+      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-464} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
     [ "$failed" -eq 0 ] || die "$failed von $total Tests ROT. Log: $log"
     info "test OK — $passed/$total bestanden"
     TEST_SUMMARY="$passed/$total"

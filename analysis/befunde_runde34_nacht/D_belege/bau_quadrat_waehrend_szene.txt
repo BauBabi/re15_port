@@ -1,0 +1,14 @@
+# Auflage 8c: Quadrat 19x waehrend der Szene (RE15_PRESS=square@150,151,152,160,175,200,230,260,272,280,290,320,350,380,410,440,466,470,475), echte exe
+# Soll: genau EINE Szene (ein Faden), kein DOOR FIRE, kein DROPPED; Szene laeuft durch.
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_adaruf/re15_port/shared_assets/PSX
+[scd] thread start slot=10 first_op=0x22
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[aot] DOOR FIRE slot=0 rect=(22850,-13400,hw=500,hh=1000) target_cut=4 spawn=(14700,0,-13500)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[adaruf] Ereignis 13: Szene startet, Spieler (16500,-13500) Gierung 0 -> Blickpunkt (17255,-13500), Rueckschritt-Ziel (15745,-13500)
+[scd] thread start slot=10 first_op=0x22
+[msg] room=1050 id=22 savepoint=0
+[msg] room=1050 id=23 savepoint=0
+[msg] room=1050 id=24 savepoint=0
+[scd F480] letterbox closed -> gameplay (player_mode=0)

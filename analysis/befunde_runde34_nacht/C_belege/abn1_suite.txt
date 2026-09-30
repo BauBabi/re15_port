@@ -1,0 +1,15 @@
+# Abnahme 1 Spur C: eigener Volllauf local_build.sh (configure+build+test) im Baum r34n_generator, HEAD 4dbf0bbe (Spielcode = 42baac77)
+
+Total Test time (real) = 812.93 sec
+    test OK — 429/429 bestanden
+
+=== LOCAL-BUILD-OK (all) — Tests 429/429
+EXIT=0
+135/429 Test #135: unit_gen_11f0_switches ..............   Passed    0.04 sec
+198/429 Test #198: unit_gen_11f0_cursor_view ...........   Passed    0.02 sec
+212/429 Test #212: unit_11f0_cut_after_puzzle ..........   Passed    0.12 sec
+310/429 Test #310: unit_r17_cursor_klick_pin ...........   Passed    0.75 sec
+328/429 Test #328: unit_r26_panel_11f0 .................   Passed    0.09 sec
+333/429 Test #333: unit_r27_panel_schalterwerte ........   Passed    0.23 sec
+382/429 Test #382: unit_r31_generator ..................   Passed    0.46 sec
+406/429 Test #406: unit_r34n_c_generator ...............   Passed    1.64 sec

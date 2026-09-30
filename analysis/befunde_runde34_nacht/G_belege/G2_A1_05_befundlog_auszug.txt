@@ -1,0 +1,8 @@
+=========== MARKE 1 (F9) ===========
+  Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r34n_schrift/re15_port/build/platform/pc/befund_3000_F60_marke1.bmp
+F60      R3000 C0  hp=100  pos=(-23774,     0,-13736) rot=664   vz= 7367/ 6960/ 6553 scr=(218,156) kasten=x203..233,y106..159 masken=43 | keine Maske am Koerper
+  alle 43 Masken dieses Winkels (Nr:(x,y)bxh Tiefe -> Kamera-z):
+      0:(225,185) 16x8   t=96  z=6214    1:(225,193) 24x8   t=94  z=6085    2:(249,193) 24x8   t=91  z=5893    3:(273,185) 24x8   t=95  z=6150 
+[maskgrp] F60 Raum 3000 wv0A=0 wv0C=0 Gruppe 1 := 0 (9 Treffer, Zahl 43)
+[maskgrp] F60 Raum 3000 wv0A=0 wv0C=0 Gruppe 2 := 0 (20 Treffer, Zahl 43)
+[maskgrp] F60 Raum 3000 wv0A=0 wv0C=0 Gruppe 3 := 0 (14 Treffer, Zahl 43)

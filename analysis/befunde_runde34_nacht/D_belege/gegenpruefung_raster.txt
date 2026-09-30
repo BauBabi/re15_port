@@ -1,0 +1,25 @@
+# Gegenpruefung Spur D — Raster ueber alle Druckstellen (Skeptiker, 2026-09-30)
+# Quelle: gegenpruefung_raster_probe.c.txt = probe_r34n_d_adaruf.c bis fall_szene + Raster-main (unveraenderte Plan-Bytes k_ruf, Installation, Weiche).
+# Gebaut gegen re15_port/build/engine/libre15_engine.a dieses Baums (Stand 5207481a), gcc -std=c11, ausserhalb des Baums.
+# Filter: Punkt 620 voraus im Tuer-Rechteck x 16700..17700 z -14700..-12700; Spieler nach 30 Bildern unverschoben;
+#         x <= gemessene Ostgrenze des begehbaren Flurs (16732 fuer z > -15000, 16482 fuer z <= -15000; Lauf nach Osten mit Pad UP).
+
+## Lauf 1: Raster 50 x 50, Gierung je 128 (nur begehbare Stellen)
+Raster step 50 yawstep 128: Kandidaten 5310, gueltig 5310, Ereignis 13 5310, kein Ereignis 0, HAENGT 0, kurz(<500) 0
+  laengste Szene 314 Bilder, laengster Rueckschritt 10 Bilder, Weg 632..703
+
+## Lauf 2: Raster 100 x 100, Gierung je 256, OHNE Ostgrenzen-Filter (zeigt das Artefakt unerreichbarer Stellen in der Wand)
+LANG    Druck (17300,-15300) yaw 3072: Schritt 77 Bilder (B133..B210), Weg 824, Ende (16482,-15396) rot 1205
+LANG    Druck (17300,-15200) yaw 2816: Schritt 79 Bilder (B136..B215), Weg 820, Ende (16482,-15257) rot 1243
+LANG    Druck (17300,-15200) yaw 3072: Schritt 79 Bilder (B133..B212), Weg 820, Ende (16482,-15257) rot 1243
+LANG    Druck (17300,-15200) yaw 3328: Schritt 79 Bilder (B130..B209), Weg 820, Ende (16482,-15257) rot 1243
+LANG    Druck (17300,-15100) yaw 2560: Schritt 80 Bilder (B138..B218), Weg 822, Ende (16482,-15185) rot 1217
+LANG    Druck (17300,-15100) yaw 2816: Schritt 80 Bilder (B136..B216), Weg 822, Ende (16482,-15185) rot 1217
+LANG    Druck (17300,-15100) yaw 3072: Schritt 80 Bilder (B133..B213), Weg 822, Ende (16482,-15185) rot 1217
+LANG    Druck (17300,-15100) yaw 3328: Schritt 80 Bilder (B130..B210), Weg 822, Ende (16482,-15185) rot 1217
+Raster step 100 yawstep 256: Kandidaten 2332, gueltig 794, Ereignis 13 794, kein Ereignis 0, HAENGT 0, kurz(<500) 0
+  laengste Szene 389 Bilder, laengster Rueckschritt 80 Bilder, Weg 632..918
+
+## Gegenprobe Begehbarkeit (Pad UP 40 Bilder)
+Lauf ab (16300,-15100) Gierung 0 (Osten): steht ab F3 bei (16482,-15100) -> Wand bei x ~16932
+Lauf ab (17300,-15100) Gierung 2048 (Westen): bewegt sich 40 Bilder nicht -> Stelle liegt IN der Wand, im Spiel unerreichbar

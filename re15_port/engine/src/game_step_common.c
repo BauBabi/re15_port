@@ -32,10 +32,12 @@
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 #include "re15_sicherung.h"
 #include "re15_granate.h"   /* Runde 30 Nachtrag K: Granate in derselben Fahrt */
+#include "re15_leiche.h"    /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_hebetisch.h" /* Runde 31: Ruhe oben des Hebetischs (Mess-Protokoll) */
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
+#include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1048,6 +1050,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Sicherung, dann Granate"). Ebenfalls vor dem Freeze-Gate. Herleitung:
      * include/re15_granate.h. */
     if (c->rdt_ok) re15_granate_tick();
+    /* Runde 34 Nacht, Spur F: LEICHEN ROOM1110/1230 — ist der lange Leichen-Text zu, geht hier das
+     * Munitions-Modal auf, VOR dem Freeze-Gate darunter (Freeze im selben Bild, der Ereignis-Faden
+     * bleibt nach Evt_next stehen). Tut ausserhalb der zwei Leichen nichts. Herleitung:
+     * include/re15_leiche.h. */
+    if (c->rdt_ok) re15_leiche_tick();
 
     if (re15_item_modal_active()) return;
 
@@ -1136,8 +1143,9 @@ void re15_game_step(const re15_game_ctx_t *c)
      *       `Sce_key_ck` (0x51/0x52) seine Tasten liest (op_sce_key_ck), und faelschte
      *       damit die ausgelieferten Raetsel-Eingaben. Den SPIELER-Pad hat er ohnehin
      *       nicht angefasst (der rohe c->pad_current geht direkt an re15_player_tick). */
-    /* ⛔ RE2-ANGLEICHUNG PANEL-SPERRE (Runde 31, ROOM11F0/11F1 Generator-Raetsel): solange
-     * der Leistungszeiger faehrt bzw. die 30 Stillstands-Bilder danach laufen, wirkt dieselbe
+    /* ⛔ RE2-ANGLEICHUNG PANEL-SPERRE (Runde 31, ROOM11F0/11F1 Generator-Raetsel): seit Runde 34
+     * Nacht NUR NOCH DIE ENDSPERRE (Schaltermaske = Loesung, bis zur Abnahme), s.
+     * re15_panel_zeiger.h. Dann wirkt dieselbe
      * Maske wie Bit 0x01000000. RE2 haelt ueber die ganze Nachfuehrschleife und den Sleep
      * Bank 2 Bit 7 (ROOM2130.RDT sub04 @0x01110 `22 02 07 01` .. @0x01818 `22 02 07 00`;
      * Leser @0x800391F8..0x80039224 `andi v0,v0,0x3c00`). Das Pausen-WORT selbst bleibt
@@ -2189,7 +2197,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * original's free-slot scan) — DIAGNOSE it loudly instead of silently: a
      * dropped examine (e.g. the save phone) looks like a dead button. */
     if (g_aot.fired_event_id_this_frame != 0) {
-        if (scd_event_fire(g_aot.fired_event_id_this_frame) < 0) {
+        const int ev_slot = scd_event_fire(g_aot.fired_event_id_this_frame);
+        /* Runde 34 Nacht B: nur der SPIELERWEG armiert den Hebetisch-Cursor (Ereignis 4 in
+         * ROOM1150/1151, Thread gestartet) - include/re15_hebetisch_cursor.h. */
+        re15_hebetisch_cursor_aktion(g_aot.fired_event_id_this_frame, ev_slot);
+        if (ev_slot < 0) {
 #ifdef RE15_PLATFORM_PC
             fprintf(stderr, "[scd] WARN: event %u DROPPED (no free event slot)\n",
                     (unsigned)g_aot.fired_event_id_this_frame);

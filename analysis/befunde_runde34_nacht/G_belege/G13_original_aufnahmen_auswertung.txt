@@ -1,0 +1,66 @@
+== rec3 (Cut 2, 300 s, 60 fps, 96x48 Ausschnitt)
+Bilder 18000, Bilder mit Aenderung gegen das vorige: 0, groesste Summe 0
+Blau-Pixel je Bild: 1269..1269
+== rec4 (Vorspann ab Montage, 150 s, 30 fps)
+Bilder 4500
+Abschnitt     0..   95 (  96 Bilder): Pixel mit Hub>40: 0
+Abschnitt    96..  190 (  95 Bilder): Pixel mit Hub>40: 3849
+Abschnitt   191..  306 ( 116 Bilder): Pixel mit Hub>40: 3079
+Abschnitt   307..  403 (  97 Bilder): Pixel mit Hub>40: 3974
+Abschnitt   404..  508 ( 105 Bilder): Pixel mit Hub>40: 2001
+Abschnitt   509.. 1364 ( 856 Bilder): Pixel mit Hub>40: 12339
+Abschnitt  1373.. 1408 (  36 Bilder): Pixel mit Hub>40: 7486
+Abschnitt  1409.. 1918 ( 510 Bilder): Pixel mit Hub>40: 2715
+Abschnitt  1919.. 1984 (  66 Bilder): Pixel mit Hub>40: 0
+Abschnitt  1985.. 2177 ( 193 Bilder): Pixel mit Hub>40: 18193
+Abschnitt  2178.. 2275 (  98 Bilder): Pixel mit Hub>40: 3292
+Abschnitt  2276.. 2318 (  43 Bilder): Pixel mit Hub>40: 7362
+Abschnitt  2319.. 2354 (  36 Bilder): Pixel mit Hub>40: 962
+Abschnitt  2356.. 2378 (  23 Bilder): Pixel mit Hub>40: 1249
+Abschnitt  2379.. 2520 ( 142 Bilder): Pixel mit Hub>40: 2723
+Abschnitt  2522.. 2750 ( 229 Bilder): Pixel mit Hub>40: 2126
+Abschnitt  2751.. 4499 (1749 Bilder): Pixel mit Hub>40: 8327
+Schild cut2  sichtbar in 740 Bildern
+   Lauf  1409.. 1918  blau 353..353  L 134.0..134.0
+   Lauf  1985.. 2177  blau 353..353  L 134.0..134.0
+   Lauf  2319.. 2355  blau 353..353  L 134.0..134.0
+Schild cut3  sichtbar in 1741 Bildern
+   Lauf  2759.. 4499  blau 379..426  L 77.3..139.2
+Schild cut10 sichtbar in 0 Bildern
+== erzwungener Cut 5 (15 s, 30 fps)
+Bilder 433
+Abschnitt     0..  432 ( 433 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 0 Bildern
+== erzwungener Cut 8 (15 s, 30 fps)
+Bilder 415
+Abschnitt     0..  414 ( 415 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 0 Bildern
+== erzwungener Cut 9 (15 s, 30 fps)
+Bilder 424
+Abschnitt     0..  423 ( 424 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 0 Bildern
+== erzwungener Cut 10 (15 s, 30 fps)
+Bilder 450
+Abschnitt     0..  449 ( 450 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 450 Bildern
+   Lauf     0..  449  blau 247..247  L 134.0..134.0
+== erzwungener Cut 11 (15 s, 30 fps)
+Bilder 399
+Abschnitt     0..  398 ( 399 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 0 Bildern
+== erzwungener Cut 12 (15 s, 30 fps)
+Bilder 854
+Abschnitt     0..  853 ( 854 Bilder): Pixel mit Hub>40: 0
+Schild cut2  sichtbar in 0 Bildern
+Schild cut3  sichtbar in 0 Bildern
+Schild cut10 sichtbar in 0 Bildern

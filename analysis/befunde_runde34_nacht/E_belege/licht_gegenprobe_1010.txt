@@ -1,0 +1,5 @@
+Spray-Maske (Abzug, Rand 1 px ab): 399 Pixel, x 222..235 y 144..179
+  abzug_0,32   Mittel-RGB (22.2, 21.1, 21.1)  Y 21.4
+  abzug_1,00   Mittel-RGB (70.7, 70.7, 70.7)  Y 70.7
+  ECHTE exe    Mittel-RGB (22.7, 21.5, 21.5)  Y 21.9
+  Hintergrund  Mittel-RGB (81.3, 55.1, 25.9)  Y 59.6

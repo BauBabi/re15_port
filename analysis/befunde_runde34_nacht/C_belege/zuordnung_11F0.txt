@@ -1,0 +1,16 @@
+Raum ROOM11F0
+Schalter | Zellbit | Zelle(slot) x/z          | Member_cmp @ | Sub   | Prop obj x/z            | Zustandsbit | Loesung | Spalte/Zeile
+       1 |       1 |  2 (-27300, 25650) @0x00D78 | 0x010FC      | sub06 | 0x02 (-25975, 26000) @0x00E76 | 13 @0x01340 | EIN | links/1
+       2 |       2 |  3 (-27300, 23450) @0x00D8C | 0x01124      | sub07 | 0x03 (-25975, 24000) @0x00E98 | 14 @0x01380 | aus | links/2
+       3 |       3 |  4 (-27300, 21250) @0x00DA0 | 0x0114C      | sub08 | 0x04 (-25975, 22000) @0x00EBA | 15 @0x013C0 | EIN | links/3
+       4 |       4 |  5 (-27300, 19000) @0x00DB4 | 0x01174      | sub09 | 0x05 (-25975, 19800) @0x00EDC | 16 @0x01400 | aus | links/4
+       5 |       5 |  6 (-27300, 16800) @0x00DC8 | 0x0119C      | sub10 | 0x06 (-25975, 17800) @0x00EFE | 17 @0x01440 | EIN | links/5
+       6 |       6 |  7 (-19700, 25650) @0x00DDC | 0x011C4      | sub11 | 0x07 (-18775, 26000) @0x00F20 | 18 @0x01480 | aus | rechts/1
+       7 |       7 |  8 (-19700, 23450) @0x00DF0 | 0x011EC      | sub12 | 0x08 (-18775, 24000) @0x00F42 | 19 @0x014C0 | EIN | rechts/2
+       8 |       8 |  9 (-19700, 21250) @0x00E04 | 0x01214      | sub13 | 0x09 (-18775, 22000) @0x00F64 | 20 @0x01500 | aus | rechts/3
+       9 |       9 | 10 (-19700, 19000) @0x00E18 | 0x0123C      | sub14 | 0x0A (-18775, 19800) @0x00F86 | 21 @0x01540 | EIN | rechts/4
+      10 |      10 | 11 (-19700, 16800) @0x00E2C | 0x01264      | sub15 | 0x0B (-18775, 17800) @0x00FA8 | 22 @0x01580 | aus | rechts/5
+Loesungsmaske = 0x155 (Bit 0 = Schalter 1)
+Lampe oben  (linke Spalte, Schalter 1..5):  (m & 0x01F) == 0x015  -> 3 EIN-Schalter
+Lampe unten (rechte Spalte, Schalter 6..10): (m & 0x3E0) == 0x140  -> 2 EIN-Schalter
+Ergebnis: OK

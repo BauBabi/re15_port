@@ -1,0 +1,14 @@
+57           '.'    678  (89.4 %)  z.B. ROOM1000.RDT msg 0 @0x00D22
+1a           '!'     24  (3.2 %)  z.B. ROOM1090.RDT msg 7 @0x028E6
+19           '"'     16  (2.1 %)  z.B. ROOM1030.RDT msg 4 @0x0297F
+1b           '?'     13  (1.7 %)  z.B. ROOM1010.RDT msg 1 @0x00A8E
+38           '/'      4  (0.5 %)  z.B. ROOM1190.RDT msg 4 @0x02EAF
+82                    4  (0.5 %)  z.B. ROOM2040.RDT msg 5 @0x019E4
+00           ' '      4  (0.5 %)  z.B. ROOM40A0.RDT msg 12 @0x013B6
+49                    4  (0.5 %)  z.B. ROOM5040.RDT msg 0 @0x01B76
+0d                    4  (0.5 %)  z.B. ROOM5070.RDT msg 0 @0x00D92
+55                    2  (0.3 %)  z.B. ROOM4010.RDT msg 39 @0x0183D
+4f                    2  (0.3 %)  z.B. ROOM4040.RDT msg 0 @0x01296
+3f                    2  (0.3 %)  z.B. ROOM4050.RDT msg 3 @0x020ED
+70                    1  (0.1 %)  z.B. ROOM10D1.RDT msg 11 @0x01CF5
+# 758 Untersuchungstexte (Kopf 04 02) in allen RDTs

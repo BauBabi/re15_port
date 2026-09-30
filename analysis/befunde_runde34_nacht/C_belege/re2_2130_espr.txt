@@ -1,0 +1,23 @@
+MAIN sub03 @0x00F44  64 01 16 02 00 00 ba 02 c2 a0 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x01 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24382,-2610,-11070)
+MAIN sub03 @0x00F54  64 02 16 02 00 00 ba 02 14 a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x02 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24300,-2610,-11070)
+MAIN sub03 @0x00F64  64 03 16 02 00 00 ba 02 6e a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x03 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24210,-2610,-11070)
+MAIN sub03 @0x00F74  64 04 16 02 00 00 ba 02 c8 a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x04 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24120,-2610,-11070)
+MAIN sub03 @0x00F84  64 05 16 02 00 00 ba 02 22 a2 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x05 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24030,-2610,-11070)
+MAIN sub04 @0x01180  65 01  sce_espr_kill2 platz=0x01
+MAIN sub04 @0x01182  65 02  sce_espr_kill2 platz=0x02
+MAIN sub04 @0x01184  65 03  sce_espr_kill2 platz=0x03
+MAIN sub04 @0x01186  65 04  sce_espr_kill2 platz=0x04
+MAIN sub04 @0x01188  65 05  sce_espr_kill2 platz=0x05
+MAIN sub04 @0x01294  64 01 16 02 00 00 ba 02 c2 a0 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x01 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24382,-2610,-11070)
+MAIN sub04 @0x013B2  64 02 16 02 00 00 ba 02 14 a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x02 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24300,-2610,-11070)
+MAIN sub04 @0x014D0  64 03 16 02 00 00 ba 02 6e a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x03 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24210,-2610,-11070)
+MAIN sub04 @0x015EE  64 04 16 02 00 00 ba 02 c8 a1 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x04 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24120,-2610,-11070)
+MAIN sub04 @0x0170C  64 05 16 02 00 00 ba 02 22 a2 ce f5 c2 d4 00 00  sce_espr_on2 platz=0x05 esp=0x16 unter=0x02 (strom 2, CLUT+0) scale16=0x02BA lage=(-24030,-2610,-11070)
+MAIN sub04 @0x01774  64 0b 16 00 00 00 b4 0b 2c a2 88 f5 96 ce 00 00  sce_espr_on2 platz=0x0B esp=0x16 unter=0x00 (strom 0, CLUT+0) scale16=0x0BB4 lage=(-24020,-2680,-12650)
+MAIN sub04 @0x01784  64 0c 16 00 00 00 b4 0b 1c a3 88 f5 96 ce 00 00  sce_espr_on2 platz=0x0C esp=0x16 unter=0x00 (strom 0, CLUT+0) scale16=0x0BB4 lage=(-23780,-2680,-12650)
+MAIN sub04 @0x017A4  65 0b  sce_espr_kill2 platz=0x0B
+MAIN sub04 @0x017A6  65 0c  sce_espr_kill2 platz=0x0C
+MAIN sub04 @0x017A8  64 0d 16 10 00 00 b4 0b 2c a2 88 f5 96 ce 00 00  sce_espr_on2 platz=0x0D esp=0x16 unter=0x10 (strom 0, CLUT+2) scale16=0x0BB4 lage=(-24020,-2680,-12650)
+MAIN sub04 @0x017B8  64 0e 16 10 00 00 b4 0b 1c a3 88 f5 96 ce 00 00  sce_espr_on2 platz=0x0E esp=0x16 unter=0x10 (strom 0, CLUT+2) scale16=0x0BB4 lage=(-23780,-2680,-12650)
+MAIN sub04 @0x01814  65 0d  sce_espr_kill2 platz=0x0D
+MAIN sub04 @0x01816  65 0e  sce_espr_kill2 platz=0x0E

@@ -1,0 +1,5 @@
+# Abnahme 1 G2 - Wanduhr: zwei Laeufe desselben Nutzerstands (CONTINUE Slot 0, ROOM1150 Cut 2), ohne Bilddumps
+[takt100] exit=0 dauer=10s
+[takt700] exit=0 dauer=30s
+mg.log mtime (s): takt100 1790760731, takt700 1790760760
+Differenz 600 Spielbilder ~ 20 s (+-1 s) -> 33,3 ms/Bild; 20 Bilder je Zustand ~ 0,67 s
