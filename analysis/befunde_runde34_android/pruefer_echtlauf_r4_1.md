@@ -110,6 +110,23 @@ install -r M `Success` (10,0 s), installiert `56ef3d26...` (= M), versionName v0
 `Entpacken fertig (Update): 3603 geprueft, 1 kopiert (297112 B, 29 ms), ... 0 Fehler, 1541 ms`; genau diese eine mtime
 neu; `adb pull` == Original-Sicherung (`cmp` rc 0, `23d5fdc1...`); `pe1_geraet.py N` -> GERAET-KONSISTENT.
 
+### 3.6 force-stop mitten im Entpacken + Neustart (`pe1_abbruch.sh`, `geraet/f1_*.txt`, `geraet/f2_*.txt`)
+`adb uninstall` (externer Ordner danach weg), N frisch installiert (`Success`), logcat geleert; eine Shell-Schleife AUF
+dem Geraet wartet auf `shared_assets/PSX/MOVIE/CAPCOM.STR.neu` (6148352 B, Eintrag 2483 von 3603) und ruft sofort
+`cmd activity force-stop de.re15.port`; danach App-Start. Zustand nach dem Abbruch:
+- Prozess beendet; logcat endet nach `Abgleich (ohne Liste): ... pruefen 3603` (keine Abschlusszeile);
+- `CAPCOM.STR.neu` **3145728 B (halb geschrieben)**, `CAPCOM.STR` **existiert nicht** (nie umbenannt), 2484 Dateien
+  (2483 fertige + das .neu), `synchro/` noch nicht angelegt, **keine** `re15_assets_entpackt.txt`, kein Marker.
+Neustart (`pe1_lauf.sh`, keine neue APK):
+```
+08:10:31.408 [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+08:10:45.937 [android] Entpacken fertig (ohne Liste): 3603 geprueft, 1120 kopiert (197043714 B, 6730 ms), 2483 per SHA-256 geprueft
+             (159634563 B, 4768 ms, 0 abweichend), 0 entfernt, 1 .neu-Reste, 0 Fehler, 14543 ms
+```
+(2483 geprueft + 1120 kopiert = 3603; der eine `.neu`-Rest entfernt.) `pe1_geraet.py N`: 3603 Dateien, fehlen 0, sha256
+falsch 0, zusaetzlich 0, **`.neu`-Reste 0**, Liste = N -> **GERAET-KONSISTENT**. Bild danach (angesehen,
+`geraet/f_titelbild_nach_abbruch_neustart.png`, 10:11:37): Titelbild wie in 3.2.
+
 ## 4. PC-Suite local_build.sh all
 
 ## 5. Kein Python-Installer
