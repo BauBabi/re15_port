@@ -1,1 +1,1 @@
-514bebd55bd6b8ec2300fd45a19d3655c91f875c9d5e7667b4631c95da7373d9 *re15_port_v0.8.19_android.apk
+371f75df94103f5edf73f16a0d5e624604abbfe87cc4aa287ccbee3a1dcd2feb *re15_port_v0.8.20_android.apk
