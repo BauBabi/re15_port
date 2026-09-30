@@ -156,6 +156,15 @@ ganze VRAM; aufgenommen wurde Bildspeicher 0 per ffmpeg-gdigrab.
 
 Auswertung: `G_belege/G13_original_aufnahmen_auswertung.txt`.
 
+**ePSXe-Staende des Nutzers (Juni 2026).** `Downloads/ePSXe2018/sstates/SLU__096.08.001..003` (gzip,
+Kopf "ePSXe", RAM ab Datei-Offset 0x1BA, VRAM ab 0x2733DF, Bildspeicher y=0/240) sind die MZD-Disk
+(Lade-Haken `0x080300B0` @0x80013b7c vorhanden) in ROOM1170 Cut 10 (.001/.002) und Cut 8 (.003). Auch
+dort: Schild Cut 10 in beiden Bildspeichern == RAM-Kopie (100 % gleich), Bildspeicher sonst 97-98 %
+gleich (Rest = Leon). ePSXe ist auf `VideoPlugin = GPUCORE` eingestellt (HKCU\Software\epsxe\config).
+Einen LAUFENDEN ePSXe-Mitschnitt habe ich abgebrochen: ePSXe laesst sich nur per Tastatur (F2/F3)
+auf einen Stand setzen, und der Desktop ist geteilt — waehrend des Versuchs lag die Rueckfrage einer
+anderen Sitzung offen; eine Tastatureingabe haette dort landen koennen.
+
 ### 3.4 RE2 (Retail) zum Vergleich
 
 * RE2 hat keinen Raum mit diesem Schild: Blau-Schild-Suche ueber alle 1261 dekodierten RE2-Hintergruende
@@ -240,8 +249,10 @@ F1769-1782) — eine Helligkeitsaenderung genau in diesem Rechteck wird also gem
    Emulator/Renderer und welchem Disk-Abbild?"* Mit einer Zeitmarke laesst sich genau dieser Moment
    nachstellen und messen.
 2. Nicht gemessen: DuckStation **Hardware-Renderer** (bewusst nicht umgestellt, um die Einstellungen
-   des Nutzers nachts nicht zu veraendern). Ein dort sichtbares Blinken waere ein Emulator-Effekt, kein
-   Original-Verhalten — der Port-Befund aendert sich dadurch nicht.
+   des Nutzers nachts nicht zu veraendern) und ein **laufendes ePSXe/GPUCORE** (nur Standbilder
+   geprueft, siehe 3.3). Ein dort sichtbares Blinken waere ein Emulator-Effekt, kein
+   Original-Verhalten — der Port-Befund aendert sich dadurch nicht. Messweg, falls der Nutzer ePSXe
+   benutzt: ePSXe-Stand `SLU__096.08.001` (Cut 10) laden, 30 s aufnehmen, `rec_analyse.py`.
 3. ROOM1171 (Elza) nur statisch geprueft: gleiche BSS (ROOM117.BSS), gleicher Upload-Pfad
    FUN_80043870, RDT+0x4C = 0, SCD ohne Hintergrund-Opcodes. Kein Savestate in ROOM1171 vorhanden.
 4. Nebenbeobachtung, **nicht Teil dieses Auftrags und nicht belegt**: das Ausblenden des oberen
