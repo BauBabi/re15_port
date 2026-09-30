@@ -89,16 +89,15 @@ if(NOT EXISTS "${_dir_ref}/ref.ppm")
     message(FATAL_ERROR "schrift1150[ref]: kein Referenzbild ref.ppm")
 endif()
 
-foreach(_raum 1150 1151)
-    schrift_lauf(r${_raum} ${_raum} _dir "RE15_FRAMEDUMP=100-200/1:f" "RE15_EXIT_AT=200#${_raum}")
-    execute_process(COMMAND "${RE15_EVAL_TOOL}" "${_dir_ref}/ref.ppm" "${_dir}/f" 100 200
-                            "${_dir}/mg.log" ${_raum}
+function(schrift_auswerten _name _dir _raum _bis)
+    execute_process(COMMAND "${RE15_EVAL_TOOL}" "${_dir_ref}/ref.ppm" "${_dir}/f" 100 ${_bis}
+                            "${_dir}/mg.log" ${_raum} ${ARGN}
                     TIMEOUT 120
                     RESULT_VARIABLE _rve
                     OUTPUT_VARIABLE _oute)
-    message(STATUS "schrift1150[${_raum}]:\n${_oute}")
+    message(STATUS "schrift1150[${_name}]:\n${_oute}")
     if(NOT _rve EQUAL 0)
-        message(FATAL_ERROR "schrift1150[${_raum}]: die Leuchtschrift blinkt nicht wie im Original "
+        message(FATAL_ERROR "schrift1150[${_name}]: die Leuchtschrift blinkt nicht wie im Original "
                             "(Auswerter exit=${_rve}) — Dossier G2_schrift1150.md §9")
     endif()
     # Bilder wieder weg (je Lauf ~200 MB), Log und Auswertung bleiben.
@@ -106,7 +105,21 @@ foreach(_raum 1150 1151)
     if(_ppm)
         file(REMOVE ${_ppm})
     endif()
+endfunction()
+
+# A/B: Lade-Weg ohne Cut-Ereignis -> genau EIN Aufbau (Auflage 6).
+foreach(_raum 1150 1151)
+    schrift_lauf(r${_raum} ${_raum} _dir "RE15_FRAMEDUMP=100-200/1:f" "RE15_EXIT_AT=200#${_raum}")
+    schrift_auswerten(${_raum} "${_dir}" ${_raum} 200 --aufbau 1)
 endforeach()
+
+# C: Statusschirm in einer AUS-Phase (Auflagen 5/6): START bei F125 (:= 0 war F119), zu nach 36
+# Bildern. Original: Dirty := 2 (@0x800466fc) -> KEIN Aufbau, der Zustand bleibt AUS, das naechste
+# := 1 kommt 20 SCD-Takte nach F119 (Laeufer steht im Menue @0x8003f040-4c). Gemessen: Menue
+# F126..F176, := 1 bei F191. Bilder F126..F180 zeigen den Schirm und seine Blenden.
+schrift_lauf(inv1150 1150 _dir "RE15_FRAMEDUMP=100-260/1:f" "RE15_EXIT_AT=260#1150"
+             RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=125 "RE15_INPUT_SCRIPT=S0.1,W1.2,S0.1")
+schrift_auswerten(inv1150 "${_dir}" 1150 260 --aufbau 1 --menue 126-180)
 
 message(STATUS "schrift1150: OK — ROOM1150 und ROOM1151 Cut 2: HEAVEN blinkt 20/20 Bilder wie sub05 "
                "(Opcode 0x45) es vorgibt, am Lade-Weg der echten exe")

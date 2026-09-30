@@ -18,7 +18,16 @@
  *   Takt: jeder vollstaendige Lauf gleichen Zustands ist genau 20 Bilder lang (sub05 Sleep 20,
  *   ROOM1150 @0x010C8/@0x010DE; 1 SCD-Takt je Bild der 30-Hz-Schleife).
  *
+ * Optional (Gegenpruefung Auflagen 5/6):
+ *   --aufbau N     genau N Aufbau-Zeilen fuer den Raum im Log (Lade-Weg ohne Cut-Ereignis: 1; ein
+ *                  Statusschirm darf KEINEN Aufbau ausloesen — Original Dirty := 2 @0x800466fc,
+ *                  Sprung @0x80021bd4 ueber @0x80021c28)
+ *   --menue A-B    Bilder A..B zeigen den Statusschirm: nicht vergleichen; ein Lauf, der sie
+ *                  enthaelt, wird nicht auf 20 Bilder geprueft (der SCD-Laeufer steht im Menue,
+ *                  @0x8003f040-4c), wohl aber auf das Orakel.
+ *
  * Aufruf: probe_r34n_g_schrift_eval <ref.ppm> <praefix> <von> <bis> <mg.log> <raum>
+ *                                   [--aufbau N] [--menue A-B]
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,6 +98,11 @@ int main(int argc, char **argv)
     int von = atoi(argv[3]), bis = atoi(argv[4]);
     const char *raum = argv[6];
     if (von < 0 || bis < von || bis - von + 1 > MAXF) { printf("FEHLER: Bereich\n"); return 2; }
+    int aufbau_soll = -1, menue_a = -1, menue_b = -1;
+    for (int i = 7; i + 1 < argc; i += 2) {
+        if (strcmp(argv[i], "--aufbau") == 0) aufbau_soll = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "--menue") == 0) sscanf(argv[i + 1], "%d-%d", &menue_a, &menue_b);
+    }
 
     bild_t ref;
     if (lade(argv[1], &ref) != 0) return 1;
@@ -96,7 +110,7 @@ int main(int argc, char **argv)
     /* Orakel aus dem Log. */
     static signed char soll[MAXF];
     for (int i = 0; i < MAXF; i++) soll[i] = -1;
-    int aufbau_cut2 = 0, schalt = 0;
+    int aufbau_cut2 = 0, schalt = 0, aufbau_alle = 0;
     {
         FILE *lf = fopen(argv[5], "rb");
         if (!lf) { printf("FEHLER: %s nicht lesbar\n", argv[5]); return 1; }
@@ -110,6 +124,7 @@ int main(int argc, char **argv)
             const char *p;
             if ((p = strstr(z, "Aufbau Cut ")) != NULL) {
                 int cut = atoi(p + 11);
+                aufbau_alle++;
                 neu = (cut == 2) ? 1 : -1;
                 if (cut == 2 && strstr(z, "Zahl 54 ")) aufbau_cut2++;
             } else if ((p = strstr(z, "Gruppe 6 := ")) != NULL) {
@@ -134,11 +149,19 @@ int main(int argc, char **argv)
     int fails = 0;
     if (aufbau_cut2 < 1) { printf("FAIL: kein 'Aufbau Cut 2 ... Zahl 54' fuer Raum %s im Log\n", raum); fails++; }
     if (schalt < 4) { printf("FAIL: nur %d Umschaltungen (Gruppe 6, >= 1 Treffer) in F%d..F%d\n", schalt, von, bis); fails++; }
+    if (aufbau_soll >= 0) {
+        if (aufbau_alle != aufbau_soll) {
+            printf("FAIL: %d Aufbau-Zeilen fuer Raum %s, erwartet genau %d (kein Neuaufbau ohne "
+                   "Cut-Ereignis, keiner nach dem Statusschirm)\n", aufbau_alle, raum, aufbau_soll);
+            fails++;
+        } else printf("  PASS: genau %d Aufbau-Zeile(n) fuer Raum %s\n", aufbau_alle, raum);
+    }
 
     bild_t an_ref = { 0, 0, NULL };
     int ist_prev = -1, lauf_start = -1, lauf_n = 0, laeufe_20 = 0, laeufe_falsch = 0;
-    int n_an = 0, n_aus = 0, abweich = 0, an_diff = -1, an_uneinig = 0;
+    int n_an = 0, n_aus = 0, abweich = 0, an_diff = -1, an_uneinig = 0, lauf_menue = 0;
     for (int f = von; f <= bis; f++) {
+        if (f >= menue_a && f <= menue_b) { lauf_menue = 1; continue; }   /* Statusschirm */
         char pfad[600];
         snprintf(pfad, sizeof pfad, "%s%06d.ppm", praefix, f);
         bild_t b;
@@ -158,12 +181,15 @@ int main(int argc, char **argv)
             abweich++;
         }
         if (ist != ist_prev) {
-            if (ist_prev >= 0 && lauf_start > von) {       /* vollstaendiger Lauf */
+            if (ist_prev >= 0 && lauf_start > von && lauf_menue) {
+                printf("  Lauf %s F%d..F%d enthaelt den Statusschirm (%d Bilder sichtbar) - "
+                       "Laenge nicht geprueft\n", ist_prev ? "AN" : "AUS", lauf_start, f - 1, lauf_n);
+            } else if (ist_prev >= 0 && lauf_start > von) {       /* vollstaendiger Lauf */
                 if (lauf_n == 20) laeufe_20++;
                 else { laeufe_falsch++; printf("  Lauf %s F%d..F%d: %d Bilder (Soll 20)\n",
                                               ist_prev ? "AN" : "AUS", lauf_start, f - 1, lauf_n); }
             }
-            lauf_start = f; lauf_n = 0; ist_prev = ist;
+            lauf_start = f; lauf_n = 0; ist_prev = ist; lauf_menue = 0;
         }
         lauf_n++;
         free(b.px);

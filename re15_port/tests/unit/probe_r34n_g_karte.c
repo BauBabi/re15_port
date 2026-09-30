@@ -12,7 +12,13 @@
  * (-18400,-16000) (-19300,-22100)) und ausserhalb des Hebetisch-Ausloesers (Aot_set slot 1
  * @Datei 0x0D7E). Kein Zonen-Uebergang aus Cut 2 heraus, solange die Figur steht.
  *
- * Aufruf: probe_r34n_g_karte <kartendatei> [<raum-hex> 1150|1151] [<cut>]
+ * Aufruf: probe_r34n_g_karte <kartendatei> [<raum-hex> 1150|1151] [<cut>] [p=<x>,<z>] [f=<b>:<bit>...]
+ *
+ * BAU G2 (Abnahme 6.6, andere Raeume mit Opcode 0x45): JEDER Raum; optional
+ *     p=<x>,<z>        Spielerlage (Standard (-22250,-18500) wie oben)
+ *     f=<bank>:<bit>   Flag im Spielstand (z.B. f=4:9 = ROOM3000-Zombie-Variante: main00 @0x14B6
+ *                      setzt dann (5,0) := 0). Bank 5 ist raumlokal und wird beim Raumaufbau
+ *                      geloescht - dafuer RE15_SET_FLAG_AT an der exe.
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -30,8 +36,8 @@ int main(int argc, char **argv)
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
     unsigned room = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0x1150u;
     int cut = (argc > 3) ? atoi(argv[3]) : 2;
-    if (room != 0x1150u && room != 0x1151u) {
-        printf("FAIL: Raum 0x%04X ist nicht Irons' Buero (1150/1151)\n", room);
+    if (room < 0x1000u || room > 0x7FFFu) {
+        printf("FAIL: Raum 0x%04X unbekannt\n", room);
         return 2;
     }
     scd_vm_init();
@@ -43,6 +49,14 @@ int main(int argc, char **argv)
     pl->active = 1; pl->type = 0; pl->hp = 100;
     pl->x = -22250; pl->y = 0; pl->z = -18500; pl->rot_y = 0;
     g_scd.cam_id = (uint8_t)cut;
+    for (int i = 4; i < argc; i++) {       /* BAU G2: p=<x>,<z> und f=<bank>:<bit> (Kopf) */
+        int a = 0, b = 0;
+        if (sscanf(argv[i], "p=%d,%d", &a, &b) == 2) { pl->x = a; pl->z = b; }
+        else if (sscanf(argv[i], "f=%d:%d", &a, &b) == 2 && a >= 0 && a < 32 && b >= 0 && b < 256) {
+            re15_game_flag_set((uint8_t)a, (uint8_t)b, 1);
+            printf("Flag (%d,%d) = 1 im Spielstand\n", a, b);
+        }
+    }
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
