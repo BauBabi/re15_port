@@ -1,0 +1,101 @@
+# Mutationsprobe Spur F (2026-09-30 04:54)
+Basis (unveraendert): texte=gruen, nein_1110=gruen, nein_1230=gruen, ja_1110=gruen, ja_1230=gruen, voll=gruen, varianten=gruen, laden=gruen, andere=gruen, stimme=gruen, nachhall=gruen, latch=gruen
+
+## M1 Message_on-Haken raus (scd_vm.c)
+rot: nein_1110, nein_1230, ja_1110, ja_1230, voll, varianten, laden, andere, stimme, nachhall, latch
+    nein_1110:  FEHLER: Runde 1 No: Nachricht 20 (Port, lang) statt 0
+    nein_1110:  FEHLER: Runde 1 No: Rohbytes der Nachricht 20 = eingebackener langer Text (63 B)
+    nein_1110:  FEHLER: Runde 1 No: zwei Seiten (1 Seitenstopp), gemessen 2
+    nein_1230:  FEHLER: Runde 1 No: Nachricht 22 (Port, lang) statt 10
+    nein_1230:  FEHLER: Runde 1 No: Rohbytes der Nachricht 22 = eingebackener langer Text (50 B)
+    nein_1230:  FEHLER: Runde 1 No: zwei Seiten (1 Seitenstopp), gemessen 2
+    ja_1110:  FEHLER: Runde 1 Yes: Nachricht 20 (Port, lang) statt 0
+    ja_1110:  FEHLER: Runde 1 Yes: Rohbytes der Nachricht 20 = eingebackener langer Text (63 B)
+    ja_1110:  FEHLER: Runde 1 Yes: zwei Seiten (1 Seitenstopp), gemessen 2
+    ja_1230:  FEHLER: Runde 1 Yes: Nachricht 22 (Port, lang) statt 10
+    ja_1230:  FEHLER: Runde 1 Yes: Rohbytes der Nachricht 22 = eingebackener langer Text (50 B)
+    ja_1230:  FEHLER: Runde 1 Yes: zwei Seiten (1 Seitenstopp), gemessen 2
+    voll:  FEHLER: Runde 1 voll: Nachricht 20 (Port, lang) statt 0
+    voll:  FEHLER: Runde 1 voll: Rohbytes der Nachricht 20 = eingebackener langer Text (63 B)
+    voll:  FEHLER: Runde 1 voll: zwei Seiten (1 Seitenstopp), gemessen 2
+    varianten:  FEHLER: Runde 1 No: Nachricht 20 (Port, lang) statt 0
+    varianten:  FEHLER: Runde 1 No: Rohbytes der Nachricht 20 = eingebackener langer Text (63 B)
+    varianten:  FEHLER: Runde 1 No: zwei Seiten (1 Seitenstopp), gemessen 2
+    laden:  FEHLER: geladen: Nachricht 21 (kurz)
+    laden:  FEHLER: geladen: eine Seite, kein Modal
+    laden:  FEHLER: geladen: Nachricht 23 (kurz)
+    andere:  FEHLER: ROOM1110: Gegenprobe msg 0 -> Port-Nachricht 20 mit Angebot
+    andere:  FEHLER: ROOM1111: Gegenprobe msg 0 -> Port-Nachricht 20 mit Angebot
+    andere:  FEHLER: ROOM1230: Gegenprobe msg 10 -> Port-Nachricht 22 mit Angebot
+    stimme:  FEHLER: mit Aufnahme: trotzdem Port-Nachricht 20
+    stimme:  FEHLER: mit Aufnahme: Modal im Schliess-Bild
+    stimme:  FEHLER: mit Aufnahme: trotzdem Port-Nachricht 22
+    nachhall:  FEHLER: Modal im Bild, in dem der Freeze faellt (F-1 / F241), trotz laufender Aufnahme
+    nachhall:  FEHLER: der Text war beim Schliessen im Nachhall (msg-FSM Zustand 7)
+    nachhall:  FEHLER: Faden steht waehrend des Modals auf @0x00D09
+    latch:  FEHLER: a) Text 20 offen (F-1), Angebot scharf
+    latch:  FEHLER: b) Text 20 offen (F-1), Angebot scharf
+    latch:  FEHLER: a) Text 22 offen (F-1), Angebot scharf
+
+## M2 Tick-Zeile raus (game_step_common.c)
+rot: nein_1110, nein_1230, ja_1110, ja_1230, voll, varianten, andere, stimme, nachhall, latch
+    nein_1110:  FEHLER: Runde 1 No: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F151)
+    nein_1110:  FEHLER: Runde 1 No: Faden steht waehrend des Modals auf @0x00D09
+    nein_1110:  FEHLER: Runde 1 No: Ja/Nein-Frage
+    nein_1230:  FEHLER: Runde 1 No: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F131)
+    nein_1230:  FEHLER: Runde 1 No: Faden steht waehrend des Modals auf @0x014C1
+    nein_1230:  FEHLER: Runde 1 No: Ja/Nein-Frage
+    ja_1110:  FEHLER: Runde 1 Yes: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F151)
+    ja_1110:  FEHLER: Runde 1 Yes: Faden steht waehrend des Modals auf @0x00D09
+    ja_1110:  FEHLER: Runde 1 Yes: Bit (9,61) gesetzt
+    ja_1230:  FEHLER: Runde 1 Yes: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F131)
+    ja_1230:  FEHLER: Runde 1 Yes: Faden steht waehrend des Modals auf @0x014C1
+    ja_1230:  FEHLER: Runde 1 Yes: Bit (9,62) gesetzt
+    voll:  FEHLER: Runde 1 voll: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F151)
+    voll:  FEHLER: Runde 1 voll: Faden steht waehrend des Modals auf @0x00D09
+    voll:  FEHLER: Runde 1 voll: "can't carry" (Prompt 2)
+    varianten:  FEHLER: Runde 1 No: genau ein Modal, im Bild, in dem der Text zugeht (F-1 / F151)
+    varianten:  FEHLER: Runde 1 No: Faden steht waehrend des Modals auf @0x00D09
+    varianten:  FEHLER: Runde 1 No: Ja/Nein-Frage
+    andere:  FEHLER: ROOM1111: 0 von 9 anderen Nachrichten unveraendert unter eigener Id, kein Angebot
+    andere:  FEHLER: ROOM1230: 0 von 11 anderen Nachrichten unveraendert unter eigener Id, kein Angebot
+    andere:  FEHLER: ROOM1231: 0 von 11 anderen Nachrichten unveraendert unter eigener Id, kein Angebot
+    stimme:  FEHLER: mit Aufnahme: Modal im Schliess-Bild
+    stimme:  FEHLER: mit Aufnahme: Modal im Schliess-Bild
+    nachhall:  FEHLER: Modal im Bild, in dem der Freeze faellt (F-1 / F151), trotz laufender Aufnahme
+    nachhall:  FEHLER: der Text war beim Schliessen im Nachhall (msg-FSM Zustand 7)
+    nachhall:  FEHLER: Faden steht waehrend des Modals auf @0x00D09
+    latch:  FEHLER: a) Raum-Neuaufbau bei offenem Text: kein Modal (0 Bilder)
+    latch:  FEHLER: b) fremde Raum-Basis: kein Modal (0 Bilder)
+    latch:  FEHLER: a) Raum-Neuaufbau bei offenem Text: kein Modal (0 Bilder)
+
+## M3 Haken VOR den Stimmen-Riegel (alte Plan-Stelle hinter der [msg]-Zeile)
+rot: stimme
+    stimme:  FEHLER: mit Aufnahme: Text erst nach deren Ende auf F32 (>= F120)
+    stimme:  FEHLER: mit Aufnahme: Text erst nach deren Ende auf F32 (>= F120)
+
+## M4 Nachhall nicht beenden
+rot: nachhall
+    nachhall:  FEHLER: Nachhall beim Oeffnen des Modals beendet (message_active 0)
+    nachhall:  FEHLER: Nachhall beim Oeffnen des Modals beendet (message_active 0)
+
+## M5 Id-Pruefung beim Schliessen raus (Auflage 5)
+rot: andere, latch
+    andere:  FEHLER: ROOM1231: 0 von 11 anderen Nachrichten unveraendert unter eigener Id, kein Angebot
+    latch:  FEHLER: a) Raum-Neuaufbau bei offenem Text: kein Modal (90 Bilder)
+    latch:  FEHLER: b) Text 20 offen (F-1), Angebot scharf
+    latch:  FEHLER: a) Raum-Neuaufbau bei offenem Text: kein Modal (90 Bilder)
+
+## M6 Raum-Basis-Pruefung raus
+rot: latch
+    latch:  FEHLER: b) fremde Raum-Basis: kein Modal (30 Bilder)
+    latch:  FEHLER: a) Text 22 offen (F-1), Angebot scharf
+    latch:  FEHLER: a) Raum-Neuaufbau bei offenem Text: kein Modal (90 Bilder)
+
+## M7 Gate auf message_active statt Belegt-Bit
+rot: nachhall
+    nachhall:  FEHLER: Modal im Bild, in dem der Freeze faellt (F-1 / F151), trotz laufender Aufnahme
+    nachhall:  FEHLER: der Text war beim Schliessen im Nachhall (msg-FSM Zustand 7)
+    nachhall:  FEHLER: Faden steht waehrend des Modals auf @0x00D09
+
+Nach dem Zuruecksetzen: texte=gruen, nein_1110=gruen, nein_1230=gruen, ja_1110=gruen, ja_1230=gruen, voll=gruen, varianten=gruen, laden=gruen, andere=gruen, stimme=gruen, nachhall=gruen, latch=gruen

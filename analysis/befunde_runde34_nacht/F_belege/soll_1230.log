@@ -1,0 +1,10 @@
+122:[msg] room=1230 id=10 savepoint=0
+123:[leiche] ROOM1230 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+146:[leiche] ROOM1230 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+171:[leiche] No/voll: Munition bleibt bei der Leiche (Bit (9,62)=0), das naechste Untersuchen bietet sie wieder an
+192:[msg] room=1230 id=10 savepoint=0
+193:[leiche] ROOM1230 msg 10 -> Port-Nachricht 22 (Bit (9,62)=0), Angebot H. Gun Bullets nach dem Text
+217:[leiche] ROOM1230 Text zu -> Aufnahme-Modal H. Gun Bullets x15 (Bit (9,62))
+237:[leiche] Yes: Bit (9,62) gesetzt, H. Gun Bullets 50 -> 57
+258:[msg] room=1230 id=10 savepoint=0
+259:[leiche] ROOM1230 msg 10 -> Port-Nachricht 23 (Bit (9,62)=1)
