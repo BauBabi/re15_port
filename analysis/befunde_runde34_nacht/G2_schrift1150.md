@@ -2,7 +2,7 @@
 
 Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code). Zweig r34n/schrift1170, Baum .claude/worktrees/r34n_schrift.
 Status: Ermittlung abgeschlossen (Original gemessen, Port gemessen, Mechanismus disassembliert);
-Bauplan Abschnitt 5. Stand 2026-09-30 ~09:15.
+Bauplan Abschnitt 5, Abnahmeplan 6. Stand 2026-09-30 ~09:40.
 
 ## 0 Kurzfassung
 
@@ -258,19 +258,184 @@ Takt = SCD-Takt des Spiels (Original 2 VBlanks = VSync(2); Port 1 Bild der 30-Hz
 * In anderen Cuts: 0x45 findet keine Records mit Byte1 6..11 -> keine Wirkung.
 * Pause (g_pauseflags & 0x02000000, z.B. Item-Modal): kein SCD-Takt -> Zustand steht.
 * Zwischenszenen sub03/sub04/sub08 (eigene Faeden) laufen parallel; sub05 laeuft weiter.
+* Nach dem Statusschirm (Inventar) setzt das Original DAT_800b5457 := 2 (@0x800466dc/@0x800466fc,
+  Normalfall DAT_800b25c0 != 1) -> naechster Present ruft FUN_80021bbc mit DEMSELBEN Cut -> alle
+  Masken wieder an (Buchstaben sichtbar bis zum naechsten :=0). Ebenso nach dem Optionsschirm
+  (@0x8002e730, nur bei DAT_800aca38 & 0x40000000) und nach dem Speicherkarten-Schirm
+  (@0x80026634 in FUN_80026594, Parameter 0). Auch Cut_chg/Cut_old (Opcode 0x29/0x2a) setzen den
+  Dirty-Schalter (@0x800402f4/@0x80040354) und bauen damit neu auf.
 
 ## 5 Bauplan
 
-(folgt)
+Einordnung: RE1.5 hat das System vollstaendig (Daten, Opcode, Aufbau, Zeichnen) -> **RE1.5 byte-true**,
+keine RE2-Angleichung, keine Nutzer-Vorgabe noetig. Kein neuer Taktgeber: der Takt ist Skript-Daten
+(`Sleep 20` in sub05) auf der vorhandenen SCD-Tick-Basis des Ports (1 SCD-Takt je Bild der
+30-Hz-Schleife = VSync(2)-Aequivalent; RE15_SCD_TRACE belegt 20 Bilder je Zustand, Abschnitt 2).
+Die Runde-30-Fehlerklasse (Zaehler je MONITOR-Bild) tritt hier nicht auf.
+
+### 5.1 Neue Dateien (Spur G2)
+
+* `re15_port/include/re15_masken_gruppen.h` + `re15_port/engine/src/masken_gruppen.c` — die
+  Record-Tabelle DAT_800b2584 als Engine-Zustand, plattformneutral (PC und PSX):
+
+      #define RE15_MG_MAX 256        /* RDT[7] ist u8; Aufbau-Schleife @0x80039370-84 */
+      typedef struct { uint8_t an; uint8_t gruppe1; } re15_mg_rec_t;   /* Byte0 / Byte1 */
+      /* FUN_800392d4 (@0x80021c28 aus FUN_80021bbc): Tabelle fuer (rdt, cut) neu aufbauen.
+       *  - NULL-Sektion (erstes u32 == 0xFFFFFFFF @0x80039324-2c): Zahl := 0 (@0x80039338)
+       *  - Zahl (RDT[0]) := (erstes u32 >> 16) & 0xFF (@0x80039330 srl 16, @0x80039358 sb)
+       *  - Byte0 := 0 fuer RDT[7] Records (@0x8003936c-84), dann je gebauter Maske
+       *    Byte0 |= 1 (@0x800393d8-e4), Byte1 := Gruppenindex+1 (@0x800393e8-ec).
+       *  Gruppenindex je Maske aus den Gruppenkoepfen (u16 Anzahl je 8-Byte-Kopf), gleiche
+       *  Reihenfolge wie re15_pri_parse_section (Leer-Gruppen zaehlen mit). */
+      void re15_mg_aufbauen(const re15_rdt_t *rdt, int cut);
+      /* FUN_800396a8 (Opcode 0x45): fuer i < Zahl mit gruppe1 == g1 -> an := wert (@0x800396d0-e0). */
+      void re15_mg_setzen(uint8_t g1, uint8_t wert);
+      /* FUN_80039590 @0x800395e8-f4: gezeichnet nur wenn Byte0 & 1. i >= Zahl -> 1 (Masken ohne
+       * Original-Record = nachgezeichnete R15M-Masken; das Original hat dort RDT[0] = 0). */
+      int  re15_mg_sichtbar(int i);
+      int  re15_mg_zahl(void);       /* fuer Log/Pins */
+
+  Log-Zeile (env-gegatet, z.B. `RE15_MG_LOG`): `[maskgrp] F%u Raum %04x Cut %d: Gruppe %d := %d
+  (%d Records)` und `[maskgrp] Aufbau Raum %04x Cut %d: %d Records`. Kein Speicherstand-Feld (das
+  Original speichert die Tabelle nicht; jeder Raum-/Cut-Aufbau setzt alles auf 1).
+* `re15_port/tests/unit/probe_r34n_g_maskgrp.c` + Eintrag in `tests/unit/probes/r34n_g_schrift.cmake`
+  mit `add_test(unit_r34n_g_maskgrp ...)` (Pin 6.1) und ein Integrationshaken
+  `re15_port/tests/integration/test_r34n_g_schrift1150.cmake` (Abnahme 6.3, echte exe, Lade-Weg-Karte
+  `probe_r34n_g_karte`). `RE15_MIN_TESTS` in local_build.sh um die neuen add_test anheben.
+
+### 5.2 Haken-Zeilen in gemeinsamen Dateien (je 1-3 Zeilen, keine Umformatierung)
+
+| Datei / Stelle | Haken | Original-Beleg |
+|---|---|---|
+| `engine/src/scd_vm.c` Opcode-Tabelle (neben `s_op_table[0x47] = op_aot_on;`, Z. 335) | `s_op_table[0x45] = op_col_chg_set;` + Handler: `re15_mg_setzen(t->pc[1] + 1, t->pc[2]); t->pc += 3; return 1;` | Tabelle @0x800745bc -> 0x800428d4; op1+1 @0x800428f8; pc+3 @0x80042904; Rueckgabe 1 @0x80042900 |
+| `platform/pc/main.c` `pc_cam_present_apply`, im Zweig `if (re15_cam_present_tick()) { ... }` | `if (rdt_ok) re15_mg_aufbauen(rdt, active_cut_idx);` | jeder Apply = FUN_80021bbc -> FUN_800392d4 (@0x80021c28), auch bei GLEICHEM Cut (Dirty-Schreiber @0x80021514, @0x800402f4, @0x80040354) |
+| `engine/src/room_common.c` Schritt (9), direkt nach `c->load_bg_cut(cut);` (Z. 381) | `re15_mg_aufbauen(c->rdt, cut);` | Raumlader FUN_8001d600 -> `DAT_800b5457 = 1` @0x8001daec -> FUN_80021bbc; SCD-Init (scd_room_reenter) VOR dem Aufbau wie im Original |
+| `platform/pc/main.c` Boot/CONTINUE nach `re15_bg_load_cut((int)g_scd.cam_id)` (Z. ~4739) und Sonderweg `re15_bg_load_cut(0)` (Z. ~8026) | `re15_mg_aufbauen(&rdt, <cut>);` | Session-Start/LOAD `DAT_800b5457 = 1` @0x8001d5c8 |
+| `platform/pc/src/render_pc.c` Maskenliste (Z. ~984-987, `mask_order[i] = i`) | nur sichtbare Indizes einsortieren: `if (!re15_mg_sichtbar(i)) continue;` (mask_n = Zahl der eingetragenen) | FUN_80039590 @0x800395e8-f4 |
+| `engine/src/menu_common.c` `close_phase`, gemeinsamer Abbau (Z. ~1420) | `g_scd.cam_change_pending = 1;` (Normalzweig) | @0x800466d0-fc: DAT_800b25c0 != 1 -> `sb 2,DAT_800b5457` |
+| Options-/Kartenschirm-Rueckkehr im Spiel (Port-Stellen im Bau suchen: Nachbauten von FUN_8002dfb0 / FUN_80026594, main.c ~1765 / ~2252) | `g_scd.cam_change_pending = 1;` | @0x8002e730 (nur DAT_800aca38 & 0x40000000), @0x80026634 (Parameter 0) |
+| PSX: `platform/psx/src/render.c` Maskenschleife (Z. ~466-469) | `if (!re15_mg_sichtbar(i)) continue;` | wie oben; PSX-Bau hier nicht pruefbar (memory reai-v2-psx-build-gap) |
+
+Nicht anfassen: `pri_common.c` / `re15_pri.h` (die Gruppenkoepfe liest das neue Modul selbst),
+`bg_pc.c`, die sprite.pri-Tiefenlogik, `op_unknown`.
+
+### 5.3 Reihenfolge im Bild (muss so bleiben)
+
+Port: `pc_cam_present_apply` (Bildanfang, Aufbau) -> `scd_vm_tick` (Z. 5378, 0x45 schaltet) ->
+pri-Block (Z. ~5680, Rechtecke nur bei (Raum,Cut)-Wechsel) -> `re15_render_end_frame` (liest
+`re15_mg_sichtbar`). Original: FUN_80021bbc am Ende des Vorbilds (Present) -> SCD @0x8001cdec ->
+Masken @0x8001ce54. Beide: Aufbau VOR dem SCD-Takt, Umschalten wirkt im selben Bild. ⛔ Der Aufbau darf
+NICHT in den pri-Block (nach dem SCD-Takt): dort wuerde ein Umschalten im Cut-Wechsel-Bild sofort
+wieder ueberschrieben (im Original bleibt es stehen).
+
+### 5.4 Konstanten-Tabelle
+
+| Wert | Bedeutung | Beleg |
+|---|---|---|
+| 0x45 / Laenge 3 | Opcode `Col_chg_set`, pc += 3 | Tabelle @0x800745bc -> 0x800428d4; `addiu v1,v1,3` @0x80042904; Port `s_opcode_sizes[0x45] = 3` bleibt |
+| Rueckgabe 1 | weiter im selben Takt (kein Yield) | `ori v0,zero,0x1` @0x80042900 |
+| op1 + 1 | Gruppenschluessel = Record-Byte1 | `addiu a0,a0,1` @0x800428f8; Vergleich `lbu v0,1(v1)` / `bne v0,a0` @0x800396d0/d8 |
+| op2 | neuer Byte0-Wert (0 = aus, 1 = an) | `lbu a1,2(v0)` @0x800428f0; `sb a1,0(v1)` @0x800396e0 |
+| Zahl = RDT[0] | Records, die 0x45 und das Zeichnen sehen | `lbu a3,0(v0)` @0x800396b8; `lbu s4,0(v0)` @0x800395c0; gesetzt `srl t2,v1,16` @0x80039330 + `sb t2,0(a0)` @0x80039358 |
+| RDT[7] | Records, deren Byte0 beim Aufbau geloescht wird | `lbu a3,7(v0)` @0x8003936c, Schleife @0x80039370-84 |
+| Byte0 oder-gleich 1 | beim Cut-Aufbau jede gebaute Maske an | `ori v0,v0,0x1` @0x800393e0, `sb` @0x800393e4 |
+| Byte1 = Gruppe + 1 | Gruppenindex+1 | `addiu v0,a3,1` / `sb v0,-1(t1)` @0x800393e8-ec |
+| Byte0 & 1 | zeichnen | `andi v0,v0,0x1` / `beq` @0x800395f0-f4 |
+| NULL-Sektion | Zahl 0 | `addiu v0,zero,-1` / `bne` / `sb zero,0(a0)` @0x80039328-38 |
+| Gruppen 6..11, Cut 2 | die Buchstaben H E A V E N | ROOM1150/1151.RDT sprite.pri @0x0066C, Records @0x0089C..0x008C8 (Daten, nicht im Code) |
+| Sleep 20 / Periode 40 Takte | Blinktakt | ROOM1150 @0x010C8 / @0x010DE `09 0a 14 00` (Daten); gemessen 40 VBlanks je Zustand (G2_06) |
+| Neuaufbau nach Statusschirm | Dirty := 2 | `ori v0,zero,0x2` @0x800466dc, `sb` @0x800466fc |
+| Neuaufbau nach Options-/Kartenschirm | Dirty := 1 bzw. 2 | @0x8002e728/30, @0x8002661c/@0x80026634 |
+
+Keine PORT-WAHL und keine NUTZER-VORGABE im Kern. Einzige Port-Konstruktion: `re15_mg_sichtbar(i) = 1`
+fuer i >= Zahl (nachgezeichnete R15M-Masken, die es im Original nicht gibt — Grund: das Original hat
+dort RDT[0] = 0, der Opcode findet also nichts; die Port-Masken sollen unveraendert bleiben).
 
 ## 6 Abnahmeplan
 
-(folgt)
+1. **Pin `unit_r34n_g_maskgrp` (ohne exe, echte RDT-Bytes):** ROOM1150.RDT laden, `re15_mg_aufbauen(rdt, 2)`
+   -> Zahl 54, Records 48..53 mit gruppe1 6..11, alle an; SCD-Bytes `45 05 00` ueber die echte VM
+   (Opcode-Tabelle, nicht direkt die Modulfunktion) -> Record 48 aus, 47 und 49 unveraendert, pc + 3,
+   selber Takt; `45 05 01` -> wieder an; Aufbau erneut -> alles an; Cut 0 -> Zahl 2, `45 05 00`
+   aendert nichts; NULL-Cut 5 -> Zahl 0, `re15_mg_sichtbar(0) == 1`. Gegenprobe (Mutation): ohne
+   `s_op_table[0x45]` faellt der Pin.
+2. **Takt-Pin (Raumsonde, ohne exe):** ROOM1150-SCD (main00 + sub00 -> sub05) ueber `scd_vm_tick` 200 Takte
+   laufen lassen (Skill re15-room-probe), Sichtbarkeit von Record 48 je Takt aufzeichnen: nach dem
+   ersten Aufbau Wechsel **exakt alle 20 Takte**; gleiches fuer ROOM1151.
+3. **Echte exe, Lade-Weg (Integrationshaken):** Karte `probe_r34n_g_karte <mcr> 1150 2` -> CONTINUE,
+   `RE15_FRAMEDUMP="100-300/1:f"`, `RE15_SCD_TRACE=1`; Auswertung `port_schrift1150_eval.py`:
+   AN- und AUS-Laeufe wechseln sich ab, jeder volle Lauf **genau 20 Bilder**, Umschaltbild = Bild der
+   0x45-Zeile im Trace; max |d| 0 gegen die jeweilige Referenz. Dasselbe fuer 1151. (Vorher: 101/101 AN.)
+4. **Debug-Sprung + Cut-Wechsel:** `RE15_DEBUG_JUMP=1150@240`, in Cut 1 und ueber RVD-Satz 6 (1 -> 2)
+   nach Cut 2 laufen (`RE15_PLAYER_POS` + `RE15_INPUT_SCRIPT`) oder `RE15_FORCE_CUT`: nach dem Eintritt
+   in Cut 2 zuerst AN (Aufbau), erstes AUS erst beim naechsten :=0 von sub05.
+5. **Statusschirm:** in Cut 2 waehrend eines AUS-Laufs das Inventar oeffnen/schliessen
+   (`RE15_INV_OPEN_AT`): nach dem Schliessen AN bis zum naechsten :=0 (Original @0x800466fc).
+6. **Andere Raeume (7.1), je ein Messlauf mit `RE15_MG_LOG` + `RE15_PRI_LOG` + Framedump:** ROOM3000
+   Cut 0 in der Zombie-Variante (Flag (4,9) = 1 -> (5,0) = 0) -> 0 von 43 Masken gezeichnet;
+   ROOM3071 sub02 (Elza-Szene) -> Lichtfolge Gruppe 13..3 je 20 Takte in Cut 9; ROOM1211 Cut 7 nach
+   Flag (5,2); ROOM5060 Cut 11 nach Flag (5,4). Gegenprobe gegen DuckStation (RAM-Patch-Weg aus 3.5)
+   mindestens fuer ROOM3000 Cut 0: Byte0 der 43 Records und beide Bildspeicher.
+7. **Gegenprobe Original (liegt vor, G2_06):** 40 VBlanks = 20 SCD-Takte je Zustand; der Port muss
+   20 Bilder je Zustand zeigen (1 Bild = 1 SCD-Takt).
+8. Suite: volle Suite ueber local_build.sh; Bild-Haken mit echter exe bei Fehlschlag einzeln 2x
+   nachfahren (memory reai-v2-gui-tests-flattern-bei-parallelen-agenten).
 
 ## 7 Risiken, Softlocks, Wechselwirkungen
 
-(folgt; 7.1 = Wirkung auf die 10 Raeume mit Opcode 0x45)
+### 7.1 Wirkung der allgemeinen Umsetzung auf alle Raeume mit Opcode 0x45
+
+Zensus `G2_04` (Stellen) und Gruppengroessen je Cut (`col_chg_zensus.py gruppen_je_cut`). "per Bild" =
+sub01 wird im Original JEDES Bild neu gestartet (FUN_8003f038 @0x8003f064-84, memory
+reai-v2-scd-per-frame-model); Switch auf work_vars[0x0A] = gezeigter Cut.
+
+| Raum | Wann | Cut | Gruppen aus | Masken aus / im Cut |
+|---|---|---|---|---|
+| ROOM1150/1151 | sub05, Endlosschleife | 2 | 6..11 im Wechsel 20/20 Takte | 6 / 54 |
+| ROOM1211 | sub01 per Bild, Ck(5,2) == 1 | 7 | 1, 2 | 10 / 70 |
+| ROOM3000/3001 | sub01 per Bild, Ck(5,0) == 0 (main00: (5,0) := 0 wenn Ck(4,9) == 1, dann Zombies) | 0 / 1 / 2 / 3 | 1-3 / 8-12 / 8-12 / 4-8 | 43/43, 50/93, 34/85, 47/105 |
+| ROOM3010/3011 | sub01 per Bild, Ck(5,0) == 0 (main00: (5,0) := 0 wenn Ck(4,10) == 1) | 0 / 1 / 2 / 3 / 4 / 6 | 1,2 / 1,2,6,7 / 1 / 1,2 / 1 / 3,4 | 26/56, 55/94, 9/57, 17/83, 14/82, 26/49 |
+| ROOM3071 | sub01 per Bild, Ck(5,3) == 0: alle aus; sub02 (Szene, setzt (5,3) := 1): Gruppe 13 an 20 Takte, 13 aus + 12 an, ... bis 3 an | 9 | 3..13 | 11 / 30 (Lichtfolge) |
+| ROOM5060/5061 | sub01 per Bild, Ck(5,4) == 1 | 11 | 1 | 1 / 1 |
+
+Heute zeichnet der Port in all diesen Faellen die Masken, die das Original ausblendet — dort verdecken
+im Port Masken Figuren, die im Original sichtbar sind (ROOM3000 Cut 0: der ganze Maskensatz). Nach dem
+Bau entspricht das Bild dem Original; das ist gewollt (memory reai-v2-original-oder-nicht), muss aber
+je Raum abgenommen werden (6.6). ROOM3071 ist der Raum mit dem offenen Elza-Softlock (memory
+reai-v2-runde30-neun-befunde): die Lichtfolge ist rein visuell, sub02 wartet nicht auf Masken — kein
+neuer Softlock, der bestehende bleibt unberuehrt.
+
+### 7.2 Weitere Risiken
+
+* **Kein Softlock:** Opcode 0x45 laeuft weiter im selben Takt (wie heute `op_unknown`), keine Wartebedingung
+  haengt an Masken. Die Pfadlaenge (3) ist unveraendert.
+* **Dirty-Schalter nach Menues** (Haken menu_common.c / Options / Karte): setzt wie das Original
+  work_vars[0x0C] (alter Cut) := gezeigter Cut (@0x80021bf4). Ein spaeteres `Cut_old` nach einem
+  Inventarbesuch kehrt damit zum gezeigten Cut zurueck — Original-Verhalten; Zwischenszenen, die
+  Cut_old benutzen, lassen kein Inventar zu. Ein Pin sollte work_vars[0x0C] nach dem Schliessen pruefen.
+* **Nachgezeichnete Masken (R15M):** bleiben unberuehrt (Zahl 0 -> sichtbar). R15M gibt es nur bei
+  NULL-Sektion (main.c ~5697), also nie gemischt mit Original-Records im selben Cut.
+* **Spur B (Hebetisch ROOM1150/1151):** keine Ueberschneidung — die Blink-Gruppen gibt es nur in Cut 2,
+  B arbeitet mit AOT 11/12, Nachrichten 20/21, obj 8 und Cut 4 (sub04). Gemeinsame Dateien bei der
+  Zusammenfuehrung: scd_vm.c (eine Tabellenzeile), main.c, render_pc.c, room_common.c, menu_common.c —
+  je eigene Zeilen. Spuren A/C/D/E/F: keine gemeinsamen Stellen.
+* **PSX-Ziel:** render.c braucht dieselbe Zeile; der PSX-Bau ist hier nicht pruefbar (bekannte Luecke).
+* **Leistung:** 54 Byte-Vergleiche je 0x45 und je Bild ein Byte-Test je Maske — vernachlaessigbar.
 
 ## 8 Offene Punkte
 
-(folgt)
+1. ⛔ **Werkzeugfehler (nicht Teil dieses Auftrags):** `tools/maske/original.py atlas()` entpackt den
+   SLD-Atlas anders als der Port (ROOM1150 Cut 2: 11978/65536 Texel verschieden; Port ==
+   `BSS/ROOM1150/PRI02.TIM`). Wer mit `original.py` Masken misst, misst falsche Pixel. Meldung an die
+   Besitzer der Masken-Werkzeuge; die Spur G2 benutzt es nicht mehr.
+2. Raum-ESP ROOM1150 (Effekt-Id 0x01, TIM @0x1E520): nicht die Schrift (3.6). Wer ihn startet, ist
+   offen und nicht Teil dieses Punkts.
+3. DuckStation-Steuerung: die Pad-Bindungen in `settings.ini` (Stand 2026-09-26) sind Akkorde
+   `Keyboard/X & SDL-0/Y` — vgamepad-Navigation (re15_quickload.py) wirkt damit nicht mehr. Der
+   RAM-Patch-Weg (3.5, `ds_lauf.py`) braucht keine Eingabe. Einstellungen nicht geaendert; der Skill
+   re15-room-capture sollte den Befund bekommen.
+4. Raumeintritt MIT Cut 2 als Eintritts-Cut (kommt ueber Tueren nicht vor): im Original laeuft der
+   erste sub05-Takt in der SCD-Init vor dem Aufbau (Aufbau erst beim Present) — der Port hat dieselbe
+   Reihenfolge (scd_room_reenter vor load_bg_cut). Im Bau mit dem Lade-Weg-Haken (6.3) mitpruefen.
+5. Kein Nutzer-Rueckfragebedarf: das Original blinkt nachweislich (3.5), der Befund des Nutzers ist
+   bestaetigt.
