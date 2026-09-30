@@ -43,20 +43,18 @@ static const dokument_t k_dokumente[] = {
       RE15_DOK3_RECT_X, RE15_DOK3_RECT_Z, RE15_DOK3_RECT_W, RE15_DOK3_RECT_D,
       re15_dokument3_md1, (int)sizeof re15_dokument3_md1,
       re15_dokument3_tim, (int)sizeof re15_dokument3_tim },
+    { 0x1010, 4, RE15_DOK4_ITEM, RE15_DOK4_BIT, RE15_DOK4_SLOT, RE15_DOK4_OBJ,
+      RE15_DOK4_X, RE15_DOK4_Y, RE15_DOK4_Z, RE15_DOK4_ROT_Y,
+      RE15_DOK4_RECT_X, RE15_DOK4_RECT_Z, RE15_DOK4_RECT_W, RE15_DOK4_RECT_D,
+      re15_dokument4_md1, (int)sizeof re15_dokument4_md1,
+      re15_dokument4_tim, (int)sizeof re15_dokument4_tim },
 };
 #define DOK_ANZAHL ((int)(sizeof k_dokumente / sizeof k_dokumente[0]))
-
-/* Die Engine-Bytes der uebrigen Modelle stehen schon in gen/dokumente_props.inc; bis ihr
- * Dokument eingetragen ist, werden sie nur referenziert (kein unused-Warnruf). */
-static const void *const k_vorrat[] = {
-    re15_dokument4_md1, re15_dokument4_tim,
-};
 
 static const dokument_t *dokument_des_raums(uint16_t room_id)
 {
     for (int k = 0; k < DOK_ANZAHL; k++)
         if ((uint16_t)(room_id & 0xFFFEu) == k_dokumente[k].raum) return &k_dokumente[k];
-    (void)k_vorrat;
     return NULL;
 }
 
@@ -113,6 +111,10 @@ typedef struct { uint16_t raum; uint8_t cut; uint16_t tiefe; } klemme_t;
 static const klemme_t k_klemmen[] = {
     { 0x1020, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
     { 0x1021, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
+    { 0x1010, 0, RE15_DOK4_KLEMME_CUT0 },       /* nur ROOM1010: ROOM1011 hat keine MSK-Datei */
+    { 0x1010, 1, RE15_DOK4_KLEMME_CUT1 },
+    { 0x1010, 6, RE15_DOK4_KLEMME_CUT6 },
+    { 0x1010, 8, RE15_DOK4_KLEMME_CUT8 },
 };
 #define KLEMMEN_ANZAHL ((int)(sizeof k_klemmen / sizeof k_klemmen[0]))
 

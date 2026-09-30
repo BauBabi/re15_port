@@ -70,12 +70,16 @@ static const uint8_t s_name_dok2[] = {     /* "Elliot's Diary" */
 static const uint8_t s_name_dok3[] = {     /* "Marvin's Notes" */
     0x29, 0x3d, 0x4e, 0x52, 0x45, 0x4a, 0x3a, 0x4f, 0x00, 0x2a, 0x4b, 0x50, 0x41, 0x4f, 0x07
 };
+static const uint8_t s_name_dok4[] = {     /* "Armory Notice" */
+    0x1d, 0x4e, 0x49, 0x4b, 0x4e, 0x55, 0x00, 0x2a, 0x4b, 0x50, 0x45, 0x3f, 0x41, 0x07
+};
 
 static const re15_file_doc_t s_docs[] = {
     { RE15_FILES_FIRST_ITEM_ID + 0, 25, 15, 144, s_name_irons_diary },
     { RE15_FILES_FIRST_ITEM_ID + 1, 26,  3, 144, s_name_dok1 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 2, 27,  4, 144, s_name_dok2 },   /* Runde 34 Nacht, Spur E */
     { RE15_FILES_FIRST_ITEM_ID + 3, 28,  2, 176, s_name_dok3 },   /* Runde 34 Nacht, Spur E */
+    { RE15_FILES_FIRST_ITEM_ID + 4, 29,  2, 176, s_name_dok4 },   /* Runde 34 Nacht, Spur E */
 };
 #define DOC_COUNT ((int)(sizeof s_docs / sizeof s_docs[0]))
 

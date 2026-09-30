@@ -193,6 +193,59 @@
 #define RE15_DOK3_KLEMME_CUT         3
 #define RE15_DOK3_KLEMME_TIEFE       258
 
+/* ---- DOKUMENT 4: "Armory Notice" — ROOM1010/1011, Verhoertisch (interrogation.bmp) ------ */
+
+/*   Item 0x4C       VERTRAG 1.4 (Dokument-Nr 4)
+ *   Bit 60          VERTRAG 1.1
+ *   Slot 9          erster Slot, der in BEIDEN Varianten frei ist: ROOM1010 belegt 0..7,
+ *                   ROOM1011 0..8 (scd_dump_room.py, alle Bloecke) — VERTRAG 1.2
+ *   obj 3           nOmodel = 3 in 1010 UND 1011, Obj_model_set nur obj 0..2;
+ *                   TIM-Slot RE15_TIM_SLOT_PROP(3) = 7 */
+#define RE15_DOK4_ITEM               0x4C
+#define RE15_DOK4_BIT                60
+#define RE15_DOK4_SLOT               9
+#define RE15_DOK4_OBJ                3
+/* LAGE:
+ *   y    -1600 = ORIGINAL-DATEN: beide Items dieses Tischs stehen bei y -1600 (ROOM1010.RDT
+ *        Obj_model_set @0x00930 `2d 00 00 00 01 00 0a 00 00 00 c8 00 c0 f9 7c 15 …` = (200,-1600,5500)
+ *        und @0x00952 (1800,-1600,5750); Modell-Fuss y 0 (mesh04 bbox y -98..0).
+ *   x,z,rot  PORT-WAHL, keine Original-Adresse — genau unter der Nutzer-Marke (interrogation.bmp,
+ *        Cut 0, x 208..231 y 166..187) steht im Spiel das ORIGINAL-Item First Aid Spray (ROOM1010
+ *        Item_aot_set @0x00996 Slot 2 Id 0x22 + Obj_model_set @0x00930 obj 0 bei (200,-1600,5500)
+ *        rot 3084, eine 489 hohe Dose); der Nutzer sah im reinen Hintergrund keine Props. Das Blatt
+ *        liegt deshalb NEBEN der Dose: globales Optimum von lage_1010.py (Regel im Werkzeugkopf:
+ *        groesster sichtbarer Blatt-Anteil in der Marke, Dose Radius 120 nicht beruehrt, 30 Rand;
+ *        Raster 20, Drehung in 256er-Schritten) -> E_belege/lage_1010.txt Zeile 1: Marke zu 0,266
+ *        gedeckt, Blatt zu 0,900 sichtbar. Ursprung vorwaerts Cut 0 (210,71 ; 170,49). */
+#define RE15_DOK4_X                  450
+#define RE15_DOK4_Y                  (-1600)
+#define RE15_DOK4_Z                  5600
+#define RE15_DOK4_ROT_Y              3840
+/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 mittig: die Original-Items DESSELBEN Tischs haben
+ * 1000 x 1000 um ihren Ort (@0x00996 Spray x[-350..650] z[5200..6200] zu (200,5500); @0x009AC
+ * Munition x[1300..2300] z[5300..6300] zu (1800,5750)). Gemessen: 201 Standorte / 786 eigene
+ * Treffer, 2202 vom Spray (Slot 2) abgefangen — wo sich beide Zonen decken, gibt der KLEINERE
+ * Slot das Spray (Scan aufsteigend, FUN_80042bac; Original-Praxis Item vor Item); nach dem Spray
+ * gehoeren alle Treffer dem Blatt. Druck (700,6400) Blick -z -> Leser, (300,6400) -> Spray. */
+#define RE15_DOK4_RECT_X             (-50)
+#define RE15_DOK4_RECT_Z             5100
+#define RE15_DOK4_RECT_W             1000
+#define RE15_DOK4_RECT_D             1000
+
+/* TIEFEN-KLEMMEN ROOM1010 — ⛔ PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK. Das Original fuehrt in
+ * ROOM1010 NULL-Sektionen (pri-Zeiger @0x458/@0x45C/@0x470/@0x478 der Cuts 0/1/6/8 = `ff ff ff ff`,
+ * selbstpruefung.py) und verdeckt dort im Spiel NICHTS. Der Port zeichnet dort NACHGEZEICHNETE
+ * Masken (MASKS/ROOM1010.MSK, md5 255426998bea71fddf7f24649534cabd; re15_pri.h "R15M"), die die
+ * Tischplatte als Treppe fuehren — das Blatt waere an seiner fernen Kante verdeckt. Klemme je Cut =
+ * die kleinste Tiefe unter den Masken, die die fernste Ecke der Blatt-Huelle verdecken (Sonde
+ * `huelle`, E_belege/endwerte.txt): Cut 0 Maske 14 Tiefe 40, Cut 1 Maske 46 Tiefe 53, Cut 6 Maske
+ * 14 Tiefe 60, Cut 8 Maske 2 Tiefe 51. Damit stellt die Klemme fuer das Blatt genau das Original
+ * her (nichts verdeckt). ROOM1011 hat keine MSK-Datei -> keine Klemme. */
+#define RE15_DOK4_KLEMME_CUT0        40
+#define RE15_DOK4_KLEMME_CUT1        53
+#define RE15_DOK4_KLEMME_CUT6        60
+#define RE15_DOK4_KLEMME_CUT8        51
+
 /* Legt die Dokumente beim Raumstart an — je Raum nur, wenn das Zone-9-Bit nicht gesetzt ist.
  * Gerufen an BEIDEN Raumstart-Wegen des Ports (Tuer: scd_room_setup.c scd_room_reenter,
  * Boot/CONTINUE: platform/pc/main.c), jeweils NACH dem Init-Lauf von main00. Im Original gibt
