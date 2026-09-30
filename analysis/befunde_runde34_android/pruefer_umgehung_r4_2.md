@@ -58,3 +58,33 @@ Stand: angelegt 2026-09-30T11:56:50+02:00 - Abschnitte folgen.
 
 ## 0.3 Laufprotokoll
 
+- 12:00 Python-Schnappschuss 0 (`py_zustand.ps1` der R4-Belege, Aufruf `powershell -ExecutionPolicy Bypass -File`, nur fuer
+  diesen Prozess - die Systemrichtlinie blockt Skripte): `build/r34a/pruefer_u2/py_zustand_0_start.txt` (121 Zeilen) ==
+  Endstand der Nachbesserung (`android_r4_nachbesserung_belege/py_zustand_ende.txt`, diff leer). Python nur `/c/Python310/python`.
+- 12:05 Grundlauf: echtes Gate (Kopie `gate_echt.py`, sha256 8a0e3f15... = Pin) `--selbsttest` 24 s, `SELBSTTEST-OK 258/258`,
+  `gate_urteil` (u2_urteil.sh: gate_urteil aus release/apk_pruefen.sh, unveraendert geladen) -> Urteil 0.
+
+## 3. Format v2: Korpus Gate == Geraete-Leser (Y4)
+
+Werkzeug `u2_korpus.py` = Runde-1-Korpus (`u1_korpus.py`, 57 Listen, unveraendert importiert) + 48 neue Listen; Geraete-Leser =
+`u1_liste_korpus.c` (R4-1, unveraendert) mit asset_abgleich.c HEAD uebersetzt (gcc 16.2, `-std=c11 -Wall -Wextra -Wpedantic
+-Wshadow -Wconversion`, ohne Warnung); Gate = `manifest_lesen` aus gate_echt.py. Beleg `korpus_ergebnis.txt`.
+
+- **Gate == Geraet auf allen 105 Listen** (0 Abweichungen). Neu u.a.: ASCII-Grenzen 0x20/0x7e (A) / 0x7f/0x80/0xff/UTF-8/
+  Kelvin allein/Tab am Ende (V); Segment 251 (A) / 252 als Datei, Ordner, erstes Segment (V); Pfad 512 (A) / 513 (V);
+  `.neu`/`.NEU`/`.nEu` (V), `x.neu ` / `x.neu.` (A); Dubletten `Z`/`z` und exakt doppelt (Kopf zaehlt ein- bzw. zweimal) (V),
+  `[`/`{`, `@`/`` ` `` (A, keine Buchstaben); Kopf mit CR vorn, Leerzeichen/Tab hinten, 19 Ziffern in Anzahl ODER Bytes,
+  CR innen (V); Zeile mit CR vorn, LF-CR (V); Groesse 0 (A), 19 Ziffern (V). Die fuenf Unicode-Paare der Runde 1
+  (Kelvin/K, Kelvin/k, Ae/ae, NFC/NFD, sz/ss) lehnen jetzt BEIDE ab (`unzulaessiger Pfad`) - H5 an dieser Stelle behoben.
+  (Drei Runde-1-Zeilen mit Nicht-ASCII-Pfad, dort "soll A", sind unter der neuen Regel richtig V.)
+- **Regel-Luecke Y4 bestaetigt (Regelebene):** `n_Y4_datei_und_neu_ordner` (`shared_assets/PSX/X` + `shared_assets/PSX/X.neu/B`)
+  und `n_Y4_datei_und_NEU_ordner_gk` (`.../x` + `.../X.NEU/B`) nehmen Leser UND Gate an; Gradle ebenso (writeAssetManifest
+  prueft `.neu` nur als Endung des GANZEN Pfads, build.gradle:157). Folge im Entpacker (android_glue.c, Code): die Zwischendatei
+  fuer `X` ist `<s_root>/.../X.neu` (`pfad_bauen(tmp, ..., RE15_ABGLEICH_NEU_ENDUNG)` :511); nach der Erstinstallation ist das ein
+  ORDNER (`X` < `X.neu/B` in strcmp-Reihenfolge: `X` wird zuerst geschrieben, danach legt `mkdirs_for` den Ordner `X.neu/` an).
+  Jeder spaetere Lauf, der `X` neu schreiben muss (Update mit geaendertem `X`, oder Lauf "ohne Liste" mit abweichender Summe):
+  `unlink(tmp)` :516 scheitert still (Ordner), `open(tmp, O_WRONLY|O_CREAT|O_TRUNC)` :233 -> EISDIR -> `n_fehler` ->
+  `fehler_halten` - bei JEDEM Start, bis die App-Daten geloescht werden; `re15_abgleich_waisen` laesst `X.neu/` stehen (sein
+  Inhalt ist gelistet). Gleiche Klasse wie U3 der Runde 1 (Gate gruen, Geraet kann die Liste nie umsetzen); heute ohne Folge
+  (kein Asset-Ordner endet auf `.neu`), und NTFS haelt `X` + `X.neu\` nebeneinander - Befund F-Y4 (niedrig), Messung auf dem
+  Geraet: Abschnitt 4 (sofern der Emulator frei wird).
