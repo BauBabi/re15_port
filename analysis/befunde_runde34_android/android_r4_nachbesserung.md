@@ -11,8 +11,8 @@ Gegenstand: Gegenpruefer-Befunde `pruefer_umgehung_r4_1.md` (H1 hoch; H5, H3, H2
 
 - [x] 1 Befunde selbst nachmessen (H1, H2, H5 schnell; H3 per make_package in eigener Sandbox)
 - [x] 2 Bauplan
-- [ ] 3 H1 + H2: Gate-Urteil aus Rueckgabe UND Ausgabe, Gate-Pin, keine Umgebungsvariable mehr
-- [ ] 4 H3: SHA256SUMS.txt + git add aus einer Positivliste, fremde Versionsdateien -> Abbruch
+- [x] 3 H1 + H2: Gate-Urteil aus Rueckgabe UND Ausgabe, Gate-Pin, keine Umgebungsvariable mehr
+- [x] 4 H3: SHA256SUMS.txt + git add aus einer Positivliste, fremde Versionsdateien -> Abbruch
 - [ ] 5 H5 (+U3, V1/V2): Pfade nur druckbares ASCII, Segment <= 251 B - Gradle, Gate, Geraete-Leser, Tests
 - [ ] 6 niedrig: U1, U2/E1 (Waisen), U4 (fail closed) im Entpacker
 - [ ] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
@@ -90,3 +90,38 @@ kanonische Name `"${NAME}_android".z*` (gross/klein-genau). Alle vier Befunde (H
   (einmal mit echtem Pin, einmal mit auf den Mutanten umgepinntem Gate = zweite Schicht), PC-Suite, Android-Bau,
   Emulator (frisch, Uebergang v0.8.19, Abbruch + Update mit gestrichener Datei, Kelvin-APK -> abgelehnt + Meldung
   bleibt stehen).
+
+## 3. H1 + H2 behoben (Commit `587e6cdf`)
+
+`release/apk_pruefen.sh` (Kopf "ASSET-GATE: FESTHALTEN UND URTEIL"):
+- `gate_pin_pruefen` / `gate_festhalten`: das Gate laeuft nur als private Kopie, deren sha256 in
+  `release/apk_asset_gate.sha256` steht (neu, Format wie `apk_signer.sha256`, Kommentar sagt, wie man ihn nach einer
+  gewollten Aenderung neu setzt). `gate_laufen` prueft den Pin vor JEDEM Lauf.
+- `gate_laufen <modus>` schreibt die Ausgabe in eine Datei (kein Pipe), zeigt sie danach, und `gate_urteil`
+  (eigener Python-Code im Aufrufer, liest nur die Ausgabe) entscheidet: letzte Zeile = Schlusszeile des Modus, genau
+  eine Urteilszeile im Lauf, keine `ABBRUCH`/`Traceback`/`[FEHLER]`-Zeile, Rueckgabe passend (OK <-> 0,
+  FEHLER/ABWEICHUNG <-> 1, sonst 2 = keine Aussage). Selbsttest: `n/n Faelle` mit n >= 258, jede Fallzeile 1..n genau
+  einmal, `[ok]` und `rc = soll`, `Innere Proben m/m` mit m >= 132 (Mindestzahlen `GATE_SELBSTTEST_MIN_*`). APK:
+  SUMME Quelle = APK = gleich = Manifestzeilen = Schlusszeile, Manifest-Bytes = Bytes gleich, RE2/DOOR + RE15DOOR
+  q = a = g > 0, TORSE.VBS gleich, Tuer-Soll g/g, und die APK-Zahl = `unzip -Z1`-Zaehlung der assets/-Eintraege - 1.
+  Quellbaum/Paket: Baumzeilen summieren zur Schlusszeile (Paket: je Baum Quelle = gleich).
+- H2: `APK_GATE_DATEI` wird beim Laden von apk_pruefen.sh verworfen (Hinweis auf stderr); make_package.sh setzt nach
+  dem Laden `APK_GATE_KOPIE` (die festgehaltene, selbstgetestete Kopie), apk_pruefen.sh leert sie beim Laden.
+- make_package.sh: Selbsttest, `--quellbaum` und `--paket` laufen nur noch ueber `gate_laufen`.
+
+Nachweis `build/r34a/nb/nb_urteil_test.sh` (Log `build/r34a/nb/logs/urteil_test.txt`, **FEHLER=0**):
+- echter Selbsttest-Log -> 0; derselbe Log mit Rueckgabe 1/2 -> 2; leer (G0) / nur Leerzeilen / ohne Schlusszeile /
+  FEHLER-Schluss mit Rueckgabe 0 (G1-G3) -> 2 (mit Rueckgabe 1 -> 1); `257/258`, `202/202` (altes Gate), Fallzeile
+  17 fehlt, Fallzeile 2 doppelt, eine Fallzeile `rc=0 (soll 1)`, eine `[FEHLER]`-Zeile, `Innere Proben 131/132` bzw.
+  `116/116`, Traceback nach der Schlusszeile, ABBRUCH-Zeile, zwei Urteilszeilen, Selbsttest-Log als APK-Urteil -> je 2.
+- Pin: echte Kopie angenommen; G0 (0 B), G1 (`main()` ohne `sys.exit`) und das Gate von vor R4-1 abgelehnt.
+- zweite Schicht: G1 und G0 mit auf sie UMGEPINNTER Pin-Datei durch `gate_laufen selbsttest` -> Urteil 2.
+
+## 4. H3 behoben (Commit `587e6cdf`)
+
+make_package.sh: `fremde_versionsdateien`/`fremde_abbruch` - jede Datei `<NAME>_*.z*`, deren Rest nicht genau
+`(linux_steamdeck_x64|win64|android).(zip|zNN)` ist, bricht ab (mit `--zip`: vor den Kopierminuten und noch einmal vor
+dem Schreiben der SUMS; auch mit `--ohne-android`). SHA256SUMS.txt und `git add` nur aus der Positivliste
+(`AUSLIEFERN` = PC-Saetze dieses Laufs + kanonischer Satz der anderen PC-Plattform nach `verify_split`, gemeldet als
+"frueherer Lauf, nicht neu geprueft"; `ANDROID_VOLUMES` nur mit `ANDROID_GEZIPPT`); ein scheiterndes `git add` bricht
+ab. Mit `--no-zip` wird nichts mehr vorgemerkt. Nachweis in der Sandbox: Abschnitt 7.
