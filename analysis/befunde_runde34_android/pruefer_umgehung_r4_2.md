@@ -229,3 +229,12 @@ gekippt + passende Listen-Summe). Beleg `kette_A.txt`.
 | A3b | derselbe Mutant | FD_sig | 1 | der schaedliche Fall faellt weiter (Quellbaum-Vergleich) |
 | **A4** | echt + Pin echt, **Urteil 1 Zeichen geaendert** | FD_sig | **0** | Gate: `APK-ASSET-GATE-ABWEICHUNG`, Rueckgabe 1; Urteil 0 -> `APK-PRUEFUNG-OK`, `ANDROID-GATES-OK` fuer das falsche Tuerarchiv |
 Danach Sandbox-Gate + Pin + apk_pruefen.sh = Arbeitsbaum, 0 Pruefkopien, 0 Temp-Reste.
+
+Pruefstand Teil 2 (`pruefstand/szenarien2.sh`, Beleg `pruefstand2_1000.txt`):
+| Szenario | EXIT | Ergebnis |
+|---|---|---|
+| H1 Datei auf dem Geraet von aussen gleich gross veraendert, Neustart | 0 | `schneller Weg`, Datei bleibt veraendert - so dokumentiert ("pruefen nur die Dateigroessen"); kein APK-Update betroffen (jede Aenderung aendert die Liste) - Grenze |
+| H4 "zuletzt entpackt"-Liste auf 40 B abgeschnitten | 0 | `unlesbar ... -> jede Datei pruefen`, Waise entfernt, 2 per SHA-256 geprueft - konsistent |
+| H7 Update: Datei `PSX/q` wird Ordner `PSX/q/c` | 0 | `entfernt ... PSX/q`, `entpacke PSX/q/c` - konsistent |
+| H8 Update: Ordner `PSX/q/` (mit `c`) wird Datei `PSX/q` | **1**, dann 0 | weg-Schleife loescht `q/c`, der leere Ordner `q/` bleibt (im Update-Weg kein rmdir, kein Waisen-Lauf) -> `rename .../PSX/q: Is a directory` -> ABBRUCH mit Meldung; erst der NAECHSTE Start (ohne Liste -> Waisen-Lauf raeumt `q/` ab) entpackt. Niedrig (fail closed, heilt beim zweiten Start) - Teil von F-Y4 (Ordner/Datei-Namenskonflikte im Update-Weg) |
+| H9 Update `X.BIN` -> `x.bin` (case-sensitiver Speicher) | 0 | `entfernt X.BIN`, `entpacke x.bin` - konsistent |

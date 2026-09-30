@@ -1,0 +1,62 @@
+== H1a A frisch: EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (9 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (9 B, 2 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+== H1b Neustart nach Aenderung von aussen (gleiche Groesse): EXIT=0
+     [android] Assets aktuell (schneller Weg): 2 Dateien, 9 Bytes unter /tmp/hs2/s_h1 (0 ms)
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 0 Zeichenaufrufe)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/DATA/ shared_assets/PSX/DATA/b.bin=bbbb1 shared_assets/PSX/a.bin=XXXX 
+== H4a A frisch: EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (9 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (9 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+== H4b Neustart mit abgeschnittener Liste (40 B): EXIT=0
+     [android] zuletzt-entpackt-Liste unlesbar (Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet) -> jede Datei pruefen
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/alt_waise.bin
+     [android] Abgleich (ohne Liste): 2 Dateien (9 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 0 kopiert (0 B, 0 ms), 2 per SHA-256 geprueft (9 B, 0 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/DATA/ shared_assets/PSX/DATA/b.bin=bbbb1 shared_assets/PSX/a.bin=AAAA 
+== H7a Datei PSX/q: EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 5 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+== H7b Update: PSX/q wird Ordner PSX/q/c: EXIT=0
+     [android] Abgleich (Update): 2 Dateien (8 Bytes) - behalten 1, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q
+     [android] entpacke shared_assets/PSX/q/c (neu)
+     [android] Entpacken fertig (Update): 2 geprueft, 1 kopiert (4 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/k.bin=kkkk shared_assets/PSX/q/ shared_assets/PSX/q/c=CCCC 
+== H8a Ordner PSX/q/c: EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+== H8b Update: Ordner PSX/q wird Datei PSX/q: EXIT=1
+     [android] Abgleich (Update): 2 Dateien (8 Bytes) - behalten 1, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q/c
+     [android] entpacke shared_assets/PSX/q (neu)
+     [android] FEHLER beim Entpacken: rename /tmp/hs2/s_h8/shared_assets/PSX/q: Is a directory
+     [android] Entpacken fertig (Update): 2 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/k.bin=kkkk shared_assets/PSX/q/ 
+== H8c Neustart (gleiche APK): EXIT=0
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 1 kopiert (4 B, 0 ms), 1 per SHA-256 geprueft (4 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 2 Zeichenaufrufe)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/k.bin=kkkk shared_assets/PSX/q=AAAA 
+== H8d noch ein Neustart: EXIT=0
+     [android] Assets aktuell (schneller Weg): 2 Dateien, 8 Bytes unter /tmp/hs2/s_h8 (0 ms)
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 0 Zeichenaufrufe)
+== H9a X.BIN: EXIT=0
+     [android] Abgleich (ohne Liste): 1 Dateien (4 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 1, weg 0
+     [android] Entpacken fertig (ohne Liste): 1 geprueft, 1 kopiert (4 B, 1 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-R
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 1 Zeichenaufrufe)
+== H9b Update auf x.bin: EXIT=0
+     [android] Abgleich (Update): 1 Dateien (4 Bytes) - behalten 0, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/X.BIN
+     [android] entpacke shared_assets/PSX/x.bin (neu)
+     [android] Entpacken fertig (Update): 1 geprueft, 1 kopiert (4 B, 2 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck, 1 Zeichenaufrufe)
+     Speicher: shared_assets/ shared_assets/PSX/ shared_assets/PSX/x.bin=xxxx 
+== Szenarien 2 fertig
