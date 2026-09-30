@@ -503,8 +503,8 @@ und Zeilen fuer Druck/Klick/Text — Grundlage der Abnahme.
 | Tastenmasken Bewegen | 0x0001 UP, 0x0004 DOWN, 0x0002 RIGHT, 0x0008 LEFT (gehalten) | ROOM11F0 sub01 @0x01098/@0x010B0/@0x010C8/@0x010E0; Richtung->Achse sub02..05 |
 | Aktionsmaske | 0x0040 (Flanke) | ROOM11F0 sub01 @0x01106 `51 01 40 00`; Flanke: PORT-WAHL §5.1 Nr. 4 (DAT_800ac76c statt DAT_800ac768) |
 | Abbildungskamera | Cut 10 von ROOM11F0: fov 26684, pos (-19628,-17442,22616), tgt (-19628,15928,22617) | ROOM11F0.RDT Kameratabelle @0x001A0 (RDT+0x24 -> 0x60, Eintrag 10) |
-| Farbe | Tint 128 (neutral) | gemessen: 11F0 rendert CLUT[3]/[4] 1:1 (§2.3); PORT-WAHL "wie 11F0 im Port" |
-| Tiefe in der Tri-Queue | 0 (vor allem) | PORT-WAHL: Zeiger ueber allem; Tris und PRI-Masken werden gemeinsam nach Tiefe sortiert (render_pc.c end_frame), Tiefe 0 liegt vor jeder Maske |
+| Farbe | ~~Tint 128 (neutral)~~ **BERICHTIGT im Bau (§9.7 Nr. 1):** Lichtsatz ROOM11F0 Cut 10 @0x0718 | der Tint 128 traf nur die HELLEN Punkte; 206 Punkte der abgewandten Seitenflaechen sind in 11F0 dunkel. Mit dem 11F0-Licht 1905/1905 pixelgleich |
+| Tiefe in der Tri-Queue | eigene Kameratiefe - 65536 (Bau: statt pauschal 0, damit die Flaechen des Cursors untereinander wie in 11F0 nach Tiefe liegen) | PORT-WAHL: Zeiger ueber allem; Tris und PRI-Masken werden gemeinsam nach Tiefe sortiert (render_pc.c end_frame), negative Tiefe liegt vor jeder Maske |
 | Randgrenze | keine | wie 11F0 (gemessen §2.3, op_add_speed ohne Grenze) |
 | Trefferflaeche | Huelle (Engine-Werte, ganzzahlig, Umlauf) (151,171) (163,161) (180,151) (206,148) (235,150) (248,156) (267,170) (265,190) (261,204) (214,210) (164,204) (151,191) | Projektion Prop 1 @0x138D4, Prop 2 @0x13B88, Podest aus Prop 0 @0x11E40 unter Cut 4 @0x00E0 bei Plattform @0x0FB4; gerendert 99,53 % (Python-Huelle), Engine-Projektion `probe_r34n_b_messung` = diese Werte, Python max. 2 px² daneben (§3.6); Riegel R2 rechnet nach |
 | Heisspunkt | Projektion von (x, -1800, z) unter Cut 10 | Objektlage wie der Zellstempel @0x80042f5c; -1800 = Oberseite -900 + Typ-4 -900 |
@@ -684,7 +684,7 @@ Alle Laeufe mit der echten exe dieses Baums unter eigenem Namen (`re15_r34nb.exe
 | b5 | CROSS im Cursor, erneute Aktion | F258 `abbruch`, Plattform F258 -20224, Raumkamera ab F260; F305 `verlangt`, F316 `aktiv`, F342 zweiter Abbruch | `bau_abnahme_abbruch_inventar_1151.png` |
 | b6 | Text mit CROSS schliessen | F258 `nichts`, F320 CROSS -> Text zu, KEIN `abbruch`; danach RIGHT 9 Takte -> x -17754 | (Log) |
 | b7 | START im Cursor, D-Pad + SQUARE im Menue (EXIT) | VM steht F258-F393, Cursorlage unveraendert, kein Text/Klick/Abbruch | Inventar-Bilder |
-| l1/l2 | CONTINUE 1150 / 1151 | `aktiv` F101 in beiden Raeumen, Cursor ab F102 | 1151-Bild |
+| l1/l2 | CONTINUE 1150 / 1151 | `aktiv` F101 in beiden Raeumen, Cursor ab F102 | beide in `bau_abnahme_abbruch_inventar_1151.png` |
 | l3 | CONTINUE 1150, Inventar | VM steht F112-F247, danach RIGHT 9 Takte -> x -17754 | (Log) |
 | b8 | Rand unten/links | Cursor vor den Tischkanten-Masken sichtbar (F160, sy 225), verlaesst das Bild unten (F180) und links (F290) und kommt zurueck — wie 11F0 (§2.3) | F160/F180 |
 
@@ -738,3 +738,7 @@ Nach dem Zuruecksetzen neu gebaut: alle 8 Teil-Riegel gruen.
 3. RE15_MIN_TESTS (§9.7 Nr. 7).
 4. PSX-Ziel: kein Cursor, kein Halt — die Fahrt laeuft dort wie bisher (der Cursor braucht den PC-Zeichner).
 5. Android: neue .c-Dateien -> frischer Configure (memory android-glob-cache).
+6. **60-Bilder-Modus (`RE15_FPS=60`, nicht Standard):** die VM laeuft nur jedes 2. Bild und liest die Flanke des
+   Vorbilds; eine Flanke aus dem ungeraden Bild ueberschreibt das naechste Bild. Ein sehr kurzer SQUARE/CROSS-Tipp
+   kann dort verloren gehen (erneut druecken). Dieselbe Grenze haben alle Flanken-Leser der VM (Opcode 0x52); der
+   30-Bilder-Standard ist nicht betroffen.
