@@ -1,0 +1,26 @@
+Quelle: analysis/befunde_runde34_nacht/AUFTRAG.md (md5 840d0718d235318d98a69677aef24c74)
+
+dok1_police_officer: Titel "Police Officer's Final Diary Entry" (AUFTRAG.md Z. 22), Text Z. 23..27
+   499 Zeichen, 5 Zeilen (davon leer 0), 97 Woerter, md5 9c8bbf64a688cfce4a69b4349e509374
+   Zeichen ausserhalb ASCII 32..126: []
+   Zeile danach (gehoert NICHT dazu): '> - Dann will ich ein Textdokument haben - Modell das gleiche wie bei '
+   verschiedene Zeichen:  ',.BCHILMOSTabcdefghijklmnoprstuwyz
+
+dok2_elliot: Titel "Elliot's Diary" (AUFTRAG.md Z. 29), Text Z. 30..38
+   648 Zeichen, 9 Zeilen (davon leer 4), 115 Woerter, md5 9d796a1b56b02220cfdfa5783cd3bc8c
+   Zeichen ausserhalb ASCII 32..126: []
+   Zeile danach (gehoert NICHT dazu): '> \t- Das soll sich in ROOM 1000 auf der Bank befinden (Siehe elliot.bm'
+   verschiedene Zeichen:  !',.3ABCGHIOSTWabcdefghijklmnopqrstuvwy
+
+dok3_marvin: Titel "Marvin's Notes" (AUFTRAG.md Z. 41), Text Z. 42..48
+   300 Zeichen, 7 Zeilen (davon leer 1), 54 Woerter, md5 5d63de086a4fc188b3bcd1b76fda30ef
+   Zeichen ausserhalb ASCII 32..126: []
+   Zeile danach (gehoert NICHT dazu): '> Passend dazu möchte ich, das im ROOM 1110 die Leiche nicht mehr den '
+   verschiedene Zeichen:  !,.1234:BFIMTUabcdefghiklmnopqrstuvwy
+
+dok4_armory: Titel 'Armory Notice' (AUFTRAG.md Z. 55), Text Z. 56..58
+   312 Zeichen, 3 Zeilen (davon leer 0), 50 Woerter, md5 e503898e65e9805233f233e93930767c
+   Zeichen ausserhalb ASCII 32..126: []
+   Zeile danach (gehoert NICHT dazu): '>'
+   verschiedene Zeichen:  '.2356:CIWabcdefghiklmnopqrstuvwy
+
