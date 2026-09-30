@@ -1,0 +1,137 @@
+ROOM1000 main00 @0x00BBE Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 4 
+ROOM1000 main00 @0x00BDE Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 1 
+ROOM1000 main00 @0x00BFE Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 1 
+ROOM1010 main00 @0x008AE Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1020 Cut 11 
+ROOM1010 main00 @0x008CE Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1020 Cut 9 
+ROOM1020 main00 @0x01C82 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1010 Cut 4 
+ROOM1020 main00 @0x01CA2 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1010 Cut 0 
+ROOM1020 main00 @0x01CC2 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1040 Cut 6 
+ROOM1030 main00 @0x01C6A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1050 Cut 0 
+ROOM1030 main00 @0x01C8A Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1070 Cut 0 
+ROOM1030 main00 @0x01CAA Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1040 Cut 0 
+ROOM1040 main00 @0x01096 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1080 Cut 0   [Ck(4,243)==0, Else]
+ROOM1040 main00 @0x010B8 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1030 Cut 8   [Ck(4,243)==0, Else]
+ROOM1040 main00 @0x010D8 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1060 Cut 7   [Ck(4,243)==0, Else]
+ROOM1040 main00 @0x010F8 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1020 Cut 0   [Ck(4,243)==0, Else]
+ROOM1050 main00 @0x00ADA Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1030 Cut 2 
+ROOM1050 main00 @0x00AFA Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1000 Cut 6 
+ROOM1050 main00 @0x00B1A Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1000 Cut 3 
+ROOM1050 main00 @0x00B3A Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1000 Cut 0 
+ROOM1050 main00 @0x00B5A Slot  4 sce 2 flags 0x31 Band 0 -> ROOM10A0 Cut 0 
+ROOM1050 main00 @0x00B7A Slot  5 sce 2 flags 0x31 Band 0 -> ROOM1090 Cut 3 
+ROOM1060 main00 @0x00D12 Slot  0 sce 2 flags 0x31 Band 8 -> ROOM1120 Cut 0 
+ROOM1060 main00 @0x00D32 Slot  1 sce 2 flags 0x31 Band 4 -> ROOM10C0 Cut 0 
+ROOM1060 main00 @0x00D52 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1040 Cut 5 
+ROOM1070 main00 @0x0145E Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1030 Cut 7 
+ROOM1080 main00 @0x00482 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1040 Cut 5 
+ROOM1080 main00 @0x004A2 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM10C0 Cut 0 
+ROOM1080 main00 @0x004C2 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1120 Cut 0 
+ROOM1090 main00 @0x0211A Slot  0 sce 2 flags 0x31 Band 1 -> ROOM1050 Cut 6 
+ROOM1090 main00 @0x0213A Slot  1 sce 2 flags 0x31 Band 6 -> ROOM1100 Cut 5 
+ROOM1090 sub00 @0x02352 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1090 Cut 6   [Ck(3,128)==1, Ck(3,133)==0, Else, Ck(3,129)==0]
+ROOM10A0 main00 @0x00DB2 Slot  0 sce 2 flags 0x31 Band 8 -> ROOM1050 Cut 4 
+ROOM10A0 main00 @0x00DDA Slot  1 sce 2 flags 0x31 Band 4 -> ROOM1180 Cut 2   [Ck(4,243)==0]
+ROOM10A0 main00 @0x00DFE Slot  1 sce 2 flags 0x31 Band 4 -> ROOM1230 Cut 2   [Ck(4,243)==0, Else]
+ROOM10A0 main00 @0x00E20 Slot  2 sce 2 flags 0x31 Band 1 -> ROOM11E0 Cut 2   [Ck(4,243)==0, Else]
+ROOM10B0 main00 @0x016D2 Slot  0 sce 2 flags 0x31 Band 5 -> ROOM1170 Cut 3 
+ROOM10B0 main00 @0x016F2 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1260 Cut 15 
+ROOM10C0 main00 @0x00E42 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1060 Cut 2 
+ROOM10C0 main00 @0x00E82 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1080 Cut 0   [Ck(4,243)==0, Else]
+ROOM10C0 main00 @0x00EA4 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM10D0 Cut 3   [Ck(4,243)==0, Else]
+ROOM10D0 main00 @0x01052 Slot  2 sce 0 flags 0x31 Band 0 -> ROOM10F0 Cut 0   [Ck(3,50)==0]
+ROOM10D0 main00 @0x01174 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM10F0 Cut 0   [Else]
+ROOM10D0 main00 @0x01196 Slot 14 sce 2 flags 0x31 Band 0 -> ROOM10E0 Cut 0   [Else]
+ROOM10D0 main00 @0x011B6 Slot 15 sce 2 flags 0x31 Band 0 -> ROOM10C0 Cut 4   [Else]
+ROOM10D0 main00 @0x011D6 Slot 16 sce 2 flags 0x31 Band 0 -> ROOM1100 Cut 0   [Else]
+ROOM10E0 main00 @0x00C2E Slot  0 sce 2 flags 0x31 Band 0 -> ROOM10D0 Cut 2 
+ROOM10F0 main00 @0x00F32 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM10D0 Cut 0 
+ROOM10F0 main00 @0x00F52 Slot  1 sce 2 flags 0x31 Band 1 -> ROOM1090 Cut 0 
+ROOM1100 main00 @0x0099A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM10D0 Cut 9 
+ROOM1100 main00 @0x009BA Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1110 Cut 0 
+ROOM1110 main00 @0x00A4E Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1100 Cut 6 
+ROOM1110 main00 @0x00A6E Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1110 Cut 7 
+ROOM1110 main00 @0x00A8E Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1110 Cut 0 
+ROOM1110 main00 @0x00AAE Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1110 Cut 10 
+ROOM1110 main00 @0x00ACE Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1110 Cut 6 
+ROOM1120 main00 @0x00C76 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1060 Cut 0 
+ROOM1120 main00 @0x00CB6 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1080 Cut 0   [Ck(4,243)==0, Else]
+ROOM1120 main00 @0x00CD8 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1130 Cut 2   [Ck(4,243)==0, Else]
+ROOM1130 main00 @0x0088E Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1140 Cut 0 
+ROOM1130 main00 @0x008AE Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1120 Cut 3 
+ROOM1130 main00 @0x008CE Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1150 Cut 0 
+ROOM1130 main00 @0x008EE Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1170 Cut 8 
+ROOM1140 main00 @0x00A52 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1130 Cut 0 
+ROOM1140 main00 @0x00A7A Slot  1 sce 0 flags 0x31 Band 0 -> ROOM1170 Cut 9   [Ck(4,195)==0]
+ROOM1140 main00 @0x00AB2 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1170 Cut 9   [Ck(4,195)==0, Else]
+ROOM1150 main00 @0x00D5E Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1130 Cut 6 
+ROOM1160 main00 @0x007C6 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 0   [Ck(4,243)==0]
+ROOM1160 main00 @0x007EA Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 0   [Ck(4,243)==0, Else]
+ROOM1170 main00 @0x01206 Slot  0 sce 2 flags 0x31 Band 4 -> ROOM1170 Cut 11   [Ck(3,125)==1]
+ROOM1170 main00 @0x01226 Slot  1 sce 0 flags 0x31 Band 4 -> ROOM10B0 Cut 0   [Ck(3,125)==1]
+ROOM1170 main00 @0x0129C Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1240 Cut 0   [Ck(3,125)==1, Ck(3,193)==0]
+ROOM1170 main00 @0x012CC Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1170 Cut 0   [Ck(3,193)==0, Else, Ck(3,125)==0]
+ROOM1170 main00 @0x012F8 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1130 Cut 7   [Else, Ck(3,125)==0]
+ROOM1170 main00 @0x01338 Slot  5 sce 2 flags 0x31 Band 0 -> ROOM1140 Cut 6   [Ck(4,195)==0, Else]
+ROOM1170 main00 @0x0135A Slot  6 sce 2 flags 0x31 Band 4 -> ROOM1170 Cut 0   [Ck(4,195)==0, Else]
+ROOM1180 main00 @0x009EE Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1160 Cut 0   [Ck(4,243)==0]
+ROOM1180 main00 @0x00A12 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11D0 Cut 0   [Ck(4,243)==0, Else]
+ROOM1180 main00 @0x00A34 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM10A0 Cut 2   [Ck(4,243)==0, Else]
+ROOM1180 main00 @0x00A54 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1190 Cut 0   [Ck(4,243)==0, Else]
+ROOM1180 main00 @0x00A74 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM11B0 Cut 0   [Ck(4,243)==0, Else]
+ROOM1180 main00 @0x00A94 Slot  4 sce 0 flags 0x31 Band 0 -> ROOM1190 Cut 12   [Ck(4,243)==0, Else]
+ROOM1190 sub13 @0x028B2 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 7   [Ck(4,243)==0]
+ROOM1190 sub13 @0x028D6 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 7   [Ck(4,243)==0, Else]
+ROOM1190 sub14 @0x02B1C Slot  6 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 6   [Ck(4,243)==0]
+ROOM1190 sub14 @0x02B40 Slot  6 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 6   [Ck(4,243)==0, Else]
+ROOM1190 sub14 @0x02D70 Slot 15 sce 2 flags 0x31 Band 1 -> ROOM1190 Cut 13   [Ck(3,117)==0]
+ROOM11A0 main00 @0x00F5A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1070 Cut 12   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x00F7C Slot  1 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 0   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x00F9C Slot  2 sce 2 flags 0x31 Band 1 -> ROOM11A0 Cut 10   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x00FC6 Slot  3 sce 2 flags 0x31 Band 3 -> ROOM11A0 Cut 8   [Ck(3,151)==0, Else]
+ROOM11A0 main00 @0x01006 Slot  4 sce 2 flags 0x31 Band 1 -> ROOM10A0 Cut 8   [Else, Ck(3,206)==0, Else]
+ROOM11B0 main00 @0x00F64 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 8   [Ck(4,243)==1, Ck(4,243)==0]
+ROOM11B0 main00 @0x00F88 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 8   [Ck(4,243)==1, Ck(4,243)==0, Else]
+ROOM11B0 main00 @0x00FAA Slot  1 sce 2 flags 0x31 Band 0 -> ROOM11C0 Cut 0   [Ck(4,243)==1, Ck(4,243)==0, Else]
+ROOM11B0 main00 @0x01010 Slot  5 sce 0 flags 0x31 Band 0 -> ROOM1260 Cut 7   [Ck(4,243)==0, Else, Ck(4,205)==0]
+ROOM11B0 main00 @0x01034 Slot  5 sce 2 flags 0x31 Band 0 -> ROOM1260 Cut 7   [Else, Ck(4,205)==0, Else]
+ROOM11C0 main00 @0x01712 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11B0 Cut 1 
+ROOM11D0 main00 @0x011E2 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1180 Cut 0   [Ck(4,243)==0]
+ROOM11D0 main00 @0x01206 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1230 Cut 0   [Ck(4,243)==0, Else]
+ROOM11D0 main00 @0x01228 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1260 Cut 9   [Ck(4,243)==0, Else]
+ROOM11E0 main00 @0x01512 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11F0 Cut 0 
+ROOM11E0 main00 @0x01532 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1200 Cut 0 
+ROOM11E0 main00 @0x01552 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM10A0 Cut 8 
+ROOM11E0 main00 @0x015A2 Slot  5 sce 0 flags 0x31 Band 0 -> ROOM1210 Cut 0   [Ck(3,139)==0]
+ROOM11E0 main00 @0x016C4 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 0   [Else]
+ROOM11F0 main00 @0x00CC6 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11E0 Cut 12 
+ROOM1200 main00 @0x007BA Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11E0 Cut 10 
+ROOM1210 main00 @0x01CC6 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11E0 Cut 0 
+ROOM1210 main00 @0x01CE6 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1220 Cut 0 
+ROOM1210 main00 @0x01D06 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1220 Cut 2 
+ROOM1210 main00 @0x01D26 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1220 Cut 4 
+ROOM1210 main00 @0x01D46 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1220 Cut 6 
+ROOM1210 main00 @0x01D66 Slot  5 sce 2 flags 0x31 Band 0 -> ROOM1220 Cut 8 
+ROOM1220 main00 @0x00DD2 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 3 
+ROOM1220 main00 @0x00DF2 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 3 
+ROOM1220 main00 @0x00E12 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 4 
+ROOM1220 main00 @0x00E32 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 4 
+ROOM1220 main00 @0x00E52 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1210 Cut 5 
+ROOM1230 main00 @0x00AEE Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1160 Cut 0   [Ck(4,243)==0]
+ROOM1230 main00 @0x00B12 Slot  0 sce 2 flags 0x31 Band 0 -> ROOM11D0 Cut 0   [Ck(4,243)==0, Else]
+ROOM1230 main00 @0x00B34 Slot  1 sce 2 flags 0x31 Band 0 -> ROOM10A0 Cut 2   [Ck(4,243)==0, Else]
+ROOM1230 main00 @0x00B54 Slot  2 sce 2 flags 0x31 Band 0 -> ROOM1190 Cut 0   [Ck(4,243)==0, Else]
+ROOM1230 main00 @0x00B74 Slot  3 sce 2 flags 0x31 Band 0 -> ROOM11B0 Cut 0   [Ck(4,243)==0, Else]
+ROOM1230 main00 @0x00BC4 Slot  6 sce 0 flags 0x31 Band 0 -> ROOM1190 Cut 12   [Else, Ck(3,137)==0]
+ROOM1230 main00 @0x00CE6 Slot  4 sce 2 flags 0x31 Band 0 -> ROOM1190 Cut 12   [Else]
+ROOM1240 main00 @0x0051A Slot  0 sce 2 flags 0x31 Band 0 -> ROOM1170 Cut 0 
+ROOM1250 main00 @0x00CB2 Slot  0 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0 
+ROOM1250 main00 @0x00CD2 Slot  1 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0 
+ROOM1250 main00 @0x00CF2 Slot  2 sce 0 flags 0x31 Band 0 -> ROOM1000 Cut 0 
+ROOM1260 main00 @0x0112A Slot  0 sce 2 flags 0x31 Band 1 -> ROOM11B0 Cut 6 
+ROOM1260 main00 @0x0114A Slot  1 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 0 
+ROOM1260 main00 @0x0116A Slot  2 sce 2 flags 0x31 Band 1 -> ROOM10B0 Cut 7 
+ROOM1260 main00 @0x0118A Slot  3 sce 2 flags 0x31 Band 1 -> ROOM11D0 Cut 7 
+ROOM1260 main00 @0x011AA Slot  4 sce 2 flags 0x31 Band 1 -> ROOM1000 Cut 4 
+
+Erreichbar ab ROOM1170 ohne ROOM10A0 (22 Raeume, Bedingungen NICHT ausgewertet):
+ROOM1000 ROOM1010 ROOM1020 ROOM1030 ROOM1040 ROOM1050 ROOM1060 ROOM1070 ROOM1080 ROOM1090 ROOM10C0 ROOM10D0 ROOM10E0 ROOM10F0 ROOM1100 ROOM1110 ROOM1120 ROOM1130 ROOM1140 ROOM1150 ROOM1170 ROOM1240
