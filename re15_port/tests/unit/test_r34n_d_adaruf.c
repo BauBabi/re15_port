@@ -29,6 +29,8 @@
  *   rettung  ECHTE Freigabe: ROOM1090 sub03 setzt (3,0xBB) im Port-VM selbst (@0x024D2); danach ROOM1050:
  *            die "Hey, wait!"-Szene loescht (3,0x6E) (@0x00D88) — die Tuer bleibt trotzdem frei, auch
  *            beim Wiederbetreten (Gegenprobe zur Freigabe ueber (3,0x6E)).
+ *   speicher (Auflage 8a) Szene sehen -> Speicherkarte -> neues Spiel-Init -> laden -> ROOM1050 = Sperrtext;
+ *            Rettung -> speichern -> laden -> Tuer frei (re15_savedata capture/restore, re15_memcard).
  *   elza     ROOM1051: keine Sperre, Druck -> ROOM10A1.
  *   raster   (Auflage 6) alle begehbaren Druckstellen im Raster 100 x 100, Gierung je 256: ueberall
  *            Ereignis 13, Faden endet, Rueckschritt <= 12 Bilder, Weg 600..760, |dz| < 100. Die
@@ -51,6 +53,8 @@
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_door_seq.h"
 #include "re15_adaruf.h"
+#include "re15_savedata.h"
+#include "re15_memcard.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -588,6 +592,56 @@ static void teil_rettung(void)
     g_room_change.pending = 0;
 }
 
+/* Auflage 8a (Riegel-Seite): Szene sehen -> Spielstand auf die Speicherkarte -> NEUES Spiel-Init ->
+ * Karte laden -> ROOM1050 = Sperrtext, keine zweite Szene; danach Rettung -> speichern -> laden ->
+ * Tuer frei. Die Flags reisen in g_game.flags (re15_savedata.c capture memcpy flags / restore). */
+static void teil_speicher(void)
+{
+    const char *karte = "r34n_d_speicher_test.mcr";
+    printf("[speicher] Szene sehen -> speichern -> laden -> ROOM1050\n");
+    grundzustand();
+    if (room_boot(0x1050, STAND_X, STAND_Z, 0, EINTRITT_CUT_1050, 1, 30) != 0) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = STAND_X; pl->z = STAND_Z; pl->rot_y = 0;
+    frame(0, 0);
+    szene_t r = szene_fahren(0, 0);
+    PRUEF(r.ende > 0 && re15_game_flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT) == 1,
+          "Szene gelaufen, (9,65)=1");
+    re15_savedata_t sd, back;
+    re15_savedata_capture(&sd, 0, 1);
+    remove(karte);
+    PRUEF(re15_memcard_save(karte, 0, &sd, "LEON  ADARUF") == 0, "Spielstand auf Karte geschrieben");
+    re15_game_state_init();                         /* frisches Spiel: alle Flags 0 */
+    PRUEF(re15_game_flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT) == 0, "nach Init (9,65)=0");
+    uint16_t rr = 0;
+    PRUEF(re15_memcard_load(karte, 0, &back) == 0 && re15_savedata_restore(&back, &rr) == 0,
+          "Karte geladen (Raum 0x%04X)", (unsigned)rr);
+    PRUEF(re15_game_flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT) == 1 &&
+          re15_game_flag_get(RE15_ADARUF_FREI_BANK, RE15_ADARUF_FREI_BIT) == 0,
+          "(9,65)=1 und (3,0xBB)=0 aus dem Spielstand");
+    if (room_boot(0x1050, 14700, -13500, 0, EINTRITT_CUT_1050, 1, 30) != 0) return;
+    PRUEF(re15_adaruf_zustand() == RE15_ADARUF_SPERRE &&
+          g_aot.slots[RE15_ADARUF_SLOT].type == RE15_AOT_TYPE_MESSAGE, "nach dem Laden: Slot 4 = Sperrtext");
+    druck_t d = drueck_vor(RE15_ADARUF_SLOT);
+    PRUEF(d.stand && d.msg_id == RE15_ADARUF_MSG_SPERRE && !d.raumwechsel && faeden_im_programm(NULL) == 0,
+          "Druck -> msg 25, keine Szene, kein Raumwechsel");
+    /* Rettung nachtragen (wie ROOM1090 sub03 @0x024D2), speichern, laden -> Tuer frei */
+    re15_game_flag_set(RE15_ADARUF_FREI_BANK, RE15_ADARUF_FREI_BIT, 1);
+    re15_savedata_capture(&sd, 0, 2);
+    PRUEF(re15_memcard_save(karte, 0, &sd, "LEON  ADARUF") == 0, "Stand nach der Rettung geschrieben");
+    re15_game_state_init();
+    PRUEF(re15_memcard_load(karte, 0, &back) == 0 && re15_savedata_restore(&back, &rr) == 0 &&
+          re15_game_flag_get(RE15_ADARUF_FREI_BANK, RE15_ADARUF_FREI_BIT) == 1, "(3,0xBB)=1 aus dem Spielstand");
+    if (room_boot(0x1050, 14700, -13500, 0, EINTRITT_CUT_1050, 1, 30) != 0) return;
+    PRUEF(re15_adaruf_zustand() == RE15_ADARUF_AUS &&
+          g_aot.slots[RE15_ADARUF_SLOT].type == RE15_AOT_TYPE_DOOR, "nach dem Laden: Slot 4 = Tuer");
+    d = drueck_vor(RE15_ADARUF_SLOT);
+    PRUEF(d.stand && d.raumwechsel && d.ziel == 0x10A0 && d.seq == 1 && s_seq.seite == 21,
+          "Druck -> ROOM10A0 mit Tuersequenz S021");
+    g_room_change.pending = 0;
+    remove(karte);
+}
+
 static void teil_elza(void)
 {
     printf("[elza] ROOM1051, (3,0xBB)=0\n");
@@ -683,6 +737,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "sperre"))  teil_sperre();
     if (alle || !strcmp(teil, "frei"))    teil_frei();
     if (alle || !strcmp(teil, "rettung")) teil_rettung();
+    if (alle || !strcmp(teil, "speicher")) teil_speicher();
     if (alle || !strcmp(teil, "elza"))    teil_elza();
     if (alle || !strcmp(teil, "raster"))  teil_raster();
     re15_door_seq_setze_laeufer(NULL);
