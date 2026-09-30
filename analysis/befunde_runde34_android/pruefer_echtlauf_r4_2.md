@@ -130,3 +130,38 @@ install -r M `Success` (34,0 s), installiert `222c4bd8...` (= M), versionName v0
 - Neustart (force-stop + Kaltstart): `Assets aktuell (schneller Weg): ... 694 ms`;
 - stat aller 3603 Dateien danach: 0 Unterschiede; GERAET-KONSISTENT.
 
+### 3.5 Gegenrichtung M -> N (`geraet/e_*.txt`)
+`Abgleich (Update): ... behalten 3602, geaendert 1` -> `entpacke synchro/STAGE1/room1240/main04.wav (geaendert)` ->
+`Entpacken fertig (Update): 3603 geprueft, 1 kopiert (2017588 B, 109 ms), ... 0 Fehler, 3513 ms`; stat: genau diese eine
+Datei neu (mtime 10:20:10.29); `adb pull` == Original-Sicherung (`cmp` rc 0, `d6e26832...`); GERAET-KONSISTENT.
+
+### 3.6 Zusatz: reines Code-Update mit gleicher Liste (N -> NB1) (`geraet/e2_*.txt`, `apk_liste_NB1.txt`)
+NB1 = APK der Nachbesserung (`d6921014...`, v0.8.20-nb1, versionCode 82000, anderer Code-Bau); `pe2_apk_liste.py`: Liste
+`95770eb5...` = Liste von N, LISTE-OK gegen den Arbeitsbaum. install -r `Success` -> `Assets aktuell (schneller Weg):
+Liste = zuletzt entpackt, 3603 Dateien, Groessen geprueft, 538 ms`; stat 0 Unterschiede; GERAET-KONSISTENT. (Der
+realistische Fall "neue App-Version, Assets gleich" nimmt den schnellen Weg, nicht nur die identische APK.)
+
+### 3.7 force-stop mitten im Entpacken + Neustart (`pe2_abbruch.sh`, `geraet/f1_*.txt`, `geraet/f2_*.txt`)
+Je `adb uninstall` (Speicherordner danach weg), N frisch installiert (`Success`), logcat geleert; eine Schleife AUF dem
+Geraet wartet auf `<ziel>.neu >= Schwelle` und ruft sofort `am force-stop de.re15.port`, dann App-Start.
+- **f1** Ziel `shared_assets/PSX/EMD/CDEMD1.EMS` (4739072 B, Eintrag 2151), Schwelle 1 MiB: das force-stop griff erst
+  NACH dem rename (Datei fertig, kein `.neu`) - Abbruch ZWISCHEN zwei Dateien: 2151 Dateien, keine Liste, kein Marker,
+  logcat endet nach `Abgleich (ohne Liste): ... pruefen 3603`. Neustart: `Entpacken fertig (ohne Liste): 3603 geprueft,
+  1452 kopiert (205883875 B), 2151 per SHA-256 geprueft (150794402 B, 0 abweichend), 0 entfernt, 0 Waisen entfernt,
+  0 .neu-Reste, 0 Fehler, 21175 ms` -> GERAET-KONSISTENT.
+- **f2** Ziel `shared_assets/RE2/CDEMD0.EMS` (11124736 B, Eintrag 3226), Schwelle 1 B: `WAECHTER: force-stop bei
+  3145728 B`; Prozess weg; Zustand: `CDEMD0.EMS.neu` **3145728 B (halb)**, `CDEMD0.EMS` **existiert nicht** (nie
+  umbenannt), 3226 Dateien (3225 fertige + das .neu), kein synchro/, keine Liste, kein Marker. Neustart (keine neue APK):
+```
+10:26:45.513 [android] Waise entfernt (steht in keiner Liste): shared_assets/RE2/CDEMD0.EMS.neu
+10:26:45.514 [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+10:27:11.463 [android] Entpacken fertig (ohne Liste): 3603 geprueft, 378 kopiert (54157661 B, 2908 ms), 3225 per SHA-256 geprueft
+             (302520616 B, 15489 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 26092 ms
+```
+  (3225 + 378 = 3603.) `pe2_geraet.py N`: 3603 Dateien, fehlen 0, sha256 falsch 0, zusaetzlich 0, **`.neu` ueberall 0**,
+  0 leere Ordner, Liste = N -> **GERAET-KONSISTENT**; CDEMD0.EMS sha256 `8724200c...` = Liste. Bild danach (angesehen,
+  `geraet/f2_titelbild_nach_abbruch_neustart_122806.png`, 12:28:06): Titelbild wie in 3.2, Prozess laeuft.
+  Hinweis (kein Befund): der halbe Rest wird jetzt als "Waise" entfernt und gezaehlt (`1 Waisen entfernt`), der Zaehler
+  `.neu-Reste` bleibt 0 - er greift nur noch fuer `.neu` zu Pfaden, die ein Lauf MIT gueltiger alter Liste vorfindet,
+  und den gibt es nach einem Abbruch nicht mehr (die Liste wird vor jedem aendernden Lauf zuerst geloescht).
+

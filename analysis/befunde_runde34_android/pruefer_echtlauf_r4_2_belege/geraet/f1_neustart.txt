@@ -1,0 +1,14 @@
+== f1_neustart 2026-09-30 12:24:14
+   firstInstallTime=2026-09-30 10:23:33
+   lastUpdateTime=2026-09-30 10:23:33
+   versionCode=81900 minSdk=24 targetSdk=35
+   versionName=v0.8.19
+installiert: /data/app/~~h5HadUCQgpvvoPRlcTWgUw==/de.re15.port-PR3i8tOXcQL2y1b4xhB5-A==/base.apk sha256 2c6a1c30c97eb978d49e07ff76dbb5d2c61b835a3f29a065ab2d15ac8ddd15ea
+Status: ok
+LaunchState: COLD
+TotalTime: 1611
+warten rc=0 (22681 ms ab am start)
+09-30 10:24:19.967 I/re15    (10742): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 10:24:20.432 I/re15    (10742): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0
+09-30 10:24:41.332 I/re15    (10742): [android] Entpacken fertig (ohne Liste): 3603 geprueft, 1452 kopiert (205883875 B, 10206 ms), 2151 per SHA-256 geprueft (150794402 B, 6126 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 21175 ms
+pidof: 10742
