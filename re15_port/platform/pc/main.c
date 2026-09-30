@@ -7552,6 +7552,23 @@ re_title:;
                         re2fx_aufschlag(fa_art, fa_q, (int16_t)fa_pl->rot_y);
                     }
                 }
+                /* Integration W6 — MESS-HAKEN RE15_FORCE_EXPLOSION="<art>@<bild>:<slot>[,...]" (kein
+                 * Spielverhalten, fx_plattform_pc.h): die Explosion einer Granate der Art 2/3/4 so, als
+                 * laege sie am Gegner <slot> — Routine 31 (P = Lage mit y - 500, FUN_80012d60) + RE2-
+                 * Aufschlag (Art 3/4), an derselben Stelle wie der echte Zuender (im ESP-Takt). */
+                if (re15_pc_fx_takt_frei()) {
+                    static const char *s_fe = NULL; static int s_fe_init = 0;
+                    if (!s_fe_init) { s_fe_init = 1; s_fe = getenv("RE15_FORCE_EXPLOSION"); }
+                    int fe_art = 0, fe_slot = 0;
+                    if (s_fe && re15_pc_force_explosion_eintrag(s_fe, g_engine.frame_count, &fe_art, &fe_slot)
+                        && g_actors[fe_slot].active) {
+                        const re15_actor_t *fz = &g_actors[fe_slot];
+                        int n = re15_pc_force_explosion(fe_art, fz);
+                        fprintf(stderr, "[harness] RE15_FORCE_EXPLOSION F%u art=%d slot=%d t=%02x P=(%d,%d,%d) "
+                                        "Treffer=%d\n", (unsigned)g_engine.frame_count, fe_art, fe_slot,
+                                (unsigned)fz->type, fz->x, fz->y - 500, fz->z, n);
+                    }
+                }
                 {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein
                      * Spielverhalten): setzt den Latch 0x800b5358 in genau diesen Spielbildern, wie
                      * es Routine 31 (@0x8001857c) bzw. Routine 9 (@0x80017694) im ESP-Tick tun —

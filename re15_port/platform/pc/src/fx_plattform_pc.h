@@ -43,6 +43,16 @@ int  re15_pc_fx_takt(void);
  * Reine Parse-/Rechenhilfe fuer main.c und die Sonde: liefert fuer `bild` die Art (1/2) und q,
  * 0 = kein Eintrag fuer dieses Bild. */
 #define RE15_PC_FORCE_AUFSCHLAG_ABSTAND 1500
+
+/* ===== Integration W6 — Harness RE15_FORCE_EXPLOSION="<art>@<bild>:<slot>[,...]" ==============
+ * Mess-Haken (kein Spielverhalten, Muster RE15_FORCE_AUFSCHLAG): im Spielbild <bild> vor dem
+ * ESP-/RE2-FX-Takt die Explosion einer Granate der Art 2/3/4 so, als laege sie am Gegner <slot>
+ * (Routine 31: P = Lage mit y - 500, FUN_80012d60(500, &P, Art); Art 3/4 zusaetzlich der RE2-
+ * Aufschlag, E8). Zweck: die Sichtabnahme der RE2-Part-Farben (Hund-/Spinnen-Tod Zeile 10/11)
+ * unabhaengig von der Wurfgeometrie — Wurf und Flug nimmt integration_r34_granaten ab. */
+int re15_pc_force_explosion_eintrag(const char *spec, unsigned bild, int *art, int *slot);
+#include "re15_actor.h"
+int re15_pc_force_explosion(int art, const re15_actor_t *ziel);
 int re15_pc_force_aufschlag_eintrag(const char *spec, unsigned bild, int32_t px, int32_t py,
                                     int32_t pz, int16_t rot_y, int *re2_art, int32_t q[3]);
 

@@ -378,6 +378,18 @@ static void teil_A(void)
                re15_pc_force_aufschlag_eintrag("x@400", 400, 0, 0, 0, 0, &art, q) == 0 &&
                re15_pc_force_aufschlag_eintrag(NULL, 400, 0, 0, 0, 0, &art, q) == 0,
           "Art 3 / Unsinn / NULL -> nichts");
+    /* Integration W6: RE15_FORCE_EXPLOSION="<art>@<bild>:<slot>[,...]" (Mess-Haken, Parse) */
+    int fe_art = 0, fe_slot = 0;
+    r = re15_pc_force_explosion_eintrag("3@35:5,4@60:2", 60, &fe_art, &fe_slot);
+    CHECK(104, r == 1 && fe_art == 4 && fe_slot == 2, "4@60:2: Art %d Slot %d", fe_art, fe_slot);
+    r = re15_pc_force_explosion_eintrag("3@35:5,4@60:2", 35, &fe_art, &fe_slot);
+    CHECK(105, r == 1 && fe_art == 3 && fe_slot == 5, "3@35:5: Art %d Slot %d", fe_art, fe_slot);
+    CHECK(106, re15_pc_force_explosion_eintrag("3@35:5", 36, &fe_art, &fe_slot) == 0 &&
+               re15_pc_force_explosion_eintrag("5@35:5", 35, &fe_art, &fe_slot) == 0 &&
+               re15_pc_force_explosion_eintrag("2@35", 35, &fe_art, &fe_slot) == 0 &&
+               re15_pc_force_explosion_eintrag("2@35:0", 35, &fe_art, &fe_slot) == 0 &&
+               re15_pc_force_explosion_eintrag(NULL, 35, &fe_art, &fe_slot) == 0,
+          "falsches Bild / Art 5 / ohne Slot / Slot 0 (Spieler) / NULL -> nichts");
 }
 
 /* ===== F — C7 Part-Tinte ==================================================================== */

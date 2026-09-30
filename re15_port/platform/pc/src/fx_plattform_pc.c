@@ -303,6 +303,49 @@ int re15_pc_force_aufschlag_eintrag(const char *spec, unsigned bild, int32_t px,
     return 0;
 }
 
+/* ===== Integration W6 — Harness RE15_FORCE_EXPLOSION="<art>@<bild>:<slot>[,...]" ============== */
+
+int re15_pc_force_explosion_eintrag(const char *spec, unsigned bild, int *art, int *slot)
+{
+    if (!spec || !*spec) return 0;
+    const char *p = spec;
+    while (*p) {
+        char *e = NULL;
+        long a = strtol(p, &e, 10);
+        if (!e || *e != '@') return 0;
+        long b = strtol(e + 1, &e, 10);
+        if (!e || *e != ':') return 0;
+        long s = strtol(e + 1, &e, 10);
+        if (b >= 0 && (unsigned long)b == bild && a >= 2 && a <= 4 && s >= 1 && s < RE15_ACTOR_MAX) {
+            if (art)  *art  = (int)a;
+            if (slot) *slot = (int)s;
+            return 1;
+        }
+        if (!e || !*e) break;
+        p = (*e == ',') ? e + 1 : e;
+        if (p == e) break;   /* unbekanntes Trennzeichen */
+    }
+    return 0;
+}
+
+int re15_pc_force_explosion(int art, const re15_actor_t *ziel)
+{
+    if (!ziel || art < 2 || art > 4) return -1;
+    /* Wie Routine 31 im Zuender-7-Bild (re15_esp.c): P = (x, y - 500, z) der liegenden Granate
+     * (`lh v0,42(v1)` @0x800185a0 / `addiu v0,v0,-500` @0x800185a8), FUN_80012d60(500, &P, Art) (`ori a0,zero,0x1f4`
+     * @0x80018598, `jal 0x80012d60` @0x800185b8) — hier liegt die "Granate" am Ziel. */
+    re15_attack_box_t box;
+    box.x = ziel->x; box.y = ziel->y - 500; box.z = ziel->z;
+    box.radius = 500;
+    int n = re15_resolve_attack(&box, (uint8_t)art, -1);
+    if (art != 2) {
+        /* E8: Art 3/4 -> Aufschlag Op 49 (Saeure, re2_art 2) / Op 48 (Brand, re2_art 1) an der Lage */
+        int32_t q[3] = { ziel->x, ziel->y, ziel->z };
+        re2fx_aufschlag(5 - art, q, (int16_t)ziel->rot_y);
+    }
+    return n;
+}
+
 /* ===== C7 — RE2-Part-Farbwort fuer RE2-KI-Aktoren ausserhalb der Zombie-Gore-Bruecke ========= */
 
 #include "re15_ai_flavor.h"
