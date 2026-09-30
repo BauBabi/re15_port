@@ -873,10 +873,18 @@ GEAENDERT (minimale Haken, VERTRAG 2):
 
 Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpruefung · `16f19248` Dok 1 ·
 `a19a9dae` 9.1 · `34838629` Dok 2 · `bbdd45b5` Dok 3 · `2d7ede7b` Dok 4 · `1d1623aa` 9.2–9.5 ·
-`5e50910c` Bild-Riegel + Mutationsproben · (Suite/Abnahme: s. 9.7/9.8).
+`5e50910c` Bild-Riegel + Mutationsproben · `c3d55089` Dossier 9.6/9.9/9.10 · `54abec03` Fremd-Riegel + Klemmen-Fall Cut 1 + Listen-Abnahme · `b8e3baa9` 9.8 · (dieser) 9.7 Suite 430/430.
 
 ### 9.7 Suite
-(offen)
+
+`bash re15_port/tools/local_build.sh` im eigenen Baum (Stand `54abec03`): **`=== LOCAL-BUILD-OK (all) —
+Tests 430/430`** (Basis 428 + `unit_r34n_e_dokumente` + `integration_r34n_e_dokumente_bild`).
+
+Erster Volllauf davor (Stand `5e50910c`): 426/430 — rot waren `unit_r26_inventar` und
+`unit_r30_irons_diary_dokument` (echte Folge der groesseren Dokument-Tabelle, angepasst: 9.9 Punkt 8),
+`integration_r34n_e_dokumente_bild` (Klemmen-Fall ROOM1020 Cut 3 mit 24 statt 25 Pixeln, ersetzt durch
+ROOM1010 Cut 1: 9.9 Punkt 3) und `integration_r30_titel_puls` (GUI-Riegel; im zweiten Volllauf ohne
+Aenderung gruen — Flattern unter Last, memory reai-v2-gui-tests-flattern-bei-parallelen-agenten).
 
 ### 9.8 Eigene Abnahme (Bilder)
 
