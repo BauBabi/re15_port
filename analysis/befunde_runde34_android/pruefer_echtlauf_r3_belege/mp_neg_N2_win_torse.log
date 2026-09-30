@@ -1,0 +1,65 @@
+1790732346.092779 START 2026-09-30 03:39:06 :: bash release/make_package.sh --version v0.8.19 --zip-only --only win
+1790732346.572065    Python: /c/Python310/python (3.10.11)
+1790732346.626647 == Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) ==
+1790732346.961025 == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+1790732346.961394    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732346.961728    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732347.663924    shared_assets/PSX               3193 Dateien
+1790732347.664310    shared_assets/extracted_fx        13 Dateien
+1790732347.664495    shared_assets/RE2                277 Dateien
+1790732347.664677    shared_assets/RE15DOOR            30 Dateien
+1790732347.664862    synchro                           90 Dateien
+1790732347.665249    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732347.665602    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732347.665891 == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+1790732347.673581 == Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790732348.029552    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790732348.029816    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+1790732348.030205 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790732349.156150    Pruefkopie (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.MbzhYX/re15_port_v0.8.19_android.apk
+1790732349.755570    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+1790732349.933463    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790732349.933559    sdkVersion:'24'
+1790732349.933635    targetSdkVersion:'35'
+1790732349.933768    native-code: 'arm64-v8a' 'x86_64'
+1790732350.202474    zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+1790732351.514540    Verified using v1 scheme (JAR signing): false
+1790732351.514804    Verified using v2 scheme (APK Signature Scheme v2): true
+1790732351.515097    Verified using v3 scheme (APK Signature Scheme v3): false
+1790732351.515336    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790732351.515565    Verified using v4 scheme (APK Signature Scheme v4): false
+1790732351.515675    Number of signers: 1
+1790732351.516067    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790732351.749764 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790732351.968767 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790732351.969174    Innere Proben: 58/58 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)
+1790732368.880804    Laufzeit: 16.8 s
+1790732368.881013 == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790732368.881196 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790732369.135738 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790732369.136167    APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\re15_apk_pruefen.MbzhYX\re15_port_v0.8.19_android.apk
+1790732369.136436    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732369.138640    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732369.920121    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732369.920532    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732369.997673    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790732375.674203    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790732375.674779    shared_assets/PSX               3193    3193     3193    300522652
+1790732375.675169    shared_assets/extracted_fx        13      13       13      1079875
+1790732375.675451    shared_assets/RE2                277     277      277     25482039
+1790732375.677369    shared_assets/RE15DOOR            30      30       30      1914932
+1790732375.678044    synchro                           90      90       90     27678779
+1790732375.678827    SUMME                           3603    3603     3603    356678277
+1790732375.679390    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790732375.680197    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790732375.680918    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790732375.681359    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790732375.681538    Laufzeit:  6.5 s
+1790732375.682180 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790732377.737929 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) ==
+1790732377.829447    gepruefte APK (sha256 crc32 Bytes): b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403
+1790732377.829958 == Windows-Paket: re15_port_v0.8.19 ==
+1790732378.351071    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790732378.473088 ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS
+1790732379.507620 ENDE 2026-09-30 03:39:39
+EXIT=1

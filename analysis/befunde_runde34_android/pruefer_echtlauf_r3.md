@@ -101,8 +101,76 @@ Ergebnis `apk_vergleich_r3_ergebnis.txt`, **rc 0**, 6,1 s:
 - Folgerung: der Bau MIT den neuen Gates nimmt der APK nichts weg und aendert kein Asset (Unterschied nur im Code der
   vier `.so` durch Baupfad/Datum; Versionsfelder gleich v0.8.19/81900).
 
-## 3. make_package.sh echt
-(folgt)
+## 3. make_package.sh echt (ohne Python-Shim, ohne touch)
+Vorbereitung `binaries_vorbereiten_r3.sh` (Log `build/r34a/pruefer_echtlauf_r3/binaries_vorbereiten.log`; Archiv nur
+gelesen): Split-Saetze win64 + linux nach `build/r34a/pruefer_echtlauf_r3/pakete/` kopiert, `sha256sum -c` gegen die
+Archiv-SUMS 4 x OK, per `zip -s 0` zusammengefuehrt, NUR die Binaries entpackt (unzip stellt die Original-mtime her), per
+`cp -p` nach `release/win_out/re15_pc.exe` (`30d5b67b...`, 19:34:23) und `release/linux_out/re15_pc` (`abfbe7c5...`,
+19:34:13) - KEIN touch. Letzter PC-Code-Commit (Standardpfade ohne platform/android) cf386e32 19:02:06; letzter Commit an
+den APK-Pfaden 9d2337e4 01:30:03 (build.gradle R2). APK = der Bau aus Abschnitt 1 (`b7bfb699...`, 03:32).
+Git-Isolation `mp_isoliert_r3.sh`: make_package.sh UNVERAENDERT, nur die git-Schreibzugriffe am Ende gehen in einen
+Wegwerf-Index/-Objektspeicher (Alternates) - den echten Index benutzt der parallele Gegenpruefer zum Committen. PATH
+unveraendert (normaler Git-Bash-PATH: /c/Python310 an Stelle 12, WindowsApps an 35; `type -a python3` = WindowsApps zuerst).
+
+### 3a Normaler Lauf `bash release/make_package.sh --version v0.8.19` (03:35:10-03:37:20): **EXIT=0, `== Fertig ==`**
+Log `build/r34a/pruefer_echtlauf_r3/mp_voll.log`, Kernzeilen `pruefer_echtlauf_r3_belege/mp_voll_kern.txt`, Zeiten
+`mp_voll_zeiten.txt`.
+- `Python: /c/Python310/python (3.10.11)` (0,42 s nach Start) - der Finder waehlt ein echtes Python.
+- VOR den Kopierminuten: `--quellbaum` (0,85 s) `APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll
+  erfuellt` (RE15DOOR 30/30, RE2/DOOR 27/27); APK-Kette 21,6 s: Frische ohne Meldung (APK 03:32 > 01:30), Werkzeuge
+  35.0.0, Pruefkopie, aapt `versionName='v0.8.19'` + beide ABIs, zipalign ok, apksigner v2 true / 1 Signer `432bc749...`,
+  Selbsttest 202/202 + 58/58 (11,7 s), Gate 3603/3603 je Baum (4,8 s), `gepruefte APK: b7bfb699... 6d7117f4 363212403`.
+- **PC-Binaries mit Archiv-Zeitstempel 19:34 ohne "VERALTET"**. Linux: Optimierungs-Gate (4 SDL2-Pfade), glibc 2.29,
+  Kopie, check_tree: **`Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2`** (Schleife mit dem neuen cmp je Datei),
+  `30 x RE15DOOR`, TORSE.VBS-cmp ohne Abbruch, dann `--paket` `APK-ASSET-GATE-PAKET-OK: 3603 Dateien ... bytegleich, nichts
+  zusaetzlich` (6,6 s), LF-Gate, `OK: 349M, 3606 Dateien`. Windows: dieselben check_tree-Zeilen (27 + 30), `--paket` OK
+  (6,8 s), Laufzeit-Gate `in_pkg 26/26` + `foreign_cwd 26/26` aus dem Paket, `3607 Dateien`.
+- Zippen ueber `"$PY"`: linux `Volumes: 2, Katalog 3800`, x-Bit `re15_pc 100644 -> 100755` (zurueckgelesen 100755),
+  win64 `3801`, android `(APK 347M, = gepruefte Datei)`, `Katalog 1`, **`APK im Split-Satz = gepruefte APK (CRC32 6d7117f4,
+  363212403 B)`**; SHA256SUMS.txt (`sha256sum -c` 6/6 OK, Beleg `SHA256SUMS_nach_make_package.txt`); Git im Wegwerf-Index:
+  `0 alte ... entfernt, 6 neue vorgemerkt`. **Echter Index danach leer** (`git diff --cached --stat` ohne Ausgabe); der
+  Wegwerf-Index hat genau die 6 Volumes.
+- Laufzeit: gesamt 129 s; neu in dieser Runde davon --quellbaum 0,85 s + APK-Kette 21,6 s + 2 x --paket 13,4 s.
+- **Paketinhalt gegen die Archiv-Pakete** (`paket_vergleich_r3.py`, zusammengefuehrt, Name/Groesse/CRC32/Unix-Modus;
+  `paket_vergleich_r3_ergebnis.txt`): win64 3801/3801 und linux 3800/3800 **identisch** (Modi re15_pc/run.sh 100755);
+  android 1 Eintrag, nur die APK anders (Neubau), sha256 des Eintrags im neuen Satz = `b7bfb699...` = die gepruefte APK.
+- **Python-Schnappschuss 2** (03:37:47, `-seit 03:20`) == Schnappschuss 0 (`Compare-Object` leer): kein Unterschluessel
+  unter `HKCU\Software\Python\PythonCore`, kein Startmenue-Ordner `Python 3.1x` (Benutzer), keine neue Datei in
+  `%LOCALAPPDATA%\Python`, `...\Programs\Python`, `...\WindowsApps`, Startmenue; kein Installer-Prozess.
+- Rezept-PATH aus der Memory (`PATH="/c/msys64/usr/bin:$PATH"`): `python_finden.sh` waehlt auch dann `/c/Python310/python`
+  (in msys64/usr/bin liegt kein Python). `grep` ueber release/*.sh und release/docker/*: kein direkter
+  `python3`/`python`/`py`-Aufruf mehr ausser ueber den Finder.
+
+### 3b Die neuen cmp-Gates im echten Fluss (`mp_neg_cmp_r3.sh`, `--zip-only` auf die Paketordner aus 3a, isoliert)
+Je Fall EIN Byte (Groesse gleich) in einer Paketdatei gekippt, andere Dateien als in r2 (dort DOOR04/DOOR36); danach aus
+dem Quellbaum zurueck (cmp 0). Logs `mp_neg_N1_linux_door13.log`, `mp_neg_N2_win_torse.log`, Uebersicht `mp_neg_cmp.out`.
+| Fall | EXIT | Abbruch (woertlich) | vorher |
+|---|---|---|---|
+| N1 `--only linux`, pkg-linux RE2/DOOR/DOOR13.DO2 @1500 | **1** (33,5 s) | `ABBRUCH: RE2-Tuerarchiv im Paket weicht vom Quellbaum ab: shared_assets/RE2/DOOR/DOOR13.DO2` | Quellbaum-OK, APK-Kette OK; 0 x `== Zippen` |
+| N2 `--only win`, pkg-win RE2/TORSE.VBS @9000 | **1** (33,4 s) | `ABBRUCH: RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/TORSE.VBS` | Quellbaum-OK, APK-Kette OK; 0 x `== Zippen` |
+(Die cmp-Gates brechen VOR dem `--paket`-Gate ab; dass `--paket` einen gekippten Byte in einer Paketdatei ebenfalls
+faengt, zeigt unter Linux L11b in Abschnitt 4 - unter Windows im echten Fluss hier nicht eigens gemessen.)
+
+### 3c Stolperdraht: ruft der ENDSTAND von make_package.sh Python am Finder vorbei? (`stolperdraht_r3.sh`)
+Der Bauer hat seinen Stolperdraht (R2-3.9) nur mit `build_android.sh --gate-only`, dem Direktaufruf des Gates und
+zip_exec_bit.py gefahren - NICHT mit make_package.sh, das in R2 neue Python-Aufrufe bekam (`--quellbaum`, `--paket` x 2,
+`apk_kopie_mit_kennung`, `apk_kennung` x 3, `verify_apk_im_zip`). Deshalb ein voller make_package-Lauf (03:40:19-03:42:36,
+isoliert) mit PATH = `<draht>:/usr/bin:/mingw64/bin:<WindowsApps>:<Rest>`; im Draht `python3`/`python`/`py`, die jeden
+Aufruf samt Elternprozess protokollieren und mit rc 97 scheitern (kein Shim - sie lassen nichts gelingen). `type -a
+python3`: Draht, dann WindowsApps. Ergebnis (`stolperdraht_lauf.out`, `stolperdraht.log`, `mp_stolper.log`):
+- Finder: Draht-`python3` und -`python` `verworfen (Pruefung rc=97 ...)`, dann `WindowsApps/python3` und `WindowsApps/python`
+  **`verworfen (WindowsApps-Alias, NICHT gestartet)`**, gewaehlt `/c/Python310/python (3.10.11)`.
+- **EXIT=0 `== Fertig ==`** (Quellbaum-OK, Selbsttest 202/202, beide PAKET-OK, x-Bit ok, Kataloge 3800/3801/1, `APK im
+  Split-Satz = gepruefte APK`).
+- **Drahtprotokoll: genau 2 Eintraege**, beide `timeout 30 <draht>/python{3,} -c import sys, zipfile, hashlib; ...` = die
+  Probe des Finders. **Kein Umgehungsaufruf** im ganzen Endstand-Lauf.
+- Python-Schnappschuss 3 (03:42:50) == Schnappschuss 0.
+
+### 3d Aufraeumen release/ (03:43)
+`git restore --source=HEAD` fuer SHA256SUMS.txt + 6 Split-Volumes; `pkg-linux`, `pkg-win`, `win_out`, `linux_out` und die
+APK geloescht (Kopie `build/r34a/pruefer_echtlauf_r3/neu_v0.8.19.apk` fuer Abschnitt 4). Danach 8/8 versionierte
+release/-Dateien sha256 = Stand vor den Laeufen (`release_vorher.sha256` == `release_nachher.sha256`), `git status --short
+release/ re15_port/` leer, `git status --ignored release/` ohne Reste, echter Index leer.
 
 ## 4. Linux (Docker)
 (folgt)

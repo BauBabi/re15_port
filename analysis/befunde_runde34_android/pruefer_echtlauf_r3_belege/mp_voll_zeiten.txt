@@ -1,0 +1,7 @@
+Lauf gesamt                               129.0 s
+Quellbaum --quellbaum                       0.85 s
+APK-Kette (Frische..Kennung)               21.55 s (Selbsttest 11.67, Gate 4.76)
+Linux-Paket (Gates, Kopie, check_tree)     18.43 s (davon --paket 6.57 s)
+Windows-Paket (inkl. Laufzeit-Gate)        20.61 s (davon --paket 6.78 s)
+Zippen (3 Saetze, SUMS)                    44.23 s
+Git (Wegwerf-Index)                        22.85 s

@@ -1,0 +1,143 @@
+1790732419.579547 START 2026-09-30 03:40:19 :: bash release/make_package.sh --version v0.8.19
+1790732420.241346    Python-Kandidat verworfen (Pruefung rc=97, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_echtlauf_r3/stolperdraht/python3
+1790732420.616537    Python-Kandidat verworfen (Pruefung rc=97, Version '' - braucht >= 3.8 mit zipfile/hashlib): /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/pruefer_echtlauf_r3/stolperdraht/python
+1790732420.617005    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python3
+1790732420.617879    Python-Kandidat verworfen (WindowsApps-Alias, NICHT gestartet): /c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps/python
+1790732420.913051    Python: /c/Python310/python (3.10.11)
+1790732420.976238 == Quellbaum: Asset-Liste, Tuer-Soll (release/apk_asset_gate.py --quellbaum) ==
+1790732421.408653 == APK-Asset-Gate: Quellbaum (release/apk_asset_gate.py --quellbaum) ==
+1790732421.408962    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732421.409291    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732422.210196    shared_assets/PSX               3193 Dateien
+1790732422.210494    shared_assets/extracted_fx        13 Dateien
+1790732422.210743    shared_assets/RE2                277 Dateien
+1790732422.211620    shared_assets/RE15DOOR            30 Dateien
+1790732422.211884    synchro                           90 Dateien
+1790732422.213066    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732422.213569    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732422.214463 == APK-ASSET-GATE-QUELLBAUM-OK: 3603 Dateien in 5 Baeumen, Tuer-Soll erfuellt ==
+1790732422.224884 == Android-APK: Frische, Version, Ausrichtung, Signatur, volle Asset-Pruefung (release/apk_pruefen.sh) ==
+1790732422.602513    APK-Werkzeuge: aapt + zipalign + apksigner aus 35.0.0, Java /c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot/bin/java
+1790732422.602787    erwarteter Signer: 432bc7497b520324... (release/apk_signer.sha256)
+1790732422.603329 == APK-Pruefung: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (Version v0.8.19) ==
+1790732424.229080    Pruefkopie (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) - alle Schritte lesen nur sie: /tmp/re15_apk_pruefen.Nwc52x/re15_port_v0.8.19_android.apk
+1790732425.125726    Stichproben ok; unzip zaehlt 3604 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+1790732425.325781    package: name='de.re15.port' versionCode='81900' versionName='v0.8.19' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+1790732425.325914    sdkVersion:'24'
+1790732425.326024    targetSdkVersion:'35'
+1790732425.326172    native-code: 'arm64-v8a' 'x86_64'
+1790732425.703073    zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+1790732427.100945    Verified using v1 scheme (JAR signing): false
+1790732427.101219    Verified using v2 scheme (APK Signature Scheme v2): true
+1790732427.101494    Verified using v3 scheme (APK Signature Scheme v3): false
+1790732427.101756    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+1790732427.101994    Verified using v4 scheme (APK Signature Scheme v4): false
+1790732427.102128    Number of signers: 1
+1790732427.102515    Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+1790732427.452445 == Volle Asset-Pruefung 1/2: Selbsttest des Gates (/c/Python310/python) ==
+1790732427.704124 == APK-Asset-Gate: Selbsttest (Mini-Quellbaum + Mini-APK im Temp-Ordner) ==
+1790732427.704604    Innere Proben: 58/58 (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)
+1790732441.420830    Laufzeit: 13.7 s
+1790732441.421069 == SELBSTTEST-OK: 202/202 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+1790732441.421264 == Volle Asset-Pruefung 2/2: APK gegen den Quellbaum ==
+1790732441.619455 == APK-Asset-Gate (release/apk_asset_gate.py) ==
+1790732441.619872    APK:       C:\Users\MJOEDI~1\AppData\Local\Temp\re15_apk_pruefen.Nwc52x\re15_port_v0.8.19_android.apk
+1790732441.620068    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732441.622311    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732442.131685    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732442.132070    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732442.194578    ZIP-Struktur: 3616 Eintraege roh gelesen, 3616 fuer Android lesbar (Name, Local Header = Zentralverzeichnis, Lage, Methode)
+1790732446.676736    Baum (unter assets/)          Quelle     APK   gleich Bytes gleich
+1790732446.676987    shared_assets/PSX               3193    3193     3193    300522652
+1790732446.677228    shared_assets/extracted_fx        13      13       13      1079875
+1790732446.677458    shared_assets/RE2                277     277      277     25482039
+1790732446.677696    shared_assets/RE15DOOR            30      30       30      1914932
+1790732446.678057    synchro                           90      90       90     27678779
+1790732446.678357    SUMME                           3603    3603     3603    356678277
+1790732446.678631    RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+1790732446.679842    RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+1790732446.680073    TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+1790732446.680410    Manifest:  3603 Zeilen / 356678277 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+1790732446.680517    Laufzeit:  5.1 s
+1790732446.681043 == APK-ASSET-GATE-OK: 3603 Dateien in 5 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur wie Android sie liest ==
+1790732448.428328 == APK-PRUEFUNG-OK: /c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/release/re15_port_v0.8.19_android.apk (sha256 crc32 Bytes: b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403) ==
+1790732448.499016    gepruefte APK (sha256 crc32 Bytes): b7bfb6996a1fd9d0155a125f3850450ce2f944100fc2caf5dd1a84714e29fabc 6d7117f4 363212403
+1790732448.499566 == Linux/Steam-Deck-Paket: re15_port_v0.8.19 ==
+1790732448.945279    Optimierungs-Gate: Linux-Binary ist ein Release-Build (4 SDL2-Quellpfade)
+1790732449.029267    hoechste glibc-Anforderung: GLIBC_2.29
+1790732450.119740    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790732452.959592    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790732452.997961    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790732453.269753    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790732453.319252    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790732456.877907    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790732459.942070    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790732460.381025 == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+1790732460.381383    Paket:     C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\pkg-linux\re15_port_v0.8.19
+1790732460.381661    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732460.381955    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732460.922805    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732460.923223    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732468.392910    Baum                          Quelle  gleich
+1790732468.393115    shared_assets/PSX               3193    3193
+1790732468.393261    shared_assets/extracted_fx        13      13
+1790732468.393402    shared_assets/RE2                277     277
+1790732468.393540    shared_assets/RE15DOOR            30      30
+1790732468.393698    synchro                           90      90
+1790732468.393821    Laufzeit:  8.0 s
+1790732468.394092 == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+1790732468.494550    Zeilenenden-Gate: alle Skripte im Paket sind LF
+1790732468.548685    (Laufzeit-Gate uebersprungen: re15_pc ist kein Windows-Binary)
+1790732468.974322    OK: 349M, 3606 Dateien
+1790732468.974729 == Windows-Paket: re15_port_v0.8.19 ==
+1790732469.484659    Optimierungs-Gate: Windows-Binary ist ein Release-Build (3 SDL2-Quellpfade)
+1790732470.388843    Assets kopieren (shared_assets/PSX, ~283 MB) ...
+1790732473.379525    Effekt-Texturen kopieren (shared_assets/extracted_fx) ...
+1790732473.419942    RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ...
+1790732473.696769    Port-Tuerarchive kopieren (shared_assets/RE15DOOR, Runde 33) ...
+1790732473.750018    Voiceover kopieren (synchro/STAGE*, ohne unused/) ...
+1790732477.240350    Tuerarchive im Paket: 27 x shared_assets/RE2/DOOR/*.DO2
+1790732480.332981    Port-Tuerarchive im Paket: 30 x shared_assets/RE15DOOR/*.DO2
+1790732480.775729 == APK-Asset-Gate: PC-Paket gegen die Asset-Liste (release/apk_asset_gate.py --paket) ==
+1790732480.776150    Paket:     C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android\release\pkg-win\re15_port_v0.8.19
+1790732480.776433    Quellbaum: C:\workspace\git\reAi_v2\.claude\worktrees\r34a_android
+1790732480.776699    Baumliste: 5 Baeume = build.gradle stageAssets (from/into/include geprueft)
+1790732481.336790    Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+1790732481.337145    Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+1790732488.653391    Baum                          Quelle  gleich
+1790732488.653586    shared_assets/PSX               3193    3193
+1790732488.653748    shared_assets/extracted_fx        13      13
+1790732488.653964    shared_assets/RE2                277     277
+1790732488.654114    shared_assets/RE15DOOR            30      30
+1790732488.654238    synchro                           90      90
+1790732488.654309    Laufzeit:  7.9 s
+1790732488.654533 == APK-ASSET-GATE-PAKET-OK: 3603 Dateien in 5 Baeumen bytegleich, nichts zusaetzlich ==
+1790732490.078089    Laufzeit-Gate in_pkg: 26/26 Assets, alle aus dem Paket (cwd=re15_port_v0.8.19)
+1790732491.155564    Laufzeit-Gate foreign_cwd: 26/26 Assets, alle aus dem Paket (cwd=cwd)
+1790732491.671142    OK: 350M, 3607 Dateien
+1790732491.678734 == Zippen: re15_port_v0.8.19_linux_steamdeck_x64 ==
+1790732506.123873    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3800
+1790732506.374787    x-Bit: re15_port_v0.8.19/re15_pc  100644 -> 100755
+1790732506.375011    x-Bit: re15_port_v0.8.19/run.sh  100755 -> 100755
+1790732506.375177    1 Eintrag/Eintraege im Zentralverzeichnis angepasst
+1790732506.560044    x-Bit ok: re15_port_v0.8.19/re15_pc  100755
+1790732506.560193    x-Bit ok: re15_port_v0.8.19/run.sh  100755
+1790732506.560301 == Zippen: re15_port_v0.8.19_win64 ==
+1790732520.294681    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 3801
+1790732521.117785 == Zippen: re15_port_v0.8.19_android (APK 347M, = gepruefte Datei) ==
+1790732532.147883    Volumes: 2 (letztes = Nr. 2), Eintraege im Katalog: 1
+1790732532.274045    APK im Split-Satz = gepruefte APK (CRC32 6d7117f4, 363212403 B)
+1790732534.407503 
+1790732534.443009 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 30 03:42 re15_port_v0.8.19_android.z01
+1790732534.443304 -rw-r--r-- 1 mjoedicke Kein 75108052 Sep 30 03:42 re15_port_v0.8.19_android.zip
+1790732534.443596 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 30 03:41 re15_port_v0.8.19_linux_steamdeck_x64.z01
+1790732534.443891 -rw-r--r-- 1 mjoedicke Kein 75236322 Sep 30 03:41 re15_port_v0.8.19_linux_steamdeck_x64.zip
+1790732534.444102 -rw-r--r-- 1 mjoedicke Kein 94371840 Sep 30 03:41 re15_port_v0.8.19_win64.z01
+1790732534.444318 -rw-r--r-- 1 mjoedicke Kein 75344263 Sep 30 03:42 re15_port_v0.8.19_win64.zip
+1790732534.444944 == SHA256SUMS.txt geschrieben ==
+1790732534.482839 == Git: alte Pakete austauschen ==
+1790732555.768733    0 alte Paketdatei(en) aus dem Repo entfernt, 6 neue vorgemerkt
+1790732555.768994    (noch nicht committet — das macht der Release-Commit)
+1790732555.769080 == Fertig ==
+1790732556.807690 ENDE 2026-09-30 03:42:36
+EXIT=0
