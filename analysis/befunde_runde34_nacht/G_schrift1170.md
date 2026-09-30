@@ -259,3 +259,35 @@ F1769-1782) — eine Helligkeitsaenderung genau in diesem Rechteck wird also gem
    Kinobalkens am Vorspann-Ende laeuft im Port in 13 gleichmaessigen Stufen (F1769-1782); die
    Original-Aufnahme zeigt ~6 Stufen ueber 12 Aufnahmebilder (gdigrab ist nicht bildsynchron). Das
    braeuchte eine bildgenaue Messung (FrameAdvance), bevor daraus ein Befund wird.
+
+## 9 Umsetzung (Stufe BAU, 2026-09-30)
+
+Status: IN ARBEIT (Geruest angelegt, Abschnitte folgen).
+
+### 9.1 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
+
+(folgt)
+
+### 9.2 Dateien
+
+(folgt)
+
+### 9.3 Commits
+
+(folgt)
+
+### 9.4 Suite
+
+(folgt)
+
+### 9.5 Eigene Abnahme an der echten exe (Bilder)
+
+(folgt)
+
+### 9.6 Abweichungen vom Plan (mit Grund)
+
+(folgt)
+
+### 9.7 Offene Punkte
+
+(folgt)
