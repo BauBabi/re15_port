@@ -462,7 +462,8 @@ Bestehende Riegel muessen gruen bleiben: `integration_keypad` (ROOM1230 Tastenfe
 | `soll1110_ja` | wie oben, `A` auf Yes | modal.log 6 -> 7 -> 0, `[leiche] Yes: Bit (9,61)`, danach Druck -> `Port-Nachricht 21`, Bild "It's a police officer, he's dead." ohne Pfeil, KEINE Modal-Zeile; Inventar (Start-Taste) zeigt H. Gun Bullets 57 |
 | `soll1230_nein` / `soll1230_ja` | `1230`, CUT=8 | dasselbe mit "A miserable death..." / 22 / 23 / (9,62) |
 | `laden_1110` | Karten-Werkzeug `probe_r34n_f_karte` (Muster `probe_r30_granate_karte.c`: Spielstand in ROOM1110 vor der Leiche, mit/ohne Bit 61), `RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1` | ohne Bit: langer Text + Modal; mit Bit: kurzer Text, kein Modal |
-| `durchlauf_1110` | Eintritt ueber die TUER ROOM1100 -> ROOM1110 (ROOM1110 main00 Slot 0 fuehrt zurueck nach Raum 0x10), Weg zur Leiche per RE15_INPUT_SCRIPT, im Bau zu vermessen | gleiche Folge wie `soll1110_nein`; beweist den Tuer-Weg (Nachrichtentabelle neu geladen, `re15_msg_clear_room_block`) |
+| `durchlauf_1110` | Eintritt ueber die TUER: ROOM1100 main00 @0x009BA Slot 1 (Rechteck (-27330,-11736) 900x1600) -> ROOM1110 Spawn (-2400,0,-5000) Blick 0, Cut 0; von dort nach Osten zur Leiche (Standplatz der Sonde (10330,2650) Blick 0), Weg per RE15_INPUT_SCRIPT im Bau zu vermessen | gleiche Folge wie `soll1110_nein`; beweist den Tuer-Weg (Nachrichtentabelle neu geladen, `re15_msg_clear_room_block`) |
+| `durchlauf_1230` | Eintritt aus der GARAGE: ROOM11B0 main00 @0x00F88 Slot 0 -> ROOM1230 Spawn (4725,0,28650) Blick 2048, Cut 8 — 2750 Einheiten noerdlich der Leiche (Mitte (3900,25900)) | gleiche Folge wie `soll1230_nein` |
 
 Gegenproben an der exe: Untersuchen des Kartenlesers/Tastenfelds in ROOM1230 und eines Regals in
 ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf ohne CUT pro Raum
@@ -489,8 +490,9 @@ ROOM1110 (msg 1) -> Originaltexte; `RE15_FORCE_CUT` NUR fuer die Sicht, ein Lauf
    sichtbare Haltungsaenderung (Ist-Bilder F320..F760 gleich). Ob das Original hier eine Pose zeigt, ist nicht
    gemessen. Der Bau aendert das Ereignis nicht; eine eigene Pruefung gehoert in eine andere Runde.
 2. **Stimmdateien** main20..23.wav (Texte in 4.1-4.3) nimmt der Nutzer auf; bis dahin stumm mit Untertitel.
-3. **Weg fuer `durchlauf_1110`** (Tuereintritt ROOM1100 -> ROOM1110 und Laufweg zur Leiche) ist im Bau per
-   Framedump zu vermessen; die Sprung-Laeufe (6.2) decken die Funktion schon ab.
+3. **Laufwege fuer `durchlauf_1110` / `durchlauf_1230`** (Tuer-Spawns belegt: ROOM1100 @0x009BA -> (-2400,0,-5000),
+   ROOM11B0 @0x00F88 -> (4725,0,28650)) sind im Bau per Framedump zu vermessen; die Sprung-Laeufe (6.2) decken die
+   Funktion schon ab.
 4. **RE2-Spieler-Routine 6** (Item-AOT action Bit 0, @0x80051924) ist nicht weiter disassembliert — fuer
    den Bau nicht noetig (RE1.5-Ereignisablauf bleibt).
 5. Keine offene RE-Frage fuer den Bau selbst: Text-Bytes, Nachrichten-Stelle, Faden-Stand, Modal-Weg,
