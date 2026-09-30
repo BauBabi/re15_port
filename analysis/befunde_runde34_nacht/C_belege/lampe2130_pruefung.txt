@@ -1,0 +1,9 @@
+OK     Kopfwort[20] Basis = 0x0E398, Tabelle bis 0x0F458, erster Eintrag 0 -> TIM @0x0E398
+OK     Magic 0x10 Flags 0x8 (4bpp+CLUT)
+OK     CLUT 16x4 bei (0,480)
+OK     Pixel 64x32 Halbworte (= 256x32 Texel)
+OK     Laenge 4256 B
+OK     byte-gleich mit room2130/esp16.tim (4256 B)
+OK     CLUT-Zeile 2: Index 0 = 0x0000, alle anderen mit Bit 15: 0000 ffff effb dff7 cbb2 bb6e a729 96e5 9284 8e03 8982 8521 84e1 80a0 8060 8020
+OK     Zelle 3 (u 96..127): 851 von 1024 Texeln belegt
+OK     Zelle 4 (u 128..159): 832 von 1024 Texeln belegt
