@@ -27,7 +27,8 @@ Werkzeuge: `re15_port/tools/r34n_a/` (belege.py, raumgraph.py, lauf.sh), Sonde
   alles andere in `engine/src/rolltor_1050.c`. KEIN AOT-Slot noetig (die Vertragsslots 11/12 sind in
   ROOM1051 ORIGINAL belegt).
 * **Plan an der echten VM gefahren** (Sonde, 6 Faelle 1050/1051, keine Fremd-Opcode-Position, Faden endet
-  sauber) und **88 Byte-Belege** gegen die ausgelieferten Dateien geprueft (belege.py, 88/88 OK).
+  sauber; Gegenprobe: ohne registrierten Opcode 0x62 wird das Einsetzen STILL verschluckt) und
+  **88 Byte-Belege** gegen die ausgelieferten Dateien geprueft (belege.py, 88/88 OK).
 * **Korrektur am Vor-Dossier:** `Cut_replace 7,8` waere wirkungslos — Cut_replace etikettiert nur die
   RVD-Tabelle um (@0x80040414..@0x800404a8), Cut 7/8 sind reine Skript-Cuts. Die Nahansicht waehlt
   `Cut_chg 7`/`Cut_chg 8`, wie ROOM2060 selbst (sub18 @0x0168C, sub19 @0x016A2).
@@ -415,8 +416,13 @@ Zusaetzlich: Suite im eigenen Baum (429 Tests), GUI-Haken einzeln nachfahren (me
   z -8950..-8150), gewinnt Slot 7 (Scan-Reihenfolge aufsteigend, erster Treffer verbraucht die Taste —
   scd_vm.c op_aot_set Kommentar "(a) … liegt in der Scan-Reihenfolge VOR 60").
 * **VERTRAG:** Spur-A-Slots 11/12 sind in ROOM1051 original belegt (§3.1) — der Plan braucht sie nicht.
-* **Unregistriertes 0x62:** faellt HAKEN 2 weg, liest op_unknown `62` als 1 Byte und `40` als Plc_dest
-  (8 B) = Desync. Der Riegel prueft deshalb den vollen Einsetz-Lauf UND die PC-Schranke.
+* **Unregistriertes 0x62 — GEMESSEN (Sonden-Gegenprobe, `A_belege/sonde_r34n_a_rolltor.txt`):** faellt
+  HAKEN 2 weg, schiebt op_unknown um 1 (`s_opcode_sizes[0x62]` = 1), liest `40 22 09 3f 01 29 08 2b` als
+  Plc_dest (Fremd-Operanden!), dann `15 ff ff 02` als Default, und erst ab dem Endif @+0x36 laeuft der Plan
+  weiter. Ergebnis nach Ja/Ja: KEIN (9,63), Sicherung bleibt, kein Cut 8, keine msg 21 — das Einsetzen wird
+  STILL verschluckt, und der Faden endet trotzdem sauber (die PC-Stichprobe am Bildanfang sieht es nicht).
+  Der Riegel muss deshalb das ERGEBNIS des Ja/Ja-Laufs pruefen ((9,63)=1, Sicherung weg, msg 21 gezeigt),
+  nicht nur, dass der Faden endet.
 * **Cut 3 zeigt den Kasten immer rot** (BSS-Kunst, keine Variante). Nach dem Einsetzen bleibt die kleine
   rote Leuchte im Normalblick. Kein RE1.5-Gegenstueck (ROOM2060 hat Varianten 11/10, ROOM1050 nicht).
 

@@ -271,7 +271,25 @@ int main(void)
     f |= fall("1050 mit Sicherung, Ja/Nein", 0x1050, d1050, sz0, 1, JA, NEIN);
     f |= fall("1051 ohne Sicherung, Schalter Ja", 0x1051, d1051, sz1, 0, JA, 0);
     f |= fall("1051 mit Sicherung, Ja/Ja", 0x1051, d1051, sz1, 1, JA, JA);
-    free(d1050); free(d1051);
     printf(f ? "ERGEBNIS: AUFFAELLIG (fremd/laeuft oben pruefen)\n" : "ERGEBNIS: Plan laeuft sauber\n");
+
+    /* GEGENPROBE zum Risiko "HAKEN 2 fehlt": dieselbe Fassung mit den ECHTEN Bytes `62 40` an
+     * +0x28, ohne registrierten Opcode 0x62. op_unknown schiebt um 1 (s_opcode_sizes[0x62] = 1)
+     * und liest `40` als Plc_dest (8 B). Die Ersatz-Entnahme der Sonde bleibt an; sie greift nur,
+     * wenn (9,63) kippt. */
+    k_mit[MIT_ITEM_LOST_OFF] = 0x62; k_mit[MIT_ITEM_LOST_OFF + 1] = 0x40;
+    {
+        int g = fall("GEGENPROBE 0x62 unregistriert", 0x1050, d1050, sz0, 1, JA, JA);
+        /* Mass ist das ERGEBNIS, nicht die PC-Stichprobe: der Fremdlauf passiert innerhalb EINES
+         * VM-Durchlaufs (kein Ertrag an einer Fremdposition), die Stichprobe am Bildanfang sieht
+         * ihn nicht. Verschluckt ist das Einsetzen, wenn nach Ja/Ja weder (9,63) steht noch die
+         * Sicherung fehlt. */
+        int verschluckt = !re15_game_flag_get(9, 63) && re15_inv_find_item(0x40) >= 0;
+        printf("GEGENPROBE: fremd/laeuft=%d, Einsetzen %s\n", g,
+               verschluckt ? "STILL VERSCHLUCKT (62 -> op_unknown pc+1, `40` = Plc_dest 8 B, "
+                             "Default @+0x31, im Plan erst wieder ab Endif @+0x36) - Haken 2 (Opcode 0x62) ist Pflicht"
+                           : "gelaufen - Annahme pruefen");
+    }
+    free(d1050); free(d1051);
     return 0;
 }
