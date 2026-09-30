@@ -2830,6 +2830,17 @@ def _faelle():
          ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
         ("R4 MU3: NEL (U+0085) als Zeilentrenner", trenner("\u0085"), 1,
          ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU3: VT (\\x0b) als Zeilentrenner", trenner("\x0b"), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        ("R4 MU3: FF (\\x0c) als Zeilentrenner", trenner("\x0c"), 1,
+         ["fehlt im Manifest: %s (wird" % P07M, "Manifest-Kopfzeile passt nicht"]),
+        # Groesse >= 64 GiB (atoll liest 64 Bit, das Geraet vergleicht mit der echten Dateigroesse): Kopfzeile
+        # passend mitgerechnet, damit NUR die Groesse abweicht - ein Leser mit 32-Bit-Groessen saehe 2748 B
+        ("R4: Groessenfeld 64 GiB + 2748 (32-Bit-Ueberlauf waere 2748)",
+         lambda f: setattr(f, "manifest_zeilen", [(p, g + (64 << 30) if p == P07M else g)
+                                                  for p, g in f.manifest_aus_eintraegen()]), 1,
+         ["Manifest-Groesse falsch: %s Manifest %d B, APK 2748 B" % (P07M, (64 << 30) + 2748)], False,
+         ["Manifest-Kopfzeile passt nicht"]),
         ("R4 MU2/MU6: Groessenfeld in Vollbreit-Ziffern", groesse_ziffern("０１２３４５６７８９"),
          1, ["ist keine Zahl (atoll, :205)", "fehlt im Manifest: %s (wird" % P07M]),
         ("R4 MU2/MU6: Groessenfeld in arabisch-indischen Ziffern",
