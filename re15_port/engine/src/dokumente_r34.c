@@ -9,6 +9,7 @@
 #include "re15_dokumente.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #include "re15_scd.h"
 #include "re15_aot.h"
@@ -37,13 +38,18 @@ static const dokument_t k_dokumente[] = {
       RE15_DOK2_RECT_X, RE15_DOK2_RECT_Z, RE15_DOK2_RECT_W, RE15_DOK2_RECT_D,
       re15_dokument2_md1, (int)sizeof re15_dokument2_md1,
       re15_dokument2_tim, (int)sizeof re15_dokument2_tim },
+    { 0x1020, 3, RE15_DOK3_ITEM, RE15_DOK3_BIT, RE15_DOK3_SLOT, RE15_DOK3_OBJ,
+      RE15_DOK3_X, RE15_DOK3_Y, RE15_DOK3_Z, RE15_DOK3_ROT_Y,
+      RE15_DOK3_RECT_X, RE15_DOK3_RECT_Z, RE15_DOK3_RECT_W, RE15_DOK3_RECT_D,
+      re15_dokument3_md1, (int)sizeof re15_dokument3_md1,
+      re15_dokument3_tim, (int)sizeof re15_dokument3_tim },
 };
 #define DOK_ANZAHL ((int)(sizeof k_dokumente / sizeof k_dokumente[0]))
 
 /* Die Engine-Bytes der uebrigen Modelle stehen schon in gen/dokumente_props.inc; bis ihr
  * Dokument eingetragen ist, werden sie nur referenziert (kein unused-Warnruf). */
 static const void *const k_vorrat[] = {
-    re15_dokument3_md1, re15_dokument3_tim, re15_dokument4_md1, re15_dokument4_tim,
+    re15_dokument4_md1, re15_dokument4_tim,
 };
 
 static const dokument_t *dokument_des_raums(uint16_t room_id)
@@ -102,10 +108,50 @@ static void anlegen(const dokument_t *d)
     }
 }
 
+/* TIEFEN-KLEMMEN je (Raum, Cut) — Herleitung je Eintrag in re15_dokumente.h. */
+typedef struct { uint16_t raum; uint8_t cut; uint16_t tiefe; } klemme_t;
+static const klemme_t k_klemmen[] = {
+    { 0x1020, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
+    { 0x1021, RE15_DOK3_KLEMME_CUT, RE15_DOK3_KLEMME_TIEFE },
+};
+#define KLEMMEN_ANZAHL ((int)(sizeof k_klemmen / sizeof k_klemmen[0]))
+
+/* VORRANG ROOM1020/1021: die Tisch-Nachricht in den Slot RE15_DOK3_NACHRICHT_ZIEL umziehen
+ * (Herleitung und Satz-Waechter: re15_dokumente.h, "VORRANG"). Nur der unveraenderte Original-
+ * Satz zieht um, nur in einen freien Ziel-Slot; alle Parallel-Felder des Slots ziehen mit. */
+static void tisch_nachricht_umziehen(uint16_t room_id)
+{
+    const int q   = (room_id == 0x1020) ? RE15_DOK3_NACHRICHT_1020 : RE15_DOK3_NACHRICHT_1021;
+    const int msg = (room_id == 0x1020) ? RE15_DOK3_MSG_1020 : RE15_DOK3_MSG_1021;
+    const int z   = RE15_DOK3_NACHRICHT_ZIEL;
+    const re15_aot_t *a = &g_aot.slots[q];
+    if (!a->active || a->type != RE15_AOT_TYPE_MESSAGE || a->event_id != msg ||
+        a->sce_flags != 0x31 || a->pause_mask16 != 0xFFFFu ||
+        a->x != RE15_DOK3_NACHRICHT_RECT_X + RE15_DOK3_NACHRICHT_RECT_W / 2 ||
+        a->z != RE15_DOK3_NACHRICHT_RECT_Z + RE15_DOK3_NACHRICHT_RECT_D / 2 ||
+        a->half_w != RE15_DOK3_NACHRICHT_RECT_W / 2 ||
+        a->half_h != RE15_DOK3_NACHRICHT_RECT_D / 2) return;
+    if (g_aot.slots[z].active) return;
+    g_aot.slots[z]        = g_aot.slots[q];
+    g_aot.door_params[z]  = g_aot.door_params[q];
+    g_aot.item_params[z]  = g_aot.item_params[q];
+    g_aot.flag_params[z]  = g_aot.flag_params[q];
+    g_aot.env_params[z]   = g_aot.env_params[q];
+    g_aot.stair_params[z] = g_aot.stair_params[q];
+    memset(&g_aot.slots[q],        0, sizeof g_aot.slots[q]);
+    memset(&g_aot.door_params[q],  0, sizeof g_aot.door_params[q]);
+    memset(&g_aot.item_params[q],  0, sizeof g_aot.item_params[q]);
+    memset(&g_aot.flag_params[q],  0, sizeof g_aot.flag_params[q]);
+    memset(&g_aot.env_params[q],   0, sizeof g_aot.env_params[q]);
+    memset(&g_aot.stair_params[q], 0, sizeof g_aot.stair_params[q]);
+}
+
 void re15_dokumente_install(uint16_t room_id)
 {
     const dokument_t *d = dokument_des_raums(room_id);
     if (!d) return;
+    if (d->nr == 3 && !re15_game_flag_get(9, d->bit))
+        tisch_nachricht_umziehen(room_id);
     anlegen(d);
 }
 
@@ -123,7 +169,11 @@ int re15_dokumente_nr(uint16_t room_id)
 
 int re15_dokumente_sort_max_mit(int irons, uint16_t room_id, int cut, int obj_id)
 {
-    (void)room_id; (void)cut; (void)obj_id;
+    const dokument_t *d = dokument_des_raums(room_id);
+    if (!d || obj_id != (int)d->obj) return irons;
+    for (int k = 0; k < KLEMMEN_ANZAHL; k++)
+        if (k_klemmen[k].raum == room_id && (int)k_klemmen[k].cut == cut)
+            return (int)re15_pri_mask_camera_z((int)k_klemmen[k].tiefe) - 1;
     return irons;
 }
 

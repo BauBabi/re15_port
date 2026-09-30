@@ -21,9 +21,16 @@
  *   B  Eingebackene Modelle = die RE2-Quellen (md5 in tools/r34n_e/dokumente_engine_export.py):
  *      Groesse, parsebar, CLUT-Zeile der Dreiecke liegt in der TIM (Mehrzeilen-CLUT).
  *
+ *   M  Marke: die Prop-Mitte liegt im Nutzer-Cut in der roten Marke des Nutzerbilds.
+ *   K  Tiefen-Klemmen: je (Raum, Cut) = kleinste Tiefe der Original-Masken ueber der Mitte, ohne
+ *      Klemme verdeckt (re15_pri_mask_occludes), mit Klemme davor; sonst Irons-Wert durchgereicht.
+ *
  * Dokument-spezifisch:
  *   1  ROOM1051 (Elza): der Leichen-Satz Slot 11 (sce 3, @0x00C0E) fuehrt; nach Bit (9,165)
  *      legt sub01 @0x00CB2 ihn still und der Druck liefert das Tagebuch.
+ *   3  ROOM1020/1021: die Tisch-Nachricht (Slot 10 @0x01F0E / 11 @0x01F6C) zieht fuer die
+ *      Liegezeit nach Slot 15 (Original-Regel "Gegenstand im kleineren Slot"); mit Bit (9,59)
+ *      bleibt sie; Satz-Waechter; nach dem Aufheben liefert derselbe Druck wieder die Nachricht.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -127,16 +134,19 @@ typedef struct {
     int32_t stand_x, stand_z; int16_t stand_rot;   /* gemessener Druck-Standort (Dossier 3.4) */
     int user_cut;                          /* Cut des Nutzerbilds bzw. der Leiche */
     int md1_n, tim_n;
-    int prop_count_nach;                   /* Pool nach dem Raumstart (RDT-Props + Dokument) */
+    int mx0, mx1, my0, my1;                /* rote Marke im Nutzerbild (Cut user_cut), 0 = keine */
 } soll_t;
 
 static const soll_t k_soll[] = {
     { 1, 0x1050, 0x49, 57, 15, 2, 26, 3, 144, 16474, -360, -6592, 0,
       15250, -7250, 1000, 1000, "Police Officer's Final Diary Entry",
-      14900, -6750, 0, 3, 372, 34848, 3 },
+      14900, -6750, 0, 3, 372, 34848, 0, 0, 0, 0 },
     { 2, 0x1000, 0x4A, 58, 10, 2, 27, 4, 144, 19226, -398, -11723, 0,
       18726, -12223, 1000, 1000, "Elliot's Diary",
-      18250, -11723, 0, 0, 372, 17440, 3 },
+      18250, -11723, 0, 0, 372, 17440, 182, 203, 162, 182 },      /* elliot.bmp, marken.py */
+    { 3, 0x1020, 0x4B, 59, 14, 7, 28, 2, 176, -9975, -1410, -16428, 0,
+      -11100, -16928, 2200, 1000, "Marvin's Notes",
+      -11500, -16428, 0, 6, 404, 34848, 151, 161, 101, 109 },     /* marvin.bmp, marken.py */
 };
 #define N_SOLL ((int)(sizeof k_soll / sizeof k_soll[0]))
 
@@ -208,16 +218,18 @@ static void teil_pzg(const soll_t *s, raum_t *rr[2], raum_t *fremd)
 {
     printf("\n[P/Z/G] Dokument %d: Prop und Zone nach dem Raumstart\n", s->nr);
     for (int i = 0; i < 2; i++) {
+        static int bits[2]; bits[0] = s->bit; bits[1] = 0;
+        hochfahren(rr[i], s->stand_x, s->stand_z, bits);
+        int pool_ohne = (int)g_scd.prop_count;
         hochfahren(rr[i], s->stand_x, s->stand_z, NULL);
         CHECK(prop_ok(s), "P ROOM%04X obj %d bei (%d,%d,%d) rot %d, Flags 0x000B, Band 1, Nullbox",
               rr[i]->id, s->obj, s->x, s->y, s->z, s->rot);
-        CHECK(g_scd.prop_count == s->prop_count_nach,
-              "P ROOM%04X Pool %d Eintraege (Soll %d: Raum-Props + Dokument)", rr[i]->id,
-              (int)g_scd.prop_count, s->prop_count_nach);
+        CHECK((int)g_scd.prop_count == pool_ohne + 1 && slot_von(s->obj) == pool_ohne,
+              "P ROOM%04X Pool %d Eintraege = Raum-Props %d + Dokument (hinten angehaengt)",
+              rr[i]->id, (int)g_scd.prop_count, pool_ohne);
         CHECK(zone_ok(s), "Z ROOM%04X Slot %d: ITEM x[%d..%d] z[%d..%d] Item 0x%02X x1 Bit %d obj %d, "
               "sat 0x31, floor 0", rr[i]->id, s->slot, s->rx, s->rx + s->rw, s->rz, s->rz + s->rd,
               s->item, s->bit, s->obj);
-        static int bits[2]; bits[0] = s->bit; bits[1] = 0;
         hochfahren(rr[i], s->stand_x, s->stand_z, bits);
         CHECK(slot_von(s->obj) < 0 &&
               !(g_aot.slots[s->slot].active && g_aot.slots[s->slot].type == RE15_AOT_TYPE_ITEM &&
@@ -260,6 +272,23 @@ static void druck(raum_t *r, int32_t x, int32_t z, int16_t rot, const int *bits)
     scd_vm_tick();
     re15_aot_scan(pl->x, pl->z, 0);
     g_aot_action_pressed = 0;
+}
+
+/* Leser -> Schliessen -> Meldung -> Bestaetigen -> Menue zu, ohne Pruefungen (wie
+ * test_r30_irons_tisch.c leser_abschliessen): der Menue-Zustand ist prozessweit, ein nur
+ * angeforderter Leser bliebe sonst fuer den naechsten Druck "aktiv". */
+static void leser_abschliessen(void)
+{
+    int n = 0;
+    while (n++ < 300 && !(re15_menu_phase() == 1 && g_inv_screen.item_state == 3))
+        menue_bild(0, 0);
+    menue_bild(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    uint8_t mid = 0; int rev = -1, total = re15_menu_doc_msg_total();
+    n = 0;
+    while (n++ < 400 && re15_menu_doc_msg(&mid, &rev) && rev < total) menue_bild(0, 0);
+    menue_bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    n = 0;
+    while (n++ < 200 && (re15_menu_is_open() || re15_menu_stage() != 0)) menue_bild(0, 0);
 }
 
 static void teil_d(const soll_t *s, raum_t *r)
@@ -354,7 +383,68 @@ static void teil_v(const soll_t *s, raum_t *rr[2])
         int ok = sichtbar_im_cut(rr[i], s, s->user_cut, &sx, &sy);
         CHECK(ok, "V ROOM%04X Cut %d: Mitte (%.1f ; %.1f) im Bild, Regions-Test (Anker des Cuts, "
               "FUN_80014368) behaelt das Prop", rr[i]->id, s->user_cut, sx, sy);
+        if (s->mx1 > 0)
+            CHECK(sx >= s->mx0 && sx <= s->mx1 + 1 && sy >= s->my0 && sy <= s->my1 + 1,
+                  "M ROOM%04X Cut %d: Mitte (%.2f ; %.2f) in der roten Marke x%d..%d y%d..%d",
+                  rr[i]->id, s->user_cut, sx, sy, s->mx0, s->mx1, s->my0, s->my1);
     }
+}
+
+/* ------------------------------------------------------------------ K */
+typedef struct { uint16_t raum; int cut; int tiefe; int nr; } klemme_soll_t;
+static const klemme_soll_t k_klemmen[] = {
+    { 0x1020, 3, 258, 3 }, { 0x1021, 3, 258, 3 },     /* Original-Maske 35 @0xD28 (Tischplatte) */
+};
+#define N_KLEMMEN ((int)(sizeof k_klemmen / sizeof k_klemmen[0]))
+
+static const soll_t *soll_nr(int nr)
+{
+    for (int i = 0; i < N_SOLL; i++) if (k_soll[i].nr == nr) return &k_soll[i];
+    return NULL;
+}
+
+static void teil_k(raum_t *alle[], int n_alle)
+{
+    printf("\n[K] Tiefen-Klemmen\n");
+    for (int k = 0; k < N_KLEMMEN; k++) {
+        const klemme_soll_t *kl = &k_klemmen[k];
+        const soll_t *s = soll_nr(kl->nr);
+        raum_t *r = NULL;
+        for (int i = 0; i < n_alle; i++) if (alle[i]->id == kl->raum) r = alle[i];
+        if (!s || !r) { CHECK(0, "K Raum %04X nicht geladen", kl->raum); continue; }
+        re15_camera_view_t v;
+        double sx = -1, sy = -1, vz = 0;
+        if (re15_camera_build_view(&r->rdt.cuts[kl->cut], &v) == 0)
+            vz = proj(&v, s->x, s->y, s->z, &sx, &sy);
+        static re15_pri_cut_t pri;
+        memset(&pri, 0, sizeof pri);
+        int nm = re15_pri_parse_section(r->buf, r->n, r->rdt.cuts[kl->cut].pri_offset, &pri);
+        int tief = 99999;
+        for (int m = 0; m < pri.draw_count && m < nm; m++) {
+            const re15_pri_mask_t *q = &pri.masks[m];
+            if (sx >= q->dstX && sx < q->dstX + q->width && sy >= q->dstY && sy < q->dstY + q->height &&
+                q->depth < tief)
+                tief = q->depth;
+        }
+        CHECK(tief == kl->tiefe && re15_pri_mask_occludes(kl->tiefe, (long)vz),
+              "K ROOM%04X Cut %d: flachste Original-Maske ueber der Mitte (%.1f;%.1f) Tiefe %d (Soll %d), "
+              "ohne Klemme verdeckt (vz %.0f)", kl->raum, kl->cut, sx, sy, tief, kl->tiefe, vz);
+        int km = re15_dokumente_sort_max_mit(-1, kl->raum, kl->cut, s->obj);
+        CHECK(km == (int)re15_pri_mask_camera_z(kl->tiefe) - 1 && (float)km < re15_pri_mask_camera_z(kl->tiefe),
+              "K ROOM%04X Cut %d obj %d: Klemme %d = re15_pri_mask_camera_z(%d) - 1", kl->raum, kl->cut,
+              s->obj, km, kl->tiefe);
+        CHECK(re15_dokumente_sort_max_mit(-1, kl->raum, kl->cut, s->obj + 1) == -1 &&
+              re15_dokumente_sort_max_mit(4711, kl->raum, kl->cut, s->obj + 1) == 4711,
+              "K ROOM%04X Cut %d: anderes obj -> keine Klemme, Irons-Wert durchgereicht", kl->raum, kl->cut);
+    }
+    const soll_t *s3 = soll_nr(3);
+    if (s3)
+        CHECK(re15_dokumente_sort_max_mit(-1, 0x1020, 6, s3->obj) == -1 &&
+              re15_dokumente_sort_max_mit(-1, 0x1020, 5, s3->obj) == -1,
+              "K ROOM1020 Cut 6 (Nutzerbild) und Cut 5: keine Klemme");
+    CHECK(re15_dokumente_sort_max_mit(5636, 0x1150, 2, 5) == 5636 &&
+          re15_dokumente_sort_max_mit(-1, 0x1150, 2, 5) == -1,
+          "K ROOM1150 (Irons): Wert unveraendert durchgereicht");
 }
 
 /* ------------------------------------------------------------------ B */
@@ -407,15 +497,88 @@ static void teil_dok1_elza(raum_t *r1051)
           (unsigned)g_aot.slots[11].sce_flags);
     CHECK(re15_menu_doc_active() && !re15_item_modal_active(),
           "1 ROOM1051 mit Bit (9,165): derselbe Druck -> Aufnahme-Leser (Dokument 1)");
+    leser_abschliessen();
+    CHECK(!re15_menu_doc_active() && re15_files_get(0) == 1 && re15_game_flag_get(9, 57),
+          "1 ROOM1051 Leser abgeschlossen: FILE-Platz 0 = Dokument 1, Bit (9,57)");
+}
+
+/* ------------------------------------------------------------------ Dok 3: Tisch-Nachricht */
+static int nachricht_in(int slot, int msg)
+{
+    const re15_aot_t *a = &g_aot.slots[slot];
+    return a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == msg &&
+           a->sce_flags == 0x31 && a->pause_mask16 == 0xFFFF &&
+           a->x - a->half_w == -11100 && a->x + a->half_w == -8900 &&
+           a->z - a->half_h == -18100 && a->z + a->half_h == -14800;
+}
+
+static void teil_dok3_nachricht(raum_t *r1020, raum_t *r1021)
+{
+    const soll_t *s = soll_nr(3);
+    raum_t *rr[2] = { r1020, r1021 };
+    static const int quelle[2] = { 10, 11 }, msg[2] = { 3, 12 };
+    static const int bit59[] = { 59, 0 };
+    printf("\n[3] Dokument 3: Tisch-Nachricht und Vorrang\n");
+    for (int i = 0; i < 2; i++) {
+        hochfahren(rr[i], s->stand_x, s->stand_z, NULL);
+        CHECK(nachricht_in(15, msg[i]) && !g_aot.slots[quelle[i]].active,
+              "3 ROOM%04X Bit (9,59) frei: Nachricht %d in Slot 15, Slot %d frei", rr[i]->id, msg[i],
+              quelle[i]);
+        hochfahren(rr[i], s->stand_x, s->stand_z, bit59);
+        CHECK(nachricht_in(quelle[i], msg[i]) && !g_aot.slots[15].active,
+              "3 ROOM%04X Bit (9,59) gesetzt: Nachricht %d bleibt in Slot %d, Slot 15 frei", rr[i]->id,
+              msg[i], quelle[i]);
+        /* Satz-Waechter: veraenderter Satz (andere Nachricht) -> kein Umzug */
+        g_aot.slots[quelle[i]].event_id = (uint8_t)(msg[i] + 1);
+        re15_game_flag_set(9, 59, 0);
+        re15_dokumente_install(rr[i]->id);
+        CHECK(!g_aot.slots[15].active && g_aot.slots[quelle[i]].active &&
+              g_aot.slots[quelle[i]].event_id == msg[i] + 1 && zone_ok(s),
+              "3 ROOM%04X Waechter: Satz mit Nachricht %d zieht NICHT um (Dokument-Zone trotzdem da)",
+              rr[i]->id, msg[i] + 1);
+        /* Druck vom Dokument-Standort */
+        CHECK(!re15_menu_doc_active(), "3 ROOM%04X vor dem Druck kein Leser offen", rr[i]->id);
+        druck(rr[i], s->stand_x, s->stand_z, s->stand_rot, NULL);
+        CHECK(re15_menu_doc_active() && !g_scd.message_active,
+              "3 ROOM%04X Druck (%d,%d) Blick +x -> Leser (die Nachricht in Slot 15 kommt danach)",
+              rr[i]->id, s->stand_x, s->stand_z);
+        leser_abschliessen();
+        CHECK(!re15_menu_doc_active() && !g_aot.slots[s->slot].active && nachricht_in(15, msg[i]),
+              "3 ROOM%04X nach dem Aufheben: Dokument-Zone aus, Nachricht %d weiter in Slot 15",
+              rr[i]->id, msg[i]);
+        g_scd.message_display_frames = 0; g_scd.message_query = 0; g_scd.message_active = 0;
+        re15_pauseflags_clear();
+        {
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            for (int f = 0; f < 3; f++) { scd_vm_tick(); re15_aot_scan(pl->x, pl->z, 0); }
+            g_aot_action_pressed = 1; scd_vm_tick(); re15_aot_scan(pl->x, pl->z, 0);
+            g_aot_action_pressed = 0;
+        }
+        CHECK(!re15_menu_doc_active() && g_scd.message_active && g_scd.message_id == msg[i],
+              "3 ROOM%04X im selben Raumbesuch: zweiter Druck -> Nachricht %d (aus Slot 15)",
+              rr[i]->id, (int)g_scd.message_id);
+        druck(rr[i], s->stand_x, s->stand_z, s->stand_rot, bit59);
+        CHECK(!re15_menu_doc_active() && g_scd.message_active && g_scd.message_id == msg[i],
+              "3 ROOM%04X Dokument genommen: derselbe Druck -> Nachricht %d \"It's Lieutenant "
+              "Branagh's desk.\"", rr[i]->id, (int)g_scd.message_id);
+    }
+    /* Die Nachricht deckt weiter den ganzen Tisch: Druck an der Tisch-Nordseite (ausserhalb des
+     * Dokument-Rechtecks z -16928..-15928) liefert die Nachricht aus Slot 15. */
+    druck(r1020, -11500, -15300, 0, NULL);
+    CHECK(!re15_menu_doc_active() && g_scd.message_active && g_scd.message_id == 3,
+          "3 ROOM1020 Druck (-11500,-15300) Blick +x (ausserhalb der Dokument-Zone) -> Nachricht %d",
+          (int)g_scd.message_id);
 }
 
 int main(void)
 {
-    static raum_t r1050, r1051, r1040, r1000, r1001;
+    static raum_t r1050, r1051, r1040, r1000, r1001, r1020, r1021;
     if (raum_laden(&r1050, 0x1050) || raum_laden(&r1051, 0x1051) || raum_laden(&r1040, 0x1040) ||
-        raum_laden(&r1000, 0x1000) || raum_laden(&r1001, 0x1001))
+        raum_laden(&r1000, 0x1000) || raum_laden(&r1001, 0x1001) ||
+        raum_laden(&r1020, 0x1020) || raum_laden(&r1021, 0x1021))
         return 1;
-    raum_t *raeume[2][2] = { { &r1050, &r1051 }, { &r1000, &r1001 } };
+    raum_t *raeume[3][2] = { { &r1050, &r1051 }, { &r1000, &r1001 }, { &r1020, &r1021 } };
+    raum_t *alle[] = { &r1050, &r1051, &r1000, &r1001, &r1020, &r1021 };
     for (int i = 0; i < N_SOLL; i++) {
         const soll_t *s = &k_soll[i];
         teil_t(s);
@@ -426,6 +589,8 @@ int main(void)
         teil_b(s);
     }
     teil_dok1_elza(&r1051);
+    teil_dok3_nachricht(&r1020, &r1021);
+    teil_k(alle, (int)(sizeof alle / sizeof alle[0]));
     printf("\n%s: %d Fehler\n", fails ? "FAIL" : "OK", fails);
     return fails ? 1 : 0;
 }

@@ -118,6 +118,81 @@
 #define RE15_DOK2_RECT_W             1000
 #define RE15_DOK2_RECT_D             1000
 
+/* ---- DOKUMENT 3: "Marvin's Notes" — ROOM1020/1021, Marvins Schreibtisch (marvin.bmp) ---- */
+
+/*   Item 0x4B       VERTRAG 1.4 (Dokument-Nr 3)
+ *   Bit 59          VERTRAG 1.1
+ *   Slot 14         erster Slot, der in BEIDEN Varianten frei ist: ROOM1020 belegt 0..12,
+ *                   ROOM1021 0..13 (scd_dump_room.py, alle Bloecke) — VERTRAG 1.2
+ *   obj 7           nOmodel = 7 in 1020 UND 1021 (RDT-Byte 2; Dossier 9.0 berichtigt die "6"
+ *                   aus 2.2), Obj_model_set nur obj 0..6; TIM-Slot RE15_TIM_SLOT_PROP(7) = 27 */
+#define RE15_DOK3_ITEM               0x4B
+#define RE15_DOK3_BIT                59
+#define RE15_DOK3_SLOT               14
+#define RE15_DOK3_OBJ                7
+/* LAGE — PORT-WAHL aus Messung, keine Original-Adresse:
+ *   x,z  Rueckprojektion der Markenmitte marvin.bmp (Cut 6, Mitte (156,5 ; 105,5)) auf die Platte
+ *        y -1410 -> (-9975,9 ; -16434,6), minus Grundriss-Mitte des Blatts (-1, -7) (mesh01 bbox
+ *        x -144..142, z -225..211, Fuss y 0; RE2 ROOM2020.RDT @0x003254) -> Ursprung (-9975, -16428);
+ *        Blattmitte vorwaerts (156,49 ; 105,48) (Sonde `projekt`, Dossier 9.0).
+ *   y    Tischplatte -1410 = Mittel Kantenlage -1405 / Deckflaeche -1415 in Cut 6 (Dossier 3.5);
+ *        das Modell hat seinen Fuss bei y 0 -> Ursprung auf der Platte.
+ *   rot  0 = Grundstellung (PORT-WAHL; lange Blattachse z = lange Tischachse, SCA-Zelle 2 z 2800
+ *        > x 1696; Dossier 8.1). */
+#define RE15_DOK3_X                  (-9975)
+#define RE15_DOK3_Y                  (-1410)
+#define RE15_DOK3_Z                  (-16428)
+#define RE15_DOK3_ROT_Y              0
+/* AUFHEBE-RECHTECK: x und w = die Tisch-Nachricht DESSELBEN Tischs, ROOM1020.RDT main00 @0x01F0E
+ *   `2c 0a 01 31 00 00 a4 d4 4c b9 98 08 e4 0c 03 00 ff ff 00 00` -> x 0xD4A4 = -11100, w 0x0898 = 2200
+ * (ein 1000 breites mittiges Rechteck erreicht KEIN Standort — Sonde `abdeckung`: 0, der Tisch ist
+ * 1696 breit); z und d = PORT-WAHL 1000 mittig auf -16428 (wie Dok 2). Gemessen mit Umzug der
+ * Tisch-Nachricht: 611 Standorte / 5384 Treffer, 0 abgefangen; Druck von (-11500,-16428) Blick +x
+ * -> Leser (1020 und 1021). */
+#define RE15_DOK3_RECT_X             (-11100)
+#define RE15_DOK3_RECT_Z             (-16928)
+#define RE15_DOK3_RECT_W             2200
+#define RE15_DOK3_RECT_D             1000
+
+/* VORRANG — die Tisch-Nachricht zieht fuer die Liegezeit in einen HOEHEREN Slot.
+ * Der Aktions-Scan feuert je Druck den KLEINSTEN treffenden Slot (FUN_80042bac aufsteigend ueber
+ * 0x800AC9B0, Ruecksprung nach dem ersten Treffer `j 0x80043028` @0x80042f94). Die Tisch-Nachricht
+ * "It's Lieutenant Branagh's desk." (Slot 10 bzw. 11) deckt den GANZEN Tisch x[-11100..-8900]
+ * z[-18100..-14800] und finge alle 5384 Treffer des Dokuments ab -> Marvins Notiz waere UNERREICHBAR.
+ * ORIGINAL-REGEL "liegt ein Gegenstand im Untersuchen-Rechteck, steht er im kleineren Slot":
+ * Zensus aller 240 RDTs 10 von 10 Paaren mit >= 81 % Deckung (zensus_item_nachricht.py), z.B.
+ * ROOM10E0 @0x00C4E Item_aot_set Slot 1 / @0x00CCC Aot_set sce 1 Slot 8 mit DEMSELBEN Rechteck
+ * (-650,-7350,2600,1000) (selbstpruefung.py). Also zieht die Nachricht, solange Bit (9,59) = 0,
+ * von 10 (1020) bzw. 11 (1021) nach 15 — Slot 15 ist in beiden Varianten frei, und kein Skript
+ * beruehrt 1020:10 / 1021:11 ausser diesem Aot_set selbst (scd_dump_room.py; kein Work-Var-
+ * Vergleich in beiden Raeumen). Ist das Dokument genommen, bleibt sie in ihrem Original-Slot.
+ * SATZ-WAECHTER (Muster re15_tuer1120_install): nur der unveraenderte Original-Satz zieht um —
+ * aktiv, MESSAGE, sat 0x31, Mitte/halbe Ausdehnung (-10000,-16450) / (1100,1650) = Rechteck
+ * (-11100,-18100,2200,3300), Nachricht 3 (1020) bzw. 12 (1021 @0x01F6C `2c 0b 01 31 … 0c 00 ff ff`),
+ * Pausenmaske 0xFFFF. Weicht etwas ab, zieht nichts um. */
+#define RE15_DOK3_NACHRICHT_ZIEL     15
+#define RE15_DOK3_NACHRICHT_1020     10     /* Slot, ROOM1020.RDT @0x01F0E pc[1] = 0x0a */
+#define RE15_DOK3_NACHRICHT_1021     11     /* Slot, ROOM1021.RDT @0x01F6C pc[1] = 0x0b */
+#define RE15_DOK3_MSG_1020           3      /* Nachricht, @0x01F0E +14 = 03 00 */
+#define RE15_DOK3_MSG_1021           12     /* Nachricht, @0x01F6C +14 = 0c 00 */
+/* Rechteck des Waechters, beide Varianten: +6 `a4 d4` = -11100, +8 `4c b9` = -18100,
+ * +10 `98 08` = 2200, +12 `e4 0c` = 3300 (@0x01F0E bzw. @0x01F6C). */
+#define RE15_DOK3_NACHRICHT_RECT_X   (-11100)
+#define RE15_DOK3_NACHRICHT_RECT_Z   (-18100)
+#define RE15_DOK3_NACHRICHT_RECT_W   2200
+#define RE15_DOK3_NACHRICHT_RECT_D   3300
+
+/* TIEFEN-KLEMME — ⛔ PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (wie RE15_IRONS_KLEMME_*).
+ * ROOM1020/1021 Cut 3: die ORIGINAL-Maske 35 der Sektion @0xD28 (x 127..166 y 91..114 Tiefe 258 =
+ * die Tischplatte; selbstpruefung.py) liegt ueber dem Blatt, das Blatt liegt bei vz 17020..17395 >
+ * (258+1)*65536/1023 = 16592 -> ohne Klemme VERDECKT (re15_pri_mask_occludes, otz>>4 @0x8002565c
+ * gegen die Maskentiefe @0x80039650-58). Das Original kennt keinen Tiefen-Versatz je Objekt
+ * (FUN_8002c18c); RE1.5 hat auf diesem Tisch kein Objekt. Sortierschluessel hoechstens
+ * re15_pri_mask_camera_z(258) - 1. Cut 6 (Nutzerbild): Maske 32 Tiefe 156, Blatt vz 9624..9993 <
+ * 10058 -> sichtbar ohne Klemme. */
+#define RE15_DOK3_KLEMME_CUT         3
+#define RE15_DOK3_KLEMME_TIEFE       258
+
 /* Legt die Dokumente beim Raumstart an — je Raum nur, wenn das Zone-9-Bit nicht gesetzt ist.
  * Gerufen an BEIDEN Raumstart-Wegen des Ports (Tuer: scd_room_setup.c scd_room_reenter,
  * Boot/CONTINUE: platform/pc/main.c), jeweils NACH dem Init-Lauf von main00. Im Original gibt
