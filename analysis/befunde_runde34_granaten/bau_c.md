@@ -434,9 +434,16 @@ Platz bleibt in Zeile 0 mit den Spawner-Flags 0x03 (sichtbar) und w/h 1, bis die
 | Effekt (Raumbank) | Routinen | Spawner im Port | Wirkung von C2 |
 |---|---|---|---|
 | 0x0b sub 0 | 41/42 | ROOM2000/2001 main00 @0x174C/5C/6C (Eintrittstakt), ROOM20B0/20B1 sub00 @0x1E96/A6/B6 (Else-Zweig von Ck(3,235), also nur bei Flag (3,235)=1) | Zeile 0 w/h 1 statt 0x1000: <= 1-Pixel-Punkte statt 11-Pixel-Kleckse, 27-32 Takte |
-| 0x0d sub 0/1 | 10/24/25 | keiner (kein Sce_espr_on in 206 RDTs mit Flags 0, kein Engine-Aufruf mit Id 0x0d: `grep` der 40 Spawn-Aufrufe, variable Ids nur Gore 0/5/7/8) | keine |
+| 0x0d sub 0/1 | 10/24/25 | keiner (kein Sce_espr_on mit Id 0x0d in den SCDs aller RDTs, s.u.; kein Engine-Aufruf mit Id 0x0d: `grep` der 40 Spawn-Aufrufe, variable Ids nur Gore 0/5/7/8) | keine |
 | 0x06 sub 1/2 | 10/0 | keiner der Eintritts-Spawns (ROOM2000 sub07 = sub 0, ROOM20A0 sub02 = sub 6, beide w/h 0x1000) | keine; die Zeilengroessen 0x0f9c/0x1064 waeren ohnehin byte-true (10/0 schreiben +4/+6 nicht) |
 | 0x05 sub 0 (Gore-Bruecken) | 19 | Hund/Zombie (Ids 5/7 ueber die Raumbank) | keine (w/h 0x1000) |
+| 0x01 sub 0 (sub 8/24 & 7) | 10/0 | ROOM5060/5061 @0x3124/@0x31C0 | keine (w/h 0x1000) |
+| 0x11 sub 0 | 10/0 | ROOM11E0/11E1 sub27 | keine (w/h 0x1000) |
+
+Statischer Zensus ALLER Sce_espr_on in den SCDs aller RDTs (`scd_dump_room.py` ueber `STAGE*/ROOM*.RDT`, Effekt-Id =
+Byte 2): 0x01 in 2 Raeumen, 0x06 in 4, 0x08 in 10 (CORE00-Feuer, Routinen 17/18 — schon vor C2 zeilengefuehrt), 0x0b in 4
+(2000/2001/20B0/20B1, je 3x), 0x11 in 2; keine 0x0d. Damit ist 0x0b der EINZIGE Effekt, dessen Groesse sich durch C2
+aendert.
 
 **N1.4 Altbestand behoben: die Raum-Effektbank stand beim SCD-Eintrittstakt noch nicht.**
 * Ursache: `pc_load_room_esp` lief erst NACH `re15_room_apply_pending`, dessen `scd_room_reenter` den Eintrittstakt
