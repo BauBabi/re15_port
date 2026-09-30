@@ -9,7 +9,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 
 | Schritt | Stand |
 |---|---|
-| S1 Merge r34g/b-schaden | offen |
+| S1 Merge r34g/b-schaden | erledigt 94c7d41d — konfliktfrei, Bau OK, unit_r34_schaden + unit_r34_reaktion gruen (430 Tests) |
 | S1 Merge r34g/a-granate | offen |
 | S1 Merge r34g/c-plattform | offen |
 | S1 Merge r34g/d-re2fx | offen |
@@ -18,7 +18,13 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 
 ## 1. Merges (Schritt 1)
 
-(wird je Merge ergaenzt: Commit, Konflikte + Loesung, Bau, Sonden)
+### 1.1 r34g/b-schaden (enthaelt r34g/c0-vertrag) — Merge-Commit 94c7d41d
+* `git merge --no-ff r34g/b-schaden`: **keine Konflikte** (27 Dateien, +5102/-181; C0-Vertrag V1/V2b/V3/V5 + RE2-Assets
+  `shared_assets/RE2/CORE00.ESP` 8572 B / `TEX.TIM` 132320 B kommen mit).
+* Bau: `local_build.sh configure` + `build` im frischen `build_r34_int` -> `LOCAL-BUILD-OK (configure)` / `(build)`.
+* Sonden der Spur: `unit_r34_schaden` Passed, `unit_r34_reaktion` Passed (`probe_r34_reaktion alle: 0 Fehler`, Zensus
+  352 Laeufe / 0 Haenger, Ausgang K1 220-222 ok). `ctest -N`: 430 Tests.
+
 
 ## 2. Integrationswuensche (Schritt 2)
 
