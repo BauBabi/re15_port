@@ -1,3 +1,86 @@
+# v0.8.20 - 2026-09-30
+
+Ihre Hausaufgaben fuer die Nacht sind gebaut — sieben Themen, jedes von einer eigenen Pruefung an der
+echten exe abgenommen. Suite 428 -> 463/463. (Die Granaten folgen als v0.8.21 aus der Parallelsitzung.)
+
+## Was Sie merken
+
+**Das Rolltor in ROOM1050 geht nur noch mit eingesetzter Sicherung auf — mit Nahansicht.** Am Schalter
+kommt zuerst wie bisher die Frage. Ohne Sicherung zeigt die Nahansicht (Cut 7: leerer Sockel, rote
+Leuchte) "I need a fuse to run the shutter." — das Tor bleibt zu. Mit der Sicherung aus Irons'
+Hebetisch: "Will you use the Fuse?" -> Ja: die Sicherung verlaesst das Inventar, die Nahansicht zeigt
+sie eingesetzt (Cut 8, beide Leuchten gruen) mit "You've used the Fuse."; ab dann oeffnet der Schalter
+das Tor wie im Original, mit Frage und Ton. Vorbild ist RE1.5 selbst: dasselbe Raetsel steht fertig in
+ROOM2060, die beiden Saetze sind byte-gleich von dort uebernommen. Das Entfernen aus dem Inventar macht
+wie in RE2 der Befehl Sce_item_lost (RE1.5 kennt keinen). Gilt auch fuer Elza (ROOM1051). Das Tor ist
+der einzige Weg in den Suedteil — die Sicherung ist damit Pflicht; verlieren kann man sie nicht.
+
+**Irons' Hebetisch bedient man jetzt mit dem Cursor.** Aktionstaste an der Westseite des Tisches ->
+Nahansicht, und es erscheint der Cursor des Generator-Raetsels (bildgleich), das Steuerkreuz bewegt ihn.
+Quadrat auf der Kuppel unten rechts -> Klick-Geraeusch wie am Generator-Schalter, die Kuppel geht auf,
+danach wie bisher Sicherung und Granate aus den Faechern. Quadrat daneben -> "Nothing happened.",
+danach ist der Cursor wieder frei. Kreuz verlaesst den Cursor; die naechste Aktion bringt ihn zurueck.
+
+**Generator ROOM11F0: frei bewegen, Sperre nur am Ende, zwei gruene Lampen.** Nach jedem Schalter bleibt
+der Cursor frei, der Zeiger faehrt nebenher auf den neuen Wert (auch wenn Sie weiterschalten). Erst wenn
+die Stellung stimmt (Schalter 1, 3, 5, 7, 9 an), wird die Eingabe gesperrt, der Zeiger faehrt auf 80,
+steht 30 Bilder (wie RE2), dann "Power supply OK." und die Flurlichter wie bisher. Die obere Lampe
+leuchtet gruen, wenn die linke Spalte (Schalter 1-5) stimmt, die untere fuer die rechte Spalte (6-10);
+ein falscher Schalter einer Seite loescht ihre Lampe sofort. RE1.5 hat fuer diese Lampen keine
+Leuchtkunst — genommen ist die gruene Schalterlampe desselben Bedienfelds aus RE2 (ROOM2130), mit
+RE2s Flimmern. (Alternative, falls lieber: RE1.5s runde gruene Leuchte aus ROOM5060.)
+
+**Ada ruft an der Tuer nach ROOM10A0.** Beim ersten Versuch, von ROOM1050 nach ROOM10A0 zu gehen,
+solange Ada nicht gerettet ist, spielt eine Szene: "Woman: Hello? Anyone? Please, get me out of here!",
+Leon tritt von der Tuer zurueck (derselbe Rueckschritt wie in ROOM1090 am Feuer), "Leon: Another
+civilian survivor." mit der Arm-Geste hin und zurueck, "Leon: I have to help her!" mit dem Arm-Schwung.
+Danach steht an der Tuer "I have to help the Survivor first!" — bis zur Rettung in ROOM1090, dann geht
+die Tuer normal (mit Tueranimation). Freigegeben wird ueber das Rettungs-Flag (3,0xBB); das naheliegende
+(3,0x6E) loescht ROOM1050 beim Wiederbetreten selbst und haette die Tuer fuer immer gesperrt.
+Feuerloescher und Ada sind ohne ROOM10A0 erreichbar. Elza hat keine Ada-Rettung und keine Sperre.
+
+**Vier neue Dokumente.** "Police Officer's Final Diary Entry" auf dem Schoss der sitzenden Leiche vor dem
+Rolltor (ROOM1050), "Elliot's Diary" auf der Bank in der Umkleide (ROOM1000, Modell wie Irons Diary),
+"Marvin's Notes" auf Marvins Schreibtisch (ROOM1020), "Armory Notice" auf dem Verhoertisch (ROOM1010,
+neben der Spraydose, die dort im Spiel genau unter Ihrer Markierung liegt). Texte woertlich, Aufnahme
+per Aktionstaste, lesbar im FILE-Menue, danach ist das Modell weg; Speichern und Laden behalten alles.
+Die Codes stimmen mit den Schloessern im Spiel: 4312 = Communication Room (ROOM10D0), 5632 = Waffenkammer
+(ROOM1230).
+
+**Die Leichen in ROOM1110 und ROOM1230 halten Munition.** Evidence Room: "It's a police officer, he's
+dead." / "He is holding something." -> Handgun-Munition mit Aufnahme-Abfrage; Nein -> beim naechsten
+Untersuchen wieder. Nach dem Ja nur noch "It's a police officer, he's dead." ROOM1230 genauso mit
+"A miserable death..." Menge wie die haeufigste Packung in RE1.5 und RE2 (15), mit Ihrer
+Halbierungsregel +7 Schuss. Die Original-Zettel mit den Codes, die dort lagen, entfallen — die Codes
+stehen jetzt in Marvins Notiz und im Armory Notice.
+
+**Die Leuchtschrift "HEAVEN" in Irons' Buero blinkt.** Cut 2, hinter den Jalousien: das Raumskript
+schaltet die Buchstaben ueber den Befehl 0x45 alle 20 Skripttakte (40 VBlanks) an und aus — der Port
+kannte den Befehl nicht und zeigte die Schrift immer an. Weil der Befehl allgemein wirkt, zeigen jetzt
+auch acht andere Raeume, was das Original zeigt: ROOM3000/3001 und ROOM3010/3011 in der Zombie-Variante
+(die gemalten toten Polizisten verschwinden, wenn sie als Zombies aufstehen — am Original in DuckStation
+gegengeprueft), ROOM3071 Cut 9 (Lichtleiste aus bis zur Elza-Szene), ROOM1211 Cut 7 und ROOM5060/5061
+Cut 11 (nach dem jeweiligen Ereignis). In ROOM1170 blinkt im Original nichts — dort bleibt alles, wie es ist.
+
+## Grenzen
+
+* **Sprachaufnahmen fehlen noch** (RE1.5 hat keine englische Sprachausgabe): Ablage
+  `synchro/STAGE1/room1050/main22.wav` (Woman, hoechstens 3,3 s — sonst tritt Leon schon zurueck,
+  waehrend sie noch spricht), `main23.wav` ("Another civilian survivor."), `main24.wav` ("I have to help
+  her!"). Bis dahin laufen die Zeilen mit Untertitel.
+* Rolltor: im normalen Blick (Cut 3) behaelt der kleine Kasten seine rote Leuchte — fuer diesen Cut gibt
+  es keine gemalte Variante.
+* Hebetisch: das Motorgeraeusch des Tischs kommt jetzt schon beim Druck am Tisch (Folge davon, dass der
+  Original-Ablauf unveraendert bleibt).
+* Generator: gehaltenes Quadrat legt etwa alle 17 Bilder denselben Schalter erneut um (RE1.5 selbst;
+  vorher von der Sperre verdeckt).
+* Dokumente: so hell wie die Original-Items der Raeume (byte-true Licht) — wirkt eines zu dunkel, sagen
+  Sie Bescheid. Der lange Name "Police Officer's Final Diary Entry" ragt beim Anwaehlen ueber die
+  Markierung hinaus; die Ablagemeldung lautet nach RE1.5-Vorlage "The Elliot's Diary has been filed.".
+* Leichen: "police"/"holding" klein und "..." statt "…" — so stehen die Woerter bzw. Punkte im
+  Original-Zeichensatz (eine Auslassungs-Glyphe gibt es nicht).
+* Nur PC-Ziel gebaut; das PSX-Ziel kennt die neuen Teile noch nicht.
+
 # v0.8.19 - 2026-09-29
 
 Ihre vier Auftraege dieser Runde sind gebaut. Suite 416 -> 428/428.
