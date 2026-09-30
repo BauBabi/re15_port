@@ -33,8 +33,18 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                                      uint8_t r, uint8_t g, uint8_t b);
 
 #define RE2FX_CLUT_ZEILEN 19     /* CLUT-Block 32 x 19 (TEX.TIM-Kopf `20 00 13 00`) */
+/* Nachbesserung N5 (Gegenpruefung M8): hochgeladen werden nur die CLUT-Zeilen 480..484. Der PC-Slot stapelt
+ * je CLUT-Zeile eine Kopie der Seite (render_pc.c upload: Hoehe = 256 * Zeilen); 19 Zeilen = 512 x 4864 Texel
+ * lagen ueber der 4096er Texturgrenze aelterer GLES-Geraete (Android baut diese Datei per GLOB mit). Belegt:
+ * CLUT eines Platzes = Bankkopf + (Sub >> 3) * 0x40 (`srl v0,t5,3 / sll v0,v0,6 / addu v1,v1,v0 /
+ * sh v1,50(t0)` @0x8001ccf4-d10); Bankkoepfe aus CORE00.ESP: Bank 3/4 0x7811 (Zeile 480), Bank 5 0x7911
+ * (Zeile 484); die Aufschlag-Kinder haben Sub 0x0C..0x1F (Bank 3/4: Zeile 481..483) bzw. 4/5 (Bank 5: 484).
+ * Quads mit einer anderen Zeile laesst re2fx_pc_draw aus (render_pc.c faellt sonst still auf Zeile 0 zurueck,
+ * `if (clut_idx < 0 || clut_idx >= s_tim_n_cluts) clut_idx = 0`). Sonde: probe_r34_re2fx_pc. */
+#define RE2FX_CLUT_ERSTE  480
+#define RE2FX_CLUT_ANZAHL 5
 
-static uint16_t s_clut[RE2FX_CLUT_ZEILEN * 16];
+static uint16_t s_clut[RE2FX_CLUT_ANZAHL * 16];
 static uint8_t  s_pix[256 * 256];          /* 512 Texel x 256 Zeilen, 4 bpp = 256 Byte je Zeile */
 static int      s_tex_ok;
 
@@ -70,17 +80,17 @@ int re2fx_pc_lade_tex(const uint8_t *tim, size_t size)
     uint16_t iw = le16(img + 8), ih = le16(img + 10);
     if (iw != 256 || ih != 256) return -5;                                          /* 256 hw x 256 */
     if ((size_t)(img - tim) + 12u + 256u * 256u * 2u > size) return -6;
-    /* CLUT-Spalte x 272 = Eintraege 16..31 jeder 32er-Zeile. */
-    for (int r = 0; r < RE2FX_CLUT_ZEILEN; r++)
+    /* CLUT-Spalte x 272 = Eintraege 16..31 jeder 32er-Zeile; Zeilen 480..484 = Datei-Zeilen 0..4. */
+    for (int r = 0; r < RE2FX_CLUT_ANZAHL; r++)
         for (int k = 0; k < 16; k++)
-            s_clut[r * 16 + k] = le16(tim + 20 + (size_t)(r * 32 + 16 + k) * 2);
+            s_clut[r * 16 + k] = le16(tim + 20 + (size_t)((RE2FX_CLUT_ERSTE - 480 + r) * 32 + 16 + k) * 2);
     /* Seiten 0x1E + 0x1F = Bild-hw 128..255 = Bytes 256..511 jeder 512-Byte-Zeile. */
     for (int y = 0; y < 256; y++)
         memcpy(s_pix + (size_t)y * 256, img + 12 + (size_t)y * 512 + 256, 256);
     re15_tim_t t;
     memset(&t, 0, sizeof t);
     t.bpp = 4; t.has_clut = 1;
-    t.clut_x = 272; t.clut_y = 480; t.clut_entries = RE2FX_CLUT_ZEILEN * 16; t.clut = s_clut;
+    t.clut_x = 272; t.clut_y = RE2FX_CLUT_ERSTE; t.clut_entries = RE2FX_CLUT_ANZAHL * 16; t.clut = s_clut;
     t.data_x = 896; t.data_y = 256; t.width = 512; t.height = 256;
     t.pixels = (const uint16_t *)(const void *)s_pix;
     re15_render_pc_upload_tim_slot(&t, RE2FX_TIM_SLOT);
@@ -126,6 +136,8 @@ void re2fx_pc_draw(void)
         unsigned seite = e->tpage & 0x1Fu;
         if (seite != 0x1E && seite != 0x1F) continue;          /* nur die TEX.TIM-Seiten (s. Kopf) */
         if ((e->clut & 0x3Fu) != 0x11u) continue;              /* nur CLUT-Spalte x 272 geladen */
+        const int zeile = (e->clut >> 6) & 0x1FF;
+        if (zeile < RE2FX_CLUT_ERSTE || zeile >= RE2FX_CLUT_ERSTE + RE2FX_CLUT_ANZAHL) continue;   /* nur Zeilen 480..484 (N5) */
         int uo = (seite == 0x1F) ? 256 : 0;
         /* Code 0x2E = halbtransparent (Status 0x1000 @0x80077a44-50); Mischmodus = TPage-Bits 5-6
          * (FUN_80077ed0 `or v1,v1,s0` mit s0 = +0x2A << 16 @0x80078130-34 -> POLY_FT4 Wort 5). Die

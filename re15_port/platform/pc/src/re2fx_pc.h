@@ -29,7 +29,8 @@ void re2fx_pc_draw(void);
 #define RE2FX_TIM_SLOT 50
 
 /** RE2 TEX.TIM (shared_assets/RE2/TEX.TIM, 132320 B) in den Slot laden: die Seiten 0x1E (VRAM x 896)
- *  und 0x1F (x 960) nebeneinander (512 x 256 Texel, 4 bpp) mit den 19 CLUT-Zeilen (272, 480..498).
+ *  und 0x1F (x 960) nebeneinander (512 x 256 Texel, 4 bpp) mit den CLUT-Zeilen (272, 480..484) der
+ *  Aufschlag-Baenke 3/4/5 (Slot 512 x 1280; Nachbesserung N5, bau_d.md).
  *  Rueckgabe 0 = geladen, < 0 = Datei unpassend. Die Datei bleibt beim Aufrufer (Zeiger-Leihe). */
 int  re2fx_pc_lade_tex(const uint8_t *tim, size_t size);
 

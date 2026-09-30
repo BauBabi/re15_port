@@ -50,3 +50,16 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r34_re2fx_raum COMMAND probe_r34_re2fx_raum)
 set_tests_properties(unit_r34_re2fx_raum PROPERTIES TIMEOUT 120)
+
+# Nachbesserung N5 (Gegenpruefung M7/M8): der PC-Zeichner platform/pc/src/re2fx_pc.c ohne SDL - die sechs
+# render_pc.c-APIs sind Attrappen in der Sonde; Slot-Masse (512 x 1280), Seiten-/CLUT-Zeilen-Abbildung,
+# Texel gegen das PSX-VRAM-Modell, Reihenfolge, Mischmodus je ABR, Auslassen fremder CLUT-Zeilen.
+add_executable(probe_r34_re2fx_pc ${CMAKE_CURRENT_LIST_DIR}/../probe_r34_re2fx_pc.c
+                                  ${CMAKE_SOURCE_DIR}/platform/pc/src/re2fx_pc.c)
+target_link_libraries(probe_r34_re2fx_pc PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r34_re2fx_pc PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/platform/pc/src)
+if(NOT WIN32)
+    target_link_libraries(probe_r34_re2fx_pc PRIVATE m)
+endif()
+add_test(NAME unit_r34_re2fx_pc COMMAND probe_r34_re2fx_pc)
+set_tests_properties(unit_r34_re2fx_pc PROPERTIES TIMEOUT 120)
