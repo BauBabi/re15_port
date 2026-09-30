@@ -6,7 +6,8 @@ Auftrag: BAUPLAN §3.1 A1-A10, K1-K3, K9, P1-P10, P31; Orchestrator-Vorgaben (O-
 
 STATUS: FERTIG (Code + Sonde + 18 Mutationsproben + exe-Messung); Suite: kein reproduzierbares Rot, Zielzeile unter Fremd-Kills nicht erreicht (§8).
 NACHBESSERUNG (Gegenpruefung `bau_a.gegenpruefung.md` M-1..M-5, H-1..H-5): §9 — M-2/M-3/M-4 + H-1 gebaut, 11 neue Mutationsproben, M-1 ohne Fremd-Kill
-(Wrapper `build/r34g_a/lb.sh`, INTEGRATIONSWUNSCH 8 mit fertigem Patch), Suite-Stand §9.6.
+(Wrapper `build/r34g_a/lb.sh`, INTEGRATIONSWUNSCH 8 mit fertigem Patch). Suite §9.6: 413/413 Nicht-exe-Tests in zwei Laeufen gruen, alle 16 exe-Tests
+gruen im Beweislauf mit umbenannter byte-gleicher exe; Zielzeile `LOCAL-BUILD-OK (all)` wegen 51 fremder `taskkill /IM` NICHT erreicht.
 
 ---
 
@@ -267,6 +268,7 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
 
 b9ee0468 (A2-A8), 690c2053 (Sonde 1-5), 8aca11ef (Drehen + Sonde 6), a9a772da (A10 + Sonde 7), 76894e74 (R9-Latch-
 Pruefung), 5239b817 (Sonde 6a Zombie 700), + Dossier-Commits.
+NACHBESSERUNG: 8a33ddbd (M-2/M-3/M-4 Code + Sonde), 82205b96 (H-1 Code + Sonde), 356d331c und folgende (Dossier §9).
 
 ## 8. Suite
 
@@ -506,6 +508,40 @@ gezielt (`cmake --build build_r34_a --target probe_r34_wurf`, msys64 vorn im PAT
   / `sh v0,106(v1)` @0x8001ab4c/58, `addu v1,v1,a0` / `sh` @0x8001ab7c-80, ohne Maske); sein Port-Zwilling
   `re15_enemy_steer_point` (`enemy_ai_common.c:3499-3513`) maskiert jeden Schritt (`& 0x0fff`) — gleiche Klasse wie H-1
   fuer Gegner (die Richtungslogik dort rechnet bereits mit `+ slew`). INTEGRATIONSWUNSCH 9.
+
+### 9.6 M-5 — Suite (volle Laeufe ueber den Wrapper, eigene Sonden)
+
+* **Eigene Sonde**: `probe_r34_wurf` ALLE PRUEFUNGEN GRUEN (`build/r34g_a/nb_probe4.txt`); jeder Abschnitt einzeln
+  (`mitte zeit gier saeure rand schritt debug kinder`) rc 0 (`build/r34g_a/nb_probe_<abschnitt>.txt`).
+* **Suite 1** (`lb.sh all` = configure + build + test, 04:00:39-04:09:14; Windows-Kette aus Win32_Process: Bash 28844 ->
+  37720 -> ctest 32292): `99% tests passed, 5 tests failed out of 429`, 500.06 s (`build/r34g_a/nb_suite1_ctest.log`).
+  Rot NUR exe-Tests, je `exit=1` ohne Meldung: `integration_r30_cut_blitz` ([B] debug.log zuletzt 04:02:36.988 -> Waechter
+  04:02:37.206 taskkill), `integration_r30_granate_laden` ([a] 04:04:17.52 -> 04:04:19.792), `integration_r30_irons_tisch_bild`
+  ([S] 04:05:31.628 -> 04:05:32.227), `integration_r33_speichern` ([a] Start 04:08:15.45 + 9,90 s -> 04:08:25.446
+  `taskkill /F /IM re15_pc.exe`, Grosseltern 28132 `local_build.sh build` = fremd), `integration_relatch_pin` (Abriss nach
+  Bild 90 um ~04:08:48; kein Eintrag — der Waechter fragt alle 100 ms, ein taskkill kann kuerzer leben).
+* **Einzel-Wiederholung per ctest** (04:09:41-04:10:59, `build/r34g_a/rerun_nb_suite1.txt`): alle 5 wieder rot; dabei
+  Fremd-Kills 04:09:41.767 (cut_blitz nach 0,77 s), 04:10:28.081 (irons_tisch_bild), 04:10:45.693 (r33_speichern), je
+  `local_build.sh build` anderer Baeume.
+* **Suite 2** (`lb.sh test`, 04:17:32-04:28:06; Windows-Kette Bash 32740 -> 1988 -> ctest 27240): `98% tests passed,
+  9 tests failed out of 429`, 631.79 s (`build/r34g_a/nb_suite2_ctest.log`). Rot NUR exe-Tests (cut_blitz, granate_laden,
+  irons_tisch_laden, irons_tisch_bild, irons_tisch_licht, sicherung_bild, r32_tor_hell, r33_speichern, boot_bg_pin; alle
+  `exit=1`/Abriss). Im Fenster 10 fremde `taskkill /F /IM re15_pc.exe`, 0 aus meiner Kette.
+* **Beweislauf gegen die Fremd-Kills** (`build/r34g_a/exe_kopie_lauf.sh`): exakt die ctest-Kommandos (`ctest -N -V`), nur
+  mit einer BYTE-GLEICHEN Kopie der exe unter anderem Bildnamen (`re15_pc_nb.exe`, md5 `be0159f91324c255c236a874a7cf503d`
+  = Original, gleiches Verzeichnis = gleiche Asset-Wurzel; danach geloescht): **alle 16 exe-Tests rc 0**
+  (04:28:22-04:43:00, `build/r34g_a/kopie_nb_alle.txt`: weste_load_pin, r30_cut_blitz, elza_vollstart, r30_granate_laden,
+  r30_irons_tisch_laden/_bild/_licht, r30_sicherung_laden/_bild, r30_titel_puls, r32_tor_hell, r33_speichern, boot_bg_pin,
+  dark_start_pin, relatch_pin, save_counter_pin). Im selben Fenster protokollierte der Waechter 16 fremde
+  `taskkill /F /IM re15_pc.exe` (04:29:06-04:38:00) — ohne Wirkung auf die Kopie. Vorher schon die 5 Rot aus Suite 1
+  (04:11:58-04:17:22, `build/r34g_a/kopie_nb1.txt`): 5/5 rc 0.
+* **Ergebnis**: alle 413 Nicht-exe-Tests (Unit, Sonden inkl. `unit_r34_wurf`, Blut-/Huelsen-/Muendungs-Pins
+  `unit_r26_mg_blut`, `unit_r17_waffen_loop_pin`, `probe_abzug_takt`, `unit_r30_granate`, `unit_espr_11e0`, C-Integration)
+  in BEIDEN Suiten gruen; alle 16 exe-Tests gruen (Suite 1: 11 direkt, der Rest in beiden Beweislaeufen). Kein
+  reproduzierbares Rot. **Die Zielzeile `=== LOCAL-BUILD-OK (all) — Tests 429/429` ist NICHT erreicht**: Ursache sind
+  fremde `local_build.sh build|test|all` (M-1 in den anderen Baeumen; Waechter: 51 Fremd-Kills zwischen 03:54 und 04:38,
+  keiner aus diesem Baum). Ein ungestoerter Gesamtlauf braucht INTEGRATIONSWUNSCH 8 in allen laufenden Baeumen (oder eine
+  ruhige Maschine) — vor dem Merge von A nachzuholen (Orchestrator).
 
 ### 9.7 Mutationsproben der Nachbesserung (`build/r34g_a/mutation_nb.py`, `mutation_nb_ergebnis.txt`, `mutation_nb_h1.txt`)
 
