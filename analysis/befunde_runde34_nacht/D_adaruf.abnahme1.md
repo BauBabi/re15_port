@@ -47,7 +47,7 @@ traegt der Port die Variante (aot_common.c `dest_id | (g_current_room_id & 0xF)`
 ROOM1051 und die Installation kehrt dort zurueck (Riegel `elza`). Wirkung nur im Debug-Pfad; Abhilfe: Debug-Sprung
 variantentreu machen (eigenes Thema) oder die Installation zusaetzlich an Spielerfamilie PL00 binden.
 Derselbe Debug-Pfad setzt Cut 0 (Log `cut=0`) — Leon dreht sich dann zur Kamera Cut 4, die nicht aktiv ist; im
-Spiel ist an der Tuer immer Cut 4 aktiv (RVD selbst dekodiert, 3.4).
+Spiel ist an der Tuer immer Cut 4 aktiv (RVD selbst dekodiert, Abschnitt 4 letzter Punkt).
 
 **M2 — Stimme gegen Rueckschritt.** Der Rueckschritt haengt an `Sleep 100` nach Message_on 22 (+0x20), nicht am
 Stimmende (voice_wait parkt nur das naechste Message_on). Die Aufnahmeliste verlangt <= 3,3 s. Die vorhandene
@@ -80,7 +80,7 @@ ROOM1000 Slot 0 (Tuersequenz P07G). Befehle und Logzeilen: `abnahme1_laeufe.txt`
 | Szene, bevor Leon 1050 -> 10A0 wechseln kann | Lauf r1: Quadrat F150 -> `[adaruf] Ereignis 13: Szene startet`, kein `DOOR FIRE slot=4`, kein `room10a0` | erfuellt |
 | Dialog "Ada"/Woman + Leon | `abnahme1_szene_ueberblick.png`: F172..F270 "Woman: Hello? Anyone? Please, / get me out of here!" (Sprecher rot = Farbe 02 wie ROOM1090 msg 0), F316 "Leon: Another civilian survivor.", F366 "Leon: I have to help her!" (Sprecher gruen) | erfuellt (Sprecher "Woman:" = Nutzer-Nachtrag) |
 | Schritt zurueck von der Tuer, wie ROOM1090 nach dem Lauf zum Feuer | `abnahme1_rueckschritt_drehung.png` + State-Log: F271 Drehung (1 Bild, Blick schon zur Tuer), F273..F282 je 70 Einheiten rueckwaerts (16500 -> 15800, z fest), Beine im Schritt, Blick bleibt zur Tuer — gleicher Modus 8 wie ROOM1090 sub02 @0x0247C | erfuellt |
-| "another civilian survivor" = rechter Arm 180 Grad, nach rechts, denselben Weg zurueck | `abnahme1_gesten_clip19_clip17.png` F316..F364: nach Drehung zur Kamera (F283..F294, Gierung 4095 -> 2973) geht der Arm rechts im Bild seitlich hinaus, Hand dreht auf, derselbe Weg zurueck (Clip 19 vor, ab F340 rueckwaerts) | erfuellt (Lesart L4 Zuschauersicht; Katalog/Zensus nachgesehen, 3.3) |
+| "another civilian survivor" = rechter Arm 180 Grad, nach rechts, denselben Weg zurueck | `abnahme1_gesten_clip19_clip17.png` F316..F364: nach Drehung zur Kamera (F283..F294, Gierung 4095 -> 2973) geht der Arm rechts im Bild seitlich hinaus, Hand dreht auf, derselbe Weg zurueck (Clip 19 vor, ab F340 rueckwaerts) | erfuellt (Lesart L4 Zuschauersicht; Gestenzensus nachgesehen, Abschnitt 5) |
 | "I have to help her" = Arm-Schwung | dasselbe Bild F368..F400: Arm quer vor die Brust, dann waagerecht ganz nach rechts hinaus (F384..F390), zurueck in die Ruhe (Clip 17) | erfuellt |
 | Balken wie Original-Szenen | Balken ab F151 (Rampe 15 Bilder), weg F480; `[scd F480] letterbox closed -> gameplay` | erfuellt |
 | Erneuter Druck -> "I have to help the Survivor first!" | Lauf t1 (`abnahme1_folgedruecke_sperrtext.png`): nach der Szene zurueck zur Tuer, Quadrat F520 -> msg 25, Freeze `pf=FFFF0007`, Schreibmaschinentext einzeilig; F560 (noch im Tippen) schliesst nicht, F600 schliesst (F601 msg aus), F640 -> wieder msg 25 — der Schliessdruck oeffnet nicht erneut, keine zweite Szene, kein Raumwechsel | erfuellt |
@@ -95,6 +95,9 @@ ROOM1000 Slot 0 (Tuersequenz P07G). Befehle und Logzeilen: `abnahme1_laeufe.txt`
   kein Zielen, keine Bewegung, Zeitlinie bildgenau wie ohne Eingaben (msg 22 F171, Schritt F273..F282, msg 23 +
   Clip 19 F315, msg 24 + Clip 17 F366, pm 2 -> 0 bei F480). Danach sofort steuerbar (F481 Vorwaerts bewegt), und
   die Kamera folgt wieder (Cut 4 -> 3 bei z -11280, RVD-Satz 4->3 z -11500..-10500 @0x02A0).
+- **Gegen die Wand gerannt, Quadrat bei gehaltenem Rennen** (Lauf t7): Leon steht nach dem Rennen bei x 16732 an
+  der Wand, Druck F150 bei gehaltenem Kreuz+Vor -> Szene startet (pm 2), Rennen/Vor waehrend der Szene ohne
+  Wirkung, Rueckschritt 16732 -> 16032 (700), Drehung zur Kamera — gleiche Szene wie vom Standplatz.
 - **Quadrat-Spam / zweiter Ausloeser**: Riegel `doppel` + Builder-Lauf 8c (19 Druecke) — nicht wiederholt.
 - **Folgedruecke** im selben Raum und nach Laden: Abschnitt 3.
 - **Echte Rettung statt RE15_SET_FLAG**: Abschnitt 3, t4b.
@@ -124,8 +127,18 @@ ROOM1000 Slot 0 (Tuersequenz P07G). Befehle und Logzeilen: `abnahme1_laeufe.txt`
   Modus 9 `ori v0,zero,0x5` @0x8003139c / `ori a2,zero,0x60` @0x800313d4 und @0x80031440 — alles wie zitiert.
 - Punkt-Glyphe: 0x57 ist in allen RDT-Nachrichten das Satzende (890x vor Ende-/Umbruch-Code, 0x3C nie) — die
   Wahl in msg 23 ist richtig.
-- Commit-Messages e6f46443/5e9d089a tragen die Konstanten mit @0x.
-- Commit-Messages mit Backticks per `-F` (lesbar), Co-Authored-By vorhanden.
+- Gestenwahl gegen den Zensus (`D_belege/plc_motion_zensus.tsv`, nach Inhalts-Hash gruppiert): in Leon-Raeumen
+  gibt es ausser den Bibliotheks-Clips 15..21/23 nur Inhalte, die der Bau gerendert und verworfen hat (1150
+  Clip 10/11/12 kniend, 1170 Clip 25, 50B0 13/14, 2020 0, 3070 Clip 24), dazu 036945c77ae4 (11B0/4010/5021 Clip 11)
+  = 1-Bild-Pose und 12f8c236fb59 (11C0 Clip 21 / 6030 Clip 6) = Bibliotheks-Clip 21 "Hand hoch". Keine uebersehene
+  Arm-Geste; ROOM1050-RBJ hat genau einen Spieler-Record (rec0 Marker 1, rec1 Marker 2), die Bindung ist eindeutig.
+  An der exe stimmen Clip 19 (Arm seitlich hinaus, Hand dreht auf, zurueck) und Clip 17 (Schwung) mit dem
+  Nutzerwortlaut ueberein (Bild).
+- Commit-Messages e6f46443/5e9d089a tragen die Konstanten mit @0x (Backticks lesbar, Co-Authored-By vorhanden).
+- Vertrag: nur Bank-9-Bit 65 (66 frei), Slot 4 umgewidmet (erlaubt), Nachrichten 22..25, eigene Dateien + je
+  eine Haken-Zeile in `scd_room_setup.c`/`scd_vm.c`; kein Port-Code liest/schreibt sonst (9,65) (grep Bank 9).
+- PSX: kein Gesamtbau moeglich (bekannte Luecke), aber das Modul uebersetzt mit `mipsel-none-elf-gcc` 12.3
+  (`-DRE15_PLATFORM_PSX`, exit 0, nur eine vorbestehende Kommentar-Warnung in re15_emd.h).
 
 ## 6. Softlock-/Raumgraph-Pruefung
 
@@ -143,7 +156,7 @@ msg 25 ist ein Text-Platz ohne Stimme (wie alle Untersuchungstexte, scd_vm.c "No
 
 ## 8. Messprotokoll
 
-`D_belege/abnahme1_laeufe.txt` (Befehle, Logzeilen, State-Log-Auszuege der Laeufe r1, t1, t2, t4b, t5, t6),
+`D_belege/abnahme1_laeufe.txt` (Befehle, Logzeilen, State-Log-Auszuege der Laeufe r1, t1, t2, t4b, t5, t6, t7),
 `D_belege/abnahme1_bytes.txt` (Bytes, Punkt-Zensus, Disasm). Bilder: `abnahme1_szene_ueberblick.png`,
 `abnahme1_rueckschritt_drehung.png`, `abnahme1_gesten_clip19_clip17.png`, `abnahme1_folgedruecke_sperrtext.png`,
 `abnahme1_eingaben_waehrend_szene.png`, `abnahme1_echte_rettung_1090_1050.png` (Bilder F360..F420 dort stammen noch
