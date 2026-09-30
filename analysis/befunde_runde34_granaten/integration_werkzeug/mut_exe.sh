@@ -10,7 +10,7 @@ name=$1; f=$2
 cp -f "$f" "$S/mutx_backup.bin"
 python "$S/sub.py" "$f" "$3" "$4" || { echo "[$name] MUTATION NICHT ANWENDBAR"; exit 3; }
 ( cd $WT && RE15_BUILD_DIR=$B bash re15_port/tools/local_build.sh build > "$S/mutx_build_$name.log" 2>&1 ) || { echo "[$name] BAU FEHLGESCHLAGEN"; tail -5 "$S/mutx_build_$name.log"; }
-"/c/Program Files/CMake/bin/cmake.exe" -DRE15_PC_EXE="$B/platform/pc/re15_pc.exe" -DWORKDIR="$B/tests/integration/r34_granaten_mut_$name" -DR34_NUR="$5" -P "$WT/re15_port/tests/integration/test_r34_granaten.cmake" > "$S/mutx_test_$name.log" 2>&1
+"/c/Program Files/CMake/bin/cmake.exe" -DRE15_PC_EXE="$B/platform/pc/re15_pc.exe" -DRE15_PPM_TOOL="$B/tests/unit/probe_r34_ppm_beitrag.exe" -DWORKDIR="$B/tests/integration/r34_granaten_mut_$name" -DR34_NUR="$5" -P "$WT/re15_port/tests/integration/test_r34_granaten.cmake" > "$S/mutx_test_$name.log" 2>&1
 rc=$?
 echo "[$name] Test rc=$rc (erwartet != 0)"; grep -E 'r34_granaten' "$S/mutx_test_$name.log" | tail -4
 cp -f "$S/mutx_backup.bin" "$f"

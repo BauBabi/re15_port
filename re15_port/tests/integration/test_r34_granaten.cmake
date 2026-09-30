@@ -493,7 +493,7 @@ r34_exe("${_lauf}" "${_dir}" 300
     RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 RE15_AI_FLAVOR=re2
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=260 "RE15_INPUT_SCRIPT=${_sk}"
     RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log
-    "RE15_EXIT_AT=760#1140")
+    "RE15_FRAMEDUMP=692-693/1:f_" "RE15_EXIT_AT=760#1140")
 file(STRINGS "${_dir}/debug.log" _dl)
 set(_nach 0)
 set(_menue 0)
@@ -533,6 +533,36 @@ math(EXPR _s_soll "${_A} + 24")
 math(EXPR _x_soll "${_G_L} + 36")
 if(NOT _G_S EQUAL _s_soll OR NOT _G_X EQUAL _x_soll OR NOT _G_RES_N EQUAL 1)
     r34_fehler("${_lauf}" "S ${_G_S} (Soll ${_s_soll}), X ${_G_X} (Soll ${_x_soll}), ${_G_RES_N} Resolver-Aufrufe")
+endif()
+# (W8) Helligkeit des HE-Feuerballs im Explosionsbild: Kind 0x03195000 (Routine 10: Flags 0x13 = ABE,
+# TPAGE-ABR 0 = 0.5*B + 0.5*F), Palette 483 Index 1 = (248,248,248) (DATA/TEX.TIM). Das Original moduliert
+# mit der Primitivfarbe 0x80 = x 1.0 (FUN_800537e4 @0x800537ec/@0x800538fc-908; FUN_800534c4 schreibt nur
+# das Code-Byte @0x8005369c) -> wirksamer Beitrag 2*out - B bis ~248; mit Farbe 128 als SDL-Faktor ~124.
+# Bildausschnitt: der Feuerball liegt in diesem Lauf (Tuer-Sprungpunkt, Kamera 0, Fenster x1) bei
+# x 95..155 / y 85..140, links neben Leon (dessen Licht-Latch-Farbe bleibt ausserhalb).
+if(RE15_PPM_TOOL AND EXISTS "${RE15_PPM_TOOL}")
+    math(EXPR _xm1 "${_G_X} - 1")
+    # Framedump-Namen wie main.c: "<praefix>%06ld.ppm"
+    foreach(_v _xm1 _G_X)
+        set(_z "000000${${_v}}")
+        string(LENGTH "${_z}" _zl)
+        math(EXPR _za "${_zl} - 6")
+        string(SUBSTRING "${_z}" ${_za} 6 _pad${_v})
+    endforeach()
+    set(_pa "${_dir}/f_${_pad_xm1}.ppm")
+    set(_pb "${_dir}/f_${_pad_G_X}.ppm")
+    if(NOT EXISTS "${_pa}" OR NOT EXISTS "${_pb}")
+        r34_fehler("${_lauf}" "Framedumps ${_pa} / ${_pb} fehlen (RE15_FRAMEDUMP 692-693, X ${_G_X})")
+    endif()
+    execute_process(COMMAND "${RE15_PPM_TOOL}" "${_pa}" "${_pb}" 95 85 155 140 0
+                    OUTPUT_VARIABLE _hell RESULT_VARIABLE _hrv OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT _hrv EQUAL 0 OR NOT _hell MATCHES "^max=(-?[0-9]+),(-?[0-9]+),(-?[0-9]+) n=([0-9]+)$")
+        r34_fehler("${_lauf}" "Helligkeitsmessung unbrauchbar (${_hrv}: '${_hell}')")
+    endif()
+    if(CMAKE_MATCH_1 LESS 240 OR CMAKE_MATCH_2 LESS 240 OR CMAKE_MATCH_3 LESS 240 OR CMAKE_MATCH_4 LESS 200)
+        r34_fehler("${_lauf}" "Feuerball im Explosionsbild zu dunkel: Beitrag ${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3} (Soll ~248 = Texel x 0x80/0x80), ${CMAKE_MATCH_4} Pixel — Primitivfarbe 128 als SDL-Faktor? (W8)")
+    endif()
+    message(STATUS "${_tag} [${_lauf}]: Feuerball-Beitrag ${_hell} (Soll ~248, W8)")
 endif()
 message(STATUS "${_tag} [${_lauf}]: ok — Item-Debug: Menge 255, W09 ausgeruestet, kein Debug-Menue; A ${_A}, S ${_G_S}, L ${_G_L}, X ${_G_X}")
 endif()

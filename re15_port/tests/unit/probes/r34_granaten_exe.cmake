@@ -7,10 +7,14 @@
 #                              bis RE15_EXIT_AT; dazu der Item-Debug-Weg des Statusschirms (SELECT, 9x R1)
 #                              und ein Abzugs-Lauf mit Zombie in <= 1000. Skript und Belege:
 #                              tests/integration/test_r34_granaten.cmake.
+# MESS-WERKZEUG (kein add_test): wirksamer Effekt-Beitrag aus zwei Framedumps (Integration W8).
+add_executable(probe_r34_ppm_beitrag ${CMAKE_CURRENT_LIST_DIR}/../probe_r34_ppm_beitrag.c)
+
 if(TARGET re15_pc)
     add_test(NAME integration_r34_granaten
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PPM_TOOL=$<TARGET_FILE:probe_r34_ppm_beitrag>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r34_granaten_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r34_granaten.cmake)
     set_tests_properties(integration_r34_granaten PROPERTIES TIMEOUT 1200)
