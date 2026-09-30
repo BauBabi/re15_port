@@ -51,12 +51,16 @@ Werkzeuge: `re15_port/tools/scd_dump_room.py`, `rdt_msgdump.py`, `.claude/skills
   Saetze in EINEM Kasten, und waehrend dieser EINEN Nachricht laufen ZWEI Gesten nacheinander (sub03 @0x02640 Message_on 5,
   @0x02648/@0x02650 Clip 18 vor/rueck, @0x0265C/@0x02664 Clip 19 vor/rueck). Weitere Einkasten-Vorbilder: ROOM6030 msg 0
   "Leon: Hang on, Marvin. / We're getting out of here." (Clip 0 vor/rueck, 2, 7 in einer Nachricht), ROOM1150 msg 4. Der
-  Nutzer schrieb die Leon-Zeile als EINE Zeile; zwei Zeilen passen in einen Kasten (218 px + ~130 px, je <= 271 px).
+  Nutzer schrieb die Leon-Zeile als EINE Zeile; zwei Zeilen passen in einen Kasten ("Leon: Another civilian survivor."
+  218 px + "I have to help her!" 125 px, je <= 271 px; gemessen mit `texte_bauen.py breite()` = font_width.h).
   Zwei Nachrichten sind trotzdem vertretbar (Sprach-Takt ueber `voice_wait`), aber dann als Port-Wahl mit diesem Gegenbeleg.
   Folge zum Messen: Dialogzeilen erscheinen per `04 00` sofort ganz (msg_common.c:505-524), msg 23 steht ohne Sprachdatei
   nur **51 Bilder** (Sleep 25+26), die Originale geben einer Leon-Zeile ~100 Bilder (sub02 @0x0248A..@0x024B6 = 101).
 * **L3 Rueckschritt** — traegt (Modus 8, dieselbe Weglaenge wie ROOM1090 @0x0247C; echte exe 1090 Bild 301..311 im Beleg
-  `r1090_sub02_rueckschritt_echt.png` angesehen).
+  `r1090_sub02_rueckschritt_echt.png` angesehen). Randnotiz: der Blickpunkt ist (x+755, z), nicht die Tuermitte
+  (17200,-13700). Wer schraeg von Suedwesten drueckt (begehbar bis z -15300, x <= 16482), dreht sich zur Wand ~400 suedlich
+  der Tuerkante und tritt von DER zurueck. Hinnehmbar (Ostwand = Tuerwand, kein z-Versatz, keine Kamerazone), aber im
+  Framedump einer solchen Druckstelle ansehen (Auflage 7).
 * **L4/L5 Gesten — Lesart traegt, Katalog war unvollstaendig.** Semantik der Original-Verwendung (Zensus-Texte): Clip 19 (fast
   immer vor+rueck) begleitet erklaerende Saetze ("We can talk later... It's not safe here.", "Ada, what is this place...?",
   "What should we do?"), Clip 17 (nie rueckwaerts) die nachdrucklichen ("Now what am I gonna do?", "Hurry up! They're
@@ -69,7 +73,9 @@ Werkzeuge: `re15_port/tools/scd_dump_room.py`, `rdt_msgdump.py`, `.claude/skills
   ROOM1150 Clip 10/11/12 = KNIEND. Keiner ist eine stehende Arm-Geste "180 Grad nach rechts" — die Wahl 19/17 bleibt die beste.
   Nebenbefund: `plc_motion_zensus.py` nimmt in ROOM6030 den ersten Record mit Bit 0 (rec0, 1 Clip) statt rec2 (Marker 3) ->
   25 Aufrufe ohne Hash; Clip-Laengen von rec2 (20/30/30/20/30/25/35/24) = Bibliothek, aendert nichts.
-* **Sichtbarkeit in Cut 4** — Cut 4 sieht Leon schraeg von hinten links (Kamera (14999,-3549,-8140) -> (15618,-2173,-12830));
+* **Sichtbarkeit in Cut 4** — Cut 4 sieht Leon schraeg von hinten links (Kamera-Satz RDT @0xE0 selbst gelesen:
+  (14999,-3549,-8140) -> (15618,-2173,-12830); Cut 5 @0x100 steht suedoestlich bei (20036,-3915,-22179) und saehe Leons
+  rechte = Waffenseite, stuetzt L9);
   in `geste19_17_kamera4.png` Zeile "kamera" ist Clip 19 stark verkuerzt, Clip 17 gut sichtbar. Die Nutzerforderung haengt an
   erkennbaren Gesten — das muss am echten Framedump abgenommen werden (Auflage 7), nicht am Synthetikbild.
 * **L8 Elza** — ROOM1091 sub00 @0x0222E / sub01 @0x02230 = `01 00`, main00 ohne Ada/Feuer (nur Zombies Typ 0x10/0x11) ✓.
@@ -95,8 +101,11 @@ Werkzeuge: `re15_port/tools/scd_dump_room.py`, `rdt_msgdump.py`, `.claude/skills
   wuerde falsch rot.
 * **Doppel-Ausloesung:** waehrend der Szene blockt `in_cinematic` (aot_common.c:1061/:1153, `player_mode == 2 ||
   letterbox_countdown`) alle Nicht-Kamera-AOTs, bis die Balken weg sind; dann ist Slot 4 schon Text-Platz (Aot_reset +0x82).
-  Die Weiche selbst prueft (9,65) aber nicht — eine zweite Flanke im Druckbild (vor dem ersten VM-Takt) startet einen zweiten
-  Faden auf DENSELBEN `s_prog`. Billige Absicherung: Weiche nur bei (9,65)=0 (Auflage 5).
+  Reihenfolge der echten exe (main.c: `scd_vm_tick` :5378 -> Szenen-Block :5433-5465 setzt `player_mode = 2`, solange
+  (1,27)||(2,7) -> `re15_game_step` :7358): schon im Bild nach dem Druck ist der Scan gesperrt, ein Doppeldruck ueber den
+  Spieler ist also praktisch ausgeschlossen. Die Weiche selbst prueft (9,65) aber nicht — jeder andere Aufrufer von
+  `scd_event_fire(13)` (z.B. `RE15_FORCE_EVENT=13`, main.c:7564) startet einen zweiten Faden auf DENSELBEN `s_prog` und
+  ueberschreibt dessen Ziele. Billige Absicherung: Weiche nur bei (9,65)=0 (Auflage 5).
 * **Laden/Speichern:** `g_game.flags` wird komplett gespeichert (re15_savedata.c:210 `memcpy(out->flags …)`, :274 zurueck) —
   (9,65) und (3,187) ueberleben. Im Abnahmeplan fehlt der Kartenlauf (Auflage 8).
 * **Alt-Spielstaende:** wer (heutiger Port) schon ohne Rettung hinter 10A0 ist, kommt ueber 10A0 S0 nach 1050 zurueck; der
@@ -137,7 +146,10 @@ A+D-Lauf (Sicherung -> Tor -> Szene) nach der Zusammenfuehrung.
 Kein besseres. ROOM1090 sub01/sub02 (der Ruf der "Woman") ist das richtige Vorbild und wird benutzt. Ergaenzend zitierbar
 (stuetzt die Folgetext-Form): RE1.5 hat im selben Handlungsstrang schon einen Hinweistext, solange die Bedingung fehlt —
 ROOM1090 sub00 @0x0230A `Ck(3,133)==0` -> @0x0230E Text-Platz msg 7 "I must hurry up and get something to / put out this fire
-to save that woman!". RE2 sperrt Story-Tueren stumm (tuer1120-Beleg ROOM2190/ROOM6010) — deckungsgleich mit msg 25 ohne Ton.
+to save that woman!" (Satz selbst gelesen: Langform 0xB1, Nutzlast `07 00 ff ff`). RE2 sperrt Story-Tueren stumm — das
+steht als Beleg in include/re15_tuer1120.h (ROOM2190 @0x00B6A, ROOM6010 @0x0068A, RE2-Text-Handler @0x80051948); von mir
+NICHT nachdisassembliert, hier nur zitiert — fuer msg 25 ohne Ton reicht ohnehin der RE1.5-Handler selbst (selbst
+disassembliert: @0x80043084..@0x800430b8, einziger Aufruf `jal 0x80027e68` @0x800430a0 = Nachricht oeffnen, kein Se_on).
 
 ## Widerlegte Behauptungen
 
@@ -169,14 +181,16 @@ to save that woman!". RE2 sperrt Story-Tueren stumm (tuer1120-Beleg ROOM2190/ROO
    Zahl als Port-Wahl begruenden.
 5. **Weiche absichern:** `re15_adaruf_ereignis` liefert nur bei `room == 0x1050 && event_id == 13 && (9,65) == 0 &&
    (3,0xBB) == 0` das Programm, sonst NULL (Rueckfall `sub_scd[13]` = NULL -> Ereignis verworfen, harmlos). Riegel-Fall:
-   zweiter Quadrat-Druck im Druckbild und waehrend der Szene -> genau EIN Faden, (9,65) einmal gesetzt.
+   Quadrat-Druecke waehrend der Szene UND ein direkter zweiter `scd_event_fire(13)` nach dem ersten VM-Takt -> genau EIN
+   Faden, Ziele in `s_prog` unveraendert.
 6. **Riegel mit Raster statt 7 Punkten:** die Rueckschritt-Pruefung ueber ein Raster begehbarer Druckstellen (z.B. 100 x 100,
    Gierung je 256 = 728 Stellen, 8,6 s gemessen; oder 200/512 = 120 Stellen, 2,1 s) mit Begehbarkeitsfilter (Ostgrenze
    16732/16482 bzw. Lauf-Gegenprobe); Soll: Ereignis 13 ueberall, Faden endet, Rueckschritt <= 12 Bilder, Weg 600..760,
    z-Aenderung < 100 (keine Kamerazone). Die Stellen in der Wand NICHT einbeziehen (Artefakt aus (c)).
 7. **Gesten am echten Bild abnehmen:** Framedumps (RE15_WINDOW_SCALE=3) von Clip 19 hin/zurueck und Clip 17 in Cut 4 ansehen
    und ins Dossier; ist Clip 19 aus dieser Kamera nicht als "Arm dreht auf und geht nach rechts" erkennbar, im Dossier
-   ausdruecklich festhalten und die Kamerawahl L9 neu begruenden (die Nutzerforderung sind SICHTBARE Gesten).
+   ausdruecklich festhalten und die Kamerawahl L9 neu begruenden (die Nutzerforderung sind SICHTBARE Gesten). Zusaetzlich
+   einen Lauf von einer schraegen Druckstelle im Suedwesten (z.B. (16300,-15100), Gierung 3584) ansehen: Drehung + Schritt.
 8. **Abnahmeplan ergaenzen:** (a) Kartenlauf: Szene sehen -> in 1120/1150 speichern -> CONTINUE -> 1050 -> Druck = msg 25,
    keine Szene; Speichern nach der Rettung -> CONTINUE -> Tuer + Tuersequenz P07G. (b) "auch nach Raumwechsel" als echter
    Wechsel (1050 -> 1000 -> 1050) statt `RE15_SET_FLAG=9:65`. (c) Quadrat waehrend der Szene (`RE15_PRESS` mehrfach) ->
