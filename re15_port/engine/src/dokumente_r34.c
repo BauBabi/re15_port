@@ -32,14 +32,18 @@ static const dokument_t k_dokumente[] = {
       RE15_DOK1_RECT_X, RE15_DOK1_RECT_Z, RE15_DOK1_RECT_W, RE15_DOK1_RECT_D,
       re15_dokument1_md1, (int)sizeof re15_dokument1_md1,
       re15_dokument1_tim, (int)sizeof re15_dokument1_tim },
+    { 0x1000, 2, RE15_DOK2_ITEM, RE15_DOK2_BIT, RE15_DOK2_SLOT, RE15_DOK2_OBJ,
+      RE15_DOK2_X, RE15_DOK2_Y, RE15_DOK2_Z, RE15_DOK2_ROT_Y,
+      RE15_DOK2_RECT_X, RE15_DOK2_RECT_Z, RE15_DOK2_RECT_W, RE15_DOK2_RECT_D,
+      re15_dokument2_md1, (int)sizeof re15_dokument2_md1,
+      re15_dokument2_tim, (int)sizeof re15_dokument2_tim },
 };
 #define DOK_ANZAHL ((int)(sizeof k_dokumente / sizeof k_dokumente[0]))
 
 /* Die Engine-Bytes der uebrigen Modelle stehen schon in gen/dokumente_props.inc; bis ihr
  * Dokument eingetragen ist, werden sie nur referenziert (kein unused-Warnruf). */
 static const void *const k_vorrat[] = {
-    re15_dokument2_md1, re15_dokument2_tim, re15_dokument3_md1, re15_dokument3_tim,
-    re15_dokument4_md1, re15_dokument4_tim,
+    re15_dokument3_md1, re15_dokument3_tim, re15_dokument4_md1, re15_dokument4_tim,
 };
 
 static const dokument_t *dokument_des_raums(uint16_t room_id)

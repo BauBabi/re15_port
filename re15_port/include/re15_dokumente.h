@@ -82,6 +82,42 @@
 #define RE15_DOK1_RECT_W             1000
 #define RE15_DOK1_RECT_D             1000
 
+/* ---- DOKUMENT 2: "Elliot's Diary" — ROOM1000/1001, auf der Bank (elliot.bmp) ------------ */
+
+/*   Item 0x4A       VERTRAG 1.4 (Dokument-Nr 2)
+ *   Bit 58          VERTRAG 1.1
+ *   Slot 10         erster Slot, der in BEIDEN Varianten frei ist: ROOM1000/1001 belegen 0..9
+ *                   (scd_dump_room.py, alle Bloecke; slot_zensus.py) — VERTRAG 1.2 "frei nach Zensus"
+ *   obj 2           nOmodel = 2 in 1000 UND 1001 (RDT-Byte 2), kein Obj_model_set obj >= 2;
+ *                   TIM-Slot RE15_TIM_SLOT_PROP(2) = 6 */
+#define RE15_DOK2_ITEM               0x4A
+#define RE15_DOK2_BIT                58
+#define RE15_DOK2_SLOT               10
+#define RE15_DOK2_OBJ                2
+/* LAGE — PORT-WAHL aus Messung, keine Original-Adresse:
+ *   x,z  Rueckprojektion der Markenmitte des Nutzerbilds elliot.bmp (Cut 0, Marke x 182..203
+ *        y 162..182, Mitte (193,0 ; 172,5), marken.py) mit der ECHTEN Inversen der Engine-Matrix
+ *        auf die Sitzflaeche y -385 -> (19226,4 ; -11723,4); vorwaerts (192,98 ; 172,49) (Sonde
+ *        `projekt`, Dossier 9.0).
+ *   y    Sitzflaeche -385 = Median von fuenf Messungen (Kantenlage Cut 0 -385 / Cut 2 -400 /
+ *        Cut 0 Ostkante -325, Deckflaeche Cut 0 -345 / Cut 2 -385; Dossier 3.5) minus 13 = halbe
+ *        Buchdicke (mesh03 bbox y -13..13, RE2 ROOM10E0.RDT @0x002320) -> Buchmitte -398.
+ *   rot  0 = Grundstellung (PORT-WAHL, keine Original-Adresse: lange Buchachse z = lange Achse
+ *        der Bank, SCA-Zelle 7 z 9700 lang; Dossier 8.1). */
+#define RE15_DOK2_X                  19226
+#define RE15_DOK2_Y                  (-398)
+#define RE15_DOK2_Z                  (-11723)
+#define RE15_DOK2_ROT_Y              0
+/* AUFHEBE-RECHTECK — PORT-WAHL, keine Original-Adresse (auf der Bank liegt im Original nichts):
+ * 1000 x 1000 = haeufigste Groesse der Original-Item_aot_set (69 von 162, groessen_zensus.py),
+ * mittig auf dem Ursprung — wie ROOM1000s eigene Items (@0x00C66 obj 0 (-4400,-325) <-> Rechteck
+ * x[-4850..-3850] z[-800..200]). Gemessen: 134 Standorte / 1000 Treffer, 0 abgefangen (Sonde
+ * `abdeckung`); Druck von (18250,-11723) Blick +x -> Leser. */
+#define RE15_DOK2_RECT_X             18726
+#define RE15_DOK2_RECT_Z             (-12223)
+#define RE15_DOK2_RECT_W             1000
+#define RE15_DOK2_RECT_D             1000
+
 /* Legt die Dokumente beim Raumstart an — je Raum nur, wenn das Zone-9-Bit nicht gesetzt ist.
  * Gerufen an BEIDEN Raumstart-Wegen des Ports (Tuer: scd_room_setup.c scd_room_reenter,
  * Boot/CONTINUE: platform/pc/main.c), jeweils NACH dem Init-Lauf von main00. Im Original gibt

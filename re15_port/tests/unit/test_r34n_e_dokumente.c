@@ -134,6 +134,9 @@ static const soll_t k_soll[] = {
     { 1, 0x1050, 0x49, 57, 15, 2, 26, 3, 144, 16474, -360, -6592, 0,
       15250, -7250, 1000, 1000, "Police Officer's Final Diary Entry",
       14900, -6750, 0, 3, 372, 34848, 3 },
+    { 2, 0x1000, 0x4A, 58, 10, 2, 27, 4, 144, 19226, -398, -11723, 0,
+      18726, -12223, 1000, 1000, "Elliot's Diary",
+      18250, -11723, 0, 0, 372, 17440, 3 },
 };
 #define N_SOLL ((int)(sizeof k_soll / sizeof k_soll[0]))
 
@@ -408,10 +411,11 @@ static void teil_dok1_elza(raum_t *r1051)
 
 int main(void)
 {
-    static raum_t r1050, r1051, r1040;
-    if (raum_laden(&r1050, 0x1050) || raum_laden(&r1051, 0x1051) || raum_laden(&r1040, 0x1040))
+    static raum_t r1050, r1051, r1040, r1000, r1001;
+    if (raum_laden(&r1050, 0x1050) || raum_laden(&r1051, 0x1051) || raum_laden(&r1040, 0x1040) ||
+        raum_laden(&r1000, 0x1000) || raum_laden(&r1001, 0x1001))
         return 1;
-    raum_t *raeume[1][2] = { { &r1050, &r1051 } };
+    raum_t *raeume[2][2] = { { &r1050, &r1051 }, { &r1000, &r1001 } };
     for (int i = 0; i < N_SOLL; i++) {
         const soll_t *s = &k_soll[i];
         teil_t(s);
