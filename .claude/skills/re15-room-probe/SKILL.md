@@ -10,7 +10,7 @@ Für byte-true RE gibt es zwei dynamische Wege: das echte Spiel (`re15-room-capt
 ## ⚠️ Gotchas (hart erkämpft 2026-06-29)
 
 - **Die PC-Exe ignoriert `argv`** (`platform/pc/main.c`: `(void)argc; (void)argv;`). `re15_pc.exe --headless` tut NICHTS — Steuerung läuft über env-Vars, und es gibt keinen sauberen „lade Raum + dump State"-CLI-Pfad. Einen Raum betritt man nur noch per Tür oder Debug-Menü (`RE15_DEBUG_JUMP=<hexraum>@<frame>`); den alten Direktstart `RE15_START_ROOM` gibt es seit 2026-08-01 nicht mehr. → Nicht mit der Exe kämpfen; einen **ctest-Probe** schreiben (unten).
-- **`re15_pc.exe` sperrt die eigene Datei**, solange sie läuft (auch ein hängender Hintergrund-Lauf). Ein folgender Build scheitert dann mit `cannot open output file platform\pc\re15_pc.exe: Permission denied` (KEIN Code-Fehler!). → **Vor jedem Build, der nach einem Exe-Lauf kommt: `taskkill //F //IM re15_pc.exe 2>/dev/null; true`.**
+- **`re15_pc.exe` sperrt die eigene Datei**, solange sie läuft (auch ein hängender Hintergrund-Lauf). Ein folgender Build scheitert dann mit `cannot open output file platform\pc\re15_pc.exe: Permission denied` (KEIN Code-Fehler!). → **Immer über `tools/local_build.sh` bauen: es beendet seit Runde 34 NUR die exe des eigenen Bauverzeichnisses. ⛔ NIE `taskkill /IM re15_pc.exe` — das trifft die exe des Nutzers und die exe-Tests paralleler Bäume (Runde 34: 55 solcher Kills in einer Stunde).**
 - `tools/` ist standardmäßig AUS (`RE15_BUILD_TOOLS=OFF`, alte API) — KEIN neues Tool dort ablegen, es verrottet. Die **Test-Infra** (`tests/unit/`, GLOB-gebaut, ctest) ist der robuste Ort für Probes.
 - **Test-State-Kontamination zwischen Probe-Teilen** (Phase 8.9): wenn ein Probe-ctest mehrere Szenarien NACHEINANDER auf demselben `g_actors[]` fährt, schleppt jeder Teil den State des vorigen mit. Konkret biss diese Gotcha: Part-5 ließ einen Zombie mitten im Grab (+0x5=3) zurück → Part-6 (das den −15-HP-Grab eines ANDEREN Zombies prüfte) bekam doppelten Damage, weil der Part-5-Zombie weiter-grabte. → Pro Szenario **den Test-Gegner ISOLIEREN**: alle anderen Gegner weit weg parken + benign setzen, z.B. `for (i) { z=&g_actors[zslots[i]]; z->grid_id=0x86; z->sub_state_1=0; z->sub_state_2=0; z->ai_flags=0; z->x=z->z=30000; }` (feeding-Sub-Mode + dist≫4000 → kein Wake/Grab), und Player-HP/Pos frisch setzen. Sonst misst du Cross-Talk, nicht den getesteten Pfad.
 
@@ -60,7 +60,7 @@ Wichtig (Stand 8.9): `combat_active` (= `DAT_800aca3c & 1`) ist **dormant** — 
 ## Build/Run
 
 ```bash
-taskkill //F //IM re15_pc.exe 2>/dev/null; true        # falls die Exe noch läuft (Lock!)
+# Lock durch eine laufende exe: local_build.sh beendet NUR die exe DIESES Bauverzeichnisses (nie taskkill /IM)
 export PATH="/c/msys64/mingw64/bin:$PATH"
 cmake --build re15_port/build                          # Ninja erfasst neue Test-Dateien via GLOB + re-config
 ./re15_port/build/tests/unit/test_<name>.exe           # direkt, sieht die printf-Diagnose
