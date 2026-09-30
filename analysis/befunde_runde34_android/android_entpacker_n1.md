@@ -189,7 +189,7 @@ nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht
    | gueltig | BEHALTEN | fehlt / andere Groesse | entpacken |
    | gueltig | Groesse oder Summe anders (GEAENDERT) | egal | entpacken (Befund N1a) |
    | gueltig | nicht in der alten Liste (NEU) | egal | entpacken |
-   | gueltig | nur in der alten Liste | - | Datei loeschen (Regeln wie jede Zeile: nie ausserhalb) |
+   | gueltig | nur in der alten Liste | - | Datei loeschen, VOR dem Entpacken (Regeln wie jede Zeile: nie ausserhalb; Reihenfolge siehe 2.5) |
    | keine/unlesbar (PRUEFEN) | - | gleiche Groesse | sha256 der Datei gegen die Liste; anders -> entpacken |
    | keine/unlesbar (PRUEFEN) | - | fehlt / andere Groesse | entpacken |
 
@@ -203,6 +203,18 @@ nie entpackt wird - das Spiel liefe still mit einem Loch im Asset-Baum; so steht
    -> neu: <pfad>`, `entfernt ...`), bei der Erstinstallation nur die Summe. Abschlusszeile
    `[android] Entpacken fertig (<modus>): ... kopiert (B, ms), ... per SHA-256 geprueft (B, ms, abweichend),
    ... entfernt, ... .neu-Reste, ... Fehler, <ms>` bzw. `[android] Assets aktuell (schneller Weg): ...`.
+
+### 2.5 Eigenpruefung: Loeschen erst NACH dem Entpacken war falsch (behoben)
+
+Beim Durchsehen des Glue nach den ersten Emulator-Laeufen gefunden: die erste Fassung loeschte die Pfade "nur in
+der alten Liste" NACH der Entpack-Schleife. Der App-Speicher ist case-insensitiv (gemessen, 1.3). Aendert eine
+Version einen Pfad nur in der Gross/Kleinschreibung (alt `a/X.BIN`, neu `a/x.bin`), so schreibt die Schleife
+zuerst `a/x.bin` (ueber den Eintrag `a/X.BIN`), und das anschliessende `unlink("a/X.BIN")` trifft genau diese
+frische Datei - sie fehlt bis zum naechsten Start (dann holt der Groessen-Nachlauf sie zurueck). Die Liste v2
+verbietet solche Paare nur INNERHALB einer Liste, nicht zwischen alter und neuer. Behoben: erst loeschen, dann
+entpacken - auf einem case-insensitiven Speicher faellt die alte Schreibweise weg und die neue wird frisch
+geschrieben, auf einem case-sensitiven (interner Speicher) ebenso ohne Rest. Die APKs N0/N1 der Laeufe 3.1-3.6
+stammen von VOR diesem Fix; Nachlauf mit dem Endstand in 3.8.
 
 ### 2.4 Pruefung des C-Teils (PC)
 

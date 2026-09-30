@@ -38,7 +38,8 @@
  *   - Start: Liste bytegleich der zuletzt entpackten -> schneller Weg (nur stat(): Groesse je
  *     Datei). Sonst je Datei (re15_abgleich_planen/_tun): in der alten Liste mit gleicher Groesse
  *     und Summe -> behalten, wenn die Groesse stimmt; geaendert/neu -> entpacken; Pfade nur in
- *     der alten Liste -> loeschen. Ohne gueltige alte Liste (Erstinstallation, v0.8.19-Geraet mit
+ *     der alten Liste -> loeschen, und zwar VOR dem Entpacken (der App-Speicher ist case-insensitiv:
+ *     "a/X.BIN" alt, "a/x.bin" neu waere sonst nach dem Entpacken wieder geloescht). Ohne gueltige alte Liste (Erstinstallation, v0.8.19-Geraet mit
  *     nur dem alten Marker, abgebrochener Lauf) -> jede gleich grosse Datei per SHA-256 pruefen,
  *     sonst entpacken (Aufwand gemessen: Dossier Abschnitt 3).
  * ============================================================================================= */
@@ -430,6 +431,19 @@ void re15_android_bootstrap_assets(void)
     char l2[160];
     if (!buf) n_fehler++;
 
+    /* Pfade, die nur in der alten Liste stehen, ZUERST loeschen (Regeln wie jede Listenzeile: nie ausserhalb
+     * s_root). Erst danach entpacken: der App-Speicher ist case-insensitiv (Dossier N1, 1.3) - stuende "a/X.BIN"
+     * nur in der alten und "a/x.bin" in der neuen Liste, loeschte ein unlink NACH dem Entpacken die frische
+     * Datei (Dossier N1, 2.5). */
+    for (size_t j = 0; j < plan.n_weg; j++) {
+        if (pfad_bauen(dst, sizeof dst, plan.weg[j], NULL) != 0) continue;
+        if (unlink(dst) == 0) {
+            n_weg++;
+            fprintf(stderr, "[android] entfernt (nicht mehr in der Liste): %s\n", plan.weg[j]);
+            LOGI("[android] entfernt (nicht mehr in der Liste): %s", plan.weg[j]);
+        }
+    }
+
     for (size_t i = 0; buf && i < neu.n; i++) {
         const re15_abgleich_eintrag_t *e = &neu.e[i];
         if (pfad_bauen(dst, sizeof dst, e->pfad, NULL) != 0 ||
@@ -479,16 +493,6 @@ void re15_android_bootstrap_assets(void)
         }
     }
     free(buf);
-
-    /* Pfade, die nur in der alten Liste stehen (Regeln wie jede Listenzeile: nie ausserhalb s_root) */
-    for (size_t j = 0; j < plan.n_weg; j++) {
-        if (pfad_bauen(dst, sizeof dst, plan.weg[j], NULL) != 0) continue;
-        if (unlink(dst) == 0) {
-            n_weg++;
-            fprintf(stderr, "[android] entfernt (nicht mehr in der Liste): %s\n", plan.weg[j]);
-            LOGI("[android] entfernt (nicht mehr in der Liste): %s", plan.weg[j]);
-        }
-    }
 
     if (n_fehler == 0) {
         sync();                                           /* erst alle Dateien haltbar, dann die Liste */
