@@ -755,7 +755,30 @@ Slot 4 (16700,−14700,1000,2000) — beide schneiden das Dok-1-Rechteck x[15250
 z[−7250..−6250] nicht; der Rolltor-Schalter Slot 7 x[16800..17600] z[−8950..−8150] ebenfalls nicht.
 
 ### 9.1 Dok 1 — Police Officer's Final Diary Entry (ROOM1050, Item 0x49, FILE26)
-(offen)
+
+Commit `16f19248` (wip). Gebaut wie geplant (5.1–5.3), Werte unveraendert aus 5.2:
+Prop obj 2 (16474, −360, −6592) rot 0, Zone Slot 15 = Rechteck des Leichen-Satzes ROOM1051 @0x00C0E,
+Item 0x49, Bit 57, Bildsatz 26 (max_page 3, H 144).
+
+* **Unit-Riegel** `unit_r34n_e_dokumente` (Teile T/P/Z/G/D/S/V/B + „1"): 31 von 31 PASS — u. a. echter
+  Druck von (14900,−6750) Blick +x → Leser nach 28 Bildern, Bildsatz 26 mit 4 Seiten, Meldung Id 0x49,
+  Bestaetigen → Bit (9,57), Zone 15 aus, obj 2 aus, FILE-Platz 0 = 1; Gegenprobe Blick −x → nichts;
+  ROOM1051: ohne Bit (9,165) feuert der Leichen-Satz (event 3 = sub03), mit Bit legt sub01 @0x00CB2
+  Slot 11 still (sat 0) und derselbe Druck liefert das Tagebuch; CLUT-Zeile der 6 Flaechen = 2 von 4.
+* **Echte exe** (`tools/r34n_e/bau_lauf.sh`, CONTINUE → `RE15_DEBUG_JUMP 1050@gp`, Stand (14900,−6750,0),
+  `RE15_FORCE_CUT=3` nur fuer die Kamera, Quadrat per `RE15_PAD_AT`, Framedumps angesehen):
+  Buch liegt auf dem Schoss der gemalten Leiche (Cut 3 Mitte (136,0;142,2) = Riegel V), Aufnahme per
+  Quadrat F200 → Leser: Titel „POLICE OFFICER'S / FINAL DIARY ENTRY" zweizeilig ueber der FILE00-
+  Illustration 1/4, Seiten 2/4..4/4 („good care of yourself and / Mom..."), Ende-Stellung EXIT;
+  Kreuz → Meldung „The Police Officer's Final Diary Entry has been filed." (Name gruen, Schreib-
+  maschine); Quadrat → Welt: Schoss leer, die gemalte Hand wieder sichtbar.
+  Belege: `E_belege/bau_d1_1050_cut3.png`, `bau_d1_aufnahme_bogen.png` (19 Bilder F240..F960),
+  `bau_d1_schoss_vorher_nachher.png`.
+* **Befund Regions-Test (nicht im Plan):** Props werden je Cut gegen den ANKER des Cuts verworfen
+  (`re15_prop_culled`, FUN_8002c18c → FUN_80014368). ROOM1050: Anker Cut 3 = RVD-Zone 8 (enthaelt das
+  Buch), Anker Cut 9 = Zone 21 x 19600..22100 (Blindrechteck, A_rolltor.md) und Cut 5 = Zone 14 —
+  dort wird das Buch NICHT gezeichnet. Plan 6.2 erwartete es in Cut 9; das Original verwirft jedes
+  Objekt ausserhalb des Ankers genauso (Cut 9 zeigt nur ROOM1051 sub03 per `Cut_chg 9`).
 
 ### 9.2 Dok 2 — Elliot's Diary (ROOM1000, Item 0x4A, FILE27)
 (offen)
