@@ -17,13 +17,16 @@ Stand: alle Abschnitte gefuellt (Ermittlung + Bauplan), 2026-09-30.
 * **Bauplan 1 (freie Bewegung, Endsperre):** `sperrt()` = "Raetsel aktiv, nicht geloest, Maske ==
   0x155" (live). Keine Aenderung an game_step_common.c/scd_vm.c.
 * **Spalten (aus den Bytes):** Schalter 1..5 = linke Spalte (Loesung 1,3,5 = "die 3"), 6..10 = rechte
-  (7,9 = "die 2"). Lampe oben = `(m & 0x01F) == 0x015`, unten = `(m & 0x3E0) == 0x140`, je Bild, plus
-  "dauerhaft an nach 4:238" (RE2 sub03 @0x00F3C).
-* **Kunst gefunden:** RE1.5 hat keine (15 BG-Cuts, Props, ESP geprueft). RE2 ROOM2130 = dasselbe Panel:
-  ESP 0x16 (`esp16.tim` = RDT @0x0E398), Zelle 3/4 = quadratische Gitterlampe, **CLUT-Zeile 2 = gruen**
-  (RE2 benutzt sie @0x017A8/@0x017B8 fuer "Strom da"), additiv (0xBA03 -> Prim 0x2E, TPAGE|0x20),
-  Wechsel 3/4 je Bild. Groesse in RE2 nachgerechnet (25,8 px), auf RE1.5 22 px uebertragen.
-  Vorschau am Original-Hintergrund: `C_belege/vorschau_k22_z3.png`.
+  (7,9 = "die 2"). Lampe oben = `(m & 0x01F) == 0x015`, unten = `(m & 0x3E0) == 0x140`, je Bild.
+  (Die fruehere Zusatzregel "dauerhaft an nach 4:238" mit Vorbild RE2 sub03 @0x00F3C ist nach der
+  Gegenpruefung GESTRICHEN — RE2s Gruen wird @0x01814/@0x01816 geloescht; §4.4, §9.1.)
+* **Kunst = PORT-WAHL (Kombination)** (berichtigt nach Gegenpruefung, Auflage 1): Form = RE2-Schalterlampe
+  ESP 0x16 Strom 2 / Satz 4 / Zellen 3,4 (ROOM2130 @0x01294, dort ROT); Palette = CLUT-Zeile 2 (gruen) aus
+  dem Strom-0-Ereignis @0x017A8/@0x017B8 (dort die Rechteck-Lampe Zellen 0..2). RE2 zeigt die gruene
+  Quadrat-Lampe nirgends (Zensus 250 RDTs, `C_belege/gp_re2_esp16_zensus.txt`). Additiv (0xBA03 -> Prim
+  0x2E, TPAGE|0x20), Wechsel 3/4 je Bild. Groesse in RE2 nachgerechnet (25,8 px), auf RE1.5 22 px
+  uebertragen. Der RE1.5-Kandidat ESP 0x01 gruen (ROOM5060) ist geprueft und nicht genommen (§3.5, §9.7).
+  Vorschau am Original-Hintergrund: `C_belege/vorschau_k22_z3.png`, Vergleich `C_belege/esp01_vergleich.png`.
 * **Neu:** `platform/pc/src/panel_lampen_pc.c`, `shared_assets/RE2/LAMPE2130.TIM`, 1 Haken in main.c,
   Riegel `unit_r34n_c_generator`; `unit_r31_generator` Teil D umschreiben. Vertragsressourcen
   (Bits 69/70, AOT 40/41, Msg 28/29) nicht gebraucht.
@@ -62,7 +65,7 @@ y 42..70 (endet am oberen Lampenrahmen), Pfeil unten: x 196..219 / y 141..172 (e
 | "links die 3 Schalter" / "die 2 Schalter rechts" | linke Spalte = Schalter 1..5 (davon 1,3,5 EIN), rechte Spalte = Schalter 6..10 (davon 7,9 EIN) | Aus den Bytes belegt (Abschnitt 3.4): obj 0x02..0x06 liegen auf Welt-x -25975 (Bild x 64..84), obj 0x07..0x0B auf -18775 (Bild x 155..169); die Loesung @0x012BE..0x012E2 verlangt links genau 3, rechts genau 2 EIN-Schalter. Die Zaehlung des Nutzers (3/2) bestaetigt die Spaltenzuordnung. |
 | "wenn links die 3 Schalter korrekt betaetigt sind" | obere Lampe AN genau dann, wenn ALLE FUENF Schalter der linken Spalte in Loesungsstellung sind (1,3,5 EIN UND 2,4 AUS) | Der Folgesatz "Sobald EINES der jeweiligen Schalter der jeweiligen Seite nicht mehr korrekt ist ... wieder aus" macht jeden Schalter der Seite zum Pruefling — ein zusaetzlich eingeschalteter Schalter 2 ist "nicht korrekt". Nur so gilt auch: beide Lampen gruen <=> Maske 0x155 <=> RE1.5-Loesung <=> Zeigerziel 80. Die laxere Lesart (nur 1,3,5 EIN) wuerde zwei gruene Lampen bei falscher Stellung zeigen. |
 | "angehen, wenn ... betaetigt sind" / "sobald ... nicht mehr korrekt" | Lampenzustand = Funktion der Schalterbits Bank 5 / 13..22 in JEDEM Bild; Wechsel im Bild, in dem das Schalterbit wechselt (Ende der 16-Bild-Kippung, sub06 @0x01340) | "sobald" verlangt einen lebenden Zustand, kein Einrasten. RE2 zuendet seine Schalterlampen zwar erst NACH der Zeigerfahrt (@0x01294 hinter ewhile @0x01290), dort bedeutet die Lampe aber "Schalter N bearbeitet" und geht nie wieder aus (nur Sammel-Kill @0x01180..0x01188 beim Start von sub04) — fuer "Seite korrekt / wieder aus" gibt es in RE2 kein Vorbild; die Zeitlinie folgt deshalb dem Schalterbit. |
-| "gruen" | gruene Palette der RE2-Lampenkunst desselben Bedienfelds (RE2 ROOM2130 ESP 0x16, CLUT-Zeile 2) | Abschnitt 3.7: RE2 schaltet mit genau dieser Palette die zwei "Strom da"-Lampen von rot auf gruen (@0x017A8/@0x017B8, Unterindex 0x10). |
+| "gruen" | gruene Palette der RE2-Lampenkunst desselben Bedienfelds (RE2 ROOM2130 ESP 0x16, CLUT-Zeile 2) — auf die QUADRAT-Form der Schalterlampe gelegt = PORT-WAHL (Kombination, Auflage 1) | Abschnitt 3.7: RE2 schaltet mit genau dieser Palette die zwei "Strom da"-Lampen von rot auf gruen (@0x017A8/@0x017B8, Unterindex 0x10) — dort aber die RECHTECK-Lampe (Zellen 0..2); die Quadrat-Zellen 3/4 zeigt RE2 nur rot/blau. |
 
 ### 1.3 Einordnung Beta -> Retail
 
@@ -170,7 +173,7 @@ die tragenden RE2-Bytes habe ich in dieser Runde selbst nachgelesen (12 Stellen,
 | sub06 @0x01332..0x0133E | `2f 05 40 00` / `0d 00 04 00 10 00` / `30` / `02` / `0e 00` | Hebel 16 Bilder je +64 um Achse 5 kippen |
 | sub06 @0x01340 | `22 05 0d 01` | ERST DANN das Schalterbit (Bank 5 Bit 13) |
 | sub06 @0x0135C | `22 05 01 01` | Zelle wieder frei |
-| sub01 @0x012A4..0x012B0 | `21 05 0c 01` / `22 02 00 01` / `22 02 02 01` | Spieler- und KI-Pause (nicht Pad!) |
+| sub01 @0x012A4 / @0x012A8..0x012B0 (berichtigt, Auflage 10) | `06 00 0e 00` (Ifel_ck) / `21 05 0c 01` @0x012A8 / `22 02 00 01` @0x012AC / `22 02 02 01` @0x012B0 | Spieler- und KI-Pause (nicht Pad!) |
 | sub01 @0x012B6..0x012EA | `06 00 36 00` / `21 04 ee 00` / 10x `21 05 0d..16 01/00` / `04 ff 18 12` / `22 04 ee 01` | Loesungskette je Bild: nicht geloest + 1,0,1,0,1,0,1,0,1,0 -> Evt_exec(sub18), Set(4,238,1) |
 | sub18 @0x016F6 / @0x016FA..0x0172A | `22 04 f3 01` / 13x `22 05 xx 00` | Reservestrom global; Bank 5 Bits 0..12 aus — **Bits 13..22 (Schalter) BLEIBEN stehen** |
 | sub18 @0x01736 / @0x0173A / @0x01742 | `22 02 07 01` / `29 08` / `2b 02 ff ff` | Pad-Sperre, Cut 8, "Power supply OK." |
@@ -260,20 +263,31 @@ Lampen-Wahrheit (Bitmaske m, Bit 0 = Schalter 1): oben = `(m & 0x01F) == 0x015`,
 | ROOM11F0 ESP (RDT+0x4C = 0x032F4) | Ids `05 07` = die allgemeinen Blut-/Brocken-Effekte (wie ROOM1140), keine Lampe. |
 | RDT-Kopf | nSprite = 0. |
 | ROOM1050 Cut 7/8 (Sicherungskasten, `ROOM10507/08.bmp`, angesehen) | Gruene/orange Leuchten sind RUND, ~6 px und fest ins MDEC-Bild gemalt — nicht als Sprite loesbar, andere Form als die quadratischen Generator-Lampen. |
+| **Nachtrag (Auflage 2): ESP 0x01 gruen** (14 RDTs; Beispiel ROOM5060.RDT: Id-Kopf @0x04918 `01 05 07`, EFF @0x04920, TIM @0x1D4A0, 4 Paletten rot/gruen/orange/blau, 5 Zellen 24x24 u 0..96, Saetze 0..4 `0n 01 01 18`, Satz 5 `00 01 ff 18` = Schleife) | RE1.5s EIGENE gruene Leuchte, live gezuendet ROOM5060 sub06 @0x03124 `3a 00 01 08 00 01 00 0d 9c ff 6a fa c8 9c 00 00` (Id 1, Unterindex 0x08 -> CLUT-Zeile 1 gruen, Kategorie 0 absolut, scale16 0x0D00, Lage (-100,-1430,-25400)) in Cut 0x0B (@0x030F2 `29 0b`) als "Maschine laeuft"-Leuchte der Impfstoff-Synthese: eigene Projektion (tor_kamera.py, Cut 11 H 188) -> Bild (266.2, 76.5), SZ 1012, Kante 57,9 px, sitzt genau auf der GEMALTEN RUNDEN gruenen Lampe (Glas x 266..271 / y 72..77, Einfassung ~15 px) — `C_belege/esp01_vergleich.png` (rechts). Eine runde Glanz-/Sternleuchte (Stern + Hof), 5 Zellen je Bild wechselnd (Funkeln). Werkzeuge: `tools/r34n_c/esp01_re15.py`, `tools/r34n_c/esp01_vorschau.py`. Bewertung und Wahl: §9.7. |
 
-RE1.5 ist hier also unfertig (die Lampenrahmen sind gemalt, eine Leuchtkunst fehlt) -> RE2.
+RE1.5 hat also KEINE Leuchtkunst fuer DIESE Lampe (die Rahmen sind gemalt, dunkel) — wohl aber eine
+eigene gruene Leuchte fuer eine andere, runde Maschinenlampe (ESP 0x01, Nachtrag oben). Die Wahl der
+Kunst ist damit eine Abwaegung (§9.7), keine gefundene Original-Kunst.
 
 ### 3.6 Die zwei Lampen im RE1.5-Bild (Original-Hintergrund ROOM11F10.bmp, Pixel selbst gelesen)
 
 | | Rahmen aussen | Oeffnung innen | gruenliches Glas | Mitte (Glas) |
 |---|---|---|---|---|
-| oben | x 213..231, y 67..85 | x 215..228, y 71..83 (14 x 13) | x 218..228, y 72..80 (z.B. @(223,75) = 0x2e3629) | (222.5, 75.5) |
-| unten | x 213..231, y 126..143 | x 215..228, y 130..142 (14 x 13) | x 218..229, y 131..140 (z.B. @(223,134) = 0x2f3926) | (222.5, 135.5) |
+| oben | x 213..231, y 67..85 | x 215..228, y 71..83 (14 x 13) | x 218..228, y 72..80 (z.B. @(223,75) = 0x2e3a28, berichtigt Auflage 10) | (222.5, 75.5) |
+| unten | x 213..231, y 126..143 | x 215..228, y 130..142 (14 x 13) | x 218..229, y 131..140 (z.B. @(223,134) = 0x242c1f, berichtigt Auflage 10) | (222.5, 135.5) |
 
 (Glas-Bbox automatisch: "g - r >= 5 und g - b >= 5 und g >= 0x1c" -> x 216..229 / y 72..79 bzw. 131..140.)
 Die Pfeile in lights.bmp zeigen genau auf diese Rahmen.
 
 ### 3.7 RE2 ROOM2130: dieselben Lampen, als ESP-Sprite, mit gruener Palette
+
+> **Berichtigung nach der Gegenpruefung (Auflagen 1 und 3):** Die gruene QUADRAT-Lampe gibt es in RE2
+> nicht. RE2 zeigt die Zellen 3/4 (Quadrat) nur rot (ROOM2130 @0x00F44.., @0x01294.., ROOM3030) und blau
+> (ROOM6150); die CLUT-Zeile 2 (gruen) kommt nur mit Strom 0 = Rechteck-Zellen 0..2 vor (ROOM2110
+> @0x01866/@0x01876, ROOM2130 @0x017A8/@0x017B8). Form + Palette sind also eine PORT-WAHL (Kombination).
+> Und RE2s Gruen ist VORUEBERGEHEND: sub04 loescht beide gruenen Lampen am Ende @0x01814 `65 0d` /
+> @0x01816 `65 0e`; dauerhaft (sub03 @0x00F3C..) sind nur die ROTEN Schalterlampen. Die Regel
+> "gruen nach der Loesung dauerhaft" ist deshalb gestrichen (§9.1, Auflage 3).
 
 **Kunst.** ROOM2130 hat genau ein ESP, Id 0x16 (`effect.esp` = RDT @0x03188, Kopf `16 ff ff ff ff ff ff ff`);
 die TIM `esp16.tim` = RDT @0x0E398, 4256 B (= RDT-Kopfwort [20]), 4 bpp, 256x32, **vier CLUT-Zeilen**:
@@ -389,13 +403,14 @@ Beispiel (Reihenfolge 7, 9, 3, 1 ohne Warten, dann 5; Werte nach Nutzer-Gewichte
 
 ### 4.4 Lampen: Zustand und Bild fuer Bild
 
-* `oben  = geloest || (m & 0x01F) == 0x015` (Schalter 1..5 = 1,0,1,0,1; @0x012BE..0x012CE)
-* `unten = geloest || (m & 0x3E0) == 0x140` (Schalter 6..10 = 0,1,0,1,0; @0x012D2..0x012E2)
-* `geloest` = 4:238 (@0x012EA). Nach der Loesung dauerhaft an — Vorbild RE2 ROOM2130 sub03
-  @0x00F3C..0x00F94: `if Ck(4,0x3c)` -> alle fuenf Panel-Lampen beim Betreten an. (In RE1.5 ist die
-  Buehne nach der Loesung gar nicht mehr erreichbar: sub00 @0x0101A Else-Zweig setzt Slot 1 nur als
-  Text @0x0101E und baut die Hebel-Props nicht auf — die Regel wirkt also nur im Abnahmebild und in
-  Riegeln, schadet aber nirgends.)
+* `oben  = (m & 0x01F) == 0x015` (Schalter 1..5 = 1,0,1,0,1; @0x012BE..0x012CE)
+* `unten = (m & 0x3E0) == 0x140` (Schalter 6..10 = 0,1,0,1,0; @0x012D2..0x012E2)
+* **Keine Nach-Loesung-Regel** (berichtigt, Auflage 3 — der alte Plan hatte `geloest ||` mit dem
+  falschen Vorbild RE2 sub03 @0x00F3C, das nur ROTE Lampen dauerhaft zeigt; RE2s Gruen wird @0x01814/
+  @0x01816 geloescht). Gebraucht wird sie auch nicht: sub18 loescht nur Bank 5 Bits 0..12
+  (@0x016FA..0x0172A), die Schalterbits 13..22 bleiben, also bleibt m = L und beide Lampen brennen bis
+  zum Schnitt auf Cut 8 (@0x0173A) von selbst; danach ist die Buehne unerreichbar (sub00 Else @0x0101A
+  -> @0x0101E Slot 1 sce 1 = Text, keine Hebel-Props; Cut 12 ohne RVD-Zone/Cut_chg).
 * Sichtbar nur, wenn Raum 11F0/11F1 und aktiver Cut 10 (dieselbe Regel wie der Zeiger,
   panel_zeiger_common.c:255-256).
 * Leuchten = RE2-Zelle 3 im Einschaltbild, dann Zelle 4, 3, 4 ... im Wechsel je Bild
@@ -501,8 +516,8 @@ Ressourcen des Vertrags: Bank-9-Bits 69/70, AOT 40/41, Nachrichten 28/29 werden 
 | Lampe oben: Maske / Soll | 0x01F / 0x015 | Ck @0x012BE `21 05 0d 01`, @0x012C2 `.. 0e 00`, @0x012C6 `.. 0f 01`, @0x012CA `.. 10 00`, @0x012CE `.. 11 01`; Zuordnung oben <-> linke Spalte = NUTZER-VORGABE |
 | Lampe unten: Maske / Soll | 0x3E0 / 0x140 | Ck @0x012D2 `21 05 12 00`, @0x012D6 `.. 13 01`, @0x012DA `.. 14 00`, @0x012DE `.. 15 01`, @0x012E2 `.. 16 00`; unten <-> rechte Spalte = NUTZER-VORGABE |
 | Spaltenzuordnung | links = Schalter 1..5, rechts = 6..10 | Props @0x00E76..0x00EFE (x -25975) / @0x00F20..0x00FA8 (x -18775), Zellen @0x00D78..0x00E2C, Bild 3.4 |
-| Lampe an nach der Loesung | `|| 4:238` | RE2 sub03 @0x00F3C `06 00 56 00` / @0x00F40 `21 04 3c 01` / @0x00F44.. 5x sce_espr_on2 |
-| Kunst | LAMPE2130.TIM = ROOM2130.RDT @0x0E398, 4256 B | RE2 ESP 0x16 (effect.esp @0x03188, Kopf `16 ff ..`) |
+| ~~Lampe an nach der Loesung~~ | ~~`|| 4:238`~~ GESTRICHEN (Auflage 3) | RE2 haelt Gruen nicht (@0x01814/@0x01816 `65 0d`/`65 0e`); in RE1.5 bleibt m = L bis Cut 8 (@0x016FA..0x0172A loescht nur 0..12), danach Buehne unerreichbar (@0x0101A) |
+| Kunst | LAMPE2130.TIM = ROOM2130.RDT @0x0E398, 4256 B — **PORT-WAHL (Kombination)**: Form Zellen 3/4 (Strom 2, @0x01294, dort rot) + Palette CLUT-Zeile 2 (Strom-0-Ereignis @0x017A8/@0x017B8, dort Rechteck) | RE2 ESP 0x16 (effect.esp @0x03188, Kopf `16 ff ..`); RE2 zeigt die gruene Quadrat-Lampe nirgends (Zensus 250 RDTs) |
 | Zelle A / B | 3 (u 96) / 4 (u 128), v 0, S 32, Versatz -16/-16 | Koordinatensaetze effect.esp @0x7C `60 00 f0 f0` / @0x80 `80 00 f0 f0`; Anim-Saetze 4..6 @effect.esp+0x30 `03 01 01 20`, `04 01 01 20`, `04 01 ff 20`; Strom 2 Zeile 0 Byte 2 = 4 -> Routine 1 @0x8001dc40/0x8001dc4c |
 | Wechseltakt | jedes Bild, Beginn mit Zelle 3 | Dauer-Byte 1 der Saetze 4/5, Schleife 0xFF -> Satz 4; FUN_8001d68c @0x8001d7b8..0x8001d880 |
 | Palette | CLUT-Zeile 2 (gruen) | Unterindex 0x10 @0x017A8/@0x017B8 (`64 0d 16 10`, `64 0e 16 10`), (0x10 >> 3) * 64 @0x8001c9e0..0x8001c9fc, Kopf-CLUT gepatcht @0x8001be68/0x8001be70 |
@@ -511,7 +526,7 @@ Ressourcen des Vertrags: Bank-9-Bits 69/70, AOT 40/41, Nachrichten 28/29 werden 
 | Kantenlaenge | **22 px** | PORT-WAHL, abgeleitet: RE2-Bildgroesse 25,8 px (Formel @0x80077f14..0x8007800c mit S 32, scale16 0x02BA @0x01294+6, camf 330 aus camera.rid Cut 6, SZ 1116) x Verhaeltnis der Lampenoeffnungen RE1.5/RE2 ((14/17 + 13/15)/2 = 0,845; RE1.5 3.6, RE2 3.7) = 21,8 -> 22. Grund: RE1.5 hat keine ESP-Weltlage fuer die Lampe, gezeichnet wird 2D wie der Zeiger. Vorschau `C_belege/vorschau_k22_z3.png`; Vergleich 26/17 px `vorschau_k26_k17_vergleich.png` |
 | Lage oben / unten | Ecke (212, 65) / (212, 125), Mitte (222.5, 75.5) / (222.5, 135.5) | gemessen: Mitte der gruenlichen Glasflaeche im Original-Hintergrund ROOM11F10.bmp (3.6) und identisch im Port-Framedump (2.3); Ecke = Mitte - 11 |
 | Sichtbarkeit | Raum 11F0/11F1 und Cut 10 | wie Zeiger: Cut_chg 0x0A sub16 @0x015C0 (`29 0a`) |
-| Ton beim Aufleuchten | keiner | RE2 zuendet Lampen ohne se_on (@0x01294 folgt `09 0a 1e 00`, kein `36`); RE1.5 0 Se_on im SCD |
+| Ton beim Aufleuchten | keiner | RE2 zuendet seine SCHALTERLAMPEN still (@0x01294 folgt `09 0a 1e 00`, kein `36`); RE1.5 0 Se_on im SCD. Berichtigt (Auflage 8): das einzige RE2-Gruen-Ereignis, dessen Palette uebernommen wird, hat se_on 0x0F @0x01798 direkt davor — es gilt aber dem Waffenkammer-Schloss (Cut 8, "Strom da"), nicht einer Schalterlampe; die Seitenlampe ist eine Zustandsanzeige der Schalter und folgt deshalb der stillen Schalterlampe |
 
 ## 6 Abnahmeplan (echte exe, Bilder ansehen)
 
@@ -607,11 +622,38 @@ Stand: IN ARBEIT (2026-09-30). Abschnitte werden nach jedem Teilschritt gespeich
 
 ### 9.1 Auflagen der Gegenpruefung — Abhakliste
 
-(in Arbeit)
+| # | Auflage | Stand | Wo |
+|---|---|---|---|
+| 1 | Kunst ehrlich kennzeichnen ("PORT-WAHL (Kombination)", "Kunst gefunden" faellt weg) | ERLEDIGT | Dossier §0, §1.2, §3.7 (Kasten), §5.2; Kopf `include/re15_panel_zeiger.h` (Block "DIE ZWEI GRUENEN LAMPEN"); Kopf `platform/pc/src/panel_lampen_pc.c`; Commit 42baac77 |
+| 2 | RE1.5-Kandidat ESP 0x01 bewerten, Vorschau neben `vorschau_k22_z3.png`, Wahl mit Grund | ERLEDIGT | §3.5 Nachtrag (Bytes, Projektion ROOM5060 Cut 11 -> 57,9 px auf der gemalten runden Lampe), Bild `C_belege/esp01_vergleich.png` (RE2-Quadrat 22 px / ESP01 58 px / ESP01 73 px / ROOM5060-Vorbild), Wahl + Gruende §9.7 |
+| 3 | Punkt 4 neu begruenden, `|| geloest` streichen | ERLEDIGT — gestrichen | Code: Lampen = f(Schalterbits) allein (`re15_panel_lampe_an_aus_maske`); Begruendung §4.4 / Kopf re15_panel_zeiger.h (RE2 loescht Gruen @0x01814/@0x01816; RE1.5 m = L bis Cut 8, Buehne danach unerreichbar @0x0101A); Riegel E live "4:238 aendert nichts", Riegel H "nicht erreichbar" (Slot 1 = MESSAGE nach @0x0101E) |
+| 4 | Veraltete Kommentare mitziehen | ERLEDIGT | re15_panel_zeiger.h: Block "EINGABESPERRE" neu (ersetzt :120-127), `RE15_PANEL_LOESUNGSMASKE` "Seit Runde 34 Nacht SPIELLOGIK" (ersetzt :158-160), Prototyp-Kommentar `re15_panel_zeiger_sperrt` neu (ersetzt :239-241); game_step_common.c Haken-Kommentar: 1 Zeile geaendert + 2 ergaenzt ("seit Runde 34 Nacht NUR NOCH DIE ENDSPERRE"), keine fremden Zeilen |
+| 5 | Paket-Gate LAMPE2130.TIM verbindlich + Riegel-Check byte-gleich | ERLEDIGT | `release/make_package.sh` check_tree: 3 Zeilen (Gate wie TORSE.VBS); Riegel I: Datei vorhanden, 4256 B, byte-gleich `ROOM2130.RDT[0x0E398, +4256)` (Lage selbst aus Kopfwort[20]/[21] wie FUN_8001bd38) |
+| 6 | Riegelliste ergaenzen, r17/r27 G/r26 A einzeln fahren, r31 D umschreiben | ERLEDIGT | §9.5 (Einzelfahrten), r31 D neu (§9.4) |
+| 7 | Abnahme ergaenzen (a) Leck-Test Cut 8 + Nachbarraum, (b) Quadrat gehalten >= 40 Bilder auf dem letzten Schalter, (c) Cursor-x < 200 in allen Lampen-Messbildern, (d) Abnahme 3 mit Bildpaar, (e) Abnahme 5 relativ zum Hintergrund | siehe §9.6 | §9.6 |
+| 8 | Ton-Begruendung korrigieren (se_on 0x0F @0x01798) | ERLEDIGT | §5.2 Zeile "Ton", Kopf re15_panel_zeiger.h |
+| 9 | Rueckmeldung an den Nutzer (i)..(v) | ERLEDIGT | §9.8 |
+| 10 | Nebenfehler berichtigen (3.1 Offsets, 3.6 Beispielpixel) | ERLEDIGT | §3.1 Zeile @0x012A4/@0x012A8..0x012B0, §3.6 Pixel 0x2e3a28 / 0x242c1f |
 
 ### 9.2 Dateien und Haken
 
-(in Arbeit)
+| Datei | Art | Inhalt |
+|---|---|---|
+| `re15_port/engine/src/panel_zeiger_common.c` | Spur-C-Datei | `re15_panel_zeiger_sperrt()` = nur Endsperre (aktiv 5:0, nicht 4:238, Maske LIVE == 0x155); Lampenzustand je Tick (`s_lampe_an/s_lampe_takt`), `re15_panel_lampen`, `re15_panel_lampe_an_aus_maske`, `re15_panel_lampe_sicht`, `re15_panel_lampe_takt`; RE15_PANEL_LOG um `lampe_o/lampe_u/lzelle_o/lzelle_u` erweitert. Wertbildung, Fahrt, Ruhe, Abnahme-Halt, Ton: unveraendert |
+| `re15_port/include/re15_panel_zeiger.h` | Spur-C-Datei | Kopf: Nutzerwortlaut, Lesart, RE1.5-Zensus Set(2,7,*), Lampen-Regel + Spalten-Belege, Kunst als PORT-WAHL, Ton; Konstanten `RE15_PANEL_LAMPE_*` mit @0x-Belegen; Prototypen |
+| `re15_port/platform/pc/src/panel_lampen_pc.c` | NEU (Spur C) | LAMPE2130.TIM laden/pruefen, Zellen 3/4 ueber CLUT-Zeile 2 dekodieren, additiv B+F in den Software-Framebuffer (Ebene 1) |
+| `re15_port/shared_assets/RE2/LAMPE2130.TIM` | NEU (Asset) | 4256 B = ROOM2130.RDT[0x0E398, +4256) = room2130/esp16.tim, geschrieben mit `tools/r34n_c/lampe2130_schnitt.py --schreiben` (9/9 Pruefungen OK) |
+| `re15_port/platform/pc/main.c` | gemeinsam, 2 Zeilen | Kommentar + `{ extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }` direkt hinter dem Zeiger-Block, noch in `if (re15_bg_is_loaded())` |
+| `re15_port/engine/src/game_step_common.c` | gemeinsam, Kommentar | eigener Runde-31-Haken-Kommentar: "seit Runde 34 Nacht NUR NOCH DIE ENDSPERRE" (Code unveraendert) |
+| `release/make_package.sh` | gemeinsam, 3 Zeilen | Gate LAMPE2130.TIM in check_tree |
+| `re15_port/tools/local_build.sh` | gemeinsam, 3 Zeilen | RE15_MIN_TESTS 428 -> 429 (+ Chronik-Zeile) |
+| `re15_port/tests/unit/probe_r34n_c_generator.c` + `probes/r34n_c_generator.cmake` | NEU (Riegel) | ctest `unit_r34n_c_generator`, Teile A..I, Zeichner echt einkompiliert |
+| `re15_port/tests/unit/r31_generator.c` | Spur-C-Riegel | Teil D auf "nur Endsperre" umgeschrieben |
+| `re15_port/tools/r34n_c/esp01_re15.py`, `esp01_vorschau.py` | NEU (Werkzeug) | ESP 0x01 aus einer RE1.5-RDT beschreiben / auf ROOM5060 und ROOM11F10 zeichnen (Auflage 2) |
+
+Vertragsressourcen (Bank-9-Bits 69/70, AOT 40/41, Nachrichten 28/29): **nicht benutzt** — der Zustand
+ist vollstaendig aus Bank 5 Bits 13..22 abgeleitet, kein neuer Text, keine neue Zone.
+scd_vm.c, aot_common.c, render_pc.c, bg_pc.c: **unveraendert**.
 
 ### 9.3 Commits
 
