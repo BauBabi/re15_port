@@ -1,6 +1,6 @@
 # Spur B — Hebetisch Irons Office ROOM1150/1151: Cursor-Bedienung statt Direktoeffnung
 
-Stufe: ERMITTLUNG + BAUPLAN (kein Port-Code) — Stand: FERTIG. Arbeitsbaum `.claude/worktrees/r34n_hebetisch`,
+Stufe: ERMITTLUNG + BAUPLAN — Stand: FERTIG; BAU 2026-09-30 siehe §9 (Auflagen der Gegenpruefung dort abgehakt). Arbeitsbaum `.claude/worktrees/r34n_hebetisch`,
 Zweig `r34n/hebetisch`. Einzige Code-Zugabe: die Mess-Sonde `tests/unit/probe_r34n_b_messung.c` (kein add_test,
 Suite bleibt 428).
 Werkzeuge: `re15_port/tools/r34n_b/`, Belege: `analysis/befunde_runde34_nacht/B_belege/`, grosse Zwischenausgaben
@@ -33,8 +33,9 @@ beschleunigter Renderer, `RE15_FRAMEDUMP`, `RE15_WINDOW_SCALE=3`, kein AUTOSHOT/
 * Belegt mit Engine-Code (Mess-Sonde): Halt nach 10 VM-Takten auf dem For, Plattform -305, Deckel zu; Cut_old kehrt
   aus dem Halt-Weg in die Raumkamera zurueck, aus einem Vorschalt-Weg NICHT (bleibt auf 4); Kuppel-Huelle Engine =
   Python (<= 1,4 px); 11F0-Cursor-Start (160,119). Alle tragenden EXE-Adressen selbst nachdisassembliert (§3.9).
-* Offen fuer den Nutzer (§8): Abbruch ohne Kuppel (RE1.5 hat in keinem Cursor-Raum eine Abbruchtaste; falls
-  gewuenscht, mit den Aufraeum-Bytes von sub04 @0x109E..@0x10B2), Trefferflaeche mit/ohne Podest, Sprachdatei main20.
+* ~~Offen fuer den Nutzer (§8)~~ BERICHTIGT im Bau (Gegenpruefung Auflagen 3/4/5): Abbruch mit CROSS GEBAUT (Aufraeum-
+  Bytes von sub04 @0x109A..@0x10B4), Trefferflaeche = Deckel + Podest, KEINE Sprachdatei (der Untersuchungsweg spielt
+  keine). Siehe §9.
 
 ## 1 Nutzerwortlaut + Lesart
 
@@ -274,8 +275,11 @@ Raeume mit D-Pad-Abfrage (0x01/0x02/0x04/0x08) + Aktion 0x0040 + Typ-4-Cursor (j
 | 3050 | **1** | nach Ja ("Will you use the Red Master Keycard?" msg 4), sub10 @0x02588 | NUR Ziel-Zelle Slot 11 -> sub15 |
 
 Ergebnis: **keine einzige andere Tastenmaske** in einem Cursor-Raum (die drei "0x4152"-Treffer in 2030/20A0/30C0 liegen
-ausserhalb jedes Cursor-Raums). RE1.5 hat also KEINE Abbruchtaste im Cursor. **Kein Raum zeigt einen Text bei
-Fehldruck.** Direkter Einstieg ohne Frage ist belegt (1080/4020/30E0), Ziel-Zelle als einziger Ausgang ebenfalls
+ausserhalb jedes Cursor-Raums). RE1.5 hat also KEINE Abbruchtaste im Cursor. ~~Kein Raum zeigt einen Text bei Fehldruck.~~ **BERICHTIGT (Gegen-
+pruefung (f), Auflage 6):** ROOM4020 sub12 @0x00B14 zeigt im Cursor-Modus nach Druck auf eine funktionslose Zelle
+(Slot 9 @0x00750, Member_cmp(15==9) @0x00888, `51 01 40 00` @0x00892, `04 ff 18 0c` @0x00896) den Text msg 1 @0x0BAA
+"The button doesn't respond..." (`2b 01 ff ff` @0x00B44, stumm) und kehrt in den Cursor zurueck — das RE1.5-Vorbild
+fuer "Nothing happened". Kein Text nur bei Druck AUSSERHALB jeder Zelle. Direkter Einstieg ohne Frage ist belegt (1080/4020/30E0), Ziel-Zelle als einziger Ausgang ebenfalls
 (2040/5050/3050).
 
 ### 3.5 "Nothing happened" — gibt es den Satz? Glyphen und Form
@@ -296,9 +300,10 @@ Form: Kopf `04 02` = Untersuchungstext, Ende `01 00`. Satzschluss-Zensus (`satzs
 -> **`04 02 2a 4b 50 44 45 4a 43 00 44 3d 4c 4c 41 4a 41 40 57 01 00`** ("Nothing happened.", 17 Glyphen,
 **123 px** nach der Vorschubtabelle include/font_width.h = DEBUG.BIN[0x4416+code]; "Nothing unusual." misst 111 px —
 eine Zeile, kein Umbruch). Nachrichten-Id: ROOM1150 hat 15 (Sektion @0x012F8, off[0] = 0x1E), ROOM1151 hat 4
-(@0x010EC, off[0] = 0x08) — Id 20 (Vertrag) ist in beiden frei und < 32 (MSG_TABLE_N). Sprachdatei (optional,
-Nutzer): `synchro/STAGE1/room1150/main20.wav` und `synchro/STAGE1/room1151/main20.wav`; Untersuchungstexte sind in
-RE1.5 unvertont (room1150 hat nur die Dialoge 02, 04..14), ohne Datei laeuft er stumm.
+(@0x010EC, off[0] = 0x08) — Id 20 (Vertrag) ist in beiden frei und < 32 (MSG_TABLE_N). ~~Sprachdatei (optional,
+Nutzer): main20.wav~~ **BERICHTIGT (Auflage 3):** der Text laeuft ueber den Untersuchungsweg `re15_scd_show_message`
+(sce-1-Handler LAB_80043084), der keine Sprache einreiht — unvertont wie jeder RE1.5-Untersuchungstext (room1150 hat nur
+die Dialoge 02, 04..14). Keine Datei noetig.
 
 ### 3.6 Trefferflaeche der Kuppel (`kuppel_flaeche.py`, `B_belege/kuppel_flaeche_1150.txt` / `_1151.txt`)
 
@@ -581,6 +586,9 @@ Kuppeldruck-Klick, Deckelfahrt, Cut_old-Ziel). Bestehende Riegel unveraendert gr
 
 ## 8 Offene Punkte
 
+**BERICHTIGT im Bau (Auflagen 3/4/5):** Nr. 1 GEBAUT (CROSS -> Aufraeumbytes, §9.1), Nr. 2 entschieden (Deckel +
+Podest), Nr. 3 entfaellt (keine Sprache auf dem Untersuchungsweg). Stand der Ermittlung:
+
 1. **Abbruch ohne Kuppel?** RE1.5 kennt keinen (§3.4), geplant ist deshalb keiner. Falls der Nutzer einen will, ginge
    es OHNE erfundenes Verhalten so: Taste = die virtuelle Menue-Abbruchtaste 0x8000 (<- CROSS, @0x80073dbc[15]) als
    PORT-WAHL; Wirkung = genau die Aufraeum-Bytes, mit denen sub04 selbst endet: sub04-Thread beenden (er steht vor der
@@ -597,36 +605,136 @@ Kuppeldruck-Klick, Deckelfahrt, Cut_old-Ziel). Bestehende Riegel unveraendert gr
 
 ## 9 Umsetzung
 
-(BAU-Stufe, in Arbeit - Geruest, wird fortlaufend gefuellt)
+BAU-Stufe 2026-09-30, Zweig `r34n/hebetisch` (Basis 1143dd6d). Stand: FERTIG bis auf die Suite-Zeile in §9.4
+(wird nach dem Lauf eingetragen).
 
-### 9.1 Auflagen der Gegenpruefung (abgehakt / begruendet abgelehnt)
+### 9.0 Kurzfassung fuer den Nutzer
 
-(offen)
+* **Bedienung:** Aktionstaste (SQUARE) an der Westseite des Mitteltischs -> das Modell faehrt wie bisher in den Tisch,
+  Nahansicht Cut 4, dann erscheint **der Cursor der Generator-/Aufzugs-Raetsel** in der Bildmitte. D-Pad bewegt ihn.
+  SQUARE **auf der Kuppel** (unten rechts) -> Klick-Geraeusch wie am 11F0-Schalter, die Kuppel geht auf, danach der
+  bisherige Ablauf (Sicherung, Granate, Abfahrt, zurueck in die Raumkamera). SQUARE **daneben** -> "Nothing happened."
+  (stumm, wie jeder Untersuchungstext), danach ist der Cursor wieder frei. CROSS -> Cursor verlassen, das Modell
+  verschwindet wieder (Original-Aufraeumbytes von sub04), erneute Aktion bringt den Cursor wieder.
+* **Der Cursor ist pixelgleich mit dem 11F0-Cursor im Port:** Fussabdruck 1905 Punkte in 11F0, alle 1905 an derselben
+  Stelle und in derselben Farbe in 1150 (`B_belege/bau_cursor_vergleich.txt`, `bau_cursor_11f0_gegen_1150.png`).
+* **Hinweis (Auflage 9, keine Frage):** der Motor-Laut ROOM1150-0x0A (sub04 @0x0FA2) kommt jetzt beim Druck am TISCH,
+  11 Bilder bevor der Cursor erscheint; beim Kuppeldruck spielt nur der RE2-Klick. Das ist die Folge von "sub04
+  unveraendert" (der Halt liegt hinter @0x0FA2, weil die Kuppel erst nach Cut_chg 4 @0x0FB2 + Pos_set @0x0FB4 im Bild
+  unten rechts liegt, §2.2).
+
+### 9.1 Auflagen der Gegenpruefung (B_hebetisch.gegenpruefung.md) — alle umgesetzt
+
+| # | Auflage | Umsetzung | Beleg |
+|---|---|---|---|
+| 1 | Cursor-Tick im VM-Takt | Bewegen, Druck, Treffertest, Text, Klick und Abbruch laufen im Halte-Aufruf `re15_hebetisch_cursor_for` aus `op_for` (scd_vm.c). Damit kein Takt unter Menue/Item-Modal/Wegwerf-Abfrage (main.c) und unter RE15_PAUSE_SCD (FUN_8003f038 @0x8003f040-4c), 30 Hz auch mit RE15_FPS=60 (VM nur jedes 2. Bild). | exe-Lauf b7: VM-Takte F242-F257, Menue offen F258-F393 = keine Cursor-Zeile, Cursor danach unveraendert, kein Text/Klick/Abbruch (`bau_abnahme_abbruch_inventar_1151.png`); Integrations-Lauf C |
+| 2 | Install an beiden Raumaufbau-Stellen, Cache an (Raum, raw, raw_size), defensiv nur mit Thread auf dem Halt | `re15_hebetisch_cursor_install` in scd_room_setup.c (neben re15_granate_install) UND main.c Boot/CONTINUE (neben re15_granate_install). Signatur-Cache in `halt_pc()` an (raw, raw_size, g_current_room_id), `install()` leert ihn. `sicht()` setzt AUS, wenn der armierte Thread nicht mehr auf dem Halt steht | exe-Laeufe l1 (1150) und l2 (1151) ueber CONTINUE: `verlangt` F90, `aktiv` F101, Cursor im Framedump ab F102; Integrations-Laeufe A (1150) und B (1151) |
+| 3 | Sprachdatei-Aussage berichtigen | §3.5 und §8.3 unten berichtigt: der Text laeuft ueber den Untersuchungsweg `re15_scd_show_message` (sce-1-Handler LAB_80043084), der keine Sprache einreiht (scd_vm.c "No voiceover"); KEINE main20.wav | Kopf re15_hebetisch_cursor.h "Text bei Fehldruck" |
+| 4 | Ausgang ohne Kuppel bauen (Vorbild 11F0 sub17 @0x015FA) | CROSS = virtuell 0x8000 (Preset @0x80073dbc[15] = 64 = roh 0x40, selbst gelesen) als PORT-WAHL (Cut 4 hat kein gemaltes EXIT). Wirkung: PC des haltenden sub04-Threads auf Halt + 0xDA = @0x109A (1151 @0x1078), Anker = die 28 Aufraeumbytes `2e 03 00 00 32 00 24 af 00 b1 cc bb 22 05 00 00 22 02 00 00 22 02 02 00 2a 00 01 00` (in beiden RDTs selbst gelesen), sonst kein Abbruch. Kein Klick, kein Text | Riegel R7 (Parklage -20224, Pause 0, Raumkamera, Deckel 0, Items unberuehrt, erneut aktivierbar); exe b5 (F258 Abbruch, F260 Raumkamera, F305 erneut, F342 zweiter Abbruch); Integrations-Lauf B |
+| 5 | Offene Nutzerfragen §8.1/§8.2 schliessen | Trefferflaeche = Deckel + Podest (ein sichtbares Achteck); Ausgang nach Auflage 4. §8 unten berichtigt | — |
+| 6 | Vorbild ROOM4020 sub12 zitieren, §3.4 berichtigen, Textform begruenden | Kopf re15_hebetisch_cursor.h zitiert sub12 @0x00B14, `2b 01 ff ff` @0x00B44, msg 1 @0x0BAA; §3.4 unten berichtigt. Textform `04 02` ohne fuehrendes 0x08 und EIN Punkt: Zensus `tools/r34n_b/textform_zensus.py` (`B_belege/textform_zensus.txt`): STAGE1 fuehrt 0x08 in 6 von 360 Untersuchungstexten, ROOM1150 msg 0/1/3 (@0x1316/@0x1385/@0x1426) nie; einzeilige Texte 256x '.' gegen 39x '...'; der Nutzer schreibt ohne Auslassungspunkte | Riegel R3 Pruefung 6 (Bytes) |
+| 7 | Halte-Bedingung am Anker | `re15_hebetisch_cursor_for` haelt nur, wenn t = der armierte Thread, pc == Halt UND die 20 Signaturbytes ab Halt-14 stimmen (`memcmp`) | Riegel R1; Mutation M1 |
+| 8 | Abnahme-Luecken schliessen, alte FIRE_AOT-Koepfe vermerken | `integration_r34n_b_cursor` (4 exe-Laeufe: A Nutzerweg 1150 bis Raumkamera, B Abbruch 1151 + erneut, C Inventar, D Harness ohne Cursor); Notiz in test_r30_sicherung_laden.cmake und test_r30_granate_laden.cmake | §9.4 |
+| 9 | Uebergabetext: Motor-Laut | §9.0 Hinweis | — |
 
 ### 9.2 Dateien
 
-(offen)
+| Datei | neu/Haken | Inhalt |
+|---|---|---|
+| `re15_port/include/re15_hebetisch_cursor.h` | neu | alle Belege + Konstanten (je `@0x…`/Datei-Offset bzw. NUTZER-VORGABE/PORT-WAHL) |
+| `re15_port/engine/src/hebetisch_cursor_1150.c` | neu | Zustand, Halt/Anker, Takt (Abbruch, Druck, Bewegen), Treffertest, Text, Klick, Abbildung (Cut 10 von 11F0), Mess-Protokoll `RE15_HEBETISCH_CURSOR_LOG` |
+| `re15_port/platform/pc/src/hebetisch_cursor_pc.c` | neu | Zeichnen wie die Raum-Prop-Schleife: MD1/TIM/Licht aus 11F0, TIM-Platz 28, Tiefe vor allem |
+| `re15_port/engine/src/gen/hebetisch_cursor.inc` | neu, generiert | ROOM11F0.RDT MD1 @0x001928 (5556 B, md5 91418c7c…), TIM @0x018DAC (33312 B, md5 26ac39af…), Lichtsatz Cut 10 @0x0718 (40 B); nur PC |
+| `re15_port/engine/src/scd_vm.c` | Haken | 1 Include + 3 Zeilen am Kopf von `op_for` |
+| `re15_port/engine/src/game_step_common.c` | Haken | 1 Include; GENERIC-Ausgabe: Rueckgabe von scd_event_fire in `ev_slot`, `re15_hebetisch_cursor_aktion(...)` |
+| `re15_port/engine/src/scd_room_setup.c` | Haken | 1 Include + Install neben re15_granate_install |
+| `re15_port/platform/pc/main.c` | Haken | 1 Include; Install am Boot-/CONTINUE-Weg; Zeichnen nach `pc_draw_effects` |
+| `re15_port/tests/unit/probe_r34n_b_cursor.c` + `probes/r34n_b_hebetisch.cmake` | neu | 8 Riegel unit_r34n_b_{halt,kuppel,ablauf,cut_old,harness,abbruch,kreuztext,cursor_bytes} |
+| `re15_port/tests/integration/test_r34n_b_cursor.cmake` | neu | integration_r34n_b_cursor |
+| `re15_port/tests/integration/test_r30_{sicherung,granate}_laden.cmake` | Kopf-Notiz | Harness-Weg ohne Cursor (Auflage 8) |
+| `re15_port/tools/r34n_b/{cursor_export,cursor_vergleich,textform_zensus,mutation}.py`, `lauf_laden.sh`, `lb.sh` | neu | Werkzeuge (Export, Pixelvergleich, Zensus, Mutationsproben, Messlauf Lade-Weg, sicherer Bauaufruf) |
+
+Nicht angefasst: aot_common.c, msg_common.c, panel_zeiger_common.c / re15_panel_zeiger.h (Spur C), audio_pc.c,
+op_sce_key_ck. Kein Bank-9-Bit, kein AOT-Slot, kein g_scd.props-Eintrag (der Cursor ist kein Raum-Prop; obj_id 8
+wird nur als TIM-Platz RE15_TIM_SLOT_PROP(8) = 28 benutzt).
 
 ### 9.3 Commits
 
-(offen)
+`4f6d12d6` Dossier-Geruest + Textform-Zensus · `f19450c1` Modul, Zeichner, Haken · `feac7396` 11F0-Lichtsatz (pixelgleich)
+· `532e96c8` Messlauf Lade-Weg · `215be0e6` Riegel + Integrations-Haken · `51a8762e` eigener exe-Name im Haken ·
+`ebb18893` Mutationsproben · `49207f49` Koepfe der alten FIRE_AOT-Haken · `57f0312c` Abnahmebilder · (Abschluss-Commit
+dieses Abschnitts siehe `git log`).
 
 ### 9.4 Suite
 
-(offen)
+(wird nach dem Lauf eingetragen)
 
-### 9.5 Eigene Abnahme an der echten exe (Bilder)
+### 9.5 Eigene Abnahme an der echten exe (Bilder angesehen)
 
-(offen)
+Alle Laeufe mit der echten exe dieses Baums unter eigenem Namen (`re15_r34nb.exe`), beschleunigter Renderer,
+`RE15_FRAMEDUMP` bei `RE15_WINDOW_SCALE=3`, Protokoll `RE15_HEBETISCH_CURSOR_LOG`. Werkzeuge `tools/r34n_b/lauf.sh`
+(Debug-Sprung) und `lauf_laden.sh` (CONTINUE).
 
-### 9.6 Mutationsproben
+| Lauf | Weg | Ergebnis (Log) | Bild |
+|---|---|---|---|
+| b1/b2 | Sprung 1150, Aktion F230 | `verlangt` F230, `aktiv` F241 (= das Bild, in dem ohne Cursor die Deckel losliefen, §2.1), Cursor ab F242 in der Bildmitte, Kuppel zu unten rechts | `bau_abnahme_nutzerweg.png` F242 |
+| b2 | Pixelvergleich mit 11F0 m2 F480 | 1905/1905 Punkte deckungs- und farbgleich | `bau_cursor_11f0_gegen_1150.png` |
+| b3 | Fehldruck, Text, CROSS/SQUARE-Schliessen, D-Pad, Kuppel | F258 `nichts` (Text tippt F260, steht F290), F320 zu, D-Pad F338-359 -> (-15954,18284) = Bild (208,177), F370 `kuppel` treffer=1 klick=1; `[se] Stimme: se=10 … vag=9 note=66 fine=57 pitch=0x5f3` = derselbe Panel-Klick wie 11F0 m5; F374.. Kuppel geht auf | `bau_abnahme_nutzerweg.png` F260-F392 |
+| b4 | wie b3 + Yes/Yes bis zum Ende | `[sicherung] Modal auf … sub04-PC @0x101B` Bild 517, Yes, `[granate]` Yes, `Fahrt zu Ende … y=-20224`, danach `[pri] cut=0` = Raumkamera | F560, F680, F940, F1000 |
+| b5 | CROSS im Cursor, erneute Aktion | F258 `abbruch`, Plattform F258 -20224, Raumkamera ab F260; F305 `verlangt`, F316 `aktiv`, F342 zweiter Abbruch | `bau_abnahme_abbruch_inventar_1151.png` |
+| b6 | Text mit CROSS schliessen | F258 `nichts`, F320 CROSS -> Text zu, KEIN `abbruch`; danach RIGHT 9 Takte -> x -17754 | (Log) |
+| b7 | START im Cursor, D-Pad + SQUARE im Menue (EXIT) | VM steht F258-F393, Cursorlage unveraendert, kein Text/Klick/Abbruch | Inventar-Bilder |
+| l1/l2 | CONTINUE 1150 / 1151 | `aktiv` F101 in beiden Raeumen, Cursor ab F102 | 1151-Bild |
+| l3 | CONTINUE 1150, Inventar | VM steht F112-F247, danach RIGHT 9 Takte -> x -17754 | (Log) |
+| b8 | Rand unten/links | Cursor vor den Tischkanten-Masken sichtbar (F160, sy 225), verlaesst das Bild unten (F180) und links (F290) und kommt zurueck — wie 11F0 (§2.3) | F160/F180 |
 
-(offen)
+### 9.6 Mutationsproben (`tools/r34n_b/mutation.py`, `B_belege/bau_mutationen.txt`)
+
+| Mutation | Riegel | Ergebnis |
+|---|---|---|
+| M1 Halt-Haken in op_for entfernt | unit_r34n_b_halt | ROT (1,2,3) |
+| M2 Treffertest invertiert | unit_r34n_b_ablauf | ROT (6-9,11) |
+| M3 Huellenecke (151,171) -> (140,171) | unit_r34n_b_kuppel | ROT (4,5) |
+| M4 Armieren auch in scd_event_fire | unit_r34n_b_harness | ROT (13) |
+| M5 Vorschalt: work_vars[0x0A] = 4 vor sub04 (Cut_chg @0x800402c0/@0x800402e4 merkt 4) | unit_r34n_b_cut_old | ROT (12) |
+| M6 Abbruchziel @0x109A + 4 (ohne Work_set) | unit_r34n_b_abbruch | ROT (15) |
+| M7 Abbruch auf der GEHALTENEN Taste | unit_r34n_b_kreuztext | ROT (18) |
+| M8 ein TIM-Byte geaendert | unit_r34n_b_cursor_bytes | ROT (14) |
+
+Nach dem Zuruecksetzen neu gebaut: alle 8 Teil-Riegel gruen.
 
 ### 9.7 Abweichungen vom Plan (mit Grund)
 
-(offen)
+1. **Licht statt neutralem Tint 0x80.** BAU-BEFUND: mit Tint 0x80 lagen die 524 HELLEN 11F0-Punkte deckungsgleich, aber
+   206 weitere Punkte waren hell statt dunkel (die abgewandten Seitenflaechen der Winkel). Der Plan (§2.3/§5.4) hatte nur
+   die hellen CLUT-Farben gemessen. Jetzt beleuchtet wie die Raum-Prop-Schleife in 11F0 (main.c `licht_cut =
+   g_re15_active_cut`) mit dem Lichtsatz ROOM11F0 Cut 10 (RDT+0x2C -> @0x0588, Eintrag 10 @0x0718, eingebacken) ->
+   1905/1905 pixelgleich.
+2. **Takt im VM-Takt (Auflage 1) statt `re15_hebetisch_cursor_tick()` am Kopf von re15_game_step.** Dadurch kein
+   eigener Zustand FREI: der Kuppeldruck laesst das For im SELBEN VM-Takt laufen (Deckel +10/-10 im Druckbild) statt
+   im naechsten. Kein Haken in game_step fuer den Tick (nur die Armierung an der GENERIC-Ausgabe).
+3. **Abbruch gebaut** (Auflage 4) — der Plan hatte keinen.
+4. **Install auch in main.c** (Auflage 2).
+5. **Druck vor Bewegung im Takt:** der Treffertest nimmt die Lage, die im Bild steht (11F0: Zellstempel des
+   Vorbild-Endes, AUTO-Scan FUN_800436a8 @0x8001ce1c); im Plan stand die Bewegung zuerst. Ein Druck oeffnet den Text
+   bzw. startet die Fahrt, ohne dass der Cursor im selben Takt noch einen Schritt macht.
+6. **Integrations-Haken startet eine Kopie der exe unter eigenem Namen** (gemessen: 2 von 2 Laeufen unter dem Namen
+   re15_pc.exe endeten mitten im Spiel mit exit=1, 5 von 5 unter anderem Namen liefen durch; Ursache §9.8 Nr. 2).
+7. **RE15_MIN_TESTS in local_build.sh nicht angehoben** (gemeinsame Datei aller sieben Spuren; 428 bleibt eine
+   gueltige Untergrenze). Neu: 9 Tests (8 Unit + 1 Integration) -> 437; die Integration setzt den Endwert.
+8. **Keine main20.wav** (Auflage 3).
+9. **Zeichen-Haken nach `pc_draw_effects`** (Plan: nach der Prop-Schleife) — dieselbe Stelle im Bild, aber hinter den
+   Effekten, damit deren Textur-Bindung unberuehrt bleibt.
 
 ### 9.8 Offene Punkte
 
-(offen)
+1. Hinweis Motor-Laut (§9.0) — bewusst so, keine Frage.
+2. **local_build.sh beendet ueber seinen Rueckfall `taskkill //F //IM re15_pc.exe` (:298-299) JEDE re15_pc.exe der
+   Maschine**, weil `command -v powershell` unter seinem CLEAN_PATH (:147, ohne System32\WindowsPowerShell\v1.0)
+   scheitert. Meine ersten drei `build`-Aufrufe in diesem Baum liefen noch ohne Gegenmittel und koennen Mess-/Testlaeufe
+   paralleler Spuren beendet haben (deren rote GUI-Haken dieser Nacht also einzeln nachfahren). Danach nur noch ueber
+   `tools/r34n_b/lb.sh` (exportierte Funktion `powershell`, Vorbild r34g_a/build/r34g_a/lb.sh). Vorschlag fuer die
+   Integration: `/c/Windows/System32/WindowsPowerShell/v1.0` in CLEAN_PATH aufnehmen.
+3. RE15_MIN_TESTS (§9.7 Nr. 7).
+4. PSX-Ziel: kein Cursor, kein Halt — die Fahrt laeuft dort wie bisher (der Cursor braucht den PC-Zeichner).
+5. Android: neue .c-Dateien -> frischer Configure (memory android-glob-cache).
