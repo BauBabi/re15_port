@@ -1,0 +1,23 @@
+== e8c am start -R 2 (Activity wird vor der Wiederholung mit finish() beendet) 11:37:18
+Status: ok
+LaunchState: COLD
+TotalTime: 1025
+Status: ok
+LaunchState: WARM
+TotalTime: 326
+Prozess: beendet
+09-30 09:37:18.637 I/re15    (10462): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:37:18.814 E/re15    (10462): [android] assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad
+09-30 09:37:18.814 E/re15    (10462): [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)
+09-30 09:37:19.570 I/re15    (10462): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 09:37:19.572 E/re15    (10462): [android] assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad
+09-30 09:37:19.572 E/re15    (10462): [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)
+09-30 09:37:20.733 I/re15    (10462): [android] App geschlossen - Prozess endet ohne Spielstart
+09-30 09:37:20.757 I/re15    (10462): [android] App geschlossen - Prozess endet ohne Spielstart
+09-30 09:37:19.830 D/CoreBackPreview(  664): Window{fa646c u0 Splash Screen de.re15.port EXITING}: Setting back callback null
+09-30 09:37:20.126 V/SDL     (10462): surfaceDestroyed()
+09-30 09:37:20.148 D/CoreBackPreview(  664): Window{259342 u0 Splash Screen de.re15.port EXITING}: Setting back callback null
+09-30 09:37:20.732 V/SDL     (10462): onDestroy()
+09-30 09:37:20.878 I/WindowManager(  664): WINDOW DIED Window{a8b3daf u0 de.re15.port/de.re15.port.RE15Activity}
+09-30 09:37:20.880 I/ActivityManager(  664): Process de.re15.port (pid 10462) has died: fg  TOP 
+09-30 09:37:20.889 W/ActivityTaskManager(  664): Force removing ActivityRecord{183838399 u0 de.re15.port/.RE15Activity t21}: app died, no saved state

@@ -1,0 +1,15 @@
+[window] FULLSCREEN (RE15_FULLSCREEN set) 1280x960
+INFO: pixel format wanted SDL_PIXELFORMAT_RGBX8888 (2), got SDL_PIXELFORMAT_RGBX8888 (2)
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+[touch] Overlay-Controller AN (2400x1080, u=90, 10 Knoepfe)
+[android] FEHLER: assets/re15_assets.txt ungueltig (Zeile 3606: unzulaessiger Pfad) - es wird NICHTS entpackt.
+[android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+s_glBindAttribLocation: bind attrib 0 name a_position
+s_glBindAttribLocation: bind attrib 1 name a_color
+s_glBindAttribLocation: bind attrib 2 name a_texCoord
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color

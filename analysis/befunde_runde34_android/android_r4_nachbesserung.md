@@ -15,7 +15,7 @@ Gegenstand: Gegenpruefer-Befunde `pruefer_umgehung_r4_1.md` (H1 hoch; H5, H3, H2
 - [x] 4 H3: SHA256SUMS.txt + git add aus einer Positivliste, fremde Versionsdateien -> Abbruch
 - [x] 5 H5 (+U3, V1/V2): Pfade nur druckbares ASCII, Segment <= 251 B - Gradle, Gate, Geraete-Leser, Tests
 - [x] 6 niedrig: U1, U2/E1 (Waisen), U4 (fail closed) im Entpacker
-- [ ] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
+- [~] 7 Nachweise: Selbsttest, Mutanten/Kette gegen die neuen Skripte, PC-Suite, Android-Bau, Emulator
 - [ ] 8 Endstand
 
 ## 1. Befunde selbst nachgemessen (Stand HEAD, vor jeder Aenderung)
@@ -188,3 +188,58 @@ Compiler-Warnung aus android_glue.c oder asset_abgleich.c (die 12 Warnungen im L
 Faelschungen daraus (`nb_faelschen.sh`, Werkzeuge der Pruefer, zipalign + derselbe Debug-Schluessel, verify rc 0):
 FW_sig (Leerraumzeile), FD_sig (P07G.DO2 1 Byte gekippt + passende sha256), FK_sig (Kelvin-Paar), R_sig (ohne
 RE2/CDEMD0.EMS, Kopf nachgerechnet).
+
+### 7.2 Die ganze Kette mit den NEUEN Skripten (Sandbox, `nb_kette.sh`)
+
+Sandbox `build/r34a/nb/sb` (aus 1.1; Skripte + Pin + build.gradle vor dem Lauf = Arbeitsbaum, per `cmp` geprueft).
+Mutanten des NEUEN Gates: G0 (0 B), G4 (vor `main()` abgeschnitten), G1 (`main()` ohne `sys.exit`), G2
+(`RC_ABWEICHUNG = 0`), G3 (`return RC_GLEICH`), V1 (`if not z.strip()`); ALT = Gate von be8b60f3. "Pin echt" = der
+Mutant liegt unter release/, der Pin bleibt (erste Schicht); "umgepinnt" = die Pin-Datei der Sandbox traegt die sha256 des
+Mutanten (zweite Schicht: nur noch das Urteil aus der Ausgabe haelt). Zusammenfassung
+`android_r4_nachbesserung_belege/kette_AB_kurz.txt`, volle Logs `build/r34a/nb/logs/kette/`.
+
+| Lauf | Gate | Eingabe | EXIT | Grund |
+|---|---|---|---|---|
+| A0 | echt | NB1 | **0** | `ANDROID-GATES-OK` (Kontrolle) |
+| A1/A8/A11/A6 | echt | v0.8.19 (v1) / FD_sig / FK_sig / FW_sig | 1 | Urteil 1 "Schlusszeile und Rueckgabe stimmen ueberein" (v1-Liste / `Inhalt weicht ab` / `Nicht-ASCII-Byte` / `0 Tab(s)`) |
+| A2 | G0, Pin echt | v0.8.19 | 1 | `Asset-Gate ist NICHT das festgehaltene` (4 s) - vor Pruefung: **H1 A2 behoben** |
+| A2b/A2c | G0 / G4 umgepinnt | v0.8.19 | 1 | Urteil 2 "KEINE Ausgabe - das Gate lief nicht" |
+| A3/A3b | G1 umgepinnt | v0.8.19 / FD_sig | 1 | Urteil 2 "Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1" - **H1 A3/A9 behoben** |
+| A10/A13 | G2 / G3 umgepinnt | FD_sig | 1 | ebenso - **H1 A10 behoben** |
+| A7 | V1 umgepinnt | FW_sig | 1 | Selbsttest FEHLER (innere Probe), Urteil 1 - **V1 A7 behoben** |
+| A4/A5 | echt, Umgebung `APK_GATE_DATEI=<G0>` bzw. `<ALT>` | v0.8.19 | 1 | Hinweis "wird IGNORIERT", das echte Gate lehnt die v1-Liste ab - **H2 behoben** (vorher EXIT 0) |
+| A12 | echt | FK_sig + Kelvin-Paar im Sandbox-Quellbaum | 1 | Quellbaum-Pfad + Manifest `Nicht-ASCII-Byte` - **H5 A12 behoben** (vorher EXIT 0) |
+| B0 | echt | `--no-zip` | **0** | Paket gebaut (Quellbaum/Paket ueber `gate_laufen`), keine SUMS, nichts vorgemerkt |
+| B1 | echt | Paket-TEX.TIM veraendert, `--zip-only` | 1 | Urteil 1 `PAKET-ABWEICHUNG` |
+| B2 | G0, Pin echt | dasselbe | 1 | Pin (1 s) - **H1 B2 behoben** |
+| B2b/B3 | G0 / G1 umgepinnt | dasselbe | 1 | Urteil 2 (keine Ausgabe / FEHLER mit Rueckgabe 0) - **H1 B3 behoben**; keine SUMS, Index leer |
+| B4/B5 | echt | `..._ANDROID.zip` + `..._android.apk.zip`, `--zip-only` (B5 `--ohne-android`) | 1 | `fremde Datei(en) mit dem Versions-Praefix ... (vor den Kopierminuten)` - **H3 behoben** |
+| B6 | echt | Kontrolle `--zip-only` | **0** | SUMS = 2 Linux-Volumes, Index A x 2 |
+| B7 | echt | + gueltiger `..._win64.zip` (frueherer Lauf) | **0** | "andere Plattform aus einem frueheren Lauf - nicht neu geprueft" in SUMS + Index |
+| B8 | echt | + `..._win64.z01` ohne `.zip` | 1 | `Satz ..._win64.z* ohne letztes Volume` (keine SUMS, Index leer) |
+
+Nach dem Lauf: Sandbox-Gate + Pin = Arbeitsbaum, 0 Pruefkopien/Temp-Reste, Kelvin-Dateien aus dem Sandbox-Quellbaum
+entfernt (0 `.bin` in PSX/).
+
+### 7.3 Emulator (geaenderter Entpacker; `nb_emu_folge.sh`, Logs `build/r34a/nb/logs/geraet/`, Auszug in den Belegen)
+
+Vorher `adb devices` leer, kein qemu/emulator-Prozess. Eigene AVD-Kopie `Medium_Phone_API_36_nb` (build/r34a/nb/avd;
+config.ini des Nutzer-AVD `Medium_Phone_API_36` mit genau 5 Aenderungen: AvdId, Anzeigename, `disk.dataPartition.size`
+12 GiB statt 6 GiB, Kaltstart - Grund wie beim Pruefer ECHTER LAUF: auf 6 GiB scheitern Updates an
+`INSTALL_FAILED_INSUFFICIENT_STORAGE`; dasselbe System-Image), `-port 5584 -no-window -wipe-data`, Android 16 / API 36 /
+x86_64, `ro.build.type=user`, Boot 125 s. Geraetepruefung `nb_geraet.py`: sha256 JEDER Datei unter shared_assets/ +
+synchro/ gegen die Liste der APK, Waisen, `.neu` ueberall, leere Ordner, Liste "zuletzt entpackt", alter Marker.
+
+| Schritt | Ergebnis (logcat Tag re15) | Geraet |
+|---|---|---|
+| e1 NB1 frisch | `Abgleich (ohne Liste) ... pruefen 3603` -> `Entpacken fertig (ohne Liste): 3603 kopiert ... 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler` | **KONSISTENT**; Titelbild erreicht (hinter einem Emulator-Systemdialog "Bluetooth keeps stopping" - Systemdienst, nicht die App) |
+| e2 Neustart | `Assets aktuell (schneller Weg) ... 989 ms` | - |
+| e3 v0.8.19 frisch (alter Entpacker, 3603 kopiert), gepflanzt: `PSX/ALT_WAISE.BIN`, `synchro/STAGE9/room9999/alt.wav`, halbes `PSX/DATA/TEX.TIM.neu`; Update auf NB1 | `Waise entfernt` x 3, `Abgleich (Uebergang v0.8.19) ... pruefen 3603` -> `3603 per SHA-256 geprueft (0 abweichend) ... 3 Waisen entfernt ... 0 Fehler` | **KONSISTENT**, `synchro/STAGE9` weg, 0 leere Ordner |
+| e4 = Pruefer-E1 "j": NB1 frisch, force-stop bei `RE2/CDEMD0.EMS.neu` (9437184 B, Ziel nie umbenannt, keine Liste); Update auf R (ohne CDEMD0.EMS) | `Waise entfernt: shared_assets/RE2/CDEMD0.EMS.neu`, `Entpacken fertig (ohne Liste): 3602 geprueft, 377 kopiert, 3225 per SHA-256 ... 1 Waisen entfernt ... 0 Fehler`; Neustart `schneller Weg` | **KONSISTENT** (vorher: `.neu` blieb fuer immer) |
+| e5 = Pruefer-E1 "k": force-stop bei `RE2/ENEMSE.VBS.neu` (CDEMD0.EMS schon FERTIG); Update auf R | `Waise entfernt: shared_assets/RE2/CDEMD0.EMS` + `...ENEMSE.VBS.neu`, `2 Waisen entfernt ... 0 Fehler` | **KONSISTENT** (vorher: CDEMD0.EMS blieb als Waise) |
+| e6 FK_sig (Kelvin-Paar) als Update ueber R | `assets/re15_assets.txt ungueltig: Zeile 3606: unzulaessiger Pfad` -> `ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (Meldung bleibt stehen)`; nach 10 s und 30 s: Prozess lebt, Bild zeigt `RE1.5 PORT - FEHLER / FEHLER: ASSET-LISTE DER APK UNGUELTIG`, logcat genau 3 Zeilen, debug.log nach der ABBRUCH-Zeile nur noch Shader-Bindungen der Fehleranzeige (kein Spielstart) | 0 `K.bin`/Kelvin im Baum, Baum = R **KONSISTENT** (H5: vorher EINE Datei mit falschem Inhalt, still) |
+| e7 NB1 als Update ueber den e6-Stand | `Abgleich (Update): behalten 3602, neu 1` -> `entpacke shared_assets/RE2/CDEMD0.EMS (neu)` -> `1 kopiert ... 0 Fehler` | **KONSISTENT**; Titelbild NEW GAME / LOAD GAME / OPTION (angesehen) |
+| e8 FK_sig erneut, App schliessen waehrend der Meldung | `cmd activity stack remove` = Wegwischen: das System beendet den Prozess (2 s). `am start -R 2` (finish()): `onDestroy()` -> `App geschlossen - Prozess endet ohne Spielstart` -> `Process de.re15.port has died` - der SDL_QUIT-Zweig von `fehler_halten` laeuft | - |
+
+Danach `adb uninstall` (kein `Android/data/de.re15.port` mehr), `adb emu kill` (`EMULATOR EXIT=0`), kein qemu/emulator,
+`adb devices` leer; Datenabbilder der AVD-Kopie geloescht (6,8 GB, config.ini bleibt). Nutzer-AVD nie gestartet.
