@@ -26,8 +26,8 @@ Stand: Ermittlung abgeschlossen (2026-09-30, 02:30-03:45).
   die Kopie wird nur beim Cut-Wechsel geschrieben (MDEC `jal 0x80053a8c` @0x80021e34, `StoreImage`
   `jal 0x80068cec` @0x80021e44). ROOM1170 hat keinen Raum-ESP (RDT+0x4C = 0), keine SCD-Schleife auf
   Hintergrund/Objekte, und keines der 6 Objektmodelle ist ein Schild.
-* **Port:** zeigt das Schild in Cut 2/3/10 pixelgleich zur BSS-Dekodierung (max |Δ| 0, 64 gemessene
-  Bilder) — also genau wie das Original.
+* **Port:** zeigt das Schild in Cut 2/3/10 pixelgleich zur BSS-Dekodierung (max |Δ| 0 in 71 gemessenen
+  Bildern: 36 x Cut 2, 33 x Cut 3, 2 x Cut 10) — also genau wie das Original.
 * **Ergebnis: kein Umbau.** Nach der Regel "Ist das im Original nicht so, ist der Port richtig"
   (memory reai-v2-original-oder-nicht) ist der Port hier bereits byte-true. Offen bleibt allein die
   Beobachtung des Nutzers — Abschnitt 8 formuliert die Messfrage (keine Wahlfrage).
@@ -69,7 +69,7 @@ Objekt, bei dem "blinken" Sinn ergibt. Die beiden anderen Kandidaten wurden trot
 Original (Abschnitt 3.1). Raum-ESP: ROOM1170 hat keinen (RDT+0x4C = 0), also laedt `pc_load_room_esp`
 nichts.
 
-**Messung an der echten exe** (`re15_pc_g.exe` = Kopie von `re15_pc.exe` dieses Baums, Bau c274a66f;
+**Messung an der echten exe** (`re15_pc_g.exe` = Kopie von `re15_pc.exe` dieses Baums, Bau aus cf0e68ba = Rundenstand, nur Sonde nachgebaut;
 `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
 RE15_DEBUG_JUMP=1170@240 RE15_WINDOW_SCALE=3 RE15_CUT_SYNC_LOG=cutsync.log RE15_FRAMEDUMP=<a>-<b>/<s>:…`):
 
@@ -77,7 +77,7 @@ RE15_DEBUG_JUMP=1170@240 RE15_WINDOW_SCALE=3 RE15_CUT_SYNC_LOG=cutsync.log RE15_
 |---|---|---|
 | Vorspann F400-1500/20 | 36 Bilder Cut 2 (F480-1380) | blau 356, L 130,4, **max \|Port − BSS\| = 0** in allen |
 | Freilauf F1800-2600/25 | 33 Bilder Cut 3 | blau 427, L 135,5, **max \|Δ\| = 0** in allen |
-| RE15_FORCE_CUT=10, F1800 | Cut 10 | Schild oben sichtbar, Bild = Original-Cut-10 (`G10`) |
+| RE15_FORCE_CUT=10, F1790/F1800 | 2 Bilder Cut 10 | blau 248, **max \|Δ\| = 0**; Bild = Original-Cut-10 (`G10`) |
 | F1760-1800/1 | Ende Vorspann → Cut 3 | Kinobalken blendet in 13 Bildern aus (F1769 L 8,3 … F1782 L 135,5), danach konstant |
 
 Tabelle: `G_belege/G14_port_schild_stats.txt`. Bilder: `G03`/`G04` (Cut 2 Original gegen Port, gleiche
@@ -123,8 +123,8 @@ Die RAM-Kopie schreibt nur der Cut-Wechsel FUN_80021bbc:
 
 Uebrige Schreiber von 0x80198000 (ghidra1_V2.txt, 16 Verweise) sind andere Bildschirme als
 Arbeitspuffer: YOUDIED.TIM (FUN_8001613c), Config.tim/C_back.tim (FUN_8002dfb0), MEMORY CARD BG
-(FUN_800264e8), Statusbild/Karte (FUN_80049a5c, FUN_8004d96c), Waffen-Nachladen beim Raumaufbau
-(@0x800466c8). **Kein Pfad veraendert die Hintergrundkopie oder den Upload waehrend des Spiels
+(FUN_800264e8), Statusbild/Karte (FUN_80049a5c, FUN_8004d96c), Waffendatei-Laden
+(`jal 0x80043d8c` mit Waffe DAT_800aca5d, Ziel 0x80198000, @0x800466c4/c8). **Kein Pfad veraendert die Hintergrundkopie oder den Upload waehrend des Spiels
 periodisch.** Alles, was ueber dem Hintergrund liegt, muesste als GPU-Primitiv in einer der drei OTs
 stehen (DrawOTag @0x800215bc/@0x800215d0/@0x800215e4 auf 0x800ac714/0x800ab6d4/0x800aa6b4 + buf*Stride).
 
@@ -243,7 +243,7 @@ F1769-1782) — eine Helligkeitsaenderung genau in diesem Rechteck wird also gem
 ## 8 Offene Punkte
 
 1. **Beobachtung des Nutzers (Messfrage, keine Wahlfrage).** Ich habe das Original in allen 13 Cuts,
-   im ganzen Vorspann und 5 Minuten im Freilauf gemessen, dazu 16 Savestates und die Zeichenlisten —
+   im ganzen Vorspann und 5 Minuten im Freilauf gemessen, dazu 19 Savestates und 18 Zeichenlisten —
    nirgends blinkt die Schrift. Der naechste Weg ist die Stelle, an der der Nutzer es gesehen hat:
    *"In welchem Bild (Screenshot oder kurzes Video mit Zeitmarke) blinkt die Schrift, und mit welchem
    Emulator/Renderer und welchem Disk-Abbild?"* Mit einer Zeitmarke laesst sich genau dieser Moment
