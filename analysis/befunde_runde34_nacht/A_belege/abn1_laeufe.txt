@@ -214,3 +214,83 @@ seg1 F1638 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=0
 seg1 F1640 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=01000007 pm=2
 seg1 F1860 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=1
 seg1 F1874 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
+=== abnahme1_lauf.sh wieder (debug.log, gefiltert; 3 Raumaufbauten ROOM1050: Einsetzen -> Debug-Menue-JUMP -> Schalter)
+[give] item 64 x1 -> slot 3
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[debug-menu] JUMP -> 105 EAST CORRIDOR  (ROOM1050) spawn=(17000,0,12000) cut=0
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm MIT (Sicherung im Inventar, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[msg] room=1050 id=20 savepoint=0
+[rolltor] Sce_item_lost(0x40): Platz 3 geleert
+[scd F1007] Cut_chg(8)
+[msg] room=1050 id=21 savepoint=0
+[scd F1129] Cut_chg(3)
+[debug-menu] JUMP -> 105 EAST CORRIDOR  (ROOM1050) spawn=(17000,0,12000) cut=0
+[room] PC loaded room1050.rdt (297324 bytes)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(3)
+[se] SCD Se_on: bank=2 id=12 flags=0 origin=1/0
+[se] SCD Se_on: bank=2 id=10 flags=0 origin=3/0
+[se] SCD Se_on: bank=2 id=11 flags=0 origin=3/0
+[debug-menu] JUMP -> 105 EAST CORRIDOR  (ROOM1050) spawn=(17000,0,12000) cut=0
+[room] PC loaded room1050.rdt (297324 bytes)
+--- wieder (state.log: Wechsel; seg1 = erster Aufbau, seg2 = Wiederbetreten)
+seg1 F606 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg1 F759 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg1 F761 pad=0000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=2 q=0) pf=FFFF0007 pm=2
+seg1 F882 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=2 q=0) pf=01000007 pm=2
+seg1 F883 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=1 fsm=1 id=20 q=1) pf=FFFF0007 pm=2
+seg1 F1005 pad=8000 pos=(16556,-8313) rot=-32 cam=7 msg(a=0 fsm=0 id=20 q=1) pf=01000007 pm=2
+seg1 F1007 pad=0000 pos=(16556,-8313) rot=-32 cam=8 msg(a=1 fsm=1 id=21 q=0) pf=FFFF0007 pm=2
+seg1 F1128 pad=8000 pos=(16556,-8313) rot=-32 cam=8 msg(a=0 fsm=0 id=21 q=0) pf=01000007 pm=2
+seg1 F1129 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=2
+seg1 F1143 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=21 q=0) pf=00000007 pm=0
+seg2 F606 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=1 fsm=1 id=0 q=1) pf=FF800007 pm=0
+seg2 F759 pad=8000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=1) pf=00000007 pm=0
+seg2 F761 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=01000007 pm=2
+seg2 F981 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=1
+seg2 F995 pad=0000 pos=(16556,-8313) rot=-32 cam=3 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0
+
+=== re15_port/tools/r34n_a/lauf_laden.sh (Kartenlauf des Baus, von der Abnahme NACHGEFAHREN)
+=== Schritt 0: Startkarte
+Karte re15_card.mcr: Platz 0, Raum 0x1150, Inventarplatz 0 = Item 0x21 x1
+=== Schritt 1: speichern in ROOM1150 mit (9,63)=1
+exit=0
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[setflag-at] Frame 100: flag(9,63/0x3f) = 1
+[scd F151] Cut_chg(6)
+[save] room=1150 msg=1 card_slot=0 -> FRAGE (Memory Card benutzen?)
+[save] Antwort: JA -> Speicherbildschirm
+[save] saved (room 1150) slot n=2 -> next=3; card=kept (slot 0 qty 1)
+[flow] EXIT_AT: Bild 460 in Raum 1150 erreicht -> exit
+=== Schritt 2: laden aus Platz 1 -> ROOM1050 -> Schalter
+exit=0
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(3)
+[se] SCD Se_on: bank=2 id=12 flags=0 origin=1/0
+[se] SCD Se_on: bank=2 id=10 flags=0 origin=3/0
+[se] SCD Se_on: bank=2 id=11 flags=0 origin=3/0
+[flow] EXIT_AT: Bild 1400 in Raum 1050 erreicht -> exit
+=== Schritt 2G: Gegenprobe laden aus Platz 0 (ohne Bit 63) -> Schalter
+exit=0
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[debug-menu] AUTO-JUMP -> ROOM1050 (Frame 120)
+[room] PC loaded room1050.rdt (297324 bytes)
+[rolltor] ROOM1050 Ereignis 2 -> Port-Programm OHNE (Sicherung fehlt, (9,63)=0)
+[msg] room=1050 id=0 savepoint=0
+[msg] room=1050 id=0 savepoint=0
+[scd F761] Cut_chg(7)
+[msg] room=1050 id=2 savepoint=0
+[scd F883] Cut_chg(3)
+[flow] EXIT_AT: Bild 1000 in Raum 1050 erreicht -> exit
+EXIT=0

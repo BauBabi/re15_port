@@ -54,6 +54,16 @@ mit_erst_nein)
     # msg 20 Ja, msg 21 schliessen; 1 s; Druck, Frage, Ja -> Tor
     export RE15_INPUT_SCRIPT="$WEG_JUMP,A0.1,W5,R0.1,W0.5,A0.1,W1,A0.1,W5,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,W1,A0.1,W5,A0.1,W12"
     export RE15_FRAMEDUMP="590-2300/10:f_" RE15_EXIT_AT="2300#1050" ;;
+wieder)
+    # WIEDERBETRETEN an der exe: Einsetzen (Ja/Ja) wie lauf.sh "mit", dann Debug-Menue von Hand
+    # (E = SELECT oeffnet, A = Viereck laedt die JUMP-Zeile, Cursor steht noch auf ROOM1050) ->
+    # derselbe Raumaufbau-Weg wie eine Tuer (re15_room_request_change -> re15_room_apply_pending).
+    # Das Skript laeuft je Raum neu (BASIS=spiel, Bildzaehler je Raum ab 0): im 2. Durchgang
+    # fragt der Schalter AUSGELIEFERT, das Ja faehrt das Tor. Ende per Wanduhr (SEK).
+    export RE15_GIVE=0x40:1 RE15_DEBUG_JUMP="1050@120" RE15_PLAYER_POS="17000,12000,1024"
+    export RE15_INPUT_SCRIPT_START=200
+    export RE15_INPUT_SCRIPT="$WEG_JUMP,A0.1,W5,A0.1,W4,A0.1,W4,A0.1,W4,A0.1,W4,E0.1,W1,A0.1,W2"
+    export RE15_FRAMEDUMP="1000:f_1000.ppm" ;;
 *) echo "Modus?"; exit 2 ;;
 esac
 export RE15_STATE_LOG=state.log RE15_MSG_LOG=1 RE15_EVT_TRACE=1 RE15_SE_DEBUG=1
