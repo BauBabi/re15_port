@@ -1,0 +1,22 @@
+== j1_abbruch_frisch_M 2026-09-30 10:22:58 APK 56ef3d26b9328097... Ausloeser: shared_assets/RE2/CDEMD0.EMS.neu
+Success
+externer Ordner nach uninstall: ls: /sdcard/Android/data/de.re15.port/files: No such file or directory
+install: Performing Streamed Install Success 
+Starting: Intent { cmp=de.re15.port/.RE15Activity }
+AUSLOESER i=676629
+ls: /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/CDEMD0.EMS: No such file or directory
+-rw-rw---- 1 u0_a214 ext_data_rw 7340032 2026-09-30 08:23 /sdcard/Android/data/de.re15.port/files/shared_assets/RE2/CDEMD0.EMS.neu
+Prozess: beendet
+--- Zustand nach dem Abbruch:
+.
+..
+debug.log
+shared_assets
+Dateien: 3226
+.neu:
+-rw-rw---- 1 u0_a214 ext_data_rw 7340032 2026-09-30 08:23 ./shared_assets/RE2/CDEMD0.EMS.neu
+ls: shared_assets/RE2/CDEMD0.EMS: No such file or directory
+ls: re15_assets_entpackt.txt: No such file or directory
+ls: re15_assets_ok.txt: No such file or directory
+09-30 08:23:23.035 I/re15    (10546): [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-30 08:23:23.388 I/re15    (10546): [android] Abgleich (ohne Liste): 3603 Dateien (356678277 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3603, weg 0

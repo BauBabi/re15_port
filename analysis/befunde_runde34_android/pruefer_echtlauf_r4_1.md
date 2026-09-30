@@ -140,6 +140,40 @@ Aenderung, die der alte Entpacker nie saehe, und der Lauf wird mittendrin beende
   9052 ms, 1 abweichend), 0 entfernt, 0 .neu-Reste, 0 Fehler, 11210 ms`; `adb pull` == Inhalt in M (`c065442b...`, cmp rc 0);
   `pe1_geraet.py M` -> **GERAET-KONSISTENT** (Marker weg, Liste = M).
 
+### 3.8 Zusatz: geloeschte Datei, Datei faellt weg (`geraet/h_*.txt`, `geraet/i_*.txt`)
+- (h) `rm shared_assets/PSX/STAGE4/ROOM4011.RDT` per adb (M installiert, konsistent), Neustart:
+  `Liste = zuletzt entpackt, aber 1 Dateien fehlen/falsche Groesse -> neu entpacken`, `Abgleich (Groessen-Nachlauf)`,
+  `entpacke shared_assets/PSX/STAGE4/ROOM4011.RDT (Groesse falsch/fehlt)`, `1 kopiert (194208 B) ... 0 Fehler` -> KONSISTENT.
+- (i) **Mess-APK R** = M ohne `shared_assets/RE2/CDEMD0.EMS` (`pe1_apk_ohne_datei.py`: Eintrag + Listenzeile entfernt,
+  Kopf `# re15 assets v2 3602 345553541` nachgerechnet, sonst jeder Eintrag unveraendert; `pe1_signieren.sh`: zipalign
+  -P 16 4 + derselbe Debug-Schluessel, apksigner verify rc 0, Signer 432bc749..., sha256 `2dcce6d5...`; KEIN
+  Auslieferungsstueck - das Gate wuerde sie ablehnen, weil die Quelle die Datei hat). Update M -> R:
+  `Abgleich (Update): 3602 Dateien - behalten 3602, ... weg 1`, `entfernt (nicht mehr in der Liste): shared_assets/RE2/CDEMD0.EMS`,
+  `1 entfernt, 0 .neu-Reste, 0 Fehler` -> `pe1_geraet.py R` KONSISTENT. Der Loesch-Weg mit echter Liste funktioniert.
+
+### 3.9 BEFUND (niedrig): Abbruch + Update, das die abgebrochene Datei streicht -> Waise bleibt fuer immer
+(`geraet/j*.txt`, `geraet/k*.txt`)
+- (j) deinstalliert, M frisch, force-stop mitten in `shared_assets/RE2/CDEMD0.EMS` (`.neu` 7340032 B, Ziel nie
+  umbenannt, keine Liste). OHNE Neustart von M sofort R als Update: `Abgleich (ohne Liste): 3602 Dateien ... weg 0` ->
+  `Entpacken fertig (ohne Liste): 3602 geprueft, 377 kopiert, 3225 per SHA-256 geprueft (0 abweichend), 0 entfernt,
+  **0 .neu-Reste, 0 Fehler**` - und `pe1_geraet.py R`: **`shared_assets/RE2/CDEMD0.EMS.neu` (7340032 B) liegt noch da**
+  -> GERAET-ABWEICHUNG. Neustart: `Assets aktuell (schneller Weg)` - die Waise bleibt dauerhaft (ls danach: 7340032 B).
+- (k) dasselbe, Abbruch erst in `ENEMSE.VBS` (CDEMD0.EMS vorher FERTIG entpackt), dann R: `... 1 .neu-Reste, 0 Fehler`
+  (das ENEMSE-.neu gehoert zu R und wird entfernt), aber **`shared_assets/RE2/CDEMD0.EMS` (11124736 B) bleibt als
+  vollstaendige Datei unter ihrem echten Namen**, obwohl R sie nicht mehr fuehrt -> GERAET-ABWEICHUNG.
+- Ursache (Code, android_glue.c): ein abgebrochener Lauf loescht "zuletzt entpackt" ZUERST; der naechste Lauf hat
+  damit keine alte Liste (`plan.n_weg = 0`), und `.neu` wird nur je Eintrag der NEUEN Liste entfernt
+  (`unlink(tmp)` in der Entpack-Schleife). Dateien/`.neu` von Pfaden, die die neue Version nicht mehr kennt, raeumt
+  niemand ab. Dieselbe Luecke hat der Uebergang v0.8.19 -> neu (das v0.8.19-Geraet hat keine Liste, nur den Marker):
+  streicht eine kuenftige Version Dateien gegenueber v0.8.19, bleiben sie auf jedem direkt aktualisierten Geraet liegen
+  (heute ohne Folge: HEAD hat dieselben 3603 Pfade wie v0.8.19).
+- Einordnung: Randfall (Abbruch waehrend des Entpackens UND Update, das genau diese Pfade streicht, vor einem
+  erfolgreichen Start). Folge nur Speicher (hier 7-11 MB) und ein Geraetezustand != Liste; die Engine oeffnet keine
+  `.neu`, und ob sie verwaiste Dateien je liest, habe ich nicht geprueft. Widerspricht aber der Aussage im N1-Dossier
+  2.3 Punkt 4 ("`.neu`-Reste eines Abbruchs werden in jedem Lauf, der etwas aendern kann, je Datei entfernt") in der
+  Lesart "keine Reste"; die Abschlusszeile meldet `0 .neu-Reste`, waehrend einer liegt. Nicht in N1 5. "Offen"
+  genannt.
+
 ## 4. PC-Suite local_build.sh all
 
 ## 5. Kein Python-Installer
