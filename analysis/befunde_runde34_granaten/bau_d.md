@@ -451,3 +451,139 @@ Mutationsproben (Konstante in re2_fx.c kurz verstellt → Sonde rot → zurueck 
   **Passed** (100 %), elza_vollstart **Passed** (100 → 76 %). Stand ueber vier Laeufe: 17 rote Eintraege (6 + 4 + 4 + 3) in 10 verschiedenen
   exe-Tests, KEINER reproduzierbar (jeder einzeln gruen, titel_puls bei niedriger Last); die Ziel-Zeile
   `=== LOCAL-BUILD-OK (all)` kam unter der Dauerlast der parallelen Spuren in keinem Lauf zustande.
+
+---
+
+## NACHBESSERUNG (nach Gegenpruefung bau_d.gegenpruefung.md: M1-M4, Hinweise M5/M6)
+
+Stand: 2026-09-30, Zweig `r34g/d-re2fx`, Basis `0749ed00`. Alle Adressen in DIESER Sitzung mit
+`re2_disasm.py` (RE2 `info/re2leon/PSX.EXE`) bzw. `re15_disasm.py` (RE1.5 `info/Re1.5/PSX.EXE`) gelesen.
+Mutationsproben mit `build/r34g_d/mut/mut.py` (unversioniert): genau eine Ersetzung in `re2_fx.c` →
+`local_build.sh build` → Sonde(n) → `git checkout -- re2_fx.c` → `git diff` leer (jede Zeile unten so gelaufen).
+
+### N1 — M1 behoben: `re2fx_boden` nach der RE2-Vergleichsregel (re2_fx.c `re2fx_boden`, `zelle_im_band`)
+
+**Befund bestaetigt** (Messung mit Mutation A1b = alte Regel nur in Op 27): ROOM1140-Wandpunkt → Flammen-+0x14
+`FFFFF8F8`, erster Applier-Ruf **X+3**; mit der neuen Regel `00000000` und **X+19** (wie auf freiem Boden).
+
+**RE2 FUN_8004fba0, selbst disassembliert** (0x8004fba0-0x8005010c, 330 Instruktionen):
+
+```
+8004fc34 sw zero,-13368(at)   ; Kontakt 0x800DCBC8 := 0
+8004fc3c sh zero,15228(at)    ; Rueckgabe 0x800C3B7C := 0
+8004fc48 blez v1 / 8004fc58 sw v0(=1),-13368(at)   ; P.y > 0 -> Kontakt 1
+8004fc5c bne s0(=a3),zero,0x800500c8                ; a3 != 0 -> keine Objekte
+--- Objekte 0x800D0324.. Schritt 504: jal 0x80036e30 (Kasten), jal 0x80038950(P,obj,r,0)
+8004fcbc lhu a2,22(s1) / lw a0,0(s1) / subu v1,a0,a2   ; oben = +0x88 - +0x9E
+8004fccc slt v0,v1,a1 / bne -> 0x8004fce0 ; delay addu v0,a0,a2 (unten)
+8004fcd8 j 0x8004fd38 / addu a0,v1,zero    ; P.y <= oben: Kandidat oben
+8004fce0 slt v0,v0,a1 / bne -> naechstes  ; P.y > unten: nichts
+8004fd0c ori v0,v0,0x1 (Kontakt) ... 8004fd34 addiu a0,v0,-1   ; innen: Kandidat P.y - 1
+8004fd44 slt v0,a0,v0 / 8004fd54 sh a0,15228(at)              ; Rueckgabe = min
+--- Formen (16 B): 8004fd84-fdb8 (u32)(P.x + r - x) < (u32)(w + 2r)  [ERWEITERT um r]
+8004fde4-fe04 unten s1 = -1800 * Bitindex(+12) ; 8004fe08-fe30 oben s0 = -1800 * ((+10>>6)&0x1f)
+8004fe44 Sprungtabelle 0x80011104 (Typ 0/9 Rechteck, 1..8 Formtests, 11..13 Rampen)
+8004ffdc slt v0,s1,v1 / bne 0x8005005c     ; P.y > unten -> nur Buchhaltung 0x800D5BE4
+8004ffe4 slt v0,s0,v1 / beq 0x80050028     ; P.y <= oben -> Rueckgabe-Zweig
+80050000 ori v0,v0,0x1                     ; innen: Kontakt |= 1
+80050034 slt v0,s0,v0 / 80050044 sh s0,15228(at)   ; Rueckgabe = min(oben)
+80050050 slt v0,v0,s0 / bne naechste Form  ; P.y < oben: fertig
+80050064 slt v0,v0,s1 / 80050080 ori v0,v0,0x2     ; P.y < unten: Kontakt |= 2
+800500d8 lh v0,15228(v0)                   ; Rueckgabe s16
+```
+
+FUN_80038950 mit a3 = 0: nur XZ (`beq a3,zero,0x800389e0` @0x800389a4), Rand `addu v0,v0,a2` @0x80038978 —
+**kein Band-/Hoehentor**. Op 28/29 werten den Kontakt als `!= 0` (`beq v0,zero` @0x8001fce4 / @0x8001fe84).
+
+**Port-Zuordnung (neu, je Glied belegt):**
+
+| RE2-Glied | Port (RE1.5-Daten) | Beleg |
+|---|---|---|
+| Form | SCA-Zelle Band b, Filter wie FUN_8001c6e8: `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0, Maske 0x100 (`lh v0,6(a1) / and v0,v0,fp` @0x8001c8a8-b4; Routine-12-Argument `ori a3,zero,0x100` @0x800177d0), Baender 7..0 (`ori a2,zero,0x8` @0x800177c4) | RE1.5-Gegenstueck "Boden unter Effekt-Teilchen" (ESP-Routine 12, §2.4) |
+| Form-Oberkante | −1800·(b+1) | FUN_8001c6e8 `srl v1,s3,12 / addiu v1,v1,1 / … / sll v0,v0,19 / subu / sra t0,v0,16` @0x8001c868-88c |
+| Form-Unterkante | −1800·b | Standhoehe des Bandes: Spieler-y := −1800·(+0x82) `sll v0,v1,3 / … / subu v0,zero,v0 / sw v0,-13684(at)` @0x8001d7b8-d4 |
+| Rechteck ± r | FUN_8001c6e8-Zellenausdruck mit **−r** (RE1.5 SCHRUMPFT um r: `addu v0,v0,s6` / `subu a0,a0,a3` @0x8001c8c8-d0; RE2 erweitert) → identisch `(u32)(P.x + r − x) < (u32)(w + 2r)` | @0x8004fd84-98 |
+| Quadrant | FUN_8003b068 (`and/srl 1/or/srl 30` @0x8003b084-a0, Versatz 0x80010694 = {0,0,0,0}) | wie `quadrant_of` (re15_collision.c) |
+| Objekt | aktives Obj_model_set-Prop, XZ = FUN_8002da4c-Zwilling mit Rand r und dem EIGENEN Band des Props (RE2 ohne Tor); oben = y − 2·hy (`lhu v1,8(v0) / lhu v0,56(s0) / sll v1,v1,1 / subu` @0x8001c828-834), unten = y | @0x8004fcbc-fd54 |
+| Vergleich | wortgleich zur Disasm oben (inkl. Kontakt-Bit 2 und Kandidat P.y − 1) | re2_fx.c `re2fx_boden` |
+
+`zelle_im_band` scannt nur den ZELLEN-Teil von FUN_8001c6e8 fuer ein Band (die Objekt-Stufe von FUN_8001c6e8
+wuerde vor den Zellen eine Objekt-Oberkante liefern, @0x8001c810-840). Ein Aufruf mit Maske `0x100|0x10000`
+waere FALSCH: FUN_8001c6e8 erweitert das Zellwort vorzeichenrichtig (`lh v0,6(a1)` @0x8001c8a8), bei u0-Bit 7
+traefe Bit 0x10000.
+
+Folge fuer die erreichbaren Faelle (Flammen immer mit y > 0, BAUPLAN §1.1): Op 27 (P.y = y) liegt unter jeder
+Band-0-Zelle und unter jedem Prop (unten = 0) → Rueckgabe 0, +0x14..+0x17 = 0 wie in RE2 (vorher −1800 bzw. die
+Prop-Oberkante → +0x16 = 0xFFFF). Op 28 (P.y = y − 900) in einer Wandzelle → Kontakt, Rueckgabe 0 < y → Landung
+wie vorher. Op 29 (P.y = y − 100) in der Wandzelle → Kontakt → Op 50 (wie vorher). Zellen hoeherer Baender ueber
+der Flamme (ROOM1170 Band 2) wirken jetzt wie freier Boden (vorher −5400 → +0x16 = 0xFFFF).
+
+Neu (additiv, re2_fx.h): `re2fx_boden_sonde(p, r, mask, a3, &kontakt)` fuer Sonden.
+
+### N2 — M2 behoben: Sonde `unit_r34_re2fx_raum` (tests/unit/probe_r34_re2fx_raum.c) mit echten Raeumen
+
+Laedt ROOM1140/1150/1170 nach `g_room_rdt` (Haken NULL). Punkte (Werkzeug `build/r34g_d/raum/punkte.c`,
+`zellen.c`, unversioniert; in der Sonde als Vorbedingung 101-108 nachgeprueft):
+
+| Raum | Wandpunkt (Zelle) | Freipunkt | Sonderpunkt |
+|---|---|---|---|
+| ROOM1140 | (−2750, −5750) in Zelle 3 x −5750..16700 z −7800..1750, Band 0, u0 0xFF | (−3000, −20500), 0 im Umkreis 2500 | — |
+| ROOM1150 | (−20000, −19000) in Zelle 0 x −21782..−17858 z −20864..−15914 | (−23750, −13750) | Zellrand x −21784 / −21785 |
+| ROOM1170 | (−19250, −18250) in Zellen 16/17 | (−28750, −14250) | Band-2-Zellen 23/25 (floor 0x23) bei (−27750, −27000): −5400 |
+
+(Die Prueferpunkte lagen teils am Zellrand — Tiefe 0 — bzw. ausserhalb der SCA-Huelle; die Sonde nimmt Punkte
+mit Umkreis ≥ 1000 bzw. ≥ 2500.)
+
+Gemessen und gepinnt (Rueckgabe / Kontakt der Bodensonde):
+
+| Punkt | P.y −2500 | −1800 | −1799 | −900 | 0 | +10 |
+|---|---|---|---|---|---|---|
+| Wand (Band 0) | −1800 / 0 | −1800 / 2 | 0 / 3 | 0 / 3 | 0 / 1 | 0 / 1 |
+| frei | 0 / 0 | — | — | 0 / 0 | 0 / 0 | 0 / 1 |
+| Band-2-Zelle | −6000: −5400 / 0; −5400: −5400 / 2; −4000: 0 / 3; −3600: 0 / 1 | | | 0 / 0 | | 0 / 1 |
+| Prop (oben −600) | −900: −600 / 0; −600: −600 / 0; −300: **−301** / 1; 0: −1 / 1 | | | | | 0 / 1 |
+
+Flammenlauf (`re2fx_aufschlag(1, {x, 10, z}, 0)`, 60 Bilder, X = 0): Wand / Prop → +0x14 `0`, Landung X+2,
+Op 50 in X+3 (erstes Gleitbild, Kontakt Op 29 @0x8001fe84), danach Stillstand, erster Applier-Ruf X+19, 123 Rufe;
+frei / Band-2 → +0x14 `0`, gleitet 1258-1443 in 12 Bildern, kein Op 50, erster Applier-Ruf X+19. Alle drei
+Raeume identisch. Negativ-Kontrollen: derselbe Wandpunkt ohne Raum (`g_room_rdt_ok = 0`) und mit Boden-Haken
+gleitet wie frei (610/620); Gegenprobe mit Raum haelt (630); Prop-Band 1 statt 0 aendert nichts (503, RE2 ohne
+Band-Tor); a3 = 1 schaltet die Objekte ab (502); Rand r = 2 an Zelle (208/209) und Prop (504/505).
+
+Mutationsproben (alle rot, danach `git diff` leer):
+
+| # | Mutation in re2_fx.c | Ergebnis |
+|---|---|---|
+| A1b | Op 27 nimmt wieder FUN_8001c6e8(P,0,8,0x100) (alte Regel) | `FAIL 301` (+0x14 = FFFFF8F8, Applier ab X+3) |
+| A1 | Rueckgabe wieder y-unabhaengig (room_coll am Ende von re2fx_boden) | `FAIL 201` |
+| A2 | Zellen aus (= Pruefer-Mutation B) | `FAIL 201` |
+| A3 | Objekt-Kandidat P.y statt P.y − 1 | `FAIL 501` |
+| A4 | Kontakt-Bit 2 aus | `FAIL 201` |
+| A5 | Rechteck um r geschrumpft statt erweitert | `FAIL 208` |
+| A6 | Prop mit Band-Tor aus P.y | `FAIL 501` |
+| A7 | Unterkante −1800·(b+1)+900 statt −1800·b | `FAIL 201` |
+
+### N3 — M4 behoben (+ Hinweise M5/M6): Weltlage-Normalzweig in `unit_r34_re2fx` (8xx)
+
+* 801-834: Bodenflamme mit Gier genau 1024 / 2048 / 3072 (Aufschlag-Gier = Ziel − r%40, Zug aus dem
+  Strom-Nachbau), jedes Bild ab X+1: Weltlage == M.t + Viertel(lokal VOR dem Bild) — Viertel-Drehung von Hand
+  aus RotMatrixY FUN_8008e8b4 auf I = [[c,0,s],[0,1,0],[−s,0,c]] (`subu t1,zero,t7` @0x8008e910,
+  @0x8008e918-a40): 1024 → (l.z, l.y, −l.x), 2048 → (−l.x, l.y, −l.z), 3072 → (−l.z, l.y, l.x); M.t == Q;
+  lokal.x == Start + Σ vel.x (Physik @0x8001d720-794); Gleitrichtung 1024 → −z (Versatz (0, −1558)),
+  2048 → −x, 3072 → +z; Gleitweg 1260.
+* 840-843: M.rot·Versatz mit Nicht-Einheitsmatrix (direkter Spawn, M.rot = [[0,0,4096],[0,4096,0],[−4096,0,0]],
+  M.t = (1000,20,−2000), Versatz (100,5,300) → (300,5,−100)) jedes Bild; Negativ-Kontrolle Versatz 0 → M.t.
+  (Kein Aufschlag-Kind nutzt M.rot ≠ I zusammen mit Versatz ≠ 0 — Saeure-Kinder/Folgeflammen: M = I, Versatz =
+  Elternlage; Brand-Kinder/Flammen: M = Aufschlag-Matrix, Versatz 0 — der Normalzweig rechnet es trotzdem.)
+* M5: 401 jetzt exakt `vel.x == 180 + acc.x` nach dem Landebild (Op 46 `addiu v0,zero,180` @0x80020ba4, acc.x
+  @0x80020bb0-f4, Physik danach), 408 acc.x ∈ [−20, −10].
+* M6: 337/338 Op 27 in X+1 je Flamme (Draw-Pass aufsteigend 90, 91, 92): Anim r%3 (@0x8001faa4-f4), Luftzaehler
+  8 + r%3 (@0x8001fbb4-b8) gegen den Strom-Nachbau.
+
+| # | Mutation in re2_fx.c | Ergebnis |
+|---|---|---|
+| H | Normalzweig Gier negiert (= Pruefer-Mutation H) | `FAIL 803` |
+| H2 | M.rot·Versatz mit transponierter Matrix | `FAIL 841` |
+| C2 | Op 46 vel.x 180 → 189 (= Pruefer-Mutation C2) | `FAIL 401` (raum: `FAIL 305`) |
+| D | Op 27 Luftzaehler 8 → 9 (= Pruefer-Mutation D) | `FAIL 338` |
+| P | Physik: vel += acc VOR lokal += vel | `FAIL 216` |
