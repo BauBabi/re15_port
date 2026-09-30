@@ -14,7 +14,7 @@ Dieses Dossier wird fortlaufend geschrieben und committet (Sitzungslimit-Schutz)
 | S1 Merge r34g/c-plattform | erledigt 7c202b7a — konfliktfrei, Bau OK, C-Sonden (2 unit + 2 exe) + A/B-Sonden gruen (435 Tests) |
 | S1 Merge r34g/d-re2fx | erledigt 3086da7e — konfliktfrei, Bau OK, alle 12 r34-Sonden gruen (440 Tests) |
 | S2 W1..W11 | W1-W5 erledigt (c91ae1ed), W6 (5b7d3dc9, 62d52d33), W7 (6f7aa99f), W8 (7fbd45a0, 6e320214), W9 (c49f20fe), W10 (b787f722), W11 (Dossier) — alle erledigt |
-| S3 volle Suite | Lauf 1: LOCAL-BUILD-OK (all) — Tests 442/442 (Stand 3b189506) |
+| S3 volle Suite | Lauf 1: LOCAL-BUILD-OK (all) — Tests 442/442 (Stand 3b189506); Lauf 2 (Endstand c8cb4040): LOCAL-BUILD-OK (all) — Tests 442/442 |
 
 ## 1. Merges (Schritt 1)
 
@@ -258,9 +258,14 @@ im Scratchpad der Sitzung), Bildbogen `sheet.py` / `crop.py`. Commit W1-W5: c91a
 ## 3. Volle Suite (Schritt 3)
 
 * **Lauf 1** (`RE15_BUILD_DIR=.../build_r34_int bash re15_port/tools/local_build.sh all`, Stand 3b189506 = alle Code-
-  Aenderungen W1-W10, 2026-09-30 ~09:30-10:25, parallel lief die Suite eines r34n-Baums und ein Android-Bau):
+  Aenderungen W1-W10, 2026-09-30 ~09:50-10:07, ctest 1029 s, parallel lief die Suite eines r34n-Baums und ein Android-Bau):
   **`100% tests passed, 0 tests failed out of 442`**, Abschlusszeile **`=== LOCAL-BUILD-OK (all) — Tests 442/442`**;
   `integration_r34_granaten` 207.4 s. Kein exe-Rot, keine Wiederholung noetig.
+* **Lauf 2 = Endstand** (derselbe Befehl, Stand c8cb4040 = zusaetzlich 7cdd0c73: Ton-Pruefung (h) in W9, W4-Pruefung 70
+  in `unit_r34_wasser`; 2026-09-30 ~10:15-10:34, ctest 1142 s; parallel liefen die Suiten der Baeume `r34n_schrift` und
+  `r34n_dokumente` — Prozessliste gemessen): Bau `ninja: no work to do` (7cdd0c73 war schon gebaut), **`100% tests passed,
+  0 tests failed out of 442`**, Abschlusszeile **`=== LOCAL-BUILD-OK (all) — Tests 442/442`**; `integration_r34_granaten`
+  151.7 s, `unit_r34_wasser` 0.03 s. Kein exe-Rot, keine Wiederholung noetig.
 
 ## 4. OFFEN
 
