@@ -24,6 +24,22 @@ Arbeitsordner (nicht versioniert): build/r34a/pruefer_e1/ ; Belege: analysis/bef
 
 ## 1. Voller Android-Bau build_android.sh
 
+`bash release/build_android.sh --version v0.8.19 --no-toolchain` im Arbeitsbaum (Log
+`build/r34a/pruefer_e1/logs/android_voll.log`, Auszug `android_voll_auszug.txt`), 09:52:11-09:54:50:
+**EXIT 0, `ANDROID-BUILD-OK`**. Python `/c/Python310/python (3.10.11)` (python_finden.sh). CMake-Cache verworfen,
+beide ABIs neu uebersetzt (`buildCMakeRelWithDebInfo[arm64-v8a]` + `[x86_64]`), `BUILD SUCCESSFUL in 2m 15s`
+(Asset-Tasks UP-TO-DATE: die Staging-Kopie stammt aus dem N2-Bau von N1 mit gleichem Inhalt - das Gate danach
+vergleicht jede Datei der APK mit dem Quellbaum). Kette auf der Pruefkopie: aapt `versionCode='81900'
+versionName='v0.8.19'`, beide ABIs, zipalign ok, v2 true, 1 Signer `432bc749...`, Selbsttest **248/248 + 116/116**,
+Tuer-Soll RE15DOOR 30/30 + RE2/DOOR 27/27, ZIP 3616/3616 lesbar, **3603/3603 bytegleich** (356678277 B), Manifest
+3603 Zeilen. APK **N** = `a340a325855801302a6f916061996e7949a3b217e5ff3f24530e3d0bdcadacbc`, 363479879 B
+(Kopie `build/r34a/pruefer_e1/apk/N_v0.8.19.apk`). `release/SHA256SUMS_android.txt` danach per `git restore` auf HEAD.
+
+Unabhaengig (eigenes Skript `pe1_apk_liste.py`, nicht das Gate; `apk_liste_N.txt`): Liste in N 398099 B, sha256
+`95770eb5...`, Kopf `# re15 assets v2 3603 356678277`, jede Zeile `<bytes>	<64 hex>	<pfad>`, sortiert, keine
+(auch Gross/klein-)Dubletten, Kopf = Summe; Eintraege unter `assets/` = Liste + re15_assets.txt; je Zeile sha256 +
+Groesse der APK-Daten UND der Quelldatei = Liste: **0 Abweichungen, LISTE-OK**.
+
 ## 2. make_package.sh echt (Binaries aus Archiv v0.8.19) + "nur PC mit altem Android-Satz"
 
 ## 3. Emulator headless: v0.8.19 -> neue APK -> Update mit gleich grosser Aenderung -> Update ohne Aenderung -> force-stop mitten im Entpacken
