@@ -1,0 +1,13 @@
+Lauf gesamt (START..ENDE)             220.19 s
+python_finden (START..Python:)           0.44 s
+Gradle (== Gradle .. BUILD SUCCESSFUL)  188.42 s
+Kette apk_pruefen gesamt                 25.46 s  (= 11.6 % des Laufs)
+  0 Pruefkopie + Kennung                  0.97 s
+  1 Stichproben (unzip -Z1)               0.52 s
+  2+3 aapt badging + zipalign             0.37 s
+  4 apksigner verify                      1.21 s
+  5a Selbsttest (202 + 58 Proben)        12.66 s
+  5b Gate gegen den Quellbaum             6.89 s
+  6 Kennung Kopie + Pfad (2 x sha256)     2.84 s
+neue Gates (Selbsttest + Gate)           19.55 s  (= 8.9 % des Laufs)
+mv + SHA256SUMS (bis ANDROID-BUILD-OK)    3.99 s
