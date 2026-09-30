@@ -1,0 +1,75 @@
+Mutanten: 490, ueberlebt: 63, davon Zeitgrenze erkannt: 0
+  Klasse A:  47 gesamt,  47 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse B:  48 gesamt,  44 erkannt,   4 ueberlebt,   0 per Zeitgrenze
+  Klasse C:   5 gesamt,   5 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse D:  35 gesamt,  35 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse E: 194 gesamt, 160 erkannt,  34 ueberlebt,   0 per Zeitgrenze
+  Klasse F:  76 gesamt,  55 erkannt,  21 ueberlebt,   0 per Zeitgrenze
+  Klasse G:   5 gesamt,   5 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse H:  40 gesamt,  40 erkannt,   0 ueberlebt,   0 per Zeitgrenze
+  Klasse I:  40 gesamt,  36 erkannt,   4 ueberlebt,   0 per Zeitgrenze
+Ueberlebende:
+  F_gradle_baeume_Z313_ohne1                     m.group(3) or ""  [Operand 1 weg: ""]
+  F_gradle_baeume_Z318_ohne0                     mi.group(1) or mi.group(2)  [Operand 0 weg: mi.group(1)]
+  E__ant_passt_Z374_ge                           i == len(mt)  [== -> >=]
+  E__ant_passt_Z376_le                           mt[i] == "**"  [== -> <=]
+  F__ant_passt_Z378_ohne0                        j < len(pt) and seg(mt[i], pt[j]) and geht(i + 1, j + 1)  [Operand 0 weg: j < len(pt)]
+  F__ant_passt_Z378_ohne2                        j < len(pt) and seg(mt[i], pt[j]) and geht(i + 1, j + 1)  [Operand 2 weg: geht(i + 1, j + 
+  E__ant_passt_Z375_le                           j == len(pt)  [== -> <=]
+  E__ant_passt_Z375_ge                           j == len(pt)  [== -> >=]
+  E__ant_passt_Z378_le                           j < len(pt)  [< -> <=]
+  E__ant_passt_Z370_le                           c == "*"  [== -> <=]
+  E__ant_passt_Z370_le_2                         c == "?"  [== -> <=]
+  F__auslass_hinweis_Z393_ohne0                  n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+  F__auslass_hinweis_Z393_ohne1                  n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+  F__auslass_hinweis_Z393_ohne2                  n.endswith("~") or (n.startswith("#") and n.endswith("#")) or (n.startswith("%")  [Operand
+  F__auslass_hinweis_Z395_ohne0                  n.lower() in ("thumbs.db", "picasa.ini") or n.lower().endswith(".scc")  [Operand 0 weg: n.
+  F__auslass_hinweis_Z395_ohne1                  n.lower() in ("thumbs.db", "picasa.ini") or n.lower().endswith(".scc")  [Operand 1 weg: n.
+  F__auslass_hinweis_Z393_ohne0_2                n.startswith("#") and n.endswith("#")  [Operand 0 weg: n.startswith("#")]
+  F__auslass_hinweis_Z393_ohne1_2                n.startswith("#") and n.endswith("#")  [Operand 1 weg: n.endswith("#")]
+  F__auslass_hinweis_Z393_ohne0_3                n.startswith("%") and n.endswith("%")  [Operand 0 weg: n.startswith("%")]
+  F__auslass_hinweis_Z393_ohne1_3                n.startswith("%") and n.endswith("%")  [Operand 1 weg: n.endswith("%")]
+  E__auslass_hinweis_Z395_notin                  n.lower() in ("thumbs.db", "picasa.ini")  [in -> not in]
+  B_quelldateien_Z407                            raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
+  F_quelldateien_Z435_ohne1                      not q or not os.path.getsize(q[0])  [Operand 1 weg: not os.path.getsize(q[0])]
+  F_quelldateien_Z429_ohne1                      a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand
+  F_quelldateien_Z429_ohne2                      a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand
+  E_c_tabelle_Z572_le                            typ == "char"  [== -> <=]
+  E_tuer_soll_Z655_le                            z["eigen"] == 0  [== -> <=]
+  E_tuer_soll_Z663_ge                            z["spender"] == kein_spender  [== -> >=]
+  E_tuer_soll_Z668_le                            g["spender_eigen"] == 0  [== -> <=]
+  E_tuer_soll_Z650_le_2                          g["spender"] == z["spender"]  [== -> <=]
+  B_paket_pruefen_Z780                           raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" 
+  E_paket_pruefen_Z779_le                        n_befunde == 0  [== -> <=]
+  I_paket_pruefen_Z779_minus1                    n_befunde == 0  [0 -> -1]
+  E_paket_pruefen_Z779_lt                        len(gleich) != len(quellen)  [!= -> <]
+  E_paket_pruefen_Z779_gt                        len(gleich) != len(quellen)  [!= -> >]
+  E_zip_verzeichnis_Z893_lt                      p != len(cd)  [!= -> <]
+  F_zip_verzeichnis_Z856_ohne0                   i < 0 or n_ende - i < EOCD_LEN  [Operand 0 weg: i < 0]
+  E_zip_verzeichnis_Z870_lt                      f.read(4) != LFH_SIG  [!= -> <]
+  E_zip_verzeichnis_Z856_le                      i < 0  [< -> <=]
+  I_zip_verzeichnis_Z856_plus1                   i < 0  [0 -> 1]
+  I_zip_verzeichnis_Z856_minus1                  i < 0  [0 -> -1]
+  E_zip_verzeichnis_Z876_gt                      disk != 0  [!= -> >]
+  E_zip_verzeichnis_Z876_gt_2                    cd_disk != 0  [!= -> >]
+  E_zip_verzeichnis_Z876_lt_3                    n_hier != n_ges  [!= -> <]
+  E_zip_verzeichnis_Z886_ge                      p + CD_LEN > len(cd)  [> -> >=]
+  E_zip_verzeichnis_Z886_gt                      cd[p:p + 4] != CD_SIG  [!= -> >]
+  F__name_fehler_Z914_ohne0                      s.startswith("/") or any(t in (".", "..") for t in teile) or "" in teile[:-1]  [Operand 0 
+  E_struktur_pruefen_Z932_gt                     kopf[:4] != LFH_SIG  [!= -> >]
+  E__eintrag_lesen_Z992_ge                       e.methode == 8  [== -> >=]
+  B__eintrag_lesen_Z1000                         raise _Lesefehler("Datei endet mitten im Eintrag")
+  E__eintrag_pruefen_Z1025_gt                    crc != e.crc  [!= -> >]
+  E__eintrag_pruefen_Z1025_lt_2                  n != e.usize  [!= -> <]
+  B_pruefen_Z1257                                raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" 
+  E_pruefen_Z1255_le                             n_befunde == 0  [== -> <=]
+  I_pruefen_Z1255_minus1                         n_befunde == 0  [0 -> -1]
+  E_pruefen_Z1255_lt                             len(gleich) != len(quellen)  [!= -> <]
+  E_pruefen_Z1255_gt                             len(gleich) != len(quellen)  [!= -> >]
+  F_pruefen_Z1218_ohne1                          e_man.lesbar and e_man.nr not in kaputt  [Operand 1 weg: e_man.nr not in kaputt]
+  F_pruefen_Z1218_ohne0                          e_man.lesbar and e_man.nr not in kaputt  [Operand 0 weg: e_man.lesbar]
+  F_pruefen_Z1203_ohne1                          x.lesbar and x.nr not in gelesen  [Operand 1 weg: x.nr not in gelesen]
+  E_pruefen_Z1220_gt                             n != man_name  [!= -> >]
+  E_pruefen_Z1194_le                             q_n == a_n  [== -> <=]
+  E_pruefen_Z1194_ge                             q_n == a_n  [== -> >=]
+Zeitgrenze (Gate haengt -> Selbsttest faellt ebenfalls):

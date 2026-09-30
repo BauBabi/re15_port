@@ -39,7 +39,7 @@ HAND = [
     ("D13_doppelte_namen_egal", [
         ("        if len(je_name[name]) > 1:", "        if False:", 1)]),
     ("D14_nur_stored_gelesen", [
-        ("    d = zlib.decompressobj(-15) if e.methode == 8 else None", "    d = None", 1)]),
+        ("    d = zlib.decompressobj(-15) if e.methode else None", "    d = None", 1)]),
     ("D15_nicht_assets_nicht_gelesen", [
         ("        for e in sorted((x for x in eintraege if x.lesbar and x.nr not in gelesen), key=lambda x: x.lho):",
          "        for e in []:", 1)]),

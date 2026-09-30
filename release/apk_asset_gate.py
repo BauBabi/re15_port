@@ -397,14 +397,15 @@ def _auslass_hinweis(rel):
     return ""
 
 
+def _walk_fehler(e):
+    """os.walk-Fehler (unlesbarer Ordner) -> Rueckgabe 2; ein still uebersprungener Ordner fehlte sonst im
+    Vergleich. Im Fall-Selbsttest nicht nachstellbar - die inneren Proben rufen es direkt."""
+    raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
+
+
 def quelldateien(repo, befund):
     """{apk_name: (abs_pfad, rel_zum_repo)} ueber alle Baeume + Zaehlung je Baum."""
     dateien, zahl = {}, {}
-
-    def walk_fehler(e):
-        # im Selbsttest nicht nachstellbar (unlesbarer Ordner); fiele er weg, meldete die Zusatz-Pruefung
-        # die APK-Dateien des uebersprungenen Ordners als "zusaetzlich in der APK" (rc 1)
-        raise Bedienfehler("Quellbaum nicht lesbar: %s" % e)
 
     for basis, quelle, ziel, muster in BAEUME:
         rel_baum = "/".join(x for x in (BASIS_ORDNER[basis], quelle) if x)
@@ -414,7 +415,7 @@ def quelldateien(repo, befund):
             befund("Quellbaum", "Quellbaum fehlt: %s (Gradle kopiert aus einem fehlenden Ordner "
                                 "still NICHTS)" % rel_baum)
             continue
-        for dp, dns, fns in os.walk(wurzel, onerror=walk_fehler, followlinks=True):
+        for dp, dns, fns in os.walk(wurzel, onerror=_walk_fehler, followlinks=True):
             dns.sort()
             for fn in sorted(fns):
                 p = os.path.join(dp, fn)
@@ -513,6 +514,7 @@ def c_struktur(code, typname, datei):
     return felder
 
 
+_C_ZEICHENTYPEN = ("char",)      # char[N] wird mit einer Zeichenkette initialisiert
 _C_TOK_RE = re.compile(r'(\{)|(\})|(,)|("(?:[^"\\\n]|\\.)*")|(-?(?:0[xX][0-9a-fA-F]+|[0-9]+))[uUlL]*(?![\w.])')
 
 
@@ -569,7 +571,7 @@ def c_tabelle(code, typname, name, felder, datei):
         d = {}
         for idx, (feld, typ, anz) in enumerate(felder):
             w = z[idx] if idx < len(z) else None
-            if typ == "char" and anz:
+            if typ in _C_ZEICHENTYPEN and anz:
                 w = "" if w is None else w
                 if not isinstance(w, str) or len(w.encode("utf-8")) >= anz:
                     raise Bedienfehler("%s: %s Zeile %d Feld %s: Zeichenkette mit < %d Bytes erwartet" % (datei, name, k, feld, anz))
@@ -652,7 +654,7 @@ def tuer_soll(repo, befund):
         return None
 
     for z in z31 + z33:
-        if z["eigen"] == 0:                               # door_scene_pc.c:322 RE2-Datei DOORxx.DO2
+        if not z["eigen"]:                                # door_scene_pc.c:322 RE2-Datei DOORxx.DO2
             braucht(z["re2_nr"], "Tuerzeile")
         elif z["eigen"] > len(eigen):
             befund("Engine-Tabelle", "Tuerzeile nennt Port-Archiv %d, re15_tuer_eigen hat %d" % (z["eigen"], len(eigen)))
@@ -665,7 +667,7 @@ def tuer_soll(repo, befund):
         g = griff(z)                                      # :347-350 Spender des Griff-Tauschs
         if g is None:
             continue
-        if g["spender_eigen"] == 0:
+        if not g["spender_eigen"]:
             braucht(z["spender"], "Griff-Spender")
         elif g["spender_eigen"] > len(eigen):
             befund("Engine-Tabelle", "Griff-Tausch nennt Port-Archiv %d, re15_tuer_eigen hat %d"
@@ -776,8 +778,7 @@ def paket_pruefen(repo, paket, max_zeilen):
         print("   %-28s %7d %7d" % (ziel, zahl_quelle.get(ziel, 0), sum(1 for n in gleich if n.startswith(pre))))
     print("   Laufzeit:  %.1f s" % (time.monotonic() - t0))
     n_befunde = sum(len(v) for v in befunde.values())
-    if n_befunde == 0 and len(gleich) != len(quellen):
-        raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (len(quellen), len(gleich)))
+    _widerspruch_pruefen(n_befunde, len(gleich), len(quellen))
     return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE-PAKET",
                              "%d Dateien in %d Baeumen bytegleich, nichts zusaetzlich" % (len(gleich), len(BAEUME)))
 
@@ -797,6 +798,13 @@ def nur_quellbaum(repo, max_zeilen):
     _tuer_zeilen_drucken(tuer)
     return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE-QUELLBAUM",
                              "%d Dateien in %d Baeumen, Tuer-Soll erfuellt" % (len(quellen), len(BAEUME)))
+
+
+def _widerspruch_pruefen(n_befunde, n_gleich, n_quellen):
+    """Sicherheitsnetz: keine Befunde, aber nicht jede Quelldatei als gleich gezaehlt -> eine Pruefung hat still
+    uebersprungen (zweiter Fehler) -> Rueckgabe 2 statt 0. Im Lauf unerreichbar; die inneren Proben pruefen es."""
+    if not n_befunde and n_gleich != n_quellen:
+        raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (n_quellen, n_gleich))
 
 
 def _sammler():
@@ -873,7 +881,7 @@ def zip_verzeichnis(pfad):
         f.seek(max(0, eocd_pos - 20))
         z64 = f.read(4) == Z64_LOC_SIG
         if (z64 or 0xFFFF in (n_hier, n_ges) or 0xFFFFFFFF in (cd_groesse, cd_off)
-                or disk != 0 or cd_disk != 0 or n_hier != n_ges):
+                or disk or cd_disk or n_hier != n_ges):
             raise Bedienfehler("APK nicht lesbar: %s (ZIP64/mehrteiliges Archiv - so baut AGP die APK nicht, "
                                "das Gate liest es nicht)" % pfad)
         if cd_off + cd_groesse > eocd_pos:
@@ -911,7 +919,7 @@ def _name_fehler(roh):
     if any(ord(c) < 0x20 or ord(c) == 0x7F for c in s):
         return "Steuerzeichen im Namen"
     teile = s.split("/")
-    if s.startswith("/") or any(t in (".", "..") for t in teile) or "" in teile[:-1]:
+    if any(t in (".", "..") for t in teile) or "" in teile[:-1]:     # absolut: der erste Teil ist ""
         return "absoluter Pfad, '.'/'..' oder '//' im Namen"
     return ""
 
@@ -989,7 +997,7 @@ def _eintrag_lesen(fa, e, sammeln=False):
         if teile is not None:
             teile.append(b)
 
-    d = zlib.decompressobj(-15) if e.methode == 8 else None
+    d = zlib.decompressobj(-15) if e.methode else None      # nur 0/8 kommen hierher (struktur_pruefen)
     fa.seek(e.daten_off)
     rest = e.csize
     try:
@@ -1191,8 +1199,7 @@ def pruefen(repo, apk, max_zeilen):
             q_sha, q_n = _sha_datei(pfad)
             if a_sha != q_sha:
                 befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s  Quelle %s.., APK %s.."
-                       % (("gleiche Groesse %d B" % q_n) if q_n == a_n else ("Quelle %d B, APK %d B" % (q_n, a_n)),
-                          name, q_sha[:16], a_sha[:16]))
+                       % ("gleiche Groesse %d B" % q_n, name, q_sha[:16], a_sha[:16]))
             else:
                 gleich[name] = q_n
                 bytes_gleich += q_n
@@ -1252,10 +1259,7 @@ def pruefen(repo, apk, max_zeilen):
     print("   Laufzeit:  %.1f s" % (time.monotonic() - t0))
 
     n_befunde = sum(len(v) for v in befunde.values())
-    if n_befunde == 0 and len(gleich) != len(quellen):
-        # Sicherheitsnetz: greift nur, wenn eine Pruefung oben still ueberspringt (zweiter Fehler)
-        raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde"
-                           % (len(quellen), len(gleich)))
+    _widerspruch_pruefen(n_befunde, len(gleich), len(quellen))
     return _befunde_ausgeben(befunde, reihenfolge, max_zeilen, "APK-ASSET-GATE",
                              "%d Dateien in %d Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, ZIP-Struktur "
                              "wie Android sie liest" % (len(gleich), len(BAEUME)))
@@ -1394,11 +1398,13 @@ static const re15_tuer_eigen_t re15_tuer_eigen[2] = {
     { "P07G", 0x07, %(P07G_ton)d, %(P07G_modell)d, %(P07G_sektor)d, %(P07G_datei)d, 0x%(P07G_fnv)08Xu, 0 },
     { "P2DS", 0x13, %(P2DS_ton)d, %(P2DS_modell)d, %(P2DS_sektor)d, %(P2DS_datei)d, 0x%(P2DS_fnv)08Xu, 1 },
 };
-static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[4] = {
+static const re15_tuer_zeile_t re15_tuer_zeilen_eigen[6] = {
     /* C */ { 0x1000, 0, 0, 22850, -13400, 500, 1000, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 1, 0, 0xFF, 0, 2, 0x00BBE, 1 },
     /* D */ { 0x5060, 0, 0, -26300, -11600, 800, 1800, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0x0A, 273, 142, 0x02AAE, 2 },
     /* G */ { 0x4080, 0, 0, 1, 2, 3, 4, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x13, 0, 0, 0xFF, 7, 8, 0x0100, 0 },
     /* H */ { 0x1070, 0, 0, 5, 6, 7, 8, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0x0A, 11, 12, 0x0200, 1 },
+    /* I */ { 0x1071, 0, 0, 5, 6, 7, 8, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0x0B, 13, 14, 0x0210, 1 },
+    /* J */ { 0x1072, 0, 0, 5, 6, 7, 8, {0, 0, 0, 0}, {0, 0, 0, 0}, 0x07, 0, 0, 0x0D, 15, 16, 0x0220, 1 },
 };
 static const re15_griff_tausch_t re15_griff_tausche_eigen[5] = {
     /* E1 */ { 0x13, 0x0A, 1, 1, {0, 0, 0}, {2048, 2048, 0}, 0, -450, 0, {0, -584, 458}, {0, -1064, 418}, 1 },
@@ -1623,6 +1629,7 @@ class _Fall:
         self.paket = os.path.join(wurzel, "paket")
         self.paket_eingriffe = []            # f(paketordner) nach dem Kopieren
         self.umgebung = {}                   # zusaetzliche Umgebung des Gate-Laufs (Pruefhaken)
+        self.leer_am_ende = False            # Eintrag mit leerem Namen als LETZTER Eintrag (0 B Name im CD)
         self.argumente = []                  # zusaetzliche Aufrufargumente (z.B. --max-zeilen)
 
     def manifest_aus_eintraegen(self):
@@ -1691,6 +1698,8 @@ class _Fall:
                     zf.writestr(zipfile.ZipInfo(self.schreibname.get(name, name)), b, methode)
                 for name in self.verzeichnisse:
                     zf.writestr(zipfile.ZipInfo(name), b"", zipfile.ZIP_STORED)
+                if self.leer_am_ende:
+                    zf.writestr(zipfile.ZipInfo("x"), b"", zipfile.ZIP_STORED)   # Name danach roh auf Laenge 0
         _fx_polstern(self.apk, self.anhang)
         for eingriff in self.roh:
             eingriff(self.apk)
@@ -1802,7 +1811,7 @@ def _faelle():
     def kein_zip(f):
         def ueberschreiben():
             with open(f.apk, "wb") as h:
-                h.write(b"kein ZIP, nur Text")
+                h.write(b"kein ZIP, nur Text - " * 8)
         f.nach_schreiben = ueberschreiben
 
     def apk_fehlt(f):
@@ -2314,6 +2323,99 @@ def _faelle():
     def eocd_cd_off_ffff(f):
         f.roh.append(lambda apk: _fx_eocd(apk, (16, "<I"), 0xFFFFFFFF))
 
+    def praefix_zz(f):                   # Praefix aus 'Z' (Bytes GROESSER als 'PK\3\4')
+        def e(apk):
+            d = bytearray(_fx_lesen(apk))
+            cd, cd_off, eocd = _fx_cd(bytes(d))
+            for (p, lho, _n, _x, _k, _s, _nm) in cd:
+                struct.pack_into("<I", d, p + 42, lho + 16)
+            struct.pack_into("<I", d, eocd + 16, cd_off + 16)
+            _fx_schreiben(apk, b"Z" * 16 + bytes(d))
+        f.roh.append(e)
+
+    def kommentar_max(f):                # gut: EOCD mit 65535 B Kommentar - die Signatur steht dann am Anfang des Suchfensters
+        def e(apk):
+            d = bytearray(_fx_lesen(apk))
+            i = d.rfind(EOCD_SIG)
+            struct.pack_into("<H", d, i + 20, 0xFFFF)
+            _fx_schreiben(apk, bytes(d[:i + 22]) + b"k" * 0xFFFF)
+        f.roh.append(e)
+
+    def torse_leer(f):
+        rel = "re15_port/shared_assets/RE2/TORSE.VBS"
+        f.quelle[rel] = b""
+        f.eintrag("assets/" + rel[len("re15_port/"):])[1] = b""
+
+    def re15door_ohne_do2(f):            # RE15DOOR: nur eine Nicht-DO2-Datei und ein DO2 in einem Unterordner
+        for rel in [r for r in f.quelle if r.startswith("re15_port/shared_assets/RE15DOOR/")]:
+            del f.quelle[rel]
+        f.eintraege = [e for e in f.eintraege if not e[0].startswith("assets/shared_assets/RE15DOOR/")]
+        for rel, b in (("re15_port/shared_assets/RE15DOOR/liesmich.txt", b"text"),
+                       ("re15_port/shared_assets/RE15DOOR/alt/P99X.DO2", b"alt")):
+            f.quelle[rel] = b
+            f.eintraege.append(["assets/" + rel[len("re15_port/"):], b, zipfile.ZIP_STORED])
+
+    def cd_groesse_kleiner(f):           # EOCD nennt ein 3 B kleineres Zentralverzeichnis (letzter Name ragt hinaus)
+        f.roh.append(lambda apk: _fx_eocd(apk, (12, "<I"), plus=-3))
+
+    def leer_am_ende(f):                 # gut: letzter CD-Eintrag ohne Name/Extra/Kommentar (Kopf endet genau am CD-Ende)
+        f.leer_am_ende = True
+
+        def e(apk):
+            d = bytearray(_fx_lesen(apk))
+            cd, cd_off, eocd = _fx_cd(bytes(d))
+            p, lho, nlen, xlen, klen, _cs, name = cd[-1]
+            if name != b"x" or (xlen, klen) != (0, 0):
+                raise AssertionError("Selbsttest-Fixture: letzter Eintrag nicht 'x'")
+            l_nlen, l_xlen = struct.unpack("<HH", bytes(d[lho + 26:lho + 30]))
+            # Local Header: Name 'x' raus (Laenge 0), Daten/Polster bleiben; CD: Name raus
+            neu = d[:lho + 26] + struct.pack("<HH", 0, l_xlen) + d[lho + 30 + 1:p] + d[p:p + 28] + struct.pack("<H", 0) + d[p + 30:p + 46]
+            neu = bytearray(neu)
+            neu_cd_off = cd_off - 1
+            ende = bytearray(d[eocd:eocd + 22])
+            struct.pack_into("<I", ende, 12, (eocd - cd_off) - 1)
+            struct.pack_into("<I", ende, 16, neu_cd_off)
+            # CD-Offset des letzten Eintrags im Zentralverzeichnis bleibt lho (davor nichts verschoben)
+            _fx_schreiben(apk, bytes(neu) + bytes(ende))
+        f.roh.append(e)
+
+    def signatur_klein(wo):              # Signatur durch KLEINERE Bytes ersetzt ('PK\0\0' < 'PK\1\2'/'PK\3\4')
+        def faelschen(f):
+            def e(apk):
+                if wo == "cd":
+                    _cd, off, _eocd = _fx_cd(_fx_lesen(apk))
+                else:
+                    off, _p, _d = _fx_stelle(apk, P07)
+                _fx_patch(apk, [(off, b"PK\x00\x00")])
+            f.roh.append(e)
+        return faelschen
+
+    def crc_richtung(kleiner):           # Stored-Nicht-Asset: berechnete CRC32 kleiner/groesser als die im CD
+        def faelschen(f):
+            def e(apk):
+                _lho, _p, d = _fx_stelle(apk, SO)
+                n = len(_NICHT_ASSETS[2][1])
+                alt = _fx_lesen(apk)[d:d + n]
+                neu = _richtung(alt, kleiner, zlib.crc32)
+                _fx_patch(apk, [(d, neu)])
+            f.roh.append(e)
+        return faelschen
+
+    def manifest_daten_kippen(f):        # Manifest-Daten: '1200' -> '1201' (CRC bleibt alt) - Eintrag beschaedigt
+        def e(apk):
+            _lho, _p, d = _fx_stelle(apk, "assets/" + MANIFEST)
+            daten = _fx_lesen(apk)
+            i = daten.index(b"1200\t", d)
+            _fx_patch(apk, [(i + 3, b"1")])
+        f.roh.append(e)
+
+    def manifest_lfh_crc(f):             # Manifest: CRC nur im Local Header +1 - Eintrag nicht lesbar
+        def e(apk):
+            lho, _p, _d = _fx_stelle(apk, "assets/" + MANIFEST)
+            w, = struct.unpack("<I", _fx_lesen(apk)[lho + 14:lho + 18])
+            _fx_patch(apk, [(lho + 14, struct.pack("<I", (w + 1) % (1 << 32)))])
+        f.roh.append(e)
+
     def cd_kopf_halb(f):                 # Zentralverzeichnis endet mitten im Kopf eines weiteren Eintrags
         def e(apk):
             d = _fx_lesen(apk)
@@ -2340,7 +2442,8 @@ def _faelle():
         ("Manifest: fehlende Zeile", man_zeile_fehlt, 1, ["fehlt im Manifest: " + P2DS]),
         ("Datei nur im Quellbaum", nur_quelle, 1, ["fehlt in der APK: assets/shared_assets/RE15DOOR/NEU.DO2"]),
         ("APK-Eintrag kuerzer als die Quelle", kuerzer, 1, ["Groesse weicht ab: " + TEX]),
-        ("Byte im APK-Datenstrom gekippt (CRC)", crc, 1, ["beschaedigt (CRC", "effect0_blood.tim"]),
+        ("Byte im APK-Datenstrom gekippt (CRC)", crc, 1, ["beschaedigt (CRC", "effect0_blood.tim"], False,
+         ["[APK: beschaedigt (CRC)] 2"]),
         ("doppelter APK-Eintrag", doppelt, 1, ["doppelter Eintrag in der APK (2x): " + D7]),
         ("Manifest: Kopfzeile Anzahl falsch", kopf, 1, ["Manifest-Kopfzeile passt nicht"]),
         ("Manifest: BOM", bom, 1, ["BOM"]),
@@ -2400,6 +2503,12 @@ def _faelle():
         ("build.gradle: from in unbekanntem Format", g_from_format, 2, ["from-Anweisung nicht im bekannten Format"]),
         ("build.gradle: unbekannte Anweisung im from-Block", g_from_anweisung, 2, ["unbekannte Anweisung im from-Block"]),
         ("build.gradle: from ohne into", g_ohne_into, 2, ["from 'shared_assets/RE2' ohne into"]),
+        ("build.gradle: from ohne Block", lambda f: f.gradle_ersetzen('from(new File(portRoot, "shared_assets/RE2"))          { into "shared_assets/RE2" }',
+                                                                    'from(new File(portRoot, "shared_assets/RE2"))'),
+         2, ["from 'shared_assets/RE2' ohne into"]),
+        ("build.gradle: into(\"...\") mit Klammern (gut)", lambda f: f.gradle_ersetzen('{ into "shared_assets/RE2" }',
+                                                                                    '{ into("shared_assets/RE2") }'),
+         0, ["APK-ASSET-GATE-OK"]),
         ("build.gradle: preserve fehlt", g_ohne_preserve, 2, ["erwartet genau ein 'into(assetStage)'"]),
         ("build.gradle: Klammern passen nicht", g_klammer_falsch, 2,
          ["Klammern passen nicht (Zeichen %d)" % (_GRADLE_MUSTER.index("    into(assetStage)") + len("    into(assetStage"))]),
@@ -2577,7 +2686,7 @@ def _faelle():
          ["Manifest-Zeile 2: unerwartete Kommentarzeile"]),
         ("APK-Eintrag laenger als die Quelle", laenger, 1, ["Groesse weicht ab: " + TEX + "  Quelle 5000 B, APK 5010 B"]),
         ("Zusatzeintrag assets/AAA.BIN (sortiert vor dem Manifest)", zusatz_vorn, 1,
-         ["zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/AAA.BIN"]),
+         ["zusaetzlich in der APK (kein Asset-Baum liefert ihn): assets/AAA.BIN"], False, ["Manifest nennt AAA.BIN"]),
         ("APK-Inhalt: sha256 kleiner als die Quelle", apk_inhalt_richtung(D7, True), 1, ["Inhalt weicht ab (sha256", D7]),
         ("APK-Inhalt: sha256 groesser als die Quelle", apk_inhalt_richtung(D7, False), 1, ["Inhalt weicht ab (sha256", D7]),
         ("Local Header zeigt auf die letzten 8 Bytes ('PK\\3\\4' im EOCD-Kommentar)", lfh_hinten, 1,
@@ -2615,6 +2724,23 @@ def _faelle():
          ["fehlt in der APK: " + P07], False, ["weitere"]),
         ("Kopf ohne #define RE15_DOOR_KEIN_SPENDER", tabelle("tuer_kopf", "#define RE15_DOOR_KEIN_SPENDER  0xFFu\n", ""), 2,
          ["#define RE15_DOOR_KEIN_SPENDER nicht gefunden"]),
+        ("Praefix aus 'Z' vor dem ersten Local Header", praefix_zz, 2, ["beginnt nicht mit einem Local Header"]),
+        ("EOCD mit 65535 B Kommentar (gut)", kommentar_max, 0, ["APK-ASSET-GATE-OK"]),
+        ("TORSE.VBS 0 B in Quelle UND APK", torse_leer, 1, ["Pflichtdatei fehlt/leer: re15_port/shared_assets/RE2/TORSE.VBS"]),
+        ("RE15DOOR nur mit liesmich.txt und alt/P99X.DO2", re15door_ohne_do2, 1,
+         ["Pflichtinhalt fehlt: re15_port/shared_assets/RE15DOOR/*.DO2 (0 Dateien)"]),
+        ("EOCD: Zentralverzeichnis 3 B kleiner als belegt", cd_groesse_kleiner, 2, ["Rest oder Ueberlauf"]),
+        ("EOCD: Eintraege hier > Eintraege gesamt", eocd_feld(8, plus=1), 2, ["ZIP64/mehrteiliges Archiv"]),
+        ("letzter Eintrag ohne Name (Kopf endet genau am Ende des Zentralverzeichnisses, gut)", leer_am_ende, 0,
+         ["APK-ASSET-GATE-OK"]),
+        ("Zentralverzeichnis-Signatur durch kleinere Bytes ersetzt", signatur_klein("cd"), 2, ["Zentralverzeichnis kaputt bei Eintrag 1"]),
+        ("Local-Header-Signatur durch kleinere Bytes ersetzt", signatur_klein("lfh"), 1, ["Local Header fehlt", P07]),
+        ("libmain.so: CRC32 der Daten kleiner als im Zentralverzeichnis", crc_richtung(True), 1, ["beschaedigt (CRC", SO]),
+        ("libmain.so: CRC32 der Daten groesser als im Zentralverzeichnis", crc_richtung(False), 1, ["beschaedigt (CRC", SO]),
+        ("Manifest-Eintrag beschaedigt: kein Manifest-Befund aus kaputten Daten", manifest_daten_kippen, 1,
+         ["beschaedigt (CRC", "assets/re15_assets.txt"], False, ["Manifest-Groesse falsch", "Manifest-Kopfzeile passt nicht"]),
+        ("Manifest-Eintrag mit falscher LFH-CRC: nicht gelesen", manifest_lfh_crc, 1,
+         ["CRC/Groessen im Local Header weichen", "assets/re15_assets.txt"]),
     )
 
 
@@ -2647,6 +2773,79 @@ def _fall_laufen(tmp, nr, fall):
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
+# Innere Proben (Nachbesserung R2, Mutanten-Probe): Hilfsfunktionen, die die Fall-Fixture nur mit EINER
+# Eingabe erreicht - die Baumliste hat genau ein include-Muster ("STAGE*/**"), und die muss build.gradle
+# gleichen. Teil-Abschwaechungen von _ant_passt (z.B. '*' wie '**', Grenze j <= len) blieben dort
+# unsichtbar; hier laeuft sie gegen feste Ant/Gradle-Antworten.
+_ANT_PROBEN = (
+    ("STAGE*/**", "STAGE1/room1170/main00.wav", True), ("STAGE*/**", "STAGE1", True),
+    ("STAGE*/**", "unused/STAGE1/x.mp3", False), ("STAGE*/**", "README.md", False), ("STAGE*/**", "stage1/x", False),
+    ("*/x", "a/x", True), ("*/x", "a/b/x", False), ("*", "a/b", False), ("*", "", True), ("x", "", False),
+    ("a/?", "a/b", True), ("a/?", "a/bc", False), ("a/?", "a/", False), ("?b", "!b", True),
+    ("**/x.wav", "x.wav", True), ("**/x.wav", "a/b/x.wav", True), ("**/x.wav", "a/b/y.wav", False),
+    ("a/**/b", "a/b", True), ("a/**/b", "a/x/y/b", True), ("a/**/b", "a/x/y/c", False), ("a/**", "a", True),
+    ("a/**", "b", False), ("a/b", "a", False), ("a", "a/b", False), ("A*", "a1", False), ("#*", "#1", True),
+    ("(*)", "(1)", True), ("x*y", "x/y", False),
+)
+
+
+# Hinweis in "fehlt in der APK" (warum Gradle/AAPT die Datei weglassen): Teiltext oder "" = kein Hinweis
+_AUSLASS_PROBEN = (
+    ("s/PSX/.versteckt.bin", "Name beginnt mit '.'"), ("s/.cache/x.bin", "Ordner '.cache' beginnt mit '.'"),
+    ("s/_intern/x.bin", "Ordner '_intern' beginnt mit '_'"), ("s/x.bin~", "Gradle-Standardausschluss"),
+    ("s/#x#", "Gradle-Standardausschluss"), ("s/%x%", "Gradle-Standardausschluss"), ("s/x#", ""), ("s/#x", ""),
+    ("s/%x", ""), ("s/x%", ""), ("s/Thumbs.db", "AAPT-Ignoriermuster"), ("s/picasa.ini", "AAPT-Ignoriermuster"),
+    ("s/a.SCC", "AAPT-Ignoriermuster"), ("s/x.bin", ""), ("s/a_b/x.bin", ""), ("s/a.b/x.bin", ""),
+    ("s/x~y", ""), ("s/thumbs.dbx", ""),
+)
+
+
+def _innere_proben():
+    """-> Liste der falschen Antworten (leer = gut)."""
+    falsch = []
+    for muster, pfad, soll in _ANT_PROBEN:
+        try:
+            ist = _ant_passt(muster, pfad)
+        except Exception as ex:
+            ist = "Ausnahme %r" % (ex,)
+        if ist is not soll:
+            falsch.append("_ant_passt(%r, %r) = %r, soll %r" % (muster, pfad, ist, soll))
+    # Sicherheitsnetz und walk-Fehler (im Fall-Selbsttest unerreichbar)
+    for args, soll_ausnahme in (((0, 5, 5), False), ((0, 4, 5), True), ((0, 6, 5), True), ((1, 4, 5), False),
+                                ((2, 5, 5), False)):
+        try:
+            _widerspruch_pruefen(*args)
+            ist = False
+        except Bedienfehler:
+            ist = True
+        if ist != soll_ausnahme:
+            falsch.append("_widerspruch_pruefen%r: Ausnahme %r, soll %r" % (args, ist, soll_ausnahme))
+    try:
+        _walk_fehler(OSError("Probe"))
+        falsch.append("_walk_fehler: keine Ausnahme")
+    except Bedienfehler as ex:
+        if "Quellbaum nicht lesbar: Probe" not in str(ex):
+            falsch.append("_walk_fehler: falsche Meldung %r" % str(ex))
+    # Datei endet mitten im Eintrag (struktur_pruefen laesst es im Lauf nie dazu kommen)
+    import io
+    e = _Eintrag(0, b"x", 0, 0, 0, 10, 10, 0)
+    e.daten_off = 2
+    try:
+        _eintrag_lesen(io.BytesIO(b"0123456"), e)
+        falsch.append("_eintrag_lesen: 5 von 10 B ohne Fehler")
+    except _Lesefehler as ex:
+        if "Datei endet mitten im Eintrag" not in str(ex):
+            falsch.append("_eintrag_lesen: falsche Meldung %r" % str(ex))
+    for rel, soll in _AUSLASS_PROBEN:
+        try:
+            ist = _auslass_hinweis(rel)
+        except Exception as ex:
+            ist = "Ausnahme %r" % (ex,)
+        if not isinstance(ist, str) or (soll not in ist if soll else ist != ""):
+            falsch.append("_auslass_hinweis(%r) = %r, soll %s" % (rel, ist, repr(soll) if soll else "''"))
+    return falsch
+
+
 def _fall_bewerten(fall, ergebnis):
     """-> (gut, fehlende Meldungen)"""
     _titel, _f, soll_rc, soll_text = fall[:4]
@@ -2662,6 +2861,15 @@ def selbsttest():
     # RE15_GATE_SELBSTTEST_SCHNELL=1 (nur fuer die Mutanten-Probe): beim ersten falschen Fall aufhoeren - am
     # Ergebnis aendert das nichts (ein falscher Fall = SELBSTTEST-FEHLER), es spart nur die Laufzeit
     schnell = os.environ.get("RE15_GATE_SELBSTTEST_SCHNELL") == "1"
+    falsch = _innere_proben()
+    n_innen = len(_ANT_PROBEN) + len(_AUSLASS_PROBEN) + 7
+    print("   Innere Proben: %d/%d (_ant_passt, _auslass_hinweis, Sicherheitsnetz, walk-Fehler, Dateiende)"
+          % (n_innen - len(falsch), n_innen))
+    if falsch:
+        for z in falsch:
+            print("   [FEHLER] " + z)
+        print("== SELBSTTEST-FEHLER: %d innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==" % len(falsch))
+        return RC_ABWEICHUNG
     tmp = tempfile.mkdtemp(prefix="apk_gate_selbsttest_")
     faelle = _faelle()
     ergebnis = {}

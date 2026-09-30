@@ -8,7 +8,7 @@
 B=C:/workspace/git/reAi_v2/.claude/worktrees/r34a_android
 cd "$B"
 L=build/r34a/nb2/logs/stolperdraht.log; : > $L
-D=$B/build/r34a/nb2/stolperdraht
+D=/c/workspace/git/reAi_v2/.claude/worktrees/r34a_android/build/r34a/nb2/stolperdraht   # POSIX: "C:/..." zerlegte PATH am ':' (Lauf 1: Draht nie im PATH)
 WA=/c/Users/mjoedicke/AppData/Local/Microsoft/WindowsApps
 P="$D:/usr/bin:/mingw64/bin:$WA:$PATH"
 echo "--- (1) ./release/apk_asset_gate.py --quellbaum"
