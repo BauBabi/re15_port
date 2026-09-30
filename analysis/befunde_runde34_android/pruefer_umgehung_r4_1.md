@@ -71,7 +71,7 @@ Ziel: ein falsches Ergebnis erzwingen (Umgehung) oder einen verschluckten Fehler
 
 Werkzeug `u1_mutanten.py` (Kopien unter `build/r34a/pruefer_u1/mut/`, je Mutant `diff` = genau 1 geaenderte Zeile;
 G0/G4 sind Kuerzungen), `u1_selbsttests.sh` (Selbsttest direkt, Rueckgabe selbst abgefangen). Beleg
-`selbsttests_h1h4_teil1.txt`:
+`selbsttests_h1h4.txt`:
 
 | Gate | Selbsttest EXIT | gedruckte Aussage |
 |---|---|---|
@@ -87,3 +87,38 @@ Gates liefern auch fuer `--quellbaum`, `--paket` und die APK-Pruefung rc 0 (G0/G
 Abweichung endet mit 0). Die ganze Kette mit diesen Gates: Abschnitt 2.
 Warum die Kampagnen das nicht sahen: `mutanten_teil.py` (R2) "Nur Pruefcode wird mutiert (nicht Selbsttest/Fixture/
 main)", G1-G22 (N1) nur `manifest_lesen`/`manifest_pruefen`/`_pfad_fehler`, MU1-MU8 (R3) Pruefcode.
+
+## 3. SHA-256 von asset_abgleich.c (H6f) - haltbar
+
+`u1_sha_zusatz.c` uebersetzt die AUSGELIEFERTE `asset_abgleich.c` unveraendert mit (gcc 16.2 msys64, `-Wall -Wextra
+-Wpedantic -Wshadow -Wconversion`, ohne Warnung); `u1_sha_vergleich.py` rechnet dasselbe mit Python hashlib
+(Beleg `sha_zusatz.txt`):
+- 300 Zufallsnachrichten (Laengen 2..1046990 B, 136 unter 300 B, gezielt um 55/56/63/64 je Block, 94 >= 64 KiB), je
+  Nachricht zufaellige Stueckelung 0..4097 B inkl. leerer Aufrufe: **0 falsch**;
+- Strom 2^29-1 / 2^29 / 2^29+1 B (Bitlaenge ueber 2^32) und **4,5 GiB** (Bytezaehler ueber 2^32): gleich;
+- `re15_sha256_datei` auf `RE2/CDEMD0.EMS` (11124736 B) und der Referenz-APK (363212403 B, = Archiv-sha 514bebd5...): gleich.
+Kein Befund.
+
+## 4. Format v2: eigene Faelschungen (H5) und neue Gate-Mutanten (H4)
+
+`u1_liste_korpus.c` (asset_abgleich.c unveraendert) + `u1_korpus.py` (Gate `manifest_lesen` als Modul geladen) auf
+DENSELBEN 57 Byte-Listen (Beleg `korpus_ergebnis.txt`): Summe falsch/leer/fehlt (v1-Zeile)/Grossbuchstaben (ganz und
+einer)/Leerzeichen vorn+hinten/NBSP/Tab doppelt/Vollbreit/'g'; Zeilenenden CR allein, LF CR, CRLF, CR CR LF, VT, FF,
+NEL, U+2028; Zeilen nur aus Leerzeichen/Tab/CR/NBSP; Kopf v1 + Zeilen v2, Kopf v2 + Zeilen v1, zwei Kopfzeilen, v1-Kopf
+als 2. Zeile, Nullen vorn, `\r\r`, UTF-16; Pfade doppelt, ASCII-Gross/klein, 0x1f, C1-NEL, Leerzeichen/Punkt am Ende,
+`.neu` in der Mitte/als Ordner/`.NEU`/Vollbreit, 512/513 B mit 2-Byte-Zeichen am Ende, Datei + gleichnamiger Ordner;
+Groesse mit Nullen/Leerzeichen/Unterstrich; BOM, NUL.
+- **Gate == Geraete-Leser auf allen 57 Listen** (0 Abweichungen). Jede Faelschung aus dem Auftrag (Summe falsch ->
+  formal gueltig, den Rest faengt der APK-Abgleich `manifest_pruefen`; Summe fehlt/gross/Leerraum, Zeilenenden, v1/v2
+  gemischt, Dubletten) wird von BEIDEN gleich behandelt.
+- **Luecke der Dublettenregel (H5):** die 5 Paare, die sich nur in UNICODE-Gross/klein bzw. -Normalform unterscheiden
+  (Kelvin-Zeichen U+212A gegen `K` und gegen `k`, `Ä`/`ä`, NFC-`é`/NFD-`e`+U+0301, `ß`/`ss`), nehmen Geraete-Leser UND
+  Gate an - die Regel faltet nur ASCII (`asset_abgleich.c` `ascii_klein`, Gate `_ASCII_KLEIN`), begruendet wird sie mit
+  dem case-insensitiven App-Speicher. Ob der Speicher diese Paare zusammenlegt: Emulator, Abschnitt 6.
+- **Neue Ein-Zeilen-Mutanten im v2-Teil ueberleben den Selbsttest** (`selbsttests_h1h4.txt`):
+  | Mutant | Selbsttest | weicht vom Geraet ab bei (Korpus) |
+  |---|---|---|
+  | V1 `manifest_lesen`: `if not z:` -> `if not z.strip():` | **SELBSTTEST-OK 248/248**, EXIT 0 | `zeile_nur_leerzeichen`, `zeile_nur_tab`: Gate nimmt an, Geraet verwirft die GANZE Liste (entpackt nichts) |
+  | V2 `_pfad_fehler`: `c < 0x20` -> `c < 0x1f` | **SELBSTTEST-OK 248/248**, EXIT 0 | `pfad_steuer_1f`: Gate nimmt an, Geraet verwirft |
+  Weder `_MANIFEST_PROBEN` noch die 248 Faelle enthalten eine Zeile nur aus Leerraum oder das Byte 0x1f im Pfad
+  (der C-Unit-Test hat 0x1f, das Gate nicht). Ganze Kette mit V1 und einer signierten Faelschung: Abschnitt 2.

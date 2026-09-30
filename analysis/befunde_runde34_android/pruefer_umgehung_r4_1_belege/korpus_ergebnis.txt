@@ -1,0 +1,59 @@
+Fall                           soll  Geraet Gate      Gate1     Gate2    
+gut                            A     A      A         A         A        
+summe_falsch_aber_hex          A     A      A         A         A        
+summe_leer                     V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_fehlt_v1_zeile           V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_gross_ganz               V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_ein_grossbuchstabe       V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_leerzeichen_hinten       V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_leerzeichen_vorn         V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_nbsp_hinten              V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_tab_doppelt              V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_vollbreit_ziffer         V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_63_plus_g                V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+zeilenende_nur_cr              V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_lf_cr               V     V      V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+zeilenende_crlf                A     A      A         A         A        
+zeilenende_cr_cr_lf            A     A      A         A         A        
+zeilenende_vt                  V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_ff                  V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_nel_utf8            V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_u2028               V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeile_nur_leerzeichen          V     V      V         A         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+zeile_nur_tab                  V     V      V         A         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+zeile_nur_cr                   A     A      A         A         A        
+zeile_nur_nbsp                 V     V      V         V         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+kopf_v1_zeilen_v2              V     V1     V1        V1        V1          | Zeile 1: Kopfzeile im alten Format v1 (bis v0.8.19, ohne Pruefsumme)
+kopf_v2_zeilen_v1              V     V      V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+zwei_kopfzeilen_v2             V     V      V         V         V           | Zeile 2: unerwartete Kommentarzeile
+zweite_zeile_v1_kopf           V     V      V         V         V           | Zeile 2: unerwartete Kommentarzeile
+kopf_anzahl_null_vorn          A     A      A         A         A        
+kopf_mit_cr_cr                 A     A      A         A         A        
+kopf_utf16                     V     V      V         V         V           | NUL-Byte an Stelle 1
+pfad_doppelt                   V     V      V         V         V           | Pfad doppelt: shared_assets/PSX/a.bin
+pfad_ascii_gross_klein         V     V      V         V         V           | Pfade nur in Gross/klein verschieden: shared_assets/PSX/a.bin / SHARED
+pfad_kelvin_gegen_K            V?    A      A         A         A        
+pfad_kelvin_gegen_k            V?    A      A         A         A        
+pfad_AE_gegen_ae               V?    A      A         A         A        
+pfad_nfc_gegen_nfd             V?    A      A         A         A        
+pfad_sz_gegen_ss               V?    A      A         A         A        
+pfad_steuer_1f                 V     V      V         V         A           | Zeile 2: unzulaessiger Pfad
+pfad_c1_nel                    A     A      A         A         A        
+pfad_leerzeichen_hinten        A     A      A         A         A        
+pfad_punkt_hinten              A     A      A         A         A        
+pfad_neu_mitte                 A     A      A         A         A        
+pfad_neu_ordner                A     A      A         A         A        
+pfad_NEU_gross                 V     V      V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_neu_vollbreit             A     A      A         A         A        
+pfad_512_mit_2byte_am_ende     A     A      A         A         A        
+pfad_513_mit_2byte_am_ende     V     V      V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_datei_und_ordner          A     A      A         A         A        
+pfad_datei_und_ordner_gross    A     A      A         A         A        
+groesse_null_vorn              A     A      A         A         A        
+groesse_leerzeichen            V     V      V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+groesse_unterstrich            V     V      V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+bom                            V     V      V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+nul_am_ende                    V     V      V         V         V           | NUL-Byte an Stelle 204
+nur_kopf_und_leer              V     V      V         V         V           | Liste ohne Dateien
+# Gate (1. Datei) != Geraet: 0 []
+# Geraet != 'soll' (Format-Regel bzw. case-insensitiver Speicher): 5 ['pfad_kelvin_gegen_K', 'pfad_kelvin_gegen_k', 'pfad_AE_gegen_ae', 'pfad_nfc_gegen_nfd', 'pfad_sz_gegen_ss']

@@ -9,3 +9,9 @@ G2_rc_abweichung_0           EXIT=0   40s  Bytes-Ausgabe=324898 OK-Zeile=0  FEHL
       == SELBSTTEST-FEHLER: 165 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
 G3_main_return_0             EXIT=0   50s  Bytes-Ausgabe=324898 OK-Zeile=0  FEHLER-Zeile=1  [FEHLER]-Faelle=165
       == SELBSTTEST-FEHLER: 165 von 248 Faellen falsch - das Gate ist NICHT verlaesslich ==
+V1_leerzeile_strip           EXIT=0   55s  Bytes-Ausgabe=21647  OK-Zeile=1  FEHLER-Zeile=0  [FEHLER]-Faelle=0
+      == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+V2_steuer_1f                 EXIT=0   41s  Bytes-Ausgabe=21647  OK-Zeile=1  FEHLER-Zeile=0  [FEHLER]-Faelle=0
+      == SELBSTTEST-OK: 248/248 Faelle (gute APKs angenommen, jede Faelschung abgelehnt) ==
+FERTIG
+EXIT=0
