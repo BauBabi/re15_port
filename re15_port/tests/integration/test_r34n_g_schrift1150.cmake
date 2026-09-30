@@ -36,6 +36,13 @@ endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 
+# Alte Laufordner dieses Riegels weg: ein ROT abgebrochener Lauf laesst seine Bilder liegen
+# (~200 MB je Lauf, gemessen 1,1 GB nach den Mutationsproben).
+file(GLOB _alte_laeufe "${WORKDIR}/lauf_*")
+if(_alte_laeufe)
+    file(REMOVE_RECURSE ${_alte_laeufe})
+endif()
+
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 
