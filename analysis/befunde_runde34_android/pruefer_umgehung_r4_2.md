@@ -122,3 +122,44 @@ als root nicht aussagekraeftig):
 | W9 Wurzel mit `/` am Ende, Spielstand + Listen in der Wurzel, `shared_assets` fehlt | Wurzel-Dateien unberuehrt, Waise in `synchro` weg, kein Fehler |
 Ausserhalb von `<s_root>/{shared_assets,synchro}` wird nichts geloescht; die Engine schreibt in beide Baeume nichts (grep aller
 `fopen(...,"w"/"a"...)`/`SDL_RWFromFile(...,"w")`: nur Logs im Arbeitsverzeichnis, Pfade aus Umgebungsvariablen, re15_card.mcr).
+
+## 1. Selbsttest gegen NEUE Ein-Zeilen-Mutanten (Y1)
+
+Werkzeug `u2_mutanten.py`: die Klassen der R2-Kampagne (`mutanten_teil_r2.py` = `nachbesserung_r2_belege/mutanten_teil.py`,
+unveraendert importiert: A befund->pass, B raise->pass, E Vergleich eine Richtung/Grenze, F Teilbedingung weg, G Tupelpaar weg,
+H `not` weg, I Zahl +-1), gerichtet auf den seit R2 neuen/geaenderten Pruefcode (`_pfad_fehler`, `manifest_lesen`,
+`manifest_pruefen`, `quellpfade_pruefen`, `quelldateien`, `pruefen`, `paket_pruefen`, `nur_quellbaum`, `_widerspruch_pruefen`,
+`_befunde_ausgeben`, `_manifest_grenze`, `quellbaum_pruefen`, `wurzel_pruefen`, `_tuer_zeilen_drucken`), dazu drei Klassen, die
+R2 nicht erzeugt (A2 `fehler.append(...)`->pass - manifest_lesen meldet NICHT ueber befund; C2 Regel-`return` in `_pfad_fehler`->pass;
+K `continue`->pass) und 29 Hand-Mutanten D01-D29 (`u2_hand.py`: Konstanten auf Modulebene, strip/rstrip/split/fullmatch-Varianten).
+Je Mutant `--selbsttest` im Schnellmodus; Ueberlebender = Rueckgabe 0 UND Schlusszeile SELBSTTEST-OK; auf jedem Ueberlebenden danach
+`gate_urteil` (apk_pruefen.sh) = die Pruefung, die make_package/build_android vor jeder Nutzung eines NEU GEPINNTEN Gates machen.
+Belege `mut_k1_ergebnis.tsv`, `mut_k1_urteile.txt`, `mut_k1_ueberlebende_diff.txt`. (Erster Urteilslauf rief ueber Python
+`bash` = WSL-Starter auf; Urteile danach mit `u2_urteil_nach.sh` ueber Git-Bash nachgerechnet.)
+
+**201 Mutanten, 183 erkannt, 18 ueberleben - alle 18 mit Urteil 0** (`SELBSTTEST-OK 258/258, jede Fallzeile [ok] ..., innere Proben
+132/132`). Je Klasse ueberlebt: A 0/21, A2 0/16, B 0/3, C2 2/9, E 4/58, F 2/23, G 0/2, H 0/19, I 1/14, K 2/7, D 7/29.
+Einordnung jedes Ueberlebenden (am Code, die Schwaechungen zusaetzlich am Korpus `korpus_mutanten.txt` gemessen):
+
+| Mutant | Aenderung | Einordnung |
+|---|---|---|
+| I__pfad_fehler_Z1123_minus1, E__pfad_fehler_Z1123_ge | `c > 0x7f` -> `c > 126` / `c >= 0x7f` | aequivalent (0x7f faengt schon Zeile 1121) |
+| F_manifest_lesen_Z1164_ohne0 | `not m and V1` -> `V1` | aequivalent (v1-Muster passt nie auf einen v2-Kopf) |
+| F_manifest_lesen_Z1211_ohne1, E_manifest_lesen_Z1208_ge, K_Z1183, K_Z1204 | Zusatzmeldung / `>=` / continue->pass | aequivalent im Urteil (Fehler steht schon; Summe >= 2^63-1 mit 18-Ziffern-Kopf unerreichbar) |
+| E_pruefen_Z1355_gt | `n != man_name` -> `n > man_name` | aequivalent (alle Baeume `assets/s...` > `assets/re15_assets.txt`) |
+| C2__pfad_fehler_Z1118 | `return "leer"` weg | aequivalent (leerer Pfad scheitert an "ohne '/'") |
+| C2__pfad_fehler_Z1127 | Backslash-Regel weg | im Leser schwaecher, in der Kette ausgeglichen (NTFS-Quelle kann kein `\` tragen -> "zusaetzlich in der APK") |
+| D25_neu_je_segment, D28, D29 | `.neu` je Segment / Quellpfad mit `assets/` / `str.lower` | STRENGER bzw. aequivalent (D25 waere die Abhilfe zu F-Y4) |
+| **E_manifest_pruefen_Z1247_gt** | `a_sha != m_sha` -> `a_sha > m_sha` | **Schwaechung**: falsche Listen-Summe nur noch in EINER Richtung gemeldet (Kette: Abschnitt 5, A3) |
+| **D06_ASCII_KLEIN_ohne_Z** | Faltungstabelle ohne `Z` | **Schwaechung**: `.../Z.bin` + `.../z.bin` -> Gate A, Geraet V (`n_dub_Z_z`) |
+| **D08_KOPF_RE_plus_anzahl** | Kopf-Anzahl `[0-9]+` statt `{1,18}` | **Schwaechung**: 19-stellige Anzahl -> Gate A, Geraet V (`n_kopf_anzahl_19_ziffern`) |
+| **D13_kopf_strip_cr** | `kopf ... rstrip(b"\r")` -> `strip(b"\r")` | **Schwaechung**: CR VOR der Kopfzeile -> Gate A, Geraet V (`n_kopf_cr_vorn`) |
+| **D15_zeile_strip_cr** | `z.rstrip(b"\r")` -> `z.strip(b"\r")` | **Schwaechung**: Zeile mit CR vorn / Zeilenende LF-CR -> Gate A, Geraet V (`n_zeile_cr_vorn`, `n_zeile_lf_cr`, `zeilenende_lf_cr`) |
+
+Fuenf nicht-aequivalente Ein-Zeilen-Mutanten im v2-Teil bestehen Selbsttest UND Urteil. Alle fuenf machen das Gate NACHSICHTIGER als
+den Geraete-Leser (Klasse V1/V2 der Runde 1): eine APK geht gruen durch die Kette, das Geraet verwirft Liste bzw. Datei und startet
+nicht (fail closed, mit Meldung). Keiner laesst FALSCHEN INHALT auf das Geraet: der schaedliche Fall (Tuerarchiv falsch, Liste
+passend) haengt am Quellbaum-Vergleich in `pruefen`, und dort ueberlebte kein Mutant (E_pruefen 1/23, aequivalent). Die Proben
+`_MANIFEST_PROBEN`/Faelle haben: CR vor Kopf- bzw. Datenzeile (nur CR HINTER), 19 Ziffern nur im Bytes-Feld des Kopfs, die
+Gross/klein-Dublette nur als `B`/`b`, falsche Listen-Summe nur in einer Richtung (Fall 247/248: `0123456789abcdef..`, `0000..`).
+**Befund F-Y1 (niedrig)** - dieselbe Klasse wie V1/V2 der Runde 1, dort als niedrig gefuehrt und mit 16 Proben + 10 Faellen behoben.

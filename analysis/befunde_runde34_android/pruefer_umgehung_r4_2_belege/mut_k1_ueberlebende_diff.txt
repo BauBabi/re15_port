@@ -1,0 +1,90 @@
+=== I__pfad_fehler_Z1123_minus1
+1123c1123
+<     if any(c > 0x7f for c in p):
+---
+>     if any(c > 126 for c in p):
+=== E__pfad_fehler_Z1123_ge
+1123c1123
+<     if any(c > 0x7f for c in p):
+---
+>     if any(c >= 0x7f for c in p):
+=== F_manifest_lesen_Z1164_ohne0
+1164c1164
+<     if not m and KOPF_V1_RE.fullmatch(kopf):
+---
+>     if (KOPF_V1_RE.fullmatch(kopf)):
+=== F_manifest_lesen_Z1211_ohne1
+1211c1211
+<     if not eintraege and m:
+---
+>     if (not eintraege):
+=== E_manifest_lesen_Z1208_ge
+1208c1208
+<         if summe > (1 << 63) - 1:
+---
+>         if summe >= (1 << 63) - 1:
+=== E_manifest_pruefen_Z1247_gt
+1247c1247
+<         elif a_sha is not None and a_sha != m_sha:
+---
+>         elif a_sha is not None and a_sha > m_sha:
+=== E_pruefen_Z1355_gt
+1355c1355
+<             apk_dateien = {n[len("assets/"):]: (x.usize, apk_sha.get(n)) for n, x in asset_infos.items() if n != man_name}
+---
+>             apk_dateien = {n[len("assets/"):]: (x.usize, apk_sha.get(n)) for n, x in asset_infos.items() if n > man_name}
+=== D06_ASCII_KLEIN_ohne_Z
+182c182
+< _ASCII_KLEIN = bytes.maketrans(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ", b"abcdefghijklmnopqrstuvwxyz")
+---
+> _ASCII_KLEIN = bytes.maketrans(b"ABCDEFGHIJKLMNOPQRSTUVWXY", b"abcdefghijklmnopqrstuvwxy")
+=== D08_KOPF_RE_plus_anzahl
+173c173
+< KOPF_RE = re.compile(rb"# re15 assets v2 ([0-9]{1,18}) ([0-9]{1,18})")
+---
+> KOPF_RE = re.compile(rb"# re15 assets v2 ([0-9]+) ([0-9]{1,18})")
+=== D13_kopf_strip_cr
+1162c1162
+<     kopf = zeilen[0].rstrip(b"\r")                 # angehaengte '\r' weg
+---
+>     kopf = zeilen[0].strip(b"\r")                 # angehaengte '\r' weg
+=== D15_zeile_strip_cr
+1177c1177
+<         z = z.rstrip(b"\r")
+---
+>         z = z.strip(b"\r")
+=== D25_neu_je_segment
+1137c1137
+<     if p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG:
+---
+>     if any(t.translate(_ASCII_KLEIN).endswith(NEU_ENDUNG) for t in teile):
+=== D28_quell_mit_assets_praefix
+477c477
+<         roh = name[len("assets/"):].encode("utf-8", "surrogateescape")
+---
+>         roh = name.encode("utf-8", "surrogateescape")
+=== D29_man_lower_statt_ascii
+1221c1221
+<         klein.setdefault(p.encode("utf-8").translate(_ASCII_KLEIN), []).append(p)   # sind reines ASCII (_pfad_fehler)
+---
+>         klein.setdefault(p.lower(), []).append(p)   # sind reines ASCII (_pfad_fehler)
+=== C2__pfad_fehler_Z1118
+1118c1118
+<         return "leer"
+---
+>         pass  # MUTANT
+=== C2__pfad_fehler_Z1127
+1127c1127
+<         return "'\\'"
+---
+>         pass  # MUTANT
+=== K_manifest_lesen_Z1183
+1183c1183
+<             continue
+---
+>             pass  # MUTANT
+=== K_manifest_lesen_Z1204
+1204c1204
+<             continue
+---
+>             pass  # MUTANT

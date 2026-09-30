@@ -77,6 +77,7 @@ def alle(text, hand):
 
 
 URTEIL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "u2_urteil.sh")
+GITBASH = r"C:\Program Files\Git\bin\bash.exe"
 
 
 def laufen(py, pfad, timeout):
@@ -86,7 +87,9 @@ def laufen(py, pfad, timeout):
         log = pfad[:-3] + ".voll.log"
         with open(log, "w", encoding="utf-8", newline="\n") as f:
             f.write(aus)
-        u = subprocess.run(["bash", URTEIL, "selbsttest", log.replace("\\", "/"), "0"], stdout=subprocess.PIPE,
+        # Git-Bash ausdruecklich: "bash" aus Python loest unter Windows den WSL-Starter System32\bash.exe auf
+        # (erster Lauf k1: "WSL ... CreateProcessCommon" statt Urteil - Urteile danach mit u2_urteil_nach.sh nachgerechnet)
+        u = subprocess.run([GITBASH, URTEIL, "selbsttest", log.replace("\\", "/"), "0"], stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
         urteil = "%d %s" % (u.returncode, u.stdout.decode("utf-8", "replace").strip().replace("\n", " | ")[:200])
     return rc, rot, aus, dauer, urteil

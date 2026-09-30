@@ -1,0 +1,11 @@
+Sandbox-Skripte = Arbeitsbaum (Pin 8a0e3f152f508690...)
+=== P: Pin-Datei-Varianten (gate_pin_pruefen aus der Sandbox-Kopie von apk_pruefen.sh, echtes Gate) ===
+   P1 echt, Grossbuchstaben + CRLF + Kommentar                rc=0  ANGENOMMEN sha=8a0e3f152f508690...
+   P2 alter + neuer Wert je Zeile (Nachtragen statt Ersetzen) rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): '0000000000000000000000
+   P3 Zeile aus sha256sum (Wert + *Pfad)                      rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): '8a0e3f152f508690fcd447
+   P4 Wert zweimal in einer Zeile                             rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): '8a0e3f152f508690fcd447
+   P5 leer                                                    rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): ''
+   P6 nur Kommentar mit dem Wert                              rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): ''
+   P7 Wert mit Praefix sha256:                                rc=1  DIE: Gate-Pin build/r34a/pruefer_u2/logs/kette/pin_test.sha256 ist kein SHA-256 (64 Hexziffern): 'sha256:8a0e3f152f50869
+   P8 Wert eines anderen Gates (be8b60f3)                     rc=1  DIE: Asset-Gate ist NICHT das festgehaltene: release/apk_asset_gate.py
+Temp-Reste: 2

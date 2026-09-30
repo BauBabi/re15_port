@@ -1,0 +1,201 @@
+H_quelldateien_Z441	1	05	2.7	-	f23fadc091ea	not os.path.isdir(wurzel)  [not weg]
+H_quelldateien_Z454	1	03	3.0	-	323313986cb0	not zahl[ziel]  [not weg]
+A_quelldateien_Z442	1	20	6.5	-	3971e2b81af3	befund("Quellbaum", "Quellbaum fehlt: %s (Gradle kopiert aus einem fehlenden Ordner " "still NICHTS)
+H_quelldateien_Z460	1	03	3.6	-	8ac179cbedc1	not n  [not weg]
+A_quelldateien_Z455	1	19	5.7	-	84428243a906	befund("Quellbaum", "Quellbaum leer: %s" % rel_baum)
+A_quelldateien_Z461	1	19	5.7	-	d0e4433d2fe8	befund("Quellbaum", "Pflichtinhalt fehlt: re15_port/%s/*%s (0 Dateien)" % (ordner, endung))
+F_quelldateien_Z464_ohne0	1	21	6.1	-	aacead2cba4f	not q or not os.path.getsize(q[0])  [Operand 0 weg: not q]
+H_quelldateien_Z464	1	02	3.8	-	2806ca165dd3	not q  [not weg]
+A_quelldateien_Z465	1	21	7.1	-	3f5ae11ce935	befund("Quellbaum", "Pflichtdatei fehlt/leer: re15_port/%s" % datei)
+H_quelldateien_Z464_2	1	02	3.2	-	8b77457dcbe2	not os.path.getsize(q[0])  [not weg]
+F_quelldateien_Z450_ohne0	1	01	7.8	-	dab854bd7d13	muster and not any(_ant_passt(m, rel) for m in muster)  [Operand 0 weg: muster]
+F_quelldateien_Z450_ohne1	1	02	9.0	-	477d65b83b4f	muster and not any(_ant_passt(m, rel) for m in muster)  [Operand 1 weg: not any(_ant_passt(m, rel) for m in must]
+H_quelldateien_Z450	1	02	3.8	-	8d03d3ca5195	not any(_ant_passt(m, rel) for m in muster)  [not weg]
+F_quelldateien_Z458_ohne0	1	19	10.4	-	5a82f37b0b60	a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand 0 weg: a.startswith("assets/%s/" % ordner)]
+F_quelldateien_Z464_ohne1	1	192	48.1	-	8e311ddba544	not q or not os.path.getsize(q[0])  [Operand 1 weg: not os.path.getsize(q[0])]
+E_quelldateien_Z459_in	1	02	3.5	-	49c9c695762a	"/" not in a[len("assets/%s/" % ordner):]  [not in -> in]
+A_quellpfade_pruefen_Z484	1	-	0.6	-	8e85fb69c706	befund("Quellbaum: Pfad", "Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)" % "
+A_quellpfade_pruefen_Z480	1	-	0.5	-	c9479a3e6828	befund("Quellbaum: Pfad", "Pfad verletzt die Regeln der Liste v2 (%s): %s - Gradle writeAssetManifes
+E_quellpfade_pruefen_Z483_ge	1	-	1.0	-	3a73d08b8904	len(v) > 1  [> -> >=]
+I_quellpfade_pruefen_Z483_plus1	1	-	0.9	-	8fb9829477ac	len(v) > 1  [1 -> 2]
+I_quellpfade_pruefen_Z483_minus1	1	-	0.5	-	fa7389a099bf	len(v) > 1  [1 -> 0]
+E_wurzel_pruefen_Z492_in	1	01	4.1	-	25093395f443	name not in SHARED_WURZEL  [not in -> in]
+F_quelldateien_Z458_ohne1	1	193	41.4	-	5d6be951a4da	a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand 1 weg: a.endswith(endung)]
+F_quelldateien_Z458_ohne2	1	193	45.1	-	dae2417fbafe	a.startswith("assets/%s/" % ordner) and a.endswith(endung) and "/" not in a[len(  [Operand 2 weg: "/" not in a[len("assets/%s/" % ordner):]
+A_wurzel_pruefen_Z493	1	128	29.2	-	ec18cdbd91ac	befund("Quellbaum: in keiner Liste", "re15_port/shared_assets/%s liegt in keinem Asset-Baum (build.g
+H_paket_pruefen_Z794	1	133	27.1	-	dfa9d1e939f0	not os.path.isdir(paket)  [not weg]
+B_paket_pruefen_Z795	1	135	34.1	-	1bc0ecbc0190	raise Bedienfehler("Paketordner fehlt: %s" % paket)
+H_paket_pruefen_Z802	1	129	30.7	-	832f746dcda9	not os.path.isfile(ziel)  [not weg]
+A_paket_pruefen_Z803	1	130	30.4	-	8cecd0c6b399	befund("fehlt im Paket", "fehlt im Paket: %s (Quelle %s)" % (name[len("assets/"):], rel))
+E_paket_pruefen_Z807_gt	1	132	24.4	-	57742786ed2a	q_sha != p_sha  [!= -> >]
+E_paket_pruefen_Z807_lt	1	185	34.0	-	20e39ee4c1d9	q_sha != p_sha  [!= -> <]
+A_paket_pruefen_Z808	1	132	22.9	-	65e9efc0d112	befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab: %s Quelle %d B %s.., Paket %d B %s.." % (name
+F__widerspruch_pruefen_Z852_ohne0	1	-	0.4	-	cec60583fed8	not n_befunde and n_gleich != n_quellen  [Operand 0 weg: not n_befunde]
+F__widerspruch_pruefen_Z852_ohne1	1	-	0.5	-	74f54f510fe6	not n_befunde and n_gleich != n_quellen  [Operand 1 weg: n_gleich != n_quellen]
+B__widerspruch_pruefen_Z853	1	-	0.5	-	4f35dc87c699	raise Bedienfehler("interner Widerspruch: %d Quelldateien, %d gleich, aber keine Befunde" % (n_quell
+H__widerspruch_pruefen_Z852	1	-	0.6	-	d033e320eae6	not n_befunde  [not weg]
+E__widerspruch_pruefen_Z852_lt	1	-	0.4	-	48953dd0e748	n_gleich != n_quellen  [!= -> <]
+E__widerspruch_pruefen_Z852_gt	1	-	0.4	-	4dcc6721fded	n_gleich != n_quellen  [!= -> >]
+E_paket_pruefen_Z818_in	1	129	22.9	-	a2e73aa044d5	"assets/" + rel not in quellen  [not in -> in]
+H__pfad_fehler_Z1117	1	-	0.5	-	7745e263d124	not p  [not weg]
+E__pfad_fehler_Z1119_ge	1	-	0.4	-	f06c8c3e8ce7	len(p) > PFAD_MAX  [> -> >=]
+A_paket_pruefen_Z819	1	133	23.3	-	fcd2e228d223	befund("zusaetzlich im Paket", "zusaetzlich im Paket (kein Asset-Baum liefert es; make_package.sh " 
+E__pfad_fehler_Z1126_notin	1	-	0.4	-	4565284a2ccf	b"\\" in p  [in -> not in]
+E__pfad_fehler_Z1129_le	1	-	0.4	-	a05aa6afd17f	len(teile) < 2  [< -> <=]
+I__pfad_fehler_Z1129_plus1	1	-	0.4	-	9c3a7f7ffbfc	len(teile) < 2  [2 -> 3]
+I__pfad_fehler_Z1129_minus1	1	-	0.5	-	df16c4e8612f	len(teile) < 2  [2 -> 1]
+E__pfad_fehler_Z1134_ge	1	-	0.3	-	988720308859	lang > SEGMENT_MAX  [> -> >=]
+E__pfad_fehler_Z1137_le	1	-	0.3	-	35f96935569c	p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG  [== -> <=]
+E__pfad_fehler_Z1137_ge	1	-	0.4	-	8ef6bad9f5a9	p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG  [== -> >=]
+F__pfad_fehler_Z1121_ohne0	1	-	0.5	-	47646385ac5a	c < 0x20 or c == 0x7f  [Operand 0 weg: c < 0x20]
+F__pfad_fehler_Z1121_ohne1	1	-	0.3	-	c04161611d21	c < 0x20 or c == 0x7f  [Operand 1 weg: c == 0x7f]
+I__pfad_fehler_Z1123_plus1	1	-	0.5	-	f9f722403462	c > 0x7f  [127 -> 128]
+E__befunde_ausgeben_Z878_ge	1	188	31.7	-	b3cc8cb8951d	len(liste) > max_zeilen  [> -> >=]
+E__pfad_fehler_Z1131_notin	1	-	0.7	-	f5249bb13b16	t in (b"", b".", b"..")  [in -> not in]
+E__pfad_fehler_Z1121_le	1	-	0.6	-	48e9501daf0d	c < 0x20  [< -> <=]
+I__pfad_fehler_Z1121_plus1	1	-	0.5	-	cd8c8e828402	c < 0x20  [32 -> 33]
+I__pfad_fehler_Z1121_minus1	1	-	0.7	-	581e723a10d3	c < 0x20  [32 -> 31]
+E__pfad_fehler_Z1121_le_2	1	-	0.5	-	b3713b776637	c == 0x7f  [== -> <=]
+I__pfad_fehler_Z1123_minus1	0	-	49.2	1 <3>WSL (40695 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	79a22397f4df	c > 0x7f  [127 -> 126]
+E__pfad_fehler_Z1123_ge	0	-	49.9	1 <3>WSL (40694 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	fe468ddbd4bf	c > 0x7f  [> -> >=]
+I__pfad_fehler_Z1121_plus1_2	1	-	0.5	-	9cbf1f8b2d1a	c == 0x7f  [127 -> 128]
+I__pfad_fehler_Z1121_minus1_2	1	-	0.5	-	489aae8fb271	c == 0x7f  [127 -> 126]
+E_manifest_lesen_Z1152_notin	1	-	0.3	-	4e34ab55229a	b"\0" in roh  [in -> not in]
+E__pfad_fehler_Z1121_ge	1	207	40.0	-	460aacdb5909	c == 0x7f  [== -> >=]
+F_manifest_lesen_Z1164_ohne1	1	38	10.5	-	9a7c35c03490	not m and KOPF_V1_RE.fullmatch(kopf)  [Operand 1 weg: KOPF_V1_RE.fullmatch(kopf)]
+H_manifest_lesen_Z1169	1	-	0.8	-	2266ce180b29	not m  [not weg]
+F_manifest_lesen_Z1211_ohne0	1	-	0.5	-	f9f084e3f63a	not eintraege and m  [Operand 0 weg: not eintraege]
+E_manifest_lesen_Z1149_ge	1	138	27.9	-	19b287e0af84	len(roh) > grenze  [> -> >=]
+F_manifest_lesen_Z1164_ohne0	0	-	55.5	1 <3>WSL (40698 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	456b6c30afe6	not m and KOPF_V1_RE.fullmatch(kopf)  [Operand 0 weg: not m]
+H_manifest_lesen_Z1178	1	-	0.5	-	fa9b091f336c	not z  [not weg]
+E_manifest_lesen_Z1185_le	1	-	0.5	-	8ed3c6d62a9c	len(teile) < 3  [< -> <=]
+I_manifest_lesen_Z1185_plus1	1	-	0.5	-	673b91810919	len(teile) < 3  [3 -> 4]
+I_manifest_lesen_Z1185_minus1	1	-	0.6	-	bc5cf19146d6	len(teile) < 3  [3 -> 2]
+H_manifest_lesen_Z1190	1	-	0.5	-	2fb214f88d9a	not GROESSE_RE.fullmatch(groesse)  [not weg]
+H_manifest_lesen_Z1193	1	-	0.6	-	24ff59fc3b60	not SHA_RE.fullmatch(sha)  [not weg]
+E_manifest_lesen_Z1202_notin	1	-	0.7	-	e49b0f208139	p in eintraege  [in -> not in]
+F_manifest_lesen_Z1211_ohne1	0	-	55.5	1 <3>WSL (40701 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	d1e287b72645	not eintraege and m  [Operand 1 weg: m]
+H_manifest_lesen_Z1211	1	-	0.6	-	0175cfd65414	not eintraege  [not weg]
+E_manifest_lesen_Z1216_lt	1	-	0.5	-	c5112b41c6de	(n_kopf, b_kopf) != (n_ist, b_ist)  [!= -> <]
+H_manifest_lesen_Z1164	1	227	47.9	-	c2d50f1cf8c0	not m  [not weg]
+G_manifest_lesen_Z1216_ohne0	1	-	0.5	-	4134731b1e0d	(n_kopf, b_kopf) != (n_ist, b_ist)  [Paar 0 weg]
+G_manifest_lesen_Z1216_ohne1	1	-	1.1	-	b11dbe5d0e7b	(n_kopf, b_kopf) != (n_ist, b_ist)  [Paar 1 weg]
+E_manifest_lesen_Z1222_ge	1	-	0.5	-	e2ed6205acbd	len(v) > 1  [> -> >=]
+I_manifest_lesen_Z1222_plus1	1	-	0.7	-	a1afe23e7f98	len(v) > 1  [1 -> 2]
+I_manifest_lesen_Z1222_minus1	1	-	0.8	-	fd0bfec2a9f9	len(v) > 1  [1 -> 0]
+A_manifest_pruefen_Z1233	1	15	7.5	-	42bdc75516f3	befund("Manifest", text)
+E_manifest_pruefen_Z1238_in	1	01	4.1	-	3fd19c103fc9	pfad not in apk_dateien  [not in -> in]
+A_manifest_pruefen_Z1239	1	32	10.7	-	6ee3d3a8778e	befund("Manifest: Zeile ohne APK-Eintrag", "Manifest nennt %s (%d B), die APK hat keinen Eintrag ass
+E_manifest_lesen_Z1216_gt	1	163	34.6	-	b7e09666d53c	(n_kopf, b_kopf) != (n_ist, b_ist)  [!= -> >]
+E_manifest_pruefen_Z1243_gt	1	08	3.3	-	dd820792cde3	a_groesse != m_groesse  [!= -> >]
+E_manifest_lesen_Z1208_ge	0	-	51.6	1 <3>WSL (40704 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	3194bc3a50e5	summe > (1 << 63) - 1  [> -> >=]
+A_manifest_pruefen_Z1244	1	08	3.7	-	716a5b6174bc	befund("Manifest: falsche Groesse", "Manifest-Groesse falsch: %s Manifest %d B, APK %d B (das Geraet
+E_manifest_pruefen_Z1243_lt	1	76	14.8	-	81af4b7880b4	a_groesse != m_groesse  [!= -> <]
+E_manifest_pruefen_Z1252_in	1	03	3.3	-	e659c54eba3f	pfad not in eintraege  [not in -> in]
+A_manifest_pruefen_Z1253	1	09	3.6	-	233794be14b7	befund("Manifest: Datei fehlt im Manifest", "fehlt im Manifest: %s (wird auf dem Geraet nie entpackt
+F_manifest_pruefen_Z1247_ohne1	1	01	3.9	-	762644b1aaa6	a_sha is not None and a_sha != m_sha  [Operand 1 weg: a_sha != m_sha]
+F_manifest_pruefen_Z1247_ohne0	1	12	6.3	-	3e0cf3adb95c	a_sha is not None and a_sha != m_sha  [Operand 0 weg: a_sha is not None]
+E_manifest_pruefen_Z1247_is	1	12	6.2	-	cb4599a1d1f8	a_sha is not None  [is not -> is]
+A_manifest_pruefen_Z1248	1	228	50.4	-	710952b988b3	befund("Manifest: falsche Pruefsumme", "Manifest-Pruefsumme falsch: %s Manifest %s.., APK %s.. (das 
+H_pruefen_Z1270	1	08	3.4	-	8a4d000102e1	not os.path.isfile(apk)  [not weg]
+E_manifest_pruefen_Z1247_lt	1	228	53.4	-	14172cf92cd4	a_sha != m_sha  [!= -> <]
+B_pruefen_Z1271	1	23	7.5	-	72f91c7210fa	raise Bedienfehler("APK fehlt: %s" % apk)
+E_pruefen_Z1350_isnot	1	02	4.1	-	7959c8f8a7e0	e_man is None  [is -> is not]
+E_pruefen_Z1382_is	1	16	7.2	-	1019ae1ca41c	n_man is not None  [is not -> is]
+H_pruefen_Z1284	1	01	3.7	-	8f20ae5069ab	not name.startswith("assets/")  [not weg]
+E_manifest_pruefen_Z1247_gt	0	-	59.5	1 <3>WSL (40708 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	c7fe5847f7a5	a_sha != m_sha  [!= -> >]
+A_pruefen_Z1351	1	16	6.8	-	f2b0c35ceebb	befund("Manifest", "Manifest fehlt in der APK: %s (das Geraet entpackt dann NICHTS, " "android_glue.
+E_pruefen_Z1305_isnot	1	03	3.2	-	72f9c16afc38	e is None  [is -> is not]
+H_pruefen_Z1310	1	05	4.4	-	2a3236d3e88e	not e.lesbar  [not weg]
+A_pruefen_Z1307	1	04	6.3	-	4f1ca88bfaf3	befund("fehlt in der APK", "fehlt in der APK: %s (Quelle %s)%s" % (name, rel, (" - " + hinweis) if h
+E_pruefen_Z1313_gt	1	11	6.0	-	5927a74b9cf2	e.usize != q_groesse  [!= -> >]
+A_pruefen_Z1287	1	53	15.6	-	3ff69ff50ca8	befund("APK: doppelt/Verzeichnis", "Verzeichniseintrag in der APK: %s" % name)
+E_pruefen_Z1319_isnot	1	01	5.4	-	3a0de405049b	r is None  [is -> is not]
+A_pruefen_Z1314	1	11	7.3	-	3e4ee96132c9	befund("Groesse weicht ab", "Groesse weicht ab: %s Quelle %d B, APK %d B" % (name, q_groesse, e.usiz
+E_pruefen_Z1325_gt	1	05	4.7	-	db9ef5d76c11	a_sha != q_sha  [!= -> >]
+A_pruefen_Z1326	1	05	3.8	-	9c03a10ee80b	befund("Inhalt weicht ab (sha256)", "Inhalt weicht ab (sha256, %s): %s Quelle %s.., APK %s.." % ("gl
+E_pruefen_Z1325_lt	1	31	9.8	-	a8ce65dedd65	a_sha != q_sha  [!= -> <]
+F_pruefen_Z1344_ohne0	1	02	3.0	-	b3f77ec925dc	name != man_name and name not in quellen  [Operand 0 weg: name != man_name]
+E_pruefen_Z1337_isnot	1	15	3.8	-	b089335fc136	r is None  [is -> is not]
+F_pruefen_Z1344_ohne1	1	01	2.8	-	66b1f5c3a493	name != man_name and name not in quellen  [Operand 1 weg: name not in quellen]
+A_pruefen_Z1345	1	07	2.9	-	bb9ad2f3f04b	befund("zusaetzlich in der APK", "zusaetzlich in der APK (kein Asset-Baum liefert ihn): %s" % name)
+E_pruefen_Z1313_lt	1	165	35.2	-	77cb45153eb0	e.usize != q_groesse  [!= -> <]
+F_pruefen_Z1353_ohne0	1	202	49.3	-	58abd4284261	e_man.lesbar and e_man.nr not in kaputt  [Operand 0 weg: e_man.lesbar]
+F_pruefen_Z1353_ohne1	1	201	49.9	-	7d907d02834d	e_man.lesbar and e_man.nr not in kaputt  [Operand 1 weg: e_man.nr not in kaputt]
+E_pruefen_Z1344_lt	1	07	4.8	-	f9db8752c406	name != man_name  [!= -> <]
+E_pruefen_Z1344_in	1	07	3.8	-	01ec5ad53cc1	name not in quellen  [not in -> in]
+E_pruefen_Z1353_in	1	08	5.8	-	4535570211db	e_man.nr not in kaputt  [not in -> in]
+E_pruefen_Z1377_notin	1	01	4.8	-	d1fe04272513	name in quellen  [in -> not in]
+E_pruefen_Z1339_isnot	1	248	64.1	-	9b267df3c68a	asset_infos.get(e.name) is e  [is -> is not]
+E_pruefen_Z1300_is	1	04	4.4	-	a224479da371	e is not None  [is not -> is]
+E_pruefen_Z1378_notin	1	01	6.4	-	f613c28305f2	name in asset_infos  [in -> not in]
+F_pruefen_Z1335_ohne1	1	12	8.4	-	e2b3754d55d7	x.lesbar and x.nr not in gelesen  [Operand 1 weg: x.nr not in gelesen]
+F_pruefen_Z1335_ohne0	1	40	12.8	-	a931ba4ea6f6	x.lesbar and x.nr not in gelesen  [Operand 0 weg: x.lesbar]
+E_pruefen_Z1344_gt	1	166	39.2	-	3d71600183ac	name != man_name  [!= -> >]
+E_pruefen_Z1335_in	1	12	6.2	-	3767fd044e9e	x.nr not in gelesen  [not in -> in]
+E_pruefen_Z1355_lt	1	03	3.6	-	ad9aaac46d57	n != man_name  [!= -> <]
+E_pruefen_Z1380_is	1	01	4.5	-	b6e3373c0b19	q is not None  [is not -> is]
+E_pruefen_Z1380_is_2	1	01	4.4	-	47bb12367cb7	a is not None  [is not -> is]
+D01_SEGMENT_MAX_252	1	-	0.8	-	9179b7848b12	Hand-Mutant
+D02_SEGMENT_MAX_255	1	-	0.4	-	6cf98da5f0a6	Hand-Mutant
+E_pruefen_Z1381_notin	1	01	3.0	-	410888f8dcd8	name in gleich  [in -> not in]
+E_pruefen_Z1355_gt	0	-	55.0	1 <3>WSL (41178 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	91cca78f3a71	n != man_name  [!= -> >]
+D05_NEU_ENDUNG_new	1	-	0.6	-	b57a74518b9a	Hand-Mutant
+D04_PFAD_MAX_4096	1	241	53.3	-	7c4e610eefe6	Hand-Mutant
+D07_KOPF_RE_plus_beide	1	-	0.4	-	223baed95d72	Hand-Mutant
+D03_PFAD_MAX_513	1	241	55.6	-	0ca158954d50	Hand-Mutant
+D09_GROESSE_RE_19	1	-	0.6	-	a9a0ecce8d08	Hand-Mutant
+D10_SHA_RE_gross	1	-	0.6	-	5a20ebd3248e	Hand-Mutant
+D11_SHA_RE_64plus	1	-	0.6	-	488b43558e26	Hand-Mutant
+D12_split_splitlines	1	-	0.7	-	fc7b6c0d4dbc	Hand-Mutant
+D06_ASCII_KLEIN_ohne_Z	0	-	59.2	1 <3>WSL (41210 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	d68bcd8407ac	Hand-Mutant
+D14_kopf_rstrip_alles	1	-	0.5	-	2a67bc216771	Hand-Mutant
+D08_KOPF_RE_plus_anzahl	0	-	58.7	1 <3>WSL (41213 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	19fee84c486e	Hand-Mutant
+D16_zeile_rstrip_alles	1	-	0.5	-	471e5f4b9589	Hand-Mutant
+D17_zeile_rstrip_cr_lf_tab	1	-	0.6	-	a6fcade86d14	Hand-Mutant
+D18_tab_split_ohne_max	1	-	0.3	-	0b332f7e03b3	Hand-Mutant
+D13_kopf_strip_cr	0	-	56.1	1 <3>WSL (41216 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	03a2da5530cd	Hand-Mutant
+D20_segmente_ohne_letztes	1	-	0.4	-	b3c319577870	Hand-Mutant
+D21_segmente_ohne_erstes	1	-	0.6	-	5b660f372b49	Hand-Mutant
+D22_punkt_ohne_erstes	1	-	0.5	-	1690fedb601a	Hand-Mutant
+D23_punkt_ohne_letztes	1	-	0.4	-	f81292b7053b	Hand-Mutant
+D19_befunde_ab_2	1	05	2.4	-	ad58f77738d1	Hand-Mutant
+D24_neu_ohne_faltung	1	-	0.3	-	af7679d5a365	Hand-Mutant
+D26_quell_ohne_faltung	1	-	0.5	-	537e48512294	Hand-Mutant
+D27_man_ohne_faltung	1	-	0.9	-	aee6db45b69c	Hand-Mutant
+D15_zeile_strip_cr	0	-	44.2	1 <3>WSL (41219 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	9de3b588cc44	Hand-Mutant
+D25_neu_je_segment	0	-	44.4	1 <3>WSL (41222 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	95c52f8cf3d4	Hand-Mutant
+D28_quell_mit_assets_praefix	0	-	45.0	1 <3>WSL (41225 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	bd158e7c1a64	Hand-Mutant
+D29_man_lower_statt_ascii	0	-	39.4	1 <3>WSL (41228 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	23d9b57a4f61	Hand-Mutant
+C2__pfad_fehler_Z1122	1	-	0.6	-	9d31e493c8a3	return "Steuerzeichen"
+C2__pfad_fehler_Z1124	1	-	0.7	-	b3f727e17b3b	return ("Nicht-ASCII-Byte - nur druckbares ASCII 0x20-0x7e: der App-Speicher faltet Unicode-Gross/kl
+C2__pfad_fehler_Z1120	1	241	50.0	-	5531f8fc6dc9	return "%d Bytes > %d" % (len(p), PFAD_MAX)
+C2__pfad_fehler_Z1130	1	-	0.7	-	1404b6ae6dc8	return "ohne '/' (Assets liegen nie direkt im Speicherordner)"
+C2__pfad_fehler_Z1118	0	-	51.3	1 <3>WSL (41231 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	f49e07053bb2	return "leer"
+C2__pfad_fehler_Z1132	1	-	0.8	-	8bb1db98ef34	return "absolut, '//', '/' am Ende, '.' oder '..' - landet ausserhalb des Ankers"
+C2__pfad_fehler_Z1138	1	-	0.7	-	6cc65f284092	return "endet auf .neu (Endung der Zwischendatei beim Entpacken)"
+C2__pfad_fehler_Z1135	1	-	1.1	-	c0bcca6a9ed5	return ("Segment mit %d Bytes > %d (Geraet: Name <= 255 B, der Entpacker haengt '.neu' an)" % (lang,
+A2_manifest_lesen_Z1150	1	139	35.2	-	2fece047a081	fehler.append("Manifest %d B > %d B (64 MiB): das Geraet liest es nicht (asset_abgleich.h " "RE15_AB
+A2_manifest_lesen_Z1155	1	15	3.7	-	ed54e10fa334	fehler.append("Manifest beginnt mit BOM: Kopfzeile auf dem Geraet unlesbar")
+A2_manifest_lesen_Z1165	1	-	0.2	-	cb0efe8caadb	fehler.append("Manifest im alten Format v1 ('%s', bis v0.8.19: ohne sha256) - das Geraet lehnt es ab
+A2_manifest_lesen_Z1170	1	-	0.3	-	b1d1275c39bb	fehler.append("Manifest-Kopfzeile fehlt/unlesbar: '%s' (erwartet '# re15 assets v2 <anzahl> <bytes>'
+A2_manifest_lesen_Z1212	1	-	0.2	-	4ddf5d625c27	fehler.append("Manifest ohne Dateien (das Geraet entpackt dann nichts)")
+C2__pfad_fehler_Z1127	0	-	59.7	1 <3>WSL (41234 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	81251ad2aac1	return "'\\'"
+A2_manifest_lesen_Z1223	1	-	0.3	-	870f0bb5da81	fehler.append("Manifest: Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)" % " /
+K_manifest_lesen_Z1179	1	-	0.3	-	373d4c1274b4	continue -> pass
+A2_manifest_lesen_Z1181	1	-	0.4	-	438fbd6092c9	fehler.append("Manifest-Zeile %d: unerwartete Kommentarzeile '%s' (der Schreiber schreibt nur die " 
+A2_manifest_lesen_Z1159	1	35	7.2	-	04a922272d94	fehler.append("Manifest ist kein gueltiges UTF-8 (%s) - Pfade treffen die APK-Namen nicht" % e)
+A2_manifest_lesen_Z1186	1	-	0.5	-	eeb52a8b26dd	fehler.append("Manifest-Zeile %d: erwartet '<bytes>\\t<sha256>\\t<pfad>', %d Tab(s): '%s'" % (nr, le
+K_manifest_lesen_Z1188	1	-	0.8	-	9e214d6b1071	continue -> pass
+A2_manifest_lesen_Z1153	1	244	48.9	-	eecd294f08ba	fehler.append("Manifest enthaelt ein NUL-Byte (Stelle %d)" % roh.index(b"\0"))
+A2_manifest_lesen_Z1191	1	34	8.2	-	492ec6b53232	fehler.append("Manifest-Zeile %d: Groessenfeld '%s' ist keine Zahl (1-18 Ziffern 0-9)" % (nr, _t(gro
+K_manifest_lesen_Z1183	0	-	42.8	1 <3>WSL (41237 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	4b9661fd5e8d	continue -> pass
+K_manifest_lesen_Z1192	1	216	35.5	-	2b7084bd1772	continue -> pass
+A2_manifest_lesen_Z1199	1	18	4.1	-	9bbbc4a79161	fehler.append("Manifest-Zeile %d: unzulaessiger Pfad '%s' (%s)" % (nr, _t(pfad), grund))
+K_manifest_lesen_Z1200	1	-	0.3	-	240ec25e8750	continue -> pass
+A2_manifest_lesen_Z1194	1	231	34.4	-	3121b1b5d377	fehler.append("Manifest-Zeile %d: Pruefsumme '%s' ist kein sha256 (genau 64 Zeichen 0-9a-f, " "Klein
+A2_manifest_lesen_Z1203	1	33	8.7	-	d9ebe73942c0	fehler.append("Manifest nennt %s mehrfach (Zeilen %d und %d)" % (p, zeile_von[p], nr))
+K_manifest_lesen_Z1196	1	232	39.0	-	275ef77b378d	continue -> pass
+A2_manifest_lesen_Z1217	1	-	0.5	-	62baa8541e0a	fehler.append("Manifest-Kopfzeile passt nicht: nennt %d Dateien / %d Bytes, die Zeilen ergeben %d / 
+K_manifest_lesen_Z1204	0	-	42.0	1 <3>WSL (41254 - Relay) ERROR: CreateProcessCommon:640: execvpe(/bin/bash) failed: No such file or directory	469bd87fe5a1	continue -> pass
+A2_manifest_lesen_Z1209	1	247	38.3	-	31e32d48c034	fehler.append("Manifest-Zeile %d: Summe der Groessen > 2^63-1 (asset_abgleich.c: laeuft ueber)" % nr

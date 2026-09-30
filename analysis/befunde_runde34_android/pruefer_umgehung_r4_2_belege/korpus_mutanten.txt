@@ -1,0 +1,105 @@
+Fall                           soll  Geraet Gate      Gate1     Gate2     Gate3     Gate4     Gate5    
+gut                            A     A      A         A         A         A         A         A        
+summe_falsch_aber_hex          A     A      A         A         A         A         A         A        
+summe_leer                     V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_fehlt_v1_zeile           V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_gross_ganz               V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_ein_grossbuchstabe       V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_leerzeichen_hinten       V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_leerzeichen_vorn         V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_nbsp_hinten              V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_tab_doppelt              V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_vollbreit_ziffer         V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+summe_63_plus_g                V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+zeilenende_nur_cr              V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_lf_cr               V     V      V         V         V         V         A         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+zeilenende_crlf                A     A      A         A         A         A         A         A        
+zeilenende_cr_cr_lf            A     A      A         A         A         A         A         A        
+zeilenende_vt                  V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_ff                  V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_nel_utf8            V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeilenende_u2028               V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+zeile_nur_leerzeichen          V     V      V         V         V         V         V         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+zeile_nur_tab                  V     V      V         V         V         V         V         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+zeile_nur_cr                   A     A      A         A         A         A         A         A        
+zeile_nur_nbsp                 V     V      V         V         V         V         V         V           | Zeile 4: Groesse (1-18 Ziffern) + Tab erwartet
+kopf_v1_zeilen_v2              V     V1     V1        V1        V1        V1        V1        V1          | Zeile 1: Kopfzeile im alten Format v1 (bis v0.8.19, ohne Pruefsumme)
+kopf_v2_zeilen_v1              V     V      V         V         V         V         V         V           | Zeile 2: SHA-256 (64 Zeichen 0-9a-f) + Tab erwartet
+zwei_kopfzeilen_v2             V     V      V         V         V         V         V         V           | Zeile 2: unerwartete Kommentarzeile
+zweite_zeile_v1_kopf           V     V      V         V         V         V         V         V           | Zeile 2: unerwartete Kommentarzeile
+kopf_anzahl_null_vorn          A     A      A         A         A         A         A         A        
+kopf_mit_cr_cr                 A     A      A         A         A         A         A         A        
+kopf_utf16                     V     V      V         V         V         V         V         V           | NUL-Byte an Stelle 1
+pfad_doppelt                   V     V      V         V         V         V         V         V           | Pfad doppelt: shared_assets/PSX/a.bin
+pfad_ascii_gross_klein         V     V      V         V         V         V         V         V           | Pfade nur in Gross/klein verschieden: shared_assets/PSX/a.bin / SHARED
+pfad_kelvin_gegen_K            V?    V      V         V         V         V         V         V           | Zeile 3: unzulaessiger Pfad
+pfad_kelvin_gegen_k            V?    V      V         V         V         V         V         V           | Zeile 3: unzulaessiger Pfad
+pfad_AE_gegen_ae               V?    V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_nfc_gegen_nfd             V?    V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_sz_gegen_ss               V?    V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_steuer_1f                 V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_c1_nel                    A     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_leerzeichen_hinten        A     A      A         A         A         A         A         A        
+pfad_punkt_hinten              A     A      A         A         A         A         A         A        
+pfad_neu_mitte                 A     A      A         A         A         A         A         A        
+pfad_neu_ordner                A     A      A         A         A         A         A         A        
+pfad_NEU_gross                 V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_neu_vollbreit             A     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_512_mit_2byte_am_ende     A     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_513_mit_2byte_am_ende     V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+pfad_datei_und_ordner          A     A      A         A         A         A         A         A        
+pfad_datei_und_ordner_gross    A     A      A         A         A         A         A         A        
+groesse_null_vorn              A     A      A         A         A         A         A         A        
+groesse_leerzeichen            V     V      V         V         V         V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+groesse_unterstrich            V     V      V         V         V         V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+bom                            V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+nul_am_ende                    V     V      V         V         V         V         V         V           | NUL-Byte an Stelle 204
+nur_kopf_und_leer              V     V      V         V         V         V         V         V           | Liste ohne Dateien
+n_pfad_0x20_innen              A     A      A         A         A         A         A         A        
+n_pfad_0x7e                    A     A      A         A         A         A         A         A        
+n_pfad_0x7f                    V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_0x80                    V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_0xff                    V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_utf8_ae                 V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_kelvin_allein           V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_tab_am_ende             V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_leerzeichen_am_ende     A     A      A         A         A         A         A         A        
+n_pfad_nur_leerzeichen_segment A     A      A         A         A         A         A         A        
+n_pfad_drei_punkte             A     A      A         A         A         A         A         A        
+n_pfad_punkt_leer              A     A      A         A         A         A         A         A        
+n_pfad_dot_slash_vorn          V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_seg_251_datei                A     A      A         A         A         A         A         A        
+n_seg_252_datei                V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_seg_251_ordner               A     A      A         A         A         A         A         A        
+n_seg_252_ordner               V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_seg_252_erstes               V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_pfad_512                     A     A      A         A         A         A         A         A        
+n_pfad_513                     V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_neu_klein                    V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_neu_gross                    V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_neu_gemischt                 V     V      V         V         V         V         V         V           | Zeile 2: unzulaessiger Pfad
+n_neu_leerzeichen_hinten       A     A      A         A         A         A         A         A        
+n_neu_punkt_hinten             A     A      A         A         A         A         A         A        
+n_neu_als_ordner               A     A      A         A         A         A         A         A        
+n_Y4_datei_und_neu_ordner      A     A      A         A         A         A         A         A        
+n_Y4_datei_und_NEU_ordner_gk   A     A      A         A         A         A         A         A        
+n_dub_Z_z                      V     V      V         A         V         V         V         V           | Pfade nur in Gross/klein verschieden: shared_assets/PSX/z.bin / shared
+n_dub_ordner_gk                A     A      A         A         A         A         A         A        
+n_kein_dub_klammer             A     A      A         A         A         A         A         A        
+n_kein_dub_at_backtick         A     A      A         A         A         A         A         A        
+n_dub_exakt_kopf_zaehlt_einmal V     V      V         V         V         V         V         V           | Kopfzeile nennt 1 Dateien / 5 Bytes, die Zeilen ergeben 2 / 10
+n_dub_exakt_kopf_zaehlt_zweimal V     V      V         V         V         V         V         V           | Pfad doppelt: shared_assets/PSX/a.bin
+n_kopf_cr_vorn                 V     V      V         V         V         A         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_kopf_leerzeichen_hinten      V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_kopf_tab_hinten              V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_kopf_anzahl_19_ziffern       V     V      V         V         A         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_kopf_bytes_19_ziffern        V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_zeile_cr_vorn                V     V      V         V         V         V         A         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+n_zeile_lf_cr                  V     V      V         V         V         V         A         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+n_zeile_cr_innen_kopf          V     V      V         V         V         V         V         V           | Zeile 1: Kopfzeile fehlt/unlesbar (erwartet '# re15 assets v2 <anzahl>
+n_groesse_null                 A     A      A         A         A         A         A         A        
+n_groesse_19_ziffern           V     V      V         V         V         V         V         V           | Zeile 2: Groesse (1-18 Ziffern) + Tab erwartet
+n_nur_kopf_leerzeilen          V     V      V         V         V         V         V         V           | Liste ohne Dateien
+n_pfad_ohne_toplevel_baum      A     A      A         A         A         A         A         A        
+# Gate (1. Datei) != Geraet: 0 []
+# Geraet != 'soll' (Format-Regel bzw. case-insensitiver Speicher): 3 ['pfad_c1_nel', 'pfad_neu_vollbreit', 'pfad_512_mit_2byte_am_ende']
