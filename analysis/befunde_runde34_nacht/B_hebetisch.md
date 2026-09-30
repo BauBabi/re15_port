@@ -406,10 +406,10 @@ Begruendung: das Original legt fuer sub04 keinen "erledigt"-Zustand an, und der 
 | `re15_port/include/re15_hebetisch_cursor.h` | neu | Kopf mit allen Belegen (Abschnitte 3/5 dieses Dossiers), API unten |
 | `re15_port/engine/src/hebetisch_cursor_1150.c` | neu | Zustand, Halt, Bewegung, Treffertest, Klick, Text |
 | `re15_port/platform/pc/src/hebetisch_cursor_pc.c` | neu (B-eigen, PC) | Zeichnen: 11F0-MD1 mit Cut-10-Sicht projizieren, Dreiecke in die Tri-Queue, TIM-Slot 28 |
-| `re15_port/engine/src/gen/hebetisch_cursor.inc` | neu, generiert | MD1 (5556 B) + TIM (33312 B) bytegleich aus ROOM11F0.RDT @0x001928/@0x018DAC |
+| `re15_port/engine/src/gen/hebetisch_cursor.inc` | neu, generiert | MD1 (5556 B) + TIM (33312 B) bytegleich aus ROOM11F0.RDT @0x001928/@0x018DAC; eingebunden von hebetisch_cursor_1150.c NUR unter `RE15_PLATFORM_PC` (PSX-Speicher, der Cursor ist dort aus), Zugriff fuer die PC-Datei ueber `re15_hebetisch_cursor_md1_bytes()/_tim_bytes()` (Muster irons_tisch_1150.c) |
 | `re15_port/tools/r34n_b/cursor_export.py` | neu | erzeugt das .inc, prueft Bytegleichheit (Vorbild tools/irons_tisch_engine_export.py) |
 | `re15_port/engine/src/scd_vm.c` | Haken 1 Zeile | op_for: `if (s_current_rdt && re15_hebetisch_cursor_haelt(t->pc, s_current_rdt->raw, s_current_rdt->raw_size)) return SCD_R_YIELD;` vor jeder Zustandsaenderung (im Zustand AUS nur ein Vergleich) |
-| `re15_port/engine/src/game_step_common.c` | Haken 2 Zeilen | (a) GENERIC-Ausgabe: `re15_hebetisch_cursor_aktion(g_aot.fired_event_id_this_frame);` vor `scd_event_fire(...)`; (b) neben `re15_granate_tick()`: `if (c->rdt_ok) re15_hebetisch_cursor_tick();` |
+| `re15_port/engine/src/game_step_common.c` | Haken 2 Zeilen | (a) GENERIC-Ausgabe: das Ergebnis von `scd_event_fire(...)` an `re15_hebetisch_cursor_aktion(ereignis, gestartet)` geben (armiert nur, wenn sub04 wirklich gestartet ist — sonst bliebe VERLANGT stehen und haelte den naechsten Start); (b) neben `re15_granate_tick()`: `if (c->rdt_ok) re15_hebetisch_cursor_tick();` |
 | `re15_port/engine/src/scd_room_setup.c` | Haken 1 Zeile | neben `re15_granate_install(...)`: `re15_hebetisch_cursor_install((uint16_t)g_current_room_id);` (Zustand zuruecksetzen, Signatur suchen) |
 | `re15_port/platform/pc/main.c` | Haken 1 Zeile | nach der Prop-Zeichenschleife: `re15_hebetisch_cursor_zeichnen_pc();` — das TIM laedt die PC-Datei selbst beim ersten Zeichnen je Cursor-Sitzung in `RE15_TIM_SLOT_PROP(8)` = 28 (`re15_render_pc_upload_tim_slot`; Upload wendet den Farbschluessel wie fuer jedes Prop an). Die Zeichenfolge je Viereck MUSS die der Raum-Prop-Schleife sein (Zerlegung + Abtastphase re15_abtastphase.h), sonst weicht das Kreuz ab (Runde 26/27) |
 | `re15_port/tests/unit/probe_r34n_b_messung.c` + `probes/r34n_b_hebetisch.cmake` | liegt schon (Mess-Sonde dieser Stufe, kein add_test) | Halt, Cut_old mit/ohne Vorschalt, Kuppel-Huelle, 11F0-Projektion (§3.2/§3.6/§3.7) |
@@ -423,7 +423,7 @@ halten wir sub04 NICHT an (Modul fragt `RE15_PLATFORM_PC`), sonst stuende die Fa
 
 ```c
 void re15_hebetisch_cursor_install(uint16_t room);        /* Raumaufbau: Zustand AUS */
-void re15_hebetisch_cursor_aktion(uint8_t ereignis);      /* GENERIC-Ausgabe: 1150/1151 && ereignis == 4 -> VERLANGT */
+void re15_hebetisch_cursor_aktion(uint8_t ereignis, int gestartet); /* GENERIC-Ausgabe: 1150/1151 && ereignis == 4 && gestartet -> VERLANGT */
 int  re15_hebetisch_cursor_haelt(const uint8_t *pc, const uint8_t *raw, int raw_size);
                                    /* op_for: 1 = Yield; sucht die Halte-Signatur (§3.7) einmal je raw-Puffer */
 void re15_hebetisch_cursor_tick(void);                    /* je Spielbild */
@@ -439,7 +439,7 @@ Aufruf setzt AKTIV und den Cursor auf den Start. `tick()` nur in AKTIV und nur w
 2. Druck `g_scd_pad_edge & 0x0040`: Heisspunkt projizieren; in der Huelle -> `re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK)`,
    Zustand FREI (naechster op_for laeuft durch); sonst `re15_msg_install_text(20, k_nichts, sizeof k_nichts)` +
    `re15_msg_install_durations(20, re15_msg_compute_duration(...))` + `re15_dialog_open_mask(20, 0, 0xFFFF0000u)`.
-Protokoll (nur PC, `RE15_HEBETISCH_LOG` erweitern): je Bild `cursor=<zustand> x=<x> z=<z> sx=<px> sy=<px> treffer=<0|1>`
+Protokoll (nur PC, eigener Schalter `RE15_HEBETISCH_CURSOR_LOG=<datei>` — hebetisch_1150.c bleibt unberuehrt): je Bild `cursor=<zustand> x=<x> z=<z> sx=<px> sy=<px> treffer=<0|1>`
 und Zeilen fuer Druck/Klick/Text — Grundlage der Abnahme.
 
 ### 5.4 KONSTANTEN-TABELLE
@@ -460,7 +460,7 @@ und Zeilen fuer Druck/Klick/Text — Grundlage der Abnahme.
 | Farbe | Tint 128 (neutral) | gemessen: 11F0 rendert CLUT[3]/[4] 1:1 (§2.3); PORT-WAHL "wie 11F0 im Port" |
 | Tiefe in der Tri-Queue | 0 (vor allem) | PORT-WAHL: Zeiger ueber allem; Tris und PRI-Masken werden gemeinsam nach Tiefe sortiert (render_pc.c end_frame), Tiefe 0 liegt vor jeder Maske |
 | Randgrenze | keine | wie 11F0 (gemessen §2.3, op_add_speed ohne Grenze) |
-| Trefferflaeche | Huelle (151,171) (163,161) (180,151) (206,149) (234,151) (248,157) (267,171) (264,191) (261,205) (214,211) (164,205) (151,191) | Projektion Prop 1 @0x138D4, Prop 2 @0x13B88, Podest aus Prop 0 @0x11E40 unter Cut 4 @0x00E0 bei Plattform @0x0FB4; gerendert 99,53 % (§3.6). Besser: zur Laufzeit dieselbe Projektion (siehe unten) |
+| Trefferflaeche | Huelle (Engine-Werte, ganzzahlig, Umlauf) (151,171) (163,161) (180,151) (206,148) (235,150) (248,156) (267,170) (265,190) (261,204) (214,210) (164,204) (151,191) | Projektion Prop 1 @0x138D4, Prop 2 @0x13B88, Podest aus Prop 0 @0x11E40 unter Cut 4 @0x00E0 bei Plattform @0x0FB4; gerendert 99,53 % (Python-Huelle), Engine-Projektion `probe_r34n_b_messung` = diese Werte, Python max. 2 px² daneben (§3.6); Riegel R2 rechnet nach |
 | Heisspunkt | Projektion von (x, -1800, z) unter Cut 10 | Objektlage wie der Zellstempel @0x80042f5c; -1800 = Oberseite -900 + Typ-4 -900 |
 | Klick | `re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK)` = RE2 Gruppe 2 / 0x0A | NUTZER-VORGABE ("wie ... Generator in ROOM 11F0"); RE2 ROOM2130.RDT @0x01192; Port scd_vm.c op_sce_key_ck |
 | Klick ausserhalb | keiner | 11F0 gemessen (m5, §2.4) |
@@ -469,11 +469,7 @@ und Zeilen fuer Druck/Klick/Text — Grundlage der Abnahme.
 | Pausemaske Text | 0xFFFF0000 | sce-1-Handler @0x80043098/@0x800430a4 (u16@+2 << 16), alle 524 sce-1-Records 0xffff (scd_vm.c) |
 | TIM-Slot | 28 = RE15_TIM_SLOT_PROP(8) | VERTRAG §1.5 obj_id 8; main.c RE15_TIM_SLOT_PROP (6..15 -> 26..35); in 1150/1151 frei (nOmodel 4, Port-Props 4..7 = Slots 8/9/26/27) |
 
-Trefferflaeche zur Laufzeit statt als Zahlen (empfohlen): das Modul projiziert die 12 Huellen-Punkte nicht, sondern
-die Weltpunkte der Kuppel (Deckel-Punkte aus den Prop-1/2-MD1, Podest-Punkte aus Prop 0) mit der AKTIVEN Kamera und der
-aktuellen Plattformlage und bildet die Huelle je Druck neu — dann kann sie nicht von der gezeichneten Kuppel abweichen.
-Die Zahlen oben sind dann nur der Riegel-Sollwert. Wer es einfacher will: Zahlen als Tabelle, Riegel vergleicht sie
-mit der Engine-Projektion (§6 R2).
+Trefferflaeche: die 12 Ecken als Konstanten im Kopf (Werte oben), Riegel R2 rechnet sie mit der Engine-Projektion nach (so wie `probe_r34n_b_messung` es schon tut: max. 2 px² Abstand). Eine Laufzeit-Projektion der Kuppel waere genauer gegen spaetere Kamera-/Lageaenderungen, braucht aber im Engine-Modul die Raumkamera — nicht noetig, solange Cut 4 und Plattformlage aus den Original-Bytes kommen (beide in 1150/1151 gleich, §3.6/§3.7).
 
 ### 5.5 Gemeinsame Dateien — was genau wo (minimale Haken)
 
