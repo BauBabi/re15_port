@@ -5,8 +5,8 @@ Zweig `r34n/dokumente`, aufgesetzt auf cf0e68ba (master + Auftrag/Vertrag der Na
 Vorbild in allen Punkten: Irons Diary (Runde 30, `analysis/befunde_runde30/irons-diary-welt.md`,
 `irons-diary-dokument.md`, `nachtrag-diary-en.md`).
 
-Status: ERMITTLUNG + BAUPLAN ABGESCHLOSSEN. Kein Port-Code geschrieben; Werkzeuge, Sonde und
-Belege im Baum.
+Status: ERMITTLUNG + BAUPLAN ABGESCHLOSSEN; BAU (Abschnitt 9) ABGESCHLOSSEN — vier Dokumente gebaut,
+Riegel `unit_r34n_e_dokumente` + `integration_r34n_e_dokumente_bild`, an der echten exe abgenommen.
 
 Werkzeuge dieser Spur (alle neu, alle im Baum, `re15_port/tools/r34n_e/`):
 
@@ -879,7 +879,31 @@ Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpru
 (offen)
 
 ### 9.8 Eigene Abnahme (Bilder)
-(offen)
+
+Alle Laeufe an der ECHTEN exe (eigene Kopie `build/r34n_e/mess_bau/re15_pc_e.exe`, beschleunigter
+Renderer, `RE15_FRAMEDUMP` + `RE15_WINDOW_SCALE=3`, kein AUTOSHOT/SOFTWARE_RENDER), jedes Bild angesehen.
+`RE15_FORCE_CUT` setzt nur die Kamera (der Sprung landet sonst im Vorgabe-Cut des Debug-Menues).
+
+| Beleg (`E_belege/`) | Weg | Was zu sehen ist |
+|---|---|---|
+| `bau_d1_1050_cut3.png`, `bau_d1_schoss_vorher_nachher.png` | Sprung 1050, Cut 3 | Buch auf dem Schoss der gemalten Leiche; nach der Aufnahme leer (Hand wieder sichtbar) |
+| `bau_d1_aufnahme_bogen.png` | Quadrat am Stand (14900,−6750) | Leser 1/4..4/4, EXIT, „The Police Officer's Final Diary Entry has been filed." |
+| `bau_d2_bank_vorher_nachher.png`, `bau_d2_aufnahme_bogen.png` | Sprung 1000, Cut 0 | Buch auf der rechten Bank in der Marke; Leser 1/5..5/5; Bank danach leer |
+| `bau_d3_cut6_mit_ohne.png`, `bau_d3_cut3_mit_ohne.png`, `bau_d3_aufnahme_bogen.png` | Sprung 1020, Cut 6/3 | Blatt auf Marvins Tisch (Cut 6 = Nutzerbild), in Cut 3 trotz Tischmaske; Leser 1/3..3/3 mit „4312" und „Marvin Branagh" rechts; danach „It's Lieutenant Branagh's desk." |
+| `bau_d4_cut0_mit_ohne.png`, `bau_d4_cut1_6_8_mit_ohne.png`, `bau_d4_aufnahme_bogen.png` | Sprung 1010, Cut 0/1/6/8 | Blatt neben der Spray-Dose, ganz sichtbar; Leser 1/3..3/3 mit „5632" |
+| `bau_liste_files.png`, `bau_liste_leser_aus_liste.png` | CONTINUE (Karte mit files = 1,2,3,4,0) | FILE-Liste mit allen fuenf Namen aus dem Spielstand; der lange Name endet bei x ≈ 272 von 320, innerhalb der Tafel (Risiko 7.6 erledigt); Quadrat auf Zeile 0 oeffnet den Leser aus der Liste |
+| (Log `build/r34n_e/bau/d3_lade_druck`) | CONTINUE direkt in ROOM1020, Quadrat am Tisch | Leser (Bildsatz 28) statt Nachricht — der Nachricht-Umzug greift auch am Boot-Weg |
+
+Riegel an der echten exe `integration_r34n_e_dokumente_bild` (Lade-Weg, je Raum mit/ohne Genommen-Bit,
+Framedump F100): d1 283, d2 783, d3 228, d4 1603, d4c1 1625 Pixel im Fenster, ausserhalb 0.
+
+**Mutationsproben** (jeweils gebaut, gemessen, zurueckgesetzt; Quelle danach unveraendert):
+
+| Probe | Eingriff | Ergebnis |
+|---|---|---|
+| M1 | Nachricht-Umzug UND Klemmen aus | `unit_r34n_e_dokumente` 18 Fehler (Dok-3-Druck liefert die Nachricht, Umzug, K); Bild-Riegel ROOM1020 Cut 3 0 Pixel |
+| M2 | Boot-Weg-Install in main.c aus | Bild-Riegel in allen Faellen rot (keine „Boot-Weg"-Zeile, 0 Pixel) |
+| M3 | nur Klemmen aus | Bild-Riegel d4c1 739 statt 1625 Pixel → rot (Schwelle 1180); d4 1565, Cut 6 1288, Cut 8 1554 (Klemme dort ohne sichtbare Wirkung) |
 
 ### 9.9 Abweichungen vom Plan
 
@@ -892,8 +916,9 @@ Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpru
 3. **Wirkung der ROOM1010-Klemme kleiner als im Plan:** Plan 6.2 erwartete ohne Klemme „fernes
    Blattdrittel fehlt"; gemessen (Mutationsprobe M1) fehlen in Cut 0 nur 38 von 1603 Pixeln (ein
    schmaler Streifen an der fernen Kante). Die Klemme bleibt (sie stellt fuer das Blatt das Original her:
-   dort verdeckt nichts); der Bild-Riegel pinnt die Klemme deshalb an ROOM1020 Cut 3 (Tischmaske 258:
-   ohne Klemme 0 Pixel).
+   dort verdeckt nichts); der Bild-Riegel pinnt die Klemme an ROOM1010 Cut 1 (ohne Klemme 739 statt 1625
+   Pixel). ROOM1020 Cut 3 (Tischmaske 258: ohne Klemme 0 Pixel) taugt am Lade-Weg nicht als Riegel —
+   dort steht ein Zombie vor dem Tisch (24 Pixel mit Klemme).
 4. **Riegel-Umfang:** Plan 6.1 k („kein Original-Skript nutzt 0x49..0x4C") ist KEIN ctest geworden — der
    Bytescan braucht den SCD-Walker samt Opcode-Laengen; er liegt reproduzierbar als
    `tools/r34n_e/id_zensus.py` (Ergebnis `E_belege/id_zensus.txt`, 0 Treffer). 6.1 l (Meldungstext) prueft
@@ -905,6 +930,15 @@ Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpru
    r30_irons-diary-welt.cmake), das Skript liegt wie geplant unter `tests/integration/`.
 7. **6.2 Punkt 7 (Codes an der exe eingeben) nicht gefahren:** die Schloss-Skripte sind unveraendert
    Original, `test_keypad.c` faehrt „5632"; die Codes der Nutzertexte = die Zettel des Originals (9.5).
+8. **Zwei Fremd-Riegel angepasst** (nicht Spur-E-Dateien, minimal, Absicht erhalten):
+   `probe_r26_inventar.c` B4/B4b pruefte „genau EINE Dokument-Id (0x48)" und `gefahren >= 900`;
+   `probe_r30_irons_diary_dokument.c` pruefte „0x49 → kein Dokument". Beides kodierte die Groesse der
+   Dokument-Tabelle von Runde 30. Jetzt: ausgenommen werden genau die Ids der Tabelle
+   (`re15_files_doc_count()`), alle anderen 97 × 9 = 873 Laeufe bleiben bit-genau verglichen; die
+   Tabellengrenze liegt bei 0x48 + Anzahl.
+9. **Klemmen-Wirkung je Cut gemessen** (M3): ROOM1010 Cut 1 gross (886 Pixel), Cut 0/6 klein (38/33),
+   Cut 8 keine. Die Werte bleiben (Regel des Plans: kleinste Tiefe, die die fernste Huellen-Ecke
+   verdeckt — eine obere Schranke, schadet nicht), der Bild-Riegel pinnt Cut 1.
 
 ### 9.10 Offene Punkte
 
@@ -913,7 +947,9 @@ Commits (Zweig `r34n/dokumente`): `ae3a069b` Geruest · `7919ff8e` 9.0 Selbstpru
 2. **Helligkeit:** die Dokumente sind so dunkel wie die Original-Items ihrer Raeume (byte-true Lichtsatz,
    2.8/3.8). Wirkt es dem Nutzer zu dunkel, ist das eine neue Vorgabe (Irons-Muster: Lichtsatz-Wahl).
 3. **Auslieferung E + F zusammen** (7.5): F entfernt die Code-Zettel.
-4. **PSX:** der Prop-Lader fuer portseitige Props fehlt dort generell (wie Irons, 7.10).
+4. **PSX:** der Prop-Lader fuer portseitige Props fehlt dort generell (wie Irons, 7.10); die Engine
+   traegt die vier Modelle als statische Daten mit (gen/dokumente_props.inc, 123 KB, wie Irons 144 KB) —
+   fuer das PSX-Laufzeitbudget pruefen, wenn der PSX-Bau wieder laeuft.
 5. **Android:** GLOB-Liste neu konfigurieren (`dokumente_r34.c`, 7.9).
 6. **GUI-Riegel unter Last:** `integration_r34n_e_dokumente_bild` startet die echte exe zehnmal — faellt er
    waehrend paralleler Agenten-Laeufe, einzeln nachfahren (memory reai-v2-gui-tests-flattern…).
