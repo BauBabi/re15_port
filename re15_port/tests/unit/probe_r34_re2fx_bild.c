@@ -141,6 +141,27 @@ static void bild_schreiben(const char *folge, int bild)
     fclose(f);
 }
 
+/* 30 (O9 in ctest): Texel direkt aus der TIM-DATEI, ohne VRAM-Modell (wie tools/re2fx_katalog.py Tex.texel):
+ * Seite 0x1E/0x1F = Bild-hw-Spalte (Seite & 0xF)*64 - 768 (Bild liegt bei VRAM-x 768), CLUT-Zeile = y - 480,
+ * CLUT-Spalte = x*16 - 256 (Datei-CLUT bei (256,480)). */
+static const uint8_t *s_tim; static long s_tim_n;
+static int s_texel_abw, s_texel_n;
+static uint16_t tim_texel(uint16_t tpage, uint16_t clut, int u, int v)
+{
+    const uint32_t csz = le32(s_tim + 8);
+    const int cw = le16(s_tim + 16);
+    const uint8_t *im = s_tim + 8 + csz;
+    const int iw = le16(im + 8);
+    const int col = (tpage & 0xF) * 64 - 768;
+    const long off = 12 + ((long)(v & 255) * iw + col + u / 4) * 2;
+    if (col < 0 || (long)(im - s_tim) + off + 2 > s_tim_n) return 0xFFFF;
+    const uint16_t hw = le16(im + off);
+    const int idx = (hw >> ((u & 3) * 4)) & 0xF;
+    const int zeile = ((clut >> 6) & 0x1FF) - 480, spalte = (clut & 0x3F) * 16 - 256;
+    if (zeile < 0 || spalte < 0) return 0xFFFF;
+    return le16(s_tim + 20 + (size_t)(zeile * cw + spalte + idx) * 2);
+}
+
 typedef struct { uint16_t tp, cl; uint8_t u0, v0, u1, v1; } crop_t;
 static crop_t s_crops[4096]; static int s_ncrops;
 static void crop_merken(const re2fx_quad_t *q)
@@ -153,7 +174,12 @@ static void crop_merken(const re2fx_quad_t *q)
     c->tp = q->tpage; c->cl = q->clut; c->u0 = q->u0; c->v0 = q->v0; c->u1 = q->u1; c->v1 = q->v1;
     fprintf(s_cf, "CROP %04X %04X %u %u %u %u\n", q->tpage, q->clut, q->u0, q->v0, q->u1, q->v1);
     for (int v = q->v0; v < q->v1; v++) {
-        for (int u = q->u0; u < q->u1; u++) fprintf(s_cf, "%04x ", texel(q->tpage, q->clut, u, v));
+        for (int u = q->u0; u < q->u1; u++) {
+            const uint16_t t = texel(q->tpage, q->clut, u, v);
+            fprintf(s_cf, "%04x ", t);
+            s_texel_n++;
+            if (t != tim_texel(q->tpage, q->clut, u, v)) s_texel_abw++;
+        }
         fprintf(s_cf, "\n");
     }
 }
@@ -502,7 +528,7 @@ int main(int argc, char **argv)
     long ne = 0, nt = 0;
     uint8_t *esp = lesen("CORE00.ESP", &ne), *tim = lesen("TEX.TIM", &nt);
     if (!esp || !tim || re2fx_register_core(esp, (size_t)ne) != 0 || tim_ins_vram(tim, nt) != 0) { printf("FAIL 1: Dateien\n"); return 1; }
-    s_esp = esp; s_esp_n = ne;
+    s_esp = esp; s_esp_n = ne; s_tim = tim; s_tim_n = nt;
     char p[1024];
     snprintf(p, sizeof p, "%s/re2fx_quads.txt", s_dir);  s_qf = fopen(p, "w");
     snprintf(p, sizeof p, "%s/re2fx_crops.txt", s_dir);  s_cf = fopen(p, "w");
@@ -520,6 +546,15 @@ int main(int argc, char **argv)
            ps, pb, s_ncrops, s_leere_zellen);
     printf("Handrechnung: %d Quads identisch; Negativ-Kontrolle (SZ<<3) wich in %d Bildern ab\n",
            s_hand_geprueft, s_hand_neg_abweichung);
+    printf("Texel (VRAM-Modell gegen TIM-Datei): %d geprueft, %d abweichend\n", s_texel_n, s_texel_abw);
+    /* Negativ-Kontrolle 30: ein falsches CLUT-Wort (Zeile + 1) liefert andere Texel. */
+    {
+        int anders = 0;
+        for (int v = 168; v < 208 && !anders; v++) for (int u = 0; u < 40; u++)
+            if (tim_texel(0x003E, 0x7911, u, v) != tim_texel(0x003E, 0x7951, u, v)) { anders = 1; break; }
+        if (!anders) { printf("FAIL 31: Negativ-Kontrolle Texel ohne Wirkung\n"); return 31; }
+    }
+    if (s_texel_n < 10000 || s_texel_abw != 0) { printf("FAIL 30: Texel VRAM-Modell != TIM-Datei\n"); return 30; }
     printf("  Kamera rot [%d %d %d | %d %d %d | %d %d %d] trans (%d,%d,%d) H %d\n", s_cam.rot[0], s_cam.rot[1], s_cam.rot[2],
            s_cam.rot[3], s_cam.rot[4], s_cam.rot[5], s_cam.rot[6], s_cam.rot[7], s_cam.rot[8],
            s_cam.trans[0], s_cam.trans[1], s_cam.trans[2], s_cam.fov_screen_dist);
