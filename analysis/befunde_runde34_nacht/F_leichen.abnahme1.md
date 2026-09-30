@@ -5,7 +5,20 @@ Ziel: WIDERLEGEN, dass Spur F fertig ist.
 
 ## 0. Urteil
 
-(offen — wird am Ende gesetzt)
+**ABGENOMMEN** (mit drei kosmetischen Maengeln an der Dokumentation, 5.1) — und mit einer BINDENDEN
+Integrationsauflage (5.2): F nur zusammen mit Spur E Dok 3 + Dok 4 ausliefern.
+
+Widerlegungsversuche, die alle gescheitert sind (Einzelheiten 3/4):
+- jeder Nutzerpunkt (AUFTRAG.md Z. 49, Z. 61-64) an der echten exe mit Spielereingaben: 1110 und 1230
+  (1230 ueber den echten Tuerweg aus der Garage) — langer Text, Angebot, "No" -> beim naechsten Untersuchen
+  wieder Text + Angebot, "Yes" -> H. Gun Bullets 50 -> 57 in EINEM Platz, danach nur der kurze Text;
+- falsche Eingaben (Kreuz an der Ja/Nein-Frage wirkungslos; Kreuz/Schnellvorlauf auf den Textseiten);
+- Wiederbetreten nach der Annahme (Tuer raus und wieder rein, ein Prozess): kurzer Text, kein Modal;
+- Speichern ueber den Speicherbildschirm des Spiels + Laden per CONTINUE: kurzer Text, kein Modal, 57;
+- Raumvarianten ROOM1111 / ROOM1231: identisch;
+- Nachbarverhalten: Suite 440/440 inkl. Tastenfeld/Tuer-Riegel, Riegel-Teil `andere` selbst gefahren;
+- RE-Gate: Text- und Ereignis-Bytes selbst aus den RDTs gelesen, Open-Guard und Modal-Frage selbst
+  disassembliert, keine Konstante ohne Beleg, kein Rate-Tell.
 
 ## 1. Stand (git log, Dossier, Gegenpruefung)
 
@@ -143,6 +156,76 @@ identisch.
 
 ## 4. Code gegen RE-Gate
 
+Geprueft: `re15_leiche.h`, `leiche_1110_1230.c`, die zwei Haken-Zeilen, `test_r34n_f_leiche.c`,
+`probes/r34n_f_leiche.cmake`, die Aenderung an `test_r30_tuer.c`.
+
+| Punkt | selbst nachgeprueft | Ergebnis |
+|---|---|---|
+| Text-Bytes | Python ueber `shared_assets/PSX/STAGE1`: ROOM1110 msg 0 @0x0D68..0x0DD4, ROOM1230 msg 10 @0x16F4..0x1753, ROOM1011 msg 19 @0x12A1 (`24 41 00 45 4f 00 44 4b 48 40 45 4a 43 00 4f 4b 49 41 50 44 45 4a 43 57 57 57`), " something" ROOM1110 @0x0EC4 | die vier Texte im Code sind Byte fuer Byte diese Stellen (Kopf `04 02`, Umbruch `02 00`, Ende `01 00`, Punkt `57`) |
+| Ereignis-Bytes | ROOM1110 @0x0AEE / sub02 @0x0CEE..0x0D23, ROOM1230 @0x0D52 / sub21 @0x14A6..0x14DB | wie im Kopf von `re15_leiche.h` zitiert; 1111 == 1110, 1231 == 1230 an denselben Offsets (bytegleich) |
+| Einzige Code-Quellen | alle RDTs nach `10 0f 0d 0e` ("4312") und `11 12 0f 0e` ("5632") durchsucht | nur ROOM1110/1111 @0xDB3 und ROOM1230/1231 @0x1732 — die ersetzten Nachrichten (-> Integrationsauflage 5.2) |
+| Open-Guard FUN_80027e68 | `re15_disasm.py dis 0x80027e68`: @0x80027e74 `lbu v0,0(v1)` (v1 = 0x800b8520), @0x80027e7c `andi v0,v0,0x80`, @0x80027e80 `beq v0,zero,0x80027e90`, @0x80027e88 `j 0x800280ac` / @0x80027e8c `addiu v0,zero,-1` | stimmt (Sprungziel selbst gelesen, nicht nur zitiert) |
+| Modal-Frage ueber dieselbe Routine | `dis 0x8001df64`/`0x8001dfd8`: @0x8001df6c `ori a1,zero,0x100` -> @0x8001dfe0 `jal 0x80027e68`; @0x8001df88 `ori a1,zero,0x100` / @0x8001df90 `jal 0x80027e68` | stimmt |
+| Konstanten ohne Beleg | Suche nach "plausib/interim/tunable/vermutlich/TODO/faithful" in allen neuen Dateien: 0 Treffer. Jede Konstante in `re15_leiche.h` traegt Datei-Offset/@0x oder VERTRAG-Zuteilung; Menge 15 und Modal-Zeitpunkt als PORT-WAHL/NUTZER-VORGABE gekennzeichnet | ok |
+| Menge 15 (PORT-WAHL) | RE1.5 vom Gegenpruefer unabhaengig gezaehlt (38 Saetze, 22 x 15); RE2 selbst grob gezaehlt (Roh-Scan `4e .. 02 ..` Id 0x14 in 2553 SCD-Bloecken: 47 Treffer, 41 x 15, 6 x 30) | Modus 15 in beiden Spielen haelt |
+| Duration-Zeile (`d < 65535`) | msg_common.c:342-343 macht fuer jede Raumnachricht dasselbe | Muster des Raumladers, kein neues Verhalten |
+| Andere Haken im selben Opcode | `gen/discard_sites.inc`, `gen/lock_se_sites.inc` gelesen | kein Eintrag fuer (1110,0)/(1230,10) -> der fruehe Ausstieg verliert nichts |
+| Haken-Stelle | scd_vm.c:1775 hinter dem Stimmen-Riegel (:1750-1769), vor Besitz-Gate/Tuerton/Schreibmaschine | wie Gegenpruefung Auflage 1 |
+| `test_r30_tuer.c` (+7 Zeilen) | room_boot beantwortet ein offenes Aufnahme-Modal, bevor der naechste Raum gebootet wird; `messen()` bootet je Platz neu | legitime Pruefstand-Anpassung (der Pruefstand tickt das Modal nicht, main.c:7380); ohne sie: "Tabellen-Plaetze 18 statt 51" (Bau-Suite 05:39). Aber undokumentiert (M2) |
+
+Keine erfundene Konstante, kein Stub, kein Rate-Tell gefunden.
+
 ## 5. Maengelliste
 
+### 5.1 Maengel der Spur F
+
+| # | Schwere | Mangel | Beleg |
+|---|---|---|---|
+| M1 | kosmetisch | Dossier nach dem Limit-Abbruch unvollstaendig: 9.5 Suite steht auf "(laeuft)", 9.8 "Abschluss-Commit mit Suite folgt", Kopfzeile noch "Stufe: ERMITTLUNG + BAUPLAN (noch kein Port-Code)". Suite-Ergebnis 440/440 steht nur in dieser Abnahme | `F_leichen.md` Z. 3, Z. 588-589, Z. 649 |
+| M2 | kosmetisch | Aenderung an einem FREMDEN Riegel (`tests/unit/test_r30_tuer.c`, Runde 30) nur im wip-Commit `d0611644`, nicht in Dossier 9.1 (Dateiliste) / 9.7 (Abweichungen); sachlich richtig (s. 4) | `git show d0611644`; `build/r34n_f_suite.log` Z. 9350 "Tabellen-Plaetze 18 ... statt 51" (unversioniertes Bau-Protokoll im Baum) |
+| M3 | kosmetisch | Die RE-Sonde `probe_r34n_f_leiche` wird weiter in jedem Bau uebersetzt, misst aber laut eigenem Kopf nicht mehr den gebauten Stand (simuliert mit den Original-Ids); Dossier 9.9.6 schlaegt Entfernen bei der Integration vor | `probes/r34n_f_leiche.cmake` Z. 6-10 |
+
+Kein blocker, kein wesentlicher Mangel an Spur F gefunden.
+
+### 5.2 Integrationsauflage (bindend — kein Mangel der Spur F, Folge des Nutzerauftrags)
+
+F entfernt die EINZIGEN Quellen der Tastenfeld-Codes 4312 (Communication Room ROOM10D0 -> 10F0) und 5632
+(Weapon Storage ROOM1230) (Byte-Suche in 4). F darf deshalb nur ZUSAMMEN mit Spur E Dok 3 (Marvin's Notes,
+4312, ROOM1020) und Dok 4 (Armory Notice, 5632, ROOM1010) auf master/ausgeliefert werden. Stand Spur E
+(nur gelesen, 08:5x): Dok 3 gebaut (`bbdd45b5`), Dok 4 noch nicht. Ohne Dok 4 fehlt 5632, ohne Dok 3 fehlt 4312.
+
+### 5.3 Lesarten (geprueft, kein Mangel)
+
+| Nutzer schreibt | Port zeigt | warum haltbar |
+|---|---|---|
+| "It's a **P**olice officer, he's dead." | "It's a **p**olice officer, he's dead." | wortgleich zur Original-Seite (ROOM1110 @0x0D6A) -> Original-Bytes laut Bau-Auftrag ("Wortgleiche Teile aus den Original-Bytes"); Vorlauf Runde 33 "Report" -> "report" ohne Einwand |
+| "He is **H**olding something" (1110 ohne Punkt) | "He is **h**olding something." | "He is holding" wortgleich (@0x0D8D / @0x0170C, am Stueck ROOM1011 @0x012A3); Punkt = Satzende des ersetzten Original-Satzes (@0x0DA1) und die 1230-Schreibung des Nutzers |
+| eine Zeile | Seitenumbruch `02 00` zwischen den Saetzen | steht im Original genau dort (@0x0D8B / @0x170A) |
+| "A miserable death…." / "A miserable death…" | "A miserable death..." (drei Punkte) | wortgleich zur Original-Seite @0x016F6; RE1.5 hat keine Auslassungs-Glyphe (0 x 0xF2, 0 x vier Punkte in 1227 Nachrichten) |
+
+Sollte der Nutzer die Grossschreibung woertlich wollen, sind es zwei Glyphen je Text (0x4C -> 0x2C "P",
+0x44 -> 0x24 "H"; Gross A-Z ab 0x1D, klein a-z ab 0x3D) — keine Mechanik-Aenderung.
+
+### 5.4 Nebenbefunde (nicht Spur F, vorbestehend)
+
+- Plc_motion(1,11,0) der Leichen-Ereignisse zeigt im Port keine sichtbare Haltungsaenderung (auch vor dem
+  Bau, `ist_1110_leiche.png`; Dossier 8.1).
+- Nach einem Debug-Sprung + `RE15_PLAYER_POS` bleibt die Kamera auf Cut 0 (Leon/Leiche ausserhalb des Bilds);
+  ueber den Tuerweg waehlt die Auto-Kamera den richtigen Cut (1230 Cut 8, 1110 Cut 3 im Bau-Durchlauf).
+  Messhaken-Eigenschaft, kein Spielweg.
+- PSX-Ziel tickt das Aufnahme-Modal nicht (Dossier 9.9.7) — betrifft jede Welt-Aufnahme, die Leichen erben es.
+
 ## 6. Belege (Dateien)
+
+| Datei | Inhalt |
+|---|---|
+| `F_belege/abn1_1110_nein_ja_kurz.png` | 1110: Seite 1/2, Modal, Frage (Kreuz ohne Wirkung), No, Schrumpfen, 2. Untersuchen, 2. Frage, Yes, Kurztext |
+| `F_belege/abn1_1110_inventar57.png` | Statusschirm nach Yes: H. Gun Bullets 57 in einem Platz |
+| `F_belege/abn1_1230_tuer_nein_ja.png` | 1230 ueber den Tuerweg aus 11B0: Seite 1/2, Modal, No, 2. Untersuchen, Yes |
+| `F_belege/abn1_1230_wiederbetreten_kurz.png` | 1230 nach Yes -> Tuer -> 11B0 -> Tuer -> 1230: nur "A miserable death..." |
+| `F_belege/abn1_1110_speichern_laden.png` | Stand vom Speicherbildschirm geladen: nur Kurztext, Statusschirm 57 |
+| `F_belege/abn1_varianten_1111_1231.png` | ROOM1111 / ROOM1231: lang + Frage, danach kurz |
+| `F_belege/abn1_laeufe.log` | Protokollauszug aller sieben Laeufe (Eingaben, `[msg]`, `[leiche]`, Tueren, Speichern, Modal-Zustaende) |
+
+Laufordner (nicht versioniert): `build/abn1_f/{f1_1110,f2a_1230,f2b_1230_wieder,f3_1110_kreuz,s1_1110_save,
+s2_1110_laden,v1_1111,v2_1231,kalib}`. Skripte: Scratchpad `abn1_lauf.sh`, `skript.py`, `bogen.py`.
