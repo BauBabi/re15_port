@@ -5,8 +5,8 @@ Auftrag: BAUPLAN §3.2 B1-B12, E4-E7, E13, E16, K4-K7, P14-P27; O-VB4 vom Orches
 (Bodenfeuer an Gegnern OHNE RE2-KI = RE1.5-Angriffsart 5 "Flaechenfeuer", 50 @0x8006f422 / Reaktion 14 @0x8006f435).
 Bauverzeichnis `re15_port/build_r34_b`; Laufzeit-Ausgaben `build/r34g_b/` (unversioniert).
 
-STATUS: B1-B12 GEBAUT + NACHBESSERUNG K1/M1/M2 (Abschnitt am Dateiende; unit_r34_schaden 46, unit_r34_reaktion 69
-Pruefungen, Mutationsproben MN1-MN12). Stand vor der Nachbesserung: alle Sonden gruen (unit_r34_schaden 39, unit_r34_reaktion 63 Pruefungen, Mutationsproben M1-M51);
+STATUS: B1-B12 GEBAUT + NACHBESSERUNG K1/M1/M2 (Abschnitt am Dateiende; unit_r34_schaden 47, unit_r34_reaktion 69
+Pruefungen, Mutationsproben MN1-MN13; volle Suite `=== LOCAL-BUILD-OK (all) — Tests 430/430`, Stand 16a8d90e). Stand vor der Nachbesserung: alle Sonden gruen (unit_r34_schaden 39, unit_r34_reaktion 63 Pruefungen, Mutationsproben M1-M51);
 volle Suite: 5 Laeufe je 426-429/430, rot nur GUI-Integrationen mit exe-Abbruch unter Parallel-Last, alle einzeln gruen
 (Abschnitt "Volle Suite").
 
@@ -834,7 +834,9 @@ gruen, `git diff` leer.
   --repeat until-pass:3 -j 1`, 05:21-05:25): sicherung_laden und titel_puls sofort gruen, cut_blitz im 3. Versuch
   (Versuch 1/2: "0 mit 3D" bzw. "nur 1 sichtbare Kamerawechsel" — Kamera-Weg, kein Schadenspfad). Kein
   reproduzierbares Rot; unit_r34_schaden / unit_r34_reaktion gruen.
-* **Lauf 2**: nach dem Nachtrag N3b (s. unten).
+* **Lauf 2** (all, 05:26-05:39, Stand 16a8d90e = alle Aenderungen der Nachbesserung, gebaut ueber `lb.sh` =
+  `local_build.sh` ohne Argument): **`100% tests passed, 0 tests failed out of 430`**, Abschlusszeile
+  **`=== LOCAL-BUILD-OK (all) — Tests 430/430`** (795 s Testzeit). RE15_MIN_TESTS unveraendert.
 
 ### INTEGRATIONSWUNSCH (Nachbesserung)
 * **N-1** `re15_port/tools/local_build.sh:147` (Integration): `/c/Windows/System32/WindowsPowerShell/v1.0` in `CLEAN_PATH`
