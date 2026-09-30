@@ -1,0 +1,61 @@
+# Spur G, Stufe BAU (Auflage 3): Original-Aufnahmen OHNE Schwelle nachgemessen, mit Lebendnachweis, 2026-09-30
+# Werkzeug: re15_port/tools/r34n_g/rec_leben.py (ffmpeg-Pipe, jede Aenderung eines Farbwerts zaehlt)
+# Aufnahmen verlustfrei (libx264rgb -qp 0, gbrp; ds_rec_fb0.py / ds_rec_small.py), Bildspeicher 0 auf 600x450 (Faktor 1,875)
+# Pruefrechtecke in PSX-px inkl. Grenzen: Cut 2 283,48,314,65 | Cut 3 290,4,319,23 | Cut 10 260,0,289,12 | Notausgang Cut 8 228,3,277,32
+
+## A. rec4 (Vorspann ab Montage, 150 s, 30 B/s) - TRAGEND: Lebendnachweis im selben Abschnitt
+rec4.mkv: 600x450 h264 gbrp
+Bilder 4500 (ausgewertet 1409..1918 = 510)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 250 von 509; erste: [1411, 1412, 1414, 1416, 1418, 1421, 1423, 1425]; Rechteck aller Aenderungen (Aufnahme-px): (0, 44, 551, 397)
+             dasselbe in PSX-px: x0..293 y23..211
+PRUEFRECHTECK Aufnahme-px (530, 90, 589, 122): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 99.11..99.11
+rec4.mkv: 600x450 h264 gbrp
+Bilder 4500 (ausgewertet 1985..2177 = 193)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 67 von 192; erste: [1988, 1989, 1991, 1993, 1995, 1997, 1999, 2000]; Rechteck aller Aenderungen (Aufnahme-px): (0, 44, 583, 449)
+             dasselbe in PSX-px: x0..310 y23..239
+PRUEFRECHTECK Aufnahme-px (530, 90, 589, 122): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 99.11..99.11
+rec4.mkv: 600x450 h264 gbrp
+Bilder 4500 (ausgewertet 2319..2355 = 37)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 14 von 36; erste: [2323, 2325, 2326, 2329, 2331, 2333, 2335, 2337]; Rechteck aller Aenderungen (Aufnahme-px): (0, 0, 274, 449)
+             dasselbe in PSX-px: x0..146 y0..239
+PRUEFRECHTECK Aufnahme-px (530, 90, 589, 122): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 99.11..99.11
+rec4.mkv: 600x450 h264 gbrp
+Bilder 4500 (ausgewertet 2764..4499 = 1736)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 759 von 1735; erste: [2841, 2843, 2845, 2847, 2849, 2850, 2852, 2854]; Rechteck aller Aenderungen (Aufnahme-px): (322, 143, 362, 242)
+             dasselbe in PSX-px: x171..193 y76..129
+PRUEFRECHTECK Aufnahme-px (543, 7, 599, 44): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 107.36..107.36
+(Cut 3 ab Bild 2764 = nach dem Ausblenden des Kinobalkens, Bilder 2759..2763; Aenderungen im Bild x171..193 y76..129 = Leon)
+
+## B. rec3 (Cut 2, 300 s, 60 B/s, Ausschnitt 96x48 um das Schild) - OHNE Lebendnachweis
+rec3.mkv: 96x48 h264 gbrp
+Bilder 18000 (ausgewertet 0..17999 = 18000)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 17999; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+PRUEFRECHTECK Aufnahme-px (0, 0, 95, 47): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 65.03..65.03
+Der Ausschnitt enthaelt nur das Schild (und VRAM rechts von x=320): ein stehender/pausierter Emulator liefert dasselbe.
+Ein End-Stand dieses Laufs existiert nicht mehr (resume.sav von spaeteren Laeufen ueberschrieben).
+
+## C. Erzwungene Cuts (Start = lamp_near.sav mit RAM-Patch 0x800aca3c:=0x100, 0x800afbb5:=Cut; cutforce/cutN.sav Vcount 14322) - OHNE Lebendnachweis im Bild
+rec_cut5.mkv: 600x450 h264 gbrp
+Bilder 433 (ausgewertet 0..432 = 433)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 432; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+rec_cut8.mkv: 600x450 h264 gbrp
+Bilder 415 (ausgewertet 0..414 = 415)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 414; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+PRUEFRECHTECK Aufnahme-px (427, 5, 520, 60): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 68.49..68.49
+rec_cut9.mkv: 600x450 h264 gbrp
+Bilder 424 (ausgewertet 0..423 = 424)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 423; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+rec_cut10.mkv: 600x450 h264 gbrp
+Bilder 450 (ausgewertet 0..449 = 450)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 449; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+PRUEFRECHTECK Aufnahme-px (487, 0, 542, 23): Bilder mit Aenderung im Rechteck: 0; groesste Spanne je Pixel/Kanal ueber alle Bilder: 0; mittlere Helligkeit 103.69..103.69
+rec_cut11.mkv: 600x450 h264 gbrp
+Bilder 399 (ausgewertet 0..398 = 399)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 398; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+rec_cut12.mkv: 600x450 h264 gbrp
+Bilder 854 (ausgewertet 0..853 = 854)
+GANZES BILD: Bilder mit Aenderung gegen das vorige: 0 von 853; erste: []; Rechteck aller Aenderungen (Aufnahme-px): None
+Alle sechs Aufnahmen: das GANZE Bild ist in keinem Bild auch nur um einen Farbwert anders (kein Leon, kein Hubschrauber im Bild).
+Damit ist ein laufender von einem stehenden Emulator im Bild NICHT unterscheidbar.
+Teil-Lebendnachweis nur fuer Cut 12: DuckStation-resume.sav nach dem letzten Lauf (03:28:12) = Vcount 15939, Cut 12, 0x800aca3c=0x100;
+  Start war Vcount 14322 -> 1617 VBlanks (27,0 s bei 59,94 Hz) emuliert. Fuer Cut 5/8/9/10/11 ist der End-Stand ueberschrieben.
