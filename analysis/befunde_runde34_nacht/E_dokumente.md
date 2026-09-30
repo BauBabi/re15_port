@@ -506,7 +506,7 @@ NEU (Datei-Hoheit Spur E, VERTRAG 2):
 | `re15_port/engine/src/dokumente_r34.c` | Installer (Muster `irons_tisch_1150.c` `anlegen()`), Tisch-Nachricht-Umzug mit Satz-Waechter (Muster `tuer1120_1130.c`), Klemmen-Tabelle, Modell-Bytes je Raum |
 | `re15_port/engine/src/gen/dokumente_props.inc` | MD1+TIM von mesh00/mesh03/mesh01/mesh04, UNVERAENDERT aus den RE2-RDTs (Tabelle „Modelle" in 5.2), erzeugt von … |
 | `re15_port/tools/dokumente_engine_export.py` | … diesem Werkzeug (Muster `irons_tisch_engine_export.py`: jede Quelle gegen ihre md5, sonst Abbruch) |
-| `re15_port/shared_assets/RE2/FILES/FILE26..29_*.TIM` | 23 Dateien (FILE26 6, FILE27 7, FILE28 5, FILE29 5), erzeugt von `re15_port/tools/r34n_e/doc_satz_brief.py`; md5 `E_belege/satz_md5.txt`, Rueckleseprobe `satz_pruefung.py` PASS |
+| `re15_port/shared_assets/RE2/FILES/FILE26..29_*.TIM` | 23 Dateien (FILE26 6, FILE27 7, FILE28 5, FILE29 5), erzeugt von `re15_port/tools/r34n_e/doc_satz_brief.py`; md5 `E_belege/satz_md5.txt`, Rueckleseprobe `satz_pruefung.py` PASS. Reproduzierbar mit `bash re15_port/tools/r34n_e/satz_bauen.sh` (Atlas + die vier Aufrufe + md5-Vergleich; gemessen: 4 von 4 gleich der Liste) — danach die TIM aus `build/r34n_e/satz_neu/FILEnn/` kopieren |
 | `re15_port/tests/unit/test_r34n_e_dokumente.c` (+ Eintrag in der Unit-CMake) | Riegel 6.1 |
 | `re15_port/tests/integration/test_r34n_e_dokumente_bild.cmake` | Riegel 6.2 (echte exe, Framedumps) |
 
