@@ -334,6 +334,33 @@ ROOM1150-snd0-EDT @0x145E8 (RDT-Kopf +0x08; VH @0x14668, VB @0x15F08): [0x0A] `0
 Laut (@0x0FA2) und vor der Abfahrt (@0x1022), 0x0C vor jeder Fahrt, 0x0D beim Anschlag. Zum Vergleich ROOM11F0-EDT
 @0x3794: [0x0A]..[0x0D] = `00 00 00 00` (leer) — deshalb fuehrt der Port dort die RE2-Bank.
 
+### 3.9 Selbst nachdisassembliert (RE-Gate: jede tragende EXE-Adresse an den Bytes gelesen)
+
+`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` (dis/read) auf `info/Re1.5/PSX.EXE` (Ausgaben im Wortlaut):
+
+```
+Cut_chg LAB_800402a0            800402c0 lbu a1,4068(a1)   ; 0x800b0fe4 = ANGEZEIGTER Cut
+                                800402c4 lbu a0,1(v0)      ; pc[1] = neuer Cut
+                                800402d4 ori v0,v0,0x100 / 800402d8 sw ; 0x800aca3c |= 0x100 (Auto-Cam aus)
+                                800402e4 sb a1,16251(at)   ; 0x800b3f7b = gemerkter Cut  <- Cut_old-Quelle
+                                800402fc sh a0,4068(at)    ; 0x800b0fe4 = neuer Cut
+Cut_old FUN_8004032c            8004033c lbu a0,16251(a0)  ; 0x800b3f7b
+                                80040364 sh a0,4068(at)    ; zurueck nach 0x800b0fe4
+                                80040378 addiu v1,zero,-257 / 8004037c and / 80040384 sw ; Bit 0x100 aus (Auto-Cam an)
+Sce_key_ck 0x51 LAB_80042920    8004293c lw v0,-14488(v0)  ; 0x800ac768 = virtuell GEHALTEN
+                                80042944 and v1,v1,v0 / 80042948 bne / 80042950 xori v0,a1,0x1
+Opcode 0x52 LAB_8004295c        80042978 lw v0,-14484(v0)  ; 0x800ac76c = virtuelle FLANKE, sonst identisch
+Add_speed LAB_80040f40          80040f48..80040f7c         ; obj+52/56/60 += vel (reine Addition, keine Grenze)
+Typ-4-Anhebung FUN_8002c18c     8002c234 lbu v1,8(s1) / 8002c23c bne v1,4 / 8002c24c addiu v0,v0,-900
+Spieler-Dispatcher FUN_80031c44 80031c54 lw a0,g_pauseflags / 80031c78 bltz a0 -> alles uebersprungen
+Preset-Tabelle @0x80073dbc      [4096,8192,16384,32768,4096,16384,128,128,8,64,8,4,32768,8192,128,64]
+                                 -> virt. Bit 0..3 <- roh UP/RIGHT/DOWN/LEFT, Bit 6/7/14 <- roh 0x80 SQUARE,
+                                    Bit 15 <- roh 0x40 CROSS
+```
+
+Opcode 0x52 (Flanke) benutzt kein ausgeliefertes RDT (opcode-exakter Zensus ueber alle RDTs mit Inhalt: 0 Treffer) — die Cursor-Raeume
+nehmen 0x51 + Zellen-Sperrbit. Die Engine HAT die Flanke als SCD-Pruefung aber vorgesehen; darauf stuetzt sich §5.1 Nr. 4.
+
 ## 4 Soll-Verhalten (Zeitlinie)
 
 Bildnummern relativ zum Druck am Tisch (F0), abgeleitet aus Lauf m1 (§2.1); alles bis F11 ist heutiges sub04.
@@ -399,9 +426,10 @@ Begruendung: das Original legt fuer sub04 keinen "erledigt"-Zustand an, und der 
    Zellstempel @0x80042f5c, der die OBJEKTLAGE prueft), gegen die konvexe Huelle der Kuppel (§3.6).
 4. **Flanke statt Halten fuer den Druck.** 11F0 fragt 0x0040 GEHALTEN ab und verhindert Wiederholung ueber das
    Zellenbit (sub06 @0x01322 Set(5,1,0)). Hier gibt es zwei Ausgaenge (Text oder Fahrt); nach dem Text laege die Taste
-   ggf. noch -> Flanke `g_scd_pad_edge & 0x0040` (DAT_800ac76c, wie der ACTION-Scan der Spielerbefehle: aot_common.c
-   Kommentar @0x80073f90 "DAT_800ac76c & 0x80 = virtual edge"). Bewegen weiter GEHALTEN (`g_scd_pad_held`, DAT_800ac768,
-   wie Sce_key_ck LAB_80042920).
+   ggf. noch -> Flanke `g_scd_pad_edge & 0x0040` (DAT_800ac76c — die Engine fuehrt genau diese Pruefung als SCD-Opcode
+   0x52 LAB_8004295c @0x80042978, §3.9; und der ACTION-Scan der Spielerbefehle liest ebenfalls die Flanke, aot_common.c
+   Kommentar @0x80073f90). Bewegen weiter GEHALTEN (`g_scd_pad_held`, DAT_800ac768, wie Sce_key_ck LAB_80042920
+   @0x8004293c).
 5. **Nur der Spielerweg armiert.** Haken an der GENERIC-Ausgabe in game_step_common.c, nicht in scd_event_fire (§4.3).
 
 ### 5.2 Dateien
