@@ -129,7 +129,11 @@ int re15_pc_fx_seite_clut_ok(uint16_t clut);
  *                                       beide rufen je Figur FUN_80053fc0 (@0x8001e94c) = Lichtrechnung
  *   8001d1ac  jal 0x8004ee38          Satz aus der Kopie zurueck
  *   8001d1b4  sb zero,0(s0)           Latch := 0
- *   8001d1c0  jal 0x8002c18c          ERST DANACH die Objekte (Props) -> sie sehen das Licht NICHT
+ *   8001d1b8  jal 0x80039ca0          ERST DANACH (Nachbesserung H7) die Tabelle 0x800af33c (Zaehler
+ *                                       0x800afbb7, Eintraege aus FUN_80039b2c; Katalog "NPC render"),
+ *   8001d1c0  jal 0x8002c18c          dann die Objekte (Props) -> beide sehen das Licht NICHT.
+ *   Welche Port-Objekte FUN_80039ca0 entsprechen, ist OFFEN (bau_c.md NACHBESSERUNG); die NPC-Typen
+ *   0x40..0x4D sind Entitaeten der Liste 0x800acc2c = Figuren-Schleife MIT Licht.
  * Port: re15_pc_licht_latch_anwenden() vor dem Licht-Kontext des Spielers, _zurueck() hinter der
  * Figuren-Schleife (Gegner/NPC) und vor den Props. */
 #define RE15_PC_LICHT_VOR       0x4b0   /* @0x8001cebc: 1200 vor Leon (lokal +x = Blickrichtung) */

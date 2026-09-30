@@ -223,6 +223,30 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
     }
 }
 
+/* Runde 34 Nachbesserung M1 (bau_c.md NACHBESSERUNG §M1.4): die Effekt-Bank des NEUEN Raums wird
+ * geparst, BEVOR dessen SCD den Eintrittstakt faehrt — gerufen aus dem Teardown
+ * re15_room_reset_render_pc (room_pc.c) direkt nach dem Clear, also innerhalb von
+ * re15_room_apply_pending nach load_rdt und vor scd_room_reenter.
+ * ORIGINAL (selbst disassembliert): der Raumlader FUN_800396fc laedt die RDT (`jal 0x80013b60`
+ * @0x800397e8) und ruft `jal 0x80019354` @0x8003996c — EIN Aufrufer —, das die 96 Plaetze nullt
+ * (@0x80019378), die Id-Maps auf -1 setzt (@0x80019388-e4) und DANN die Sektion parst
+ * (`lw a0,76(a1)` @0x80019404 = RDT+0x4c, `lw a1,80(a1)` @0x80019424 = RDT+0x50,
+ * `jal 0x8001945c` @0x80019428) und die TIMs installiert (`lw a0,88` / `lw a1,84` @0x8001943c/40,
+ * FUN_800194f8); die SCD-Raum-Init FUN_8003ef6c folgt erst @0x80039a00.
+ * VORHER (Altbestand, auch auf master): pc_load_room_esp lief erst NACH re15_room_apply_pending;
+ * jeder Sce_espr_on des Eintrittsbilds (scd_room_reenter) sah die geloeschte Bank (NULL) ->
+ * re15_esp_fx_spawn_rows streams=-1 -> row-loser Ersatzplatz ohne Bank, im naechsten Takt verworfen.
+ * Gemessen (Debug-Sprung ROOM2000): Waffen-Log "SPAWN id=11 sub=0 scale=0x1900 streams=-1" x3 und
+ * "id=6 ... streams=-1" x3, im Folgebild 0 Plaetze; ueber den Lade-Pfad (Bank vor main00, Zeile
+ * pc_load_room_esp im Boot-Block) "streams=6" x3 + "streams=1" x3. */
+void re15_pc_room_esp_laden(void)
+{
+    extern const unsigned char *re15_room_pc_bytes(int *size);
+    int n = 0;
+    const unsigned char *b = re15_room_pc_bytes(&n);
+    if (b && n > 0) pc_load_room_esp(b, n, (unsigned)g_current_room_id);
+}
+
 /* Phase ESP-C draw: project each live effect particle (byte-true owner+offset world pos, same
  * camera transform as the player) and emit a billboard quad textured from the effect TIM.
  * The texture is byte-true: room fx sample the RDT effect TIM (slot 19); GLOBAL-bank fx (effect-id
@@ -7888,7 +7912,10 @@ re_title:;
                         if (nbuf && nsz > 0) {
                             rdt_buf  = (uint8_t *)nbuf;
                             rdt_size = nsz;
-                            pc_load_room_esp(rdt_buf, rdt_size, dest_room);
+                            /* Runde 34 Nachbesserung M1: die Effekt-Bank ist hier schon geparst —
+                             * re15_pc_room_esp_laden() lief im Teardown VOR dem Eintrittstakt des
+                             * SCD (Original @0x8003996c vor @0x80039a00); vorher stand hier
+                             * pc_load_room_esp(rdt_buf, rdt_size, dest_room), also DANACH. */
                         }
                     }
                     /* BYTE-TRUE DOOR TRANSITION FADE-IN (RE1.5 transition FSM FUN_8001c958 state-1,
@@ -8678,7 +8705,8 @@ re_title:;
              * ESP-Tick, stellt Licht 2 des aktiven Cuts um (Typ 0, Farbe max(.,D2/8C/50), Lage 1200
              * vor Leon auf Hoehe y-800, Helligkeit 0x1770; @0x8001cef8-0x8001d084), DANN Spieler
              * (`jal 0x8001e8c8` @0x8001d09c) und Figuren-Schleife (@0x8001d0e8-164), dann Satz
-             * zurueck + Latch := 0 (@0x8001d1ac/@0x8001d1b4) — VOR den Props (@0x8001d1c0). Belege je
+             * zurueck + Latch := 0 (@0x8001d1ac/@0x8001d1b4) — VOR `jal 0x80039ca0` @0x8001d1b8 und den
+             * Props (@0x8001d1c0). Belege je
              * Instruktion: fx_plattform_pc.h. Das Zurueckstellen steht hinter der NPC-Schleife. */
             if (re15_pc_licht_latch_anwenden(&g_re15_room_lights, g_re15_active_cut,
                                              g_actors[RE15_ACTOR_SLOT_PLAYER].x,
@@ -9869,6 +9897,17 @@ re_title:;
                 uint8_t  gore_draw[RE15_EMD_MAX_BONES];
                 uint32_t gore_tint[RE15_EMD_MAX_BONES];
                 uint8_t  gore_mesh[RE15_EMD_MAX_BONES];
+                /* Runde 34 Nachbesserung (Gegenpruefung H4): re15_re2z_gore_resolve fuellt nur
+                 * min(npc_bones, 16) Eintraege (Modellblock 16 Records), die Zeichenschleife liest
+                 * gore_draw/gore_tint/gore_mesh aber bis npc_zeichen_n (<= RE15_EMD_MAX_BONES) —
+                 * dahinter stand uninitialisierter Stapel. Vorbelegung = genau die Werte, die der
+                 * Resolver selbst einem Slot ohne RE2-Part gibt (enemy_ai_re2_zombie.c
+                 * re15_re2z_gore_resolve: zeichnen, Tinte neutral, eigenes Mesh); neutral 0x808080 =
+                 * RE2 Part-Init `lui v0,0x80 / ori v0,v0,0x8080` @0x80028450-54, `sw v0,-36(s1)`
+                 * @0x80028468. */
+                for (int gi = 0; gi < RE15_EMD_MAX_BONES; gi++) {
+                    gore_draw[gi] = 1u; gore_tint[gi] = 0x00808080u; gore_mesh[gi] = (uint8_t)gi;
+                }
                 int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
                                                      gore_draw, gore_tint, gore_mesh);
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
@@ -10373,7 +10412,8 @@ re_title:;
 
             /* Runde 34 C3: Figuren (Spieler + Gegner/NPC) sind gezeichnet -> Lichtsatz zurueck und
              * Latch := 0 (`jal 0x8004ee38` @0x8001d1ac, `sb zero,0(s0)` @0x8001d1b4) — VOR den Props,
-             * die im Original erst danach laufen (`jal 0x8002c18c` @0x8001d1c0). */
+             * die im Original erst danach laufen (`jal 0x80039ca0` @0x8001d1b8 Tabelle 0x800af33c,
+             * dann `jal 0x8002c18c` @0x8001d1c0). */
             re15_pc_licht_latch_zurueck(&g_re15_room_lights);
 
             /* I-round disable (2026-05-24): NPC name-label overlay
