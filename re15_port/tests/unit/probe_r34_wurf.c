@@ -1147,11 +1147,16 @@ static void abschnitt_kinder(void)
     int k2_ok = c2 && c2->effect_id == 4 && c2->sub_index == 0 && c2->scale16 == 0x0800;
     printf("  8b R15-Kind #1 (Platz 2): fl %02x +16 %u sichtbar %d | #2 (Platz 0): fl %02x +16 %u sichtbar %d\n",
            k1.flags, k1.r16, k1.sichtbar, k2s.flags, k2s.r16, k2s.sichtbar);
-    PRUEF(167, k1_ok && k1.flags == 0x63 && k1.r16 == 1 && k1.sichtbar && k1.frame == 0,
-          "8b Kind #1 (ueber dem Eltern-Platz): Flags %02x +0x16 %u sichtbar %d Satz %d (soll 0x63 / 1 / 1 / 0)",
+    /* Satz 1 (Integration Runde 34 W7, Pin nachgezogen): der Kind-Spawner FUN_800199d4 setzt den
+     * Satzindex +0x6e := 1 (`ori v0,zero,0x1` / `sb v0,110(t0)` @0x80019b74-78) und den Zeitgeber
+     * +0x6d := Satz[0].Byte2 (`lbu v1,10(t5)` @0x80019b70, `sb v1,109(t0)` @0x80019b90); mit dem
+     * Bild-Stopp (Flags 0x63, Bit 6) bleibt der Satz im Spawnbild 1. Der Port startete bis W7 mit
+     * Satz 0 / Zeitgeber 0 (der erste Anim-Schritt ging auf Satz 1 — ausser bei Bild-Stopp). */
+    PRUEF(167, k1_ok && k1.flags == 0x63 && k1.r16 == 1 && k1.sichtbar && k1.frame == 1,
+          "8b Kind #1 (ueber dem Eltern-Platz): Flags %02x +0x16 %u sichtbar %d Satz %d (soll 0x63 / 1 / 1 / 1)",
           k1.flags, k1.r16, k1.sichtbar, k1.frame);
-    PRUEF(168, k2_ok && k2s.flags == 0x63 && k2s.r16 == 1 && k2s.frame == 0 && kind_gleich(&k1, &k2s),
-          "8b Kind #2 UNTER dem Eltern-Platz: Flags %02x +0x16 %u Satz %d (soll wie Kind #1: 0x63 / 1 / 0 = "
+    PRUEF(168, k2_ok && k2s.flags == 0x63 && k2s.r16 == 1 && k2s.frame == 1 && kind_gleich(&k1, &k2s),
+          "8b Kind #2 UNTER dem Eltern-Platz: Flags %02x +0x16 %u Satz %d (soll wie Kind #1: 0x63 / 1 / 1 = "
           "Routine 16 einmal im Spawnbild)", k2s.flags, k2s.r16, k2s.frame);
 }
 

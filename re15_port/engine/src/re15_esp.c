@@ -347,8 +347,22 @@ re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, u
             int gi = re15_esp_find_id(gb, effect_id);
             if (gi >= 0) { f->eff_idx = (int8_t)gi; f->bank = gb; }
         }
-        f->frame     = 0;
-        f->timer     = 0;     /* 0 -> the next tick advances to frame 0's duration (FUN_80019e20) */
+        /* ANIM-START wie die beiden Spawner (Integration Runde 34 W7, selbst disassembliert):
+         *   FUN_80019700  8001989c lbu v1,10(t5)        Satz[0].Byte2 (Dauer; t5+8 = Satztabelle)
+         *                 800198a0 ori v0,zero,0x1 / 800198a4 sb v0,110(t0)   +0x6e := 1
+         *                 800198bc sb v1,109(t0)        +0x6d := Satz[0].Byte2
+         *   FUN_800199d4  80019b70 lbu v1,10(t5) / 80019b74-78 ori 1, sb 110 / 80019b90 sb v1,109
+         * Vorher: frame 0 / timer 0 (der erste Anim-Schritt sprang auf Satz 1 mit Dauer von Satz 1).
+         * In allen 506 Effekten der Auslieferung (501 Raum-Effekte, 5 CORE00) ist Dauer(Satz 0) ==
+         * Dauer(Satz 1) (gemessen, integration.md W7) -> dieselbe Bildfolge; anders nur, wenn eine
+         * Routine im Spawn-Takt den Satzindex OHNE Zeitgeber setzt (Routine 41 `sb v0,110(v1)`
+         * @0x80018f60) oder ein Platz vor seinem ersten Takt gezeichnet wird (Original: Satz 1). */
+        f->frame     = 1;
+        {
+            re15_esp_anim_t a0;
+            f->timer = (f->eff_idx >= 0 && re15_esp_anim(f->bank, f->eff_idx, 0, &a0) == 0)
+                       ? (int16_t)(a0.param & 0xff) : 0;
+        }
         f->x = x; f->y = y; f->z = z;
         f->param     = param;
         f->follow_slot = -1;  /* kein Eltern-Anker (Flags-Bit 0x04 wirkt nur mit Slot) */
@@ -586,6 +600,30 @@ static void esp_granate_p(const re15_esp_fx_t *f, int32_t p[3])
 static int esp_granate_re2_art(uint8_t art)
 {
     return (art == 3) ? 2 : (art == 4) ? 1 : 0;
+}
+
+/* FUN_8002b7e8-Zwilling (Integration Runde 34 W7; selbst disassembliert `dis 0x8002b7e8 44`):
+ *   8002b7f0-f4 lbu s1,-13746(s1)         Zahl aktiver Gegner 0x800aca4e
+ *   8002b80c-10 addiu s0,s0,-13268        Gegnerliste 0x800acc2c
+ *   8002b824-30 lw v0,0(s0) / andi 0x1    Wort 0 Bit 0 (aktiv) -> s1--, FUN_8002b5d0(s0, P, r & 0xffff)
+ *   8002b848    or s2,s2,v0               Treffer ODER-verknuepft (kein Abbruch, kein Schaden)
+ *   8002b854    addiu s0,s0,500           Schritt 0x1F4, bis s1 aktive gezaehlt sind (@0x8002b84c-50)
+ *   8002b858-6c FUN_8002b5d0(Spieler 0x800aca54, P, r), ODER
+ *   8002b870    andi v0,s2,0xff           Rueckgabe
+ * FUN_8002b5d0 = re15_hitbox_test (Kasten je Typ, re15_damage.c). */
+static int esp_treffer_test(const int32_t p[3], int r)
+{
+    re15_attack_box_t box;
+    box.x = p[0]; box.y = p[1]; box.z = p[2];
+    box.radius = (uint16_t)r;
+    int t = 0;
+    for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *e = &g_actors[i];
+        if (!e->active) continue;
+        t |= re15_hitbox_test(e, &box);
+    }
+    t |= re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], &box);
+    return t & 0xff;
 }
 
 static void esp_fx_dispatch(re15_esp_fx_t *f)
@@ -947,6 +985,93 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             }
             row_set16(f, 0x1e, (uint16_t)(z - 1u));   /* addiu v0,v0,-1 @0x8001867c /
                                                        * sh v0,30(v1) @0x80018684 (Delay-Slot) */
+            break;
+        }
+        case 41: {  /* ROUTINE 41 @0x80018ef4 — Integration Runde 34 W7 (bau_c.md N1.1; selbst
+                     * disassembliert `re15_disasm.py dis 0x80018ef4 41`). Traeger: Raum-Effekt 0x0b
+                     * (Wasserstrahl ROOM2000/2001/20B0/20B1, Zeile 0 jedes der 6 Stroeme):
+                     *   80018f04 lbu v1,14(v0) / 80018f0c sb v1,108(v0)   Flags := row[0x0e]
+                     *   80018f1c lhu v0,22(v1) / 80018f24 beq -> 80018f40  row[0x16] == 0 ?
+                     *   80018f2c-3c lhu / addiu -1 / sh v0,22(v1)          sonst row[0x16]-- , ENDE
+                     *   80018f40 lbu v0,30(v1) / 80018f48 sb v0,108(v1)   Flags := row[0x1e]
+                     *   80018f58 lbu v0,38(v1) / 80018f60 sb v0,110(v1)   +0x6e := row[0x26] (Delay-
+                     *                                                     Slot VOR dem Vorschub)
+                     *   80018f5c jal 0x800174e4                            Vorschub (Zeile 1 = R42)
+                     *   80018f64 jal 0x8001af20                            "RNG" auf a0 = Rest des
+                     *            Kopier-Laufs von FUN_800174e4 (`lw a0,8(a2)` @0x80017594 bzw.
+                     *            `lwl/lwr a0,0xb/8(a2)` @0x80017548/4c im 2. 16-Byte-Block) = u32 der
+                     *            NEUEN Zeile ab +0x18 (`jr ra` @0x800175d4 ohne weiteren a0-Schreiber);
+                     *            FUN_8001af20: v = (a0 + ((a0>>7)&0xff)) & 0xff (@0x8001af30-4c)
+                     *   80018f78 lhu v1,10(a0) / 80018f7c andi v0,v0,0x3 / 80018f80 addu /
+                     *   80018f84 sh v1,10(a0)                              +0x0a (Beschl. y der
+                     *                                                     neuen Zeile) += v & 3
+                     * Der Satzindex +0x6e wird OHNE den Zeitgeber +0x6d gesetzt — der Port setzt
+                     * frame roh (der Anim-Schritt liest ihn wie das Original @0x8001a398-47c).
+                     * KEIN BODEN: der Takt hat keine Klemme (Physik @0x8001a2fc-388 = xlat += vel,
+                     * vel += acc); einen Boden kennen nur die B-Routinen (12/29/...), Effekt 0x0b hat
+                     * B = 0 -> die Port-Sammelklemme (floor_y = Spawn-y beim SCD-Weg) haelt den
+                     * Strahl sonst auf Spawnhoehe fest (Muster A6/E12, ESP_KEIN_BODEN). */
+            f->floor_y = ESP_KEIN_BODEN;
+            f->flags = f->row[0x0e];
+            uint16_t halt = row_u16(f->row, 0x16);
+            if (halt != 0) {
+                row_set16(f, 0x16, (uint16_t)(halt - 1u));
+                break;
+            }
+            f->flags = f->row[0x1e];
+            f->frame = (int16_t)f->row[0x26];
+            esp_fx_row_advance(f);
+            {
+                const uint32_t w = (uint32_t)f->row[0x18] | ((uint32_t)f->row[0x19] << 8) |
+                                   ((uint32_t)f->row[0x1a] << 16) | ((uint32_t)f->row[0x1b] << 24);
+                const uint32_t v = (w + ((w >> 7) & 0xffu)) & 0xffu;
+                const uint16_t ay = (uint16_t)(row_u16(f->row, 0x0a) + (v & 3u));
+                row_set16(f, 0x0a, ay);
+                f->accel_y = (int16_t)ay;           /* Port fuehrt +0x0a zusaetzlich als accel_y */
+            }
+            break;
+        }
+        case 42: {  /* ROUTINE 42 @0x80018f98 — Integration Runde 34 W7 (bau_c.md N1.1; selbst
+                     * disassembliert `re15_disasm.py dis 0x80018f98 120`):
+                     *   80018fa8-b8 lhu 14 / lhu 38 / sltu / beq -> 80019068   row[0x0e] < row[0x26] ?
+                     *   80018fc0-cc lhu / addiu 1 / sh v0,14(a0)              row[0x0e]++
+                     *   80018fc4 lbu v1,112(a0) / 80018fd0 ori 0xb / 80018fd4 bne -> Ende
+                     *                                                         nur Effekt-Id 0x0b:
+                     *   80018fdc-80019000 P = (lh +0x28, lh +0x2a, lh +0x2c) (s32 auf dem Stapel),
+                     *   80018ffc jal 0x8002b7e8 mit a1 = 0x2d (Delay-Slot @0x80018fd8)
+                     *   80019004-20 Treffer -> Flags |= 0x20 (Physik-Stopp); 80019024-30 sonst Flags := 0x13
+                     *   80019040-4c lhu 14 / sltiu 0x10 / bne -> Ende           row[0x0e] >= 16:
+                     *   80019054-64 lhu v0,6(v1) / addiu v0,v0,768 / sh v0,6(v1)   defH += 768
+                     *   80019068-8001911c SCHLEIFE: 40 Byte Zeile 0 aus [+0x80] (Strom-Anfang)
+                     *   8001912c sb zero,111(v0)                              Cursor +0x6f := 0
+                     *   80019138 sh zero,22(v0)                               row[0x16] := 0 (kein Halten)
+                     *   8001913c-44 sw zero,52/56/60(v0)                      xlat := 0
+                     *   80019148-4c ori v0,zero,0x1 / sb v0,110(v1)           +0x6e := 1
+                     *   8001915c-74 lbu 110 / lw 120 / sll 3 / addu / lbu v0,2(v0) / sb v0,109(v1)
+                     *                                                         +0x6d := Satz[1].Byte2 */
+            uint16_t zaehler = row_u16(f->row, 0x0e);
+            if (zaehler < row_u16(f->row, 0x26)) {
+                zaehler = (uint16_t)(zaehler + 1u);
+                row_set16(f, 0x0e, zaehler);
+                if (f->effect_id != 0x0b) break;
+                const int32_t p[3] = { f->wpos[0], f->wpos[1], f->wpos[2] };
+                if (esp_treffer_test(p, 0x2d)) f->flags |= 0x20;
+                else                           f->flags = 0x13;
+                if (zaehler >= 0x10u) row_set16(f, 0x06, (uint16_t)(row_u16(f->row, 0x06) + 768u));
+                break;
+            }
+            /* SCHLEIFE: Zeile 0 neu (esp_fx_row_load laedt auch die Port-Felder accel/drift aus
+             * +0x08..+0x14 — im Original liegen sie IN der kopierten Zeile). */
+            esp_fx_row_load(f, 0);
+            f->row_cursor = 0;
+            row_set16(f, 0x16, 0);
+            f->xlat_x = 0; f->xlat_y = 0; f->xlat_z = 0;
+            f->frame = 1;
+            {
+                re15_esp_anim_t a;
+                f->timer = (f->eff_idx >= 0 && re15_esp_anim(f->bank, f->eff_idx, 1, &a) == 0)
+                           ? (int16_t)(a.param & 0xff) : 0;   /* Satz[1].Byte2 (Dauer) */
+            }
             break;
         }
         default: break;                                  /* stage-3c selectors: noop for now */
