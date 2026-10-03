@@ -224,5 +224,80 @@ n=1 (synthetisches Wort 0x1306) -> zwei Baender. (B) echter Weg (main00-Spawns, 
 EM10- bzw. RE2-EM010-Bank geladen, KI + Animation je Bild): RE1.5 Sturz Bild 152-166, RE2 132-146, beide
 landen auf y=0 / Band 0, Fallfolge exakt. (C) Seed +0x1ba = -(Band*1800) fuer alle Raumgegner.
 
+---
+
+## Punkt 4 — ROOM1210 Gitterarme: Griff nicht synchron zu Leons Schuetteln (Clipping)
+
+### 4.1 Messung vorher (Basisstand, echte exe, KI-Default RE2 -> EM2D-Arme, Leon aus der EM2D-Opferbank)
+Lauf DEBUG_JUMP 1210@gp, Leon (-20622,-14600) rot 1024, RE15_FORCE_CUT=4, RE15_ANIM_TRACE, RE15_RE2_TRACE
+(re2_ki.log). Arm Slot 5 (Westreihe, z -15747) greift (Sub 4 = HALTEN, Clip 5, 19 Bilder), Leon im
+Opfer-Clip 0 (19 Bilder). ANIM_TRACE Bild fuer Bild: Leon zeigt durchgehend **Arm-Bild + 1** (Arm 0..18 /
+Leon 1..18,0). Bilder `H_raeume/p4_vorher_cut4_F34-56.png` (Cut 4) und obere Reihe von
+`p4_griff_vorher_oben_nachher_unten_F56-71.png`: die Zombiehaende fahren Leon durch Kopf/Oberkoerper.
+PIN-Messschiene (neu, RE15_RE2_TRACE, B4 P0): `PIN slot 5 yaw 3664: Parts-Pose Clip 3 Bild 4 -> (-20588,
+-15148); Clip 5 Bild 0 (bisher) -> (-20728,-15056)` — der Port stellte Leon **168 Einheiten** neben den
+Punkt, den das Original nimmt.
+
+### 4.2 RE-Belege (RE2 EM2D-Overlay CDEMD0_EM2D_ai1.BIN @0x80100000, Volltext
+`analysis/befunde_2026-09-19/arme-1210-re2_em2d_ai1.dis`; RE2 PSX.EXE)
+* B4 P0 @0x80100BC4: `ori v0,v0,0x5 / sw v0,332(s0)` (Clip 5) @0x80100BC8-CC, Hand-Part = Tabelle
+  `lbu v1,5142(at)` @0x80100BEC (0x80101416 + var*7), Part-Stride 0xAC (@0x80100BF4-C10), `lw v1,408(s0)`
+  (+0x198 Parts) @0x80100C0C, **`lw v0,92(v1)` -> `sw v0,0x800CFC30` (PL.x) @0x80100C18-20, `lw v0,100(v1)`
+  -> `sw v0,0x800CFC38` (PL.z) @0x80100C24-38**. P0 ruft KEINEN Advance: Ende `j 0x80100D6C` @0x80100CAC.
+* Die Parts-Matrizen baut nur 0x8002959C -> 0x80029614 (`jal 0x80029614` @0x800295FC); 0x8002959C setzt
+  +0x178 auf das Bild **+0x14D vor dem Zaehlen** (`lbu v0,333(a0)` @0x800295E8, `sw a2,376(a0)` @0x800295F8),
+  gezaehlt wird erst @0x80029B30. Also liest P0 die Hand der Pose, die B3 P1 (`jal 0x8002959C` @0x80100B24)
+  im VORTAKT gebaut hat (Clip 3, Startbild des Vortakts). Ebenso A1 (Hand < 900 @0x801007C4) und A3
+  (Hand < 600 @0x801009BC): FUN_800157D4(&PL, part[Hand]+0x5C, r).
+* Spieler-Hook P0 @0x801012A8: Clipwort 0x000F0000 (`lui v0,0xf / sw v0,332(s1)`), FUN_80015910(PL, Greifer)
+  @0x801012E0 = `(Greifer+0x76 - PL+0x76 + 0x400) & 0xFFF < 0x800` (RE2 PSX.EXE @0x80015910-2C), danach
+  FUN_80015558(PL, Greifer.x, Greifer.z, 2048) @0x801012F8, bei 1: PL+0x76 += 2048 @0x80101304-18, Advance
+  @0x80101328. Spieler-Routine 5 laeuft nach allen Entities (@0x80026620) — daher Leon = Arm + 1 (Arm zaehlt
+  erst ab P1 @0x80100D18). Port-Takt war darin bereits byte-true.
+
+### 4.3 Umsetzung
+* `engine/src/enemy_ai_re2_zellenarm.c`: Pose-Merker `pose_clip/pose_frame` je Arm = was die Parts tragen;
+  `arm_adv()` merkt (Clip, Bild) VOR dem Zaehlen und ruft re15_re2_advance_959c (alle sieben Advance-Stellen
+  @0x80100370/6D0/740/950/B24/D18/E08/F00); `arm_hand_pose()` rechnet part[Hand] aus dieser Pose. Genutzt in
+  A1 (900), A3 (600) und B4 P0 (Pin @0x80100C18-38). Messschiene `[re2arm] PIN` (RE15_RE2_TRACE).
+* `tests/unit/test_p2_1210_arme_re2.c` (4d): Erwartung von "Hand der aktuellen Pose" auf "Hand der Parts-Pose"
+  umgestellt (Startbild-Historie, Kommentar Runde 35 Spur H) — die alte Pruefung hielt den Fehler fest.
+
+### 4.4 Messung nachher
+* PIN (exe, gleicher Lauf): Leon steht auf der Parts-Pose-Hand (-20588,-15148) statt (-20728,-15056).
+* Clipping-Mass (probe_r35_raeume_arme + Riegel; waagerechter Abstand Arm-Hand zu Leons Brustachse,
+  PL00-Knochen 8 im Opfer-Renderpfad, Leon = Arm + 1, Ueberblendung abgewartet):
+  | Fall | vorher (Clip 5 Bild 0) | nachher (Parts-Pose) |
+  |---|---|---|
+  | Leon dem Arm zugewandt (kein Flip) | Hand < 120 in 9 von 19 Bildern, min 33 | **0 von 19 (Riegel: 0 von 44), min 169-170** |
+  | Leon mit dem Ruecken zum Arm (Flip +2048) | 2 von 19 (vorzeichenbehaftet: 17 von 19 nicht klar hinter der Brust) | 11 von 19 (Riegel 24 von 44; vorzeichenbehaftet 14 von 19) |
+* Bild `p4_griff_vorher_oben_nachher_unten_F56-71.png` (Cut 4, Gesicht-Fall): die Hand liegt nachher seitlich
+  an Kopf/Schulter statt durch das Gesicht.
+* Phasen-Gegenprobe (Sonde): im Gesicht-Fall waere der Gleichlauf bei Leon = Arm + 6..10 am saubersten (0
+  falsche Bilder), byte-true ist + 1 (5 von 19 "Hand nicht klar vor der Brust") — der Port bleibt beim Original.
+
+### 4.5 Tests
+`unit_r35_raeume_arme` (tests/unit/test_r35_raeume_arme.c, echter Weg game_step, ROOM1210 + RE2-EM2D + PL00):
+(1) Pin = Parts-Pose-Hand (Abstand 0) und nicht Clip-5-Hand (167 daneben), beide Blickfaelle; (2) jedes
+Halte-Bild Leon = Arm + 1; (3) Gesicht-Griff: 0 von 44 Halte-Bildern mit Hand < 120 an der Brustachse
+(Minimum 170). Ruecken-Griff gemessen und protokolliert (24 von 44, s. OFFEN).
+`unit_1210_arme_re2` angepasst und gruen. Mess-Sonde `probe_r35_raeume_arme` (kein add_test).
+
 ## OFFEN
-- (laufend)
+1. **ROOM1210 Ruecken-Griff (Punkt 4):** greift der Arm Leon, waehrend Leon vom Fenster wegschaut, dreht der
+   Hook ihn mit dem Ruecken zum Arm (FUN_80015910 = 1 -> +2048 @0x80101304-18). Mit dem einzigen Opfer-Clip 0
+   der EM2D-Bank liegt die Hand dann in 14 von 19 Bildern nicht klar hinter der Brust (Hals/Ruecken) — bei
+   JEDEM Phasenversatz (Sonde: 11..15 von 19 fuer Versatz 0..18). Alles daran ist RE2-byte-true (Pin, Flip,
+   Takt); ob RE2 selbst so aussieht, ist ohne Referenz NICHT belegt. Naechster Messweg: RE2 ROOM2050 im
+   Emulator (pcsx-redux, Skill re15-pcsx-watchpoint) einen Ruecken-Griff aufnehmen und PL+0x38/+0x40/+0x76 +
+   Arm-Parts gegen den Port vergleichen.
+2. **RE1.5-Flavor der Gitterarme** (EM01A + Opferbank-Leihgabe vom Zombie 0x10): nicht angefasst; der
+   Nutzerbefund ist am Default (RE2) gemessen.
+3. **Schubladen-Kriecher ROOM1200 (Slot 3, grid 0x81) unter RE2** steht nach dem Wecken still (Sub 2, Clip 23)
+   — nicht Teil des Nutzerbefunds (der laufende Bahren-Zombie ist id 1), unter RE1.5 kriecht er und faellt
+   jetzt ebenfalls an der Kante (Zelle 17). Naechster Weg: RE2-Kriecher-Wurzel 0x80101210 gegen grid 0x81.
+4. **Weitere Aufrufer von FUN_8001bd60** (Zombie-Maedchen @0x8010a9b8, 0x8010c288, NPC-/Typ-0x47-Wurzeln
+   0x8011c5ec/0x8011cbbc/0x8011d1e4/0x8011d778/0x8011dcc4/0x8011e29c) sind weiter ohne Schwerkraft — gleiche
+   Funktion, je eine Zeile in der jeweiligen Wurzel; nicht Teil dieser Spur.
+5. **Zielscheiben, zweite Raetsel-Variante** ((3,112)=1, nur aus ROOM1241 @0x055E): dort waeren Scheibe 1+3
+   die Loesung; die Texte bleiben nach Nutzer-Vorgabe fest auf 0+2 = viele.
