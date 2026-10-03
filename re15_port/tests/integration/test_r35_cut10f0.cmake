@@ -5,22 +5,32 @@
 #
 # Dossier analysis/befunde_runde35/K_cut10f0.md, Konstanten include/re15_cut10f0.h. Die Unit-Riegel
 # unit_r35_cut10f0_* pruefen die Mechanik Bild fuer Bild in der VM; dieser Riegel prueft, was nur die
-# exe zeigt: Lade-Weg, Tuersequenz -> Raumwechsel, Gestenblock-Leihe (main.c), Port-Bank-Tuerknall,
-# Kartenhinweis-Kette ueber den Statusschirm (menu_common.c) und das Szenen-Ende mit MAIN01-Anstoss.
+# exe zeigt: Lade-Weg, Tuersequenz -> Raumwechsel, Gestenblock-Leihe (cut10f0_pc.c), Port-Bank-Tuerknall,
+# Kartenhinweis-Kette ueber den Statusschirm (menu_common.c) und die Raummusik (audio_pc.c).
 #
 # Laeufe (Karte aus probe_r35_cut10f0_karte, Spieler (1900,0,-7000) Gierung 2048 vor der Tuer, CONTINUE,
 # Eingabeskript auf der Spielbild-Zeitachse ab Bild 60):
 #   A  ROOM10D0 -> Tuer -> ROOM10F0: "[cut10f0] ROOM10F0: Szene gestartet", Animationsblock von ROOM11B0
 #      geliehen, Nachrichten 6..23 in dieser Reihenfolge, 2x Se_on Bank 14 (0x0E) Satz 1, "Szene zu Ende",
-#      Hinweis 1 -> 2 (Folge) -> schliessen, danach Cut 2 (Leon im Bild)
+#      Hinweis 1 -> 2 (Folge) -> schliessen, danach Cut 2 (Leon im Bild).
+#      NACHBESSERUNG 1 (Mangel 2): RE15_SET_FLAG_AT setzt (9,73) "Irons-Todesszene gesehen" MITTEN in einer
+#      laufenden Szene (Stellvertreter fuer die 1150-Montage der Spur L) -> MAIN01 beginnt trotzdem erst
+#      NACH dem Szenen-Ende ("MAIN01-Fenster auf", "entry=FF01")
 #   B  wie A mit (9,71)=1 im Spielstand: kein "[cut10f0]", keine Nachricht 6..23, kein geliehener Block
-#   C  CONTINUE direkt IN ROOM10F0 mit ausstehender Szene (Boot-Weg main.c): Szene + Leihe
-#   D  MAIN01 VON RAUM ZU RAUM (Fortsetzung, Dossier §8.6): Stand in ROOM10F0 mit (9,71)=1, Blick zur Tuer ->
-#      nach dem Laden "[bgm] ... room=0F entry=FF01" (der Boot-BGM-Aufruf lief vor dem Restore: main.c-Haken),
-#      Aktionstaste -> Tuer -> ROOM10D0: "[bgm] ... room=0D entry=FF01 ... [unveraendert, laeuft durch]"
-#   E  ENDE AM PARKPLATZ: Stand in ROOM11B0 vor der Tuer nach ROOM11C0 mit (9,71)=1 -> "room=1B entry=FF01",
-#      Tuer -> "room=1C entry=FF56" (die eigene Musik des Parkplatzes, Tabelle UNK_80074828)
-#   F  KARTEN-LATCH: Stand in ROOM1150 mit (9,71)=1 -> Raumaufbau setzt (9,72) ("ROOM1150 nach der Szene betreten")
+#   C  CONTINUE direkt IN ROOM10F0 mit ausstehender Szene (Boot-Weg main.c): Szene + Leihe; ohne (9,73)
+#      kein MAIN01
+#   D  MAIN01 VON RAUM ZU RAUM: Stand in ROOM10F0 mit (9,71)=1 und (9,73)=1, Blick zur Tuer -> nach dem Laden
+#      stoesst das erste Spielbild die Raummusik an ("room=0F entry=FF01"; der Boot-BGM-Aufruf lief vor dem
+#      Restore), Aktionstaste -> Tuer -> ROOM10D0: "room=0D entry=FF01 ... [unveraendert, laeuft durch]"
+#   E  ENDE AM PARKPLATZ: Stand in ROOM11B0 vor der Tuer nach ROOM11C0, Fenster offen -> "room=1B entry=FF01",
+#      Tuer -> "room=1C entry=FF56" (eigene Musik des Parkplatzes), die Ankunftsszene setzt (4,64) ->
+#      "MAIN01-Fenster zu"
+#   F  MAIN01 ERST NACH DER MONTAGE (Mangel 2): Stand in ROOM1150 mit (9,71)=1 OHNE (9,73) -> Latch (9,72),
+#      Raummusik = Tabelle ("room=15 entry=FF1E", kein FF01); bei Bild 60 setzt RE15_SET_FLAG_AT (9,73)
+#      (keine Szene laeuft) -> "MAIN01-Fenster auf", "room=15 entry=FF01"
+#   G  RAUMSKRIPT STOPPT DEN MAIN-KANAL (Mangel 1): Stand im Flur ROOM1180 (Strom an) vor der Tuer zum Zwinger,
+#      alle fuenf Gegner des Zwingers tot, Fenster offen -> Tuer -> ROOM11D0: "room=1D entry=FF01 ... laeuft
+#      durch", sub01 @0x01710 `54 00 02 00 00 00` (Stop an Slot 0) wird NICHT auf MAIN01 angewandt
 #
 # RE15_SOFTWARE_RENDER=1 dient nur der Robustheit des Testhakens; geprueft wird das LOG (debug.log).
 # SDL_AUDIODRIVER=dummy, damit die BGM-Weiche auch ohne Audio-Endpunkt laeuft und "[bgm] ... entry=FF01"
@@ -55,6 +65,8 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r35k_haken_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(RE15_PC_EXE "${_exe_kopie}")
 
+# szene_lauf(<name> <karten-argumente> <raum> <endbild> <out> [KEY=WERT ...])  — die Zusatz-Umgebung gilt nur
+# fuer diesen Lauf (re15_start_spiel setzt sie danach zurueck).
 function(szene_lauf _name _karte _raum _ende _out_debug)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
@@ -70,8 +82,9 @@ function(szene_lauf _name _karte _raum _ende _out_debug)
         RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=A0.2,W5"
-        RE15_MSG_LOG=1 RE15_SE_DEBUG=1 RE15_CAM_TRACE=1
+        RE15_MSG_LOG=1 RE15_SE_DEBUG=1 RE15_CAM_TRACE=1 RE15_BGM_CTL_DEBUG=1
         "RE15_EXIT_AT=${_ende}"
+        ${ARGN}
         "${RE15_PC_EXE}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
         message(FATAL_ERROR "r35_cut10f0[${_name}]: kein debug.log (exit=${_rv}, ${WORKDIR})")
@@ -94,16 +107,16 @@ function(_pos _text _wort _out)
     set(${_out} ${_p} PARENT_SCOPE)
 endfunction()
 
-# --- A: erster Eintritt -> Szene --------------------------------------------------------------------
-# Endbild 3200: Szene bis ~F2720 (Zeilentakt 110, Dossier §8.5), Hinweiskette bis ~F2980
-szene_lauf(a "" 10d0 "3200#10f0" _dbg)
+# --- A: erster Eintritt -> Szene; (9,73) faellt MITTEN in die Szene -> MAIN01 erst nach ihrem Ende --------
+# Endbild 3200: Szene bis ~F2730 (Zeilentakt 110), Hinweiskette bis ~F2990
+szene_lauf(a "" 10d0 "3200#10f0" _dbg "RE15_SET_FLAG_AT=9:73@300")
 _pos("${_dbg}" "[cut10f0] ROOM10F0: Szene gestartet" _ps)
 if(_ps LESS 0)
     message(FATAL_ERROR "r35_cut10f0[A]: Szene nach dem Tuereintritt nicht gestartet")
 endif()
 _pos("${_dbg}" "Animationsblock von ROOM11B0 geliehen" _pr)
 if(_pr LESS 0)
-    message(FATAL_ERROR "r35_cut10f0[A]: Gestenblock von ROOM11B0 nicht geliehen (main.c-Haken)")
+    message(FATAL_ERROR "r35_cut10f0[A]: Gestenblock von ROOM11B0 nicht geliehen (cut10f0_pc.c)")
 endif()
 # Nachrichten 6..23 in dieser Reihenfolge
 set(_vorher -1)
@@ -135,13 +148,18 @@ string(REGEX MATCH "\\[hint\\] F[0-9]+ schliessen" _hs "${_dbg}")
 if(NOT _hs)
     message(FATAL_ERROR "r35_cut10f0[A]: Hinweis-Schirm hat sich nicht geschlossen")
 endif()
-# Audio: die BGM-Weiche liefert nach der Szene MAIN01 (0xFF01) — mit dem Dummy-Treiber geloggt
+# Mangel 2: (9,73) kam waehrend der Szene; MAIN01 (entry=FF01) und "Fenster auf" erst NACH dem Szenen-Ende
+_pos("${_dbg}" "[setflag-at] Frame" _p73)
+_pos("${_dbg}" "[cut10f0] MAIN01-Fenster auf in ROOM10F0" _pauf)
 _pos("${_dbg}" "entry=FF01 -> MAIN01" _pb)
-if(_pb LESS 0)
-    message(FATAL_ERROR "r35_cut10f0[A]: nach der Szene kein BGM-Start mit entry=FF01 (MAIN01)")
+if(_p73 LESS 0 OR NOT _p73 LESS _pe)
+    message(FATAL_ERROR "r35_cut10f0[A]: (9,73) wurde nicht WAEHREND der Szene gesetzt (setflag ${_p73}, Ende ${_pe})")
 endif()
-if(NOT _pb GREATER _pe)
-    message(FATAL_ERROR "r35_cut10f0[A]: MAIN01 vor dem Szenen-Ende")
+if(_pauf LESS 0 OR _pb LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[A]: nach Szene + (9,73) kein MAIN01 (Fenster ${_pauf}, entry=FF01 ${_pb})")
+endif()
+if(NOT _pauf GREATER _pe OR NOT _pb GREATER _pe)
+    message(FATAL_ERROR "r35_cut10f0[A]: MAIN01 begann VOR dem Szenen-Ende (Fenster ${_pauf}, FF01 ${_pb}, Ende ${_pe})")
 endif()
 # Ende: Kamera wieder auf Cut 2 (Leon im Bild), nicht auf Cut 0 der Abgangsszene (letzte cam-trace-Zeile)
 string(REGEX MATCHALL "\\[cam-trace\\] F[0-9]+ room=10f0 [^\n]*" _cts "${_dbg}")
@@ -178,18 +196,23 @@ _pos("${_dbg}" "[msg] room=10f0 id=6 " _pm)
 if(_ps LESS 0 OR _pr LESS 0 OR _pm LESS 0)
     message(FATAL_ERROR "r35_cut10f0[C]: CONTINUE in ROOM10F0: Szene ${_ps}, Leihe ${_pr}, msg 6 ${_pm} (Boot-Weg)")
 endif()
+_pos("${_dbg}" "entry=FF01" _pb)
+if(NOT _pb LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[C]: MAIN01 schon in der 10F0-Szene (ohne (9,73))")
+endif()
 
 # --- D: MAIN01 von Raum zu Raum (Laden im Fenster, dann durch die Tuer nach ROOM10D0) ---------------------
-szene_lauf(d "gesehen;raus" 10f0 "200#10d0" _dbg)
+szene_lauf(d "gesehen;montage;raus" 10f0 "200#10d0" _dbg)
 _pos("${_dbg}" "[cut10f0] ROOM10F0: Szene gestartet" _ps)
 if(NOT _ps LESS 0)
     message(FATAL_ERROR "r35_cut10f0[D]: Szene lief trotz (9,71)=1 noch einmal")
 endif()
 _pos("${_dbg}" "CONTINUE: resumed in room 10f0" _pl)
+_pos("${_dbg}" "[cut10f0] Raummusik-Anstoss in ROOM10F0: Soll MAIN01" _pa)
 _pos("${_dbg}" "[bgm] stage=0 room=0F entry=FF01 -> MAIN01" _pb1)
 _pos("${_dbg}" "[bgm] stage=0 room=0D entry=FF01 -> MAIN01" _pb2)
-if(_pb1 LESS 0 OR NOT _pb1 GREATER _pl)
-    message(FATAL_ERROR "r35_cut10f0[D]: nach dem Laden in ROOM10F0 kein MAIN01 (Boot-BGM lief vor dem Restore)")
+if(_pa LESS 0 OR _pb1 LESS 0 OR NOT _pb1 GREATER _pl)
+    message(FATAL_ERROR "r35_cut10f0[D]: nach dem Laden in ROOM10F0 kein MAIN01 (Anstoss ${_pa}, FF01 ${_pb1}, Laden ${_pl})")
 endif()
 if(_pb2 LESS 0 OR NOT _pb2 GREATER _pb1)
     message(FATAL_ERROR "r35_cut10f0[D]: nach der Tuer in ROOM10D0 kein MAIN01 (entry=FF01)")
@@ -204,7 +227,7 @@ if(_tab)
 endif()
 
 # --- E: Ende am Parkplatz (ROOM11B0 -> Tuer -> ROOM11C0) ----------------------------------------------------
-szene_lauf(e "gesehen;vor11c0" 11b0 "100#11c0" _dbg)
+szene_lauf(e "gesehen;montage;vor11c0" 11b0 "100#11c0" _dbg)
 _pos("${_dbg}" "CONTINUE: resumed in room 11b0" _pl)
 _pos("${_dbg}" "[bgm] stage=0 room=1B entry=FF01 -> MAIN01" _pb1)
 _pos("${_dbg}" "[bgm] stage=0 room=1C entry=FF56" _pb2)
@@ -218,18 +241,60 @@ string(REGEX MATCH "\\[bgm\\] stage=0 room=1C entry=FF01" _falsch "${_dbg}")
 if(_falsch)
     message(FATAL_ERROR "r35_cut10f0[E]: MAIN01 laeuft im Parkplatz weiter")
 endif()
+# "Parkplatz erreicht" = die Ankunftsszene ROOM11C0 sub02 setzt (4,64) -> das Fenster schliesst
+_pos("${_dbg}" "[cut10f0] MAIN01-Fenster zu in ROOM11C0" _pz)
+if(_pz LESS 0 OR NOT _pz GREATER _pb2)
+    message(FATAL_ERROR "r35_cut10f0[E]: im Parkplatz schliesst das MAIN01-Fenster nicht ((4,64) der Ankunftsszene)")
+endif()
+string(REGEX MATCH "MAIN01-Fenster zu in ROOM11C0[^\n]*Parkplatz erreicht \\(4,64\\)=1" _p464 "${_dbg}")
+if(NOT _p464)
+    message(FATAL_ERROR "r35_cut10f0[E]: Fenster schloss nicht ueber (4,64)")
+endif()
 
-# --- F: Karten-Latch (9,72) beim Raumaufbau von ROOM1150 nach der Szene --------------------------------------
-szene_lauf(f "gesehen;in1150" 1150 "40#1150" _dbg)
+# --- F: MAIN01 erst NACH der Montage (Mangel 2) + Karten-Latch (9,72) -------------------------------------
+szene_lauf(f "gesehen;in1150" 1150 "150#1150" _dbg "RE15_SET_FLAG_AT=9:73@60")
 _pos("${_dbg}" "[cut10f0] ROOM1150 nach der Szene betreten: (9,72)=1" _pk)
 if(_pk LESS 0)
     message(FATAL_ERROR "r35_cut10f0[F]: Raumaufbau ROOM1150 mit (9,71)=1 setzt den Latch (9,72) nicht")
 endif()
+_pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF1E" _ptab)
+_pos("${_dbg}" "[setflag-at] Frame" _p73)
+_pos("${_dbg}" "[cut10f0] MAIN01-Fenster auf in ROOM1150" _pauf)
 _pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF01 -> MAIN01" _pb1)
+if(_ptab LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F]: ROOM1150 nach der 10F0-Szene spielt nicht seine Tabellenmusik (entry=FF1E)")
+endif()
+if(_p73 LESS 0 OR _pauf LESS 0 OR _pb1 LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F]: nach (9,73) kein MAIN01 (setflag ${_p73}, Fenster ${_pauf}, FF01 ${_pb1})")
+endif()
+if(NOT _pb1 GREATER _p73 OR NOT _pauf GREATER _p73)
+    message(FATAL_ERROR "r35_cut10f0[F]: MAIN01 schon VOR (9,73) (FF01 ${_pb1}, Fenster ${_pauf}, setflag ${_p73})")
+endif()
+
+# --- G: ein Raumskript stoppt den MAIN-Kanal (Mangel 1) -----------------------------------------------------
+# Flur ROOM1180 (Strom an) -> Tuer -> Zwinger ROOM11D0, alle fuenf Gegner tot: MAIN01 laeuft durch die Tuer,
+# sub01 schickt im ersten Spielbild den Stop an Slot 0 — er darf MAIN01 nicht treffen.
+szene_lauf(g "gesehen;montage;vor11d0" 1180 "200#11d0" _dbg)
+_pos("${_dbg}" "[bgm] stage=0 room=18 entry=FF01 -> MAIN01" _pb1)
 if(_pb1 LESS 0)
-    message(FATAL_ERROR "r35_cut10f0[F]: in ROOM1150 nach der Szene kein MAIN01")
+    message(FATAL_ERROR "r35_cut10f0[G]: im Flur ROOM1180 kein MAIN01 nach dem Laden")
+endif()
+string(REGEX MATCH "\\[bgm\\] stage=0 room=1D entry=FF01[^\n]*laeuft durch" _durch "${_dbg}")
+_pos("${_dbg}" "[bgm] stage=0 room=1D entry=FF01" _pb2)
+if(NOT _durch OR _pb2 LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[G]: MAIN01 laeuft nicht durch die Tuer in den Zwinger ROOM11D0")
+endif()
+string(SUBSTRING "${_dbg}" ${_pb2} -1 _rest)
+_pos("${_rest}" "Sce_bgm_control slot=0 op=2 im MAIN01-Fenster NICHT angewandt" _pn)
+if(_pn LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[G]: ROOM11D0 sub01 @0x01710 (Sce_bgm_control Slot 0 op 2) kam nicht an der Weiche an")
+endif()
+string(REGEX MATCH "Sce_bgm_control slot=0 op=[0-9]+ \\(part=" _stop "${_rest}")
+if(_stop)
+    message(FATAL_ERROR "r35_cut10f0[G]: ein Skript-Befehl an den MAIN-Slot wurde im Zwinger auf MAIN01 ANGEWANDT (${_stop})")
 endif()
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r35_cut10f0: OK - Eintritt durch die Tuer, Szene genau einmal, Hinweiskette, MAIN01 von Raum zu Raum "
-               "bis zum Parkplatz, Karten-Latch ROOM1150, Boot-Weg")
+message(STATUS "r35_cut10f0: OK - Eintritt durch die Tuer, Szene genau einmal, Hinweiskette, MAIN01 erst nach "
+               "(9,73) und nach dem Szenen-Ende, von Raum zu Raum bis zum Parkplatz ((4,64)), Raumskript-Stop "
+               "im Fenster nicht angewandt, Karten-Latch ROOM1150, Boot-Weg")

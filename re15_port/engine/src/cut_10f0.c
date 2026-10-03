@@ -303,20 +303,28 @@ int re15_cut10f0_bgm_fenster(void)    { return s_bgm_offen; }
 
 static void bgm_fenster_tick(void)
 {
+    const uint8_t war_offen = s_bgm_offen;
     if (!fenster_flags())           s_bgm_offen = 0;
     else if (!re15_cine_active())   s_bgm_offen = 1;    /* oeffnet erst nach dem Ende der Szene */
+#ifdef RE15_PLATFORM_PC
+    if (war_offen != s_bgm_offen)
+        fprintf(stderr, "[cut10f0] MAIN01-Fenster %s in ROOM%04X: (%d,%d)=%d (%d,%d)=%d, Parkplatz erreicht (%d,%d)=%d\n",
+                s_bgm_offen ? "auf" : "zu", (unsigned)g_current_room_id,
+                RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, gesehen(),
+                RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT,
+                re15_game_flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT),
+                RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT,
+                re15_game_flag_get(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT));
+#else
+    (void)war_offen;
+#endif
     const int stage = (int)((g_current_room_id >> 12) & 0xf) - 1;
     const int room  = (int)((g_current_room_id >> 4) & 0xff);
     const int soll  = weiche(stage, room) >= 0;
     if (soll == (int)s_bgm_stand) return;
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[cut10f0] MAIN01-Fenster %s in ROOM%04X ((%d,%d)=%d (%d,%d)=%d (%d,%d)=%d): Raummusik neu anstossen\n",
-            soll ? "OFFEN" : "ZU", (unsigned)g_current_room_id,
-            RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, gesehen(),
-            RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT,
-            re15_game_flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT),
-            RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT,
-            re15_game_flag_get(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT));
+    fprintf(stderr, "[cut10f0] Raummusik-Anstoss in ROOM%04X: Soll %s (letzte Auskunft an die Audio-Schicht: %s)\n",
+            (unsigned)g_current_room_id, soll ? "MAIN01" : "Tabelle", s_bgm_stand ? "MAIN01" : "Tabelle");
 #endif
     /* Beim OEFFNEN die Skript-Latches des Raums leeren (room_common.c tut das vor jedem Raumwechsel):
      * was das Raumskript der TABELLEN-Musik mitgegeben hat (Status, Programm-Lautstaerken — ROOM1090
