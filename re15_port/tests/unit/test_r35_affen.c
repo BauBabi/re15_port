@@ -831,7 +831,7 @@ static void teil_griff(void)
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
     const int T0 = 254, NT = (int)(sizeof s_wurf_orig / sizeof s_wurf_orig[0]);
     int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0, fx = 0, fz = 0;
-    double abw_p2 = 0, abw_p2_mitte = 0; int n_p2 = 0, f_abw_p2 = -1;
+    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1, f_ruhe = -1, still = 0; int32_t rx = 0, rz = 0;
     int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
     for (int f = 196; f < 196 + 300; f++) {
         if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
@@ -839,20 +839,27 @@ static void teil_griff(void)
         frame(0, 0);
         int k = f - T0;
         const int32_t *o = (k >= 0 && k < NT) ? s_wurf_orig[k] : NULL;
-        if (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)))
+        int zeigen = (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)));
+        if (zeigen)
             printf("    T%d hp%d pl %d/%d c%d/%d%s h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) | e2 (%d,%d)\n", f, (int)pl->hp,
                    pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (pl->anim_flags & 0x80) ? "R" : "",
                    pl->hit_react, (int)pl->x, (int)pl->z, (int)pl->rot_y, a->state, a->sub_state_1, a->sub_state_2,
                    (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)b->x, (int)b->z);
-        if (o && f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)))
+        if (o && zeigen)
             printf("         Original (%d,%d) cmd %d c%d/%d  d=%.0f\n", (int)o[0], (int)o[1], (int)o[2], (int)o[3], (int)o[4],
                    dist2d(pl->x, pl->z, o[0], o[1]));
         if (f_pin < 0 && a->sub_state_1 == 15 && a->sub_state_2 >= 3) { f_pin = f; px0 = pl->x; pz0 = pl->z; hp_griff = pl->hp; }
         if (f_pin >= 0 && f_sprung < 0 && dist2d(pl->x, pl->z, ox, oz) > 600.0) f_sprung = f;
         if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) { f_frei = f; fx = pl->x; fz = pl->z; }
         if (o && f >= 265 && f <= 290) {            /* P2: Platzierung + Schub + Klemme je Bild */
-            double d = dist2d(pl->x, pl->z, o[0], o[1]); abw_p2_mitte += d; n_p2++;
-            if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }
+            double d = dist2d(pl->x, pl->z, o[0], o[1]);
+            if (f >= 268) {   /* T265-T267 schiebt e2 (Lage aus seiner KI) — Kette im Riegel wand */
+                 abw_p2_mitte += d; n_p2++; if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; } }
+            else if (d > abw_e2) abw_e2 = d;
+        }
+        if (f_frei == f) hp_frei = pl->hp;
+        if (f_frei >= 0 && f > f_frei && f_ruhe < 0) {
+            if (pl->x == ox && pl->z == oz) { if (++still == 3) { f_ruhe = f - 3; rx = pl->x; rz = pl->z; } } else still = 0;
         }
         if (re15_player_victim_own_bank()) {        /* P3-P6: gerenderte Bank / Richtung */
             re15_anim_view_t av; re15_actor_anim_select(pl, 1, &banks, &av);
@@ -864,21 +871,23 @@ static void teil_griff(void)
     if (n_p2) abw_p2_mitte /= n_p2;
     printf("  Pin T%d bei (%d,%d) hp %d, erste Platzierung T%d, frei T%d bei (%d,%d), Ende (%d,%d) hp %d\n",
            f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)fx, (int)fz, (int)pl->x, (int)pl->z, (int)pl->hp);
-    printf("  Bahn P2 (T265-T290) gegen das Original: mittlere Abweichung %.0f, groesste %.0f in T%d; P3/P4 %d Bilder Clip 0x10"
-           " (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n", abw_p2_mitte, abw_p2, f_abw_p2,
-           p3_bilder, p3_pl00, p5_bilder, p5_rueck);
+    printf("  Bahn P2 gegen das Original (%s): mittlere Abweichung %.0f, groesste %.0f in T%d; T265-T267 (Schub von e2) %.0f;"
+           " P3/P4 %d Bilder Clip 0x10 (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n",
+           "T268-T290", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, p3_bilder, p3_pl00, p5_bilder, p5_rueck);
     PRUEF(f_pin >= 253 && f_pin <= 255, "Pin-Latch in T%d (Original T254: Clip 0x1c Bild 4, a780 = 0 -> Front-Griff @0x8011aa4c-bc)", f_pin);
     PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original T254: (-6660,-12486))", (int)px0, (int)pz0);
     PRUEF(f_sprung == 265, "erste Wurf-Platzierung in T%d = Opfer-Bild 0x0b (Original T265 = VSync 10171, +0x95 0x0b beim Eintritt;"
           " P1->P2 @0x8011c244-5c, Fenster @0x8011c278)", f_sprung);
-    PRUEF(n_p2 == 26 && abw_p2 <= 250.0, "Wurf-Bahn T265-T290 (Platzierung -> Schub -> Wandklemme) im Mittel %.0f, hoechstens %.0f (T%d) neben"
-          " dem Original (Schranke 250: der Schub des zweiten Gorillas haengt an dessen Lage)", abw_p2_mitte, abw_p2, f_abw_p2);
+    PRUEF(n_p2 == 23 && abw_p2 <= 200.0, "Wurf-Bahn T268-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub) im Mittel %.0f,"
+          " hoechstens %.0f (T%d) neben dem Original — vorher ab T273 bis 744 (Paar-Schub) und ab T289 festgeklemmt", abw_p2_mitte, abw_p2, f_abw_p2);
     PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
     PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
-    PRUEF(f_frei >= 377 && f_frei <= 379, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
-    PRUEF(dist2d(fx, fz, -4759, -10633) <= 600.0, "Lage bei der Freigabe (%d,%d) (Original (-4759,-10633); die Wandklemme schiebt seit T291 je Bild ~100)", (int)fx, (int)fz);
-    PRUEF(hp_griff == 76 && pl->hp == 76, "der Griff kostet keine HP (%d -> %d; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in 0x8011a878-af40 / 0x8011c118-c598)",
-          hp_griff, (int)pl->hp);
+    PRUEF(f_frei == 378, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
+    PRUEF(dist2d(fx, fz, -4759, -10633) <= 400.0, "Lage bei der Freigabe (%d,%d) (Original (-4759,-10633); die Wandklemme schiebt seit T291 je Bild ~100)", (int)fx, (int)fz);
+    PRUEF(hp_griff == 76 && hp_frei == 76, "der Griff kostet keine HP (%d -> %d bei der Freigabe; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in"
+          " 0x8011a878-af40 / 0x8011c118-c598)", hp_griff, hp_frei);
+    PRUEF(f_ruhe >= 0 && f_ruhe <= 412 && dist2d(rx, rz, -3009, -11643) <= 60.0, "nach der Freigabe schiebt die Wandklemme Leon bis zur Ruhelage (%d,%d) in T%d"
+          " (Original (-3009,-11643) ab T410)", (int)rx, (int)rz, f_ruhe);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -1077,6 +1086,34 @@ static void teil_wand(void)
     }
     printf("  Wandklemme: %d/%d Bilder bitgleich (%d mit Schub im Original), groesste Abweichung %d\n", gleich, n, schub, abw_max);
     PRUEF(gleich == n, "re15_collision_constrain = FUN_8003b0a4 in allen %d Original-Bildern des Wurfs (%d bitgleich)", n, gleich);
+    /* KOERPER-SCHUB des zweiten Gorillas in T265-T267 (Original: Lage nach dem Handler @0x80031cbc, nach dem Schub
+     * @0x80031cc4, e2 nach seinem Tick aus g_griff.txt) und danach die Klemme — die ganze Kette des Spieler-Schwanzes. */
+    static const int32_t kette[3][11] = {   /* T, Bezug x/z, Handler x/z, e2 x/z, Schub x/z, Klemme x/z */
+        { 265, -6659,-12487, -7332,-10884, -8795,-12049, -7190,-10771, -7804,-10186 },
+        { 266, -7804,-10186, -7332,-10884, -8754,-12002, -7140,-10733, -6686,-10348 },
+        { 267, -6686,-10348, -7193,-11403, -8655,-12000, -6756,-11225, -7340,-11870 },
+    };
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *g1 = aktor_vom_typ(0x27, 0), *g2 = aktor_vom_typ(0x27, 1);
+    if (!g1 || !g2) { PRUEF(0, "zwei Gorillas im Kampf-Layout"); return; }
+    g1->x = 20000; g1->z = 20000;                         /* der Greifer selbst ist ausgenommen (6e) */
+    int kette_ok = 0;
+    for (int i = 0; i < 3; i++) {
+        const int32_t *k = kette[i];
+        g2->x = k[5]; g2->z = k[6]; g2->y = 0; pl->x = k[3]; pl->z = k[4]; pl->y = 0; pl->hp = 76;
+        re15_body_push_player();
+        int32_t sx = pl->x, sz = pl->z;
+        re15_collision_set_band(0);
+        int32_t wx = sx, wz = sz;
+        re15_collision_constrain(&s_rdt, k[1], k[2], &wx, &wz);
+        printf("    T%d Handler (%d,%d) e2 (%d,%d) -> Schub Port (%d,%d) Original (%d,%d) -> Klemme Port (%d,%d) Original (%d,%d)\n",
+               (int)k[0], (int)k[3], (int)k[4], (int)k[5], (int)k[6], (int)sx, (int)sz, (int)k[7], (int)k[8], (int)wx, (int)wz,
+               (int)k[9], (int)k[10]);
+        if (abs((int)(sx - k[7])) <= 3 && abs((int)(sz - k[8])) <= 3 && abs((int)(wx - k[9])) <= 3 && abs((int)(wz - k[10])) <= 3)
+            kette_ok++;
+    }
+    PRUEF(kette_ok == 3, "Koerper-Schub FUN_8002b544 (e2, r %d + 450) + Wandklemme in T265-T267 wie das Original (%d/3 Bilder auf 3 Einheiten)",
+          (int)g2->hit_radius_min, kette_ok);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
