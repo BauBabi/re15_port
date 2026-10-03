@@ -12,8 +12,9 @@
 #   C  CONTINUE mit einem ALTEN Spielstand (Messer in Platz 0, ausgeruestet; Karte vom Werkzeug
 #      `test_r35_inventar1050 karte`): Messer wird beim Laden entfernt, Stich trotzdem mit dem Messer.
 #
-# RE15_SOFTWARE_RENDER=1 nur fuer die Robustheit des Hakens; geprueft werden debug.log und das
-# Zustandslog (RE15_STATE_LOG), die Bilder belegt die Framedump-Abnahme im Dossier.
+# Neues Spiel per RE15_TITLE_SHOT + _AF=2 (Titel startet selbst, main.c Titelschleife), wie
+# test_r34_granaten.cmake. Geprueft werden debug.log und das Zustandslog (RE15_STATE_LOG); die Bilder
+# belegt die Framedump-Abnahme im Dossier.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<test_r35_inventar1050> -DWORKDIR=<dir>
 #               -P test_r35_inventar1050.cmake
@@ -58,7 +59,7 @@ function(e_lauf _name _out_dbg _out_state)
         endif()
     endif()
     re15_start_spiel(_rv 300
-        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         RE15_STATE_LOG=state.log RE15_INV_DBG=1
         ${ARGN}
         "${RE15_PC_EXE}")
@@ -86,6 +87,7 @@ set(_start_soll "[messer] Startinventar Charakter 0: 03 x15 15 x50 | Ausruest-Pl
 
 # --- A: Szene + Inventar danach ---------------------------------------------------------------
 e_lauf(a _dbg _st
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_SET_FLAG=3:121 RE15_DEBUG_JUMP=1000@120 RE15_PLAYER_POS=22230,-13400,0,0
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 RE15_INPUT_SCRIPT=U0.8,W14
     RE15_PRESS=square@150,start@560 RE15_EXIT_AT=620)
@@ -134,6 +136,7 @@ message(STATUS "r35_inventar1050[a]: Szene, pf=${_pf} pm=${_pm} vor START, Statu
 
 # --- B: Neues Spiel, Messerstich ohne Waffe --------------------------------------------------------
 e_lauf(b _dbg _st
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=1000@120 RE15_PLAYER_POS=22230,-13400,0,0
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100
     "RE15_INPUT_SCRIPT=W1,M1,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,W1" RE15_EXIT_AT=300)
