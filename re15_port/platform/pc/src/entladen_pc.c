@@ -267,10 +267,12 @@ static void alles_entladen(const char *anlass)
     /* (6) Raum-Tonbaenke: im Original schliesst der Raumlader die Vorgaengerbank (SsVabClose in
      *     FUN_80043eac/FUN_80043fb0, @0x80039974/@0x8003997c). */
     { extern void re15_audio_raum_entladen(void); re15_audio_raum_entladen(); }
-    /* (7) RDT-Bytes. Beim Raumwechsel gibt re15_room_load die alten Bytes beim Installieren
-     *     der neuen frei (gleich nach diesem Aufruf). An Spielstart/-ende gibt es keinen
-     *     Nachfolger im selben Schritt — hier freigeben (Spielmodul-Init @0x8001d590-a0). */
-    if (anlass && strcmp(anlass, "raum") != 0) re15_room_pc_entladen();
+    /* (7) RDT-Bytes des Raums davor. Beim Raumwechsel liegt die NEUE RDT zu diesem Zeitpunkt nur
+     *     geparst in re15_room_load bereit und wird direkt danach installiert (== Laden ab der
+     *     Arena-Basis @0x800397e8 NACH dem Reset @0x80039738); an Spielstart/-ende folgt der
+     *     Boot-Block bzw. der Titel (Spielmodul-Init @0x8001d590-a0). */
+    (void)anlass;
+    re15_room_pc_entladen();
 }
 
 void re15_entladen_ereignis(const char *anlass)
