@@ -816,6 +816,15 @@ static void abschnitt_strecke(void)
                    f->wpos[0] == (int16_t)wx && f->wpos[2] == (int16_t)zz,
               "Wurfbild: Hand hinter der duennen Zelle (Punkt frei %d) -> Explosion im Wurfbild (Wand %u) ueber dem Werfer: x %d (%d), z %d (%d)",
               hand_frei, nw, f ? (int)f->wpos[0] : 0, (int)wx, f ? (int)f->wpos[2] : 0, (int)zz);
+        /* Werfer selbst IN einer Zelle des getesteten Bandes (Band-Abweichung): keine Wurfbild-Strecke, nur die Hand
+         * als Punkt -> die freie Hand im Flur fliegt los. */
+        re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = -21700; g_actors[RE15_ACTOR_SLOT_PLAYER].z = zz;   /* in x[-21825..-21550] */
+        g = re15_esp_granate_spawn(&s_core, 2, -20700, -2474, zz, 0);
+        re15_esp_fx_tick(NULL);
+        re15_granate_r35_zaehler(&nw, &nk, &ne);
+        PRUEF(235, g != NULL && nw == 0 && ne == 0,
+              "Werfer in der Zelle, Hand frei im Flur: kein Ausloeser im Wurfbild (Wand %u, Explosionen %u)", nw, ne);
         re15_player_acaec_override_for_test(0, 0);
     }
     g_room_rdt_ok = 0;

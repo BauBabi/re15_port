@@ -197,7 +197,10 @@ int re15_granate_r35_punkt(const re15_rdt_t *rdt, int32_t x, int32_t z, int band
 }
 
 /* Anfang der Flugstrecke dieses Bildes.
- *   Wurfbild (xlat == 0: die Physik @0x8001a324-388 hat den Platz noch nie bewegt): der Werfer.
+ *   Wurfbild (xlat == 0: die Physik @0x8001a324-388 hat den Platz noch nie bewegt): der Werfer — sofern er
+ *   selbst frei steht. Steht er im getesteten Band IN einer Zelle (Band der Granate = -(Standhoehe/0x708),
+ *   das Band des Spieler-Aufloesers ist ein gefuehrter Zustand +0x82 und kann davon abweichen), gibt es keine
+ *   freie Strecke; dann gilt nur die Hand als Punkt.
  *   sonst: die vorige Weltlage. Physik je Tick `xlat += vel; vel += acc` (@0x8001a324-388) ->
  *   xlat_alt = xlat - (vel - acc) je Achse; Weltlage daraus wie im Tick (@0x8001a118-2a4). Nach einem
  *   Abprall (R29 @0x800183c4-f8) ist das die auf die Ebene korrigierte Abprallstelle. */
@@ -207,6 +210,10 @@ static p2_t strecken_anfang(const re15_esp_fx_t *f)
     if (f->xlat_x == 0 && f->xlat_y == 0 && f->xlat_z == 0) {
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         s.x = pl->x; s.z = pl->z;
+        if (re15_granate_r35_punkt(&g_room_rdt, s.x, s.z, re15_collision_band_from_y(f->granate_boden),
+                                   RE15_GRANATE_R35_WAND_MASKE)) {
+            s.x = f->wpos[0]; s.z = f->wpos[2];
+        }
         return s;
     }
     re15_esp_fx_t alt = *f;
