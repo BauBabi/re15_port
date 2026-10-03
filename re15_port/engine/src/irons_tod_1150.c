@@ -237,6 +237,8 @@ static const uint8_t k_p_1040_tor[] = {
     OP_SLEEP(15),                                                             /* @0x019BE */
     0x36, 0x02, 0x0a, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019C2 */
     OP_SLEEP(15),                                                             /* @0x019CE */
+    /* @0x019D2..@0x019DD (`2e 01 00 00` + `40 00 09 3d 90 9d 98 fe` = Leon dreht sich zum Tor) entfaellt: der Spieler
+     * steht in der Montage unsichtbar auf dem Parkplatz; alles andere ist Byte fuer Byte das Original (Riegel programme). */
     OP_WORK(3, 0),                                          /* Objekt 0 = Rolltor (@0x019DE) */
     0x2f, 0x01, 0xd8, 0xff,                                 /* Speed_set y -40 (@0x019E2) */
     0x0d, 0x00, 0x04, 0x00, LE16(20), 0x30, 0x02, 0x0e, 0x00,   /* For 20 { Add_speed; Evt_next } (@0x019E6) */

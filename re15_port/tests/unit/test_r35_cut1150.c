@@ -397,6 +397,10 @@ static void teil_programme(void)
             }
         }
         if (w == 8) { PRUEF(n_em == 1 && p[n-36+23] == 0x15 && p[n-36+24] == 7, "Programm 8: Marvin, Tuer -> 1150 Cut 7"); }
+        if (w == 3 && rdt_laden(0x1040) == 0) {   /* M6: Tor-Fahrt = sub08 woertlich (ohne Leons Drehung @0x019D2) */
+            PRUEF(n >= 32 + 76 && !memcmp(p, s_raw + 0x019B2, 32) && !memcmp(p + 32, s_raw + 0x019DE, 76),
+                  "Programm 3: Tor-Fahrt = ROOM1040 sub08 @0x019B2 (32 B) + @0x019DE..@0x01A29 (76 B) woertlich");
+        }
         if (w == 17) {   /* Aufstellung: Laengenfelder wie ROOM1030 sub00 nachgerechnet (For 0x88, Ifel 0x78, Switch 0x66) */
             PRUEF(n == 4 + 4 + 6 + 0x88 && p[8] == 0x0d && p[10] == 0x88 && p[12] == 20 && p[18] == 0x06 && p[20] == 0x78 &&
                   p[28] == 0x13 && p[30] == 0x66, "Programm 17: Aufstellung For 20 / Ifel / Switch mit Laengen 0x88/0x78/0x66 (%d B)", n);
