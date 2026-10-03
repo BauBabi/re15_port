@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "re15_actor.h"
 #include "re15_enemy.h"
 #include "re15_damage.h"
@@ -128,6 +129,67 @@ int main(void)
             printf("  f%2d hand=(%5d,%5d,%5d) leon8=(%5d,%5d,%5d) leon0=(%5d,%5d,%5d)\n", f,
                    hand[f % fca][0], hand[f % fca][1], hand[f % fca][2], leon[f][8][0], leon[f][8][1],
                    leon[f][8][2], leon[f][0][0], leon[f][0][1], leon[f][0][2]);
+    }
+    /* ---- Kontakt-Analyse im echten Fall (Slot 5, Arm-Yaw 3664, Lauf PIN-Zeile re2_ki.log) ------ */
+    {
+        long esz = 0, rsz = 0;
+        uint8_t *edd = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EDD", &esz);
+        uint8_t *emr = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EMR", &rsz);
+        static re15_emd_animation_t pa2; static re15_emd_skeleton_t ps2;
+        if (!edd || !emr || re15_emd_parse_animation(edd, (size_t)esz, &pa2) != 0 ||
+            re15_emd_parse_skeleton(emr, (size_t)rsz, &ps2) != 0) return 1;
+        re15_emd_skeleton_t vs = ps2;
+        vs.keyframe_data = eb->skel_victim.keyframe_data;
+        vs.keyframe_data_size = eb->skel_victim.keyframe_data_size;
+        vs.keyframe_count = eb->skel_victim.keyframe_count;
+        vs.keyframe_size_bytes = eb->skel_victim.keyframe_size_bytes;
+        const int fcv = eb->anim_victim.clips[0].frame_count, fca = eb->anim.clips[5].frame_count;
+        e->x = -21490; e->y = -2500; e->z = -15747; e->rot_y = 3664;
+        for (int pinart = 0; pinart < 2; pinart++) {
+            int32_t pin[3];
+            if (pinart == 0) { e->motion = 5; e->anim_frame = 0; }   /* bisher: Clip 5 Bild 0 */
+            else             { e->motion = 3; e->anim_frame = 4; }   /* Parts-Pose: Clip 3 Bild 4 */
+            re15_enemy_bone_world_pos(e, 3, pin);
+            for (int seite = 0; seite < 2; seite++) for (int dv = 0; dv < 19; dv += (pinart == 1 ? 1 : 19)) {
+                /* Leon dreht zum Arm-Ursprung (FUN_80015558, 2048 = Sprung), +2048 wenn same */
+                int32_t dx = e->x - pin[0], dz = e->z - pin[2];
+                double a = atan2(-(double)dz, (double)dx);           /* Port: vorwaerts = (cos, -sin) */
+                int yaw = ((int)(a * 2048.0 / 3.14159265358979) + 4096) & 0xfff;
+                if (seite) yaw = (yaw + 2048) & 0xfff;
+                int tief = 0, nah = 0, gegen = 0, vmin = 1 << 30, vmax = -(1 << 30); long sum = 0; int mind = 1 << 30;
+                for (int f = 0; f < fca; f++) {
+                    int lf = (f + (pinart == 1 ? dv : 1)) % fcv;                            /* Leon = Arm + 1 (Original-Reihenfolge) */
+                    re15_actor_t pr; memset(&pr, 0, sizeof pr);
+                    pr.active = 1; pr.motion = 0; pr.anim_frame = (uint16_t)lf; pr.rot_y = (int16_t)yaw;
+                    int kf = re15_compute_actor_kf(&eb->anim_victim, &vs, &pr, 0, pr.anim_frame);
+                    re15_skel_pose_t poses[RE15_EMD_MAX_BONES]; g_anim_pose_actor = NULL;
+                    if (kf < 0 || re15_skel_compute_pose(&vs, kf, poses) != 0) return 1;
+                    int32_t b8[3];
+                    re15_skel_bone_to_world(poses[8].trans, (int16_t)yaw, pin[0], 0, pin[2], b8);
+                    e->motion = 5; e->anim_frame = (uint16_t)f;
+                    int32_t h[3]; re15_enemy_bone_world_pos(e, 3, h);
+                    /* waagerechter Abstand Hand <-> Brust/Hals-Achse (Bone 8), Kopf liegt darueber */
+                    int32_t hx = h[0] - b8[0], hz = h[2] - b8[2];
+                    int d = (int)sqrt((double)hx * hx + (double)hz * hz);
+                    /* Vorwaerts-Anteil in Leons Blickrichtung (cos, -sin): Gesicht-Fall muss die Hand
+                     * VOR der Brust liegen (> 0), Ruecken-Fall HINTER ihr (< 0, Nacken). */
+                    double c = cos(yaw * 3.14159265358979 / 2048.0), sn = sin(yaw * 3.14159265358979 / 2048.0);
+                    int vor = (int)(hx * c - hz * sn);
+                    int falsch = seite ? (vor > -60) : (vor < 60);       /* nicht klar auf der richtigen Seite */
+                    if (falsch) gegen++;
+                    if (vor < vmin) vmin = vor;
+                    if (vor > vmax) vmax = vor;
+                    if (d < mind) mind = d;
+                    if (d < 120) tief++;
+                    if (d < 250) nah++;
+                    sum += d;
+                }
+                printf("KONTAKT d=%2d Pin=%s Leon-Yaw %4d (%s): Abstand Hand-Brustachse min %d mittel %ld, "
+                       "Bilder <120 %d, <250 %d von %d; vorwaerts %d..%d, nicht klar richtige Seite %d\n",
+                       pinart == 1 ? dv : 1, pinart ? "Parts-Pose C3B4" : "Clip5 B0 (bisher)", yaw, seite ? "Ruecken" : "Gesicht",
+                       mind, sum / fca, tief, nah, fca, vmin, vmax, gegen);
+            }
+        }
     }
     return 0;
 }

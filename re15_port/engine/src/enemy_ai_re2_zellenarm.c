@@ -464,6 +464,14 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
          * `j 0x80100D6C` (@0x80100CAC). Vorher rechnete der Port die Hand aus dem eben gesetzten
          * Clip 5 Bild 0: Leon stand bis ~170 Einheiten seitlich versetzt (Messung Dossier 4.1). */
         arm_hand_pose(e, slot, h);
+        if (getenv("RE15_RE2_TRACE")) {                   /* Messschiene: alter gegen neuer Pin */
+            int32_t alt[3]; re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), alt);
+            FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
+            fprintf(o, "[re2arm] PIN slot %d yaw %d: Parts-Pose Clip %d Bild %u -> (%d,%d); Clip 5 Bild 0 "
+                       "(bisher) -> (%d,%d); Leon vorher (%d,%d) yaw %d\n", slot, (int)e->rot_y,
+                    (int)s_arm[slot].pose_clip, (unsigned)s_arm[slot].pose_frame, h[0], h[2], alt[0], alt[2],
+                    pl->x, pl->z, (int)pl->rot_y);
+        }
         pl->x = h[0];                                     /* sw v0,0x800CFC30 (PL+0x38) @0x80100C18-20 */
         pl->z = h[2];                                     /* sw v0,0x800CFC38 (PL+0x40) @0x80100C24-38 */
         s_holder = slot;                                  /* 0x800CFDAC = PL+0x1B4 = self @0x80100C2C-30 */

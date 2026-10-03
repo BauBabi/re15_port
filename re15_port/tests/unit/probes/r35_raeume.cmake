@@ -37,3 +37,14 @@ target_link_libraries(probe_r35_raeume_arme PRIVATE re15_engine re15_test_suppor
 target_include_directories(probe_r35_raeume_arme PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_r35_raeume_arme PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# Punkt 4: ROOM1210 Gitterarme — Pin aus der Parts-Pose (@0x80100C18-38), Gleichlauf Arm+1,
+# Clipping-Mass Hand/Brustachse (echter Weg game_step, RE2-EM2D, PL00).
+add_executable(test_r35_raeume_arme test_r35_raeume_arme.c)
+target_link_libraries(test_r35_raeume_arme PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r35_raeume_arme PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r35_raeume_arme PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_r35_raeume_arme COMMAND test_r35_raeume_arme)
+set_tests_properties(unit_r35_raeume_arme PROPERTIES TIMEOUT 120)
