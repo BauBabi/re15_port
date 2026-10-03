@@ -129,7 +129,23 @@ weil die Nachricht EIN Bild frueher schliesst als im Port:
 
 ## Umsetzung
 
+### P1 Nachrichten-FSM (msg_common.c re15_dialog_tick, 5 Zeilen)
+Nach der Sofort-Spanne `04 00 .. 04 NN`: ist das naechste Byte ein Steuerbyte (!= 0x00 und
+(b-0x0c)&0xff >= 0xec, @0x80028274-80), wird es im selben Bild weiterverteilt (`continue`) statt erst im
+naechsten (@0x800283b8 `j 0x80028424` / @0x8002842c `bne v0,zero,0x8002826c`). Druckbare Glyphen nach der
+Spanne warten wie bisher das Tempo ab (@0x80028434 `bne s2,zero` mit verbrauchtem Budget).
+Wirkung: jede `04 00 ... 04 01 01 NN`-Zeile schliesst ein Bild frueher (= Original). Keine Konstante neu.
+
 ## Messung nachher
+
+### P1 (Lauf m4, Stand mit msg-Fix, k_ruf noch unveraendert)
+```
+315 F151 pf=01000007 pm=2   (Szene)
+ 14 F466 pf=00000007 pm=1   (Plc_ret — Bit 0x01000000 GELOESCHT)
+121 F480 pf=00000007 pm=0
+[invdbg] 790x stage=0 open=0 | 9x stage=2 open=0 | 72x stage=2 open=1   (START F520 -> Inventar offen)
+```
+Der Befund ist damit am Mechanismus behoben (Schliessen in F465, Set in F466), nicht durch Umgehung.
 
 ## Tests
 

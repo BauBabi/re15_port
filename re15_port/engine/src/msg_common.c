@@ -521,6 +521,11 @@ static void re15_dialog_step(void)
                     g_scd.message_parse += 2;                                    /* consume the trailing 04 NN */
                     if (nn) g_scd.message_scroll = nn;
                     g_scd.message_timer = g_scd.message_scroll;                  /* wait NN before the next glyph */
+                    /* Runde 35 Spur E: ein folgendes STEUERBYTE (z.B. das Ende `01 63`) im SELBEN Bild —
+                     * @0x800283b8 `j 0x80028424`, @0x8002842c `bne v0,zero,0x8002826c`, druckbar erst bei
+                     * (b-0x0c)&0xff < 0xec (@0x80028274-80). Sonst schloss die Zeile ein Bild zu spaet. */
+                    if (g_scd.message_parse < rlen && raw[g_scd.message_parse] != 0x00 &&
+                        (uint8_t)(raw[g_scd.message_parse] - 0x0c) >= 0xec) continue;
                     break;                                                      /* the span is now flashed this frame */
                 }
                 g_scd.message_scroll = a; g_scd.message_parse += 2; continue;
