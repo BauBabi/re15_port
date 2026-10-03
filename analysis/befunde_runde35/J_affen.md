@@ -875,3 +875,20 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 - Harness und exe verhalten sich jetzt gleich: die Abweichung "Harness bleibt stehen / exe springt bei 0x24" kam
   von der Ersatzklemme (Harness: Platzierungen 0x21-0x24 lagen in Zellen -> festgehalten; exe: freier Boden -> keine
   Klemme); jetzt laufen beide durch dieselbe Kette Platzierung -> Schub -> FUN_8003b0a4.
+
+### A1 — Messung: Leons sub02-Gang im Original Bild fuer Bild (GDB) gegen den Port
+- Werkzeug `jnb2/gdbpl.py`: r3 s001 (t=6.11, Leon am Spawn (-22604,14455)) direkt geladen, Haltepunkt am
+  Spieler-Tick 0x80031c44, je Bild Spielerrecord 0x800aca54 (0x1f4 B) + aca58; 330 Bilder -> `jnb2/g_gang.txt`.
+- Original: erster Lauf-Schritt (-22604,14455) -> **(-22413,14397)** (dx +191, **dz -58**), danach je Bild
+  (+191,-58); Yaw 191 -> 189 (ab (-18593,13237)) -> 185 -> 183; Ankunft Bein 1 bei (-16108,12491); Bein 2 Yaw
+  855..1015, x +2/Bild; Bein 3 Yaw 397/395, Schritt (+163,-115)/(+164,-114); **Endlage (-7138,-12372)**, Yaw 1513.
+- Port (Abnahme n10, state.log): erster Schritt -> **(-22413,14398)** (**dz -57**), je Bild (+191,-57); Yaw 191 ->
+  **193** (Drift zur anderen Seite, weil Leon jedes Bild 1 Einheit zu weit noerdlich steht); Bein 2 Yaw 1019; Bein 3
+  Yaw 401/405, Schritt (+163,-115)/(+162,-116); Endlage (-7157,-12355), Yaw 1505.
+- **Ursache = Rundung des Schritts.** FUN_800245d8 (selbst disassembliert): Vektor (+0x8c,0,0) @0x800245f0-80024600,
+  `jal 0x800659d0` (RotMatrixY auf die Identitaet 0x80072d4c, Yaw +0x6a + a0) @0x80024660-64, `ctc2` der Matrix
+  @0x80024674-90, `lwc2` V0 @0x8002469c-a0, **GTE MVMVA sf=1 (cop2 0x0486012) @0x800246ac**, `mfc2` IR1/IR2/IR3
+  @0x800246bc-c4 -> dx = (R11*v) SAR 12, dz = (R31*v) SAR 12 mit R31 = -sin (psx-spx: "MAC1 = (R11*VX+...) SAR
+  (sf*12)"). Fuer Yaw 191: -1183*200 = -236600 SAR 12 = **-58**. Der Port rechnet `z -= (s*speed) >> 12` = -57
+  (re15_port/engine/src/actor_locomotion.c) — die Negation NACH der Verschiebung rundet zur Null statt nach unten.
+  Eine Einheit je Bild ueber ~230 Laufbilder = die 26 Einheiten der Szenen-Endlage.
