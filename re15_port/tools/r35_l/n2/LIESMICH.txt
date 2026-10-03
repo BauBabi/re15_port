@@ -1,0 +1,2 @@
+# Spur L Nachbesserung 2 - bildlauf.sh: exe-Lauf mit Karte (probe_r35_cut1150_karte, z.B. tot1040_15) + CONTINUE +
+# Tuer 1130->1150 und RE15_FRAMEDUMP, Bilder laufend weggesichert (Pfade auf das Scratchpad verdrahtet). Dossier §10.
