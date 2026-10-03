@@ -126,3 +126,68 @@ Stub · 1180 @0x80076970 Stub · 1080 @0x800768f0 Stub · 1040 @0x800768d0 = (94
   auf x 111..119 / y 143..152 — also UNTER die Kabine (Suedwand y=143); die Klemmung (Rand 4,
   re15_inv_screen.c) laesst davon y 144..146 uebrig. Und die Etagenwahl nimmt bei gleichem Band
   immer die ERSTE Zeile (re15_map_floor_lookup) = Blatt 2.
+
+## Umsetzung (Dateien, Konstanten)
+
+Alle Datenzeilen in `re15_port/engine/src/re15_map_zones.h` (je Block mit Kommentar "Runde 35 Spur G";
+Rechnung reproduzierbar: `python analysis/befunde_runde35/G_karte_zeilen.py`). Kein Patch an shared_assets.
+
+| Punkt | Aenderung | Beleg |
+|---|---|---|
+| 1 | `0x1080/0x1081` Blatt 2 rect 9, Gastzeilen Blatt 3 rect 4 / Blatt 4 rect 0: ox,oy,sx,sy = 129,117,795,805 (Blatt 2/3) bzw. 147,120,795,805 (Blatt 4), flip 1,1 | B5: 180 Grad aus Yaw ROOM1040 @0x1096 (0x0400) vs Gehrichtung; Ziel = gemalter Innenraum (Kachel uv(168,40)) geschnitten mit dem Klemmfenster (Rect+4); Massstab PORT-WAHL (Stub @0x800768f0) |
+| 1 | NEU `engine/src/karte_fahrstuhl_1080.c` + `include/re15_karte_fahrstuhl.h`: Blatt der Kabine = Etage des Vorraums (Spiegel DAT_800b0fe6, FUN_8001d600 @0x8001d92c/@0x8001d938/@0x8001d95c), sonst Bank 3 Bit 54/55/56 (ROOM1040 @0x15D6, ROOM10C0 @0x0FEE, ROOM1120 @0x0D6C); Blatt je Etage aus dem Seiten-Setzer @0x8004b684/@0x8004b6f8/@0x8004b758 | B1, B5 |
+| 1 | Haken `re15_map_zones.c`: `re15_karte_raum_gesehen(room)` in `re15_map_zone_update` (1 Zeile), Filter `if (fb >= 0 && page != fb) continue;` in `floor_row` und `re15_map_floor_lookup` (je 2 Zeilen), 1 include | — |
+| 2 | `0x11F0/1` rect 0 -> **1**; `0x1200/1` rect 0 -> **2** (Abbildungen unveraendert: 11F0 hergeleitet, 1200 = @0x800769b0) | B4 |
+| 3 | `0x1180/1` und NEU `0x1230/1`: Blatt 0 **rect 0**, 5 Abschnitte (idx 0..4, zid 25/106/107/108/109), je eigene Streckung auf den gemalten Streifen; Kaesten an gemeinsamen Kanten um ZONE_SLACK=1500 eingezogen | B1, B4; Kunst schematisch -> PORT-WAHL |
+| 3 | NEU Gastzeile `0x10A0/1` Blatt 0 rect 6 + Etagenzeile (10A0, z0, Band 4 -> Blatt 0 rect 6) am ENDE von s_map_floors + Etagen-Bit 25 in `s_etage_bit` (re15_map_zones.c, angehaengt) | Band 4 = -(-7200/0x708), Tuer @0xA34 |
+| 3 | Marken Blatt 0: die zwei alten 1180-Marken auf rect 6 ersetzt durch (139,76) und (157,113) auf rect 0 (ungepaart); 1190-Marke (151,69) und 11D0-Marke (129,124) mit dem Gang gepaart (zid2 106/108, auf_partner 1) | gemalte Nischen B4 |
+| 4 | `0x1210/1` rect 4 -> **3**; `0x1220/1` eine Zone -> **5 Zellen** (rect 4/6/5/7/8, zid 35/102/103/104/105) mit der 1210-Zeile @0x800769b8 (gemeinsamer Weltrahmen) | B4 |
+| 4 | Marken Blatt 1: 5 alte (davon (206,95) quer im Gang) ersetzt durch die 6 Tueren von 1210 auf den gemalten Nischen: (187,74) 11E0, (201,82)/(201,99) West, (212,91)/(212,108)/(212,125) Ost | B4 |
+| 3/4 | Besucht-Bits fuer Zonen idx>=2: `s_zone_zusatzbit` += 1220 idx 2..4, 1180 idx 2..4, 1230 idx 2..4 (Bits 242..250 von 256, angehaengt) | Pin unit_map_zone_bits |
+
+Geaenderter fremder Pin (begruendet): `tests/unit/test_map_etagenzeile.c` — die Regel "Gast-Zeile traegt KEINE
+Kartenzeile (sx=0)" meinte eine BLATTFREMDE absolute Zeile (2026-09-07: die 1060-Zeile stand als eine Spalte
+x=122 daneben). Jetzt zulaessig: eine Zeile, deren Projektion des Kasten-Mittelpunkts IN das eigene Rechteck
+faellt. Die Wirkungsprobe (>= 10 verschiedene Markerpixel) bleibt unveraendert und ist gruen (25 Pixel).
+
+Dateiregel (VERTRAG §1.4): `re15_map_zones.h` ist eine gemeinsame Datei. Geaendert sind NUR die Zeilen der
+Raeume dieses Auftrags (1080, 11F0, 1200, 1210, 1220, 1180, 1230, 10A0-Gast, Marken Blatt 0/1, Etagenzeile am
+Ende) — Datenzeilen, keine Logik; jede Stelle traegt "Runde 35 Spur G". In `re15_map_zones.c` 6 Haken-Zeilen
++ 10 angehaengte Tabelleneintraege.
+
+## Messung nachher (probe_r35_karte messung, gleicher Stand wie die Riegel)
+```
+Punkt 1  Kabine 1F (Bits)  Blatt 2 aktuell 9 | Ecken SW(116,139) SO(114,139) NW(116,141) NO(114,141) Mitte (115,140)
+         Kabine 2F (Bits)  Blatt 3 aktuell 4 | dieselben Pixel (Ersatzrect (109,134) wie 1F)
+         Kabine 3F (Bits)  Blatt 4 aktuell 0 | SW(134,142) SO(132,142) NW(134,144) NO(132,144)
+         aus ROOM1040/10C0/1120 in die Kabine: Blatt 2/3/4, aktuell 9/4/0 (Vorraum gewinnt)
+         -> Marker IMMER im gemalten Kabinen-Innenraum (vorher y 144..146 = unter der Suedwand y143),
+            folgt dem Spieler in beiden Achsen (4 px Fenster: 8x8-Marker auf 10x10-Kabine, Rand 4).
+Punkt 2  11F0 Ankunft/Mitte: Blatt 1 aktuell NUR 1, Marker (106,111)/(121,137)
+         1200 Ankunft/Mitte: Blatt 1 aktuell NUR 2, Marker (165,135)/(159,113);  11E0: NUR 0
+Punkt 3  1230 und 1180 an 6 Punkten: Blatt 0 (B1) aktuell NUR 0, Marker auf dem Gang:
+         aus 1190 (140,73) · aus 11B0 (165,64) · aus 11D0 (131,123) · Gang-Mitte/Versatz ebenso
+         10A0 Band 4: Blatt 0 aktuell NUR 6
+Punkt 4  1210 (3 Ankuenfte): Blatt 1 aktuell NUR 3, Marker (191,76) (203,85) (210,126)
+         1220 Zellen: aktuell 4 / 6 / 5 / 7 / 8, Marker (199,85) (216,93) (199,101) (216,110) (216,125)
+         Marken Blatt 1 zid 34: 6 (187,74) (201,82) (212,91) (201,99) (212,108) (212,125), alle sichtbar
+integration_map_raum_live: 93 Raeume, 92 sichtbar rot (einzige Ausnahme ROOM5020 Blatt 9, unberuehrt),
+Spieler-Marker in der roten Flaeche 92/92, nie im fremden Raum.
+```
+
+## Tests
+Neu (tests/unit/probes/r35_karte.cmake, Quelle tests/unit/test_r35_karte.c):
+* `unit_r35_karte_fahrstuhl` — echter Weg Etagenraum -> Kabine (betrete = scd_room_reenter ->
+  re15_map_zone_update): Blatt 2/3/4 + aktuell nur rect 9/4/0; mit Bits: dasselbe; 4 Ecken je Etage im
+  GEMALTEN Innenraum (Kachel-Index 1, aus DATA/MAP0x.PIX gelesen) und 180-Grad-Richtung; ohne Bit/Vorraum
+  Blatt 2.
+* `unit_r35_karte_b2` — 11F0 -> rect 1, 1200 -> rect 2, 11E0 -> rect 0, je NUR dieses aktuell, Marker auf
+  gemalter Flaeche; danach rect 1/2 besucht.
+* `unit_r35_karte_r1230` — 1230 und 1180 an 6 Punkten: Blatt 0, NUR rect 0, Marker auf dem gemalten Gang;
+  NICHT Blatt 1; 10A0 Band 4 -> Blatt 0 rect 6.
+* `unit_r35_karte_r1210` — 1210 -> NUR rect 3 (3 Ankuenfte), 5 Zellen -> rect 4/6/5/7/8; JEDE der 6
+  Tuer-AOTs von 1210 (aus g_aot nach dem Laden) hat eine SICHTBARE Marke auf gemalter Wand (Index 4)
+  <= 3 px neben ihrer Projektion mit der Zeile @0x800769b8.
+Gegenprobe (logisch, aus der Messung vorher): alter Stand -> 1080 immer Blatt 2 und Marker y144..146
+ausserhalb des Innenraums (y135..142); 11F0/1200 aktuell 0; 1230 keine Zone/Blatt 1; 1210 aktuell 4 und
+nur 3 Zellentueren -> jeder der vier Riegel waere ROT.
