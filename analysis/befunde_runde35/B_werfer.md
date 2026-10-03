@@ -1112,3 +1112,18 @@ Ursache: re15_damage.c nahm nur w7/w8 in +0x93 |= 0x40 und wiederholte den Waffe
 Platz 5 Redhawk hp -1, Python hp -650 (Platz 2: -850). Beleg (§9.2): @0x80012370-b8, @0x800124fc-1c. Aenderung (§9.3):
 w20 in die Kritklasse (PORT-WAHL §3.5 Punkt 1), HP -1 am Bit. Nachher (§9.4): Python hp -1 an Platz 5 und 2; Unit 130-134
 (Affe: Bit gesetzt, hp > 0) und integration_r35_werfer_form gruen, Gegenprobe `FAIL 131 ... hp 1100 (soll -1)`.
+
+### 9.9 Suite (Nachbesserung 2)
+* Lauf 1 (`local_build.sh all`, Stand 3cd5a00c-Code, 22:04-22:27, Log `re15_port/build/mess_r35b_logs/nb2_suite.log` /
+  `re15_port/build/local_build_ctest.log`): `99% tests passed, 3 tests failed out of 484` — drei ECHTE Folgen von N2, keine
+  Flatter-Haken: `unit_re2_hp_model` (`RE1.5 typ=0x10 w20: hp -1, erwartet 1800 (Schaden 200)` u.a. — der Pin hielt "der
+  RE1.5-Crit bleibt w7-eigen" fest = genau die Luecke N2), `unit_re2_weapon_rows` (Negativ-Kontrolle: w20 mit roher Zeile
+  muesste STUMM bleiben, toetet jetzt per Kritklasse -> `gemessen 6`), `integration_r35_werfer` ([w20] `Python-Schaden am
+  Zombie 2 = 51, erwartet 900` — hp 50 -> -1 statt -850). Nachgezogen (a01371f4 + Kopfzeile): hp_model `R35_KRIT(w)` = 7
+  oder 20 an allen fuenf Crit-Stellen, weapon_rows Negativ-Kontrolle fuer w20 = DEATH erwartet (`<== TOT (Kritklasse,
+  erwartet)`), integration_r35_werfer [w20] erwartet hp -1. Einzeln gefahren: `test_r35_werfer: OK` (jetzt mit 140-149),
+  `test_re2_hp_model: OK`, `test_re2_weapon_rows: OK`, `integration_r35_werfer` Passed 133.93 s (`[w20]: ... Zombie 2 HP 50 ->
+  -1 (ss1=5)`; frei_w15 / frei_w18_1000 / frei_w18_1060 unveraendert: Rakete an der Wand, Vortrieb 2300).
+* Teil I 140-149 (nach Lauf 1 ergaenzt): Form je Typ 1..9 gegen den Port-Zwilling des RE1.5-Handlers
+  (`re15_collision_constrain_contact_band`, Radius 0, Maske 1: innen sperrt der Werfer-Test UND der Handler schiebt, aussen
+  im Zellrechteck weder noch) + Filter (Band 1, u0 Bit 0 frei, u1 Bit 1) — gruen.
