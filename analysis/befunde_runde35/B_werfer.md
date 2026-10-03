@@ -640,9 +640,11 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
    (RE15_INPUT_SCRIPT "W2,S1,W900" + PSELECT_AUTO_SWITCH) mit RE15_DEBUG_JUMP=1000 und den Laeufen aus
    mess_r35b/run_nachladen.sh.
 8. **Pose+0x7AC vs. 0x7A4**: RE2 nimmt die Knochenmatrix bei +0x7AC, RE1.5 bei +0x7A4 — der Port
-   nimmt in beiden Faellen den gerenderten Knochen 11 (R_gunbone/T_gunbone); die RE2-Versatzrichtung
-   (+y Lauf, +x oben) stimmt mit der RE1.5-Muendung ueberein (gemessen: Runden fliegen in Blickrichtung,
-   Aufschlaege an den Zombies vor Leon).
+   nimmt in beiden Faellen den gerenderten Knochen 11 (R_gunbone/T_gunbone). ⛔ BERICHTIGT (Fortsetzung): die
+   Aussage "die RE2-Versatzrichtung (+y Lauf, +x oben) stimmt mit der RE1.5-Muendung ueberein" war nur am
+   ERGEBNIS abgelesen (Aufschlaege an den nahen Zombies) und fuer Leons PL00W0F FALSCH — Befund G1 (§4.1): das
+   Netz ist 35,62 Grad gedreht, die Runden flogen 30 Grad abwaerts. Fuer PL00W0E / PL00W12 / PL04W0F stimmt sie
+   (Netze vermessen, §4.1).
 
 9. **Moebel-Zellen (Typ 1) sperren Werfer-Geschosse wie Waende** (§3.8): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
    Memory reai-v2-quader-modell: "die Hoehe ist die einzige Groesse, die nicht in den Daten steht"). Eine Rakete,
