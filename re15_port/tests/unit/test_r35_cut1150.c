@@ -205,11 +205,14 @@ typedef struct {
      * z-Spanne; ROOM1040: kleinstes z je Aktor (durchs Tor = z < Tor-z). */
     uint8_t kriech[RE15_ACTOR_MAX]; int32_t z_min[RE15_ACTOR_MAX], z_max[RE15_ACTOR_MAX], z_erst[RE15_ACTOR_MAX];
     uint8_t gesehen[RE15_ACTOR_MAX];
+    /* Leons Kopfschuetteln (Plc_neck Modus 4 = Flag-Bit 0x40): erstes/letztes Bild, Gier-Spanne, Neigung. */
+    int neck4_von, neck4_bis; int neck_yaw_min, neck_yaw_max, neck_pitch_min, neck_pitch_max; int steht_auf_von, steht_auf_bis;
 } lauf_t;
 
 static void lauf(lauf_t *L, int max, int bis_tuer)
 {
     memset(L, 0, sizeof *L); L->pl_min_dist_couch = 1 << 30; L->irons_fall_bild = -1;
+    L->neck4_von = L->neck4_bis = L->steht_auf_von = L->steht_auf_bis = -1;
     int letzte_msg = -1;
     for (int f = 0; f < max; f++) {
         frame(0, 0);
@@ -221,6 +224,18 @@ static void lauf(lauf_t *L, int max, int bis_tuer)
         if (!g_scd.message_active) letzte_msg = -1;
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         if (pl->motion == 11 && pl->anim_use_pl00) L->kniet_gesehen = 1;
+        if (pl->neck_flags & 0x40) {
+            if (L->neck4_von < 0) { L->neck4_von = f; L->neck_yaw_min = L->neck_yaw_max = pl->neck_yaw; L->neck_pitch_min = L->neck_pitch_max = pl->neck_pitch; }
+            L->neck4_bis = f;
+            if (pl->neck_yaw < L->neck_yaw_min) L->neck_yaw_min = pl->neck_yaw;
+            if (pl->neck_yaw > L->neck_yaw_max) L->neck_yaw_max = pl->neck_yaw;
+            if (pl->neck_pitch < L->neck_pitch_min) L->neck_pitch_min = pl->neck_pitch;
+            if (pl->neck_pitch > L->neck_pitch_max) L->neck_pitch_max = pl->neck_pitch;
+        }
+        if (L->neck4_bis >= 0 && pl->motion == 11 && pl->anim_use_pl00 && (pl->anim_flags & 0x80)) {
+            if (L->steht_auf_von < 0) L->steht_auf_von = f;
+            if (pl->sub_state_2 != 2) L->steht_auf_bis = f;
+        }
         {
             long dx = pl->x - RE15_IT_COUCH_X, dz = pl->z - RE15_IT_COUCH_Z;
             long d = labs(dx) + labs(dz);
@@ -439,6 +454,8 @@ static void teil_szene(void)
     printf("  Nachrichten:"); for (int i = 0; i < L.n_msgs; i++) printf(" %d", L.msgs[i]); printf("\n");
     PRUEF(L.n_msgs >= 8 && L.msgs[0] == 22 && L.msgs[L.n_msgs-1] == 29, "Nachrichten 22 .. 29 der Reihe nach");
     PRUEF(L.irons_clip5, "Irons Arm ausgestreckt (Clip 5)");
+    printf("  Kopfschuetteln: Bilder %d..%d (%d), Gier %d..%d, Neigung %d..%d; Aufstehen Bilder %d..%d\n", L.neck4_von, L.neck4_bis,
+           L.neck4_bis - L.neck4_von + 1, L.neck_yaw_min, L.neck_yaw_max, L.neck_pitch_min, L.neck_pitch_max, L.steht_auf_von, L.steht_auf_bis);
     PRUEF(L.irons_clip2 && L.irons_fall_bild >= 72, "Irons' Arm faellt: Clip 2 ab Bild %d", L.irons_fall_bild);
     PRUEF(ir->motion == 2 && ir->anim_frame == 89 && ir->sub_state_2 == 2, "Irons tot: Clip 2 Bild 89 gehalten (mo=%d bild=%d ph=%d)", ir->motion, ir->anim_frame, ir->sub_state_2);
     PRUEF(L.raumwechsel && L.ziel == 0x1130 && L.ziel_cut == 0 && L.ziel_x == RE15_IT_PARK_1130_X,

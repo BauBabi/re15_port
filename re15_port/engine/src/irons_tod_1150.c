@@ -121,8 +121,13 @@ static const uint8_t k_p_szene[] = {
     OP_MOTION(0, 10), OP_SLEEP(40), OP_MOTION(0, 10), OP_FLG_REV, OP_SLEEP(40),
     0x41, 0x02, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x01, 0x00, 0x0a,   /* Kopf gesenkt (11B0 @0x0154E) */
     OP_SLEEP(30),
-    0x41, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00,   /* Kopfschuetteln (11B0 @0x0155C) */
-    OP_SLEEP(90),
+    /* Kopfschuetteln LANGSAM (NUTZER-VORGABE "schuettelt ... den Kopf langsam"): Form = 11B0 sub06 @0x0155C
+     * `41 04 03 00 00 00 00 00 64 00` (Modus 4, 3 Schwuenge); die Gier-Rate (pc[8] -> +0x9e @0x80041f5c-6c,
+     * Schritt je Bild @0x800375dc ff.) ist die langsamste ausgelieferte: 0x1e aus ROOM4001 @0x018A4
+     * `41 04 02 00 00 00 00 00 1e 00` (Zensus aller 36 Modus-4-Saetze: 0x1e 2x, 0x3c 14x, 0x5e 6x, 0x60 1x,
+     * 0x64 12x, 0x78 1x). Gemessen (RE15_NECK_TRACE): Rate 100 = 26 Bilder, Rate 30 = 86 Bilder. */
+    0x41, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00,
+    OP_SLEEP(110),
     0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x60,   /* Kopf frei (@0x012D2) */
     OP_SLEEP(20),
     OP_MOTION(1, 11), OP_FLG_REV, OP_SLEEP(40),            /* steht auf (@0x012C6/@0x012CA) */
