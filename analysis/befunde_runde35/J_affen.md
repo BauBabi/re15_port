@@ -243,3 +243,63 @@ Original: orig_scene/r3 (110 Savestates + PNG). Bilder: gdigrab lieferte in dies
   0x13; Sce_em_set @0x80042210), die HP liegt bei +0x9a (@0x80013000). Riegel liest jetzt dog_floor_y.
 - unit_maggot_ai (2f): erwartete den Vergeltungs-Sprung nach JEDEM Flinch (Original). Mit der NUTZER-VORGABE kommt er beim
   3. Treffer; der Teil stellt mag_hit_ctr = RE15_AFFEN_TREFFER_BIS_SPRUNG-1 und misst weiter den Original-Exit +0x5=7.
+
+## Fortsetzung (2. Sitzung, 2026-10-03 ab 15:30) — kritische Gegenpruefung des Stands 2a03f965
+
+Ausgangslage: Baum sauber, 12 wip-Commits, exe vom 11:25. Suite des Vorgaengers wurde um 12:00 vom Sitzungslimit
+abgeschossen (local_build_ctest.log: 398 Passed, ab #399 `Exit code 0xc0000142`). Gegengelesen wurden die Punkte 2-5
+am gebauten Stand gegen die Original-Aufnahme r3 (scratchpad orig_scene/r3, 110 Savestates) — zwei Befunde des
+Vorgaengers halten NICHT:
+
+### G1 — Punkt 3 war NICHT behoben (Bildbeleg) — die Ursache ist Part 18, nicht "weltfest"
+- Bild (scratchpad chk_brust_zoom.png: Original s021 t=36.41 / s022 t=37.92 gegen Port-Lauf A4 F830/F850, Cut 12, Gorilla
+  frontal): der Port zeigt unter dem Kinn eine WEISSE, rot geaderte Trapezplatte auf der Brust, die sich von Bild zu
+  Bild verformt; im Original ist die Brust dort durchgehend braunes Fell. A4 lief NACH dem Fix des Vorgaengers.
+- Original-RAM (Savestate s021_t036.41, Entity 1 = Gorilla, Part-Records entity+0x188 = 0x8016f3b4, Stride 0xac, 22 Stueck,
+  alle word0 = 1 = gezeichnet):
+  - Part 18: rel = **(102,-810,0)**, Elternmatrix = 0x8016f4a0 = **Matrix von Part 1 (Rumpf)**, Eltern-Record = Part 1,
+    Weltmatrix == die von Part 1 (keine eigene Drehung), t = (-4279,-2816,-16899) = T1 + R1*(102,-810,0).
+  - Parts 19/20/21: Elternmatrix 0x80072d4c (Identitaet), t = (75,1,78)/(0,79,1)/(79,1,80) = weltfest am Raumursprung
+    (wie vom Vorgaenger belegt; y 0..+590 = UNTER dem Boden, unsichtbar).
+- Schreiber: der Gorilla-INIT selbst (FUN_80116f50, Schwanz), selbst disassembliert:
+  `80117200 lw v0,392(v0)` (+0x188) / `80117210 addiu v1,v0,236` + `80117214 sw v1,3204(v0)` (rec18.Elternmatrix = &rec1.Matrix,
+  0xac+0x40) / `80117218 addiu v1,v0,172` + `8011721c sw v1,3240(v0)` (rec18.Eltern-Record = rec1) / `80117220 ori v1,zero,0x66`
+  + `80117224 sw v1,3140(v0)` (rel.x = 102) / `80117228 addiu v1,zero,-810` + `8011722c sw v1,3144(v0)` (rel.y = -810) /
+  `80117230 sw zero,3148(v0)` (rel.z = 0) / `80117234-38 sh zero,3192/3194(v0)` + `8011723c jal 0x80068098` (RotMatrix der
+  Null-Winkel -> lokale Identitaet). Roh-Scan aller STAGE*.BIN nach `sw rX,0xc84(rY)` / `sw rX,0xb2c(rY)`: nur der
+  Gorilla-INIT (STAGE1 0x80117214, STAGE3 0x80110fdc, STAGE4 0x8010c67c, STAGE5 0x8010c7fc) — 0x29/0x30 haben KEINE
+  Umhaengung, dort gilt der Binder-Standard (weltfest).
+- Mesh 18 (MD1: 29 Vtx, 2 Tri + 20 Quad, x 43..482 y -82..578 z -391..391, Fell-Textur u 0..23 v 132..180) ist die
+  BRUST-/HALSSCHALE: sie verschliesst die Oeffnung des Rumpf-Meshes. Der Port zeichnete sie erst auf der Wurzelpose
+  (Becken = der "komisch bewegliche Teil"), nach dem Vorgaenger-Fix am Raumursprung — beide Male blieb das Loch offen
+  und man sah von vorn durch die Halsoeffnung auf die Innenseite des weiss geaderten Ruecken-Fells (die Trapezplatte).
+- FIX (folgt): Part 18 des Typs 0x27 haengt an Knochen 1 mit rel (102,-810,0), Rotation = Rumpf; 19..21 bleiben weltfest.
+
+### G2 — Punkt 4: die KI-Gates stimmen, aber die SPIELER-Reaktion auf die Treffer nicht (gemessen)
+- Vergleichslage identisch (Leon ohne Eingabe am Szenen-Endpunkt (-7138,-12372), beide Gorillas frei):
+  Original r3: 1. Treffer t=57.56 (Heavy -12), danach Bisse -6 im ~1,6-s-Takt, **Leon tot bei t=84.88 = 39,4 s nach der
+  Freigabe (t=45.48)**; Leon bleibt dabei im Umkreis von ~500 Einheiten ((-7126,-12368) ... (-6295,-12816)).
+  Port A3 (nach den Fixes des Vorgaengers, scratchpad lauf_a3/state.log, ana_state.py): Freigabe F1070, 1. Treffer F1258,
+  letzter Treffer F2136 (HP 22), danach bis Lauf-Ende F3000 (= 64 s nach der Freigabe) KEIN Treffer mehr, Leon lebt.
+- Zwei Ursachen, beide in der Spieler-Reaktion, beide am Original belegt:
+  (a) HEAVY-KNOCKDOWN: Port F1259-F1277 traegt Leon 4915 Einheiten weit ((-7152,-12350) -> (-4446,-16458), 500/Bild mit
+      Abbau); Original: Leon steht nach demselben Heavy (cmd 2/5, Clip 12) bei (-7126,-12368) = 9 Einheiten Versatz.
+      Savestate s035_t057.56: Spieler +0x8c = 0 (Geschwindigkeit genullt), **+0x9e = 1** (Stopp-Flag), cmd 2/5/1.
+      Mechanismus = FUN_8001c2dc (selbst disassembliert 0x8001c2dc-0x8001c3f8): Band = -(y/1800) (`mult` 0x91a2b3c5
+      @0x8001c2e8-2c), `jal 0x8003b7f0` (@0x8001c340: Zellwort der ersten Zelle des Bandes, deren AABB + Radius den
+      Punkt enthaelt), `andi v0,v1,0x1` @0x8001c37c -> Flag 1; sonst `andi v0,v1,0x2` @0x8001c390 -> Flag 0;
+      sonst `andi v0,v1,0x600` @0x8001c3b0 -> != 0: `sb s4(=1),0(s2)` @0x8001c3c0. Handler [5] (Sturz vorwaerts,
+      0x8003644c): Abbau zuerst (`subu v0,v0,v1` 5*t @0x8003656c-8c), dann `jal 0x8001c2dc` @0x80036594 (a0 = Spieler+0x34,
+      a1 = Box[6] = 450, a2 = &+0x9e), Flag -> `sh zero,-13600(at)` @0x800365b0 (+0x8c = 0), dann `jal 0x800245d8`
+      @0x800365b4. Handler [4] (Sturz rueckwaerts, 0x800360e8): 245d8(0x800) @0x800361fc, DANACH `jal 0x8001c2dc`
+      @0x80036214, Flag -> Phase 5 (Slam) @0x80036228-30. ROOM11C0: ALLE 59 SCA-Zellen tragen floor 2/3/0x13 (Bit 0x200
+      des Wortes); Leons Standort liegt im AABB der Typ-2-Zelle (20199x18187 @(-15400,-13266), floor 2) -> Flag 1
+      (scratchpad sca_q.py). Der Port prueft stattdessen "hat die Wandklemme die Position veraendert" (kd_move) —
+      im AABB einer Schraeg-Zelle, aber auf ihrer freien Seite, schlaegt das nie an.
+  (b) BISS-RICHTUNG: der Biss schreibt cmd 2 und `aca59 = a780(BEISSER)+2` selbst (`jal 0x8001a780` @0x80118488,
+      `addiu v0,v0,2` @0x80118494, `sb v0,-13735(at)` @0x8011849c). Der Port laesst den HP-Abfall-Detektor die Richtung
+      aus dem NAECHSTEN Gegner ableiten (game_step_common.c re15_nearest_hostile) — bei zwei Gorillas der falsche:
+      Port A3 schiebt Leon mit jedem Biss in DIESELBE Richtung ((-5703,-14275) -> (-8495,-10826), 8 Bisse je ~(-350,+330)),
+      bis beide Gorillas an ihren Wandklemmen haengen (Slot 2 bei (-5050,-14635) = exakt der Original-Haltepunkt von G1,
+      Slot 3 bei z=-15477). Im Original wechseln Clip 8/9 (cmd 2/2, 2/3) und Leon pendelt auf der Stelle.
+- FIX (folgt): Knockdown-Stopp ueber die Original-Sonde FUN_8001c2dc ([4] und [5]), Biss-Flinch mit der Richtung des Beissers.
