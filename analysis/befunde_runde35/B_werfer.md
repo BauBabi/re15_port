@@ -1080,8 +1080,10 @@ und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
   den Strecken-Anfang (+0x3C/+0x40) setzen — waere eine PORT-WAHL ohne RE2-Vorbild.
 * NEU 21 — Python-Nachladen ohne Schnelllader-Wurf: RE1.5 wirft beim Nachladen des Redhawk in Bild 10 den Schnelllader
   0x04060800 nur fuer Waffe 7 (Port player_common.c, @0x80033e34-88). Die Python laedt ohne ihn nach. Nicht Teil der
-  Maengel; falls die PORT-WAHL "zweiter Magnum-Revolver" auch das Nachlade-Bild umfassen soll: @0x80033e34-88
-  disassemblieren (Vergleich auf Id 7) und w20 dort aufnehmen.
+  Maengel; selbst gelesen: `lbu v1,-13731(v1)` (gefuehrte Waffe) / `ori v0,zero,0x7` / `bne v1,v0,0x80033e94` @0x80033e34-3c,
+  `lbu v1,-13591(v1)` (0x800acae9 Bild) / `ori v0,zero,0xa` / `bne` @0x80033e48-50, `lui a0,0x406` / `ori a0,a0,0x800`
+  @0x80033e54-58. Falls die PORT-WAHL "zweiter Magnum-Revolver" auch das Nachlade-Bild umfassen soll: w20 im Port-Zweig
+  player_common.c (`re15_player_equipped_weapon() == 7`) aufnehmen.
 * Mess-Hinweis: die wf.log-Spalten `kontakt`/`fuss` der RE2FLUG-Zeilen rechnet `re2fx_boden_sonde` OHNE Formtest
   (Rechteck-Vortest, nur Mess-Harness) — fuer Diagonalzellen zeigen sie den Rechteck-Befund, nicht den Werfer-Test.
 
