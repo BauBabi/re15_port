@@ -15,6 +15,10 @@
  *           einem Schritt in den Slam (Clip 0xf) um.
  *   biss    Punkt 4b: zwei Gorillas, der BEISSER steht hinter Leon, der naehere steht vor ihm -> der Flinch
  *           nimmt die Richtung des Beissers (Clip 9, a780 @0x80118488), nicht die des naechsten Gegners.
+ *   frac    Punkt 4/5: der Crossfade-Zaehler +0x8f des Gorillas baut je anim_set-Aufruf um 1 ab
+ *           (@0x8001f5a8-b4): CHASE-Eintritt setzt 7, nach 7 Bildern steht 0 (Original-Savestates: 7 - Bild).
+ *   anker   Punkt 5: der Pin-Latch (sub 15 Phase 2) setzt den Anker des Gorillas und kopiert ihn an den Spieler
+ *           (FUN_8001ac38 @0x8011ac18, Kopie @0x8001ad30/48) — Leon landet nicht mehr am Raumursprung.
  *   band    ROOM11C0, Kampf-Layout: eine NPC-Laeuferin (Typ 0x42, Sub 5 RUN) mit +0x82 = 2 erreicht
  *           (-18214,-7229) im Streifenwagen (Ankunftsbit 5/1); mit +0x82 = 0 klemmt die Band-0-Zelle
  *           (x <= -17790, FUN_8003b0a4) — die Mechanik des Ada-Befunds.
@@ -507,6 +511,64 @@ static void teil_biss(void)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
+/* Punkt 4/5: +0x8f (anim_frac) des Gorillas baut ab — anim_set FUN_8001f314 @0x8001f5a8-b4. */
+static void teil_frac(void)
+{
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -22604, 14455, 0, 0, 3) != 0) return;
+    re15_actor_t *g = aktor_vom_typ(0x27, 0), *g2 = aktor_vom_typ(0x27, 1);
+    PRUEF(g != NULL, "Gorilla 1 vorhanden");
+    if (!g) return;
+    if (g2) { g2->grid_id |= 0x20; g2->x = 30000; g2->z = 30000; }
+    g->state = 1; g->sub_state_1 = 3; g->sub_state_2 = 0; g->sub_state_3 = 0;      /* CHASE-Eintritt: Clip 4 -> 5, +0x8f = 7 */
+    g->dog_blocked_ctr = 100;                                                     /* kein Biss-Commit waehrend der Messung */
+    int folge[10];
+    for (int f = 0; f < 10; f++) { frame(0, 0); folge[f] = (int)g->anim_frac; }
+    printf("  +0x8f ueber 10 Bilder CHASE:");
+    for (int f = 0; f < 10; f++) printf(" %d", folge[f]);
+    printf("  (Clip %d)\n", (int)g->motion);
+    PRUEF(g->motion == 5, "CHASE laeuft mit Clip 5 (sichtig, @0x80117cdc-e4)");
+    PRUEF(folge[0] == 6 && folge[1] == 5 && folge[5] == 1 && folge[6] == 0 && folge[9] == 0,
+          "+0x8f: 7 am Clip-Setzer, je anim_set -1 (6,5,4,3,2,1,0), dann 0 — Original-Savestates r3: Clip 5 Bild 2 -> 5, Bild 4 -> 3, Bild 5 -> 2");
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Punkt 5: Pin-Latch setzt den Anker (FUN_8001ac38 @0x8011ac18) — Leon bleibt beim Gorilla. */
+static void teil_anker(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -3180, -15263, 2048, 5, 3) != 0) return;
+    re15_actor_t *g = aktor_vom_typ(0x27, 0), *g2 = aktor_vom_typ(0x27, 1);
+    PRUEF(g != NULL, "Gorilla 1 vorhanden");
+    if (!g) return;
+    if (g2) { g2->grid_id |= 0x20; g2->x = 30000; g2->z = 30000; }
+    /* Lage wie im exe-Lauf C1 (F446): Gorilla (-5221,-14988) r87, Leon (-3176,-15263) r2048, Pin verbunden */
+    pl->x = -3176; pl->z = -15263; pl->rot_y = 2048; pl->hp = 64; pl->hit_react = 0;
+    pl->anchor_x = 0; pl->anchor_z = 0;
+    g->x = -5221; g->z = -14988; g->y = 1600; g->rot_y = 87; g->grid_id = 0x10;
+    g->state = 1; g->sub_state_1 = 15; g->sub_state_2 = 2; g->sub_state_3 = 0;      /* PIN-Latch @0x8011abe8 */
+    g->motion = 0x1c; g->anim_frame = 4; g->anim_frac = 0; g->hit_react = 1;
+    frame(0, 0);
+    printf("  nach dem Latch: Gorilla (%d,%d) Anker (%d,%d) | Leon (%d,%d) Anker (%d,%d)\n",
+           (int)g->x, (int)g->z, (int)g->anchor_x, (int)g->anchor_z, (int)pl->x, (int)pl->z, (int)pl->anchor_x, (int)pl->anchor_z);
+    PRUEF(pl->anchor_x == g->anchor_x && pl->anchor_z == g->anchor_z,
+          "Spieler-Anker = Gorilla-Anker (Kopie `sh v0,160(s2)` @0x8001ad30 / `sh v0,162(s2)` @0x8001ad48)");
+    PRUEF(dist2d(g->anchor_x, g->anchor_z, -5221, -14988) < 4000.0 && !(pl->anchor_x == 0 && pl->anchor_z == 0),
+          "Anker liegt am Gorilla (Abstand %.0f), nicht mehr am Raumursprung (0,0)", dist2d(g->anchor_x, g->anchor_z, -5221, -14988));
+    double dmax = 0.0; int am_ursprung = 0;
+    for (int f = 0; f < 140; f++) {
+        frame(0, 0);
+        double d = dist2d(pl->x, pl->z, -5221, -14988); if (d > dmax) dmax = d;
+        if (dist2d(pl->x, pl->z, 0, 0) < 600.0 || dist2d(pl->x, pl->z, -4330, 387) < 600.0) am_ursprung++;
+    }
+    PRUEF(am_ursprung == 0, "Leon steht in 140 Bildern nie am Raumursprung / bei (-4330,387) (vorher: ab dem 1. Pin-Bild, exe-Lauf C1 F447/F480)");
+    PRUEF(dmax < 6500.0, "Leon bleibt waehrend Griff und Wurf beim Gorilla (groesster Abstand %.0f; vorher 15400)", dmax);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -520,6 +582,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "brust")  || !strcmp(teil, "alle")) teil_brust();
     if (!strcmp(teil, "kdsonde")|| !strcmp(teil, "alle")) teil_kdsonde();
     if (!strcmp(teil, "biss")   || !strcmp(teil, "alle")) teil_biss();
+    if (!strcmp(teil, "frac")   || !strcmp(teil, "alle")) teil_frac();
+    if (!strcmp(teil, "anker")  || !strcmp(teil, "alle")) teil_anker();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }
