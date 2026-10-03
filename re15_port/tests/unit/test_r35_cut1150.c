@@ -11,7 +11,7 @@
  * Raum hinterlaesst) und bis zur Tuer-Anforderung (g_room_change) gefahren.
  *
  * Teile (je ein ctest-Eintrag): tuer1060 programme zaehlung szene montage_1130 montage_1040
- * montage_1030 montage_11c0 rueckkehr totenpose */
+ * montage_1040_reihe montage_1030 montage_11c0 rueckkehr totenpose tot_bleibt_tot knallbank */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -653,6 +653,48 @@ static void teil_montage_1040(void)
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
 
+/* ---- Teil: montage_1040_reihe (Nachbesserung 2 M1) ------------------------------------------------
+ * Der Spieler toetet die Raum-Zombies von ROOM1040 in SPAWN-Reihenfolge: das Gleichzeitig-Limit 5 (Save(0x12,5)
+ * @0x011F0, Gate @0x80042214-3c) zeigt immer die fuenf niedrigsten lebenden Records (Tot-Bit-Gate @0x80042128-38 vorher,
+ * ohne Zaehler). Abnahme 1 (exe): Records 0..11 tot -> 3 Zombies, 0..14 tot -> 0 (Kappe), 0..17 tot -> 3. Ursache: Record
+ * i hat Sce_em_set-Slot i (@0x011FD / @0x01391 + 20 i), der Port fuehrt Slot i als Aktor i+1 und verwirft Aktor >= 16
+ * (RE15_ACTOR_MAX) - Records 15..19 belegen einen Platz des Limits, erscheinen aber nie.
+ * Je k = 0..20 (Records 0..k-1 tot): Szene in 1150 (umzug_vorbereiten ueber den echten Haken), dann 1040: fuenf Zombies
+ * hinter dem Tor; fuer die Faelle der Abnahme (12/15/18) die ganze Montage mit Durchgang und Spieler-HP. */
+static void reihe_fall(int k, int tor_offen, int voll)
+{
+    char fall[64];
+    snprintf(fall, sizeof fall, "%d tot (Records 0..%d), Tor %s", k, k - 1, tor_offen ? "offen" : "zu");
+    szene_flags();
+    for (int i = 0; i < k; i++) re15_game_flag_set(7, (uint8_t)(0x14 + i), 1);
+    if (tor_offen) { re15_game_flag_set(4, 5, 1); re15_game_flag_set(4, 4, 1); }
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1150, -17150, -11960, 1600, 0) != 0) return;
+    PRUEF(re15_irons_tod_zustand() == RE15_IT_SZENE, "%s: Szene in 1150 gestartet (Umzug vorbereitet)", fall);
+    re15_game_flag_set(9, 73, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_S1130);
+    re15_irons_tod_bilanz_reset();
+    if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) != 0) return;
+    frame(0, 0);
+    PRUEF(aktive_gegner(0x16) == 5, "%s: %d Zombies nach dem ersten Takt (Gleichzeitig-Zaehler %d)", fall, aktive_gegner(0x16),
+          (int)g_scd.work_vars[0x11]);
+    aufstellung_pruefen(fall);
+    if (!voll) return;
+    lauf_t L; lauf(&L, RE15_IT_1040_KAPPE + 200, 1);
+    durchgang_pruefen(fall, &L);
+    PRUEF(L.raumwechsel && L.ziel == 0x1030, "%s: Schnitt nach ROOM1030 nach %d Bildern", fall, L.bilder);
+}
+static void teil_montage_1040_reihe(void)
+{
+    printf("== montage_1040_reihe ==\n");
+    for (int k = 0; k <= 20; k++) {
+        int voll = (k == 12 || k == 15 || k == 18);
+        reihe_fall(k, 0, voll);
+        if (k == 15) reihe_fall(k, 1, 1);          /* derselbe Stand mit schon offenem Tor */
+    }
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+}
+
 /* Die drei Zusatz-Zombies (erschienen bei z -24800 im Warte-Rechteck Slot 5 @0x01CF2) muessen das Kriech-Bit
  * bekommen haben (sub09 @0x0280A..@0x02814: member 0x10 |= 0x1000 -> Kriech-Wurzel grid&0xf == 1) und bis
  * zum Schnitt durchs Tor sein: z > -22500 = im Rechteck VOR dem Tor (Slot 4 @0x01CDE z -22500..-20300). */
@@ -905,6 +947,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "szene") || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "montage_1130") || !strcmp(teil, "alle")) teil_montage_1130();
     if (!strcmp(teil, "montage_1040") || !strcmp(teil, "alle")) teil_montage_1040();
+    if (!strcmp(teil, "montage_1040_reihe") || !strcmp(teil, "alle")) teil_montage_1040_reihe();
     if (!strcmp(teil, "montage_1030") || !strcmp(teil, "alle")) teil_montage_1030();
     if (!strcmp(teil, "montage_11c0") || !strcmp(teil, "alle")) teil_montage_11c0();
     if (!strcmp(teil, "rueckkehr") || !strcmp(teil, "alle")) teil_rueckkehr();
