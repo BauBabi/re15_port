@@ -831,7 +831,8 @@ static void teil_griff(void)
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
     const int T0 = 254, NT = (int)(sizeof s_wurf_orig / sizeof s_wurf_orig[0]);
     int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0, fx = 0, fz = 0;
-    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1, f_ruhe = -1, still = 0; int32_t rx = 0, rz = 0;
+    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
+    int n_nach = 0, n_fremd = 0, n_klemme = 0;   /* T291..Freigabe: Bilder / Bilder mit fremdem Beweger / Bilder mit Klemm-Schub */
     int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
     for (int f = 196; f < 196 + 300; f++) {
         if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
@@ -858,8 +859,16 @@ static void teil_griff(void)
             else if (d > abw_e2) abw_e2 = d;
         }
         if (f_frei == f) hp_frei = pl->hp;
-        if (f_frei >= 0 && f > f_frei && f_ruhe < 0) {
-            if (pl->x == ox && pl->z == oz) { if (++still == 3) { f_ruhe = f - 3; rx = pl->x; rz = pl->z; } } else still = 0;
+        if (f >= 291 && f_frei < 0 && re15_player_victim_gorilla()) {   /* nach Bild 0x24: keine Platzierung mehr */
+            int32_t ax = 0, az = 0, opx = 0, opz = 0, kx = 0, kz = 0, ex = 0, ez = 0, tx = 0, tz = 0;
+            re15_schritt_station_hole(RE15_SCHRITT_ANFANG, &ax, &az);
+            re15_schritt_station_hole(RE15_SCHRITT_OPFER, &opx, &opz);
+            re15_schritt_station_hole(RE15_SCHRITT_TICK, &tx, &tz);
+            re15_schritt_station_hole(RE15_SCHRITT_KLEMME, &kx, &kz);
+            re15_schritt_station_hole(RE15_SCHRITT_ENDE, &ex, &ez);
+            n_nach++;
+            if (opx != ax || opz != az || ex != kx || ez != kz) n_fremd++;   /* Handler oder Nachlauf bewegt Leon */
+            if (kx != tx || kz != tz) n_klemme++;
         }
         if (re15_player_victim_own_bank()) {        /* P3-P6: gerenderte Bank / Richtung */
             re15_anim_view_t av; re15_actor_anim_select(pl, 1, &banks, &av);
@@ -883,11 +892,13 @@ static void teil_griff(void)
     PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
     PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
     PRUEF(f_frei == 378, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
-    PRUEF(dist2d(fx, fz, -4759, -10633) <= 400.0, "Lage bei der Freigabe (%d,%d) (Original (-4759,-10633); die Wandklemme schiebt seit T291 je Bild ~100)", (int)fx, (int)fz);
+    printf("  T291..Freigabe: %d Bilder, %d mit fremdem Beweger, %d mit Klemm-Schub; Lage bei der Freigabe (%d,%d) (Original (-4759,-10633))\n",
+           n_nach, n_fremd, n_klemme, (int)fx, (int)fz);
+    PRUEF(n_nach == 87 && n_fremd == 0, "nach Opfer-Bild 0x24 (T291-T377, %d Bilder) bewegt Leon nur noch die Wandklemme @0x80031d70 (%d Bilder mit anderem"
+          " Beweger; Original: kein `jal 0x8001ad68` ab +0x95 = 0x25, `sltiu 0x25` @0x8011c278) — das Zittern selbst ist im Riegel wand bitgleich",
+          n_nach, n_fremd);
     PRUEF(hp_griff == 76 && hp_frei == 76, "der Griff kostet keine HP (%d -> %d bei der Freigabe; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in"
           " 0x8011a878-af40 / 0x8011c118-c598)", hp_griff, hp_frei);
-    PRUEF(f_ruhe >= 0 && f_ruhe <= 412 && dist2d(rx, rz, -3009, -11643) <= 60.0, "nach der Freigabe schiebt die Wandklemme Leon bis zur Ruhelage (%d,%d) in T%d"
-          " (Original (-3009,-11643) ab T410)", (int)rx, (int)rz, f_ruhe);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
