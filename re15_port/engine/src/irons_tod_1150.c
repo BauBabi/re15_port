@@ -812,13 +812,16 @@ static void mess_zeile(void)
 }
 
 /* BILANZ (Nachbesserung 1 M4 — nur Zaehlen/Protokoll, kein Spielverhalten): waehrend des 1040-Schritts je Aktor
- * das erste Bild mit z < Tor-z (Rolltor-Objekt main00 @0x01168 `2d 00 .. 90 9d 00 00 98 fe` = (-25200,0,-360));
+ * das erste Bild mit z < Tor-z (Rolltor-Objekt main00 @0x01168 `2d 00 .. 90 9d 00 00 98 fe` = (-25200,0,-360)),
+ * NACHDEM er hinter dem Tor (z >= Tor-z) gesehen wurde = ein echter Durchgang (gemessen Lauf n1_offen: Record
+ * @0x01224 steht in Bild 1 noch an seinem Raum-Platz z -11126 vor dem Tor, die Aufstellung folgt im Programm);
  * ueber die ganze Kette (Szene .. Rueckkehr) die Spieler-HP (Start und Minimum). Ausgabe im debug.log beim
  * Wechsel 1040 -> 1030 bzw. am Ende der Rueckkehr; die Riegel lesen dieselben Zahlen ueber
  * re15_irons_tod_bilanz_1040 / re15_irons_tod_hp. */
 static int     s_b1040_bild = 0, s_b1040_n = 0;
 static int16_t s_b1040_durch[RE15_ACTOR_MAX];
 static uint8_t s_b1040_da[RE15_ACTOR_MAX];
+static uint8_t s_b1040_hinten[RE15_ACTOR_MAX];
 static int     s_hp_start = -1, s_hp_min = 0;
 
 static void bilanz_takt(void)
@@ -829,13 +832,14 @@ static void bilanz_takt(void)
         if (pl->hp < s_hp_min) s_hp_min = pl->hp;
     }
     if (s_zustand != RE15_IT_S1040 || (uint16_t)g_current_room_id != RE15_IT_RAUM_1040) return;
-    if (s_b1040_bild == 0) { s_b1040_n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; } }
+    if (s_b1040_bild == 0) { s_b1040_n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; s_b1040_hinten[i] = 0; } }
     s_b1040_bild++;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *a = &g_actors[i];
         if (!a->active || a->type != 0x16) continue;
         if (!s_b1040_da[i]) { s_b1040_da[i] = 1; s_b1040_n++; }
-        if (s_b1040_durch[i] < 0 && a->z < RE15_IT_TOR_Z_1040) s_b1040_durch[i] = (int16_t)s_b1040_bild;
+        if (a->z >= RE15_IT_TOR_Z_1040) s_b1040_hinten[i] = 1;
+        else if (s_b1040_hinten[i] && s_b1040_durch[i] < 0) s_b1040_durch[i] = (int16_t)s_b1040_bild;
     }
 }
 
@@ -858,7 +862,7 @@ void re15_irons_tod_hp(int *out_start, int *out_min)
 void re15_irons_tod_bilanz_reset(void)
 {
     s_b1040_bild = 0; s_b1040_n = 0; s_hp_start = -1; s_hp_min = 0;
-    for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; }
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; s_b1040_hinten[i] = 0; }
 }
 
 static void bilanz_1040_melden(void)
