@@ -283,6 +283,27 @@ Halte-Bild Leon = Arm + 1; (3) Gesicht-Griff: 0 von 44 Halte-Bildern mit Hand < 
 (Minimum 170). Ruecken-Griff gemessen und protokolliert (24 von 44, s. OFFEN).
 `unit_1210_arme_re2` angepasst und gruen. Mess-Sonde `probe_r35_raeume_arme` (kein add_test).
 
+---
+
+## Fuer den Nutzer
+* **Sprachdateien (neu, optional — ohne Datei laeuft der Text stumm mit Untertitel):**
+  * `synchro/STAGE1/room1190/main06.wav` — Leon: "This target has a surprisingly large number of bullet holes."
+  * `synchro/STAGE1/room1190/main07.wav` — Leon: "This target does not have many bullet holes."
+  (Seite 2 der Nachricht ist der unveraenderte Originaltext des Platzes, ohne Stimme.)
+* **Neue Assets fuer das Paket-/Android-Gate:** keine (alles im Code, keine Datei unter shared_assets/).
+* **Bedienung / was man sieht:**
+  * ROOM1190: an den vier Scheiben-Schaltern (Kabinen 1..4, von links) kommt zuerst der Scheiben-Satz, dann wie
+    bisher "There's a switch here. Push it?" (bzw. nach den Hunden "I have nothing else to do here.").
+    Scheibe 1 und 3 von links = viele Einschuesse = genau die beiden Scheiben, die fuer Leons Raetsel vorn
+    stehen muessen.
+  * ROOM1190 Hunde: beim Sprung durch die Luke haengt kein Schatten mehr in der Luft (er liegt am Raumboden).
+  * ROOM1200: der Zombie von der Bahre faellt beim Herunterlaufen an der Kante auf den Boden und kommt auf
+    Leons Ebene (in beiden KI-Einstellungen).
+  * ROOM1210: Leon wird beim Griff an die Stelle gestellt, die das RE2-Original nimmt; von vorn gegriffen
+    steckt keine Zombiehand mehr in seinem Oberkoerper. Von hinten gegriffen bleibt Ueberschneidung (OFFEN 1).
+* **Messschienen (env, kein Spielverhalten):** `RE15_HUNDESCHATTEN_LOG=<datei>`, `RE15_GEGNER_Y_LOG=<datei>`,
+  `[re2arm] PIN` in re2_ki.log bei `RE15_RE2_TRACE=1`.
+
 ## OFFEN
 1. **ROOM1210 Ruecken-Griff (Punkt 4):** greift der Arm Leon, waehrend Leon vom Fenster wegschaut, dreht der
    Hook ihn mit dem Ruecken zum Arm (FUN_80015910 = 1 -> +2048 @0x80101304-18). Mit dem einzigen Opfer-Clip 0
