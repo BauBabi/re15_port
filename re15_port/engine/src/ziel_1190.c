@@ -113,24 +113,38 @@ static int ablegen(int slot, unsigned orig_msg)
     return (int)id;
 }
 
+/* EIGENE Ja/Nein-Nachricht offen (Park-Phase). Noetig, weil work_vars[0] nur EIN Bild lang den
+ * Slot traegt: der VM-Schwanz wischt [0..3] jedes Bild auf -1 (FUN_8003ebf4, Port scd_vm.c
+ * `g_scd.work_vars[0] = -1`), das Wiederbetreten des geparkten Opcodes sieht also -1. */
+static uint8_t  s_offen;
+static unsigned s_offen_raum;
+
 int re15_ziel1190_message_on(const uint8_t *pc, uint32_t pause_mask)
 {
     if (!pc || pc[1] != RE15_ZIEL1190_MSG_SCHALTER) return 0;
-    const int slot = re15_ziel1190_slot();
-    if (slot < 0) return 0;
+    if (s_offen && s_offen_raum != (unsigned)g_current_room_id) s_offen = 0;   /* Raum gewechselt */
+    /* g_scd neu aufgebaut (scd_room_reenter memset't g_scd -> message_query 0): Latch verfallen.
+     * Im Normalfall bleibt message_query bis zum Ende 1 (nur der Park-Zweig setzt es zurueck). */
+    if (s_offen && g_scd.message_query == 0) s_offen = 0;
     /* Park-Semantik = der Ja/Nein-Zweig von op_message_on (scd_vm.c): erstes Betreten oeffnet
      * blockierend, danach parken bis das FSM fertig ist (Antwort steht dann in (12,31)). */
-    if (g_scd.message_query == 0 && !g_scd.message_fsm_active) {
-        const int id = ablegen(slot, RE15_ZIEL1190_MSG_SCHALTER);
-        if (id < 0) return 0;                          /* Original-Weg bleibt */
-        re15_dialog_open_mask(id, 1, pause_mask);
-        g_scd.message_arg2 = pc[2];
-        g_scd.message_arg3 = pc[3];
-        return 2;
+    if (s_offen) {
+        if (g_scd.message_active) return 2;
+        s_offen = 0;
+        g_scd.message_query = 0;
+        return 1;
     }
-    if (g_scd.message_active) return 2;
-    g_scd.message_query = 0;
-    return 1;
+    const int slot = re15_ziel1190_slot();
+    if (slot < 0) return 0;
+    if (g_scd.message_query != 0 || g_scd.message_fsm_active) return 0;   /* Original-Zweig entscheidet */
+    const int id = ablegen(slot, RE15_ZIEL1190_MSG_SCHALTER);
+    if (id < 0) return 0;                              /* Original-Weg bleibt */
+    re15_dialog_open_mask(id, 1, pause_mask);
+    g_scd.message_arg2 = pc[2];
+    g_scd.message_arg3 = pc[3];
+    s_offen = 1;
+    s_offen_raum = (unsigned)g_current_room_id;
+    return 2;
 }
 
 int re15_ziel1190_show(uint8_t index, uint32_t pause_mask)

@@ -10,3 +10,13 @@ target_compile_definitions(test_r35_raeume_hundeschatten PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r35_raeume_hundeschatten COMMAND test_r35_raeume_hundeschatten)
 set_tests_properties(unit_r35_raeume_hundeschatten PROPERTIES TIMEOUT 60)
+
+# Punkt 2: Zielscheiben-Texte ROOM1190/1191 (echter Raumaufbau, Aktion am Platz, Text-FSM, drei
+# Raumzustaende Strom aus / Strom an / nach Hunden, Gegenprobe ohne work_vars-Stempel).
+add_executable(test_r35_raeume_ziel test_r35_raeume_ziel.c)
+target_link_libraries(test_r35_raeume_ziel PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r35_raeume_ziel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r35_raeume_ziel PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r35_raeume_ziel COMMAND test_r35_raeume_ziel)
+set_tests_properties(unit_r35_raeume_ziel PROPERTIES TIMEOUT 60)
