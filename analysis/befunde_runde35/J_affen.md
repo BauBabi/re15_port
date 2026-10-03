@@ -520,3 +520,19 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   unter denselben Regeln stabil. Im Original r3 stand G1 nach demselben Knockdown am selben Haltepunkt
   (-5042,-14629), Leon bei (-7097,-12368) = Abstand 3055 — und G1 committete trotzdem ~6 Bilder VOR dem
   ersten Biss von G2. Wie er in den Bogen kam, klaert die Einzelbild-Spur ab s036 (oC/oD, laeuft).
+
+### M5 — Haken in gemeinsamen Dateien auf 1-2 Zeilen je Stelle (erledigt, gebaut, 13/13 Riegel gruen)
+- Ursache: Begruendungs-Kommentare und Logik standen inline in den gemeinsamen Dateien.
+- Messung vorher (Abnahme, `git diff master -U0`): enemy_ai_common.c +97/-12 (16 Hunks, 7 davon > 5 Zeilen),
+  game_step_common.c +33 (kd_move +14/-10), main.c +17 (Hunks +11 / +5).
+- Aenderung: Logik nach engine/src/affen_11c0.c verschoben — re15_affen_pose_abfrage (Fuss-Sperre als
+  Abfrage), re15_affen_fuss_log (Mess-Schiene RE15_AFFEN_FUSS, vorher 10 Zeilen Datei-Log im Spiel-Code),
+  re15_affen_pin_anker (FUN_8001ac38 @0x8011ac18), re15_affen_teil_weltfest (Zeichner-Regel 2c). Die
+  Begruendungen (mit allen Adressen) stehen jetzt in include/re15_affen.h (4c)-(4f), (5); an der Stelle
+  bleibt eine Zeile mit Adresse und Verweis. kd_move wieder in der Vor-Runde-35-Form, nur die Urteils-Zeile
+  ist die Sonde (`int wall = re15_affen_kd_sonde(...)` @0x80036214); [5] 3 Zeilen (Decel, Sonde, Vorschub).
+  Der Biss-Kommentar des Originals (audit #17) ist wiederhergestellt.
+- Messung nachher (`git diff master -U0`): enemy_ai_common.c **+17/-9 in 15 Hunks, keiner > 2 Zeilen**;
+  game_step_common.c **+4/-2** (4 Hunks); main.c **+5** (1 include + 2x2); actor_common.c +2/-2;
+  scd_vm.c +1; emd_common.c +2. Verhalten unveraendert: `ctest -R "r35_affen|^unit_member$|^unit_maggot_ai$"`
+  13/13 gruen.

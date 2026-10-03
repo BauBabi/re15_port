@@ -4,7 +4,13 @@
  */
 #include "re15_affen.h"
 #include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
+#include "re15_enemy.h"         /* re15_enemy_find (Bank: re2_rig, Skelett/Clips des Gorillas) */
+#include "re15_enemy_ai.h"      /* re15_clip_anchor_set_pub */
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z);   /* enemy_ai_common.c */
 
 /* (1) NPC-Wandklemme: FUN_8003b0a4 vergleicht `entity+0x82` mit `floor >> 4` der Zelle
  *     (`lbu v1,130(a3)` @0x8003b228-3c; Zonen-Zwilling `sra v0,v0,28` @0x8003ba04). Das Byte wird
@@ -32,6 +38,51 @@ int re15_affen_surplus_part_world(const re15_emd_skeleton_t *sk, int part,
     for (int k = 0; k < 3; k++)
         trans[k] = (int32_t)(int16_t)((uint16_t)p[2*k] | ((uint16_t)p[2*k + 1] << 8));
     return 1;
+}
+
+/* (2c) Zeichner-Haken (main.c): Regel (2b) ausser fuer G5-Kinder, RE2-Banken und den Gorilla-Part 18. */
+int re15_affen_teil_weltfest(uint8_t type, const re15_emd_skeleton_t *sk, int part,
+                             int32_t rot[9], int32_t trans[3])
+{
+    if (type == 0x36u || type == 0x37u) return 0;                     /* G5-Kinder: eigene Regel in main.c */
+    if (type == 0x27u && part == RE15_AFFEN_BRUST_PART) return 0;     /* (2a) am Rumpf (@0x80117200-3c) */
+    const re15_enemy_bank_t *b = re15_enemy_find(type);
+    if (b && b->re2_rig) return 0;                                    /* RE2-Banken: eigene Regel */
+    return re15_affen_surplus_part_world(sk, part, rot, trans);
+}
+
+/* (4d) Fuss-Sperre: Pose als ABFRAGE (ohne Pose-Aktor/Tween), Zustand danach zurueck. */
+int re15_affen_pose_abfrage(const re15_emd_skeleton_t *sk, int kf, re15_skel_pose_t *pose)
+{
+    void *pa = g_anim_pose_actor; re15_kf_tween_t tw = g_anim_kf_tween;
+    g_anim_pose_actor = NULL; g_anim_kf_tween.active = 0;
+    int rc = re15_skel_compute_pose(sk, kf, pose);
+    g_anim_pose_actor = pa; g_anim_kf_tween = tw;
+    return rc;
+}
+
+/* MESS-SCHIENE (kein Spielverhalten): RE15_AFFEN_FUSS=1 -> affen_fuss.log, je Fuss-Sperren-Schritt. */
+void re15_affen_fuss_log(int slot, int clip, int bild, int bone, int kf_n, int kf_p,
+                         int32_t dx, int32_t dz, int16_t rot_y)
+{
+    static int an = -1; static FILE *lf = NULL;
+    if (an < 0) { an = (getenv("RE15_AFFEN_FUSS") != NULL); if (an) lf = fopen("affen_fuss.log", "w"); }
+    if (!lf) return;
+    const re15_actor_t *pa = (const re15_actor_t *)g_anim_pose_actor;   /* unveraendert durch die Abfrage */
+    fprintf(lf, "slot=%d clip=%d bild=%d bone=%d kf=%d/%d d=(%d,%d) rot=%d poseaktor=%d frac=%d tween=%d\n",
+            slot, clip, bild, bone, kf_n, kf_p, (int)dx, (int)dz, (int)rot_y,
+            pa ? (int)(pa - g_actors) : -1, pa ? (int)pa->anim_frac : -1, (int)g_anim_kf_tween.active);
+    fflush(lf);
+}
+
+/* (5) Pin-Latch: FUN_8001ac38(a0 = Spieler) @0x8011ac18 — Anker des Greifers, Kopie an den Spieler. */
+void re15_affen_pin_anker(re15_actor_t *e, re15_actor_t *pl)
+{
+    re15_enemy_bank_t *gb = re15_enemy_find(0x27);
+    if (gb && gb->ok) re15_clip_anchor_set_pub(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+    else { e->anchor_x = e->x; e->anchor_z = e->z; }
+    pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;       /* @0x8001ad30 / @0x8001ad48 */
+    re15_victim_anchor_calibrate(pl->x, pl->z);                   /* Port-Wandklemme: Bezug = Standpunkt */
 }
 
 /* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50

@@ -10191,11 +10191,8 @@ re_title:;
                                   r0->rot[rr*3+2]*g5o[2]) >> 12);
                         np = &np_kind;
                     }
-                    /* Runde 35 Spur J (re15_affen.h (2a)): Gorilla-Part 18 (Brustschale) haengt am
-                     * Rumpfknochen 1, rel (102,-810,0) — INIT-Schwanz @0x80117200-3c. */
-                    int affe_fest = (nbi >= npc_bones && !npc_remap &&
-                                     re15_affen_part_attach(npc->type, nbi, npc_poses, npc_bones, &np_kind));
-                    if (affe_fest) np = &np_kind;
+                    if (nbi >= npc_bones && !npc_remap && re15_affen_part_attach(npc->type, nbi, npc_poses, npc_bones, &np_kind))
+                        np = &np_kind;   /* Runde 35 Spur J: Gorilla-Part 18 am Rumpf @0x80117200-3c (re15_affen.h (2a)) */
                     /* ---- G5-ENDKAMPF: 2-BONE-SKINNING (Phase 2, birkin-g5.md 2.2b/4.2.1) ----
                      * Mesh 0 des Bosses (Kopf+Rumpf) haengt im Original NICHT starr an Bone 0:
                      * FUN_800197f4 (@0x80103b70/84) schreibt je Frame die gewichtete Mischung
@@ -10251,17 +10248,8 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
-                    /* Runde 35 Spur J (re15_affen.h (2b)): ein RE1.5-Mesh OHNE Knochen haengt im
-                     * Binder FUN_8001e5b0 an &DAT_80072d4c (Identitaet, kein Entity-Link) und steht
-                     * weltfest bei EMR[8+6i] — nicht auf der Wurzelpose. Ausnahme: der vom INIT
-                     * umgehaengte Gorilla-Part 18 (affe_fest, oben). RE2-Banken (re2_rig) und die
-                     * G5-Kinder bleiben bei ihrer eigenen Regel oben. */
-                    if (nbi >= npc_bones && !npc_remap && !affe_fest &&
-                        npc->type != 0x36u && npc->type != 0x37u) {
-                        const re15_enemy_bank_t *tbJ = re15_enemy_find(npc->type);
-                        if (!(tbJ && tbJ->re2_rig))
-                            (void)re15_affen_surplus_part_world(npc_skel, nbi, nyawed_rot, nbone_world_trans);
-                    }
+                    if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
+                        (void)re15_affen_teil_weltfest(npc->type, npc_skel, nbi, nyawed_rot, nbone_world_trans);
                     /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die
                      * PART-SICHT des finalen Birkin (Typ 0x36) — welche nbi laufen
                      * und wo jeder Part in WELT-Y landet (Blob-Bodenkontakt!). */

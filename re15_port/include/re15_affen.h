@@ -114,4 +114,45 @@ int      re15_affen_kd_sonde(const re15_rdt_t *rdt, int32_t x, int32_t y, int32_
  *      Clip 8 (frontal) / [3] Clip 9 (von hinten). */
 uint8_t  re15_affen_biss_clip(const re15_actor_t *e, const re15_actor_t *pl);
 
+/* (2c) Welttransformation eines Parts ohne Knochen fuer den Zeichner (main.c-Haken): wie (2b), aber
+ *      NICHT fuer die G5-Kinder 0x36/0x37 (eigene Regel), NICHT fuer RE2-Banken (re2_rig) und NICHT fuer
+ *      den vom Gorilla-INIT umgehaengten Part 18 (2a). Rueckgabe 1 = rot/trans ueberschrieben. */
+int      re15_affen_teil_weltfest(uint8_t type, const re15_emd_skeleton_t *sk, int part,
+                                  int32_t rot[9], int32_t trans[3]);
+
+/* (4c) CROSSFADE +0x8f: anim_set FUN_8001f314 (a3 = 0x200 an jeder Gorilla-Site, z.B. `jal 0x8001f314`
+ *      @0x80117d6c) zieht +0x8f je Aufruf um 1 (`lbu v0,143(v1)` @0x8001f5a8, `addiu v0,v0,-1` @0x8001f5b0,
+ *      `sb v0,143(v1)` @0x8001f5b4; nur bei +0x8f != 0, `bne v1,zero` @0x8001f540). Der Port baute ihn nie
+ *      ab (gemessen affen_fuss.log frac=7 in 849/887 Bildern; Original r3: +0x8f = 0 in 55/66 Proben).
+ *      Haken: enemy_ai_common.c re15_maggot_anim (1 Zeile).
+ *
+ * (4d) FUSS-SPERRE ALS ABFRAGE: re15_maggot_footlock posiert zwei Keyframes nur, um den Locator-Versatz zu
+ *      lesen. g_anim_pose_actor zeigt dabei noch auf den zuletzt GEZEICHNETEN Aktor (gemessen Slot 3, frac 7)
+ *      -> beide Posen wurden gegen DESSEN Vor-Pose gemischt; Folge +52..-83 statt +8..+125 je Bild, der
+ *      Gorilla kroch auf der Stelle. Abfrage = ohne Pose-Aktor und ohne Tween (Muster
+ *      re15_enemy_bone_world_pos); der Zustand wird danach wiederhergestellt. Rueckgabe = die von
+ *      re15_skel_compute_pose. Mess-Schiene RE15_AFFEN_FUSS=1 -> affen_fuss.log (re15_affen_fuss_log). */
+int      re15_affen_pose_abfrage(const re15_emd_skeleton_t *sk, int kf, re15_skel_pose_t *pose);
+void     re15_affen_fuss_log(int slot, int clip, int bild, int bone, int kf_n, int kf_p,
+                             int32_t dx, int32_t dz, int16_t rot_y);
+
+/* (4e) LEAP-FLUG OHNE 245d8: jeder Pfad der Phase 2 (0x80118b14) springt in den Epilog 0x80118dc4 —
+ *      Landung `j 0x80118dc4` @0x80118cc0, Bild != 0x13 `bne ..,0x80118dc4` @0x80118cdc, Finisher-Gates
+ *      @0x80118cf8/d0c/d20/d3c, Commit `j 0x80118dc4` @0x80118d6c. `jal 0x800245d8` @0x80118dbc erreichen nur
+ *      Phase 0/1 (Anlauf) und Phase 3 (`beq v0,zero,0x80118dbc` @0x80118d84). Port vorher: c1a4 + 245d8(0)
+ *      je Flugbild = doppelte Flugweite (Lauf B: 12700 in 40 Bildern). Haken: Zeile entfernt.
+ *
+ * (4f) SPAWN-WURZELAUFRUF: Sce_em_set ruft die Typ-Wurzel einmal mit geloeschtem Bit 0x20
+ *      (`andi v0,v1,0xdf` @0x8004256c, `jalr 0x80072bac[typ]` @0x8004259c, Bit zurueck @0x80042604-08) —
+ *      auch fuer den Gorilla: sein INIT (HP 180, Scale 0x1b33 @0x80117148, Flag 0x800, Zustand 1) laeuft im
+ *      Spawn-Bild, auch fuer die eingefrorenen Szenen-Records (ROOM11C0 grid 0x30; Original-Savestate
+ *      t=6.11: st=1, +0x166=0x1b33, flags 0x801). Haken: enemy_ai_common.c re15_enemy_spawn_root. */
+
+/* (5) PIN-LATCH-ANKER: der Pin-Latch (@0x8011abe8) ruft `jal 0x8001ac38` @0x8011ac18 mit a0 = Spieler.
+ *     FUN_8001ac38: Anker des GREIFERS = Lage - rot(off[kf des laufenden Clips/Bildes]) (@0x8001ac6c-ad18),
+ *     dann KOPIE an den Spieler (`sh v0,160(s2)` @0x8001ad30, `sh v0,162(s2)` @0x8001ad48). Der Port
+ *     kommentierte den Aufruf nur: Leons Anker blieb (0,0) -> Opfer-Platzierung am Raumursprung (Lauf C1
+ *     F447). Zusaetzlich: Bezugspunkt der Port-Wandklemme re15_victim_place = Standpunkt beim Zupacken. */
+void     re15_affen_pin_anker(re15_actor_t *e, re15_actor_t *pl);
+
 #endif /* RE15_AFFEN_H */

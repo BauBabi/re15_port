@@ -8680,13 +8680,7 @@ static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the re
     uint8_t c = e->motion; int fc = (c < 29) ? s_maggot_clip_len[c] : 1; if (fc < 1) fc = 1;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
-    /* Runde 35 Spur J: anim_set (FUN_8001f314, a3 = 0x200 an jeder Gorilla-Site, z.B. `jal 0x8001f314`
-     * @0x80117d6c) zieht den Crossfade-Zaehler +0x8f je Aufruf um 1 (`lbu v0,143(v1)` @0x8001f5a8,
-     * `addiu v0,v0,-1` @0x8001f5b0, `sb v0,143(v1)` @0x8001f5b4). Ohne den Abbau blieb er auf der 7
-     * jedes Clip-Setzers stehen (gemessen: affen_fuss.log frac=7 in 849 von 887 Bildern; Original-
-     * Savestates r3: +0x8f = 0 in 55 von 66 Proben, sonst 7 - Bild) -> der Renderer mischte dauerhaft
-     * 7/8 der Vor-Pose bei (Gorilla-Animation mit Bruchteil der Amplitude, auch der Brustschlag). */
-    if (e->anim_frac > 0) e->anim_frac--;
+    if (e->anim_frac > 0) e->anim_frac--;   /* Runde 35 Spur J: +0x8f-Abbau @0x8001f5a8-b4 (re15_affen.h (4c)) */
     return done;
 }
 /* hit-blood/gore burst func_0x80019700(0x2000, +0x6a, skel_part, &vec) — the maggot passes part
@@ -8782,23 +8776,10 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
     static re15_skel_pose_t s_pose[RE15_EMD_MAX_BONES];
     int32_t mn[3], mp[3], wn[3], wp[3];
     int16_t rx, ry, rz;
-    const re15_actor_t *mess_pa = (const re15_actor_t *)g_anim_pose_actor;   /* Mess-Schiene (s.u.): Zustand VOR der Abfrage */
-    int mess_frac = mess_pa ? (int)mess_pa->anim_frac : -1, mess_tw = (int)g_anim_kf_tween.active;
-    /* Runde 35 Spur J — Pose-ABFRAGE, kein Render (Muster re15_enemy_bone_world_pos): der Zeiger
-     * g_anim_pose_actor steht hier noch auf dem ZULETZT GEZEICHNETEN Aktor (gemessen: Slot 3). Mit
-     * dessen Crossfade (frac 7) wurden beide Abfrage-Posen gegen SEINE Vor-Pose gemischt und seine
-     * Vor-Pose zweimal je Tick ueberschrieben -> die Locator-Deltas pendelten +52..-83 statt
-     * +8..+125 (affen_fuss.log), netto ~0: der Gorilla kroch auf der Stelle und wurde an jeder Wand
-     * rueckwaerts geschoben. Ohne Blend ist die Folge die des Originals (Lage von G1 30 Bilder
-     * nach der Freigabe: Port (-4850,-14440), Original-Savestate t=45.48 (-4855,-14459)). */
-    void *q_save = g_anim_pose_actor; re15_kf_tween_t q_tw = g_anim_kf_tween;
-    g_anim_pose_actor = NULL; g_anim_kf_tween.active = 0;
-    int q_rc = re15_skel_compute_pose(sk, kf_n, s_pose);
+    if (re15_affen_pose_abfrage(sk, kf_n, s_pose)) return;   /* Runde 35 Spur J: Abfrage ohne Blend (re15_affen.h (4d)) */
     mn[0] = s_pose[bone].trans[0]; mn[1] = s_pose[bone].trans[1]; mn[2] = s_pose[bone].trans[2];
-    if (!q_rc) q_rc = re15_skel_compute_pose(sk, kf_p, s_pose);
-    g_anim_pose_actor = q_save; g_anim_kf_tween = q_tw;
-    if (q_rc) return;
     if (re15_emd_get_keyframe_position(sk, kf_n, &rx, &ry, &rz)) { mn[0] += rx; mn[2] += rz; }
+    if (re15_affen_pose_abfrage(sk, kf_p, s_pose)) return;
     mp[0] = s_pose[bone].trans[0]; mp[1] = s_pose[bone].trans[1]; mp[2] = s_pose[bone].trans[2];
     if (re15_emd_get_keyframe_position(sk, kf_p, &rx, &ry, &rz)) { mp[0] += rx; mp[2] += rz; }
     re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
@@ -8815,16 +8796,7 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
         }
         e->x -= dx;                                    /* @0x8011bfe4-e8 */
         e->z -= dz;                                    /* @0x8011c004-08 */
-        {   /* MESS-SCHIENE Runde 35 Spur J (RE15_AFFEN_FUSS -> affen_fuss.log): reine Aufzeichnung */
-            static int an_ = -1; static FILE *lf = NULL;
-            if (an_ < 0) { an_ = (getenv("RE15_AFFEN_FUSS") != NULL); if (an_) lf = fopen("affen_fuss.log", "w"); }
-            if (lf) {
-                fprintf(lf, "slot=%d clip=%d bild=%d bone=%d kf=%d/%d d=(%d,%d) rot=%d poseaktor=%d frac=%d tween=%d\n",
-                        slot, clip, s_now, bone, kf_n, kf_p, (int)dx, (int)dz, (int)e->rot_y,
-                        mess_pa ? (int)(mess_pa - g_actors) : -1, mess_frac, mess_tw);
-                fflush(lf);
-            }
-        }
+        re15_affen_fuss_log(slot, clip, s_now, bone, kf_n, kf_p, dx, dz, e->rot_y);   /* Runde 35 Spur J: Mess-Schiene RE15_AFFEN_FUSS */
     }
 }
 static void re15_maggot_bf50(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 14 + 3 * a1); }
@@ -8882,10 +8854,7 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
         e->mag_hit_ctr = 0;                                   /* Runde 35 Spur J: Port-Zaehler, INIT-geloescht wie +0x1e0..+0x1e3 */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
-        /* +0x1ba (Boden-Y) wird vom INIT NICHT geschrieben (FUN_80116f50 @0x80116f50-801171c0 hat
-         * keinen 442(.)-Store); es traegt den Sce_em_set-Seed -(pc[4]*1800) @0x80042210 und wird vom
-         * Raumskript per Member_set 0x13 gesetzt (ROOM11C0 @0x1A3E/@0x1AFC). Runde 35 Spur J: der
-         * fruehere Port-Ersatz `dog_floor_y = y` ueberschrieb den Seed beim Spawn-Wurzelaufruf. */
+        /* Runde 35 Spur J: +0x1ba hat KEINEN INIT-Store (FUN_80116f50, kein 442(.)) — Seed @0x80042210 */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
          * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
          * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
@@ -9102,12 +9071,9 @@ static void re15_maggot_ai_tick(int slot)
                     pl->hp = (int16_t)(pl->hp - 6);              /* @0x80118460-6c */
                     e->dog_blocked_ctr = 0x2d;                   /* +0x1dc=45 @0x80118470-78 */
                     re15_audio_room_se(6);                       /* Se(6) @0x80118474 (a0=6 @0x80118454) */
-                    pl->hit_react |= 1;                          /* @0x801184c0-d4 */
-                    /* Runde 35 Spur J: der Biss schreibt cmd 2 und aca59 = a780(BEISSER)+2 selbst
-                     * (`jal 0x8001a780` @0x80118488, `sb v0,-13735(at)` @0x8011849c; hp<0 -> cmd 3
-                     * @0x801184a8-bc bleibt beim Todes-Detektor). Vorher leitete der HP-Detektor die
-                     * Richtung aus dem NAECHSTEN Gegner ab — bei zwei Gorillas der falsche. */
-                    if (pl->hp >= 0) re15_player_stagger_cmd2(re15_affen_biss_clip(e, pl));
+                    pl->hit_react |= 1;                          /* @0x801184c0-d4. The stagger cmd aca58=2/aca59=facing+2 (hp<0 -> 3)
+                                                                  * @0x8011847c-b8 = the player-command FSM; port convention = hit_react (audit #17, dog/crow parity) */
+                    if (pl->hp >= 0) re15_player_stagger_cmd2(re15_affen_biss_clip(e, pl));   /* Runde 35 Spur J @0x80118488-9c (re15_affen.h (4b)) */
                 }
                 break;
             default:  /* exit @0x801184e0-8520: lockout 0x14 if clear, -> CHASE */
@@ -9223,14 +9189,7 @@ static void re15_maggot_ai_tick(int slot)
                     re15_audio_room_se(7);                    /* @0x80118d64-68 */
                     break;
                 }
-                /* Runde 35 Spur J — KEIN 245d8(0) im Flug (Port-Defekt "double-advance" entfernt, selbst
-                 * disassembliert @0x80118c3c-dc4): jeder Pfad der Phase 2 springt in den Epilog
-                 * 0x80118dc4 — Landung `j 0x80118dc4` @0x80118cc0, Frame!=0x13 `bne ..,0x80118dc4`
-                 * @0x80118cdc, Finisher-Gates @0x80118cf8/d0c/d20/d3c, Commit `j 0x80118dc4`
-                 * @0x80118d6c. `jal 0x800245d8` @0x80118dbc erreichen nur Phase 0/1 (Anlauf) und die
-                 * Landungs-Phase 3 (`beq v0,zero,0x80118dbc` @0x80118d84). Gemessen vorher (Lauf B):
-                 * ein Sprung trug 12700 Einheiten in 40 Bildern = doppelte Flugweite -> der Gorilla
-                 * ueberschoss Leon ("KI nicht zielstrebig"). Die c1a4-Horizontale ist der Flug. */
+                /* Runde 35 Spur J: KEIN 245d8(0) im Flug — Phase 2 endet im Epilog 0x80118dc4 (re15_affen.h (4e)) */
                 break; }
             default:  /* phase 3 landing tail @0x80118d74-dc0: play out, slide at +0x8c=100, -> SELECTOR */
                 if (re15_maggot_anim(e)) { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
@@ -9333,19 +9292,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->sub_state_2 = 3;                           /* @0x8011abf4-fc */
                 s_player_grabbed = 1;                         /* aca58=5 @0x8011ac40-48 (+ entity/player flags|=0x1000 @0x8011ac2c-54) */
                 re15_player_victim_latch(e, pl);              /* player anchor 0x8001ac38 @0x8011ac18 + a8f8(player,0x800) yaw latch @0x8011acac-b0 */
-                {   /* Runde 35 Spur J — FUN_8001ac38(a0 = Spieler) @0x8011ac18 WIRKLICH ausfuehren: der Gorilla-Anker
-                     * +0xa0/+0xa2 = Lage - rot(off[kf des laufenden Clips/Bildes]) (@0x8001ac6c-ad18), dann die KOPIE
-                     * an den Spieler (`sh v0,160(s2)` @0x8001ad30, `sh v0,162(s2)` @0x8001ad48). Fehlte ganz: Leons
-                     * Anker blieb (0,0), die Opfer-Platzierung setzte ihn an den Raumursprung (gemessen Lauf C1 F447:
-                     * PL (0,0), nach dem Loesen (-4330,387) — 15000 Einheiten vom Gorilla, ausser Reichweite, und der
-                     * Brustschlag nach dem Griff lief ausserhalb des Bildes). */
-                    extern void re15_victim_anchor_calibrate(int32_t, int32_t);
-                    re15_enemy_bank_t *gb = re15_enemy_find(0x27);
-                    if (gb && gb->ok) re15_clip_anchor_set(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
-                    else { e->anchor_x = e->x; e->anchor_z = e->z; }
-                    pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
-                    re15_victim_anchor_calibrate(pl->x, pl->z);   /* Port-Wandklemme re15_victim_place: Bezug = Standpunkt beim Zupacken */
-                }
+                re15_affen_pin_anker(e, pl);                  /* Runde 35 Spur J: FUN_8001ac38 @0x8011ac18 ausfuehren (re15_affen.h (5)) */
                 g_player_victim_variant = (uint8_t)re15_maggot_a780(e, pl);   /* aca59 = a780 ret @0x8011ac50-68 */
                 pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
@@ -9437,9 +9384,7 @@ static void re15_maggot_ai_tick(int slot)
             default:  /* exit @0x8011b178-1d8: -> ACTIVE sub 7 = RETALIATION LEAP (sub 9 if +0x1e3) */
                 e->hit_react = 0;                             /* @0x8011b178 */
                 e->state = 1;                                 /* sb 1 @0x8011b188 */
-                e->sub_state_1 = re15_affen_flinch_exit_sub(e);   /* Original: 7 (@0x8011b194-98) / 9 bei +0x1e3
-                                                                   * (@0x8011b1c8-d8); Runde 35 Spur J: 7 erst beim
-                                                                   * 3. Treffer, sonst 3 (NUTZER-VORGABE, re15_affen.h) */
+                e->sub_state_1 = re15_affen_flinch_exit_sub(e);   /* 7 @0x8011b194-98 / 9 @0x8011b1c8-d8; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
@@ -10236,12 +10181,8 @@ static void re15_npc_pos_advance(re15_actor_t *e)
 static void re15_npc_wall_clamp(re15_actor_t *e, int32_t ox, int32_t oz)
 {
     int32_t nx = e->x, nz = e->z;
-    /* Runde 35 Spur J: Band = Zustandsbyte +0x82 (FUN_8003b0a4 `lbu v1,130(a3)` @0x8003b228-3c),
-     * nicht band_from_y — ROOM11C0 sub07 setzt Ada `Member_set 12 = 2` (@0x1C66), ehe sie in den
-     * Streifenwagen laeuft (re15_affen.h (1)). */
-    re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz,
-                                          (int32_t)e->hit_radius_min, re15_affen_npc_band(e), 4u,
-                                          NULL, NULL);
+    re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz, (int32_t)e->hit_radius_min,
+                                          re15_affen_npc_band(e), 4u, NULL, NULL);   /* Runde 35 Spur J: Band +0x82 @0x8003b228-3c (re15_affen.h (1)) */
     e->x = nx; e->z = nz;
 }
 
@@ -14452,16 +14393,8 @@ void re15_enemy_spawn_root(int slot)
     if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) return;   /* G5-Modul */
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
-    if (e->type == 0x27)                                /* Runde 35 Spur J: derselbe generische jalr
-                                                         * 0x80072bac[typ] @0x8004259c fuer den Gorilla —
-                                                         * sein INIT (HP 180, Scale 0x1b33 @0x80117148,
-                                                         * Flag 0x800, Zustand 1) laeuft damit im Spawn-Bild
-                                                         * auch fuer die eingefrorenen Szenen-Records
-                                                         * (ROOM11C0 grid 0x30: Original-Savestate t=6 s
-                                                         * st=1, +0x166=0x1b33, flags 0x801) */
-        re15_maggot_ai_tick(slot);
-    else
-        re15_birkin_root(slot);                         /* @0x8004259c jalr 0x80072bac[typ] */
+    if (e->type == 0x27) re15_maggot_ai_tick(slot);     /* Runde 35 Spur J: Gorilla-INIT im Spawn-Bild (re15_affen.h (4f)) */
+    else re15_birkin_root(slot);                        /* @0x8004259c jalr 0x80072bac[typ] */
     e->grid_id = (uint8_t)(e->grid_id | s4);            /* @0x80042604 or / @0x80042608 sb */
 }
 

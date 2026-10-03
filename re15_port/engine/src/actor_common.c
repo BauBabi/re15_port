@@ -157,11 +157,7 @@ void re15_actor_set_member(int slot, uint8_t member_id, int32_t value)
     case 16: a->anim_flags   = (uint16_t)value; break; /* +0x1c4 sh */
     case 17: a->status_flags = (uint16_t)value; break; /* +0x98 sh */
     case 18: a->floor        = (uint8_t)value; break;  /* +0x82 sb */
-    case 19: a->dog_floor_y  = (int16_t)value; break;  /* +0x1ba sh — Runde 35 Spur J: +0x1ba ist das
-                                                        * BODEN-Y (Sce_em_set `sh v0,442(s0)` @0x80042210 =
-                                                        * -(pc[4]*1800); c1a4-Boden a3 des Gorillas), NICHT die
-                                                        * HP (+0x9a, Resolver `sh v1,154(s1)` @0x80013000).
-                                                        * ROOM11C0 sub02 @0x1A3E/@0x1AFC `Member_set 13=0`. */
+    case 19: a->dog_floor_y  = (int16_t)value; break;  /* +0x1ba sh = Boden-Y @0x80042210, HP liegt bei +0x9a @0x80013000 (Runde 35 Spur J) */
     default: /* id>=20 → no-op */               break;
     }
 }
