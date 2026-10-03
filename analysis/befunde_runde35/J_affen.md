@@ -151,3 +151,54 @@ in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert
 - Maggot-INIT FUN_80116f50 schreibt +0x1ba NICHT (kein 442-Store) -> Port-Ersatz `dog_floor_y = y` entfernt.
 - Spawn-Wurzelaufruf (re15_enemy_spawn_root) auf 0x27 erweitert: INIT im Spawn-Bild (HP 180, Scale, Zustand 1), Bit 0x20 bleibt.
 
+## Ergebnis je Nutzer-Punkt
+
+### Punkt 1 — Ada versteckt sich / kommt zurueck
+- Ursache: NPC-Wandklemme mit Band aus y statt +0x82 (Beleg oben). Fix enemy_ai_common.c re15_npc_wall_clamp -> Band +0x82.
+- Messung nachher (Lauf A3/A4, exe): sub07 F1070, Ankunft F1127 bei (-18025,-7379), y=20000 — Framedumps: Ada ab F1150 nicht
+  mehr im Bild (vorher stand sie bis Lauf-Ende sichtbar neben dem Wagen). Original: (-18000,20000,-7403) bei t=47.
+- Rueckkehr: sub03 (@0x1B52 y=0, @0x1B56 rot_y=512) — im Riegel `ada` gemessen: y=0 nach 219 Bildern (Leons Gang vorweg),
+  rot_y=512, (3,0x43)=1, danach Lauf zu (-16211,-8183) (@0x1B70). Im Port ist nichts weiter noetig: der Faden hing nur an
+  der nie erreichten Ankunft von sub07.
+
+### Punkt 2 — Monkey kommt nicht an der korrekten Position aus dem Auto
+- Skript-Positionen (Wagen -840/-2930/-19110, Gorilla y=-2500 im Wagen, Austritt (-3617,0,-17798), Klappe 48->1752) sind im
+  Port byte-gleich (Riegel `wagen`; Original-Pool/Entities aus dem Savestate identisch).
+- Ursache des sichtbaren Unterschieds: der eingefrorene Gorilla (grid 0x30) hatte im Port keinen INIT (Zustand 0, Scale 0
+  = 1,0x) — im Original laeuft der INIT im Spawn-Bild (generischer Wurzelaufruf @0x8004256c-0x80042608, Savestate t=6 s:
+  st=1, +0x166=0x1b33, flags 0x801). Die 1,7x kleinere Figur verschwand hinter der aufgeklappten Heckklappe; der Nutzer sah den
+  Gorilla erst "aus dem Nichts" bei (-3617,-17798). Fix: re15_enemy_spawn_root auch fuer 0x27 (+ +0x1ba-Kette, s.o.).
+- Messung nachher (Lauf A4, Framedumps F770-F790, Cut 12): Gorilla sitzt sichtbar in der offenen Klappe wie im Original
+  t=34.89 (scratchpad vergleich_wagen_a4.png); F800 Austritt gross vor dem Pfeiler wie Original t=36.41.
+
+### Punkt 3 — komisch beweglicher Teil am Oberkoerper
+- Ursache + Beleg: Abschnitt "Punkt 3 — Mechanismus" (FUN_8001e56c/FUN_8001e5b0/FUN_8001f3bc/FUN_8001e9ec, DAT_80072d4c).
+  Messung vorher: enemy_dbg.log `ZEICHNE Typ 0x27: 22 Teile (Bones 18, Meshes 22)`, Parts 18..21 auf der Wurzelpose.
+- Fix: main.c-Haken + re15_affen_surplus_part_world (weltfest bei EMR[8+6i], Identitaet). Riegel `teile`: Parts 18..21 ->
+  (3,72,3)/(75,1,78)/(0,79,1)/(79,1,80), Part 17 unveraendert. Gilt ebenso fuer 0x29 (19/18) und 0x30 (17/16).
+- Messung nachher (A4 F1130-F1300, 2x): kein mitbewegtes Teil am Rumpf mehr (a4_teile_nachher.png vs a2_teile_vorher.png).
+
+### Punkt 4 — KI zielstrebiger/aggressiver im Original
+- Ein belegter Port-Defekt: der LEAP-Flug lief mit doppeltem Vorschub (c1a4 + 245d8(0) je Bild) — Disasm @0x80118c3c-dc4:
+  alle Flugpfade enden im Epilog 0x80118dc4, `jal 0x800245d8` @0x80118dbc nur aus Anlauf (Phase 0/1) und Landung (Phase 3).
+  Vorher (Lauf B): ein Sprung 12700 Einheiten in 40 Bildern, Landung weit hinter Leon in Wandtaschen. Original (r3): ~8900
+  = Anlauf + Flug. Fix: Zeile entfernt; Riegel `flug`: 240 je Flugbild.
+- Die uebrigen Brain-Gates (A[0]/A[3]/A[4], Lockouts, LOS) wurden gegen die Decompiles gelesen und stimmen; das Original idlet
+  nach der Freigabe sogar laenger (G2 7 s Clip 0x16) als der Port (2 s, rng+59). Erste Beruehrung Leon: Original t=57.5 (12 s nach
+  Freigabe, Heavy -12), Port A2 F1464 (13 s, Heavy -12) — gleichwertig.
+
+### Punkt 5 — Brust-schlagen-Animation
+- Identifiziert: Clip 3 (70 Bilder), Bild 30-55 aufrecht mit beiden Haenden an der Brust. Erreichbar in 11C0 nur nach dem
+  verbundenen Rear-up-Pin (sub 15 Phase 4 ab Bild 0x16 @0x8011ad50-78, Phase 6 -> sub 2 Clip 3 ab 0x1d @0x8011ae30-58);
+  die Wach-Variante (sub 1 -> sub 2, grid Bit 0) kommt in 11C0 nicht vor (grid 0x30/0x10). Keine andere Quelle: die
+  Haenge-Clips (subs 9..14) sind ohne +0x1e3-Schreiber unerreichbar.
+- Port: Mechanik vorhanden und byte-true (A2 F2569-2691 sub 15 -> Pin -> Clip 3 -> CHASE, Framedumps f002640/f002670);
+  Riegel `brust` misst die Bildfolge. Das Original zeigte in 40 s Kampf (Leon reglos) KEINEN Rear-up — "manchmal" = nur
+  wenn der Pin verbindet (a9cc +-32, Bogen 2500/256, +0x1d6==0, +0x1e1==0 @0x80117ab4-b3c). Kein Code-Fix noetig; der
+  Nutzer sieht den Brustschlag, sobald ein Gorilla ihn packt (Leon nahe, frontal).
+
+### Punkt 6 — Sprung erst nach 3 Treffern (NUTZER-VORGABE)
+- Original: jeder Boden-Flinch endet im Vergeltungs-Sprung (+0x5=7 @0x8011b188-98; Lauf B: 13 Treffer = 13 Spruenge).
+- Port-Form: mag_hit_ctr (INIT-geloescht), Flinch-Eintritt zaehlt, Exit 7 beim 3. Treffer sonst 3 (CHASE). Riegel `sprung`:
+  Exit-Folge 3,3,7,3,3,7. Luft-/Sturz-Spuren (Spur 1/2) unveraendert byte-true.
+
