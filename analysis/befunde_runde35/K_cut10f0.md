@@ -192,7 +192,7 @@ Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STA
   Ursache = Folge dieser Spur: die Sonde betritt ROOM10F0 mit frischen Flags und erwartet den szenenfreien Raum (freie RVD-Kette); jetzt startet beim ERSTEN Betreten die Szene
   (Cut_chg sperrt die Kamera-Automatik, der Spieler ist gehalten). Behoben in der Sonde selbst (enter_room: (9,71)=1 fuer ROOM10F0 NACH scd_vm_init, das die Flags nullt,
   VOR scd_room_reenter — 6 Zeilen mit Kommentar "Runde 35 Spur K"); danach 3/3 gruen. Kein Spielcode geaendert: die Sonde misst die Kamera-Selbstheilung, nicht die Szene.
-- Suite: (siehe Abschluss unten)
+- Suite: siehe §8.8 (Abschluss der Fortsetzung): `=== LOCAL-BUILD-OK (all) — Tests 486/486`.
 
 ## 6. OFFEN
 - Keine Sprachaufnahmen: die 18 Zeilen laufen stumm mit Untertitel (99 Bilder Standzeit + Lesezeit), bis der Nutzer synchro/STAGE1/room10F0/main06..main23.wav liefert
@@ -420,3 +420,20 @@ MAIN01 von Raum zu Raum (echte Tueren, SDL_AUDIODRIVER=dummy weil der Rechner ke
 - Je Nutzer-Punkt: (1) Szene: _programm, _texte, _szene, _einmal, integration A/B/C; (2) Karte: _karte (Kette, beide
   Ziele, echter Weg), integration A (Hinweiskette am Schirm) + F; (3) MAIN01: _bgm, integration A/D/E/F;
   (4) Animationen: _szene (Gierung je Zeile, Zeilentakt) + Bildbelege.
+- GANZE SUITE (`bash re15_port/tools/local_build.sh all`, Stand f2ac79e0 = Code dieses Abschlusses, 2026-10-03 16:01-16:25,
+  parallel bauende Nachbarbaeume): `100% tests passed, 0 tests failed out of 486`, `Total Test time (real) = 1427.08 sec`,
+  woertliche Schlusszeile:
+  `=== LOCAL-BUILD-OK (all) — Tests 486/486`
+  (Schranke RE15_MIN_TESTS=478; 478 Bestand + 8 dieser Spur). Kein Fenster-Haken geflattert, nichts nachgefahren.
+  unit_cam_selfheal (im ersten Durchgang angepasst, §5) gruen.
+
+### 8.9 Abschluss — Stand je Nutzer-Punkt
+| Punkt (AUFTRAG.md) | Stand | Beleg |
+|---|---|---|
+| 1 Szene beim ERSTEN Betreten von ROOM10F0, Reihenfolge/Sprecher/Kamera/Tuerknall/Abgang/Balken | erfuellt | §4, §8.7; unit _programm/_texte/_szene/_einmal, integration A/B/C; Bilder nachher_*, nachher2_* |
+| 2 Karte: erst ROOM11C0 markiert, dann ROOM1150 blinkend, beide bis besucht | erfuellt (ROOM1150: Besuch NACH der Szene, Latch (9,72)) | §8.1, §8.7; unit _karte, integration A/F; Bild nachher2_karte_3F_* |
+| 3 MAIN01 durchweg bis zum Parkplatz | erfuellt ab Szenenende, auch nach dem Laden; Beginn-Lesart siehe §6 OFFEN | §8.5, §8.7; unit _bgm, integration A/D/E/F |
+| 4 Animationen passend wie bei vergleichbaren Dialogen | erfuellt (Original-Zeilentakt 110, Leon dem Angesprochenen zugewandt) | §3.1, §8.2, §8.3, §8.7; unit _szene; Bild nachher2_gesten_* |
+
+Commits des Zweigs r35/cut10f0 ueber master 154a73c1: 0908b3df, d017beaa, 9cc0d253 (erster Durchgang), 3d366e0e, 779c45bc,
+4ea3c410, f2ac79e0 (Fortsetzung, wip) und der Abschluss-Commit `feat(r35-cut10f0): ...`.
