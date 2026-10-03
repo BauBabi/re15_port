@@ -933,3 +933,10 @@ Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, beri
 * Zusammenfuehrung mit Spur A (Handgranate): beide sperren Moebel in jeder Hoehe (gleiche Regel); EIN Formtest fuer
   Typ 1..9 und Strecke-vs-Punkt sind dort zu vereinheitlichen (OFFEN 18/19). re2_fx.c, re15_damage.c,
   enemy_ai_re2_zombie.c werden auch von Spur A/D beruehrt.
+
+## 9. Nachbesserung 2 (nach der unabhaengigen Abnahme 1, `B_abnahme_1.md`)
+
+### 9.0 Protokoll
+- 2026-10-03 (Sitzungsbeginn siehe `date` im Commit): Baum sauber, HEAD 8f88ab61 (Abnahme 1). Maengel N1 (Werfer-Geschosse
+  und Flammenstrahl ignorieren ueber Bandhoehe die Formen 2/4..9; Punkttest je Bild tunnelt) und N2 (Python ohne
+  Kritklasse des Redhawk). Pflichtlektuere AUFTRAG.md/VERTRAG.md/B_abnahme_1.md/§3/§6/§8 gelesen.
