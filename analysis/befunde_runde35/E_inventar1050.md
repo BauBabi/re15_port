@@ -74,6 +74,18 @@ vor zur 10A0-Tuer, Quadrat -> Szene).
   XREF-Liste ghidra1_V2.txt Z.474490). Erst der naechste Raumwechsel loescht es (re15_pauseflags_clear).
   Der Befund "innerhalb desselben Raums" ist damit erklaert.
 
+### P2 Messer (Stand 154a73c1)
+* platform/pc/main.c:4389 `re15_inv_load_briefing()` = Byte-Kopie des Original-Briefings
+  (inventory_common.c:112 `slots[0] = 0x01` COMBAT KNIFE, :113 BROWNING x15, :114 H.GUN BULLETS x50), 25c8 = 0
+  (statische Vorbelegung inventory_common.c:129) — das Messer liegt als Gegenstand in Platz 0 der Item-Liste,
+  fuer JEDEN Charakter. Gleiches Bild im Original-Savestate mzd_stage1_briefing_live (inv `01 00 00 00 03 0f
+  00 00 15 32 ..`, 25c8 = 00, aca5d = 1).
+
+### P3 Szene (Riegel unit_r34n_d_adaruf_szene am Stand 154a73c1, erster Lauf dieser Sitzung)
+`zur Kamera B145 cos 1.000 | Clip19 B165, Clip19 rueckw. B190, Clip17 B216 | Ende B316` und
+`[scd] Plc_dest(slot=0 mode=0x09 dest=(14999,-8140))` = Leon dreht sich frontal zur Kamera Cut 4 und macht die
+Gespraechsgeste 19 in die Kamera.
+
 ## RE-Belege
 
 ### P1 Warum das Original an derselben Stelle NICHT haengen bleibt (re15_disasm.py, info/Re1.5/PSX.EXE)
