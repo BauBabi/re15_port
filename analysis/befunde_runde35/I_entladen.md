@@ -145,6 +145,8 @@ Was faellt (platform/pc/src/entladen_pc.c `alles_entladen`), je mit Original-Bel
    Bildanfang zerstoert (`re15_render_pc_entladen_freigeben` in `re15_render_begin_frame`) — die
    Dreiecksliste des laufenden Bildes kann den Slot noch referenzieren. NICHT angefasst: 0..3
    (Spieler, Elliot, Heli/Pilot — Boot-Lader), 19..23/44/50..55 (globale Effektseiten, Spielstart).
+   **Korrigiert in Nachbesserung 1:** 1..3 sind Raum-Slots (Elliot = Sce_em_set-Modell, Heli/Pilot =
+   RDT-Objekte); nur 0 (Spieler, fester Puffer 0x801bd814) bleibt.
 2. SLD-Atlas-Auszug (bg_pc.c `re15_pri_sld_entladen`) + nachgezeichnete Masken (MSK-Cache aus
    main.c nach entladen_pc.c verlegt: `re15_entladen_msk`).
 3. Gegnerbanken `re15_enemy_reset()` (idempotent; Raumwechsel/Boot riefen es schon, jetzt auch Tod).
@@ -242,8 +244,10 @@ Gegenproben (Fix-Zeile temporaer entfernt, gebaut, gemessen, `git checkout` zuru
   entladen_pc.c nicht. Nicht gebaut/gemessen (PSn00bSDK-Bau ist hier nicht Teil der Suite).
   Naechster Messweg: PSX-Build + gleiche Laeufe ueber DuckStation-Savestate-RAM (0x800ac77c nach
   Tuer == 0x800ac780 + RDT-Groesse).
-* O2 Bewusst NICHT entladen (keine Raum-Assets, eigene Lebensdauer im Original belegt bzw. im Port
-  begruendet): TIM 0..3 (Spieler, Elliot, Heli/Pilot: Boot-Lader, bei jedem Spielstart neu), 19..23/
+* O2 (KORRIGIERT in Nachbesserung 1 — Elliot/Heli/Pilot fallen jetzt, s. dort; die Begruendung
+  "Boot-Lader" war ohne Beleg und fuer 1..3 falsch). Bewusst NICHT entladen bleiben: TIM 0 (Spieler:
+  fester Puffer 0x801bd814 @0x800314c8/cc, geladen nur am Spielstart @0x8001d5a4 bzw. bei
+  Figurwechsel im Raumlader), 19..23/
   44/50..55 (globale Effektseiten CORE00/TEX.TIM, Spielmodul-Init `jal 0x8001923c` @0x8001d580),
   CDEMD0.EMS-Archive (Prozess-Cache einer CD-Datei, wie der CD-Inhalt selbst), STAGE%u.BIN-Tabelle
   (bg_pc, je Stage), Tuer-TONBANK (RE2: Key-Off nur fuer Raum-SPU-Bereich @0x800597a4-0x80059810,
@@ -362,3 +366,95 @@ die Strukturen (Zeichen-/Anim-Wege lesen sie per Adresse) und meldet sie an
 (`re15_elliot_pc_anmelden`); der Boot-Lader (31 Zeilen) ist entfernt. render_pc.c
 `re15_render_pc_tim_slot_raum`: Slots 1..3 jetzt Raum-Slots (entladen + gezaehlt). Zensus-Fach
 `figur` (Elliot-Modell, Generation). Aussehen unveraendert (Port-Wahl R23: PL05 statt EM047-Mesh).
+
+### Messung nachher (N1) — Stand 86f65b95, eigener Bau
+
+Laeufe mit eigener exe-Kopie (`scratchpad/i_lauf.sh`, PATH msys64 zuerst, eigenes Arbeitsverzeichnis).
+Zeilen gekuerzt (`| fremd ...` und die Masken-Faecher weggelassen, alle dort 0).
+
+**M1 Stimmen** — Lauf r2 in NORMALTEMPO (`SDL_AUDIODRIVER=dummy RE15_NO_INTRO=1 RE15_TITLE_SHOT=t.bmp
+RE15_TITLE_SHOT_AF=60 RE15_EXIT_AT=30#1170`):
+```
+VORHER raum gen=2 raum=1240 | belegt tim=2 ... rdt=1 ton=2 bg=1 stimme=6 figur=0 | tim_slots 36 37 | stimme_laeuft=0
+EREIGNIS raum gen=3 raum=1240 | belegt ... ton=0 bg=0 stimme=0 figur=0
+```
+Die sechs ROOM1240-Clips (main00..05, Vorbedingung des Mangels) fallen an der Grenze; die letzte
+Zeile war vor der Tuer zu Ende (`stimme_laeuft=0`) — im echten Ablauf wird nichts Hoerbares
+abgeschnitten. Mit `RE15_FPS=240` (Lauf r1, Pin e) steht an derselben Grenze `stimme_laeuft=1`: das
+Spiel laeuft dann viel schneller als das Echtzeit-Tongeraet, main05 (242550 Samples = 5,50 s) ist
+noch nicht durch. Dort wird der Strom geloest — das ist die Wirkung des RE2-Raumladers (Laufwerk auf
+ReadN ohne XA-Bit). Danach 30 bzw. 300 Bilder ROOM1170: keine BILD-Zeile (nichts Fremdes), `stimme=0`.
+
+**M2 Elliot** — Lauf r3 = Pin d (`RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_GOTO_ROOM=1170
+RE15_KILL_AT=3200 RE15_BOOT_EXIT_AT=3`):
+```
+VORHER raum gen=5 raum=1240     | belegt tim=2 ... figur=0 | tim_slots 36 37        <- Elliot in 1240 NICHT resident
+debug.log 417: [elliot] PL05 loaded: 15 meshes, 15 bones, 24 clips (Raum 1170, Spawn 0x47)
+          418: [elliot] Raum-RBJ-Overlay: 26 clips / 419: [tim] elliot TIM in slot 1: 256x256
+VORHER spielende gen=6 raum=1170 | belegt tim=8 gegner=1 ... figur=1 | tim_slots 1 4 5 6 7 8 9 11
+EREIGNIS spielende gen=7 raum=1170 | belegt (alle 15 Faecher) 0
+```
+Vorher (Abnahme 0): `[elliot] PL05 loaded` + Slot 1 bei JEDEM Spielstart, auch in ROOM1240.
+(Spiel 1 dieses Laufs kommt per RE15_GOTO_ROOM nach 1170; dieser Debug-Sprung faehrt das
+Helipad-Intro nicht, Elliot wird bis zum Tod bei Bild 3200 nicht gesetzt -> dort figur=0. Unveraendert.)
+
+**M2 Heli/Pilot-Slots 2/3** — Pin c (Tod -> LOAD im Todesraum ROOM1020):
+```
+VORHER spielende gen=2 raum=1020 | belegt tim=16 gegner=2 ... | tim_slots 2 3 4 5 6 7 8 9 11 12 26 27 36 37 46 47
+EREIGNIS spielende gen=3 raum=1020 | belegt ... tim=0 ...
+```
+Slots 2/3 tragen hier die Objekte 2/5 der Boot-RDT ROOM1020 (nicht Heli/Pilot — der alte Lader
+schneidet blind prop[2]/prop[5] der jeweiligen Boot-RDT). Vorher wurden sie weder gezaehlt noch je
+entladen und ueberlebten jeden Raumwechsel.
+
+**Aussehen unveraendert (A/B)** — exe des Stands VOR N1 (20ced3e7, `git archive` in den Scratchpad,
+eigener Bau, `RE15_CD_ROOT` auf diesen Baum) gegen N1, gleicher Lauf (`RE15_NO_INTRO=1 RE15_NOAUDIO=1
+RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60 RE15_EXIT_AT=1700#1170
+RE15_FRAMEDUMP=880-1600/20:fd_`, Rueckleser vor dem Present): **37/37 Bilder bytegleich**, darunter
+die Helipad-Szene mit Elliot im Bild (`I_entladen_bilder/n1_elliot_1170_b960.png`, "Elliot: We must
+go! ..."; debug.log `[F950-elliot-root] screen=(102.2,108.4)`).
+Erster Wurf: das Laden nur in der Roster-Schleife lieferte EIN Bild mit `[enemy-diag] actor1
+type=0x47 model=LEON-FALLBACK` — im Spawn-Bild laeuft der Render-Durchgang vor der Roster-Schleife
+(main.c-Kommentar an pc_enemy_load_ex: "DIESE Stelle ist die frueheste"). Zweiter Haken dort
+(1 Zeile); danach `[enemy-diag] actor1 type=0x47 model=elliot` schon beim ersten Zeichnen.
+
+### Tests (N1)
+| Test | misst | Ergebnis (einzeln) |
+|---|---|---|
+| unit_r35_entladen_n1beleg (neu) | RE1.5: `8e31c77c` @0x800422c4, `jal 0x80022300` @0x80042328, `ac31c77c` @0x80042554, `3c05801b`/`34a5d814` @0x800314c8/cc, genau ein Arena-Basis-Schreiber `ac23c780` @0x80039a58 (Voll-Scan); RE2: `jal 0x80012fb8` @0x8004a1c4, DsCommand 9/14/21/6 @0x800130d4/f0/80013110/40, Byte 0xA0 @0x8009a429 (Bit 6 = 0), 0xC8 @0x8009a415 (Bit 6 = 1) | Passed |
+| integration_r35_entladen_c (erweitert) | + Slots 2/3 am Tod belegt und gezaehlt, EREIGNIS 0 | Passed 38.7 s |
+| integration_r35_entladen_d (erweitert) | + Elliot in ROOM1240 nie resident (figur=0, kein Slot 1), geladen nur "(Raum 1170, Spawn 0x47)", am Tod figur=1 + Slot 1 -> EREIGNIS 0 | Passed 45.5 s |
+| integration_r35_entladen_e (neu) | Intro 1240 -> 1170 mit Ton (Dummy-Treiber): >= 1 Clip geladen, VORHER raum stimme >= 1, EREIGNIS raum stimme=0, keine BILD-Zeile | Passed 27.4 s |
+| unit_r35_entladen_beleg/_gegner, integration_a/_b | unveraendert | Passed |
+
+Gegenproben (N1-Zeilen temporaer entfernt: Schritt (9) und (10) in alles_entladen auskommentiert,
+Slot-Bereich zurueck auf 4..18; gebaut, gefahren, `git checkout` zurueck, neu gebaut):
+* e FAILED: `EREIGNIS raum gen=3 raum=1240 ... stimme=6` ("nach dem Entladen noch belegt")
+* d FAILED: `EREIGNIS spielende gen=7 raum=1170 ... figur=1`
+* c FAILED: "Slots 2/3 (Objekte 2/5 der Boot-RDT ROOM1020) nicht als Raum-Slots belegt/gezaehlt"
+=> die Pins messen genau die beiden Maengel.
+
+### OFFEN (N1)
+* O4 main.c (Boot-Block, ca. Zeile 3995-4020) parst `heli_md1`/`pilot_md1` aus der Boot-RDT; beide
+  werden NIRGENDS gelesen (grep: keine weitere Stelle; Slots 2/3 bindet niemand:
+  `re15_render_pc_bind_tim_slot` nur mit 0, 21, Bank-, Prop- und Gore-Slots bzw. 1 fuer Elliot).
+  Nach der ersten Grenze zeigen ihre Zeiger in die freigegebene Boot-RDT — totes, nie
+  dereferenziertes Erbe. Das Entfernen (~28 Zeilen main.c) sprengt die 1-5-Zeilen-Regel fuer
+  gemeinsame Dateien; naechster Schritt: in einer Aufraeum-Runde den Block streichen (Verhalten
+  unveraendert, da ungenutzt). Die Slots selbst fallen seit N1.
+* O5 Typ 0x47 in spaeteren Stages (laut Memory reai-v2-npc-ai = Annette EM047) zeichnet der PC
+  weiterhin mit PLD/ELLIOT (Port-Wahl R23, unveraendert); die Lebensdauer folgt jetzt auch dort dem
+  Spawn. Nicht Teil dieses Auftrags.
+* O1/O3 unveraendert (PSX nicht gebaut; O3 "echte Tuer mit Tuersequenz" hat die Abnahme selbst
+  gefahren: DOOR13, alle Faecher 0).
+* main.c-Umfang: der Boot-Lader fuer Elliot (31 Zeilen) ist nach elliot_pc.c VERSCHOBEN, dazu
+  3 Haken-Zeilen (Anmelden, Roster-Schleife, Render-Durchgang) — mehr als 1-5 Zeilen Diff, aber
+  ueberwiegend Loeschung; die Logik liegt in der neuen Datei (VERTRAG 1.4).
+
+### Fuer den Nutzer (N1)
+* Keine Sprachdateien, keine neuen Assets (Paket-/Android-Gate unveraendert).
+* Neue Quelldatei `platform/pc/src/elliot_pc.c` -> Android-Bau einmal neu konfigurieren (GLOB-Cache).
+* Wirkung: nach Raumwechsel und Tod sind auch die gesprochenen Zeilen des Raums davor und Elliot
+  (Modell + Textur) nicht mehr geladen; Elliot erscheint unveraendert, sobald er in ROOM1170 gesetzt
+  wird. Messschiene: zwei neue Faecher `stimme` und `figur`, VORHER-Zeile mit `stimme_laeuft`.
+
