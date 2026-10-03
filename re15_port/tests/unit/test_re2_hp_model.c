@@ -76,8 +76,13 @@ static const int E2_DOG[22]     = { 10,10,10,18,18,18,18,200,59,300,300,300,10,3
 static const int E2_CROW[22]    = { 15,15,15,15,15,15,15,200,60,60,60,60,15,120,15,60,60,60,300,30,15,15 };
 static const int E2_SPIDER[22]  = { 15,15,15,17,17,17,17,130,55,60,90,130,10,130,10,60,90,130,200,18,17,15 };
 
-/* Waffen, die den unbegrenzten Schuss-Streifen benutzen (Tester-Tabelle @0x8006E548). */
-static const uint8_t GUN_STRIP[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,0,1 };
+/* Waffen, die den unbegrenzten Schuss-Streifen benutzen (Tester-Tabelle @0x8006E548; w20 per PORT-WAHL). */
+static const uint8_t GUN_STRIP[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,1,1 };
+/* Runde 35 Spur B: die Colt Python (w20, Spalte 20 ueberall 0 = unfertig) schiesst mit der Spalte 7
+ * des Super Redhawk (re15_player_weapon_fire `if (weapon_id == 20) dmg = dmg_row[7]`, PORT-WAHL,
+ * Dossier B_werfer.md §3.5) — die Tabellen hier bleiben die rohen Zeilen, der Erwartungs-Index
+ * wird fuer w20 auf 7 umgelenkt. Der RE1.5-Crit (@0x800124FC-51C) bleibt w7-eigen. */
+#define R35_W(w) ((w) == 20 ? 7 : (w))
 
 /* Die vier RE2-INIT-HP-Tabellen des ausgelieferten Zweigs (selbst gedumpt, s. Kopf). */
 static const int HP_ZOMBIE[16] = { 80, 94, 128, 75, 60, 95, 58, 75, 50, 83, 79, 66, 80, 65, 82, 65 };
@@ -173,10 +178,10 @@ static void check_row(const char *tag, int flavor, int model_on, uint8_t type, c
         /* RE1.5-Crit (@0x800124FC-51C, in BEIDEN Modi aktiv — er sitzt im RE1.5-Hitscan, nicht
          * im Schadensmodell): Waffe 7 toetet Typen < 0x20 sofort (Waffe 8 nur unter 3000). */
         int crit = (w == 7 && type < 0x20);
-        int want = crit ? -1 : (2000 - exp[w]);
+        int want = crit ? -1 : (2000 - exp[R35_W(w)]);
         if (e->hp != (int16_t)want) {
             CHECK(0, "%s typ=0x%02X w%d: hp %d, erwartet %d (Schaden %d%s)",
-                  tag, type, w, e->hp, want, exp[w], crit ? ", Crit" : "");
+                  tag, type, w, e->hp, want, exp[R35_W(w)], crit ? ", Crit" : "");
             bad++;
         }
     }
@@ -424,10 +429,10 @@ int main(void)
             re15_actor_t *e = &g_actors[slot];
             if (!fired) { CHECK(0, "Option AN typ=0x10 w%d: Schuss kam nicht an", w); continue; }
             int crit = (w == 7);
-            int want = crit ? -1 : (2000 - E2_ZOMBIE[w]);
+            int want = crit ? -1 : (2000 - E2_ZOMBIE[R35_W(w)]);
             CHECK(e->hp == (int16_t)want,
                   "RE1.5+Option typ=0x10 w%d: hp %d, erwartet %d (RE2-Schaden %d)",
-                  w, e->hp, want, E2_ZOMBIE[w]);
+                  w, e->hp, want, E2_ZOMBIE[R35_W(w)]);
         }
         printf("  RE1.5 + Option  typ=0x10: 22/22 Waffen auf der RE2-Zeile 0x800A412C\n");
         for (int w = 0; w < 22; w++) {           /* 0x16 hat seine eigene RE2-Zeile 0x800A42A8 */
@@ -437,7 +442,7 @@ int main(void)
             re15_player_set_equipped_weapon(w);
             if (!re15_player_weapon_fire(w)) continue;
             re15_actor_t *e = &g_actors[slot];
-            int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE16[w]);
+            int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE16[R35_W(w)]);
             CHECK(e->hp == (int16_t)want, "RE1.5+Option typ=0x16 w%d: hp %d, erwartet %d",
                   w, e->hp, want);
         }
@@ -458,7 +463,7 @@ int main(void)
                 re15_player_set_equipped_weapon(w);
                 if (!re15_player_weapon_fire(w)) { bad++; continue; }
                 re15_actor_t *e = &g_actors[slot];
-                int want = (w == 7 && keep[k].t < 0x20) ? -1 : (2000 - keep[k].row[w]);
+                int want = (w == 7 && keep[k].t < 0x20) ? -1 : (2000 - keep[k].row[R35_W(w)]);
                 if (e->hp != (int16_t)want) {
                     CHECK(0, "RE1.5+Option %s w%d: hp %d, erwartet %d — die Option darf NUR "
                              "die Zombie-Familie treffen", keep[k].name, w, e->hp, want);
@@ -529,7 +534,7 @@ int main(void)
                 re15_player_set_equipped_weapon(w);
                 if (!re15_player_weapon_fire(w)) { bad++; continue; }
                 re15_actor_t *e = &g_actors[slot];
-                int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE[w]);
+                int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE[R35_W(w)]);
                 if (e->hp != (int16_t)want) {
                     CHECK(0, "RE2-Modus mit Option=%d w%d: hp %d statt %d — die Option darf den "
                              "RE2-Modus NICHT beruehren", opt, w, e->hp, want);

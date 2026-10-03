@@ -316,7 +316,10 @@ int main(void)
             { 13,  8, "SPAS-12 -> Custom-Schrotflinte (300/80/60)" },
             { 14, 16, "Flammenwerfer -> RE2-Id 16 IST der Flammenwerfer (Fuel 0x17)" },
             { 18, 17, "Rocket Launcher -> RE2-Id 17 IST der Raketenwerfer (900 Schaden)" },
-            { 20, 13, "Colt Python -> Colt S.A.A. (Single-Action-Revolver)" },
+            /* Runde 35 Spur B: 13 -> 5. RE1.5 fuehrt die Python als zweiten MAGNUM-Revolver (ARMS14
+             * = Record-Layout des Redhawk ARMS07 `00001330 00003310 00004210 .. 00009314`, Bank W14 =
+             * Revolver-Clips 10/26/27/50, Magazin 6 @0x80074e98; Dossier B_werfer.md §3.5). */
+            { 20,  5, "Colt Python -> Magnum-Klasse (zweiter Magnum-Revolver, Runde 35 Spur B)" },
         };
         for (unsigned k = 0; k < sizeof id / sizeof id[0]; k++) {
             unsigned got = re15_re2z_row_for_weapon((unsigned)id[k].w, 1u, 0);  /* ungefiltert */

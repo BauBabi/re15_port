@@ -384,6 +384,13 @@ RE1.5-KI (unit_r35_werfer Teil F, Treffer in 800).
   94 s, Passed): je Waffe die RE2-Spawns im Rueckstossbild 1, die Toene, HP-Verlust und Reaktionszeile
   (15: ss1 9; 16: 11; 17: 10; 18: 900/ss1 17; 14: ss1 16 + Fuel leer; 20: Redhawk-FX ohne Huelse, 900/ss1 5),
   EXIT_AT erreicht (kein Haenger). Exit -1 (fremder Kill) wird einmal wiederholt.
+* **Pin-Anpassungen (Suite-Lauf 1, 4 rote Pins = alte Port-Wahlen der Python / Raketen-Hitscan):**
+  `unit_re2_weapon_rows` (w20: Zeile 13 -> 5), `unit_re2_baby_spider_dmg` (w20: Zone 0 = 130 statt 17,
+  Streifen), `unit_re2_hp_model` (w20 liest die Erwartung der Spalte 7, `R35_W`), `unit_re2_zombie_teardeath`
+  (PIN2: der Raketen-Treffer kommt wie in Op 24 ueber den Applier `0x30011` Box {-800,0,400,200} im
+  Rueckstossbild 1 — der Harness tickt die RE2-FX-Maschine nicht; PIN3..PIN7 waren eine Kaskade des
+  nicht endenden PIN2-Kampfs; w20 aus PIN7 (Handfeuer-Wache) heraus und als PIN1b (Magnum-Zelle
+  0x801092C4, Zeile 5) hinein).
 * Suite: s. Abschluss (local_build.sh all).
 
 ## 6. OFFEN (mit Adresse und naechstem Messweg)
