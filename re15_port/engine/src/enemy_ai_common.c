@@ -38,6 +38,7 @@
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
+#include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -5694,6 +5695,10 @@ int re15_enemy_ai_live_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60(-10,0x14) `jal` @0x80100514 (a0 @0x801004dc,
+     * a1 @0x80100518) VOR Steer/Dispatch — Absturzkante (Zellattribut 2) -> faellt auf +0x1ba.
+     * Beide KI-Geschmaecker (Raumdaten = RE1.5). re15_trage1200.h */
+    re15_schwerkraft_8001bd60(e, RE15_SCHWERKRAFT_ZOMBIE_A0, RE15_SCHWERKRAFT_ZOMBIE_A1, (int32_t)e->hit_radius_min);
     /* +0x1bc/+0x1be STEER TARGET — the per-tick writer is EXE FUN_80039e7c (RESOLVED 2026-07-04;
      * the RAM observation "== player pos every tick" was the SAME-ZONE case). Byte-true call
      * (zombie driver @0x8010a9c0-9e0 / m0 root @0x80100538): a0 = the player-pos block, a1 = the
