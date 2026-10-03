@@ -224,7 +224,30 @@ Gegenproben (Fix-Zeile temporaer entfernt, gebaut, gemessen, `git checkout` zuru
   (fremde Masken in 23/599 Bildern, fremde TIM-Slots) -> a und b schlagen dort an.
 
 ## OFFEN
-(laufend)
+
+* O1 PSX-Port: der PSX-Teil (platform/psx) hat seinen eigenen Raumlader (asset_psx.c/room_common.c
+  reset_render) und die echte Arena; entladen_common.c (Generation) baut dort mit, der PC-Teardown
+  entladen_pc.c nicht. Nicht gebaut/gemessen (PSn00bSDK-Bau ist hier nicht Teil der Suite).
+  Naechster Messweg: PSX-Build + gleiche Laeufe ueber DuckStation-Savestate-RAM (0x800ac77c nach
+  Tuer == 0x800ac780 + RDT-Groesse).
+* O2 Bewusst NICHT entladen (keine Raum-Assets, eigene Lebensdauer im Original belegt bzw. im Port
+  begruendet): TIM 0..3 (Spieler, Elliot, Heli/Pilot: Boot-Lader, bei jedem Spielstart neu), 19..23/
+  44/50..55 (globale Effektseiten CORE00/TEX.TIM, Spielmodul-Init `jal 0x8001923c` @0x8001d580),
+  CDEMD0.EMS-Archive (Prozess-Cache einer CD-Datei, wie der CD-Inhalt selbst), STAGE%u.BIN-Tabelle
+  (bg_pc, je Stage), Tuer-TONBANK (RE2: Key-Off nur fuer Raum-SPU-Bereich @0x800597a4-0x80059810,
+  Tuerbank 0x3DC50 ueberlebt den Raumwechsel — unveraendert aus Runde 31).
+* O3 Messung "Tod -> LOAD in einem ANDEREN Raum" und "Raumwechsel ueber eine echte Tuer mit
+  Tuersequenz (TIM 24/25)" nicht einzeln gefahren; beide laufen durch dieselben Grenzen
+  (spielstart bzw. raum), die Faecher sind dieselben. Naechster Messweg: Lauf C mit Karte in Raum X
+  und Tod in Raum Y; Tuersequenz per RE15_FIRE_AOT an einer Kreuz-Raum-Tuer + RE15_ENTLADEN_LOG.
 
 ## Fuer den Nutzer
-(laufend)
+
+* Keine Sprachdateien, keine neuen Assets (Paket-/Android-Gate unveraendert).
+* Neue Quelldatei platform/pc/src/entladen_pc.c + engine/src/entladen_common.c: der Android-Bau
+  cacht die GLOB-Liste (Memory reai-v2-android-glob-cache) -> dort einmal neu konfigurieren.
+* Bedienung: nichts. Wirkung: nach dem Tod sind Titel, Charakterwahl und das neue Spiel frei von
+  Masken/Texturen/Modellen/Effekten/Tonbaenken/RDT des alten Spielstands; nach jedem Raumwechsel
+  dito fuer den Raum davor.
+* Messschiene fuer eigene Befunde: `RE15_ENTLADEN_LOG=entladen.log` (Zeilen EREIGNIS/SUMME/BILD,
+  s. Messung vorher), Bildbeleg `RE15_ENTLADEN_SHOT=<praefix>` + `RE15_ENTLADEN_SHOT_BILD=5,40,...`.

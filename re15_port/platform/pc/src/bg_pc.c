@@ -235,6 +235,8 @@ int re15_pri_load_cut_atlas(int cut_idx) { return re15_pri_load_cut_atlas_ex(cut
 /* Cached BG frame, RGBA8888 layout (matches the PC framebuffer). */
 static uint32_t s_bg_cache[BG_PIXELS];
 static int      s_bg_loaded = 0;
+static unsigned s_bg_gen    = 0;   /* Runde 35 Spur I: Generation des Hintergrundbilds */
+int re15_bg_belegt(unsigned *gen) { if (gen) *gen = s_bg_gen; return s_bg_loaded; }   /* Zensus */
 
 /* RE15_FADE_LOG-Messlauf-Instrumentierung (env-gegatet, Normalpfad stumm):
  * s_bg_tag = Herkunft des Cache-Inhalts ("room1170#00"), gesetzt bei jedem
@@ -313,6 +315,7 @@ int re15_bg_load_from_bss(const uint8_t *bss_chunk, size_t size)
     free(rgb_bytes);
 
     s_bg_loaded = 1;
+    s_bg_gen    = g_re15_entladen_gen;   /* Runde 35 Spur I */
 
     /* AZ-round: hand the freshly decoded BG to the renderer so its
      * sprite.pri overdraw layer can sample from the matching image. */

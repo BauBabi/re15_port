@@ -32,6 +32,9 @@ extern void re15_render_pc_entladen_raum(void);
 /* bg_pc.c */
 extern int  re15_pri_sld_belegt(unsigned *gen);
 extern void re15_pri_sld_entladen(void);
+extern int  re15_bg_belegt(unsigned *gen);
+extern void re15_bg_invalidate(void);
+extern void re15_bg_prev_invalidate(void);
 /* room_pc.c */
 extern int  re15_room_pc_belegt(unsigned *gen);
 extern void re15_room_pc_entladen(void);
@@ -40,7 +43,7 @@ extern int  re15_audio_raum_belegt(void);
 
 const char *const re15_entladen_fachname[RE15_FACH_ANZAHL] = {
     "pri_masken", "pri_atlas", "sld", "msk", "tim", "gegner",
-    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton"
+    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg"
 };
 
 /* ---- Nachgezeichnete Masken (vorher main.c-Cache, Schluessel nur der Raum) ------------------ */
@@ -128,6 +131,11 @@ void re15_entladen_zensus(re15_entladen_zensus_t *z)
     z->fremd [RE15_FACH_RDT] = (rdt && dg != g) ? 1 : 0;
 
     z->belegt[RE15_FACH_TON] = re15_audio_raum_belegt();   /* ohne Generation: nur am Ereignis */
+
+    unsigned bgg = 0;
+    int bg = re15_bg_belegt(&bgg);
+    z->belegt[RE15_FACH_BG] = bg ? 1 : 0;
+    z->fremd [RE15_FACH_BG] = (bg && bgg != g) ? 1 : 0;
 
     for (int f = 0; f < RE15_FACH_ANZAHL; f++) {
         z->belegt_summe += z->belegt[f];
@@ -273,6 +281,15 @@ static void alles_entladen(const char *anlass)
      *     Boot-Block bzw. der Titel (Spielmodul-Init @0x8001d590-a0). */
     (void)anlass;
     re15_room_pc_entladen();
+    /* (8) Hintergrundbild des Cuts. Original: der Raumlader schaltet zuerst auf Modus-2-Schwarz
+     *     (`jal 0x80021634` a0=2 @0x8001d620-28 Boot / @0x8001d830-34 Tuer, Spielmodul-Init
+     *     @0x8001d248-50) und gibt das neue Bild erst nach dem Laden frei (@0x8001dadc-ec). Der
+     *     Port laedt das Eintrittsbild direkt danach (room_common.c Schritt 9 / Boot-Preload);
+     *     schlaegt das fehl, bleibt es schwarz statt beim Bild des Raums davor. Der Montage-
+     *     Schnappschuss (s_bg_prev) bleibt beim Raumwechsel stehen — er gehoert zu einer
+     *     laufenden Ueberblendung —, faellt aber an Spielstart/-ende. */
+    re15_bg_invalidate();
+    if (anlass && strcmp(anlass, "raum") != 0) re15_bg_prev_invalidate();
 }
 
 void re15_entladen_ereignis(const char *anlass)

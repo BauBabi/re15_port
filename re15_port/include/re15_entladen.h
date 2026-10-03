@@ -62,6 +62,7 @@ enum {
     RE15_FACH_RE2FX,           /* RE2-FX-Plaetze                                            */
     RE15_FACH_RDT,             /* residente Raum-RDT-Bytes (room_pc)                         */
     RE15_FACH_TON,             /* Raum-Tonbaenke snd0/snd1 (audio_pc, dekodiertes PCM)       */
+    RE15_FACH_BG,              /* Hintergrundbild des Cuts (bg_pc, dekodiertes BSS)          */
     RE15_FACH_ANZAHL
 };
 
