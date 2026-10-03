@@ -185,8 +185,7 @@ static int griff(int yaw0, const char *name)
                             "@0x80100C18-38, nicht Clip 5 Bild 0", name);
     long dneu = (long)sqrt((double)(pl->x-erwartet[0])*(pl->x-erwartet[0]) + (double)(pl->z-erwartet[2])*(pl->z-erwartet[2]));
     long dbis = (long)sqrt((double)(pl->x-alt[0])*(pl->x-alt[0]) + (double)(pl->z-alt[2])*(pl->z-alt[2]));
-    printf("  [%s] Leon zur Parts-Pose-Hand %ld, zur Clip-5-Hand %ld
-", name, dneu, dbis);
+    printf("  [%s] Leon zur Parts-Pose-Hand %ld, zur Clip-5-Hand %ld\n", name, dneu, dbis);
     CHECK(nm, vor_mo == 3 && dneu <= 30 && dneu < dbis && dalt > 0);
     /* (2) Gleichlauf + (3) Clipping-Mass ueber einen vollen Zyklus nach der Ueberblendung */
     int gleich = 1, im_koerper = 0, bilder = 0; int mind = 1 << 30;

@@ -183,10 +183,19 @@ int main(void)
     CHECK("(4b) A1: Hand < 900 -> 0x301 ZUGRIFF, B3 P0 Clip 3 (@0x80100814 / @0x80100AEC)",
           arm->state == 1 && arm->sub_state_1 == 3 && arm->motion == 3);
     int grab_f = -1;
-    for (int f = 0; f < 40 && grab_f < 0; f++) { frame_step(); if (arm->sub_state_1 == 4) grab_f = f; }
+    /* Runde 35 Spur H: Startbild-Historie fuer (4d) — die Parts im Griff-Takt tragen die Pose, die
+     * B3 P1 (@0x80100B24) im VORTAKT aus dessen Startbild baute (0x8002959C posiert vor dem +1). */
+    int vor_mo = arm->motion, vor_fr = arm->anim_frame, cur_mo = arm->motion, cur_fr = arm->anim_frame;
+    for (int f = 0; f < 40 && grab_f < 0; f++) {
+        vor_mo = cur_mo; vor_fr = cur_fr; cur_mo = arm->motion; cur_fr = arm->anim_frame;
+        frame_step(); if (arm->sub_state_1 == 4) grab_f = f; }
     CHECK("(4c) A3: Hand < 600 ab Bild 5 -> 0x401 HALTEN (@0x801009BC-A54)", grab_f >= 0);
     if (grab_f >= 0) {
-        int32_t h2[3]; re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), h2);
+        int32_t h2[3];
+        {   const int16_t mo = arm->motion; const uint16_t fr = arm->anim_frame;   /* Parts-Pose */
+            arm->motion = (int16_t)vor_mo; arm->anim_frame = (uint16_t)vor_fr;
+            re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), h2);
+            arm->motion = mo; arm->anim_frame = fr; }
         printf("  Griff-Bild %d: pl=(%ld,%ld) Hand=(%ld,%ld) Standpunkt davor=(%ld,%ld)\n", grab_f,
                (long)pl->x, (long)pl->z, (long)h2[0], (long)h2[2], (long)stand_x, (long)stand_z);
         CHECK("(4d) Spieler an die Hand teleportiert (PL.x/z := part[Hand]+0x5C/+0x64 @0x80100C18-38), Victim-Modus 4, Riegel gesetzt",
