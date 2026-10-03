@@ -43,6 +43,13 @@ void re15_messer_startinventar(void)
      * leitet den Platz per Suche ab (kein Messer im Inventar -> 0x80); danach explizit festnageln. */
     re15_player_set_equipped_weapon(RE15_MESSER_ID);
     re15_inv_set_equipped_slot(RE15_MESSER_NICHTS);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[messer] Startinventar Charakter %d:", g_gameflow.character);
+    for (int i = 0; i < n; i++)
+        fprintf(stderr, " %02x x%u", (unsigned)g_inv.slots[i].id, (unsigned)g_inv.slots[i].qty);
+    fprintf(stderr, " | Ausruest-Platz 0x%02x, Waffe %d\n", (unsigned)re15_inv_equipped_slot(),
+            re15_player_equipped_weapon());
+#endif
 }
 
 int re15_messer_aus_inventar(void)
