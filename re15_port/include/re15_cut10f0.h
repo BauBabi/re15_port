@@ -199,10 +199,11 @@ int re15_cut10f0_bgm_eintrag(int stage, int room);
 /* HAKEN audio_pc.c (SCD_AUDIO_SEQ_CTL, Slot 0): 1 = die Weiche hat der Audio-Schicht MAIN01 geliefert —
  * Sce_bgm_control des Raumskripts an den MAIN-Slot gilt der Tabellen-Musik und wird nicht angewandt. */
 int re15_cut10f0_bgm_haelt_main(void);
-/* HAKEN audio_pc.c (je eine Zeile; Rumpf platform/pc/src/cut10f0_pc.c): Se_on an die Port-Bank 0x0E ->
+/* HAKEN audio_pc.c (je eine Zeile; Rumpf engine/src/cut_10f0.c, damit jede Bindung von audio_pc.c — auch
+ * test_rotor_bgm_pin ohne platform-Dateien — ihn ueber re15_engine findet): Se_on an die Port-Bank 0x0E ->
  * RE2-Tuerbank (1 = behandelt); Sce_bgm_control an Slot 0 im MAIN01-Fenster -> nicht anwenden (1). */
-int re15_cut10f0_pc_se_on(unsigned bank, int sample_id);
-int re15_cut10f0_pc_main_gesperrt(unsigned slot, int op, long cap_tick);
+int re15_cut10f0_se_on(unsigned bank, int sample_id);
+int re15_cut10f0_main_gesperrt(unsigned slot, int op, long cap_tick);
 /* HAKEN menu_common.c map_mode (offener Hinweis-Schirm, je Menue-Schritt): zeitgesteuerte Hinweiskette.
  * weiter = START/Abbruch gedrueckt. 0 = nichts; 1 = *hint_nr ist jetzt der Folge-Hinweis, der Schirm zeigt
  * ihn schon; 2 = Zeit um (letztes Ziel) -> der Aufrufer schliesst wie bei START. */

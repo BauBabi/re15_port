@@ -3531,9 +3531,9 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
-                /* Runde 35 Spur K (cut10f0_pc.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
+                /* Runde 35 Spur K (cut_10f0.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
                  * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
-                if (re15_cut10f0_pc_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
+                if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
@@ -3564,9 +3564,9 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
                  * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
-                /* Runde 35 Spur K (cut10f0_pc.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
+                /* Runde 35 Spur K (cut_10f0.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
                  * FUN_80044da4 op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 traefe dessen Bank. */
-                if (re15_cut10f0_pc_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
+                if (re15_cut10f0_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

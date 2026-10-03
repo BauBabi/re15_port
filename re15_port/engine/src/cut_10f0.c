@@ -20,6 +20,7 @@
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>   /* getenv der Logzeilen RE15_SE_DEBUG / RE15_BGM_CTL_DEBUG */
 #endif
 
 extern unsigned g_current_room_id;
@@ -298,6 +299,41 @@ int re15_cut10f0_bgm_eintrag(int stage, int room)
 }
 
 int re15_cut10f0_bgm_haelt_main(void) { return s_bgm_stand; }
+
+/* Haken audio_pc.c, SEQ_CTL-Zweig (Nachbesserung 1, Mangel 1; Rumpf hier statt in audio_pc.c, dort eine Zeile).
+ * Hat die Weiche der Audio-Schicht MAIN01 geliefert, meint ein Skript-Befehl an Slot 0 die nicht geladene
+ * TABELLEN-Musik des Raums (ROOM11D0 sub01 @0x01710 `54 00 02 00 00 00` gilt MAIN3B, Tabelle @0x80074828[0x1D]
+ * = 0xFF7B). Angewandt stoppte er MAIN01 (FUN_80044da4 op 2 @0x80044e50 -> SsSeqStop), und weil jeder Raum des
+ * Fensters denselben MAIN traegt, startete ihn nichts neu (FUN_80044210 Gleich-Zweig @0x80044280; SsSeqReplay
+ * kehrt bei gestoppter Sequenz um, @0x8005ac94); die Nutzlast @0x80044f50/@0x80044f6c schriebe in die
+ * MAIN01-Bank. Rueckgabe 1 = nicht anwenden. Slots 1/2 (SUB) bleiben unberuehrt. */
+int re15_cut10f0_main_gesperrt(unsigned slot, int op, long cap_tick)
+{
+    if (slot != 0 || !s_bgm_stand) return 0;
+#ifdef RE15_PLATFORM_PC
+    if (getenv("RE15_BGM_CTL_DEBUG"))
+        fprintf(stderr, "[bgm] Sce_bgm_control slot=0 op=%d im MAIN01-Fenster NICHT angewandt "
+                        "(Runde 35 Spur K) capTick=%ld\n", op, cap_tick);
+#else
+    (void)op; (void)cap_tick;
+#endif
+    return 1;
+}
+
+/* Haken audio_pc.c, Se_on-Zweig (Nachbesserung 1; Rumpf hier, dort eine Zeile). Port-Bank 0x0E
+ * (RE15_CUT10F0_SE_BANK) = die geladene RE2-Tuerbank: der Tuerknall der Szene in der Se_on-Form von ROOM10D0
+ * sub21 @0x01A02. Die Original-Bank-Weiche FUN_80045024 kennt nur Bank 0..5, deshalb VOR ihr und vor deren
+ * Debug-Zeile. Rueckgabe 1 = behandelt. */
+int re15_cut10f0_se_on(unsigned bank, int sample_id)
+{
+    if (bank != RE15_CUT10F0_SE_BANK) return 0;
+#ifdef RE15_PLATFORM_PC
+    if (getenv("RE15_SE_DEBUG"))
+        fprintf(stderr, "[se] Se_on bank=%u id=%d -> RE2-Tuerbank (Runde 35 Spur K)\n", bank, sample_id);
+#endif
+    re15_audio_re2_tuer_se(sample_id);
+    return 1;
+}
 
 int re15_cut10f0_bgm_fenster(void)    { return s_bgm_offen; }
 

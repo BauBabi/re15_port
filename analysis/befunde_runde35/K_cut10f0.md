@@ -647,4 +647,6 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
 - **M4 Rest — audio_pc.c** (nicht auf der Vertragsliste, aber dieselbe Zusammenfuehrungs-Gefahr: Spuren A/B fassen den
   Ton an): die Haken waren 10 bzw. 9 Zeilen. Rumpf nach platform/pc/src/cut10f0_pc.c verlegt
   (`re15_cut10f0_pc_se_on`, `re15_cut10f0_pc_main_gesperrt`, gleiche Logzeilen), in audio_pc.c bleiben je 2 Kommentar-
-  + 1 Codezeile. `git diff master --numstat` audio_pc.c: **10/0** (include 1, ss_bgm_entry 3, Se_on 3, SEQ_CTL 3).
+  + 1 Codezeile. Rumpf zuerst in cut10f0_pc.c -> Linkfehler `test_rotor_bgm_pin` (bindet audio_pc.c ohne platform-
+  Dateien, nur re15_engine); deshalb in engine/src/cut_10f0.c (`re15_cut10f0_se_on`, `re15_cut10f0_main_gesperrt`).
+  `git diff master --numstat` audio_pc.c: **10/0** (include 1, ss_bgm_entry 3, Se_on 3, SEQ_CTL 3). Bau: LOCAL-BUILD-OK (build).
