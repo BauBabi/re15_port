@@ -3763,6 +3763,8 @@ re_title:;
     char rdt_path[32]; snprintf(rdt_path, sizeof rdt_path, "STAGE%u/ROOM%04X.RDT",
                                 (boot_room >> 12) & 0xFu, boot_room);
     uint8_t *rdt_buf = pc_read_shared(rdt_path, &rdt_size);
+    { extern void re15_room_pc_uebernehmen(unsigned char *buf, int size);   /* Runde 35 Spur I: room_pc */
+      if (rdt_buf) re15_room_pc_uebernehmen(rdt_buf, rdt_size); }           /* besitzt + entlaedt die Boot-RDT */
     fprintf(stderr, "[boot] room RDT: %s (%d bytes)\n", rdt_path, rdt_size);
     re15_rdt_t rdt = {0};
     int rdt_ok = 0;
@@ -5898,9 +5900,13 @@ re_title:;
              * Cut-Wechsel UND beim Raumeintritt, und ruehrt Fade/Montage/Licht nicht an. */
             static unsigned s_pri_room = 0xFFFFu;
             static int      s_pri_cut  = -1;
-            if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut) {
+            static unsigned s_pri_gen  = 0;   /* Runde 35 Spur I: entladen (re15_entladen.h) -> neu ableiten,
+                                               * auch wenn (Raum,Cut) gleich bleibt (Tod -> LOAD im Todesraum) */
+            if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut ||
+                s_pri_gen != g_re15_entladen_gen) {
                 s_pri_room = g_current_room_id;
                 s_pri_cut  = active_cut_idx;
+                s_pri_gen  = g_re15_entladen_gen;
                 /* AZ-round 2026-05-28: parse sprite.pri for this cut and
                  * push the mask list to the renderer's BG-overdraw layer.
                  * NULL section (pri_offset bytes 0xFFFFFFFF) → no masks,
@@ -8126,6 +8132,12 @@ re_title:;
                     {
                         static uint8_t *s_room_rbj = NULL;   /* keep alive: parse_rbj refs it */
                         static unsigned s_rbj_room  = 0xFFFFFFFFu;
+                        /* Runde 35 Spur I: der Riegel ueberlebte Tod -> Titel -> Spielstart (erster
+                         * Tuer-Raum == letzter Raum vor dem Tod -> Bank des Boot-Raums blieb). Das
+                         * Original bindet die Raum-Animation bei JEDEM Raumladen neu aus der neuen
+                         * RDT (`jal 0x8001b3f8` @0x80039a08, unbedingt) -> nach jedem Entladen neu. */
+                        static unsigned s_rbj_gen = 0;
+                        if (s_rbj_gen != g_re15_entladen_gen) { s_rbj_room = 0xFFFFFFFFu; s_rbj_gen = g_re15_entladen_gen; }
                         if (dest_room != s_rbj_room) {
                             char rpath[64];
                             snprintf(rpath, sizeof rpath, "RBJ/ROOM%04X.RBJ", dest_room);

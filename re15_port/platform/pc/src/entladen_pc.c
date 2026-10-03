@@ -35,10 +35,12 @@ extern void re15_pri_sld_entladen(void);
 /* room_pc.c */
 extern int  re15_room_pc_belegt(unsigned *gen);
 extern void re15_room_pc_entladen(void);
+/* audio_pc.c */
+extern int  re15_audio_raum_belegt(void);
 
 const char *const re15_entladen_fachname[RE15_FACH_ANZAHL] = {
     "pri_masken", "pri_atlas", "sld", "msk", "tim", "gegner",
-    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt"
+    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton"
 };
 
 /* ---- Nachgezeichnete Masken (vorher main.c-Cache, Schluessel nur der Raum) ------------------ */
@@ -125,6 +127,8 @@ void re15_entladen_zensus(re15_entladen_zensus_t *z)
     z->belegt[RE15_FACH_RDT] = rdt ? 1 : 0;
     z->fremd [RE15_FACH_RDT] = (rdt && dg != g) ? 1 : 0;
 
+    z->belegt[RE15_FACH_TON] = re15_audio_raum_belegt();   /* ohne Generation: nur am Ereignis */
+
     for (int f = 0; f < RE15_FACH_ANZAHL; f++) {
         z->belegt_summe += z->belegt[f];
         z->fremd_summe  += z->fremd[f];
@@ -146,9 +150,18 @@ static void zensus_schreiben(FILE *f, const re15_entladen_zensus_t *z, int am_er
     fprintf(f, " | fremd");
     for (int i = 0; i < RE15_FACH_ANZAHL; i++) {
         /* am Ereignis ist JEDE noch lebende Instanz fremd (s.o.) */
-        int fr = am_ereignis && (i == RE15_FACH_ESP_FX || i == RE15_FACH_ESP_POOL || i == RE15_FACH_RE2FX)
+        int fr = am_ereignis && (i == RE15_FACH_ESP_FX || i == RE15_FACH_ESP_POOL || i == RE15_FACH_RE2FX ||
+                                 i == RE15_FACH_TON)
                ? z->belegt[i] : z->fremd[i];
         fprintf(f, " %s=%d", re15_entladen_fachname[i], fr);
+    }
+    if (z->belegt[RE15_FACH_TIM] > 0) {   /* welche Raum-Slots (f = fremd) */
+        fprintf(f, " | tim_slots");
+        for (int s = 0; s < re15_render_pc_tim_slot_anzahl(); s++) {
+            unsigned tg = 0;
+            if (re15_render_pc_tim_slot_raum(s) && re15_render_pc_tim_slot_belegt(s, &tg))
+                fprintf(f, " %d%s", s, (am_ereignis || tg != g_re15_entladen_gen) ? "f" : "");
+        }
     }
 }
 
@@ -226,9 +239,38 @@ void re15_entladen_bild(int masken_gezeichnet, unsigned masken_gen)
 }
 
 /* ---- Entladen ------------------------------------------------------------------------------- */
-static void alles_entladen(void)
+/* Das Gegenstueck zum Arena-Reset: ALLES, was einem Raum gehoert, faellt an der Grenze — auch das,
+ * was der neue Raum gleich wieder fuellt (das Fuellen ist dann eindeutig "neu", Generation g).
+ * Jeder Schritt ist idempotent; der Raumwechsel-Teardown (room_pc.c re15_room_reset_render_pc,
+ * room_common.c re15_room_apply_pending) laeuft danach unveraendert weiter. */
+static void alles_entladen(const char *anlass)
 {
-    /* (Schritt 2 der Runde — siehe Dossier "Umsetzung") */
+    /* (1) Masken, Atlas, Raum-TIM-Slots (Props 4..9/26..35/45, Gegner 10..18 + Gore 46..49,
+     *     Tuersequenz 24/25, Raum-ESP 36..43). Original: Masken-Tabelle in der Arena
+     *     (`jal 0x80039270` @0x800399cc), Objekt-Slots per Flagwort genullt (FUN_8003ea7c
+     *     @0x8003eab0-acc), Gegner-Entities per Flagwort (FUN_8001a4c0 @0x8001a4e8). */
+    re15_render_pc_entladen_raum();
+    /* (2) SLD-Auszug + nachgezeichnete Masken (beides Bytes des Raums). */
+    re15_pri_sld_entladen();
+    free(s_msk); s_msk = NULL; s_msk_size = 0; s_msk_room = 0xFFFFu;
+    /* (3) Gegnerbanken (Modelle/Animationen, PC-Puffer frei). */
+    re15_enemy_reset();
+    /* (4) Effekte: 96 Plaetze nullen + Id-Maps -1 (FUN_80019354 @0x80019378/@0x80019388-e4,
+     *     einziger Aufrufer @0x8003996c im Raumlader), Raum-Bank weg, Row-Pool, RE2-FX-Pool. */
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    re15_esp_pool_reset();
+    re2fx_reset();
+    /* (5) Lichtset + Nachrichtentabelle des Raums (beide aus der RDT reloziert, @0x800397fc-834). */
+    g_re15_room_lights_ok = 0;
+    re15_msg_clear_room_block();
+    /* (6) Raum-Tonbaenke: im Original schliesst der Raumlader die Vorgaengerbank (SsVabClose in
+     *     FUN_80043eac/FUN_80043fb0, @0x80039974/@0x8003997c). */
+    { extern void re15_audio_raum_entladen(void); re15_audio_raum_entladen(); }
+    /* (7) RDT-Bytes. Beim Raumwechsel gibt re15_room_load die alten Bytes beim Installieren
+     *     der neuen frei (gleich nach diesem Aufruf). An Spielstart/-ende gibt es keinen
+     *     Nachfolger im selben Schritt — hier freigeben (Spielmodul-Init @0x8001d590-a0). */
+    if (anlass && strcmp(anlass, "raum") != 0) re15_room_pc_entladen();
 }
 
 void re15_entladen_ereignis(const char *anlass)
@@ -243,7 +285,7 @@ void re15_entladen_ereignis(const char *anlass)
         summe_schreiben(f);
     }
     re15_entladen_gen_weiter();
-    alles_entladen();
+    alles_entladen(anlass);
     snprintf(s_letzter_anlass, sizeof s_letzter_anlass, "%s", anlass ? anlass : "?");
     if (f) {
         re15_entladen_zensus_t z;

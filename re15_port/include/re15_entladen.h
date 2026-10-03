@@ -61,6 +61,7 @@ enum {
     RE15_FACH_ESP_POOL,        /* ESP-Row-Pool                                              */
     RE15_FACH_RE2FX,           /* RE2-FX-Plaetze                                            */
     RE15_FACH_RDT,             /* residente Raum-RDT-Bytes (room_pc)                         */
+    RE15_FACH_TON,             /* Raum-Tonbaenke snd0/snd1 (audio_pc, dekodiertes PCM)       */
     RE15_FACH_ANZAHL
 };
 

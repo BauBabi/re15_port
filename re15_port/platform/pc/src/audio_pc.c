@@ -3636,7 +3636,10 @@ void re15_audio_footstep(int foot, int sound_type)
  * RDT-Parse und bei JEDEM Raumwechsel laufen, weil beide Baenke aus dem RDT geschnitten werden. */
 static int ist_tuer_pcm(const int16_t *pcm);   /* Tuerbank (Tor + RE2-Tuer), s.u. */
 
-void re15_audio_load_room_banks(void)
+/* Runde 35 Spur I: Freigabe-Haelfte von re15_audio_load_room_banks als eigener Schritt, damit
+ * die Raum-Tonbaenke auch an den Grenzen Spielstart/Spielende fallen (re15_entladen.h).
+ * Inhalt unveraendert (Stimmen aus, Prioritaeten/Vormerkungen weg, PCM frei; Tuerbank bleibt). */
+void re15_audio_raum_entladen(void)
 {
     if (!g_audio.initialized) return;
     SDL_LockAudioDevice(s_audio_dev);
@@ -3672,6 +3675,14 @@ void re15_audio_load_room_banks(void)
     memset(s_re2se_pend, 0, sizeof s_re2se_pend);
     free_room_bank_pcm();
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+int re15_audio_raum_belegt(void) { return (s_foot_loaded ? 1 : 0) + (s_se_loaded ? 1 : 0); }   /* Zensus */
+
+void re15_audio_load_room_banks(void)
+{
+    if (!g_audio.initialized) return;
+    re15_audio_raum_entladen();
     load_footstep_vab_pc();   /* room snd0 + EDT (Schritt-SE) */
     load_room_se_vab_pc();    /* room snd1 + SE-Tabelle (FUN_800453d0) */
 }
