@@ -24,4 +24,10 @@ int re15_karte_fahrstuhl_blatt(unsigned room);
 /* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */
 void re15_karte_raum_gesehen(unsigned room);
 
+/* Nachbesserung 1: Klemmfenster des Markers in der Kabine = gemalter Innenraum (+Glyph-
+ * Versatz) statt Rechteck+4. Liefert 1 und setzt die Grenzen nur fuer ROOM1080/1081;
+ * (rx,ry) = Ursprung des Kabinen-Rechtecks des gezeigten Blatts. Belege im .c. */
+int re15_karte_fahrstuhl_fenster(unsigned room, int rx, int ry,
+                                 int *lo_x, int *hi_x, int *lo_y, int *hi_y);
+
 #endif

@@ -78,11 +78,30 @@ if __name__ == '__main__':
     # x128..135 y138..145) und Klemmfenster des Markers (Rechteck +4: Blatt 2/3 x113..121
     # y138..146, Blatt 4 x131..139 y141..149). 180 Grad gedreht: Welt-Ost -> Karte-West,
     # Welt-Nord (+z, Tuerseite) -> Karte-Sued.
+    # (Stand 8fee1bb4, von Abnahme 0 verworfen: Marker wanderte nur 2 px je Achse)
     k23 = strecke(-15750, -11550, -4150, -50, 117, 113, 138, 142)
     k4 = strecke(-15750, -11550, -4150, -50, 135, 131, 141, 145)
-    zeig('1080 Blatt 2 rect 9 / Blatt 3 rect 4', (-15750, -4150, -11550, -50), k23,
+    zeig('ALT 1080 Blatt 2 rect 9 / Blatt 3 rect 4', (-15750, -4150, -11550, -50), k23,
          (('Ankunft', (-13650, -900)), ('Panel', (-12050, -50))))
-    zeig('1080 Blatt 4 rect 0', (-15750, -4150, -11550, -50), k4)
+    zeig('ALT 1080 Blatt 4 rect 0', (-15750, -4150, -11550, -50), k4)
+    # NACHBESSERUNG 1: RE2-Massstab 1/450 (FUN_8006e120 @0x8006e1dc-0x8006e268, magic 0x91a2b3c5
+    # sra 8) -> sx = sy = round(2^20/450) = 2330. Versatz: die SICHTBARE Ring-Mitte (mx-1, my-1;
+    # DATA/TEX.TIM @0x14910) legt die West-/Nordwand (x -15750, z -4150) auf die gemalten
+    # Wandpixel x118/y134 (Blatt 2/3) bzw. x136/y137 (Blatt 4). Probe: Gegenwaende -> x109/y143
+    # bzw. x127/y146 = ebenfalls gemalte Wand; Reichweite (Wand -468) -> gemalter Innenraum.
+    S = round((1 << 20) / 450)
+    for nm, (wx, wy) in (('Blatt 2 rect 9 / Blatt 3 rect 4', (118, 134)),
+                         ('Blatt 4 rect 0', (136, 137))):
+        ox = wx + 1 + f(-15750, S)          # flip_x: px = -f + ox ; sichtbar = px - 1
+        oy = wy + 1 - f(-4150, S)           # flip_z: py = +f + oy
+        r = (ox, oy, S, S, 1, 1)
+        sicht = lambda x, z: tuple(v - 1 for v in proj(x, z, r))
+        print('  NEU 1080 %-32s ox,oy,sx,sy = %d,%d,%d,%d flip 1,1' % (nm, ox, oy, S, S))
+        for t, (x, z) in (('Wand W', (-15750, -2100)), ('Wand O', (-11550, -2100)),
+                          ('Wand N', (-13650, -4150)), ('Wand S', (-13650, -50)),
+                          ('steh', (-13650, -900)), ('vor', (-13650, -3682)),
+                          ('rechts', (-15282, -518)), ('links', (-12018, -518))):
+            print('    %-8s (%6d,%6d) -> sichtbar %s' % (t, x, z, sicht(x, z)))
 
     print('== Punkt 4: ROOM1220 = Zellen im Rahmen von ROOM1210 (Zeile @0x800769b8) ==')
     r1210 = zeile(33) + (0, 0)

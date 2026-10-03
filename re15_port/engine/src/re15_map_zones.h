@@ -80,13 +80,22 @@ static const re15_map_zone_t s_map_zones[] = {
      * hergeleitete Zeile (78,214,2080,2320, ohne Spiegel) legte den Kabinen-Innenraum auf
      * y 143..152 - UNTER die gemalte Kabine (Suedwand y=143) -, die Klemmung liess davon
      * x 113..118 / y 144..146 uebrig. Die Massstabszeile @0x800768f0 ist der Stub {0,0,1,1}.
-     * NEU: 180 Grad gedreht (flip 1,1) - Yaw-Stetigkeit der Tuer ROOM1040 @0x1096 (Spawn
-     * Yaw 0x0400 = -z, man geht in 1040 nach +z hinein) - und Innenraum x -15750..-11550 /
-     * z -4150..-50 auf den Schnitt aus gemaltem Innenraum (x110..117 y135..142, Kachel
-     * uv(168,40)) und Klemmfenster (Rect+4: x113..121 y138..146) = x113..117 y138..142.
-     * PORT-WAHL (Original: Stub). Rechnung: analysis/befunde_runde35/G_karte_zeilen.py. */
-    { 0x1080, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   129,   117,   795,   805, 1, 1,   0, 0 },
-    { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   129,   117,   795,   805, 1, 1,   0, 0 },
+     * 180 Grad gedreht (flip 1,1) - Yaw-Stetigkeit der Tuer ROOM1040 @0x1096 (Spawn
+     * Yaw 0x0400 = -z, man geht in 1040 nach +z hinein).
+     * NACHBESSERUNG 1 (Abnahme 0: Marker wanderte mit 795/805 nur 2 px je Achse): MASSSTAB
+     * AUS RE2 RETAIL, weil RE1.5 hier ein Stub ist (@0x800768f0 {0,0,1,1}, Beta->Retail).
+     * RE2-Kartenzeichner FUN_8006e120: x = (x+28000)/450 @0x8006e1dc-0x8006e218 (magic
+     * 0x91a2b3c5, sra 8), y = -(z+28000)/450 @0x8006e1f8-0x8006e268, EIN Massstab fuer alle
+     * Raeume, Versatz je Raum (Eintrag +8/+10 @0x8006e2cc/0x8006e2e4), keine Klemmung (AddPrim
+     * @0x8006e2f0). In Zeilenform sx = sy = 2^20/450 = 2330. Versatz (ox,oy) = PORT-WAHL aus der
+     * Kunst: die sichtbare Ring-Mitte (mx-1,my-1, DATA/TEX.TIM @0x14910) legt die westliche
+     * und noerdliche SCA-Wand (x -15750, z -4150) auf die gemalten Wandpixel x118/y134 (Kachel
+     * uv(168,40), MAP03.PIX @0x1454). PROBE des Massstabs: die GEGENwaende (x -11550, z -50)
+     * fallen dann ebenfalls auf die gemalten Waende x109/y143 - die Kunst ist im RE2-Massstab
+     * gemalt. Spieler-Reichweite (Wand -468, debug.log) -> sichtbar x110..117 y135..142 = der
+     * gemalte Innenraum, 7 px je Achse. Klemmfenster: re15_karte_fahrstuhl_fenster. */
+    { 0x1080, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
+    { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
     { 0x10A0,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x10A1,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
     /* ⛔ ROOM1090 FEHLTE GANZ AUF DER KARTE (Nutzer 2026-09-13: "Fuer ROOM 1090 fehlt noch
@@ -420,12 +429,13 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x50D0, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x50D1, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
     /* Runde 35 Spur G: dieselbe Kabine auf 2F (Ersatzrect Blatt 3 Nr. 4 = (109,134) wie 1F)
-     * und 3F (Blatt 4 rect 0 (127,137), gemalter Innenraum x128..135 y138..145, Fenster
-     * x131..139 y141..149). Abbildung wie die 1F-Zeile oben (G_karte.md B5). */
-    { 0x1080, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   129,   117,   795,   805, 1, 1,   0, 1 },
-    { 0x1081, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   129,   117,   795,   805, 1, 1,   0, 1 },
-    { 0x1080, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   147,   120,   795,   805, 1, 1,   0, 1 },
-    { 0x1081, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   147,   120,   795,   805, 1, 1,   0, 1 },
+     * und 3F (Blatt 4 rect 0 (127,137), gemalte Waende x127/x136 y137/y146, MAP05.PIX @0x1454).
+     * Abbildung wie die 1F-Zeile oben: RE2-Massstab 2330 (FUN_8006e120 @0x8006e1dc), Versatz
+     * aus der Kunst (3F: Kasten um (+18,+3) verschoben -> 173/76). Nachbesserung 1. */
+    { 0x1080, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1081, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1080, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   173,    76,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1081, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   173,    76,  2330,  2330, 1, 1,   0, 1 },
     /* Runde 35 Spur G: ROOM10A0 (Treppenhaus) auf B1 = Blatt 0 rect 6. Band 4: Ankunft aus
      * ROOM1180/1230 auf y -7200 (Tuer @0xA34/@0xB34, Spawn (21200,-7200,25500);
      * re15_collision_band_from_y = -(y/0x708) = 4). Die gemalte Nische der Gang-Kachel
