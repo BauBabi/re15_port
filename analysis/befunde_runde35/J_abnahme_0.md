@@ -54,6 +54,45 @@ Status: IN ARBEIT
   (`jab3/t2_ada.png`, F1110-F1260, zwei Gorillas in Bewegung): kein mitschwingendes Fremdteil am Rumpf.
 - Disasm des Belegs selbst geprueft (Abschnitt 2, Stichprobe 1); Riegel `teile` gruen.
 
+### Punkt 6 — "erst springen, wenn sie 3x getroffen wurden, nicht nach jedem Schuss" — **erfuellt**
+- Lauf t3 (Tuerweg wie t2, `RE15_GIVE=3:250 RE15_EQUIP=3`, `RE15_INPUT_SCRIPT=W40,(MA0.1,M0.6)x150` Basis spiel,
+  Feuer ab 11C0-F1260, Leon steht): Auswertung `jab3/p6.py` (Flinch-Eintritt st 1->2, Exit-Sub beim Austritt):
+  - Slot 2: 13 Treffer, Exit-Subs `3,3,7, 3,3,7, 3,3,7, 3,3,7, 3` (F1281 hp168 -> 3, F1303 -> 3, F1325 hp144 -> 7, ...).
+  - Slot 3: 5 Treffer, Exit-Subs `3,3,7, 3,3`.
+  - Spruenge (sub-7-Eintritte): 6 = 5 "nach Treffer" (je der 3., 6., 9., 12. bzw. 3.) + 1 Fernsprung des
+    Selektors (Slot 3 F1380 aus sub 4, ohne Treffer — Original-Verhalten, auch in der Original-Aufnahme r3
+    t=54.55 sprang G2 ohne Treffer).
+  - Vorher (Bau-Agent, Lauf B): 13 Treffer -> 13 Spruenge. Riegel `sprung` (3,3,7,3,3,7) gruen.
+
+### Punkt 1, erste Haelfte — Ada verschwindet beim Verstecken — **erfuellt**
+- t2 state.log (Tuerweg): `[evt] F1088 room=11c0 Evt_exec sub=7`, `Plc_dest(slot=1 mode=0x05 dest=(-18214,-7229))`;
+  Ada F1088 `st=4/5/2` -> F1145 `st=4/6/0 @(-18025,-7379)` (Original-Savestate t=47.02: `(-18000,20000,-7403)`).
+- Lauf t4 (wie t2, Kamera mit `RE15_FORCE_CUT=4` auf den Wagen-Cut, den sub03 fuer die Rueckkehr nutzt; Bild
+  `jab3/t4_sheet.png`): F1105 Ada laeuft zu den Streifenwagen, F1135 klein am hinteren Wagen, **ab F1150 nicht
+  mehr im Bild** (F1150/F1180/F1300/F1495 leer). Im Cut 5 (t2, `jab3/t2_ada.png`) steht sie bis F1080 sichtbar
+  neben Leon, ab F1110 nicht mehr.
+- y = 20000 ist im state.log nicht protokolliert; belegt durch den Riegel `ada` (gruen: `y = 20000 ab Bild ...`
+  nach Ankunft, Member_set 01 @0x1C74) und das leere Bild.
+
+### Punkt 4 — "KI zielstrebiger und aggressiver wie im Original" — **teilweise**
+Vergleichslage: Leon ohne Eingabe am Szenen-Endpunkt (Port t2 ueber den Tuerweg, Original r3 ueber Debug-JUMP;
+Takt 30 Bilder/s). Original-Zeitleiste aus den 110 r3-Savestates (`abn0_orig_timeline.txt`, selbst gelesen).
+| Groesse | Original r3 | Port t2 (gebaut) |
+|---|---|---|
+| Freigabe (sub07 / G1 frei) | t=45.48 | F1088 |
+| G2 Fernsprung aus der Ruhe | t=54.55 (sub 7) = 9,1 s | F1395 (sub 7) = 10,2 s |
+| 1. Treffer (Heavy -12) | t=57.56 = 12,1 s | F1477 = 13,0 s |
+| Biss-Takt (HP -6) | 15 Bisse t=60.58..84.88 = **1,62 s/Biss (~49 Bilder)** | 16 Bisse F1583..F2079 = **35,4 Bilder/Biss** |
+| Leon tot | t=84.88 = **39,4 s** | F2079 = **33,0 s** |
+| Leon-Lage waehrend der Bisse | pendelt im Kasten (-6285..-7138, -12368..-12963) | wandert stetig (-7160,-12346) -> (-7923,-11343) = 1260 Einheiten nach NW |
+- Vorher (Bau-Agent A3/A5): Leon lebte nach 64 s / 74 s noch, Gorillas krochen/drueckten rueckwaerts — das ist
+  behoben; Annaeherung und erster Kontakt decken sich jetzt mit dem Original (+0,9 s).
+- ABER: der Port ist jetzt in der Angriffsfolge SCHNELLER als das Original (Biss alle 35 statt ~49 Bilder,
+  Tod 6,4 s frueher = -16 %) — nicht "wie im Original", sondern ueberschiessend; vom Bau-Agenten selbst als OFFEN
+  gefuehrt ("Kandidat: Fuss-Sperre auf geblendeten Pool-Matrizen"), Mechanismus nicht gefunden -> Mangel M1.
+- Leons stetige Drift unter den Bissen (Port) gegenueber dem Pendeln im Original ist eine zweite, kleinere
+  Abweichung derselben Kette (Biss-Stagger) -> in M1 enthalten.
+
 ## 2. RE-Gate (@0x-Belege, Stichproben-Disasm, Guess-Tells)
 Diff `git diff master -- re15_port` vollstaendig gelesen (affen_11c0.c, re15_affen.h, enemy_ai_common.c +97,
 game_step_common.c 33, main.c 17, actor_common.c, scd_vm.c, emd_common.c, re15_emd.h, re15_actor.h, Tests).
