@@ -301,6 +301,9 @@ void re15_granate_r35_rueckzug(re15_esp_fx_t *f)
  * `ori v0,zero,0x1f / sh v0,0` @0x80018378-7c, `sh zero,2` @0x80018384) mit Zuender 7 (`ori v0,zero,0x7`
  * @0x8001856c) und Routine 31 laeuft noch in diesem Tick (Zuender 7 -> 6, danach 2 = Nachbrand, 0 = frei).
  *
+ * Explosionspunkt: RE2 Op 47 nimmt die Lage des Geschosses selbst (@0x80020cdc-fc) -> der Platz wird um
+ * den Versatz der Routine 31 (500 @0x800185a8) gesenkt, P = Rueckzugspunkt.
+ *
  * WURFBILD (PORT-WAHL zur NUTZER-VORGABE "nicht durch die Wand"): liegt schon zwischen Werfer und Hand
  * eine Zelle, gibt es keine freie vorige Lage, auf die der RE2-Rueckzug zurueckfuehren koennte. Bleibt die
  * Strecke Werfer -> Rueckzugspunkt blockiert, zuendet die Granate ueber dem Standpunkt des Werfers
@@ -330,6 +333,8 @@ int re15_granate_r35_flug(re15_esp_fx_t *f)
                     tick, (int)vor[0], (int)vor[1], (int)vor[2],
                     (int)f->wpos[0], (int)f->wpos[1], (int)f->wpos[2], (int)von.x, (int)von.z,
                     wurfbild ? " wurfbild" : "");
+    f->y += RE15_GRANATE_R35_R31_VERSATZ;      /* P = Rueckzugspunkt (RE2 Op 47 @0x80020cdc-fc), Header */
+    re15_esp_r35_weltlage(f);
     f->flags = 0x63;
     row_setze16(f, 0x00, 31);
     row_setze16(f, 0x02, 0);

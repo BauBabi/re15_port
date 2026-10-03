@@ -44,6 +44,13 @@
  * `00 00 33 20` -> VAG 3 (12800 B). RE1.5 liefert dieselbe Bank als SOUND/ARMS0F (.VB md5
  * 786ad6910be7a9ea8bf1df0b145ad55b = RE2 ARMS09.VB; ARMS0F.EDH @0x28 Record 0x0A `00 00 33 20`). */
 #define RE15_GRANATE_R35_SE_EXPLOSION  0x01110001u
+/* Explosionspunkt der WANDZUENDUNG = die Lage selbst: RE2 Op 47 liest die Lage ohne Versatz (`lh v0,52(v1)` /
+ * `lh v0,54(v1)` / `lh v0,56(v1)` -> sp+16/20/24 @0x80020cdc-fc; `addiu a0,sp,16` @0x80020d50, `jal 0x800470c0`
+ * @0x80020d78). Routine 31 zieht fuer die LIEGENDE Granate 500 ab (`addiu v0,v0,-500` @0x800185a8); der
+ * Flug-Haken senkt den Platz vor der Zuendung um dieselben 500, damit P = Rueckzugspunkt (und nicht 500
+ * darueber: eine HOCH-Wandzuendung bei y -3525 laege sonst mit P.y -4025 ueber dem Band stehender Gegner,
+ * gemessen Nachbesserung 1 Lauf d_a `eingriffe=0`). */
+#define RE15_GRANATE_R35_R31_VERSATZ   500
 /* Wand-Maske des Zelltests: u0 & 1 = die Zellklasse, die den SPIELER stoppt (FUN_8003b0a4 mit
  * a2 = 1, Port re15_collision_constrain PR/1u). PORT-WAHL: RE2 FUN_8004fba0(&Lage, 2, 0x2000, 0)
  * @0x8001ee60-a0 testet eine EIGENE Geschoss-Klasse (Bit 0x2000 im Wort Zelle+8, `and v0,v1,t0`

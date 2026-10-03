@@ -168,7 +168,7 @@ static void abschnitt_wand(void)
     const int slot = slot_von(g);
     unsigned res0 = re15_esp_granate_resolver_calls();
     int bild_wand = -1, bild_frei = -1;
-    int16_t wpos_vor[3] = { 0, 0, 0 }, wpos_expl[3] = { 0, 0, 0 };
+    int16_t wpos_vor[3] = { 0, 0, 0 }, wpos_expl[3] = { 0, 0, 0 }, wpos_vw[3] = { 0, 0, 0 };
     uint16_t z_nach = 0; uint8_t fl_nach = 0; uint16_t A_nach = 0;
     int kinder_expl = 0;
     for (int k = 0; k < 40; k++) {
@@ -179,6 +179,7 @@ static void abschnitt_wand(void)
         const re15_esp_fx_t *f = re15_esp_fx_get(slot);
         if (f && f->granate_art && bild_wand < 0 && re15_esp_granate_resolver_calls() > res0) {
             bild_wand = k;
+            wpos_vw[0] = wpos_vor[0]; wpos_vw[1] = wpos_vor[1]; wpos_vw[2] = wpos_vor[2];
             wpos_expl[0] = f->wpos[0]; wpos_expl[1] = f->wpos[1]; wpos_expl[2] = f->wpos[2];
             z_nach = ru16(f, 0x1e); fl_nach = f->flags; A_nach = ru16(f, 0x00);
             for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
@@ -203,7 +204,14 @@ static void abschnitt_wand(void)
           bild_frei, bild_wand);
     PRUEF(108, zaehl_re2se(RE15_GRANATE_R35_SE_EXPLOSION) == 1,
           "RE2-SE 0x01110001 genau einmal (%d)", zaehl_re2se(RE15_GRANATE_R35_SE_EXPLOSION));
-    (void)wpos_vor;
+    /* Explosionspunkt der Wandzuendung = Rueckzugspunkt (RE2 Op 47 liest die Lage ohne Versatz @0x80020cdc-fc):
+     * der RE2-SE traegt P; P.y liegt auf der Flugbahn (hoechstens einen Schritt neben der Lage des Vorbilds),
+     * nicht 500 darueber (Routine-31-Versatz @0x800185a8 gilt der liegenden Granate). */
+    { int32_t py = 0, px = 0; for (int i = 0; i < s_re2se_n; i++) if (s_re2se_code[i] == RE15_GRANATE_R35_SE_EXPLOSION) { py = s_re2se_pos[i][1]; px = s_re2se_pos[i][0]; }
+      int32_t dy = py - (int32_t)wpos_vw[1]; if (dy < 0) dy = -dy;
+      PRUEF(113, px == wpos_expl[0] && py == (int32_t)wpos_expl[1] - RE15_GRANATE_R35_R31_VERSATZ && dy < 150,
+            "Explosionspunkt P=(%d,%d) = Rueckzugspunkt: Flugbahn-y im Vorbild %d (Abstand %d < 150; mit Routine-31-Versatz waeren es ~500)",
+            (int)px, (int)py, (int)wpos_vw[1], (int)dy); }
 
     /* Negativ-Kontrolle: OHNE Raumgeometrie (g_room_rdt_ok = 0) fliegt derselbe Wurf weiter (R29 unveraendert). */
     g_room_rdt_ok = 0;
