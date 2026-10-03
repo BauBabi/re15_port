@@ -63,6 +63,10 @@ enum {
     RE15_FACH_RDT,             /* residente Raum-RDT-Bytes (room_pc)                         */
     RE15_FACH_TON,             /* Raum-Tonbaenke snd0/snd1 (audio_pc, dekodiertes PCM)       */
     RE15_FACH_BG,              /* Hintergrundbild des Cuts (bg_pc, dekodiertes BSS)          */
+    /* Nachbesserung 1 (Abnahme 0, M1/M2): */
+    RE15_FACH_STIMME,          /* dekodierte Raum-Stimmen synchro/STAGEn/room<id>/mainNN.wav  */
+    RE15_FACH_FIGUR,           /* Elliot-Modell (Typ 0x47, elliot_pc.c) — Raum-Arena wie jedes */
+                               /* Sce_em_set-Modell (`jal 0x80022300` @0x80042328)             */
     RE15_FACH_ANZAHL
 };
 
@@ -88,6 +92,25 @@ void re15_entladen_bild(int masken_gezeichnet, unsigned masken_gen);
 /* Nachgezeichnete Masken (R15M-Container) des Raums — ersetzt den alten main.c-Cache, damit das
  * Entladen ihn erreicht. Liefert NULL, wenn der Raum keine Datei hat. */
 const unsigned char *re15_entladen_msk(unsigned room_id, int *out_size);
+
+/* ---- Nachbesserung 1 -------------------------------------------------------------------- */
+/* M1 Raum-Stimmen (audio_pc.c): Zahl der geladenen Clips (+ ob der Stimm-Strom gerade laeuft) und
+ * ihre Freigabe samt Loesen des Stroms. RE2 haelt keine dekodierte Stimme im RAM (CD-XA geht vom
+ * Laufwerk direkt in den SPU-Eingang) und der Raumlader liest die neue RDT von CD
+ * (`jal 0x80012fb8` @0x8004a1c4 in FUN_80049e48): Pause @0x800130d4, Setmode 0xA0 (Bit 6
+ * XA-ADPCM = 0) @0x800130f0, ReadN @0x80013140 — danach erreicht keine Stimme mehr die SPU. */
+int  re15_audio_stimmen_belegt(unsigned *gen, int *laeuft);
+void re15_audio_stimmen_entladen(void);
+
+/* M2 Elliot (platform/pc/src/elliot_pc.c). main.c meldet seine Ablage an (Strukturen, die die
+ * Zeichen-/Anim-Wege per Adresse lesen); geladen wird beim Spawn eines Typ-0x47-Aktors, entladen
+ * an jeder Grenze. */
+void re15_elliot_pc_anmelden(void *md1 /* re15_md1_t */, int *md1_ok,
+                             void *skel /* re15_emd_skeleton_t */, void *anim /* re15_emd_animation_t */,
+                             int *skel_ok, void *base_skel, void *base_anim);
+int  re15_elliot_pc_sicherstellen(void);
+void re15_elliot_pc_entladen(void);
+int  re15_elliot_pc_belegt(unsigned *gen);
 
 #ifdef __cplusplus
 }

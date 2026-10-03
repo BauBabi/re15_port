@@ -66,6 +66,8 @@ void re15_rbj_bind_room(const uint8_t *rbj, size_t size)
     s_room_rbj = rbj; s_room_rbj_size = size;
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++) { s_rbj_cache[i].slot = -1; s_rbj_cache[i].valid = 0; }
 }
+/* Runde 35 Spur I (N1-M2): die registrierte Raum-RBJ fuer das Elliot-Overlay beim Spawn (elliot_pc.c). */
+const uint8_t *re15_rbj_room(size_t *size) { if (size) *size = s_room_rbj_size; return s_room_rbj; }
 
 /* Marker-Wort des Records r (u32 @trailer[r].EMR_prefix — die 4 Bytes, die parse_rbj_record
  * mit prefix+4 ueberspringt). -1 = kein Record/kein RBJ. */

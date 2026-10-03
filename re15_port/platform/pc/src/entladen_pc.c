@@ -43,7 +43,7 @@ extern int  re15_audio_raum_belegt(void);
 
 const char *const re15_entladen_fachname[RE15_FACH_ANZAHL] = {
     "pri_masken", "pri_atlas", "sld", "msk", "tim", "gegner",
-    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg"
+    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg", "stimme", "figur"
 };
 
 /* ---- Nachgezeichnete Masken (vorher main.c-Cache, Schluessel nur der Raum) ------------------ */
@@ -136,6 +136,16 @@ void re15_entladen_zensus(re15_entladen_zensus_t *z)
     int bg = re15_bg_belegt(&bgg);
     z->belegt[RE15_FACH_BG] = bg ? 1 : 0;
     z->fremd [RE15_FACH_BG] = (bg && bgg != g) ? 1 : 0;
+
+    /* Nachbesserung 1: Raum-Stimmen (M1) und Elliot (M2), beide mit Generation. */
+    unsigned vg = 0;
+    int st = re15_audio_stimmen_belegt(&vg, NULL);
+    z->belegt[RE15_FACH_STIMME] = st;
+    z->fremd [RE15_FACH_STIMME] = (st > 0 && vg != g) ? st : 0;
+    unsigned eg = 0;
+    int fig = re15_elliot_pc_belegt(&eg);
+    z->belegt[RE15_FACH_FIGUR] = fig ? 1 : 0;
+    z->fremd [RE15_FACH_FIGUR] = (fig && eg != g) ? 1 : 0;
 
     for (int f = 0; f < RE15_FACH_ANZAHL; f++) {
         z->belegt_summe += z->belegt[f];
@@ -290,6 +300,15 @@ static void alles_entladen(const char *anlass)
      *     laufenden Ueberblendung —, faellt aber an Spielstart/-ende. */
     re15_bg_invalidate();
     if (anlass && strcmp(anlass, "raum") != 0) re15_bg_prev_invalidate();
+    /* (9) Nachbesserung 1, M1: dekodierte Raum-Stimmen + Loesen des Stimm-Stroms. RE2-Raumlader
+     *     FUN_80049e48 liest die neue RDT `jal 0x80012fb8` @0x8004a1c4 -> Pause @0x800130d4,
+     *     Setmode 0xA0 (XA-ADPCM-Bit 6 = 0) @0x800130f0, ReadN @0x80013140: keine Stimme
+     *     erreicht danach die SPU; dekodiert im RAM lag in RE2 nie etwas (CD-XA -> SPU). */
+    re15_audio_stimmen_entladen();
+    /* (10) Nachbesserung 1, M2: Elliot (Typ 0x47) — im Original ein Sce_em_set-Modell in der
+     *     Arena (`jal 0x80022300` @0x80042328 mit dem Kopf 0x800ac77c @0x800422c4), also mit dem
+     *     Arena-Reset @0x80039738 weg. Neu geladen beim naechsten Spawn eines 0x47-Aktors. */
+    re15_elliot_pc_entladen();
 }
 
 void re15_entladen_ereignis(const char *anlass)
@@ -300,6 +319,8 @@ void re15_entladen_ereignis(const char *anlass)
         re15_entladen_zensus(&z0);
         fprintf(f, "VORHER %s gen=%u raum=%04X", anlass, g_re15_entladen_gen, g_current_room_id);
         zensus_schreiben(f, &z0, 0);
+        { int laeuft = 0; (void)re15_audio_stimmen_belegt(NULL, &laeuft);   /* Nachbesserung 1 */
+          fprintf(f, " | stimme_laeuft=%d", laeuft); }
         fputc('\n', f);
         summe_schreiben(f);
     }

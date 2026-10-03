@@ -2192,6 +2192,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
 
     s_voice_clip[voice_id].pcm = pcm;
     s_voice_clip[voice_id].len = (int)out_n;
+    { extern unsigned g_re15_entladen_gen; extern unsigned re15_audio_stimme_gen_setzen(unsigned);
+      re15_audio_stimme_gen_setzen(g_re15_entladen_gen); }   /* Runde 35 Spur I: Zensus */
     fprintf(stderr, "[voice] clip loaded: main%02d.wav (%d Hz x%d → %ld @%d Hz)\n",
             voice_id, rate, ch, (long)out_n, RE15_AUDIO_RATE);
     return 1;
@@ -3678,6 +3680,42 @@ void re15_audio_raum_entladen(void)
 }
 
 int re15_audio_raum_belegt(void) { return (s_foot_loaded ? 1 : 0) + (s_se_loaded ? 1 : 0); }   /* Zensus */
+
+/* Runde 35 Spur I, Nachbesserung 1 (Abnahme 0, M1): die dekodierten RAUM-STIMMEN fallen an jeder
+ * Grenze (raum / spielstart / spielende) — vorher erst, wenn in einem ANDEREN Raum die naechste
+ * Zeile angefordert wurde (re15_voice_load_clip oben), also z.B. nie nach dem letzten Satz eines
+ * Raums. RE2 (Ton = RE2): eine Stimme ist CD-XA, das Laufwerk speist sie direkt in den SPU-Eingang
+ * (Abspielen FUN_800129b4: Setmode 0xC8 = Bit 6 XA-ADPCM, Byte @0x8009a415; ReadS 0x1B) — im RAM
+ * liegt nichts Dekodiertes. Der Raumlader FUN_80049e48 liest die neue RDT `jal 0x80012fb8`
+ * @0x8004a1c4; der Leser sendet Pause (9) @0x800130d4, Setmode 0xA0 (Bit 6 = 0, Byte @0x8009a429)
+ * @0x800130f0, SeekL @0x80013110, ReadN @0x80013140 — ab da erreicht keine Stimme die SPU mehr.
+ * Deshalb wird der Strom hier geloest, nicht weitergespielt. Sperre wie oben (Mixer-Thread). */
+static unsigned s_voice_gen = 0;   /* Generation der zuletzt geladenen Clips (re15_entladen.h) */
+unsigned re15_audio_stimme_gen_setzen(unsigned g) { unsigned alt = s_voice_gen; s_voice_gen = g; return alt; }
+int re15_audio_stimmen_belegt(unsigned *gen, int *laeuft)
+{
+    int n = 0;
+    for (int i = 0; i < VOICE_MAX_MSG; i++) if (s_voice_clip[i].pcm) n++;
+    if (gen) *gen = s_voice_gen;
+    if (laeuft) *laeuft = (s_xa.active && s_xa.pcm) ? 1 : 0;
+    return n;
+}
+void re15_audio_stimmen_entladen(void)
+{
+    int n = 0;
+    for (int i = 0; i < VOICE_MAX_MSG; i++) if (s_voice_clip[i].pcm || s_voice_clip[i].tried) n++;
+    if (n == 0 && !s_xa.pcm) return;
+    if (s_audio_dev) SDL_LockAudioDevice(s_audio_dev);
+    for (int i = 0; i < VOICE_MAX_MSG; i++) {
+        if (s_voice_clip[i].pcm && s_xa.pcm == s_voice_clip[i].pcm) {
+            s_xa.active = 0; s_xa.pcm = NULL; s_xa.pcm_len = 0; s_xa.pos = 0;
+        }
+        free(s_voice_clip[i].pcm);
+        s_voice_clip[i].pcm = NULL; s_voice_clip[i].len = 0; s_voice_clip[i].tried = 0;
+    }
+    s_voice_room = 0;
+    if (s_audio_dev) SDL_UnlockAudioDevice(s_audio_dev);
+}
 
 void re15_audio_load_room_banks(void)
 {

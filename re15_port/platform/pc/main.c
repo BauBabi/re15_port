@@ -4036,32 +4036,15 @@ re_title:;
         }
     }
 
-    /* Phase 4.5.13-R23: Elliot's actual model is PL05.PLD (not em47 EMD).
-     * Load his MD1 mesh + EDD/EMR for skeletal animation so NPC[1] (type
-     * 0x47) renders as Elliot instead of a Leon-clone. */
-    int elliot_md1_size = 0;
-    uint8_t *elliot_md1_buf = pc_read_shared("PLD/ELLIOT.MD1", &elliot_md1_size);
+    /* Phase 4.5.13-R23: Elliot's actual model is PL05.PLD (not em47 EMD) — NPC[1] (type 0x47)
+     * renders as Elliot instead of a Leon-clone. Runde 35 Spur I (Nachbesserung 1, M2): er ist ein
+     * RAUM-Modell (Sce_em_set -> `jal 0x80022300` @0x80042328 in die Arena 0x800ac77c) — geladen
+     * beim Spawn (elliot_pc.c), entladen an jeder Grenze. Hier nur die Ablage, angemeldet unten. */
     re15_md1_t elliot_md1 = {0};
-    int elliot_ok = (elliot_md1_buf && re15_md1_parse(elliot_md1_buf, elliot_md1_size, &elliot_md1) == 0);
-    int elliot_edd_size = 0, elliot_emr_size = 0;
-    uint8_t *elliot_edd_buf = pc_read_shared("PLD/ELLIOT.EDD", &elliot_edd_size);
-    uint8_t *elliot_emr_buf = pc_read_shared("PLD/ELLIOT.EMR", &elliot_emr_size);
+    int elliot_ok = 0;
     re15_emd_animation_t elliot_anim = {0};
     re15_emd_skeleton_t  elliot_skel = {0};
     int elliot_skel_ok = 0;
-    if (elliot_edd_buf && elliot_emr_buf) {
-        if (re15_emd_parse_animation(elliot_edd_buf, elliot_edd_size, &elliot_anim) == 0 &&
-            re15_emd_parse_skeleton (elliot_emr_buf, elliot_emr_size, &elliot_skel) == 0) {
-            elliot_skel_ok = 1;
-            fprintf(stderr, "[elliot] PL05 loaded: %d meshes, %d bones, %d clips\n",
-                    elliot_md1.mesh_count, elliot_skel.bone_count, elliot_anim.clip_count);
-        }
-    }
-    /* Register Elliot's own cinematic EDD with the NPC motion executor so his Plc_motion GESTURE
-     * clips (ROOM1170 intro "Hey!" wave etc.) wrap anim_frame at THEIR real length, not the shared
-     * EM040/Irons table (which froze clips 15/16/20/25 on frame 0). Stable function-scope storage. */
-    { extern void re15_npc_set_elliot_anim(const re15_emd_animation_t *);
-      re15_npc_set_elliot_anim(&elliot_anim); }
 
     /* AD-round (2026-05-26): load PL00W01 (handgun weapon track) for the
      * RUN/WALK_FORWARD animation. PL00.EDD only has Walk_Backward / Damage
@@ -4173,21 +4156,7 @@ re_title:;
                 nloaded, RE15_WPN_MDL_MAX, wpn_fam);
     }
 
-    /* Elliot TIM into slot 1. */
-    int elliot_tim_size = 0;
-    uint8_t *elliot_tim_buf = pc_read_shared("PLD/ELLIOT.TIM", &elliot_tim_size);
-    re15_tim_t elliot_tim;
-    if (elliot_tim_buf && re15_tim_parse(elliot_tim_buf, elliot_tim_size, &elliot_tim) == 0) {
-        re15_render_pc_upload_tim_slot(&elliot_tim, 1);
-        fprintf(stderr, "[tim] elliot TIM in slot 1: %dx%d\n", elliot_tim.width, elliot_tim.height);
-    } else {
-        fprintf(stderr, "[tim] elliot TIM FAILED to load — NPC type 0x47 will use Leon's TIM\n");
-    }
-    if (elliot_ok) {
-        fprintf(stderr, "[md1] loaded elliot mesh: %d meshes\n", elliot_md1.mesh_count);
-    } else {
-        fprintf(stderr, "[md1] elliot MD1 FAILED to load — NPC type 0x47 will use Leon's mesh\n");
-    }
+    /* Elliot TIM (Slot 1): elliot_pc.c beim Spawn (Runde 35 Spur I, Nachbesserung 1). */
 
     /* Phase 4.5.7.3: load EDD (animation) + EMR (skeleton) for the
      * skeletal renderer. The EMR pointer is held by skel.keyframe_data
@@ -4346,6 +4315,8 @@ re_title:;
      * zuruecksetzen koennte. Das Original braucht das nicht — dort verschwindet die Bank mit dem
      * Arena-Reset (@0x80039738) von selbst. */
     re15_emd_animation_t elliot_base_anim = elliot_anim;
+    re15_elliot_pc_anmelden(&elliot_md1, &elliot_ok, &elliot_skel, &elliot_anim, &elliot_skel_ok,
+                            &elliot_base_skel, &elliot_base_anim);   /* Runde 35 Spur I (N1-M2) */
     /* SHARED room-cinematic overlay (enemy_common.c) — the SAME single source of truth the
      * PSX port (re15_load_room_cinematic) and the cross-room reload below use: Leon (overlaid
      * from the clean pl00 base) + Elliot (from his base) + per-room RBJ→enemy rebind
@@ -7523,6 +7494,8 @@ re_title:;
                         pc_enemy_load_ex(g_actors[_pi].type,
                                          g_actors[_pi].type != 0x26u
                                              || g_actors[_pi].re2s_baby_spawned);
+                for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
+                    if (g_actors[_pi].active && g_actors[_pi].type == 0x47u) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
                  * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
                  * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Die Roster-Schleife darueber

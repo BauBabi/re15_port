@@ -2093,11 +2093,15 @@ int re15_render_pc_pri_belegt(unsigned *rects_gen, int *atlas, unsigned *atlas_g
     return s_pri_rect_count;
 }
 /* Raum-eigene Slots (Belegung: Kommentar an RE15_TIM_SLOT_MAX): 4..9 + 26..35 + 45 Raum-Props,
- * 10..18 Gegner (+46..49 Gore), 24/25 Tuersequenz, 36..43 Raum-ESP. Nicht dabei: 0..3 Spieler/
- * Cinematic-Figuren, 19..23 + 44 + 50..55 globale Effektseiten (CORE00/TEX.TIM, Spielstart). */
+ * 10..18 Gegner (+46..49 Gore), 24/25 Tuersequenz, 36..43 Raum-ESP. Nachbesserung 1 (M2): auch
+ * 1 = Elliot (Typ 0x47 = Sce_em_set-Modell in der Arena: `lw s1` 0x800ac77c @0x800422c4,
+ * `jal 0x80022300` @0x80042328, Kopf `sw s1` @0x80042554) und 2/3 = Heli/Pilot (Objekte 2/5 der
+ * Boot-RDT; die RDT liegt ab der Arena-Basis @0x800397e8). Nicht dabei: 0 Spieler (fester Puffer
+ * 0x801bd814, `lui a1,0x801b / ori a1,0xd814` @0x800314c8/cc, NICHT der Arena-Kopf), 19..23 + 44 +
+ * 50..55 globale Effektseiten (CORE00/TEX.TIM, Spielmodul-Init `jal 0x8001923c` @0x8001d580). */
 int re15_render_pc_tim_slot_raum(int slot)
 {
-    return (slot >= 4 && slot <= 18) || slot == 24 || slot == 25 ||
+    return (slot >= 1 && slot <= 18) || slot == 24 || slot == 25 ||
            (slot >= 26 && slot <= 43) || (slot >= 45 && slot <= 49);
 }
 int re15_render_pc_tim_slot_belegt(int slot, unsigned *gen)
