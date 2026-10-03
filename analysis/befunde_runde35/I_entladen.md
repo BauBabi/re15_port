@@ -192,6 +192,18 @@ Gleiche Laeufe, gleiche exe-Kopie, Stand 02397874 + RDT-Schritt (Logs `I_entlade
 * Lauf e (1020 -> 1030): `EREIGNIS raum` belegt 0; keine BILD-Zeile in 150 Bildern ROOM1030
   (vorher 4 fremde TIM-Slots 12/26/27/47 in jedem Bild). Eigene Masken 1030 Cut 6: 22, gezeichnet.
 
+### M3 Cinematic-Bank nach Tod (RBJ-Riegel) — Messung + Gegenprobe
+Lauf: `RE15_TITLE_SHOT=t.bmp RE15_GOTO_ROOM=1170 RE15_KILL_AT=1500 RE15_BOOT_EXIT_AT=3`. Spiel 1:
+1240 -> (GOTO, F30) 1170 -> Tod in 1170. Spiel 2: NEW GAME -> Montage 1240 -> echte Tuer nach 1170
+(F1421, gemessen mit RE15_FADE_LOG `TUER-EINTRITTS-FADE`) -> Tod. debug.log:
+* NACHHER (Riegel je Generation): Spiel 2 Zeile 271 `[rbj] room 1170 cinematic overlay: 26 clips, 366 kf`.
+* GEGENPROBE (nur die Riegel-Zeile entfernt, exe re15_pc_gegenprobe.exe, danach `git checkout`):
+  Spiel 2 betritt 1170 (`[room] PC loaded room1170.rdt`), aber KEINE `[rbj] room 1170`-Zeile —
+  die Helipad-Intro-Bank wurde nicht gebunden, Leon/Elliot spielten das Intro mit der Bank des
+  Boot-Raums (ROOM1240: keine Datei -> PL00-Basis). Original: `jal 0x8001b3f8` @0x80039a08 bindet
+  bei JEDEM Raumladen neu.
+* Masken im Spiel 2 ROOM1170 (echte Tuer): `bilder_mit_masken=847`, fremd 0.
+
 ## Tests
 (laufend)
 
