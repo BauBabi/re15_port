@@ -483,7 +483,7 @@ M4 (NPC-Klemmband ausserhalb 11C0 messen) -> M1 (Biss-Takt gegen das Original). 
 Messung vorher, Beleg, Aenderung, Messung nachher.
 
 ### Stand (fortlaufend)
-- [ ] M5  - [ ] M2  - [ ] M3  - [ ] M4  - [ ] M1
+- [x] M5  - [x] M2  - [x] M3  - [x] M4  - [x] M1 (widerlegt + Griff-Defekt behoben) — Ergebnis-Tabelle am Abschnittsende
 
 ### M1 — Messweg Original (Einzelbild-Naehe ohne PCSX-Redux)
 - Zeitbasis der Original-Aufnahme r3 geprueft (nicht vermutet): RAM-Suche ueber 10/12 aufeinanderfolgende
@@ -702,3 +702,51 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   Vorher (Abnahme t5, gleiche Eingaben): 6 Treffer -> 6 Spruenge (7,7,7 / 7,7,7) + 4 Zonen-Spruenge.
 - Punkt 1 haelt: beide Gorillas tot -> sub03 F2018 (Ada kommt zurueck), sub04 F2606 (gemeinsamer Gang),
   danach Raumwechsel nach 11B0 (wie Abnahme t5).
+
+### Nachbesserung 1 — Ergebnis je Mangel
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| M1 Biss-Takt 35 statt ~49, Tod 33 statt 39 s, NW-Drift | KEIN Regel-Unterschied: das Original hat zwei stabile Takte (Gleichtakt ~51, Wechseltakt 36); welcher entsteht, entscheidet die Lage nach dem ersten Heavy (Bogen 3000 @0x80117a60-74) | GDB-Einzelbild-Spur r3 (Treffer 218/268/321/...); Original-Desync (+0x1dc := 30) -> 36/36/36..., Leon driftet ~2000 nach NW | keine am Biss-Takt (waere erfunden) | Port ab Original-Lage F195: 8 Bisse auf 0-3 Bilder (Gleichtakt), nach Desync 0-4 Bilder (Wechseltakt); Riegel `takt` |
+| M1 Rear-up-Griff (0 HP, ~1600 Sprung beim Zupacken) | 0 HP = Original; der Sprung = Port-Defekt: aca59 = a780 nach statt vor dem Yaw-Latch | `jal 0x8001a780` @0x8011ac50 vor `jal 0x8001a8f8` @0x8011acac; GDB-Griff: Leon steht bis F265, Platzierung ab F266, HP 76 -> 76 | Pin-Latch: `re15_player_victim_latch_ex(e, pl, re15_maggot_a780(e, pl))` | Riegel `griff`: Pin F254, Leon steht, erste Platzierung F266, 0 HP |
+| M2 Riegel pinnt Ursache von Punkt 2 nicht | Riegel `wagen` druckte nur | s001 t=6.11 / s020 / s021 | `wagen` prueft Spawn-INIT (Zustand 1, HP 180, Scale 0x1b33 @0x80117148), y = -2500 (36 Bilder), Austritt (-3617,0,-17798) | gruen |
+| M3 Schrotflinte springt nach jedem Treffer | Zaehler nur in Spur 0 | Exits Spur 1 @0x8011b3c8-cc, Spur 2 @0x8011b6c4-c8 (+0x5 = 7) | Zaehler in Spur 1/2 (Eintritt + Exit, je 1 Zeile) | exe Tuerweg + Schrot: 3,3,7 / 3,3,7 (vorher 7,7,7 / 7,7,7); Riegel `sprung` 24/24, `schrot` (Original-GDB 0-1 Bild) |
+| M4 NPC-Klemme +0x82 spielweit ungemessen | Wurzel-Schwanz aller NPCs | FUN_8003b0a4 `lbu v1,130(a3)` @0x8003b228-3c; Zensus 101 Spawns (94 gleich) | keine (byte-true); OFFEN-Eintrag | Riegel `npcband`: in 10 Raeumen kein laufender NPC mit abweichendem Band |
+| M5 Haken > 1-5 Zeilen | Logik/Kommentare inline | — | Logik + Mess-Schiene nach affen_11c0.c, Belege in re15_affen.h | enemy_ai_common.c +21/-11 in 19 Hunks (max 2 Zeilen), game_step_common.c +4/-2, main.c +5 |
+
+## Tests (Stand Nachbesserung 1) — probes/r35_affen.cmake, test_r35_affen.c, 15 Eintraege
+- Bisherige 11 (teile, band, ada, sprung, flug, wagen, brust, kdsonde, biss, frac, anker), davon erweitert:
+  `wagen` (M2: Spawn-INIT, y im Wagen, Austritt), `sprung` (M3: Spur 0/1/2 + gemischt, 24 Pruefungen).
+- NEU `takt` (M1: Gleich- und Wechseltakt gegen die GDB-Spur des Originals), `griff` (M1: Rear-up-Griff wie das
+  Original, 0 HP), `npcband` (M4: NPC-Band 10D0/1050), `schrot` (M3: Schrot-Vergeltungssprung wie das Original).
+- Alt-Riegel unit_member, unit_maggot_ai gruen.
+
+## OFFEN (Stand Nachbesserung 1; ersetzt die Liste "Stand Abschluss")
+- **Leons Szenen-Endlage in 11C0** weicht ~25 Einheiten ab (Port JUMP-Lauf A7 (-7157,-12355), Tuerweg t2
+  (-7164,-12350), Original r3 (-7138,-12372)). Sie entscheidet im JUMP-Szenario, welcher der beiden
+  Original-Takte entsteht (M1). Messweg: GDB-Spur des Originals ueber sub02 (Leons Plc_dest-Gang) Bild fuer
+  Bild gegen den Port-Gang; dazu eine Original-Aufnahme ueber den TUERWEG (Generator-Flag per GDB `M`).
+- **Wurf-Bahn ab Opfer-Clip-Bild ~19**: Port laeuft entlang z ~ -12500, Original nach SO und springt bei
+  Bild 0x25 nach (-5381,-10551); Endlage ~1900 auseinander (Riegel `griff`, GDB `jnb1/g_griff.txt`).
+  Messweg: 0x8001ad68 (Platzierung) Bild fuer Bild mit GDB-Haltepunkt, Gorilla-Anker +0xa0/+0xa2 mitlesen.
+- **NPC-Klemme +0x82 in Szenen hinter Flags** (Marvin-Gang 10D0, Irons 6030/6031, 4001 0x49/0x4b mit
+  +0x82 0 bei y -3500): Raumaufbau zeigt keinen laufenden NPC mit abweichendem Band; die Szenen selbst sind
+  nicht gefahren. Messweg: Szenen-Trigger im Harness (Riegel `npcband` erweitern).
+- Knockdown-Sonde FUN_8001c2dc gilt spielweit (auch Alligator), nur in ROOM11C0 nachgemessen.
+- Gorilla-Schatten: INIT Box[6]+100/+200 (@0x801171d8-ec), Port 1000/500 — nicht angefasst.
+- Heckklappe (Objekt 0) dunkler als im Original (Cut 12); Weg: FUN_8002c18c `jal 0x80053fc0` @0x8002c254.
+- Member_set 0x13 (+0x1ba statt hp) in 10B1/2030/2031/3050/3051/50D0/50D1 nicht nachgemessen.
+- Spawn-Wurzelaufruf: ausser Birkin jetzt auch 0x27; uebrige Typen wie vor Runde 35.
+- Werkzeug: ViGEm-Geisterpad `USB\VID_045E&PID_028E\01` blockiert den Savestate-Recorder (SDL-0) bis zum
+  Neustart; der GDB-Weg (`jnb1/gdbspur.py`, settings.ini [Debug] EnableGDBServer = true nur waehrend der
+  Messung) ersetzt ihn und liefert jedes Bild.
+
+## Fuer den Nutzer (Stand Nachbesserung 1)
+- Sprachdateien: keine neuen Zeilen.
+- Neue Assets fuer das Paket-/Android-Gate: keine.
+- Spuerbar neu: (1) der Sprung nach drei Treffern gilt jetzt fuer ALLE Waffen (vorher sprang der Gorilla bei
+  Schrotflinte/Magnum nach jedem Treffer); (2) packt ein Gorilla Leon von vorn, bleibt Leon kurz stehen,
+  bevor er geworfen wird (wie im Original) — vorher wurde er im selben Bild weggerissen.
+- Zur Aggressivitaet: der Port beisst jetzt in genau den Takten des Originals. Das Original hat selbst zwei
+  Takte — beissen beide Gorillas gleichzeitig, kommt ein Biss etwa alle 1,7 s; laufen sie versetzt, alle 1,2 s
+  (Leon stirbt dann schneller und wird nach hinten gedraengt). Beides ist im Original gemessen.
+- Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 -> affen_fuss.log (jetzt in affen_11c0.c).
