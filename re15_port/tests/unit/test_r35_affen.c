@@ -40,6 +40,8 @@
  *           Original): Pin F254, Leon steht bis Bild 0xb, erste Wurf-Platzierung F266, 0 HP.
  *   npcband M4: NPC-Wandklemme mit +0x82 statt y — je Raum (10D0, 1050, 1090, 10B1, 1170, 11B0, 4001, 4031, 6030, 6031)
  *           600 Bilder: laeuft ein NPC, dessen +0x82 != band_from_y(y) ist? (10D0/1050 gepinnt: nein).
+ *   schrot  M3: Schrot-Treffer (Spur 1, Zeile 7) als 3. Treffer ab der Original-Lage F195 (GDB-Experiment): Exit-Sub 7,
+ *           Landung, SELECTOR, Heavy-Anlauf, KEIN Zonen-Sprung — Bild fuer Bild wie das Original.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -834,6 +836,50 @@ static void teil_npcband(void)
             PRUEF(n_lauf == 0, "ROOM%04X: kein laufender NPC mit abweichendem Band -> die +0x82-Klemme wirkt hier identisch zur alten y-Klemme", r[i].room);
     }
 }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* M3-Nachtrag (Nachbesserung 1): Schrotflinten-Treffer (Spur 1, Zeile 7) als 3. Treffer -> Vergeltungssprung und was
+ * danach kommt, gegen das Original. Original-Experiment per GDB: r3 s033 direkt geladen, in F250 e1 +0x4..+0x7 :=
+ * 2/7/1/0 (`M800ace24,4:02070100`, scratch jnb1/g_schrot.txt): Spur-1-Exit F276 -> sub 7, Anlauf F277-F286, Flug
+ * F286-F312, Landung F312 bei (-10040,-8792) (5361 von Leon), F316 SELECTOR -> Clip 6 Heavy-Anlauf bis F444, dann
+ * CHASE — KEIN Zonen-Sprung. Port: mag_hit_ctr = 2, damit dieser Treffer der dritte ist (NUTZER-VORGABE). */
+static void teil_schrot(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) return;
+    PRUEF(bank_laden_27(), "EM027-Bank geladen");
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    if (!a || !b) { PRUEF(0, "zwei Gorillas"); return; }
+    pl->x = -6729; pl->z = -12800; pl->rot_y = 647; pl->hp = 82; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();
+    a->x = -5525; a->z = -14883; a->y = 0; a->rot_y = 2731; a->grid_id = 0x10; a->floor = 0;
+    a->state = 1; a->sub_state_1 = 3; a->sub_state_2 = 1; a->sub_state_3 = 0; a->motion = 5; a->anim_frame = 10;
+    a->anim_frac = 0; a->dog_blocked_ctr = 9; a->hit_react = 0; a->dog_flags = 1; a->mag_boost = 4;
+    b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
+    b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
+    int f_exit = -1, exit_sub = -1, f_land = -1, f_sel = -1, zonen = 0; int32_t lx = 0, lz = 0;
+    int alt = -1;
+    for (int f = 196; f < 196 + 300; f++) {
+        if (f == 250) { a->state = 2; a->sub_state_1 = 7; a->sub_state_2 = 1; a->sub_state_3 = 0; a->mag_hit_ctr = 2; }
+        frame(0, 0);
+        int k = a->state * 10000 + a->sub_state_1 * 100 + a->sub_state_2 * 10 + a->sub_state_3;
+        if (f >= 250 && k != alt)
+            printf("    F%d e1 %d/%d/%d/%d c%d/%d (%d,%d) d%.0f%s", f, a->state, a->sub_state_1, a->sub_state_2, a->sub_state_3,
+                   (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, dist2d(a->x, a->z, pl->x, pl->z), "\n");
+        alt = k;
+        if (f > 250 && f_exit < 0 && a->state == 1) { f_exit = f; exit_sub = a->sub_state_1; }
+        if (f_exit >= 0 && f_land < 0 && a->sub_state_1 == 7 && a->sub_state_2 == 3) { f_land = f; lx = a->x; lz = a->z; }
+        if (f_land >= 0 && f_sel < 0 && a->sub_state_1 == 4) f_sel = f;
+        if (f_sel >= 0 && a->sub_state_1 == 7 && a->sub_state_3 != 0) zonen++;
+    }
+    PRUEF(exit_sub == 7 && f_exit >= 274 && f_exit <= 278, "3. Treffer Spur 1: Exit F%d -> Sub %d (Original F276 -> 7 @0x8011b3c8-cc)", f_exit, exit_sub);
+    PRUEF(f_land >= 309 && f_land <= 315, "Landung F%d bei (%d,%d) (Original F312 bei (-10040,-8792))", f_land, (int)lx, (int)lz);
+    PRUEF(dist2d(lx, lz, -10040, -8792) < 1500.0, "Landepunkt %.0f vom Original entfernt", dist2d(lx, lz, -10040, -8792));
+    PRUEF(f_sel >= 0 && zonen == 0, "danach SELECTOR (F%d) und KEIN Zonen-Sprung (Original: Clip-6-Anlauf bis F444, dann CHASE); Zonen-Sprung-Bilder %d", f_sel, zonen);
+}
 /* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
@@ -853,6 +899,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "takt")   || !strcmp(teil, "alle")) teil_takt();
     if (!strcmp(teil, "griff")  || !strcmp(teil, "alle")) teil_griff();
     if (!strcmp(teil, "npcband")|| !strcmp(teil, "alle")) teil_npcband();
+    if (!strcmp(teil, "schrot") || !strcmp(teil, "alle")) teil_schrot();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

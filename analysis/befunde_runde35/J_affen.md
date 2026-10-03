@@ -678,3 +678,15 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
 - Riegel `npcband` pinnt 10D0 und 1050 (0 laufende NPC mit abweichendem Band); die uebrigen Raeume werden
   gedruckt. Szenen, die erst ueber Flags laufen (Marvin-Gang 10D0, Irons 6030), deckt der Raumaufbau nicht
   ab -> OFFEN (Messweg: Szenen-Trigger im Harness, gleiche Zaehlung).
+
+### M3-Nachtrag — Vergeltungssprung nach einem Schrot-Treffer gegen das Original (GDB-Experiment)
+- Original: r3 s033 direkt geladen, F250 e1 +0x4..+0x7 := 2/7/1/0 (Spur 1, Zeile 7 = Schrotflinte;
+  `M800ace24,4:02070100`, `jnb1/g_schrot.txt`): Clip 8 F251-F275, Exit F276 -> sub 7, Anlauf F277-F286,
+  Flug F286-F312, **Landung F312 bei (-10040,-8792)** = 5361 von Leon (der Sprung ueberfliegt ihn), F316
+  SELECTOR -> **Clip-6-Heavy-Anlauf bis F444**, dann CHASE. **Kein Zonen-Sprung.** Das Ueberfliegen ist also
+  Original (Sprung entlang der Blickrichtung ohne Slew, @0x801189b8-a00).
+- Port (Riegel `schrot`, neu; gleiche Lage, mag_hit_ctr = 2 damit es der 3. Treffer ist): Exit **F275**,
+  Landung **F311** bei (-10110,-8325) (472 vom Original), SELECTOR **F315**, Clip 6 bis **F444**, CHASE F445 —
+  jedes Ereignis 0-1 Bild neben dem Original, kein Zonen-Sprung. Die Zonen-Sprung-Kette der Abnahme (t5)
+  entstand dort aus anderer Lage (Landepunkt an den SCA-Markern, LOS-Latch frei); sie ist dieselbe
+  Path-A-Regel (@0x80117ecc-8011802c), hier nicht ausgeloest — im Original wie im Port.
