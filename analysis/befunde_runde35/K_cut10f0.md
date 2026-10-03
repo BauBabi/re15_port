@@ -824,5 +824,5 @@ oben gruen).
 | 4 Animationen passend wie bei vergleichbaren Dialogen (Z.67) | erfuellt; Zeile 6 in der Form ROOM11C0 sub02 @0x01886/@0x01890 |
 
 Commits der Nachbesserung 1: d65c027f, b7e63c98, 59203d44, fc841604, a7f8db0c, f56e446f, 7cd02507 (zweite Sitzung),
-eed4f9d2, 4d742ac6, 9f8fc50e, (Dossier), c9c32c9a, 515dc35c, 2e1255e6, 9a6d7233 (dritte Sitzung) und der Abschluss-Commit
+eed4f9d2, 4d742ac6, 9f8fc50e, f6f19419, c9c32c9a, 515dc35c, 2e1255e6, 9a6d7233, 4ade9c4c (dritte Sitzung) und der Abschluss-Commit
 `fix(r35-cut10f0): Nachbesserung 1 ...`.
