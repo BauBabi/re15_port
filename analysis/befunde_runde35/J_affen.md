@@ -418,7 +418,7 @@ nachher / mit Cut 5). Original: orig_scene/r3 (110 Savestates des Vorgaengers, h
   re15_emd.h (EMR-Rohdaten), re15_actor.h (mag_hit_ctr). Alt-Riegel angepasst: tests/unit/test_member.c, test_maggot_ai.c.
 - Kein Bank-9-Bit, keine Nachrichten-ID, kein Ereignis, kein Asset belegt (Bit 82 / IDs 20..23 / Ereignis 25 bleiben frei).
 
-## Tests (Stand Abschluss) — re15_port/tests/unit/probes/r35_affen.cmake, test_r35_affen.c, 11 Eintraege
+## Tests (Stand Abschluss, ERSETZT durch "Tests (Stand Nachbesserung 1)") — 11 Eintraege
 - unit_r35_affen_teile   — Punkt 3: Part 18 an Knochen 1, t = (-4279,-2816,-16899) = Original-Savestate; 19..21 weltfest; 0x29/0x30 ohne Umhaengung.
 - unit_r35_affen_band    — Punkt 1: NPC-Klemmband +0x82 (Band 2 kommt an, Band 0 klemmt bei x=-16859).
 - unit_r35_affen_ada     — Punkt 1: echte Szene sub02 -> sub07 (y=20000) -> Kill-Bits -> sub03 (y=0, rot 512, Lauf zum Ziel).
@@ -437,7 +437,7 @@ Suite-Lauf 1 der 2. Sitzung (16:27-16:55, unter Last paralleler Baeume): 488/489
 einzeln nachgefahren 2x gruen in 30,4 s / 30,5 s -> Last-Flattern, keine Regression.
 Suite-Lauf 2 (17:00-17:21, HEAD 11087280 = letzter Code-Stand, Baum sauber): `=== LOCAL-BUILD-OK (all) — Tests 489/489` (1265 s; 478 + 11 Riegel dieser Spur).
 
-## OFFEN (Stand Abschluss, ersetzt die Liste der 1. Sitzung)
+## OFFEN (Stand Abschluss, ERSETZT durch "OFFEN (Stand Nachbesserung 1)")
 - **Biss-Takt 36 statt ~51 Bilder.** Port A7: ein Biss alle 36 Bilder (zwei Gorillas im Wechsel; = Flinch 22 + Commit->Treffer 13 + 1),
   Original r3: ~50-52 (Flinch-Bildnummern der 45-Bild-Proben: Clip 9 Bild 16 -> Clip 8 Bild 10 -> Clip 9 Bild 5). Der Port toetet
   den reglosen Leon deshalb in 33,3 s statt 39,4 s. Die Gates (A[3] @0x80117a54-90, Lockout +0x1dc Abbau @0x801173f8-0c, Exit
@@ -464,7 +464,7 @@ Suite-Lauf 2 (17:00-17:21, HEAD 11087280 = letzter Code-Stand, Baum sauber): `==
 - Die Fuss-Sperre der uebrigen Sites (c024 Heavy, bf50 Biss/Rise) laeuft ueber dieselbe reparierte Funktion; einzeln nachgemessen
   wurde nur CHASE (Clip 5).
 
-## Fuer den Nutzer (Stand Abschluss)
+## Fuer den Nutzer (Stand Abschluss, ERSETZT durch "Fuer den Nutzer (Stand Nachbesserung 1)")
 - Sprachdateien: keine neuen Zeilen (alle Texte sind die Original-Nachrichten msg00..09 von ROOM11C0).
 - Neue Assets fuer das Paket-/Android-Gate: keine.
 - Was sich im Kampf spuerbar aendert: die Gorillas laufen jetzt wirklich auf Leon zu (vorher krochen sie auf der Stelle und wurden an
@@ -561,7 +561,7 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   VSync-Zaehler gelesen, dann `c`. Ergebnis: **jedes Spielbild** (VSync +2 je Zeile, Probe g_try.txt
   9875..9913), deterministisch ab dem direkt geladenen r3-Savestate.
 
-### M3 — 3-Treffer-Vorgabe in ALLEN drei Treffer-Spuren (umgesetzt, Riegel gruen; exe-Nachmessung folgt)
+### M3 — 3-Treffer-Vorgabe in ALLEN drei Treffer-Spuren (umgesetzt, Riegel gruen; exe-Nachmessung unten)
 - Ursache: der Zaehler sass nur in Spur 0 (Boden-Flinch). Schrotflinte (Zeile 7) laeuft ueber Spur 1
   (Luft-Treffer 7/8/13/21), Zeilen 9..11/15..18 ueber Spur 2 (Sturz) — beide ohne Zaehler.
 - Messung vorher (Abnahme t5, Schrotflinte): 6 Treffer -> 6 Spruenge (Exit-Subs 7,7,7 / 7,7,7).
