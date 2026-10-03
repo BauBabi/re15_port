@@ -437,3 +437,55 @@ MAIN01 von Raum zu Raum (echte Tueren, SDL_AUDIODRIVER=dummy weil der Rechner ke
 
 Commits des Zweigs r35/cut10f0 ueber master 154a73c1: 0908b3df, d017beaa, 9cc0d253 (erster Durchgang), 3d366e0e, 779c45bc,
 4ea3c410, f2ac79e0 (Fortsetzung, wip) und der Abschluss-Commit `feat(r35-cut10f0): ...`.
+
+## 9. NACHBESSERUNG 1 (2026-10-03 abends, nach der unabhaengigen Abnahme 0 = K_abnahme_0.md)
+Stand beim Einstieg: Baum sauber, HEAD 702bca9e (`doc(r35-cut10f0): Abnahme 0`). Gelesen: K_abnahme_0.md ganz,
+Dossier §0-§8, VERTRAG.md, AUFTRAG.md Z.36-110, `git diff master..HEAD` der gemeinsamen Dateien. Vier Maengel,
+jeder mit Ursache / Messung vorher / Beleg / Aenderung / Messung nachher. "Messung vorher" = die Messlaeufe der
+Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederholt.
+
+### 9.0 RE-Belege, die fuer die Maengel 1 und 2 neu gezogen wurden (selbst disassembliert, `re15_disasm.py`, info/Re1.5/PSX.EXE)
+- **Sce_bgm_control (0x54) -> FUN_80044da4**, Sprungtabelle @0x80010e58 = `80044f28 80044e00 80044e50 80044e88 80044ee8
+  80044f20` (op 0 = nur Nutzlast, 1 = SetVol+Play, 2 = Stop, 3 = SetVol+Replay, 4 = Pause, 5 = Ausblendung):
+  op 2 @0x80044e50: `lb a0,0x800b52ae[slot*8]` @0x80044e60, `jal 0x800603dc` (SsSeqStop) @0x80044e64, Status
+  `sb 2,0x800b52ac[slot*8]` @0x80044e7c.
+  Nutzlast @0x80044f2c ff.: `beq s1,zero` @0x80044f34 -> Slot 0 nimmt `lw v1,0x800b3f88` @0x80044f50 (Kopf der
+  GELADENEN MAIN-Bank), sonst `0x800b3f8c` (SUB); `sb v1,-15(v0)` @0x80044f6c (ProgAtr[part-1].mvol) bzw.
+  `sb v0,24(v1)` @0x80044f74 (Master). Die Schreiber treffen also immer die Bank, die gerade geladen ist.
+- **SsSeqStop** 0x800603dc -> _SsSndStop @0x80060270: loescht die Bits 1/2/8 (`and ... -2/-3/-9` @0x800602c8/e4/300)
+  und SETZT Bit 4 `ori v0,v0,0x4` @0x8006031c im Zustandswort +0x90 (144) der Sequenz.
+- **SsSeqReplay** 0x8005acec -> _SsSndReplay @0x8005ac48: `lw v1,144(a2)` @0x8005ac88, `andi v0,v1,0x204` @0x8005ac90,
+  `bne v0,zero,0x8005ace4` @0x8005ac94 -> eine GESTOPPTE Sequenz (Bit 4) wird von Replay NICHT wieder gestartet.
+- **Auto-Replay beim Raumstart FUN_800444b0** (Aufrufer nur @0x8001d5d4 und @0x8001daf0, je NACH dem Raumlader
+  FUN_800396fc @0x8001d5ac/@0x8001d988): `lbu v1,0x800b52ad` @0x800444b8, `bne v1,zero,0x800444ec` @0x800444c8,
+  `jal 0x8005acec` (SsSeqReplay) @0x800444d8, Status = 1 @0x800444e8. Wegen @0x8005ac94 holt das einen vom Skript
+  gestoppten MAIN NICHT zurueck.
+- **FUN_80044210** (einziger Aufrufer @0x800399b0): gleicher MAIN (`beq a0,v1,0x800442f4` @0x80044280) -> kein Laden,
+  kein Play; das Flag 0x800b52ad wird NUR im MAIN-Wechsel-Zweig geschrieben (@0x800442D0).
+  => Im Original bleibt ein per op 2 gestoppter MAIN stumm, bis ein Skript op 1 schickt oder der MAIN wechselt.
+  Der Port bildet genau das ab ("[unveraendert, laeuft durch]"); der Engine-Pfad ist byte-true, kein Engine-Fehler.
+- **Tabelle UNK_80074828** (STAGE1, Index = Raum-Byte): [0x1D] ROOM11D0 = 0xFF7B (MAIN3B, Flag 1 = Handstart),
+  [0x18] ROOM1180 = 0xFF1D, [0x16] 0xFF1D, [0x1B] 0xFF1D, [0x09] ROOM1090 = 0x0355 (MAIN15 Flag 1 + SUB03),
+  [0x15] ROOM1150 = 0xFF1E, [0x0F] 0xFF20, [0x0D] 0xFF1F, [0x03] 0x4041, [0x1C] 0xFF56.
+  Im Original haben ROOM11D0 und ROOM1180 VERSCHIEDENE MAINs — der Stop des Zwingers (@0x01710, gilt MAIN3B) endet
+  dort mit dem Raumwechsel (MAIN1D wird neu geladen). Erst die Weiche der Spur K (ueberall MAIN01) macht aus dem
+  Raum-Stop ein dauerhaftes Verstummen.
+- RDT-Bytes: ROOM11D0 sub01 @0x016E4 `21 07 d1 01 06 00 38 00 / 21 07 d2 01 .. / 21 07 dd 01 .. / 21 07 2c 01 .. /
+  21 07 2d 01 .. / 21 05 00 00`, @0x01710 `54 00 02 00 00 00`; ROOM1090 sub00 @0x022EE `54 00 00 01 78 33`
+  (Programm 0 der MAIN-Bank: Lautstaerke 0x77, Pan 0x32), sub03 @0x024DA `54 00 00 01 01 41` (Programm 0 stumm),
+  @0x024E0 `54 00 02 00 00 00`.
+- Vergleichsdialog fuer Mangel 3: ROOM11C0 sub02 @0x01886 `41 01 fb dc 00 00 f5 c7 64 00` (Plc_neck Modus 1),
+  @0x01890 `40 00 09 00 fb dc f5 c7` (Plc_dest Modus 9) + `18 05`, `29 0d` (Cut_chg), `09 0a 14 00` (Sleep 20),
+  @0x018A0 `2b 00 00 00` + `3f 00 0f 00` (Zeile mit Clip 15): Blick, Drehung, Schnitt, 20 Bilder, DANN die Zeile.
+- "Szene laeuft" im Port = `re15_cine_active()` (game_state.c: flag(1,27) || flag(2,7)) — die beiden Rahmen-Flags
+  jeder Original-Szene (ROOM1090 sub02 @0x02414/@0x02418, Ende @0x024BE/@0x024C2; Balken FUN_80021a0c @0x80021a24).
+
+### 9.1 Plan je Mangel (Umsetzung und Messung nachher folgen unten)
+1. MAIN verstummt: Skript-Befehle an Slot 0 (MAIN) gelten der Tabellen-Musik des Raums (ROOM11D0: MAIN3B), die im
+   Fenster gar nicht geladen ist. Im Fenster werden sie nicht auf MAIN01 angewandt (Haken audio_pc.c, SEQ_CTL-Zweig).
+2. MAIN01 zu frueh: Weiche zusaetzlich an (9,73) (VERTRAG §1.1 Spur L "Irons-Todesszene gesehen", nur gelesen) und an
+   "keine Szene laeuft" beim OEFFNEN; den Anstoss macht re15_cut10f0_tick selbst (kein Haken bei Spur L noetig),
+   ebenso nach dem Laden (der CONTINUE-Haken in main.c entfaellt).
+3. Zeile 6: Blick + Drehung zu Ada VOR der Zeile in der Form von ROOM11C0 sub02.
+4. Haken: Hinweiskette/zweites Ziel aus menu_common.c nach cut_10f0.c, pc_rbj_leihen aus main.c nach
+   platform/pc/src/cut10f0_pc.c; in beiden Dateien bleiben Haken von 1-5 Zeilen.
