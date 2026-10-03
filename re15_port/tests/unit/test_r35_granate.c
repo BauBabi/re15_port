@@ -782,6 +782,24 @@ static void abschnitt_strecke(void)
         PRUEF(232, punkt_haette_verfehlt >= 5,
               "davon %d Phasen, in denen KEIN Bildpunkt in der 275 dicken Zelle liegt (der Punkttest je Bild verfehlte sie)", punkt_haette_verfehlt);
 
+        /* HOCH-Wandzuendung trifft den stehenden Gegner am Boden: P = Rueckzugspunkt (Anker y -3171 wie Lauf d_a ->
+         * y ~ -3500), zweite Pruefhoehe P + 900 (@0x80020d98) liegt im Band des Zombies (b98 -1500, h9e 1500
+         * @0x8004716c-a4: Pruefhoehe in (-3100, 100]). Mit dem Routine-31-Versatz (P.y - 500 @0x800185a8) laege auch
+         * sie darueber (gemessen exe-Lauf d_a vor der Aenderung: P.y -4025). */
+        re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
+        { const int32_t xa = -19723;
+          g_actors[RE15_ACTOR_SLOT_PLAYER].x = xa + 900; g_actors[RE15_ACTOR_SLOT_PLAYER].z = zz;
+          re15_actor_t *d = dummy(1, 0x10, 100, -20800, 0, zz);
+          re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, xa, -3171, zz, 2048);
+          if (g) g->granate_boden = 0;
+          unsigned r0 = re15_esp_granate_resolver_calls(); int32_t py = 0;
+          for (int k = 0; k < 20 && re15_esp_granate_resolver_calls() == r0; k++) re15_esp_fx_tick(NULL);
+          for (int i = 0; i < s_re2se_n; i++) if (s_re2se_code[i] == RE15_GRANATE_R35_SE_EXPLOSION) py = s_re2se_pos[i][1];
+          PRUEF(234, d->hp == 100 - 200 && py < -3100 && py > -4000,
+                "HOCH-Wandzuendung bei P.y %d (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp %d (-100)",
+                (int)py, d->hp);
+          g_actors[1].active = 0; }
+
         /* ---- (d) Wurfbild: Werfer 468 vor der Zellenfront, Hand 1000 weiter = HINTER der duennen Zelle ---- */
         re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
         re15_player_acaec_override_for_test(1, 0x4000);              /* MITTE */
