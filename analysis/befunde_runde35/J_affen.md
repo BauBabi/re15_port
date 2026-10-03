@@ -549,3 +549,14 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   - Freigabe 36 Bilder nach Cut-12-Beginn: G1 grid 0x10 bei **(-3617,0,-17798)**, Zustand 1 (@0x1A2E;
     s021 t=36.41: (-3617,0,-17798) g=10).
 - Ergebnis: `test_r35_affen wagen` alle Pruefungen ok.
+- **Werkzeug-Befund (fuer kuenftige Spuren wichtig):** seit ~21:58 legt ViGEm einen GEISTER-Pad an
+  (`USB\VID_045E&PID_028E\01`, XInput 0, kein Besitzer-Prozess; `pnputil /remove-device` = Zugriff
+  verweigert). DuckStation bindet `SDL-0` -> der neue vgamepad landet auf XInput 1 und KEIN Hotkey kommt an
+  (Savestate-Recorder: 0 Saves). Zusaetzliche Bindings `SDL-1..4` halfen nicht, `-settings` kennt diese
+  DuckStation-Version nicht. AUSWEG ohne Pad: der **DuckStation-GDB-Server** (`[Debug] EnableGDBServer =
+  true`, Port 2345; settings.ini voruebergehend geaendert, Original in scratch `jnb1/settings.ini.orig`,
+  wird am Ende zurueckgespielt). `jnb1/gdbspur.py`: Haltepunkt `Z0` auf die Gorilla-Wurzel **0x80116db8**
+  (Dispatch 0x80072bac[0x27], Prolog `addiu sp,sp,-24`), je Halt `m`-Lesen von g_entity(cur) 0x800ac784;
+  ist cur = Entity 1 (0x800ace20), werden Spieler 0x800aca54, Entity 1/2 (je 0x1f4 B), aca58..5b und der
+  VSync-Zaehler gelesen, dann `c`. Ergebnis: **jedes Spielbild** (VSync +2 je Zeile, Probe g_try.txt
+  9875..9913), deterministisch ab dem direkt geladenen r3-Savestate.
