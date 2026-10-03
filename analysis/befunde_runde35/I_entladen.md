@@ -272,7 +272,93 @@ M2 Ausnahme TIM 0..3 (Elliot, Heli/Pilot) ohne Original-Beleg.
 Stand zu Beginn: HEAD 20ced3e7, Baum sauber.
 
 ### N1-M1 Raum-Stimmen
-(laufend)
+
+**Ursache.** Der Port dekodiert jede Raum-Stimme (`synchro/STAGEn/room<id>/mainNN.wav`) in den Cache
+`s_voice_clip[64]` (audio_pc.c), Schluessel `s_voice_room`. Freigegeben wurde er nur in
+`re15_voice_load_clip`, wenn eine Zeile in einem ANDEREN Raum angefordert wird. Die Grenzen
+(raum/spielstart/spielende) kannten den Cache nicht; der Zensus hatte kein Fach dafuer.
+
+**Messung vorher** (Abnahme 0, nicht wiederholt): `SDL_AUDIODRIVER=dummy` Intro 1240 -> 1170:
+main00..05 aus ROOM1240 geladen (debug.log 67..255, ~3,2 MB PCM), `EREIGNIS raum gen=3` meldet
+`ton=0`, 300 Bilder ROOM1170 ohne neue Zeile -> die sechs Clips bleiben resident.
+
+**Beleg (Ton = RE2, RE1.5 hat keine Stimme: SCD 0x59 ist dort ein Flag-Opcode @0x8003fe90).**
+Werkzeug `re2_disasm.py` + eigener jal-/Speicher-Scan ueber `info/re2leon/PSX.EXE`.
+```
+RE2 Abspielen FUN_800129b4 (Aufrufer jal @0x800338a4, @0x80058048; Overlays OPENING/DIEDEMO/STAGE6)
+  DsCommand(9 Pause) / (0x0D Setfilter, &0x800d5b48) / (0x0E Setmode, Byte @0x8009a415 = 0xC8)
+  / (0x15 SeekL) / (0x1B ReadS)
+  0x8009a410: 00 00 00 00 80 c8 00 00 ...  -> 0x8009a414 = 0x80 (Init), 0x8009a415 = 0xC8
+  0x8009a428: 00 a0 a0 00                  -> 0x8009a429 = 0xA0 (Datei-Lesen), 0x8009a42a = 0xA0
+RE2 CD-Datei-Leser FUN_80012fb8 (41 Aufrufer)
+  800130d4: addiu a0,zero,9   / 800130e0: jal 0x8008a380 (DsCommand)   ; Pause
+  800130f0: addiu a0,zero,14  / 80013100: jal 0x8008a380               ; Setmode 0xA0
+  80013110: addiu a0,zero,21  / 80013120: jal 0x8008a380               ; SeekL
+  80013140: addiu a0,zero,6   / 80013150: jal 0x8008a380               ; ReadN
+RE2 Raumlader FUN_80049e48 (RE2_Quellcode_V2/FUN_80049e48.c:98)
+  8004a1ac: lw v0,0x7210(at) 0x800a7210 (Datei-Index je Stage/Raum) / 8004a1c4: jal 0x80012fb8   ; RDT lesen
+  8004a2f4: jal 0x80059e54 (Raum-Ton-Init) / 8004a33c: jal 0x8005a09c
+psx-spx cdromdrive.md "Setmode": Bit 6 XA-ADPCM (0=Off, 1=Send XA-ADPCM sectors to SPU Audio Input).
+RE2 Stimm-Zustand: Tabelle @0x8009a418 = {0x80012ca4 (0 Ruhe: sb zero 0x800d5334/5301/5335,
+  0x800cfbd8 &= ~0x20), 0x80012cd8, 0x80012e70, 0x80012f48 (3 Stopp: DsCommand 9, Zustand 0)}.
+```
+=> In RE2 liegt nie eine dekodierte Stimme im RAM (CD-XA geht vom Laufwerk in den SPU-Eingang), und
+der Raumlader programmiert das Laufwerk fuer die neue RDT um (Pause, Setmode ohne Bit 6, ReadN):
+ab dem Raumladen erreicht keine Stimme des alten Raums mehr die SPU. Eine explizite Stopp-
+Anforderung (FUN_80012c2c, setzt Zustand 3) ruft der Raumlader NICHT — es ist das Umprogrammieren
+des Laufwerks, das die Stimme beendet. Port-Gegenstueck: an der Grenze Clips frei + Strom loesen.
+
+**Aenderung.** audio_pc.c `re15_audio_stimmen_entladen()` (unter `SDL_LockAudioDevice`: Strom
+loesen, falls er aus einem Clip liest; alle 64 Clips frei, `tried` 0, `s_voice_room` 0) und
+`re15_audio_stimmen_belegt(&gen,&laeuft)`; Generation beim Clip-Laden (`re15_audio_stimme_gen_setzen`).
+entladen_pc.c Schritt (9) ruft das Entladen; Zensus-Fach `stimme` (mit Generation); VORHER-Zeile
+zusaetzlich `stimme_laeuft=0/1` (lief an der Grenze gerade eine Zeile?).
 
 ### N1-M2 Elliot / Heli / Pilot (TIM 0..3)
-(laufend)
+
+**Ursache.** O2 nahm TIM-Slots 0..3 aus ("Boot-Lader"). Der PC lud Elliot (PLD/ELLIOT.*, Slot 1)
+und Heli/Pilot (Objekte 2/5 der Boot-RDT, Slots 2/3) einmal je Spielstart und hielt sie ueber
+jeden Raumwechsel; der Zensus zaehlte 0..3 per Definition nicht.
+
+**Messung vorher** (Abnahme 0): `[elliot] PL05 loaded ... [tim] elliot TIM in slot 1` bei JEDEM
+Spielstart, auch im Boot-Raum ROOM1240 ohne Elliot. Heli/Pilot: Slots 2/3 aus der Boot-RDT
+(bei Boot 1240 leer). Eigene Messung mit dem neuen Zensus: s. "Messung nachher (N1)" (VORHER-Zeilen).
+
+**Beleg (RE1.5 PSX.EXE, `re15_disasm.py`, eigener Speicher-/jal-Scan).**
+```
+Arena-Basis: FUN_80039a30 (jal @0x8001d588 Spielstart, @0x8001d80c, @0x8001d980 Tuer)
+  80039a44: jal 0x800299a4 (a0=2, a1=Stage+1: Stage-Overlay laden, v0 = Groesse)
+  80039a4c: lui v1,0x8010 / 80039a50: addu v1,v0,v1 / 80039a58: sw v1,-0x3880(at)  0x800ac780
+  (einziger Schreiber von 0x800ac780: Speicher-Scan)  -> Arena = 0x80100000 + Overlay-Groesse ...
+Sce_em_set (0x44) @0x800420a0 — JEDES gesetzte Modell in die Arena:
+  800422c0: lui s1,0x800b / 800422c4: lw s1,-0x3884(s1)   0x800ac77c   ; Arena-Kopf
+  800422dc: sw s1,124(s0)                                  ; entity+0x7C = Modellbasis
+  800422f4: addiu s1,s1,12
+  80042328: jal 0x80022300  (a3 = s1)                      ; EMD laden
+  80042554: sw s1,-0x3884(at)  0x800ac77c                  ; Kopf hinter das Modell
+FUN_80022300 (RE_15_Quellcode_V2/FUN_80022300.c): Datei 0x26 (CDEMD0.EMS) bzw. 0x27, Eintrag
+  (Typ-0x10) aus 0x80072f38/0x80073178, FUN_80013c50(param_4 = Arena) liest, Zeiger +0x1b0/+0x16c/
+  +0x84/+0x174/+0x170/+0x17c/+0x178 in DIESEN Puffer, TIM per FUN_80022150 ins VRAM.
+Spieler dagegen: FUN_800314b0
+  800314c8: lui a1,0x801b / 800314cc: ori a1,a1,0xd814    ; fester Puffer 0x801bd814
+  -> jal 0x80013b60 (PLD lesen). Aufrufer: Spielstart @0x8001d5a4 und im Raumlader NUR wenn
+  (0x800aca5c & 0xf) != 0 (Figurwechsel, RE_15_Quellcode_V2/FUN_800396fc.c:15-18).
+RDT-Objekte (Heli = Objekt 2, Pilot = Objekt 5 von ROOM1170): Teil der RDT, die ab der Arena-Basis
+  geladen wird (`lw a1` 0x800ac778 @0x800397c0, `jal 0x80013b60` @0x800397e8).
+```
+=> Elliot (jedes Typ-0x47-Modell) und Heli/Pilot leben im Original in der Raum-Arena und sind mit
+dem Arena-Reset @0x80039738 weg. Die O2-Ausnahme stimmt NUR fuer Slot 0 (Spieler, fester Puffer)
+und die globalen Effektseiten (19..23/44/50..55, `jal 0x8001923c` @0x8001d580). O2 ist damit
+korrigiert: Slots 1/2/3 sind Raum-Slots.
+
+**Aenderung.** Neue Datei `platform/pc/src/elliot_pc.c`: die Lade-Schritte des frueheren
+Boot-Laders (PLD/ELLIOT.MD1/EDD/EMR/TIM, gleiche Parser, TIM -> Slot 1) laufen jetzt beim SPAWN
+eines Typ-0x47-Aktors (main.c Roster-Vorladen nach scd_vm_tick, wo jedes Sce_em_set-Modell
+nachgeladen wird == `jal 0x80022300` @0x80042328), inkl. Dialog-Gesten-Overlay aus der gebundenen
+Raum-RBJ (`re15_rbj_room`, neue 1-Zeilen-Abfrage in enemy_common.c; dieselbe Rechnung wie
+re15_apply_room_cinematic Schritt 2) und `re15_npc_set_elliot_anim`. Entladen an jeder Grenze
+(entladen_pc.c Schritt 10): Puffer frei, Strukturen genullt, Executor-Zeiger NULL. main.c behaelt
+die Strukturen (Zeichen-/Anim-Wege lesen sie per Adresse) und meldet sie an
+(`re15_elliot_pc_anmelden`); der Boot-Lader (31 Zeilen) ist entfernt. render_pc.c
+`re15_render_pc_tim_slot_raum`: Slots 1..3 jetzt Raum-Slots (entladen + gezaehlt). Zensus-Fach
+`figur` (Elliot-Modell, Generation). Aussehen unveraendert (Port-Wahl R23: PL05 statt EM047-Mesh).
