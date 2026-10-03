@@ -284,6 +284,8 @@ der Riegel misst den Mechanismus, nicht die Choreografie.
   zur Tuer gewandt, schaut nicht in die Kamera.
 
 ## Tests
+* **Suite (Stand 267967c9, `bash re15_port/tools/local_build.sh all`): `=== LOCAL-BUILD-OK (all) — Tests 487/487`**
+  (Schranke RE15_MIN_TESTS 478; neu: 8 unit_r35_inventar1050_* + integration_r35_inventar1050).
 
 * `unit_r35_inventar1050_{start,elza,ablegen,altstand,altpistole,kiste,breit,reserve}` (NEU,
   tests/unit/test_r35_inventar1050.c, probes/r35_inventar1050.cmake) — alle gruen. Ausgaben z.B.:
