@@ -136,6 +136,26 @@ naechsten (@0x800283b8 `j 0x80028424` / @0x8002842c `bne v0,zero,0x8002826c`). D
 Spanne warten wie bisher das Tempo ab (@0x80028434 `bne s2,zero` mit verbrauchtem Budget).
 Wirkung: jede `04 00 ... 04 01 01 NN`-Zeile schliesst ein Bild frueher (= Original). Keine Konstante neu.
 
+### P2 Messer-Rueckfall (neue Dateien + kleine Haken)
+* NEU `re15_port/include/re15_messer.h`, `re15_port/engine/src/messer_rueckfall.c`:
+  - `re15_messer_startinventar()` — Starttabelle des Originals je Charakter (Ids @0x80074bb8 Leon /
+    @0x80074bc4 Elza, Mengen @0x80074bd0, Weiche `sltiu v0,v0,0x4` @0x80045e28) OHNE Id 1 (NUTZER-VORGABE);
+    25c9 := 0x80 (@0x80045fe0), 25c8 := 0x80 (statt 0 @0x80045fec, weil Platz 0 kein Messer mehr ist),
+    Waffen-Id 1 nach der Commit-Regel @0x80046668/@0x8004666c. Leon: Platz 0 BROWNING HP x15, Platz 1
+    H.GUN BULLETS x50. Elza: leer (Original-Tabelle: nur das Messer) -> Messer-Rueckfall.
+  - `re15_messer_aus_inventar()` — alter Spielstand: Messer aus Inventar (ausgeruestet -> 25c8 := 0x80
+    wie UNEQUIP, dann re15_inv_remove_slot = Verbrauch + Verdichten FUN_8004dadc) und aus der Kiste.
+* Haken: `platform/pc/main.c` Startinventar-Aufruf (2 Zeilen statt `re15_inv_load_briefing()`; die
+  Byte-Kopie des Original-Briefings bleibt fuer Sonden/Tests unveraendert); `re15_savedata.c` nach dem
+  Kisten-Import (2 Zeilen); `inventory_common.c` FUN_8004eb70-Nachbau mit RE2-Regel Platz >= 0 / -1
+  (@0x8006a294/@0x8006a2a0) + Nachlade-Ausfuehrung `as < 0`; breite Waffe nur bei 25c8 != 0x80 schieben
+  (RE2 @0x8006999c) in `inventory_common.c` UND `re15_itembox.c`; `game_step_common.c` Nachlade-Gate
+  `>= 0` (1 Zeile); `re15_inventory.h` Kommentar; `tests/unit/test_room1140_combat.c` (27) auf die
+  RE2-Regel umgestellt (Platz 0 -> 0, keine Reserve -> -1).
+* Speicherformat unveraendert (equipped_slot 0x80 + weapon_id 1 werden wie bisher geschrieben).
+* Das Item-Debug des Statusschirms (SELECT + R1, Original @0x8004a138..) kann weiter jede Id setzen,
+  auch 1 — Debug-Werkzeug, bleibt original; der naechste Ladevorgang raeumt ein solches Messer ab.
+
 ## Messung nachher
 
 ### P1 (Lauf m4, Stand mit msg-Fix, k_ruf noch unveraendert)
@@ -146,6 +166,17 @@ Wirkung: jede `04 00 ... 04 01 01 NN`-Zeile schliesst ein Bild frueher (= Origin
 [invdbg] 790x stage=0 open=0 | 9x stage=2 open=0 | 72x stage=2 open=1   (START F520 -> Inventar offen)
 ```
 Der Befund ist damit am Mechanismus behoben (Schliessen in F465, Set in F466), nicht durch Umgehung.
+
+### P2 (Lauf m5, Stand c17305bd: Startinventar ohne Messer)
+Weg: Titel -> RE15_DEBUG_JUMP=1000 -> ROOM1000, Eingabe `W1,M1,MA0.1,M0.6,MA0.1,...` (M = R1 zielen, A =
+Quadrat), START F330, RE15_FRAMEDUMP 150-400/10. Zustandslog: `mg=-1` in allen Bildern (= 25c8 0x80, nichts
+ausgeruestet), Zielclip `ac` 13 -> 8 -> 7 bei jedem Quadrat (W01-Bank = Messer: debug.log
+`[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)`), drei Stiche F160/F181/F202.
+Bild `E_belege/p2_messer_ohne_inventar.png` (FRAMEDUMP F160/F170/F180 = Messerstich, F390 = Statusschirm):
+Item-Liste = BROWNING HP 15 + H.GUN BULLETS 50, KEIN Messer; Kasten "Equip Arms" zeigt das Standard-Messer
+hell. Das ist die Original-Darstellung fuer 25c8 = 0x80: FUN_80049a5c zeichnet die feste Messer-Kachel
+(Icon-Zelle 10, uv (40,90)) mit Helligkeit 25cd = 0x80 statt 0x3e (re15_inv_screen.c:146 =
+@0x800495e8-618) — das Original kennt "kein Gegenstand ausgeruestet = Standardwaffe Messer" also auch im Bild.
 
 ## Tests
 
