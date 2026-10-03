@@ -1131,7 +1131,7 @@ void (*re15_esp_shell_clink_hook)(void) = NULL;
  *    0x010A0001 | (Zaehler_neu << 8) an der Eindringstelle (`lh` 40/42/44 @0x800183fc-414,
  *    `sll a0,a0,8` / `or` @0x80018420/28, `jal 0x80045024` @0x80018424). vz wird NIE gedaempft. */
 /* Runde 35 Spur A — Explosion SOFORT (RE2: `jr Op[step[3]+Art]` @0x8001f0e0-104 im selben Bild nach
- * Wand oder Kontakt): der Platz nimmt den Liegezustand aus R29 (`ori v0,zero,0x63 / sb v0,108` @0x80018368-6c,
+ * der Wand; der RE2-Gegnerkontakt ist nicht verdrahtet, granate_r35.c): der Platz nimmt den Liegezustand aus R29 (`ori v0,zero,0x63 / sb v0,108` @0x80018368-6c,
  * `ori v0,zero,0x1f / sh v0,0` @0x80018378-7c, `sh zero,2` @0x80018384) mit Zuender 7 (`ori v0,zero,0x7`
  * @0x8001856c) und Routine 31 laeuft noch in diesem Tick (Zuender 7 -> 6, danach 2 = Nachbrand, 0 = frei). */
 static void esp_granate_sofort(re15_esp_fx_t *f)

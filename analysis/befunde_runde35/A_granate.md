@@ -234,7 +234,10 @@ exe bis EXIT_AT`; `[birkin] 36 Slot 2: HP 600 -> 520, Zustand 2, exe bis EXIT_AT
   RE15_FORCE_EXPLOSION=2@60:15, Schaden 1000), birkin (ROOM5090 Slot 2, Schaden 80). Alle vier gruen (int1/int2):
   `Wand x=8385 -> 8332, Explosion Tick 349`; `X=119, 2 Zombies zerrissen, 3 Eingriffe`; Bosse s.o.
 * Angepasst (verhaltensbedingt): `probe_r34_wurf.c` 21/25/78 (Explosions-SE 0x01110001 ueber re2fx_se_hook; kein
-  Eigenschaden), `test_r34_granaten.cmake` (SE-Erwartung 0x01110001 in gr.log/wf.log). `unit_r34_wurf` gruen.
+  Eigenschaden), `test_r34_granaten.cmake` (SE-Erwartung 0x01110001 in gr.log/wf.log), `probe_r34_schaden.c` 31/34
+  (HE-Spalte 1 statt 3; Brad HURT[9][1] = 0x80105BC0), `probe_r34_reaktion.c` 220/222 (Spalte 1, DEATH-Zelle
+  0x80108BEC/0x80109610 = Port 5/6 statt 0x80108530 = 1; Brad Handler RE2ZH_STAGGER = 2). Die Negativ-Kontrolle 221
+  (Spalte 0 von Hand -> Kriecher HP 10) bleibt unveraendert gueltig.
 
 ## OFFEN
 1. **Wand-Maske 1 (Spielerklasse)** ist PORT-WAHL: RE2 FUN_8004fba0 testet die RE2-SCA mit a1 = 2 / a2 = 8192, deren
