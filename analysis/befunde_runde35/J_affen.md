@@ -750,3 +750,10 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   Takte — beissen beide Gorillas gleichzeitig, kommt ein Biss etwa alle 1,7 s; laufen sie versetzt, alle 1,2 s
   (Leon stirbt dann schneller und wird nach hinten gedraengt). Beides ist im Original gemessen.
 - Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 -> affen_fuss.log (jetzt in affen_11c0.c).
+
+### Suite (Nachbesserung 1)
+- `bash re15_port/tools/local_build.sh all` (22:20-22:47, parallel bauende Nachbarbaeume, Code-Stand = HEAD
+  nach dem Riegel `schrot`; danach nur Dossier/Kommentar im probes-Kopf geaendert):
+  `=== LOCAL-BUILD-OK (all) — Tests 493/493` (1114 s; 478 Basis + 15 Riegel dieser Spur). Kein
+  Fenster-Haken rot.
+- DuckStation settings.ini nach den GDB-Messungen auf den Ausgangsstand zurueckgespielt (diff leer).
