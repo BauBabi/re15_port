@@ -1036,3 +1036,20 @@ und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
   LEEREN Teil des Zellrechtecks (Bandhoehe) gestoppt hatte; z max 898 statt 769 aus demselben Grund (Strahl laeuft im
   begehbaren Teil weiter).
 * N2 `t7`/`t20`, state.log F19 Platz 5: Redhawk `hp=-1`, Python `hp=-1` (vorher -650).
+
+### 9.5 Tests (unit_r35_werfer Teil I, Pruefungen 120-134) und GEGENPROBE
+* 120 ROOM10E0 Zelle 21 Bytes (Typ 5); 121 Formtest Typ 5: (-2215,627) fest, (-1200,0) leer im Rechteck, Strecke ueber die
+  Hypotenuse; 122 Rakete auf der Abnahme-Bahn (Muendung (-2477,-1657), Richtung (465,4069)): `Explosion nach 4 Bildern
+  @(-2331,-385)` (exe: @(-2331,..,-388)); 123 GL-Runde in Bandhoehe (y -1000) bei x -1200 durch den LEEREN Teil des
+  Zellrechtecks: `Explosion nach 9 Bildern @(-1200,1500)` (Hypotenuse bei z 1845); 124/125 ROOM11C0 Zelle 5 (Raute) —
+  Rakete auf z -12500 nach +x: `@(-7112,-12500)` (Rautenkante x -6152); 126-128 Durchtunneln ROOM1000 Kreis-Zelle 15 bei x
+  -2117 (Lagen -4058/-4826 beide ausserhalb, Strecke schneidet): `@(-2117,-3802)`; 129 Schuetze -> Muendung (ROOM1140
+  Kreis zwischen Schuetze (-4750,-13300) und Muendung (-4750,-14600)): ohne Schuetze `13 Bildern @(-4750,-22792)`, mit
+  `1 Bildern @(-4750,-13576)`; 130-134 Kritklasse ueber re15_player_weapon_fire: w7/w20 gegen Typ 0x10 -> Bit 0x40 + hp -1,
+  w3 -> kein Bit, w7/w20 gegen den Affen 0x27 (Zielband LEVEL) -> Bit 0x40, hp > 0. Ergebnis `test_r35_werfer: OK`.
+* GEGENPROBE (re2_fx.c und re15_damage.c auf 9d8336b2 = vor Nachbesserung 2 zurueckgesetzt, Stub fuer re2fx_r35_schuetze,
+  gebaut, gefahren, wiederhergestellt + neu gebaut; Log `re15_port/build/mess_r35b_logs/nb2_gegenprobe_unit.txt`):
+  `FAIL 122 ... ist z=1904` (alt @(-2070,1904)), `FAIL 123 ... ist z=-2100` (Vortest-Kontakt im leeren Rechteckteil),
+  `FAIL 125 ... ist x=-5576` (durch die Raute, Kontakt erst als die Rakete in Bandhoehe sank), `FAIL 128 ... ist z=-4570`
+  (uebersprungen, Wand dahinter), `FAIL 129` (mit Schuetze ebenfalls -22792), `FAIL 131: w20 gegen Typ 0x10 (hp 2000):
+  Treffer 2, +0x93 Bit 0x40 0 (soll 1), hp 1100 (soll -1)`, `FAIL 134` (Affe: Bit fehlt) — `test_r35_werfer: 7 FAILURES`.
