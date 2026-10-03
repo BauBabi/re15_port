@@ -292,6 +292,8 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
         re15_vest_model_mark(vm);
     }
     re15_itembox_import(in->box);        /* v4 ITEM BOX contents survive load */
+    { extern int re15_messer_aus_inventar(void);   /* Runde 35 Spur E: Messer alter Staende raus */
+      (void)re15_messer_aus_inventar(); }         /* (Inventar + Kiste), re15_messer.h          */
     /* v5 Wund-Restore — setzt IMMER alle 8 Panels (aeltere Saves laden Nullen aus dem
      * Upgrade-Pfad): behebt zugleich den Stale-Blut-Bug (analysis/save_injured_state.md
      * SI-3 — CONTINUE liess das Blut des gestorbenen Runs stehen, weil kein Spiel-Caller

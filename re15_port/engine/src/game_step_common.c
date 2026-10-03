@@ -1708,7 +1708,7 @@ void re15_game_step(const re15_game_ctx_t *c)
                 eq_item >= 3 && !re15_ammo_mag_nonzero()) {
                 if (c->pad_pressed & RE15_PAD_BIT_SQUARE) {         /* press-EDGE only */
                     extern void re15_player_reload_start(void);
-                    if (re15_ammo_reserve_slot() > 0 && eq_item < 9)
+                    if (re15_ammo_reserve_slot() >= 0 && eq_item < 9)   /* Runde 35 Spur E: Platz 0 zaehlt (RE2) */
                         re15_player_reload_start();                 /* sub=4 @0x80033378 */
                     else if (!(eq_item == 12 || eq_item == 14 || eq_item == 19))
                         re15_audio_weapon_se(1);                    /* click 0x01010001 */

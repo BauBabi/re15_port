@@ -151,7 +151,8 @@ static void inv_front_shift2(void)
     clear_slot(&g_inv.slots[1]);
     re15_inv_icon_blank(0);
     re15_inv_icon_blank(1);
-    re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
+    if (re15_inv_equipped_slot() != 0x80)             /* Runde 35 Spur E: RE2 FUN_800698b4 @0x8006999c */
+        re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
 }
 
 int re15_itembox_transfer(int inv_cursor, int box_slot)

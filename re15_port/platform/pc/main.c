@@ -4386,7 +4386,8 @@ re_title:;
      * scd_vm_init just cleared it; populate the game-start inventory here. (Per-room persistence
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
-    re15_inv_load_briefing();
+    { extern void re15_messer_startinventar(void);   /* Runde 35 Spur E: Starttabelle @0x80074bb8 OHNE */
+      re15_messer_startinventar(); }                 /* Messer, 25c8 = 0x80 -> Messer (re15_messer.h)  */
     re15_itembox_init();   /* ITEM BOX starts empty (the RE1.5 new-game zero loop shape
                             * FUN_8003e4f4 @0x8003e52c-554; a CONTINUE load overwrites
                             * it from the v4 save block right after). */
