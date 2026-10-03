@@ -166,3 +166,13 @@ uint8_t re15_affen_flinch_exit_sub(re15_actor_t *e)
     if (e->mag_1e3 != 0) return 9;                      /* byte-true Variante @0x8011b1c8-d8 (nie gesetzt) */
     return re15_affen_sprung_oder_jagd(e);
 }
+
+/* (6e) Griff-Paar vom Koerper-Schub ausgenommen: FUN_8002aec4 prueft `and v0,a0,v1; andi 0x1000` (@0x8002af14) — beide
+ *      Worte muessen Bit 0x1000 tragen. Der Gorilla setzt seins beim Pin-Latch (`ori v0,v0,0x1000` / `sw v0,0(v1)`
+ *      @0x8011ac34-38, g_entity(cur)) und loescht es beim Loslassen (`addiu v1,zero,-4097` / `and` / `sw` @0x8011ad8c-94,
+ *      Phase 4); Leons Bit (@0x8011ac4c) faellt erst am Ende von P2 (@0x8011c2c0-dc) — das UND ist also genau die
+ *      Gorilla-Spanne Phase 3/4 von sub 15. GDB (jnb1/g_griff.txt Wort 0): e1 0x60001811 ab T254, 0x60000811 ab T302. */
+int re15_affen_griff_paar(const re15_actor_t *e)
+{
+    return e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4);
+}

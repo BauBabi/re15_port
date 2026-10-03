@@ -187,5 +187,8 @@ void     re15_affen_pin_anker(re15_actor_t *e, re15_actor_t *pl);
  *          Ersatzklemme, danach re15_player_body_and_walls mit dem Bezug vom Bildanfang. Riegel `wand`:
  *          re15_collision_constrain = FUN_8003b0a4 in 168/168 Original-Bildern bitgleich. */
 int      re15_player_victim_gorilla(void);   /* 1 = Opfer-Handler des Gorillas (0x27) besitzt Leon (P0-P6) */
+/* (6e) 1 = dieser Gorilla haelt Leon (sub 15 Phase 3/4: Wort-Bit 0x1000 gesetzt @0x8011ac34-38, geloescht
+ *      @0x8011ad8c-94) -> das Paar ist vom Koerper-Schub FUN_8002aec4 ausgenommen (`andi 0x1000` @0x8002af14). */
+int      re15_affen_griff_paar(const re15_actor_t *e);
 
 #endif /* RE15_AFFEN_H */

@@ -1605,7 +1605,7 @@ void re15_player_victim_tick(void)
      * Original-Phasen (Tabelle @0x80100404):
      *   P0 @0x8011c194: Opfer-Bank-CLIP 1 (der 83-Frame-WURF), Zwangs-Yaw = Gorilla;
      *      RUECK-Variante (aca59!=0): Clip startet bei Frame 0xc (@0x8011c208-1c).
-     *   P1 @0x8011c228: anim_set; Frame 0xb -> P2 (Front-Intro 0..0xb OHNE ad68 —
+     *   P1 @0x8011c228: anim_set; Frame 0xb -> P2 (Front-Intro 0..0xa OHNE ad68, 0xb = erstes P2-Bild, re15_affen.h (6a) —
      *      der Latch-Anker haelt Leons Position).
      *   P2 @0x8011c268: Root-PLATZIERUNG am Gorilla NUR solange Frame < 0x25
      *      (sltiu @0x8011c278, ad68 @0x8011c294); Clip-ENDE -> P3 + UNPIN
@@ -1614,7 +1614,7 @@ void re15_player_victim_tick(void)
      *      laeuft unabhaengig weiter).
      *   P3-P6: Leons EIGENE Bank ([acad8]/[acbc0]): Clip 0x10 (@0x8011c2e8, anim_set
      *      0x200 @0x8011c34c-60), dann Clip 0xb (@0x8011c31c, anim_set @0x8011c348).
-     *   P7 @0x8011c384: aca58=2 (frei), player.+0x93=0 @0x8011c3a0, Freeze-Bits
+     *   P7 @0x8011c384: aca58=1 (frei, `ori v0,zero,0x1` @0x8011c384), player.+0x93=0 @0x8011c3a0, Freeze-Bits
      *      aca3c &= ~0xc0 @0x8011c398-b4.
      * VORHER loopte der Port den Wurf-Clip als "Hold" und released auf der GORILLA-
      * Timeline (sub-15 Phase 4/5) — komplett andere Choreographie (Kern des Nutzer-
@@ -1657,7 +1657,7 @@ void re15_player_victim_tick(void)
                 player->anim_frac = 7; player->anim_blend_rate = 0x200;
                 return;
             }
-            /* P7: frei — aca58=2 @0x8011c38c, +0x93=0 @0x8011c3a0 */
+            /* P7: frei — aca58=1 @0x8011c384-8c, +0x93=0 @0x8011c3a0 */
             g_player_victim = 0;
             s_gthrow_phase = 0;
             player->hit_react = 0;
@@ -4455,6 +4455,7 @@ void re15_body_push_player(void)
          * @0x80102bb8 = its sub_state_1 stays 3..6 for exactly that window. */
         if (pl_locked && e->state == 1 &&
             e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
+        if (pl_locked && re15_affen_griff_paar(e)) continue;   /* Runde 35 Spur J (6e): Gorilla-Bit 0x1000 @0x8011ac34-38 / @0x8011ad8c-94 */
         /* G5-ENDBOSS (Typ 0x36): RE2 gibt ihm KEINEN +0x78-Zylinder, sondern ZWEI
          * Kollisionssegmente (+0x1E8 = 2 @0x80100530, r 6000 @0x80100540 und r 1300
          * @0x8010055c) und schiebt den Spieler ueber FUN_80034D0C statt FUN_8002AEC4

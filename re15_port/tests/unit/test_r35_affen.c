@@ -61,6 +61,7 @@
 #include "re15_emd.h"
 #include "re15_ems.h"
 #include "re15_affen.h"
+#include "re15_anim_select.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -745,12 +746,68 @@ static void teil_takt(void)
 
 
 /* ---------------------------------------------------------------------------------------------- */
-/* M1-Nachtrag (Nachbesserung 1): verbundener Rear-up-Griff gegen das Original. Original-Experiment per GDB:
- * r3 s033 direkt geladen, in F250 e1 +0x5/+0x6/+0x7 := 15/0/0 (`M800ace25,3:0f0000`), Leon ohne Eingabe
- * (scratch jnb1/g_griff.txt). Original: Pin in F254 (Clip 0x1c Bild 4), Spieler-Zustand 5 ab F255 (Yaw := Gorilla
- * 2823), Leon bleibt F255-F265 stehen (Front-Intro ohne 0x8001ad68), ab F266 Wurf-Platzierung am Gorilla-Anker,
- * KEIN HP-Verlust (76 -> 76; in B[15] 0x8011a878-af40 und im Opfer-Handler 0x8011c118-c598 gibt es keinen
- * Schreiber auf Spieler+0x9a), Leon frei (Zustand 1) in F381 bei (-4645,-10726). */
+/* A2 (Nachbesserung 2): die WURF-BAHN bis zur Freigabe gegen die Original-GDB-Spur (scratch jnb2/g_wer.txt, gleiches
+ * Experiment): Lage am ENDE jedes Spieler-Ticks (Haltepunkt 0x80031d80 nach `jal 0x80037358`), Tick T = (VSync-9641)/2,
+ * dazu aca58 / +0x94 / +0x95. Ab T254 (Pin). Platzierung je Bild (0x8001ad68 @0x8011c294, Fenster [0x0b,0x25)
+ * @0x8011c244-5c/@0x8011c278), danach Koerper-Schub @0x80031cbc und Wandklemme @0x80031d70; P3/P4 Clip 0x10, P5/P6
+ * Clip 0xb RUECKWAERTS aus PL00 (@0x8011c348/@0x8011c350-58), Freigabe T378 (aca58 = 1 @0x8011c384-8c). */
+static const int32_t s_wurf_orig[][5] = {   /* x, z, aca58, +0x94, +0x95 (nach dem Tick) */
+    {-6660,-12486,5,1,1}, {-6659,-12487,5,1,2}, {-6659,-12487,5,1,3}, {-6659,-12487,5,1,4},  /* T254 */
+    {-6659,-12487,5,1,5}, {-6659,-12487,5,1,6}, {-6659,-12487,5,1,7}, {-6659,-12487,5,1,8},  /* T258 */
+    {-6659,-12487,5,1,9}, {-6659,-12487,5,1,10}, {-6659,-12487,5,1,11}, {-7804,-10186,5,1,12},  /* T262 */
+    {-6686,-10348,5,1,13}, {-7340,-11870,5,1,14}, {-7492,-11733,5,1,15}, {-7110,-12078,5,1,16},  /* T266 */
+    {-7110,-12078,5,1,17}, {-6799,-12508,5,1,18}, {-6799,-12508,5,1,19}, {-6542,-12913,5,1,20},  /* T270 */
+    {-6542,-12913,5,1,21}, {-6210,-13216,5,1,22}, {-6210,-13216,5,1,23}, {-5804,-13474,5,1,24},  /* T274 */
+    {-5804,-13474,5,1,25}, {-5374,-13651,5,1,26}, {-5374,-13651,5,1,27}, {-4969,-13711,5,1,28},  /* T278 */
+    {-4969,-13711,5,1,29}, {-4639,-13614,5,1,30}, {-4639,-13614,5,1,31}, {-4353,-13122,5,1,32},  /* T282 */
+    {-4353,-13122,5,1,33}, {-3964,-12506,5,1,34}, {-3964,-12506,5,1,35}, {-4588,-11243,5,1,36},  /* T286 */
+    {-5381,-10551,5,1,37}, {-5302,-10633,5,1,38}, {-5207,-10699,5,1,39}, {-5098,-10737,5,1,40},  /* T290 */
+    {-5190,-10791,5,1,41}, {-5237,-10891,5,1,42}, {-5122,-10899,5,1,43}, {-5170,-10989,5,1,44},  /* T294 */
+    {-5291,-11003,5,1,45}, {-5268,-10904,5,1,46}, {-5381,-10936,5,1,47}, {-5408,-10842,5,1,48},  /* T298 */
+    {-5286,-10864,5,1,49}, {-5312,-10747,5,1,50}, {-5239,-10828,5,1,51}, {-5276,-10938,5,1,52},  /* T302 */
+    {-5178,-10927,5,1,53}, {-5193,-11051,5,1,54}, {-5089,-10997,5,1,55}, {-5042,-10875,5,1,56},  /* T306 */
+    {-5166,-10886,5,1,57}, {-5137,-10794,5,1,58}, {-5014,-10811,5,1,59}, {-5078,-10885,5,1,60},  /* T310 */
+    {-5166,-10933,5,1,61}, {-5207,-11030,5,1,62}, {-5341,-11031,5,1,63}, {-5280,-11108,5,1,64},  /* T314 */
+    {-5145,-11092,5,1,65}, {-5163,-11203,5,1,66}, {-5329,-11163,5,1,67}, {-5375,-11039,5,1,68},  /* T318 */
+    {-5255,-11055,5,1,69}, {-5359,-11087,5,1,70}, {-5475,-11047,5,1,71}, {-5497,-10895,5,1,72},  /* T322 */
+    {-5429,-10964,5,1,73}, {-5350,-11021,5,1,74}, {-5292,-11101,5,1,75}, {-5416,-11112,5,1,76},  /* T326 */
+    {-5420,-11247,5,1,77}, {-5553,-11158,5,1,78}, {-5643,-11015,5,1,79}, {-5481,-10978,5,1,80},  /* T330 */
+    {-5595,-10937,5,1,81}, {-5620,-10788,5,1,82}, {-5546,-10851,5,1,0}, {-5478,-10920,5,16,1},  /* T334 */
+    {-5397,-10976,5,16,2}, {-5344,-11061,5,16,3}, {-5233,-11086,5,16,4}, {-5127,-11035,5,16,5},  /* T338 */
+    {-5086,-10906,5,16,6}, {-5196,-10932,5,16,7}, {-5194,-10808,5,16,8}, {-5261,-10887,5,16,9},  /* T342 */
+    {-5358,-10935,5,16,10}, {-5417,-10878,5,16,11}, {-5482,-10829,5,16,12}, {-5533,-10763,5,16,13},  /* T346 */
+    {-5613,-10730,5,16,14}, {-5634,-10629,5,16,15}, {-5524,-10664,5,16,0}, {-5514,-10566,5,11,1},  /* T350 */
+    {-5438,-10644,5,11,2}, {-5348,-10707,5,11,3}, {-5286,-10799,5,11,4}, {-5217,-10792,5,11,5},  /* T354 */
+    {-5228,-10692,5,11,6}, {-5302,-10772,5,11,7}, {-5204,-10828,5,11,8}, {-5288,-10889,5,11,9},  /* T358 */
+    {-5349,-10975,5,11,10}, {-5361,-10864,5,11,11}, {-5270,-10918,5,11,12}, {-5152,-10929,5,11,13},  /* T362 */
+    {-5205,-11014,5,11,14}, {-5315,-11040,5,11,15}, {-5277,-11140,5,11,16}, {-5191,-11065,5,11,17},  /* T366 */
+    {-5109,-10985,5,11,18}, {-5019,-10915,5,11,19}, {-4946,-10824,5,11,20}, {-4837,-10776,5,11,21},  /* T370 */
+    {-4800,-10642,5,11,22}, {-4903,-10676,5,11,23}, {-4915,-10803,5,11,24}, {-4816,-10743,5,11,0},  /* T374 */
+    {-4759,-10633,1,11,0}, {-4620,-10622,1,3,0}, {-4645,-10726,1,3,0}, {-4798,-10698,1,3,0},  /* T378 */
+    {-4699,-10638,1,3,0}, {-4643,-10527,1,3,0}, {-4502,-10517,1,3,0}, {-4529,-10618,1,3,0},  /* T382 */
+    {-4677,-10596,1,3,0}, {-4590,-10522,1,3,0}, {-4521,-10460,1,3,0}, {-4499,-10473,1,3,0},  /* T386 */
+    {-4538,-10449,1,3,0}, {-4470,-10491,1,3,0}, {-4502,-10588,1,3,0}, {-4640,-10575,1,3,0},  /* T390 */
+    {-4570,-10481,1,3,0}, {-4484,-10482,1,3,0}, {-4484,-10612,1,3,0}, {-4362,-10558,1,3,0},  /* T394 */
+    {-4399,-10535,1,3,0}, {-4333,-10576,1,3,0}, {-4336,-10691,1,3,0}, {-4515,-10625,1,3,0},  /* T398 */
+    {-4354,-10571,1,3,0}, {-4323,-10722,1,3,0}, {-4193,-10663,1,3,0}, {-4092,-10871,1,3,0},  /* T402 */
+    {-3984,-10791,1,3,0}, {-3765,-11101,1,3,0}, {-3520,-11078,1,3,0}, {-3010,-11642,1,3,0},  /* T406 */
+    {-3009,-11643,1,3,0}, {-3009,-11643,1,3,0}, {-3009,-11643,1,3,0}, {-3009,-11643,1,3,0},  /* T410 */
+    {-3009,-11643,1,3,0},  /* T414 */
+};
+static re15_emd_animation_t s_pl00_anim;
+static re15_emd_skeleton_t  s_pl00_skel;
+static int pl00_laden(void)
+{
+    static int ok = -1;
+    if (ok >= 0) return ok;
+    char p[600]; size_t esz = 0, rsz = 0;
+    snprintf(p, sizeof p, "%s/PLD/PL00.EDD", RE15_ASSET_PSX_DIR); uint8_t *edd = slurp(p, &esz);
+    snprintf(p, sizeof p, "%s/PLD/PL00.EMR", RE15_ASSET_PSX_DIR); uint8_t *emr = slurp(p, &rsz);
+    ok = (edd && emr && re15_emd_parse_animation(edd, esz, &s_pl00_anim) == 0 &&
+          re15_emd_parse_skeleton(emr, rsz, &s_pl00_skel) == 0) ? 1 : 0;   /* Puffer bleiben (Zeiger in die Daten) */
+    return ok;
+}
+
 static void teil_griff(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -758,6 +815,10 @@ static void teil_griff(void)
     re15_game_flag_set(4, 0x40, 1);
     if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) return;
     PRUEF(bank_laden_27(), "EM027-Bank geladen");
+    PRUEF(pl00_laden(), "PL00.EDD/EMR geladen (COMMON-Bank der Aufsteh-Clips 0x10/0xb)");
+    s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
+    re15_anim_banks_t banks; memset(&banks, 0, sizeof banks);
+    banks.pl00_skel = &s_pl00_skel; banks.pl00_anim = &s_pl00_anim; banks.pl00_ok = 1;
     re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
     if (!a || !b) { PRUEF(0, "zwei Gorillas"); return; }
     pl->x = -6729; pl->z = -12800; pl->rot_y = 647; pl->hp = 82; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
@@ -768,26 +829,56 @@ static void teil_griff(void)
     b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
     b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
-    int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0;
+    const int T0 = 254, NT = (int)(sizeof s_wurf_orig / sizeof s_wurf_orig[0]);
+    int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0, fx = 0, fz = 0;
+    double abw_p2 = 0, abw_p2_mitte = 0; int n_p2 = 0, f_abw_p2 = -1;
+    int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
     for (int f = 196; f < 196 + 300; f++) {
         if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
         int32_t ox = pl->x, oz = pl->z;
         frame(0, 0);
-        if (f >= 249 && (f < 300 || (f % 6) == 0))
-            printf("    F%d hp%d pl %d/%d c%d/%d h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) r%d\n", f, (int)pl->hp, pl->state,
-                   pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, pl->hit_react, (int)pl->x, (int)pl->z, (int)pl->rot_y,
-                   a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)a->rot_y);
+        int k = f - T0;
+        const int32_t *o = (k >= 0 && k < NT) ? s_wurf_orig[k] : NULL;
+        if (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)))
+            printf("    T%d hp%d pl %d/%d c%d/%d%s h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) | e2 (%d,%d)\n", f, (int)pl->hp,
+                   pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (pl->anim_flags & 0x80) ? "R" : "",
+                   pl->hit_react, (int)pl->x, (int)pl->z, (int)pl->rot_y, a->state, a->sub_state_1, a->sub_state_2,
+                   (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)b->x, (int)b->z);
+        if (o && f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)))
+            printf("         Original (%d,%d) cmd %d c%d/%d  d=%.0f\n", (int)o[0], (int)o[1], (int)o[2], (int)o[3], (int)o[4],
+                   dist2d(pl->x, pl->z, o[0], o[1]));
         if (f_pin < 0 && a->sub_state_1 == 15 && a->sub_state_2 >= 3) { f_pin = f; px0 = pl->x; pz0 = pl->z; hp_griff = pl->hp; }
         if (f_pin >= 0 && f_sprung < 0 && dist2d(pl->x, pl->z, ox, oz) > 600.0) f_sprung = f;
-        if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) f_frei = f;
+        if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) { f_frei = f; fx = pl->x; fz = pl->z; }
+        if (o && f >= 265 && f <= 290) {            /* P2: Platzierung + Schub + Klemme je Bild */
+            double d = dist2d(pl->x, pl->z, o[0], o[1]); abw_p2_mitte += d; n_p2++;
+            if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }
+        }
+        if (re15_player_victim_own_bank()) {        /* P3-P6: gerenderte Bank / Richtung */
+            re15_anim_view_t av; re15_actor_anim_select(pl, 1, &banks, &av);
+            int on_pl00 = (av.anim == &s_pl00_anim);
+            if (pl->motion == 0x10) { p3_bilder++; if (on_pl00 && !re15_actor_anim_reverse(pl)) p3_pl00++; }
+            if (pl->motion == 0x0b) { p5_bilder++; if (on_pl00 && re15_actor_anim_reverse(pl)) p5_rueck++; }
+        }
     }
-    printf("  Pin F%d bei (%d,%d) hp %d, erster Platzierungs-Sprung F%d, frei F%d bei (%d,%d) hp %d\n",
-           f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)pl->x, (int)pl->z, (int)pl->hp);
-    PRUEF(f_pin >= 253 && f_pin <= 255, "Pin-Latch in F%d (Original F254: Clip 0x1c Bild 4, a780 = 0 -> Front-Griff @0x8011aa4c-bc)", f_pin);
-    PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original F255: (-6660,-12486)) — vorher sprang er hier ~1200-1600", (int)px0, (int)pz0);
-    PRUEF(f_sprung >= 265 && f_sprung <= 267, "erste Wurf-Platzierung in F%d = Bild 0x0c des Opfer-Clips (Original F266; Front-Intro 0..0xb ohne 0x8001ad68,"
-          " aca59 = a780 VOR dem Yaw-Latch @0x8011ac50-68 / @0x8011acac)", f_sprung);
-    PRUEF(hp_griff == 76, "der Griff kostet keine HP (%d; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in 0x8011a878-af40 / 0x8011c118-c598)", hp_griff);
+    if (n_p2) abw_p2_mitte /= n_p2;
+    printf("  Pin T%d bei (%d,%d) hp %d, erste Platzierung T%d, frei T%d bei (%d,%d), Ende (%d,%d) hp %d\n",
+           f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)fx, (int)fz, (int)pl->x, (int)pl->z, (int)pl->hp);
+    printf("  Bahn P2 (T265-T290) gegen das Original: mittlere Abweichung %.0f, groesste %.0f in T%d; P3/P4 %d Bilder Clip 0x10"
+           " (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n", abw_p2_mitte, abw_p2, f_abw_p2,
+           p3_bilder, p3_pl00, p5_bilder, p5_rueck);
+    PRUEF(f_pin >= 253 && f_pin <= 255, "Pin-Latch in T%d (Original T254: Clip 0x1c Bild 4, a780 = 0 -> Front-Griff @0x8011aa4c-bc)", f_pin);
+    PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original T254: (-6660,-12486))", (int)px0, (int)pz0);
+    PRUEF(f_sprung == 265, "erste Wurf-Platzierung in T%d = Opfer-Bild 0x0b (Original T265 = VSync 10171, +0x95 0x0b beim Eintritt;"
+          " P1->P2 @0x8011c244-5c, Fenster @0x8011c278)", f_sprung);
+    PRUEF(n_p2 == 26 && abw_p2 <= 250.0, "Wurf-Bahn T265-T290 (Platzierung -> Schub -> Wandklemme) im Mittel %.0f, hoechstens %.0f (T%d) neben"
+          " dem Original (Schranke 250: der Schub des zweiten Gorillas haengt an dessen Lage)", abw_p2_mitte, abw_p2, f_abw_p2);
+    PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
+    PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
+    PRUEF(f_frei >= 377 && f_frei <= 379, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
+    PRUEF(dist2d(fx, fz, -4759, -10633) <= 600.0, "Lage bei der Freigabe (%d,%d) (Original (-4759,-10633); die Wandklemme schiebt seit T291 je Bild ~100)", (int)fx, (int)fz);
+    PRUEF(hp_griff == 76 && pl->hp == 76, "der Griff kostet keine HP (%d -> %d; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in 0x8011a878-af40 / 0x8011c118-c598)",
+          hp_griff, (int)pl->hp);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
