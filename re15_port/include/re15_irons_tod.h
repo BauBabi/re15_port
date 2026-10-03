@@ -96,7 +96,8 @@
 /* SCHUTZ DES GEPARKTEN SPIELERS (Nachbesserung 1 M2): wer im 1040-Schritt HINTER die Kamera Cut 1 laeuft (RID
  * ROOM1040 @0x80 Cut 1, Kamera-z @0x88 `3c d6 ff ff` = -10692; der Parkplatz liegt bei z -14900 dahinter), wird
  * mit dem Original-Einzelstopp angehalten: entity+0x9 |= 0x20 = Member_set(12, 0x30) (@0x800410b8 -> FUN_8004116c
- * Fall 0xc), gelesen vom Gegner-Root (Skip-Tor @0x80116df4-f8, Port re15_enemy_ai_tick RE15_AI_GRID_SKIP); im
+ * Fall 0xc), gelesen vom STAGE1-Zombie-Root FUN_80100424 (`lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 /
+ * `bne v0,zero,0x80100658` @0x8010045c = Tick uebersprungen; Port re15_enemy_ai_tick RE15_AI_GRID_SKIP); im
  * Original in Szenen benutzt (ROOM1141 sub02 12,0x30 <-> 12,0x10). Unsichtbar (hinter der Kamera). GEMESSEN: unter
  * der RE1.5-KI erreichte ein laufender Zombie den Parkplatz nach ~430 Bildern und biss (hp 100 -> 90, Riegel
  * montage_1040 "Tor offen"); unter der RE2-KI (exe) kam keiner hinter die Kamera. */
