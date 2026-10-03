@@ -536,3 +536,16 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   game_step_common.c **+4/-2** (4 Hunks); main.c **+5** (1 include + 2x2); actor_common.c +2/-2;
   scd_vm.c +1; emd_common.c +2. Verhalten unveraendert: `ctest -R "r35_affen|^unit_member$|^unit_maggot_ai$"`
   13/13 gruen.
+
+### M2 — Riegel `wagen` pinnt jetzt die Ursache von Punkt 2 (erledigt, gruen)
+- Ursache des Mangels: der Riegel pruefte nur die Klappe und druckte die Gorilla-Lage.
+- Neu im Riegel (test_r35_affen.c teil_wagen), alle gegen den Original-Savestate r3:
+  - Spawn-Bild (1 Bild nach dem Raumaufbau): beide Records grid 0x30 (eingefroren), **Zustand 1 / sub 0,
+    HP 180, Scale 0x1b33** (`ori v0,zero,0x1b33` / `sh v0,358(v1)` @0x80117148-4c), Lagen
+    (-1220,-20000,-21568) / (-554,-20000,-25423) = s001 t=6.11. Ohne den Spawn-Wurzelaufruf
+    (`jalr 0x80072bac[typ]` @0x8004259c) bliebe der Record in Zustand 0 mit Scale 0 -> der Riegel faellt.
+  - Cut 12 bis zur Freigabe: G1 auf **y = -2500** in allen 36 Bildern (`Member_set 01 = -2500` @0x1996;
+    s020 t=34.89: y=-2500).
+  - Freigabe 36 Bilder nach Cut-12-Beginn: G1 grid 0x10 bei **(-3617,0,-17798)**, Zustand 1 (@0x1A2E;
+    s021 t=36.41: (-3617,0,-17798) g=10).
+- Ergebnis: `test_r35_affen wagen` alle Pruefungen ok.

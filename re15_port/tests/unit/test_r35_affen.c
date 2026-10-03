@@ -31,8 +31,11 @@
  *           c1a4-Schritt (240), nicht um den doppelten (Port-Defekt "double-advance", @0x80118cc0-dc4).
  *   brust   Rear-up-Pin-Release: Clip 3 ab Bild 0x16 -> Phase 5/6 -> sub 2 (Clip 3 ab 0x1d) -> CHASE = der
  *           Brustschlag (Punkt 5), gemessen als Bildfolge.
- *   wagen   Messschiene (kein Riegel-Urteil ausser Plausibilitaet): die Klappe (Objekt 0) waehrend des
- *           Umklappens in Cut 12 — rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
+ *   wagen   Punkt 2: der eingefrorene Szenen-Record bekommt seinen INIT im Spawn-Bild (Zustand 1, HP 180, Scale
+ *           0x1b33 @0x80117148, Sce_em_set-Wurzelaufruf @0x8004259c) = die Ursache; in Cut 12 sitzt G1 auf
+ *           y = -2500 im Wagen (@0x1996) und tritt bei (-3617,0,-17798) aus (@0x1A2E); dazu die Klappe (Objekt 0)
+ *           waehrend des Umklappens — rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
+ *   takt    Punkt 4 (M1): zwei Gorillas, Startlage = Bild F36 der Einzelbild-Spur des Originals -> Treffer-Abstaende.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -355,6 +358,26 @@ static void teil_wagen(void)
 {
     re15_game_state_init();
     if (room_boot(0x11C0, -22604, 14455, 0, 0, 1) != 0) return;
+    {   /* M2 (Nachbesserung 1): die URSACHE von Punkt 2 — der eingefrorene Szenen-Record (grid 0x30) bekommt seinen
+         * INIT im Spawn-Bild (Sce_em_set: Wurzel mit geloeschtem Bit 0x20, `jalr 0x80072bac[typ]` @0x8004259c).
+         * Original-Savestate r3 s001 t=6.11: beide st=1/0/0/0, hp 180, +0x166 = 0x1b33, (-1220,-20000,-21568) /
+         * (-554,-20000,-25423), grid 0x30. Ohne den Aufruf: Zustand 0, Scale 0 (= 1,0x statt 1,7x). */
+        re15_actor_t *s1 = aktor_vom_typ(0x27, 0), *s2 = aktor_vom_typ(0x27, 1);
+        PRUEF(s1 && s2, "zwei Gorilla-Records im Szenen-Layout");
+        if (!s1 || !s2) return;
+        PRUEF(s1->grid_id == 0x30 && s2->grid_id == 0x30, "beide eingefroren (grid 0x30 = Bit 0x20 Root-Skip @0x80116df4-f8): 0x%02x / 0x%02x",
+              s1->grid_id, s2->grid_id);
+        PRUEF(s1->state == 1 && s2->state == 1 && s1->sub_state_1 == 0 && s2->sub_state_1 == 0,
+              "INIT im Spawn-Bild gelaufen: Zustand %d/%d, sub %d/%d (Original t=6.11: 1/0 und 1/0)",
+              s1->state, s2->state, s1->sub_state_1, s2->sub_state_1);
+        PRUEF(s1->hp == 180 && s2->hp == 180, "HP %d / %d = 180 (Original t=6.11: 180/180)", (int)s1->hp, (int)s2->hp);
+        PRUEF(s1->render_scale_q12 == 0x1b33 && s2->render_scale_q12 == 0x1b33,
+              "Scale +0x166 = 0x%x / 0x%x (INIT `ori v0,zero,0x1b33` / `sh v0,358(v1)` @0x80117148-4c; Original t=6.11: 0x1b33)",
+              (unsigned)(uint16_t)s1->render_scale_q12, (unsigned)(uint16_t)s2->render_scale_q12);
+        PRUEF(s1->x == -1220 && s1->y == -20000 && s1->z == -21568 && s2->x == -554 && s2->y == -20000 && s2->z == -25423,
+              "Spawn-Lagen (-1220,-20000,-21568) / (-554,-20000,-25423) (sub00 @0x1784/@0x1798): (%d,%d,%d) / (%d,%d,%d)",
+              (int)s1->x, (int)s1->y, (int)s1->z, (int)s2->x, (int)s2->y, (int)s2->z);
+    }
     PRUEF(g_scd.prop_count >= 1, "Objekt 0 (Klappe) vorhanden (%d Props)", (int)g_scd.prop_count);
     int16_t rz0 = g_scd.props[0].rot_z;
     PRUEF(g_scd.props[0].x == -840 && g_scd.props[0].y == -2930 && g_scd.props[0].z == -19110 && g_scd.props[0].rot_x == -72 && g_scd.props[0].rot_y == -1400 && rz0 == 48,
@@ -363,18 +386,32 @@ static void teil_wagen(void)
     /* bis Cut 12 laufen, dann die rot_z-Folge mitschreiben */
     int f_cut12 = -1; int16_t folge[60]; int n = 0; int16_t rz_max = rz0;
     re15_actor_t *g1 = aktor_vom_typ(0x27, 0), *g2 = aktor_vom_typ(0x27, 1);
+    int f_frei = -1, y_wagen_bilder = 0, y_wagen_falsch = 0, fst = -1, fmo = -1; int32_t fx = 0, fy = 1, fz = 0;
     for (int f = 0; f < 4000; f++) {
         frame(0, 0);
         if (f_cut12 < 0 && (int)g_scd.cam_id == 12) f_cut12 = f;
         if (f_cut12 >= 0 && n < 60) folge[n++] = g_scd.props[0].rot_z;
+        /* M2: im Cut 12 VOR der Freigabe sitzt G1 im Wagen auf y = -2500 (`Member_set 01 = -2500` @0x1996),
+         * die Freigabe setzt ihn auf (-3617,0,-17798) mit grid 0x10 (@0x1A2E: Member_set 00/01/02, 0C=16). */
+        if (f_cut12 >= 0 && f_frei < 0 && g1) {
+            if (g1->grid_id == 0x10) { f_frei = f; fx = g1->x; fy = g1->y; fz = g1->z; fst = g1->state; fmo = (int)g1->motion; }
+            else { y_wagen_bilder++; if (g1->y != -2500) y_wagen_falsch++; }
+        }
         if (f_cut12 >= 0 && (n % 10) == 1 && g1 && g2)   /* Messschiene Punkt 2: Lage der Gorillas waehrend Cut 12 */
             printf("    Cut12+%d: G1 y=%d @(%d,%d) g=0x%02x st=%d mo=%d | G2 y=%d @(%d,%d) g=0x%02x\n", n - 1,
                    (int)g1->y, (int)g1->x, (int)g1->z, g1->grid_id, g1->state, (int)g1->motion,
                    (int)g2->y, (int)g2->x, (int)g2->z, g2->grid_id);
         if (g_scd.props[0].rot_z > rz_max) rz_max = g_scd.props[0].rot_z;
-        if (f_cut12 >= 0 && n >= 60) break;
+        if (f_cut12 >= 0 && n >= 60 && f_frei >= 0) break;
     }
     PRUEF(f_cut12 >= 0, "Cut 12 erreicht (Bild %d)", f_cut12);
+    PRUEF(y_wagen_bilder > 0 && y_wagen_falsch == 0,
+          "G1 sitzt in Cut 12 bis zur Freigabe auf y = -2500 im Wagen (%d Bilder, %d abweichend; Original-Savestate t=34.89: y=-2500)",
+          y_wagen_bilder, y_wagen_falsch);
+    PRUEF(f_frei >= 0 && fx == -3617 && fy == 0 && fz == -17798,
+          "Austritt: G1 frei (grid 0x10) %d Bilder nach Cut-12-Beginn bei (%d,%d,%d) (Original t=36.41: (-3617,0,-17798) g=10)",
+          f_frei - f_cut12, (int)fx, (int)fy, (int)fz);
+    PRUEF(fst == 1, "beim Austritt laeuft die KI im Zustand 1 (INIT war schon im Spawn-Bild), Clip %d", fmo);
     printf("  rot_z ab Cut 12:");
     for (int i = 0; i < n; i++) printf(" %d", (int)folge[i]);
     printf("\n");
