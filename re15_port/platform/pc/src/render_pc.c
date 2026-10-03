@@ -30,6 +30,7 @@
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "touch_overlay_pc.h" /* On-Screen-Pad (Android: an; Desktop: RE15_TOUCH_OVERLAY=1) */
+#include "re15_entladen.h"    /* Runde 35 Spur I: Generation je Cache + Entladen (Block vor re15_render_pc_set_pri_atlas) */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -739,6 +740,8 @@ void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
 
 void re15_render_begin_frame(void)
 {
+    { extern void re15_render_pc_entladen_freigeben(void);   /* Runde 35 Spur I: entladene Texturen */
+      re15_render_pc_entladen_freigeben(); }                  /* erst hier zerstoeren (Queue leer)   */
     /* Der Maskenriegel gilt genau ein Bild (s. re15_render_pc_clear_scene_overlays). */
     s_pri_suppress = 0;
     /* Phase 4.5.10-F: reset debug bbox for this frame. */
@@ -995,6 +998,8 @@ void re15_render_end_frame(void)
         { extern int re15_mg_sichtbar(int i);
           int n_alle = mask_n; mask_n = 0;
           for (int i = 0; i < n_alle; i++) if (re15_mg_sichtbar(i)) mask_order[mask_n++] = i; }
+        { extern unsigned re15_render_pc_pri_gen(void);   /* Runde 35 Spur I: Messschiene */
+          re15_entladen_bild(mask_n, re15_render_pc_pri_gen()); }
         for (int i = 1; i < mask_n; i++) {
             int k  = mask_order[i];
             float kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);
@@ -2071,6 +2076,64 @@ void re15_render_pc_set_bg_image(const uint32_t *bg_rgba_320x240)
     }
 }
 
+/* ---- Runde 35 Spur I: Generation + Entladen der Raum-Render-Caches (re15_entladen.h) ----------
+ * Jeder Fuell-Aufruf vermerkt g_re15_entladen_gen; re15_render_pc_entladen_raum() gibt alles frei,
+ * was einem Raum gehoert (Original: Arena-Reset @0x80039738, Masken-Tabelle in der Arena
+ * @0x800399cc). TEXTUREN werden erst am naechsten Bildanfang zerstoert (die Dreiecksliste des
+ * laufenden Bildes kann den Slot noch referenzieren); ungueltig sind sie sofort (loaded = 0). */
+static unsigned s_pri_rects_gen = 0, s_pri_atlas_gen = 0;
+static unsigned s_tim_gen[RE15_TIM_SLOT_MAX];
+static int      s_tim_frei[RE15_TIM_SLOT_MAX], s_pri_atlas_frei = 0;
+unsigned re15_render_pc_pri_gen(void) { return s_pri_rects_gen; }
+int re15_render_pc_pri_belegt(unsigned *rects_gen, int *atlas, unsigned *atlas_gen)
+{
+    if (rects_gen) *rects_gen = s_pri_rects_gen;
+    if (atlas)     *atlas     = (s_pri_atlas_tex && s_pri_atlas_w > 0) ? 1 : 0;
+    if (atlas_gen) *atlas_gen = s_pri_atlas_gen;
+    return s_pri_rect_count;
+}
+/* Raum-eigene Slots (Belegung: Kommentar an RE15_TIM_SLOT_MAX): 4..9 + 26..35 + 45 Raum-Props,
+ * 10..18 Gegner (+46..49 Gore), 24/25 Tuersequenz, 36..43 Raum-ESP. Nicht dabei: 0..3 Spieler/
+ * Cinematic-Figuren, 19..23 + 44 + 50..55 globale Effektseiten (CORE00/TEX.TIM, Spielstart). */
+int re15_render_pc_tim_slot_raum(int slot)
+{
+    return (slot >= 4 && slot <= 18) || slot == 24 || slot == 25 ||
+           (slot >= 26 && slot <= 43) || (slot >= 45 && slot <= 49);
+}
+int re15_render_pc_tim_slot_belegt(int slot, unsigned *gen)
+{
+    if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return 0;
+    if (gen) *gen = s_tim_gen[slot];
+    return s_tim_slots[slot].loaded;
+}
+int re15_render_pc_tim_slot_anzahl(void) { return RE15_TIM_SLOT_MAX; }
+void re15_render_pc_entladen_raum(void)
+{
+    s_pri_rect_count = 0;                                   /* Maskenliste (Arena @0x800399cc) */
+    s_pri_atlas_w = s_pri_atlas_h = 0;
+    if (s_pri_atlas_tex) s_pri_atlas_frei = 1;
+    for (int slot = 0; slot < RE15_TIM_SLOT_MAX; slot++)
+        if (re15_render_pc_tim_slot_raum(slot) && s_tim_slots[slot].loaded) {
+            s_tim_slots[slot].loaded = 0;
+            s_tim_frei[slot] = 1;
+        }
+}
+void re15_render_pc_entladen_freigeben(void)
+{
+    if (s_pri_atlas_frei && s_pri_atlas_w == 0 && s_pri_atlas_tex) {
+        SDL_DestroyTexture(s_pri_atlas_tex);
+        s_pri_atlas_tex = NULL;
+    }
+    s_pri_atlas_frei = 0;
+    for (int slot = 0; slot < RE15_TIM_SLOT_MAX; slot++) {
+        if (s_tim_frei[slot] && !s_tim_slots[slot].loaded && s_tim_slots[slot].tex) {
+            SDL_DestroyTexture(s_tim_slots[slot].tex);
+            s_tim_slots[slot].tex = NULL;
+        }
+        s_tim_frei[slot] = 0;
+    }
+}
+
 /* Upload the per-cut sprite.pri foreground atlas (RGBA8888, index0 already keyed
  * to alpha 0) used as the overdraw source. w/h are the atlas pixel dims (256x256).
  * Pass NULL to clear (cut with no foreground). Recreated when the size changes. */
@@ -2080,6 +2143,7 @@ void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h)
         s_pri_atlas_w = s_pri_atlas_h = 0;   /* disable overdraw until next set */
         return;
     }
+    s_pri_atlas_gen = g_re15_entladen_gen; s_pri_atlas_frei = 0;   /* Runde 35 Spur I */
     if (s_pri_atlas_tex && (w != s_pri_atlas_w || h != s_pri_atlas_h)) {
         SDL_DestroyTexture(s_pri_atlas_tex);
         s_pri_atlas_tex = NULL;
@@ -2104,6 +2168,7 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
 {
     if (count > RE15_PRI_RECTS_MAX) count = RE15_PRI_RECTS_MAX;
     s_pri_rect_count = count;
+    if (count > 0) s_pri_rects_gen = g_re15_entladen_gen;   /* Runde 35 Spur I */
     for (int i = 0; i < count; i++) {
         s_pri_rects[i].src_x = src_x[i];
         s_pri_rects[i].src_y = src_y[i];
@@ -2358,6 +2423,7 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
         st->n_cluts     = n_cluts;
         st->clut_base_y = tim->clut_y;
         st->loaded      = 1;
+        s_tim_gen[slot] = g_re15_entladen_gen; s_tim_frei[slot] = 0;   /* Runde 35 Spur I */
     }
     /* Stash slot 0's decoded base RGBA (the body-skin atlas) so the in-hand weapon composite can
      * REBUILD slot 0 from scratch on equip (base + weapon dir[3]) — a fresh texture + full upload

@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "re15_entladen.h"   /* Runde 35 Spur I: Grenze "raum" + Generation */
 #include "re15_room.h"
 #include "re15_rdt.h"
 #include "re15_msg.h"     /* re15_msg_clear_room_block  — Teardown (3) */
@@ -30,6 +32,29 @@ extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 /* Keeps the resident room's RDT bytes alive (g_room_rdt points into it). */
 static unsigned char *s_pc_room_buf = NULL;
 static int            s_pc_room_size = 0;
+static unsigned       s_pc_room_gen  = 0;   /* Runde 35 Spur I: Generation (re15_entladen.h) */
+
+/* Runde 35 Spur I: Belegung der residenten RDT-Bytes (Zensus) und Freigabe an den Grenzen
+ * "spielstart"/"spielende" (Spielmodul-Init setzt die Arena @0x8001d590-a0 zurueck). */
+int re15_room_pc_belegt(unsigned *gen) { if (gen) *gen = s_pc_room_gen; return s_pc_room_buf != NULL; }
+void re15_room_pc_entladen(void)
+{
+    if (s_pc_room_buf) free(s_pc_room_buf);
+    s_pc_room_buf  = NULL;
+    s_pc_room_size = 0;
+    memset(&g_room_rdt, 0, sizeof g_room_rdt);   /* keine Zeiger in freigegebene Bytes */
+    g_room_rdt_ok  = 0;
+}
+/* Der Boot-Pfad liest seine RDT selbst (main.c) — hier zur Verwaltung uebergeben, damit die
+ * naechste Grenze sie freigibt wie jede andere Raum-RDT (vorher ein Leck je Spielstart). */
+void re15_room_pc_uebernehmen(unsigned char *buf, int size)
+{
+    if (buf == s_pc_room_buf) return;
+    if (s_pc_room_buf) free(s_pc_room_buf);
+    s_pc_room_buf  = buf;
+    s_pc_room_size = buf ? size : 0;
+    s_pc_room_gen  = g_re15_entladen_gen;
+}
 
 int re15_room_load(unsigned room_id)
 {
@@ -55,14 +80,22 @@ int re15_room_load(unsigned room_id)
         g_room_rdt_ok = 0;
         return -1;
     }
-    if (re15_rdt_parse(buf, (size_t)size, &g_room_rdt) != 0) {
+    /* Runde 35 Spur I: erst in eine Zwischen-Struktur parsen — die Grenze "raum" (Entladen aller
+     * Raum-Assets, re15_entladen.h) liegt wie im Original VOR der Installation der neuen RDT
+     * (Arena-Reset @0x80039738 vor dem Laden @0x800397e8), aber NACH dem erfolgreichen Lesen:
+     * ein Ladefehler laesst den Spieler weiter im alten, unversehrten Raum stehen. */
+    static re15_rdt_t s_neu;
+    if (re15_rdt_parse(buf, (size_t)size, &s_neu) != 0) {
         free(buf);
         g_room_rdt_ok = 0;
         return -1;
     }
+    re15_entladen_ereignis("raum");
+    g_room_rdt = s_neu;
     if (s_pc_room_buf) free(s_pc_room_buf);   /* free the previous room's bytes */
     s_pc_room_buf     = buf;
     s_pc_room_size    = size;
+    s_pc_room_gen     = g_re15_entladen_gen;
     g_current_room_id = room_id;
     g_room_rdt_ok     = 1;
     fprintf(stderr, "[room] PC loaded room%04x.rdt (%d bytes)\n", room_id, size);

@@ -7,6 +7,7 @@
 #include "re15_enemy.h"
 #include "re15_enemy_ai.h"   /* re15_player_victim_reset */
 #include "re15_actor.h"      /* RBJ-Marker-Binder: Aktor-Slots (g_actors) */
+#include "re15_entladen.h"   /* Runde 35 Spur I: Generation je Bank */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 
@@ -31,6 +32,7 @@ re15_enemy_bank_t *re15_enemy_alloc(uint8_t type)
             g_enemy[i].xshift      = -1;
             g_enemy[i].pc_tex_slot = -1;
             g_enemy[i].pc_tex_slot_gore = -1;
+            re15_entladen_gegner_merken(i);   /* Runde 35 Spur I: Generation der Bank (re15_entladen.h) */
             return &g_enemy[i];
         }
     }

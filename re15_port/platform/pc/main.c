@@ -120,6 +120,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_memcard.h"      /* FE-4 byte-true PSX .mcr backend */
 #include "re15_savepoint.h"    /* FE-4 phone save-point pending signal */
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
+#include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -204,6 +205,7 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
     int rc = re15_esp_parse(rdt_buf, (size_t)rdt_size, idh, pe, tb, te, &s_room_esp);
     if (rc == 0) {
         re15_esp_set_room_bank(&s_room_esp);
+        { extern void re15_entladen_esp_bank_merken(void); re15_entladen_esp_bank_merken(); }   /* Runde 35 Spur I */
         fprintf(stderr, "[esp] room %04X: %d effect bank(s) parsed (e.g. id 0x%02x: %u anim/%u cells)\n",
                 room_id, s_room_esp.id_count,
                 s_room_esp.id_count ? s_room_esp.eff[0].effect_id : 0,
@@ -3737,6 +3739,8 @@ re_title:;
     /* Phase 4.5.6.4: software MDEC + decode bundled BG (PC: no-op chip init).
      * Der eigentliche Boot-BG-Preload ist NACH die Raum-Initialisierung verschoben
      * (vor den Game-Loop, s.u.) — Beleg + Messung dort. */
+    re15_entladen_ereignis("spielstart");   /* Runde 35 Spur I: Arena-Reset der Spielmodul-Init
+                                             * @0x8001d590-a0 vor Spieler/Raum @0x8001d5a4/ac */
     re15_bg_init();
 
     /* Phase 4.5.9 / globalization Phase 3-A (2026-06-13): load + parse the room RDT
@@ -5917,15 +5921,8 @@ re_title:;
                  * Kuenstler bearbeitet haben, bleibt unangetastet byte-true. */
                 int pri_nachgezeichnet = 0;
                 if (pri_n == 0 && active_cut_idx >= 0) {
-                    static uint8_t *s_msk = NULL; static int s_msk_size = 0;
-                    static unsigned s_msk_room = 0xFFFFu;
-                    if (s_msk_room != g_current_room_id) {
-                        char mrel[64];
-                        free(s_msk); s_msk = NULL; s_msk_size = 0;
-                        s_msk_room = g_current_room_id;
-                        snprintf(mrel, sizeof mrel, "MASKS/ROOM%04X.MSK", g_current_room_id);
-                        s_msk = re15_pc_read_cd(mrel, &s_msk_size);
-                    }
+                    int s_msk_size = 0;   /* Runde 35 Spur I: Cache liegt in entladen_pc.c (entladbar) */
+                    const uint8_t *s_msk = re15_entladen_msk(g_current_room_id, &s_msk_size);
                     if (s_msk) {
                         uint32_t moff = re15_pri_msk_section_offset(s_msk, (size_t)s_msk_size,
                                                                     active_cut_idx);
@@ -11439,6 +11436,10 @@ re_title:;
     /* FE-5.3: the death FSM set mode=TITLE and broke the game loop — go back to the title menu
      * (YOU DIED -> TITLE). CONTINUE there reloads the last card save; NEW GAME restarts. Any other
      * exit (SDL_QUIT calls exit() directly) falls through to a normal return. */
-    if (re15_gameflow_mode() == RE15_MODE_TITLE) goto re_title;
+    if (re15_gameflow_mode() == RE15_MODE_TITLE) {
+        re15_entladen_ereignis("spielende");   /* Runde 35 Spur I: Modul-Ende @0x8001d1f8/@0x8001d200 —
+                                                * Raum-Masken zeichnet nur das Spielmodul (@0x8001ce54) */
+        goto re_title;
+    }
     return 0;
 }
