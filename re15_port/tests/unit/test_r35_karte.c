@@ -525,9 +525,12 @@ static int teil_karte(int argc, char **argv)
 
 /* bild <bmp> <x0> <y0> <x1> <y1> <min_gelb>
  *   wertet den Kartenschirm aus (RE15_INV_FB_SHOT, 24-Bit-BMP 320x240, Kanaele c5<<3):
- *   ROT = Fuellung des aktuellen Raums (RE2-CLUT 502 Index 1 = 0x680808 -> (104,8,8);
- *   re15_inv_screen.c re2_ton), GELB = RE2-Tuerbalken (224,168,40). Erwartet: rote Pixel
- *   NUR im Kasten (x0..x1, y0..y1), und darin >= min_gelb gelbe Pixel. */
+ *   ROT = Fuellung des aktuellen Raums: RE2-CLUT 502 Index 1 = 0x680808 (104,8,8) ist
+ *   HALBTRANSPARENT und liegt auf dem blauen Kartengrund (0,16,88)/(0,16,120) - im Abzug
+ *   GEMESSEN als (48,8,48) bzw. (48,8,64) (Laeufe A/B/D, 2026-10-04). Erkannt wird deshalb
+ *   R 40..56, G <= 12, B 40..72 (besucht = (16,56,40), Grund = (0,16,88)). GELB = RE2-
+ *   Tuerbalken (224,168,40). Erwartet: rote Pixel NUR im Kasten (x0..x1, y0..y1), darin
+ *   >= 10, und >= min_gelb gelbe Pixel. */
 static int teil_bild(int argc, char **argv)
 {
     FILE *f;
@@ -555,7 +558,9 @@ static int teil_bild(int argc, char **argv)
         for (x = 0; x < w; x++) {
             unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;  /* B,G,R */
             int drin = (x >= x0 && x <= x1 && y >= y0 && y <= y1);
-            if (p[2] == 104 && p[1] == 8 && p[0] == 8) { if (drin) rot_in++; else rot_aus++; }
+            if (p[2] >= 40 && p[2] <= 56 && p[1] <= 12 && p[0] >= 40 && p[0] <= 72) {
+                if (drin) rot_in++; else rot_aus++;
+            }
             if (p[2] == 224 && p[1] == 168 && p[0] == 40 && drin) gelb_in++;
         }
     free(px);

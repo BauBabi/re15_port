@@ -74,9 +74,11 @@ karte_lauf(A 1230 "1230;-4729;-16018;0;${_b1}" "" 1230 "120;60;175;131" 0)
 karte_lauf(B 11F0 "11F0;250;250;0;${_b2}" "" 11F0 "100;101;139;156" 0)
 karte_lauf(C 1200 "1200;-20154;-25245;0;${_b2}" "" 1200 "141;101;172;140" 0)
 karte_lauf(D 1210 "1210;-26400;-2200;0;${_b2}" "" 1210 "187;70;250;149" 30)
-# E: vor der Fahrstuhltuer von ROOM1120 (Tuer @0xCB6 r(300,5900,2000,1000)), Blick -z
+# E: in der Fahrstuhltuer von ROOM1120 (Tuer @0xCB6 r(300,5900,2000,1000)), Blick -z
 # (Yaw 1024 = (cos,-sin) = -z, player_common.c:1292), Aktionstaste -> ROOM1080.
-karte_lauf(E 1120 "1120;1300;6600;1024;besucht:1120:1300:7300" "W1,A0.3" 1080
+# flag:4:243 = "Reservestrom an" (ROOM11F0 sub18 @0x016F6 `22 04 f3 01`) - ohne Strom ist der
+# Fahrstuhl nicht in Betrieb.
+karte_lauf(E 1120 "1120;1300;6400;1024;besucht:1120:1300:7300;flag:4:243" "W1,A0.3,W1,A0.3" 1080
            "127;137;142;152" 0)
 
 file(REMOVE "${_exe_kopie}")
