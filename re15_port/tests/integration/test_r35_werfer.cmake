@@ -16,7 +16,7 @@
 #   14  >= 6 x "RE2SPAWN a0=031d1200" (je 3. Bild), Toene "re2arms ARMS10 satz=0" und "satz=11",
 #       Gegner-HP faellt um 15 je Treffer (RE2-Zeile 16), ss1=16; Fuel 6 -> 0 nach 24 Bildern.
 #   20  "SPAWN id=2 sub=0 scale=0xe00" (Redhawk-Muendung 0x02000E00) + "id=3 sub=0 scale=0x1000",
-#       "SE  arms_rec=0", Gegner-HP faellt um 900 (RE2-Zeile 5), ss1=5.
+#       "SE  arms_rec=0", Gegner-HP -> -1 (Kritklasse wie Redhawk, Nachbesserung 2; Schaden RE2-Zeile 5), ss1=5.
 # Ein Lauf ohne Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
 cmake_minimum_required(VERSION 3.16)
