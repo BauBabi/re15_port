@@ -523,10 +523,165 @@ static void teil_h(void)
     }
 }
 
+/* ---- I: Nachbesserung 2 (Abnahme 1, Maengel N1/N2; Dossier §9) ------------------------------- */
+static uint8_t *rdt_laden(const char *raum)
+{
+    char p[1024];
+    snprintf(p, sizeof p, "%s/STAGE1/%s.RDT", RE15_XSTR(RE15_ASSETS_PATH), raum);
+    FILE *f = fopen(p, "rb");
+    uint8_t *rdt = NULL; long n = 0;
+    if (f) { fseek(f, 0, SEEK_END); n = ftell(f); fseek(f, 0, SEEK_SET);
+             rdt = (uint8_t *)malloc((size_t)n);
+             if (!rdt || fread(rdt, 1, (size_t)n, f) != (size_t)n) n = 0; fclose(f); }
+    memset(&g_room_rdt, 0, sizeof g_room_rdt);
+    g_room_rdt_ok = (n > 0 && re15_rdt_parse(rdt, (size_t)n, &g_room_rdt) == 0 && g_room_rdt.sca_count > 0);
+    return rdt;                                    /* g_room_rdt zeigt hinein; bleibt bis Teilende */
+}
+/* Geschoss-Rahmen: lokales +y (Flug) -> Welt (ux,0,uz)/4096, lokales +x (oben) -> Welt -y, Spalte 2 = Kreuzprodukt. */
+static void mtx_richtung(uint8_t m[32], int32_t tx, int32_t ty, int32_t tz, int32_t ux, int32_t uz)
+{
+    const int16_t R[9] = { 0, (int16_t)ux, (int16_t)-uz,  -4096, 0, 0,  0, (int16_t)uz, (int16_t)ux };
+    mtx_t(m, tx, ty, tz);
+    for (int k = 0; k < 9; k++) { m[2*k] = (uint8_t)R[k]; m[2*k + 1] = (uint8_t)((uint16_t)R[k] >> 8); }
+}
+static int32_t s_i_ex, s_i_ez; static int s_i_n; static uint32_t s_i_code;
+static void se_spion_i(uint32_t code, const int32_t pos[3])
+{
+    se_spion(code, pos);
+    if (code == s_i_code && s_i_n == 0) { s_i_ex = pos[0]; s_i_ez = pos[2]; }
+    if (code == s_i_code) s_i_n++;
+}
+/* Rakete mit Muendung (mx, -2530, mz) in Richtung (ux,uz)/4096; schuetze: Lage fuer re2fx_r35_schuetze (NULL = keine).
+ * Rueckgabe Bildzahl bis zur Explosion (0x01140001) bzw. -1; Lage der Explosion in *ex/*ez. */
+static int rakete_i(int32_t mx, int32_t mz, int32_t ux, int32_t uz, const int32_t *schuetze, int32_t *ex, int32_t *ez)
+{
+    start();
+    re2fx_boden_hook = NULL;                       /* echter Wand-/Bodentest (werfer_boden) */
+    re2fx_se_hook = se_spion_i; s_i_code = 0x01140001u; s_i_n = 0; s_i_ex = s_i_ez = 0;
+    uint8_t m[32]; mtx_richtung(m, mx - ((ux * 1100) >> 12), -2530, mz - ((uz * 1100) >> 12), ux, uz);
+    static const int16_t OM[4] = { 0, 1100, 0, 0 };
+    int i = re2fx_spawn_sofort(0x020D1000u, 0, m, OM);
+    if (schuetze && i >= 0) re2fx_r35_schuetze(i, schuetze[0], schuetze[1]);
+    int t; for (t = 0; t < 80 && s_i_n == 0; t++) re2fx_tick();
+    *ex = s_i_ex; *ez = s_i_ez;
+    printf("     Rakete ab (%d,%d) Richtung (%d,%d)%s: %s nach %d Bildern @(%d,%d)\n", (int)mx, (int)mz, (int)ux, (int)uz,
+           schuetze ? " mit Schuetze" : "", s_i_n ? "Explosion" : "KEINE Explosion", t, (int)*ex, (int)*ez);
+    return s_i_n ? t : -1;
+}
+static void teil_i(void)
+{
+    printf("== I Nachbesserung 2: N1 Formen 2/4..9 + Strecke, N2 Python in der Kritklasse\n");
+    int32_t ex = 0, ez = 0;
+    /* N1 — ROOM10E0 Zelle 21 = Typ 5 (LAB_8003c734, Verteiler @0x8003af44), Rezept der Abnahme 1 §2.6:
+     * Flugbahn der Rakete (-2477,-1657) mit Schritt (87,761). Der feste Teil ist d*(x-X)/w < z-Z (@0x8003c764-7e0). */
+    uint8_t *r10e0 = rdt_laden("ROOM10E0");
+    {
+        const re15_sca_entry_t *c = g_room_rdt_ok && g_room_rdt.sca_count > 21 ? &g_room_rdt.sca[21] : NULL;
+        CHECK(120, c && c->width == 2850 && c->density == 3700 && c->x == -3700 && c->z == -1400 && c->type == 5 &&
+                   c->u0 == 0xff && c->u1 == 0x00 && c->floor == 0x03,
+              "ROOM10E0 SCA-Zelle 21 = {w 2850, d 3700, x -3700, z -1400, Typ 5, u0 ff, u1 00, floor 03} (@RDT 0x758)");
+        if (c) {
+            /* Formtest selbst: Punkt im festen Dreieck / im leeren Teil des Rechtecks / Strecke ueber die Kante. */
+            CHECK(121, re15_werfer_zelle_strecke(c, -2215, 627, -2215, 627) == 1 &&
+                       re15_werfer_zelle_strecke(c, -1200, 0, -1200, 0) == 0 &&
+                       re15_werfer_zelle_strecke(c, -1200, 0, -1200, 2000) == 1,
+                  "Typ 5: (-2215,627) fest, (-1200,0) leer (im Rechteck), Strecke (-1200,0)-(-1200,2000) schneidet die Hypotenuse");
+            int b = rakete_i(-2477, -1657, 465, 4069, NULL, &ex, &ez);
+            CHECK(122, b > 0 && ez > -1657 && ez < 528,
+                  "Rakete 10E0 (Abnahme-Bahn): Explosion vor dem festen Dreieck (z < 528), vorher @(-2070,..,1897); ist z=%d", (int)ez);
+            /* GL-Runde IN Bandhoehe (y -1000) durch den LEEREN Teil des Rechtecks: der Rechteck-Vortest allein meldete dort
+             * Kontakt; mit dem Formtest (RE2 @0x8004fe34-54) fliegt sie bis zur Hypotenuse (x -1200: z > 1845). */
+            start();
+            re2fx_boden_hook = NULL;
+            re2fx_se_hook = se_spion_i; s_i_code = 0x01110001u; s_i_n = 0; s_i_ex = s_i_ez = 0;
+            re15_inv_init(); re15_inv_grant(15, 6); re15_player_set_equipped_weapon(15);
+            uint8_t m[32]; mtx_richtung(m, -1200, -880, -3700, 0, 4096);   /* Muendung (-1200,-1000,-2500) */
+            static const int16_t OG[4] = { 120, 1200, 0, 0 };
+            int i = re2fx_spawn_sofort(0x020C0A00u, 0, m, OG);
+            if (i >= 0 && i < RE2FX_PLAETZE) {             /* Runde 1 der Explosiv-Ueberschreibung wie gl_runde_spawn */
+                uint8_t *pb = re2fx_platz_sonde(i);
+                pb[0x08] = (uint8_t)-10; pb[0x0C] = 0; pb[0x0D] = 0; pb[0x0E] = (uint8_t)600; pb[0x0F] = (uint8_t)(600 >> 8); pb[0x10] = 0; pb[0x11] = 0;
+            }
+            int t; for (t = 0; t < 40 && s_i_n == 0; t++) re2fx_tick();
+            printf("     GL-Runde x -1200 ab z -2500 (y -1000): %s nach %d Bildern @(%d,%d)\n", s_i_n ? "Explosion" : "KEINE", t, (int)s_i_ex, (int)s_i_ez);
+            CHECK(123, s_i_n > 0 && s_i_ez > 0 && s_i_ez < 2300,
+                  "GL in Bandhoehe: kein Kontakt im leeren Teil des Rechtecks (z -1400..1845), Explosion an der Hypotenuse; ist z=%d", (int)s_i_ez);
+        }
+    }
+    /* N1 — ROOM11C0 Zelle 5 = Typ 2 (Raute, LAB_8003d00c @0x8003d090-9c) — der Affen-Parkplatz: Rakete auf z -12500 nach +x;
+     * die Rautenkante liegt dort bei x -6152 (|dx|/10099 + 8327/9093 = 1). */
+    uint8_t *r11c0 = rdt_laden("ROOM11C0");
+    {
+        const re15_sca_entry_t *c = g_room_rdt_ok && g_room_rdt.sca_count > 5 ? &g_room_rdt.sca[5] : NULL;
+        CHECK(124, c && c->type == 2 && c->x == -15400 && c->z == -13266 && c->width == 20199 && c->density == 18187 && c->u0 == 0xff,
+              "ROOM11C0 SCA-Zelle 5 = Raute {x -15400, z -13266, w 20199, d 18187, u0 ff}");
+        if (c) {
+            int b = rakete_i(-13000, -12500, 4096, 0, NULL, &ex, &ez);
+            CHECK(125, b > 0 && ex > -13000 && ex < -6152,
+                  "Rakete 11C0 nach +x: Explosion vor der Rautenkante (x < -6152); ist x=%d", (int)ex);
+        }
+    }
+    /* N1 — Durchtunneln (OFFEN 19): ROOM1000 Kreis-Zelle 15 (Mitte (-1700,-4350), r 500); bei x -2117 ist die Sehne 552 <
+     * Schritt 768. Lagen -4058 (vor der Sehne) und -4826 (dahinter): der Punkttest sieht den Kreis nie, die Strecke schon. */
+    uint8_t *r1000 = rdt_laden("ROOM1000");
+    {
+        const re15_sca_entry_t *c = g_room_rdt_ok && g_room_rdt.sca_count > 15 ? &g_room_rdt.sca[15] : NULL;
+        CHECK(126, c && c->type == 3 && c->x == -2200 && c->z == -4850 && c->width == 1000,
+              "ROOM1000 SCA-Zelle 15 = Kreis {x -2200, z -4850, w 1000}");
+        if (c) {
+            CHECK(127, re15_werfer_zelle_strecke(c, -2117, -4058, -2117, -4058) == 0 &&
+                       re15_werfer_zelle_strecke(c, -2117, -4826, -2117, -4826) == 0 &&
+                       re15_werfer_zelle_strecke(c, -2117, -4058, -2117, -4826) == 1,
+                  "Kreis: beide Lagen ausserhalb, die Strecke dazwischen schneidet die Sehne");
+            int b = rakete_i(-2117, -3290, 0, -4096, NULL, &ex, &ez);
+            CHECK(128, b > 0 && ez > -4074,
+                  "Rakete ROOM1000 x -2117: Explosion vor dem Kreis (z > -4074), nicht an der Wand dahinter; ist z=%d", (int)ez);
+        }
+    }
+    /* N1 — PORT-WAHL Schuetze -> Muendung: ROOM1140 Kreis (-4750,-13900) r 500 zwischen Schuetze (-4750,-13300) und
+     * Muendung (-4750,-14600). Ohne Schuetzenlage (RE2: Punkt je Bild) fliegt sie ueber die Muendung hinaus weiter. */
+    uint8_t *r1140 = rdt_laden("ROOM1140");
+    if (g_room_rdt_ok) {
+        const int32_t S[2] = { -4750, -13300 };
+        int b0 = rakete_i(-4750, -14600, 0, -4096, NULL, &ex, &ez);
+        const int32_t ez0 = ez;
+        int b1 = rakete_i(-4750, -14600, 0, -4096, S, &ex, &ez);
+        CHECK(129, b0 > 0 && ez0 < -15368 && b1 > 0 && b1 <= 3 && b1 < b0 && ez > -14700,
+              "Muendung hinter dem Kreis: ohne Schuetze Fernwand z=%d (%d Bilder), mit Schuetze sofort z=%d (%d Bilder)",
+              (int)ez0, b0, (int)ez, b1);
+    }
+    g_room_rdt_ok = 0; memset(&g_room_rdt, 0, sizeof g_room_rdt);
+    free(r10e0); free(r11c0); free(r1000); free(r1140);
+    start();
+
+    /* N2 — Kritklasse: Redhawk (7) und Python (20) setzen +0x93 |= 0x40 (@0x800123b4-b8; 20 = PORT-WAHL §3.5), Typ < 0x20
+     * -> HP -1 am Bit (@0x800124fc-1c); Typ 0x27 (Affe) traegt nur das Bit; Pistole (3) keins. */
+    {
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        static const struct { int w; uint8_t typ; int16_t hp; int bit; int tot; } K[5] = {
+            { 7, 0x10, 2000, 1, 1 }, { 20, 0x10, 2000, 1, 1 }, { 3, 0x10, 2000, 0, 0 }, { 7, 0x27, 5000, 1, 0 }, { 20, 0x27, 5000, 1, 0 } };
+        for (int k = 0; k < 5; k++) {
+            memset(pl, 0, sizeof *pl);
+            pl->active = 1; pl->hp = 100; pl->state = 1; pl->x = 100000; pl->y = 0; pl->z = 100000; pl->rot_y = 0;
+            re15_player_apply_hitbox(pl);
+            for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
+            re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, K[k].typ, 100800, 0, 100000, K[k].hp);
+            re15_inv_init(); re15_inv_grant(K[k].w, 6); re15_player_set_equipped_weapon(K[k].w);
+            int hit = re15_player_weapon_fire(K[k].w);
+            const int bit = (z->hit_react & 0x40) != 0;
+            CHECK(130 + k, hit != 0 && bit == K[k].bit && ((z->hp == -1) == (K[k].tot != 0)),
+                  "w%d gegen Typ 0x%02x (hp %d): Treffer %d, +0x93 Bit 0x40 %d (soll %d), hp %d (soll %s)",
+                  K[k].w, K[k].typ, K[k].hp, hit, bit, K[k].bit, z->hp, K[k].tot ? "-1" : "> 0");
+        }
+        for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
+    }
+}
+
 int main(void)
 {
     if (laden() != 0) { printf("CORE00.ESP (RE2) fehlt/ungueltig\n"); return 2; }
-    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f(); teil_g(); teil_h();
+    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f(); teil_g(); teil_h(); teil_i();
     if (s_fails) { printf("test_r35_werfer: %d FAILURES\n", s_fails); return 1; }
     printf("test_r35_werfer: OK\n");
     return 0;
