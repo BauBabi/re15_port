@@ -61,3 +61,14 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer_elza.cmake)
     set_tests_properties(integration_r35_werfer_elza PROPERTIES TIMEOUT 600)
 endif()
+
+#   integration_r35_werfer_form Nachbesserung 2 (N1/N2 der Abnahme 1): Rakete ROOM10E0 explodiert VOR der Hypotenuse der
+#                             Typ-5-Zelle 21 (keine Flug-Lage im festen Dreieck); Python-Treffer ROOM1140 -> hp -1 (Kritklasse).
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_werfer_form
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_werfer_form_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer_form.cmake)
+    set_tests_properties(integration_r35_werfer_form PROPERTIES TIMEOUT 600)
+endif()
