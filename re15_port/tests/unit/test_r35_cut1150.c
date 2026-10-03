@@ -562,7 +562,9 @@ static void teil_knallbank(void)
         int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
         int got = pcm ? re15_vag_adpcm_decode(b + 0xC38u + vab.samples[i].offset, vab.samples[i].size, pcm, cap) : 0;
         int peak = 0; for (int k = 0; k < got; k++) { int v = pcm[k] < 0 ? -pcm[k] : pcm[k]; if (v > peak) peak = v; }
-        PRUEF(got == (i == 0 ? 16128 : 14112) && peak > 30000, "VAG %d dekodiert: %d Abtastwerte, Spitze %d", i + 1, got, peak);
+        /* Abtastwerte bis zum ADPCM-Endflag: 16100 (DOOR04 VAG 3) / 14112 (ROOM1030 VAG 6) — dieselben Zahlen wie
+         * die Python-Dekodierung im Dossier §2.5. */
+        PRUEF(got == (i == 0 ? 16100 : 14112) && peak > 30000, "VAG %d dekodiert: %d Abtastwerte, Spitze %d", i + 1, got, peak);
         free(pcm);
     }
 }

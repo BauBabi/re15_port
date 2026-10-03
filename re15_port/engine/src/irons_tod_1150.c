@@ -134,16 +134,18 @@ static const uint8_t k_p_szene[] = {
 };
 
 /* PROGRAMM 1 — ROOM1130 Cut 0: Tuerknall, die aus 1140 uebrig gebliebenen Zombies erscheinen.
- * Records = ROOM1140 sub00 @0x00BAA..@0x00C62 (Typ/grid/p6 je Record uebernommen), Tot-Bits neu,
+ * Records = ROOM1140 sub00, STEHENDE Form des Else-Zweigs ((3,210)=1, @0x00C12..@0x00C62: grid 0x02 fuer
+ * alle fuenf, p6 = 00/01/01/01/01) — der Erst-Zweig @0x00BAA.. (grid 0x86/0x88) sind die LIEGENDEN
+ * Leichen, die erst aufstehen (gemessen: Lauf v1130, Haufen am Boden). Tot-Bits neu,
  * Standorte = PORT-WAHL im Flur vor der Briefing-Room-Tuer (Spawn 1140->1130 @ROOM1140 0x00A52
  * (-1300,-13950)), Blick zur Kamera (+z = Gierung 3072; Gierung 0 = +x, 1024 = -z, 2048 = -x: Vorwaerts-
  * punkt fx = x + cos, fz = z - sin, aot_common.c). */
 #define EM_1130_LISTE \
-    OP_EM(0, 0x16, 0x88, 0x00, 40, -1400, -14200, 0), \
-    OP_EM(1, 0x10, 0x86, 0x01, 41,  -900, -12900, 0), \
-    OP_EM(2, 0x10, 0x86, 0x01, 42, -2000, -12000, 0), \
-    OP_EM(3, 0x11, 0x86, 0x01, 43, -1300, -10800, 0), \
-    OP_EM(4, 0x11, 0x86, 0x01, 46,  -700, -11600, 0)
+    OP_EM(0, 0x16, 0x02, 0x00, 40, -1400, -14200, 3072), \
+    OP_EM(1, 0x10, 0x02, 0x01, 41,  -900, -12900, 3072), \
+    OP_EM(2, 0x10, 0x02, 0x01, 42, -2000, -12000, 3072), \
+    OP_EM(3, 0x11, 0x02, 0x01, 43, -1300, -10800, 3072), \
+    OP_EM(4, 0x11, 0x02, 0x01, 46,  -700, -11600, 3072)
 static const uint8_t k_p_1130[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_CUT(RE15_IT_CUT_1130), OP_SLEEP(15),
@@ -186,26 +188,28 @@ static const uint8_t k_p_1040_ende[] = {
 };
 
 /* PROGRAMM 3 — ROOM1030: Cut 7 (nur wenn aus 1070 Zombies uebrig: Tuerknall + Kopien vor der
- * 1070-Tuer, Records = ROOM1070 sub00 @0x015CA.., Blick zur Kamera = -x = Gierung 2048), dann Cut 6:
+ * 1070-Tuer, Records = ROOM1070 sub00 Else-Zweig @0x01632.., Blick zur Kamera = -x = Gierung 2048), dann Cut 6:
  * der Raumknall selbst (sub08 @0x02776 woertlich) und drei Zombies (Raum-Record-Form @0x01DE6, Typ
  * 0x16 grid 0x0d) noerdlich des Tors, die zum geparkten Spieler laufen und dabei durch das
  * Tor-Rechteck (AOT Slot 4 @0x01CDE) kriechen. Save(0x12,20) hebt das Gleichzeitig-Limit 6
  * (@0x01DE2) fuer die Zusatz-Records (@0x80042214-3c). Slots werden bei der Ausloesung auf freie
  * Aktor-Plaetze gesetzt (RE15_ACTOR_MAX = 16). */
+/* 1070-Kopien: STEHENDE Form des Else-Zweigs von ROOM1070 sub00 ((4,197)=1, @0x01632..@0x01682: grid 0x00,
+ * p6 = 00/01/01/01/01); der Erst-Zweig @0x015CA.. (grid 0x88/0x87) sind die liegenden Leichen. */
 #define EM_1070_LISTE \
-    OP_EM(0, 0x10, 0x88, 0x00, 47, -18600, -3500, 3072), \
-    OP_EM(0, 0x10, 0x88, 0x01, 48, -20600, -3000, 3072), \
-    OP_EM(0, 0x10, 0x87, 0x01, 49, -22400, -4000, 3072), \
-    OP_EM(0, 0x11, 0x88, 0x01, 75, -19600, -2400, 3072), \
-    OP_EM(0, 0x11, 0x87, 0x01, 76, -21600, -4600, 3072)
+    OP_EM(0, 0x10, 0x00, 0x00, 47, -18600, -3500, 2048), \
+    OP_EM(0, 0x10, 0x00, 0x01, 48, -20600, -3000, 2048), \
+    OP_EM(0, 0x10, 0x00, 0x01, 49, -22400, -4000, 2048), \
+    OP_EM(0, 0x11, 0x00, 0x01, 75, -19600, -2400, 2048), \
+    OP_EM(0, 0x11, 0x00, 0x01, 76, -21600, -4600, 2048)
 #define EM_KRIECHER_LISTE \
-    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -24600, 0), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -24300, 0), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -24500, 0)
+    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -24600, 3072), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -24300, 3072), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -24500, 3072)
 #define EM_KRIECHER_NACH \
-    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -19000, 2048), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -18500, 2048), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -18800, 2048)
+    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -19000, 1024), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -18500, 1024), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -18800, 1024)
 static const uint8_t k_p_1030_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     0x24, 0x12, LE16(20),                                   /* Save(0x12,20): Gleichzeitig-Limit */

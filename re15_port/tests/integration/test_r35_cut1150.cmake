@@ -146,10 +146,19 @@ it_darf_nicht(B "${_dbg}" "Kette unterbrochen")
 it_lauf(c 1060 "nach10f0;ersteszene" "W1,A0.2,W3" 240 1060 240 _dbg)
 it_muss(C "${_dbg}" "[tuer1060] ROOM1060 Slot 2 -> Text-Platz msg 1")
 it_darf_nicht(C "${_dbg}" "[room] PC loaded room1040.rdt")
+it_darf_nicht(C "${_dbg}" "DOOR FIRE")
+# der Druck hat den Text wirklich geoeffnet: state.log traegt nach Bild 90 eine Zeile mit msg(a=1 ... id=1
+file(READ "${_basis}_c/state.log" _stc)
+string(REGEX MATCH "F(9[0-9]|1[0-9][0-9]|2[0-3][0-9]) [^
+]*msg\(a=1 fsm=[0-9]+ id=1 " _text_c "${_stc}")
+if(NOT _text_c)
+    message(FATAL_ERROR "r35_cut1150[C]: nach dem Druck an der Tuer kein Text msg 1 im state.log (Standplatz/Blick?)")
+endif()
 
 # --- D: 1060 frei ((9,73)=1): Tuer nach 1040 -----------------------------------------------------
 it_lauf(d 1060 "nach10f0;ersteszene;gesehen" "W1,A0.2,W3" 240 1040 240 _dbg)
 it_darf_nicht(D "${_dbg}" "[tuer1060]")
+it_muss(D "${_dbg}" "DOOR FIRE slot=2")
 it_muss(D "${_dbg}" "[room] PC loaded room1040.rdt")
 
 file(REMOVE "${_exe_kopie}")
