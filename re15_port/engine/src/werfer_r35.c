@@ -186,6 +186,80 @@ int re15_werfer_fuel_bild(void)
     return 1;
 }
 
+/* ---- Inventar-Kombination: Nachladen + Munitionswechsel (Runde 35 Spur B) -------------------
+ * BEFUND RE1.5 (re15_disasm.py bytes 0x80074c88 / 0x80074da8): die Waffen-Zeilen 15..18/20 der
+ * Eigenschaftstabelle tragen pair_count 0 (+9) und den NULL-Satz 0x80074c88 — der Matcher
+ * FUN_8004e900 (@0x8004e9ec `beq cnt,zero`) lehnt JEDE Kombination ab. Die Saetze des
+ * Granatwerfers liegen unverwiesen daneben: 0x80074cb4 `19 0f 02 00` (EXPLOSIVE RND + GL =
+ * Nachladen, Aktion 2), 0x80074cb8 `1a 10 04 0c`, 0x80074cbc `1b 11 04 0c` (ACID/INCEND. ->
+ * GL 0x10/0x11, Aktion 4, Bild 0x0c). Aktion 4 (@0x8004e538) schreibt die Ergebnis-Id in den
+ * PARTNER-Platz und laesst die Munition unverbraucht (Beta-Rest, unerreichbar) -> Beta ->
+ * Retail: der Munitionswechsel ist der RE2-Zustand 7/8 der Kombinier-Maschine FUN_8006b358
+ * (Sprungtabelle @0x80011bb0: [7] 0x8006bc18, [8] 0x8006bd98), RE2-Saetze @0x800a9d10..
+ * (`18 05 09 ff | 19 07 09 03 | 1a 07 09 03` = eigene Runde Nachladen, fremde Runde Tausch;
+ * Gegenrichtung @0x800a9d88 `09 06 09 ff | 0a 08 09 04 | 0b 08 09 05`).
+ * RE1.5-Ids: Runde = GL + 0x0a (0x19/0x1a/0x1b <-> 0x0f/0x10/0x11, aus den drei Saetzen oben;
+ * RE2: +15). Bild der ZURUECKKOMMENDEN Runde = MIXITEM-Bild 0x0c/0x0d/0x0e (RE1.5-Saetze
+ * @0x80074d24 `1e 19 06 0c`, @0x80074d28 `1f 1a 06 0d`, @0x80074d2c `20 1b 06 0e`; der
+ * unverwiesene GL-Satz der 0x0f traegt genau 0x0c = Bild der EXPLOSIVE RND).
+ * Nachladen = RE1.5-Aktionen 2/3 (x_reload, Magazin aus +0 der Zeile = 6): Form der fertigen
+ * Saetze `17 07 02 00` @0x80074c9c / `07 07 03 00` @0x80074cf8 (Redhawk <-> MAGNUM).
+ * Colt Python + MAGNUM BULLETS: dieselbe Form (PORT-WAHL Magnum-Revolver, Dossier §3.5).
+ * Rueckgabe = Aktion (0 = kein Paar dieser Klasse -> der RE1.5-Matcher laeuft weiter). */
+int re15_werfer_paar(uint8_t id_a, uint8_t id_b, uint8_t *result, uint8_t *pic)
+{
+    const int gl_a = (id_a >= 15 && id_a <= 17), gl_b = (id_b >= 15 && id_b <= 17);
+    const int rd_a = (id_a >= 0x19 && id_a <= 0x1b), rd_b = (id_b >= 0x19 && id_b <= 0x1b);
+    if (gl_a && rd_b) {
+        *result = id_a;                                   /* RE2 Feld 2 = eigene Id (`.. .. 09 ..`) */
+        if (id_b == id_a + 0x0a) { *pic = 0; return 2; }  /* `19 0f 02 00` @0x80074cb4 */
+        *pic = (uint8_t)(0x0c + (id_a - 15));             /* Bild der alten Runde (RE2 `.. 07 09 03`) */
+        return 7;                                         /* RE2-Zustand 7 @0x8006bc18 */
+    }
+    if (rd_a && gl_b) {
+        if (id_a == id_b + 0x0a) { *result = id_b; *pic = 0; return 3; }   /* Form `07 07 03 00` */
+        *result = (uint8_t)(id_a - 0x0a);                 /* RE2 `0a 08 09 04`: GL der Runde A */
+        *pic = (uint8_t)(0x0c + (id_b - 15));
+        return 8;                                         /* RE2-Zustand 8 @0x8006bd98 */
+    }
+    if (id_a == 20 && id_b == 0x17) { *result = 20; *pic = 0; return 2; }
+    if (id_a == 0x17 && id_b == 20) { *result = 20; *pic = 0; return 3; }
+    return 0;
+}
+
+/* RE2-Zustand 7 @0x8006bc18 (Zustand 8 @0x8006bd98 = derselbe Tausch mit vertauschten Cursorn):
+ *   8006bc5c lbu s0,id[A]                          alte GL-Id
+ *   8006bc60 addiu v0,v0,-15 / 8006bc6c sb id[A]   GL := Runde B - 15      (RE1.5: - 0x0a)
+ *   8006bc70-98                                    gefuehrte Waffe nachziehen (Port: equip_id_now
+ *                                                  beim Schliessen, menu_common.c)
+ *   8006bca0 addiu v1,s0,15 / 8006bcb4 sb id[B]    Runde := alte GL + 15   (RE1.5: + 0x0a)
+ *   8006bcd8-0x8006bd0c                            Menge[A] <-> Menge[B]
+ *   8006bd30 beq Menge[B],zero -> 8006bd6c         leer: FUN_8006947c(B,0,0,0) + Zelle leeren
+ *   8006bd38-60 jal 0x80069bb4                     sonst Bild der Runde in Zelle B
+ * Der Werfer nimmt wie in RE2 den GANZEN Stapel der neuen Runde (keine Kappe im Zustand 7);
+ * das RE1.5-Magazin 6 (@0x80074dd4) gilt nur beim Nachladen. Breite Waffe (Zellen-Flags 1/2,
+ * FUN_8004dc4c): die Schwanzzelle fuehrt Id/Menge der Kopfzelle mit. */
+void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic)
+{
+    extern void re15_inv_icon_mix_upload(int cell, int pic);
+    extern void re15_inv_icon_blank(int cell);
+    if (gl_slot < 0 || rd_slot < 0 || gl_slot >= RE15_INV_MAX_SLOTS || rd_slot >= RE15_INV_MAX_SLOTS) return;
+    re15_inv_slot_t *a = &g_inv.slots[gl_slot], *b = &g_inv.slots[rd_slot];
+    const uint8_t alt = a->id, menge = a->qty;
+    a->id  = (uint8_t)(b->id - 0x0a);
+    b->id  = (uint8_t)(alt + 0x0a);
+    a->qty = b->qty;
+    b->qty = menge;
+    if (gl_slot + 1 < RE15_INV_MAX_SLOTS && g_inv.slots[gl_slot + 1].flags == 2) {
+        g_inv.slots[gl_slot + 1].id  = a->id;
+        g_inv.slots[gl_slot + 1].qty = a->qty;
+        re15_inv_icon_blank(gl_slot + 1);
+    }
+    re15_inv_icon_blank(gl_slot);                         /* Zelle folgt der neuen Id */
+    if (b->qty == 0) { b->id = 0; b->flags = 0; re15_inv_icon_blank(rd_slot); }
+    else             re15_inv_icon_mix_upload(rd_slot, pic);
+}
+
 /* Fuer player_common.c (aim_clip_wirksam): Clip der gefuehrten Waffe gegen die Bank-Clipzahl. */
 int re15_player_werfer_clip(int clip, int clip_n)
 {

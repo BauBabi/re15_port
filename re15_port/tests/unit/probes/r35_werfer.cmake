@@ -19,6 +19,18 @@ endif()
 add_test(NAME unit_r35_werfer COMMAND test_r35_werfer)
 set_tests_properties(unit_r35_werfer PROPERTIES TIMEOUT 120)
 
+#   unit_r35_werfer_kombi     Inventar-Kombination ueber die echte Menue-Maschine: Nachladen der GL 15/16/17
+#                             und der Python (RE1.5-Aktionen 2/3), Munitionswechsel des GL (RE2-Zustaende
+#                             7/8 @0x8006bc18/@0x8006bd98), Rakete ohne Paar, gefuehrter GL nach dem Schliessen.
+add_executable(test_r35_werfer_kombi ${CMAKE_CURRENT_LIST_DIR}/../test_r35_werfer_kombi.c)
+target_link_libraries(test_r35_werfer_kombi PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r35_werfer_kombi PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r35_werfer_kombi PRIVATE m)
+endif()
+add_test(NAME unit_r35_werfer_kombi COMMAND test_r35_werfer_kombi)
+set_tests_properties(unit_r35_werfer_kombi PROPERTIES TIMEOUT 120)
+
 if(TARGET re15_pc)
     add_test(NAME integration_r35_werfer
              COMMAND "${CMAKE_COMMAND}"

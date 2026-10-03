@@ -265,7 +265,8 @@ void re15_pc_re2fx_se(uint32_t code, const int32_t pos[3])
                          : (code == 0x01110001u) ? "ARMS0F Satz 10"
                          : (code == 0x01140001u) ? "RE2 ARMS11 Satz 20" : "unbekannt (stumm)";
     {   FILE *wl = re15_waffen_log();
-        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s\n", (unsigned)code, was); }
+        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s @(%d,%d,%d)\n", (unsigned)code, was,
+                        pos ? (int)pos[0] : 0, pos ? (int)pos[1] : 0, pos ? (int)pos[2] : 0); }   /* Mess-Harness: Lage */
     if (ok) { re15_audio_arms_zusatz_se(arms, satz); return; }
     if (code == 0x01000001u)      re15_audio_weapon_se(0);
     else if (code == 0x01110001u) re15_audio_arms_zusatz_se(0x0F, RE15_PC_ARMS_AUFSCHLAG_SATZ);

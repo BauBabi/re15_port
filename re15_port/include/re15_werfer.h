@@ -60,6 +60,16 @@ void re15_werfer_flamme_bild(int f);
 int  re15_werfer_fuel_bild(void);
 void re15_werfer_reset(void);
 
+/* Inventar-Kombination (Haken in menu_common.c exchange_match / exchange_exec): Aktion fuer das
+ * Paar (Cursor-A-Id, Cursor-B-Id) der Werfer-Klasse und der Python — 2/3 = RE1.5-Nachladen in
+ * A/B (Satzform `19 0f 02 00` @0x80074cb4 / `07 07 03 00` @0x80074cf8), 7/8 = RE2-Munitions-
+ * wechsel des Granatwerfers (Zustaende 7/8 @0x8006bc18 / @0x8006bd98), 0 = kein Paar. Die
+ * RE1.5-Zeilen 15..18/20 tragen pair_count 0 (@0x80074da8 + id*12 + 9) = unverdrahtet. */
+int  re15_werfer_paar(uint8_t id_a, uint8_t id_b, uint8_t *result, uint8_t *pic);
+/* RE2-Zustand 7: GL-Id := Runde - 0x0a, Runde := alte GL + 0x0a, Mengen getauscht, leere Runde
+ * geloescht (sonst MIXITEM-Bild `pic` in die Zelle). */
+void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic);
+
 /* Diagnose (Sonden): Zahl der RE2-Spawns seit reset, letzter Rueckstoss-Spawn-Bildzaehler. */
 unsigned re15_werfer_spawns(void);
 
