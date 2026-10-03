@@ -250,8 +250,12 @@ static const uint8_t k_p_1040_tor[] = {
     OP_SLEEP(10),                                                             /* @0x01A26 */
     OP_SET(4, 5, 1), OP_SET(4, 4, 1),
 };
+/* Ende des 1040-Schritts: warten, bis der Port-Takt "alle durch" meldet (Signal (5,30), Poll-Form ROOM1150 sub08
+ * @0x0112A..@0x01132), dann noch ein Blick auf die Durchgekommenen (Sleep 90 = PORT-WAHL, 3 s), dann der Schnitt.
+ * Vorher: feste Sleep 240 — bei offenem Tor kam damit unter der RE1.5-KI nur einer von fuenf durch (Riegel). */
 static const uint8_t k_p_1040_ende[] = {
-    OP_SLEEP(240),
+    0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_IT_SIG_ALLE_DURCH, 0x00,
+    OP_SLEEP(90),
     OP_DOOR(RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03, RE15_IT_CUT_1030_TUER),   /* Cut 7 oder 6 (Weiche) */
     OP_AOT_ON,
     OP_END,
@@ -816,7 +820,7 @@ static void mess_zeile(void)
 #endif
 }
 
-/* BILANZ (Nachbesserung 1 M4 — nur Zaehlen/Protokoll, kein Spielverhalten): waehrend des 1040-Schritts je Aktor
+/* BILANZ (Nachbesserung 1 M4; zaehlt und meldet "alle durch" als Signal (5,30), s.u.): waehrend des 1040-Schritts je Aktor
  * das erste Bild mit z < Tor-z (Rolltor-Objekt main00 @0x01168 `2d 00 .. 90 9d 00 00 98 fe` = (-25200,0,-360)),
  * NACHDEM er hinter dem Tor (z >= Tor-z) gesehen wurde = ein echter Durchgang (gemessen Lauf n1_offen: Record
  * @0x01224 steht in Bild 1 noch an seinem Raum-Platz z -11126 vor dem Tor, die Aufstellung folgt im Programm);
@@ -828,6 +832,7 @@ static int16_t s_b1040_durch[RE15_ACTOR_MAX];
 static uint8_t s_b1040_da[RE15_ACTOR_MAX];
 static uint8_t s_b1040_hinten[RE15_ACTOR_MAX];
 static int     s_hp_start = -1, s_hp_min = 0;
+static uint8_t s_b1040_frei = 0, s_b1040_kappe = 0, s_b1040_halt = 0;
 
 static void bilanz_takt(void)
 {
@@ -837,7 +842,7 @@ static void bilanz_takt(void)
         if (pl->hp < s_hp_min) s_hp_min = pl->hp;
     }
     if (s_zustand != RE15_IT_S1040 || (uint16_t)g_current_room_id != RE15_IT_RAUM_1040) return;
-    if (s_b1040_bild == 0) { s_b1040_n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; s_b1040_hinten[i] = 0; } }
+    if (s_b1040_bild == 0) { s_b1040_n = 0; s_b1040_frei = 0; s_b1040_kappe = 0; s_b1040_halt = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; s_b1040_hinten[i] = 0; } }
     s_b1040_bild++;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *a = &g_actors[i];
@@ -845,8 +850,26 @@ static void bilanz_takt(void)
         if (!s_b1040_da[i]) { s_b1040_da[i] = 1; s_b1040_n++; }
         if (a->z >= RE15_IT_TOR_Z_1040) s_b1040_hinten[i] = 1;
         else if (s_b1040_hinten[i] && s_b1040_durch[i] < 0) s_b1040_durch[i] = (int16_t)s_b1040_bild;
+        /* Schutz des Parkplatzes (re15_irons_tod.h): nur wer vorher HINTER dem Tor stand (gemessen: Record @0x01224 steht
+         * in Bild 1 vor der Aufstellung noch bei z -11126 und darf nicht schon dort angehalten werden). */
+        if (s_b1040_hinten[i] && a->z < RE15_IT_KAMERA_Z_1040 && !(a->grid_id & 0x20)) {
+            g_actors[i].grid_id |= 0x20; s_b1040_halt++;
+            log_it("1040: Zombie hinter der Kamera angehalten (entity+0x9 |= 0x20)");
+        }
+    }
+    /* "Alle durch" -> Signal (5,30) fuer k_p_1040_ende (re15_irons_tod.h RE15_IT_SIG_ALLE_DURCH); Kappe als Sicherung. */
+    if (!s_b1040_frei) {
+        int n = 0, durch = re15_irons_tod_bilanz_1040(&n, NULL);
+        if ((n > 0 && durch == n) || s_b1040_bild >= RE15_IT_1040_KAPPE) {
+            s_b1040_frei = 1; s_b1040_kappe = (uint8_t)!(n > 0 && durch == n);
+            re15_game_flag_set(5, RE15_IT_SIG_ALLE_DURCH, 1);
+            log_it(s_b1040_kappe ? "1040: KAPPE erreicht, Schnitt ohne alle Durchgaenge" : "1040: alle durchs Tor (Signal (5,30))");
+        }
     }
 }
+
+int re15_irons_tod_1040_kappe(void) { return s_b1040_kappe; }
+int re15_irons_tod_1040_angehalten(void) { return s_b1040_halt; }
 
 int re15_irons_tod_bilanz_1040(int *out_gesehen, int *out_letztes_bild)
 {
@@ -866,7 +889,7 @@ void re15_irons_tod_hp(int *out_start, int *out_min)
 
 void re15_irons_tod_bilanz_reset(void)
 {
-    s_b1040_bild = 0; s_b1040_n = 0; s_hp_start = -1; s_hp_min = 0;
+    s_b1040_bild = 0; s_b1040_n = 0; s_hp_start = -1; s_hp_min = 0; s_b1040_frei = 0; s_b1040_kappe = 0; s_b1040_halt = 0;
     for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; s_b1040_hinten[i] = 0; }
 }
 
@@ -877,7 +900,8 @@ static void bilanz_1040_melden(void)
     fprintf(stderr, "[irons-tod] Bilanz 1040: %d Zombies, durchs Tor (z < %d) %d, letzter bei Bild %d von %d;",
             n, RE15_IT_TOR_Z_1040, durch, letztes, s_b1040_bild);
     for (int i = 1; i < RE15_ACTOR_MAX; i++) if (s_b1040_da[i]) fprintf(stderr, " %d@%d", i, (int)s_b1040_durch[i]);
-    fprintf(stderr, "; Spieler-HP %d -> min %d\n", s_hp_start, s_hp_min);
+    fprintf(stderr, "; Spieler-HP %d -> min %d; Kappe %d, hinter der Kamera angehalten %d\n", s_hp_start, s_hp_min,
+            s_b1040_kappe, s_b1040_halt);
 #endif
 }
 

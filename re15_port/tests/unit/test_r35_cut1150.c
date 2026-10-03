@@ -562,9 +562,11 @@ static void durchgang_pruefen(const char *fall, const lauf_t *L)
 {
     int n = 0, letzt = -1, durch = re15_irons_tod_bilanz_1040(&n, &letzt);
     int hp0 = 0, hpmin = 0; re15_irons_tod_hp(&hp0, &hpmin);
-    PRUEF(n == 5 && durch == 5 && letzt >= 0 && letzt < L->bilder,
-          "%s: alle fuenf kommen durchs Tor - %d von %d, letzter bei Bild %d, Schnitt nach %d Bildern", fall, durch, n, letzt, L->bilder);
-    PRUEF(hp0 == 100 && hpmin == 100, "%s: Spieler-HP waehrend der Montage unveraendert (%d -> min %d)", fall, hp0, hpmin);
+    PRUEF(n == 5 && durch == 5 && letzt >= 0 && letzt < L->bilder && !re15_irons_tod_1040_kappe(),
+          "%s: alle fuenf kommen durchs Tor - %d von %d, letzter bei Bild %d, Schnitt nach %d Bildern (Kappe %d)", fall, durch, n, letzt,
+          L->bilder, re15_irons_tod_1040_kappe());
+    PRUEF(hp0 == 100 && hpmin == 100, "%s: Spieler-HP waehrend der Montage unveraendert (%d -> min %d; hinter der Kamera angehalten: %d)",
+          fall, hp0, hpmin, re15_irons_tod_1040_angehalten());
 }
 
 /* ---- Teil: montage_1040 ------------------------------------------------------------------------ */
@@ -581,7 +583,7 @@ static void teil_montage_1040(void)
     int knall0 = g_test_tuer_se_count;
     frame(0, 0);
     aufstellung_pruefen("Tor zu");
-    lauf_t L; lauf(&L, 900, 1);
+    lauf_t L; lauf(&L, RE15_IT_1040_KAPPE + 200, 1);   /* Kappe 1000 + Tor-Vorlauf */
     durchgang_pruefen("Tor zu", &L);
     PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1040: der Knall wie ROOM1030 (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(y0 == 0 && g_scd.props[0].y == -5400, "Rolltor von y=%d auf y=%d (sub08 135 x -40)", y0, (int)g_scd.props[0].y);
@@ -595,11 +597,11 @@ static void teil_montage_1040(void)
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
         frame(0, 0);
         aufstellung_pruefen("Tor offen");
-        lauf(&L, 900, 1);
+        lauf(&L, RE15_IT_1040_KAPPE + 200, 1);
         durchgang_pruefen("Tor offen", &L);
         PRUEF(g_scd.props[0].y == -5400, "Tor war offen: bleibt bei y=-5400 (%d)", (int)g_scd.props[0].y);
         PRUEF(aktive_gegner(0x16) == 5, "Tor war offen: 5 Zombies (%d)", aktive_gegner(0x16));
-        PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 6 && L.bilder < 400, "Schnitt nach ROOM1030 Cut 6 nach %d Bildern", L.bilder);
+        PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 6 && L.bilder < RE15_IT_1040_KAPPE, "Schnitt nach ROOM1030 Cut 6 nach %d Bildern", L.bilder);
     }
     /* Tor offen und der Spieler hat vorher 18 der 20 Raum-Zombies getoetet: 2 Raum-Records + 3 Auffuell-Records
      * = wieder fuenf (NUTZER-VORGABE "Wenn es bereits offen ist, kommen nur 5 Zombies"). */
@@ -612,7 +614,7 @@ static void teil_montage_1040(void)
         int raum = aktive_gegner(0x16);
         frame(0, 0);
         aufstellung_pruefen("18 tot");
-        lauf(&L, 900, 1);
+        lauf(&L, RE15_IT_1040_KAPPE + 200, 1);
         PRUEF(raum == 2 && aktive_gegner(0x16) == 5, "18 tot: %d Raum-Zombies + Auffuellung = %d Zombies", raum, aktive_gegner(0x16));
         durchgang_pruefen("18 tot (2 Raum + 3 Auffuellung)", &L);
         PRUEF(L.raumwechsel && L.ziel == 0x1030, "Schnitt nach ROOM1030 nach %d Bildern", L.bilder);

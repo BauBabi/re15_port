@@ -83,6 +83,24 @@
  * Bits 0..20 + das Handshake-Wort 32..35). */
 #define RE15_IT_SIG_KNALL_TUER 28
 #define RE15_IT_SIG_KNALL_1030 29
+/* "Alle durch"-Signal ROOM1040 (Nachbesserung 1, NUTZER-VORGABE "5 Zombies durch kommen"), dieselbe Bauart in
+ * umgekehrter Richtung: der Port-Takt SETZT (5,30), sobald jeder erschienene Zombie das Tor durchquert hat, und
+ * das Programm wartet darauf mit der Ankunfts-Poll-Form `11 00 08 00 02 00 12 04 21 05 1e 00` (ROOM1150 sub08
+ * @0x0112A..@0x01132 mit Bit 0x1e statt 0x20). Bit 30 ist in ROOM1040 frei (Zensus: Wort 0 Bits 0..20). Die
+ * Schnittlaenge folgt damit dem Lauf der Zombies statt einer festen Zahl: GEMESSEN liefen sie unter der RE2-KI
+ * (exe-Default) ~18 Einheiten je Bild, unter der RE1.5-KI des Riegels 6..16 (Dossier §9.1). KAPPE = Sicherung
+ * gegen einen haengenden Zombie (PORT-WAHL): Tor-Fahrt ~175 Bilder + weitester Platz z 4800 bis z -360 = 5160 bei
+ * der langsamsten gemessenen Rate 6,5 je Bild = 794 -> 1000 Bilder. */
+#define RE15_IT_SIG_ALLE_DURCH 30
+#define RE15_IT_1040_KAPPE     1000
+/* SCHUTZ DES GEPARKTEN SPIELERS (Nachbesserung 1 M2): wer im 1040-Schritt HINTER die Kamera Cut 1 laeuft (RID
+ * ROOM1040 @0x80 Cut 1, Kamera-z @0x88 `3c d6 ff ff` = -10692; der Parkplatz liegt bei z -14900 dahinter), wird
+ * mit dem Original-Einzelstopp angehalten: entity+0x9 |= 0x20 = Member_set(12, 0x30) (@0x800410b8 -> FUN_8004116c
+ * Fall 0xc), gelesen vom Gegner-Root (Skip-Tor @0x80116df4-f8, Port re15_enemy_ai_tick RE15_AI_GRID_SKIP); im
+ * Original in Szenen benutzt (ROOM1141 sub02 12,0x30 <-> 12,0x10). Unsichtbar (hinter der Kamera). GEMESSEN: unter
+ * der RE1.5-KI erreichte ein laufender Zombie den Parkplatz nach ~430 Bildern und biss (hp 100 -> 90, Riegel
+ * montage_1040 "Tor offen"); unter der RE2-KI (exe) kam keiner hinter die Kamera. */
+#define RE15_IT_KAMERA_Z_1040  (-10692)
 
 /* Irons = Sce_em_set main00 @0x00E88 Slot 0 (Aktor-Slot 1), Typ 0x45, Pos (-21150,-720,-26131).
  * Seine Szenen-Clips liegen im Raum-RBJ (RDT+0x5C @0x1774) Record 1 (Marker 2 = Gegner 0):
@@ -188,6 +206,8 @@ int            re15_irons_tod_ohne_11c0(void);   /* 1 = (4,64)=1: Ada steht nich
 /* Bilanz (Nachbesserung 1 M4): Zombies im 1040-Schritt, davon durchs Tor (z < RE15_IT_TOR_Z_1040), letztes
  * Durchgangsbild; Spieler-HP Start/Minimum ueber die ganze Kette. Reset beim Szenenstart. */
 int            re15_irons_tod_bilanz_1040(int *out_gesehen, int *out_letztes_bild);
+int            re15_irons_tod_1040_kappe(void);   /* 1 = (5,30) kam aus der KAPPE, nicht aus "alle durch" */
+int            re15_irons_tod_1040_angehalten(void);   /* Zahl der hinter der Kamera angehaltenen Zombies */
 void           re15_irons_tod_hp(int *out_start, int *out_min);
 void           re15_irons_tod_bilanz_reset(void);
 

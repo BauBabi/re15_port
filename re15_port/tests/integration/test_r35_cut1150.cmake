@@ -114,6 +114,7 @@ it_muss(A "${_dbg}" "1040: 20 Raum-Records leben, Auffuellung 0")
 # standen), und der geparkte Spieler wird in der ganzen Kette nicht verletzt.
 it_muss(A "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
 it_muss(A "${_dbg}" "Bilanz Kette: Spieler-HP 100 -> min 100")
+it_muss(A "${_dbg}" "Kappe 0,")
 # ROOM1030 Cut 6: sub09 hat Zombies das Kriech-Bit gesetzt (Messzeile RE15_IT_LOG: fl = +0x1c4 mit 0x1000),
 # die Kamera steht dabei auf Cut 12 (= Cut 6 mit aufgebrochenem Tor).
 string(REGEX MATCH "irons-tod-mess. ROOM1030 T[0-9]+ cam=12:[^\n]* fl=1004" _kriech_a "${_dbg}")
@@ -165,6 +166,7 @@ it_lauf(e 1130 "nach10f0;ersteszene;tor1040offen" "W1,A0.2,W200" 5 1030 600 _dbg
 it_muss(E "${_dbg}" "Montage 1040 (Programm 2)")
 it_muss(E "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
 it_muss(E "${_dbg}" "Spieler-HP 100 -> min 100")
+it_muss(E "${_dbg}" "Kappe 0,")
 
 # --- C: 1060 gesperrt ((9,71)=1, (9,73)=0): Text, kein Raumwechsel ----------------------------
 it_lauf(c 1060 "nach10f0;ersteszene" "W1,A0.2,W3" 240 1060 240 _dbg)
