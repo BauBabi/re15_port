@@ -13,6 +13,7 @@
 #   C  1060 Etage 0, (9,71)=1: Aktion an der Tuer -> Text msg 1, kein Raumwechsel
 #   D  1060 Etage 0, (9,73)=1: Aktion -> ROOM1040
 #   E  wie A, Rolltor ROOM1040 schon offen: Bilanz 5 durchs Tor, Spieler-HP 100 (Nachbesserung 1)
+#   F  wie A, in ROOM1040 vorher die Raum-Records 0..14 getoetet: trotzdem 5 durchs Tor (Nachbesserung 2)
 #
 # RE15_SOFTWARE_RENDER=1 dient nur der Robustheit des Hakens; geprueft wird das LOG. Das BILD belegt die
 # Framedump-Abnahme im Dossier.
@@ -109,7 +110,7 @@ it_muss(A "${_dbg}" "[room] PC loaded room1150.rdt")
 it_muss(A "${_dbg}" "Szene startet (Programm 0)")
 it_muss(A "${_dbg}" "Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1")
 it_muss(A "${_dbg}" "Signal (5,12): Irons' Arm faellt")
-it_muss(A "${_dbg}" "1040: 20 Raum-Records leben, Auffuellung 0")
+it_muss(A "${_dbg}" "1040: 20 Raum-Records leben, 5 erscheinen im Port, Auffuellung 0")
 # Nachbesserung 1 M1/M4: in ROOM1040 kommen alle fuenf DURCH das Tor (Bilanz: z < -360, nachdem sie hinter dem Tor
 # standen), und der geparkte Spieler wird in der ganzen Kette nicht verletzt.
 it_muss(A "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
@@ -168,6 +169,19 @@ it_muss(E "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
 it_muss(E "${_dbg}" "Spieler-HP 100 -> min 100")
 it_muss(E "${_dbg}" "Kappe 0,")
 
+# --- F: Spieler hat in ROOM1040 vorher 15 Raum-Zombies getoetet (Records 0..14, Spawn-Reihenfolge; Nachbesserung 2 M1) ------
+# Abnahme 1: "1040: 5 Raum-Records leben, Auffuellung 0" -> KAPPE, "Bilanz 1040: 0 Zombies". Die Records 15..19 (Slot 15..19 =
+# Aktor 16..20 >= RE15_ACTOR_MAX) belegen das Limit 5 (@0x011F0), erscheinen im Port aber nicht -> fuenf Auffuell-Records,
+# Save(0x11, 0) gibt die Plaetze zurueck. Ende im 5. Bild von ROOM1030.
+it_lauf(f 1130 "nach10f0;ersteszene;tot1040_15" "W1,A0.2,W200" 5 1030 600 _dbg)
+it_muss(F "${_dbg}" "1040: 5 Raum-Records leben, 0 erscheinen im Port, Auffuellung 5")
+it_muss(F "${_dbg}" "Montage 1040 (Programm 2)")
+it_muss(F "${_dbg}" "Gleichzeitig-Zaehler 5 -> 0")
+it_muss(F "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
+it_muss(F "${_dbg}" "Spieler-HP 100 -> min 100")
+it_muss(F "${_dbg}" "Kappe 0,")
+it_darf_nicht(F "${_dbg}" "KAPPE erreicht")
+
 # --- C: 1060 gesperrt ((9,71)=1, (9,73)=0): Text, kein Raumwechsel ----------------------------
 it_lauf(c 1060 "nach10f0;ersteszene" "W1,A0.2,W3" 240 1060 240 _dbg)
 it_muss(C "${_dbg}" "[tuer1060] ROOM1060 Slot 2 -> Text-Platz msg 1")
@@ -187,4 +201,4 @@ it_muss(D "${_dbg}" "DOOR FIRE slot=2")
 it_muss(D "${_dbg}" "[room] PC loaded room1040.rdt")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r35_cut1150: OK - Kette A/B, Tor offen E, Sperre C, Freigabe D")
+message(STATUS "r35_cut1150: OK - Kette A/B, Tor offen E, 15 getoetet F, Sperre C, Freigabe D")
