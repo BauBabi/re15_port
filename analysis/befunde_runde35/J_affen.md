@@ -808,3 +808,10 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 - Reihenfolge im Original (FUN_80031c44 + Haltepunkt-Folge je Bild: Gorilla-Wurzel VOR dem Spieler-Tick):
   Gegner-KI -> Spieler: Kommando-Handler (cmd 5 = 0x8011c118-Kette: Platzierung) -> b544 -> dc48 -> b498 -> b0a4
   (Bezug +0x40/+0x44 = Lage am Ende des Vorbilds, `addiu a2,a2,64` @0x8003b4ac).
+- **Port-Wandklemme gegen das Original (neuer Riegel `wand`):** die 168 Original-Bilder (Bezug = Lage beim
+  Eintritt 0x80031c44 = Spiegel +0x40/+0x44, Eingang = Lage vor `jal 0x8003b0a4` @0x80031d70, Ausgang = Lage
+  @0x80031d78; `jnb2/triples.py`) durch re15_collision_constrain (Band 0, r 450, Maske 1) geschickt:
+  **168/168 bitgleich**, darunter alle 135 Bilder mit Schub (auch das ~100er-Zittern nach dem Wurf). Der
+  Resolver des Ports IST FUN_8003b0a4 — falsch ist allein, WO der Port ihn beim Gorilla-Wurf aufruft
+  (vor statt nach der Platzierung) und dass er die Platzierung zusaetzlich mit "letzter begehbarer Standpunkt"
+  ueberschreibt.
