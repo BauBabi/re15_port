@@ -9048,8 +9048,9 @@ static void re15_maggot_ai_tick(int slot)
             }
             /* B[4] heavy-approach (audit #4) */
             if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_maggot_clip(e, 6); }   /* clip 6 @0x80118128-60 */
-            e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180);   /* +0x8c = 180-211 per tick @0x80118164-80 */
-            {   int slew = (int)(re15_engine_rand8() & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
+            uint32_t a0_b4 = re15_affen_psx_entity(e) + 0x34u; int b4_fest = !((e->dog_flags & 1) && !re15_dog_blocked(e) && dist >= 6001);   /* Runde 35 Spur J (7) */
+            e->crow_speed = (int16_t)(((b4_fest ? re15_affen_rng_a0(&a0_b4) : re15_engine_rand8()) & 0x1f) + 180);   /* +0x8c = 180-211 per tick @0x80118164-80 */
+            {   int slew = (int)((b4_fest ? re15_affen_rng_a0(&a0_b4) : re15_engine_rand8()) & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
                 if (dist < 2000) slew += 24;                                 /* +24 inside 2000 @0x801181a4-c4 */
                 e->grab_kill_ctr = (int16_t)slew;
                 re15_enemy_steer_point(e, pl->x, pl->z, slew);               /* a8f8 @0x801181e0 */

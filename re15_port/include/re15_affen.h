@@ -191,4 +191,12 @@ int      re15_player_victim_gorilla(void);   /* 1 = Opfer-Handler des Gorillas (
  *      @0x8011ad8c-94) -> das Paar ist vom Koerper-Schub FUN_8002aec4 ausgenommen (`andi 0x1000` @0x8002af14). */
 int      re15_affen_griff_paar(const re15_actor_t *e);
 
+/* (7) RNG des Originals: FUN_8001af20 hasht das a0-Register des Aufrufers (Dossier A1). Wo a0 an einer
+ *     Ziehstelle nachweislich ein fester Wert ist, zieht der Port mit DIESEM Wert statt der xorshift-Ersatzquelle:
+ *     B[4] (Heavy-Anlauf, `jal 0x8001af20` @0x80118164 / @0x8011817c): a0 = Entity+0x34 (der Zeiger, mit dem
+ *     A[4] die Zonen-Abfrage FUN_8003b93c ruft) — GDB jnb2/g_rng.txt: 21/21 Ziehungen ra 0x8011816c mit
+ *     a0 = 0x800ad048 (e2+0x34), danach a0 = 0xa0e8 (verkettet) -> +0x8c 188 / +0x9e 73 je Bild wie gemessen. */
+uint8_t  re15_affen_rng_a0(uint32_t *a0);
+uint32_t re15_affen_psx_entity(const re15_actor_t *e);
+
 #endif /* RE15_AFFEN_H */

@@ -176,3 +176,22 @@ int re15_affen_griff_paar(const re15_actor_t *e)
 {
     return e && e->type == 0x27 && e->sub_state_1 == 15 && (e->sub_state_2 == 3 || e->sub_state_2 == 4);
 }
+
+/* (7) FUN_8001af20 = Hash des a0-Registers des AUFRUFERS (der State @0x800ac774 ist ein toter Store):
+ *     `srl v1,a0,7` / `andi v1,v1,0xff` @0x8001af30-34, `addu a0,a0,v1` / `andi a0,a0,0xff` @0x8001af38-3c,
+ *     `sll v1,v1,8` / `or a0,a0,v1` @0x8001af40-44 (a0 bleibt so fuer die naechste Ziehung), Rueckgabe
+ *     `andi v0,a0,0xff` @0x8001af4c. */
+uint8_t re15_affen_rng_a0(uint32_t *a0)
+{
+    uint32_t v1 = (*a0 >> 7) & 0xffu;
+    uint32_t a  = (*a0 + v1) & 0xffu;
+    *a0 = a | (v1 << 8);
+    return (uint8_t)a;
+}
+
+/* PSX-Adresse des Entity-Records zu einem Port-Slot: Array 0x800acc2c, Stride 0x1f4 (Schleife FUN_8001a50c),
+ * Port-Slot = Skript-Slot + 1 (scd_vm.c SCRIPT_SLOT_TO_ACTOR). */
+uint32_t re15_affen_psx_entity(const re15_actor_t *e)
+{
+    return 0x800acc2cu + (uint32_t)((int)(e - g_actors) - 1) * 0x1f4u;
+}
