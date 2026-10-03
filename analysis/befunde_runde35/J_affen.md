@@ -757,3 +757,14 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   `=== LOCAL-BUILD-OK (all) — Tests 493/493` (1114 s; 478 Basis + 15 Riegel dieser Spur). Kein
   Fenster-Haken rot.
 - DuckStation settings.ini nach den GDB-Messungen auf den Ausgangsstand zurueckgespielt (diff leer).
+
+## Nachbesserung 2 (2026-10-03 spaet, nach Abnahme 1 = NICHT BESTANDEN, A1-A3)
+
+Ausgangslage: Baum sauber, HEAD f604a1dc (Bericht J_abnahme_1.md). Der Vorgaenger dieser Nachbesserung hat
+nichts hinterlassen (kein Commit, kein Scratch `jnb2/`). Scratch: `scratchpad/jnb2/`. Original-Spuren der
+Nachbesserung 1 liegen in `scratchpad/jnb1/` (g_orig.txt, g_griff.txt, g_desync.txt, g_schrot.txt +
+*_dec.txt; Werkzeuge gdbspur.py, gdec.py). Reihenfolge: A3 (Doku) -> A2 (Wurf-Bahn, Mechanismus +
+Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
+
+### Stand (fortlaufend)
+- [ ] A3  - [ ] A2  - [ ] A1
