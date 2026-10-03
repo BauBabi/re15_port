@@ -253,11 +253,23 @@ void re15_pc_re2fx_se(uint32_t code, const int32_t pos[3])
     (void)pos;
     int arms = 0, satz = 0;
     int ok = re15_pc_re2fx_se_weiche(code, &arms, &satz);
+    /* Runde 35 Spur B (Werfer-Klasse, re2_fx.c Ops 7/47):
+     *   0x01000001  Op 7 Muendungsblitz (`(+0x16 << 16) + 1` @0x8001e1b8, rr = 256) = ARMS Satz 0
+     *               der gefuehrten Waffe (RE2 Bank 1) -> re15_audio_weapon_se(0);
+     *   0x01110001  Op 47 Sub 12 Explosiv-Aufschlag (@0x80020d40-48) -> RE1.5 ARMS0F Satz 10
+     *               (`00003320`, VAG 12800 B = bytegleich RE2 ARMS09 Satz 17, Dossier §2.1);
+     *   0x01140001  Op 47 Sub 13 Raketen-Explosion (@0x80020d3c/dc0-c4) -> RE2 ARMS11 Satz 20
+     *               (`00003320`, shared_assets/RE2/SOUND/ARMS11). */
+    const char *was = ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" : "ARMS11 Satz 10")
+                         : (code == 0x01000001u) ? "ARMS Satz 0 (Waffe)"
+                         : (code == 0x01110001u) ? "ARMS0F Satz 10"
+                         : (code == 0x01140001u) ? "RE2 ARMS11 Satz 20" : "unbekannt (stumm)";
     {   FILE *wl = re15_waffen_log();
-        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s\n", (unsigned)code,
-                        ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" : "ARMS11 Satz 10")
-                           : "unbekannt (stumm)"); }
-    if (ok) re15_audio_arms_zusatz_se(arms, satz);
+        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s\n", (unsigned)code, was); }
+    if (ok) { re15_audio_arms_zusatz_se(arms, satz); return; }
+    if (code == 0x01000001u)      re15_audio_weapon_se(0);
+    else if (code == 0x01110001u) re15_audio_arms_zusatz_se(0x0F, RE15_PC_ARMS_AUFSCHLAG_SATZ);
+    else if (code == 0x01140001u) { extern void re15_audio_re2_arms_se(int, int); re15_audio_re2_arms_se(0x11, 20); }
 }
 
 void re15_pc_r34_haken_binden(void)

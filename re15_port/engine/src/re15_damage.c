@@ -44,6 +44,7 @@ typedef struct { unsigned zeile, k, spalte; } re2gl_treffer_t;
 /* Die GL-Records (Zeilen 9/10/11) eines Typs, UNABHAENGIG vom KI-Besitz (Definition am Dateiende
  * bei den Records): Zeiger *(0x800A6A88 + Typ*4). NULL = kein RE2-Record fuer den Typ. */
 static const uint32_t *re2_gl_rec_typ(uint8_t type);
+static const uint32_t *re2_gl_rec16_17(uint8_t type);   /* Runde 35 Spur B: Zeilen 16/17 */
 
 /* fix_1d2_spec — Definition vor take_damage. `row_src`/`row_id`: welcher Port-Erzeuger die
  * RE2-Trefferreaktions-ZEILE (+0x5) speist (0 = RE1.5-Waffen-Id, 1 = RE1.5-Angriffstyp). */
@@ -1168,6 +1169,23 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
     out[0] = (int32_t)(((int64_t)R[0]*ox + (int64_t)R[1]*oy + (int64_t)R[2]*oz) >> 12) + T[0];
     out[1] = (int32_t)(((int64_t)R[3]*ox + (int64_t)R[4]*oy + (int64_t)R[5]*oz) >> 12) + T[1];
     out[2] = (int32_t)(((int64_t)R[6]*ox + (int64_t)R[7]*oy + (int64_t)R[8]*oz) >> 12) + T[2];
+    return 1;
+}
+/* Runde 35 Spur B: dieselbe Waffenknochen-Matrix (R_gunbone, T_gunbone) roh — die RE2-Effekt-
+ * Handler uebergeben sie als a2 an FUN_8001bf10 (`lw s0,408(s1) / addiu s0,s0,1964` = Pose+0x7AC,
+ * @0x800455b8-cc Rakete, @0x80044bb8-dc GL, @0x800454ec-514 Flamme). Gleiche Quelle/Rueckfall wie
+ * re15_player_gunbone_world. */
+int re15_player_gunbone_matrix(int32_t rot[9], int32_t t[3])
+{
+    const int32_t *T = s_hand_world;
+    const int32_t *R = s_hand_rot;
+    int32_t fT[3], fR[9];
+    if (!s_hand_valid || !s_hand_rot_valid) {
+        if (!muzzle_bone_world(1, fT, fR)) return 0;
+        T = fT; R = fR;
+    }
+    for (int k = 0; k < 9; k++) rot[k] = R[k];
+    t[0] = T[0]; t[1] = T[1]; t[2] = T[2];
     return 1;
 }
 
@@ -2663,6 +2681,14 @@ retry_after_latch:
     }
     const uint16_t *dmg_row = re15_enemy_dmg_row(e);
     int dmg = dmg_row[weapon_id];                   /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
+    /* Runde 35 Spur B — COLT PYTHON (20): Spalte 20 ist in JEDER Zeile @0x8006e0d0 0 (unfertig;
+     * Dispatch @0x80074080 NULL, Resolver-Art 10 = 0 @0x8006f42c). Die Python ist in RE1.5 als
+     * zweiter Magnum-Revolver angelegt (ARMS14 traegt das Record-Layout des Redhawk ARMS07
+     * 00001330/00003310/00004210/00006311/00007311/00009314, nicht das der Pistolen; Bank W14 =
+     * Revolver-Clips 10/26/27/50 wie W07 8/26/25/40). PORT-WAHL (Dossier §3.5): die Schadensspalte
+     * 7 des Super Redhawk (@0x8006e0d0 + Typ*0x58 + 7*4) — unter dem RE2-Modell w7 -> RE2-Zeile 5
+     * (Magnum, 900). */
+    if (weapon_id == 20) dmg = dmg_row[7];
     if (s_re2_probe[best].valid &&
         (dmg_row == s_re2_wpn_dmg_zombie || dmg_row == s_re2_wpn_dmg_zombie16)) {
         /* RE2-Applier: Schaden nach KLAMMER aus dem Zombie-Record-Wort 0 —
@@ -3018,7 +3044,9 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * (Typ 0x26, Wurzel 0x80116288) sind RE1.5-Typen und behalten 1000 (BAUPLAN 1.6 "Feuer 0x26");
      * nur echte RE2-Babys (re15_re2spider_baby_owns) stehen unter dem RE2-Modell. Vorher bekam
      * der Emitter im RE2-Flavor die Baby-Zeile = 0 Schaden (Zensus Runde 34 B12). */
-    if (type >= 2u && type <= 4u && re15_e4_modell(e))
+    /* Runde 35 Spur B: dieselbe Modell-Auswahl fuer die Werfer-Arten 6..9 (DAT_8006f430[6..9] =
+     * 15/16/17/18 @0x8006f436-39; Aufrufer im Port: RE2-Ops 15/24/47 ueber den Applier). */
+    if (((type >= 2u && type <= 4u) || (type >= 6u && type <= 9u)) && re15_e4_modell(e))
         dmg = (int16_t)re15_enemy_dmg_row(e)[re15_react_table[type]];
     /* ⛔ NACHBESSERUNG M1 — das Bodenfeuer (RE2-GL-Applier, O-VB4 Art 5) an einem RE1.5-KI-Typ
      * UNTER DEM RE2-MODELL (Import-Zombies im RE1.5-Flavor = Vorgabe): RE2-HP gegen die RE1.5-Zahl
@@ -3032,6 +3060,10 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
         const uint32_t *rec = re2_gl_rec_typ(e->type);
         if (rec && gl->zeile >= 9u && gl->zeile <= 11u && gl->k < 3u)
             dmg = (int16_t)((rec[(gl->zeile - 9u) * 2u] >> (10u * gl->k)) & 0x3FFu);
+        /* Runde 35 Spur B: Zeilen 16/17 (Flamme/Rakete) mit denselben Records wie der Applier. */
+        const uint32_t *r16 = re2_gl_rec16_17(e->type);
+        if (r16 && (gl->zeile == 16u || gl->zeile == 17u) && gl->k < 3u)
+            dmg = (int16_t)((r16[(gl->zeile - 16u) * 2u] >> (10u * gl->k)) & 0x3FFu);
     }
     /* ⛔ RUNDE 34 B9 / BAUPLAN E16 — G5 im Endkampf (ROOM5090/5091, RE2-Modul em36, RE2-HP 600
      * @0x801003fc) bekommt fuer die Granaten die RE2-Records, Klammer 0: Zeile 9 = 80
@@ -4002,6 +4034,30 @@ static const uint32_t *re2_gl_rec_typ(uint8_t type)
     }
 }
 
+/* Runde 35 Spur B — RE2-Schadensrecords der Zeilen 16 (Flammenwerfer) und 17 (Rakete), je Typ
+ * {w0_16, w1_16, w0_17, w1_17}; Zeiger *(0x800A6A88 + Typ*4), Zeile r @ Basis + (r-1)*20
+ * (`read` mit re2_disasm.py 2026-10-03). Brackets (w0 >> 10k) & 0x3FF, Sperre (w1 >> 9) & 0x7F. */
+static const uint32_t s_re2gl_rec16_zombie[4]   = { 0x00F03C0Fu, 0x02850A0Au, 0x384E1384u, 0x078F1E0Au };  /* @0x800A4258/5C, @0x800A426C/70: 15/15/15 Sperre 5; 900/900/900 Sperre 15 */
+static const uint32_t s_re2gl_rec16_zombie16[4] = { 0x00C0300Cu, 0x02850A0Au, 0x384E1384u, 0x078F1E0Au };  /* @0x800A43D4/D8, @0x800A43E8/EC: 12/12/12; 900 */
+static const uint32_t s_re2gl_rec16_dog[4]      = { 0x00C0300Cu, 0x02850A0Au, 0x12C4B12Cu, 0x078F1E0Au };  /* @0x800A4550/54, @0x800A4564/68: 12/12/12; 300/300/300 */
+static const uint32_t s_re2gl_rec16_crow[4]     = { 0x00F03C0Fu, 0x078F1E0Au, 0x12C4B12Cu, 0x078F1E0Au };  /* @0x800A46CC/D0, @0x800A46E0/E4: 15 Sperre 15; 300 */
+static const uint32_t s_re2gl_rec16_spider[4]   = { 0x00A0280Au, 0x02850A0Au, 0x0C8320C8u, 0x078F1E0Au };  /* @0x800A4CBC/C0, @0x800A4CD0/D4: 10/10/10; 200/200/200 */
+static const uint32_t s_re2gl_rec16_arm[4]      = { 0x0280A028u, 0x03870E0Au, 0x0280A028u, 0x078F1E0Au };  /* @0x800A52AC/B0, @0x800A52C0/C4: 40/40/40 Sperre 7; 40 */
+static const uint32_t s_re2gl_rec16_g5[4]       = { 0x00501405u, 0x0102040Au, 0x0C8320C8u, 0x078F1E0Au };  /* @0x800A6008/0C, @0x800A601C/20: 5/5/5 Sperre 2; 200 */
+static const uint32_t *re2_gl_rec16_17(uint8_t type)
+{
+    switch (type) {
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x18: return s_re2gl_rec16_zombie;
+    case 0x16:                                             return s_re2gl_rec16_zombie16;
+    case 0x20:                                             return s_re2gl_rec16_dog;
+    case 0x21:                                             return s_re2gl_rec16_crow;
+    case 0x25: case 0x26:                                  return s_re2gl_rec16_spider;
+    case 0x1A:                                             return s_re2gl_rec16_arm;
+    case 0x36:                                             return s_re2gl_rec16_g5;
+    default:                                               return NULL;
+    }
+}
+
 /* ---- Je-Typ-Eingaben des Appliers, die der Port nicht ueberall als Feld fuehrt ------------ *
  * r1ee = +0x1EE (Zielradius), o94/o96 = +0x94/+0x96 (Mittelpunkt-Versatz fuer FUN_80036E30),
  * b98/h9e = +0x98/+0x9E (Band; wo der Port re2_hit_box_set fuehrt, gilt das Feld), kopf =
@@ -4330,7 +4386,19 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
             unsigned zone = 1u;
             if ((hitcode & 0x20000u) && e->y + ((int32_t)b98 >> 1) < p[1]) zone = 0u;
             gl.zeile = zeile; gl.k = k; gl.spalte = zone + 3u * k;
-            if (re15_resolver_gegnerzweig(e, 5u, p, &gl) < 0) continue;
+            /* Runde 35 Spur B: die RE1.5-Angriffsart je Hitcode-Zeile aus der RE1.5-eigenen
+             * Resolver-Tabelle DAT_8006f430 = [3,3,9,10,11,14,15,16,17,18,20] (@0x8006f430-3a) mit
+             * DAT_8006f418 = [10,20,1000,1000,1000,50,100,200,300,1000,0] (@0x8006f418-2c): Zeile 9
+             * (GL Explosiv, RE2-Id 9 = RE1.5 w15) -> Art 6, Zeile 11 (Saeure = w16) -> Art 7, Zeile 10
+             * (Brand = w17) -> Art 8, Zeile 17 (Rakete = w18) -> Art 9, Zeile 16 (Flamme = w14) -> Art 5;
+             * das Bodenfeuer Op 40 (0x2002000A) bleibt Art 5 (O-VB4). Die Arten 6..9 haben im
+             * Original keinen Aufrufer (unfertig) — hier sind die Aufrufer die RE2-Ops 15/24/47/70. */
+            uint8_t art = 5u;
+            if (hitcode != 0x2002000Au) {
+                if (zeile == 9u) art = 6u; else if (zeile == 11u) art = 7u;
+                else if (zeile == 10u) art = 8u; else if (zeile == 17u) art = 9u;
+            }
+            if (re15_resolver_gegnerzweig(e, art, p, &gl) < 0) continue;
             /* NACHBESSERUNG (mess_sb 3.1): die RE2-Sperre nach dem Treffer — +0x1D3 =
              * (+0x1D3 & 0x80) | ((w1 >> 9) & 0x7F) (`lbu a0,467(s1)` @0x8004731c / `andi a0,a0,0x80`
              * @0x8004732c / `lw v0,4(a1)` @0x80047338 / `srl v0,v0,9` @0x80047340 / `andi v0,v0,0x7f`
@@ -4363,8 +4431,22 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
              * +0x1D3 & 0x7F == 0) — "der Treffer selbst setzt Bit 0" (@0x800124F0-Analogon). */
             e->hit_react |= 1u;
         }
-        /* Andere Zeilen als 9/10/11 sind im Port nicht hinterlegt (einziger Aufrufer Op 40 =
-         * Zeile 10): Treffer ohne Anwendung, gemeldet im Dossier. */
+        /* Runde 35 Spur B: Zeilen 16 (Flammenwerfer, Op 70 Hitcode 0x20010) und 17 (Rakete, Op 24
+         * Hitcodes 0x30011/0x20011) — Records je Typ (re2_gl_rec16_17, @-Belege dort), Rechnung
+         * wie die Zeilen 9..11: HP -= (w0 >> 10k) & 0x3FF, Stempel mit w1 (Sperre (w1>>9)&0x7F). */
+        else if (zeile == 16u || zeile == 17u) {
+            const uint32_t *r16 = re2_gl_rec16_17(e->type);
+            if (r16) {
+                const uint32_t w0 = r16[(zeile - 16u) * 2u];
+                const uint32_t w1 = r16[(zeile - 16u) * 2u + 1u];
+                int dmg = (int)((w0 >> (10u * k)) & 0x3FFu);
+                e->hp = (int16_t)((uint16_t)e->hp - (uint16_t)dmg);
+                e->state = (e->hp < 0) ? 3u : 2u;
+                re2_gl_stempel(e, &t, p, zeile, k, w1, hitcode & 0x20000u);
+                e->hit_react |= 1u;
+            }
+        }
+        /* Andere Zeilen als 9/10/11/16/17 sind im Port nicht hinterlegt: Treffer ohne Anwendung. */
         if (!alle) break;
     }
     return getroffen;

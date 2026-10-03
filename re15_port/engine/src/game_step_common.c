@@ -27,6 +27,7 @@
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 #include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
 #include "re15_inventory.h"     /* re15_ammo_* — the byte-true magazine/reload model (FUN_8004ea6c/eae4) */
+#include "re15_werfer.h"        /* Runde 35 Spur B: Werfer-Klasse 15..18, Flammenwerfer 14 (RE2-Handler) */
 #include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
 #include "re15_math.h"          /* re15_squareroot0 — der Auto-Look-Scan vergleicht die WURZEL */
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
@@ -1708,7 +1709,12 @@ void re15_game_step(const re15_game_ctx_t *c)
                 eq_item >= 3 && !re15_ammo_mag_nonzero()) {
                 if (c->pad_pressed & RE15_PAD_BIT_SQUARE) {         /* press-EDGE only */
                     extern void re15_player_reload_start(void);
-                    if (re15_ammo_reserve_slot() > 0 && eq_item < 9)
+                    /* Runde 35 Spur B: das RE1.5-Gate `sltiu id,9` @0x80033368 laesst die Werfer-
+                     * Klasse und die Python nicht nachladen — ihre Munitions-Zeiger sind im
+                     * Auslieferungsstand NULL (unfertig, @0x80074dd4-e10); die Records existieren
+                     * (0x80074cb4/b8/bc). re15_werfer_nachladbar = 15/16/17/20 (include/re15_werfer.h). */
+                    extern int re15_werfer_nachladbar(int id);
+                    if (re15_ammo_reserve_slot() > 0 && (eq_item < 9 || re15_werfer_nachladbar(eq_item)))
                         re15_player_reload_start();                 /* sub=4 @0x80033378 */
                     else if (!(eq_item == 12 || eq_item == 14 || eq_item == 19))
                         re15_audio_weapon_se(1);                    /* click 0x01010001 */
@@ -1797,21 +1803,28 @@ void re15_game_step(const re15_game_ctx_t *c)
                                           {4,3,0x0920,{0x118,0x190,-0xa0}}}},/* @0x80033c08-38 */
                         /* 15..18 Werfer-Klasse: Original-Handler ist NULL
                          * (@0x8007413c-4b) - auf der PSX waere das Feuern ein jalr-0-
-                         * ABSTURZ, die Klasse ist unfertig. PORT-BRUECKE wie bei der
-                         * Granate: Hitscan-Resolve + 1 Patrone, KEINE Effekte, damit
-                         * die Werfer benutzbar bleiben (und die RE2-Zerreiss-Zeilen
-                         * erreichbar - Pin unit_re2_zombie_teardeath PIN2, Waffe 18).
-                         * 20: feuert nie (Dispatch @0x80074080 = NULL). */
-                        [15] = {1,1,1,0, {{0}}},
-                        [16] = {1,1,1,0, {{0}}},
-                        [17] = {1,1,1,0, {{0}}},
-                        [18] = {1,1,1,0, {{0}}},
-                        /* Id 20: der Dispatch @0x80074080 ist NULL - im Original
-                         * feuert sie NIE (die Tabellenzelle [20] @0x80074150 ist in
-                         * Wahrheit der erste Dauerfeuer-Sub, Tabellen-Ueberlappung).
-                         * PORT-BRUECKE wie 15..18: die RE2-Treffertabelle fuehrt eine
-                         * Zeile fuer sie (Pin unit_re2_zombie_teardeath PIN7). */
-                        [20] = {1,1,1,0, {{0}}},
+                         * ABSTURZ, die Klasse ist unfertig. RUNDE 35 SPUR B (Beta ->
+                         * Retail): die PORT-BRUECKE "Hitscan-Resolve" ist weg (resolve 0);
+                         * hier nur noch 1 Patrone (RE2 Entlade-Tabelle @0x800A6F90 [9..11]/
+                         * [17] = FUN_8006a0cc = eine Patrone), die RE2-Effekt-Handler
+                         * (Muendung, Runde/Rakete, Rauch) laufen je Bild in
+                         * re15_werfer_tick (werfer_r35.c, RE2 @0x80044B44/F44/@0x80045090/
+                         * @0x80045588), Treffer/Schaden ueber die RE2-Ops 15/24/47. */
+                        [15] = {1,0,1,0, {{0}}},
+                        [16] = {1,0,1,0, {{0}}},
+                        [17] = {1,0,1,0, {{0}}},
+                        [18] = {1,0,1,0, {{0}}},
+                        /* Id 20 COLT PYTHON: der Dispatch @0x80074080 ist NULL - im Original
+                         * feuert sie NIE (Tabellen-Ueberlappung @0x80074150). RUNDE 35
+                         * SPUR B: RE1.5 fuehrt sie als zweiten MAGNUM-REVOLVER (ARMS14 =
+                         * Record-Layout des Redhawk ARMS07, Bank W14 = Revolver-Clips),
+                         * deshalb die RE1.5-Revolver-Entladung des Super Redhawk
+                         * 0x800339A4: Muendung 0x02000E00 {0x8c,0x25d,0} @0x800339a8-e4,
+                         * Rauch 0x03001000 {0x91,0x1f4,-25} @0x800339ec-1c, KEINE Huelse,
+                         * 1x Resolve @0x80033a34 + 1x Munition @0x80033a3c (PORT-WAHL,
+                         * Dossier B_werfer.md §3.5; Schaden = Spalte 7, re15_damage.c). */
+                        [20] = {1,1,1,2, {{2,0,0x0e00,{0x8c,0x25d,0}},
+                                          {3,0,0x1000,{0x91,0x1f4,-25}}}},
                     };
                     const re15_entlade_t *ent = (eq_item <= 20) ? &ENT[eq_item] : ENT + 3;
                     if (ent->aktiv) {
@@ -1923,9 +1936,12 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int ai = (eqa == 12) ? 0 : (eqa == 14) ? 1 : 2;
                     int32_t gp2[3];
                     if (AFX[ai].flamme) {
-                        if (muendung && re15_player_gunbone_world(AFX[ai].mo[0], AFX[ai].mo[1], AFX[ai].mo[2], gp2))
-                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0x1D, 0x1200,
-                                                   gp2[0], gp2[1], gp2[2], pl->y, 3000);
+                        /* Runde 35 Spur B (Beta -> Retail): der DEBUG.BIN-Handler 0x800C45A8
+                         * (a1 = 3000 statt Gier @0x800c466c, Puff Effekt 3 sub 5 ohne Vorwaerts-
+                         * bewegung) ist durch den RE2-Handler [16] 0x800454a0 ersetzt:
+                         * Strahl 0x031D1200 mit Gier bei f%3==1, SE Bild 1/11 (werfer_r35.c). */
+                        (void)muendung;
+                        re15_werfer_flamme_bild((int)pl->anim_frame);
                     } else {
                         if (muendung && re15_player_gunbone_world(AFX[ai].mo[0], AFX[ai].mo[1], AFX[ai].mo[2], gp2))
                             re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 1, 0x0800,
@@ -1937,7 +1953,14 @@ void re15_game_step(const re15_game_ctx_t *c)
                             re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800,
                                                    gp2[0], gp2[1], gp2[2], pl->y, 0);
                     }
-                    if (schuss) {
+                    if (eqa == 14) {
+                        /* Runde 35 Spur B: Fuel nach RE2 FUN_8006a0cc Id 16 (zwei Einheiten je 8
+                         * Bilder, @0x8006a184-21c) statt (acae9&4)==0 x FUN_8004eae4; der Schaden
+                         * kommt aus dem Strahl (Op 70, Hitcode 0x20010), kein Hitscan mehr. Leer:
+                         * aca5b := 2 (RE1.5-Schleifenstruktur), RE2 spielt dort keinen Ton
+                         * (`j 0x80048064` ohne SE, @0x80047e7c-88 / @0x80048490). */
+                        if (!re15_werfer_fuel_bild()) re15_player_autofire_empty();
+                    } else if (schuss) {
                         if (re15_ammo_mag_nonzero()) {
                             re15_ammo_consume();                    /* @0x800349c8/0x80034c0c */
                             re15_player_weapon_fire(eqa);           /* FUN_80011f50 @0x800349ec */
@@ -1992,6 +2015,9 @@ void re15_game_step(const re15_game_ctx_t *c)
                 }
             }
         }
+        /* Runde 35 Spur B: RE2-Effekt-Handler der Werfer-Klasse (15..18) im Rueckstossbild 1
+         * (werfer_r35.c; Tabelle @0x800A6FDC, Aufruf je Bild @0x800431ac-cc). */
+        re15_werfer_tick();
         /* SCHROTFLINTE: drei WEITERE Resolves in den Rueckstoss-Bildern 3/5/7
          * (byte-true @0x80033508-58, Herleitung im Kopf von
          * re15_player_schrot_fenster). Vier Treffer je Abzug = die Streuung der

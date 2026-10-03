@@ -1,0 +1,70 @@
+/*
+ * re15_werfer.h — Runde 35 Spur B: Werfer-Klasse (Granatwerfer 15/16/17, Raketenwerfer 18),
+ * Flammenwerfer 14 und Colt Python 20.
+ *
+ * EINORDNUNG (Beta -> Retail, Memory reai-v2-beta-zu-retail; Belege Dossier
+ * analysis/befunde_runde35/B_werfer.md §2): im RE1.5-Auslieferungsstand sind
+ *   15..18  Entlade-Handler NULL (@0x8007413c-4b), Munitions-Zeiger NULL (@0x80074dd4..e85),
+ *           Waffen-Parametersatz 0 (@0x800740d6-e9) — nur Baenke, Magazin und Schaden fertig,
+ *   20      Dispatch NULL (@0x80074080), Schaden 0 in jeder Gegnerzeile (@0x8006e0d0 Spalte 20),
+ *   14      Handler nur als Debug-Patch in DEBUG.BIN (a1 = 3000 @0x800c466c, Rauch-jal entfernt),
+ *           Effekt 3 sub 5 = aufsteigender Puff ohne Vorwaertsbewegung (CORE00.ESP @0x0574).
+ * Deshalb ist RE2 Retail (info/re2leon/PSX.EXE) das Vorbild fuer Entladung, Projektil, Treffer,
+ * Effekt und Ton; RE1.5 bleibt massgeblich fuer Animationsbaenke, Magazine, Schadensspalten,
+ * Reichweiten und — wo fertig — die eigenen Toene.
+ *
+ * RE2-Effekt-Handler je Waffe (Tabelle @0x800A6FDC, gelesen `lhu v0,0x10e(s1)` / `jalr`
+ * @0x800431ac-cc im Feuerzustand, jedes Bild mit In-Clip-Bild +0x14D):
+ *   [9]  GL Explosiv  0x80044B44   [10] GL Brand 0x80044F44   [11] GL Saeure 0x80045090
+ *   [16] Flammenwerfer 0x800454A0  [17] Rakete  0x80045588
+ * Spawner FUN_8001bf10 (sofort lebendig, Status 0xA003): a0 = Bank<<24 | Sub<<16 | Skala,
+ * a1 -> Platz+0x22 (Gier), a2 = Waffenknochen-Matrix (*(+0x198) + 0x7AC), a3 = Versatz.
+ */
+#ifndef RE15_WERFER_H
+#define RE15_WERFER_H
+
+#include <stdint.h>
+
+/* 15..18 = Werfer-Klasse (RE1.5 Entlade-Tabelle @0x8007413c-4b NULL). */
+int  re15_werfer_ist(int id);
+/* Nachladbar: 15/16/17 (RE1.5 Magazin 6 @0x80074dd4/e0/ec + Munitions-Records 0x80074cb4/b8/bc,
+ * nur der Zeiger ist unverdrahtet) und 20 (Magazin 6 @0x80074e98; Munition MAGNUM 0x17 =
+ * PORT-WAHL, s. Dossier §3.5). 18 = 4 Schuss ohne Munitionsitem (@0x80074e68, RE2 Id 17 ohne
+ * Kombinations-Satz @0x800a9ea4). */
+int  re15_werfer_nachladbar(int id);
+/* Animationsbank/Mesh: 16 und 17 fuehren die Bank der 15 (RE1.5 PL00W10 = PL00W11 ist eine
+ * Ingram-foermige Platzhalterbank ohne Granatwerfer-Clips; Elza PL04W0F = W10 = W11 und RE2
+ * PL01W09 = 0A = 0B: EINE Bank fuer alle drei Munitionsarten). */
+int  re15_werfer_bank_id(int id);
+/* Clip-Umsetzung fuer die 11-Clip-Bank PL00W0F (Leon): [22,31,39,50, 4:Heben 15, 5:Feuer 34,
+ * 6:Hold 1, 7:Feuer-hoch 36, 8:Hold-hoch 1, 9:Feuer-tief 36, 10:Hold-tief 1] = Standard-Folge
+ * ohne die Clips 3/5/13 -> Basis -2; Nachladen (13) hat keinen Clip -> Hold (6).
+ * Liefert den Clip unveraendert, wenn die Bank nicht 11 Clips hat oder id nicht 15..17 ist. */
+int  re15_werfer_clip_remap(int id, int clip_n, int clip);
+/* Rueckstoss-Abbruchschwelle (Standard-FSM `!R1 && acae9 > tab5[(id-1)*5+2]` @0x80033634-4c):
+ * die Saetze der Ids 14..18/20 sind 0 (@0x800740d6-ef, unfertig); PORT-WAHL = Klassenwert 10
+ * der fertigen schweren Waffen 5..13 (@0x800740a4-cc byte 2). */
+int  re15_werfer_recoil_break(int id);
+
+/* Je Spielbild hinter dem Feuerpfad: RE2-Effekt-Handler der Ids 15..18 im Rueckstossbild 1
+ * (`lbu v1,333 / addiu v0,zero,1 / bne` @0x80044b98-a0 GL, @0x8004559c-a4 Rakete). */
+void re15_werfer_tick(void);
+
+/* Flammenwerfer (RE2 [16] @0x800454a0), je Bild der Dauerfeuer-Schleife mit In-Clip-Bild f:
+ * Strahl 0x031D1200 bei f % 3 == 1 (@0x800454b4-e0), a1 = Gier (`lh a1,-914(a1)` = Spieler
+ * +0x76 @0x80045500), Versatz {150,1200,0} (@0x800454f0-508); SE 0x01000001 bei f == 1
+ * (@0x80045534-44), SE 0x010B0001 bei f == 11 (@0x80045550-6c). */
+void re15_werfer_flamme_bild(int f);
+/* Fuel je Bild der Schleife = RE2 FUN_8006a0cc Id 16 (@0x8006a184-0x8006a21c): Zaehler
+ * DAT_800d5c1c, alle 8 Bilder zwei Einheiten; Rueckgabe 0 = leer (Schleife beenden). */
+int  re15_werfer_fuel_bild(void);
+void re15_werfer_reset(void);
+
+/* Diagnose (Sonden): Zahl der RE2-Spawns seit reset, letzter Rueckstoss-Spawn-Bildzaehler. */
+unsigned re15_werfer_spawns(void);
+
+/* Plattform (audio_pc.c; Test-Stub in tests/test_support.c): Satz `satz` der RE2-ARMS-Bank
+ * shared_assets/RE2/SOUND/ARMS<id>.EDH/.VB (RE2 Bank 1 = ARMS der Waffe, FUN_80059c74). */
+void re15_audio_re2_arms_se(int arms_id, int satz);
+
+#endif /* RE15_WERFER_H */

@@ -8481,6 +8481,11 @@ re_title:;
                  * FUN_80036b68 die Bank base_table[charid]+item, also
                  * PL00W<item> - und die liegen hier alle bereits geparst. */
                 int wid_now = re15_player_equipped_weapon();
+                {   /* Runde 35 Spur B: 16/17 fuehren die Bank der 15 (PL00W10 = PL00W11 ist eine
+                     * Ingram-foermige Platzhalterbank; Elza PL04W0F = W10 = W11, RE2 PL01W09 = 0A = 0B). */
+                    extern int re15_werfer_bank_id(int id);
+                    wid_now = re15_werfer_bank_id(wid_now);
+                }
                 const re15_emd_animation_t *want_anim;
                 const re15_emd_skeleton_t  *want_skel;
                 int want_ok;
@@ -9318,6 +9323,8 @@ re_title:;
                  * which patched the HAND band and left the blade/barrel reading stale skin = untextured.) */
                 static int s_wpn_key = -1; static unsigned s_wpn_gen = 0u;
                 int eqw = re15_player_equipped_weapon();
+                {   extern int re15_werfer_bank_id(int id);   /* Runde 35 Spur B: 16/17 -> dir[3] der W0F */
+                    eqw = re15_werfer_bank_id(eqw); }
                 int key = (g_gameflow.character << 8) | (eqw & 0xFF);
                 unsigned gen = re15_render_pc_slot0_generation();
                 /* Re-composite when the weapon changes OR slot 0 was re-uploaded (which wipes the
@@ -9364,6 +9371,8 @@ re_title:;
             {
                 extern int re15_player_equipped_weapon(void);
                 int eq = re15_player_equipped_weapon();     /* aca5d = the equipped weapon id */
+                {   extern int re15_werfer_bank_id(int id);   /* Runde 35 Spur B: 16/17 -> Mesh dir[2] der W0F */
+                    eq = re15_werfer_bank_id(eq); }
                 int wi = (eq >= 0 && eq < RE15_WPN_MDL_MAX) ? eq : 0;
                 int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
                 if (vis && wpn_bone_valid && player_visible &&

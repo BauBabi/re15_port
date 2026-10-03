@@ -1,0 +1,193 @@
+/*
+ * werfer_r35.c — Runde 35 Spur B: Werfer-Klasse (15..18), Flammenwerfer (14), Colt Python (20).
+ * Belege: Dossier analysis/befunde_runde35/B_werfer.md §2 (RE1.5 PSX.EXE / RE2 info/re2leon/PSX.EXE,
+ * selbst disassembliert mit re15_disasm.py / re2_disasm.py). Einordnung Beta -> Retail im Kopf von
+ * include/re15_werfer.h.
+ *
+ * Was hier liegt:
+ *   - die RE2-Effekt-Handler [9]/[10]/[11] (GL) und [17] (Rakete) als Bild-1-Spawns in die
+ *     RE2-FX-Maschine (re2_fx.c, Ops 7/15/17/22/23/24/47/70 dort, Runde-35-Block),
+ *   - der RE2-Handler [16] (Flammenstrahl) fuer die RE1.5-Dauerfeuer-Schleife,
+ *   - Fuel-Takt des Flammenwerfers nach RE2 FUN_8006a0cc,
+ *   - Bank-/Clip-Umsetzung fuer die Leon-Bank PL00W0F und die Nachlade-/Rueckstoss-Regeln.
+ * Die Colt Python (20) braucht hier keinen Handler: ihre Entladung ist die RE1.5-Revolver-Zeile
+ * 0x800339A4 (ENT[20] in game_step_common.c), Begruendung Dossier §3.5.
+ */
+#include <string.h>
+#include <stdio.h>
+#include "re15_werfer.h"
+#include "re15_actor.h"
+#include "re15_damage.h"
+#include "re15_inventory.h"
+#include "re2_fx.h"
+
+extern re15_actor_t g_actors[];
+extern int re15_player_granate_frame(void);        /* player_common.c: Rueckstoss-Bild oder -1 */
+extern int re15_player_aim_elevation(void);        /* player_common.c: -1 / 0 / +1 */
+extern int re15_player_gunbone_matrix(int32_t rot[9], int32_t t[3]);   /* re15_damage.c */
+extern FILE *re15_waffen_log(void);                /* player_common.c (Mess-Harness) */
+
+static inline void wr16(uint8_t *b, int o, uint32_t v) { b[o] = (uint8_t)v; b[o + 1] = (uint8_t)(v >> 8); }
+static inline void wr32(uint8_t *b, int o, uint32_t v)
+{ b[o] = (uint8_t)v; b[o + 1] = (uint8_t)(v >> 8); b[o + 2] = (uint8_t)(v >> 16); b[o + 3] = (uint8_t)(v >> 24); }
+
+int re15_werfer_ist(int id)        { return id >= 15 && id <= 18; }
+int re15_werfer_nachladbar(int id) { return id == 15 || id == 16 || id == 17 || id == 20; }
+int re15_werfer_bank_id(int id)    { return (id == 16 || id == 17) ? 15 : id; }
+
+int re15_werfer_clip_remap(int id, int clip_n, int clip)
+{
+    if (!(id >= 15 && id <= 17) || clip_n != 11) return clip;
+    if (clip == 13) return 6;                      /* kein Nachlade-Clip in PL00W0F -> Hold (Bild 1) */
+    if (clip >= 6 && clip <= 12) return clip - 2;  /* 6->4 Heben, 7->5 Feuer, 8->6 Hold, 9/10/11/12 -> 7/8/9/10 */
+    return clip;
+}
+
+int re15_werfer_recoil_break(int id)
+{
+    /* @0x80074090 + (id-1)*5 byte 2: 3/4 = 7, 5..13 = 10, 14..18 und 20 = 0 (unfertige Saetze),
+     * 19 = 10. PORT-WAHL fuer die unfertigen Saetze: 10 (Klasse der schweren Waffen). */
+    if (id >= 15 && id <= 18) return 10;
+    if (id == 20) return 10;
+    return -1;                                     /* kein Eingriff */
+}
+
+/* ---- Waffenknochen-Matrix im RE2-Abbild (MATRIX: short m[3][3] @+0, long t[3] @+20) -------
+ * Bleibt als statischer Puffer gueltig (spawn_kern haelt den Zeiger als +0x6C; gelesen nur bei
+ * Status 0x800, das keiner unserer Effekte setzt). */
+static uint8_t  s_mtx[32];
+static unsigned s_spawns = 0;
+static int      s_last_frame = -1, s_last_w = -1;
+static uint16_t s_fuel_takt = 0;                   /* DAT_800d5c1c (RE2) */
+
+static int mtx_bauen(void)
+{
+    int32_t r[9], t[3];
+    if (!re15_player_gunbone_matrix(r, t)) return 0;
+    for (int k = 0; k < 9; k++) {
+        int32_t v = r[k];
+        if (v > 32767) v = 32767; else if (v < -32768) v = -32768;
+        wr16(s_mtx, 2 * k, (uint32_t)v);
+    }
+    s_mtx[18] = 0; s_mtx[19] = 0;
+    wr32(s_mtx, 20, (uint32_t)t[0]); wr32(s_mtx, 24, (uint32_t)t[1]); wr32(s_mtx, 28, (uint32_t)t[2]);
+    return 1;
+}
+
+static int spawn(uint32_t a0, int16_t a1, const int16_t ofs[4])
+{
+    int i = re2fx_spawn_sofort(a0, a1, s_mtx, ofs);   /* FUN_8001bf10 (sofort, 0xA003) */
+    FILE *wl = re15_waffen_log();
+    if (wl) fprintf(wl, "    RE2SPAWN a0=%08x a1=%d ofs=(%d,%d,%d) platz=%d\n",
+                    (unsigned)a0, (int)a1, (int)ofs[0], (int)ofs[1], (int)ofs[2], i);
+    if (i >= 0 && i < RE2FX_PLAETZE) s_spawns++;
+    return i;
+}
+
+unsigned re15_werfer_spawns(void) { return s_spawns; }
+void re15_werfer_reset(void) { s_spawns = 0; s_last_frame = -1; s_last_w = -1; s_fuel_takt = 0; }
+
+/* ---- GL [9]/[10]/[11] und Rakete [17], Rueckstossbild 1 ----------------------------------- */
+void re15_werfer_tick(void)
+{
+    int w = re15_player_equipped_weapon();
+    if (!re15_werfer_ist(w)) { s_last_frame = -1; s_last_w = w; return; }
+    int f = re15_player_granate_frame();            /* acae9 im Rueckstoss, sonst -1 */
+    if (f < 0) { s_last_frame = -1; s_last_w = w; return; }
+    if (f == s_last_frame && w == s_last_w) return; /* der Handler laeuft je Bild genau einmal */
+    s_last_frame = f; s_last_w = w;
+    if (f != 1) return;                             /* `lbu v1,333(s0) / addiu v0,zero,1 / bne` */
+    if (!mtx_bauen()) return;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int16_t gier = (int16_t)pl->rot_y;        /* RE2 `lh a1,118(s1)` = Spieler +0x76 */
+    /* Bezugsebene des RE2-Bodentests (FUN_8004fba0: Grundebene y 0) = Standhoehe des Werfers —
+     * PORT-ZUORDNUNG wie granate_boden (re15_esp.h) fuer RE1.5-Raeume mit Boden != 0. */
+    re2fx_boden_basis_setzen(pl->y);
+
+    if (w == 18) {
+        /* Rakete 0x80045588: 0x01002000 a1=0 {0,1100,0} (@0x800455a8-d0); 0x020D1000 a1=Gier
+         * (@0x800455d8-ec); 0x030A1A00 a1=0 (@0x800455f0-604); 0x030A1500 a1=0 {300,-900,0}
+         * (@0x80045608-2c). */
+        static const int16_t OM[4] = { 0, 1100, 0, 0 }, OR[4] = { 300, -900, 0, 0 };
+        spawn(0x01002000u, 0, OM);
+        spawn(0x020D1000u, gier, OM);
+        spawn(0x030A1A00u, 0, OM);
+        spawn(0x030A1500u, 0, OR);
+        return;
+    }
+    /* GL: Versatz {120,1200,0} (`addiu v0,zero,120 / 1200` @0x80044bc4-d4 bzw. @0x80044f7c-8c),
+     * Muendung 0x01002000 a1 = 0 (@0x80044ba8-e4 / @0x80044f68-98). */
+    static const int16_t OG[4] = { 120, 1200, 0, 0 };
+    spawn(0x01002000u, 0, OG);
+    if (w == 15) {
+        /* Explosiv 0x80044B44: 5 x 0x020C0A00 (Bank 2 Skr 4, CLUT-Zeile 1, Skala 0x0A00), a1 = Gier
+         * (`lh a1,118(s0)` @0x80044bf4 usw.), danach je Platz acc.x (+0x08 = 0x800d8cf8+i*0x7C),
+         * vel.x (+0x0C) aus der Tabelle @0x80011030 `00 00 88 ff 10 ff fa 00 c8 00 96 00` =
+         * {0,-120,-240 | 250,200,150}, Zeile = Bit 15 des Zielworts (0x800cfd4c >> 15 = HOCH),
+         * vel.y (+0x0E), vel.z (+0x10): Runde 1 @0x80044c18-64, 2 @0x80044c98-e8, 3 @0x80044d1c-6c,
+         * 4 @0x80044da0-f0, 5 @0x80044e24-74 (r34-Dossier re_saeure_brand.md §2.2). */
+        static const int16_t VX[2][3] = { { 0, -120, -240 }, { 250, 200, 150 } };
+        static const struct { int8_t accx; uint8_t spalte; int16_t vy, vz; } R[5] = {
+            { -10, 0, 600,    0 }, { -20, 1, 400,  100 }, { -20, 1, 400, -100 },
+            { -40, 2, 250,   50 }, { -40, 2, 250,  -50 } };
+        const int hoch = (re15_player_aim_elevation() > 0) ? 1 : 0;
+        for (int k = 0; k < 5; k++) {
+            int i = spawn(0x020C0A00u, gier, OG);
+            if (i < 0 || i >= RE2FX_PLAETZE) continue;   /* `sltiu v0,a0,0xff / beq` @0x80044c04-08 */
+            uint8_t *b = re2fx_platz_sonde(i);
+            b[0x08] = (uint8_t)R[k].accx;
+            wr16(b, 0x0C, (uint32_t)(uint16_t)VX[hoch][R[k].spalte]);
+            wr16(b, 0x0E, (uint32_t)(uint16_t)R[k].vy);
+            wr16(b, 0x10, (uint32_t)(uint16_t)R[k].vz);
+        }
+    } else {
+        /* Brand 0x80044F44 / Saeure 0x80045090 (bytegleich): 0x020C1000 a1 = Gier (@0x80044f9c-b0),
+         * 0x03081200 a1 = 0 (@0x80044fb4-c8). Die Art der Runde setzt Op 17 aus der Waffen-Id. */
+        spawn(0x020C1000u, gier, OG);
+        spawn(0x03081200u, 0, OG);
+    }
+}
+
+/* ---- Flammenwerfer [16] 0x800454a0 ------------------------------------------------------- */
+void re15_werfer_flamme_bild(int f)
+{
+    if (f < 0) return;
+    if (f % 3 == 1) {                                /* Magic 0xAAAAAAAB, `bne v1,s1(=1)` @0x800454b8-e0 */
+        if (mtx_bauen()) {
+            static const int16_t OF[4] = { 150, 1200, 0, 0 };   /* @0x800454f0-508 */
+            const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            re2fx_boden_basis_setzen(pl->y);         /* PORT-ZUORDNUNG wie oben */
+            spawn(0x031D1200u, (int16_t)pl->rot_y, OF);   /* `lui a0,0x31d / ori 0x1200` @0x800454e4-e8 */
+            /* 0x800DF349 := 1 (@0x80045518-20): Flammen-Latch, Leser @0x80026784/@0x8002693c
+             * (Gegnerschleife) — im Port ohne Konsument (Dossier OFFEN). */
+        }
+    }
+    if (f == 1)  re15_audio_re2_arms_se(0x10, 0);     /* 0x01000001 @0x80045534-44 (ARMS10 Satz 0) */
+    if (f == 11) re15_audio_re2_arms_se(0x10, 11);    /* 0x010B0001 @0x80045550-6c (ARMS10 Satz 11) */
+}
+
+int re15_werfer_fuel_bild(void)
+{
+    /* FUN_8006a0cc, Zweig Id 16 @0x8006a184-0x8006a21c (Delay-Slot-genau):
+     *   8006a194 lhu v0,0(v1) / addiu 1 / sh         Zaehler++
+     *   8006a1ac slti v0,v0,8 / bne -> return 1      < 8: nichts
+     *   8006a1bc sh zero,0(v1)                       Zaehler := 0 (Delay-Slot von beq s0,zero)
+     *   8006a1b8 beq s0,zero,0x8006a204              Menge 0 -> return 0
+     *   8006a1c0 addiu s0,s0,-1 / jal 0x800694b8     Menge-1
+     *   8006a1fc bne s0,zero,0x8006a20c              Menge jetzt 0 -> return 0 (0x8006a204)
+     *   8006a20c addiu a1,s0,-1 / jal 0x800694b8     sonst Menge-1 nochmals, return 1 */
+    s_fuel_takt++;
+    if ((int16_t)s_fuel_takt < 8) return 1;
+    s_fuel_takt = 0;
+    if (!re15_ammo_mag_nonzero()) return 0;
+    re15_ammo_consume();
+    if (!re15_ammo_mag_nonzero()) return 0;
+    re15_ammo_consume();
+    return 1;
+}
+
+/* Fuer player_common.c (aim_clip_wirksam): Clip der gefuehrten Waffe gegen die Bank-Clipzahl. */
+int re15_player_werfer_clip(int clip, int clip_n)
+{
+    return re15_werfer_clip_remap(re15_player_equipped_weapon(), clip_n, clip);
+}

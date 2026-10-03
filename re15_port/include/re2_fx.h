@@ -122,6 +122,9 @@ void re2fx_boden_basis_setzen(int32_t y);
 
 /** Diagnose: Zahl der Aufrufe eines nicht umgesetzten Ops (0 = alle erreichten Ops umgesetzt). */
 unsigned re2fx_op_unbekannt(void);
+/** Runde 35 Spur B (Sonden): Latch 0x800DF349 (Op 7) und Treffer-Lage DAT_800CFB88.. (Op 15/24/70). */
+unsigned        re2fx_r35_latch(void);
+const int32_t  *re2fx_r35_treffer_lage(void);
 /** Diagnose: Zahl der Op-Aufrufe je Op-Nummer seit re2fx_reset (Sonden). */
 unsigned re2fx_op_zaehler(int op);
 
