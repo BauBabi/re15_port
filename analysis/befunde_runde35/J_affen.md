@@ -1097,3 +1097,11 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
     Platzierung — e1 bleibt stehen, schiebt e2 nicht, und Leons Kette T265-T267 trifft e2 an der falschen Stelle.
   - Kein Harness-Startzustand: auch das Original-e2 steht bis T255 (wie der Port); die Bewegung beginnt erst mit
     dem Kontakt zu e1 in T256.
+- **Zweite Ursache (gemessen nach dem ersten Bau mit Ritt-Platzierung, `jnb3/griff1.txt`):** e1 blieb T255-T265 auf
+  genau **2050** zu Leon stehen ((-5867,-14385) -> d 2053, (-5868,-14382) -> d 2050; Original-Bahn rueckt ~830 vor) und
+  lief erst ab T266 los, als Leons Platzierung ihn freigab. Taeter: der Port-Wurzelschwanz des Gorillas
+  (enemy_ai_common.c, Ende re15_maggot_ai_tick) ruft aec4(Spieler, Gorilla) OHNE die Paar-Ausnahme. Original
+  FUN_8002aec4 (PSX.EXE, selbst disassembliert): `lw a0,0(s3)` / `lw v1,0(s2)` @0x8002aef8-fc, `and v0,a0,v1` /
+  `andi v0,v0,0x1000` / `bne v0,zero,0x8002b464` @0x8002af14-1c -> beide Wort-Bits 0x1000 (Gorilla @0x8011ac34-38,
+  Spieler @0x8011ac4c-54) = KEIN Schub. Die Spieler-Seite (re15_body_push_player) hatte die Ausnahme seit
+  Nachbesserung 2 (6e), die Gorilla-Seite nicht. Haken: `if (!(re15_player_is_grabbed() && re15_affen_griff_paar(e)))`.

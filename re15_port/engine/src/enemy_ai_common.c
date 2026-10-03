@@ -9543,7 +9543,8 @@ static void re15_maggot_ai_tick(int slot)
      * Kraehen-Root aec4 @0x801121d4). */
     {
         re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        re15_body_push(plr, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
+        if (!(re15_player_is_grabbed() && re15_affen_griff_paar(e)))   /* Runde 35 Spur J (8): Paar-Ausnahme `and`/`andi 0x1000` @0x8002af14-1c */
+            re15_body_push(plr, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
     }
 }
 
