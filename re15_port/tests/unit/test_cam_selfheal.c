@@ -72,6 +72,7 @@
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_cut10f0.h"   /* Runde 35 Spur K: Szene ROOM10F0 in dieser Sonde als gesehen markieren */
 
 extern scd_vm_t g_scd;
 extern re15_aot_state_t g_aot;
@@ -120,6 +121,12 @@ static void enter_room(re15_rdt_t *rdt, unsigned room_id, uint8_t entry_cut,
                        int32_t px, int32_t pz)
 {
     re15_actor_init(); scd_vm_init(); re15_aot_init();
+    /* Runde 35 Spur K: ROOM10F0 spielt beim ERSTEN Betreten eine Szene (Ada/Leon/Marvin,
+     * include/re15_cut10f0.h), die Kamera (Cut_chg) und Spieler haelt. Diese Sonde misst die
+     * freie RVD-Zonenkette des Raums, also "Szene gesehen" setzen — NACH scd_vm_init (nullt
+     * die Flags), VOR scd_room_reenter (dort feuert der Installer). */
+    if (room_id == RE15_CUT10F0_RAUM)
+        re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
     g_current_room_id = room_id;
     g_room_change.pending = 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];

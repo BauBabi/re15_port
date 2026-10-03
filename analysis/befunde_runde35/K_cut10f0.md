@@ -180,7 +180,12 @@ Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STA
   in der Reihenfolge von main.c) — alle 7 gruen (ctest -R "^unit_r35_cut10f0_").
 - integration_r35_cut10f0 (test_r35_cut10f0.cmake, Karte aus probe_r35_cut10f0_karte: ROOM10D0 (1900,0,-7000) Gierung 2048 vor der Tuer, Flags (3,50)=1 Schloss offen /
   (4,247)=1 Freeze-Szene gesehen): Lauf A CONTINUE -> Aktionstaste -> DOOR13-Sequenz -> ROOM10F0 -> Szene (Nachrichten 6..23 in Reihenfolge, 2x Se_on Bank 14 Satz 1,
-  Szenen-Ende, Folge-Hinweis 1 -> 2, schliessen, entry=FF01, Kamera Cut 2); Lauf B mit (9,71)=1: nichts davon. Ergebnis: (siehe Abschluss unten)
+  Szenen-Ende, Folge-Hinweis 1 -> 2, schliessen, entry=FF01, Kamera Cut 2); Lauf B mit (9,71)=1: nichts davon; Lauf C (Karte "in10f0", CONTINUE im Raum = Boot-Weg
+  main.c): Szene + Leihe. Ergebnis: 8/8 gruen (ctest -R r35_cut10f0: 7 Unit-Teile + integration_r35_cut10f0 146 s).
+- Erster Lauf der ganzen Suite: 485/486 — rot NUR unit_cam_selfheal (test_cam_selfheal.c M6: "ROOM10F0: die Kamera wechselt nie"), 3/3 deterministisch rot, kein Flattern.
+  Ursache = Folge dieser Spur: die Sonde betritt ROOM10F0 mit frischen Flags und erwartet den szenenfreien Raum (freie RVD-Kette); jetzt startet beim ERSTEN Betreten die Szene
+  (Cut_chg sperrt die Kamera-Automatik, der Spieler ist gehalten). Behoben in der Sonde selbst (enter_room: (9,71)=1 fuer ROOM10F0 NACH scd_vm_init, das die Flags nullt,
+  VOR scd_room_reenter — 6 Zeilen mit Kommentar "Runde 35 Spur K"); danach 3/3 gruen. Kein Spielcode geaendert: die Sonde misst die Kamera-Selbstheilung, nicht die Szene.
 - Suite: (siehe Abschluss unten)
 
 ## 6. OFFEN
