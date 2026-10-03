@@ -167,9 +167,16 @@ static const uint8_t k_p_1130[] = {
 static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres Betreten */
 
 /* PROGRAMM 2 — ROOM1040 Cut 1: Knall wie ROOM1030, Rolltor hoch (nur wenn (4,5)=0), die Zombies
- * (Raum-Records, Limit 5 @0x011F0) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A1A
- * woertlich (Se_on 0x0c/0x0a, Speed_set y -40, 135 Bilder, Sca_id_set/Sca_floor_set 2/3, Se_on 0x0b),
- * Zustand (4,5)=1 + (4,4)=1 wie sub01 @0x0157A/@0x01586.
+ * (Raum-Records, Limit 5 @0x011F0) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A26
+ * woertlich (Se_on 0x0c/0x0a, Speed_set y -40, For 20 / Cut_chg 1 / For 50 / Sca_id_set+Sca_floor_set 2/3 /
+ * For 65, Se_on 0x0b, Sleep 10 — Nachbesserung 1 M6: vorher zu For 135 zusammengefasst, die Sca-Zellen erst
+ * nach 135 statt nach 70 Bildern frei), Zustand (4,5)=1 + (4,4)=1 wie sub01 @0x0157A/@0x01586.
+ * AUFSTELLUNG (Nachbesserung 1 M1/M2): die erschienenen Zombies werden in der Form von ROOM1030 sub00
+ * @0x020C6..@0x0216E (Else-Zweig: For 20 ueber die Gegner-Plaetze, Member 6 != 0, Switch var5, je Fall Pos_set +
+ * Member_set 4) HINTER dem Tor in Navigations-Zone 0 aufgestellt. GEMESSEN (Abnahme s1040/s1040offen, Dossier
+ * §9.1): die Raum-Records @0x013B8.. stehen in Zone 5 (block.blk @0x0FF4, x < -27340, Nachbar nur Zone 3) und
+ * laufen ueber die Kreuzung (-27340,22950) VOM Tor weg; Record @0x01224 steht bei offenem Tor schon vor dem
+ * Tor 3800 vor dem Parkplatz und biss den Spieler.
  * AUFFUELLUNG auf 5 (NUTZER-VORGABE "5 Zombies durch kommen ... Wenn es bereits offen ist, kommen nur 5
  * Zombies"): die Raum-Records (main00 @0x011FC.., 20 Stueck, Tot-Bits 0x14..0x27) liefern durch das
  * Gleichzeitig-Limit 5 (Save(0x12,5) @0x011F0, Gate @0x80042214-3c) genau fuenf — solange noch fuenf
@@ -186,21 +193,56 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
     OP_EM(0, 0x16, 0x0d, 0x01, 95, -28394, 11500, 0)
 static const uint8_t k_p_1040_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
-    OP_CUT(RE15_IT_CUT_1040), OP_SLEEP(15),
+    OP_CUT(RE15_IT_CUT_1040),
+    EM_1040_LISTE,                                          /* erst erscheinen, dann im selben Takt aufstellen */
+};
+/* Aufstellung hinter dem Tor = ROOM1030 sub00 Else-Zweig @0x020C6..@0x0216E mit FUENF Faellen (Gleichzeitig-
+ * Limit 5 @0x011F0) statt sechs; Laengenfelder nachgerechnet wie im Original (Fall 6+14 B; Switch = 5*20 + Eswitch
+ * = 0x66; Ifel = Member_cmp 6 + Switch 4+0x66 + Calc 6 + Endif 2 = 0x78; For = 4 + 4 + 0x78 + 6 + 2 = 0x88).
+ * Orte/Gierung = PORT-WAHL: Zone 0 hinter dem Tor (x -27100..-23300, z > 1200 = dort warteten die Records
+ * @0x01390/@0x013A4 am geschlossenen Tor, Messzeilen T180..T360), in zwei Gassen der Toroeffnung (dort gingen
+ * sie durch: x -24.6k / -25.7k) gestaffelt, Gierung 1024 = -z = zum Tor (Vorwaertspunkt fz = z - sin,
+ * aot_common.c). Startabstand zum Parkplatz >= 16400 (bei ~23 je Bild > 700 Bilder; die Montage dauert < 460). */
+#define IT_AUF_FALL(n, x, z) 0x14, 0x00, 0x0e, 0x00, (n), 0x00, 0x32, 0x00, LE16(x), LE16(0), LE16(z), \
+                             0x34, 0x04, LE16(1024), 0x1a, 0x00
+static const uint8_t k_p_1040_aufstellen[] = {
+    0x24, 0x04, 0x00, 0x00, 0x24, 0x05, 0x00, 0x00,                   /* @0x020C6/@0x020CA var4 = var5 = 0 */
+    0x0d, 0x00, 0x88, 0x00, 0x14, 0x00,                               /* @0x020CE For 20 (Laenge 0x88) */
+    0x53, 0x02, 0x04, 0x00,                                           /* @0x020D4 Work = Gegner[var4] + Nop */
+    0x06, 0x00, 0x78, 0x00,                                           /* @0x020D8 Ifel_ck (Laenge 0x78) */
+    0x3e, 0x00, 0x06, 0x05, 0x00, 0x00,                               /* @0x020DC Member 6 != 0 (Platz besetzt) */
+    0x13, 0x05, 0x66, 0x00,                                           /* @0x020E2 Switch var5 (Laenge 0x66) */
+    IT_AUF_FALL(0, -24700, 1600),
+    IT_AUF_FALL(1, -25700, 2300),
+    IT_AUF_FALL(2, -25100, 3200),
+    IT_AUF_FALL(3, -24500, 4100),
+    IT_AUF_FALL(4, -25900, 4800),
+    0x16, 0x00,                                                       /* @0x0215E Eswitch */
+    0x26, 0x00, 0x00, 0x05, 0x01, 0x00,                               /* @0x02160 var5 += 1 */
+    0x08, 0x00,                                                       /* @0x02166 Endif */
+    0x26, 0x00, 0x00, 0x04, 0x01, 0x00,                               /* @0x02168 var4 += 1 */
+    0x0e, 0x00,                                                       /* @0x0216E Next */
+};
+static const uint8_t k_p_1040_knall[] = {
+    OP_SLEEP(15),
     OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(20),
-    EM_1040_LISTE,
 };
 static const uint8_t k_p_1040_tor[] = {
     0x36, 0x02, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019B2 */
-    OP_SLEEP(15),
+    OP_SLEEP(15),                                                             /* @0x019BE */
     0x36, 0x02, 0x0a, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019C2 */
-    OP_SLEEP(15),
+    OP_SLEEP(15),                                                             /* @0x019CE */
     OP_WORK(3, 0),                                          /* Objekt 0 = Rolltor (@0x019DE) */
     0x2f, 0x01, 0xd8, 0xff,                                 /* Speed_set y -40 (@0x019E2) */
-    0x0d, 0x00, 0x04, 0x00, LE16(135), 0x30, 0x02, 0x0e, 0x00,   /* For 135 { Add_speed; Evt_next } (@0x019E6) */
+    0x0d, 0x00, 0x04, 0x00, LE16(20), 0x30, 0x02, 0x0e, 0x00,   /* For 20 { Add_speed; Evt_next } (@0x019E6) */
+    0x29, 0x01,                                             /* Cut_chg 1 (@0x019F0) */
+    0x2f, 0x01, 0xd8, 0xff,                                 /* Speed_set y -40 (@0x019F2) */
+    0x0d, 0x00, 0x04, 0x00, LE16(50), 0x30, 0x02, 0x0e, 0x00,   /* For 50 (@0x019F6) */
     0x37, 0x02, 0x06, 0x00, 0x37, 0x03, 0x02, 0x00,         /* Sca_id_set (@0x01A00/@0x01A04) */
     0x39, 0x02, 0x06, 0x00, 0x39, 0x03, 0x02, 0x00,         /* Sca_floor_set (@0x01A08/@0x01A0C) */
+    0x0d, 0x00, 0x04, 0x00, LE16(65), 0x30, 0x02, 0x0e, 0x00,   /* For 65 (@0x01A10) */
     0x36, 0x02, 0x0b, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x01A1A */
+    OP_SLEEP(10),                                                             /* @0x01A26 */
     OP_SET(4, 5, 1), OP_SET(4, 4, 1),
 };
 static const uint8_t k_p_1040_ende[] = {
@@ -469,6 +511,8 @@ const uint8_t *re15_irons_tod_programm(int welches, int *out_len)
     case 14: p = k_p_1040_nach;      n = (int)sizeof k_p_1040_nach;      break;
     case 15: p = k_p_1030_bruch;     n = (int)sizeof k_p_1030_bruch;     break;
     case 16: p = k_p_1030_kriechen;  n = (int)sizeof k_p_1030_kriechen;  break;
+    case 17: p = k_p_1040_aufstellen; n = (int)sizeof k_p_1040_aufstellen; break;
+    case 18: p = k_p_1040_knall;     n = (int)sizeof k_p_1040_knall;     break;
     default: break;
     }
     if (out_len) *out_len = n;
@@ -640,6 +684,8 @@ static int programm_bauen(uint16_t room_id)
         if (room_id != RE15_IT_RAUM_1040) return 0;
         prog_anhaengen(k_p_1040_kopf, (int)sizeof k_p_1040_kopf);
         slots_zuweisen(0);                                   /* Auffuell-Records auf freie Plaetze */
+        prog_anhaengen(k_p_1040_aufstellen, (int)sizeof k_p_1040_aufstellen);   /* hinter das Tor (Zone 0) */
+        prog_anhaengen(k_p_1040_knall, (int)sizeof k_p_1040_knall);
         if (!re15_game_flag_get(4, 5)) prog_anhaengen(k_p_1040_tor, (int)sizeof k_p_1040_tor);
         prog_anhaengen(k_p_1040_ende, (int)sizeof k_p_1040_ende);
         if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030))   /* 1070 leer: gleich Cut 6 */
@@ -757,16 +803,79 @@ static void mess_zeile(void)
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         const re15_actor_t *a = &g_actors[i];
         if (!a->active || !a->type) continue;
-        fprintf(stderr, " %d:%02x(%d,%d) g=%02x s=%d st=%d fl=%04x mo=%d", i, a->type, (int)a->x, (int)a->z,
-                a->grid_id, a->sub_state_1, a->member_0b, a->anim_flags, a->motion);
+        fprintf(stderr, " %d:%02x(%d,%d)->(%d,%d) g=%02x s=%d st=%d fl=%04x mo=%d", i, a->type, (int)a->x, (int)a->z,
+                (int)a->steer_x, (int)a->steer_z, a->grid_id, a->sub_state_1, a->member_0b, a->anim_flags, a->motion);
     }
-    fprintf(stderr, "\n");
+    fprintf(stderr, " PL(%d,%d) hp=%d\n", (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
+#endif
+}
+
+/* BILANZ (Nachbesserung 1 M4 — nur Zaehlen/Protokoll, kein Spielverhalten): waehrend des 1040-Schritts je Aktor
+ * das erste Bild mit z < Tor-z (Rolltor-Objekt main00 @0x01168 `2d 00 .. 90 9d 00 00 98 fe` = (-25200,0,-360));
+ * ueber die ganze Kette (Szene .. Rueckkehr) die Spieler-HP (Start und Minimum). Ausgabe im debug.log beim
+ * Wechsel 1040 -> 1030 bzw. am Ende der Rueckkehr; die Riegel lesen dieselben Zahlen ueber
+ * re15_irons_tod_bilanz_1040 / re15_irons_tod_hp. */
+static int     s_b1040_bild = 0, s_b1040_n = 0;
+static int16_t s_b1040_durch[RE15_ACTOR_MAX];
+static uint8_t s_b1040_da[RE15_ACTOR_MAX];
+static int     s_hp_start = -1, s_hp_min = 0;
+
+static void bilanz_takt(void)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_zustand != RE15_IT_AUS) {
+        if (s_hp_start < 0) { s_hp_start = pl->hp; s_hp_min = pl->hp; }
+        if (pl->hp < s_hp_min) s_hp_min = pl->hp;
+    }
+    if (s_zustand != RE15_IT_S1040 || (uint16_t)g_current_room_id != RE15_IT_RAUM_1040) return;
+    if (s_b1040_bild == 0) { s_b1040_n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; } }
+    s_b1040_bild++;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || a->type != 0x16) continue;
+        if (!s_b1040_da[i]) { s_b1040_da[i] = 1; s_b1040_n++; }
+        if (s_b1040_durch[i] < 0 && a->z < RE15_IT_TOR_Z_1040) s_b1040_durch[i] = (int16_t)s_b1040_bild;
+    }
+}
+
+int re15_irons_tod_bilanz_1040(int *out_gesehen, int *out_letztes_bild)
+{
+    int durch = 0, letztes = -1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (s_b1040_da[i] && s_b1040_durch[i] >= 0) { durch++; if (s_b1040_durch[i] > letztes) letztes = s_b1040_durch[i]; }
+    if (out_gesehen) *out_gesehen = s_b1040_n;
+    if (out_letztes_bild) *out_letztes_bild = letztes;
+    return durch;
+}
+
+void re15_irons_tod_hp(int *out_start, int *out_min)
+{
+    if (out_start) *out_start = s_hp_start;
+    if (out_min) *out_min = s_hp_min;
+}
+
+void re15_irons_tod_bilanz_reset(void)
+{
+    s_b1040_bild = 0; s_b1040_n = 0; s_hp_start = -1; s_hp_min = 0;
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) { s_b1040_durch[i] = -1; s_b1040_da[i] = 0; }
+}
+
+static void bilanz_1040_melden(void)
+{
+#ifdef RE15_PLATFORM_PC
+    int n = 0, letztes = -1, durch = re15_irons_tod_bilanz_1040(&n, &letztes);
+    fprintf(stderr, "[irons-tod] Bilanz 1040: %d Zombies, durchs Tor (z < %d) %d, letzter bei Bild %d von %d;",
+            n, RE15_IT_TOR_Z_1040, durch, letztes, s_b1040_bild);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (s_b1040_da[i]) fprintf(stderr, " %d@%d", i, (int)s_b1040_durch[i]);
+    fprintf(stderr, "; Spieler-HP %d -> min %d\n", s_hp_start, s_hp_min);
 #endif
 }
 
 void re15_irons_tod_tick(void)
 {
     mess_zeile();
+    bilanz_takt();
     /* Marvins Marker-Alias (Aktor 4 spielt Adas Gesten-Record) JEDEN Takt setzen: auf dem Tuer-Weg bindet
      * main.c das Raum-RBJ erst NACH dem Installer (debug.log: "[irons-tod] ... Montage 11C0" vor "[rbj] room 11C0
      * cinematic overlay"), und re15_rbj_bind_room setzt die Aliase zurueck. Gemessen (Lauf v11c0, Bilder 340/370):
@@ -795,6 +904,9 @@ void re15_irons_tod_tick(void)
     if (s_zustand == RE15_IT_RUECKKEHR && !programm_laeuft()) {
         s_zustand = RE15_IT_AUS;
         log_it("Rueckkehr beendet, Steuerung frei");
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[irons-tod] Bilanz Kette: Spieler-HP %d -> min %d\n", s_hp_start, s_hp_min);
+#endif
     }
 }
 
@@ -818,6 +930,7 @@ void re15_irons_tod_install(uint16_t room_id)
         if (!re15_game_flag_get(RE15_IT_K_BANK, RE15_IT_K_BIT) ||
             !re15_game_flag_get(RE15_IT_IRONS_BANK, RE15_IT_IRONS_BIT)) return;
         if (!irons()) { log_it("kein Irons im Raum - Szene unterbleibt"); return; }
+        re15_irons_tod_bilanz_reset();
         umzug_vorbereiten();
         meldungen_einsetzen(room_id);
         knallbank_laden();
@@ -850,6 +963,7 @@ void re15_irons_tod_install(uint16_t room_id)
         return;
     case RE15_IT_RAUM_1030:
         if (s_zustand == RE15_IT_S1040) {
+            bilanz_1040_melden();
             s_zustand = RE15_IT_S1030;
             knallbank_laden();
             if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Montage 1030 (Programm 3)");

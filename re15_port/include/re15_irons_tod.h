@@ -149,6 +149,9 @@
 #define RE15_IT_BIT_1040_0    0x14
 #define RE15_IT_N_1040        20
 #define RE15_IT_N_1040_AUF    5
+/* Rolltor ROOM1040 = Objekt 0 main00 @0x01168 `2d 00 00 00 01 00 0a 00 00 00 90 9d 00 00 98 fe` = (-25200,0,-360):
+ * "durchs Tor" = z < -360 (Bilanz Nachbesserung 1 M4). */
+#define RE15_IT_TOR_Z_1040    (-360)
 
 /* Zustand der Kette (nur RAM; waehrend der Szene kann weder gespeichert noch gestorben werden). */
 #define RE15_IT_AUS        0
@@ -176,11 +179,16 @@ void re15_irons_tod_tick(void);
 /* Pruefhaken (kein Spielverhalten). */
 int            re15_irons_tod_zustand(void);
 void           re15_irons_tod_zustand_setzen(int z);      /* Riegel: Schritt vorgeben */
-const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..14 (s. .c) */
+const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..18 (s. .c) */
 const uint8_t *re15_irons_tod_laufprogramm(int *out_len);            /* RAM-Kopie der VM */
 const uint8_t *re15_irons_tod_meldung(uint16_t room_id, int msg_id, int *out_len);
 int            re15_irons_tod_lebend(int welche /* 0 = 1140, 1 = 1070 */);   /* Zaehlung ueber die Tot-Bits */
 int            re15_irons_tod_lebend_1040(void);                             /* lebende der 20 Raum-Records */
 int            re15_irons_tod_ohne_11c0(void);   /* 1 = (4,64)=1: Ada steht nicht mehr an Cut 13, Schnitt entfaellt */
+/* Bilanz (Nachbesserung 1 M4): Zombies im 1040-Schritt, davon durchs Tor (z < RE15_IT_TOR_Z_1040), letztes
+ * Durchgangsbild; Spieler-HP Start/Minimum ueber die ganze Kette. Reset beim Szenenstart. */
+int            re15_irons_tod_bilanz_1040(int *out_gesehen, int *out_letztes_bild);
+void           re15_irons_tod_hp(int *out_start, int *out_min);
+void           re15_irons_tod_bilanz_reset(void);
 
 #endif /* RE15_IRONS_TOD_H */

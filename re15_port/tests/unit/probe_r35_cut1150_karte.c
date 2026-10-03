@@ -30,13 +30,14 @@ int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
     unsigned room = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0x1130u;
-    int k = 0, e = 0, t1140 = 0, t1070 = 0, g = 0;
+    int k = 0, e = 0, t1140 = 0, t1070 = 0, g = 0, tor = 0;
     for (int a = 3; a < argc; a++) {
         if (!strcmp(argv[a], "nach10f0"))        k = 1;
         else if (!strcmp(argv[a], "ersteszene")) e = 1;
         else if (!strcmp(argv[a], "tot1140"))    t1140 = 1;
         else if (!strcmp(argv[a], "tot1070"))    t1070 = 1;
         else if (!strcmp(argv[a], "gesehen"))    g = 1;
+        else if (!strcmp(argv[a], "tor1040offen")) tor = 1;   /* Rolltor ROOM1040 schon offen: (4,5)=(4,4)=1 wie sub01 @0x0157A/@0x01586 */
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     scd_vm_init();
@@ -58,6 +59,7 @@ int main(int argc, char **argv)
     if (g) re15_game_flag_set(9, 73, 1);
     if (t1140) for (int i = 0; i < 5; i++) re15_game_flag_set(7, (uint8_t)(0xd3 + i), 1);
     if (t1070) for (int i = 0; i < 5; i++) re15_game_flag_set(7, (uint8_t)(0xc6 + i), 1);
+    if (tor) { re15_game_flag_set(4, 5, 1); re15_game_flag_set(4, 4, 1); }
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
