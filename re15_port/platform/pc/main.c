@@ -7622,7 +7622,8 @@ re_title:;
                         int n = re15_pc_force_explosion(fe_art, fz);
                         fprintf(stderr, "[harness] RE15_FORCE_EXPLOSION F%u art=%d slot=%d t=%02x P=(%d,%d,%d) "
                                         "Treffer=%d\n", (unsigned)g_engine.frame_count, fe_art, fe_slot,
-                                (unsigned)fz->type, fz->x, fz->y - 500, fz->z, n);
+                                (unsigned)fz->type, fz->x, g_actors[RE15_ACTOR_SLOT_PLAYER].y - 500, fz->z, n);
+                                /* Runde 35 Spur A: P.y = Spieler-Boden - 500 (fx_plattform_pc.c) */
                     }
                 }
                 {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein

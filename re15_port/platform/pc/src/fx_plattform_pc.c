@@ -338,8 +338,11 @@ int re15_pc_force_explosion(int art, const re15_actor_t *ziel)
      * (`lh v0,42(v1)` @0x800185a0 / `addiu v0,v0,-500` @0x800185a8), FUN_80012d60(500, &P, Art) (`ori a0,zero,0x1f4`
      * @0x80018598, `jal 0x80012d60` @0x800185b8) — hier liegt die "Granate" am Ziel. */
     /* Runde 35 Spur A: dieselbe Zustellung wie Routine 31 (RE2-Reichweite Box +-2000 @0x80010918 an P und
-     * P+900 @0x80020d98 -> RE1.5-Gegnerzweig; kein Spielerzweig), granate_r35.c. */
-    int32_t p[3] = { ziel->x, ziel->y - 500, ziel->z };
+     * P+900 @0x80020d98 -> RE1.5-Gegnerzweig; kein Spielerzweig), granate_r35.c. Die "Granate am Gegner" liegt
+     * auf dem BODEN DES WERFERS (granate_boden = Standhoehe des Werfers, Runde 34; Spieler-y), nicht auf der
+     * y des Ziels: der Gator-Boss (ROOM2090) liegt im Wasser GB_WATER_Y -1200 mit Kasten +1200 auf Deckhoehe —
+     * mit ziel->y - 500 lag P 1200 neben dem Deck und verfehlte ihn (gemessen int1: Treffer=0). */
+    int32_t p[3] = { ziel->x, g_actors[RE15_ACTOR_SLOT_PLAYER].y - 500, ziel->z };
     int n = re15_granate_r35_explosion(p, (int16_t)ziel->rot_y, (uint8_t)art);
     if (art != 2) {
         /* E8: Art 3/4 -> Aufschlag Op 49 (Saeure, re2_art 2) / Op 48 (Brand, re2_art 1) an der Lage */
