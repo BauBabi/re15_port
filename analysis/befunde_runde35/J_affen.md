@@ -237,3 +237,9 @@ Original: orig_scene/r3 (110 Savestates + PNG). Bilder: gdigrab lieferte in dies
 - Neue Assets fuer das Paket-Gate: keine (keine Dateien unter shared_assets/).
 - Bedienhinweis: der Brustschlag (Clip 3) kommt nur nach einem verbundenen Rear-up-Griff — nahe und frontal zum Gorilla stehen.
 - Die Zahl "3 Treffer bis zum Sprung" steht als RE15_AFFEN_TREFFER_BIS_SPRUNG in include/re15_affen.h (NUTZER-VORGABE).
+
+### Angepasste Alt-Riegel (Suite-Lauf 1: 2 rote Tests, beide kodierten die widerlegten Annahmen)
+- unit_member (tests/unit/test_member.c): id19 wurde als "hp" gefuehrt; byte-true ist +0x1ba das Boden-Y (FUN_8004116c Fall
+  0x13; Sce_em_set @0x80042210), die HP liegt bei +0x9a (@0x80013000). Riegel liest jetzt dog_floor_y.
+- unit_maggot_ai (2f): erwartete den Vergeltungs-Sprung nach JEDEM Flinch (Original). Mit der NUTZER-VORGABE kommt er beim
+  3. Treffer; der Teil stellt mag_hit_ctr = RE15_AFFEN_TREFFER_BIS_SPRUNG-1 und misst weiter den Original-Exit +0x5=7.

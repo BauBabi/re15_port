@@ -33,6 +33,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
 #include "re15_ems.h"
+#include "re15_affen.h"   /* RE15_AFFEN_TREFFER_BIS_SPRUNG (Runde 35 Spur J) */
 #include "re15_emd.h"
 #include "re15_damage.h"   /* re15_enemy_apply_hitbox, re15_enemy_take_damage */
 
@@ -301,6 +302,10 @@ int main(void)
     /* the weapon-resolver hurt entry (byte-true FUN_80011f50: +0x5=weapon @0x800124bc, +0x7=0
      * @0x80012428, +0x6=hit-dir @0x80012438-50, +0x93|=1, +0x4=2 @0x80012520): handgun lane 2 */
     m->state = 2; m->sub_state_1 = 2; m->sub_state_2 = 1; m->sub_state_3 = 0; m->hit_react = 1;
+    /* Runde 35 Spur J (NUTZER-VORGABE "erst nach 3 Treffern springen", re15_affen.h): der
+     * Vergeltungs-Sprung (+0x5=7 @0x8011b188-98) kommt beim 3. Boden-Flinch; die ersten zwei
+     * enden in CHASE (+0x5=3). Dieser Teil misst den Original-Exit -> als 3. Treffer stellen. */
+    m->mag_hit_ctr = RE15_AFFEN_TREFFER_BIS_SPRUNG - 1;
     int flinched = 0;
     for (int f = 0; f < 100 && m->state == 2; f++) {
         re15_enemy_ai_run_all(0);
