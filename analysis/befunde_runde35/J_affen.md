@@ -999,3 +999,14 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   50D0/50D1 nicht nachgemessen.
 - Werkzeug: ViGEm-Geisterpad blockiert den Savestate-Recorder; der GDB-Weg (gdbspur/gdbmulti/gdbpl/gdbrng in
   `jnb1/`/`jnb2/`, settings.ini [Debug] EnableGDBServer nur waehrend der Messung) ersetzt ihn.
+
+## Fuer den Nutzer (Stand Nachbesserung 2)
+- Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine.
+- Spuerbar neu: (1) Wirft ein Gorilla Leon, laeuft der Wurf jetzt wie im Original: Leon fliegt die volle Bahn,
+  landet notfalls im Hindernis und wird Bild fuer Bild herausgeschoben, steht dann mit der richtigen (rueckwaerts
+  gespielten) Aufsteh-Animation auf — vorher blieb er mitten im Wurf an einer Ersatzklemme haengen und der
+  zweite Gorilla schob ihn weg. (2) Ohne Eingabe beissen die Gorillas im Original-Rhythmus (etwa alle 1,7 s,
+  beide zugleich) und Leon stirbt nach ~40 s wie im Original — vorher 1,2 s-Rhythmus und Tod nach 33 s.
+  (3) Leons Laufwege in Zwischensequenzen (Plc_dest) enden jetzt auf der Einheit genau wie im Original (vorher
+  bis ~1 Einheit je Schritt zu kurz, ueber einen langen Gang ~25 Einheiten); das gilt fuer alle Raeume.
+- Bedienhinweis: keine. Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 -> affen_fuss.log.
