@@ -12,20 +12,29 @@
 #     unit_r35_cut10f0_szene     echte VM + Spielschritt: Szene startet beim Raumaufbau, Nachrichtenfolge,
 #                                Ada an den Monitoren, Marvin geparkt -> an der Tuer -> schraeg links, Leon
 #                                links von Ada, Kamera 2 -> 0 -> 2 -> 0 -> 2 -> 0 -> 2, Tuerknall 2x, Balken,
-#                                Abgang beider, Flags danach, Hinweis angefordert, MAIN01-Weiche aktiv;
-#                                Leons Gierung je Zeile (zu Marvin bei 11/16/19/21/22, zu Ada bei 7/12),
-#                                Zeilenabstand >= 90 Bilder (kuerzeste Original-Zeile ROOM11B0 @0x01574)
+#                                Abgang beider, Flags danach, Hinweis angefordert, MAIN01-Weiche noch ZU
+#                                (Nachbesserung 1: MAIN01 erst nach der 1150-Montage);
+#                                Leons Gierung je Zeile (zu Ada schon bei Zeile 6 an der Tuer und bei 7/12, zu
+#                                Marvin bei 11/16/19/21/22), Zeilenabstand >= 90 Bilder (kuerzeste Original-Zeile
+#                                ROOM11B0 @0x01574)
 #     unit_r35_cut10f0_einmal    danach erneuter Raumaufbau: keine Szene, kein Spawn; Elza-Raum 10F1: nie
 #     unit_r35_cut10f0_karte     Hinweiskette K1 (ROOM11C0, Blatt 0/Rechteck 4) -> K2 (ROOM1150, Blatt 4/
 #                                Rechteck 2), beide Ziele in der normalen Karte bis zum Besuch; Runde-33-
 #                                Eintrag unveraendert; ECHTER WEG: ROOM1150 vor der Szene schon besucht ->
-#                                blinkt trotzdem, bis Leon es NACH der Szene betritt (Latch (9,72))
-#     unit_r35_cut10f0_bgm       Tabellenweiche: -1 vor der Szene, 0xFF01 danach fuer jeden STAGE1-Raum
-#                                ausser 0x1C, -1 in anderen Stages, -1 sobald ROOM11C0 besucht ist
+#                                blinkt trotzdem, bis Leon es NACH der Szene betritt (Latch (9,72)); ROOM11C0
+#                                blinkt bis zum Original-Flag (4,64) der Ankunftsszene (ROOM11C0 sub02 @0x0184E) -
+#                                das Besucht-Bit der Zone allein (Montage-Schnitt) beendet es nicht
+#     unit_r35_cut10f0_bgm       MAIN01-Fenster: zu nach der 10F0-Szene allein; zu waehrend der Montage ((9,73)
+#                                gesetzt, Szene laeuft); am Montage-Ende auf + EIN Anstoss der Raummusik; 0xFF01
+#                                fuer jeden STAGE1-Raum ausser 0x1C; Auskunft sperrt Skript-Befehle an den MAIN-Slot
+#                                (Zwinger ROOM11D0 sub01 @0x01710); spaetere Szene schliesst nicht; (4,64) schliesst;
+#                                Laden im Fenster / ausserhalb -> der Tick zieht die Raummusik nach
 #   integration_r35_cut10f0     echte exe, Spielstand + CONTINUE in ROOM10D0, Aktionstaste an der Tuer,
-#                               Szene im Zielraum genau einmal; MAIN01 nach dem Laden und durch die Tuer
-#                               10F0 -> 10D0 ("laeuft durch"), Ende an der Tuer 11B0 -> 11C0, Latch (9,72)
-#                               beim Raumaufbau ROOM1150 (test_r35_cut10f0.cmake, Laeufe A-F)
+#                               Szene im Zielraum genau einmal; (9,73) mitten in der Szene -> MAIN01 erst nach
+#                               ihrem Ende; MAIN01 nach dem Laden und durch die Tuer 10F0 -> 10D0 ("laeuft durch"),
+#                               Ende an der Tuer 11B0 -> 11C0 ((4,64)), ROOM1150: Tabelle bis (9,73), Latch (9,72);
+#                               Tuer ROOM1180 -> Zwinger ROOM11D0: Skript-Stop trifft MAIN01 nicht
+#                               (test_r35_cut10f0.cmake, Laeufe A-G)
 add_executable(test_r35_cut10f0 ${CMAKE_CURRENT_LIST_DIR}/../test_r35_cut10f0.c)
 target_link_libraries(test_r35_cut10f0 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_cut10f0 PRIVATE ${CMAKE_SOURCE_DIR}/include)

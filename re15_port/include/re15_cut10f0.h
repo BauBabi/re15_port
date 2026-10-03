@@ -43,7 +43,9 @@
  *
  * CHOREOGRAFIE (Fortsetzung, Dossier §8): jede Dialogzeile laeuft im Takt der Original-Dialoge
  * Sleep 40 + 50 + 20 = 110 Bilder (ROOM11B0 sub06 @0x014FA/@0x01502/@0x0150A); Leon dreht sich per
- * Plc_dest Modus 9 (ROOM11C0 sub02 @0x0185E) dem zu, mit dem er spricht — zu Marvin vor "Hey Marvin, glad
+ * Plc_dest Modus 9 (ROOM11C0 sub02 @0x0185E) dem zu, mit dem er spricht — zu Ada schon VOR der ersten Zeile
+ * "Hey - how did you came in here?" (Nachbesserung 1: Blick @0x01886, Drehung @0x01890, Schnitt, Sleep 20
+ * @0x0189C, dann Zeile + Clip 15 @0x018A0 — vorher zeigte der Arm 78,6 Grad an ihr vorbei), zu Marvin vor "Hey Marvin, glad
  * you made it!", zu Ada vor "Allow me to introduce you. This is..." (Arm Richtung Ada), danach wieder zu
  * Marvin.
  */
