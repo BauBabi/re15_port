@@ -940,3 +940,16 @@ Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, beri
 - 2026-10-03 (Sitzungsbeginn siehe `date` im Commit): Baum sauber, HEAD 8f88ab61 (Abnahme 1). Maengel N1 (Werfer-Geschosse
   und Flammenstrahl ignorieren ueber Bandhoehe die Formen 2/4..9; Punkttest je Bild tunnelt) und N2 (Python ohne
   Kritklasse des Redhawk). Pflichtlektuere AUFTRAG.md/VERTRAG.md/B_abnahme_1.md/§3/§6/§8 gelesen.
+- 21:48 exe-Kopie `re15_port/build/platform/pc/re15_r35nb2_alt.exe` (cmp-gleich re15_pc.exe = re15_r35nb1.exe = Stand vor
+  Nachbesserung 2) fuer Vorher-Messung und Gegenprobe. Skript `mess_r35b/nb2/run_nb2.sh` (Laeufe d18/d14/t7/t20, Rezepte
+  der Abnahme 1 §2.6/§2.7), Auswertung `mess_r35b/nb2/dreieck.py` (Flugplaetze im festen Teil der Zelle 21 nach
+  push_diag5 / LAB_8003c734: fest, wenn d*(px-x)/w < pz-z).
+
+### 9.1 Messung VORHER (eigene Laeufe, `mess_r35b/nb2/vorher/`, alle exit 0) — Befunde der Abnahme reproduziert
+* N1 Rakete `d18` (ROOM10E0, Leon (-3000,-3000) Blick 3072, `RE15_GIVE=18:4`, `M0.6,MA0.3,M1.6,W2`): RE2FLUG
+  `(-2477,-2575,-1657)`, `(-2389,-2607,-896)`, `(-2302,-2640,-134)`, dann `(-2215,-2673,627)`, `(-2128,-2706,1389)`,
+  `(-2041,-2739,2150)` (alle drei im festen Dreieck), `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2070,-2728,1897)`.
+  dreieck.py: `Plaetze 6, im festen Dreieck 3, z max 2150`.
+* N1 Flamme `d14` (`14:100`, `M0.6,MA1.5,M1.6,W2`): `Plaetze 360, im festen Dreieck 47, z max 769` (z.B. (-2310,-1938,501)).
+* N2 `t7`/`t20` (ROOM1140, Leon (200,-10300) Blick 1024, `7:6` bzw. `20:6`, `M0.6,MA0.3,M1.6,W2`), state.log F19 Platz 5
+  (Typ 0x11, d=9272): Redhawk `[5 t=11 st=3 ss1=5 ...] hp=-1`, Python `[5 t=11 st=3 ss1=5 ...] hp=-650`.
