@@ -36,6 +36,8 @@
  *           y = -2500 im Wagen (@0x1996) und tritt bei (-3617,0,-17798) aus (@0x1A2E); dazu die Klappe (Objekt 0)
  *           waehrend des Umklappens — rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
  *   takt    Punkt 4 (M1): zwei Gorillas ab der Original-Lage Bild F195 (GDB-Einzelbild-Spur) -> Treffer-Bilder/-Abstaende.
+ *   griff   Punkt 4/5 (M1): verbundener Rear-up-Griff ab derselben Lage (e1 sub 15 in F250, wie das GDB-Experiment im
+ *           Original): Pin F254, Leon steht bis Bild 0xb, erste Wurf-Platzierung F266, 0 HP.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -647,7 +649,9 @@ static int bank_laden_27(void)
     if (ok) {
         re15_tim_t tim = (re15_tim_t){0};
         ok = (re15_emd_parse_container(s_blob27, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0);
-        if (ok) { eb->ok = 1; eb->buf = NULL; } else eb->type = 0;
+        if (ok) { eb->ok = 1; eb->buf = NULL;
+                  eb->victim_ok = (re15_emd_parse_victim_bank(s_blob27, len, &eb->skel_victim, &eb->anim_victim) == 0); }   /* wie main.c:1270 */
+        else eb->type = 0;
     }
     free(ems);
     return ok;
@@ -735,6 +739,52 @@ static void teil_takt(void)
     takt_lauf(1, wechsel, 8);
 }
 
+
+/* ---------------------------------------------------------------------------------------------- */
+/* M1-Nachtrag (Nachbesserung 1): verbundener Rear-up-Griff gegen das Original. Original-Experiment per GDB:
+ * r3 s033 direkt geladen, in F250 e1 +0x5/+0x6/+0x7 := 15/0/0 (`M800ace25,3:0f0000`), Leon ohne Eingabe
+ * (scratch jnb1/g_griff.txt). Original: Pin in F254 (Clip 0x1c Bild 4), Spieler-Zustand 5 ab F255 (Yaw := Gorilla
+ * 2823), Leon bleibt F255-F265 stehen (Front-Intro ohne 0x8001ad68), ab F266 Wurf-Platzierung am Gorilla-Anker,
+ * KEIN HP-Verlust (76 -> 76; in B[15] 0x8011a878-af40 und im Opfer-Handler 0x8011c118-c598 gibt es keinen
+ * Schreiber auf Spieler+0x9a), Leon frei (Zustand 1) in F381 bei (-4645,-10726). */
+static void teil_griff(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) return;
+    PRUEF(bank_laden_27(), "EM027-Bank geladen");
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    if (!a || !b) { PRUEF(0, "zwei Gorillas"); return; }
+    pl->x = -6729; pl->z = -12800; pl->rot_y = 647; pl->hp = 82; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();
+    a->x = -5525; a->z = -14883; a->y = 0; a->rot_y = 2731; a->grid_id = 0x10; a->floor = 0;
+    a->state = 1; a->sub_state_1 = 3; a->sub_state_2 = 1; a->sub_state_3 = 0; a->motion = 5; a->anim_frame = 10;
+    a->anim_frac = 0; a->dog_blocked_ctr = 9; a->hit_react = 0; a->dog_flags = 1; a->mag_boost = 4;
+    b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
+    b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
+    int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0;
+    for (int f = 196; f < 196 + 300; f++) {
+        if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
+        int32_t ox = pl->x, oz = pl->z;
+        frame(0, 0);
+        if (f >= 249 && (f < 300 || (f % 6) == 0))
+            printf("    F%d hp%d pl %d/%d c%d/%d h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) r%d\n", f, (int)pl->hp, pl->state,
+                   pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, pl->hit_react, (int)pl->x, (int)pl->z, (int)pl->rot_y,
+                   a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)a->rot_y);
+        if (f_pin < 0 && a->sub_state_1 == 15 && a->sub_state_2 >= 3) { f_pin = f; px0 = pl->x; pz0 = pl->z; hp_griff = pl->hp; }
+        if (f_pin >= 0 && f_sprung < 0 && dist2d(pl->x, pl->z, ox, oz) > 600.0) f_sprung = f;
+        if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) f_frei = f;
+    }
+    printf("  Pin F%d bei (%d,%d) hp %d, erster Platzierungs-Sprung F%d, frei F%d bei (%d,%d) hp %d\n",
+           f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)pl->x, (int)pl->z, (int)pl->hp);
+    PRUEF(f_pin >= 253 && f_pin <= 255, "Pin-Latch in F%d (Original F254: Clip 0x1c Bild 4, a780 = 0 -> Front-Griff @0x8011aa4c-bc)", f_pin);
+    PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original F255: (-6660,-12486)) — vorher sprang er hier ~1200-1600", (int)px0, (int)pz0);
+    PRUEF(f_sprung >= 265 && f_sprung <= 267, "erste Wurf-Platzierung in F%d = Bild 0x0c des Opfer-Clips (Original F266; Front-Intro 0..0xb ohne 0x8001ad68,"
+          " aca59 = a780 VOR dem Yaw-Latch @0x8011ac50-68 / @0x8011acac)", f_sprung);
+    PRUEF(hp_griff == 76, "der Griff kostet keine HP (%d; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in 0x8011a878-af40 / 0x8011c118-c598)", hp_griff);
+}
 /* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
@@ -752,6 +802,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "frac")   || !strcmp(teil, "alle")) teil_frac();
     if (!strcmp(teil, "anker")  || !strcmp(teil, "alle")) teil_anker();
     if (!strcmp(teil, "takt")   || !strcmp(teil, "alle")) teil_takt();
+    if (!strcmp(teil, "griff")  || !strcmp(teil, "alle")) teil_griff();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

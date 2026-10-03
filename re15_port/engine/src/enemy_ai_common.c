@@ -9291,9 +9291,8 @@ static void re15_maggot_ai_tick(int slot)
                 re15_audio_room_se(10);                       /* Se(10) @0x8011abe8-f8 */
                 e->sub_state_2 = 3;                           /* @0x8011abf4-fc */
                 s_player_grabbed = 1;                         /* aca58=5 @0x8011ac40-48 (+ entity/player flags|=0x1000 @0x8011ac2c-54) */
-                re15_player_victim_latch(e, pl);              /* player anchor 0x8001ac38 @0x8011ac18 + a8f8(player,0x800) yaw latch @0x8011acac-b0 */
+                re15_player_victim_latch_ex(e, pl, re15_maggot_a780(e, pl));   /* Runde 35 Spur J: aca59 = a780 @0x8011ac50-68 VOR dem Yaw-Latch a8f8 @0x8011acac */
                 re15_affen_pin_anker(e, pl);                  /* Runde 35 Spur J: FUN_8001ac38 @0x8011ac18 ausfuehren (re15_affen.h (5)) */
-                g_player_victim_variant = (uint8_t)re15_maggot_a780(e, pl);   /* aca59 = a780 ret @0x8011ac50-68 */
                 pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
                 break;

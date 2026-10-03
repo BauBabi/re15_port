@@ -625,3 +625,32 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   218/268/321/371/424/475/527/579) und Wechseltakt nach Desync e2 +0x1dc := 30 in F203 (Soll = GDB-Spur
   218/254/290/326/362/397/433/469). Port: groesste Abweichung **3** bzw. **4** Bilder (Schranke 6, das
   Original streut je Biss +-3), mittlerer Abstand **52,0** (Original 51,6) bzw. **35,3** (35,9). Gruen.
+
+### M1-Nachtrag — Rear-up-Griff gegen das Original: 0 HP belegt, Sprung beim Zupacken = Port-Defekt (behoben)
+- **Original-Experiment (GDB):** r3 s033 direkt geladen, in F250 e1 +0x5/+0x6/+0x7 := 15/0/0
+  (`M800ace25,3:0f0000`, `jnb1/g_griff.txt`). Ergebnis Bild fuer Bild: Clip 0x1c ab F251, Pin in F254
+  (Bild 4), Spieler-Zustand 5 ab F255 mit Yaw := Gorilla (2823), Opfer-Clip 1 **ab Bild 0** (Front-Griff),
+  Leon steht F255-F265 auf (-6660,-12486), **erste Wurf-Platzierung F266** (Bild 0x0c), HP **76 -> 76**,
+  frei (Zustand 1) in F381 bei (-4645,-10726).
+- **0 HP = Original:** Roh-Scan B[15] 0x8011a878-0x8011af40 und Opfer-Handler 0x8011c118-0x8011c598
+  (Phasentabelle @0x80100404): kein Schreiber auf Spieler+0x9a (`154(` 0 Treffer; der einzige
+  `sh v0,154(v1)` der Umgebung liegt bei 0x8011c748 in einer anderen Funktion).
+- **Port vorher (Riegel `griff`, gleiche Lage, Opfer-Bank geladen wie main.c:1270):** Pin F254, Opfer-Clip ab
+  **Bild 0x0c** (Rueck-Variante) -> Leon springt im Latch-Bild von (-6658,-12488) nach (-7835,-11422) —
+  genau der "~1600 Einheiten beim Zupacken"-Befund der Abnahme (t6 F1202->F1203).
+- **Ursache (selbst disassembliert 0x8011abe8-acb4):** `jal 0x8001ac38` @0x8011ac18 (Anker) ->
+  `sb v1(5),-13736(at)` @0x8011ac48 (aca58 = 5) -> **`jal 0x8001a780` @0x8011ac50** (a0 = Spieler) ->
+  `sb v0,-13735(at)` @0x8011ac68 (aca59 = a780) -> ... -> **`jal 0x8001a8f8` @0x8011acac, a1 = 0x800**
+  (Yaw-Latch). Das Original rechnet die Variante mit Leons ALTEM Blick. Der Port rief erst
+  re15_player_victim_latch (setzt den Yaw auf den des Gorillas) und danach a780 -> Spieler- und Gorilla-Yaw
+  gleich -> a780 = 1 -> immer Rueck-Variante -> Opfer-Clip ab Bild 0x0c -> sofortige Platzierung.
+- **Aenderung (1 Zeile, enemy_ai_common.c Pin-Latch):** `re15_player_victim_latch_ex(e, pl,
+  re15_maggot_a780(e, pl))` — das Argument wird VOR dem Yaw-Latch ausgewertet; die nachtraegliche
+  Zuweisung `g_player_victim_variant = a780` entfaellt.
+- **Nachher (Riegel `griff`):** Pin F254 bei (-6658,-12487), Leon steht bis Bild 0x0b, **erste Platzierung
+  F266** (Original F266), HP 76 -> 76. Die Platzierungs-Lagen der Bilder 15-18 decken sich mit dem
+  Original auf ~10 Einheiten, aber um 1 Bild frueher (Port F269 (-7114,-12075) = Original F270
+  (-7110,-12078)); ab Bild ~19 laeuft der Wurf im Port entlang z ~ -12500 nach Osten, im Original nach SO
+  (z bis -13711) und endet in einem Sprung nach (-5381,-10551) bei Bild 0x25 -> Endlage weicht ~1900 ab
+  (OFFEN, Messweg unten). Riegel `griff` prueft Pin-Bild, Stehen beim Zupacken, Bild der ersten
+  Platzierung (+-1) und 0 HP; alle 15 r35-Riegel + unit_member/unit_maggot_ai gruen.
