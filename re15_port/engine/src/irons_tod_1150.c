@@ -210,7 +210,9 @@ static const uint8_t k_p_1040_nach[] = { EM_1040_LISTE, OP_END };   /* spaeteres
  *   @0x0276C Aot_reset Slot 17 -> msg 1, @0x02776 Se_on 0x0c (der Knall), @0x02782..@0x0278B Cut_replace
  *   0->9 3->10 4->11 6->12 (Tor aufgebrochen), @0x0278E/@0x02792 Sca_id_set 2/3, (4,15)=1 (sub01
  *   @0x02198), @0x02796/@0x0279A Save var5/var7 = 0, dann VIERMAL `18 09` Gosub sub09 (@0x0279E, @0x027A4,
- *   @0x027B4, @0x027BA; Pausen 5/20/10 @0x027A0/@0x027A6/@0x027B6) — sub09 @0x027E0 sucht ab Index var5
+ *   @0x027B4, @0x027BA; im Original mit Pausen 5/20/10, hier unmittelbar hintereinander, weil die frisch
+ *   erschienenen Zombies sonst aus dem Warte-Rechteck laufen, bevor sub09 sie findet — gemessen: von drei
+ *   wurde mit den Original-Pausen nur einer erfasst, Dossier §8) — sub09 @0x027E0 sucht ab Index var5
  *   den naechsten Zombie mit AOT-Stempel 5 (member 0x0f == 5 @0x02804 = steht im Warte-Rechteck Slot 5
  *   @0x01CF2 (-12900,-25300,9200,1100) hinter dem Tor) und setzt ihm das Kriech-Bit (member 0x10 |= 0x1000
  *   @0x0280A..@0x02814 -> Toggle-Handler @0x8011f890[0x10] = FUN_80104f80), @0x027AA Cut_chg 12,
@@ -251,20 +253,19 @@ static const uint8_t k_p_1030_tuer[] = {
 };
 static const uint8_t k_p_1030_tor[] = {
     OP_CUT(RE15_IT_CUT_1030_TOR), OP_SLEEP(15),
-    EM_KRIECHER_LISTE,                                      /* warten hinter dem Tor (Stempel 5) */
-    OP_SLEEP(20),
     0x46, 0x11, 0x01, 0x31, 0x01, 0x00, 0xff, 0xff, 0x00, 0x00,               /* sub08 @0x0276C */
     0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776: der Knall */
     0x4b, 0x00, 0x09, 0x4b, 0x03, 0x0a, 0x4b, 0x04, 0x0b, 0x4b, 0x06, 0x0c,   /* sub08 @0x02782..@0x0278B */
     0x37, 0x02, 0x06, 0xf7, 0x37, 0x03, 0x06, 0xf7,                           /* sub08 @0x0278E/@0x02792 */
     OP_SET(4, 15, 1),                                                         /* sub01 @0x02198 */
+    EM_KRIECHER_LISTE,                                      /* erscheinen im Warte-Rechteck hinter dem Tor */
+    OP_SLEEP(2),                                            /* ein Bild fuer den AOT-Stempel (Scan nach der VM, @0x8001ce1c) */
     0x24, 0x05, 0x00, 0x00, 0x24, 0x07, 0x00, 0x00,                           /* sub08 @0x02796/@0x0279A */
-    0x18, 0x09, OP_SLEEP(5),                                                  /* sub08 @0x0279E/@0x027A0 */
-    0x18, 0x09, OP_SLEEP(20),                                                 /* sub08 @0x027A4/@0x027A6 */
+    0x18, 0x09, 0x18, 0x09, 0x18, 0x09, 0x18, 0x09,         /* sub08 @0x0279E/@0x027A4/@0x027B4/@0x027BA: Gosub sub09 x4 */
+    OP_SLEEP(20),                                                             /* sub08 @0x027A6 */
     OP_CUT(12),                                                               /* sub08 @0x027AA */
-    0x18, 0x09, OP_SLEEP(10),                                                 /* sub08 @0x027B4/@0x027B6 */
-    0x18, 0x09,                                                               /* sub08 @0x027BA */
     OP_SLEEP(15), OP_SLEEP(20), OP_SLEEP(180),                                /* sub08 @0x027BC..@0x027C4 */
+    OP_SLEEP(120),                                          /* bis die Kriecher durchs Tor sind (gemessen, Dossier §8) */
     OP_SET(5, 20, 1),                                                         /* sub08 @0x027DA */
     OP_DOOR(RE15_IT_PARK_11C0_X, RE15_IT_PARK_11C0_Z, RE15_IT_PARK_11C0_YAW, 0x1c, RE15_IT_CUT_11C0),   /* Raum 0x1c = ROOM11C0 (dest_id = 0x1000 | 0x1c<<4) */
     OP_AOT_ON,

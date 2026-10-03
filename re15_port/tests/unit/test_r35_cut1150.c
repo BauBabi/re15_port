@@ -113,6 +113,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     g_game = flags_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     bank_laden(0x45, 0); bank_laden(0x42, 1); bank_laden(0x40, 2);   /* Irons, Ada, Marvin */
+    bank_laden(0x16, 3);   /* Zombie Typ 0x16 (Raum-Records 1040/1030, Kriecher): ohne Bank keine Wurzelbewegung */
     re15_player_cmd_reset();
     re15_pauseflags_clear();
     g_letterbox_level = 0;
@@ -139,7 +140,7 @@ static void flags_leeren(void) { re15_game_state_init(); }
  * ohne geladene Bank loest der Marker-Binder den RBJ-Record nicht auf und die Clip-Laengen fallen auf
  * die eingebetteten Tabellen zurueck (Irons' Clip 2 waere 52 statt 90 Bilder). */
 static uint8_t *s_ems = NULL; static size_t s_ems_sz = 0;
-static uint8_t  s_bank_buf[3][0x60000];
+static uint8_t  s_bank_buf[4][0x60000];
 static void bank_laden(uint8_t type, int buf)
 {
     if (!s_ems) {
@@ -187,6 +188,7 @@ static void gegner_dump(const char *marke, int bild)
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
         const re15_actor_t *a = &g_actors[s];
         if (!a->active || !a->type) continue;
+        if (getenv("RE15_R35L_DUMP_AB") && s < atoi(getenv("RE15_R35L_DUMP_AB"))) continue;
         printf(" %d:t%02x(%d,%d,y%d)g%02x s%d/%d st%d fl%04x mo%d", s, a->type, (int)a->x, (int)a->z, (int)a->y, a->grid_id,
                a->state, a->sub_state_1, a->member_0b, a->anim_flags, a->motion);
     }
