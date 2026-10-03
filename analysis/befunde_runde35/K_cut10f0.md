@@ -733,6 +733,23 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   Protokoll geprueft: m1/m2 zeigen das Oeffnen GENAU zwischen `z1/27 = 0` (Raumaufbau) und `z2/7 = 1` (erster
   Programmlauf), m3 nicht mehr.
 
+### 9.8 Tests und Suite der Nachbesserung 1
+| Test | prueft (Mechanik) | Ergebnis |
+|---|---|---|
+| unit_r35_cut10f0_szene | echte VM: Zeile 6 Leon-Gierung 2941 (Soll 2942 zu Ada, Toleranz 160/4096) am Tuer-Spawn, Blick/Drehung VOR der Zeile; Gierungen der Zeilen 7/11/12/16/19/21/22; Zeilentakt | gruen |
+| unit_r35_cut10f0_bgm | Fenster-Zustandsmaschine: zu nach der 10F0-Szene allein; zu waehrend der Montage; **zu beim Raumaufbau mitten in der Montage (nur Init-Lauf, Rahmen-Flags geloescht) und nach dessen erstem VM-Lauf** (neu, §9.7); auf + EIN Anstoss am Montage-Ende in ROOM1150; MAIN01 in 16 STAGE1-Raeumen; Zwinger-Sperre Slot 0; 11C0 eigene Musik; Zonen-Bit 11C0 beendet nichts; (4,64) schliesst; Laden: erst nach dem ersten VM-Lauf auf | gruen (Gegenprobe: mit `tick_count > 0` faellt der neue Fall) |
+| unit_r35_cut10f0_karte | Kachel 11C0 bis (4,64), 1150 bis (9,72); Montage-Schnitt 11C0 (Zonen-Bit) beendet das Blinken nicht | gruen |
+| unit_r35_cut10f0_programm/_texte/_tuerton/_einmal | Opcode-Walk 1350 B/288 Opcodes, 18 Zeilen woertlich, Tuerton == DOOR13[0..0x3DA8), Szene genau einmal | gruen |
+| integration_r35_cut10f0 | echte exe, echte Tuer ROOM10D0 -> ROOM10F0 (A), (9,71)=1 (B), Boot-Weg (C), Laden im Fenster (D), Ende an der Tuer 11B0 -> 11C0 (E), ROOM1150 (F), Zwinger-Stop ueber die Tuer 1180 -> 11D0 (G) | gruen, 229,8 s |
+| unit_rotor_bgm_pin | bindet audio_pc.c ohne platform-Dateien — Anlass, den Haken-Rumpf in die Engine zu legen (§9.6) | gruen |
+
+Ganze Suite am Code-Stand 515dc35c (danach nur Dossier-Commits), `bash re15_port/tools/local_build.sh all`, 18:16-18:38,
+parallel zum Messlauf m3 — woertliche Schlusszeile:
+`=== LOCAL-BUILD-OK (all) — Tests 486/486`
+(Schranke RE15_MIN_TESTS=478; kein Fenster-Haken geflattert, nichts nachgefahren). Der vom Vorgaenger um 17:35 gestartete
+Lauf am Stand fc841604 hatte 485/486 (rot nur `integration_r32_tor_hell`, 5,16 s, Fenster-Haken unter Last; im Lauf
+oben gruen).
+
 ### 9.9 OFFEN (Stand Nachbesserung 1; ersetzt §6)
 - **Sprachaufnahmen fehlen:** die 18 Zeilen laufen stumm mit Untertitel, bis der Nutzer
   synchro/STAGE1/room10F0/main06..main23.wav liefert (Liste §9.10); dann haelt der Stimmen-Riegel die naechste Zeile bis
@@ -790,3 +807,22 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   scd_room_setup.c 5, scd_vm.c 3, game_step_common.c 2, enemy_common.c 4, menu_common.c 8/1, platform/pc/main.c 12,
   platform/pc/src/audio_pc.c 10 (je Haken <= 5 Zeilen), dazu map_hint_common.c/.h, re15_inv_screen.c/.h,
   tests/test_support.c, tests/unit/test_cam_selfheal.c.
+
+### 9.11 Abschluss der Nachbesserung 1 — Stand je Mangel und je Nutzer-Punkt
+| Mangel (K_abnahme_0.md) | Stand | Beleg |
+|---|---|---|
+| M1 MAIN01 verstummt durch Stop eines Raumskripts (ROOM11D0 sub01 @0x01710) | behoben | §9.3; Lauf G (Pegel 691..1603 statt 0), unit `bgm`, integration G |
+| M2 MAIN01 beginnt eine Szene zu frueh | behoben; mit L zusammen gemessen und nachgebessert | §9.4, §9.7 (m1/m2 falsch, m3 richtig: Fenster erst nach "Rueckkehr beendet") |
+| M3 Zeile 6 Arm an Ada vorbei | behoben | §9.2; Gierung 2941/2942, Bilder K_belege/nachbesserung1_zeile6_* |
+| M4 Haken > 5 Zeilen | behoben | §9.5, §9.6: menu_common.c 8/1, main.c 12, audio_pc.c 10 — jeder Haken <= 5 Zeilen |
+
+| Punkt (AUFTRAG.md) | Stand |
+|---|---|
+| 1 Szene beim ersten Betreten von ROOM10F0 (Z.41-65) | erfuellt (Abnahme 0), Zeile 6 nachgebessert |
+| 2 Karte: ROOM11C0, dann ROOM1150, beide blinken bis besucht (Z.66) | erfuellt; Ende 11C0 jetzt an der Ankunft (4,64), vom Montage-Schnitt der Spur L unberuehrt (m3) |
+| 3 MAIN01 durchweg bis zum Parkplatz (Z.92) | erfuellt ab dem Ende der 1150-Montage, durch Raumskript-Stops hindurch, nach dem Laden; braucht (9,73) von Spur L |
+| 4 Animationen passend wie bei vergleichbaren Dialogen (Z.67) | erfuellt; Zeile 6 in der Form ROOM11C0 sub02 @0x01886/@0x01890 |
+
+Commits der Nachbesserung 1: d65c027f, b7e63c98, 59203d44, fc841604, a7f8db0c, f56e446f, 7cd02507 (zweite Sitzung),
+eed4f9d2, 4d742ac6, 9f8fc50e, (Dossier), c9c32c9a, 515dc35c, 2e1255e6, 9a6d7233 (dritte Sitzung) und der Abschluss-Commit
+`fix(r35-cut10f0): Nachbesserung 1 ...`.
