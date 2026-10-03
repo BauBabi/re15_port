@@ -210,12 +210,16 @@ typedef struct {
     uint8_t gesehen[RE15_ACTOR_MAX];
     /* Leons Kopfschuetteln (Plc_neck Modus 4 = Flag-Bit 0x40): erstes/letztes Bild, Gier-Spanne, Neigung. */
     int neck4_von, neck4_bis; int neck_yaw_min, neck_yaw_max, neck_pitch_min, neck_pitch_max; int steht_auf_von, steht_auf_bis;
+    /* Aufstehen (Nachbesserung 1 M3): Bild, in dem der Rueckwaerts-Zaehler das Clipende (Bild 24) erreicht, und die
+     * Zahl der Bilder, in denen er sich bewegt hat (Halbtakt @0x80030670-80: jedes zweite Bild). */
+    int steht_auf_ende, steht_auf_schritte, steht_auf_letzt;
 } lauf_t;
 
 static void lauf(lauf_t *L, int max, int bis_tuer)
 {
     memset(L, 0, sizeof *L); L->pl_min_dist_couch = 1 << 30; L->irons_fall_bild = -1;
     L->neck4_von = L->neck4_bis = L->steht_auf_von = L->steht_auf_bis = -1;
+    L->steht_auf_ende = -1; L->steht_auf_letzt = -1;
     int letzte_msg = -1;
     for (int f = 0; f < max; f++) {
         frame(0, 0);
@@ -238,6 +242,11 @@ static void lauf(lauf_t *L, int max, int bis_tuer)
         if (L->neck4_bis >= 0 && pl->motion == 11 && pl->anim_use_pl00 && (pl->anim_flags & 0x80)) {
             if (L->steht_auf_von < 0) L->steht_auf_von = f;
             if (pl->sub_state_2 != 2) L->steht_auf_bis = f;
+            if (L->steht_auf_ende < 0) {
+                if (L->steht_auf_letzt >= 0 && (int)pl->anim_frame != L->steht_auf_letzt) L->steht_auf_schritte++;
+                L->steht_auf_letzt = (int)pl->anim_frame;
+                if (pl->anim_frame >= 24) L->steht_auf_ende = f;      /* PL00.EDD Clip 11 = 25 Bilder */
+            }
         }
         {
             long dx = pl->x - RE15_IT_COUCH_X, dz = pl->z - RE15_IT_COUCH_Z;
@@ -462,6 +471,13 @@ static void teil_szene(void)
     PRUEF(L.irons_clip5, "Irons Arm ausgestreckt (Clip 5)");
     printf("  Kopfschuetteln: Bilder %d..%d (%d), Gier %d..%d, Neigung %d..%d; Aufstehen Bilder %d..%d\n", L.neck4_von, L.neck4_bis,
            L.neck4_bis - L.neck4_von + 1, L.neck_yaw_min, L.neck_yaw_max, L.neck_pitch_min, L.neck_pitch_max, L.steht_auf_von, L.steht_auf_bis);
+    /* M3 "steht dann langsam wieder auf": Clip 11 rueckwaerts im HALBTAKT (Plc_flg 0x90; Tor @0x80030670-80, Kippbit
+     * @0x800306c4) = 24 Schritte in ~48 Bildern statt 24 (vorher gemessen: 25 Bilder, Abnahme s1150 F1163..F1188). */
+    printf("  Aufstehen: Beginn Bild %d, Clipende Bild %d (%d Bilder), %d Schritte\n", L.steht_auf_von, L.steht_auf_ende,
+           L.steht_auf_ende - L.steht_auf_von, L.steht_auf_schritte);
+    PRUEF(L.steht_auf_von >= 0 && L.steht_auf_ende > L.steht_auf_von && L.steht_auf_schritte == 24 &&
+          L.steht_auf_ende - L.steht_auf_von >= 46 && L.steht_auf_ende - L.steht_auf_von <= 50,
+          "Leon steht LANGSAM auf: 24 Clip-Schritte in %d Bildern (Halbtakt)", L.steht_auf_ende - L.steht_auf_von);
     PRUEF(L.irons_clip2 && L.irons_fall_bild >= 72, "Irons' Arm faellt: Clip 2 ab Bild %d", L.irons_fall_bild);
     PRUEF(ir->motion == 2 && ir->anim_frame == 89 && ir->sub_state_2 == 2, "Irons tot: Clip 2 Bild 89 gehalten (mo=%d bild=%d ph=%d)", ir->motion, ir->anim_frame, ir->sub_state_2);
     PRUEF(L.raumwechsel && L.ziel == 0x1130 && L.ziel_cut == 0 && L.ziel_x == RE15_IT_PARK_1130_X,
@@ -523,18 +539,50 @@ static void auf_1040(int lebend)
     re15_game_flag_set(9, 75, 1);
 }
 
+/* Nachbesserung 1 M1/M2/M4: nach dem ersten Takt stehen ALLE Zombies hinter dem Tor in Navigations-Zone 0 (block.blk
+ * ROOM1040 @0x0FF4: x -27100..-23300; z >= 1200 = hinter dem Tor) auf den Plaetzen der Aufstellung (Form ROOM1030
+ * sub00 @0x020C6..@0x0216E) und blicken zum Tor (Gierung 1024). */
+static void aufstellung_pruefen(const char *fall)
+{
+    static const int32_t px[5] = { -24700, -25700, -25100, -24500, -25900 }, pz[5] = { 1600, 2300, 3200, 4100, 4800 };
+    int n = 0, ok = 0;
+    for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) {
+        const re15_actor_t *a = &g_actors[sl];
+        if (!a->active || a->type != 0x16) continue;
+        n++;
+        for (int k = 0; k < 5; k++)
+            if (labs((long)a->x - px[k]) < 300 && labs((long)a->z - pz[k]) < 300) { ok++; break; }
+    }
+    PRUEF(n == 5 && ok == 5, "%s: alle fuenf hinter dem Tor aufgestellt (Zone 0): %d von %d", fall, ok, n);
+}
+/* Durchgang je Zombie (z < Tor-z -360, NACHDEM er hinter dem Tor stand) ueber den Bilanz-Haken, und die Spieler-HP
+ * ueber die ganze Montage (Abnahme: hp 100 -> 60 bei offenem Tor). Messung an der exe: Tor zu letzter Durchgang
+ * Bild 273 von 451, Tor offen Bild 239 von 276 (Dossier §9.1) -> der letzte muss vor dem Schnitt durch sein. */
+static void durchgang_pruefen(const char *fall, const lauf_t *L)
+{
+    int n = 0, letzt = -1, durch = re15_irons_tod_bilanz_1040(&n, &letzt);
+    int hp0 = 0, hpmin = 0; re15_irons_tod_hp(&hp0, &hpmin);
+    PRUEF(n == 5 && durch == 5 && letzt >= 0 && letzt < L->bilder,
+          "%s: alle fuenf kommen durchs Tor - %d von %d, letzter bei Bild %d, Schnitt nach %d Bildern", fall, durch, n, letzt, L->bilder);
+    PRUEF(hp0 == 100 && hpmin == 100, "%s: Spieler-HP waehrend der Montage unveraendert (%d -> min %d)", fall, hp0, hpmin);
+}
+
 /* ---- Teil: montage_1040 ------------------------------------------------------------------------ */
 static void teil_montage_1040(void)
 {
     printf("== montage_1040 ==\n");
     szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(9, 76, 1); auf_1040(20);
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
+    re15_irons_tod_bilanz_reset();
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) != 0) return;
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S1040 && faeden_im_programm() == 1, "1040: Montage-Programm laeuft");
     int32_t y0 = g_scd.props[0].y;
     int n0 = aktive_gegner(-1);
     int knall0 = g_test_tuer_se_count;
+    frame(0, 0);
+    aufstellung_pruefen("Tor zu");
     lauf_t L; lauf(&L, 900, 1);
+    durchgang_pruefen("Tor zu", &L);
     PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1040: der Knall wie ROOM1030 (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(y0 == 0 && g_scd.props[0].y == -5400, "Rolltor von y=%d auf y=%d (sub08 135 x -40)", y0, (int)g_scd.props[0].y);
     PRUEF(re15_game_flag_get(4, 5) == 1 && re15_game_flag_get(4, 4) == 1, "(4,5)=1 (4,4)=1 Tor offen");
@@ -543,8 +591,12 @@ static void teil_montage_1040(void)
     /* Tor schon offen, 1070 leer: keine Fahrt, Cut 6 */
     szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 5, 1); auf_1040(20);
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
+    re15_irons_tod_bilanz_reset();
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
+        frame(0, 0);
+        aufstellung_pruefen("Tor offen");
         lauf(&L, 900, 1);
+        durchgang_pruefen("Tor offen", &L);
         PRUEF(g_scd.props[0].y == -5400, "Tor war offen: bleibt bei y=-5400 (%d)", (int)g_scd.props[0].y);
         PRUEF(aktive_gegner(0x16) == 5, "Tor war offen: 5 Zombies (%d)", aktive_gegner(0x16));
         PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 6 && L.bilder < 400, "Schnitt nach ROOM1030 Cut 6 nach %d Bildern", L.bilder);
@@ -555,15 +607,14 @@ static void teil_montage_1040(void)
     for (int i = 2; i < 20; i++) re15_game_flag_set(7, 0x14 + i, 1);
     auf_1040(2);
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
+    re15_irons_tod_bilanz_reset();
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
         int raum = aktive_gegner(0x16);
+        frame(0, 0);
+        aufstellung_pruefen("18 tot");
         lauf(&L, 900, 1);
-        int auf = 0, bewegt = 0;
-        for (int sl = 1; sl < RE15_ACTOR_MAX; sl++)
-            if (L.gesehen[sl] && L.z_erst[sl] >= 11500 && L.z_erst[sl] <= 15500 && g_actors[sl].type == 0x16 &&
-                (L.z_erst[sl] - 11500) % 1000 == 0) { auf++; if (L.z_min[sl] < L.z_erst[sl] - 1000) bewegt++; }
         PRUEF(raum == 2 && aktive_gegner(0x16) == 5, "18 tot: %d Raum-Zombies + Auffuellung = %d Zombies", raum, aktive_gegner(0x16));
-        PRUEF(auf == 3 && bewegt == 3, "drei Auffuell-Zombies erschienen hinter dem Tor (x -28394) und laufen zum Tor (%d/%d)", auf, bewegt);
+        durchgang_pruefen("18 tot (2 Raum + 3 Auffuellung)", &L);
         PRUEF(L.raumwechsel && L.ziel == 0x1030, "Schnitt nach ROOM1030 nach %d Bildern", L.bilder);
         /* spaeteres Betreten: die Auffuell-Zombies stehen wieder da (einer inzwischen getoetet) */
         re15_irons_tod_zustand_setzen(RE15_IT_AUS);

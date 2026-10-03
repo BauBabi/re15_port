@@ -12,6 +12,7 @@
 #   B  1130 -> 1150, 1140 und 1070 leer: Szene, direkt 1040 (ohne 1130), 1030 nur Cut 6, 11C0, Rueckkehr
 #   C  1060 Etage 0, (9,71)=1: Aktion an der Tuer -> Text msg 1, kein Raumwechsel
 #   D  1060 Etage 0, (9,73)=1: Aktion -> ROOM1040
+#   E  wie A, Rolltor ROOM1040 schon offen: Bilanz 5 durchs Tor, Spieler-HP 100 (Nachbesserung 1)
 #
 # RE15_SOFTWARE_RENDER=1 dient nur der Robustheit des Hakens; geprueft wird das LOG. Das BILD belegt die
 # Framedump-Abnahme im Dossier.
@@ -109,6 +110,10 @@ it_muss(A "${_dbg}" "Szene startet (Programm 0)")
 it_muss(A "${_dbg}" "Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1")
 it_muss(A "${_dbg}" "Signal (5,12): Irons' Arm faellt")
 it_muss(A "${_dbg}" "1040: 20 Raum-Records leben, Auffuellung 0")
+# Nachbesserung 1 M1/M4: in ROOM1040 kommen alle fuenf DURCH das Tor (Bilanz: z < -360, nachdem sie hinter dem Tor
+# standen), und der geparkte Spieler wird in der ganzen Kette nicht verletzt.
+it_muss(A "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
+it_muss(A "${_dbg}" "Bilanz Kette: Spieler-HP 100 -> min 100")
 # ROOM1030 Cut 6: sub09 hat Zombies das Kriech-Bit gesetzt (Messzeile RE15_IT_LOG: fl = +0x1c4 mit 0x1000),
 # die Kamera steht dabei auf Cut 12 (= Cut 6 mit aufgebrochenem Tor).
 string(REGEX MATCH "irons-tod-mess. ROOM1030 T[0-9]+ cam=12:[^\n]* fl=1004" _kriech_a "${_dbg}")
@@ -153,6 +158,14 @@ if(NOT _kriech_b)
     message(FATAL_ERROR "r35_cut1150[B]: in ROOM1030 unter Cut 12 kein Zombie mit Kriech-Bit (fl=1004) in den Messzeilen")
 endif()
 
+# --- E: Rolltor ROOM1040 schon offen ((4,5)=(4,4)=1 im Spielstand; Nachbesserung 1 M2/M4) -----------------
+# "Wenn es bereits offen ist, kommen nur 5 Zombies": keine Tor-Fahrt, alle fuenf durchs Tor, Spieler-HP unveraendert
+# (Abnahme 0: keiner kam durch, Zombie 3 biss den geparkten Spieler 100 -> 60). Ende im 5. Bild von ROOM1030.
+it_lauf(e 1130 "nach10f0;ersteszene;tor1040offen" "W1,A0.2,W200" 5 1030 600 _dbg)
+it_muss(E "${_dbg}" "Montage 1040 (Programm 2)")
+it_muss(E "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
+it_muss(E "${_dbg}" "Spieler-HP 100 -> min 100")
+
 # --- C: 1060 gesperrt ((9,71)=1, (9,73)=0): Text, kein Raumwechsel ----------------------------
 it_lauf(c 1060 "nach10f0;ersteszene" "W1,A0.2,W3" 240 1060 240 _dbg)
 it_muss(C "${_dbg}" "[tuer1060] ROOM1060 Slot 2 -> Text-Platz msg 1")
@@ -172,4 +185,4 @@ it_muss(D "${_dbg}" "DOOR FIRE slot=2")
 it_muss(D "${_dbg}" "[room] PC loaded room1040.rdt")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r35_cut1150: OK - Kette A/B, Sperre C, Freigabe D")
+message(STATUS "r35_cut1150: OK - Kette A/B, Tor offen E, Sperre C, Freigabe D")

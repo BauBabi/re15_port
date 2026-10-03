@@ -818,9 +818,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * BEFORE the AI seeds in run_all @:499). SCD Plc_motion seeds (scd_vm_tick, before game_step)
      * are consumed identically at either position.
      *
-     * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — a "half-rate" divider citing FUN_80030660 bit
-     * 0x10 was tried + REVERTED; DAT_800acc18 bit 0x10 is NEVER set (only `xori 0x20` toggle +
-     * `sh zero` clear), so the half-rate path is dead and the original advances every frame. */
+     * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — ausser im HALBTAKT (Runde 35 Spur L, unten):
+     * DAT_800acc18 Bit 0x10 setzt das Skript INDIREKT (Plc_flg ueber den Work-Zeiger @0x80042020,
+     * Plc_motion pc[3] @0x80041bc8); die alte Aussage "NEVER set" zaehlte nur direkte Xrefs. */
     /* AUSNAHME EVENT-REACH (Plc_dest-Sub 6 @0x800517f0, Spieler-Tabelle 0x80073e30[6]): dieser
      * Sub advanct +0x95 SELBST. Sein Body ruft `jal 0x8001f314` genau EINMAL pro Tick
      * (Phase 0/1 @0x8005188c, Phase 2/3 @0x800518f0), und anim_set erhoeht dort +0x95 um 1
@@ -833,7 +833,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * also +2 pro 30-Hz-Tick — der Halte-Clip lief exakt doppelt so schnell wie im Original
      * (16 Bilder PL00W01 Clip 1 in 8 statt 16 Ticks). */
     extern int re15_player_event_reach_clip(void);   /* game_step_common.c: >=0 = Sub 6 aktiv */
-    if (re15_player_event_reach_clip() >= 0) {
+    /* HALBTAKT (Runde 35 Spur L, L_cut1150.md §9.2): Kommando 4 = 0x80030660 ueberspringt den Motion-
+     * Handler bei +0x1c4 & 0x10 UND & 0x20 (@0x80030670-80), 0x20 kippt jedes Bild (@0x800306c4/c8). */
+    int halbtakt_aus = (p->state == 4) && (p->anim_flags & 0x10u) && (p->anim_flags & 0x20u);
+    if (p->state == 4) p->anim_flags ^= 0x20u;
+    if (halbtakt_aus || re15_player_event_reach_clip() >= 0) {
         /* Sub 6 besitzt den Frame-Zaehler — hier NICHT advancen. */
     } else if (p->motion_init_delay > 0) {
         /* State-4 init hold (PSX +0x4=4): render keyframe 0 once WITHOUT advancing

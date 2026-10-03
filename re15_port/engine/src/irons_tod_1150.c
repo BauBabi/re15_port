@@ -53,6 +53,7 @@ extern unsigned g_current_room_id;
 #define OP_MOTION(e,c)     0x3f, (e), (c), 0x00
 #define OP_FLG_REV         0x43, 0x00, 0x80, 0x00
 #define OP_FLG_LOOP        0x43, 0x00, 0x04, 0x00
+#define OP_FLG_REV_HALB    0x43, 0x00, 0x90, 0x00   /* Plc_flg Unterop 0 (OR, @0x80041ffc) 0x80|0x10 */
 #define OP_WORK(k,i)       0x2e, (k), (i), 0x00
 #define OP_DEST(m,f,x,z)   0x40, 0x00, (m), (f), LE16(x), LE16(z)
 #define OP_WAIT32          0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, 0x20, 0x00
@@ -82,7 +83,7 @@ extern unsigned g_current_room_id;
  *   Irons-Gesten: Clip 4 vor/zurueck + Liege-Loop (@0x011BE..@0x011D6), Clip 6 (sub03 @0x00F24),
  *     Clip 5 = Arm ausgestreckt + Halt (@0x0125A/@0x0125E Sleep 120).
  *   Kopfschuetteln gesenkt: ROOM11B0 sub06 @0x0154E..@0x0156A (Modus 2 Pitch 300, Modus 4 Sweep 3).
- *   Aufstehen: @0x012C6/@0x012CA (Clip 11 entity 1 rueckwaerts).
+ *   Aufstehen: @0x012C6/@0x012CA (Clip 11 entity 1 rueckwaerts) im Halbtakt (Bit 0x10, @0x80030670-80).
  *   Knall + Schnitt: Signal (5,28) -> Knall-Bank Satz 0 (Port-Takt), Door_aot_set + Aot_on (Tuersatz wird bei
  *     der Ausloesung auf 1130 oder 1040 gesetzt — NUTZER-VORGABE "wenn in 1140 alle tot: nichts").
  * Zeiten (Sleep) = PORT-WAHL im Takt der ersten Szene. */
@@ -132,7 +133,11 @@ static const uint8_t k_p_szene[] = {
     OP_SLEEP(110),
     0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x60,   /* Kopf frei (@0x012D2) */
     OP_SLEEP(20),
-    OP_MOTION(1, 11), OP_FLG_REV, OP_SLEEP(40),            /* steht auf (@0x012C6/@0x012CA) */
+    /* steht LANGSAM auf (NUTZER-VORGABE "langsam"; Nachbesserung 1 M3, Dossier §9.2): Clip 11 rueckwaerts wie
+     * @0x012C6/@0x012CA, dazu Bit 0x10 = HALBTAKT (Spieler-Kommando 4 @0x80030670-80, Kippbit 0x20 @0x800306c4;
+     * RE2 Retail @0x80065d28, benutzt ROOM4100 `3f 00 14 10`) -> 25 Clip-Bilder in 50. Sleep = Original
+     * @0x012CE 40 (fuer 25 Bilder) + 25 = 65. */
+    OP_MOTION(1, 11), OP_FLG_REV_HALB, OP_SLEEP(65),
     OP_CUT(5),                                             /* Totale wie das Ende der ersten Szene (@0x012C4) */
     OP_SLEEP(60),                                          /* kurze Pause */
     OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(45),        /* der Knall (aus dem Buero gehoert) */
