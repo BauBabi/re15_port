@@ -302,3 +302,37 @@ RE2-Massstab gemalt. (Zum Vergleich: der Vorgaenger-Massstab 795 legte die Waend
 Reichweite des Spielers (Wand -468): x -15282..-12018 -> 117..110, z -3682..-518 -> 135..142 =
 **genau der gemalte Innenraum, 7 px je Achse.**
 
+### M1/M2 — Messung vorher (eigene Laeufe, Stand d2ec24e5 = Bau-Stand 8fee1bb4)
+
+Werkzeug: `scratch nb1/lauf.sh` (wie Abnahme lauf.sh) und der NEUE Riegel
+`integration_r35_karte_fahrstuhl` (tests/integration/test_r35_karte_fahrstuhl.cmake): Spielstand
+vor der Fahrstuhltuer (1040 (-21786,-10500) Yaw 3072 bzw. 1120 (1300,6400) Yaw 1024, flag 4:243),
+LOAD GAME, `W1,A0.3,W1,A0.3` = Tuer-AOT (1040 @0x1096 / 1120 @0xCB6) -> Tuersequenz -> ROOM1080,
+dann laufen (`U2` / `R0.6,U2` / `L0.6,U2`), Karte 230 Bilder nach Eintritt, Abzug im 60. Kartenbild
+(RE15_INV_FB_SHOT), Marker = Pixel ohne Kartenfarbe (probe_r35_karte marker; Ring 5x5, im Abzug
+gemessen Farbe (16,16,0), Wand (176,176,176), rot (48,8,48)/(48,8,64)).
+```
+integration_r35_karte_fahrstuhl am Stand 8fee1bb4 (170 s):  ROT
+  f1_steh   pl pos=(-13650,0,-900)  -> MARKER 114 140  bbox (112,138)-(116,142)
+  f1_vor    pl pos=(-13650,0,-3682) -> MARKER 114 138
+  f1_rechts pl pos=(-15282,0,-518)  -> MARKER 115 140
+  f1_links  pl pos=(-12018,0,-518)  -> MARKER 113 140
+  f3_rechts pl pos=(-15282,0,-518)  -> MARKER 133 143
+  f3_links  pl pos=(-12018,0,-518)  -> MARKER 131 143
+  FAIL 1F quer x 113..115 = 2 px | FAIL 1F laengs y 138..140 = 2 px | FAIL 3F quer 2 px
+unit_r35_karte_fahrstuhl (neuer Teil c/d) am Stand 8fee1bb4: ROT
+  1F/2F Lagen -> x 114..116 (2 px), y 139..141 (2 px); 3F x 132..134, y 142..144;
+  Waende: O/N/S -> (0,0) (Zeile 795 bildet die Wand x -11550 hinter den Rand) -> FAIL
+```
+= exakt die Abnahme-Messung (x113..115 / y138..140). Spieler-Reichweite bestaetigt: Wand -468
+(x -15750+468 = -15282, -11550-468 = -12018, z -4150+468 = -3682, -50-468 = -518).
+
+**Glyph-Versatz (fuer die Abbildung gebraucht):** der Ring liegt im 8x8-Quad ab uv(224,128) auf
+uv 225..229 / 129..133 (DATA/TEX.TIM, Bilddaten ab Datei-Byte 0x620, Zeile v=129 ab 0x14910;
+Texel 0xa = Ring). Mitte = Quad-Ursprung (mx-4) + 3 = **mx-1** (ebenso y). Im Abzug bestaetigt:
+Logik-Marker (115,141) (unit) -> Ring-Bbox (112..116, 138..142), Mitte (114,140).
+
+**RE1.5 klemmt nicht** (re15_disasm.py dis 0x80047528): @0x80047554 `addiu a0,t0,-4`,
+@0x80047564 `addiu a1,t0,4`, @0x80047578 `ori v1,zero,0xfffc` (y-4), @0x800475ac/0x800475c0
+`addiu v0,v0,4` (y+4), dann @0x800475d8 `jal 0x8006b538` (AddPrim) - kein min/max.
+
