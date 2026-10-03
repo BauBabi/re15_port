@@ -202,3 +202,38 @@ in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert
 - Port-Form: mag_hit_ctr (INIT-geloescht), Flinch-Eintritt zaehlt, Exit 7 beim 3. Treffer sonst 3 (CHASE). Riegel `sprung`:
   Exit-Folge 3,3,7,3,3,7. Luft-/Sturz-Spuren (Spur 1/2) unveraendert byte-true.
 
+### Messung nachher, Kampf (Lauf B2, exe nach allen Fixes, gleiches Feuerskript wie Lauf B)
+- 16 Treffer -> 16 Flinches -> **7 Spruenge** (vorher 13 -> 13): Slot 2: 6 Treffer -> 2 Spruenge (Treffer 3 und 6);
+  Slot 3: 10 Treffer -> 3 Vergeltungs-Spruenge + 2 Fernspruenge des Selektors (A[4] Path B, @0x80118028-8100).
+- Vollstaendige Spruenge: 6098 / 5448 / 5175 Einheiten in 40 Bildern (vorher 12700 in 40). Vier Spruenge brachen nach 10 Bildern
+  (Anlauf) ab: der naechste Handfeuerwaffen-Treffer (alle 21 Bilder) stoesst sie in HURT (Original-Verhalten, @0x80118b14-74 Latch).
+- Erster Spieler-Schaden F1423 (Heavy -12) = 353 Bilder nach der Freigabe (Original: ~12 s).
+
+## Tests (re15_port/tests/unit/probes/r35_affen.cmake, test_r35_affen.c) — alle gruen (einzeln gefahren)
+- unit_r35_affen_teile  — EM027 18/22, Parts 18..21 weltfest (3,72,3)/(75,1,78)/(0,79,1)/(79,1,80), Part 17 unveraendert.
+- unit_r35_affen_band   — NPC-Laeuferin in ROOM11C0: +0x82=2 Ankunft im Wagen (Bild 11, Abstand 112); +0x82=0 klemmt bei x=-16859.
+- unit_r35_affen_ada    — echte Szene: sub07 Lauf ab Bild 1063, Ankunft Bild 1120 (-18025,-7379), y=20000 ab Bild 1121; nach
+                          beiden Kill-Bits sub03: y=0, rot_y=512, (3,0x43)=1, Lauf zu (-16211,-8183).
+- unit_r35_affen_sprung — Flinch-Exits 3,3,7,3,3,7.
+- unit_r35_affen_flug   — ein Flugbild = 240 (ein c1a4-Schritt).
+- unit_r35_affen_wagen  — Klappe (-840,-2930,-19110) rot (-72,-1400,48) -> Folge 223..1752 + Wackler, Ende 1752; Gorilla-Lage-Schiene.
+- unit_r35_affen_brust  — Pin-Release Clip 3 ab 0x16 -> Phase 5/6 -> sub 2 (Clip 3 ab 0x1d) -> CHASE nach 68 Bildern.
+Exe-Laeufe (scratchpad, nicht im Repo): lauf_a (vorher), lauf_a3/lauf_a4 (nachher, Szene), lauf_b (vorher), lauf_b2 (nachher, Kampf);
+Original: orig_scene/r3 (110 Savestates + PNG). Bilder: gdigrab lieferte in dieser Sitzung keine brauchbaren Bilder -> RE15_FRAMEDUMP.
+
+## OFFEN (mit Adresse und naechstem Messweg)
+- Heckklappe (Objekt 0) wird im Port dunkler gezeichnet als im Original (Cut 12: Original-Panel grau ~ (35,36,39), Port ~ (11,11,12));
+  Lage/Drehung sind byte-gleich (Pool +0x20/+0x48 == pc_prop_rot_q12). Naechster Weg: Objekt-Beleuchtung FUN_8002c18c
+  (`jal 0x80053fc0` @0x8002c254 mit &pool+0x5c, SetColorMatrix DAT_80076d34, MulMatrix0 DAT_80076d14) gegen main.c lctx_prop
+  (Normalen/Lichtfaltung) messen — nicht Teil der sechs Punkte.
+- Member_set 0x13 (jetzt +0x1ba statt hp) betrifft auch ROOM10B1/2030/2031/3050/3051/50D0/50D1 (Werte 0/3/4/6/9): dort behalten die
+  Aktoren ihre Tabellen-HP. Byte-true (FUN_8004116c), aber in jenen Raeumen nicht nachgemessen — Messweg: Savestate +0x9a/+0x1ba.
+- Die vier ueberzaehligen EM027-Meshes stehen jetzt (wie im Original) weltfest am Raumursprung (3,72,3) usw.; ob der Ursprung in
+  einem 11C0-Cut sichtbar ist, wurde nicht gemessen (in den Framedumps A4 kein Fremdkoerper erkennbar).
+- Spawn-Wurzelaufruf: ausser Birkin jetzt auch 0x27; die uebrigen Typen bleiben wie vor Runde 35 (OFFEN seit Runde 30, Dossier 9).
+
+## Fuer den Nutzer
+- Sprachdateien: keine neuen Zeilen (alle Texte sind Original-Nachrichten msg00..09 von ROOM11C0).
+- Neue Assets fuer das Paket-Gate: keine (keine Dateien unter shared_assets/).
+- Bedienhinweis: der Brustschlag (Clip 3) kommt nur nach einem verbundenen Rear-up-Griff — nahe und frontal zum Gorilla stehen.
+- Die Zahl "3 Treffer bis zum Sprung" steht als RE15_AFFEN_TREFFER_BIS_SPRUNG in include/re15_affen.h (NUTZER-VORGABE).
