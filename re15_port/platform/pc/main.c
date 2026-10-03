@@ -4771,6 +4771,12 @@ re_title:;
          * No-op. Eingefroren von integration_weste_load_pin. */
         pc_player_model_sync_cb();                 /* @0x80039760-8c am Lade-Weg */
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
+        /* Runde 35 Spur K: im MAIN01-Fenster (Ende der ROOM10F0-Szene bis zum Parkplatz) haengt die
+         * Raummusik an Flags des Spielstands (re15_cut10f0_bgm_eintrag) — der BOOT-BGM-Aufruf oben
+         * lief VOR dem Restore und nahm die Tabelle (gemessen: entry=FF20 trotz (9,71)=1). Hier noch
+         * einmal; der Cache-Vergleich FUN_80044210 @0x80044280 macht daraus MAIN01. */
+        if (re15_cut10f0_bgm_eintrag((int)((rr >> 12) - 1), (int)((rr >> 4) & 0xff)) >= 0)
+            re15_audio_start_room_bgm((int)((rr >> 12) - 1), (int)((rr >> 4) & 0xff));
     }
 
     /* MESS-HAKEN RE15_SET_FLAG="<bank>:<bit>[,<bank>:<bit>...]" (bit dezimal oder 0x-hex) —

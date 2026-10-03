@@ -16,7 +16,18 @@
  *                         Flur spawnt dann keinen Marvin mehr (main00 Else-Zweig @0x012A4)
  *   gesehen   (9,71) = 1  10F0-Szene schon gesehen (re15_cut10f0.h) — Gegenprobe "genau einmal"
  *
- * Aufruf: probe_r35_cut10f0_karte <kartendatei> [gesehen]
+ * Weitere Staende (Fortsetzung, Dossier §8.6 — MAIN01 von Raum zu Raum und der 1150-Latch am echten Weg):
+ *   raus      Stand IN ROOM10F0 am Tuer-Spawn (8400,0,-350), Blick zur Tuer (Gierung 0 = +X; Vorwaerts-620-Punkt
+ *             (9020,-350) liegt im Tuer-Rechteck Slot 0 @0x00F32 (8800,-1300,1000,2000)) -> Aktionstaste fuehrt
+ *             zurueck nach ROOM10D0. Mit "gesehen" kombinieren.
+ *   vor11c0   Stand in ROOM11B0 vor der Tuer zum Parkplatz (main00 @0x00FAA Door_aot_set Slot 1, Rechteck
+ *             (-26730,-29940,2500,3500), Ziel-Byte 0x1c): Spieler (-25480,0,-26100) Gierung 1024 (= -Z), Vorwaerts-
+ *             620-Punkt (-25480,-26720) im Rechteck. Flags (4,243)=1 Strom an (sonst macht sub01 @0x01216 die Tuer
+ *             zum Text-Platz), (3,130)=1 Strom-Szene sub04 schon gesehen (sub01 @0x011AE). Mit "gesehen" kombinieren.
+ *   in1150    Stand in ROOM1150 mit (3,94)=1 (erste Irons-Szene gesehen, main00 @0x00DE6) — der Raumaufbau am
+ *             Lade-Weg setzt mit (9,71)=1 den Latch (9,72). Mit "gesehen" kombinieren.
+ *
+ * Aufruf: probe_r35_cut10f0_karte <kartendatei> [gesehen] [in10f0|raus|vor11c0|in1150]
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -32,23 +43,31 @@
 int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
-    int gesehen = 0, in10f0 = 0;
+    int gesehen = 0, in10f0 = 0, raus = 0, vor11c0 = 0, in1150 = 0;
     for (int a = 2; a < argc; a++) {
         if (strcmp(argv[a], "gesehen") == 0)     gesehen = 1;
         else if (strcmp(argv[a], "in10f0") == 0) in10f0 = 1;   /* Stand IM Raum (alter Spielstand, Szene steht aus) */
+        else if (strcmp(argv[a], "raus") == 0)    raus = 1;     /* IM Raum, Blick zur Tuer nach ROOM10D0 */
+        else if (strcmp(argv[a], "vor11c0") == 0) vor11c0 = 1;  /* ROOM11B0 vor der Tuer zum Parkplatz */
+        else if (strcmp(argv[a], "in1150") == 0)  in1150 = 1;   /* ROOM1150, erste Irons-Szene gesehen */
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     scd_vm_init();
     re15_actor_init();
     re15_aot_init();
-    const unsigned raum = in10f0 ? RE15_CUT10F0_RAUM : 0x10D0u;
+    const unsigned raum = (in10f0 || raus) ? RE15_CUT10F0_RAUM : vor11c0 ? 0x11B0u : in1150 ? 0x1150u : 0x10D0u;
     g_current_room_id = raum;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
-    if (in10f0) { pl->x = RE15_CUT10F0_SPAWN_X; pl->y = 0; pl->z = RE15_CUT10F0_SPAWN_Z; pl->rot_y = RE15_CUT10F0_SPAWN_DIR; }
-    else        { pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048; }
+    if (raus)         { pl->x = RE15_CUT10F0_SPAWN_X; pl->y = 0; pl->z = RE15_CUT10F0_SPAWN_Z; pl->rot_y = 0; }
+    else if (in10f0)  { pl->x = RE15_CUT10F0_SPAWN_X; pl->y = 0; pl->z = RE15_CUT10F0_SPAWN_Z; pl->rot_y = RE15_CUT10F0_SPAWN_DIR; }
+    else if (vor11c0) { pl->x = -25480; pl->y = 0; pl->z = -26100; pl->rot_y = 1024; }
+    else if (in1150)  { pl->x = -21000; pl->y = 0; pl->z = -20000; pl->rot_y = 0; }
+    else              { pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048; }
     re15_game_flag_set(3, 50, 1);
     re15_game_flag_set(4, 247, 1);
+    if (vor11c0) { re15_game_flag_set(4, 243, 1); re15_game_flag_set(3, 130, 1); }
+    if (in1150)  re15_game_flag_set(3, 94, 1);
     if (gesehen) re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
 
     re15_savedata_t sd;

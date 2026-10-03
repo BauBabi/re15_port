@@ -237,8 +237,14 @@ void re15_cut10f0_install(uint16_t room_id)
     /* Besucht-Latch des zweiten Kartenziels: Leon betritt ROOM1150 NACH der Szene -> (9,72)=1, die
      * Kachel hoert auf zu blinken (map_hint_common.c Eintrag K2). Das Besucht-Bit der Zone taugt dafuer
      * nicht — ROOM1150 ist vor der Szene laengst besucht (re15_cut10f0.h, Dossier §8.1). */
-    if (room_id == RE15_CUT10F0_ZIEL2_RAUM && gesehen())
+    if (room_id == RE15_CUT10F0_ZIEL2_RAUM && gesehen() &&
+        !re15_game_flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT)) {
         re15_game_flag_set(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT, 1);
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[cut10f0] ROOM%04X nach der Szene betreten: (%d,%d)=1, Kartenziel ROOM1150 erreicht\n",
+                (unsigned)room_id, RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT);
+#endif
+    }
     if (room_id != RE15_CUT10F0_RAUM) return;
     if (gesehen()) return;
 
