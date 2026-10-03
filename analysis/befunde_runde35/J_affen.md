@@ -767,7 +767,7 @@ Nachbesserung 1 liegen in `scratchpad/jnb1/` (g_orig.txt, g_griff.txt, g_desync.
 Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 
 ### Stand (fortlaufend)
-- [x] A3  - [ ] A2  - [ ] A1
+- [x] A3  - [x] A2 (Riegel; exe-Nachmessung folgt)  - [ ] A1
 
 ### A3 — Kopfkommentar (3) in re15_affen.h (erledigt)
 - Vorher: "Luft-/Sturz-Spuren (1/2) bleiben byte-true" (falsch seit 30484afa).
@@ -815,3 +815,49 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   Resolver des Ports IST FUN_8003b0a4 — falsch ist allein, WO der Port ihn beim Gorilla-Wurf aufruft
   (vor statt nach der Platzierung) und dass er die Platzierung zusaetzlich mit "letzter begehbarer Standpunkt"
   ueberschreibt.
+
+### A2 — weitere Belege (selbst disassembliert, STAGE1.BIN) und Umsetzung
+- **Erstes P2-Bild ist 0x0b, nicht 0x0c:** P1 0x8011c228: `jal 0x8001f314` @0x8011c23c (a3 = 0x200), danach
+  `lbu v1,acae9` / `ori v0,zero,0xb` / `bne v1,v0,0x8011c3b8` / `sb 2,aca5a` @0x8011c244-5c — P2 beginnt im Bild,
+  dessen +0x95 beim Eintritt 0x0b ist; P2 platziert mit diesem Wert (`sltiu v0,v0,0x25` @0x8011c278, `jal
+  0x8001ad68` @0x8011c294) und posiert erst danach (`jal 0x8001f314` @0x8011c2b0). GDB: vs10171 Eintritt mo 010b ->
+  AD68(a0=0x800aca54, ra 0x8011c29c). Port-Fenster war [0x0c,0x25) -> jetzt [0x0b,0x25).
+- **Rueck-Variante:** `beq v1,zero,0x8011c228` @0x8011c208 (aca59 = 0 -> Front), sonst `sb 2,aca5a` @0x8011c210,
+  `sb 0xc,acae9` @0x8011c214-1c, `j 0x8011c3b8` @0x8011c220 = KEIN anim_set, KEINE Platzierung im P0-Bild. Port: Seed
+  0x0b (wird vor dem Platzieren auf 0x0c gezaehlt), Fenster ab 0x0b + Variante -> 0xc wird im Folgebild platziert.
+- **Aufsteher P3-P6 aus der COMMON-Bank, Clip 0xb RUECKWAERTS:** P3 0x8011c2e8 (aca5a 4, acae8 0x10, acae9 0,
+  acae3 7, `j 0x8011c34c` mit `addu a2,zero,zero` im Delay-Slot @0x8011c318); P5 0x8011c31c (aca5a 6, acae8 0xb,
+  acae9 0, acae3 7) faellt in 0x8011c348 `ori a2,zero,0x1` = anim_set RUECKWAERTS; beide mit `lw a0,-13608(a0)` =
+  DAT_800acad8 @0x8011c350 / `lw a1,-13376(a1)` = DAT_800acbc0 @0x8011c358 (= PL00.EMR/EDD, wie die Knockdown-Handler);
+  Phasenvorschub `addu v1,v1,v0` / `sb v1,aca5a` @0x8011c370-78. P7 0x8011c384: `ori v0,zero,0x1` / `sw v0,aca58`
+  @0x8011c384-8c (Kommando 1, nicht 2 wie der alte Port-Kommentar), +0x93 = 0 @0x8011c3a0, aca3c &= ~0x80 & ~0x40
+  @0x8011c398-b4. GDB: Clip 0x10 T338-T353 (16 Bilder), Clip 0xb T354-T377 + Freigabe T378.
+- **Griff-Paar ohne Koerper-Schub:** Gorilla-Wort |= 0x1000 beim Pin-Latch (`lw v0,0(v1)` / `ori v0,v0,0x1000` /
+  `sw v0,0(v1)` @0x8011ac2c-38, v1 = g_entity(cur)), Spieler-Wort @0x8011ac3c-4c; Gorilla loescht seins in Phase 4
+  (`addiu v1,zero,-4097` / `and` / `sw v0,0(a0)` @0x8011ad88-94). FUN_8002aec4 `andi 0x1000` auf das UND beider Worte
+  @0x8002af14. GDB-Wort 0 (g_griff.txt): e1 0x60001811 ab T254, 0x60000811 ab T302; Leon 0x00001010 T254-T335.
+  Der Port nahm nur Zombie-Greifer (sub 3..6) aus -> der Gorilla schob Leon in T273-T282 um ~420 weg (gemessen:
+  Port T273 (-6729,-12534) statt Platzierung (-6542,-12913) = Schub vom Greifer, Abstand 1630 < 2050).
+- **Umsetzung (Dateien):**
+  - enemy_ai_common.c (Haken je 1 Zeile, Kommentar "Runde 35 Spur J (6x)"): Seed `? 0x0b : 0` (6b); Fenster
+    `>= 0x0b + g_player_victim_variant` (6a/6b); P3 `anim_flags &= ~0x80`, P5 `anim_flags |= 0x80`, P7 Endpose
+    (6c); re15_victim_place: Ersatzklemme nicht fuer 0x27 (6d); `re15_player_victim_gorilla()` (6d);
+    re15_body_push_player: `if (pl_locked && re15_affen_griff_paar(e)) continue;` (6e); 3 Kommentarzeilen korrigiert.
+  - game_step_common.c: `wurf`/`wurf_alt_x/z` (Bezug = Lage beim Eintritt in den Grabbed-Zweig = Spiegel +0x40/+0x44);
+    im Grabbed-Zweig die Wandklemme fuer den Gorilla-Wurf NICHT vor der Platzierung; nach re15_player_victim_tick
+    `re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z)` (Schub @0x80031cbc -> Klemme @0x80031d70).
+  - anim_select_common.c: COMMON-Bank-Gate um `re15_player_victim_own_bank()` erweitert (P3-P6).
+  - affen_11c0.c: `re15_affen_griff_paar` (6e); re15_affen.h Abschnitt (6a)-(6e).
+- **Messung nachher (Riegel, gleiche Lage wie das Original-Experiment):**
+  - `wand`: Klemme 168/168 bitgleich; Schub-Kette T265-T267 mit e2 auf seiner Original-Lage: Schub UND Klemme
+    bitgleich ((-7190,-10771)/(-7804,-10186), (-7140,-10733)/(-6686,-10348), (-6756,-11225)/(-7340,-11870)).
+  - `griff` (vorher: ab T289 festgeklemmt auf (-3965,-12507), frei bei (-3685,-12254)): Pin T254, erste
+    Platzierung **T265** (Original T265), Bahn T268-T290 im Mittel **18**, hoechstens 173 (T290) neben dem Original,
+    T287/T288 (-3965,-12507) = Original (-3964,-12506), T289 (-4548,-11295) / T290 (-5374,-10724) (Original
+    (-4588,-11243) / (-5381,-10551)); P3/P4 16 Bilder Clip 0x10 PL00 vorwaerts, P5/P6 25 Bilder Clip 0xb PL00
+    rueckwaerts; **Freigabe T378** (Original T378) bei (-4580,-10518) (Original (-4759,-10633)); 0 HP; danach
+    schiebt die Wandklemme Leon zur Ruhelage **(-3018,-11651)** (Original (-3009,-11643)).
+  - T265-T267 im Harness weicht ab (bis 1573), weil der Port-e2 dort ~400 weiter weg steht (Port e2 T264
+    (-8707,-12438), Original (-8890,-12048)) und Leon nicht schiebt — die Kette selbst ist bitgleich (s. `wand`).
+    Der Port-e2 steht T250-T264 still, das Original-e2 gleitet in derselben Zeit ~400 an Leons Koerper entlang
+    -> gehoert zu A1 (Lage/Bewegung im Koerperkontakt), dort weiter.
