@@ -286,6 +286,13 @@ der Riegel misst den Mechanismus, nicht die Choreografie.
   `pf=00000007 pm=0` vor START, Statusschirm offen, 210 Gestenbilder zur Tuer, kein Clip 19; B Neues
   Spiel, `mg=-1`, 9 Stichbilder W01/Clip 7; C CONTINUE mit Altstand-Karte -> "[messer] alter Spielstand:
   1 Messer entfernt, Ausruest-Platz 0x80, Waffe 1", 9 Stichbilder.
+* Suite-Lauf 1 (Stand e89b70c0): 486/487, rot nur `integration_r34_granaten` Teil [debug]: "nach dem
+  Schliessen keine Waffenbank W09". Ursache gemessen (Testablauf gelesen): das Item-Debug schreibt die Granate
+  in Cursor-Zelle 0; ausgeruestet wurde sie bisher nur, weil Zelle 0 das AUSGERUESTETE Messer war (Commit
+  vergleicht inv[25c8], @0x80046654-88). Mit 25c8 = 0x80 gibt es nichts zu ersetzen -> kein Commit -> kein W09
+  — richtiges neues Verhalten. Anpassung im Testlauf: `RE15_EQUIP=3` (Pistole in Zelle 0 ausgeruestet, gleiche
+  Vorbedingung wie vorher mit dem Messer). Danach gruen (193 s): "Item-Debug: Menge 255, W09 ausgeruestet".
+  ⛔ Fuer die Integration: Spur A (granate) arbeitet ggf. in derselben Datei — 4-Zeilen-Einschub im Lauf "debug".
 * Mutationsprobe P1: msg-Fix abgeschaltet -> unit_r34n_d_adaruf_szene rot (Pad-Bit 1, Inventar 0).
 
 ## OFFEN
