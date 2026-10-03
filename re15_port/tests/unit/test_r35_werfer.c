@@ -30,6 +30,8 @@
 #include "re15_werfer.h"
 #include "re2_fx.h"
 #include "re15_ai_flavor.h"
+#include "re15_rdt.h"
+#include "re15_room.h"
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -404,10 +406,126 @@ static void teil_g(void)
     CHECK(97, re15_werfer_rahmen(17, 11, e, o2) == 1, "GL Brand fuehrt Leons W0F-Netz (re15_werfer_bank_id) -> Rahmen");
 }
 
+/* ---- H: Nachbesserung 1 (Abnahme 0, Maengel M1/M2/M4; Dossier §8) -------------------------- */
+extern int g_test_re2arms_last_id, g_test_re2arms_last_satz, g_test_re2arms_count;
+static int bytes_at(const char *pfad, long ofs, uint8_t out[4])
+{
+    FILE *f = fopen(pfad, "rb");
+    if (!f) return -1;
+    int ok = (fseek(f, ofs, SEEK_SET) == 0 && fread(out, 1, 4, f) == 4);
+    fclose(f);
+    return ok ? 0 : -1;
+}
+/* Rakete in der Welt: lokales +y (Flug) -> Welt -z, lokales +x (oben) -> Welt -y. */
+static void mtx_minus_z(uint8_t m[32], int32_t tx, int32_t ty, int32_t tz)
+{
+    static const int16_t R[9] = { 0, 0, 4096,  -4096, 0, 0,  0, -4096, 0 };
+    mtx_t(m, tx, ty, tz);
+    for (int k = 0; k < 9; k++) { m[2*k] = (uint8_t)R[k]; m[2*k + 1] = (uint8_t)((uint16_t)R[k] >> 8); }
+}
+static int32_t s_expl_z; static int s_expl_n;
+static void se_spion_lage(uint32_t code, const int32_t pos[3])
+{
+    se_spion(code, pos);
+    if (code == 0x01140001u) { s_expl_n++; s_expl_z = pos[2]; }
+}
+/* Rakete von (x, -2530, z0) nach -z ueber ROOM1140; Rueckgabe: z der Explosion (0x01140001). */
+static int32_t rakete_nach_minus_z(int32_t x, int32_t z0)
+{
+    start();
+    re2fx_boden_hook = NULL;                       /* echter Wand-/Bodentest (werfer_boden) */
+    re2fx_se_hook = se_spion_lage; s_expl_n = 0; s_expl_z = 0;
+    uint8_t m[32]; mtx_minus_z(m, x, -2530, z0 + 1100);
+    static const int16_t OM[4] = { 0, 1100, 0, 0 };
+    (void)re2fx_spawn_sofort(0x020D1000u, 0, m, OM);
+    for (int t = 0; t < 60 && s_expl_n == 0; t++) re2fx_tick();
+    return s_expl_n ? s_expl_z : 1;
+}
+static void teil_h(void)
+{
+    printf("== H Nachbesserung 1: M2 Leer-Ton Rakete, M4 Fresser-Sperre, M1 Moebel/Kreis-Zellen\n");
+    /* M2 — Daten: RE1.5 ARMS12 Satz 1 leer, RE2 ARMS11 Satz 1 belegt (EDH Dateibytes 4..7). */
+    {
+        char p[1024]; uint8_t b[4];
+        snprintf(p, sizeof p, "%s/SOUND/ARMS12.EDH", RE15_XSTR(RE15_ASSETS_PATH));
+        int r1 = bytes_at(p, 4, b);
+        CHECK(100, r1 == 0 && b[0] == 0xff && b[1] == 0xff && b[2] == 0xff && b[3] == 0xff,
+              "RE1.5 ARMS12.EDH Satz 1 = ff ff ff ff (kein Sample -> Klick 0x01010001 stumm)");
+        snprintf(p, sizeof p, "%s/../RE2/SOUND/ARMS11.EDH", RE15_XSTR(RE15_ASSETS_PATH));
+        int r2 = bytes_at(p, 4, b);
+        CHECK(101, r2 == 0 && b[0] == 0x00 && b[1] == 0x00 && b[2] == 0x54 && b[3] == 0x16,
+              "RE2 ARMS11.EDH Satz 1 = 00 00 54 16 (belegt)");
+    }
+    /* M2 — Leerzweig: Rakete -> RE2 ARMS11 Satz 1 (Haltezustand @0x80043868/94-9c), sonst RE1.5-Klick. */
+    {
+        int n0 = g_test_re2arms_count;
+        int r = re15_werfer_leer_ton(18);
+        CHECK(102, r == 1 && g_test_re2arms_count == n0 + 1 && g_test_re2arms_last_id == 0x11 && g_test_re2arms_last_satz == 1,
+              "leere Rakete: re2arms(0x11, 1), ist r=%d id=%d satz=%d", r, g_test_re2arms_last_id, g_test_re2arms_last_satz);
+        int andere = re15_werfer_leer_ton(14) + re15_werfer_leer_ton(15) + re15_werfer_leer_ton(16) +
+                     re15_werfer_leer_ton(17) + re15_werfer_leer_ton(20) + re15_werfer_leer_ton(3);
+        CHECK(103, andere == 0 && g_test_re2arms_count == n0 + 1, "GL/Flamme/Python/Pistole: Aufrufer spielt den RE1.5-Klick");
+    }
+    /* M4 — RE2-Fresser: +0x1D3 Bit 0x80 (EXEC[8] P0 @0x80103c04-14) und +0x10E Bit 0x4000 sperren den
+     * Applier (Gate 2 @0x80047138-40, Gate 4 @0x80047158-64) — jeder fuer sich. */
+    {
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        memset(pl, 0, sizeof *pl);
+        pl->active = 1; pl->hp = 100; pl->state = 1; pl->x = 100000; pl->y = 0; pl->z = 100000;
+        re15_player_apply_hitbox(pl);
+        for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
+        const int32_t P[3] = { 100800, -800, 100000 };
+        static const int16_t box[4] = { -800, 0, 400, 200 };
+        static const struct { uint8_t b1d3; uint16_t f10e; int treffer; const char *was; } F[4] = {
+            { 0x80, 0x4000, 0, "frisst (1D3=80, 10E=4000)" }, { 0x80, 0x0000, 0, "nur 1D3=80 (Gate 2)" },
+            { 0x00, 0x4000, 0, "nur 10E=4000 (Gate 4)" },     { 0x00, 0x0000, 1, "aufgestanden (beide frei)" } };
+        for (int k = 0; k < 4; k++) {
+            re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 100800, 0, 100000, 50);
+            z->state = 1; z->sub_state_1 = 8; z->re2z_self1d3 = F[k].b1d3; z->re2z_f10e = F[k].f10e;
+            int n = re15_re2_gl_apply(P, 0, box, 0x30011u);
+            CHECK(104 + k, F[k].treffer ? (n != 0 && z->hp < 50) : (n == 0 && z->hp == 50),
+                  "Rakete gegen RE2-Zombie %s: Treffer %d hp %d", F[k].was, n, z->hp);
+        }
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
+    }
+    /* M1 — ROOM1140: der Konferenztisch (SCA-Zelle 6) ist eine Zelle der RE1.5-Schusslinie (Band 0,
+     * Klasse 3: Wort+10 = 0x0300, FUN_8003dcc4 @0x8003de5c-94) und sperrt die Rakete in Flughoehe
+     * -2530 wie die Handgranate (Spur A); neben dem Tisch fliegt sie bis zur Fernwand; die Kreis-Zelle
+     * (Typ 3, FUN_8003d6a8) sperrt formgenau. */
+    {
+        char p[1024];
+        snprintf(p, sizeof p, "%s/STAGE1/ROOM1140.RDT", RE15_XSTR(RE15_ASSETS_PATH));
+        FILE *f = fopen(p, "rb");
+        static uint8_t *rdt = NULL; long n = 0;
+        if (f) { fseek(f, 0, SEEK_END); n = ftell(f); fseek(f, 0, SEEK_SET);
+                 rdt = (uint8_t *)malloc((size_t)n);
+                 if (!rdt || fread(rdt, 1, (size_t)n, f) != (size_t)n) n = 0; fclose(f); }
+        memset(&g_room_rdt, 0, sizeof g_room_rdt);
+        int ok = (n > 0 && re15_rdt_parse(rdt, (size_t)n, &g_room_rdt) == 0 && g_room_rdt.sca_count > 6);
+        g_room_rdt_ok = ok;
+        const re15_sca_entry_t *c6 = ok ? &g_room_rdt.sca[6] : NULL;
+        CHECK(110, ok && (int16_t)c6->x == -4650 && (int16_t)c6->z == -17450 && c6->width == 12100 && c6->density == 6100 &&
+                   c6->type == 1 && c6->u0 == 0xff && c6->u1 == 0x00 && c6->floor == 0x03,
+              "ROOM1140 SCA-Zelle 6 = Tisch {x -4650..7450, z -17450..-11350, Typ 1, u0 ff, Wort+10 0x0300}");
+        if (ok) {
+            int32_t ze = rakete_nach_minus_z(200, -10400);
+            CHECK(111, ze != 1 && ze > -11400 && ze <= -10400, "Rakete ueber den Tisch: Explosion an der Tischkante, z=%d", (int)ze);
+            ze = rakete_nach_minus_z(9000, -10400);
+            CHECK(112, ze != 1 && ze < -18000, "Rakete neben dem Tisch (x 9000): Explosion an der Fernwand, z=%d", (int)ze);
+            ze = rakete_nach_minus_z(-4750, -10400);
+            CHECK(113, ze != 1 && ze > -13450 && ze < -12000, "Rakete auf den Kreis (-4750,-13900) r 500: Explosion am Kreis, z=%d", (int)ze);
+        }
+        g_room_rdt_ok = 0; memset(&g_room_rdt, 0, sizeof g_room_rdt);
+        start();
+    }
+}
+
 int main(void)
 {
     if (laden() != 0) { printf("CORE00.ESP (RE2) fehlt/ungueltig\n"); return 2; }
-    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f(); teil_g();
+    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f(); teil_g(); teil_h();
     if (s_fails) { printf("test_r35_werfer: %d FAILURES\n", s_fails); return 1; }
     printf("test_r35_werfer: OK\n");
     return 0;

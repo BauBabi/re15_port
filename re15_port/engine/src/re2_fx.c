@@ -1122,11 +1122,21 @@ static void op_dispatch_plus_art(int k)
  * `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0) — ohne Hoehe. Deshalb: liegt das Geschoss UEBER
  * der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band = -y/1800, Spieler-y := -1800 * +0x82
  * @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt jede Zelle dieses Bandes an
- * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild, aber NUR
- * Rechteck-Zellen (Typ & 0x0f == 1): der Wand-Filter des Projekts (re15_collision.c / Karten-Innen-
- * waende: Typ 1 + solide + Band). Treppen-/Rampenzellen (Typ != 1, begehbar — in ROOM1060 liegen
- * 18,7 % der gemessenen Spieler-Standorte in solchen Zellen) sperren ueber Bandhoehe NICHT.
- * Moebel-Zellen (Typ 1) sperren wie Waende (Hoehe steht nicht in den Daten; OFFEN im Dossier). */
+ * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild: Rechteck-Zellen
+ * (Typ 1) und Kreis-Zellen (Typ 3).
+ * ⛔ BERICHTIGT (Nachbesserung 1, Dossier §8.1): hier stand "Typ != 1 = Treppen-/Rampenzellen,
+ * begehbar". Falsch: Typ 1..9 sind FORMEN (Verteiler 0x800b2858, gefuellt @0x8003af04-84; Port
+ * re15_collision.c Dispatch push_rect/push_circle/push_diag*), in ROOM1000/1060/1140 kommen nur
+ * Typ 1 und Typ 3 (Kreis, FUN_8003d6a8) vor, alle mit Wort+10 = 0x?3 (Klassen-Nibble 3). Der Kreis
+ * hat Mitte (x + w/2, z + w/2), Radius w/2 (FUN_8003d6a8; push_circle `cr = width >> 1`), gesperrt
+ * wie dort bei pen = (cr + r) - dist >= 1 (dist = SquareRoot0, @0x8003d724 `jal 0x80065f60`).
+ * Die Formen 2/4..9 (Raute/Dreiecke/Kapseln) prueft Spur A (granate_r35.c, formgenau) — bei der
+ * Zusammenfuehrung EINEN Formtest fuer Handgranate und Werfer nehmen (Dossier OFFEN 9).
+ * HOEHE: Moebel-Zellen sperren wie Waende in jeder Hoehe — dieselbe Regel wie die Handgranate
+ * (Spur A): RE1.5-Zellen tragen keine Hoehe, und die RE1.5-SCHUSSLINIE selbst sperrt an ihnen ohne
+ * Hoehe: Resolver FUN_80011f50 `jal 0x8001b9b4` / `bne v0,zero,0x80012540` @0x80012168-70 ->
+ * FUN_8003dcc4(.,.,0xf00,0x300) @0x8001ba1c-24, Band `lbu v1,130(v1)` / `sra v0,v0,28` / `bne`
+ * @0x8003de5c-6c, Klasse `and v1,t5,a0` / `bne` @0x8003de7c-94, nur x/z (Dossier §8.1). */
 static int wandzelle_im_band(int32_t x, int32_t z, int b, int32_t r15)
 {
     const re15_rdt_t *rdt = &g_room_rdt;
@@ -1134,10 +1144,18 @@ static int wandzelle_im_band(int32_t x, int32_t z, int b, int32_t r15)
     const int32_t rr = (int32_t)(int16_t)r15;
     for (int i = 0; i < rdt->sca_count; i++) {
         const re15_sca_entry_t *e = &rdt->sca[i];
-        if (((unsigned)e->type & 0x0fu) != 1u) continue;               /* Rechteck */
+        const unsigned typ = (unsigned)e->type & 0x0fu;
+        if (typ != 1u && typ != 3u) continue;                          /* Rechteck / Kreis */
         if (!((unsigned)e->u0 & 1u)) continue;                         /* solide = Maske 0x100 des Wortes Typ|u0<<8 */
         if ((((unsigned)e->floor >> 4) & 0x0fu) != (unsigned)b) continue;   /* Band (Wort u1|floor<<8, Bits 12..15) */
         if ((unsigned)e->u1 & 2u) continue;                            /* `andi 0xf002`: Bit 1 muss 0 sein */
+        if (typ == 3u) {                                               /* Kreis FUN_8003d6a8 */
+            const int32_t cr = (int32_t)e->width >> 1;
+            const int32_t dx = x - ((int32_t)e->x + cr), dz = z - ((int32_t)e->z + cr);
+            const int32_t dist = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+            if ((cr - rr) - dist >= 1) return 1;                       /* pen = (cr + r) - dist >= 1, r = -rr */
+            continue;
+        }
         if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
         if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
         return 1;
