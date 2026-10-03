@@ -767,7 +767,7 @@ Nachbesserung 1 liegen in `scratchpad/jnb1/` (g_orig.txt, g_griff.txt, g_desync.
 Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 
 ### Stand (fortlaufend)
-- [x] A3  - [x] A2 (Riegel; exe-Nachmessung folgt)  - [ ] A1
+- [x] A3  - [x] A2 (Riegel + exe)  - [ ] A1
 
 ### A3 — Kopfkommentar (3) in re15_affen.h (erledigt)
 - Vorher: "Luft-/Sturz-Spuren (1/2) bleiben byte-true" (falsch seit 30484afa).
@@ -861,3 +861,17 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
     (-8707,-12438), Original (-8890,-12048)) und Leon nicht schiebt — die Kette selbst ist bitgleich (s. `wand`).
     Der Port-e2 steht T250-T264 still, das Original-e2 gleitet in derselben Zeit ~400 an Leons Koerper entlang
     -> gehoert zu A1 (Lage/Bewegung im Koerperkontakt), dort weiter.
+- **Messung nachher, exe ueber den ECHTEN Tuerweg** (`jnb2/w6`, exe-Kopie re15_pc_jnb2.exe, Env wie Abnahme n6b:
+  RE15_SET_FLAG=4:243,3:130, RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der Tuer, Quadrat-Tasten,
+  RE15_INPUT_SCRIPT=W34.5,U2.5,W1; debug.log `DOOR FIRE` -> room11c0, sub02 F6, sub07 F1088):
+  Rear-up S3 F1198, Pin F1203 (Leon mo 1), Leon steht bis F1213, **erste Platzierung F1214 = Pin + 11** (Original
+  T254 -> T265 = +11; vorher Abnahme n6b F1215 = +12), Wurf-Bahn alle 2 Bilder wie die Clip-Daten, letzte Platzierung
+  F1239 (Opfer-Bild 0x24: 1437 Einheiten — derselbe Clip-Sprung wie im Original, dort Platzierung 0x23 -> 0x24
+  (-4334,-11423) -> (-5402,-10631) = 1330; die Abnahme las ihn als Port-Sprung), danach steht Leon (freier Boden,
+  keine Zelle -> die Klemme schiebt nicht); **P3 Clip 0x10 ab F1286 = Pin + 83** (Original T337/338), Clip 0xb ab
+  F1302 (+16), Freigabe F1327/28 (+25), HP 88 -> 88. Bilder `jnb2/w6_aufsteh.png` (F1284-F1328): in dieser Kamera
+  verdeckt der Gorilla Leon beim Aufstehen (nur die Beine am Wagen sichtbar) — die Pose (Bank PL00, Richtung)
+  belegt der Riegel `griff` ueber dieselbe Auswahlfunktion re15_actor_anim_select, die der Zeichner nimmt.
+- Harness und exe verhalten sich jetzt gleich: die Abweichung "Harness bleibt stehen / exe springt bei 0x24" kam
+  von der Ersatzklemme (Harness: Platzierungen 0x21-0x24 lagen in Zellen -> festgehalten; exe: freier Boden -> keine
+  Klemme); jetzt laufen beide durch dieselbe Kette Platzierung -> Schub -> FUN_8003b0a4.
