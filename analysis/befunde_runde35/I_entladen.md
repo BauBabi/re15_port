@@ -205,7 +205,23 @@ Lauf: `RE15_TITLE_SHOT=t.bmp RE15_GOTO_ROOM=1170 RE15_KILL_AT=1500 RE15_BOOT_EXI
 * Masken im Spiel 2 ROOM1170 (echte Tuer): `bilder_mit_masken=847`, fremd 0.
 
 ## Tests
-(laufend)
+
+Registriert NUR in `re15_port/tests/unit/probes/r35_entladen.cmake`:
+| Test | misst | Ergebnis (einzeln) |
+|---|---|---|
+| unit_r35_entladen_beleg | Original-Bytes in info/Re1.5/PSX.EXE: `@0x80039704/38/40` Arena-Reset, `@0x8001d5a0`, `jal 0x80039270` @0x800399cc, `jal 0x8001b3f8` @0x80039a08; Voll-Scan: genau 2x `jal 0x800396fc` (@0x8001d5ac/@0x8001d988), genau 1x `jal 0x80039590` (@0x8001ce54) | Passed |
+| unit_r35_entladen_gegner | Generation je Gegnerbank (re15_enemy_alloc), FREMD nach der Grenze, leer nach re15_enemy_reset, Ueberlauf -> 1 | Passed |
+| integration_r35_entladen_a | Tod 1020 -> NEW GAME -> Tod 1240 -> NEW GAME: jede EREIGNIS-Zeile belegt 0, jede SUMME fremd 0, keine BILD-Zeile, ROOM1020 zeichnet eigene Masken, Titel nach Tod 0 Masken | Passed 21 s |
+| integration_r35_entladen_b | Raumwechsel 1020 -> 1030 -> Tod: dito, ROOM1030 zeichnet eigene Masken | Passed 16 s |
+| integration_r35_entladen_c | Tod -> LOAD im Todesraum (Karte ROOM1020 (-26000,0,-8700) Cut 0): beide Spiele zeichnen ihre Masken (137/137 Bilder), fremd 0 | Passed 39 s |
+| integration_r35_entladen_d | Tod in 1170 -> NEW GAME -> Montage-Tuer 1170 (240 Bilder/s): Cinematic-Bank 1170 bei JEDEM Betreten gebunden (2/2), fremd 0 | Passed 50 s |
+
+Gegenproben (Fix-Zeile temporaer entfernt, gebaut, gemessen, `git checkout` zurueck):
+* PRI-Riegel ohne Generation -> integration_r35_entladen_c FAILED: "Masken nach dem Laden fehlen
+  (Spiel 1: 137, Spiel 2 nach Tod im selben Raum/Cut: 0 Bilder)".
+* RBJ-Riegel ohne Generation -> Spiel 2 ohne `[rbj] room 1170`-Zeile (M3) = Bedingung von Lauf d.
+* Ohne Entladen (Messstand c21e38f8/9b36e714) liefern dieselben Laeufe die Vorher-Zahlen aus M1/M2
+  (fremde Masken in 23/599 Bildern, fremde TIM-Slots) -> a und b schlagen dort an.
 
 ## OFFEN
 (laufend)
