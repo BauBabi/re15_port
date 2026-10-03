@@ -255,14 +255,13 @@ void re15_actor_step_walk(re15_actor_t *a)
      * For RE2-faithful cinematic, Elliot's yaw stays at his spawn value
      * and gradually slews while walking toward dest. */
     int16_t delta = yaw_delta(a->rot_y, target);
-    int16_t abs_delta = (delta < 0) ? -delta : delta;
 
     if (a->walk_fsm == 1) {
         /* STATE 1 — ALIGN: slew yaw at 0x60/tick, NO position advance. When the
          * heading is within ~31° (0x15e) of the target → enter state 2 (active).
          * PSX LAB_80030b70 + FUN_8001ab9c convergence gate. */
         plc_yaw_slew(a, target, PLC_YAW_SLEW_INIT);   /* FUN_8001aac4, a2=0x60 @0x80030ba4 */
-        if (abs_delta <= PLC_CONV_THRESHOLD) {
+        if (delta >= -PLC_CONV_THRESHOLD && delta < PLC_CONV_THRESHOLD) {   /* Runde 35 Spur J: FUN_8001ab9c halboffen ((b-r+k)&0xfff) < 2k, `slt v0,v1,v0` @0x8001abfc */
             a->walk_fsm = 2;
             /* A2: the walk/run EDD clip starts ONLY now (active stepping) — the
              * actor STOOD through the align phase. PSX Plc_dest sets no motion;
@@ -311,7 +310,7 @@ void re15_actor_step_walk(re15_actor_t *a)
     /* Mode-9 arrival cone = 0x60 (@0x800313d4 `ori a2,0x60`), NOT the port-invented 0x20 (which made the
      * scripted turn-in-place fire ~3x too tightly aligned). (audit wf_4e8af27f) */
     int16_t arrival_cone = (a->walk_mode == 0x09) ? 0x60 : PLC_YAW_ARRIVAL;
-    int yaw_aligned = (delta >= -arrival_cone && delta <= arrival_cone);
+    int yaw_aligned = (delta >= -arrival_cone && delta < arrival_cone);   /* Runde 35 Spur J: FUN_8001ab9c halboffen @0x8001abfc (Mode 9 @0x800313d0) */
 
     /* Translate forward at per-mode speed EVERY tick — the real engine's
      * walker (FUN_800245d8) doesn't gate translation on yaw alignment.
