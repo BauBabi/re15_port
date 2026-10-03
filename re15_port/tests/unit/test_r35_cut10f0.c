@@ -632,6 +632,7 @@ static void teil_bgm(void)
     re15_game_state_init();
     re15_map_visited_reset();
     g_current_room_id = 0x1150;
+    g_scd.tick_count = 1;                                    /* die VM ist in diesem Raum schon gelaufen */
     (void)re15_cut10f0_bgm_eintrag(0, 0x15);                 /* die Audio-Schicht fragt beim Raumaufbau */
     ticks(2);
     PRUEF(re15_cut10f0_bgm_eintrag(0, 0x0F) == -1 && re15_cut10f0_bgm_eintrag(0, 0x15) == -1 && !re15_cut10f0_bgm_fenster(),
@@ -652,6 +653,20 @@ static void teil_bgm(void)
     PRUEF(!re15_cut10f0_bgm_fenster() && re15_cut10f0_bgm_eintrag(0, 0x15) == -1 &&
           re15_cut10f0_bgm_eintrag(0, 0x13) == -1 && g_test_bgm_start_count == 0,
           "waehrend der Montage ((9,73)=1, Szene laeuft): kein MAIN01, auch nicht bei einem Raumaufbau, kein Anstoss");
+
+    /* ---- Schnitt der Montage in den naechsten Raum (gemessen mit K+L zusammen, Dossier §9.7): der Raumaufbau
+     * loescht die Rahmen-Flags ((1,27) @0x80039710-30, (2,7)-Schatten) und nullt g_scd; das Programm des
+     * Montage-Schritts setzt sie erst bei seinem ersten VM-Lauf wieder. Vorher ging hier das Fenster auf. ---- */
+    szenenrahmen(0);
+    g_scd.tick_count = 0;
+    ticks(1);
+    PRUEF(!re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 0,
+          "Raumaufbau mitten in der Montage (Rahmen-Flags geloescht, VM in diesem Raum noch nicht gelaufen): Fenster zu");
+    g_scd.tick_count = 1;                                    /* erster VM-Lauf: Set(2,7,1)/Set(1,27,1) */
+    szenenrahmen(1);
+    ticks(3);
+    PRUEF(!re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 0,
+          "... nach dem ersten VM-Lauf des Montage-Schritts (Rahmen-Flags wieder gesetzt): weiter zu, kein Anstoss");
 
     /* ---- Montage-Ende: Fenster auf, EIN Anstoss fuer den laufenden Raum ---- */
     szenenrahmen(0);
@@ -704,10 +719,15 @@ static void teil_bgm(void)
     re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);       /* Restore */
     re15_game_flag_set(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, 1);
     g_test_bgm_start_count = 0;
+    g_scd.tick_count = 0;                                     /* Raumaufbau des Ladens: g_scd genullt */
+    ticks(1);
+    PRUEF(!re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 0,
+          "nach dem Laden, VM noch nicht gelaufen: Fenster noch zu");
+    g_scd.tick_count = 1;                                     /* erster VM-Lauf im geladenen Raum */
     ticks(1);
     PRUEF(re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 1 && g_test_bgm_start_room == 0x0F &&
           re15_cut10f0_bgm_eintrag(0, 0x0F) == RE15_CUT10F0_BGM_EINTRAG,
-          "nach dem Laden im Fenster: das erste Spielbild stoesst die Raummusik an (Raum 0x%02X, %dx)",
+          "nach dem Laden im Fenster: das erste Spielbild nach dem ersten VM-Lauf stoesst die Raummusik an (Raum 0x%02X, %dx)",
           g_test_bgm_start_room, g_test_bgm_start_count);
 
     /* ---- LADEN eines Stands AUSSERHALB des Fensters, waehrend die Audio-Schicht noch MAIN01 hat ---- */

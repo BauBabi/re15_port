@@ -340,8 +340,16 @@ int re15_cut10f0_bgm_fenster(void)    { return s_bgm_offen; }
 static void bgm_fenster_tick(void)
 {
     const uint8_t war_offen = s_bgm_offen;
+    /* "Keine Szene laeuft" gilt erst, wenn die VM in diesem Raum gelaufen ist (g_scd.tick_count > 0; der
+     * Raumaufbau nullt g_scd, scd_room_setup.c memset; gezaehlt hinter dem Freeze-Gate des Frame-Runners
+     * FUN_8003f038 @0x8003f04c). Der Raumaufbau loescht die Rahmen-Flags — (1,27) byte-true mit der Maske
+     * @0x80039710-30 (FUN_800396fc), (2,7) als Port-Schatten —, und ein Szenenprogramm, das der Aufbau startet
+     * (Montage-Schritt der Spur L; Form Evt_exec aus sub00), setzt sie erst bei seinem ersten VM-Lauf wieder
+     * (`22 02 07 01` / `22 01 1b 01` am Programmanfang, Executor FUN_8003f0a0). Gemessen mit K+L zusammen
+     * (Dossier §9.7): ohne diese Bedingung ging das Fenster MITTEN in der Montage auf (ROOM1130, Bild 0). */
     if (!fenster_flags())           s_bgm_offen = 0;
-    else if (!re15_cine_active())   s_bgm_offen = 1;    /* oeffnet erst nach dem Ende der Szene */
+    else if (!re15_cine_active() && g_scd.tick_count > 0)
+                                    s_bgm_offen = 1;    /* oeffnet erst nach dem Ende der Szene */
 #ifdef RE15_PLATFORM_PC
     if (war_offen != s_bgm_offen)
         fprintf(stderr, "[cut10f0] MAIN01-Fenster %s in ROOM%04X: (%d,%d)=%d (%d,%d)=%d, Parkplatz erreicht (%d,%d)=%d\n",

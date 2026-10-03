@@ -650,3 +650,44 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   + 1 Codezeile. Rumpf zuerst in cut10f0_pc.c -> Linkfehler `test_rotor_bgm_pin` (bindet audio_pc.c ohne platform-
   Dateien, nur re15_engine); deshalb in engine/src/cut_10f0.c (`re15_cut10f0_se_on`, `re15_cut10f0_main_gesperrt`).
   `git diff master --numstat` audio_pc.c: **10/0** (include 1, ss_bgm_entry 3, Se_on 3, SEQ_CTL 3). Bau: LOCAL-BUILD-OK (build).
+
+### 9.7 Zusammenfuehrung K + L gemessen (Auftrag: "pruefe, ob das Besucht-Bit von 11C0 dabei gesetzt wird und Blinken/MAIN01 vorzeitig beendet")
+- **Aufbau (nur Messung, nichts davon im Zweig):** `git merge-tree --write-tree HEAD r35/cut1150` (HEAD eed4f9d2, L 6f03b1ef)
+  -> Baum 4b82344d, per `git archive` (ohne shared_assets) in den Sitzungs-Scratch `mitL/`, eigenes Bauverzeichnis
+  (`RE15_BUILD_DIR`), Assets des Baums ueber `RE15_CD_ROOT`; Laufverzeichnis `re15_port/build/k_mitL/` (ignoriert).
+  **Konflikte beim Zusammenfuehren** (fuer den Orchestrator):
+  1. `scd_room_setup.c` include + Installer-Block, `scd_vm.c` include + scd_event_fire-Weiche: beide Seiten behalten
+     (K-Zeile vor den L-Zeilen; die Weichen sind disjunkt: K Ereignis 20 nur ROOM10F0, L Ereignis 21).
+  2. `enemy_common.c` rbj_resolve_slot: L ersetzt `(1u << slot)` durch `(1u << mslot)` (Alias-Tabelle s_rbj_alias);
+     K haengt danach `if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);` an — beide behalten, L-Zeile in der
+     Schleife, K-Zeile danach.
+  3. `tests/test_support.c` fuehrt git OHNE Konfliktmarke zusammen, der Bau scheitert aber: K und L legen beide die
+     Spione `g_test_tuer_laden_count/_se_last/_se_count`, `re15_audio_re2_tuer_laden`, `re15_audio_re2_tuer_se` an
+     ("redefinition", test_support.c:100-102). Aufloesung: die K-Fassung behalten (Obermenge, zusaetzlich
+     `g_test_tuer_laden_groesse`), die drei L-Zeilen streichen.
+- **Lauf m1** (L's Weg "A": Karte `probe_r35_cut1150_karte re15_card.mcr 1130 nach10f0 ersteszene` = (9,71)=1, (3,94)=1,
+  (9,73)=0; CONTINUE in ROOM1130, `W1,A0.2,W200`, `RE15_FLAG_TRACE=1`, `RE15_IT_LOG=30`, EXIT_AT 1500#1150) — debug.log:
+  ```
+  1373 [room] PC loaded room1130.rdt              <- Schnitt der Montage 1150 -> 1130
+  1377 [flag] z1/27 = 0                            <- Raumaufbau loescht die Rahmen-Flags (@0x80039710-30)
+  1383 [irons-tod] ROOM1130 Zustand 2: Montage 1130 (Programm 1)
+  1386 [cut10f0] MAIN01-Fenster auf in ROOM1130: (9,71)=1 (9,73)=1, Parkplatz erreicht (4,64)=0
+  1387 [cut10f0] Raummusik-Anstoss in ROOM1130: Soll MAIN01
+  1389 [flag] z2/7 = 1                            <- erst JETZT setzt das Montage-Programm seinen Rahmen
+  1390 [flag] z1/27 = 1
+  ...
+  1579 [irons-tod] ROOM11C0 Zustand 5: Montage 11C0 (Programm 4)
+  1584 [cut10f0] Raummusik-Anstoss in ROOM11C0: Soll Tabelle  <- Raum-Byte 0x1C: Parkplatzmusik im Montage-Schnitt
+  1652 [irons-tod] ROOM1150 Zustand 6: Rueckkehr: Programm 5
+  1656 [cut10f0] Raummusik-Anstoss in ROOM1150: Soll MAIN01
+  1662/1663 [flag] z2/7 = 0 / z1/27 = 0; 1665 Rueckkehr beendet, Steuerung frei
+  ```
+- **Befund 1 (neu, MANGEL):** das Fenster ging MITTEN in der Montage auf (ROOM1130, erstes Bild nach dem Raumladen),
+  MAIN01 lief damit unter den Knaellen 1130/1040/1030 — genau das, was Mangel 2 verhindern sollte. Ursache: der
+  Raumaufbau loescht die Rahmen-Flags ((1,27) byte-true @0x80039710-30 in FUN_800396fc = scd_room_setup.c:258,
+  (2,7)-Schatten scd_room_setup.c:286), und das Programm des Montage-Schritts setzt sie erst bei seinem ERSTEN VM-Lauf
+  wieder (`22 02 07 01` / `22 01 1b 01` am Programmanfang). re15_cut10f0_tick lief dazwischen. Der Unit-Riegel `bgm`
+  hatte das nicht gesehen: er setzte die Rahmen-Flags ueber den Raumwechsel hinweg einfach stehen.
+- **Befund 2 (Auftragsfrage):** "Besucht-Bit 11C0" — beendet nichts mehr: seit §9.4 haengen Kachel und Fenster an
+  (4,64), und der Montage-Schnitt nach ROOM11C0 laesst (4,64) = 0 (kein `Fenster zu`-Eintrag in m1; L sperrt den
+  sub01-Reseed waehrend der Montage, L-Dossier §2.3, Riegel `unit_r35_cut1150_montage_11c0` "(4,64) unberuehrt").
