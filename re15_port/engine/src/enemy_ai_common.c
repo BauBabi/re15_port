@@ -8891,7 +8891,7 @@ static void re15_maggot_ai_tick(int slot)
                 if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 4); e->sub_state_3 = 0; break; }  /* aca58==0x701 grab/aim-assist @0x801174e4-504 (#14; 0x701 = state1-sub7 aim, dog #7 proof) */
                 if (dist < 3000) { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }  /* blind @0x8011753c-68 */
             }
-            if (e->sub_state_2 == 0) { uint32_t a0_b0 = re15_affen_psx_entity(e); e->ai_timer = (int16_t)(re15_affen_rng_a0(&a0_b0) + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, clip 0x16 @0x801175a4-c8; Runde 35 Spur J (7b): a0 = Entity */
+            if (e->sub_state_2 == 0) { uint32_t a0_b0 = re15_affen_b0_a0(e, pl); e->ai_timer = (int16_t)(re15_affen_rng_a0(&a0_b0) + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, clip 0x16 @0x801175a4-c8; Runde 35 Spur J (7b): a0 = Entity */
             {   /* unconditional -1 INCLUDING the seed tick (sh in the branch delay slot @0x801175f8-608);
                  * transition at PRE-decrement 0 @0x80117618 -> period exactly rng+59 (audit #18) */
                 int16_t t = e->ai_timer; e->ai_timer = (int16_t)(t - 1);
@@ -9151,7 +9151,8 @@ static void re15_maggot_ai_tick(int slot)
                 re15_maggot_anim(e);
                 if (e->anim_frame == 0x0a) {                  /* LAUNCH at frame 10 @0x80118a2c-40 */
                     e->sub_state_2 = 2;
-                    e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 200   /* @0x80118a44-54 */
+                    uint32_t a0_l = re15_affen_psx_entity(e);   /* Runde 35 Spur J (7c): `lw a0,-14460(a0)` = g_entity(cur) @0x80118a24 */
+                    e->crow_speed = (int16_t)((re15_affen_rng_a0(&a0_l) & 0x1f) + 200   /* @0x80118a44-54 */
                                               + (int)e->mag_boost * 10);           /* += +0x1e2*10 = +40 @0x80118a64-80 (audit #6) */
                     if (e->sub_state_3 == 3) e->crow_speed = 0x32a;                /* blind zone leap @0x80118a94-aa0 */
                     e->mag_airborne = 1;                                           /* +0x1e0=1 @0x80118aa4-b0 */

@@ -202,5 +202,7 @@ uint32_t re15_affen_psx_entity(const re15_actor_t *e);
  *      B[0] Leerlauf-Timer (@0x80117594): a0 = Entity-Zeiger (GDB vs9117: 0x800ad014 bei cur = e2). */
 uint32_t re15_affen_a804_a0(const re15_actor_t *e, const re15_actor_t *ziel, int32_t r);
 uint32_t re15_affen_b3_a0(const re15_actor_t *e, const re15_actor_t *pl);
+uint32_t re15_affen_b0_a0(const re15_actor_t *e, const re15_actor_t *pl);   /* +0x1dc != 0 -> Abstand^2, sonst Entity */
+/* (7c) B[7] Absprung (`jal 0x8001af20` @0x80118a3c): a0 = g_entity(cur) per `lw a0,-14460(a0)` @0x80118a24. */
 
 #endif /* RE15_AFFEN_H */

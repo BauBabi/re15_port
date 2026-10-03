@@ -232,3 +232,16 @@ uint32_t re15_affen_b3_a0(const re15_actor_t *e, const re15_actor_t *pl)
 {
     return pl->hit_react ? 0xbb8u : re15_affen_a804_a0(e, pl, 3000);
 }
+
+/* (7b) a0 beim Eintritt in B[0] (Leerlauf 0x80117574): der Zustand-1-Handler 0x80117254 rechnet den Abstand mit
+ *      a0 = dx^2+dz^2 (Spieler - Entity, `lw`/`mult`/`mflo` @0x801172c4-fc) fuer SquareRoot0 @0x80117300 (a0 bleibt);
+ *      A[0] 0x80117484 kehrt bei +0x1dc != 0 sofort zurueck (`bne` @0x80117498), sonst laedt es
+ *      `lw a0,-14460(a0)` = g_entity(cur) @0x801174d0-d4 (wenn A[0] nicht nach sub 3/4 umschaltet). */
+uint32_t re15_affen_b0_a0(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    if (e->dog_blocked_ctr != 0) {
+        uint32_t dx = (uint32_t)(pl->x - e->x), dz = (uint32_t)(pl->z - e->z);
+        return dx * dx + dz * dz;
+    }
+    return re15_affen_psx_entity(e);
+}
