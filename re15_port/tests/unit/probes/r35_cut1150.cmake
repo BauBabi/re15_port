@@ -5,13 +5,13 @@
 #
 # RIEGEL (Unit): ueber die ECHTEN Haken (Installation beim Raumaufbau, Weiche in scd_event_fire, Reseed-
 # Sperre, Signal-Takt). Teile: tuer1060 programme zaehlung szene montage_1130 montage_1040 montage_1030
-# montage_11c0 rueckkehr totenpose.
+# montage_11c0 rueckkehr totenpose knallbank.
 add_executable(test_r35_cut1150 ${CMAKE_CURRENT_SOURCE_DIR}/test_r35_cut1150.c)
 target_link_libraries(test_r35_cut1150 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_cut1150 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r35_cut1150 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-foreach(_teil tuer1060 programme zaehlung szene montage_1130 montage_1040 montage_1030 montage_11c0 rueckkehr totenpose)
+foreach(_teil tuer1060 programme zaehlung szene montage_1130 montage_1040 montage_1030 montage_11c0 rueckkehr totenpose knallbank)
     add_test(NAME unit_r35_cut1150_${_teil} COMMAND test_r35_cut1150 ${_teil})
     set_tests_properties(unit_r35_cut1150_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()

@@ -101,7 +101,9 @@ endfunction()
 
 # --- A: ganze Kette, alle Zombies leben --------------------------------------------------------
 #  F90 Aktion an der Tuer (Standplatz aus der Karte: (-5900,16350) Blick 3072 vor Slot 2 @0x008CE)
-it_lauf(a 1130 "nach10f0;ersteszene" "W1,A0.2,W200" 6500 1150 600 _dbg)
+# RE15_EXIT_AT zaehlt je Raum (der Bildzaehler startet bei jedem Raumladen neu): 1500 liegt ueber der
+# Szenenlaenge des ERSTEN 1150-Besuchs (1283 Bilder, Unit-Riegel) und wird erst beim RUECKKEHR-Besuch erreicht.
+it_lauf(a 1130 "nach10f0;ersteszene" "W1,A0.2,W200" 1500 1150 600 _dbg)
 it_muss(A "${_dbg}" "[room] PC loaded room1150.rdt")
 it_muss(A "${_dbg}" "Szene startet (Programm 0)")
 it_muss(A "${_dbg}" "Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1")
@@ -130,7 +132,7 @@ if(NOT CMAKE_MATCH_1 STREQUAL "0")
 endif()
 
 # --- B: 1140 und 1070 leer: ohne 1130, ohne Cut-7-Teil ------------------------------------------
-it_lauf(b 1130 "nach10f0;ersteszene;tot1140;tot1070" "W1,A0.2,W200" 6500 1150 600 _dbg)
+it_lauf(b 1130 "nach10f0;ersteszene;tot1140;tot1070" "W1,A0.2,W200" 1500 1150 600 _dbg)
 it_muss(B "${_dbg}" "Umzug: 1140 lebend 0 -> 1130 (9,74)=0; 1070 lebend 0 -> 1030 (9,76)=0")
 it_darf_nicht(B "${_dbg}" "Montage 1130")
 it_darf_nicht(B "${_dbg}" "[room] PC loaded room1130.rdt")

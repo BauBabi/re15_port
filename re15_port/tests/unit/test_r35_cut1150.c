@@ -25,6 +25,10 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
 #include "re15_fade.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
+#include "re15_tim.h"
+#include "re15_vab.h"
 #include "re15_tuer1060.h"
 #include "re15_irons_tod.h"
 #include <stdio.h>
@@ -57,6 +61,8 @@ static uint8_t *slurp(const char *p, size_t *n)
     if (n) *n = (size_t)sz;
     return b;
 }
+
+static void bank_laden(uint8_t type, int buf);
 
 static int rdt_laden(uint16_t room)
 {
@@ -106,6 +112,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     g_game = flags_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    bank_laden(0x45, 0); bank_laden(0x42, 1); bank_laden(0x40, 2);   /* Irons, Ada, Marvin */
     re15_player_cmd_reset();
     re15_pauseflags_clear();
     g_letterbox_level = 0;
@@ -127,6 +134,32 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
 }
 
 static void flags_leeren(void) { re15_game_state_init(); }
+
+/* Gegner-Bank aus CDEMD0.EMS laden wie die Live-Plattform (main.c pc_enemy_load) und probe_marvin_10d0.c:
+ * ohne geladene Bank loest der Marker-Binder den RBJ-Record nicht auf und die Clip-Laengen fallen auf
+ * die eingebetteten Tabellen zurueck (Irons' Clip 2 waere 52 statt 90 Bilder). */
+static uint8_t *s_ems = NULL; static size_t s_ems_sz = 0;
+static uint8_t  s_bank_buf[3][0x60000];
+static void bank_laden(uint8_t type, int buf)
+{
+    if (!s_ems) {
+        char p2[600]; snprintf(p2, sizeof p2, "%s/EMD/CDEMD0.EMS", RE15_ASSET_PSX_DIR);
+        s_ems = slurp(p2, &s_ems_sz);
+    }
+    if (!s_ems) return;
+    int idx = re15_ems_index_for_type(type);
+    size_t off = 0, len = 0;
+    if (idx < 0 || re15_ems_get_entry(s_ems, s_ems_sz, idx, &off, &len) != 0) return;
+    re15_enemy_bank_t *eb = re15_enemy_alloc(type);
+    if (!eb || len > sizeof s_bank_buf[buf]) return;
+    memcpy(s_bank_buf[buf], s_ems + off, len);
+    re15_tim_t tim = (re15_tim_t){0};
+    if (re15_emd_parse_container(s_bank_buf[buf], len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
+    eb->ok = 1; eb->buf = NULL;
+    eb->loco_ok   = (re15_emd_parse_loco_bank(s_bank_buf[buf], len, &eb->skel_loco, &eb->anim_loco) == 0);
+    eb->victim_ok = (re15_emd_parse_victim_bank(s_bank_buf[buf], len, &eb->skel_victim, &eb->anim_victim) == 0);
+    eb->own_ok    = (re15_emd_parse_own_bank(s_bank_buf[buf], len, &eb->skel_own, &eb->anim_own) == 0);
+}
 
 static int faeden_im_programm(void)
 {
@@ -504,6 +537,36 @@ static void teil_totenpose(void)
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
 
+/* ---- Teil: knallbank (die eingebackene Tonbank mit den Lesern des Tuerbank-Laders pruefen) ---- */
+#include "../../engine/src/gen/knall_bank.inc"
+static void teil_knallbank(void)
+{
+    printf("== knallbank ==\n");
+    const uint8_t *b = k_knall_bank; const uint32_t n = KNALL_BANK_SIZE;
+    uint32_t vh_off = (uint32_t)b[0xC30] | ((uint32_t)b[0xC31] << 8) | ((uint32_t)b[0xC32] << 16) | ((uint32_t)b[0xC33] << 24);
+    PRUEF(n > 0xC38u && vh_off == 0x10, "Tonteil-Form: %u B, VH @0x%X (Nachspann @0xC30)", (unsigned)n, (unsigned)vh_off);
+    re15_vab_t vab; int rc = re15_vab_parse(b + vh_off, 0xC38u - vh_off, &vab);
+    PRUEF(rc == 0 && vab.vag_count == 2, "re15_vab_parse rc=%d, %d VAGs", rc, vab.vag_count);
+    uint32_t vbd = n - 0xC38u;
+    PRUEF(vab.samples[0].size == 9216 && vab.samples[1].size == 8080 && vab.samples[1].offset + vab.samples[1].size == vbd,
+          "VAG 1 = 9216 B (DOOR04 Door_exit), VAG 2 = 8080 B (ROOM1030 0x0c), VB %u B", (unsigned)vbd);
+    re15_edt_rec_t e0, e1;
+    PRUEF(re15_edt_decode(b, 0, &e0) == 0 && re15_edt_decode(b, 1, &e1) == 0 &&
+          e0.prog == 0 && e0.tone == 0 && e1.prog == 0 && e1.tone == 1 && !e0.empty && !e1.empty,
+          "EDT-Saetze 0/1 -> Programm 0 Tone 0 / Tone 1 (prio %d/%d, Stimme %d/%d)", e0.prio, e1.prio, e0.voice, e1.voice);
+    /* Tone-Saetze: VAG-Index 1 bzw. 2 (Tone-Segment Programm 0 @VH+0x20+0x800, Satz 0x20 B, VAG @+0x16) */
+    const uint8_t *t0 = b + vh_off + 0x20 + 0x800, *t1 = t0 + 0x20;
+    PRUEF(t0[0x16] == 1 && t1[0x16] == 2 && t0[2] == 127 && t1[2] == 127, "Tone 0 -> VAG 1 (vol %d), Tone 1 -> VAG 2 (vol %d)", t0[2], t1[2]);
+    for (int i = 0; i < 2; i++) {
+        size_t cap = (vab.samples[i].size / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        int got = pcm ? re15_vag_adpcm_decode(b + 0xC38u + vab.samples[i].offset, vab.samples[i].size, pcm, cap) : 0;
+        int peak = 0; for (int k = 0; k < got; k++) { int v = pcm[k] < 0 ? -pcm[k] : pcm[k]; if (v > peak) peak = v; }
+        PRUEF(got == (i == 0 ? 16128 : 14112) && peak > 30000, "VAG %d dekodiert: %d Abtastwerte, Spitze %d", i + 1, got, peak);
+        free(pcm);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -518,6 +581,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "montage_11c0") || !strcmp(teil, "alle")) teil_montage_11c0();
     if (!strcmp(teil, "rueckkehr") || !strcmp(teil, "alle")) teil_rueckkehr();
     if (!strcmp(teil, "totenpose") || !strcmp(teil, "alle")) teil_totenpose();
+    if (!strcmp(teil, "knallbank") || !strcmp(teil, "alle")) teil_knallbank();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
 }

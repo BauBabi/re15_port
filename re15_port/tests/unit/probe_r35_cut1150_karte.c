@@ -5,8 +5,8 @@
  *     RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
  * am LADE-Weg startet (Muster probe_r34n_d_karte.c). Der Spieler steht vor der Tuer (Vorwaerts-620-
  * Punkt im Tuer-Rechteck): ROOM1130 Slot 2 @0x008CE Rechteck (-7150,15350,1000,2000) -> Standplatz
- * (-5900,16350) Blick 3072 (-x); ROOM1060 Slot 2 @0x00D52 Rechteck (26600,24300,1000,2200) ->
- * Standplatz (27720,25400) Blick 3072. Die Flags kommen dann aus dem GELADENEN Spielstand.
+ * (-5900,16350) Blick 2048 (-x); ROOM1060 Slot 2 @0x00D52 Rechteck (26600,24300,1000,2200) ->
+ * Standplatz (27720,25400) Blick 2048 (-x). Die Flags kommen dann aus dem GELADENEN Spielstand.
  *
  * Aufruf: probe_r35_cut1150_karte <kartendatei> <raum-hex> [nach10f0] [ersteszene] [tot1140] [tot1070] [gesehen]
  *   nach10f0    (9,71)  10F0-Szene gesehen (Spur K)
@@ -45,8 +45,10 @@ int main(int argc, char **argv)
     g_current_room_id = (int)room;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
-    if (room == 0x1060u) { pl->x = 27720; pl->z = 25400; pl->rot_y = 3072; }
-    else                 { pl->x = -5900; pl->z = 16350; pl->rot_y = 3072; }
+    /* Blick 2048 = -x (Vorwaerts-620-Punkt des Scans: fx = x + 620*cos(yaw), fz = z - 620*sin(yaw),
+     * aot_common.c / test_r34n_d_adaruf.c vorwaerts_trifft; Gierung 0 = +x, 1024 = -z, 2048 = -x, 3072 = +z). */
+    if (room == 0x1060u) { pl->x = 27720; pl->z = 25400; pl->rot_y = 2048; }
+    else                 { pl->x = -5900; pl->z = 16350; pl->rot_y = 2048; }
     pl->y = 0;
     if (k) re15_game_flag_set(9, 71, 1);
     if (e) re15_game_flag_set(3, 94, 1);

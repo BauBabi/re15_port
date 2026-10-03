@@ -125,6 +125,7 @@ static const uint8_t k_p_szene[] = {
     0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x60,   /* Kopf frei (@0x012D2) */
     OP_SLEEP(20),
     OP_MOTION(1, 11), OP_FLG_REV, OP_SLEEP(40),            /* steht auf (@0x012C6/@0x012CA) */
+    OP_CUT(5),                                             /* Totale wie das Ende der ersten Szene (@0x012C4) */
     OP_SLEEP(60),                                          /* kurze Pause */
     OP_SE6(KNALL_SE_TUER), OP_SLEEP(45),                   /* der Knall (aus dem Buero gehoert) */
     OP_DOOR(RE15_IT_PARK_1130_X, RE15_IT_PARK_1130_Z, 0, 0x13, RE15_IT_CUT_1130),   /* -> 1130 (oder 1040, Weiche) */
@@ -135,7 +136,8 @@ static const uint8_t k_p_szene[] = {
 /* PROGRAMM 1 — ROOM1130 Cut 0: Tuerknall, die aus 1140 uebrig gebliebenen Zombies erscheinen.
  * Records = ROOM1140 sub00 @0x00BAA..@0x00C62 (Typ/grid/p6 je Record uebernommen), Tot-Bits neu,
  * Standorte = PORT-WAHL im Flur vor der Briefing-Room-Tuer (Spawn 1140->1130 @ROOM1140 0x00A52
- * (-1300,-13950)), Blick zur Kamera (+z = Gierung 0). */
+ * (-1300,-13950)), Blick zur Kamera (+z = Gierung 3072; Gierung 0 = +x, 1024 = -z, 2048 = -x: Vorwaerts-
+ * punkt fx = x + cos, fz = z - sin, aot_common.c). */
 #define EM_1130_LISTE \
     OP_EM(0, 0x16, 0x88, 0x00, 40, -1400, -14200, 0), \
     OP_EM(1, 0x10, 0x86, 0x01, 41,  -900, -12900, 0), \
@@ -184,7 +186,7 @@ static const uint8_t k_p_1040_ende[] = {
 };
 
 /* PROGRAMM 3 — ROOM1030: Cut 7 (nur wenn aus 1070 Zombies uebrig: Tuerknall + Kopien vor der
- * 1070-Tuer, Records = ROOM1070 sub00 @0x015CA.., Blick zur Kamera = -x = Gierung 3072), dann Cut 6:
+ * 1070-Tuer, Records = ROOM1070 sub00 @0x015CA.., Blick zur Kamera = -x = Gierung 2048), dann Cut 6:
  * der Raumknall selbst (sub08 @0x02776 woertlich) und drei Zombies (Raum-Record-Form @0x01DE6, Typ
  * 0x16 grid 0x0d) noerdlich des Tors, die zum geparkten Spieler laufen und dabei durch das
  * Tor-Rechteck (AOT Slot 4 @0x01CDE) kriechen. Save(0x12,20) hebt das Gleichzeitig-Limit 6
