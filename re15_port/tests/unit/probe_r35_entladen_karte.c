@@ -7,7 +7,9 @@
  * Generationsvergleich am PRI-Riegel in main.c: (Raum,Cut) bleibt gleich, die Maskenliste wurde
  * am Spielende entladen und muss im ersten Spielbild neu abgeleitet werden.
  *
- * Aufruf: probe_r35_entladen_karte <kartendatei> <raum-hex>
+ * Aufruf: probe_r35_entladen_karte <kartendatei> <raum-hex> [<x> <y> <z> <cut>]
+ *   ohne Lage: Eintrittspunkt aus re15_room_spawns; mit Lage: genau diese Stelle + dieser Cut
+ *   (Lauf C nimmt den Sprungpunkt des Debug-Menues ROOM1020 (-26000,0,-8700) Cut 0 = 24 Masken).
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -33,14 +35,17 @@ int main(int argc, char **argv)
     if (idx < 0) { printf("FAIL: Raum 0x%04X nicht in re15_room_ids\n", room); return 2; }
     const re15_room_spawn_t *sp = &re15_room_spawns[idx];
 
+    int x = sp->x, y = sp->y, z = sp->z, cut = sp->cut;
+    if (argc > 6) { x = atoi(argv[3]); y = atoi(argv[4]); z = atoi(argv[5]); cut = atoi(argv[6]); }
+
     scd_vm_init();
     re15_actor_init();
     re15_aot_init();
     g_current_room_id = room;
-    g_scd.cam_id = sp->cut;
+    g_scd.cam_id = (uint8_t)cut;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
-    pl->x = sp->x; pl->y = sp->y; pl->z = sp->z; pl->rot_y = sp->yaw;
+    pl->x = x; pl->y = y; pl->z = z; pl->rot_y = sp->yaw;
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
@@ -53,7 +58,7 @@ int main(int argc, char **argv)
     uint16_t rr = 0;
     if (re15_savedata_restore(&back, &rr) != 0) { printf("FAIL: Restore\n"); return 1; }
     printf("Karte %s: Raum 0x%04X Cut %u Lage (%d,%d,%d)\n", path, (unsigned)rr,
-           (unsigned)back.camera_cut, sp->x, sp->y, sp->z);
-    if (rr != (uint16_t)room || back.camera_cut != sp->cut) { printf("FAIL: Ruecklesen\n"); return 1; }
+           (unsigned)back.camera_cut, x, y, z);
+    if (rr != (uint16_t)room || back.camera_cut != (uint8_t)cut) { printf("FAIL: Ruecklesen\n"); return 1; }
     return 0;
 }

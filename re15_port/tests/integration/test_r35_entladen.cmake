@@ -152,7 +152,7 @@ if(TEIL STREQUAL "C" OR TEIL STREQUAL "alle")
         message(FATAL_ERROR "r35_entladen[c]: RE15_KARTE_TOOL fehlt: '${RE15_KARTE_TOOL}'")
     endif()
     file(MAKE_DIRECTORY "${_basis}_c")
-    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" 1020
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" 1020 -26000 0 -8700 0
                     WORKING_DIRECTORY "${_basis}_c" TIMEOUT 60
                     RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
     if(NOT _rvk EQUAL 0)
