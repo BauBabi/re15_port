@@ -50,3 +50,14 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer_ton.cmake)
     set_tests_properties(integration_r35_werfer_ton PROPERTIES TIMEOUT 600)
 endif()
+
+#   integration_r35_werfer_elza Nachbesserung 1 (A2/M6): Elza (PL04) feuert den Granatwerfer an der exe (Bank W0F 14 Clips,
+#                             RE2-Versatz ohne Waffenrahmen, Explosion).
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_werfer_elza
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_werfer_elza_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer_elza.cmake)
+    set_tests_properties(integration_r35_werfer_elza PROPERTIES TIMEOUT 600)
+endif()
