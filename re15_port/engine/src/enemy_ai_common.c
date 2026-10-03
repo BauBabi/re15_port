@@ -1487,6 +1487,7 @@ int re15_player_victim_own_bank(void)
     return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
         && s_gthrow_phase != 0;
 }
+int re15_player_victim_gorilla(void) { return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27; }   /* Runde 35 Spur J (6d) */
 
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
@@ -1534,7 +1535,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
      * Der Greifer war ein Zombie (0x10..0x18), fuer den die Klemme bisher NICHT lief.
      * Sie ist konservativ: sie haelt den letzten nachweislich begehbaren Standpunkt
      * dieses Griffs und kann die Opfer-Animation deshalb nicht verreissen. */
-    if (vg_ty != 0u && g_room_rdt_ok) {
+    if (vg_ty != 0u && vg_ty != 0x27u && g_room_rdt_ok) {   /* Runde 35 Spur J (6d): 0x27 klemmt im Spieler-Schwanz @0x80031d70 */
         /* ⛔ DIE WANDKLEMME DES GITTER-GREIFERS (Nutzer 2026-08-26: "wenn ich zu oft
          * hintereinander gegriffen werde, werde ich trotzdem noch in die Wand gezogen").
          *
@@ -1622,7 +1623,7 @@ void re15_player_victim_tick(void)
         if (s_victim_fresh) {
             s_gthrow_phase = 0;
             player->motion = 1;                                   /* acae8=1 @0x8011c1c4 */
-            player->anim_frame = (uint8_t)(g_player_victim_variant ? 0x0c : 0);  /* @0x8011c208-1c */
+            player->anim_frame = (uint8_t)(g_player_victim_variant ? 0x0b : 0);  /* Runde 35 Spur J: re15_affen.h (6b), @0x8011c208-20 */
             player->anim_frac = 7; player->anim_blend_rate = 0x200;
         }
         if (s_gthrow_phase == 0) {                                /* P0-P2: der WURF */
@@ -1632,14 +1633,14 @@ void re15_player_victim_tick(void)
                 if ((int)player->anim_frame + 1 < fc) player->anim_frame++;
                 else {                                            /* Clip-Ende -> P3: UNPIN */
                     s_gthrow_phase = 1;
-                    player->motion = 0x10; player->anim_frame = 0;   /* acae8=0x10 @0x8011c2e8 */
+                    player->motion = 0x10; player->anim_frame = 0; player->anim_flags &= (uint16_t)~0x80u;   /* acae8=0x10 @0x8011c2e8; vorwaerts a2=0 @0x8011c318 (Runde 35 Spur J (6c)) */
                     player->anim_frac = 7; player->anim_blend_rate = 0x200;  /* anim_set 0x200 @0x8011c34c-60 */
                     return;
                 }
             }
             s_victim_fresh = 0;
             player->motion = 1;
-            if (player->anim_frame >= 0x0c && player->anim_frame < 0x25)   /* P2-Fenster @0x8011c278 */
+            if (player->anim_frame >= 0x0b + g_player_victim_variant && player->anim_frame < 0x25)   /* Runde 35 Spur J: (6a)/(6b), @0x8011c244-5c/@0x8011c278 */
                 re15_victim_place(player, vb, 1, (int)player->anim_frame);
             return;
         }
@@ -1652,7 +1653,7 @@ void re15_player_victim_tick(void)
             if ((int)player->anim_frame + 1 < fc) { player->anim_frame++; return; }
             if (s_gthrow_phase == 1) {
                 s_gthrow_phase = 2;
-                player->motion = 0x0b; player->anim_frame = 0;    /* acae8=0xb @0x8011c31c */
+                player->motion = 0x0b; player->anim_frame = 0; player->anim_flags |= 0x80u;   /* acae8=0xb @0x8011c31c; RUECKWAERTS a2=1 @0x8011c348 (Runde 35 Spur J (6c)) */
                 player->anim_frac = 7; player->anim_blend_rate = 0x200;
                 return;
             }
@@ -1660,6 +1661,7 @@ void re15_player_victim_tick(void)
             g_player_victim = 0;
             s_gthrow_phase = 0;
             player->hit_react = 0;
+            if (player->anim_flags & 0x80u) { player->anim_frame = 0; player->anim_flags &= (uint16_t)~0x80u; }   /* Runde 35 Spur J (6c): Endpose = Vorwaerts-Slot 0 */
             return;
         }
     }

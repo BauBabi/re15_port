@@ -383,9 +383,10 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         extern int re15_player_knockdown_active(void);
         extern int re15_player_death_cmd3_active(void);
         extern int re15_player_react_pose_pl00(void);
+        extern int re15_player_victim_own_bank(void);   /* Runde 35 Spur J: Gorilla-Wurf P3-P6 @0x8011c350/@0x8011c358 = acad8/acbc0 */
         if (is_player && banks->pl00_ok &&
             (re15_player_hit_flinch_active() || re15_player_knockdown_active() ||
-             re15_player_death_cmd3_active() || re15_player_react_pose_pl00())) {
+             re15_player_death_cmd3_active() || re15_player_react_pose_pl00() || re15_player_victim_own_bank())) {
             out->skel = banks->pl00_skel;
             out->anim = banks->pl00_anim;
             out->clip_override = m;

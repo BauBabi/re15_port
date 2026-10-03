@@ -163,4 +163,29 @@ void     re15_affen_fuss_log(int slot, int clip, int bild, int bone, int kf_n, i
  *     F447). Zusaetzlich: Bezugspunkt der Port-Wandklemme re15_victim_place = Standpunkt beim Zupacken. */
 void     re15_affen_pin_anker(re15_actor_t *e, re15_actor_t *pl);
 
+/* (6) GORILLA-WURF = Opfer-Handler 0x8011c118 (Phasentabelle @0x80100404) + SPIELER-SCHWANZ FUN_80031c44
+ *     (Nachbesserung 2, A2; Original-GDB jnb2/g_wer.txt: Haltepunkte an jeder Station des Spieler-Ticks).
+ *     (6a) P1 (0x8011c228) ruft anim_set (`jal 0x8001f314` @0x8011c23c) und setzt P2 (`sb 2,aca5a` @0x8011c25c),
+ *          sobald +0x95 danach 0xb ist (`ori v0,zero,0xb` / `bne` @0x8011c24c-50). P2 (0x8011c268) platziert mit
+ *          dem +0x95 VOR seinem anim_set (`sltiu v0,v0,0x25` @0x8011c278, `jal 0x8001ad68` @0x8011c294, anim_set
+ *          @0x8011c2b0) -> die Opfer-Bilder 0x0b..0x24 werden platziert (GDB: erste Platzierung mit +0x95 = 0x0b,
+ *          letzte mit 0x24). Der Port zaehlt vor dem Platzieren hoch -> Fenster [0x0b, 0x25).
+ *     (6b) RUECK-Variante (aca59 != 0, `beq v1,zero` @0x8011c208): P0 setzt +0x95 = 0xc (@0x8011c214-1c) und
+ *          springt OHNE anim_set und OHNE Platzierung ans Ende (`j 0x8011c3b8` @0x8011c220); 0xc wird im FOLGE-
+ *          Bild platziert. Port: Seed 0x0b (wird vor dem Platzieren auf 0x0c gezaehlt), Fenster ab 0x0b + 1.
+ *     (6c) P3 (0x8011c2e8) Clip 0x10 VORWAERTS (a2 = 0 im Delay-Slot @0x8011c318), P5 (0x8011c31c) Clip 0xb
+ *          RUECKWAERTS (`ori a2,zero,0x1` @0x8011c348 -> FUN_8001f314 spiegelt den Cursor @0x8001f34c-54), beide aus
+ *          der COMMON-Bank (`lw a0,-13608(a0)` = DAT_800acad8 @0x8011c350, `lw a1,-13376(a1)` = DAT_800acbc0
+ *          @0x8011c358) wie die Knockdown-Handler; P7 (0x8011c384): aca58 = 1, +0x93 = 0, aca3c &= ~0xc0.
+ *     (6d) REIHENFOLGE: der Handler laeuft als Kommando 5 IM Spieler-Tick (`jalr v0` @0x80031cb4), danach
+ *          Koerper-Schub (`jal 0x8002b544` @0x80031cbc) und Wandklemme (`jal 0x8003b0a4` @0x80031d70, Bezug =
+ *          Spiegel +0x40/+0x44 = Lage am Ende des Vorbilds, @0x8003b4ac). GDB: Bild 0x23 Platzierung
+ *          (-4334,-11423) -> Klemme (-4588,-11243); Bild 0x24 (-5402,-10631) -> (-5381,-10551); danach schiebt
+ *          die Klemme Leon ~100/Bild aus der Zelle (auch nach der Freigabe). Der Port klemmte die Platzierung
+ *          stattdessen auf den "letzten begehbaren Standpunkt" (re15_victim_place, fuer 0x27 seit 2026-08-29)
+ *          und rief die Wandklemme VOR der Platzierung. Jetzt fuer den Greifer 0x27: Platzierung ohne
+ *          Ersatzklemme, danach re15_player_body_and_walls mit dem Bezug vom Bildanfang. Riegel `wand`:
+ *          re15_collision_constrain = FUN_8003b0a4 in 168/168 Original-Bildern bitgleich. */
+int      re15_player_victim_gorilla(void);   /* 1 = Opfer-Handler des Gorillas (0x27) besitzt Leon (P0-P6) */
+
 #endif /* RE15_AFFEN_H */
