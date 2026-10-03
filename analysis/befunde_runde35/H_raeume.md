@@ -86,5 +86,73 @@ F195-213 / F227-245 / F259-277 (Koerper bis y=-3680). Bilder `p1_nachher_F184-21
 Freigabe wie sub10, Sprungmaschine Bild fuer Bild, beide KI-Geschmaecker. Ergebnis: je Hund 21 Luft-Bilder
 (y bis -3680), in jedem Schatten-Y = Boden (0), 0 Bilder mit Schatten auf Koerperhoehe, Landung y == Boden.
 
+---
+
+## Punkt 2 — Zielscheiben-Texte (ROOM1190/1191)
+
+### 2.1 Messung vorher
+ROOM1190 hat 6 Nachrichten (rdt_msgdump): 0 "There's a switch here. Push it?" (Ja/Nein), 1 "There's a driver
+here. Take it?", 2 "I have nothing else to do / here.", 3 "No response...[02 00]The power is not supplied.",
+4/5 Weste. An den vier Scheiben-Plaetzen gab es nur msg 0 / 3 / 2 — keinen Scheiben-Text (Nutzerbefund).
+Raumskript (scd_dump_room.py): main00 @0x02226.. Slots 0..3 sce 5 flags 0x31, Rechteck x=-4400 w=600,
+z=-25700/-22000/-18500/-14900 d=2400 (nach dem Hunde-Ereignis (4,234)=1: sce 1 msg 2 @0x0227A..);
+sub01: Strom aus ((4,243)=0) -> Aot_reset Slots 0..3 sce 3 -> sub12 (msg 0, Ck(12,31) -> msg 3);
+Strom an -> Switch work_vars[0] @0x023C4 -> sub02..05 (Slot 0..3: msg 0, Ja -> Scheibe faehrt, sub06/sub08);
+sub10 (Hunde) Aot_reset Slots 0..3 sce 1 msg 2 @0x027B4..
+
+### 2.2 Welche Scheibe ist "ganz links" / "3. von links" — aus der Kamera gemessen
+Scheiben = Obj 0..3 (sub13 Obj_model_set @0x0297E/0x029A0/0x029C2/0x029E4, x=-21340,
+z=-24516/-20916/-17316/-13716); Slot n bewegt Obj n (`Work_set 2e 03 0n` in sub02..05 @0x024C8/0x02540/
+0x025B8/0x02630). Projektion der Scheibenmitte (y=-3186 = Obj-y -4446 + Box-Mitte 1260) durch alle 15 Kameras
+(tools/maske/geom.py cut_view = FUN_80053ca4-Nachbau, Kamerablock RDT+0x24) und Framedump mit RE15_FORCE_CUT
+5/6/7/9: Bild `H_raeume/p2_kameras_cut5_6_7_9.png` (rote Kreise = projizierte Scheibenmitten S0..S3 liegen
+exakt auf den gerenderten Scheiben). In JEDEM Cut, der die Scheiben zeigt (5: Blick den Stand hinunter, 6:
+Kabinen 3/4, 7: Kabinen 1/2, 9: Nahsicht), liegen sie von links nach rechts als S0, S1, S2, S3; die Kabinen-
+Nummern 1..4 an den Trennwaenden laufen gleich (Cut 7 "1" links, Cut 6 "3"/"4").
+=> **ganz links = Slot 0, 3. von links = Slot 2** (viele Einschuesse); Slot 1 und 3 = wenige.
+Gegenprobe Raetsel: sub01 @0x0244C-0x02464 feuert sub10 (Hunde) bei (5,4)=1 (5,5)=1 (5,6)=0 (5,7)=0; die Bits
+setzt sub02 (Slot 0) `22 05 04 01` @0x024F4, sub04 (Slot 2) `22 05 05 01` @0x025E4, sub03 (Slot 1) Bit 6
+@0x0256C, sub05 (Slot 3) Bit 7 @0x0265C. Die Loesung des Leon-Raetsels ((3,111)=0) ist also Scheibe 0 und 2
+vorn — genau die beiden "vielen Einschuesse" des Nutzers. Zensus (3,111)/(3,112) ueber alle RDTs: gesetzt nur
+in ROOM1190/1191 sub10 und ROOM1241 @0x055A/0x055E (zweite Variante 1+3, nicht Leons Weg).
+
+### 2.3 Umsetzung
+* NEU `include/re15_ziel1190.h` + `engine/src/ziel_1190.c`. Port-Nachrichten **6 = viele, 7 = wenige**
+  (VERTRAG 1.2: 1190 -> 6..11). Form: Kopf der Original-Nachricht `04 02`, Seite 1 = Nutzer-Satz (zwei Zeilen,
+  Umbruch 0x08), Seitenumbruch `02 00`, Seite 2 = die Original-Nachricht des Platzes Byte fuer Byte (msg 0 mit
+  Ja/Nein bzw. msg 2). Belegte Form: ROOM1190 msg 4 @0x2EAF hat genau "Text 02 00 Frage 03 02 01".
+  Glyphen re15_msg_glyph; Zeilenbreiten font_width.h: 202/195 px bzw. 174/120 px (<= 271 px).
+* Slot = work_vars[0], vom Aktions-Scan gestempelt (FORWARD @0x80042f3c, Port aot_common.c:1507), gelesen im
+  selben VM-Takt (sub01 -> Evt_exec sub02..05 laufen im selben Tick; der VM-Schwanz wischt [0..3] danach
+  auf -1, FUN_8003ebf4 / scd_vm.c:811). Pruefung zusaetzlich: aktiver Slot mit linker Kante -4400 und Z-Kante
+  des Slots. Die Park-Phase der Ja/Nein-Frage haelt ein eigener Latch (der Stempel ist dann schon weg).
+* Haken (scd_vm.c, 6 Zeilen + Include): op_message_on VOR dem Ja/Nein-Zweig
+  `re15_ziel1190_message_on(t->pc, pause_mask)` (1 = pc+=4, 2 = parken — dieselbe Semantik wie der Zweig);
+  re15_scd_show_message (sce-1-Platz) `if (re15_ziel1190_show(index, pause_mask)) return;`.
+* Stimme: je Satz EINE Datei (Text wird bei jedem Oeffnen neu unter 6/7 abgelegt, Seite 2 wechselt):
+  synchro/STAGE1/room1190/main06.wav, main07.wav (Muster leiche_1110_1230.c: SCD_AUDIO_VOICE_ON).
+* NUTZER-VORGABE: die beiden Saetze. PORT-WAHL: (a) Satz als Seite VOR dem Original (in allen drei
+  Raumzustaenden, "ergaenzt" = das Original bleibt); (b) Satzende "." auch beim zweiten Satz (Gleichlauf,
+  leiche L8); (c) Ereignis 27 wird NICHT gebraucht (kein Ereignisprogramm, nur Textaustausch).
+
+### 2.4 Messung nachher
+Echte exe (DEBUG_JUMP 1190@gp, Spieler 620 vor Slot 0, (4,243)=1, Viereck per RE15_PAD_AT): debug.log
+`[ziel1190] ROOM1190 Slot 0 -> Port-Nachricht 6 (viele Einschuesse) + Original msg 0`; Bild
+`H_raeume/p2_exe_slot0_seite1_seite2.png`: F150 Seite 1 tippt, F240 "This target has a surprisingly / large
+number of bullet holes." mit Weiter-Pfeil, F330 Seite 2 tippt, F420 "There's a switch here. Push it?  Yes No".
+⛔ Messfalle (nur Harness): Einzelbild-Flanken aus RE15_PAD_AT gehen unter RE15_FRAMEDUMP verloren, wenn
+mehrere Spielschritte zwischen zwei Text-Takten liegen (gemessen mit temporaerer Sonde: im Seiten-Warten kam
+die Flanke an, sobald sie 4 Bilder lang gedrueckt wurde; ein voriger Lauf mit einer Einzelflanke blieb stehen).
+Der STATE_LOG-Wert fsm= ist dafuer kein Mass (zeigte durchgehend 1, waehrend das Bild Seite 2 und die Frage
+zeigte). Temporaere Sonde wieder entfernt (git checkout).
+
+### 2.5 Test
+`unit_r35_raeume_ziel` (tests/unit/test_r35_raeume_ziel.c): echte ROOM1190/1191, Raumaufbau wie im Spiel,
+Aktion per re15_aot_scan, VM + Text-FSM Bild fuer Bild. 3 Zustaende x 4 Slots (+1191): Slot 0/2 -> msg 6,
+Slot 1/3 -> msg 7; Text = Nutzer-Satz + Original-Seite; Strom aus: Frage bleibt Frage, nach Ja folgt msg 3;
+Strom an: nach Ja kippt (4,n) (Scheibe faehrt, Original-Mechanik intakt); nach Hunden: keine Frage.
+Gegenprobe ohne Stempel (re15_aot_fire_slot): Original-Nachricht bzw. nichts (sce 5 = NOP @0x8004318C).
+Aufbau-Bytes: Seite 2 == msg 0 Byte fuer Byte, `02 00` an Stelle 62, Laenge <= 128 (PSX MSG_RAW_LEN).
+
 ## OFFEN
 - (laufend)
