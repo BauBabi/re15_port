@@ -1024,3 +1024,20 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   Bild 0x0c) Pin F1572, Clip 0x10 F1644 (+72 = 83 - 11), Leon wird waehrend P3 von der Wandklemme aus einer Zelle
   geschoben (F1644 (-7347,-9511) -> F1660 (-8275,-8608)), frei F1686, 0 HP. Brustschlag (Clip 3) nach beiden Griffen
   (F1250, F1609).
+
+### Suite (Nachbesserung 2)
+- Lauf 1 (Code-Stand vor B[0]-Verfeinerung/B[7]/H2): 494/495 — rot nur `unit_plc_back_yaw_1090`: Regressions-Pins
+  auf PORT-Messwerte (Endyaw 111, (-77,-1997)) und `Mode 5 Endyaw == bearing`, die beide die alte Rundung zur Null
+  kodierten. Nachgezogen (Endyaw 133, (-77,-1999); Mode-5-Drift <= 0x20 wie R1, Beleg: Original-Drift 191 -> 183
+  im 11C0-Gang), Kommentar mit @0x800246ac / @0x8001abfc.
+- Lauf 2 (Endstand): `bash re15_port/tools/local_build.sh all` ->
+  `=== LOCAL-BUILD-OK (all) — Tests 495/495` (478 Basis + 17 Riegel dieser Spur). Kein Fenster-Haken rot.
+- DuckStation settings.ini nach den GDB-Messungen auf den Ausgangsstand zurueckgespielt (EnableGDBServer = false).
+
+### Nachbesserung 2 — Ergebnis je Mangel
+| Mangel | Ursache (gemessen) | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| A1 Tod 6 s frueher, 36er-Takt, Endlage 26 Einheiten | (1) Plc_dest-Schritt dz rundete zur Null (-57 statt -58); (2) Kegeltest geschlossen statt halboffen; (3) xorshift-Ersatz statt des a0-Hashs des Originals in B[0]/B[3]/B[4] (Heavy-Anlauf drehte 64-95 statt 73 je Bild) | GTE MVMVA @0x800246ac; FUN_8001ab9c `slt` @0x8001abfc; FUN_8001af20 @0x8001af30-4c + GDB-Zensus (B[4] 43/43, B[3] 960/960, B[0] vs9117) | actor_locomotion.c (2 Stellen), re15_damage.c (Rueckstoss), affen_11c0.c (7)/(7b)/(7c), enemy_ai_common.c (Ziehstellen) | Gang 207/207 bitgleich; JUMP und Tuerweg: Gleichtakt, Tod 39,9 s (Original 39,8 s); Riegel `szene` |
+| A2 Wurf-Bahn ab Bild ~0x22, Harness != exe | Ersatzklemme "letzter begehbarer Standpunkt" statt Platzierung -> Schub -> FUN_8003b0a4; Wandklemme vor statt nach der Platzierung; Griff-Paar nicht vom Schub ausgenommen; P2 ab 0x0b; Clip 0xb rueckwaerts aus COMMON | GDB-Stationen 0x80031cbc/d70/d78; Paar-Bit 0x1000 @0x8011ac34-38/@0x8011ad8c-94; P1/P2 @0x8011c244-5c/@0x8011c278; P5 `ori a2,1` @0x8011c348 | enemy_ai_common.c, game_step_common.c, anim_select_common.c, affen_11c0.c (6a)-(6e) | Riegel `wand` 168/168 + Schub-Kette bitgleich; `griff` Bahn T268-T290 Mittel 19, Freigabe T378, 87/87 Bilder nur Wandklemme; exe Tuerweg: Pin+11/+83/+16 |
+| A3 Kopfkommentar (3) | veraltet seit 30484afa | — | re15_affen.h (3) | — |
+| H2 a780-Operanden | Gorilla - Spieler statt Spieler - Gorilla | @0x8001a788-a4 | 1 Zeile | Riegel gruen |
