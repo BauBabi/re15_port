@@ -742,3 +742,10 @@ liefert nur noch diese Abschnitts-Zeilen.
 ### 8.5 Nebenbefund — Uhrzeit "17:20 Suite Lauf 4"
 Berichtigt in §0 (Protokollzeile): `suite_lauf4.log` endet 16:59:25, Abschluss-Commit 17:00:46; "17:20" war
 verschrieben. Ergebnis 481/481 unveraendert.
+
+### 8.0 Protokoll Fortsetzung (zweite Sitzung der Nachbesserung 1)
+- 2026-10-03 abends: Baum sauber, HEAD e32ab456 (vom Orchestrator gesicherter Rest: `re15_werfer_leer_ton`, Haken
+  game_step_common.c +1, re15_werfer.h +6 = Beginn M2). B_abnahme_0.md, Diff 058301b3..HEAD gelesen.
+- `local_build.sh build` auf e32ab456: `=== LOCAL-BUILD-OK (build)` (Log `re15_port/build/mess_r35b_logs/nb1_build1.log`).
+- Die RE2-Zitate des Vorgaengers in `re15_werfer_leer_ton` SELBST nachdisassembliert (§8.2) — sie stimmen.
+- M1-Beleg (RE1.5-Schusslinie) und M4-Beleg (RE2-Fressergate) selbst disassembliert (§8.1, §8.4).
