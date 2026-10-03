@@ -379,7 +379,9 @@ Startskript `nb1/lauf.sh <name> <timeout> VAR=...` (Kopie der exe als `re15_pc_n
 * **Aenderung:** `re15_granate_r35_wand` testet die STRECKE vorige -> neue Weltlage (`re15_granate_r35_strecke`, ganzzahlig,
   s64-Kreuzprodukte; an den Quadrantengrenzen geteilt). Im WURFBILD (xlat == 0, es gibt noch keine vorige Lage) die Strecke
   Werfer -> Hand; fuehrt der RE2-Rueckzug dort nicht auf die freie Seite, zuendet die Granate ueber dem Standpunkt des
-  Werfers (PORT-WAHL, ohne Konstante).
+  Werfers (PORT-WAHL, ohne Konstante). Steht der Werfer im getesteten Band selbst in einer Zelle (das Band der Granate ist
+  -(Standhoehe/0x708), das Band des Spieler-Aufloesers der gefuehrte Zustand +0x82), gibt es keine freie Strecke — dann
+  gilt im Wurfbild nur die Hand als Punkt (Sonde 235), damit eine Band-Abweichung nicht jeden Wurf sofort zuendet.
 * **Nachher (exe, gleiche Aufstellungen):**
   ```
   d_a (Leon x -19533): T=289 EV wand wpos=(-21603,-3621,-10677) -> rueckzug (-21107,-3525,-10649) -> explosion sofort von=(-21231,-10656)
@@ -540,7 +542,17 @@ Bilder: in dieser Nachbesserung wurden keine neuen Bilder gebraucht (alle Urteil
 
 ## N1.7 Tests und Suite (Nachbesserung 1)
 * `unit_r35_granate` (test_r35_granate alle): `test_r35_granate: ALLE PRUEFUNGEN GRUEN` — neu 113, 154 (echt), 200-211,
-  220-222, 230-234.
+  220-222, 230-235. Auszug:
+  ```
+  ok   113: Explosionspunkt P=(8022,-1634) = Rueckzugspunkt: Flugbahn-y im Vorbild -1640 (Abstand 6 < 150; mit Routine-31-Versatz waeren es ~500)
+  ok   201: Typ 2 Raute LAB_8003d00c: ... innen 1 (1), aussen 0 (0); Rechteck-Test aussen 1; RE1.5-Handler schiebt innen 1 (1) / aussen 0 (0)
+  ok   220: ROOM11C0 Hand (-6720,-13266): Rechteck der Raute 1 (1 = Vorher-Befund), Form 0 (0 = frei)
+  ok   231: ROOM1220 HOCH, 38 Phasen (Wurfstelle je 10 versetzt): 38 halten VOR der Zellenfront (x > -21550); Explosion x in [-21424..-21059]
+  ok   232: davon 11 Phasen, in denen KEIN Bildpunkt in der 275 dicken Zelle liegt (der Punkttest je Bild verfehlte sie)
+  ok   233: Wurfbild: Hand hinter der duennen Zelle (Punkt frei 1) -> Explosion im Wurfbild (Wand 1) ueber dem Werfer: x -21082 (-21082), z -10677 (-10677)
+  ok   234: HOCH-Wandzuendung bei P.y -3525 (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp -100 (-100)
+  ok   235: Werfer in der Zelle, Hand frei im Flur: kein Ausloeser im Wurfbild (Wand 0, Explosionen 0)
+  ```
 * `integration_r35_granate` (echte exe, 7 Laeufe): wand, zombie, gator, birkin (armiert), duenn_a, duenn_b, raute.
   Eigener Lauf: `[wand] ok — Wand x=8385 -> 8332`, `[zombie] ok — X=119, 2 Zombies zerrissen, 3 Eingriffe`,
   `[gator] ok — HP 3000 -> 2000`, `[birkin] ok — armiert (g=13): HP 600 -> 520, danach Weg 3421, af 53 -> 93`,
@@ -553,3 +565,18 @@ Bilder: in dieser Nachbesserung wurden keine neuen Bilder gebraucht (alle Urteil
   Einzeln nachgefahren: gruen in 52,6 s. Der Pin setzt jetzt `SDL_ASSERT=always_ignore` (SDL-eigene Umgebungsvariable)
   und wiederholt einen Lauf mit dieser Assertion einmal. Fuer den Orchestrator: derselbe Dialog kann jeden anderen
   Fenster-Haken treffen (Symptom: Timeout, debug.log endet mit der Assertion).
+
+### Suite (voller Lauf `bash re15_port/tools/local_build.sh all` im Baum, Endstand der Nachbesserung 1)
+```
+=== LOCAL-BUILD-OK (all) — Tests 480/480
+```
+Zwei volle Laeufe: Lauf 1 (Stand d72d020d, vor Sonde 234/235 und dem Werfer-in-Zelle-Schutz) `=== LOCAL-BUILD-OK (all) —
+Tests 480/480`, darin `integration_r35_granate` mit allen sieben Laeufen; Lauf 2 (Endstand, Quellen = Abschluss-Commit)
+die Zeile oben. Kein Fenster-Haken geflattert. Logs: `re15_port/build/r35a_mess/nb1/suite1.log` / `suite2.log`,
+`re15_port/build/local_build_ctest.log`.
+
+### Commits der Nachbesserung 1 (Zweig r35/granate, auf 6ffc1d41)
+553f3174 RE-Belege (FUN_8004fba0, Formverteiler, Zensus) · 52ba0d6d Wandtest formgenau/Strecke/Quadrant, Haken nach
+granate_r35.c, Sonde [6], PRUEF 154, audio-Kommentar · (wip) Handler-Gegenprobe · 9acc9c04 P = Rueckzugspunkt, Sonde 113 ·
+d72d020d exe-Pins (Birkin armiert, duenn_a/b, raute), SDL_ASSERT · fd5b8845 Dossier N1.2-N1.7, Sonde 234 · a45a5a00
+Werfer-in-Zelle-Schutz, Sonde 235 · (final) fix(r35-granate): Nachbesserung 1.
