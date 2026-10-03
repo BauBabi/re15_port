@@ -484,3 +484,20 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
 
 ### Stand (fortlaufend)
 - [ ] M5  - [ ] M2  - [ ] M3  - [ ] M4  - [ ] M1
+
+### M1 — Messweg Original (Einzelbild-Naehe ohne PCSX-Redux)
+- Zeitbasis der Original-Aufnahme r3 geprueft (nicht vermutet): RAM-Suche ueber 10/12 aufeinanderfolgende
+  r3-Savestates nach monoton wachsenden Woertern (`jnb1/fcount.py`, `fcount2.py`): **0x800787dc** waechst
+  90/91 je 1,5 s (= VSync 60 Hz, Emulation lief mit 100 %), und das Gorilla-Feld **entity2+0x1de
+  (0x800ad1f2)** waechst 45/46 je 1,5 s waehrend des Kampfes (= die Spiel-Logik lief durchgehend mit
+  30 Bildern/s, kein Einbruch auf 20). Die Wanduhr-Zeiten der Abnahme (~49 Bilder je Biss) sind damit
+  echte Spielbilder, kein fps-Artefakt.
+- Neuer Recorder `jnb1/dsfast.py`: DuckStation laedt den r3-Savestate s035 (t=57.56) DIREKT
+  (`-statefile`, deterministisch laut re15-parity-verify §4), Leon ohne Eingabe, Savestates so schnell wie
+  moeglich (~0,21 s = 6-7 Spielbilder); Bild-Zuordnung je Savestate ueber den VSync-Zaehler / 2.
+  Probe `try0` (4 s) reproduziert r3 exakt (t=60.58: PL(-6729,-12800) hp 82 Clip 9 — identisch).
+- Erste Einzelbild-Beobachtung (try0, Bild = (VSync - VSync0)/2): BEIDE Gorillas committen gleichzeitig
+  (F17-F23 beide sub 5, Clip 0x12); e2 trifft bei F24 (+0x1dc 45 -> 39 bei F30), e1 verfehlt (Spieler
+  +0x93 schon gesetzt) und steigt bei F43 mit +0x1dc := 0x14 aus (@0x801184e0-f0). Der Spieler-Flinch
+  (Clip 9) endet ~F47 (+0x93 = 0, Zustand 1/0/1 Clip 3 Bild 0). Danach warten BEIDE noch auf ihre Sperre
+  (e1 14, e2 20 bei F49) -> naechster Commit e1 F64, Treffer F78 = **54 Bilder** Abstand.
