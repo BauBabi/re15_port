@@ -9473,6 +9473,7 @@ re_title:;
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
                                      npc->type != 0x26u || npc->re2s_baby_spawned);
+                if (npc->type == 0x47u) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o. */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
