@@ -78,6 +78,11 @@ typedef struct {
      * Eintrag bleibt wie bisher: nur START/Abbruch schliesst (RE2 @0x8006F884). */
     signed char    folge;
     unsigned char  zeitgesteuert;
+    /* Runde 35 Spur K (Fortsetzung): eigenes "Ziel erreicht"-Flag (Bank, Bit) statt des Besucht-Bits
+     * der Zielzone — fuer ein Ziel, das VOR dem Hinweis schon besucht war (ROOM1150 nach der
+     * ROOM10F0-Szene: re15_cut10f0.h RE15_CUT10F0_ZIEL2_BESUCHT_*). Bank 0 = Besucht-Bit der Zone
+     * (Runde-33-Regel, unveraendert). */
+    unsigned char  erreicht_bank, erreicht_bit;
 } re15_map_hint_eintrag_t;
 
 static const re15_map_hint_eintrag_t s_hints[] = {
@@ -87,14 +92,17 @@ static const re15_map_hint_eintrag_t s_hints[] = {
      * Szene, main00 @0x00DE6 `21 03 5e 00` Ck(3,94)==0 legt die AUTO-Zone nur davor an. */
     { 0x1150,
       { 0x42, 0x00, 0x3c, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x01, 0x00 },
-      12, 0x10F0, 0, 3, 94, -1, 0 },
+      12, 0x10F0, 0, 3, 94, -1, 0, 0, 0 },
     /* Runde 35 Spur K: nach der ROOM10F0-Szene (Port-Programm cut_10f0.c, nicht im RDT-Puffer —
      * KEIN Anker, pc_versatz 0; Anforderung per re15_map_hint_request aus re15_cut10f0_tick).
      * Eintrag 1: Ziel ROOM11C0 "PARKING LOT" (Zone 0), danach Eintrag 2: Ziel ROOM1150 (Zone 0);
      * "Szene gesehen" = (9,71), gesetzt als erstes Opcode des Programms. Beide blinken in der
-     * normalen Karte, bis ihr Zielort besucht ist (Abschnitt 4, re15_map_ziel_aktiv_n). */
-    { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1 },
-    { 0x10F0, { 0 }, 0, 0x1150, 0, 9, 71, -1, 1 },
+     * normalen Karte, bis ihr Zielort besucht ist (Abschnitt 4, re15_map_ziel_aktiv_n):
+     * ROOM11C0 ueber das Besucht-Bit seiner Zone; ROOM1150 — vor der Szene laengst besucht (erste
+     * Irons-Szene (3,94)) — ueber den Latch (9,72) "ROOM1150 NACH der Szene betreten"
+     * (RE15_CUT10F0_ZIEL2_BESUCHT_BANK/_BIT, gesetzt in re15_cut10f0_install). */
+    { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1, 0, 0 },
+    { 0x10F0, { 0 }, 0, 0x1150, 0, 9, 71, -1, 1, 9, 72 },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))
 
@@ -266,7 +274,10 @@ int re15_map_ziel_aktiv_n(int k, int *page, int *rect)
         const re15_map_zone_t *zn;
         if (!hint_gezeigt(h)) continue;
         zn = ziel_zone(h);
-        if (!zn || re15_map_zone_visited(zn)) continue;   /* erreicht -> aus */
+        if (!zn) continue;
+        if (s_hints[h].erreicht_bank                      /* erreicht -> aus: eigener Latch ... */
+                ? re15_game_flag_get(s_hints[h].erreicht_bank, s_hints[h].erreicht_bit) != 0
+                : re15_map_zone_visited(zn)) continue;    /* ... sonst das Besucht-Bit der Zone */
         if (n++ != k) continue;
         if (page) *page = (int)zn->page;
         if (rect) *rect = (int)zn->rect;

@@ -21,6 +21,11 @@ Choreografie = NUTZER-VORGABE / PORT-WAHL (include/re15_cut10f0.h), die FORM der
   Message_on Maske 0      ROOM11B0 sub06 @0x014EE `2b 01 00 00`
   Plc_motion / Plc_flg    ROOM11C0 sub02 @0x018D8..@0x018E4 (Clip 19 vor + 19 rueckwaerts `43 00 80 00`)
   Geste + 23 Abschluss    ROOM11C0 sub02 @0x018A4 `3f 00 0f 00` Sleep 40 `3f 00 13 00` Sleep 40 `3f 00 17 00` Sleep 20
+  ZEILENTAKT 40+50+20     ROOM11B0 sub06 @0x014EE `2b 01 00 00` Work_set `3f 00 0f 00` @0x014FA `09 0a 28 00` Sleep 40
+                          @0x014FE `3f 00 10 00` (Clip 16) @0x01502 `09 0a 32 00` Sleep 50 @0x01506 `3f 00 17 00`
+                          @0x0150A `09 0a 14 00` Sleep 20 = 110 Bilder je Zeile (ebenso msg 2 @0x0150E..@0x0152A, msg 8
+                          @0x0166E..@0x01686); kuerzeste Original-Zeile 90 (msg 4 @0x01574, Sleep 40 @0x01580 + 50
+                          @0x0158C). Zeilen mit nur EINER Geste halten sie ueber Sleep 40 + Sleep 50 (Geste B entfaellt).
   Plc_neck Modus 1        ROOM11C0 sub02 @0x01886 `41 01 fb dc 00 00 f5 c7 64 00` (Weltpunkt, Tempo 0x64)
   Plc_neck Kopf gesenkt + Schuetteln  ROOM11B0 sub06 @0x0154E `41 02 00 00 00 00 2c 01 00 0a` Sleep 30
                           @0x0155C `41 04 03 00 00 00 00 00 64 00` Sleep 60 (ebenso ROOM10D0 sub21 @0x01BB4/@0x01BC2
@@ -95,26 +100,23 @@ def se_on(bank, sat, c):               op(bytes([0x36, bank, sat] + [0] * 9), c)
 def evt_end():                         op([0x01, 0x00], "Evt_end")
 def plc_ret():                         op([0x42, 0x00], "Plc_ret + Nop")
 
-# Eine Dialogzeile in der Form von ROOM11C0 sub02 @0x018A4: Geste A, Sleep 40, Geste B (optional), Sleep, 23, Sleep 20
+# Eine Dialogzeile im Takt von ROOM11B0 sub06 @0x014EE..@0x0150A (= ROOM11C0 sub02 @0x018A4): Message_on,
+# Geste A, Sleep 40, Geste B (optional - sonst wird A gehalten), Sleep 50, Clip 23, Sleep 20 = 110 Bilder.
 def zeile(mid, wer, gesten, sprecher_work, c):
     message(mid, "Message_on %d  %s" % (mid, c))
     sprecher_work()
     g = gesten
     if g:
         motion(g[0][0], "Plc_motion(0,%d) %s" % (g[0][0], g[0][1]))
+        sleep(40, "Sleep 40  (Zeilentakt ROOM11B0 @0x014FA)")
         if len(g) > 1 and g[1] == "rev":
-            sleep(40)
             motion(g[0][0], "Plc_motion(0,%d) noch einmal" % g[0][0])
             motion_rev()
-            sleep(50)
         elif len(g) > 1:
-            sleep(40)
             motion(g[1][0], "Plc_motion(0,%d) %s" % (g[1][0], g[1][1]))
-            sleep(50)
-        else:
-            sleep(50)
+        sleep(50, "Sleep 50  (Zeilentakt ROOM11B0 @0x01502)")
         motion(23, "Plc_motion(0,23) Abschluss: Hand an die Huefte")
-        sleep(20)
+        sleep(20, "Sleep 20  (Zeilentakt ROOM11B0 @0x0150A)")
     else:
         sleep(110)
 
@@ -192,17 +194,28 @@ MARVIN(); dest(4, BIT_MARVIN, MARVIN_X, MARVIN_Z, "Marvin: Plc_dest Modus 4 (geh
 wait(BIT_MARVIN, "Marvin angekommen")
 dest(9, BIT_MARVIN, LEON_X, LEON_Z, "Marvin: Plc_dest Modus 9 -> zu Leon drehen")
 wait(BIT_MARVIN, "Marvin zu Leon gedreht")
-work_player(); neck_pt(MARVIN_X, MARVIN_Z, "Leon: Kopf zu Marvin")
 ADA(); neck_pt(MARVIN_X, MARVIN_Z, "Ada: Kopf zu Marvin")
+# Leon wendet sich Marvin zu (er stand zu Ada gewandt, Marvin schraeg hinter ihm - Dossier §8.2)
+work_player(); neck_pt(MARVIN_X, MARVIN_Z, "Leon: Kopf zu Marvin")
+dest(9, BIT_LEON, MARVIN_X, MARVIN_Z, "Leon: Plc_dest Modus 9 -> zu Marvin drehen")
+wait(BIT_LEON, "Leon zu Marvin gedreht")
 sleep(10)
-zeile(MSG["l_made"], "Leon", [(15, "Arm strecken")], LEON, "Leon: Hey Marvin, glad you made it!")
-# Leon stellt vor: Arm Richtung Ada (Leon blickt Ada an, Kopf zu Marvin)
-zeile(MSG["intro"], "Leon", [(15, "Arm strecken Richtung Ada (Leon steht zu Ada gewandt)")], LEON, "Leon: Allow me to introduce you. This is...")
+zeile(MSG["l_made"], "Leon", [(15, "Arm strecken (zu Marvin)")], LEON, "Leon: Hey Marvin, glad you made it!")
+# Leon stellt vor: er dreht sich zu Ada, Arm Richtung Ada, der Kopf bleibt bei Marvin
+work_player(); dest(9, BIT_LEON, ADA_X, ADA_Z, "Leon: Plc_dest Modus 9 -> zu Ada drehen (Arm Richtung Ada)")
+wait(BIT_LEON, "Leon zu Ada gedreht")
+zeile(MSG["intro"], "Leon", [(15, "Arm strecken Richtung Ada")], LEON, "Leon: Allow me to introduce you. This is...")
 zeile(MSG["ada"], "Ada", [(18, "Hand zur Brust")], ADA, "Ada: ... Ada, Ada Wong")
 message(MSG["adawong"], "Message_on %d  Leon: Ada Wong." % MSG["adawong"])
 work_player(); neck_nod("Leon: Nicken")
 sleep(90)
+MARVIN(); neck_pt(ADA_X, ADA_Z, "Marvin: Kopf zu Ada (er stellt sich IHR vor)")
 zeile(MSG["m_hello"], "Marvin", [(15, "Arm strecken"), (18, "Hand zur Brust (I'm Marvin)")], MARVIN, "Marvin: Hello, glad to meet another Survivor! I'm Marvin.")
+MARVIN(); neck_pt(LEON_X, LEON_Z, "Marvin: Kopf zurueck zu Leon")
+# Leon wendet sich fuer den Rest des Gespraechs Marvin zu
+work_player(); neck_pt(MARVIN_X, MARVIN_Z, "Leon: Kopf zu Marvin")
+dest(9, BIT_LEON, MARVIN_X, MARVIN_Z, "Leon: Plc_dest Modus 9 -> zu Marvin drehen")
+wait(BIT_LEON, "Leon zu Marvin gedreht")
 # Leon: Anyway... (Kopfschuetteln, Kopf leicht gebeugt)
 message(MSG["l_anyway"], "Message_on %d  Leon: Anyway... looks like we can't contact anyone ..." % MSG["l_anyway"])
 work_player(); neck_down("Leon: Plc_neck Modus 2 Kopf leicht gesenkt")
@@ -216,10 +229,11 @@ message(MSG["l_dots"], "Message_on %d  Leon: ..." % MSG["l_dots"])
 sleep(70, "Sleep 70  'etwas Pause'")
 sleep(60, "Sleep 60  Pause")
 zeile(MSG["l_car"], "Leon", [(21, "Hand hoch (I know!)"), (17, "Arm-Schwung (The patrol car!)")], LEON, "Leon: I know! The patrol car! We can use it to get out of here!")
-zeile(MSG["m_yeah"], "Marvin", [(15, "Arm strecken")], MARVIN, "Marvin: Yeah, you're right! That could be our way out!")
-zeile(MSG["l_okay"], "Leon", [(15, "Arm strecken (zu Marvin: you go with Ada)")], LEON, "Leon: Okay, Marvin, you go with Ada to the parking lot and wait there.")
+G16 = (16, "kleine Handflaechen-Geste (Original-Paar 15 -> 16, ROOM11B0 sub06 @0x014FE)")
+zeile(MSG["m_yeah"], "Marvin", [(15, "Arm strecken"), G16], MARVIN, "Marvin: Yeah, you're right! That could be our way out!")
+zeile(MSG["l_okay"], "Leon", [(15, "Arm strecken (zu Marvin: you go with Ada)"), G16], LEON, "Leon: Okay, Marvin, you go with Ada to the parking lot and wait there.")
 zeile(MSG["l_irons"], "Leon", [(17, "Arm-Schwung (I'm going to get Chief Irons)")], LEON, "Leon: I'm going to get Chief Irons, and I'll be right behind you!")
-zeile(MSG["m_alright"], "Marvin", [(15, "Arm strecken (Take care Leon!)")], MARVIN, "Marvin: Alright! Sounds like a plan. Take care Leon!")
+zeile(MSG["m_alright"], "Marvin", [(15, "Arm strecken (Take care Leon!)"), G16], MARVIN, "Marvin: Alright! Sounds like a plan. Take care Leon!")
 # Marvin und Ada rennen hintereinander zur Tuer
 MARVIN(); neck_release("Marvin: Kopf loslassen")
 dest(5, BIT_MARVIN, WP_X, WP_Z, "Marvin: Plc_dest Modus 5 (rennen) zum Wegpunkt")

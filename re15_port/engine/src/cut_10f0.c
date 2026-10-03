@@ -22,7 +22,7 @@
 
 extern unsigned g_current_room_id;
 
-/* ---- Das Programm (1162 Bytes, 245 Opcodes) und der RE2-Tuerton ---------------------------------- */
+/* ---- Das Programm (1326 Bytes, 282 Opcodes) und der RE2-Tuerton ---------------------------------- */
 #include "gen/cut10f0_szene.inc"
 #include "gen/cut10f0_tuerton.inc"
 
@@ -234,6 +234,11 @@ static const re15_map_zone_t *hauptzone(unsigned room)
 void re15_cut10f0_install(uint16_t room_id)
 {
     s_zustand = RE15_CUT10F0_AUS;
+    /* Besucht-Latch des zweiten Kartenziels: Leon betritt ROOM1150 NACH der Szene -> (9,72)=1, die
+     * Kachel hoert auf zu blinken (map_hint_common.c Eintrag K2). Das Besucht-Bit der Zone taugt dafuer
+     * nicht — ROOM1150 ist vor der Szene laengst besucht (re15_cut10f0.h, Dossier §8.1). */
+    if (room_id == RE15_CUT10F0_ZIEL2_RAUM && gesehen())
+        re15_game_flag_set(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT, 1);
     if (room_id != RE15_CUT10F0_RAUM) return;
     if (gesehen()) return;
 

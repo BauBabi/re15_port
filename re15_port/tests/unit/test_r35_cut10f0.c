@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 void re15_actor_step_all_walkers(void);
 extern int g_test_tuer_laden_groesse, g_test_tuer_laden_count;   /* tests/test_support.c Spion */
@@ -309,7 +310,22 @@ typedef struct {
     int lb_voll, lb_weg, ende, pm_frei, auto_ende;
     int marvin_weg, ada_weg;                      /* am Ende geparkt */
     int hint_nr, bgm_vorher, bgm_nachher, flag_vorher, flag_nachher, f27, f17;
+    /* Fortsetzung (Dossier §8.2/§8.3): Leons Lage/Gierung beim Aufgehen jeder Zeile, Marvins Lage dabei */
+    int leon_rot_msg[18], leon_x_msg[18], leon_z_msg[18], mv_x_msg[18], mv_z_msg[18];
 } szene_t;
+
+/* Gierung (0 = +X, 1024 = -Z, 2048 = -X, 3072 = +Z; actor_locomotion.c: x += cos, z -= sin) von (x,z) nach (tx,tz). */
+static int gierung_nach(int x, int z, int tx, int tz)
+{
+    double a = atan2(-(double)(tz - z), (double)(tx - x)) * 2048.0 / 3.14159265358979323846;
+    int y = (int)(a < 0 ? a - 0.5 : a + 0.5);
+    return y & 0xfff;
+}
+static int gier_abstand(int a, int b)
+{
+    int d = (a - b) & 0xfff;
+    return d > 2048 ? 4096 - d : d;
+}
 
 #define SZENE_MAX 3600
 
@@ -341,7 +357,11 @@ static szene_t szene_fahren(void)
                 int k = id - RE15_CUT10F0_MSG_ERSTE;
                 if (k < 0 || k >= 18) r.fremde_msg++;
                 else {
-                    if (r.msg_bild[k] < 0) r.msg_bild[k] = f;
+                    if (r.msg_bild[k] < 0) {
+                        r.msg_bild[k] = f;
+                        r.leon_rot_msg[k] = pl->rot_y & 0xfff; r.leon_x_msg[k] = pl->x; r.leon_z_msg[k] = pl->z;
+                        r.mv_x_msg[k] = mv->x; r.mv_z_msg[k] = mv->z;
+                    }
                     if (k > 0 && r.msg_bild[k - 1] < 0) r.msg_folge_ok = 0;
                 }
                 zuletzt = id;
@@ -442,7 +462,47 @@ static void teil_szene(void)
     PRUEF(k1 >= 0 && r.hint_nr == k1, "Kartenhinweis angefordert: Eintrag K1 (ROOM11C0) = %d, anstehend %d", k1, r.hint_nr);
     PRUEF(r.bgm_vorher == -1 && r.bgm_nachher == RE15_CUT10F0_BGM_EINTRAG,
           "BGM-Weiche: vorher -1 (Tabelle), nachher 0x%04X (MAIN01)", r.bgm_nachher);
-    PRUEF(r.leon_rot <= 160 || r.leon_rot >= 4096 - 160, "Leon blickt am Ende nach +X (zu Ada), Gierung %d", r.leon_rot);
+    /* ---- Fortsetzung (Dossier §8.2): wem Leon zugewandt ist. Zeile 7 (k=1) und 12 (k=6) zu Ada, Zeile 11
+     * (k=5), 16 (k=10), 21 (k=15) und am Ende zu Marvins Standort — "Hey Marvin ... wieder arm strecken" zeigt
+     * auf MARVIN, "This is... -> arm strecken Richtung Ada" auf ADA. Toleranz 160/4096 = 14 Grad. */
+    {
+        static const struct { int k; int zu_ada; const char *zeile; } w[] = {
+            { 1, 1, "7 'Did you really think' (Leon bei Ada)" }, { 5, 0, "11 'Hey Marvin, glad you made it!'" },
+            { 6, 1, "12 'Allow me to introduce you. This is...'" }, { 10, 0, "16 'Anyway... looks like'" },
+            { 13, 0, "19 'I know! The patrol car!'" }, { 15, 0, "21 'Okay, Marvin, you go with Ada'" },
+            { 16, 0, "22 'I'm going to get Chief Irons'" },
+        };
+        for (unsigned i = 0; i < sizeof w / sizeof w[0]; i++) {
+            int k = w[i].k;
+            int soll = w[i].zu_ada
+                ? gierung_nach(r.leon_x_msg[k], r.leon_z_msg[k], RE15_CUT10F0_ADA_X, RE15_CUT10F0_ADA_Z)
+                : gierung_nach(r.leon_x_msg[k], r.leon_z_msg[k], RE15_CUT10F0_MARVIN_X, RE15_CUT10F0_MARVIN_Z);
+            PRUEF(r.msg_bild[k] > 0 && gier_abstand(r.leon_rot_msg[k], soll) <= 160,
+                  "Zeile %s: Leon blickt zu %s (Gierung %d, Soll %d)", w[i].zeile, w[i].zu_ada ? "Ada" : "Marvin",
+                  r.leon_rot_msg[k], soll);
+        }
+        /* Marvin steht dabei wirklich dort, wohin Leon sich dreht */
+        PRUEF(abs(r.mv_x_msg[5] - RE15_CUT10F0_MARVIN_X) < 200 && abs(r.mv_z_msg[5] - RE15_CUT10F0_MARVIN_Z) < 300,
+              "Marvin steht bei Zeile 11 an seinem Platz (%d,%d)", r.mv_x_msg[5], r.mv_z_msg[5]);
+        int soll_ende = gierung_nach(r.leon_x, r.leon_z, RE15_CUT10F0_MARVIN_X, RE15_CUT10F0_MARVIN_Z);
+        PRUEF(gier_abstand(r.leon_rot, soll_ende) <= 160, "Leon steht am Ende Marvins Platz zugewandt (Gierung %d, Soll %d)",
+              r.leon_rot, soll_ende);
+    }
+    /* ---- Fortsetzung (Dossier §8.3): Zeilentakt. Keine Zeile wird vor 90 Bildern von der naechsten ersetzt
+     * (kuerzeste Original-Zeile ROOM11B0 sub06 msg 4 @0x01574: Sleep 40 @0x01580 + Sleep 50 @0x0158C); der
+     * Regeltakt ist 110 (40 + 50 + 20, @0x014FA/@0x01502/@0x0150A). */
+    {
+        int min_abst = 1 << 30, min_k = -1;
+        printf("  Zeilenabstaende (Bilder bis zur naechsten Zeile):");
+        for (int k = 0; k + 1 < 18; k++) {
+            int d = r.msg_bild[k + 1] - r.msg_bild[k];
+            printf(" %d:%d", k + RE15_CUT10F0_MSG_ERSTE, d);
+            if (d < min_abst) { min_abst = d; min_k = k; }
+        }
+        printf("\n");
+        PRUEF(min_abst >= 90, "jede Zeile steht mindestens 90 Bilder (kuerzeste: msg %d mit %d Bildern)",
+              min_k + RE15_CUT10F0_MSG_ERSTE, min_abst);
+    }
 }
 
 static void teil_einmal(void)
@@ -499,10 +559,12 @@ static void teil_karte(void)
     PRUEF(a0 && p0 == 0 && q0 == 4 && a1 && p_1 == 4 && q_1 == 2 && !a2,
           "nach der Szene: Ziel 0 = ROOM11C0 (0/4), Ziel 1 = ROOM1150 (4/2), kein drittes");
     PRUEF(re15_map_ziel_blatt_frei(0) && re15_map_ziel_blatt_frei(4), "Blaetter 0 und 4 fuer die Karte frei");
-    /* ROOM1150 besucht -> nur noch 11C0; ROOM11C0 besucht -> nichts mehr */
-    re15_map_zone_update(0x1150, -21000, -20000);
+    /* ROOM1150 NACH der Szene betreten (Raumaufbau -> Latch (9,72)) -> nur noch 11C0; ROOM11C0 besucht -> nichts mehr */
+    re15_cut10f0_install(0x1151);                                  /* Elzas Variante: kein Latch */
+    PRUEF(re15_map_ziel_aktiv_n(1, &zp, &zr), "Raumaufbau ROOM1151 (Elza) laesst ROOM1150 weiter blinken");
+    re15_cut10f0_install(0x1150);
     a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); a1 = re15_map_ziel_aktiv_n(1, &zp, &zr);
-    PRUEF(a0 && zp == 0 && !a1, "ROOM1150 besucht -> nur noch ROOM11C0 blinkt (Blatt 0)");
+    PRUEF(a0 && zp == 0 && !a1, "ROOM1150 nach der Szene betreten -> nur noch ROOM11C0 blinkt (Blatt 0)");
     re15_map_zone_update(0x11C0, -10000, 0);
     PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "ROOM11C0 besucht -> kein Ziel mehr");
 
@@ -511,6 +573,7 @@ static void teil_karte(void)
      * ist, blinken beide weiter" meint den Besuch NACH der Szene -> eigener Latch (9,72), nicht das
      * Besucht-Bit der Zone. */
     re15_game_state_init();
+    re15_map_visited_reset();                                     /* die Besucht-Bits sind nicht Teil von g_game */
     re15_map_zone_update(0x1150, -21000, -20000);                 /* Besuch davor */
     re15_game_flag_set(3, 94, 1);
     re15_map_zone_update(RE15_CUT10F0_RAUM, RE15_CUT10F0_SPAWN_X, RE15_CUT10F0_SPAWN_Z);
