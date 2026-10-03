@@ -493,6 +493,8 @@ static void teil_biss(void)
     for (int f = 0; f < 8; f++) {
         /* Lage je Bild festhalten: Koerper-Schub und Wurzelbewegung sollen die Biss-Geometrie nicht verschieben */
         pl->x = -9013; pl->z = -15461; a->x = pl->x - 700; a->z = pl->z; b->x = pl->x + 500; b->z = pl->z;
+        a->hit_radius_min = 0; b->hit_radius_min = 0;   /* kein Koerper-Schub (re15_body_push_player ueberspringt Radius 0):
+                                                         * der Riegel misst die RICHTUNG, nicht den Abstandshalter */
         frame(0, 0);
         printf("    Bild %d: HP %d Clip %d | A sub %d/%d Bild %d @(%d,%d) | PL @(%d,%d)\n", f, (int)pl->hp, (int)pl->motion,
                a->sub_state_1, a->sub_state_2, (int)a->anim_frame, (int)a->x, (int)a->z, (int)pl->x, (int)pl->z);
