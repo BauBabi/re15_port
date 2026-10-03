@@ -4252,6 +4252,12 @@ re_title:;
         rbj_size = rdt.animation_size;
         rbj_borrowed = 1;
     }
+    /* Runde 35 Spur K: Boot/CONTINUE direkt in ROOM10F0 mit ausstehender Szene (alter Spielstand) ->
+     * Gestenblock von ROOM11B0 leihen, wie im Raumwechsel-Pfad (re15_cut10f0_rbj_quelle). */
+    if (!rbj_buf && re15_cut10f0_rbj_quelle(boot_room)) {
+        rbj_buf = pc_rbj_leihen(re15_cut10f0_rbj_quelle(boot_room), &rbj_size);
+        if (rbj_buf && rbj_size > 0) rbj_borrowed = 1;
+    }
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -4914,6 +4920,9 @@ re_title:;
                 fprintf(stderr, "[dokumente] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+    /* Runde 35 Spur K: Szene ROOM10F0 auch am Boot-/CONTINUE-Weg (alter Spielstand im Raum, (9,71)=0) —
+     * derselbe Grund wie die Installer darueber. Herleitung: include/re15_cut10f0.h. */
+    re15_cut10f0_install((uint16_t)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

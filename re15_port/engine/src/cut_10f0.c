@@ -265,16 +265,17 @@ void re15_cut10f0_tick(void)
     if (s_zustand != RE15_CUT10F0_LAEUFT) return;
     if (programm_laeuft()) return;
     s_zustand = RE15_CUT10F0_FERTIG;
-    /* Kartenhinweis wie nach ROOM1150 sub08 (RE2 Opcode 0x84 @0x800591C4 vor dem Evt_end) — hier
-     * portseitig angefordert, weil das Programm nicht im RDT-Puffer liegt (kein Anker-Scan). */
-    re15_map_hint_request(re15_map_hint_eintrag_fuer(RE15_CUT10F0_RAUM, RE15_CUT10F0_ZIEL1_RAUM));
-    /* Raummusik neu anstossen: dieselbe Weiche wie beim Raumwechsel (room_common.c (15)), die Tabelle
-     * liefert jetzt MAIN01 (re15_cut10f0_bgm_eintrag) -> MAIN wechselt -> Ausblendung + Load. */
-    re15_audio_start_room_bgm((int)((RE15_CUT10F0_RAUM >> 12) - 1), (int)((RE15_CUT10F0_RAUM >> 4) & 0xff));
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[cut10f0] Szene zu Ende: Kartenhinweis ROOM%04X -> ROOM%04X angefordert, MAIN01 bis ROOM11C0\n",
             RE15_CUT10F0_ZIEL1_RAUM, RE15_CUT10F0_ZIEL2_RAUM);
 #endif
+    /* Kartenhinweis wie nach ROOM1150 sub08 (RE2 Opcode 0x84 @0x800591C4 vor dem Evt_end) — hier
+     * portseitig angefordert, weil das Programm nicht im RDT-Puffer liegt (kein Anker-Scan). */
+    re15_map_hint_request(re15_map_hint_eintrag_fuer(RE15_CUT10F0_RAUM, RE15_CUT10F0_ZIEL1_RAUM));
+    /* Raummusik neu anstossen: dieselbe Weiche wie beim Raumwechsel (room_common.c (15)), die Tabelle
+     * liefert jetzt MAIN01 (re15_cut10f0_bgm_eintrag) -> MAIN wechselt -> Ausblendung + Load
+     * (audio_pc.c schreibt dabei "[bgm] ... entry=FF01 -> MAIN01"). */
+    re15_audio_start_room_bgm((int)((RE15_CUT10F0_RAUM >> 12) - 1), (int)((RE15_CUT10F0_RAUM >> 4) & 0xff));
 }
 
 /* ---- Gestenbank-Leihe und NPC-Record-Alias ------------------------------------------------------- */

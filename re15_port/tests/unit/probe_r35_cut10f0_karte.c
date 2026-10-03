@@ -32,18 +32,21 @@
 int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
-    int gesehen = 0;
+    int gesehen = 0, in10f0 = 0;
     for (int a = 2; a < argc; a++) {
-        if (strcmp(argv[a], "gesehen") == 0) gesehen = 1;
+        if (strcmp(argv[a], "gesehen") == 0)     gesehen = 1;
+        else if (strcmp(argv[a], "in10f0") == 0) in10f0 = 1;   /* Stand IM Raum (alter Spielstand, Szene steht aus) */
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     scd_vm_init();
     re15_actor_init();
     re15_aot_init();
-    g_current_room_id = 0x10D0;
+    const unsigned raum = in10f0 ? RE15_CUT10F0_RAUM : 0x10D0u;
+    g_current_room_id = raum;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
-    pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048;
+    if (in10f0) { pl->x = RE15_CUT10F0_SPAWN_X; pl->y = 0; pl->z = RE15_CUT10F0_SPAWN_Z; pl->rot_y = RE15_CUT10F0_SPAWN_DIR; }
+    else        { pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048; }
     re15_game_flag_set(3, 50, 1);
     re15_game_flag_set(4, 247, 1);
     if (gesehen) re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
@@ -59,5 +62,5 @@ int main(int argc, char **argv)
     int g = re15_game_flag_get(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT);
     printf("Karte %s: Raum 0x%04X, (3,50)=%d, (4,247)=%d, (9,71)=%d\n", path, (unsigned)rr,
            re15_game_flag_get(3, 50), re15_game_flag_get(4, 247), g);
-    return (rr == 0x10D0 && re15_game_flag_get(3, 50) == 1 && g == gesehen) ? 0 : 1;
+    return (rr == raum && re15_game_flag_get(3, 50) == 1 && g == gesehen) ? 0 : 1;
 }

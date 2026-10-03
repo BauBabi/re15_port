@@ -104,18 +104,116 @@ Datei-Offsets in re15_port/shared_assets/PSX/STAGE1/ROOM####.RDT; EXE-Adressen =
   ss_bgm_entry; Port-Bank 0x0E -> RE2-Tuerbank vor der Bank-Weiche), map_hint_common.c (Eintraege K1/K2 mit Folge/Zeitsteuerung, re15_map_hint_request/_eintrag_fuer/_folge/_zeitgesteuert,
   re15_map_ziel_aktiv_n), re15_map_hint.h, menu_common.c (Hinweiskette im offenen Schirm: Zeit oder START -> Folge-Ziel; letztes Ziel schliesst nach derselben Zeit; zweites Kartenziel),
   re15_inv_screen.h (ziel2_* am Ende), re15_inv_screen.c (zweites Ziel in der Kachelschleife, gleiche Phase).
+  Boot-/CONTINUE-Weg (main.c geht dort nicht durch scd_room_reenter, Muster Sicherung/Granate/Hebetisch-Cursor/Dokumente): Leihe des Gestenblocks + re15_cut10f0_install
+  hinter dem Dokumente-Installer — gemessen (integration Lauf C): ohne diese Zeile lief bei CONTINUE im Raum zwar die Leihe, aber keine Szene ("Szene -1, Leihe 2724").
+  (ROOM10F0 hat keinen Speicherpunkt — re15_savepoint.c: 1070/1120/1150/... — der Fall ist nur mit Fremd-Spielstaenden/Werkzeugen erreichbar, aber jetzt abgedeckt.)
+  tests/test_support.c: Spion fuer re15_audio_re2_tuer_laden/_se (Unit-Riegel linken ohne SDL-Audio).
 - NUTZER-VORGABE / PORT-WAHL (in re15_cut10f0.h gekennzeichnet): Standorte Ada (6000,11500) Gierung 3072, Leon (4800,11500), Wegpunkt (5500,2500), Marvin (3800,9900),
   Adas Abgangs-Wegpunkt (5500,3200); Texte und Reihenfolge woertlich; Zeilenumbrueche unter 285 px; Gestenwahl je Zeile (Tabelle oben); Hinweisdauer 3 Blinkperioden;
   MAIN01 ab Szenenende (Flag (9,71)) bis zur besuchten Zone ROOM11C0, im Raum-Byte 0x1C selbst nie.
 
-## 4. Messung nachher
-(folgt)
+### 3.1 Gestenwahl je Zeile (Nutzer: "Sei bei den Animationen ein wenig flexibel ... wie bei vergleichbaren Dialogen")
+Form jeder Zeile = ROOM11C0 sub02 @0x018A4 (Geste A, Sleep 40, Geste B, Sleep 50, Clip 23, Sleep 20). Clips = Bibliothek 15..23 (D_adaruf.md §3.5, Bild gesten_katalog_vorn.png):
+
+| Zeile (msg) | Sprecher | Geste | Beleg der Geste |
+|---|---|---|---|
+| 6 Hey - how did you came in here? | Leon | 15 Arm nach vorn ("Arm strecken") + 23 | ROOM11C0 @0x018A4 "Ada! Where's Marvin?" |
+| 7 Did you really think ... | Woman | 19 vor + 19 rueckwaerts ("180-Grad-Geste") + 23 | ROOM11C0 @0x018D8/@0x018E0/@0x018E4 (Ada) |
+| 8/9 Anyway... destroyed / We won't reach ... | Woman | Plc_neck Modus 2 (Kopf gesenkt) + Modus 4 (Schuetteln), zurueck Modus 1 | ROOM11B0 @0x0154E/@0x0155C/@0x0156A |
+| 10 Leon! You already made it! | Marvin | 15 + 23, davor Plc_dest 9 zu Leon | ROOM11B0 @0x014F6 (Marvin Clip 15), @0x018CA |
+| 11 Hey Marvin, glad you made it! | Leon | 15 + 23 | wie 6 |
+| 12 Allow me to introduce you. This is... | Leon | 15 (zu Ada gewandt, Kopf zu Marvin) + 23 | wie 6; Kopf = Plc_neck Modus 1 |
+| 13 ... Ada, Ada Wong | Ada | 18 Hand zur Brust + 23 | ROOM11C0 @0x018F0 (Ada Clip 18) |
+| 14 Ada Wong. | Leon | Plc_neck Modus 3 Nicken | ROOM11B0 @0x016B4 |
+| 15 Hello, glad to meet another Survivor! I'm Marvin. | Marvin | 15, 18 Hand zur Brust, 23 | ROOM11B0 @0x014F6; ROOM11C0 @0x018F0 |
+| 16 Anyway... looks like we can't contact ... | Leon | Modus 2 + Modus 4 (Kopf gebeugt schuetteln) | ROOM10D0 sub21 @0x01BB4/@0x01BC2 (Leon) |
+| 17 Ohh... what do we do then?... | Marvin | 20 Unterarm nach vorn + 23 | ROOM11B0 @0x015A0 (Marvin Clip 20) |
+| 18 ... + Pause | Leon | keine (Sleep 70 + 60) | Nutzer: "etwas pause" |
+| 19 I know! The patrol car! ... | Leon | 21 Hand hoch, 17 Arm-Schwung, 23 | ROOM1050 rec0 Clip 21 (1x gerufen), ROOM1170 sub02 @0x015F0 (17) |
+| 20 Yeah, you're right! ... | Marvin | 15 + 23 | wie 10 |
+| 21 Okay, Marvin, you go with Ada ... | Leon | 15 + 23 | wie 6 |
+| 22 I'm going to get Chief Irons ... | Leon | 17 + 23 | ROOM1170 sub02 @0x015F0 |
+| 23 Alright! Sounds like a plan. Take care Leon! | Marvin | 15 + 23 | wie 10 |
+
+Schnittstelle zu Spur L: (9,71) = "10F0-Szene gesehen" (VERTRAG §0), gesetzt als erstes Opcode; L gatet seine 1150-Szene auf (9,71)=1 und (3,94)=1.
+
+## 4. Messung nachher (gebauter Stand mit cut_10f0.c; exe-Kopie re15_pc_r35k.exe; Bilder = RE15_FRAMEDUMP, Scratch r35k/szene1..4)
+Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STATE_LOG "F" und RE15_CAM_TRACE "F").
+- Start: debug.log "[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)", "[rbj] Animationsblock von ROOM11B0 geliehen (48168 B)",
+  "[rbj] room 10F0 cinematic overlay: 25 clips, 284 kf". Spawns (RE15_SPAWN_DIAG): Ada 0x42 Slot 0 (6000,0,11500) dir 3072; Marvin 0x40 Slot 1 (-30000,0,-30000);
+  "[enemy] EM42 loaded ... EM40 loaded" (CDEMD0.EMS). Balken voll ab F15.
+- Kamera (RE15_CAM_TRACE / "[scd Fn] Cut_chg"): F6 Cut 2 (Ada an der Monitorbank, Leon hinter der Kamera), F56 Cut 0 (Leon an der Tuer), Leons "Hey - how did you
+  came in here?" F71..F160 mit Clip 15 (Arm nach vorn) + 23; Leon geht ab F164 (Modus 4), Kamera folgt den RVD-Baendern: Cut 1 ab ~F260 (Band 0->1 z 2900..3900),
+  Cut 2 ab ~F300 (Band 1->2 z 7000..8000), Ankunft F357 bei (4796,11356) Gierung 4019 (= Blick +X zu Ada; Ziel (4800,11500), Modus-4-Ankunft < 100 bzw. Konsole);
+  F356 Cut_chg 2 (Dialogkamera). Leon steht LINKS von Ada (x 4796 < 6000), beide vor der Monitorbank (Bilder h_000360..h_000700).
+- Nachrichten (RE15_MSG_LOG): id 6, 7 (F396, Ada Clip 19 vor+rueck), 8/9 (Kopf gesenkt + Schuetteln: RE15_NECK_LOG "slot=1 mode=2 tgt=(0,0,300)" dann "mode=4 tgt=(3,0,0)"),
+  Tuerknall F704 ("[se] SCD Se_on: bank=14 id=1"), Marvin per Pos_set an der Tuer (8400,-350) F716, F732 Cut 0, id 10 "Leon! You already made it!" (Marvin Clip 15 + 23,
+  Blick zu Leon: neck slot=2 mode=1 tgt=(4800,0,11500)), F831 Cut 2, Marvin geht (Modus 4) ueber (5500,2500) nach (3814,9831) = schraeg links vor Leon/Ada (F987),
+  danach id 11..23 in dieser Reihenfolge (Leons Kopfschuetteln bei id 16: neck slot=0 mode=2 + mode=4; Nicken bei id 14: mode=3; "I know!" Clip 21 + 17; Pause nach id 18 = 130 Bilder).
+- Abgang: Marvin rennt (Modus 5, 200/Takt) ueber (5500,2500) zur Tuer, Ada 25 Bilder spaeter ueber (5500,3200); F2199 Cut 0 (beide laufen durch das Bild zur Tuer,
+  h_002200/h_002220), Parken beider per Pos_set (-30000,-30000), zweiter Tuerknall F2217, F2249 Cut 2 (Leon allein, Balken noch 45 Bilder), Faden zu Ende F2272
+  ("[cut10f0] Szene zu Ende: Kartenhinweis ROOM11C0 -> ROOM1150 angefordert, MAIN01 bis ROOM11C0"), Balken weg F2286, Flags danach (9,71)=1 (2,7)=0 (1,27)=0,
+  player_mode 0, Cut-Automatik an; Kamera bleibt Cut 2 (Leon in Zone 2, kein 2->x-Band greift) — gemessen: cam-trace F2400..F2640 shown=2.
+  ⛔ Erste Fassung endete mit Cut 0 + Cut_auto 1: Leon (z 11356) lag ausserhalb jedes 0->x-Bands, die Kamera blieb auf der Tuer stehen (Bilder f_002540ff ohne Leon).
+  Behoben durch Cut_chg 2 vor dem Schlussbalken (szene_bauen.py); danach gemessen cam=2 (h_002260ff, Leon im Bild).
+- Karte: "[hint] F2294 begin (Zaehler 10, Richtung 1)", Blatt B1 mit ROOM11C0 blinkend (h_002320..h_002400 "POLICE STATION B1", Kachel rot/Umriss im Wechsel, Ton Se(2,0x2B)
+  alle 39 Schritte), nach 3 Perioden "[hint] F2402 Folge-Hinweis 1 -> 2 (Zeit)" -> Blatt 3F mit ROOM1150 blinkend (h_002420..h_002540 "POLICE STATION 3F"), nach weiteren
+  3 Perioden "[hint] F2517 schliessen (Abbruch/Zeit)" (t = 3,95 s je Ziel, Wanduhr). Normale Karte danach: re15_map_ziel_aktiv_n(0) = Blatt 0/Rechteck 4 (11C0),
+  (1) = Blatt 4/Rechteck 2 (1150), bis die jeweilige Zone besucht ist (unit_r35_cut10f0_karte).
+- BGM: dieser Rechner hat keinen Audio-Endpunkt ("[audio] SDL_OpenAudioDevice failed: WASAPI"), re15_audio_start_room_bgm kehrt dann vor der Tabelle zurueck ->
+  Messung mit SDL_AUDIODRIVER=dummy: "[bgm] stage=0 room=0F entry=FF20 -> MAIN20" beim Eintritt, nach der Szene "entry=FF01 -> MAIN01" (integration_r35_cut10f0, Lauf A).
+  Tabellenweiche (unit_r35_cut10f0_bgm): -1 vor der Szene; 0xFF01 fuer 0x0F/0x0D/0x10/0x11/0x12/0x13/0x15/0x04/0x06/0x03/0x1B/0x1F; -1 fuer Raum-Byte 0x1C, andere Stages,
+  und sobald die Zone ROOM11C0 besucht ist. Gleicher MAIN-Slot ueber Raumwechsel = "laeuft durch" (FUN_80044210 @0x80044280), d.h. MAIN01 wird zwischen den Raeumen nicht neu gestartet.
+- Genau einmal: zweiter Raumaufbau mit (9,71)=1 -> kein Faden, kein Spawn, keine Leihe (unit_r35_cut10f0_einmal; integration Lauf B mit Karte "gesehen").
+- Bilder (K_belege/): vorher_cut0_leon_an_der_tuer.png, vorher_cut2_konsole_monitore.png, grundriss_10f0_aots_kameras.png (Floor-Dump + AOT-Rechtecke + Kameras),
+  nachher_kontaktbogen_alle_20_bilder.png (F0..F2700 je 20 Bilder), nachher_F0080_cut0_leon_hey.png, nachher_F0360_leon_links_von_ada.png,
+  nachher_F0760_cut0_marvin_an_der_tuer.png, nachher_F1100_drei_im_dialog.png, nachher_F2220_abgang_zur_tuer.png, nachher_F2260_cut2_leon_balken.png,
+  nachher_F2360_karte_B1_room11c0.png, nachher_F2480_karte_3F_room1150.png, nachher_F2600_cut2_leon_frei.png.
+- Echter Weg (integration_r35_cut10f0 Lauf A, Spielstand ROOM10D0 + CONTINUE + Aktionstaste): "[save] CONTINUE: resumed in room 10d0", "[tuer] Sequenz Archiv 2 DOOR13
+  Variante 1 ... Schliesston 1, Ton geladen", "[esp] room 10F0", "[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)", "[rbj] room 10F0 cinematic
+  overlay: 25 clips, 284 kf", Nachrichten 6..23, 2x "[se] SCD Se_on: bank=14 id=1", "[bgm] stage=0 room=0F entry=FF01 -> MAIN01(flag 0) SUB--", "[hint] F2411 Folge-Hinweis
+  1 -> 2 (Zeit)", "[hint] F2529 schliessen (Abbruch/Zeit)", cam-trace bis F2700 shown=2 (Leon (4792,11359)). Lauf B ((9,71)=1): keine der Zeilen. Lauf C (Spielstand IM Raum,
+  Boot-Weg main.c): Szene + Leihe wie A.
 
 ## 5. Tests
-(folgt)
+- `tests/unit/probes/r35_cut10f0.cmake` (GLOB): unit_r35_cut10f0_programm / _texte / _tuerton / _szene / _einmal / _karte / _bgm (test_r35_cut10f0.c, echte VM + Spielschritt
+  in der Reihenfolge von main.c) — alle 7 gruen (ctest -R "^unit_r35_cut10f0_").
+- integration_r35_cut10f0 (test_r35_cut10f0.cmake, Karte aus probe_r35_cut10f0_karte: ROOM10D0 (1900,0,-7000) Gierung 2048 vor der Tuer, Flags (3,50)=1 Schloss offen /
+  (4,247)=1 Freeze-Szene gesehen): Lauf A CONTINUE -> Aktionstaste -> DOOR13-Sequenz -> ROOM10F0 -> Szene (Nachrichten 6..23 in Reihenfolge, 2x Se_on Bank 14 Satz 1,
+  Szenen-Ende, Folge-Hinweis 1 -> 2, schliessen, entry=FF01, Kamera Cut 2); Lauf B mit (9,71)=1: nichts davon. Ergebnis: (siehe Abschluss unten)
+- Suite: (siehe Abschluss unten)
 
 ## 6. OFFEN
-(folgt)
+- Keine Sprachaufnahmen: die 18 Zeilen laufen stumm mit Untertitel (99 Bilder Standzeit + Lesezeit), bis der Nutzer synchro/STAGE1/room10F0/main06..main23.wav liefert
+  (dann haelt der Stimmen-Riegel die naechste Zeile bis zum Ende der Aufnahme).
+- PSX-Ziel: die BGM-Weiche sitzt in platform/pc/src/audio_pc.c (audio_psx.c unveraendert); die Gestenblock-Leihe in platform/pc/main.c — fuer den PSX-Port waeren beide
+  Haken in asset_psx.c/audio_psx.c nachzuziehen (nicht Teil dieser Runde, PSX-Build-Luecke laut Memory).
+- Dialogkamera Cut 2 zeigt die drei Figuren klein (Abstand ~9500 Einheiten zur Monitorbank, Nutzer-Vorgabe "hinten rechts ... bei CUT2"); die Kopfgesten sind in dieser
+  Entfernung nur wenige Bildpunkte gross — ausgefuehrt (NECK_LOG), aber auf dem Bild kaum sichtbar. Falls gewuenscht: Dialog naeher an der Kamera (z ~6000) = Positions-
+  Konstanten in re15_cut10f0.h + szene_bauen.py.
 
 ## 7. Fuer den Nutzer
-(folgt)
+- Sprachdateien (Sprecher: Text), synchro/STAGE1/room10F0/:
+  main06.wav Leon: Hey - how did you came in here?
+  main07.wav Woman: Did you really think there was only one staff card for the Communication Room?
+  main08.wav Woman: Anyway... the communication system is completely destroyed.
+  main09.wav Woman: We won't reach anyone with it anymore...
+  main10.wav Marvin: Leon! You already made it!
+  main11.wav Leon: Hey Marvin, glad you made it!
+  main12.wav Leon: Allow me to introduce you. This is...
+  main13.wav Ada: ... Ada, Ada Wong
+  main14.wav Leon: Ada Wong.
+  main15.wav Marvin: Hello, glad to meet another Survivor! I'm Marvin.
+  main16.wav Leon: Anyway... looks like we can't contact anyone with this thing anymore.
+  main17.wav Marvin: Ohh... what do we do then?...
+  main18.wav Leon: ...
+  main19.wav Leon: I know! The patrol car! We can use it to get out of here!
+  main20.wav Marvin: Yeah, you're right! That could be our way out!
+  main21.wav Leon: Okay, Marvin, you go with Ada to the parking lot and wait there.
+  main22.wav Leon: I'm going to get Chief Irons, and I'll be right behind you!
+  main23.wav Marvin: Alright! Sounds like a plan. Take care Leon!
+- Neue Assets fuer das Paket-/Android-Gate: KEINE Dateien unter shared_assets/ (Tonteil und Szene liegen eingebacken in engine/src/gen/cut10f0_*.inc;
+  DOOR13.DO2 und ROOM11B0.RDT sind bereits im Gate).
+- Bedienung: Szene startet beim ersten Betreten von ROOM10F0 (Leon) automatisch; die Karte danach schaltet nach ~4 s von B1 (Parkplatz) auf 3F (Irons' Buero) und schliesst
+  nach weiteren ~4 s, START springt sofort weiter/schliesst. Beide Raeume blinken in der normalen Karte, bis man sie betreten hat. MAIN01 laeuft ab Szenenende in jedem
+  Raum, bis man den Parkplatz ROOM11C0 betritt.

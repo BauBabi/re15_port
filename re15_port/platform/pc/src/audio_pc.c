@@ -3531,6 +3531,16 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
+                /* Runde 35 Spur K: Port-Bank 0x0E = die geladene RE2-Tuerbank (Tuerknall der Szene
+                 * ROOM10F0, Se_on-Form ROOM10D0 sub21 @0x01A02; re15_cut10f0.h) — VOR der Bank-Weiche
+                 * (FUN_80045024 kennt nur Bank 0..5) und vor deren Debug-Zeile. */
+                if (evt.bank == RE15_CUT10F0_SE_BANK) {
+                    if (getenv("RE15_SE_DEBUG"))
+                        fprintf(stderr, "[se] Se_on bank=%u id=%u -> RE2-Tuerbank (Runde 35 Spur K)\n",
+                                evt.bank, evt.sample_id);
+                    re15_audio_re2_tuer_se(evt.sample_id);
+                    break;
+                }
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
@@ -3544,9 +3554,6 @@ void re15_audio_tick(void)
                  * @0x80045140, NO -1). Route to the matching resident/room bank; a bank the port has
                  * not loaded is skipped exactly as the original skips DAT_800b21ec[bank] == -1. (Was:
                  * ignore the bank and play (sample_id-1) from a bring-up TEST VAB — a divergence.) */
-                /* Runde 35 Spur K: Port-Bank 0x0E = die geladene RE2-Tuerbank (Tuerknall der Szene
-                 * ROOM10F0, Se_on-Form ROOM10D0 sub21 @0x01A02; re15_cut10f0.h). */
-                if (evt.bank == RE15_CUT10F0_SE_BANK) { re15_audio_re2_tuer_se(evt.sample_id); break; }
                 switch (re15_audio_se_bank_kind(evt.bank)) {
                     case RE15_SE_BANK_WEAPON: re15_audio_weapon_se(evt.sample_id);   break;
                     case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;
