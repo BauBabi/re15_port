@@ -40,3 +40,89 @@ Zustand AKTUELL, Spieler-Marker.
   1220 (5 Zellen):            Zone Blatt 1 rect 3 zid 35 | aktuell: 3   (rect 3 = 64x80-Korridor)
   Marken Blatt 1 mit zid 34/35: nur 5 (#11..#15), davon Tuer 1210<->11E0 einmal, Zellentueren 3 von 5.
 ```
+
+## RE-Belege (Adressen, Bytes) — alle aus info/Re1.5/PSX.EXE bzw. den RDTs selbst gelesen
+
+### B1 Seiten-Setzer STAGE1 `FUN_8004b568` (Tabelle @0x8001103c, 38 Faelle)
+`re15_disasm.py dis 0x8004b568`: `lh v1,0x0fe2(0x800b)` (Raumindex) / `sltiu v0,v1,0x26` @0x8004b574 /
+Sprungtabelle @0x8001103c. Fall-Ketten enden in: Raum 0..11 -> `ori v0,zero,0x2` @0x8004b684,
+12..17 -> `ori v0,zero,0x3` @0x8004b6f8, 18..22 -> `ori v0,zero,0x4` @0x8004b758,
+23 -> `ori v0,zero,0x5` @0x8004b768, 24..29 -> `sb zero,0x260e` @0x8004b7dc, 30..37 ->
+`ori v0,zero,0x1` @0x8004b884; Schreiber `sb v0,0x260e(0x800b)` @0x8004b88c (= SEITE),
+`sb v1,0x260d` @0x8004b894 (= Zeilenindex der Massstabstabelle).
+=> ROOM1180 (24) -> Blatt 0 "POLICE STATION B1", ROOM1230 (35) -> Blatt 1 "POLICE STATION B2"
+(Beischrift in der Kachel uv(0,0) gelesen, Abzug scratch page0_rects.png/page1_rects.png).
+
+### B2 Rechteck-Tabellen (u16 count @0x80076840+8*Seite, Liste @+4, 12 B {x,y,w,h,u,_,v,_})
+Blatt 0 @0x800762a0 (7): r0 (120,60,56,72) uv(72,48) · r1 (76,76,72,48) · r2 (144,69,16,40) ·
+r3 (168,76,72,32) · r4 (168,100,72,96) · r5 (96,124,56,56) · r6 (153,114,16,24) uv(128,16)
+Blatt 1 @0x800762f4 (10): r0 (100,70,88,80) uv(168,16) · r1 (100,101,40,56) uv(0,32) ·
+r2 (141,101,32,40) uv(40,32) · r3 (187,70,64,80) uv(96,48) · r4 (187,78,16,24) · r5 (187,95,16,24) ·
+r6 (212,78,16,24) · r7 (212,95,16,24) · r8 (212,112,16,24) · r9 (170,101,24,24) uv(128,16)
+Blatt 2 @0x8007636c r9 (109,134,16,16) uv(168,40) · Blatt 4 @0x80076468 r0 (127,137,16,16) uv(168,40)
+(Blatt 3: Port-Ersatztabelle s_map_rectfix Eintrag 4 = (109,134,16,16) uv(168,40)).
+
+### B3 Massstabszeilen @0x800768b0 + 8*Index {s16 ox, s16 oy, u16 sx, u16 sy} (`FUN_800473f8` @0x8004741c-0x80047528)
+11E0 @0x800769a0 = (91,157,2304,2240) · 11F0 @0x800769a8 = Stub (0,0,1,1) · 1200 @0x800769b0 =
+(129,150,3168,2305) · 1210 @0x800769b8 = (177,140,2496,2250) · 1220 @0x800769c0 Stub · 1230 @0x800769c8
+Stub · 1180 @0x80076970 Stub · 1080 @0x800768f0 Stub · 1040 @0x800768d0 = (94,193,2080,2320) ·
+1190 @0x80076978 = (75,127,1920,2301) · 11B0 @0x80076988 = (159,110,2272,1954).
+
+### B4 Projektionen mit der Original-Formel (scratch b1.py, gleiche Rechnung wie FUN_800473f8)
+* 1200 (eigene Zeile): SCA-Huelle -> (137..176, 99..143) = Blatt 1 **rect 2** (141..173,101..141);
+  Tuer 1200->11E0 (ROOM1200.RDT @0x7BA) -> (165,139) = gemalte Tuernische in rect 2 (163..167,134..138);
+  Gegenseite 11E0->1200 (ROOM11E0.RDT @0x1532) mit 11E0-Zeile -> (166,140).
+* 11F0 (Stub; Header-Zeile (35,180,2304,2240) aus der Tuerkette hergeleitet): Huelle -> (99..134, 97..149)
+  = **rect 1** (100..140,101..157); die L-Form trifft Pixel fuer Pixel: Kollisionswand z 1150..2150
+  -> y 107 (Kunst: obere Wand links y 108), z 5700 -> y 100 (Kunst: y 101), Ecke x 1900..2900 -> x 109
+  (Kunst: 108). Tuer 11F0->11E0 (@0xCC6) -> (106,109) = gemalte Doppeltuer rect 0 (101..110,104..109).
+* 1210 (eigene Zeile): Huelle -> (184..230, 68..133) = **rect 3** (T-Korridor, gemalt: Querbalken y70..77,
+  Laengsgang x201..212). Tueren 1210->1220 (@0x1CE6/0x1D06/0x1D26/0x1D46/0x1D66) -> (202,84) (212,92)
+  (202,101) (212,108) (212,126) = je 1 px an den gemalten Nischen von rect 4 (196..201,80..84),
+  rect 6 (212..217,89..93), rect 5 (196..201,97..101), rect 7 (212..217,106..110),
+  rect 8 (212..217,123..127). Tuer 1210->11E0 (@0x1CC6) -> (188,76) = Nische rect 3 (187..192,72..76).
+* 1220 teilt den Weltrahmen mit 1210 (jede der 5 Tuerpaarungen: Tuer-Rechteck der einen Seite liegt
+  auf dem Spawn der anderen, z.B. 1210 @0x1CE6 r(-22200,-7200,1500,2200) -> Spawn (-22400,-6500);
+  1220 @0xDD2 r(-22000,-7400,500,2000) -> Spawn (-20890,-6560); Zellwand (-17275,-28650,200,24350)
+  trennt Gang und Ostzellen). Mit der 1210-Zeile projiziert: Zellenteiler y 81 / 96-97 / 114
+  (Kunst 78 / 95 / 112) -> 5 Zellen = rect 4,5 (West) und 6,7,8 (Ost); die SW-Kammer (z<-19875 West)
+  hat keine Tuer und ist nicht gemalt.
+* 1230 = 1180 (VARIANTE desselben Ortes): alle Tuer-Datensaetze identisch
+  (1180 @0x9EE/0xA12/0xA34/0xA54/0xA74/0xA94 == 1230 @0xAEE/0xB12/0xB34/0xB54/0xB74/0xBC4:
+  gleiche Rechtecke, Spawns, Ziele 1160/11D0, 10A0, 1190, 11B0, 1190), gleiche SCA-Huelle
+  (-10592..6733, -17477..32871); Nachbarn 1190/11B0/11D0 tragen beide Ziele auf DEMSELBEN Slot
+  (1190 @0x28B2/0x28D6, 11B0 @0xF64/0xF88, 11D0 @0x11E2/0x1206).
+  -> 1230 gehoert auf Blatt 0 (B1) wie 1180; der Seiten-Setzer schickt Index 35 auf Blatt 1 (B2) —
+  dort gibt es fuer diesen Ort KEIN Rechteck (alle 10 Rechtecke von Blatt 1 sind 11E0/11F0/1200/1210/
+  1220x5/10A0). Prototyp-Luecke (Stub-Zeile @0x800769c8, Marker = (0,0)).
+* Blatt 0 rect 0 ist der Gang 1180/1230: seine 5 gemalten Nischen entsprechen den 5 Tueren:
+  (136..141,71..75) Suedwand -> rect 1 = 1190-Hauptraum (1190-Zeile: Tuer @0x28B2 -> (139,78));
+  (152..155,70..73) -> rect 2 (1190-Ostkammer, Tuer 1230 Slot 4 @0xCE6); Doppeltuer x168 y78..86 ->
+  rect 3 = 11B0 (11B0-Zeile: Tuer @0xF64 -> (168,82)); (155..159,108..112) -> rect 6 (10A0, Tuer
+  @0xA34); (125..129,119..123) -> rect 5 (11D0, Tuer @0x9EE). rect 6 dagegen ist ein leerer 16x24-Kasten
+  ohne Nische — ein Ort mit 5 Tueren kann nicht rect 6 sein. Kein Zeilenpaar in der Tabelle traegt
+  rect 0 (Messung: nur 1180 -> rect 6, 1190 -> rect 2, 11A0 -> rect 1, 11B0 -> 3, 11C0 -> 4, 11D0 -> 5).
+  Die Kunst ist SCHEMATISCH (Affin-Fit der 5 Tueren: Rest bis 17 px) — der Gang wird als Ring gezeichnet.
+
+### B5 Fahrstuhl ROOM1080
+* Etage der Kabine = Bank 3 Bit 54/55/56, gesetzt von den Etagenraeumen beim Betreten:
+  ROOM1040 @0x15C8/0x15D6 `21 03 36 00`/`22 03 36 01`, ROOM10C0 @0x0FE0/0x0FEE `22 03 37 01`,
+  ROOM1120 @0x0D5E/0x0D6C `22 03 38 01` (je die anderen beiden geloescht); gelesen von ROOM1080 sub10
+  @0x08AC/0x08BC/0x08CC (`21 03 36 01` / `21 03 37 01` / `21 03 38 01` -> Aot_on 0/1/2).
+  (Belegt in analysis/befunde_2026-09-26/fahrstuhl-faehrt-nicht.md §2.4, Bytes hier nachgelesen.)
+* Seite der Etagenraeume (Setzer B1): 1040 -> 2, 10C0 -> 3, 1120 -> 4.
+* Orientierung der Kabine: Tuer-Datensaetze ROOM1040 @0x1096 Spawn (-13650,0,-900) Yaw 0x0400,
+  ROOM10C0 @0xE82 / ROOM1120 @0xCB6 ebenso Yaw 0x0400; Rueckweg ROOM1080 @0x482 -> 1040 Yaw 0x0400,
+  @0x4A2 -> 10C0 / @0x4C2 -> 1120 Yaw 0x0C00. Vorwaerts = (cos,-sin) (player_common.c:1292-1293):
+  Yaw 1024 = -z, 3072 = +z. Man geht in 1040 nach +z (Kabine liegt auf Blatt 2 NOERDLICH der Tuer:
+  1040-Zeile -> Tuer (114,145), Kabinen-Suedwand der Kachel y=143) und steht in 1080 mit Blick -z:
+  die Kabine ist gegen 1040 um 180 Grad gedreht (flip_x = flip_z = 1). Gegen 10C0/1120 ist sie NICHT
+  gedreht (aus der Kabine +z -> Ankunft Yaw 3072 = +z), und 10C0/1120 fuehren selbst flip 1,1 auf
+  ihren Blaettern (re15_map_zones.h) -> auf allen drei Blaettern 180 Grad. Konsistent.
+* Kabinen-Kunst (MAP-Kacheln uv(168,40)): Kasten 10x10, Innen 8x8 — Blatt 2/3 x110..117 y135..142,
+  Blatt 4 x128..135 y138..145. Kollision ROOM1080: Waende x -16750..-15750 / -11550..-10550,
+  z -5150..-4150 / -50..950 -> Innenraum x -15750..-11550, z -4150..-50.
+* Gemessener Defekt: die hergeleitete Zeile (78,214,2080,2320, ohne Spiegel) projiziert den Innenraum
+  auf x 111..119 / y 143..152 — also UNTER die Kabine (Suedwand y=143); die Klemmung (Rand 4,
+  re15_inv_screen.c) laesst davon y 144..146 uebrig. Und die Etagenwahl nimmt bei gleichem Band
+  immer die ERSTE Zeile (re15_map_floor_lookup) = Blatt 2.
