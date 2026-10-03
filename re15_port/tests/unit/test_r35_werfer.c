@@ -32,6 +32,7 @@
 #include "re15_ai_flavor.h"
 #include "re15_rdt.h"
 #include "re15_room.h"
+#include "re15_collision.h"
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -653,6 +654,49 @@ static void teil_i(void)
     g_room_rdt_ok = 0; memset(&g_room_rdt, 0, sizeof g_room_rdt);
     free(r10e0); free(r11c0); free(r1000); free(r1140);
     start();
+
+    /* N1 — Form JE TYP 1..9 gegen den Port-Zwilling des RE1.5-Handlers (Aufloeser FUN_8003b0a4 -> 0x800b2858[Typ],
+     * re15_collision_constrain_contact_band, Radius 0, Maske 1): innen sperrt der Werfer-Test UND der Handler schiebt,
+     * aussen (im Zellrechteck, aber ausserhalb der Form) weder noch. Eine Zelle, Quadrant 0. */
+    {
+        static re15_sca_entry_t z1;
+        re15_rdt_t r; memset(&r, 0, sizeof r);
+        r.sca = &z1; r.sca_count = 1; r.sca_rgn[0] = 1;
+        r.ceiling_x = (uint16_t)(int16_t)-30000; r.ceiling_z = (uint16_t)(int16_t)-30000;
+        static const struct { uint8_t typ; uint16_t w, d; int32_t ix, iz, ax, az; const char *was; } F[9] = {
+            { 1, 2000, 1000, 1100, 2100, 3100, 2500, "Rechteck FUN_8003bca8" },
+            { 2, 2000, 1000, 2000, 2500, 1100, 2100, "Raute LAB_8003d00c" },
+            { 3, 2000, 1000, 1500, 2500, 1050, 2050, "Kreis FUN_8003d6a8 (r 1000)" },
+            { 4, 2000, 1000, 2800, 2900, 1200, 2100, "Dreieck LAB_8003beb0 (rechter Winkel x+w,z+d)" },
+            { 5, 2000, 1000, 1200, 2900, 2800, 2100, "Dreieck LAB_8003c734 (rechter Winkel x,z+d)" },
+            { 6, 2000, 1000, 2800, 2100, 1200, 2900, "Dreieck LAB_8003cb9c (rechter Winkel x+w,z)" },
+            { 7, 2000, 1000, 1200, 2100, 2800, 2900, "Dreieck LAB_8003c2cc (rechter Winkel x,z)" },
+            { 8, 2000, 1000, 2000, 2500, 1020, 2020, "Kapsel x LAB_8003d7e8 (Kappen r 500)" },
+            { 9, 1000, 2000, 1500, 3000, 1020, 2020, "Kapsel z LAB_8003d930 (Kappen r 500)" } };
+        for (int k = 0; k < 9; k++) {
+            z1.width = F[k].w; z1.density = F[k].d; z1.x = 1000; z1.z = 2000; z1.type = F[k].typ; z1.u0 = 0xff; z1.u1 = 0; z1.floor = 0x03;
+            const int in  = re15_werfer_band_strecke(&r, F[k].ix, F[k].iz, F[k].ix, F[k].iz, 0);
+            const int aus = re15_werfer_band_strecke(&r, F[k].ax, F[k].az, F[k].ax, F[k].az, 0);
+            const int quer = re15_werfer_band_strecke(&r, F[k].ax, F[k].az, F[k].ix, F[k].iz, 0);
+            int32_t qx = F[k].ix, qz = F[k].iz;
+            re15_collision_constrain_contact_band(&r, F[k].ax, F[k].az, &qx, &qz, 0, 0, 1u, NULL, NULL);
+            const int schiebt_in = (qx != F[k].ix || qz != F[k].iz);
+            qx = F[k].ax; qz = F[k].az;
+            re15_collision_constrain_contact_band(&r, F[k].ax, F[k].az, &qx, &qz, 0, 0, 1u, NULL, NULL);
+            const int schiebt_aus = (qx != F[k].ax || qz != F[k].az);
+            CHECK(140 + k, in == 1 && aus == 0 && quer == 1 && schiebt_in == 1 && schiebt_aus == 0,
+                  "Typ %u %s: Werfer innen %d (1) aussen %d (0) Strecke %d (1); RE1.5-Handler schiebt innen %d (1) aussen %d (0)",
+                  F[k].typ, F[k].was, in, aus, quer, schiebt_in, schiebt_aus);
+        }
+        /* Filter wie das Abbild: anderes Band, nicht solide (u0 Bit 0), u1 Bit 1 -> keine Sperre. */
+        z1.width = 2000; z1.density = 1000; z1.x = 1000; z1.z = 2000; z1.type = 1; z1.u0 = 0xff; z1.u1 = 0; z1.floor = 0x13;
+        const int band1 = re15_werfer_band_strecke(&r, 1100, 2100, 1100, 2100, 0);
+        z1.floor = 0x03; z1.u0 = 0xfe;
+        const int weich = re15_werfer_band_strecke(&r, 1100, 2100, 1100, 2100, 0);
+        z1.u0 = 0xff; z1.u1 = 2;
+        const int u1b1 = re15_werfer_band_strecke(&r, 1100, 2100, 1100, 2100, 0);
+        CHECK(149, band1 == 0 && weich == 0 && u1b1 == 0, "Filter: Band 1 %d, u0 Bit 0 frei %d, u1 Bit 1 %d (alle 0)", band1, weich, u1b1);
+    }
 
     /* N2 — Kritklasse: Redhawk (7) und Python (20) setzen +0x93 |= 0x40 (@0x800123b4-b8; 20 = PORT-WAHL §3.5), Typ < 0x20
      * -> HP -1 am Bit (@0x800124fc-1c); Typ 0x27 (Affe) traegt nur das Bit; Pistole (3) keins. */
