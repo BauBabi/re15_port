@@ -322,6 +322,54 @@ static int teil_fahrstuhl(void)
                  ecke[2].my, ecke[0].my);
         CHECK(t, ecke[1].mx < ecke[0].mx && ecke[3].mx < ecke[2].mx &&
                  ecke[2].my > ecke[0].my && ecke[3].my > ecke[1].my);
+        /* (c) NACHBESSERUNG 1 (Abnahme 0, M1/M2): BEWEGUNGSWEITE ueber den BEGEHBAREN Bereich.
+         * Die Lagen sind die, die der Spieler in der exe wirklich erreicht (Kollisionswand
+         * -468, gemessen an debug.log `[walk] pl pos`: steh (-13650,-900), vor (-13650,-3682),
+         * rechts (-15282,-518), links (-12018,-518); G_karte.md Nachbesserung 1). Soll: der
+         * Marker wandert in JEDER Achse >= 6 px und bleibt dabei im gemalten Innenraum.
+         * ROT am Stand 154a73c1 (x 5 px, y 2 px) und am Stand 8fee1bb4 (x 2 px, y 2 px). */
+        {
+            static const int32_t lage[6][2] = {
+                { -13650,  -900 }, { -13650, -3682 }, { -15282,  -518 },
+                { -12018,  -518 }, { -15282, -3682 }, { -12018, -3682 } };
+            int lo_x = 999, hi_x = -999, lo_y = 999, hi_y = -999, alle_innen = 1;
+            for (k = 0; k < 6; k++) {
+                mess_t q;
+                miss_hier(0x1080, lage[k][0], lage[k][1], &q);
+                if (q.mx < lo_x) lo_x = q.mx;
+                if (q.mx > hi_x) hi_x = q.mx;
+                if (q.my < lo_y) lo_y = q.my;
+                if (q.my > hi_y) hi_y = q.my;
+                if (texel(m.page, rect[e], q.mx, q.my) != 1) alle_innen = 0;
+                printf("    Kabine %dF Lage (%d,%d) -> Marker (%d,%d)\n", e, (int)lage[k][0],
+                       (int)lage[k][1], q.mx, q.my);
+            }
+            snprintf(t, sizeof t, "Kabine %dF: Marker wandert ueber den begehbaren Bereich "
+                     "x %d..%d (%d px), y %d..%d (%d px) - soll je >= 6 px, alle Lagen im "
+                     "gemalten Innenraum", e, lo_x, hi_x, hi_x - lo_x, lo_y, hi_y, hi_y - lo_y);
+            CHECK(t, hi_x - lo_x >= 6 && hi_y - lo_y >= 6 && alle_innen);
+        }
+        /* (d) MECHANIK: im RE2-Massstab 1/450 (FUN_8006e120 @0x8006e1dc-0x8006e268) fallen
+         * die vier Kollisionswaende der Kabine (SCA-Innenflaechen x -15750/-11550, z -4150/-50)
+         * auf die GEMALTEN Wandpixel der Kachel (Index 4). Gemessen mit der Zonen-Abbildung
+         * selbst (re15_map_zone_marker, ohne das Klemmfenster des Kartenschirms). */
+        {
+            const re15_map_zone_t *zk = re15_map_zone_fuer(0x1080, 0, (unsigned)m.page);
+            int rx, ry, rw, rh, w;
+            static const int32_t wand[4][2] = {
+                { -15750, -2100 }, { -11550, -2100 }, { -13650, -4150 }, { -13650, -50 } };
+            int16_t wx[4] = {0}, wy[4] = {0};
+            int auf_wand = zk && re15_map_rect_geometry((unsigned)m.page, (unsigned)rect[e],
+                                                        &rx, &ry, &rw, &rh);
+            for (w = 0; auf_wand && w < 4; w++) {
+                re15_map_zone_marker(zk, wand[w][0], wand[w][1], rx, ry, rw, rh, &wx[w], &wy[w]);
+                if (texel(m.page, rect[e], wx[w], wy[w]) != 4) auf_wand = 0;
+            }
+            snprintf(t, sizeof t, "Kabine %dF: Kollisionswaende -> Karte W(%d,%d) O(%d,%d) "
+                     "N(%d,%d) S(%d,%d) liegen auf den gemalten Wandpixeln (Index 4)", e,
+                     wx[0], wy[0], wx[1], wy[1], wx[2], wy[2], wx[3], wy[3]);
+            CHECK(t, auf_wand);
+        }
     }
     /* Gegenprobe: kein Etagen-Bit, kein Etagen-Vorraum -> wie bisher die erste Zeile (Blatt 2) */
     if (betrete(0x1070, 0, 0, 0) && betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) {
@@ -571,11 +619,63 @@ static int teil_bild(int argc, char **argv)
     return 0;
 }
 
+/* marker <bmp> <x0> <y0> <x1> <y1>
+ *   sucht den Spieler-Marker im Fenster (x0..x1, y0..y1) des Kartenabzugs (RE15_INV_FB_SHOT):
+ *   Marker = jedes Pixel, das KEINE Kartenfarbe ist. Kartenfarben im Abzug gemessen
+ *   (Nachbesserung 1, Lauf vorgaenger_steh 2026-10-04): Wand (176,176,176), Tuerbalken
+ *   (224,168,40), aktuell rot (48,8,48)/(48,8,64), besucht gruen (16,56,40)/(16,56,56), Grund
+ *   (0,16,88)/(0,16,120). Der Marker ist der 5x5-Ring aus uv(224,128) (Quad 8x8 um die Mitte,
+ *   FUN_800473f8), modulierte Farbe des Pulses (gemessen (16,16,0)) und liegt OBEN (Op-Liste).
+ *   Ausgabe "MARKER <mx> <my> <n>" mit der Mitte der Bbox; exit 0 = gefunden. */
+static int teil_marker(int argc, char **argv)
+{
+    FILE *f;
+    unsigned char hdr[54], *px;
+    int w, h, x, y, x0, y0, x1, y1, n = 0, bx0 = 9999, by0 = 9999, bx1 = -1, by1 = -1;
+    long off;
+    if (argc < 7) { printf("FAIL: marker <bmp> x0 y0 x1 y1\n"); return 2; }
+    x0 = atoi(argv[3]); y0 = atoi(argv[4]); x1 = atoi(argv[5]); y1 = atoi(argv[6]);
+    f = fopen(argv[2], "rb");
+    if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); return 1; }
+    off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
+    w = hdr[18] | (hdr[19] << 8); h = hdr[22] | (hdr[23] << 8);
+    px = (unsigned char *)malloc((size_t)w * (size_t)h * 3u + 4u * (size_t)h);
+    fseek(f, off, SEEK_SET);
+    for (y = 0; y < h; y++) {
+        int stride = (w * 3 + 3) & ~3;
+        unsigned char *zeile = px + (size_t)(h - 1 - y) * (size_t)w * 3u;   /* von unten */
+        if (fread(zeile, 1, (size_t)w * 3u, f) != (size_t)w * 3u) break;
+        fseek(f, stride - w * 3, SEEK_CUR);
+    }
+    fclose(f);
+    for (y = y0; y <= y1 && y < h; y++)
+        for (x = x0; x <= x1 && x < w; x++) {
+            unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;  /* B,G,R */
+            int r = p[2], g = p[1], b = p[0], karte;
+            karte = (r == 176 && g == 176 && b == 176) || (r == 224 && g == 168 && b == 40) ||
+                    (r >= 40 && r <= 56 && g <= 12 && b >= 40 && b <= 72) ||
+                    (r == 16 && g == 56 && (b == 40 || b == 56)) ||
+                    (r == 0 && g == 16 && (b == 88 || b == 120));
+            if (karte) continue;
+            n++;
+            if (x < bx0) bx0 = x;
+            if (x > bx1) bx1 = x;
+            if (y < by0) by0 = y;
+            if (y > by1) by1 = y;
+        }
+    free(px);
+    if (!n) { printf("MARKER fehlt im Fenster (%d,%d)-(%d,%d)\n", x0, y0, x1, y1); return 1; }
+    printf("MARKER %d %d %d bbox (%d,%d)-(%d,%d)\n", (bx0 + bx1) / 2, (by0 + by1) / 2, n,
+           bx0, by0, bx1, by1);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "messung";
     if (!strcmp(teil, "karte")) return teil_karte(argc, argv);
     if (!strcmp(teil, "bild")) return teil_bild(argc, argv);
+    if (!strcmp(teil, "marker")) return teil_marker(argc, argv);
     re15_map_visited_reset();
     re15_inv_map_stage_init(0, 6);
     if (!strcmp(teil, "messung")) return teil_messung();

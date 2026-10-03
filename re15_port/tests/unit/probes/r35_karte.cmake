@@ -41,3 +41,17 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_karte.cmake)
     set_tests_properties(integration_r35_karte PROPERTIES TIMEOUT 1500)
 endif()
+#
+#   integration_r35_karte_fahrstuhl   NACHBESSERUNG 1 (Abnahme 0, M1/M2): BEWEGUNGSWEITE des
+#                            Fahrstuhl-Markers am ECHTEN Weg (Etagenraum -> Tuer -> ROOM1080 ->
+#                            laufen -> MAP -> Abzug), 4 Lagen auf 1F + 2 auf 3F; Soll je Achse
+#                            >= 6 px im gemalten Innenraum (tests/integration/test_r35_karte_fahrstuhl.cmake)
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_karte_fahrstuhl
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PROBE=$<TARGET_FILE:probe_r35_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_karte_fahrstuhl_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_karte_fahrstuhl.cmake)
+    set_tests_properties(integration_r35_karte_fahrstuhl PROPERTIES TIMEOUT 1500)
+endif()
