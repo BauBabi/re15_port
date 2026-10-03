@@ -690,3 +690,15 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   jedes Ereignis 0-1 Bild neben dem Original, kein Zonen-Sprung. Die Zonen-Sprung-Kette der Abnahme (t5)
   entstand dort aus anderer Lage (Landepunkt an den SCA-Markern, LOS-Latch frei); sie ist dieselbe
   Path-A-Regel (@0x80117ecc-8011802c), hier nicht ausgeloest — im Original wie im Port.
+
+### Messung nachher am gebauten Stand — exe ueber den ECHTEN Tuerweg (Schrotflinte, wie Abnahme t5)
+- Lauf `jnb1/n5` (exe-Kopie re15_pc_jnb1.exe, Env = Abnahme t5: RE15_SET_FLAG=4:243,3:130,
+  RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der Tuer, Quadrat-Tasten, RE15_GIVE=7:200 RE15_EQUIP=7,
+  Feuerskript ab 11C0-F1260): `DOOR FIRE` -> room11c0, sub02 F6, sub07 F1088.
+- Auswertung mit dem Abnahme-Skript `jab3/p6.py` (Segment 11C0):
+  Slot 2: 3 Treffer, Exit-Subs **3, 3, 7** -> 1 Sprung (nach dem 3. Treffer, F1390);
+  Slot 3: 3 Treffer, Exit-Subs **3, 3, 7** -> 1 Sprung nach dem 3. Treffer (F1789) + 1 Fernsprung des
+  Selektors aus sub 4 (F1395, Path B @0x80118028-8100 — kein Treffer-Sprung, auch r3 zeigt ihn bei t=54.55).
+  Vorher (Abnahme t5, gleiche Eingaben): 6 Treffer -> 6 Spruenge (7,7,7 / 7,7,7) + 4 Zonen-Spruenge.
+- Punkt 1 haelt: beide Gorillas tot -> sub03 F2018 (Ada kommt zurueck), sub04 F2606 (gemeinsamer Gang),
+  danach Raumwechsel nach 11B0 (wie Abnahme t5).
