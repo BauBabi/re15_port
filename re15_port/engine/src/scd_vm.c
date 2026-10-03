@@ -50,6 +50,7 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
+#include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
 
 scd_vm_t g_scd;
 
@@ -1551,6 +1552,7 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
      * @0x800516b8 `jal 0x8002fe38` (Text) liegen im selben Bild. RE1.5s LAB_80043084 hat an
      * dieser Stelle keinen Ton (@0x800430a0 einziger Aufruf = 0x80027e68). */
     re15_lock_se_notice(g_current_room_id, index, RE15_LOCK_WEG_AOT);
+    if (re15_ziel1190_show(index, pause_mask)) return;   /* Runde 35 Spur H: ROOM1190 Scheiben, msg 2 */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
@@ -1716,6 +1718,10 @@ static int op_message_on(scd_thread_t *t)
      * button to RELEASE (debounce), 2 = wait for a fresh PRESS = the answer. Plain messages
      * keep the PSX-canon non-blocking fall-through below. (void)arg2 — kept for the comment. */
     (void)arg2;
+    /* Runde 35 Spur H: ROOM1190 Scheiben-Schalter (msg 0, Slot 0..3) -> Port-Nachricht 6/7 =
+     * Scheiben-Satz + Original-Seite, gleiche Park-Semantik wie unten. re15_ziel1190.h */
+    { int zr = re15_ziel1190_message_on(t->pc, pause_mask);
+      if (zr == 1) { t->pc += 4; return 1; } if (zr == 2) return 2; }
     /* CHOICE message (its .msg carries a 0x03 yes/no code): BLOCK the SCD thread and run the
      * byte-true typewriter FSM (re15_dialog_open + re15_dialog_step, driven by re15_msg_tick).
      * We park here each frame and poll message_active; the FSM types the pages (action button
