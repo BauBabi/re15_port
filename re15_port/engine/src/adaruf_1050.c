@@ -18,15 +18,13 @@
 #include <stdio.h>
 #endif
 
-/* ---- Die Szene (162 Bytes). Jede Zeile traegt ihr Vorbild im Auslieferungsstand (Datei-Offsets).
+/* ---- Die Szene (166 Bytes; Runde 35 Spur E umgebaut ab +0x4C). Jede Zeile traegt ihr Vorbild im Auslieferungsstand (Datei-Offsets).
  * Opcode-Laengen = s_opcode_sizes (scd_vm.c). Die Form ist die der RE1.5-Szenen, die der Nutzer
- * nennt: ROOM1090 sub02 (Ruf der Frau, Rueckschritt nach dem Lauf zum Feuer), ROOM1090 sub03
- * (Clip 19 vor + zurueck), ROOM1170 sub02 (Clip 17), ROOM1050 sub03 (Plc_dest Modus 9 + Warte-
- * schleife), ROOM1130 sub01 (Tuer -> Text-Platz).
- * Zeitlinie (Riegel test_r34n_d_adaruf szene = echte VM + Spielschritt, B = Bilder nach dem Quadrat-
- * Druck): Balken ab B1 (voll ab B15), Ruf B21..B120, Drehung zur Tuer ab B121, Rueckschritt
- * B123..B133, Drehung zur Kamera bis B145, Leon-Zeilen ab B165/B216, Szenen-Ende B316 (+15 Bilder
- * Balken-Rampe, weg ab B330). */
+ * nennt: ROOM1090 sub02 (Ruf der Frau, Rueckschritt nach dem Lauf zum Feuer), ROOM1170 sub14 und
+ * sub02 (Leons Selbstgespraech: Clip 18 + Plc_neck, Clip 17), ROOM1050 sub03 (Plc_dest Modus 9 +
+ * Warteschleife), ROOM1130 sub01 (Tuer -> Text-Platz).
+ * Zeitlinie: Riegel test_r34n_d_adaruf szene (echte VM + Spielschritt) — Werte im Dossier
+ * analysis/befunde_runde35/E_inventar1050.md (Messung nachher P3). */
 static const uint8_t k_ruf[RE15_ADARUF_PROG_LEN] = {
     /* +00 */ 0x22, 0x09, 0x41, 0x01,   /* Set(9,65)=1 "Szene gesehen" — Einmal-Riegel als ERSTES Opcode
                                            wie ROOM11B0 sub06 @0x01478 `22 03 83 01`                      */
@@ -64,44 +62,48 @@ static const uint8_t k_ruf[RE15_ADARUF_PROG_LEN] = {
     /* +44 */ 0x02, 0x00,               /* Evt_next + Nop            = sub04 @0x026EA                     */
     /* +46 */ 0x12, 0x04,               /* Edwhile                   = sub04 @0x026EC                     */
     /* +48 */ 0x21, 0x05, 0x20, 0x00,   /* Ck(5,32)==0 (Ankunft)     = sub04 @0x026EE                     */
-    /* +4C */ 0x40, 0x00, 0x09, 0x20,
-              (uint8_t)(RE15_ADARUF_KAMERA_X & 0xff), (uint8_t)((RE15_ADARUF_KAMERA_X >> 8) & 0xff),
-              (uint8_t)(RE15_ADARUF_KAMERA_Z & 0xff), (uint8_t)((RE15_ADARUF_KAMERA_Z >> 8) & 0xff),
-                                        /* Plc_dest Modus 9: zur Kamera drehen (Cut 4, re15_adaruf.h
-                                           RE15_ADARUF_KAMERA_*). PORT-WAHL, Grund dort: nur frontal
-                                           liest sich die Geste so, wie der Nutzer sie beschreibt.
-                                           Form wie +0x24 (ROOM1050 sub03 @0x00DC2).                      */
-    /* +54 */ 0x11, 0x00, 0x08, 0x00,   /* Do                        = ROOM1050 sub03 @0x00DCA            */
-    /* +58 */ 0x02, 0x00,               /* Evt_next + Nop            = @0x00DCE                           */
-    /* +5A */ 0x12, 0x04,               /* Edwhile                   = @0x00DD0                           */
-    /* +5C */ 0x21, 0x05, 0x20, 0x00,   /* Ck(5,32)==0 (Ankunftsbit) = @0x00DD2                           */
-    /* +60 */ 0x09, 0x0a, 0x14, 0x00,   /* Sleep 20                  = ROOM1090 sub02 @0x02486            */
-    /* +64 */ 0x2b, RE15_ADARUF_MSG_LEON_A, 0x00, 0x00,
+    /* ---- Runde 35 Spur E: Leon redet mit SICH SELBST wie in ROOM1170 (NUTZER-VORGABE, AUFTRAG.md
+     * Z.94). Keine Drehung zur Kamera mehr (das war die "4. Wand"): Leon bleibt nach dem Rueckschritt
+     * zur Tuer gewandt (Modus 8 laeuft rueckwaerts, Blick bleibt +X), Kamera Cut 4 sieht ihn von hinten
+     * links — wie ROOM1170 sub02 Leons Selbstgespraech von hinten zeigt (Blick -> Kamera 152 Grad).
+     * Die Gesten sind die Selbstgespraechs-Formen aus ROOM1170: sub14 (Clip 18 + Kopf senken + Kopf
+     * schuetteln, "Damn it, there must be another way out of here.") und sub02 (Clip 17, "Now what am
+     * I gonna do?"). Clip 19 entfaellt: er steht in allen 32 Original-Aufrufen NUR im Gespraech mit
+     * einem Gegenueber (D_belege/plc_motion_zensus.tsv), nie im Selbstgespraech.                   */
+    /* +4C */ 0x09, 0x0a, 0x14, 0x00,   /* Sleep 20                  = ROOM1090 sub02 @0x02486            */
+    /* +50 */ 0x2b, RE15_ADARUF_MSG_LEON_A, 0x00, 0x00,
                                         /* Message_on 23 "Leon: Another civilian survivor." — Form
-                                           @0x0248A `2b 01 00 00`                                          */
-    /* +68 */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0) Arm hinaus = ROOM1090 sub03 @0x0265C
+                                           ROOM1170 sub14 @0x0175E `2b 0d 00 00`                           */
+    /* +54 */ 0x3f, 0x00, 0x12, 0x00,   /* Plc_motion(0,18,0) Hand zur Brust = ROOM1170 sub14 @0x01762
                                            (Handler 0x80041b90: `sb a1,148(v0)` @0x80041ba8 = Clip)        */
-    /* +6C */ 0x09, 0x0a, 0x19, 0x00,   /* Sleep 25                  = sub03 @0x02660                     */
-    /* +70 */ 0x3f, 0x00, 0x13, 0x00,   /* Plc_motion(0,19,0)        = sub03 @0x02664                     */
-    /* +74 */ 0x43, 0x00, 0x80, 0x00,   /* Plc_flg(0,0x80,0) rueckwaerts = sub03 @0x02668 (Handler
+    /* +58 */ 0x41, 0x02, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x01, 0x00, 0x0a,
+                                        /* Plc_neck(2) Kopf senken (relativ, Nick 300, Tempo 0x0a)
+                                           = ROOM1170 sub14 @0x01766 (Handler 0x80041e98)                  */
+    /* +62 */ 0x09, 0x0a, 0x1e, 0x00,   /* Sleep 30                  = sub14 @0x01770                     */
+    /* +66 */ 0x41, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00,
+                                        /* Plc_neck(4) Kopf schuetteln (3 Schwuenge, Tempo 0x64)
+                                           = ROOM1170 sub14 @0x01774                                        */
+    /* +70 */ 0x09, 0x0a, 0x3c, 0x00,   /* Sleep 60                  = sub14 @0x0177E                     */
+    /* +74 */ 0x3f, 0x00, 0x12, 0x00,   /* Plc_motion(0,18,0)        = sub14 @0x01782                     */
+    /* +78 */ 0x43, 0x00, 0x80, 0x00,   /* Plc_flg(0,0x80,0) rueckwaerts = sub14 @0x01786 (Handler
                                            0x80041fb8, `or v0,v0,a2` @0x80041ffc auf +0x1c4)               */
-    /* +78 */ 0x09, 0x0a, 0x1a, 0x00,   /* Sleep 26                  = sub03 @0x0266C                     */
-    /* +7C */ 0x2b, RE15_ADARUF_MSG_LEON_B, 0x00, 0x00,
-                                        /* Message_on 24 "Leon: I have to help her!" — Form sub03
-                                           @0x02670 `2b 06 00 00`; der Stimmen-Riegel (voice_wait) haelt
-                                           diese Zeile bis main23.wav zu Ende ist                          */
-    /* +80 */ 0x3f, 0x00, 0x11, 0x00,   /* Plc_motion(0,17,0) Arm-Schwung = ROOM1170 sub02 @0x015F0       */
-    /* +84 */ 0x09, 0x0a, 0x64, 0x00,   /* Sleep 100                 = ROOM1170 sub02 @0x015F4            */
-    /* +88 */ 0x22, 0x02, 0x07, 0x00,   /* Set(2,7)=0                = ROOM1090 sub02 @0x024BE            */
-    /* +8C */ 0x22, 0x01, 0x1b, 0x00,   /* Set(1,27)=0               = ROOM1090 sub02 @0x024C2            */
-    /* +90 */ 0x2e, 0x01, 0x00, 0x00,   /* Work_set(1,0)+Nop         = ROOM1090 sub02 @0x024C6            */
-    /* +94 */ 0x42, 0x00,               /* Plc_ret + Nop             = ROOM1090 sub02 @0x024CA (Handler
+    /* +7C */ 0x09, 0x0a, 0x14, 0x00,   /* Sleep 20                  = sub14 @0x0178A                     */
+    /* +80 */ 0x2b, RE15_ADARUF_MSG_LEON_B, 0x00, 0x00,
+                                        /* Message_on 24 "Leon: I have to help her!" — Form ROOM1170
+                                           sub02 @0x015EC `2b 07 00 00`; der Stimmen-Riegel (voice_wait)
+                                           haelt diese Zeile bis main23.wav zu Ende ist                    */
+    /* +84 */ 0x3f, 0x00, 0x11, 0x00,   /* Plc_motion(0,17,0) Arm-Schwung = ROOM1170 sub02 @0x015F0       */
+    /* +88 */ 0x09, 0x0a, 0x64, 0x00,   /* Sleep 100                 = ROOM1170 sub02 @0x015F4            */
+    /* +8C */ 0x22, 0x02, 0x07, 0x00,   /* Set(2,7)=0                = ROOM1170 sub02 @0x015F8            */
+    /* +90 */ 0x22, 0x01, 0x1b, 0x00,   /* Set(1,27)=0               = ROOM1170 sub02 @0x015FC            */
+    /* +94 */ 0x2e, 0x01, 0x00, 0x00,   /* Work_set(1,0)+Nop         = ROOM1170 sub02 @0x01604            */
+    /* +98 */ 0x42, 0x00,               /* Plc_ret + Nop             = ROOM1170 sub02 @0x01608 (Handler
                                            0x80041f88: +0x4 = 1, +0x5..+0x7 = 0)                           */
-    /* +96 */ 0x46, RE15_ADARUF_SLOT, RE15_ADARUF_SCE_TEXT, RE15_ADARUF_FLAGS,
+    /* +9A */ 0x46, RE15_ADARUF_SLOT, RE15_ADARUF_SCE_TEXT, RE15_ADARUF_FLAGS,
               RE15_ADARUF_MSG_SPERRE, 0x00, 0xff, 0xff, 0x00, 0x00,
                                         /* Aot_reset(4, sce 1, 0x31, msg 25, 0xffff, 0) — Form ROOM1130
                                            sub01 @0x00A1C `46 03 01 31 01 00 ff ff 00 00`                 */
-    /* +A0 */ 0x01, 0x00,               /* Evt_end                                                        */
+    /* +A4 */ 0x01, 0x00,               /* Evt_end                                                        */
 };
 
 /* Die RAM-Kopie, die die VM ausfuehrt: die Weiche setzt die zwei Ziel-Operanden aus der Spieler-

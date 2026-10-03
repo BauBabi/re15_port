@@ -111,30 +111,33 @@
  * @0x80031210, `sh` +0x8c @0x80031218) und endet bei Rest < 100 (`slti v0,v0,100` @0x800312fc). */
 #define RE15_ADARUF_SCHRITT         755
 
-/* Nach dem Rueckschritt dreht Leon sich zur KAMERA (Plc_dest Modus 9 auf ihren Standort), dann erst
- * die zwei Leon-Zeilen mit den Gesten. ⛔ PORT-WAHL, keine Original-Adresse fuer die Blickrichtung —
- * Grund (gemessen an der echten exe, Dossier §9 / Gegenpruefung Auflage 7): alle Leon-Gesten bewegen
- * den LINKEN Arm (Dossier §3.5), der Nutzer beschreibt sie aber als "den rechten Arm ... nach rechts"
- * — das ist die Sicht von VORN (sein linker Arm liegt dann rechts im Bild und geht nach rechts
- * hinaus). Zur Tuer gewandt sieht Cut 4 Leon schraeg von hinten links: der Arm ginge im Bild nach
- * LINKS, der Schwung (Clip 17) verschwindet halb hinter dem Koerper. Eine Kamera, die Leon an der
- * Tuer von vorn zeigt, gibt es nicht: Kameratabelle RDT @0x00060 (10 Saetze a 0x20) — Cut 0..4, 6..9
- * stehen westlich/noerdlich (x 14332..16171), Cut 5 (@0x00100, Standort (20036,-22179)) suedoestlich:
- * er saehe Leons rechte Seite (Waffenhand) und zeigt ihn an der Tuer nur als Streifen hinter der
- * Wandkante (Dossier §1 L9). An der Tuer ist aus jeder Richtung Cut 4 aktiv (RVD-Baender, §2.2).
- * Also dreht sich Leon zur aktiven Kamera. Standort Cut 4 = ROOM1050.RDT @0x000E0 `00 00 3c 68 97 3a
- * 00 00 23 f2 ff ff 34 e0 ff ff ...` (pos_x @0x000E4 = 14999, pos_z @0x000EC = -8140). */
+/* ⛔ Runde 35 Spur E — die Drehung zur KAMERA ist WEG (Runde 34 hatte Leon nach dem Rueckschritt per
+ * Plc_dest Modus 9 auf den Standort von Cut 4 gedreht, damit die Gesten frontal lesbar sind).
+ * NUTZER-VORGABE (analysis/befunde_runde35/AUFTRAG.md Z.94, woertlich): "Ich bin auch noch nicht ganz
+ * zufrieden mit unserer neuen Cutscene in ROOM 1050. Da diese die "3. Wand" quasi durchbricht, und Leon
+ * so mit dem Spieler redet von den Animationen her. Er sollte er so mit sich selbst reden, wie in der
+ * Cutscene in ROOM 1170."
+ * FORM aus ROOM1170 (scd_dump_room.py, Dossier E_inventar1050.md RE-Belege P3):
+ *   sub02 @0x015DC..@0x015F4 (Selbstgespraech nach dem Abflug): Leon zuletzt per Plc_dest Modus 9 auf
+ *     (2664,-10336) gedreht (@0x0156A), Kamera Cut 4 (RDT @0x000E4: (-72,-2196)) — Winkel Blick ->
+ *     Kamera 152 Grad = die Kamera sieht ihm in den RUECKEN; Gesten Clip 25 (raumeigen) und Clip 17.
+ *   sub14 @0x0175E..@0x017B6 ("Damn it, ..." / "If only I could contact ..." / "..." / "That's right!
+ *     I have to ..."): Clip 18 vor/zurueck, Plc_neck(2) Kopf senken + Plc_neck(4) Kopfschuetteln,
+ *     Clip 23 — nur Gesten zum eigenen Koerper.
+ * Hier: Leon bleibt zur Tuer gewandt (wohin der Ruf kam), Cut 4 sieht ihn von hinten links (Winkel
+ * Blick -> Kamera ~100 Grad); "Another civilian survivor." = sub14-Form, "I have to help her!" =
+ * sub02-Form mit Clip 17 (vom Nutzer in Runde 34 fuer diese Zeile gewuenscht). Der Standort von Cut 4
+ * bleibt als MESSBEZUG fuer den Riegel (Blick weg von der Kamera): ROOM1050.RDT @0x000E0
+ * `00 00 3c 68 97 3a 00 00 23 f2 ff ff 34 e0 ff ff ...` (pos_x @0x000E4 = 14999, pos_z @0x000EC = -8140). */
 #define RE15_ADARUF_KAMERA_X        14999
 #define RE15_ADARUF_KAMERA_Z        (-8140)
 
 /* Operanden-Stellen im Programm, die die Weiche beim Ausloesen setzt (x/z als LE s16):
  *   +0x28 = Blickpunkt des Plc_dest Modus 9 (x + SCHRITT, z)  — Drehung zur Tuerwand
- *   +0x3C = Ziel des Plc_dest Modus 8      (x - SCHRITT, z)  — Rueckschritt
- * (+0x50 = Kamera-Standort, fest im Programm.) */
+ *   +0x3C = Ziel des Plc_dest Modus 8      (x - SCHRITT, z)  — Rueckschritt */
 #define RE15_ADARUF_OFF_DREH        0x28
 #define RE15_ADARUF_OFF_ZIEL        0x3C
-#define RE15_ADARUF_OFF_KAMERA      0x50
-#define RE15_ADARUF_PROG_LEN        162
+#define RE15_ADARUF_PROG_LEN        166   /* Runde 35 Spur E: ab +0x4C umgebaut */
 
 /* Zustand nach der Installation (Pruefhaken). */
 #define RE15_ADARUF_AUS             0    /* nicht ROOM1050, gerettet, oder Slot 4 keine Tuer */
