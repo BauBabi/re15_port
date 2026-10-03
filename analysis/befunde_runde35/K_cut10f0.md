@@ -554,3 +554,78 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
 - **Test:** integration_r35_cut10f0 Lauf G (derselbe Weg; prueft "laeuft durch" in den Zwinger, die Zeile "NICHT
   angewandt" und dass danach KEIN Slot-0-Befehl mehr angewandt wird); unit_r35_cut10f0_bgm ("Zwinger ROOM11D0 im
   Fenster: MAIN gehalten", "im Parkplatz ... gelten wieder").
+
+### 9.4 Mangel 2 — MAIN01 beginnt eine Szene zu frueh
+- **Ursache:** die Weiche hing nur an (9,71) "10F0-Szene gesehen" und wurde am Ende der 10F0-Szene angestossen. Der
+  Nutzer-Satz steht in AUFTRAG.md Z.92 HINTER der 1150-Montage ("Bis Leon DANN den Parking Lot erreicht hat") — der Weg
+  zu Irons und dessen Todesszene (Spur L) liefen sonst schon unter MAIN01.
+- **Messung vorher** (Abnahme): Lauf A F2731 `entry=FF01` am Ende der 10F0-Szene; J1 `room=15 entry=FF01` statt
+  Tabelle 0xFF1E.
+- **Beleg:** VERTRAG §1.1 — Bit (9,73) = "Irons-Todesszene gesehen" (Spur L; K liest es nur). "Szene laeuft" =
+  `re15_cine_active()` = flag(1,27) || flag(2,7), die Rahmen-Flags jeder Original-Szene (ROOM1090 sub02
+  @0x02414/@0x02418 gesetzt, @0x024BE/@0x024C2 geloescht; Balken FUN_80021a0c @0x80021a24). Musikwahl beim Raumaufbau
+  FUN_80044210 (@0x800399b0), LOAD-Reihenfolge @0x8002629c (§8.5).
+- **Aenderung** (cut_10f0.c, re15_cut10f0.h RE15_CUT10F0_BGM_START_BANK/_BIT = (9,73)):
+  - Fenster-Bedingung `fenster_flags()` = (9,71) UND (9,73) UND "Parkplatz noch nicht erreicht".
+  - `s_bgm_offen` (fluechtig): oeffnet erst, wenn die Bedingung steht UND keine Szene laeuft. Setzt Spur L (9,73) am
+    Anfang ihrer Montage, beginnt MAIN01 trotzdem erst mit deren Ende (Rahmen-Flags geloescht); setzt sie es am Ende,
+    genauso. Einmal offen, bleibt es ueber spaetere Szenen offen ("durchweg").
+  - Der Anstoss gehoert jetzt dem Tick (`bgm_fenster_tick`, je Spielbild): weicht die letzte Auskunft an die
+    Audio-Schicht (`s_bgm_stand`) vom Soll des laufenden Raums ab, ruft er `re15_audio_start_room_bgm`. Das deckt das
+    Montage-Ende (kein Haken bei Spur L noetig), das LADEN (der Boot-BGM-Aufruf laeuft vor dem Restore) und das Laden
+    eines Stands ausserhalb des Fensters. Der CONTINUE-Haken in platform/pc/main.c (§8.5) ist dadurch entfallen.
+  - re15_cut10f0_tick stoesst am Ende der 10F0-Szene KEINE Musik mehr an (nur noch der Kartenhinweis).
+- **"Parkplatz erreicht" neu = Original-Flag (4,64)** (RE15_CUT10F0_ZIEL1_ERREICHT_*), fuer das Fenster-Ende UND fuer
+  die Kachel ROOM11C0 (map_hint_common.c Eintrag K1, `erreicht` 4/64). Beleg: ROOM11C0 sub01 @0x01820 `21 04 40 00`
+  Ck(4,64)==0 -> @0x01824 `04 0a 18 02` Evt_exec sub02; sub02 @0x0184E `22 04 40 01` als ERSTES Opcode (die
+  Ankunftsszene "Ada! Where's Marvin?" @0x018A0); sub00 @0x0176C waehlt damit den Spawn. Zensus 240 RDTs (Rohbytes
+  `22 04 40`, `21 04 40`): nur diese drei Stellen; kein Port-Nutzer.
+  Grund (K_abnahme_0.md §9 "Zusammenfuehrung K <-> L", jetzt mit Beleg): das Besucht-Bit der Zone setzt JEDER
+  Raumaufbau — scd_room_setup.c ruft nach main00/sub00 `re15_map_zone_update(g_current_room_id, Spieler)` —, also auch
+  der Montage-Schnitt der Spur L nach ROOM11C0 Cut 13, bei dem Leon gar nicht dort ist. Mit dem Zonen-Bit haette die
+  Montage die Kachel geloescht und das Fenster geschlossen, bevor es aufging. (4,64) setzt nur die Ankunftsszene selbst,
+  die laut Auftrag spaeter noch kommt ("wo Ada in der spaeteren cutscene schon steht").
+- **Messung nachher** (echte exe, integration_r35_cut10f0, debug.log der Laeufe):
+  - Lauf A (echte Tuer ROOM10D0 -> ROOM10F0, (9,73) per RE15_SET_FLAG_AT mitten in die laufende Szene gesetzt —
+    Stellvertreter fuer die Montage): `[bgm] stage=0 room=0F entry=FF20 -> MAIN20`, `[setflag-at] Frame 300:
+    flag(9,73/0x49) = 1`, ... (kein `entry=FF01` waehrend der Szene) ..., `[cut10f0] Szene zu Ende`,
+    `[cut10f0] MAIN01-Fenster auf in ROOM10F0: (9,71)=1 (9,73)=1, Parkplatz erreicht (4,64)=0`,
+    `[cut10f0] Raummusik-Anstoss in ROOM10F0: Soll MAIN01 (letzte Auskunft an die Audio-Schicht: Tabelle)`,
+    `[bgm] stage=0 room=0F entry=FF01 -> MAIN01(flag 0) SUB--`.
+  - Lauf C (10F0-Szene ohne (9,73)): nur `room=0F entry=FF20`, kein FF01.
+  - Lauf F (Stand in ROOM1150, (9,71)=1, (9,73)=0): `[bgm] stage=0 room=15 entry=FF1E -> MAIN1E` (Tabelle, vorher
+    FF01), `[cut10f0] ROOM1150 nach der Szene betreten: (9,72)=1`, bei Bild 60 `[setflag-at] ... flag(9,73)`,
+    `[cut10f0] MAIN01-Fenster auf in ROOM1150`, `[bgm] stage=0 room=15 entry=FF01 -> MAIN01`.
+  - Lauf D (Laden im Fenster): `room=0F entry=FF20`, `[save] CONTINUE: resumed in room 10f0`, `MAIN01-Fenster auf in
+    ROOM10F0`, `Raummusik-Anstoss ... Soll MAIN01`, `room=0F entry=FF01`, Tuer, `room=0D entry=FF01 ... [unveraendert,
+    laeuft durch]`.
+  - Lauf E (Ende): `room=1B entry=FF01`, Tuer DOOR1A, `[bgm] stage=0 room=1C entry=FF56 -> MAIN16(flag 1)`,
+    `[cut10f0] MAIN01-Fenster zu in ROOM11C0: (9,71)=1 (9,73)=1, Parkplatz erreicht (4,64)=1` — die Ankunftsszene
+    setzt das Flag am echten Weg.
+  - Unit `bgm`: "nach der 10F0-Szene allein ... weiter Tabelle", "waehrend der Montage ... kein MAIN01, auch nicht bei
+    einem Raumaufbau, kein Anstoss", "Montage-Ende: Fenster offen, Raummusik EINMAL angestossen (Raum 0x15, 1x)",
+    "Besucht-Bit der Zone ROOM11C0 (Raumaufbau ohne Leon) beendet das Fenster nicht", "Parkplatz erreicht ((4,64)=1):
+    Fenster zu", "nach dem Laden im Fenster: das erste Spielbild stoesst die Raummusik an", "Stand ausserhalb des
+    Fensters geladen: ... zurueck auf die Tabelle". Unit `karte`: "Raumaufbau ROOM11C0 allein (Montage-Schnitt, Zone
+    besucht): die Kachel blinkt weiter", "Ankunftsszene ROOM11C0 gestartet ((4,64)=1) -> kein Ziel mehr".
+- **Folge im Baum der Spur K allein:** (9,73) setzt hier niemand — MAIN01 erklingt im eigenen Baum nur in den
+  Messlaeufen. Erst mit Spur L laeuft es im Spiel (siehe "Fuer die Zusammenfuehrung", §9.7).
+
+### 9.5 Mangel 4 — VERTRAG §1.4 "nur kleine Haken (1-5 Zeilen)"
+- **Messung vorher** (`git diff master --numstat`, HEAD 7b20a561): menu_common.c 41/2 (Block in map_mode ~20 Zeilen,
+  Funktion hint_wechsel 12, menu_task_step 6); platform/pc/main.c 43/0 (Funktion pc_rbj_leihen 20, Haken 6/6/3/6).
+- **Aenderung:**
+  - Hinweiskette und Folge-Ziel (vorher map_mode-Block + hint_wechsel) -> cut_10f0.c `re15_cut10f0_hinweis_kette`;
+    zweites Kartenziel -> cut_10f0.c `re15_cut10f0_ziel2_setzen`. Verhalten unveraendert (dieselben Logzeilen
+    `[hint] F.. Folge-Hinweis 1 -> 2 (Zeit)`; neu `[hint] F.. Zeit um (Hinweis 2, 3 Blinkperioden)` vor dem
+    unveraenderten `[hint] F.. schliessen`).
+  - pc_rbj_leihen -> NEUE Datei platform/pc/src/cut10f0_pc.c `re15_cut10f0_pc_rbj_leihen` (liest ueber
+    re15_pc_read_any, dieselbe Wurzelliste wie pc_read_shared). CONTINUE-BGM-Haken entfernt (§9.4).
+- **Messung nachher** (`git diff master --numstat` / `-U0`, Stand dieses Abschlusses):
+  - engine/src/menu_common.c **8/1**: include (1), map_mode @1595 (4 neu + die `if`-Zeile), menu_task_step @2429 (1)
+    und @2432 (1).
+  - platform/pc/main.c **12/0**: include (1), Boot-Leihe @4234 (4: 2 Kommentar + 2 Code), Boot-Installer @4900 (3),
+    Raumwechsel-Leihe @8157 (4: 2 + 2).
+  - unveraendert klein: scd_room_setup.c 5 (include + 4), scd_vm.c 3, game_step_common.c 2, enemy_common.c 4.
+  Kein Haken ueber 5 Zeilen. Nicht auf der Vertragsliste, aber mit Haken dieser Spur: audio_pc.c 23 (Weiche 3,
+  Port-Bank 0x0E 10, MAIN-Sperre 9, include 1), map_hint_common.c, re15_inv_screen.c/.h, tests/test_support.c.
