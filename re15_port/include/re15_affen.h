@@ -198,5 +198,9 @@ int      re15_affen_griff_paar(const re15_actor_t *e);
  *     a0 = 0x800ad048 (e2+0x34), danach a0 = 0xa0e8 (verkettet) -> +0x8c 188 / +0x9e 73 je Bild wie gemessen. */
 uint8_t  re15_affen_rng_a0(uint32_t *a0);
 uint32_t re15_affen_psx_entity(const re15_actor_t *e);
+/* (7b) B[3] CHASE (`jal 0x8001af20` @0x80117ce0 Eintritt / @0x80117d1c je Bild): a0 = Rest aus A[3] (s. affen_11c0.c);
+ *      B[0] Leerlauf-Timer (@0x80117594): a0 = Entity-Zeiger (GDB vs9117: 0x800ad014 bei cur = e2). */
+uint32_t re15_affen_a804_a0(const re15_actor_t *e, const re15_actor_t *ziel, int32_t r);
+uint32_t re15_affen_b3_a0(const re15_actor_t *e, const re15_actor_t *pl);
 
 #endif /* RE15_AFFEN_H */

@@ -6,6 +6,7 @@
 #include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
 #include "re15_enemy.h"         /* re15_enemy_find (Bank: re2_rig, Skelett/Clips des Gorillas) */
 #include "re15_enemy_ai.h"      /* re15_clip_anchor_set_pub */
+#include "re15_math.h"          /* re15_squareroot0 = BIOS SquareRoot0 0x80065f60 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -194,4 +195,40 @@ uint8_t re15_affen_rng_a0(uint32_t *a0)
 uint32_t re15_affen_psx_entity(const re15_actor_t *e)
 {
     return 0x800acc2cu + (uint32_t)((int)(e - g_actors) - 1) * 0x1f4u;
+}
+
+/* (7b) a0 nach FUN_8001a6d4 (atan2 von e nach p): dx = lh p.x - lh e.x, dz = lh p.z - lh e.z (@0x8001a6dc-704);
+ *      dx == 0 -> Rueckkehr mit a0 = dz << 12 (`sll a0,a0,12` im Delay-Slot von `beq s0,zero` @0x8001a714-18);
+ *      sonst a0 = (dz << 12) / dx (`div` / `mflo a0` @0x8001a71c/44) -> catan @0x800658fc, das in seiner 12. Iteration
+ *      `lw a0,56(a1)` @0x80065928 = den CORDIC-Rest y_11 laedt und so zurueckkehrt. */
+static uint32_t affen_atan2_a0(int32_t ex, int32_t ez, int32_t px, int32_t pz)
+{
+    int32_t dx = (int32_t)(int16_t)px - (int32_t)(int16_t)ex;
+    int32_t dz = (int32_t)(int16_t)pz - (int32_t)(int16_t)ez;
+    if (dx == 0) return (uint32_t)dz << 12;
+    int32_t x = 0x1000, y = (dz * 4096) / dx;             /* MIPS div rundet zur Null wie C */
+    for (int i = 0; i < 11; i++) {                         /* Iterationen 0..10 -> y_11 (vgl. re15_catan) */
+        int32_t xs = x >> i, ys = y >> i;
+        if (y >= 0) { x += ys; y -= xs; } else { x -= ys; y += xs; }
+    }
+    return (uint32_t)y;
+}
+
+/* (7b) a0 nach FUN_8001a804(r, tol, &ziel): dx/dz aus `lw` (32 Bit) @0x8001a82c-50, a0 = dx^2+dz^2 (`mflo`,
+ *      niedrige 32 Bit) fuer SquareRoot0 @0x8001a85c-60, das a0 nicht schreibt; r < d -> Rueckkehr ohne atan2
+ *      (`slt s0,s0,s1` / `bne` @0x8001a870-74), sonst atan2(e -> ziel) @0x8001a894. */
+uint32_t re15_affen_a804_a0(const re15_actor_t *e, const re15_actor_t *ziel, int32_t r)
+{
+    uint32_t dx = (uint32_t)(ziel->x - e->x), dz = (uint32_t)(ziel->z - e->z);
+    uint32_t d2 = dx * dx + dz * dz;
+    if (r < (int32_t)re15_squareroot0(d2)) return d2;
+    return affen_atan2_a0(e->x, e->z, ziel->x, ziel->z);
+}
+
+/* (7b) a0 beim Eintritt in B[3] (CHASE 0x80117c90) = was A[3] 0x80117a3c hinterlaesst: Spieler +0x93 != 0 ->
+ *      0xbb8 (Delay-Slot @0x80117a60), sonst a0 nach a804(0xbb8, 0x180, Spieler) @0x80117a6c; der Rest von A[3]
+ *      (@0x80117b40-c74) ruft nichts mehr. GDB-Modellpruefung: e1 517/517, e2 443/443 (jnb2/a0model.py). */
+uint32_t re15_affen_b3_a0(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    return pl->hit_react ? 0xbb8u : re15_affen_a804_a0(e, pl, 3000);
 }
