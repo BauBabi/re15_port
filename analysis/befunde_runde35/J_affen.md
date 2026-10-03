@@ -586,3 +586,38 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   (2)/(3) sind die Original-Navigation ueber die SCA-Marker (Runde S5, 2026-09-05), nicht treffer-
   ausgeloest; ausgeloest wurde die Kette vom Vergeltungssprung (1) nach dem 2. Treffer — den gibt es mit
   der Vorgabe jetzt erst beim 3. Treffer.
+
+### M1 — Ergebnis: der 36-Bilder-Takt IST Original-Verhalten (Mangel per Messung widerlegt)
+- **Einzelbild-Spur des Originals** (GDB, ab r3 s033, 1000 Bilder, `jnb1/g_orig.txt`, Bild = (VSync-9641)/2,
+  Messpunkt = Halt an der Gorilla-Wurzel 0x80116db8 von Entity 1 = VOR deren KI-Tick des Bildes):
+  Heavy F61, danach Bisse in F165, 218, 268, 321, 371, 424, 475, 527, 579, 630, 683, 733, 787, 836, 891
+  (Tod) = Abstaende **53,50,53,50,53,51,52,52,51,53,50,54,49,55** (Gleichtakt; Tod 830 Bilder nach dem Heavy).
+  Zyklus Bild fuer Bild (F195-F270): Commit e1 F205 / e2 F211 (Sperren liefen F204 / F210 ab), Treffer e1
+  F218 (Bild 13 im Fenster 0x0c-0x0f, +0x1dc := 45), e1 Exit F229, e2 verfehlt (+0x93 = 1) und steigt F235
+  mit +0x1dc := 0x14 aus, Spieler-Flinch Clip 8 F219-F240 (+0x93 = 0 ab F241), Commit e2 F256 / e1 F264,
+  Treffer e2 F268.
+- **Port ab DERSELBEN Lage** (Riegel `takt`, Startzustand = Original-Bild F195 aus der GDB-Spur, EM027-Bank
+  geladen, HP-Detektor ohne Baseline): Commit e1 F205 / e2 F211, Treffer **F218**, e1 Exit F230, e2 Exit
+  F236 (+0x1dc 19), Spieler frei F241, Commit e2 F257 / e1 F263, Treffer F270; Treffer-Bilder
+  **218/270/321/374/424/478/527/582** gegen Original **218/268/321/371/424/475/527/579** — jeder der 8 Bisse
+  innerhalb 0-3 Bilder. (Erster Harness-Lauf ohne `re15_player_cmd_zero` taeuschte einen Phantom-Flinch vor:
+  HP 100 -> 82 beim Setzen der Lage wurde vom HP-Abfall-Detektor als Treffer gelesen.)
+- **Gegenprobe im ORIGINAL** (GDB-Speicherschreiben `M800ad1f0,2:1e00` in F203 = e2 +0x1dc := 30, sonst
+  nichts, `jnb1/g_desync.txt`): e1 beisst allein (F218), e2 wartet in CHASE mit Sperre 0 auf das Flinch-Ende
+  und trifft 36 Bilder spaeter — das Original faellt in den **Wechseltakt 36/36/36/36/35/36/...** (Treffer
+  218, 254, 290, 326, 362, 397, 433, 469, 505, 541, 577, 613, 649, 685, Tod F709) und haelt ihn. Leon
+  wandert dabei stetig nach NW ((-6721,-12789) -> (-8004,-11269), ~2000 Einheiten) — genau die beiden
+  Abnahme-Befunde (35,4 Bilder/Biss, 1260 Einheiten NW-Drift im exe-Lauf t2).
+- **Mechanismus (beide Takte = dieselben Regeln):** Commit nur bei Spieler +0x93 = 0 (@0x80117a54-5c),
+  Bogen a804(0xbb8,0x180) (@0x80117a60-74) und +0x1dc = 0 (@0x80117a88-90); Treffer setzt +0x1dc = 45
+  (@0x80118470-78), der Verlierer eines Doppel-Commits steigt am Clip-Ende mit 0x14 aus (@0x801184e0-f0).
+  Committen beide im selben Flinch-Fenster -> Gleichtakt ~50 (Takt = Verlierer-Sperre 20 + Fensterweg);
+  steht einer beim ersten Biss ausserhalb des Bogens -> Wechseltakt 23 (Flinch) + 13 (Commit -> Bild 0x0c)
+  = 36. In r3 schob der Biss-Lunge von G2 Leon in F155-F161 um ~70 Einheiten nach Osten (Koerperkontakt
+  2050), G1 kam dadurch in den Bogen (Abstand 3016 -> 2998 in F159) und committete mit. Im Port-exe-Lauf t2
+  stand Leon nach der Szene ~25 Einheiten anders ((-7164,-12350) Tuerweg / (-7157,-12355) JUMP-Lauf A7 gegen
+  r3 (-7138,-12372)), G2s Lunge lief an der Wand entlang z, Slot 2 blieb bei 3069 > 3000 -> Wechseltakt.
+- **Folge:** kein Code-Fix fuer den Biss-Takt (es gibt keinen Regel-Unterschied; ein Eingriff waere eine
+  erfundene Verlangsamung). Offen bleibt die Szenen-Endlage Leons (25 Einheiten), die im JUMP-Szenario
+  entscheidet, welcher der beiden Original-Takte entsteht -> OFFEN.
+- Rear-up-Griff gegen das Original (Abnahme: 0 HP, ~1600 Versatz beim Zupacken): siehe unten.

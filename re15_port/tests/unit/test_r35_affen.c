@@ -35,7 +35,7 @@
  *           0x1b33 @0x80117148, Sce_em_set-Wurzelaufruf @0x8004259c) = die Ursache; in Cut 12 sitzt G1 auf
  *           y = -2500 im Wagen (@0x1996) und tritt bei (-3617,0,-17798) aus (@0x1A2E); dazu die Klappe (Objekt 0)
  *           waehrend des Umklappens — rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
- *   takt    Punkt 4 (M1): zwei Gorillas, Startlage = Bild F36 der Einzelbild-Spur des Originals -> Treffer-Abstaende.
+ *   takt    Punkt 4 (M1): zwei Gorillas ab der Original-Lage Bild F195 (GDB-Einzelbild-Spur) -> Treffer-Bilder/-Abstaende.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -62,6 +62,7 @@
 #include <string.h>
 
 void re15_actor_step_all_walkers(void);
+void re15_player_cmd_zero(void);
 
 static int g_fail = 0;
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
@@ -653,44 +654,58 @@ static int bank_laden_27(void)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
-/* M1 (Nachbesserung 1): Biss-Takt gegen die Einzelbild-Spur des Originals (jnb1/oA+oB, r3-Savestate s035
- * direkt geladen, Leon ohne Eingabe). Startlage = Original-Bild F36 (VSync-Zaehler 0x800787dc): Leon
- * (-6656,-12490) r647 hp76 frei; e1 (-5873,-14465) r2825 CHASE Clip 5 Bild 14 +0x1dc 19; e2 (-9188,-12369)
- * r31 CHASE Clip 5 Bild 8 +0x1dc 11. Original: Treffer im Abstand 47/54/50/52/53/51 Bilder. */
+/* M1 (Nachbesserung 1): Biss-Takt gegen die EINZELBILD-Spur des Originals (DuckStation-GDB-Server, Haltepunkt
+ * Gorilla-Wurzel 0x80116db8, r3-Savestate s033 direkt geladen, Leon ohne Eingabe; scratch jnb1/g_orig.txt).
+ * Startlage = Original-Bild F195 (VSync-Zaehler 0x800787dc, (vs-9641)/2): Leon (-6729,-12800) r647 hp82 frei
+ * (1/0/1, +0x93 = 0); e1 (-5525,-14883) r2731 CHASE Clip 5 Bild 10 +0x1dc 9; e2 (-8915,-12487) r93 CHASE Clip 5
+ * Bild 16 +0x1dc 15; beide grid 0x10, +0x82 = 0, +0x1d0 = 1 (LOS), +0x1e2 = 4.
+ * Original ab F195: Commit e1 F205, e2 F211 (beide Biss, Clip 0x12), Treffer e1 F218 (+0x1dc 45), Flinch Clip 8
+ * bis F240, Spieler frei F241; e2 Exit F235 -> +0x1dc 0x14; Commit e2 F256, e1 F264; Treffer e2 F268, ...
+ * Treffer-Bilder 218/268/321/371/... (Abstaende 50/53/50/...). */
 static void teil_takt(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_game_state_init();
     re15_game_flag_set(4, 0x40, 1);
-    if (room_boot(0x11C0, -6656, -12490, 647, 5, 3) != 0) return;
+    if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) return;
     PRUEF(bank_laden_27(), "EM027-Bank geladen (Fuss-Sperre + Knochenprobe)");
     re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
     PRUEF(a != NULL && b != NULL, "zwei Gorillas im Kampf-Layout");
     if (!a || !b) return;
-    pl->x = -6656; pl->z = -12490; pl->rot_y = 647; pl->hp = 76; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
-    a->x = -5873; a->z = -14465; a->y = 0; a->rot_y = 2825; a->grid_id = 0x10; a->floor = 0;
-    a->state = 1; a->sub_state_1 = 3; a->sub_state_2 = 1; a->sub_state_3 = 0; a->motion = 5; a->anim_frame = 14;
-    a->anim_frac = 0; a->dog_blocked_ctr = 19; a->hit_react = 0;
-    b->x = -9188; b->z = -12369; b->y = 0; b->rot_y = 31; b->grid_id = 0x10; b->floor = 0;
-    b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 8;
-    b->anim_frac = 0; b->dog_blocked_ctr = 11; b->hit_react = 0;
+    pl->x = -6729; pl->z = -12800; pl->rot_y = 647; pl->hp = 82; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();   /* HP-Abfall-Detektor ohne Baseline (s_prev_hp = -1): 100 -> 82 ist KEIN Treffer */
+    a->x = -5525; a->z = -14883; a->y = 0; a->rot_y = 2731; a->grid_id = 0x10; a->floor = 0;
+    a->state = 1; a->sub_state_1 = 3; a->sub_state_2 = 1; a->sub_state_3 = 0; a->motion = 5; a->anim_frame = 10;
+    a->anim_frac = 0; a->dog_blocked_ctr = 9; a->hit_react = 0; a->dog_flags = 1; a->mag_boost = 4;
+    b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
+    b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
     int hp_alt = pl->hp, treffer[64], nt = 0;
-    for (int f = 0; f < 420; f++) {
+    char alt[256] = "";
+    for (int f = 196; f < 196 + 420; f++) {
         frame(0, 0);
         int ev = (pl->hp != hp_alt);
         if (ev && nt < 64) treffer[nt++] = f;
-        if (ev || (f % 6) == 0)
-            printf("    F%3d hp%3d %d/%d c%2d/%2d h%d (%6d,%6d) | A %d/%d/%d c%2d/%2d L%2d d%4.0f | B %d/%d/%d c%2d/%2d L%2d d%4.0f%s\n",
+        char z[256];
+        snprintf(z, sizeof z, "hp%d pl %d/%d c%d h%d | e1 %d/%d/%d c%d L%d | e2 %d/%d/%d c%d L%d",
+                 (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, pl->hit_react ? 1 : 0,
+                 a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, a->dog_blocked_ctr ? 1 : 0,
+                 b->state, b->sub_state_1, b->sub_state_2, (int)b->motion, b->dog_blocked_ctr ? 1 : 0);
+        if (strcmp(z, alt) != 0)
+            printf("    F%d hp%d pl %d/%d c%d/%d h%d (%d,%d) | e1 %d/%d/%d c%d/%d L%d d%.0f | e2 %d/%d/%d c%d/%d L%d d%.0f%s\n",
                    f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, pl->hit_react,
                    (int)pl->x, (int)pl->z,
                    a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->dog_blocked_ctr,
                    dist2d(a->x, a->z, pl->x, pl->z),
                    b->state, b->sub_state_1, b->sub_state_2, (int)b->motion, (int)b->anim_frame, (int)b->dog_blocked_ctr,
                    dist2d(b->x, b->z, pl->x, pl->z), ev ? "  <-- TREFFER" : "");
+        snprintf(alt, sizeof alt, "%s", z);
         hp_alt = pl->hp;
         if (pl->hp < 0) break;
     }
-    printf("  Treffer-Abstaende:");
+    printf("  Treffer-Bilder:");
+    for (int i = 0; i < nt; i++) printf(" %d", treffer[i]);
+    printf("\n  Treffer-Abstaende:");
     for (int i = 1; i < nt; i++) printf(" %d", treffer[i] - treffer[i - 1]);
     printf("  (%d Treffer)\n", nt);
 }
