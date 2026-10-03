@@ -913,3 +913,23 @@ Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, beri
 * Fressende Zombies: wie in RE2 sind sie fuer Granatwerfer/Rakete/Flamme kein Ziel, solange sie fressen; wer naeher als
   ca. 4000 Einheiten herankommt, weckt sie, danach treffen die Werfer. (Die Python trifft sie schon beim Fressen — das
   ist eine Abweichung des allgemeinen Schuss-Pfads, OFFEN 16.)
+
+### 8.9 Tests und Suite (Nachbesserung 1)
+* `unit_r35_werfer` Teil H (Pruefungen 100-113): 100/101 EDH-Bytes ARMS12 Satz 1 = ff ff ff ff, RE2 ARMS11 Satz 1 =
+  00 00 54 16; 102/103 Leerzweig: Rakete -> re2arms(0x11, 1), GL/Flamme/Python/Pistole -> RE1.5-Klick des Aufrufers;
+  104-107 RE2-Zombie gegen den Raketen-Applier: frisst (1D3=80 + 10E=4000), nur Gate 2, nur Gate 4 -> kein Treffer, HP 50;
+  beide frei -> Treffer; 110 ROOM1140 Zelle 6 Bytes; 111-113 Rakete mit echtem werfer_boden ueber echter RDT: Tisch
+  (z -10912), neben dem Tisch Fernwand (z -18592), Kreis (z -12448). Gegenprobe ohne Typ 3: FAIL 113 (z -23200).
+* `integration_r35_werfer_ton` (neu): Leerschuss am Mischer, Passed 28.3 s; Gegenprobe alte exe rot, Mitschnitte bytegleich.
+* `integration_r35_werfer_elza` (neu): Elza GL an der exe, Passed 30.0 s.
+* Volle Suite (Stand 6abed8d7 + Dossier, `local_build.sh all`, 18:12-18:34, Log `re15_port/build/mess_r35b_logs/nb1_suite.log`):
+  `100% tests passed, 0 tests failed out of 483`, `Total Test time (real) = 1306.93 sec`,
+  **`=== LOCAL-BUILD-OK (all) — Tests 483/483`** (483 = 481 + integration_r35_werfer_ton + integration_r35_werfer_elza;
+  kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer, unit_r35_werfer_kombi, integration_r35_werfer 134 s,
+  _ton 28 s, _elza 30 s Passed).
+* Geaenderte gemeinsame Dateien in Nachbesserung 1: game_step_common.c +1 Zeile (Leerzweig-Haken, e32ab456),
+  re2_fx.c `wandzelle_im_band` (Runde-35-Block, Kreis + Kommentar). Keine Bank-9-Bits, Nachrichten-IDs, AOT-Slots,
+  Ereignisse; kein shared_assets/PSX, release/, platform/android/.
+* Zusammenfuehrung mit Spur A (Handgranate): beide sperren Moebel in jeder Hoehe (gleiche Regel); EIN Formtest fuer
+  Typ 1..9 und Strecke-vs-Punkt sind dort zu vereinheitlichen (OFFEN 18/19). re2_fx.c, re15_damage.c,
+  enemy_ai_re2_zombie.c werden auch von Spur A/D beruehrt.
