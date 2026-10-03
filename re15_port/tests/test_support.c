@@ -98,6 +98,8 @@ void re15_audio_re2_tuer_se(int se) { g_test_tuer_se_last = se; g_test_tuer_se_c
 int g_test_panel_se_last = -1;
 int g_test_panel_se_count = 0;
 void re15_audio_re2_panel_se(int se_id) { g_test_panel_se_last = se_id; g_test_panel_se_count++; }
+/* Runde 35 Spur L: die Knall-Tonbank der 1150-Montage (irons_tod_1150.c) nutzt dieselben Spione
+ * re15_audio_re2_tuer_laden / re15_audio_re2_tuer_se wie Spur K (oben) — Integration: L-Kopie entfernt. */
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
 /* game_step_common.c haengt seit der Knockdown-Klasse an den Test-Links (enemy_ai_common
  * ruft re15_player_knockdown_begin) — die zwei restlichen Plattform-Audio-Symbole stubben. */

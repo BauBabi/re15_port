@@ -4886,6 +4886,11 @@ re_title:;
      * Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter. Zustand AUS, Signatur-Cache leer.
      * Herleitung: include/re15_hebetisch_cursor.h. */
     re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
+    /* Runde 35 Spur L: derselbe Grund (Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter): Tuer 1060 und
+     * die Irons-Todesszene (Spielstand + CONTINUE in ROOM1150 mit (9,71),(3,94),(9,73)=0 startet sie). */
+    { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
+      re15_tuer1060_install((uint16_t)g_current_room_id);
+      re15_irons_tod_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
      * Granate darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN
      * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem
