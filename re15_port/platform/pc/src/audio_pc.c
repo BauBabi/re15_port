@@ -3531,16 +3531,9 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
-                /* Runde 35 Spur K: Port-Bank 0x0E = die geladene RE2-Tuerbank (Tuerknall der Szene
-                 * ROOM10F0, Se_on-Form ROOM10D0 sub21 @0x01A02; re15_cut10f0.h) — VOR der Bank-Weiche
-                 * (FUN_80045024 kennt nur Bank 0..5) und vor deren Debug-Zeile. */
-                if (evt.bank == RE15_CUT10F0_SE_BANK) {
-                    if (getenv("RE15_SE_DEBUG"))
-                        fprintf(stderr, "[se] Se_on bank=%u id=%u -> RE2-Tuerbank (Runde 35 Spur K)\n",
-                                evt.bank, evt.sample_id);
-                    re15_audio_re2_tuer_se(evt.sample_id);
-                    break;
-                }
+                /* Runde 35 Spur K (cut10f0_pc.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
+                 * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
+                if (re15_cut10f0_pc_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
@@ -3571,15 +3564,9 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
                  * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
-                /* Runde 35 Spur K (re15_cut10f0.h, Nachbesserung 1): hat die Weiche MAIN01 geliefert, gilt ein
-                 * Skript-Befehl an den MAIN-Slot der (nicht geladenen) Tabellen-Musik des Raums — FUN_80044da4
-                 * op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 schriebe in dessen Bank. */
-                if (evt.bank == 0 && re15_cut10f0_bgm_haelt_main()) {
-                    if (getenv("RE15_BGM_CTL_DEBUG"))
-                        fprintf(stderr, "[bgm] Sce_bgm_control slot=0 op=%d im MAIN01-Fenster NICHT angewandt "
-                                        "(Runde 35 Spur K) capTick=%ld\n", (int)evt.volume, s_cap_ticks);
-                    break;
-                }
+                /* Runde 35 Spur K (cut10f0_pc.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
+                 * FUN_80044da4 op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 traefe dessen Bank. */
+                if (re15_cut10f0_pc_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

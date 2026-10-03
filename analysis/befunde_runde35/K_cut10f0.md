@@ -634,3 +634,17 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   - unveraendert klein: scd_room_setup.c 5 (include + 4), scd_vm.c 3, game_step_common.c 2, enemy_common.c 4.
   Kein Haken ueber 5 Zeilen. Nicht auf der Vertragsliste, aber mit Haken dieser Spur: audio_pc.c 23 (Weiche 3,
   Port-Bank 0x0E 10, MAIN-Sperre 9, include 1), map_hint_common.c, re15_inv_screen.c/.h, tests/test_support.c.
+
+### 9.6 Fortsetzung der Nachbesserung 1 (dritte Sitzung, 2026-10-03 ab 17:49, nach dem Guthaben-Limit 17:39)
+- **Stand beim Einstieg:** HEAD 7cd02507 (Dossier-Rest = die 5 Kopfzeilen "§9 = NACHBESSERUNG 1", gegengelesen, stimmen
+  mit §9.2-§9.5 ueberein). Baum sauber. Ein vom Vorgaenger um 17:35:48 gestarteter `local_build.sh all` lief noch
+  (PID 28204/40988, ctest bei Test 406/486, exe 17:35:55 = Stand fc841604 = Code des HEAD); nicht abgebrochen,
+  Ergebnis unten (§9.8). Bis dahin ein Fehlschlag im Log: `integration_r32_tor_hell` (5,16 s, Fenster-Haken unter Last).
+- **Je Mangel festgestellt (Diff 702bca9e..HEAD gelesen):** M1 (Stop im Fenster) umgesetzt + Lauf G gemessen (§9.3);
+  M2 (Beginn (9,73)) umgesetzt + Laeufe A/C/D/E/F gemessen (§9.4); M3 (Zeile 6) umgesetzt + gemessen (§9.2);
+  M4: menu_common.c 8/1, main.c 12/0 erledigt (§9.5). Offen waren: die Suite am Endstand, der Abschnitt "Fuer die
+  Zusammenfuehrung" (§9.7, in §9.4 angekuendigt), OFFEN/Fuer den Nutzer und der Abschluss-Commit.
+- **M4 Rest — audio_pc.c** (nicht auf der Vertragsliste, aber dieselbe Zusammenfuehrungs-Gefahr: Spuren A/B fassen den
+  Ton an): die Haken waren 10 bzw. 9 Zeilen. Rumpf nach platform/pc/src/cut10f0_pc.c verlegt
+  (`re15_cut10f0_pc_se_on`, `re15_cut10f0_pc_main_gesperrt`, gleiche Logzeilen), in audio_pc.c bleiben je 2 Kommentar-
+  + 1 Codezeile. `git diff master --numstat` audio_pc.c: **10/0** (include 1, ss_bgm_entry 3, Se_on 3, SEQ_CTL 3).
