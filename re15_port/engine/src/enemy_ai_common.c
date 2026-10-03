@@ -9072,8 +9072,12 @@ static void re15_maggot_ai_tick(int slot)
                     pl->hp = (int16_t)(pl->hp - 6);              /* @0x80118460-6c */
                     e->dog_blocked_ctr = 0x2d;                   /* +0x1dc=45 @0x80118470-78 */
                     re15_audio_room_se(6);                       /* Se(6) @0x80118474 (a0=6 @0x80118454) */
-                    pl->hit_react |= 1;                          /* @0x801184c0-d4. The stagger cmd aca58=2/aca59=facing+2 (hp<0 -> 3)
-                                                                  * @0x8011847c-b8 = the player-command FSM; port convention = hit_react (audit #17, dog/crow parity) */
+                    pl->hit_react |= 1;                          /* @0x801184c0-d4 */
+                    /* Runde 35 Spur J: der Biss schreibt cmd 2 und aca59 = a780(BEISSER)+2 selbst
+                     * (`jal 0x8001a780` @0x80118488, `sb v0,-13735(at)` @0x8011849c; hp<0 -> cmd 3
+                     * @0x801184a8-bc bleibt beim Todes-Detektor). Vorher leitete der HP-Detektor die
+                     * Richtung aus dem NAECHSTEN Gegner ab — bei zwei Gorillas der falsche. */
+                    if (pl->hp >= 0) re15_player_stagger_cmd2(re15_affen_biss_clip(e, pl));
                 }
                 break;
             default:  /* exit @0x801184e0-8520: lockout 0x14 if clear, -> CHASE */

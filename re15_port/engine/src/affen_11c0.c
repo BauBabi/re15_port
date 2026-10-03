@@ -3,6 +3,7 @@
  * Belege und Messungen: include/re15_affen.h (Kopf) und analysis/befunde_runde35/J_affen.md.
  */
 #include "re15_affen.h"
+#include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
 #include <string.h>
 
 /* (1) NPC-Wandklemme: FUN_8003b0a4 vergleicht `entity+0x82` mit `floor >> 4` der Zelle
@@ -31,6 +32,67 @@ int re15_affen_surplus_part_world(const re15_emd_skeleton_t *sk, int part,
     for (int k = 0; k < 3; k++)
         trans[k] = (int32_t)(int16_t)((uint16_t)p[2*k] | ((uint16_t)p[2*k + 1] << 8));
     return 1;
+}
+
+/* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50
+ *      `lw v0,392(v0)` @0x80117200; rec18.Elternmatrix = &rec1.Matrix (`sw v1,3204(v0)`
+ *      @0x80117214, v1 = v0+236), rec18.Eltern-Record = rec1 (`sw v1,3240(v0)` @0x8011721c),
+ *      rel = (0x66,-810,0) (@0x80117220-30), lokale Rotation = Identitaet (@0x80117234-3c).
+ *      FUN_8001e9ec: Welt = Eltern * Lokal -> R = R1, t = T1 + R1 * rel. */
+int re15_affen_part_attach(uint8_t type, int part, const re15_skel_pose_t *poses,
+                           int bone_count, re15_skel_pose_t *out)
+{
+    static const int32_t rel[3] = { RE15_AFFEN_BRUST_REL_X, RE15_AFFEN_BRUST_REL_Y, RE15_AFFEN_BRUST_REL_Z };
+    if (type != 0x27u || part != RE15_AFFEN_BRUST_PART) return 0;
+    if (!poses || !out || bone_count <= RE15_AFFEN_BRUST_ELTERN || part < bone_count) return 0;
+    const re15_skel_pose_t *r = &poses[RE15_AFFEN_BRUST_ELTERN];
+    *out = *r;
+    for (int k = 0; k < 3; k++)
+        out->trans[k] = r->trans[k] +
+            (int32_t)(((int64_t)r->rot[k*3+0] * rel[0] + (int64_t)r->rot[k*3+1] * rel[1] +
+                       (int64_t)r->rot[k*3+2] * rel[2]) >> 12);
+    return 1;
+}
+
+/* (4a) FUN_8001c2dc — nur das Stopp-Flag (*param_3); die Rueckgabe (Bodenhoehe) braucht der
+ *      Knockdown nicht. Schleife @0x8001c330-f8: Band s0 = -(y/1800); Zellwort w = FUN_8003b7f0
+ *      (pos, r, s0 & 0xff); w == 0 -> gibt es IRGENDEINE Zelle dieses Bandes (FUN_8003bc2c
+ *      @0x8001c358), ist Schluss mit Flag 0 (@0x8001c368), sonst ein Band tiefer bis 0
+ *      (@0x8001c3e8-f4). w != 0: Bit 0x1 -> Flag 1 (@0x8001c37c-8c / @0x8001c3c0); Bit 0x2 ->
+ *      Flag 0 (@0x8001c390-ac); Bit 0x600 -> Flag 1 (@0x8001c3b0-c0); sonst Flag 0. */
+static int affen_band_hat_zelle(const re15_rdt_t *rdt, int band)
+{
+    for (int i = 0; i < rdt->sca_count; i++) {          /* FUN_8003bc2c: alle vier Quadranten */
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        uint16_t w = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+        if ((int)(((int32_t)((uint32_t)w << 16)) >> 28) == (band & 0xff)) return 1;
+    }
+    return 0;
+}
+
+int re15_affen_kd_sonde(const re15_rdt_t *rdt, int32_t x, int32_t y, int32_t z, int32_t r)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0) return 0;
+    uint32_t s0 = (uint32_t)(-(y / 0x708));             /* @0x8001c304-2c */
+    for (;;) {
+        int s1 = (int)(s0 & 0xffu);                     /* @0x8001c338 */
+        uint16_t w = re15_collision_floor_typeword(rdt, x, z, s1, r);   /* @0x8001c340 */
+        if (w != 0) {
+            if (w & 0x1u) return 1;                     /* @0x8001c37c-8c -> sb s4 @0x8001c3c0 */
+            if (w & 0x2u) return 0;                     /* @0x8001c390-ac sb zero */
+            return (w & 0x600u) != 0;                   /* @0x8001c3b0-c0 */
+        }
+        if (affen_band_hat_zelle(rdt, s1)) return 0;    /* @0x8001c358-68 */
+        if ((s0 & 0xffu) == 0) return 0;                /* @0x8001c3e8-f8 */
+        s0--;                                           /* Delay-Slot @0x8001c3f4 */
+    }
+}
+
+/* (4b) Biss: aca59 = a780(Beisser) + 2 (@0x80118488-9c); a780 @0x8001a788-a4 mit a0 = Spieler. */
+uint8_t re15_affen_biss_clip(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    int a780 = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
+    return (uint8_t)(a780 ? 0x09 : 0x08);               /* [3] Clip 9 @0x80035fbc-c4 / [2] Clip 8 @0x80035e38-40 */
 }
 
 /* (3) Trefferzaehler fuer den Vergeltungs-Sprung (NUTZER-VORGABE 3). */

@@ -4,9 +4,17 @@
  * + Haken in enemy_ai_common.c / main.c / emd_common.c.
  *
  * Teile (je ein ctest-Eintrag, Mechanik gemessen, nicht "Funktion existiert"):
- *   teile   EM027 aus CDEMD0.EMS: 18 Knochen, 22 Meshes; Parts 18..21 bekommen die Welttransformation des
- *           Binders FUN_8001e5b0 (Identitaet, rel = EMR[8+6i] = (3,72,3)/(75,1,78)/(0,79,1)/(79,1,80));
- *           Part 17 (hat einen Knochen) wird NICHT umgebogen.
+ *   teile   EM027 aus CDEMD0.EMS: 18 Knochen, 22 Meshes; Part 18 (Brustschale) haengt am Rumpfknochen 1 mit
+ *           rel (102,-810,0) (Gorilla-INIT @0x80117200-3c) — gemessen gegen die Part-Matrizen des Original-
+ *           Savestates (t = (-4279,-2816,-16899)); Parts 19..21 bekommen die Welttransformation des Binders
+ *           FUN_8001e5b0 (Identitaet, rel = EMR[8+6i] = (75,1,78)/(0,79,1)/(79,1,80)); Part 17 (hat einen
+ *           Knochen) wird NICHT umgebogen.
+ *   kdsonde Punkt 4a: die Knockdown-Sonde FUN_8001c2dc in ROOM11C0 — an Leons Szenen-Endpunkt (-7138,-12372)
+ *           Flag 1 (Original-Savestate +0x9e = 1, +0x8c = 0), der Heavy-Knockdown [5] rutscht dort NICHT
+ *           (vorher 4915 Einheiten); auf freiem Boden Flag 0 und der Sturz gleitet 500/Bild; [4] schlaegt nach
+ *           einem Schritt in den Slam (Clip 0xf) um.
+ *   biss    Punkt 4b: zwei Gorillas, der BEISSER steht hinter Leon, der naehere steht vor ihm -> der Flinch
+ *           nimmt die Richtung des Beissers (Clip 9, a780 @0x80118488), nicht die des naechsten Gegners.
  *   band    ROOM11C0, Kampf-Layout: eine NPC-Laeuferin (Typ 0x42, Sub 5 RUN) mit +0x82 = 2 erreicht
  *           (-18214,-7229) im Streifenwagen (Ankunftsbit 5/1); mit +0x82 = 0 klemmt die Band-0-Zelle
  *           (x <= -17790, FUN_8003b0a4) — die Mechanik des Ada-Befunds.
@@ -169,12 +177,35 @@ static void teil_teile(void)
     PRUEF(sk.bone_count == 18 && md1.mesh_count == 22, "EM027: %d Knochen, %d Meshes (Original: EMR+4 = 18, MD1+8>>1 = 22)", sk.bone_count, md1.mesh_count);
     PRUEF(sk.emr_raw != NULL && sk.emr_raw_size > 8 + 6 * 22, "EMR-Rohdaten am Skelett (%u B)", (unsigned)sk.emr_raw_size);
     static const int16_t erwartet[4][3] = { {3, 72, 3}, {75, 1, 78}, {0, 79, 1}, {79, 1, 80} };   /* = Bytes der Kindtabelle @EMR+0x74 */
-    for (int part = 18; part < 22; part++) {
+    for (int part = 19; part < 22; part++) {
         int32_t rot[9] = {0}, tr[3] = {0};
+        static re15_skel_pose_t dummy[18]; re15_skel_pose_t aus;
+        memset(dummy, 0, sizeof dummy);
         int r = re15_affen_surplus_part_world(&sk, part, rot, tr);
         int ident = rot[0] == 0x1000 && rot[4] == 0x1000 && rot[8] == 0x1000 && rot[1] == 0 && rot[2] == 0 && rot[3] == 0 && rot[5] == 0 && rot[6] == 0 && rot[7] == 0;
         PRUEF(r == 1 && ident && tr[0] == erwartet[part - 18][0] && tr[1] == erwartet[part - 18][1] && tr[2] == erwartet[part - 18][2],
-              "Part %d: weltfest Identitaet, t=(%d,%d,%d) (FUN_8001e5b0 rel=EMR[8+6*%d], Eltern DAT_80072d4c)", part, tr[0], tr[1], tr[2], part);
+              "Part %d: weltfest Identitaet, t=(%d,%d,%d) (FUN_8001e5b0 rel=EMR[8+6*%d], Eltern DAT_80072d4c; Savestate s021: dieselben Werte)", part, tr[0], tr[1], tr[2], part);
+        PRUEF(re15_affen_part_attach(0x27, part, dummy, 18, &aus) == 0, "Part %d wird NICHT umgehaengt", part);
+    }
+    {
+        /* Part 18: die Weltmatrix von Part 1 aus dem ORIGINAL-Savestate (orig_scene/r3 s021_t036.41, Record
+         * 0x8016f3b4 + 1*0xac + 0x40) hinein, die Weltlage von Part 18 desselben Savestates muss herauskommen. */
+        static re15_skel_pose_t posen[18]; re15_skel_pose_t aus;
+        static const int32_t m1[9] = { -2906, 2987, -5562, 5066, 4757, -97, 3766, -4087, -4174 };
+        memset(posen, 0, sizeof posen); memset(&aus, 0, sizeof aus);
+        for (int k = 0; k < 9; k++) posen[1].rot[k] = m1[k];
+        posen[1].trans[0] = -3615; posen[1].trans[1] = -2001; posen[1].trans[2] = -17801;
+        int r = re15_affen_part_attach(0x27, 18, posen, 18, &aus);
+        int rotgleich = 1; for (int k = 0; k < 9; k++) if (aus.rot[k] != m1[k]) rotgleich = 0;
+        PRUEF(r == 1 && rotgleich, "Part 18 haengt an Knochen 1: Rotation = Rumpf (INIT @0x80117210-1c, lokale Identitaet @0x80117234-3c)");
+        PRUEF(aus.trans[0] == -4279 && aus.trans[1] == -2816 && aus.trans[2] == -16899,
+              "Part 18: t = T1 + R1*(102,-810,0) = (%d,%d,%d); Original-Savestate Part 18: (-4279,-2816,-16899)",
+              aus.trans[0], aus.trans[1], aus.trans[2]);
+        PRUEF(re15_affen_part_attach(0x29, 18, posen, 18, &aus) == 0 && re15_affen_part_attach(0x30, 16, posen, 16, &aus) == 0,
+              "0x29 Part 18 / 0x30 Part 16: keine Umhaengung (Roh-Scan sw rX,0xc84/0xb2c(rY): nur der Gorilla-INIT)");
+        int32_t rot[9] = {0}, tr[3] = {0};
+        PRUEF(re15_affen_surplus_part_world(&sk, 18, rot, tr) == 1 && tr[0] == 3 && tr[1] == 72 && tr[2] == 3,
+              "Binder-Standard von Part 18 waere (3,72,3) — der INIT ueberschreibt ihn (main.c: affe_fest geht vor)");
     }
     {
         int32_t rot[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, tr[3] = {11, 12, 13};
@@ -382,6 +413,98 @@ static void teil_brust(void)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
+/* Punkt 4a: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) + die beiden Sturz-Handler am gebauten Stand. */
+static void gorillas_parken(void)
+{
+    for (int k = 0; k < 2; k++) { re15_actor_t *g = aktor_vom_typ(0x27, k); if (g) { g->grid_id |= 0x20; g->x = 30000; g->z = 30000; } }
+}
+
+static void teil_kdsonde(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -7138, -12372, 647, 5, 3) != 0) return;
+    gorillas_parken();
+    PRUEF(re15_affen_kd_sonde(&s_rdt, -7138, 0, -12372, RE15_KD_SONDE_RADIUS) == 1,
+          "Sonde an Leons Szenen-Endpunkt (-7138,-12372): Flag 1 (Typ-2-Zelle 20199x18187 @(-15400,-13266), floor 2 = Bit 0x200; Savestate s035 +0x9e = 1)");
+    PRUEF(re15_affen_kd_sonde(&s_rdt, -9013, 0, -15461, RE15_KD_SONDE_RADIUS) == 0,
+          "Sonde auf freiem Boden (-9013,-15461): Flag 0 (kein Zell-AABB + 450 des Bandes 0)");
+    /* [5] Sturz vorwaerts (Treffer von hinten) am Szenen-Endpunkt: kein Rutschen */
+    pl->x = -7138; pl->z = -12372; pl->rot_y = 647; pl->hp = 88;
+    re15_player_knockdown_begin(1);
+    int32_t x0 = pl->x, z0 = pl->z; double dmax = 0.0; int clip_c = 0;
+    for (int f = 0; f < 30; f++) {
+        frame(0, 0);
+        double d = dist2d(pl->x, pl->z, x0, z0); if (d > dmax) dmax = d;
+        if (pl->motion == 0x0c) clip_c++;
+    }
+    PRUEF(clip_c > 0, "[5] laeuft: Clip 0xc ueber %d Bilder (@0x800364a8-b0)", clip_c);
+    PRUEF(dmax <= 20.0, "[5] am Szenen-Endpunkt: Versatz %.0f Einheiten (Original r3: 9; Port vorher: 4915) — Sonde nullt +0x8c (@0x80036594-b0)", dmax);
+    /* [5] auf freiem Boden: der Sturz gleitet (erstes Bewegungsbild 500 - 5*0 = 500) */
+    if (room_boot(0x11C0, -9013, -15461, 0, 5, 3) != 0) return;
+    gorillas_parken();
+    pl->x = -9013; pl->z = -15461; pl->rot_y = 0; pl->hp = 88;
+    re15_player_knockdown_begin(1);
+    x0 = pl->x; z0 = pl->z;
+    double d1 = 0.0;
+    for (int f = 0; f < 3 && d1 == 0.0; f++) { frame(0, 0); d1 = dist2d(pl->x, pl->z, x0, z0); }
+    PRUEF(d1 >= 480.0 && d1 <= 520.0, "[5] auf freiem Boden: erstes Sturzbild traegt %.0f (500 = ori v0,zero,0x1f4 @0x800364c0, Decel 5*t erst ab t=1)", d1);
+    /* [4] Sturz rueckwaerts (Treffer von vorn) am Szenen-Endpunkt: ein Schritt, dann Slam */
+    if (room_boot(0x11C0, -7138, -12372, 647, 5, 3) != 0) return;
+    gorillas_parken();
+    pl->x = -7138; pl->z = -12372; pl->rot_y = 647; pl->hp = 88;
+    re15_player_knockdown_begin(0);
+    x0 = pl->x; z0 = pl->z; int f_slam = -1; dmax = 0.0;
+    for (int f = 0; f < 12; f++) {
+        frame(0, 0);
+        double d = dist2d(pl->x, pl->z, x0, z0); if (d > dmax) dmax = d;
+        if (f_slam < 0 && pl->motion == 0x0f) f_slam = f;
+    }
+    PRUEF(f_slam >= 0 && f_slam <= 2, "[4] am Szenen-Endpunkt: Slam-Clip 0xf in Bild %d (Sonde NACH dem Vorschub @0x80036214 -> Phase 5 @0x80036228-30)", f_slam);
+    PRUEF(dmax <= 1010.0, "[4]: hoechstens EIN Rueckwaerts-Schritt von 1000 (ori v0,zero,0x3e8 @0x8003615c), gemessen %.0f", dmax);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Punkt 4b: die Biss-Richtung kommt vom BEISSER (a780 @0x80118488), nicht vom naechsten Gegner. */
+static void teil_biss(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -9013, -15461, 0, 5, 3) != 0) return;
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    PRUEF(a != NULL && b != NULL, "zwei Gorillas im Kampf-Layout");
+    if (!a || !b) return;
+    /* Reine Richtungsregel zuerst (a780 @0x8001a788-a4, a0 = Spieler): */
+    pl->rot_y = 0; a->rot_y = 0; b->rot_y = 2048;
+    PRUEF(re15_affen_biss_clip(a, pl) == 0x09 && re15_affen_biss_clip(b, pl) == 0x08,
+          "a780: gleiche Blickrichtung -> Clip 9 (von hinten, [3]); Gegenrichtung -> Clip 8 (frontal, [2])");
+    /* Lage: Leon schaut nach +x. A (Beisser) steht HINTER ihm und schaut wie er; B steht VOR ihm, schaut ihn an,
+     * ist naeher und geparkt (Bit 0x20) -> re15_nearest_hostile = B. */
+    pl->x = -9013; pl->z = -15461; pl->rot_y = 0; pl->hp = 100; pl->hit_react = 0;
+    a->x = pl->x - 700; a->z = pl->z; a->y = 0; a->rot_y = 0; a->grid_id = 0x10;
+    b->x = pl->x + 500; b->z = pl->z; b->y = 0; b->rot_y = 2048; b->grid_id |= 0x20;
+    a->state = 1; a->sub_state_1 = 5; a->sub_state_2 = 1; a->sub_state_3 = 0;      /* BITE B[5], Clip 0x12 */
+    a->motion = 0x12; a->anim_frame = 0x0b; a->anim_frac = 0; a->dog_blocked_ctr = 0; a->hit_react = 0;
+    const re15_actor_t *nah = re15_nearest_hostile(pl);
+    PRUEF(nah == b, "naechster Gegner vor dem Biss = der GEPARKTE vor Leon (Abstand 500 < 700)");
+    int hp0 = pl->hp, f_biss = -1, clip = -1;
+    for (int f = 0; f < 8; f++) {
+        /* Lage je Bild festhalten: Koerper-Schub und Wurzelbewegung sollen die Biss-Geometrie nicht verschieben */
+        pl->x = -9013; pl->z = -15461; a->x = pl->x - 700; a->z = pl->z; b->x = pl->x + 500; b->z = pl->z;
+        frame(0, 0);
+        printf("    Bild %d: HP %d Clip %d | A sub %d/%d Bild %d @(%d,%d) | PL @(%d,%d)\n", f, (int)pl->hp, (int)pl->motion,
+               a->sub_state_1, a->sub_state_2, (int)a->anim_frame, (int)a->x, (int)a->z, (int)pl->x, (int)pl->z);
+        if (pl->hp < hp0 && f_biss < 0) { f_biss = f; clip = (int)pl->motion; break; }
+    }
+    PRUEF(f_biss >= 0 && pl->hp == hp0 - 6, "Biss sitzt in Bild %d: HP %d -> %d (-6 @0x80118460-6c)", f_biss, hp0, (int)pl->hp);
+    PRUEF(clip == 0x09, "Flinch-Clip = %d: Richtung des BEISSERS (von hinten = 9, @0x80118488-9c), nicht die des naeheren Gegners (waere 8)", clip);
+    for (int f = 0; f < 3; f++) frame(0, 0);
+    PRUEF(pl->motion == 0x09, "der HP-Detektor ueberschreibt die Richtung im Folgebild nicht (Clip %d)", (int)pl->motion);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -393,6 +516,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "flug")   || !strcmp(teil, "alle")) teil_flug();
     if (!strcmp(teil, "wagen")  || !strcmp(teil, "alle")) teil_wagen();
     if (!strcmp(teil, "brust")  || !strcmp(teil, "alle")) teil_brust();
+    if (!strcmp(teil, "kdsonde")|| !strcmp(teil, "alle")) teil_kdsonde();
+    if (!strcmp(teil, "biss")   || !strcmp(teil, "alle")) teil_biss();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

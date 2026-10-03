@@ -38,6 +38,7 @@
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
+#include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -479,16 +480,20 @@ static void kd_clip(re15_actor_t *pl, uint8_t clip, int rev)
  * werden ([4] hat KEINEN Decel-Clamp @0x800361c8-e0 — byte-true Vorwaerts-Drift). */
 static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int back)
 {
-    if (mag == 0) return 0;
-    int32_t dx, dz, ox = pl->x, oz = pl->z;
-    re15_player_knockback_delta(back ? pl->rot_y : (int16_t)(pl->rot_y + 0x800), mag, &dx, &dz);
-    int32_t nx = ox + dx, nz = oz + dz;
-    re15_collision_ensure_band(pl->y);
-    re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
-    re15_collision_objects(&nx, &nz);
-    int wall = (nx != ox + dx || nz != oz + dz);
-    pl->x = nx; pl->z = nz;
-    return wall;
+    int32_t dx = 0, dz = 0, ox = pl->x, oz = pl->z;
+    if (mag != 0) {
+        re15_player_knockback_delta(back ? pl->rot_y : (int16_t)(pl->rot_y + 0x800), mag, &dx, &dz);
+        int32_t nx = ox + dx, nz = oz + dz;
+        re15_collision_ensure_band(pl->y);
+        re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+        re15_collision_objects(&nx, &nz);
+        pl->x = nx; pl->z = nz;
+    }
+    /* Runde 35 Spur J: das Urteil ist die Original-Sonde FUN_8001c2dc am VORGESCHOBENEN Punkt
+     * (`jal 0x800245d8` @0x800361fc, dann `jal 0x8001c2dc` @0x80036214 — die Wandklemme laeuft
+     * erst im Dispatcher-Schwanz @0x80031d70), nicht "die Klemme hat die Lage veraendert":
+     * im AABB einer Schraeg-Zelle schlug das nie an (re15_affen.h (4a)). */
+    return re15_affen_kd_sonde(c->rdt, ox + dx, pl->y, oz + dz, RE15_KD_SONDE_RADIUS);
 }
 
 /* ---------------------------------------------------------------------------------------
@@ -616,8 +621,12 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
                 break;
             }
         } else if ((int)pl->anim_frame < 0xf) {            /* Move-Gate frame<15 @0x80036544 */
-            if (kd_move(c, pl, s_kd_speed, 0)) s_kd_speed = 0;   /* Wand=Stopp @0x800365ac-b0 */
-            s_kd_speed -= 5 * s_kd_t; s_kd_t++;            /* Decel 5*t @0x8003656c-8c */
+            /* Runde 35 Spur J — Original-Reihenfolge @0x80036558-b8: erst Decel 5*t (@0x8003656c-8c),
+             * dann die Sonde am STANDORT (`jal 0x8001c2dc` @0x80036594), Flag -> +0x8c = 0
+             * (@0x800365ac-b0), dann der Vorschub (`jal 0x800245d8` @0x800365b4). */
+            s_kd_speed -= 5 * s_kd_t; s_kd_t++;
+            if (re15_affen_kd_sonde(c->rdt, pl->x, pl->y, pl->z, RE15_KD_SONDE_RADIUS)) s_kd_speed = 0;
+            (void)kd_move(c, pl, s_kd_speed, 0);
         }
         if (kd_adv(pl, KD_FC(pl->motion))) {
             if (s_kd_dir == 0) { kd_clip(pl, 0x0e, 0); s_kd_phase = 2; }  /* [4] Ph2/3 Clip 0xe */
