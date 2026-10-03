@@ -667,6 +667,7 @@ static void teil_i(void)
             re15_player_apply_hitbox(pl);
             for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) memset(&g_actors[s], 0, sizeof g_actors[s]);
             re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, K[k].typ, 100800, 0, 100000, K[k].hp);
+            if (K[k].typ == 0x27) z->aim_band = 2;         /* Affe: Zielband LEVEL (re15_damage.c, Typ-0x27-Zweig) */
             re15_inv_init(); re15_inv_grant(K[k].w, 6); re15_player_set_equipped_weapon(K[k].w);
             int hit = re15_player_weapon_fire(K[k].w);
             const int bit = (z->hit_react & 0x40) != 0;
