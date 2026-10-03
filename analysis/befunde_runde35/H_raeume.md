@@ -63,7 +63,28 @@ dort, wo der Hund landen wird (Raumboden y=0, +0x1ba := 0 @FUN_80111398 case 1),
 (Kamera blickt zur Luke hoch) ausserhalb des Bildes bzw. am Boden — NICHT in der Luft.
 
 ### 1.3 Umsetzung
-(folgt)
+* NEU `include/re15_hundeschatten.h` + `engine/src/hundeschatten_1190.c`: `re15_hundeschatten_y(e)` liefert
+  fuer Typ 0x20 `e->dog_floor_y` (= +0x1ba, RE2 +0x1C2-Analog), sonst `e->y`. Messschiene
+  `RE15_HUNDESCHATTEN_LOG=<datei>` (env-gegatet): je gezeichnetem Hunde-Schatten Koerper-Y / Boden-Y.
+* `platform/pc/main.c` (2 Zeilen + Include): im NPC-Schatten nach `int32_t nsh_y = npc->y;`
+  `if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);`.
+* Konstanten: keine neuen Zahlen; Quelle der Hoehe = Feld +0x1ba (`lh a1,442(v0)` @0x8010d91c), das die
+  Sprungmaschine bereits byte-true fuehrt (`sh zero,442(v0)` @0x801114f0, Port enemy_ai_common.c).
+* Wirkung ueber den Luken-Sprung hinaus: auch bei den RE2-Angriffsspruengen (Sub 3, y bis -1120) liegt der
+  Schatten jetzt am Boden statt am Koerper — das ist RE2 (@0x800268c8 Quad-Y = +0x1C2), Bild
+  `p1_angriffssprung_F316_vorher_nachher.png` (links alt: Quad halb in der Luft; rechts: am Boden unter dem Hund).
+
+### 1.4 Messung nachher (gleicher Lauf, neue exe)
+`hs.log`: 117 Luft-Bilder (Koerper ueber Boden), in ALLEN schatten_y = boden_y = 0; Luken-Spruenge
+F195-213 / F227-245 / F259-277 (Koerper bis y=-3680). Bilder `p1_nachher_F184-216.png`,
+`p1_nachher_F200_F204.png`: **kein Schatten mehr an der Wand**. Pixel-Differenz vorher/nachher
+(Graustufe, Schwelle 12) in den drei Luken-Spruengen: nachher nur HELLER (F200 1102 px, F204 4762 px je Hund),
+**0 Pixel dunkler** = kein neuer Schatten irgendwo im Bild (Raumboden liegt unter Cut 11 ausserhalb).
+
+### 1.5 Test
+`unit_r35_raeume_hundeschatten` (tests/unit/test_r35_raeume_hundeschatten.c): echte ROOM1190.RDT, sub13-Spawns,
+Freigabe wie sub10, Sprungmaschine Bild fuer Bild, beide KI-Geschmaecker. Ergebnis: je Hund 21 Luft-Bilder
+(y bis -3680), in jedem Schatten-Y = Boden (0), 0 Bilder mit Schatten auf Koerperhoehe, Landung y == Boden.
 
 ## OFFEN
 - (laufend)
