@@ -560,3 +560,29 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   ist cur = Entity 1 (0x800ace20), werden Spieler 0x800aca54, Entity 1/2 (je 0x1f4 B), aca58..5b und der
   VSync-Zaehler gelesen, dann `c`. Ergebnis: **jedes Spielbild** (VSync +2 je Zeile, Probe g_try.txt
   9875..9913), deterministisch ab dem direkt geladenen r3-Savestate.
+
+### M3 — 3-Treffer-Vorgabe in ALLEN drei Treffer-Spuren (umgesetzt, Riegel gruen; exe-Nachmessung folgt)
+- Ursache: der Zaehler sass nur in Spur 0 (Boden-Flinch). Schrotflinte (Zeile 7) laeuft ueber Spur 1
+  (Luft-Treffer 7/8/13/21), Zeilen 9..11/15..18 ueber Spur 2 (Sturz) — beide ohne Zaehler.
+- Messung vorher (Abnahme t5, Schrotflinte): 6 Treffer -> 6 Spruenge (Exit-Subs 7,7,7 / 7,7,7).
+- Beleg (selbst disassembliert, STAGE1.BIN): Spur 1 Exit `sb zero,147(a0)` @0x8011b3ac (+0x93 = 0),
+  `sb v0,4(v1)` @0x8011b3bc (+0x4 = 1), `ori v0,zero,0x7` / `sb v0,5(v1)` @0x8011b3c8-cc (+0x5 = 7),
+  `sb zero,6(v0)` @0x8011b3dc, `sb zero,7(v0)` @0x8011b3ec. Spur 2 Exit `sb zero,147(v0)` @0x8011b6a8,
+  `ori v0,zero,0x1` / `sb v0,4(v1)` @0x8011b6b4-b8, `ori v0,zero,0x7` / `sb v0,5(v1)` @0x8011b6c4-c8,
+  `sb zero,6/7` @0x8011b6d8/e8. Das Original springt also nach JEDEM Treffer in jeder Spur; die Zahl 3 ist
+  NUTZER-VORGABE, die Form (Exit-Schreibsatz +0x4/+0x5/+0x6/+0x7, Ersatz-Sub 3 = CHASE) ist belegt.
+- Aenderung: affen_11c0.c re15_affen_sprung_oder_jagd (7 beim 3. Treffer, Zaehler zurueck, sonst 3);
+  re15_affen_flinch_exit_sub (Spur 0) = +0x1e3 ? 9 : dieselbe Regel. Haken enemy_ai_common.c: Spur 1 und 2
+  zaehlen beim Eintritt (je 1 Zeile, @0x8011b238-54 / @0x8011b44c-68) und nehmen den Exit aus der Regel
+  (je 1 geaenderte Zeile, @0x8011b3c8-cc / @0x8011b6c4-c8).
+- Riegel `sprung` erweitert: Spur 0 (Zeile 3), Spur 1 (Zeile 7), Spur 2 (Zeile 9) und GEMISCHT (3,7,9,9,3,7):
+  je 6 Treffer -> Exits 3,3,7,3,3,7 — **alle 24 Pruefungen ok**.
+- Sprungkette nach dem 2. Schrottreffer (t5, Slot 2 F1365-F1644), Mechanismus im Port-Code nachgelesen:
+  (1) F1390 Spur-1-Exit -> sub 7 mit +0x7 = 0 (Vergeltungssprung, KEIN Slew im Anlauf @0x801189b8-a00 ->
+  fliegt entlang seiner Blickrichtung ~6000-8900 weit, Original r3 ~8900) -> landet hinter Leon;
+  (2) F1430 SELECTOR (sub 4) -> F1441 Zonen-Sprung Path A attr 0x10 (+0x7 = 1, @0x80117ecc-80118024);
+  (3) F1489/F1530/F1582 Zonen-Spruenge mit +0x7 = 3 (BLIND, LOS-Latch frei, @0x80117fc8-8011802c) — Flug-
+  geschwindigkeit **0x32a = 810** (@0x80118a94-aa0) = genau die "810 Einheiten/Bild" der Abnahme. Glieder
+  (2)/(3) sind die Original-Navigation ueber die SCA-Marker (Runde S5, 2026-09-05), nicht treffer-
+  ausgeloest; ausgeloest wurde die Kette vom Vergeltungssprung (1) nach dem 2. Treffer — den gibt es mit
+  der Vorgabe jetzt erst beim 3. Treffer.

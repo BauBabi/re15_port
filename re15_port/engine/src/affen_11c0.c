@@ -152,12 +152,17 @@ void re15_affen_treffer_zaehlen(re15_actor_t *e)
     if (e->mag_hit_ctr < 255u) e->mag_hit_ctr++;        /* ein Flinch-Eintritt = ein Treffer (+0x93-Latch) */
 }
 
+uint8_t re15_affen_sprung_oder_jagd(re15_actor_t *e)
+{
+    if (e->mag_hit_ctr >= RE15_AFFEN_TREFFER_BIS_SPRUNG) {
+        e->mag_hit_ctr = 0;
+        return 7;                                       /* Vergeltungs-Sprung: Spur 0 @0x8011b194-98, Spur 1 @0x8011b3c8-cc, Spur 2 @0x8011b6c4-c8 */
+    }
+    return 3;                                           /* PORT-WAHL: zurueck in die Jagd (A[3]/B[3]) */
+}
+
 uint8_t re15_affen_flinch_exit_sub(re15_actor_t *e)
 {
     if (e->mag_1e3 != 0) return 9;                      /* byte-true Variante @0x8011b1c8-d8 (nie gesetzt) */
-    if (e->mag_hit_ctr >= RE15_AFFEN_TREFFER_BIS_SPRUNG) {
-        e->mag_hit_ctr = 0;
-        return 7;                                       /* Vergeltungs-Sprung @0x8011b188-98 */
-    }
-    return 3;                                           /* PORT-WAHL: zurueck in die Jagd (A[3]/B[3]) */
+    return re15_affen_sprung_oder_jagd(e);
 }

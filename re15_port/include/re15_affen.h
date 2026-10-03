@@ -99,9 +99,15 @@ int      re15_affen_part_attach(uint8_t type, int part, const re15_skel_pose_t *
 int      re15_affen_surplus_part_world(const re15_emd_skeleton_t *sk, int part,
                                        int32_t rot[9], int32_t trans[3]);
 
-/* (3) Trefferzaehler: Eintritt in den Boden-Flinch zaehlt; der Exit entscheidet 7 (Sprung) / 3 (Jagd). */
+/* (3) Trefferzaehler: der Eintritt in JEDE der drei Treffer-Spuren zaehlt (Spur 0 Boden-Flinch
+ *     @0x8011b064-70, Spur 1 Luft-Treffer 7/8/13/21 @0x8011b238-54, Spur 2 Sturz 9..11/15..18
+ *     @0x8011b44c-68 — Schrotflinte/Magnum landen in 1/2); jeder Exit entscheidet 7 (Sprung) / 3 (Jagd).
+ *     Original: alle drei Exits schreiben +0x4=1/+0x5=7/+0x6=0/+0x7=0 (Spur 0 @0x8011b188-98, Spur 1
+ *     @0x8011b3bc-ec, Spur 2 @0x8011b6b4-e8, selbst disassembliert). NUTZER-VORGABE "nicht nach jedem
+ *     Schuss" gilt fuer alle Waffen (Abnahme 0 M3: mit der Schrotflinte 6 Treffer = 6 Spruenge). */
 void     re15_affen_treffer_zaehlen(re15_actor_t *e);
-uint8_t  re15_affen_flinch_exit_sub(re15_actor_t *e);
+uint8_t  re15_affen_sprung_oder_jagd(re15_actor_t *e);   /* Spur 1/2-Exit: 7 beim 3. Treffer, sonst 3 */
+uint8_t  re15_affen_flinch_exit_sub(re15_actor_t *e);    /* Spur 0-Exit: 9 bei +0x1e3, sonst wie oben */
 
 /* (4a) Stopp-Flag der Knockdown-Sonde FUN_8001c2dc (`sb s4/zero,0(s2)`): 1 = der Punkt liegt
  *      (mit Radius) im AABB einer Zelle seines Bandes, deren Wort Bit 0x1 oder (ohne Bit 0x2)

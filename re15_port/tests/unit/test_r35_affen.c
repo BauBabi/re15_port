@@ -329,6 +329,29 @@ static void teil_sprung(void)
         g->mag_airborne = 0; g->y = g->dog_floor_y; g->floor = 0; g->hit_react = 0;
         g->state = 1; g->sub_state_1 = 3; g->sub_state_2 = 0; g->sub_state_3 = 0;
     }
+    /* M3 (Nachbesserung 1): dieselbe Vorgabe in den Spuren 1 (Luft-Treffer, Zeile 7 = Schrotflinte, Original-Exit
+     * +0x5=7 @0x8011b3c8-cc) und 2 (Sturz, Zeile 9, Exit @0x8011b6c4-c8) und GEMISCHT ueber alle drei Spuren —
+     * der Zaehler gehoert dem Gorilla, nicht der Waffe. */
+    static const struct { uint8_t zeile; const char *name; } spur[3] = { {7, "Spur 1 (Zeile 7, Luft-Treffer)"},
+                                                                         {9, "Spur 2 (Zeile 9, Sturz)"},
+                                                                         {0, "gemischt 3/7/9"} };
+    static const uint8_t misch[6] = { 3, 7, 9, 9, 3, 7 };
+    for (int sp = 0; sp < 3; sp++) {
+        g->mag_hit_ctr = 0; g->hp = 180;
+        for (int hit = 0; hit < 6; hit++) {
+            uint8_t z = spur[sp].zeile ? spur[sp].zeile : misch[hit];
+            g->state = 2; g->sub_state_1 = z; g->sub_state_2 = 1; g->sub_state_3 = 0;
+            g->hp = (int16_t)(g->hp - 12); g->hit_react |= 1;
+            int exit_sub = -1;
+            for (int f = 0; f < 200; f++) {
+                frame(0, 0);
+                if (g->state == 1) { exit_sub = g->sub_state_1; break; }
+            }
+            PRUEF(exit_sub == erwartet[hit], "%s, Treffer %d (Zeile %d): Exit -> Sub %d (erwartet %d)", spur[sp].name, hit + 1, z, exit_sub, erwartet[hit]);
+            g->mag_airborne = 0; g->y = g->dog_floor_y; g->floor = 0; g->hit_react = 0;
+            g->state = 1; g->sub_state_1 = 3; g->sub_state_2 = 0; g->sub_state_3 = 0;
+        }
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------- */

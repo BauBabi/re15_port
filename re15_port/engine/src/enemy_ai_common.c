@@ -9394,6 +9394,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b238-54 */
                 e->motion = (int16_t)((e->hit_react & 0x80) ? 9 : 8);   /* clip 8 @0x8011b260-64, 9 if front-latch @0x8011b274-8c */
                 e->anim_frame = 0; e->anim_frac = 7;
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: Spur 1 zaehlt mit (re15_affen.h (3)) */
                 re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b2b0-334 */
                 /* fall through */
             case 1:
@@ -9401,7 +9402,7 @@ static void re15_maggot_ai_tick(int slot)
                 re15_maggot_bf50(e, (e->motion == 8) ? 0 : 1);   /* @0x8011b370-a0 */
                 break;
             default:  /* @0x8011b3ac-ec */
-                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = re15_affen_sprung_oder_jagd(e); e->sub_state_2 = 0; e->sub_state_3 = 0;   /* 7 @0x8011b3c8-cc; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 break;
             }
         } else {                                              /* 0x8011b400 CRASH: 9..11/15..18, phases @0x801003ec */
@@ -9412,6 +9413,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->anim_frame = 0; e->anim_frac = 7;
                 e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* +0x8c @0x8011b4c4-d4 */
                 e->ai_timer = 0;                              /* +0x9c=0 @0x8011b4e4 */
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: Spur 2 zaehlt mit (re15_affen.h (3)) */
                 re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b4f0-56c */
                 /* fall through */
             case 1:
@@ -9429,7 +9431,7 @@ static void re15_maggot_ai_tick(int slot)
                 if (re15_maggot_anim(e)) e->sub_state_3 = 4;  /* @0x8011b660-98 */
                 break;
             default:  /* @0x8011b69c-e8 */
-                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = re15_affen_sprung_oder_jagd(e); e->sub_state_2 = 0; e->sub_state_3 = 0;   /* 7 @0x8011b6c4-c8; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 break;
             }
         }
