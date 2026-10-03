@@ -505,6 +505,33 @@ static void teil_karte(void)
     PRUEF(a0 && zp == 0 && !a1, "ROOM1150 besucht -> nur noch ROOM11C0 blinkt (Blatt 0)");
     re15_map_zone_update(0x11C0, -10000, 0);
     PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "ROOM11C0 besucht -> kein Ziel mehr");
+
+    /* ---- WIE IM ECHTEN SPIEL (Fortsetzung, Dossier §8.1): ROOM1150 ist VOR der 10F0-Szene laengst besucht
+     * (erste Irons-Szene (3,94), deren Hinweis erst nach ROOM10F0 schickt). "So lange der Raum nicht besucht
+     * ist, blinken beide weiter" meint den Besuch NACH der Szene -> eigener Latch (9,72), nicht das
+     * Besucht-Bit der Zone. */
+    re15_game_state_init();
+    re15_map_zone_update(0x1150, -21000, -20000);                 /* Besuch davor */
+    re15_game_flag_set(3, 94, 1);
+    re15_map_zone_update(RE15_CUT10F0_RAUM, RE15_CUT10F0_SPAWN_X, RE15_CUT10F0_SPAWN_Z);
+    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "echter Weg: vor der 10F0-Szene blinkt nichts (1150 besucht, 10F0 besucht)");
+    re15_cut10f0_install(0x1150);                                  /* Raumaufbau 1150 VOR der Szene: kein Latch */
+    PRUEF(re15_game_flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT) == 0,
+          "echter Weg: Raumaufbau ROOM1150 vor der Szene setzt (9,72) nicht");
+    re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
+    a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); p0 = zp; q0 = zr;
+    a1 = re15_map_ziel_aktiv_n(1, &zp, &zr); p_1 = zp; q_1 = zr;
+    PRUEF(a0 && p0 == 0 && q0 == 4 && a1 && p_1 == 4 && q_1 == 2,
+          "echter Weg: nach der Szene blinken ROOM11C0 (%d/%d) UND das schon frueher besuchte ROOM1150 (%d/%d, aktiv %d)",
+          p0, q0, p_1, q_1, a1);
+    re15_cut10f0_install(0x10D0);                                  /* andere Raeume: kein Latch */
+    PRUEF(re15_map_ziel_aktiv_n(1, &zp, &zr), "echter Weg: ROOM1150 blinkt in anderen Raeumen weiter");
+    re15_cut10f0_install(0x1150);                                  /* Leon betritt ROOM1150 NACH der Szene */
+    a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); a1 = re15_map_ziel_aktiv_n(1, &zp, &zr);
+    PRUEF(re15_game_flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT) == 1 && a0 && zp == 0 && !a1,
+          "echter Weg: Betreten von ROOM1150 nach der Szene setzt (9,72) -> nur noch ROOM11C0 blinkt");
+    re15_map_zone_update(0x11C0, -10000, 0);
+    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "echter Weg: ROOM11C0 besucht -> kein Ziel mehr");
 }
 
 static void teil_bgm(void)

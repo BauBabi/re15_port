@@ -123,6 +123,17 @@
 #define RE15_CUT10F0_ZIEL2_RAUM      0x1150
 #define RE15_CUT10F0_HINWEIS_PERIODEN 3
 
+/* "ROOM1150 NACH der Szene betreten" — der Besucht-Latch des ZWEITEN Ziels. ROOM1150 ist im echten Spiel
+ * vor der 10F0-Szene laengst besucht (erste Irons-Szene, Flag (3,94) gesetzt @0x01110 in ROOM1150 sub08;
+ * erst ihr Hinweis schickt nach ROOM10F0, map_hint_common.c Eintrag 0) — das Besucht-Bit der ZONE stuende
+ * also schon und die Kachel blinkte nie (gemessen, Dossier §8.1). Der Nutzer-Satz "So lange der Raum nicht
+ * besucht ist, blinken beide weiter" meint den Besuch NACH der Szene: gesetzt beim Raumaufbau von ROOM1150
+ * mit (9,71)=1 (re15_cut10f0_install). VERTRAG Runde 35 §1.1: Bit 72 = Reserve der Spur K (Zensus alle
+ * 240 RDTs + Port: kein Ck/Set (9,72), Dossier §8.1). ROOM11C0 behaelt das Besucht-Bit seiner Zone
+ * (vor der Szene nur mit Strom (4,243) erreichbar, ROOM11B0 sub01 @0x011F6/@0x01216). */
+#define RE15_CUT10F0_ZIEL2_BESUCHT_BANK 9
+#define RE15_CUT10F0_ZIEL2_BESUCHT_BIT  72
+
 /* MAIN01 bis zum Parkplatz: Tabellen-Eintrag wie UNK_80074828 (FUN_800443ec: low = MAIN, high = SUB,
  * 0xff = kein SUB; MAIN01 = Slot 1, ROOM1030 traegt ihn @0x8007482e als 0x4041 mit Manuell-Start-Flag
  * 0x40 — hier OHNE Flag, damit er von selbst laeuft (FUN_800444b0 spielt nur Flag == 0)). Gilt fuer STAGE1

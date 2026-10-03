@@ -222,3 +222,78 @@ Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STA
 - Bedienung: Szene startet beim ersten Betreten von ROOM10F0 (Leon) automatisch; die Karte danach schaltet nach ~4 s von B1 (Parkplatz) auf 3F (Irons' Buero) und schliesst
   nach weiteren ~4 s, START springt sofort weiter/schliesst. Beide Raeume blinken in der normalen Karte, bis man sie betreten hat. MAIN01 laeuft ab Szenenende in jedem
   Raum, bis man den Parkplatz ROOM11C0 betritt.
+
+## 8. FORTSETZUNG (2026-10-03 nachmittags, nach dem Sitzungslimit 12:00) — Gegenlesen gegen den Wortlaut
+Stand beim Einstieg: Baum sauber, HEAD 9cc0d253 (3 wip-Commits). Gelesen: Dossier §0-§7, `git log --stat master..HEAD`,
+Diff gegen master, AUFTRAG.md, VERTRAG.md. Keine vorliegende Messung wiederholt. Gegengelesen wurde JEDE Zeile des
+Nutzers (AUFTRAG.md Z.41-67, Z.92) gegen Programm (tools/r35_k/szene_bauen.py), Texte (texte_bauen.py), Karte
+(map_hint_common.c) und BGM (cut_10f0.c). Ergebnis: Texte/Sprecher/Reihenfolge/Kamera/Tuerknall stimmen woertlich
+(18 Zeilen, "Woman:" bei 7/8/9, "Ada:" ab 13) — DREI Abweichungen vom Wortlaut bzw. von "vergleichbaren Dialogen":
+
+### 8.1 BEFUND 1 — ROOM1150 blinkt im echten Spiel NIE ("So lange der Raum nicht besucht ist, blinken beide weiter")
+- Mechanik bisher: `re15_map_ziel_aktiv_n` (map_hint_common.c) blendet ein Ziel aus, sobald `re15_map_zone_visited(zone)`
+  steht. Fuer K2 (ROOM1150) steht dieses Bit im echten Spiel LAENGST: der Weg nach ROOM10F0 fuehrt ueber die erste
+  Irons-Szene in ROOM1150 (Flag (3,94), ROOM1150 sub08 @0x01110; erst deren Hinweis — Tabelleneintrag 0 `{0x1150, ...,
+  0x10F0, 0, 3, 94}` — schickt nach ROOM10F0). Der vorhandene Riegel unit_r35_cut10f0_karte pruefte nur den frischen
+  Zustand (1150 nie besucht) und war deshalb gruen.
+- MESSUNG VORHER (gebauter Stand 9cc0d253 + nur neue Pruefzeilen, `test_r35_cut10f0.exe karte`): Zone 1150 besucht,
+  (3,94)=1, Zone 10F0 besucht, dann (9,71)=1 ->
+  `FEHLER: echter Weg: nach der Szene blinken ROOM11C0 (0/4) UND das schon frueher besuchte ROOM1150 (0/4, aktiv 0)`.
+  Der Hinweis-SCHIRM am Szenenende zeigt 1150 trotzdem blinkend (re15_map_hint_ziel fragt das Besucht-Bit nicht,
+  RE2 @0x8006F4E8-0x8006F608 — gemessen §4), nur die normale Karte danach nicht.
+- Deutung des Nutzer-Satzes: "besucht" = NACH der Szene betreten (Leon soll Irons holen) -> eigener Latch.
+  VERTRAG §1.1: Bit (9,72) = Reserve der Spur K. Zensus (alle 240 RDTs, Rohbytes `21 09 48` / `22 09 48`):
+  0 Treffer; Port-Code (engine/src, include, platform/pc/main.c): kein Nutzer. Gesetzt beim Raumaufbau von
+  ROOM1150 mit (9,71)=1 (re15_cut10f0_install laeuft in scd_room_reenter UND am Boot-Weg fuer JEDEN Raum).
+- ROOM11C0 behaelt das Besucht-Bit der Zone: vor der Szene ist der Parkplatz nur mit Strom erreichbar (ROOM11B0 sub01
+  @0x011F2 `06 00 40 00` / @0x011F6 Ck(4,243)==0 -> @0x01216 `46 01 01 31 0f 00 ff ff 00 00` Aot_reset Slot 1 = die
+  Tuer nach 11C0 wird zum Text-Platz msg 15 "It's too dark to see anything..."); war Leon trotzdem schon dort, gilt
+  der Wortlaut woertlich ("nicht besucht" ist dann falsch -> kein Blinken, MAIN01 endet sofort). Kein zweiter Latch
+  (Spur K hat genau ein Reserve-Bit).
+
+### 8.2 BEFUND 2 — Leon begruesst Marvin mit dem Ruecken zu ihm ("Hey Marvin, glad you made it! wieder arm strecken")
+- MESSUNG VORHER (integration Lauf A, debug.log lauf_8c69c670_a, RE15_CAM_TRACE): von F360 bis F2040 unveraendert
+  `pl=(4792,11359) rot=4019` — Leon steht die GANZE Szene nach +X zu Ada gewandt. Marvin steht bei (3814,9831):
+  Richtung von Leon = (-978,-1528) = Gierung ~1390 (0 = +X, 1024 = -Z, 2048 = -X). Differenz zu 4019: ~134 Grad —
+  Marvin steht schraeg HINTER Leon; Clip 15 ("Arm strecken") zeigt bei Zeile 11 auf Ada, nicht auf Marvin. Damit ist
+  auch "This is... -> arm strecken Richtung Ada" (Zeile 12) von Zeile 11 nicht zu unterscheiden, und Leon redet
+  bei 16/19/21/22 ("Okay, Marvin, you go with Ada ...") an Marvin vorbei.
+- Form der Abhilfe (belegt, schon im Programm benutzt): Plc_dest Modus 9 (drehen) Spieler ROOM11C0 sub02 @0x0185E +
+  Warteschleife Ck(5,0) ROOM1050 sub03 @0x00DCA. Choreografie (PORT-WAHL nach Wortlaut): vor Zeile 11 dreht Leon zu
+  Marvin, vor Zeile 12 zurueck zu Ada (Arm Richtung Ada, Kopf bleibt per Plc_neck bei Marvin), nach Marvins
+  Vorstellung (15) wieder zu Marvin — den Rest des Gespraechs (16..22) fuehrt er mit Marvin. Marvin sieht bei
+  "glad to meet another Survivor" Ada an (Plc_neck Modus 1, Form ROOM11C0 sub02 @0x01886), danach wieder Leon.
+
+### 8.3 BEFUND 3 — Ein-Gesten-Zeilen sind kuerzer als JEDE Dialogzeile des Originals
+- MESSUNG VORHER (Listing szene_bauen.py; debug.log Lauf A): Zeilen mit einer Geste bekamen Message_on, Geste,
+  Sleep 50, Clip 23, Sleep 20 = 70 Bilder bis zur naechsten Zeile (11 -> 12, 12 -> 13, 13 -> 14, 17 -> 18, 20 -> 21,
+  21 -> 22, 22 -> 23). Ohne Sprachdatei ersetzt die naechste Message_on die laufende (Standzeit sonst 99 Bilder,
+  `04 01 01 63`; msg_common.c re15_msg_compute_duration zaehlt Glyphen nicht) -> z.B. die zweizeilige Zeile 21
+  (65 Zeichen) stand nur 70 Bilder = 2,3 s.
+- ORIGINAL (ROOM11B0 sub06, Datei-Offsets): JEDE Zeile = Message_on, Geste A, `09 0a 28 00` Sleep 40, Geste B,
+  `09 0a 32 00` Sleep 50, Clip 23, `09 0a 14 00` Sleep 20 = 110 Bilder: msg 1 @0x014EE..@0x0150A (Marvin 15/16/23,
+  58 Zeichen), msg 2 @0x0150E..@0x0152A (Leon 19/17/23, 70 Zeichen), msg 8 @0x0166E..@0x01686 (95 Zeichen, 3 Reihen).
+  Kuerzeste Original-Zeile: 90 Bilder (msg 4 @0x01574: Sleep 40 @0x01580 + Sleep 50 @0x0158C), msg 10/11/12 je 100
+  (40+40+20 @0x0177A/@0x01782/@0x0178A). Keine Zeile unter 90.
+- Abhilfe: jede Zeile im vollen Original-Takt 40 + 50 + 20 = 110. Zeilen mit Nutzer-Geste halten die Geste
+  (Sleep 40 + Sleep 50 ohne Geste B); die langen zweizeiligen Zeilen 20/21/23 bekommen das Original-Paar
+  15 -> 16 -> 23 (Clip 16 = "kleine Handflaechen-Geste", ROOM11B0 sub06 @0x014FE `3f 00 10 00`; Clip-Inhalt im
+  geliehenen Block: rec1 Clip 15..23 hash-gleich mit rec0 und ROOM11C0 rec0 — rbj_zensus.py suche, z.B. Clip 16
+  fec1ec970163, Clip 19 fde929aa6e6b). Mit Sprachdatei haelt weiterhin der Stimmen-Riegel die naechste Zeile.
+
+### 8.4 Gelesen und in Ordnung befunden (keine Aenderung)
+- "hinten rechts an den Monitoren bei CUT2": Ada (6000,11500) = die NO-Tasche zwischen Wandvorsprung (x 4300..5700,
+  z >= 11800) und Konsole (x >= 6900) — Bild nachher_F1100: sie ist die rechte der drei Figuren vor der Monitorwand.
+- "Kamera muss immer wechseln ..., solange Leon noch nicht bei ihr steht": Cut 2 (F6) -> Cut 0 (F56) -> RVD-Kette
+  Cut 1 (~F260) -> Cut 2 (~F300) waehrend Leon laeuft (Cut_auto 1), erst bei Ankunft Cut_chg 2 fest.
+- Reihenfolge Tuerknall (F704) -> Marvin laden (Pos_set F716) -> Cut 0 (F732); Abgang Modus 5 (rennen), Balken +45.
+- MAIN01-START: der Nutzer-Satz steht in AUFTRAG.md HINTER der 1150-Montage ("Bis Leon DANN den Parking Lot erreicht
+  hat"). VERTRAG §0 teilt ihn Spur K zu ("danach Karte ...; MAIN01 ... bis zum Parkplatz"). ENTSCHEIDUNG: Beginn =
+  Ende der 10F0-Szene ((9,71)), Ende = Parkplatz. Das erfuellt den Satz in jeder Lesart fuer die Strecke nach der
+  1150-Montage ("durchweg") und haengt nicht an Spur L. Folge fuer die Integration: auf dem Weg 10F0 -> 1150 und
+  WAEHREND der Irons-Todesszene (Spur L) laeuft bereits MAIN01, sofern L dort nichts anderes schaltet; soll MAIN01
+  erst mit der Montage beginnen, ist die eine Stelle `re15_cut10f0_bgm_eintrag` (zusaetzlich (9,73) lesen,
+  VERTRAG §1.1 Spur L) — siehe OFFEN.
+- Skript-BGM auf dem Weg (Zensus Sce_bgm_control 0x54 / Sce_bgmtbl_set 0x57, alle ROOM1xx0): ROOM1030 main00
+  @0x01C5E/@0x01C64 (Start MAIN/SUB), ROOM1090 sub00/02/03, ROOM1170, ROOM11C0 sub00/02/03, ROOM11D0, ROOM11F0,
+  ROOM1200 — kein Raum auf dem Weg STOPPT den MAIN-Kanal ausserhalb bereits gelaufener Szenen.
