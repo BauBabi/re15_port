@@ -344,13 +344,20 @@ static const uint8_t k_p_1030_nach_tuer[] = { EM_1070_LISTE };
 static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
 
 /* PROGRAMM 4 — ROOM11C0 Cut 13: Ada steht bereits dort (sub00 @0x01770, (4,64)=0), Marvin kommt
- * dazu (Record-Form ROOM11B0 main00 @0x01080, Typ 0x40, grid 0x40; Standort links von Ada =
- * PORT-WAHL), beide drehen sich zum Gebaeude (Tuer Slot 0 @0x01712), Dialog, Marvin dreht sich zu
- * Ada, Arm (NPC-Bibliotheks-Clip 15 vor/zurueck wie 11B0 sub06 @0x014F6), rennt zum Gebaeude
- * (Modus 5, 11B0 sub06 @0x015EA), Ada: "Marvin!..." + Arm, Schnitt zurueck nach 1150. */
+ * dazu (Record-Form ROOM11B0 main00 @0x01080, Typ 0x40, grid 0x40), beide drehen sich zum Gebaeude
+ * (Tuer Slot 0 @0x01712), Dialog, Marvin dreht sich zu Ada, Arm (NPC-Bibliotheks-Clip 15 vor/zurueck
+ * wie 11B0 sub06 @0x014F6), rennt zum Gebaeude (Modus 5, 11B0 sub06 @0x015EA), Ada: "Marvin!..." + Arm,
+ * Schnitt zurueck nach 1150.
+ * MARVINS STANDORT (Nachbesserung 1 M5, PORT-WAHL mit Herleitung): Kamera Cut 13 = RID ROOM11C0 @0x200
+ * (-11300,-3788,-8584) -> (-1688,-832,-21500), Blickrichtung in x/z f = (0,597, -0,802). Ada (-8965,-14347)
+ * liegt 6016 tief und 1567 bildrechts (Querachse (0,802, 0,597) negativ). Marvin steht in DERSELBEN Tiefe 1000
+ * weiter bildlinks: Kamera + 6016 f - 567 q = (-8163,-13748). Vorher (-10500,-12300) = 3458 tief, Verhaeltnis
+ * quer/tief 0,46 statt Adas 0,26 -> rechts von Ada am Bildrand angeschnitten (Abnahme 0 M5, s11c0 F12..F402).
+ * LAUFZIEL: Mitte des Tuer-Rechtecks Slot 0 @0x01712 (-27100,15900, 4000 x 2700) = (-25100,17250), die Tuer
+ * ins Gebaeude (ROOM11B0) = "Richtung Gebaeude"; der Weg fuehrt hinter der Kamera aus dem Bild. */
 static const uint8_t k_p_11c0[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
-    OP_EM(3, 0x40, 0x40, 0x00, 0xff, -10500, -12300, 475),   /* Marvin, Slot 3 = Aktor 4 */
+    OP_EM(3, 0x40, 0x40, 0x00, 0xff, -8163, -13748, 475),    /* Marvin, Slot 3 = Aktor 4 (Standort s.o.) */
     OP_CUT(RE15_IT_CUT_11C0), OP_SLEEP(30),
     OP_WORK(2, 0), OP_DEST(9, 0x21, -27100, 15900),         /* Ada dreht sich zum Gebaeude */
     OP_WORK(2, 3), OP_DEST(9, 0x22, -27100, 15900),         /* Marvin ebenso */
@@ -361,7 +368,7 @@ static const uint8_t k_p_11c0[] = {
     OP_DEST(9, 0x22, -8965, -14347), OP_SLEEP(40),          /* Marvin dreht sich zu Ada */
     OP_MSG(13),                                             /* "Marvin: I have to help him, sorry!" */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
-    OP_DEST(5, 0x22, -22000, 8000), OP_SLEEP(30),           /* Marvin rennt aus dem Bild Richtung Gebaeude */
+    OP_DEST(5, 0x22, -25100, 17250), OP_SLEEP(30),          /* Marvin rennt zur Tuer Slot 0 @0x01712 (Mitte) */
     OP_WORK(2, 0), OP_MSG(14),                              /* "Ada: Marvin!..." */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
     OP_SLEEP(60),

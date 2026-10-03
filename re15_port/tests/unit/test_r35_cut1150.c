@@ -32,6 +32,7 @@
 #include "re15_tuer1060.h"
 #include "re15_irons_tod.h"
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -728,6 +729,20 @@ static void teil_montage_11c0(void)
      * 11C0 cinematic overlay"): das Raum-RBJ wird NACH dem Installer gebunden und setzt dabei die Marker-Aliase
      * zurueck. Marvins Alias (er spielt Adas Gesten-Record) muss das ueberleben, sonst hat er keine Arm-Geste. */
     re15_rbj_bind_room(s_rdt.animation, s_rdt.animation_size);
+    /* M5 (Nachbesserung 1): Marvin steht in Adas Bildtiefe LINKS neben ihr. Kamera Cut 13 = RID @0x200
+     * (-11300,-8584) -> (-1688,-21500); Tiefe = rel . f, Bildquer = -(rel . q) mit q = (fz', fx') senkrecht. */
+    frame(0, 0);
+    {
+        const double fx = 9612.0, fz = -12916.0, fl = sqrt(fx * fx + fz * fz), ux = fx / fl, uz = fz / fl;
+        double ad = (g_actors[1].x + 11300.0) * ux + (g_actors[1].z + 8584.0) * uz;
+        double aq = -((g_actors[1].x + 11300.0) * -uz + (g_actors[1].z + 8584.0) * ux);
+        double md = (g_actors[4].x + 11300.0) * ux + (g_actors[4].z + 8584.0) * uz;
+        double mq = -((g_actors[4].x + 11300.0) * -uz + (g_actors[4].z + 8584.0) * ux);
+        printf("  Cut 13: Ada Tiefe %.0f quer/tief %.3f, Marvin Tiefe %.0f quer/tief %.3f (Marvin @(%d,%d))\n", ad, aq / ad, md, mq / md,
+               (int)g_actors[4].x, (int)g_actors[4].z);
+        PRUEF(fabs(md - ad) < 300 && mq / md < aq / ad && mq / md > -0.2,
+              "Marvin steht in Adas Bildtiefe links neben ihr, nicht am Bildrand (quer/tief %.3f < Ada %.3f)", mq / md, aq / ad);
+    }
     lauf_t L; lauf(&L, 1200, 1);
     {
         const re15_emd_animation_t *ma = re15_actor_rbj_anim(4);
@@ -740,7 +755,7 @@ static void teil_montage_11c0(void)
     printf("  Nachrichten:"); for (int i = 0; i < L.n_msgs; i++) printf(" %d", L.msgs[i]); printf("\n");
     PRUEF(L.n_msgs == 5 && L.msgs[0] == 10 && L.msgs[4] == 14, "Nachrichten 10..14");
     {
-        long dx = labs((long)g_actors[4].x - (-10500)), dz = labs((long)g_actors[4].z - (-12300));
+        long dx = labs((long)g_actors[4].x - (-8163)), dz = labs((long)g_actors[4].z - (-13748));
         PRUEF(dx + dz > 3000, "Marvin ist aus dem Bild gelaufen (Weg %ld)", dx + dz);
     }
     PRUEF(L.raumwechsel && L.ziel == 0x1150 && L.ziel_cut == 7 && L.ziel_x == RE15_IT_COUCH_X && L.ziel_z == RE15_IT_COUCH_Z,
