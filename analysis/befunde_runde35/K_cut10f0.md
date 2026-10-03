@@ -4,6 +4,11 @@ Baum: `.claude/worktrees/r35_cut10f0`, Zweig `r35/cut10f0`, Basis master 154a73c
 **Lesehinweis:** §0-§7 = erster Durchgang (bis zum Sitzungslimit 12:00), §8 = Fortsetzung mit dem Gegenlesen gegen den
 Wortlaut — drei Befunde, ihre Belege, Umsetzung und Messung nachher. Wo §8 etwas aendert (Programmgroesse, Gestentabelle
 §3.1, Bildnummern §4, Tests §5), gilt §8; die betroffenen Stellen sind markiert.
+**§9 = NACHBESSERUNG 1** nach der unabhaengigen Abnahme (K_abnahme_0.md). Wo §9 etwas aendert, gilt §9: MAIN01 beginnt
+erst nach der 1150-Montage ((9,73)) statt am Ende der 10F0-Szene und endet an (4,64) statt am Besucht-Bit der Zone;
+Skript-Befehle an den MAIN-Slot gelten im Fenster nicht; Leon dreht sich schon vor Zeile 6 zu Ada (Programm 1350 B /
+288 Opcodes); Hinweiskette und Gestenblock-Leihe liegen nicht mehr in menu_common.c / main.c. Die OFFEN-Punkte und
+"Fuer den Nutzer" stehen aktuell in §9.7/§9.8.
 Vertrag (VERTRAG.md): Bank-9-Bits 71 (Szene gesehen) + 72 (Reserve); Nachrichten-IDs ROOM10F0 6..30;
 Ereignis 20 in 10F0; AOT-Slots nach Zensus; neue Logik in `engine/src/cut_10f0.c` + `include/re15_cut10f0.h`.
 
