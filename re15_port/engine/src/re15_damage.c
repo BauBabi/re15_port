@@ -1119,7 +1119,7 @@ void re15_player_knockback_delta(int16_t rot_y, int32_t mag, int32_t *dx, int32_
 {
     int32_t ang = ((int32_t)rot_y + 0x800) & 0xfff;
     if (dx) *dx =  (int32_t)((re15_cos_q12(ang) * mag) >> 12);
-    if (dz) *dz = -(int32_t)((re15_sin_q12(ang) * mag) >> 12);
+    if (dz) *dz = (int32_t)((-re15_sin_q12(ang) * mag) >> 12);   /* Runde 35 Spur J: FUN_800245d8 dz = (R31 = -sin)*v SAR 12 @0x800246ac */
 }
 
 /* BLADE/HAND world point (byte-true: the melee slash passes *(0x800acbdc)+0x7b8 = the player's

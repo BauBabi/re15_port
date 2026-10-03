@@ -341,7 +341,7 @@ void re15_actor_step_walk(re15_actor_t *a)
         int32_t c = re15_cos_q12(hdg);
         int32_t s = re15_sin_q12(hdg);
         a->x += (int32_t)((c * (int32_t)speed) >> 12);
-        a->z -= (int32_t)((s * (int32_t)speed) >> 12);
+        a->z += (int32_t)((-s * (int32_t)speed) >> 12);   /* Runde 35 Spur J: dz = (R31 = -sin)*v SAR 12, GTE MVMVA sf=1 @0x800246ac (vorher -(s*v>>12): 1 Einheit/Bild zu kurz) */
     }
 
     /* [SEIT marvin_glide_end.md Fix #1 (2026-08-04) laufen NPC-Plc_dest-Walks (0x40-0x4d ausser
