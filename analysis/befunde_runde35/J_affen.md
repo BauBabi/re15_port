@@ -1068,3 +1068,32 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 - Original (Riegel-Tabelle s_wand_orig, GDB `jnb2/g_wer.txt`): ab T291 (vs10223) bis T414 (vs10469) gilt in
   **124/124** Bildern Bezug == Eingang == Ausgang des Vorbilds (Python-Pruefung ueber die Tabelle) -> nach
   Opfer-Bild 0x24 ist die Bahn bis zur Ruhe REINE Iteration von FUN_8003b0a4 (@0x80031d70, Bezug +0x40/+0x44).
+
+### M2 — Messung vorher und Ursache
+- Port (Riegel `griff` HEAD, `jabn2/griff_v.txt`): e1 (Greifer) steht T254-T273 fest auf (-5865,-14392..-14396),
+  springt T274 um 425 nach (-5683,-14784) (Koerper-Schub), e2 steht T249-T264 fest auf (-8706..-8710,-12437..-12448).
+- Original (`jnb1/g_griff_dec.txt`, T = F - 1; Tabelle `jnb3/e12_orig.inc`): e1 laeuft ab dem Pin die Bahn des
+  Clips 0x1c: T254 (-5882,-14389), T256 (-6062,-14169), T258 (-6199,-14044), T260 (-6404,-13856), T261
+  (-6471,-13796), zurueck T264 (-6307,-13944), T267 (-6191,-14052). e2 steht bis T255 (Kontakt mit Leon, d 2050-2053),
+  danach **Abstand e1-e2 = 3200 (= 2 x 1600) in T256-T264** (3205, 3201, 3208, 3209, 3206, 3168, 3174, 3202, 3204;
+  aus den Lagen gerechnet) und e2 weicht nach (-9094,-12016) aus (T262), Yaw 27 -> 123: **e2 wird vom
+  vorrueckenden e1 geschoben** (b544 im Gorilla-Wurzelschwanz). Danach T268 Sprung e2 (-8655,-12000) ->
+  (-9377,-12112) = Abstand 2051 zu Leon (-7340,-11870): aec4(Spieler, Gorilla) des Wurzelschwanzes.
+- **Ursache = die Ritt-Platzierung des Greifers fehlt im Port.** STAGE1.BIN, selbst disassembliert:
+  - Phase 2 (Pin-Latch 0x8011abe8): `jal 0x8001ac38` a0 = Spieler @0x8011ac18 (Anker), Paar-Bits @0x8011ac2c-54,
+    `jal 0x8001a780` @0x8011ac50, Spieler +0x93 |= 1 @0x8011ac8c-a0, **`jal 0x8001a8f8` a0 = Spieler+0x34
+    (`addiu a0,s0,-372` @0x8011ac60), `ori a1,zero,0x800` @0x8011acb0** (Yaw-Fang des Greifers auf Leon), dann
+    KEIN Sprung: Phase 2 faellt in den Koerper von Phase 3.
+  - Phase 3 (0x8011acb4): `lw a0,g_entity` @0x8011acc0, `lw a1,132(v0)` (+0x84) @0x8011acc4, `lw a2,364(v0)`
+    (+0x16c) @0x8011acc8, **`jal 0x8001ad68` @0x8011accc** = der GORILLA SELBST wird absolut aus seinem Anker
+    platziert; danach anim_set `jal 0x8001f314` (a2 = 0, a3 = 0x200) @0x8011ace8-ec, +0x6 += v0 @0x8011acfc-ad0c.
+  - FUN_8001ad68 (PSX.EXE): FUN_8001ae38 (Versatz des laufenden Bildes) @0x8001ad84, RotMatrixY(+0x6a)
+    @0x8001addc, ApplyMatrix @0x8001adec, `+0x34 = +0xa0 + vx` @0x8001adf4-ae04, `+0x3c = +0xa2 + vz`
+    @0x8001ae08-18 (= Port re15_clip_root_motion_abs).
+  - FUN_8001a8f8 (PSX.EXE): Peilung atan2 @0x8001a928, d = (s1 + Peilung - Yaw) & 0xfff @0x8001a960-68,
+    `slt` gegen 2*s1 @0x8001a974 -> bei s1 = 0x800 immer Yaw := Peilung (`sh a0,106(v1)` @0x8001a984)
+    (= Port re15_enemy_steer_point mit slew 0x800).
+  - Port Phase 2/3 (enemy_ai_common.c case 15): Anker ja (re15_affen_pin_anker), aber weder Yaw-Fang noch
+    Platzierung — e1 bleibt stehen, schiebt e2 nicht, und Leons Kette T265-T267 trifft e2 an der falschen Stelle.
+  - Kein Harness-Startzustand: auch das Original-e2 steht bis T255 (wie der Port); die Bewegung beginnt erst mit
+    dem Kontakt zu e1 in T256.
