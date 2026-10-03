@@ -473,3 +473,14 @@ Suite-Lauf 2 (17:00-17:21, HEAD 11087280 = letzter Code-Stand, Baum sauber): `==
 - Brustschlag: kommt nach jedem verbundenen Griff (Gorilla richtet sich auf, packt und wirft Leon) — im Freien, nicht an der Wand.
 - Sprung: erst beim 3. Treffer (RE15_AFFEN_TREFFER_BIS_SPRUNG in include/re15_affen.h, NUTZER-VORGABE).
 - Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 schreibt affen_fuss.log neben die exe (Fuss-Sperre je Bild).
+
+## Nachbesserung 1 (2026-10-03 abends, nach Abnahme 0 = NICHT BESTANDEN, M1-M5)
+
+Ausgangslage: Baum sauber, HEAD e14fd399 (Abnahmebericht J_abnahme_0.md). Scratch dieser Nachbesserung:
+`scratchpad/jnb1/` (die Nachbarordner im Scratch gehoeren anderen Spuren). Reihenfolge: M5 (Haken
+verkleinern, mechanisch) -> M2 (Riegel Spawn-INIT/Wagen) -> M3 (Zaehler in allen Treffer-Spuren) ->
+M4 (NPC-Klemmband ausserhalb 11C0 messen) -> M1 (Biss-Takt gegen das Original). Je Mangel: Ursache,
+Messung vorher, Beleg, Aenderung, Messung nachher.
+
+### Stand (fortlaufend)
+- [ ] M5  - [ ] M2  - [ ] M3  - [ ] M4  - [ ] M1
