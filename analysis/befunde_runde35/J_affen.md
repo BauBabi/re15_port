@@ -151,7 +151,11 @@ in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert
 - Maggot-INIT FUN_80116f50 schreibt +0x1ba NICHT (kein 442-Store) -> Port-Ersatz `dog_floor_y = y` entfernt.
 - Spawn-Wurzelaufruf (re15_enemy_spawn_root) auf 0x27 erweitert: INIT im Spawn-Bild (HP 180, Scale, Zustand 1), Bit 0x20 bleibt.
 
-## Ergebnis je Nutzer-Punkt
+## Ergebnis je Nutzer-Punkt (Stand 1. Sitzung)
+> ⛔ Die Aussagen dieses Abschnitts zu den Punkten 3, 4 und 5 sind durch die Gegenpruefung der 2. Sitzung UEBERHOLT
+> (Abschnitte G1-G4 und "Abschluss 2. Sitzung" weiter unten): Punkt 3 war nicht behoben (Part 18 haengt am Rumpf),
+> Punkt 4 hatte drei weitere, groessere Ursachen (Crossfade/Fuss-Sperre, Knockdown-Sonde, Biss-Richtung), Punkt 5 lief
+> ausserhalb des Bildes (Pin-Anker). Die Punkte 1, 2 und 6 gelten unveraendert.
 
 ### Punkt 1 — Ada versteckt sich / kommt zurueck
 - Ursache: NPC-Wandklemme mit Band aus y statt +0x82 (Beleg oben). Fix enemy_ai_common.c re15_npc_wall_clamp -> Band +0x82.
@@ -341,3 +345,75 @@ Vorgaengers halten NICHT:
   kommentierte den Aufruf nur ("player anchor 0x8001ac38 @0x8011ac18"), fuehrte ihn aber nicht aus: pl->anchor blieb (0,0),
   und der Bezugspunkt der Port-Wandklemme (s_victim_ok) wurde nur vom ROOM1210-Arm gesetzt.
 - FIX: Anker am Pin-Latch setzen (Gorilla aus Clip/Bild, Kopie an den Spieler) + Klemmen-Bezug = Standpunkt beim Zupacken.
+
+## Abschluss 2. Sitzung — Stand je Nutzer-Punkt (gebaut, gemessen)
+
+Messlaeufe dieser Sitzung (exe-Kopie re15_pc_r35j3.exe, scratchpad): lauf_a5 (nach G1/G2), lauf_a6 (Mess-Schiene Fuss-Sperre),
+lauf_a7 (alle KI-Fixes, Szene, Leon ohne Eingabe), lauf_a8 (Cut 12, Brustbild), lauf_c1/c2/c3 (Kampf-Layout, Rear-up-Griff vorher /
+nachher / mit Cut 5). Original: orig_scene/r3 (110 Savestates des Vorgaengers, hier neu ausgewertet: Part-Records, Spieler-Felder,
++0x8f). Bilder nur ueber RE15_FRAMEDUMP (gdigrab liefert in dieser Sitzung weisse Bilder).
+
+### Punkt 1 — Ada versteckt sich / kommt zurueck: unveraendert erfuellt
+- Stand der 1. Sitzung (NPC-Klemmband +0x82) haelt; Lauf A7: Ada erreicht (-18025,-7379) in F1127 und ist danach versenkt.
+  Riegel `band` und `ada` gruen (sub07 -> y=20000; beide Kill-Bits -> sub03 -> y=0, rot_y=512, Lauf zu (-16211,-8183)).
+
+### Punkt 2 — Austritt aus dem Auto: unveraendert erfuellt, gegengelesen
+- Bildvergleich vergleich_wagen_a4.png erneut gelesen: der scheinbare Hoehenversatz ist der Bildausschnitt (Original-PNG ohne,
+  Port-Bild mit Szenenbalken, ~32 Zeilen); Kopf und Klappenkante liegen nach Abzug uebereinander (x 148/150, y 144/150).
+  Skript-Lage (Wagen, y=-2500, Austritt (-3617,0,-17798)) byte-gleich mit dem Savestate t=34.89/36.41; Riegel `wagen`.
+- Zusaetzlich jetzt richtig: im Cut 12 traegt der Gorilla die Brustschale (Punkt 3) — vorher sah man beim Austritt die weisse Platte.
+
+### Punkt 3 — "komisch beweglicher Teil am Oberkoerper": JETZT behoben (G1)
+- Vorher (auch nach dem Fix der 1. Sitzung): weisse, rot geaderte Trapezplatte unter dem Kinn (Bild chk_brust_zoom.png).
+- Beleg: Gorilla-INIT @0x80117200-3c haengt Part 18 an Part 1 (rel (102,-810,0), lokale Identitaet); Savestate s021: Part 18
+  Matrix = Part 1, t = (-4279,-2816,-16899); Parts 19..21 weltfest (Elternmatrix 0x80072d4c).
+- Umsetzung: re15_affen_part_attach (affen_11c0.c) + Haken main.c (`affe_fest`, 3 Zeilen; der Weltfest-Haken greift fuer Part 18
+  nicht mehr). Konstanten RE15_AFFEN_BRUST_* in re15_affen.h mit Adresse.
+- Nachher (Lauf A8 F830/F850, Bild chk_brust_a8.png): Brust geschlossen braun wie im Original, keine Platte.
+- Riegel `teile`: Rumpfmatrix des Savestates hinein -> t = (-4279,-2816,-16899) heraus (exakt der Original-Wert).
+
+### Punkt 4 — KI zielstrebiger/aggressiver wie im Original: vier Ursachen, alle am Original belegt
+| Ursache | Beleg | Umsetzung |
+|---|---|---|
+| Flug doppelt (1. Sitzung) | @0x80118c3c-dc4 | Zeile entfernt |
+| +0x8f baut nie ab -> Fuss-Sperre netto 0, an Waenden rueckwaerts (G3) | anim_set @0x8001f5a8-b4; Savestates +0x8f = 7 - Bild | re15_maggot_anim baut ab; re15_maggot_footlock posiert als Abfrage |
+| Heavy-Knockdown traegt Leon 4915 weit (G2a) | FUN_8001c2dc @0x8001c2dc-3f8; [5] @0x80036594-b4; [4] @0x800361fc-230; Savestate +0x9e=1/+0x8c=0 | re15_affen_kd_sonde; Haken kd_move + [5]-Reihenfolge (game_step_common.c) |
+| Biss-Flinch aus dem naechsten statt dem beissenden Gorilla (G2b) | @0x80118488-9c | re15_affen_biss_clip + re15_player_stagger_cmd2 am Biss |
+- Messung vorher (Port A3/A5, Leon ohne Eingabe): letzter Treffer F2136 bzw. nur 2 Treffer bis F3300; Leon lebt nach 64 s / 74 s.
+  CHASE-Vorschub 8,9 Einheiten/Bild im Freien, an der Wand -15..-30 (rueckwaerts).
+- Messung nachher (Lauf A7): Freigabe F1070, 1. Treffer F1459 (Heavy -12; Original 12,1 s nach der Freigabe, Port 13,0 s), danach
+  Bisse im Wechsel beider Gorillas, **Leon tot in F2069 = 33,3 s nach der Freigabe (Original 39,4 s)**. Leon pendelt zwischen
+  (-6282,-12975) und (-6368,-12750) (Original (-6295,-12816) / (-6425,-12699)); Slot 2 haelt bei (-4914,-14528)..(-4561,-14192),
+  Slot 3 bei (-8444,-12986)..(-8317,-12708) (Original G2 (-8396,-12463)..(-8706,-12471)).
+  CHASE-Vorschub (affen_fuss.log nach dem Fix): Clip 5 je Bild -14,+9,...,+126,...,+33, **2880/2897 je Zyklus = 74 Einheiten/Bild**
+  (Soll 2892); frac des Pose-Aktors 0 in 1869 von 2087 Bildern, sonst 6..1 direkt nach dem Clip-Wechsel.
+- Riegel: `flug`, `kdsonde`, `biss`, `frac`.
+
+### Punkt 5 — Brust-Schlag: Mechanik war da, lief aber ausserhalb des Bildes und mit gedaempfter Pose (G3 + G4)
+- Vorher (Lauf C1): der verbundene Rear-up-Griff setzt Leon an den Raumursprung (F447 (0,0), danach (-4330,387)); die Kamera folgt
+  Leon, der Release-Clip 3 laeuft 15000 Einheiten entfernt. Dazu mischte der Renderer dauerhaft 7/8 der Vor-Pose bei (+0x8f = 7).
+- Beleg: Pin-Latch `jal 0x8001ac38` @0x8011ac18 (a0 = Spieler), Anker-Kopie @0x8001ad30/@0x8001ad48; Clip 3 ab Bild 0x16
+  @0x8011ad50-78, ab 0x1d @0x8011ae30-58 (1. Sitzung).
+- Umsetzung: Anker am Pin-Latch (enemy_ai_common.c case 15 Phase 2) + Klemmen-Bezug; +0x8f-Abbau (Punkt 4).
+- Nachher (Lauf C2/C3, Kampf-Layout, Leon ohne Eingabe im Freien): Rear-up F442, Pin F446, Leon wird 1690 Einheiten geworfen
+  ((-3180,-15263) -> (-2184,-16627)) und bleibt im Kampf; Clip 3 F495-F563; in 1200 Bildern DREI Griffe (F442, F828, F1200), jeder
+  mit Brustschlag. Bildfolge chk_c3_pin.png (Cut 5): F448 Griff, F464 Wurf, F480 Leon am Boden, F508-F548 Gorilla aufrecht, Arme
+  wechselnd an der Brust, F556 wieder auf allen vieren.
+- "Manchmal" = wenn der Biss-Commit im Freien faellt (a9cc >= 0, Bogen 2500/256, +0x1d6 == 0, +0x1e1 == 0 @0x80117ab4-b3c) UND
+  der Griff in Bild 4 / 0x0f verbindet. An der Rauten-Zelle des Szenen-Endpunkts (Wandkontakt +0x1d6 != 0) kommt er nicht —
+  wie in der Original-Aufnahme r3 (40 s Kampf dort, kein Rear-up).
+- Riegel: `brust` (Bildfolge Release), `anker` (Latch-Anker, Leon bleibt beim Gorilla), `frac`.
+
+### Punkt 6 — Sprung erst nach 3 Treffern (NUTZER-VORGABE): unveraendert erfuellt
+- Stand der 1. Sitzung; Riegel `sprung` (3,3,7,3,3,7) gruen. Hinweis: mit der jetzt funktionierenden Fuss-Sperre laeuft der Gorilla
+  nach Treffer 1 und 2 sichtbar auf Leon zu (74 Einheiten/Bild), statt wie vorher auf der Stelle zu kriechen.
+
+## Umsetzung — Dateien (gesamt, beide Sitzungen)
+- NEU: include/re15_affen.h, engine/src/affen_11c0.c (Klemmband, Part 18, ueberzaehlige Parts, Trefferzaehler, Knockdown-Sonde,
+  Biss-Clip), tests/unit/test_r35_affen.c, tests/unit/probes/r35_affen.cmake.
+- Haken in gemeinsamen Dateien: enemy_ai_common.c (INIT-Zaehler, Flinch-Eintritt/-Exit, NPC-Klemmband, LEAP ohne 245d8,
+  Spawn-Wurzelaufruf 0x27, +0x8f-Abbau in re15_maggot_anim, Abfrage-Posen + Mess-Schiene RE15_AFFEN_FUSS in re15_maggot_footlock,
+  Biss-Stagger, Pin-Anker), game_step_common.c (kd_move-Urteil = Sonde, [5]-Reihenfolge, 1 include), main.c (Part 18 am Rumpf,
+  ueberzaehlige Parts weltfest, 1 include), actor_common.c (Member 0x13 = +0x1ba), scd_vm.c (+0x1ba-Seed), emd_common.c /
+  re15_emd.h (EMR-Rohdaten), re15_actor.h (mag_hit_ctr). Alt-Riegel angepasst: tests/unit/test_member.c, test_maggot_ai.c.
+- Kein Bank-9-Bit, keine Nachrichten-ID, kein Ereignis, kein Asset belegt (Bit 82 / IDs 20..23 / Ereignis 25 bleiben frei).
