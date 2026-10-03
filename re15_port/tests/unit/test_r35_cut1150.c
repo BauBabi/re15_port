@@ -330,6 +330,9 @@ static int op_len(uint8_t op)
     case 0x3b: return 32; case 0x3c: return 2; case 0x3f: return 4; case 0x40: return 8;
     case 0x41: return 10; case 0x42: return 1; case 0x43: return 4; case 0x44: return 20;
     case 0x47: return 2; case 0x46: return 10; case 0x4b: return 3; case 0x18: return 2;
+    /* Nachbesserung 1 (Aufstellung ROOM1030 sub00 @0x020C6..): Laengen = s_opcode_sizes (scd_vm.c) */
+    case 0x06: return 4; case 0x08: return 2; case 0x13: return 4; case 0x14: return 6; case 0x16: return 2;
+    case 0x1a: return 2; case 0x26: return 6; case 0x32: return 8; case 0x3e: return 6; case 0x53: return 3;
     default: return 0;
     }
 }
@@ -342,7 +345,7 @@ static int frei_zone7(int bit)
 static void teil_programme(void)
 {
     printf("== programme ==\n");
-    for (int w = 0; w <= 16; w++) {
+    for (int w = 0; w <= 18; w++) {
         int n = 0; const uint8_t *p = re15_irons_tod_programm(w, &n);
         if (!p) { PRUEF(0, "Programm %d fehlt", w); continue; }
         int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0, bad_se = -1;
@@ -394,6 +397,14 @@ static void teil_programme(void)
             }
         }
         if (w == 8) { PRUEF(n_em == 1 && p[n-36+23] == 0x15 && p[n-36+24] == 7, "Programm 8: Marvin, Tuer -> 1150 Cut 7"); }
+        if (w == 17) {   /* Aufstellung: Laengenfelder wie ROOM1030 sub00 nachgerechnet (For 0x88, Ifel 0x78, Switch 0x66) */
+            PRUEF(n == 4 + 4 + 6 + 0x88 && p[8] == 0x0d && p[10] == 0x88 && p[12] == 20 && p[18] == 0x06 && p[20] == 0x78 &&
+                  p[28] == 0x13 && p[30] == 0x66, "Programm 17: Aufstellung For 20 / Ifel / Switch mit Laengen 0x88/0x78/0x66 (%d B)", n);
+        }
+        if (w == 4) {
+            PRUEF(n >= 12 && p[0] == 0x11 && p[8] == 0x21 && p[9] == 5 && p[10] == RE15_IT_SIG_ALLE_DURCH,
+                  "Programm 4: wartet auf (5,%d) 'alle durch' (Poll-Form ROOM1150 sub08 @0x0112A)", RE15_IT_SIG_ALLE_DURCH);
+        }
     }
     /* Nachrichten vorhanden, Kopf/Ende der Dialogform */
     int ids1150[] = { 22,23,24,25,26,27,28,29 }, ids11c0[] = { 10,11,12,13,14 };
