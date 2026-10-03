@@ -925,14 +925,20 @@ void re15_irons_tod_tick(void)
     /* Knall-Signale: (5,28) = Tuerknall (Knall-Bank Satz 0), (5,29) = Knall wie ROOM1030 (Satz 1). Nur waehrend
      * der Kette (in ROOM1150/1130/1040/1030 ist Bank 5 Wort 0 oberhalb von Bit 20 unbenutzt, Zensus Dossier §8.8). */
     if (s_zustand != RE15_IT_AUS) {
+        /* MESS-HAKEN RE15_IT_KNALL_STUMM (Nachbesserung 1 M7, kein Spielverhalten): Signal verbrauchen, aber nicht
+         * spielen — die Differenz zweier RE15_AUDIO_CAP_SYNC-Mitschnitte (mit/ohne) ist dann genau der Knall. */
+        int stumm = 0;
+#ifdef RE15_PLATFORM_PC
+        stumm = getenv("RE15_IT_KNALL_STUMM") ? 1 : 0;
+#endif
         if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_TUER)) {
             re15_game_flag_set(5, RE15_IT_SIG_KNALL_TUER, 0);
-            re15_audio_re2_tuer_se(KNALL_SE_TUER);
+            if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_TUER);
             log_it("Signal (5,28): Tuerknall (Knall-Bank Satz 0)");
         }
         if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_1030)) {
             re15_game_flag_set(5, RE15_IT_SIG_KNALL_1030, 0);
-            re15_audio_re2_tuer_se(KNALL_SE_1030);
+            if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_1030);
             log_it("Signal (5,29): Knall wie ROOM1030 (Knall-Bank Satz 1)");
         }
     }
