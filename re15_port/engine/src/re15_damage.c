@@ -2597,9 +2597,13 @@ retry_after_latch:
          * Ingram M10 (12), SPAS-12 (13) und H&K MC51 (19) liefen damit im Port durch den
          * begrenzten Nahkampf-Kegel (Reach 1300/1800/1100 @0x8006E5A0) statt durch den
          * unbegrenzten Schuss-Streifen — genau die "starke Waffe trifft/reagiert nicht". */
+        /* Runde 35 Spur B: COLT PYTHON (20) steht in der unfertigen Tester-Zeile 0x800128A0
+         * (alle Ids 14..18/20 ohne Handler zeigen dorthin); als Magnum-Revolver wie der Redhawk
+         * (w7 -> 0x80012574) bekommt sie den Schuss-STREIFEN (PORT-WAHL, Dossier B_werfer.md §3.5).
+         * 14..18 rufen den Hitscan nicht mehr (RE2-Projektile/-Strahl). */
         int is_gun_strip = (weapon_id == 0 || (weapon_id >= 3 && weapon_id <= 8) ||
                             weapon_id == 12 || weapon_id == 13 || weapon_id == 19 ||
-                            weapon_id == 21);
+                            weapon_id == 20 || weapon_id == 21);
         if (s_re2_probe[s].valid) {
             /* RE2-owned Zombie: die XZ-Sub-Box des Appliers (FUN_80041CE4) IST der Streifen —
              * der RE1.5-Keil gilt fuer diesen Kandidaten nicht mehr (Runde 16).
@@ -4408,6 +4412,13 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
              * @0x800A4C48, RE2-Typ 0x27 @0x800A4DC4) — deshalb gilt er fuer jeden RE1.5-KI-Kandidaten,
              * auch fuer Typen ohne Port-Record. */
             e->re2_gl_sperre = RE2_GL_SPERRE;
+            /* Runde 35 Spur B: fuer die Zeilen 16/17 traegt w1 des Typ-Records den Sperrwert
+             * ((w1 >> 9) & 0x7F @0x80047340-44): Zeile 16 = 5 (Zombie/Hund/Spinne/G5 2/Arm 7, Kraehe
+             * 15), Zeile 17 = 15 — s_re2gl_rec16_* oben. */
+            if (zeile == 16u || zeile == 17u) {
+                const uint32_t *r16 = re2_gl_rec16_17(e->type);
+                if (r16) e->re2_gl_sperre = (uint8_t)((r16[(zeile - 16u) * 2u + 1u] >> 9) & 0x7Fu);
+            }
             getroffen = s + 1;
             if (!alle) break;
             continue;
