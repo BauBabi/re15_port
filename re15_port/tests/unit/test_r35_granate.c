@@ -7,7 +7,7 @@
  * Spielschritt fuer die RE2-Zombie-Arena, Boss-Module G5/Gator).
  *
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r35_granate [wand|reichweite|sound|gore|bosse|alle]
+ * Aufruf: test_r35_granate [wand|reichweite|sound|gore|bosse|strecke|alle]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -159,6 +159,8 @@ static void abschnitt_wand(void)
     re15_esp_fx_reset(); spione_reset();
     re15_player_acaec_override_for_test(1, 0x4000);
     const int32_t x0 = 7000, z0 = -19800, h = -1500;
+    /* Werfer 900 hinter der Hand (Nachbesserung 1: im Wurfbild wird die Strecke Werfer -> Hand getestet). */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = x0 - 900; g_actors[RE15_ACTOR_SLOT_PLAYER].z = z0;
     re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, x0, h, z0, 0);
     PRUEF(101, g != NULL, "Granate gespawnt (MITTE, Gier 0, Anker (%d,%d,%d))", x0, h, z0);
     if (!g) return;
@@ -331,12 +333,16 @@ static void abschnitt_sound(void)
     re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, -6851, -2474, -18279, 0);
     const int slot = slot_von(g);
     int bild_x = -1;
+    int16_t wpos_x[3] = { 0, 0, 0 };
     unsigned res0 = re15_esp_granate_resolver_calls();
     for (int k = 0; k < 160; k++) {
         s_bild = k;
         re15_esp_fx_tick(NULL);
-        if (bild_x < 0 && re15_esp_granate_resolver_calls() > res0) bild_x = k;
         const re15_esp_fx_t *f = re15_esp_fx_get(slot);
+        if (bild_x < 0 && re15_esp_granate_resolver_calls() > res0) {
+            bild_x = k;
+            if (f) { wpos_x[0] = f->wpos[0]; wpos_x[1] = f->wpos[1]; wpos_x[2] = f->wpos[2]; }
+        }
         if (bild_x >= 0 && !(f && f->granate_art)) break;
     }
     int n_re2 = zaehl_re2se(RE15_GRANATE_R35_SE_EXPLOSION);
@@ -348,8 +354,12 @@ static void abschnitt_sound(void)
     PRUEF(152, zaehl_se(0x04080001u) == 0, "RE1.5-SE 0x04080001 NICHT mehr (%d)", zaehl_se(0x04080001u));
     PRUEF(153, s_se_n == 8 && (s_se_code[0] & 0xffff00ffu) == 0x010A0001u,
           "Abprall-/Liegen-SEs ueber den ESP-Haken unveraendert: %d (8 x 0x010Axx01 @0x80018410-28; die Explosion geht ueber re2fx_se_hook)", s_se_n);
-    const re15_esp_fx_t *fx = NULL; (void)fx;
-    PRUEF(154, pos_se[1] == -491 || pos_se[1] == pos_se[1], "SE-Lage = P (y %d = Liegestelle - 500 @0x800185a8)", (int)pos_se[1]);
+    /* SE-Lage = P = (Welt-x, Welt-y - 500, Welt-z) der liegenden Granate im Explosionsbild
+     * (`lh v0,40(v1)` @0x80018594, `addiu v0,v0,-500` @0x800185a8, `lh v0,44(v1)` @0x800185b0). */
+    PRUEF(154, n_re2 == 1 && pos_se[0] == wpos_x[0] && pos_se[1] == wpos_x[1] - 500 && pos_se[2] == wpos_x[2]
+               && wpos_x[1] >= 0 && wpos_x[1] < 60,
+          "SE-Lage (%d,%d,%d) = Liegestelle (%d,%d,%d) mit y - 500 (@0x800185a8); Liegestelle auf der Ebene (0 <= y < 60)",
+          (int)pos_se[0], (int)pos_se[1], (int)pos_se[2], (int)wpos_x[0], (int)wpos_x[1], (int)wpos_x[2]);
     /* Plattform-Weiche (fx_plattform_pc.c): 0x01110001 -> ARMS0F Satz 10 */
     int arms = 0, satz = 0;
     int ok = re15_pc_re2fx_se_weiche(RE15_GRANATE_R35_SE_EXPLOSION, &arms, &satz);
@@ -593,6 +603,189 @@ static void abschnitt_bosse(void)
     }
 }
 
+/* ================================================================================================
+ * [6] NACHBESSERUNG 1 — Zellform, Quadrantenliste, Strecke statt Punkt, Wurfbild
+ *   (a) Form: RE1.5-Handler 0x800b2858[1..9] (FUN_8003aea0 @0x8003af04-84) — je Typ ein Punkt IN der
+ *       Flaeche (blockiert) und einer im Rechteck, aber AUSSERHALB der Flaeche (frei). RE2 prueft die
+ *       Form ebenfalls (Tabelle 0x80011104 @0x8004fe34-54).
+ *   (b) ROOM11C0 (Abnahme 0, Lauf t11c0c): Hand (-6720,-13266) liegt im Rechteck der Raute
+ *       x[-15400..4799] z[-13266..4921], ausserhalb der Raute -> frei (vorher: Explosion in der Hand).
+ *   (c) ROOM1220 (Abnahme 0, Lauf t1220h2): Zelle x[-21825..-21550] (275 dick) wird vom HOCH-Schritt
+ *       380 (@0x80018494) je nach Phase uebersprungen -> Strecke haelt in JEDER Phase.
+ *   (d) Wurfbild: duenne Zelle zwischen Werfer und Hand -> Explosion ueber dem Werfer, kein Flug dahinter.
+ * ================================================================================================ */
+static int raum_laden(unsigned rid)
+{
+    static uint8_t *buf[4]; static unsigned id[4]; static size_t len[4]; static int nbuf = 0;
+    int i;
+    for (i = 0; i < nbuf; i++) if (id[i] == rid) break;
+    if (i == nbuf) {
+        char pfad[256];
+        if (nbuf >= 4) return -1;
+        snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/STAGE%u/ROOM%04X.RDT", rid >> 12, rid);
+        buf[i] = slurp(pfad, &len[i]);
+        if (!buf[i]) { printf("%s fehlt\n", pfad); return -1; }
+        id[i] = rid; nbuf++;
+    }
+    if (re15_rdt_parse(buf[i], len[i], &g_room_rdt) != 0) return -1;
+    g_room_rdt_ok = 1; g_current_room_id = rid;
+    return 0;
+}
+static void abschnitt_strecke(void)
+{
+    /* ---- (a) Form je Typ: eine Zelle x[1000..3000] z[2000..3000] (w 2000, d 1000) in Quadrant 0 ---- */
+    {
+        static re15_sca_entry_t z1;
+        re15_rdt_t r; memset(&r, 0, sizeof r);
+        r.sca = &z1; r.sca_count = 1; r.sca_rgn[0] = 1;
+        r.ceiling_x = (uint16_t)(int16_t)-30000; r.ceiling_z = (uint16_t)(int16_t)-30000;
+        struct { uint8_t typ; int32_t ix, iz, ax, az; const char *was; } f[] = {
+            { 1, 1100, 2100, 3100, 2500, "Rechteck: innen (1100,2100), aussen x 3100" },
+            { 2, 2000, 2500, 1100, 2100, "Raute LAB_8003d00c: Mitte innen, Ecke (1100,2100) aussen" },
+            { 3, 1500, 2500, 1050, 2050, "Kreis FUN_8003d6a8 (Mitte (2000,3000), r 1000): (1500,2500) innen, Ecke (1050,2050) aussen" },
+            { 4, 2800, 2900, 1200, 2100, "Dreieck LAB_8003beb0 (rechter Winkel x+w,z+d): (2800,2900) innen, (1200,2100) aussen" },
+            { 5, 1200, 2900, 2800, 2100, "Dreieck LAB_8003c734 (rechter Winkel x,z+d): (1200,2900) innen, (2800,2100) aussen" },
+            { 6, 2800, 2100, 1200, 2900, "Dreieck LAB_8003cb9c (rechter Winkel x+w,z): (2800,2100) innen, (1200,2900) aussen" },
+            { 7, 1200, 2100, 2800, 2900, "Dreieck LAB_8003c2cc (rechter Winkel x,z): (1200,2100) innen, (2800,2900) aussen" },
+            { 8, 2000, 2500, 1020, 2020, "Kapsel x LAB_8003d7e8 (Kappen r 500): Mitte innen, Ecke (1020,2020) aussen" },
+        };
+        int nr = 200;
+        for (unsigned i = 0; i < sizeof f / sizeof f[0]; i++, nr++) {
+            z1.width = 2000; z1.density = 1000; z1.x = 1000; z1.z = 2000; z1.type = f[i].typ; z1.u0 = 0xff; z1.u1 = 0; z1.floor = 0x03;
+            int in  = re15_granate_r35_punkt(&r, f[i].ix, f[i].iz, 0, 1);
+            int aus = re15_granate_r35_punkt(&r, f[i].ax, f[i].az, 0, 1);
+            int box = re15_collision_box_blocked(&r, f[i].ax, f[i].az, 0, 0, 1);
+            PRUEF(nr, in == 1 && aus == 0 && (f[i].typ == 1 || box == 1),
+                  "Typ %u %s: innen %d (1), aussen %d (0); Rechteck-Test aussen %d", f[i].typ, f[i].was, in, aus, box);
+        }
+        /* Typ 9: Kapsel in z, Zelle w 1000 d 2000 */
+        z1.width = 1000; z1.density = 2000; z1.x = 1000; z1.z = 2000; z1.type = 9;
+        PRUEF(nr, re15_granate_r35_punkt(&r, 1500, 3000, 0, 1) == 1 && re15_granate_r35_punkt(&r, 1020, 2020, 0, 1) == 0,
+              "Typ 9 Kapsel z LAB_8003d930 (Kappen r 500): Mitte innen, Ecke (1020,2020) aussen");
+        nr++;
+        /* Strecke ueber die leere Rautenecke (frei) und quer durch die Raute (blockiert) */
+        z1.width = 2000; z1.density = 1000; z1.x = 1000; z1.z = 2000; z1.type = 2;
+        PRUEF(nr, re15_granate_r35_strecke(&r, 900, 2200, 1300, 1900, 0, 1) == 0 &&
+                  re15_granate_r35_strecke(&r, 900, 2500, 3100, 2500, 0, 1) == 1,
+              "Raute: Strecke ueber die leere Ecke frei, Strecke durch die Mitte blockiert");
+        nr++;
+        /* Band und Klasse */
+        z1.type = 1;
+        z1.floor = 0x13;
+        int b1 = re15_granate_r35_punkt(&r, 1100, 2100, 0, 1);
+        z1.floor = 0x03; z1.u0 = 0x04;
+        int k4 = re15_granate_r35_punkt(&r, 1100, 2100, 0, 1);
+        PRUEF(nr, b1 == 0 && k4 == 0, "Zelle in Band 1 haelt Band 0 nicht (%d), Zelle u0=04 haelt Maske 1 nicht (%d)", b1, k4);
+        nr++;
+        /* Quadrantenliste: Deckenpunkt (0,0); Zelle x[100..300] z[-200..200] NUR in Liste 0 (x >= 0, z >= 0) */
+        r.ceiling_x = 0; r.ceiling_z = 0; r.sca_rgn[0] = 1;
+        z1.width = 200; z1.density = 400; z1.x = 100; z1.z = -200; z1.type = 1; z1.u0 = 0xff; z1.floor = 0x03;
+        int oben  = re15_granate_r35_strecke(&r, 0,  100, 400,  100, 0, 1);   /* z >= 0: Liste 0 */
+        int unten = re15_granate_r35_strecke(&r, 0, -100, 400, -100, 0, 1);   /* z < 0: Liste 2 (leer) */
+        int quer  = re15_granate_r35_strecke(&r, 200, -150, 200, 150, 0, 1);  /* kreuzt z = 0 in der Zelle */
+        PRUEF(nr, oben == 1 && unten == 0 && quer == 1,
+              "Quadrantenliste (FUN_8003b068): z >= 0 blockiert %d (1), z < 0 frei %d (0), Querung %d (1)", oben, unten, quer);
+    }
+
+    /* ---- (b) ROOM11C0: der Punkt aus Lauf t11c0c ---- */
+    welt_leer();
+    if (raum_laden(0x11C0) != 0) { PRUEF(220, 0, "ROOM11C0 laden"); return; }
+    {
+        int rechteck = re15_collision_box_blocked(&g_room_rdt, -6720, -13266, 0, 0, 1);
+        int form     = re15_granate_r35_punkt(&g_room_rdt, -6720, -13266, 0, 1);
+        int mitte    = re15_granate_r35_punkt(&g_room_rdt, -5301, -4173, 0, 1);
+        int leon     = re15_granate_r35_punkt(&g_room_rdt, -7157, -12355, 0, 1);
+        PRUEF(220, rechteck == 1 && form == 0,
+              "ROOM11C0 Hand (-6720,-13266): Rechteck der Raute %d (1 = Vorher-Befund), Form %d (0 = frei)", rechteck, form);
+        PRUEF(221, mitte == 1 && leon == 0, "ROOM11C0: Rautenmitte (-5301,-4173) blockiert %d (1), Leons Standpunkt frei %d (0)", mitte, leon);
+        /* der Wurf selbst: MITTE aus Leons Hand, Gier 467 (Lauf t11c0c) -> KEIN Ausloeser im Wurfbild */
+        re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
+        re15_player_acaec_override_for_test(1, 0x4000);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = -7157; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -12355;
+        re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, -6720, -2474, -13266, 467);
+        const int slot = g ? slot_von(g) : -1;
+        unsigned nw = 0, nk = 0, ne = 0; int flugbilder = 0;
+        for (int k = 0; k < 6 && g; k++) {
+            re15_esp_fx_tick(NULL);
+            const re15_esp_fx_t *f = re15_esp_fx_get(slot);
+            re15_granate_r35_zaehler(&nw, &nk, &ne);
+            if (f && f->granate_art && ne == 0) flugbilder++;
+        }
+        PRUEF(222, g != NULL && flugbilder >= 3,
+              "ROOM11C0 MITTE-Wurf aus der Hand: %d Flugbilder ohne Explosion (>= 3; vorher 0 = Explosion im Wurfbild)", flugbilder);
+        re15_player_acaec_override_for_test(0, 0);
+    }
+
+    /* ---- (c) ROOM1220: duenne Zellenfront x[-21825..-21550], HOCH (380/Bild), alle Phasen ---- */
+    welt_leer();
+    if (raum_laden(0x1220) != 0) { PRUEF(230, 0, "ROOM1220 laden"); return; }
+    {
+        const int32_t zz = -10677;
+        int p_vor = re15_granate_r35_punkt(&g_room_rdt, -21503, zz, 0, 1);
+        int p_hin = re15_granate_r35_punkt(&g_room_rdt, -21873, zz, 0, 1);
+        int p_in  = re15_granate_r35_punkt(&g_room_rdt, -21603, zz, 0, 1);
+        int st    = re15_granate_r35_strecke(&g_room_rdt, -21503, zz, -21873, zz - 21, 0, 1);
+        PRUEF(230, p_vor == 0 && p_hin == 0 && p_in == 1 && st == 1,
+              "Lauf t1220h2: Punkt vor %d / hinter %d der Zelle frei, Punkt in der Zelle %d, STRECKE -21503 -> -21873 blockiert %d",
+              p_vor, p_hin, p_in, st);
+        int phasen = 0, gehalten = 0, punkt_haette_verfehlt = 0; int32_t x_min_expl = 0, x_max_expl = -40000;
+        re15_player_acaec_override_for_test(1, 0x8000);              /* HOCH */
+        for (int off = 0; off < 380; off += 10) {
+            re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
+            const int32_t xa = -20000 - off;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].x = xa + 900; g_actors[RE15_ACTOR_SLOT_PLAYER].y = 0;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].z = zz;
+            re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, xa, -3600, zz, 2048);
+            if (!g) continue;
+            g->granate_boden = 0;
+            const int slot = slot_von(g);
+            unsigned res0 = re15_esp_granate_resolver_calls();
+            int expl = 0, in = 0;
+            for (int k = 0; k < 20 && !expl; k++) {
+                re15_esp_fx_tick(NULL);
+                const re15_esp_fx_t *f = re15_esp_fx_get(slot);
+                if (!f) break;
+                if (re15_esp_granate_resolver_calls() > res0) {
+                    expl = 1;
+                    if (f->wpos[0] > -21550 && f->wpos[0] < xa + 900) gehalten++;
+                    if (f->wpos[0] < x_min_expl) x_min_expl = f->wpos[0];
+                    if (f->wpos[0] > x_max_expl) x_max_expl = f->wpos[0];
+                }
+            }
+            /* haette der Punkttest je Bild diese Phase verfehlt? Bahn in -x: Schritt 380, 378, ... (@0x80018494,
+             * acc -2 @0x800184b0): kein Bildpunkt in x[-21825..-21550) */
+            { int32_t x = xa, v = 380;
+              for (int k = 0; k < 8; k++) { x -= v; v -= 2; if (x >= -21825 && x < -21550) in = 1; } }
+            if (!in) punkt_haette_verfehlt++;
+            phasen++;
+        }
+        PRUEF(231, phasen == 38 && gehalten == phasen,
+              "ROOM1220 HOCH, %d Phasen (Wurfstelle je 10 versetzt): %d halten VOR der Zellenfront (x > -21550); Explosion x in [%d..%d]",
+              phasen, gehalten, (int)x_min_expl, (int)x_max_expl);
+        PRUEF(232, punkt_haette_verfehlt >= 5,
+              "davon %d Phasen, in denen KEIN Bildpunkt in der 275 dicken Zelle liegt (der Punkttest je Bild verfehlte sie)", punkt_haette_verfehlt);
+
+        /* ---- (d) Wurfbild: Werfer 468 vor der Zellenfront, Hand 1000 weiter = HINTER der duennen Zelle ---- */
+        re15_esp_fx_reset(); spione_reset(); re15_granate_r35_zaehler_reset();
+        re15_player_acaec_override_for_test(1, 0x4000);              /* MITTE */
+        const int32_t wx = -21550 + 468;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = wx; g_actors[RE15_ACTOR_SLOT_PLAYER].z = zz;
+        int hand_frei = (re15_granate_r35_punkt(&g_room_rdt, wx - 1000, zz, 0, 1) == 0);
+        re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, wx - 1000, -2474, zz, 2048);
+        const int slot = g ? slot_von(g) : -1;
+        unsigned res0 = re15_esp_granate_resolver_calls();
+        re15_esp_fx_tick(NULL);
+        const re15_esp_fx_t *f = (slot >= 0) ? re15_esp_fx_get(slot) : NULL;
+        unsigned nw = 0, nk = 0, ne = 0; re15_granate_r35_zaehler(&nw, &nk, &ne);
+        PRUEF(233, hand_frei && f && re15_esp_granate_resolver_calls() == res0 + 1 && nw == 1 &&
+                   f->wpos[0] == (int16_t)wx && f->wpos[2] == (int16_t)zz,
+              "Wurfbild: Hand hinter der duennen Zelle (Punkt frei %d) -> Explosion im Wurfbild (Wand %u) ueber dem Werfer: x %d (%d), z %d (%d)",
+              hand_frei, nw, f ? (int)f->wpos[0] : 0, (int)wx, f ? (int)f->wpos[2] : 0, (int)zz);
+        re15_player_acaec_override_for_test(0, 0);
+    }
+    g_room_rdt_ok = 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -612,6 +805,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "sound"))      { printf("[3] Sound\n");           abschnitt_sound(); }
     if (alle || strstr(teil, "gore"))       { printf("[4] Gore\n");            abschnitt_gore(); }
     if (alle || strstr(teil, "bosse"))      { printf("[5] Bosse\n");           abschnitt_bosse(); }
+    if (alle || strstr(teil, "strecke"))    { printf("[6] Form / Strecke (Nachbesserung 1)\n"); abschnitt_strecke(); }
 
     re15_esp_se_hook = NULL; re2fx_se_hook = NULL;
     free(buf);

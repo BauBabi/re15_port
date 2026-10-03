@@ -12,14 +12,16 @@
  * @0x80020d78/@0x80020db0). Dossier: analysis/befunde_runde35/A_granate.md.
  *
  * Die drei RE1.5-Routinen bleiben byte-true; dieses Modul haengt an zwei Stellen von re15_esp.c:
- *   - Routine 29 (vor dem Bodentest): re15_granate_r35_flugtest / _rueckzug  -> Explosion sofort
+ *   - Routine 29 (vor dem Bodentest): re15_granate_r35_flug (Wand -> Rueckzug -> Explosion sofort)
  *   - Routine 31 (Zuender 7):          re15_granate_r35_explosion / _explosion_se
  */
 #ifndef RE15_GRANATE_R35_H
 #define RE15_GRANATE_R35_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "re15_esp.h"
+#include "re15_rdt.h"
 
 /* ---- RE2-Konstanten (info/re2leon/PSX.EXE, selbst disassembliert `re2_disasm.py`) ------------ */
 
@@ -43,18 +45,28 @@
  * 786ad6910be7a9ea8bf1df0b145ad55b = RE2 ARMS09.VB; ARMS0F.EDH @0x28 Record 0x0A `00 00 33 20`). */
 #define RE15_GRANATE_R35_SE_EXPLOSION  0x01110001u
 /* Wand-Maske des Zelltests: u0 & 1 = die Zellklasse, die den SPIELER stoppt (FUN_8003b0a4 mit
- * a2 = 1, Port re15_collision_constrain PR/1u). PORT-WAHL: RE2 FUN_8004fba0(&Lage, 2, 8192, 0)
- * @0x8001ee60-a0 testet die RE2-SCA, deren Klassen nicht 1:1 auf RE1.5-u0 abbilden; die Granate
- * haelt an derselben Wand wie Leon. */
+ * a2 = 1, Port re15_collision_constrain PR/1u). PORT-WAHL: RE2 FUN_8004fba0(&Lage, 2, 0x2000, 0)
+ * @0x8001ee60-a0 testet eine EIGENE Geschoss-Klasse (Bit 0x2000 im Wort Zelle+8, `and v0,v1,t0`
+ * @0x8004fdc0-d0; Spieler/Gegner laufen mit 0x8000/0x4000 @0x800376cc/@0x80036930). Die RE1.5-Zelle
+ * kennt nur u0 = 01/02/04/fb/fd/ff (Zensus Dossier N1.1) ohne Geschoss-Klasse; die Granate haelt an
+ * derselben Wand wie Leon. */
 #define RE15_GRANATE_R35_WAND_MASKE    1u
 
+/* Flug-Haken der Routine 29: EIN Aufruf am Kopf von esp_fx_dispatch_b_29 (re15_esp.c). Rueckgabe 1 =
+ * Wand getroffen, Rueckzug + Explosion sind erledigt (der Aufrufer kehrt zurueck); 0 = frei, Routine 29
+ * laeuft unveraendert weiter. */
+int  re15_granate_r35_flug(re15_esp_fx_t *f);
 /* Flugtest je Bild (Routine-29-Kontext, nach der Weltlage). Rueckgabe:
- *   0 = frei, 1 = Wand (RE2 DAT_800dcbc8 != 0 @0x8001ef84-8c). Bei 1 ist VOR der Explosion
- *   re15_granate_r35_rueckzug zu rufen (RE2 @0x8001ef90-0cc). Der RE2-Gegnerkontakt (`bne s0,zero`
+ *   0 = frei, 1 = Wand (RE2 DAT_800dcbc8 != 0 @0x8001ef84-8c). Der RE2-Gegnerkontakt (`bne s0,zero`
  *   @0x8001ef14) ist fuer die Handgranate NICHT verdrahtet — gemessen, Begruendung in granate_r35.c. */
 int  re15_granate_r35_flugtest(const re15_esp_fx_t *f);
-/* Nur der Wandteil (fuer Sonden). */
+/* Nur der Wandteil: STRECKE vorige Weltlage (im Wurfbild: Werfer) -> neue Weltlage gegen die soliden
+ * Zellen des Werfer-Bandes, formgenau (Typ 1..9), je Quadrant die eigene Liste. */
 int  re15_granate_r35_wand(const re15_esp_fx_t *f);
+/* Die Geometrie darunter (fuer Sonden): Strecke bzw. Punkt gegen die Zellen eines Raums. 1 = blockiert. */
+int  re15_granate_r35_strecke(const re15_rdt_t *rdt, int32_t x0, int32_t z0, int32_t x1, int32_t z1,
+                              int band, unsigned maske);
+int  re15_granate_r35_punkt(const re15_rdt_t *rdt, int32_t x, int32_t z, int band, unsigned maske);
 /* Der RE2-Flugkontakt (FUN_8001ED9C @0x8001ee90-ef14) als reiner Geometrietest — fuer Sonden/Dossier,
  * im Flug nicht verwendet (s. granate_r35.c). Zaehlt s_n_kontakt bei jedem Aufruf. */
 int  re15_granate_r35_kontakt(const re15_esp_fx_t *f);
@@ -71,5 +83,12 @@ void re15_granate_r35_explosion_se(const int32_t p[3]);
 /* MESSSCHIENE (kein Verhalten): Zaehler der Ausloeser seit Programmstart. */
 void re15_granate_r35_zaehler(unsigned *wand, unsigned *kontakt, unsigned *explosionen);
 void re15_granate_r35_zaehler_reset(void);
+
+/* Dienste aus re15_esp.c fuer dieses Modul (dort je eine Zeile "Runde 35 Spur A"): Weltlage des Platzes
+ * neu rechnen (@0x8001a118-2a4), Routine A des Platzes im selben Tick laufen lassen (Tabelle 0x80071d40),
+ * RE15_GRANATE_LOG-Datei + ESP-Tick (Diagnose). */
+void  re15_esp_r35_weltlage(re15_esp_fx_t *f);
+void  re15_esp_r35_routine_a(re15_esp_fx_t *f);
+FILE *re15_esp_r35_log(unsigned *tick);
 
 #endif /* RE15_GRANATE_R35_H */

@@ -1100,7 +1100,7 @@ static arms_zusatz_t *arms_zusatz_laden(int arms_id)
             return (s_arms_zusatz[i].state == 1) ? &s_arms_zusatz[i] : NULL;
         if (!frei && s_arms_zusatz[i].id < 0) frei = &s_arms_zusatz[i];
     }
-    if (!frei) return NULL;                           /* nur die zwei Aufschlag-Baenke vorgesehen */
+    if (!frei) return NULL;                           /* ARMS_ZUSATZ_N Plaetze: ARMS10/11 (Aufschlag) + ARMS0F (Explosion) */
     frei->id = arms_id;
     frei->state = -1;
     char path[64];
