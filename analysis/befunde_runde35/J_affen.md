@@ -1041,3 +1041,13 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 | A2 Wurf-Bahn ab Bild ~0x22, Harness != exe | Ersatzklemme "letzter begehbarer Standpunkt" statt Platzierung -> Schub -> FUN_8003b0a4; Wandklemme vor statt nach der Platzierung; Griff-Paar nicht vom Schub ausgenommen; P2 ab 0x0b; Clip 0xb rueckwaerts aus COMMON | GDB-Stationen 0x80031cbc/d70/d78; Paar-Bit 0x1000 @0x8011ac34-38/@0x8011ad8c-94; P1/P2 @0x8011c244-5c/@0x8011c278; P5 `ori a2,1` @0x8011c348 | enemy_ai_common.c, game_step_common.c, anim_select_common.c, affen_11c0.c (6a)-(6e) | Riegel `wand` 168/168 + Schub-Kette bitgleich; `griff` Bahn T268-T290 Mittel 19, Freigabe T378, 87/87 Bilder nur Wandklemme; exe Tuerweg: Pin+11/+83/+16 |
 | A3 Kopfkommentar (3) | veraltet seit 30484afa | — | re15_affen.h (3) | — |
 | H2 a780-Operanden | Gorilla - Spieler statt Spieler - Gorilla | @0x8001a788-a4 | 1 Zeile | Riegel gruen |
+
+## Nachbesserung 3 (2026-10-04, nach Abnahme 2 = NICHT BESTANDEN, M1/M2)
+
+Ausgangslage: Baum sauber, HEAD 062e8f82 (Bericht J_abnahme_2.md). Alle sechs Nutzer-Punkte dort "erfuellt";
+offen sind nur M1 (Dossier-Zahl Z. 858-859 stimmt am HEAD nicht, zwei Pruefungen still entfernt, "chaotisch"
+nicht gemessen) und M2 (Port-e2 steht T250-T264 still, Original-e2 gleitet ~400; weder geklaert noch unter OFFEN).
+Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jnb2/g_wer.txt`.
+
+### Stand (fortlaufend)
+- [ ] M1 (a) Zahlen auf HEAD  - [ ] M1 (b) Entfernung offenlegen  - [ ] M1 (c) Chaos messen  - [ ] M2 Ursache e2
