@@ -691,3 +691,15 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
 - **Befund 2 (Auftragsfrage):** "Besucht-Bit 11C0" — beendet nichts mehr: seit §9.4 haengen Kachel und Fenster an
   (4,64), und der Montage-Schnitt nach ROOM11C0 laesst (4,64) = 0 (kein `Fenster zu`-Eintrag in m1; L sperrt den
   sub01-Reseed waehrend der Montage, L-Dossier §2.3, Riegel `unit_r35_cut1150_montage_11c0` "(4,64) unberuehrt").
+- **RE-Beleg (selbst disassembliert, re15_disasm.py, PSX.EXE):** Raumlader FUN_800396fc
+  `8003970c lw v0,0x800aca3c` / `80039710 lui v1,0xffff` / `80039728 and v0,v0,v1` / `80039730 sw v0,0x800aca3c`
+  -> Bank 1 (Zeiger 0x80074664[1] = 0x800aca3c) verliert die unteren 16 Bits, darunter (1,27) = Maske 0x10.
+  Frame-Runner FUN_8003f038: `8003f040 lw v0,g_pauseflags` / `8003f044 lui v1,0x200` / `8003f04c bne v0,zero,0x8003f090`
+  (Skript-Freeze -> kein Lauf); dahinter zaehlt der Port `g_scd.tick_count++` (scd_vm.c:684), g_scd wird beim
+  Raumaufbau genullt (scd_room_setup.c:228 memset).
+- **Aenderung (cut_10f0.c bgm_fenster_tick):** das Fenster oeffnet erst, wenn zusaetzlich `g_scd.tick_count > 0` —
+  "keine Szene laeuft" gilt erst, nachdem die VM in diesem Raum gelaufen ist und ein vom Aufbau gestartetes Programm
+  seine Rahmen-Flags setzen konnte. PORT-WAHL der Auswertungsstelle (das Fenster ist eine Nutzer-Vorgabe); die Form
+  (Flags, Loeschmaske, Freeze-Gate) ist belegt. Unit `bgm` um den gemessenen Fall erweitert (Raumaufbau mitten in der
+  Montage: Rahmen-Flags geloescht + tick_count 0 -> zu; erster VM-Lauf setzt sie -> weiter zu; Laden: erst nach dem
+  ersten VM-Lauf auf).
