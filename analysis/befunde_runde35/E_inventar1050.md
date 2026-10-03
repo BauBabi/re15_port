@@ -14,6 +14,23 @@ Ereignis 26 (1050, Vorschlag). Vorhanden: ROOM1050 Ereignis 13 = Ada-Ruf, Slots 
    "3. Wand" quasi durchbricht, und Leon so mit dem Spieler redet von den Animationen her. Er sollte
    er so mit sich selbst reden, wie in der Cutscene in ROOM 1170."
 
+## Kurzfassung (Stand Abschluss)
+* **P1 Inventar nach der Szene** — Ursache gemessen: Pad-Bit 0x01000000 blieb stehen, weil msg 24 im
+  selben Bild wie `Set(2,7)=0` schloss und den Schnappschuss (mit Pad-Bit) zurueckspielte. Port-Fehler
+  in der Nachrichten-FSM: nach der Sofort-Spanne `04 00` verteilt das Original ein folgendes Steuerbyte
+  im SELBEN Aufruf (@0x800283b8 `j 0x80028424` / @0x8002842c), der Port erst ein Bild spaeter. Fix
+  msg_common.c (5 Zeilen). Nachher: Pad-Bit weg, START oeffnet das Inventar (exe m4/m6, Riegel).
+* **P2 Messer** — die Rueckfall-Regel steht im Original (@0x80046654-88: 25c8 = 0x80 -> Waffe 1). Neu:
+  Startinventar ohne Messer (Tabelle @0x80074bb8/@0x80074bc4), 25c8 = 0x80; alte Spielstaende werden
+  beim Laden bereinigt (Inventar + Kiste); zwei Beta-Defekte, die erst ohne Dauer-Messer in Platz 0
+  erreichbar werden, nach RE2 Retail: Reserve-Munition in Platz 0 (@0x8006a2a0) und breite Waffe bei
+  0x80 (@0x8006999c, STAGE1 ROOM1110 Item 0x13). Statusschirm zeigt im Kasten "Equip Arms" das
+  Standard-Messer hell (Original-Darstellung fuer 0x80).
+* **P3 Selbstgespraech** — Drehung zur Kamera entfernt; Leon bleibt zur Tuer gewandt (Kamera von hinten
+  links, 99 Grad), Gesten aus ROOM1170: sub14-Form (Clip 18 + Kopf senken + Kopfschuetteln) zu
+  "Another civilian survivor.", sub02-Form (Clip 17) zu "I have to help her!"; Clip 19 (nur im
+  Gespraech mit einem Gegenueber belegt) entfaellt.
+
 ## Protokoll
 - 2026-10-03 Start: Baum sauber auf 154a73c1, kein build/ vorhanden. configure + build OK.
 - Messwerkzeug: `re15_port/tools/r35_e/messlauf.sh` (Kopie von r34n_d/messlauf.sh, eigene exe
@@ -256,6 +273,42 @@ der Riegel misst den Mechanismus, nicht die Choreografie.
 
 ## Tests
 
+* `unit_r35_inventar1050_{start,elza,ablegen,altstand,altpistole,kiste,breit,reserve}` (NEU,
+  tests/unit/test_r35_inventar1050.c, probes/r35_inventar1050.cmake) — alle gruen. Ausgaben z.B.:
+  `altstand: alter Stand [0]01 x0 [1]03 x15 [2]15 x50 | 25c8=0x00 Waffe 1 -> geladen [0]03 x15 [1]15 x50 |
+  25c8=0x80 Waffe 1`.
+* `unit_r34n_d_adaruf_{szene,doppel,sperre,frei,rettung,speicher,elza,raster}` (Runde 34, in Runde 35
+  auf die neue Choreografie + Punkt-1-Pruefung umgestellt): gruen. raster: 735 Druckstellen, alle Ereignis
+  13, Szene max 372 Bilder, Blick->Kamera cos max -0.062, Pad-Bit danach 0, START oeffnet das Inventar.
+* `unit_room1140_combat` Teil (27): FUN_8004eb70 auf die RE2-Regel umgestellt (Platz 0 -> 0, keine
+  Reserve -> -1).
+* `integration_r35_inventar1050` (NEU, echte exe, 65 s): A Szene ueber den echten Tuerweg 1000 -> 1050,
+  `pf=00000007 pm=0` vor START, Statusschirm offen, 210 Gestenbilder zur Tuer, kein Clip 19; B Neues
+  Spiel, `mg=-1`, 9 Stichbilder W01/Clip 7; C CONTINUE mit Altstand-Karte -> "[messer] alter Spielstand:
+  1 Messer entfernt, Ausruest-Platz 0x80, Waffe 1", 9 Stichbilder.
+* Mutationsprobe P1: msg-Fix abgeschaltet -> unit_r34n_d_adaruf_szene rot (Pad-Bit 1, Inventar 0).
+
 ## OFFEN
 
+* Clip 25 aus ROOM1170 (Hand ans Gesicht, sub02 @0x015E4) ist RAUMEIGEN (ROOM1050-RBJ Clip 25 = Ganzkoerper-
+  Drehung, D_adaruf.md §3.5) und deshalb nicht verwendet; die gewaehlte sub14-Form (Clip 18 + Plc_neck)
+  ist die naechste Selbstgespraechs-Geste aus der gemeinsamen Bibliothek 15..23. Wer Clip 25 will, muss
+  ein fremdes RBJ-Clip in ROOM1050 binden (kein Port-Mechanismus vorhanden) — nicht gebaut.
+* Die Nachrichten-FSM-Korrektur (P1) verschiebt das Schliessen JEDER `04 00 ... 04 NN 01 NN`-Zeile um ein
+  Bild nach vorn (= Original). Suite gruen; andere Szenen-Zeitlinien wurden nicht einzeln vermessen.
+* Item-Debug (SELECT + R1 im Statusschirm, Original-Werkzeug) kann weiterhin Id 1 in einen Platz legen;
+  bereinigt wird das erst beim naechsten Laden.
+* Elza startet jetzt nach der Original-Tabelle @0x80074bc4 (nur Messer -> leer); vorher gab der Port ihr
+  Leons Pistole + Munition. Elza-Durchlauf im Port nicht nachgespielt.
+
 ## Fuer den Nutzer
+
+* Sprachdateien: KEINE neuen Zeilen (msg 22..25 unveraendert; 28..31 nicht belegt). Vorhandene Namen
+  aus Runde 34 bleiben: `synchro/STAGE1/room1050/main22.wav` (Woman: Hello? Anyone? Please, get me out of
+  here!), `main23.wav` (Leon: Another civilian survivor.), `main24.wav` (Leon: I have to help her!).
+* Neue Assets fuer das Paket-/Android-Gate: keine (alles im Code, keine Datei unter shared_assets/).
+* Bedienung: Ohne ausgeruestete Waffe kaempft Leon mit dem Messer (R1 zielen, Quadrat stechen). Das Messer
+  steht nicht mehr in der Item-Liste; der Kasten "Equip Arms" zeigt es hell, solange nichts ausgeruestet
+  ist. Eine Waffe legt man im Statusschirm ab, indem man die ausgeruestete Waffe erneut anwaehlt
+  (Original-UNEQUIP) — danach wieder Messer. Alte Spielstaende laden normal; ein Messer darin
+  (Inventar oder Kiste) verschwindet beim Laden.
