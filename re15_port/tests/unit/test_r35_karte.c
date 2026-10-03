@@ -267,6 +267,10 @@ static int marker_auf_kunst(const mess_t *m, int rect)
 }
 
 /* ---- Riegel Punkt 1: Fahrstuhl ROOM1080 ----------------------------------------- */
+/* Der SICHTBARE Marker: der Ring liegt im 8x8-Quad (mx-4..mx+3) ab uv(224,128) auf den Texeln
+ * uv 225..229 / 129..133 (DATA/TEX.TIM ab Datei-Byte 0x14910) - seine Mitte ist (mx-1, my-1).
+ * Die Riegel messen an DIESER Mitte, weil der Nutzer sie sieht (Nachbesserung 1). */
+#define R35_GLYPH 1
 static int teil_fahrstuhl(void)
 {
     static const int blatt[4] = { 0, 2, 3, 4 }, rect[4] = { 0, 9, 4, 0 };
@@ -309,12 +313,11 @@ static int teil_fahrstuhl(void)
         miss_hier(0x1080, -15500,  -300, &ecke[2]);
         miss_hier(0x1080, -11800,  -300, &ecke[3]);
         for (k = 0; k < 4; k++) {
-            int drin = ecke[k].mx >= ix0[e] && ecke[k].mx <= ix0[e] + 7 &&
-                       ecke[k].my >= iy0[e] && ecke[k].my <= iy0[e] + 7;
-            snprintf(t, sizeof t, "Kabine %dF Ecke %d: Marker (%d,%d) im gemalten Innenraum "
-                     "x%d..%d y%d..%d", e, k, ecke[k].mx, ecke[k].my, ix0[e], ix0[e] + 7,
-                     iy0[e], iy0[e] + 7);
-            CHECK(t, drin && texel(m.page, rect[e], ecke[k].mx, ecke[k].my) == 1);
+            int vx = ecke[k].mx - R35_GLYPH, vy = ecke[k].my - R35_GLYPH;
+            int drin = vx >= ix0[e] && vx <= ix0[e] + 7 && vy >= iy0[e] && vy <= iy0[e] + 7;
+            snprintf(t, sizeof t, "Kabine %dF Ecke %d: Ring-Mitte (%d,%d) im gemalten Innenraum "
+                     "x%d..%d y%d..%d", e, k, vx, vy, ix0[e], ix0[e] + 7, iy0[e], iy0[e] + 7);
+            CHECK(t, drin && texel(m.page, rect[e], vx, vy) == 1);
         }
         /* 180 Grad (G_karte.md B5): Welt-Ost -> Karte-West, Welt-Nord -> Karte-Sued */
         snprintf(t, sizeof t, "Kabine %dF: Marker folgt dem Spieler, 180 Grad gedreht "
@@ -335,14 +338,16 @@ static int teil_fahrstuhl(void)
             int lo_x = 999, hi_x = -999, lo_y = 999, hi_y = -999, alle_innen = 1;
             for (k = 0; k < 6; k++) {
                 mess_t q;
+                int vx, vy;
                 miss_hier(0x1080, lage[k][0], lage[k][1], &q);
-                if (q.mx < lo_x) lo_x = q.mx;
-                if (q.mx > hi_x) hi_x = q.mx;
-                if (q.my < lo_y) lo_y = q.my;
-                if (q.my > hi_y) hi_y = q.my;
-                if (texel(m.page, rect[e], q.mx, q.my) != 1) alle_innen = 0;
-                printf("    Kabine %dF Lage (%d,%d) -> Marker (%d,%d)\n", e, (int)lage[k][0],
-                       (int)lage[k][1], q.mx, q.my);
+                vx = q.mx - R35_GLYPH; vy = q.my - R35_GLYPH;
+                if (vx < lo_x) lo_x = vx;
+                if (vx > hi_x) hi_x = vx;
+                if (vy < lo_y) lo_y = vy;
+                if (vy > hi_y) hi_y = vy;
+                if (texel(m.page, rect[e], vx, vy) != 1) alle_innen = 0;
+                printf("    Kabine %dF Lage (%d,%d) -> Ring-Mitte (%d,%d)\n", e, (int)lage[k][0],
+                       (int)lage[k][1], vx, vy);
             }
             snprintf(t, sizeof t, "Kabine %dF: Marker wandert ueber den begehbaren Bereich "
                      "x %d..%d (%d px), y %d..%d (%d px) - soll je >= 6 px, alle Lagen im "
@@ -363,6 +368,7 @@ static int teil_fahrstuhl(void)
                                                         &rx, &ry, &rw, &rh);
             for (w = 0; auf_wand && w < 4; w++) {
                 re15_map_zone_marker(zk, wand[w][0], wand[w][1], rx, ry, rw, rh, &wx[w], &wy[w]);
+                wx[w] = (int16_t)(wx[w] - R35_GLYPH); wy[w] = (int16_t)(wy[w] - R35_GLYPH);
                 if (texel(m.page, rect[e], wx[w], wy[w]) != 4) auf_wand = 0;
             }
             snprintf(t, sizeof t, "Kabine %dF: Kollisionswaende -> Karte W(%d,%d) O(%d,%d) "
