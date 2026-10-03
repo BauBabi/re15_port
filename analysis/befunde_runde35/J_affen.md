@@ -957,3 +957,45 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   (Haltepunkt-Folge Gorilla-Wurzel -> 0x80031c44). Daraus die restlichen 0-4 Bilder -> OFFEN.
 - Riegel `szene` (Raum-Harness, gleiche Eingabe): Gang 207/207, Heavy +365, Takt Mittel 51,5 (kuerzester 46),
   Tod +1197 — gruen.
+
+### H2 (Hinweis der Abnahme) — re15_maggot_a780 Operandenfolge (behoben)
+- FUN_8001a780 (selbst disassembliert): `lh v0,106(a0)` (a0 = Spieler) @0x8001a788, `lh v1,106(v1)` (g_entity(cur))
+  @0x8001a78c, `subu v0,v0,v1` @0x8001a794, `addiu 1024` / `andi 0xfff` / `slti 2048` @0x8001a798-a4. Der Port
+  rechnete Gorilla - Spieler (unterscheidet sich nur bei Differenz genau +-0x400). Jetzt Spieler - Gorilla (1 Zeile).
+
+## Tests (Stand Nachbesserung 2) — probes/r35_affen.cmake, test_r35_affen.c, 17 Eintraege
+- Bisherige 15 (teile, band, ada, sprung, flug, wagen, brust, kdsonde, biss, frac, anker, takt, griff, npcband, schrot).
+- `griff` NEU gefasst (A2): Pin T254, erste Platzierung T265 (= Opfer-Bild 0x0b), Wurf-Bahn T268-T290 gegen die
+  Original-Spur (Mittel 18-19, max 177), P3/P4 Clip 0x10 aus PL00 vorwaerts (16 Bilder), P5/P6 Clip 0xb aus PL00
+  RUECKWAERTS (25 Bilder), Freigabe T378, nach Bild 0x24 bewegt nur noch die Wandklemme (87/87 Bilder), 0 HP.
+- NEU `wand` (A2): re15_collision_constrain = FUN_8003b0a4 in 168/168 Original-Bildern; Schub + Klemme T265-T267
+  mit e2 auf Original-Lage bitgleich.
+- NEU `szene` (A1): Raumeintritt wie r3, keine Eingabe: sub02-Gang 207/207 bitgleich, Heavy Freigabe+365
+  (Original +364), Biss-Takt Mittel 51,5 / kuerzester 46 (Original 51,8 / 49), Tod +1197 (Original +1193).
+- Alt-Riegel unit_member, unit_maggot_ai.
+
+## OFFEN (Stand Nachbesserung 2; ersetzt die Liste "Stand Nachbesserung 1")
+- **Spieler-Schub-Reihenfolge**: der Port schiebt den Spieler aus den Gegner-Koerpern im Spieler-Zweig VOR der
+  Gegner-KI (game_step), das Original im Spieler-Tick NACH allen Entity-Ticks (FUN_80031c44 `jal 0x8002b544`
+  @0x80031cbc; GDB-Haltepunktfolge Gorilla-Wurzel -> 0x80031c44). Gemessen: im Biss-Kontakt wird Leon 1 Bild
+  spaeter geschoben (n10d F1532-F1536 gegen g_orig F158-F162); daraus die restlichen 0-4 Bilder je Biss.
+  Spielweite Reihenfolge, nicht nur 11C0 -> nicht in dieser Spur angefasst. Messweg: Station SCHUB je Bild gegen
+  die Original-Stationen 0x80031cbc/cc4 (Werkzeug jnb2/gdbmulti.py).
+- **A/B im selben Tick**: der Gorilla-Zustand-1-Handler liest +0x5 nach A[sub] neu und ruft B[neu] im selben Bild
+  (`lbu v0,5(v0)` @0x80117358, `jalr` @0x80117378); der Port bricht nach jedem Wechsel ab und laesst B im Folgebild
+  laufen (gemessen: Heavy +365 statt +364). Betrifft alle Gorilla-Subs; die Riegel takt/schrot/szene liegen trotzdem
+  bei 0-4 Bildern.
+- **RNG-a0 nicht modelliert** (bleibt xorshift-Ersatz, Memory reai-v2-rng-determinism): B[4] im Bild des
+  A[3]->4-Wechsels (a0 = A[3]-Rest, vs9597 0x027e6945) und bei Path B mit a9cc-Aufruf (a0 = atan2-Rest);
+  Path-B-Muenze @0x801180a8 (a0 nach a9cc = atan2-Rest, vs9599: 5); B[7]-Anlauf @0x8011898c (a0 haengt am
+  Eintrittsweg: Path B -> Spieler-Zeiger nach a780 (vs9599: 0x800aca54), Zonen-Sprung -> Entity+0x34, Flinch-Exit
+  -> Abstand^2); B[1] (sub 1, in 11C0 nicht erreicht); Spieler-Ziehungen 0x800320b0/0x8003218c (a0 = 0).
+- **Gleiche Rundung ausserhalb dieser Spur**: climb_common.c:360 (`p->z -= (s_speed*s)>>12`) und
+  enemy_ai_re2_spider.c:257 rechnen dz ebenfalls als -(s*v>>12); FUN_800245d8/GTE rundet nach unten. Nicht
+  angefasst (andere Raeume/Spuren), Beleg @0x800246ac.
+- Weiter offen aus Nachbesserung 1: NPC-Klemme +0x82 in Szenen hinter Flags (Marvin 10D0, Irons 6030/6031, 4001);
+  Knockdown-Sonde spielweit nur in 11C0 nachgemessen; Gorilla-Schatten Box[6]+100/+200 (@0x801171d8-ec);
+  Heckklappe dunkler (FUN_8002c18c `jal 0x80053fc0` @0x8002c254); Member_set 0x13 in 10B1/2030/2031/3050/3051/
+  50D0/50D1 nicht nachgemessen.
+- Werkzeug: ViGEm-Geisterpad blockiert den Savestate-Recorder; der GDB-Weg (gdbspur/gdbmulti/gdbpl/gdbrng in
+  `jnb1/`/`jnb2/`, settings.ini [Debug] EnableGDBServer nur waehrend der Messung) ersetzt ihn.
