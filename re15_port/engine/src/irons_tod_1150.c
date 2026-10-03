@@ -38,7 +38,9 @@ extern unsigned g_current_room_id;
  *                                                      sub02 @0x01868 (Modus 5 RUN) / @0x0114A (Modus 9)
  *   Ankunfts-Poll  `11 00 08 00 02 00 12 04 21 05 20 00` ROOM1150 sub08 @0x0112A..@0x01132
  *   Cut_chg        `29 cc`                             ROOM1150 sub08 @0x01178
- *   Se_on          `36 bb id 00 ...`                   ROOM1030 sub08 @0x02776 (bb 2) / Port-Bank 6
+ *   Se_on          `36 bb id 00 ...`                   ROOM1030 sub08 @0x02776 (bb 2)
+ *   Knall-Signal   `22 05 1c 01` / `22 05 1d 01`       Set(5,28) / Set(5,29): der Port-Takt spielt die Knall-Bank
+ *                                                      (s. RE15_IT_SIG_KNALL_*, wie das Arm-Signal (5,12))
  *   Sce_em_set     `44 ss tt gg 00 00 p6 pp xx xx yy yy zz zz 00 00 rr rr 00 00` ROOM1140 sub00 @0x00BAA
  *   Save           `24 vv nn nn`                       ROOM1030 main00 @0x01DE2 (Gleichzeitig-Limit)
  *   Door_aot_set   `3b ss 02 31 00 00 <Rechteck 8> <x y z yaw> st rm ct 00..` ROOM1130 main00 @0x008CE
@@ -55,7 +57,7 @@ extern unsigned g_current_room_id;
 #define OP_DEST(m,f,x,z)   0x40, 0x00, (m), (f), LE16(x), LE16(z)
 #define OP_WAIT32          0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, 0x20, 0x00
 #define OP_CUT(c)          0x29, (c)
-#define OP_SE6(id)         0x36, 0x06, (id), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#define OP_KNALL(sig)      0x22, 0x05, (sig), 0x01
 #define OP_EM(s,t,g,p6,pp,x,z,rot) 0x44, (s), (t), (g), 0x00, 0x00, (p6), (pp), LE16(x), LE16(0), LE16(z), 0x00, 0x00, LE16(rot), 0x00, 0x00
 #define OP_DOOR(x,z,yaw,rm,ct) 0x3b, RE15_IT_TUER_SLOT, 0x02, 0x31, 0x00, 0x00, 0,0,0,0,0,0,0,0, \
                                LE16(x), LE16(0), LE16(z), LE16(yaw), 0x00, (rm), (ct), 0,0,0,0,0,0,0
@@ -81,7 +83,7 @@ extern unsigned g_current_room_id;
  *     Clip 5 = Arm ausgestreckt + Halt (@0x0125A/@0x0125E Sleep 120).
  *   Kopfschuetteln gesenkt: ROOM11B0 sub06 @0x0154E..@0x0156A (Modus 2 Pitch 300, Modus 4 Sweep 3).
  *   Aufstehen: @0x012C6/@0x012CA (Clip 11 entity 1 rueckwaerts).
- *   Knall + Schnitt: Se_on Bank 6 Satz 0 (Port-Knallbank), Door_aot_set + Aot_on (Tuersatz wird bei
+ *   Knall + Schnitt: Signal (5,28) -> Knall-Bank Satz 0 (Port-Takt), Door_aot_set + Aot_on (Tuersatz wird bei
  *     der Ausloesung auf 1130 oder 1040 gesetzt — NUTZER-VORGABE "wenn in 1140 alle tot: nichts").
  * Zeiten (Sleep) = PORT-WAHL im Takt der ersten Szene. */
 static const uint8_t k_p_szene[] = {
@@ -133,7 +135,7 @@ static const uint8_t k_p_szene[] = {
     OP_MOTION(1, 11), OP_FLG_REV, OP_SLEEP(40),            /* steht auf (@0x012C6/@0x012CA) */
     OP_CUT(5),                                             /* Totale wie das Ende der ersten Szene (@0x012C4) */
     OP_SLEEP(60),                                          /* kurze Pause */
-    OP_SE6(KNALL_SE_TUER), OP_SLEEP(45),                   /* der Knall (aus dem Buero gehoert) */
+    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(45),        /* der Knall (aus dem Buero gehoert) */
     OP_DOOR(RE15_IT_PARK_1130_X, RE15_IT_PARK_1130_Z, 0, 0x13, RE15_IT_CUT_1130),   /* -> 1130 (oder 1040, Weiche) */
     OP_AOT_ON,
     OP_END,
@@ -155,7 +157,7 @@ static const uint8_t k_p_szene[] = {
 static const uint8_t k_p_1130[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_CUT(RE15_IT_CUT_1130), OP_SLEEP(15),
-    OP_SE6(KNALL_SE_TUER), OP_SLEEP(10),
+    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(10),
     EM_1130_LISTE,
     OP_SLEEP(150),
     OP_DOOR(RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 0x04, RE15_IT_CUT_1040),
@@ -185,7 +187,7 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
 static const uint8_t k_p_1040_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_CUT(RE15_IT_CUT_1040), OP_SLEEP(15),
-    OP_SE6(KNALL_SE_1030), OP_SLEEP(20),
+    OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(20),
     EM_1040_LISTE,
 };
 static const uint8_t k_p_1040_tor[] = {
@@ -253,7 +255,7 @@ static const uint8_t k_p_1030_kopf[] = {
 };
 static const uint8_t k_p_1030_tuer[] = {
     OP_CUT(RE15_IT_CUT_1030_TUER), OP_SLEEP(15),
-    OP_SE6(KNALL_SE_TUER), OP_SLEEP(10),
+    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(10),
     EM_1070_LISTE,
     OP_SLEEP(150),
 };
@@ -557,7 +559,8 @@ static void umzug_vorbereiten(void)
 
 /* Die Knall-Tonbank in den Tuerbank-Platz laden (Format DO2-Tonteil, audio_pc.c TORSE_EDT_SIZE;
  * ueberlebt re15_audio_load_room_banks, wird erst von der naechsten Tuersequenz ersetzt). Das
- * Programm spielt sie mit Se_on Bank 6 (re15_audio.h RE15_SE_BANK_TUER). PSX: Stub. */
+ * Programm loest sie mit den Signalen (5,28)/(5,29) aus, der Takt ruft re15_audio_re2_tuer_se. Der Se_on-
+ * Verteiler bleibt byte-true (Bank >= 6 verworfen, `sltiu v0,v1,0x6` @0x80045094; Pin unit_se_bank_routing). */
 static void knallbank_laden(void)
 {
     if (!re15_audio_re2_tuer_laden(k_knall_bank, (int)KNALL_BANK_SIZE)) log_it("Knall-Tonbank nicht geladen");
@@ -764,6 +767,26 @@ static void mess_zeile(void)
 void re15_irons_tod_tick(void)
 {
     mess_zeile();
+    /* Marvins Marker-Alias (Aktor 4 spielt Adas Gesten-Record) JEDEN Takt setzen: auf dem Tuer-Weg bindet
+     * main.c das Raum-RBJ erst NACH dem Installer (debug.log: "[irons-tod] ... Montage 11C0" vor "[rbj] room 11C0
+     * cinematic overlay"), und re15_rbj_bind_room setzt die Aliase zurueck. Gemessen (Lauf v11c0, Bilder 340/370):
+     * ohne den Alias stand Marvin bei "I have to help him, sorry!" mit haengenden Armen. Der Takt laeuft vor den
+     * Faeden, der Binder loest Aktor 4 erst nach dessen Erscheinen auf (rbj_resolve_slot: !active -> kein Cache). */
+    if (s_zustand == RE15_IT_S11C0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_11C0) re15_rbj_set_alias(4, 1);
+    /* Knall-Signale: (5,28) = Tuerknall (Knall-Bank Satz 0), (5,29) = Knall wie ROOM1030 (Satz 1). Nur waehrend
+     * der Kette (in ROOM1150/1130/1040/1030 ist Bank 5 Wort 0 oberhalb von Bit 20 unbenutzt, Zensus Dossier §8.8). */
+    if (s_zustand != RE15_IT_AUS) {
+        if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_TUER)) {
+            re15_game_flag_set(5, RE15_IT_SIG_KNALL_TUER, 0);
+            re15_audio_re2_tuer_se(KNALL_SE_TUER);
+            log_it("Signal (5,28): Tuerknall (Knall-Bank Satz 0)");
+        }
+        if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_1030)) {
+            re15_game_flag_set(5, RE15_IT_SIG_KNALL_1030, 0);
+            re15_audio_re2_tuer_se(KNALL_SE_1030);
+            log_it("Signal (5,29): Knall wie ROOM1030 (Knall-Bank Satz 1)");
+        }
+    }
     if ((uint16_t)g_current_room_id == RE15_IT_RAUM_1150 && re15_game_flag_get(5, RE15_IT_SIG_ARM)) {
         re15_game_flag_set(5, RE15_IT_SIG_ARM, 0);
         irons_pose(RE15_IT_IRONS_CLIP_TOT, RE15_IT_IRONS_BILD_FALL, 0);

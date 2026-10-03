@@ -38,6 +38,9 @@
 void re15_actor_step_all_walkers(void);
 
 static int g_fail = 0;
+/* Spione der Tuer-/Knall-Tonbank (tests/test_support.c): der Port-Takt spielt die Knall-Saetze auf die Signale
+ * (5,28)/(5,29) hin (re15_irons_tod.h RE15_IT_SIG_KNALL_*). */
+extern int g_test_tuer_laden_count, g_test_tuer_se_last, g_test_tuer_se_count;
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
                            else { printf("  ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
@@ -332,12 +335,13 @@ static void teil_programme(void)
     for (int w = 0; w <= 16; w++) {
         int n = 0; const uint8_t *p = re15_irons_tod_programm(w, &n);
         if (!p) { PRUEF(0, "Programm %d fehlt", w); continue; }
-        int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0;
+        int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0, bad_se = -1;
         while (o < n) {
             int l = op_len(p[o]);
             if (l <= 0) { ok = 0; printf("  Programm %d: unbekanntes Opcode 0x%02x @+%d\n", w, p[o], o); break; }
             if (p[o] == 0x44) { n_em++; if (p[o+7] != 0xff && !frei_zone7(p[o+7])) bad_bit = p[o+7]; }
             if (p[o] == 0x3b) { n_door++; }
+            if (p[o] == 0x36 && p[o+1] != 0x02) bad_se = p[o+1];
             if (p[o] == 0x18 && p[o+1] == 0x09) n_gosub9++;
             if (p[o] == 0x0d || p[o] == 0x11) tiefe++;
             if (p[o] == 0x0e || p[o] == 0x12) tiefe--;
@@ -349,6 +353,7 @@ static void teil_programme(void)
         if (w == 0 || w == 1 || w == 4 || w == 8 || w == 9 || w == 10 || w == 13 || w == 14 || w == 16)
             PRUEF(letzte == 0x01, "Programm %d endet mit Evt_end", w);
         PRUEF(bad_bit < 0, "Programm %d: Tot-Bits aus dem freien Bereich (%d)", w, bad_bit);
+        PRUEF(bad_se < 0, "Programm %d: jedes Se_on traegt Bank 2 wie alle 284 ausgelieferten (kein Port-Bankbyte): %d", w, bad_se);
         if (w == 0) {
             PRUEF(p[0] == 0x22 && p[1] == 9 && p[2] == 73 && p[3] == 1, "Programm 0: erstes Opcode Set(9,73)=1");
             const uint8_t *d = p + n - 36;
@@ -447,6 +452,7 @@ static void teil_szene(void)
     PRUEF(re15_irons_tod_zustand() == RE15_IT_SZENE && faeden_im_programm() == 1, "Szene: genau ein Faden");
     const re15_actor_t *ir = &g_actors[RE15_IT_IRONS_SLOT];
     PRUEF(ir->active && ir->type == 0x45, "Irons liegt im Raum (Slot 1, Typ 0x45)");
+    int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 4000, 1);
     PRUEF(re15_game_flag_get(9, 73) == 1, "(9,73)=1 nach dem ersten Opcode");
     PRUEF(L.pl_min_dist_couch < 400, "Leon rennt zur Liege (Minimalabstand %d)", L.pl_min_dist_couch);
@@ -461,6 +467,9 @@ static void teil_szene(void)
     PRUEF(L.raumwechsel && L.ziel == 0x1130 && L.ziel_cut == 0 && L.ziel_x == RE15_IT_PARK_1130_X,
           "Schnitt nach ROOM1130 Cut 0 (Parkplatz) nach %d Bildern", L.bilder);
     PRUEF(g_scd.player_mode == 2 && re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27), "Spieler bleibt skriptgefuehrt");
+    PRUEF(g_test_tuer_laden_count >= 1 && g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0 &&
+          !re15_game_flag_get(5, RE15_IT_SIG_KNALL_TUER),
+          "der Knall am Szenenende: Knall-Bank geladen, genau ein Satz 0 gespielt (Signal (5,28) verbraucht): %d", g_test_tuer_se_count - knall0);
     /* Variante: 1140 leer -> direkt 1040 */
     szene_flags(); for (int i = 0; i < 5; i++) re15_game_flag_set(7, 0xd3 + i, 1);
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
@@ -488,7 +497,9 @@ static void teil_montage_1130(void)
     if (room_boot(0x1130, RE15_IT_PARK_1130_X, RE15_IT_PARK_1130_Z, 0, 0) != 0) return;
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S1130 && faeden_im_programm() == 1, "1130: Montage-Programm laeuft");
     PRUEF(re15_irons_tod_sub01_gesperrt() == 1, "sub01-Reseed gesperrt");
+    int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 600, 1);
+    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0, "1130: lautes Tuerknallen (Knall-Bank Satz 0) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(aktive_gegner(-1) == 4, "4 Zombies erschienen (Kopie 40 still): %d", aktive_gegner(-1));
     PRUEF(aktive_gegner(0x10) == 2 && aktive_gegner(0x11) == 2, "Typen 0x10 x2, 0x11 x2");
     PRUEF(s_shown == 0 || g_scd.cam_id == 0, "Kamera Cut 0 (angezeigt %d, angefordert %d)", s_shown, (int)g_scd.cam_id);
@@ -522,7 +533,9 @@ static void teil_montage_1040(void)
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S1040 && faeden_im_programm() == 1, "1040: Montage-Programm laeuft");
     int32_t y0 = g_scd.props[0].y;
     int n0 = aktive_gegner(-1);
+    int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 900, 1);
+    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1040: der Knall wie ROOM1030 (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(y0 == 0 && g_scd.props[0].y == -5400, "Rolltor von y=%d auf y=%d (sub08 135 x -40)", y0, (int)g_scd.props[0].y);
     PRUEF(re15_game_flag_get(4, 5) == 1 && re15_game_flag_get(4, 4) == 1, "(4,5)=1 (4,4)=1 Tor offen");
     PRUEF(n0 == 5 && aktive_gegner(0x16) == 5, "5 Zombies (Gleichzeitig-Limit 5): %d", aktive_gegner(0x16));
@@ -596,8 +609,10 @@ static void teil_montage_1030(void)
     if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 7) != 0) return;
     int n0 = aktive_gegner(-1);
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S1030 && faeden_im_programm() == 1, "1030: Montage-Programm laeuft (%d Raum-Zombies)", n0);
+    int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 900, 1);
     int n1 = aktive_gegner(-1);
+    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0, "1030 Cut 7: Tuerknall (Knall-Bank Satz 0) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(n1 == n0 + 7, "4 Kopien + 3 Kriecher dazu: %d -> %d", n0, n1);
     PRUEF(g_scd.work_vars[0x12] == 20, "Gleichzeitig-Limit 20 (Save 0x12)");
     PRUEF(L.raumwechsel && L.ziel == 0x11C0 && L.ziel_cut == 13 && L.ziel_x == RE15_IT_PARK_11C0_X, "Schnitt nach ROOM11C0 Cut 13 nach %d Bildern", L.bilder);
@@ -656,7 +671,17 @@ static void teil_montage_11c0(void)
     if (room_boot(0x11C0, RE15_IT_PARK_11C0_X, RE15_IT_PARK_11C0_Z, RE15_IT_PARK_11C0_YAW, 13) != 0) return;
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S11C0 && faeden_im_programm() == 1, "11C0: Montage-Programm laeuft");
     PRUEF(g_actors[1].active && g_actors[1].type == 0x42, "Ada steht da (sub00, Typ 0x42)");
+    /* REIHENFOLGE DER ECHTEN EXE (main.c Tuer-Weg :8168, debug.log: "[irons-tod] ... Montage 11C0" VOR "[rbj] room
+     * 11C0 cinematic overlay"): das Raum-RBJ wird NACH dem Installer gebunden und setzt dabei die Marker-Aliase
+     * zurueck. Marvins Alias (er spielt Adas Gesten-Record) muss das ueberleben, sonst hat er keine Arm-Geste. */
+    re15_rbj_bind_room(s_rdt.animation, s_rdt.animation_size);
     lauf_t L; lauf(&L, 1200, 1);
+    {
+        const re15_emd_animation_t *ma = re15_actor_rbj_anim(4);
+        PRUEF(ma != NULL && ma->clip_count > 15 && ma->clips[15].frame_count > 2,
+              "Marvin (Aktor 4) hat den Gesten-Record gebunden: Clip 15 = %d Bilder (Arm streck)",
+              ma ? (int)ma->clips[15].frame_count : -1);
+    }
     PRUEF(g_actors[4].active && g_actors[4].type == 0x40, "Marvin erschienen (Aktor 4, Typ 0x40)");
     PRUEF(re15_game_flag_get(4, 64) == 0, "(4,64) unberuehrt: die spaetere Ada-Szene bleibt (sub01 gesperrt)");
     printf("  Nachrichten:"); for (int i = 0; i < L.n_msgs; i++) printf(" %d", L.msgs[i]); printf("\n");

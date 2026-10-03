@@ -75,6 +75,14 @@
  * Ein-Bild-Handshake-Wort (Plc_dest-Ankunft 0x20 u.a.), das FUN_8003ebf4 nach JEDEM VM-Takt
  * wischt (scd_vm.c `g_game.flags[5][1] = 0`) — gemessen: ein Signal auf Bit 44 kam nie an. */
 #define RE15_IT_SIG_ARM     12
+/* Knall-Signale, dieselbe Bauart: 28 = Tuerknall (Knall-Bank Satz 0 = RE2 DOOR04 Door_exit), 29 = Knall wie
+ * die ROOM1030-Szene (Satz 1 = ROOM1030 snd0 Tone 7, sub08 @0x02776). Der Takt ruft re15_audio_re2_tuer_se
+ * auf der geladenen Knall-Bank. KEIN Se_on mit einem Port-Bankbyte: der Se_on-Verteiler bleibt byte-true
+ * (`sltiu v0,v1,0x6; beq v0,zero,ret` @0x80045094 verwirft Bank >= 6, Pin unit_se_bank_routing). Bits 28/29
+ * sind in ROOM1150/1130/1040/1030 frei (Bank-5-Zensus der vier Raeume: 1150 Bit 0; 1130 keins; 1040 und 1030
+ * Bits 0..20 + das Handshake-Wort 32..35). */
+#define RE15_IT_SIG_KNALL_TUER 28
+#define RE15_IT_SIG_KNALL_1030 29
 
 /* Irons = Sce_em_set main00 @0x00E88 Slot 0 (Aktor-Slot 1), Typ 0x45, Pos (-21150,-720,-26131).
  * Seine Szenen-Clips liegen im Raum-RBJ (RDT+0x5C @0x1774) Record 1 (Marker 2 = Gegner 0):
