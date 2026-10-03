@@ -1053,3 +1053,13 @@ und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
   `FAIL 125 ... ist x=-5576` (durch die Raute, Kontakt erst als die Rakete in Bandhoehe sank), `FAIL 128 ... ist z=-4570`
   (uebersprungen, Wand dahinter), `FAIL 129` (mit Schuetze ebenfalls -22792), `FAIL 131: w20 gegen Typ 0x10 (hp 2000):
   Treffer 2, +0x93 Bit 0x40 0 (soll 1), hp 1100 (soll -1)`, `FAIL 134` (Affe: Bit fehlt) — `test_r35_werfer: 7 FAILURES`.
+* `integration_r35_werfer_form` (neu, tests/integration/test_r35_werfer_form.cmake, registriert in probes/r35_werfer.cmake):
+  zwei exe-Laeufe — `rakete10e0` (Rezept §9.1 d18: Explosion 0x01140001 muss vor der Hypotenuse liegen, z < 528, und keine
+  RE2FLUG-Lage der Rakete im festen Dreieck) und `python1140` (Rezept Abnahme 1 §2.2, Leon (-1676,-18070) Blick 1076,
+  `20:6`, `M0.6,MA1.5,M1.0,W4`: erster Todeszustand von Platz 2 (Typ 0x10, freie Schusslinie, d 1530) mit hp -1).
+  Gefahren: `-- r35_werfer_form: OK — Rakete 10E0 explodiert vor der Hypotenuse (SE re2fx code=0x01140001 -> RE2 ARMS11
+  Satz 20 @(-2331,-2629,-388)), 3 Flug-Lagen ausserhalb des festen Dreiecks; Python-Treffer Platz 2 -> hp -1 (Kritklasse)`,
+  Passed 25.96 s. GEGENPROBE mit re15_r35nb2_alt.exe (`cmake -P` direkt): rot — `Explosion nicht VOR der Hypotenuse der
+  Zelle 21 (z soll -3000..527): ' SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2070,-2728,1897)'`. Python-Teil am
+  alten Stand gemessen (`mess_r35b/nb2/vorher/p20`): `[2 t=10 st=3 ss1=5 d=1530 @(-1800,-19600,r512)] hp=-850`, Redhawk
+  `p7` hp=-1; nachher beide hp=-1.
