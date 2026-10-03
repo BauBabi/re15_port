@@ -272,3 +272,89 @@ FORCE_EXPLOSION-Boden · c1a36aa8 Dossier §4-6 · 24642c7a r34-Sonden Spalte 1 
   Granatwerfer (ARMS0F). Leon selbst wird von der Explosion nicht mehr verletzt (RE2-Regel).
 * Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief
   bestimmt die Wurfweite (tief ~1500, mitte ~12000 bis zur naechsten Wand).
+
+---
+
+# Nachbesserung 1 (nach `A_abnahme_0.md`, 2026-10-03)
+
+Ausgang: HEAD 6ffc1d41, Abnahme 0 = NICHT BESTANDEN (Punkt 1 teilweise). Die Messungen "vorher" je Mangel stehen in
+`A_abnahme_0.md` (Laeufe `abn0_mess/t1220h1`, `t1220h2`, `t11c0c`, `tisch`, `boss_5090d`); sie werden hier als Pins
+nachgestellt (N1.4). Werkzeuge neu: `A_werkzeug/sca_zensus.py` (Zellfelder aller Raeume), `A_werkzeug/jal_scan.py`
+(alle `jal <ziel>` einer EXE mit den Argument-Ladungen davor).
+
+## N1.1 RE-Belege (neu, selbst disassembliert)
+
+### RE2 FUN_8004fba0 vollstaendig (`re2_disasm.py dis 0x8004fba0 330`, Ende `jr ra` @0x80050108) — korrigiert §3.1/§4.1
+Signatur am Aufruf der Geschoss-Routine @0x8001ee60-a0: a0 = `sp+16` (Lage x/y/z s32), **a1 = 2 = Radius**
+(`addiu a1,zero,2` @0x8001ee68), **a2 = 0x2000 = Klassenmaske** (`addiu a2,zero,8192` @0x8001ee7c), a3 = 0
+(`addu a3,zero,zero` @0x8001ee84 = Objektkaesten mitpruefen).
+
+| Schritt | Adresse | Instruktionen |
+|---|---|---|
+| Flag loeschen | @0x8004fc30-44 | `sw zero,-13368(at)` 0x800dcbc8, `sh zero,15228(at)` 0x800c3b7c (Bodenhoehe), `sw zero,-13268(at)` 0x800dcc2c |
+| **y > 0 -> Flag** | @0x8004fc2c / @0x8004fc48-58 | `lw v1,4(s3)` / `blez v1,0x8004fc5c` / `addiu v0,zero,1` / `sw v0,-13368(at)` — unter der Ebene 0 gilt als Kontakt |
+| **Objektkaesten** (a3 == 0) | @0x8004fc5c-0x8004fd6c | Liste 0x800d0324, Schritt 504, bis `*0x800d4224`; `jal 0x80038950(Lage, Obj, r, 0)` @0x8004fcac; Hoehenfenster des Kastens `lw a0,0(s1)` / `lhu a2,22(s1)` @0x8004fcbc-e4; im Fenster `ori v0,v0,0x1` / `sw v0,-13368(at)` @0x8004fd0c-18 |
+| Zellschleife | @0x8004fd74-0x800500cc | 16 B je Zelle, Ende s7 = Kopf + Zahl*16 (`lw v0,4(s2)` / `sll v0,v0,4` @0x8004fc00-10) |
+| Quadrant | @0x8004fd74-80 | `lhu v0,10(s2)` / `and v0,v0,fp` (fp = Rueckgabe `jal 0x8004c198` @0x8004fc0c) |
+| Rechteck-Vortest | @0x8004fd88-b8 | `(x + r - Zelle.x) <u (w + 2r)`, dasselbe in z |
+| **Klassenmaske** | @0x8004fdc0-d0 | `lhu v1,8(s2)` / `lw t0,16(sp)` / `and v0,v1,t0` / `beq v0,zero` (naechste Zelle) |
+| Form 10 uebersprungen | @0x8004fdd4-dc | `andi v1,v1,0xf` / `addiu v0,zero,10` / `beq v1,v0` |
+| Unterkante s1 | @0x8004fde4-0x8004fe04 | `lw a0,12(s2)`; Schleife `sra a0,a0,1` / `addiu s1,s1,-1800` bis Bit 0 = -1800 * (niedrigstes gesetztes Bit) |
+| Etagenhoehe s0 | @0x8004fe08-30 | `lhu v1,10(s2)` / `srl v1,v1,6` / `andi v1,v1,0x1f` ... `subu s0,zero,v0` = -1800 * ((Zelle+10 >> 6) & 31) |
+| **Formtest** | @0x8004fe34-54 | `andi v1,v1,0xf` / `sltiu v0,v1,0xe` / `lw v0,4356(at)` (Tabelle **0x80011104**) / `jr v0` |
+| Tabelle 0x80011104 | 14 Worte | [0] 0x8004ffb0 (ohne Formtest = Rechteck), [1] 0x8004fe5c `jal 0x8004cfc8`, [2] 0x8004fe7c `jal 0x8004d484`, [3] 0x8004fe9c `jal 0x8004d940`, [4] 0x8004febc `jal 0x8004dde8`, [5] 0x8004fedc `jal 0x8004ea14`, [6] 0x8004fefc `jal 0x8004ed84`, [7] 0x8004ff1c `jal 0x8004ef0c`, [8] 0x8004ff3c `jal 0x8004f17c`, [9] 0x8004ffb0, [10] 0x800500c8 (naechste Zelle), [11] 0x8004ff5c `jal 0x8004f8b8`, [12] 0x8004ff78 `jal 0x8004fa28`, [13] 0x8004ff94 `jal 0x8004fb38`; je `bne v0,zero,0x8004ffb0` (Treffer), sonst `j 0x800500cc` |
+| Oberkante | @0x8004ffb0-d0 | `lhu v1,10(s2)` / `srl v1,v1,11` / v1*100 (`sll 1`, `addu`, `sll 3`, `addu`, `sll 2`) / `subu s0,s0,v0` — s0 = Etagenhoehe - 100 * (Zelle+10 >> 11) |
+| **Hoehenfenster** | @0x8004ffd4-0x8005000c | `lw v1,4(s3)` / `slt v0,s1,v1` / `bne v0,zero,0x8005005c` (unter der Unterkante) / `slt v0,s0,v1` / `beq v0,zero,0x80050028` (auf/ueber der Oberkante) / `ori v0,v0,0x1` / `sw v0,-13368(at)` — Flag Bit 0 nur fuer **s0 < y <= s1** |
+| ueber der Oberkante | @0x80050028-58 | Oberkante wird Bodenkandidat (`sh s0,15228(at)`), `slt v0,v0,s0` / `bne` -> naechste Zelle OHNE Flag |
+| Bit 1 | @0x8005005c-8c | y < s1: `ori v0,v0,0x2` / `sw v0,-13368(at)` |
+
+RE2-Aufrufer von FUN_8004fba0 (`jal_scan.py info/re2leon/PSX.EXE 0x80010000 0x800 0x8004fba0`): alle Geschoss-Routinen
+(@0x8001e060, @0x8001eea0, @0x8001f15c, @0x8001f564, @0x8001f810, ...) mit (r 2, Maske 0x2000); @0x8003692c mit (r 450,
+Maske 0x4000: `addiu a1,zero,450` / `addiu a2,zero,16384`); @0x800376d8 mit (r aus 0x800cfc92, Maske 0x8000:
+`ori a2,zero,0x8000`). RE2 fuehrt also eine EIGENE Zellklasse fuer Geschosse (Bit 0x2000 im Wort Zelle+8) neben
+0x4000/0x8000.
+
+### RE2 FUN_8001ED9C: zwei Ausgaenge in die Op-Tabelle — korrigiert §3.1/§3.2
+* Gegner-Kontakt (`bne s0,zero,0x8001ef38` @0x8001ef14) und Lebensdauer-Ende (`lbu v0,11(t2)` / `bne v0,zero,0x8001ef80`
+  @0x8001ef28-30, sonst Durchfall nach 0x8001ef38): Status |= 0x80 (`ori v0,v0,0x80` / `sh v0,24(v1)` @0x8001ef4c-50),
+  dann **`lbu v0,2(v1)` @0x8001ef74 / `j 0x8001f0e4`** = Op aus step[**2**] + Art.
+* Wand (`lw v0,-13368(v0)` / `beq v0,zero,0x8001f10c` @0x8001ef84-8c): Rueckzug, `jal 0x8001d894` @0x8001f0cc, dann
+  **`lbu v0,3(v1)` @0x8001f0e0** = Op aus step[**3**] + Art (`lb v1,27(v1)` @0x8001f0e4, Tabelle 0x8009d868, `jalr v0`
+  @0x8001f104). §3.2 schrieb fuer den Kontakt "Op 47"; belegt ist nur: Wand -> step[3] (= 47 bei der Explosivrunde).
+  Ohne Wirkung auf den Port (Kontakt nicht verdrahtet).
+
+### RE1.5-Zelle: Formen ja, Hoehe nein
+* Form-Verteiler RE1.5: FUN_8003b0a4 ruft `(*(code**)(0x800b2858 + typ*4))(Zelle, ...)` (`lw v0,0x0(at)` @0x8003b4a0);
+  FUN_8003aea0 fuellt die Tabelle: [1] FUN_8003bca8 Rechteck (`sw` @0x8003af04), [2] LAB_8003d00c Raute (@0x8003af14),
+  [3] FUN_8003d6a8 Kreis (@0x8003af24), [4] LAB_8003beb0 (@0x8003af34), [5] LAB_8003c734 (@0x8003af44), [6] LAB_8003cb9c
+  (@0x8003af54), [7] LAB_8003c2cc (@0x8003af64), [8] LAB_8003d7e8 (@0x8003af74), [9] LAB_8003d930 (@0x8003af84).
+  Die Port-Zwillinge (re15_collision.c push_rect / push_diag2 / push_circle / push_diag4..7 / push_caps8/9) tragen die
+  Flaechen; fuer r = 0 ergeben ihre Eintrittsbedingungen:
+
+  | Typ | solide Flaeche (Zelle x, z, w, d) | Bedingung im Handler |
+  |---|---|---|
+  | 1 | Rechteck | Vortest |
+  | 2 | Raute, Mitte (x + w/2, z + d/2), Halbachsen w/2 und d/2 | je Quadrant `pcmp < edge` (LAB_8003d00c) = abs(dx)/hw + abs(dz)/hd < 1 |
+  | 3 | Kreis, Mitte (x + w/2, z + w/2), Radius w/2 | `pen = cr - dist >= 1` (FUN_8003d6a8) |
+  | 4 | Dreieck, rechter Winkel bei (x+w, z+d) | `Q < s8`: pz - (z+d) > -d*(px-x)/w (LAB_8003beb0) |
+  | 5 | Dreieck, rechter Winkel bei (x, z+d) | `LINE < ZTERM`: pz - z > d*(px-x)/w (LAB_8003c734) |
+  | 6 | Dreieck, rechter Winkel bei (x+w, z) | `s3 < s7q`: pz - z < d*(px-x)/w (LAB_8003cb9c) |
+  | 7 | Dreieck, rechter Winkel bei (x, z) | `s6 < s3`: pz - (z+d) < -d*(px-x)/w (LAB_8003c2cc) |
+  | 8 | Kapsel in x: Rechteck x+d/2 .. x+w-d/2, Kreise (Durchmesser d) an beiden Enden | LAB_8003d7e8 |
+  | 9 | Kapsel in z: Rechteck z+w/2 .. z+d-w/2, Kreise (Durchmesser w) an beiden Enden | LAB_8003d930 |
+
+* Quadranten: die Zellen stehen in 5 Listen (Kopf +4..+20); der Aufloeser nimmt die Liste des Quadranten der Lage
+  (`FUN_8003b068(pos, ..., hdr[0], hdr[1])` in FUN_8003b0a4). In ROOM1140 sind alle Listen gleich, in ROOM11C0 nicht —
+  eine Zelle gilt nur in IHREM Quadranten.
+* **Hoehe:** die RE1.5-Zelle hat 12 B (w, d, x, z, typ u8, u0 u8, u1 u8, floor u8). Wort +10 = u1 | floor<<8:
+  Bits 12-15 Band (`(u8)(ent+0x82) == (w5<<16)>>28` in FUN_8003b0a4), Bits 8-11 ein Klassen-Nibble, Bits 0-7 Merker.
+  Zensus (`sca_zensus.py`: 4706 eindeutige Zellen, 4666 mit u0&1): Nibble 3 = 3996, 0/1/2 = 84/130/144, 4..d = 312; alle
+  Formtypen kommen in Nibble 3 vor. Leser des Nibbles in der EXE (Suche ueber RE_15_Quellcode_V2, 1258 Funktionen): nur
+  der Sichtstrahl FUN_8003dcc4(vec, Region, Maske, Wert) mit `(Maske & w5) == Wert` — FUN_8001b9b4 ruft ihn mit
+  (0xf00, 0x300) (Schuetze -> Ziel; Aufrufer FUN_80011f50 = Zielwahl der Waffe), FUN_8001bafc mit (0x400, 0x400).
+  KEIN Leser nimmt das Nibble als Zahl (keine Multiplikation wie RE2s `* 100` @0x8004ffb0-d0); in Treppenraeumen ist es
+  = Band oder Band+1 (ROOM4070: 0x45/0x67/0x89/0xab/0xcd; ROOM2080: 0x45/0x55/0x78/0x88), also keine Hoehe ueber Grund.
+  **ROOM1140: alle 19 Zellen je Liste tragen u0=ff u1=00 floor=03 — der Konferenztisch (#6 x[-4650..7450]
+  z[-17450..-11350]) ist in den RDT-Daten von einer Wand nicht zu unterscheiden** (und sperrt im Original auch die
+  Schusslinie der Zielwahl: Nibble 3). Eine Hoehenregel wie RE2 @0x8004ffd4-0x8005000c laesst sich aus den RE1.5-Daten
+  nicht belegen -> OFFEN (N1.5), Nutzerhinweis.
