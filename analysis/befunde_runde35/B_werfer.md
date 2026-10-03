@@ -34,6 +34,7 @@ Dossier wird FORTLAUFEND geschrieben (Sitzungsabbrueche moeglich).
   Waende) — §4.1. Netze vermessen (PL00W0F gedreht), Fix G1 = Waffenrahmen (§3.7), Fix G2 = werfer_boden (§3.8),
   Commit 46f769fd (Befund) + G1/G2-Commit; Messung nachher §4.2.
 - 16:25 Nachladen/Leerschuss/Elevation/Zensus aller 20 Waffen-Ids/Inventarbild gemessen (§4.2).
+- 17:20 Suite Lauf 4 gruen (481/481); Dauerfeuer-Bild und Tonweg mit Dummy-Audiotreiber geprueft; Abschluss-Commit.
 - 16:40 Suite Lauf 3 von mir selbst bei Test 340/481 abgebrochen (nur eigene PIDs: local_build-bash, ctest,
   cmake, re15_pc.exe des eigenen Baums), um werfer_boden auf WAND-Zellen (Typ 1) einzugrenzen — bis dahin kein
   roter Test. Suite Lauf 4 auf dem Endstand.
@@ -571,13 +572,22 @@ exit 0; jede Id laeuft durch ihr Feuerclip, verbraucht Munition (1/2 Nahkampf ni
 6->4, 12 6->0, 13 6->3 (HP -250), 14 Fuel 6->0 (HP -10), 15/16/17 6->4 (HP -150), 18 6->4 (HP -850), 19 6->0,
 20 6->4 (HP -850). Keine weitere Waffe ohne Wirkung.
 
+**Dauerfeuer-Bild Flammenwerfer** (audio/w14_dauer.png, RE15_FRAMEDUMP Bilder 40/48/56/64, Abzug 2,5 s gehalten):
+durchgehender waagerechter Flammenstrahl von der Duese, etwa anderthalb Koerperlaengen weit; Toene im Wechsel
+`SE re2arms ARMS10 satz=0` / `satz=11` je Clip-Durchlauf (Bild 1 / 11 des 21-Bild-Clips).
+
+**Tonweg mit eingeschaltetem Audio** (audio/, SDL_AUDIODRIVER=dummy statt RE15_NOAUDIO, damit `g_audio.initialized`
+gesetzt ist und die RE2-Baenke wirklich geladen werden): Laeufe 14/15/18/20 exit 0, keine Zeile
+`[re2arms] ... fehlt` in debug.log/run.out (shared_assets/RE2/SOUND/ARMS10/ARMS11 werden gefunden und geparst).
+Gehoert wurde nichts (Dummy-Treiber) — die Klangprobe am Lautsprecher bleibt dem Nutzer.
+
 **Inventar-Darstellung** (inv/inv_zoom.png, RE15_INV_SHOT + RE15_GIVE): Granatwerfer-Symbol mit Mengenzahl in der
 Farbe der Munitionsart (Explosiv blau wie jede Waffe, Saeure gelb = Byte +8 = 1 @0x80074e68, Brand/Flamme
 orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS, Flammenwerfer + FLAME FUEL.
 
 ## 5. Tests
 
-* `unit_r35_werfer` (tests/unit/test_r35_werfer.c, 60 Pruefungen, OK): A Daten (Magazine/Munitions-
+* `unit_r35_werfer` (tests/unit/test_r35_werfer.c, 78 Pruefungen mit Teil G, OK): A Daten (Magazine/Munitions-
   Records, Bank-/Clip-Umsetzung, Schwelle), B GL-Runde (Op 17 Art/Lebensdauer, Op 22 + Op 15 je Bild,
   zwei Applier 0x30009 je Bild mit Box {-1400,0,350,250} und y+-1000, Wand -> Op 47: SE 0x01110001,
   2 x 0x10020009 Box {-2000,0,1000,500} y/y+900, drei Kinder, Phasen 1..4 -> Platz frei; Treffer ->
@@ -614,7 +624,10 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
   dy in -400..200 ueber drei Bilder, 5 Explosionen), Rakete in ROOM1000 und ROOM1060 (>= 4 Flugbilder, Vortrieb
   ~2300 ueber drei Bilder, GENAU eine Explosion 0x01140001 an der Wand). Gegenprobe = Messung vorher §4.1 (dy +912
   bzw. 0 Explosionen).
-* Suite nach G1/G2/Kombination (Lauf 3): s. Abschluss.
+* **Suite Lauf 4 (Endstand Code f391f1c6, `local_build.sh all`): `=== LOCAL-BUILD-OK (all) — Tests 481/481`**
+  (481 = 480 + unit_r35_werfer_kombi; kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer,
+  unit_r35_werfer_kombi Passed, integration_r35_werfer Passed 137 s). Lauf 3 wurde von mir bei 340/481 abgebrochen
+  (Code-Aenderung Wand-Filter), bis dahin ohne roten Test.
 
 ## 6. OFFEN (mit Adresse und naechstem Messweg)
 
