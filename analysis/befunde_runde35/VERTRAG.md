@@ -1,7 +1,7 @@
 # Runde 35 — Ressourcen-Vertrag und Arbeitsregeln (verbindlich fuer alle 14 Spuren)
 
 Zweck: 14 Spuren bauen parallel in eigenen Arbeitsbaeumen (`.claude/worktrees/r35_<spur>`, Zweig
-`r35/<spur>`, Basis master 19f32749 + dieser Auftrag). Jede Spur nimmt NUR die hier zugeteilten
+`r35/<spur>`, Basis master e6783b27 = 19f32749 + dieser Auftrag). Jede Spur nimmt NUR die hier zugeteilten
 Plaetze. Wer mehr braucht: im eigenen Dossier begruenden, aus dem eigenen Reservebereich nehmen,
 NIE aus dem einer anderen Spur. Dossier je Spur: `analysis/befunde_runde35/<SPUR>_<thema>.md`
 (ZUERST anlegen, fortlaufend schreiben — [[Sitzungslimit bricht Agenten ab]]).
@@ -22,15 +22,16 @@ NIE aus dem einer anderen Spur. Dossier je Spur: `analysis/befunde_runde35/<SPUR
 | J | affen | ROOM11C0: Ada verschwindet nach ihrer Szene nicht (verstecken) und kommt nach dem Sieg nicht zurueck; Monkey kommt an falscher Position aus dem Auto; komisch beweglicher Oberkoerper-Teil; KI nicht zielstrebig/aggressiv wie Original; Brust-Schlag-Animation fehlt; Sprung erst nach 3 Treffern |
 | K | cut10f0 | Neue Szene ROOM10F0 (Ada/Leon/Marvin, kompletter Dialog); danach Karte: ROOM11C0 markiert, dann ROOM1150 blinkend, beide bis besucht; MAIN01 als Hintergrundmusik bis zum Parkplatz |
 | L | cut1150 | Dialog ROOM1060->ROOM1040 "I have to get the Chief first..." solange ROOM1150 nicht besucht; Irons-Todesszene ROOM1150 (Dialog, Arm, Knien); danach Knaelle + Zombie-Spawns ROOM1130 (Rest aus 1140), ROOM1040 (Rolltor + 5), ROOM1030 (Rest aus 1070, Cut 7; Kriechen durchs Tor Cut 6) |
-| M | cut11c0_fenster | Szene ROOM11C0 Cut 13 Ada+Marvin; ROOM1120 Cut 1: Scheiben zerbrechen wie RE2 (Glas-Effekt + Knall aus RE2 extrahieren), Kraehe fliegt herein, hinteres Fenster im Hintergrund beschaedigt |
+| M | cut11c0_fenster | ROOM1120 Cut 1: Scheiben zerbrechen wie RE2 (Glas-Effekt + Knall aus RE2 extrahieren), Kraehe fliegt herein, hinteres Fenster im Hintergrund beschaedigt. (Die Szene ROOM11C0 Cut 13 Ada+Marvin ist der letzte Schnitt der 1150-Montage und gehoert zu Spur L; der Baum heisst aus historischen Gruenden r35_cut11c0_fenster.) |
 | N | android | Fortschrittsanzeige auf sehr breiten Displays abgeschnitten; Datei<->Ordner-Konflikt beim Update bricht sauber ab, erst 2. Start heilt; Pruefskript-Urteilslogik selbst mittesten |
 
-Reihenfolge der Zustaende K -> L -> M ist eine Geschichte: K setzt das Flag "10F0-Szene gesehen",
-L liest es NICHT (die 1150-Szene haengt nur am Betreten von 1150 nach K? — NEIN: der Nutzer sagt
-"Betritt man ROOM 1150 kommt eine weitere Cutscene" im Anschluss an K; L gatet seine Szene auf
-(9,71)=1 UND (3,94)=1 (erste Irons-Szene gelaufen) und setzt (9,73)). M gatet die 11C0-Szene auf
-(9,73)=1 (Irons tot) und die Ada-Marvin-Vorszene von Spur J/11B0 bleibt unberuehrt. Jede Spur liest
-die Flags der anderen nur ueber die hier vereinbarten Nummern.
+Reihenfolge der Zustaende K -> L ist eine Geschichte: K setzt das Flag "10F0-Szene gesehen" (9,71).
+Der Nutzer sagt "Betritt man ROOM 1150 kommt eine weitere Cutscene" im Anschluss an K; L gatet
+seine Szene auf (9,71)=1 UND (3,94)=1 (erste Irons-Szene gelaufen) und setzt (9,73). Die Montage
+von L endet mit dem Schnitt nach ROOM11C0 Cut 13 (Ada/Marvin: "What was this noise?" ... "Marvin!")
+— das ist EIN Ereignisprogramm, deshalb liegt dieser Schnitt bei L und nicht bei M. Die
+Ada-Marvin-Vorszene von 11B0 sub06 (Spur J) bleibt unberuehrt. Jede Spur liest die Flags der
+anderen nur ueber die hier vereinbarten Nummern.
 
 ## 1. Zuteilung
 
@@ -42,8 +43,8 @@ Belegt (Zensus 2026-10-03, re15_port/include/*.h): 53 Sicherung, 54 Irons Diary,
 | Bits | Spur | Verwendung |
 |---|---|---|
 | 71, 72 | K | 71 = "10F0-Szene gesehen" (Kartenmarken blinken ab hier), 72 Reserve |
-| 73, 74, 75, 76, 77 | L | 73 = "Irons-Todesszene gesehen" (= Spawns ausgeloest), 74 = Spawn 1130 verbraucht, 75 = Spawn 1040 verbraucht, 76 = Spawn 1030 verbraucht, 77 Reserve |
-| 78, 79 | M | 78 = "11C0-Vorszene Ada/Marvin gesehen", 79 = "1120-Fenster zerbrochen" |
+| 73, 74, 75, 76, 77, 78 | L | 73 = "Irons-Todesszene gesehen" (= Spawns ausgeloest), 74 = Spawn 1130 verbraucht, 75 = Spawn 1040 verbraucht, 76 = Spawn 1030 verbraucht, 77 = "1060->1040-Dialog" nur falls noetig, 78 Reserve (frueher M: 11C0-Schnitt, jetzt Teil von 73) |
+| 79 | M | 79 = "1120-Fenster zerbrochen" |
 | 80, 81 | F | 80 = Memory Card ROOM1010 genommen, 81 = Schrot-Munition ROOM1090 genommen |
 | 82 | J | Reserve (Ada versteckt/zurueck — bevorzugt aus dem RAUMSKRIPT ableiten) |
 | 83 | E | Reserve |
@@ -65,7 +66,7 @@ Hebetisch-Cursor), 11C0=10, 1120=9, 1060=1, 1040=2, 1130=6, 1030=18, 1010=3, 109
 | ROOM1150/1151 | L | 22..31 (Irons-Szene; 20/21 sind der Hebetisch) |
 | ROOM1060/1061 | L | 1..5 ("I have to get the Chief first...") |
 | ROOM1130, 1040, 1030 | L | nur falls noetig, ab RDT-Zahl, max +4 je Raum |
-| ROOM11C0/11C1 | M (Vorszene Ada/Marvin) 10..19; J (Ada verstecken/zurueck) 20..23 |
+| ROOM11C0/11C1 | L (Schluss-Schnitt Ada/Marvin der 1150-Montage) 10..19; J (Ada verstecken/zurueck) 20..23 |
 | ROOM1120/1121 | M | 9..15 |
 | ROOM1190/1191 | H | 6..11 (Zielscheiben) |
 | ROOM1010/1011, ROOM1090/1091 | F | ab RDT-Zahl, max +3 je Raum (Memory Card / Munition) |
@@ -81,8 +82,9 @@ Jede Spur macht VOR dem Belegen einen Zensus des Raums (main00 + alle subs, Port
 scd_room_setup.c) und schreibt ihn ins Dossier. Vergeben (Port): ROOM1050 Slots 11/12 Rolltor,
 13/14 Ada-Ruf, 15/16 Dokumente; ROOM1150 11/12 Hebetisch-Cursor. Ereignisse (Port-Programme ueber
 scd_event_fire, < 32, nicht die RDT-Subs des Raums): ROOM1050 2 (Rolltor), 13 (Ada-Ruf); ROOM1150 4
-(Hebetisch-Cursor). Vorschlag: K = Ereignis 20 in 10F0, L = 21 (1150), 22 (1060), M = 23 (11C0), 24
-(1120), J = 25 (11C0), E = 26 (1050), H = 27 (1190), F = 28 (1010), 29 (1090).
+(Hebetisch-Cursor). Vorschlag: K = Ereignis 20 in 10F0, L = 21 (1150), 22 (1060), 23 (11C0-Schnitt,
+falls als eigenes Programm im Raum 11C0 noetig), M = 24 (1120), J = 25 (11C0), E = 26 (1050),
+H = 27 (1190), F = 28 (1010), 29 (1090).
 
 ### 1.4 Dateien — Konfliktvermeidung beim Zusammenfuehren
 * Neue Logik in NEUEN Dateien `engine/src/<thema>_<raum>.c` + `include/re15_<thema>.h` (Vorbild:
@@ -114,9 +116,14 @@ flattern die fuenf GUI-Haken (integration_boot_bg_pin, dark_start_pin, relatch_p
 save_counter_pin, weste_load_pin) — faellt einer davon, NICHT als Regression werten, sondern
 einzeln nachfahren (`ctest --test-dir re15_port/build -R "^<name>$"`), 2-3x. Zwei Builds im selben
 build/ gleichzeitig: NIE.
-Referenzdaten, die der schlanke Baum nicht traegt (info/re2leon, info/Resident_Evil_und_Playstation_
-Information, voice, .agent_refs), liegen als Verzeichnis-Junction auf den Hauptbaum — sie sind
-lesbar wie immer, duerfen aber NICHT beschrieben werden.
+Der schlanke Baum (sparse-checkout cone) traegt re15_port, analysis, alle Quellcode-/Overlay-
+Verzeichnisse, info/Re1.5, info/re2leon, voice, synchro, stage_saves, release, tools, psx_dev u.a.
+NICHT dabei: `info/Resident_Evil_und_Playstation_Information/` und `.agent_refs/` — die liest man
+direkt aus dem Hauptbaum `C:/workspace/git/reAi_v2/...` (nur lesen, nie schreiben; der Hauptbaum
+gehoert dem Orchestrator). Keine Junctions/Links in den Baum legen (zerstoert den sparse index).
+Die Ghidra-Dumps `ghidra1_V2.txt` / `ghidra_re2_Leon.txt`, die Wissensdateien `RE15_*.md` und
+`RE_15_Quellcode_*`/`RE2_Quellcode_*` liegen im Baum (Wurzel-Dateien des cone);
+`re15_disasm.py`/`re2_disasm.py` in `.claude/skills/re15-psx-disasm/scripts/` funktionieren dort.
 
 ### 1.6 Commits
 Frueh und in Schritten committen (`wip(r35-<spur>): ...` ist erlaubt, am Ende `fix/feat(r35-<spur>): ...`).
