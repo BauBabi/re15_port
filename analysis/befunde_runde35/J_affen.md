@@ -621,3 +621,7 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   erfundene Verlangsamung). Offen bleibt die Szenen-Endlage Leons (25 Einheiten), die im JUMP-Szenario
   entscheidet, welcher der beiden Original-Takte entsteht -> OFFEN.
 - Rear-up-Griff gegen das Original (Abnahme: 0 HP, ~1600 Versatz beim Zupacken): siehe unten.
+- **Riegel `unit_r35_affen_takt` (neu):** zwei Laeufe ab der Original-Lage F195 — Gleichtakt (Soll = GDB-Spur
+  218/268/321/371/424/475/527/579) und Wechseltakt nach Desync e2 +0x1dc := 30 in F203 (Soll = GDB-Spur
+  218/254/290/326/362/397/433/469). Port: groesste Abweichung **3** bzw. **4** Bilder (Schranke 6, das
+  Original streut je Biss +-3), mittlerer Abstand **52,0** (Original 51,6) bzw. **35,3** (35,9). Gruen.

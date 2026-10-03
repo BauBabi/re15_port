@@ -662,7 +662,7 @@ static int bank_laden_27(void)
  * Original ab F195: Commit e1 F205, e2 F211 (beide Biss, Clip 0x12), Treffer e1 F218 (+0x1dc 45), Flinch Clip 8
  * bis F240, Spieler frei F241; e2 Exit F235 -> +0x1dc 0x14; Commit e2 F256, e1 F264; Treffer e2 F268, ...
  * Treffer-Bilder 218/268/321/371/... (Abstaende 50/53/50/...). */
-static void teil_takt(void)
+static void takt_lauf(int desync, const int *soll, int nsoll)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_game_state_init();
@@ -683,6 +683,7 @@ static void teil_takt(void)
     int hp_alt = pl->hp, treffer[64], nt = 0;
     char alt[256] = "";
     for (int f = 196; f < 196 + 420; f++) {
+        if (desync && f == 203) b->dog_blocked_ctr = 30;   /* = GDB-Schreiben M800ad1f0,2:1e00 im Original */
         frame(0, 0);
         int ev = (pl->hp != hp_alt);
         if (ev && nt < 64) treffer[nt++] = f;
@@ -708,6 +709,30 @@ static void teil_takt(void)
     printf("\n  Treffer-Abstaende:");
     for (int i = 1; i < nt; i++) printf(" %d", treffer[i] - treffer[i - 1]);
     printf("  (%d Treffer)\n", nt);
+    int abw = 0, fehlend = 0;
+    for (int i = 0; i < nsoll; i++) {
+        if (i >= nt) { fehlend++; continue; }
+        int d = treffer[i] - soll[i]; if (d < 0) d = -d; if (d > abw) abw = d;
+    }
+    /* Schranke 6 Bilder kumuliert ueber 8 Bisse: das Original selbst streut je Biss um +-3 (Abstaende 49..55 bzw.
+     * 35..36 — Treffer in Fenster-Bild 0x0c oder 0x0d je nach Knochenabstand, bff8 r=0x3e8 @0x801183c0-cc). */
+    PRUEF(fehlend == 0 && abw <= 6, "%s: %d Bisse wie im Original (GDB-Einzelbild-Spur), groesste Abweichung %d Bilder (Schranke 6), fehlend %d",
+          desync ? "Wechseltakt nach Desync (+0x1dc := 30 in F203)" : "Gleichtakt ab Original-Lage F195", nsoll, abw, fehlend);
+    if (nt >= nsoll && nsoll >= 2) {
+        double mitte = (double)(treffer[nsoll - 1] - treffer[0]) / (double)(nsoll - 1);
+        double soll_m = (double)(soll[nsoll - 1] - soll[0]) / (double)(nsoll - 1);
+        PRUEF(mitte >= soll_m - 2.0 && mitte <= soll_m + 2.0, "mittlerer Biss-Abstand %.1f Bilder (Original %.1f, +-2)", mitte, soll_m);
+    }
+}
+
+static void teil_takt(void)
+{
+    /* Original (VSync-Bild, Treffer im Bild davor): Gleichtakt 218/268/321/371/424/475/527/579; nach dem
+     * Desync 218/254/290/326/362/397/433/469 (36er-Wechseltakt, scratch jnb1/g_orig.txt / g_desync.txt). */
+    static const int gleich[8]  = { 218, 268, 321, 371, 424, 475, 527, 579 };
+    static const int wechsel[8] = { 218, 254, 290, 326, 362, 397, 433, 469 };
+    takt_lauf(0, gleich, 8);
+    takt_lauf(1, wechsel, 8);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
