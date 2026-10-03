@@ -179,12 +179,30 @@ static int aktive_gegner(int typ /* -1 = alle */)
     return n;
 }
 
+/* Messhilfe (RE15_R35L_DUMP=1): alle aktiven Gegner mit Ort, Stempel und Kriech-Zustand. */
+static void gegner_dump(const char *marke, int bild)
+{
+    if (!getenv("RE15_R35L_DUMP")) return;
+    printf("  [%s F%d]", marke, bild);
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *a = &g_actors[s];
+        if (!a->active || !a->type) continue;
+        printf(" %d:t%02x(%d,%d,y%d)g%02x s%d/%d st%d fl%04x mo%d", s, a->type, (int)a->x, (int)a->z, (int)a->y, a->grid_id,
+               a->state, a->sub_state_1, a->member_0b, a->anim_flags, a->motion);
+    }
+    printf("\n");
+}
+
 /* Bis zu `max` Bilder fahren, Nachrichten-Ids und Tuer-Anforderung mitschreiben. */
 typedef struct {
     int bilder; int raumwechsel; unsigned ziel; int ziel_cut; int32_t ziel_x, ziel_z;
     int msgs[16]; int n_msgs;
     int kniet_gesehen; int irons_clip5; int irons_fall_bild; int irons_clip2;
     int32_t pl_min_dist_couch;
+    /* ROOM1030: je Aktor das Kriech-Bit gesehen (anim_flags 0x1000 bzw. Kriech-Wurzel grid&0xf == 1) und die
+     * z-Spanne; ROOM1040: kleinstes z je Aktor (durchs Tor = z < Tor-z). */
+    uint8_t kriech[RE15_ACTOR_MAX]; int32_t z_min[RE15_ACTOR_MAX], z_max[RE15_ACTOR_MAX], z_erst[RE15_ACTOR_MAX];
+    uint8_t gesehen[RE15_ACTOR_MAX];
 } lauf_t;
 
 static void lauf(lauf_t *L, int max, int bis_tuer)
@@ -206,6 +224,15 @@ static void lauf(lauf_t *L, int max, int bis_tuer)
             long d = labs(dx) + labs(dz);
             if (d < L->pl_min_dist_couch) L->pl_min_dist_couch = (int32_t)d;
         }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            const re15_actor_t *a = &g_actors[s];
+            if (!a->active || !a->type) continue;
+            if (!L->gesehen[s]) { L->gesehen[s] = 1; L->z_erst[s] = L->z_min[s] = L->z_max[s] = a->z; }
+            if (a->z < L->z_min[s]) L->z_min[s] = a->z;
+            if (a->z > L->z_max[s]) L->z_max[s] = a->z;
+            if ((a->anim_flags & 0x1000) || (a->grid_id & 0x0f) == 1) L->kriech[s] = 1;
+        }
+        if ((f % 30) == 0) gegner_dump("lauf", f);
         const re15_actor_t *ir = &g_actors[RE15_IT_IRONS_SLOT];
         if (ir->active && ir->type == RE15_IT_IRONS_TYP) {
             if (ir->motion == 5) L->irons_clip5 = 1;
@@ -272,28 +299,29 @@ static int op_len(uint8_t op)
     case 0x34: return 4; case 0x36: return 12; case 0x37: return 4; case 0x39: return 4;
     case 0x3b: return 32; case 0x3c: return 2; case 0x3f: return 4; case 0x40: return 8;
     case 0x41: return 10; case 0x42: return 1; case 0x43: return 4; case 0x44: return 20;
-    case 0x47: return 2;
+    case 0x47: return 2; case 0x46: return 10; case 0x4b: return 3; case 0x18: return 2;
     default: return 0;
     }
 }
 static int frei_zone7(int bit)
 {
-    static const int frei[] = { 40,41,42,43,46,47,48,49,75,76,77,78,79 };
+    static const int frei[] = { 40,41,42,43,46,47,48,49,75,76,77,78,79, 83,84,90,91,95 };
     for (unsigned i = 0; i < sizeof frei / sizeof frei[0]; i++) if (frei[i] == bit) return 1;
     return 0;
 }
 static void teil_programme(void)
 {
     printf("== programme ==\n");
-    for (int w = 0; w <= 13; w++) {
+    for (int w = 0; w <= 14; w++) {
         int n = 0; const uint8_t *p = re15_irons_tod_programm(w, &n);
         if (!p) { PRUEF(0, "Programm %d fehlt", w); continue; }
-        int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0;
+        int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0;
         while (o < n) {
             int l = op_len(p[o]);
             if (l <= 0) { ok = 0; printf("  Programm %d: unbekanntes Opcode 0x%02x @+%d\n", w, p[o], o); break; }
             if (p[o] == 0x44) { n_em++; if (p[o+7] != 0xff && !frei_zone7(p[o+7])) bad_bit = p[o+7]; }
             if (p[o] == 0x3b) { n_door++; }
+            if (p[o] == 0x18 && p[o+1] == 0x09) n_gosub9++;
             if (p[o] == 0x0d || p[o] == 0x11) tiefe++;
             if (p[o] == 0x0e || p[o] == 0x12) tiefe--;
             letzte = p[o];
@@ -301,7 +329,7 @@ static void teil_programme(void)
         }
         PRUEF(ok && o == n, "Programm %d: Opcode-Walk schliesst exakt (%d/%d B)", w, o, n);
         PRUEF(tiefe == 0, "Programm %d: For/Do-Bloecke ausgeglichen", w);
-        if (w == 0 || w == 1 || w == 4 || w == 7 || w == 8 || w == 9 || w == 10 || w == 13)
+        if (w == 0 || w == 1 || w == 4 || w == 7 || w == 8 || w == 9 || w == 10 || w == 13 || w == 14)
             PRUEF(letzte == 0x01, "Programm %d endet mit Evt_end", w);
         PRUEF(bad_bit < 0, "Programm %d: Tot-Bits aus dem freien Bereich (%d)", w, bad_bit);
         if (w == 0) {
@@ -313,7 +341,23 @@ static void teil_programme(void)
         if (w == 1) { PRUEF(n_em == 5 && n_door == 1 && p[n-36+23] == 0x04 && p[n-36+24] == 1, "Programm 1: 5 Records, Tuer -> 1040 Cut 1"); }
         if (w == 4) { PRUEF(p[n-36+23] == 0x03 && p[n-36+24] == 7, "Programm 4: Tuer -> 1030 Cut 7"); }
         if (w == 6) { PRUEF(n_em == 5, "Programm 6: 5 Kopien aus 1070"); }
-        if (w == 7) { PRUEF(n_em == 3 && p[n-36+23] == 0x1c && p[n-36+24] == 13, "Programm 7: 3 Kriecher, Tuer -> 11C0 (Raum 0x1c) Cut 13"); }
+        if (w == 2 || w == 14) { PRUEF(n_em == 5, "Programm %d: 5 Auffuell-Records ROOM1040", w); }
+        if (w == 7) {
+            PRUEF(n_em == 3 && p[n-36+23] == 0x1c && p[n-36+24] == 13, "Programm 7: 3 Kriecher, Tuer -> 11C0 (Raum 0x1c) Cut 13");
+            PRUEF(n_gosub9 == 4, "Programm 7: viermal Gosub sub09 wie ROOM1030 sub08 (@0x0279E/@0x027A4/@0x027B4/@0x027BA): %d", n_gosub9);
+            /* die Zeilen der Original-Szene liegen woertlich im Programm: gegen die RDT-Bytes pruefen */
+            if (rdt_laden(0x1030) == 0) {
+                static const struct { unsigned off; int n; } z[] = {
+                    { 0x0276C, 10 }, { 0x02776, 12 }, { 0x02782, 12 }, { 0x0278E, 8 }, { 0x02796, 8 } };
+                for (unsigned k = 0; k < sizeof z / sizeof z[0]; k++) {
+                    int gefunden = 0;
+                    for (int a = 0; a + z[k].n <= n; a++) if (!memcmp(p + a, s_raw + z[k].off, (size_t)z[k].n)) { gefunden = 1; break; }
+                    PRUEF(gefunden, "Programm 7 traegt ROOM1030 sub08 @0x%05X (%d B) woertlich", z[k].off, z[k].n);
+                }
+                PRUEF(s_raw[0x027E0 + 0x24] == 0x3e && s_raw[0x027E0 + 0x26] == 0x0f && s_raw[0x027E0 + 0x28] == 0x05,
+                      "ROOM1030 sub09 @0x02804 Member_cmp member 0x0f == 5 (Warte-Stempel)");
+            }
+        }
         if (w == 8) { PRUEF(n_em == 1 && p[n-36+23] == 0x15 && p[n-36+24] == 7, "Programm 8: Marvin, Tuer -> 1150 Cut 7"); }
     }
     /* Nachrichten vorhanden, Kopf/Ende der Dialogform */

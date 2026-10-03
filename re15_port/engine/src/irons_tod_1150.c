@@ -159,13 +159,28 @@ static const uint8_t k_p_1130[] = {
 static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres Betreten */
 
 /* PROGRAMM 2 — ROOM1040 Cut 1: Knall wie ROOM1030, Rolltor hoch (nur wenn (4,5)=0), die Zombies
- * (Raum-Records, Limit 5 @0x011F4) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A1A
+ * (Raum-Records, Limit 5 @0x011F0) kommen durchs Tor zur Kamera. Tor-Fahrt = sub08 @0x019B2..@0x01A1A
  * woertlich (Se_on 0x0c/0x0a, Speed_set y -40, 135 Bilder, Sca_id_set/Sca_floor_set 2/3, Se_on 0x0b),
- * Zustand (4,5)=1 + (4,4)=1 wie sub01 @0x0157A/@0x01586. */
+ * Zustand (4,5)=1 + (4,4)=1 wie sub01 @0x0157A/@0x01586.
+ * AUFFUELLUNG auf 5 (NUTZER-VORGABE "5 Zombies durch kommen ... Wenn es bereits offen ist, kommen nur 5
+ * Zombies"): die Raum-Records (main00 @0x011FC.., 20 Stueck, Tot-Bits 0x14..0x27) liefern durch das
+ * Gleichzeitig-Limit 5 (Save(0x12,5) @0x011F0, Gate @0x80042214-3c) genau fuenf — solange noch fuenf
+ * leben. Hat der Spieler vorher mehr als 15 getoetet, fuellen diese Records auf fuenf auf: Form der
+ * Raum-Records (Typ 0x16, grid 0x0d, p6 01; @0x01238), Tot-Bits 83,84,90,91,95 (frei, Zensus Dossier
+ * §2.3), Standort hinter dem Tor auf der x-Linie des Records 3 (@0x01238 x = 0x9116 = -28394) zwischen
+ * der Reihe x -29248 (@0x0124C..) und Record 0 (-26063,12188) = PORT-WAHL. umzug_vorbereiten legt die
+ * nicht gebrauchten still (Tot-Bit 1), das Gate @0x80042128-38 entscheidet. */
+#define EM_1040_LISTE \
+    OP_EM(0, 0x16, 0x0d, 0x01, 83, -28394, 15500, 0), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 84, -28394, 14500, 0), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 90, -28394, 13500, 0), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 91, -28394, 12500, 0), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 95, -28394, 11500, 0)
 static const uint8_t k_p_1040_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_CUT(RE15_IT_CUT_1040), OP_SLEEP(15),
     OP_SE6(KNALL_SE_1030), OP_SLEEP(20),
+    EM_1040_LISTE,
 };
 static const uint8_t k_p_1040_tor[] = {
     0x36, 0x02, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019B2 */
@@ -186,14 +201,28 @@ static const uint8_t k_p_1040_ende[] = {
     OP_AOT_ON,
     OP_END,
 };
+static const uint8_t k_p_1040_nach[] = { EM_1040_LISTE, OP_END };   /* spaeteres Betreten */
 
 /* PROGRAMM 3 — ROOM1030: Cut 7 (nur wenn aus 1070 Zombies uebrig: Tuerknall + Kopien vor der
- * 1070-Tuer, Records = ROOM1070 sub00 Else-Zweig @0x01632.., Blick zur Kamera = -x = Gierung 2048), dann Cut 6:
- * der Raumknall selbst (sub08 @0x02776 woertlich) und drei Zombies (Raum-Record-Form @0x01DE6, Typ
- * 0x16 grid 0x0d) noerdlich des Tors, die zum geparkten Spieler laufen und dabei durch das
- * Tor-Rechteck (AOT Slot 4 @0x01CDE) kriechen. Save(0x12,20) hebt das Gleichzeitig-Limit 6
- * (@0x01DE2) fuer die Zusatz-Records (@0x80042214-3c). Slots werden bei der Ausloesung auf freie
- * Aktor-Plaetze gesetzt (RE15_ACTOR_MAX = 16). */
+ * 1070-Tuer, Records = ROOM1070 sub00 Else-Zweig @0x01632.., Blick zur Kamera = -x = Gierung 2048), dann
+ * Cut 6: "noch ein Knall und die Zombies kriechen noch einmal durch das Tor" = die ORIGINAL-Szene des
+ * Raums (sub08 @0x02764..@0x027DE) in ihrer eigenen Form:
+ *   @0x0276C Aot_reset Slot 17 -> msg 1, @0x02776 Se_on 0x0c (der Knall), @0x02782..@0x0278B Cut_replace
+ *   0->9 3->10 4->11 6->12 (Tor aufgebrochen), @0x0278E/@0x02792 Sca_id_set 2/3, (4,15)=1 (sub01
+ *   @0x02198), @0x02796/@0x0279A Save var5/var7 = 0, dann VIERMAL `18 09` Gosub sub09 (@0x0279E, @0x027A4,
+ *   @0x027B4, @0x027BA; Pausen 5/20/10 @0x027A0/@0x027A6/@0x027B6) — sub09 @0x027E0 sucht ab Index var5
+ *   den naechsten Zombie mit AOT-Stempel 5 (member 0x0f == 5 @0x02804 = steht im Warte-Rechteck Slot 5
+ *   @0x01CF2 (-12900,-25300,9200,1100) hinter dem Tor) und setzt ihm das Kriech-Bit (member 0x10 |= 0x1000
+ *   @0x0280A..@0x02814 -> Toggle-Handler @0x8011f890[0x10] = FUN_80104f80), @0x027AA Cut_chg 12,
+ *   @0x027BC..@0x027C4 Sleep 15+20+180, @0x027DA (5,20)=1.
+ * GEMESSEN (Laeufe w1030/w1030x, Dossier §8): ohne diese Form standen die Zusatz-Zombies nur hinter dem
+ * Tor ((4,15)=0) bzw. es kroch keiner ((4,15)=1) — das Kriechen loest im Original das SKRIPT aus (sub09 in
+ * der Szene, sub02/sub06 im Spiel, dort nur solange weniger als 4 Zombies im Hauptraum stehen @0x021CC).
+ * Die drei Zusatz-Zombies (Raum-Record-Form @0x01DE6, Typ 0x16 grid 0x0d; Standort = PORT-WAHL IM
+ * Warte-Rechteck Slot 5 und ausserhalb des Hauptraum-Rechtecks Slot 6 @0x01D06 z >= -24500) sind die, die
+ * kriechen; war die Original-Szene noch nicht gelaufen ((4,15)=0), ist sie damit verbraucht (Tor offen).
+ * Save(0x12,20) hebt das Gleichzeitig-Limit 6 (@0x01DE2) fuer die Zusatz-Records (@0x80042214-3c). Slots
+ * werden bei der Ausloesung auf freie Aktor-Plaetze gesetzt (RE15_ACTOR_MAX = 16). */
 /* 1070-Kopien: STEHENDE Form des Else-Zweigs von ROOM1070 sub00 ((4,197)=1, @0x01632..@0x01682: grid 0x00,
  * p6 = 00/01/01/01/01); der Erst-Zweig @0x015CA.. (grid 0x88/0x87) sind die liegenden Leichen. */
 #define EM_1070_LISTE \
@@ -203,9 +232,9 @@ static const uint8_t k_p_1040_ende[] = {
     OP_EM(0, 0x11, 0x00, 0x01, 75, -19600, -2400, 2048), \
     OP_EM(0, 0x11, 0x00, 0x01, 76, -21600, -4600, 2048)
 #define EM_KRIECHER_LISTE \
-    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -24600, 3072), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -24300, 3072), \
-    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -24500, 3072)
+    OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -24800, 3072), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -24800, 3072), \
+    OP_EM(0, 0x16, 0x0d, 0x01, 79, -11500, -24800, 3072)
 #define EM_KRIECHER_NACH \
     OP_EM(0, 0x16, 0x0d, 0x01, 77,  -9500, -19000, 1024), \
     OP_EM(0, 0x16, 0x0d, 0x01, 78,  -7300, -18500, 1024), \
@@ -222,10 +251,21 @@ static const uint8_t k_p_1030_tuer[] = {
 };
 static const uint8_t k_p_1030_tor[] = {
     OP_CUT(RE15_IT_CUT_1030_TOR), OP_SLEEP(15),
-    0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776 */
-    OP_SLEEP(10),
-    EM_KRIECHER_LISTE,
-    OP_SLEEP(300),
+    EM_KRIECHER_LISTE,                                      /* warten hinter dem Tor (Stempel 5) */
+    OP_SLEEP(20),
+    0x46, 0x11, 0x01, 0x31, 0x01, 0x00, 0xff, 0xff, 0x00, 0x00,               /* sub08 @0x0276C */
+    0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776: der Knall */
+    0x4b, 0x00, 0x09, 0x4b, 0x03, 0x0a, 0x4b, 0x04, 0x0b, 0x4b, 0x06, 0x0c,   /* sub08 @0x02782..@0x0278B */
+    0x37, 0x02, 0x06, 0xf7, 0x37, 0x03, 0x06, 0xf7,                           /* sub08 @0x0278E/@0x02792 */
+    OP_SET(4, 15, 1),                                                         /* sub01 @0x02198 */
+    0x24, 0x05, 0x00, 0x00, 0x24, 0x07, 0x00, 0x00,                           /* sub08 @0x02796/@0x0279A */
+    0x18, 0x09, OP_SLEEP(5),                                                  /* sub08 @0x0279E/@0x027A0 */
+    0x18, 0x09, OP_SLEEP(20),                                                 /* sub08 @0x027A4/@0x027A6 */
+    OP_CUT(12),                                                               /* sub08 @0x027AA */
+    0x18, 0x09, OP_SLEEP(10),                                                 /* sub08 @0x027B4/@0x027B6 */
+    0x18, 0x09,                                                               /* sub08 @0x027BA */
+    OP_SLEEP(15), OP_SLEEP(20), OP_SLEEP(180),                                /* sub08 @0x027BC..@0x027C4 */
+    OP_SET(5, 20, 1),                                                         /* sub08 @0x027DA */
     OP_DOOR(RE15_IT_PARK_11C0_X, RE15_IT_PARK_11C0_Z, RE15_IT_PARK_11C0_YAW, 0x1c, RE15_IT_CUT_11C0),   /* Raum 0x1c = ROOM11C0 (dest_id = 0x1000 | 0x1c<<4) */
     OP_AOT_ON,
     OP_END,
@@ -408,6 +448,7 @@ const uint8_t *re15_irons_tod_programm(int welches, int *out_len)
     case 11: p = k_p_1030_nach_kopf; n = (int)sizeof k_p_1030_nach_kopf; break;
     case 12: p = k_p_1030_nach_tuer; n = (int)sizeof k_p_1030_nach_tuer; break;
     case 13: p = k_p_1030_nach_tor;  n = (int)sizeof k_p_1030_nach_tor;  break;
+    case 14: p = k_p_1040_nach;      n = (int)sizeof k_p_1040_nach;      break;
     default: break;
     }
     if (out_len) *out_len = n;
@@ -445,6 +486,15 @@ static void meldungen_einsetzen(uint16_t room_id)
 #define IT_ZONE 7
 static const uint8_t k_bits_1130[RE15_IT_N_1140] = { 40, 41, 42, 43, 46 };
 static const uint8_t k_bits_1030[RE15_IT_N_1070] = { 47, 48, 49, 75, 76 };
+static const uint8_t k_bits_1040[RE15_IT_N_1040_AUF] = { 83, 84, 90, 91, 95 };
+
+/* ROOM1040: wie viele der 20 Raum-Records (Tot-Bits 0x14..0x27, main00 @0x011FC..) leben noch? */
+int re15_irons_tod_lebend_1040(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_IT_N_1040; i++) if (!re15_game_flag_get(IT_ZONE, (uint8_t)(RE15_IT_BIT_1040_0 + i))) n++;
+    return n;
+}
 
 int re15_irons_tod_lebend(int welche)
 {
@@ -472,12 +522,18 @@ static void umzug_vorbereiten(void)
         else
             re15_game_flag_set(IT_ZONE, (uint8_t)(RE15_IT_BIT_1070_0 + i), 1);
     }
+    /* 1040: auf fuenf auffuellen — Auffuell-Record i ist scharf, wenn weniger als 5 - i Raum-Records leben. */
+    int l1040 = re15_irons_tod_lebend_1040();
+    for (int i = 0; i < RE15_IT_N_1040_AUF; i++)
+        re15_game_flag_set(IT_ZONE, k_bits_1040[i], (l1040 + i < RE15_IT_N_1040_AUF) ? 0 : 1);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1130, l1140 > 0 ? 1 : 0);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1040, 1);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1030, l1070 > 0 ? 1 : 0);
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[irons-tod] Umzug: 1140 lebend %d -> 1130 (9,74)=%d; 1070 lebend %d -> 1030 (9,76)=%d\n",
             l1140, l1140 > 0, l1070, l1070 > 0);
+    fprintf(stderr, "[irons-tod] 1040: %d Raum-Records leben, Auffuellung %d\n",
+            l1040, l1040 < RE15_IT_N_1040_AUF ? RE15_IT_N_1040_AUF - l1040 : 0);
 #endif
 }
 
@@ -514,7 +570,8 @@ static int it_opcode_len(uint8_t op)
     switch (op) {
     case 0x01: return 2;  case 0x09: return 4;  case 0x22: return 4;  case 0x24: return 4;
     case 0x29: return 2;  case 0x36: return 12; case 0x3b: return 32; case 0x44: return 20;
-    case 0x47: return 2;
+    case 0x47: return 2;  case 0x46: return 10; case 0x4b: return 3;  case 0x37: return 4;
+    case 0x18: return 2;
     default:   return 0;
     }
 }
@@ -561,6 +618,7 @@ static int programm_bauen(uint16_t room_id)
     case RE15_IT_S1040:
         if (room_id != RE15_IT_RAUM_1040) return 0;
         prog_anhaengen(k_p_1040_kopf, (int)sizeof k_p_1040_kopf);
+        slots_zuweisen(0);                                   /* Auffuell-Records auf freie Plaetze */
         if (!re15_game_flag_get(4, 5)) prog_anhaengen(k_p_1040_tor, (int)sizeof k_p_1040_tor);
         prog_anhaengen(k_p_1040_ende, (int)sizeof k_p_1040_ende);
         if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030))   /* 1070 leer: gleich Cut 6 */
@@ -573,6 +631,8 @@ static int programm_bauen(uint16_t room_id)
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)) prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
         prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
         slots_zuweisen(von);
+        if (re15_irons_tod_ohne_11c0())                      /* Ada steht nicht mehr an Cut 13: gleich zurueck */
+            tuer_setzen(s_prog_len - 36, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 0x15, RE15_IT_CUT_1150);
         return 1;
     }
     case RE15_IT_S11C0:
@@ -586,6 +646,11 @@ static int programm_bauen(uint16_t room_id)
     case RE15_IT_AUS:
         if (room_id == RE15_IT_RAUM_1130 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {
             prog_anhaengen(k_p_1130_nach, (int)sizeof k_p_1130_nach);
+            return 1;
+        }
+        if (room_id == RE15_IT_RAUM_1040 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)) {
+            prog_anhaengen(k_p_1040_nach, (int)sizeof k_p_1040_nach);
+            slots_zuweisen(0);
             return 1;
         }
         if (room_id == RE15_IT_RAUM_1030 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)) {
@@ -611,8 +676,20 @@ const uint8_t *re15_irons_tod_ereignis(uint16_t room_id, uint8_t event_id)
     return s_prog;
 }
 
+/* ROOM11C0 sub00 @0x0176C `21 04 40 00`: Ada steht nur bei (4,64)=0 an Cut 13 (@0x01770); nach ihrer eigenen
+ * Szene (sub02 @0x0184E `22 04 40 01`) ist sie geparkt (@0x017D4 y -20000) bzw. gar nicht im Raum. Dann
+ * entfaellt der Schnitt nach 11C0 (die Vorbedingung des Nutzers "wo Ada in der spaeteren cutscene schon
+ * steht" gilt nicht mehr) und die Montage kehrt aus 1030 direkt nach 1150 zurueck. */
+int re15_irons_tod_ohne_11c0(void) { return re15_game_flag_get(4, 64) ? 1 : 0; }
+
 int re15_irons_tod_sub01_gesperrt(void)
 {
+    /* Irons ist tot ((9,73)=1): der Ansprech-Poll von ROOM1150 sub01 (@0x00EC0 `23 00 00 00 02 00` +
+     * @0x00EC6 Ck(3,157)==0 -> @0x00ECE Evt_exec sub03 "Irons: I'll be fine...", Irons Clip 6 @0x00F24) darf
+     * nicht mehr laufen — NUTZER-VORGABE "sich garnicht mehr bewegen - tot". sub01 traegt in ROOM1150
+     * nichts anderes (26 B @0x00EBC..@0x00ED6). Gemessen vorher: Riegel tot_bleibt_tot (msg 2, Clip 6). */
+    if ((uint16_t)g_current_room_id == RE15_IT_RAUM_1150 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN))
+        return 1;
     return s_zustand == RE15_IT_S1130 || s_zustand == RE15_IT_S1040 ||
            s_zustand == RE15_IT_S1030 || s_zustand == RE15_IT_S11C0;
 }
@@ -655,7 +732,7 @@ void re15_irons_tod_install(uint16_t room_id)
 {
     switch (room_id) {
     case RE15_IT_RAUM_1150:
-        if (s_zustand == RE15_IT_S11C0) {
+        if (s_zustand == RE15_IT_S11C0 || (s_zustand == RE15_IT_S1030 && re15_irons_tod_ohne_11c0())) {
             s_zustand = RE15_IT_RUECKKEHR;
             irons_pose(RE15_IT_IRONS_CLIP_TOT, RE15_IT_IRONS_BILD_TOT, 1);
             if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Rueckkehr: Programm 5");
@@ -698,6 +775,8 @@ void re15_irons_tod_install(uint16_t room_id)
             return;
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (1040)"); }
+        if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040))
+            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Nachspawn 1040 (Programm 14)");
         return;
     case RE15_IT_RAUM_1030:
         if (s_zustand == RE15_IT_S1040) {

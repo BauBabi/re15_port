@@ -84,7 +84,7 @@
  * (Bild 60-72) -> faellt abrupt (72 -> 84) und bleibt haengen (89). Der abrupte Fall = Clip 2 ab
  * Bild 72 (gerendert: tools/.. irons_streifen, Dossier §2.2); das Original kann einen Clip nur ab
  * Bild 0 starten (Plc_motion @0x80041b90 -> Phase 0 `sb zero,149` @0x80050d0c), darum setzt der
- * Port-Takt auf das Signal (5,44) hin Bild 72 direkt (Phase 1 des Motion-Subs 0x80050cb8, Halt
+ * Port-Takt auf das Signal (5,12) hin Bild 72 direkt (Phase 1 des Motion-Subs 0x80050cb8, Halt
  * bei Clip-Ende @0x80050da4). Die Totenpose = Bild 89 gehalten (Phase 2). */
 #define RE15_IT_IRONS_SLOT      1
 #define RE15_IT_IRONS_TYP       0x45
@@ -135,6 +135,12 @@
 #define RE15_IT_N_KRIECHER    3
 #define RE15_IT_BIT_1140_0    0xd3
 #define RE15_IT_BIT_1070_0    0xc6
+/* ROOM1040: 20 Raum-Records main00 @0x011FC..@0x01378 (Tot-Bits 0x14..0x27), Gleichzeitig-Limit 5
+ * (Save(0x12,5) @0x011F0). Auffuell-Records (Tot-Bits 83,84,90,91,95), damit auch dann fuenf durchs Tor
+ * kommen, wenn der Spieler vorher mehr als 15 getoetet hat (irons_tod_1150.c EM_1040_LISTE). */
+#define RE15_IT_BIT_1040_0    0x14
+#define RE15_IT_N_1040        20
+#define RE15_IT_N_1040_AUF    5
 
 /* Zustand der Kette (nur RAM; waehrend der Szene kann weder gespeichert noch gestorben werden). */
 #define RE15_IT_AUS        0
@@ -162,9 +168,11 @@ void re15_irons_tod_tick(void);
 /* Pruefhaken (kein Spielverhalten). */
 int            re15_irons_tod_zustand(void);
 void           re15_irons_tod_zustand_setzen(int z);      /* Riegel: Schritt vorgeben */
-const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..6 (s. .c) */
+const uint8_t *re15_irons_tod_programm(int welches, int *out_len);   /* Vorlagen 0..14 (s. .c) */
 const uint8_t *re15_irons_tod_laufprogramm(int *out_len);            /* RAM-Kopie der VM */
 const uint8_t *re15_irons_tod_meldung(uint16_t room_id, int msg_id, int *out_len);
 int            re15_irons_tod_lebend(int welche /* 0 = 1140, 1 = 1070 */);   /* Zaehlung ueber die Tot-Bits */
+int            re15_irons_tod_lebend_1040(void);                             /* lebende der 20 Raum-Records */
+int            re15_irons_tod_ohne_11c0(void);   /* 1 = (4,64)=1: Ada steht nicht mehr an Cut 13, Schnitt entfaellt */
 
 #endif /* RE15_IRONS_TOD_H */
