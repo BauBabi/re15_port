@@ -616,9 +616,8 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
 2. **FUN_80043d30(player)** im Flammen-/Werfer-Handler Bild 1 (Tabelle 0x800A6ED0 (id-2)*6, FUN_8003947c /
    FUN_80039514): nicht portiert (vermutlich Muendungs-Licht/Kamerazittern). Weg: beide Funktionen
    disassemblieren; sie werden auch von Magnum/Schrot gerufen (@0x80043a94, @0x80045720, @0x800489b8).
-3. **Flamme: Elevation**: der RE2-Strahl fliegt im Knochenrahmen (Status 0x400) — hoch/tief folgt
-   dem Knochen; nicht einzeln gemessen (Clips W0E 10/13 vorhanden). Weg: wf.log mit MU/MD-Skript + Lage
-   der Strahl-Plaetze (re2fx_platz +0x34..38).
+3. ~~Flamme: Elevation~~ — ERLEDIGT (Fortsetzung): gemessen, der Strahl folgt dem Knochen 32 Grad auf / 37 Grad
+   ab (§4.2).
 4. **Explosiv-GL: Trefferzonen (Klammer k)** im Applier fuer RE1.5-KI-Typen = Zone + 3k mit k aus dem
    Hitcode (0x10020009 -> k = 1): die Gore-Spalten der RE2-Zombies sind nur im RE2-Modell erreichbar.
 5. **Wasser-Spritzer 0x1A051C00** (Op 15 @0x8001ee1c-38): Bank 0x1A ist eine Raum-ESP-Bank (nicht in
@@ -626,11 +625,39 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
 6. **Rakete: Explosions-Sample**: RE2 ARMS11 Satz 20 (12672 B) statt RE1.5 ARMS12 Satz 10 (17104 B) —
    Vertrag "Sound ist RE2"; wer das RE1.5-Sample will, aendert nur fx_plattform_pc.c (0x01140001).
 7. **Elza (PL04)**: Baenke W0F/W10/W11/W12/W14 sind Standard-14-Clip-Baenke (Nachlade-Clip 13 = 32 Bilder
-   vorhanden) — die Umsetzung greift nur bei 11 Clips; nicht mit Elza gemessen.
+   vorhanden), ihr GL-Netz liegt auf +y (Muendungsring (61..202,1153,+-70)) — weder Clip-Umsetzung noch
+   Waffenrahmen greifen (unit_r35_werfer 95). NICHT mit Elza am gebauten Stand gemessen: der Harness-Start ueber
+   RE15_TITLE_SHOT nimmt immer Leon (`[pl] Spieler-Familie PL00`), RE15_PSELECT_AUTO(_SWITCH) allein kam in 150 s
+   nicht ins Spiel (mess_r35b/elza). Naechster Weg: das Rezept aus tests/integration/test_elza_vollstart.cmake
+   (RE15_INPUT_SCRIPT "W2,S1,W900" + PSELECT_AUTO_SWITCH) mit RE15_DEBUG_JUMP=1000 und den Laeufen aus
+   mess_r35b/run_nachladen.sh.
 8. **Pose+0x7AC vs. 0x7A4**: RE2 nimmt die Knochenmatrix bei +0x7AC, RE1.5 bei +0x7A4 — der Port
    nimmt in beiden Faellen den gerenderten Knochen 11 (R_gunbone/T_gunbone); die RE2-Versatzrichtung
    (+y Lauf, +x oben) stimmt mit der RE1.5-Muendung ueberein (gemessen: Runden fliegen in Blickrichtung,
    Aufschlaege an den Zombies vor Leon).
+
+9. **Moebel-Zellen sperren Werfer-Geschosse wie Waende** (§3.8): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
+   Memory reai-v2-quader-modell: "die Hoehe ist die einzige Groesse, die nicht in den Daten steht"). Eine Rakete,
+   die in RE2 ueber einen Tisch floege, explodiert im Port an der Tischkante. Naechster Weg: je Zelle eine Hoehe
+   messen (Quader-Verfahren der Karten-Masken) oder die RE2-Formhoehen (`(+10 >> 6) & 0x1f` @0x8004fe08-30) fuer
+   gleiche Raeume uebernehmen.
+10. **Keine Decke**: nach oben geschossene GL-Runden explodieren erst nach ihrer Lebensdauer (10..15 Bilder,
+    @0x8001f224-84) hoch ueber dem Raum (gemessen y -9137) — RE1.5-Raeume tragen keine Deckenhoehe.
+11. **Leer-Ton des Raketenwerfers**: der Port spielt den RE1.5-Klick `0x01010001` = ARMS12 Satz 1 (wf.log
+    `SE arms_rec=1 bank=18`). RE2 ARMS11 traegt einen eigenen Satz 1 (`00005416`); der RE2-Leerzweig der
+    Feuer-FSM ist nicht disassembliert. Weg: `re2_disasm.py` Suche nach `lui a0,0x101` im Bereich 0x80042c00-
+    0x80048a00, dann ggf. `re15_audio_re2_arms_se(0x11, 1)`.
+12. **RE2-Vorpruefung "Waffe schon voll"** (Zustaende 5/6 -> Zustand 3, @0x8006b9a4-bb60): nicht portiert; die
+    RE1.5-Aktionen 2/3 laden ohne Vorpruefung (bei vollem Magazin aendert der TEIL-Zweig @0x8004e3e4 nichts, die
+    Ergebnis-Animation laeuft trotzdem).
+13. **Raketen-Rohrachse**: RE1.5 PL00W12 -6,35 Grad gegen die RE2-Geschwindigkeit (-70,768) = -5,21 Grad (RE2-Netz
+    -5,53): 1,1 Grad Abweichung, Netto-Steigung der Rakete 33 je 767 (2,5 Grad). RE2-Daten unveraendert gelassen.
+14. **Selbstschaden**: Explosion/Flamme treffen im Port nur die Gegnerliste (Applier FUN_800470C0). Ob RE2 den
+    Spieler durch eigene GL-/Raketen-Explosionen verletzt, ist nicht untersucht. Weg: Aufrufer von FUN_800470c0
+    und Op 47 auf einen zweiten Schadensweg (Spieler-Struktur 0x800cfbf8) durchsuchen.
+15. **Harness**: RE15_GIVE legt breite Waffen (0x0e..0x13) als EINE Zelle ab; die Welt-Aufnahme
+    (FUN_8004dc4c) als zwei (Zellen-Flags 1/2). `re15_werfer_gl_tausch` fuehrt die Schwanzzelle mit, wenn sie
+    da ist (unit_r35_werfer_kombi 32); am gebauten Stand wurde nur die Ein-Zellen-Form gesehen (inv/).
 
 ## 7. Fuer den Nutzer
 
@@ -645,3 +672,12 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
   (2 Einheiten je 8 Bilder), Zombies brennen nach 10 Treffern (RE2-Zeile 16).
 * Item-Debug: SELECT + R1/L1 am Statusschirm (Runde 34) oder RE15_GIVE="15:6,25:12" / RE15_EQUIP=15
   (Munitions-Ids 0x19 = 25, 0x1a = 26, 0x1b = 27, 0x17 = 23).
+* NEU (Fortsetzung) — Inventar, Kommando EXCHANGE: Runde auf den Granatwerfer (oder umgekehrt) kombinieren.
+  Eigene Art = Nachladen bis 6; andere Art = Munitionswechsel wie in RE2: der Werfer wird zur anderen Art und
+  nimmt den ganzen Stapel, die bisher geladenen Runden kommen als Runden-Item zurueck (die Mengenzahl zeigt die
+  Art: gelb = Saeure, orange = Brand). COLT PYTHON + MAGNUM BULLETS = Nachladen bis 6. Raketenwerfer: 4 Schuss,
+  keine Kombination. Flammenwerfer: FLAME FUEL im Inventar kombinieren (per Abzug laedt er nicht nach).
+* NEU (Fortsetzung) — Leons Granatwerfer schoss vor der Korrektur 30 Grad nach unten (alle Explosionen 1..2 m
+  vor ihm am Boden); jetzt fliegt die Runde entlang des sichtbaren Laufs. Rakete, Runden und Flammenstrahl
+  enden an Waenden (die Rakete flog vorher durch die Wand und verschwand ohne Explosion). Auch Moebel-Zellen
+  sperren (OFFEN 9).
