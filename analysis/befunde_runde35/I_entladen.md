@@ -216,6 +216,18 @@ Registriert NUR in `re15_port/tests/unit/probes/r35_entladen.cmake`:
 | integration_r35_entladen_c | Tod -> LOAD im Todesraum (Karte ROOM1020 (-26000,0,-8700) Cut 0): beide Spiele zeichnen ihre Masken (137/137 Bilder), fremd 0 | Passed 39 s |
 | integration_r35_entladen_d | Tod in 1170 -> NEW GAME -> Montage-Tuer 1170 (240 Bilder/s): Cinematic-Bank 1170 bei JEDEM Betreten gebunden (2/2), fremd 0 | Passed 50 s |
 
+Nachtrag Hintergrundbild (Commit 5955ae71): Fach `bg` im Zensus (bg_pc Generation beim Dekodieren);
+Lauf a danach: alle 6 EREIGNIS-Zeilen `belegt ... ton=0 bg=0`, alle SUMME fremd 0, ROOM1020 116
+Bilder mit eigenen Masken.
+
+SUITE (Stand 5955ae71, eigener Bau, `bash re15_port/tools/local_build.sh all`, 00:26-00:47):
+`=== LOCAL-BUILD-OK (all) — Tests 484/484` (Beleg im eigenen Baum:
+re15_port/build/local_build_ctest.log `100% tests passed, 0 tests failed out of 484`,
+`Total Test time (real) = 1237.52 sec`, Exit 0). Kein Flatter-Haken rot.
+⚠ Sitzungsnotiz: der Scratchpad ist zwischen den Spuren GETEILT — die Spur "karte" schrieb in
+dieselben Dateinamen (suite*.log, commit_final.txt). Ein frueheres "482/482" im geteilten
+suite1.log war NICHT mein Lauf; massgeblich ist nur das ctest-Log im eigenen build/.
+
 Gegenproben (Fix-Zeile temporaer entfernt, gebaut, gemessen, `git checkout` zurueck):
 * PRI-Riegel ohne Generation -> integration_r35_entladen_c FAILED: "Masken nach dem Laden fehlen
   (Spiel 1: 137, Spiel 2 nach Tod im selben Raum/Cut: 0 Bilder)".
