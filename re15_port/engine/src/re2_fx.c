@@ -1122,8 +1122,29 @@ static void op_dispatch_plus_art(int k)
  * `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0) — ohne Hoehe. Deshalb: liegt das Geschoss UEBER
  * der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band = -y/1800, Spieler-y := -1800 * +0x82
  * @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt jede Zelle dieses Bandes an
- * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild. Moebel-Zellen
- * sperren damit wie Waende (Hoehe steht nicht in den Daten; OFFEN im Dossier). */
+ * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild, aber NUR
+ * Rechteck-Zellen (Typ & 0x0f == 1): der Wand-Filter des Projekts (re15_collision.c / Karten-Innen-
+ * waende: Typ 1 + solide + Band). Treppen-/Rampenzellen (Typ != 1, begehbar — in ROOM1060 liegen
+ * 18,7 % der gemessenen Spieler-Standorte in solchen Zellen) sperren ueber Bandhoehe NICHT.
+ * Moebel-Zellen (Typ 1) sperren wie Waende (Hoehe steht nicht in den Daten; OFFEN im Dossier). */
+static int wandzelle_im_band(int32_t x, int32_t z, int b, int32_t r15)
+{
+    const re15_rdt_t *rdt = &g_room_rdt;
+    if (!rdt->sca || rdt->sca_count <= 0) return 0;
+    const int32_t rr = (int32_t)(int16_t)r15;
+    for (int i = 0; i < rdt->sca_count; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        if (((unsigned)e->type & 0x0fu) != 1u) continue;               /* Rechteck */
+        if (!((unsigned)e->u0 & 1u)) continue;                         /* solide = Maske 0x100 des Wortes Typ|u0<<8 */
+        if ((((unsigned)e->floor >> 4) & 0x0fu) != (unsigned)b) continue;   /* Band (Wort u1|floor<<8, Bits 12..15) */
+        if ((unsigned)e->u1 & 2u) continue;                            /* `andi 0xf002`: Bit 1 muss 0 sein */
+        if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
+        if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
+        return 1;
+    }
+    return 0;
+}
+
 static int32_t werfer_boden(const int32_t P[3], int r, uint32_t mask, int a3, int *kontakt)
 {
     int32_t f = re2fx_boden(P, r, mask, a3, kontakt);
@@ -1132,7 +1153,7 @@ static int32_t werfer_boden(const int32_t P[3], int r, uint32_t mask, int a3, in
     const int bs = (int)((900 - s_boden_basis) / 1800);   /* Band des Schuetzen */
     if (bs < 0 || bs > 15) return f;
     if (bs <= 7 && P[1] > -1800 * (bs + 1)) return f;  /* innerhalb der Bandhoehe hat das Abbild entschieden */
-    if (zelle_im_band(P[0], P[2], bs, -r, 0x100u)) *kontakt |= 1;
+    if (wandzelle_im_band(P[0], P[2], bs, -r)) *kontakt |= 1;
     return f;
 }
 
