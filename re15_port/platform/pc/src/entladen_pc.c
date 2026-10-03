@@ -185,9 +185,34 @@ void re15_entladen_bild(int masken_gezeichnet, unsigned masken_gen)
         s_bilder_masken_fremd++;
         if ((unsigned)masken_fremd > s_masken_fremd_max) s_masken_fremd_max = (unsigned)masken_fremd;
     }
-    /* Zeile nur bei Befund und gedrosselt (erstes Bild + jedes 30.), sonst waere das Log riesig. */
+    /* Bildbeleg (RE15_ENTLADEN_SHOT=<praefix>, RE15_ENTLADEN_SHOT_BILD=<n>[,<n>...], Vorgabe 5):
+     * die genannten Bilder JE Ereignis-Strecke werden komplett komponiert zurueckgelesen
+     * (render_pc: vor SDL_RenderPresent, wie FRAMEDUMP) — auch in Titel/Auswahl, wo der
+     * FRAMEDUMP-Haken der Spielschleife nicht hinkommt. Reiner Messhaken. */
+    { static const char *s_shot = NULL, *s_shot_bild = "5"; static int s_shot_init = 0;
+      static unsigned s_shot_gen = 0, s_shot_n = 0;
+      if (!s_shot_init) { s_shot_init = 1; s_shot = getenv("RE15_ENTLADEN_SHOT"); if (s_shot && !*s_shot) s_shot = NULL;
+                          const char *b = getenv("RE15_ENTLADEN_SHOT_BILD"); if (b && *b) s_shot_bild = b; }
+      if (s_shot) {
+          if (s_shot_gen != g_re15_entladen_gen) { s_shot_gen = g_re15_entladen_gen; s_shot_n = 0; }
+          ++s_shot_n;
+          for (const char *q = s_shot_bild; q && *q; ) {
+              if ((unsigned)atoi(q) == s_shot_n) {
+                  extern void re15_render_pc_request_readback(const char *path);
+                  char p[300];
+                  snprintf(p, sizeof p, "%s_gen%u_b%03u_raum%04X_modus%d.ppm", s_shot, g_re15_entladen_gen,
+                           s_shot_n, g_current_room_id, (int)re15_gameflow_mode());
+                  re15_render_pc_request_readback(p);
+                  break;
+              }
+              q = strchr(q, ','); if (q) q++;
+          }
+      } }
+    /* Zeile nur bei Befund und gedrosselt (erstes Befund-Bild je Strecke + jedes 30.). */
+    static unsigned s_zeilen_strecke = 0xFFFFFFFFu, s_zeile_gen = 0;
+    if (s_zeile_gen != g_re15_entladen_gen) { s_zeile_gen = g_re15_entladen_gen; s_zeilen_strecke = 0; }
     if ((z.fremd_summe > 0 || masken_fremd > 0) &&
-        (s_bilder_fremd + s_bilder_masken_fremd == 1 || (s_bilder % 30u) == 0u)) {
+        (s_zeilen_strecke++ == 0 || (s_bilder % 30u) == 0u)) {
         FILE *f = log_oeffnen();
         if (f) {
             fprintf(f, "BILD %u gen=%u raum=%04X modus=%d masken_gezeichnet=%d (gen %u) fremd_gezeichnet=%d",

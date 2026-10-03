@@ -12,7 +12,45 @@ Punkte:
 2. Beim Tod UND beim Raumwechsel saemtliche Assets der vorherigen Raeume entladen.
 
 ## Messung vorher
-(laufend)
+
+### Messschiene (gebaut, Commit c21e38f8 + Folgecommit)
+`RE15_ENTLADEN_LOG=<datei>` (platform/pc/src/entladen_pc.c): jede Grenze ("raum", "spielstart",
+"spielende") zaehlt die Generation `g_re15_entladen_gen` hoch; jeder Cache vermerkt beim FUELLEN die
+Generation (render_pc: Maskenliste, Atlas, jeder TIM-Slot; bg_pc: SLD-Auszug; MSK-Container;
+enemy_common: Gegnerbank; Raum-ESP-Bank; room_pc: RDT-Bytes). Belegt + aelter = FREMD.
+Zeilen: `VORHER <grenze>` (Bilanz vor dem Wechsel), `SUMME` (Bilder seit letzter Grenze: mit Masken,
+mit fremder Belegung, mit FREMD GEZEICHNETEN Masken), `EREIGNIS <grenze>` (Belegung direkt nach der
+Grenze), `BILD` (gedrosselt, wenn fremd). Zusaetzlich `RE15_ENTLADEN_SHOT=<praefix>` +
+`RE15_ENTLADEN_SHOT_BILD=<n,...>`: komplett komponiertes Bild (Rueckleser vor SDL_RenderPresent,
+wie FRAMEDUMP) — auch in Titel/Charakterwahl, wo FRAMEDUMP nicht hinkommt.
+⚠ gdigrab liefert in dieser Sitzung weisse Bilder (Auftrag) -> Bildbelege per Rueckleser.
+
+### M1 Tod -> Titel -> NEW GAME (exe-Kopie re15_pc_entladen.exe, Stand vor dem Entladen)
+Lauf a: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=t.bmp RE15_DEBUG_JUMP=1020@5 RE15_KILL_AT=40
+RE15_BOOT_EXIT_AT=3`. ROOM1020 Cut 0 hat 24 sprite.pri-Masken (debug.log `[pri] cut=0
+pri_offset=0x778 masks=24 fg_atlas=1`). Log: `I_entladen_bilder/vorher_lauf_a_entladen.log`.
+```
+VORHER spielende gen=3 raum=1020 | belegt pri_masken=24 pri_atlas=1 sld=1 tim=14 gegner=2 esp_bank=1 rdt=1
+SUMME seit=spielende bilder=23 bilder_mit_masken=23 ... bilder_fremde_masken_gezeichnet=23 fremde_masken_max=24
+EREIGNIS spielstart gen=5 raum=1020 | belegt pri_masken=24 pri_atlas=1 sld=1 tim=14 gegner=2 esp_bank=1 rdt=1
+BILD 1 gen=5 raum=1240 ... | fremd tim=12 rdt=1          (zweites Spiel, ROOM1240)
+SUMME seit=spielstart bilder=301 ... bilder_fremd_belegt=301 fremd_belegt_max=13
+```
+=> In JEDEM Bild zwischen Tod und neuem Spiel werden die 24 Masken des Todesraums GEZEICHNET
+(render_pc end_frame zeichnet die Maskenliste in jedem Modus). Im zweiten Spiel bleiben 12 Raum-
+TIM-Slots (Gegner/Props/Raum-ESP des Todesraums) und die ROOM1020-RDT-Bytes resident (301/301 Bilder).
+
+Lauf d (echter Weg ueber das Titelmenue in die Charakterwahl): zusaetzlich
+`RE15_TITLE_SHOT_AF=60 RE15_TITLE_CONFIRM_MS=8000 RE15_PSELECT_AUTO=1 RE15_BOOT_EXIT_AT=2
+RE15_ENTLADEN_SHOT_BILD=250,...,590` -> `SUMME seit=spielende bilder=599 bilder_mit_masken=599
+bilder_fremde_masken_gezeichnet=599 fremde_masken_max=24`.
+Bild 500 nach dem Tod (`I_entladen_bilder/vorher_auswahl_b500.png`, Charakterwahl "Confirm-Zoom",
+schwarzer Hintergrund): rechts steht ein grau-weisser Raum-Ausschnitt (Gelaender/Treppe) — ein
+ROOM1020-Masken-Stueck UEBER der Charakterwahl. Das ist der Nutzerbefund.
+WARUM gerade dort: die Charakterwahl malt ihren Hintergrund (SELECTH.TIM) VOR dem Masken-Pass
+(render_pc.c "PLAYER-SELECT backdrop ... BEFORE the 3D models", danach Step 2 Tri+Masken); Titel und
+Film liegen NACH dem Masken-Pass und decken sie zu (Titelbild gen1 vs gen4 bitgleich, 0 Pixel Diff).
+Das Original zeichnet in keinem dieser Module eine Raum-Maske (R4).
 
 ## RE-Belege (Adressen, Bytes)
 
