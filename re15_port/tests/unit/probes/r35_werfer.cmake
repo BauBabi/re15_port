@@ -39,3 +39,14 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer.cmake)
     set_tests_properties(integration_r35_werfer PROPERTIES TIMEOUT 900)
 endif()
+
+#   integration_r35_werfer_ton  Nachbesserung 1 (M2): Leerschuss des Raketenwerfers am Mischer (RE15_AUDIO_CAP_SYNC,
+#                             zwei Laeufe MIT/OHNE zweiten Abzug, Mitschnitte muessen ab dem Leerschuss abweichen).
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_werfer_ton
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_werfer_ton_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_werfer_ton.cmake)
+    set_tests_properties(integration_r35_werfer_ton PROPERTIES TIMEOUT 600)
+endif()
