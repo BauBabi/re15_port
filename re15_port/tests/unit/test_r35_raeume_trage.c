@@ -28,6 +28,10 @@
 #include "re15_damage.h"
 #include "re15_climb.h"
 #include "re15_trage1200.h"
+#include "re15_enemy.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
+#include "re2_ems.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -128,9 +132,46 @@ static int raum_hoch(const re15_rdt_t *r)
     return -1;
 }
 
+/* Zombie-Bank wie im Spiel: RE1.5 EM10 aus PSX/EMD/CDEMD0.EMS (Muster probe_10d0_knockse.c),
+ * RE2 EM010 aus RE2/CDEMD0.EMS (Muster test_re2_room1190_ab.c) — Clip-Laengen + Wurzelschritte. */
+static uint8_t s_b10[0x80000];
+static int bank_laden(int re2)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x10);
+    if (!eb) eb = re15_enemy_alloc(0x10);
+    if (!eb) return 0;
+    long sz = 0;
+    if (re2) {
+        static uint8_t *ems = NULL; static long ems_sz = 0;
+        if (!ems) ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &ems_sz);
+        if (!ems) return 0;
+        if (re2_ems_load_bank(ems, (size_t)ems_sz, 0x10, eb, NULL) != 0) return 0;
+        eb->buf = NULL; eb->ok = 1;
+        return 1;
+    }
+    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &sz);
+    if (!ems) return 0;
+    int ok = 0;
+    int idx = re15_ems_index_for_type(0x10);
+    size_t off = 0, len = 0;
+    if (idx >= 0 && re15_ems_get_entry(ems, (size_t)sz, idx, &off, &len) == 0 && len <= sizeof s_b10) {
+        memcpy(s_b10, ems + off, len);
+        re15_tim_t tim = (re15_tim_t){0};
+        if (re15_emd_parse_container(s_b10, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0) {
+            eb->ok = 1; eb->buf = NULL;
+            eb->loco_ok = (re15_emd_parse_loco_bank(s_b10, len, &eb->skel_loco, &eb->anim_loco) == 0);
+            eb->own_ok  = (re15_emd_parse_own_bank(s_b10, len, &eb->skel_own, &eb->anim_own) == 0);
+            ok = 1;
+        }
+    }
+    free(ems);
+    return ok;
+}
+
 static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
 {
     re15_ai_flavor_set(flavor);
+    CHECK(bank_laden(flavor == RE15_AI_FLAVOR_RE2), "[%s] Zombie-Bank nicht ladbar", name);
     const int s = raum_hoch(r);
     CHECK(s > 0, "[%s] Liege-Zombie (id 1 @RDT 0x0086A) nicht gespawnt", name);
     if (s <= 0) return;
@@ -152,6 +193,11 @@ static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
     int32_t y_vor = e->y;
     for (int f = 0; f < 1500; f++) {
         pl->hp = 200;                           /* Messung des Gegners, nicht des Kampfes */
+        /* Spieler laeuft (Bewegungsclip 100 = rennen) auf Band 0 hinter der Kante hin und her, wie im
+         * Spiel nach dem Aufnehmen — der RE2-Zombie verliert sonst das Interesse (Leerlauf Sub 0);
+         * steht der Spieler DIREKT unter der Kante, beisst der RE2-Zombie von oben (Sub 14, 2D-Abstand)
+         * statt weiterzugehen — darum 4500 hinter der Kante (Zelle 13 z -17351..-16251). */
+        pl->motion = 100; pl->x = -24300 + ((f / 60) & 1 ? 600 : -600); pl->z = -12500;
         frame();
         if (e->floor == 1 && e->y == -1800) luft_band1++;
         if (sturz_start < 0 && (e->fall_1c0 & 0x8000)) sturz_start = f;
@@ -163,6 +209,9 @@ static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
             if (!(e->fall_1c0 & 0x8000)) landung = f;
         }
         y_vor = e->y;
+        if (getenv("R35_TRAGE_DBG") && (f % 50) == 0)
+            printf("    f%d st=%d/%d/%d g=%02x mo=%d af=%d @(%d,%d,%d) b%d\n", f, e->state, e->sub_state_1,
+                   e->sub_state_2, e->grid_id, e->motion, e->anim_frame, e->x, e->y, e->z, e->floor);
         if (landung >= 0 && f > landung + 30) break;
     }
     printf("  [B %s] slot %d: Sturz ab Bild %d, Landung Bild %d, danach y=%d b%d +0x1ba=%d\n",
