@@ -108,6 +108,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
+#include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
@@ -9692,6 +9693,9 @@ re_title:;
                      * `+0x1C2 - 250` (@0x80102B60 Flug-Treffer, @0x80103E6C Wandsplat). Der
                      * Port-Kanal dafuer ist dog_floor_y. */
                     int32_t nsh_y = npc->y;
+                    /* Runde 35 Spur H: Hund 0x20 -> Boden-Referenz (+0x1ba `lh a1,442` @0x8010d91c
+                     * / RE2 +0x1C2 @0x800268c8), nicht der Koerper. re15_hundeschatten.h */
+                    if (npc->type == RE15_HUNDESCHATTEN_TYP) nsh_y = re15_hundeschatten_y(npc);
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
