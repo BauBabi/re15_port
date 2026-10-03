@@ -15,8 +15,8 @@
 #     (c) Explosion im Bild X = L + 36 (Liegen setzt den Zuender 42 `ori v0,zero,0x2a` @0x80018474,
 #         Routine 31 zaehlt je Bild -1 @0x8001867c-84 und zuendet bei 7 @0x8001856c-70), genau EIN
 #         Resolver-Aufruf (`jal 0x80012d60` @0x800185b8) mit Art 2/3/4.
-#     (d) Inhalt des Explosionsbilds: art 2 = Licht-Latch (@0x8001857c) + Kind 0x03195000 + SE 0x04080001
-#         (@0x800185c0-ec); art 3/4 = Aufschlag-Uebergabe re2_art 2/1 (E8, Op 49/48) und KEINER der
+#     (d) Inhalt des Explosionsbilds: art 2 = Licht-Latch (@0x8001857c) + Kind 0x03195000 + SE 0x01110001
+#         (@0x800185c0-dc; SE seit Runde 35 Spur A = RE2 Op 47 @0x80020d40-48 statt 0x04080001); art 3/4 = Aufschlag-Uebergabe re2_art 2/1 (E8, Op 49/48) und KEINER der
 #         HE-Inhalte.
 #     (e) Treffer: mindestens ein Gegner verliert HP GENAU in Zeile X (die Zeile wird in main.c HINTER
 #         dem ESP-Takt geschrieben, der Resolver laeuft im ESP-Tick von X — @0x8001ce2c nach der
@@ -29,7 +29,7 @@
 #         Dossier §2.7): jeder getoetete Gegner erreicht Zustand 7 (Leiche), und die exe laeuft bis
 #         RE15_EXIT_AT weiter (Zeile "[flow] EXIT_AT", exit 0). Spieler-HP im Bild X unveraendert.
 #     (h) Toene im Waffen-Log: 6x 0x010A..01 (TIEF: 5 Abpraller + Liegen, @0x800183d0-28 / @0x80018350-58),
-#         0x04080001 genau einmal nur bei Art 2 (@0x800185e4-ec), RE2-Aufschlag 0x01130001 / 0x01120001 genau
+#         0x01110001 (RE2, ARMS0F Satz 10) genau einmal nur bei Art 2, RE2-Aufschlag 0x01130001 / 0x01120001 genau
 #         einmal nur bei Art 3 / 4 (E9 -> ARMS10/ARMS11 Satz 10).
 #   debug   Item-Debug des Statusschirms (Original FUN_8004a0cc @0x8004a138-35c): Inventar auf, ITEM-
 #           Raster, SELECT, 9x R1 (Id 0 -> 9), Kreis/Schliessen = ausgeruestet, werfen. Pruefungen:
@@ -321,8 +321,8 @@ endfunction()
 
 # (h) TOENE des Wurfs aus dem Waffen-Log (RE15_WAFFEN_LOG, Zeilen "SE  esp code=..." bzw. "SE  re2fx code=...";
 #     Weiche fx_plattform_pc.c, Spur C4): Abprall/Liegen `jal 0x80045024` mit 0x010A0001 | (n<<8) @0x800183d0-28 /
-#     @0x80018350-58 (TIEF: Zaehler 5 -> 5 Abpraller + Liegen = 6 Toene 0x010a....), Explosion 0x04080001 @0x800185e4-ec
-#     nur Art 2, RE2-Aufschlag Saeure 0x01130001 (RE2 @0x80021678-7c) / Brand 0x01120001 (RE2 @0x80020fd4/0x80021028)
+#     @0x80018350-58 (TIEF: Zaehler 5 -> 5 Abpraller + Liegen = 6 Toene 0x010a....), Explosion RE2 0x01110001 (Runde 35
+#     Spur A, re2fx-Weiche -> ARMS0F Satz 10) nur Art 2, RE2-Aufschlag Saeure 0x01130001 (RE2 @0x80021678-7c) / Brand 0x01120001 (RE2 @0x80020fd4/0x80021028)
 #     -> ARMS10/ARMS11 Satz 10 (E9) nur Art 3/4. Rueckgabe: Fehlertext oder leer.
 function(r34_pruef_toene _datei _art _aus)
     set(${_aus} "" PARENT_SCOPE)
@@ -334,7 +334,7 @@ function(r34_pruef_toene _datei _art _aus)
     foreach(_l IN LISTS _w)
         if(_l MATCHES "SE  esp code=0x010a0[0-4]01 ")
             math(EXPR _n010a "${_n010a} + 1")
-        elseif(_l MATCHES "SE  esp code=0x04080001 ")
+        elseif(_l MATCHES "SE  re2fx code=0x01110001 ")
             math(EXPR _n0408 "${_n0408} + 1")
         elseif(_l MATCHES "SE  re2fx code=0x01130001 ")
             math(EXPR _n0113 "${_n0113} + 1")
@@ -353,7 +353,7 @@ function(r34_pruef_toene _datei _art _aus)
         set(_soll0112 1)
     endif()
     if(NOT _n010a EQUAL 6 OR NOT _n0408 EQUAL _soll0408 OR NOT _n0113 EQUAL _soll0113 OR NOT _n0112 EQUAL _soll0112)
-        set(${_aus} "Toene: ${_n010a}x 0x010a....(Soll 6), ${_n0408}x 0x04080001 (Soll ${_soll0408}), ${_n0113}x 0x01130001 (Soll ${_soll0113}), ${_n0112}x 0x01120001 (Soll ${_soll0112})" PARENT_SCOPE)
+        set(${_aus} "Toene: ${_n010a}x 0x010a....(Soll 6), ${_n0408}x 0x01110001 (Soll ${_soll0408}), ${_n0113}x 0x01130001 (Soll ${_soll0113}), ${_n0112}x 0x01120001 (Soll ${_soll0112})" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -445,7 +445,7 @@ foreach(_ki re2 re15)
         set(_he 0)
         set(_aufs "")
         foreach(_e IN LISTS _G_EV)
-            if(_e STREQUAL "latch" OR _e MATCHES "^kind code=03195000 " OR _e MATCHES "^se code=04080001 ")
+            if(_e STREQUAL "latch" OR _e MATCHES "^kind code=03195000 " OR _e MATCHES "^se code=01110001 ")
                 math(EXPR _he "${_he} + 1")
             elseif(_e MATCHES "^aufschlag re2_art=([0-9]+) ")
                 set(_aufs "${CMAKE_MATCH_1}")
@@ -453,7 +453,7 @@ foreach(_ki re2 re15)
         endforeach()
         if(_art EQUAL 2)
             if(NOT _he EQUAL 3 OR NOT "${_aufs}" STREQUAL "")
-                r34_fehler("${_lauf}" "HE-Explosionsbild: ${_he}/3 HE-Inhalte (Latch/0x03195000/0x04080001), Aufschlag '${_aufs}' (erwartet keiner)")
+                r34_fehler("${_lauf}" "HE-Explosionsbild: ${_he}/3 HE-Inhalte (Latch/0x03195000/0x01110001), Aufschlag '${_aufs}' (erwartet keiner)")
             endif()
         else()
             math(EXPR _re2_soll "5 - ${_art}")             # Art 3 -> 2 (Saeure, Op 49), Art 4 -> 1 (Brand, Op 48)

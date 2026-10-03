@@ -40,7 +40,8 @@ static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const 
  * Kandidaten (O-VB4): Zeile (Hitcode & 0xFFFF, `andi v1,s5,0xffff` @0x80047214), Klammer
  * (`srl s6,s5,28` @0x80047114) und die Spalte Zone + 3K, die der Applier einem RE2-Typ stempeln
  * wuerde (@0x80047294-330). NULL = kein GL-Treffer (Resolver FUN_80012d60, Direktaufruf). */
-typedef struct { unsigned zeile, k, spalte; } re2gl_treffer_t;
+typedef struct re2gl_treffer { unsigned zeile, k, spalte; } re2gl_treffer_t;   /* Tag: Runde 35 Spur A
+                                                                                * (Deklaration im Header) */
 /* Die GL-Records (Zeilen 9/10/11) eines Typs, UNABHAENGIG vom KI-Besitz (Definition am Dateiende
  * bei den Records): Zeiger *(0x800A6A88 + Typ*4). NULL = kein RE2-Record fuer den Typ. */
 static const uint32_t *re2_gl_rec_typ(uint8_t type);
@@ -3448,8 +3449,8 @@ int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
  * (gezaehlt, `addiu s4,s4,1` @0x80013024 — auch der Riegel-Fall "Bit 0 schon gesetzt").
  * Runde 34: ausgelagert, weil der RE2-GL-Applier (re15_re2_gl_apply) RE1.5-KI-Kandidaten ueber
  * GENAU diesen Zweig schickt (O-VB4, Art 5). */
-static int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3],
-                                     const re2gl_treffer_t *gl)
+int re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3],
+                              const re2gl_treffer_t *gl)   /* Runde 35 Spur A: oeffentlich (granate_r35.c) */
 {
     /* GATE B (@0x80012f54-60, RUNDE 34 B1 — war hier als "Tod/Despawn-Flags, inert"
      * AUSGELASSEN; das war falsch gelesen):
@@ -4231,9 +4232,20 @@ static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const 
      * sterben spaltenunabhaengig (`table 0x8010CD8C 18` = 0x80108530) und ueberleben mit Spalte 0 in
      * 0x80105BC0 (Taumeln + Element-Leiter, BAUPLAN §1.6; Brand = Op 48 0x0002000A = K0 @0x80021058-70);
      * der Hund behaelt K0 (Spalte >= 3 = nur Kern/Schrei @0x801046a8-d4 statt "zerplatzt", §1.6). */
-    const unsigned k_spalte = (t.zombie && zeile == 9u) ? 1u : 0u;
+    /* ⛔ RUNDE 35 SPUR A — NUTZER-VORGABE "mehr Brutalitaet (Zerplatzen, abplatzende Beine, Arme)"
+     * (AUFTRAG.md, PORT-WAHL, Dossier A_granate.md §3.5): die HE-Explosion stempelt die Zombie-Familie
+     * mit K0 und Zone 1 (Rumpf) = Spalte 1 -> DEATH[9][1] @0x8010CD68+4 = 0x80108BEC ZERREISSEN (Kopf ab +
+     * Bein(e) ab, Russ `jal 0x8010640C` @0x80108CEC; Zeile-9-Wuerfe -> 0x80109610 Wegschleudern mit
+     * Fleischbrocken), HURT[9][1] fuer Ueberlebende. K1 (oben, Runde 34) ergab Spalte 3+Zone = 0x80108530
+     * schlichter Sturz (gemessen W2: Clip 1, keine Teile). Zone fest 1 statt der RE2-Zonenregel
+     * (@0x800472b8-cc), weil P = Liegestelle - 500 bei jedem stehenden Zombie (b98 = -1500 ->
+     * `e->y - 750 < P.y`) Zone 0 ergibt = Spalte 0 = 0x80107438 mit Kriecher-Wiederbelebung HP 10
+     * (Fund K1). Bits 0 -> Zone bleibt 1 (`unsigned zone = 1u` ohne 0x20000 in re2_gl_stempel).
+     * Hund/Kraehe/Spinne/G5/Arm: unveraendert K0 mit RE2-Zonenregel. */
+    const unsigned k_spalte = 0u;
+    const uint32_t zonen_bits = (t.zombie && zeile == 9u) ? 0u : 0x20000u;
     e->re2z_hitdir1d0 &= 0xFF00u;                                      /* @0x8004716c-84 */
-    re2_gl_stempel(e, &t, p, zeile, k_spalte, t.rec[(zeile - 9u) * 2u + 1u], 0x20000u);
+    re2_gl_stempel(e, &t, p, zeile, k_spalte, t.rec[(zeile - 9u) * 2u + 1u], zonen_bits);
     return 1;
 }
 
@@ -4368,4 +4380,54 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
         if (!alle) break;
     }
     return getroffen;
+}
+
+/* ===== Runde 35 Spur A — KANDIDATENTEST des RE2-GL-Appliers OHNE Anwendung ======================
+ * Dieselben Tore und dieselbe Geometrie wie die Schleife von re15_re2_gl_apply (FUN_800470C0), aber
+ * ohne Schaden/Stempel/Sperre: fuer den Flugkontakt der Handgranate (RE2 FUN_8001ED9C @0x8001ee90-ef14,
+ * Hitcode 0x00030009) und die Reichweite ihrer Explosion (Op 47 @0x80020c3c, Hitcode 0x10020009), deren
+ * Anwendung der RE1.5-Gegnerzweig bleibt (granate_r35.c, Dossier A_granate.md §3.2/§3.3).
+ *   Gate 1 aktiv @0x8004712c-30; Gate 2 Sperre +0x1D3 @0x80047138-40 (RE1.5-KI: +0x93 Bit 0 bzw.
+ *   re2_gl_sperre, NACHBESSERUNG mess_sb 3.1); Gate 3 HP < 0 @0x80047148-50; Gate 4 +0x10E & 0xC000
+ *   @0x80047158-64; Band @0x8004716c-a4; Radius in den Puffer @0x800471bc-ec (bleibt bei Treffer
+ *   erweitert, Ruecknahme nur im Nicht-Treffer-Zweig @0x800473dc-408); Box FUN_80041EF8 (`jal 0x80041ef8`).
+ * `box` wird wie im Original als Puffer des Aufrufers fortgeschrieben. Rueckgabe 1 = Kandidat getroffen. */
+int re15_re2_gl_kandidat(const re15_actor_t *e, const int32_t p[3], int16_t gier, int16_t box[4])
+{
+    re2_gl_typ_t t;
+    if (!e || !p || !box || !e->active) return 0;                     /* Gate 1 */
+    const int re2 = re2_gl_typ(e, &t);
+    if (re2 && e->re2z_self1d3 != 0u) return 0;                       /* Gate 2 */
+    if (!re2 && ((e->hit_react & 1u) || e->re2_gl_sperre != 0u)) return 0;
+    if (e->hp < 0) return 0;                                          /* Gate 3 */
+    if (re2 && (e->re2z_f10e & 0xC000u)) return 0;                    /* Gate 4 */
+    int16_t  b98, r1ee; uint16_t h9e; int32_t gx, gz;
+    if (re2) {
+        b98 = t.b98; h9e = t.h9e; r1ee = t.r1ee;
+        if ((uint16_t)e->rot_y & 0x400u) { gx = e->x + t.o96; gz = e->z + t.o94; }
+        else                             { gx = e->x + t.o94; gz = e->z + t.o96; }
+    } else {
+        int32_t ox, oy, oz;
+        uint16_t kr1, kr2, kh;
+        re15_resolver_kasten(e, &ox, &oy, &oz, &kr1, &kr2, &kh);
+        if (kr1 == 0u && kr2 == 0u && kh == 0u) { kr1 = 1u; kr2 = 1u; kh = 1u; }
+        b98 = (int16_t)oy; h9e = kh; gx = e->x + ox; gz = e->z + oz;
+        r1ee = (int16_t)re15_ellipse_radius((int32_t)kr1, (int32_t)kr2, (int32_t)e->rot_y,
+                                            p[2] - gz, p[0] - gx);
+    }
+    {   /* Band (@0x8004716c-a4) */
+        int32_t v = e->y + (int32_t)b98 + 100 + (int32_t)h9e - p[1];
+        if (!((uint32_t)v < (uint32_t)(2 * ((int32_t)h9e + 100)))) return 0;
+    }
+    {   /* Radius in den Puffer (@0x800471bc-ec), Box-Test, Ruecknahme bei Fehlschlag */
+        int16_t add = (int16_t)(r1ee >> 2);
+        box[3] = (int16_t)(box[3] + add);
+        box[2] = (int16_t)(box[2] + add);
+        if (!re2gl_box_test(p, gier, gx, gz, box)) {
+            box[3] = (int16_t)(box[3] - add);
+            box[2] = (int16_t)(box[2] - add);
+            return 0;
+        }
+    }
+    return 1;
 }

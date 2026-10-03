@@ -185,6 +185,11 @@ int  re15_pc_re2fx_se_weiche(uint32_t code, int *arms_id, int *satz);
 #define RE15_PC_ARMS_SAEURE     0x10          /* SOUND/ARMS10 = RE2 ARMS0B (Saeure)               */
 #define RE15_PC_ARMS_BRAND      0x11          /* SOUND/ARMS11 = RE2 ARMS0A (Brand)                */
 #define RE15_PC_ARMS_AUFSCHLAG_SATZ 10        /* ARMS10/11.EDH @0x28 = `00 00 33 20`               */
+/* Runde 35 Spur A: Explosions-SE der Handgranate = RE2 Op 47 `lui a0,0x111` @0x80020d40 / `ori a0,a0,0x1`
+ * @0x80020d44 (RE2 ARMS09.EDH @0x44 Record 0x11 `00 00 33 20`) -> RE1.5 SOUND/ARMS0F (.VB md5 = RE2 ARMS09.VB,
+ * ARMS0F.EDH @0x28 Record 0x0A `00 00 33 20` = derselbe Satz 10). Dossier A_granate.md §3.4. */
+#define RE15_PC_RE2FX_SE_EXPLOSIV 0x01110001u
+#define RE15_PC_ARMS_EXPLOSIV   0x0F          /* SOUND/ARMS0F = RE2 ARMS09 (Explosiv)              */
 /** Gebunden an re15_esp_se_hook (FUN_80045024-Analogon der ESP-Routinen 29/31). */
 void re15_pc_esp_se(uint32_t code, const int32_t pos[3]);
 /** Gebunden an re2fx_se_hook (FUN_8005ba28-Analogon der RE2-FX-Maschine, Op 48/49). */

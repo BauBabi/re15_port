@@ -16,6 +16,7 @@
 #include "re15_damage.h"   /* re15_resolve_attack = FUN_80012d60 (Routine 31, Runde 34 A5) */
 #include "re15_skeleton.h" /* re15_sin_q12/re15_cos_q12 = Tabelle 0x800794c4 (RotMatrix-Zwilling) */
 #include "re15_engine.h"   /* g_engine.frame_count — nur RE15_GRANATE_LOG */
+#include "re15_granate_r35.h"   /* Runde 35 Spur A: Wand/Kontakt im Flug, RE2-Reichweite, RE2-SE */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
@@ -576,6 +577,7 @@ unsigned re15_esp_granate_resolver_calls(void) { return s_granate_resolver_calls
 /* FUN_800199d4-Zwilling (Kind-Spawner mit Start-Flags 0x0a), unten definiert. */
 static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier,
                              const int32_t p[3]);
+static void esp_fx_weltlage(re15_esp_fx_t *f);   /* Runde 35 Spur A: nach dem Wand-Rueckzug neu */
 /* Zeilen-Spawn mit waehlbaren Start-Flags (0x03 = FUN_80019700, 0x0a = FUN_800199d4), unten
  * definiert. Routinen 8/15 spawnen ihre Kinder damit ueber den 0x0a-Weg (Gegenpruefung M-3). */
 static int esp_fx_spawn_rows_flags(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
@@ -947,12 +949,12 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * = 10/11 @0x8006f433/34, ohne Aufrufer im Original), `jal 0x80012d60` @0x800185b8.
                      * Kein Gegner ausgeschlossen: Gate A vergleicht Platz+0x74 (Anker = Spieler-
                      * Knochen) mit Gegner+0x188+0x40 (@0x80012f38-4c) -> attacker -1. */
-                    re15_attack_box_t box;
-                    box.x = p[0]; box.y = p[1]; box.z = p[2];
-                    box.radius = 500;
-                    int treffer = re15_resolve_attack(&box, art, -1);
+                    /* Runde 35 Spur A: Reichweite = RE2 Op 47 (Box +-2000 @0x80010918 an P und P+900
+                     * @0x80020d98), Anwendung = derselbe RE1.5-Gegnerzweig; kein Spielerzweig (RE2
+                     * FUN_800470C0 nur Gegnerliste) — granate_r35.c, Dossier A_granate.md §3.3. */
+                    int treffer = re15_granate_r35_explosion(p, f->param, art);
                     s_granate_resolver_calls++;
-                    if (gl) fprintf(gl, "T=%u EV resolver art=%u P=(%d,%d,%d) r=500 eingriffe=%d\n",
+                    if (gl) fprintf(gl, "T=%u EV resolver art=%u P=(%d,%d,%d) r=2000 eingriffe=%d\n",
                                     s_gr_tick, (unsigned)art, (int)p[0], (int)p[1], (int)p[2], treffer);
                 }
                 if (art == 2) {
@@ -961,9 +963,11 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * a3 = &P @0x800185e0; `jal 0x800199d4` @0x800185dc), dann SE 0x04080001 an P
                      * (`lui a0,0x408` / `ori a0,a0,0x1` / `jal 0x80045024` @0x800185e4-ec, a1 = &P). */
                     esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
+                    /* Runde 35 Spur A: SE = RE2 Op 47 0x01110001 (@0x80020d40-48) statt RE1.5
+                     * 0x04080001 (Sound ist RE2, VERTRAG §2.2; RE1.5 ARMS0F = RE2 ARMS09, Dossier §3.4). */
                     if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d)\n", s_gr_tick,
-                                    0x04080001u, (int)p[0], (int)p[1], (int)p[2]);
-                    if (re15_esp_se_hook) re15_esp_se_hook(0x04080001u, p);
+                                    RE15_GRANATE_R35_SE_EXPLOSION, (int)p[0], (int)p[1], (int)p[2]);
+                    re15_granate_r35_explosion_se(p);
                 } else {
                     /* E8: Aufschlag an der Granaten-WELTLAGE Q = slot+0x28/2a/2c (nicht P), Gier =
                      * slot+0x2e. re2_art per expliziter Tabelle (esp_granate_re2_art). */
@@ -1126,14 +1130,39 @@ void (*re15_esp_shell_clink_hook)(void) = NULL;
  *    `sw v0,56(t0)` @0x800183c4/dc/e0), vy := -trunc(vy/3) (@0x800183e4-f8), SE
  *    0x010A0001 | (Zaehler_neu << 8) an der Eindringstelle (`lh` 40/42/44 @0x800183fc-414,
  *    `sll a0,a0,8` / `or` @0x80018420/28, `jal 0x80045024` @0x80018424). vz wird NIE gedaempft. */
+/* Runde 35 Spur A — Explosion SOFORT (RE2: `jr Op[step[3]+Art]` @0x8001f0e0-104 im selben Bild nach
+ * Wand oder Kontakt): der Platz nimmt den Liegezustand aus R29 (`ori v0,zero,0x63 / sb v0,108` @0x80018368-6c,
+ * `ori v0,zero,0x1f / sh v0,0` @0x80018378-7c, `sh zero,2` @0x80018384) mit Zuender 7 (`ori v0,zero,0x7`
+ * @0x8001856c) und Routine 31 laeuft noch in diesem Tick (Zuender 7 -> 6, danach 2 = Nachbrand, 0 = frei). */
+static void esp_granate_sofort(re15_esp_fx_t *f)
+{
+    f->flags = 0x63;
+    row_set16(f, 0x00, 31);
+    row_set16(f, 0x02, 0);
+    row_set16(f, 0x1e, 7);
+    esp_fx_dispatch(f);
+}
+
 static void esp_fx_dispatch_b_29(re15_esp_fx_t *f)
 {
+    FILE *gl = esp_granate_log();
+    /* ===== Runde 35 Spur A — Wand / Gegner-Kontakt im Flug (RE2 FUN_8001ED9C, granate_r35.c) ===== */
+    {   int k = re15_granate_r35_flugtest(f);          /* 1 Wand (@0x8001ef84-8c); Kontakt nicht verdrahtet */
+        if (k) {
+            int16_t vor[3] = { f->wpos[0], f->wpos[1], f->wpos[2] };
+            re15_granate_r35_rueckzug(f); esp_fx_weltlage(f);                /* @0x8001ef90-0x8001f0cc */
+            if (gl) fprintf(gl, "T=%u EV wand wpos=(%d,%d,%d) -> rueckzug (%d,%d,%d) -> explosion sofort\n",
+                            s_gr_tick, (int)vor[0], (int)vor[1], (int)vor[2],
+                            (int)f->wpos[0], (int)f->wpos[1], (int)f->wpos[2]);
+            esp_granate_sofort(f);
+            return;
+        }
+    }
     /* t1 = Eindringtiefe unter die Bezugsebene. Original: Ebene y 0 (`lh t1,42(t0)` / `blez t1`
      * @0x80018330-38). granate_boden (re15_esp.h) = Standhoehe des Werfers, PORT-ZUORDNUNG fuer
      * Raeume mit Boden != 0; bei Boden 0 (granate_boden == 0) byte-gleich. */
     int32_t t1 = (int32_t)f->wpos[1] - f->granate_boden;
     if (t1 <= 0) return;
-    FILE *gl = esp_granate_log();
     uint16_t n = row_u16(f->row, 0x26);
     if (n == 0) {
         /* E14 (Port-Wahl, gekennzeichnet): die Lage dieses SEs ist im Original Stapelrest

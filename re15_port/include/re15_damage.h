@@ -348,6 +348,16 @@ int     re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box[4]
  * Aufrufer: re15_game_step hinter re15_enemy_ai_run_all (selbes KI-Freeze-Tor). */
 void    re15_re2_gl_sperre_tick(void);
 
+/* ---- Runde 35 Spur A (granate_r35.c) ------------------------------------------------------------
+ * re15_re2_gl_kandidat = Tore 1-4 + Band + Box (FUN_80041EF8) des Appliers FUN_800470C0 OHNE Anwendung;
+ * `box` wird wie der Puffer des Originals fortgeschrieben (@0x800471bc-ec / @0x800473dc-408).
+ * re15_resolver_gegnerzweig = der Gegnerzweig von FUN_80012d60 ab Gate B (@0x80012f54-0x80013024) fuer
+ * EINEN Kandidaten; Rueckgabe -1 = Gate B (nicht gezaehlt), sonst 1. gl = NULL ausserhalb des RE2-GL-Pfads. */
+struct re2gl_treffer;
+int     re15_re2_gl_kandidat(const re15_actor_t *e, const int32_t p[3], int16_t gier, int16_t box[4]);
+int     re15_resolver_gegnerzweig(re15_actor_t *e, uint8_t attack_type, const int32_t p[3],
+                                  const struct re2gl_treffer *gl);
+
 /* MECHANISMUS-ZAEHLER (Runde 34, nur fuer Sonden — sie aendern kein Spielverhalten).
  * gate5   = wie oft das fuenfte Tor des Kandidatenfilters FUN_800470C0 (@0x8004716C-A4)
  *           ein Urteil gefaellt hat. Nach der Umstellung gehoert es AUSSCHLIESSLICH zum

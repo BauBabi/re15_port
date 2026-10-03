@@ -1080,7 +1080,7 @@ void re15_audio_prime_weapon(int weapon_id)
  * ist Port-Zuordnung (E9): FEST, NICHT ueber die Bank der ausgeruesteten Waffe (die Granaten-
  * baenke ARMS09/0A/0B haben keinen Aufschlagton, nur VAG 2). Deshalb eigene, einmal geladene
  * Baenke neben s_weap_*; Satz-Aufloesung und Stimmen/Prio-Maschine = se_play_layers wie ARMS. */
-#define ARMS_ZUSATZ_N 2
+#define ARMS_ZUSATZ_N 3   /* Runde 35 Spur A: + ARMS0F (Explosiv) */
 typedef struct {
     int         id;                                   /* ARMS-Id (0x10/0x11), -1 = leer         */
     int         state;                                /* 0 ungeprueft, 1 geladen, -1 fehlt       */
@@ -1090,7 +1090,7 @@ typedef struct {
     uint8_t    *edt;                                  /* EDH-Puffer, EDT-Praefix @0             */
     int         edt_count;
 } arms_zusatz_t;
-static arms_zusatz_t s_arms_zusatz[ARMS_ZUSATZ_N] = { { .id = -1 }, { .id = -1 } };
+static arms_zusatz_t s_arms_zusatz[ARMS_ZUSATZ_N] = { { .id = -1 }, { .id = -1 }, { .id = -1 } };
 
 static arms_zusatz_t *arms_zusatz_laden(int arms_id)
 {

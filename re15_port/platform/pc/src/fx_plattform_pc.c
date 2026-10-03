@@ -202,6 +202,7 @@ void re15_pc_licht_latch_zurueck(re15_light_set_t *ls)
 
 #include "re15_audio.h"
 #include "re15_damage.h"     /* re15_re2_gl_apply (V2b) */
+#include "re15_granate_r35.h" /* Runde 35 Spur A: re15_granate_r35_explosion (FORCE_EXPLOSION) */
 #include <stdio.h>
 
 extern FILE *re15_waffen_log(void);   /* engine/src/player_common.c — Mess-Log RE15_WAFFEN_LOG */
@@ -223,6 +224,7 @@ int re15_pc_re2fx_se_weiche(uint32_t code, int *arms_id, int *satz)
     int id;
     if (code == RE15_PC_RE2FX_SE_SAEURE)     id = RE15_PC_ARMS_SAEURE;
     else if (code == RE15_PC_RE2FX_SE_BRAND) id = RE15_PC_ARMS_BRAND;
+    else if (code == RE15_PC_RE2FX_SE_EXPLOSIV) id = RE15_PC_ARMS_EXPLOSIV;   /* Runde 35 Spur A */
     else return 0;
     if (arms_id) *arms_id = id;
     if (satz) *satz = RE15_PC_ARMS_AUFSCHLAG_SATZ;
@@ -255,7 +257,8 @@ void re15_pc_re2fx_se(uint32_t code, const int32_t pos[3])
     int ok = re15_pc_re2fx_se_weiche(code, &arms, &satz);
     {   FILE *wl = re15_waffen_log();
         if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s\n", (unsigned)code,
-                        ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" : "ARMS11 Satz 10")
+                        ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" :
+                              arms == RE15_PC_ARMS_EXPLOSIV ? "ARMS0F Satz 10" : "ARMS11 Satz 10")
                            : "unbekannt (stumm)"); }
     if (ok) re15_audio_arms_zusatz_se(arms, satz);
 }
@@ -334,10 +337,10 @@ int re15_pc_force_explosion(int art, const re15_actor_t *ziel)
     /* Wie Routine 31 im Zuender-7-Bild (re15_esp.c): P = (x, y - 500, z) der liegenden Granate
      * (`lh v0,42(v1)` @0x800185a0 / `addiu v0,v0,-500` @0x800185a8), FUN_80012d60(500, &P, Art) (`ori a0,zero,0x1f4`
      * @0x80018598, `jal 0x80012d60` @0x800185b8) — hier liegt die "Granate" am Ziel. */
-    re15_attack_box_t box;
-    box.x = ziel->x; box.y = ziel->y - 500; box.z = ziel->z;
-    box.radius = 500;
-    int n = re15_resolve_attack(&box, (uint8_t)art, -1);
+    /* Runde 35 Spur A: dieselbe Zustellung wie Routine 31 (RE2-Reichweite Box +-2000 @0x80010918 an P und
+     * P+900 @0x80020d98 -> RE1.5-Gegnerzweig; kein Spielerzweig), granate_r35.c. */
+    int32_t p[3] = { ziel->x, ziel->y - 500, ziel->z };
+    int n = re15_granate_r35_explosion(p, (int16_t)ziel->rot_y, (uint8_t)art);
     if (art != 2) {
         /* E8: Art 3/4 -> Aufschlag Op 49 (Saeure, re2_art 2) / Op 48 (Brand, re2_art 1) an der Lage */
         int32_t q[3] = { ziel->x, ziel->y, ziel->z };
