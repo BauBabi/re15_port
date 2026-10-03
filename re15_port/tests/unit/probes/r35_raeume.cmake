@@ -30,3 +30,10 @@ target_compile_definitions(test_r35_raeume_trage PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r35_raeume_trage COMMAND test_r35_raeume_trage)
 set_tests_properties(unit_r35_raeume_trage PROPERTIES TIMEOUT 120)
+
+# Punkt 4 MESS-SONDE (kein add_test): Handlage des RE2-Zellenarms EM2D in Clip 3/5.
+add_executable(probe_r35_raeume_arme probe_r35_raeume_arme.c)
+target_link_libraries(probe_r35_raeume_arme PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r35_raeume_arme PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r35_raeume_arme PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

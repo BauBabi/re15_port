@@ -147,6 +147,13 @@ typedef struct {
     uint8_t  bone_base;     /* +0x1C1 = Tabelle 0x80101414[var*7] = 1 (A) / 8 (B)             */
     uint8_t  hidden;        /* Entity-Wort-0 Bit 2 (0x80101164: |= 2 bei a2 = 0, &= ~2 bei 1) */
     uint8_t  init_done;
+    /* Runde 35 Spur H: die Pose, die die Part-Matrizen GERADE tragen. RE2 baut sie NUR in
+     * 0x8002959C -> 0x80029614 aus dem Bild VOR dem Weiterzaehlen (+0x178 = Bild +0x14D
+     * @0x800295C8-F8, Zaehlen +1 erst @0x80029B30); jede Lesung `lw ...,92/100(part)` (+0x5C/+0x64)
+     * sieht also die Pose des LETZTEN Advance-Aufrufs, nicht den eben gesetzten Clip. */
+    int16_t  pose_clip;
+    uint16_t pose_frame;
+    uint8_t  pose_ok;
 } re2arm_t;
 static re2arm_t s_arm[RE15_ACTOR_MAX];
 
@@ -238,6 +245,24 @@ static int arm_frame(const re15_actor_t *e)        /* +0x14D */
     int fc = re15_actor_clip_len(e);
     return (fc > 0) ? (int)(e->anim_frame % (uint32_t)fc) : (int)e->anim_frame;
 }
+/* 0x8002959C mit Pose-Merker (s. re2arm_t.pose_*): erst die Pose des AKTUELLEN Bilds merken
+ * (= das, was 0x80029614 in die Parts schreibt), dann zaehlen. */
+static int arm_adv(re15_actor_t *e, int slot, int blend)
+{
+    s_arm[slot].pose_clip  = e->motion;                  /* +0x14C beim Aufruf              */
+    s_arm[slot].pose_frame = e->anim_frame;              /* +0x14D VOR `addiu +1` @0x80029B30 */
+    s_arm[slot].pose_ok    = 1;
+    return re15_re2_advance_959c(e, blend);
+}
+/* part[Hand]+0x5C/+0x60/+0x64 = Hand-Weltpunkt der Pose, die die Parts tragen (s. o.). */
+static void arm_hand_pose(re15_actor_t *e, int slot, int32_t out[3])
+{
+    const int16_t mo = e->motion; const uint16_t fr = e->anim_frame;
+    if (s_arm[slot].pose_ok) { e->motion = s_arm[slot].pose_clip; e->anim_frame = s_arm[slot].pose_frame; }
+    re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), out);
+    e->motion = mo; e->anim_frame = fr;
+}
+
 /* FUN_800152C8(self, yaw_ofs): x += cos(yaw+ofs)*+0x144 >> 12, z -= sin(...)*+0x144 >> 12
  * (EXE @0x800152E4-334, s. enemy_ai_re2_dog.c re2d_move). +0x146/+0x148 sind beim Arm immer 0. */
 static void arm_move(re15_actor_t *e, int spd, int yaw_ofs)
@@ -249,10 +274,10 @@ static void arm_move(re15_actor_t *e, int spd, int yaw_ofs)
 }
 /* FUN_800157D4(&PL, part+0x5C, r): Spieler-Abstand zum Part-Weltpunkt STRIKT < r
  * (`sltu v0,v0,s0` — Skeptiker-Tabelle 7). */
-static int arm_hand_within(const re15_actor_t *e, const re15_actor_t *pl, int r, int32_t out_hand[3])
+static int arm_hand_within(re15_actor_t *e, int slot, const re15_actor_t *pl, int r, int32_t out_hand[3])
 {
     int32_t h[3];
-    re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), h);
+    arm_hand_pose(e, slot, h);                           /* part[Hand]+0x5C der Parts-Pose (s. re2arm_t) */
     if (out_hand) { out_hand[0] = h[0]; out_hand[1] = h[1]; out_hand[2] = h[2]; }
     int32_t dx = pl->x - h[0], dz = pl->z - h[2];
     uint32_t d = re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
@@ -298,7 +323,7 @@ static void arm_init(re15_actor_t *e, int slot)
      * RE2-Trefferkasten — nicht uebernommen (Kopf). */
     s_se_cd = 0;                                          /* sb zero,5412(at) @0x80100358 = 0x80101524 */
     arm_clip(e, 0, 0);                                    /* sw zero,332(s0) @0x80100368 (Clip 0, Rate 0) */
-    (void)re15_re2_advance_959c(e, 256);                  /* jal 0x8002959C @0x80100370 */
+    (void)arm_adv(e, slot, 256);                          /* jal 0x8002959C @0x80100370 */
     a->init_done = 1;
 }
 
@@ -338,7 +363,7 @@ static void arm_B0(re15_actor_t *e, re15_actor_t *pl, int slot)
     switch (e->sub_state_2) {
     case 0:                                               /* @0x801006C8 */
         arm_clip(e, 0, 15);                               /* sw 0xF0000,332 @0x801006CC-D4 */
-        (void)re15_re2_advance_959c(e, 256);              /* jal 0x8002959C @0x801006D0 */
+        (void)arm_adv(e, slot, 256);                      /* jal 0x8002959C @0x801006D0 */
         e->sub_state_2 = 1;                               /* sb 1,6 @0x801006F4 */
         e->rot_y = a->home_yaw; e->x = a->home_x; e->z = a->home_z;   /* @0x8010070C-714 */
         e->re2z_self1d3 |= 0x80u;                         /* ori 0x80 @0x80100708 / sb @0x8010071C */
@@ -353,7 +378,7 @@ static void arm_B0(re15_actor_t *e, re15_actor_t *pl, int slot)
     case 2:                                               /* @0x801006B0 -> Ausgang: nichts */
         break;
     default: {                                            /* Phase 3 @0x80100740 (von A0 Zweig 2 gesetzt) */
-        int done = re15_re2_advance_959c(e, 256);         /* jal 0x8002959C @0x80100740 */
+        int done = arm_adv(e, slot, 256);                 /* jal 0x8002959C @0x80100740 */
         if (done) {
             re15_ai_set_state_word(e, 0x101u);            /* sw 257,4 @0x80100758 */
             e->x = a->home_x; e->z = a->home_z;           /* @0x8010075C/64 */
@@ -366,9 +391,9 @@ static void arm_B0(re15_actor_t *e, re15_actor_t *pl, int slot)
 }
 
 /* ---- A1 @0x801007A8 / B1 @0x80100830 (REACH 0x101) ------------------------------------------- */
-static void arm_A1(re15_actor_t *e, re15_actor_t *pl)
+static void arm_A1(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
-    if (arm_hand_within(e, pl, 900, NULL))                /* FUN_800157D4(&PL, part[Hand]+0x5C, 900) @0x801007C4/@0x80100804 */
+    if (arm_hand_within(e, slot, pl, 900, NULL))                /* FUN_800157D4(&PL, part[Hand]+0x5C, 900) @0x801007C4/@0x80100804 */
         re15_ai_set_state_word(e, 0x301u);                /* sw 769,4 @0x80100814-18 */
 }
 static void arm_B1(re15_actor_t *e, re15_actor_t *pl, int slot)
@@ -390,7 +415,7 @@ static void arm_B1(re15_actor_t *e, re15_actor_t *pl, int slot)
         if (hi < yaw) yaw = hi;                           /* slt @0x80100914-20 */
         if (yaw < lo) yaw = lo;                           /* slt @0x80100934-40 */
         e->rot_y = yaw;
-        (void)re15_re2_advance_959c(e, 256);              /* jal 0x8002959C @0x80100950 */
+        (void)arm_adv(e, slot, 256);                      /* jal 0x8002959C @0x80100950 */
         int16_t v = e->re2z_t158;
         e->re2z_t158 = (int16_t)(v - 1);                  /* sh im Delay-Slot @0x80100968: IMMER */
         if (v == 0) re15_ai_set_state_word(e, 0x501u);    /* @0x8010096C-70 */
@@ -398,9 +423,9 @@ static void arm_B1(re15_actor_t *e, re15_actor_t *pl, int slot)
 }
 
 /* ---- A3 @0x801009A0 / B3 @0x80100A90 (ZUGRIFF 0x301) ----------------------------------------- */
-static void arm_A3(re15_actor_t *e, re15_actor_t *pl)
+static void arm_A3(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
-    if (!arm_hand_within(e, pl, 600, NULL)) return;       /* FUN_800157D4(…,600) @0x801009BC/@0x801009FC */
+    if (!arm_hand_within(e, slot, pl, 600, NULL)) return;       /* FUN_800157D4(…,600) @0x801009BC/@0x801009FC */
     if (arm_frame(e) < 5) return;                         /* sltiu 5 @0x80100A18 */
     if (s_cd_cfbf4 != 0) return;                          /* lhu 0x800CFBF4 @0x80100A28-30 */
     if ((pl->re2z_self1d3 & 0x80u) || re15_player_is_grabbed()) {   /* PL+0x1D3 & 0x80 @0x80100A3C-48
@@ -411,7 +436,7 @@ static void arm_A3(re15_actor_t *e, re15_actor_t *pl)
     re15_ai_set_state_word(e, 0x401u);                    /* sw 1025,4 @0x80100A50-54 */
     pl->re2z_self1d3 |= 0x80u;                            /* @0x80100A58-6C */
 }
-static void arm_B3(re15_actor_t *e, re15_actor_t *pl)
+static void arm_B3(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
     if (e->sub_state_2 == 0) {                            /* P0 @0x80100AEC (faellt in P1 @0x80100AFC) */
         arm_clip(e, 3, 15);                               /* 0xF0003 @0x80100ACC/AEC-F0 */
@@ -419,7 +444,7 @@ static void arm_B3(re15_actor_t *e, re15_actor_t *pl)
     }
     if (e->sub_state_2 == 1) {                            /* P1 @0x80100AFC */
         re15_enemy_steer_point(e, pl->x, pl->z, 48);      /* FUN_80015558(self, PL.x, PL.z, 48) @0x80100B10-14 */
-        int done = re15_re2_advance_959c(e, 256);         /* @0x80100B24 */
+        int done = arm_adv(e, slot, 256);                 /* @0x80100B24 */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + done);/* @0x80100B34-3C */
     } else if (e->sub_state_2 == 2) {
         re15_ai_set_state_word(e, 0x501u);                /* @0x80100AE0 / @0x80100B40 */
@@ -434,7 +459,11 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
         int32_t h[3];
         arm_clip(e, 5, 15);                               /* 0xF0005 @0x80100BC8-CC */
         e->sub_state_2 = 1;                               /* @0x80100BD0-D4 */
-        re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), h);   /* part[Hand] @0x80100BEC-C14 */
+        /* Runde 35 Spur H: part[Hand] @0x80100BEC-C14 traegt die Pose des LETZTEN 0x8002959C
+         * (B3 P1 @0x80100B24 im Vortakt: Clip 3 Bild k) — P0 ruft selbst keinen Advance, er endet
+         * `j 0x80100D6C` (@0x80100CAC). Vorher rechnete der Port die Hand aus dem eben gesetzten
+         * Clip 5 Bild 0: Leon stand bis ~170 Einheiten seitlich versetzt (Messung Dossier 4.1). */
+        arm_hand_pose(e, slot, h);
         pl->x = h[0];                                     /* sw v0,0x800CFC30 (PL+0x38) @0x80100C18-20 */
         pl->z = h[2];                                     /* sw v0,0x800CFC38 (PL+0x40) @0x80100C24-38 */
         s_holder = slot;                                  /* 0x800CFDAC = PL+0x1B4 = self @0x80100C2C-30 */
@@ -452,7 +481,7 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
             /* Rumble @0x80100CC4-E8: kein Port-Rumble */
             arm_se((re15_re2_rand() & 1u) ? 5 : 7);       /* @0x80100CEC-D08 */
         }
-        (void)re15_re2_advance_959c(e, 256);              /* @0x80100D18 */
+        (void)arm_adv(e, slot, 256);                      /* @0x80100D18 */
         int mash = re15_re2z_mash();                      /* FUN_8001598C @0x80100D20 */
         e->re2z_t15a = (int16_t)(e->re2z_t15a - 1 - 2 * mash);   /* @0x80100D28-38 */
         if (e->re2z_t15a < 0) {                           /* sll/bgez @0x80100D3C-40 */
@@ -478,7 +507,7 @@ static void arm_B5(re15_actor_t *e, int slot)
         arm_se(6);                                        /* addiu a0,6 @0x80100DD8 / jal @0x80100DF4 */
     }
     if (e->sub_state_2 == 1) {                            /* P1 @0x80100E00 */
-        int done = re15_re2_advance_959c(e, 256);         /* @0x80100E08 */
+        int done = arm_adv(e, slot, 256);                 /* @0x80100E08 */
         if (done) {
             e->re2z_t158 = (int16_t)((re15_re2_rand() & 0x1Fu) + 30u);   /* @0x80100E18-34 */
             arm_show(e, slot, 0);                         /* 0x80101164(self,var,0) @0x80100E38 */
@@ -492,12 +521,12 @@ static void arm_B5(re15_actor_t *e, int slot)
 }
 
 /* ---- B6 @0x80100E9C (WARTEN 0x601; A6 = jr ra) ---------------------------------------------- */
-static void arm_B6(re15_actor_t *e, re15_actor_t *pl)
+static void arm_B6(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
     switch (e->sub_state_2) {
     case 0: arm_clip(e, 5, 15); e->sub_state_2 = 1; break;      /* 0xF0005 @0x80100EE8-EC, sb 1,6 @0x80100EF0-F8 */
     case 1:
-        (void)re15_re2_advance_959c(e, 256);                     /* @0x80100F00 */
+        (void)arm_adv(e, slot, 256);                             /* @0x80100F00 */
         if (!(pl->re2z_self1d3 & 0x80u) && !re15_player_is_grabbed())   /* PL+0x1D3 & 0x80 @0x80100F08-18 */
             e->sub_state_2 = 2;                                  /* @0x80100F1C-24 */
         break;
@@ -614,17 +643,17 @@ int re15_re2arm_tick(int slot)
                                                            * (Dual-Dispatch, +0x5 wird fuer B NEU gelesen @0x80100448) */
         switch (e->sub_state_1) {
         case 0: arm_A0(e, pl, slot); break;               /* 0x8010050C */
-        case 1: arm_A1(e, pl);       break;               /* 0x801007A8 */
-        case 3: arm_A3(e, pl);       break;               /* 0x801009A0 */
+        case 1: arm_A1(e, pl, slot); break;               /* 0x801007A8 */
+        case 3: arm_A3(e, pl, slot); break;               /* 0x801009A0 */
         default: break;                                   /* 2/4/5/6/7 = jr ra */
         }
         switch (e->sub_state_1) {
         case 0: arm_B0(e, pl, slot); break;               /* 0x80100674 */
         case 1: arm_B1(e, pl, slot); break;               /* 0x80100830 */
-        case 3: arm_B3(e, pl);       break;               /* 0x80100A90 */
+        case 3: arm_B3(e, pl, slot); break;               /* 0x80100A90 */
         case 4: arm_B4(e, pl, slot); break;               /* 0x80100B68 */
         case 5: arm_B5(e, slot);     break;               /* 0x80100D90 */
-        case 6: arm_B6(e, pl);       break;               /* 0x80100E9C */
+        case 6: arm_B6(e, pl, slot); break;               /* 0x80100E9C */
         default: break;                                   /* 2/7 = jr ra */
         }
         break;
