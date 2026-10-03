@@ -438,7 +438,8 @@ static int32_t rakete_nach_minus_z(int32_t x, int32_t z0)
     uint8_t m[32]; mtx_minus_z(m, x, -2530, z0 + 1100);
     static const int16_t OM[4] = { 0, 1100, 0, 0 };
     (void)re2fx_spawn_sofort(0x020D1000u, 0, m, OM);
-    for (int t = 0; t < 60 && s_expl_n == 0; t++) re2fx_tick();
+    int t; for (t = 0; t < 60 && s_expl_n == 0; t++) re2fx_tick();
+    printf("     Rakete x=%d ab z=%d: %s nach %d Bildern, z=%d\n", (int)x, (int)z0, s_expl_n ? "Explosion" : "KEINE Explosion", t, (int)s_expl_z);
     return s_expl_n ? s_expl_z : 1;
 }
 static void teil_h(void)
