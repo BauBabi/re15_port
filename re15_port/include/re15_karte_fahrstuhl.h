@@ -12,8 +12,16 @@
 #ifndef RE15_KARTE_FAHRSTUHL_H
 #define RE15_KARTE_FAHRSTUHL_H
 
-/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl oder kein Bit gesetzt
- * (dann bleibt die Etagenwahl wie bisher). */
+/* Blatt, auf dem die Kabine von `room` gerade steht; -1 = kein Fahrstuhl oder Etage unbekannt
+ * (dann bleibt die Etagenwahl wie bisher). Quelle 1: der Raum, aus dem man in die Kabine kam
+ * (Spiegel von DAT_800b0fe6, FUN_8001d600 @0x8001d938) - aus ihm betritt man sie, dort steht
+ * sie. Quelle 2: Bank 3 Bit 54/55/56. Die Bits allein reichen NICHT: die Etagenraeume setzen
+ * sie in sub01 nur unter Ck(4,243,1) ("Reservestrom an", ROOM11F0 sub18 @0x016F6) und nur bei
+ * Eintritts-Cut 5/0/0 (`23 00 0a 00 05 00` ROOM1040 @0x15D0 usw.) - wer 3F aus ROOM1130
+ * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage. */
 int re15_karte_fahrstuhl_blatt(unsigned room);
+
+/* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */
+void re15_karte_raum_gesehen(unsigned room);
 
 #endif

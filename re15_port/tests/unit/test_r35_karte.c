@@ -274,23 +274,27 @@ static int teil_fahrstuhl(void)
     int e, k;
     char t[200];
     printf("=== Riegel Punkt 1: Fahrstuhl ROOM1080 ===\n");
-    /* (a) DATENWEG: die Etagenraeume setzen die Bits selbst (main00 beim Betreten). */
+    /* (a) DER ECHTE WEG: aus dem Etagenraum durch die Tuer in die Kabine (betrete faehrt
+     * scd_room_reenter -> re15_map_zone_update, wie der Raumlade-Punkt im Spiel). Die
+     * Etagen-Bits stehen dabei absichtlich auf 1F - der Raum, aus dem man kommt, gewinnt. */
     {
         static const unsigned raum[4] = { 0, 0x1040, 0x10C0, 0x1120 };
+        /* Ankunftspunkte an der Fahrstuhltuer der Etage (Gegenrichtung der Tuer-Datensaetze
+         * ROOM1080 @0x482/0x4A2/0x4C2) */
+        static const int32_t ank[4][2] = { {0,0}, {-21936,-11000}, {1450,7300}, {1300,7300} };
         for (e = 1; e <= 3; e++) {
-            int b54, b55, b56;
-            re15_game_flag_set(3, 54, 0); re15_game_flag_set(3, 55, 0);
-            re15_game_flag_set(3, 56, 0);
-            if (!betrete(raum[e], 0, 0, 0)) { CHECK("RDT der Etage geladen", 0); continue; }
-            b54 = re15_game_flag_get(3, 54); b55 = re15_game_flag_get(3, 55);
-            b56 = re15_game_flag_get(3, 56);
-            snprintf(t, sizeof t, "ROOM%04X setzt beim Betreten Bank 3 Bit %d (54/55/56 = %d%d%d)",
-                     raum[e], 53 + e, b54, b55, b56);
-            CHECK(t, (e == 1 && b54 && !b55 && !b56) || (e == 2 && !b54 && b55 && !b56) ||
-                     (e == 3 && !b54 && !b55 && b56));
+            if (!betrete(raum[e], ank[e][0], ank[e][1], 0)) { CHECK("RDT der Etage", 0); continue; }
+            kabine_auf(1);
+            if (!betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) { CHECK("ROOM1080", 0); continue; }
+            miss_hier(0x1080, s_kabine[0][0], s_kabine[0][1], &m);
+            snprintf(t, sizeof t, "aus ROOM%04X in die Kabine: Blatt %d (soll %d), aktuell nur "
+                     "rect %d", raum[e], m.page, blatt[e], rect[e]);
+            CHECK(t, m.page == blatt[e] && nur_aktuell(&m, rect[e]));
         }
     }
     for (e = 1; e <= 3; e++) {
+        /* (b) Etagen-Bits des Spiels, wenn der Vorraum KEIN Etagenraum ist */
+        if (!betrete(0x1070, 0, 0, 0)) { CHECK("ROOM1070", 0); break; }
         if (!betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) { CHECK("ROOM1080", 0); break; }
         kabine_auf(e);
         miss_hier(0x1080, s_kabine[0][0], s_kabine[0][1], &m);
@@ -317,8 +321,8 @@ static int teil_fahrstuhl(void)
         CHECK(t, ecke[1].mx < ecke[0].mx && ecke[3].mx < ecke[2].mx &&
                  ecke[2].my > ecke[0].my && ecke[3].my > ecke[1].my);
     }
-    /* Gegenprobe: kein Etagen-Bit -> wie bisher die erste Zeile (Blatt 2) */
-    if (betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) {
+    /* Gegenprobe: kein Etagen-Bit, kein Etagen-Vorraum -> wie bisher die erste Zeile (Blatt 2) */
+    if (betrete(0x1070, 0, 0, 0) && betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) {
         kabine_auf(0);
         miss_hier(0x1080, s_kabine[0][0], s_kabine[0][1], &m);
         CHECK("ohne Etagen-Bit: Blatt 2 (unveraenderter Rueckfall)", m.page == 2);

@@ -630,6 +630,7 @@ static const re15_map_zone_t *s_cur_zone;
 
 void re15_map_zone_update(unsigned room, int32_t x, int32_t z)
 {
+    re15_karte_raum_gesehen(room);   /* Runde 35 Spur G: alter Raum fuer die Fahrstuhl-Etage */
     s_cur_zone = re15_map_zone_at(room, x, z);
     if (s_cur_zone) re15_map_visited_mark_at(room, x, z);
 }
