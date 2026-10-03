@@ -19,6 +19,7 @@
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #include "gen/knall_bank.inc"   /* k_knall_bank: Satz 0 Tuerknall (RE2 DOOR04 Door_exit), Satz 1 Knall ROOM1030 */
@@ -207,9 +208,9 @@ static const uint8_t k_p_1040_nach[] = { EM_1040_LISTE, OP_END };   /* spaeteres
  * 1070-Tuer, Records = ROOM1070 sub00 Else-Zweig @0x01632.., Blick zur Kamera = -x = Gierung 2048), dann
  * Cut 6: "noch ein Knall und die Zombies kriechen noch einmal durch das Tor" = die ORIGINAL-Szene des
  * Raums (sub08 @0x02764..@0x027DE) in ihrer eigenen Form:
- *   @0x0276C Aot_reset Slot 17 -> msg 1, @0x02776 Se_on 0x0c (der Knall), @0x02782..@0x0278B Cut_replace
- *   0->9 3->10 4->11 6->12 (Tor aufgebrochen), @0x0278E/@0x02792 Sca_id_set 2/3, (4,15)=1 (sub01
- *   @0x02198), @0x02796/@0x0279A Save var5/var7 = 0, dann VIERMAL `18 09` Gosub sub09 (@0x0279E, @0x027A4,
+ *   @0x02776 Se_on 0x0c (der Knall); nur bei (4,15)=0 (sonst hat sub00 es schon getan): @0x0276C Aot_reset
+ *   Slot 17 -> msg 1, @0x02782..@0x0278B Cut_replace 0<->9 3<->10 4<->11 6<->12 (Tor aufgebrochen),
+ *   @0x0278E/@0x02792 Sca_id_set 2/3, (4,15)=1 (sub01 @0x02198); @0x02796/@0x0279A Save var5/var7 = 0, dann VIERMAL `18 09` Gosub sub09 (@0x0279E, @0x027A4,
  *   @0x027B4, @0x027BA; im Original mit Pausen 5/20/10, hier unmittelbar hintereinander, weil die frisch
  *   erschienenen Zombies sonst aus dem Warte-Rechteck laufen, bevor sub09 sie findet — gemessen: von drei
  *   wurde mit den Original-Pausen nur einer erfasst, Dossier §8) — sub09 @0x027E0 sucht ab Index var5
@@ -253,11 +254,20 @@ static const uint8_t k_p_1030_tuer[] = {
 };
 static const uint8_t k_p_1030_tor[] = {
     OP_CUT(RE15_IT_CUT_1030_TOR), OP_SLEEP(15),
-    0x46, 0x11, 0x01, 0x31, 0x01, 0x00, 0xff, 0xff, 0x00, 0x00,               /* sub08 @0x0276C */
     0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776: der Knall */
+};
+/* Das Tor bricht auf — NUR wenn die Original-Szene noch nicht gelaufen ist ((4,15)=0). Bei (4,15)=1 hat
+ * sub00 @0x01FF4..@0x02004 dieselben Zeilen schon beim Raumaufbau ausgefuehrt, und Cut_replace ist ein
+ * TAUSCH (LAB_80040414 @0x8004044c-a8: jeder Zonen-Satz mit a bekommt b UND umgekehrt): ein zweiter Lauf
+ * tauschte die Zonen zurueck — gemessen (Lauf x1030, Dossier §8.3): die Kriecher standen im Raum
+ * (Messzeile), wurden unter Cut 12 aber nicht gezeichnet (Sicht-Zonen wieder die des alten Cuts). */
+static const uint8_t k_p_1030_bruch[] = {
+    0x46, 0x11, 0x01, 0x31, 0x01, 0x00, 0xff, 0xff, 0x00, 0x00,               /* sub08 @0x0276C */
     0x4b, 0x00, 0x09, 0x4b, 0x03, 0x0a, 0x4b, 0x04, 0x0b, 0x4b, 0x06, 0x0c,   /* sub08 @0x02782..@0x0278B */
     0x37, 0x02, 0x06, 0xf7, 0x37, 0x03, 0x06, 0xf7,                           /* sub08 @0x0278E/@0x02792 */
     OP_SET(4, 15, 1),                                                         /* sub01 @0x02198 */
+};
+static const uint8_t k_p_1030_kriechen[] = {
     EM_KRIECHER_LISTE,                                      /* erscheinen im Warte-Rechteck hinter dem Tor */
     OP_SLEEP(2),                                            /* ein Bild fuer den AOT-Stempel (Scan nach der VM, @0x8001ce1c) */
     0x24, 0x05, 0x00, 0x00, 0x24, 0x07, 0x00, 0x00,                           /* sub08 @0x02796/@0x0279A */
@@ -265,7 +275,7 @@ static const uint8_t k_p_1030_tor[] = {
     OP_SLEEP(20),                                                             /* sub08 @0x027A6 */
     OP_CUT(12),                                                               /* sub08 @0x027AA */
     OP_SLEEP(15), OP_SLEEP(20), OP_SLEEP(180),                                /* sub08 @0x027BC..@0x027C4 */
-    OP_SLEEP(120),                                          /* bis die Kriecher durchs Tor sind (gemessen, Dossier §8) */
+    OP_SLEEP(120),                                          /* bis die Kriecher durchs Tor sind (gemessen, Dossier §8.3) */
     OP_SET(5, 20, 1),                                                         /* sub08 @0x027DA */
     OP_DOOR(RE15_IT_PARK_11C0_X, RE15_IT_PARK_11C0_Z, RE15_IT_PARK_11C0_YAW, 0x1c, RE15_IT_CUT_11C0),   /* Raum 0x1c = ROOM11C0 (dest_id = 0x1000 | 0x1c<<4) */
     OP_AOT_ON,
@@ -450,6 +460,8 @@ const uint8_t *re15_irons_tod_programm(int welches, int *out_len)
     case 12: p = k_p_1030_nach_tuer; n = (int)sizeof k_p_1030_nach_tuer; break;
     case 13: p = k_p_1030_nach_tor;  n = (int)sizeof k_p_1030_nach_tor;  break;
     case 14: p = k_p_1040_nach;      n = (int)sizeof k_p_1040_nach;      break;
+    case 15: p = k_p_1030_bruch;     n = (int)sizeof k_p_1030_bruch;     break;
+    case 16: p = k_p_1030_kriechen;  n = (int)sizeof k_p_1030_kriechen;  break;
     default: break;
     }
     if (out_len) *out_len = n;
@@ -631,6 +643,8 @@ static int programm_bauen(uint16_t room_id)
         int von = s_prog_len;
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)) prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
         prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
+        if (!re15_game_flag_get(4, 15)) prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
+        prog_anhaengen(k_p_1030_kriechen, (int)sizeof k_p_1030_kriechen);
         slots_zuweisen(von);
         if (re15_irons_tod_ohne_11c0())                      /* Ada steht nicht mehr an Cut 13: gleich zurueck */
             tuer_setzen(s_prog_len - 36, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 0x15, RE15_IT_CUT_1150);
@@ -716,8 +730,31 @@ static void irons_pose(int clip, int bild, int gehalten)
     a->motion_init_delay = 0;
 }
 
+/* MESS-HAKEN RE15_IT_LOG=<n> (env-gegatet, kein Spielverhalten): waehrend eines Montage-Schritts alle n Takte
+ * eine Zeile je Raum mit allen Gegnern — Platz:Typ(x,z) g=grid_id s=+0x05 st=AOT-Stempel fl=+0x1c4 mo=Clip.
+ * Damit laesst sich an der echten exe messen, wer wo steht, kriecht (g & 0xf == 1, fl & 0x1000) und durchs
+ * Tor ist. */
+static void mess_zeile(void)
+{
+#ifdef RE15_PLATFORM_PC
+    static int s_init = 0, s_n = 0, s_takt = 0;
+    if (!s_init) { s_init = 1; const char *e = getenv("RE15_IT_LOG"); s_n = (e && *e) ? atoi(e) : 0; }
+    if (s_n <= 0 || !re15_irons_tod_sub01_gesperrt() || (uint16_t)g_current_room_id == RE15_IT_RAUM_1150) { s_takt = 0; return; }
+    if ((s_takt++ % s_n) != 0) return;
+    fprintf(stderr, "[irons-tod-mess] ROOM%04X T%d cam=%d:", (unsigned)g_current_room_id, s_takt - 1, (int)g_scd.cam_id);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *a = &g_actors[i];
+        if (!a->active || !a->type) continue;
+        fprintf(stderr, " %d:%02x(%d,%d) g=%02x s=%d st=%d fl=%04x mo=%d", i, a->type, (int)a->x, (int)a->z,
+                a->grid_id, a->sub_state_1, a->member_0b, a->anim_flags, a->motion);
+    }
+    fprintf(stderr, "\n");
+#endif
+}
+
 void re15_irons_tod_tick(void)
 {
+    mess_zeile();
     if ((uint16_t)g_current_room_id == RE15_IT_RAUM_1150 && re15_game_flag_get(5, RE15_IT_SIG_ARM)) {
         re15_game_flag_set(5, RE15_IT_SIG_ARM, 0);
         irons_pose(RE15_IT_IRONS_CLIP_TOT, RE15_IT_IRONS_BILD_FALL, 0);

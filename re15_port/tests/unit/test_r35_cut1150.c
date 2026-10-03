@@ -314,7 +314,7 @@ static int frei_zone7(int bit)
 static void teil_programme(void)
 {
     printf("== programme ==\n");
-    for (int w = 0; w <= 14; w++) {
+    for (int w = 0; w <= 16; w++) {
         int n = 0; const uint8_t *p = re15_irons_tod_programm(w, &n);
         if (!p) { PRUEF(0, "Programm %d fehlt", w); continue; }
         int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0;
@@ -331,7 +331,7 @@ static void teil_programme(void)
         }
         PRUEF(ok && o == n, "Programm %d: Opcode-Walk schliesst exakt (%d/%d B)", w, o, n);
         PRUEF(tiefe == 0, "Programm %d: For/Do-Bloecke ausgeglichen", w);
-        if (w == 0 || w == 1 || w == 4 || w == 7 || w == 8 || w == 9 || w == 10 || w == 13 || w == 14)
+        if (w == 0 || w == 1 || w == 4 || w == 8 || w == 9 || w == 10 || w == 13 || w == 14 || w == 16)
             PRUEF(letzte == 0x01, "Programm %d endet mit Evt_end", w);
         PRUEF(bad_bit < 0, "Programm %d: Tot-Bits aus dem freien Bereich (%d)", w, bad_bit);
         if (w == 0) {
@@ -344,17 +344,20 @@ static void teil_programme(void)
         if (w == 4) { PRUEF(p[n-36+23] == 0x03 && p[n-36+24] == 7, "Programm 4: Tuer -> 1030 Cut 7"); }
         if (w == 6) { PRUEF(n_em == 5, "Programm 6: 5 Kopien aus 1070"); }
         if (w == 2 || w == 14) { PRUEF(n_em == 5, "Programm %d: 5 Auffuell-Records ROOM1040", w); }
-        if (w == 7) {
-            PRUEF(n_em == 3 && p[n-36+23] == 0x1c && p[n-36+24] == 13, "Programm 7: 3 Kriecher, Tuer -> 11C0 (Raum 0x1c) Cut 13");
-            PRUEF(n_gosub9 == 4, "Programm 7: viermal Gosub sub09 wie ROOM1030 sub08 (@0x0279E/@0x027A4/@0x027B4/@0x027BA): %d", n_gosub9);
+        if (w == 7 || w == 15 || w == 16) {
+            if (w == 16) {
+                PRUEF(n_em == 3 && p[n-36+23] == 0x1c && p[n-36+24] == 13, "Programm 16: 3 Kriecher, Tuer -> 11C0 (Raum 0x1c) Cut 13");
+                PRUEF(n_gosub9 == 4, "Programm 16: viermal Gosub sub09 wie ROOM1030 sub08 (@0x0279E/@0x027A4/@0x027B4/@0x027BA): %d", n_gosub9);
+            }
             /* die Zeilen der Original-Szene liegen woertlich im Programm: gegen die RDT-Bytes pruefen */
             if (rdt_laden(0x1030) == 0) {
-                static const struct { unsigned off; int n; } z[] = {
-                    { 0x0276C, 10 }, { 0x02776, 12 }, { 0x02782, 12 }, { 0x0278E, 8 }, { 0x02796, 8 } };
+                static const struct { int w; unsigned off; int n; } z[] = {
+                    { 7, 0x02776, 12 }, { 15, 0x0276C, 10 }, { 15, 0x02782, 12 }, { 15, 0x0278E, 8 }, { 16, 0x02796, 8 } };
                 for (unsigned k = 0; k < sizeof z / sizeof z[0]; k++) {
+                    if (z[k].w != w) continue;
                     int gefunden = 0;
                     for (int a = 0; a + z[k].n <= n; a++) if (!memcmp(p + a, s_raw + z[k].off, (size_t)z[k].n)) { gefunden = 1; break; }
-                    PRUEF(gefunden, "Programm 7 traegt ROOM1030 sub08 @0x%05X (%d B) woertlich", z[k].off, z[k].n);
+                    PRUEF(gefunden, "Programm %d traegt ROOM1030 sub08 @0x%05X (%d B) woertlich", w, z[k].off, z[k].n);
                 }
                 PRUEF(s_raw[0x027E0 + 0x24] == 0x3e && s_raw[0x027E0 + 0x26] == 0x0f && s_raw[0x027E0 + 0x28] == 0x05,
                       "ROOM1030 sub09 @0x02804 Member_cmp member 0x0f == 5 (Warte-Stempel)");
