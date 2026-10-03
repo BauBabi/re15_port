@@ -245,3 +245,13 @@ Suite (Stand ec76eb0e): === LOCAL-BUILD-OK (all) — Tests 482/482
 ## Abschluss-Suite (Stand nach allen Aenderungen inkl. integration_r35_karte)
 
 `=== LOCAL-BUILD-OK (all) — Tests 484/484`
+
+---
+
+## Nachbesserung 1 (nach Abnahme 0, `G_abnahme_0.md`; 2026-10-04)
+
+Baum geprueft: status leer, HEAD d2ec24e5 (Basis 154a73c1 + 13 Spur-G-Commits).
+Maengel: M1 Fahrstuhl-Marker 2 px, M2 kein Bewegungsriegel, M3 Suite 484 vs 483, M4 Dossier
+ueberzeichnet, G1 SCA-Offsets 1220-Teiler, G2 PORT-WAHL-Kennzeichnung Fahrstuhl-Blatt.
+(fortlaufend, je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
+
