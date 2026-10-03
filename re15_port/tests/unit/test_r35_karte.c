@@ -216,12 +216,269 @@ static int teil_messung(void)
     return 0;
 }
 
+/* ---- Kachel der Seite: DATA/MAP0<p+1>.PIX (id-Tabelle @0x80074c4c, id 12.. -> MAP01..),
+ * 256x256 4bpp, 128 B je Zeile, unteres Nibble = linkes Pixel (gen_map_zones.py page_pix). */
+static uint8_t s_pix[256 * 256];
+static int s_pix_seite = -1;
+static int pix_laden(int seite)
+{
+    char pfad[600];
+    size_t n = 0;
+    uint8_t *roh;
+    int y, x;
+    if (s_pix_seite == seite) return 1;
+    snprintf(pfad, sizeof pfad, "%s/DATA/MAP%02X.PIX", RE15_ASSET_PSX_DIR, seite + 1);
+    roh = slurp(pfad, &n);
+    if (!roh || n < 256 * 128) { free(roh); return 0; }
+    for (y = 0; y < 256; y++)
+        for (x = 0; x < 128; x++) {
+            s_pix[y * 256 + 2 * x]     = roh[y * 128 + x] & 0xF;
+            s_pix[y * 256 + 2 * x + 1] = roh[y * 128 + x] >> 4;
+        }
+    free(roh);
+    s_pix_seite = seite;
+    return 1;
+}
+
+/* Kachel-Index des Rechtecks `rect` am Bildpunkt (x,y); -1 = ausserhalb des Rechtecks. */
+static int texel(int seite, int rect, int x, int y)
+{
+    int rx, ry, rw, rh, u, v;
+    if (!pix_laden(seite)) return -1;
+    if (!re15_map_rect_geometry((unsigned)seite, (unsigned)rect, &rx, &ry, &rw, &rh)) return -1;
+    if (!re15_map_rect_uv((unsigned)seite, (unsigned)rect, &u, &v)) return -1;
+    if (x < rx || x >= rx + rw || y < ry || y >= ry + rh) return -1;
+    return s_pix[(v + y - ry) * 256 + (u + x - rx)];
+}
+
+/* Genau EIN aktuelles Rechteck, und zwar `soll`. */
+static int nur_aktuell(const mess_t *m, int soll)
+{
+    return m->ncur == 1 && m->cur[0] == soll;
+}
+
+/* Marker steht auf der GEMALTEN Flaeche des Rechtecks (Index != 0). */
+static int marker_auf_kunst(const mess_t *m, int rect)
+{
+    int t = texel(m->page, rect, m->mx, m->my);
+    return t > 0;
+}
+
+/* ---- Riegel Punkt 1: Fahrstuhl ROOM1080 ----------------------------------------- */
+static int teil_fahrstuhl(void)
+{
+    static const int blatt[4] = { 0, 2, 3, 4 }, rect[4] = { 0, 9, 4, 0 };
+    /* gemalter Kabinen-Innenraum (Index 1) je Blatt, aus der Kachel uv(168,40) */
+    static const int ix0[4] = { 0, 110, 110, 128 }, iy0[4] = { 0, 135, 135, 138 };
+    mess_t m, ecke[4];
+    int e, k;
+    char t[200];
+    printf("=== Riegel Punkt 1: Fahrstuhl ROOM1080 ===\n");
+    /* (a) DATENWEG: die Etagenraeume setzen die Bits selbst (main00 beim Betreten). */
+    {
+        static const unsigned raum[4] = { 0, 0x1040, 0x10C0, 0x1120 };
+        for (e = 1; e <= 3; e++) {
+            int b54, b55, b56;
+            re15_game_flag_set(3, 54, 0); re15_game_flag_set(3, 55, 0);
+            re15_game_flag_set(3, 56, 0);
+            if (!betrete(raum[e], 0, 0, 0)) { CHECK("RDT der Etage geladen", 0); continue; }
+            b54 = re15_game_flag_get(3, 54); b55 = re15_game_flag_get(3, 55);
+            b56 = re15_game_flag_get(3, 56);
+            snprintf(t, sizeof t, "ROOM%04X setzt beim Betreten Bank 3 Bit %d (54/55/56 = %d%d%d)",
+                     raum[e], 53 + e, b54, b55, b56);
+            CHECK(t, (e == 1 && b54 && !b55 && !b56) || (e == 2 && !b54 && b55 && !b56) ||
+                     (e == 3 && !b54 && !b55 && b56));
+        }
+    }
+    for (e = 1; e <= 3; e++) {
+        if (!betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) { CHECK("ROOM1080", 0); break; }
+        kabine_auf(e);
+        miss_hier(0x1080, s_kabine[0][0], s_kabine[0][1], &m);
+        snprintf(t, sizeof t, "Kabine %dF: gezeigt Blatt %d (soll %d), aktuell nur rect %d",
+                 e, m.page, blatt[e], rect[e]);
+        CHECK(t, m.page == blatt[e] && nur_aktuell(&m, rect[e]));
+        /* vier Ecken des Innenraums: SW, SO, NW, NO (Welt) */
+        miss_hier(0x1080, -15500, -3900, &ecke[0]);
+        miss_hier(0x1080, -11800, -3900, &ecke[1]);
+        miss_hier(0x1080, -15500,  -300, &ecke[2]);
+        miss_hier(0x1080, -11800,  -300, &ecke[3]);
+        for (k = 0; k < 4; k++) {
+            int drin = ecke[k].mx >= ix0[e] && ecke[k].mx <= ix0[e] + 7 &&
+                       ecke[k].my >= iy0[e] && ecke[k].my <= iy0[e] + 7;
+            snprintf(t, sizeof t, "Kabine %dF Ecke %d: Marker (%d,%d) im gemalten Innenraum "
+                     "x%d..%d y%d..%d", e, k, ecke[k].mx, ecke[k].my, ix0[e], ix0[e] + 7,
+                     iy0[e], iy0[e] + 7);
+            CHECK(t, drin && texel(m.page, rect[e], ecke[k].mx, ecke[k].my) == 1);
+        }
+        /* 180 Grad (G_karte.md B5): Welt-Ost -> Karte-West, Welt-Nord -> Karte-Sued */
+        snprintf(t, sizeof t, "Kabine %dF: Marker folgt dem Spieler, 180 Grad gedreht "
+                 "(Ost x %d < West x %d, Nord y %d > Sued y %d)", e, ecke[1].mx, ecke[0].mx,
+                 ecke[2].my, ecke[0].my);
+        CHECK(t, ecke[1].mx < ecke[0].mx && ecke[3].mx < ecke[2].mx &&
+                 ecke[2].my > ecke[0].my && ecke[3].my > ecke[1].my);
+    }
+    /* Gegenprobe: kein Etagen-Bit -> wie bisher die erste Zeile (Blatt 2) */
+    if (betrete(0x1080, s_kabine[0][0], s_kabine[0][1], 0)) {
+        kabine_auf(0);
+        miss_hier(0x1080, s_kabine[0][0], s_kabine[0][1], &m);
+        CHECK("ohne Etagen-Bit: Blatt 2 (unveraenderter Rueckfall)", m.page == 2);
+    }
+    printf(g_fail ? "FEHLER\n" : "OK\n");
+    return g_fail;
+}
+
+/* ---- Riegel Punkt 2: 11F0 und 1200 auf ihren eigenen Kacheln ---------------------- */
+static int teil_b2(void)
+{
+    static const struct { unsigned rid; int32_t x, z; int rect; const char *was; } P[] = {
+        { 0x11F0,    250,    250, 1, "11F0 Ankunft aus 11E0" },
+        { 0x11F0,   7000, -12000, 1, "11F0 Mitte" },
+        { 0x1200, -20154, -25245, 2, "1200 Ankunft aus 11E0" },
+        { 0x1200, -22000, -15000, 2, "1200 Mitte" },
+        { 0x11E0, -24707,  -9442, 0, "11E0 Gegenprobe" },
+    };
+    mess_t m;
+    int i;
+    char t[200];
+    printf("=== Riegel Punkt 2: ROOM11F0 / ROOM1200 ===\n");
+    for (i = 0; i < (int)(sizeof P / sizeof P[0]); i++) {
+        miss(P[i].rid, P[i].x, P[i].z, 0, &m);
+        snprintf(t, sizeof t, "%s: Blatt 1, aktuell NUR rect %d (ist: Blatt %d, %d Rect(s), "
+                 "erstes %d)", P[i].was, P[i].rect, m.page, m.ncur, m.ncur ? m.cur[0] : -1);
+        CHECK(t, m.page == 1 && nur_aktuell(&m, P[i].rect));
+        snprintf(t, sizeof t, "%s: Marker (%d,%d) auf der gemalten Flaeche von rect %d",
+                 P[i].was, m.mx, m.my, P[i].rect);
+        CHECK(t, marker_auf_kunst(&m, P[i].rect));
+    }
+    /* Nach dem Besuch aller drei: jede eigene Kachel ist gezeichnet (nicht UNMAPPED) */
+    CHECK("rect 1 (11F0) und rect 2 (1200) sind nach dem Besuch BESUCHT/AKTUELL",
+          re15_map_rect_state(1, 1) >= RE15_MAP_RECT_VISITED &&
+          re15_map_rect_state(1, 2) >= RE15_MAP_RECT_VISITED);
+    printf(g_fail ? "FEHLER\n" : "OK\n");
+    return g_fail;
+}
+
+/* ---- Riegel Punkt 3: 1230 zeigt B1 (Blatt 0) und den Gang ---------------------------- */
+static int teil_r1230(void)
+{
+    static const struct { int32_t x, z; const char *was; } P[] = {
+        {  -8133,  10226, "Ankunft aus 1190 (Hauptraum)" },
+        {    142,  13001, "Ankunft aus 1190 (Ostkammer)" },
+        {   4725,  28650, "Ankunft aus 11B0" },
+        {  -4729, -16018, "Ankunft aus 11D0/1160" },
+        {   3800,   5000, "Laengsgang Mitte" },
+        {   1000,  -5800, "Versatz bei der 10A0-Tuer" },
+    };
+    static const unsigned R[2] = { 0x1230, 0x1180 };
+    mess_t m;
+    int i, r;
+    char t[220];
+    printf("=== Riegel Punkt 3: ROOM1230 (= ROOM1180) ===\n");
+    for (r = 0; r < 2; r++)
+        for (i = 0; i < (int)(sizeof P / sizeof P[0]); i++) {
+            miss(R[r], P[i].x, P[i].z, 0, &m);
+            snprintf(t, sizeof t, "ROOM%04X %s: Blatt 0 (B1), aktuell NUR rect 0 (ist Blatt %d, "
+                     "%d Rect(s))", R[r], P[i].was, m.page, m.ncur);
+            CHECK(t, m.zone && m.page == 0 && nur_aktuell(&m, 0));
+            snprintf(t, sizeof t, "ROOM%04X %s: Marker (%d,%d) auf dem gemalten Gang (rect 0)",
+                     R[r], P[i].was, m.mx, m.my);
+            CHECK(t, marker_auf_kunst(&m, 0));
+        }
+    /* Gegenprobe: das Blatt von 11E0 (B2) ist es NICHT mehr */
+    miss(0x1230, -8133, 10226, 0, &m);
+    CHECK("ROOM1230 zeigt NICHT mehr Blatt 1 (B2 = Blatt von 11E0)", m.page != 1);
+    /* 10A0 auf B1 (Band 4) = rect 6 */
+    miss(0x10A0, 21200, 25500, 4, &m);
+    snprintf(t, sizeof t, "ROOM10A0 Band 4 (Ankunft aus 1180/1230): Blatt 0 rect 6 (ist Blatt %d)",
+             m.page);
+    CHECK(t, m.page == 0 && nur_aktuell(&m, 6));
+    printf(g_fail ? "FEHLER\n" : "OK\n");
+    return g_fail;
+}
+
+/* ---- Riegel Punkt 4: 1210 Korridor + alle Tueren, 1220 Zellen ---------------------- */
+static int teil_r1210(void)
+{
+    static const struct { int32_t x, z; const char *was; } K[] = {
+        { -26400,  -2200, "Ankunft aus 11E0" },
+        { -20890,  -6560, "Ankunft aus Zelle West 1" },
+        { -18100, -25600, "Ankunft aus Zelle Ost 3" },
+    };
+    /* Spawns aus 1210 in die Zellen (1210.RDT @0x1CE6/0x1D06/0x1D26/0x1D46/0x1D66) */
+    static const struct { int32_t x, z; int rect; } Z[] = {
+        { -22400,  -6500, 4 }, { -16600,  -9900, 6 }, { -22400, -14000, 5 },
+        { -16600, -17900, 7 }, { -16600, -25050, 8 },
+    };
+    mess_t m;
+    int i, k;
+    char t[220];
+    printf("=== Riegel Punkt 4: ROOM1210 / ROOM1220 ===\n");
+    for (i = 0; i < (int)(sizeof K / sizeof K[0]); i++) {
+        miss(0x1210, K[i].x, K[i].z, 0, &m);
+        snprintf(t, sizeof t, "1210 %s: aktuell NUR rect 3 = T-Korridor (ist %d Rect(s), erstes %d)",
+                 K[i].was, m.ncur, m.ncur ? m.cur[0] : -1);
+        CHECK(t, m.page == 1 && nur_aktuell(&m, 3));
+        snprintf(t, sizeof t, "1210 %s: Marker (%d,%d) auf dem gemalten Korridor", K[i].was,
+                 m.mx, m.my);
+        CHECK(t, marker_auf_kunst(&m, 3));
+    }
+    for (i = 0; i < 5; i++) {
+        miss(0x1220, Z[i].x, Z[i].z, 0, &m);
+        snprintf(t, sizeof t, "1220 Zelle bei (%d,%d): aktuell NUR rect %d (ist %d Rect(s), "
+                 "erstes %d), Marker (%d,%d) in der Zelle", Z[i].x, Z[i].z, Z[i].rect, m.ncur,
+                 m.ncur ? m.cur[0] : -1, m.mx, m.my);
+        CHECK(t, m.page == 1 && nur_aktuell(&m, Z[i].rect) && marker_auf_kunst(&m, Z[i].rect));
+    }
+    /* TUEREN: jede Tuer-AOT von 1210 (aus dem geladenen Raum, g_aot) hat eine SICHTBARE Marke,
+     * die auf einer GEMALTEN WAND (Index 4) liegt und hoechstens 3 px neben der Projektion
+     * der Tuer mit der 1210-Zeile @0x800769b8 (177,140,2496,2250). */
+    if (betrete(0x1210, -26400, -2200, 0)) {
+        int tueren = 0, getroffen = 0, n = re15_map_mark_count();
+        re15_map_visited_reset();
+        re15_map_zone_update(0x1210, -26400, -2200);     /* nur 1210 besucht */
+        for (k = 0; k < RE15_AOT_MAX; k++) {
+            const re15_aot_t *a = &g_aot.slots[k];
+            int32_t tx, tz;
+            int px, py, j, gut = 0;
+            if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
+            tueren++;
+            tx = ((a->x + 32000) * 10 * 2496) >> 20;
+            tz = ((a->z + 32000) * 10 * 2250) >> 20;
+            px = (tx + 5) / 10 + 177;
+            py = -((tz + 5) / 10) + 140;
+            for (j = 0; j < n && !gut; j++) {
+                int pg, rc, mx, my, kind, w, c;
+                if (!re15_map_mark_get(j, &pg, &rc, &mx, &my, &kind)) continue;
+                if (pg != 1 || kind >= 4) continue;
+                if (abs(mx - px) + abs(my - py) > 3) continue;
+                /* Wand der Kachel: rect 3 oder ein Zellen-/Garagen-Rechteck daneben */
+                w = 0;
+                for (c = 0; c <= 8 && !w; c++) w = (texel(1, c, mx, my) == 4);
+                gut = w;
+            }
+            snprintf(t, sizeof t, "1210 Tuer-AOT %d bei Karte (%d,%d): sichtbare Marke auf "
+                     "gemalter Wand <= 3 px", k, px, py);
+            CHECK(t, gut);
+            getroffen += gut;
+        }
+        snprintf(t, sizeof t, "1210 fuehrt 6 Tueren (11E0 + 5 Zellen), alle mit Marke: %d/%d",
+                 getroffen, tueren);
+        CHECK(t, tueren == 6 && getroffen == 6);
+    }
+    printf(g_fail ? "FEHLER\n" : "OK\n");
+    return g_fail;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "messung";
     re15_map_visited_reset();
     re15_inv_map_stage_init(0, 6);
     if (!strcmp(teil, "messung")) return teil_messung();
+    if (!strcmp(teil, "fahrstuhl")) return teil_fahrstuhl();
+    if (!strcmp(teil, "b2")) return teil_b2();
+    if (!strcmp(teil, "r1230")) return teil_r1230();
+    if (!strcmp(teil, "r1210")) return teil_r1210();
     printf("unbekannter Teil %s\n", teil);
     return 2;
 }

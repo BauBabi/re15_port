@@ -11,3 +11,19 @@ target_compile_definitions(probe_r35_karte PRIVATE
 if(NOT WIN32)
     target_link_libraries(probe_r35_karte PRIVATE m)
 endif()
+#
+#   RIEGEL (je Nutzer-Punkt, misst die MECHANIK am echten Kartenpfad):
+#     unit_r35_karte_fahrstuhl  Punkt 1: Etagenraeume setzen Bank 3 Bit 54/55/56; Blatt 2/3/4 je
+#                               Kabinen-Etage, aktuell nur rect 9/4/0; Marker in allen 4 Ecken im
+#                               GEMALTEN Kabinen-Innenraum und 180 Grad gedreht; Rueckfall ohne Bit
+#     unit_r35_karte_b2         Punkt 2: 11F0 -> rect 1, 1200 -> rect 2 (nur diese aktuell), Marker
+#                               auf der gemalten Flaeche; 11E0 bleibt rect 0
+#     unit_r35_karte_r1230      Punkt 3: 1230 (und 1180) an 6 Punkten -> Blatt 0 rect 0, Marker auf
+#                               dem gemalten Gang; NICHT Blatt 1; 10A0 Band 4 -> Blatt 0 rect 6
+#     unit_r35_karte_r1210      Punkt 4: 1210 -> rect 3 (T-Korridor), 1220-Zellen -> rect 4/6/5/7/8;
+#                               jede der 6 Tuer-AOTs von 1210 hat eine sichtbare Marke auf
+#                               gemalter Wand <= 3 px neben ihrer Projektion (Zeile @0x800769b8)
+foreach(_r35g_teil fahrstuhl b2 r1230 r1210)
+    add_test(NAME unit_r35_karte_${_r35g_teil} COMMAND probe_r35_karte ${_r35g_teil})
+    set_tests_properties(unit_r35_karte_${_r35g_teil} PROPERTIES TIMEOUT 120)
+endforeach()

@@ -457,23 +457,23 @@ typedef struct { unsigned char page, rect; short mx, my;
                } re15_map_mark_t;
 static const re15_map_mark_t s_map_marks[] = {
     {  0,  1,  116,  116, 2,  27, 255, 0 },
-    {  0,  2,  151,   69, 0,  26, 255, 0 },
+    {  0,  2,  151,   69, 0,  26, 106, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  3,  168,   82, 3,  28, 255, 0 },
     {  0,  3,  172,  100, 1,  28,  29, 1 },
     {  0,  3,  233,   88, 1,  28, 255, 0 },
-    {  0,  5,  129,  124, 0,  30, 255, 0 },
+    {  0,  5,  129,  124, 0,  30, 108, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  5,  137,  172, 2,  30, 255, 0 },
     /* Runde 35 Spur G: die Tueren des Gangs 1180/1230 auf seinem rect 0 (statt rect 6),
      * je auf der gemalten Nische (G_karte.md B4): 1190-Haupt (136..141,71..75) Wand y76,
-     * 1190-Ost (Nische rect 2 (152..155,70..73), Wand y69 - Punkt der 1190-Marke (151,69)),
-     * 10A0 (155..159,108..112) Wand y113, 11D0 (125..129,119..123) Wand y124 - Punkt der
-     * 11D0-Marke (129,124). Die 11B0-Tuer bekommt KEINE Gang-Marke: die Kachel malt sie
+     * 10A0 (155..159,108..112) Wand y113. Ungepaart (zid2 255): der 1190-Hauptraum (rect 1)
+     * und der 10A0-Absatz fuehren auf diesem Blatt keine Zone, deren Kasten die Marke
+     * beruehrt (Pin unit_map_durchgang). 1190-Ost und 11D0 tragen schon je eine Marke auf
+     * DEMSELBEN Punkt ((151,69) rect 2, (129,124) rect 5) - die werden mit dem Gang
+     * gepaart (auf_partner), statt eine zweite daraufzulegen. Die 11B0-Tuer bekommt KEINE Gang-Marke: die Kachel malt sie
      * UNTER dem Zweig (y78..86), der Gang laeuft in der Welt dort nach Norden weiter - ein
      * Zug dorthin liesse den Marker beim Nordwaertsgehen nach UNTEN rutschen. */
-    {  0,  0,  139,   76, 2, 106,  26, 0 },
-    {  0,  0,  151,   69, 2, 106,  26, 1 },
-    {  0,  0,  157,  113, 2, 107,  10, 1 },
-    {  0,  0,  129,  124, 2, 108,  30, 1 },
+    {  0,  0,  139,   76, 2, 106, 255, 0 },
+    {  0,  0,  157,  113, 2, 107, 255, 0 },
     {  1,  0,  105,  109, 2,  31,  32, 1 },
     {  1,  0,  165,  139, 0,  31,  33, 1 },
     /* Runde 35 Spur G: ALLE sechs Tueren von ROOM1210 auf dem T-Korridor (rect 3), je auf
@@ -810,8 +810,6 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x10A1, 0,  1,  1,  9 },
     { 0x10A0, 0,  8,  2,  6 },
     { 0x10A1, 0,  8,  2,  6 },
-    { 0x10A0, 0,  4,  0,  6 },   /* Runde 35 Spur G: B1-Absatz (Ankunft y -7200 aus 1180/1230) */
-    { 0x10A1, 0,  4,  0,  6 },
     { 0x10F0, 0,  0,  3,  9 },
     { 0x10F1, 0,  0,  3,  9 },
     { 0x10F0, 0,  1,  2,  8 },
@@ -842,6 +840,10 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x50D1, 0,  0, 11,  0 },
     { 0x50D0, 0,  3, 10,  1 },
     { 0x50D1, 0,  3, 10,  1 },
+    /* Runde 35 Spur G: ROOM10A0 B1-Absatz (Ankunft y -7200 aus 1180/1230 -> Band 4). AM ENDE
+     * angehaengt: Pin unit_map_speichern_laden prueft Zeile 48 = ROOM50D0. */
+    { 0x10A0, 0,  4,  0,  6 },
+    { 0x10A1, 0,  4,  0,  6 },
 };
 
 /* SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX. Fuer Zonen, denen kein
