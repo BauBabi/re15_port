@@ -1063,3 +1063,35 @@ und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
   Zelle 21 (z soll -3000..527): ' SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2070,-2728,1897)'`. Python-Teil am
   alten Stand gemessen (`mess_r35b/nb2/vorher/p20`): `[2 t=10 st=3 ss1=5 d=1530 @(-1800,-19600,r512)] hp=-850`, Redhawk
   `p7` hp=-1; nachher beide hp=-1.
+
+### 9.6 OFFEN (Stand Nachbesserung 2)
+* OFFEN 18 (Formtest Typ 2/4..9) — ERLEDIGT (§9.3). Fuer die Zusammenfuehrung mit Spur A: `re15_werfer_zelle_strecke` /
+  `re15_werfer_band_strecke` (werfer_r35.c) und Spur As `strecke_zelle` / `re15_granate_r35_strecke` (granate_r35.c) tragen
+  dieselbe Flaechentabelle und dieselbe Geometrie — beim Mergen auf EINE Funktion bringen (Unterschied nur die Filter:
+  Spur A Klassenmaske u0 & WAND_MASKE, Spur B u0 Bit 0 + u1 Bit 1 frei wie das Abbild).
+* OFFEN 19 (Durchtunneln) — ERLEDIGT (§9.3, Strecke vorige Weltlage -> Lage; Pruefung 128 + Gegenprobe).
+* OFFEN 9 (Hoehe der Moebel) — unveraendert: RE1.5-Zellen tragen keine Hoehe; Moebel sperren in jeder Hoehe (Spur-A-Regel).
+* OFFEN 16/17 (allgemeiner Schuss-Pfad: Fresser-Sperre +0x1D3/+0x10E und Sichtlinie FUN_8001b9b4 fehlen im Port-Resolver)
+  — unveraendert, nicht Spur B (Abnahme 1 §6 "nicht gewertet").
+* NEU 20 — Flamme nach Strecken-Kontakt: Op 70 setzt bei Kontakt nur den Nachbrenn-Zustand (@0x800234c8-538), ohne
+  Rueckprall; das Partikel bleibt an der Lage P dieses Bildes. Bei Zellen, die duenner sind als ein Flammenschritt (gemessen
+  ~100-200 je Bild in ROOM10E0), kann P schon HINTER der Zelle liegen (RE2 kennt den Fall nicht: Punkttest). In ROOM10E0
+  liegt die Kontaktstelle hoechstens 59 tief im Dreieck. Naechster Weg, falls sichtbar: bei Strecken-Kontakt die Lage auf
+  den Strecken-Anfang (+0x3C/+0x40) setzen — waere eine PORT-WAHL ohne RE2-Vorbild.
+* NEU 21 — Python-Nachladen ohne Schnelllader-Wurf: RE1.5 wirft beim Nachladen des Redhawk in Bild 10 den Schnelllader
+  0x04060800 nur fuer Waffe 7 (Port player_common.c, @0x80033e34-88). Die Python laedt ohne ihn nach. Nicht Teil der
+  Maengel; falls die PORT-WAHL "zweiter Magnum-Revolver" auch das Nachlade-Bild umfassen soll: @0x80033e34-88
+  disassemblieren (Vergleich auf Id 7) und w20 dort aufnehmen.
+* Mess-Hinweis: die wf.log-Spalten `kontakt`/`fuss` der RE2FLUG-Zeilen rechnet `re2fx_boden_sonde` OHNE Formtest
+  (Rechteck-Vortest, nur Mess-Harness) — fuer Diagonalzellen zeigen sie den Rechteck-Befund, nicht den Werfer-Test.
+
+### 9.7 Fuer den Nutzer (Ergaenzung Nachbesserung 2)
+* Keine neuen Sprachdateien, keine neuen Assets.
+* Raketenwerfer, Granatwerfer und Flammenwerfer: die Geschosse halten jetzt an allen Wandformen — auch an schraegen/
+  diagonalen Waenden, Rauten und Kapseln (ROOM1010/1050/1090/10B0/10D0/10E0/1150/1190/11C0/11D0/11F0 u.a.; vorher flog
+  die Rakete z.B. in ROOM10E0 ~1900 Einheiten durch eine Diagonalwand) — und springen nicht mehr ueber duenne Hindernisse
+  (Saeulen). Im LEEREN Teil einer schraegen Zelle (wo Leon gehen kann) fliegen sie weiter (vorher explodierte eine tief
+  fliegende Granatwerfer-Runde dort in der Luft). Steht Leon direkt vor einer Wand, zuendet die Runde an der Wand und
+  erscheint nicht dahinter.
+* Colt Python: wirkt jetzt wie der Super Redhawk — ein Treffer toetet Zombies sofort (Kritklasse) und holt einen
+  springenden Affen herunter bzw. loest seinen Griff.
