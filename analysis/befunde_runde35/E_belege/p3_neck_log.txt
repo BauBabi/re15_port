@@ -1,0 +1,2 @@
+PLC_NECK slot=0 mode=2 tgt=(0,0,300) speed=2560 flags=0x88
+PLC_NECK slot=0 mode=4 tgt=(3,0,0) speed=100 flags=0xd8

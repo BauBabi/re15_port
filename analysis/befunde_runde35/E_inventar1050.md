@@ -242,6 +242,18 @@ Mutationsprobe (msg-Fix per `&& 0` abgeschaltet, nur gebaut + Riegel, danach zur
 Der neue Szenenschluss (Form 1170 sub02: Message_on + Sleep 100 + Set) haengt also OHNE den Fix genauso —
 der Riegel misst den Mechanismus, nicht die Choreografie.
 
+### P3 + P1 an der echten exe (Lauf m6, Weg wie m1, RE15_FRAMEDUMP 280-620/10, RE15_NECK_LOG)
+* Zustand: `362x F151 pf=01000007 pm=2` (Szene) -> `14x F513 pf=00000007 pm=1` (Plc_ret, Bit geloescht) ->
+  `F527 pm=0`; START F560 -> Statusschirm offen (Bild F610). Gierung waehrend beider Zeilen 4095 (= +X, zur
+  Tuer), Clip 18 F310..F410, Clip 17 F420..F510, Ruhe 200 ab F520 (E_belege/p3_zustand_F280_F620.txt).
+* NECK_LOG: `PLC_NECK slot=0 mode=2 tgt=(0,0,300) speed=2560 flags=0x88` und `mode=4 tgt=(3,0,0) speed=100
+  flags=0xd8` (E_belege/p3_neck_log.txt) = die zwei sub14-Saetze @0x01766/@0x01774 am Spieler.
+* Bilder (RE15_FRAMEDUMP, weil das Fenster-Capture in dieser Sitzung weisse Bilder liefert):
+  E_belege/p3_szene_echt_exe.png (Cut 4 mit Untertiteln, F610 Inventar offen) und
+  E_belege/p3_leon_gesten_zoom.png (Ausschnitt Leon): F300 Ruhe, F320..F380 Hand zur Brust mit gesenktem
+  bzw. schuettelndem Kopf, F430 Arm-Schwung Richtung Tuer, F450..F500 Ruhe — Leon steht seitlich/von hinten,
+  zur Tuer gewandt, schaut nicht in die Kamera.
+
 ## Tests
 
 ## OFFEN
