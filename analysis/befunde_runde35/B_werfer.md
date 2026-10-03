@@ -1127,3 +1127,14 @@ w20 in die Kritklasse (PORT-WAHL §3.5 Punkt 1), HP -1 am Bit. Nachher (§9.4): 
 * Teil I 140-149 (nach Lauf 1 ergaenzt): Form je Typ 1..9 gegen den Port-Zwilling des RE1.5-Handlers
   (`re15_collision_constrain_contact_band`, Radius 0, Maske 1: innen sperrt der Werfer-Test UND der Handler schiebt, aussen
   im Zellrechteck weder noch) + Filter (Band 1, u0 Bit 0 frei, u1 Bit 1) — gruen.
+* Lauf 2 (`local_build.sh all`, Stand 2cc3862c = Endstand Code/Tests, 22:31-22:53, Log
+  `re15_port/build/mess_r35b_logs/nb2_suite2.log` / `re15_port/build/local_build_ctest.log`): `100% tests passed, 0 tests
+  failed out of 484`, `Total Test time (real) = 1334.37 sec`, **`=== LOCAL-BUILD-OK (all) — Tests 484/484`** (484 = 483 +
+  integration_r35_werfer_form). Kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer, unit_re2_hp_model,
+  unit_re2_weapon_rows, integration_r35_werfer 133.42 s, _ton 28.40 s, _elza 29.96 s, _form 25.94 s Passed.
+* Geaenderte Dateien in Nachbesserung 2: engine/src/re2_fx.c (Runde-35-Block werfer_boden + 2 Zeilen im Abbild-Zellentest
+  + Include), engine/src/werfer_r35.c (Formtest/Strecke + Schuetzenmeldung im Spawn), include/re15_werfer.h, include/re2_fx.h,
+  engine/src/re15_damage.c (2 Stellen Kritklasse), Tests (test_r35_werfer.c Teil I, test_r35_werfer_form.cmake neu,
+  probes/r35_werfer.cmake, nachgezogene Pins test_re2_hp_model.c / test_re2_weapon_rows.c / test_r35_werfer.cmake), Dossier.
+  Keine gemeinsame Datei der VERTRAG-Liste (scd_room_setup.c, game_step_common.c, main.c ...) angefasst; keine Bank-9-Bits,
+  Nachrichten-IDs, AOT-Slots, Ereignisse; kein shared_assets/PSX, release/, platform/android/, keine Test-CMakeLists.
