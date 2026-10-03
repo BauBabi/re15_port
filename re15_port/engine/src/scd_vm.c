@@ -51,6 +51,7 @@
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 #include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
+#include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
 
 scd_vm_t g_scd;
 
@@ -3842,9 +3843,7 @@ static int op_sce_em_set(scd_thread_t *t)
                                  * The port left it struct-zero, so band-gated AI/collision (e.g. the WATER/
                                  * RAMP env-stamp gate, and any per-floor event AOT) read the wrong band for
                                  * a non-floor-0 enemy. (audit wf_27ae1ea7) */
-        a->dog_floor_y = (int16_t)(-(int32_t)t->pc[4] * 1800);   /* Runde 35 Spur H: +0x1ba = -(pc[4]*1800)
-                                 * (Faktorfolge @0x800421f8-0x8004220c, `sh v0,442(s0)` @0x80042210) —
-                                 * Leser jetzt die Schwerkraft FUN_8001bd60 (trage_1200.c) */
+        re15_schwerkraft_seed(a);   /* Runde 35 Spur H: +0x1ba = -(pc[4]*1800) @0x80042210 (Zombie-Wurzel-Typen) */
         /* hp=100 is harmless nominal init. Sce_em_set (0x44) carries NO hp
          * field — the `hp` struct member is RE2 +0x1C2 (Member ID 0x13), a
          * SEPARATE field written only via Member_set, not by this opcode.

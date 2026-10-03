@@ -54,6 +54,13 @@
  * die Entity in diesem Bild faellt oder gelandet ist (nur fuer Messung/Test). */
 int re15_schwerkraft_8001bd60(re15_actor_t *e, int32_t a0, int32_t a1, int32_t radius);
 
+/* +0x1ba-Seed aus Sce_em_set FUN_800420a0: -(pc[4]*1800) (`lbu v1,2(s2)` @0x800421d4, Faktorfolge
+ * @0x800421f8-0x8004220c, `sh v0,442(s0)` @0x80042210). Das Original seedet jede Entity; der Port-Platz
+ * dog_floor_y dient bei der RE2-Spinne/-Kraehe aber als +0x1C2 (andere Adresse, enemy_ai_re2_spider.c /
+ * enemy_ai_re2_crow.c), der Hund seedet ihn im INIT selbst. Deshalb NUR die Typen der Zombie-Wurzel
+ * FUN_80100424 (0x10/0x11/0x12/0x16/0x18, enemy_ai_common.c run_all), deren Wurzel die Schwerkraft ruft. */
+void re15_schwerkraft_seed(re15_actor_t *e);
+
 /* Messschiene RE15_GEGNER_Y_LOG=<datei> (env-gegatet, kein Spielverhalten): je Spielbild eine Zeile
  * je aktivem Gegner — Typ, Zustand, grid, Clip/Bild, x/y/z, Band (+0x82). Gerufen aus der
  * PC-Hauptschleife hinter re15_game_step. Auf PSX ein No-op. */

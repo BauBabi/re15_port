@@ -53,6 +53,15 @@ int re15_schwerkraft_8001bd60(re15_actor_t *e, int32_t a0, int32_t a1, int32_t r
     return 1;
 }
 
+void re15_schwerkraft_seed(re15_actor_t *e)
+{
+    if (!e) return;
+    if (e->type == 0x10 || e->type == 0x11 || e->type == 0x12 || e->type == 0x16 || e->type == 0x18) {
+        e->dog_floor_y = (int16_t)(-(int32_t)e->floor * RE15_SCHWERKRAFT_BAND);   /* @0x80042210 */
+        e->fall_1c0 = 0;
+    }
+}
+
 void re15_trage1200_mess(void)
 {
 #ifdef RE15_PLATFORM_PC
