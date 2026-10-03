@@ -953,3 +953,43 @@ Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, beri
 * N1 Flamme `d14` (`14:100`, `M0.6,MA1.5,M1.6,W2`): `Plaetze 360, im festen Dreieck 47, z max 769` (z.B. (-2310,-1938,501)).
 * N2 `t7`/`t20` (ROOM1140, Leon (200,-10300) Blick 1024, `7:6` bzw. `20:6`, `M0.6,MA0.3,M1.6,W2`), state.log F19 Platz 5
   (Typ 0x11, d=9272): Redhawk `[5 t=11 st=3 ss1=5 ...] hp=-1`, Python `[5 t=11 st=3 ss1=5 ...] hp=-650`.
+
+### 9.2 RE-Belege (selbst disassembliert, Nachbesserung 2)
+**N1 — Formen der RE1.5-Zelle (re15_disasm.py, info/Re1.5/PSX.EXE):**
+* Verteiler 0x800b2858 + Typ*4, gefuellt in FUN_8003aea0: `addiu v0,v0,-17240` (0x8003bca8) @0x8003aefc / `sw v0,10332(at)`
+  (0x800b285c = [1]) @0x8003af04; [2] 0x8003d00c `sw v0,10336(at)` @0x8003af14; [3] 0x8003d6a8 @0x8003af24; [4] 0x8003beb0
+  @0x8003af34; [5] 0x8003c734 @0x8003af44; [6] 0x8003cb9c @0x8003af54; [7] 0x8003c2cc @0x8003af64; [8] 0x8003d7e8
+  @0x8003af74; [9] 0x8003d930 @0x8003af84. Also: jede der Formen 1..9 ist eine EIGENE Flaeche, Typ 5 ist nicht Rechteck.
+* Typ 5 LAB_8003c734 (die Zelle 21 von ROOM10E0): `lhu v0,2(t3)` (Tiefe) / `lhu v1,6(t3)` (z) / `addu` / `subu a1,s0,t4` /
+  `subu t8,s3,a1` @0x8003c764-788 (t8 = (z+d) - (z-r)); `lhu v1,4(t3)` (x) / `addu t9,t0,s5` (Spieler-x) / `subu v0,t9,t5` /
+  `mult t8,v0` @0x8003c79c-7b8; `lhu v0,0(t3)` (Breite) / `addu` / `addu v0,v1,t4` / `subu t6,v0,t5` / `div a2,t6` @0x8003c7c0-7e0
+  = LINE = (d+r)*(px-x)/(w+r); fest, wenn LINE < pz-(z-r) (Port push_diag5 re15_collision.c:530-532). Fuer r = 0: das Dreieck
+  mit dem rechten Winkel bei (x, z+d) — genau das Dreieck, durch das die Rakete in §9.1 fliegt.
+* Typ 2 LAB_8003d00c (Raute, ROOM11C0 Zelle 5): `lhu t1,0(s0)` / `lhu v1,4(s0)` / `lhu t0,2(s0)` / `lhu a0,6(s0)` @0x8003d070-7c,
+  `addu s7,t1,v1` (x+w) / `addu s6,t0,a0` (z+d) @0x8003d088-8c, `srl a1,a1,1` / `addu v1,v1,a1` (cx = x + w/2) / `srl a2,a2,1` /
+  `addu a0,a0,a2` (cz = z + d/2) @0x8003d090-9c; je Quadrant `pcmp < edge` (Port push_diag2) = Raute um (cx,cz).
+* Die uebrigen Flaechen (4/6/7 Dreiecke, 8/9 Kapseln) aus den Port-Zwillingen push_diag4/6/7 und push_caps8/9 (re15_collision.c,
+  byte-true transliteriert) — dieselbe Flaechentabelle hat Spur A selbst disassembliert (A_granate.md N1.1, Zweig r35/granate),
+  ich uebernehme sie unveraendert (EIN Formtest fuer Handgranate und Werfer bei der Zusammenfuehrung).
+**N1 — RE2 testet die FORM, nicht das Rechteck (re2_disasm.py, info/re2leon/PSX.EXE):** FUN_8004fba0 (von allen Werfer-
+Geschossen gerufen, Op 15 @0x8001eea0, Op 24 @0x8001f810, Op 70 @0x8002343c): `andi v1,v1,0xf` / `sltiu v0,v1,0xe` / `beq` /
+`sll v0,v1,2` / `lw v0,4356(at)` (Tabelle 0x80011104) / `jr v0` @0x8004fe34-54; Tabelle [1..8] = eigene Formtests (0x8004fe5c
+`jal 0x8004cfc8` ... 0x8004ff3c), [0]/[9] = 0x8004ffb0 (Rechteck = nur Vortest). Der Port (re2fx_boden/zelle_im_band, Runde 34)
+macht nur den Rechteck-VORtest (@0x8004fd88-b8) — fuer Diagonalzellen meldet er Kontakt im LEEREN Teil des Rechtecks.
+**N1 — Strecke statt Punkt: die vorige Weltlage steht im Platz.** RE2 FUN_8001d894 (Weltlage, je Bild vor Op B):
+`lw v1,52(a2)` / `sw v1,60(a2)` @0x8001d954/64 und `lhu a0,56(a2)` / `sh a0,64(a2)` @0x8001d95c/6c = +0x3C/+0x3E/+0x40 :=
+alte +0x34/+0x36/+0x38, BEVOR die neue Lage gerechnet wird (Port re2_fx.c weltlage). Der Spawner loescht +0x34 und +0x3C
+(@0x8001ccfc-d08); Op B (15/24/70) laeuft im Schritt NACH der Weltlage (FUN_8001d68c `jal 0x8001d894` @0x8001d6c8, Op B
+@0x8001d6d0-fc), die Physik `lokal += vel` danach (@0x8001d70c-798). Also gilt beim Test in Op B: +0x34.. = Lage dieses Bildes,
++0x3C.. = Lage des vorigen Bildes — die Strecke, die das Geschoss in diesem Bild zurueckgelegt hat. Ausnahme: das erste
+Bild (lokal +0x24/+0x26/+0x28 = 0, @0x8001cca4 `sw zero` + `sw v0,40(t0)` mit +0x28 = 0): dann steht in +0x3C der geloeschte
+Wert, keine Strecke. RE2 selbst testet nur den Punkt (Schritt 767 je Bild bei der Rakete, Abnahme OFFEN 19).
+**N2 — Kritklasse (re15_disasm.py):** FUN_80011f50 `lbu v0,147(s1)` / `andi v0,v0,0x1` / `sb v0,147(s1)` @0x80012370-7c
+(+0x93 &= 1); `ori v0,zero,0x8` / `bne v1,v0,0x800123a4` / `ori v0,zero,0x7` @0x80012380-88, `lw v0,-2592(v0)` (0x8008f5e0 =
+Abstand) / `sltiu v0,v0,0xbb8` / `bne` @0x8001238c-9c, `bne v1,v0,0x800123c0` @0x800123a4, `ori v0,v0,0x40` / `sb v0,147(s1)`
+@0x800123b4-b8 = Waffe 7, oder 8 unter 3000 -> +0x93 |= 0x40. Dann `andi v0,v0,0x40` / `beq v0,zero,0x80012520` @0x800124fc-500,
+`lbu v0,8(s1)` / `sltiu v0,v0,0x20` / `beq` / `addiu v0,zero,-1` / `sh v0,154(s1)` @0x80012508-1c: die HP -1 haengen am BIT
+0x40, nicht noch einmal an der Waffen-Id. Die Python (20) ist in RE1.5 unfertig (Tester 0x800128a0, Dispatch NULL,
+Spalte 20 = 0, §2.1) und kommt in diesem Vergleich deshalb nicht vor; der Port fuehrt sie per PORT-WAHL §3.5 Punkt 1 als
+zweiten Magnum-Revolver (Entladung 0x800339A4, Spalte 7, RE2-Zeile 5, Munition, Streifen) — die Kritklasse ist die letzte
+Redhawk-Eigenschaft, die ihr fehlte.
