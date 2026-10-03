@@ -774,3 +774,36 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 - Jetzt: (3) nennt alle drei Eintritte (@0x8011b064-70 / @0x8011b238-54 / @0x8011b44c-68) und alle drei
   Original-Exits (@0x8011b188-98 / @0x8011b3bc-ec / @0x8011b6b4-e8) und sagt, dass der Zaehler in allen dreien
   gilt — deckungsgleich mit dem Funktionskommentar bei re15_affen_treffer_zaehlen. Nur Kommentar, kein Code.
+
+### A2 — Messung: WER bewegt Leon beim Wurf? (Original, GDB-Haltepunkte im Spieler-Tick)
+- Werkzeug `jnb2/gdbmulti.py` (DuckStation-GDB-Server, settings.ini [Debug] EnableGDBServer nur waehrend der
+  Messung; Original in `jnb2/settings.ini.orig`): r3 s033 direkt geladen, gleiches Experiment wie g_griff
+  (`M800ace25,3:0f0000` bei VSync 10141), ab VSync 10135 Haltepunkte an den Stationen von FUN_80031c44
+  (selbst disassembliert): Eintritt 0x80031c44, nach dem Kommando-Handler 0x80031cbc (= `jal 0x8002b544`),
+  nach dem Koerper-Schub 0x80031cc4, vor/nach `jal 0x8002dc48` 0x80031d38/d40, vor/nach `jal 0x8002b498`
+  0x80031d58/d60, vor/nach `jal 0x8003b0a4` 0x80031d70/d78 (a0 = Spieler+0x34 `addiu a0,s0,52` @0x80031d68,
+  a1 = Radius `lhu a1,6(v0)` @0x80031d6c, a2 = 1 @0x80031d74), nach `jal 0x80037358` 0x80031d80, dazu
+  0x8001ad68 (Eintritt, a0/ra). Spur `jnb2/g_wer.txt` (2090 Halte, VSync 10135-10470), Dekoder `wer.py`.
+- Ergebnis (Bild = VSync-Paar):
+  - Der Wurf-Handler (P2, `jal 0x8001ad68` @0x8011c294, ra 0x8011c29c, a0 = 0x800aca54) setzt Leon ABSOLUT
+    (Anker (-7507,-10327) = FUN_8001ac38-Kopie, unveraendert ueber den ganzen Wurf). Danach im SELBEN
+    Spieler-Tick: Koerper-Schub FUN_8002b544 (vs10171: +142/+113, vs10173: +192/+151, vs10175: +437/+178
+    — der zweite Gorilla e2 steht im Koerperabstand) und die WANDKLEMME FUN_8003b0a4 (vs10171 -614/+585,
+    vs10215 +217/-240, vs10219 -254/+180, vs10221 +21/+80). FUN_8002dc48 / FUN_8002b498 bewegen nie.
+  - Bild 0x24 (vs10219): Platzierung (-4334,-11423) -> Wand -> **(-4588,-11243)**; Bild 0x25 (vs10221, letzte
+    Platzierung, `sltiu 0x25` @0x8011c278 prueft den Wert VOR dem anim_set) (-5402,-10631) -> Wand ->
+    **(-5381,-10551)** = die beiden "Spruenge" der Abnahme.
+  - Ab vs10223 KEINE Platzierung mehr, aber FUN_8003b0a4 schiebt Leon JEDES Bild um ~100-125 in wechselnde
+    Richtungen (vs10223 +79/-82, +95/-66, +109/-38, -92/-54, -47/-100, ...) — auch nach der Freigabe (Zustand
+    1/0/1), bis er bei vs~10461 auf (-3009,-11643) zur Ruhe kommt. Das "Weiterwandern ~100/Bild" der Abnahme ist
+    also die Wandklemme, kein Clip-Wurzelweg (FUN_8001f314/f3bc schreiben +0x34/+0x3c nicht; RE_15_Quellcode_V2
+    FUN_8001f3bc.c: nur Part-Records und +0x95).
+- Port (Riegel griff vorher, `jnb2/griff_vorher.txt`): Platzierung + "letzter begehbarer Standpunkt"-Klemme in
+  re15_victim_place (fuer JEDEN Greifer, Kommentar dort: 0x27 seit 2026-08-29), Wandklemme des Grabbed-Zweigs
+  VOR der Platzierung (game_step_common.c: `re15_player_body_and_walls(c, pl, pl->x, pl->z)` im Grabbed-Zweig,
+  die Platzierung laeuft erst danach in re15_player_victim_tick), danach nur Schub + Klemme-wenn-geschoben.
+  Folge: ab Bild 0x21 haelt die Klemme Leon auf (-3965,-12507) (die Platzierungen 0x22-0x25 liegen in Zellen),
+  danach steht er (keine Wandklemme auf den alten Standpunkt) -> frei bei (-3685,-12254).
+- Reihenfolge im Original (FUN_80031c44 + Haltepunkt-Folge je Bild: Gorilla-Wurzel VOR dem Spieler-Tick):
+  Gegner-KI -> Spieler: Kommando-Handler (cmd 5 = 0x8011c118-Kette: Platzierung) -> b544 -> dc48 -> b498 -> b0a4
+  (Bezug +0x40/+0x44 = Lage am Ende des Vorbilds, `addiu a2,a2,64` @0x8003b4ac).
