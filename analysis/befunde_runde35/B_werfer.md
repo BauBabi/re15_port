@@ -853,3 +853,22 @@ Teil H):** Tisch (x 200 ab z -10400): Explosion nach 3 Bildern bei z -10912 (Kan
 (x 9000): 13 Bilder, z -18592 (Fernwand Zelle 11 bei -19600); auf den Kreis (-4750,-13900) r 500: 5 Bilder, z -12448.
 GEGENPROBE (Typ-3-Zeile auf `typ != 1u` zurueckgesetzt, gebaut, gefahren, wiederhergestellt): Kreis-Lauf 19 Bilder,
 z -23200 (Fernwand) -> FAIL 113. Mit Typ 3: alle gruen.
+**Messung nachher an der exe** (`mess_r35b/nb1/run_m1.sh`, ROOM1000 ohne Gegner, Leon (-1327,-1000) Blick -z -> Rohr bei
+x -1700 = Mitte der Kreis-Zelle 15 {x -2200..-1200, z -4850..-3850, Typ 3}; neue exe-Kopie re15_r35nb1.exe gegen
+re15_r35b.exe = Stand vor der Nachbesserung):
+* NEU: `RE2FLUG ... welt=(-1716,-2575,-2390)`, `(-1726,-2607,-3157)`, dann `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20
+  @(-1723,-2596,-2901)` = Explosion am Kreis (Kontakt im naechsten Schritt bei z ~ -3923, Rueckprall).
+* ALT: dieselben zwei Bilder, dann `welt=(-1737,-2640,-3923) fuss=3`, `(-1748,-2673,-4690) fuss=3` = MITTEN durch den
+  Kreis, Explosion erst an der Wand Zelle 14 (z -5150) `@(-1744,-2662,-4435)`.
+* Erster Versuch mit Leon (-1700,-1000): Rohr bei x -2117, Sehne des Kreises dort 552 < 767 Schritt — beide exe
+  sprangen ueber den Kreis (Punkttest je Bild, wie RE2 FUN_8004fba0 je Bild) und explodierten an der Wand; nicht
+  gewertet. Erster Versuch in ROOM1140 (Leon (-4750,-10300)): Auto-Zielen drehte auf 821, Explosion an der Tischecke
+  in beiden — nicht gewertet.
+* Tisch ROOM1140 (Leon (200,-10300)): unveraendert `@(-174,-2530,-10668)` (= Abnahme), d.h. Spur-A-Regel.
+
+**Test am Mischer (M2, neu):** `integration_r35_werfer_ton` (tests/integration/test_r35_werfer_ton.cmake): zwei exe-Laeufe
+MIT/OHNE zweiten Abzug, `RE15_AUDIO_CAP_SYNC`, Vergleich je Spielbild (5880 Byte). Gefahren: `-- r35_werfer_ton: OK —
+Leerschuss hoerbar: erstes abweichendes Bild 331 von 404, 10 abweichende Bilder; wf.log ARMS11 satz=1 MIT=1 OHNE=0`,
+Passed 28.3 s. GEGENPROBE mit der exe vor der Nachbesserung (re15_r35b.exe): Test rot (`'re2arms ARMS11 satz=1'
+MIT=0`), und `cmp mit/cap.raw ohne/cap.raw` = BYTEGLEICH (2375520 Byte) bei `arms_rec=1` im MIT-Log = der alte Klick war
+ein Aufruf ohne Ton (Abnahme §2.5 bestaetigt).
