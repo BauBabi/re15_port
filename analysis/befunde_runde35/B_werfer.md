@@ -993,3 +993,46 @@ Abstand) / `sltiu v0,v0,0xbb8` / `bne` @0x8001238c-9c, `bne v1,v0,0x800123c0` @0
 Spalte 20 = 0, §2.1) und kommt in diesem Vergleich deshalb nicht vor; der Port fuehrt sie per PORT-WAHL §3.5 Punkt 1 als
 zweiten Magnum-Revolver (Entladung 0x800339A4, Spalte 7, RE2-Zeile 5, Munition, Streifen) — die Kritklasse ist die letzte
 Redhawk-Eigenschaft, die ihr fehlte.
+
+### 9.3 Umsetzung (Commit 9250a21f, gebaut `=== LOCAL-BUILD-OK (build)`, Log `re15_port/build/mess_r35b_logs/nb2_build1.log`)
+**N1 (re2_fx.c Runde-35-Block, werfer_r35.c, re15_werfer.h, re2_fx.h):**
+* `werfer_r35.c` neu `re15_werfer_zelle_strecke(e, x0,z0, x1,z1)`: beruehrt die Strecke die solide FLAECHE der Zelle?
+  Typ 1 Rechteck, 2 Raute um (x+w/2, z+d/2), 3 Kreis (Mitte x+w/2/z+w/2, Radius w/2), 4..7 die vier rechtwinkligen
+  Dreiecke (rechter Winkel bei (x+w,z+d) / (x,z+d) / (x+w,z) / (x,z)), 8/9 Kapseln — Adressen je Fall im Code
+  (Verteiler @0x8003af04-84). Punkt = Strecke der Laenge 0. Geometrie (Trennachsen, ganzzahlig s64) = Spur A
+  granate_r35.c `strecke_*` (gleiche Flaechentabelle; fuer die Zusammenfuehrung EIN Formtest).
+* `re15_werfer_band_strecke(rdt, x0,z0, x1,z1, band)`: alle soliden Zellen des Bandes (u0 Bit 0, floor >> 4, u1 Bit 1
+  frei — dieselben Filter wie vorher), je Quadrantenliste (FUN_8003b068; die Strecke wird am Deckenpunkt geteilt).
+* `re2_fx.c zelle_im_band` (Runde-34-Abbild FUN_8004fba0, Zellentest IN der Bandhoehe): mit `s_r35_formtest` (nur
+  waehrend werfer_boden gesetzt) folgt dem Rechteck-Vortest der Formtest (RE2 `jr` Tabelle 0x80011104 @0x8004fe34-54).
+  Flammen/Granate der Runde 34 (re2fx_boden ohne Werfer) unveraendert.
+* `re2_fx.c werfer_boden`: `wandzelle_im_band` (Typ 1/3, Punkt) ersetzt. Liegt das Geschoss ueber der Standhoehe und hat
+  das Abbild keinen Kontakt: Strecke vorige Weltlage (+0x3C/+0x40, @0x8001d954-6c) -> Lage gegen das Schuetzen-Band;
+  erstes Bild (lokal = 0) = Punkt. Die Ausnahme "innerhalb der Bandhoehe entscheidet das Abbild" ist entfallen (das Abbild
+  testet nur den Punkt; ein GL-Schritt in Bandhoehe kann sonst auch durchtunneln).
+* PORT-WAHL (gekennzeichnet, wie Spur A "Wurfbild: Werfer -> Hand"): beim ERSTEN Wandtest eines Geschoss-Platzes auch die
+  Strecke Schuetze -> (vorige) Lage, sofern der Schuetze selbst frei steht; Schuetzenlage meldet `werfer_r35.c spawn()` fuer
+  Bank 2 (GL-Runde, Rakete) und 0x031D (Flammenstrahl) ueber `re2fx_r35_schuetze(platz, x, z)`.
+* PORT-WAHL: Flaeche ohne Radius-Aufschlag (a1 = 2 @0x8001eea0, 2 Einheiten) wie Spur A.
+**N2 (re15_damage.c, 2 Stellen):** Kritklasse `weapon_id == 7 || weapon_id == 20 || (8 && < 3000)` (Kommentar mit
+@0x80012380-b8 und PORT-WAHL §3.5 Punkt 1); HP -1 jetzt am BIT wie das Original (`(e->hit_react & 0x40) && type < 0x20`,
+@0x800124fc-1c) statt am wiederholten Waffenvergleich — fuer 7/8 gleichwertig (Bit 0x40 wird unmittelbar davor geloescht
+und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
+
+### 9.4 Messung NACHHER (exe-Kopie `re15_r35nb2.exe` = Stand 9250a21f, gleiche Rezepte, `mess_r35b/nb2/nachher/`, alle exit 0)
+* N1 Rakete `d18`: RE2FLUG `(-2477,-2575,-1657)`, `(-2389,-2607,-896)`, `(-2302,-2640,-134)`, dann
+  `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2331,-2629,-388)` — Explosion VOR dem festen Dreieck (Kante bei
+  diesem x: z 415..528), vorher erst @(-2070,-2728,1897). dreieck.py: `Plaetze 3, im festen Dreieck 0, z max -134`.
+  Erklaert den Befund: die Strecke (-2302,-134) -> (-2215,627) schneidet die Hypotenuse (Lage 627 liegt bei x -2215 hinter
+  LINE 1928 < ZTERM 2027), Kontakt -> Rueckprall um vel1 + vel2/3 = 768 + 256 = 1024 (@0x8001f874-9c0) -> z 627 - 1015 = -388.
+* N1 Flamme `d14` (`flamme_kontakt.py`, je Partikel ab Spawn-Zeile op 1/0):
+  vorher `Partikel 15, ins Dreieck 12, ... Schritt in die erste Lage im Mittel 109, Schritt danach im Mittel 92` (die Partikel
+  fliegen im Dreieck mit vollem Schritt weiter, Tiefe bis 332 — `tiefe.py`);
+  nachher `Partikel 15, ins Dreieck 13, Tiefe der ersten Lage im Dreieck max 59, ... Schritt danach im Mittel 16` — jedes
+  Partikel haelt an der ersten Lage hinter der Kante (Kontakt) und laeuft dort das RE2-Nachbrennen (acc/vel x := 0, vel.y :=
+  20, step[2] := 6, step[3] := 1 @0x800234c8-538). ⛔ Die Zaehlung der Abnahme ("47 von 360 Plaetzen im Dreieck") steigt
+  dadurch auf 143 von 456: die neuen Zeilen sind die Nachbrenn-Bilder an der Kontaktstelle (Tiefe max 139 = Kontakt <= 59 +
+  Drift 20/Bild), nicht ein tieferer Flug. Ein 13. Partikel erreicht das Dreieck, weil der Rechteck-Vortest es vorher im
+  LEEREN Teil des Zellrechtecks (Bandhoehe) gestoppt hatte; z max 898 statt 769 aus demselben Grund (Strahl laeuft im
+  begehbaren Teil weiter).
+* N2 `t7`/`t20`, state.log F19 Platz 5: Redhawk `hp=-1`, Python `hp=-1` (vorher -650).
