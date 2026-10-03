@@ -703,3 +703,14 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   (Flags, Loeschmaske, Freeze-Gate) ist belegt. Unit `bgm` um den gemessenen Fall erweitert (Raumaufbau mitten in der
   Montage: Rahmen-Flags geloescht + tick_count 0 -> zu; erster VM-Lauf setzt sie -> weiter zu; Laden: erst nach dem
   ersten VM-Lauf auf).
+- **Messung nach der ersten Aenderung (Lauf m2, gleicher Weg): NOCH FALSCH.** debug.log 1377 `[flag] z1/27 = 0`, 1383
+  `Montage 1130 (Programm 1)`, 1386 `MAIN01-Fenster auf in ROOM1130`, 1389 `[flag] z2/7 = 1` — unveraendert. Grund:
+  `tick_count > 0` gilt schon nach dem Init-Lauf des Raumaufbaus (scd_room_setup.c:421 `scd_vm_tick()` NACH dem
+  memset @228, VOR den Installern ~@452), und der Montage-Schritt wird erst vom Installer (scd_event_fire) gestartet.
+- **Zweite Aenderung:** `re15_cut10f0_install` (laeuft am Ende JEDES Raumaufbaus, auch am Boot-/CONTINUE-Weg) merkt
+  sich `s_vm_tick_aufbau = g_scd.tick_count`; das Fenster oeffnet erst bei `g_scd.tick_count > s_vm_tick_aufbau`, also
+  nach dem ersten Spielbild-Lauf der VM, in dem ein vom Installer gestartetes Programm seine Rahmen-Flags setzt
+  (VM vor dem Spielschritt im selben Bild: Frame-Runner @0x8001cdec vor dem Spielschritt, main.c:5595 vor 7592).
+  Unit `bgm` bildet die Reihenfolge von scd_room_reenter nach (`raumaufbau()`: tick_count 1 = Init-Lauf, Rahmen
+  geloescht, install; `vm_lauf()`); Gegenprobe: mit der ersten Aenderung (`tick_count > 0`) faellt
+  "Raumaufbau mitten in der Montage ... Fenster zu". Jetzt `bgm: PASS (0 Fehler)`.

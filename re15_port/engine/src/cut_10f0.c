@@ -222,8 +222,12 @@ static void meldungen_einsetzen(void)
 }
 
 /* ---- Installation beim Raumaufbau ---------------------------------------------------------------- */
+/* VM-Laufzaehler am Ende des Raumaufbaus (Herleitung bei bgm_fenster_tick). */
+static uint32_t s_vm_tick_aufbau = 0;
+
 void re15_cut10f0_install(uint16_t room_id)
 {
+    s_vm_tick_aufbau = g_scd.tick_count;   /* NACH dem Init-Lauf (scd_room_setup.c:421), VOR jedem Spielbild-Lauf */
     s_zustand = RE15_CUT10F0_AUS;
     /* Besucht-Latch des zweiten Kartenziels: Leon betritt ROOM1150 NACH der Szene -> (9,72)=1, die
      * Kachel hoert auf zu blinken (map_hint_common.c Eintrag K2). Das Besucht-Bit der Zone taugt dafuer
@@ -340,15 +344,16 @@ int re15_cut10f0_bgm_fenster(void)    { return s_bgm_offen; }
 static void bgm_fenster_tick(void)
 {
     const uint8_t war_offen = s_bgm_offen;
-    /* "Keine Szene laeuft" gilt erst, wenn die VM in diesem Raum gelaufen ist (g_scd.tick_count > 0; der
-     * Raumaufbau nullt g_scd, scd_room_setup.c memset; gezaehlt hinter dem Freeze-Gate des Frame-Runners
-     * FUN_8003f038 @0x8003f04c). Der Raumaufbau loescht die Rahmen-Flags — (1,27) byte-true mit der Maske
-     * @0x80039710-30 (FUN_800396fc), (2,7) als Port-Schatten —, und ein Szenenprogramm, das der Aufbau startet
-     * (Montage-Schritt der Spur L; Form Evt_exec aus sub00), setzt sie erst bei seinem ersten VM-Lauf wieder
-     * (`22 02 07 01` / `22 01 1b 01` am Programmanfang, Executor FUN_8003f0a0). Gemessen mit K+L zusammen
-     * (Dossier §9.7): ohne diese Bedingung ging das Fenster MITTEN in der Montage auf (ROOM1130, Bild 0). */
+    /* "Keine Szene laeuft" gilt erst, wenn die VM NACH dem Raumaufbau gelaufen ist (g_scd.tick_count ueber dem
+     * Stand am Ende des Aufbaus, s_vm_tick_aufbau aus re15_cut10f0_install; gezaehlt hinter dem Freeze-Gate des
+     * Frame-Runners FUN_8003f038 @0x8003f04c). Der Raumaufbau loescht die Rahmen-Flags — (1,27) byte-true mit
+     * der Maske @0x80039710-30 (FUN_800396fc), (2,7) als Port-Schatten —; ein Szenenprogramm, das ein Installer
+     * NACH dem Init-Lauf startet (Montage-Schritt der Spur L, scd_event_fire), setzt sie erst bei seinem ersten
+     * Spielbild-Lauf wieder (`22 02 07 01` / `22 01 1b 01` am Programmanfang, Executor FUN_8003f0a0). Gemessen
+     * mit K+L zusammen (Dossier §9.7): ohne diese Bedingung ging das Fenster MITTEN in der Montage auf (ROOM1130,
+     * erstes Bild); "tick_count > 0" allein reichte nicht, der Init-Lauf (scd_room_setup.c:421) zaehlt schon. */
     if (!fenster_flags())           s_bgm_offen = 0;
-    else if (!re15_cine_active() && g_scd.tick_count > 0)
+    else if (!re15_cine_active() && g_scd.tick_count > s_vm_tick_aufbau)
                                     s_bgm_offen = 1;    /* oeffnet erst nach dem Ende der Szene */
 #ifdef RE15_PLATFORM_PC
     if (war_offen != s_bgm_offen)
