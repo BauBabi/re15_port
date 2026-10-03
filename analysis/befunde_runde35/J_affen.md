@@ -767,7 +767,7 @@ Nachbesserung 1 liegen in `scratchpad/jnb1/` (g_orig.txt, g_griff.txt, g_desync.
 Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 
 ### Stand (fortlaufend)
-- [x] A3  - [x] A2 (Riegel + exe)  - [ ] A1
+- [x] A3  - [x] A2 (Riegel + exe)  - [x] A1 (Riegel + exe JUMP + Tuerweg)  - [x] H2
 
 ### A3 — Kopfkommentar (3) in re15_affen.h (erledigt)
 - Vorher: "Luft-/Sturz-Spuren (1/2) bleiben byte-true" (falsch seit 30484afa).
@@ -1010,3 +1010,17 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   (3) Leons Laufwege in Zwischensequenzen (Plc_dest) enden jetzt auf der Einheit genau wie im Original (vorher
   bis ~1 Einheit je Schritt zu kurz, ueber einen langen Gang ~25 Einheiten); das gilt fuer alle Raeume.
 - Bedienhinweis: keine. Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 -> affen_fuss.log.
+
+## Messung nachher am Endstand (exe-Kopie re15_pc_jnb2.exe = Stand nach allen Aenderungen, `jnb2/fin_runs.sh`)
+- **A1, gleiche Eingabe wie das Original** (`n10e`: RE15_DEBUG_JUMP=11C0@240, keine Eingabe): Gang 207/207 bitgleich,
+  Endlage (-7138,-12372) Yaw 1513; Freigabe (sub07) F1071; Bisse ab dem Heavy +105, dann Abstaende
+  53,51,52,52,51,53,50,54,49,55,48,56,47,57 (Gleichtakt, Original 52,50,53,50,53,51,52,52,51,53,50,54,49,55);
+  **Tod F2269 = Freigabe + 1198 Bilder = 39,9 s (Original 1193 = 39,8 s)**. Abnahme n10 vorher: 36er-Takt, 999 Bilder.
+- **A1 ueber den ECHTEN Tuerweg** (`t2`: Generator-Flags, 11B0-Tuer, Quadrat-Tasten, danach keine Eingabe):
+  `DOOR FIRE` -> room11c0, sub07 F1088, Leon (-7148,-12363) Yaw 647 (anderer Start als der JUMP-Spawn), dieselben
+  Abstaende wie n10e, **Tod F2286 = Freigabe + 1198 = 39,9 s** (Abnahme n2 vorher: Tod F2079 = +991, 36er-Takt).
+- **A2 ueber den Tuerweg, Leon im Freien** (`w7`, Eingabe wie Abnahme n6b): Griff 1 Pin F1202, Clip 0x10 F1285
+  (+83), Clip 0xb F1301 (+16), frei F1327 (+25... +26), HP 88 -> 88; Griff 2 (Rueck-Variante: Opfer-Clip ab
+  Bild 0x0c) Pin F1572, Clip 0x10 F1644 (+72 = 83 - 11), Leon wird waehrend P3 von der Wandklemme aus einer Zelle
+  geschoben (F1644 (-7347,-9511) -> F1660 (-8275,-8608)), frei F1686, 0 HP. Brustschlag (Clip 3) nach beiden Griffen
+  (F1250, F1609).
