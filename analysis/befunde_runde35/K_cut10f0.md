@@ -7,8 +7,9 @@ Wortlaut — drei Befunde, ihre Belege, Umsetzung und Messung nachher. Wo §8 et
 **§9 = NACHBESSERUNG 1** nach der unabhaengigen Abnahme (K_abnahme_0.md). Wo §9 etwas aendert, gilt §9: MAIN01 beginnt
 erst nach der 1150-Montage ((9,73)) statt am Ende der 10F0-Szene und endet an (4,64) statt am Besucht-Bit der Zone;
 Skript-Befehle an den MAIN-Slot gelten im Fenster nicht; Leon dreht sich schon vor Zeile 6 zu Ada (Programm 1350 B /
-288 Opcodes); Hinweiskette und Gestenblock-Leihe liegen nicht mehr in menu_common.c / main.c. Die OFFEN-Punkte und
-"Fuer den Nutzer" stehen aktuell in §9.7/§9.8.
+288 Opcodes); Hinweiskette und Gestenblock-Leihe liegen nicht mehr in menu_common.c / main.c; das Fenster oeffnet erst
+nach dem ersten VM-Lauf nach einem Raumaufbau (gemessen mit K+L zusammen, §9.7). Zusammenfuehrung K+L: §9.7; Tests und
+Suite: §9.8; OFFEN: §9.9; "Fuer den Nutzer": §9.10; Abschluss: §9.11.
 Vertrag (VERTRAG.md): Bank-9-Bits 71 (Szene gesehen) + 72 (Reserve); Nachrichten-IDs ROOM10F0 6..30;
 Ereignis 20 in 10F0; AOT-Slots nach Zensus; neue Logik in `engine/src/cut_10f0.c` + `include/re15_cut10f0.h`.
 
@@ -714,3 +715,61 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   Unit `bgm` bildet die Reihenfolge von scd_room_reenter nach (`raumaufbau()`: tick_count 1 = Init-Lauf, Rahmen
   geloescht, install; `vm_lauf()`); Gegenprobe: mit der ersten Aenderung (`tick_count > 0`) faellt
   "Raumaufbau mitten in der Montage ... Fenster zu". Jetzt `bgm: PASS (0 Fehler)`.
+
+### 9.9 OFFEN (Stand Nachbesserung 1; ersetzt §6)
+- **Sprachaufnahmen fehlen:** die 18 Zeilen laufen stumm mit Untertitel, bis der Nutzer
+  synchro/STAGE1/room10F0/main06..main23.wav liefert (Liste §9.10); dann haelt der Stimmen-Riegel die naechste Zeile bis
+  zum Ende der Aufnahme.
+- **MAIN01 erklingt in diesem Zweig allein nie:** Beginn = (9,73) "Irons-Todesszene gesehen", gesetzt nur von Spur L
+  (VERTRAG §1.1). Abnahme im Zweig K: `RE15_SET_FLAG=9:73` bzw. `RE15_SET_FLAG_AT` (Laeufe A/D/F/G der Integration);
+  nach dem Zusammenfuehren: Weg L-"A" (§9.7) — erwartet `MAIN01-Fenster auf in ROOM1150` erst nach
+  `Rueckkehr beendet, Steuerung frei`.
+- **Parkplatz VOR der Szene erreicht** ((4,64)=1 schon gesetzt, d.h. die Ankunftsszene "Ada! Where's Marvin?" lief vor
+  der 10F0-Szene; nur mit Strom (4,243) erreichbar): die Kachel ROOM11C0 blinkt dann nicht und MAIN01 beginnt nicht
+  (Wortlaut "nicht besucht" / "erreicht hat" woertlich). Nicht nachgemessen; Messweg: unit `_karte`/`_bgm` mit
+  (4,64)=1 vor (9,71).
+- **PSX/Android:** BGM-Weiche und MAIN-Sperre haengen an platform/pc/src/audio_pc.c (audio_psx.c unveraendert), die
+  Gestenblock-Leihe an platform/pc (cut10f0_pc.c); die Fenster-Logik selbst liegt plattformfrei in engine/src/cut_10f0.c.
+  Ob platform/android audio_pc.c mitbaut (TABU fuer diese Spur), ist nicht gemessen — Messweg: Lauf D auf dem Geraet,
+  Zeile `[bgm] ... entry=FF01` nach dem Laden.
+- **Dialogkamera Cut 2 klein** (Nutzer-Vorgabe "hinten rechts ... bei CUT2", ~60 von 480 Bildpunkten Figurhoehe,
+  K_abnahme_0.md §3): Beurteilung am Bild durch den Nutzer; Positionen = re15_cut10f0.h + tools/r35_k/szene_bauen.py.
+- **Nicht Spur K (aus der Abnahme, nur vermerkt):** Lauf G der Abnahme endete einmal mit exit 139 beim ersten
+  RE15_FRAMEDUMP-Bild (3 Wiederholungen liefen durch, nicht zugeordnet); Leon traegt in der Szene das Messer (Spur E,
+  "Kampfmesser als Rueckfall").
+
+### 9.10 Fuer den Nutzer (ersetzt §7)
+- **Sprachdateien** (Sprecher: Text), `synchro/STAGE1/room10F0/`:
+  main06.wav Leon: Hey - how did you came in here? /
+  main07.wav Woman: Did you really think there was only one staff card for the Communication Room? /
+  main08.wav Woman: Anyway... the communication system is completely destroyed. /
+  main09.wav Woman: We won't reach anyone with it anymore... /
+  main10.wav Marvin: Leon! You already made it! /
+  main11.wav Leon: Hey Marvin, glad you made it! /
+  main12.wav Leon: Allow me to introduce you. This is... /
+  main13.wav Ada: ... Ada, Ada Wong /
+  main14.wav Leon: Ada Wong. /
+  main15.wav Marvin: Hello, glad to meet another Survivor! I'm Marvin. /
+  main16.wav Leon: Anyway... looks like we can't contact anyone with this thing anymore. /
+  main17.wav Marvin: Ohh... what do we do then?... /
+  main18.wav Leon: ... /
+  main19.wav Leon: I know! The patrol car! We can use it to get out of here! /
+  main20.wav Marvin: Yeah, you're right! That could be our way out! /
+  main21.wav Leon: Okay, Marvin, you go with Ada to the parking lot and wait there. /
+  main22.wav Leon: I'm going to get Chief Irons, and I'll be right behind you! /
+  main23.wav Marvin: Alright! Sounds like a plan. Take care Leon!
+- **Neue Assets fuer das Paket-/Android-Gate:** keine (Szene und Tuerton eingebacken in engine/src/gen/cut10f0_*.inc;
+  DOOR13.DO2 und ROOM11B0.RDT liegen schon im Gate).
+- **Bedienung / was man sieht:** Szene beim ersten Betreten von ROOM10F0 (Tuer aus ROOM10D0); danach Karte: ~4 s Blatt B1
+  mit der Parkplatz-Kachel ROOM11C0, ~4 s Blatt 3F mit ROOM1150, dann zu (START springt weiter / schliesst). In der
+  normalen Karte blinken beide: ROOM1150 bis Leon es nach der Szene betritt, ROOM11C0 bis zur Ankunftsszene am Parkplatz.
+  MAIN01 beginnt, wenn die Irons-Todesszene samt Knall-Montage (Spur L) zu Ende ist, laeuft in jedem Raum durch (auch nach
+  dem Laden und ueber Raumskripte hinweg, die ihre eigene Musik stoppen wuerden, z.B. der Zwinger ROOM11D0) und endet mit
+  der Ankunft am Parkplatz.
+- **Fuer die Zusammenfuehrung (Orchestrator):** die vier Konfliktstellen K <-> L und ihre Aufloesung stehen in §9.7
+  (scd_room_setup.c, scd_vm.c, enemy_common.c mit Marke; tests/test_support.c OHNE Marke, aber Bau-Fehler "redefinition"
+  -> die drei L-Spionzeilen streichen). Bank-9-Bits der Spur K: 71 "Szene gesehen", 72 "ROOM1150 nach der Szene betreten";
+  gelesen: (9,73) von L, (4,64) Original. Haken dieser Spur in gemeinsamen Dateien (`git diff master --numstat`):
+  scd_room_setup.c 5, scd_vm.c 3, game_step_common.c 2, enemy_common.c 4, menu_common.c 8/1, platform/pc/main.c 12,
+  platform/pc/src/audio_pc.c 10 (je Haken <= 5 Zeilen), dazu map_hint_common.c/.h, re15_inv_screen.c/.h,
+  tests/test_support.c, tests/unit/test_cam_selfheal.c.
