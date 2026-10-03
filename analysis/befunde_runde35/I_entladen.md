@@ -263,3 +263,16 @@ Gegenproben (Fix-Zeile temporaer entfernt, gebaut, gemessen, `git checkout` zuru
   dito fuer den Raum davor.
 * Messschiene fuer eigene Befunde: `RE15_ENTLADEN_LOG=entladen.log` (Zeilen EREIGNIS/SUMME/BILD,
   s. Messung vorher), Bildbeleg `RE15_ENTLADEN_SHOT=<praefix>` + `RE15_ENTLADEN_SHOT_BILD=5,40,...`.
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-04)
+
+Abnahmebericht `I_abnahme_0.md`: Punkt 1 erfuellt, Punkt 2 teilweise. Zwei Maengel:
+M1 Raum-Stimmen-Cache (`s_voice_clip`/`s_voice_room`, audio_pc.c) faellt an keiner Grenze;
+M2 Ausnahme TIM 0..3 (Elliot, Heli/Pilot) ohne Original-Beleg.
+Stand zu Beginn: HEAD 20ced3e7, Baum sauber.
+
+### N1-M1 Raum-Stimmen
+(laufend)
+
+### N1-M2 Elliot / Heli / Pilot (TIM 0..3)
+(laufend)
