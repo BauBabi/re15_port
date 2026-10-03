@@ -34,6 +34,7 @@
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
+#include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -2715,6 +2716,9 @@ static const uint16_t SS_BGMTBL[106] = {  /* UNK_80074828 @ PSX.EXE 0x80074828 *
 /* == FUN_800443ec + FUN_80044564/80044774: resolve the MAIN/SUB BGM slots for a
  * room. main = entry&0x3f; sub = (entry>>8)&0x3f (0xff high byte = no sub). -1 none. */
 static int ss_bgm_entry(int stage, int room) {
+    /* Runde 35 Spur K (re15_cut10f0.h): MAIN01 vom Ende der ROOM10F0-Szene bis zum Parkplatz —
+     * erzwungener Tabellen-Eintrag 0xFF01 statt UNK_80074828[...], sonst -1 = Tabelle. */
+    { int k = re15_cut10f0_bgm_eintrag(stage, room); if (k >= 0) return k; }
     if (stage < 0 || stage > 5) return -1;
     int idx = room + SS_STAGE_OFF[stage];
     if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
@@ -3527,6 +3531,9 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
+                /* Runde 35 Spur K (cut_10f0.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
+                 * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
+                if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
@@ -3557,6 +3564,9 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
                  * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
+                /* Runde 35 Spur K (cut_10f0.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
+                 * FUN_80044da4 op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 traefe dessen Bank. */
+                if (re15_cut10f0_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

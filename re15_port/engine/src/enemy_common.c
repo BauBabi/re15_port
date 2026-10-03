@@ -7,6 +7,7 @@
 #include "re15_enemy.h"
 #include "re15_enemy_ai.h"   /* re15_player_victim_reset */
 #include "re15_actor.h"      /* RBJ-Marker-Binder: Aktor-Slots (g_actors) */
+#include "re15_cut10f0.h"    /* Runde 35 Spur K: Record-Alias fuer den geliehenen Gestenblock */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 
@@ -95,6 +96,9 @@ static int rbj_resolve_slot(int slot)
     int rec = -1;
     for (int r = 0; r < 8; r++)
         if (rbj_record_marker(r) & (1u << slot)) { rec = r; break; }
+    /* Runde 35 Spur K: geliehener Block (ROOM10F0 <- ROOM11B0) hat nur Marker-Bits 0/1 — der zweite NPC
+     * (Aktor 2, Marvin) liest denselben NPC-Record 1 (re15_cut10f0.h). Sonst -1 = unveraendert. */
+    if (rec < 0) rec = re15_cut10f0_rbj_record_alias(slot);
     /* negativ cachen (Slot ohne Record), damit der Scan nicht jeden Frame laeuft */
     int ci = -1;
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++)

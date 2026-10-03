@@ -73,6 +73,16 @@ typedef struct {
     /* Runde 33: das Spiel-Flag, das die Szene als GELAUFEN markiert — "der Hinweis ist
      * gezeigt worden" (Abschnitt 4 unten). */
     unsigned char  fertig_bank, fertig_bit;
+    /* Runde 35 Spur K: FOLGE-Hinweis (Index in dieser Tabelle, -1 = keiner) und ob der Schirm
+     * ZEITGESTEUERT weiterschaltet/schliesst ("kurz eine Weile", re15_cut10f0.h) — der Runde-33-
+     * Eintrag bleibt wie bisher: nur START/Abbruch schliesst (RE2 @0x8006F884). */
+    signed char    folge;
+    unsigned char  zeitgesteuert;
+    /* Runde 35 Spur K (Fortsetzung): eigenes "Ziel erreicht"-Flag (Bank, Bit) statt des Besucht-Bits
+     * der Zielzone — fuer ein Ziel, das VOR dem Hinweis schon besucht war (ROOM1150 nach der
+     * ROOM10F0-Szene: re15_cut10f0.h RE15_CUT10F0_ZIEL2_BESUCHT_*). Bank 0 = Besucht-Bit der Zone
+     * (Runde-33-Regel, unveraendert). */
+    unsigned char  erreicht_bank, erreicht_bit;
 } re15_map_hint_eintrag_t;
 
 static const re15_map_hint_eintrag_t s_hints[] = {
@@ -82,7 +92,19 @@ static const re15_map_hint_eintrag_t s_hints[] = {
      * Szene, main00 @0x00DE6 `21 03 5e 00` Ck(3,94)==0 legt die AUTO-Zone nur davor an. */
     { 0x1150,
       { 0x42, 0x00, 0x3c, 0x01, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x01, 0x00 },
-      12, 0x10F0, 0, 3, 94 },
+      12, 0x10F0, 0, 3, 94, -1, 0, 0, 0 },
+    /* Runde 35 Spur K: nach der ROOM10F0-Szene (Port-Programm cut_10f0.c, nicht im RDT-Puffer —
+     * KEIN Anker, pc_versatz 0; Anforderung per re15_map_hint_request aus re15_cut10f0_tick).
+     * Eintrag 1: Ziel ROOM11C0 "PARKING LOT" (Zone 0), danach Eintrag 2: Ziel ROOM1150 (Zone 0);
+     * "Szene gesehen" = (9,71), gesetzt als erstes Opcode des Programms. Beide blinken in der
+     * normalen Karte, bis ihr Zielort besucht ist (Abschnitt 4, re15_map_ziel_aktiv_n):
+     * ROOM11C0 ueber das ORIGINAL-Flag (4,64) seiner Ankunftsszene (ROOM11C0 sub02 @0x0184E
+     * `22 04 40 01`, RE15_CUT10F0_ZIEL1_ERREICHT_* — das Besucht-Bit der Zone setzte schon der
+     * Montage-Schnitt der Spur L nach ROOM11C0, Nachbesserung 1); ROOM1150 — vor der Szene laengst
+     * besucht (erste Irons-Szene (3,94)) — ueber den Latch (9,72) "ROOM1150 NACH der Szene betreten"
+     * (RE15_CUT10F0_ZIEL2_BESUCHT_BANK/_BIT, gesetzt in re15_cut10f0_install). */
+    { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1, 4, 64 },
+    { 0x10F0, { 0 }, 0, 0x1150, 0, 9, 71, -1, 1, 9, 72 },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))
 
@@ -106,6 +128,7 @@ void re15_map_hint_room_scan(const unsigned char *raw, int raw_size, unsigned ro
         const re15_map_hint_eintrag_t *e = &s_hints[h];
         const int len = (int)sizeof e->sig;
         if (room_id != (unsigned)e->quelle) continue;
+        if (e->pc_versatz == 0) continue;     /* Runde 35 Spur K: portseitig angeforderter Eintrag, kein Anker */
         for (int i = 0; i + len <= raw_size; i++) {
             if (raw[i] != e->sig[0]) continue;
             if (memcmp(raw + i, e->sig, (size_t)len) != 0) continue;
@@ -132,6 +155,32 @@ long re15_map_hint_anchor_off(void)
 
 int  re15_map_hint_pending(void) { return s_pending; }
 void re15_map_hint_take(void)    { s_pending = -1; }
+
+/* Runde 35 Spur K: portseitige Anforderung (Gegenstueck zu re15_map_hint_pc fuer Programme, die nicht
+ * im RDT-Puffer liegen), Eintragssuche und die Folge-/Zeitsteuerung des Schirms. */
+void re15_map_hint_request(int nr)
+{
+    if (nr >= 0 && nr < HINT_COUNT) s_pending = nr;
+}
+
+int re15_map_hint_eintrag_fuer(unsigned quelle, unsigned ziel_raum)
+{
+    for (int h = 0; h < HINT_COUNT; h++)
+        if ((unsigned)s_hints[h].quelle == quelle && (unsigned)s_hints[h].ziel_raum == ziel_raum) return h;
+    return -1;
+}
+
+int re15_map_hint_folge(int nr)
+{
+    return (nr >= 0 && nr < HINT_COUNT) ? (int)s_hints[nr].folge : -1;
+}
+
+int re15_map_hint_zeitgesteuert(int nr)
+{
+    return (nr >= 0 && nr < HINT_COUNT) ? (int)s_hints[nr].zeitgesteuert : 0;
+}
+
+int re15_map_hint_anzahl(void) { return HINT_COUNT; }
 
 /* Die HAUPTZEILE des Zielraums in der Zonen-Tabelle (NULL = keine). */
 static const re15_map_zone_t *ziel_zone(int nr)
@@ -218,18 +267,30 @@ int re15_map_blatt_waehlbar(unsigned page)
     return re15_map_page_known(page) || re15_map_ziel_blatt_frei(page);
 }
 
-int re15_map_ziel_aktiv(int *page, int *rect)
+/* Runde 35 Spur K: das k-te (0-basiert) markierte Ziel — mehrere Ziele zugleich (ROOM11C0 und
+ * ROOM1150 nach der ROOM10F0-Szene, "So lange der Raum nicht besucht ist, blinken beide weiter"). */
+int re15_map_ziel_aktiv_n(int k, int *page, int *rect)
 {
+    int n = 0;
     for (int h = 0; h < HINT_COUNT; h++) {
         const re15_map_zone_t *zn;
         if (!hint_gezeigt(h)) continue;
         zn = ziel_zone(h);
-        if (!zn || re15_map_zone_visited(zn)) continue;   /* erreicht -> aus */
+        if (!zn) continue;
+        if (s_hints[h].erreicht_bank                      /* erreicht -> aus: eigener Latch ... */
+                ? re15_game_flag_get(s_hints[h].erreicht_bank, s_hints[h].erreicht_bit) != 0
+                : re15_map_zone_visited(zn)) continue;    /* ... sonst das Besucht-Bit der Zone */
+        if (n++ != k) continue;
         if (page) *page = (int)zn->page;
         if (rect) *rect = (int)zn->rect;
         return 1;
     }
     return 0;
+}
+
+int re15_map_ziel_aktiv(int *page, int *rect)
+{
+    return re15_map_ziel_aktiv_n(0, page, rect);
 }
 
 /* ---- Wanduhr -------------------------------------------------------------------------- */

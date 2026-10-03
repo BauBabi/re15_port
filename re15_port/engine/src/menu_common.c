@@ -74,6 +74,7 @@
 #include "re15_re2doc.h"        /* Runde 30: re15_re2doc_select — Bild-Satz des Lesers */
 #include "re15_item_prompt.h"   /* Runde 30: Glyphenzahl der Meldung "has been filed" */
 #include "re15_aot.h"           /* Runde 30: g_aot — die Aufhebe-Zone nach der Meldung aus */
+#include "re15_cut10f0.h"       /* Runde 35 Spur K: Hinweiskette + zweites Kartenziel (cut_10f0.c) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -1591,7 +1592,11 @@ static void map_mode(uint16_t pressed)
          * tab_select als Abbruch liest). KEIN Blaettern, KEIN L1, KEIN Bestaetigen; der
          * GANZE Schirm schliesst ueber close_phase, nicht ueber das Rueck-Gleiten. */
         if (g_inv_screen.hint_aktiv) {
-            if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000)) {
+            int weiter = (pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000);
+            /* Runde 35 Spur K (cut_10f0.c): zeitgesteuerte Hinweiskette — 1 = Folge-Ziel steht schon, 2 = Zeit um */
+            int kette = re15_cut10f0_hinweis_kette(&s_hint_nr, weiter);
+            if (kette == 1) return;
+            if (kette == 2 || weiter) {
                 se4(5);
                 s_phase = 2;
                 fprintf(stderr, "[hint] F%u schliessen (%s)\n", (unsigned)g_engine.frame_count,
@@ -2421,8 +2426,10 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
             g_inv_screen.ziel_page  = (uint8_t)zp;
             g_inv_screen.ziel_rect  = (uint8_t)zr;
             g_inv_screen.ziel_rot   = (uint8_t)re15_map_ziel_blink_rot();
+            re15_cut10f0_ziel2_setzen(1);   /* Runde 35 Spur K: zweites Ziel zugleich (ROOM11C0 + ROOM1150) */
         } else {
             g_inv_screen.ziel_aktiv = 0;
+            re15_cut10f0_ziel2_setzen(0);   /* Runde 35 Spur K */
         }
     }
     /* Spielermarker: im Hinweis nicht — RE2s Hinweis-Zeichner liest die Spielerlage

@@ -26,6 +26,7 @@
 #include "re15_hebetisch_cursor.h" /* Hebetisch-Cursor ROOM1150/1151 (Runde 34 Nacht B) */
 #include "re15_dokumente.h"   /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
 #include "re15_adaruf.h"      /* Runde 34 Nacht Spur D: Ada-Ruf an der Tuer ROOM1050 -> ROOM10A0 */
+#include "re15_cut10f0.h"     /* Runde 35 Spur K: Szene ROOM10F0 (Ada/Leon/Marvin) */
 
 extern scd_vm_t g_scd;
 
@@ -449,6 +450,10 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (erster Druck = Szene, danach Sperrtext) — aus demselben Grund an derselben Stelle wie
      * tuer1120: main00 @0x00B5A hat Slot 4 erst im Init-Lauf angelegt. Herleitung: re15_adaruf.h. */
     re15_adaruf_install((uint16_t)g_current_room_id);
+    /* Runde 35 Spur K: Szene beim ERSTEN Betreten von ROOM10F0 (Ada/Leon/Marvin) — NACH dem Init-Lauf
+     * (main00 hat Tueren/Plaetze angelegt, Flags gelesen); startet den Faden selbst wie ein Evt_exec aus
+     * sub00 (ROOM1050 @0x00C8A). Tut in jedem anderen Raum nichts. Herleitung: re15_cut10f0.h. */
+    re15_cut10f0_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

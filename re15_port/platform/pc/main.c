@@ -79,6 +79,7 @@ static inline int RNDI(float f) {
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_map_hint.h"    /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
+#include "re15_cut10f0.h"     /* Runde 35 Spur K: Gestenblock-Leihe ROOM10F0 <- ROOM11B0 */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
@@ -4230,6 +4231,10 @@ re_title:;
         rbj_size = rdt.animation_size;
         rbj_borrowed = 1;
     }
+    /* Runde 35 Spur K: Boot/CONTINUE in ROOM10F0 mit ausstehender Szene -> Gestenblock von ROOM11B0 leihen
+     * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+    { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
+      if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -4892,6 +4897,9 @@ re_title:;
                 fprintf(stderr, "[dokumente] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+    /* Runde 35 Spur K: Szene ROOM10F0 auch am Boot-/CONTINUE-Weg (alter Spielstand im Raum, (9,71)=0) —
+     * derselbe Grund wie die Installer darueber. Herleitung: include/re15_cut10f0.h. */
+    re15_cut10f0_install((uint16_t)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -8147,6 +8155,10 @@ re_title:;
                                 rsz  = rdt.animation_size;
                                 rbj_borrowed = 1;
                             }
+                            /* Runde 35 Spur K: ROOM10F0 ohne eigenen Block, Szene steht aus -> den von ROOM11B0
+                             * leihen (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+                            { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
+                              if (kb) { rbuf = kb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
                                 if (s_room_rbj) free(s_room_rbj);
                                 s_room_rbj = rbj_borrowed ? NULL : rbuf;

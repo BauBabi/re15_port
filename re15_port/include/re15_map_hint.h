@@ -88,6 +88,14 @@ long re15_map_hint_anchor_off(void);
  * gesetzt, bis der Status-Task startet, @0x80025BA8-E0). */
 int  re15_map_hint_pending(void);
 void re15_map_hint_take(void);
+/* Runde 35 Spur K (map_hint_common.c): Anforderung von Port-Seite (Programm ausserhalb des RDT-
+ * Puffers), Eintrag (quelle, ziel) -> Nummer oder -1, Folge-Hinweis (-1 = keiner), Zeitsteuerung
+ * (1 = schaltet nach RE15_CUT10F0_HINWEIS_PERIODEN Blinkperioden weiter bzw. schliesst). */
+void re15_map_hint_request(int nr);
+int  re15_map_hint_eintrag_fuer(unsigned quelle, unsigned ziel_raum);
+int  re15_map_hint_folge(int nr);
+int  re15_map_hint_zeitgesteuert(int nr);
+int  re15_map_hint_anzahl(void);
 
 /* Ziel des Hinweises nr: Blatt und Rechteck der HAUPTZEILE (etage == 0) des Zielraums in
  * der Zonen-Tabelle. 1 = gefunden. */
@@ -126,6 +134,8 @@ int  re15_map_blatt_waehlbar(unsigned page);
 /* 1 = ein Zielraum ist markiert (Hinweis gezeigt, Zielort noch nicht besucht); Blatt und
  * Rechteck seiner Hauptzeile. */
 int  re15_map_ziel_aktiv(int *page, int *rect);
+/* Runde 35 Spur K: das k-te markierte Ziel (0-basiert), 0 = keines mehr. */
+int  re15_map_ziel_aktiv_n(int k, int *page, int *rect);
 /* Blinker der Zielkachel in der normalen Karte: RE2s Karten-Pulszaehler (@0x8006D87C-
  * 0x8006D8D4), ein Schritt je VBlank auf der Wanduhr, OHNE Ton. rot = Richtung 0 -> CLUT
  * 502, sonst 498 (wie der Hinweis, @0x8006F514 / @0x8006F5DC). */

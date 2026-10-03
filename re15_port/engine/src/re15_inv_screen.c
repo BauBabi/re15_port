@@ -2588,8 +2588,10 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                  * solange der Zielort unbesucht ist (menu_common.c menu_task_step). Der
                  * aktuelle Raum und alle anderen Kacheln folgen unveraendert der normalen
                  * Regel. */
-                if (!st->hint_aktiv && st->ziel_aktiv &&
-                    st->map_page == st->ziel_page && i == st->ziel_rect) {
+                if (!st->hint_aktiv &&
+                    ((st->ziel_aktiv  && st->map_page == st->ziel_page  && i == st->ziel_rect) ||
+                     /* Runde 35 Spur K: zweites Ziel (ROOM11C0 + ROOM1150), gleiche Regel, gleiche Phase */
+                     (st->ziel2_aktiv && st->map_page == st->ziel2_page && i == st->ziel2_rect))) {
                     if (durchgang_r != 0) continue;
                     if (!re15_map_rect_geometry((unsigned)st->map_page, (unsigned)i,
                                                 &rx, &ry, &rw, &rh)) continue;

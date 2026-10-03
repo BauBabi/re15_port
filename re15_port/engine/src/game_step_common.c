@@ -38,6 +38,7 @@
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
+#include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1232,6 +1233,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * @0x80026404) samt seinem Riegel. Verbraucht wird die Anforderung erst, wenn das
      * Menue sie angenommen hat (s_stage == 0 && !s_alive); sonst bleibt sie stehen
      * (RE2: Bit 0x8000 bleibt bis zum Start des Status-Tasks, @0x80025BA8-E0). */
+    re15_cut10f0_tick();   /* Runde 35 Spur K: Szenen-Ende ROOM10F0 -> Kartenhinweis + MAIN01 (re15_cut10f0.h) */
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();
