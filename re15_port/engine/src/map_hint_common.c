@@ -98,10 +98,12 @@ static const re15_map_hint_eintrag_t s_hints[] = {
      * Eintrag 1: Ziel ROOM11C0 "PARKING LOT" (Zone 0), danach Eintrag 2: Ziel ROOM1150 (Zone 0);
      * "Szene gesehen" = (9,71), gesetzt als erstes Opcode des Programms. Beide blinken in der
      * normalen Karte, bis ihr Zielort besucht ist (Abschnitt 4, re15_map_ziel_aktiv_n):
-     * ROOM11C0 ueber das Besucht-Bit seiner Zone; ROOM1150 — vor der Szene laengst besucht (erste
-     * Irons-Szene (3,94)) — ueber den Latch (9,72) "ROOM1150 NACH der Szene betreten"
+     * ROOM11C0 ueber das ORIGINAL-Flag (4,64) seiner Ankunftsszene (ROOM11C0 sub02 @0x0184E
+     * `22 04 40 01`, RE15_CUT10F0_ZIEL1_ERREICHT_* — das Besucht-Bit der Zone setzte schon der
+     * Montage-Schnitt der Spur L nach ROOM11C0, Nachbesserung 1); ROOM1150 — vor der Szene laengst
+     * besucht (erste Irons-Szene (3,94)) — ueber den Latch (9,72) "ROOM1150 NACH der Szene betreten"
      * (RE15_CUT10F0_ZIEL2_BESUCHT_BANK/_BIT, gesetzt in re15_cut10f0_install). */
-    { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1, 0, 0 },
+    { 0x10F0, { 0 }, 0, 0x11C0, 0, 9, 71,  2, 1, 4, 64 },
     { 0x10F0, { 0 }, 0, 0x1150, 0, 9, 71, -1, 1, 9, 72 },
 };
 #define HINT_COUNT ((int)(sizeof s_hints / sizeof s_hints[0]))

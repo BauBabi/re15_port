@@ -741,27 +741,6 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
     pos[2] = t[2];
 }
 
-/* Runde 35 Spur K (re15_cut10f0.h): den Animationsblock (RDT @0x5C) eines ANDEREN Raums leihen —
- * ROOM10F0 hat keinen, die Szene braucht Leons und die NPC-Gestenbibliothek aus ROOM11B0. Der
- * Dateipuffer bleibt resident (static), bis der naechste Leih-Aufruf ihn ersetzt; der Aufrufer
- * behandelt den Rueckgabewert wie einen RDT-Alias (rbj_borrowed = 1, nie free). */
-static uint8_t *pc_rbj_leihen(unsigned room, int *size)
-{
-    static uint8_t  *s_leih_buf = NULL;
-    static re15_rdt_t s_leih_rdt;
-    char rel[48]; int n = 0;
-    *size = 0;
-    snprintf(rel, sizeof rel, "STAGE%u/ROOM%04X.RDT", (room >> 12) & 0xFu, room);
-    uint8_t *b = pc_read_shared(rel, &n);
-    if (!b) return NULL;
-    if (re15_rdt_parse(b, (size_t)n, &s_leih_rdt) != 0 || !s_leih_rdt.animation ||
-        s_leih_rdt.animation_size <= 0) { free(b); return NULL; }
-    free(s_leih_buf); s_leih_buf = b;
-    *size = s_leih_rdt.animation_size;
-    fprintf(stderr, "[rbj] Animationsblock von ROOM%04X geliehen (%d B, Runde 35 Spur K)\n", room, *size);
-    return (uint8_t *)s_leih_rdt.animation;
-}
-
 /* Scratch for re15_apply_room_cinematic (the shared overlay parses into this before copying
  * to the real destination). File-scope static so it's NOT a ~7 KB stack local; PC RAM is
  * unconstrained. (The PSX caller instead reuses its CD staging buffer — see asset_psx.c.) */
@@ -4252,12 +4231,10 @@ re_title:;
         rbj_size = rdt.animation_size;
         rbj_borrowed = 1;
     }
-    /* Runde 35 Spur K: Boot/CONTINUE direkt in ROOM10F0 mit ausstehender Szene (alter Spielstand) ->
-     * Gestenblock von ROOM11B0 leihen, wie im Raumwechsel-Pfad (re15_cut10f0_rbj_quelle). */
-    if (!rbj_buf && re15_cut10f0_rbj_quelle(boot_room)) {
-        rbj_buf = pc_rbj_leihen(re15_cut10f0_rbj_quelle(boot_room), &rbj_size);
-        if (rbj_buf && rbj_size > 0) rbj_borrowed = 1;
-    }
+    /* Runde 35 Spur K: Boot/CONTINUE in ROOM10F0 mit ausstehender Szene -> Gestenblock von ROOM11B0 leihen
+     * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+    { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
+      if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -4771,12 +4748,6 @@ re_title:;
          * No-op. Eingefroren von integration_weste_load_pin. */
         pc_player_model_sync_cb();                 /* @0x80039760-8c am Lade-Weg */
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
-        /* Runde 35 Spur K: im MAIN01-Fenster (Ende der ROOM10F0-Szene bis zum Parkplatz) haengt die
-         * Raummusik an Flags des Spielstands (re15_cut10f0_bgm_eintrag) — der BOOT-BGM-Aufruf oben
-         * lief VOR dem Restore und nahm die Tabelle (gemessen: entry=FF20 trotz (9,71)=1). Hier noch
-         * einmal; der Cache-Vergleich FUN_80044210 @0x80044280 macht daraus MAIN01. */
-        if (re15_cut10f0_bgm_eintrag((int)((rr >> 12) - 1), (int)((rr >> 4) & 0xff)) >= 0)
-            re15_audio_start_room_bgm((int)((rr >> 12) - 1), (int)((rr >> 4) & 0xff));
     }
 
     /* MESS-HAKEN RE15_SET_FLAG="<bank>:<bit>[,<bank>:<bit>...]" (bit dezimal oder 0x-hex) —
@@ -8183,12 +8154,10 @@ re_title:;
                                 rsz  = rdt.animation_size;
                                 rbj_borrowed = 1;
                             }
-                            /* Runde 35 Spur K: ROOM10F0 ohne eigenen Block -> den von ROOM11B0 leihen
-                             * (nur solange die Szene aussteht; re15_cut10f0_rbj_quelle). */
-                            if ((!rbuf || rsz <= 0) && re15_cut10f0_rbj_quelle(dest_room)) {
-                                rbuf = pc_rbj_leihen(re15_cut10f0_rbj_quelle(dest_room), &rsz);
-                                if (rbuf && rsz > 0) rbj_borrowed = 1;
-                            }
+                            /* Runde 35 Spur K: ROOM10F0 ohne eigenen Block, Szene steht aus -> den von ROOM11B0
+                             * leihen (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+                            { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
+                              if (kb) { rbuf = kb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
                                 if (s_room_rbj) free(s_room_rbj);
                                 s_room_rbj = rbj_borrowed ? NULL : rbuf;

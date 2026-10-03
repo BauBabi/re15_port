@@ -11,6 +11,8 @@
 
 #include "re15_actor.h"
 #include "re15_audio.h"
+#include "re15_engine.h"        /* g_engine.frame_count (Logzeile der Hinweiskette) */
+#include "re15_inv_screen.h"    /* g_inv_screen: Hinweis-/Zielfelder des Statusschirms */
 #include "re15_map_hint.h"
 #include "re15_msg.h"
 #include "re15_room.h"
@@ -22,7 +24,7 @@
 
 extern unsigned g_current_room_id;
 
-/* ---- Das Programm (1326 Bytes, 282 Opcodes) und der RE2-Tuerton ---------------------------------- */
+/* ---- Das Programm (1350 Bytes, 288 Opcodes) und der RE2-Tuerton ---------------------------------- */
 #include "gen/cut10f0_szene.inc"
 #include "gen/cut10f0_tuerton.inc"
 
@@ -218,18 +220,6 @@ static void meldungen_einsetzen(void)
     }
 }
 
-/* Die Hauptzeile (etage == 0, echtes Rechteck) einer Raum-Zone — NULL = keine. */
-static const re15_map_zone_t *hauptzone(unsigned room)
-{
-    const int n = re15_map_zone_count();
-    for (int i = 0; i < n; i++) {
-        const re15_map_zone_t *zn = re15_map_zone_by_index(i);
-        if (!zn || zn->room != room || zn->etage || zn->rect == 255) continue;
-        return zn;
-    }
-    return NULL;
-}
-
 /* ---- Installation beim Raumaufbau ---------------------------------------------------------------- */
 void re15_cut10f0_install(uint16_t room_id)
 {
@@ -270,23 +260,130 @@ const uint8_t *re15_cut10f0_ereignis(uint16_t room_id, uint8_t event_id)
     return k_cut10f0_prog;
 }
 
-/* ---- Szenen-Ende: Karte auf, MAIN01 an ----------------------------------------------------------- */
+/* ---- MAIN01 vom Ende der 1150-Montage bis zum Parkplatz ------------------------------------------ */
+/* Zwei fluechtige Zustaende (nicht im Spielstand; beide stellen sich nach dem Laden im ersten Spielbild
+ * aus den Flags wieder her):
+ *   s_bgm_offen  Das Fenster ist OFFEN. Es oeffnet erst, wenn die Flags stehen UND keine Szene laeuft
+ *                (re15_cine_active = (1,27) || (2,7), die Rahmen-Flags jeder Original-Szene) — setzt
+ *                Spur L (9,73) am ANFANG ihrer Montage, beginnt MAIN01 trotzdem erst an deren Ende.
+ *                Einmal offen bleibt es ueber spaetere Szenen hinweg offen ("durchweg").
+ *   s_bgm_stand  Die letzte Auskunft an die Audio-Schicht (1 = 0xFF01 geliefert, 0 = Tabelle). Weicht
+ *                sie vom Soll des laufenden Raums ab, stoesst der Tick die Raummusik an — das deckt das
+ *                Montage-Ende, das Laden eines Spielstands (der Boot-BGM-Aufruf laeuft vor dem Restore,
+ *                Block-memcpy @0x8002629c) und das Schliessen ausserhalb eines Raumwechsels. */
+static uint8_t s_bgm_offen = 0;
+static uint8_t s_bgm_stand = 0;
+
+static int fenster_flags(void)
+{
+    return gesehen() &&
+           re15_game_flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT) != 0 &&
+           re15_game_flag_get(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT) == 0;
+}
+
+/* Rein: der Eintrag fuer (stage, room) beim jetzigen Zustand. */
+static int weiche(int stage, int room)
+{
+    if (stage != 0) return -1;                          /* nur STAGE1 */
+    if (room == RE15_CUT10F0_BGM_RAUM_ENDE) return -1;  /* im Parkplatz selbst dessen eigene Musik */
+    if (!s_bgm_offen || !fenster_flags()) return -1;
+    return RE15_CUT10F0_BGM_EINTRAG;
+}
+
+int re15_cut10f0_bgm_eintrag(int stage, int room)
+{
+    int e = weiche(stage, room);
+    s_bgm_stand = (uint8_t)(e >= 0);                    /* die Audio-Schicht waehlt jetzt danach */
+    return e;
+}
+
+int re15_cut10f0_bgm_haelt_main(void) { return s_bgm_stand; }
+
+int re15_cut10f0_bgm_fenster(void)    { return s_bgm_offen; }
+
+static void bgm_fenster_tick(void)
+{
+    if (!fenster_flags())           s_bgm_offen = 0;
+    else if (!re15_cine_active())   s_bgm_offen = 1;    /* oeffnet erst nach dem Ende der Szene */
+    const int stage = (int)((g_current_room_id >> 12) & 0xf) - 1;
+    const int room  = (int)((g_current_room_id >> 4) & 0xff);
+    const int soll  = weiche(stage, room) >= 0;
+    if (soll == (int)s_bgm_stand) return;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[cut10f0] MAIN01-Fenster %s in ROOM%04X ((%d,%d)=%d (%d,%d)=%d (%d,%d)=%d): Raummusik neu anstossen\n",
+            soll ? "OFFEN" : "ZU", (unsigned)g_current_room_id,
+            RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, gesehen(),
+            RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT,
+            re15_game_flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT),
+            RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT,
+            re15_game_flag_get(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT));
+#endif
+    /* Beim OEFFNEN die Skript-Latches des Raums leeren (room_common.c tut das vor jedem Raumwechsel):
+     * was das Raumskript der TABELLEN-Musik mitgegeben hat (Status, Programm-Lautstaerken — ROOM1090
+     * sub00 @0x022EE `54 00 00 01 78 33`), gehoert nicht auf die MAIN01-Bank (FUN_80044da4 schreibt in
+     * die GELADENE Bank, @0x80044f50/@0x80044f6c). */
+    if (soll) re15_audio_bgm_status_reset();
+    /* Dieselbe Weiche wie beim Raumwechsel (room_common.c (15)): die Tabelle liefert jetzt MAIN01 ->
+     * MAIN wechselt -> Ausblendung + Load (audio_pc.c schreibt "[bgm] ... entry=FF01 -> MAIN01"). */
+    re15_audio_start_room_bgm(stage, room);
+    s_bgm_stand = (uint8_t)soll;                        /* auch ohne Audio-Geraet nur EIN Anstoss */
+}
+
+/* ---- Szenen-Ende: Karte auf; je Spielbild das MAIN01-Fenster ------------------------------------- */
 void re15_cut10f0_tick(void)
 {
-    if (s_zustand != RE15_CUT10F0_LAEUFT) return;
-    if (programm_laeuft()) return;
-    s_zustand = RE15_CUT10F0_FERTIG;
+    if (s_zustand == RE15_CUT10F0_LAEUFT && !programm_laeuft()) {
+        s_zustand = RE15_CUT10F0_FERTIG;
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[cut10f0] Szene zu Ende: Kartenhinweis ROOM%04X -> ROOM%04X angefordert, MAIN01 bis ROOM11C0\n",
-            RE15_CUT10F0_ZIEL1_RAUM, RE15_CUT10F0_ZIEL2_RAUM);
+        fprintf(stderr, "[cut10f0] Szene zu Ende: Kartenhinweis ROOM%04X -> ROOM%04X angefordert\n",
+                RE15_CUT10F0_ZIEL1_RAUM, RE15_CUT10F0_ZIEL2_RAUM);
 #endif
-    /* Kartenhinweis wie nach ROOM1150 sub08 (RE2 Opcode 0x84 @0x800591C4 vor dem Evt_end) — hier
-     * portseitig angefordert, weil das Programm nicht im RDT-Puffer liegt (kein Anker-Scan). */
-    re15_map_hint_request(re15_map_hint_eintrag_fuer(RE15_CUT10F0_RAUM, RE15_CUT10F0_ZIEL1_RAUM));
-    /* Raummusik neu anstossen: dieselbe Weiche wie beim Raumwechsel (room_common.c (15)), die Tabelle
-     * liefert jetzt MAIN01 (re15_cut10f0_bgm_eintrag) -> MAIN wechselt -> Ausblendung + Load
-     * (audio_pc.c schreibt dabei "[bgm] ... entry=FF01 -> MAIN01"). */
-    re15_audio_start_room_bgm((int)((RE15_CUT10F0_RAUM >> 12) - 1), (int)((RE15_CUT10F0_RAUM >> 4) & 0xff));
+        /* Kartenhinweis wie nach ROOM1150 sub08 (RE2 Opcode 0x84 @0x800591C4 vor dem Evt_end) — hier
+         * portseitig angefordert, weil das Programm nicht im RDT-Puffer liegt (kein Anker-Scan). */
+        re15_map_hint_request(re15_map_hint_eintrag_fuer(RE15_CUT10F0_RAUM, RE15_CUT10F0_ZIEL1_RAUM));
+    }
+    bgm_fenster_tick();
+}
+
+/* ---- Statusschirm: Hinweiskette und zweites Kartenziel (Haken menu_common.c) ---------------------- */
+int re15_cut10f0_hinweis_kette(int *hint_nr, int weiter)
+{
+    if (!hint_nr || !re15_map_hint_zeitgesteuert(*hint_nr)) return 0;   /* Runde-33-Hinweis: wie bisher */
+    const int zeit_um = re15_map_hint_schritte() >=
+                        (uint64_t)(RE15_CUT10F0_HINWEIS_PERIODEN * re15_map_hint_periode());
+    const int folge = re15_map_hint_folge(*hint_nr);
+    if (folge >= 0 && (weiter || zeit_um)) {
+        int page = 0, rect = 0;
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[hint] F%u Folge-Hinweis %d -> %d (%s)\n",
+                (unsigned)g_engine.frame_count, *hint_nr, folge, weiter ? "START" : "Zeit");
+#endif
+        *hint_nr = folge;
+        /* Im offenen Schirm auf das Folge-Ziel umschalten: Blatt + Rechteck neu, Zaehler neu wie beim
+         * Oeffnen (menu_common.c hint_open); die Panelfahrt steht schon in der Endlage. */
+        if (re15_map_hint_ziel(folge, &page, &rect)) {
+            g_inv_screen.map_page  = (uint8_t)page;
+            g_inv_screen.hint_page = (uint8_t)page;
+            g_inv_screen.hint_rect = (uint8_t)rect;
+            re15_map_hint_begin();
+            g_inv_screen.hint_rot  = (uint8_t)re15_map_hint_rot();
+        }
+        return 1;
+    }
+    if (!zeit_um) return 0;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[hint] F%u Zeit um (Hinweis %d, %d Blinkperioden)\n",
+            (unsigned)g_engine.frame_count, *hint_nr, RE15_CUT10F0_HINWEIS_PERIODEN);
+#endif
+    return 2;
+}
+
+void re15_cut10f0_ziel2_setzen(int karte_mit_ziel)
+{
+    int page = 0, rect = 0;
+    g_inv_screen.ziel2_aktiv = karte_mit_ziel ? (uint8_t)re15_map_ziel_aktiv_n(1, &page, &rect) : 0;
+    g_inv_screen.ziel2_page  = (uint8_t)page;
+    g_inv_screen.ziel2_rect  = (uint8_t)rect;
 }
 
 /* ---- Gestenbank-Leihe und NPC-Record-Alias ------------------------------------------------------- */
@@ -301,15 +398,4 @@ int re15_cut10f0_rbj_record_alias(int slot)
     if (g_current_room_id != RE15_CUT10F0_RAUM) return -1;
     if (slot == RE15_CUT10F0_AKTOR_MARVIN) return RE15_CUT10F0_RBJ_NPC_RECORD;
     return -1;
-}
-
-/* ---- MAIN01 bis zum Parkplatz -------------------------------------------------------------------- */
-int re15_cut10f0_bgm_eintrag(int stage, int room)
-{
-    if (stage != 0) return -1;                          /* nur STAGE1 */
-    if (room == RE15_CUT10F0_BGM_RAUM_ENDE) return -1;  /* im Parkplatz selbst dessen eigene Musik */
-    if (!gesehen()) return -1;
-    const re15_map_zone_t *zn = hauptzone(RE15_CUT10F0_ZIEL1_RAUM);
-    if (zn && re15_map_zone_visited(zn)) return -1;     /* Parkplatz erreicht -> Tabelle wieder normal */
-    return RE15_CUT10F0_BGM_EINTRAG;
 }

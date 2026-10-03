@@ -74,7 +74,7 @@
 #include "re15_re2doc.h"        /* Runde 30: re15_re2doc_select — Bild-Satz des Lesers */
 #include "re15_item_prompt.h"   /* Runde 30: Glyphenzahl der Meldung "has been filed" */
 #include "re15_aot.h"           /* Runde 30: g_aot — die Aufhebe-Zone nach der Meldung aus */
-#include "re15_cut10f0.h"       /* Runde 35 Spur K: RE15_CUT10F0_HINWEIS_PERIODEN (Hinweiskette) */
+#include "re15_cut10f0.h"       /* Runde 35 Spur K: Hinweiskette + zweites Kartenziel (cut_10f0.c) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -104,7 +104,6 @@ static uint8_t s_hint_target = 0;  /* RE2-ERGAENZUNG KARTENHINWEIS: der Task oef
                                     * direkt die Karte auf dem Zielblatt (RE2
                                     * Statusschirm-Modus 4, Init @0x8006F6A8). */
 static int     s_hint_nr = -1;     /* Hinweis-Nummer (RE2 [0x800D69F2], @0x80059210) */
-static void    hint_wechsel(void); /* Runde 35 Spur K: Folge-Ziel im offenen Hinweis-Schirm */
 
 /* ---- RUNDE 30: DOKUMENT AUFHEBEN (nach RE2; Beleg-Block bei re15_menu_request_doc) ---- */
 static uint8_t s_doc_target = 0;   /* 1 = dieser Menue-Lauf ist der Aufnahme-Leser
@@ -1594,28 +1593,14 @@ static void map_mode(uint16_t pressed)
          * GANZE Schirm schliesst ueber close_phase, nicht ueber das Rueck-Gleiten. */
         if (g_inv_screen.hint_aktiv) {
             int weiter = (pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000);
-            /* Runde 35 Spur K (re15_cut10f0.h): zeitgesteuerte Hinweiskette ROOM11C0 -> ROOM1150 —
-             * nach RE15_CUT10F0_HINWEIS_PERIODEN Blinkperioden (oder START/Abbruch) zum Folge-Ziel,
-             * das letzte Ziel schliesst nach derselben Zeit von selbst. Der Runde-33-Hinweis
-             * (nicht zeitgesteuert) bleibt wie bisher. */
-            if (re15_map_hint_zeitgesteuert(s_hint_nr)) {
-                int zeit_um = re15_map_hint_schritte() >=
-                              (uint64_t)(RE15_CUT10F0_HINWEIS_PERIODEN * re15_map_hint_periode());
-                int folge = re15_map_hint_folge(s_hint_nr);
-                if (folge >= 0 && (weiter || zeit_um)) {
-                    fprintf(stderr, "[hint] F%u Folge-Hinweis %d -> %d (%s)\n",
-                            (unsigned)g_engine.frame_count, s_hint_nr, folge, weiter ? "START" : "Zeit");
-                    s_hint_nr = folge;
-                    hint_wechsel();
-                    return;
-                }
-                if (zeit_um) weiter = 1;
-            }
-            if (weiter) {
+            /* Runde 35 Spur K (cut_10f0.c): zeitgesteuerte Hinweiskette — 1 = Folge-Ziel steht schon, 2 = Zeit um */
+            int kette = re15_cut10f0_hinweis_kette(&s_hint_nr, weiter);
+            if (kette == 1) return;
+            if (kette == 2 || weiter) {
                 se4(5);
                 s_phase = 2;
                 fprintf(stderr, "[hint] F%u schliessen (%s)\n", (unsigned)g_engine.frame_count,
-                        (pressed & RE15_PAD_BIT_START) ? "START" : "Abbruch/Zeit");
+                        (pressed & RE15_PAD_BIT_START) ? "START" : "Abbruch");
             }
             return;
         }
@@ -2320,19 +2305,6 @@ static void hint_open(void)
     g_inv_screen.hint_rot   = (uint8_t)re15_map_hint_rot();
 }
 
-/* Runde 35 Spur K: im offenen Hinweis-Schirm auf das Folge-Ziel umschalten (Blatt + Rechteck neu,
- * Zaehler neu wie beim Oeffnen; die Panelfahrt ist schon in der Endlage, nicht noch einmal). */
-static void hint_wechsel(void)
-{
-    int page = 0, rect = 0;
-    if (!re15_map_hint_ziel(s_hint_nr, &page, &rect)) return;
-    g_inv_screen.map_page   = (uint8_t)page;
-    g_inv_screen.hint_page  = (uint8_t)page;
-    g_inv_screen.hint_rect  = (uint8_t)rect;
-    re15_map_hint_begin();
-    g_inv_screen.hint_rot   = (uint8_t)re15_map_hint_rot();
-}
-
 static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
     switch (s_phase) {
@@ -2454,14 +2426,10 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
             g_inv_screen.ziel_page  = (uint8_t)zp;
             g_inv_screen.ziel_rect  = (uint8_t)zr;
             g_inv_screen.ziel_rot   = (uint8_t)re15_map_ziel_blink_rot();
-            /* Runde 35 Spur K: ein zweites Ziel zugleich (ROOM11C0 + ROOM1150), gleiche Blinkphase. */
-            { int zp2 = 0, zr2 = 0;
-              g_inv_screen.ziel2_aktiv = (uint8_t)re15_map_ziel_aktiv_n(1, &zp2, &zr2);
-              g_inv_screen.ziel2_page  = (uint8_t)zp2;
-              g_inv_screen.ziel2_rect  = (uint8_t)zr2; }
+            re15_cut10f0_ziel2_setzen(1);   /* Runde 35 Spur K: zweites Ziel zugleich (ROOM11C0 + ROOM1150) */
         } else {
             g_inv_screen.ziel_aktiv = 0;
-            g_inv_screen.ziel2_aktiv = 0;
+            re15_cut10f0_ziel2_setzen(0);   /* Runde 35 Spur K */
         }
     }
     /* Spielermarker: im Hinweis nicht — RE2s Hinweis-Zeichner liest die Spielerlage

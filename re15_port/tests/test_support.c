@@ -27,11 +27,13 @@ void re15_debug_text(int x, int y, int z, const char *text)
     (void)x; (void)y; (void)z; (void)text;
 }
 
-void re15_audio_bgm_status_reset(void) { /* No-op (kein BGM in Tests) */ }
+/* Runde 35 Spur K: Spion (unit_r35_cut10f0_bgm zaehlt den Anstoss der Raummusik); sonst No-op. */
+int g_test_bgm_reset_count = 0, g_test_bgm_start_count = 0, g_test_bgm_start_room = -1;
+void re15_audio_bgm_status_reset(void) { g_test_bgm_reset_count++; }
 
 void re15_audio_start_room_bgm(int stage, int room)
 {
-    (void)stage; (void)room;
+    (void)stage; g_test_bgm_start_room = room; g_test_bgm_start_count++;
 }
 
 void re15_audio_load_room_banks(void)

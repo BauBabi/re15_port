@@ -3571,6 +3571,15 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
                  * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
+                /* Runde 35 Spur K (re15_cut10f0.h, Nachbesserung 1): hat die Weiche MAIN01 geliefert, gilt ein
+                 * Skript-Befehl an den MAIN-Slot der (nicht geladenen) Tabellen-Musik des Raums — FUN_80044da4
+                 * op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 schriebe in dessen Bank. */
+                if (evt.bank == 0 && re15_cut10f0_bgm_haelt_main()) {
+                    if (getenv("RE15_BGM_CTL_DEBUG"))
+                        fprintf(stderr, "[bgm] Sce_bgm_control slot=0 op=%d im MAIN01-Fenster NICHT angewandt "
+                                        "(Runde 35 Spur K) capTick=%ld\n", (int)evt.volume, s_cap_ticks);
+                    break;
+                }
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

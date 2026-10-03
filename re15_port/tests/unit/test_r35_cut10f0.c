@@ -44,6 +44,7 @@
 
 void re15_actor_step_all_walkers(void);
 extern int g_test_tuer_laden_groesse, g_test_tuer_laden_count;   /* tests/test_support.c Spion */
+extern int g_test_bgm_reset_count, g_test_bgm_start_count, g_test_bgm_start_room;   /* dito: Raummusik-Anstoss */
 
 static int g_fail = 0;
 #define PRUEF(c, ...) do { if (!(c)) { printf("  FEHLER: "); printf(__VA_ARGS__); printf("\n"); g_fail++; } \
@@ -460,13 +461,19 @@ static void teil_szene(void)
     PRUEF(re15_cut10f0_zustand() == RE15_CUT10F0_FERTIG, "Zustand FERTIG");
     int k1 = re15_map_hint_eintrag_fuer(RE15_CUT10F0_RAUM, RE15_CUT10F0_ZIEL1_RAUM);
     PRUEF(k1 >= 0 && r.hint_nr == k1, "Kartenhinweis angefordert: Eintrag K1 (ROOM11C0) = %d, anstehend %d", k1, r.hint_nr);
-    PRUEF(r.bgm_vorher == -1 && r.bgm_nachher == RE15_CUT10F0_BGM_EINTRAG,
-          "BGM-Weiche: vorher -1 (Tabelle), nachher 0x%04X (MAIN01)", r.bgm_nachher);
+    /* Nachbesserung 1, Mangel 2: MAIN01 beginnt NICHT am Ende der 10F0-Szene, sondern erst nach der
+     * 1150-Montage ((9,73), Spur L) — AUFTRAG.md Z.92 steht hinter der Montage. */
+    PRUEF(r.bgm_vorher == -1 && r.bgm_nachher == -1 && !re15_cut10f0_bgm_fenster(),
+          "BGM-Weiche: vor UND nach der 10F0-Szene Tabelle (-1/%d), Fenster zu - MAIN01 erst nach der 1150-Montage",
+          r.bgm_nachher);
     /* ---- Fortsetzung (Dossier §8.2): wem Leon zugewandt ist. Zeile 7 (k=1) und 12 (k=6) zu Ada, Zeile 11
      * (k=5), 16 (k=10), 21 (k=15) und am Ende zu Marvins Standort — "Hey Marvin ... wieder arm strecken" zeigt
      * auf MARVIN, "This is... -> arm strecken Richtung Ada" auf ADA. Toleranz 160/4096 = 14 Grad. */
     {
         static const struct { int k; int zu_ada; const char *zeile; } w[] = {
+            /* Nachbesserung 1, Mangel 3: schon die ERSTE Zeile spricht Leon Ada zugewandt (vorher Gierung 2048
+             * bei Soll 2942 = 78,6 Grad vorbei). Stand = Tuer-Spawn (8400,-350). */
+            { 0, 1, "6 'Hey - how did you came in here?' (Leon an der Tuer)" },
             { 1, 1, "7 'Did you really think' (Leon bei Ada)" }, { 5, 0, "11 'Hey Marvin, glad you made it!'" },
             { 6, 1, "12 'Allow me to introduce you. This is...'" }, { 10, 0, "16 'Anyway... looks like'" },
             { 13, 0, "19 'I know! The patrol car!'" }, { 15, 0, "21 'Okay, Marvin, you go with Ada'" },
@@ -481,6 +488,8 @@ static void teil_szene(void)
                   "Zeile %s: Leon blickt zu %s (Gierung %d, Soll %d)", w[i].zeile, w[i].zu_ada ? "Ada" : "Marvin",
                   r.leon_rot_msg[k], soll);
         }
+        PRUEF(r.leon_x_msg[0] == RE15_CUT10F0_SPAWN_X && r.leon_z_msg[0] == RE15_CUT10F0_SPAWN_Z,
+              "Zeile 6: Leon steht dabei noch am Tuer-Spawn (%d,%d)", r.leon_x_msg[0], r.leon_z_msg[0]);
         /* Marvin steht dabei wirklich dort, wohin Leon sich dreht */
         PRUEF(abs(r.mv_x_msg[5] - RE15_CUT10F0_MARVIN_X) < 200 && abs(r.mv_z_msg[5] - RE15_CUT10F0_MARVIN_Z) < 300,
               "Marvin steht bei Zeile 11 an seinem Platz (%d,%d)", r.mv_x_msg[5], r.mv_z_msg[5]);
@@ -565,8 +574,13 @@ static void teil_karte(void)
     re15_cut10f0_install(0x1150);
     a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); a1 = re15_map_ziel_aktiv_n(1, &zp, &zr);
     PRUEF(a0 && zp == 0 && !a1, "ROOM1150 nach der Szene betreten -> nur noch ROOM11C0 blinkt (Blatt 0)");
+    /* Nachbesserung 1: "Parkplatz erreicht" = ORIGINAL-Flag (4,64) der Ankunftsszene (ROOM11C0 sub02 @0x0184E),
+     * NICHT das Besucht-Bit der Zone — das setzt jeder Raumaufbau, auch der Montage-Schnitt der Spur L. */
     re15_map_zone_update(0x11C0, -10000, 0);
-    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "ROOM11C0 besucht -> kein Ziel mehr");
+    PRUEF(re15_map_ziel_aktiv_n(0, &zp, &zr) && zp == 0 && zr == 4,
+          "Raumaufbau ROOM11C0 allein (Montage-Schnitt, Zone besucht): die Kachel blinkt weiter");
+    re15_game_flag_set(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT, 1);
+    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "Ankunftsszene ROOM11C0 gestartet ((4,64)=1) -> kein Ziel mehr");
 
     /* ---- WIE IM ECHTEN SPIEL (Fortsetzung, Dossier §8.1): ROOM1150 ist VOR der 10F0-Szene laengst besucht
      * (erste Irons-Szene (3,94), deren Hinweis erst nach ROOM10F0 schickt). "So lange der Raum nicht besucht
@@ -593,26 +607,116 @@ static void teil_karte(void)
     a0 = re15_map_ziel_aktiv_n(0, &zp, &zr); a1 = re15_map_ziel_aktiv_n(1, &zp, &zr);
     PRUEF(re15_game_flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT) == 1 && a0 && zp == 0 && !a1,
           "echter Weg: Betreten von ROOM1150 nach der Szene setzt (9,72) -> nur noch ROOM11C0 blinkt");
-    re15_map_zone_update(0x11C0, -10000, 0);
-    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "echter Weg: ROOM11C0 besucht -> kein Ziel mehr");
+    re15_game_flag_set(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT, 1);
+    PRUEF(!re15_map_ziel_aktiv_n(0, &zp, &zr), "echter Weg: Parkplatz erreicht ((4,64)=1) -> kein Ziel mehr");
+}
+
+/* MAIN01-Fenster (Nachbesserung 1, Dossier §9). Beginn: (9,71) UND (9,73) und erst, wenn keine Szene mehr laeuft
+ * (Mangel 2); der Tick stoesst die Raummusik selbst an (Montage-Ende, Laden). Ende: (4,64), das Flag der
+ * Ankunftsszene ROOM11C0 sub02 @0x0184E. Solange die Audio-Schicht MAIN01 bekommen hat, gelten Skript-Befehle an
+ * den MAIN-Slot nicht (Mangel 1). Der Spion in tests/test_support.c zaehlt re15_audio_start_room_bgm. */
+static void szenenrahmen(int an) { re15_game_flag_set(2, 7, (uint8_t)an); re15_game_flag_set(1, 27, (uint8_t)an); }
+static void ticks(int n) { for (int i = 0; i < n; i++) re15_cut10f0_tick(); }
+static int weg_main01(void)
+{
+    /* jeder STAGE1-Raum des Wegs, auch der Zwinger 0x1D (Tabelle 0xFF7B) und der Hinterhof 0x09 (0x0355) */
+    static const int raeume[] = { 0x0F, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x15, 0x04, 0x06, 0x03, 0x09, 0x16, 0x18, 0x1D,
+                                  0x1B, 0x1F };
+    for (unsigned i = 0; i < sizeof raeume / sizeof raeume[0]; i++)
+        if (re15_cut10f0_bgm_eintrag(0, raeume[i]) != RE15_CUT10F0_BGM_EINTRAG) return 0;
+    return 1;
 }
 
 static void teil_bgm(void)
 {
     re15_game_state_init();
-    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x0F) == -1 && re15_cut10f0_bgm_eintrag(0, 0x15) == -1,
+    re15_map_visited_reset();
+    g_current_room_id = 0x1150;
+    (void)re15_cut10f0_bgm_eintrag(0, 0x15);                 /* die Audio-Schicht fragt beim Raumaufbau */
+    ticks(2);
+    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x0F) == -1 && re15_cut10f0_bgm_eintrag(0, 0x15) == -1 && !re15_cut10f0_bgm_fenster(),
           "vor der Szene: Tabelle (-1) fuer 10F0 und 1150");
+
+    /* ---- Mangel 2: die 10F0-Szene allein oeffnet das Fenster NICHT ---- */
     re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
-    int ok = 1;
-    static const int raeume[] = { 0x0F, 0x0D, 0x10, 0x11, 0x12, 0x13, 0x15, 0x04, 0x06, 0x03, 0x1B, 0x1F };
-    for (unsigned i = 0; i < sizeof raeume / sizeof raeume[0]; i++)
-        if (re15_cut10f0_bgm_eintrag(0, raeume[i]) != RE15_CUT10F0_BGM_EINTRAG) ok = 0;
-    PRUEF(ok, "nach der Szene: 0xFF01 (MAIN01, kein SUB, kein Manuell-Start-Flag) in jedem STAGE1-Raum des Wegs");
-    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x1C) == -1, "im Parkplatz ROOM11C0 (Raum-Byte 0x1C) selbst: eigene Musik");
+    g_test_bgm_start_count = 0; g_test_bgm_reset_count = 0;
+    ticks(3);
+    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x15) == -1 && re15_cut10f0_bgm_eintrag(0, 0x0F) == -1 &&
+          !re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 0,
+          "nach der 10F0-Szene allein ((9,71)=1, (9,73)=0): weiter Tabelle - der Weg zu Irons laeuft ohne MAIN01");
+
+    /* ---- die 1150-Montage laeuft: (9,73) steht schon, die Rahmen-Flags (2,7)/(1,27) auch ---- */
+    szenenrahmen(1);
+    re15_game_flag_set(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, 1);
+    ticks(5);
+    PRUEF(!re15_cut10f0_bgm_fenster() && re15_cut10f0_bgm_eintrag(0, 0x15) == -1 &&
+          re15_cut10f0_bgm_eintrag(0, 0x13) == -1 && g_test_bgm_start_count == 0,
+          "waehrend der Montage ((9,73)=1, Szene laeuft): kein MAIN01, auch nicht bei einem Raumaufbau, kein Anstoss");
+
+    /* ---- Montage-Ende: Fenster auf, EIN Anstoss fuer den laufenden Raum ---- */
+    szenenrahmen(0);
+    ticks(1);
+    PRUEF(re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 1 && g_test_bgm_start_room == 0x15 &&
+          g_test_bgm_reset_count == 1,
+          "Montage-Ende: Fenster offen, Raummusik EINMAL angestossen (Raum 0x%02X, %dx), Skript-Latches geleert (%dx)",
+          g_test_bgm_start_room, g_test_bgm_start_count, g_test_bgm_reset_count);
+    ticks(5);
+    PRUEF(g_test_bgm_start_count == 1, "danach kein weiterer Anstoss (%dx)", g_test_bgm_start_count);
+    PRUEF(weg_main01(), "Fenster offen: 0xFF01 (MAIN01, kein SUB, kein Handstart-Flag) in jedem STAGE1-Raum des Wegs");
     PRUEF(re15_cut10f0_bgm_eintrag(1, 0x0F) == -1 && re15_cut10f0_bgm_eintrag(2, 0x00) == -1, "andere Stages: Tabelle");
+
+    /* ---- Mangel 1: die Auskunft an die Audio-Schicht sperrt Skript-Befehle an den MAIN-Slot ---- */
+    (void)re15_cut10f0_bgm_eintrag(0, 0x1D);                 /* Raumaufbau Zwinger ROOM11D0 */
+    PRUEF(re15_cut10f0_bgm_haelt_main() == 1,
+          "Zwinger ROOM11D0 im Fenster: MAIN gehalten - Sce_bgm_control Slot 0 (sub01 @0x01710 op 2) gilt nicht");
+    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x1C) == -1 && re15_cut10f0_bgm_haelt_main() == 0,
+          "im Parkplatz ROOM11C0 (Raum-Byte 0x1C): eigene Musik, Skript-Befehle gelten wieder");
+    (void)re15_cut10f0_bgm_eintrag(0, 0x15);                 /* zurueck: die Audio-Schicht hat wieder MAIN01 */
+
+    /* ---- "durchweg": eine spaetere Szene im Fenster schliesst es nicht ---- */
+    szenenrahmen(1);
+    ticks(3);
+    PRUEF(re15_cut10f0_bgm_fenster() && re15_cut10f0_bgm_eintrag(0, 0x1B) == RE15_CUT10F0_BGM_EINTRAG,
+          "eine spaetere Szene im Fenster: MAIN01 bleibt");
+    szenenrahmen(0);
+
+    /* ---- der Montage-Schnitt nach ROOM11C0 setzt das Besucht-Bit der Zone: das beendet NICHTS ---- */
     re15_map_zone_update(0x11C0, -10000, 0);
-    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x0F) == -1 && re15_cut10f0_bgm_eintrag(0, 0x1B) == -1,
-          "Parkplatz besucht -> Tabelle wieder normal");
+    (void)re15_cut10f0_bgm_eintrag(0, 0x15);
+    ticks(2);
+    PRUEF(re15_cut10f0_bgm_fenster() && re15_cut10f0_bgm_eintrag(0, 0x1B) == RE15_CUT10F0_BGM_EINTRAG,
+          "Besucht-Bit der Zone ROOM11C0 (Raumaufbau ohne Leon) beendet das Fenster nicht");
+
+    /* ---- Leon erreicht den Parkplatz: die Ankunftsszene setzt (4,64) ---- */
+    g_current_room_id = 0x11C0;
+    (void)re15_cut10f0_bgm_eintrag(0, 0x1C);                 /* Tuer 11B0 -> 11C0: Tabelle (0xFF56) */
+    re15_game_flag_set(RE15_CUT10F0_ZIEL1_ERREICHT_BANK, RE15_CUT10F0_ZIEL1_ERREICHT_BIT, 1);
+    g_test_bgm_start_count = 0;
+    ticks(3);
+    PRUEF(!re15_cut10f0_bgm_fenster() && re15_cut10f0_bgm_eintrag(0, 0x1B) == -1 &&
+          re15_cut10f0_bgm_eintrag(0, 0x0F) == -1,
+          "Parkplatz erreicht ((4,64)=1): Fenster zu, Tabelle wieder normal");
+
+    /* ---- LADEN im Fenster: der Boot-BGM-Aufruf laeuft VOR dem Restore (Tabelle), der Tick zieht nach ---- */
+    re15_game_state_init();
+    g_current_room_id = RE15_CUT10F0_RAUM;
+    PRUEF(re15_cut10f0_bgm_eintrag(0, 0x0F) == -1, "Boot-BGM vor dem Restore: Tabelle");
+    re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);       /* Restore */
+    re15_game_flag_set(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, 1);
+    g_test_bgm_start_count = 0;
+    ticks(1);
+    PRUEF(re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 1 && g_test_bgm_start_room == 0x0F &&
+          re15_cut10f0_bgm_eintrag(0, 0x0F) == RE15_CUT10F0_BGM_EINTRAG,
+          "nach dem Laden im Fenster: das erste Spielbild stoesst die Raummusik an (Raum 0x%02X, %dx)",
+          g_test_bgm_start_room, g_test_bgm_start_count);
+
+    /* ---- LADEN eines Stands AUSSERHALB des Fensters, waehrend die Audio-Schicht noch MAIN01 hat ---- */
+    re15_game_state_init();                                   /* Flags weg, fluechtiger Zustand steht noch */
+    g_test_bgm_start_count = 0;
+    ticks(1);
+    PRUEF(!re15_cut10f0_bgm_fenster() && g_test_bgm_start_count == 1 && re15_cut10f0_bgm_haelt_main() == 0,
+          "Stand ausserhalb des Fensters geladen: Fenster zu, Raummusik zurueck auf die Tabelle angestossen (%dx)",
+          g_test_bgm_start_count);
 }
 
 int main(int argc, char **argv)

@@ -29,12 +29,17 @@
  *   Ereignis-Slot (wie ROOM1050 sub03, das sub00 beim Raumstart per Evt_exec startet, @0x00C8A).
  *   Das Programm setzt (9,71) als ERSTES Opcode (Einmal-Riegel wie ROOM11B0 sub06 @0x01478).
  *   Ist der Faden zu Ende (re15_cut10f0_tick, game_step_common.c), fordert der Port den Kartenhinweis
- *   an (map_hint_common.c, Eintraege K1 = ROOM11C0, K2 = ROOM1150, Folge per Zeit/START) und startet die
- *   Raummusik neu — die Tabellenweiche (re15_cut10f0_bgm_eintrag) liefert ab jetzt MAIN01, bis ROOM11C0
- *   besucht ist. Nach dem LADEN eines Spielstands in diesem Fenster stoesst platform/pc/main.c die
- *   Raummusik nach dem Restore noch einmal an (der Boot-BGM-Aufruf laeuft vor dem Restore).
+ *   an (map_hint_common.c, Eintraege K1 = ROOM11C0, K2 = ROOM1150, Folge per Zeit/START).
  *   Betritt Leon danach ROOM1150, setzt re15_cut10f0_install den Latch (9,72): die zweite Kartenmarke
- *   (ROOM1150) hoert auf zu blinken; die erste (ROOM11C0) haengt am Besucht-Bit ihrer Zone.
+ *   (ROOM1150) hoert auf zu blinken; die erste (ROOM11C0) haengt an (4,64), dem Flag der Ankunftsszene
+ *   des Parkplatzes (ROOM11C0 sub02 @0x0184E).
+ *   MAIN01 (Nachbesserung 1, Dossier §9): das Fenster oeffnet, sobald (9,71) UND (9,73) "Irons-
+ *   Todesszene gesehen" (Spur L) stehen und keine Szene mehr laeuft — also am Ende der 1150-Montage
+ *   ("Bis Leon DANN den Parking Lot erreicht hat", AUFTRAG.md Z.92 hinter der Montage). Der Tick stoesst
+ *   die Raummusik dann selbst an (auch nach dem Laden eines Spielstands); die Tabellenweiche
+ *   (re15_cut10f0_bgm_eintrag) liefert MAIN01, bis (4,64) steht. Solange die Weiche MAIN01 geliefert
+ *   hat, gelten Sce_bgm_control-Befehle der Raumskripte an den MAIN-Slot nicht (sie meinen die
+ *   Tabellen-Musik des Raums, re15_cut10f0_bgm_haelt_main) — "durchweg".
  *
  * CHOREOGRAFIE (Fortsetzung, Dossier §8): jede Dialogzeile laeuft im Takt der Original-Dialoge
  * Sleep 40 + 50 + 20 = 110 Bilder (ROOM11B0 sub06 @0x014FA/@0x01502/@0x0150A); Leon dreht sich per
@@ -138,22 +143,37 @@
  * also schon und die Kachel blinkte nie (gemessen, Dossier §8.1). Der Nutzer-Satz "So lange der Raum nicht
  * besucht ist, blinken beide weiter" meint den Besuch NACH der Szene: gesetzt beim Raumaufbau von ROOM1150
  * mit (9,71)=1 (re15_cut10f0_install). VERTRAG Runde 35 §1.1: Bit 72 = Reserve der Spur K (Zensus alle
- * 240 RDTs + Port: kein Ck/Set (9,72), Dossier §8.1). ROOM11C0 behaelt das Besucht-Bit seiner Zone
- * (vor der Szene nur mit Strom (4,243) erreichbar, ROOM11B0 sub01 @0x011F6/@0x01216). */
+ * 240 RDTs + Port: kein Ck/Set (9,72), Dossier §8.1). */
 #define RE15_CUT10F0_ZIEL2_BESUCHT_BANK 9
 #define RE15_CUT10F0_ZIEL2_BESUCHT_BIT  72
 
+/* "Parkplatz erreicht" — ORIGINAL-Flag (4,64), nur GELESEN (VERTRAG §1.1 "Vorhandene Original-Flags duerfen
+ * gelesen werden"): die Ankunftsszene des Parkplatzes setzt es als ERSTES Opcode, ROOM11C0 sub02 @0x0184E
+ * `22 04 40 01`; gestartet wird sie von sub01 in jedem Spielbild, solange es 0 ist (@0x01820 `21 04 40 00`,
+ * @0x01824 `04 0a 18 02`); sub00 @0x0176C waehlt damit den Spawn. Zensus 240 RDTs: sonst kein Ck/Set (4,64),
+ * kein Port-Nutzer. Es beendet das Blinken der Kachel ROOM11C0 (map_hint_common.c Eintrag K1) und das
+ * MAIN01-Fenster. Nachbesserung 1: vorher das Besucht-Bit der ZONE — das setzt aber JEDER Raumaufbau
+ * (scd_room_setup.c: re15_map_zone_update nach main00/sub00), also auch der Schnitt der 1150-Montage nach
+ * ROOM11C0 Cut 13 (Spur L), bei dem Leon gar nicht dort ist (K_abnahme_0.md §9). */
+#define RE15_CUT10F0_ZIEL1_ERREICHT_BANK 4
+#define RE15_CUT10F0_ZIEL1_ERREICHT_BIT  64
+
 /* MAIN01 bis zum Parkplatz: Tabellen-Eintrag wie UNK_80074828 (FUN_800443ec: low = MAIN, high = SUB,
  * 0xff = kein SUB; MAIN01 = Slot 1, ROOM1030 traegt ihn @0x8007482e als 0x4041 mit Manuell-Start-Flag
- * 0x40 — hier OHNE Flag, damit er von selbst laeuft (FUN_800444b0 spielt nur Flag == 0)). Gilt fuer STAGE1
- * ab (9,71)=1, bis die Zone von ROOM11C0 besucht ist; in ROOM11C0 selbst (Raum-Byte 0x1C) nie. */
+ * 0x40 — hier OHNE Flag, damit er von selbst laeuft (FUN_800444b0 spielt nur Flag == 0, @0x800444c8)).
+ * Gilt fuer STAGE1, in ROOM11C0 selbst (Raum-Byte 0x1C) nie.
+ * BEGINN (Nachbesserung 1, Mangel 2): (9,71) UND (9,73) — Bit 73 = "Irons-Todesszene gesehen", gesetzt von
+ * Spur L (VERTRAG §1.1, hier nur GELESEN) — und keine laufende Szene (re15_cine_active: (1,27) || (2,7));
+ * der Nutzer-Satz steht HINTER der 1150-Montage (AUFTRAG.md Z.92). ENDE: (4,64) (oben). */
 #define RE15_CUT10F0_BGM_EINTRAG     0xFF01
 #define RE15_CUT10F0_BGM_RAUM_ENDE   0x1C
+#define RE15_CUT10F0_BGM_START_BANK  9
+#define RE15_CUT10F0_BGM_START_BIT   73
 
 /* Zustand (Pruefhaken). */
 #define RE15_CUT10F0_AUS             0    /* nicht ROOM10F0 oder Szene schon gesehen           */
 #define RE15_CUT10F0_LAEUFT          1    /* Faden gestartet                                   */
-#define RE15_CUT10F0_FERTIG          2    /* Faden zu Ende: Hinweis angefordert, MAIN01 laeuft */
+#define RE15_CUT10F0_FERTIG          2    /* Faden zu Ende: Hinweis angefordert                */
 
 /* HAKEN scd_room_setup.c (nach dem Init-Lauf von main00, Ende des Installer-Blocks) und platform/pc/main.c
  * (Boot-/CONTINUE-Weg). Laeuft fuer JEDEN Raum: ROOM10F0 -> Szene starten; ROOM1150 mit (9,71)=1 -> Latch
@@ -161,19 +181,33 @@
 void re15_cut10f0_install(uint16_t room_id);
 /* HAKEN scd_vm.c scd_event_fire: das Port-Programm fuer (ROOM10F0, Ereignis 20), sonst NULL. */
 const uint8_t *re15_cut10f0_ereignis(uint16_t room_id, uint8_t event_id);
-/* HAKEN game_step_common.c (einmal je Spielbild): Szenen-Ende -> Kartenhinweis + MAIN01. */
+/* HAKEN game_step_common.c (einmal je Spielbild): Szenen-Ende -> Kartenhinweis; MAIN01-Fenster oeffnen/
+ * schliessen und die Raummusik anstossen, wenn die letzte Auskunft an die Audio-Schicht nicht mehr gilt. */
 void re15_cut10f0_tick(void);
-/* HAKEN platform/pc/main.c (Raumwechsel ohne eigenen Animationsblock): Raum, dessen RDT-Block zu leihen
- * ist (0x11B0), sonst 0. */
+/* HAKEN platform/pc/main.c (Raumaufbau ohne eigenen Animationsblock): Raum, dessen RDT-Block zu leihen
+ * ist (0x11B0), sonst 0. Die Leihe selbst: platform/pc/src/cut10f0_pc.c re15_cut10f0_pc_rbj_leihen —
+ * Zeiger auf den geliehenen Block (resident, nie free) oder NULL, *size gesetzt. */
 unsigned re15_cut10f0_rbj_quelle(unsigned room_id);
+uint8_t *re15_cut10f0_pc_rbj_leihen(unsigned room_id, int *size);
 /* HAKEN enemy_common.c rbj_resolve_slot: Record fuer einen Aktor-Slot ohne Marker-Bit (Aktor 2 -> 1), sonst -1. */
 int re15_cut10f0_rbj_record_alias(int slot);
-/* HAKEN audio_pc.c ss_bgm_entry: erzwungener Tabellen-Eintrag (0xFF01 = MAIN01) oder -1.
- * HAKEN platform/pc/main.c (CONTINUE, nach dem Restore): >= 0 -> Raummusik noch einmal anstossen. */
+/* HAKEN audio_pc.c ss_bgm_entry: erzwungener Tabellen-Eintrag (0xFF01 = MAIN01) oder -1. Merkt sich die
+ * Auskunft (die Audio-Schicht waehlt danach). */
 int re15_cut10f0_bgm_eintrag(int stage, int room);
+/* HAKEN audio_pc.c (SCD_AUDIO_SEQ_CTL, Slot 0): 1 = die Weiche hat der Audio-Schicht MAIN01 geliefert —
+ * Sce_bgm_control des Raumskripts an den MAIN-Slot gilt der Tabellen-Musik und wird nicht angewandt. */
+int re15_cut10f0_bgm_haelt_main(void);
+/* HAKEN menu_common.c map_mode (offener Hinweis-Schirm, je Menue-Schritt): zeitgesteuerte Hinweiskette.
+ * weiter = START/Abbruch gedrueckt. 0 = nichts; 1 = *hint_nr ist jetzt der Folge-Hinweis, der Schirm zeigt
+ * ihn schon; 2 = Zeit um (letztes Ziel) -> der Aufrufer schliesst wie bei START. */
+int re15_cut10f0_hinweis_kette(int *hint_nr, int weiter);
+/* HAKEN menu_common.c menu_task_step: zweites Kartenziel der normalen Karte (g_inv_screen.ziel2_*);
+ * karte_mit_ziel = 0 loescht es. */
+void re15_cut10f0_ziel2_setzen(int karte_mit_ziel);
 
 /* Pruefhaken (kein Spielverhalten). */
 int            re15_cut10f0_zustand(void);
+int            re15_cut10f0_bgm_fenster(void);             /* 1 = MAIN01-Fenster offen */
 const uint8_t *re15_cut10f0_programm(int *out_len);
 const uint8_t *re15_cut10f0_meldung(int msg_id, int *out_len);
 int            re15_cut10f0_msg_offset(int msg_id);        /* Offset des Message_on im Programm, -1 */

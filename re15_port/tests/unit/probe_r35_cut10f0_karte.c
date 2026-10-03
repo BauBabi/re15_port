@@ -27,7 +27,17 @@
  *   in1150    Stand in ROOM1150 mit (3,94)=1 (erste Irons-Szene gesehen, main00 @0x00DE6) — der Raumaufbau am
  *             Lade-Weg setzt mit (9,71)=1 den Latch (9,72). Mit "gesehen" kombinieren.
  *
- * Aufruf: probe_r35_cut10f0_karte <kartendatei> [gesehen] [in10f0|raus|vor11c0|in1150]
+ * Nachbesserung 1 (Dossier §9):
+ *   montage   (9,73) = 1  "Irons-Todesszene gesehen" (VERTRAG §1.1 Spur L) — mit "gesehen" ist damit das
+ *             MAIN01-Fenster offen (re15_cut10f0.h RE15_CUT10F0_BGM_START_*).
+ *   in11d0    Stand im Zwinger ROOM11D0 am Tuer-Spawn von ROOM1180 her (ROOM1180 main00 @0x00A12 Door_aot_set,
+ *             Bytes 14..21 `d4 fe 00 00 08 bc 00 04` = (-300, 0, -17400)), Blick zur Tuer zurueck (Gierung 3072 =
+ *             +Z; Vorwaerts-620-Punkt (-300,-16780) im Rechteck Slot 0 @0x011E2 (-1300,-17000,2000,1000), Ziel-
+ *             Byte 0x18 solange (4,243)=0, main00 @0x011DE). Die fuenf Gegner des Raums tot: (7,209) (7,210)
+ *             (7,221) (7,44) (7,45) = 1 -> sub01 @0x016E4-@0x0170C schickt im ersten Spielbild
+ *             @0x01710 `54 00 02 00 00 00` (Sce_bgm_control Slot 0 op 2 = Stop). Mit "gesehen montage".
+ *
+ * Aufruf: probe_r35_cut10f0_karte <kartendatei> [gesehen] [montage] [in10f0|raus|vor11c0|in1150|in11d0]
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -43,19 +53,22 @@
 int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
-    int gesehen = 0, in10f0 = 0, raus = 0, vor11c0 = 0, in1150 = 0;
+    int gesehen = 0, in10f0 = 0, raus = 0, vor11c0 = 0, in1150 = 0, montage = 0, in11d0 = 0;
     for (int a = 2; a < argc; a++) {
         if (strcmp(argv[a], "gesehen") == 0)     gesehen = 1;
         else if (strcmp(argv[a], "in10f0") == 0) in10f0 = 1;   /* Stand IM Raum (alter Spielstand, Szene steht aus) */
         else if (strcmp(argv[a], "raus") == 0)    raus = 1;     /* IM Raum, Blick zur Tuer nach ROOM10D0 */
         else if (strcmp(argv[a], "vor11c0") == 0) vor11c0 = 1;  /* ROOM11B0 vor der Tuer zum Parkplatz */
         else if (strcmp(argv[a], "in1150") == 0)  in1150 = 1;   /* ROOM1150, erste Irons-Szene gesehen */
+        else if (strcmp(argv[a], "montage") == 0) montage = 1;  /* (9,73) Irons-Todesszene gesehen (Spur L) */
+        else if (strcmp(argv[a], "in11d0") == 0)  in11d0 = 1;   /* Zwinger ROOM11D0, alle fuenf Gegner tot */
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     scd_vm_init();
     re15_actor_init();
     re15_aot_init();
-    const unsigned raum = (in10f0 || raus) ? RE15_CUT10F0_RAUM : vor11c0 ? 0x11B0u : in1150 ? 0x1150u : 0x10D0u;
+    const unsigned raum = (in10f0 || raus) ? RE15_CUT10F0_RAUM : vor11c0 ? 0x11B0u : in1150 ? 0x1150u
+                        : in11d0 ? 0x11D0u : 0x10D0u;
     g_current_room_id = raum;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
@@ -63,12 +76,18 @@ int main(int argc, char **argv)
     else if (in10f0)  { pl->x = RE15_CUT10F0_SPAWN_X; pl->y = 0; pl->z = RE15_CUT10F0_SPAWN_Z; pl->rot_y = RE15_CUT10F0_SPAWN_DIR; }
     else if (vor11c0) { pl->x = -25480; pl->y = 0; pl->z = -26100; pl->rot_y = 1024; }
     else if (in1150)  { pl->x = -21000; pl->y = 0; pl->z = -20000; pl->rot_y = 0; }
+    else if (in11d0)  { pl->x = -300; pl->y = 0; pl->z = -17400; pl->rot_y = 3072; }
     else              { pl->x = 1900; pl->y = 0; pl->z = -7000; pl->rot_y = 2048; }
     re15_game_flag_set(3, 50, 1);
     re15_game_flag_set(4, 247, 1);
     if (vor11c0) { re15_game_flag_set(4, 243, 1); re15_game_flag_set(3, 130, 1); }
     if (in1150)  re15_game_flag_set(3, 94, 1);
     if (gesehen) re15_game_flag_set(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT, 1);
+    if (montage) re15_game_flag_set(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT, 1);
+    if (in11d0) {
+        static const uint8_t tot[] = { 209, 210, 221, 44, 45 };       /* ROOM11D0 sub01 @0x016E4..@0x01704 */
+        for (unsigned i = 0; i < sizeof tot; i++) re15_game_flag_set(7, tot[i], 1);
+    }
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);

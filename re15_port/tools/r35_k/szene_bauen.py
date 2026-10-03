@@ -27,6 +27,9 @@ Choreografie = NUTZER-VORGABE / PORT-WAHL (include/re15_cut10f0.h), die FORM der
                           @0x0166E..@0x01686); kuerzeste Original-Zeile 90 (msg 4 @0x01574, Sleep 40 @0x01580 + 50
                           @0x0158C). Zeilen mit nur EINER Geste halten sie ueber Sleep 40 + Sleep 50 (Geste B entfaellt).
   Plc_neck Modus 1        ROOM11C0 sub02 @0x01886 `41 01 fb dc 00 00 f5 c7 64 00` (Weltpunkt, Tempo 0x64)
+  Blick+Drehung VOR der Zeile  ROOM11C0 sub02 @0x01886 (Plc_neck 1), @0x01890 `40 00 09 00 fb dc f5 c7` + `18 05`,
+                          `29 0d` Cut_chg, @0x0189C `09 0a 14 00` Sleep 20, @0x018A0 `2b 00 00 00` + `3f 00 0f 00` -
+                          so jetzt auch Leons erste Zeile (Nachbesserung 1, Mangel 3)
   Plc_neck Kopf gesenkt + Schuetteln  ROOM11B0 sub06 @0x0154E `41 02 00 00 00 00 2c 01 00 0a` Sleep 30
                           @0x0155C `41 04 03 00 00 00 00 00 64 00` Sleep 60 (ebenso ROOM10D0 sub21 @0x01BB4/@0x01BC2
                           fuer Leon und @0x01BEE/@0x01BFC fuer MARVIN, ROOM1170 @0x01766/@0x01774)
@@ -134,18 +137,24 @@ ADA(); stand("Ada: Plc_dest Modus 6 (stehen)")
 work_player()
 stand("Leon: Plc_dest Modus 6 (stehen, Tuer-Eintrittspose beenden)")
 cut_chg(2, "Cut_chg 2  'Zuerst Kamera auf CUT2 - Ada'")
+# Nachbesserung 1 (Abnahme 0, Mangel 3): Leon sieht Ada an und dreht sich zu ihr, BEVOR er sie anspricht - Form und
+# Reihenfolge von ROOM11C0 sub02: @0x01886 Plc_neck Modus 1, @0x01890 Plc_dest Modus 9 + Warteschleife, `29 0d`
+# Cut_chg, `09 0a 14 00` Sleep 20, @0x018A0 Message_on + Clip 15. Vorher zeigte der Arm bei Gierung 2048 an Ada
+# (Soll 2942) vorbei auf die Westwand (state.log F76-F166, K_abnahme_0.md Mangel 3).
+work_player(); neck_pt(ADA_X, ADA_Z, "Leon: Kopf zu Ada (Blick VOR der Zeile, ROOM11C0 sub02 @0x01886)")
+dest(9, BIT_LEON, ADA_X, ADA_Z, "Leon: Plc_dest Modus 9 -> zu Ada drehen (ROOM11C0 sub02 @0x01890)")
+wait(BIT_LEON, "Leon zu Ada gedreht")
 sleep(50)
 cut_chg(0, "Cut_chg 0  'Dann Kamera auf CUT0 - Leon'")
-sleep(20)
-# Leon: "Hey - how did you came in here?"  Arm strecken = Clip 15
-zeile(MSG["hey"], "Leon", [(15, "Arm strecken (Hey!-Griff nach vorn)")], LEON, "Leon: Hey - how did you came in here?")
+sleep(20, "Sleep 20  (ROOM11C0 sub02 @0x0189C `09 0a 14 00` vor der Zeile)")
+# Leon: "Hey - how did you came in here?"  Arm strecken = Clip 15, jetzt auf Ada gerichtet
+zeile(MSG["hey"], "Leon", [(15, "Arm strecken (Hey!-Griff nach vorn, zu Ada)")], LEON, "Leon: Hey - how did you came in here?")
 # Ada dreht sich zu Leon um
 ADA(); neck_pt(SPAWN_X, SPAWN_Z, "Ada: Kopf zu Leon an der Tuer")
 dest(9, BIT_ADA, SPAWN_X, SPAWN_Z, "Ada: Plc_dest Modus 9 -> zu Leon drehen")
 wait(BIT_ADA, "Ada gedreht")
 # Leon laeuft zu ihr, Kamera folgt per RVD (Cut 0 -> 1 -> 2)
 work_player()
-neck_pt(ADA_X, ADA_Z, "Leon: Kopf zu Ada")
 cut_auto(1, "Cut_auto 1  Kamera wechselt ueber die RVD-Baender, solange Leon laeuft")
 dest(4, BIT_LEON, WP_X, WP_Z, "Leon: Plc_dest Modus 4 (gehen) zum Wegpunkt im Gang")
 wait(BIT_LEON, "Leon am Wegpunkt")
