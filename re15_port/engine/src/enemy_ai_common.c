@@ -8709,7 +8709,7 @@ static int re15_maggot_a9cc(const re15_actor_t *e, const re15_actor_t *pl, int t
  * & 0xfff < 0x800 (both facing the same way), else 0 (@0x8001a788-94, re15_damage.c F2 cite). */
 static int re15_maggot_a780(const re15_actor_t *e, const re15_actor_t *pl)
 {
-    return ((((int)e->rot_y - (int)pl->rot_y) + 0x400) & 0xfff) < 0x800;
+    return ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;   /* Runde 35 Spur J (H2): a0.Yaw - cur.Yaw @0x8001a788-94, +0x400 / &0xfff / slti 0x800 @0x8001a798-a4 */
 }
 /* FUN_8001bff8 — der ORIGINAL-Trefferpruefer der Affen-Angriffe (Nutzer-Report 2026-08-29
  * "Die Affen treffen Leon so gut wie nie"; analysis/nutzer_batch_2026-08-29/
