@@ -18,7 +18,41 @@ Status: IN ARBEIT
 - Selbst gefahren: `ctest -R "r35_affen|^unit_member$|^unit_maggot_ai$"` -> **13/13 Passed** (11 Riegel + 2 Alt-Riegel).
 
 ## 1. Nutzer-Punkte — Messprotokoll und Urteil
-(folgt)
+
+### 1.0 Der ECHTE Tuerweg (vom Bau-Agenten als offen gemeldet) — jetzt gefahren
+- Ursache des gescheiterten Versuchs des Bau-Agenten (lauf_t1): ROOM11B0 sub01 @0x11F2-0x1234 `Ck(4,0xF3)==0` ->
+  `Aot_reset 01 01 31` — ohne Strom (Bank 4 Bit 243 = "strom", vgl. panel_zeiger_common.c sub18 @0x016F6) ist die
+  Tuer Slot 1 (Door_aot_set @0x0FAA, Ziel `00 1c 00` = ROOM11C0, Spawn (-25279,0,17268)) KEINE Tuer. Kein RDT
+  setzt (4,0xF3) (Scan aller STAGE*/ROOM*.RDT: nur Ck), d.h. das ist der Generator-Zustand. Mit Strom laeuft
+  beim Betreten von 11B0 zuerst sub04 (`Ck(3,0x82)==0 && Ck(4,6)==1`, @0x11AA) — im Durchlauf vor dem Gang zur Tuer.
+- Lauf t2 (scratchpad `jab3/t2`, exe-Kopie `re15_pc_jab3.exe`): `RE15_SET_FLAG=4:243,3:130` (Durchlauf-Stand:
+  Generator an, 11B0-Szene gesehen), `RE15_DEBUG_JUMP=11B0@240`, `RE15_PLAYER_POS=-25500,-28200,1024`,
+  `RE15_PRESS=square@300..900/30`, Leon danach OHNE Eingabe. debug.log: `[aot] DOOR FIRE slot=1 rect=(-25480,
+  -28190,hw=1250,hh=1750) target_cut=0 spawn=(-25279,0,17268)`, `[tuer] Sequenz Archiv 2 DOOR1A ...`,
+  `[room] PC loaded room11c0.rdt`, `[evt] F6 room=11c0 Evt_exec sub=2 cond=0x0a` = die Intro-Szene startet ueber
+  die Tuer. Alle folgenden Messungen (t2, t3, t4) laufen ueber diesen Tuerweg.
+
+### Punkt 2 — "kommt noch nicht an der korrekten Position aus dem Auto" — **erfuellt**
+- t2 state.log (11C0-Segment): beide Gorillas ab F1 `st=1/0/0 hp=180` (INIT im Spawn-Bild wie Original-Savestate
+  t=6.11: `st=1/0/0/0 hp=180`), G1 F816 `@(-3617,-17798) g=10 mo=22` = Austritt (Original t=36.41 `(-3617,0,-17798)
+  c=22`).
+- Bild `jab3/vergleich_wagen.png`: Original s020 t=34.89 / s021 t=36.41 / s022 t=37.92 gegen Port F810/F840/F870
+  (Cut 12): der Gorilla sitzt in der offenen Heckklappe und steigt an derselben Stelle gross vor dem Pfeiler aus;
+  Lage, Groesse und Bildausschnitt decken sich. (Die Klappe ist im Port dunkler — vom Bau-Agenten als OFFEN
+  gefuehrt, nicht Teil des Wortlauts.)
+- Beleg der Ursache selbst geprueft: STAGE1 0x80117148 `ori v0,zero,0x1b33`/`sh v0,358(v1)` (Scale im INIT),
+  Spawn-Wurzelaufruf `jalr 0x80072bac[typ]` @0x8004259c (Code-Kommentar).
+- Test-Luecke: der Riegel `wagen` prueft nur die Klappe (rot_z-Folge) und druckt die Gorilla-Lage, ohne sie zu
+  pruefen ("kein Riegel-Urteil ausser Plausibilitaet"); die eigentliche Ursache (INIT/Scale 0x1b33 im Spawn-Bild
+  des eingefrorenen Szenen-Records) ist von keinem Riegel gepinnt -> Mangel M2.
+
+### Punkt 3 — "komisch beweglicher Teil am Oberkoerper" — **erfuellt**
+- t2 enemy_dbg.log: `ZEICHNE Typ 0x27: 22 Teile (Bones 18, Meshes 22)` (Parts 18..21 werden gezeichnet, jetzt nach
+  der INIT-/Binder-Regel).
+- Bild `jab3/vergleich_brust.png` (3x Ausschnitt): Original t=36.41/t=37.92 gegen Port F840/F870 — Brust in beiden
+  durchgehend braunes Fell, keine weisse/geaderte Platte, kein abstehendes Teil. Kampfbilder Cut 5
+  (`jab3/t2_ada.png`, F1110-F1260, zwei Gorillas in Bewegung): kein mitschwingendes Fremdteil am Rumpf.
+- Disasm des Belegs selbst geprueft (Abschnitt 2, Stichprobe 1); Riegel `teile` gruen.
 
 ## 2. RE-Gate (@0x-Belege, Stichproben-Disasm, Guess-Tells)
 Diff `git diff master -- re15_port` vollstaendig gelesen (affen_11c0.c, re15_affen.h, enemy_ai_common.c +97,
