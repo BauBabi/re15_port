@@ -241,3 +241,7 @@ Erster Lauf scheiterte an E ohne Strom-Flag (4,243): Spieler stand in der Tuer, 
 * 1210: der T-Korridor ist rot, alle sechs Tueren (1x Garage, 5x Zellen) als gelbe Balken; jede Zelle
   leuchtet einzeln, wenn man drin steht.
 Suite (Stand ec76eb0e): === LOCAL-BUILD-OK (all) — Tests 482/482
+
+## Abschluss-Suite (Stand nach allen Aenderungen inkl. integration_r35_karte)
+
+`=== LOCAL-BUILD-OK (all) — Tests 484/484`
