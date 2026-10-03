@@ -391,13 +391,15 @@ static szene_t szene_fahren(int quadrat_waehrend, int zweiter_fire)
      * (Gate game_step_common.c `!(g_re15_pauseflags & RE15_PAUSE_PAD)`). Nur nach einem Szenenende. */
     if (r.ende > 0) {
         r.pad_bit_ende = (g_re15_pauseflags & RE15_PAUSE_PAD) ? 1 : 0;
+        /* START-Flanke -> Anforderung angenommen = Spiel eingefroren + Stufe 2 (Ausblenden), wie
+         * test_inv_fsm (1) (@0x8001cd64-cde8 / @0x8001ca64-88). Danach mit Blend-Takt bis der
+         * Statusschirm lebt, dann wieder zu (der Raum laeuft fuer die Folgeteile weiter). */
         frame(RE15_PAD_BIT_START, RE15_PAD_BIT_START);
-        for (int f = 0; f < 40 && !re15_menu_is_open(); f++) frame(0, 0);
-        r.inv_auf = re15_menu_is_open();
-        if (r.inv_auf) {                      /* wieder schliessen, der Raum laeuft fuer die Folgeteile weiter */
-            re15_menu_toggle();
-            for (int f = 0; f < 5; f++) frame(0, 0);
-        }
+        int angenommen = re15_menu_gameplay_frozen() && re15_menu_stage() == 2;
+        for (int f = 0; f < 60 && angenommen && !re15_menu_is_open(); f++) { re15_fade_tick(); frame(0, 0); }
+        r.inv_auf = angenommen && re15_menu_is_open();
+        if (re15_menu_is_open()) re15_menu_toggle();
+        for (int f = 0; f < 5; f++) { re15_fade_tick(); frame(0, 0); }
     }
     return r;
 }
@@ -718,7 +720,7 @@ static void teil_raster(void)
     printf("  gemessene Ostgrenze: z=-15700 -> %d, z=-15000 -> %d, z=-13700 -> %d, z=-11700 -> %d\n",
            (int)ost[0], (int)ost[7], (int)ost[20], (int)ost[40]);
     int kandidaten = 0, gueltig = 0, ereignis = 0, haengt = 0, schlecht = 0;
-    int max_schritt = 0, max_ende = 0; double min_weg = 1e9, max_weg = 0, min_blick = 1.0; int max_dz = 0;
+    int max_schritt = 0, max_ende = 0; double min_weg = 1e9, max_weg = 0, max_blick = -2.0; int max_dz = 0;
     for (int32_t x = 15700; x <= 17500; x += 100) {
         int iz = 0;
         for (int32_t z = -15700; z <= -11700; z += 100, iz++)
@@ -741,23 +743,25 @@ static void teil_raster(void)
             if (r.weg < min_weg) min_weg = r.weg;
             if (r.weg > max_weg) max_weg = r.weg;
             if (abs(r.dz) > max_dz) max_dz = abs(r.dz);
-            if (r.blick_kamera < min_blick) min_blick = r.blick_kamera;
+            if (r.blick_kamera_max > max_blick) max_blick = r.blick_kamera_max;
             if (schritt > 12 || r.weg < 600.0 || r.weg > 760.0 || abs(r.dz) >= 100 || r.ende > SZENE_MAX ||
-                !r.geste_blick_ok || r.zur_kamera < 0 || r.blick_kamera < BLICK_TOL_COS) {
+                !r.geste_blick_ok || r.blick_kamera_max > 0.0 || r.pad_bit_ende != 0 || r.inv_auf != 1) {
                 schlecht++;
                 printf("  AUSSERHALB  (%d,%d) Gierung %d: Schritt %d Bilder, Weg %.0f, dz %d, Ende B%d, "
-                       "Blick zur Kamera cos %.3f (Gesten %d)\n", (int)x, (int)z, yaw, schritt, r.weg, r.dz,
-                       r.ende, r.blick_kamera, r.geste_blick_ok);
+                       "Blick zur Kamera max cos %.3f (Gesten zur Tuer %d), Pad-Bit %d, Inventar %d\n",
+                       (int)x, (int)z, yaw, schritt, r.weg, r.dz, r.ende, r.blick_kamera_max,
+                       r.geste_blick_ok, r.pad_bit_ende, r.inv_auf);
             }
         }
     }
     printf("  Kandidaten %d, gueltig %d, Ereignis 13 %d, haengt %d, ausserhalb %d | Schritt max %d Bilder, "
-           "Weg %.0f..%.0f, |dz| max %d, Szene max %d Bilder, Blick zur Kamera cos min %.3f\n", kandidaten,
-           gueltig, ereignis, haengt, schlecht, max_schritt, min_weg, max_weg, max_dz, max_ende, min_blick);
+           "Weg %.0f..%.0f, |dz| max %d, Szene max %d Bilder, Blick zur Kamera cos max %.3f\n", kandidaten,
+           gueltig, ereignis, haengt, schlecht, max_schritt, min_weg, max_weg, max_dz, max_ende, max_blick);
     PRUEF(gueltig >= 100, "genug begehbare Druckstellen (%d)", gueltig);
     PRUEF(ereignis == gueltig && haengt == 0 && schlecht == 0,
           "ueberall Ereignis 13, Faden endet, Schritt <= 12, Weg 600..760, |dz| < 100, Ende <= %d, "
-          "Gesten mit Blick zur Kamera", SZENE_MAX);
+          "Gesten mit Blick zur Tuer und weg von der Kamera, Pad-Bit danach 0, START oeffnet das Inventar",
+          SZENE_MAX);
 }
 
 int main(int argc, char **argv)

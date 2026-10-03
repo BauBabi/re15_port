@@ -127,6 +127,35 @@ weil die Nachricht EIN Bild frueher schliesst als im Port:
 * Savestate-Gegenprobe (re15_ss.py): mzd_stage1_briefing_live / engage_live / combat_death: 25c8 = 00,
   aca5d = 1, inv `01 00 00 00 03 0f 00 00 15 32 ...`; equip_test / parity_turn_R2: 25c8 = 01, aca5d = 3.
 
+### P3 Wie Leon in ROOM1170 mit sich selbst redet (scd_dump_room.py ROOM1170.RDT, Kameratabelle RDT+0x24 -> 0x60)
+Zwei Selbstgespraeche in ROOM1170 (Zensus D_belege/plc_motion_zensus.tsv + eigener Dump):
+* **sub02 Ende** (Vorspann, nach dem Abflug): @0x0156A `40 00 09 20 68 0a a0 d7` Plc_dest Modus 9 -> Leon
+  blickt zu (2664,-10336) (= -z); @0x015B6/@0x015BA Member_set Leon (2664,-7336) ohne Richtung; @0x015D6
+  `29 04` Cut 4; @0x015DC `2b 06 00 00` "Leon: Oh, that's just freaking great..." + @0x015E4 `3f 00 19 00`
+  Clip 25 (raumeigen: Hand ans Gesicht) + Sleep 100; @0x015EC `2b 07 00 00` "Leon: Now what am I gonna do?"
+  + @0x015F0 `3f 00 11 00` Clip 17 + @0x015F4 Sleep 100; @0x015F8 Set(2,7)=0, @0x015FC Set(1,27)=0, @0x01600
+  Cut_chg 3, @0x01602 Cut_auto 1, @0x01604 Work_set(1,0), @0x01608 Plc_ret, @0x0160A Evt_end.
+  Kamera Cut 4 @0x000E0: pos (-72,-2196). Winkel zwischen Leons Blick (0,-1) und der Richtung zur Kamera =
+  **152 Grad** — die Kamera sieht ihm in den Ruecken.
+* **sub14** (Ausloeser main sub00 @0x0140C Switch Cut, Fall 11 @0x01410, Ck(3,62)==0 @0x0141A -> Evt_exec 14):
+  @0x0174A Pos_set + @0x01752 Member_set Richtung 2957, Cut 12 @0x01744; @0x0175E `2b 0d` "Damn it, there must
+  be another way out of here." + @0x01762 `3f 00 12 00` Clip 18 + @0x01766 `41 02 00 00 00 00 2c 01 00 0a`
+  Plc_neck Modus 2 (Kopf relativ senken, Nick 300) + Sleep 30 + @0x01774 `41 04 03 00 00 00 00 00 64 00`
+  Plc_neck Modus 4 (Kopfschuetteln, 3 Schwuenge, Tempo 0x64) + Sleep 60 + @0x01782 Clip 18 + @0x01786
+  `43 00 80 00` rueckwaerts + Sleep 20; @0x0178E msg 14 + Clip 23 (Hand an die Huefte); @0x017A2 msg 16
+  "That's right! I have to report this to the chief." + Clip 18 vor/zurueck; Ende Cut_chg 11, Set(1,27)=0,
+  Set(2,7)=0, Cut_auto 1, Plc_ret. Winkel Blick -> Kamera Cut 12 = 27 Grad (fast frontal, aber Kopf
+  gesenkt/schuettelnd, Gesten zum eigenen Koerper).
+* **Clip 19 (Runde-34-Geste zu "Another civilian survivor.")** steht in ALLEN 32 Original-Aufrufen seines
+  Inhalts (Hash fde929aa6e6b, Zensus) ausschliesslich in Saetzen an ein Gegenueber ("We can talk later...",
+  "Ada, what is this place...?", "Where's Elza?", ...), nie im Selbstgespraech. Clip 17 dagegen auch im
+  Selbstgespraech (1170 sub02, 3020 sub02 "Dammit! the door does not open!" als Inhalt von Clip 2).
+* **Runde-34-Stand (gemessen am Riegel, alter Stand):** nach dem Rueckschritt Plc_dest Modus 9 auf den
+  Standort von Cut 4 (14999,-8140) -> `zur Kamera B145 cos 1.000` = Leon schaut frontal in die Kamera
+  (Winkel 0 Grad) und macht die Gespraechsgeste 19 -> das ist die "durchbrochene 4. Wand".
+* Kamera ROOM1050 Cut 4 (Messbezug): Leon zur Tuer (+X) gewandt -> Winkel Blick -> Kamera 100 Grad
+  (rechnerisch, D_belege/kameras_1050.txt), Kamera von hinten links.
+
 ## Umsetzung
 
 ### P1 Nachrichten-FSM (msg_common.c re15_dialog_tick, 5 Zeilen)
@@ -156,6 +185,30 @@ Wirkung: jede `04 00 ... 04 01 01 NN`-Zeile schliesst ein Bild frueher (= Origin
 * Das Item-Debug des Statusschirms (SELECT + R1, Original @0x8004a138..) kann weiter jede Id setzen,
   auch 1 — Debug-Werkzeug, bleibt original; der naechste Ladevorgang raeumt ein solches Messer ab.
 
+### P3 k_ruf ab +0x4C (adaruf_1050.c, re15_adaruf.h; 162 -> 166 Bytes)
+NUTZER-VORGABE ist die Absicht ("so mit sich selbst reden wie in ROOM1170"), die FORM ist Zeile fuer Zeile
+aus ROOM1170: Drehung zur Kamera (+0x4C..+0x5F alt) ENTFAELLT, Leon bleibt nach Modus 8 zur Tuer gewandt.
+```
++4C Sleep 20                 ROOM1090 sub02 @0x02486
++50 Message_on 23            Form ROOM1170 sub14 @0x0175E
++54 Plc_motion(0,18,0)       sub14 @0x01762   Hand zur Brust
++58 Plc_neck(2) Nick 300     sub14 @0x01766   Kopf senken
++62 Sleep 30                 sub14 @0x01770
++66 Plc_neck(4) 3x 0x64      sub14 @0x01774   Kopfschuetteln
++70 Sleep 60                 sub14 @0x0177E
++74 Plc_motion(0,18,0)       sub14 @0x01782
++78 Plc_flg 0x80             sub14 @0x01786   rueckwaerts
++7C Sleep 20                 sub14 @0x0178A
++80 Message_on 24            Form ROOM1170 sub02 @0x015EC
++84 Plc_motion(0,17,0)       sub02 @0x015F0   Arm-Schwung (Runde-34-Wunsch fuer diese Zeile)
++88 Sleep 100                sub02 @0x015F4
++8C Set(2,7)=0 / +90 Set(1,27)=0 / +94 Work_set(1,0) / +98 Plc_ret   sub02 @0x015F8..@0x01608
++9A Aot_reset(4, sce 1, msg 25) / +A4 Evt_end   (unveraendert)
+```
+Kein Cut_chg/Cut_auto: die Szene wechselt den Schnitt nie (bleibt Cut 4), also gibt es nichts
+zurueckzustellen (sub02/sub14 stellen nur zurueck, weil sie vorher Cut_chg benutzen).
+Neue Nachrichten-IDs: keine (28..31 nicht noetig). RE15_ADARUF_KAMERA_X/Z bleiben als Messbezug fuer den Riegel.
+
 ## Messung nachher
 
 ### P1 (Lauf m4, Stand mit msg-Fix, k_ruf noch unveraendert)
@@ -177,6 +230,17 @@ Item-Liste = BROWNING HP 15 + H.GUN BULLETS 50, KEIN Messer; Kasten "Equip Arms"
 hell. Das ist die Original-Darstellung fuer 25c8 = 0x80: FUN_80049a5c zeichnet die feste Messer-Kachel
 (Icon-Zelle 10, uv (40,90)) mit Helligkeit 25cd = 0x80 statt 0x3e (re15_inv_screen.c:146 =
 @0x800495e8-618) — das Original kennt "kein Gegenstand ausgeruestet = Standardwaffe Messer" also auch im Bild.
+
+### P3 + P1 am Riegel (test_r34n_d_adaruf szene, echte VM + Spielschritt, B = Bilder nach dem Druck)
+```
+msg 22/23/24 ab B21/B153/B263 | Schritt B123..B133 Weg 700 dz 0 Gierung 4095 | Clip18 B153, rueckw. B243,
+Neck2 B153, Neck4 B183, Clip17 B263, Clip19 nie | Blick->Kamera max cos -0.157 (= 99 Grad) | Ende B363 |
+Balken voll B15 weg B377 | Pad-Bit 0, Inventar 1        -> szene/doppel/sperre/speicher: 0 Fehler
+```
+Mutationsprobe (msg-Fix per `&& 0` abgeschaltet, nur gebaut + Riegel, danach zurueckkopiert):
+`Pad-Bit 1, Inventar 0` -> `FEHLER: Pad-Bit ... (ist 1)` + `FEHLER: START ... oeffnet das Inventar`.
+Der neue Szenenschluss (Form 1170 sub02: Message_on + Sleep 100 + Set) haengt also OHNE den Fix genauso —
+der Riegel misst den Mechanismus, nicht die Choreografie.
 
 ## Tests
 
