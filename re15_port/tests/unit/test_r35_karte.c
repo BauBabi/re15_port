@@ -34,6 +34,8 @@
 #include "re15_enemy_ai.h"
 #include "re15_esp.h"
 #include "re15_msg.h"
+#include "re15_savedata.h"
+#include "re15_memcard.h"
 
 static int g_fail = 0;
 #define CHECK(name, cond) do { if (!(cond)) { printf("  FAIL: %s\n", (name)); g_fail = 1; } \
@@ -473,9 +475,102 @@ static int teil_r1210(void)
     return g_fail;
 }
 
+/* ---- WERKZEUG fuer den echten Lauf (tests/integration/test_r35_karte.cmake) -----------
+ * karte <mcr> <hexraum> <x> <z> <rot> [besucht:<hexraum>:<x>:<z> ...] [flag:<bank>:<bit>]
+ *   schreibt einen Spielstand (Slot 0): Spieler im Raum an (x,z) mit Blick rot; die genannten
+ *   Orte gelten als besucht (Karten-Bits wie beim Betreten: re15_map_zone_update). */
+static int teil_karte(int argc, char **argv)
+{
+    re15_savedata_t sd, back;
+    re15_actor_t *pl;
+    unsigned room;
+    uint16_t rr = 0;
+    int a;
+    if (argc < 7) { printf("FAIL: karte <mcr> <raum> <x> <z> <rot> ...\n"); return 2; }
+    room = (unsigned)strtoul(argv[3], NULL, 16);
+    scd_vm_init(); re15_actor_init(); re15_aot_init();
+    re15_map_visited_reset();
+    for (a = 7; a < argc; a++) {
+        unsigned r2 = 0; int x2 = 0, z2 = 0, b = 0, i = 0;
+        if (sscanf(argv[a], "besucht:%x:%d:%d", &r2, &x2, &z2) == 3) {
+            re15_map_zone_update(r2, x2, z2);
+            continue;
+        }
+        if (sscanf(argv[a], "flag:%d:%d", &b, &i) == 2) {
+            re15_game_flag_set((uint8_t)b, (uint8_t)i, 1);
+            continue;
+        }
+        printf("FAIL: unbekanntes Argument '%s'\n", argv[a]);
+        return 2;
+    }
+    g_current_room_id = room;
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100;
+    pl->x = atoi(argv[4]); pl->y = 0; pl->z = atoi(argv[5]);
+    pl->rot_y = (int16_t)atoi(argv[6]);
+    re15_savedata_capture(&sd, 0, 1);
+    if (re15_memcard_save(argv[2], 0, &sd, "LEON  R35 KARTE") != 0) {
+        printf("FAIL: Karte %s nicht schreibbar\n", argv[2]);
+        return 1;
+    }
+    if (re15_memcard_load(argv[2], 0, &back) != 0 || re15_savedata_restore(&back, &rr) != 0 ||
+        rr != (uint16_t)room) {
+        printf("FAIL: Ruecklesen (Raum 0x%04X)\n", (unsigned)rr);
+        return 1;
+    }
+    printf("Karte %s: Raum 0x%04X an (%d,%d) rot %d\n", argv[2], room, (int)pl->x, (int)pl->z,
+           (int)pl->rot_y);
+    return 0;
+}
+
+/* bild <bmp> <x0> <y0> <x1> <y1> <min_gelb>
+ *   wertet den Kartenschirm aus (RE15_INV_FB_SHOT, 24-Bit-BMP 320x240, Kanaele c5<<3):
+ *   ROT = Fuellung des aktuellen Raums (RE2-CLUT 502 Index 1 = 0x680808 -> (104,8,8);
+ *   re15_inv_screen.c re2_ton), GELB = RE2-Tuerbalken (224,168,40). Erwartet: rote Pixel
+ *   NUR im Kasten (x0..x1, y0..y1), und darin >= min_gelb gelbe Pixel. */
+static int teil_bild(int argc, char **argv)
+{
+    FILE *f;
+    unsigned char hdr[54], *px;
+    int w, h, x, y, x0, y0, x1, y1, min_gelb, rot_in = 0, rot_aus = 0, gelb_in = 0;
+    long off;
+    if (argc < 8) { printf("FAIL: bild <bmp> x0 y0 x1 y1 min_gelb\n"); return 2; }
+    x0 = atoi(argv[3]); y0 = atoi(argv[4]); x1 = atoi(argv[5]); y1 = atoi(argv[6]);
+    min_gelb = atoi(argv[7]);
+    f = fopen(argv[2], "rb");
+    if (!f || fread(hdr, 1, 54, f) != 54) { printf("FAIL: %s nicht lesbar\n", argv[2]); return 1; }
+    off = hdr[10] | (hdr[11] << 8) | (hdr[12] << 16) | ((long)hdr[13] << 24);
+    w = hdr[18] | (hdr[19] << 8); h = hdr[22] | (hdr[23] << 8);
+    if (h < 0) h = -h;
+    px = (unsigned char *)malloc((size_t)w * (size_t)h * 3u + 4u * (size_t)h);
+    fseek(f, off, SEEK_SET);
+    for (y = 0; y < h; y++) {
+        int stride = (w * 3 + 3) & ~3;
+        unsigned char *zeile = px + (size_t)(h - 1 - y) * (size_t)w * 3u;   /* von unten */
+        if (fread(zeile, 1, (size_t)w * 3u, f) != (size_t)w * 3u) break;
+        fseek(f, stride - w * 3, SEEK_CUR);
+    }
+    fclose(f);
+    for (y = 0; y < h; y++)
+        for (x = 0; x < w; x++) {
+            unsigned char *p = px + ((size_t)y * (size_t)w + (size_t)x) * 3u;  /* B,G,R */
+            int drin = (x >= x0 && x <= x1 && y >= y0 && y <= y1);
+            if (p[2] == 104 && p[1] == 8 && p[0] == 8) { if (drin) rot_in++; else rot_aus++; }
+            if (p[2] == 224 && p[1] == 168 && p[0] == 40 && drin) gelb_in++;
+        }
+    free(px);
+    printf("Bild %s (%dx%d): rot im Kasten (%d,%d)-(%d,%d) %d, rot ausserhalb %d, gelb im Kasten %d\n",
+           argv[2], w, h, x0, y0, x1, y1, rot_in, rot_aus, gelb_in);
+    if (rot_in < 10 || rot_aus != 0 || gelb_in < min_gelb) { printf("FAIL\n"); return 1; }
+    printf("OK\n");
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "messung";
+    if (!strcmp(teil, "karte")) return teil_karte(argc, argv);
+    if (!strcmp(teil, "bild")) return teil_bild(argc, argv);
     re15_map_visited_reset();
     re15_inv_map_stage_init(0, 6);
     if (!strcmp(teil, "messung")) return teil_messung();

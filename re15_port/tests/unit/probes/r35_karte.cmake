@@ -27,3 +27,17 @@ foreach(_r35g_teil fahrstuhl b2 r1230 r1210)
     add_test(NAME unit_r35_karte_${_r35g_teil} COMMAND probe_r35_karte ${_r35g_teil})
     set_tests_properties(unit_r35_karte_${_r35g_teil} PROPERTIES TIMEOUT 120)
 endforeach()
+#
+#   integration_r35_karte    ECHTE exe, Spielstand + LOAD GAME + MAP + Framebuffer-Abzug, Auswertung
+#                            des BILDES (rot nur im erwarteten Rechteck, gelbe Tuerbalken):
+#                            1230 / 11F0 / 1200 / 1210 und der Nutzerweg 1120 -> Fahrstuhl 1080
+#                            (tests/integration/test_r35_karte.cmake)
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_karte
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_PROBE=$<TARGET_FILE:probe_r35_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_karte_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_karte.cmake)
+    set_tests_properties(integration_r35_karte PROPERTIES TIMEOUT 1500)
+endif()
