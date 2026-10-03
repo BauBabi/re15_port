@@ -540,6 +540,10 @@ if(_an_debug)
 r34_exe("${_lauf}" "${_dir}" 300
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 RE15_AI_FLAVOR=re2
+    # Runde 35 Spur E: das Startinventar hat kein Messer mehr (25c8 = 0x80, include/re15_messer.h). Das
+    # Item-Debug schreibt in die Cursor-Zelle 0; ausgeruestet wird die Granate nur, wenn Zelle 0 der
+    # AUSGERUESTETE Platz ist (Commit @0x80046654-88 vergleicht inv[25c8]) — wie vorher mit dem Messer.
+    RE15_EQUIP=3
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=260 "RE15_INPUT_SCRIPT=${_sk}"
     RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log
     "RE15_FRAMEDUMP=692-693/1:f_" "RE15_EXIT_AT=760#1140")

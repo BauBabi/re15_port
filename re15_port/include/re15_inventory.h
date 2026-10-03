@@ -78,7 +78,7 @@ void re15_inv_compact(void);                /* FUN_8004dadc post-USE slot compac
                                              * run at menu-open init @0x800464a0)          */
 int  re15_ammo_mag_nonzero(void);           /* FUN_8004ea6c: equipped slot qty != 0         */
 int  re15_ammo_consume(void);               /* FUN_8004eae4: qty--; pre-decrement bool      */
-int  re15_ammo_reserve_slot(void);          /* FUN_8004eb70: ammo slot >0, or 0 (slot-0 quirk!) */
+int  re15_ammo_reserve_slot(void);          /* FUN_8004eb70 mit RE2-Regel (Runde 35 E): Platz >=0, sonst -1 */
 void re15_ammo_reload_exec(void);           /* FUN_8004ebdc: chunk transfer / box removal   */
 
 /* Item CLASSIFICATION — BYTE-TRUE id-range gate (RE15_INVENTORY_SUBSYSTEM.md §2): the game uses an

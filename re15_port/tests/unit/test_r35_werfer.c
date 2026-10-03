@@ -135,13 +135,13 @@ static void teil_a(void)
     CHECK(12, re15_ammo_reserve_slot() > 0, "GL 17: INCEND. ROUNDS (0x1b) erkannt (Record 0x80074cbc)");
     re15_inv_init();
     re15_inv_grant(18, 4); re15_inv_grant(0x19, 6); re15_inv_grant(0x17, 6); re15_player_set_equipped_weapon(18);
-    CHECK(13, re15_ammo_reserve_slot() == 0, "Rakete 18: keine Munitionsart (Record NULL, RE2 Id 17 ohne Satz)");
+    CHECK(13, re15_ammo_reserve_slot() < 0, "Rakete 18: keine Munitionsart (Record NULL, RE2 Id 17 ohne Satz)");
     re15_inv_init();
     re15_inv_grant(20, 6); re15_inv_grant(0x17, 6); re15_player_set_equipped_weapon(20);
     CHECK(14, re15_ammo_reserve_slot() > 0, "Python 20: MAGNUM BULLETS (0x17) erkannt (PORT-WAHL)");
     re15_inv_init();
     re15_inv_grant(15, 6); re15_inv_grant(0x1a, 6); re15_player_set_equipped_weapon(15);
-    CHECK(15, re15_ammo_reserve_slot() == 0, "GL 15 nimmt KEINE Saeure-Runden");
+    CHECK(15, re15_ammo_reserve_slot() < 0, "GL 15 nimmt KEINE Saeure-Runden");
 }
 
 /* ========================================================================================== */

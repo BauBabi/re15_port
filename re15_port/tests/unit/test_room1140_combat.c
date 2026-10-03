@@ -1598,10 +1598,16 @@ int main(void)
         if (g_inv.slots[1].qty != 7 || g_inv.slots[2].id != 0) {
             fprintf(stderr, "FAIL: (27) box-exhaust reload -> mag 7 + slot removed, qty=%d id=%d\n",
                     g_inv.slots[1].qty, g_inv.slots[2].id); fail = 1; }
-        /* the byte-true SLOT-0 QUIRK: ammo in inventory slot 0 is NOT seen as reserve */
+        /* Runde 35 Spur E: ammo in inventory slot 0 IS reserve now (RE2 rule FUN_8006a23c
+         * @0x8006a294/@0x8006a2a0 slot >= 0; RE1.5 `slt zero,slot` @0x8004ebc8 ignored it —
+         * harmless only while the knife sat in slot 0). Return 0 = slot 0, -1 = none. */
         g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 50;   /* bullets into slot 0 */
         if (re15_ammo_reserve_slot() != 0) {
-            fprintf(stderr, "FAIL: (27) eb70 slot-0 quirk: ammo in slot 0 -> NOT recognized\n"); fail = 1; }
+            fprintf(stderr, "FAIL: (27) eb70 RE2 rule: ammo in slot 0 -> slot 0, ist %d\n",
+                    re15_ammo_reserve_slot()); fail = 1; }
+        g_inv.slots[0].id = 0; g_inv.slots[0].qty = 0;
+        if (re15_ammo_reserve_slot() != -1) {
+            fprintf(stderr, "FAIL: (27) eb70 no reserve -> -1, ist %d\n", re15_ammo_reserve_slot()); fail = 1; }
         /* RELOAD FSM: empty mag -> reload_start plays W clip 0xD out -> refill + HOLD */
         re15_inv_load_briefing();
         re15_player_set_equipped_weapon(3);
