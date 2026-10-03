@@ -31,6 +31,7 @@
 #include "re15_map_owned.h"   /* re15_map_owned_page — NUR LESEN: das Marken-Gatter fragt
                                * dasselbe wie der Zeichner (Runde 30) */
 #include "re15_map_zones.h"
+#include "re15_karte_fahrstuhl.h"   /* Runde 35 Spur G: Blatt der Fahrstuhlkabine */
 
 #define ZONE_COUNT ((int)(sizeof s_map_zones / sizeof s_map_zones[0]))
 /* Toleranz beim Zonen-Test: dieselbe, mit der der Generator Bereiche verschmilzt —
@@ -113,6 +114,7 @@ s_etage_bit[] = {
     { 0x4070, 0, 12,  8 },   /* Bit 22                                */
     { 0x50D0, 0,  0, 11 },   /* Bit 23                                */
     { 0x50D0, 0,  3, 10 },   /* Bit 24                                */
+    { 0x10A0, 0,  4,  0 },   /* Bit 25  Runde 35 Spur G: B1-Absatz    */
     /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: 8 * sizeof s_visited_floor = 128. */
 };
 #define ETAGE_BIT_COUNT ((int)(sizeof s_etage_bit / sizeof s_etage_bit[0]))
@@ -217,6 +219,10 @@ void re15_map_visited_floor_import(const uint8_t in[16]) { memcpy(s_visited_floo
 static const struct { unsigned short room; unsigned char idx; } s_zone_zusatzbit[] = {
     { 0x1000, 2 },   /* ROOM1000 Sued-WC   (Bit 240) */
     { 0x2070, 2 },   /* ROOM2070 Zone 2    (Bit 241) */
+    /* Runde 35 Spur G: ROOM1220 = 5 Zellen, ROOM1180/1230 = 5 Gangabschnitte (Bits 242-250) */
+    { 0x1220, 2 }, { 0x1220, 3 }, { 0x1220, 4 },
+    { 0x1180, 2 }, { 0x1180, 3 }, { 0x1180, 4 },
+    { 0x1230, 2 }, { 0x1230, 3 }, { 0x1230, 4 },
 };
 #define ZONE_ZUSATZ_BASIS 240
 #define ZONE_ZUSATZ_N ((int)(sizeof s_zone_zusatzbit / sizeof s_zone_zusatzbit[0]))
@@ -788,10 +794,12 @@ int re15_map_player_band(void)
 static int floor_row(unsigned room, int zone, int band)
 {
     int i, best = -1, bestd = 0, n = 0;
+    int fb = re15_karte_fahrstuhl_blatt(room);   /* Runde 35 Spur G: Kabinen-Etage */
     for (i = 0; i < FLOOR_COUNT; i++) {
         int d;
         if (s_map_floors[i].room != room) continue;
         if ((int)s_map_floors[i].zone != zone) continue;
+        if (fb >= 0 && (int)s_map_floors[i].page != fb) continue;   /* Runde 35 Spur G */
         n++;
         d = (int)s_map_floors[i].band - band;
         if (d < 0) d = -d;
@@ -810,10 +818,12 @@ int re15_map_floor_row_visited(unsigned room, int zone, int band)
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)
 {
     int i, best = -1, bestd = 0, n = 0;
+    int fb = re15_karte_fahrstuhl_blatt(room);   /* Runde 35 Spur G: Kabinen-Etage */
     for (i = 0; i < FLOOR_COUNT; i++) {
         int d;
         if (s_map_floors[i].room != room) continue;
         if ((int)s_map_floors[i].zone != zone) continue;
+        if (fb >= 0 && (int)s_map_floors[i].page != fb) continue;   /* Runde 35 Spur G */
         n++;
         d = (int)s_map_floors[i].band - band;
         if (d < 0) d = -d;
