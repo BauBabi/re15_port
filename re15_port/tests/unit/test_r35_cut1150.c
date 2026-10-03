@@ -393,6 +393,28 @@ static void teil_zaehlung(void)
         int kopie1030_still = 1; static const int b[5] = { 47,48,49,75,76 };
         for (int i = 0; i < 5; i++) if (!re15_game_flag_get(7, b[i])) kopie1030_still = 0;
         PRUEF(kopie1030_still, "1030-Kopien alle still (1070 war leer)");
+        /* 1040: alle 20 Raum-Records leben -> keine Auffuellung (alle fuenf Auffuell-Records still) */
+        static const int a[5] = { 83,84,90,91,95 };
+        int still = 0; for (int i = 0; i < 5; i++) still += re15_game_flag_get(7, a[i]);
+        PRUEF(re15_irons_tod_lebend_1040() == 20 && still == 5, "1040: 20 Raum-Records leben, Auffuellung 0 (still %d/5)", still);
+    }
+    /* 1040: nur 2 der 20 Raum-Records leben -> drei Auffuell-Records scharf (83,84,90), zwei still (91,95) */
+    szene_flags();
+    for (int i = 2; i < 20; i++) re15_game_flag_set(7, 0x14 + i, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1150, -17150, -11960, 1600, 0) == 0) {
+        PRUEF(re15_irons_tod_lebend_1040() == 2, "1040: 2 Raum-Records leben");
+        PRUEF(!re15_game_flag_get(7, 83) && !re15_game_flag_get(7, 84) && !re15_game_flag_get(7, 90) &&
+              re15_game_flag_get(7, 91) && re15_game_flag_get(7, 95), "1040: Auffuellung 3 (83,84,90 scharf; 91,95 still)");
+    }
+    /* 1040: alle 20 tot -> fuenf Auffuell-Records scharf */
+    szene_flags();
+    for (int i = 0; i < 20; i++) re15_game_flag_set(7, 0x14 + i, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1150, -17150, -11960, 1600, 0) == 0) {
+        int scharf = 0; static const int a[5] = { 83,84,90,91,95 };
+        for (int i = 0; i < 5; i++) scharf += !re15_game_flag_get(7, a[i]);
+        PRUEF(re15_irons_tod_lebend_1040() == 0 && scharf == 5, "1040: 0 Raum-Records leben -> Auffuellung 5 (%d)", scharf);
     }
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
@@ -462,11 +484,19 @@ static void teil_montage_1130(void)
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
 
+/* Die fuenf Auffuell-Bits so setzen, wie umzug_vorbereiten es bei `lebend` lebenden Raum-Records tut. */
+static void auf_1040(int lebend)
+{
+    static const int a[5] = { 83,84,90,91,95 };
+    for (int i = 0; i < 5; i++) re15_game_flag_set(7, (uint8_t)a[i], (lebend + i < 5) ? 0 : 1);
+    re15_game_flag_set(9, 75, 1);
+}
+
 /* ---- Teil: montage_1040 ------------------------------------------------------------------------ */
 static void teil_montage_1040(void)
 {
     printf("== montage_1040 ==\n");
-    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(9, 76, 1);
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(9, 76, 1); auf_1040(20);
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) != 0) return;
     PRUEF(re15_irons_tod_zustand() == RE15_IT_S1040 && faeden_im_programm() == 1, "1040: Montage-Programm laeuft");
@@ -478,14 +508,62 @@ static void teil_montage_1040(void)
     PRUEF(n0 == 5 && aktive_gegner(0x16) == 5, "5 Zombies (Gleichzeitig-Limit 5): %d", aktive_gegner(0x16));
     PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 7, "Schnitt nach ROOM1030 Cut 7 ((9,76)=1) nach %d Bildern", L.bilder);
     /* Tor schon offen, 1070 leer: keine Fahrt, Cut 6 */
-    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 5, 1);
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 5, 1); auf_1040(20);
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
         lauf(&L, 900, 1);
         PRUEF(g_scd.props[0].y == -5400, "Tor war offen: bleibt bei y=-5400 (%d)", (int)g_scd.props[0].y);
+        PRUEF(aktive_gegner(0x16) == 5, "Tor war offen: 5 Zombies (%d)", aktive_gegner(0x16));
         PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 6 && L.bilder < 400, "Schnitt nach ROOM1030 Cut 6 nach %d Bildern", L.bilder);
     }
+    /* Tor offen und der Spieler hat vorher 18 der 20 Raum-Zombies getoetet: 2 Raum-Records + 3 Auffuell-Records
+     * = wieder fuenf (NUTZER-VORGABE "Wenn es bereits offen ist, kommen nur 5 Zombies"). */
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 5, 1);
+    for (int i = 2; i < 20; i++) re15_game_flag_set(7, 0x14 + i, 1);
+    auf_1040(2);
+    re15_irons_tod_zustand_setzen(RE15_IT_S1130);
+    if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
+        int raum = aktive_gegner(0x16);
+        lauf(&L, 900, 1);
+        int auf = 0, bewegt = 0;
+        for (int sl = 1; sl < RE15_ACTOR_MAX; sl++)
+            if (L.gesehen[sl] && L.z_erst[sl] >= 11500 && L.z_erst[sl] <= 15500 && g_actors[sl].type == 0x16 &&
+                (L.z_erst[sl] - 11500) % 1000 == 0) { auf++; if (L.z_min[sl] < L.z_erst[sl] - 1000) bewegt++; }
+        PRUEF(raum == 2 && aktive_gegner(0x16) == 5, "18 tot: %d Raum-Zombies + Auffuellung = %d Zombies", raum, aktive_gegner(0x16));
+        PRUEF(auf == 3 && bewegt == 3, "drei Auffuell-Zombies erschienen hinter dem Tor (x -28394) und laufen zum Tor (%d/%d)", auf, bewegt);
+        PRUEF(L.raumwechsel && L.ziel == 0x1030, "Schnitt nach ROOM1030 nach %d Bildern", L.bilder);
+        /* spaeteres Betreten: die Auffuell-Zombies stehen wieder da (einer inzwischen getoetet) */
+        re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+        re15_game_flag_set(7, 84, 1);
+        if (room_boot(0x1040, -21008, -13134, 2112, 5) == 0) {
+            for (int f = 0; f < 5; f++) frame(0, 0);
+            PRUEF(aktive_gegner(0x16) == 4, "Nachspawn 1040: 2 Raum-Zombies + 2 Auffuell-Zombies (84 tot): %d", aktive_gegner(0x16));
+            PRUEF(g_room_change.pending == 0 && re15_irons_tod_sub01_gesperrt() == 0, "normaler Raum: keine Tuer, sub01 frei");
+        }
+    }
+    /* ohne Szene ((9,75)=0): kein Nachspawn, auch wenn die Auffuell-Bits 0 sind */
+    flags_leeren();
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1040, -21008, -13134, 2112, 5) == 0) {
+        for (int f = 0; f < 5; f++) frame(0, 0);
+        PRUEF(aktive_gegner(0x16) == 5 && faeden_im_programm() == 0, "ohne Szene: nur die Raum-Zombies (%d), kein Port-Programm", aktive_gegner(0x16));
+    }
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+}
+
+/* Die drei Zusatz-Zombies (erschienen bei z -24800 im Warte-Rechteck Slot 5 @0x01CF2) muessen das Kriech-Bit
+ * bekommen haben (sub09 @0x0280A..@0x02814: member 0x10 |= 0x1000 -> Kriech-Wurzel grid&0xf == 1) und bis
+ * zum Schnitt durchs Tor sein: z > -22500 = im Rechteck VOR dem Tor (Slot 4 @0x01CDE z -22500..-20300). */
+static void kriecher_pruefen(const lauf_t *L, const char *fall)
+{
+    int n = 0, kriecht = 0, durch = 0; long zsum = 0;
+    for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) {
+        if (!L->gesehen[sl] || L->z_erst[sl] != -24800) continue;
+        n++; kriecht += L->kriech[sl]; if (L->z_max[sl] > -22500) durch++;
+        zsum += L->z_max[sl];
+    }
+    PRUEF(n == 3 && kriecht == 3, "%s: drei Zusatz-Zombies, alle drei kriechen (%d/%d)", fall, kriecht, n);
+    PRUEF(durch == 3, "%s: alle drei sind beim Schnitt durchs Tor (z > -22500): %d von %d, mittleres z %ld", fall, durch, n, n ? zsum / n : 0);
 }
 
 /* ---- Teil: montage_1030 ------------------------------------------------------------------------ */
@@ -503,6 +581,31 @@ static void teil_montage_1030(void)
     PRUEF(n1 == n0 + 7, "4 Kopien + 3 Kriecher dazu: %d -> %d", n0, n1);
     PRUEF(g_scd.work_vars[0x12] == 20, "Gleichzeitig-Limit 20 (Save 0x12)");
     PRUEF(L.raumwechsel && L.ziel == 0x11C0 && L.ziel_cut == 13 && L.ziel_x == RE15_IT_PARK_11C0_X, "Schnitt nach ROOM11C0 Cut 13 nach %d Bildern", L.bilder);
+    kriecher_pruefen(&L, "(4,15)=0");
+    PRUEF(re15_game_flag_get(4, 15) == 1, "(4,15)=1: die Original-Szene des Raums ist damit gelaufen (Tor offen)");
+    PRUEF(g_scd.cam_id == 12, "Kamera = Cut 12 (Cut 6 mit aufgebrochenem Tor, Cut_replace @0x0278B): %d", (int)g_scd.cam_id);
+    /* Variante: die Original-Szene war schon gelaufen ((4,15)=1) — "noch einmal" */
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 15, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_S1040);
+    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 6) == 0) {
+        lauf(&L, 900, 1);
+        kriecher_pruefen(&L, "(4,15)=1");
+        PRUEF(L.raumwechsel && L.ziel == 0x11C0 && L.ziel_cut == 13, "(4,15)=1: Schnitt nach ROOM11C0 Cut 13 nach %d Bildern", L.bilder);
+    }
+    /* Variante: Ada steht nicht mehr an Cut 13 ((4,64)=1) -> aus 1030 direkt zurueck nach 1150 */
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 64, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_S1040);
+    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 6) == 0) {
+        lauf(&L, 900, 1);
+        PRUEF(L.raumwechsel && L.ziel == 0x1150 && L.ziel_cut == 7 && L.ziel_x == RE15_IT_COUCH_X && L.ziel_z == RE15_IT_COUCH_Z,
+              "(4,64)=1: Schnitt aus 1030 direkt nach ROOM1150 Cut 7 (Ziel %04X Cut %d)", L.ziel, L.ziel_cut);
+        if (room_boot(0x1150, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 7) == 0) {
+            PRUEF(re15_irons_tod_zustand() == RE15_IT_RUECKKEHR, "(4,64)=1: Rueckkehr-Programm in 1150 (Zustand %d)", re15_irons_tod_zustand());
+            for (int f = 0; f < 200; f++) frame(0, 0);
+            PRUEF(re15_irons_tod_zustand() == RE15_IT_AUS && g_scd.player_mode == 0, "(4,64)=1: Kette beendet, Steuerung frei");
+        }
+    }
+    szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(9, 76, 1); re15_game_flag_set(7, 47, 1);
     /* Nachspawn */
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
     if (room_boot(0x1030, 160, 6145, 0, 0) == 0) {
