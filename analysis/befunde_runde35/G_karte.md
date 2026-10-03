@@ -191,3 +191,34 @@ Neu (tests/unit/probes/r35_karte.cmake, Quelle tests/unit/test_r35_karte.c):
 Gegenprobe (logisch, aus der Messung vorher): alter Stand -> 1080 immer Blatt 2 und Marker y144..146
 ausserhalb des Innenraums (y135..142); 11F0/1200 aktuell 0; 1230 keine Zone/Blatt 1; 1210 aktuell 4 und
 nur 3 Zellentueren -> jeder der vier Riegel waere ROT.
+
+## OFFEN (mit Adresse und naechstem Messweg)
+1. **Blatt 0 (B1), ROOM1190/11A0 vermutlich vertauscht — nicht gemeldet, nicht angefasst.** 1190 fuehrt EINE Zone
+   auf rect 2 (der Kasten im Gang-Ring = laut Tuer-Nische seine OSTKAMMER, Tuer 1230 Slot 4 @0xCE6); sein
+   Schiessstand projiziert mit der eigenen Zeile @0x80076978 auf rect 1 (85..142, 72..122), und rect 1 traegt
+   heute ROOM11A0, dessen Zeile @0x80076980 (138,113,1776,2048) auf KEIN Rechteck von Blatt 0 faellt
+   (y -2..62) und der keine Tuer zu einem B1-Raum hat. Naechster Schritt: 1190 in Haupt (rect 1) und
+   Ostkammer (rect 2) teilen, 11A0s Etagenzeile (Band 3 -> Blatt 0 rect 1) gegen seine Tueren pruefen.
+2. **Fahrstuhl-Marker: 4 px Weg je Achse.** Die Kabine ist 10x10 px gemalt (Innenraum 8x8), der Marker ist
+   ein 8x8-Quad (FUN_800473f8: POLY_FT4 uv(224,128)), und re15_inv_screen.c klemmt den Mittelpunkt auf
+   Rechteck+4 (`reserve = (zrc == 255) ? 1 : 4`) - beim 16x16-Rechteck mit Kunst oben links bleibt
+   x113..117 / y138..142. Mehr ginge nur mit einem Klemmfenster aus der GEMALTEN Flaeche statt aus dem
+   Rechteck - Aenderung fuer alle Raeume, hier bewusst nicht gemacht.
+3. **Gang 1180/1230: Kunst schematisch.** Die 11B0-Doppeltuer ist UNTER dem Zweig gemalt (y78..86), in der
+   Welt liegt sie am Nordende des Laengsgangs (z 26563..31185). Der Marker steht an dieser Tuer bei
+   (167,62), 20 px ueber der gemalten Tuer; eine monotone Abbildung kann beides nicht.
+   Der Tuer-Zug (tuer_anziehen) wirkt nur auf Grundriss-Zeichnungen (`if (!zn || !zn->synth) return;`).
+4. **ROOM5020** zeigt im integration_map_raum_live kein sichtbares Rot (Blatt 9) - unberuehrt, vorbestehend.
+5. Die Fahrstuhl-Etage nach einem LADEN in der Kabine: der Vorraum-Spiegel ist nicht im Spielstand
+   (DAT_800b0fe6 steht auch im Original nicht im Speicherblock); dann gelten die Bits 54/55/56.
+   In der Kabine kann man nicht speichern.
+
+## Fuer den Nutzer
+* Keine neuen Sprachdateien, keine neuen Assets (kein Eintrag fuers Paket-/Android-Gate).
+* Fahrstuhl: die Karte zeigt jetzt die Etage, von der aus man eingestiegen ist (1F/2F/3F), die Kabine rot,
+  und der Spieler-Marker steht IN der gemalten Kabine und bewegt sich mit (180 Grad gedreht wie der Raum).
+* B2: 11F0 (links) und 1200 (Kasten in der Mitte) leuchten jetzt selbst rot, statt der ganzen Garage.
+* B1: In ROOM1230 (und 1180 - derselbe Gang) kommt die B1-Karte; der Gang (Ring um die Kammer) leuchtet
+  rot, der Treppenabsatz von 10A0 ist der kleine Kasten darunter.
+* 1210: der T-Korridor ist rot, alle sechs Tueren (1x Garage, 5x Zellen) als gelbe Balken; jede Zelle
+  leuchtet einzeln, wenn man drin steht.
