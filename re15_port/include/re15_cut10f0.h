@@ -31,7 +31,16 @@
  *   Ist der Faden zu Ende (re15_cut10f0_tick, game_step_common.c), fordert der Port den Kartenhinweis
  *   an (map_hint_common.c, Eintraege K1 = ROOM11C0, K2 = ROOM1150, Folge per Zeit/START) und startet die
  *   Raummusik neu — die Tabellenweiche (re15_cut10f0_bgm_eintrag) liefert ab jetzt MAIN01, bis ROOM11C0
- *   besucht ist.
+ *   besucht ist. Nach dem LADEN eines Spielstands in diesem Fenster stoesst platform/pc/main.c die
+ *   Raummusik nach dem Restore noch einmal an (der Boot-BGM-Aufruf laeuft vor dem Restore).
+ *   Betritt Leon danach ROOM1150, setzt re15_cut10f0_install den Latch (9,72): die zweite Kartenmarke
+ *   (ROOM1150) hoert auf zu blinken; die erste (ROOM11C0) haengt am Besucht-Bit ihrer Zone.
+ *
+ * CHOREOGRAFIE (Fortsetzung, Dossier §8): jede Dialogzeile laeuft im Takt der Original-Dialoge
+ * Sleep 40 + 50 + 20 = 110 Bilder (ROOM11B0 sub06 @0x014FA/@0x01502/@0x0150A); Leon dreht sich per
+ * Plc_dest Modus 9 (ROOM11C0 sub02 @0x0185E) dem zu, mit dem er spricht — zu Marvin vor "Hey Marvin, glad
+ * you made it!", zu Ada vor "Allow me to introduce you. This is..." (Arm Richtung Ada), danach wieder zu
+ * Marvin.
  */
 #ifndef RE15_CUT10F0_H
 #define RE15_CUT10F0_H
@@ -146,7 +155,9 @@
 #define RE15_CUT10F0_LAEUFT          1    /* Faden gestartet                                   */
 #define RE15_CUT10F0_FERTIG          2    /* Faden zu Ende: Hinweis angefordert, MAIN01 laeuft */
 
-/* HAKEN scd_room_setup.c (nach dem Init-Lauf von main00, Ende des Installer-Blocks). */
+/* HAKEN scd_room_setup.c (nach dem Init-Lauf von main00, Ende des Installer-Blocks) und platform/pc/main.c
+ * (Boot-/CONTINUE-Weg). Laeuft fuer JEDEN Raum: ROOM10F0 -> Szene starten; ROOM1150 mit (9,71)=1 -> Latch
+ * (9,72) setzen; sonst nichts. */
 void re15_cut10f0_install(uint16_t room_id);
 /* HAKEN scd_vm.c scd_event_fire: das Port-Programm fuer (ROOM10F0, Ereignis 20), sonst NULL. */
 const uint8_t *re15_cut10f0_ereignis(uint16_t room_id, uint8_t event_id);
@@ -157,7 +168,8 @@ void re15_cut10f0_tick(void);
 unsigned re15_cut10f0_rbj_quelle(unsigned room_id);
 /* HAKEN enemy_common.c rbj_resolve_slot: Record fuer einen Aktor-Slot ohne Marker-Bit (Aktor 2 -> 1), sonst -1. */
 int re15_cut10f0_rbj_record_alias(int slot);
-/* HAKEN audio_pc.c ss_bgm_entry: erzwungener Tabellen-Eintrag (0xFF01 = MAIN01) oder -1. */
+/* HAKEN audio_pc.c ss_bgm_entry: erzwungener Tabellen-Eintrag (0xFF01 = MAIN01) oder -1.
+ * HAKEN platform/pc/main.c (CONTINUE, nach dem Restore): >= 0 -> Raummusik noch einmal anstossen. */
 int re15_cut10f0_bgm_eintrag(int stage, int room);
 
 /* Pruefhaken (kein Spielverhalten). */

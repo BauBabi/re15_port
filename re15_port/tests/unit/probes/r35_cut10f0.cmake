@@ -12,15 +12,20 @@
 #     unit_r35_cut10f0_szene     echte VM + Spielschritt: Szene startet beim Raumaufbau, Nachrichtenfolge,
 #                                Ada an den Monitoren, Marvin geparkt -> an der Tuer -> schraeg links, Leon
 #                                links von Ada, Kamera 2 -> 0 -> 2 -> 0 -> 2 -> 0 -> 2, Tuerknall 2x, Balken,
-#                                Abgang beider, Flags danach, Hinweis angefordert, MAIN01-Weiche aktiv
+#                                Abgang beider, Flags danach, Hinweis angefordert, MAIN01-Weiche aktiv;
+#                                Leons Gierung je Zeile (zu Marvin bei 11/16/19/21/22, zu Ada bei 7/12),
+#                                Zeilenabstand >= 90 Bilder (kuerzeste Original-Zeile ROOM11B0 @0x01574)
 #     unit_r35_cut10f0_einmal    danach erneuter Raumaufbau: keine Szene, kein Spawn; Elza-Raum 10F1: nie
 #     unit_r35_cut10f0_karte     Hinweiskette K1 (ROOM11C0, Blatt 0/Rechteck 4) -> K2 (ROOM1150, Blatt 4/
 #                                Rechteck 2), beide Ziele in der normalen Karte bis zum Besuch; Runde-33-
-#                                Eintrag unveraendert
+#                                Eintrag unveraendert; ECHTER WEG: ROOM1150 vor der Szene schon besucht ->
+#                                blinkt trotzdem, bis Leon es NACH der Szene betritt (Latch (9,72))
 #     unit_r35_cut10f0_bgm       Tabellenweiche: -1 vor der Szene, 0xFF01 danach fuer jeden STAGE1-Raum
 #                                ausser 0x1C, -1 in anderen Stages, -1 sobald ROOM11C0 besucht ist
 #   integration_r35_cut10f0     echte exe, Spielstand + CONTINUE in ROOM10D0, Aktionstaste an der Tuer,
-#                               Szene im Zielraum genau einmal (test_r35_cut10f0.cmake)
+#                               Szene im Zielraum genau einmal; MAIN01 nach dem Laden und durch die Tuer
+#                               10F0 -> 10D0 ("laeuft durch"), Ende an der Tuer 11B0 -> 11C0, Latch (9,72)
+#                               beim Raumaufbau ROOM1150 (test_r35_cut10f0.cmake, Laeufe A-F)
 add_executable(test_r35_cut10f0 ${CMAKE_CURRENT_LIST_DIR}/../test_r35_cut10f0.c)
 target_link_libraries(test_r35_cut10f0 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_cut10f0 PRIVATE ${CMAKE_SOURCE_DIR}/include)

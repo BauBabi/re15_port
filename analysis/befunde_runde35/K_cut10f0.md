@@ -1,6 +1,9 @@
 # Runde 35 — Spur K "cut10f0": Neue Szene ROOM10F0 (Ada/Leon/Marvin), Karte 11C0+1150, MAIN01
 
 Baum: `.claude/worktrees/r35_cut10f0`, Zweig `r35/cut10f0`, Basis master 154a73c1. Datum 2026-10-03.
+**Lesehinweis:** §0-§7 = erster Durchgang (bis zum Sitzungslimit 12:00), §8 = Fortsetzung mit dem Gegenlesen gegen den
+Wortlaut — drei Befunde, ihre Belege, Umsetzung und Messung nachher. Wo §8 etwas aendert (Programmgroesse, Gestentabelle
+§3.1, Bildnummern §4, Tests §5), gilt §8; die betroffenen Stellen sind markiert.
 Vertrag (VERTRAG.md): Bank-9-Bits 71 (Szene gesehen) + 72 (Reserve); Nachrichten-IDs ROOM10F0 6..30;
 Ereignis 20 in 10F0; AOT-Slots nach Zensus; neue Logik in `engine/src/cut_10f0.c` + `include/re15_cut10f0.h`.
 
@@ -121,19 +124,22 @@ Form jeder Zeile = ROOM11C0 sub02 @0x018A4 (Geste A, Sleep 40, Geste B, Sleep 50
 | 7 Did you really think ... | Woman | 19 vor + 19 rueckwaerts ("180-Grad-Geste") + 23 | ROOM11C0 @0x018D8/@0x018E0/@0x018E4 (Ada) |
 | 8/9 Anyway... destroyed / We won't reach ... | Woman | Plc_neck Modus 2 (Kopf gesenkt) + Modus 4 (Schuetteln), zurueck Modus 1 | ROOM11B0 @0x0154E/@0x0155C/@0x0156A |
 | 10 Leon! You already made it! | Marvin | 15 + 23, davor Plc_dest 9 zu Leon | ROOM11B0 @0x014F6 (Marvin Clip 15), @0x018CA |
-| 11 Hey Marvin, glad you made it! | Leon | 15 + 23 | wie 6 |
-| 12 Allow me to introduce you. This is... | Leon | 15 (zu Ada gewandt, Kopf zu Marvin) + 23 | wie 6; Kopf = Plc_neck Modus 1 |
+| 11 Hey Marvin, glad you made it! | Leon | **dreht zu Marvin (Plc_dest 9)**, 15 + 23 | wie 6; Drehung ROOM11C0 sub02 @0x0185E (§8.2) |
+| 12 Allow me to introduce you. This is... | Leon | **dreht zu Ada (Plc_dest 9)**, 15 = Arm Richtung Ada, Kopf bei Marvin, + 23 | wie 6; Kopf = Plc_neck Modus 1 (§8.2) |
 | 13 ... Ada, Ada Wong | Ada | 18 Hand zur Brust + 23 | ROOM11C0 @0x018F0 (Ada Clip 18) |
 | 14 Ada Wong. | Leon | Plc_neck Modus 3 Nicken | ROOM11B0 @0x016B4 |
-| 15 Hello, glad to meet another Survivor! I'm Marvin. | Marvin | 15, 18 Hand zur Brust, 23 | ROOM11B0 @0x014F6; ROOM11C0 @0x018F0 |
-| 16 Anyway... looks like we can't contact ... | Leon | Modus 2 + Modus 4 (Kopf gebeugt schuetteln) | ROOM10D0 sub21 @0x01BB4/@0x01BC2 (Leon) |
+| 15 Hello, glad to meet another Survivor! I'm Marvin. | Marvin | **Kopf zu Ada (Plc_neck 1)**, 15, 18 Hand zur Brust, 23, Kopf zurueck zu Leon | ROOM11B0 @0x014F6; ROOM11C0 @0x018F0, @0x01886 |
+| 16 Anyway... looks like we can't contact ... | Leon | **dreht zu Marvin (Plc_dest 9)**, Modus 2 + Modus 4 (Kopf gebeugt schuetteln) | ROOM10D0 sub21 @0x01BB4/@0x01BC2 (Leon) |
 | 17 Ohh... what do we do then?... | Marvin | 20 Unterarm nach vorn + 23 | ROOM11B0 @0x015A0 (Marvin Clip 20) |
 | 18 ... + Pause | Leon | keine (Sleep 70 + 60) | Nutzer: "etwas pause" |
 | 19 I know! The patrol car! ... | Leon | 21 Hand hoch, 17 Arm-Schwung, 23 | ROOM1050 rec0 Clip 21 (1x gerufen), ROOM1170 sub02 @0x015F0 (17) |
-| 20 Yeah, you're right! ... | Marvin | 15 + 23 | wie 10 |
-| 21 Okay, Marvin, you go with Ada ... | Leon | 15 + 23 | wie 6 |
+| 20 Yeah, you're right! ... | Marvin | 15, **16**, 23 | Original-Paar ROOM11B0 sub06 @0x014F6/@0x014FE (§8.3) |
+| 21 Okay, Marvin, you go with Ada ... | Leon | 15 (zu Marvin), **16**, 23 | wie 20 |
 | 22 I'm going to get Chief Irons ... | Leon | 17 + 23 | ROOM1170 sub02 @0x015F0 |
-| 23 Alright! Sounds like a plan. Take care Leon! | Marvin | 15 + 23 | wie 10 |
+| 23 Alright! Sounds like a plan. Take care Leon! | Marvin | 15, **16**, 23 | wie 20 |
+
+(Stand nach der Fortsetzung §8: **fett** = geaendert. Takt JEDER Zeile jetzt Sleep 40 + 50 + 20 = 110 Bilder wie ROOM11B0
+sub06 @0x014FA/@0x01502/@0x0150A; im ersten Durchgang hatten Ein-Gesten-Zeilen nur 50 + 20 = 70.)
 
 Schnittstelle zu Spur L: (9,71) = "10F0-Szene gesehen" (VERTRAG §0), gesetzt als erstes Opcode; L gatet seine 1150-Szene auf (9,71)=1 und (3,94)=1.
 
@@ -196,6 +202,20 @@ Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STA
 - Dialogkamera Cut 2 zeigt die drei Figuren klein (Abstand ~9500 Einheiten zur Monitorbank, Nutzer-Vorgabe "hinten rechts ... bei CUT2"); die Kopfgesten sind in dieser
   Entfernung nur wenige Bildpunkte gross — ausgefuehrt (NECK_LOG), aber auf dem Bild kaum sichtbar. Falls gewuenscht: Dialog naeher an der Kamera (z ~6000) = Positions-
   Konstanten in re15_cut10f0.h + szene_bauen.py.
+- (Fortsetzung) MAIN01-BEGINN — Lesart, vom Nutzer zu bestaetigen: der Satz "Bis Leon dann den Parking Lot erreicht hat, soll durchweg
+  MAIN01 ... gespielt werden" steht in AUFTRAG.md Z.92 HINTER der 1150-Montage (Spur L). Umgesetzt ist der Beginn am Ende der
+  10F0-Szene ((9,71), Zuteilung VERTRAG §0 Spur K) — MAIN01 laeuft damit schon auf dem Weg zu Irons und waehrend dessen
+  Todesszene, sofern Spur L dort nichts anderes schaltet. Soll es erst mit der Montage beginnen: EINE Stelle,
+  `re15_cut10f0_bgm_eintrag` (cut_10f0.c) zusaetzlich auf (9,73) "Irons-Todesszene gesehen" (VERTRAG §1.1 Spur L) gaten und L
+  die Raummusik am Montage-Ende einmal anstossen lassen (wie re15_cut10f0_tick). Naechster Messweg: Lauf D mit
+  RE15_SET_FLAG=9:73 nach dem Zusammenfuehren mit L.
+- (Fortsetzung) War Leon VOR der Szene schon im Parkplatz (nur mit Strom (4,243) moeglich, ROOM11B0 sub01 @0x011F6/@0x01216), steht
+  das Besucht-Bit der Zone ROOM11C0 bereits: die Parkplatz-Kachel blinkt dann nicht und MAIN01 beginnt nicht (Wortlaut "nicht
+  besucht" / "erreicht hat" woertlich genommen). Ein eigener Latch wie (9,72) fuer ROOM1150 braeuchte ein weiteres Bank-9-Bit —
+  Spur K hat keines mehr frei (71, 72 belegt); frei laut VERTRAG §1.1: 84, 64, 66-70. Messweg: unit_r35_cut10f0_bgm /
+  _karte mit `re15_map_zone_update(0x11C0, ...)` VOR dem Setzen von (9,71).
+- (Fortsetzung) Android/PSX: der CONTINUE-Haken (§8.5) sitzt in platform/pc/main.c; ob platform/android denselben Lade-Weg nimmt
+  (TABU fuer diese Spur), ist nicht gemessen — Messweg: Lauf D auf dem Geraet, Zeile `[bgm] ... entry=FF01` nach dem Laden.
 
 ## 7. Fuer den Nutzer
 - Sprachdateien (Sprecher: Text), synchro/STAGE1/room10F0/:
@@ -222,6 +242,16 @@ Bildnummern = g_engine.frame_count, das beim Raumstart auf 0 springt (= RE15_STA
 - Bedienung: Szene startet beim ersten Betreten von ROOM10F0 (Leon) automatisch; die Karte danach schaltet nach ~4 s von B1 (Parkplatz) auf 3F (Irons' Buero) und schliesst
   nach weiteren ~4 s, START springt sofort weiter/schliesst. Beide Raeume blinken in der normalen Karte, bis man sie betreten hat. MAIN01 laeuft ab Szenenende in jedem
   Raum, bis man den Parkplatz ROOM11C0 betritt.
+- (Fortsetzung) ROOM1150 blinkt auf Blatt 3F, obwohl man vorher schon dort war — bis Leon den Raum NACH der Szene wieder betritt
+  (Bild K_belege/nachher2_karte_3F_room1150_blinkt_trotz_besuch.png). MAIN01 laeuft auch nach dem Laden eines Spielstands weiter.
+  Die Szene dauert jetzt ~91 s (2720 Bilder; jede Zeile steht mindestens 3 s wie in den Original-Dialogen); mit Sprachdateien
+  richtet sich jede Zeile wie bisher nach der Laenge der Aufnahme.
+- (Fortsetzung) Fuer die Zusammenfuehrung: Spur K belegt jetzt BEIDE zugeteilten Bank-9-Bits — 71 "Szene gesehen", 72 "ROOM1150 nach
+  der Szene betreten" (vorher Reserve). Spur L: (9,71) wie vereinbart; die MAIN01-Weiche gilt auch in ROOM1150 (Raum-Byte 0x15)
+  und waehrend der Montage (siehe OFFEN, MAIN01-Beginn). Gemeinsame Dateien mit Haken dieser Spur: scd_room_setup.c (1 Zeile),
+  scd_vm.c (1), game_step_common.c (1), enemy_common.c (1), menu_common.c (Hinweiskette), re15_inv_screen.c/.h (zweites Ziel),
+  map_hint_common.c/.h (Eintraege K1/K2, Latch-Feld), platform/pc/main.c (Leihe 2x, Installer am Boot-Weg, CONTINUE-BGM),
+  platform/pc/src/audio_pc.c (Weiche, Port-Bank 0x0E), tests/test_support.c (Spion), tests/unit/test_cam_selfheal.c (Flag).
 
 ## 8. FORTSETZUNG (2026-10-03 nachmittags, nach dem Sitzungslimit 12:00) — Gegenlesen gegen den Wortlaut
 Stand beim Einstieg: Baum sauber, HEAD 9cc0d253 (3 wip-Commits). Gelesen: Dossier §0-§7, `git log --stat master..HEAD`,
@@ -237,8 +267,14 @@ Nutzers (AUFTRAG.md Z.41-67, Z.92) gegen Programm (tools/r35_k/szene_bauen.py), 
   0x10F0, 0, 3, 94}` — schickt nach ROOM10F0). Der vorhandene Riegel unit_r35_cut10f0_karte pruefte nur den frischen
   Zustand (1150 nie besucht) und war deshalb gruen.
 - MESSUNG VORHER (gebauter Stand 9cc0d253 + nur neue Pruefzeilen, `test_r35_cut10f0.exe karte`): Zone 1150 besucht,
-  (3,94)=1, Zone 10F0 besucht, dann (9,71)=1 ->
+  (3,94)=1, Zone 10F0 besucht, dann (9,71)=1 -> ROOM1150 nicht aktiv ("aktiv 0"):
   `FEHLER: echter Weg: nach der Szene blinken ROOM11C0 (0/4) UND das schon frueher besuchte ROOM1150 (0/4, aktiv 0)`.
+  ⛔ Berichtigung zu genau dieser Zeile: in diesem ersten Lauf war auch ROOM11C0 nicht aktiv (die gedruckten "0/4" sind
+  stehengebliebene Werte) — ein TESTARTEFAKT: die Besucht-Bits liegen nicht in g_game, `re15_game_state_init` loescht
+  sie nicht, der erste Testteil hatte 11C0 schon "besucht". Mit `re15_map_visited_reset()` davor bleibt genau der eine
+  Befund. Der saubere Vorher-Beleg ist der ALTE Riegel selbst, im selben Lauf gruen:
+  `ok: ROOM1150 besucht -> nur noch ROOM11C0 blinkt (Blatt 0)` — Besucht-Bit der Zone => Ziel aus; und im echten Spiel
+  steht dieses Bit vor der Szene.
   Der Hinweis-SCHIRM am Szenenende zeigt 1150 trotzdem blinkend (re15_map_hint_ziel fragt das Besucht-Bit nicht,
   RE2 @0x8006F4E8-0x8006F608 — gemessen §4), nur die normale Karte danach nicht.
 - Deutung des Nutzer-Satzes: "besucht" = NACH der Szene betreten (Leon soll Irons holen) -> eigener Latch.
@@ -297,3 +333,90 @@ Nutzers (AUFTRAG.md Z.41-67, Z.92) gegen Programm (tools/r35_k/szene_bauen.py), 
 - Skript-BGM auf dem Weg (Zensus Sce_bgm_control 0x54 / Sce_bgmtbl_set 0x57, alle ROOM1xx0): ROOM1030 main00
   @0x01C5E/@0x01C64 (Start MAIN/SUB), ROOM1090 sub00/02/03, ROOM1170, ROOM11C0 sub00/02/03, ROOM11D0, ROOM11F0,
   ROOM1200 — kein Raum auf dem Weg STOPPT den MAIN-Kanal ausserhalb bereits gelaufener Szenen.
+
+### 8.5 BEFUND 4 (beim Messen gefunden) — nach dem LADEN eines Spielstands im MAIN01-Fenster spielt die Tabellenmusik
+- MESSUNG VORHER (echte exe, Lauf D: Spielstand IN ROOM10F0 mit (9,71)=1, CONTINUE): debug.log
+  `[bgm] stage=0 room=0F entry=FF20 -> MAIN20(flag 0) SUB--` und erst DANACH `[save] CONTINUE: resumed in room 10f0`;
+  ebenso Lauf F in ROOM1150: `room=15 entry=FF1E -> MAIN1E`. Der Boot-BGM-Aufruf (platform/pc/main.c:4631,
+  `re15_audio_start_room_bgm(boot_room)`) laeuft VOR dem Restore der Flags — die Weiche sieht (9,71)=0. Erst die
+  naechste Tuer brachte MAIN01 (`room=0D entry=FF01`). "durchweg MAIN01" war nach jedem Laden bis zum ersten
+  Raumwechsel verletzt.
+- ORIGINAL (selbst disassembliert, re15_disasm.py auf info/Re1.5/PSX.EXE): der LOAD ist ein Block-memcpy
+  `80026290 lui a0,0x800b / 80026294 addiu a0,a0,3516 (=0x800b0dbc) / 80026298 lw a1,504(sp) / 8002629c jal 0x8004ee38 /
+  800262a0 ori a2,zero,0x1430`; DANACH laeuft der Raumlader FUN_800396fc mit der Musikwahl FUN_800443ec/FUN_80044210,
+  deren Cache-Vergleich `80044278 andi a0,s0,0x3f / 8004427c andi v1,v1,0x3f / 80044280 beq a0,v1,0x800442f4` nur die
+  Tabelle UNK_80074828 liest — die Wahl haengt dort nie an Flags, die Reihenfolge Boot-BGM/Restore war im Port deshalb
+  bisher gleichgueltig. Die MAIN01-Weiche ist die erste flag-abhaengige Raummusik.
+- UMSETZUNG: Haken in platform/pc/main.c direkt hinter `[save] CONTINUE: resumed ...` (6 Zeilen, "Runde 35 Spur K"):
+  gilt die Weiche (`re15_cut10f0_bgm_eintrag(stage, room) >= 0`), wird `re15_audio_start_room_bgm` noch einmal gerufen;
+  der Cache-Vergleich (FUN_80044210 @0x80044278-@0x80044280) ersetzt das noch nicht geladene MAIN20 durch MAIN01.
+- MESSUNG NACHHER (Lauf D): `[bgm] ... room=0F entry=FF20`, `[save] CONTINUE: resumed in room 10f0`,
+  `[bgm] stage=0 room=0F entry=FF01 -> MAIN01(flag 0) SUB--`, Tuer (DOOR13), dann
+  `[bgm] stage=0 room=0D entry=FF01 -> MAIN01(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]`.
+
+### 8.6 Umsetzung der Fortsetzung (Dateien, Konstanten)
+- `include/re15_cut10f0.h`: RE15_CUT10F0_ZIEL2_BESUCHT_BANK/_BIT = (9,72) (VERTRAG §1.1 Reserve Spur K; Zensus §8.1),
+  Ablauf-/Choreografie-Kommentar, Haken-Beschreibung.
+- `engine/src/map_hint_common.c`: Tabellenfelder `erreicht_bank/erreicht_bit` (0 = Besucht-Bit der Zone, Runde-33-Regel
+  unveraendert); Eintrag K2 `{0x10F0, {0}, 0, 0x1150, 0, 9, 71, -1, 1, 9, 72}`; `re15_map_ziel_aktiv_n` fragt den Latch.
+- `engine/src/cut_10f0.c` `re15_cut10f0_install`: Raumaufbau ROOM1150 (nur Leons Variante 0x1150) mit (9,71)=1 ->
+  Set (9,72)=1 + Logzeile `[cut10f0] ROOM1150 nach der Szene betreten: (9,72)=1, Kartenziel ROOM1150 erreicht`.
+- `tools/r35_k/szene_bauen.py` -> `engine/src/gen/cut10f0_szene.inc` (jetzt 1326 Bytes, 282 Opcodes, 18 Message_on;
+  vorher 1162/245): zeile() im Takt Sleep 40 `09 0a 28 00` + Sleep 50 `09 0a 32 00` + Clip 23 + Sleep 20 `09 0a 14 00`
+  (ROOM11B0 sub06 @0x014FA/@0x01502/@0x01506/@0x0150A); drei Leon-Drehungen `40 00 09 00 <x> <z>` + Warteschleife
+  (ROOM11C0 sub02 @0x0185E, ROOM1050 sub03 @0x00DCA) zu Marvin (3800,9900) / Ada (6000,11500) / Marvin; Marvins Blick
+  `41 01 <x> 00 00 <z> 64 00` zu Ada und zurueck (ROOM11C0 sub02 @0x01886); Clip 16 `3f 00 10 00` (ROOM11B0 @0x014FE)
+  als Geste B der Zeilen 20/21/23. Positionen/Texte unveraendert (NUTZER-VORGABE / PORT-WAHL, re15_cut10f0.h).
+- `platform/pc/main.c`: CONTINUE-Haken §8.5.
+- Tests: `tests/unit/test_r35_cut10f0.c` (karte: echter Weg; szene: Leons Gierung je Zeile, Zeilenabstand),
+  `tests/unit/probe_r35_cut10f0_karte.c` (Staende raus / vor11c0 / in1150), `tests/integration/test_r35_cut10f0.cmake`
+  (Laeufe D/E/F, Endbild Lauf A 3200), `tests/unit/probes/r35_cut10f0.cmake` (Beschreibung).
+
+### 8.7 Messung nachher (gebauter Stand der Fortsetzung)
+Unit, echte VM + Spielschritt (`test_r35_cut10f0.exe szene`):
+- `Faden 1 (max 1) | msg 6..23 ab B71..B2455 | Ada (6000,11500) dir 3072 | Marvin geparkt 1, an der Tuer B756
+  (8400,-350), bei Leon B1083 (3814,9831) | Leon los B204 an B414 (4792,11359) rot 1413 | Knall B744/B2665 |
+  Cuts: 2 0 1 2 0 2 0 2 | Ende B2720 Balken voll B15 weg B2734`
+- Leons Gierung beim Aufgehen der Zeile (Soll = atan2 zum Ziel, 4096 = 360 Grad): Zeile 7 -> Ada 4019 (Soll 4020);
+  Zeile 11 "Hey Marvin" -> Marvin 1413 (Soll 1413); Zeile 12 "This is..." -> Ada 4019 (Soll 4020); Zeilen 16, 19, 21, 22
+  -> Marvin 1413; am Ende 1413. Marvin steht bei Zeile 11 auf (3814,9831).
+- Zeilenabstaende (Bilder bis zur naechsten Zeile): 6:343 7:110 8:110 9:151 10:298 11:126 12:110 13:110 14:90 15:126
+  16:130 17:110 18:130 19:110 20:110 21:110 22:110 — Minimum 90 (Zeile 14 "Ada Wong." mit Nicken; = kuerzeste
+  Original-Zeile), vorher 70. 126 = 110 + 16 Bilder Drehung (Modus 9).
+Echte exe, echter Weg (Spielstand ROOM10D0 + CONTINUE + Aktionstaste, beschleunigter Renderer, RE15_FRAMEDUMP
+1040-3180/20, Scratch r35k/mess1; gdigrab unbrauchbar wie in §1.2):
+- cam-trace: F1080 `rot=1075` (Leon dreht), F1200 `rot=1413` (zu Marvin, Zeile 11), F1320 `rot=4019` (zu Ada, Zeile 12),
+  F1740..F2460 `rot=1413`; Position durchgehend (4792,11359).
+- Bild K_belege/nachher2_gesten_zeilen11_bis_22.png (angesehen): F1120/F1180 Leon Marvin zugewandt, Arm zu Marvin;
+  F1260 Leon zu Ada gedreht, Arm waagerecht auf Ada; F1340 Ada Hand zur Brust; F1600 Marvin gestikuliert, Leon bei Ada;
+  F1700 Leon zu Marvin gedreht, Kopf gesenkt; F2040 "I know!" Hand hoch; F2260 Arm zu Marvin. Alle drei im Bild.
+- Ende: `[cut10f0] Szene zu Ende ...` , `[bgm] stage=0 room=0F entry=FF01 -> MAIN01`, `[hint] F2741 begin`,
+  `[hint] F2859 Folge-Hinweis 1 -> 2 (Zeit)`, `[hint] F2977 schliessen (Abbruch/Zeit)` (3,96 s je Ziel, Wanduhr).
+  Bild K_belege/nachher2_abgang_balken_karte.png (angesehen): F2600 Marvin/Ada laufen los, F2660 Cut 0 Ada vor der Tuer,
+  F2700/F2720 Leon allein mit Balken, F2780 Blatt B1 (Parkplatz-Kachel), F2900 Blatt 3F (ROOM1150 rot), F3000 frei.
+Karte danach, normale Karte der echten exe (Stand in ROOM10F0 mit (9,71)=1; RE15_INV_OPEN_AT=30#10f0,
+RE15_MAP_SHOT_PAGE=4 deckt Blatt 3F auf = ALLE Zonen des Blatts besucht, auch ROOM1150; FRAMEDUMP 90-230/10):
+- Bild K_belege/nachher2_karte_3F_room1150_blinkt_trotz_besuch.png (angesehen): alle Raeume gruen (besucht), die
+  Kachel ROOM1150 wechselt F120 rot -> F140 Umriss -> F160 rot -> F180 Umriss. Vorher (Besucht-Bit) waere sie gruen.
+- Unit `karte`: `ok: echter Weg: nach der Szene blinken ROOM11C0 (0/4) UND das schon frueher besuchte ROOM1150 (4/2,
+  aktiv 1)`, `ok: ... ROOM1150 blinkt in anderen Raeumen weiter`, `ok: ... Betreten von ROOM1150 nach der Szene setzt
+  (9,72) -> nur noch ROOM11C0 blinkt`, `ok: ... ROOM11C0 besucht -> kein Ziel mehr`, Elzas ROOM1151: kein Latch.
+- Lauf F (Stand in ROOM1150, (9,71)=1): `[cut10f0] ROOM1150 nach der Szene betreten: (9,72)=1, Kartenziel ROOM1150
+  erreicht`, `[bgm] stage=0 room=15 entry=FF01 -> MAIN01`.
+MAIN01 von Raum zu Raum (echte Tueren, SDL_AUDIODRIVER=dummy weil der Rechner keinen Audio-Endpunkt hat):
+- Lauf D (10F0 -> 10D0): siehe §8.5 — `room=0D entry=FF01 ... [unveraendert, laeuft durch]` (kein Neustart des Stuecks).
+- Lauf E (Stand in ROOM11B0 vor der Tuer zum Parkplatz, (4,243)=1 Strom, (3,130)=1): `[save] CONTINUE: resumed in room
+  11b0`, `[bgm] stage=0 room=1B entry=FF01 -> MAIN01(flag 0) SUB--`, `[tuer] Sequenz Archiv 2 DOOR1A ...`,
+  `[bgm] stage=0 room=1C entry=FF56 -> MAIN16(flag 1) SUB--` = die eigene Musik des Parkplatzes (UNK_80074828[0x1C]);
+  danach ist die Zone ROOM11C0 besucht -> Weiche -1 fuer jeden Raum (unit_r35_cut10f0_bgm "Parkplatz besucht -> Tabelle
+  wieder normal").
+- Tabellenweiche fuer die uebrigen Raeume des Wegs (unit `bgm`): 0xFF01 fuer Raum-Bytes 0x0F 0x0D 0x10 0x11 0x12 0x13
+  0x15 0x04 0x06 0x03 0x1B 0x1F; -1 fuer 0x1C, andere Stages und nach dem Parkplatz.
+
+### 8.8 Tests der Fortsetzung
+- `ctest -R r35_cut10f0`: 8/8 gruen — unit_r35_cut10f0_programm/_texte/_tuerton/_szene/_einmal/_karte/_bgm und
+  integration_r35_cut10f0 (208 s; Laeufe A Szene am echten Weg, B genau einmal, C Boot-Weg, D MAIN01 nach dem Laden und
+  durch die Tuer, E Ende am Parkplatz, F Latch (9,72)).
+- Je Nutzer-Punkt: (1) Szene: _programm, _texte, _szene, _einmal, integration A/B/C; (2) Karte: _karte (Kette, beide
+  Ziele, echter Weg), integration A (Hinweiskette am Schirm) + F; (3) MAIN01: _bgm, integration A/D/E/F;
+  (4) Animationen: _szene (Gierung je Zeile, Zeilentakt) + Bildbelege.
