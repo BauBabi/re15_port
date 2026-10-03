@@ -647,7 +647,7 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
    CORE00) — spawn liefert -1, kein Spritzer in Raeumen mit Wasser. Weg: RE2-Raum-ESP-Banken registrieren.
 6. **Rakete: Explosions-Sample**: RE2 ARMS11 Satz 20 (12672 B) statt RE1.5 ARMS12 Satz 10 (17104 B) —
    Vertrag "Sound ist RE2"; wer das RE1.5-Sample will, aendert nur fx_plattform_pc.c (0x01140001).
-7. **Elza (PL04)**: Baenke W0F/W10/W11/W12/W14 sind Standard-14-Clip-Baenke (Nachlade-Clip 13 = 32 Bilder
+7. ~~**Elza (PL04)**~~ — ERLEDIGT (Nachbesserung 1, §8.6: Abnahme 0 §2.3 hat Elza gemessen, Test integration_r35_werfer_elza): Baenke W0F/W10/W11/W12/W14 sind Standard-14-Clip-Baenke (Nachlade-Clip 13 = 32 Bilder
    vorhanden), ihr GL-Netz liegt auf +y (Muendungsring (61..202,1153,+-70)) — weder Clip-Umsetzung noch
    Waffenrahmen greifen (unit_r35_werfer 95). NICHT mit Elza am gebauten Stand gemessen: der Harness-Start ueber
    RE15_TITLE_SHOT nimmt immer Leon (`[pl] Spieler-Familie PL00`), RE15_PSELECT_AUTO(_SWITCH) allein kam in 150 s
@@ -661,14 +661,14 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
    Netz ist 35,62 Grad gedreht, die Runden flogen 30 Grad abwaerts. Fuer PL00W0E / PL00W12 / PL04W0F stimmt sie
    (Netze vermessen, §4.1).
 
-9. **Moebel-Zellen (Typ 1) sperren Werfer-Geschosse wie Waende** (§3.8): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
+9. **Moebel-Zellen sperren Werfer-Geschosse wie Waende** (§3.8; Stand Nachbesserung 1 §8.1: BELEGT als RE1.5-Schusslinien-Regel FUN_80011f50 -> FUN_8001b9b4 -> FUN_8003dcc4 ohne Hoehe, gleiche Regel wie Spur A; Kreis-Zellen Typ 3 jetzt mit; offen bleibt nur der EINE Formtest fuer Typ 2/4..9 bei der Zusammenfuehrung mit Spur A): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
    Memory reai-v2-quader-modell: "die Hoehe ist die einzige Groesse, die nicht in den Daten steht"). Eine Rakete,
    die in RE2 ueber einen Tisch floege, explodiert im Port an der Tischkante. Naechster Weg: je Zelle eine Hoehe
    messen (Quader-Verfahren der Karten-Masken) oder die RE2-Formhoehen (`(+10 >> 6) & 0x1f` @0x8004fe08-30) fuer
    gleiche Raeume uebernehmen.
 10. **Keine Decke**: nach oben geschossene GL-Runden explodieren erst nach ihrer Lebensdauer (10..15 Bilder,
     @0x8001f224-84) hoch ueber dem Raum (gemessen y -9137) — RE1.5-Raeume tragen keine Deckenhoehe.
-11. **Leer-Ton des Raketenwerfers**: der Port spielt den RE1.5-Klick `0x01010001` = ARMS12 Satz 1 (wf.log
+11. ~~**Leer-Ton des Raketenwerfers**~~ — ERLEDIGT (Nachbesserung 1, §8.2: RE2 ARMS11 Satz 1 @0x80043868/94-9c, am Mischer gemessen): der Port spielt den RE1.5-Klick `0x01010001` = ARMS12 Satz 1 (wf.log
     `SE arms_rec=1 bank=18`). RE2 ARMS11 traegt einen eigenen Satz 1 (`00005416`); der RE2-Leerzweig der
     Feuer-FSM ist nicht disassembliert. Weg: `re2_disasm.py` Suche nach `lui a0,0x101` im Bereich 0x80042c00-
     0x80048a00, dann ggf. `re15_audio_re2_arms_se(0x11, 1)`.
@@ -872,3 +872,44 @@ Leerschuss hoerbar: erstes abweichendes Bild 331 von 404, 10 abweichende Bilder;
 Passed 28.3 s. GEGENPROBE mit der exe vor der Nachbesserung (re15_r35b.exe): Test rot (`'re2arms ARMS11 satz=1'
 MIT=0`), und `cmp mit/cap.raw ohne/cap.raw` = BYTEGLEICH (2375520 Byte) bei `arms_rec=1` im MIT-Log = der alte Klick war
 ein Aufruf ohne Ton (Abnahme §2.5 bestaetigt).
+
+### 8.5b M5 — Uhrzeit im Protokoll
+Erledigt in §8.5 (Vorgaenger, c21a0ce9): §0-Zeile berichtigt auf 16:59 (`suite_lauf4.log` endet 16:59:25). Gegengelesen:
+die Zeile steht so in §0; keine weitere erfundene Uhrzeit in §8 (alle Zeiten dieser Sitzung stammen aus `date`/Dateien).
+
+### 8.6 M6 — Elza-Rezept
+OFFEN 7 sagte "Elza am gebauten Stand nicht gemessen; RE15_PSELECT_AUTO(_SWITCH) kam in 150 s nicht ins Spiel". Die
+Abnahme 0 §2.3 hat das tragende Rezept gefunden und alle sechs Waffen mit Elza gemessen (nicht wiederholt):
+`RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1` (statt RE15_TITLE_SHOT, das Leon startet) +
+`RE15_DEBUG_JUMP=1000@250`. Uebernommen als Test `integration_r35_werfer_elza` (test_r35_werfer_elza.cmake): ein Lauf
+GL Explosiv, gefahren `-- r35_werfer_elza: OK — Elza PL04, W0F 14 Clips, 10 Runden mit ofs=(120,1200,0), 10 Explosionen`,
+Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, berichtigt 6abed8d7).
+
+### 8.7 OFFEN (neu aus Nachbesserung 1)
+16. **Python (alle Schusswaffen) trifft FRESSENDE Zombies, die Werfer nicht** (§8.4): der Port-Schuss-Resolver ist in
+    beiden KI-Arten der RE1.5-Resolver FUN_80011f50; RE2s Resolver FUN_800410CC sperrt +0x1D3 != 0 (@0x80041270-78) und
+    +0x10E & 0xC000 (@0x80041290-9c) wie der Applier. Frueher Versuch, Gate 2 in den Resolver zu setzen, verschluckte
+    Schuesse und brach vier Tests (re15_damage.c:2019-2025). Schuss-Pfad aller Waffen, nicht Spur B. Naechster Weg: den
+    RE2-Resolver-Filter fuer RE2-eigene Gegner (re2_gl_typ != 0) mit +0x1D3/+0x10E nachziehen und die vier Alt-Tests messen.
+17. **Sichtlinien-Test der RE1.5-Schusslinie fehlt im Port-Resolver** (§8.1): FUN_80011f50 @0x80012168-70 ruft
+    FUN_8001b9b4 (Klasse 3, Band des Spielers, nur x/z) und gibt bei Blockade 0 zurueck; re15_player_weapon_fire hat
+    diesen Test nicht (grep `8001b9b4` in engine/src: nur Kraehen-Code) -> im Port trifft die Python ueber den Tisch
+    ROOM1140 (Abnahme 0 M1 Gegenprobe), im Original nicht. Schuss-Pfad aller Schusswaffen, nicht Spur B. Naechster
+    Weg: re15_los_ray_blocked (enemy_ai_common.c, byte-true FUN_8003dcc4) mit dem SPIELER als Strahl-Ursprung je
+    Region 3..0 in den Resolver haengen, Zensus-/Pin-Tests nachmessen.
+18. **Formtest Typ 2/4..9 fuer die Werfer** (§8.1): wandzelle_im_band prueft Rechteck (1) und Kreis (3); Raute/Dreiecke/
+    Kapseln prueft nur Spur A (granate_r35.c). In ROOM1000/1060/1140 kommen sie nicht vor. ZUSAMMENFUEHRUNG: Spur As
+    Formtest (`re15_granate_r35_punkt`/`strecke_*`) und `wandzelle_im_band` (re2_fx.c) auf EINE Funktion bringen.
+19. **Durchtunneln duenner Zellen**: der Wandtest ist ein Punkttest je Bild (wie RE2 `jal 0x8004fba0` je Bild); eine
+    Sehne < 767 (Raketenschritt) kann uebersprungen werden (gemessen §8.1, erster ROOM1000-Versuch). Spur A prueft die
+    STRECKE (Nutzervorgabe der Handgranate) — bei der Zusammenfuehrung mitentscheiden.
+
+### 8.8 Fuer den Nutzer (Ergaenzung Nachbesserung 1)
+* Keine neuen Sprachdateien, keine neuen Assets (die RE2-Baenke ARMS10/ARMS11 aus §7 tragen auch den Leer-Ton).
+* Raketenwerfer leer: der Abzug klickt jetzt hoerbar (RE2-Klick der Raketenwerfer-Bank); vorher war er stumm.
+* Tische/Baenke: Rakete, Granatwerfer-Runden und Flammenstrahl enden an Tischen wie an Waenden — so wie im Original
+  auch kein Schuss ueber den Konferenztisch geht (die RE1.5-Schusslinie sperrt an denselben Zellen ohne Hoehe). Gleiches
+  Verhalten wie die Handgranate. Runde Hindernisse (Saeulen/Stuehle) sperren jetzt ebenfalls (vorher flog die Rakete durch).
+* Fressende Zombies: wie in RE2 sind sie fuer Granatwerfer/Rakete/Flamme kein Ziel, solange sie fressen; wer naeher als
+  ca. 4000 Einheiten herankommt, weckt sie, danach treffen die Werfer. (Die Python trifft sie schon beim Fressen — das
+  ist eine Abweichung des allgemeinen Schuss-Pfads, OFFEN 16.)
