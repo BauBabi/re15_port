@@ -93,6 +93,40 @@ weil die Nachricht EIN Bild frueher schliesst als im Port:
 * Der Port-1170-Vorspann zeigt das NICHT, weil dort `pf=00000007` waehrend der ganzen Szene steht
   (Lauf m3_1170: der Raumwechsel loescht das Wort nach dem Set(2,7)=1 von sub02) — kein Vergleichsfall.
 
+### P2 Kampfmesser — die Original-Form IST "nichts ausgeruestet -> Messer" (re15_disasm.py, PSX.EXE)
+* **Ruecklauf-Regel steht im Original.** Ausruest-Commit beim Schliessen des Statusschirms @0x80046654..88:
+  `lbu v1,9672(v1)` (0x800b25c8 = ausgeruesteter PLATZ) / @0x8004665c `ori v0,zero,0x80` / @0x80046660
+  `bne v1,v0,0x80046670` / @0x80046668 `j 0x80046680` mit Verzoegerungsplatz @0x8004666c `ori v0,zero,0x1`
+  / sonst @0x8004667c `lbu v0,0(at)` (inv[25c8].Id) / @0x80046688 `sb v0,-13731(at)` (0x800aca5d = Waffen-Id).
+  => Platz 0x80 ("nichts") ergibt Waffe 1 = COMBAT KNIFE (Namensliste inventory_common.c:400). Port:
+  menu_common.c close_phase `(eq == 0x80) ? 1 : ...` und re15_menu_toggle — schon vorhanden.
+* **Ablegen gibt es im Original** (Statusschirm, gleiche Id angewaehlt): menu_common.c state5_classifier
+  `eq_id == id` -> UNEQUIP @0x8004aaec (s_c3 = 2) -> 25c8 := 0x80 (menu_common.c:634). Danach Messer.
+* **Das Messer kommt nur aus dem Startinventar.** Spielstart-Init @0x80045e00..@0x80045ff4:
+  `lbu v0,-13732(v0)` (0x800aca5c Charakter) / @0x80045e28 `sltiu v0,v0,0x4` -> Leon-Tabelle Ids
+  @0x80074bb8 `01 03 15 00 00 00`, sonst Elza-Tabelle @0x80074bc4 `01 00 00 00 00 00`; Mengen @0x80074bd0
+  `00 0f 32 00 00 00` (Lesestellen @0x80045e44 / @0x80045ef0 / @0x80045e98 / @0x80045f44); danach
+  @0x80045fe0 `sb v0,9673(at)` (25c9 := 0x80) und @0x80045fec `sb zero,9672(at)` (25c8 := 0 = Messer).
+  Zensus aller 206 RDTs (194 Item-Saetze Item_aot_set 0x50/0x4E, Id = u16 @+14 wie op_item_aot_set):
+  **kein einziger Messer-Gegenstand** (Skript scratchpad item_zensus.py, Ausgabe "Messer(Id 1): []").
+  Port: re15_inv_load_briefing gibt Leons Tabelle fuer JEDEN Charakter (Elza-Tabelle fehlte).
+* **Folgen, sobald Platz 0 nicht mehr dauerhaft das Messer traegt** (im Original unerreichbar, weil das
+  Messer Platz 0 nie verliess — Ablegen von Waffen gibt es nicht, die Kiste ist Port-Zusatz):
+  1. Reserve-Munition in Platz 0 wird nicht erkannt: FUN_8004eb70 @0x8004ebbc `jal 0x8004dfec` /
+     @0x8004ebc4 `sll v0,v0,24` / @0x8004ebc8 `slt v0,zero,v0` (Platz > 0). RE2 Retail hat das behoben:
+     FUN_8006a23c @0x8006a278 `jal 0x800696cc` / @0x8006a294 `nor v0,zero,a0` / @0x8006a2a0 `srl v0,v0,31`
+     (Platz >= 0; Sonderfall Waffe 0x11 @0x8006a28c-90). Beta -> Retail: RE2-Regel.
+  2. Breite Waffe aufnehmen schiebt den Ausruest-Platz OHNE 0x80-Schutz: RE1.5 FUN_8004dc4c @0x8004dc88
+     `addiu v1,v1,9672` / @0x8004dc8c `lbu v0,0(v1)` / @0x8004dc94 `addiu v0,v0,2` / @0x8004dc9c `sb v0,0(v1)`
+     -> 0x80 wird 0x82 (Commit liest dann inv[2] = falsche Waffe). Erreichbar in STAGE1: ROOM1110 @0x00B5A
+     Item 0x13 x100 (Zensus). RE2 Retail FUN_800698b4(1) schuetzt: @0x80069998 `addiu v0,zero,128` /
+     @0x8006999c `beq v1,v0,0x80069aa4` (0x80 -> nicht schieben) / @0x800699a0 `addiu v0,a0,2`.
+     Gleiches im Port-Kistenweg re15_itembox.c inv_front_shift2.
+  3. Verdichten (FUN_8004dadc @0x8004dbac..c8 `bne v0,s0` -> nur der verschobene Platz zaehlt runter)
+     faesst 0x80 nicht an — Port gleichwertig (inventory_common.c:92 `eq != 0x80 && eq > f`).
+* Savestate-Gegenprobe (re15_ss.py): mzd_stage1_briefing_live / engage_live / combat_death: 25c8 = 00,
+  aca5d = 1, inv `01 00 00 00 03 0f 00 00 15 32 ...`; equip_test / parity_turn_R2: 25c8 = 01, aca5d = 3.
+
 ## Umsetzung
 
 ## Messung nachher
