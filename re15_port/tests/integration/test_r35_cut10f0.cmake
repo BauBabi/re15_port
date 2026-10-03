@@ -252,23 +252,40 @@ if(NOT _p464)
 endif()
 
 # --- F: MAIN01 erst NACH der Montage (Mangel 2) + Karten-Latch (9,72) -------------------------------------
-szene_lauf(f "gesehen;in1150" 1150 "150#1150" _dbg "RE15_SET_FLAG_AT=9:73@60")
+# Integration K+L (r35/integration): Mit (9,71)=1 und (3,94)=1 startet beim Betreten von ROOM1150 die
+# Irons-Todesszene von Spur L (irons_tod_1150.c, Ereignis 21) — (9,73) setzt dann die Szene selbst, erst
+# nach Montage und Rueckkehr (Lauf m3 des Bau-Agenten K, Dossier §9.7). Der fruehere Harness-Schalter
+# RE15_SET_FLAG_AT=9:73@60 traf mitten in die laufende Szene und war nur im Zweig K allein sinnvoll.
+# F1: ROOM1150 vor der Todesszene -> Latch (9,72), Tabellenmusik FF1E, Szene startet, KEIN MAIN01.
+szene_lauf(f "gesehen;in1150" 1150 "150#1150" _dbg)
 _pos("${_dbg}" "[cut10f0] ROOM1150 nach der Szene betreten: (9,72)=1" _pk)
 if(_pk LESS 0)
     message(FATAL_ERROR "r35_cut10f0[F]: Raumaufbau ROOM1150 mit (9,71)=1 setzt den Latch (9,72) nicht")
 endif()
 _pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF1E" _ptab)
-_pos("${_dbg}" "[setflag-at] Frame" _p73)
-_pos("${_dbg}" "[cut10f0] MAIN01-Fenster auf in ROOM1150" _pauf)
-_pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF01 -> MAIN01" _pb1)
 if(_ptab LESS 0)
     message(FATAL_ERROR "r35_cut10f0[F]: ROOM1150 nach der 10F0-Szene spielt nicht seine Tabellenmusik (entry=FF1E)")
 endif()
-if(_p73 LESS 0 OR _pauf LESS 0 OR _pb1 LESS 0)
-    message(FATAL_ERROR "r35_cut10f0[F]: nach (9,73) kein MAIN01 (setflag ${_p73}, Fenster ${_pauf}, FF01 ${_pb1})")
+_pos("${_dbg}" "[irons-tod] ROOM1150 Zustand" _pit)
+string(FIND "${_dbg}" "Szene startet (Programm 0)" _pst)
+if(_pit LESS 0 OR _pst LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F]: Irons-Todesszene (Spur L) startet in ROOM1150 nicht")
 endif()
-if(NOT _pb1 GREATER _p73 OR NOT _pauf GREATER _p73)
-    message(FATAL_ERROR "r35_cut10f0[F]: MAIN01 schon VOR (9,73) (FF01 ${_pb1}, Fenster ${_pauf}, setflag ${_p73})")
+_pos("${_dbg}" "[cut10f0] MAIN01-Fenster auf in ROOM1150" _pauf)
+_pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF01 -> MAIN01" _pb1)
+if(NOT _pauf LESS 0 OR NOT _pb1 LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F]: MAIN01 schon waehrend der Irons-Todesszene (Fenster ${_pauf}, FF01 ${_pb1})")
+endif()
+# F2: (9,73)=1 (Todesszene gesehen) -> in ROOM1150 oeffnet das Fenster nach dem ersten VM-Lauf, MAIN01.
+szene_lauf(f2 "gesehen;in1150;montage" 1150 "150#1150" _dbg)
+_pos("${_dbg}" "[cut10f0] MAIN01-Fenster auf in ROOM1150" _pauf)
+_pos("${_dbg}" "[bgm] stage=0 room=15 entry=FF01 -> MAIN01" _pb1)
+if(_pauf LESS 0 OR _pb1 LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F2]: mit (9,73)=1 kein MAIN01 in ROOM1150 (Fenster ${_pauf}, FF01 ${_pb1})")
+endif()
+string(FIND "${_dbg}" "Szene startet (Programm 0)" _pst)
+if(NOT _pst LESS 0)
+    message(FATAL_ERROR "r35_cut10f0[F2]: Irons-Todesszene startet trotz (9,73)=1 erneut")
 endif()
 
 # --- G: ein Raumskript stoppt den MAIN-Kanal (Mangel 1) -----------------------------------------------------
