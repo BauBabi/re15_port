@@ -568,6 +568,73 @@ static void teil_anker(void)
     PRUEF(dmax < 6500.0, "Leon bleibt waehrend Griff und Wurf beim Gorilla (groesster Abstand %.0f; vorher 15400)", dmax);
 }
 
+/* EM027-Bank wie die exe (Muster probe_1010_kriecher.c load_bank_re15): ohne Bank laeuft keine Fuss-Sperre
+ * (re15_maggot_footlock) und keine Knochen-Trefferprobe (bff8) — die Gorillas stuenden still. */
+static uint8_t s_blob27[0x80000];
+static int bank_laden_27(void)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x27);
+    if (eb && eb->ok) return 1;
+    char p[600]; size_t n = 0;
+    snprintf(p, sizeof p, "%s/EMD/CDEMD0.EMS", RE15_ASSET_PSX_DIR);
+    uint8_t *ems = slurp(p, &n);
+    if (!ems) return 0;
+    int idx = re15_ems_index_for_type(0x27);
+    size_t off = 0, len = 0;
+    int ok = (idx >= 0 && re15_ems_get_entry(ems, n, idx, &off, &len) == 0 && len <= sizeof s_blob27);
+    if (ok) { memcpy(s_blob27, ems + off, len); if (!eb) eb = re15_enemy_alloc(0x27); ok = (eb != NULL); }
+    if (ok) {
+        re15_tim_t tim = (re15_tim_t){0};
+        ok = (re15_emd_parse_container(s_blob27, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0);
+        if (ok) { eb->ok = 1; eb->buf = NULL; } else eb->type = 0;
+    }
+    free(ems);
+    return ok;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* M1 (Nachbesserung 1): Biss-Takt gegen die Einzelbild-Spur des Originals (jnb1/oA+oB, r3-Savestate s035
+ * direkt geladen, Leon ohne Eingabe). Startlage = Original-Bild F36 (VSync-Zaehler 0x800787dc): Leon
+ * (-6656,-12490) r647 hp76 frei; e1 (-5873,-14465) r2825 CHASE Clip 5 Bild 14 +0x1dc 19; e2 (-9188,-12369)
+ * r31 CHASE Clip 5 Bild 8 +0x1dc 11. Original: Treffer im Abstand 47/54/50/52/53/51 Bilder. */
+static void teil_takt(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -6656, -12490, 647, 5, 3) != 0) return;
+    PRUEF(bank_laden_27(), "EM027-Bank geladen (Fuss-Sperre + Knochenprobe)");
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    PRUEF(a != NULL && b != NULL, "zwei Gorillas im Kampf-Layout");
+    if (!a || !b) return;
+    pl->x = -6656; pl->z = -12490; pl->rot_y = 647; pl->hp = 76; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    a->x = -5873; a->z = -14465; a->y = 0; a->rot_y = 2825; a->grid_id = 0x10; a->floor = 0;
+    a->state = 1; a->sub_state_1 = 3; a->sub_state_2 = 1; a->sub_state_3 = 0; a->motion = 5; a->anim_frame = 14;
+    a->anim_frac = 0; a->dog_blocked_ctr = 19; a->hit_react = 0;
+    b->x = -9188; b->z = -12369; b->y = 0; b->rot_y = 31; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 8;
+    b->anim_frac = 0; b->dog_blocked_ctr = 11; b->hit_react = 0;
+    int hp_alt = pl->hp, treffer[64], nt = 0;
+    for (int f = 0; f < 420; f++) {
+        frame(0, 0);
+        int ev = (pl->hp != hp_alt);
+        if (ev && nt < 64) treffer[nt++] = f;
+        if (ev || (f % 6) == 0)
+            printf("    F%3d hp%3d %d/%d c%2d/%2d h%d (%6d,%6d) | A %d/%d/%d c%2d/%2d L%2d d%4.0f | B %d/%d/%d c%2d/%2d L%2d d%4.0f%s\n",
+                   f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, pl->hit_react,
+                   (int)pl->x, (int)pl->z,
+                   a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->dog_blocked_ctr,
+                   dist2d(a->x, a->z, pl->x, pl->z),
+                   b->state, b->sub_state_1, b->sub_state_2, (int)b->motion, (int)b->anim_frame, (int)b->dog_blocked_ctr,
+                   dist2d(b->x, b->z, pl->x, pl->z), ev ? "  <-- TREFFER" : "");
+        hp_alt = pl->hp;
+        if (pl->hp < 0) break;
+    }
+    printf("  Treffer-Abstaende:");
+    for (int i = 1; i < nt; i++) printf(" %d", treffer[i] - treffer[i - 1]);
+    printf("  (%d Treffer)\n", nt);
+}
+
 /* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
@@ -584,6 +651,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "biss")   || !strcmp(teil, "alle")) teil_biss();
     if (!strcmp(teil, "frac")   || !strcmp(teil, "alle")) teil_frac();
     if (!strcmp(teil, "anker")  || !strcmp(teil, "alle")) teil_anker();
+    if (!strcmp(teil, "takt")   || !strcmp(teil, "alle")) teil_takt();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

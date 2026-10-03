@@ -501,3 +501,22 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   +0x93 schon gesetzt) und steigt bei F43 mit +0x1dc := 0x14 aus (@0x801184e0-f0). Der Spieler-Flinch
   (Clip 9) endet ~F47 (+0x93 = 0, Zustand 1/0/1 Clip 3 Bild 0). Danach warten BEIDE noch auf ihre Sperre
   (e1 14, e2 20 bei F49) -> naechster Commit e1 F64, Treffer F78 = **54 Bilder** Abstand.
+- **Einzelbild-Spur des Originals (jnb1/oA 117 + oB 66 Savestates ab s035, Bild = VSync/2):** Treffer bei
+  F~130/177/231/281/333/386/437 = Abstaende **47/54/50/52/53/51**. Je Zyklus committen BEIDE Gorillas fast
+  gleichzeitig (Abstand 0-6 Bilder), einer trifft (+0x1dc := 45, @0x80118470-78), der andere verfehlt
+  (Spieler +0x93 schon 1, Fenster-Gate @0x801183b4-bc) und steigt am Clip-Ende mit +0x1dc := 0x14 aus
+  (@0x801184e0-f0). Spieler-Flinch (Clip 8/9) ~22 Bilder, danach steht Leon bis zum naechsten Treffer
+  (Zustand 1/0/1). Takt = Verlierer-Sperre: Treffer T -> Verlierer-Exit ~T+13..17 -> Sperre 20 -> Commit
+  ~T+35 -> Fenster Bild 0x0c -> Treffer ~T+50. Beide Gorillas stehen dabei im Koerperabstand **2050**
+  (= 1600 Gorilla-Box[6] + 450 Spieler) vor Leon.
+- **Port, Raum-Harness (`test_r35_affen takt`, neu):** EM027-Bank geladen, Startlage = Original-Bild F36
+  (beide CHASE, Sperren 19/11, Leon frei). Ergebnis: Treffer-Abstaende **46 57 46 57 47 56 47** (Mittel 51)
+  — derselbe Gleichtakt wie im Original. Die REGELN des Ports erzeugen ab derselben Lage den Original-Takt.
+- **Port, exe-Lauf t2 der Abnahme (state.log je Bild):** dort laufen die Gorillas im WECHSELTAKT: nach dem
+  Heavy (F1477) und Leons Knockdown committet nur Slot 3 (F1570, Abstand 2054); Slot 2 haengt an seinem
+  Wand-Haltepunkt (-5015,-14604) mit Abstand **3069 > 3000** (Biss-Bogen a804(0xbb8,..) @0x80117a60-74) und
+  kann nicht committen. Danach wartet jeweils der eine in CHASE mit Sperre 0 auf das Flinch-Ende (+0x93 = 0,
+  Gate @0x80117a54-5c) und trifft 13 Bilder spaeter: Takt 23 + 13 = **36**. Auch dieser Wechseltakt ist
+  unter denselben Regeln stabil. Im Original r3 stand G1 nach demselben Knockdown am selben Haltepunkt
+  (-5042,-14629), Leon bei (-7097,-12368) = Abstand 3055 — und G1 committete trotzdem ~6 Bilder VOR dem
+  ersten Biss von G2. Wie er in den Bogen kam, klaert die Einzelbild-Spur ab s036 (oC/oD, laeuft).
