@@ -599,7 +599,7 @@ static void teil_montage_1040(void)
     int knall0 = g_test_tuer_se_count;
     frame(0, 0);
     aufstellung_pruefen("Tor zu");
-    lauf_t L; lauf(&L, RE15_IT_1040_KAPPE + 200, 1);   /* Kappe 1000 + Tor-Vorlauf */
+    lauf_t L; lauf(&L, RE15_IT_1040_KAPPE + 200, 1);   /* Kappe + Tor-Vorlauf */
     durchgang_pruefen("Tor zu", &L);
     PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1040: der Knall wie ROOM1030 (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(y0 == 0 && g_scd.props[0].y == -5400, "Rolltor von y=%d auf y=%d (sub08 135 x -40)", y0, (int)g_scd.props[0].y);

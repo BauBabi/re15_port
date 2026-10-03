@@ -90,9 +90,13 @@
  * Schnittlaenge folgt damit dem Lauf der Zombies statt einer festen Zahl: GEMESSEN liefen sie unter der RE2-KI
  * (exe-Default) ~18 Einheiten je Bild, unter der RE1.5-KI des Riegels 6..16 (Dossier §9.1). KAPPE = Sicherung
  * gegen einen haengenden Zombie (PORT-WAHL): Tor-Fahrt ~175 Bilder + weitester Platz z 4800 bis z -360 = 5160 bei
- * der langsamsten gemessenen Rate 6,5 je Bild = 794 -> 1000 Bilder. */
+ * der langsamsten gemessenen Rate 6,5 je Bild = 794 -> 1000 Bilder (Faktor 1000/794).
+ * NACHBESSERUNG 2: der neue Riegel montage_1040_reihe hat eine LANGSAMERE Rate gemessen (RE1.5-KI, Unterzustand 0x13,
+ * Records 0..14 tot, Tor zu: Zombie 5 von z 4435 bei Bild 30 bis z -360 bei Bild 999 = 4,95 je Bild); der letzte kam
+ * damit ein Bild vor der alten Kappe durch. Dieselbe Herleitung mit 4,95 und demselben Faktor: (175 + 5160 / 4,95)
+ * * 1000 / 794 = 1532 Bilder. */
 #define RE15_IT_SIG_ALLE_DURCH 30
-#define RE15_IT_1040_KAPPE     1000
+#define RE15_IT_1040_KAPPE     ((175 + 5160 * 100 / 495) * 1000 / 794)
 /* SCHUTZ DES GEPARKTEN SPIELERS (Nachbesserung 1 M2): wer im 1040-Schritt HINTER die Kamera Cut 1 laeuft (RID
  * ROOM1040 @0x80 Cut 1: x @0x84 `6a 99 ff ff`, y @0x88 `d6 f3 ff ff`, Kamera-z @0x8C `3c d6 ff ff` = -10692 — Nachbesserung
  * 2 M2: frueher hier und in Commit a2b4ddb0 falsch @0x88 zitiert; der Parkplatz liegt bei z -14900 dahinter), wird
