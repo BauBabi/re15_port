@@ -78,8 +78,16 @@ static int spawn(uint32_t a0, int16_t a1, const int16_t ofs[4])
 {
     int i = re2fx_spawn_sofort(a0, a1, s_mtx, ofs);   /* FUN_8001bf10 (sofort, 0xA003) */
     FILE *wl = re15_waffen_log();
-    if (wl) fprintf(wl, "    RE2SPAWN a0=%08x a1=%d ofs=(%d,%d,%d) platz=%d\n",
-                    (unsigned)a0, (int)a1, (int)ofs[0], (int)ofs[1], (int)ofs[2], i);
+    if (wl) {
+        /* Mess-Harness: Knochenlage t (MATRIX +20) und Laufachse = Spalte 1 der Rotation (m[r][1]). */
+        const int32_t tx = (int32_t)(s_mtx[20] | (s_mtx[21] << 8) | (s_mtx[22] << 16) | ((uint32_t)s_mtx[23] << 24));
+        const int32_t ty = (int32_t)(s_mtx[24] | (s_mtx[25] << 8) | (s_mtx[26] << 16) | ((uint32_t)s_mtx[27] << 24));
+        const int32_t tz = (int32_t)(s_mtx[28] | (s_mtx[29] << 8) | (s_mtx[30] << 16) | ((uint32_t)s_mtx[31] << 24));
+        fprintf(wl, "    RE2SPAWN a0=%08x a1=%d ofs=(%d,%d,%d) platz=%d knochen=(%d,%d,%d) lauf=(%d,%d,%d)\n",
+                (unsigned)a0, (int)a1, (int)ofs[0], (int)ofs[1], (int)ofs[2], i, (int)tx, (int)ty, (int)tz,
+                (int)(int16_t)(s_mtx[2] | (s_mtx[3] << 8)), (int)(int16_t)(s_mtx[8] | (s_mtx[9] << 8)),
+                (int)(int16_t)(s_mtx[14] | (s_mtx[15] << 8)));
+    }
     if (i >= 0 && i < RE2FX_PLAETZE) s_spawns++;
     return i;
 }
@@ -87,9 +95,33 @@ static int spawn(uint32_t a0, int16_t a1, const int16_t ofs[4])
 unsigned re15_werfer_spawns(void) { return s_spawns; }
 void re15_werfer_reset(void) { s_spawns = 0; s_last_frame = -1; s_last_w = -1; s_fuel_takt = 0; }
 
+/* Mess-Harness (nur mit RE15_WAFFEN_LOG): Weltlage (+0x34/36/38) der lebenden Geschoss-Plaetze je
+ * Bild — Bank 2 (GL-Runde Skr 4, Rakete Skr 5) und Flammenstrahl (Bank 3 Skr 5). Kein Verhalten. */
+static void flug_log(void)
+{
+    FILE *wl = re15_waffen_log();
+    if (!wl) return;
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        const uint8_t *b = re2fx_platz(i);
+        if (!b || !((b[0x18] | (b[0x19] << 8)) & 1)) continue;
+        if (!(b[0x1C] == 2 || (b[0x1C] == 3 && (b[0x1E] & 7) == 5))) continue;
+        /* kontakt = FUN_8004fba0-Abbild am Geschoss; fuss = dasselbe auf Standhoehe des Spielers
+         * (liegt (x,z) in einer Zelle seines Bandes?) — zeigt, ob das Geschoss UEBER einer Wand fliegt. */
+        const int32_t P[3] = { (int16_t)(b[0x34] | (b[0x35] << 8)), (int16_t)(b[0x36] | (b[0x37] << 8)),
+                               (int16_t)(b[0x38] | (b[0x39] << 8)) };
+        const int32_t Q[3] = { P[0], g_actors[RE15_ACTOR_SLOT_PLAYER].y - 1, P[2] };
+        int k = 0, kf = 0;
+        (void)re2fx_boden_sonde(P, 2, 8192u, 1, &k);
+        (void)re2fx_boden_sonde(Q, 2, 8192u, 1, &kf);
+        fprintf(wl, "    RE2FLUG platz=%d bank=%d sub=%d op=%d/%d welt=(%d,%d,%d) kontakt=%d fuss=%d\n", i, b[0x1C], b[0x1E],
+                b[0], b[1], (int)P[0], (int)P[1], (int)P[2], k, kf);
+    }
+}
+
 /* ---- GL [9]/[10]/[11] und Rakete [17], Rueckstossbild 1 ----------------------------------- */
 void re15_werfer_tick(void)
 {
+    flug_log();
     int w = re15_player_equipped_weapon();
     if (!re15_werfer_ist(w)) { s_last_frame = -1; s_last_w = w; return; }
     int f = re15_player_granate_frame();            /* acae9 im Rueckstoss, sonst -1 */

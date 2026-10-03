@@ -431,6 +431,45 @@ kein Treffer VOR der Streifen-Korrektur — der Hitscan lief fuer 20 durch den b
 (Reichweite 1000 + Radius < 1535). Nach der Korrektur (Streifen wie w7) trifft die Python auch unter
 RE1.5-KI (unit_r35_werfer Teil F, Treffer in 800).
 
+### 4.1 Gegenpruefung am gebauten Stand (Fortsetzung, exe-Kopie re15_r35b.exe vom Stand 023b68a7 + Mess-Zeilen)
+
+Neue Mess-Zeilen in wf.log (nur Harness): `RE2SPAWN ... knochen=(t) lauf=(Spalte 1 der Knochenmatrix)`,
+`RE2FLUG platz bank sub op welt=(x,y,z) kontakt fuss` (je Bild je lebendem Geschoss-Platz; kontakt = FUN_8004fba0-
+Abbild am Geschoss, fuss = dasselbe auf Standhoehe des Spielers), `SE re2fx ... @(Lage)`.
+Laeufe `mess_r35b/{gegen,flug,flug2,raum,raum_vor}/` (Skripte `mess_r35b/run_*.sh`).
+
+**BEFUND G1 — Leons Granatwerfer schiesst 30 Grad nach UNTEN** (flug2/w15_3072, ROOM1140 Leon (-4311,-19289)):
+`RE2SPAWN a0=020c0a00 ... knochen=(-4268,-1977,-19662) lauf=(3478,2079,-417)` = die y-Achse des Waffenknochens
+zeigt 30,5 Grad abwaerts; die gerade Runde (Platz 94, vel.y 600) fliegt Bild 1 -> 2 von (-3189,-1471,-19793) nach
+(-2680,-1167,-19854): 509 vor, 304 TIEFER; alle fuenf Explosionen liegen 1100..2150 vor Leon am Boden
+(y -262..-853). Ursache (Netz gemessen, `plw_mesh`-Werkzeug der Runde 30): PL00W0F.PLW (md5 6c63da9c...) dir[2]
+MD1 @0x50A8 ist IM Knochenrahmen um 35,6 Grad gedreht modelliert — Muendungsring (654,1343,-41) @0x518C,
+(758,1278,-41) @0x519C, (654,1343,48) @0x51AC, (758,1278,48) @0x51BC; Laufring (326,886,62) @0x51C4,
+(326,886,-58) @0x51CC, (429,818,71) @0x5224, (429,818,-65) @0x522C; Schaftende (-297,-345,-60) @0x51F4,
+(-531,-188,-60) @0x520C. Achse Laufring -> Muendung (328.5, 458.5) = 35,62 Grad von +y nach +x. Alle anderen
+Netze liegen auf +y: PL04W0F Hauptachse (0.06,1.00), Muendungsring (61..202, 1153, +-70); PL00W10 (0.02,1.00);
+PL00W0E = RE2 PL00W10 punktgleich (40 Punkte, Duese (57..205, 1100..1116)); PL00W12 Rohr (275,-732) -> (81,1013)
+= -6,35 Grad; RE2 PL00W11 Rohr (215,-600) -> (50,1105) = -5,53 Grad = RE2-Geschwindigkeit (-70,768) = -5,21 Grad;
+RE2 PL01W09 Muendungsring (64,960,+-70). Der RE2-Rahmen "+y = Lauf, +x = oben" und der Versatz {120,1200,0}
+gelten also fuer jedes Netz AUSSER Leons PL00W0F.
+
+**BEFUND G2 — Rakete und Flammenstrahl fliegen durch Waende** (raum_vor/r1000_w18, ROOM1000 ohne Gegner):
+`RE2FLUG platz=94 bank=2 sub=13 op=23/24 welt=(23239,-2575,-13789) kontakt=0 fuss=3` ... zwoelf Bilder bis
+x = 31672, danach `slti 32001` @0x8001f724 -> Platz tot, KEINE Explosion (kein `SE re2fx code=0x01140001`).
+fuss=3 in jedem Bild = die Rakete fliegt die ganze Strecke UEBER einer Zelle des Spieler-Bandes. Ursache: das
+FUN_8004fba0-Abbild der Runde 34 gibt einer SCA-Zelle die Hoehe EINES Bandes (oben = -1800*(b+1)); Leons
+Raketenwerfer-Knochen liegt 2428 ueber dem Boden (Muendung -2575), der Flammenwerfer-Knochen 1800..1900 (Strahl
+-1951, raum_vor/r1000_w14 `welt=(22969,-1951,-13736) kontakt=0 fuss=3`). ROOM1060 (Spieler-y -14400 = Band 8):
+auch die GL-Runde bekommt keinen Kontakt (Schleife 7..0), Rakete tot nach 7 Bildern (raum_vor/r1060_w18).
+Im Lauf mit Gegnern (flug/w18) explodiert die Rakete dagegen im Startbild an der Muendung: der zweite Applier
+0x20011 laeuft auf Bodenhoehe mit Box {-800,0,400,200} + Gegnerradius (= 800 zurueck .. 1300 vor, 1300 seitlich,
+re2gl_box_test) — Zombies in 1200 Abstand vom Muendungspunkt werden im ersten Bild getroffen (RE2-Verhalten).
+
+**Raketen-Elevation:** die Clips 9/11 (hoch/tief) der RE1.5-Bank W12 tragen dieselbe Knochenlage wie Clip 7
+(flug/w18u, w18d: `lauf=(4023,-449,-491)` in BEIDEN) — die Rakete fliegt wie in RE2 (PL00W11 ohne hoch/tief-Clips)
+immer waagerecht. Netto-Steigung 33 je 767 (ROOM1000: y -2575 -> -2936 in 11 Bildern): Knochen 7,6 Grad hoch,
+RE2-Geschwindigkeit (-70,768) = -5,2 Grad.
+
 ## 5. Tests
 
 * `unit_r35_werfer` (tests/unit/test_r35_werfer.c, 60 Pruefungen, OK): A Daten (Magazine/Munitions-
