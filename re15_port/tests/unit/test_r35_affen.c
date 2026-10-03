@@ -80,6 +80,7 @@ static int rdt_laden(uint16_t room)
     free(s_raw); s_raw = slurp(rp, &s_rawsz);
     if (!s_raw || s_rawsz < 0x100) return -1;
     if (re15_rdt_parse(s_raw, s_rawsz, &s_rdt) < 0) return -1;
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;             /* Raumkollision fuer die Klemmen (wie probe_1030_*) */
     return 0;
 }
 
@@ -194,6 +195,12 @@ static void teil_band(void)
     for (int k = 0; k < 2; k++) { re15_actor_t *g = aktor_vom_typ(0x27, k); if (g) { g->grid_id |= 0x20; g->x = 30000; g->z = 30000; } }
     for (int fall = 0; fall < 2; fall++) {
         int band = (fall == 0) ? 2 : 0;
+        if (fall == 1) {                                             /* zweiter Fall: Raum frisch aufbauen */
+            if (room_boot(0x11C0, -22604, 14455, 0, 0, 5) != 0) return;
+            ada = aktor_vom_typ(0x42, 0);
+            if (!ada) { PRUEF(0, "Ada im zweiten Aufbau"); return; }
+            for (int k = 0; k < 2; k++) { re15_actor_t *g = aktor_vom_typ(0x27, k); if (g) { g->grid_id |= 0x20; g->x = 30000; g->z = 30000; } }
+        }
         ada->x = -16000; ada->y = 0; ada->z = -6560; ada->rot_y = 2048; ada->floor = (uint8_t)band;
         ada->state = 4; ada->sub_state_1 = 5; ada->sub_state_2 = 0; ada->sub_state_3 = 0;
         ada->steer_x = -18214; ada->steer_z = -7229; ada->walk_dest_x = -18214; ada->walk_dest_z = -7229;
@@ -236,8 +243,11 @@ static void teil_ada(void)
     PRUEF(ada->y == 20000, "Ada bleibt versenkt bis zum Sieg (y=%d)", (int)ada->y);
     re15_game_flag_set(7, 0x60, 1); re15_game_flag_set(7, 0x61, 1);
     int f_zurueck = -1;
-    for (int f = 0; f < 200; f++) {
+    for (int f = 0; f < 900; f++) {                      /* sub03: erst Leons Gang zu (-14280,-8543) + Drehung (@0x1B26-1B38) */
         frame(0, 0);
+        if ((f % 60) == 0)
+            printf("    +%d: Ada y=%d st=%d/%d/%d @(%d,%d) rot=%d flag(3,0x43)=%d\n", f, (int)ada->y, ada->state, ada->sub_state_1, ada->sub_state_2,
+                   (int)ada->x, (int)ada->z, (int)ada->rot_y, re15_game_flag_get(3, 0x43));
         if (ada->y == 0 && f_zurueck < 0) { f_zurueck = f; break; }
     }
     PRUEF(f_zurueck >= 0, "sub03: Ada kommt zurueck, y = 0 nach %d Bildern (@0x1B52), rot_y = %d (@0x1B56: 512)", f_zurueck, (int)ada->rot_y);
@@ -315,10 +325,15 @@ static void teil_wagen(void)
           (int)g_scd.props[0].x, (int)g_scd.props[0].y, (int)g_scd.props[0].z, (int)g_scd.props[0].rot_x, (int)g_scd.props[0].rot_y, (int)rz0);
     /* bis Cut 12 laufen, dann die rot_z-Folge mitschreiben */
     int f_cut12 = -1; int16_t folge[60]; int n = 0; int16_t rz_max = rz0;
+    re15_actor_t *g1 = aktor_vom_typ(0x27, 0), *g2 = aktor_vom_typ(0x27, 1);
     for (int f = 0; f < 4000; f++) {
         frame(0, 0);
         if (f_cut12 < 0 && (int)g_scd.cam_id == 12) f_cut12 = f;
         if (f_cut12 >= 0 && n < 60) folge[n++] = g_scd.props[0].rot_z;
+        if (f_cut12 >= 0 && (n % 10) == 1 && g1 && g2)   /* Messschiene Punkt 2: Lage der Gorillas waehrend Cut 12 */
+            printf("    Cut12+%d: G1 y=%d @(%d,%d) g=0x%02x st=%d mo=%d | G2 y=%d @(%d,%d) g=0x%02x\n", n - 1,
+                   (int)g1->y, (int)g1->x, (int)g1->z, g1->grid_id, g1->state, (int)g1->motion,
+                   (int)g2->y, (int)g2->x, (int)g2->z, g2->grid_id);
         if (g_scd.props[0].rot_z > rz_max) rz_max = g_scd.props[0].rot_z;
         if (f_cut12 >= 0 && n >= 60) break;
     }

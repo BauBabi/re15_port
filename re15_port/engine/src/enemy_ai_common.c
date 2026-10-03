@@ -8852,7 +8852,10 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
         e->mag_hit_ctr = 0;                                   /* Runde 35 Spur J: Port-Zaehler, INIT-geloescht wie +0x1e0..+0x1e3 */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
-        e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
+        /* +0x1ba (Boden-Y) wird vom INIT NICHT geschrieben (FUN_80116f50 @0x80116f50-801171c0 hat
+         * keinen 442(.)-Store); es traegt den Sce_em_set-Seed -(pc[4]*1800) @0x80042210 und wird vom
+         * Raumskript per Member_set 0x13 gesetzt (ROOM11C0 @0x1A3E/@0x1AFC). Runde 35 Spur J: der
+         * fruehere Port-Ersatz `dog_floor_y = y` ueberschrieb den Seed beim Spawn-Wurzelaufruf. */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
          * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
          * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
@@ -14398,11 +14401,20 @@ void re15_enemy_spawn_root(int slot)
     if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return;
-    if (e->type != 0x30 && e->type != 0x36) return;
+    if (e->type != 0x30 && e->type != 0x36 && e->type != 0x27) return;
     if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) return;   /* G5-Modul */
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
-    re15_birkin_root(slot);                             /* @0x8004259c jalr 0x80072bac[typ] */
+    if (e->type == 0x27)                                /* Runde 35 Spur J: derselbe generische jalr
+                                                         * 0x80072bac[typ] @0x8004259c fuer den Gorilla —
+                                                         * sein INIT (HP 180, Scale 0x1b33 @0x80117148,
+                                                         * Flag 0x800, Zustand 1) laeuft damit im Spawn-Bild
+                                                         * auch fuer die eingefrorenen Szenen-Records
+                                                         * (ROOM11C0 grid 0x30: Original-Savestate t=6 s
+                                                         * st=1, +0x166=0x1b33, flags 0x801) */
+        re15_maggot_ai_tick(slot);
+    else
+        re15_birkin_root(slot);                         /* @0x8004259c jalr 0x80072bac[typ] */
     e->grid_id = (uint8_t)(e->grid_id | s4);            /* @0x80042604 or / @0x80042608 sb */
 }
 

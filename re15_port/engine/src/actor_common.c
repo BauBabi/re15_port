@@ -128,7 +128,7 @@ int32_t re15_actor_get_member(int slot, uint8_t member_id)
     case 16: return (int32_t)a->anim_flags;        /* +0x1c4 lhu */
     case 17: return (int32_t)a->status_flags;      /* +0x98 lhu */
     case 18: return (int32_t)a->floor;             /* +0x82 lbu */
-    case 19: return (int32_t)a->hp;                /* +0x1ba lh */
+    case 19: return (int32_t)a->dog_floor_y;       /* +0x1ba lh (Boden-Y, s. Setter; Runde 35 Spur J) */
     default: return 0;                             /* id>=20 → default (FUN_80041358 LAB_8004146c) */
     }
 }
@@ -157,7 +157,11 @@ void re15_actor_set_member(int slot, uint8_t member_id, int32_t value)
     case 16: a->anim_flags   = (uint16_t)value; break; /* +0x1c4 sh */
     case 17: a->status_flags = (uint16_t)value; break; /* +0x98 sh */
     case 18: a->floor        = (uint8_t)value; break;  /* +0x82 sb */
-    case 19: a->hp           = (int16_t)value; break;  /* +0x1ba sh */
+    case 19: a->dog_floor_y  = (int16_t)value; break;  /* +0x1ba sh — Runde 35 Spur J: +0x1ba ist das
+                                                        * BODEN-Y (Sce_em_set `sh v0,442(s0)` @0x80042210 =
+                                                        * -(pc[4]*1800); c1a4-Boden a3 des Gorillas), NICHT die
+                                                        * HP (+0x9a, Resolver `sh v1,154(s1)` @0x80013000).
+                                                        * ROOM11C0 sub02 @0x1A3E/@0x1AFC `Member_set 13=0`. */
     default: /* id>=20 → no-op */               break;
     }
 }
