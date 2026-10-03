@@ -8680,6 +8680,13 @@ static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the re
     uint8_t c = e->motion; int fc = (c < 29) ? s_maggot_clip_len[c] : 1; if (fc < 1) fc = 1;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    /* Runde 35 Spur J: anim_set (FUN_8001f314, a3 = 0x200 an jeder Gorilla-Site, z.B. `jal 0x8001f314`
+     * @0x80117d6c) zieht den Crossfade-Zaehler +0x8f je Aufruf um 1 (`lbu v0,143(v1)` @0x8001f5a8,
+     * `addiu v0,v0,-1` @0x8001f5b0, `sb v0,143(v1)` @0x8001f5b4). Ohne den Abbau blieb er auf der 7
+     * jedes Clip-Setzers stehen (gemessen: affen_fuss.log frac=7 in 849 von 887 Bildern; Original-
+     * Savestates r3: +0x8f = 0 in 55 von 66 Proben, sonst 7 - Bild) -> der Renderer mischte dauerhaft
+     * 7/8 der Vor-Pose bei (Gorilla-Animation mit Bruchteil der Amplitude, auch der Brustschlag). */
+    if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
 /* hit-blood/gore burst func_0x80019700(0x2000, +0x6a, skel_part, &vec) — the maggot passes part
@@ -8775,10 +8782,23 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
     static re15_skel_pose_t s_pose[RE15_EMD_MAX_BONES];
     int32_t mn[3], mp[3], wn[3], wp[3];
     int16_t rx, ry, rz;
-    if (re15_skel_compute_pose(sk, kf_n, s_pose)) return;
+    const re15_actor_t *mess_pa = (const re15_actor_t *)g_anim_pose_actor;   /* Mess-Schiene (s.u.): Zustand VOR der Abfrage */
+    int mess_frac = mess_pa ? (int)mess_pa->anim_frac : -1, mess_tw = (int)g_anim_kf_tween.active;
+    /* Runde 35 Spur J — Pose-ABFRAGE, kein Render (Muster re15_enemy_bone_world_pos): der Zeiger
+     * g_anim_pose_actor steht hier noch auf dem ZULETZT GEZEICHNETEN Aktor (gemessen: Slot 3). Mit
+     * dessen Crossfade (frac 7) wurden beide Abfrage-Posen gegen SEINE Vor-Pose gemischt und seine
+     * Vor-Pose zweimal je Tick ueberschrieben -> die Locator-Deltas pendelten +52..-83 statt
+     * +8..+125 (affen_fuss.log), netto ~0: der Gorilla kroch auf der Stelle und wurde an jeder Wand
+     * rueckwaerts geschoben. Ohne Blend ist die Folge die des Originals (Lage von G1 30 Bilder
+     * nach der Freigabe: Port (-4850,-14440), Original-Savestate t=45.48 (-4855,-14459)). */
+    void *q_save = g_anim_pose_actor; re15_kf_tween_t q_tw = g_anim_kf_tween;
+    g_anim_pose_actor = NULL; g_anim_kf_tween.active = 0;
+    int q_rc = re15_skel_compute_pose(sk, kf_n, s_pose);
     mn[0] = s_pose[bone].trans[0]; mn[1] = s_pose[bone].trans[1]; mn[2] = s_pose[bone].trans[2];
+    if (!q_rc) q_rc = re15_skel_compute_pose(sk, kf_p, s_pose);
+    g_anim_pose_actor = q_save; g_anim_kf_tween = q_tw;
+    if (q_rc) return;
     if (re15_emd_get_keyframe_position(sk, kf_n, &rx, &ry, &rz)) { mn[0] += rx; mn[2] += rz; }
-    if (re15_skel_compute_pose(sk, kf_p, s_pose)) return;
     mp[0] = s_pose[bone].trans[0]; mp[1] = s_pose[bone].trans[1]; mp[2] = s_pose[bone].trans[2];
     if (re15_emd_get_keyframe_position(sk, kf_p, &rx, &ry, &rz)) { mp[0] += rx; mp[2] += rz; }
     re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
@@ -8795,6 +8815,16 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
         }
         e->x -= dx;                                    /* @0x8011bfe4-e8 */
         e->z -= dz;                                    /* @0x8011c004-08 */
+        {   /* MESS-SCHIENE Runde 35 Spur J (RE15_AFFEN_FUSS -> affen_fuss.log): reine Aufzeichnung */
+            static int an_ = -1; static FILE *lf = NULL;
+            if (an_ < 0) { an_ = (getenv("RE15_AFFEN_FUSS") != NULL); if (an_) lf = fopen("affen_fuss.log", "w"); }
+            if (lf) {
+                fprintf(lf, "slot=%d clip=%d bild=%d bone=%d kf=%d/%d d=(%d,%d) rot=%d poseaktor=%d frac=%d tween=%d\n",
+                        slot, clip, s_now, bone, kf_n, kf_p, (int)dx, (int)dz, (int)e->rot_y,
+                        mess_pa ? (int)(mess_pa - g_actors) : -1, mess_frac, mess_tw);
+                fflush(lf);
+            }
+        }
     }
 }
 static void re15_maggot_bf50(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 14 + 3 * a1); }

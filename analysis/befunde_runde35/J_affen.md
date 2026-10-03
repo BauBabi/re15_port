@@ -303,3 +303,27 @@ Vorgaengers halten NICHT:
       bis beide Gorillas an ihren Wandklemmen haengen (Slot 2 bei (-5050,-14635) = exakt der Original-Haltepunkt von G1,
       Slot 3 bei z=-15477). Im Original wechseln Clip 8/9 (cmd 2/2, 2/3) und Leon pendelt auf der Stelle.
 - FIX (folgt): Knockdown-Stopp ueber die Original-Sonde FUN_8001c2dc ([4] und [5]), Biss-Flinch mit der Richtung des Beissers.
+
+### G3 — Punkt 4/5: die eigentliche Ursache — Crossfade-Zaehler +0x8f des Gorillas baute nie ab (gemessen)
+- Messung (Lauf A5 nach G1/G2-Fix, Leon ohne Eingabe): nur 2 Treffer bis F3300; Slot 3 lief in CHASE (Clip 5) 700 Bilder
+  lang RUECKWAERTS von Leon weg ((-11727,-9924) -> (-16184,-4931), Blick dabei auf Leon). Je-Bild-Zerlegung (scratchpad
+  perframe.py): an der Wand -15..-30 je Bild in Blickrichtung, im Freien +80 -> -85 je Halbfenster (netto 8,9/Bild).
+- Soll (dieselbe Posenrechnung ohne Blend, scratchpad footlock.py = re15_skel_compute_pose-Zwilling): Clip 5, Locator Knochen
+  17 (Bild < 0x18) / 14 (ab 0x18): +8 .. +88 .. +17 / +88 .. +126 .. +36 je Bild, 2892 je Zyklus = 74 Einheiten/Bild.
+- Mess-Schiene RE15_AFFEN_FUSS (affen_fuss.log, Lauf A6): `poseaktor=3 frac=7` in 849 von 887 Bildern — die Fuss-Sperre
+  re15_maggot_footlock ruft re15_skel_compute_pose OHNE das Abfrage-Muster; g_anim_pose_actor zeigt noch auf den zuletzt
+  gezeichneten Aktor (Slot 3), dessen Crossfade-Zaehler dauerhaft auf 7 steht. Folge: beide Abfrage-Posen werden gegen
+  SEINE Vor-Pose gemischt (und ueberschreiben sie). Die 38 Bilder mit frac=0 (G2 noch eingefroren) zeigen exakt die
+  Soll-Folge (-15,+19,+30,...,+125,...,+33) und treffen die Original-Lage: G1 30 Bilder nach der Freigabe Port
+  (-4850,-14440) Bild 30 / Original t=45.48 (-4855,-14459) Bild 31.
+- Warum frac dauerhaft 7: re15_maggot_clip setzt +0x8f = 7 (wie das Original an jeder Clip-Site), aber re15_maggot_anim
+  (= der anim_set-Aufruf des Ports) baute ihn nie ab. Original: anim_set FUN_8001f314 zieht +0x8f je Aufruf um 1
+  (`lbu v0,143(v1)` @0x8001f5a8, `addiu v0,v0,-1` @0x8001f5b0, `sb v0,143(v1)` @0x8001f5b4; Aufruf mit a3 = 0x200 an den
+  Gorilla-Sites, z.B. CHASE `jal 0x8001f314` @0x80117d6c). Original-Savestates r3 (66 Proben, beide Gorillas, t=36..86):
+  +0x8f = 0 in 55, sonst 7 - Bild (Clip 5 Bild 2 -> 5, Bild 4 -> 3, Bild 5 -> 2; Clip 0x12 Bild 6 -> 1).
+- Folgen im Port (alle drei Nutzer-Beobachtungen): (a) der RENDERER mischte dauerhaft 7/8 der Vor-Pose bei -> jede
+  Gorilla-Animation lief mit einem Bruchteil ihrer Amplitude und hing nach (Punkt 5: der Brustschlag Clip 3 war so nicht
+  zu erkennen); (b) die Fuss-Sperre lieferte netto keine Vorwaertsbewegung -> der Gorilla kroch auf der Stelle und wurde
+  an Waenden rueckwaerts gedrueckt (Punkt 4: "nicht zielstrebig"); (c) der Mechanismus ist derselbe wie beim NPC-Gleiten
+  (Memory reai-v2-npc-crossfade-decay) — dort wurde der Gorilla-Pfad nicht mitgefixt.
+- FIX: re15_maggot_anim baut +0x8f ab; re15_maggot_footlock posiert als ABFRAGE (g_anim_pose_actor = NULL, Tween gesichert).
