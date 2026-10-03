@@ -72,6 +72,7 @@ static inline int RNDI(float f) {
 #include "re15_granate.h"       /* Runde 30 Nachtrag K: Handgranate im Hebetisch (ROOM1150/1151) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Hebetisch-Cursor (ROOM1150/1151) */
 #include "re15_dokumente.h"     /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
+#include "re15_affen.h"         /* Runde 35 Spur J: Parts ohne Knochen weltfest (FUN_8001e5b0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -10245,6 +10246,16 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
+                    /* Runde 35 Spur J (re15_affen.h (2)): ein RE1.5-Mesh OHNE Knochen haengt im
+                     * Binder FUN_8001e5b0 an &DAT_80072d4c (Identitaet, kein Entity-Link) und steht
+                     * weltfest bei EMR[8+6i] — nicht auf der Wurzelpose (das war der mitbewegte Teil
+                     * am Gorilla-Oberkoerper). RE2-Banken (re2_rig) und die G5-Kinder bleiben bei
+                     * ihrer eigenen Regel oben. */
+                    if (nbi >= npc_bones && !npc_remap && npc->type != 0x36u && npc->type != 0x37u) {
+                        const re15_enemy_bank_t *tbJ = re15_enemy_find(npc->type);
+                        if (!(tbJ && tbJ->re2_rig))
+                            (void)re15_affen_surplus_part_world(npc_skel, nbi, nyawed_rot, nbone_world_trans);
+                    }
                     /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die
                      * PART-SICHT des finalen Birkin (Typ 0x36) — welche nbi laufen
                      * und wo jeder Part in WELT-Y landet (Blob-Bodenkontakt!). */

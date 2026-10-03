@@ -1037,6 +1037,9 @@ typedef struct {
     uint8_t  mag_1e3;        /* +0x1e3: hurt-exit variant — !=0 routes the flinch exit to sub 9
                               * instead of the sub-7 leap (@0x8011b1c8-d8). ONLY writer in STAGE1.BIN
                               * is the INIT clear (@0x801170ac) -> always 0 in shipped play. */
+    uint8_t  mag_hit_ctr;    /* Runde 35 Spur J (PORT-FELD, NUTZER-VORGABE "erst nach 3 Treffern
+                              * springen"): Flinch-Eintritte seit dem letzten Vergeltungs-Sprung;
+                              * INIT-geloescht wie +0x1e0..+0x1e3 (re15_affen.h) */
 
     /* ---- Spider-Baby (type 0x26, EM026) — a STATIONARY web-spitter/ambush (RE15_SPIDER_AI.md).
      * Emerges vertically from its spawn point (spider_phase < 13 = intangible), then solid + a -2

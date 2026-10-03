@@ -38,6 +38,7 @@
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
+#include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -8849,6 +8850,7 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_pin_cd = 0;                                    /* +0x1e1 @0x8011708c */
         e->mag_boost = 4;                                     /* +0x1e2 = 4 @0x80117098-9c */
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
+        e->mag_hit_ctr = 0;                                   /* Runde 35 Spur J: Port-Zaehler, INIT-geloescht wie +0x1e0..+0x1e3 */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
         e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
@@ -9184,7 +9186,14 @@ static void re15_maggot_ai_tick(int slot)
                     re15_audio_room_se(7);                    /* @0x80118d64-68 */
                     break;
                 }
-                re15_dog_advance_ofs(e, 0);                   /* the flight DOUBLE-advance: c1a4 + 245d8(0) @0x80118dbc */
+                /* Runde 35 Spur J — KEIN 245d8(0) im Flug (Port-Defekt "double-advance" entfernt, selbst
+                 * disassembliert @0x80118c3c-dc4): jeder Pfad der Phase 2 springt in den Epilog
+                 * 0x80118dc4 — Landung `j 0x80118dc4` @0x80118cc0, Frame!=0x13 `bne ..,0x80118dc4`
+                 * @0x80118cdc, Finisher-Gates @0x80118cf8/d0c/d20/d3c, Commit `j 0x80118dc4`
+                 * @0x80118d6c. `jal 0x800245d8` @0x80118dbc erreichen nur Phase 0/1 (Anlauf) und die
+                 * Landungs-Phase 3 (`beq v0,zero,0x80118dbc` @0x80118d84). Gemessen vorher (Lauf B):
+                 * ein Sprung trug 12700 Einheiten in 40 Bildern = doppelte Flugweite -> der Gorilla
+                 * ueberschoss Leon ("KI nicht zielstrebig"). Die c1a4-Horizontale ist der Flug. */
                 break; }
             default:  /* phase 3 landing tail @0x80118d74-dc0: play out, slide at +0x8c=100, -> SELECTOR */
                 if (re15_maggot_anim(e)) { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
@@ -9368,6 +9377,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->hit_react |= 2;                            /* @0x8011b064-70 */
                 e->sub_state_3 = 1;                           /* @0x8011b07c-80 */
                 e->motion = 7; e->anim_frame = 0; e->anim_frac = 7;   /* flinch clip 7 @0x8011b08c-90 */
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: ein Flinch = ein Treffer */
                 re15_maggot_gore(e);                          /* vec @0x80121388[(+0x6&1)*0x20] @0x8011b0bc-130 */
                 re15_audio_room_se(3);                        /* Se(3) @0x8011b134-38 */
                 /* fall through */
@@ -9377,7 +9387,9 @@ static void re15_maggot_ai_tick(int slot)
             default:  /* exit @0x8011b178-1d8: -> ACTIVE sub 7 = RETALIATION LEAP (sub 9 if +0x1e3) */
                 e->hit_react = 0;                             /* @0x8011b178 */
                 e->state = 1;                                 /* sb 1 @0x8011b188 */
-                e->sub_state_1 = (uint8_t)((e->mag_1e3 != 0) ? 9 : 7);   /* @0x8011b194-98 / @0x8011b1c8-d8 */
+                e->sub_state_1 = re15_affen_flinch_exit_sub(e);   /* Original: 7 (@0x8011b194-98) / 9 bei +0x1e3
+                                                                   * (@0x8011b1c8-d8); Runde 35 Spur J: 7 erst beim
+                                                                   * 3. Treffer, sonst 3 (NUTZER-VORGABE, re15_affen.h) */
                 e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
@@ -10174,8 +10186,12 @@ static void re15_npc_pos_advance(re15_actor_t *e)
 static void re15_npc_wall_clamp(re15_actor_t *e, int32_t ox, int32_t oz)
 {
     int32_t nx = e->x, nz = e->z;
-    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
-                                   (int32_t)e->hit_radius_min, e->y, 4u);
+    /* Runde 35 Spur J: Band = Zustandsbyte +0x82 (FUN_8003b0a4 `lbu v1,130(a3)` @0x8003b228-3c),
+     * nicht band_from_y — ROOM11C0 sub07 setzt Ada `Member_set 12 = 2` (@0x1C66), ehe sie in den
+     * Streifenwagen laeuft (re15_affen.h (1)). */
+    re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz,
+                                          (int32_t)e->hit_radius_min, re15_affen_npc_band(e), 4u,
+                                          NULL, NULL);
     e->x = nx; e->z = nz;
 }
 
