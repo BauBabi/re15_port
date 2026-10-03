@@ -239,6 +239,17 @@ exe bis EXIT_AT`; `[birkin] 36 Slot 2: HP 600 -> 520, Zustand 2, exe bis EXIT_AT
   0x80108BEC/0x80109610 = Port 5/6 statt 0x80108530 = 1; Brad Handler RE2ZH_STAGGER = 2). Die Negativ-Kontrolle 221
   (Spalte 0 von Hand -> Kriecher HP 10) bleibt unveraendert gueltig.
 
+### 6.1 Suite (voller Lauf `local_build.sh all` im Baum, Endstand)
+```
+=== LOCAL-BUILD-OK (all) — Tests 480/480
+```
+(Lauf 1 davor: 478/480 — nur `unit_r34_schaden` / `unit_r34_reaktion` mit den Binaries VOR der Spalten-Anpassung
+§6; nach dem Neubau einzeln und im Lauf 2 gruen. Keine Fenster-Haken geflattert.)
+
+### 6.2 Commits (Zweig r35/granate auf 154a73c1)
+41c906b8 Dossier Messung vorher + RE2-Belege · 731c3263 Umsetzung Modul + Haken + Sonde · 59117ee5 exe-Pins +
+FORCE_EXPLOSION-Boden · c1a36aa8 Dossier §4-6 · 24642c7a r34-Sonden Spalte 1 · (final) fix(r35-granate).
+
 ## OFFEN
 1. **Wand-Maske 1 (Spielerklasse)** ist PORT-WAHL: RE2 FUN_8004fba0 testet die RE2-SCA mit a1 = 2 / a2 = 8192, deren
    Klassenbits nicht 1:1 auf RE1.5-u0 abbilden (RE1.5: Spieler 1, Objekte 2, Gegner 4). Naechster Messweg: FUN_8004fba0
