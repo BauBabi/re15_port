@@ -17,6 +17,8 @@
  *           danach wieder 3, 3, 7 (Zaehler setzt sich beim Sprung zurueck).
  *   flug    LEAP Phase 2 (in der Luft, +0x8c = 240): ein Bild verschiebt den Gorilla um genau EINEN
  *           c1a4-Schritt (240), nicht um den doppelten (Port-Defekt "double-advance", @0x80118cc0-dc4).
+ *   brust   Rear-up-Pin-Release: Clip 3 ab Bild 0x16 -> Phase 5/6 -> sub 2 (Clip 3 ab 0x1d) -> CHASE = der
+ *           Brustschlag (Punkt 5), gemessen als Bildfolge.
  *   wagen   Messschiene (kein Riegel-Urteil ausser Plausibilitaet): die Klappe (Objekt 0) waehrend des
  *           Umklappens in Cut 12 â€” rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
  */
@@ -346,6 +348,39 @@ static void teil_wagen(void)
     PRUEF(rz_max == 1752, "rot_z-Maximum 1752 (Spitze der Folge), ist %d", (int)rz_max);
 }
 
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Punkt 5: der Brustschlag = Clip 3 ab Bild 0x16 nach dem verbundenen Rear-up-Pin (sub 15 Phase 4
+ * @0x8011ad50-78), Phase 5 bis Bild 0x31 (@0x8011adc0-d4), Phase 6 -> sub 2 Phase 1 mit Clip 3 ab
+ * Bild 0x1d (@0x8011ae30-58), Clip-Ende -> CHASE (sub 3). Gemessen als Bildfolge der Mechanik. */
+static void teil_brust(void)
+{
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -22604, 14455, 0, 0, 3) != 0) return;
+    re15_actor_t *g = aktor_vom_typ(0x27, 0);
+    re15_actor_t *g2 = aktor_vom_typ(0x27, 1);
+    PRUEF(g != NULL, "Gorilla 1 vorhanden");
+    if (!g) return;
+    if (g2) { g2->grid_id |= 0x20; g2->x = 30000; g2->z = 30000; }
+    g->state = 1; g->sub_state_1 = 15; g->sub_state_2 = 4; g->sub_state_3 = 0;   /* RELEASE-Init nach dem Pin */
+    g->hit_react = 1; g->y = g->dog_floor_y + 1600;
+    frame(0, 0);
+    PRUEF(g->sub_state_1 == 15 && g->sub_state_2 == 5 && g->motion == 3 && g->anim_frame >= 0x16 && g->anim_frame <= 0x17,
+          "Phase 4 -> 5: Clip 3 ab Bild 0x16 (@0x8011ad50-78): sub %d phase %d clip %d bild %d",
+          g->sub_state_1, g->sub_state_2, (int)g->motion, (int)g->anim_frame);
+    int f_sub2 = -1, f_chase = -1, clip3_bilder = 0, maxbild = 0;
+    for (int f = 0; f < 200; f++) {
+        frame(0, 0);
+        if (g->motion == 3) { clip3_bilder++; if (g->anim_frame > maxbild) maxbild = g->anim_frame; }
+        if (f_sub2 < 0 && g->sub_state_1 == 2) f_sub2 = f;
+        if (f_sub2 >= 0 && g->sub_state_1 == 3) { f_chase = f; break; }
+    }
+    PRUEF(f_sub2 >= 0, "Phase 6 -> sub 2 (Clip 3 ab Bild 0x1d, @0x8011ae30-58) nach %d Bildern", f_sub2);
+    PRUEF(f_chase >= 0 && maxbild >= 0x45, "Clip 3 laeuft bis zum Ende (Bild %d von 70) und mündet in CHASE (sub 3) nach %d Bildern; %d Bilder Clip 3 = der aufrechte Brustschlag",
+          maxbild, f_chase, clip3_bilder);
+}
+
 /* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
@@ -357,6 +392,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "sprung") || !strcmp(teil, "alle")) teil_sprung();
     if (!strcmp(teil, "flug")   || !strcmp(teil, "alle")) teil_flug();
     if (!strcmp(teil, "wagen")  || !strcmp(teil, "alle")) teil_wagen();
+    if (!strcmp(teil, "brust")  || !strcmp(teil, "alle")) teil_brust();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

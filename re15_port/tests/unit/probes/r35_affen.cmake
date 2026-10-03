@@ -9,7 +9,7 @@ target_link_libraries(test_r35_affen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_affen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r35_affen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-foreach(_teil teile band ada sprung flug wagen)
+foreach(_teil teile band ada sprung flug wagen brust)
     add_test(NAME unit_r35_affen_${_teil} COMMAND test_r35_affen ${_teil})
     set_tests_properties(unit_r35_affen_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
