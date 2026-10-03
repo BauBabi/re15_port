@@ -369,10 +369,45 @@ static void teil_f(void)
     CHECK(87, z->re2_gl_sperre == 5 || z->re2_gl_sperre == 15, "Flammen-Sperre aus w1 (5) bzw. 15, ist %d", z->re2_gl_sperre);
 }
 
+/* ---- G: Waffenrahmen des Leon-Granatwerfers PL00W0F (re15_werfer_rahmen) -------------------- */
+static void teil_g(void)
+{
+    /* Einheitsmatrix: Spalte 1 (Lauf) = (sin, cos, 0), Spalte 0 (oben) = (cos, -sin, 0) — das Netz
+     * PL00W0F ist um 35,62 Grad von +y nach +x gedreht (MD1 @0x50A8: Laufring-Mitte (377.5,852) ->
+     * Muendungsring-Mitte (706,1310.5), Punkte @0x518C-0x522C). */
+    int32_t r[9] = { 4096, 0, 0,  0, 4096, 0,  0, 0, 4096 };
+    int16_t ofs[4] = { 120, 1200, 0, 0 };
+    int n = re15_werfer_rahmen(15, 11, r, ofs);
+    CHECK(90, n == 1 && r[1] == 2386 && r[4] == 3330 && r[7] == 0, "Laufachse im Knochenrahmen (2386,3330,0), ist (%d,%d,%d)", (int)r[1], (int)r[4], (int)r[7]);
+    CHECK(91, r[0] == 3330 && r[3] == -2386 && r[6] == 0 && r[8] == 4096, "Hochachse (3330,-2386,0), z unveraendert; ist (%d,%d,%d) z=%d", (int)r[0], (int)r[3], (int)r[6], (int)r[8]);
+    CHECK(92, ofs[0] == -204 && ofs[1] == 1717 && ofs[2] == 3, "Muendungsversatz im Netzrahmen {-204,1717,3}, ist {%d,%d,%d}", ofs[0], ofs[1], ofs[2]);
+    /* Muendungspunkt im Knochenrahmen = M' * ofs = Ringmitte (706,1310.5) + 240 laengs - 14.5 quer */
+    {
+        const int32_t mx = (r[0] * ofs[0] + r[1] * ofs[1]) >> 12, my = (r[3] * ofs[0] + r[4] * ofs[1]) >> 12;
+        CHECK(93, mx > 706 + 100 && mx < 706 + 160 && my > 1310 + 180 && my < 1310 + 220,
+              "Muendungspunkt (%d,%d) = Ringmitte (706,1310) + 240 entlang (0.58,0.81) - 14.5 quer", (int)mx, (int)my);
+    }
+    /* Die gemessene Knochenachse der Haltepose (30,5 Grad abwaerts: Spalte 1 = (3478,2079), y nach
+     * unten) wird mit der dazu senkrechten Hochachse zur fast waagerechten Laufachse. */
+    {
+        int32_t k[9] = { 2079, 3478, 0,   -3504, 2079, 0,   0, 0, 4096 };
+        (void)re15_werfer_rahmen(16, 11, k, NULL);
+        CHECK(94, k[1] > 3900 && k[4] > -500 && k[4] < 100, "Haltepose: Laufachse nach dem Rahmen fast waagerecht, ist (%d,%d)", (int)k[1], (int)k[4]);
+    }
+    /* Kein Eingriff: Standard-Baenke (14 Clips = Elza PL04W0F, Netz auf +y), Rakete, Flamme, Python */
+    int32_t e[9] = { 4096, 0, 0,  0, 4096, 0,  0, 0, 4096 };
+    int16_t o2[4] = { 120, 1200, 0, 0 };
+    CHECK(95, re15_werfer_rahmen(15, 14, e, o2) == 0 && e[1] == 0 && e[4] == 4096 && o2[0] == 120 && o2[1] == 1200,
+          "14-Clip-Bank (Elza PL04W0F): unveraendert");
+    CHECK(96, re15_werfer_rahmen(18, 11, e, o2) == 0 && re15_werfer_rahmen(14, 11, e, o2) == 0 && re15_werfer_rahmen(20, 11, e, o2) == 0,
+          "Rakete/Flamme/Python: kein Rahmen");
+    CHECK(97, re15_werfer_rahmen(17, 11, e, o2) == 1, "GL Brand fuehrt Leons W0F-Netz (re15_werfer_bank_id) -> Rahmen");
+}
+
 int main(void)
 {
     if (laden() != 0) { printf("CORE00.ESP (RE2) fehlt/ungueltig\n"); return 2; }
-    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f();
+    teil_a(); teil_b(); teil_c(); teil_d(); teil_e(); teil_f(); teil_g();
     if (s_fails) { printf("test_r35_werfer: %d FAILURES\n", s_fails); return 1; }
     printf("test_r35_werfer: OK\n");
     return 0;

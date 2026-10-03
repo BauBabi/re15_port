@@ -265,3 +265,103 @@ endif()
 message(STATUS "${_tag} [w20]: Muendung ${_n_mz}, Rauch ${_n_ra}, Knall ${_n_kn}, Zombie 2 HP ${_hp0} -> ${_hpmin} (ss1=${_ss1})")
 
 message(STATUS "${_tag}: alle sechs Waffen gemessen — OK")
+
+# ---------------------------------------------------------------------------------------------------
+# FREIE BAHN (Gegenpruefung, Dossier §4.1 G1/G2): Raum ohne Gegner, Leon blickt in den Raum.
+#   G1  Leons Granatwerfer PL00W0F: das Netz ist im Knochenrahmen um 35,62 Grad gedreht (MD1 @0x50A8,
+#       Punkte @0x518C-0x522C) — vorher flog die gerade Runde 304 je 509 nach UNTEN. Jetzt: Versatz
+#       {-204,1717,3} im Netzrahmen, die gerade Runde (Platz 94, vel.y 600 @0x80044c18-64) bleibt ueber
+#       drei Flugbilder waagerecht (|dy| klein gegen den Vortrieb).
+#   G2  Rakete: fliegt (>= 4 Bilder Op 23/24) und explodiert an der WAND (SE 0x01140001) — vorher flog
+#       sie ueber die Zellen des Bandes bis `slti 32001` @0x8001f724 und verschwand ohne Explosion;
+#       ROOM1060 (Spieler-y -14400 = Band 8) ebenso.
+# ---------------------------------------------------------------------------------------------------
+function(r35_exe_frei _lauf _dir _id _raum _pos)
+    file(MAKE_DIRECTORY "${_dir}")
+    set(WORKDIR "${_dir}")
+    set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+             RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=${_pos}"
+             RE15_AI_FLAVOR=re2 "RE15_GIVE=${_id}:6" "RE15_EQUIP=${_id}"
+             RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=M0.8,MA0.3,M2.0,W1"
+             RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=130#${_raum}")
+    re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
+    if(NOT _rv EQUAL 0)
+        message(STATUS "${_tag} [${_lauf}]: Lauf ohne Ergebnis (exit=${_rv}) -> EIN Wiederholungsversuch")
+        file(REMOVE "${_dir}/debug.log" "${_dir}/state.log" "${_dir}/wf.log")
+        re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
+    endif()
+    if(NOT _rv EQUAL 0)
+        r35_fehler("${_lauf}" "re15_pc.exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT), ${_dir}")
+    endif()
+    if(NOT EXISTS "${_dir}/wf.log")
+        r35_fehler("${_lauf}" "kein wf.log in ${_dir}")
+    endif()
+endfunction()
+
+# Flugbahn eines Platzes: Weltlage des ersten und des _n_soll-ten Bildes mit dem Op-Paar _op ("22/15").
+function(r35_flug _datei _platz _op _aus_n _aus_x0 _aus_y0 _aus_xn _aus_yn _n_soll)
+    file(STRINGS "${_datei}" _l REGEX "RE2FLUG platz=${_platz} bank=2 sub=[0-9]+ op=${_op} welt=")
+    list(LENGTH _l _n)
+    set(${_aus_n} ${_n} PARENT_SCOPE)
+    if(_n LESS _n_soll)
+        return()
+    endif()
+    list(GET _l 0 _a)
+    math(EXPR _i "${_n_soll} - 1")
+    list(GET _l ${_i} _b)
+    string(REGEX MATCH "welt=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)" _m "${_a}")
+    set(${_aus_x0} ${CMAKE_MATCH_1} PARENT_SCOPE)
+    set(${_aus_y0} ${CMAKE_MATCH_2} PARENT_SCOPE)
+    string(REGEX MATCH "welt=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)" _m "${_b}")
+    set(${_aus_xn} ${CMAKE_MATCH_1} PARENT_SCOPE)
+    set(${_aus_yn} ${CMAKE_MATCH_2} PARENT_SCOPE)
+endfunction()
+
+# G1: Granatwerfer Explosiv in ROOM1000, Blick -x (Gier 2048)
+set(_d "${_wurzel}/frei_w15")
+r35_exe_frei("frei_w15" "${_d}" 15 1000 "21850,-13400,2048")
+r35_zaehle("${_d}/wf.log" "RE2SPAWN a0=020c0a00 a1=2048 ofs=\\(-204,1717,3\\)" _n_rd)
+if(_n_rd LESS 5)
+    r35_fehler("frei_w15" "Netzrahmen PL00W0F nicht angewendet: ${_n_rd} Runden mit Versatz (-204,1717,3), erwartet 5")
+endif()
+r35_flug("${_d}/wf.log" 94 "22/15" _n _x0 _y0 _x3 _y3 4)
+if(_n LESS 4)
+    r35_fehler("frei_w15" "gerade Runde (Platz 94) fliegt nur ${_n} Bilder (erwartet >= 4 bis zur Wand)")
+endif()
+math(EXPR _vor "${_x0} - ${_x3}")
+math(EXPR _dy  "${_y3} - ${_y0}")
+if(_vor LESS 1500)
+    r35_fehler("frei_w15" "Vortrieb der geraden Runde ueber 3 Bilder = ${_vor}, erwartet >= 1500 (vel.y 600)")
+endif()
+if(_dy GREATER 200 OR _dy LESS -400)
+    r35_fehler("frei_w15" "gerade Runde nicht waagerecht: dy ${_dy} ueber 3 Bilder bei Vortrieb ${_vor} (vor dem Netzrahmen: +912)")
+endif()
+r35_zaehle("${_d}/wf.log" "SE  re2fx code=0x01110001 -> ARMS0F Satz 10" _n_ex)
+if(_n_ex LESS 5)
+    r35_fehler("frei_w15" "nur ${_n_ex} Explosionen der 5 Teilgeschosse")
+endif()
+message(STATUS "${_tag} [frei_w15]: gerade Runde ${_n} Flugbilder, Vortrieb ${_vor}, dy ${_dy}, Explosionen ${_n_ex}")
+
+# G2: Rakete in ROOM1000 (Blick -x) und ROOM1060 (Band 8)
+foreach(_p "1000|21850,-13400,2048" "1060|26000,25300,2048")
+    string(REPLACE "|" ";" _pl "${_p}")
+    list(GET _pl 0 _raum)
+    list(GET _pl 1 _pos)
+    set(_d "${_wurzel}/frei_w18_${_raum}")
+    r35_exe_frei("frei_w18_${_raum}" "${_d}" 18 ${_raum} "${_pos}")
+    r35_flug("${_d}/wf.log" 94 "23/24" _n _x0 _y0 _x3 _y3 4)
+    if(_n LESS 4)
+        r35_fehler("frei_w18_${_raum}" "Rakete fliegt nur ${_n} Bilder (erwartet >= 4)")
+    endif()
+    math(EXPR _vor "${_x0} - ${_x3}")
+    if(_vor LESS 2200 OR _vor GREATER 2400)
+        r35_fehler("frei_w18_${_raum}" "Raketen-Vortrieb ueber 3 Bilder = ${_vor}, erwartet ~2300 (vel.y 768)")
+    endif()
+    r35_zaehle("${_d}/wf.log" "SE  re2fx code=0x01140001 -> RE2 ARMS11 Satz 20" _n_ex)
+    if(NOT _n_ex EQUAL 1)
+        r35_fehler("frei_w18_${_raum}" "Raketen-Explosion an der Wand: ${_n_ex} x 0x01140001, erwartet 1 (vorher 0: Flug ueber die Band-Zellen bis slti 32001 @0x8001f724)")
+    endif()
+    message(STATUS "${_tag} [frei_w18_${_raum}]: ${_n} Flugbilder, Vortrieb ${_vor}, Explosion an der Wand ${_n_ex}")
+endforeach()
+
+message(STATUS "${_tag}: freie Bahn (G1 Netzrahmen, G2 Wandkontakt) — OK")
