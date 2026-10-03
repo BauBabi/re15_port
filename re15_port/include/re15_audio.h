@@ -147,7 +147,13 @@ typedef enum {
     RE15_SE_BANK_WEAPON,
     RE15_SE_BANK_SND0,
     RE15_SE_BANK_SND1,
-    RE15_SE_BANK_CORE
+    RE15_SE_BANK_CORE,
+    RE15_SE_BANK_TUER      /* Runde 35 Spur L: Port-Bankbyte 6 = die geladene Tuer-Tonbank
+                            * (re15_audio_re2_tuer_laden/_se). Im Original ist Bank 6 ungueltig
+                            * (`sltiu v0,v1,0x6; beq v0,zero,ret` @0x80045094 = verworfen) und
+                            * kein ausgelieferter Se_on nutzt sie (Zensus 2026-10-03: alle 284
+                            * Se_on in 240 RDTs tragen Bank 2). Nur Port-Programme (irons_tod_1150.c
+                            * Knall-Bank gen/knall_bank.inc) setzen Bank 6. */
 } re15_se_bank_kind_t;
 
 static inline re15_se_bank_kind_t re15_audio_se_bank_kind(unsigned bank)
@@ -158,7 +164,8 @@ static inline re15_se_bank_kind_t re15_audio_se_bank_kind(unsigned bank)
         case 3:  return RE15_SE_BANK_SND1;
         case 4:  return RE15_SE_BANK_CORE;
         case 5:  return RE15_SE_BANK_SND0;   /* @0x8004513c lw a0,0x8 = snd0 (D6) */
-        default: return RE15_SE_BANK_SKIP;   /* 0 (blob, not resident) + >=6 (invalid) */
+        case 6:  return RE15_SE_BANK_TUER;   /* Port: Tuer-/Knall-Tonbank (s.o.), Original verwirft */
+        default: return RE15_SE_BANK_SKIP;   /* 0 (blob, not resident) + >=7 (invalid) */
     }
 }
 

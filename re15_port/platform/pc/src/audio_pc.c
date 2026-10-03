@@ -3528,10 +3528,10 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
                 if (getenv("RE15_SE_DEBUG")) {
-                    static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
+                    static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE", "TUER" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
                     fprintf(stderr, "[se] Se_on bank=%u id=%u -> %s%s\n", evt.bank, evt.sample_id,
-                            (k >= 0 && k < 5) ? kn[k] : "?",
+                            (k >= 0 && k < 6) ? kn[k] : "?",
                             (re15_audio_se_bank_kind(evt.bank) == RE15_SE_BANK_SKIP)
                                 ? "  << VERWORFEN (Bank nicht resident)" : "");
                 }
@@ -3545,7 +3545,9 @@ void re15_audio_tick(void)
                     case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;
                     case RE15_SE_BANK_SND1:   re15_audio_room_se(evt.sample_id);     break;
                     case RE15_SE_BANK_CORE:   re15_audio_core_se(evt.sample_id);     break;
-                    case RE15_SE_BANK_SKIP:   default: break;   /* bank 0/>=6 not resident -> skip */
+                    case RE15_SE_BANK_TUER:   re15_audio_re2_tuer_se(evt.sample_id); break;   /* Runde 35 Spur L:
+                                               * Bankbyte 6 = geladene Tuer-/Knall-Tonbank (re15_audio.h) */
+                    case RE15_SE_BANK_SKIP:   default: break;   /* bank 0/>=7 not resident -> skip */
                 }
                 break;
             case SCD_AUDIO_VOICE_ON:

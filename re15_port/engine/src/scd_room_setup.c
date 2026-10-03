@@ -26,6 +26,8 @@
 #include "re15_hebetisch_cursor.h" /* Hebetisch-Cursor ROOM1150/1151 (Runde 34 Nacht B) */
 #include "re15_dokumente.h"   /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
 #include "re15_adaruf.h"      /* Runde 34 Nacht Spur D: Ada-Ruf an der Tuer ROOM1050 -> ROOM10A0 */
+#include "re15_tuer1060.h"    /* Runde 35 Spur L: Tuer ROOM1060 -> ROOM1040 bis der Chief geholt ist */
+#include "re15_irons_tod.h"   /* Runde 35 Spur L: Irons-Todesszene 1150 + Knall-Montage + 11C0-Schnitt */
 
 extern scd_vm_t g_scd;
 
@@ -449,6 +451,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (erster Druck = Szene, danach Sperrtext) — aus demselben Grund an derselben Stelle wie
      * tuer1120: main00 @0x00B5A hat Slot 4 erst im Init-Lauf angelegt. Herleitung: re15_adaruf.h. */
     re15_adaruf_install((uint16_t)g_current_room_id);
+    /* Runde 35 Spur L: Tuer ROOM1060 -> ROOM1040 (Text-Platz, re15_tuer1060.h) und die Irons-Todesszene
+     * samt Montage-Schritten/Nachspawns (re15_irons_tod.h) — beide NACH dem Init-Lauf (Tuer-Slot bzw.
+     * Irons/Ada stehen erst dann im Pool). */
+    re15_tuer1060_install((uint16_t)g_current_room_id);
+    re15_irons_tod_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

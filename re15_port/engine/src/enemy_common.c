@@ -59,9 +59,21 @@ static struct {
     re15_emd_animation_t anim;    /* Record-EDD */
 } s_rbj_cache[RE15_RBJ_CACHE_MAX] = { { -1, 0, {0}, {0} }, { -1, 0, {0}, {0} } };
 
+/* Runde 35 Spur L: Marker-Alias je Aktor-Slot (0 = keiner). Ein portseitig gespawnter NPC ohne
+ * eigenen RBJ-Record (ROOM11C0: Marvin, Aktor-Slot 4) spielt den Record des angegebenen
+ * Marker-Slots (Ada, Slot 1 = Record-Marker 0x2). Inhalt der Gesten-Clips 15..23 ist ueber
+ * die Figuren hinweg bytegleich (rbj_zensus suche: Clip 15 ROOM11B0 rec0 == rec1 == ROOM1050 rec0).
+ * Zuruecksetzen mit re15_rbj_bind_room (Raumwechsel). */
+static int8_t s_rbj_alias[RE15_ACTOR_MAX];
+void re15_rbj_set_alias(int slot, int marker_slot)
+{
+    if (slot > 0 && slot < RE15_ACTOR_MAX) s_rbj_alias[slot] = (int8_t)marker_slot;
+}
+
 void re15_rbj_bind_room(const uint8_t *rbj, size_t size)
 {
     s_room_rbj = rbj; s_room_rbj_size = size;
+    memset(s_rbj_alias, 0, sizeof s_rbj_alias);   /* Runde 35 Spur L */
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++) { s_rbj_cache[i].slot = -1; s_rbj_cache[i].valid = 0; }
 }
 
@@ -93,8 +105,9 @@ static int rbj_resolve_slot(int slot)
     if (!e->active || e->type == 0x47) return -1;         /* Elliot-Ausnahme (O3) */
     /* Marker-Bit (1 + Enemy-Index); Port-Aktor-Slot = 1 + Enemy-Index -> Bit == slot. */
     int rec = -1;
+    int mslot = s_rbj_alias[slot] ? (int)s_rbj_alias[slot] : slot;   /* Runde 35 Spur L: Alias */
     for (int r = 0; r < 8; r++)
-        if (rbj_record_marker(r) & (1u << slot)) { rec = r; break; }
+        if (rbj_record_marker(r) & (1u << mslot)) { rec = r; break; }
     /* negativ cachen (Slot ohne Record), damit der Scan nicht jeden Frame laeuft */
     int ci = -1;
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++)
