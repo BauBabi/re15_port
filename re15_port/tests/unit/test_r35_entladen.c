@@ -130,8 +130,7 @@ static int test_n1beleg(void)
 #undef B2
     free(b); free(r);
     printf("n1beleg: Elliot/Typ-Modelle in der Arena (@0x80042328), Spieler fest (0x801bd814), "
-           "RE2-Raumlader schaltet XA ab (@0x8004a1c4 -> Setmode 0xA0)
-");
+           "RE2-Raumlader schaltet XA ab (@0x8004a1c4 -> Setmode 0xA0)\n");
     return 0;
 }
 

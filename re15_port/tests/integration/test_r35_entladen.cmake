@@ -181,7 +181,19 @@ if(TEIL STREQUAL "C" OR TEIL STREQUAL "alle")
                             "nach Tod im selben Raum/Cut: ${_ms2} Bilder) — PRI-Riegel muss nach dem "
                             "Entladen neu ableiten")
     endif()
-    message(STATUS "r35_entladen[C] OK: Tod -> LOAD im Todesraum, Masken ${_ms1}/${_ms2} Bilder, 0 fremd")
+    # Nachbesserung 1 (M2): die Boot-Lader-Slots 2/3 ("Heli/Pilot" = Objekte 2/5 der BOOT-RDT, hier
+    # ROOM1020) sind Raum-Bytes (RDT ab Arena-Basis @0x800397e8) — gezaehlt und am Tod entladen.
+    file(STRINGS "${_basis}_c/entladen.log" _vende REGEX "^VORHER spielende ")
+    list(LENGTH _vende _nvende)
+    if(_nvende LESS 1)
+        message(FATAL_ERROR "r35_entladen[c]: keine Grenze spielende")
+    endif()
+    list(GET _vende 0 _ve0)
+    if(NOT "${_ve0} " MATCHES "tim_slots 2 3 ")
+        message(FATAL_ERROR "r35_entladen[c]: Slots 2/3 (Objekte 2/5 der Boot-RDT ROOM1020) nicht als "
+                            "Raum-Slots belegt/gezaehlt: '${_ve0}'")
+    endif()
+    message(STATUS "r35_entladen[C] OK: Tod -> LOAD im Todesraum, Masken ${_ms1}/${_ms2} Bilder, 0 fremd, Slots 2/3 entladen")
 endif()
 
 # --- D: Cinematic-Bank ueber den Tod ------------------------------------------------------------
