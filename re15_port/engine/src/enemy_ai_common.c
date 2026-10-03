@@ -9300,10 +9300,12 @@ static void re15_maggot_ai_tick(int slot)
                 re15_player_victim_latch_ex(e, pl, re15_maggot_a780(e, pl));   /* Runde 35 Spur J: aca59 = a780 @0x8011ac50-68 VOR dem Yaw-Latch a8f8 @0x8011acac */
                 re15_affen_pin_anker(e, pl);                  /* Runde 35 Spur J: FUN_8001ac38 @0x8011ac18 ausfuehren (re15_affen.h (5)) */
                 pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
+                re15_affen_ritt_platz(e, pl, 1);              /* Runde 35 Spur J (8): a8f8(0x800) @0x8011acac, ad68(g_entity) @0x8011accc */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
                 break;
             case 3:   /* RIDE @0x8011acb4: hold the pin (0x8001ad68 root-place) until clip 0x1c ends */
                 s_player_grabbed = 1;
+                re15_affen_ritt_platz(e, pl, 0);              /* Runde 35 Spur J (8): ad68(g_entity,+0x84,+0x16c) @0x8011accc */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;
                 break;
             case 4:   /* RELEASE init @0x8011ad10 */

@@ -205,4 +205,13 @@ uint32_t re15_affen_b3_a0(const re15_actor_t *e, const re15_actor_t *pl);
 uint32_t re15_affen_b0_a0(const re15_actor_t *e, const re15_actor_t *pl);   /* +0x1dc != 0 -> Abstand^2, sonst Entity */
 /* (7c) B[7] Absprung (`jal 0x8001af20` @0x80118a3c): a0 = g_entity(cur) per `lw a0,-14460(a0)` @0x80118a24. */
 
+/* (8) RITT-PLATZIERUNG DES GREIFERS (Nachbesserung 3, M2). Der Pin-Latch (Phase 2, 0x8011abe8) dreht den Gorilla
+ *     nach dem Anker per `jal 0x8001a8f8` (a0 = Spieler+0x34 @0x8011ac60, a1 = 0x800 @0x8011acb0 -> Yaw := Peilung,
+ *     FUN_8001a8f8 `slt` @0x8001a974 / `sh a0,106(v1)` @0x8001a984) und faellt OHNE Sprung in Phase 3 (0x8011acb4):
+ *     `jal 0x8001ad68` @0x8011accc mit a0 = g_entity (@0x8011acc0), a1 = +0x84, a2 = +0x16c -> der GORILLA SELBST
+ *     steht jedes Bild auf Anker + rot(Versatz des laufenden Clip-0x1c-Bildes) (FUN_8001ad68 @0x8001adf4-ae18),
+ *     erst danach anim_set (@0x8011ace8). Im Original rueckt e1 so ~800 auf Leon vor und schiebt e2 weg (Abstand
+ *     e1-e2 = 3200 in T256-T264, jnb1/g_griff.txt). latch = 1: Phase-2-Bild (Yaw-Fang + Platzierung). */
+void     re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latch);
+
 #endif /* RE15_AFFEN_H */

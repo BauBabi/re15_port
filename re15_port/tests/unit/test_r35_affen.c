@@ -808,7 +808,16 @@ static int pl00_laden(void)
     return ok;
 }
 
-static void teil_griff(void)
+/* Nachbesserung 3: Ergebnisse je Lauf fuer die Auswertung in teil_griff (hinter s_wand_orig). Lauf 0 = Riegel wie
+ * bisher, Lauf 1 = "Weg 2": Leon, e1, e2 am Ende von T253 auf die Original-Lage/-Yaw gesetzt (jnb1/g_griff.txt F254). */
+#define GRIFF_T0 250
+#define GRIFF_N  246
+static int32_t s_gl_pl[2][GRIFF_N][2], s_gl_e1[2][GRIFF_N][3], s_gl_e2[2][GRIFF_N][3];
+static int32_t s_gl_st[2][GRIFF_N][6];         /* Bezug, Eingang (nach Schub), Ausgang der Klemme je Bild (Wurf) */
+static int32_t s_gl_anker[2][2];
+static int     s_gl_frei[2];
+static int32_t s_gl_frei_xy[2][2];
+static void griff_lauf(int erzwinge)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_game_state_init();
@@ -834,18 +843,39 @@ static void teil_griff(void)
     double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
     int n_nach = 0, n_fremd = 0, n_klemme = 0;   /* T291..Freigabe: Bilder / Bilder mit fremdem Beweger / Bilder mit Klemm-Schub */
     int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
+    memset(s_gl_st[erzwinge], 0, sizeof s_gl_st[erzwinge]);
     for (int f = 196; f < 196 + 300; f++) {
         if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
+        if (erzwinge && f == 254) {   /* Weg 2: Lage/Yaw am Ende von T253 = Original (jnb1/g_griff.txt F254) */
+            pl->x = -6660; pl->z = -12486; pl->rot_y = 647;
+            a->x = -5895; a->z = -14394; a->rot_y = 2825;
+            b->x = -8709; b->z = -12400; b->rot_y = 27;
+        }
         int32_t ox = pl->x, oz = pl->z;
+        re15_schritt_station_reset();
         frame(0, 0);
+        if (f >= GRIFF_T0 && f < GRIFF_T0 + GRIFF_N) {
+            int i = f - GRIFF_T0;
+            s_gl_pl[erzwinge][i][0] = pl->x; s_gl_pl[erzwinge][i][1] = pl->z;
+            s_gl_e1[erzwinge][i][0] = a->x; s_gl_e1[erzwinge][i][1] = a->z; s_gl_e1[erzwinge][i][2] = a->rot_y;
+            s_gl_e2[erzwinge][i][0] = b->x; s_gl_e2[erzwinge][i][1] = b->z; s_gl_e2[erzwinge][i][2] = b->rot_y;
+            int32_t rx = 0, rz = 0, ix = 0, iz = 0, kx = 0, kz = 0;
+            if (re15_schritt_station_hole(RE15_SCHRITT_ANFANG, &rx, &rz) && re15_schritt_station_hole(RE15_SCHRITT_SCHUB, &ix, &iz) &&
+                re15_schritt_station_hole(RE15_SCHRITT_KLEMME, &kx, &kz)) {
+                s_gl_st[erzwinge][i][0] = rx; s_gl_st[erzwinge][i][1] = rz; s_gl_st[erzwinge][i][2] = ix;
+                s_gl_st[erzwinge][i][3] = iz; s_gl_st[erzwinge][i][4] = kx; s_gl_st[erzwinge][i][5] = kz;
+            }
+            if (f == 254) { s_gl_anker[erzwinge][0] = pl->anchor_x; s_gl_anker[erzwinge][1] = pl->anchor_z; }
+        }
         int k = f - T0;
         const int32_t *o = (k >= 0 && k < NT) ? s_wurf_orig[k] : NULL;
         int zeigen = (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)));
         if (zeigen)
-            printf("    T%d hp%d pl %d/%d c%d/%d%s h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) | e2 (%d,%d)\n", f, (int)pl->hp,
+            printf("    T%d hp%d pl %d/%d c%d/%d%s h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) r%d | e2 %d/%d c%d/%d (%d,%d) r%d\n", f, (int)pl->hp,
                    pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (pl->anim_flags & 0x80) ? "R" : "",
                    pl->hit_react, (int)pl->x, (int)pl->z, (int)pl->rot_y, a->state, a->sub_state_1, a->sub_state_2,
-                   (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)b->x, (int)b->z);
+                   (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->z, (int)a->rot_y,
+                   b->sub_state_1, b->sub_state_2, (int)b->motion, (int)b->anim_frame, (int)b->x, (int)b->z, (int)b->rot_y);
         if (o && zeigen)
             printf("         Original (%d,%d) cmd %d c%d/%d  d=%.0f\n", (int)o[0], (int)o[1], (int)o[2], (int)o[3], (int)o[4],
                    dist2d(pl->x, pl->z, o[0], o[1]));
@@ -878,8 +908,10 @@ static void teil_griff(void)
         }
     }
     if (n_p2) abw_p2_mitte /= n_p2;
-    printf("  Pin T%d bei (%d,%d) hp %d, erste Platzierung T%d, frei T%d bei (%d,%d), Ende (%d,%d) hp %d\n",
+    s_gl_frei[erzwinge] = f_frei; s_gl_frei_xy[erzwinge][0] = fx; s_gl_frei_xy[erzwinge][1] = fz;
+    printf("  %sPin T%d bei (%d,%d) hp %d, erste Platzierung T%d, frei T%d bei (%d,%d), Ende (%d,%d) hp %d\n", erzwinge ? "[Weg 2] " : "",
            f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)fx, (int)fz, (int)pl->x, (int)pl->z, (int)pl->hp);
+    if (erzwinge) return;
     printf("  Bahn P2 gegen das Original (%s): mittlere Abweichung %.0f, groesste %.0f in T%d; T265-T267 (Schub von e2) %.0f;"
            " P3/P4 %d Bilder Clip 0x10 (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n",
            "T268-T290", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, p3_bilder, p3_pl00, p5_bilder, p5_rueck);
@@ -1237,6 +1269,178 @@ static void teil_wand(void)
     }
     PRUEF(kette_ok == 3, "Koerper-Schub FUN_8002b544 (e2, r %d + 450) + Wandklemme in T265-T267 wie das Original (%d/3 Bilder auf 3 Einheiten)",
           (int)g2->hit_radius_min, kette_ok);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Nachbesserung 3 (Abnahme 2, M1/M2) — Auswertung des Griff-Laufs gegen die Original-GDB-Spuren.
+ * M2: der Greifer e1 wird in Phase 2/3 jedes Bild absolut aus seinem Anker platziert (`jal 0x8001ad68` a0 = g_entity
+ *     @0x8011accc, Yaw-Fang `jal 0x8001a8f8` a1 = 0x800 @0x8011acac) und schiebt dabei e2 weg (Abstand 3200 T256-T264).
+ * M1: ab T291 bewegt im Original nur FUN_8003b0a4 (s_wand_orig vs10223-10469: Bezug == Eingang == Vorbild-Ausgang in
+ *     124/124 Bildern) -> die Bahn ab T290 ist die Iteration p -> Klemme(p, Bezug p). Gemessen wird, ob die Port-Klemme
+ *     die Original-Bahn ab dem Original-Zustand T290 reproduziert und wie empfindlich die Iteration auf den Start ist. */
+static const int32_t s_e12_orig[][7] = {   /* T, e1 x/z/Yaw, e2 x/z/Yaw (nach dem Bild; jnb1/g_griff.txt F = T + 1) */
+    { 250, -5895,-14391,2825, -8711,-12397,29 }, /* e1 15/1/0 c28/1  e2 3/1/0 c5/15 */
+    { 251, -5895,-14392,2825, -8710,-12400,29 }, /* e1 15/1/0 c28/2  e2 3/1/0 c5/16 */
+    { 252, -5895,-14393,2825, -8712,-12403,27 }, /* e1 15/1/0 c28/3  e2 3/1/0 c5/17 */
+    { 253, -5895,-14394,2825, -8709,-12400,27 }, /* e1 15/2/0 c28/4  e2 3/1/0 c5/18 */
+    { 254, -5882,-14389,2823, -8711,-12399,27 }, /* e1 15/3/0 c28/5  e2 3/1/0 c5/19 */
+    { 255, -5953,-14268,2823, -8709,-12406,27 }, /* e1 15/3/0 c28/6  e2 3/1/0 c5/20 */
+    { 256, -6062,-14169,2823, -8731,-12394,27 }, /* e1 15/3/0 c28/7  e2 3/1/0 c5/21 */
+    { 257, -6116,-14119,2823, -8782,-12348,29 }, /* e1 15/3/0 c28/8  e2 3/1/0 c5/22 */
+    { 258, -6199,-14044,2823, -8868,-12264,41 }, /* e1 15/3/0 c28/9  e2 3/1/0 c5/23 */
+    { 259, -6308,-13944,2823, -8963,-12141,62 }, /* e1 15/3/0 c28/10  e2 3/1/0 c5/24 */
+    { 260, -6404,-13856,2823, -9041,-12032,83 }, /* e1 15/3/0 c28/11  e2 3/1/0 c5/25 */
+    { 261, -6471,-13796,2823, -9092,-12016,104 }, /* e1 15/3/0 c28/12  e2 3/1/0 c5/26 */
+    { 262, -6468,-13798,2823, -9094,-12016,123 }, /* e1 15/3/0 c28/13  e2 3/1/0 c5/27 */
+    { 263, -6380,-13878,2823, -8996,-12031,123 }, /* e1 15/3/0 c28/14  e2 3/1/0 c5/28 */
+    { 264, -6307,-13944,2823, -8890,-12048,123 }, /* e1 15/3/0 c28/15  e2 3/1/0 c5/29 */
+    { 265, -6249,-13997,2823, -8795,-12049,127 }, /* e1 15/3/0 c28/16  e2 3/1/0 c5/30 */
+    { 266, -6249,-13997,2823, -8754,-12002,106 }, /* e1 15/3/0 c28/17  e2 3/1/0 c5/31 */
+    { 267, -6191,-14052,2823, -8655,-12000,85 }, /* e1 15/3/0 c28/18  e2 3/1/0 c5/32 */
+    { 268, -6191,-14052,2823, -9377,-12112,64 }, /* e1 15/3/0 c28/19  e2 3/1/0 c5/33 */
+    { 269, -6132,-14105,2823, -9497,-12178,43 }, /* e1 15/3/0 c28/20  e2 3/1/0 c5/34 */
+    { 270, -6132,-14105,2823, -9396,-12183,22 }, /* e1 15/3/0 c28/21  e2 3/1/0 c5/35 */
+    { 271, -6069,-14162,2823, -9307,-12188,1 }, /* e1 15/3/0 c28/22  e2 3/1/0 c5/36 */
+    { 272, -6069,-14162,2823, -9231,-12187,22 }, /* e1 15/3/0 c28/23  e2 3/1/0 c5/37 */
+    { 273, -6006,-14220,2823, -9175,-12190,43 }, /* e1 15/3/0 c28/24  e2 3/1/0 c5/38 */
+    { 274, -6006,-14220,2823, -9217,-12189,64 }, /* e1 15/3/0 c28/25  e2 3/1/0 c5/0 */
+    { 275, -5926,-14294,2823, -9232,-12187,85 }, /* e1 15/3/0 c28/26  e2 3/1/0 c5/1 */
+    { 276, -5926,-14294,2823, -9224,-12188,106 }, /* e1 15/3/0 c28/27  e2 3/1/0 c5/2 */
+    { 277, -5867,-14427,2823, -9205,-12192,127 }, /* e1 15/3/0 c28/28  e2 3/1/0 c5/3 */
+    { 278, -5867,-14427,2823, -9173,-12198,148 }, /* e1 15/3/0 c28/29  e2 3/1/0 c5/4 */
+    { 279, -5816,-14555,2823, -9131,-12206,169 }, /* e1 15/3/0 c28/30  e2 3/1/0 c5/5 */
+    { 280, -5816,-14555,2823, -9080,-12222,190 }, /* e1 15/3/0 c28/31  e2 3/1/0 c5/6 */
+    { 281, -5780,-14644,2823, -9020,-12237,211 }, /* e1 15/3/0 c28/32  e2 3/1/0 c5/7 */
+    { 282, -5780,-14644,2823, -8953,-12263,227 }, /* e1 15/3/0 c28/33  e2 3/1/0 c5/8 */
+    { 283, -5774,-14660,2823, -8880,-12282,225 }, /* e1 15/3/0 c28/34  e2 3/1/0 c5/9 */
+    { 284, -5774,-14660,2823, -8807,-12311,204 }, /* e1 15/3/0 c28/35  e2 3/1/0 c5/10 */
+    { 285, -5812,-14566,2823, -8730,-12340,199 }, /* e1 15/3/0 c28/36  e2 3/1/0 c5/11 */
+    { 286, -5812,-14566,2823, -8651,-12364,178 }, /* e1 15/3/0 c28/37  e2 3/1/0 c5/12 */
+    { 287, -5885,-14382,2823, -8566,-12391,157 }, /* e1 15/3/0 c28/38  e2 3/1/0 c5/13 */
+    { 288, -5885,-14382,2823, -8484,-12411,136 }, /* e1 15/3/0 c28/39  e2 3/1/0 c5/14 */
+    { 289, -5913,-14305,2823, -8469,-12378,115 }, /* e1 15/3/0 c28/40  e2 3/1/0 c5/15 */
+    { 290, -5928,-14291,2823, -8468,-12331,94 }, /* e1 15/3/0 c28/41  e2 3/1/0 c5/16 */
+    { 291, -5954,-14267,2823, -8475,-12279,73 }, /* e1 15/3/0 c28/42  e2 3/1/0 c5/17 */
+    { 292, -5975,-14248,2823, -8464,-12230,52 }, /* e1 15/3/0 c28/43  e2 3/1/0 c5/18 */
+    { 293, -5983,-14241,2823, -8446,-12196,31 }, /* e1 15/3/0 c28/44  e2 3/1/0 c5/19 */
+    { 294, -5984,-14240,2823, -8430,-12170,10 }, /* e1 15/3/0 c28/45  e2 3/1/0 c5/20 */
+    { 295, -5989,-14236,2823, -8406,-12135,65525 }, /* e1 15/3/0 c28/46  e2 3/1/0 c5/21 */
+    { 296, -5977,-14246,2823, -8368,-12112,65504 }, /* e1 15/3/0 c28/47  e2 3/1/0 c5/22 */
+    { 297, -5974,-14249,2823, -8344,-12090,65483 }, /* e1 15/3/0 c28/48  e2 3/1/0 c5/23 */
+    { 298, -5979,-14245,2823, -8344,-12082,65462 }, /* e1 15/3/0 c28/49  e2 3/1/0 c5/24 */
+    { 299, -5977,-14247,2823, -8341,-12086,65441 }, /* e1 15/3/0 c28/50  e2 3/1/0 c5/25 */
+    { 300, -5975,-14249,2823, -8336,-12090,65420 }, /* e1 15/3/0 c28/51  e2 3/1/0 c5/26 */
+    { 301, -5969,-14254,2823, -8331,-12095,65399 }, /* e1 15/4/0 c28/0  e2 3/1/0 c5/27 */
+    { 302, -5967,-14256,2823, -8331,-12095,65378 }, /* e1 15/5/0 c3/23  e2 3/1/0 c5/28 */
+};
+
+static void klemme_iter(int32_t x, int32_t z, int t_bis, int32_t (*bahn)[2])
+{
+    for (int t = 291; t <= t_bis; t++) {
+        int32_t nx = x, nz = z;
+        re15_collision_set_band(0);
+        re15_collision_constrain(&s_rdt, x, z, &nx, &nz);        /* Bezug = Eingang = Lage am Ende des Vorbilds */
+        x = nx; z = nz;
+        bahn[t - 291][0] = x; bahn[t - 291][1] = z;
+    }
+}
+
+static void griff_kette(int lauf)
+{
+    /* Platzierungskette T265-T290: Bezug / Eingang (nach Platzierung + Schub) / Ausgang der Klemme, Port gegen Original */
+    for (int t = 265; t <= 290; t++) {
+        const int32_t *w = s_wand_orig[t - 247];                 /* vs = 9641 + 2T, Tabelle ab vs10135 = T247 */
+        const int32_t *q = s_gl_st[lauf][t - GRIFF_T0];
+        printf("    %sT%d Bezug (%d,%d)/(%d,%d) Eingang (%d,%d)/(%d,%d) d%.0f Ausgang (%d,%d)/(%d,%d) d%.0f  [Port/Original]\n",
+               lauf ? "[Weg 2] " : "", t, (int)q[0], (int)q[1], (int)w[1], (int)w[2], (int)q[2], (int)q[3], (int)w[3], (int)w[4],
+               dist2d(q[2], q[3], w[3], w[4]), (int)q[4], (int)q[5], (int)w[5], (int)w[6], dist2d(q[4], q[5], w[5], w[6]));
+    }
+}
+
+static void teil_griff(void)
+{
+    griff_lauf(0);
+    /* ---- M2: Ritt des Greifers und Schub auf e2 ---- */
+    double e1_max = 0, e2_max = 0; int e1_t = -1, e2_t = -1;
+    for (int t = 253; t <= 268; t++) {
+        const int32_t *q = s_e12_orig[t - 250]; int i = t - GRIFF_T0;
+        printf("    T%d e1 Port (%d,%d) r%d Original (%d,%d) r%d d%.0f | e2 Port (%d,%d) r%d Original (%d,%d) r%d d%.0f | e1-e2 %.0f\n", t,
+               (int)s_gl_e1[0][i][0], (int)s_gl_e1[0][i][1], (int)s_gl_e1[0][i][2], (int)q[1], (int)q[2], (int)q[3],
+               dist2d(s_gl_e1[0][i][0], s_gl_e1[0][i][1], q[1], q[2]),
+               (int)s_gl_e2[0][i][0], (int)s_gl_e2[0][i][1], (int)s_gl_e2[0][i][2], (int)q[4], (int)q[5], (int)q[6],
+               dist2d(s_gl_e2[0][i][0], s_gl_e2[0][i][1], q[4], q[5]),
+               dist2d(s_gl_e1[0][i][0], s_gl_e1[0][i][1], s_gl_e2[0][i][0], s_gl_e2[0][i][1]));
+    }
+    for (int t = 254; t <= 301; t++) {
+        const int32_t *q = s_e12_orig[t - 250]; int i = t - GRIFF_T0;
+        double d1 = dist2d(s_gl_e1[0][i][0], s_gl_e1[0][i][1], q[1], q[2]);
+        if (d1 > e1_max) { e1_max = d1; e1_t = t; }
+        if (t <= 264) { double d2 = dist2d(s_gl_e2[0][i][0], s_gl_e2[0][i][1], q[4], q[5]); if (d2 > e2_max) { e2_max = d2; e2_t = t; } }
+    }
+    double e2_weg = dist2d(s_gl_e2[0][262 - GRIFF_T0][0], s_gl_e2[0][262 - GRIFF_T0][1], s_gl_e2[0][254 - GRIFF_T0][0], s_gl_e2[0][254 - GRIFF_T0][1]);
+    printf("  M2: e1 T254-T301 hoechstens %.0f (T%d) neben dem Original; e2 T254-T264 hoechstens %.0f (T%d); e2-Weg T254->T262 %.0f (Original 542)\n",
+           e1_max, e1_t, e2_max, e2_t, e2_weg);
+    griff_kette(0);
+
+    /* ---- M1: die Wandklemme allein ab T290 ---- */
+    static int32_t bahn[124][2];
+    klemme_iter(-5381, -10551, 414, bahn);                       /* Original-Zustand T290 (s_wurf_orig[36]) */
+    int gleich = 0, erste = -1;
+    for (int t = 291; t <= 414; t++) {
+        if (bahn[t - 291][0] == s_wurf_orig[t - 254][0] && bahn[t - 291][1] == s_wurf_orig[t - 254][1]) gleich++;
+        else if (erste < 0) erste = t;
+    }
+    PRUEF(gleich == 124, "Port-Klemme ab dem Original-Zustand T290 (-5381,-10551) iteriert: %d/124 Bilder T291-T414 bitgleich mit der Original-Bahn"
+          " (erste Abweichung T%d); Freigabe T378 (%d,%d) (Original (-4759,-10633)), T410 (%d,%d) (Original-Ruhelage (-3009,-11643))",
+          gleich, erste, (int)bahn[378 - 291][0], (int)bahn[378 - 291][1], (int)bahn[410 - 291][0], (int)bahn[410 - 291][1]);
+    /* Zerlegung des Riegel-Laufs: Freigabe = Iteration ab der EIGENEN T290-Lage */
+    {
+        int32_t px = s_gl_pl[0][290 - GRIFF_T0][0], pz = s_gl_pl[0][290 - GRIFF_T0][1];
+        static int32_t pb[124][2];
+        klemme_iter(px, pz, 414, pb);
+        int g = 0;
+        for (int t = 291; t <= 378; t++)
+            if (pb[t - 291][0] == s_gl_pl[0][t - GRIFF_T0][0] && pb[t - 291][1] == s_gl_pl[0][t - GRIFF_T0][1]) g++;
+        PRUEF(g == 88 && pb[378 - 291][0] == s_gl_frei_xy[0][0] && pb[378 - 291][1] == s_gl_frei_xy[0][1],
+              "Riegel-Lauf T291-T378 = Klemmen-Iteration ab seiner eigenen T290-Lage (%d,%d): %d/88 Bilder gleich, Freigabe (%d,%d)"
+              " (Riegel (%d,%d)) -> die Freigabe-Abweichung ist allein der Startversatz bei T290 (%.0f zum Original)",
+              (int)px, (int)pz, g, (int)pb[378 - 291][0], (int)pb[378 - 291][1], (int)s_gl_frei_xy[0][0], (int)s_gl_frei_xy[0][1],
+              dist2d(px, pz, -5381, -10551));
+    }
+    /* Empfindlichkeit: 24 Starts im 5x5-Gitter (+-1/+-2 Einheiten) um den Original-Zustand T290 + die beiden Port-Staende
+     * vor/nach A1 (jnb2/griff_nach4: T290 (-5374,-10724) -> frei (-4580,-10518); griff_nach5: (-5376,-10728) -> (-5433,-10693)) */
+    {
+        static const int32_t hist[2][2] = { { -5374, -10724 }, { -5376, -10728 } };
+        int n100 = 0, n400 = 0, n0 = 0; double dmax = 0;
+        static int32_t sb[124][2];
+        for (int k = 0; k < 26; k++) {
+            int32_t sx, sz;
+            if (k < 24) { int j = k < 12 ? k : k + 1; sx = -5381 + (j % 5) - 2; sz = -10551 + (j / 5) - 2; }
+            else { sx = hist[k - 24][0]; sz = hist[k - 24][1]; }
+            klemme_iter(sx, sz, 414, sb);
+            double d378 = dist2d(sb[378 - 291][0], sb[378 - 291][1], -4759, -10633);
+            int div = -1, ruhe = -1;
+            for (int t = 291; t <= 414; t++) {
+                if (div < 0 && dist2d(sb[t - 291][0], sb[t - 291][1], s_wurf_orig[t - 254][0], s_wurf_orig[t - 254][1]) > 50.0) div = t;
+                if (ruhe < 0 && t >= 293 && sb[t - 291][0] == sb[t - 292][0] && sb[t - 291][1] == sb[t - 292][1] &&
+                    sb[t - 292][0] == sb[t - 293][0] && sb[t - 292][1] == sb[t - 293][1]) ruhe = t - 2;
+            }
+            printf("    Start (%d,%d) [%+d,%+d]: >50 vom Original ab T%d, T378 (%d,%d) d%.0f, Ruhe ab T%d bei (%d,%d)\n", (int)sx, (int)sz,
+                   (int)(sx + 5381), (int)(sz + 10551), div, (int)sb[378 - 291][0], (int)sb[378 - 291][1], d378, ruhe,
+                   ruhe > 0 ? (int)sb[ruhe - 291][0] : 0, ruhe > 0 ? (int)sb[ruhe - 291][1] : 0);
+            if (k < 24) { if (d378 > 100) n100++; if (d378 > 400) n400++; if (d378 == 0) n0++; if (d378 > dmax) dmax = d378; }
+        }
+        printf("  M1 Empfindlichkeit: von 24 Starts 1-2 Einheiten neben dem Original-T290 enden bei T378 %d gleich, %d > 100 und %d > 400"
+               " Einheiten neben der Original-Freigabe (hoechstens %.0f)\n", n0, n100, n400, dmax);
+    }
+
+    /* ---- Weg 2: Startversatz entfernt (Leon/e1/e2 am Ende von T253 = Original) ---- */
+    griff_lauf(1);
+    printf("  Anker beim Pin: Lauf 0 (%d,%d), Weg 2 (%d,%d) (Original (-7507,-10327), jnb2/g_wer.txt)\n",
+           (int)s_gl_anker[0][0], (int)s_gl_anker[0][1], (int)s_gl_anker[1][0], (int)s_gl_anker[1][1]);
+    griff_kette(1);
+    printf("  [Weg 2] T290 (%d,%d) (Original (-5381,-10551)), frei T%d bei (%d,%d) (Original T378 (-4759,-10633))\n",
+           (int)s_gl_pl[1][290 - GRIFF_T0][0], (int)s_gl_pl[1][290 - GRIFF_T0][1], s_gl_frei[1], (int)s_gl_frei_xy[1][0], (int)s_gl_frei_xy[1][1]);
 }
 
 /* ---------------------------------------------------------------------------------------------- */

@@ -86,6 +86,17 @@ void re15_affen_pin_anker(re15_actor_t *e, re15_actor_t *pl)
     re15_victim_anchor_calibrate(pl->x, pl->z);                   /* Port-Wandklemme: Bezug = Standpunkt */
 }
 
+/* (8) Ritt-Platzierung des Greifers (re15_affen.h (8)): Phase 2 faellt in Phase 3; beide platzieren den Gorilla
+ *     mit dem +0x95 VOR anim_set. */
+void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);   /* = FUN_8001a8f8-Kern */
+void re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latch)
+{
+    if (latch) re15_enemy_steer_point(e, pl->x, pl->z, 0x800);    /* a8f8(&Spieler+0x34, 0x800) @0x8011ac60/@0x8011acac-b0 */
+    re15_enemy_bank_t *gb = re15_enemy_find(0x27);
+    if (gb && gb->ok)                                             /* ad68(g_entity, +0x84, +0x16c) @0x8011acc0-cc */
+        re15_clip_root_motion_abs_pub(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+}
+
 /* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50
  *      `lw v0,392(v0)` @0x80117200; rec18.Elternmatrix = &rec1.Matrix (`sw v1,3204(v0)`
  *      @0x80117214, v1 = v0+236), rec18.Eltern-Record = rec1 (`sw v1,3240(v0)` @0x8011721c),
