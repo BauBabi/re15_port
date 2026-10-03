@@ -249,6 +249,14 @@ check_tree() {           # $1 = fertiger Paketordner
     # Seit Runde 34 Nacht (Spur C): die zwei gruenen Generator-Lampen ROOM11F0/11F1 lesen
     # shared_assets/RE2/LAMPE2130.TIM (panel_lampen_pc.c) - fehlt sie, bleiben sie still dunkel.
     [[ -s "$out/shared_assets/RE2/LAMPE2130.TIM" ]]     || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/LAMPE2130.TIM (Generator-Lampen waeren dunkel)"
+    # Seit Runde 35 (Spur B, Werfer): Flammenwerfer-, Raketen- und Leerschuss-Toene der RE2-Baenke
+    # shared_assets/RE2/SOUND/ARMS10/ARMS11 (audio_pc.c re15_audio_re2_arms_se). Fehlen sie, bleiben
+    # Flammenstrahl, Raketen-Explosion und der Leer-Klick des Raketenwerfers still - Gate statt Stille.
+    local rs
+    for rs in SOUND/ARMS10.EDH SOUND/ARMS10.VB SOUND/ARMS11.EDH SOUND/ARMS11.VB; do
+        [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Werfer-Toene waeren stumm)"
+        cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
+    done
     # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
     # UNVERAENDERT aus shared_assets/RE2/DOOR/DOORxx.DO2 (door_scene_pc.c re2_archiv_lesen,
     # Modellteil + Tonteil). Fehlt eine Datei, laeuft an diesen Tueren der RE1.5-Uebergang

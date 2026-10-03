@@ -1,3 +1,103 @@
+# v0.8.22 - 2026-10-04
+
+Der erste Teil Ihres Auftrags der Runde 35 ist gebaut: Handgranate, Werfer und Python, Messer und
+Inventar, die neue Szene im Kommunikationsraum und Irons' Tod mit der Knall-Montage. Suite
+478 -> 517/517. Jeder Punkt wurde von einem zweiten Agenten unabhaengig am gebauten Spiel gegen
+Ihren Wortlaut nachgemessen. Die uebrigen Punkte folgen mit v0.8.23 (siehe unten).
+
+## Was Sie merken
+
+**Neue Szene im Kommunikationsraum (ROOM10F0).** Beim ersten Betreten steht Ada hinten rechts an
+den Monitoren (Cut 2), die Kamera wechselt zwischen Ada und Leon, Leon geht zu ihr, und der Dialog
+laeuft in Ihrem Wortlaut bis zu Marvins "Alright! Sounds like a plan. Take care Leon!" - mit
+Tuerknall, Marvins Auftritt, Vorstellung ("Woman:" bis zur Vorstellung, danach "Ada:") und dem
+Abgang der beiden zur Tuer. Danach geht die Karte auf: erst der Parkplatz ROOM11C0, dann Irons'
+Buero ROOM1150 (je ca. 4 s); in der normalen Karte blinken beide, bis Sie sie betreten haben.
+
+**Treppenhaus ROOM1060 -> ROOM1040.** Solange Irons nicht geholt ist: "I have to get the Chief
+first..." und die Tuer bleibt zu.
+
+**Irons' Tod (ROOM1150).** "Sir!" mit ausgestrecktem Arm, Leon rennt zur Liege, der Dialog in Ihrem
+Wortlaut; Irons haelt den Arm wie in der ersten Szene und laesst ihn abrupt fallen - danach ist er
+tot und laesst sich nicht mehr ansprechen. "SIR, Sir?!", Leon kniet, schuettelt langsam den Kopf
+(2,8 s, Kopf gesenkt) und steht langsam auf (1,6 s).
+
+**Die Knall-Montage.** Leben in ROOM1140 noch Zombies: Tuerknall, genau diese Zahl erscheint in
+ROOM1130 bei Cut 0. Dann der Knall wie in der ROOM1030-Szene: in ROOM1040 faehrt das Rolltor hoch
+(falls unten) und es kommen immer fuenf Zombies durch - auch wenn Sie dort vorher fast alle
+getoetet haben. Leben in ROOM1070 noch Zombies: Tuerknall, sie erscheinen in ROOM1030 bei Cut 7;
+noch ein Knall, und die Zombies kriechen unter dem Tor durch (Cut 6). Zum Schluss der Schnitt auf
+den Parkplatz (Cut 13): Ada und Marvin drehen sich zum Gebaeude, Marvin "I have to help him,
+sorry!" und rennt los, Ada "Marvin!...". Die erschienenen Zombies bleiben in diesen Raeumen.
+
+**MAIN01** laeuft ab dem Ende der Montage durchgehend, in jedem Raum, auch nach dem Laden und auch
+dort, wo das Raumskript seine Musik sonst stoppt - bis Leon den Parkplatz erreicht.
+
+**Handgranate.** Sie fliegt nicht mehr durch Waende: sie explodiert an der ersten Wand ihrer
+Flugbahn, auch an duennen, schraegen und runden. Die Reichweite ist die der RE2-Explosivrunde
+(+-2000 um den Zuendpunkt statt 900 Radius) - auf dieselbe Zombie-Gruppe gemessen 9 statt 1
+Treffer. Der Explosionston ist der von RE2. Zombies werden zerrissen und weggeschleudert,
+Gliedmassen fliegen durch den Feuerball. Explosionstests fuer Birkin und den Alligator sind dabei.
+
+**Granatwerfer, Raketenwerfer, Flammenwerfer, Colt Python** funktionieren jetzt nach RE2 Retail
+(im Original sind die Werfer leere Tabellenplaetze). Granatwerfer mit Explosiv-, Saeure- und
+Brandrunden (6 je Magazin); im Inventar mit einer anderen Rundenart kombinieren wechselt die
+Munition wie in RE2. Raketenwerfer 4 Schuss, leer klickt er hoerbar. Flammenwerfer mit Strahl, Fuel
+und brennenden Zombies. Geschosse enden an allen Wandformen. Die Python laedt mit Magnum-Munition
+nach und wirkt wie der Super Redhawk: ein Treffer toetet Zombies und holt einen springenden Affen
+herunter.
+
+**Kampfmesser.** Es steht nicht mehr im Inventar und ist immer der Rueckfall, wenn keine Waffe
+ausgeruestet ist (R1 zielen, Quadrat stechen). Eine Waffe legen Sie ab, indem Sie die ausgeruestete
+Waffe im Statusschirm erneut anwaehlen. Ein Messer in alten Spielstaenden (Inventar oder Kiste)
+verschwindet beim Laden.
+
+**ROOM1050 nach der Ada-Szene.** Das Inventar oeffnet wieder. In der Szene redet Leon mit sich
+selbst wie in ROOM1170 (im Profil, Hand zur Brust, Geste zur Tuer) statt in die Kamera.
+
+## Sprachdateien zum Aufnehmen
+
+Ohne Datei laufen die Zeilen stumm mit Untertitel.
+* synchro/STAGE1/room10F0/ main06..main23.wav: die 18 Zeilen der Kommunikationsraum-Szene in Ihrer
+  Reihenfolge (06 Leon "Hey - how did you came in here?" ... 23 Marvin "Alright! Sounds like a plan.
+  Take care Leon!"; 08/09 und 21/22 sind je eine Ihrer Zeilen, auf zwei Untertitel geteilt).
+* synchro/STAGE1/room1150/ main22..main29.wav: 22 Leon "Sir!", 23/24 Leons lange Zeile, 25/26 Irons,
+  27/28 Irons' letzte Bitte, 29 Leon "SIR, Sir?!".
+* synchro/STAGE1/room11C0/ main10..main14.wav: Ada/Marvin auf dem Parkplatz.
+Die vollstaendige Liste mit Sprecher und Text steht in analysis/befunde_runde35/K_cut10f0.md (§9.10)
+und L_cut1150.md (§7).
+
+## Zu entscheiden
+
+* Leon wird von der eigenen Handgranate nicht mehr verletzt (RE2-Regel; RE1.5 toetete ihn unter
+  ca. 950 Abstand). So lassen?
+* Die RE1.5-Raumdaten kennen keine Hoehe von Hindernissen: Granate, Runden, Rakete und Flamme enden
+  deshalb auch an Tischen (Konferenztisch ROOM1140). Soll die Granate ueber bestimmte niedrige
+  Hindernisse fliegen, nennen Sie bitte Raum und Stelle.
+* Mittlere und hohe Wuerfe ueberfliegen Gegner (kein Kontaktzuender) und zuenden an der Wand.
+* ROOM1030: War die Original-Szene des Raums noch nicht gelaufen, bricht das Tor in der Montage auf
+  - die Original-Szene kommt danach nicht mehr.
+
+## Grenzen
+
+* Der allgemeine Schusspfad aller Schusswaffen kennt die Sichtlinie des Originals und die
+  Fresser-Sperre von RE2 noch nicht: die Python trifft ueber den Konferenztisch und trifft
+  fressende Zombies. Gemessen, belegt, noch nicht gebaut.
+* Der Port fuehrt 15 Gegner gleichzeitig, das Original 20 - in ROOM1040/1030 erscheinen deshalb im
+  normalen Spiel die letzten fuenf Raum-Zombies nie (schon vor dieser Version).
+* Die Knall-Toene sind im Mitschnitt belegt, aber noch nicht am Lautsprecher gehoert (der Messrechner
+  hat kein Audiogeraet).
+
+## Kommt mit v0.8.23
+
+Gorillas in ROOM11C0 (in Arbeit: Ada versteckt sich und kommt zurueck, Ausstieg aus dem Auto,
+Brustteil, Brustschlag und Sprung nach 3 Treffern sind abgenommen; Bisstakt und Wurfbahn werden noch
+nachgemessen), Entladen nach Tod und Raumwechsel, Karte (Aufzug 1080, 11F0/1200, 1230, 1210), ROOM1190
+(Hunde-Schatten, Zielscheiben), ROOM1200 (Trage-Zombie), ROOM1210 (Gitterarme), Super Redhawk an
+Hunden, Doppeltueren, gruene Codes in den Dokumenten, Zombie-Abstaende 1010/1220, Memory Card 1010,
+Schrot-Munition 1090, RE2-Weltmodelle, Fenster und Kraehe in ROOM1120, das Zombie-Maedchen und die
+drei Android-Punkte.
+
 # v0.8.21 - 2026-09-30
 
 Ihr Auftrag dieser Runde ist gebaut: alle drei Granaten sind voll benutzbar. Suite 463 -> 477/477.
