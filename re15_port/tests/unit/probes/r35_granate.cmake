@@ -5,12 +5,16 @@
 # Dossier: analysis/befunde_runde35/A_granate.md
 #
 #   unit_r35_granate            echte Engine: tests/unit/test_r35_granate.c (Abschnitte wand, reichweite,
-#                               sound, gore, bosse) — linkt fx_plattform_pc.c fuer die Ton-Weiche (wie
-#                               unit_r34_plattform, ohne SDL).
+#                               sound, gore, bosse, strecke) — linkt fx_plattform_pc.c fuer die Ton-Weiche (wie
+#                               unit_r34_plattform, ohne SDL). Abschnitt strecke (Nachbesserung 1): Zellform
+#                               Typ 1-9 gegen die RE1.5-Handler, Quadrantenliste, ROOM11C0-Raute, ROOM1220
+#                               duenne Zellenfront in 38 Wurfphasen, Wurfbild.
 #   integration_r35_granate     echte exe (tests/integration/test_r35_granate.cmake): MITTE-Wurf gegen die
 #                               Wand in ROOM1140 (Explosion in der Zelle, kein Durchflug), TIEF-Wurf an den
-#                               Zombie (RE2-Ton ARMS0F, Zerreissen statt Sturz), RE15_FORCE_EXPLOSION an
-#                               Birkin (ROOM5090 G5) und am Alligator (ROOM2090).
+#                               Zombie (RE2-Ton ARMS0F, Zerreissen statt Sturz), RE15_FORCE_EXPLOSION am
+#                               ARMIERTEN Birkin (ROOM5090 G5, sub04) und am Alligator (ROOM2090), HOCH-Wurf
+#                               gegen die duenne Zellenfront ROOM1220 in zwei Phasen, MITTE-Wurf aus dem
+#                               Rechteck der Raute in ROOM11C0.
 add_executable(test_r35_granate
     ${CMAKE_CURRENT_LIST_DIR}/../test_r35_granate.c
     ${CMAKE_SOURCE_DIR}/platform/pc/src/fx_plattform_pc.c)
