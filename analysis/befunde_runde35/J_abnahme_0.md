@@ -101,6 +101,24 @@ Urteil fuer die Handfeuerwaffe (Spur 0):
   wieder sichtbar neben Leon** ("Ada: Okay, it's over now."), F2420-F2500 Dialog "...There are some outrageous
   monsters out there." (Original-Nachrichten msg07..09).
 
+### Punkt 5 — "Brust-schlagen-Animation, die sie im Original manchmal ausfuehren" — **erfuellt**
+- Laeufe t2 (Leon steht am Szenen-Endpunkt) und t3 (dort + Handfeuerwaffe): KEIN sub 15 / Clip 3 (je ~33-35 s
+  Kampf) — wie in der Original-Aufnahme r3 (40 s an derselben Stelle, kein Rear-up).
+- Lauf t6/t6b (Tuerweg; nach der Freigabe `RE15_INPUT_SCRIPT=W34.5,U2.5,W1`: Leon geht 2,5 s ins Freie, dann ohne
+  Eingabe; t6b = Wiederholung mit Bildfang und Ende vor dem Tod, bildgleich zu t6 — deterministisch): Slot 3
+  richtet sich DREIMAL auf und greift (sub 15 F1198, F1584, F1921), jedes Mal folgt Clip 3: F1251 `st=1/15/5 mo=3
+  af=23` -> F1277 Phase 6 -> F1278 sub 2 (Clip 3 ab Bild 29) -> F1320 CHASE; ebenso F1637-F1706 und F1974-F2043
+  (210 Bilder Clip 3 in ~35 s).
+- Bilder `jab3/t6b_brust.png` + `jab3/t6b_brust_zoom.png` (Cut 5, F1252-F1308): der Gorilla steht aufrecht und
+  schlaegt die Arme abwechselnd vor die Brust (F1268 Arm aussen, F1276 Arm an der Brust, F1284/F1292 aussen,
+  F1300 an der Brust), danach wieder auf allen vieren. Die Animation existiert und kommt im Spiel "manchmal".
+- Mechanismus selbst nicht neu disassembliert (Clip-3-Stellen @0x8011ad50-78 / @0x8011ae30-58 laut Dossier);
+  Pin-Latch-Beleg (`jal 0x8001ac38` @0x8011ac18) im Diff zitiert.
+- Nebenbefund (nicht Teil des Wortlauts, ungemessen gegen das Original): der Griff selbst kostet Leon im Port 0 HP
+  (t6: hp 88 vor und nach dem Griff F1198-F1386) und versetzt ihn beim Zupacken in EINEM Bild um ~1600 Einheiten
+  (F1202 (-6908,-14468) -> F1203 (-7894,-13260), Gorilla bei (-5708,-16372)); Wurfweite/Schaden/Aufstehen sind
+  laut Dossier OFFEN (Opfer-Handler 0x8011c118) -> Messauftrag in M1.
+
 ### Punkt 4 — "KI zielstrebiger und aggressiver wie im Original" — **teilweise**
 Vergleichslage: Leon ohne Eingabe am Szenen-Endpunkt (Port t2 ueber den Tuerweg, Original r3 ueber Debug-JUMP;
 Takt 30 Bilder/s). Original-Zeitleiste aus den 110 r3-Savestates (`abn0_orig_timeline.txt`, selbst gelesen).
