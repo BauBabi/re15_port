@@ -42,11 +42,13 @@
  *     Boden-Flinch (HURT-Spur 0, FUN_8011b018) endet IMMER im Vergeltungs-Sprung `+0x4=1, +0x5=7`
  *     (@0x8011b188-98; +0x5=9 nur bei +0x1e3 != 0 @0x8011b1c8-d8, das in STAGE1.BIN nie gesetzt
  *     wird). Port-Form: ein Trefferzaehler (mag_hit_ctr, INIT-geloescht wie die Nachbarbytes
- *     +0x1e0..+0x1e3 @0x8011707c-ac) zaehlt jeden Flinch-Eintritt (@0x8011b064-70, einer je
- *     Treffer: der +0x93-Latch @0x8001300c sperrt weitere Treffer bis zum Exit @0x8011b178); erst
- *     der dritte Flinch verlaesst die Spur in den Sprung (+0x5=7), die ersten zwei in die Jagd
- *     (+0x5=3 = CHASE A[3]/B[3], derselbe Exit-Schreibsatz +0x4=1/+0x6=0/+0x7=0). Luft-/Sturz-Spuren
- *     (1/2) bleiben byte-true.
+ *     +0x1e0..+0x1e3 @0x8011707c-ac) zaehlt jeden Eintritt in EINE der drei Treffer-Spuren (Spur 0
+ *     Boden-Flinch @0x8011b064-70, Spur 1 Luft-Treffer @0x8011b238-54, Spur 2 Sturz @0x8011b44c-68;
+ *     einer je Treffer: der +0x93-Latch @0x8001300c sperrt weitere Treffer bis zum Exit); erst der
+ *     dritte Treffer verlaesst seine Spur in den Sprung (+0x5=7), die ersten zwei in die Jagd (+0x5=3 =
+ *     CHASE A[3]/B[3], derselbe Exit-Schreibsatz +0x4=1/+0x6=0/+0x7=0). Das Original springt in ALLEN
+ *     drei Spuren nach jedem Treffer (Exits @0x8011b188-98 / @0x8011b3bc-ec / @0x8011b6b4-e8, s. (3)
+ *     unten bei re15_affen_treffer_zaehlen); der Zaehler gilt seit 30484afa in allen dreien.
  *
  * (4) SPIELER-REAKTION AUF DIE GORILLA-TREFFER (Nutzer-Punkt 4, "im Original zielstrebiger und
  *     aggressiver"). Gemessen (Original-Aufnahme r3 gegen Port-Lauf A3, Leon ohne Eingabe): das

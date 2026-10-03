@@ -767,4 +767,10 @@ Nachbesserung 1 liegen in `scratchpad/jnb1/` (g_orig.txt, g_griff.txt, g_desync.
 Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 
 ### Stand (fortlaufend)
-- [ ] A3  - [ ] A2  - [ ] A1
+- [x] A3  - [ ] A2  - [ ] A1
+
+### A3 — Kopfkommentar (3) in re15_affen.h (erledigt)
+- Vorher: "Luft-/Sturz-Spuren (1/2) bleiben byte-true" (falsch seit 30484afa).
+- Jetzt: (3) nennt alle drei Eintritte (@0x8011b064-70 / @0x8011b238-54 / @0x8011b44c-68) und alle drei
+  Original-Exits (@0x8011b188-98 / @0x8011b3bc-ec / @0x8011b6b4-e8) und sagt, dass der Zaehler in allen dreien
+  gilt — deckungsgleich mit dem Funktionskommentar bei re15_affen_treffer_zaehlen. Nur Kommentar, kein Code.
