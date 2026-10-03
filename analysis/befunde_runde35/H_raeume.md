@@ -154,5 +154,75 @@ Strom an: nach Ja kippt (4,n) (Scheibe faehrt, Original-Mechanik intakt); nach H
 Gegenprobe ohne Stempel (re15_aot_fire_slot): Original-Nachricht bzw. nichts (sce 5 = NOP @0x8004318C).
 Aufbau-Bytes: Seite 2 == msg 0 Byte fuer Byte, `02 00` an Stelle 62, Laenge <= 128 (PSX MSG_RAW_LEN).
 
+---
+
+## Punkt 3 — ROOM1200: Zombie von der Bahre laeuft durch die Luft
+
+### 3.1 Messung vorher (Basisstand, echte exe)
+Messschiene NEU `RE15_GEGNER_Y_LOG` (trage_1200.c, je Bild x/y/z/Band je Gegner). Echter Weg: DEBUG_JUMP
+1200@gp, Spieler vor dem Minidisc-Platz (-25880,-16450), Aktion (RE15_PAD_AT) -> Item-Modal -> Ja -> sub03.
+ROOM1200 SCD: main00 Sce_em_set id 0 @0x00856 (grid 0x88, Band 0), **id 1 @0x0086A (Typ 0x10, grid 0x87,
+pc[4]=1 -> Band 1, y=-1800, (-24249,-18579))**, id 2 @0x0087E (grid 0xA1 = Schubladen-Kriecher, Band 1, y
+-1800), id 3 @0x00892 (0x87, Band 0). sub03 @0x009F4: nach Ja ((9,104)=1) Evt_exec sub02 (id 2 -> 0x81,
+Schublade obj 1 faehrt) und Member_set id 0 -> 0x8A, id 1 -> 0x89 @0x00A26, id 3 -> 0x89.
+Gemessen, beide Geschmaecker (`H_raeume/p3_vorher_re15_luft_F200-700.png`, `p3_vorher_re2_luft_F200-700.png`,
+Cut 2 per RE15_FORCE_CUT): Slot 2 (= id 1) wacht bei F210 auf (grid 0x89), steht auf und laeuft danach
+600+ Bilder lang auf **y=-1800 / Band 1** durch den Raum (RE1.5: bis (-25622,-1800,-17706), RE2: bis
+(-22368,-1800,-18297)) — im Bild schwebt er oben links ueber dem Schrankblock. Slot 3 (Schubladen-
+Kriecher) kriecht unter RE1.5 ebenso auf -1800 (unter RE2 steht er still, s. OFFEN).
+
+### 3.2 RE-Belege — der Original-Mechanismus ist die Engine-Schwerkraft FUN_8001bd60
+* Zombie-Wurzel FUN_80100424 (STAGE1.BIN, selbst disassembliert), VOR Steer (@0x80100538) und Dispatch
+  (@0x80100588), jedes Bild nach den Gates:
+  `801004dc addiu a0,zero,-10` (Delay-Slot) / `80100514 jal 0x8001bd60` / `80100518 ori a1,zero,0x14`.
+  Der Port fuehrte den Aufruf als "func_0x8001bd60(-10,20) setup helper — deferred" (enemy_ai_common.c:213)
+  bzw. "look aux ... unmodeled port-wide" (:10690) — er fehlte komplett.
+* FUN_8001bd60 (PSX.EXE): `8001bd64-80` DAT_800aca3c & 0x4000 -> Erkennung ueberspringen;
+  `8001bd94-a8` r = FUN_8003b7f0(&+0x34, -(*(+0x78)+6) [`subu a1,zero,a1`], +0x82);
+  `8001bdb0` andi r,2 -> sonst nichts; `8001bdc8-ec` nur wenn y == -(+0x82*1800);
+  `8001bdf0-be14` +0x1c0 = 0x8000 | ((r&0xc)>>2)<<13; `8001be18-54` do { +0x1ba += 1800; +0x82 -= 1 }
+  while (n-- != 0); Fall-Teil `8001be64-a4`: wenn +0x1c0 & 0x8000: y += a0 + a1*(+0x1c0 & 0x1fff),
+  +0x1c0 += 1; `8001beb4-e8` wenn +0x1ba < y: y = +0x1ba, +0x1c0 &= 0x7fff.
+  Weitere Aufrufer: 0x8010a9b8 (Zombie-Maedchen), 0x8010c288, 0x8011c5ec, 0x8011cbbc, 0x8011d1e4,
+  0x8011d778, 0x8011dcc4, 0x8011e29c (s. OFFEN).
+* +0x1ba-Seed: Sce_em_set FUN_800420a0 `lbu v1,2(s2)` (pc[4]) @0x800421d4, Faktorfolge @0x800421f8-0x8004220c
+  = -(pc[4]*1800), `sh v0,442(s0)` @0x80042210. Radius: +0x78 = 0x8011f778 (`lw v0,-2160` @0x80100770 /
+  `sw v0,120` @0x80100778), Wort +6 = 0x0190 = 400.
+* Zellen ROOM1200 (SCA-Dump, 12-B-Zellen ab RDT+0x20): Band-1-Zellen 11/12/13/17 tragen u1 = 0x02 (Wort
+  0x1302: Absturzkante, n = 0 -> ein Band): 13 = x -26400..-22570 z -17351..-16251, 12 = x -23300..-22000
+  z -26300..-16240, 11 und 17 analog; die Bloecke 8/9/10/14/15/16 sind Band-1-Waende (u0 0xFF). Der Liege-
+  platz (-24249,-18579) liegt in KEINER Band-1-Zelle (dort ruht er), jeder Weg hinunter kreuzt eine Kante.
+  Zensus aller 240 RDTs: Absturzkanten nur auf Band >= 1 (34 Raeume), keine auf Band 0 -> kein Unterlauf.
+
+### 3.3 Umsetzung
+* NEU in `engine/src/trage_1200.c` / `include/re15_trage1200.h`: `re15_schwerkraft_8001bd60(e, a0, a1, radius)`
+  Zeile fuer Zeile wie oben; Zellwort ueber das vorhandene `re15_collision_floor_typeword` (= FUN_8003b7f0
+  mit Band/Radius), Standobjekt-Gate = `re15_climb_dbg_standing() >= 0` (= DAT_800aca3c & 0x4000,
+  climb_common.c @0x80031d24). Konstanten: -10 @0x801004dc, 0x14 @0x80100518, 1800 @0x8001be2c,
+  0x8000 @0x8001bdf0, 0x1fff @0x8001be7c, 0x7fff @0x8001bee4.
+* `include/re15_actor.h`: Feld `fall_1c0` (+0x1c0) hinter dog_floor_y (+0x1ba, der Port-Platz dieses Felds).
+* `engine/src/scd_vm.c` Sce_em_set (1 Zeile): `a->dog_floor_y = -(pc[4]*1800)` @0x80042210.
+* `engine/src/enemy_ai_common.c` re15_enemy_ai_live_tick (1 Aufruf): hinter dem Abstand, VOR Steer und
+  Dispatch = die Original-Reihenfolge @0x80100514. Gilt fuer die Wurzel FUN_80100424 (Typen 0x10/0x11/0x12/
+  0x16/0x18) in BEIDEN KI-Geschmaeckern — PORT-WAHL fuer RE2: die Raumdaten (SCA-Baender) sind RE1.5, die
+  Schwerkraft ist Engine (EXE), nicht KI; genauso faehrt der Port die RE1.5-SCA-Klemme in beiden Geschmaeckern.
+
+### 3.4 Messung nachher (echte exe, gleicher Weg)
+RE1.5 (`RE15_AI_FLAVOR=re15`, Spieler geht nach dem Aufnehmen weg, Bild `H_raeume/p3_nachher_re15_sturz_F374-410.png`):
+Slot 2 laeuft bis F380 auf Band 1, betritt die Kante (Zelle 13) -> F380 y -1810, F381 -1800, F382 -1770,
+-1720, -1650, -1560, -1450, -1320, -1170, -1000, -810, -600, -370, -120, F394/395 **y=0 Band 0**, Fallwort
+0x000F = exakt -10 + 20*t; danach geht er Leon auf der Spieler-Ebene an (Sub 3/5 Griff). Im Bild sieht man
+ihn von der Schrankoberkante herunterfallen und neben Leon landen.
+RE2 (Default-Geschmack): Slot 2 erreicht die Kante spaeter (der RE2-Zombie steht zuerst am Rand und beisst
+nach unten, Sub 14), faellt bei F~680 und geht auf y=0 weiter (`p3_nachher_re2_F300-650.png`, Log).
+
+### 3.5 Test
+`unit_r35_raeume_trage` (tests/unit/test_r35_raeume_trage.c): (A) Funktion an den echten ROOM1200-Zellen —
+Kante: 15 Bilder Sturz -1800 -> 0 mit -10+20t, +0x82 1->0, +0x1ba -1800->0, Fallwort 0x8001 nach Bild 0
+und 0x000F nach der Landung; Liegeplatz / Rand innerhalb des Radius / y != -(Band*1800): kein Sturz;
+n=1 (synthetisches Wort 0x1306) -> zwei Baender. (B) echter Weg (main00-Spawns, Weckwert 0x89 wie sub03,
+EM10- bzw. RE2-EM010-Bank geladen, KI + Animation je Bild): RE1.5 Sturz Bild 152-166, RE2 132-146, beide
+landen auf y=0 / Band 0, Fallfolge exakt. (C) Seed +0x1ba = -(Band*1800) fuer alle Raumgegner.
+
 ## OFFEN
 - (laufend)
