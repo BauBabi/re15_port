@@ -20,3 +20,13 @@ target_compile_definitions(test_r35_raeume_ziel PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r35_raeume_ziel COMMAND test_r35_raeume_ziel)
 set_tests_properties(unit_r35_raeume_ziel PROPERTIES TIMEOUT 60)
+
+# Punkt 3: ROOM1200 Bahren-Zombie faellt auf die Spieler-Ebene — Engine-Schwerkraft FUN_8001bd60
+# (Funktion an den echten Zellen + echter Weg KI, beide Geschmaecker).
+add_executable(test_r35_raeume_trage test_r35_raeume_trage.c)
+target_link_libraries(test_r35_raeume_trage PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r35_raeume_trage PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r35_raeume_trage PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r35_raeume_trage COMMAND test_r35_raeume_trage)
+set_tests_properties(unit_r35_raeume_trage PROPERTIES TIMEOUT 120)
