@@ -192,6 +192,24 @@ Gegenprobe (logisch, aus der Messung vorher): alter Stand -> 1080 immer Blatt 2 
 ausserhalb des Innenraums (y135..142); 11F0/1200 aktuell 0; 1230 keine Zone/Blatt 1; 1210 aktuell 4 und
 nur 3 Zellentueren -> jeder der vier Riegel waere ROT.
 
+
+### Echtlauf (echte exe, Spielstand + LOAD GAME + MAP, Framebuffer-Abzug) — `integration_r35_karte`
+Bilder: `analysis/befunde_runde35/G_karte_bilder/nachher_{A..E}.png` (RE15_INV_FB_SHOT = Software-Framebuffer
+des Kartenschirms; gdigrab liefert in dieser Sitzung weisse Bilder, AUTOSHOT nicht benutzt). Aktuell-Farbe im
+Abzug GEMESSEN (48,8,48)/(48,8,64) = halbtransparentes 0x680808 auf dem blauen Grund.
+```
+A ROOM1230 (Spielstand an der 11D0-Tuer): Blatt "POLICE STATION B1", rot im Gang-Kasten 1030 px, ausserhalb 0
+B ROOM11F0 (Ankunft):                    Blatt B2, rot in rect 1 1392 px, ausserhalb 0
+C ROOM1200 (Ankunft):                    Blatt B2, rot in rect 2  995 px, ausserhalb 0
+D ROOM1210 (Ankunft aus 11E0):           Blatt B2, rot in rect 3  763 px, ausserhalb 0, gelb 30 px = 6 Balken x 5
+E NUTZERWEG ROOM1120 -> Aktionstaste an der Fahrstuhltuer -> ROOM1080 -> MAP:
+                                         Blatt "POLICE STATION 3F", rot in der Kabine (127..142,137..152) 51 px,
+                                         ausserhalb 0, Marker in der Kabine (debug.log: CONTINUE 1120 ->
+                                         RBJ room 1080 -> fb shot -> EXIT_AT in Raum 1080)
+```
+Erster Lauf scheiterte an E ohne Strom-Flag (4,243): Spieler stand in der Tuer, Aktionstaste ohne Wirkung
+(debug.log 30 Bilder lang pos=(1300,0,6868)) - mit Set(4,243) (wie ROOM11F0 sub18) faehrt der Weg durch.
+
 ## OFFEN (mit Adresse und naechstem Messweg)
 1. **Blatt 0 (B1), ROOM1190/11A0 vermutlich vertauscht — nicht gemeldet, nicht angefasst.** 1190 fuehrt EINE Zone
    auf rect 2 (der Kasten im Gang-Ring = laut Tuer-Nische seine OSTKAMMER, Tuer 1230 Slot 4 @0xCE6); sein
@@ -222,3 +240,4 @@ nur 3 Zellentueren -> jeder der vier Riegel waere ROT.
   rot, der Treppenabsatz von 10A0 ist der kleine Kasten darunter.
 * 1210: der T-Korridor ist rot, alle sechs Tueren (1x Garage, 5x Zellen) als gelbe Balken; jede Zelle
   leuchtet einzeln, wenn man drin steht.
+Suite (Stand ec76eb0e): === LOCAL-BUILD-OK (all) — Tests 482/482
