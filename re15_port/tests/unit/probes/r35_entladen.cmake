@@ -11,6 +11,11 @@
 #   integration_r35_entladen_{a,b,c,d}   echte exe (test_r35_entladen.cmake):
 #       a  Tod -> NEW GAME          b  Raumwechsel 1020 -> 1030
 #       c  Tod -> LOAD im Todesraum d  Cinematic-Bank 1170 ueber den Tod (240 Bilder/s)
+#                                      + Elliot Raum-Modell (Nachbesserung 1, M2)
+#       e  Raum-Stimmen 1240 -> 1170 mit Ton (SDL_AUDIODRIVER=dummy; Nachbesserung 1, M1)
+#   unit_r35_entladen_n1beleg  Nachbesserung 1: Sce_em_set-Modell in der Arena (@0x80042328),
+#                              Spieler fest 0x801bd814 (@0x800314c8/cc), Arena-Basis-Schreiber
+#                              @0x80039a58; RE2 Raumlader @0x8004a1c4 -> Setmode 0xA0 (XA aus)
 add_executable(test_r35_entladen ${CMAKE_CURRENT_LIST_DIR}/../test_r35_entladen.c)
 target_link_libraries(test_r35_entladen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_entladen PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -19,7 +24,7 @@ target_compile_definitions(test_r35_entladen PRIVATE RE15_REPO_ROOT="${_r35i_rep
 if(NOT WIN32)
     target_link_libraries(test_r35_entladen PRIVATE m)
 endif()
-foreach(_r35i_teil beleg gegner)
+foreach(_r35i_teil beleg gegner n1beleg)
     add_test(NAME unit_r35_entladen_${_r35i_teil} COMMAND test_r35_entladen ${_r35i_teil})
     set_tests_properties(unit_r35_entladen_${_r35i_teil} PROPERTIES TIMEOUT 60)
 endforeach()
@@ -32,7 +37,7 @@ if(NOT WIN32)
 endif()
 
 if(TARGET re15_pc)
-    foreach(_r35i_lauf A B C D)
+    foreach(_r35i_lauf A B C D E)
         string(TOLOWER "${_r35i_lauf}" _r35i_klein)
         add_test(NAME integration_r35_entladen_${_r35i_klein}
                  COMMAND "${CMAKE_COMMAND}"

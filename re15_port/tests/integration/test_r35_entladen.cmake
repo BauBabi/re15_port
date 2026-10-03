@@ -22,6 +22,13 @@
 #   D  Tod in ROOM1170 -> NEW GAME -> Montage -> echte Tuer nach ROOM1170: die Cinematic-Bank 1170
 #      muss im zweiten Spiel NEU gebunden werden (Original `jal 0x8001b3f8` @0x80039a08 bei jedem
 #      Raumladen). GEGENPROBE gemessen (Dossier M3): ohne den Riegel-Fix fehlt die Zeile.
+#      Nachbesserung 1 (M2): Elliot (Typ 0x47) ist ein Raum-Modell (Sce_em_set `jal 0x80022300`
+#      @0x80042328 in die Arena) — er darf in ROOM1240 NICHT resident sein, wird beim Spawn in 1170
+#      geladen (debug.log "[elliot] PL05 loaded ... (Raum 1170, Spawn 0x47)") und faellt am Tod
+#      (VORHER spielende: figur=1 + TIM-Slot 1 belegt, EREIGNIS: alles 0).
+#   E  Nachbesserung 1 (M1): Raum-Stimmen. Intro ROOM1240 (main00..05) -> Montage-Tuer -> ROOM1170
+#      mit Ton (SDL_AUDIODRIVER=dummy). VORHER raum (1240) muss Clips belegt haben (sonst misst der
+#      Lauf nichts), EREIGNIS raum: stimme=0. VORHER Abnahme 0: 6 Clips ~3,2 MB blieben resident.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_entladen_karte> -DWORKDIR=<dir>
 #               [-DTEIL=A|B|C|D|alle] -P test_r35_entladen.cmake
@@ -51,7 +58,12 @@ function(entladen_lauf _name _timeout)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(REMOVE "${WORKDIR}/debug.log" "${WORKDIR}/entladen.log")
-    re15_start_spiel(_rv ${_timeout} RE15_NO_INTRO=1 RE15_NOAUDIO=1
+    if(_name STREQUAL "e")   # mit Ton: Dummy-Treiber (kein Geraet noetig), Stimmen werden dekodiert
+        set(_ton SDL_AUDIODRIVER=dummy)
+    else()
+        set(_ton RE15_NOAUDIO=1)
+    endif()
+    re15_start_spiel(_rv ${_timeout} RE15_NO_INTRO=1 ${_ton}
                      "RE15_ENTLADEN_LOG=${WORKDIR}/entladen.log" ${ARGN} "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         message(FATAL_ERROR "r35_entladen[${_name}]: exe exit=${_rv}")
@@ -189,7 +201,61 @@ if(TEIL STREQUAL "D" OR TEIL STREQUAL "alle")
         message(FATAL_ERROR "r35_entladen[d]: ROOM1170 ${_nein}x betreten, Cinematic-Bank nur ${_nbank}x gebunden "
                             "— Original bindet bei JEDEM Raumladen neu (jal 0x8001b3f8 @0x80039a08)")
     endif()
-    message(STATUS "r35_entladen[D] OK: Cinematic-Bank 1170 in beiden Spielen gebunden (${_nbank}/${_nein})")
+    # Nachbesserung 1 (M2): Elliot nur im Raum, in dem er gesetzt wird.
+    file(STRINGS "${_basis}_d/entladen.log" _v1240 REGEX "^VORHER raum gen=[0-9]+ raum=1240 ")
+    foreach(_z IN LISTS _v1240)
+        string(REGEX MATCH "[|] belegt [^|]*" _bel "${_z}")
+        string(REGEX MATCH "[|] tim_slots[^|]*" _sl "${_z} ")
+        if(NOT _bel MATCHES " figur=0" OR _sl MATCHES " 1 ")
+            message(FATAL_ERROR "r35_entladen[d]: Elliot in ROOM1240 resident (Original: Modell erst mit "
+                                "Sce_em_set, jal 0x80022300 @0x80042328): '${_z}'")
+        endif()
+    endforeach()
+    file(STRINGS "${_basis}_d/debug.log" _el REGEX "elliot. PL05 loaded")
+    list(LENGTH _el _nel)
+    if(_nel LESS 1)
+        message(FATAL_ERROR "r35_entladen[d]: Elliot nie geladen (kein '[elliot] PL05 loaded')")
+    endif()
+    foreach(_z IN LISTS _el)
+        if(NOT _z MATCHES "Raum 1170, Spawn 0x47")
+            message(FATAL_ERROR "r35_entladen[d]: Elliot ausserhalb seines Spawns geladen: '${_z}'")
+        endif()
+    endforeach()
+    file(STRINGS "${_basis}_d/entladen.log" _vende REGEX "^VORHER spielende ")
+    set(_elliot_am_tod 0)
+    foreach(_z IN LISTS _vende)
+        string(REGEX MATCH "[|] tim_slots[^|]*" _sl "${_z} ")
+        if(_z MATCHES " figur=1 " AND _sl MATCHES " 1 ")
+            set(_elliot_am_tod 1)
+        endif()
+    endforeach()
+    if(NOT _elliot_am_tod)
+        message(FATAL_ERROR "r35_entladen[d]: kein Tod mit geladenem Elliot (figur=1 + TIM-Slot 1) — "
+                            "der Lauf misst das Entladen nicht")
+    endif()
+    message(STATUS "r35_entladen[D] OK: Cinematic-Bank 1170 in beiden Spielen gebunden (${_nbank}/${_nein}), "
+                   "Elliot ${_nel}x beim Spawn geladen, am Tod entladen, in 1240 nie resident")
+endif()
+
+# --- E: Raum-Stimmen (Nachbesserung 1, M1) ------------------------------------------------------
+if(TEIL STREQUAL "E" OR TEIL STREQUAL "alle")
+    entladen_lauf(e 300 RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60 "RE15_EXIT_AT=60#1170")
+    entladen_pruefen(e 1 1 0)
+    file(STRINGS "${_basis}_e/debug.log" _clips REGEX "voice. clip loaded")
+    list(LENGTH _clips _nclips)
+    file(STRINGS "${_basis}_e/entladen.log" _v REGEX "^VORHER raum gen=[0-9]+ raum=1240 ")
+    list(LENGTH _v _nv)
+    if(_nv LESS 1)
+        message(FATAL_ERROR "r35_entladen[e]: keine Grenze 1240 -> 1170")
+    endif()
+    list(GET _v 0 _v0)
+    string(REGEX MATCH " stimme=([0-9]+)" _m "${_v0}")
+    set(_nst "${CMAKE_MATCH_1}")
+    if(_nclips LESS 1 OR NOT _nst OR _nst LESS 1)
+        message(FATAL_ERROR "r35_entladen[e]: vor der Grenze keine Stimme geladen (Clips ${_nclips}, "
+                            "Fach stimme='${_nst}') — der Lauf misst das Entladen nicht: '${_v0}'")
+    endif()
+    message(STATUS "r35_entladen[E] OK: ${_nst} Raum-Stimmen aus ROOM1240 an der Grenze entladen, 0 fremd")
 endif()
 
 file(REMOVE "${_exe_kopie}")
