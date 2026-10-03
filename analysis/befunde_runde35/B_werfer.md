@@ -1097,3 +1097,18 @@ und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
   erscheint nicht dahinter.
 * Colt Python: wirkt jetzt wie der Super Redhawk — ein Treffer toetet Zombies sofort (Kritklasse) und holt einen
   springenden Affen herunter bzw. loest seinen Griff.
+
+### 9.8 Je Mangel (Kurzfassung)
+**N1 — Werfer-Geschosse durch die Formen 2/4..9, Punkttest tunnelt.**
+Ursache: `wandzelle_im_band` (re2_fx.c) liess ueber der Bandhoehe nur Typ 1/3 zu und testete nur den Punkt des Bildes;
+in Bandhoehe meldete der Rechteck-Vortest des Abbilds Kontakt auch im leeren Teil einer Diagonalzelle.
+Vorher (§9.1): Rakete 10E0 drei Bilder im festen Dreieck, Explosion @(-2070,-2728,1897); Flamme fliegt im Dreieck mit
+vollem Schritt weiter (92/Bild). Beleg (§9.2): Formen 0x800b2858[1..9] @0x8003af04-84, Typ 5 @0x8003c764-7e0, Typ 2
+@0x8003d070-9c; RE2-Formtest @0x8004fe34-54; vorige Weltlage @0x8001d954-6c. Aenderung (§9.3): Formtest je Typ +
+Strecke (werfer_r35.c / re2_fx.c). Nachher (§9.4): Rakete @(-2331,-2629,-388) vor der Hypotenuse, Flamme haelt an der
+Kante (16/Bild = Nachbrennen); Unit 120-129/140-149 und integration_r35_werfer_form gruen, Gegenprobe rot (§9.5).
+**N2 — Python ohne Kritklasse.**
+Ursache: re15_damage.c nahm nur w7/w8 in +0x93 |= 0x40 und wiederholte den Waffenvergleich fuer HP -1. Vorher (§9.1):
+Platz 5 Redhawk hp -1, Python hp -650 (Platz 2: -850). Beleg (§9.2): @0x80012370-b8, @0x800124fc-1c. Aenderung (§9.3):
+w20 in die Kritklasse (PORT-WAHL §3.5 Punkt 1), HP -1 am Bit. Nachher (§9.4): Python hp -1 an Platz 5 und 2; Unit 130-134
+(Affe: Bit gesetzt, hp > 0) und integration_r35_werfer_form gruen, Gegenprobe `FAIL 131 ... hp 1100 (soll -1)`.
