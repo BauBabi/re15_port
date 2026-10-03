@@ -655,8 +655,17 @@ static void abschnitt_strecke(void)
             int in  = re15_granate_r35_punkt(&r, f[i].ix, f[i].iz, 0, 1);
             int aus = re15_granate_r35_punkt(&r, f[i].ax, f[i].az, 0, 1);
             int box = re15_collision_box_blocked(&r, f[i].ax, f[i].az, 0, 0, 1);
-            PRUEF(nr, in == 1 && aus == 0 && (f[i].typ == 1 || box == 1),
-                  "Typ %u %s: innen %d (1), aussen %d (0); Rechteck-Test aussen %d", f[i].typ, f[i].was, in, aus, box);
+            /* Gegenprobe am Port-Zwilling des RE1.5-Handlers (Aufloeser FUN_8003b0a4, Radius 0, Maske 1): von
+             * aussen nach innen bewegt -> der Handler schiebt; am Aussenpunkt stehend -> er schiebt nicht. */
+            int32_t qx = f[i].ix, qz = f[i].iz;
+            re15_collision_constrain_contact_band(&r, f[i].ax, f[i].az, &qx, &qz, 0, 0, 1u, NULL, NULL);
+            int schiebt_in = (qx != f[i].ix || qz != f[i].iz);
+            qx = f[i].ax; qz = f[i].az;
+            re15_collision_constrain_contact_band(&r, f[i].ax, f[i].az, &qx, &qz, 0, 0, 1u, NULL, NULL);
+            int schiebt_aus = (qx != f[i].ax || qz != f[i].az);
+            PRUEF(nr, in == 1 && aus == 0 && (f[i].typ == 1 || box == 1) && schiebt_in == 1 && schiebt_aus == 0,
+                  "Typ %u %s: innen %d (1), aussen %d (0); Rechteck-Test aussen %d; RE1.5-Handler schiebt innen %d (1) / aussen %d (0)",
+                  f[i].typ, f[i].was, in, aus, box, schiebt_in, schiebt_aus);
         }
         /* Typ 9: Kapsel in z, Zelle w 1000 d 2000 */
         z1.width = 1000; z1.density = 2000; z1.x = 1000; z1.z = 2000; z1.type = 9;
