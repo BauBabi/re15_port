@@ -94,7 +94,8 @@
 #define RE15_IT_SIG_ALLE_DURCH 30
 #define RE15_IT_1040_KAPPE     1000
 /* SCHUTZ DES GEPARKTEN SPIELERS (Nachbesserung 1 M2): wer im 1040-Schritt HINTER die Kamera Cut 1 laeuft (RID
- * ROOM1040 @0x80 Cut 1, Kamera-z @0x88 `3c d6 ff ff` = -10692; der Parkplatz liegt bei z -14900 dahinter), wird
+ * ROOM1040 @0x80 Cut 1: x @0x84 `6a 99 ff ff`, y @0x88 `d6 f3 ff ff`, Kamera-z @0x8C `3c d6 ff ff` = -10692 — Nachbesserung
+ * 2 M2: frueher hier und in Commit a2b4ddb0 falsch @0x88 zitiert; der Parkplatz liegt bei z -14900 dahinter), wird
  * mit dem Original-Einzelstopp angehalten: entity+0x9 |= 0x20 = Member_set(12, 0x30) (@0x800410b8 -> FUN_8004116c
  * Fall 0xc), gelesen vom STAGE1-Zombie-Root FUN_80100424 (`lbu v0,9(a0)` @0x80100450 / `andi v0,v0,0x20` @0x80100458 /
  * `bne v0,zero,0x80100658` @0x8010045c = Tick uebersprungen; Port re15_enemy_ai_tick RE15_AI_GRID_SKIP); im
@@ -164,7 +165,8 @@
 #define RE15_IT_BIT_1070_0    0xc6
 /* ROOM1040: 20 Raum-Records main00 @0x011FC..@0x01378 (Tot-Bits 0x14..0x27), Gleichzeitig-Limit 5
  * (Save(0x12,5) @0x011F0). Auffuell-Records (Tot-Bits 83,84,90,91,95), damit auch dann fuenf durchs Tor
- * kommen, wenn der Spieler vorher mehr als 15 getoetet hat (irons_tod_1150.c EM_1040_LISTE). */
+ * kommen, wenn weniger als fuenf Raum-Records im Port ERSCHEINEN (Nachbesserung 2: Records 15..19 = Aktor 16..20
+ * belegen das Limit, erscheinen aber nicht; irons_tod_1150.c EM_1040_LISTE / re15_irons_tod_sichtbar_1040). */
 #define RE15_IT_BIT_1040_0    0x14
 #define RE15_IT_N_1040        20
 #define RE15_IT_N_1040_AUF    5
@@ -203,6 +205,7 @@ const uint8_t *re15_irons_tod_laufprogramm(int *out_len);            /* RAM-Kopi
 const uint8_t *re15_irons_tod_meldung(uint16_t room_id, int msg_id, int *out_len);
 int            re15_irons_tod_lebend(int welche /* 0 = 1140, 1 = 1070 */);   /* Zaehlung ueber die Tot-Bits */
 int            re15_irons_tod_lebend_1040(void);                             /* lebende der 20 Raum-Records */
+int            re15_irons_tod_sichtbar_1040(void);   /* davon erscheinen im Port (Limit 5 @0x011F0, Aktor < RE15_ACTOR_MAX) */
 int            re15_irons_tod_ohne_11c0(void);   /* 1 = (4,64)=1: Ada steht nicht mehr an Cut 13, Schnitt entfaellt */
 /* Bilanz (Nachbesserung 1 M4): Zombies im 1040-Schritt, davon durchs Tor (z < RE15_IT_TOR_Z_1040), letztes
  * Durchgangsbild; Spieler-HP Start/Minimum ueber die ganze Kette. Reset beim Szenenstart. */

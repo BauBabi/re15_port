@@ -189,7 +189,17 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
  * Raum-Records (Typ 0x16, grid 0x0d, p6 01; @0x01238), Tot-Bits 83,84,90,91,95 (frei, Zensus Dossier
  * §2.3), Standort hinter dem Tor auf der x-Linie des Records 3 (@0x01238 x = 0x9116 = -28394) zwischen
  * der Reihe x -29248 (@0x0124C..) und Record 0 (-26063,12188) = PORT-WAHL. umzug_vorbereiten legt die
- * nicht gebrauchten still (Tot-Bit 1), das Gate @0x80042128-38 entscheidet. */
+ * nicht gebrauchten still (Tot-Bit 1), das Gate @0x80042128-38 entscheidet.
+ * NACHBESSERUNG 2 (Abnahme 1 M1, Dossier §10.1): "leben" reicht nicht. Record i traegt Sce_em_set-Slot i
+ * (@0x011FD / @0x01391 + 20 i); das Original legt jeden Slot ohne Grenzpruefung ab (Entity = 0x800acc2c + Slot*0x1F4,
+ * @0x800420b0/@0x800420dc/@0x80042118), der Port fuehrt Slot i als Aktor i+1 und verwirft Aktor >= RE15_ACTOR_MAX
+ * (scd_vm.c op_sce_em_set) - NACH dem Limit-Zaehler. Records 15..19 belegen also Limit-Plaetze, ohne zu erscheinen
+ * (gemessen: Records 0..14 tot -> 0 Zombies). Deshalb zaehlt die Auffuellung nur, wer im Port ERSCHEINT
+ * (re15_irons_tod_sichtbar_1040), und vor den Auffuell-Records steht Save(0x11, sichtbar) = `24 11 nn 00`
+ * (Opcode 0x24 LAB_80040018: work_vars[pc[1]] @0x800b0fd0 + 2 i; Index 0x11 = 0x800b0ff2 = der Lebend-Zaehler, den das
+ * Gate @0x800421d8/@0x80042214 liest): die verworfenen Records geben ihren Platz zurueck, die Auffuell-Records
+ * passieren das Limit 5. Der Wert nn wird beim Bauen des Programms eingesetzt (zaehler_1040_setzen). */
+#define OP_ZAEHLER_1040    0x24, 0x11, 0x00, 0x00   /* Save(0x11, nn): nn = re15_irons_tod_sichtbar_1040() */
 #define EM_1040_LISTE \
     OP_EM(0, 0x16, 0x0d, 0x01, 83, -28394, 15500, 0), \
     OP_EM(0, 0x16, 0x0d, 0x01, 84, -28394, 14500, 0), \
@@ -199,6 +209,7 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
 static const uint8_t k_p_1040_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     OP_CUT(RE15_IT_CUT_1040),
+    OP_ZAEHLER_1040,                                        /* Nachbesserung 2: verworfene Records geben ihren Platz zurueck */
     EM_1040_LISTE,                                          /* erst erscheinen, dann im selben Takt aufstellen */
 };
 /* Aufstellung hinter dem Tor = ROOM1030 sub00 Else-Zweig @0x020C6..@0x0216E mit FUENF Faellen (Gleichzeitig-
@@ -262,7 +273,7 @@ static const uint8_t k_p_1040_ende[] = {
     OP_AOT_ON,
     OP_END,
 };
-static const uint8_t k_p_1040_nach[] = { EM_1040_LISTE, OP_END };   /* spaeteres Betreten */
+static const uint8_t k_p_1040_nach[] = { OP_ZAEHLER_1040, EM_1040_LISTE, OP_END };   /* spaeteres Betreten */
 
 /* PROGRAMM 3 — ROOM1030: Cut 7 (nur wenn aus 1070 Zombies uebrig: Tuerknall + Kopien vor der
  * 1070-Tuer, Records = ROOM1070 sub00 Else-Zweig @0x01632.., Blick zur Kamera = -x = Gierung 2048), dann
@@ -578,6 +589,22 @@ int re15_irons_tod_lebend_1040(void)
     return n;
 }
 
+/* ROOM1040 (Nachbesserung 2 M1): wie viele Raum-Records ERSCHEINEN im Port? Der Init-Lauf geht die 20 Records in
+ * RDT-Reihenfolge durch (beide Zweige von main00: @0x011FC.. Tor offen / @0x01390.. Tor zu, Slot i = Record i, Tot-Bit
+ * 0x14 + i): Tot-Bit gesetzt -> uebersprungen OHNE Zaehler (@0x80042128-38); sonst Limit (Zaehler < 5, Save(0x12,5)
+ * @0x011F0, Gate @0x80042214-3c) -> Zaehler + 1; ERSCHEINEN tut der Record nur, wenn sein Aktor (Slot + 1,
+ * scd_vm.c SCRIPT_SLOT_TO_ACTOR) < RE15_ACTOR_MAX ist (op_sce_em_set). Dieselbe Rechnung, nur aus den Flags. */
+int re15_irons_tod_sichtbar_1040(void)
+{
+    int zaehler = 0, n = 0;
+    for (int i = 0; i < RE15_IT_N_1040 && zaehler < RE15_IT_N_1040_AUF; i++) {
+        if (re15_game_flag_get(IT_ZONE, (uint8_t)(RE15_IT_BIT_1040_0 + i))) continue;
+        zaehler++;
+        if (i + 1 < RE15_ACTOR_MAX) n++;
+    }
+    return n;
+}
+
 int re15_irons_tod_lebend(int welche)
 {
     int n = 0;
@@ -604,18 +631,19 @@ static void umzug_vorbereiten(void)
         else
             re15_game_flag_set(IT_ZONE, (uint8_t)(RE15_IT_BIT_1070_0 + i), 1);
     }
-    /* 1040: auf fuenf auffuellen — Auffuell-Record i ist scharf, wenn weniger als 5 - i Raum-Records leben. */
-    int l1040 = re15_irons_tod_lebend_1040();
+    /* 1040: auf fuenf auffuellen — Auffuell-Record i ist scharf, wenn weniger als 5 - i Raum-Records im Port
+     * ERSCHEINEN (Nachbesserung 2: nicht "leben" — Records 15..19 belegen das Limit, erscheinen aber nicht). */
+    int l1040 = re15_irons_tod_lebend_1040(), s1040 = re15_irons_tod_sichtbar_1040();
     for (int i = 0; i < RE15_IT_N_1040_AUF; i++)
-        re15_game_flag_set(IT_ZONE, k_bits_1040[i], (l1040 + i < RE15_IT_N_1040_AUF) ? 0 : 1);
+        re15_game_flag_set(IT_ZONE, k_bits_1040[i], (s1040 + i < RE15_IT_N_1040_AUF) ? 0 : 1);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1130, l1140 > 0 ? 1 : 0);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1040, 1);
     re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_1030, l1070 > 0 ? 1 : 0);
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[irons-tod] Umzug: 1140 lebend %d -> 1130 (9,74)=%d; 1070 lebend %d -> 1030 (9,76)=%d\n",
             l1140, l1140 > 0, l1070, l1070 > 0);
-    fprintf(stderr, "[irons-tod] 1040: %d Raum-Records leben, Auffuellung %d\n",
-            l1040, l1040 < RE15_IT_N_1040_AUF ? RE15_IT_N_1040_AUF - l1040 : 0);
+    fprintf(stderr, "[irons-tod] 1040: %d Raum-Records leben, %d erscheinen im Port, Auffuellung %d\n",
+            l1040, s1040, s1040 < RE15_IT_N_1040_AUF ? RE15_IT_N_1040_AUF - s1040 : 0);
 #endif
 }
 
@@ -673,6 +701,25 @@ static void slots_zuweisen(int von)
     }
 }
 
+/* Den Wert des ersten Save(0x11, nn) in [von, s_prog_len) einsetzen (Nachbesserung 2 M1, OP_ZAEHLER_1040). */
+static void zaehler_1040_setzen(int von)
+{
+    int s = re15_irons_tod_sichtbar_1040();
+    for (int o = von; o < s_prog_len; ) {
+        int n = it_opcode_len(s_prog[o]);
+        if (n <= 0) break;
+        if (s_prog[o] == 0x24 && s_prog[o + 1] == 0x11) {
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[irons-tod] 1040: Gleichzeitig-Zaehler %d -> %d (Save(0x11) vor den Auffuell-Records)\n",
+                    (int)g_scd.work_vars[0x11], s);
+#endif
+            s_prog[o + 2] = (uint8_t)(s & 0xff); s_prog[o + 3] = (uint8_t)((s >> 8) & 0xff);
+            return;
+        }
+        o += n;
+    }
+}
+
 static void tuer_setzen(int door_off, int x, int z, int yaw, uint8_t room, uint8_t cut)
 {
     uint8_t *d = s_prog + door_off;
@@ -701,6 +748,7 @@ static int programm_bauen(uint16_t room_id)
     case RE15_IT_S1040:
         if (room_id != RE15_IT_RAUM_1040) return 0;
         prog_anhaengen(k_p_1040_kopf, (int)sizeof k_p_1040_kopf);
+        zaehler_1040_setzen(0);                              /* Nachbesserung 2: Save(0x11, erschienene Raum-Records) */
         slots_zuweisen(0);                                   /* Auffuell-Records auf freie Plaetze */
         prog_anhaengen(k_p_1040_aufstellen, (int)sizeof k_p_1040_aufstellen);   /* hinter das Tor (Zone 0) */
         prog_anhaengen(k_p_1040_knall, (int)sizeof k_p_1040_knall);
@@ -741,6 +789,7 @@ static int programm_bauen(uint16_t room_id)
         }
         if (room_id == RE15_IT_RAUM_1040 && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)) {
             prog_anhaengen(k_p_1040_nach, (int)sizeof k_p_1040_nach);
+            zaehler_1040_setzen(0);
             slots_zuweisen(0);
             return 1;
         }
