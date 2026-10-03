@@ -4,7 +4,7 @@ Baum `.claude/worktrees/r35_affen`, Zweig `r35/affen`, gepruefter Stand HEAD 2de
 Abnahme 2026-10-03 (3. Anlauf; die ersten zwei wurden vom Sitzungslimit ohne Bericht abgebrochen — dieser Bericht
 wird FORTLAUFEND geschrieben und nach jedem Punkt committet). Massstab: Wortlaut AUFTRAG.md, Regeln VERTRAG.md / CLAUDE.md.
 
-Status: IN ARBEIT
+Status: ABGESCHLOSSEN — Urteil siehe Abschnitt 5 (NICHT BESTANDEN)
 
 ## 0. Bau
 - `bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`; `... build` ->
@@ -165,8 +165,76 @@ Guess-Tell-Suche im hinzugefuegten Code (`deferred|tunable|interim|for now|faith
 ein Treffer — test_r35_affen.c Kopf: "wagen   Messschiene (kein Riegel-Urteil ausser Plausibilitaet)" (siehe
 Mangel zu Punkt 2). Env-Schalter: nur RE15_AFFEN_FUSS (Mess-Log, kein Spielverhalten).
 
+Original-Datenquelle geprueft: die r3-Savestates laufen auf der Auslieferungs-EXE (`abn0_orig.py patch`:
+s000/s021 `0x80026e4c: 08 00 e0 03` = `jr ra`, nicht der Patch `24 c2 01 08`).
+
+Fix erklaert Befund (Vorbedingungen im Dossier-Protokoll, NICHT von mir am Vorstand nachgemessen — kein master-
+Bau im Baum): P1 Ada-Stopp (-16859,-6560) / Band-0-Zelle; P2 Szenen-Record ohne INIT (Zustand 0, Scale 0);
+P3 weisse Platte (Bild chk_brust_zoom) / Part 18 auf der Wurzelpose; P4 frac=7 in 849/887 Bildern, Knockdown
+4915 Einheiten, Biss-Richtung vom naechsten Gegner; P5 Leon nach dem Griff bei (0,0); P6 13 Treffer = 13
+Spruenge. Fuer P1-P3, P5, P6 deckt sich mein Nachher-Mass mit der Erklaerung; fuer P4 erklaeren die Fixes das
+"zu passiv" (behoben), aber nicht den neuen Ueberschuss (M1).
+
 ## 3. Vertrags-/Pfad-Gate, Tests
-(folgt)
+- `git diff master --name-only`: keine Pfade unter `release/`, `platform/android/`, `shared_assets/PSX/`; keine
+  Edits an `tests/unit/CMakeLists.txt` / `tests/integration/CMakeLists.txt`. Neue Dateien: affen_11c0.c,
+  re15_affen.h, test_r35_affen.c, probes/r35_affen.cmake (Vertrag 1.4 eingehalten). Alt-Riegel test_member.c /
+  test_maggot_ai.c angepasst (im Dossier begruendet: id19 = +0x1ba, 3-Treffer-Vorgabe).
+- Bank-9-Bits / Nachrichten-IDs / Ereignisse / Assets: KEINE belegt (Bit 82, IDs 20..23, Ereignis 25 frei) — ok.
+- Hakengroesse in gemeinsamen Dateien (Vertrag 1.4 "NUR kleine Haken (1-5 Zeilen)"), gezaehlt mit
+  `git diff master -U0`: enemy_ai_common.c 16 Hunks (+97/-12), davon groesser als 5 Zeilen: footlock +12/-1,
+  Mess-Schiene +10, Pin-Anker +13, Biss +6/-2, Flug +8/-1, Spawn-Wurzel +10/-1, NPC-Klemme +6/-2;
+  game_step_common.c kd_move umgeschrieben +14/-10, Knockdown +6/-2; main.c +11 und +5. Ueberwiegend Kommentar,
+  aber ueber der Vertragsgrenze -> Mangel M5 (vom Bau-Agenten offen angegeben).
+- Spielweite Seiteneffekte gemeinsamer Funktionen: `re15_npc_wall_clamp` (Band jetzt +0x82 statt y) ist der
+  Root-Tail ALLER NPCs (enemy_ai_common.c:10639, Kommentar "alle States") — betrifft jede NPC-Szene (1050 Ada-Ruf,
+  10D0 Marvin, 1170, 11B0, die neuen Szenen der Spuren K/L); im Dossier-OFFEN NICHT genannt, ausserhalb 11C0 nicht
+  gemessen -> Mangel M4. Knockdown-Sonde (alle Knockdowns) und Member_set 0x13 (7 weitere Raeume) sind im
+  Dossier als OFFEN genannt.
+- Tests: `ctest -R r35_affen` 11/11 gruen (+ unit_member, unit_maggot_ai). Abdeckung je Punkt: P1 `band`+`ada`
+  (messend), P2 `wagen` (nur Klappe; Gorilla-Lage nur gedruckt -> M2), P3 `teile` (messend gegen Savestate-Matrix),
+  P4 `flug`/`kdsonde`/`biss`/`frac` (Bausteine messend; KEIN Riegel auf Biss-Takt/Todeszeit), P5 `brust`/`anker`,
+  P6 `sprung` (nur Spur 0 — Spur 1/2 ungeprueft -> M3).
 
 ## 4. Maengel
-(folgt)
+- **M1 (Punkt 4, teilweise): die Gorillas sind jetzt AGGRESSIVER als das Original.** Gemessen am Tuerweg
+  (t2, Leon ohne Eingabe, Szenen-Endpunkt) gegen r3: Biss-Takt 35,4 Bilder (Port, 16 Bisse F1583-F2079) gegen
+  ~49 Bilder (Original, 15 Bisse t=60.58-84.88); Tod 33,0 s gegen 39,4 s nach der Freigabe; Leon driftet unter den
+  Bissen stetig 1260 Einheiten nach NW (Original: pendelt im Kasten ~850x600). Mechanismus nicht gefunden (Dossier:
+  "Kandidat Fuss-Sperre auf geblendeten Pool-Matrizen"). Naechster Weg: Einzelbild-Spur des Originals (PCSX-Redux-
+  Lua-Watch auf Entity 1/2 +0x34/+0x3c/+0x8f/+0x1dc und Spieler +0x34/+0x3c ueber zwei Bisse) gegen Port-state.log;
+  dazu den Rear-up-Griff im Original aufnehmen (Leon im Freien, Opfer-Handler 0x8011c118) — Port: 0 HP Schaden,
+  ~1600 Einheiten Versatz beim Zupacken (t6 F1202->F1203) ungeprueft.
+- **M2 (Punkt 2, Test): kein Riegel pinnt die Ursache von Punkt 2.** `unit_r35_affen_wagen` prueft nur die
+  Klappen-rot_z-Folge und druckt die Gorilla-Lage ("kein Riegel-Urteil ausser Plausibilitaet"). Fehlt: Pruefung,
+  dass der eingefrorene Szenen-Record (grid 0x30) im Spawn-Bild INIT hat (state 1, hp 180, render scale = 0x1b33
+  @0x80117148, flags 0x800) und in Cut 12 bei y=-2500 im Wagen sitzt / bei (-3617,0,-17798) austritt.
+- **M3 (Punkt 6, teilweise): mit der Schrotflinte springt der Gorilla weiterhin nach JEDEM Treffer.** t5: 6 Treffer
+  -> 6 Spruenge (Exit-Subs 7,7,7 / 7,7,7). Der 3-Treffer-Zaehler wirkt nur in Spur 0 (Handfeuerwaffe); Spur 1
+  (Zeilen 7/8/13/21, Exit `+0x5=7` @0x8011b3c8-cc, selbst disassembliert) und Spur 2 (Zeilen 9..11/15..18,
+  Exit @0x8011b69c-e8) haben keinen Zaehler. Der Wortlaut ("nicht nach jedem Schuss") gilt fuer alle Waffen.
+  Dazu ungemessen: die Sprungkette nach dem 2. Schrottreffer (5 Spruenge ueber den ganzen Platz, bis 810
+  Einheiten/Bild, Landung 11 600 von Leon) gegen das Original.
+- **M4 (Seiteneffekt, nicht im Dossier-OFFEN): NPC-Wandklemme spielweit auf +0x82 umgestellt**
+  (enemy_ai_common.c re15_npc_wall_clamp, Root-Tail aller NPCs). Byte-true zitiert (@0x8003b228-3c), aber
+  ausserhalb ROOM11C0 ungemessen; muss im Dossier unter OFFEN stehen und in mindestens einer weiteren NPC-Szene
+  mit Bandwechsel/Treppe (z.B. 10D0 Marvin, 1050 Ada-Ruf) nachgemessen werden.
+- **M5 (Vertrag 1.4): Haken in gemeinsamen Dateien groesser als 1-5 Zeilen** (Zaehlung Abschnitt 3; v.a.
+  kd_move-Neuschrieb in game_step_common.c, Pin-Anker-Block und Mess-Schiene in enemy_ai_common.c). Die
+  Mess-Schiene RE15_AFFEN_FUSS (10 Zeilen Datei-Log im Spiel-Code) gehoert in die eigene Datei.
+
+## 5. Ergebnis
+| Punkt | Urteil |
+|---|---|
+| 1 Ada versteckt sich / kommt nach dem Sieg zurueck | erfuellt (Tuerweg, echte Kills, Bilder) |
+| 2 Monkey kommt an der korrekten Position aus dem Auto | erfuellt (Bildvergleich mit Original r3) — Test-Luecke M2 |
+| 3 komisch beweglicher Teil am Oberkoerper | erfuellt (Bildvergleich, Disasm bestaetigt) |
+| 4 KI zielstrebiger/aggressiver wie im Original | teilweise (Annaeherung ok; Biss-Takt/Todeszeit ueberschiessen, M1) |
+| 5 Brust-schlagen-Animation | erfuellt (3x in ~35 s im Freien, Bild) |
+| 6 Sprung erst nach 3 Treffern | teilweise (Handfeuerwaffe ja; Schrotflinte jeder Treffer, M3) |
+
+Gates: Bau gruen; Suite 489/489 laut Dossier + frueherem Lauf (nicht selbst wiederholt); r35_affen 11/11 gruen;
+@0x-Gate gehalten (3+3 Stichproben bestaetigt); Pfad-Gate ohne verbotene Pfade, aber Hakengroesse ueberschritten
+(M5). **Abnahme 0: NICHT BESTANDEN** (Punkte 4 und 6 nur teilweise, M1-M5).
+
+Status: ABGESCHLOSSEN (3. Anlauf, 2026-10-03). Messlaeufe/Bilder: scratchpad `jab3/` (t2..t6b, *_ana.txt, *.png).
