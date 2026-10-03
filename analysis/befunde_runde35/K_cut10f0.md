@@ -715,6 +715,23 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
   Unit `bgm` bildet die Reihenfolge von scd_room_reenter nach (`raumaufbau()`: tick_count 1 = Init-Lauf, Rahmen
   geloescht, install; `vm_lauf()`); Gegenprobe: mit der ersten Aenderung (`tick_count > 0`) faellt
   "Raumaufbau mitten in der Montage ... Fenster zu". Jetzt `bgm: PASS (0 Fehler)`.
+- **Messung nachher (Lauf m3, gleicher Weg, Scratch-Bau K 515dc35c + L 6f03b1ef):** debug.log
+  ```
+  1373 [room] PC loaded room1130.rdt / 1377 [flag] z1/27 = 0 / 1383 Montage 1130 (Programm 1) / 1387-88 z2/7 = 1, z1/27 = 1
+  1411 room1040.rdt / 1415 z1/27 = 0 / 1424 Montage 1040 (Programm 2) / 1430-31 Rahmen = 1
+  1466 room1030.rdt / 1470 z1/27 = 0 / 1478 Montage 1030 (Programm 3) / 1484-85 Rahmen = 1
+  1564 room11c0.rdt / 1566 z1/27 = 0 / 1577 Montage 11C0 (Programm 4) / 1582-83 Rahmen = 1
+  1634 room1150.rdt / 1637 z1/27 = 0 / 1649 Rueckkehr: Programm 5 / 1653-54 Rahmen = 1 / 1658-59 Rahmen = 0
+  1660 [cut10f0] MAIN01-Fenster auf in ROOM1150: (9,71)=1 (9,73)=1, Parkplatz erreicht (4,64)=0
+  1661 [cut10f0] Raummusik-Anstoss in ROOM1150: Soll MAIN01 (letzte Auskunft an die Audio-Schicht: Tabelle)
+  1663 [irons-tod] ROOM1150 Zustand 0: Rueckkehr beendet, Steuerung frei
+  1748 [flow] EXIT_AT: Bild 1500 in Raum 1150 erreicht -> exit
+  ```
+  Vor Zeile 1660 KEINE `[cut10f0]`-Fenster-/Anstoss-Zeile (in m1: 1386/1387 in ROOM1130 und 1584 in ROOM11C0). MAIN01
+  beginnt jetzt genau mit dem Ende der Montage in ROOM1150; (4,64) bleibt ueber den 11C0-Schnitt 0, also blinkt die
+  Kachel weiter und das Fenster bleibt offen bis zur echten Ankunft. Zu Befund 1 ist die Vorbedingung des Fixes im
+  Protokoll geprueft: m1/m2 zeigen das Oeffnen GENAU zwischen `z1/27 = 0` (Raumaufbau) und `z2/7 = 1` (erster
+  Programmlauf), m3 nicht mehr.
 
 ### 9.9 OFFEN (Stand Nachbesserung 1; ersetzt §6)
 - **Sprachaufnahmen fehlen:** die 18 Zeilen laufen stumm mit Untertitel, bis der Nutzer
