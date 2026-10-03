@@ -54,7 +54,23 @@ Status: IN ARBEIT
   (`jab3/t2_ada.png`, F1110-F1260, zwei Gorillas in Bewegung): kein mitschwingendes Fremdteil am Rumpf.
 - Disasm des Belegs selbst geprueft (Abschnitt 2, Stichprobe 1); Riegel `teile` gruen.
 
-### Punkt 6 — "erst springen, wenn sie 3x getroffen wurden, nicht nach jedem Schuss" — **erfuellt**
+### Punkt 6 — "erst springen, wenn sie 3x getroffen wurden, nicht nach jedem Schuss" — **teilweise**
+**Nachtrag nach Lauf t5 (Schrotflinte) — das Urteil unten (Handfeuerwaffe) gilt NUR fuer die Handfeuerwaffe:**
+- Lauf t5 (Tuerweg, `RE15_GIVE=7:200 RE15_EQUIP=7` = Schrotflinte, sonst wie t3), `p6.py` auf dem gesicherten
+  `t5_keep/state_copy.log`: Slot 2: 3 Treffer, Exit-Subs `7,7,7`; Slot 3: 3 Treffer, Exit-Subs `7,7,7` —
+  **6 Treffer = 6 Vergeltungs-Spruenge**, also weiterhin "nach jedem Schuss".
+- Ursache im Code: der Zaehler sitzt nur in der Boden-Flinch-Spur 0 (`spur_h == 0`, Zeilen 0..6/12/14/19/20,
+  enemy_ai_common.c re15_maggot_ai_tick case 2). Die Schrot-Zeile 7 laeuft ueber Spur 1 "AIR-HIT 7/8/13/21"
+  (Exit `e->sub_state_1 = 7` @0x8011b3ac-ec) und die Zeilen 9..11/15..18 ueber Spur 2 "CRASH" (Exit
+  `sub_state_1 = 7` @0x8011b69c-e8) — beide ohne Zaehler ("Luft-/Sturz-Spuren byte-true", Dossier). Der Wortlaut
+  des Nutzers ist nicht auf eine Waffe beschraenkt -> Mangel M3.
+- Beobachtung t5 (nicht gegen das Original gemessen): nach dem 2. Schrottreffer (F1365) folgt bei Slot 2 eine KETTE
+  aus 5 Spruengen ueber den ganzen Platz (F1392-F1644; (-4898,-15245) -> (-13848,-246) -> (8652,1758) ->
+  (8382,10354) -> (7732,-13368) -> (4633,-14167)), Flugschritte bis 810 Einheiten/Bild (F1500-F1524: x +3240 je
+  4 Bilder); er landet 11 600 Einheiten von Leon entfernt. Ob das Original nach Spur-1-Treffern so springt, ist
+  ungemessen -> unter M3 als Messauftrag.
+
+Urteil fuer die Handfeuerwaffe (Spur 0):
 - Lauf t3 (Tuerweg wie t2, `RE15_GIVE=3:250 RE15_EQUIP=3`, `RE15_INPUT_SCRIPT=W40,(MA0.1,M0.6)x150` Basis spiel,
   Feuer ab 11C0-F1260, Leon steht): Auswertung `jab3/p6.py` (Flinch-Eintritt st 1->2, Exit-Sub beim Austritt):
   - Slot 2: 13 Treffer, Exit-Subs `3,3,7, 3,3,7, 3,3,7, 3,3,7, 3` (F1281 hp168 -> 3, F1303 -> 3, F1325 hp144 -> 7, ...).
@@ -73,6 +89,17 @@ Status: IN ARBEIT
   neben Leon, ab F1110 nicht mehr.
 - y = 20000 ist im state.log nicht protokolliert; belegt durch den Riegel `ada` (gruen: `y = 20000 ab Bild ...`
   nach Ankunft, Member_set 01 @0x1C74) und das leere Bild.
+
+### Punkt 1, zweite Haelfte — Ada kommt nach dem Sieg wieder heraus — **erfuellt**
+- Lauf t5 (Tuerweg, Schrotflinte, beide Gorillas WIRKLICH getoetet — kein gesetztes Kill-Bit): Slot 2 F2054
+  `st=3 hp=-20`, danach Slot 3; debug.log `[evt] F2142 room=11c0 Evt_exec sub=3` (sub01: (3,0x43)==0 &&
+  (7,0x60) && (7,0x61)), `[scd F2172] Cut_chg(4)`, `Plc_dest(slot=0 mode=0x04 dest=(-14280,-8543))`,
+  `Plc_dest(slot=0 mode=0x09 dest=(-18214,-7229))`; Ada F2425 `st=4/4/2 mo=5` verlaesst (-18025,-7379), F2451
+  bei (-16264,-8159) (Ziel @0x1B70 (-16211,-8183)); F2729 sub04 (gemeinsamer Gang), danach `[room] PC loaded
+  room11b0.rdt` (Raum verlassen).
+- Bild `jab3/t5_ada_zurueck.png` (Cut 4): F2140 beide Gorillas liegen; F2300 Leon geht zum Wagen; **F2400 Ada steht
+  wieder sichtbar neben Leon** ("Ada: Okay, it's over now."), F2420-F2500 Dialog "...There are some outrageous
+  monsters out there." (Original-Nachrichten msg07..09).
 
 ### Punkt 4 — "KI zielstrebiger und aggressiver wie im Original" — **teilweise**
 Vergleichslage: Leon ohne Eingabe am Szenen-Endpunkt (Port t2 ueber den Tuerweg, Original r3 ueber Debug-JUMP;
