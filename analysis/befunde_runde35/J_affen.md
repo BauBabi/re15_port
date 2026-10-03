@@ -892,3 +892,38 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
   (sf*12)"). Fuer Yaw 191: -1183*200 = -236600 SAR 12 = **-58**. Der Port rechnet `z -= (s*speed) >> 12` = -57
   (re15_port/engine/src/actor_locomotion.c) — die Negation NACH der Verschiebung rundet zur Null statt nach unten.
   Eine Einheit je Bild ueber ~230 Laufbilder = die 26 Einheiten der Szenen-Endlage.
+- **Messung nach dem Rundungs-Fix (exe `jnb2/n10`):** Bein 1 bitgleich, ab der Wende Abweichung: Original dreht
+  am Ende von Bein 1 sechs Bilder auf der Stelle (183 -> 759, +96) und nimmt im 7. Bild (Eintritt 759) noch +96 ->
+  855 ohne Schritt; der Port wechselte schon beim Eintritt 663 in den Laufzustand. **Ursache = Kegelgrenze.**
+  Mode-5-Handler 0x80030d28 Zustand 1 (selbst disassembliert): `jal 0x8001ab9c` mit a2 = 0x15e @0x80030db8-bc VOR
+  dem Slew `jal 0x8001aac4` (a2 = 0x60) @0x80030df4-f8. FUN_8001ab9c: d = (Peilung - Yaw + k) & 0xfff @0x8001abe4-ec,
+  `slt v0,v1,v0` mit v0 = 2k @0x8001abf8-fc -> "im Kegel" <=> -k <= Peilung - Yaw < k (HALBOFFEN). Der Port pruefte
+  `|delta| <= 0x15e` (geschlossen) -> bei delta = +350 einen Zustand zu frueh. Gleicher Test im Mode-9-Handler
+  (`jal 0x8001ab9c`, a2 = 0x60 @0x800313d0-d4) -> dort ebenso `< 0x60`.
+- **Messung nach beiden Walker-Fixes (exe `jnb2/n10b`, Werkzeug `gangvgl.py`):** alle **207** Lage-/Yaw-Zustaende
+  des sub02-Gangs **bitgleich** mit der Original-Spur, Endlage **(-7138,-12372) Yaw 1513** = Original.
+- **Aber der Takt blieb 36** (n10b: Bisse alle 35-36 Bilder, Tod F2062). Die Lage allein erklaert ihn also nicht
+  (= die Gegenprobe, die die Abnahme verlangte). Weiter mit dem Kampf Bild fuer Bild (`kampf.py`) gegen g_orig:
+  Heavy des Port-e2 (S3) mit Yaw **160**, Original **4228** (= 132, das Original maskiert +0x6a hier nicht);
+  dadurch rutscht S3 waehrend des Heavy ~400 an Leons Koerper entlang, steht danach ~370 weiter suedlich und
+  sein Biss-Lunge schiebt Leon nicht in den Bogen des anderen Gorillas -> Wechseltakt.
+- **Ursache = die Zufallszahlen.** Im Original drehte e2 im Heavy-Anlauf (B[4]) 21 Bilder lang um genau **+73**
+  und lief mit +0x8c **188** (g_orig, e2 +0x9e/+0x8c je Bild); der Port zog je Bild neu (xorshift-Ersatz) 64-95.
+  FUN_8001af20 (selbst disassembliert, s. auch Memory reai-v2-rng-determinism) liest den State @0x800ac774 NICHT
+  (`lhu t1` @0x8001af28 tot), sondern hasht das **a0-Register des Aufrufers**. GDB-Zensus aller Ziehungen
+  (`jnb2/gdbrng.py`, Haltepunkt 0x8001af20, ra/a0/g_entity(cur); `g_rng.txt` ab s033, `g_rng2.txt` ab s026):
+  - B[4] @0x80118164/@0x8011817c (ra 0x8011816c/0x80118184): a0 = **Entity+0x34** (21/21 + 22/22: 0x800ad048 =
+    e2+0x34, danach verkettet 0xa0e8) -> (8, 9) -> 188 / 73. Ausnahme: im Bild, in dem A[3] auf sub 4 schaltet,
+    laeuft B[4] mit dem a0 aus A[3] (vs9597: 0x027e6945 = Abstand^2 aus a804).
+  - B[3] CHASE @0x80117ce0/@0x80117d1c (ra 0x80117ce8/0x80117d24): a0 = **0xbb8**, wenn Spieler +0x93 != 0 (Delay-
+    Slot `ori a0,zero,0xbb8` @0x80117a60 des `bne` @0x80117a5c), sonst das a0 nach a804(0xbb8,0x180) @0x80117a6c:
+    a804 laesst nach SquareRoot0 a0 = dx^2+dz^2 stehen (SquareRoot0 @0x80065f60 schreibt a0 nicht) und kehrt bei
+    r < d ohne atan2 zurueck (`slt s0,s0,s1` / `bne` @0x8001a870-74); sonst atan2 FUN_8001a6d4 -> a0 = dz<<12 bei
+    dx = 0 (Delay-Slot @0x8001a718), sonst der CORDIC-Rest y_11 aus catan (`lw a0,56(a1)` @0x80065928 in der
+    12. Iteration). Modell (`jnb2/a0model.py`) gegen die Original-Ziehungen: **e1 517/517, e2 443/443** (die
+    uebrigen 15 sind die Kette nach der Eintritts-Ziehung: H(0xbb8) -> a0 0x17cf).
+  - B[0] Leerlauf-Timer @0x80117594 (ra 0x8011759c): a0 = **Entity-Zeiger** (vs9117: 0x800ad014) -> H = 180 ->
+    +0x9c = 239. Port (xorshift): 264 -> Heavy 26 Bilder spaeter (Port F1461 = Freigabe + 390, Original vs9765 =
+    Freigabe vs9037 + 364).
+- Freigabe im Original exakt: aca58 4 -> 1 bei **vs9037** (`jnb2/g_frei.txt`, s026); Tod vs11423 (g_orig F891)
+  -> **1193 Bilder = 39,8 s**.
