@@ -255,3 +255,50 @@ Maengel: M1 Fahrstuhl-Marker 2 px, M2 kein Bewegungsriegel, M3 Suite 484 vs 483,
 ueberzeichnet, G1 SCA-Offsets 1220-Teiler, G2 PORT-WAHL-Kennzeichnung Fahrstuhl-Blatt.
 (fortlaufend, je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher)
 
+### M1 Fahrstuhl-Marker — RE-Belege (selbst disassembliert)
+
+**Ursache (Vorgaenger-Stand):** Zeile 0x1080/0x1081 (129,117,795,805, flip 1,1) = 795/2^20 px je
+Einheit = 1/1319 -> Kollisions-Innere 4200 Einheiten auf 3,2 px; Reichweite des Spielers (Wand -468,
+Abnahme-Lauf: x -15282..-12018, z -3682..-518) davon die Haelfte -> 2 px. Dazu Klemmung
+re15_inv_screen.c (Rect 9 (109,134,16,16) + Reserve 4 -> x113..121 y138..146) - schneidet vom
+gemalten Innenraum (x110..117 y135..142) die linken/oberen 3 px weg. Beide Glieder zusammen = 2 px.
+
+**RE1.5 (Original-Marker) `FUN_800473f8`** (RE_15_Quellcode_V2/FUN_800473f8.c): Quad x-4..x+4,
+y-4..y+4 aus der Zeile @0x800768b0+8*Idx; danach direkt `AddPrim` - **keine Klemmung**. Zeile 1080
+@0x800768f0 = Stub {0,0,1,1} (Abnahme + B3) -> das Original zeigt in der Kabine KEINEN brauchbaren
+Marker (alle Lagen -> (0,0)). RE1.5 ist hier nachweislich unfertig -> Beta->Retail: RE2 ist das Ziel.
+
+**RE2 Retail Kartenzeichner `FUN_8006e120`** (info/re2leon/PSX.EXE, re2_disasm.py dis 0x8006e120):
+```
+8006e1d4: bne v1,a3,0x8006e2f8      ; nur wenn gezeigtes Blatt (0x800d5c0a) == Blatt des Spielers
+8006e1dc: lui v0,0x91a2
+8006e1e4: lw a0,-976(a0)             ; 0x800cfc30 = Spieler x
+8006e1e8: ori v0,v0,0xb3c5           ; magic 0x91a2b3c5
+8006e1ec: addiu a0,a0,28000          ; x + 28000
+8006e1f0: mult a0,v0 / 8006e204 mfhi v1 / 8006e208 addu v1,v1,a0 / 8006e20c sra v1,v1,8
+8006e214: sra a0,a0,31 / 8006e218 subu v1,v1,a0      ; = (x+28000)/450  (C-Trunkierung)
+8006e1f8: lw a1,-968(a1)             ; 0x800cfc38 = Spieler z
+8006e200: addiu a1,a1,28000 / 8006e210 mult a1,v0 / 8006e24c mfhi / 8006e250 addu / 8006e254 sra 8
+8006e268: subu v0,zero,v0            ; y = -(z+28000)/450
+8006e228/8006e264: lhu 0x800d5c48 / 0x800d5c4a   ; Blatt-Ursprung
+8006e234-23c: (yaw+0x100)>>9 & 7 -> u = 12*Richtung (8006e280-28c, sb 12(s4)) = Pfeil je Blickrichtung
+8006e2cc: lhu a1,8(v1) / 8006e2e4 lhu v1,10(v1)  ; Raum-Eintrag +8/+10 = Versatz JE RAUM
+8006e2d8: sh v0,8(s4) / 8006e2f4 sh v0,10(s4)    ; x0/y0 des Sprites
+8006e2f0: jal 0x8008f918 (AddPrim)               ; KEINE Klemmung
+```
+Magic-Pruefung: 0x91a2b3c5 signiert = -0.431111*2^32; (mfhi + x) = 0.568889 x; >>8 -> x/450,0.
+=> RE2: **ein Massstab fuer ALLE Raeume, 1/450 px je Einheit**, Versatz je Raum, Marker ungeklemmt.
+
+**Gegenprobe gegen die RE1.5-Kunst (Kachel uv(168,40), MAP03.PIX Blatt 2 / MAP05.PIX Blatt 4,
+Zeilen v=40..49 ab Datei-Byte 0x1454):** Kabine = 10x10-Kasten, Index 4 (Wand) in Spalte 0/9 und
+Zeile 0/9, Index 1 (Innen) dazwischen. Blatt 2 (rect 9 (109,134)): Waende x109/x118, y134/y143,
+innen x110..117 y135..142. Blatt 4 (rect 0 (127,137)): Waende x127/x136, y137/y146.
+Mit 1/450 (Zeilenform sx = sy = 2^20/450 = 2330) und je EINEM Versatz pro Achse fallen BEIDE
+Kollisionswaende der Kabine (SCA ROOM1080: Innenflaechen x -15750/-11550, z -4150/-50) auf die
+gemalten Wandpixel - Blatt 2: x -15750 -> 118, -11550 -> 109, z -4150 -> 134, -50 -> 143; Blatt 4:
+136/127/137/146 (scratch nb1/fit.py). Der Versatz ist von der einen Wand bestimmt, die andere Wand
+PRUEFT den Massstab: 4200/450 = 9,33 px gegen 9 px gemalten Wandabstand - die Kunst ist im
+RE2-Massstab gemalt. (Zum Vergleich: der Vorgaenger-Massstab 795 legte die Waende 3 px auseinander.)
+Reichweite des Spielers (Wand -468): x -15282..-12018 -> 117..110, z -3682..-518 -> 135..142 =
+**genau der gemalte Innenraum, 7 px je Achse.**
+
