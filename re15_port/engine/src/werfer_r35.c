@@ -237,6 +237,31 @@ void re15_werfer_flamme_bild(int f)
     if (f == 11) re15_audio_re2_arms_se(0x10, 11);    /* 0x010B0001 @0x80045550-6c (ARMS10 Satz 11) */
 }
 
+/* Leerschuss-Ton (Nachbesserung 1, M2). BEFUND: der zweite Abzug mit leerem Raketenwerfer war
+ * STUMM — der RE1.5-Klick 0x01010001 trifft ARMS12 Satz 1 = ff ff ff ff (ARMS12.EDH Dateibytes
+ * 4..7; die Bank hat nur Satz 0 `00 00 13 20` und Satz 10 `00 00 33 20` @0x28).
+ * RE2 Retail (Beta -> Retail, Sound ist RE2): Waffe 17 laeuft ueber die Standard-FSM
+ * (Dispatch-Tabelle @0x800a6f38 + 17*4 = @0x800a6f7c -> 0x80043230, Sub-Tabelle @0x800a7048[1] =
+ * Haltezustand 0x8004362c). Dort:
+ *   8004382c jal 0x80069f54 (Id & 0xfff)        Magazin > 0?  -> Zustand 2 (Feuer) @0x80043838-40
+ *   80043844-54 lw 0x800ce310 / andi 0x40 / beq Tasten-FLANKE, sonst nichts
+ *   8004385c jal 0x8006a23c                     Nachladen moeglich? Fuer Id 17 hart 0:
+ *                                               `addiu v0,zero,17 / bne v1,v0 / addu v0,zero,zero`
+ *                                               @0x8006a28c-9c
+ *   80043864 beq v0,zero,0x80043894
+ *   80043868 lui a0,0x101 / 80043894 ori a0,a0,0x1 / 80043898 jal 0x8005ba28 / addiu a1,s0,56
+ *                                               = SE 0x01010001 an der Spielerlage
+ * 0x01010001 = Bank 1 (ARMS der gefuehrten Waffe, FUN_80059c74) Satz 1; RE2 ARMS11.EDH Dateibytes
+ * 4..7 = 00 00 54 16. (Derselbe Zweig spielt den Klick auch fuer die Granatwerfer 9/10/11:
+ * `addiu v0,v0,-9 / sltiu v0,v0,0x3 / bne` @0x80043878-80 — RE2 laedt den GL NICHT per Abzug nach;
+ * der Port laedt 15/16/17 nach RE1.5-Anlage nach, PORT-WAHL Dossier §3.5 Punkt 4.) */
+int re15_werfer_leer_ton(int id)
+{
+    if (id != 18) return 0;
+    re15_audio_re2_arms_se(0x11, 1);
+    return 1;
+}
+
 int re15_werfer_fuel_bild(void)
 {
     /* FUN_8006a0cc, Zweig Id 16 @0x8006a184-0x8006a21c (Delay-Slot-genau):

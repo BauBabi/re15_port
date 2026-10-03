@@ -1716,6 +1716,7 @@ void re15_game_step(const re15_game_ctx_t *c)
                     extern int re15_werfer_nachladbar(int id);
                     if (re15_ammo_reserve_slot() > 0 && (eq_item < 9 || re15_werfer_nachladbar(eq_item)))
                         re15_player_reload_start();                 /* sub=4 @0x80033378 */
+                    else if (re15_werfer_leer_ton(eq_item)) { }     /* Runde 35 Spur B (M2): Rakete = RE2 ARMS11 Satz 1 @0x80043868-9c */
                     else if (!(eq_item == 12 || eq_item == 14 || eq_item == 19))
                         re15_audio_weapon_se(1);                    /* click 0x01010001 */
                     /* DAUERFEUER (12/14/19): Abzug mit leerem Magazin im Hold tut

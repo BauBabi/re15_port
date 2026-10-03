@@ -59,6 +59,12 @@ void re15_werfer_flamme_bild(int f);
  * DAT_800d5c1c, alle 8 Bilder zwei Einheiten; Rueckgabe 0 = leer (Schleife beenden). */
 int  re15_werfer_fuel_bild(void);
 void re15_werfer_reset(void);
+/* Leerschuss-Ton der Werfer-Klasse (Nachbesserung 1, M2): 1 = hier gespielt, 0 = der Aufrufer
+ * spielt den RE1.5-Klick 0x01010001 der gefuehrten ARMS-Bank. Nur der Raketenwerfer 18: seine
+ * RE1.5-Bank ARMS12 hat KEINEN Satz 1 (ARMS12.EDH Dateibytes 4..7 = ff ff ff ff), RE2 spielt im
+ * Haltezustand der Standard-FSM 0x01010001 (@0x80043868/94-9c) = ARMS11 Satz 1 (EDH Bytes 4..7 =
+ * 00 00 54 16). */
+int  re15_werfer_leer_ton(int id);
 
 /* Inventar-Kombination (Haken in menu_common.c exchange_match / exchange_exec): Aktion fuer das
  * Paar (Cursor-A-Id, Cursor-B-Id) der Werfer-Klasse und der Python — 2/3 = RE1.5-Nachladen in
