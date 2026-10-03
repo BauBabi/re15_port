@@ -308,7 +308,7 @@ int re15_werfer_paar(uint8_t id_a, uint8_t id_b, uint8_t *result, uint8_t *pic)
  *   8006bd30 beq Menge[B],zero -> 8006bd6c         leer: FUN_8006947c(B,0,0,0) + Zelle leeren
  *   8006bd38-60 jal 0x80069bb4                     sonst Bild der Runde in Zelle B
  * Der Werfer nimmt wie in RE2 den GANZEN Stapel der neuen Runde (keine Kappe im Zustand 7);
- * das RE1.5-Magazin 6 (@0x80074dd4) gilt nur beim Nachladen. Breite Waffe (Zellen-Flags 1/2,
+ * das RE1.5-Magazin 6 (@0x80074e5c/e68/e74) gilt nur beim Nachladen. Breite Waffe (Zellen-Flags 1/2,
  * FUN_8004dc4c): die Schwanzzelle fuehrt Id/Menge der Kopfzelle mit. */
 void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic)
 {

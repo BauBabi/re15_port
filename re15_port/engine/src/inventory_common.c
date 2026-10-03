@@ -190,8 +190,9 @@ int re15_ammo_consume(void)
  * 9..15 rows are carried for the table's byte-truth, not reachability. */
 typedef struct { uint8_t chunk; uint8_t ammo_id; } re15_wpn_prop_t;
 /* Runde 35 Spur B: Zeilen 15..20 aus den Waffen-Records @0x80074da8 + id*0xC (u32 Magazin):
- * [15] 6 @0x80074dd4, [16] 6 @0x80074de0, [17] 6 @0x80074dec, [18] 4 @0x80074df8, [19] 100
- * @0x80074e04, [20] 6 @0x80074e10. Munitions-Zeiger dieser Zeilen = NULL-Record 0x80074c88
+ * [15] 6 @0x80074e5c, [16] 6 @0x80074e68, [17] 6 @0x80074e74, [18] 4 @0x80074e80, [19] 100
+ * @0x80074e8c, [20] 6 @0x80074e98 (Nachbesserung 1 M3: vorher standen hier die Adressen der
+ * Pistolen-Records 3..8). Munitions-Zeiger dieser Zeilen = NULL-Record 0x80074c88
  * (unverdrahtet); die Records der GL-Runden EXISTIEREN unverwiesen: 0x80074cb4 `19 0f 02 00`,
  * 0x80074cb8 `1a 10 04 0c`, 0x80074cbc `1b 11 04 0c` (Munitions-Id, Waffen-Id, ..) -> 15/16/17
  * laden EXPLOSIVE/ACID/INCEND. ROUNDS (0x19/0x1a/0x1b). 18 Rakete: kein Record, auch RE2 Id 17

@@ -1711,7 +1711,7 @@ void re15_game_step(const re15_game_ctx_t *c)
                     extern void re15_player_reload_start(void);
                     /* Runde 35 Spur B: das RE1.5-Gate `sltiu id,9` @0x80033368 laesst die Werfer-
                      * Klasse und die Python nicht nachladen — ihre Munitions-Zeiger sind im
-                     * Auslieferungsstand NULL (unfertig, @0x80074dd4-e10); die Records existieren
+                     * Auslieferungsstand der NULL-Record 0x80074c88 (unfertig; Record +4 @0x80074e60/6c/78/84/9c); die Records existieren
                      * (0x80074cb4/b8/bc). re15_werfer_nachladbar = 15/16/17/20 (include/re15_werfer.h). */
                     extern int re15_werfer_nachladbar(int id);
                     if (re15_ammo_reserve_slot() > 0 && (eq_item < 9 || re15_werfer_nachladbar(eq_item)))

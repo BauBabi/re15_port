@@ -6,7 +6,7 @@
  * Code engine/src/werfer_r35.c (re15_werfer_paar / re15_werfer_gl_tausch), Haken in menu_common.c.
  *
  *  K1  GL Explosiv 15 + EXPLOSIVE RND 0x19  -> Nachladen (RE1.5-Aktion 2, Satz `19 0f 02 00`
- *      @0x80074cb4), Magazin 6 (@0x80074dd4), Rest bleibt in der Runde.
+ *      @0x80074cb4), Magazin 6 (@0x80074e5c), Rest bleibt in der Runde.
  *  K2  GL Explosiv 15 + ACID ROUNDS 0x1a    -> RE2-Zustand 7 (@0x8006bc18): GL wird 16 (Saeure) mit
  *      dem GANZEN Stapel, die geladenen Explosiv-Runden kommen als 0x19 zurueck (MIXITEM-Bild 0x0c),
  *      Schwanzzelle der breiten Waffe zieht mit.
@@ -122,7 +122,7 @@ int main(void)
     CHECK(21, g_inv_screen.second_cursor == 2, "K1 zweiter Cursor auf der Runde, ist %d", g_inv_screen.second_cursor);
     druck(RE15_PAD_BIT_SQUARE);
     CHECK(22, g_inv.slots[0].id == 15 && g_inv.slots[0].qty == 6 && g_inv.slots[2].id == 0x19 && g_inv.slots[2].qty == 6,
-          "K1 GL 2 + 10 Runden -> Magazin 6 (@0x80074dd4), Rest 6; ist GL %02x q%d, Runde %02x q%d",
+          "K1 GL 2 + 10 Runden -> Magazin 6 (@0x80074e5c), Rest 6; ist GL %02x q%d, Runde %02x q%d",
           g_inv.slots[0].id, g_inv.slots[0].qty, g_inv.slots[2].id, g_inv.slots[2].qty);
     zu(23, 1);
 

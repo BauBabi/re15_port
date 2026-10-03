@@ -4,7 +4,7 @@
  *
  * EINORDNUNG (Beta -> Retail, Memory reai-v2-beta-zu-retail; Belege Dossier
  * analysis/befunde_runde35/B_werfer.md §2): im RE1.5-Auslieferungsstand sind
- *   15..18  Entlade-Handler NULL (@0x8007413c-4b), Munitions-Zeiger NULL (@0x80074dd4..e85),
+ *   15..18  Entlade-Handler NULL (@0x8007413c-4b), Munitions-Zeiger NULL-Record 0x80074c88 (Record +4: @0x80074e60/6c/78/84),
  *           Waffen-Parametersatz 0 (@0x800740d6-e9) — nur Baenke, Magazin und Schaden fertig,
  *   20      Dispatch NULL (@0x80074080), Schaden 0 in jeder Gegnerzeile (@0x8006e0d0 Spalte 20),
  *   14      Handler nur als Debug-Patch in DEBUG.BIN (a1 = 3000 @0x800c466c, Rauch-jal entfernt),
@@ -27,9 +27,9 @@
 
 /* 15..18 = Werfer-Klasse (RE1.5 Entlade-Tabelle @0x8007413c-4b NULL). */
 int  re15_werfer_ist(int id);
-/* Nachladbar: 15/16/17 (RE1.5 Magazin 6 @0x80074dd4/e0/ec + Munitions-Records 0x80074cb4/b8/bc,
+/* Nachladbar: 15/16/17 (RE1.5 Magazin 6 @0x80074e5c/e68/e74 + Munitions-Records 0x80074cb4/b8/bc,
  * nur der Zeiger ist unverdrahtet) und 20 (Magazin 6 @0x80074e98; Munition MAGNUM 0x17 =
- * PORT-WAHL, s. Dossier §3.5). 18 = 4 Schuss ohne Munitionsitem (@0x80074e68, RE2 Id 17 ohne
+ * PORT-WAHL, s. Dossier §3.5). 18 = 4 Schuss ohne Munitionsitem (@0x80074e80, RE2 Id 17 ohne
  * Kombinations-Satz @0x800a9ea4). */
 int  re15_werfer_nachladbar(int id);
 /* Animationsbank/Mesh: 16 und 17 fuehren die Bank der 15 (RE1.5 PL00W10 = PL00W11 ist eine
@@ -42,8 +42,8 @@ int  re15_werfer_bank_id(int id);
  * Liefert den Clip unveraendert, wenn die Bank nicht 11 Clips hat oder id nicht 15..17 ist. */
 int  re15_werfer_clip_remap(int id, int clip_n, int clip);
 /* Rueckstoss-Abbruchschwelle (Standard-FSM `!R1 && acae9 > tab5[(id-1)*5+2]` @0x80033634-4c):
- * die Saetze der Ids 14..18/20 sind 0 (@0x800740d6-ef, unfertig); PORT-WAHL = Klassenwert 10
- * der fertigen schweren Waffen 5..13 (@0x800740a4-cc byte 2). */
+ * die Saetze der Ids 14..18/20 sind 0 (@0x800740d1-e9 und @0x800740ef-f3, unfertig); PORT-WAHL = Klassenwert 10
+ * der fertigen schweren Waffen 5..13 (Saetze @0x800740a4..0x800740cc, je byte 2 = 0x0a). */
 int  re15_werfer_recoil_break(int id);
 
 /* Je Spielbild hinter dem Feuerpfad: RE2-Effekt-Handler der Ids 15..18 im Rueckstossbild 1

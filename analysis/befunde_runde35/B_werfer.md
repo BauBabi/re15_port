@@ -34,7 +34,9 @@ Dossier wird FORTLAUFEND geschrieben (Sitzungsabbrueche moeglich).
   Waende) — §4.1. Netze vermessen (PL00W0F gedreht), Fix G1 = Waffenrahmen (§3.7), Fix G2 = werfer_boden (§3.8),
   Commit 46f769fd (Befund) + G1/G2-Commit; Messung nachher §4.2.
 - 16:25 Nachladen/Leerschuss/Elevation/Zensus aller 20 Waffen-Ids/Inventarbild gemessen (§4.2).
-- 17:20 Suite Lauf 4 gruen (481/481); Dauerfeuer-Bild und Tonweg mit Dummy-Audiotreiber geprueft; Abschluss-Commit.
+- 16:59 Suite Lauf 4 gruen (481/481; `suite_lauf4.log` endet 16:59:25, Abschluss-Commit 17:00:46 — die frueher hier
+  eingetragene Uhrzeit "17:20" war verschrieben, berichtigt in Nachbesserung 1); Dauerfeuer-Bild und Tonweg mit
+  Dummy-Audiotreiber geprueft; Abschluss-Commit.
 - 16:40 Suite Lauf 3 von mir selbst bei Test 340/481 abgebrochen (nur eigene PIDs: local_build-bash, ctest,
   cmake, re15_pc.exe des eigenen Baums), um werfer_boden auf WAND-Zellen (Typ 1) einzugrenzen — bis dahin kein
   roter Test. Suite Lauf 4 auf dem Endstand.
@@ -399,7 +401,7 @@ Abweichung dokumentiert: Op 24 beendet bei |x|/|z| > 32000 (Original faellt nach
 ### 3.5 PORT-WAHLEN (gekennzeichnet) und ihre Belege
 1. **Colt Python = zweiter Magnum-Revolver** (statt RE2 Colt S.A.A.): ARMS14 traegt das Record-Layout des
    Redhawk ARMS07 (`00001330 00003310 00004210 … 00006311 00007311 00009314`, Pistolen: `…36/…00/…01`),
-   Bank W14 = Revolver-Clips (10/26/27/50 ~ W07 8/26/25/40), Magazin 6 wie w7 (@0x80074e98 / @0x80074df8).
+   Bank W14 = Revolver-Clips (10/26/27/50 ~ W07 8/26/25/40), Magazin 6 wie w7 (@0x80074e98 / @0x80074dfc; berichtigt Nachbesserung 1 M3).
    Folgen: Entladung = Redhawk-Handler 0x800339A4, Schaden = Spalte 7, RE2-Zeile 5, Munition MAGNUM
    BULLETS 0x17 (Record 0x80074c9c `17 07 02 00` des Redhawk), Tester = Schuss-Streifen.
 2. **GL 16/17 fuehren Bank/Mesh/TIM der W0F** (Leon): PL00W10 = PL00W11 ist Ingram-foermig (Platzhalter);
@@ -408,7 +410,7 @@ Abweichung dokumentiert: Op 24 beendet bei |x|/|z| > 32000 (Original faellt nach
    keinen Nachlade-Clip, RE2 Claire auch nicht (16 Clips ohne 13), Elza hat ihn (PL04W0F Clip 13 = 32).
 4. **Nachladen fuer 15/16/17/20** (RE1.5-Gate `sltiu id,9` @0x80033368 laesst sie nicht): die Munitions-
    Records existieren unverwiesen (0x80074cb4/b8/bc), Magazine 6 — die Verdrahtung ist der fehlende Rest.
-5. **Rueckstoss-Schwelle 10** fuer 15..18/20 (Saetze @0x800740d6-ef sind 0 = unfertig; 5..13 = 10).
+5. **Rueckstoss-Schwelle 10** fuer 15..18/20 (Saetze @0x80074090 + (id-1)*5: 15..18 @0x800740d6-e9 und 20 @0x800740ef-f3 sind 0 = unfertig; 5..13 @0x800740a4..cc byte 2 = 10).
 6. **Bezugsebene des RE2-Bodentests = Standhoehe** (wie granate_boden, Runde 34).
 7. **Schaden an RE1.5-KI-Gegnern** ueber die RE1.5-Resolver-Arten 6..9/5 (DAT_8006f418/430, byte-true
    Daten ohne Original-Aufrufer); RE2-Modell-Typen bekommen die RE2-Records (E4-Regel der Runde 34).
@@ -416,7 +418,7 @@ Abweichung dokumentiert: Op 24 beendet bei |x|/|z| > 32000 (Original faellt nach
    naechsten Takt-Bild weiter (RE2 prueft nur im Takt-Bild).
 9. **Munitionswechsel des Granatwerfers = RE2-Zustaende 7/8** (statt der unfertigen RE1.5-Aktion 4): der Werfer
    nimmt den GANZEN Stapel der neuen Runde (RE2: keine Kappe im Zustand 7, GL-Kappe 250 @0x800a9e64); das
-   RE1.5-Magazin 6 (@0x80074dd4) gilt beim Nachladen (Aktionen 2/3). Ein Werfer kann nach dem Wechsel also mehr
+   RE1.5-Magazin 6 (@0x80074e5c/e68/e74; berichtigt M3) gilt beim Nachladen (Aktionen 2/3). Ein Werfer kann nach dem Wechsel also mehr
    als 6 Runden tragen — RE2-Verhalten, bewusst nicht gekappt (der Rest haette keinen Platz: die Runden-Zelle
    traegt danach die zurueckkommende alte Runde).
 10. **Waffenrahmen PL00W0F** (§3.7): Drehung 35,62 Grad und Versatz {-204,1717,3} aus den Netz-Bytes; der Anteil
@@ -582,7 +584,7 @@ gesetzt ist und die RE2-Baenke wirklich geladen werden): Laeufe 14/15/18/20 exit
 Gehoert wurde nichts (Dummy-Treiber) — die Klangprobe am Lautsprecher bleibt dem Nutzer.
 
 **Inventar-Darstellung** (inv/inv_zoom.png, RE15_INV_SHOT + RE15_GIVE): Granatwerfer-Symbol mit Mengenzahl in der
-Farbe der Munitionsart (Explosiv blau wie jede Waffe, Saeure gelb = Byte +8 = 1 @0x80074e68, Brand/Flamme
+Farbe der Munitionsart (Explosiv blau wie jede Waffe, Saeure gelb = Byte +8 = 1 @0x80074e70 (Record 16 @0x80074e68 + 8), Brand/Flamme
 orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS, Flammenwerfer + FLAME FUEL.
 
 ## 5. Tests
@@ -704,3 +706,39 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
   vor ihm am Boden); jetzt fliegt die Runde entlang des sichtbaren Laufs. Rakete, Runden und Flammenstrahl
   enden an Waenden (die Rakete flog vorher durch die Wand und verschwand ohne Explosion). Auch Moebel-Zellen
   sperren (OFFEN 9).
+
+## 8. Nachbesserung 1 (nach der unabhaengigen Abnahme 0, `B_abnahme_0.md`)
+
+Protokoll: 2026-10-03, Fortsetzung im selben Baum (HEAD 058301b3 = Abnahme 0, Baum sauber). Die Maengel
+M1..M4 und der Nebenbefund der Abnahme werden einzeln abgearbeitet; jede Messung/jedes Zitat steht hier.
+exe-Kopie fuer eigene Laeufe: `re15_port/build/platform/pc/re15_r35nb1.exe`, Laeufe unter
+`re15_port/build/platform/pc/mess_r35b/nb1/` (nicht versioniert).
+
+### 8.3 M3 — falsche Adress-Zitate der Magazin-Konstanten (RE-Gate)
+
+**Ursache:** der Vorgaenger hat die Adressen `0x80074da8 + id*12` mit id = 3..8 (statt 15..20) hingeschrieben.
+**Beleg (selbst gelesen, `re15_disasm.py bytes 0x80074da8 264`):**
+```
+[7]  @0x80074dfc  06 00 00 00  9c 4c 07 80  03 01 00 00   Super Redhawk: 6, Record 0x80074c9c, nachladbar
+[14] @0x80074e50  64 00 00 00  a8 4c 07 80  02 01 00 00   Flammenwerfer
+[15] @0x80074e5c  06 00 00 00  88 4c 07 80  03 00 00 00   GL Explosiv: 6, Zeiger @0x80074e60 = NULL-Record 0x80074c88
+[16] @0x80074e68  06 00 00 00  88 4c 07 80  01 00 00 00   GL Saeure (Farb-Byte +8 @0x80074e70 = 1)
+[17] @0x80074e74  06 00 00 00  88 4c 07 80  02 00 00 00   GL Brand
+[18] @0x80074e80  04 00 00 00  88 4c 07 80  03 00 00 00   Rakete: 4
+[19] @0x80074e8c  64 00 00 00  88 4c 07 80  03 00 00 00   MC51: 100
+[20] @0x80074e98  06 00 00 00  88 4c 07 80  03 00 00 00   Colt Python: 6
+```
+An den frueher zitierten Adressen 0x80074dd4/de0/dec/df8/e04/e10 steht `03 01 00 00` = Bytes +8..+11 der
+Records 3..8 (Pistolen/Redhawk/Schrot). Die WERTE im Code waren richtig, die Belege nicht.
+**Aenderung (nur Kommentare/Meldungstexte, kein Verhalten):** inventory_common.c:193-194 ([15] @0x80074e5c ..
+[20] @0x80074e98), re15_werfer.h:7 (Munitions-Zeiger Record +4 @0x80074e60/6c/78/84), :30 (Magazin
+@0x80074e5c/e68/e74), :32 (Rakete @0x80074e80), :45 (Rueckstoss-Saetze @0x80074090 + (id-1)*5: 14 @0x800740d1,
+15..18 @0x800740d6-e9, 20 @0x800740ef-f3 — vorher "d6-ef" ungenau; nachgelesen `bytes 0x80074084 124`),
+game_step_common.c:1714, werfer_r35.c:311, test_r35_werfer.c:123, test_r35_werfer_kombi.c:9/125, Dossier §3.5
+Punkt 1 (w7 @0x80074dfc), Punkt 5, Punkt 9 und §4.2 Inventar-Darstellung (Farb-Byte @0x80074e70).
+Gegenprobe: `grep -rn "80074dd4\|80074de0\|80074dec\|80074df8\|80074e04\|80074e10" re15_port analysis/.../B_werfer.md`
+liefert nur noch diese Abschnitts-Zeilen.
+
+### 8.5 Nebenbefund — Uhrzeit "17:20 Suite Lauf 4"
+Berichtigt in §0 (Protokollzeile): `suite_lauf4.log` endet 16:59:25, Abschluss-Commit 17:00:46; "17:20" war
+verschrieben. Ergebnis 481/481 unveraendert.

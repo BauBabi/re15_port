@@ -120,7 +120,7 @@ static void teil_a(void)
     re15_player_set_equipped_weapon(15);
     CHECK(8, re15_ammo_reserve_slot() > 0, "GL 15: Reserve EXPLOSIVE RND (0x19) erkannt (Record 0x80074cb4 `19 0f`)");
     for (int k = 0; k < 6; k++) re15_ammo_consume();
-    CHECK(9, !re15_ammo_mag_nonzero(), "GL 15: 6 Schuss verbraucht (Magazin 6 @0x80074dd4)");
+    CHECK(9, !re15_ammo_mag_nonzero(), "GL 15: 6 Schuss verbraucht (Magazin 6 @0x80074e5c)");
     re15_ammo_reload_exec();
     CHECK(10, re15_ammo_mag_nonzero() && re15_inv_find_item(0x19) < 0, "GL 15: Nachladen 6 aus 6 -> Schachtel weg");
 
