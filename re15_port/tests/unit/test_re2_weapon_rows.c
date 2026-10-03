@@ -361,10 +361,14 @@ int main(void)
             for (int k = 0; k < 7; k++) {
                 int w = reported[k]; react_t r;
                 if (measure(e, w, 5000, w, &r) != 0) continue;
-                int mute = (r.state == 2 && r.handler == 0);
+                /* Runde 35 Spur B, Nachbesserung 2 (Abnahme 1 N2, Dossier B_werfer.md §9): die Python (w20)
+                 * gehoert jetzt zur Kritklasse des Redhawk (+0x93 |= 0x40 @0x800123b4-b8, HP -1 am Bit
+                 * @0x800124fc-1c) — ihr Treffer toetet den Zombie (Typ < 0x20) sofort und laeuft wie w7 gar
+                 * nicht durch HURT. Fuer sie gilt hier deshalb DEATH (state 3) als erwartetes Ergebnis. */
+                int mute = (w == 20) ? (r.state == 3) : (r.state == 2 && r.handler == 0);
                 if (mute) silent++;
                 printf("      w=%-2d %-16s -> Zeile %-2d -> %-19s %s\n", w, wname(w), r.row,
-                       hname(r.handler), mute ? "<== STUMM (erwartet)" : "reagiert");
+                       hname(r.handler), mute ? (w == 20 ? "<== TOT (Kritklasse, erwartet)" : "<== STUMM (erwartet)") : "reagiert");
             }
             CHECK(silent == 7,
                   "NEGATIV-KONTROLLE: mit der rohen Waffen-Id muessen GENAU die 7 gemeldeten Ids "
