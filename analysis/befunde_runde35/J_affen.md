@@ -1051,3 +1051,20 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 
 ### Stand (fortlaufend)
 - [ ] M1 (a) Zahlen auf HEAD  - [ ] M1 (b) Entfernung offenlegen  - [ ] M1 (c) Chaos messen  - [ ] M2 Ursache e2
+
+### M1 — Messung vorher (HEAD 062e8f82) und Herkunft der Dossier-Zahlen
+- Riegel `griff` am HEAD (Abnahme `jabn2/griff_v.txt`, deckungsgleich mit `jnb2/fin_griff.txt` 00:41):
+  T290 (-5376,-10728), **frei T378 bei (-5433,-10693)** (677 vom Original (-4759,-10633)), keine Ruhelage:
+  Leon wird T396 (76 -> 70) und T450 (70 -> 64) gebissen, Ende T495 (-5893,-10250) HP 64.
+- Die Zahlen in Z. 858-859 ("frei (-4580,-10518)", "Ruhelage (-3018,-11651)") stammen aus `jnb2/griff_nach3/4.txt`
+  (23:47/23:49, Stand VOR den A1-Aenderungen): dort Pin T254 bei (-6658,-12487), T290 **(-5374,-10724)**,
+  frei (-4580,-10518), Ruhelage (-3018,-11651) ab T392. Ab `griff_nach5.txt` (00:19, nach den A1-Aenderungen
+  dz-Rundung/Kegel/RNG-a0): Pin T254 (-6656,-12489), T290 **(-5376,-10728)** (2 bzw. 4 Einheiten anders),
+  frei (-5433,-10693), keine Ruhelage -> die beiden PRUEFs "Lage bei der Freigabe <= 400 vom Original" und
+  "Ruhelage <= 60 von (-3009,-11643) bis T412" wurden ROT (griff_nach5: "FEHLER: ... (-5433,-10693)",
+  "FEHLER: ... Ruhelage (0,0) in T-1"). Commit 1ac1ea84 (00:20) hat beide entfernt und durch die
+  Strukturpruefung "nach Bild 0x24 bewegt nur die Wandklemme (87/87)" ersetzt; das Dossier (Z. 858-859,
+  Testliste Z. 966-975, OFFEN) hat das nicht nachgetragen. Das war ein Fehler des Dossiers.
+- Original (Riegel-Tabelle s_wand_orig, GDB `jnb2/g_wer.txt`): ab T291 (vs10223) bis T414 (vs10469) gilt in
+  **124/124** Bildern Bezug == Eingang == Ausgang des Vorbilds (Python-Pruefung ueber die Tabelle) -> nach
+  Opfer-Bild 0x24 ist die Bahn bis zur Ruhe REINE Iteration von FUN_8003b0a4 (@0x80031d70, Bezug +0x40/+0x44).
