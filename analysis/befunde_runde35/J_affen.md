@@ -115,3 +115,39 @@ Probes-Datei: `re15_port/tests/unit/probes/r35_affen.cmake`, Quellen `tests/unit
   LEAP Phase 2 ohne 245d8), main.c (include; Parts ohne Knochen weltfest, nur RE1.5-Banken, nicht 0x36/0x37/remap),
   re15_emd.h (+emr_raw/emr_raw_size) + emd_common.c (setzen), re15_actor.h (+mag_hit_ctr).
 
+### Original-Referenz: DuckStation-Aufnahme der Szene (scratchpad orig_scene/r3, Rekorder dsrec.py)
+Debug-Menue-Basis stage_saves/mzd_debugmenu.sav, JUMP 0x11C (8x Links; die Taps sind flatterhaft: Lauf 1 landete
+in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert der Rekorder jetzt den Spieler-Spawn
+(-22604,14455) und wiederholt). 110 Savestates im 1,5-s-Takt (LeftShoulder = SaveSelectedSaveState), Dekoder dsdecode.py
+(re15_ss.Ram: Entities 0x800acc2c+i*0x1f4, Spieler 0x800aca54, Cut 0x800b0fe4, Objektpool 0x800b3f98+148*i, View-Matrix 0x800b5288).
+- Szenen-Layout t=6: beide Gorillas st=1 sub0, grid 0x30, flags 0x801, +0x166=0x1b33, +0x82=2, hp 180 -> der INIT lief im
+  SPAWN-Bild (Sce_em_set ruft die Wurzel einmal mit geloeschtem Bit: `andi v0,v1,0xdf` @0x8004256c, `jalr 0x80072bac[typ]`
+  @0x8004259c, Bit zurueck @0x80042604-08). Der Port verdrahtete diesen Aufruf nur fuer Birkin (re15_enemy_spawn_root) ->
+  der eingefrorene Gorilla stand in Zustand 0 OHNE Scale (render_scale_q12 = 0 -> 1,0x statt 1,7x).
+- t=34.89 (Cut 12, Klappe rot_z=1725 mid-Bounce): der Gorilla (y=-2500) sitzt SICHTBAR in der offenen Heckklappe des Wagens
+  (Bild sheet_orig_30_50.png); der Port zeigte an derselben Stelle nur den Kopf ueber der Klappenkante — die um 1,7x kleinere
+  Figur verschwindet hinter der Klappe (View-Projektion mit der Original-Matrix 0x800b5288: Klappen-Oberkante y=114..124 bei
+  vz 9.4-9.5k, Gorilla-Ursprung (165,145) vz 11.1k, Kopf 1,7x3543 Einheiten hoeher). DAS ist Punkt 2 ("kommt nicht an der
+  korrekten Position aus dem Auto"): die Figur fehlt im Wagen und taucht dann bei (-3617,-17798) auf.
+- Klappe (Objekt 0): Position (-840,-2930,-19110), rot (-72,-1400,48) -> 1752 nach 12 Bildern + 6 Wackler — Port-Werte
+  (Riegel `wagen`: 223 392 ... 1752 1702 ... 1752) = Original-Pool (t=34.89: 1725, ab 36.41: 1752). Rotationsmatrix des Ports
+  (RotMatrix @0x80068098, der Objekt-Zeichner FUN_8002c18c ruft dieselbe @0x8002c218 wie FUN_8001e8c8 @0x8001e8f4) = Original-
+  Pool +0x20/+0x48 bis auf +-5 (Sinustabelle). Speed_set @0x80040f14 (thread+0x158+2*id), Add_speed @0x80040f40 (+0x34../+0x68..
+  += vel), Add_aspeed @0x80040fd4 (vel += acc) — alle drei im Port byte-gleich.
+- Gorilla 1 nach der Freigabe (t=45.5): (-4855,-14459) = Band-0-Klemme der flr=3-Zelle (z -> -15477) + ~1600 Krabbeln; der
+  Port versetzt an derselben Stelle um dieselben +2321 (Lauf A2 F1070) -> byte-gleich, KEIN Befund.
+- Ada: t=45.5 Sub 5 RUN (-13894,-10590) +0x82=2; t=47.0 bei (-18000,20000,-7403) = versteckt. Port nach dem Band-Fix (Lauf A3):
+  Ankunft F1127 bei (-18025,-7379), y=20000 (Framedumps: ab F1150 nicht mehr im Bild; vorher A2: steht sichtbar am Wagen).
+- Gorilla 2: idlet ~7 s (Clip 0x16), dann EIN Fernsprung (Path B) ueber ~8900 Einheiten (Anlauf 10 Bilder +0x8c 180-211 + Flug
+  ~25 Bilder 240-271), landet 2,6k hinter Leon, dann Sub 6 Heavy (-12). Leon (ohne Eingabe) stirbt t=85 (Bisse -6 im 1,5-s-Takt).
+  Kein Rear-up (sub 15) in 40 s Kampf. Original-Sprungweite == Anlauf+Flug ohne Doppelvorschub (bestaetigt den 245d8-Fix).
+
+### +0x1ba-Kette (Boden-Y), byte-true nachgezogen (Punkt 2, Voraussetzung fuer den Spawn-Wurzelaufruf)
+- Sce_em_set: `lbu v1,2(s2)` (pc[4]) @0x800421d4 -> 1800*v1 (sll 3/subu/sll 5/addu/sll 3 @0x800421f8-8004220c) -> `subu v0,zero,v0`
+  / `sh v0,442(s0)` @0x8004220c-10: +0x1ba = -(pc[4]*1800). Port: scd_vm.c op_sce_em_set seedet dog_floor_y.
+- Member_set 0x13 -> +0x1ba (FUN_8004116c Fall 0x13); 20 Stellen game-weit (10B1, 11C0 x2, 2030/2031 x4, 3050/3051 x2, 50D0/50D1 x2).
+  Der Port schrieb hier a->hp (+0x9a ist die HP: Resolver `sh v1,154(s1)` @0x80013000) — korrigiert auf dog_floor_y. Folge in
+  2030/3050/50D0: diese Aktoren behalten ihre Tabellen-HP statt 3/4/6/9 (byte-true; war ein stiller One-Shot).
+- Maggot-INIT FUN_80116f50 schreibt +0x1ba NICHT (kein 442-Store) -> Port-Ersatz `dog_floor_y = y` entfernt.
+- Spawn-Wurzelaufruf (re15_enemy_spawn_root) auf 0x27 erweitert: INIT im Spawn-Bild (HP 180, Scale, Zustand 1), Bit 0x20 bleibt.
+
