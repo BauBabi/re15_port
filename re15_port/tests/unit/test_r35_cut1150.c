@@ -537,6 +537,46 @@ static void teil_totenpose(void)
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
 }
 
+/* ---- Teil: tot_bleibt_tot — "sich garnicht mehr bewegen - tot" (AUFTRAG Z. 75) ------------------
+ * ROOM1150 Slot 2 (@0x00D92 sce 5, Rechteck an der Liege) stempelt beim Ansprechen work_vars[0] = 2
+ * (@0x80042f3c); sub01 @0x00EC0 `23 00 00 00 02 00` + @0x00EC6 Ck(3,157)==0 startet dann sub03
+ * (@0x00EE4: msg 2 "Irons: I'll be fine. Just worry about yourself for now.", Irons Clip 6 @0x00F24,
+ * Liege-Loop @0x00F34). Nach der Todesszene darf das nicht mehr laufen. */
+static void teil_tot_bleibt_tot(void)
+{
+    printf("== tot_bleibt_tot ==\n");
+    const re15_actor_t *ir = &g_actors[RE15_IT_IRONS_SLOT];
+    /* Gegenprobe: Irons lebt ((9,73)=0, (9,71)=0) -> das Ansprechen startet sub03 */
+    flags_leeren(); re15_game_flag_set(3, 94, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1150, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 5) == 0) {
+        for (int f = 0; f < 5; f++) frame(0, 0);
+        g_scd.work_vars[0] = 2;
+        int msg2 = 0, clip6 = 0;
+        for (int f = 0; f < 150; f++) { frame(0, 0); if (g_scd.message_active && g_scd.message_id == 2) msg2 = 1; if (ir->motion == 6) clip6 = 1; }
+        PRUEF(re15_game_flag_get(3, 157) == 1 && msg2 && clip6, "Gegenprobe lebend: Ansprechen -> sub03 ((3,157)=%d msg2=%d Clip6=%d)",
+              re15_game_flag_get(3, 157), msg2, clip6);
+        PRUEF(re15_irons_tod_sub01_gesperrt() == 0, "lebend: sub01 frei");
+    }
+    /* tot: (9,73)=1, (3,157)=0 -> nichts */
+    szene_flags(); re15_game_flag_set(9, 73, 1);
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+    if (room_boot(0x1150, RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 5) == 0) {
+        for (int f = 0; f < 5; f++) frame(0, 0);
+        g_scd.work_vars[0] = 2;
+        int msg = 0, bewegt = 0;
+        for (int f = 0; f < 150; f++) {
+            frame(0, 0);
+            if (g_scd.message_active) msg = 1;
+            if (ir->motion != 2 || ir->anim_frame != 89 || ir->sub_state_2 != 2) bewegt = 1;
+        }
+        PRUEF(re15_game_flag_get(3, 157) == 0 && !msg, "tot: Ansprechen startet sub03 NICHT ((3,157)=%d msg=%d)", re15_game_flag_get(3, 157), msg);
+        PRUEF(!bewegt, "tot: Irons bleibt 150 Bilder in Clip 2 Bild 89 Phase 2 (mo=%d bild=%d ph=%d)", ir->motion, ir->anim_frame, ir->sub_state_2);
+        PRUEF(g_scd.player_mode == 0 && !re15_game_flag_get(2, 7), "tot: Steuerung bleibt frei (pm=%d)", g_scd.player_mode);
+    }
+    re15_irons_tod_zustand_setzen(RE15_IT_AUS);
+}
+
 /* ---- Teil: knallbank (die eingebackene Tonbank mit den Lesern des Tuerbank-Laders pruefen) ---- */
 #include "../../engine/src/gen/knall_bank.inc"
 static void teil_knallbank(void)
@@ -583,6 +623,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "montage_11c0") || !strcmp(teil, "alle")) teil_montage_11c0();
     if (!strcmp(teil, "rueckkehr") || !strcmp(teil, "alle")) teil_rueckkehr();
     if (!strcmp(teil, "totenpose") || !strcmp(teil, "alle")) teil_totenpose();
+    if (!strcmp(teil, "tot_bleibt_tot") || !strcmp(teil, "alle")) teil_tot_bleibt_tot();
     if (!strcmp(teil, "knallbank") || !strcmp(teil, "alle")) teil_knallbank();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

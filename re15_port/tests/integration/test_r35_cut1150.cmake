@@ -149,8 +149,7 @@ it_darf_nicht(C "${_dbg}" "[room] PC loaded room1040.rdt")
 it_darf_nicht(C "${_dbg}" "DOOR FIRE")
 # der Druck hat den Text wirklich geoeffnet: state.log traegt nach Bild 90 eine Zeile mit msg(a=1 ... id=1
 file(READ "${_basis}_c/state.log" _stc)
-string(REGEX MATCH "F(9[0-9]|1[0-9][0-9]|2[0-3][0-9]) [^
-]*msg\(a=1 fsm=[0-9]+ id=1 " _text_c "${_stc}")
+string(REGEX MATCH "F(9[0-9]|1[0-9][0-9]|2[0-3][0-9]) [^\n]*msg\\(a=1 fsm=[0-9]+ id=1 " _text_c "${_stc}")
 if(NOT _text_c)
     message(FATAL_ERROR "r35_cut1150[C]: nach dem Druck an der Tuer kein Text msg 1 im state.log (Standplatz/Blick?)")
 endif()
