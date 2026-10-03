@@ -138,4 +138,123 @@ Liegestelle - 500 bei JEDEM stehenden Zombie (b98 = -1500: `e->y - 750 < P.y`) Z
 Kriecher-Wiederbeleber traegt (Runde-34-Fund K1, gemessen 24/24). Hund/Kraehe/Spinne/G5 bleiben K0 mit
 RE2-Zonenregel (unveraendert; Hund K0 = "zerplatzt", Teile-Wurf @0x80104440).
 
-(Fortsetzung: §4 Umsetzung, §5 Messung nachher, §6 Tests, OFFEN, Fuer den Nutzer — folgt)
+## 4. Umsetzung (Commits 731c3263 + Folgecommits; jede Konstante traegt ihre Adresse im Code)
+
+### 4.1 Neues Modul `engine/src/granate_r35.c` + `include/re15_granate_r35.h`
+| Funktion | Mechanismus | Beleg |
+|---|---|---|
+| `re15_granate_r35_wand(f)` | Granaten-Weltlage (slot+0x28/+0x2c) gegen die soliden SCA-Zellen des Werfer-Bandes (Band = -(granate_boden/0x708) wie FUN_8001c2dc), Punkttest r=0, Maske u0&1 | RE2 `jal 0x8004fba0(&Lage,2,8192,0)` @0x8001ee60-a0 setzt DAT_800dcbc8; `lw/beq` @0x8001ef84-8c. Maske 1 = PORT-WAHL (Zellklasse des Spielers, FUN_8003b0a4 a2=1) |
+| `re15_granate_r35_rueckzug(f)` | je Achse: vel -= 2*acc; xlat -= (vel-acc) + (vel-2acc)/3 (C-Division = 0x55555556-Idiom) | RE2 @0x8001efd4-0x8001f0c8 (Zitate §3.1) auf den RE1.5-Feldern +0x10/+0x08/+0x34 |
+| `re15_granate_r35_flugtest(f)` | nur Wand (Kontakt NICHT verdrahtet, §4.2) | — |
+| `re15_granate_r35_explosion(p,gier,art)` | Box {-2000,0,1000,500} an P und P+900, "alle" Kandidaten; jeder Platz hoechstens einmal; Anwendung `re15_resolver_gegnerzweig` (RE1.5 Gate B, Richtung, Schaden E4, Stempel) in umgekehrter Sammelreihenfolge; KEIN Spielerzweig | RE2 Op 47 @0x80020c58-5c / @0x80020d54-db0, Box @0x80010918; FUN_80012d60 @0x80012f12-30 (do-while rueckwaerts); FUN_800470C0 nur Gegnerliste @0x800470c4-0x8004740c |
+| `re15_granate_r35_explosion_se(p)` | `re2fx_se_hook(0x01110001, P)` | RE2 @0x80020d40-48 |
+| `re15_granate_r35_kontakt(f)` | RE2-Flugkontakt als Geometrietest (Box @0x80010900, Pruefhoehen y+-1000, Gates 1-4, Band, Box) — nur Sonde/Dossier | @0x8001ee90-ef14 |
+
+### 4.2 Gemessen und NICHT verdrahtet: der RE2-Flugkontakt
+Erster Stand (Laeufe `r35a_mess/n1_mitte`, `n2_tief`) hatte Wand UND Kontakt im Flug:
+```
+n1: F=41 SPAWN (-3438,-2474,-19797) ... T=291 EV kontakt wpos=(-2321,-2614,-19837) -> explosion sofort
+    (4 Bilder nach dem Wurf, P=(-2321,-3114,-19837) = 3114 ueber dem Boden, eingriffe=2 nur ueber P+900)
+n2: F=43 SPAWN (-2108,-772,-19007)  ... T=290 EV kontakt wpos=(-2114,-772,-19087)  -> explosion sofort
+    (3 Bilder nach dem Wurf, 80 Einheiten neben Leon)
+```
+Ursache: die RE2-Box @0x80010900 ist ein gefegtes Volumen HINTER dem Geschoss (Ecke -1400, Kante 4*350 = 1400
+-> lokal x in [-1400, 0] (+r/4 vorwaerts), z +-1400), das Band des Appliers ist 3200 hoch (b98 -1500, h9e 1500,
+@0x8004716c-a4) — passend zur schnellen, flachen RE2-Runde. Auf dem Bogen der Handgranate (280/Bild, Scheitel bis
+~3000) zuendet sie ueber jedem ueberflogenen Zombie in der Luft — das Gegenteil des Nutzerziels ("Gegner treffen").
+Entscheidung: Kontakt NICHT verdrahten; der Zeitzuender bleibt RE1.5 (42 @0x80018474, Zuendung bei 7 @0x8001856c
+= Liegen + 36 Bilder). Belegt im Code (granate_r35.c) und in der Sonde (unit_r35_granate 110-112: Geometrie meldet
+den Gegner, der Flug geht weiter, die Wandexplosion trifft ihn ueber die Reichweite).
+
+### 4.3 Haken in gemeinsamen Dateien (klein, benannt "Runde 35 Spur A")
+| Datei | Zeilen | Was |
+|---|---|---|
+| `engine/src/re15_esp.c` | ~14 | include; Vorwaertsdeklaration `esp_fx_weltlage`; `esp_granate_sofort()` (Liegezustand @0x80018368-84 + Zuender 7 @0x8001856c + Routine A im selben Tick = RE2 `jr Op[47+Art]` @0x8001f0e0-104); Haken am Kopf von `esp_fx_dispatch_b_29` (Wand -> Rueckzug -> Weltlage neu -> sofort); `case 31` Zuender 7: Zustellung `re15_granate_r35_explosion` statt `re15_resolve_attack(r=500)`, SE `re15_granate_r35_explosion_se` statt `0x04080001`; gr.log-Zeilen `EV wand ... -> rueckzug ...`, `resolver ... r=2000`, `se code=01110001` |
+| `engine/src/re15_damage.c` | ~60 | `re2gl_treffer_t` mit Struct-Tag; `re15_resolver_gegnerzweig` oeffentlich; `re2_gl_explosion_stempel`: `k_spalte = 0`, Zonen-Bits 0 fuer die Zombie-Familie (Zone 1 fest) — PORT-WAHL §3.5; neu `re15_re2_gl_kandidat()` (Tore 1-4 + Band + Box des Appliers ohne Anwendung, angehaengt hinter `re15_re2_gl_apply`) |
+| `include/re15_damage.h` | 8 | Deklarationen |
+| `platform/pc/src/fx_plattform_pc.h/.c` | ~12 | `RE15_PC_RE2FX_SE_EXPLOSIV 0x01110001`, `RE15_PC_ARMS_EXPLOSIV 0x0F`; Weiche + Log-Text; `re15_pc_force_explosion` -> neue Zustellung, P.y = Spieler-Boden - 500 (Gator-Boss liegt in GB_WATER_Y -1200 mit Kasten +1200 auf Deckhoehe; mit ziel->y verfehlte der Haken, gemessen int1 `Treffer=0`) |
+| `platform/pc/src/audio_pc.c` | 2 | `ARMS_ZUSATZ_N 2 -> 3` (+ Initialisierer) |
+| `platform/pc/main.c` | 2 | Harness-Ausgabe P.y |
+
+Keine neuen Assets (ARMS0F liegt in shared_assets/PSX/SOUND), kein Patch an shared_assets/PSX.
+
+### 4.4 Beta -> Retail, ausgeschrieben
+* **Wand** (RE1.5 unfertig: kein Kollisionsaufruf im Flug) -> RE2 FUN_8001ED9C Wandregel (Rueckzug + sofortige Explosion).
+* **Reichweite** (RE1.5 500 vollstaendig, aber Beta-Bemessung; Nutzer: "fast unmoeglich") -> RE2 Op 47 Box +-2000 + Band;
+  Schaden unveraendert RE1.5/E4 (RE1.5-KI 1000 @0x8006f41c, RE2-Modell Zeile 9 K0: Zombie 200 @0x800A41CC, G5 80).
+  Der Spieler-Eigenschaden (Wurf-GP §2.5, < 950) entfaellt mit der RE2-Zustellung: FUN_800470C0 kennt keinen
+  Spielerzweig — und mit der Wandzuendung neben Leon waere RE1.5s 1000 ein Selbstmord gewesen.
+* **Sound** -> RE2 0x01110001 (VERTRAG §2.2 "Sound ist RE2").
+* **Brutalitaet** -> NUTZER-VORGABE; Form = RE2 DEATH[9][1] 0x80108BEC (Zerreissen) / 0x80109610 (Wegschleudern), Spalte 1 als PORT-WAHL (§3.5).
+* **Flugkontakt** -> RE2-Mechanismus gemessen und begruendet NICHT uebernommen (§4.2).
+
+## 5. Messung nachher (exe `re15_pc_r35a.exe` ab Bau 731c3263, gleiche Aufstellungen wie §2)
+
+### 5.1 N1b — MITTE gegen die Wand (`r35a_mess/n1b_mitte/gr.log`)
+```
+T=347 EV se code=010a0301 pos=(8304,25,-19777) abprall
+T=349 EV wand wpos=(8385,-12,-19739) -> rueckzug (8332,-8,-19764) -> explosion sofort
+T=349 EV latch
+T=349 EV resolver art=2 P=(8332,-508,-19764) r=2000 eingriffe=0
+T=349 EV kind code=03195000 ...  /  T=349 EV se code=01110001 pos=(8332,-508,-19764)
+T=354 EV kind 03195000 + 030b5400 (Zuender 2)  /  T=356 EV frei (Zuender 0)
+```
+wf.log: `SE  re2fx code=0x01110001 -> ARMS0F Satz 10` / `SE  zusatz ARMS0F satz=10`; kein `0x04080001`.
+Vorher (W1): 7 Bilder in der Zelle, Liegen bei x 8612 jenseits der Wand. Nachher: Explosion im Eintrittsbild, Lage
+8332 < 8350 (vor der Zelle). exe bis EXIT_AT.
+
+### 5.2 N2b — TIEF an den Zombies (`r35a_mess/n2b_tief`)
+* Liegen T=329 (-2199,20,-20548), Explosion T=365 = F119 = L+36 (Zeitzuender unveraendert), `r=2000 eingriffe=3` (vorher 1).
+* state.log Slots 2 und 3 (0x10): F119 `st=3 ss1=9 hp=-150 / -120`; F120 `mo=2` (re2z_death_rip, clip2[] @0x80108C24-30;
+  vorher mo=1 Sturz), Lage F120 (-1441,-19915) -> F126 (-1803,-21213) = ~1400 weggeschleudert (vorher Stillstand);
+  F180 `st=7` Leiche, keine Wiederbelebung.
+* Ton: `SE  re2fx code=0x01110001 -> ARMS0F Satz 10` genau einmal.
+
+### 5.3 Reichweite (Sonde [2]): vorn 1200/1900/2300 Treffer, 2600 nicht; hinten 1900 Treffer, 2100 nicht; seitlich +-2300
+Treffer, 2600 nicht; eine Etage hoeher (y -1800) nicht, eine Etage tiefer Treffer (Band/2. Pruefhoehe); drei Gegner in einem
+Quadrat; RE2-Puffer-Wachstum (r/4 je Treffer, Ruecknahme nur im Nicht-Treffer-Zweig @0x800473dc-408) gemessen: vierter
+Gegner bei 3000 nach drei Treffern erreicht, bei 4000 nicht. Spieler 300 neben P: HP 100 (kein Spielerzweig).
+
+### 5.4 Bosse (Sonde [5], beide Flavors, Granate 300 und 1500 vor dem Boss; exe-Pins int2)
+| Boss | Treffer | HP | Reaktion |
+|---|---|---|---|
+| Birkin 0x30 (RE1.5-KI, ROOM3080) | ja | 300 -> 150 (Mutations-Schutz, enemy_ai_common.c) | Zustand 3 -> 1 im Folgebild (wie Runde-34-Zensus 't'), kein Haenger |
+| Birkin 0x36@3080 | ja | 300 -> 150 | wie 0x30 |
+| G5 0x36@5090 (RE2-Modul, Kampfstart grid 0x13) | ja | 600 -> 520 (E16: RE2 Zeile 9 K0 = 80 @0x800A5F7C) | Zustand 2, Modul-Akku/Routine reagiert |
+| Alligator 0x23 (RE1.5-KI) | ja | 300 -> -700 (1000 @0x8006f41c) | Zustand 3 verlassen in Bild 20, Leiche 7 |
+| Gator-Boss 0x23@2090 (Modul) | ja | 3000 -> 2000 | Zustand 2, Modul setzt zurueck, kein Haenger |
+exe-Pins (echte exe, RE15_DEBUG_JUMP + RE15_FORCE_EXPLOSION=2@60:<slot>): `[gator] 23 Slot 15: HP 3000 -> 2000, Zustand 2,
+exe bis EXIT_AT`; `[birkin] 36 Slot 2: HP 600 -> 520, Zustand 2, exe bis EXIT_AT`.
+
+## 6. Tests
+* `unit_r35_granate` (tests/unit/test_r35_granate.c, probes/r35_granate.cmake): [1] Wand (100-112), [2] Reichweite
+  (120-136), [3] Sound (150-159), [4] Gore (170-175: 6 Laeufe, Spalte +0x1D2 = 1, Handler 5 = 0x80108BEC, Leiche 7,
+  0 Wiederbelebungen, 3 fliegende Teile je Lauf), [5] Bosse (180-189). `test_r35_granate: ALLE PRUEFUNGEN GRUEN`.
+* `integration_r35_granate` (tests/integration/test_r35_granate.cmake): Laeufe wand, zombie, gator (ROOM2090 Slot 15,
+  RE15_FORCE_EXPLOSION=2@60:15, Schaden 1000), birkin (ROOM5090 Slot 2, Schaden 80). Alle vier gruen (int1/int2):
+  `Wand x=8385 -> 8332, Explosion Tick 349`; `X=119, 2 Zombies zerrissen, 3 Eingriffe`; Bosse s.o.
+* Angepasst (verhaltensbedingt): `probe_r34_wurf.c` 21/25/78 (Explosions-SE 0x01110001 ueber re2fx_se_hook; kein
+  Eigenschaden), `test_r34_granaten.cmake` (SE-Erwartung 0x01110001 in gr.log/wf.log). `unit_r34_wurf` gruen.
+
+## OFFEN
+1. **Wand-Maske 1 (Spielerklasse)** ist PORT-WAHL: RE2 FUN_8004fba0 testet die RE2-SCA mit a1 = 2 / a2 = 8192, deren
+   Klassenbits nicht 1:1 auf RE1.5-u0 abbilden (RE1.5: Spieler 1, Objekte 2, Gegner 4). Naechster Messweg: FUN_8004fba0
+   @0x8004fba0-0x8004fd?? vollstaendig disassemblieren (Zellscan ab @0x8004fc3c) und die Klasse der RE2-Runde mit
+   den RE1.5-Zellklassen eines Raums (gen_map_zones.py) vergleichen.
+2. **Explosionspunkt der Wandzuendung** = RE1.5-Regel (Welt-y - 500 @0x800185a8) am Rueckzugspunkt; RE2 Op 47 nimmt die
+   Lage selbst (+ y-470 bei Lebensdauer 255 @0x80020df0). Fuer eine Granate, die hoch an der Wand zuendet, liegt P 500
+   darueber — sichtbar nur bei sehr hohen Treffpunkten; gemessen n1b: Treffpunkt y -12, P y -508 (Bodennaehe).
+3. **Spieler-Eigenschaden entfaellt** (RE2-Zustellung) — Nutzer informieren (§Fuer den Nutzer); RE1.5 hatte ihn ueber den
+   generischen Resolver (Wurf-GP §2.5), nicht als Granaten-Design.
+4. Birkin 0x30/0x36 ausserhalb 5090: die RE1.5-KI-Reaktion bleibt der Mutations-Schutz (300 -> 150, Zustand 3 -> 1) aus
+   Runde 34 (Bosse-GP OFFEN 1 "Zielmodell"); nicht Gegenstand dieser Spur, die Explosion trifft ihn und haengt nicht.
+
+## Fuer den Nutzer
+* Keine neuen Sprachdateien, keine neuen Assets fuer das Paket-/Android-Gate (ARMS0F.EDH/.VB liegen schon unter
+  shared_assets/PSX/SOUND).
+* Verhalten: die Handgranate (auch Saeure/Brand) explodiert jetzt an der ersten Wand (ohne Abprall, wie die RE2-Granate),
+  sonst nach wie vor 36 Bilder nach dem Liegen; Reichweite der Explosion ein Quadrat von +-2000 um die Liegestelle
+  (vorher 900 Radius); Zombies im Umkreis werden zerrissen/weggeschleudert (RE2-Explosivrunde); Explosionston = RE2
+  Granatwerfer (ARMS0F). Leon selbst wird von der Explosion nicht mehr verletzt (RE2-Regel).
+* Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief
+  bestimmt die Wurfweite (tief ~1500, mitte ~12000 bis zur naechsten Wand).
