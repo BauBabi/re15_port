@@ -79,6 +79,7 @@ static inline int RNDI(float f) {
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_map_hint.h"    /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
+#include "re15_cut10f0.h"     /* Runde 35 Spur K: Gestenblock-Leihe ROOM10F0 <- ROOM11B0 */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
@@ -738,6 +739,27 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
     pos[0] = t[0];
     pos[1] = re15_prop_render_y((int)g_scd.props[slot].obj_type, t[1]);
     pos[2] = t[2];
+}
+
+/* Runde 35 Spur K (re15_cut10f0.h): den Animationsblock (RDT @0x5C) eines ANDEREN Raums leihen —
+ * ROOM10F0 hat keinen, die Szene braucht Leons und die NPC-Gestenbibliothek aus ROOM11B0. Der
+ * Dateipuffer bleibt resident (static), bis der naechste Leih-Aufruf ihn ersetzt; der Aufrufer
+ * behandelt den Rueckgabewert wie einen RDT-Alias (rbj_borrowed = 1, nie free). */
+static uint8_t *pc_rbj_leihen(unsigned room, int *size)
+{
+    static uint8_t  *s_leih_buf = NULL;
+    static re15_rdt_t s_leih_rdt;
+    char rel[48]; int n = 0;
+    *size = 0;
+    snprintf(rel, sizeof rel, "STAGE%u/ROOM%04X.RDT", (room >> 12) & 0xFu, room);
+    uint8_t *b = pc_read_shared(rel, &n);
+    if (!b) return NULL;
+    if (re15_rdt_parse(b, (size_t)n, &s_leih_rdt) != 0 || !s_leih_rdt.animation ||
+        s_leih_rdt.animation_size <= 0) { free(b); return NULL; }
+    free(s_leih_buf); s_leih_buf = b;
+    *size = s_leih_rdt.animation_size;
+    fprintf(stderr, "[rbj] Animationsblock von ROOM%04X geliehen (%d B, Runde 35 Spur K)\n", room, *size);
+    return (uint8_t *)s_leih_rdt.animation;
 }
 
 /* Scratch for re15_apply_room_cinematic (the shared overlay parses into this before copying
@@ -8145,6 +8167,12 @@ re_title:;
                                 rbuf = (uint8_t *)rdt.animation;
                                 rsz  = rdt.animation_size;
                                 rbj_borrowed = 1;
+                            }
+                            /* Runde 35 Spur K: ROOM10F0 ohne eigenen Block -> den von ROOM11B0 leihen
+                             * (nur solange die Szene aussteht; re15_cut10f0_rbj_quelle). */
+                            if ((!rbuf || rsz <= 0) && re15_cut10f0_rbj_quelle(dest_room)) {
+                                rbuf = pc_rbj_leihen(re15_cut10f0_rbj_quelle(dest_room), &rsz);
+                                if (rbuf && rsz > 0) rbj_borrowed = 1;
                             }
                             if (rbuf && rsz > 0) {
                                 if (s_room_rbj) free(s_room_rbj);

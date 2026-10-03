@@ -34,6 +34,7 @@
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
+#include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -2715,6 +2716,9 @@ static const uint16_t SS_BGMTBL[106] = {  /* UNK_80074828 @ PSX.EXE 0x80074828 *
 /* == FUN_800443ec + FUN_80044564/80044774: resolve the MAIN/SUB BGM slots for a
  * room. main = entry&0x3f; sub = (entry>>8)&0x3f (0xff high byte = no sub). -1 none. */
 static int ss_bgm_entry(int stage, int room) {
+    /* Runde 35 Spur K (re15_cut10f0.h): MAIN01 vom Ende der ROOM10F0-Szene bis zum Parkplatz —
+     * erzwungener Tabellen-Eintrag 0xFF01 statt UNK_80074828[...], sonst -1 = Tabelle. */
+    { int k = re15_cut10f0_bgm_eintrag(stage, room); if (k >= 0) return k; }
     if (stage < 0 || stage > 5) return -1;
     int idx = room + SS_STAGE_OFF[stage];
     if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
@@ -3540,6 +3544,9 @@ void re15_audio_tick(void)
                  * @0x80045140, NO -1). Route to the matching resident/room bank; a bank the port has
                  * not loaded is skipped exactly as the original skips DAT_800b21ec[bank] == -1. (Was:
                  * ignore the bank and play (sample_id-1) from a bring-up TEST VAB — a divergence.) */
+                /* Runde 35 Spur K: Port-Bank 0x0E = die geladene RE2-Tuerbank (Tuerknall der Szene
+                 * ROOM10F0, Se_on-Form ROOM10D0 sub21 @0x01A02; re15_cut10f0.h). */
+                if (evt.bank == RE15_CUT10F0_SE_BANK) { re15_audio_re2_tuer_se(evt.sample_id); break; }
                 switch (re15_audio_se_bank_kind(evt.bank)) {
                     case RE15_SE_BANK_WEAPON: re15_audio_weapon_se(evt.sample_id);   break;
                     case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;

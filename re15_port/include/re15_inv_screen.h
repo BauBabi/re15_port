@@ -412,6 +412,11 @@ typedef struct {
     uint8_t ziel_rot;       /* Blinkphase wie hint_rot: 1 -> CLUT 502, 0 -> CLUT 498      */
     uint8_t ziel_page;      /* Blatt der Hauptzeile des Zielraums                         */
     uint8_t ziel_rect;      /* Rechteck darauf                                            */
+    /* ---- Runde 35 Spur K: ZWEITES Ziel zugleich (ROOM11C0 + ROOM1150 nach der ROOM10F0-Szene,
+     * re15_map_ziel_aktiv_n(1, ...)); Blinkphase = ziel_rot. NEUE FELDER ANS ENDE. */
+    uint8_t ziel2_aktiv;
+    uint8_t ziel2_page;
+    uint8_t ziel2_rect;
 } re15_inv_screen_t;
 
 /* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve
