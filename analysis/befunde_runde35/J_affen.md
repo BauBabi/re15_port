@@ -327,3 +327,17 @@ Vorgaengers halten NICHT:
   an Waenden rueckwaerts gedrueckt (Punkt 4: "nicht zielstrebig"); (c) der Mechanismus ist derselbe wie beim NPC-Gleiten
   (Memory reai-v2-npc-crossfade-decay) — dort wurde der Gorilla-Pfad nicht mitgefixt.
 - FIX: re15_maggot_anim baut +0x8f ab; re15_maggot_footlock posiert als ABFRAGE (g_anim_pose_actor = NULL, Tween gesichert).
+
+### G4 — Punkt 5 (und 4): der verbundene Rear-up-Griff setzte Leon an den RAUMURSPRUNG (gemessen)
+- Lauf C1 (exe, Kampf-Layout RE15_SET_FLAG=4:0x40, Leon ohne Eingabe im Freien bei (-6500,-14800)): 3 Bisse, F442 sub 15
+  (Rear-up), F446 Pin verbunden — F447 steht Leon bei **(0,0)**, ab F480 bei **(-4330,387)** und bleibt dort bis Lauf-Ende;
+  der Gorilla spielt F495-F563 den Release-Clip 3 (Brustschlag) bei (-5221,-14988), 15000 Einheiten entfernt, und findet
+  Leon danach nicht mehr (1061 Bilder CHASE ohne Treffer). Derselbe Endpunkt (-4330,387) stand schon im Lauf A2 des
+  Vorgaengers (F4500). Der Nutzer sieht den Brustschlag deshalb nie: die Kamera folgt Leon.
+- Ursache: der Pin-Latch des Originals (@0x8011abe8) ruft `jal 0x8001ac38` @0x8011ac18 mit a0 = Spieler (s1 = 0x800aca54).
+  FUN_8001ac38 (selbst disassembliert 0x8001ac38-0x8001ad64): Resolver 0x8001ae38(cur, cur+0x84, cur+0x16c) -> off[kf],
+  RotMatrixY(cur+0x6a) (@0x8001acc8-cc), `sh v0,160(a0)` @0x8001acfc / `sh v0,162(a0)` @0x8001ad18 = Anker des GREIFERS
+  = Lage - rot(off), danach `sh v0,160(s2)` @0x8001ad30 / `sh v0,162(s2)` @0x8001ad48 = KOPIE an den Spieler. Der Port
+  kommentierte den Aufruf nur ("player anchor 0x8001ac38 @0x8011ac18"), fuehrte ihn aber nicht aus: pl->anchor blieb (0,0),
+  und der Bezugspunkt der Port-Wandklemme (s_victim_ok) wurde nur vom ROOM1210-Arm gesetzt.
+- FIX: Anker am Pin-Latch setzen (Gorilla aus Clip/Bild, Kopie an den Spieler) + Klemmen-Bezug = Standpunkt beim Zupacken.

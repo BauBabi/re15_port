@@ -9333,6 +9333,19 @@ static void re15_maggot_ai_tick(int slot)
                 e->sub_state_2 = 3;                           /* @0x8011abf4-fc */
                 s_player_grabbed = 1;                         /* aca58=5 @0x8011ac40-48 (+ entity/player flags|=0x1000 @0x8011ac2c-54) */
                 re15_player_victim_latch(e, pl);              /* player anchor 0x8001ac38 @0x8011ac18 + a8f8(player,0x800) yaw latch @0x8011acac-b0 */
+                {   /* Runde 35 Spur J — FUN_8001ac38(a0 = Spieler) @0x8011ac18 WIRKLICH ausfuehren: der Gorilla-Anker
+                     * +0xa0/+0xa2 = Lage - rot(off[kf des laufenden Clips/Bildes]) (@0x8001ac6c-ad18), dann die KOPIE
+                     * an den Spieler (`sh v0,160(s2)` @0x8001ad30, `sh v0,162(s2)` @0x8001ad48). Fehlte ganz: Leons
+                     * Anker blieb (0,0), die Opfer-Platzierung setzte ihn an den Raumursprung (gemessen Lauf C1 F447:
+                     * PL (0,0), nach dem Loesen (-4330,387) — 15000 Einheiten vom Gorilla, ausser Reichweite, und der
+                     * Brustschlag nach dem Griff lief ausserhalb des Bildes). */
+                    extern void re15_victim_anchor_calibrate(int32_t, int32_t);
+                    re15_enemy_bank_t *gb = re15_enemy_find(0x27);
+                    if (gb && gb->ok) re15_clip_anchor_set(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+                    else { e->anchor_x = e->x; e->anchor_z = e->z; }
+                    pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
+                    re15_victim_anchor_calibrate(pl->x, pl->z);   /* Port-Wandklemme re15_victim_place: Bezug = Standpunkt beim Zupacken */
+                }
                 g_player_victim_variant = (uint8_t)re15_maggot_a780(e, pl);   /* aca59 = a780 ret @0x8011ac50-68 */
                 pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
