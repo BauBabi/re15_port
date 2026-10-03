@@ -59,6 +59,40 @@ vor zur 10A0-Tuer, Quadrat -> Szene).
 
 ## RE-Belege
 
+### P1 Warum das Original an derselben Stelle NICHT haengen bleibt (re15_disasm.py, info/Re1.5/PSX.EXE)
+Das Szenenende von k_ruf hat dieselbe Form wie ROOM1170 sub02 @0x015EC..@0x015FC: `Message_on 7` (msg 7 =
+`... 04 01 01 63`, RDT @0x1AB0) -> `Plc_motion 17` -> `Sleep 100` -> `Set(2,7)=0`. Im Original geht das gut,
+weil die Nachricht EIN Bild frueher schliesst als im Port:
+* Oeffnen FUN_80027e68: Guard @0x80027e74 `lbu v0,0(v1)` (0x800b8520) / @0x80027e7c `andi v0,v0,0x80` /
+  @0x80027e80 `beq`; Schnappschuss @0x80027eb4 `lw v0,0(a0)` (0x800aca40) -> @0x80027ec8 `sw v0,-31428(at)`
+  (0x800b853c); @0x80027ecc `or v0,a3,v0` / @0x80027ed0 `sw v0,0(a0)`.
+* Schliessen FUN_80028134 Zustand 6 (Standzeit): @0x800286e8 `addiu v0,v0,-1` auf 0x800b8525; bei 1:
+  @0x80028708 `lw v1,-31428(v1)` (0x800b853c) -> @0x8002871c `sw v1,-13760(at)` (= 0x800aca40). Ebenso
+  Tasten-Ende @0x800286bc/@0x800286cc. Also volles Wort zurueck — derselbe Mechanismus wie im Port.
+* Der Unterschied: Steuerbyte-Schleife nach einer Sofort-Spanne `04 00`. Steuer-Verteiler @0x80028288..
+  @0x800282b4 (Index = Byte-1, Tabelle @0x8001096c: [0] Byte 1 -> 0x800282bc, [3] Byte 4 -> 0x80028334).
+  Fall `04 NN` @0x80028334: NN = 0 -> Spanne bis zum naechsten 0x04 ueberspringen (@0x8002835c..@0x80028398),
+  dessen NN lesen, Tempo `sb v0,-31452(at)` @0x800283b4 (0x800b8524), dann `j 0x80028424` @0x800283b8:
+  @0x80028424 `lbu v0,0(s0)` / @0x8002842c `bne v0,zero,0x8002826c` -> ein FOLGENDES STEUERBYTE wird im
+  SELBEN Aufruf verteilt (@0x8002826c..@0x80028280: druckbar = (b-0x0c)&0xff < 0xec -> Glyphenweg, sonst
+  Verteiler). `01 63` -> @0x800282bc `lbu v0,0(s0)`, != 0 -> @0x80028728 `ori v0,zero,0x6` / @0x80028730
+  `sb v0,-31455(at)` (Zustand 6) / @0x80028744 `sb v0,-31451(at)` (Standzeit 0x63 << s1).
+  s1 = (DAT_800b5456 == 0) (@0x80028148/@0x80028168); im Spiel ist DAT_800b5456 = 2 (Savestates
+  mzd_stage1_briefing_live / engage_live / combat_death / walked / equip_test / parity_turn_R2 / after_flow,
+  re15_ss.py) -> keine Verdopplung, Standzeit 99.
+  => Original: Message_on in Bild N (SCD im Spiel-Task), FSM am Bildende (Hauptschleife @0x80020ddc
+  `jal FUN_80029690` [Tasks] vor @0x80020f3c `jal FUN_80010000` -> @0x80010044 `jal FUN_800280b4` ->
+  @0x800280dc `jal FUN_80028134`) zeigt Spanne UND setzt Standzeit 99 in Bild N -> Schliessen in N+99.
+  `Sleep 100` laesst `Set(2,7)=0` in N+100 laufen -> das Ruecksetzen in N+99 stellt nur den ohnehin noch
+  gesetzten Szenenzustand her, das Set in N+100 loescht das Bit endgueltig.
+* Port (msg_common.c re15_dialog_tick case 0, Zweig `b == 0x04 && a == 0`): nach der Spanne
+  `g_scd.message_timer = g_scd.message_scroll; break;` -> das `01 63` wird erst im NAECHSTEN Bild gelesen
+  -> Standzeit beginnt in N+1 -> Schliessen in N+100, im selben Bild wie das Set, aber NACH der VM ->
+  Schnappschuss (mit Pad-Bit) ueberschreibt das geloeschte Bit. Gemessen: F366 Message_on 24, F466 Set +
+  Schliessen (Lauf m2). Das ist der Port-Fehler, nicht das Szenenende.
+* Der Port-1170-Vorspann zeigt das NICHT, weil dort `pf=00000007` waehrend der ganzen Szene steht
+  (Lauf m3_1170: der Raumwechsel loescht das Wort nach dem Set(2,7)=1 von sub02) — kein Vergleichsfall.
+
 ## Umsetzung
 
 ## Messung nachher
