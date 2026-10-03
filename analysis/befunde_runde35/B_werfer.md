@@ -33,7 +33,10 @@ Dossier wird FORTLAUFEND geschrieben (Sitzungsabbrueche moeglich).
   BEFUND G1 (Leons Granatwerfer schiesst 30 Grad nach unten) und G2 (Rakete/Flammenstrahl fliegen durch
   Waende) — §4.1. Netze vermessen (PL00W0F gedreht), Fix G1 = Waffenrahmen (§3.7), Fix G2 = werfer_boden (§3.8),
   Commit 46f769fd (Befund) + G1/G2-Commit; Messung nachher §4.2.
-- 16:25 Nachladen/Leerschuss/Elevation/Zensus aller 20 Waffen-Ids/Inventarbild gemessen (§4.2); Suite Lauf 3.
+- 16:25 Nachladen/Leerschuss/Elevation/Zensus aller 20 Waffen-Ids/Inventarbild gemessen (§4.2).
+- 16:40 Suite Lauf 3 von mir selbst bei Test 340/481 abgebrochen (nur eigene PIDs: local_build-bash, ctest,
+  cmake, re15_pc.exe des eigenen Baums), um werfer_boden auf WAND-Zellen (Typ 1) einzugrenzen — bis dahin kein
+  roter Test. Suite Lauf 4 auf dem Endstand.
 
 ## 1. Messung VORHER (Stand 154a73c1)
 
@@ -445,7 +448,12 @@ Abweichung dokumentiert: Op 24 beendet bei |x|/|z| > 32000 (Original faellt nach
 * `re2_fx.c` `werfer_boden()` (im Runde-35-Block, vor `wand_rueckprall`), gerufen von Op 15 (@0x8001eea0), Op 24
   (@0x8001f808-14) und Op 70 (@0x8002343c) statt `re2fx_boden`: erst das FUN_8004fba0-Abbild der Runde 34; meldet
   es keinen Kontakt und liegt das Geschoss UEBER der Standhoehe des Schuetzen und ausserhalb der Bandhoehe (oder
-  das Band > 7), sperrt jede Zelle des Schuetzen-Bandes an (x,z) (`zelle_im_band`, Maske 0x100, Rand -r).
+  das Band > 7), sperrt jede WAND-Zelle des Schuetzen-Bandes an (x,z) (`wandzelle_im_band`: Typ & 0x0f == 1
+  Rechteck, u0 & 1 solide = Maske 0x100, Band = floor >> 4, u1-Bit 1 frei wie `andi 0xf002`, Rand -r). Der
+  Typ-1-Filter ist der Wand-Filter des Projekts (Memory reai-v2-kollisionszellen-sind-waende); Treppen-/
+  Rampenzellen (Typ != 1, begehbar — 18,7 % der gemessenen Standorte in ROOM1060) sperren ueber Bandhoehe nicht.
+  Gegenmessung frei_nach2 (mit Typ-Filter): Rakete ROOM1000 @(16882,-2728,-12963), ROOM1060 @(20266,-17161,25748)
+  — unveraendert zur Messung ohne Filter.
   Begruendung: RE2-Formen tragen ihre Oberkante (`-1800 * ((+10 >> 6) & 0x1f)` @0x8004fe08-30), RE1.5-Zellen
   keine Hoehe; die RE1.5-Kollision sperrt je Band ohne Hoehe (FUN_8001c6e8 @0x8001c89c-a0). Mit gesetztem
   Mess-Haken (`re2fx_boden_hook`) unveraendert. `re2fx_boden` selbst (Runde 34, Flammen/Granaten) ist NICHT
@@ -636,7 +644,7 @@ orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS
    (+y Lauf, +x oben) stimmt mit der RE1.5-Muendung ueberein (gemessen: Runden fliegen in Blickrichtung,
    Aufschlaege an den Zombies vor Leon).
 
-9. **Moebel-Zellen sperren Werfer-Geschosse wie Waende** (§3.8): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
+9. **Moebel-Zellen (Typ 1) sperren Werfer-Geschosse wie Waende** (§3.8): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
    Memory reai-v2-quader-modell: "die Hoehe ist die einzige Groesse, die nicht in den Daten steht"). Eine Rakete,
    die in RE2 ueber einen Tisch floege, explodiert im Port an der Tischkante. Naechster Weg: je Zelle eine Hoehe
    messen (Quader-Verfahren der Karten-Masken) oder die RE2-Formhoehen (`(+10 >> 6) & 0x1f` @0x8004fe08-30) fuer
