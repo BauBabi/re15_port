@@ -213,7 +213,7 @@ in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert
   (Anlauf) ab: der naechste Handfeuerwaffen-Treffer (alle 21 Bilder) stoesst sie in HURT (Original-Verhalten, @0x80118b14-74 Latch).
 - Erster Spieler-Schaden F1423 (Heavy -12) = 353 Bilder nach der Freigabe (Original: ~12 s).
 
-## Tests (re15_port/tests/unit/probes/r35_affen.cmake, test_r35_affen.c) — alle gruen (einzeln gefahren)
+## Tests — Stand 1. Sitzung (ERSETZT durch "Tests (Stand Abschluss)" am Dateiende)
 - unit_r35_affen_teile  — EM027 18/22, Parts 18..21 weltfest (3,72,3)/(75,1,78)/(0,79,1)/(79,1,80), Part 17 unveraendert.
 - unit_r35_affen_band   — NPC-Laeuferin in ROOM11C0: +0x82=2 Ankunft im Wagen (Bild 11, Abstand 112); +0x82=0 klemmt bei x=-16859.
 - unit_r35_affen_ada    — echte Szene: sub07 Lauf ab Bild 1063, Ankunft Bild 1120 (-18025,-7379), y=20000 ab Bild 1121; nach
@@ -225,7 +225,7 @@ in 0x11D KENNEL LIGHT, Lauf 2 mit 9 Taps in 0x11B GARAGE — deshalb verifiziert
 Exe-Laeufe (scratchpad, nicht im Repo): lauf_a (vorher), lauf_a3/lauf_a4 (nachher, Szene), lauf_b (vorher), lauf_b2 (nachher, Kampf);
 Original: orig_scene/r3 (110 Savestates + PNG). Bilder: gdigrab lieferte in dieser Sitzung keine brauchbaren Bilder -> RE15_FRAMEDUMP.
 
-## OFFEN (mit Adresse und naechstem Messweg)
+## OFFEN — Stand 1. Sitzung (ERSETZT durch "OFFEN (Stand Abschluss)" am Dateiende)
 - Heckklappe (Objekt 0) wird im Port dunkler gezeichnet als im Original (Cut 12: Original-Panel grau ~ (35,36,39), Port ~ (11,11,12));
   Lage/Drehung sind byte-gleich (Pool +0x20/+0x48 == pc_prop_rot_q12). Naechster Weg: Objekt-Beleuchtung FUN_8002c18c
   (`jal 0x80053fc0` @0x8002c254 mit &pool+0x5c, SetColorMatrix DAT_80076d34, MulMatrix0 DAT_80076d14) gegen main.c lctx_prop
@@ -236,7 +236,7 @@ Original: orig_scene/r3 (110 Savestates + PNG). Bilder: gdigrab lieferte in dies
   einem 11C0-Cut sichtbar ist, wurde nicht gemessen (in den Framedumps A4 kein Fremdkoerper erkennbar).
 - Spawn-Wurzelaufruf: ausser Birkin jetzt auch 0x27; die uebrigen Typen bleiben wie vor Runde 35 (OFFEN seit Runde 30, Dossier 9).
 
-## Fuer den Nutzer
+## Fuer den Nutzer — Stand 1. Sitzung (ERSETZT durch "Fuer den Nutzer (Stand Abschluss)" am Dateiende)
 - Sprachdateien: keine neuen Zeilen (alle Texte sind Original-Nachrichten msg00..09 von ROOM11C0).
 - Neue Assets fuer das Paket-Gate: keine (keine Dateien unter shared_assets/).
 - Bedienhinweis: der Brustschlag (Clip 3) kommt nur nach einem verbundenen Rear-up-Griff — nahe und frontal zum Gorilla stehen.
@@ -417,3 +417,59 @@ nachher / mit Cut 5). Original: orig_scene/r3 (110 Savestates des Vorgaengers, h
   ueberzaehlige Parts weltfest, 1 include), actor_common.c (Member 0x13 = +0x1ba), scd_vm.c (+0x1ba-Seed), emd_common.c /
   re15_emd.h (EMR-Rohdaten), re15_actor.h (mag_hit_ctr). Alt-Riegel angepasst: tests/unit/test_member.c, test_maggot_ai.c.
 - Kein Bank-9-Bit, keine Nachrichten-ID, kein Ereignis, kein Asset belegt (Bit 82 / IDs 20..23 / Ereignis 25 bleiben frei).
+
+## Tests (Stand Abschluss) — re15_port/tests/unit/probes/r35_affen.cmake, test_r35_affen.c, 11 Eintraege
+- unit_r35_affen_teile   — Punkt 3: Part 18 an Knochen 1, t = (-4279,-2816,-16899) = Original-Savestate; 19..21 weltfest; 0x29/0x30 ohne Umhaengung.
+- unit_r35_affen_band    — Punkt 1: NPC-Klemmband +0x82 (Band 2 kommt an, Band 0 klemmt bei x=-16859).
+- unit_r35_affen_ada     — Punkt 1: echte Szene sub02 -> sub07 (y=20000) -> Kill-Bits -> sub03 (y=0, rot 512, Lauf zum Ziel).
+- unit_r35_affen_wagen   — Punkt 2: Klappe (-840,-2930,-19110), rot_z-Folge bis 1752, Gorilla-Lage-Schiene in Cut 12.
+- unit_r35_affen_flug    — Punkt 4: ein Flugbild = 240 (kein Doppelvorschub).
+- unit_r35_affen_kdsonde — Punkt 4: Sonde 1 am Szenen-Endpunkt / 0 im Freien; [5] Versatz 0 (vorher 4915); [5] frei 500/Bild; [4] ein Schritt 996, dann Slam-Clip 0xf.
+- unit_r35_affen_biss    — Punkt 4: Biss von hinten bei naeherem Gorilla vorn -> Clip 9 (Richtung des Beissers).
+- unit_r35_affen_frac    — Punkt 4/5: +0x8f 6,5,4,3,2,1,0,0,0,0 ab CHASE-Eintritt.
+- unit_r35_affen_brust   — Punkt 5: Release Clip 3 ab 0x16 -> Phase 5/6 -> sub 2 (ab 0x1d) -> CHASE.
+- unit_r35_affen_anker   — Punkt 5: Pin-Latch: Spieler-Anker = Gorilla-Anker; Leon nie am Raumursprung, groesster Abstand 2560 (vorher 15400).
+- unit_r35_affen_sprung  — Punkt 6: Flinch-Exits 3,3,7,3,3,7.
+Alt-Riegel der 1. Sitzung (unit_member, unit_maggot_ai) bleiben gruen.
+
+Suite-Lauf 1 der 2. Sitzung (16:27-16:55, unter Last paralleler Baeume): 488/489, rot nur integration_r30_irons_tisch_laden
+("Bild 120 in ROOM1150 nicht erreicht ... Process terminated due to timeout", 200,5 s) — ein Fenster-Haken (echte exe, ROOM1150);
+einzeln nachgefahren 2x gruen in 30,4 s / 30,5 s -> Last-Flattern, keine Regression.
+Suite-Lauf 2 (17:00-17:21, HEAD 11087280 = letzter Code-Stand, Baum sauber): `=== LOCAL-BUILD-OK (all) — Tests 489/489` (1265 s; 478 + 11 Riegel dieser Spur).
+
+## OFFEN (Stand Abschluss, ersetzt die Liste der 1. Sitzung)
+- **Biss-Takt 36 statt ~51 Bilder.** Port A7: ein Biss alle 36 Bilder (zwei Gorillas im Wechsel; = Flinch 22 + Commit->Treffer 13 + 1),
+  Original r3: ~50-52 (Flinch-Bildnummern der 45-Bild-Proben: Clip 9 Bild 16 -> Clip 8 Bild 10 -> Clip 9 Bild 5). Der Port toetet
+  den reglosen Leon deshalb in 33,3 s statt 39,4 s. Die Gates (A[3] @0x80117a54-90, Lockout +0x1dc Abbau @0x801173f8-0c, Exit
+  @0x801184e0-f0, Cliplaenge 0x12 = 25) sind gelesen und gleich. Kandidat: die Fuss-Sperre des Originals arbeitet auf den GEBLENDETEN
+  Pool-Matrizen (in den 7 Crossfade-Bildern nach jedem Clip-Wechsel wandert der Gorilla um den Locator-Versatz zwischen den Clips;
+  der Port posiert ungeblendet und ueberspringt das Wechselbild) -> andere Abstaende beim naechsten Commit. Naechster Messweg:
+  Einzelbild-Spur des Originals (PCSX-Redux-Lua oder Savestate je Bild) fuer +0x34/+0x3c, +0x8f, +0x1dc beider Gorillas ueber zwei Bisse.
+- **Verbundener Rear-up-Griff ohne Original-Aufnahme.** r3 enthaelt keinen (Leon stand an der Rauten-Zelle). Wurfweite (Port 1690),
+  Schaden und Leons Aufstehen (Port: Leon steht 8 Bilder nach dem Liegen, Bildfolge chk_c3_pin.png F516 -> F524) sind NICHT gegen
+  das Original gemessen. Naechster Messweg: DuckStation-Aufnahme mit Leon im Freien neben dem Gorilla (Kampf-Layout), Opfer-Handler
+  0x8011c118 (P0-P7) Bild fuer Bild.
+- **Echter Tuer-Weg nicht gefahren.** Alle Raum-Messungen laufen ueber RE15_DEBUG_JUMP (derselbe Raumwechsel-Executor und dieselbe
+  sub00/sub01-Kette). Ein Versuch ueber ROOM11B0 (Lauf lauf_t1: JUMP 11B0, RE15_PLAYER_POS an der Tuer Slot 1 rect (-26730,-29940,
+  2500,3500), square/cross) loeste keinen Raumwechsel aus (Leon steht bei (-25500,-29188), keine Wechsel-Zeile) — Ursache nicht
+  ermittelt (Raumskript von 11B0 oder Tasten-Zeitpunkt). Naechster Weg: Spielstand vor der Tuer + CONTINUE (Muster spiel_lauf.cmake).
+- **Knockdown-Sonde gilt spielweit.** FUN_8001c2dc ersetzt das Wand-Urteil der Handler [4]/[5] fuer JEDEN Knockdown (auch
+  Alligator-Heavy); byte-true, aber nur in ROOM11C0 nachgemessen. Messweg: Savestate +0x9e/+0x8c nach einem Knockdown in ROOM2090.
+- **Gorilla-Schatten.** Der INIT ruft FUN_8001af5c(0, 0, Box[6]+100, Box[6]+200, +0xb0, 0x808080) (@0x801171d8-ec); der Port setzt
+  crow_shadow_w/h = 1000/500 mit dem Zitat des HUNDE-INIT. Nicht Teil der sechs Punkte, nicht angefasst.
+- Heckklappe (Objekt 0) dunkler als im Original (Cut 12: Original ~ (35,36,39), Port ~ (11,11,12)); Weg: Objekt-Beleuchtung
+  FUN_8002c18c (`jal 0x80053fc0` @0x8002c254) gegen main.c lctx_prop messen.
+- Member_set 0x13 (= +0x1ba statt hp) betrifft auch ROOM10B1/2030/2031/3050/3051/50D0/50D1; dort nicht nachgemessen (Savestate +0x9a/+0x1ba).
+- Spawn-Wurzelaufruf: ausser Birkin jetzt auch 0x27; uebrige Typen wie vor Runde 35.
+- Die Fuss-Sperre der uebrigen Sites (c024 Heavy, bf50 Biss/Rise) laeuft ueber dieselbe reparierte Funktion; einzeln nachgemessen
+  wurde nur CHASE (Clip 5).
+
+## Fuer den Nutzer (Stand Abschluss)
+- Sprachdateien: keine neuen Zeilen (alle Texte sind die Original-Nachrichten msg00..09 von ROOM11C0).
+- Neue Assets fuer das Paket-/Android-Gate: keine.
+- Was sich im Kampf spuerbar aendert: die Gorillas laufen jetzt wirklich auf Leon zu (vorher krochen sie auf der Stelle und wurden an
+  Waenden rueckwaerts gedrueckt), ihre Animationen laufen mit voller Auslenkung, ein schwerer Treffer schleudert Leon in ROOM11C0
+  nicht mehr quer ueber den Platz, und wer stehen bleibt, ist nach gut einer halben Minute tot (Original: 39 s).
+- Brustschlag: kommt nach jedem verbundenen Griff (Gorilla richtet sich auf, packt und wirft Leon) — im Freien, nicht an der Wand.
+- Sprung: erst beim 3. Treffer (RE15_AFFEN_TREFFER_BIS_SPRUNG in include/re15_affen.h, NUTZER-VORGABE).
+- Mess-Schalter (kein Spielverhalten): RE15_AFFEN_FUSS=1 schreibt affen_fuss.log neben die exe (Fuss-Sperre je Bild).
