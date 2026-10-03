@@ -640,15 +640,19 @@ static int programm_bauen(uint16_t room_id)
         if (!re15_game_flag_get(4, 5)) prog_anhaengen(k_p_1040_tor, (int)sizeof k_p_1040_tor);
         prog_anhaengen(k_p_1040_ende, (int)sizeof k_p_1040_ende);
         if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030))   /* 1070 leer: gleich Cut 6 */
-            tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03, RE15_IT_CUT_1030_TOR);
+            tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03,
+                        re15_game_flag_get(4, 15) ? 12 : RE15_IT_CUT_1030_TOR);   /* aufgebrochenes Tor = Cut 12 (s. S1030) */
         return 1;
     case RE15_IT_S1030: {
         if (room_id != RE15_IT_RAUM_1030) return 0;
         prog_anhaengen(k_p_1030_kopf, (int)sizeof k_p_1030_kopf);
         int von = s_prog_len;
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)) prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
+        int tor = s_prog_len;
         prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
-        if (!re15_game_flag_get(4, 15)) prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
+        if (re15_game_flag_get(4, 15)) s_prog[tor + 1] = 12;   /* Tor schon aufgebrochen: die Tor-Ansicht ist nach dem
+                                                                * Tausch von sub00 (@0x01FFD `4b 06 0c`) Cut 12 */
+        else prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
         prog_anhaengen(k_p_1030_kriechen, (int)sizeof k_p_1030_kriechen);
         slots_zuweisen(von);
         if (re15_irons_tod_ohne_11c0())                      /* Ada steht nicht mehr an Cut 13: gleich zurueck */

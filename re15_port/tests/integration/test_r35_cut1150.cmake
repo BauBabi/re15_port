@@ -60,7 +60,7 @@ function(it_lauf _name _raum _karte _skript _ende _ende_raum _timeout _out_debug
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60
         "RE15_INPUT_SCRIPT=${_skript}"
-        RE15_STATE_LOG=state.log
+        RE15_STATE_LOG=state.log RE15_IT_LOG=30
         "RE15_EXIT_AT=${_ende}#${_ende_raum}"
         "${RE15_PC_EXE}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -108,6 +108,13 @@ it_muss(A "${_dbg}" "[room] PC loaded room1150.rdt")
 it_muss(A "${_dbg}" "Szene startet (Programm 0)")
 it_muss(A "${_dbg}" "Umzug: 1140 lebend 5 -> 1130 (9,74)=1; 1070 lebend 5 -> 1030 (9,76)=1")
 it_muss(A "${_dbg}" "Signal (5,12): Irons' Arm faellt")
+it_muss(A "${_dbg}" "1040: 20 Raum-Records leben, Auffuellung 0")
+# ROOM1030 Cut 6: sub09 hat Zombies das Kriech-Bit gesetzt (Messzeile RE15_IT_LOG: fl = +0x1c4 mit 0x1000),
+# die Kamera steht dabei auf Cut 12 (= Cut 6 mit aufgebrochenem Tor).
+string(REGEX MATCH "irons-tod-mess. ROOM1030 T[0-9]+ cam=12:[^\n]* fl=1004" _kriech_a "${_dbg}")
+if(NOT _kriech_a)
+    message(FATAL_ERROR "r35_cut1150[A]: in ROOM1030 unter Cut 12 kein Zombie mit Kriech-Bit (fl=1004) in den Messzeilen")
+endif()
 it_muss(A "${_dbg}" "Montage 1130 (Programm 1)")
 it_muss(A "${_dbg}" "Montage 1040 (Programm 2)")
 it_muss(A "${_dbg}" "Montage 1030 (Programm 3)")
@@ -141,6 +148,10 @@ it_muss(B "${_dbg}" "Montage 1030 (Programm 3)")
 it_muss(B "${_dbg}" "Montage 11C0 (Programm 4)")
 it_muss(B "${_dbg}" "Rueckkehr beendet, Steuerung frei")
 it_darf_nicht(B "${_dbg}" "Kette unterbrochen")
+string(REGEX MATCH "irons-tod-mess. ROOM1030 T[0-9]+ cam=12:[^\n]* fl=1004" _kriech_b "${_dbg}")
+if(NOT _kriech_b)
+    message(FATAL_ERROR "r35_cut1150[B]: in ROOM1030 unter Cut 12 kein Zombie mit Kriech-Bit (fl=1004) in den Messzeilen")
+endif()
 
 # --- C: 1060 gesperrt ((9,71)=1, (9,73)=0): Text, kein Raumwechsel ----------------------------
 it_lauf(c 1060 "nach10f0;ersteszene" "W1,A0.2,W3" 240 1060 240 _dbg)

@@ -608,7 +608,16 @@ static void teil_montage_1030(void)
     szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 15, 1);
     re15_irons_tod_zustand_setzen(RE15_IT_S1040);
     if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 6) == 0) {
-        lauf(&L, 900, 1);
+        for (int f = 0; f < 3; f++) frame(0, 0);
+        PRUEF(g_scd.cam_id == 12, "(4,15)=1: die Tor-Ansicht ist von Anfang an Cut 12 (sub00 hat 6<->12 getauscht @0x01FFD): %d", (int)g_scd.cam_id);
+        {   /* kein zweiter Tausch: die Zonen, die sub00 auf 12 umetikettiert hat, tragen am Ende noch 12 */
+            int z6 = 0, z12 = 0;
+            for (int i = 0; i < s_rdt.zone_count; i++) { if (s_rdt.zones[i].cam_from == 6) z6++; if (s_rdt.zones[i].cam_from == 12) z12++; }
+            lauf(&L, 900, 1);
+            int n6 = 0, n12 = 0;
+            for (int i = 0; i < s_rdt.zone_count; i++) { if (s_rdt.zones[i].cam_from == 6) n6++; if (s_rdt.zones[i].cam_from == 12) n12++; }
+            PRUEF(z12 > 0 && n12 == z12 && n6 == z6, "(4,15)=1: Sicht-Zonen bleiben auf Cut 12 (vorher %d/%d, nachher %d/%d Zonen mit cam_from 12/6)", z12, z6, n12, n6);
+        }
         kriecher_pruefen(&L, "(4,15)=1");
         PRUEF(L.raumwechsel && L.ziel == 0x11C0 && L.ziel_cut == 13, "(4,15)=1: Schnitt nach ROOM11C0 Cut 13 nach %d Bildern", L.bilder);
     }
