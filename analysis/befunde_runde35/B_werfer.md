@@ -749,3 +749,69 @@ verschrieben. Ergebnis 481/481 unveraendert.
 - `local_build.sh build` auf e32ab456: `=== LOCAL-BUILD-OK (build)` (Log `re15_port/build/mess_r35b_logs/nb1_build1.log`).
 - Die RE2-Zitate des Vorgaengers in `re15_werfer_leer_ton` SELBST nachdisassembliert (§8.2) — sie stimmen.
 - M1-Beleg (RE1.5-Schusslinie) und M4-Beleg (RE2-Fressergate) selbst disassembliert (§8.1, §8.4).
+
+### 8.2 M2 — Leerschuss des Raketenwerfers war stumm
+**Messung vorher (Abnahme 0, §2.5):** `RE15_GIVE=18:1`, zweiter Abzug F76: wf.log `SE arms_rec=1 bank=18(geladen=1)`,
+Audio-Mitschnitt ohne jede Abweichung vom Leerlauf. Ursache gelesen: RE1.5-Klick 0x01010001 = Bank ARMS12 Satz 1,
+`ARMS12.EDH` Dateibytes 4..7 = `ff ff ff ff` (xxd: `0000 1320 ffff ffff ...`, Satz 10 @0x28 `0000 3320`) -> kein Sample.
+**Beleg RE2 Retail (selbst disassembliert, info/re2leon/PSX.EXE, re2_disasm.py; Zitate des Vorgaengers bestaetigt):**
+* Waffen-Dispatch @0x800a6f38 + Id*4: [17] @0x800a6f7c -> 0x80043230 (= Standard-FSM wie 2..13; 16 -> 0x8004799c,
+  18 -> 0x80048b50); 0x80043230: `lbu v0,6(a0)` / `lw v0,28744(at)` = Tabelle 0x800a7048 / `jalr` @0x80043238-54;
+  0x800a7048[1] = 0x8004362c (Haltezustand).
+* Haltezustand, Leerzweig:
+  ```
+  8004382c jal 0x80069f54 / andi a0,a0,0xfff       Magazin > 0 ?
+  80043834 beq v0,zero,0x80043844 / addiu v0,zero,2 -> sonst Zustand 2 (Feuer) `sh v0,6(s0)` @0x80043840
+  80043844 lui v0,0x800d / lw v0,-7408(v0)         0x800ce310 (Tasten-Flanke)
+  80043850 andi v0,v0,0x40 / beq v0,zero,0x800438a4
+  8004385c jal 0x8006a23c                         Nachladen moeglich?
+  80043864 beq v0,zero,0x80043894 / lui a0,0x101  (Delay-Slot)
+  8004386c lhu v0,270(s0) / andi 0xfff / addiu -9 / sltiu 0x3 / bne v0,zero,0x80043898 / ori a0,a0,0x1   (GL 9..11: Klick)
+  80043888 addiu v0,zero,4 / j 0x800438a0 / sh v0,6(s0)                                                 (sonst Zustand 4 = Nachladen)
+  80043894 ori a0,a0,0x1 / 80043898 jal 0x8005ba28 / 8004389c addiu a1,s0,56   = SE 0x01010001 an der Spielerlage
+  ```
+* 0x8006a23c (Nachladen moeglich?): fuer Id 17 hart 0 — `lbu v1,23546(v1)` (0x800d5bfa) / `addiu v0,zero,17` /
+  `bne v1,v0,0x8006a2a0` / `j 0x8006a2a4` / `addu v0,zero,zero` @0x8006a284-9c. Die leere Rakete laeuft also IMMER in
+  den Klick 0x01010001 = Bank 1 (ARMS der gefuehrten Waffe) Satz 1. RE2 `ARMS11.EDH` Dateibytes 4..7 = `00 00 54 16`
+  (xxd `0000 1436 0000 5416 ffff ...`) = ein belegter Satz 1.
+**Umsetzung (e32ab456, jetzt gebaut):** `werfer_r35.c` `re15_werfer_leer_ton(id)`: nur Id 18 -> `re15_audio_re2_arms_se(0x11, 1)`;
+Haken game_step_common.c im Leerzweig (`else if (re15_werfer_leer_ton(eq_item)) { }`, 1 Zeile) vor dem RE1.5-Klick. Die GL
+15/16/17 behalten den RE1.5-Klick ARMS0F Satz 1 (`00005216`, hoerbar, Abnahme §2.5); ihr Nachladen per Abzug bleibt
+PORT-WAHL §3.5 Punkt 4 (RE2 laedt den GL per Abzug NICHT, s. `sltiu 0x3` @0x8004387c).
+**Messung nachher** (exe-Kopie `re15_r35nb1.exe`, `mess_r35b/nb1/run_m2.sh`, `RE15_AUDIO_CAP_SYNC=cap.raw` = 1470 Stereo-
+Abtastungen je Spielbild, ROOM1000 ohne Gegner, Leon (21850,-13400) Blick -x, `RE15_GIVE=<id>:1`, Skript MIT zweitem Abzug
+`M0.6,MA0.3,M1.6,MA0.2,M2.0,W1` gegen OHNE `...,M0.2,...`; Spitzenpegel je Bild /256, `mess_r35b/nb1/ana_m2.py`):
+| Waffe | wf.log zweiter Abzug | erste Abweichung MIT gegen OHNE (Bild: mit/ohne) | abweichende Bilder |
+|---|---|---|---|
+| 18 Rakete | `F76 ... mag=0` / `SE  re2arms ARMS11 satz=1` | 331: 33/17, 332: 32/15, 335..339 | 6 |
+| 15 GL (Gegenprobe) | `F76` / `SE  arms_rec=1 bank=15(geladen=1)` | 331: 19/17, 332: 31/15, 334 | 3 |
+Vorher (Abnahme): Rakete 0 abweichende Bilder. Der Leerschuss ist jetzt am Mischer hoerbar (RE2-Sample ARMS11 Satz 1).
+
+### 8.4 M4 — Werfer gegen FRESSENDE Zombies (ROOM1140)
+**Beleg RE2 Retail (selbst disassembliert):**
+* Fress-Executor EXEC[8], Phase 0 (EMZ0.BIN, `re2_disasm.py dis 0x80103be8 --bin EMZ0.BIN`): `lbu v1,467(s1)` @0x80103c04 /
+  `ori v1,v1,0x80` @0x80103c0c / `sb v1,467(s1)` @0x80103c14 -> +0x1D3 Bit 0x80 steht, solange der Zombie frisst.
+  Geloescht nur beim Aufstehen (P3 `andi 0x7f` @0x80103CE4-FC, Port enemy_ai_re2_zombie.c re2z_exec_feeding) bzw. im
+  Weck-Zweig (`lbu v0,467(s0)` / `andi v0,v0,0x7f` / `sb v0,467(s0)` @0x80104ef0-f04, zusammen mit `andi v1,v1,0xbfff`
+  / `sh v1,270(s0)` @0x80104f0c-10 = +0x10E Bit 0x4000 "Fress-Riegel").
+* Kandidatenfilter des Appliers FUN_800470C0 (alle Werfer-Treffer): `lbu v0,467(s0)` / `bne v0,zero,0x8004740c`
+  @0x80047138-40 (+0x1D3 != 0 -> kein Kandidat) und `lhu v0,270(s0)` / `andi v0,v0,0xc000` / `bne` @0x80047158-64.
+* DIESELBEN Gates im RE2-Schuss-Resolver FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC):
+  `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78, `lhu v0,270(s2)` / `andi v0,v0,0xc000` / `bne`
+  @0x80041290-9c. => In RE2 Retail ist ein FRESSENDER Zombie fuer JEDE Waffe kein Ziel, bis er aufsteht.
+**Messung (eigener Lauf, `mess_r35b/nb1/run_m4.sh`, exe-Kopie re15_r35nb1.exe, RE2-KI = Vorgabe, GL Explosiv 15:6, zwei
+Schuesse, `RE15_BEFUND_MARKE=255` = ROOM1140 Bild 255, befund.log-Marke je Gegner):**
+* Tuer (-7600,-17600) Blick +x: alle fuenf Plaetze `ss= 8/1 ... 1D3=80` (Fresser), dist 6122..8748, HP 50/80/250/250 und
+  der Liegende (0x16, `ss= 7/1 1D3=80`) unveraendert; Explosionen u.a. `@(-928,-1892,-20295)`, `(-2449,-63,-20814)`,
+  `(-1372,218,-18974)` zwischen den Fressern; state.log: kein Platz verlaesst st=1 ss1=8 bis Bild 280.
+* Mittel (-5000,-19600) Blick +x: Platz 2 (dist 3197) und 3 (3771) < 0xFA0 = 4000 -> geweckt (Port-Weckregel
+  re2z_exec_feeding: `ai_dist < 0xfa0` = RE1.5-Fresser-Tor, gekennzeichnetes PORT-MAPPING), dabei +0x1D3 &= 0x7f; erster
+  Schuss: state.log F23 `st=3 ss1=9` (GL-Reaktion) fuer beide, F54 Leichen st=7. Platz 4 (dist 5561) und 5 (5196) bleiben
+  `ss= 8/1 1D3=80 hp=250` — der zweite Schuss (Explosionen `@(501,-333,-20870)`, `(504,-340,-19078)`, `(-1626,-165,-20240)`)
+  bleibt an ihnen wirkungslos.
+**Urteil:** das Verhalten der Werfer ist RE2-treu (Gate 2 + Gate 4); die Abnahme-Vermutung "das Bit steht erst einige
+Bilder nach dem Raumeintritt" stimmt nicht — die nahen Fresser (< 4000) stehen auf und sind treffbar, die fernen fressen
+weiter und sind es nicht. Kein Werfer-Code geaendert. Die Python toetet Fresser, weil der Port fuer Schusswaffen in beiden
+KI-Arten den RE1.5-Resolver FUN_80011f50 faehrt, der +0x1D3/+0x10E nicht kennt — Abweichung vom RE2-Resolver
+@0x80041270-9c, Schuss-Pfad ALLER Schusswaffen (nicht Spur B), OFFEN 16. Die befund.log-Deutung `treffbar=ja` prueft nur
+die RE1.5-Gates (main.c, "NUR LESEN") und zeigt die RE2-Sperre nicht.
