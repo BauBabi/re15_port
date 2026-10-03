@@ -377,7 +377,7 @@ static void teil_brust(void)
         if (f_sub2 >= 0 && g->sub_state_1 == 3) { f_chase = f; break; }
     }
     PRUEF(f_sub2 >= 0, "Phase 6 -> sub 2 (Clip 3 ab Bild 0x1d, @0x8011ae30-58) nach %d Bildern", f_sub2);
-    PRUEF(f_chase >= 0 && maxbild >= 0x45, "Clip 3 laeuft bis zum Ende (Bild %d von 70) und mündet in CHASE (sub 3) nach %d Bildern; %d Bilder Clip 3 = der aufrechte Brustschlag",
+    PRUEF(f_chase >= 0 && maxbild >= 0x45, "Clip 3 laeuft bis zum Ende (Bild %d von 70) und muendet in CHASE (sub 3) nach %d Bildern; %d Bilder Clip 3 = der aufrechte Brustschlag",
           maxbild, f_chase, clip3_bilder);
 }
 
