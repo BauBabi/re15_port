@@ -489,3 +489,68 @@ Abnahme am selben Code (HEAD 7b20a561; K_abnahme_0.md §2/§8) — nicht wiederh
 3. Zeile 6: Blick + Drehung zu Ada VOR der Zeile in der Form von ROOM11C0 sub02.
 4. Haken: Hinweiskette/zweites Ziel aus menu_common.c nach cut_10f0.c, pc_rbj_leihen aus main.c nach
    platform/pc/src/cut10f0_pc.c; in beiden Dateien bleiben Haken von 1-5 Zeilen.
+
+### 9.2 Mangel 3 — Zeile 6: Leon streckt den Arm an Ada vorbei
+- **Ursache:** das Programm liess Leon nach dem Tuer-Eintritt mit der Eintritts-Gierung 2048 (Blick -X, Westwand) stehen
+  und spielte Clip 15 sofort; Blick (Plc_neck) und Drehung zu Ada kamen erst NACH der Zeile.
+- **Messung vorher** (Abnahme Lauf A, state.log F76-F166): `PL(8400,-350,rot=2048)`, `mo=15`, Nachricht 6; Soll-Gierung
+  zu Ada (6000,11500) = 2942 -> 894/4096 = 78,6 Grad daneben; neck.log Zeile 2 erst `PLC_NECK slot=0 mode=1`.
+- **Beleg (Form):** ROOM11C0 sub02 @0x01886 `41 01 fb dc 00 00 f5 c7 64 00` (Plc_neck Modus 1), @0x01890
+  `40 00 09 00 fb dc f5 c7` (Plc_dest Modus 9) + `18 05` (warten), `29 0d` (Cut_chg), @0x0189C `09 0a 14 00` (Sleep 20),
+  @0x018A0 `2b 00 00 00` + `3f 00 0f 00` (Zeile + Clip 15). Handler Plc_dest @0x80041be4, Plc_neck @0x80041e98 (§2).
+- **Aenderung:** tools/r35_k/szene_bauen.py -> gen/cut10f0_szene.inc (jetzt 1350 Bytes, 288 Opcodes; vorher 1326/282):
+  nach `Cut_chg 2` kommen `2e 01 00 00` Work_set Spieler, `41 01 70 17 00 00 ec 2c 64 00` Plc_neck Modus 1 auf Ada
+  (6000,11500), `40 00 09 00 70 17 ec 2c` Plc_dest Modus 9 + Warteschleife Ck(5,0) (ROOM1050 sub03 @0x00DCA), dann wie
+  bisher Sleep 50, `Cut_chg 0`, Sleep 20, Message_on 6 + Clip 15. Der spaetere doppelte Plc_neck vor dem Losgehen entfaellt.
+  Positionen/Text unveraendert (NUTZER-VORGABE). Reihenfolge wie im Vorbild: Blick, Drehung, Schnitt, 20 Bilder, Zeile.
+- **Messung nachher:**
+  - Unit (`test_r35_cut10f0.exe szene`, echte VM): `ok: Zeile 6 'Hey - how did you came in here?' (Leon an der Tuer):
+    Leon blickt zu Ada (Gierung 2941, Soll 2942)`, `ok: Zeile 6: Leon steht dabei noch am Tuer-Spawn (8400,-350)`;
+    Ablauf `msg 6..23 ab B81..B2464 | Leon los B213 an B423 (4797,11359) rot 1415 | Ende B2729`; Zeilenabstaende
+    `6:342 7:110 8:110 9:151 10:298 11:126 12:110 13:110 14:90 15:126 16:130 17:110 18:130 19:110 20:110 21:110 22:110`
+    (Minimum weiter 90).
+  - Echte exe, echter Weg (Spielstand ROOM10D0 + CONTINUE + Aktionstaste, beschleunigter Renderer, RE15_STATE_LOG,
+    RE15_NECK_LOG, RE15_FRAMEDUMP 60-240/20; Scratch r35k_nb1/m3): `[scd F6] Cut_chg(2)`, `[scd F66] Cut_chg(0)`,
+    `[msg] room=10f0 id=6`; state.log F69..F199 `PL(8400,-350,rot=2941,...)`, `mo=15` F86-F176, danach `mo=23`;
+    neck.log Zeile 1 `PLC_NECK slot=0 mode=1 tgt=(6000,0,11500)` (jetzt VOR der Zeile).
+  - Bilder (angesehen): K_belege/nachbesserung1_zeile6_cut0_F080_bis_F180.png (Cut 0, Untertitel "Leon: Hey - how did
+    you came in here?"), K_belege/nachbesserung1_zeile6_leon_arm_zu_ada_F080_F100_F120_F140.png (Ausschnitt 3-fach): Leon
+    steht der Kamera — und damit Ada, die hinter der Kamera im Raum steht — zugewandt, ab F100 ist der linke Arm nach vorn
+    gestreckt. Vorher stand er im Profil zur Westwand.
+- **Test:** unit_r35_cut10f0_szene prueft jetzt auch Zeile 6 (Tabelle w[], k = 0, Toleranz 160/4096).
+
+### 9.3 Mangel 1 — MAIN01 verstummt, wenn ein Raumskript den MAIN-Kanal stoppt
+- **Ursache:** im Fenster liefert die Weiche in jedem Raum MAIN01; der Befehl des Raumskripts an Slot 0 meint aber die
+  TABELLEN-Musik des Raums (Zwinger: MAIN3B mit Handstart-Flag, 0xFF7B). Er traf die geladene MAIN01-Sequenz
+  (FUN_80044da4 op 2 @0x80044e50 = SsSeqStop), und weil danach jeder Raum denselben MAIN traegt, startet nichts sie neu
+  (FUN_80044210 @0x80044280; FUN_800444b0 -> SsSeqReplay kehrt bei gestoppter Sequenz um, @0x8005ac94). Das Original
+  verhaelt sich im selben Fall genauso — der Engine-Pfad ist richtig, der Fehler liegt in der Weiche der Spur K.
+  Dieselbe Bauart trifft die Nutzlast-Schreiber: ROOM1090 sub00 @0x022EE setzt Programm 0 der MAIN-Bank (Lautstaerke/Pan)
+  und sub03 @0x024DA macht es stumm — im Fenster waere das Programm 0 von MAIN01 gewesen (@0x80044f50/@0x80044f6c).
+- **Messung vorher** (Abnahme J4/J5): `[bgm] stage=0 room=1D entry=FF01 ... [unveraendert, laeuft durch]`,
+  `[bgm] Sce_bgm_control slot=0 op=2 ... capTick=519`, Pegel 580 -> 0; nach der Tuer in ROOM1180 `room=18 entry=FF01 ...
+  [unveraendert, laeuft durch]` bei Pegel 0 ueber 450 Ticks.
+- **Aenderung:**
+  - cut_10f0.c: `s_bgm_stand` = die letzte Auskunft der Weiche an die Audio-Schicht (1 = 0xFF01 geliefert);
+    `re15_cut10f0_bgm_haelt_main()` gibt sie heraus.
+  - audio_pc.c, SCD_AUDIO_SEQ_CTL: Befehl an Slot 0 bei `re15_cut10f0_bgm_haelt_main()` -> nicht anwenden (weder
+    Play/Stop/Pause noch die Nutzlast), Logzeile unter RE15_BGM_CTL_DEBUG. Slots 1/2 (SUB) und der direkte Aufruf
+    `re15_audio_seq_ctl` (Game Over, main.c) bleiben unberuehrt. In ROOM11C0 (Raum-Byte 0x1C) liefert die Weiche die
+    Tabelle -> dort gelten die Skript-Befehle wieder (sub00 @0x01810 `54 00 01 00 00 00` startet MAIN16).
+  - Beim OEFFNEN des Fensters leert der Tick die Skript-Latches (`re15_audio_bgm_status_reset`, wie room_common.c vor
+    jedem Raumwechsel): was das Raumskript vorher der Tabellen-Musik mitgab, wird beim Laden von MAIN01 nicht mehr
+    nachgezogen (re15_bgm_load_main -> re15_bgm_vabw_apply).
+- **Messung nachher** (echte exe, echter Weg: Stand im Flur ROOM1180 mit Strom (4,243), die fuenf Zwinger-Gegner tot,
+  (9,71)=1, (9,73)=1; Aktionstaste -> Tuer DOOR1A -> ROOM11D0; RE15_BGM_CTL_DEBUG, RE15_AUDIO_CAP_SYNC; Scratch
+  r35k_nb1/m1):
+  `[bgm] stage=0 room=18 entry=FF1D`, `[save] CONTINUE: resumed in room 1180`, `[cut10f0] MAIN01-Fenster auf in ROOM1180:
+  (9,71)=1 (9,73)=1, Parkplatz erreicht (4,64)=0`, `[cut10f0] Raummusik-Anstoss in ROOM1180: Soll MAIN01`,
+  `[bgm] stage=0 room=18 entry=FF01 -> MAIN01(flag 0) SUB--`, `[bgm] loaded: 9 VAGs, SEQ 7788B`, Tuersequenz,
+  `[bgm] stage=0 room=1D entry=FF01 -> MAIN01 ... [unveraendert, laeuft durch]`,
+  `[bgm] Sce_bgm_control slot=0 op=2 im MAIN01-Fenster NICHT angewandt (Runde 35 Spur K) capTick=736`.
+  Tonpegel (mittlerer Betrag je 30 Ticks = 1 s, 1470 Stereo-Frames je Tick) ab dem Stop-Befehl bei Tick 736, 15 s im
+  Zwinger: 691, 444, 432, 795, 827, 804, 852, 820, 1182, 1517, 1428, 1513, 1786, 1703, 1322, 1603 — kein Abfall auf 0
+  (vorher 580 -> 0).
+- **Test:** integration_r35_cut10f0 Lauf G (derselbe Weg; prueft "laeuft durch" in den Zwinger, die Zeile "NICHT
+  angewandt" und dass danach KEIN Slot-0-Befehl mehr angewandt wird); unit_r35_cut10f0_bgm ("Zwinger ROOM11D0 im
+  Fenster: MAIN gehalten", "im Parkplatz ... gelten wieder").
