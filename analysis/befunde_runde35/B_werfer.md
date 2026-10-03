@@ -815,3 +815,41 @@ weiter und sind es nicht. Kein Werfer-Code geaendert. Die Python toetet Fresser,
 KI-Arten den RE1.5-Resolver FUN_80011f50 faehrt, der +0x1D3/+0x10E nicht kennt — Abweichung vom RE2-Resolver
 @0x80041270-9c, Schuss-Pfad ALLER Schusswaffen (nicht Spur B), OFFEN 16. Die befund.log-Deutung `treffbar=ja` prueft nur
 die RE1.5-Gates (main.c, "NUR LESEN") und zeigt die RE2-Sperre nicht.
+
+### 8.1 M1 — Moebel-Zellen sperren Rakete, GL-Runden und Flammenstrahl in jeder Hoehe
+**Messung vorher:** Abnahme 0 §4 M1 (ROOM1140, Leon (200,-10300) Blick -z: Rakete explodiert im Startbild an der
+Tischkante `@(-174,-2530,-10668)`, GL-Explosionen an der Kante in 1840..2150 Hoehe, Strahl-Plaetze z -11349..-11569;
+Python trifft ueber denselben Tisch Platz 5 in 9300). Nicht wiederholt.
+**RE-Beleg 1 — die Zelldaten (selbst gelesen, ROOM1140.RDT SCA @0x570, 5 Listen zu 19):** Zelle 6 @RDT 0x5d0
+`44 2f d4 17 d6 ed d6 bb 01 ff 00 03` = {w 12100, d 6100, x -4650, z -17450, Typ 1, u0 ff, u1 00, floor 03}: Wort+10 =
+0x0300 = Band 0, Klassen-Nibble 3 — dieselben Bytes wie jede Wand des Raums (Zellen 0..13 alle `01 ff 00 03`). ROOM1000
+Baenke (Zellen 6/7 @0x574/@0x580) ebenso `01 ff 00 03`. Keine Hoehe im 12-Byte-Satz (wie Spur A N1.1, A_granate.md).
+**RE-Beleg 2 — die RE1.5-SCHUSSLINIE sperrt an genau diesen Zellen ohne Hoehe (selbst disassembliert, re15_disasm.py):**
+* Treffer-Resolver FUN_80011f50 (alle Schusswaffen): `jal 0x8001b9b4` / `addu a0,s0,zero` (s0 = Ziel+0x34) @0x80012168-6c,
+  `bne v0,zero,0x80012540` / `addu v0,zero,zero` @0x80012170-74 -> Sichtlinie blockiert = Rueckgabe 0 = KEIN Treffer.
+* FUN_8001b9b4: vier Regionen 3..0, je `ori a2,zero,0xf00` / `jal 0x8003dcc4` / `ori a3,zero,0x300` @0x8001ba1c-24;
+  Strahl von DAT_800ac784 (= Spieler, Katalog FUN_80031c44) zum Ziel.
+* FUN_8003dcc4 Zellfilter: `lhu a0,0(s7)` (Wort+10) / `lbu v1,130(v1)` (Spieler +0x82 = Band) / `sll v0,a0,16` /
+  `sra v0,v0,28` / `bne v1,v0` @0x8003de5c-6c; `and v1,t5,a0` (0xf00) / ... / `bne v1,v0` (0x300) @0x8003de7c-94; danach
+  nur x/z-Kreuzungstests gegen die Zelldiagonalen (OuterProduct0) — keine y-Komponente.
+=> Im Auslieferungsstand gibt es KEINE Schusslinie ueber den Konferenztisch: ein Zombie hinter Zelle 6 ist fuer jede
+Waffe kein Treffer. Der Werfer, der an der Tischkante explodiert, folgt also der einzigen Schusslinien-Regel, die RE1.5
+hat; RE2s Hoehenfenster (@0x8004ffd4-0x8005000c, Oberkante @0x8004ffb0-d0) braucht ein Feld, das RE1.5-Zellen nicht
+tragen. Dieselbe Regel wie die Handgranate (Spur A, A_granate.md N1.1 "Formen ja, Hoehe nein", Mangel 3): Handgranate und
+Werfer verhalten sich am Tisch gleich. Die Gegenprobe der Abnahme (Python trifft ueber den Tisch) ist eine ABWEICHUNG
+des Port-Resolvers: re15_player_weapon_fire (re15_damage.c) hat den Sichtlinien-Test @0x80012168-70 nicht (grep
+`8001b9b4` in engine/src: nur Kraehen-Code) -> OFFEN 17 (Schuss-Pfad aller Schusswaffen, nicht Spur B).
+**Neuer Befund beim Gegenlesen — Kreis-Zellen fehlten:** `wandzelle_im_band` nahm nur Typ 1 mit der Begruendung "Typ != 1
+= Treppen-/Rampenzellen". Falsch: Typ 1..9 sind Formen (Verteiler 0x800b2858, gefuellt @0x8003af04-84, [3] Kreis
+@0x8003af24; Port re15_collision.c push_rect/push_circle/push_diag*). Zensus ROOM1000/1060/1140: nur Typ 1 und Typ 3,
+alle `ff 00 ?3`; ROOM1060 Typ 3 = 25 Eintraege Band 0 (keine Treppe). Die Rakete flog durch Saeulen/Stuehle.
+**Umsetzung:** re2_fx.c `wandzelle_im_band` nimmt Typ 1 und Typ 3; Kreis nach FUN_8003d6a8: `lhu a2,0(a0)` / `srl a2,a2,1`
+@0x8003d6cc-d4 (Radius = Breite >> 1, Mitte (x + w/2, z + w/2)), SquareRoot0 `jal 0x80065f60` @0x8003d724, gesperrt bei
+(Radius + r) - Abstand >= 1 (wie push_circle). Kommentar mit der Schusslinien-Begruendung und der Berichtigung. Hoehe:
+unveraendert keine (Spur-A-Regel). Formen 2/4..9: prueft Spur A formgenau (granate_r35.c `strecke_*`) — fuer die
+Zusammenfuehrung: EIN Formtest fuer beide (OFFEN 9).
+**Messung nachher (Unit, echte RDT ROOM1140, echter werfer_boden, Rakete in Flughoehe -2530 nach -z, test_r35_werfer
+Teil H):** Tisch (x 200 ab z -10400): Explosion nach 3 Bildern bei z -10912 (Kante -11350, Rueckprall); neben dem Tisch
+(x 9000): 13 Bilder, z -18592 (Fernwand Zelle 11 bei -19600); auf den Kreis (-4750,-13900) r 500: 5 Bilder, z -12448.
+GEGENPROBE (Typ-3-Zeile auf `typ != 1u` zurueckgesetzt, gebaut, gefahren, wiederhergestellt): Kreis-Lauf 19 Bilder,
+z -23200 (Fernwand) -> FAIL 113. Mit Typ 3: alle gruen.
