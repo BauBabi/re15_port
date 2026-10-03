@@ -790,9 +790,10 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
     Spieler-Tick: Koerper-Schub FUN_8002b544 (vs10171: +142/+113, vs10173: +192/+151, vs10175: +437/+178
     — der zweite Gorilla e2 steht im Koerperabstand) und die WANDKLEMME FUN_8003b0a4 (vs10171 -614/+585,
     vs10215 +217/-240, vs10219 -254/+180, vs10221 +21/+80). FUN_8002dc48 / FUN_8002b498 bewegen nie.
-  - Bild 0x24 (vs10219): Platzierung (-4334,-11423) -> Wand -> **(-4588,-11243)**; Bild 0x25 (vs10221, letzte
-    Platzierung, `sltiu 0x25` @0x8011c278 prueft den Wert VOR dem anim_set) (-5402,-10631) -> Wand ->
-    **(-5381,-10551)** = die beiden "Spruenge" der Abnahme.
+  - Opfer-Bild 0x23 (vs10219, +0x95 beim Eintritt = 0x23): Platzierung (-4334,-11423) -> Wand -> **(-4588,-11243)**;
+    Opfer-Bild 0x24 (vs10221, letzte Platzierung: `sltiu v0,v0,0x25` @0x8011c278 prueft +0x95 VOR dem anim_set
+    @0x8011c2b0) (-5402,-10631) -> Wand -> **(-5381,-10551)** = die beiden "Spruenge" der Abnahme (die
+    g_griff-Dekodierung zeigt +0x95 NACH dem anim_set, daher dort "Bild 0x24/0x25").
   - Ab vs10223 KEINE Platzierung mehr, aber FUN_8003b0a4 schiebt Leon JEDES Bild um ~100-125 in wechselnde
     Richtungen (vs10223 +79/-82, +95/-66, +109/-38, -92/-54, -47/-100, ...) — auch nach der Freigabe (Zustand
     1/0/1), bis er bei vs~10461 auf (-3009,-11643) zur Ruhe kommt. Das "Weiterwandern ~100/Bild" der Abnahme ist
