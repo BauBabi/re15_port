@@ -927,3 +927,33 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
     Freigabe vs9037 + 364).
 - Freigabe im Original exakt: aca58 4 -> 1 bei **vs9037** (`jnb2/g_frei.txt`, s026); Tod vs11423 (g_orig F891)
   -> **1193 Bilder = 39,8 s**.
+
+### A1 — Umsetzung (Dateien, Konstanten mit Beleg)
+- actor_locomotion.c (Plc_dest-Walker des Spielers, 1 Zeile je Stelle, Kommentar "Runde 35 Spur J"):
+  `a->z += ((-s * speed) >> 12)` statt `a->z -= ((s * speed) >> 12)` (GTE MVMVA sf=1 @0x800246ac, R31 = -sin aus
+  RotMatrixY @0x80024660); Ausrichtungs-Kegel `delta >= -0x15e && delta < 0x15e` und Mode-9-Ankunft
+  `delta >= -0x60 && delta < 0x60` (FUN_8001ab9c `slt` @0x8001abfc; Aufrufe @0x80030db8 / @0x80030b80 / @0x800313d0);
+  die ungenutzte `abs_delta` entfaellt.
+- re15_damage.c re15_player_knockback_delta (Rueckstoss der Biss-/Treffer-Reaktion ueber FUN_800245d8): dieselbe
+  dz-Rundung (1 Zeile).
+- affen_11c0.c / re15_affen.h (7): `re15_affen_rng_a0` (= FUN_8001af20 @0x8001af30-4c auf einem gegebenen a0),
+  `re15_affen_psx_entity` (0x800acc2c + (Slot-1)*0x1f4), `re15_affen_a804_a0` (a0 nach a804: d^2 bei r < d, sonst
+  atan2-Rest), `re15_affen_b3_a0` (B[3]-Eintritt), `re15_affen_b0_a0` (B[0]-Eintritt).
+- enemy_ai_common.c (je 1-2 Zeilen): B[0]-Timer, B[3]-Eintritts- und Bild-Ziehung, B[4]-Ziehungen (a0 = Entity+0x34,
+  wenn Path B vor a9cc kurzschliesst; sonst bleibt der xorshift-Ersatz), B[7]-Absprung (a0 = g_entity @0x80118a24).
+
+### A1 — Messung nachher
+- exe JUMP-Szenario ohne Eingabe (`jnb2/n10d`, gleiche Eingabe wie r3/Abnahme n10): Gang 207/207 bitgleich,
+  Endlage (-7138,-12372) Yaw 1513; Heavy-Anlauf von S3 Yaw 2768, 2841, ... +73 je Bild bis 132 (Original 4228 =
+  132), Lage (-9419,-11137) (Original (-9419,-11139)); Heavy F1436 = Freigabe F1071 + 365 (Original +364);
+  Bisse relativ zum Heavy 105/157/209/260/313/363/417/466/521/569/625/672/729/775/832(Tod) gegen Original
+  104/156/206/259/309/362/413/465/517/568/621/671/725/774/829 — **jeder Biss 0-4 Bilder neben dem Original**,
+  Abstaende 52,52,51,53,50,54,49,55,48,56,47,57,46,57 (Original 52,50,53,50,53,51,52,52,51,53,50,54,49,55);
+  **Tod Freigabe + 1197 Bilder = 39,9 s** (Original 1193 = 39,8 s; vorher Abnahme n10: 999 = 33,3 s).
+- Bild fuer Bild im Kontakt (n10d F1526-F1546 gegen g_orig F152-F172, Versatz 1374): S3 F1532 (-9066,-12016) =
+  Original F158 (-9066,-12016) exakt; e1 committet F1534 = Original F160; Leon wird aber EIN Bild spaeter
+  geschoben (Port F1534 (-7032,-12373) = Original F158 (-7045,-12373) ~ F160): der Port schiebt den Spieler im
+  Spieler-Zweig VOR der Gegner-KI (game_step), das Original im Spieler-Tick NACH den Entity-Ticks
+  (Haltepunkt-Folge Gorilla-Wurzel -> 0x80031c44). Daraus die restlichen 0-4 Bilder -> OFFEN.
+- Riegel `szene` (Raum-Harness, gleiche Eingabe): Gang 207/207, Heavy +365, Takt Mittel 51,5 (kuerzester 46),
+  Tod +1197 — gruen.
