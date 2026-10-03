@@ -24,6 +24,11 @@ Dossier wird FORTLAUFEND geschrieben (Sitzungsabbrueche moeglich).
 - 10:30 Messung VORHER (Abschnitt 1), exe-Kopie `re15_port/build/platform/pc/re15_r35b.exe`,
   Laeufe unter `re15_port/build/platform/pc/mess_r35b/vorher/w<ID>/` (nicht versioniert).
 - 10:45-11:30 RE-Belege (Abschnitt 2): RE1.5-Tabellen, RE2-Effekt-Handler, RE2-FX-Ops, Baenke, SE-Banken.
+- 12:00 Sitzungslimit beendet den Vorgaenger (4 wip-Commits, Baum sauber, Suite-Lauf 1 zerrissen).
+- 15:30 FORTSETZUNG: Dossier/Commits/Diff gelesen; Suite Lauf 2 gestartet (480/480, s. §5).
+- 15:35-15:50 Gegenlesen gegen den Wortlaut: Luecke gefunden — Runden/MAGNUM lassen sich im Inventar NICHT mit
+  Granatwerfer/Python kombinieren (pair_count 0, §2.5); RE2-Kombinier-Zustaende 7/8 disassembliert, verdrahtet
+  (Commit 023b68a7, §3.6), Test unit_r35_werfer_kombi.
 
 ## 1. Messung VORHER (Stand 154a73c1)
 
@@ -253,6 +258,64 @@ analog (10992/11664 B); Rakete: Schuss 18256 B gleich, Explosion RE1.5 17104 B v
 Sample); Flamme: RE2 ARMS10 {2624, 2352, 3520, 14368, 8928} — RE1.5 ARMS0E hat 8928 (Satz 11, Strahl) nicht.
 RE2 EDH-Layout = RE1.5 EDH-Layout (Satz-Deskriptoren 4 B @0, `pBAV` @ u32[size-8]; ARMS10/11: 0x80).
 
+### 2.5 Inventar-Kombination: Nachladen und Munitionswechsel (Fortsetzung 2026-10-03 nachmittags)
+
+**Messung (statisch, Port liest die eingebettete EXE-Tabelle `re15_inv_ui.h` byte-genau):** der Matcher
+`exchange_match` (= FUN_8004e900) liest `pair_count` @0x80074da8 + id*12 + 9 und bricht bei 0 ab
+(`beq` @0x8004e9ec). `re15_disasm.py bytes 0x80074da8 348`:
+```
+[0x0e] 64 00 00 00  a8 4c 07 80  02 01    Flammenwerfer: 1 Satz @0x80074ca8 `18 0e 02 00` (FLAME FUEL, Nachladen)
+[0x0f] 06 00 00 00  88 4c 07 80  03 00    GL Explosiv:  pair_count 0, NULL-Satz
+[0x10] 06 00 00 00  88 4c 07 80  01 00    GL Saeure:    0
+[0x11] 06 00 00 00  88 4c 07 80  02 00    GL Brand:     0
+[0x12] 04 00 00 00  88 4c 07 80  03 00    Rakete:       0
+[0x14] 06 00 00 00  88 4c 07 80  03 00    Colt Python:  0
+[0x17] fa .. f4 4c 07 80 00 02            MAGNUM BULLETS: 2 Saetze @0x80074cf4 `17 17 05 00 | 07 07 03 00`
+[0x19] fa .. 04 4d 07 80 00 01            EXPLOSIVE RND: 1 Satz `19 19 05 00` (nur Selbst-Stapel)
+[0x1a] fa .. 08 4d 07 80 01 01            ACID ROUNDS:   `1a 1a 05 00`
+[0x1b] fa .. 0c 4d 07 80 02 01            INCEND. ROUNDS: `1b 1b 05 00`
+```
+-> Im Auslieferungsstand laesst sich KEINE Runde mit einem Granatwerfer und nichts mit der Python
+kombinieren (Byte +8 = Zahlenfarbe: 3 normal, 1 Saeure, 2 Feuer). Die GL-Saetze liegen unverwiesen bei
+@0x80074cb4 `19 0f 02 00 | 1a 10 04 0c | 1b 11 04 0c` (Satz = {Partner, Ergebnis, Aktion, Bild}):
+Explosiv-Runde = Nachladen (Aktion 2), Saeure/Brand = Aktion 4 "SWAP+TRANSFORM" @0x8004e538 mit Bild
+0x0c. Aktion 4 schreibt die Ergebnis-Id in den PARTNER-Platz (@0x8004e598), kopiert die GL-Menge dorthin
+(@0x8004e5a8-bc) und legt die unverbrauchte Runde auf den GL-Platz (@0x8004e628-58) — die geladenen
+Explosiv-Runden wuerden zu Saeure-Runden, die Saeure-Runden blieben erhalten; fuer 0x10/0x11 gibt es
+gar keinen Satz (kein Rueckweg). Unfertig -> Beta -> Retail.
+
+**RE2 Retail (info/re2leon/PSX.EXE):** Eigenschaftstabelle @0x800a9e1c (Schritt 8: Kappe, -, Farbe,
+pair_count, Zeiger), Saetze {Partner, Zustand, Ergebnis, Bild} (`re2_disasm.py bytes 0x800a9ce8 224`):
+```
+GL Explosiv [9]  fa 00 03 03 -> @0x800a9d10  18 05 09 ff | 19 07 09 03 | 1a 07 09 03
+GL Brand    [10] fa 00 01 03 -> @0x800a9d1c  19 05 0a ff | 18 07 0a 04 | 1a 07 0a 04
+GL Saeure   [11] fa 00 02 03 -> @0x800a9d28  1a 05 0b ff | 18 07 0b 05 | 19 07 0b 05
+Runde 0x18  fa 00 03 04      -> @0x800a9d88  09 06 09 ff | 0a 08 09 04 | 0b 08 09 05 | 18 05 18 ff
+Runde 0x19                   -> @0x800a9d98  0a 06 0a ff | 09 08 0a 03 | 0b 08 0a 05 | 19 05 19 ff
+Runde 0x1a                   -> @0x800a9da8  0b 06 0b ff | 09 08 0b 03 | 0a 08 0b 04 | 1a 05 1a ff
+Rakete [0x11] 04 00 00 00 -> NULL-Satz 0x800a9ce8 (keine Kombination, 4 Schuss)
+Magnum [5] 08 00 00 02 -> @0x800a9cf4 `16 05 05 ff | 21 04 06 01`
+```
+Eigene Runde = Zustand 5/6 (Nachladen in A/B), fremde Runde = Zustand 7/8 (Munitionswechsel); Bild 3/4/5 =
+MIX-Bild der ZURUECKKOMMENDEN Runde (Explosiv/Brand/Saeure). Kombinier-Maschine FUN_8006b358, Sprungtabelle
+@0x80011bb0 (`sltiu a0,0xc` @0x8006b3e8): [5] 0x8006b9a4, [6] 0x8006bacc, [7] 0x8006bc18, [8] 0x8006bd98.
+**Zustand 7 @0x8006bc18** (`re2_disasm.py dis 0x8006bc18 96`):
+```
+8006bc5c lbu s0,id[A]                         alte GL-Id
+8006bc60 addiu v0,v0,-15 / 8006bc6c sb id[A]  GL-Id := Runde B - 15
+8006bc70-98 bne eq,A / sb v0,10(s1)           gefuehrte Waffe (0x800d5bfa) nachziehen, wenn A gefuehrt
+8006bca0 addiu v1,s0,15 / 8006bcb4 sb id[B]   Runde := alte GL-Id + 15
+8006bcd8-0x8006bd0c                           Menge[A] <-> Menge[B] (ganzer Stapel, KEINE Kappe)
+8006bd30 beq Menge[B],zero,0x8006bd6c         leer -> jal 0x8006947c(B,0,0,0) @0x8006bd74 + jal 0x80069e54 @0x8006bd88
+8006bd38-60 jal 0x80069bb4(Zelle B, 0x801a0000 + Bild*1200)   sonst Bild der Runde
+```
+**Zustand 8 @0x8006bd98** = Spiegel (A = Runde, B = GL): `addiu v0,v0,-15` @0x8006be10 / `sb` @0x8006be1c
+auf id[B], `addiu v1,s0,15` @0x8006be50 / `sb` @0x8006be64 auf id[A], Mengentausch @0x8006be94-bc, leer ->
+`jal 0x8006947c` @0x8006bf20.
+RE1.5-Entsprechung der Ids: Runde = GL + 0x0a (0x19/0x1a/0x1b <-> 0x0f/0x10/0x11 — aus den drei
+unverwiesenen Saetzen); MIXITEM-Bilder der Runden 0x0c/0x0d/0x0e (Saetze @0x80074d24 `1e 19 06 0c`,
+@0x80074d28 `1f 1a 06 0d`, @0x80074d2c `20 1b 06 0e`; Pin test_inv_fsm.c "(pics 12-14)").
+
 ## 3. Umsetzung (Commit-Kette r35/werfer; jede Konstante mit @0x im Code)
 
 Einordnung je Waffe (Beta -> Retail): 15..18 und 20 sind nachweislich unfertig (§2.1) -> RE2 Retail ist
@@ -391,7 +454,9 @@ RE1.5-KI (unit_r35_werfer Teil F, Treffer in 800).
   Rueckstossbild 1 — der Harness tickt die RE2-FX-Maschine nicht; PIN3..PIN7 waren eine Kaskade des
   nicht endenden PIN2-Kampfs; w20 aus PIN7 (Handfeuer-Wache) heraus und als PIN1b (Magnum-Zelle
   0x801092C4, Zeile 5) hinein).
-* Suite: s. Abschluss (local_build.sh all).
+* Suite Lauf 1 (12:00-12:30) wurde vom Sitzungslimit zerrissen (alle Tests ab ~#440 `Exit code 0xc0000142` = Prozessstart beim Sitzungsende; kein Befund).
+* **Suite Lauf 2 (15:32-15:55, Stand 7943c63a, `local_build.sh all`): `=== LOCAL-BUILD-OK (all) — Tests 480/480`** (1342 s unter Last paralleler Baeume; kein roter Test, auch die Fenster-Haken gruen). Die vier nachgezogenen Alt-Pins sind gruen, weitere Alt-Pins waren nicht rot.
+* Suite nach der Kombinations-Verdrahtung (§3.6): s. Abschluss.
 
 ## 6. OFFEN (mit Adresse und naechstem Messweg)
 
