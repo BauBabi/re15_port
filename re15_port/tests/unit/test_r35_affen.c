@@ -38,6 +38,8 @@
  *   takt    Punkt 4 (M1): zwei Gorillas ab der Original-Lage Bild F195 (GDB-Einzelbild-Spur) -> Treffer-Bilder/-Abstaende.
  *   griff   Punkt 4/5 (M1): verbundener Rear-up-Griff ab derselben Lage (e1 sub 15 in F250, wie das GDB-Experiment im
  *           Original): Pin F254, Leon steht bis Bild 0xb, erste Wurf-Platzierung F266, 0 HP.
+ *   npcband M4: NPC-Wandklemme mit +0x82 statt y — je Raum (10D0, 1050, 1090, 10B1, 1170, 11B0, 4001, 4031, 6030, 6031)
+ *           600 Bilder: laeuft ein NPC, dessen +0x82 != band_from_y(y) ist? (10D0/1050 gepinnt: nein).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -785,6 +787,53 @@ static void teil_griff(void)
           " aca59 = a780 VOR dem Yaw-Latch @0x8011ac50-68 / @0x8011acac)", f_sprung);
     PRUEF(hp_griff == 76, "der Griff kostet keine HP (%d; Original 76 -> 76, kein Schreiber auf Spieler+0x9a in 0x8011a878-af40 / 0x8011c118-c598)", hp_griff);
 }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* M4 (Nachbesserung 1): die NPC-Wandklemme nimmt seit Runde 35 das Band aus +0x82 statt aus y. Fuer jeden NPC, dessen
+ * +0x82 gleich band_from_y(y) ist, ist das Ergebnis identisch (re15_collision_constrain_enemy ruft dieselbe
+ * constrain_contact_band mit band_from_y(y), re15_collision.c). Gemessen wird je Raum ueber 600 Bilder, ob ein NPC
+ * (0x40/42/45/47/49/4b/4d) mit abweichendem Band LAEUFT (Lage aendert sich) — nur dann kann die Umstellung wirken. */
+static int ist_npc(uint8_t t) { return t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b || t == 0x4d; }
+static void npcband_raum(uint16_t room, int32_t px, int32_t pz, int bilder, int *n_npc, int *n_abw, int *n_abw_lauf)
+{
+    *n_npc = *n_abw = *n_abw_lauf = 0;
+    re15_game_state_init();
+    if (room_boot(room, px, pz, 0, 0, 1) != 0) return;
+    int32_t ax[RE15_ACTOR_MAX], az[RE15_ACTOR_MAX];
+    for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) { ax[sl] = g_actors[sl].x; az[sl] = g_actors[sl].z; }
+    for (int f = 0; f < bilder; f++) {
+        frame(0, 0);
+        for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) {
+            re15_actor_t *e = &g_actors[sl];
+            if (!e->active || !ist_npc(e->type)) continue;
+            if (f == 0) (*n_npc)++;
+            int bandy = re15_collision_band_from_y(e->y);
+            if ((int)e->floor != bandy) {
+                (*n_abw)++;
+                if (e->x != ax[sl] || e->z != az[sl]) {
+                    if (*n_abw_lauf < 3) printf("    ROOM%04X Bild %d Slot %d Typ 0x%02x +0x82=%d band_from_y(%d)=%d @(%d,%d)%s", room, f, sl,
+                                                e->type, e->floor, (int)e->y, bandy, (int)e->x, (int)e->z, "\n");
+                    (*n_abw_lauf)++;
+                }
+            }
+            ax[sl] = e->x; az[sl] = e->z;
+        }
+    }
+}
+static void teil_npcband(void)
+{
+    static const struct { uint16_t room; int32_t x, z; } r[] = {
+        {0x10D0, -21500, -3300}, {0x1050, -1800, -1800}, {0x1090, -25000, 2000}, {0x10B1, -1000, -1000},
+        {0x1170, -17000, -5000}, {0x11B0, -22604, 14455}, {0x4001, -4000, -3000}, {0x4031, 0, 0},
+        {0x6030, -21000, -24000}, {0x6031, -21000, -24000} };
+    for (unsigned i = 0; i < sizeof r / sizeof r[0]; i++) {
+        int n_npc, n_abw, n_lauf;
+        npcband_raum(r[i].room, r[i].x, r[i].z, 600, &n_npc, &n_abw, &n_lauf);
+        printf("  ROOM%04X: %d NPC, %d NPC-Bilder mit +0x82 != band_from_y(y), davon %d mit Bewegung\n", r[i].room, n_npc, n_abw, n_lauf);
+        if (r[i].room == 0x10D0 || r[i].room == 0x1050)
+            PRUEF(n_lauf == 0, "ROOM%04X: kein laufender NPC mit abweichendem Band -> die +0x82-Klemme wirkt hier identisch zur alten y-Klemme", r[i].room);
+    }
+}
 /* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
@@ -803,6 +852,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "anker")  || !strcmp(teil, "alle")) teil_anker();
     if (!strcmp(teil, "takt")   || !strcmp(teil, "alle")) teil_takt();
     if (!strcmp(teil, "griff")  || !strcmp(teil, "alle")) teil_griff();
+    if (!strcmp(teil, "npcband")|| !strcmp(teil, "alle")) teil_npcband();
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

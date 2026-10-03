@@ -654,3 +654,27 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
   (z bis -13711) und endet in einem Sprung nach (-5381,-10551) bei Bild 0x25 -> Endlage weicht ~1900 ab
   (OFFEN, Messweg unten). Riegel `griff` prueft Pin-Bild, Stehen beim Zupacken, Bild der ersten
   Platzierung (+-1) und 0 HP; alle 15 r35-Riegel + unit_member/unit_maggot_ai gruen.
+
+### M4 — NPC-Wandklemme auf +0x82: spielweit gezaehlt und in 10D0/1050 gemessen
+- Ursache des Mangels: re15_npc_wall_clamp ist der Wurzel-Schwanz ALLER NPCs (0x40/42/45/47/49/4b/4d,
+  Dispatch enemy_ai_common.c ~14680); die Umstellung (Band = +0x82, FUN_8003b0a4 `lbu v1,130(a3)`
+  @0x8003b228-3c) war nur in ROOM11C0 gemessen und stand nicht unter OFFEN.
+- Mechanik-Beleg: die alte Klemme re15_collision_constrain_enemy(..., y, 4) ruft dieselbe
+  constrain_contact_band mit band_from_y(y) (re15_collision.c:797/809). Ist +0x82 == band_from_y(y), sind
+  alte und neue Klemme identisch.
+- **Zensus aller RDTs** (`jnb1/npcband_census.py`, scd_dump_room.py): 101 NPC-Sce_em_set; **94** mit
+  pc[4] (= +0x82-Seed @0x800421c8-d0) == band_from_y(y). Abweichend 7: 1090 Ada 0x42 (+0x82 1, geparkt
+  (-30000,-30000), das Skript setzt spaeter y = -1800 @0x02558 -> wieder gleich), 10B1 0x49 (+0x82 5,
+  geparkt, Skript setzt +0x82 = 0 @0x017DA/@0x018C2 vor dem Lauf), 11C0 Ada Kampf-Layout (+0x82 0, y
+  -20000), 4001 0x49/0x4b (+0x82 0, y -3500 -> band_from_y 1), 6030/6031 Irons 0x40 (+0x82 1, y -920 -> 0).
+  Member_set y/+0x82 auf NPC-Slots: 8 (1090, 10B1 x2, 11C0 x4, 4031).
+- **Dynamisch (Riegel `npcband`, neu, je Raum 600 Bilder ab Raumaufbau):** 10D0 1 NPC / 0 Bilder mit
+  abweichendem Band; 1050 kein NPC-Aktor (die Ada-Ruf-Szene der Runde 34 spawnt keinen NPC, nur
+  Plc_*-Opcodes fuer Leon); 1090 0; 10B1 1 NPC, 600 abweichende Bilder, aber **keine Bewegung** (geparkt);
+  1170 0; 11B0 3 NPC / 0; 4001 2 NPC / 46 abweichende Bilder, keine Bewegung; 4031 / 6030 / 6031 je 1 NPC / 0.
+  **In keinem Raum laeuft ein NPC mit abweichendem Band** — die Umstellung aendert dort nichts Sichtbares.
+  Wo sie wirkt (11C0 sub07, 4001 und 6030/6031 falls die NPCs dort laufen), ist sie byte-true, weil das
+  Original dieselbe +0x82-Klemme faehrt (@0x8011cc58-68 -> 0x8003b0a4).
+- Riegel `npcband` pinnt 10D0 und 1050 (0 laufende NPC mit abweichendem Band); die uebrigen Raeume werden
+  gedruckt. Szenen, die erst ueber Flags laufen (Marvin-Gang 10D0, Irons 6030), deckt der Raumaufbau nicht
+  ab -> OFFEN (Messweg: Szenen-Trigger im Harness, gleiche Zaehlung).
