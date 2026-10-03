@@ -70,6 +70,13 @@ int  re15_werfer_paar(uint8_t id_a, uint8_t id_b, uint8_t *result, uint8_t *pic)
  * geloescht (sonst MIXITEM-Bild `pic` in die Zelle). */
 void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic);
 
+/* Waffenrahmen des Leon-Granatwerfers PL00W0F (11-Clip-Bank): dreht die Knochenmatrix `rot`
+ * (Q12, zeilenweise) um die 35,62 Grad, um die das Netz im Knochenrahmen gedreht modelliert ist
+ * (MD1 @0x50A8, Punkte @0x518C-0x522C; sin 2386 / cos 3330), und liefert den Muendungsversatz
+ * {-204,1717,3} im Netzrahmen. Rueckgabe 1 = angewendet, 0 = Netz liegt schon auf +y (alle
+ * anderen Baenke). Belege: werfer_r35.c, Dossier §4.1 G1. */
+int  re15_werfer_rahmen(int id, int clip_n, int32_t rot[9], int16_t ofs[4]);
+
 /* Diagnose (Sonden): Zahl der RE2-Spawns seit reset, letzter Rueckstoss-Spawn-Bildzaehler. */
 unsigned re15_werfer_spawns(void);
 

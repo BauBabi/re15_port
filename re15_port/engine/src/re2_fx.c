@@ -1109,6 +1109,33 @@ static void op_dispatch_plus_art(int k)
     op_rufen((unsigned)((int)b[k] + (int)(int8_t)b[0x1B]));
 }
 
+/* Wand-/Bodentest der Werfer-Geschosse (Ops 15/24/70) = FUN_8004fba0-Abbild + PORT-ZUORDNUNG
+ * "Zelle des Schuetzen-Bandes = Wand in jeder Hoehe" (Runde 35 Spur B, Dossier §4.1 G2 / §3.8).
+ * BEFUND: das Abbild der Runde 34 gibt einer RE1.5-SCA-Zelle die Hoehe EINES Bandes (oben =
+ * -1800*(b+1), s. re2fx_boden) und laeuft nur die Baender 7..0. RE2-Formen tragen ihre Oberkante
+ * selbst (`-1800 * ((+10 >> 6) & 0x1f)` @0x8004fe08-30) — eine RE2-Wand ist mehrere Baender hoch,
+ * RE1.5-Zellen tragen KEINE Hoehe (12-Byte-Satz: Breite, Tiefe, x, z, Typ, u0, u1, Band). Gemessen:
+ * Rakete (Muendung 2575 ueber dem Boden) und Flammenstrahl (1951) fliegen in ROOM1000 zwoelf Bilder
+ * lang UEBER einer Zelle des Spieler-Bandes (`kontakt=0 fuss=3`), bis `slti 32001` @0x8001f724 sie
+ * ohne Explosion loescht; in ROOM1060 (Spieler-y -14400 = Band 8) bekommt auch die GL-Runde keinen
+ * Kontakt. Die RE1.5-Kollision selbst kennt nur "Zelle des eigenen Bandes sperrt" (FUN_8001c6e8
+ * `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0) — ohne Hoehe. Deshalb: liegt das Geschoss UEBER
+ * der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band = -y/1800, Spieler-y := -1800 * +0x82
+ * @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt jede Zelle dieses Bandes an
+ * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild. Moebel-Zellen
+ * sperren damit wie Waende (Hoehe steht nicht in den Daten; OFFEN im Dossier). */
+static int32_t werfer_boden(const int32_t P[3], int r, uint32_t mask, int a3, int *kontakt)
+{
+    int32_t f = re2fx_boden(P, r, mask, a3, kontakt);
+    if (re2fx_boden_hook || !g_room_rdt_ok || (*kontakt & 1)) return f;
+    if (P[1] >= s_boden_basis) return f;               /* auf/unter der Standhoehe: Grundregel des Abbilds */
+    const int bs = (int)((900 - s_boden_basis) / 1800);   /* Band des Schuetzen */
+    if (bs < 0 || bs > 15) return f;
+    if (bs <= 7 && P[1] > -1800 * (bs + 1)) return f;  /* innerhalb der Bandhoehe hat das Abbild entschieden */
+    if (zelle_im_band(P[0], P[2], bs, -r, 0x100u)) *kontakt |= 1;
+    return f;
+}
+
 /* Wand-Rueckprall @0x8001ef90-0x8001f0d0 (Op 15) = @0x8001f874-0x8001f9c0 (Op 24), Delay-Slot-
  * genau: vel -= acc; lokal -= vel; vel -= acc; lokal -= vel/3 (0x55555556-Idiom + Vorzeichen =
  * C-Division mit Abschneiden); dann FUN_8001d894 (Weltlage). */
@@ -1198,7 +1225,7 @@ static void op_15(void)
     b[0x0B] = (uint8_t)(b[0x0B] - 1);                  /* Lebensdauer-- @0x8001ee64-70 */
     int32_t P[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };
     int kontakt = 0;
-    int32_t f = re2fx_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8001eea0 */
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8001eea0 */
     b = cur();
     wr32(b, 0x14, (uint32_t)(f - 10));                 /* `addiu v0,v0,-10 / sw v0,20(v1)` @0x8001eeac-bc */
     const uint32_t hc = 0x30009u + (uint32_t)(int32_t)(int8_t)b[0x1B];   /* `ori s2,s2,0x9` + `lb a3,27 / addu` @0x8001ee90-dc */
@@ -1240,7 +1267,7 @@ static void op_24(void)
         return;
     }
     int kontakt = 0;
-    int32_t f = re2fx_boden(P, 2, 8192u, 0, &kontakt); /* @0x8001f808-14 */
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* @0x8001f808-14 */
     b = cur();
     P[1] = f;                                          /* `sw v0,20(sp)` @0x8001f830 */
     wr32(b, 0x14, (uint32_t)(f - 10));                 /* `addiu v0,v0,-10 / sw v0,20(v1)` @0x8001f838-40 */
@@ -1345,7 +1372,7 @@ static void op_70(void)
         s0 = 2;                                        /* @0x80023428 */
     }
     int kontakt = 0;
-    int32_t f = re2fx_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8002343c */
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8002343c */
     b = cur();
     if (f < P[1]) s0 = 1;                              /* `slt v0,v0,v1 / beq ... / addiu s0,zero,1` @0x8002344c-58 */
     if (kontakt) {                                     /* DAT_800DCBC8 @0x80023460-68 */

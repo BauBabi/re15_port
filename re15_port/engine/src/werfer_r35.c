@@ -60,10 +60,47 @@ static unsigned s_spawns = 0;
 static int      s_last_frame = -1, s_last_w = -1;
 static uint16_t s_fuel_takt = 0;                   /* DAT_800d5c1c (RE2) */
 
-static int mtx_bauen(void)
+/* ---- Waffenrahmen des Leon-Granatwerfers PL00W0F (PORT-ZUORDNUNG, Dossier §4.1 G1 / §3.7) ----
+ * Die RE2-Handler rechnen im Rahmen der Knochenmatrix mit "+y = Lauf, +x = oben" (Versatz
+ * {120,1200,0}, Geschwindigkeit der Runde (vx,vy,vz) mit vy = Vortrieb; FUN_8001d894 Status 0x400
+ * @0x8001d960: Welt = t + M * (Versatz + lokal)). Das gilt fuer RE2 PL01W09 (Rumpf x 64..205,
+ * Muendungsring (64,960,+-70) @0x194 der MD1), Elza PL04W0F (Ring (61..202,1153,+-70)), den
+ * Flammenwerfer PL00W0E (= RE2 PL00W10 punktgleich) und den Raketenwerfer PL00W12 — NICHT fuer
+ * Leons PL00W0F.PLW: dessen Netz (dir[2] MD1 @0x50A8) ist im Knochenrahmen um 35,62 Grad von +y
+ * nach +x gedreht modelliert:
+ *   Muendungsring (654,1343,-41) @0x518C, (758,1278,-41) @0x519C, (654,1343,48) @0x51AC,
+ *                 (758,1278,48) @0x51BC                      -> Mitte (706, 1310.5, 3.5)
+ *   Laufring      (326,886,62) @0x51C4, (326,886,-58) @0x51CC, (429,818,71) @0x5224,
+ *                 (429,818,-65) @0x522C                      -> Mitte (377.5, 852, 2.5)
+ *   Achse = (328.5, 458.5) / 564.0 -> sin 2386, cos 3330 (Q12).
+ * Gemessen vorher: Laufachse des Knochens (3478,2079,-417)/4096 = 30,5 Grad ABWAERTS, die gerade
+ * Runde faellt 304 je 509 Vortrieb. Rahmen des Netzes: x' = (cos,-sin,0), y' = (sin,cos,0):
+ *   M' = M * [x' y' z]  (Spalte 0' = cos*Sp0 - sin*Sp1, Spalte 1' = sin*Sp0 + cos*Sp1).
+ * Versatz im Netzrahmen = Ringmitte (x' -189.4, y' 1476.7, z 3.5) plus der RE2-Abstand zum
+ * EIGENEN Ring: RE2 {120,1200,0} gegen Rumpfmitte 134.5 / Ring 960 = (-14.5, +240, 0)
+ *   -> {-204, 1717, 3}.
+ * Greift nur fuer die 11-Clip-Bank (Leon; dasselbe Kriterium wie re15_werfer_clip_remap). */
+#define W0F_SIN 2386
+#define W0F_COS 3330
+static int s_bank_clips = 0;                       /* Clip-Zahl der gefuehrten Bank (aim_clip_wirksam) */
+
+int re15_werfer_rahmen(int id, int clip_n, int32_t rot[9], int16_t ofs[4])
+{
+    if (!(id >= 15 && id <= 17) || clip_n != 11) return 0;
+    for (int z = 0; z < 3; z++) {
+        const int32_t x = rot[z * 3 + 0], y = rot[z * 3 + 1];
+        rot[z * 3 + 0] = (int32_t)(((int64_t)W0F_COS * x - (int64_t)W0F_SIN * y) >> 12);
+        rot[z * 3 + 1] = (int32_t)(((int64_t)W0F_SIN * x + (int64_t)W0F_COS * y) >> 12);
+    }
+    if (ofs) { ofs[0] = -204; ofs[1] = 1717; ofs[2] = 3; ofs[3] = 0; }
+    return 1;
+}
+
+static int mtx_bauen_ofs(int16_t ofs[4])
 {
     int32_t r[9], t[3];
     if (!re15_player_gunbone_matrix(r, t)) return 0;
+    (void)re15_werfer_rahmen(re15_player_equipped_weapon(), s_bank_clips, r, ofs);
     for (int k = 0; k < 9; k++) {
         int32_t v = r[k];
         if (v > 32767) v = 32767; else if (v < -32768) v = -32768;
@@ -73,6 +110,7 @@ static int mtx_bauen(void)
     wr32(s_mtx, 20, (uint32_t)t[0]); wr32(s_mtx, 24, (uint32_t)t[1]); wr32(s_mtx, 28, (uint32_t)t[2]);
     return 1;
 }
+static int mtx_bauen(void) { return mtx_bauen_ofs(NULL); }
 
 static int spawn(uint32_t a0, int16_t a1, const int16_t ofs[4])
 {
@@ -129,7 +167,10 @@ void re15_werfer_tick(void)
     if (f == s_last_frame && w == s_last_w) return; /* der Handler laeuft je Bild genau einmal */
     s_last_frame = f; s_last_w = w;
     if (f != 1) return;                             /* `lbu v1,333(s0) / addiu v0,zero,1 / bne` */
-    if (!mtx_bauen()) return;
+    /* GL: Versatz {120,1200,0} (`addiu v0,zero,120 / 1200` @0x80044bc4-d4 bzw. @0x80044f7c-8c);
+     * Leons PL00W0F: Netzrahmen + Versatz aus re15_werfer_rahmen (oben). */
+    int16_t OG[4] = { 120, 1200, 0, 0 };
+    if (!mtx_bauen_ofs(w == 18 ? NULL : OG)) return;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     const int16_t gier = (int16_t)pl->rot_y;        /* RE2 `lh a1,118(s1)` = Spieler +0x76 */
     /* Bezugsebene des RE2-Bodentests (FUN_8004fba0: Grundebene y 0) = Standhoehe des Werfers —
@@ -147,9 +188,7 @@ void re15_werfer_tick(void)
         spawn(0x030A1500u, 0, OR);
         return;
     }
-    /* GL: Versatz {120,1200,0} (`addiu v0,zero,120 / 1200` @0x80044bc4-d4 bzw. @0x80044f7c-8c),
-     * Muendung 0x01002000 a1 = 0 (@0x80044ba8-e4 / @0x80044f68-98). */
-    static const int16_t OG[4] = { 120, 1200, 0, 0 };
+    /* GL: Muendung 0x01002000 a1 = 0 (@0x80044ba8-e4 / @0x80044f68-98). */
     spawn(0x01002000u, 0, OG);
     if (w == 15) {
         /* Explosiv 0x80044B44: 5 x 0x020C0A00 (Bank 2 Skr 4, CLUT-Zeile 1, Skala 0x0A00), a1 = Gier
@@ -295,5 +334,6 @@ void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic)
 /* Fuer player_common.c (aim_clip_wirksam): Clip der gefuehrten Waffe gegen die Bank-Clipzahl. */
 int re15_player_werfer_clip(int clip, int clip_n)
 {
+    s_bank_clips = clip_n;                          /* fuer re15_werfer_rahmen (PL00W0F = 11 Clips) */
     return re15_werfer_clip_remap(re15_player_equipped_weapon(), clip_n, clip);
 }
