@@ -86,6 +86,15 @@ int  re15_werfer_rahmen(int id, int clip_n, int32_t rot[9], int16_t ofs[4]);
 /* Diagnose (Sonden): Zahl der RE2-Spawns seit reset, letzter Rueckstoss-Spawn-Bildzaehler. */
 unsigned re15_werfer_spawns(void);
 
+/* Nachbesserung 2 (Abnahme 1 N1, Dossier §9): Wandtest der Werfer-Geschosse.
+ * re15_werfer_zelle_strecke: beruehrt die Strecke (x0,z0)-(x1,z1) die solide FLAECHE der Zelle (Typ 1..9 nach dem
+ *   Verteiler 0x800b2858, @0x8003af04-84)? Punkt = Strecke der Laenge 0.
+ * re15_werfer_band_strecke: dieselbe Frage gegen alle soliden Zellen des Bandes (u0 Bit 0, floor >> 4, u1 Bit 1 frei),
+ *   je Quadrantenliste (FUN_8003b068); 1 = gesperrt. */
+#include "re15_rdt.h"
+int re15_werfer_zelle_strecke(const re15_sca_entry_t *e, int32_t x0, int32_t z0, int32_t x1, int32_t z1);
+int re15_werfer_band_strecke(const re15_rdt_t *rdt, int32_t x0, int32_t z0, int32_t x1, int32_t z1, int band);
+
 /* Plattform (audio_pc.c; Test-Stub in tests/test_support.c): Satz `satz` der RE2-ARMS-Bank
  * shared_assets/RE2/SOUND/ARMS<id>.EDH/.VB (RE2 Bank 1 = ARMS der Waffe, FUN_80059c74). */
 void re15_audio_re2_arms_se(int arms_id, int satz);

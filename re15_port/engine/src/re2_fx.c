@@ -29,6 +29,7 @@
 #include "re15_collision.h"   /* room_coll (FUN_8001c6e8), box_blocked (FUN_8003b558), prop_box_hit */
 #include "re15_aot.h"         /* re15_aot_water_at = FUN_800527b4-Zwilling; re15_esp_fx_culled */
 #include "re15_math.h"        /* re15_gte_divide - RTPS-Kehrwert wie pc_draw_effects */
+#include "re15_werfer.h"      /* Runde 35 Spur B: Formtest/Strecke der Werfer-Geschosse (werfer_r35.c) */
 
 int  (*re2fx_applier)(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode) = NULL;
 void (*re2fx_se_hook)(uint32_t code, const int32_t pos[3]) = NULL;
@@ -434,7 +435,11 @@ static void op_2(void)
  * `jal 0x8003b068` @0x8001c770; `and v0,v0,a3(0x80000000)` / `srl v1,v1,1` / `or` / `srl v0,v0,30`
  * @0x8003b084-a0), Zellen der Quadrantengruppe (@0x8001c778-794, Port: sca_rgn wie re15_collision_room_coll),
  * Filter `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0 und `lh v0,6(a1) / and v0,v0,fp / beq`
- * @0x8001c8a8-b4, Rechteck `addu v0,v0,s6 / subu v1,v1,v0 / subu a0,a0,a3 / sltu` @0x8001c8bc-fc. */
+ * @0x8001c8a8-b4, Rechteck `addu v0,v0,s6 / subu v1,v1,v0 / subu a0,a0,a3 / sltu` @0x8001c8bc-fc.
+ * Runde 35 Spur B, Nachbesserung 2 (Dossier B_werfer.md §9): fuer die Werfer-Geschosse (werfer_boden setzt
+ * s_r35_formtest) folgt dem Rechteck-Vortest (RE2 @0x8004fd88-b8) die FORM der Zelle wie in RE2 (`jr` ueber
+ * Tabelle 0x80011104 @0x8004fe34-54) — Flaechen der RE1.5-Typen 1..9 (0x800b2858, @0x8003af04-84). */
+static int s_r35_formtest;
 static int zelle_im_band(int32_t x, int32_t z, int b, int32_t r15, uint32_t maske)
 {
     const re15_rdt_t *rdt = &g_room_rdt;
@@ -455,6 +460,7 @@ static int zelle_im_band(int32_t x, int32_t z, int b, int32_t r15, uint32_t mask
         if (((uint32_t)(int32_t)(int16_t)w08 & maske) == 0) continue;
         if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
         if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
+        if (s_r35_formtest && !re15_werfer_zelle_strecke(e, x, z, x, z)) continue;   /* Runde 35 Spur B: Form */
         return 1;
     }
     return 0;
@@ -1110,68 +1116,61 @@ static void op_dispatch_plus_art(int k)
 }
 
 /* Wand-/Bodentest der Werfer-Geschosse (Ops 15/24/70) = FUN_8004fba0-Abbild + PORT-ZUORDNUNG
- * "Zelle des Schuetzen-Bandes = Wand in jeder Hoehe" (Runde 35 Spur B, Dossier §4.1 G2 / §3.8).
- * BEFUND: das Abbild der Runde 34 gibt einer RE1.5-SCA-Zelle die Hoehe EINES Bandes (oben =
+ * "Zelle des Schuetzen-Bandes = Wand in jeder Hoehe" (Runde 35 Spur B, Dossier §4.1 G2 / §3.8 / §8.1 / §9).
+ * BEFUND (G2): das Abbild der Runde 34 gibt einer RE1.5-SCA-Zelle die Hoehe EINES Bandes (oben =
  * -1800*(b+1), s. re2fx_boden) und laeuft nur die Baender 7..0. RE2-Formen tragen ihre Oberkante
  * selbst (`-1800 * ((+10 >> 6) & 0x1f)` @0x8004fe08-30) — eine RE2-Wand ist mehrere Baender hoch,
- * RE1.5-Zellen tragen KEINE Hoehe (12-Byte-Satz: Breite, Tiefe, x, z, Typ, u0, u1, Band). Gemessen:
- * Rakete (Muendung 2575 ueber dem Boden) und Flammenstrahl (1951) fliegen in ROOM1000 zwoelf Bilder
- * lang UEBER einer Zelle des Spieler-Bandes (`kontakt=0 fuss=3`), bis `slti 32001` @0x8001f724 sie
- * ohne Explosion loescht; in ROOM1060 (Spieler-y -14400 = Band 8) bekommt auch die GL-Runde keinen
- * Kontakt. Die RE1.5-Kollision selbst kennt nur "Zelle des eigenen Bandes sperrt" (FUN_8001c6e8
- * `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0) — ohne Hoehe. Deshalb: liegt das Geschoss UEBER
- * der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band = -y/1800, Spieler-y := -1800 * +0x82
- * @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt jede Zelle dieses Bandes an
- * (x,z) — gleiche Zellklasse (Maske 0x100) und gleicher Rand (-r) wie das Abbild: Rechteck-Zellen
- * (Typ 1) und Kreis-Zellen (Typ 3).
- * ⛔ BERICHTIGT (Nachbesserung 1, Dossier §8.1): hier stand "Typ != 1 = Treppen-/Rampenzellen,
- * begehbar". Falsch: Typ 1..9 sind FORMEN (Verteiler 0x800b2858, gefuellt @0x8003af04-84; Port
- * re15_collision.c Dispatch push_rect/push_circle/push_diag*), in ROOM1000/1060/1140 kommen nur
- * Typ 1 und Typ 3 (Kreis, FUN_8003d6a8) vor, alle mit Wort+10 = 0x?3 (Klassen-Nibble 3). Der Kreis
- * hat Mitte (x + w/2, z + w/2), Radius w/2 (FUN_8003d6a8; push_circle `cr = width >> 1`), gesperrt
- * wie dort bei pen = (cr + r) - dist >= 1 (dist = SquareRoot0, @0x8003d724 `jal 0x80065f60`).
- * Die Formen 2/4..9 (Raute/Dreiecke/Kapseln) prueft Spur A (granate_r35.c, formgenau) — bei der
- * Zusammenfuehrung EINEN Formtest fuer Handgranate und Werfer nehmen (Dossier OFFEN 9).
- * HOEHE: Moebel-Zellen sperren wie Waende in jeder Hoehe — dieselbe Regel wie die Handgranate
- * (Spur A): RE1.5-Zellen tragen keine Hoehe, und die RE1.5-SCHUSSLINIE selbst sperrt an ihnen ohne
- * Hoehe: Resolver FUN_80011f50 `jal 0x8001b9b4` / `bne v0,zero,0x80012540` @0x80012168-70 ->
- * FUN_8003dcc4(.,.,0xf00,0x300) @0x8001ba1c-24, Band `lbu v1,130(v1)` / `sra v0,v0,28` / `bne`
- * @0x8003de5c-6c, Klasse `and v1,t5,a0` / `bne` @0x8003de7c-94, nur x/z (Dossier §8.1). */
-static int wandzelle_im_band(int32_t x, int32_t z, int b, int32_t r15)
+ * RE1.5-Zellen tragen KEINE Hoehe (12-Byte-Satz: Breite, Tiefe, x, z, Typ, u0, u1, Band). Die RE1.5-
+ * Kollision selbst kennt nur "Zelle des eigenen Bandes sperrt" (FUN_8001c6e8 `andi v0,v0,0xf002 / bne
+ * s3,v0` @0x8001c89c-a0) — ohne Hoehe. HOEHE: Moebel-Zellen sperren wie Waende in jeder Hoehe — dieselbe
+ * Regel wie die Handgranate (Spur A); die RE1.5-SCHUSSLINIE selbst sperrt an ihnen ohne Hoehe: Resolver
+ * FUN_80011f50 `jal 0x8001b9b4` / `bne v0,zero,0x80012540` @0x80012168-70 -> FUN_8003dcc4(.,.,0xf00,0x300)
+ * @0x8001ba1c-24, Band `lbu v1,130(v1)` / `sra v0,v0,28` / `bne` @0x8003de5c-6c, nur x/z (Dossier §8.1).
+ * Deshalb: liegt das Geschoss UEBER der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band =
+ * -y/1800, Spieler-y := -1800 * +0x82 @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt
+ * jede solide Zelle dieses Bandes, die die Flugstrecke dieses Bildes beruehrt.
+ * ⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 N1, Dossier §9): bis hierher pruefte der Test ueber der
+ * Bandhoehe nur Typ 1 (Rechteck) und Typ 3 (Kreis) und nur den PUNKT des Bildes; Rakete, GL-Runden und
+ * Flammenstrahl flogen deshalb durch die Formen 2/4..9 (ROOM10E0 Zelle 21 Typ 5: drei Flugbilder im festen
+ * Dreieck, gemessen §9.1) und konnten duenne Zellen ueberspringen (Schritt 767 > Sehne 552, §8.1). Jetzt:
+ *   - FORM aller Typen 1..9 (re15_werfer_zelle_strecke, Verteiler 0x800b2858 @0x8003af04-84), auch im
+ *     Zellentest des Abbilds selbst (s_r35_formtest: RE2 testet nach dem Rechteck-Vortest die Form, `jr`
+ *     ueber Tabelle 0x80011104 @0x8004fe34-54 — vorher meldete der Vortest Kontakt im LEEREN Teil des
+ *     Rechtecks einer Diagonalzelle);
+ *   - STRECKE vorige Weltlage -> Lage: die Weltlage (FUN_8001d894) kopiert die alte Lage nach +0x3C/+0x3E/
+ *     +0x40, bevor sie die neue rechnet (`lw v1,52(a2)` / `sw v1,60(a2)` @0x8001d954/64, `lhu a0,56(a2)` /
+ *     `sh a0,64(a2)` @0x8001d95c/6c), und Op B laeuft danach (@0x8001d6c8 / @0x8001d6d0-fc). Im ersten Bild
+ *     (lokal +0x24/+0x26/+0x28 = 0: die Physik @0x8001d70c-798 lief noch nicht) gibt es keine vorige Lage;
+ *   - PORT-WAHL (wie Spur A "Wurfbild: Werfer -> Hand", Nutzer "nicht durch die Wand"): beim ERSTEN Test eines
+ *     Geschoss-Platzes zusaetzlich die Strecke Schuetze -> Muendung (re2fx_r35_schuetze vom Spawn), sofern
+ *     der Schuetze selbst frei steht. RE2 testet nur den Punkt je Bild. */
+static struct { int32_t x, z; uint8_t gueltig; } s_r35_schuetze[RE2FX_PLAETZE];
+void re2fx_r35_schuetze(int platz, int32_t x, int32_t z)
 {
-    const re15_rdt_t *rdt = &g_room_rdt;
-    if (!rdt->sca || rdt->sca_count <= 0) return 0;
-    const int32_t rr = (int32_t)(int16_t)r15;
-    for (int i = 0; i < rdt->sca_count; i++) {
-        const re15_sca_entry_t *e = &rdt->sca[i];
-        const unsigned typ = (unsigned)e->type & 0x0fu;
-        if (typ != 1u && typ != 3u) continue;                          /* Rechteck / Kreis */
-        if (!((unsigned)e->u0 & 1u)) continue;                         /* solide = Maske 0x100 des Wortes Typ|u0<<8 */
-        if ((((unsigned)e->floor >> 4) & 0x0fu) != (unsigned)b) continue;   /* Band (Wort u1|floor<<8, Bits 12..15) */
-        if ((unsigned)e->u1 & 2u) continue;                            /* `andi 0xf002`: Bit 1 muss 0 sein */
-        if (typ == 3u) {                                               /* Kreis FUN_8003d6a8 */
-            const int32_t cr = (int32_t)e->width >> 1;
-            const int32_t dx = x - ((int32_t)e->x + cr), dz = z - ((int32_t)e->z + cr);
-            const int32_t dist = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
-            if ((cr - rr) - dist >= 1) return 1;                       /* pen = (cr + r) - dist >= 1, r = -rr */
-            continue;
-        }
-        if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
-        if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
-        return 1;
-    }
-    return 0;
+    if (platz < 0 || platz >= RE2FX_PLAETZE) return;
+    s_r35_schuetze[platz].x = x; s_r35_schuetze[platz].z = z; s_r35_schuetze[platz].gueltig = 1;
 }
 
 static int32_t werfer_boden(const int32_t P[3], int r, uint32_t mask, int a3, int *kontakt)
 {
+    s_r35_formtest = 1;                                /* Formtest im Zellentest des Abbilds (s.o.) */
     int32_t f = re2fx_boden(P, r, mask, a3, kontakt);
+    s_r35_formtest = 0;
+    const int erst = s_r35_schuetze[s_cur].gueltig;    /* erster Test dieses Geschosses */
+    s_r35_schuetze[s_cur].gueltig = 0;
     if (re2fx_boden_hook || !g_room_rdt_ok || (*kontakt & 1)) return f;
     if (P[1] >= s_boden_basis) return f;               /* auf/unter der Standhoehe: Grundregel des Abbilds */
     const int bs = (int)((900 - s_boden_basis) / 1800);   /* Band des Schuetzen */
     if (bs < 0 || bs > 15) return f;
-    if (bs <= 7 && P[1] > -1800 * (bs + 1)) return f;  /* innerhalb der Bandhoehe hat das Abbild entschieden */
-    if (wandzelle_im_band(P[0], P[2], bs, -r)) *kontakt |= 1;
+    const uint8_t *b = cur();
+    int32_t ax = P[0], az = P[2];                      /* Strecken-Anfang: im ersten Bild der Punkt selbst */
+    if (rd16(b, 0x24) | rd16(b, 0x26) | rd16(b, 0x28)) { ax = rds16(b, 0x3C); az = rds16(b, 0x40); }
+    if (erst) {
+        const int32_t sx = s_r35_schuetze[s_cur].x, sz = s_r35_schuetze[s_cur].z;
+        if (!re15_werfer_band_strecke(&g_room_rdt, sx, sz, sx, sz, bs) &&
+            re15_werfer_band_strecke(&g_room_rdt, sx, sz, ax, az, bs)) { *kontakt |= 1; return f; }
+    }
+    if (re15_werfer_band_strecke(&g_room_rdt, ax, az, P[0], P[2], bs)) *kontakt |= 1;
     return f;
 }
 

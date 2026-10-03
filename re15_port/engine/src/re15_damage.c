@@ -2662,7 +2662,11 @@ retry_after_latch:
      * (@0x80118b1c-28 leap crash, @0x80118eb8-c4 finisher crash, @0x8011a890-98 pin abort).
      * (audit wf_827f186d maggot #7) */
     g_actors[best].hit_react = (uint8_t)(g_actors[best].hit_react & 0x1);   /* +0x93 &= 1 (line 145) */
-    if (weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u))
+    /* Runde 35 Spur B, Nachbesserung 2 (Abnahme 1 N2): die COLT PYTHON (20) gehoert zur Kritklasse des Super
+     * Redhawk — Teil der PORT-WAHL "zweiter Magnum-Revolver" (Dossier B_werfer.md §3.5 Punkt 1 / §9). RE1.5
+     * vergleicht hier nur 7 und 8 (`ori v0,zero,0x8` / `bne` / `ori v0,zero,0x7` @0x80012380-88, `sltiu
+     * v0,v0,0xbb8` @0x80012398, `ori v0,v0,0x40` / `sb v0,147(s1)` @0x800123b4-b8); 20 ist dort unfertig. */
+    if (weapon_id == 7 || weapon_id == 20 || (weapon_id == 8 && best_dist < 3000u))
         g_actors[best].hit_react |= 0x40;
     if (g_actors[best].hit_react & 0x1) {            /* hit earlier in THIS attack window */
         g_actors[best].hit_react |= 0x2;             /* +0x93 |= 2 (@0x8001240c) */
@@ -2736,8 +2740,11 @@ retry_after_latch:
         if (((((int32_t)e->rot_y - (int32_t)pl2->rot_y) + 0x400) & 0xfff) < 0x800)
             e->hit_react |= 0x80;
     }
-    /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
-    if ((weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u)) && e->type < 0x20)
+    /* crit/headshot (@0x800124fc-0x8001251c): the instant kill (type<0x20) hangs on the BIT, not on the weapon id —
+     * `andi v0,v0,0x40` / `beq v0,zero,0x80012520` @0x800124fc-500, `lbu v0,8(s1)` / `sltiu v0,v0,0x20` / `beq` /
+     * `addiu v0,zero,-1` / `sh v0,154(s1)` @0x80012508-1c. Bit 0x40 was cleared (+0x93 &= 1) and set for the crit
+     * class just above (w7, w8 < 3000, Runde 35: w20) — so this is the same class, read like the original. */
+    if ((e->hit_react & 0x40) && e->type < 0x20)
         e->hp = -1;
     e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012428) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */

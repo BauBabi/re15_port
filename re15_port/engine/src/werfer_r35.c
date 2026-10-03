@@ -127,6 +127,12 @@ static int spawn(uint32_t a0, int16_t a1, const int16_t ofs[4])
                 (int)(int16_t)(s_mtx[14] | (s_mtx[15] << 8)));
     }
     if (i >= 0 && i < RE2FX_PLAETZE) s_spawns++;
+    /* Nachbesserung 2: fuer die Geschosse (Bank 2 GL-Runde/Rakete, Bank 3 Flammenstrahl 0x031D) die Schuetzenlage
+     * vormerken — der erste Wandtest des Platzes prueft auch die Strecke Schuetze -> Muendung (re2_fx.c werfer_boden). */
+    if (i >= 0 && i < RE2FX_PLAETZE && ((a0 >> 24) == 2u || (a0 >> 16) == 0x031Du)) {
+        const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        re2fx_r35_schuetze(i, pl->x, pl->z);
+    }
     return i;
 }
 
@@ -361,4 +367,174 @@ int re15_player_werfer_clip(int clip, int clip_n)
 {
     s_bank_clips = clip_n;                          /* fuer re15_werfer_rahmen (PL00W0F = 11 Clips) */
     return re15_werfer_clip_remap(re15_player_equipped_weapon(), clip_n, clip);
+}
+
+/* ==== Nachbesserung 2 (Abnahme 1, Mangel N1): Wandtest der Werfer-Geschosse FORMGENAU und als STRECKE ====
+ * Dossier analysis/befunde_runde35/B_werfer.md §9.2.
+ *   Form:    die solide Flaeche der RE1.5-Zelle je Typ — Verteiler 0x800b2858 + Typ*4, gefuellt in FUN_8003aea0
+ *            @0x8003af04-84: [1] FUN_8003bca8 Rechteck, [2] LAB_8003d00c Raute um (x + w/2, z + d/2)
+ *            (`srl a1,a1,1` / `addu v1,v1,a1` @0x8003d090-94), [3] FUN_8003d6a8 Kreis (Radius w/2), [4] LAB_8003beb0,
+ *            [5] LAB_8003c734 (LINE = d*(px-x)/w < pz-z, @0x8003c764-7e0), [6] LAB_8003cb9c, [7] LAB_8003c2cc
+ *            (Dreiecke), [8] LAB_8003d7e8 / [9] LAB_8003d930 (Kapseln). Port-Zwillinge push_rect/push_diag2/
+ *            push_circle/push_diag4..7/push_caps8/9 (re15_collision.c); Flaechentabelle = Spur A (A_granate.md N1.1,
+ *            gleiche Formen, damit Handgranate und Werfer bei der Zusammenfuehrung EINEN Formtest teilen).
+ *            RE2 testet die Form ebenso (`jr` ueber Tabelle 0x80011104 @0x8004fe34-54 in FUN_8004fba0).
+ *            PORT-WAHL: Flaeche ohne den Radius-Aufschlag a1 = 2 (@0x8001eea0) — 2 Einheiten, wie Spur A.
+ *   Strecke: getestet wird die in diesem Bild zurueckgelegte Strecke (vorige Weltlage +0x3C/+0x40 -> Lage, RE2
+ *            @0x8001d954-6c) statt nur des Punktes (RE2 FUN_8004fba0 je Bild) — ein Raketenschritt (767) ist laenger
+ *            als duenne Zellen (Abnahme OFFEN 19). Ganzzahlig (s64-Kreuzprodukte), kein Gleitkomma. */
+typedef struct { int32_t x, z; } w35_p2_t;
+
+static int64_t w35_kreuz(int64_t ax, int64_t az, int64_t bx, int64_t bz) { return ax * bz - az * bx; }
+
+/* Strecke a-b gegen ein konvexes Vieleck (Trennachsen: Kanten + die Strecke selbst); Beruehren = Treffer. */
+static int w35_vieleck(const w35_p2_t *v, int n, w35_p2_t a, w35_p2_t b)
+{
+    int64_t fl = 0;
+    for (int i = 0; i < n; i++) { const int j = (i + 1) % n; fl += w35_kreuz(v[i].x, v[i].z, v[j].x, v[j].z); }
+    if (fl == 0) return 0;                                   /* entartete Zelle (w oder d = 0) */
+    const int64_t sg = (fl > 0) ? 1 : -1;
+    for (int i = 0; i < n; i++) {
+        const int j = (i + 1) % n;
+        const int64_t ex = (int64_t)v[j].x - v[i].x, ez = (int64_t)v[j].z - v[i].z;
+        const int64_t sa = sg * w35_kreuz(ex, ez, (int64_t)a.x - v[i].x, (int64_t)a.z - v[i].z);
+        const int64_t sb = sg * w35_kreuz(ex, ez, (int64_t)b.x - v[i].x, (int64_t)b.z - v[i].z);
+        if (sa < 0 && sb < 0) return 0;                      /* beide Enden ausserhalb dieser Kante */
+    }
+    const int64_t dx = (int64_t)b.x - a.x, dz = (int64_t)b.z - a.z;
+    if (dx || dz) {
+        int pos = 0, neg = 0;
+        for (int i = 0; i < n; i++) {
+            const int64_t s = w35_kreuz(dx, dz, (int64_t)v[i].x - a.x, (int64_t)v[i].z - a.z);
+            if (s > 0) pos++; else if (s < 0) neg++;
+        }
+        if (pos == n || neg == n) return 0;                  /* Vieleck ganz auf einer Seite der Strecke */
+    }
+    return 1;
+}
+
+/* Strecke a-b gegen einen Kreis (Abstand Mitte-Strecke < r); lange Strecken halbiert (s64-Grenze). */
+static int w35_kreis(int32_t cx, int32_t cz, int32_t r, w35_p2_t a, w35_p2_t b)
+{
+    if (r <= 0) return 0;
+    const int64_t dx = (int64_t)b.x - a.x, dz = (int64_t)b.z - a.z;
+    if (dx > 4096 || dx < -4096 || dz > 4096 || dz < -4096) {
+        const w35_p2_t m = { (int32_t)(a.x + dx / 2), (int32_t)(a.z + dz / 2) };
+        return w35_kreis(cx, cz, r, a, m) || w35_kreis(cx, cz, r, m, b);
+    }
+    const int64_t fx = (int64_t)cx - a.x, fz = (int64_t)cz - a.z;
+    const int64_t l2 = dx * dx + dz * dz, r2 = (int64_t)r * r;
+    const int64_t dot = fx * dx + fz * dz;
+    if (l2 == 0 || dot <= 0) return fx * fx + fz * fz < r2;
+    if (dot >= l2) { const int64_t gx = (int64_t)cx - b.x, gz = (int64_t)cz - b.z; return gx * gx + gz * gz < r2; }
+    const int64_t kr = w35_kreuz(fx, fz, dx, dz);
+    return kr * kr < r2 * l2;
+}
+
+int re15_werfer_zelle_strecke(const re15_sca_entry_t *e, int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    const w35_p2_t a = { x0, z0 }, b = { x1, z1 };
+    const int32_t x = e->x, z = e->z, w = e->width, d = e->density;
+    const int32_t xm = x + w, zm = z + d;
+    w35_p2_t v[4];
+    switch (e->type & 0x0f) {
+    case 1:                                                  /* FUN_8003bca8 Rechteck (@0x8003af04) */
+        v[0] = (w35_p2_t){ x, z }; v[1] = (w35_p2_t){ xm, z }; v[2] = (w35_p2_t){ xm, zm }; v[3] = (w35_p2_t){ x, zm };
+        return w35_vieleck(v, 4, a, b);
+    case 2: {                                                /* LAB_8003d00c Raute (@0x8003af14, @0x8003d090-9c) */
+        const int32_t cx = x + (w >> 1), cz = z + (d >> 1);
+        v[0] = (w35_p2_t){ cx, z }; v[1] = (w35_p2_t){ xm, cz }; v[2] = (w35_p2_t){ cx, zm }; v[3] = (w35_p2_t){ x, cz };
+        return w35_vieleck(v, 4, a, b);
+    }
+    case 3:                                                  /* FUN_8003d6a8 Kreis (@0x8003af24, `srl a2,a2,1` @0x8003d6d4) */
+        return w35_kreis(x + (w >> 1), z + (w >> 1), w >> 1, a, b);
+    case 4:                                                  /* LAB_8003beb0 (@0x8003af34): rechter Winkel bei (x+w, z+d) */
+        v[0] = (w35_p2_t){ x, zm }; v[1] = (w35_p2_t){ xm, z }; v[2] = (w35_p2_t){ xm, zm };
+        return w35_vieleck(v, 3, a, b);
+    case 5:                                                  /* LAB_8003c734 (@0x8003af44): rechter Winkel bei (x, z+d) */
+        v[0] = (w35_p2_t){ x, z }; v[1] = (w35_p2_t){ xm, zm }; v[2] = (w35_p2_t){ x, zm };
+        return w35_vieleck(v, 3, a, b);
+    case 6:                                                  /* LAB_8003cb9c (@0x8003af54): rechter Winkel bei (x+w, z) */
+        v[0] = (w35_p2_t){ x, z }; v[1] = (w35_p2_t){ xm, zm }; v[2] = (w35_p2_t){ xm, z };
+        return w35_vieleck(v, 3, a, b);
+    case 7:                                                  /* LAB_8003c2cc (@0x8003af64): rechter Winkel bei (x, z) */
+        v[0] = (w35_p2_t){ x, zm }; v[1] = (w35_p2_t){ xm, z }; v[2] = (w35_p2_t){ x, z };
+        return w35_vieleck(v, 3, a, b);
+    case 8: {                                                /* LAB_8003d7e8 (@0x8003af74): Kapsel in x, Kappen-Durchmesser d */
+        const int32_t h = d >> 1, xa = x + h, xb = xm - h;
+        if (xa < xb) {
+            v[0] = (w35_p2_t){ xa, z }; v[1] = (w35_p2_t){ xb, z }; v[2] = (w35_p2_t){ xb, zm }; v[3] = (w35_p2_t){ xa, zm };
+            if (w35_vieleck(v, 4, a, b)) return 1;
+        }
+        return w35_kreis(x + h, z + h, h, a, b) || w35_kreis(xm - d + h, z + h, h, a, b);
+    }
+    case 9: {                                                /* LAB_8003d930 (@0x8003af84): Kapsel in z, Kappen-Durchmesser w */
+        const int32_t h = w >> 1, za = z + h, zb = zm - h;
+        if (za < zb) {
+            v[0] = (w35_p2_t){ x, za }; v[1] = (w35_p2_t){ xm, za }; v[2] = (w35_p2_t){ xm, zb }; v[3] = (w35_p2_t){ x, zb };
+            if (w35_vieleck(v, 4, a, b)) return 1;
+        }
+        return w35_kreis(x + h, z + h, h, a, b) || w35_kreis(x + h, zm - w + h, h, a, b);
+    }
+    default:
+        return 0;                                            /* der Verteiler 0x800b2858 kennt nur 1..9 */
+    }
+}
+
+/* FUN_8003b068 — Quadrant aus dem Vorzeichen (Lage - Deckenpunkt), wie re2_fx.c zelle_im_band. */
+static int w35_quadrant(const re15_rdt_t *rdt, int32_t x, int32_t z)
+{
+    const unsigned zb = (unsigned)(z - (int32_t)(int16_t)rdt->ceiling_z) & 0x80000000u;
+    const unsigned xb = (unsigned)(x - (int32_t)(int16_t)rdt->ceiling_x) & 0x80000000u;
+    return (int)((zb | (xb >> 1)) >> 30);
+}
+
+/* Zellen der Quadrantenliste q, die das Werfer-Geschoss sperren: solide (u0 Bit 0 = Maske 0x100 des Wortes
+ * Typ|u0<<8, @0x800177d0), Band = floor >> 4 (Wort u1|floor<<8 Bits 12..15), u1 Bit 1 frei (`andi 0xf002`
+ * @0x8001c89c-a0) — dieselben Filter wie der Zellentest des Abbilds (re2_fx.c zelle_im_band). */
+static int w35_liste(const re15_rdt_t *rdt, int q, w35_p2_t a, w35_p2_t b, int band)
+{
+    int start = 0;
+    for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        if (!((unsigned)e->u0 & 1u)) continue;
+        if ((((unsigned)e->floor >> 4) & 0x0fu) != (unsigned)band) continue;
+        if ((unsigned)e->u1 & 2u) continue;
+        if (re15_werfer_zelle_strecke(e, a.x, a.z, b.x, b.z)) return 1;
+    }
+    return 0;
+}
+
+static w35_p2_t w35_punkt_bei(w35_p2_t a, w35_p2_t b, int64_t t)
+{
+    w35_p2_t p;
+    p.x = (int32_t)(a.x + (((int64_t)b.x - a.x) * t) / 65536);
+    p.z = (int32_t)(a.z + (((int64_t)b.z - a.z) * t) / 65536);
+    return p;
+}
+
+int re15_werfer_band_strecke(const re15_rdt_t *rdt, int32_t x0, int32_t z0, int32_t x1, int32_t z1, int band)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0 || band < 0) return 0;
+    const w35_p2_t a = { x0, z0 }, b = { x1, z1 };
+    /* An den Quadrantengrenzen (Deckenpunkt) teilen: jedes Stueck gilt gegen die Liste SEINES Quadranten. */
+    int64_t t[4]; int n = 0;
+    t[n++] = 0;
+    const int32_t cx = (int16_t)rdt->ceiling_x, cz = (int16_t)rdt->ceiling_z;
+    if ((x0 < cx) != (x1 < cx)) t[n++] = (((int64_t)cx - x0) * 65536) / ((int64_t)x1 - x0);
+    if ((z0 < cz) != (z1 < cz)) {
+        const int64_t tz = (((int64_t)cz - z0) * 65536) / ((int64_t)z1 - z0);
+        if (n == 2 && tz < t[1]) { t[2] = t[1]; t[1] = tz; n = 3; } else t[n++] = tz;
+    }
+    t[n++] = 65536;
+    for (int i = 0; i + 1 < n; i++) {
+        const w35_p2_t s0 = (i == 0) ? a : w35_punkt_bei(a, b, t[i]);
+        const w35_p2_t s1 = (i + 2 == n) ? b : w35_punkt_bei(a, b, t[i + 1]);
+        const w35_p2_t m  = w35_punkt_bei(a, b, (t[i] + t[i + 1]) / 2);
+        if (w35_liste(rdt, w35_quadrant(rdt, m.x, m.z), s0, s1, band)) return 1;
+    }
+    return 0;
 }
