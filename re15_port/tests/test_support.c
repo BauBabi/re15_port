@@ -56,6 +56,10 @@ void re15_audio_room_se(int se_id)
     }
 }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
+/* Runde 35 Spur B: RE2-ARMS-Bank (audio_pc.c re15_audio_re2_arms_se) — in Tests nur gezaehlt. */
+int g_test_re2arms_last_id = -1, g_test_re2arms_last_satz = -1, g_test_re2arms_count = 0;
+void re15_audio_re2_arms_se(int arms_id, int satz)
+{ g_test_re2arms_last_id = arms_id; g_test_re2arms_last_satz = satz; g_test_re2arms_count++; }
 /* snd0-Bank (FUN_80045024 Bank 2/5). Spion fuer den Schiebe-SE 0x02070000 @0x80035a18. */
 int g_test_snd0_se_last = -1;
 int g_test_snd0_se_count = 0;

@@ -1,0 +1,1140 @@
+# Runde 35 — Spur B "werfer": Granatwerfer, Raketenwerfer, Flammenwerfer, Colt Python
+
+Baum: `.claude/worktrees/r35_werfer`, Zweig `r35/werfer`, Basis master 154a73c1. Beginn 2026-10-03.
+
+Auftrag (woertlich, AUFTRAG.md):
+> - Einige Waffen, wie die Granatwerfer oder der Raketenwerfer gehen noch nicht
+> - Andere Waffen wie der Flammenwerfer oder die Colt Python gehen noch nicht richtig.
+
+Waffen-Ids (Item-Katalog DAT_800c4a28, inventory_common.c s_item_names): 14 = FLAMETHROWER,
+15/16/17 = GRENADE LAUNCHER (Explosiv/Saeure/Brand — Subtyp-Byte +8 der Munitions-Records
+@0x80074cb4/b8/bc = 03/01/02, dieselbe Kennung wie die Handgranaten 9/10/11), 18 = ROCKET LAUNCHER,
+20 = COLT PYTHON. Munitions-Items 0x19 EXPLOSIVE RND, 0x1a ACID ROUNDS, 0x1b INCEND. ROUNDS,
+0x18 FLAME FUEL, 0x17 MAGNUM BULLETS.
+
+Dossier wird FORTLAUFEND geschrieben (Sitzungsabbrueche moeglich).
+
+## 0. Arbeitsprotokoll (chronologisch)
+
+- 2026-10-03 09:55 Baum geprueft (`git status --porcelain` leer, HEAD 154a73c1). AUFTRAG/VERTRAG gelesen.
+  Spur B hat KEINE Bank-9-Bits, Nachrichten-IDs, AOT-Slots (raumunabhaengige Waffen-Mechanik).
+- 10:10 Pflichtlektuere: SPEC analysis/waffen_fsm_2026-09-12/SPEC.md, Memories dauerfeuer-fsm,
+  waffen-banken, runde34-granaten, beta-zu-retail; r34-Dossier re_saeure_brand.md §2 (RE2-GL-Runden).
+- 10:20 configure+build im eigenen Baum (`local_build.sh configure` + `build`): `=== LOCAL-BUILD-OK (build)`.
+- 10:30 Messung VORHER (Abschnitt 1), exe-Kopie `re15_port/build/platform/pc/re15_r35b.exe`,
+  Laeufe unter `re15_port/build/platform/pc/mess_r35b/vorher/w<ID>/` (nicht versioniert).
+- 10:45-11:30 RE-Belege (Abschnitt 2): RE1.5-Tabellen, RE2-Effekt-Handler, RE2-FX-Ops, Baenke, SE-Banken.
+- 12:00 Sitzungslimit beendet den Vorgaenger (4 wip-Commits, Baum sauber, Suite-Lauf 1 zerrissen).
+- 15:30 FORTSETZUNG: Dossier/Commits/Diff gelesen; Suite Lauf 2 gestartet (480/480, s. §5).
+- 15:35-15:50 Gegenlesen gegen den Wortlaut: Luecke gefunden — Runden/MAGNUM lassen sich im Inventar NICHT mit
+  Granatwerfer/Python kombinieren (pair_count 0, §2.5); RE2-Kombinier-Zustaende 7/8 disassembliert, verdrahtet
+  (Commit 023b68a7, §3.6), Test unit_r35_werfer_kombi.
+- 16:00-16:20 Gegenpruefung je Waffe am gebauten Stand mit neuen Mess-Zeilen (RE2FLUG / knochen / lauf):
+  BEFUND G1 (Leons Granatwerfer schiesst 30 Grad nach unten) und G2 (Rakete/Flammenstrahl fliegen durch
+  Waende) — §4.1. Netze vermessen (PL00W0F gedreht), Fix G1 = Waffenrahmen (§3.7), Fix G2 = werfer_boden (§3.8),
+  Commit 46f769fd (Befund) + G1/G2-Commit; Messung nachher §4.2.
+- 16:25 Nachladen/Leerschuss/Elevation/Zensus aller 20 Waffen-Ids/Inventarbild gemessen (§4.2).
+- 16:59 Suite Lauf 4 gruen (481/481; `suite_lauf4.log` endet 16:59:25, Abschluss-Commit 17:00:46 — die frueher hier
+  eingetragene Uhrzeit "17:20" war verschrieben, berichtigt in Nachbesserung 1); Dauerfeuer-Bild und Tonweg mit
+  Dummy-Audiotreiber geprueft; Abschluss-Commit.
+- 16:40 Suite Lauf 3 von mir selbst bei Test 340/481 abgebrochen (nur eigene PIDs: local_build-bash, ctest,
+  cmake, re15_pc.exe des eigenen Baums), um werfer_boden auf WAND-Zellen (Typ 1) einzugrenzen — bis dahin kein
+  roter Test. Suite Lauf 4 auf dem Endstand.
+
+## 1. Messung VORHER (Stand 154a73c1)
+
+Harness (Muster tests/integration/test_r34_granaten.cmake): `RE15_NO_INTRO=1 RE15_NOAUDIO=1
+RE15_DEBUG_JUMP=1140@250 RE15_PLAYER_POS=-1676,-18070,1076 RE15_AI_FLAVOR=re2 RE15_GIVE=<id>:6
+RE15_EQUIP=<id> RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1
+RE15_INPUT_SCRIPT="M0.6,MA1.5,M1.0,W4" RE15_STATE_LOG RE15_WAFFEN_LOG RE15_FX_LOG RE15_WPN_DBG=1
+RE15_EXIT_AT=200#1140`. Alle sechs Laeufe exit 0 (kein Absturz, kein Haenger). Gegner nach dem
+Sprung: slot2 Zombie 0x10 HP 50 bei (-1800,-19600) = 1535 Einheiten vor Leon, slot3 0x10 HP 80,
+slot4/5 0x11 HP 250.
+
+| Id | Bank (wpnbank.log) | gemessen (wf.log / state.log / fx.log) |
+|---|---|---|
+| 14 Flammenwerfer | W0E 16 Clips | Dauerfeuer-FSM laeuft (Hold 9, Feuer 7 fc=21, Abklingen 8). Je 3. Bild `SPAWN id=3 sub=29 scale=0x1200 streams=1` = EIN Platz an der Muendung mit `drift=(0,-70,0)`, `xlat=(0,-75,0)`, naechstes Bild `(0,-145,0)`: der "Strahl" steigt SENKRECHT nach oben, keine Vorwaertsbewegung (fx.log F20-F27). 6 Fuel in 10 Bildern weg (Schuss an Bild 0-3, 8-9). Kein Gegner verliert HP (Hitscan-Reichweite 1000 < 1535; Flamme trifft nichts). Leer: `SE arms_rec=0` (0x01000001). |
+| 15 GL Explosiv | W0F **11 Clips** | Heben Clip 6 fc=**1** (sofort), Hold 8 fc=1, Feuer Clip 7 fc=36 (F20-F54), Nachfeuern F55. `fx=0` IMMER: kein Projektil, keine Muendung, kein Knall, keine Explosion. Kein HP-Verlust (Hitscan 1000). Munition 6 -> 4. |
+| 16 GL Saeure | W10 14 Clips | Heben Clip 6 fc=19, ab F24 "Hold" Clip 8 fc=**9**, nie Clip 7 (rec=0 bleibt): das Feuer-Clip 7 hat fc<=1, der Rueckstoss endet im selben Tick -> jedes Bild ein Schuss: **6 Granaten in 6 Bildern** (F24-F29), fx=0, kein Projektil. |
+| 17 GL Brand | W11 (= W10 byte-gleich, md5 a480735f…) | identisch zu 16. |
+| 18 Rakete | W12 14 Clips | Heben 6 fc=20, Hold 8, Feuer Clip 7 fc=33 (F26-F57), Nachfeuern F58. fx=0: keine Rakete, keine Explosion, kein Ton. Munition 6 -> 4 (RE1.5 gibt 4 Schuss vor, s. 2.1). |
+| 20 Colt Python | W14 14 Clips | Heben 6 fc=10, Hold 8, Feuer Clip 7 fc=26. TRIFFT (Hitscan): slot2 HP 50 -> 34 -> 18 (F19/F44), Reaktion ss1=13 (RE2-Zeile 13 Colt S.A.A., Schaden 16 aus dem RE2-Record). fx=25 nur Blut. KEINE Muendung, KEIN Knall, KEINE Huelse; RE1.5-Schadensspalte 20 = 0 fuer alle Nicht-RE2-Gegner; kein Nachladen moeglich (s_wpn_props endet bei 15). |
+
+Ursachen im Code (Stand vorher): game_step_common.c ENT[15..18]/[20] = `{1,1,1,0}` = Hitscan-Resolve
+ohne Effekte (PORT-BRUECKE seit 2026-09-12, Kommentar "Original-Handler NULL"); kein Projektil, kein
+RE2-FX; player_common.c Clip-Formel 6/7+2u+4d/8+2u+4d/13 passt nicht auf die Bank W0F (11 Clips) und
+W10/W11 (Dauerfeuer-Form); inventory_common.c s_wpn_props[16] kennt 16..20 nicht; Flammenstrahl =
+RE1.5-CORE00 Effekt 3 sub 5 (ein aufsteigender Puff) mit param 3000.
+
+## 2. RE-Belege
+
+### 2.1 RE1.5 — was der Auslieferungsstand hat (alles PSX.EXE, re15_disasm.py)
+
+**Dispatch @0x80074030** (`table 0x80074030 21`): [15..18] -> 0x80032e9c (Standard-FSM), [20] ->
+0x00000000 (NULL: R1 mit Waffe 20 waere ein jalr-0-Absturz). **Entlade-Tabelle @0x80074100**: [15..18]
+= NULL, [20] = 0x80034060 (Tabellen-Ueberlappung, Dauerfeuer-Sub 0). [14] = 0x800c45a8 (DEBUG.BIN).
+
+**Tester-Dispatch @0x8006e548** (`table`): 14/15/16/17/18/20 -> 0x800128a0 (Sprengstoff-Tester, wie
+9/10/11), 19 -> 0x80012574 (Schusswaffe). **Reichweite @0x8006e5a0** (`read --w 4`): alle 1000 bis
+auf 1=1100, 6=1200, 8=1500, 12=1300, 13=1800, 19=1100.
+
+**Spieler-Schaden @0x8006e0d0** (`read 22 --w 2 --stride 4 --rows 0x48 --rowstride 0x58`, Zeile =
+Gegnertyp, u16 je Waffe): Typ 0x10..0x1a (Zombies) `[0, 6, 24, 5, 5, 15, 15, 200, 40, 100, 200, 100,
+10, 100, 10, 100, 200, 100, 400, 20, 0, 100]` -> w14 = 10, w15 = 100, w16 = 200, w17 = 100,
+w18 = 400, w20 = **0**. Typ 0x20 (Hund) `[.., 7:200, .., 15:100, 16:100, 17:200, 18:400, 20:0]`,
+Typ 0x22 `[.., 7:200, 9:200, 10:50, 11:50, 15:200, 16:50, 17:50, 18:400, 20:0]`, Typ 0x23
+`[.., 7:50, 15:70, 16:30, 17:30, 18:400, 20:0]` usw. **Spalte 20 ist in JEDER Zeile 0** (Colt Python
+unfertig), Spalte 18 ueberall 400.
+
+**Waffen-Records @0x80074da8** (Stride 0xC: u32 Magazin, ptr Munitions-Record, u8 Subtyp, u8 nachladbar):
+```
+[14] 64 00 00 00  a8 4c 07 80  02 01   Flamme: 100, Record 0x80074ca8 = 18 0e (FLAME FUEL), nachladbar
+[15] 06 00 00 00  88 4c 07 80  03 00   GL Explosiv: 6, Record 0x80074c88 = NULL-Record (00 00 00 00)
+[16] 06 00 00 00  88 4c 07 80  01 00   GL Saeure:   6, NULL-Record
+[17] 06 00 00 00  88 4c 07 80  02 00   GL Brand:    6, NULL-Record
+[18] 04 00 00 00  88 4c 07 80  03 00   Rakete:      4, NULL-Record
+[19] 64 00 00 00  88 4c 07 80  03 00   MC51:      100, NULL-Record
+[20] 06 00 00 00  88 4c 07 80  03 00   Colt Python: 6, NULL-Record
+```
+Die Munitions-Records der GL-Runden EXISTIEREN aber (@0x80074c88 `bytes`): 0x80074cb4 `19 0f 02 00`
+(EXPLOSIVE RND fuer Waffe 0x0f), 0x80074cb8 `1a 10 04 0c` (ACID ROUNDS fuer 0x10), 0x80074cbc
+`1b 11 04 0c` (INCEND. ROUNDS fuer 0x11), 0x80074cb0 `15 13 02 00` (H.GUN fuer MC51) — alle OHNE
+Verweis aus der Record-Tabelle (unverdrahtet). Nachlade-Gate der FSM `sltiu id,9` @0x80033368 (nur
+Ids < 9 laden nach).
+
+**Animationsbaenke** (PLW dir[0] = EDD, eigener Parser plw_clips.py; Clip-Laengen):
+```
+PL00W03 (Pistole, Referenz-Layout) 14: [22,16,52,1,50,30, 6:10 Heben, 7:23 Feuer, 8:1 Hold, 9:24 Feuer-hoch, 10:1, 11:24 Feuer-tief, 12:1, 13:32 Nachladen]
+PL00W07 (Super Redhawk)            14: [22,16,52,1,50,30, 8, 26, 1, 25, 1, 25, 1, 40]
+PL00W08 (M870)                     14: [20,16,52,1,50,30, 15, 34, 1, 36, 1, 36, 1, 65]
+PL00W0E (Flamme)                   16: [20,31,39,1,50,30, 15, 21,5,1, 21,5,1, 21,5,1]  (Dauerfeuer-Form)
+PL00W0F (GL Explosiv, Leon)        11: [22,31,39,50, 4:15 Heben, 5:34 Feuer, 6:1 Hold, 7:36, 8:1, 9:36, 10:1]  = M870-Feuerclips (34/36), OHNE Clip 3 (1), 5 (30) und 13 (Nachladen) -> Basis -2
+PL00W10 = PL00W11 (GL Saeure/Brand, Leon) 14: [22,31,39,50, 16, 9,19,1, 9,18,1, 9,18,1] = Ingram-Form (W0C) ohne Clips 3/5 -> KEIN Granatwerfer-Clip (Platzhalterbank, 223 kf)
+PL00W12 (Rakete)                   14: [20,16,52,1,50,30, 20, 33, 1, 33, 1, 33, 1, 80]  Standard-Layout
+PL00W14 (Colt Python)              14: [22,16,52,1,50,30, 10, 26, 1, 27, 1, 27, 1, 50]  Standard-Layout
+PL04W0F = PL04W10 = PL04W11 (Elza, md5 26acffcc) 14: [20,16,52,1,105,30, 15, 39, 1, 39, 1, 39, 1, 32]  Standard, Feuer 39 = RE2 Claire-GL
+PL04W12 (Elza Rakete)              14: [20,16,52,1,105,30, 20, 33, 1, 33, 1, 33, 1, 80]
+PL04W14 (Elza Python)              14: [22,16,52,1,105,30, 10, 26, 1, 27, 1, 27, 1, 50]
+RE2 PL01W09 (Claire GL)            16: [30,20,50,34,20,30,45,22,30, 9:15 Heben, 10:39 Feuer, 11:1 Hold, 12:39, 13:1, 14:39, 15:1] (9 gemeinsame Clips, dann dieselbe Folge; kein Nachlade-Clip)
+RE2 PL00W11 (Leon Rakete)          12: [.. 9 gemeinsame .., 20, 33, 1]  (KEINE hoch/tief-Clips)
+RE2 PL00W05 (Magnum)               17: [.. 9 .., 10, 36, 1, 36, 1, 36, 1, 32]
+RE2 PL01W0D (Colt S.A.A.)          17: [.. 9 .., 8, 8, 1, 8, 1, 8, 1, 45]
+RE2 PL00W10 (Flamme)               20: [.. 9 .., 15, 21,5,1, 21,5,1, 21,5,1, 35]
+```
+PLW-md5-Gruppen Leon: W00=W01=W02, W03=W04, W05=W06, W09=W0A=W0B, W10=W11; W0F, W12, W14 je eigen.
+Elza: W0F=W10=W11 (EINE Bank fuer alle drei GL-Varianten, wie RE2 PL01W09=0A=0B).
+
+**SE-Baenke** (EDH-Deskriptoren = erste pBAV_off Bytes, 4 Byte je Record; VAG-Groessen aus dem VH):
+```
+RE1.5 ARMS0F (GL Expl): 16 Rec: 0 00001336 (Schuss) 1 00005216 3 00007217 10 00003320 (Aufschlag) 14 00006216; VAG [48,4672,12800,1824,6896,4176]
+RE1.5 ARMS10 (GL Acid): wie 0F;  VAG [48,4672,10992,1824,6896,4176]
+RE1.5 ARMS11 (GL Brand): wie 0F; VAG [48,4672,11664,1824,6896,4176]
+RE2   ARMS09/0A/0B:  0 00001436 1 00005416 3 00007417 14 00006416 17 00003320; Aufschlag-VAG 12800/10992/11664 (r34-Dossier §2.6)
+  -> RE1.5 ARMS0F/10/11 tragen DIESELBEN Samples wie RE2 ARMS09/0B/0A (Schuss 4672 B, Aufschlag 12800/10992/11664 B), nur der Aufschlag-Record liegt bei 10 statt 17.
+RE1.5 ARMS12 (Rakete): 0 00001320 (Schuss), 10 00003320 (Explosion); VAG [48,18256,17104]
+RE2   ARMS11 (Rakete): 0 00001436, 1 00005416, 20 00003320 (= Op-47-Ton 0x01140001)
+RE1.5 ARMS0E (Flamme): 0 00001300 1 00005300 3 00007217 12 00003300 14 00006216; VAG [48,12928,2624,2352,3520,14368]
+RE2   ARMS10 (Flamme): 0 00001416 1 00005417 3 00007400 11 00002417 12 00003400 13 00004401 14 00006400
+RE1.5 ARMS07 (Redhawk): 8 Rec 0 00001330 1 00003310 2 00004210 3 00000310 4 00005310 5 00006311 6 00007311 7 00009314; VAG [48,11616,2752,2976]
+RE1.5 ARMS14 (Python): 10 Rec 0 00001330 1 00003310 2 00004210 3 00005310 4 00006310 5 00006311 6 00007311 7 00009314 8/9 00004210; VAG [48,15808,1472,1296,7200,9824]
+RE1.5 ARMS03 (Pistole): 0 00001336 1 00003300 2 00004201 3 00005300 4 00007300 14 00006301
+  -> ARMS14 hat das Record-Layout des REVOLVERS ARMS07 (00001330/00003310/00004210/00006311/00007311/00009314), nicht das der Pistolen (…36/…00/…01): die Python ist in RE1.5 als zweiter Magnum-Revolver angelegt.
+```
+
+**Flammenwerfer-Handler 0x800C45A8 (DEBUG.BIN)**: Effekt `0x031D1200` je 3. Bild, **a1 = 3000 statt
+Gier** (@0x800c466c), Rauch-jal entfernt (SPEC §2). RE1.5 CORE00.ESP Effekt 3 sub 5 (core00_subs.txt
+@0x0574): 1 Strom, Z00 `A=10 acc=(0,5,0) vel=(0,-80,0)`, Z01 `vel=(0,-75,0)` — ein aufsteigender Puff
+ohne Routine, die +0x2e (Gier/param) liest; genau das misst fx.log (drift (0,-70,0)). Der RE1.5-
+Flammenwerfer ist damit ein Debug-Platzhalter (Patch-Konstante 3000, Puff statt Strahl, Hitscan).
+
+**Einordnung (Beta -> Retail, Memory reai-v2-beta-zu-retail):** 15..18 = Entlade-Handler NULL +
+Munitions-Zeiger NULL + Schaden vorhanden; 20 = Dispatch NULL + Schaden 0 ueberall; 14 = Debug-Patch
+mit Puff. Alle vier sind NACHWEISLICH UNFERTIG -> RE2 Retail ist das Ziel fuer Entladung, Projektil,
+Treffer, Effekt und Ton. Was RE1.5 fertig hat und bleibt: Animationsbaenke (W0F/W12/W14 mit
+hoch/tief), Magazingroessen (6/6/6/4/6 @0x80074da8), Schadensspalten 15..18 (100/200/100/400) und
+die eigenen SE-Samples (ARMS0F/10/11/12/14), Reichweiten.
+
+### 2.2 RE2 Retail — Entlade-Effekt-Handler je Waffe (info/re2leon/PSX.EXE, re2_disasm.py)
+
+Per-Waffe-Effekt-Tabelle @0x800A6FDC (Index = RE2-Waffen-Id; r34-Dossier §2.2: gelesen
+`lhu v0,0x10e(s1)` / `jalr` @0x800431ac-cc im Feuer-Zustand, jedes Bild mit In-Clip-Bild +0x14D):
+[5] 0x800444e0 Magnum, [9] 0x80044b44 GL Expl, [10] 0x80044f44 GL Brand, [11] 0x80045090 GL Saeure,
+[13] 0x8004522c Colt S.A.A., [16] 0x800454a0 Flammenwerfer, [17] 0x80045588 Rakete.
+Entlade-Tabelle @0x800A6F90: [5]/[13]/[17] = `lhu a0,270(a0)` / `jal 0x8006a0cc` (eine Patrone),
+[16] = `jr ra` (Fuel laeuft ueber den 8-Bild-Zaehler in FUN_8006a0cc @0x8006a130-… DAT_800d5c1c).
+Spawner FUN_8001bf10(a0 = Bank<<24|Sub<<16|Skala, a1 -> Platz+0x22 (Gier), a2 = Matrix (32 B),
+a3 = Versatz-Tripel); Sub&7 = Skript, Sub>>3 = CLUT-Zeile (re2_fx.c spawn_kern).
+
+**Rakete [17] @0x80045588** (nur Bild `+0x14D == 1`, `lbu v1,333(s1)` / `addiu v0,zero,1` @0x8004559c-a4;
+Matrix `lw s0,408(s1)` + 1964 = Pose+0x7AC = Waffenknochen):
+```
+800455ac ori a0,a0,0x2000 / lui 0x100 -> 0x01002000  a1=0, ofs {0,1100,0}  @0x800455a8-d0  Muendung (Bank 1 Skr 0)
+800455d8 lui a0,0x20d / ori 0x1000    -> 0x020D1000  a1 = lh 118(s1) = Spieler+0x76 GIER, ofs {0,1100,0} @0x800455d8-ec  RAKETE (Bank 2 Skr 5, CLUT 1)
+800455f0 lui 0x30a / ori 0x1a00       -> 0x030A1A00  a1=0, ofs {0,1100,0}  @0x800455f0-604  Rauch (Bank 3 Skr 2)
+80045608 lui 0x30a / ori 0x1500       -> 0x030A1500  a1=0, ofs {300,-900,0} @0x80045608-2c  Rauch hinten (Rueckstrahl)
+```
+**Flammenwerfer [16] @0x800454a0**: jedes Bild mit `+0x14D % 3 == 1` (Magic 0xAAAAAAAB @0x800454b8-e0):
+`0x031D1200`, **a1 = lh 0x800cfc6e = Spieler+0x76 (GIER)** (@0x80045500), ofs {150,1200,0}
+(@0x800454f0-508), danach `0x800df349 := 1` (@0x80045518-20, Flammen-Latch; Leser @0x80026784/8002693c).
+Bild 1: SE `0x01000001` (@0x80045534-44 jal 0x8005ba28) + FUN_80043d30(player) (@0x80045548);
+Bild 11: SE `0x010B0001` (@0x80045550-6c). Vergleich RE1.5 DEBUG.BIN: gleicher Effektcode, aber
+3000 statt Gier und Takt %3==0 statt %3==1.
+**Magnum [5] @0x800444e0**: Bild 1: `0x030A1400` ofs {110,670,-10} (@0x80044504-38) + `0x01001D00`
+gleiche ofs (@0x8004453c-50); Bild 4: `0x03080900` ofs {330,50,0} zweimal (@0x80044560-a8) +
+`0x02000900` a1 = Gier+1684 (Huelse, @0x800445ac-d0).
+**Colt S.A.A. [13] @0x8004522c**: Bild 2: `0x01001000` {130,730,0}, `0x01041000` {130,280,0},
+`0x01061000` a1 = Gier+2048, `0x030A0C00` {130,280,0}, `0x030C1000` {130,830,0}, `0x01073000`
+{130,910,0} ueber FUN_8001c224 (@0x80045240-32c).
+**GL [9]/[10]/[11]**: r34-Dossier re_saeure_brand.md §2.2 (Bild 1: `0x01002000` + 5 x `0x020C0A00`
+mit acc/vel-Ueberschreibungen @0x80044c18-e74 bzw. 1 x `0x020C1000` a1 = Gier + `0x03081200`).
+
+### 2.3 RE2 Retail — FX-Skripte und Ops (CORE00.ESP RE2, re2_core00_scripts.txt; Optab @0x8009D868)
+
+```
+Bank 2 Skr 4 (GL-Runde 0x020C): S00 OpA 0 OpB 17, step[2]=47 step[3]=47, acc (-10,0,0), step[0xB]=15, vel (0,640,0)   (r34 §2.2)
+Bank 2 Skr 5 (Rakete 0x020D):  S00 OpA 1 anim 18 vel (-70,768,0) st 0xB403; S01 OpA 23 OpB 24 anim 47 b3 47 vel (-70,768,0)
+Bank 3 Skr 5 (Flamme 0x031D):  S00 OpA 1 anim 0 st 0xB403 tp 0x20; S01 OpA 0 OpB 70 anim 10 acc (0,20,0) vel (0,20,0)
+Bank 3 Skr 2 (Rauch 0x030A):   S00 OpA 1 anim 24 st 0xB003 (nur Op 1)
+Bank 1 Skr 0 (Muendung 0x0100): S00 OpA 0 OpB 7 st 0xB803 tp 0x20 rr 256
+```
+Ops (re2_disasm.py dis): **Op 23 @0x8001f6a4** (Rakete Op A): jedes Bild `FUN_8001cbe8(0x030A1800, 0,
+Identitaet 0x8009db44, &Lage+0x34)` = Rauchspur. **Op 24 @0x8001f6e0** (Rakete Op B): Box @0x80010908
+(lwl/lwr nach sp+32); Lage ausserhalb +-32000 -> tot (`slti 32001` @0x8001f724/738, `sb zero,0 / sh zero,24`
+@0x8001f744-48); Treffer `FUN_800470c0(&Lage, Gier +0x22, Box, 0x30011)` @0x8001f7b0-c0 -> Lage nach
+DAT_800cfb88/8c/90, Dispatch Op[step[2]] = 47 (@0x8001f7fc-804 / 9dc-ec); sonst Boden
+`FUN_8004fba0(&P,2,8192,0)` @0x8001f810, P.y := Boden, +0x14 := Boden-10 (@0x8001f838-40), zweiter Treffer
+0x20011 @0x8001f83c -> Op 47; sonst Wand (DAT_800dcbc8 != 0 @0x8001f868-70): vel -= acc, xlat -= vel,
+vel -= vel/3 (0x55555556 @0x8001f874-9c0), `jal 0x8001d894` (Weltlage) -> Op[step[3]] = 47. KEIN
+Flaechenschaden: **Op 47 mit Sub 13** (`lbu v1,30 / addiu v0,zero,12 / bne` @0x80020d30-38) spielt nur
+SE 0x01140001 (@0x80020d3c/dc0-c4) und die Kinder 0x031F1700/0x040C1F00/0x041D1700 (Skalen +2560,
+@0x80020d1c-2c s1 = (Sub-12)*5<<9) — der Raketen-Schaden kommt allein aus dem Flugtreffer 0x30011/0x20011.
+**Op 47 Sub 12** (GL Explosiv): SE 0x01110001 + Schaden 0x10020009 Box @0x80010918 {-2000,0,1000,500}
+bei y und y+900 (@0x80020d40-b4), Phasen 1-3 Pause, Phase 4 Kind 0x04152700, Platz frei (r34 §2.4).
+**Op 70 @0x80023204** (Flammenstrahl Op B): Box @0x80010964; step[2]-- (@0x80023244-50), bei 0 ->
+acc.y := -10 (@0x80023268-70); step[3]==0 (Flug): Wasser (FUN_800527b4 @0x80023364, unter Spiegel:
+Skala*65/100 @0x80023398-d4, Kind 0x030F2000, s0=3), **Treffer `FUN_800470c0(&Lage, Gier +0x22, Box,
+0x20010)`** (@0x800233dc-f4; Treffer -> Lage nach DAT_800cfb88.., s0=2), Boden `FUN_8004fba0(&P,2,8192,0)`
+unter der Lage -> s0=1 (@0x80023434-58), Wand DAT_800dcbc8 -> Skala*70/100, s0=1 (@0x8002345c-b0);
+s0 != 0: acc.x/vel.x/acc.y := 0, Anim 12, vel.y := 20, step[2] := 6, step[3] := 1 (@0x800234b4-538);
+step[3]==1 (Nachbrennen): bei step[2]==3 Kind 0x040C2000 (@0x8002329c-b8), dann 0x0506xxxx mit
+rng (@0x800232c8-32c).
+Trefferzustellung FUN_800470C0 = Port `re15_re2_gl_apply` (re15_damage.c, re2fx_applier).
+
+**Boxen (RE2 `bytes 0x80010900 112`, je {s16 x0, 0, x1, Halbbreite}):** @0x80010900 {-1400,0,350,250}
+(Op 15 Flug), @0x80010908 {-800,0,400,200} (Op 24 Rakete), @0x80010910 {-600,0,300,150} (Op 40),
+@0x80010918 {-2000,0,1000,500} (Op 47 Explosion), @0x80010920 {-1000,0,500,250} (Op 47 zweite Box,
+nur fuer Sub 13 adressiert, ungenutzt), @0x8001093c {-1200,0,600,300} / @0x80010944 {-600,0,300,150}
+(Op 48/49), @0x80010964 {-1400,0,400,200} (Op 70 Flamme).
+
+**Op 15 @0x8001ed9c (GL-Flug, 228 Instr.)**: Wasser (`jal 0x800527b4` @0x8001ede8; unter dem Spiegel:
+y += 500 @0x8001ee34-3c, Spritzer 0x1A051C00 @0x8001ee1c-38, Op[step[2]+Art]); Lebensdauer-- (@0x8001ee64-70);
+Boden `FUN_8004fba0(&P,2,8192,0)` @0x8001eea0 -> +0x14 := Boden-10 (@0x8001eeac-bc); Treffer
+`FUN_800470c0(&P, Gier +0x22, Box, 0x30009 + Art)` bei y+1000 (@0x8001eec8-d8) und y-1000 (@0x8001eef8-f08);
+Treffer oder Lebensdauer 0 -> Status |= 0x80 (@0x8001ef44-50), Lage -> DAT_800CFB88/8C/90 (@0x8001ef58-70),
+Op[step[2]+Art] (@0x8001ef74 / @0x8001f0e4-104); sonst Wand (DAT_800DCBC8 @0x8001ef84-8c): Rueckprall
+vel -= acc, lokal -= vel, vel -= acc, lokal -= vel/3 (0x55555556 @0x8001ef90-0x8001f0c8), Weltlage
+(`jal 0x8001d894` @0x8001f0cc), Op[step[3]+Art] (@0x8001f0e0).
+**Op 17 @0x8001f198** (Start): Art := Waffen-Id(0x800CFD06) - 9 (@0x8001f1a8-b8), Op A := 22, Op B := 15
+(@0x8001f1c4-d8), Status 0xB403 (@0x8001f1e4-e8), Anim 18 (@0x8001f1ec-f0), TPage |= 0x20 (@0x8001f1f4-204),
+Lebensdauer: Id 9 -> 10 + rng%3 (@0x8001f224-74), sonst 15 (@0x8001f284); dann `jal 0x8001ed9c` (@0x8001f288).
+**Op 22 @0x8001f634** (Rauchspur): 0x030B0000 | Skala*150/100 (@0x8001f648-90), a1 = 0, Einheit 0x8009DB44.
+**Op 7 @0x8001e154** (Bank 1 Skr 0 Muendungsblitz): Sub += step[3] (@0x8001e164-74), SE (+0x16 << 16) + 1
+= 0x01000001 (`lhu a0,22 / sll 16 / addiu 1` @0x8001e188-b8) bzw. 0x031F0001 bei Art != 0 (@0x8001e1bc-c4),
+Latch 0x800DF349 := 1 (@0x8001e1dc-e4), dann Op 1 (@0x8001e1e8). **Der Schussknall der RE2-Werfer kommt
+also aus dem Muendungs-Effekt** (wie RE1.5 Routine 9), nicht aus dem Handler.
+**Op 59 @0x800223f8** (Bank 5 Skr 6): Op 2, +0x1B := 2, +0x42 := rng%4 + 10 (@0x80022400-48).
+**RE2-Pumpe FUN_8001d300**: s0 = 0x800D8CF0 + 11904 = Pool-Ende (@0x8001d314); FUN_8001d68c sichert s0
+nicht -> Op 70 liest in seinem Nachbrenn-Zweig `bne s0,2` @0x800232bc den Pool-Ende-Zeiger (uninitialisierte
+Variable) -> der Zufalls-Puff 0x0506xxxx (@0x800232c8-32c) ist in RE2 toter Code.
+
+**Fuel FUN_8006a0cc Id 16 (@0x8006a184-0x8006a21c, Delay-Slot-genau):** Zaehler DAT_800d5c1c++
+(@0x8006a194-a0), `slti v0,v0,8 / bne` (@0x8006a1ac-b0) -> < 8 nichts; `sh zero` (@0x8006a1bc) Zaehler := 0;
+`beq s0,zero` (@0x8006a1b8) Menge 0 -> 0; `addiu s0,s0,-1 / jal 0x800694b8` (@0x8006a1c0-cc) Menge-1;
+`bne s0,zero,0x8006a20c` (@0x8006a1fc) -> Menge jetzt 0 -> return 0 (@0x8006a204); sonst `addiu a1,s0,-1 /
+jal` (@0x8006a20c-10) zweite Einheit, return 1. Ids 15/18 (SMG/Gatling) laufen denselben Doppelabzug.
+Der SMG-Aufrufer @0x80047e70-88 geht bei Rueckgabe 0 mit v0 = 3 nach 0x80048064 — ohne SE.
+
+**RE2-Feuerzustand, Spieler +0x14D** = In-Clip-Bild (RE1.5 acae9): GL-/Raketen-Handler spawnen bei 1,
+Flamme bei %3 == 1 (SE 1/11), Magnum bei 1 und 4, Colt S.A.A. bei 2.
+
+### 2.4 Audio
+
+RE1.5-Weg: Bank 1 = ARMS der gefuehrten Waffe (FUN_80043d8c), Knall = Routine 9 des Muendungs-Effekts
+(0x01000001 = Satz 0). RE2-Weg: Bank 1 = ARMS der Waffe (FUN_80059c74), Knall = Op 7 des Muendungs-
+Effekts 0x0100xxxx (0x01000001 = Satz 0), Aufschlag-/Explosions-Toene aus den Ops (0x01110001 Satz 17
+Explosiv, 0x01120001/0x01130001 Satz 18/19 Brand/Saeure, 0x01140001 Satz 20 Rakete), Flamme Satz 0/11.
+Sample-Identitaet RE1.5 <-> RE2 (VAG-Groessen): GL-Explosiv RE1.5 ARMS0F {4672, 12800, 1824, 6896, 4176} =
+RE2 ARMS09 (Aufschlag-VAG 12800 B liegt in RE1.5 bei Satz 10 `00003320`, in RE2 bei Satz 17); Acid/Brand
+analog (10992/11664 B); Rakete: Schuss 18256 B gleich, Explosion RE1.5 17104 B vs RE2 12672 B (anderes
+Sample); Flamme: RE2 ARMS10 {2624, 2352, 3520, 14368, 8928} — RE1.5 ARMS0E hat 8928 (Satz 11, Strahl) nicht.
+RE2 EDH-Layout = RE1.5 EDH-Layout (Satz-Deskriptoren 4 B @0, `pBAV` @ u32[size-8]; ARMS10/11: 0x80).
+
+### 2.5 Inventar-Kombination: Nachladen und Munitionswechsel (Fortsetzung 2026-10-03 nachmittags)
+
+**Messung (statisch, Port liest die eingebettete EXE-Tabelle `re15_inv_ui.h` byte-genau):** der Matcher
+`exchange_match` (= FUN_8004e900) liest `pair_count` @0x80074da8 + id*12 + 9 und bricht bei 0 ab
+(`beq` @0x8004e9ec). `re15_disasm.py bytes 0x80074da8 348`:
+```
+[0x0e] 64 00 00 00  a8 4c 07 80  02 01    Flammenwerfer: 1 Satz @0x80074ca8 `18 0e 02 00` (FLAME FUEL, Nachladen)
+[0x0f] 06 00 00 00  88 4c 07 80  03 00    GL Explosiv:  pair_count 0, NULL-Satz
+[0x10] 06 00 00 00  88 4c 07 80  01 00    GL Saeure:    0
+[0x11] 06 00 00 00  88 4c 07 80  02 00    GL Brand:     0
+[0x12] 04 00 00 00  88 4c 07 80  03 00    Rakete:       0
+[0x14] 06 00 00 00  88 4c 07 80  03 00    Colt Python:  0
+[0x17] fa .. f4 4c 07 80 00 02            MAGNUM BULLETS: 2 Saetze @0x80074cf4 `17 17 05 00 | 07 07 03 00`
+[0x19] fa .. 04 4d 07 80 00 01            EXPLOSIVE RND: 1 Satz `19 19 05 00` (nur Selbst-Stapel)
+[0x1a] fa .. 08 4d 07 80 01 01            ACID ROUNDS:   `1a 1a 05 00`
+[0x1b] fa .. 0c 4d 07 80 02 01            INCEND. ROUNDS: `1b 1b 05 00`
+```
+-> Im Auslieferungsstand laesst sich KEINE Runde mit einem Granatwerfer und nichts mit der Python
+kombinieren (Byte +8 = Zahlenfarbe: 3 normal, 1 Saeure, 2 Feuer). Die GL-Saetze liegen unverwiesen bei
+@0x80074cb4 `19 0f 02 00 | 1a 10 04 0c | 1b 11 04 0c` (Satz = {Partner, Ergebnis, Aktion, Bild}):
+Explosiv-Runde = Nachladen (Aktion 2), Saeure/Brand = Aktion 4 "SWAP+TRANSFORM" @0x8004e538 mit Bild
+0x0c. Aktion 4 schreibt die Ergebnis-Id in den PARTNER-Platz (@0x8004e598), kopiert die GL-Menge dorthin
+(@0x8004e5a8-bc) und legt die unverbrauchte Runde auf den GL-Platz (@0x8004e628-58) — die geladenen
+Explosiv-Runden wuerden zu Saeure-Runden, die Saeure-Runden blieben erhalten; fuer 0x10/0x11 gibt es
+gar keinen Satz (kein Rueckweg). Unfertig -> Beta -> Retail.
+
+**RE2 Retail (info/re2leon/PSX.EXE):** Eigenschaftstabelle @0x800a9e1c (Schritt 8: Kappe, -, Farbe,
+pair_count, Zeiger), Saetze {Partner, Zustand, Ergebnis, Bild} (`re2_disasm.py bytes 0x800a9ce8 224`):
+```
+GL Explosiv [9]  fa 00 03 03 -> @0x800a9d10  18 05 09 ff | 19 07 09 03 | 1a 07 09 03
+GL Brand    [10] fa 00 01 03 -> @0x800a9d1c  19 05 0a ff | 18 07 0a 04 | 1a 07 0a 04
+GL Saeure   [11] fa 00 02 03 -> @0x800a9d28  1a 05 0b ff | 18 07 0b 05 | 19 07 0b 05
+Runde 0x18  fa 00 03 04      -> @0x800a9d88  09 06 09 ff | 0a 08 09 04 | 0b 08 09 05 | 18 05 18 ff
+Runde 0x19                   -> @0x800a9d98  0a 06 0a ff | 09 08 0a 03 | 0b 08 0a 05 | 19 05 19 ff
+Runde 0x1a                   -> @0x800a9da8  0b 06 0b ff | 09 08 0b 03 | 0a 08 0b 04 | 1a 05 1a ff
+Rakete [0x11] 04 00 00 00 -> NULL-Satz 0x800a9ce8 (keine Kombination, 4 Schuss)
+Magnum [5] 08 00 00 02 -> @0x800a9cf4 `16 05 05 ff | 21 04 06 01`
+```
+Eigene Runde = Zustand 5/6 (Nachladen in A/B), fremde Runde = Zustand 7/8 (Munitionswechsel); Bild 3/4/5 =
+MIX-Bild der ZURUECKKOMMENDEN Runde (Explosiv/Brand/Saeure). Kombinier-Maschine FUN_8006b358, Sprungtabelle
+@0x80011bb0 (`sltiu a0,0xc` @0x8006b3e8): [5] 0x8006b9a4, [6] 0x8006bacc, [7] 0x8006bc18, [8] 0x8006bd98.
+**Zustand 7 @0x8006bc18** (`re2_disasm.py dis 0x8006bc18 96`):
+```
+8006bc5c lbu s0,id[A]                         alte GL-Id
+8006bc60 addiu v0,v0,-15 / 8006bc6c sb id[A]  GL-Id := Runde B - 15
+8006bc70-98 bne eq,A / sb v0,10(s1)           gefuehrte Waffe (0x800d5bfa) nachziehen, wenn A gefuehrt
+8006bca0 addiu v1,s0,15 / 8006bcb4 sb id[B]   Runde := alte GL-Id + 15
+8006bcd8-0x8006bd0c                           Menge[A] <-> Menge[B] (ganzer Stapel, KEINE Kappe)
+8006bd30 beq Menge[B],zero,0x8006bd6c         leer -> jal 0x8006947c(B,0,0,0) @0x8006bd74 + jal 0x80069e54 @0x8006bd88
+8006bd38-60 jal 0x80069bb4(Zelle B, 0x801a0000 + Bild*1200)   sonst Bild der Runde
+```
+**Zustand 8 @0x8006bd98** = Spiegel (A = Runde, B = GL): `addiu v0,v0,-15` @0x8006be10 / `sb` @0x8006be1c
+auf id[B], `addiu v1,s0,15` @0x8006be50 / `sb` @0x8006be64 auf id[A], Mengentausch @0x8006be94-bc, leer ->
+`jal 0x8006947c` @0x8006bf20.
+RE1.5-Entsprechung der Ids: Runde = GL + 0x0a (0x19/0x1a/0x1b <-> 0x0f/0x10/0x11 — aus den drei
+unverwiesenen Saetzen); MIXITEM-Bilder der Runden 0x0c/0x0d/0x0e (Saetze @0x80074d24 `1e 19 06 0c`,
+@0x80074d28 `1f 1a 06 0d`, @0x80074d2c `20 1b 06 0e`; Pin test_inv_fsm.c "(pics 12-14)").
+
+## 3. Umsetzung (Commit-Kette r35/werfer; jede Konstante mit @0x im Code)
+
+Einordnung je Waffe (Beta -> Retail): 15..18 und 20 sind nachweislich unfertig (§2.1) -> RE2 Retail ist
+das Ziel fuer Entladung/Projektil/Treffer/Effekt/Ton; RE1.5 bleibt fuer Baenke, Magazine, Schadensspalten,
+Reichweite, eigene Toene massgeblich. 14 ist in RE1.5 ein Debug-Patch mit Puff -> RE2-Handler.
+
+### 3.1 Neue Dateien
+* `re15_port/include/re15_werfer.h`, `re15_port/engine/src/werfer_r35.c` — Werfer-Modul:
+  - `re15_werfer_tick()` (je Spielbild hinter dem Feuerpfad): bei Id 15..18 im Rueckstossbild 1
+    (`lbu v1,333 / addiu v0,zero,1 / bne` @0x80044b98-a0 / @0x8004559c-a4) die RE2-Spawns mit der
+    Waffenknochen-Matrix (`re15_player_gunbone_matrix`, Pose+0x7AC-Analogon) und Gier = Spieler-Gier
+    (+0x76 RE2 = +0x6a RE1.5): GL Explosiv 0x01002000 + 5 x 0x020C0A00 (Ueberschreibungen acc.x/vel
+    @0x80044c18-e74, Tabelle @0x80011030, HOCH = Zielbit 15), Brand/Saeure 0x01002000 + 0x020C1000 +
+    0x03081200 (@0x80044f68-c8 / @0x800450b4-114), Rakete 0x01002000/0x020D1000/0x030A1A00/0x030A1500
+    (@0x800455a8-62c). Versatz GL {120,1200,0}, Rakete {0,1100,0} + {300,-900,0}.
+  - `re15_werfer_flamme_bild(f)`: RE2 [16] @0x800454a0 — 0x031D1200 mit Gier bei f%3==1, Versatz
+    {150,1200,0}, SE RE2-ARMS10 Satz 0 bei f==1, Satz 11 bei f==11.
+  - `re15_werfer_fuel_bild()`: FUN_8006a0cc Id 16 (Zaehler, 2 je 8 Bilder, leer -> 0).
+  - `re15_werfer_clip_remap`, `re15_werfer_bank_id`, `re15_werfer_nachladbar`, `re15_werfer_recoil_break`.
+  - Bezugsebene des RE2-Bodentests := Standhoehe des Spielers (`re2fx_boden_basis_setzen(pl->y)`),
+    PORT-ZUORDNUNG wie granate_boden (Runde 34) fuer RE1.5-Raeume mit Boden != 0.
+* `re15_port/shared_assets/RE2/SOUND/ARMS10.EDH/.VB`, `ARMS11.EDH/.VB` (Kopien aus
+  info/re2leon/COMMON/SOUND; md5 74d9982e… / a074d427… / 1b9abbaf… / 6c5fa622…) — NEUE ASSETS fuer das
+  Paket-/Android-Gate.
+* `re15_port/tests/unit/test_r35_werfer.c`, `tests/unit/probes/r35_werfer.cmake`,
+  `tests/integration/test_r35_werfer.cmake`.
+
+### 3.2 re2_fx.c — Block "RUNDE 35 SPUR B" (am Dateiende) + 9 Faelle in op_rufen
+Ops 7 (@0x8001e154), 15 (@0x8001ed9c), 17 (@0x8001f198), 22 (@0x8001f634), 23 (@0x8001f6a4),
+24 (@0x8001f6e0), 47 (@0x80020c3c), 59 (@0x800223f8), 70 (@0x80023204) wie in §2.3 belegt;
+Wand-Rueckprall `wand_rueckprall()` (@0x8001ef90-0x8001f0d0); `kind0_an_lage` = FUN_8001cbe8 mit a1 = 0;
+Treffer-Lage DAT_800CFB88.. und Latch 0x800DF349 als Buchfuehrung (`re2fx_r35_treffer_lage/latch`).
+Abweichung dokumentiert: Op 24 beendet bei |x|/|z| > 32000 (Original faellt nach dem Freigeben durch).
+
+### 3.3 re15_damage.c
+* `re15_player_gunbone_matrix(rot, t)` neben `re15_player_gunbone_world` (gleiche Quelle, Rueckfall Pose).
+* Applier `re15_re2_gl_apply`: Zeilen 16/17 fuer RE2-Typen mit den Records (§3.3a); fuer RE1.5-KI-
+  Kandidaten die RE1.5-Angriffsart je Hitcode-Zeile aus DAT_8006f430/DAT_8006f418 (Zeile 9 -> Art 6 = w15
+  100, 11 -> Art 7 = w16 200, 10 -> Art 8 = w17 300, 17 -> Art 9 = w18 1000, 16 -> Art 5 = w14 50;
+  Bodenfeuer 0x2002000A bleibt Art 5), Sperre der Zeilen 16/17 aus w1 des Records.
+* `re15_enemy_take_damage_at`: E4-Modellauswahl (RE2-Record statt RE1.5-Flachzahl) auch fuer die Arten
+  6..9; `gl`-Zeilen 16/17.
+* Hitscan: Waffe 20 nimmt die Schadensspalte 7 (Redhawk) und den Schuss-Streifen 0x80012574 (PORT-WAHL §3.5).
+* 3.3a Records Zeilen 16/17 (`read` 2026-10-03, Zeiger *(0x800A6A88+Typ*4), Zeile r @ Basis+(r-1)*20):
+  Zombie 0x800A4258/5C 0x00F03C0F/0x02850A0A (15/15/15, Sperre 5), 0x800A426C/70 0x384E1384/0x078F1E0A
+  (900, Sperre 15); Zombie 0x16 0x800A43D4.. 0x00C0300C (12); Hund 0x800A4550.. 0x00C0300C / 0x800A4564
+  0x12C4B12C (300); Kraehe 0x800A46CC 0x00F03C0F/0x078F1E0A (15, Sperre 15) / 0x12C4B12C; Spinne
+  0x800A4CBC 0x00A0280A (10) / 0x0C8320C8 (200); Arm 0x800A52AC 0x0280A028/0x03870E0A (40, Sperre 7);
+  G5 0x800A6008 0x00501405/0x0102040A (5, Sperre 2) / 0x0C8320C8 (200).
+
+### 3.4 Haken in gemeinsamen Dateien (klein, benannt "Runde 35 Spur B")
+* `game_step_common.c`: Include; Nachlade-Gate `eq_item < 9 || re15_werfer_nachladbar(eq_item)`;
+  ENT[15..18] = {1,0,1,0} (nur Munition; FX/Treffer ueber RE2), ENT[20] = Redhawk-Zeile 0x800339A4
+  (0x02000E00 {0x8c,0x25d,0} @0x800339a8-e4, 0x03001000 {0x91,0x1f4,-25} @0x800339ec-1c, keine Huelse,
+  Resolve + 1 Patrone @0x80033a34-3c); `re15_werfer_tick()` hinter dem Granaten-Block; Dauerfeuer-Zweig
+  14: `re15_werfer_flamme_bild(anim_frame)` statt (3,0x1D,3000) und `re15_werfer_fuel_bild()` statt
+  (acae9&4)==0 x Hitscan.
+* `player_common.c`: `s_aim_clip_n`; `aim_clip_wirksam()` (Renderer + Bildzahl) ueber
+  `re15_player_werfer_clip`; Rueckstoss-Schwelle 10 fuer 15..18/20.
+* `inventory_common.c`: `s_wpn_props[21]` (Zeilen 15..20, Belege im Kommentar), Grenzen 16 -> 21.
+* `enemy_ai_re2_zombie.c`: `re2z_row_from_weapon[20] = 5`; `re2z_row_from_atktype[7]=11, [8]=10, [10]=5`
+  (DAT_8006f430-Semantik: Art 7 = w16 Saeure, Art 8 = w17 Brand — vorher vertauscht).
+* `main.c`: Bank/Mesh/dir[3]-TIM fuer 16/17 -> W0F (3 Einzeiler).
+* `audio_pc.c`: `re15_audio_re2_arms_se()` (RE2-ARMS-Bank aus shared_assets/RE2/SOUND), ARMS_ZUSATZ_N 3.
+* `fx_plattform_pc.c`: `re15_pc_re2fx_se`: 0x01000001 -> ARMS Satz 0 der Waffe, 0x01110001 -> ARMS0F
+  Satz 10, 0x01140001 -> RE2 ARMS11 Satz 20.
+* `tests/test_support.c`: Stub `re15_audio_re2_arms_se` (zaehlt).
+* `menu_common.c` (Fortsetzung): zwei Haken je 5 Zeilen — `exchange_match` fragt nach den Verwerfungen
+  (@0x8004e98c/@0x8004e9bc) `re15_werfer_paar`, `exchange_exec` `case 7: case 8:` -> `re15_werfer_gl_tausch`.
+* `fx_plattform_pc.c` (Fortsetzung): die wf.log-Zeile `SE re2fx ...` traegt die Lage `@(x,y,z)` (nur Mess-Harness).
+
+### 3.5 PORT-WAHLEN (gekennzeichnet) und ihre Belege
+1. **Colt Python = zweiter Magnum-Revolver** (statt RE2 Colt S.A.A.): ARMS14 traegt das Record-Layout des
+   Redhawk ARMS07 (`00001330 00003310 00004210 … 00006311 00007311 00009314`, Pistolen: `…36/…00/…01`),
+   Bank W14 = Revolver-Clips (10/26/27/50 ~ W07 8/26/25/40), Magazin 6 wie w7 (@0x80074e98 / @0x80074dfc; berichtigt Nachbesserung 1 M3).
+   Folgen: Entladung = Redhawk-Handler 0x800339A4, Schaden = Spalte 7, RE2-Zeile 5, Munition MAGNUM
+   BULLETS 0x17 (Record 0x80074c9c `17 07 02 00` des Redhawk), Tester = Schuss-Streifen.
+2. **GL 16/17 fuehren Bank/Mesh/TIM der W0F** (Leon): PL00W10 = PL00W11 ist Ingram-foermig (Platzhalter);
+   Elza PL04W0F = W10 = W11, RE2 PL01W09 = 0A = 0B (eine Bank je Werfer).
+3. **PL00W0F-Clipumsetzung** (11 Clips, Basis -2; Nachladen -> Hold-Clip, Nachladen sofort): Leon hat
+   keinen Nachlade-Clip, RE2 Claire auch nicht (16 Clips ohne 13), Elza hat ihn (PL04W0F Clip 13 = 32).
+4. **Nachladen fuer 15/16/17/20** (RE1.5-Gate `sltiu id,9` @0x80033368 laesst sie nicht): die Munitions-
+   Records existieren unverwiesen (0x80074cb4/b8/bc), Magazine 6 — die Verdrahtung ist der fehlende Rest.
+5. **Rueckstoss-Schwelle 10** fuer 15..18/20 (Saetze @0x80074090 + (id-1)*5: 15..18 @0x800740d6-e9 und 20 @0x800740ef-f3 sind 0 = unfertig; 5..13 @0x800740a4..cc byte 2 = 10).
+6. **Bezugsebene des RE2-Bodentests = Standhoehe** (wie granate_boden, Runde 34).
+7. **Schaden an RE1.5-KI-Gegnern** ueber die RE1.5-Resolver-Arten 6..9/5 (DAT_8006f418/430, byte-true
+   Daten ohne Original-Aufrufer); RE2-Modell-Typen bekommen die RE2-Records (E4-Regel der Runde 34).
+8. Flamme ohne Leer-Ton (RE2 `j 0x80048064` ohne SE); die Flamme brennt nach dem letzten Fuel bis zum
+   naechsten Takt-Bild weiter (RE2 prueft nur im Takt-Bild).
+9. **Munitionswechsel des Granatwerfers = RE2-Zustaende 7/8** (statt der unfertigen RE1.5-Aktion 4): der Werfer
+   nimmt den GANZEN Stapel der neuen Runde (RE2: keine Kappe im Zustand 7, GL-Kappe 250 @0x800a9e64); das
+   RE1.5-Magazin 6 (@0x80074e5c/e68/e74; berichtigt M3) gilt beim Nachladen (Aktionen 2/3). Ein Werfer kann nach dem Wechsel also mehr
+   als 6 Runden tragen — RE2-Verhalten, bewusst nicht gekappt (der Rest haette keinen Platz: die Runden-Zelle
+   traegt danach die zurueckkommende alte Runde).
+10. **Waffenrahmen PL00W0F** (§3.7): Drehung 35,62 Grad und Versatz {-204,1717,3} aus den Netz-Bytes; der Anteil
+    "+240 vor dem Muendungsring, 14,5 unter der Rumpfmitte" ist der RE2-Versatz {120,1200,0} gegen das RE2-EIGENE
+    Netz PL01W09 (Ring y 960, Rumpf x 64..205).
+11. **Wandkontakt ueber Bandhoehe** (§3.8): jede Zelle des Schuetzen-Bandes sperrt Werfer-Geschosse in jeder
+    Hoehe ueber der Standhoehe.
+
+### 3.6 Inventar-Kombination (Belege §2.5)
+* `werfer_r35.c` `re15_werfer_paar(idA, idB, &result, &pic)`: GL 15/16/17 + eigene Runde (Runde = GL + 0x0a) ->
+  Aktion 2 (Nachladen in A, Satz `19 0f 02 00` @0x80074cb4), Runde + eigener GL -> Aktion 3 (Form `07 07 03 00`
+  @0x80074cf8); GL + fremde Runde -> 7, fremde Runde + GL -> 8 (RE2-Zustaende @0x8006bc18 / @0x8006bd98), Bild
+  0x0c + (alte GL - 15) (@0x80074d24/28/2c); Python 20 + MAGNUM 0x17 -> 2, MAGNUM + Python -> 3; sonst 0 (der
+  RE1.5-Matcher laeuft weiter: Redhawk, Flammenwerfer + FLAME FUEL `18 0e 02 00` unveraendert; Rakete ohne Paar).
+* `re15_werfer_gl_tausch(gl, runde, pic)`: Id-Tausch (@0x8006bc5c-b4), Mengentausch (@0x8006bcd8-d0c), leere
+  Runde loeschen (@0x8006bd30 / @0x8006bd6c-78) bzw. MIXITEM-Bild (@0x8006bd38-60); die Schwanzzelle der breiten
+  Waffe (Zellen-Flag 2, FUN_8004dc4c) fuehrt Id/Menge mit. Die gefuehrte Waffe zieht beim Schliessen des Menues
+  nach (equip_id_now -> re15_player_set_equipped_weapon + re15_audio_prime_weapon; RE2 @0x8006bc70-98).
+
+### 3.7 Waffenrahmen des Leon-Granatwerfers PL00W0F (Befund G1)
+* `werfer_r35.c` `re15_werfer_rahmen(id, clip_n, rot, ofs)` (aufgerufen in `mtx_bauen_ofs`): fuer 15..17 mit der
+  11-Clip-Bank M' = M * Rz(35,62 Grad): Spalte 0' = (3330*Sp0 - 2386*Sp1) >> 12, Spalte 1' = (2386*Sp0 +
+  3330*Sp1) >> 12; Versatz {-204,1717,3}. sin/cos aus Laufring-Mitte (377.5,852) -> Muendungsring-Mitte
+  (706,1310.5) (PL00W0F.PLW MD1 @0x50A8, Punkte @0x518C/@0x519C/@0x51AC/@0x51BC und @0x51C4/@0x51CC/@0x5224/
+  @0x522C). Clip-Zahl der Bank aus `re15_player_werfer_clip` (dasselbe Kriterium wie die Clip-Umsetzung).
+  Elza (PL04W0F, 14 Clips, Netz auf +y), Flammenwerfer, Rakete: unveraendert RE2 ({120,1200,0}, {150,1200,0},
+  {0,1100,0}).
+
+### 3.8 Wandkontakt der Werfer-Geschosse (Befund G2)
+* `re2_fx.c` `werfer_boden()` (im Runde-35-Block, vor `wand_rueckprall`), gerufen von Op 15 (@0x8001eea0), Op 24
+  (@0x8001f808-14) und Op 70 (@0x8002343c) statt `re2fx_boden`: erst das FUN_8004fba0-Abbild der Runde 34; meldet
+  es keinen Kontakt und liegt das Geschoss UEBER der Standhoehe des Schuetzen und ausserhalb der Bandhoehe (oder
+  das Band > 7), sperrt jede WAND-Zelle des Schuetzen-Bandes an (x,z) (`wandzelle_im_band`: Typ & 0x0f == 1
+  Rechteck, u0 & 1 solide = Maske 0x100, Band = floor >> 4, u1-Bit 1 frei wie `andi 0xf002`, Rand -r). Der
+  Typ-1-Filter ist der Wand-Filter des Projekts (Memory reai-v2-kollisionszellen-sind-waende); Treppen-/
+  Rampenzellen (Typ != 1, begehbar — 18,7 % der gemessenen Standorte in ROOM1060) sperren ueber Bandhoehe nicht.
+  Gegenmessung frei_nach2 (mit Typ-Filter): Rakete ROOM1000 @(16882,-2728,-12963), ROOM1060 @(20266,-17161,25748)
+  — unveraendert zur Messung ohne Filter.
+  Begruendung: RE2-Formen tragen ihre Oberkante (`-1800 * ((+10 >> 6) & 0x1f)` @0x8004fe08-30), RE1.5-Zellen
+  keine Hoehe; die RE1.5-Kollision sperrt je Band ohne Hoehe (FUN_8001c6e8 @0x8001c89c-a0). Mit gesetztem
+  Mess-Haken (`re2fx_boden_hook`) unveraendert. `re2fx_boden` selbst (Runde 34, Flammen/Granaten) ist NICHT
+  angefasst.
+
+## 4. Messung NACHHER (Commit 9e6852e2 + Tests; gleiche Harness wie §1, exe-Kopie re15_r35b.exe, Laeufe `re15_port/build/platform/pc/mess_r35b/nachher/w<ID>/` und `.../re15ki/w<ID>/`)
+
+RE2-KI (RE15_AI_FLAVOR=re2), Leon (-1676,-18070) Blick 1076, Zombie slot2 0x10 HP 50 in 1535:
+
+| Id | wf.log (RE2SPAWN / SE) | state.log (Gegner) |
+|---|---|---|
+| 14 | je 3. Bild `RE2SPAWN a0=031d1200 a1=1079 ofs=(150,1200,0)` (11 Strahlen), `SE re2arms ARMS10 satz=0` (Bild 1) und `satz=11` (Bild 11); Fuel 6 -> 0 nach 24 Schleifenbildern (mag=0 ab F44), Schleife endet im naechsten Taktbild | slot2 HP 50 -> 35 -> 20 -> 5 -> -10 (15 je Treffer, alle 5 Bilder = Sperre 5 der Zeile 16), ss1=16, Tod -> Leiche st=7; danach slot3 80 -> ... -> -10 |
+| 15 | Rueckstossbild 1 (F21): `01002000` + 5 x `020c0a00 a1=1079`, Explosionen `SE re2fx code=0x01110001 -> ARMS0F Satz 10` (5x, je Teilgeschoss), Knall `0x01000001 -> ARMS Satz 0` (Op 7) | F21 slot2 50 -> -150 (200 = Zeile 9 Klammer 0), slot3 80 -> 30, slot5 250 -> 200, slot4 (F25) 250 -> 200 (50 = Klammer 1), ss1=9; Tote -> st=7 |
+| 16 | `01002000`, `020c1000 a1=1079`, `03081200`; `SE 0x01130001 -> ARMS10 Satz 10` | slot2 50 -> -150, ss1=11 (Saeure) |
+| 17 | wie 16, `SE 0x01120001 -> ARMS11 Satz 10` | slot2 50 -> -150, ss1=10 (Brand) |
+| 18 | F26: `01002000`, `020d1000 a1=1079`, `030a1a00`, `030a1500 ofs=(300,-900,0)`; `SE 0x01140001 -> RE2 ARMS11 Satz 20`, Knall Satz 0 | slot2 50 -> -850 (900 = Zeile 17), ss1=17 (re2z_death_rip), st=3 -> st=7; zweite Rakete F60 slot3 -> -820 |
+| 20 | `SPAWN id=2 sub=0 scale=0xe00 streams=2`, `id=3 sub=0 scale=0x1000`, `SE arms_rec=0 bank=20`; KEINE Huelse | F19 slot2 50 -> -850 (900 = Zeile 5 Magnum), ss1=5, Tod |
+
+Bilder (RE15_FRAMEDUMP, `mess_r35b/nachher/w15/f_000030.png` usw.): GL-Explosionswolke (Bank 3/4
+RE2-Billboards) an den Zombies, Granatwerfer-Mesh W0F in Leons Haenden; Flammenstoss vor der Muendung
+(w14 f_000030); Raketen-Explosion und Raketenwerfer-Mesh W12 (w18 f_000030); Python W14 mit
+Muendungsblitz (w20 f_000020). Vorher-Bilder (vorher/w15, w14) zeigen keine Effekte bzw. den Puff.
+(gdigrab lieferte in dieser Sitzung weisse Bilder; deshalb RE15_FRAMEDUMP.)
+
+RE1.5-KI (RE15_AI_FLAVOR=re15, Leon (-4311,-19289) Blick 0): alle sechs Laeufe exit 0 und `[flow]
+EXIT_AT` erreicht (kein Haenger auf den RE1.5-Reaktionszeilen 14/15/16/17/18): 14: slot2 75 -> 60 -> 45
+-> 30 (15 je 15 Bilder, Zeile 14 -> Zombie steht wieder auf); 15: slot2/3 -> -125/-135 (RE2-Record
+200 unter dem Import-Modell), ss1=15; 16/17: ss1=16/17, Leichen st=7 ab F76; 18: ss1=18, -825; 20 (in
+2530 ausserhalb der Streifen-Reichweite: kein Treffer) und mit der nahen Aufstellung (w20nah) ebenfalls
+kein Treffer VOR der Streifen-Korrektur — der Hitscan lief fuer 20 durch den begrenzten Kegel 0x800128A0
+(Reichweite 1000 + Radius < 1535). Nach der Korrektur (Streifen wie w7) trifft die Python auch unter
+RE1.5-KI (unit_r35_werfer Teil F, Treffer in 800).
+
+### 4.1 Gegenpruefung am gebauten Stand (Fortsetzung, exe-Kopie re15_r35b.exe vom Stand 023b68a7 + Mess-Zeilen)
+
+Neue Mess-Zeilen in wf.log (nur Harness): `RE2SPAWN ... knochen=(t) lauf=(Spalte 1 der Knochenmatrix)`,
+`RE2FLUG platz bank sub op welt=(x,y,z) kontakt fuss` (je Bild je lebendem Geschoss-Platz; kontakt = FUN_8004fba0-
+Abbild am Geschoss, fuss = dasselbe auf Standhoehe des Spielers), `SE re2fx ... @(Lage)`.
+Laeufe `mess_r35b/{gegen,flug,flug2,raum,raum_vor}/` (Skripte `mess_r35b/run_*.sh`).
+
+**BEFUND G1 — Leons Granatwerfer schiesst 30 Grad nach UNTEN** (flug2/w15_3072, ROOM1140 Leon (-4311,-19289)):
+`RE2SPAWN a0=020c0a00 ... knochen=(-4268,-1977,-19662) lauf=(3478,2079,-417)` = die y-Achse des Waffenknochens
+zeigt 30,5 Grad abwaerts; die gerade Runde (Platz 94, vel.y 600) fliegt Bild 1 -> 2 von (-3189,-1471,-19793) nach
+(-2680,-1167,-19854): 509 vor, 304 TIEFER; alle fuenf Explosionen liegen 1100..2150 vor Leon am Boden
+(y -262..-853). Ursache (Netz gemessen, `plw_mesh`-Werkzeug der Runde 30): PL00W0F.PLW (md5 6c63da9c...) dir[2]
+MD1 @0x50A8 ist IM Knochenrahmen um 35,6 Grad gedreht modelliert — Muendungsring (654,1343,-41) @0x518C,
+(758,1278,-41) @0x519C, (654,1343,48) @0x51AC, (758,1278,48) @0x51BC; Laufring (326,886,62) @0x51C4,
+(326,886,-58) @0x51CC, (429,818,71) @0x5224, (429,818,-65) @0x522C; Schaftende (-297,-345,-60) @0x51F4,
+(-531,-188,-60) @0x520C. Achse Laufring -> Muendung (328.5, 458.5) = 35,62 Grad von +y nach +x. Alle anderen
+Netze liegen auf +y: PL04W0F Hauptachse (0.06,1.00), Muendungsring (61..202, 1153, +-70); PL00W10 (0.02,1.00);
+PL00W0E = RE2 PL00W10 punktgleich (40 Punkte, Duese (57..205, 1100..1116)); PL00W12 Rohr (275,-732) -> (81,1013)
+= -6,35 Grad; RE2 PL00W11 Rohr (215,-600) -> (50,1105) = -5,53 Grad = RE2-Geschwindigkeit (-70,768) = -5,21 Grad;
+RE2 PL01W09 Muendungsring (64,960,+-70). Der RE2-Rahmen "+y = Lauf, +x = oben" und der Versatz {120,1200,0}
+gelten also fuer jedes Netz AUSSER Leons PL00W0F.
+
+**BEFUND G2 — Rakete und Flammenstrahl fliegen durch Waende** (raum_vor/r1000_w18, ROOM1000 ohne Gegner):
+`RE2FLUG platz=94 bank=2 sub=13 op=23/24 welt=(23239,-2575,-13789) kontakt=0 fuss=3` ... zwoelf Bilder bis
+x = 31672, danach `slti 32001` @0x8001f724 -> Platz tot, KEINE Explosion (kein `SE re2fx code=0x01140001`).
+fuss=3 in jedem Bild = die Rakete fliegt die ganze Strecke UEBER einer Zelle des Spieler-Bandes. Ursache: das
+FUN_8004fba0-Abbild der Runde 34 gibt einer SCA-Zelle die Hoehe EINES Bandes (oben = -1800*(b+1)); Leons
+Raketenwerfer-Knochen liegt 2428 ueber dem Boden (Muendung -2575), der Flammenwerfer-Knochen 1800..1900 (Strahl
+-1951, raum_vor/r1000_w14 `welt=(22969,-1951,-13736) kontakt=0 fuss=3`). ROOM1060 (Spieler-y -14400 = Band 8):
+auch die GL-Runde bekommt keinen Kontakt (Schleife 7..0), Rakete tot nach 7 Bildern (raum_vor/r1060_w18).
+Im Lauf mit Gegnern (flug/w18) explodiert die Rakete dagegen im Startbild an der Muendung: der zweite Applier
+0x20011 laeuft auf Bodenhoehe mit Box {-800,0,400,200} + Gegnerradius (= 800 zurueck .. 1300 vor, 1300 seitlich,
+re2gl_box_test) — Zombies in 1200 Abstand vom Muendungspunkt werden im ersten Bild getroffen (RE2-Verhalten).
+
+**Raketen-Elevation:** die Clips 9/11 (hoch/tief) der RE1.5-Bank W12 tragen dieselbe Knochenlage wie Clip 7
+(flug/w18u, w18d: `lauf=(4023,-449,-491)` in BEIDEN) — die Rakete fliegt wie in RE2 (PL00W11 ohne hoch/tief-Clips)
+immer waagerecht. Netto-Steigung 33 je 767 (ROOM1000: y -2575 -> -2936 in 11 Bildern): Knochen 7,6 Grad hoch,
+RE2-Geschwindigkeit (-70,768) = -5,2 Grad.
+
+### 4.2 Messung NACHHER (exe-Kopie vom Stand der G1/G2-Commits; Laeufe `mess_r35b/{frei_nach,raum_nach,nachladen,zensus,inv}/`)
+
+**G1 Granatwerfer (frei_nach/r1000_w15, ROOM1000 Leon (21850,-13400) Blick -x):** `RE2SPAWN a0=020c0a00 a1=2048
+ofs=(-204,1717,3) ... lauf=(-4063,-353,9)` = Laufachse 5 Grad aufwaerts (vorher 30,5 abwaerts). Gerade Runde
+(Platz 94): (20041,-1923) -> (19446,-1975) -> (18850,-2017) -> (18253,-2049) -> ... -> (16457,-2085): 597 je Bild
+vor, flacher Bogen; Explosion an der Wand `SE re2fx code=0x01110001 @(16657,-2083,-13029)`, die vier
+Teilgeschosse am Boden/an der Wand (18475,-165), (18475,-169), (16318,-443), (16877,-770). Bildfolge
+`frei_nach/r1000_w15_mont.png` (RE15_FRAMEDUMP, Bilder 26..41): Werfer waagerecht in Leons Haenden, Rauchspuren
+der Runden, fuenf Feuerbaelle an Boden und Spinden.
+Saeure/Brand (r1000_w16/w17): eine Runde, sechs Flugbilder 635 je Bild, Aufschlag an derselben Wand
+`0x01130001 -> ARMS10 Satz 10` bzw. `0x01120001 -> ARMS11 Satz 10 @(17071,-2094,-13030)`, danach Op 49/48.
+Elevation (r1000_w15u / w15d): hoch `lauf=(-2606,-3136,15)` = 50 Grad auf (Runde steigt 600 je Bild, Explosion
+nach der Lebensdauer in y -9137 — der Raum hat keine Decke in den Daten), tief `lauf=(-3699,1711,12)` = 25 Grad
+ab, Explosionen am Boden 1700..3600 vor Leon.
+
+**G2 Rakete (frei_nach/r1000_w18):** sechs Flugbilder (20460,-2575) -> (16627,-2739), 767 je Bild, dann
+`SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(16882,-2728,-12963)` = Explosion an der Wand (dieselbe Wand
+x ~16650 wie die GL-Runde). ROOM1060 (Band 8, frei_nach/r1060_w18): sieben Flugbilder, Explosion @(20266,-17161,
+25748). Vorher: zwoelf bzw. sieben Bilder, KEINE Explosion. Bildfolge `frei_nach/r1000_w18_mont.png`:
+Muendungs- und Rueckstrahlrauch (Bild 27), Rauchspur quer durch den Raum (30), Feuerball an der Spindwand (33..42).
+Blick auf die nahe Wand (raum_nach/r1000_w18, Muendungspunkt liegt IN der Wandzelle): Explosion im Startbild
+am Rueckprallpunkt (22217,-2530) statt Durchflug.
+
+**Flammenwerfer:** Strahl folgt dem Knochen — waagerecht `lauf=(-4076,-4,-190)`, hoch `(-3456,-2165,-4)` = 32 Grad
+auf, tief `(-3270,2432,-9)` = 37 Grad ab (frei_nach/r1000_w14, w14u, w14d; damit ist der alte OFFEN-Punkt
+"Elevation" gemessen). Strahl-Plaetze laufen beschleunigt (20, 40, 60 ... je Bild, Op 70 acc 20) von der Duese
+weg; an der nahen Wand (raum_nach/r1000_w14) enden sie jetzt (36 statt 72 Flugzeilen, letzter Platz kehrt bei
+x 23048 um). Bildfolge `frei_nach/r1000_w14_mont.png`: Flammenstoss an der Duese, Feuerwolke wandert vorwaerts.
+
+**Nachladen / Leerschuss (nachladen/, ROOM1000 ohne Gegner, state.log `mg=` = Magazin):**
+| Waffe | Verlauf |
+|---|---|
+| 15 / 16 / 17 (1 geladen + 8 Runden) | mg 1 -> 0 (Schuss F20), Leerdruck F76: Nachlade-Ton `SE arms_rec=3`, Magazin 6, derselbe Druck feuert (F77 mg 5), weitere Schuesse 4, 3. Leon hat keinen Nachlade-Clip (Bank 11 Clips) -> sofort. |
+| 20 Python (1 + 8 MAGNUM) | mg 1 -> 0 (F19), Leerdruck F77: Nachlade-Clip 13 (50 Bilder) + `arms_rec=3`, F125 mg 6, Schuesse 5, 4. |
+| 18 Rakete (1) | mg 1 -> 0 (F25, Rakete + Explosion), jeder weitere Druck `SE arms_rec=1` (Klick), kein Nachladen. |
+| 14 Flamme (4 Fuel + 60 FLAME FUEL im Inventar) | mg 4 -> 2 (F27) -> 0 (F35) = 2 je 8 Bilder, Toene ARMS10 Satz 0 / 11 / 0; Schleife endet; kein Nachladen per Abzug (RE1.5 Sub 4 tot, SPEC §1.2) — FLAME FUEL wird im Inventar kombiniert (RE1.5-Satz `18 0e 02 00`, Pin test_inv_fsm 26w). |
+Im Raum mit Gegnern (gegen/w20r) reisst ein Zombie-Griff das Nachladen ab (gr=1 ab F128) — Spielverhalten, kein
+Waffenfehler.
+
+**Zensus aller Waffen-Ids 1..20** (zensus/, ROOM1140, gleiches Skript; "Einige Waffen wie ..."): alle 20 Laeufe
+exit 0; jede Id laeuft durch ihr Feuerclip, verbraucht Munition (1/2 Nahkampf nicht) und der Zombie Platz 2
+(HP 50) verliert HP: 1/2 -> 0, 3/4 mg 6->3, 5/6 6->0 (Feuerstoss), 7 6->4 (HP -1), 8 6->4, 9/10/11 (Granaten)
+6->4, 12 6->0, 13 6->3 (HP -250), 14 Fuel 6->0 (HP -10), 15/16/17 6->4 (HP -150), 18 6->4 (HP -850), 19 6->0,
+20 6->4 (HP -850). Keine weitere Waffe ohne Wirkung.
+
+**Dauerfeuer-Bild Flammenwerfer** (audio/w14_dauer.png, RE15_FRAMEDUMP Bilder 40/48/56/64, Abzug 2,5 s gehalten):
+durchgehender waagerechter Flammenstrahl von der Duese, etwa anderthalb Koerperlaengen weit; Toene im Wechsel
+`SE re2arms ARMS10 satz=0` / `satz=11` je Clip-Durchlauf (Bild 1 / 11 des 21-Bild-Clips).
+
+**Tonweg mit eingeschaltetem Audio** (audio/, SDL_AUDIODRIVER=dummy statt RE15_NOAUDIO, damit `g_audio.initialized`
+gesetzt ist und die RE2-Baenke wirklich geladen werden): Laeufe 14/15/18/20 exit 0, keine Zeile
+`[re2arms] ... fehlt` in debug.log/run.out (shared_assets/RE2/SOUND/ARMS10/ARMS11 werden gefunden und geparst).
+Gehoert wurde nichts (Dummy-Treiber) — die Klangprobe am Lautsprecher bleibt dem Nutzer.
+
+**Inventar-Darstellung** (inv/inv_zoom.png, RE15_INV_SHOT + RE15_GIVE): Granatwerfer-Symbol mit Mengenzahl in der
+Farbe der Munitionsart (Explosiv blau wie jede Waffe, Saeure gelb = Byte +8 = 1 @0x80074e70 (Record 16 @0x80074e68 + 8), Brand/Flamme
+orange = 2), ACID ROUNDS gelb, EXPLOSIVE RND gruen, COLT PYTHON + MAGNUM BULLETS, Flammenwerfer + FLAME FUEL.
+
+## 5. Tests
+
+* `unit_r35_werfer` (tests/unit/test_r35_werfer.c, 78 Pruefungen mit Teil G, OK): A Daten (Magazine/Munitions-
+  Records, Bank-/Clip-Umsetzung, Schwelle), B GL-Runde (Op 17 Art/Lebensdauer, Op 22 + Op 15 je Bild,
+  zwei Applier 0x30009 je Bild mit Box {-1400,0,350,250} und y+-1000, Wand -> Op 47: SE 0x01110001,
+  2 x 0x10020009 Box {-2000,0,1000,500} y/y+900, drei Kinder, Phasen 1..4 -> Platz frei; Treffer ->
+  sofort; Saeure -> Op 49 + 0x01130001 mit Hitcode 0x3000B, Brand -> Op 48 + 0x01120001 mit 0x3000A;
+  Lebensdauer 10..12), C Rakete (Op 23 + Op 24, 0x30011/0x20011 Box {-800,0,400,200}, Treffer -> Op 47
+  Sub 13 = 0x01140001 ohne Flaechenschaden, Wand -> Op 47), D Flammenstrahl (Op 70 je Bild, 0x20010 Box
+  {-1400,0,400,200}, Vortrieb, Zaehler 10 -> acc.y -10, Treffer -> Nachbrennen, Puff bei step[2]==3),
+  E Fuel-Takt (7 Bilder nichts, 8. Bild 2 Einheiten, leer -> 0), F Python/Rakete/GL/Flamme gegen den
+  RE1.5-KI-Zombie (Treffer, Tod, +0x5 = 20/18/15/14, RE2-Zeile 5, DAT_8006f430[6..10]).
+* `integration_r35_werfer` (tests/integration/test_r35_werfer.cmake, echte exe, 6 Laeufe ROOM1140,
+  94 s, Passed): je Waffe die RE2-Spawns im Rueckstossbild 1, die Toene, HP-Verlust und Reaktionszeile
+  (15: ss1 9; 16: 11; 17: 10; 18: 900/ss1 17; 14: ss1 16 + Fuel leer; 20: Redhawk-FX ohne Huelse, 900/ss1 5),
+  EXIT_AT erreicht (kein Haenger). Exit -1 (fremder Kill) wird einmal wiederholt.
+* **Pin-Anpassungen (Suite-Lauf 1, 4 rote Pins = alte Port-Wahlen der Python / Raketen-Hitscan):**
+  `unit_re2_weapon_rows` (w20: Zeile 13 -> 5), `unit_re2_baby_spider_dmg` (w20: Zone 0 = 130 statt 17,
+  Streifen), `unit_re2_hp_model` (w20 liest die Erwartung der Spalte 7, `R35_W`), `unit_re2_zombie_teardeath`
+  (PIN2: der Raketen-Treffer kommt wie in Op 24 ueber den Applier `0x30011` Box {-800,0,400,200} im
+  Rueckstossbild 1 — der Harness tickt die RE2-FX-Maschine nicht; PIN3..PIN7 waren eine Kaskade des
+  nicht endenden PIN2-Kampfs; w20 aus PIN7 (Handfeuer-Wache) heraus und als PIN1b (Magnum-Zelle
+  0x801092C4, Zeile 5) hinein).
+* Suite Lauf 1 (12:00-12:30) wurde vom Sitzungslimit zerrissen (alle Tests ab ~#440 `Exit code 0xc0000142` = Prozessstart beim Sitzungsende; kein Befund).
+* **Suite Lauf 2 (15:32-15:55, Stand 7943c63a, `local_build.sh all`): `=== LOCAL-BUILD-OK (all) — Tests 480/480`** (1342 s unter Last paralleler Baeume; kein roter Test, auch die Fenster-Haken gruen). Die vier nachgezogenen Alt-Pins sind gruen, weitere Alt-Pins waren nicht rot.
+* `unit_r35_werfer` Teil G (Fortsetzung, 8 Pruefungen 90..97): `re15_werfer_rahmen` — Laufachse (2386,3330,0),
+  Hochachse (3330,-2386,0), Versatz {-204,1717,3}, Muendungspunkt = Ringmitte + 240 laengs, gemessene Haltepose
+  wird waagerecht; 14-Clip-Bank/Rakete/Flamme/Python unveraendert.
+* `unit_r35_werfer_kombi` (tests/unit/test_r35_werfer_kombi.c, 52 Pruefungen, OK): faehrt die ECHTE Menue-Maschine
+  (GRID -> EXCHANGE -> Zustand 7 -> Matcher/Executor -> Kompaktierung -> Ergebnis-Animation): K1 GL + eigene Runde
+  = Magazin 6 / Rest; K2 GL Explosiv + ACID = GL Saeure mit ganzem Stapel, Explosiv-Runden zurueck, Bild 0x0c,
+  Schwanzzelle zieht mit; K3 leerer GL: Runden-Zelle geloescht + kompaktiert; K4 Runde + GL (Zustand 8); K5 Runde +
+  Schwanzzelle (Normalisierung, Aktion 3 VOLL); K6/K7 Python <-> MAGNUM; K8 Redhawk weiter ueber die RE1.5-Tabelle;
+  K9 Rakete ohne Paar; K10 gefuehrter GL ist nach dem Schliessen die neue Art.
+* `integration_r35_werfer` (Fortsetzung, jetzt 9 exe-Laeufe, 134 s, Passed): zusaetzlich FREIE BAHN — ROOM1000
+  Granatwerfer (Versatz (-204,1717,3) an allen 5 Runden, gerade Runde >= 4 Flugbilder, Vortrieb >= 1500 und
+  dy in -400..200 ueber drei Bilder, 5 Explosionen), Rakete in ROOM1000 und ROOM1060 (>= 4 Flugbilder, Vortrieb
+  ~2300 ueber drei Bilder, GENAU eine Explosion 0x01140001 an der Wand). Gegenprobe = Messung vorher §4.1 (dy +912
+  bzw. 0 Explosionen).
+* **Suite Lauf 4 (Endstand Code f391f1c6, `local_build.sh all`): `=== LOCAL-BUILD-OK (all) — Tests 481/481`**
+  (481 = 480 + unit_r35_werfer_kombi; kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer,
+  unit_r35_werfer_kombi Passed, integration_r35_werfer Passed 137 s). Lauf 3 wurde von mir bei 340/481 abgebrochen
+  (Code-Aenderung Wand-Filter), bis dahin ohne roten Test.
+
+## 6. OFFEN (mit Adresse und naechstem Messweg)
+
+1. **Flammen-Latch 0x800DF349** (Op 7 / Flammen-Handler @0x80045518-20): Leser @0x80026784 / @0x8002693c
+   in der RE2-Gegnerschleife nicht portiert (vermutlich "Laerm/Licht fuer Gegner"). Naechster Weg:
+   `re2_disasm.py dis 0x80026760 40` und `0x80026920 24`, Konsument bestimmen.
+2. **FUN_80043d30(player)** im Flammen-/Werfer-Handler Bild 1 (Tabelle 0x800A6ED0 (id-2)*6, FUN_8003947c /
+   FUN_80039514): nicht portiert (vermutlich Muendungs-Licht/Kamerazittern). Weg: beide Funktionen
+   disassemblieren; sie werden auch von Magnum/Schrot gerufen (@0x80043a94, @0x80045720, @0x800489b8).
+3. ~~Flamme: Elevation~~ — ERLEDIGT (Fortsetzung): gemessen, der Strahl folgt dem Knochen 32 Grad auf / 37 Grad
+   ab (§4.2).
+4. **Explosiv-GL: Trefferzonen (Klammer k)** im Applier fuer RE1.5-KI-Typen = Zone + 3k mit k aus dem
+   Hitcode (0x10020009 -> k = 1): die Gore-Spalten der RE2-Zombies sind nur im RE2-Modell erreichbar.
+5. **Wasser-Spritzer 0x1A051C00** (Op 15 @0x8001ee1c-38): Bank 0x1A ist eine Raum-ESP-Bank (nicht in
+   CORE00) — spawn liefert -1, kein Spritzer in Raeumen mit Wasser. Weg: RE2-Raum-ESP-Banken registrieren.
+6. **Rakete: Explosions-Sample**: RE2 ARMS11 Satz 20 (12672 B) statt RE1.5 ARMS12 Satz 10 (17104 B) —
+   Vertrag "Sound ist RE2"; wer das RE1.5-Sample will, aendert nur fx_plattform_pc.c (0x01140001).
+7. ~~**Elza (PL04)**~~ — ERLEDIGT (Nachbesserung 1, §8.6: Abnahme 0 §2.3 hat Elza gemessen, Test integration_r35_werfer_elza): Baenke W0F/W10/W11/W12/W14 sind Standard-14-Clip-Baenke (Nachlade-Clip 13 = 32 Bilder
+   vorhanden), ihr GL-Netz liegt auf +y (Muendungsring (61..202,1153,+-70)) — weder Clip-Umsetzung noch
+   Waffenrahmen greifen (unit_r35_werfer 95). NICHT mit Elza am gebauten Stand gemessen: der Harness-Start ueber
+   RE15_TITLE_SHOT nimmt immer Leon (`[pl] Spieler-Familie PL00`), RE15_PSELECT_AUTO(_SWITCH) allein kam in 150 s
+   nicht ins Spiel (mess_r35b/elza). Naechster Weg: das Rezept aus tests/integration/test_elza_vollstart.cmake
+   (RE15_INPUT_SCRIPT "W2,S1,W900" + PSELECT_AUTO_SWITCH) mit RE15_DEBUG_JUMP=1000 und den Laeufen aus
+   mess_r35b/run_nachladen.sh.
+8. **Pose+0x7AC vs. 0x7A4**: RE2 nimmt die Knochenmatrix bei +0x7AC, RE1.5 bei +0x7A4 — der Port
+   nimmt in beiden Faellen den gerenderten Knochen 11 (R_gunbone/T_gunbone). ⛔ BERICHTIGT (Fortsetzung): die
+   Aussage "die RE2-Versatzrichtung (+y Lauf, +x oben) stimmt mit der RE1.5-Muendung ueberein" war nur am
+   ERGEBNIS abgelesen (Aufschlaege an den nahen Zombies) und fuer Leons PL00W0F FALSCH — Befund G1 (§4.1): das
+   Netz ist 35,62 Grad gedreht, die Runden flogen 30 Grad abwaerts. Fuer PL00W0E / PL00W12 / PL04W0F stimmt sie
+   (Netze vermessen, §4.1).
+
+9. **Moebel-Zellen sperren Werfer-Geschosse wie Waende** (§3.8; Stand Nachbesserung 1 §8.1: BELEGT als RE1.5-Schusslinien-Regel FUN_80011f50 -> FUN_8001b9b4 -> FUN_8003dcc4 ohne Hoehe, gleiche Regel wie Spur A; Kreis-Zellen Typ 3 jetzt mit; offen bleibt nur der EINE Formtest fuer Typ 2/4..9 bei der Zusammenfuehrung mit Spur A): die SCA-Zelle traegt keine Hoehe (12-Byte-Satz;
+   Memory reai-v2-quader-modell: "die Hoehe ist die einzige Groesse, die nicht in den Daten steht"). Eine Rakete,
+   die in RE2 ueber einen Tisch floege, explodiert im Port an der Tischkante. Naechster Weg: je Zelle eine Hoehe
+   messen (Quader-Verfahren der Karten-Masken) oder die RE2-Formhoehen (`(+10 >> 6) & 0x1f` @0x8004fe08-30) fuer
+   gleiche Raeume uebernehmen.
+10. **Keine Decke**: nach oben geschossene GL-Runden explodieren erst nach ihrer Lebensdauer (10..15 Bilder,
+    @0x8001f224-84) hoch ueber dem Raum (gemessen y -9137) — RE1.5-Raeume tragen keine Deckenhoehe.
+11. ~~**Leer-Ton des Raketenwerfers**~~ — ERLEDIGT (Nachbesserung 1, §8.2: RE2 ARMS11 Satz 1 @0x80043868/94-9c, am Mischer gemessen): der Port spielt den RE1.5-Klick `0x01010001` = ARMS12 Satz 1 (wf.log
+    `SE arms_rec=1 bank=18`). RE2 ARMS11 traegt einen eigenen Satz 1 (`00005416`); der RE2-Leerzweig der
+    Feuer-FSM ist nicht disassembliert. Weg: `re2_disasm.py` Suche nach `lui a0,0x101` im Bereich 0x80042c00-
+    0x80048a00, dann ggf. `re15_audio_re2_arms_se(0x11, 1)`.
+12. **RE2-Vorpruefung "Waffe schon voll"** (Zustaende 5/6 -> Zustand 3, @0x8006b9a4-bb60): nicht portiert; die
+    RE1.5-Aktionen 2/3 laden ohne Vorpruefung (bei vollem Magazin aendert der TEIL-Zweig @0x8004e3e4 nichts, die
+    Ergebnis-Animation laeuft trotzdem).
+13. **Raketen-Rohrachse**: RE1.5 PL00W12 -6,35 Grad gegen die RE2-Geschwindigkeit (-70,768) = -5,21 Grad (RE2-Netz
+    -5,53): 1,1 Grad Abweichung, Netto-Steigung der Rakete 33 je 767 (2,5 Grad). RE2-Daten unveraendert gelassen.
+14. **Selbstschaden**: Explosion/Flamme treffen im Port nur die Gegnerliste (Applier FUN_800470C0). Ob RE2 den
+    Spieler durch eigene GL-/Raketen-Explosionen verletzt, ist nicht untersucht. Weg: Aufrufer von FUN_800470c0
+    und Op 47 auf einen zweiten Schadensweg (Spieler-Struktur 0x800cfbf8) durchsuchen.
+15. **Harness**: RE15_GIVE legt breite Waffen (0x0e..0x13) als EINE Zelle ab; die Welt-Aufnahme
+    (FUN_8004dc4c) als zwei (Zellen-Flags 1/2). `re15_werfer_gl_tausch` fuehrt die Schwanzzelle mit, wenn sie
+    da ist (unit_r35_werfer_kombi 32); am gebauten Stand wurde nur die Ein-Zellen-Form gesehen (inv/).
+
+## 7. Fuer den Nutzer
+
+* Keine neuen Sprachzeilen (synchro/): nichts aufzunehmen.
+* NEUE ASSETS fuer das Paket-/Android-Gate: `re15_port/shared_assets/RE2/SOUND/ARMS10.EDH`,
+  `ARMS10.VB`, `ARMS11.EDH`, `ARMS11.VB` (RE2-Flammenwerfer- und Raketen-Toene; ohne sie bleiben
+  Flammen-Ignition/-Strahl und die Raketen-Explosion stumm, alles andere laeuft).
+* Bedienung: Granatwerfer (3 Munitionsarten) und Raketenwerfer feuern im Rueckstossbild 1 ein RE2-
+  Geschoss (fliegt in Blickrichtung, explodiert an Wand/Boden/Gegner bzw. nach 10..15 Bildern; die
+  Rakete nur bei Treffer/Wand). Nachladen: GL mit EXPLOSIVE/ACID/INCEND. ROUNDS (6 je Magazin), Python mit
+  MAGNUM BULLETS (6); Rakete 4 Schuss ohne Nachladen. Flammenwerfer: 100 Fuel = 400 Bilder Dauerfeuer
+  (2 Einheiten je 8 Bilder), Zombies brennen nach 10 Treffern (RE2-Zeile 16).
+* Item-Debug: SELECT + R1/L1 am Statusschirm (Runde 34) oder RE15_GIVE="15:6,25:12" / RE15_EQUIP=15
+  (Munitions-Ids 0x19 = 25, 0x1a = 26, 0x1b = 27, 0x17 = 23).
+* NEU (Fortsetzung) — Inventar, Kommando EXCHANGE: Runde auf den Granatwerfer (oder umgekehrt) kombinieren.
+  Eigene Art = Nachladen bis 6; andere Art = Munitionswechsel wie in RE2: der Werfer wird zur anderen Art und
+  nimmt den ganzen Stapel, die bisher geladenen Runden kommen als Runden-Item zurueck (die Mengenzahl zeigt die
+  Art: gelb = Saeure, orange = Brand). COLT PYTHON + MAGNUM BULLETS = Nachladen bis 6. Raketenwerfer: 4 Schuss,
+  keine Kombination. Flammenwerfer: FLAME FUEL im Inventar kombinieren (per Abzug laedt er nicht nach).
+* NEU (Fortsetzung) — Leons Granatwerfer schoss vor der Korrektur 30 Grad nach unten (alle Explosionen 1..2 m
+  vor ihm am Boden); jetzt fliegt die Runde entlang des sichtbaren Laufs. Rakete, Runden und Flammenstrahl
+  enden an Waenden (die Rakete flog vorher durch die Wand und verschwand ohne Explosion). Auch Moebel-Zellen
+  sperren (OFFEN 9).
+
+## 8. Nachbesserung 1 (nach der unabhaengigen Abnahme 0, `B_abnahme_0.md`)
+
+Protokoll: 2026-10-03, Fortsetzung im selben Baum (HEAD 058301b3 = Abnahme 0, Baum sauber). Die Maengel
+M1..M4 und der Nebenbefund der Abnahme werden einzeln abgearbeitet; jede Messung/jedes Zitat steht hier.
+exe-Kopie fuer eigene Laeufe: `re15_port/build/platform/pc/re15_r35nb1.exe`, Laeufe unter
+`re15_port/build/platform/pc/mess_r35b/nb1/` (nicht versioniert).
+
+### 8.3 M3 — falsche Adress-Zitate der Magazin-Konstanten (RE-Gate)
+
+**Ursache:** der Vorgaenger hat die Adressen `0x80074da8 + id*12` mit id = 3..8 (statt 15..20) hingeschrieben.
+**Beleg (selbst gelesen, `re15_disasm.py bytes 0x80074da8 264`):**
+```
+[7]  @0x80074dfc  06 00 00 00  9c 4c 07 80  03 01 00 00   Super Redhawk: 6, Record 0x80074c9c, nachladbar
+[14] @0x80074e50  64 00 00 00  a8 4c 07 80  02 01 00 00   Flammenwerfer
+[15] @0x80074e5c  06 00 00 00  88 4c 07 80  03 00 00 00   GL Explosiv: 6, Zeiger @0x80074e60 = NULL-Record 0x80074c88
+[16] @0x80074e68  06 00 00 00  88 4c 07 80  01 00 00 00   GL Saeure (Farb-Byte +8 @0x80074e70 = 1)
+[17] @0x80074e74  06 00 00 00  88 4c 07 80  02 00 00 00   GL Brand
+[18] @0x80074e80  04 00 00 00  88 4c 07 80  03 00 00 00   Rakete: 4
+[19] @0x80074e8c  64 00 00 00  88 4c 07 80  03 00 00 00   MC51: 100
+[20] @0x80074e98  06 00 00 00  88 4c 07 80  03 00 00 00   Colt Python: 6
+```
+An den frueher zitierten Adressen 0x80074dd4/de0/dec/df8/e04/e10 steht `03 01 00 00` = Bytes +8..+11 der
+Records 3..8 (Pistolen/Redhawk/Schrot). Die WERTE im Code waren richtig, die Belege nicht.
+**Aenderung (nur Kommentare/Meldungstexte, kein Verhalten):** inventory_common.c:193-194 ([15] @0x80074e5c ..
+[20] @0x80074e98), re15_werfer.h:7 (Munitions-Zeiger Record +4 @0x80074e60/6c/78/84), :30 (Magazin
+@0x80074e5c/e68/e74), :32 (Rakete @0x80074e80), :45 (Rueckstoss-Saetze @0x80074090 + (id-1)*5: 14 @0x800740d1,
+15..18 @0x800740d6-e9, 20 @0x800740ef-f3 — vorher "d6-ef" ungenau; nachgelesen `bytes 0x80074084 124`),
+game_step_common.c:1714, werfer_r35.c:311, test_r35_werfer.c:123, test_r35_werfer_kombi.c:9/125, Dossier §3.5
+Punkt 1 (w7 @0x80074dfc), Punkt 5, Punkt 9 und §4.2 Inventar-Darstellung (Farb-Byte @0x80074e70).
+Gegenprobe: `grep -rn "80074dd4\|80074de0\|80074dec\|80074df8\|80074e04\|80074e10" re15_port analysis/.../B_werfer.md`
+liefert nur noch diese Abschnitts-Zeilen.
+
+### 8.5 Nebenbefund — Uhrzeit "17:20 Suite Lauf 4"
+Berichtigt in §0 (Protokollzeile): `suite_lauf4.log` endet 16:59:25, Abschluss-Commit 17:00:46; "17:20" war
+verschrieben. Ergebnis 481/481 unveraendert.
+
+### 8.0 Protokoll Fortsetzung (zweite Sitzung der Nachbesserung 1)
+- 2026-10-03 abends: Baum sauber, HEAD e32ab456 (vom Orchestrator gesicherter Rest: `re15_werfer_leer_ton`, Haken
+  game_step_common.c +1, re15_werfer.h +6 = Beginn M2). B_abnahme_0.md, Diff 058301b3..HEAD gelesen.
+- `local_build.sh build` auf e32ab456: `=== LOCAL-BUILD-OK (build)` (Log `re15_port/build/mess_r35b_logs/nb1_build1.log`).
+- Die RE2-Zitate des Vorgaengers in `re15_werfer_leer_ton` SELBST nachdisassembliert (§8.2) — sie stimmen.
+- M1-Beleg (RE1.5-Schusslinie) und M4-Beleg (RE2-Fressergate) selbst disassembliert (§8.1, §8.4).
+
+### 8.2 M2 — Leerschuss des Raketenwerfers war stumm
+**Messung vorher (Abnahme 0, §2.5):** `RE15_GIVE=18:1`, zweiter Abzug F76: wf.log `SE arms_rec=1 bank=18(geladen=1)`,
+Audio-Mitschnitt ohne jede Abweichung vom Leerlauf. Ursache gelesen: RE1.5-Klick 0x01010001 = Bank ARMS12 Satz 1,
+`ARMS12.EDH` Dateibytes 4..7 = `ff ff ff ff` (xxd: `0000 1320 ffff ffff ...`, Satz 10 @0x28 `0000 3320`) -> kein Sample.
+**Beleg RE2 Retail (selbst disassembliert, info/re2leon/PSX.EXE, re2_disasm.py; Zitate des Vorgaengers bestaetigt):**
+* Waffen-Dispatch @0x800a6f38 + Id*4: [17] @0x800a6f7c -> 0x80043230 (= Standard-FSM wie 2..13; 16 -> 0x8004799c,
+  18 -> 0x80048b50); 0x80043230: `lbu v0,6(a0)` / `lw v0,28744(at)` = Tabelle 0x800a7048 / `jalr` @0x80043238-54;
+  0x800a7048[1] = 0x8004362c (Haltezustand).
+* Haltezustand, Leerzweig:
+  ```
+  8004382c jal 0x80069f54 / andi a0,a0,0xfff       Magazin > 0 ?
+  80043834 beq v0,zero,0x80043844 / addiu v0,zero,2 -> sonst Zustand 2 (Feuer) `sh v0,6(s0)` @0x80043840
+  80043844 lui v0,0x800d / lw v0,-7408(v0)         0x800ce310 (Tasten-Flanke)
+  80043850 andi v0,v0,0x40 / beq v0,zero,0x800438a4
+  8004385c jal 0x8006a23c                         Nachladen moeglich?
+  80043864 beq v0,zero,0x80043894 / lui a0,0x101  (Delay-Slot)
+  8004386c lhu v0,270(s0) / andi 0xfff / addiu -9 / sltiu 0x3 / bne v0,zero,0x80043898 / ori a0,a0,0x1   (GL 9..11: Klick)
+  80043888 addiu v0,zero,4 / j 0x800438a0 / sh v0,6(s0)                                                 (sonst Zustand 4 = Nachladen)
+  80043894 ori a0,a0,0x1 / 80043898 jal 0x8005ba28 / 8004389c addiu a1,s0,56   = SE 0x01010001 an der Spielerlage
+  ```
+* 0x8006a23c (Nachladen moeglich?): fuer Id 17 hart 0 — `lbu v1,23546(v1)` (0x800d5bfa) / `addiu v0,zero,17` /
+  `bne v1,v0,0x8006a2a0` / `j 0x8006a2a4` / `addu v0,zero,zero` @0x8006a284-9c. Die leere Rakete laeuft also IMMER in
+  den Klick 0x01010001 = Bank 1 (ARMS der gefuehrten Waffe) Satz 1. RE2 `ARMS11.EDH` Dateibytes 4..7 = `00 00 54 16`
+  (xxd `0000 1436 0000 5416 ffff ...`) = ein belegter Satz 1.
+**Umsetzung (e32ab456, jetzt gebaut):** `werfer_r35.c` `re15_werfer_leer_ton(id)`: nur Id 18 -> `re15_audio_re2_arms_se(0x11, 1)`;
+Haken game_step_common.c im Leerzweig (`else if (re15_werfer_leer_ton(eq_item)) { }`, 1 Zeile) vor dem RE1.5-Klick. Die GL
+15/16/17 behalten den RE1.5-Klick ARMS0F Satz 1 (`00005216`, hoerbar, Abnahme §2.5); ihr Nachladen per Abzug bleibt
+PORT-WAHL §3.5 Punkt 4 (RE2 laedt den GL per Abzug NICHT, s. `sltiu 0x3` @0x8004387c).
+**Messung nachher** (exe-Kopie `re15_r35nb1.exe`, `mess_r35b/nb1/run_m2.sh`, `RE15_AUDIO_CAP_SYNC=cap.raw` = 1470 Stereo-
+Abtastungen je Spielbild, ROOM1000 ohne Gegner, Leon (21850,-13400) Blick -x, `RE15_GIVE=<id>:1`, Skript MIT zweitem Abzug
+`M0.6,MA0.3,M1.6,MA0.2,M2.0,W1` gegen OHNE `...,M0.2,...`; Spitzenpegel je Bild /256, `mess_r35b/nb1/ana_m2.py`):
+| Waffe | wf.log zweiter Abzug | erste Abweichung MIT gegen OHNE (Bild: mit/ohne) | abweichende Bilder |
+|---|---|---|---|
+| 18 Rakete | `F76 ... mag=0` / `SE  re2arms ARMS11 satz=1` | 331: 33/17, 332: 32/15, 335..339 | 6 |
+| 15 GL (Gegenprobe) | `F76` / `SE  arms_rec=1 bank=15(geladen=1)` | 331: 19/17, 332: 31/15, 334 | 3 |
+Vorher (Abnahme): Rakete 0 abweichende Bilder. Der Leerschuss ist jetzt am Mischer hoerbar (RE2-Sample ARMS11 Satz 1).
+
+### 8.4 M4 — Werfer gegen FRESSENDE Zombies (ROOM1140)
+**Beleg RE2 Retail (selbst disassembliert):**
+* Fress-Executor EXEC[8], Phase 0 (EMZ0.BIN, `re2_disasm.py dis 0x80103be8 --bin EMZ0.BIN`): `lbu v1,467(s1)` @0x80103c04 /
+  `ori v1,v1,0x80` @0x80103c0c / `sb v1,467(s1)` @0x80103c14 -> +0x1D3 Bit 0x80 steht, solange der Zombie frisst.
+  Geloescht nur beim Aufstehen (P3 `andi 0x7f` @0x80103CE4-FC, Port enemy_ai_re2_zombie.c re2z_exec_feeding) bzw. im
+  Weck-Zweig (`lbu v0,467(s0)` / `andi v0,v0,0x7f` / `sb v0,467(s0)` @0x80104ef0-f04, zusammen mit `andi v1,v1,0xbfff`
+  / `sh v1,270(s0)` @0x80104f0c-10 = +0x10E Bit 0x4000 "Fress-Riegel").
+* Kandidatenfilter des Appliers FUN_800470C0 (alle Werfer-Treffer): `lbu v0,467(s0)` / `bne v0,zero,0x8004740c`
+  @0x80047138-40 (+0x1D3 != 0 -> kein Kandidat) und `lhu v0,270(s0)` / `andi v0,v0,0xc000` / `bne` @0x80047158-64.
+* DIESELBEN Gates im RE2-Schuss-Resolver FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC):
+  `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78, `lhu v0,270(s2)` / `andi v0,v0,0xc000` / `bne`
+  @0x80041290-9c. => In RE2 Retail ist ein FRESSENDER Zombie fuer JEDE Waffe kein Ziel, bis er aufsteht.
+**Messung (eigener Lauf, `mess_r35b/nb1/run_m4.sh`, exe-Kopie re15_r35nb1.exe, RE2-KI = Vorgabe, GL Explosiv 15:6, zwei
+Schuesse, `RE15_BEFUND_MARKE=255` = ROOM1140 Bild 255, befund.log-Marke je Gegner):**
+* Tuer (-7600,-17600) Blick +x: alle fuenf Plaetze `ss= 8/1 ... 1D3=80` (Fresser), dist 6122..8748, HP 50/80/250/250 und
+  der Liegende (0x16, `ss= 7/1 1D3=80`) unveraendert; Explosionen u.a. `@(-928,-1892,-20295)`, `(-2449,-63,-20814)`,
+  `(-1372,218,-18974)` zwischen den Fressern; state.log: kein Platz verlaesst st=1 ss1=8 bis Bild 280.
+* Mittel (-5000,-19600) Blick +x: Platz 2 (dist 3197) und 3 (3771) < 0xFA0 = 4000 -> geweckt (Port-Weckregel
+  re2z_exec_feeding: `ai_dist < 0xfa0` = RE1.5-Fresser-Tor, gekennzeichnetes PORT-MAPPING), dabei +0x1D3 &= 0x7f; erster
+  Schuss: state.log F23 `st=3 ss1=9` (GL-Reaktion) fuer beide, F54 Leichen st=7. Platz 4 (dist 5561) und 5 (5196) bleiben
+  `ss= 8/1 1D3=80 hp=250` — der zweite Schuss (Explosionen `@(501,-333,-20870)`, `(504,-340,-19078)`, `(-1626,-165,-20240)`)
+  bleibt an ihnen wirkungslos.
+**Urteil:** das Verhalten der Werfer ist RE2-treu (Gate 2 + Gate 4); die Abnahme-Vermutung "das Bit steht erst einige
+Bilder nach dem Raumeintritt" stimmt nicht — die nahen Fresser (< 4000) stehen auf und sind treffbar, die fernen fressen
+weiter und sind es nicht. Kein Werfer-Code geaendert. Die Python toetet Fresser, weil der Port fuer Schusswaffen in beiden
+KI-Arten den RE1.5-Resolver FUN_80011f50 faehrt, der +0x1D3/+0x10E nicht kennt — Abweichung vom RE2-Resolver
+@0x80041270-9c, Schuss-Pfad ALLER Schusswaffen (nicht Spur B), OFFEN 16. Die befund.log-Deutung `treffbar=ja` prueft nur
+die RE1.5-Gates (main.c, "NUR LESEN") und zeigt die RE2-Sperre nicht.
+
+### 8.1 M1 — Moebel-Zellen sperren Rakete, GL-Runden und Flammenstrahl in jeder Hoehe
+**Messung vorher:** Abnahme 0 §4 M1 (ROOM1140, Leon (200,-10300) Blick -z: Rakete explodiert im Startbild an der
+Tischkante `@(-174,-2530,-10668)`, GL-Explosionen an der Kante in 1840..2150 Hoehe, Strahl-Plaetze z -11349..-11569;
+Python trifft ueber denselben Tisch Platz 5 in 9300). Nicht wiederholt.
+**RE-Beleg 1 — die Zelldaten (selbst gelesen, ROOM1140.RDT SCA @0x570, 5 Listen zu 19):** Zelle 6 @RDT 0x5d0
+`44 2f d4 17 d6 ed d6 bb 01 ff 00 03` = {w 12100, d 6100, x -4650, z -17450, Typ 1, u0 ff, u1 00, floor 03}: Wort+10 =
+0x0300 = Band 0, Klassen-Nibble 3 — dieselben Bytes wie jede Wand des Raums (Zellen 0..13 alle `01 ff 00 03`). ROOM1000
+Baenke (Zellen 6/7 @0x574/@0x580) ebenso `01 ff 00 03`. Keine Hoehe im 12-Byte-Satz (wie Spur A N1.1, A_granate.md).
+**RE-Beleg 2 — die RE1.5-SCHUSSLINIE sperrt an genau diesen Zellen ohne Hoehe (selbst disassembliert, re15_disasm.py):**
+* Treffer-Resolver FUN_80011f50 (alle Schusswaffen): `jal 0x8001b9b4` / `addu a0,s0,zero` (s0 = Ziel+0x34) @0x80012168-6c,
+  `bne v0,zero,0x80012540` / `addu v0,zero,zero` @0x80012170-74 -> Sichtlinie blockiert = Rueckgabe 0 = KEIN Treffer.
+* FUN_8001b9b4: vier Regionen 3..0, je `ori a2,zero,0xf00` / `jal 0x8003dcc4` / `ori a3,zero,0x300` @0x8001ba1c-24;
+  Strahl von DAT_800ac784 (= Spieler, Katalog FUN_80031c44) zum Ziel.
+* FUN_8003dcc4 Zellfilter: `lhu a0,0(s7)` (Wort+10) / `lbu v1,130(v1)` (Spieler +0x82 = Band) / `sll v0,a0,16` /
+  `sra v0,v0,28` / `bne v1,v0` @0x8003de5c-6c; `and v1,t5,a0` (0xf00) / ... / `bne v1,v0` (0x300) @0x8003de7c-94; danach
+  nur x/z-Kreuzungstests gegen die Zelldiagonalen (OuterProduct0) — keine y-Komponente.
+=> Im Auslieferungsstand gibt es KEINE Schusslinie ueber den Konferenztisch: ein Zombie hinter Zelle 6 ist fuer jede
+Waffe kein Treffer. Der Werfer, der an der Tischkante explodiert, folgt also der einzigen Schusslinien-Regel, die RE1.5
+hat; RE2s Hoehenfenster (@0x8004ffd4-0x8005000c, Oberkante @0x8004ffb0-d0) braucht ein Feld, das RE1.5-Zellen nicht
+tragen. Dieselbe Regel wie die Handgranate (Spur A, A_granate.md N1.1 "Formen ja, Hoehe nein", Mangel 3): Handgranate und
+Werfer verhalten sich am Tisch gleich. Die Gegenprobe der Abnahme (Python trifft ueber den Tisch) ist eine ABWEICHUNG
+des Port-Resolvers: re15_player_weapon_fire (re15_damage.c) hat den Sichtlinien-Test @0x80012168-70 nicht (grep
+`8001b9b4` in engine/src: nur Kraehen-Code) -> OFFEN 17 (Schuss-Pfad aller Schusswaffen, nicht Spur B).
+**Neuer Befund beim Gegenlesen — Kreis-Zellen fehlten:** `wandzelle_im_band` nahm nur Typ 1 mit der Begruendung "Typ != 1
+= Treppen-/Rampenzellen". Falsch: Typ 1..9 sind Formen (Verteiler 0x800b2858, gefuellt @0x8003af04-84, [3] Kreis
+@0x8003af24; Port re15_collision.c push_rect/push_circle/push_diag*). Zensus ROOM1000/1060/1140: nur Typ 1 und Typ 3,
+alle `ff 00 ?3`; ROOM1060 Typ 3 = 25 Eintraege Band 0 (keine Treppe). Die Rakete flog durch Saeulen/Stuehle.
+**Umsetzung:** re2_fx.c `wandzelle_im_band` nimmt Typ 1 und Typ 3; Kreis nach FUN_8003d6a8: `lhu a2,0(a0)` / `srl a2,a2,1`
+@0x8003d6cc-d4 (Radius = Breite >> 1, Mitte (x + w/2, z + w/2)), SquareRoot0 `jal 0x80065f60` @0x8003d724, gesperrt bei
+(Radius + r) - Abstand >= 1 (wie push_circle). Kommentar mit der Schusslinien-Begruendung und der Berichtigung. Hoehe:
+unveraendert keine (Spur-A-Regel). Formen 2/4..9: prueft Spur A formgenau (granate_r35.c `strecke_*`) — fuer die
+Zusammenfuehrung: EIN Formtest fuer beide (OFFEN 9).
+**Messung nachher (Unit, echte RDT ROOM1140, echter werfer_boden, Rakete in Flughoehe -2530 nach -z, test_r35_werfer
+Teil H):** Tisch (x 200 ab z -10400): Explosion nach 3 Bildern bei z -10912 (Kante -11350, Rueckprall); neben dem Tisch
+(x 9000): 13 Bilder, z -18592 (Fernwand Zelle 11 bei -19600); auf den Kreis (-4750,-13900) r 500: 5 Bilder, z -12448.
+GEGENPROBE (Typ-3-Zeile auf `typ != 1u` zurueckgesetzt, gebaut, gefahren, wiederhergestellt): Kreis-Lauf 19 Bilder,
+z -23200 (Fernwand) -> FAIL 113. Mit Typ 3: alle gruen.
+**Messung nachher an der exe** (`mess_r35b/nb1/run_m1.sh`, ROOM1000 ohne Gegner, Leon (-1327,-1000) Blick -z -> Rohr bei
+x -1700 = Mitte der Kreis-Zelle 15 {x -2200..-1200, z -4850..-3850, Typ 3}; neue exe-Kopie re15_r35nb1.exe gegen
+re15_r35b.exe = Stand vor der Nachbesserung):
+* NEU: `RE2FLUG ... welt=(-1716,-2575,-2390)`, `(-1726,-2607,-3157)`, dann `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20
+  @(-1723,-2596,-2901)` = Explosion am Kreis (Kontakt im naechsten Schritt bei z ~ -3923, Rueckprall).
+* ALT: dieselben zwei Bilder, dann `welt=(-1737,-2640,-3923) fuss=3`, `(-1748,-2673,-4690) fuss=3` = MITTEN durch den
+  Kreis, Explosion erst an der Wand Zelle 14 (z -5150) `@(-1744,-2662,-4435)`.
+* Erster Versuch mit Leon (-1700,-1000): Rohr bei x -2117, Sehne des Kreises dort 552 < 767 Schritt — beide exe
+  sprangen ueber den Kreis (Punkttest je Bild, wie RE2 FUN_8004fba0 je Bild) und explodierten an der Wand; nicht
+  gewertet. Erster Versuch in ROOM1140 (Leon (-4750,-10300)): Auto-Zielen drehte auf 821, Explosion an der Tischecke
+  in beiden — nicht gewertet.
+* Tisch ROOM1140 (Leon (200,-10300)): unveraendert `@(-174,-2530,-10668)` (= Abnahme), d.h. Spur-A-Regel.
+
+**Test am Mischer (M2, neu):** `integration_r35_werfer_ton` (tests/integration/test_r35_werfer_ton.cmake): zwei exe-Laeufe
+MIT/OHNE zweiten Abzug, `RE15_AUDIO_CAP_SYNC`, Vergleich je Spielbild (5880 Byte). Gefahren: `-- r35_werfer_ton: OK —
+Leerschuss hoerbar: erstes abweichendes Bild 331 von 404, 10 abweichende Bilder; wf.log ARMS11 satz=1 MIT=1 OHNE=0`,
+Passed 28.3 s. GEGENPROBE mit der exe vor der Nachbesserung (re15_r35b.exe): Test rot (`'re2arms ARMS11 satz=1'
+MIT=0`), und `cmp mit/cap.raw ohne/cap.raw` = BYTEGLEICH (2375520 Byte) bei `arms_rec=1` im MIT-Log = der alte Klick war
+ein Aufruf ohne Ton (Abnahme §2.5 bestaetigt).
+
+### 8.5b M5 — Uhrzeit im Protokoll
+Erledigt in §8.5 (Vorgaenger, c21a0ce9): §0-Zeile berichtigt auf 16:59 (`suite_lauf4.log` endet 16:59:25). Gegengelesen:
+die Zeile steht so in §0; keine weitere erfundene Uhrzeit in §8 (alle Zeiten dieser Sitzung stammen aus `date`/Dateien).
+
+### 8.6 M6 — Elza-Rezept
+OFFEN 7 sagte "Elza am gebauten Stand nicht gemessen; RE15_PSELECT_AUTO(_SWITCH) kam in 150 s nicht ins Spiel". Die
+Abnahme 0 §2.3 hat das tragende Rezept gefunden und alle sechs Waffen mit Elza gemessen (nicht wiederholt):
+`RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1` (statt RE15_TITLE_SHOT, das Leon startet) +
+`RE15_DEBUG_JUMP=1000@250`. Uebernommen als Test `integration_r35_werfer_elza` (test_r35_werfer_elza.cmake): ein Lauf
+GL Explosiv, gefahren `-- r35_werfer_elza: OK — Elza PL04, W0F 14 Clips, 10 Runden mit ofs=(120,1200,0), 10 Explosionen`,
+Passed 30.0 s (erster Lauf rot nur wegen eines Regex-Escapes im Testskript, berichtigt 6abed8d7).
+
+### 8.7 OFFEN (neu aus Nachbesserung 1)
+16. **Python (alle Schusswaffen) trifft FRESSENDE Zombies, die Werfer nicht** (§8.4): der Port-Schuss-Resolver ist in
+    beiden KI-Arten der RE1.5-Resolver FUN_80011f50; RE2s Resolver FUN_800410CC sperrt +0x1D3 != 0 (@0x80041270-78) und
+    +0x10E & 0xC000 (@0x80041290-9c) wie der Applier. Frueher Versuch, Gate 2 in den Resolver zu setzen, verschluckte
+    Schuesse und brach vier Tests (re15_damage.c:2019-2025). Schuss-Pfad aller Waffen, nicht Spur B. Naechster Weg: den
+    RE2-Resolver-Filter fuer RE2-eigene Gegner (re2_gl_typ != 0) mit +0x1D3/+0x10E nachziehen und die vier Alt-Tests messen.
+17. **Sichtlinien-Test der RE1.5-Schusslinie fehlt im Port-Resolver** (§8.1): FUN_80011f50 @0x80012168-70 ruft
+    FUN_8001b9b4 (Klasse 3, Band des Spielers, nur x/z) und gibt bei Blockade 0 zurueck; re15_player_weapon_fire hat
+    diesen Test nicht (grep `8001b9b4` in engine/src: nur Kraehen-Code) -> im Port trifft die Python ueber den Tisch
+    ROOM1140 (Abnahme 0 M1 Gegenprobe), im Original nicht. Schuss-Pfad aller Schusswaffen, nicht Spur B. Naechster
+    Weg: re15_los_ray_blocked (enemy_ai_common.c, byte-true FUN_8003dcc4) mit dem SPIELER als Strahl-Ursprung je
+    Region 3..0 in den Resolver haengen, Zensus-/Pin-Tests nachmessen.
+18. **Formtest Typ 2/4..9 fuer die Werfer** (§8.1): wandzelle_im_band prueft Rechteck (1) und Kreis (3); Raute/Dreiecke/
+    Kapseln prueft nur Spur A (granate_r35.c). In ROOM1000/1060/1140 kommen sie nicht vor. ZUSAMMENFUEHRUNG: Spur As
+    Formtest (`re15_granate_r35_punkt`/`strecke_*`) und `wandzelle_im_band` (re2_fx.c) auf EINE Funktion bringen.
+19. **Durchtunneln duenner Zellen**: der Wandtest ist ein Punkttest je Bild (wie RE2 `jal 0x8004fba0` je Bild); eine
+    Sehne < 767 (Raketenschritt) kann uebersprungen werden (gemessen §8.1, erster ROOM1000-Versuch). Spur A prueft die
+    STRECKE (Nutzervorgabe der Handgranate) — bei der Zusammenfuehrung mitentscheiden.
+
+### 8.8 Fuer den Nutzer (Ergaenzung Nachbesserung 1)
+* Keine neuen Sprachdateien, keine neuen Assets (die RE2-Baenke ARMS10/ARMS11 aus §7 tragen auch den Leer-Ton).
+* Raketenwerfer leer: der Abzug klickt jetzt hoerbar (RE2-Klick der Raketenwerfer-Bank); vorher war er stumm.
+* Tische/Baenke: Rakete, Granatwerfer-Runden und Flammenstrahl enden an Tischen wie an Waenden — so wie im Original
+  auch kein Schuss ueber den Konferenztisch geht (die RE1.5-Schusslinie sperrt an denselben Zellen ohne Hoehe). Gleiches
+  Verhalten wie die Handgranate. Runde Hindernisse (Saeulen/Stuehle) sperren jetzt ebenfalls (vorher flog die Rakete durch).
+* Fressende Zombies: wie in RE2 sind sie fuer Granatwerfer/Rakete/Flamme kein Ziel, solange sie fressen; wer naeher als
+  ca. 4000 Einheiten herankommt, weckt sie, danach treffen die Werfer. (Die Python trifft sie schon beim Fressen — das
+  ist eine Abweichung des allgemeinen Schuss-Pfads, OFFEN 16.)
+
+### 8.9 Tests und Suite (Nachbesserung 1)
+* `unit_r35_werfer` Teil H (Pruefungen 100-113): 100/101 EDH-Bytes ARMS12 Satz 1 = ff ff ff ff, RE2 ARMS11 Satz 1 =
+  00 00 54 16; 102/103 Leerzweig: Rakete -> re2arms(0x11, 1), GL/Flamme/Python/Pistole -> RE1.5-Klick des Aufrufers;
+  104-107 RE2-Zombie gegen den Raketen-Applier: frisst (1D3=80 + 10E=4000), nur Gate 2, nur Gate 4 -> kein Treffer, HP 50;
+  beide frei -> Treffer; 110 ROOM1140 Zelle 6 Bytes; 111-113 Rakete mit echtem werfer_boden ueber echter RDT: Tisch
+  (z -10912), neben dem Tisch Fernwand (z -18592), Kreis (z -12448). Gegenprobe ohne Typ 3: FAIL 113 (z -23200).
+* `integration_r35_werfer_ton` (neu): Leerschuss am Mischer, Passed 28.3 s; Gegenprobe alte exe rot, Mitschnitte bytegleich.
+* `integration_r35_werfer_elza` (neu): Elza GL an der exe, Passed 30.0 s.
+* Volle Suite (Stand 6abed8d7 + Dossier, `local_build.sh all`, 18:12-18:34, Log `re15_port/build/mess_r35b_logs/nb1_suite.log`):
+  `100% tests passed, 0 tests failed out of 483`, `Total Test time (real) = 1306.93 sec`,
+  **`=== LOCAL-BUILD-OK (all) — Tests 483/483`** (483 = 481 + integration_r35_werfer_ton + integration_r35_werfer_elza;
+  kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer, unit_r35_werfer_kombi, integration_r35_werfer 134 s,
+  _ton 28 s, _elza 30 s Passed).
+* Geaenderte gemeinsame Dateien in Nachbesserung 1: game_step_common.c +1 Zeile (Leerzweig-Haken, e32ab456),
+  re2_fx.c `wandzelle_im_band` (Runde-35-Block, Kreis + Kommentar). Keine Bank-9-Bits, Nachrichten-IDs, AOT-Slots,
+  Ereignisse; kein shared_assets/PSX, release/, platform/android/.
+* Zusammenfuehrung mit Spur A (Handgranate): beide sperren Moebel in jeder Hoehe (gleiche Regel); EIN Formtest fuer
+  Typ 1..9 und Strecke-vs-Punkt sind dort zu vereinheitlichen (OFFEN 18/19). re2_fx.c, re15_damage.c,
+  enemy_ai_re2_zombie.c werden auch von Spur A/D beruehrt.
+
+## 9. Nachbesserung 2 (nach der unabhaengigen Abnahme 1, `B_abnahme_1.md`)
+
+### 9.0 Protokoll
+- 2026-10-03 (Sitzungsbeginn siehe `date` im Commit): Baum sauber, HEAD 8f88ab61 (Abnahme 1). Maengel N1 (Werfer-Geschosse
+  und Flammenstrahl ignorieren ueber Bandhoehe die Formen 2/4..9; Punkttest je Bild tunnelt) und N2 (Python ohne
+  Kritklasse des Redhawk). Pflichtlektuere AUFTRAG.md/VERTRAG.md/B_abnahme_1.md/§3/§6/§8 gelesen.
+- 21:48 exe-Kopie `re15_port/build/platform/pc/re15_r35nb2_alt.exe` (cmp-gleich re15_pc.exe = re15_r35nb1.exe = Stand vor
+  Nachbesserung 2) fuer Vorher-Messung und Gegenprobe. Skript `mess_r35b/nb2/run_nb2.sh` (Laeufe d18/d14/t7/t20, Rezepte
+  der Abnahme 1 §2.6/§2.7), Auswertung `mess_r35b/nb2/dreieck.py` (Flugplaetze im festen Teil der Zelle 21 nach
+  push_diag5 / LAB_8003c734: fest, wenn d*(px-x)/w < pz-z).
+
+### 9.1 Messung VORHER (eigene Laeufe, `mess_r35b/nb2/vorher/`, alle exit 0) — Befunde der Abnahme reproduziert
+* N1 Rakete `d18` (ROOM10E0, Leon (-3000,-3000) Blick 3072, `RE15_GIVE=18:4`, `M0.6,MA0.3,M1.6,W2`): RE2FLUG
+  `(-2477,-2575,-1657)`, `(-2389,-2607,-896)`, `(-2302,-2640,-134)`, dann `(-2215,-2673,627)`, `(-2128,-2706,1389)`,
+  `(-2041,-2739,2150)` (alle drei im festen Dreieck), `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2070,-2728,1897)`.
+  dreieck.py: `Plaetze 6, im festen Dreieck 3, z max 2150`.
+* N1 Flamme `d14` (`14:100`, `M0.6,MA1.5,M1.6,W2`): `Plaetze 360, im festen Dreieck 47, z max 769` (z.B. (-2310,-1938,501)).
+* N2 `t7`/`t20` (ROOM1140, Leon (200,-10300) Blick 1024, `7:6` bzw. `20:6`, `M0.6,MA0.3,M1.6,W2`), state.log F19 Platz 5
+  (Typ 0x11, d=9272): Redhawk `[5 t=11 st=3 ss1=5 ...] hp=-1`, Python `[5 t=11 st=3 ss1=5 ...] hp=-650`.
+
+### 9.2 RE-Belege (selbst disassembliert, Nachbesserung 2)
+**N1 — Formen der RE1.5-Zelle (re15_disasm.py, info/Re1.5/PSX.EXE):**
+* Verteiler 0x800b2858 + Typ*4, gefuellt in FUN_8003aea0: `addiu v0,v0,-17240` (0x8003bca8) @0x8003aefc / `sw v0,10332(at)`
+  (0x800b285c = [1]) @0x8003af04; [2] 0x8003d00c `sw v0,10336(at)` @0x8003af14; [3] 0x8003d6a8 @0x8003af24; [4] 0x8003beb0
+  @0x8003af34; [5] 0x8003c734 @0x8003af44; [6] 0x8003cb9c @0x8003af54; [7] 0x8003c2cc @0x8003af64; [8] 0x8003d7e8
+  @0x8003af74; [9] 0x8003d930 @0x8003af84. Also: jede der Formen 1..9 ist eine EIGENE Flaeche, Typ 5 ist nicht Rechteck.
+* Typ 5 LAB_8003c734 (die Zelle 21 von ROOM10E0): `lhu v0,2(t3)` (Tiefe) / `lhu v1,6(t3)` (z) / `addu` / `subu a1,s0,t4` /
+  `subu t8,s3,a1` @0x8003c764-788 (t8 = (z+d) - (z-r)); `lhu v1,4(t3)` (x) / `addu t9,t0,s5` (Spieler-x) / `subu v0,t9,t5` /
+  `mult t8,v0` @0x8003c79c-7b8; `lhu v0,0(t3)` (Breite) / `addu` / `addu v0,v1,t4` / `subu t6,v0,t5` / `div a2,t6` @0x8003c7c0-7e0
+  = LINE = (d+r)*(px-x)/(w+r); fest, wenn LINE < pz-(z-r) (Port push_diag5 re15_collision.c:530-532). Fuer r = 0: das Dreieck
+  mit dem rechten Winkel bei (x, z+d) — genau das Dreieck, durch das die Rakete in §9.1 fliegt.
+* Typ 2 LAB_8003d00c (Raute, ROOM11C0 Zelle 5): `lhu t1,0(s0)` / `lhu v1,4(s0)` / `lhu t0,2(s0)` / `lhu a0,6(s0)` @0x8003d070-7c,
+  `addu s7,t1,v1` (x+w) / `addu s6,t0,a0` (z+d) @0x8003d088-8c, `srl a1,a1,1` / `addu v1,v1,a1` (cx = x + w/2) / `srl a2,a2,1` /
+  `addu a0,a0,a2` (cz = z + d/2) @0x8003d090-9c; je Quadrant `pcmp < edge` (Port push_diag2) = Raute um (cx,cz).
+* Die uebrigen Flaechen (4/6/7 Dreiecke, 8/9 Kapseln) aus den Port-Zwillingen push_diag4/6/7 und push_caps8/9 (re15_collision.c,
+  byte-true transliteriert) — dieselbe Flaechentabelle hat Spur A selbst disassembliert (A_granate.md N1.1, Zweig r35/granate),
+  ich uebernehme sie unveraendert (EIN Formtest fuer Handgranate und Werfer bei der Zusammenfuehrung).
+**N1 — RE2 testet die FORM, nicht das Rechteck (re2_disasm.py, info/re2leon/PSX.EXE):** FUN_8004fba0 (von allen Werfer-
+Geschossen gerufen, Op 15 @0x8001eea0, Op 24 @0x8001f810, Op 70 @0x8002343c): `andi v1,v1,0xf` / `sltiu v0,v1,0xe` / `beq` /
+`sll v0,v1,2` / `lw v0,4356(at)` (Tabelle 0x80011104) / `jr v0` @0x8004fe34-54; Tabelle [1..8] = eigene Formtests (0x8004fe5c
+`jal 0x8004cfc8` ... 0x8004ff3c), [0]/[9] = 0x8004ffb0 (Rechteck = nur Vortest). Der Port (re2fx_boden/zelle_im_band, Runde 34)
+macht nur den Rechteck-VORtest (@0x8004fd88-b8) — fuer Diagonalzellen meldet er Kontakt im LEEREN Teil des Rechtecks.
+**N1 — Strecke statt Punkt: die vorige Weltlage steht im Platz.** RE2 FUN_8001d894 (Weltlage, je Bild vor Op B):
+`lw v1,52(a2)` / `sw v1,60(a2)` @0x8001d954/64 und `lhu a0,56(a2)` / `sh a0,64(a2)` @0x8001d95c/6c = +0x3C/+0x3E/+0x40 :=
+alte +0x34/+0x36/+0x38, BEVOR die neue Lage gerechnet wird (Port re2_fx.c weltlage). Der Spawner loescht +0x34 und +0x3C
+(@0x8001ccfc-d08); Op B (15/24/70) laeuft im Schritt NACH der Weltlage (FUN_8001d68c `jal 0x8001d894` @0x8001d6c8, Op B
+@0x8001d6d0-fc), die Physik `lokal += vel` danach (@0x8001d70c-798). Also gilt beim Test in Op B: +0x34.. = Lage dieses Bildes,
++0x3C.. = Lage des vorigen Bildes — die Strecke, die das Geschoss in diesem Bild zurueckgelegt hat. Ausnahme: das erste
+Bild (lokal +0x24/+0x26/+0x28 = 0, @0x8001cca4 `sw zero` + `sw v0,40(t0)` mit +0x28 = 0): dann steht in +0x3C der geloeschte
+Wert, keine Strecke. RE2 selbst testet nur den Punkt (Schritt 767 je Bild bei der Rakete, Abnahme OFFEN 19).
+**N2 — Kritklasse (re15_disasm.py):** FUN_80011f50 `lbu v0,147(s1)` / `andi v0,v0,0x1` / `sb v0,147(s1)` @0x80012370-7c
+(+0x93 &= 1); `ori v0,zero,0x8` / `bne v1,v0,0x800123a4` / `ori v0,zero,0x7` @0x80012380-88, `lw v0,-2592(v0)` (0x8008f5e0 =
+Abstand) / `sltiu v0,v0,0xbb8` / `bne` @0x8001238c-9c, `bne v1,v0,0x800123c0` @0x800123a4, `ori v0,v0,0x40` / `sb v0,147(s1)`
+@0x800123b4-b8 = Waffe 7, oder 8 unter 3000 -> +0x93 |= 0x40. Dann `andi v0,v0,0x40` / `beq v0,zero,0x80012520` @0x800124fc-500,
+`lbu v0,8(s1)` / `sltiu v0,v0,0x20` / `beq` / `addiu v0,zero,-1` / `sh v0,154(s1)` @0x80012508-1c: die HP -1 haengen am BIT
+0x40, nicht noch einmal an der Waffen-Id. Die Python (20) ist in RE1.5 unfertig (Tester 0x800128a0, Dispatch NULL,
+Spalte 20 = 0, §2.1) und kommt in diesem Vergleich deshalb nicht vor; der Port fuehrt sie per PORT-WAHL §3.5 Punkt 1 als
+zweiten Magnum-Revolver (Entladung 0x800339A4, Spalte 7, RE2-Zeile 5, Munition, Streifen) — die Kritklasse ist die letzte
+Redhawk-Eigenschaft, die ihr fehlte.
+
+### 9.3 Umsetzung (Commit 9250a21f, gebaut `=== LOCAL-BUILD-OK (build)`, Log `re15_port/build/mess_r35b_logs/nb2_build1.log`)
+**N1 (re2_fx.c Runde-35-Block, werfer_r35.c, re15_werfer.h, re2_fx.h):**
+* `werfer_r35.c` neu `re15_werfer_zelle_strecke(e, x0,z0, x1,z1)`: beruehrt die Strecke die solide FLAECHE der Zelle?
+  Typ 1 Rechteck, 2 Raute um (x+w/2, z+d/2), 3 Kreis (Mitte x+w/2/z+w/2, Radius w/2), 4..7 die vier rechtwinkligen
+  Dreiecke (rechter Winkel bei (x+w,z+d) / (x,z+d) / (x+w,z) / (x,z)), 8/9 Kapseln — Adressen je Fall im Code
+  (Verteiler @0x8003af04-84). Punkt = Strecke der Laenge 0. Geometrie (Trennachsen, ganzzahlig s64) = Spur A
+  granate_r35.c `strecke_*` (gleiche Flaechentabelle; fuer die Zusammenfuehrung EIN Formtest).
+* `re15_werfer_band_strecke(rdt, x0,z0, x1,z1, band)`: alle soliden Zellen des Bandes (u0 Bit 0, floor >> 4, u1 Bit 1
+  frei — dieselben Filter wie vorher), je Quadrantenliste (FUN_8003b068; die Strecke wird am Deckenpunkt geteilt).
+* `re2_fx.c zelle_im_band` (Runde-34-Abbild FUN_8004fba0, Zellentest IN der Bandhoehe): mit `s_r35_formtest` (nur
+  waehrend werfer_boden gesetzt) folgt dem Rechteck-Vortest der Formtest (RE2 `jr` Tabelle 0x80011104 @0x8004fe34-54).
+  Flammen/Granate der Runde 34 (re2fx_boden ohne Werfer) unveraendert.
+* `re2_fx.c werfer_boden`: `wandzelle_im_band` (Typ 1/3, Punkt) ersetzt. Liegt das Geschoss ueber der Standhoehe und hat
+  das Abbild keinen Kontakt: Strecke vorige Weltlage (+0x3C/+0x40, @0x8001d954-6c) -> Lage gegen das Schuetzen-Band;
+  erstes Bild (lokal = 0) = Punkt. Die Ausnahme "innerhalb der Bandhoehe entscheidet das Abbild" ist entfallen (das Abbild
+  testet nur den Punkt; ein GL-Schritt in Bandhoehe kann sonst auch durchtunneln).
+* PORT-WAHL (gekennzeichnet, wie Spur A "Wurfbild: Werfer -> Hand"): beim ERSTEN Wandtest eines Geschoss-Platzes auch die
+  Strecke Schuetze -> (vorige) Lage, sofern der Schuetze selbst frei steht; Schuetzenlage meldet `werfer_r35.c spawn()` fuer
+  Bank 2 (GL-Runde, Rakete) und 0x031D (Flammenstrahl) ueber `re2fx_r35_schuetze(platz, x, z)`.
+* PORT-WAHL: Flaeche ohne Radius-Aufschlag (a1 = 2 @0x8001eea0, 2 Einheiten) wie Spur A.
+**N2 (re15_damage.c, 2 Stellen):** Kritklasse `weapon_id == 7 || weapon_id == 20 || (8 && < 3000)` (Kommentar mit
+@0x80012380-b8 und PORT-WAHL §3.5 Punkt 1); HP -1 jetzt am BIT wie das Original (`(e->hit_react & 0x40) && type < 0x20`,
+@0x800124fc-1c) statt am wiederholten Waffenvergleich — fuer 7/8 gleichwertig (Bit 0x40 wird unmittelbar davor geloescht
+und nur fuer die Kritklasse gesetzt), fuer 20 folgt es der Kritklasse.
+
+### 9.4 Messung NACHHER (exe-Kopie `re15_r35nb2.exe` = Stand 9250a21f, gleiche Rezepte, `mess_r35b/nb2/nachher/`, alle exit 0)
+* N1 Rakete `d18`: RE2FLUG `(-2477,-2575,-1657)`, `(-2389,-2607,-896)`, `(-2302,-2640,-134)`, dann
+  `SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2331,-2629,-388)` — Explosion VOR dem festen Dreieck (Kante bei
+  diesem x: z 415..528), vorher erst @(-2070,-2728,1897). dreieck.py: `Plaetze 3, im festen Dreieck 0, z max -134`.
+  Erklaert den Befund: die Strecke (-2302,-134) -> (-2215,627) schneidet die Hypotenuse (Lage 627 liegt bei x -2215 hinter
+  LINE 1928 < ZTERM 2027), Kontakt -> Rueckprall um vel1 + vel2/3 = 768 + 256 = 1024 (@0x8001f874-9c0) -> z 627 - 1015 = -388.
+* N1 Flamme `d14` (`flamme_kontakt.py`, je Partikel ab Spawn-Zeile op 1/0):
+  vorher `Partikel 15, ins Dreieck 12, ... Schritt in die erste Lage im Mittel 109, Schritt danach im Mittel 92` (die Partikel
+  fliegen im Dreieck mit vollem Schritt weiter, Tiefe bis 332 — `tiefe.py`);
+  nachher `Partikel 15, ins Dreieck 13, Tiefe der ersten Lage im Dreieck max 59, ... Schritt danach im Mittel 16` — jedes
+  Partikel haelt an der ersten Lage hinter der Kante (Kontakt) und laeuft dort das RE2-Nachbrennen (acc/vel x := 0, vel.y :=
+  20, step[2] := 6, step[3] := 1 @0x800234c8-538). ⛔ Die Zaehlung der Abnahme ("47 von 360 Plaetzen im Dreieck") steigt
+  dadurch auf 143 von 456: die neuen Zeilen sind die Nachbrenn-Bilder an der Kontaktstelle (Tiefe max 139 = Kontakt <= 59 +
+  Drift 20/Bild), nicht ein tieferer Flug. Ein 13. Partikel erreicht das Dreieck, weil der Rechteck-Vortest es vorher im
+  LEEREN Teil des Zellrechtecks (Bandhoehe) gestoppt hatte; z max 898 statt 769 aus demselben Grund (Strahl laeuft im
+  begehbaren Teil weiter).
+* N2 `t7`/`t20`, state.log F19 Platz 5: Redhawk `hp=-1`, Python `hp=-1` (vorher -650).
+
+### 9.5 Tests (unit_r35_werfer Teil I, Pruefungen 120-134) und GEGENPROBE
+* 120 ROOM10E0 Zelle 21 Bytes (Typ 5); 121 Formtest Typ 5: (-2215,627) fest, (-1200,0) leer im Rechteck, Strecke ueber die
+  Hypotenuse; 122 Rakete auf der Abnahme-Bahn (Muendung (-2477,-1657), Richtung (465,4069)): `Explosion nach 4 Bildern
+  @(-2331,-385)` (exe: @(-2331,..,-388)); 123 GL-Runde in Bandhoehe (y -1000) bei x -1200 durch den LEEREN Teil des
+  Zellrechtecks: `Explosion nach 9 Bildern @(-1200,1500)` (Hypotenuse bei z 1845); 124/125 ROOM11C0 Zelle 5 (Raute) —
+  Rakete auf z -12500 nach +x: `@(-7112,-12500)` (Rautenkante x -6152); 126-128 Durchtunneln ROOM1000 Kreis-Zelle 15 bei x
+  -2117 (Lagen -4058/-4826 beide ausserhalb, Strecke schneidet): `@(-2117,-3802)`; 129 Schuetze -> Muendung (ROOM1140
+  Kreis zwischen Schuetze (-4750,-13300) und Muendung (-4750,-14600)): ohne Schuetze `13 Bildern @(-4750,-22792)`, mit
+  `1 Bildern @(-4750,-13576)`; 130-134 Kritklasse ueber re15_player_weapon_fire: w7/w20 gegen Typ 0x10 -> Bit 0x40 + hp -1,
+  w3 -> kein Bit, w7/w20 gegen den Affen 0x27 (Zielband LEVEL) -> Bit 0x40, hp > 0. Ergebnis `test_r35_werfer: OK`.
+* GEGENPROBE (re2_fx.c und re15_damage.c auf 9d8336b2 = vor Nachbesserung 2 zurueckgesetzt, Stub fuer re2fx_r35_schuetze,
+  gebaut, gefahren, wiederhergestellt + neu gebaut; Log `re15_port/build/mess_r35b_logs/nb2_gegenprobe_unit.txt`):
+  `FAIL 122 ... ist z=1904` (alt @(-2070,1904)), `FAIL 123 ... ist z=-2100` (Vortest-Kontakt im leeren Rechteckteil),
+  `FAIL 125 ... ist x=-5576` (durch die Raute, Kontakt erst als die Rakete in Bandhoehe sank), `FAIL 128 ... ist z=-4570`
+  (uebersprungen, Wand dahinter), `FAIL 129` (mit Schuetze ebenfalls -22792), `FAIL 131: w20 gegen Typ 0x10 (hp 2000):
+  Treffer 2, +0x93 Bit 0x40 0 (soll 1), hp 1100 (soll -1)`, `FAIL 134` (Affe: Bit fehlt) — `test_r35_werfer: 7 FAILURES`.
+* `integration_r35_werfer_form` (neu, tests/integration/test_r35_werfer_form.cmake, registriert in probes/r35_werfer.cmake):
+  zwei exe-Laeufe — `rakete10e0` (Rezept §9.1 d18: Explosion 0x01140001 muss vor der Hypotenuse liegen, z < 528, und keine
+  RE2FLUG-Lage der Rakete im festen Dreieck) und `python1140` (Rezept Abnahme 1 §2.2, Leon (-1676,-18070) Blick 1076,
+  `20:6`, `M0.6,MA1.5,M1.0,W4`: erster Todeszustand von Platz 2 (Typ 0x10, freie Schusslinie, d 1530) mit hp -1).
+  Gefahren: `-- r35_werfer_form: OK — Rakete 10E0 explodiert vor der Hypotenuse (SE re2fx code=0x01140001 -> RE2 ARMS11
+  Satz 20 @(-2331,-2629,-388)), 3 Flug-Lagen ausserhalb des festen Dreiecks; Python-Treffer Platz 2 -> hp -1 (Kritklasse)`,
+  Passed 25.96 s. GEGENPROBE mit re15_r35nb2_alt.exe (`cmake -P` direkt): rot — `Explosion nicht VOR der Hypotenuse der
+  Zelle 21 (z soll -3000..527): ' SE re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2070,-2728,1897)'`. Python-Teil am
+  alten Stand gemessen (`mess_r35b/nb2/vorher/p20`): `[2 t=10 st=3 ss1=5 d=1530 @(-1800,-19600,r512)] hp=-850`, Redhawk
+  `p7` hp=-1; nachher beide hp=-1.
+
+### 9.6 OFFEN (Stand Nachbesserung 2)
+* OFFEN 18 (Formtest Typ 2/4..9) — ERLEDIGT (§9.3). Fuer die Zusammenfuehrung mit Spur A: `re15_werfer_zelle_strecke` /
+  `re15_werfer_band_strecke` (werfer_r35.c) und Spur As `strecke_zelle` / `re15_granate_r35_strecke` (granate_r35.c) tragen
+  dieselbe Flaechentabelle und dieselbe Geometrie — beim Mergen auf EINE Funktion bringen (Unterschied nur die Filter:
+  Spur A Klassenmaske u0 & WAND_MASKE, Spur B u0 Bit 0 + u1 Bit 1 frei wie das Abbild).
+* OFFEN 19 (Durchtunneln) — ERLEDIGT (§9.3, Strecke vorige Weltlage -> Lage; Pruefung 128 + Gegenprobe).
+* OFFEN 9 (Hoehe der Moebel) — unveraendert: RE1.5-Zellen tragen keine Hoehe; Moebel sperren in jeder Hoehe (Spur-A-Regel).
+* OFFEN 16/17 (allgemeiner Schuss-Pfad: Fresser-Sperre +0x1D3/+0x10E und Sichtlinie FUN_8001b9b4 fehlen im Port-Resolver)
+  — unveraendert, nicht Spur B (Abnahme 1 §6 "nicht gewertet").
+* NEU 20 — Flamme nach Strecken-Kontakt: Op 70 setzt bei Kontakt nur den Nachbrenn-Zustand (@0x800234c8-538), ohne
+  Rueckprall; das Partikel bleibt an der Lage P dieses Bildes. Bei Zellen, die duenner sind als ein Flammenschritt (gemessen
+  ~100-200 je Bild in ROOM10E0), kann P schon HINTER der Zelle liegen (RE2 kennt den Fall nicht: Punkttest). In ROOM10E0
+  liegt die Kontaktstelle hoechstens 59 tief im Dreieck. Naechster Weg, falls sichtbar: bei Strecken-Kontakt die Lage auf
+  den Strecken-Anfang (+0x3C/+0x40) setzen — waere eine PORT-WAHL ohne RE2-Vorbild.
+* NEU 21 — Python-Nachladen ohne Schnelllader-Wurf: RE1.5 wirft beim Nachladen des Redhawk in Bild 10 den Schnelllader
+  0x04060800 nur fuer Waffe 7 (Port player_common.c, @0x80033e34-88). Die Python laedt ohne ihn nach. Nicht Teil der
+  Maengel; selbst gelesen: `lbu v1,-13731(v1)` (gefuehrte Waffe) / `ori v0,zero,0x7` / `bne v1,v0,0x80033e94` @0x80033e34-3c,
+  `lbu v1,-13591(v1)` (0x800acae9 Bild) / `ori v0,zero,0xa` / `bne` @0x80033e48-50, `lui a0,0x406` / `ori a0,a0,0x800`
+  @0x80033e54-58. Falls die PORT-WAHL "zweiter Magnum-Revolver" auch das Nachlade-Bild umfassen soll: w20 im Port-Zweig
+  player_common.c (`re15_player_equipped_weapon() == 7`) aufnehmen.
+* Mess-Hinweis: die wf.log-Spalten `kontakt`/`fuss` der RE2FLUG-Zeilen rechnet `re2fx_boden_sonde` OHNE Formtest
+  (Rechteck-Vortest, nur Mess-Harness) — fuer Diagonalzellen zeigen sie den Rechteck-Befund, nicht den Werfer-Test.
+
+### 9.7 Fuer den Nutzer (Ergaenzung Nachbesserung 2)
+* Keine neuen Sprachdateien, keine neuen Assets.
+* Raketenwerfer, Granatwerfer und Flammenwerfer: die Geschosse halten jetzt an allen Wandformen — auch an schraegen/
+  diagonalen Waenden, Rauten und Kapseln (ROOM1010/1050/1090/10B0/10D0/10E0/1150/1190/11C0/11D0/11F0 u.a.; vorher flog
+  die Rakete z.B. in ROOM10E0 ~1900 Einheiten durch eine Diagonalwand) — und springen nicht mehr ueber duenne Hindernisse
+  (Saeulen). Im LEEREN Teil einer schraegen Zelle (wo Leon gehen kann) fliegen sie weiter (vorher explodierte eine tief
+  fliegende Granatwerfer-Runde dort in der Luft). Steht Leon direkt vor einer Wand, zuendet die Runde an der Wand und
+  erscheint nicht dahinter.
+* Colt Python: wirkt jetzt wie der Super Redhawk — ein Treffer toetet Zombies sofort (Kritklasse) und holt einen
+  springenden Affen herunter bzw. loest seinen Griff.
+
+### 9.8 Je Mangel (Kurzfassung)
+**N1 — Werfer-Geschosse durch die Formen 2/4..9, Punkttest tunnelt.**
+Ursache: `wandzelle_im_band` (re2_fx.c) liess ueber der Bandhoehe nur Typ 1/3 zu und testete nur den Punkt des Bildes;
+in Bandhoehe meldete der Rechteck-Vortest des Abbilds Kontakt auch im leeren Teil einer Diagonalzelle.
+Vorher (§9.1): Rakete 10E0 drei Bilder im festen Dreieck, Explosion @(-2070,-2728,1897); Flamme fliegt im Dreieck mit
+vollem Schritt weiter (92/Bild). Beleg (§9.2): Formen 0x800b2858[1..9] @0x8003af04-84, Typ 5 @0x8003c764-7e0, Typ 2
+@0x8003d070-9c; RE2-Formtest @0x8004fe34-54; vorige Weltlage @0x8001d954-6c. Aenderung (§9.3): Formtest je Typ +
+Strecke (werfer_r35.c / re2_fx.c). Nachher (§9.4): Rakete @(-2331,-2629,-388) vor der Hypotenuse, Flamme haelt an der
+Kante (16/Bild = Nachbrennen); Unit 120-129/140-149 und integration_r35_werfer_form gruen, Gegenprobe rot (§9.5).
+**N2 — Python ohne Kritklasse.**
+Ursache: re15_damage.c nahm nur w7/w8 in +0x93 |= 0x40 und wiederholte den Waffenvergleich fuer HP -1. Vorher (§9.1):
+Platz 5 Redhawk hp -1, Python hp -650 (Platz 2: -850). Beleg (§9.2): @0x80012370-b8, @0x800124fc-1c. Aenderung (§9.3):
+w20 in die Kritklasse (PORT-WAHL §3.5 Punkt 1), HP -1 am Bit. Nachher (§9.4): Python hp -1 an Platz 5 und 2; Unit 130-134
+(Affe: Bit gesetzt, hp > 0) und integration_r35_werfer_form gruen, Gegenprobe `FAIL 131 ... hp 1100 (soll -1)`.
+
+### 9.9 Suite (Nachbesserung 2)
+* Lauf 1 (`local_build.sh all`, Stand 3cd5a00c-Code, 22:04-22:27, Log `re15_port/build/mess_r35b_logs/nb2_suite.log` /
+  `re15_port/build/local_build_ctest.log`): `99% tests passed, 3 tests failed out of 484` — drei ECHTE Folgen von N2, keine
+  Flatter-Haken: `unit_re2_hp_model` (`RE1.5 typ=0x10 w20: hp -1, erwartet 1800 (Schaden 200)` u.a. — der Pin hielt "der
+  RE1.5-Crit bleibt w7-eigen" fest = genau die Luecke N2), `unit_re2_weapon_rows` (Negativ-Kontrolle: w20 mit roher Zeile
+  muesste STUMM bleiben, toetet jetzt per Kritklasse -> `gemessen 6`), `integration_r35_werfer` ([w20] `Python-Schaden am
+  Zombie 2 = 51, erwartet 900` — hp 50 -> -1 statt -850). Nachgezogen (a01371f4 + Kopfzeile): hp_model `R35_KRIT(w)` = 7
+  oder 20 an allen fuenf Crit-Stellen, weapon_rows Negativ-Kontrolle fuer w20 = DEATH erwartet (`<== TOT (Kritklasse,
+  erwartet)`), integration_r35_werfer [w20] erwartet hp -1. Einzeln gefahren: `test_r35_werfer: OK` (jetzt mit 140-149),
+  `test_re2_hp_model: OK`, `test_re2_weapon_rows: OK`, `integration_r35_werfer` Passed 133.93 s (`[w20]: ... Zombie 2 HP 50 ->
+  -1 (ss1=5)`; frei_w15 / frei_w18_1000 / frei_w18_1060 unveraendert: Rakete an der Wand, Vortrieb 2300).
+* Teil I 140-149 (nach Lauf 1 ergaenzt): Form je Typ 1..9 gegen den Port-Zwilling des RE1.5-Handlers
+  (`re15_collision_constrain_contact_band`, Radius 0, Maske 1: innen sperrt der Werfer-Test UND der Handler schiebt, aussen
+  im Zellrechteck weder noch) + Filter (Band 1, u0 Bit 0 frei, u1 Bit 1) — gruen.
+* Lauf 2 (`local_build.sh all`, Stand 2cc3862c = Endstand Code/Tests, 22:31-22:53, Log
+  `re15_port/build/mess_r35b_logs/nb2_suite2.log` / `re15_port/build/local_build_ctest.log`): `100% tests passed, 0 tests
+  failed out of 484`, `Total Test time (real) = 1334.37 sec`, **`=== LOCAL-BUILD-OK (all) — Tests 484/484`** (484 = 483 +
+  integration_r35_werfer_form). Kein roter Test, auch die Fenster-Haken gruen; unit_r35_werfer, unit_re2_hp_model,
+  unit_re2_weapon_rows, integration_r35_werfer 133.42 s, _ton 28.40 s, _elza 29.96 s, _form 25.94 s Passed.
+* Geaenderte Dateien in Nachbesserung 2: engine/src/re2_fx.c (Runde-35-Block werfer_boden + 2 Zeilen im Abbild-Zellentest
+  + Include), engine/src/werfer_r35.c (Formtest/Strecke + Schuetzenmeldung im Spawn), include/re15_werfer.h, include/re2_fx.h,
+  engine/src/re15_damage.c (2 Stellen Kritklasse), Tests (test_r35_werfer.c Teil I, test_r35_werfer_form.cmake neu,
+  probes/r35_werfer.cmake, nachgezogene Pins test_re2_hp_model.c / test_re2_weapon_rows.c / test_r35_werfer.cmake), Dossier.
+  Keine gemeinsame Datei der VERTRAG-Liste (scd_room_setup.c, game_step_common.c, main.c ...) angefasst; keine Bank-9-Bits,
+  Nachrichten-IDs, AOT-Slots, Ereignisse; kein shared_assets/PSX, release/, platform/android/, keine Test-CMakeLists.

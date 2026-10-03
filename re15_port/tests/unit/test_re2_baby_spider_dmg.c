@@ -55,11 +55,13 @@ static int fails = 0;
 
 /* Zone 0 von 0x800A4B90 + (RE2-Zeile-1)*20, RE2-Zeile = s_re2s_row_from_weapon
  * (enemy_ai_re2_spider.c:1525). Adressen je Waffe stehen in re15_damage.c. */
+/* Runde 35 Spur B: w20 Colt Python = Magnum-Klasse (RE2-Zeile 5 wie w7 -> Zone 0 = 130 statt der
+ * Colt-S.A.A.-Zeile 13 = 17; Beleg Dossier B_werfer.md §3.5) und Schuss-Streifen wie w7. */
 static const int s_re2_expect[22] = {
-    15, 15, 15, 17, 17, 17, 17, 130, 55, 60, 90, 130, 10, 130, 10, 60, 90, 130, 200, 18, 17, 15
+    15, 15, 15, 17, 17, 17, 17, 130, 55, 60, 90, 130, 10, 130, 10, 60, 90, 130, 200, 18, 130, 15
 };
-/* Waffen, die den unbegrenzten Schuss-Streifen benutzen (Tester-Tabelle @0x8006E548). */
-static const uint8_t s_gun_strip[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,0,1 };
+/* Waffen, die den unbegrenzten Schuss-Streifen benutzen (Tester-Tabelle @0x8006E548; w20 per PORT-WAHL). */
+static const uint8_t s_gun_strip[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,1,1 };
 
 static uint8_t *s_buf = NULL;
 static long     s_sz  = 0;

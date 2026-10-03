@@ -29,6 +29,7 @@
 #include "re15_collision.h"   /* room_coll (FUN_8001c6e8), box_blocked (FUN_8003b558), prop_box_hit */
 #include "re15_aot.h"         /* re15_aot_water_at = FUN_800527b4-Zwilling; re15_esp_fx_culled */
 #include "re15_math.h"        /* re15_gte_divide - RTPS-Kehrwert wie pc_draw_effects */
+#include "re15_werfer.h"      /* Runde 35 Spur B: Formtest/Strecke der Werfer-Geschosse (werfer_r35.c) */
 
 int  (*re2fx_applier)(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode) = NULL;
 void (*re2fx_se_hook)(uint32_t code, const int32_t pos[3]) = NULL;
@@ -434,7 +435,11 @@ static void op_2(void)
  * `jal 0x8003b068` @0x8001c770; `and v0,v0,a3(0x80000000)` / `srl v1,v1,1` / `or` / `srl v0,v0,30`
  * @0x8003b084-a0), Zellen der Quadrantengruppe (@0x8001c778-794, Port: sca_rgn wie re15_collision_room_coll),
  * Filter `andi v0,v0,0xf002 / bne s3,v0` @0x8001c89c-a0 und `lh v0,6(a1) / and v0,v0,fp / beq`
- * @0x8001c8a8-b4, Rechteck `addu v0,v0,s6 / subu v1,v1,v0 / subu a0,a0,a3 / sltu` @0x8001c8bc-fc. */
+ * @0x8001c8a8-b4, Rechteck `addu v0,v0,s6 / subu v1,v1,v0 / subu a0,a0,a3 / sltu` @0x8001c8bc-fc.
+ * Runde 35 Spur B, Nachbesserung 2 (Dossier B_werfer.md §9): fuer die Werfer-Geschosse (werfer_boden setzt
+ * s_r35_formtest) folgt dem Rechteck-Vortest (RE2 @0x8004fd88-b8) die FORM der Zelle wie in RE2 (`jr` ueber
+ * Tabelle 0x80011104 @0x8004fe34-54) — Flaechen der RE1.5-Typen 1..9 (0x800b2858, @0x8003af04-84). */
+static int s_r35_formtest;
 static int zelle_im_band(int32_t x, int32_t z, int b, int32_t r15, uint32_t maske)
 {
     const re15_rdt_t *rdt = &g_room_rdt;
@@ -455,6 +460,7 @@ static int zelle_im_band(int32_t x, int32_t z, int b, int32_t r15, uint32_t mask
         if (((uint32_t)(int32_t)(int16_t)w08 & maske) == 0) continue;
         if ((uint32_t)(x - ((int32_t)e->x + rr)) >= (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
         if ((uint32_t)(z - ((int32_t)e->z + rr)) >= (uint32_t)((int32_t)e->density - 2 * rr)) continue;
+        if (s_r35_formtest && !re15_werfer_zelle_strecke(e, x, z, x, z)) continue;   /* Runde 35 Spur B: Form */
         return 1;
     }
     return 0;
@@ -850,6 +856,12 @@ static void op_48(void)
     wr32(b, 0x68, alt68);
 }
 
+/* Runde 35 Spur B (Werfer-Klasse): Ops der GL-Runde, Rakete, Muendung, Flammenstrahl — Block am
+ * Dateiende ("RUNDE 35 SPUR B"). */
+static void op_7(void);  static void op_15(void); static void op_17(void); static void op_22(void);
+static void op_23(void); static void op_24(void); static void op_47(void); static void op_59(void);
+static void op_70(void);
+
 static void op_rufen(unsigned op)
 {
     if (op < 96) s_op_zaehler[op]++;
@@ -857,6 +869,15 @@ static void op_rufen(unsigned op)
     case 0:  op_0();  break;    /* 0x8001dc28 */
     case 1:  op_1();  break;    /* 0x8001dc30 */
     case 2:  op_2();  break;    /* 0x8001dd2c */
+    case 7:  op_7();  break;    /* 0x8001e154  Runde 35 Spur B */
+    case 15: op_15(); break;    /* 0x8001ed9c  Runde 35 Spur B */
+    case 17: op_17(); break;    /* 0x8001f198  Runde 35 Spur B */
+    case 22: op_22(); break;    /* 0x8001f634  Runde 35 Spur B */
+    case 23: op_23(); break;    /* 0x8001f6a4  Runde 35 Spur B */
+    case 24: op_24(); break;    /* 0x8001f6e0  Runde 35 Spur B */
+    case 47: op_47(); break;    /* 0x80020c3c  Runde 35 Spur B */
+    case 59: op_59(); break;    /* 0x800223f8  Runde 35 Spur B */
+    case 70: op_70(); break;    /* 0x80023204  Runde 35 Spur B */
     case 19: op_19(); break;    /* 0x8001f2c0 */
     case 25: op_25(); break;    /* 0x8001fa08 */
     case 27: op_27(); break;    /* 0x8001fa9c */
@@ -1055,4 +1076,353 @@ void re2fx_aufschlag(int re2_art, const int32_t q[3], int16_t gier)
     wr16(b, 0x2A, rd16(b, 0x2A) | 0x20u);              /* @0x8001f1f4-204 */
     b[0x20] = anim_eintrag(b, 18)[2];                  /* @0x8001f208-220 */
     b[0x0B] = 15;                                      /* Brand/Saeure `addiu a2,zero,15` @0x8001f1d4 / `sb a2,11` @0x8001f284 */
+}
+
+/* =============================================================================================
+ * RUNDE 35 SPUR B — Werfer-Klasse (Beta -> Retail): GL-Runde (Op 17 Start, Op 22 Rauchspur,
+ * Op 15 Flug, Op 47 Explosiv-Aufschlag), Rakete (Op 23 Rauchspur, Op 24 Flug), Muendungsblitz
+ * (Op 7), Flammenstrahl (Op 70), Flammen-Puff (Op 59). Alle Adressen info/re2leon/PSX.EXE,
+ * selbst disassembliert (re2_disasm.py); Dossier analysis/befunde_runde35/B_werfer.md §2.3.
+ * Die bestehenden Ops 48/49 (Brand/Saeure-Aufschlag) werden ueber Op 15 -> Op[47 + Art] erreicht.
+ * ============================================================================================= */
+extern int      re15_player_equipped_weapon(void);     /* re15_damage.c (DAT_800aca5d) */
+extern unsigned re15_re2z_weapon_id(unsigned w);       /* enemy_ai_re2_zombie.c: RE1.5-Id -> RE2-Id */
+
+/* DAT_800CFB88/8C/90 — Treffer-Lage der Runde (Schreiber Op 15/24/70); im Port Buchfuehrung. */
+static int32_t s_treffer_lage[3];
+/* DAT_800DF349 — Flammen-/Muendungs-Latch (Op 7, RE2-Flammenwerfer-Handler); Leser @0x80026784/
+ * @0x8002693c (Gegnerschleife) sind nicht portiert (Dossier OFFEN). */
+static uint8_t s_latch_df349;
+unsigned re2fx_r35_latch(void) { return s_latch_df349; }
+const int32_t *re2fx_r35_treffer_lage(void) { return s_treffer_lage; }
+
+static int applier(const int32_t P[3], int16_t gier, const int16_t box[4], uint32_t hitcode)
+{ return re2fx_applier ? re2fx_applier(P, gier, box, hitcode) : 0; }
+
+/* FUN_8001cbe8(a0, 0, Einheit 0x8009DB44, &Lage) — Kind an der Weltlage mit a1 = 0
+ * (`addu a1,zero,zero` in Op 22/23/47/70; kind_an_lage oben traegt die Eltern-Gier fuer Op 48/49). */
+static int kind0_an_lage(uint32_t a0, const uint8_t *quelle34)
+{
+    int16_t ofs[4] = { rds16(quelle34, 0), rds16(quelle34, 2), rds16(quelle34, 4), rds16(quelle34, 6) };
+    return spawn_kern(a0, 0, re2fx_einheitsmatrix, ofs, 0x4000u);
+}
+
+/* Dispatch Op[step[k] + Art]: `lbu v0,k(v1) / lb v1,27(v1) / addu / sll 2 / lw 0x8009d868 / jalr`
+ * @0x8001f0e0-104 (Op 15, k = 2 @0x8001ef74 bzw. 3 @0x8001f0e0). */
+static void op_dispatch_plus_art(int k)
+{
+    uint8_t *b = cur();
+    op_rufen((unsigned)((int)b[k] + (int)(int8_t)b[0x1B]));
+}
+
+/* Wand-/Bodentest der Werfer-Geschosse (Ops 15/24/70) = FUN_8004fba0-Abbild + PORT-ZUORDNUNG
+ * "Zelle des Schuetzen-Bandes = Wand in jeder Hoehe" (Runde 35 Spur B, Dossier §4.1 G2 / §3.8 / §8.1 / §9).
+ * BEFUND (G2): das Abbild der Runde 34 gibt einer RE1.5-SCA-Zelle die Hoehe EINES Bandes (oben =
+ * -1800*(b+1), s. re2fx_boden) und laeuft nur die Baender 7..0. RE2-Formen tragen ihre Oberkante
+ * selbst (`-1800 * ((+10 >> 6) & 0x1f)` @0x8004fe08-30) — eine RE2-Wand ist mehrere Baender hoch,
+ * RE1.5-Zellen tragen KEINE Hoehe (12-Byte-Satz: Breite, Tiefe, x, z, Typ, u0, u1, Band). Die RE1.5-
+ * Kollision selbst kennt nur "Zelle des eigenen Bandes sperrt" (FUN_8001c6e8 `andi v0,v0,0xf002 / bne
+ * s3,v0` @0x8001c89c-a0) — ohne Hoehe. HOEHE: Moebel-Zellen sperren wie Waende in jeder Hoehe — dieselbe
+ * Regel wie die Handgranate (Spur A); die RE1.5-SCHUSSLINIE selbst sperrt an ihnen ohne Hoehe: Resolver
+ * FUN_80011f50 `jal 0x8001b9b4` / `bne v0,zero,0x80012540` @0x80012168-70 -> FUN_8003dcc4(.,.,0xf00,0x300)
+ * @0x8001ba1c-24, Band `lbu v1,130(v1)` / `sra v0,v0,28` / `bne` @0x8003de5c-6c, nur x/z (Dossier §8.1).
+ * Deshalb: liegt das Geschoss UEBER der Standhoehe des Schuetzen (Bezugsebene s_boden_basis; Band =
+ * -y/1800, Spieler-y := -1800 * +0x82 @0x8001d7b8-cc) und hat das Abbild keinen Kontakt gemeldet, sperrt
+ * jede solide Zelle dieses Bandes, die die Flugstrecke dieses Bildes beruehrt.
+ * ⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 N1, Dossier §9): bis hierher pruefte der Test ueber der
+ * Bandhoehe nur Typ 1 (Rechteck) und Typ 3 (Kreis) und nur den PUNKT des Bildes; Rakete, GL-Runden und
+ * Flammenstrahl flogen deshalb durch die Formen 2/4..9 (ROOM10E0 Zelle 21 Typ 5: drei Flugbilder im festen
+ * Dreieck, gemessen §9.1) und konnten duenne Zellen ueberspringen (Schritt 767 > Sehne 552, §8.1). Jetzt:
+ *   - FORM aller Typen 1..9 (re15_werfer_zelle_strecke, Verteiler 0x800b2858 @0x8003af04-84), auch im
+ *     Zellentest des Abbilds selbst (s_r35_formtest: RE2 testet nach dem Rechteck-Vortest die Form, `jr`
+ *     ueber Tabelle 0x80011104 @0x8004fe34-54 — vorher meldete der Vortest Kontakt im LEEREN Teil des
+ *     Rechtecks einer Diagonalzelle);
+ *   - STRECKE vorige Weltlage -> Lage: die Weltlage (FUN_8001d894) kopiert die alte Lage nach +0x3C/+0x3E/
+ *     +0x40, bevor sie die neue rechnet (`lw v1,52(a2)` / `sw v1,60(a2)` @0x8001d954/64, `lhu a0,56(a2)` /
+ *     `sh a0,64(a2)` @0x8001d95c/6c), und Op B laeuft danach (@0x8001d6c8 / @0x8001d6d0-fc). Im ersten Bild
+ *     (lokal +0x24/+0x26/+0x28 = 0: die Physik @0x8001d70c-798 lief noch nicht) gibt es keine vorige Lage;
+ *   - PORT-WAHL (wie Spur A "Wurfbild: Werfer -> Hand", Nutzer "nicht durch die Wand"): beim ERSTEN Test eines
+ *     Geschoss-Platzes zusaetzlich die Strecke Schuetze -> Muendung (re2fx_r35_schuetze vom Spawn), sofern
+ *     der Schuetze selbst frei steht. RE2 testet nur den Punkt je Bild. */
+static struct { int32_t x, z; uint8_t gueltig; } s_r35_schuetze[RE2FX_PLAETZE];
+void re2fx_r35_schuetze(int platz, int32_t x, int32_t z)
+{
+    if (platz < 0 || platz >= RE2FX_PLAETZE) return;
+    s_r35_schuetze[platz].x = x; s_r35_schuetze[platz].z = z; s_r35_schuetze[platz].gueltig = 1;
+}
+
+static int32_t werfer_boden(const int32_t P[3], int r, uint32_t mask, int a3, int *kontakt)
+{
+    s_r35_formtest = 1;                                /* Formtest im Zellentest des Abbilds (s.o.) */
+    int32_t f = re2fx_boden(P, r, mask, a3, kontakt);
+    s_r35_formtest = 0;
+    const int erst = s_r35_schuetze[s_cur].gueltig;    /* erster Test dieses Geschosses */
+    s_r35_schuetze[s_cur].gueltig = 0;
+    if (re2fx_boden_hook || !g_room_rdt_ok || (*kontakt & 1)) return f;
+    if (P[1] >= s_boden_basis) return f;               /* auf/unter der Standhoehe: Grundregel des Abbilds */
+    const int bs = (int)((900 - s_boden_basis) / 1800);   /* Band des Schuetzen */
+    if (bs < 0 || bs > 15) return f;
+    const uint8_t *b = cur();
+    int32_t ax = P[0], az = P[2];                      /* Strecken-Anfang: im ersten Bild der Punkt selbst */
+    if (rd16(b, 0x24) | rd16(b, 0x26) | rd16(b, 0x28)) { ax = rds16(b, 0x3C); az = rds16(b, 0x40); }
+    if (erst) {
+        const int32_t sx = s_r35_schuetze[s_cur].x, sz = s_r35_schuetze[s_cur].z;
+        if (!re15_werfer_band_strecke(&g_room_rdt, sx, sz, sx, sz, bs) &&
+            re15_werfer_band_strecke(&g_room_rdt, sx, sz, ax, az, bs)) { *kontakt |= 1; return f; }
+    }
+    if (re15_werfer_band_strecke(&g_room_rdt, ax, az, P[0], P[2], bs)) *kontakt |= 1;
+    return f;
+}
+
+/* Wand-Rueckprall @0x8001ef90-0x8001f0d0 (Op 15) = @0x8001f874-0x8001f9c0 (Op 24), Delay-Slot-
+ * genau: vel -= acc; lokal -= vel; vel -= acc; lokal -= vel/3 (0x55555556-Idiom + Vorzeichen =
+ * C-Division mit Abschneiden); dann FUN_8001d894 (Weltlage). */
+static void wand_rueckprall(void)
+{
+    uint8_t *b = cur();
+    const int8_t ax = (int8_t)b[0x08], ay = (int8_t)b[0x09], az = (int8_t)b[0x0A];
+    const int16_t vx1 = (int16_t)(rds16(b, 0x0C) - ax), vy1 = (int16_t)(rds16(b, 0x0E) - ay),
+                  vz1 = (int16_t)(rds16(b, 0x10) - az);
+    const int16_t vx2 = (int16_t)(vx1 - ax), vy2 = (int16_t)(vy1 - ay), vz2 = (int16_t)(vz1 - az);
+    wr16(b, 0x0C, (uint16_t)vx2); wr16(b, 0x0E, (uint16_t)vy2); wr16(b, 0x10, (uint16_t)vz2);
+    wr16(b, 0x24, (uint16_t)(rds16(b, 0x24) - vx1 - vx2 / 3));
+    wr16(b, 0x26, (uint16_t)(rds16(b, 0x26) - vy1 - vy2 / 3));
+    wr16(b, 0x28, (uint16_t)(rds16(b, 0x28) - vz1 - vz2 / 3));
+    weltlage();                                        /* `jal 0x8001d894` @0x8001f0cc / @0x8001f9bc */
+}
+
+/* Op 7 = FUN_8001e154 (Bank 1 Skr 0 = Muendungsblitz 0x0100xxxx): Sub += step[3] (@0x8001e164-74),
+ * SE-Code = (+0x16 << 16) + 1 (`lhu a0,22 / sll v0,a0,16 / addiu a0,v0,1` @0x8001e188/a8/b8 — fuer
+ * Skr 0 rr = 256 -> 0x01000001 = ARMS Satz 0, der Schussknall), bei Art != 0 stattdessen 0x031F0001
+ * (@0x8001e1ac-c8); Latch 0x800DF349 := 1 nur im Art-0-Zweig (@0x8001e1dc-e4); dann Op 1. */
+static void op_7(void)
+{
+    uint8_t *b = cur();
+    b[0x1E] = (uint8_t)(b[0x1E] + b[0x03]);
+    const int32_t P[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };   /* sp+16 @0x8001e184-a4 */
+    if ((int8_t)b[0x1B] != 0) {
+        se(0x031F0001u, P);
+    } else {
+        se(((uint32_t)rd16(b, 0x16) << 16) + 1u, P);
+        s_latch_df349 = 1;
+    }
+    op_1();                                            /* `jal 0x8001dc30` @0x8001e1e8 */
+}
+
+/* Op 17 = FUN_8001f198: Start der GL-Runde (Bank 2 Skr 4). Waffen-Id aus Spieler +0x10E
+ * (`lbu v0,0(a1)` 0x800CFD06 @0x8001f1a8) — Port: RE1.5-Id der gefuehrten Waffe -> RE2-Id
+ * (15 -> 9 Explosiv, 17 -> 10 Brand, 16 -> 11 Saeure, re2z_row_from_weapon). */
+static void op_17(void)
+{
+    uint8_t *b = cur();
+    unsigned re2id = re15_re2z_weapon_id((unsigned)re15_player_equipped_weapon());
+    int art = (int)re2id - 9;                          /* `addiu v0,v0,-9 / sb v0,27` @0x8001f1b4-b8 */
+    if (art < 0 || art > 2) art = 0;                   /* Port-Schutz: nur 9/10/11 spawnen Bank-2-Skr-4-Runden */
+    b[0x1B] = (uint8_t)art;
+    b[0x00] = 22;                                      /* `addiu v0,zero,22 / sb v0,0` @0x8001f1c4-c8 */
+    b[0x01] = 15;                                      /* `addiu a2,zero,15 / sb a2,1` @0x8001f1d4-d8 */
+    wr16(b, 0x18, 0xB403u);                            /* @0x8001f1e4-e8 */
+    b[0x21] = 18;                                      /* @0x8001f1ec-f0 */
+    wr16(b, 0x2A, rd16(b, 0x2A) | 0x20u);              /* @0x8001f1f4-204 */
+    b[0x20] = anim_eintrag(b, 18)[2];                  /* @0x8001f208-220 */
+    if ((re2id & 0x1fu) == 9u) {                       /* `lhu v0,0(a1) / addiu v1,zero,9 / andi 0x1f / bne` @0x8001f224-30 */
+        int32_t r = (int32_t)rng();                    /* @0x8001f238 */
+        b[0x0B] = (uint8_t)(10 + r % 3);               /* 0x55555556-Idiom @0x8001f240-60, `addiu v0,v0,10` @0x8001f26c */
+    } else {
+        b[0x0B] = 15;                                  /* `sb a2(=15),11(v0)` @0x8001f284 */
+    }
+    op_15();                                           /* `jal 0x8001ed9c` @0x8001f288 */
+}
+
+/* Op 22 = FUN_8001f634 (Op A der fliegenden Runde): Rauchspur 0x030B0000 | (Skala*150/100)
+ * (`lhu v0,58 / *5 / *15 / *2` @0x8001f648-60, 0x51eb851f >> 5 = /100 @0x8001f640-84, `lui v0,0x30b`
+ * @0x8001f688), a1 = 0 (@0x8001f668), Einheitsmatrix, &Lage. */
+static void op_22(void)
+{
+    uint8_t *b = cur();
+    const int32_t v = (int32_t)rd16(b, 0x3A) * 150;
+    int32_t q = (int32_t)((((int64_t)v * 0x51eb851fLL) >> 32) >> 5) - (v >> 31);
+    kind0_an_lage(0x030B0000u | (uint32_t)(uint16_t)q, b + 0x34);
+}
+
+/* Op 23 = FUN_8001f6a4 (Rakete Op A): Rauchspur 0x030A1800 je Bild, a1 = 0 (@0x8001f6a8-cc). */
+static void op_23(void) { kind0_an_lage(0x030A1800u, cur() + 0x34); }
+
+/* Op 15 = FUN_8001ed9c: Flug der GL-Runde (Box @0x80010900 = {-1400,0,350,250}). */
+static void op_15(void)
+{
+    uint8_t *b = cur();
+    static const int16_t box[4] = { -1400, 0, 350, 250 };
+    int32_t w = wasser(rds16(b, 0x34), rds16(b, 0x38));   /* `jal 0x800527b4` @0x8001ede8 */
+    if (w != 0 && w < rds16(b, 0x36)) {                /* `slt v0,v1,v0 / beq` @0x8001ee14-18 */
+        wr16(b, 0x36, (uint16_t)(rds16(b, 0x36) + 500));   /* `addiu v0,t1,500 / sh v0,54` @0x8001ee34-3c */
+        kind_an_lage(0x1A051C00u, b + 0x34);           /* Spritzer Bank 0x1A (Raum-Bank; a1 = Gier @0x8001ee30) */
+        op_dispatch_plus_art(0x02);                    /* `lbu v0,2(v1)` @0x8001ee4c -> @0x8001f0e4 */
+        return;
+    }
+    b[0x0B] = (uint8_t)(b[0x0B] - 1);                  /* Lebensdauer-- @0x8001ee64-70 */
+    int32_t P[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };
+    int kontakt = 0;
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8001eea0 */
+    b = cur();
+    wr32(b, 0x14, (uint32_t)(f - 10));                 /* `addiu v0,v0,-10 / sw v0,20(v1)` @0x8001eeac-bc */
+    const uint32_t hc = 0x30009u + (uint32_t)(int32_t)(int8_t)b[0x1B];   /* `ori s2,s2,0x9` + `lb a3,27 / addu` @0x8001ee90-dc */
+    const int16_t gier = rds16(b, 0x22);
+    P[1] += 1000;                                      /* @0x8001eec8 */
+    int s0 = applier(P, gier, box, hc);                /* @0x8001eed8 */
+    P[1] -= 2000;                                      /* @0x8001eef8 */
+    s0 += applier(P, gier, box, hc);                   /* @0x8001ef08 */
+    b = cur();
+    if (s0 != 0 || b[0x0B] == 0) {                     /* `bne s0,zero` @0x8001ef14; `lbu v0,11 / bne` @0x8001ef28-30 */
+        wr16(b, 0x18, rd16(b, 0x18) | 0x80u);          /* @0x8001ef44-50 */
+        s_treffer_lage[0] = rds16(b, 0x34); s_treffer_lage[1] = rds16(b, 0x36); s_treffer_lage[2] = rds16(b, 0x38);
+        op_dispatch_plus_art(0x02);                    /* `lbu v0,2(v1)` @0x8001ef74 */
+        return;
+    }
+    if (kontakt) {                                     /* DAT_800DCBC8 @0x8001ef84-8c */
+        wand_rueckprall();
+        op_dispatch_plus_art(0x03);                    /* `lbu v0,3(v1)` @0x8001f0e0 */
+    }
+}
+
+/* Op 24 = FUN_8001f6e0: Flug der Rakete (Box @0x80010908 = {-800,0,400,200}). Kein Flaechen-
+ * schaden: der Treffer kommt aus 0x30011 (Gegner, @0x8001f7b0-c0) bzw. 0x20011 (Bodenhoehe,
+ * @0x8001f820-3c); Wand -> Rueckprall + Op[step[3]] (@0x8001f864-9ec). */
+static void op_24(void)
+{
+    uint8_t *b = cur();
+    static const int16_t box[4] = { -800, 0, 400, 200 };
+    const int16_t x = rds16(b, 0x34), z = rds16(b, 0x38);
+    if (x >= 32001 || z >= 32001 || x < -32000 || z < -32000) {   /* `slti 32001` @0x8001f724/738, `slti -32000` @0x8001f760/774 */
+        b[0x00] = 0; wr16(b, 0x18, 0);                 /* @0x8001f744-48 / @0x8001f780-84 (Original laeuft danach weiter; Port: Ende) */
+        return;
+    }
+    int32_t P[3] = { x, rds16(b, 0x36), z };
+    const int16_t gier = rds16(b, 0x22);
+    if (applier(P, gier, box, 0x30011u)) {             /* `lui a3,0x3 / ori a3,a3,0x11` @0x8001f7b0/c0 */
+        s_treffer_lage[0] = P[0]; s_treffer_lage[1] = P[1]; s_treffer_lage[2] = P[2];   /* @0x8001f7cc-f8 */
+        op_rufen(cur()[0x02]);                         /* `lbu v0,2(v1) / sll 2` @0x8001f7fc-804 -> jalr @0x8001f9ec */
+        return;
+    }
+    int kontakt = 0;
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* @0x8001f808-14 */
+    b = cur();
+    P[1] = f;                                          /* `sw v0,20(sp)` @0x8001f830 */
+    wr32(b, 0x14, (uint32_t)(f - 10));                 /* `addiu v0,v0,-10 / sw v0,20(v1)` @0x8001f838-40 */
+    if (applier(P, gier, box, 0x20011u)) {             /* `lui a3,0x2 / ori 0x11` @0x8001f820-2c, jal @0x8001f83c */
+        op_rufen(cur()[0x02]);                         /* @0x8001f858-60 */
+        return;
+    }
+    if (kontakt) {                                     /* DAT_800DCBC8 @0x8001f868-70 */
+        wand_rueckprall();
+        op_rufen(cur()[0x03]);                         /* `lbu v0,3(v0)` @0x8001f9d0 */
+    }
+}
+
+/* Op 47 = FUN_80020c3c: EXPLOSIV-Aufschlag (Sprungtabelle @0x80010928 = {0x80020CD0, 0x80020E7C,
+ * 0x80020E90, 0x80020EA4, 0x80020EB8}, Phase +0x12 `lhu v1,18 / sltiu 0x5` @0x80020ca4-b0).
+ * Sub 12 (GL-Runde 0x020C): SE 0x01110001 + Schaden 0x10020009 (Box @0x80010918 = {-2000,0,1000,500})
+ * bei y und y+900; Sub 13 (Rakete 0x020D): nur SE 0x01140001, Kinder-Skalen +2560. */
+static void op_47(void)
+{
+    uint8_t *b = cur();
+    static const int16_t box[4] = { -2000, 0, 1000, 500 };
+    const unsigned phase = rd16(b, 0x12);
+    if (phase >= 5u) return;                           /* `sltiu v0,v1,0x5 / beq` @0x80020cac-b0 */
+    switch (phase) {
+    case 0: {
+        int32_t P[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };   /* sp+16 @0x80020cdc-fc */
+        const int sub = b[0x1E];                       /* `lbu a0,30(v1)` @0x80020ce0 */
+        wr16(b, 0x18, 0x8400u);                        /* @0x80020d00-04 */
+        b[0x00] = 0;                                   /* @0x80020d08 */
+        b[0x01] = 47;                                  /* @0x80020d14-18 */
+        const uint32_t s1 = (uint32_t)(((sub - 12) * 5) << 9) & 0xffffu;   /* @0x80020cf8-2c, `andi s0,s1,0xffff` @0x80020de4 */
+        if (sub == 12) {                               /* `addiu v0,zero,12 / bne` @0x80020d34-38 */
+            const int16_t gier = rds16(b, 0x22);
+            se(0x01110001u, P);                        /* `lui a0,0x111 / ori 0x1` @0x80020d40-44, jal @0x80020d48 */
+            applier(P, gier, box, 0x10020009u);        /* @0x80020d54-7c (Box sp+32 + sub*8 - 96 = Box 0) */
+            P[1] += 900;                               /* `addiu v0,v0,900` @0x80020d98 */
+            applier(P, gier, box, 0x10020009u);        /* @0x80020db0 */
+        } else {
+            se(0x01140001u, P);                        /* `lui a0,0x114` @0x80020d3c, `ori 0x1` @0x80020dc0, jal @0x80020dc4 */
+        }
+        b = cur();
+        if (b[0x0B] == 255) wr16(b, 0x36, rd16(b, 0x36) - 470u);   /* @0x80020dd8-f4 */
+        const uint32_t s2 = s1 + 5888u;                /* `addiu s2,s0,5888` @0x80020df8 */
+        kind0_an_lage(0x031F0000u | s2, cur() + 0x34); /* @0x80020dfc-e20 */
+        kind0_an_lage(0x040C0000u | (s1 + 7936u), cur() + 0x34);   /* `addiu s0,s0,7936` @0x80020e24-44 */
+        kind0_an_lage(0x041D0000u | s2, cur() + 0x34); /* @0x80020e48-64 */
+        wr16(cur(), 0x12, 1);                          /* @0x80020e70-78 */
+        break; }
+    case 1: wr16(b, 0x12, 2); break;                   /* @0x80020e7c-8c */
+    case 2: wr16(b, 0x12, 3); break;                   /* @0x80020e90-a0 */
+    case 3: wr16(b, 0x12, 4); break;                   /* @0x80020ea4-b4 */
+    default:                                           /* Phase 4 @0x80020eb8 */
+        if (b[0x0B] == 255) wr16(b, 0x36, rd16(b, 0x36) - 600u);   /* @0x80020ec4-e0 */
+        kind0_an_lage(0x04152700u, cur() + 0x34);      /* @0x80020ee4-f04 */
+        b = cur();
+        b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0);    /* Platz frei @0x80020f14-1c */
+        break;
+    }
+}
+
+/* Op 59 = FUN_800223f8 (Bank 5 Skr 6, Op A): Op 2, Zustand +0x1B := 2, Zaehler +0x42 := rng % 4 + 10
+ * (`bgez / addiu 3 / sra 2 / sll 2 / subu / addiu 10` @0x80022428-48). */
+static void op_59(void)
+{
+    op_2();                                            /* `jal 0x8001dd2c` @0x80022400 */
+    uint8_t *b = cur();
+    b[0x1B] = 2;                                       /* @0x80022410-18 */
+    int32_t r = (int32_t)rng();
+    wr16(b, 0x42, (uint32_t)(r % 4 + 10));
+}
+
+/* Op 70 = FUN_80023204: FLAMMENSTRAHL (Bank 3 Skr 5, Op B). Box @0x80010964 = {-1400,0,400,200}.
+ * Flug (step[3] == 0): Wasser (unter dem Spiegel: Skala*65/100, Kind 0x030F2000, s0 = 3), Treffer
+ * 0x20010 (s0 = 2, Lage nach DAT_800CFB88..), Boden unter der Lage (s0 = 1), Wand (Skala*70/100,
+ * s0 = 1); s0 != 0: acc.x/vel.x/acc.y := 0, Anim 12, vel.y := 20, step[2] := 6, step[3] := 1.
+ * Nachbrennen (step[3] == 1): bei step[2] == 3 Kind 0x040C2000; der Zweig `bne s0,2` @0x800232bc
+ * liest s0 UNINITIALISIERT (= s0 der Pumpe FUN_8001d300 = Pool-Ende 0x800E2E80) -> nie gleich 2,
+ * der Zufalls-Puff 0x0506xxxx (@0x800232c8-32c) ist toter Code. */
+static void op_70(void)
+{
+    uint8_t *b = cur();
+    static const int16_t box[4] = { -1400, 0, 400, 200 };
+    b[0x02] = (uint8_t)(b[0x02] - 1);                  /* @0x80023244-50 */
+    if (b[0x02] == 0) b[0x09] = (uint8_t)(int8_t)-10;  /* @0x80023260-70 */
+    if (b[0x03] != 0) {                                /* `lbu v0,3(a3) / beq v0,zero,0x80023338` @0x80023280-88 */
+        if (b[0x02] == 3)                              /* `addiu v0,zero,3 / lbu v1,2 / bne` @0x8002328c-98 */
+            kind0_an_lage(0x040C2000u, b + 0x34);      /* `lui a0,0x40c / ori 0x2000`, a1 = 0 @0x8002329c-b8 */
+        return;
+    }
+    int32_t P[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };   /* sp+16 @0x80023338-58 */
+    int s0 = 0;                                        /* `addu s0,zero,zero` @0x80023360 */
+    int32_t w = wasser(P[0], P[2]);                    /* `jal 0x800527b4` @0x80023364 */
+    if (w != 0 && w < P[1]) {                          /* `slt v0,v1,v0 / beq` @0x8002338c-90 */
+        uint32_t s = rd16(b, 0x3A) * 65u;              /* `sll v0,v1,6 / addu` @0x800233a0-a4 */
+        wr16(b, 0x3A, (uint32_t)(((int64_t)(int32_t)s * 0x51eb851fLL) >> 37));   /* /100 @0x800233a8-d4 */
+        s0 = 3;                                        /* @0x800233bc */
+        kind0_an_lage(0x030F2000u, cur() + 0x34);      /* @0x800233c0-d0 */
+        b = cur();
+    }
+    if (applier(P, rds16(b, 0x22), box, 0x20010u)) {   /* `lui a3,0x2 / ori a3,a3,0x10` @0x800233e8-f4 */
+        s_treffer_lage[0] = P[0]; s_treffer_lage[1] = P[1]; s_treffer_lage[2] = P[2];   /* @0x80023400-30 */
+        s0 = 2;                                        /* @0x80023428 */
+    }
+    int kontakt = 0;
+    int32_t f = werfer_boden(P, 2, 8192u, 0, &kontakt); /* `jal 0x8004fba0(&P,2,8192,0)` @0x8002343c */
+    b = cur();
+    if (f < P[1]) s0 = 1;                              /* `slt v0,v0,v1 / beq ... / addiu s0,zero,1` @0x8002344c-58 */
+    if (kontakt) {                                     /* DAT_800DCBC8 @0x80023460-68 */
+        uint32_t s = rd16(b, 0x3A) * 70u;              /* `sll 3 / addu / sll 2 / subu / sll 1` = *70 @0x80023484-94 */
+        wr16(b, 0x3A, (uint32_t)(((int64_t)(int32_t)s * 0x51eb851fLL) >> 37));   /* /100 @0x80023498-b0 */
+        s0 = 1;                                        /* @0x8002349c */
+    }
+    if (s0 == 0) return;                               /* `beq s0,zero,0x8002353c` @0x800234b4 */
+    b[0x08] = 0; wr16(b, 0x0C, 0); b[0x09] = 0;        /* @0x800234c8-d8 */
+    b[0x21] = 12;                                      /* `addiu v0,zero,12 / sb v0,33` @0x800234e4-e8 */
+    b[0x20] = anim_eintrag(b, 12)[2];                  /* @0x800234f8-510 */
+    wr16(b, 0x0E, 20);                                 /* `addiu v0,zero,20 / sh v0,14` @0x8002351c-20 */
+    b[0x02] = 6;                                       /* @0x80023524-28 */
+    b[0x03] = 1;                                       /* @0x80023534-38 */
 }

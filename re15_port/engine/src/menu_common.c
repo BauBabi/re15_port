@@ -938,6 +938,11 @@ static int exchange_match(void)
     idB = g_inv.slots[b].id;                     /* lbu 0x800b10ac+b*4 @0x8004e9a8 */
     idA = g_inv.slots[a].id;                     /* lbu 0x800b10ac+a*4 @0x8004e9b8 */
     if (idB == 0) return 0;                      /* beq @0x8004e9bc */
+    {   /* Runde 35 Spur B: Werfer 15..17 / Python 20, RE1.5-Saetze unverdrahtet (werfer_r35.c) */
+        extern int re15_werfer_paar(uint8_t id_a, uint8_t id_b, uint8_t *result, uint8_t *pic);
+        int r35 = re15_werfer_paar(idA, idB, &s_x_result, &s_x_pic);
+        if (r35) return r35;
+    }
     cnt   = xu8(X_PROP_TBL + (uint32_t)idA * 12u + 9u);
     plist = xu32(X_PROP_TBL + (uint32_t)idA * 12u + 4u);   /* PSX address in the blob */
     if (cnt == 0) return 0;                      /* beq @0x8004e9ec */
@@ -1048,6 +1053,11 @@ static int exchange_exec(int action)
         g_inv.slots[an].id = sid;                /* @0x8004e628 */
         g_inv.slots[an].qty = sqty;              /* @0x8004e640 */
         g_inv.slots[an].flags = skind;           /* @0x8004e658 */
+        break;
+    }
+    case 7: case 8: {                            /* Runde 35 Spur B: RE2 @0x8006bc18/@0x8006bd98 */
+        extern void re15_werfer_gl_tausch(int gl_slot, int rd_slot, int pic);
+        if ((action & 0xff) == 7) re15_werfer_gl_tausch(an, bn, s_x_pic); else re15_werfer_gl_tausch(bn, an, s_x_pic);
         break;
     }
     case 5:                                      /* [5] @0x8004e664 SELF-STACK: delegates

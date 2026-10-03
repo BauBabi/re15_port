@@ -289,6 +289,19 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
             if (!rising) { cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE; }
         }
         if (force_col0 && e->state == 3) e->re2z_hits1d2 = 0;
+        /* Runde 35 Spur B: die Rakete (18) ist ein RE2-GESCHOSS — der Hitscan-Resolve (ENT[18]) ist
+         * weg; der Treffer kommt aus Op 24 @0x8001f6e0: `FUN_800470c0(&Lage, Gier, Box @0x80010908
+         * {-800,0,400,200}, 0x30011)` (@0x8001f7b0-c0). Dieser Harness tickt die RE2-FX-Maschine
+         * nicht; er liefert den Geschoss-Treffer im Spawn-Bild (Rueckstossbild 1, @0x8004559c-a4) an
+         * der Zombie-Lage direkt an den Applier — exakt der Hitcode und die Box des Flugtreffers. */
+        if (weapon == 18 && !dead) {
+            extern int re15_player_granate_frame(void);
+            if (re15_player_granate_frame() == 1) {
+                const int32_t P[3] = { e->x, e->y - 800, e->z };
+                static const int16_t rbox[4] = { -800, 0, 400, 200 };
+                (void)re15_re2_gl_apply(P, (int16_t)pl->rot_y, rbox, 0x30011u);
+            }
+        }
         frame(cur, edge);
         t->frames = f;
         if (e->hp < hp_last) t->hits++;
@@ -599,7 +612,9 @@ int main(void)
     CHECK(t.cell == 4, "PIN6b: Zeile 7 Spalte 1 dispatcht %d statt 4 (0x801066FC)", t.cell);
 
     /* ===== PIN 7 — REGRESSIONSWACHE: die schon byte-truen Waffen ========================== */
-    {   const int wpn[] = { 3, 4, 12, 19, 20 };   /* Browning HP, Beretta, Ingram, MC51, Colt */
+    /* Runde 35 Spur B: die Colt Python (20) ist jetzt Magnum-Klasse (RE2-Zeile 5, PIN1b oben) und
+     * gehoert nicht mehr in die Handfeuer-Regressionswache. */
+    {   const int wpn[] = { 3, 4, 12, 19 };       /* Browning HP, Beretta, Ingram, MC51 */
         s_reaim = 1;                              /* Nachzielen (s. run_kill-Kommentar) */
         for (unsigned i = 0; i < sizeof wpn / sizeof wpn[0]; i++) {
             /* Budget 2600 (vorher 900): seit die Kriech-Varianten 2/3 scharf sind, nimmt der
@@ -632,6 +647,19 @@ int main(void)
         }
         s_reaim = 0;
     }
+
+    /* ===== PIN 1b — Runde 35 Spur B: COLT PYTHON (Waffe 20 -> Zeile 5) = Magnum-Klasse ========
+     * RE1.5 fuehrt die Python als zweiten Magnum-Revolver (ARMS14 = Record-Layout des Redhawk ARMS07,
+     * Bank W14 = Revolver-Clips, Magazin 6; Dossier B_werfer.md §3.5); Schaden = Spalte 7, RE2-Zeile 5
+     * -> dieselbe Todeszelle 0x801092C4 wie PIN 1 (der Kopf platzt ab). Steht HINTER PIN 7, damit die
+     * Einlege-Reihenfolge der Waffen (7, 18, 8, 13, 3, 4, 12, 19, 20) unveraendert bleibt — die MC51
+     * (19) ist eine 2-Platz-Waffe und findet sonst keinen freien Platz mehr (Harness-Kapazitaet). */
+    CHECK(find_kill(slot, 20, 3, -1, 900, &t),
+          "PIN1b: in 16 RNG-Verschiebungen kein Treffer der Zelle 3 (0x801092C4) mit der Python");
+    dump("PIN1b Python", &t);
+    CHECK(t.ok && t.cell == 3, "PIN1b: Zelle %d statt 3 (0x801092C4)", t.cell);
+    CHECK(t.row == 5, "PIN1b: Zeile %d statt 5 (Magnum, re2z_row_from_weapon[20])", t.row);
+    CHECK(t.corpse_seen, "PIN1b: Leichenpose %d (corpse_seen=%d)", t.corpse_clip, t.corpse_seen);
 
     /* ===== PIN 8 — NEGATIVTEST RE1.5-MODUS ==============================================
      * Gemessen wird DERSELBE Reiz wie in PIN 2 (Zeile 17 / Spalte 1 -> Zelle 0x80108BEC, die
