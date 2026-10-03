@@ -711,7 +711,7 @@ Messung vorher, Beleg, Aenderung, Messung nachher.
 | M2 Riegel pinnt Ursache von Punkt 2 nicht | Riegel `wagen` druckte nur | s001 t=6.11 / s020 / s021 | `wagen` prueft Spawn-INIT (Zustand 1, HP 180, Scale 0x1b33 @0x80117148), y = -2500 (36 Bilder), Austritt (-3617,0,-17798) | gruen |
 | M3 Schrotflinte springt nach jedem Treffer | Zaehler nur in Spur 0 | Exits Spur 1 @0x8011b3c8-cc, Spur 2 @0x8011b6c4-c8 (+0x5 = 7) | Zaehler in Spur 1/2 (Eintritt + Exit, je 1 Zeile) | exe Tuerweg + Schrot: 3,3,7 / 3,3,7 (vorher 7,7,7 / 7,7,7); Riegel `sprung` 24/24, `schrot` (Original-GDB 0-1 Bild) |
 | M4 NPC-Klemme +0x82 spielweit ungemessen | Wurzel-Schwanz aller NPCs | FUN_8003b0a4 `lbu v1,130(a3)` @0x8003b228-3c; Zensus 101 Spawns (94 gleich) | keine (byte-true); OFFEN-Eintrag | Riegel `npcband`: in 10 Raeumen kein laufender NPC mit abweichendem Band |
-| M5 Haken > 1-5 Zeilen | Logik/Kommentare inline | — | Logik + Mess-Schiene nach affen_11c0.c, Belege in re15_affen.h | enemy_ai_common.c +21/-11 in 19 Hunks (max 2 Zeilen), game_step_common.c +4/-2, main.c +5 |
+| M5 Haken > 1-5 Zeilen | Logik/Kommentare inline | — | Logik + Mess-Schiene nach affen_11c0.c, Belege in re15_affen.h | enemy_ai_common.c +22/-13 in 19 Hunks (max 2 Zeilen), game_step_common.c +4/-2, main.c +5 |
 
 ## Tests (Stand Nachbesserung 1) — probes/r35_affen.cmake, test_r35_affen.c, 15 Eintraege
 - Bisherige 11 (teile, band, ada, sprung, flug, wagen, brust, kdsonde, biss, frac, anker), davon erweitert:

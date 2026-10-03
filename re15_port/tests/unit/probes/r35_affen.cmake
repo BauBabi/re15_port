@@ -1,7 +1,9 @@
 # Spur J (Runde 35) — ROOM11C0: Ada versteckt sich / kommt zurueck, Gorilla-Boss (0x27).
 # Dossier analysis/befunde_runde35/J_affen.md, Code include/re15_affen.h + engine/src/affen_11c0.c
-# (Haken: enemy_ai_common.c NPC-Klemmband +0x82, Flinch-Zaehler, LEAP ohne 245d8; main.c Parts ohne
-# Knochen weltfest; emd_common.c EMR-Rohdaten am Skelett).
+# (Haken je 1-2 Zeilen: enemy_ai_common.c NPC-Klemmband +0x82, Treffer-Zaehler Spur 0/1/2, LEAP ohne 245d8,
+# +0x8f-Abbau, Fuss-Sperre als Abfrage, Pin-Anker, Pin-Variante vor dem Yaw-Latch, Spawn-Wurzel 0x27;
+# game_step_common.c Knockdown-Sonde; main.c Part 18 am Rumpf / Parts ohne Knochen weltfest; emd_common.c
+# EMR-Rohdaten am Skelett). Die Riegel takt/griff/schrot messen gegen GDB-Einzelbild-Spuren des Originals.
 #
 # RIEGEL: Teile teile / band / ada / sprung / flug / wagen / brust / kdsonde / biss / frac / anker / takt / griff / npcband / schrot (Beschreibung im Kopf von
 # test_r35_affen.c).
