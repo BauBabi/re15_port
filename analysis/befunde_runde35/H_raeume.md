@@ -285,6 +285,15 @@ Halte-Bild Leon = Arm + 1; (3) Gesicht-Griff: 0 von 44 Halte-Bildern mit Hand < 
 
 ---
 
+---
+
+## Suite
+`bash re15_port/tools/local_build.sh all` am Endstand (nach ae4162c8, Seed nur Zombie-Wurzel-Typen):
+`=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478; neu: unit_r35_raeume_hundeschatten,
+unit_r35_raeume_ziel, unit_r35_raeume_trage, unit_r35_raeume_arme; angepasst: unit_1210_arme_re2 (4d)).
+Ein Vorlauf mit globalem +0x1ba-Seed war ebenfalls 482/482; der Seed wurde trotzdem auf die Zombie-Wurzel-Typen
+begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-3) und RE2-Kraehe +0x1C2 ist.
+
 ## Fuer den Nutzer
 * **Sprachdateien (neu, optional — ohne Datei laeuft der Text stumm mit Untertitel):**
   * `synchro/STAGE1/room1190/main06.wav` — Leon: "This target has a surprisingly large number of bullet holes."
