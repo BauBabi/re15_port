@@ -755,6 +755,11 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
         for (int i = 0; i < nsoll && i < nt; i += 2) { e1_n++; if (treffer[i] == soll[i]) e1_gleich++; }
         PRUEF(e1_n == 7 && e1_gleich == 7, "Slot 2 (e1): %d/%d Bisse im selben Bild wie das Original (Zyklus 103; HEAD 458635e1: 218/321/425/529/633/737/841"
               " = Zyklus 104 nach (9), weil A/B-Folge @0x80117358-78 und Trefferpunkt Record+0x40 @0x801183c0 fehlten)", e1_gleich, e1_n);
+        int e2_gleich = 0, e2_n = 0;   /* N5 (P1): e2 = Slot 3 beisst die Treffer 2, 4, ... 14 */
+        for (int i = 1; i < nsoll && i < nt; i += 2) { e2_n++; if (treffer[i] == soll[i]) e2_gleich++; }
+        PRUEF(e2_n == 7 && e2_gleich == 7, "Slot 3 (e2): %d/%d Bisse im selben Bild wie das Original (Zyklen 103, 104, 104, 104, 104, 104;"
+              " Nachbesserung 4: 269/372/475/578/681/784/887 = Zyklus 103, weil die Fuss-Sperre die Kette nicht auf der GTE rechnete und"
+              " Leons Rueckstoss im Handler klemmte — re15_affen.h (13), game_step_common.c (14))", e2_gleich, e2_n);
     }
     if (nt >= nsoll && nsoll >= 2) {
         double mitte = (double)(treffer[nsoll - 1] - treffer[0]) / (double)(nsoll - 1);
@@ -1112,18 +1117,25 @@ static void teil_szene(void)
          * Slot 2 beisst die Bisse 2, 4, ... 14 (+521, 624, ... 1139 = Zyklus 103). Eine Drift von 1 Bild je Zyklus (HEAD 458635e1:
          * +524 ... +1148) faellt hier auf: der Versatz zum Original muss fuer alle sieben Slot-2-Bisse GLEICH bleiben (+-1). */
         static const int orig[14] = { 468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139 };
-        int d0 = (nb >= 2) ? (biss[1] - f_frei) - orig[1] : 999, dmin = 999, dmax = -999, s3max = 0;
+        int d0 = (nb >= 2) ? (biss[1] - f_frei) - orig[1] : 999, dmin = 999, dmax = -999, s3max = 0, s3min = 999, s3hi = -999;
         printf("  Einzelbisse (Port - Original):");
         for (int i = 0; i < 14 && i < nb; i++) {
             int d = (biss[i] - f_frei) - orig[i];
             printf(" %+d", d);
             if (i & 1) { if (d < dmin) dmin = d; if (d > dmax) dmax = d; }
-            else if (abs(d) > s3max) s3max = abs(d);
+            else { if (abs(d) > s3max) s3max = abs(d); if (d < s3min) s3min = d; if (d > s3hi) s3hi = d; }
         }
         printf("\n");
         PRUEF(nb >= 14 && dmax - dmin <= 1 && abs(d0) <= 3, "Slot 2: Versatz der 7 Bisse zum Original %+d .. %+d (gleichbleibend = Zyklus 103 wie das Original;"
               " HEAD 458635e1: +3 .. +9)", dmin, dmax);
-        PRUEF(nb >= 14 && s3max <= 6, "Slot 3: groesste Abweichung %d Bilder (Schranke 6; Rest-Drift ab dem 4. Biss, Dossier OFFEN N4-1)", s3max);
+        {   /* N5 (P1): Slot 3 (Bisse 1, 3, ... 13 + Todesbiss +1194) wie Slot 2 auf GLEICHBLEIBENDEN Versatz pruefen = Zyklus wie das
+             * Original (103, 103, 104, 104, 104, 104, 104). Nachbesserung 4 lag bei 0,0,0,-1,-2,-3,-4,-5 (Zyklus 103) — die alte
+             * Schranke "groesste Abweichung <= 6" liess diese Drift durch. */
+            int dt = (f_tod > 0) ? (f_tod - f_frei) - 1194 : 999;
+            if (dt < s3min) s3min = dt; if (dt > s3hi) s3hi = dt; if (abs(dt) > s3max) s3max = abs(dt);
+            PRUEF(nb >= 14 && s3hi - s3min <= 1 && s3max <= 3, "Slot 3: Versatz der 7 Bisse und des Todesbisses zum Original %+d .. %+d"
+                  " (gleichbleibend = Zyklen 103, 103, 104, 104, 104, 104, 104 wie das Original; Nachbesserung 4: 0 .. -5 = Zyklus 103)", s3min, s3hi);
+        }
     }
 }
 
