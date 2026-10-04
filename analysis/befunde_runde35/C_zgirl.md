@@ -194,8 +194,41 @@ Umbrella-Schild; die Zombie-Frau (braunes Haar, gemustertes Kleid) laeuft auf Le
 Sitzung `GetRenderTargetData(): DEVICELOST` (nur die Vorspann-Bilder kamen an); mit
 `SDL_RENDER_DRIVER=opengl` (weiterhin beschleunigt, kein SOFTWARE_RENDER) kommen alle Bilder.
 
+### N4 KI in beiden Geschmaeckern am echten Tuerweg (exe, Tuer 6 -> Cut 9)
+* RE2-KI (Spiel-Default), Lauf nachher_tuer6: Anlauf ab F61 (d 3788), Griff F231 (ss1=3), Spieler-HP
+  100 -> 80 (F246) -> 60 (F291), danach weggestossen (ss1=5, g=0x80) und neuer Anlauf ab F484.
+* RE1.5-KI (`RE15_AI_FLAVOR=re15`), Lauf re15_tuer6: Spawn-HP 80 (50..81), ss1 0 -> 2 (engage, F70)
+  -> 3 (Griff, F198) -> Spieler-HP 100 -> 90 (Aufprall -10, F212) -> 75 (Bisse) -> ss1=5 (Fressen,
+  F313) -> Spieler-HP -1 (F378). Das ist der geteilte Zombie-Griff FUN_80102548 (ungemasht -> Fressen).
+
+### N5 Tonereignisse (SDL_AUDIODRIVER=dummy, RE15_SE_DEBUG, Tuer 6; diese Sitzung hat kein Audiogeraet)
+ROOM4050 bringt eine eigene Raum-Tonbank mit (RDT snd1: VH @0x5430 `pBAV`, 2 Programme, 22 Toene,
+15 VAGs; ROOM1140 zum Vergleich 11 VAGs). Die Gegner-Toene laufen ueber re15_audio_room_se(N) ->
+Raumbank (FUN_800453d0) und die Clip-Bild-Flags (FUN_8001b38c, Zombie-Wurzel-Schwanz @0x8010aad8
+STAGE1 / 0x8010aa8c STAGE4). Gemessen im Raum (nach dem Sprung):
+* RE2-KI: se 0 x4, 5 x2, 3 x2, 8 x1, 1 x1.
+* RE1.5-KI: se 1 x8 (Schritte, Bit 1 der Bildflags), 0 x3, 4 x2, 3 x1.
+Datengetrieben aus dem Original-RDT; kein eigener Ton noetig.
+
+
 ## Tests
-(laufend)
+
+Neue Dateien (nur aus `tests/unit/probes/r35_zgirl.cmake` registriert):
+`tests/unit/test_r35_zgirl.c`, `tests/integration/test_r35_zgirl.cmake`.
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r35_zgirl_zensus | echtes ROOM4050 UND ROOM4051, main00 je Eintritts-Cut 0..14: Cut 9 -> 0x13 @(-9900,1150) r512 Kill-Flag 0xa0, Cut 14 -> @(1600,4700) r1024 0x7d, Cut 6/11 -> 0x18, sonst nichts | gruen (30/30) |
+| unit_r35_zgirl_killflag | Zone 8 (Stage-Index 3) und Kill-Flags 0xa0/0x7d unterdruecken den Spawn | gruen |
+| unit_r35_zgirl_tuer | Slot 6/7 -> g_scd_pending_scenario 9/14, Leon am Tuer-Ziel, Verbraucher scd_room_reenter spawnt sie; Slot 0 -> ROOM4040 ohne Szenario; Stage-1-Gegenprobe ROOM1110 Slot 1 -> 7 | gruen |
+| unit_r35_zgirl_ki_re15 | echter Spielschritt (scd_vm_tick + re15_game_step, RE1.5-Bank 0x13 aus EMD/CDEMD0.EMS): INIT-HP 80 in 50..81, Abstand 3788 -> 337, Griff ab Bild 173, Abzuege 10 dann 5, Ansprung nie scharf | gruen |
+| unit_r35_zgirl_ki_re2 | dito RE2-KI (RE2-Bank aus RE2/CDEMD0.EMS): Abstand 3788 -> 386, Griff ab Bild 155, Spieler-HP 100 -> 60 (2 x 20) | gruen |
+| unit_r35_zgirl_tod | toedlich -> Zustand 3 -> Leiche 7 -> Flag (8,0xa0)=1 -> Wiedereintritt Cut 9 ohne Maedchen | gruen |
+| unit_r35_zgirl_messer | re15_player_weapon_fire(1): Zustand 2, +0x5 = 1, HP 60 -> 54, Rueckkehr in Zustand 1 | gruen |
+| integration_r35_zgirl | echte exe, Aktionstaste an Tuer 6 und Tuer 7: DOOR FIRE, `Sce_em_set type=0x13` an beiden Lagen, >= 300 Bilder mit ihr, Annaeherung >= 1500, Tuer 6 zusaetzlich Spieler-HP < 100 | gruen (253 s) |
+
+Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gruen.
+
 
 ## OFFEN
 (laufend)

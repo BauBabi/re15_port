@@ -8,7 +8,8 @@ BD=$ROOT/re15_port/build/platform/pc
 cp -f "$BD/re15_pc.exe" "$BD/re15_pc_zgirl.exe" || exit 3
 Z="$ROOT/build/r35_zgirl_mess/$1"; rm -rf "$Z"; mkdir -p "$Z"; cd "$Z" || exit 2
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' MSYS2_ENV_CONV_EXCL='*'
-export RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+export RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
+[ -z "${AUDIO:-}" ] && export RE15_NOAUDIO=1
 export RE15_DEBUG_JUMP="${JUMP:-4050@gp}"
 [ -n "${FIRE:-}" ] && export RE15_FIRE_AOT="$FIRE"
 [ -n "${POS:-}" ] && export RE15_PLAYER_POS="$POS"
