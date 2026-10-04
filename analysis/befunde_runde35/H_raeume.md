@@ -340,4 +340,53 @@ Maengel aus `H_abnahme_0.md`: M1 (P3 Bahren-Zombie bleibt unter RE2-KI in der Nu
 M2 (P4 Ruecken-Griff clippt), M3 (veraltete Kommentare enemy_ai_common.c:214/:10695), M4 (P4 RE1.5-KI der
 Gitterarme ungeprueft). Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher.
 
+### M3 (Doku) — erledigt
+enemy_ai_common.c:214 ("func_0x8001bd60(-10,20) setup helper — deferred") -> jetzt: Engine-Schwerkraft,
+portiert als re15_schwerkraft_8001bd60, aufgerufen in re15_enemy_ai_live_tick (`jal` @0x80100514).
+:10695 (Zombie-Maedchen, "unmodeled port-wide") -> "laeuft bisher nur in der Zombie-Wurzel, hier noch nicht
+— OFFEN". :14669 (NPC-Wurzel "look helper 0x8001bd60") -> "Schwerkraft 0x8001bd60 [hier noch nicht portiert]".
+Commit e83b0741.
+
+### M1 (P3, RE2-KI, Spieler direkt unter der Kante)
+**Messung vorher** (Lauf `m1_D_vorher` = Abnahme-Lauf p3c_re2_D: DEBUG_JUMP 1200@gp, Spieler (-25880,-16450)
+Blick 2048, Aktion+Ja per RE15_PRESS F1800-2003 (Bilder zaehlen ab Raumladen), danach RE15_INPUT_SCRIPT=D3
+ab F2100; `RE15_GEGNER_Y_LOG` jetzt mit `rot/los/t158/t15a/cd`):
+* Slot 2 (= id 1) F2010 Sub 1 (Gang) auf Band 1, F2070 Sub 14 (Schnappbiss, Clip 0x11), ab F2100 Sub 0 P1
+  (`st=1/0/1`, Clip 0) bei **(-24049,-1800,-17373)**, cd 60 -> 0, t158 -> 0 — und **los=0 in JEDEM Bild**
+  des Raums (auch vor dem Wecken und nach der Landung).
+* Sub 0 kommt nur ueber das Sicht-Bit weiter: DECISION[0] Block 1 `dist<0x1388 && a1024==0 && +0x154&0x800
+  -> 0x101` (@0x80101308-1C) und der Selbst-Wecker P1 `t158==0 && dist<0x1D4C && +0x154&0x800 -> 0x101`
+  (@0x80101544-7C). Ohne Sicht bleibt nur der Wander-Wurf (50 % alle 300..555 Bilder, @0x8010151C-40) —
+  daher "kommt nie" (Abnahme, 1011 Bilder) bzw. "nach ~470 Bildern" (LU/RU) bzw. hier F2370 per Sub 9.
+* Sonde `probe_r35_raeume_trage_los` (neu, kein add_test; zerlegt re15_re2_los_clear an den echten
+  ROOM1200-Zellen, Zombie (-24049,-17373) Band 1, Maske 4): der Zell-Strahl (u0 & Maske, Gegnerband) ist fuer
+  alle Spielerplaetze vor der Kante **frei**; geblockt wird vom zweiten Teil, dem RE1.5-Region-Ray
+  (FUN_8003dcc4-Stand-in), und zwar an **Zelle 13** (Spieler (-25788,-16450), (-25880,-16450), (-24049,-16000),
+  (-25000,-16800)) bzw. **Zelle 12** ((-22685,-17314)) — beide `u0 01 u1 02` = die Absturzkanten, fuer den
+  Zombie (Maske 4) begehbar. Er "sieht" also die Kante, auf der er gleich hinunterlaufen soll, als Wand.
+
+**Beleg (RE2 PSX.EXE, selbst disassembliert, re2_disasm.py):** der Strahl, den der Port hier nachbildet, ist
+0x80050858 (aus dem Navigator FUN_8004A808, Maske 0x2000, a3=1). Satzschleife:
+```
+800508b0: addiu t1,t1,16          ; naechster Satz (16 B)
+800508b4: beq   t1,s6,0x80050f50  ; Ende -> 0 (frei)
+800508bc: lhu   v1,8(t1)          ; Attribut des Satzes
+800508c4: and   v0,v1,fp          ; fp = a2 = Maske des Aufrufers
+800508c8: beq   v0,zero,0x800508b0; KEIN Maskentreffer -> Satz zaehlt nicht
+800508d0: andi  v0,v1,0xf / 800508dc: lbu v0,29620(at) ; Form-Skip-Tabelle 0x800A73B4
+...
+80050b00: lw    s6,0(sp)          ; a3
+80050b08: beq   s6,zero,0x80050f50 / 80050b0c: addiu v0,zero,1   ; a3=0: XZ-Treffer = blockiert
+80050b10-30: Unterkante t5 = -1800 * (nachlaufende Nullen von Satz+0x0C)
+80050b34-74: Oberkante t4 = -(w>>11)*100 - ((w>>6)&0x1f)*1800 (w = Satz+0x0A); danach YZ-/YX-Projektion
+```
+Die Maske ist Teil des Originals (wer nicht kollidiert, verdeckt nicht). Der Port-Zell-Strahl bildet das als
+`u0 & Maske` ab (re15_re2_los_cells_blocked); der zusaetzlich UND-verknuepfte Region-Ray hatte den Filter
+nicht — das ist der Defekt (Port-Mapping, kein RE2-Verhalten).
+
+**Aenderung:** enemy_ai_common.c re15_los_ray_blocked bekommt einen Parameter `re2_maske`; nur der RE2-Aufruf
+(re15_re2_los_clear, Zombie + Kraehe — beide laufen im Original durch dieselbe Satzschleife) uebergibt die
+Maske des Aktors (+0x1D7, Default 4) und ueberspringt Zellen ohne `u0 & Maske` (@0x800508bc-c8). Der
+RE1.5-Sensor FUN_8001bc08 ruft mit 0 = unveraendert FUN_8003dcc4. Commit d0684bcc.
+
 (in Arbeit)
