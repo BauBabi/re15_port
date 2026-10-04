@@ -229,7 +229,7 @@ void     re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latc
  *      B[+0x5] (Tabelle 0x80121428, `jalr` @0x80117378) im SELBEN Tick; +0x1dc-- erst danach (@0x801173f8-40c).
  *      Wechselt A[3] auf den Biss, laeuft B[5] (Clip 0x12 + anim_set) sofort. Der Port brach nach dem A-Entscheid
  *      ab und fuehrte B erst im Folgetick aus: +1 Tick je A-Wechsel (2 je Biss-Zyklus). Haken in enemy_ai_common.c:
- *      die A-Wechsel (A[0], A[1], A[3], A[4]) springen nach `ab_wechsel`; dort laeuft der Sub-Schalter ein zweites
+ *      die A-Wechsel (A[0], A[1], A[3], A[4]) springen nach `ab_b` (enemy_ai_common.c, Hinweis H2 Abnahme 4); dort laeuft der Sub-Schalter ein zweites
  *      Mal NUR mit dem B-Teil (A[3]/A[4]/A[15] werden im B-Lauf uebersprungen; A[2]/A[5..8] sind `jr ra`). */
 
 /* (11) TREFFERPUNKT DER ANGRIFFE = GEZEICHNETE KNOCHENMATRIX (Nachbesserung 4, N2). FUN_8001bff8 (PSX.EXE)
