@@ -76,6 +76,20 @@ static int vol_innen(const vol_t *v, const re15_skel_pose_t *p, int yaw, int32_t
     if (b < 0 || b >= v->nb || !v->ok[b]) return 0;
     return x >= v->x0[b] && x <= v->x1[b] && z >= v->z0[b] && z <= v->z1[b];
 }
+/* Nachbesserung 3: dieselbe Huellen-Pruefung mit einer WELT-Matrix des Knochens (RE2-RAM: Part +0x48 m[3][3]
+ * Q12, Translation +0x5C/+0x60/+0x64 — Pin-Quelle @0x80100C18-38, geschrieben vom Zeichnen FUN_80027434).
+ * lokal = M^T * (P - t). */
+static int vol_innen_welt(const vol_t *v, const int16_t M[9], const int32_t t[3], const int32_t P[3])
+{
+    int64_t dx = P[0] - t[0], dy = P[1] - t[1], dz = P[2] - t[2];
+    int64_t x = ((int64_t)M[0] * dx + (int64_t)M[3] * dy + (int64_t)M[6] * dz) >> 12;
+    int64_t y = ((int64_t)M[1] * dx + (int64_t)M[4] * dy + (int64_t)M[7] * dz) >> 12;
+    int64_t z = ((int64_t)M[2] * dx + (int64_t)M[5] * dy + (int64_t)M[8] * dz) >> 12;
+    if (y < v->ymin) return 0;
+    int b = (int)((y - v->ymin) / VOL_BAND);
+    if (b < 0 || b >= v->nb || !v->ok[b]) return 0;
+    return x >= v->x0[b] && x <= v->x1[b] && z >= v->z0[b] && z <= v->z1[b];
+}
 /* Arm-Vertices (Unterarm + Hand, Pose = Clip/Bild des Arms, rein) in Leons Kopf/Rumpf. leon[0] = Rumpf-,
  * leon[1] = Kopf-Pose (Knochen 0/8 der Opfer-Pose), Leon-Wurzel (lx, 0, lz), Blick lyaw. spiegel = 1: die
  * Arm-Punkte vorher waagerecht an Leons Wurzel um 180 Grad gedreht — die RE2-Konstruktion des Ruecken-Griffs

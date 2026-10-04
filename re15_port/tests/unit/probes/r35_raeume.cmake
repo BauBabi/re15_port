@@ -56,3 +56,11 @@ target_link_libraries(probe_r35_raeume_trage_los PRIVATE re15_engine re15_test_s
 target_include_directories(probe_r35_raeume_trage_los PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_r35_raeume_trage_los PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# Nachbesserung 3 MESS-SONDE (kein add_test): Volumenmass auf dem RE2-ORIGINAL-RAM eines Griffs ROOM2050
+# (DuckStation-GDB-Mitschnitt frames.bin, analysis/befunde_runde35/H_raeume/re2_mess/).
+add_executable(probe_r35_raeume_re2orig probe_r35_raeume_re2orig.c)
+target_link_libraries(probe_r35_raeume_re2orig PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r35_raeume_re2orig PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r35_raeume_re2orig PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

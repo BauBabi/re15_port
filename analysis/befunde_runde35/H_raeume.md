@@ -797,3 +797,27 @@ z -7000, Arm A), Pin Leon (-12353, -8251), Leon-Blick 2967, Arm-Blick 925. Clipw
 `000f0005` -> **Leon = Arm-Bild + 1 im ORIGINAL-RAM** (Riegel (2) bestaetigt). Bild (VRAM des Spielstands beim
 Schliessen waehrend des Haltens): `H_raeume/nb3_re2_original_halten_ost_rec9_y-2160.png` (beide Bildpuffer, 5x) —
 **im RE2-Original liegt der Zombie-Unterarm ueber/in Leons Kopf und Schulter, die Hand auf seinem Oberkoerper.**
+**Weitere Laeufe** (`R2_ONLY=<Satz>`: die uebrigen Arme per RAM in Sub 7 = ENDE, A7/B7 `jr ra` @0x80100F40/48 —
+der Ziel-Arm laeuft unveraendert im Original-Code; Satz-Index = Entity +0xC - 2, gemessen). Volumenmass auf der
+ORIGINAL-RAM (`probe_r35_raeume_re2orig`: dieselbe Huelle wie die Riegel, Arm-Vertices Unterarm + Hand mit den
+Part-Welt-Matrizen +0x48/+0x5C des Halters gegen Leons Part 0/8 aus der RAM; Halte-Zyklus nach der Ueberblendung =
+Bilder 16..34, wie die Riegel ab f >= 16):
+
+| Lauf | Satz (Hoehe, Arm) | Griff | Pin Leon | Leon-Blick | Arm in Leon, Huelle PL00-RE1.5 (Port-Modell) | Huelle PL00-RE2 |
+|---|---|---|---|---|---|---|
+| g1 | 9 (y -2160, A, Ost) | Gesicht | (-12353,-8251) | 2967 | **12/19** (max 4) | 12/19 (max 6) |
+| g2 | 9 | Ruecken | (-12353,-8251) | 5015 = 2967+2048 | **12/19** (max 4) | 16/19 (max 6) |
+| g3 | 2 (y -2180, A, West) | Gesicht | (-25899,-12383) | 2273 | **5/19** (max 2) | 6/19 |
+| g4 | 2 | Ruecken | (-25899,-12383) | 4321 = 2273+2048 | **6/19** (max 4) | 10/19 |
+| g5 | 5 (y -2480, A, Ost) | Gesicht | (-12086,-8251) | 3061 | **11/19** (max 4) | 11/19 (max 10) |
+| g6 | 5 | Ruecken | (-12086,-8251) | 5109 = 3061+2048 | **19/19** (max 14) | 17/19 (max 16) |
+| g7 | 0 (y -2580, A, West) | Gesicht | (-25899,-12336) | 2039 | **7/19** (max 8) | 10/19 |
+| g8 | 0 | Ruecken | (-25899,-12336) | 4087 = 2039+2048 | **17/19** (max 22) | 19/19 (max 20) |
+| g9 | 8 (y -2540, B, Ost) | Gesicht | (-12236,-8252) | 3077 | **11/19** (max 20) | 11/19 (max 20) |
+
+Port (Abnahme 2, exe-Pin, Arm y -2500): Gesicht **12/19** (max 8), Ruecken **18/19** (max 12).
+Bilder: `H_raeume/nb3_re2_original_halten_satz5_satz0.png` (VRAM, Satz 5 und 0, beide Griff-Lagen).
+Belegt im ORIGINAL-RAM: (a) Ruecken-Blick = Gesicht-Blick + 2048 bei GLEICHEM Pin (g1/g2, g3/g4, g5/g6, g7/g8) —
+die Konstruktion aus Nachbesserung 1; (b) Leon = Arm-Bild + 1 in jedem Halte-Bild; (c) das Original hat in JEDER
+gemessenen Hoehe Arm-Vertices in Leons Kopf/Rumpf, Gesicht 5..12/19, Ruecken 6..19/19; am naechsten Satz zur
+Port-Hoehe (Satz 5, -2480) 11/19 bzw. 19/19.

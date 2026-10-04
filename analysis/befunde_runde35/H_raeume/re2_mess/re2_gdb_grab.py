@@ -147,6 +147,17 @@ def main():
         g.wmem(PL + 0x118, struct.pack("<h", lx)); g.wmem(PL + 0x11A, struct.pack("<h", lz))
         g.wmem(PL + 0x76, struct.pack("<h", lyaw))
         L("Leon gestellt", g.s32(PL + 0x38), g.s32(PL + 0x40), "yaw", g.s16(PL + 0x76))
+        only = os.getenv("R2_ONLY")          # Satz-Index des EINEN Arms, der greifen darf
+        if only is not None:
+            # Alle anderen Arme in Sub 7 = ENDE (A7/B7 `jr ra` @0x80100F40/48, kein Setzer fuehrt heraus,
+            # Dossier arme-1210-re2.md 2.4) — der Ziel-Arm laeuft unveraendert im Original-Code.
+            for k in range(1, 33):
+                p = g.u32(ETAB + 4 * k)
+                if 0x80000000 <= p < 0x80200000 and p != 0x800D424C and g.mem(p + 8, 1)[0] == 0x2D:
+                    rec = g.mem(p + 0xC, 1)[0] - 2  # +0xC = Satz-Index + 2 (gemessen: Saetze 0..9 -> 2..11)
+                    if rec != int(only):
+                        g.wmem(p + 4, struct.pack("<I", 0x00000701))
+                    L("Arm k%d Satz %d y=%d -> %s" % (k, rec, g.s32(p + 0x3C), "Ziel" if rec == int(only) else "ENDE"))
         L("Z0:", g.cmd("Z0,%x,4" % BP_HALTEN))
         binf = open(os.path.join(out, "frames.bin"), "wb")
         txt = open(os.path.join(out, "frames.txt"), "w")
