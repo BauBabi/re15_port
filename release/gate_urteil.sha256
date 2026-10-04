@@ -1,0 +1,6 @@
+# Festgehaltene sha256 von release/gate_urteil.py (Zeilenenden LF, release/.gitattributes) - Runde 35 Spur N,
+# Gegenpruefung R4-2 F-Y2 (analysis/befunde_runde35/N_android.md Punkt 3). release/apk_pruefen.sh urteilt ueber einen
+# Gate-Lauf NUR mit einer privaten Kopie, deren sha256 diese ist, und nur nachdem deren Selbsttest (Faelle + Mutanten)
+# bestanden hat. Urteil mit Absicht geaendert: erst  "$PY" release/gate_urteil.py --selbsttest  (URTEIL-SELBSTTEST-OK),
+# dann den Wert von  sha256sum release/gate_urteil.py  hier eintragen und mit der Aenderung committen.
+2b78069e1e00cc912e3bfc1297f1fecc7741a8883da3abb64e3d48e241f92f70

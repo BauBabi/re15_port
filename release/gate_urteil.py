@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/bin/bash
+''':' #
+# Direktaufruf (./release/gate_urteil.py ...) laeuft zuerst als Bash-Skript - derselbe Kopf wie apk_asset_gate.py
+# (Nachbesserung R2, Gegenpruefung echtlauf B1): '#!/usr/bin/env python3' startete unter Git-Bash den WindowsApps-
+# Alias. Der Interpreter kommt aus release/python_finden.sh. Fuer Python ist dieser Block eine Zeichenkette ohne Wirkung.
+. "$(dirname "$0")/python_finden.sh" || exit 2 #
+exec "$PY" "$0" "$@" #
+'''
 # =============================================================================
 # release/gate_urteil.py — Urteil ueber einen Lauf von release/apk_asset_gate.py (Runde 35 Spur N, 2026-10-03)
 # =============================================================================

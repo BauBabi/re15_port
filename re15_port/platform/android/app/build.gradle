@@ -153,10 +153,12 @@ tasks.register("writeAssetManifest") {
                 // Nachbesserung R4-1 (Gegenpruefung H5/U3): NUR druckbares ASCII 0x20-0x7e (der App-Speicher faltet
                 // Unicode-Gross/klein und -Normalform - Kelvin-Zeichen/K waeren auf dem Geraet EINE Datei) und jedes
                 // Segment <= 251 Bytes (Geraet: Name <= 255 B, der Entpacker haengt ".neu" an).
+                // Runde 35 Spur N, Regel R1: KEIN Segment endet auf ".neu" (vorher nur der ganze Pfad) - ein Ordner
+                // <ziel>.neu stuende auf dem Geraet der Zwischendatei im Weg (Befund F-Y4).
                 if (!rel.contains("/") || rel.contains("\\") || rel.length() > 512
-                        || rel.toLowerCase(Locale.ROOT).endsWith(".neu")
                         || rel.chars().anyMatch { int c -> c < 0x20 || c > 0x7e }
-                        || rel.split("/", -1).any { String s -> s.isEmpty() || s == "." || s == ".." || s.length() > 251 })
+                        || rel.split("/", -1).any { String s -> s.isEmpty() || s == "." || s == ".." || s.length() > 251
+                                                              || s.toLowerCase(Locale.ROOT).endsWith(".neu") })
                     throw new GradleException("Asset-Pfad verletzt die Regeln der Liste v2 (nur druckbares ASCII, " +
                                               "Segment 1-251 B, siehe jni/asset_abgleich.h): '${rel}'")
                 def len = d.file.length()
@@ -169,6 +171,16 @@ tasks.register("writeAssetManifest") {
         if (!falten.isEmpty())
             throw new GradleException("Asset-Pfade nur in Gross/klein verschieden (auf dem Geraet EINE Datei): " +
                                       falten.values().collect { v -> v.collect { it[0] }.join(" / ") }.join(", "))
+        // Runde 35 Spur N, Regel R2: kein Pfad ist zugleich Ordner eines anderen (Gross/klein egal) - wie der
+        // Geraete-Leser (jni/asset_abgleich.c) und das Gate (release/apk_asset_gate.py manifest_lesen)
+        def klein = rows.collect { it[0].toLowerCase(Locale.ROOT) } as Set
+        def doppelt = rows.findAll { r ->
+            def t = r[0].toLowerCase(Locale.ROOT).split("/")
+            (1..<t.length).any { i -> klein.contains(t[0..<i].join("/")) }
+        }
+        if (!doppelt.isEmpty())
+            throw new GradleException("Asset-Pfad zugleich Datei und Ordner (auf dem Geraet nicht beides moeglich): " +
+                                      doppelt.collect { it[0] }.join(", "))
         rows.sort { a, b -> a[0] <=> b[0] }      // nach Pfad (reines ASCII: UTF-16-Reihenfolge = Bytefolge)
         def text = "# re15 assets v2 ${rows.size()} ${total}\n" +
                    rows.collect { "${it[1]}\t${it[2]}\t${it[0]}" }.join("\n") + "\n"

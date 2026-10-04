@@ -5,4 +5,4 @@
 # Gate mit Absicht geaendert: erst  "$PY" release/apk_asset_gate.py --selbsttest  (SELBSTTEST-OK), dann den Wert von
 #   sha256sum release/apk_asset_gate.py
 # hier eintragen und zusammen mit der Gate-Aenderung committen. Keine Umgebungsvariable ersetzt diese Datei.
-f53fbbea9b0680435e76de9484ffbb4c3c9dcb4d86f29fed1d4dae842a99d3aa
+f73c3b1a770d424ddec8c57480227813ee353ea361a96d4e5b6997903bb8f9b6
