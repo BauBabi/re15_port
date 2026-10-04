@@ -288,7 +288,9 @@ gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
     echo "   (Selbsttest des Gate-Urteils, sha256 ${GATE_URTEIL_SHA256:0:16}...)"
     "$PY" "$(apk_nativ "$datei")" --selbsttest > "$log" 2>&1 || rc=$?
     grep -v '^   \[ok\] ' "$log" | sed 's/^/   /' || true
-    letzte="$(tr -d '\r' < "$log" | grep -v '^[[:space:]]*$' | tail -1)"
+    # Nachbesserung 2: "|| true" - ohne eine einzige nicht-leere Zeile endet grep mit 1, und unter "set -euo pipefail"
+    # (die echten Aufrufer) brach die Shell HIER ab, ohne die Meldung unten (gemessen: Kontrolle N7, urteil_kontrollen.sh)
+    letzte="$(tr -d '\r' < "$log" | grep -v '^[[:space:]]*$' | tail -1 || true)"
     rm -f "$log"
     if [[ "$letzte" =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0-9]+)\ Faelle,\ ([0-9]+)/([0-9]+)\ Mutanten\ erkannt,\ ([0-9]+)\ als\ gleichwertig\ begruendet\ ==$ ]]; then
         f1="${BASH_REMATCH[1]}"; f2="${BASH_REMATCH[2]}"; e="${BASH_REMATCH[3]}"; m="${BASH_REMATCH[4]}"; g="${BASH_REMATCH[5]}"
