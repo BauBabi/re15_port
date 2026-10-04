@@ -39,5 +39,12 @@ int  re15_re2arm_holder_slot(void);      /* -1 = kein Arm haelt den Spieler */
  * = Pin-Quelle @0x80100C18-38) und die reine Keyframe-Hand derselben Parts-Pose; 1 = Parts gueltig. */
 int  re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3]);
 int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* 3 (Arm A) oder 10 (Arm B) */
+/* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
+ * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
+ * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */
+int  re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl);
+/* 1 genau einmal nach einem Pin B4 P0 (@0x80100C18-38) in diesem Bild — der Spieler-Pass schiebt im
+ * Original im SELBEN Bild nach dem Pin. */
+int  re15_re2arm_take_pin_bild(void);
 
 #endif /* RE15_ENEMY_AI_RE2_ZELLENARM_H */

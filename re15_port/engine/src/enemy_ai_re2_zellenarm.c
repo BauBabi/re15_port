@@ -139,6 +139,7 @@ static unsigned s_room_of_state = 0xFFFFFFFFu;   /* Raumwechsel-Erkennung (Port)
 static int      s_spawn_count = 0;     /* laufende Spawn-Nummer -> Arm-Wahl/Master (s. Kopf)   */
 static int      s_holder = -1;         /* Slot des Arms, der den Spieler haelt (PL+0x1B4)      */
 static uint8_t  s_hook_phase = 0;      /* PL+0x6 der Spieler-Routine 5                         */
+static uint8_t  s_pin_bild = 0;        /* Nachbesserung 3: B4 P0 hat in DIESEM Bild gepinnt      */
 
 /* Per-Slot-Arbeitsbytes des Arms, die der Aktor nicht als Feld traegt (Port-Speicher). */
 typedef struct {
@@ -219,6 +220,70 @@ static void arm_anker_1210(re15_actor_t *e)
     else return;
     e->y = y;
 }
+
+/* ---- KOERPER-PUSH Arm -> Spieler (Runde 35 Spur H, Nachbesserung 3) -------------------------
+ * GEMESSEN am RE2-Original (DuckStation-GDB, ROOM2050, Dossier H_raeume.md Nachbesserung 3): nach dem
+ * Pin @0x80100C18-38 (Schreib-Wachpunkt auf PL+0x38/+0x40: pc 0x80100c24 / 0x80100c3c) schreibt im SELBEN
+ * Bild pc 0x800350cc / 0x800350d0 (in FUN_80034D0C) Leons x/z — Leon steht danach in JEDEM der elf
+ * gemessenen Griffe 1251..1252 Einheiten vom Arm-Ursprung (r 800 + 450 + Rundung), nicht auf der Hand.
+ * Der Port liess Leon auf der Hand (~1050 vom Ursprung): Unterarm ~200 tiefer in Leon als im Original.
+ * Kette (RE2 PSX.EXE, selbst disassembliert):
+ *   Spieler-Pass FUN_800355C4 (@0x80026628, nach dem Spieler-Tick): fuer jeden Listeneintrag
+ *     0x800CFE14..*(0x800CE334) mit word0 & 1: `jal 0x80034d0c` (Pusher, Spieler) @0x80035630;
+ *     Rueckgabe -> Kontaktbit (0x8000 >> Listenindex) nach PL+0x0E (`sh s3,14(s1)` @0x80035658) —
+ *     im RAM gemessen: PL+0x0E = 0x100 / PL+0x0D = 7 (Pusher-Id = Satz 5 + 2) im Griff-Bild.
+ *   FUN_80034D0C (Decompile RE2_Quellcode_V2/FUN_80034d0c.c): Ausstieg bei (wPusher | wSpieler) & 2
+ *     (verborgener Arm), wPusher & wSpieler & 0x1000, wSpieler & 4; Breitphase |dx|,|dz| <= R,
+ *     dist = SquareRoot0, pen = R - dist > 0, Hoehenband |dy| < hA + hB, Schub (dx,dz) * pen / (dist+1);
+ *     Vorzeichen-Dreh-Zweig gegen den Positionsspiegel (wie re15_g5_body_push_player); die 0x100000-
+ *     Klemme prueft wPusher — das Arm-Overlay setzt das Bit nie (kein `lui ..,0x10` in
+ *     CDEMD0_EM2D_ai1.BIN), Arm-word0 im RAM 0x0c003405.
+ *   Segment des Arms (INIT): +0x1E8 = 1 `sw v0,488(s0)` @0x80100328; +0x9E Halbhoehe 500
+ *     `addiu v0,zero,500 / sh v0,158(s0)` @0x8010032C-30; +0x9A Radius 800 `addiu v1,zero,800 /
+ *     sh v1,154(s0)` @0x80100338-3C; Lokal-Lage 0 (`sh zero,148/152/150(s0)` @0x8010035C/60/64).
+ *   Segment des Spielers (Ctor): r 450 @0x8003bdc0-c4, Lokal-Y -1530 @0x8003bde0-e4, Halbhoehe 1530
+ *     @0x8003bde8-ec (dieselben Werte wie RE15_G5_PL_*, im RAM gemessen: PL+0x9A 450, +0x98 -1530,
+ *     +0x9E 1530). */
+#define RE2ARM_SEG_R    800    /* +0x9A @0x80100338-3C */
+#define RE2ARM_SEG_H    500    /* +0x9E @0x8010032C-30 */
+#define RE2ARM_PL_R     450    /* @0x8003bdc0-c4 */
+#define RE2ARM_PL_Y   (-1530)  /* @0x8003bde0-e4 */
+#define RE2ARM_PL_H    1530    /* @0x8003bde8-ec */
+int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (!e || !pl || !pl->active || pl->hp < 0) return 0;
+    const int slot = (int)(e - g_actors);
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_arm[slot].hidden) return 0;   /* (w|w) & 2 */
+    const int32_t rs = RE2ARM_SEG_R + RE2ARM_PL_R;
+    const int32_t dx = pl->x - e->x, dz = pl->z - e->z;
+    if ((uint32_t)(dx + rs) > (uint32_t)(rs * 2)) return 0;                   /* Breitphase X */
+    if ((uint32_t)(dz + rs) > (uint32_t)(rs * 2)) return 0;                   /* Breitphase Z */
+    const int32_t dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+    const int32_t over = rs - dist;
+    if (over <= 0) return 0;                                                  /* `if (0 < iVar10)` */
+    const int32_t hs = RE2ARM_SEG_H + RE2ARM_PL_H;
+    const int32_t dy = (pl->y + RE2ARM_PL_Y) - e->y;
+    if (!(-hs < dy && dy < hs)) return 0;
+    const int32_t d1 = dist + 1;
+    int32_t px = (dx * over) / d1, pz = (dz * over) / d1;
+    {   /* Vorzeichen-Dreh-Zweig (Decompile Z.45-70): Hoehe aus dem Positionsspiegel des Spielers */
+        const int32_t h2 = (int32_t)(int16_t)pl->pos_s_y + RE2ARM_PL_Y - e->y;
+        if (h2 <= -hs || hs <= h2) {
+            const int32_t mx = (int32_t)(int16_t)pl->pos_s_x, mz = (int32_t)(int16_t)pl->pos_s_z;
+            const int32_t r2 = RE2ARM_SEG_R * 2;
+            if ((mx < e->x && e->x < pl->x) || (e->x < mx && pl->x < e->x)) {
+                int32_t g = (-(dx * over)) / d1; px = ((g > 0) ? r2 : -r2) - g;
+            }
+            if ((mz < e->z && e->z < pl->z) || (e->z < mz && pl->z < e->z)) {
+                int32_t g = (-(dz * over)) / d1; pz = ((g > 0) ? r2 : -r2) - g;
+            }
+        }
+    }
+    pl->x += px;
+    pl->z += pz;
+    return 1;
+}
+int re15_re2arm_take_pin_bild(void) { int r = s_pin_bild; s_pin_bild = 0; return r; }
 
 /* ---- kleine Helfer ------------------------------------------------------------------------ */
 int re15_re2arm_owns(const re15_actor_t *e)
@@ -540,6 +605,8 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
         pl->x = h[0];                                     /* sw v0,0x800CFC30 (PL+0x38) @0x80100C18-20 */
         pl->z = h[2];                                     /* sw v0,0x800CFC38 (PL+0x40) @0x80100C24-38 */
         s_holder = slot;                                  /* 0x800CFDAC = PL+0x1B4 = self @0x80100C2C-30 */
+        s_pin_bild = 1;                                   /* Nachbesserung 3: Koerper-Push NACH dem Pin im
+                                                           * selben Bild (FUN_800355C4 @0x80026628) */
         /* 0x800CFD80/84 = PL+0x188/+0x18C := self+0x188/+0x18C @0x80100C3C-5C (Opfer-Bank Paar 3);
          * PL+0x4 = 5 @0x80100C4C-54 -> Spieler-Routine 5 (Port: Victim-Modus 4 = extern gefuehrt) */
         re15_player_victim_force(0x1Au, 0, 0);

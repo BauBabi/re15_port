@@ -4455,6 +4455,8 @@ void re15_body_push_player(void)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active || e->hit_radius_min == 0) continue;
+        /* Runde 35 Spur H NB3: RE2-Gitterarm schiebt mit SEINEM Segment r 800 (FUN_80034D0C, Beleg im Modul) */
+        if (re15_re2arm_owns(e)) { re15_re2arm_body_push_player(e, pl); continue; }
         if (e->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
         /* GRABBING-PAIR EXEMPTION = an AND of BOTH freeze bits (byte-true FUN_8002aec4 @0x8002af14:
          * `and v0,a0,v1; andi 0x1000; bne -> return`): only the pair skips — a THIRD zombie still

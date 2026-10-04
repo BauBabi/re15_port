@@ -2368,6 +2368,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * tick (normal branch already pushed inline) does not double-push. Ordered AFTER the victim
      * placement above == the original's placement->push->walls order (walls win: a third zombie
      * cannot shove the pinned player through the SCA perimeter). */
+    {   extern int re15_re2arm_take_pin_bild(void);    /* Runde 35 Spur H NB3: RE2 schiebt im Pin-Bild */
+        if (re15_re2arm_take_pin_bild()) grabbed_branch = 1; }   /* nach dem Pin (FUN_800355C4 @0x80026628) */
     if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         int32_t ox = pl->x, oz = pl->z;                   /* the anchored placement = the valid pos */
