@@ -50,6 +50,10 @@ OVERRIDE = {
     0x07: 4,   # Else_ck   @0x80053964: lhu v0,2(v1) -> u16 Blocklaenge bei +2,
                #            PC += Blocklaenge. Record selbst 4 Byte.
     0x10: 2,   # Ewhile    @0x80053E0C
+    0x13: 4,   # Switch    @0x80054020: lhu t0,2(a3) (Blocklaenge +2), lbu a2,1(a3) (Variable +1),
+               #            `addiu a3,a3,4` @0x80054040 => 4. Der Scan traf den Case-Suchpfad
+               #            (+2 fuer Default/Eswitch @0x800540b0/@0x800540e0) und lieferte 2.
+               #            (Runde 35 Spur F, Nachbesserung 1; Case 0x14 = 6 @0x800540cc stimmt.)
     0x17: 6,   # Goto      @0x8005415C: lh t0,4(a1) -> s16 rel_offset bei +4 => 6
     0x18: 2,   # Gosub     @0x800541A8: addiu v1,v1,2 (Ruecksprung = PC+2) => 2
     0x19: 2,   # Return    @0x80054210
@@ -110,6 +114,37 @@ def walk(buf):
         out.append((p, op, buf[p:p + n]))
         p += n
     return out, "ok"
+
+
+def rdt_blocks(raw):
+    """SCD-Bloecke DIREKT aus dem RDT (Runde 35 Spur F, Nachbesserung 1).
+
+    Die Dateien info/re2leon/PL0/RDT/room*/scd/*.scd sind an 268 von 2568 Bloecken KUERZER als der
+    Block im RDT (z.B. room20B0 sub00: Datei 14 Byte, RDT 310 Byte — dort stehen Obj_model_set 8 und
+    das Aot_set des Lageplans). Belegkette RE2 PSX.EXE:
+      @0x800535c4 lw v0,-7388(v0)  = RDT-Zeiger (0x800ce324)
+      @0x800535d4 lw v0,72(v0)     = RDT+0x48 Tabelle SCD Main -> @0x800535dc sw 0x800d8cbc
+      @0x800535f4 lw v0,76(v0)     = RDT+0x4C Tabelle SCD Sub  -> @0x800535fc sw 0x800d8cbc
+      Gosub @0x800541a8: @0x800541ec lw v1,0x800d8cbc; @0x800541f8 lhu v0,0(tab+2n);
+                         @0x80054200 addu v0,v1,v0 -> Block n = Tabelle + u16[n].
+    Anzahl = u16[0] / 2 (erster Block folgt direkt auf die Tabelle); Ende des letzten Blocks =
+    naechster Kopf-Offset (0x08..0x5C) hinter der Tabelle.
+    Rueckgabe [(name, start, ende)] mit name main00.. / sub00.."""
+    hdr = [struct.unpack_from("<I", raw, o)[0] for o in range(0x08, 0x60, 4)]
+    allofs = sorted(set([v for v in hdr if 0 < v <= len(raw)] + [len(raw)]))
+    out = []
+    for name, ho in (("main", 0x48), ("sub", 0x4C)):
+        t = struct.unpack_from("<I", raw, ho)[0]
+        if not t or t >= len(raw):
+            continue
+        n = struct.unpack_from("<H", raw, t)[0] // 2
+        offs = [struct.unpack_from("<H", raw, t + 2 * k)[0] for k in range(n)]
+        tend = min(v for v in allofs if v > t)
+        for k in range(n):
+            s = t + offs[k]
+            e = t + offs[k + 1] if k + 1 < n else tend
+            out.append(("%s%02d" % (name, k), s, e))
+    return out
 
 
 ITEM_OPS = {0x4E: 22, 0x69: 30}

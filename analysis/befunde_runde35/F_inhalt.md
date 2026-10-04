@@ -370,7 +370,65 @@ Grundlage: `analysis/befunde_runde35/F_abnahme_0.md` (bestanden = NEIN: P4 teilw
 M3 gering). Stand bei Beginn: HEAD ce1354a8.
 
 ### M1 (P6) — RE2-Lageplan-Weltmodelle
-(in Arbeit)
+
+**Ursache (gemessen).** Zwei Fehler im Extraktor, nicht nur die Auslegung von "Karten":
+1. Die Blockdateien `info/re2leon/PL0/RDT/room*/scd/*.scd` sind an **268 von 2568 Bloecken kuerzer
+   als der Block im RDT** (341 673 Byte fehlen; 42 Bloecke der RDTs ROOMG000..G040 fehlen ganz;
+   Werkzeug scratchpad `scd_bounds.py`). Beispiel room20B0 sub00: Datei 14 Byte, RDT 0x030F4..0x0322A
+   = 310 Byte — genau dort stehen Obj_model_set 8 (Lageplan) und sein Aot_set, ausserdem zwei
+   Item_aot_set (Id 0x15 md1 5, Id 0x32 md1 7), die in der ersten Ablage FEHLEN.
+2. Der Walker hatte fuer Switch (0x13) Laenge 2 statt 4 -> Desync in jedem Block mit Switch.
+
+**RE-Belege (RE2 PSX.EXE, selbst disassembliert).**
+- Bloecke aus dem RDT: @0x800535c4 `lw v0,-7388(v0)` (RDT-Zeiger 0x800ce324), @0x800535d4
+  `lw v0,72(v0)` = **RDT+0x48 Tabelle SCD Main**, @0x800535dc `sw v0,-29508(at)` (0x800d8cbc);
+  @0x800535f4 `lw v0,76(v0)` = **RDT+0x4C Tabelle SCD Sub**. Gosub @0x800541a8: @0x800541ec
+  `lw v1,-29508(v1)`, @0x800541f8 `lhu v0,0(a2)` (a2 = Tabelle + 2n), @0x80054200 `addu v0,v1,v0` ->
+  Block n = Tabelle + u16[n]. (Deckt sich mit information294.txt Z. 33/34.)
+- Switch @0x80054020: `lhu t0,2(a3)`, `lbu a2,1(a3)`, @0x80054040 `addiu a3,a3,4` -> 4 Byte;
+  Case `addiu a3,a3,6` @0x800540cc -> 6.
+- Obj_model_set (0x2D) @0x80055260: @0x80055290 `lbu t1,1(s2)` Objekt-Index; Lage +14/+16/+18
+  (`lh a2,14(s2)` @0x80055310, `lh a3,16(s2)` @0x80055314, `lh v0,18(s2)` @0x80055308);
+  Modell: @0x8005541c `lw a0,8508(t2)` (RDT-Zeiger 0x800d213c), @0x80055424 `lw v1,48(a0)`
+  (RDT+0x30 Modelltabelle), @0x80055428 `sll v0,t1,3`, @0x80055430 `lw a1,4(v0)` (MD1 des Slots)
+  -> **Objekt-Index = Modell-Slot** (TIM/MD1-Paar t1).
+- Ja/Nein-Antwort: `Ck(0x0B,0x1F,0)` (Bank 11 Bit 31) nach Message_on mit Frage — in allen 7
+  Bloecken identisch (Messung unten). Message_on-Id = Datei msg/subNN.msg (MSG Sub, RDT+0x40).
+
+**Messung: die 7 Lageplan-Aufnahmen aller 495 Leon-RDTs** (alle msg-Dateien nach "map" ohne
+Steuercodes; room2060 "It looks like an operation map..." ist nur eine Beschreibung). Walk ueber
+die RDT-Bloecke (scratchpad `mapwalk.py`), RDT-Byte-Offsets:
+```
+Raum      Plan                 Objekt  Platzierung (Obj_model_set)                Aufnahme-Block (Ja-Zweig)                         ausgeblendet durch
+room20B0  police station map   obj 8   sub00 @0x03158 (geparkt 20000) + sub04    sub10 @0x037BA: Message_on 0 / Ck(11,31,0) /       Work_set(4,8) @0x037F2
+                                       @0x03406 Ck(8,0x53,0) -> Pos_set @0x0340E  Set(8,0x53,1) @0x037D6 / Message_on 17 @0x03800  Pos_set(20000,20000,20000) @0x037F6
+                                       (-11527,-50,-11526) in Nahaufnahme Cut 14; Aot_set 11 (Gosub sub10) sub00 @0x0317E, ausgeloest per Aot_on(11) sub04 @0x0346C
+room2130  police B1 map        obj 0   sub03 @0x00FDC (-16900,-1200,-10400),     sub05 @0x01820: Message_on 0 / Ck(11,31,0) /       Work_set(4,0) @0x01836
+                                       Tor Ck(4,0x7A,0) @0x00FC4; Aot_set 5       Set(4,0x7A,1) @0x0184A / Message_on 12 @0x01858    Pos_set(0,-21024,0) @0x0183A
+                                       (Gosub sub05) @0x00FC8
+room3060  sewage disposal map  obj 7   sub00 @0x01F92 (-13800,-7200,-25250),     sub22 @0x0283E: Message_on 1 / Ck(11,31,0) /       Work_set(4,7) @0x02856
+                                       Tor Ck(8,0x89,0) @0x01F8E; Aot_set 3       Set(8,0x89,1) @0x0284E / Message_on 2 @0x0286C     Pos_set(-13800,-32000,-25250) @0x0285A
+                                       (Gosub sub22) @0x01FB8
+room4040  sewer map            obj 2   sub05 @0x00F7E (-22814,-2350,-11768),     sub06 @0x00FA8: Message_on 10 / Ck(11,31,0) /      Work_set(4,2) @0x00FC4
+                                       Tor Ck(8,0xA2,0) @0x00F66; Aot_set 4       Set(8,0xA2,1) @0x00FB8 / Message_on 11 @0x00FDA    Pos_set(0,0,0) @0x00FC8
+                                       (Gosub sub06) @0x00F6A
+room5040  factory map          obj 1   sub00 @0x01D54 (-11599,-2000,-21188),     sub13 @0x02164: Message_on 3 / Ck(11,31,0) /       Work_set(4,1) @0x02174
+                                       Tor Ck(0x22,0x19,0) @0x01D50; Aot_set 3    Set(0x22,0x19,1) @0x02188 / Message_on 4 @0x02196  Member_set(0x0C,-32000) @0x02178
+                                       (Gosub sub13) @0x01D7A
+room5060  factory map          obj 2   sub00 @0x00E20 (-10449,-21800,-20988),    sub04 @0x0101A: Message_on 1 / Ck(11,31,0) /       Work_set(4,2) @0x0102A
+                                       Tor Ck(0x22,0x19,0) @0x00E1C; Aot_set 3    Set(0x22,0x19,1) @0x0103E / Message_on 2 @0x0104C  Member_set(0x0C,-32000) @0x0102E
+                                       (Gosub sub04) @0x00E46
+room6120  laboratory map       KEINS   — Aot_set_4p 6 (Gosub sub03) sub00 @0x012B0, Flaeche x -28790..-22600 z -10800..-5900;
+                                       sub03 @0x014DA: Message_on 0 "A map of the lab is available here. Will you file ..." / Ck(11,31,0) /
+                                       Set(4,0xA5,1) @0x01538 / Aot_reset 6 @0x0153C / Message_on 14 — KEIN Work_set(4,n), nichts wird ausgeblendet
+```
+Damit ist jede der sechs Weltmodell-Zuordnungen der Abnahme belegt (Platzierung + Ausblenden im
+Ja-Zweig + Merkbit, das die Platzierung beim naechsten Betreten unterdrueckt), und der Kandidat
+**room6120 model11 ist WIDERLEGT**: der Laborplan wird an einer Wandflaeche "abgelegt" (file), der
+Block blendet nichts aus; obj 11 steht bei (-22622,-1459,-18360) (sub00 @0x0148A), 7560 ausserhalb
+der Aufnahmeflaeche (z -10800..-5900). Meshes: room2130 obj 0 = room20B0 obj 8 (gleiches Mesh),
+room5040 obj 1 = room5060 obj 2, room3060 obj 7 / room4040 obj 2 (md5 werden beim Schneiden
+gemessen, siehe Umsetzung).
 
 ### M2 (P4) — Memory Card in der erreichbaren Kamera (Cut 4) sichtbar
 Korrektur einer falschen Dossier-Aussage: OFFEN 3 oben sagt "das Nutzerbild beweist aber, dass Cut 7
