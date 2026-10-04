@@ -1357,6 +1357,35 @@ static void griff_kette(int lauf)
     }
 }
 
+/* DIAGNOSE (Nachbesserung 3, nicht in ctest): Fuss-Sperren-Locator je Bild, Wurzel einfach (s_pose enthaelt die
+ * Keyframe-Wurzel, skeleton_common.c root trans = kf_px/kf_pz) gegen doppelt (+= rx/rz wie re15_maggot_footlock). */
+static void teil_fuss(void)
+{
+    if (!bank_laden_27()) { PRUEF(0, "EM027-Bank"); return; }
+    re15_enemy_bank_t *gb = re15_enemy_find(0x27);
+    const re15_emd_skeleton_t *sk = &gb->skel; const re15_emd_animation_t *an = &gb->anim;
+    static const int clips[2] = { 3, 5 }, bones[2] = { 14, 17 };
+    static re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    for (int ci = 0; ci < 2; ci++) {
+        const re15_emd_clip_t *c = &an->clips[clips[ci]];
+        int bone = bones[ci];
+        int32_t l1p[3] = {0,0,0}, l2p[3] = {0,0,0};
+        for (int k = 0; k <= c->frame_count; k++) {
+            int s_ = k % c->frame_count;
+            int kf = (int)(an->frames[c->first_frame + s_] & 0xFFFu);
+            int16_t rx = 0, ry = 0, rz = 0;
+            re15_affen_pose_abfrage(sk, kf, ps);
+            re15_emd_get_keyframe_position(sk, kf, &rx, &ry, &rz);
+            int32_t l1[3] = { ps[bone].trans[0], ps[bone].trans[1], ps[bone].trans[2] };
+            int32_t l2[3] = { l1[0] + rx, l1[1], l1[2] + rz };
+            if (k > 0)
+                printf("    clip %d bone %d Bild %d kf %d: Wurzel (%d,%d) Locator einfach (%d,%d) d(%d,%d) | doppelt d(%d,%d)\n", clips[ci], bone, k, kf,
+                       (int)rx, (int)rz, (int)l1[0], (int)l1[2], (int)(l1[0] - l1p[0]), (int)(l1[2] - l1p[2]), (int)(l2[0] - l2p[0]), (int)(l2[2] - l2p[2]));
+            l1p[0] = l1[0]; l1p[2] = l1[2]; l2p[0] = l2[0]; l2p[2] = l2[2];
+        }
+    }
+}
+
 static void teil_griff(void)
 {
     griff_lauf(0);
@@ -1555,6 +1584,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "schrot") || !strcmp(teil, "alle")) teil_schrot();
     if (!strcmp(teil, "wand")   || !strcmp(teil, "alle")) teil_wand();
     if (!strcmp(teil, "szene")  || !strcmp(teil, "alle")) teil_szene();
+    if (!strcmp(teil, "fuss")) teil_fuss();   /* Diagnose, nicht in ctest */
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
 }

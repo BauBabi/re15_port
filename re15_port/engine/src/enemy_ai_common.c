@@ -8678,9 +8678,11 @@ static void re15_spider_ai_tick(int slot)
 static const uint8_t s_maggot_clip_len[29] =   /* EM027 clip frame-counts, byte-true (CDEMD0.EMS idx 12, dir[1]) */
     { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,52 };
 static void re15_maggot_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static uint8_t s_maggot_pose_bild[RE15_ACTOR_MAX];   /* Runde 35 Spur J (9): Bild, dessen Pose anim_set in den Pool schrieb */
 static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the real EM027 clip length */
 {
     uint8_t c = e->motion; int fc = (c < 29) ? s_maggot_clip_len[c] : 1; if (fc < 1) fc = 1;
+    if (e >= g_actors && e < g_actors + RE15_ACTOR_MAX) s_maggot_pose_bild[e - g_actors] = e->anim_frame;   /* Pose VOR dem Vorschub @0x8001f40c..@0x8001f61c */
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
     if (e->anim_frac > 0) e->anim_frac--;   /* Runde 35 Spur J: +0x8f-Abbau @0x8001f5a8-b4 (re15_affen.h (4c)) */
@@ -8772,7 +8774,7 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
         uint8_t pc = s_prev_clip[slot]; s_prev_clip[slot] = (uint8_t)clip;
         if (pc != (uint8_t)clip) return;               /* clip change: stored prev = old clip -> skip the pop */
     }
-    int s_now  = (int)e->anim_frame % c->frame_count;
+    int s_now  = (int)s_maggot_pose_bild[slot] % c->frame_count;   /* Runde 35 Spur J (9): Pool-Pose = Bild vor dem Vorschub (re15_affen.h (9)) */
     int s_prev = (s_now + c->frame_count - 1) % c->frame_count;
     int kf_n = (int)(an->frames[c->first_frame + s_now ] & 0xFFFu);
     int kf_p = (int)(an->frames[c->first_frame + s_prev] & 0xFFFu);

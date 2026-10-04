@@ -214,4 +214,14 @@ uint32_t re15_affen_b0_a0(const re15_actor_t *e, const re15_actor_t *pl);   /* +
  *     e1-e2 = 3200 in T256-T264, jnb1/g_griff.txt). latch = 1: Phase-2-Bild (Yaw-Fang + Platzierung). */
 void     re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latch);
 
+/* (9) FUSS-SPERRE MIT DER POOL-POSE: anim_set FUN_8001f314 holt das Bildwort zu +0x95 (`lbu v0,149(t0)` @0x8001f344/
+ *     @0x8001f35c, `sw a2,360(t0)` @0x8001f36c), FUN_8001f3bc schreibt DESSEN Pose in den Pool +0x188 (`lw s1,392(v1)`
+ *     @0x8001f40c, RotMatrix je Record, Stride 172) und zaehlt +0x95 ERST DANACH hoch (`lbu`/`sb v0,149(v1)`
+ *     @0x8001f610-1c, Wrap `sb zero,149(v1)` @0x8001f63c). FUN_8011bf50 kettet +0x20 mit genau diesen Pool-Matrizen
+ *     (`jal 0x80022da0` @0x8011bf80-c4) und zieht `m.t - rec[84]` ab (@0x8011bfd4-c008) -> die Fusssperre bewegt mit
+ *     der Pose des Bildes VOR dem Vorschub. Der Port nahm das Bild danach: am Ende des Brustschlags (Clip 3, Bild 69 ->
+ *     Wrap 0) rechnete er kf 74 gegen kf 143 = ~1900 Einheiten Sprung; im Original rechnet bf50 dort Bild 69 gegen 68
+ *     (g_griff F370 -> F371: (4,-4)) und das Folgebild verlaesst Sub 2 ohne bf50. Haken: re15_maggot_anim merkt das
+ *     Bild vor dem Vorschub, re15_maggot_footlock posiert es (je 1 Zeile). */
+
 #endif /* RE15_AFFEN_H */
