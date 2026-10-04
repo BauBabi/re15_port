@@ -14,6 +14,8 @@
  *             spawnt die Kraehe ueber die echte VM, Ausloeser ueber den AOT-Scan, T+0 Befehl, T+2 13
  *             Splitter, T+5/T+10 Knall, T+23 fertig, Schaden ab T+2 nur in Cut 1; Tor (9,73) und
  *             Einmaligkeit (9,79) als Gegenproben.
+ *   knall     RE2-Raumbank room1090 (GLAS1090.EDT/.VH/.VB): Satz 0x21 = `00 00 7c 60` -> Prog 0 Ton 7,
+ *             3 Zusatzlagen (Toene 7..10, alle VAG 5), Wellen im VB vorhanden.
  *   karte     Messwerkzeug (kein Riegel): Speicherkarte mit einem Stand in ROOM1120, (9,73)=1, Spieler
  *             im Gang suedlich des Bands (fuer den exe-Haken).
  */
@@ -26,6 +28,7 @@
 #include "re15_savedata.h"
 #include "re15_memcard.h"
 #include "re2_fx.h"
+#include "re15_vab.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -303,6 +306,37 @@ static int pruef_ereignis(void)
     return 0;
 }
 
+
+/* ============================================================================================ */
+static int pruef_knall(void)
+{
+    size_t ne = 0, nv = 0, nb = 0;
+    uint8_t *edt = datei("GLAS1090.EDT", &ne), *vh = datei("GLAS1090.VH", &nv), *vb = datei("GLAS1090.VB", &nb);
+    if (!edt || !vh || !vb) return fail(90, "GLAS1090.EDT/.VH/.VB fehlen");
+    if (ne != 192 || nv != 3616 || nb != 119904) return fail(91, "Groessen = RDT-Schnitt (192/3616/119904)");
+    const uint8_t *w = edt + RE15_FENSTER_SE_SATZ * 4;
+    if (w[0] != 0x00 || w[1] != 0x00 || w[2] != 0x7c || w[3] != 0x60) return fail(92, "EDT @0x84 = 00 00 7c 60");
+    re15_edt_rec_t r;
+    if (re15_edt_decode(edt, RE15_FENSTER_SE_SATZ, &r) != 0 || r.empty) return fail(93, "Satz 0x21 leer");
+    if (r.prog != 0 || r.tone != 7 || r.extra != 3 || r.prio_nib != 0xC) return fail(94, "Prog 0 Ton 7, 3 Zusatzlagen, Prio 0xC");
+    static re15_vab_t vab;
+    if (re15_vab_parse(vh, nv, &vab) != 0) return fail(95, "VH");
+    int vags[8], toene[8];
+    int n = re15_edt_resolve_layers_ex(edt, &vab, RE15_FENSTER_SE_SATZ, vags, toene, 8);
+    printf("Satz 0x21: %d Lagen:", n);
+    for (int k = 0; k < n; k++) printf(" Ton %d VAG %d (vol %d mitte %d)", toene[k], vags[k],
+                                        vab.tones[toene[k]].vol, vab.tones[toene[k]].center_note);
+    printf("\n");
+    if (n != 4) return fail(96, "4 Lagen (Ton 7 + 3)");
+    for (int k = 0; k < n; k++) {
+        if (toene[k] != 7 + k) return fail(97, "Toene 7..10");
+        if (vags[k] != vags[0] || vags[k] < 0 || vags[k] >= vab.vag_count) return fail(98, "alle Lagen dieselbe Welle (VAG 5)");
+        if (vab.samples[vags[k]].offset + vab.samples[vags[k]].size > nb) return fail(99, "Welle im VB");
+    }
+    printf("OK knall\n");
+    return 0;
+}
+
 /* ============================================================================================ */
 static int karte(const char *path, int gebrochen)
 {
@@ -333,6 +367,7 @@ int main(int argc, char **argv)
     if (!strcmp(was, "glas"))     return pruef_glas();
     if (!strcmp(was, "kraehe"))   return pruef_kraehe();
     if (!strcmp(was, "ereignis")) return pruef_ereignis();
+    if (!strcmp(was, "knall"))    return pruef_knall();
     if (!strcmp(was, "karte"))    return karte(argc > 2 ? argv[2] : "re15_card.mcr", argc > 3 && !strcmp(argv[3], "gebrochen"));
     return fail(99, "unbekannter Teil");
 }

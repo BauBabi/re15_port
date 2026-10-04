@@ -4,6 +4,7 @@
 #
 #   unit_r35_fenster_glas      Raum-ESP + Splitter-Bildfolge (Op 1/16/5/39/84) gegen unabhaengige Rechnung
 #   unit_r35_fenster_kraehe    RE2-Kraehe State 4 Sub 2 (versteckt, Befehl +0x1D4, 7 Bilder 1890, ACTIVE 4)
+#   unit_r35_fenster_knall     RE2-Raumbank GLAS1090 Satz 0x21 = Prog 0 Ton 7..10 (VAG 5), Wellen vorhanden
 #   unit_r35_fenster_ereignis  install/VM/AOT/Zeitlinie T+0/2/5/10/23, Schaden nur Cut 1, Tor + Einmaligkeit
 #   integration_r35_fenster    echte exe: Spielstand ROOM1120 + CONTINUE, Leon laeuft nach Norden ins Band,
 #                              Log + Framedump vor/nach (Schadenspixel), Wiedereintritt mit (9,79)=1
@@ -13,7 +14,7 @@ target_include_directories(probe_r35_fenster PRIVATE ${CMAKE_SOURCE_DIR}/include
 if(NOT WIN32)
     target_link_libraries(probe_r35_fenster PRIVATE m)
 endif()
-foreach(_r35m_teil glas kraehe ereignis)
+foreach(_r35m_teil glas kraehe ereignis knall)
     add_test(NAME unit_r35_fenster_${_r35m_teil} COMMAND probe_r35_fenster ${_r35m_teil})
     set_tests_properties(unit_r35_fenster_${_r35m_teil} PROPERTIES TIMEOUT 120)
 endforeach()
