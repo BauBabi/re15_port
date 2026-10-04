@@ -7,19 +7,22 @@
  *
  * Echter Weg wie unit_1210_arme_re2 (ROOM1210.RDT, zehn Arme, RE2-EM2D-Bank, game_step), Messarm 5.
  * Gemessen wird:
- *   (1) PIN: B4 P0 setzt Leon auf part[Hand]+0x5C/+0x64 (@0x80100C18-38) — die Parts traegt die Pose
- *       des LETZTEN 0x8002959C (B3 P1 @0x80100B24 im Vortakt, Bild VOR dem Weiterzaehlen
- *       @0x800295C8-F8 / +1 erst @0x80029B30), P0 selbst ruft keinen Advance (endet `j 0x80100D6C`
- *       @0x80100CAC). Erwartet: Leon steht auf der Hand von Clip 3 / Startbild des Vortakts — nicht auf
- *       Clip 5 Bild 0 (dem frueheren Port-Wert).
+ *   (1) PIN: B4 P0 setzt Leon auf part[Hand]+0x5C/+0x64 (@0x80100C18-38). part+0x5C schreibt das
+ *       Zeichnen (FUN_80027160 -> FUN_80027434) aus den Parts des LETZTEN 0x8002959C (B3 P1 @0x80100B24,
+ *       Bild VOR dem Weiterzaehlen, +1 erst @0x80029B30), und 0x80029614 mischt diese Parts mit
+ *       t1 = a3 * +0x14E (@0x800296a8-bc, @0x800299f0-0x80029ab0) — Nachbesserung 2. Erwartet: Leon steht auf
+ *       der GEMISCHTEN Hand; reine Clip-3-Hand und Clip-5-Bild-0-Hand liegen daneben.
  *   (2) GLEICHLAUF: waehrend des Haltens zeigt Leon (Opfer-Clip 0, 19 Bilder) jedes Bild genau das
  *       Bild Arm + 1 (Clip 5, 19 Bilder) — Spieler-Routine 5 laeuft NACH allen Entities
  *       (@0x80026620 FUN_8003BFAC), der Hook-P0-Advance (@0x80101328) zaehlt im Griff-Takt schon, der
  *       Arm erst ab P1 (@0x80100D18).
- *   (3) CLIPPING-MASS (Leon zum Arm gewandt = Hook-P0 ohne Flip, FUN_80015910 @0x801012E0): waagerechter
- *       Abstand Arm-Hand <-> Leons Brustachse (PL00-Knochen 8, Renderpfad main.c Opfer-Override) je
- *       Halte-Bild; Hand innerhalb 120 = steckt im Oberkoerper. Erwartet 0 Bilder (vorher 9 von 19,
- *       Dossier 4.4).
+ *   (3) GESICHT-GRIFF (kein Flip, FUN_80015910 @0x801012E0): weniger Kontaktbilder als der Basisstand des
+ *       Nutzerbefunds (Pin Clip 5 Bild 0) — waagerechtes Mass (Hand < 120 an der Brustachse, Knochen 8) UND
+ *       Volumenmass (Arm-Vertices in Leons Kopf/Rumpf, r35_raeume_volumen.h).
+ *   (3b/3c) RUECKEN-GRIFF als PRUEFUNG: Volumenmass Bild fuer Bild = RE2-Konstruktion (Gesicht-Lauf an der
+ *       Pin-Wurzel gespiegelt), weniger Kontakt als mit der reinen Clip-3-Pose, nicht mehr als im Basisstand.
+ *   (4a-c) Konstruktion: Ruecken-Blick = Gesicht-Blick + 2048, gleiche Hand-Bahn, gespiegelte Brust.
+ *   (5a/5b) RE1.5-KI: Typ 0x1A gehoert auch dort dem RE2-EM2D-Gehirn; derselbe Griff mit Kontakt.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"

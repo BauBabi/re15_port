@@ -754,3 +754,10 @@ Arm-Bild und Volumenmass Bild fuer Bild gleich dem RE2-Lauf.
   Gesicht. Von hinten gegriffen (Leon schaut beim Zupacken vom Fenster weg): der Unterarm laeuft durch Hals/Schulter
   — das ist im RE2-Original genauso gebaut (eine Opfer-Animation, Leon nur umgedreht); belegt, nicht geschoent.
 * Keine neuen Sprachdateien, keine neuen Assets.
+
+### Suite (Nachbesserung 2)
+`bash re15_port/tools/local_build.sh all` am Code-Endstand 95e93e2a (alle Code-Aenderungen der Nachbesserung 2
+committet, Lauf 1125 s, alle Fenster-Haken im ersten Lauf gruen):
+`=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478). Danach nur der Kopfkommentar von
+test_r35_raeume_arme.c auf die neuen Pruefungen gezogen (kein Code): `local_build.sh build` + `ctest -R
+^unit_r35_raeume_arme$` -> 1/1 gruen.
