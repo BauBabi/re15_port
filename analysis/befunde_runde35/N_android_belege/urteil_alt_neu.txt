@@ -1,0 +1,7 @@
+   Python: /c/Python310/python (3.10.11)
+ANDERS f57 xyz rc=0: alt 1, neu 2  (unbekannter Modus)
+gleich echte Ausgabe selbsttest rc=0 -> 0 (echt_st.txt)
+gleich echte Ausgabe quellbaum rc=0 -> 0 (echt_qb.txt)
+gleich echte Ausgabe apk rc=1 -> 1 (echt_apk_abw.txt)
+gleich echte Ausgabe apk rc=2 -> 2 (g_leer.zip.txt)
+gleich 122, anders 1

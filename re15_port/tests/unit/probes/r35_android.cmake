@@ -45,3 +45,29 @@ foreach(_r35n_teil anzeige konflikt)
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/r35_android/test_r35_android_entpacker.cmake)
     set_tests_properties(unit_r35_android_${_r35n_teil} PROPERTIES TIMEOUT 240)
 endforeach()
+
+# Punkt 3: die Release-Pruefkette (release/ liegt neben re15_port/). bash: unter Windows NUR Git-/MSYS-bash, nie
+# System32\bash.exe (WSL - local_build.sh-Kopf: "bash wurde zu WSL-bash, execvpe schlug fehl"); Python sucht das Skript
+# selbst ueber release/python_finden.sh (nie der WindowsApps-Alias). Ohne bash/Python/release wird nichts registriert.
+set(_r35n_release "${CMAKE_SOURCE_DIR}/../release")
+if(WIN32)
+    find_program(R35_ANDROID_BASH NAMES bash
+                 PATHS "C:/Program Files/Git/bin" "C:/Program Files/Git/usr/bin" "C:/msys64/usr/bin" NO_DEFAULT_PATH)
+else()
+    find_program(R35_ANDROID_BASH NAMES bash)
+endif()
+if(R35_ANDROID_BASH AND EXISTS "${_r35n_release}/apk_pruefen.sh" AND EXISTS "${_r35n_release}/gate_urteil.py")
+    execute_process(COMMAND "${R35_ANDROID_BASH}" "${_r35n_release}/python_finden.sh"
+                    RESULT_VARIABLE _r35n_py_rc OUTPUT_QUIET ERROR_QUIET TIMEOUT 60)
+    if(_r35n_py_rc EQUAL 0)
+        get_filename_component(_r35n_repo "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
+        add_test(NAME unit_r35_android_pruefkette
+                 COMMAND "${R35_ANDROID_BASH}" "${CMAKE_CURRENT_SOURCE_DIR}/r35_android/test_r35_android_pruefkette.sh"
+                         "${_r35n_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r35_android_pruefkette")
+        set_tests_properties(unit_r35_android_pruefkette PROPERTIES TIMEOUT 900)
+    else()
+        message(STATUS "r35_android: kein Python >= 3.8 ueber release/python_finden.sh - unit_r35_android_pruefkette nicht registriert")
+    endif()
+else()
+    message(STATUS "r35_android: bash oder release/ fehlt - unit_r35_android_pruefkette nicht registriert")
+endif()
