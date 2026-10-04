@@ -16,6 +16,7 @@
 #include "re15_emd.h"
 #include "re15_skeleton.h"
 #include "re15_anim_select.h"
+#include "re15_scd.h"           /* NB4: g_re15_pauseflags / RE15_PAUSE_* (FSM einfrieren) */
 #include "r35_raeume_volumen.h"   /* Nachbesserung 2: Volumenmass */
 
 static uint8_t *slurp(const char *path, long *out_sz)
@@ -244,6 +245,63 @@ int main(void)
             }
             printf("EXE-PIN %s %-22s Pin (%d,%d) Leon-Yaw %4d: waagerecht <120 in %2d/%d (min %d), Volumen %2d/%d Bilder "
                    "(max %d Vertices)\n", fall[c].name, quelle[q], px, pz, yaw, hor, fca, mind, volb, fca, volmax);
+        }
+        /* ---- Nachbesserung 4: KOPF WIE GEZEICHNET. Die exe dreht Leons Kopf im Halten (Nacken-FSM mit der RE2-
+         * Zielwahl, enemy_ai_re2_zellenarm.c re15_re2arm_player_look); den Akku je Bild liest die Sonde aus der
+         * exe-Nacken-Spur (RE15_NECK_TRACE, letzter Raumabschnitt = ROOM1210) und setzt ihn mit eingefrorener FSM
+         * auf den Keyframe (skeleton_common.c `goto neck_apply_acc`: ay += neck_yaw, az += neck_pitch) — genau die
+         * gezeichnete Kopfpose. Halte-Bilder 16..34 nach dem Pin-Bild (wie Riegel und Original-Fixture), Arm-Bild
+         * = h % 19, Leon = Arm + 1. Aufruf: R35_NECK_LOG_FRONT=<neck.log> R35_NECK_PIN_FRONT=244 (dito _BACK). */
+        static const struct { const char *name, *env_log, *env_pin; int armyaw, lyaw; int32_t lx, lz; } nf[2] = {
+            { "front", "R35_NECK_LOG_FRONT", "R35_NECK_PIN_FRONT", 3664, 1671, -20439, -15060 },   /* st.log n4_front2 F244 */
+            { "back ", "R35_NECK_LOG_BACK",  "R35_NECK_PIN_BACK",  3697, 3749, -20411, -15111 },   /* st.log n4_back2  F277 */
+        };
+        for (int c = 0; c < 2; c++) {
+            const char *lg = getenv(nf[c].env_log), *pn = getenv(nf[c].env_pin);
+            if (!lg || !pn) continue;
+            static int ny[2048], np[2048], nok[2048];
+            memset(nok, 0, sizeof nok);
+            FILE *fl = fopen(lg, "r"); if (!fl) { printf("EXE-KOPF %s: %s nicht lesbar\n", nf[c].name, lg); continue; }
+            char ln[512]; int prev = -1;
+            while (fgets(ln, sizeof ln, fl)) {
+                unsigned fr; int sl, ay, ap;
+                const char *acc = strstr(ln, "acc=(");
+                if (sscanf(ln, "F%u slot=%d", &fr, &sl) != 2 || sl != 0 || !acc || sscanf(acc, "acc=(%d,%d)", &ay, &ap) != 2) continue;
+                if ((int)fr < prev) memset(nok, 0, sizeof nok);      /* neuer Raumabschnitt */
+                prev = (int)fr;
+                if (fr < 2048) { ny[fr] = ay; np[fr] = ap; nok[fr] = 1; }
+            }
+            fclose(fl);
+            const int pin = atoi(pn);
+            e->rot_y = (int16_t)nf[c].armyaw;
+            for (int mitkopf = 1; mitkopf >= 0; mitkopf--) {
+                int volb = 0, volmax = 0, n = 0, amax = 0;
+                for (int h = 16; h <= 34; h++) {
+                    const int F = pin + h;
+                    if (F < 0 || F >= 2048 || !nok[F]) continue;
+                    re15_actor_t pr; memset(&pr, 0, sizeof pr);
+                    pr.active = 1; pr.motion = 0; pr.anim_frame = (uint16_t)((h + 1) % fcv); pr.rot_y = (int16_t)nf[c].lyaw;
+                    pr.hurt_bend_bone = -1;
+                    pr.neck_bone = 8; pr.neck_yaw = (int16_t)(mitkopf ? ny[F] : 0); pr.neck_pitch = (int16_t)(mitkopf ? np[F] : 0);
+                    if (abs(pr.neck_yaw) > amax) amax = abs(pr.neck_yaw);
+                    int kf = re15_compute_actor_kf(&eb->anim_victim, &vs, &pr, 0, pr.anim_frame);
+                    const uint32_t pf = g_re15_pauseflags;
+                    g_re15_pauseflags |= RE15_PAUSE_AI | RE15_PAUSE_PLAYER;   /* FSM eingefroren -> nur Akku */
+                    re15_skel_pose_t poses[RE15_EMD_MAX_BONES]; g_anim_pose_actor = &pr;
+                    int rv = (kf >= 0) ? re15_skel_compute_pose(&vs, kf, poses) : -1;
+                    g_anim_pose_actor = NULL; g_re15_pauseflags = pf;
+                    if (rv != 0) return 1;
+                    re15_skel_pose_t leon[2] = { poses[0], poses[8] };
+                    e->motion = 5; e->anim_frame = (uint16_t)(h % fca);
+                    int vi = vol_arm_in_leon(e, leon, nf[c].lyaw, nf[c].lx, nf[c].lz, 0);
+                    if (vi > 0) volb++;
+                    if (vi > volmax) volmax = vi;
+                    n++;
+                }
+                printf("EXE-KOPF %s Leon (%d,%d) Blick %d, Halte-Bilder 16..34 ab Pin F%d: %s -> Volumen %2d/%d Bilder "
+                       "(max %d Vertices), |Akku-yaw| max %d\n", nf[c].name, nf[c].lx, nf[c].lz, nf[c].lyaw, pin,
+                       mitkopf ? "Kopf WIE GEZEICHNET (exe-Akku)" : "Kopf ohne Drehung (Akku 0)   ", volb, n, volmax, amax);
+            }
         }
     }
     return 0;
