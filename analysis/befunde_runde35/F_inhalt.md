@@ -194,3 +194,63 @@ Echte exe nachher (derselbe Tuerweg 1020 -> 1010, ohne Eingabe nach dem Eintritt
 `[1 t=10 @(3750,3500,r3072)] [2 t=10 @(205,7248,r0)]` (state.log F1), Griff erst in Bild 107
 (vorher 53). Framedumps F20/F50/F80 nach dem Eintritt: `F_belege/p3_exe_1010_cut0_F20_F50_F80.png`
 (beide Zombies im Raum, laufen an; keiner in Wand/Moebel).
+
+### Punkte 4 und 5 — Memory Card im Regal ROOM1010, Shotgun Shells auf dem Luefter ROOM1090
+
+**Messung vorher.** Kein Item an beiden Stellen (Sonde `aots 1090`: Slots 0..3 + Kamerazonen ab 39;
+1010: Slots 0..7, Dokument 4 Slot 9). Marken (re15_port/tools/r34n_e/marken.py gegen alle
+Hintergruende, probe_bg_dump):
+- add_card.bmp -> ROOM1010 **Cut 7** (Abweichung 3,11 gegen 63,46), 130 rote Pixel x 269..278
+  y 158..170, Mitte (274,0 ; 164,5) (AUFTRAG nennt (272,157) — gemessen ist die Huelle).
+- Shotgun.bmp -> ROOM1090 **Cut 2** (7,01; Cut 10 = dieselbe Kamera, Matrix/pos/tgt gleich, 8,41),
+  400 rote Pixel x 98..117 y 127..146, Mitte (108,0 ; 137,0).
+
+**RE-Belege (FORM).** Obj_model_set LAB_80040914 (obj = Pool-Index, Typ @0x8004095c, Band
+@0x80040974, Flags | 1 @0x80040998); Item_aot_set @0x80040644 (+18 Bit @0x80040680, +20 Prop
+@0x80040684, Bit gesetzt -> still + Modell weg @0x800406dc-718); Aufnahme-Modal FUN_8001db28 (Ja ->
+Zone 0 @0x8001e090, einfuegen @0x8001e0c4, Bank-9-Bit @0x8001e0d0/@0x8001e0d4); Aktionspunkt 620
+voraus @0x80042bd0; Etagen-Tor des Scans (rec[2] == Spieler-Etage ausser Bit 0x80,
+aot_common.c @0x80042cb4-ccc). Item-Ids aus DEBUG.BIN (Offsettabelle @0x495C, Blob @0x4A28):
+0x21 "Memory Card", 0x16 "Shotgun Shells".
+Zensus Shotgun Shells (re15_port/tools/r35_inhalt/schrot_export.py, alle 240 RDTs): 28 Saetze,
+Menge 7 in 22 (sonst 14); Meshes md5 11f139fa.. (12 Saetze, STAGE1: 1010/1011/1110/1111/1190/1191/
+11D0/11D1) und e2baafec.. (10); 6 ohne Modell. Gewaehlt: haeufigstes = ROOM1010.RDT Prop 2
+(Item_aot_set @0x009C2), MD1 @0x0015DC 484 B, TIM @0x024F48 17440 B -> `gen/r35_schrot_prop.inc`
+(UNVERAENDERT eingebacken). Memory Card: RE1.5 platziert 0x21 nirgends -> dasselbe Modell wie die
+Hebetisch-Karte (Keycard-MD1 ROOM1110.RDT @0x0013D8 + Karten-TIM, re15_irons_tisch_md1_bytes),
+Menge RE15_IRONS_KARTE_MENGE = 3.
+
+**Lage (PORT-WAHL aus Messung, Werkzeuge: probe_r34n_e_dokumente `kamera`/`sicht`, geom.py,
+scratchpad ray_box.py):**
+- Karte: Strahl der Markenmitte (Cut 7) tritt bei (3600,-2055,-1708) in SCA 4 (x 3600..4600,
+  z -2050..1450, Regal) = Fach zwischen zwei Brettern. Bretthoehen gemessen in Cut 4 (frontal):
+  mittlere Helligkeit je Hoehe auf der Regalfront x 3600 ueber z -1900..1350: Brett A -2475..-2400,
+  Brett B Vorderkante -1725..-1650 (Abfall bei -1625), Brett C -1150..-850. Strahl trifft
+  Brett B (y -1725) bei (3796,-1725,-1033) = Kartenmitte; Ursprung (Ecke) (3877,-1725,-1168), rot 0.
+  Vorwaerts Cut 7 (273,96 ; 164,46); Cut 7 hat keine Masken (sicht: 0 ueber dem Pixel).
+- Kiste: Luefter = SCA 32 (x -3400..3400, z -17400..-15397, Band 5 = Boden -9000). Bild-rechts =
+  Welt -x. Oberkante des rechten Luefters: Helligkeitssprung Wand->Luefter in Zeile 146/147 fuer alle
+  Spalten 85..135 -> Strahl (108;146,5) auf der Front z -15397: y -10761. Mesh-Huelle x +-270,
+  y -342..0, z +-103 -> Ursprung (-2408,-10761,-15500) rot 0; Huelle vorwaerts x 99,7..116,2
+  y 136,7..146,6 (Marke x 98..117). Cut 2/10 ohne Masken.
+- Zonen 1000 x 1000 mittig (haeufigste Groesse 69/162): Karte Slot 10 x 3296..4296 z -1533..-533
+  Etage 0; Kiste Slot 4 x -2908..-1908 z -16000..-15000 Etage 5. obj 4 in beiden Raeumen
+  (TIM-Slot 8). Bits (9,80) / (9,81) (VERTRAG).
+
+**Umsetzung.** `engine/src/inhalt_r35.c` + `include/re15_inhalt_r35.h` (alle Konstanten mit Beleg),
+`engine/src/gen/r35_schrot_prop.inc` (Generator `tools/r35_inhalt/schrot_export.py --schreiben`),
+Haken: `scd_room_setup.c` +2 Zeilen (include + Installer am Blockende "Runde 35 Spur F"),
+`platform/pc/main.c` +1 include, +1 Boot-/CONTINUE-Installer, +6 Zeilen Modell-Lader (Muster
+Dokumente). Keine neuen Nachrichten (das normale Aufnahme-Modal zeigt Name + Frage) -> keine
+Sprachdateien. Nachrichten-IDs/Ereignisse der Spur F unbenutzt.
+
+**Messung nachher.** `unit_r35_inhalt_items` 25/25: Prop/Zone in 1010/1011/1090/1091, Bit -> weg,
+Projektion Cut 7 (274,00;164,51) in der Marke, Cut 2 (108,01;141,52) in der Marke, echter
+Aktionsdruck (re15_aot_scan) von (3300,-1033) yaw 0 bzw. (-2408,-9000,-14900) yaw 1024 (Etage 5)
+-> Aufnahme-Modal 0x21 / 0x16 -> Ja -> Bit gesetzt, Item im Inventar (Memory Card 3, Shells 3 =
+Nutzer-Halbierung re15_pickup_menge_nutzer im Modal). Echte exe (Karte probe_r35_inhalt_karte,
+CONTINUE, RE15_FORCE_CUT=7 bzw. 2, RE15_FRAMEDUMP F100): `F_belege/p45_exe_marke_gegen_framedump.png`
+(links Nutzerbild, rechts Port) und `F_belege/p45_exe_zoom.png`: die Karte liegt als kleines graues
+Viereck im Regalfach unter der Marke, die Kiste steht auf dem rechten Luefter unter der Marke.
+Hinweis: die grosse Kiste rechts im 1090-Bild ist das Original-Prop obj 1 (Obj_model_set @0x02190,
+Typ 4, (-5960,-9000,-15482)) — nicht von dieser Spur.

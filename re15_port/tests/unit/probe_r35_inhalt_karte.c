@@ -36,8 +36,10 @@ int main(int argc, char **argv)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->y = 0;
     pl->x = atoi(argv[3]); pl->z = atoi(argv[4]); pl->rot_y = (int16_t)atoi(argv[5]);
-    for (int a = 6; a < argc; a++)
+    for (int a = 6; a < argc; a++) {
         if (strncmp(argv[a], "bit:", 4) == 0) re15_game_flag_set(9, atoi(argv[a] + 4), 1);
+        if (strncmp(argv[a], "y:", 2) == 0) pl->y = atoi(argv[a] + 2);   /* Etage (z.B. 1090 Dach -9000) */
+    }
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
