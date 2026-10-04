@@ -93,6 +93,7 @@ static inline int RNDI(float f) {
 #include "fx_plattform_pc.h"  /* Runde 34 Spur C: ESP-Takt, Ton-Weiche, Licht-Latch, TEX.TIM-Seiten */
 #include "re2_fx.h"           /* Runde 34 V3: RE2-FX-Maschine (Registrierung, Aufschlag-Harness) */
 #include "re2fx_pc.h"         /* Runde 34 V3: re2fx_pc_draw im Effekt-Zeichenpass (Spur D)       */
+#include "glas1120_pc.h"       /* Runde 35 Spur M: Fenster ROOM1120 (Raum-ESP, Glas, Schaden)    */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -3919,6 +3920,7 @@ re_title:;
                 rsz, rc, RE2FX_TIM_SLOT);
         free(rtex);
     }
+    re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -5498,6 +5500,7 @@ re_title:;
               } }
             /* Spur C Runde 34 Nacht: die zwei gruenen Generator-Lampen (panel_lampen_pc.c). */
             { extern void re15_panel_lampen_pc_zeichnen(void); re15_panel_lampen_pc_zeichnen(); }
+            re15_fenster1120_pc_zeichnen(s_last_cut_idx);   /* Runde 35 Spur M: beschaedigtes Fenster */
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
              * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,
@@ -10906,6 +10909,8 @@ re_title:;
             re2fx_pc_set_ansicht(&cam_view, cx, cy, pc_fx_camf(),
                                  cam_has_region, cam_region_xs, cam_region_zs);
             re2fx_pc_draw();
+            re15_pc_glas1120_draw(&cam_view, cx, cy, pc_fx_camf(),           /* Runde 35 Spur M */
+                                  cam_has_region, cam_region_xs, cam_region_zs);
             re2fx_pc_set_ansicht(NULL, 0, 0, 0, 0, NULL, NULL);
             /* Runde 34 Nacht B: der Hebetisch-Cursor ueber dem Cut-4-Bild (eigene Abbildung ueber
              * Cut 10 von ROOM11F0, platform/pc/src/hebetisch_cursor_pc.c). */
