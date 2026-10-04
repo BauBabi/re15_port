@@ -408,6 +408,9 @@ Selbst-Tuer anders uebersteht als einen Raumwechsel.
   exe-Name): Leon vor Tuer 2 (500,-9175) rot 2048, Aktionstaste per Eingabeskript `A0.1,W1,U12` ab
   Bild 100, dann geradeaus bis zum Kampfstart; prueft DOOR FIRE slot=2 -> Cut 14, zweiten
   Sce_em_set type=0x36 nach der Tuer, Boss-HP am Ende 600, nie < 0, Boss x max >= -7500 (Start -9000).
+  Gemessen im Suite-Lauf (143 s, gruen; build/tests/integration/r35_zgirl_5090_wd): `DOOR FIRE slot=2
+  ... target_cut=14` per Aktionstaste -> 2. `Sce_em_set type=0x36`; F100 hp=600 (cam 14), F281 Kampfstart
+  (cam 15, mo=1, x=-9000), F451 x=-4046, F552 mo=3 x=-1986, hp=600 bis F900.
 
 ### M3 — Kommentar aot_common.c (behoben)
 Der Satz "BEWUSST NICHT verallgemeinert ... eigene Runde mit eigener Messung" ist ersetzt: Runde 30
