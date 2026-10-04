@@ -1753,10 +1753,46 @@ static void teil_schrot(void)
  * Opfer-Zustand 2 / Greifer 0x27, Clip 0 der Opfer-Bank (acae8 := 0 @0x8011c490) vorwaerts ab Bild 0 (@0x8011c498),
  * Blend-Saat +0x8f = 7 (0x800acae3 @0x8011c468-70) und Abbau 7, 6, ..., 0 je f314, +0x93 Bit 1 aus B[8]
  * (@0x801191d0-fc), Eintritt im Treffer-Bild, Koerperfall + Blut bei Bild 0x3c (@0x8011c4e0-518), Tod
- * (Wunden + Leiche @0x8011c55c-84) im Bild NACH dem letzten Clip-Bild, und KEINE Platzierung: Leons Lage ist in
- * jedem Bild bis zum Tod am Bildende gleich der am Bildanfang (kein 0x8001ad68 im Hook). Abnahme 5 (w3y F2814) mass
- * am alten Stand einen Sprung um 14000 Einheiten; mit abgeschalteten Haken ist dieser Riegel rot (gemessen: Leon bis
- * 15116 vom Treffer-Ort, Clip 1 dann 0xb statt 0, +0x93 = 1, kein Tod). */
+ * (Wunden + Leiche @0x8011c55c-84) im Bild NACH dem letzten Clip-Bild, und KEINE Platzierung: Leon bewegt sich je
+ * Bild hoechstens um den Koerper-Schub (kein 0x8001ad68 im Hook). Abnahme 5 (w3y F2814) mass am alten Stand einen
+ * Sprung um 14000 Einheiten; mit abgeschalteten Haken ist dieser Riegel rot (gemessen: Leon bis 15116 vom Treffer-Ort,
+ * Clip 1 dann 0xb statt 0, +0x93 = 1, kein Tod). Teil B misst denselben Ablauf ab dem Original-Zustand Bild fuer Bild
+ * gegen die GDB-Spur des Originals (s_fin_orig). */
+/* Original-Spur des Finishers (GDB jnb6/g_fin.txt -> g_fin_dec.txt): Wurzel-Eintritt e2 = Stand nach dem Vortick. */
+static const int16_t s_fin_orig[93][14] = {   /* F205..F297: e2 x,y,z,+0x5,+0x6,+0x95 | Leon x,z,hp,cmd,aca5a,+0x94,+0x95,+0x8f (Wurzel-Eintritt) */
+    {-6495,-720,-13816,7,2,11,-9975,-10422,46,1,1,3,0,0}, {-6691,-1380,-13645,7,2,12,-9975,-10422,46,1,1,3,0,0}, {-6887,-1980,-13474,7,2,13,-9975,-10422,46,1,1,3,0,0},
+    {-7083,-2520,-13303,7,2,14,-9975,-10422,46,1,1,3,0,0}, {-7279,-3000,-13132,7,2,15,-9975,-10422,46,1,1,3,0,0}, {-7475,-3420,-12961,7,2,16,-9975,-10422,46,1,1,3,0,0},
+    {-7671,-3780,-12790,7,2,17,-9975,-10422,46,1,1,3,0,0}, {-7867,-4080,-12619,7,2,18,-9975,-10422,46,1,1,3,0,0}, {-8063,-4320,-12448,8,0,19,-9975,-10422,46,1,1,3,0,0},
+    {-8259,-4500,-12277,8,1,1,-9975,-10422,46,1,1,3,0,0}, {-8455,-4620,-12106,8,1,2,-9975,-10422,46,1,1,3,0,0}, {-8651,-4680,-12016,8,1,3,-9975,-10422,46,1,1,3,0,0},
+    {-8847,-4680,-12016,8,1,4,-9975,-10422,46,1,1,3,0,0}, {-9043,-4620,-12016,8,1,5,-9975,-10422,46,1,1,3,0,0}, {-9239,-4500,-12016,8,1,6,-9975,-10422,46,1,1,3,0,0},
+    {-9435,-4320,-11845,8,1,7,-9975,-10422,46,1,1,3,0,0}, {-9631,-4080,-11674,8,1,8,-9975,-10422,-554,6,1,0,1,6}, {-9827,-3780,-11503,8,1,9,-9975,-10422,-554,6,1,0,2,5},
+    {-10023,-3420,-11332,8,1,10,-9975,-10422,-554,6,1,0,3,4}, {-10619,-3000,-12375,8,1,11,-9975,-10421,-554,6,1,0,4,3}, {-10849,-2520,-12276,8,1,12,-9975,-10420,-554,6,1,0,5,2},
+    {-11074,-1980,-12151,8,1,13,-9974,-10419,-554,6,1,0,6,1}, {-11284,-1380,-11997,8,1,14,-9973,-10418,-554,6,1,0,7,0}, {-11481,-720,-11827,8,1,15,-9972,-10417,-554,6,1,0,8,0},
+    {-11677,0,-11656,8,1,16,-9972,-10417,-554,6,1,0,9,0}, {-11873,0,-11485,8,2,17,-9972,-10417,-554,6,1,0,10,0}, {-11949,0,-11420,8,2,18,-9972,-10417,-554,6,1,0,11,0},
+    {-12025,0,-11355,8,2,19,-9972,-10417,-554,6,1,0,12,0}, {-12101,0,-11290,8,2,20,-9972,-10417,-554,6,1,0,13,0}, {-12101,0,-11290,4,0,0,-9972,-10417,-554,6,1,0,14,0},
+    {-12065,0,-11308,3,1,1,-9972,-10417,-554,6,1,0,15,0}, {-12016,0,-11334,3,1,2,-9972,-10417,-554,6,1,0,16,0}, {-11976,0,-11367,3,1,3,-9972,-10417,-554,6,1,0,17,0},
+    {-11960,0,-11381,3,1,4,-9972,-10417,-554,6,1,0,18,0}, {-11966,0,-11377,3,1,5,-9972,-10417,-554,6,1,0,19,0}, {-12000,0,-11337,3,1,6,-9972,-10417,-554,6,1,0,20,0},
+    {-12043,0,-11284,3,1,7,-9972,-10417,-554,6,1,0,21,0}, {-12092,0,-11211,3,1,8,-9972,-10417,-554,6,1,0,22,0}, {-12140,0,-11153,3,1,9,-9972,-10417,-554,6,1,0,23,0},
+    {-12177,0,-11086,3,1,10,-9972,-10417,-554,6,1,0,24,0}, {-12215,0,-11013,3,1,11,-9972,-10417,-554,6,1,0,25,0}, {-12255,0,-10940,3,1,12,-9972,-10417,-554,6,1,0,26,0},
+    {-12292,0,-10860,3,1,13,-9972,-10417,-554,6,1,0,27,0}, {-12327,0,-10783,3,1,14,-9972,-10417,-554,6,1,0,28,0}, {-12358,0,-10704,3,1,15,-9972,-10417,-554,6,1,0,29,0},
+    {-12387,0,-10623,3,1,16,-9972,-10417,-554,6,1,0,30,0}, {-12410,0,-10549,3,1,17,-9972,-10417,-554,6,1,0,31,0}, {-12436,0,-10477,3,1,18,-9972,-10417,-554,6,1,0,32,0},
+    {-12454,0,-10410,3,1,19,-9972,-10417,-554,6,1,0,33,0}, {-12462,0,-10352,3,1,20,-9972,-10417,-554,6,1,0,34,0}, {-12476,0,-10288,3,1,21,-9972,-10417,-554,6,1,0,35,0},
+    {-12488,0,-10226,3,1,22,-9972,-10417,-554,6,1,0,36,0}, {-12491,0,-10178,3,1,23,-9972,-10417,-554,6,1,0,37,0}, {-12503,0,-10086,3,1,24,-9972,-10417,-554,6,1,0,38,0},
+    {-12509,0,-9995,3,1,25,-9972,-10417,-554,6,1,0,39,0}, {-12508,0,-9905,3,1,26,-9972,-10417,-554,6,1,0,40,0}, {-12510,0,-9804,3,1,27,-9972,-10417,-554,6,1,0,41,0},
+    {-12507,0,-9694,3,1,28,-9972,-10417,-554,6,1,0,42,0}, {-12499,0,-9575,3,1,29,-9972,-10417,-554,6,1,0,43,0}, {-12491,0,-9452,3,1,30,-9972,-10417,-554,6,1,0,44,0},
+    {-12481,0,-9325,3,1,31,-9972,-10417,-554,6,1,0,45,0}, {-12468,0,-9208,3,1,32,-9972,-10417,-554,6,1,0,46,0}, {-12449,0,-9095,3,1,33,-9972,-10417,-554,6,1,0,47,0},
+    {-12421,0,-8983,3,1,34,-9972,-10417,-554,6,1,0,48,0}, {-12397,0,-8885,3,1,35,-9972,-10417,-554,6,1,0,49,0}, {-12371,0,-8799,3,1,36,-9972,-10417,-554,6,1,0,50,0},
+    {-12349,0,-8727,3,1,37,-9972,-10417,-554,6,1,0,51,0}, {-12331,0,-8675,3,1,38,-9972,-10417,-554,6,1,0,52,0}, {-12345,0,-8715,3,1,0,-9972,-10417,-554,6,1,0,53,0},
+    {-12350,0,-8728,3,1,1,-9972,-10417,-554,6,1,0,54,0}, {-12347,0,-8722,3,1,2,-9972,-10417,-554,6,1,0,55,0}, {-12340,0,-8706,3,1,3,-9972,-10417,-554,6,1,0,56,0},
+    {-12325,0,-8677,3,1,4,-9972,-10417,-554,6,1,0,57,0}, {-12302,0,-8638,3,1,5,-9972,-10417,-554,6,1,0,58,0}, {-12272,0,-8594,3,1,6,-9972,-10417,-554,6,1,0,59,0},
+    {-12238,0,-8543,3,1,7,-9972,-10417,-554,6,1,0,60,0}, {-12232,0,-8529,3,1,8,-9972,-10417,-554,6,1,0,61,0}, {-12242,0,-8520,3,1,9,-9972,-10417,-554,6,1,0,62,0},
+    {-12241,0,-8521,3,1,10,-9972,-10417,-554,6,1,0,63,0}, {-12238,0,-8523,3,1,11,-9972,-10417,-554,6,1,0,64,0}, {-12238,0,-8524,3,1,12,-9972,-10417,-554,6,1,0,65,0},
+    {-12232,0,-8529,3,1,13,-9972,-10417,-554,6,1,0,66,0}, {-12227,0,-8534,3,1,14,-9972,-10417,-554,6,1,0,67,0}, {-12220,0,-8540,3,1,15,-9972,-10417,-554,6,1,0,68,0},
+    {-12210,0,-8550,3,1,16,-9972,-10417,-554,6,1,0,69,0}, {-12197,0,-8561,3,1,17,-9972,-10417,-554,6,2,0,0,0}, {-12187,0,-8570,3,1,18,-9972,-10417,-554,7,0,0,0,0},
+    {-12175,0,-8582,3,1,19,-9972,-10417,-554,7,0,0,0,0}, {-12158,0,-8596,3,1,20,-9972,-10417,-554,7,0,0,0,0}, {-12144,0,-8609,3,1,21,-9972,-10417,-554,7,0,0,0,0},
+    {-12128,0,-8624,3,1,22,-9972,-10417,-554,7,0,0,0,0}, {-12113,0,-8638,3,1,23,-9972,-10417,-554,7,0,0,0,0}, {-12088,0,-8661,3,1,24,-9972,-10417,-554,7,0,0,0,0},
+};
+
 static int finisher_lauf_orig(int32_t spur[][16], int nmax);
 static void teil_finisher(void)
 {
@@ -1800,7 +1836,7 @@ static void teil_finisher(void)
         }
         if (t_hit >= 0 && f - t_hit < 10) frac[nfrac++] = (int)pl->anim_frac;
         if (t_hit >= 0 && t_tod < 0) {
-            if (pl->x != x0 || pl->z != z0) n_tick_weg++;   /* Bildanfang -> Bildende (der Opfer-Tick laeuft nach der KI) */
+            { int st = (int)ceil(dist2d(pl->x, pl->z, x0, z0)); if (st > n_tick_weg) n_tick_weg = st; }   /* groesster Schritt je Bild */
             int dg = (int)dist2d(pl->x, pl->z, pl_x0, pl_z0); if (dg > max_weg) max_weg = dg;
             if (pl->motion != 0) n_clip_falsch++;
             if (pl->state != 7 && (int)pl->anim_frame != bild_vorher + 1 && !(f == t_hit && pl->anim_frame == 0)) n_bild_falsch++;   /* Todesbild: aca5a 2 ruft kein f314 */
@@ -1824,7 +1860,7 @@ static void teil_finisher(void)
               frac[0], frac[1], frac[2], frac[3], frac[4], frac[5], frac[6], frac[7], frac[8], frac[9]); }
     PRUEF(n_clip_falsch == 0, "Clip 0 der Opfer-Bank in jedem Bild bis zum Tod (%d Bilder mit anderem Clip; Wurf waere 1/0x10/0xb)", n_clip_falsch);
     PRUEF(n_bild_falsch == 0, "Bild 0, 1, 2, ... ohne Luecke ab dem Treffer-Bild (%d Abweichungen)", n_bild_falsch);
-    PRUEF(n_tick_weg == 0, "keine Platzierung: Lage am Bildende = Bildanfang in jedem Bild bis zum Tod (%d Bilder bewegt; kein 0x8001ad68 im Hook)", n_tick_weg);
+    PRUEF(n_tick_weg <= 2, "keine Platzierung: groesster Schritt je Bild %d (<= 2 = nur Koerper-Schub @0x80031cbc; kein 0x8001ad68 im Hook)", n_tick_weg);
     PRUEF(max_weg <= 200, "Leon bleibt am Ort: groesste Entfernung vom Treffer-Ort %d (<= 200; Abnahme 5 alt: rund 14000)", max_weg);
     PRUEF(nev >= 3 && ev[0] == RE15_AFFEN_FIN_EINTRITT, "Eintritt im Treffer-Bild (Ereignis 0 = 0x%04x)", nev ? ev[0] : -1);
     PRUEF(nev >= 3 && ev[1] == (RE15_AFFEN_FIN_FALL | 0x3c) && f_fall == t_hit + 0x3c,
@@ -1833,11 +1869,41 @@ static void teil_finisher(void)
           "Tod (Wunden + Leiche @0x8011c55c-84) in T%d = Bild nach dem letzten Clip-Bild %d (erwartet T%d), Endpose bleibt", t_tod, fc - 1, t_hit + fc);
     PRUEF(pl->state == 7 && pl->anim_frame == fc - 1 && pl->motion == 0 && re15_player_victim_state() == 2,
           "nach dem Tod: Zustand %d, Clip %d Bild %d gehalten, Opfer-Zustand %d", (int)pl->state, (int)pl->motion, (int)pl->anim_frame, re15_player_victim_state());
-    {   static int32_t spur[100][16];
+    {   /* Teil B: ab dem Original-Zustand F204 (Abflug) Bild fuer Bild gegen die GDB-Spur. Port-Zeile F = Stand nach Tick
+         * F-1 = Original-Wurzeleintritt F. Leons Bild: das Original zaehlt +0x95 nach dem Posieren hoch (FUN_8001f3bc
+         * Z. 89-93) und +0x8f danach herunter (Z. 78) -> Original-Bild = Port-Bild + 1 (mod 70), Original-+0x8f = Port - 1. */
+        static int32_t spur[100][16];
         int n = finisher_lauf_orig(spur, 93);
-        printf("  Teil B: %d Bilder ab dem Original-Zustand F204" BSN, n);
+        int n_gz = 0, n_hp = 0, n_cmd = 0, n_bild = 0, n6 = 0, d_g = 0, d_l = 0, f_dg = 0, f_dl = 0, d_ga = 0, f_dga = 0;
+        for (int i = 0; i < n && i < 93; i++) {
+            const int32_t *r = spur[i]; const int16_t *o = s_fin_orig[i];
+            if (r[4] == o[3] && r[5] == o[4] && r[6] == o[5]) n_gz++;
+            if (r[9] == o[8]) n_hp++;
+            if (r[10] == o[9]) n_cmd++;
+            if (o[9] == 6) {
+                n6++;
+                int f8f = r[14] > 0 ? r[14] - 1 : 0;
+                if (r[12] == o[11] && (r[13] + 1) % 70 == o[12] && f8f == o[13]) n_bild++;
+            }
+            int dg = (int)ceil(dist2d(r[1], r[3], o[0], o[2])) + abs((int)r[2] - o[1]);
+            if ((o[3] == 7 || o[3] == 8) && dg > d_g) { d_g = dg; f_dg = 205 + i; }   /* Sprung + Finisher bis zur Landung */
+            if (dg > d_ga) { d_ga = dg; f_dga = 205 + i; }
+            int dl = (int)ceil(dist2d(r[7], r[8], o[6], o[7]));                   if (dl > d_l) { d_l = dl; f_dl = 205 + i; }
+        }
+        printf("  Teil B (ab Original F204, %d Bilder): Gorilla Zustand/Bild %d gleich, Lage hoechstens %d daneben (F%d); Leon hp %d,"
+               " Kommando %d, Clip/Bild/+0x8f %d/%d gleich, Lage hoechstens %d daneben (F%d)\n", n, n_gz, d_g, f_dg, n_hp, n_cmd,
+               n_bild, n6, d_l, f_dl);
+        printf("  Teil B: Gorilla-Lage nach der Landung (Jagd ab F235) hoechstens %d daneben (F%d)\n", d_ga, f_dga);
+        PRUEF(n == 93 && n_gz == 93, "Teil B: Gorilla-Zustandsfolge (Sub/Phase/Bild) 93/93 wie das Original (%d) — Commit B[8] F213, Treffer F220",
+              n_gz);
+        PRUEF(n_hp == 93 && n_cmd == 93, "Teil B: Leons hp und Kommando (1 -> 6 im Treffer-Bild -> 7 nach Clip-Ende) 93/93 wie das Original (%d/%d)",
+              n_hp, n_cmd);
+        PRUEF(n6 > 0 && n_bild == n6, "Teil B: Leons Clip 0 / Bild / +0x8f in allen %d cmd-6-Bildern wie das Original (%d)", n6, n_bild);
+        PRUEF(d_l <= 2, "Teil B: Leons Lage hoechstens %d Einheiten neben dem Original (F%d; Original schiebt ihn F224-F228 je 1)", d_l, f_dl);
+        PRUEF(d_g <= 20, "Teil B: Gorilla-Lage im Sprung/Finisher F205-F233 hoechstens %d daneben (F%d; Flugschritt z 172 statt 171 je Bild, OFFEN N6-3)", d_g, f_dg);
     }
 }
+
 
 /* Teil B (Nachbesserung 6, M1): derselbe Finisher ab dem ORIGINAL-Zustand (GDB jnb6/g_fin.txt, r3 s033, F204 = Abflug von
  * e2 aus der w3y-Lage, +0x8c = 260) — Gorilla und Leon Bild fuer Bild gegen das Original. Liefert die Port-Spur fuer
@@ -1868,7 +1934,7 @@ static int finisher_lauf_orig(int32_t spur[][16], int nmax)
         r[7] = pl->x; r[8] = pl->z; r[9] = pl->hp; r[10] = (re15_player_victim_state() == 2) ? (pl->state == 7 ? 7 : 6) : 1;
         r[11] = 0; r[12] = pl->motion; r[13] = pl->anim_frame; r[14] = pl->anim_frac; r[15] = pl->hit_react;
         if (getenv("R35_FIN_SPUR"))
-            printf("O %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d" BSN, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9],
+            printf("O %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9],
                    r[10], r[11], r[12], r[13], r[14], r[15]);
     }
     return n;
