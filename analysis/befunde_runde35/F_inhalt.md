@@ -508,4 +508,68 @@ Ecken in Cut 4/7: 0 (`probe_r34n_e_dokumente sicht`). Dateien: `include/re15_inh
   der Marke; D echter Aktionsdruck von (3300,-1033) yaw 0 -> Modal -> Ja -> Menge 3).
 
 ### M3 (P1) — Riegel-Luecke Seitenzuordnung + V3-Restbefund 1 px
-(in Arbeit)
+
+**Ursache (gemessen, Sonde mit Ausgabe der Fluegel-Achsen).** "welt" der Tuer-Maschine ist bereits
+der KAMERARAUM der Tuerszene (Kamera im Ursprung, z = Tiefe, Blaetter bei z 8000, Angeln bei
+x +-3588). Fluegel 1 ist gegen Fluegel 0 um 2048 um die Senkrechte gedreht (S022: Fluegel 0
+x-Achse (0,0,-4096), Fluegel 1 (0,0,+4096); bei V3 umgekehrt). Lokales pos[0] = +130 heisst also
+an Fluegel 0 "vorn", an Fluegel 1 "hinten". Die bisherige Paarung nach dem Vorzeichen von pos[0]
+verglich deshalb an vielen Seiten Vorderseiten- mit Rueckseiten-Griffen — und Punkt 1 hatte an
+genau diesen falschen Paaren seine Korrekturen gesucht:
+- P1B3/P1BD (DOOR1B <- Spender DOOR23): die Spiegel-Drehung rot0[2] beim Tausch machte die ECHTEN
+  Kameraseiten-Paare schief (S136/S157 37,1 Grad, 3,27 px Breitenunterschied; die Riegelstange des
+  zweiten Fluegels stand ins Blatt). Ohne sie: 0,1 Grad / 0,14 px.
+- P0CD (DOOR0C): dz 2048 allein ergab auf den echten Paaren 33,9 Grad / 3,20 px (S041).
+- DOOR1D V3 (S030/S049/S092): obj 3 sitzt im Archiv an der RUECKSEITE von Fluegel 1 (Anhaengepunkt
+  z 8130) und ragt mit der Spiegel-Drehung durch das Blatt nach vorn (Huelle z 7918..8130) — im
+  RE2-Original S192 genauso. Partner obj 2 sitzt vorn (z 7658..7870). 260 Einheiten mehr Tiefe ->
+  in der Projektion 1,1..1,3 px tiefer/kleiner. Rechnung mit H 290 (@0x80013e34 `addiu a0,zero,290`)
+  und OFX/OFY 160/120 (@0x80068e80/@0x80068e88): obj 2 Huellen-Mitte y 990 bei z 7764 -> sy 156,98;
+  obj 3 y 990 bei z 8024 -> sy 155,78 = **genau der Abnahme-Befund L 157,0 / R 156,0**. Die
+  "Punktspiegelung des Spender-Meshes" war es nicht: DOOR07 Mesh 1 ist in y symmetrisch
+  (y -52..52, Mittel 0,0; x 0..212, z -54..455, gemessen in DOOR07.DO2 Sektor 10).
+
+**Aenderung.**
+- Sonde `probe_r35_inhalt_tueren`: Seite = KAMERASEITE: Griffe, deren Welt-Huelle vor die Blattmitte
+  ragt (Seite 0) bzw. dahinter (Seite 1), je Fluegel der am weitesten ragende Griff; alter Stand mit
+  Argument `lokal`. Neues Bildmass: Bild-Huellen beider Griffe (H 290, 160/120), Unterschied von
+  Ober-/Unterkante, Hoehe, Breite in Pixeln. Verworfen und im Code vermerkt: absolute Huellen-Mitte
+  gegen die Tuermitte, Huelle gegen Anhaengepunkt, Blatt-x-Achse (paarten V3 falsch bzw. verloren
+  S041/S136/S157). Zusatzausgabe Fluegel-Achsen, Blatt-Tiefe, Anhaengepunkte.
+- `engine/src/tuer_spiegel_r35.c` / `include/re15_tuer_spiegel.h`:
+  `re15_tuer_griff_tausch_rot(..., spender, ...)` uebernimmt rot0[2] nur fuer Spender DOOR07;
+  P0CD Fluegel 1: dy 2048 + dz 2048 (`re15_tuer_spiegel_dy` neu) — dy hebt die Drehung des Fluegels
+  um die Senkrechte fuer den Griff auf, dz die Spiegeldrehung des Archivs; neu
+  `re15_tuer_griff_tausch_dx`: DOOR07-Tausch, Fluegel 1, rot0[2] 2048, pos[0] < 0 -> Anhaengepunkt
+  auf die Vorderseite (pos[0] gespiegelt). Alles ⛔ PORT-WAHL zur NUTZER-VORGABE, nur Port-Archive;
+  RE2-Archive und DO2-Dateien unveraendert.
+- `platform/pc/src/door_scene_pc.c`: 5 Zeilen (Spender an tausch_rot, +dx, s_spiegel_dy).
+- Riegel `unit_r35_inhalt_tueren` (Sonde `test`): A alter Stand Befund (Spitze, P0CD 146,1 Grad);
+  B neuer Stand JEDES Port-Paar beider Seiten < 10 Grad UND Bild-Fehler <= 1,0 px; C RE2-Originale
+  Wert fuer Wert unveraendert; **D S041 gepinnt** (alt 146,1 -> neu 0,0 Grad, 0,30 px); E alle 12
+  Port-Doppeltuer-Seiten mit Griffpaar haben ein Kameraseiten-Paar (S218 = DOOR2D-Rolltor ohne Paar).
+
+**Messung vorher -> nachher (Sonde, Bild 2, Kameraseite).**
+```
+Seite  Archiv        vorher (Abnahme-0-Stand)              nachher
+S022   P1DK V2       0,1 Grad 0,17 px                      0,1 Grad 0,17 px
+S030   P1DK V3       0,1 Grad 1,28 px                      0,1 Grad 0,00 px
+S041   P0CD V1      33,9 Grad 3,20 px                      0,0 Grad 0,30 px (Rest: Archiv-Hoehen -3000/-3008)
+S044   P0CD V0       0,0 Grad 2,75 px (Paar 2/5)           0,0 Grad 0,91 px / abgewandt 0,83 px (-2976/-3000)
+S045   P1DG V2       0,1 Grad 0,17 px                      0,1 Grad 0,17 px
+S049   P1DG V3       0,1 Grad 1,28 px                      0,1 Grad 0,00 px
+S059   P04B V2       0,1 Grad 0,00 px                      0,1 Grad 0,00 px
+S080   P1DL V2       0,1 Grad 0,17 px                      0,1 Grad 0,17 px
+S092   P1DL V3       0,1 Grad 1,28 px                      0,1 Grad 0,00 px
+S136   P1B3 V3      37,1 Grad 3,27 px                      0,1 Grad 0,14 px
+S155   P1BD V2       0,1 Grad 1,30 px                      0,1 Grad 0,14 px / abgewandt 0,12 px
+S157   P1BD V3      37,1 Grad 3,27 px                      0,1 Grad 0,14 px
+RE2    DOOR1D V3 S192 0,0 Grad 1,75 px (Original, unveraendert), DOOR1B V2/V3 18,0 Grad 0,68 px (Original)
+```
+**Echte exe** (`RE15_TUER_SEITE=S022,...,S157,S218,S192,S046 RE15_TUER_BOGEN RE15_TUER_SCHNELL=1`,
+Kopie re15_pc_r35f_n1.exe, 15 Sequenzen gespielt): Balken-Schwerpunkt mit dem Mass der Abnahme
+(helle Pixel, Spalten 132-142 / 178-186, Zeilen 148-166): S030 L 157,00 R **157,25** (vorher 156,00),
+S049 157,00 / **157,00**, S092 157,20 / **157,22**; V2 unveraendert 155,00 / 155,00. Bild
+`F_belege/n1_m3_tueren_vorher_nachher.png` (je Seite links Abnahme-0-Stand, rechts jetzt): S041/S044
+Stangen jetzt gleich breit, S136/S157 Riegelstangen jetzt gleich lang, S030/S049/S092 Druecker auf
+gleicher Hoehe. Damit ist M3b BEHOBEN (nicht nur gefuehrt).
