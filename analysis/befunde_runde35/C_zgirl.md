@@ -238,7 +238,7 @@ Neue Dateien (nur aus `tests/unit/probes/r35_zgirl.cmake` registriert):
 | unit_r35_zgirl_selbsttueren | alle Raeume: 60 Selbst-Tueren aus main00 (Stage 1: 14, Stage 2..6: 46) -> Szenario = Ziel-Cut, Wiedereintritt + 60 SCD-Bilder | gruen (60/60) |
 | integration_r35_zgirl | echte exe, Aktionstaste an Tuer 6 und Tuer 7: DOOR FIRE, `Sce_em_set type=0x13` an beiden Lagen, >= 300 Bilder mit ihr, Annaeherung >= 1500, Tuer 6 zusaetzlich Spieler-HP < 100 | gruen (253 s) |
 | unit_r35_zgirl_wiedereintritt (N1) | echter Spielschritt durch die Selbst-Tuer: ROOM5090 Boss nach Tuer 2 HP 600, Kampfstart ohne Routine 3; Spawn-Zaehler je Eintritt (ROOM5090 2, ROOM4050 Tuer 6 sechsmal je 1) | gruen; Gegenprobe ohne Fixes rot (4 Fehler) |
-| integration_r35_zgirl_5090 (N1) | echte exe, Aktionstaste an Tuer 2 in ROOM5090, dann geradeaus: zweiter Sce_em_set 0x36, Boss-HP 600 am Ende, nie < 0, Boss laeuft an (x max >= -7500) | s. Suite |
+| integration_r35_zgirl_5090 (N1) | echte exe, Aktionstaste an Tuer 2 in ROOM5090, dann geradeaus: zweiter Sce_em_set 0x36, Boss-HP 600 am Ende, nie < 0, Boss laeuft an (x max >= -7500) | gruen (143 s) |
 
 Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gruen.
 Suite vor T8: `=== LOCAL-BUILD-OK (all) — Tests 486/486` (1370 s).
@@ -417,3 +417,16 @@ Der Satz "BEWUSST NICHT verallgemeinert ... eigene Runde mit eigener Messung" is
 liess Stage >= 2 aus und verlangte eine Messung; Runde 35 Spur C hat sie gemacht, jede Selbst-Tuer
 steigt neu ein, und die Messung fand die zwei Zustaende (G5-Konstruktor, Spawn-Zaehler), die jetzt auch
 der Wiedereintritt zuruecksetzt.
+
+### Nachbesserung 1 — Suite
+`=== LOCAL-BUILD-OK (all) — Tests 489/489` (1519 s; 487 + unit_r35_zgirl_wiedereintritt +
+integration_r35_zgirl_5090; keine Flatterer, Schranke 478). Die Spawn-Zaehler-Regel aendert auch die
+21 Stage-1-Selbst-Tueren (byte-true @0x8003f014); kein bestehender Pin hat sich bewegt.
+
+### Nachbesserung 1 — OFFEN
+* O1/O2 wie oben (Schwerkraft-Aufruf nach Merge mit Spur H; Todeszeilen-Tabelle zombieweit).
+* Kraehen-Schwarm 0x800aca50: das Original nullt ihn ebenfalls in der Raum-Init (FUN_8003ecec
+  @0x8003ed84 `sh zero,-13744(at)`), der Port nur im Raumwechsel (re15_enemy_reset). In den 46 Raeumen
+  ohne Wirkung (kein Typ 0x21); betrifft nur den Stage-1-Wiedereintritt ROOM1170 (Intro-Kraehen), der
+  vor Runde 35 schon so lief. Naechster Messweg: probe/Integration des 1170-Intros mit Reset in
+  scd_room_reenter vergleichen, bevor er dorthin wandert.
