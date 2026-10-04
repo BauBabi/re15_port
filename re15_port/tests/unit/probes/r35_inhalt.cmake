@@ -29,3 +29,8 @@ endif()
 add_test(NAME unit_r35_inhalt_zombies COMMAND test_r35_inhalt_zombies
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r35_inhalt_zombies PROPERTIES TIMEOUT 300)
+
+# MESS-WERKZEUG (kein add_test): Speicherkarte an frei gewaehlter Stelle fuer Laeufe mit der echten exe.
+add_executable(probe_r35_inhalt_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r35_inhalt_karte.c)
+target_link_libraries(probe_r35_inhalt_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r35_inhalt_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)

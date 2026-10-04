@@ -133,6 +133,7 @@ static void eintreten(const eintritt_t *e)
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset();
+    re15_player_victim_reset();
     re15_pauseflags_clear();
     re15_damage_seed_rng(0x2545f491u);
     re15_inv_load_briefing();
@@ -194,21 +195,23 @@ static int flucht(const eintritt_t *e, int *bild, int *dreh_bilder)
     eintreten(e);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     *dreh_bilder = 0;
+    int losgelassen = 1;
     for (int f = 1; f <= 200; f++) {
-        if (re15_player_is_grabbed()) { *bild = f; return 0; }
-        if (g_room_change.pending) { *bild = f; return 1; }
         int err = ((int)e->yaw_tuer - (int)(pl->rot_y & 0x0FFF) + 2048 + 4096) % 4096 - 2048;
         if (err > 48 || err < -48) {
             frame(RE15_PAD_BIT_RIGHT, (f == 1) ? RE15_PAD_BIT_RIGHT : 0);
             (*dreh_bilder)++;
+        } else if (losgelassen) {
+            frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);   /* VIERECK-Flanke */
+            losgelassen = 0;
         } else {
-            /* VIERECK als Flanke, dann gehalten (wie ein Druck von Hand) */
-            static int gedrueckt = 0;
-            (void)gedrueckt;
-            frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
-            frame(0, 0);
-            f++;
+            frame(0, 0);                                       /* loslassen, naechste Flanke */
+            losgelassen = 1;
         }
+        /* nach dem Bild pruefen: der Griff-Riegel wird in re15_enemy_ai_run_all je Bild neu
+         * abgeleitet (s_player_grabbed = 0 vor der Schleife), vorher steht der Wert des Vorlaufs */
+        if (g_room_change.pending) { *bild = f; return 1; }
+        if (re15_player_is_grabbed()) { *bild = f; return 0; }
     }
     *bild = 200;
     return -1;
@@ -236,6 +239,38 @@ int main(int argc, char **argv)
     if (!s_raw1010 || !s_raw1220) { printf("FAIL: RDT nicht lesbar\n"); return 1; }
 
     const int mess = (argc > 1 && strcmp(argv[1], "mess") == 0);
+    if (argc > 2 && strcmp(argv[1], "tempo") == 0) {     /* Zombie-Bahn je Bild (Eintritt argv[2]) */
+        re15_zombie_abstand_set_aktiv(argc > 3 ? atoi(argv[3]) : 0);
+        const eintritt_t *e = &k_eintritte[atoi(argv[2])];
+        eintreten(e);
+        int32_t lx[RE15_ACTOR_MAX], lz[RE15_ACTOR_MAX];
+        for (int s = 0; s < RE15_ACTOR_MAX; s++) { lx[s] = g_actors[s].x; lz[s] = g_actors[s].z; }
+        for (int f = 1; f <= 400; f++) {
+            frame(0, 0);
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+                const re15_actor_t *z = &g_actors[s];
+                if (!z->active || !re15_re2z_owns_type(z->type)) continue;
+                long long dx = z->x - lx[s], dz = z->z - lz[s];
+                printf("f%3d slot%d st=%u s1=%2u s2=%2u clip=0x%02X pos=(%6ld,%6ld) d=%5u schritt=%4ld grab=%d\n",
+                       f, s, z->state, z->sub_state_1, z->sub_state_2, z->motion, (long)z->x, (long)z->z,
+                       (unsigned)z->ai_dist, (long)isqrt64(dx * dx + dz * dz), re15_player_is_grabbed());
+                lx[s] = z->x; lz[s] = z->z;
+            }
+            if (re15_player_is_grabbed()) break;
+        }
+        return 0;
+    }
+    if (argc > 1 && strcmp(argv[1], "karte") == 0) {     /* Grundriss-Rohdaten fuers Dossier */
+        for (int r = 0; r < 2; r++) {
+            const uint8_t *raw = r ? s_raw1220 : s_raw1010; size_t n = r ? s_n1220 : s_n1010;
+            re15_rdt_t rd; re15_rdt_parse(raw, n, &rd);
+            for (int i = 0; i < rd.sca_count; i++)
+                printf("SCA %04X %d %d %d %d %d %d 0x%02X 0x%02X %d\n", r ? 0x1220 : 0x1010, i,
+                       rd.sca[i].x, rd.sca[i].z, rd.sca[i].width, rd.sca[i].density,
+                       rd.sca[i].type, rd.sca[i].u0, rd.sca[i].u1, rd.sca[i].floor);
+        }
+        return 0;
+    }
     re15_zombie_abstand_set_aktiv(0);
     tabelle("ORIGINAL (RDT-Positionen)");
     re15_zombie_abstand_set_aktiv(1);
