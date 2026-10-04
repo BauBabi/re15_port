@@ -1500,3 +1500,23 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
   exe-Kopie der Tuerweg-Messung.
 - Abschluss-Commit: fix(r35-affen): Nachbesserung 4 (Haken enemy_ai_common.c 19 Hunks je 1-2 Zeilen; affen_11c0.c (11)/(12);
   re15_affen.h (10)/(11)/(12); test_r35_affen.c takt/szene/griff).
+
+## Nachbesserung 5 (2026-10-04, nach Abnahme 4 = NICHT BESTANDEN, P1/P2)
+
+Ausgangslage: Baum sauber, HEAD 23c2c930 (Bericht J_abnahme_4.md, geprueft 21947700). Alle sechs Nutzer-Punkte dort
+"erfuellt", Riegel 17/17, Suite 495/495. Offen nur Dossier-/Riegel-Gate:
+- **P1:** Nachbesserung 4 hat den Biss-Zyklus von Gorilla 2 (Slot 3) von 104 (= Original) auf 103 verschoben (exe t1 vorher
+  +4 konstant, jetzt 0/0/0/-1/-2/-3/-4/-5; Riegel takt e2 0,0,-1..-5). OFFEN N4-1 nennt das nicht als Folge von N4, die
+  Ergebnis-Tabelle fuehrt es nicht, "Fuer den Nutzer" (1) ist fuer Gorilla 2 falsch, die Schranke "Slot 3 <= 6" im Riegel
+  szene laesst die Drift durch. Auftrag: Aussage einschraenken, N4-1 als Nebenwirkung kennzeichnen, e2-Mechanismus belegen
+  oder den Slot-3-Zyklus im Riegel messen.
+- **P2:** Die N1-Behebung wird mit "Startversatz durch (10)-(12) verkleinert" begruendet; der Riegel griff Lauf 0 misst das
+  Gegenteil (Leon beim Pin 8 -> 14, e1 24 -> 33, e2 30 -> 43, Anker 37 -> 40, T265 64 -> 1238, Bahn 34 -> 74, T290 166 -> 183).
+  Die Landung an der Ruhelage ist ein anderer Ausgang der chaotischen Klemmen-Iteration; der Ruhelage-Pin in Lauf 0 kam
+  zurueck. Auftrag: Kausal-Aussage berichtigen, Pin entfernen oder seine Empfindlichkeit messen, gewachsenen Startversatz
+  unter OFFEN.
+Scratch: `scratchpad/jnb5/`.
+
+### Stand (fortlaufend)
+- [ ] P1 Messung Stufen (Original GDB / Port)  - [ ] P1 Beleg  - [ ] P1 Aenderung/Riegel  - [ ] P1 Dossier (a)/(b)
+- [ ] P2 (a) Kausal-Aussage  - [ ] P2 (b) Pin/Empfindlichkeit  - [ ] P2 (c) OFFEN  - [ ] Suite  - [ ] H2 Sprungmarke
