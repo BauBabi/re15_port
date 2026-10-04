@@ -245,7 +245,35 @@ gebaute exe GRUEN ("fx = 0 ab Bild 164").
 * Messwerkzeuge (kein Test): `probe_r35_redhawk zensus | haenger [vorher] | messung [bilder]`.
 
 ## OFFEN
-(folgt)
+Der Nutzer-Punkt selbst ist geschlossen (Messung vorher/nachher in Sonde UND echter exe, Mechanik
+gegen R3/R4/R6, Bildbeleg). Offen bleiben Nachbarbefunde aus dem Zensus — KEINER davon betrifft
+Hunde oder Waffen-Brocken, keiner ist im Port als Haenger beobachtet:
+
+1. **Routine A 19 @0x80017d08 (Brocken-WERFER der Raum-Id 5) ist im Port ein noop.** Kein Haenger
+   (die Id-5-Anim endet selbst: Records 0..7 Dauer 1, Record 8 = 0/0, Zensus M1), aber die 5 Kind-
+   Brocken (Code (row16>>8)<<24 | (row16&0xff)<<16 | rand+0xC00, Gier rand*682, Kind-Spawner
+   FUN_800199d4 @0x80017da0) entstehen nicht. Port-Spawns der Id 5 laufen heute ueber den Altweg
+   ohne Zeilen-VM (re15_damage.c:3199 `re15_esp_fx_spawn_ex(bank, 5, 0, 0x2800, ...)`) bzw. ueber
+   re2d_fx/re2z_gore_fx_ex (Art 0x85/8 -> Id 5). Naechster Weg: R19 in esp_brocken.c mit dem
+   Kind-Spawner-Zwilling esp_fx_spawn_kind (re15_esp.c:577) — eigene Nutzer-Sichtpruefung, weil
+   das neue sichtbare Brocken an RE1.5-Zombies erzeugt.
+2. **Hunde-FX 7/8 (Art 0x85 Sub 3/4) treffen in RE1.5-Baenken einen Fehl-Sub** (Id 5 Sub 3/4 =
+   A 6 = toter Code, Beschl. 4096 — Zensus M1, R1140 id=5 sub=1..5). In den Hunde-Raeumen
+   1190/11D0 gibt es keine Id 5 -> der Spawn faellt ins Leere (heute harmlos). Naechster Weg:
+   RE2-Raum-ESP Id 8 Sub 3/4 (info/re2leon/PL0/RDT) gegen RE1.5 Id 5 legen.
+3. **Zensus N3: 120 Id-13-Streams (A 24/25, Saeure-Tropfen, ROOM1260/2000/2010/2020/...) und 49
+   Id-1-Streams (A 2, ROOM1150 Subs 1..7 Stream 3 — verdaechtig Fehlparse) mit Endlos-Anim und
+   Port-unbekannter Routine.** Laut reai-v2-esp-rowmachine (wf_5d64f47e) armt im Port kein Raum
+   Routine 25 (op 0x55 ist ein Stub) -> heute kein lebender Haenger. Naechster Weg:
+   `RE15_FX_LOG` in ROOM1260/2000 laufen lassen und die Id-13-Plaetze zaehlen; wenn sie entstehen,
+   R24 @0x80017f50 / R25 @0x80017fa4 disassemblieren.
 
 ## Fuer den Nutzer
-(folgt)
+* Keine neuen Sprachdateien, keine neuen Assets (nichts fuer das Paket-/Android-Gate).
+* Bedienung unveraendert. Sichtbar: die Fleisch-Brocken der Hunde (und aller anderen Quellen der
+  Raum-Id 7, z.B. RE2-Zombie-Brocken) fliegen, schlagen am Boden bzw. an einer hohen Kante auf,
+  spielen ihre Aufschlag-Bilder (Records 7..9) und verschwinden — wie im Original binnen ~10 Bildern
+  nach dem Aufschlag. Ein Brocken, der seitlich gegen eine hohe Kante fliegt, rutscht senkrecht auf
+  den zuletzt gemessenen Boden und platzt dort (so steht es in Routine 37).
+* Gegenprobe selbst: ROOM1190 oder ROOM11D0, Super Redhawk ausruesten, einen Hund toeten — nach
+  etwa 2 Sekunden liegen keine Brocken mehr da (vorher: dauerhaft, im Bildwechsel).
