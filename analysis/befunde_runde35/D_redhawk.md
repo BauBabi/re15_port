@@ -254,6 +254,9 @@ gebaute exe GRUEN ("fx = 0 ab Bild 164").
   fx max >= 6, binnen 90 Bildern nach dem Tod ein Bild mit fx = 0, Endbild 230 fx = 0.
   Ergebnis: GRUEN ("Redhawk-Tod Bild 112, fx max 59, fx = 0 ab Bild 164"); gegen die vorher-exe ROT.
 * Messwerkzeuge (kein Test): `probe_r35_redhawk zensus | haenger [vorher] | messung [bilder]`.
+* Volle Suite im eigenen Baum (bash re15_port/tools/local_build.sh all, 2026-10-04), ohne
+  Flatterer: `=== LOCAL-BUILD-OK (all) — Tests 480/480` (478 + unit_r35_redhawk +
+  integration_r35_redhawk). RE15_MIN_TESTS unveraendert (478; Anhebung macht die Integration).
 
 ## OFFEN
 Der Nutzer-Punkt selbst ist geschlossen (Messung vorher/nachher in Sonde UND echter exe, Mechanik
