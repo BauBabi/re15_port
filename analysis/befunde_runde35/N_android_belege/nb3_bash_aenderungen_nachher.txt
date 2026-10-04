@@ -1,0 +1,46 @@
+Attrappen angelegt in C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/nb3/bash_zw/attrappen (F=777 E=887 G=7)
+J0   KONTROLLE-OK: KONTROLLEN: 102 ok, 0 FALSCH
+J6   BEMERKT  Urteilszeile mit festem Modus (selbsttest)   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  N25e_gate_laufen_anderer_modus -> Rueckgabe 2 (soll 0):    Gate-Urteil (quellbaum, Rueckgabe 0): Attrappe    Gate-Urteil ohne Urteilszeile '  
+J9   BEMERKT  Gate-Pin nur 16 Hexziffern   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  D5b_gate_pin_letzte_ziffer_falsch -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festgehaltene): 
+J10  BEMERKT  Urteils-Pin nur 16 Hexziffern   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  D10b_urteil_pin_letzte_ziffer_falsch -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das festgehaltene): 
+J11  BEMERKT  gate_urteil uebergibt 0 0 statt der Mindestzahlen   [KONTROLLEN: 99 ok, 3 FALSCH]
+       FALSCH  N25a_uebergabe_gate_urteil -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK:
+       FALSCH  N25b_uebergabe_apk_eintraege -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=apk rc=0 min_faelle=261 min_innen=148 apk=14 letzte=):    ARGV n=6 modus
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+J12  BEMERKT  MIN_INNEN doppelt (min_faelle 148 statt 261)   [KONTROLLEN: 99 ok, 3 FALSCH]
+       FALSCH  N25a_uebergabe_gate_urteil -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK:
+       FALSCH  N25b_uebergabe_apk_eintraege -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=apk rc=0 min_faelle=261 min_innen=148 apk=14 letzte=):    ARGV n=6 modus
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+J13  BEMERKT  unzip-Zaehlung nicht mehr uebergeben   [KONTROLLEN: 100 ok, 2 FALSCH]
+       FALSCH  N25b_uebergabe_apk_eintraege -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=apk rc=0 min_faelle=261 min_innen=148 apk=14 letzte=):    ARGV n=6 modus
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y1   BEMERKT  gate_laufen gibt dem Urteil Rueckgabe 0 statt $rc   [KONTROLLEN: 99 ok, 3 FALSCH]
+       FALSCH  P5_gate_1_befund_bleibt_1 -> Rueckgabe 2 (soll 1):    Gate-Urteil (selbsttest, Rueckgabe 0): Attrappe    Gate-Urteil ueberstimmt (zweite Insta
+       FALSCH  N25c_uebergabe_gate_laufen_befund -> Rueckgabe 2 (soll 1):    Gate-Urteil (apk, Rueckgabe 0): Attrappe    Gate-Urteil ueberstimmt (zweite Inst
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y2   BEMERKT  Gate bekommt seine Argumente nicht   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  N26_gate_bekommt_seine_argumente -> Rueckgabe 0 (soll 0:   GATE-ARGV --selbsttest|a b|c): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (selbst
+Y3   BEMERKT  gate_laufen: Modus fest selbsttest   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y4   BEMERKT  gate_urteil gibt Rueckgabe 0 statt $3 weiter   [KONTROLLEN: 99 ok, 3 FALSCH]
+       FALSCH  P5_gate_1_befund_bleibt_1 -> Rueckgabe 2 (soll 1):    Gate-Urteil (selbsttest, Rueckgabe 0): Attrappe    Gate-Urteil ueberstimmt (zweite Insta
+       FALSCH  N25c_uebergabe_gate_laufen_befund -> Rueckgabe 2 (soll 1):    Gate-Urteil (apk, Rueckgabe 0): Attrappe    Gate-Urteil ueberstimmt (zweite Inst
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y5   BEMERKT  Urteil liest $log.urteil statt der Gate-Ausgabe   [KONTROLLEN: 101 ok, 1 FALSCH]
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y6   BEMERKT  MIN_FAELLE und MIN_INNEN vertauscht   [KONTROLLEN: 99 ok, 3 FALSCH]
+       FALSCH  N25a_uebergabe_gate_urteil -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK:
+       FALSCH  N25b_uebergabe_apk_eintraege -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=apk rc=0 min_faelle=261 min_innen=148 apk=14 letzte=):    ARGV n=6 modus
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y7   BEMERKT  unzip-Zaehlung aus APK_ASSET_EINTRAEGE (falscher Name)   [KONTROLLEN: 100 ok, 2 FALSCH]
+       FALSCH  N25b_uebergabe_apk_eintraege -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=apk rc=0 min_faelle=261 min_innen=148 apk=14 letzte=):    ARGV n=6 modus
+       FALSCH  N25d_uebergabe_gate_laufen_werte -> Rueckgabe 1 (soll 0): 
+Y8   BEMERKT  gate_urteil: Modus fest apk   [KONTROLLEN: 97 ok, 5 FALSCH]
+       FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (apk, Rueckgabe 0): Attrappe    Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selb
+       FALSCH  P6_festhalten_und_laufen -> Rueckgabe 2 (soll 0:P6 Ende):    Gate-Urteil (apk, Rueckgabe 0): Attrappe    Gate-Urteil ohne Urteilszeile '   Gat
+       FALSCH  N25a_uebergabe_gate_urteil -> Rueckgabe 0 (soll 0:   ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK:
+       FALSCH  N25e_gate_laufen_anderer_modus -> Rueckgabe 2 (soll 0):    Gate-Urteil (apk, Rueckgabe 0): Attrappe    Gate-Urteil ohne Urteilszeile '   Gate-
+SUMME: 14 von 14 Aenderungen bemerkt

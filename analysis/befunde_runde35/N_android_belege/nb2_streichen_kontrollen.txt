@@ -1,0 +1,19 @@
+# NB2: NB1-Streich-Varianten B0-B17 (kette_streichen.py, B12 an die neue Zeile mit '|| true' angepasst) direkt gegen urteil_kontrollen.sh pruefen --schnell
+B0 (keine Aenderung (Kontrolle der Kopie)): KONTROLLEN: 87 ok, 0 FALSCH
+B1 (zweite Instanz in gate_laufen ganz aus): FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): alles b
+B2 (gate_urteil_selbsttest: (( rc == 0 )) || die ... gestrichen ): FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 1):    == URTEIL-SELB
+B3 (zweite Instanz: Zweig 'Gate gab Rueckgabe != 0' aus): FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): alles b
+B4 (zweite Instanz: Zweig 'ohne Urteilszeile' aus): FALSCH  N19a_ohne_urteilszeile -> Rueckgabe 0 (soll 2):    (Gate selbsttest laeuft, sha256 541ecc377168c264...; Ausgabe folgt nach dem Ende)
+B5 (Faelle: f1 == f2 gestrichen): FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 279/280 Faelle, 887/894 Mutanten erkan
+B6 (Faelle: Mindestzahl gestrichen): FALSCH  N12_faelle_unter_mindestzahl -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 279/279 Faelle, 887/894 Mut
+B7 (Mutanten: e + g == m gestrichen): FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/280 Fa
+B8 (Mutanten: Mindestzahl erkannt gestrichen): FALSCH  N14_erkannt_unter_mindestzahl -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280
+B9 (Mutanten: Hoechstzahl gleichwertig gestrichen): FALSCH  N15_zu_viele_gleichwertige -> Rueckgabe 0 (soll die:Mutanten erkannt, 8 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/28
+B10 (bash-Muster der Schlusszeile ohne Endanker $): FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile):    == URTEIL-SELBSTTEST-OK
+B11 (bash-Muster der Schlusszeile ohne Anfangsanker ^): FALSCH  N18_ok_zeile_mit_vorsatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile):    X == URTEIL-SELBSTTEST
+B12 (Schlusszeile = letzte Zeile mit URTEIL-SELBSTTEST statt letz): FALSCH  N16_ok_zeile_nicht_zuletzt -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile):    nachgeschoben    Gat
+B13 (Urteils-Pin: Vergleich ist == soll entschaerft): FALSCH  D10_urteil_nicht_festgehalten -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das festgehaltene): 
+B14 (Gate-Pin: Vergleich ist == soll entschaerft): FALSCH  D5_gate_nicht_festgehalten -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festgehaltene): 
+B15 (Urteils-Pruefung vor jeder Nutzung (gate_laufen UND gate_urt): FALSCH  N20_urteil_kopie_veraendert -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das festgehaltene): == SELBSTTEST-OK: Attrappe ==    Gate
+B16 (Gate-Pin vor jedem Lauf (gate_laufen) gestrichen): FALSCH  N21_gate_kopie_veraendert -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festgehaltene): == SELBSTTEST-OK: Attrappe ==    Gate-Ur
+B17 (kein Abbruch bei ungueltiger Schlusszeile (else-Zweig entsch): FALSCH  N16_ok_zeile_nicht_zuletzt -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile):    nachgeschoben C:/Use

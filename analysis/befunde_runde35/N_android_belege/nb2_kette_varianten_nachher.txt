@@ -1,0 +1,50 @@
+F0   KONTROLLE-OK rc=0 FALSCH=0  keine Aenderung (Kontrolle der Kopie)
+F1   BEMERKT   rc=1 FALSCH=3  :352 zweite Instanz if (( rc != 0 )) -> if (( rc == 1 ))
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 85 ok, 2 FALSCH'
+        FALSCH  N8b_urteil_luegt_gate_2 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): alles bestens 
+        FALSCH  N8m_meldung_ueberstimmt -> Rueckgabe 1 (soll 0): 
+F2   BEMERKT   rc=1 FALSCH=4  :352 rc != 0 -> rc == 2
+        FALSCH  N8_urteil_luegt_leere_apk -> 0 (soll rot)   Gate-Urteil (apk, Rueckgabe 0): alles bestens
+        FALSCH  N8 ohne 'ueberstimmt (zweite Instanz)'
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+F3   BEMERKT   rc=1 FALSCH=2  :296 (( f1 == f2 && -> (( f1 >= f2 &&
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N11b_f1_groesser_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 281/280 Faelle, 887/894 Mutanten erkannt, 7 al
+F4   BEMERKT   rc=1 FALSCH=2  :298 (( e + g == m && -> (( e + g >= m &&
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N13b_summe_groesser_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/280 Faelle, 88
+F5   BEMERKT   rc=1 FALSCH=4  :295 (( rc == 0 )) || die -> (( rc <= 1 )) || die
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 84 ok, 3 FALSCH'
+        FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 1):    == URTEIL-SELBSTTEST-OK:
+        FALSCH  D11b_zwischenspeicher_nur_gleiche_kopie -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 1):    == URTEIL
+F6   BEMERKT   rc=1 FALSCH=2  :295 (( rc == 0 )) || die -> (( rc != 1 )) || die
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N10b_ok_zeile_rueckgabe_2 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 2):    == URTEIL-SELBSTTEST-OK
+F7   BEMERKT   rc=1 FALSCH=8  :345 || rc=$? -> || true (Gate-Rueckgabe verschluckt)
+        FALSCH  N8_urteil_luegt_leere_apk -> 0 (soll rot)   Gate-Urteil (apk, Rueckgabe 0): alles bestens
+        FALSCH  N8 ohne 'ueberstimmt (zweite Instanz)'
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 82 ok, 5 FALSCH'
+F8   BEMERKT   rc=1 FALSCH=2  :290 Mutanten\ erkannt,\ ([0-9]+)\ als -> ([0-9]*)
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N22_zahl5_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile): DIE: Selbsttest des Gate-Urteils: 887/894 Mut
+F9   BEMERKT   rc=1 FALSCH=1  :288 tail -1 -> tail -2 | head -1
+        FALSCH  P0 gate_festhalten bricht ab
+F10  BEMERKT   rc=1 FALSCH=5  :355 Urteilszeile in $log statt $log.urteil
+        FALSCH  P1_selbsttest -> 2 (soll 0)   Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selbsttest, Rueckgabe 0): ...' (zweite Instanz) - keine Aussage
+        FALSCH  P2_quellbaum -> 2 (soll 0)   Gate-Urteil ohne Urteilszeile '   Gate-Urteil (quellbaum, Rueckgabe 0): ...' (zweite Instanz) - keine Aussage
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 85 ok, 2 FALSCH'
+F11  BEMERKT   rc=1 FALSCH=6  :355 "^   Gate-Urteil ($modus, Rueckgabe 0): " -> "^   Gate-Urteil ("
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 82 ok, 5 FALSCH'
+        FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (apk, Rueckgabe 0): falscher Modus 
+        FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 1): x 
+F12  BEMERKT   rc=1 FALSCH=2  :296 f2 >= MIN -> f2 >= MIN - 1
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N12_faelle_unter_mindestzahl -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 279/279 Faelle, 887/894 Mutanten erka
+F13  BEMERKT   rc=1 FALSCH=2  :298 g <= MAX -> g <= MAX + 1
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 86 ok, 1 FALSCH'
+        FALSCH  N15_zu_viele_gleichwertige -> Rueckgabe 0 (soll die:Mutanten erkannt, 8 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/280 Faelle, 
+G1   BEMERKT   rc=1 FALSCH=1  Urteil = E24 (quellbaum ohne Tuer-Soll-Regel), neu gepinnt
+        FALSCH  P0 gate_festhalten bricht ab
+G2   BEMERKT   rc=1 FALSCH=1  Urteil = E4 (tuer_soll int(g1) != int(g2) -> <), neu gepinnt
+        FALSCH  P0 gate_festhalten bricht ab
+SUMME: 15 von 15 Aenderungen bemerkt

@@ -1,0 +1,225 @@
+Python: /c/Python310/python (3.10.11)
+   Kontrolle (unveraendert): Rueckgabe 0 KONTROLLEN: 87 ok, 0 FALSCH
+   Mutanten je Operator: A 34, B 18, C 34, D 93, E 23, F 9, G 7, H 2
+   [erkannt] Zeile 247: B [[ -f "$GATE_PIN_DATEI" ]]: ! davor  <- FALSCH  D1_gate_pin_fehlt -> Rueckgabe 2 (soll die:Gate-Pin fehlt): sed: can't read C:/Use
+   [erkannt] Zeile 247: E die -> true: die "Gate-Pin fehlt: $GATE_PIN_DATEI (festgehaltene sha256 von release  <- FALSCH  D1_gate_pin_fehlt -> Rueckgabe 2 (soll die:Gate-Pin fehlt): sed: can't read C:/Use
+   [erkannt] Zeile 250: B [[ "$soll" =~ ^[0-9a-f]{64}$ ]]: ! davor  <- FALSCH  D2_gate_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$PY"
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 0 '^[0-9a-f]{64}$' -> .*  <- FALSCH  D2_gate_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$PY"
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 1 '[0-9a-f]{64}$' -> .*  <- FALSCH  D2_gate_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$PY"
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 2 '$' -> .*  <- FALSCH  D2d_gate_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Zeichen 0 '^' weg  <- FALSCH  D2d_gate_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Zeichen 2 '$' weg  <- FALSCH  D2d_gate_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Klasse '[0-9a-f]' -> .  <- FALSCH  D2b_gate_pin_nicht_hex -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 250: D =~ ^[0-9a-f]{64}$: Quantor '{64}' -> +  <- FALSCH  D2_gate_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$PY"
+   [erkannt] Zeile 250: E die -> true: die "Gate-Pin $GATE_PIN_DATEI ist kein SHA-256 (64 Hexziffern): '$soll  <- FALSCH  D2_gate_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$PY"
+   [erkannt] Zeile 251: B [[ -f "$datei" ]]: ! davor  <- FALSCH  D3_gate_fehlt -> Rueckgabe 1 (soll die:Asset-Gate fehlt): FileNotFoundError: [Errn
+   [erkannt] Zeile 251: E die -> true: die "Asset-Gate fehlt: $datei"  <- FALSCH  D3_gate_fehlt -> Rueckgabe 1 (soll die:Asset-Gate fehlt): FileNotFoundError: [Errn
+   [erkannt] Zeile 252: E die -> true: die "Asset-Gate nicht lesbar: $datei"  <- FALSCH  D4_gate_nicht_lesbar -> Rueckgabe 1 (soll die:Asset-Gate nicht lesbar):           
+   [erkannt] Zeile 254: B [[ "$ist" == "$soll" ]]: ! davor  <- FALSCH  D5_gate_nicht_festgehalten -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festg
+   [erkannt] Zeile 254: B [[ "$ist" == "$soll" ]]: == -> !=  <- FALSCH  D5_gate_nicht_festgehalten -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festg
+   [erkannt] Zeile 254: E die -> true: die "Asset-Gate ist NICHT das festgehaltene: $datei  <- FALSCH  D5_gate_nicht_festgehalten -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festg
+   [erkannt] Zeile 265: B [[ -f "$GATE_URTEIL_PIN_DATEI" ]]: ! davor  <- FALSCH  D6_urteil_pin_fehlt -> Rueckgabe 2 (soll die:Urteils-Pin fehlt): sed: can't read C
+   [erkannt] Zeile 265: E die -> true: die "Urteils-Pin fehlt: $GATE_URTEIL_PIN_DATEI (festgehaltene sha256 v  <- FALSCH  D6_urteil_pin_fehlt -> Rueckgabe 2 (soll die:Urteils-Pin fehlt): sed: can't read C
+   [erkannt] Zeile 268: B [[ "$soll" =~ ^[0-9a-f]{64}$ ]]: ! davor  <- FALSCH  D7_urteil_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 0 '^[0-9a-f]{64}$' -> .*  <- FALSCH  D7_urteil_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 1 '[0-9a-f]{64}$' -> .*  <- FALSCH  D7_urteil_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 2 '$' -> .*  <- FALSCH  D7c_urteil_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Zeichen 0 '^' weg  <- FALSCH  D7c_urteil_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Zeichen 2 '$' weg  <- FALSCH  D7c_urteil_pin_65_ziffern -> Rueckgabe 1 (soll die:ist kein SHA-256):             
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Klasse '[0-9a-f]' -> .  <- FALSCH  D7d_urteil_pin_nicht_hex -> Rueckgabe 1 (soll die:ist kein SHA-256):             "
+   [erkannt] Zeile 268: D =~ ^[0-9a-f]{64}$: Quantor '{64}' -> +  <- FALSCH  D7_urteil_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 268: E die -> true: die "Urteils-Pin $GATE_URTEIL_PIN_DATEI ist kein SHA-256 (64 Hexziffer  <- FALSCH  D7_urteil_pin_kein_sha -> Rueckgabe 1 (soll die:ist kein SHA-256):             "$P
+   [erkannt] Zeile 269: B [[ -f "$datei" ]]: ! davor  <- FALSCH  D8_urteil_fehlt -> Rueckgabe 1 (soll die:Gate-Urteil fehlt): FileNotFoundError: [E
+   [erkannt] Zeile 269: E die -> true: die "Gate-Urteil fehlt: $datei"  <- FALSCH  D8_urteil_fehlt -> Rueckgabe 1 (soll die:Gate-Urteil fehlt): FileNotFoundError: [E
+   [erkannt] Zeile 270: E die -> true: die "Gate-Urteil nicht lesbar: $datei"  <- FALSCH  D9_urteil_nicht_lesbar -> Rueckgabe 1 (soll die:Gate-Urteil nicht lesbar):        
+   [erkannt] Zeile 272: B [[ "$ist" == "$soll" ]]: ! davor  <- FALSCH  D10_urteil_nicht_festgehalten -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das f
+   [erkannt] Zeile 272: B [[ "$ist" == "$soll" ]]: == -> !=  <- FALSCH  D10_urteil_nicht_festgehalten -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das f
+   [erkannt] Zeile 272: E die -> true: die "Gate-Urteil ist NICHT das festgehaltene: $datei  <- FALSCH  D10_urteil_nicht_festgehalten -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT das f
+   [erkannt] Zeile 284: F rc=0 -> 1  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 1 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 285: G Aufruf weg: gate_urteil_pin_pruefen "$datei"  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 286: B [[ "$GATE_URTEIL_GEPRUEFT" == "$GATE_URTEIL_SHA256" ]]: ! davor  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 286: B [[ "$GATE_URTEIL_GEPRUEFT" == "$GATE_URTEIL_SHA256" ]]: == -> !=  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 286: H return 0 -> 1  <- FALSCH  P6_festhalten_und_laufen -> Rueckgabe 1 (soll 0:P6 Ende):    Urteil: private Kopie
+   [erkannt] Zeile 287: E die -> true: die "gate_urteil_selbsttest: kein Temp-Platz"  <- FALSCH  D11_selbsttest_kein_temp -> Rueckgabe 1 (soll die:gate_urteil_selbsttest: kein Tem
+   [erkannt] Zeile 295: B [[ "$letzte" =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0-9]+)\ Faelle,\ ([0-9]+)/([0-9]+)\ Mutanten\ erkannt  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 0 '^==\\ URTEIL-SELBSTTE' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 1 '==\\ URTEIL-SELBSTTES' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 2 '=\\ URTEIL-SELBSTTEST' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 3 '\\ URTEIL-SELBSTTEST-' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 4 'URTEIL-SELBSTTEST-OK' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 5 '-SELBSTTEST-OK:\\ ([0' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 6 'SELBSTTEST-OK:\\ ([0-' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 7 '-OK:\\ ([0-9]+)/([0-9' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 8 'OK:\\ ([0-9]+)/([0-9]' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 9 ':\\ ([0-9]+)/([0-9]+)' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 10 '\\ ([0-9]+)/([0-9]+)\\' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 11 '([0-9]+)/([0-9]+)\\ F' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 12 '/([0-9]+)\\ Faelle,\\ ' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 13 '([0-9]+)\\ Faelle,\\ (' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 14 '\\ Faelle,\\ ([0-9]+)/' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 15 'Faelle,\\ ([0-9]+)/([' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 16 ',\\ ([0-9]+)/([0-9]+)' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 17 '\\ ([0-9]+)/([0-9]+)\\' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 18 '([0-9]+)/([0-9]+)\\ M' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 19 '/([0-9]+)\\ Mutanten\\' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 20 '([0-9]+)\\ Mutanten\\ ' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 21 '\\ Mutanten\\ erkannt,' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 22 'Mutanten\\ erkannt,\\ ' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 23 '\\ erkannt,\\ ([0-9]+)' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 24 'erkannt,\\ ([0-9]+)\\ ' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 25 ',\\ ([0-9]+)\\ als\\ gl' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 26 '\\ ([0-9]+)\\ als\\ gle' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 27 '([0-9]+)\\ als\\ gleic' -> .*  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 28 '\\ als\\ gleichwertig\\' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 29 'als\\ gleichwertig\\ b' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 30 '\\ gleichwertig\\ begr' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 31 'gleichwertig\\ begrue' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 32 '\\ begruendet\\ ==$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 33 'begruendet\\ ==$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 34 '\\ ==$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 35 '==$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 36 '=$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Rest ab Stueck 37 '$' -> .*  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'URTEIL' -> .*  <- FALSCH  N24_wort_URTEIL -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'SELBSTTEST' -> .*  <- FALSCH  N24_wort_SELBSTTEST -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne guel
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'OK' -> .*  <- FALSCH  N24_wort_OK -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige Sch
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'Faelle' -> .*  <- FALSCH  N24_wort_Faelle -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'Mutanten' -> .*  <- FALSCH  N24_wort_Mutanten -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne guelti
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'erkannt' -> .*  <- FALSCH  N24_wort_erkannt -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltig
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'als' -> .*  <- FALSCH  N24_wort_als -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gueltige Sc
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'gleichwertig' -> .*  <- FALSCH  N24_wort_gleichwertig -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne gu
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Wort 'begruendet' -> .*  <- FALSCH  N24_wort_begruendet -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne guel
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 0 '^' weg  <- FALSCH  N18_ok_zeile_mit_vorsatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 1 '=' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 3 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 5 '-' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 7 '-' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 9 ':' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 10 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 12 '/' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 14 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 16 ',' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 17 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 19 '/' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 21 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 23 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 25 ',' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 26 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 28 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 30 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 32 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 34 '\\ ' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 35 '=' weg  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: Zeichen 37 '$' weg  <- FALSCH  N17_ok_zeile_mit_zusatz -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils ohne 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 29 -> [0-9]*  <- FALSCH  N22_zahl1_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 29 -> .*  <- FALSCH  N22_zahl1_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 38 -> [0-9]*  <- FALSCH  N22_zahl2_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 38 -> .*  <- FALSCH  N22_zahl2_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 57 -> [0-9]*  <- FALSCH  N22_zahl3_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 57 -> .*  <- FALSCH  N22_zahl3_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 66 -> [0-9]*  <- FALSCH  N22_zahl4_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 66 -> .*  <- FALSCH  N22_zahl4_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 96 -> [0-9]*  <- FALSCH  N22_zahl5_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 295: D =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0: [0-9]+ bei 96 -> .*  <- FALSCH  N22_zahl5_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige 
+   [erkannt] Zeile 298: E die -> true: die "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe  <- FALSCH  N16_ok_zeile_nicht_zuletzt -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils oh
+   [erkannt] Zeile 300: A (( rc == 0 )): == -> !=  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [gleichwertig] Zeile 300: A (( rc == 0 )): == -> <=
+   [erkannt] Zeile 300: A (( rc == 0 )): == -> >=  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 300: A (( rc == 0 )): == -> <  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 1 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 300: A (( rc == 0 )): == -> >  <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 300: E die -> true: die "Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe $rc   <- FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): == -> !=  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): == -> <=  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): == -> >=  <- FALSCH  N11b_f1_groesser_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-S
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): == -> <  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): == -> >  <- FALSCH  N11b_f1_groesser_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-S
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): && -> ||  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): >= -> >  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 1 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 301: A (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )): >= -> <=  <- FALSCH  N12_faelle_unter_mindestzahl -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    ==
+   [erkannt] Zeile 302: E die -> true: die "Selbsttest des Gate-Urteils: $f1/$f2 Faelle, verlangt n/n mit n >  <- FALSCH  N11_f1_kleiner_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SEL
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): == -> !=  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): == -> <=  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): == -> >=  <- FALSCH  N13b_summe_groesser_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): == -> <  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): == -> >  <- FALSCH  N13b_summe_groesser_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): && -> ||  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): >= -> >  <- FALSCH  D11b_zwischenspeicher_nur_gleiche_kopie -> Rueckgabe 1 (soll die:Selbsttest des Ga
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): >= -> <=  <- FALSCH  N14_erkannt_unter_mindestzahl -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichw
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): && -> ||  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): <= -> <  <- FALSCH  D11b_zwischenspeicher_nur_gleiche_kopie -> Rueckgabe 1 (soll die:Selbsttest des Ga
+   [erkannt] Zeile 303: A (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )): <= -> >=  <- FALSCH  N15_zu_viele_gleichwertige -> Rueckgabe 0 (soll die:Mutanten erkannt, 8 gleichwert
+   [erkannt] Zeile 304: E die -> true: die "Selbsttest des Gate-Urteils: $e/$m Mutanten erkannt, $g gleichwer  <- FALSCH  N13_summe_kleiner_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig -
+   [erkannt] Zeile 312: B [[ -d "$1" ]]: ! davor  <- FALSCH  D12_festhalten_ordner_fehlt -> Rueckgabe 1 (soll die:gate_festhalten: Ordner fehlt
+   [erkannt] Zeile 312: E die -> true: die "gate_festhalten: Ordner fehlt: $1"  <- FALSCH  D12_festhalten_ordner_fehlt -> Rueckgabe 1 (soll die:gate_festhalten: Ordner fehlt
+   [erkannt] Zeile 313: B [[ ! -e "$ziel" ]]: ! weg  <- FALSCH  D13_festhalten_gate_ziel_da -> Rueckgabe 0 (soll die:apk_asset_gate.py existiert s
+   [erkannt] Zeile 313: E die -> true: die "gate_festhalten: $ziel existiert schon"  <- FALSCH  D13_festhalten_gate_ziel_da -> Rueckgabe 0 (soll die:apk_asset_gate.py existiert s
+   [erkannt] Zeile 314: B [[ ! -e "$uziel" ]]: ! weg  <- FALSCH  D14_festhalten_urteil_ziel_da -> Rueckgabe 0 (soll die:gate_urteil.py existiert sc
+   [erkannt] Zeile 314: E die -> true: die "gate_festhalten: $uziel existiert schon"  <- FALSCH  D14_festhalten_urteil_ziel_da -> Rueckgabe 0 (soll die:gate_urteil.py existiert sc
+   [erkannt] Zeile 315: E die -> true: die "Asset-Gate nicht kopierbar: $GATE_QUELLE"  <- FALSCH  D15_festhalten_gate_quelle_fehlt -> Rueckgabe 1 (soll die:Asset-Gate nicht kopierb
+   [erkannt] Zeile 316: G Aufruf weg: gate_pin_pruefen "$ziel"  <- FALSCH  D20_festhalten_gate_nicht_gepinnt -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT da
+   [erkannt] Zeile 321: E die -> true: die "Gate-Urteil nicht kopierbar: $GATE_URTEIL_QUELLE"  <- FALSCH  D16_festhalten_urteil_quelle_fehlt -> Rueckgabe 1 (soll die:Gate-Urteil nicht kopi
+   [erkannt] Zeile 323: G Aufruf weg: gate_urteil_selbsttest "$uziel"  <- FALSCH  D21_festhalten_urteil_nicht_gepinnt -> Rueckgabe 0 (soll die:Gate-Urteil ist NICHT
+   [erkannt] Zeile 332: B [[ -n "$GATE_URTEIL_KOPIE" ]]: ! davor  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 1 (soll 2):    (Gate selbsttest laeuft, sha25
+   [erkannt] Zeile 332: E die -> true: die "gate_urteil: erst gate_festhalten (Urteil festhalten und selbst p  <- FALSCH  D17_urteil_ohne_festhalten -> Rueckgabe 1 (soll die:gate_urteil: erst gate_festhal
+   [erkannt] Zeile 333: G Aufruf weg: gate_urteil_selbsttest "$GATE_URTEIL_KOPIE"  <- FALSCH  N20b_urteil_kopie_veraendert_gate_urteil -> Rueckgabe 0 (soll die:Gate-Urteil ist 
+   [erkannt] Zeile 342: F rc=0 -> 1  <- FALSCH  N19m_meldung_ohne_zeile -> Rueckgabe 1 (soll 0): 
+   [erkannt] Zeile 342: F urteil=0 -> 1  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 1 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 344: G Aufruf weg: gate_pin_pruefen "$gate"  <- FALSCH  N21_gate_kopie_veraendert -> Rueckgabe 0 (soll die:Asset-Gate ist NICHT das festge
+   [erkannt] Zeile 345: B [[ -n "$GATE_URTEIL_KOPIE" ]]: ! davor  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 1 (soll 2): DIE: gate_laufen: erst gate_festh
+   [erkannt] Zeile 345: E die -> true: die "gate_laufen: erst gate_festhalten (Gate UND Urteil festhalten)"  <- FALSCH  D18_laufen_ohne_festhalten -> Rueckgabe 1 (soll die:gate_laufen: erst gate_festhal
+   [erkannt] Zeile 346: G Aufruf weg: gate_urteil_selbsttest "$GATE_URTEIL_KOPIE"  <- FALSCH  N20_urteil_kopie_veraendert -> Rueckgabe 1 (soll die:Gate-Urteil ist NICHT das fes
+   [erkannt] Zeile 347: E die -> true: die "gate_laufen: kein Temp-Platz fuer die Ausgabe"  <- FALSCH  D19_laufen_kein_temp -> Rueckgabe 1 (soll die:gate_laufen: kein Temp-Platz): mktem
+   [erkannt] Zeile 352: G Aufruf weg: gate_urteil "$modus" "$log" "$rc" > "$log.urteil" 2>&1 || urteil=$?  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 1 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 356: A (( urteil == 0 )): == -> !=  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [gleichwertig] Zeile 356: A (( urteil == 0 )): == -> <=
+   [erkannt] Zeile 356: A (( urteil == 0 )): == -> >=  <- FALSCH  P5_gate_1_befund_bleibt_1 -> Rueckgabe 2 (soll 1):    Gate-Urteil (selbsttest, Rue
+   [erkannt] Zeile 356: A (( urteil == 0 )): == -> <  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 356: A (( urteil == 0 )): == -> >  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 357: A (( rc != 0 )): != -> ==  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 357: A (( rc != 0 )): != -> <  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [gleichwertig] Zeile 357: A (( rc != 0 )): != -> >
+   [erkannt] Zeile 357: A (( rc != 0 )): != -> <=  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==
+   [erkannt] Zeile 357: A (( rc != 0 )): != -> >=  <- FALSCH  N19m_meldung_ohne_zeile -> Rueckgabe 1 (soll 0): 
+   [erkannt] Zeile 359: F urteil=2 -> 0  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2):    Gate-Urteil (selbsttest, Rueck
+   [erkannt] Zeile 359: F urteil=2 -> 1  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 1 (soll 2):    Gate-Urteil (selbsttest, Rueck
+   [erkannt] Zeile 359: F urteil=2 -> 3  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 3 (soll 2):    Gate-Urteil (selbsttest, Rueck
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 0 '^   Gate-Urteil ($mo' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 1 '   Gate-Urteil ($mod' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 2 '  Gate-Urteil ($modu' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 3 ' Gate-Urteil ($modus' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 4 'Gate-Urteil ($modus,' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 5 '-Urteil ($modus, Rue' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 6 'Urteil ($modus, Ruec' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 7 ' ($modus, Rueckgabe ' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 8 '($modus, Rueckgabe 0' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 9 '$modus, Rueckgabe 0)' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 10 ', Rueckgabe 0): ' -> .*  <- FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 11 ' Rueckgabe 0): ' -> .*  <- FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 12 'Rueckgabe 0): ' -> .*  <- FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 13 ' 0): ' -> .*  <- FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 14 '0): ' -> .*  <- FALSCH  N19c_zeile_rueckgabe_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 15 '): ' -> .*  <- FALSCH  N19e_zeile_ohne_doppelpunkt -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 16 ': ' -> .*  <- FALSCH  N19e_zeile_ohne_doppelpunkt -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 17 ' ' -> .*  <- FALSCH  N19g_zeile_ohne_leerzeichen_nach_doppelpunkt -> Rueckgabe 0 (soll 2): == SELBSTTES
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Wort 'Gate' -> .*  <- FALSCH  N19w_wort_Gate -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    XX-Urteil
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Wort 'Urteil' -> .*  <- FALSCH  N19w_wort_Urteil -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-XX
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Wort '$modus' -> .*  <- FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Wort 'Rueckgabe' -> .*  <- FALSCH  N19w_wort_Rueckgabe -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 0 '^' weg  <- FALSCH  N19d_zeile_mit_vorsatz -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe == X   
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 1 ' ' weg  <- FALSCH  N19f_zeile_zwei_leerzeichen -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 5 '-' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 7 ' ' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 8 '(' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 10 ',' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 11 ' ' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 13 ' ' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 14 '0' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 15 ')' weg  <- FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 16 ':' weg  <- FALSCH  N19e_zeile_ohne_doppelpunkt -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==
+   [erkannt] Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 17 ' ' weg  <- FALSCH  N19g_zeile_ohne_leerzeichen_nach_doppelpunkt -> Rueckgabe 0 (soll 2): == SELBSTTES
+   [erkannt] Zeile 362: F urteil=2 -> 0  <- FALSCH  N19a_ohne_urteilszeile -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 362: F urteil=2 -> 1  <- FALSCH  N19a_ohne_urteilszeile -> Rueckgabe 1 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 362: F urteil=2 -> 3  <- FALSCH  N19a_ohne_urteilszeile -> Rueckgabe 3 (soll 2): == SELBSTTEST-OK: Attrappe ==    G
+   [erkannt] Zeile 366: H return "$urteil" -> 0  <- FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2):    Gate-Urteil (selbsttest, Rueck
+   Laufzeit 224 s, 10 parallel
+== BASH-URTEIL-MUTANTEN-OK: 220 Mutanten, 217 erkannt, 3 als gleichwertig begruendet ==

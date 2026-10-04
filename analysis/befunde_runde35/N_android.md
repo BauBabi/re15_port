@@ -14,7 +14,9 @@ hat weder Entpacker noch APK). Belege sind hier Messungen (Geometrie-Rechnung, T
 Mutanten-Lauf des Gates) und Quelltext-Zeilen des Ports, keine @0x-Adressen. Jede Zahl im Code wird
 mit ihrer Herleitung (Messung/Zeile) kommentiert.
 
-Status: FERTIG (Abschluss unten); Nachbesserung 1 nach Abnahme 0 am Ende (M1-M3: Urteil-Mutator mutiert jetzt auch
+Status: Nachbesserung 2 nach Abnahme 1 am Ende (M1-M3 zu Punkt 3: Vergleiche in beide Richtungen mutiert + Faelle
+beider Seiten 280/887/7, tuer_soll() eigene Pruefung + Strukturregel, bash-Urteil mit 87 Kontrollen beider Seiten und
+eigenem Mutantenlauf 220/217/3; E-Reihe 29/29). Vorher: FERTIG (Abschluss unten); Nachbesserung 1 nach Abnahme 0 am Ende (M1-M3: Urteil-Mutator mutiert jetzt auch
 Zeichenketten/Regex-Muster, 243 Faelle / 781 von 785 Mutanten, 32/32 simulierte Aenderungen; bash-Urteil mit
 Kontrollen N10-N21, Streich-Messung 17/17; Doku auf den gemessenen Umfang). Kurz: (1) Schrift aus Hoehe UND Breite - auf dem
 Emulator 2400x1080 Titel und laengster Fehlertext vollstaendig; (2) Datei<->Ordner-Konflikte werden im selben Start
@@ -465,3 +467,447 @@ Emulator (braucht zweite, echt gebaute APK); Rechte-Fall "Konflikt nicht raeumba
 nicht bewiesen fuer jede denkbare Aenderung) - steht so in Kopf/README. Kein APK-Neubau in der Nachbesserung: kein
 C-/Gradle-Code geaendert, die Kette ist dieselbe Funktion mit strengerem Selbsttest (Positiv-Kontrolle P0-P3 am
 echten Gate + Quellbaum in jedem Suite-Lauf).
+
+## Nachbesserung 2 (nach Abnahme 1, `N_abnahme_1.md`: Punkt 1 + 2 erfuellt, Punkt 3 teilweise, Maengel M1-M3)
+
+Stand vor der Nachbesserung: HEAD 9e535728 (= 575c964d + Abnahmebericht), Arbeitsbaum sauber. Der Vorgaenger wurde um
+12:00 vom Sitzungslimit beendet, bevor er hier etwas geschrieben hatte - diese Sitzung beginnt bei null.
+Punkte 1 und 2 sind laut Abnahme 1 erfuellt und werden NICHT angefasst (kein C-Code, kein platform/android/-Code).
+Plan (nur Punkt 3, "Kuenftige Aenderungen am Pruefskript muessen dessen Urteilslogik selbst sorgfaeltig mittesten"):
+- M1 (Python-Urteil, einseitige Lockerungen von `!=`): Mutations-Operator `TAUSCH` in `release/gate_urteil.py` auf
+  einseitige Lockerungen in BEIDE Richtungen erweitern (`!=` -> `<` UND `>`, `==` -> `<=` UND `>=`, zusaetzlich zu
+  `==`<->`!=`, `<`<->`<=`, `>`<->`>=`); bei Vergleichen mit einer Zeichenkette keine Ordnungs-Mutanten (eine Ordnung
+  auf Texten ist keine "Lockerung"). Dann fuer jeden ueberlebenden Mutanten einen Fall von der ANDEREN Seite (Summe > n,
+  len > k, qq < gg, ok_n > n, g1 > g2, a > b mit b >= Mindestzahl, mb < b, je Glied einer Vergleichskette beide Seiten)
+  oder eine begruendete Gleichwertigkeit. Mindestzahlen nachziehen.
+- M2 (Tuer-Soll-Regel nur im Meldungstext): die Pruefung wird eine eigene Anweisung `tuer_soll()` vor `ende(0, ...)` in
+  apk/quellbaum/paket (Mutant "Aufruf weg" je Stelle); die Faelle "Tuer-Soll fehlt" entfernen nur noch die Zeilen, die
+  mit `   Tuer-Soll:` beginnen (Schlusszeile bleibt); je Modus Faelle 29/30, 31/30, 0/0, fehlt.
+- M3 (bash-Urteil in apk_pruefen.sh, einseitige Kontrollen): Gegenseiten-Kontrollen in test_r35_android_pruefkette.sh:
+  N8b (luegendes Urteil, Gate-Rueckgabe 2), N10b (OK-Zeile, Selbsttest-Rueckgabe 2), N11b (f1 > f2), N13b (e + g > m),
+  N22a-e (je eine Zahl der Schlusszeile leer).
+- Danach die Aenderungen der Abnahme 1 selbst nachfahren (E-Reihe: 28 nicht gleichwertige Python-Aenderungen; F1-F13
+  und G1/G2 an der echten Kette) - alle muessen rot werden.
+
+### Nachbesserung 2 - Messung vorher (Python-Urteil, E-Reihe der Abnahme 1)
+Werkzeug `N_android_belege/werkzeug/nb2_urteil_aenderungen.py` (die 29 Aenderungen der Abnahme 1, 3.2, woertlich; je
+eine Kopie + `--selbsttest`, 6 parallel, 29 s). Gegen das Urteil @9e535728 (Pin c8fed5ca...): Kontrolle K0 OK
+(243/243, 781/785, 4); **11 von 29 NICHT bemerkt: E1, E2, E3, E4, E5, E6, E7, E9, E11, E29, E24** - genau die Liste der
+Abnahme (E11 = `rc != 0` -> `rc > 0`, dort "in der Praxis gleichwertig"). Die Abnahme ist damit reproduziert.
+Beleg `N_android_belege/nb2_urteil_aenderungen_vorher.txt`.
+
+### Nachbesserung 2 - M1 einseitige Lockerungen von Vergleichen (Python-Urteil)
+**Ursache (Code gelesen, @9e535728, wie die Abnahme 3.4):** `_Mutierer.TAUSCH` bildete `NotEq` nur auf `Eq` ab (und
+`Eq` nur auf `NotEq`) - `!=` -> `<`/`>` und `==` -> `<=`/`>=` waren kein Mutant; und die Fallsammlung pruefte jede
+Ungleichung nur von EINER Seite (qb Summe nur < n, pk qq nur > gg, st ok_n nur < n, tuer_soll g1 nur < g2, apk mb nur
+> b, len(baum) nur < k; "Innere Proben 3/2" verletzte zugleich die Mindestzahl). Kein RE-Original (Port-Infrastruktur).
+
+**Aenderung (release/gate_urteil.py):**
+- `TAUSCH` je Operator eine Liste: `==` und `!=` -> jeder andere der sechs Vergleiche (darunter die einseitigen
+  Lockerungen in beide Richtungen), `<`<->`<=`, `>`<->`>=` (Grenze), `<`<->`>`, `<=`<->`>=` (Richtung). Keine
+  Ordnungs-Operatoren, wenn eine Seite eine Zeichenkette ist (`modus == "paket"`, `f.group(1) != "ok"`). Ergebnis:
+  Vergleich-Mutanten 39 -> 145. Bei den Ungleichungen bewusst NICHT `<` -> `==`/`!=` und `<=` -> `==`: auf den
+  Zaehlwerten (nie negativ) waere z.B. `n <= 0` -> `n == 0` gleichwertig, ohne etwas zu pruefen.
+- `_faelle_seiten` (37 neue Faelle, 243 -> 280), je Fall genau EINE verletzte Bedingung: st 6/5 Faelle (ok_n > n),
+  Innere Proben 4/3 (a > b bei b = Mindestzahl); Rueckgabe -1 je Modus + FEHLER mit -1 (main() nimmt jede ganze Zahl;
+  OK nur bei genau 0, Befund nur bei genau 1 - damit ist auch E11 kein "in der Praxis gleichwertig" mehr); apk-Kette
+  q == a == g == mz == n je Glied beide Seiten (Werte links vom Glied 12 -+ 1, rechts 12: 8 Faelle); Manifest-Bytes
+  4095 < 4096 und 4097 > 4096; Tuerarchiv-Kette Quelle == APK == gleich == von je Glied beide Seiten (6 Faelle);
+  Tuer-Soll 31/30 (apk); qb/pk: 3 Baumzeilen bei "in 2 Baeumen" und 2 bei "in 3 Baeumen" (Summe passt), Summe 13 > 12,
+  pk Quelle 9 < gleich 10 (Summe gleich passt).
+- `AEQUIVALENT` 4 -> 7, je mit Begruendung im Code: `int(m.group(2)) == 0` -> `<= 0` und `qq == 0` -> `<= 0` (beide
+  Werte aus `(\d+)`, nie negativ); `len(urteile) != 1` -> `> 1` (an der Stelle hat m_ok die letzte Zeile als
+  `== <MARKE>-OK: ... ==` erkannt, die passt immer auch auf das Urteilszeilen-Muster -> len >= 1).
+
+### Nachbesserung 2 - M2 Tuer-Soll-Regel nur im Meldungstext
+**Ursache:** `tuer_soll()` stand nur im Grund von `ende(0, ...)` (gate_urteil.py @9e535728 :148/:158/:168); Meldungstexte
+werden nicht mutiert, und die Faelle "Tuer-Soll fehlt" filterten mit `"Tuer-Soll" not in z` auch die Schlusszeile
+(quellbaum: "... Tuer-Soll erfuellt ==") weg - im Modus quellbaum erreichte kein Fall die Regel.
+**Aenderung:** `tuer_soll()` ist eine eigene Anweisung vor `ende(0, ...)` in apk, quellbaum und paket (gibt nichts mehr
+zurueck; die Zahl im Grund zaehlt der Meldungstext selbst mit `sum(z.startswith("   Tuer-Soll:") ...)`); damit hat jede
+Stelle den Mutanten "Aufruf weg: tuer_soll()" (Aufruf-Mutanten 28 -> 31). Die drei Faelle "Tuer-Soll fehlt" entfernen
+nur noch Zeilen, die mit `   Tuer-Soll:` beginnen; qb und pk bekommen 29/30, 31/30, 0/0. Dazu eine **Strukturregel** im
+Selbsttest (`_meldung_regel`): kein Meldungstext (2. Argument von ende()/genau_eine()) darf eine im Urteil definierte
+Funktion rufen - sonst `[FEHLER] Pruefung im Meldungstext`. Gegenprobe am alten Urteil @9e535728:
+`['Zeile 148: tuer_soll()', 'Zeile 158: tuer_soll()', 'Zeile 168: tuer_soll()']` = genau die drei Stellen der Abnahme.
+
+### Nachbesserung 2 - Messung nachher (Python-Urteil)
+- `--selbsttest`: `== URTEIL-SELBSTTEST-OK: 280/280 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet ==`
+  (`Mutanten je Operator: Aufruf 31, BoolOp 10, Regex R0 13, Regex R1 261, Regex R2 49, Regex R3 30, Regex R4 9, Regex R5
+  115, Regex R6 11, Vergleich 145, Zahl 118, Zeichenkette 37, if-Bedingung 56, not 9`), ~5 s; gleich unter Python 3.9.0
+  und 3.14.7. Zwischenstand nur mit dem neuen TAUSCH (vor den neuen Faellen): 26 Mutanten ueberlebt - genau die Klassen
+  der Abnahme (Zeilen 85/99/102/113/117/137/142/158/160/169), nach `_faelle_seiten` 3 = die drei gleichwertigen.
+- **E-Reihe der Abnahme 1 nachgefahren** (`nb2_urteil_aenderungen.py`, Beleg `nb2_urteil_aenderungen_nachher.txt`):
+  K0 Kontrolle OK; **29 von 29 bemerkt** (vorher 18/29), darunter alle zehn der Abnahme und E11: E1 -> Fall "qb/S: Summe
+  der Baumzeilen 13 > 12", E2 -> "pk/S: Quelle 9 < gleich 10", E3 -> "st/S: 6/5 Faelle", E4 -> "apk/S: Tuer-Soll 31/30" +
+  "qb/S: Tuer-Soll 31/30", E5 -> "qb/S: 3 Baumzeilen", E6 -> "pk/S: 3 Baumzeilen", E7 -> "pk/S: Summe gleich 13 > 12",
+  E9 -> "st/S: Innere Proben 4/3", E11 -> "... gut, Rueckgabe -1" (4 Faelle), E29 -> "apk/S: Manifest 4095 Bytes <
+  SUMME 4096", E24 (Form 2 = Anweisung `tuer_soll()` in quellbaum gestrichen; Form 1 `% (n, k, tuer_soll())` gibt es nicht
+  mehr) -> "qb: Tuer-Soll fehlt" + "qb/S: Tuer-Soll 29/30" u.a. (4 Faelle), E24b (Form 2) -> 14 Faelle.
+- NB1-Reihe (`urteil_aenderungen.py`, 32 Aenderungen) gegen das neue Urteil: weiter **32 von 32** (Beleg
+  `nb2_nb1_aenderungen_neu.txt`).
+- Alt (@9e535728) gegen neu auf allen 280 Faellen (`urteil_alt_neu_nb1.py`): `280 Faelle, 280 gleiches Urteil, 0 anders`
+  (Beleg `nb2_urteil_alt_neu.txt`) - die Nachbesserung aendert kein Urteil, sie haelt nur fest.
+- Pin `release/gate_urteil.sha256` = `107de123f9aa2b733d089280f1920d33a5c442a8c8e6fff578eec993e1507a2e`;
+  `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` = 280/887/7 (apk_pruefen.sh; Kommentar dort nennt die 3 neuen
+  Gleichwertigen). Commit e28f9568.
+
+### Nachbesserung 2 - M3 einseitige Kontrollen des bash-Urteils (apk_pruefen.sh)
+**Ursache (Code gelesen, wie Abnahme 3.4):** test_r35_android_pruefkette.sh pruefte jede Pruefzeile des bash-Urteils von
+EINER Seite: N8 nur Gate-Rueckgabe 1, N10 nur Selbsttest-Rueckgabe 1, N11 nur f1 < f2, N13 nur e + g < m; keine
+Kontrolle mit einer leeren oder nicht-numerischen Zahl. Und es gab - anders als beim Python-Urteil - keinen
+Mechanismus, der eine KUENFTIGE Aenderung einer bash-Pruefzeile von selbst mittestet: nur feste Kontrollen.
+
+**Aenderung 1 - `re15_port/tests/unit/r35_android/urteil_kontrollen.sh` (neu):** alle Attrappen-Kontrollen des
+bash-Urteils (vorher P3 + N10-N21 in der Kette) in einer eigenen Datei, je Kontrolle genau EINE verletzte Bedingung,
+Soll = genaue Rueckgabe bzw. Abbruch MIT der Meldung genau dieser Pruefzeile, jede Kontrolle in einer Unterschale mit
+`set -euo pipefail` (so laufen die echten Aufrufer build_android.sh/make_package.sh, Kopf apk_pruefen.sh). Gruppen:
+- P (Positiv, muss angenommen werden): P3 Selbsttest, P4/P5/P5b gate_laufen mit Gate-Rueckgabe 0/1/2 -> genau 0/1/2
+  (ein Befund bleibt Befund, "keine Aussage" bleibt 2), P6 gate_festhalten + gate_laufen, P7 gate_urteil direkt, P8
+  zweiter Aufruf aus dem Zwischenspeicher, P9 Gate-Pin richtig.
+- ST (gate_urteil_selbsttest): N10/N10b Rueckgabe 1 UND 2, N11/N11b f1 < f2 UND f1 > f2, N12 Mindestzahl, N13/N13b
+  e + g < m UND > m, N14, N15, N16-N18 Lage/Anker, N7 leeres Urteil, **N22 je Zahl leer** (5), **N23 je Zahl keine
+  Ziffer** (5), **N24 je Wort der Schlusszeile ein anderes** (9), D11 kein Temp-Platz, D11b Zwischenspeicher nur fuer
+  GENAU die gepruefte Kopie.
+- LAUF (zweite Instanz, gate_urteil): **N8c/N8b luegendes Urteil bei Gate-Rueckgabe 1 UND 2** -> genau 2, N8m Meldung
+  "ueberstimmt"; N19a-g Urteilszeile fehlt / anderer Modus / "Rueckgabe 1" / Text davor / ohne Doppelpunkt / zwei statt
+  drei Leerzeichen / ohne Leerzeichen nach dem Doppelpunkt, N19w je Wort; D17-D19.
+- PIN: D1-D10 Pin-Datei fehlt / kein SHA-256 (abc, 64 x g, 63 und 65 Ziffern) / Datei fehlt / nicht lesbar (PY=false) /
+  nicht festgehalten - fuer Gate UND Urteil.
+- FH (gate_festhalten): D12-D16, D20-D22 (Ordner fehlt, Ziel schon da, Quelle fehlt, Quelle nicht gepinnt, Selbsttest
+  rot), N20/N20b/N21 private Kopien veraendert (N20c: das veraenderte Urteil wird VOR dem Gate-Lauf erkannt).
+Die Kette (test_r35_android_pruefkette.sh) ruft die Datei auf (Abschnitt "bash-Urteil (Attrappen)"); P0-P2, N1-N9 mit
+echtem Gate/Urteil bleiben dort.
+
+**Nebenbefund + Fix (gemessen):** unter `set -euo pipefail` brach `gate_urteil_selbsttest` bei einem Urteil OHNE jede
+Ausgabe (0-Byte-Urteil, N7) in der Zeile `letzte="$(tr ... | grep -v '^[[:space:]]*$' | tail -1)"` ab - grep findet
+nichts, Rueckgabe 1, pipefail -> die Shell endet OHNE die Meldung "ohne gueltige Schlusszeile" (Kontrolle N7 rot:
+`Rueckgabe 1 ... (Selbsttest des Gate-Urteils, sha256 e3b0c44298fc1c14...)`, danach nichts). Fail-closed war es, aber
+ohne Grund. Fix `release/apk_pruefen.sh`: `... | tail -1 || true)"`. Danach N7 gruen; gegen die alte Zeile weiter rot
+(Gegenprobe mit `git show HEAD:release/apk_pruefen.sh`). Die alte Kette lief ohne `set -e` und sah das nicht.
+
+**Aenderung 2 - `bash_urteil_mutanten.py` + ctest `unit_r35_android_bash_mutanten` (neu):** das Gegenstueck zum
+Mutanten-Selbsttest des Python-Urteils fuer das bash-Urteil. Je Lauf genau EINE Aenderung an den sechs Funktionen
+gate_pin_pruefen, gate_urteil_pin_pruefen, gate_urteil_selbsttest, gate_festhalten, gate_urteil, gate_laufen, nur im
+Code (nicht in Kommentaren/Meldungstexten; Anfuehrungszeichen ueber Zeilen verfolgt). Operatoren: A `(( ))`-Vergleiche
+mit derselben Tabelle wie TAUSCH im Python-Urteil (== / != -> jeder andere, < <-> <=, > <-> >=, < <-> >, <= <-> >=) und
+&& <-> ||; B `[[ ]]` == <-> != und Verneinung; C `grep -q`-Muster gelockert (Rest -> .*, Wort -> .*, Zeichen weg);
+D `=~`-Muster gelockert (dazu `[0-9]+` -> `[0-9]*` und -> `.*`, Klasse -> `.`, `{64}` -> `+`); E jedes `die` -> `true`;
+F Zuweisung name=Zahl -> 0/+-1; G Aufruf einer Pruef-Funktion weg; H `return x` -> 0/1. Je Mutant laeuft
+urteil_kontrollen.sh `--schnell` (Ende beim ersten FALSCH; Reihenfolge der Gruppen nach der mutierten Funktion), die
+unveraenderte Datei muss ALLE Kontrollen bestehen. Ueberlebt ein Mutant und steht nicht begruendet in AEQUIVALENT ->
+`BASH-URTEIL-MUTANTEN-FEHLER`. Gleichwertig (3, je mit Begruendung): `(( rc == 0 ))` -> `<=`, `(( urteil == 0 ))` ->
+`<=`, `(( rc != 0 ))` -> `>` - rc/urteil sind Rueckgaben (`$?` 0..255), nie negativ.
+
+**Messung (bash-Urteil):**
+- urteil_kontrollen.sh gegen das echte release/apk_pruefen.sh: `KONTROLLEN: 87 ok, 0 FALSCH` (~46 s; Beleg
+  `N_android_belege/nb2_urteil_kontrollen.txt` = Stand mit 83 Kontrollen, danach +4: D2d, D7c, D7d, N19g).
+- **Erster Mutantenlauf** (83 Kontrollen, ohne AEQUIVALENT; Beleg `nb2_bash_mutanten_erster_lauf.txt`): 220 Mutanten,
+  **12 ueberlebt**: Pin-Muster `^[0-9a-f]{64}$` ohne `^` bzw. ohne `$` (Gate und Urteil, 6) und Klasse -> `.` (Urteil-Pin,
+  1) - keine Kontrolle hatte 65 Ziffern bzw. 64 Nicht-Hex-Zeichen beim Urteils-Pin; grep-Muster der Urteilszeile ohne das
+  Leerzeichen nach dem Doppelpunkt (2); und die drei `$?`-Gleichwertigen. Dazu D2d/D7c (65 Ziffern), D7d (64 x g beim
+  Urteil), N19g (Urteilszeile ohne Leerzeichen nach `:`) und die drei AEQUIVALENT-Eintraege.
+- **Endstand** (`test_r35_android_bash_mutanten.sh`, 10 parallel, Beleg `nb2_bash_mutanten.txt`): Kontrolle
+  `KONTROLLEN: 87 ok, 0 FALSCH`; `Mutanten je Operator: A 34, B 18, C 34, D 93, E 23, F 9, G 7, H 2`;
+  **`== BASH-URTEIL-MUTANTEN-OK: 220 Mutanten, 217 erkannt, 3 als gleichwertig begruendet ==`**, Laufzeit 224 s.
+  Haeufigste Toeter: N10 (56), N8c (14), N19b (11), N17 (11), P4 (8), N13/N11 (je 7) - die neuen Gegenseiten-Kontrollen
+  N8c, N11b, N13b, N22, N24, D2d/D7c toeten je mindestens einen Mutanten, den sonst keine Kontrolle faengt.
+  Beispiel G (Aufruf weg): `gate_urteil_selbsttest` in gate_laufen gestrichen -> N20 rot, weil dann die Abbruchmeldung von
+  gate_urteil in `$log.urteil` landet und vor dem `cat` verloren geht - die Vorab-Pruefung in gate_laufen ist also nicht
+  doppelt, sie macht den Grund sichtbar.
+
+### Nachbesserung 2 - Messung nachher: die Aenderungen der Abnahme 1 an der ECHTEN Kette (F/G-Reihe)
+Werkzeug `werkzeug/nb2_kette_varianten.py` + `.sh` (je Variante eine Kopie von release/ mit GENAU EINER Aenderung,
+re15_port/synchro als Junction, nur mit `cmd /c rmdir` entfernt; die echte test_r35_android_pruefkette.sh je Variante,
+4 parallel). F1-F13 woertlich wie die Abnahme (F9 an die Zeile mit `|| true` angepasst, dieselbe Aenderung), G1/G2 =
+Urteil durch E24 (Anweisung `tuer_soll()` in quellbaum gestrichen) bzw. E4 ersetzt UND neu gepinnt.
+Beleg `N_android_belege/nb2_kette_varianten_nachher.txt`:
+- F0 (unveraenderte Kopie) `KONTROLLE-OK rc=0 FALSCH=0`.
+- **15 von 15 bemerkt** (Abnahme 1: 8 von 15). Die fuenf vorher unbemerkten jetzt mit genau der Gegenseiten-Kontrolle:
+  **F1** (`rc != 0` -> `rc == 1`) -> `N8b_urteil_luegt_gate_2 -> Rueckgabe 0 (soll 2)` + N8m; **F3** (`f1 >= f2`) ->
+  `N11b_f1_groesser_f2` (Attrappe 281/280); **F4** (`e + g >= m`) -> `N13b_summe_groesser_alle`; **F6** (`rc != 1`) ->
+  `N10b_ok_zeile_rueckgabe_2`; **F8** (`([0-9]*)`) -> `N22_zahl5_leer`. **G1 und G2** -> `P0 gate_festhalten bricht ab`
+  (der Urteils-Selbsttest der neu gepinnten Variante meldet URTEIL-SELBSTTEST-FEHLER - E24 ueber "qb: Tuer-Soll fehlt" /
+  "qb/S: Tuer-Soll 29/30", E4 ueber "Tuer-Soll 31/30").
+- Gegenprobe ohne Kette (schnell): F1-F13 direkt gegen urteil_kontrollen.sh `--schnell` -> 13/13 rot, Beleg
+  `nb2_kette_varianten_kontrollen.txt`; die 17 Streich-Varianten der Nachbesserung 1 (B1-B17, kette_streichen.py, B12 an
+  die neue Zeile angepasst) ebenso -> 17/17 rot, B0 `KONTROLLEN: 87 ok, 0 FALSCH`, Beleg `nb2_streichen_kontrollen.txt`.
+
+### Nachbesserung 2 - Bilanz gegen die Maengel der Abnahme 1
+| Mangel | Messweg der Abnahme | vorher | nachher |
+|---|---|---|---|
+| M1 einseitige Lockerungen im Python-Urteil | E-Reihe, je Aenderung `--selbsttest` | 18/29 bemerkt (reproduziert) | **29/29** (auch E11) |
+| M2 Tuer-Soll-Regel quellbaum entfernbar | E24 / G1 | unbemerkt, Kette FEHLER=0 | E24 rot (4 Faelle), G1 rot (P0); Strukturregel meldet die alte Form 3x |
+| M3 einseitige Kontrollen im bash-Urteil | F1-F13, G1, G2 an der echten Kette | 8/15 bemerkt | **15/15** |
+| (kuenftig) Mutanten des Python-Urteils | --selbsttest | 785 Mutanten, Vergleich nur ==<->!= | 894 Mutanten, Vergleiche in beide Richtungen, 887 erkannt, 7 begruendet |
+| (kuenftig) Mutanten des bash-Urteils | - | gab es nicht | ctest unit_r35_android_bash_mutanten: 220 Mutanten, 217 erkannt, 3 begruendet |
+
+### Nachbesserung 2 - Tests (probes/r35_android.cmake)
+| ctest | misst | Stand |
+|---|---|---|
+| unit_r35_android_pruefkette | echte Kette: P0 gate_festhalten (Urteils-Selbsttest 280/280, 887/894, 7), P1 Gate-Selbsttest, P2 Quellbaum, N1-N9 (echtes Gate/Urteil), dazu urteil_kontrollen.sh (87 Attrappen-Kontrollen) | geaendert (P3/N10-N21 -> urteil_kontrollen.sh) |
+| unit_r35_android_bash_mutanten | **neu**: 220 Mutanten des bash-Urteils (Operatoren A-H), je Mutant urteil_kontrollen.sh --schnell; OK nur, wenn jeder Mutant rot wird oder in AEQUIVALENT begruendet ist (3) | neu (+1 Test, Suite 482 -> 483) |
+| unit_r35_android_abgleich / _anzeige / _konflikt, unit_r34a_asset_abgleich | Punkt 1/2 | unveraendert (kein C-Code beruehrt) |
+Der Mutanten-Selbsttest des Python-Urteils laeuft in P0 (gate_festhalten) jeder Kette und vor jeder Nutzung in
+build_android.sh/make_package.sh.
+
+### Nachbesserung 2 - OFFEN
+- Wie bisher: echtes APK-A -> APK-B-Update mit dem H8-Muster auf dem Emulator (braucht eine zweite echt gebaute APK) -
+  Punkt 2, von der Abnahme 1 als "kein Mangel" vermerkt. Kein APK-Neubau in dieser Nachbesserung: kein C-/Gradle-Code
+  geaendert; die Kette ist dieselbe Funktion mit strengerem Selbsttest, und die echte Kette (Gate + Urteil) laeuft in
+  jedem Suite-Lauf (P0-P2). Der pipefail-Fix in gate_urteil_selbsttest betrifft nur den Fall "Urteil ohne jede Ausgabe".
+- Umfang der Mutanten (Kopf von gate_urteil.py / bash_urteil_mutanten.py): Aenderungen ausserhalb der Operatoren
+  (z.B. `any` -> `all`, Rechenoperatoren, Methodentausch, in bash: Umleitungen, Variablen-Namen, `tail -1`) faengt nur
+  die Fall- bzw. Kontrollsammlung - gemessen an 29 + 32 (Python) und 13 + 17 (bash) simulierten Aenderungen, nicht fuer
+  jede denkbare Aenderung bewiesen.
+- Laufzeit: unit_r35_android_bash_mutanten ~4 min (10 parallel), unit_r35_android_pruefkette ~3 min (allein); unter
+  der Last von vier parallelen Ketten deutlich laenger (Variantenlauf).
+
+### Nachbesserung 2 - Fuer den Nutzer / Orchestrator
+- Keine Sprachzeilen, keine neuen Assets (shared_assets unveraendert), nichts fuers Paket-Gate.
+- Pins/Mindestzahlen: `release/gate_urteil.sha256` = `107de123f9aa2b733d089280f1920d33a5c442a8c8e6fff578eec993e1507a2e`,
+  `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` = 280/887/7. `release/apk_asset_gate.py` und sein Pin unveraendert
+  (f73c3b1a...). Wer apk_pruefen.sh-Pruefzeilen (die sechs Funktionen) aendert: Kontrolle in
+  re15_port/tests/unit/r35_android/urteil_kontrollen.sh, sonst `unit_r35_android_bash_mutanten` rot.
+- Merge: diese Spur bringt jetzt +5 Tests (abgleich, anzeige, konflikt, pruefkette, bash_mutanten); master hatte
+  RE15_MIN_TESTS 517 (6e1a3771). release/RELEASE_NOTES.md und make_package.sh nicht beruehrt.
+
+### Nachbesserung 2 - Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Ende aller Messlaeufe dieser Spur; ctest
+1438 s):
+
+    === LOCAL-BUILD-OK (all) — Tests 483/483
+
+(482 + 1 neu: unit_r35_android_bash_mutanten.) `unit_r35_android_pruefkette` Passed 114,1 s,
+`unit_r35_android_bash_mutanten` Passed 203,7 s, `unit_r35_android_abgleich/anzeige/konflikt` und
+`unit_r34a_asset_abgleich` Passed. Kein Fenster-Haken rot, kein Nachfahren noetig.
+Geaenderte Dateien der Nachbesserung 2: release/gate_urteil.py (+ .sha256), release/apk_pruefen.sh (Mindestzahlen,
+pipefail-Fix der Zeile `letzte=`, Kopfkommentar), re15_port/tests/unit/r35_android/{urteil_kontrollen.sh (neu),
+bash_urteil_mutanten.py (neu), test_r35_android_bash_mutanten.sh (neu), test_r35_android_pruefkette.sh},
+re15_port/tests/unit/probes/r35_android.cmake, re15_port/platform/android/README.md, Dossier + Belege + Werkzeuge.
+Nicht: release/RELEASE_NOTES.md, make_package.sh, tests/*/CMakeLists.txt, Engine, platform/android/jni (Punkte 1/2
+unberuehrt).
+
+## Nachbesserung 3 (nach Abnahme 2, `N_abnahme_2.md`: Punkt 1 + 2 erfuellt, Punkt 3 teilweise, Maengel M1-M3)
+
+Stand vor der Nachbesserung: HEAD 876a9f90 (= 009afe17 + Abnahmebericht), Arbeitsbaum sauber. Punkte 1 und 2 sind laut
+Abnahme 2 erfuellt und werden NICHT angefasst (kein C-Code, kein platform/android/-Code). Kein RE1.5/RE2-Original:
+reine Port-Infrastruktur (Release-Pruefkette), die PSX hat weder Entpacker noch APK - jede Zahl unten ist gemessen
+oder eine PORT-WAHL mit Herkunft.
+
+Plan (nur Punkt 3) - je Mangel die ANGEFRAGTE Abhilfe UND ein Mechanismus, der die ganze Klasse kuenftig faengt:
+- M1 (bash -> Python-Urteil, Uebergabe ungeprueft): (a) urteil_kontrollen.sh bekommt eine Urteils-Attrappe, die ihre
+  Argumente (Modus, Rueckgabe, min_faelle, min_innen, apk_eintraege, letzte Zeile der Ausgabe-Datei) ausgibt, und
+  Kontrollen, die GENAU die Werte aus apk_pruefen.sh verlangen; dazu eine Gate-Attrappe, die ihre Argumente ausgibt
+  ("$@" kommt beim Gate an). (b) bash_urteil_mutanten.py bekommt den Operator I (Uebergabe): jedes Argument an "$PY",
+  an eine Pruef-Funktion und jede Uebernahme eines Parameters (local x="$1") -> "" bzw. 0 bzw. ein anderes Argument
+  desselben Aufrufs (J11/J12/J13 sind genau solche Mutanten). (c) die echte Kette faehrt das ECHTE Urteil mit
+  umgepinnten Gate-Attrappen an der Grenze: Gate-Selbsttest MIN-1 Faelle bzw. MIN-1 innere Proben -> 2, genau MIN -> 0;
+  APK-OK-Ausgabe mit GATE_APK_EINTRAEGE = n+1 -> 0 und n+2 -> 2.
+- M2/M3 (Python-Urteil, ganze Regel entfernbar): (a) die angefragten Faelle (letzte Fallzeile fehlt bei lueckenlosen
+  Nummern; Fallzeile zuviel; pk Quelle != gleich in zwei Baeumen mit gleichen Summen; pk-Baumzeile mit drei Zahlen; qb-
+  Baumzeile mit zwei Zahlen). (b) Stoerungsfaelle: aus jeder guten Ausgabe (selbsttest/apk/quellbaum/paket) werden
+  automatisch Faelle erzeugt - jede Zeile weg, jede Zeile doppelt, jede Zahl +-1, hinter jeder Zahl eine Zusatzzahl,
+  je zwei Zahlen derselben Spalte gegenlaeufig (-1/+1). Soll ist nach REGEL 2 (keine Aussage), ausser die Stelle steht
+  begruendet in einer Liste UNGEPRUEFT (Soll 0: das Urteil liest sie absichtlich nicht, z.B. Kopfzeile, Laufzeit).
+  Die Soll-Werte werden NICHT aus dem Urteil berechnet (das waere selbstbestaetigend), sondern aus der Regel + Liste.
+  H10 (Fallzeile weg), H17 (gegenlaeufiges Paar) und H18 (Zusatzzahl) sind dann je eine Stoerung.
+- Danach die H-/J-Reihe der Abnahme 2 selbst nachfahren (Selbsttest, Kontrollen, Mutanten, echte Kette mit Neu-Pin
+  und nachgezogener Mindestzahl wie G4b) - alle muessen rot werden.
+
+### Nachbesserung 3 - Messung vorher (HEAD 876a9f90, Python 3.10.11)
+- Python-Urteil: Werkzeug `werkzeug/nb3_urteil_aenderungen.py` (H1-H22 der Abnahme 2 so woertlich wie ihre Tabelle,
+  dazu 10 eigene X1-X10; je eine Kopie + `--selbsttest`, dazu die FOLGE an einer festen Gate-Ausgabe). Beleg
+  `N_android_belege/nb3_urteil_aenderungen_vorher.txt`: K0 `280/280 Faelle, 887/894`, **29 von 32 bemerkt - NICHT: H10,
+  H17, H18**, genau die Liste der Abnahme. Folge: H10 "5/5 Faelle" mit Fallzeilen 01..04 -> Variante 0
+  (`SELBSTTEST-OK 5/5 ...`); H17 "PSX 9 10" + "synchro 3 2" -> Variante 0 (`... je Baum Quelle = gleich ...`); H18
+  "PSX 10 9 10" -> Variante 0. Die Abnahme ist reproduziert.
+- bash-Urteil: Werkzeug `werkzeug/nb3_bash_aenderungen.py` (J6/J9/J10/J11/J12/J13 der Abnahme 2 + 8 eigene Y1-Y8 an
+  derselben Schnittstelle; je Kopie von release/ ALLE 87 Kontrollen ohne --schnell). Beleg
+  `nb3_bash_aenderungen_vorher.txt`: J0 `KONTROLLEN: 87 ok, 0 FALSCH`; **J6, J9, J10, J11, J12, J13 NICHT bemerkt**
+  (reproduziert) - und von den eigenen ebenso NICHT: **Y2** (Gate bekommt "$@" nicht), **Y3** (gate_laufen: Modus fest),
+  **Y5** (Urteil liest `$log.urteil` statt der Gate-Ausgabe), **Y6** (MIN_FAELLE/MIN_INNEN vertauscht), **Y7** (unzip-
+  Zaehlung aus falschem Variablennamen). Bemerkt nur Y1/Y4 (Rueckgabe 0 statt $rc -> P5) und Y8 (Modus fest apk -> P4/P6).
+  Die Luecke ist also nicht nur J11-J13, sondern die GANZE Uebergabe (Argumente an Urteil und Gate): keine Attrappe liest
+  argv[2], argv[4..6] oder die Gate-Argumente.
+
+### Nachbesserung 3 - M2/M3 Python-Urteil (release/gate_urteil.py)
+**Ursache (Code gelesen, wie Abnahme 2 3.7):** Die Fallsammlung hielt "genau n Fallzeilen" nur ueber Luecken/Doppelte/
+falsche Nummer fest (073 "6 statt 5", "Fallzeile fehlt" = Nr. 03, also mit Luecke) - eine lueckenlos zu kurze oder zu lange
+Liste kam nicht vor, also ueberlebte `range(1, n+1)` -> `range(1, len(faelle)+1)`. Im Modus paket wich Quelle != gleich
+immer nur in EINEM Baum ab, und keine Baumzeile hatte eine Zusatzspalte. Allgemein: die Faelle sind handgeschrieben -
+welche Zahl/Zeile der Ausgabe eine Regel stuetzt, wusste nur der Autor.
+**Aenderung 1 - `_faelle_nb3` (5 Faelle, Soll 2):** "letzte Fallzeile fehlt (01..04 lueckenlos, 5/5)", "Fallzeile zuviel
+(01..06, 5/5)", "pk: Quelle != gleich in 2 Baeumen, Summen gleich (9/10 + 3/2)", "pk: Baumzeile mit drei Zahlen (10 9
+10)", "qb: Baumzeile mit zwei Zahlen (10 9 Dateien)".
+**Aenderung 2 - Stoerungsfaelle (`_stoerungen`, `_faelle_stoerung`, Liste `UNGEPRUEFT`):** aus jeder der vier guten
+Ausgaben werden Faelle ERZEUGT: jede Zeile weg / doppelt, jede Zahl -1/+1, hinter jeder Zahl dieselbe Zahl noch einmal
+(Zusatzspalte), je zwei Zahlen derselben Spalte zweier Zeilen mit gleich vielen Zahlen gegenlaeufig (-1/+1, +1/-1; reine
+Vertauschungen zweier Werte einer Spalte entstehen nicht). Soll nach REGEL 2; Soll 0 nur, wo `UNGEPRUEFT` die Stelle
+mit Grund nennt (10 Eintraege: Kopfzeile, Spaltenkopf, apk-Baumzeile = Summanden der SUMME, apk-Baumzahl k, TORSE.VBS-
+Bytezahlen, Tuer-Soll-Anzahl/unlesbare Zeile neben einer erkannten, Fallbeschreibung, Zusatzzahl in der Beschreibung,
+Laufzeit, quellbaum-Paar ohne Vergleichswert je Baum). Das Soll wird NICHT aus dem Urteil berechnet (selbstbestaetigend
+waere es sonst - Memory "Gate liest sein eigenes Feld"). Jeder Eintrag muss mindestens eine Stoerung decken (sonst
+`[FEHLER] UNGEPRUEFT-Eintrag deckt keine Stoerung mehr`). Erster Lauf gegen das UNVERAENDERTE Urteil: 492 Stoerungen,
+**0 falsch** (390 Soll 2, 102 Soll 0) - die Liste beschreibt also genau, was das Urteil heute liest; das Urteil selbst
+ist unveraendert (`urteil()` nicht angefasst).
+**Aenderung 3 - Schlusszeile:** `== URTEIL-SELBSTTEST-OK: f/f Faelle, e/m Mutanten erkannt, g als gleichwertig begruendet,
+u Stoerungen begruendet ungeprueft ==` - u wird in release/apk_pruefen.sh begrenzt (GATE_URTEIL_MAX_UNGEPRUEFT), damit
+eine neue UNGEPRUEFT-Ausnahme (der einzige Weg, eine entfernte Regel am Selbsttest vorbeizubringen) eine sichtbare Zeile
+im bash-Urteil braucht - wie AEQUIVALENT/MAX_GLEICH. (Stand dieses wip: bash-Seite noch NICHT nachgezogen.)
+**Zwischenmessung** (Selbsttest 5,7 s): `777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102
+Stoerungen begruendet ungeprueft`. nb3_urteil_aenderungen.py: **31 von 32 bemerkt**; H10 -> 5 Faelle falsch (281/282
+N3 + Stoerungen "Z6 '[ok] 05' weg", "Z6 Zahl 2/3 Zusatz"), H17 -> 5 (283 + 4 gegenlaeufige Paare pk Z1/Z2 Spalte 0 und 1),
+H18 -> 5 (284 + 4 Zusatzspalten pk). Nicht bemerkt nur X8 (pk Summe ueber Quelle statt gleich): gleichwertig - der Teil
+steht hinter `any(qq != gg ...) or`, an der Stelle gilt qq = gg in jedem Baum, also sum(qq) = sum(gg).
+
+### Nachbesserung 3 - M1 bash-Urteil: Uebergabe an Urteil und Gate (urteil_kontrollen.sh, apk_pruefen.sh)
+**Ursache (Code gelesen, wie Abnahme 2 3.7):** Alle Urteils-Attrappen entschieden nur nach argv[3] (Gate-Rueckgabe) und
+lasen weder die Ausgabe-Datei (argv[2]) noch die Mindestzahlen (argv[4], argv[5]) noch die unzip-Zaehlung (argv[6]); die
+Gate-Attrappen ignorierten ihre Argumente; bash_urteil_mutanten.py hatte keinen Operator fuer Argumente; die Kette fuetterte
+nie eine Gate-Ausgabe an der Grenze der Mindestzahlen und setzte GATE_APK_EINTRAEGE nie.
+**Aenderung (urteil_kontrollen.sh, jetzt 102 Kontrollen):**
+- Urteils-Attrappe `U_argv`: druckt `   ARGV n=<anzahl> modus=<1> rc=<3> min_faelle=<4> min_innen=<5> apk=<6> letzte=<letzte
+  nicht-leere Zeile der Datei argv[2]>` und urteilt ehrlich nach der Gate-Rueckgabe. Gate-Attrappe `GA`: druckt
+  `   GATE-ARGV <argumente|...>`. Die Soll-Werte liest das Skript per sed aus der GEPRUEFTEN apk_pruefen.sh
+  (`GATE_SELBSTTEST_MIN_FAELLE`/`_MIN_INNEN`; deren Senkung ist eine sichtbare Zeile, Kopf apk_pruefen.sh).
+- N25a gate_urteil selbsttest -> genau `ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK: x ==`;
+  N25b mit GATE_APK_EINTRAEGE=14 -> `apk=14`; N25c gate_laufen apk mit Gate-Rueckgabe 1 -> genau 1, N25d dessen ARGV-Zeile
+  (`modus=apk rc=1 ... apk=13 letzte=== SELBSTTEST-FEHLER: Attrappe ==` = die Gate-Ausgabe kam an); N25e gate_laufen
+  quellbaum -> 0 (Hinweis H2: Urteilszeile mit $modus ausserhalb von selbsttest); N26 Gate bekommt `--selbsttest|a b|c`.
+- Hinweis H1: D5b/D10b Pin mit falscher LETZTER Hexziffer -> Abbruch "ist NICHT das festgehaltene" (J9/J10).
+- Schlusszeile mit 6 Zahlen: N15u u = MAX+1 -> Abbruch, P3b u = MAX-1 -> angenommen, N22/N23 je Zahl 1..6, N24 je Wort
+  inkl. "Stoerungen", "ungeprueft" und dem ZWEITEN "begruendet" (sed .../2).
+- `pruefen` macht AP/A/W absolut und wechselt nach W (ein Mutant, der nach "0" umleitet, schreibt nur dorthin).
+**apk_pruefen.sh:** GATE_URTEIL_MIN_FAELLE 280 -> 777 (gemessen, Selbsttest), neu GATE_URTEIL_MAX_UNGEPRUEFT=102 (gemessen),
+Schlusszeilen-Muster mit `,\ ([0-9]+)\ Stoerungen\ begruendet\ ungeprueft`, Pruefung `(( u <= GATE_URTEIL_MAX_UNGEPRUEFT ))
+|| die ...`, Kopfkommentar. gate_urteil() und gate_laufen() selbst sind UNVERAENDERT (die Uebergabe war richtig, nur
+ungetestet).
+**Messung (Zwischenstand, urteil_kontrollen.sh gegen das echte apk_pruefen.sh):** `KONTROLLEN: 102 ok, 0 FALSCH` (60 s).
+nb3_bash_aenderungen.py nachher (Beleg `nb3_bash_aenderungen_nachher.txt`): **14 von 14 bemerkt** (vorher 3/14) - J11 ->
+N25a/N25b/N25d, J12 -> dieselben, J13 -> N25b/N25d, J6 -> N25e, J9 -> D5b, J10 -> D10b, Y2 -> N26, Y3 -> N25d, Y5 -> N25d,
+Y6 -> N25a/b/d, Y7 -> N25b/d.
+
+### Nachbesserung 3 - M1 Operator I (bash_urteil_mutanten.py) und Kette N26-N28 (test_r35_android_pruefkette.sh)
+**Operator I (Uebergabe):** in den sechs Funktionen jeder logische Befehl (Fortsetzung mit `\`), dessen erstes Wort
+`"$PY"` oder eine Pruef-Funktion ist, und jedes `local x="$n"`: jedes Argument der Form `"$NAME"`, `"${NAME...}"`, `"$1".."$9"`,
+`"$@"` (nicht das Befehlswort, nicht in `$( ... )`, nicht mit Text dahinter wie `"$log.urteil"`) -> `""`, `0` und jedes
+ANDERE solche Argument desselben Befehls. 86 neue Mutanten (vorher an diesen Stellen 0): `local datei="$1"` (3 Funktionen),
+`gate_urteil_pin_pruefen "$datei"`, `> "$log"` im Selbsttest-Aufruf, `gate_pin_pruefen "$ziel"`, `gate_urteil_selbsttest
+"$uziel"` / `"$GATE_URTEIL_KOPIE"` (2x), der 6-Argument-Aufruf in gate_urteil (6 x 7 = 42, darunter genau J11/J12/J13 als
+Einzel-Mutanten und Y6), `local modus="$1" gate="$2"` (6), `gate_pin_pruefen "$gate"`, `"$@"`/`"$log"` beim Gate (6),
+`gate_urteil "$modus" "$log" "$rc"` (12). Mutanten gesamt 220 -> 328 (A 36, B 18, C 34, D 112, E 24, F 9, G 7, H 2, I 86;
+D/A/E wachsen durch die u-Pruefung der neuen Schlusszeile).
+**Kette N26-N28 (echtes, gepinntes Urteil ueber gate_laufen = genau die Uebergabe aus gate_urteil()):** umgepinnte
+Gate-Attrappen geben eine Ausgabe im Format von apk_asset_gate.py aus (Zeilen aus gate_urteil.py `_selbsttest_log` /
+`_apk_log`). N26a genau 261 Faelle / 148 Proben -> 0; N26b 260 -> 2 (`meldet 260/260 Faelle, verlangt n/n mit n >= 261`);
+N26c 147 Proben -> 2; N27a APK-OK mit GATE_APK_EINTRAEGE=13 -> 0 (`= unzip-Zaehlung - 1`), N27b =14 -> 2, N27c =12 -> 2,
+N28 ohne unzip-Zaehlung -> 0. Die U_luegt-Attrappe (N8) bekam die 6-Zahlen-Schlusszeile.
+**Messung Kette (gegen den neuen Stand, Pin 4aa6bdfa...):** `FEHLER=0`, P0 `Gate-Urteil selbstgeprueft: 777/777 Faelle,
+887/894 Mutanten erkannt, 7 gleichwertig, 102 Stoerungen ungeprueft (Mindestzahlen 777/887/<=7/<=102)`, P1 echter
+Gate-Selbsttest `261/261 ... 148/148`, P2 echter Quellbaum `3629 Dateien in 5 Baeumen`, N1-N9 wie bisher, N26a-N28 wie
+oben, `urteil_kontrollen.sh KONTROLLEN: 102 ok, 0 FALSCH` (Beleg `N_android_belege/nb3_kette_nachher.txt`; 8 min 11 s,
+weil der Mutantenlauf parallel lief).
+
+### Nachbesserung 3 - Messung bash-Mutanten (test_r35_android_bash_mutanten.sh, 10 parallel)
+Beleg `N_android_belege/nb3_bash_mutanten.txt`: Kontrolle `KONTROLLEN: 102 ok, 0 FALSCH`; `Mutanten je Operator: A 36, B 18,
+C 34, D 112, E 24, F 9, G 7, H 2, I 86`; **`== BASH-URTEIL-MUTANTEN-OK: 328 Mutanten, 325 erkannt, 3 als gleichwertig
+begruendet ==`** - schon im ERSTEN Lauf kein Ueberlebender (die drei Gleichwertigen sind die bekannten $?-Faelle). 782 s,
+weil die echte Kette 8 min parallel lief. Toeter der 86 I-Mutanten: N25a 36, N8c 16, N25d 13, N10 6, N26 3, N25c 2, D4/D9/
+D16/D21 je 2, N25b 1, N19m 1 - die neuen Uebergabe-Kontrollen toeten 55 der 86. Der Einzel-Mutant zu J13
+(`"${GATE_APK_EINTRAEGE:-}" -> ""`) faellt durch N25b, die zu J11/J12/Y6 durch N25a.
+Querpruefung: `urteil()` in gate_urteil.py ist zeichengleich mit 876a9f90 (ast-Segment verglichen, 7812 Zeichen) - die
+Nachbesserung aendert kein Urteil, nur Faelle/Stoerungen/Schlusszeile; Selbsttest gleich unter Python 3.9.0 und 3.14.7
+(`777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102 Stoerungen begruendet ungeprueft`).
+
+### Nachbesserung 3 - Messung nachher: die Aenderungen der Abnahme 2 an der ECHTEN Kette und am Selbsttest
+- **Kette** (`werkzeug/nb3_kette_varianten.py` + `.sh`, je Variante Kopie von release/ mit GENAU EINER Aenderung,
+  re15_port/synchro als Junction - nach dem Lauf nur mit `cmd /c rmdir` entfernt, danach liegt in jedem repo-Ordner nur
+  `release/`; die echte test_r35_android_pruefkette.sh je Variante, 4 parallel). Beleg `nb3_kette_varianten_nachher.txt`:
+  K0 (unveraendert) `KONTROLLE-OK rc=0 FALSCH=0`; **7 von 7 bemerkt** (Abnahme 2: K2/K3/K4/G3/G4b alle FEHLER=0):
+  K2 = J11 (`0 0`) -> N26a/N26b/N26c + Kontrollen, 7 FALSCH; K3 = J12 -> N26a/N26b + `KONTROLLEN: 99 ok, 3 FALSCH`;
+  K4 = J13 -> N27a/N27b/N27c; K6 = Y6 (vertauscht) -> sogar P1 (echter Gate-Selbsttest: `Innere Proben 148/148, verlangt
+  m/m mit m >= 261`); **G3** = H10 neu gepinnt -> P0 bricht ab (`URTEIL-SELBSTTEST-FEHLER: 5 von 777 Faellen falsch`);
+  **G4b** = H17 neu gepinnt UND GATE_URTEIL_MIN_ERKANNT=886 nachgezogen (der Weg, der in Abnahme 2 durchkam) -> P0 bricht
+  ab, jetzt an FAELLEN (`5 von 777 Faellen falsch`), nicht an einer Mindestzahl - Nachziehen hilft nicht mehr; **G5** =
+  H18 neu gepinnt -> ebenso.
+- **Selbsttest** (`nb3_urteil_aenderungen_nachher.txt`): 31 von 32 (H1-H22 alle, X1-X10 ausser X8 = gleichwertig, s.o.).
+  Die frueheren Reihen gegen das neue Urteil: E-Reihe der Abnahme 1 **29 von 29** (`nb3_ereihe_nachher.txt`), NB1-Reihe
+  der Abnahme 0 **32 von 32** (`nb3_nb1reihe_nachher.txt`).
+- **bash-Urteil** (`nb3_bash_aenderungen_nachher.txt`): J6/J9/J10/J11/J12/J13 + Y1-Y8 **14 von 14** (vorher 3/14).
+
+### Nachbesserung 3 - Bilanz gegen die Maengel der Abnahme 2
+| Mangel | Messweg der Abnahme | vorher (reproduziert) | nachher |
+|---|---|---|---|
+| M1 Uebergabe bash -> Urteil ungeprueft | J11/J12/J13 gegen urteil_kontrollen.sh; K2-K4 an der Kette | 87 ok / 0 FALSCH; Kette FEHLER=0 | J11 -> 3 FALSCH, J12 -> 3, J13 -> 2; K2/K3/K4 rot (N26/N27); dazu Operator I: 86 Mutanten, alle erkannt |
+| M2 "genau n Fallzeilen" (H10) | Ersetzung -> --selbsttest; G3 | OK 280/280; G3 FEHLER=0 | SELBSTTEST-FEHLER (5 Faelle: 2 N3 + 3 Stoerungen); G3 rot |
+| M3 "je Baum Quelle = gleich" (H17), Baumzeilen-Form (H18) | Ersetzung -> --selbsttest; G4b | OK; G4b FEHLER=0 | je SELBSTTEST-FEHLER (5 Faelle); G4b rot an Faellen, G5 rot |
+| Hinweis H1 (Pin nur Praefix) | J9/J10 | unbemerkt | D5b/D10b rot |
+| Hinweis H2 (fester Modus) | J6 | nur die Kette | N25e rot |
+| Hinweis H3 (Mutanten ohne release-Dateien) | - | - | Operator I erzeugt keinen Mutanten, der GATE_QUELLE/GATE_URTEIL_QUELLE benutzt; nb3_bash_aenderungen.py legt die release-Dateien neben jede Kopie |
+| Hinweis H4 (neue Funktion nicht mutiert) | - | - | unveraendert: FUNKTIONEN im Kopf von bash_urteil_mutanten.py pflegen (OFFEN) |
+
+### Nachbesserung 3 - Konstanten (alle PORT-WAHL bzw. gemessen; kein RE1.5/RE2-Original - Port-Infrastruktur)
+| Konstante | Wert | Herkunft |
+|---|---|---|
+| GATE_URTEIL_MIN_FAELLE (apk_pruefen.sh) | 777 | gemessen: `--selbsttest` 777/777 (280 + 5 N3-Faelle + 492 Stoerungen) |
+| GATE_URTEIL_MIN_ERKANNT | 887 (unveraendert) | gemessen: 887/894 - urteil() unveraendert, also dieselben Mutanten |
+| GATE_URTEIL_MAX_GLEICH | 7 (unveraendert) | gemessen |
+| GATE_URTEIL_MAX_UNGEPRUEFT (neu) | 102 | gemessen: Stoerungen mit Soll 0 nach UNGEPRUEFT (10 Eintraege) |
+| release/gate_urteil.sha256 | 4aa6bdfa3ef9f043bf109ce02df27d1fff2c39635ad606e595cbf5dba9d32753 | sha256sum release/gate_urteil.py (LF) |
+| Stoerung Zahl +-1, Zusatz = dieselbe Zahl, Paar -1/+1 | PORT-WAHL | kleinste Abweichung, die eine Pruefung einer Zahl/Spalte/Summe sichtbar macht |
+| N26 Grenze MIN-1 / MIN; N27 unzip 12/13/14 | aus apk_pruefen.sh gelesen | GATE_SELBSTTEST_MIN_FAELLE/_INNEN = 261/148; 12 Dateien + Manifest = 13 |
+
+### Nachbesserung 3 - Tests (probes/r35_android.cmake; KEIN neuer ctest, die Spur bleibt bei +5)
+| ctest | misst | Aenderung in NB3 |
+|---|---|---|
+| unit_r35_android_pruefkette | echte Kette: P0 (Urteils-Selbsttest 777/887/7/102), P1/P2, N1-N9, **N26a-c/N27a-c/N28** (echtes Urteil an der Grenze 261/148 bzw. unzip n+1), urteil_kontrollen.sh (102) | N26-N28, 6-Zahlen-Schlusszeile in N8 |
+| unit_r35_android_bash_mutanten | 328 Mutanten des bash-Urteils (A-I), je Mutant urteil_kontrollen.sh --schnell | Operator I (86) |
+| unit_r35_android_abgleich / _anzeige / _konflikt, unit_r34a_asset_abgleich | Punkt 1/2 | unveraendert (kein C-Code beruehrt) |
+Die Stoerungsfaelle laufen im Urteils-Selbsttest, also in P0 jeder Kette und vor jeder Nutzung in build_android.sh/
+make_package.sh (gate_festhalten).
+
+### Nachbesserung 3 - OFFEN
+- Wie bisher (Punkt 2, laut Abnahme 1/2 kein Mangel): echtes APK-A -> APK-B-Update mit dem H8-Muster auf dem Emulator.
+  Kein APK-Neubau in NB3: kein C-/Gradle-Code geaendert; die Kette ist dieselbe Funktion mit strengerem Selbsttest und
+  mehr Kontrollen, und sie laeuft mit echtem Gate + Urteil in jedem Suite-Lauf (P0-P2, N1-N9, N26-N28).
+- Was das Urteil HEUTE nicht liest, steht jetzt sichtbar in gate_urteil.py `UNGEPRUEFT` (10 Eintraege, 102 Stoerungen):
+  apk-Baumzeilen (nur die SUMME zaehlt), die Baumzahl k im Modus apk, die TORSE.VBS-Bytezahlen, Anzahl/Lesbarkeit der
+  Tuer-Soll-Zeilen neben einer erkannten, Kopfzeilen, Laufzeit, Fallbeschreibung, quellbaum-Paare. Das sind keine
+  entfernbaren Regeln (es gibt dort keine), sondern Stellen ohne Regel. Sie strenger zu pruefen, aendert das Urteil ueber
+  ECHTE Gate-Ausgaben und gehoert in eine eigene Runde mit einem echten APK-Lauf; der Weg ist vorbereitet: Eintrag aus
+  UNGEPRUEFT streichen -> die Stoerungen haben automatisch Soll 2 -> Regel im Urteil schreiben -> MAX_UNGEPRUEFT senken.
+- Hinweis H4 der Abnahme 2 gilt weiter: eine Pruefung in einer NEUEN bash-Funktion wird erst mutiert, wenn sie in
+  `FUNKTIONEN` (bash_urteil_mutanten.py) steht; ebenso deckt Operator I nur Aufrufe von "$PY" und den Pruef-Funktionen
+  sowie `local x="$n"` (nicht `$( ... )`-Argumente wie in `apk_kennung "$datei"` - deren Fehler bricht ueber `|| die`
+  ab und faellt in P9/D4/D9).
+- Gemessen ist die Wirksamkeit an 32 + 29 + 32 Python- und 14 + 13 + 17 bash-Aenderungen (nb1/nb2/nb3) und 7 + 15 + 17
+  Ketten-Varianten - nicht fuer jede denkbare Aenderung bewiesen.
+- Laufzeit (unter Last parallel laufender Messungen): bash_mutanten 782 s, Kette 490 s; allein deutlich kuerzer
+  (Suite-Werte im Abschluss).
+
+### Nachbesserung 3 - Fuer den Nutzer / Orchestrator
+- Keine Sprachzeilen, keine neuen Assets (shared_assets unveraendert), nichts fuers Paket-Gate.
+- Pins/Mindestzahlen fuer den Merge: `release/gate_urteil.sha256` = `4aa6bdfa3ef9f043bf109ce02df27d1fff2c39635ad606e595cbf5dba9d32753`;
+  `GATE_URTEIL_MIN_FAELLE/MIN_ERKANNT/MAX_GLEICH/MAX_UNGEPRUEFT` = 777/887/7/102. `release/apk_asset_gate.py` und sein Pin
+  unveraendert (f73c3b1a...). release/RELEASE_NOTES.md und make_package.sh nicht beruehrt.
+- Die Schlusszeile des Urteils-Selbsttests hat jetzt sechs Zahlen (`..., u Stoerungen begruendet ungeprueft ==`); wer die
+  Kette anderswo nachbaut, liest sie mit dem Muster aus apk_pruefen.sh gate_urteil_selbsttest.
+- Merge: die Spur bringt weiter +5 Tests (abgleich, anzeige, konflikt, pruefkette, bash_mutanten); master hatte
+  RE15_MIN_TESTS 517 (6e1a3771).
+
+### Nachbesserung 3 - Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Ende aller Messlaeufe dieser Spur; configure OK,
+build "ninja: no work to do", ctest 1649 s):
+
+    === LOCAL-BUILD-OK (all) — Tests 483/483
+
+`unit_r35_android_pruefkette` Passed 128,2 s, `unit_r35_android_bash_mutanten` Passed 382,3 s (TIMEOUT 900 bzw. 1500
+bleiben), `unit_r35_android_abgleich` 0,02 s, `_anzeige` 3,30 s, `_konflikt` 1,93 s, `unit_r34a_asset_abgleich` 0,95 s
+Passed. Kein Fenster-Haken rot, kein Nachfahren noetig.
+Geaenderte Dateien der Nachbesserung 3: release/gate_urteil.py (+ .sha256; urteil() selbst zeichengleich), release/
+apk_pruefen.sh (Mindestzahl 777, neu MAX_UNGEPRUEFT 102, Schlusszeilen-Muster + u-Pruefung, Kopfkommentar),
+re15_port/tests/unit/r35_android/{urteil_kontrollen.sh, bash_urteil_mutanten.py, test_r35_android_pruefkette.sh},
+re15_port/tests/unit/probes/r35_android.cmake (nur Kommentar), re15_port/platform/android/README.md, Dossier + Belege
+(`N_android_belege/nb3_*`) + Werkzeuge (`werkzeug/nb3_*`). Nicht: release/RELEASE_NOTES.md, make_package.sh,
+tests/*/CMakeLists.txt, Engine, platform/android/jni (Punkte 1/2 unberuehrt).

@@ -1,0 +1,85 @@
+K0    KONTROLLE-OK rc=0  == URTEIL-SELBSTTEST-OK: 777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102 Stoerungen begruendet ungeprueft ==
+E1    BEMERKT Form 1 rc=1  qb sum(baum) != n -> <                           == URTEIL-SELBSTTEST-FEHLER: 4 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 276 qb/S: Summe der Baumzeilen 13 > 12                   Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+          [FEHLER] 651 qb/St: Z1 'shared_assets/' Zahl 0 +1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+E1b   BEMERKT Form 1 rc=1  qb sum(baum) != n -> >                           == URTEIL-SELBSTTEST-FEHLER: 4 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 112 qb: Summe der Baumzeilen 11                          Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+          [FEHLER] 650 qb/St: Z1 'shared_assets/' Zahl 0 -1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+E2    BEMERKT Form 1 rc=1  pk qq != gg -> >                                 == URTEIL-SELBSTTEST-FEHLER: 3 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 279 pk/S: Quelle 9 < gleich 10, Summe gleich passt       Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+          [FEHLER] 700 pk/St: Z1 'shared_assets/' Zahl 0 -1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+E2b   BEMERKT Form 1 rc=1  pk qq != gg -> <                                 == URTEIL-SELBSTTEST-FEHLER: 3 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 118 pk: Quelle 11 != gleich 10, Summe gleich passt       Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+          [FEHLER] 701 pk/St: Z1 'shared_assets/' Zahl 0 +1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+E3    BEMERKT Form 1 rc=1  st ok_n != n -> <                                == URTEIL-SELBSTTEST-FEHLER: 3 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 244 st/S: 6/5 Faelle bei 5 Fallzeilen (ok_n > n)         Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 377 st/St: Z8 '== SELBSTTEST-' Zahl 0 +1                 Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E4    BEMERKT Form 1 rc=1  tuer_soll int(g1) != int(g2) -> <                == URTEIL-SELBSTTEST-FEHLER: 21 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 267 apk/S: Tuer-Soll 31/30 (g1 > g2)                     Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 269 qb/S: Tuer-Soll 31/30                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+E5    BEMERKT Form 1 rc=1  qb len(baum) != k -> <                           == URTEIL-SELBSTTEST-FEHLER: 2 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 274 qb/S: 3 Baumzeilen bei 'in 2 Baeumen', Summe passt   Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+          [FEHLER] 679 qb/St: Z5 '== APK-ASSET-G' Zahl 1 -1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 1 Baeumen (Summe
+E6    BEMERKT Form 1 rc=1  pk len(baum) != k -> <                           == URTEIL-SELBSTTEST-FEHLER: 2 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 277 pk/S: 3 Baumzeilen bei 'in 2 Baeumen', Summe passt   Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+          [FEHLER] 735 pk/St: Z5 '== APK-ASSET-G' Zahl 1 -1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 1 Baeumen, je Baum Q
+E7    BEMERKT Form 1 rc=1  pk sum(gg) != n -> <                             == URTEIL-SELBSTTEST-FEHLER: 2 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 280 pk/S: Summe gleich 13 > 12                           Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+          [FEHLER] 732 pk/St: Z5 '== APK-ASSET-G' Zahl 0 -1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 11 Dateien in 2 Baeumen, je Baum Q
+E7b   BEMERKT Form 1 rc=1  pk sum(gg) != n -> >                             == URTEIL-SELBSTTEST-FEHLER: 2 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 120 pk: Summe der Baumzeilen 11                          Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Q
+          [FEHLER] 733 pk/St: Z5 '== APK-ASSET-G' Zahl 0 +1                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 13 Dateien in 2 Baeumen, je Baum Q
+E8    BEMERKT Form 1 rc=1  apk int(apk_eintraege) != a + 1 -> <             == URTEIL-SELBSTTEST-FEHLER: 1 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 106 apk: unzip-Zaehlung = n + 2                          Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = unzip-Zaehlun
+E8b   BEMERKT Form 1 rc=1  apk int(apk_eintraege) != a + 1 -> >             == URTEIL-SELBSTTEST-FEHLER: 1 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 105 apk: unzip-Zaehlung = n                              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = unzip-Zaehlun
+E9    BEMERKT Form 1 rc=1  st a != b -> a < b                               == URTEIL-SELBSTTEST-FEHLER: 3 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 245 st/S: Innere Proben 4/3 (a > b, b = Mindestzahl)     Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 291 st/St: Z1 'Innere Proben:' Zahl 0 +1                 Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E10   BEMERKT Form 1 rc=1  if rc == 1 -> if rc >= 1                         == URTEIL-SELBSTTEST-FEHLER: 8 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 023 selbsttest FEHLER, Rueckgabe 2                       Urteil 1 (soll 2)  ende: das Gate meldet FEHLER - Schlusszeile und Rueckgabe stimmen
+          [FEHLER] 026 selbsttest ABWEICHUNG, Rueckgabe 2                   Urteil 1 (soll 2)  ende: das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe sti
+E11   BEMERKT Form 1 rc=1  if rc != 0 -> if rc > 0 (Abnahme: in der Praxis  == URTEIL-SELBSTTEST-FEHLER: 4 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 246 selbsttest gut, Rueckgabe -1                         Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 247 apk gut, Rueckgabe -1                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E12   BEMERKT Form 1 rc=1  genau_eine len(t) != 1 -> < 1                    == URTEIL-SELBSTTEST-FEHLER: 8 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 067 st: Innere Proben doppelt                            Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 084 apk: SUMME doppelt                                   Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E12b  BEMERKT Form 1 rc=1  genau_eine len(t) != 1 -> > 1                    == URTEIL-SELBSTTEST-FEHLER: 75 von 777 Faellen falsch, 14 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 066 st: Innere Proben fehlen                             Urteil 2 (soll 2)  ausnahme: Ausnahme im Urteil: IndexError('list index out of range
+          [FEHLER] 083 apk: SUMME fehlt                                     Urteil 2 (soll 2)  ausnahme: Ausnahme im Urteil: IndexError('list index out of range
+E29   BEMERKT Form 1 rc=1  apk mb != b -> mb > b                            == URTEIL-SELBSTTEST-FEHLER: 6 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 259 apk/S: Manifest 4095 Bytes < SUMME 4096              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 488 apk/St: Z3 'SUMME         ' Zahl 3 +1                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E30   BEMERKT Form 1 rc=1  apk mb != b -> mb < b                            == URTEIL-SELBSTTEST-FEHLER: 7 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 088 apk: SUMME Bytes 4095                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 260 apk/S: Manifest 4097 Bytes > SUMME 4096              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E13   BEMERKT Form 1 rc=1  for f in faelle -> faelle[1:]                    == URTEIL-SELBSTTEST-FEHLER: 5 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 076 st: Fallzeile rc=1 (soll 0)                          Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 304 st/St: Z2 '[ok] 01 Fall 1' Zahl 2 -1                 Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E14   BEMERKT Form 1 rc=1  sorted(...) != list(range) -> set != set         == URTEIL-SELBSTTEST-FEHLER: 6 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 072 st: Fallzeile doppelt                                Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+          [FEHLER] 297 st/St: Z2 '[ok] 01 Fall 1' doppelt                   Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E15   BEMERKT Form 1 rc=1  m_ok = re.fullmatch -> re.match                  == URTEIL-SELBSTTEST-FEHLER: 1 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 126 st/M: Schluss endet ' ==X'                           Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E16   BEMERKT Form 1 rc=1  m_neg = re.fullmatch -> re.search                == URTEIL-SELBSTTEST-FEHLER: 1 von 777 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 141 M: FEHLER-Schluss endet ' ==X', Rueckgabe 1          Urteil 1 (soll 2)  ende: das Gate meldet FEHLER - Schlusszeile und Rueckgabe stimmen
+          [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 102: Regex R1 Rest ab Stueck 11 '=' -> .*: r"
+E20   BEMERKT Form 1 rc=1  Tuerarchiv-Labels ohne RE15DOOR                  == URTEIL-SELBSTTEST-FEHLER: 28 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 098 apk: RE15DOOR Quelle-1                               Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 099 apk: RE15DOOR APK-1                                  Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E24   BEMERKT Form 2 rc=1  quellbaum ohne Tuer-Soll-Regel                   == URTEIL-SELBSTTEST-FEHLER: 16 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 115 qb: Tuer-Soll fehlt                                  Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+          [FEHLER] 268 qb/S: Tuer-Soll 29/30                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+E24b  BEMERKT Form 2 rc=1  apk ohne Tuer-Soll-Regel                         == URTEIL-SELBSTTEST-FEHLER: 38 von 777 Faellen falsch, 17 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 107 apk: Tuer-Soll fehlt                                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 108 apk: Tuer-Soll 29/30                                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E26   BEMERKT Form 1 rc=1  st 'or b < min_innen' weg                        == URTEIL-SELBSTTEST-FEHLER: 1 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 069 st: Innere Proben 2/2 (unter Mindestzahl)            Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, inner
+E44   BEMERKT Form 1 rc=1  apk Kette ohne '== n'                            == URTEIL-SELBSTTEST-FEHLER: 7 von 777 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 091 apk: Schluss 13 Dateien                              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 13 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 257 apk/S: Kette Manifest/Schluss < (11/11/11/11/12)     Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+E45   BEMERKT Form 1 rc=1  tuer_soll 'not t or' weg                         == URTEIL-SELBSTTEST-FEHLER: 13 von 777 Faellen falsch, 16 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 107 apk: Tuer-Soll fehlt                                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Mani
+          [FEHLER] 115 qb: Tuer-Soll fehlt                                  Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe
+SUMME: 29 von 29 Aenderungen bemerkt

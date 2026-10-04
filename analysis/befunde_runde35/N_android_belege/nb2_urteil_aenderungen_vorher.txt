@@ -1,0 +1,33 @@
+K0    KONTROLLE-OK rc=0  == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E1    NICHT   Form 1 rc=0  qb sum(baum) != n -> <                           == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E1b   BEMERKT Form 1 rc=1  qb sum(baum) != n -> >                           == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E2    NICHT   Form 1 rc=0  pk qq != gg -> >                                 == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E2b   BEMERKT Form 1 rc=1  pk qq != gg -> <                                 == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E3    NICHT   Form 1 rc=0  st ok_n != n -> <                                == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E4    NICHT   Form 1 rc=0  tuer_soll int(g1) != int(g2) -> <                == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E5    NICHT   Form 1 rc=0  qb len(baum) != k -> <                           == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E6    NICHT   Form 1 rc=0  pk len(baum) != k -> <                           == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E7    NICHT   Form 1 rc=0  pk sum(gg) != n -> <                             == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E7b   BEMERKT Form 1 rc=1  pk sum(gg) != n -> >                             == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E8    BEMERKT Form 1 rc=1  apk int(apk_eintraege) != a + 1 -> <             == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E8b   BEMERKT Form 1 rc=1  apk int(apk_eintraege) != a + 1 -> >             == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E9    NICHT   Form 1 rc=0  st a != b -> a < b                               == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E10   BEMERKT Form 1 rc=1  if rc == 1 -> if rc >= 1                         == URTEIL-SELBSTTEST-FEHLER: 8 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+          [FEHLER] 023 selbsttest FEHLER, Rueckgabe 2                       Urteil 1 (soll 2)  ende: das Gate meldet FEHLER - Schlusszeile und Rueckgabe stimmen
+          [FEHLER] 026 selbsttest ABWEICHUNG, Rueckgabe 2                   Urteil 1 (soll 2)  ende: das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe sti
+E11   NICHT   Form 1 rc=0  if rc != 0 -> if rc > 0 (Abnahme: in der Praxis  == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E12   BEMERKT Form 1 rc=1  genau_eine len(t) != 1 -> < 1                    == URTEIL-SELBSTTEST-FEHLER: 2 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E12b  BEMERKT Form 1 rc=1  genau_eine len(t) != 1 -> > 1                    == URTEIL-SELBSTTEST-FEHLER: 51 von 243 Faellen falsch, 14 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E29   NICHT   Form 1 rc=0  apk mb != b -> mb > b                            == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E30   BEMERKT Form 1 rc=1  apk mb != b -> mb < b                            == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E13   BEMERKT Form 1 rc=1  for f in faelle -> faelle[1:]                    == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E14   BEMERKT Form 1 rc=1  sorted(...) != list(range) -> set != set         == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E15   BEMERKT Form 1 rc=1  m_ok = re.fullmatch -> re.match                  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E16   BEMERKT Form 1 rc=1  m_neg = re.fullmatch -> re.search                == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E20   BEMERKT Form 1 rc=1  Tuerarchiv-Labels ohne RE15DOOR                  == URTEIL-SELBSTTEST-FEHLER: 6 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E24   NICHT   Form 1 rc=0  quellbaum ohne Tuer-Soll-Regel                   == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==
+E24b  BEMERKT Form 1 rc=1  apk ohne Tuer-Soll-Regel                         == URTEIL-SELBSTTEST-FEHLER: 12 von 243 Faellen falsch, 21 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E26   BEMERKT Form 1 rc=1  st 'or b < min_innen' weg                        == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E44   BEMERKT Form 1 rc=1  apk Kette ohne '== n'                            == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+E45   BEMERKT Form 1 rc=1  tuer_soll 'not t or' weg                         == URTEIL-SELBSTTEST-FEHLER: 11 von 243 Faellen falsch, 16 Mutanten ueberlebt, 0 veraltete Eintraege ==
+SUMME: 18 von 29 Aenderungen bemerkt

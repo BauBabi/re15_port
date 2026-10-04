@@ -1,0 +1,16 @@
+   Kontrolle (unveraendert): Rueckgabe 0 KONTROLLEN: 83 ok, 0 FALSCH
+   Mutanten je Operator: A 34, B 18, C 34, D 93, E 23, F 9, G 7, H 2
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 250: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 2 '$' -> .*
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 250: D =~ ^[0-9a-f]{64}$: Zeichen 0 '^' weg
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 250: D =~ ^[0-9a-f]{64}$: Zeichen 2 '$' weg
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 268: D =~ ^[0-9a-f]{64}$: Rest ab Stueck 2 '$' -> .*
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 268: D =~ ^[0-9a-f]{64}$: Zeichen 0 '^' weg
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 268: D =~ ^[0-9a-f]{64}$: Zeichen 2 '$' weg
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 268: D =~ ^[0-9a-f]{64}$: Klasse '[0-9a-f]' -> .
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 300: A (( rc == 0 )): == -> <=
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 356: A (( urteil == 0 )): == -> <=
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 357: A (( rc != 0 )): != -> >
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Rest ab Stueck 17 ' ' -> .*
+   [FEHLER] Mutant UEBERLEBT (Kontrolle in urteil_kontrollen.sh ergaenzen oder in AEQUIVALENT begruenden): Zeile 360: C grep -q ^   Gate-Urteil ($modus, Rueckgabe 0): : Zeichen 17 ' ' weg
+   Laufzeit 645 s, 8 parallel
+== BASH-URTEIL-MUTANTEN-FEHLER: Kontrolle 0, 220 Mutanten, 12 ueberlebt, 0 veraltete Eintraege ==
