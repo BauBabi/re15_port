@@ -440,6 +440,9 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — NACH dem Init-Lauf: main00 hat die Props und
      * die Tisch-Nachricht ROOM1020/1021 angelegt, die Flags des Raums sind gelesen (Bits 57..60
      * entscheiden). Tut in jedem anderen Raum nichts. Herleitung: include/re15_dokumente.h. */
+    /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
+     * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
+    re15_inhalt_r35_install((uint16_t)g_current_room_id);
     re15_dokumente_install((uint16_t)g_current_room_id);
     /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
      * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade
@@ -450,7 +453,6 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * (erster Druck = Szene, danach Sperrtext) — aus demselben Grund an derselben Stelle wie
      * tuer1120: main00 @0x00B5A hat Slot 4 erst im Init-Lauf angelegt. Herleitung: re15_adaruf.h. */
     re15_adaruf_install((uint16_t)g_current_room_id);
-    re15_inhalt_r35_install((uint16_t)g_current_room_id);   /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

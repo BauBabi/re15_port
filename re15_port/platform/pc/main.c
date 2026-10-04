@@ -4892,8 +4892,10 @@ re_title:;
      * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem
      * Restore der Flags: die Genommen-Bits (9,57..60) entscheiden. Die Logzeile ist reine
      * Diagnose fuer den Lade-Riegel. Herleitung: include/re15_dokumente.h. */
+    /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
+     * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
+    re15_inhalt_r35_install((uint16_t)g_current_room_id);
     re15_dokumente_install((uint16_t)g_current_room_id);
-    re15_inhalt_r35_install((uint16_t)g_current_room_id);   /* Runde 35 Spur F (Boot-/CONTINUE-Weg) */
     if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
         for (int k = 0; k < (int)g_scd.prop_count; k++)
             if ((int)g_scd.props[k].obj_id == re15_dokumente_obj_id((uint16_t)g_current_room_id))
