@@ -50,6 +50,7 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
+#include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 
 scd_vm_t g_scd;
 
@@ -3732,6 +3733,9 @@ static int op_sce_em_set(scd_thread_t *t)
     if ((g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
         type == 0x30u)
         type = 0x36u;
+    /* Runde 35 Spur F: Zombies ROOM1010/1220 weiter von der Eintrittstuer (NUTZER-VORGABE, nur x/z
+     * der genannten Original-Saetze; Herleitung include/re15_zombie_abstand.h). */
+    (void)re15_zombie_abstand_anwenden((uint16_t)g_current_room_id, slot, type, &x, &z);
 
     if (getenv("RE15_SPAWN_DIAG"))
         fprintf(stderr, "[spawn-diag] Sce_em_set type=0x%02X behavior=0x%02X slot=%u pos=(%d,%d,%d) dir=%d\n",

@@ -13,3 +13,19 @@ target_compile_definitions(test_r35_inhalt_doku PRIVATE
 add_test(NAME unit_r35_inhalt_doku COMMAND test_r35_inhalt_doku
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r35_inhalt_doku PROPERTIES TIMEOUT 60)
+
+#   unit_r35_inhalt_zombies  Punkt 3: Zombies ROOM1010/1220 weiter von der Eintrittstuer — echte
+#                            Spielschleife je Eintritt: STEHEN (Bild des ersten Griffs) und FLUCHT
+#                            (sofort umdrehen + VIERECK an der Tuer: raus oder gegriffen), Original
+#                            gegen Port im selben Prozess. `test_r35_inhalt_zombies mess` = Tabelle.
+add_executable(test_r35_inhalt_zombies ${CMAKE_CURRENT_LIST_DIR}/../test_r35_inhalt_zombies.c)
+target_link_libraries(test_r35_inhalt_zombies PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r35_inhalt_zombies PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r35_inhalt_zombies PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r35_inhalt_zombies PRIVATE m)
+endif()
+add_test(NAME unit_r35_inhalt_zombies COMMAND test_r35_inhalt_zombies
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r35_inhalt_zombies PROPERTIES TIMEOUT 300)
