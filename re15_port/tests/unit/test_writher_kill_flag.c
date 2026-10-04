@@ -151,6 +151,7 @@ static int collect(unsigned rid, uint8_t entry_cut, int32_t px, int32_t pz,
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     printf("=== WRITHER-Kill-Flag: kein `jal 0x8004ef90` in 0x8010C1EC..0x8010D770 ===\n");
 
     /* --- (1) Die Kollision muss in den echten Raumdaten existieren --------------------- */

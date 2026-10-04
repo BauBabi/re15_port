@@ -2394,6 +2394,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * tickt unabhaengig vom Branch, solange das Script den Halt haelt (Exit = naechster
      * Plc-Befehl, kein Timeout; marvin_10d0.md D3). */
     re15_player_event_reach_tick(pl);
+    {   extern void re15_re2arm_player_look(re15_actor_t *pl);  /* Runde 35 Spur H NB4: RE2 FUN_8003DB38 */
+        re15_re2arm_player_look(pl); }                         /* nach dem Zustands-Dispatch @0x8003c1b4 */
 
     /* Body push WHILE GRABBED (byte-true FUN_80031c44: the cmd-5 victim handler — placement — is
      * followed by FUN_8002b544 body push then the walls in the SAME player tick): a THIRD zombie
@@ -2402,6 +2404,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * tick (normal branch already pushed inline) does not double-push. Ordered AFTER the victim
      * placement above == the original's placement->push->walls order (walls win: a third zombie
      * cannot shove the pinned player through the SCA perimeter). */
+    {   extern int re15_re2arm_take_pin_bild(void);    /* Runde 35 Spur H NB3: RE2 schiebt im Pin-Bild */
+        if (re15_re2arm_take_pin_bild()) grabbed_branch = 1; }   /* nach dem Pin (FUN_800355C4 @0x80026628) */
     if (wurf && c->rdt_ok) re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z);   /* Runde 35 Spur J (6d): Platzierung -> @0x80031cbc -> @0x80031d70 */
     else if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];

@@ -1,0 +1,19 @@
+DuckStation gestartet {'64096'}
+GDB verbunden
+Stopp: b'S02'
+stage 1 room 5 PL -8033 -13716 yaw -766
+Leon gestellt -12230 -7991 yaw 3072
+Arm k1 Satz 0 y=-2580 -> ENDE
+Arm k2 Satz 1 y=-2430 -> ENDE
+Arm k3 Satz 2 y=-2180 -> ENDE
+Arm k4 Satz 3 y=-1930 -> ENDE
+Arm k5 Satz 4 y=-2200 -> ENDE
+Arm k6 Satz 5 y=-2480 -> ENDE
+Arm k7 Satz 6 y=-2000 -> ENDE
+Arm k8 Satz 7 y=-2700 -> ENDE
+Arm k9 Satz 8 y=-2540 -> Ziel
+Arm k10 Satz 9 y=-2160 -> ENDE
+Z0: b'OK'
+erster Halte-Stopp: b'S05' Halter 8015bfd8
+Halte-Stopps: 40
+Bild-Spielstand kopiert

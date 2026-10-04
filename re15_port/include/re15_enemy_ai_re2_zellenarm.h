@@ -35,6 +35,22 @@ uint16_t re15_re2arm_part_hide_mask(const re15_actor_t *e);
  * Cooldown 0x800CFBF4 (== g_re2_room_gflags, EIN Wort mit Hund/Kraehe). */
 void re15_re2arm_home(int slot, int16_t *yaw, int32_t *x, int32_t *z);
 int  re15_re2arm_holder_slot(void);      /* -1 = kein Arm haelt den Spieler */
+/* Runde 35 Spur H, Nachbesserung 2: Hand der GEMISCHTEN Parts (+0x14E-Ueberblendung wie 0x80029614,
+ * = Pin-Quelle @0x80100C18-38) und die reine Keyframe-Hand derselben Parts-Pose; 1 = Parts gueltig. */
+int  re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3]);
 int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* 3 (Arm A) oder 10 (Arm B) */
+/* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
+ * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
+ * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */
+int  re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl);
+/* 1 genau einmal nach einem Pin B4 P0 (@0x80100C18-38) in diesem Bild — der Spieler-Pass schiebt im
+ * Original im SELBEN Bild nach dem Pin. */
+int  re15_re2arm_take_pin_bild(void);
+/* Runde 35 Spur H NB4: RE2-Zielwahl fuer Leons Blick (FUN_8003DB38 @0x8003c1b4), jedes Bild aus dem
+ * Spieler-Pass; verbraucht nur im Opfer-Zustand des RE2-Arms. look_debug: Test-/Mess-Auskunft. */
+void re15_re2arm_player_look(re15_actor_t *pl);
+typedef struct { uint8_t aktiv; uint16_t f10e; uint8_t sicht_frei; int32_t x, z; } re2look_kand_t;
+int  re15_re2arm_look_waehle(const re15_actor_t *pl, int n, const re2look_kand_t *k);   /* -1 = SELBST */
+void re15_re2arm_look_debug(int set_cd, int set_ziel, int *cd, int *ziel);
 
 #endif /* RE15_ENEMY_AI_RE2_ZELLENARM_H */

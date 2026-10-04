@@ -1014,6 +1014,10 @@ typedef struct {
     int16_t  dog_floor_y;    /* +0x1ba: the dog's floor Y (ground level). The original's +0x1ba is
                               * maintained by the engine floor probe; the port seeds it at INIT from
                               * the spawn Y and moves it with the reroute level hops (+-0x708). */
+    uint16_t fall_1c0;       /* +0x1c0 (Runde 35 Spur H): Fall-Wort der Engine-Schwerkraft FUN_8001bd60
+                              * — Bit 0x8000 = faellt (`ori v0,zero,0x8000` / `sh v0,448` @0x8001bdf0-f4),
+                              * Bits 13..14 = Baender-Zahl, Bits 0..12 = Fallzeit t (`andi 0x1fff` /
+                              * `addiu +1` @0x8001be7c-88). Port: trage_1200.c re15_schwerkraft_8001bd60. */
     uint8_t  dog_cage_rel0c;  /* ⛔ PORT-MARKE, KEIN Original-Feld (Nutzer-/Port-Entscheidung, nicht
                                * byte-true). Herkunftsmerkmal fuer den Sub-Index 0x0C: gesetzt EINZIG
                                * von der RE1.5-Kaefig-Freigabe (`ori v0,zero,0xc01` @0x80111718 /

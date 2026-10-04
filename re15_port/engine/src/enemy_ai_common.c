@@ -40,6 +40,7 @@
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
+#include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -212,7 +213,7 @@ int re15_enemy_ai_tick(int slot)
 
     /* cache dist @+0x1d0 (byte-true: 16-bit-wrapped ΔX/ΔZ, SquareRoot0). */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
-    /* func_0x8001bd60(-10,20) setup helper — deferred. func_0x80039e7c(&player,0,0) steer-writer is RESOLVED, IMPLEMENTED as re15_nav_update_steer (live tick @L2517/2523). */
+    /* func_0x8001bd60(-10,0x14) = Engine-Schwerkraft (Absturzkante -> Fall auf +0x1ba), portiert als re15_schwerkraft_8001bd60 und aufgerufen in re15_enemy_ai_live_tick (Zombie-Wurzel `jal` @0x80100514, Runde 35 Spur H). func_0x80039e7c(&player,0,0) steer-writer is RESOLVED, IMPLEMENTED as re15_nav_update_steer (live tick @L2517/2523). */
 
     /* main-state dispatch (*PTR_FUN_801217a0[entity+0x4])(). */
     switch (e->state) {
@@ -2903,7 +2904,8 @@ static int los_seg_straddles_diag(int32_t ex, int32_t ez, int32_t px, int32_t pz
     int32_t s4 = los_cross_z(rx, rz, c2x - ex, c2z - ez);
     return ((uint32_t)(s3 ^ s4) & 0x80000000u) != 0;          /* Diagonal-Enden straddeln */
 }
-static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step)
+static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
+                                unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
 {
     if (!g_room_rdt.sca || step < 0 || step > 3) return 0;
     int start = 0;
@@ -2916,6 +2918,14 @@ static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *playe
         const re15_sca_entry_t *c = &g_room_rdt.sca[start + i];
         if ((c->floor >> 4) != e->floor) continue;            /* w5>>12 == +0x82 */
         if ((c->floor & 0x0f) != 3) continue;                 /* (w5&0xf00) == 0x300 */
+        /* Runde 35 Spur H (M1): nur als RE2-Ray-Stand-in — RE2 0x80050858 ueberspringt Saetze ohne
+         * Maskentreffer (`lhu v1,8(t1)`/`and v0,v1,fp`/`beq v0,zero` @0x800508bc-c8). PORT-MAPPING der
+         * MASKE: RE2 uebergibt eine KONSTANTE auf RE2-Satzattribut-Bits (Zombie-Navigator a2 = 0x2000
+         * `addiu a2,zero,8192` @0x8004a868, Kraehe 0x8400 @0x801001C0-E8); RE1.5-Raeume haben statt der
+         * Saetze Zellen mit Maskenbyte u0, und RE1.5 selbst prueft die Aktor-Maske +0x1D7 gegen u0
+         * (`lbu a2,471(a0)` @0x80100624 -> FUN_8003b0a4 `lbu v1,24(sp)`/`and`/`bne` @0x8003b248-58).
+         * Hier daher u0 & re2_maske (= e->sca_mask), nicht 0x2000 — eine Abbildung, kein RE2-Wert. */
+        if (re2_maske && !(re2_maske & c->u0)) continue;
         int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12;
         int32_t x1 = ((int32_t)c->x + (int32_t)c->width)   / 0x12;
         int32_t z1 = ((int32_t)c->z + (int32_t)c->density) / 0x12;
@@ -2942,7 +2952,7 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
                                                            * ersetzt den on_floor-Stand-in, der
                                                            * offene Flaechen dauerhaft blockte
                                                            * (crow_shot_attack.md F1) */
-        if (re15_los_ray_blocked(e, player, step))
+        if (re15_los_ray_blocked(e, player, step, 0u))
             s_los_blocked[slot] = 1;
     }
     if (step == 3) {                                      /* the verdict tick */
@@ -3036,7 +3046,7 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
                                    e->sca_mask ? e->sca_mask : 4u))
         return 0;
     for (int k = 0; k < 4; k++)
-        if (re15_los_ray_blocked(e, pl, k)) return 0;
+        if (re15_los_ray_blocked(e, pl, k, e->sca_mask ? e->sca_mask : 4u)) return 0;   /* PORT-MAPPING statt RE2 0x2000 @0x8004a868 / 0x8400, s. re15_los_ray_blocked */
     return 1;
 }
 
@@ -4453,6 +4463,8 @@ void re15_body_push_player(void)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active || e->hit_radius_min == 0) continue;
+        /* Runde 35 Spur H NB3: RE2-Gitterarm schiebt mit SEINEM Segment r 800 (FUN_80034D0C, Beleg im Modul) */
+        if (re15_re2arm_owns(e)) { re15_re2arm_body_push_player(e, pl); continue; }
         if (e->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
         /* GRABBING-PAIR EXEMPTION = an AND of BOTH freeze bits (byte-true FUN_8002aec4 @0x8002af14:
          * `and v0,a0,v1; andi 0x1000; bne -> return`): only the pair skips — a THIRD zombie still
@@ -5703,6 +5715,10 @@ int re15_enemy_ai_live_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60(-10,0x14) `jal` @0x80100514 (a0 @0x801004dc,
+     * a1 @0x80100518) VOR Steer/Dispatch — Absturzkante (Zellattribut 2) -> faellt auf +0x1ba.
+     * Beide KI-Geschmaecker (Raumdaten = RE1.5). re15_trage1200.h */
+    re15_schwerkraft_8001bd60(e, RE15_SCHWERKRAFT_ZOMBIE_A0, RE15_SCHWERKRAFT_ZOMBIE_A1, (int32_t)e->hit_radius_min);
     /* +0x1bc/+0x1be STEER TARGET — the per-tick writer is EXE FUN_80039e7c (RESOLVED 2026-07-04;
      * the RAM observation "== player pos every tick" was the SAME-ZONE case). Byte-true call
      * (zombie driver @0x8010a9c0-9e0 / m0 root @0x80100538): a0 = the player-pos block, a1 = the
@@ -10724,7 +10740,8 @@ static void re15_zgirl_ai_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return;     /* +0x9 & 0x20 @0x8010a8f4-900 */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);   /* +0x1d0 @0x8010a908-64 */
     /* mercy +0x1d5 tick @0x8010a974-9b4 -> the global s_grab_mercy_timer (run_all) stands in;
-     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (look aux) is unmodeled port-wide. */
+     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (Engine-Schwerkraft, re15_schwerkraft_8001bd60) laeuft bisher nur in
+     * der Zombie-Wurzel (@0x80100514, Runde 35 Spur H); HIER (Zombie-Maedchen) noch nicht — OFFEN H_raeume.md. */
     re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));  /* FUN_80039e7c @0x8010a9c0-e0 */
     e->ai_flags &= (uint16_t)~8u;                   /* the one-shot clear @0x8010a9f0-fc */
@@ -14704,7 +14721,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * HP=-1 + idle clip 2 → shared executor state 4 @0x80050be8 + shared watcher states [6-11]
              * @0x8004f2xx). STAGE1: 0x40 Irons / 0x42 / 0x45 / 0x47 Annette / 0x49 / 0x4b. STAGE6 adds
              * 0x4d — the STAGE6 overlay registers its root @0x801017a0 (dispatch @0x80072ce0), which is
-             * byte-for-byte the NPC root pattern (pause gate → look helper 0x8001bd60 → nav-steer
+             * byte-for-byte the NPC root pattern (pause gate → Schwerkraft 0x8001bd60 [hier noch nicht portiert] → nav-steer
              * 0x80039e7c → +0x4 state dispatch) and whose state table @0x80102794 has the IDENTICAL
              * EXE-shared entries ([4]=0x80050be8, [6-11]=0x8004fxxx) as the STAGE1 NPCs; its INIT
              * @0x80101918 sets entity+0x9a = -1 (invulnerable). re15_npc_ai_tick is type-agnostic

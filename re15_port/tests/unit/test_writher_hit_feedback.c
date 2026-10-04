@@ -71,6 +71,7 @@ static int fire(int elev)
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     printf("=== Gitterhand-Treffer-Feedback (Band + Original-Flinch 0x8010d188) ===\n");
 
     /* --- A: DOWN-Schuss registriert + Flinch mit Blut --- */

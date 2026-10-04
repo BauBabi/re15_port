@@ -13,6 +13,7 @@
  *   (5) SOLID + SHOOTABLE: re15_enemy_apply_hitbox(0x1a) installs the 300-radius box (audit #1).
  *   (6) KILLABLE: a damaging hit on the HP-0 spawn -> DEATH (state 3) -> CORPSE (state 7) (audit #5).
  */
+#include "re15_ai_flavor.h"   /* re15_ai_writher_re15_pin (Runde 35 Spur H) */
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -22,6 +23,7 @@
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     int fail = 0;
     memset(g_actors, 0, sizeof g_actors);
 

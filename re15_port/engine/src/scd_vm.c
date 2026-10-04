@@ -54,6 +54,8 @@
 #include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
 #include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
+#include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
+#include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
 
 scd_vm_t g_scd;
 
@@ -1564,6 +1566,7 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
      * @0x800516b8 `jal 0x8002fe38` (Text) liegen im selben Bild. RE1.5s LAB_80043084 hat an
      * dieser Stelle keinen Ton (@0x800430a0 einziger Aufruf = 0x80027e68). */
     re15_lock_se_notice(g_current_room_id, index, RE15_LOCK_WEG_AOT);
+    if (re15_ziel1190_show(index, pause_mask)) return;   /* Runde 35 Spur H: ROOM1190 Scheiben, msg 2 */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
@@ -1729,6 +1732,10 @@ static int op_message_on(scd_thread_t *t)
      * button to RELEASE (debounce), 2 = wait for a fresh PRESS = the answer. Plain messages
      * keep the PSX-canon non-blocking fall-through below. (void)arg2 — kept for the comment. */
     (void)arg2;
+    /* Runde 35 Spur H: ROOM1190 Scheiben-Schalter (msg 0, Slot 0..3) -> Port-Nachricht 6/7 =
+     * Scheiben-Satz + Original-Seite, gleiche Park-Semantik wie unten. re15_ziel1190.h */
+    { int zr = re15_ziel1190_message_on(t->pc, pause_mask);
+      if (zr == 1) { t->pc += 4; return 1; } if (zr == 2) return 2; }
     /* CHOICE message (its .msg carries a 0x03 yes/no code): BLOCK the SCD thread and run the
      * byte-true typewriter FSM (re15_dialog_open + re15_dialog_step, driven by re15_msg_tick).
      * We park here each frame and poll message_active; the FSM types the pages (action button
@@ -3853,6 +3860,7 @@ static int op_sce_em_set(scd_thread_t *t)
                                  * The port left it struct-zero, so band-gated AI/collision (e.g. the WATER/
                                  * RAMP env-stamp gate, and any per-floor event AOT) read the wrong band for
                                  * a non-floor-0 enemy. (audit wf_27ae1ea7) */
+        re15_schwerkraft_seed(a);   /* Runde 35 Spur H: +0x1ba = -(pc[4]*1800) @0x80042210 (Zombie-Wurzel-Typen) */
         /* hp=100 is harmless nominal init. Sce_em_set (0x44) carries NO hp
          * field — the `hp` struct member is RE2 +0x1C2 (Member ID 0x13), a
          * SEPARATE field written only via Member_set, not by this opcode.
