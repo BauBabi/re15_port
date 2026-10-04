@@ -12,7 +12,41 @@ Ereignis. Nur Code + Tests.
 - 2026-10-04: Baum geprueft (status leer, HEAD 154a73c1). AUFTRAG.md + VERTRAG.md gelesen.
 
 ## Messung vorher
-(folgt)
+
+### M1 Zensus der Raum-ESP-Baenke (probe_r35_redhawk zensus, alle 94 Raeume mit ESP)
+ROOM1190 und ROOM11D0 (die Hunde-Raeume) tragen beide NUR Raum-Id 7:
+```
+R1190 id=7 count_a=11 count_b=9 anim: [0 d0100 p2003] [1 d0101 p2003] [2 d0102 p2003] [3 d0103 p2003]
+      [4 d0104 p2003] [5 d0100 p20ff] [6 d0105 p2003] [7 d0106 p2003] [8 d0107 p1003] [9 d0108 p1003] [10 d0000 p0000]
+R1190 id=7 sub=0 st=0/1 row=0/2 A=0 B=36 acc=(0,10,0) f0e=13 vel=(150,-80,0) p16=6 p1e=0 g26=1
+R1190 id=7 sub=0 st=0/1 row=1/2 A=0 B=0  acc=(0,0,0)  f0e=00 vel=(0,0,0)     p16=0 p1e=0 g26=0
+  (Subs 1..5 gleich gebaut, nur vel: (50,-160) (180,-120) (80,-30) (20,-20) (110,-100); Subs 6/7 = Fehlparse
+   hinter dem Ende, A=92/50 > 47 = ausserhalb der 48er-Tabelle)
+```
+Anim: Records 0..4 je 3 Bilder, Record 5 = Schleifenmarke (Dauer 0xFF) zurueck auf Record 0 ->
+der FLUG-Zyklus 0..4 laeuft EWIG. Erst Routine 37 setzt den Anim-Index auf row[0x16] = 6 ->
+Records 7,8,9 und Record 10 = Terminator 0/0 -> Flags := 0 (@0x8001a40c) = Platz frei.
+Ohne Routine 36/37 erreicht ein Brocken den Terminator NIE.
+
+### M2 Laufzeit-Messung am gebauten Stand 154a73c1 (probe_r35_redhawk messung, ROOM11D0)
+Echter Spielschritt (re15_game_step, RE2-KI, Bank EM020) + ESP-Takt dahinter wie die Plattform
+(fx_plattform_pc.c), Raum-Bank ROOM11D0 gebunden, Schuss = re15_player_weapon_fire(7):
+```
+ROOM11D0 Schuss Waffe 7: Treffer=2 hp 83 -> -117 st=3 +5=7
+Bild    1: id7 lebend 1 ... Bild 10: id7 lebend 6 (sichtbar 6), id0 52
+Bild   30: id7 lebend 6 (sichtbar 6), id0 0, Hund st=7/1/0
+     slot=12 id=7 sub=1 A=0 B=36 fl=03 anim=0 row=0/2 ...
+Bild  900: id7 lebend 6 (sichtbar 6), id0 0
+     slot=12 id=7 sub=1 A=0 B=36 fl=03 anim=0 timer=0 row=0/2 y=-528 xlat_y=506 vel=(0,4,0) wpos=(-4029,-16,-17955)
+     slot=39 id=7 sub=1 A=0 B=36 fl=03 anim=4 timer=0 row=0/2 ... vel=(0,-6,0) wpos=(-3739,0,-17933)
+ERGEBNIS ROOM11D0: Spitze id7 6, letztes Bild mit id7 900 von 900
+```
+=> BEFUND REPRODUZIERT: die 6 Fleisch-Brocken (Raum-Id 7, je einer pro Router-Bild FX(2,1|2))
+liegen nach 30 s noch da, stehen alle noch auf Routine B = 36 (nie 37), Zeile 0/2, Anim im
+Flug-Zyklus 0..4 (Schleife) und zittern auf der Port-Bodenklemme (vel.y +-13). Die Id-0-Tropfen
+(globale Bank) enden dagegen sauber (id0 52 -> 0).
+Erklaerung: Routine B 36/37 fehlen im Port (esp_fx_dispatch_b kennt nur 12/29) -> der Brocken
+landet nie, der Anim-Index wird nie auf 6 gesetzt, der Terminator nie erreicht.
 
 ## RE-Belege
 
