@@ -977,3 +977,8 @@ nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Ori
 * Messwerkzeug + Daten: `analysis/befunde_runde35/H_raeume/re2_mess/` (re2_gdb_grab.py, re2_gdb_push.py, re2_ss.py,
   re2_frames.py, re2_fixture.py; die PCSX-Redux-Versuche re2_run.py/re2_loader.lua/re2_arm_grab.lua; daten/<lauf>/
   frames.bin|frames.txt|log.txt, daten/push_s2/push_log.txt). Bilder `H_raeume/nb3_*.png`.
+
+**Korrektur zu Nachbesserung 2 (Abnahme 2, Punkt 4 e):** der Satz "Jede Eingangsgroesse der Ruecken-Griff-Geometrie
+ist ein RE2-Byte; ... Das Original zeigt im Ruecken-Griff dieselbe Ueberschneidung" war fuer die Armhoehe falsch
+(`RE2ARM_1210_Y` ist eine Port-Bruecke) und uebersah den Koerper-Push. Er ist durch die Original-Messungen dieses
+Abschnitts ersetzt (acht Hoehen, Push gemessen und gebaut, Port = Original in fuenf Lagen).
