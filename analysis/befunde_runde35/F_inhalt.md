@@ -306,25 +306,31 @@ alter Stand = door_scene_pc.c aus 154a73c1 kurz eingebaut): `F_belege/p1_tuergri
 — S044 P0CD Stangen vorher auf verschiedener Hoehe, nachher gleich; S049 P1DG / S030 P1DK rechter
 Druecker vorher verdreht, nachher spiegelgleich; S155 P1BD Riegelstangen nachher spiegelgleich.
 Neue DO2-Dateien: KEINE (bewusst, s.o.).
+⛔ UEBERHOLT durch Nachbesserung 1 (M3): diese Messung paarte nach dem Vorzeichen der lokalen pos[0]
+und damit an vielen Seiten Vorder- gegen Rueckseiten-Griff. Mit der Kameraseiten-Paarung gilt: rot0[2]
+beim Tausch NUR fuer Spender DOOR07, P0CD dy 2048 + dz 2048, DOOR1D V3 obj 3 auf der Vorderseite —
+siehe Abschnitt Nachbesserung 1 / M3.
 
 ## Tests (Riegel dieser Spur, alle aus `re15_port/tests/unit/probes/r35_inhalt.cmake`)
 | Test | Punkt | misst | Ergebnis |
 |---|---|---|---|
 | unit_r35_inhalt_doku | 2 | gruene Pixel FILE28/29 ueber re15_re2doc_pixel, Soll = TEX.TIM Zeile 2 (@0x80028974-94) | 19/19 |
 | unit_r35_inhalt_zombies | 3 | echte Spielschleife je Eintritt: STEHEN-Griffbild, FLUCHT raus/gegriffen, Flucht-Mindestabstand >= 0xBB8, Spawnlagen | 22/22 |
-| unit_r35_inhalt_items | 4/5 | Prop/Zone nach scd_room_reenter, Bit -> weg, Projektion in die Marke, echter Aktionsdruck -> Modal -> Ja | 25/25 |
-| unit_r35_inhalt_tueren | 1 | Griff-Symmetrie aller Port-Doppeltueren alt/neu, RE2-Originale unveraendert | 6/6 |
+| unit_r35_inhalt_items | 4/5 | Prop/Zone nach scd_room_reenter, Bit -> weg, Projektion in die Marke, V Cut-4/Cut-7-Flaeche + Sichtseite (N1), echter Aktionsdruck -> Modal -> Ja | 27/27 |
+| unit_r35_inhalt_tueren | 1 | Griff-Symmetrie der Kameraseiten-Paare aller Port-Doppeltueren alt/neu (Winkel + Bild-Fehler px), S041 gepinnt, 12 Seiten abgedeckt, RE2-Originale unveraendert (N1) | 7/7 |
 Mess-Werkzeuge (kein add_test): probe_r35_inhalt_karte (Speicherkarte an beliebiger Stelle,
-`bit:<n>`, `y:<n>`), probe_r35_inhalt_tueren (ohne "test": Tabelle; `alt`, `mitte`, `dy:`/`dz:`),
+`bit:<n>`, `y:<n>`), probe_r35_inhalt_tueren (ohne "test": Tabelle; `alt`, `mitte`, `lokal`, `dy:`/`dz:`),
 test_r35_inhalt_zombies `mess` | `suche` | `tempo <i> [0/1]` | `karte` | `sca <rdt> <name>`.
 
 ## OFFEN (mit naechstem Messweg)
-1. Punkt 6 — falls der Nutzer mit "Karten" die LAGEPLAENE meinte: RE2 fuehrt sie nicht als Item
+1. ERLEDIGT (Nachbesserung 1, M1: 6 Lageplan-Objekte, 3 Meshes, room6120 ohne Weltobjekt). Alt: Punkt 6 — falls der Nutzer mit "Karten" die LAGEPLAENE meinte: RE2 fuehrt sie nicht als Item
    (Namentabelle 0x00..0x8B: 0 Maps), sondern als Nachricht+Ja/Nein-Ereignis (7 Fundstellen oben).
    Naechster Weg: SCD der 7 Raeume (info/re2leon/PL0/RDT/room20B0/scd/*.c usw.) nach dem Block mit
    Message_on des Lageplans durchsuchen und pruefen, ob dort ein Obj_model_set/Bit das Weltobjekt
    ausblendet; wenn ja, dessen md1-Slot wie in re2_item_worldmodels.py schneiden.
-2. Punkt 6 — 8 Platzierungen mit md1 >= nOmodel (Liste in extracted_re2_items/_bericht.txt) sind
+2. Punkt 6 — nach Nachbesserung 1 noch 3 Platzierungen mit md1 >= nOmodel (room2080 sub00 Id 13 md1 4
+   bei nOmodel 4, roomG040 sub00 Id 30/99; vorher 8 — die uebrigen waren abgeschnittene Bloecke bzw.
+   md1 0xE1 = kein Weltmodell) sind
    nicht geschnitten: der Pool-Slot kommt dort nicht aus der Raumtabelle. Naechster Weg: im selben
    SCD-Block das Obj_model_set mit diesem obj suchen (Pool 0x800D0324 + md1*0x1F8).
 3. Punkt 4 — die Karte ist in Cut 7 klein und dunkel (Keycard 161x270 in ~4100 Sichtweite = etwa
@@ -336,8 +342,8 @@ test_r35_inhalt_zombies `mess` | `suche` | `tempo <i> [0/1]` | `karte` | `sca <r
    Nachbesserung 1 (M2): die Karte steht jetzt und ist in Cut 4 sichtbar.
 4. Punkt 3 — ROOM1011 (Elza): sub00 spawnt die Zombies dort nur hinter einer Bedingung; der
    Tabellen-Schluessel (Typ + Original-Lage) deckt die Saetze, gemessen ist nur ROOM1010/1220/1221.
-5. Punkt 1 — P1B3 (DOOR1B V3) hat je Seite nur einen Griff (kein Paar) -> nicht messbar; dieselbe
-   Regel (rot0[2]) gilt dort.
+5. ERLEDIGT (Nachbesserung 1, M3): mit der Kameraseiten-Paarung hat P1B3 V3 (S136) ein Paar (obj 2/3),
+   0,1 Grad / 0,14 px.
 6. Paket/Android-Gate (Orchestrator): FILE28_p01_page.TIM / FILE29_p01_page.TIM aendern sich
    GROESSENGLEICH (Memory r34a: gleich grosse Aenderung erreicht Geraete nur mit Gate-Pin).
 
@@ -347,12 +353,16 @@ test_r35_inhalt_zombies `mess` | `suche` | `tempo <i> [0/1]` | `karte` | `sca <r
 - Geaenderte Assets fuer das Paket-/Android-Gate: `re15_port/shared_assets/RE2/FILES/FILE28_p01_page.TIM`
   (md5 ad9d0f6f...), `re15_port/shared_assets/RE2/FILES/FILE29_p01_page.TIM` (md5 f39ce419...).
   Neue Laufzeit-Assets: keine (Schrot-Modell eingebacken in `engine/src/gen/r35_schrot_prop.inc`).
-- RE2-Welt-Items ansehen: `extracted_re2_items/uebersicht.html` im Browser oeffnen (alle 81 Modelle,
-  Karten oben), oder `kontaktbogen.png` / `karten.png`; Liste `katalog.csv`.
-- Im Spiel: ROOM1010 rechtes Regal (Kamera mit Schreibtisch/Monitoren) -> Memory Card x3;
+- RE2-Welt-Items ansehen: `extracted_re2_items/uebersicht.html` im Browser oeffnen (87 Item-Modelle;
+  oben "Karten": 3 Card Keys + 3 Lageplan-Modelle: zusammengerollter Plan = police station / police B1
+  map, Planbogen = sewage disposal / sewer map, Planbogen = factory map), oder `kontaktbogen.png` /
+  `karten.png`; Listen `katalog.csv` und `lageplaene.csv` (alle 7 Plan-Aufnahmen; der Laborplan in
+  room6120 hat kein Weltobjekt, er wird an einer Wandflaeche "abgelegt").
+- Im Spiel: ROOM1010 Regal neben der Tuer zu ROOM1020 (im Spiel Kamera Cut 4; die Karte steht
+  aufrecht im Fach, Marke des Nutzerbilds = Cut 7) -> Memory Card x3;
   ROOM1090 Dach-Hinterhof, rechter Aussenluefter -> Shotgun Shells (7, nach Halbierung 3);
-  Marvin's Notes / Armory Notice: Code 4312 / 5632 gruen; Doppeltueren P0CD/P1DG/P1DK/P1DL/P1BD
-  mit spiegelgleichen Griffen; ROOM1010/1220: Zombies starten ausserhalb der Sprungweite, man kann
+  Marvin's Notes / Armory Notice: Code 4312 / 5632 gruen; Doppeltueren P0CD/P1DG/P1DK/P1DL/P1BD/P1B3
+  mit spiegelgleichen Griffen (auch gleiche Hoehe/Tiefe, Nachbesserung 1); ROOM1010/1220: Zombies starten ausserhalb der Sprungweite, man kann
   sofort umdrehen und wieder hinaus.
 
 ## Suite
