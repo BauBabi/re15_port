@@ -415,3 +415,22 @@ any -> all - faengt nur die Fallsammlung"), Docstring `_Mutierer`, Kopf von `rel
 mutierte Teile, 32/32 simulierte Aenderungen mit Belegpfad). Die alte Dossier-Aussage in Punkt 3 ist an Ort und Stelle
 als zu weit markiert. Was main()/urteil_rufen() angeht: deren Fehler faengt die Kette (Abnahme B3: `return code` ->
 `return 0` -> N5a/N5b FALSCH), nicht der Mutant - so steht es jetzt auch im Text.
+
+### M2 - Messung vorher/nachher (Streich-Messung gegen die ECHTE Kette)
+- **Vorher** (Stand b19c39fa komplett: apk_pruefen.sh, Gate, Urteil, Pins und der alte test_r35_android_pruefkette.sh,
+  in apk_pruefen.sh nur `(( rc == 0 )) || die "Selbsttest des Gate-Urteils: OK-Schlusszeile ...` -> `true || die ...`):
+  Kette `FEHLER=0`, `rc=0` - B2 der Abnahme reproduziert. Beleg `N_android_belege/nb1_kette_b2_vorher.txt`.
+- **Nachher**: Werkzeug `werkzeug/kette_streichen.py` + `.sh` (je Variante eine Kopie von release/ mit GENAU EINER
+  gestrichenen/entschaerften Pruefzeile, re15_port/synchro als Junction - nur mit `cmd /c rmdir` entfernt; die echte
+  Kette je Variante). Kontrolle B0 (unveraenderte Kopie) `KONTROLLE-OK rc=0 FALSCH=0`; **17 von 17 Aenderungen
+  bemerkt**: B1 zweite Instanz ganz aus (N8, N19a/b), **B2 = M2 (N10)**, B3 Zweig rc != 0 (N8), B4 Zweig ohne
+  Urteilszeile (N19a/b), B5 f1 == f2 (N11), B6 Mindestzahl Faelle (N12), B7 e + g == m (N13), B8 Mindestzahl erkannt
+  (N9, N14), B9 Hoechstzahl gleichwertig (N15), B10 Endanker `$` (N17), B11 Anfangsanker `^` (N18), B12 "letzte Zeile"
+  -> "letzte URTEIL-Zeile" (N16), B13 Urteils-Pin-Vergleich (N20), B14 Gate-Pin-Vergleich (N21), B15 Urteils-Pruefung
+  vor jeder Nutzung an beiden Stellen (N20), B16 Gate-Pin vor jedem Lauf (N21), B17 kein Abbruch bei ungueltiger
+  Schlusszeile (N6, N7, N16 - Abbruch nur noch spaeter, mit falscher Meldung). Beleg
+  `N_android_belege/nb1_kette_streichen_nachher.txt`.
+- Hinweis zur Messung: der erste Anlauf legte keine Junctions an (`cmd //c mklink /J` -> MSYS machte aus `/J` einen
+  Pfad, "Ungueltige Option"); B0 war rot (`build.gradle fehlt`) und hat das sofort gezeigt - Anlauf verworfen, mit
+  `MSYS_NO_PATHCONV=1` neu. Der abgebrochene Lauf lebte nach TaskStop weiter (MSYS-Prozessbaum); nur dessen eigene
+  Nachfahren (Elternkette ab der eigenen PID) beendet, nichts Fremdes.

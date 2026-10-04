@@ -1,0 +1,44 @@
+B0   KONTROLLE-OK rc=0 FALSCH=0  keine Aenderung (Kontrolle der Kopie)
+B1   BEMERKT   rc=1 FALSCH=6  zweite Instanz in gate_laufen ganz aus
+        FALSCH  N8_urteil_luegt_leere_apk -> 0 (soll rot)   Gate-Urteil (apk, Rueckgabe 0): alles bestens
+        FALSCH  N8 ohne 'ueberstimmt (zweite Instanz)'
+        FALSCH  N19a_urteil_ohne_urteilszeile -> 0 (soll rot)   Gate-Urteil selbstgeprueft: 243/243 Faelle, 781/785 Mutanten erkannt, 4 gleichwertig (Mindestz
+B2   BEMERKT   rc=1 FALSCH=1  gate_urteil_selbsttest: (( rc == 0 )) || die ... gestrichen (Abnahme 0, M2)
+        FALSCH  N10_ok_zeile_rueckgabe_1 -> 0, Meldung 'OK-Schlusszeile, aber Rueckgabe 1' fehlt
+B3   BEMERKT   rc=1 FALSCH=2  zweite Instanz: Zweig 'Gate gab Rueckgabe != 0' aus
+        FALSCH  N8_urteil_luegt_leere_apk -> 0 (soll rot)   Gate-Urteil (apk, Rueckgabe 0): alles bestens
+        FALSCH  N8 ohne 'ueberstimmt (zweite Instanz)'
+B4   BEMERKT   rc=1 FALSCH=4  zweite Instanz: Zweig 'ohne Urteilszeile' aus
+        FALSCH  N19a_urteil_ohne_urteilszeile -> 0 (soll rot)   Gate-Urteil selbstgeprueft: 243/243 Faelle, 781/785 Mutanten erkannt, 4 gleichwertig (Mindestz
+        FALSCH  N19a ohne 'ohne Urteilszeile'
+        FALSCH  N19b_urteil_ohne_urteilszeile -> 0 (soll rot)   Gate-Urteil (apk, Rueckgabe 0): falscher Modus
+B5   BEMERKT   rc=1 FALSCH=1  Faelle: f1 == f2 gestrichen
+        FALSCH  N11_faelle_f1_ungleich_f2 -> 0, Meldung 'Faelle, verlangt n/n' fehlt
+B6   BEMERKT   rc=1 FALSCH=1  Faelle: Mindestzahl gestrichen
+        FALSCH  N12_faelle_unter_mindestzahl -> 0, Meldung 'Faelle, verlangt n/n' fehlt
+B7   BEMERKT   rc=1 FALSCH=1  Mutanten: e + g == m gestrichen
+        FALSCH  N13_mutanten_summe_falsch -> 0, Meldung 'Mutanten erkannt, 4 gleichwertig - verlangt' fehlt
+B8   BEMERKT   rc=1 FALSCH=2  Mutanten: Mindestzahl erkannt gestrichen
+        FALSCH  N9 Mindestzahl 999 Mutanten angenommen
+        FALSCH  N14_erkannt_unter_mindestzahl -> 0, Meldung 'Mutanten erkannt, 4 gleichwertig - verlangt' fehlt
+B9   BEMERKT   rc=1 FALSCH=1  Mutanten: Hoechstzahl gleichwertig gestrichen
+        FALSCH  N15_zu_viele_gleichwertige -> 0, Meldung 'Mutanten erkannt, 5 gleichwertig - verlangt' fehlt
+B10  BEMERKT   rc=1 FALSCH=1  bash-Muster der Schlusszeile ohne Endanker $
+        FALSCH  N17_ok_zeile_mit_zusatz -> 0, Meldung 'ohne gueltige Schlusszeile' fehlt
+B11  BEMERKT   rc=1 FALSCH=1  bash-Muster der Schlusszeile ohne Anfangsanker ^
+        FALSCH  N18_ok_zeile_mit_vorsatz -> 0, Meldung 'ohne gueltige Schlusszeile' fehlt
+B12  BEMERKT   rc=1 FALSCH=1  Schlusszeile = letzte Zeile mit URTEIL-SELBSTTEST statt letzte Zeile
+        FALSCH  N16_ok_zeile_nicht_zuletzt -> 0, Meldung 'ohne gueltige Schlusszeile' fehlt
+B13  BEMERKT   rc=1 FALSCH=1  Urteils-Pin: Vergleich ist == soll entschaerft
+        FALSCH  N20_urteil private Kopie veraendert, gate_laufen lief trotzdem
+B14  BEMERKT   rc=1 FALSCH=1  Gate-Pin: Vergleich ist == soll entschaerft
+        FALSCH  N21_gate private Kopie veraendert, gate_laufen lief trotzdem
+B15  BEMERKT   rc=1 FALSCH=1  Urteils-Pruefung vor jeder Nutzung (gate_laufen UND gate_urteil) gestrichen
+        FALSCH  N20_urteil private Kopie veraendert, gate_laufen lief trotzdem
+B16  BEMERKT   rc=1 FALSCH=1  Gate-Pin vor jedem Lauf (gate_laufen) gestrichen
+        FALSCH  N21_gate private Kopie veraendert, gate_laufen lief trotzdem
+B17  BEMERKT   rc=1 FALSCH=5  kein Abbruch bei ungueltiger Schlusszeile (else-Zweig entschaerft)
+        FALSCH  N6_urteil_fy2_ein_zeichen -> 1, Meldung 'Selbsttest des Gate-Urteils ohne gueltige Schlusszeile' fehlt
+        FALSCH  N7_urteil_leer -> 1, Meldung 'Selbsttest des Gate-Urteils ohne gueltige Schlusszeile' fehlt
+        FALSCH  N16_ok_zeile_nicht_zuletzt -> 1, Meldung 'ohne gueltige Schlusszeile' fehlt
+SUMME: 17 von 17 Aenderungen bemerkt
