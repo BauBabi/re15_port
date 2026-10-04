@@ -1930,3 +1930,48 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
 - j1/t1/Riegel `szene`: erster Angriff (Heavy) 1 Bild vor dem Original (+363 gegen vs9765 - vs9037 = 728 VSyncs = +364,
   Dossier Z. 934-936); alle 14 Bisse und der Tod danach bildgleich. In N3/N4 noch mit Original-Vergleich gefuehrt, in N5
   still geworden (KORREKTUR-Vermerk an der N5-Stelle). Messweg unter OFFEN N6-1.
+
+### M1 — Gegenprobe am Original (GDB): der ganze Finisher Bild fuer Bild
+- Werkzeug `jnb6/gdbfin.py` (wie gdbm2.py; settings.ini [Debug] EnableGDBServer nur waehrend des Laufs, danach
+  zurueckgespielt, diff leer): r3 s033, beim ersten e2-Halt ab VSync 10029 (F194): e2 := (-5125,0,-14706) r2517,
+  +0x4..+0x7 := 1/7/0/0 (LEAP, wie w3y F2786), +0x1dc := 0; Leon := (-9975,-10422) r587, **hp := 46**; e1 nach
+  (8000,15000). Spur `jnb6/g_fin.txt`, dekodiert `g_fin_dec.txt` (F194-F297 lueckenlos; danach springt der VSync-Zaehler
+  nach dem Tod, die Zeilen ab F316 wiederholen F221ff. und sind nicht verwendet).
+- **Original:** Abflug F204 (+0x8c = 260), Commit B[8] F213 (Bild 0x13), **Treffer im Tick F220** (B[8]-Bild 8): Wurzeleintritt
+  F221 Leon hp -554, **Kommando 6/0/1, Clip 0 Bild 1, +0x8f 6, +0x93 0x01**; +0x95 zaehlt je Bild hoch, +0x8f 6..0;
+  F280 Bild 0x3c; F290 Kommando 6/0/2 (Clip-Ende, Bild 0); **F291 Kommando 7** = Treffer + 70. Leon: **keine Platzierung**,
+  aber F224-F228 je 1 Einheit geschoben ((-9975,-10422) -> (-9972,-10417)), danach still. Gorilla: F224 von aec4 auf den
+  2050-Kreis geschoben ((-10023,-11332) -> (-10619,-12375), y -3000), Landung F229, Sub 4 F234, Jagd ab F235.
+- Damit sind die Port-Annahmen aus dem Disasm am Original bestaetigt: Eintritt im Treffer-Bild, Clip 0 der Opfer-Bank,
+  Saat +0x8f = 7, Tod im Bild nach dem Clip-Ende (+70), aec4-Schub des Gorillas (N6-2 der ersten Fassung damit geschlossen).
+- **Neu gefunden: Koerper-Schub auf den toten Leon.** Port vorher: 0 Bewegung, weil `re15_body_push_player` bei hp < 0
+  aussetzt (enemy_ai_common.c, Kommentar "dead: the devour overlaps the corpse" — Port-Annahme ohne Adresse). Original:
+  der Spieler-Schwanz FUN_80031c44 ruft `jal 0x8002b544` @0x80031cbc ohne Kommando-/HP-Abfrage (selbst disassembliert,
+  s. M1-Umsetzung), FUN_8002b544 (Decompilat) ruft aec4 fuer jede aktive Entity ohne HP-Abfrage, und B[8] setzt kein Bit
+  0x1000 (@0x801191c4-9204, kein Wort-0-Store) -> das Paar ist nicht ausgenommen. Aenderung (1 Zeile, "Runde 35 Spur J
+  (15)"): das hp-Gate gilt nicht, solange der Greifer ein Gorilla ist (`re15_player_victim_gorilla()`); fuer alle anderen
+  Greifer bleibt es (dort nicht gemessen). Port nachher: Leon F225-F228 je 1 Einheit, Ende (-9973,-10418) — 1 Bild spaeter
+  als das Original, weil der Gorilla bis dahin 8 Einheiten neben dem Original fliegt (Rest-Penetration am 2050-Kreis,
+  Port 2049,5 gegen Original 2056; Flugschritt OFFEN N6-3).
+- **Riegel `finisher` Teil B** ab dem Original-Zustand F204 (e2 (-6299,0,-13987) r2517 Phase 2 Bild 10, +0x8c 260, +0x9c 0),
+  Vergleich Port-Zeile F (Stand nach Tick F-1) gegen Original-Wurzeleintritt F, Leons Bild +1 / +0x8f -1 (Original zaehlt nach
+  dem Posieren, FUN_8001f3bc Z. 78/89-93): **Gorilla Sub/Phase/Bild 93/93 gleich**, **Leon hp und Kommando 93/93**,
+  **Clip/Bild/+0x8f 70/70**, **Leon-Lage hoechstens 2 daneben** (F226), Gorilla-Lage im Sprung/Finisher hoechstens 12 (F233),
+  nach der Landung in der Jagd bis 54 (F278, nicht geprueft). Gegenprobe ohne die Schub-Zeile: Leon 6 daneben -> rot.
+
+### Umsetzung Nachbesserung 6 (Dateien, Konstanten mit Beleg)
+- `re15_port/engine/src/affen_11c0.c` (15) Gorilla-Finisher = cmd-6-Hook 0x8011c414: `re15_affen_finisher_start` (Wort
+  aca58 := 6 @0x801191c4-cc -> aca5a = 0, Zielphase endet: Verteilung `lbu aca58` @0x80031c8c), `re15_affen_finisher_tick`
+  (aca5a 0 @0x8011c460-d4: +0x8f := 7 @0x8011c468-70, Clip 0 @0x8011c490, Bild 0 @0x8011c498, Blut 0x2000 an Part 8
+  @0x8011c4a0, CORE 3 @0x8011c4b8; aca5a 1: Bild 0x3c @0x8011c4e0 -> FUN_80045630(2,0,0) @0x8011c4f0 + Blut @0x8011c518,
+  f314 Rate 0x200 @0x8011c534-38, Clip-Ende -> aca5a 2 @0x8011c548-50; aca5a 2: Wunden (0,0xa)/(5,0x32)/(7,0x32)
+  @0x8011c55c-74, Leiche aca58 := 7 @0x8011c57c-84; keine Platzierung), Ereignis-Protokoll fuer den Riegel.
+  (M4) `affen_glieder` = Glieder-Aufbau fuer `affen_kette` und `re15_affen_kette_test`.
+- `re15_port/include/re15_affen.h`: Abschnitt (15), (13) Hinweis auf den Riegel `kette`, `#include "re15_enemy.h"`.
+- `re15_port/engine/src/enemy_ai_common.c` (3 Haken, je "Runde 35 Spur J (15)"): `re15_player_victim_bone_pos_pub`
+  (1 Zeile), `re15_player_victim_devour` Typ 0x27 -> `re15_affen_finisher_start` (2 Zeilen), `re15_player_victim_tick`
+  Zustand 2 + Greifer 0x27 -> `re15_affen_finisher_tick` (1 Zeile).
+- `re15_port/engine/src/game_step_common.c`: nur der Kopfkommentar des Flinch-Zweigs (Hinweis H1 aus Abnahme 5, 1 Zeile).
+- `re15_port/tests/unit/test_r35_affen.c` + `probes/r35_affen.cmake`: Riegel `finisher`, `zonensprung`, `kette` (20 Eintraege).
+- Keine Assets, keine Bank-9-Bits, Nachrichten-IDs, AOT-Slots oder Ereignisse; nichts unter release/, platform/android/,
+  shared_assets/PSX/.
