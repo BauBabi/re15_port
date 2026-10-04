@@ -75,8 +75,27 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1061,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1070,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
     { 0x1071,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
-    { 0x1080, -16750,  -5150, -10550,    950,  2,   9, 0,   9,    78,   214,  2080,  2320, 0, 0,   0, 0 },
-    { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,    78,   214,  2080,  2320, 0, 0,   0, 0 },
+    /* Runde 35 Spur G (Nutzer: "Beim Elevator ROOM 1080 bewegt sich auf der Map der Player
+     * Cursor nicht"; Dossier analysis/befunde_runde35/G_karte.md). GEMESSEN: die alte,
+     * hergeleitete Zeile (78,214,2080,2320, ohne Spiegel) legte den Kabinen-Innenraum auf
+     * y 143..152 - UNTER die gemalte Kabine (Suedwand y=143) -, die Klemmung liess davon
+     * x 113..118 / y 144..146 uebrig. Die Massstabszeile @0x800768f0 ist der Stub {0,0,1,1}.
+     * 180 Grad gedreht (flip 1,1) - Yaw-Stetigkeit der Tuer ROOM1040 @0x1096 (Spawn
+     * Yaw 0x0400 = -z, man geht in 1040 nach +z hinein).
+     * NACHBESSERUNG 1 (Abnahme 0: Marker wanderte mit 795/805 nur 2 px je Achse): MASSSTAB
+     * AUS RE2 RETAIL, weil RE1.5 hier ein Stub ist (@0x800768f0 {0,0,1,1}, Beta->Retail).
+     * RE2-Kartenzeichner FUN_8006e120: x = (x+28000)/450 @0x8006e1dc-0x8006e218 (magic
+     * 0x91a2b3c5, sra 8), y = -(z+28000)/450 @0x8006e1f8-0x8006e268, EIN Massstab fuer alle
+     * Raeume, Versatz je Raum (Eintrag +8/+10 @0x8006e2cc/0x8006e2e4), keine Klemmung (AddPrim
+     * @0x8006e2f0). In Zeilenform sx = sy = 2^20/450 = 2330. Versatz (ox,oy) = PORT-WAHL aus der
+     * Kunst: die sichtbare Ring-Mitte (mx-1,my-1, DATA/TEX.TIM @0x14910) legt die westliche
+     * und noerdliche SCA-Wand (x -15750, z -4150) auf die gemalten Wandpixel x118/y134 (Kachel
+     * uv(168,40), MAP03.PIX @0x1454). PROBE des Massstabs: die GEGENwaende (x -11550, z -50)
+     * fallen dann ebenfalls auf die gemalten Waende x109/y143 - die Kunst ist im RE2-Massstab
+     * gemalt. Spieler-Reichweite (Wand -468, debug.log) -> sichtbar x110..117 y135..142 = der
+     * gemalte Innenraum, 7 px je Achse. Klemmfenster: re15_karte_fahrstuhl_fenster. */
+    { 0x1080, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
+    { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 0 },
     { 0x10A0,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x10A1,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
     /* ⛔ ROOM1090 FEHLTE GANZ AUF DER KARTE (Nutzer 2026-09-13: "Fuer ROOM 1090 fehlt noch
@@ -157,8 +176,43 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1171, -13430, -10910,  15658,  17746,  5,   1, 0,  23,   100,   206,  2280,  2268, 0, 0,   0, 0 },
     { 0x1170, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x1171, -28900, -28841,  -8784, -17070,  5,   0, 1,  24,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1180, -10592, -17477,   6733,  32871,  0,   6, 0,  25,    89,   216,  2200,  2301, 0, 0,   0, 0 },
-    { 0x1181, -10592, -17477,   6733,  32871,  0,   6, 0,  25,    89,   216,  2200,  2301, 0, 0,   0, 0 },
+    /* Runde 35 Spur G (Nutzer: "In ROOM 1230 bekomme ich die Map von ROOM 11E0").
+     * ROOM1230 IST ROOM1180 (Variante desselben Ortes): alle Tuer-Datensaetze identisch
+     * (1180 @0x9EE..0xA94 == 1230 @0xAEE..0xBC4), gleiche SCA-Huelle; der Seiten-Setzer
+     * @0x8004b568 schickt 1230 (Index 35, @0x8004b884) aber auf Blatt 1 = B2 - dort hat
+     * der Ort kein Rechteck (Stub-Zeile @0x800769c8). Beide gehoeren auf Blatt 0 (B1)
+     * **rect 0**: dessen 5 gemalte Nischen sind die 5 Tueren des Gangs (1190-Haupt, 1190-Ost,
+     * 11B0, 10A0, 11D0 - G_karte.md B4). rect 6 (bisher) ist ein Kasten ohne Nische = der
+     * B1-Absatz von ROOM10A0 (Gastzeile unten).
+     * Die Kachel ist SCHEMATISCH (der Gang als Ring; Affin-Fit der Tueren: Rest bis 17 px),
+     * deshalb FUENF Abschnitte, jeder auf seinen gemalten Streifen gestreckt (PORT-WAHL,
+     * Rechnung analysis/befunde_runde35/G_karte_zeilen.py). Kaesten an gemeinsamen Kanten
+     * um ZONE_SLACK (1500) eingezogen, damit kein kleinerer Nachbar ueber die Kante greift.
+     *   idx0 Laengsgang Sued -> Streifen x160..167 y69..104   idx1 Zweig+Bein -> y61..75
+     *   idx2 Versatz (10A0)  -> x145..167 y105..112           idx3 Suedgang -> Balken y116..123
+     *   idx4 Laengsgang Nord (11B0) -> x160..167 y61..68                                      */
+    { 0x1180,   3690,  -2697,   5514,  13804,  0,   0, 0,  25,    98,   152,  1915,  1829, 0, 0,   0, 0 },
+    { 0x1181,   3690,  -2697,   5514,  13804,  0,   0, 0,  25,    98,   152,  1915,  1829, 0, 0,   0, 0 },
+    { 0x1180,  -9566,   9476,    690,  15304,  0,   0, 1, 106,    79,   168,  2684,  2361, 0, 0,   0, 0 },
+    { 0x1181,  -9566,   9476,    690,  15304,  0,   0, 1, 106,    79,   168,  2684,  2361, 0, 0,   0, 0 },
+    { 0x1180,  -1157,  -7359,   5514,  -5697,  0,   0, 2, 107,    70,   159,  2698,  2018, 0, 0,   0, 0 },
+    { 0x1181,  -1157,  -7359,   5514,  -5697,  0,   0, 2, 107,    70,   159,  2698,  2018, 0, 0,   0, 0 },
+    { 0x1180,  -5628, -16384,  -4157,  -4197,  0,   0, 3, 108,     2,   131,  4950,   547, 0, 0,   0, 0 },
+    { 0x1181,  -5628, -16384,  -4157,  -4197,  0,   0, 3, 108,     2,   131,  4950,   547, 0, 0,   0, 0 },
+    { 0x1180,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
+    { 0x1181,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
+    /* ROOM1230 = derselbe Ort (s.o.): dieselben Zeilen, dieselben Zonen-Nummern (wie die
+     * Varianten-Raeume, Memory "VARIANTEN-RAEUME - zwei Skriptzustaende, ein Ort"). */
+    { 0x1230,   3690,  -2697,   5514,  13804,  0,   0, 0,  25,    98,   152,  1915,  1829, 0, 0,   0, 0 },
+    { 0x1231,   3690,  -2697,   5514,  13804,  0,   0, 0,  25,    98,   152,  1915,  1829, 0, 0,   0, 0 },
+    { 0x1230,  -9566,   9476,    690,  15304,  0,   0, 1, 106,    79,   168,  2684,  2361, 0, 0,   0, 0 },
+    { 0x1231,  -9566,   9476,    690,  15304,  0,   0, 1, 106,    79,   168,  2684,  2361, 0, 0,   0, 0 },
+    { 0x1230,  -1157,  -7359,   5514,  -5697,  0,   0, 2, 107,    70,   159,  2698,  2018, 0, 0,   0, 0 },
+    { 0x1231,  -1157,  -7359,   5514,  -5697,  0,   0, 2, 107,    70,   159,  2698,  2018, 0, 0,   0, 0 },
+    { 0x1230,  -5628, -16384,  -4157,  -4197,  0,   0, 3, 108,     2,   131,  4950,   547, 0, 0,   0, 0 },
+    { 0x1231,  -5628, -16384,  -4157,  -4197,  0,   0, 3, 108,     2,   131,  4950,   547, 0, 0,   0, 0 },
+    { 0x1230,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
+    { 0x1231,   2190,  16804,   5514,  31058,  0,   0, 4, 109,    98,    86,  1915,   408, 0, 0,   0, 0 },
     { 0x1190, -26804, -29504,  22224,  -7112,  0,   2, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
     { 0x1191, -26804, -29504,  22224,  -7112,  0,   2, 0,  26,    75,   127,  1920,  2301, 0, 0,   0, 0 },
     { 0x11A0, -22175,  -5850,  31000,  26950,  0,   1, 0,  27,     0,     0,     0,     0, 0, 0,   0, 0 },
@@ -171,14 +225,48 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x11D1, -11950, -24050,   7750, -10950,  0,   5, 0,  30,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x11E0, -32312, -30800,  31100,  31150,  1,   0, 0,  31,    91,   157,  2304,  2240, 0, 0,   0, 0 },
     { 0x11E1, -32312, -30800,  31100,  31150,  1,   0, 0,  31,    91,   157,  2304,  2240, 0, 0,   0, 0 },
-    { 0x11F0,  -3100, -17500,  12950,   6700,  1,   0, 0,  32,    35,   180,  2304,  2240, 0, 0,   0, 0 },
-    { 0x11F1,  -3100, -17500,  12950,   6700,  1,   0, 0,  32,    35,   180,  2304,  2240, 0, 0,   0, 0 },
-    { 0x1200, -29300, -28771, -16330,  -8650,  1,   0, 0,  33,   129,   150,  3168,  2305, 0, 0,   0, 0 },
-    { 0x1201, -29300, -28771, -16330,  -8650,  1,   0, 0,  33,   129,   150,  3168,  2305, 0, 0,   0, 0 },
-    { 0x1210, -28928, -28640,  -9776,   1366,  1,   4, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
-    { 0x1211, -28928, -28640,  -9776,   1366,  1,   4, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
-    { 0x1220, -28186, -28850, -10650,   -200,  1,   3, 0,  35,   180,   142,  2231,  2368, 0, 0,   0, 0 },
-    { 0x1221, -28186, -28850, -10650,   -200,  1,   3, 0,  35,   180,   142,  2231,  2368, 0, 0,   0, 0 },
+    /* Runde 35 Spur G (Nutzer: "In ROOM 11F0 / ROOM 1200 taucht nicht auf der Karte auf,
+     * wenn man drin ist"; G_karte.md B4). GEMESSEN: 11E0, 11F0 und 1200 trugen ALLE rect 0
+     * (die Garagen-Kachel von 11E0) - die eigenen Kacheln blieben ungezeichnet.
+     * 11F0 -> rect 1 (100,101,40,56): die hergeleitete Zeile trifft dessen L-Form Pixel fuer
+     * Pixel (Wand z2150 -> y107, Kunst 108; z5700 -> y100, Kunst 101; Ecke x1900 -> 109,
+     * Kunst 108). 1200 -> rect 2 (141,101,32,40): eigene Zeile @0x800769b0 projiziert die
+     * Huelle auf (137..176,99..143), die Tuer @0x7BA auf die gemalte Nische (165,139). */
+    { 0x11F0,  -3100, -17500,  12950,   6700,  1,   1, 0,  32,    35,   180,  2304,  2240, 0, 0,   0, 0 },
+    { 0x11F1,  -3100, -17500,  12950,   6700,  1,   1, 0,  32,    35,   180,  2304,  2240, 0, 0,   0, 0 },
+    { 0x1200, -29300, -28771, -16330,  -8650,  1,   2, 0,  33,   129,   150,  3168,  2305, 0, 0,   0, 0 },
+    { 0x1201, -29300, -28771, -16330,  -8650,  1,   2, 0,  33,   129,   150,  3168,  2305, 0, 0,   0, 0 },
+    /* Runde 35 Spur G (Nutzer: "In ROOM 1210 ist der Korridor falsch und so gut wie alle
+     * Tueren fehlen"). GEMESSEN: 1210 lag auf rect 4 (eine 16x24-ZELLE), 1220 auf rect 3
+     * (den T-Korridor) - vertauscht. 1210 -> rect 3 (eigene Zeile @0x800769b8: Huelle
+     * (184..230,68..133), Tueren je 1 px an den gemalten Nischen). 1220 (Stub @0x800769c0)
+     * teilt den Weltrahmen mit 1210 (Tuerpaare: Tuer-Rechteck der einen Seite liegt auf dem
+     * Spawn der anderen) -> die 1210-Zeile gilt; die 5 Zellen sind 5 Orte = rect 4/6/5/7/8.
+     * KAESTEN AUS DER SCA von ROOM1220.RDT (Block @0x530, Band-0-Eintraege ab @0x548, 12 B
+     * {u16 w, u16 d, s16 x, s16 z, ...}; Nachbesserung 1, Abnahme 0 G1). Innenflaechen:
+     *   x West -27611 = @0x05C0 (x -28186..-27611) | x -21836 = @0x05CC/@0x05D8 (x -21836..)
+     *   x Ost  -17075 = @0x0590 (x -17275..-17075) | x -11311 = @0x065C (x -11311..-10736)
+     *   z Nord -4500 = @0x0560 (West, z -4500..-4300) | -4525 = @0x0578 (Ost, z -4525..-4300)
+     *   Teiler 1/2 z -11925..-11725 = @0x062C (West) / @0x0668 (Ost)
+     *   Teiler 2/3 z -19875..-19675 = @0x05B4 (West) / @0x0698 (Ost)
+     *   z Sued -26750 = @0x05A8 (z -28750..-26750)
+     * An den GEMEINSAMEN Teilern ist jeder Kasten um ZONE_SLACK = 1500 eingezogen (Port-
+     * Toleranz des Zonentests, re15_map_zones.c:39 - sonst ueberlappten sich die Zellen):
+     *   idx0 z -10225 = -11725 + 1500 | idx1 z -10225 | idx2 z -13425 = -11925 - 1500, unten
+     *   -19675 (Teilerflaeche, die SW-Kammer z < -19875 hat keine Tuer und ist nicht gemalt) |
+     *   idx3 z -18175 = -19675 + 1500 .. -13425 | idx4 z -26750 .. -21375 = -19875 - 1500. */
+    { 0x1210, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1211, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1220, -27611, -10225, -21836,  -4500,  1,   4, 0,  35,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1221, -27611, -10225, -21836,  -4500,  1,   4, 0,  35,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1220, -17075, -10225, -11311,  -4525,  1,   6, 1, 102,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1221, -17075, -10225, -11311,  -4525,  1,   6, 1, 102,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1220, -27611, -19675, -21836, -13425,  1,   5, 2, 103,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1221, -27611, -19675, -21836, -13425,  1,   5, 2, 103,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1220, -17075, -18175, -11311, -13425,  1,   7, 3, 104,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1221, -17075, -18175, -11311, -13425,  1,   7, 3, 104,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1220, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
+    { 0x1221, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1250, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x1251, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x2000, -29000, -29000,   7450,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0 },
@@ -351,10 +439,20 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x4071, -14950, -28550,  -2100, -15750,  9,   1, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x50D0, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x50D1, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1080, -16750,  -5150, -10550,    950,  3,   4, 0,   9,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1081, -16750,  -5150, -10550,    950,  3,   4, 0,   9,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1080, -16750,  -5150, -10550,    950,  4,   0, 0,   9,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x1081, -16750,  -5150, -10550,    950,  4,   0, 0,   9,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* Runde 35 Spur G: dieselbe Kabine auf 2F (Ersatzrect Blatt 3 Nr. 4 = (109,134) wie 1F)
+     * und 3F (Blatt 4 rect 0 (127,137), gemalte Waende x127/x136 y137/y146, MAP05.PIX @0x1454).
+     * Abbildung wie die 1F-Zeile oben: RE2-Massstab 2330 (FUN_8006e120 @0x8006e1dc), Versatz
+     * aus der Kunst (3F: Kasten um (+18,+3) verschoben -> 173/76). Nachbesserung 1. */
+    { 0x1080, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1081, -16750,  -5150, -10550,    950,  3,   4, 0,   9,   155,    73,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1080, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   173,    76,  2330,  2330, 1, 1,   0, 1 },
+    { 0x1081, -16750,  -5150, -10550,    950,  4,   0, 0,   9,   173,    76,  2330,  2330, 1, 1,   0, 1 },
+    /* Runde 35 Spur G: ROOM10A0 (Treppenhaus) auf B1 = Blatt 0 rect 6. Band 4: Ankunft aus
+     * ROOM1180/1230 auf y -7200 (Tuer @0xA34/@0xB34, Spawn (21200,-7200,25500);
+     * re15_collision_band_from_y = -(y/0x708) = 4). Die gemalte Nische der Gang-Kachel
+     * (155..159,108..112) oeffnet genau auf rect 6 (153,114,16,24). */
+    { 0x10A0,  17850,  15550,  29100,  28300,  0,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
+    { 0x10A1,  17850,  15550,  29100,  28300,  0,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x4020, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x4021, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x4020, -28200, -28400, -18450, -18600, 10,   3, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
@@ -380,21 +478,36 @@ typedef struct { unsigned char page, rect; short mx, my;
                } re15_map_mark_t;
 static const re15_map_mark_t s_map_marks[] = {
     {  0,  1,  116,  116, 2,  27, 255, 0 },
-    {  0,  2,  151,   69, 0,  26, 255, 0 },
+    {  0,  2,  151,   69, 0,  26, 106, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  3,  168,   82, 3,  28, 255, 0 },
     {  0,  3,  172,  100, 1,  28,  29, 1 },
     {  0,  3,  233,   88, 1,  28, 255, 0 },
-    {  0,  5,  129,  124, 0,  30, 255, 0 },
+    {  0,  5,  129,  124, 0,  30, 108, 1 },   /* Runde 35 Spur G: gepaart mit Gang 1180/1230 */
     {  0,  5,  137,  172, 2,  30, 255, 0 },
-    {  0,  6,  160,  134, 2,  25, 255, 0 },
-    {  0,  6,  168,  114, 1,  25, 255, 0 },
+    /* Runde 35 Spur G: die Tueren des Gangs 1180/1230 auf seinem rect 0 (statt rect 6),
+     * je auf der gemalten Nische (G_karte.md B4): 1190-Haupt (136..141,71..75) Wand y76,
+     * 10A0 (155..159,108..112) Wand y113. Ungepaart (zid2 255): der 1190-Hauptraum (rect 1)
+     * und der 10A0-Absatz fuehren auf diesem Blatt keine Zone, deren Kasten die Marke
+     * beruehrt (Pin unit_map_durchgang). 1190-Ost und 11D0 tragen schon je eine Marke auf
+     * DEMSELBEN Punkt ((151,69) rect 2, (129,124) rect 5) - die werden mit dem Gang
+     * gepaart (auf_partner), statt eine zweite daraufzulegen. Die 11B0-Tuer bekommt KEINE Gang-Marke: die Kachel malt sie
+     * UNTER dem Zweig (y78..86), der Gang laeuft in der Welt dort nach Norden weiter - ein
+     * Zug dorthin liesse den Marker beim Nordwaertsgehen nach UNTEN rutschen. */
+    {  0,  0,  139,   76, 2, 106, 255, 0 },
+    {  0,  0,  157,  113, 2, 107, 255, 0 },
     {  1,  0,  105,  109, 2,  31,  32, 1 },
     {  1,  0,  165,  139, 0,  31,  33, 1 },
-    {  1,  3,  201,   95, 3,  35,  34, 1 },
-    {  1,  3,  206,   95, 0,  35,  34, 0 },
-    {  1,  4,  187,   78, 3,  34,  31, 1 },
-    {  1,  4,  201,   83, 1,  34,  35, 1 },
-    {  1,  4,  201,   91, 1,  34,  35, 1 },
+    /* Runde 35 Spur G: ALLE sechs Tueren von ROOM1210 auf dem T-Korridor (rect 3), je auf
+     * der gemalten Nische (G_karte.md B4): 11E0 x187 y72..76 (1210.RDT @0x1CC6), Zellen
+     * West x201 (rect 4 Nische y80..84 @0x1CE6, rect 5 y97..101 @0x1D26), Zellen Ost x212
+     * (rect 6 y89..93 @0x1D06, rect 7 y106..110 @0x1D46, rect 8 y123..127 @0x1D66).
+     * Vorher: 5 Marken, davon (206,95) quer mitten im Gang und 3 der 5 Zellentueren fehlten. */
+    {  1,  3,  187,   74, 3,  34,  31, 1 },
+    {  1,  3,  201,   82, 3,  34,  35, 1 },
+    {  1,  3,  212,   91, 1,  34, 102, 1 },
+    {  1,  3,  201,   99, 3,  34, 103, 1 },
+    {  1,  3,  212,  108, 1,  34, 104, 1 },
+    {  1,  3,  212,  125, 1,  34, 105, 1 },
     {  1,  9,  176,  101, 2,  10,  31, 1 },
     {  1,  9,  177,  101, 0,  10, 255, 0 },
     {  1,  9,  177,  115, 4,  10, 255, 0 },
@@ -748,6 +861,10 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x50D1, 0,  0, 11,  0 },
     { 0x50D0, 0,  3, 10,  1 },
     { 0x50D1, 0,  3, 10,  1 },
+    /* Runde 35 Spur G: ROOM10A0 B1-Absatz (Ankunft y -7200 aus 1180/1230 -> Band 4). AM ENDE
+     * angehaengt: Pin unit_map_speichern_laden prueft Zeile 48 = ROOM50D0. */
+    { 0x10A0, 0,  4,  0,  6 },
+    { 0x10A1, 0,  4,  0,  6 },
 };
 
 /* SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX. Fuer Zonen, denen kein

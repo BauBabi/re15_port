@@ -37,6 +37,7 @@
                                   * Basis-Ids, die 30 Zeilennamen und der Blob sind
                                   * ARCHIV der Originalbytes (s. emit_file_list). */
 #include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
+#include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 
 /* Die Archiv-Tabellen bleiben im Uebersetzungslauf REFERENZIERT, damit ihr Wegfall aus
  * dem Spiel keine "unbenutzt"-Warnung wird und der Zensus sie weiter abgleichen kann
@@ -858,6 +859,8 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 int lo_y = ry + reserve, hi_y = ry + rh - reserve;
                 if (hi_x < lo_x) { lo_x = hi_x = rx + rw / 2; }
                 if (hi_y < lo_y) { lo_y = hi_y = ry + rh / 2; }
+                /* Runde 35 Spur G (Nachbesserung 1): Fahrstuhlkabine - Fenster = gemalter Innenraum */
+                re15_karte_fahrstuhl_fenster(zn->room, rx, ry, &lo_x, &hi_x, &lo_y, &hi_y);
                 if (*mx < lo_x) *mx = (int16_t)lo_x;
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;

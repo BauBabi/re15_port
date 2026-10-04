@@ -103,9 +103,27 @@ int main(void)
         snprintf(t, sizeof t, "%s (ROOM%04X, Blatt %u) ist eine Gast-Zeile",
                  GAST[i].was, GAST[i].room, GAST[i].page);
         CHECK(t, zn->etage != 0);
-        snprintf(t, sizeof t, "%s traegt KEINE Original-Kartenzeile (sx=%d sy=%d)",
-                 GAST[i].was, zn->sx, zn->sy);
-        CHECK(t, zn->sx == 0 && zn->sy == 0);
+        /* ⛔ Runde 35 Spur G (Fahrstuhl ROOM1080, G_karte.md B5): die REGEL meinte "keine
+         * ABSOLUTE Zeile eines ANDEREN Blatts". Eine Gast-Zeile darf eine Zeile tragen,
+         * die fuer IHR Blatt eingemessen ist - Probe: der Mittelpunkt der Zonen-Box
+         * projiziert IN das eigene Rechteck (die geliehene 1060-Zeile lag 2026-09-07 als
+         * einzige Spalte x=122 daneben). Die Wirkungsprobe darunter bleibt unveraendert. */
+        {
+            int drin = 0, rx, ry, rw, rh;
+            if (zn->sx && zn->sy &&
+                re15_map_rect_geometry(zn->page, zn->rect, &rx, &ry, &rw, &rh)) {
+                int32_t cx = (zn->wx0 + zn->wx1) / 2, cz = (zn->wz0 + zn->wz1) / 2;
+                int32_t tx = ((cx + 32000) * 10 * (int32_t)zn->sx) >> 20;
+                int32_t tz = ((cz + 32000) * 10 * (int32_t)zn->sy) >> 20;
+                int px = (zn->flip_x ? -((tx + 5) / 10) : ((tx + 5) / 10)) + zn->ox;
+                int py = (zn->flip_z ? ((tz + 5) / 10) : -((tz + 5) / 10)) + zn->oy;
+                drin = (px >= rx && px < rx + rw && py >= ry && py < ry + rh);
+            }
+            snprintf(t, sizeof t, "%s traegt keine BLATTFREMDE Kartenzeile (sx=%d sy=%d, "
+                     "eigene Zeile trifft ihr Rechteck: %d)", GAST[i].was, zn->sx, zn->sy,
+                     drin);
+            CHECK(t, (zn->sx == 0 && zn->sy == 0) || drin);
+        }
         {
             int n = marker_pixel(zn);
             snprintf(t, sizeof t, "%s: Marker erreicht %d verschiedene Pixel (>= 10)",
