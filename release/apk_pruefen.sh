@@ -95,15 +95,18 @@ GATE_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_asset_gate.sha
 # hier senken (git-Diff), nicht still.
 GATE_SELBSTTEST_MIN_FAELLE=261
 GATE_SELBSTTEST_MIN_INNEN=148
-# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 1: 243 Faelle, 781 von
-# 785 Mutanten erkannt, 4 als gleichwertig begruendet - vorher 119 / 257 von 260 / 3; seitdem werden auch Zeichenketten
-# und Regex-Muster mutiert, Abnahme 0 M1). Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum
-# gleichwertigen erklaert statt einen Fall zu schreiben, muss das HIER sichtbar tun.
+# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 2: 280 Faelle, 887 von
+# 894 Mutanten erkannt, 7 als gleichwertig begruendet - Nachbesserung 1: 243 / 781 von 785 / 4, Bau: 119 / 257 von 260 /
+# 3; NB1 mutiert auch Zeichenketten und Regex-Muster, NB2 auch die einseitigen Lockerungen != -> < / >, == -> <= / >=
+# und hat je Vergleichsstelle Faelle von beiden Seiten - die 3 neuen "gleichwertigen" sind Ordnungs-Mutanten auf
+# Werten, die nie negativ bzw. nie 0 sein koennen, Begruendung je Eintrag in gate_urteil.py AEQUIVALENT).
+# Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum gleichwertigen erklaert statt einen Fall zu
+# schreiben, muss das HIER sichtbar tun.
 GATE_URTEIL_QUELLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.py"
 GATE_URTEIL_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.sha256"
-GATE_URTEIL_MIN_FAELLE=243
-GATE_URTEIL_MIN_ERKANNT=781
-GATE_URTEIL_MAX_GLEICH=4
+GATE_URTEIL_MIN_FAELLE=280
+GATE_URTEIL_MIN_ERKANNT=887
+GATE_URTEIL_MAX_GLEICH=7
 GATE_URTEIL_KOPIE=""              # gate_festhalten: gepruefte private Kopie von release/gate_urteil.py
 GATE_URTEIL_GEPRUEFT=""           # sha256 der Urteils-Kopie, deren Selbsttest in dieser Shell bestanden hat
 if [[ -n "${APK_GATE_DATEI:-}" ]]; then

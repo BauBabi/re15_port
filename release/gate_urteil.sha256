@@ -3,4 +3,4 @@
 # Gate-Lauf NUR mit einer privaten Kopie, deren sha256 diese ist, und nur nachdem deren Selbsttest (Faelle + Mutanten)
 # bestanden hat. Urteil mit Absicht geaendert: erst  "$PY" release/gate_urteil.py --selbsttest  (URTEIL-SELBSTTEST-OK),
 # dann den Wert von  sha256sum release/gate_urteil.py  hier eintragen und mit der Aenderung committen.
-c8fed5cab7016a9d699b0b1dc90dc1532e7f1356ec0219a801d911cbc0a25ba8
+107de123f9aa2b733d089280f1920d33a5c442a8c8e6fff578eec993e1507a2e

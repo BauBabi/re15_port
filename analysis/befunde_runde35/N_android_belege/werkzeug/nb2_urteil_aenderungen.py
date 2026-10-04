@@ -46,7 +46,7 @@ E = [
      [('else "", tuer_soll()))', 'else "", 2))', False),
       (r"\n        tuer_soll\(\)[^\n]*(\n        ende\(0, \"APK-ASSET-GATE-OK)", r"\1", True)]),
     ("E26", "st 'or b < min_innen' weg", [("if a != b or b < min_innen:", "if a != b:", False)]),
-    ("E44", "apk Kette ohne '== n'", [("q == a == g == mz == n", "q == a == g == mz", False)]),
+    ("E44", "apk Kette ohne '== n'", [("not (q == a == g == mz == n)", "not (q == a == g == mz)", False)]),
     ("E45", "tuer_soll 'not t or' weg", [("if not t or any(", "if any(", False)]),
 ]
 

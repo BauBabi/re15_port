@@ -16,20 +16,25 @@ exec "$PY" "$0" "$@" #
 # nachsichtige Regression im Urteil ist STILL: jeder gute Lauf bleibt gruen. Nutzer (Runde 35): "Kuenftige Aenderungen
 # am Pruefskript muessen dessen Urteilslogik selbst sorgfaeltig mittesten." Deshalb:
 #   * --selbsttest prueft das Urteil an FESTEN Ausgaben (gute Laeufe je Modus, je Regel ein Gegenbeispiel, je gelesenem
-#     Muster Gegenbeispiele fuer jede Lockerung) UND an MUTANTEN der Funktion urteil(). Mutiert werden (Umfang, Stand
-#     Nachbesserung 1 - Abnahme 0, M1/M3): Vergleiche (==/!=, </<=, >/>=, in/not in), and/or, not, if-Bedingungen
-#     (True/False), ganze Zahlen (+-1, auch die Urteilszahlen 0/1/2 in ende()), weggelassene Ausdrucks-Aufrufe, JEDE
-#     Zeichenkette ausserhalb der Meldungstexte (MARKE-Tabelle, Modusnamen, "[FEHLER]", "ABBRUCH", "Traceback", "ok",
-#     "\r"/"\n" ...: + ein fremdes Zeichen) und jedes Regex-Muster mit den Lockerungen R0-R6 (_regex_lockerungen: Text
-#     hinter dem Muster erlaubt, Rest ab Stueck k -> .*, Wort -> .*, \d+ -> .*, \s+ -> \s*, Einzelzeichen weg,
-#     Alternative weg). Jeder Mutant muss von mindestens einem Fall erkannt werden - sonst ist er als gleichwertig
-#     begruendet (AEQUIVALENT unten) oder der Selbsttest scheitert. Wer das Urteil aendert und keinen Fall dazu
-#     schreibt, bekommt einen ueberlebenden Mutanten = SELBSTTEST-FEHLER.
+#     Muster Gegenbeispiele fuer jede Lockerung, je Vergleichsstelle Faelle von BEIDEN Seiten) UND an MUTANTEN der
+#     Funktion urteil(). Mutiert werden (Umfang, Stand Nachbesserung 2 - Abnahme 1, M1/M2): Vergleiche (== und != durch
+#     jeden anderen Vergleich, also auch die einseitigen Lockerungen != -> < / > und == -> <= / >=; < <-> <=, > <-> >=,
+#     < <-> >, <= <-> >=; keine Ordnung auf Zeichenketten; in/not in, is/is not), and/or, not, if-Bedingungen
+#     (True/False), ganze Zahlen (+-1, auch die Urteilszahlen 0/1/2 in ende()), weggelassene Ausdrucks-Aufrufe (auch die
+#     Pruef-Anweisungen tuer_soll()), JEDE Zeichenkette ausserhalb der Meldungstexte (MARKE-Tabelle, Modusnamen,
+#     "[FEHLER]", "ABBRUCH", "Traceback", "ok", "\r"/"\n" ...: + ein fremdes Zeichen) und jedes Regex-Muster mit den
+#     Lockerungen R0-R6 (_regex_lockerungen: Text hinter dem Muster erlaubt, Rest ab Stueck k -> .*, Wort -> .*,
+#     \d+ -> .*, \s+ -> \s*, Einzelzeichen weg, Alternative weg). Jeder Mutant muss von mindestens einem Fall erkannt
+#     werden - sonst ist er als gleichwertig begruendet (AEQUIVALENT unten) oder der Selbsttest scheitert. Wer das
+#     Urteil aendert und keinen Fall dazu schreibt, bekommt einen ueberlebenden Mutanten = SELBSTTEST-FEHLER.
+#     Strukturregel (Nachbesserung 2, M2): kein Meldungstext ruft eine Funktion des Urteils (ende, genau_eine,
+#     tuer_soll ...) - eine Pruefung im Meldungstext waere fuer die Mutanten unsichtbar; der Selbsttest scheitert sonst.
 #     NICHT mutiert: die Meldungstexte (zweites Argument von ende() und genau_eine()), urteil_rufen(), main() und der
 #     Selbsttest selbst; Aenderungen, die keiner dieser Operatoren abbildet (z.B. any -> all, Funktions- oder
-#     Methodentausch, Zeichenklassen in Regex), faengt nur die Fallsammlung - gemessen in
-#     analysis/befunde_runde35/N_android_belege/nb1_urteil_aenderungen_nachher.txt. main()/urteil_rufen() und das
-#     bash-Urteil in apk_pruefen.sh pruefen die Negativ-Kontrollen von ctest unit_r35_android_pruefkette.
+#     Methodentausch, Zeichenklassen in Regex, Rechenoperatoren wie + -> -), faengt nur die Fallsammlung - gemessen
+#     in analysis/befunde_runde35/N_android_belege/nb1_urteil_aenderungen_nachher.txt und nb2_urteil_aenderungen_nachher.txt.
+#     main()/urteil_rufen() und das bash-Urteil in apk_pruefen.sh pruefen die Negativ-Kontrollen von ctest
+#     unit_r35_android_pruefkette.
 #   * release/apk_pruefen.sh haelt diese Datei wie das Gate fest (Pin release/gate_urteil.sha256, private Kopie),
 #     laesst den Selbsttest vor JEDER Nutzung laufen und prueft dessen Schlusszeile in bash (Mindestzahlen dort), und
 #     verlangt fuer ein OK-Urteil zusaetzlich - unabhaengig von diesem Code - Rueckgabe 0 des Gates (gate_laufen).
@@ -77,12 +82,13 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         return [int(g) for g in t[0].groups()]
 
     def tuer_soll():
+        # Nachbesserung 2 (Abnahme 1, M2): eine EIGENE Anweisung je Modus (apk/quellbaum/paket), nicht mehr im Meldungstext
+        # von ende(0, ...) - dort liess sie sich ohne Signal entfernen (Meldungstexte werden nicht mutiert).
         t = [m for m in (re.fullmatch(r"   Tuer-Soll: .* (\d+)/(\d+) wie die Engine-Tabelle .*", z) for z in zeilen) if m]
         # Nachbesserung 1: als Zahlen vergleichen (das Gate druckt "%d/%d", apk_asset_gate.py _tuer_zeilen_drucken) -
         # so endet ein gelockertes Muster (\d+ -> .*) bei einer Nicht-Zahl in einer Ausnahme statt still gleich
         if not t or any(int(m.group(1)) != int(m.group(2)) or int(m.group(2)) == 0 for m in t):
             ende(2, "Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage")
-        return len(t)                             # nur fuer den Grund in ende(0, ...) (Meldungstext)
 
     if not zeilen:
         ende(2, "KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)")
@@ -144,8 +150,10 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         if apk_eintraege:
             if int(apk_eintraege) != a + 1:
                 ende(2, "unzip zaehlt %s Eintraege unter assets/, das Gate %d Asset-Dateien + Manifest" % (apk_eintraege, a))
+        tuer_soll()
         ende(0, "APK-ASSET-GATE-OK: %d Dateien, Quelle = APK%s = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS "
-                "gleich, %d Tuer-Soll-Zeilen g/g" % (n, " = unzip-Zaehlung - 1" if apk_eintraege else "", tuer_soll()))
+                "gleich, %d Tuer-Soll-Zeilen g/g" % (n, " = unzip-Zaehlung - 1" if apk_eintraege else "",
+                                                    sum(z.startswith("   Tuer-Soll:") for z in zeilen)))
     if modus == "quellbaum":
         m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen, Tuer-Soll erfuellt", rest)
         if not m:
@@ -154,8 +162,9 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         baum = [int(x.group(1)) for x in (re.fullmatch(r"   \S+\s+(\d+) Dateien", z) for z in zeilen) if x]
         if n <= 0 or len(baum) != k or sum(baum) != n or 0 in baum:
             ende(2, "Baumzeilen %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
+        tuer_soll()
         ende(0, "APK-ASSET-GATE-QUELLBAUM-OK: %d Dateien in %d Baeumen (Summe der Baumzeilen), %d Tuer-Soll-Zeilen g/g"
-             % (n, k, tuer_soll()))
+             % (n, k, sum(z.startswith("   Tuer-Soll:") for z in zeilen)))
     if modus == "paket":
         m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen bytegleich, nichts zusaetzlich", rest)
         if not m:
@@ -164,8 +173,9 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         baum = [(int(x.group(1)), int(x.group(2))) for x in (re.fullmatch(r"   \S+\s+(\d+)\s+(\d+)", z) for z in zeilen) if x]
         if n <= 0 or len(baum) != k or any(qq != gg or qq == 0 for qq, gg in baum) or sum(gg for _qq, gg in baum) != n:
             ende(2, "Baumzeilen (Quelle, gleich) %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
+        tuer_soll()
         ende(0, "APK-ASSET-GATE-PAKET-OK: %d Dateien in %d Baeumen, je Baum Quelle = gleich, %d Tuer-Soll-Zeilen g/g"
-             % (n, k, tuer_soll()))
+             % (n, k, sum(z.startswith("   Tuer-Soll:") for z in zeilen)))
     # hierher kommt kein bekannter Modus (jeder Zweig endet mit ende()); urteil_rufen wertet "ohne Ergebnis" als 2
 
 
@@ -206,16 +216,72 @@ def _selbsttest_log(n=5, innen=3):
 
 
 def _apk_log(n=12, b=4096):
+    return _apk_log_z(n, n, n, b, n, b, n)
+
+
+def _apk_log_z(q, a, g, b, mz, mb, n):
+    """apk-Ausgabe mit einzeln waehlbaren Zahlen (Nachbesserung 2): SUMME Quelle q / APK a / gleich g / Bytes b,
+    Manifest mz Zeilen / mb Bytes, Schlusszeile n Dateien. _apk_log(n, b) = _apk_log_z(n, n, n, b, n, b, n)."""
     return ["== APK-Asset-Gate: pruefe x.apk gegen den Quellbaum ==",
             "   %-28s %7s %7s %8s %12s" % ("Baum", "Quelle", "APK", "gleich", "Bytes"),
-            "   %-28s %7d %7d %8d %12d" % ("shared_assets/PSX", n, n, n, b),
-            "   SUMME %28d %7d %8d %12d" % (n, n, n, b),
-            "   Manifest:   %d Zeilen / %d Bytes (Format v2, sha256 je Datei)" % (n, b),
+            "   %-28s %7d %7d %8d %12d" % ("shared_assets/PSX", q, a, g, b),
+            "   SUMME %28d %7d %8d %12d" % (q, a, g, b),
+            "   Manifest:   %d Zeilen / %d Bytes (Format v2, sha256 je Datei)" % (mz, mb),
             "   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27",
             "   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30",
             "   TORSE.VBS: Quelle 1234 B, APK 1234 B, sha256 gleich"] + TUER + [
             "== APK-ASSET-GATE-OK: %d Dateien in 1 Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, "
             "ZIP-Struktur wie Android sie liest ==" % n]
+
+
+def _faelle_seiten(f, S, A, Q, P):
+    """Nachbesserung 2 (Abnahme 1, M1/M2): jede Vergleichsstelle des Urteils von BEIDEN Seiten (kleiner UND groesser) -
+    je Fall genau EINE Bedingung verletzt, alle anderen erfuellt. Vorher pruefte die Fallsammlung jede Ungleichung nur
+    von einer Seite (Summe nur < n, qq nur > gg, ok_n nur < n, g1 nur < g2, mb nur > b, len nur < k), und eine einseitige
+    Lockerung (!= -> < oder >, == -> <= oder >=) blieb unbemerkt. Soll 2 = keine Aussage."""
+    # ---- selbsttest: ok_n > n (die andere Seite "6/7 Faelle" steht in _faelle), a > b mit b = Mindestzahl ("3/2" in
+    # _faelle verletzt zugleich die Mindestzahl und isoliert a > b nicht)
+    f("st/S: 6/5 Faelle bei 5 Fallzeilen (ok_n > n)", "selbsttest", _ersetze(S, "5/5 Faelle", "6/5 Faelle"), 0, 2)
+    f("st/S: Innere Proben 4/3 (a > b, b = Mindestzahl)", "selbsttest",
+      _ersetze(S, "Innere Proben: 3/3", "Innere Proben: 4/3"), 0, 2)
+    # ---- Rueckgabe des Gates unter 0: main() nimmt jede ganze Zahl, OK ist nur genau 0, ein Befund nur genau 1
+    for modus, L in (("selbsttest", S), ("apk", A), ("quellbaum", Q), ("paket", P)):
+        f("%s gut, Rueckgabe -1" % modus, modus, "\n".join(L), -1, 2)
+    f("apk FEHLER, Rueckgabe -1", "apk", "   x\n== APK-ASSET-GATE-FEHLER: 1 Befunde ==", -1, 2)
+    # ---- apk: Kette q == a == g == mz == n, je Glied beide Seiten (alle Werte links vom Glied 12 -+ 1, rechts 12)
+    for k, glied in enumerate(("Quelle/APK", "APK/gleich", "gleich/Manifest", "Manifest/Schluss")):
+        for d in (-1, 1):
+            w = [12 + d if i <= k else 12 for i in range(5)]
+            f("apk/S: Kette %s %s (%s)" % (glied, "<" if d < 0 else ">", "/".join(map(str, w))), "apk",
+              "\n".join(_apk_log_z(w[0], w[1], w[2], 4096, w[3], 4096, w[4])), 0, 2)
+    # ---- apk: Manifest-Bytes kleiner UND groesser als die SUMME-Bytes ("SUMME Bytes 4095" in _faelle = mb > b)
+    f("apk/S: Manifest 4095 Bytes < SUMME 4096", "apk", "\n".join(_apk_log_z(12, 12, 12, 4096, 12, 4095, 12)), 0, 2)
+    f("apk/S: Manifest 4097 Bytes > SUMME 4096", "apk", "\n".join(_apk_log_z(12, 12, 12, 4096, 12, 4097, 12)), 0, 2)
+    # ---- apk: Tuerarchiv-Kette Quelle == APK == gleich == von > 0, je Glied beide Seiten (RE2/DOOR, links 27 -+ 1)
+    z = "Quelle 27, APK 27, sha256 gleich 27/27"
+    for k, glied in enumerate(("Quelle/APK", "APK/gleich", "gleich/von")):
+        for d in (-1, 1):
+            w = tuple(27 + d if i <= k else 27 for i in range(4))
+            f("apk/S: RE2/DOOR %s %s (%d/%d/%d/%d)" % ((glied, "<" if d < 0 else ">") + w), "apk",
+              _ersetze(A, z, "Quelle %d, APK %d, sha256 gleich %d/%d" % w), 0, 2)
+    # ---- Tuer-Soll g1 > g2 und - als EIGENE Pruefung (M2) - in quellbaum und paket mit erhaltener Schlusszeile:
+    # 29/30, 31/30, 0/0 (fehlende Tuer-Soll-Zeilen: "... Tuer-Soll fehlt" in _faelle, nur die Tuer-Soll-Zeilen entfernt)
+    f("apk/S: Tuer-Soll 31/30 (g1 > g2)", "apk", _ersetze(A, "30/30 wie", "31/30 wie"), 0, 2)
+    for kurz, modus, L in (("qb", "quellbaum", Q), ("pk", "paket", P)):
+        f("%s/S: Tuer-Soll 29/30" % kurz, modus, _ersetze(L, "30/30 wie", "29/30 wie"), 0, 2)
+        f("%s/S: Tuer-Soll 31/30" % kurz, modus, _ersetze(L, "30/30 wie", "31/30 wie"), 0, 2)
+        f("%s/S: Tuer-Soll 0/0" % kurz, modus, _ersetze(L, "27/27 wie", "0/0 wie"), 0, 2)
+    # ---- quellbaum: Anzahl Baumzeilen groesser UND kleiner als k bei passender Summe; Summe groesser als n
+    f("qb/S: 3 Baumzeilen bei 'in 2 Baeumen', Summe passt", "quellbaum", "\n".join(
+        ["   shared_assets/PSX   10 Dateien", "   synchro   1 Dateien", "   RE2   1 Dateien"] + TUER + [Q[-1]]), 0, 2)
+    f("qb/S: 2 Baumzeilen bei 'in 3 Baeumen', Summe passt", "quellbaum", _ersetze(Q, "in 2 Baeumen", "in 3 Baeumen"), 0, 2)
+    f("qb/S: Summe der Baumzeilen 13 > 12", "quellbaum", _ersetze(Q, "synchro   2 Dateien", "synchro   3 Dateien"), 0, 2)
+    # ---- paket: dasselbe, dazu Quelle < gleich bei passender Summe "gleich" ("11 != 10" in _faelle = Quelle > gleich)
+    f("pk/S: 3 Baumzeilen bei 'in 2 Baeumen', Summe passt", "paket", "\n".join(
+        ["   shared_assets/PSX   10   10", "   synchro   1   1", "   RE2   1   1"] + TUER + [P[-1]]), 0, 2)
+    f("pk/S: 2 Baumzeilen bei 'in 3 Baeumen', Summe passt", "paket", _ersetze(P, "in 2 Baeumen", "in 3 Baeumen"), 0, 2)
+    f("pk/S: Quelle 9 < gleich 10, Summe gleich passt", "paket", _ersetze(P, "PSX   10   10", "PSX   9   10"), 0, 2)
+    f("pk/S: Summe gleich 13 > 12", "paket", _ersetze(P, "synchro   2   2", "synchro   3   3"), 0, 2)
 
 
 def _quellbaum_log():
@@ -496,7 +562,9 @@ def _faelle():
     f("apk: TORSE.VBS fehlt", "apk", "\n".join(z for z in A if "TORSE" not in z), 0, 2)
     f("apk: unzip-Zaehlung = n", "apk", a, 0, 2, "12")
     f("apk: unzip-Zaehlung = n + 2", "apk", a, 0, 2, "14")
-    f("apk: Tuer-Soll fehlt", "apk", "\n".join(z for z in A if "Tuer-Soll" not in z), 0, 2)
+    # Nachbesserung 2 (Abnahme 1, M2): nur die Tuer-Soll-Zeilen weg - vorher filterte "Tuer-Soll" not in z auch die
+    # Schlusszeile (quellbaum/apk: "... Tuer-Soll erfuellt ...") mit, und der Fall erreichte die Regel nie
+    f("apk: Tuer-Soll fehlt", "apk", "\n".join(z for z in A if not z.startswith("   Tuer-Soll:")), 0, 2)
     f("apk: Tuer-Soll 29/30", "apk", _ersetze(A, "30/30 wie", "29/30 wie"), 0, 2)
     f("apk: Tuer-Soll 0/0", "apk", _ersetze(A, "27/27 wie", "0/0 wie"), 0, 2)
     # quellbaum
@@ -507,7 +575,7 @@ def _faelle():
                                                      "PSX   10 Dateien", "PSX   12 Dateien"), 0, 2)
     f("qb: 0 Dateien in 0 Baeumen", "quellbaum", "\n".join(TUER + ["== APK-ASSET-GATE-QUELLBAUM-OK: 0 Dateien in 0 Baeumen, "
                                                                    "Tuer-Soll erfuellt =="]), 0, 2)
-    f("qb: Tuer-Soll fehlt", "quellbaum", "\n".join(z for z in Q if "Tuer-Soll" not in z), 0, 2)
+    f("qb: Tuer-Soll fehlt", "quellbaum", "\n".join(z for z in Q if not z.startswith("   Tuer-Soll:")), 0, 2)
     # paket
     f("pk: Schluss anderer Wortlaut", "paket", _ersetze(P, "nichts zusaetzlich", "egal"), 0, 2)
     f("pk: Quelle != gleich", "paket", _ersetze(P, "PSX   10   10", "PSX   10   9"), 0, 2)
@@ -518,8 +586,9 @@ def _faelle():
                                             "PSX   10   10", "PSX   12   12"), 0, 2)
     f("pk: 0 Dateien in 0 Baeumen", "paket", "\n".join(TUER + ["== APK-ASSET-GATE-PAKET-OK: 0 Dateien in 0 Baeumen bytegleich, "
                                                                "nichts zusaetzlich =="]), 0, 2)
-    f("pk: Tuer-Soll fehlt", "paket", "\n".join(z for z in P if "Tuer-Soll" not in z), 0, 2)
+    f("pk: Tuer-Soll fehlt", "paket", "\n".join(z for z in P if not z.startswith("   Tuer-Soll:")), 0, 2)
     _faelle_muster(f, S, A, Q, P)
+    _faelle_seiten(f, S, A, Q, P)
     return F
 
 
@@ -541,6 +610,18 @@ AEQUIVALENT = {
     # beendet - die Alternative FEHLER wird nie mehr gebraucht (Nachbesserung 1, Operator R6)
     r'''Regex R6 Gruppe bei 5: Alternative 'FEHLER' weg: r" \[(ok|FEHLER)\] (\d+) (.*) rc=(-?\d+) \(soll (-?\d+)\)(.*)"''':
         "eine [FEHLER]-Fallzeile enthaelt '[FEHLER]' und endet schon in der Schleife davor mit 2",
+    # Nachbesserung 2 (Abnahme 1, M1): die neuen Ordnungs-Mutanten von == / != - drei sind auf dem Wertebereich gleich.
+    # tuer_soll: g2 kommt aus (\d+) - nur Ziffern, int() >= 0; "<= 0" ist dort dasselbe wie "== 0"
+    "Vergleich 0 Eq -> LtE: int(m.group(2)) == 0":
+        "g2 = int((\\d+)) ist nie negativ: <= 0 und == 0 sind auf jedem moeglichen Wert gleich",
+    # paket: qq kommt aus (\d+) - dasselbe
+    "Vergleich 0 Eq -> LtE: qq == 0":
+        "qq = int((\\d+)) ist nie negativ: <= 0 und == 0 sind auf jedem moeglichen Wert gleich",
+    # Urteilszeilen: an dieser Stelle hat m_ok die letzte Zeile als '== <MARKE>-OK: ... ==' erkannt, und jede solche Zeile
+    # passt auch auf das Urteilszeilen-Muster (MARKE ist eine seiner Alternativen, hinter 'OK' folgt ':' = \b) - die
+    # Liste hat also mindestens 1 Eintrag, und "> 1" ist dasselbe wie "!= 1"
+    "Vergleich 0 NotEq -> Gt: len(urteile) != 1":
+        "die OK-Schlusszeile (m_ok) ist selbst eine Urteilszeile, len(urteile) >= 1: > 1 und != 1 sind gleich",
 }
 
 
@@ -610,6 +691,7 @@ def _regex_lockerungen(p, voll):
       R3 "\\d+ Nr. k -> .*"         je Vorkommen, auch in Gruppen (eine Zahl wird nicht mehr verlangt)
       R4 "\\s+ Nr. k -> \\s*"       je Vorkommen (ein Zwischenraum wird nicht mehr verlangt)
       R5 "Zeichen k weg"            je einzelnes Literal-Zeichen auf oberster Ebene (Leerzeichen, Satzzeichen ...)
+      R6 "Alternative weg"          je Gruppe mit mindestens zwei Alternativen (auf jeder Tiefe) je eine Alternative weg
       R0 "Muster + .*"              nur fuer re.fullmatch/genau_eine: Text hinter dem Muster wird erlaubt
     -> Liste (beschreibung, neues_muster); jedes neue Muster nur einmal, das Original nie."""
     st = _regex_stuecke(p)
@@ -668,14 +750,23 @@ def _regex_alternativen(p):
 
 class _Mutierer(ast.NodeTransformer):
     """Erzeugt je Lauf genau EINE Aenderung an der Stelle nr (Zaehlung in Besuchsreihenfolge). Operatoren (Stand
-    Nachbesserung 1, Abnahme 0 M1/M3): Vergleich ==/!=, </<=, >/>=, in/not in, is/is not; and/or; not weg;
-    if-Bedingung -> False/True; ganze Zahl +-1; Ausdrucks-Aufruf weg; JEDE Zeichenkette ausserhalb von Meldungstexten
+    Nachbesserung 2, Abnahme 1 M1): Vergleich == und != -> jeder andere der sechs Vergleiche (darunter die einseitigen
+    Lockerungen != -> < / >, == -> <= / >=), < <-> <=, > <-> >=, < <-> >, <= <-> >= (keine Ordnungs-Operatoren, wo eine
+    Seite eine Zeichenkette ist), in/not in, is/is not; and/or; not weg; if-Bedingung -> False/True; ganze Zahl +-1;
+    Ausdrucks-Aufruf weg (auch jede Pruef-Anweisung wie tuer_soll()); JEDE Zeichenkette ausserhalb von Meldungstexten
     (Regex-Muster, MARKE-Tabelle, Modusnamen, Pruef-Literale wie "[FEHLER]"/"ABBRUCH"/"ok"/"\\r") -> + Zeichen U+00A7;
     jedes Regex-Muster (erstes Argument von re.fullmatch/re.match/re.search/genau_eine, auch links von %) zusaetzlich
-    die Lockerungen R0-R5 aus _regex_lockerungen. Meldungstext = zweites Argument von ende() und von genau_eine() - nur
-    dort wird nichts mutiert."""
-    TAUSCH = {ast.Eq: ast.NotEq, ast.NotEq: ast.Eq, ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt,
-              ast.In: ast.NotIn, ast.NotIn: ast.In, ast.Is: ast.IsNot, ast.IsNot: ast.Is}
+    die Lockerungen R0-R6 aus _regex_lockerungen. Meldungstext = zweites Argument von ende() und von genau_eine() - nur
+    dort wird nichts mutiert; deshalb darf keine PRUEFUNG im Meldungstext stehen (Nachbesserung 2, M2: tuer_soll())."""
+    # Nachbesserung 2 (Abnahme 1, M1): je Vergleichsoperator MEHRERE Ersatz-Operatoren. == und != werden durch JEDEN
+    # anderen Vergleich ersetzt - darunter die einseitigen Lockerungen in BEIDE Richtungen (!= -> < und != -> >,
+    # == -> <= und == -> >=), die vorher kein Mutant waren (TAUSCH bildete != nur auf == ab); <, <=, >, >= bekommen die
+    # Grenzverschiebung (< <-> <=, > <-> >=) und die umgekehrte Richtung (< <-> >, <= <-> >=). Ordnungs-Operatoren
+    # werden NICHT eingesetzt, wenn eine Seite eine Zeichenkette ist (eine Textordnung ist keine Lockerung einer Zahl).
+    TAUSCH = {ast.Eq: (ast.NotEq, ast.LtE, ast.GtE, ast.Lt, ast.Gt), ast.NotEq: (ast.Eq, ast.Lt, ast.Gt, ast.LtE, ast.GtE),
+              ast.Lt: (ast.LtE, ast.Gt), ast.LtE: (ast.Lt, ast.GtE), ast.Gt: (ast.GtE, ast.Lt), ast.GtE: (ast.Gt, ast.LtE),
+              ast.In: (ast.NotIn,), ast.NotIn: (ast.In,), ast.Is: (ast.IsNot,), ast.IsNot: (ast.Is,)}
+    ORDNUNG = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
     REGEX_RUFE = {"fullmatch", "match", "search", "genau_eine"}
 
     def __init__(self, quelle, ziel):
@@ -732,10 +823,15 @@ class _Mutierer(ast.NodeTransformer):
 
     def visit_Compare(self, node):
         self.generic_visit(node)
+        seiten = [node.left] + list(node.comparators)
         for i, op in enumerate(node.ops):
-            neu = self.TAUSCH.get(type(op))
-            if neu and self._treffer(node, "Vergleich %d %s -> %s" % (i, type(op).__name__, neu.__name__)):
-                node.ops[i] = neu()
+            text = any(isinstance(s, ast.Constant) and isinstance(s.value, str) for s in seiten[i:i + 2])
+            for neu in self.TAUSCH.get(type(op), ()):
+                if text and neu in self.ORDNUNG:
+                    continue
+                if self._treffer(node, "Vergleich %d %s -> %s" % (i, type(op).__name__, neu.__name__)):
+                    node.ops[i] = neu()
+                    return node
         return node
 
     def visit_BoolOp(self, node):
@@ -804,6 +900,23 @@ def _urteil_quelle():
     return ast.get_source_segment(text, fn), fn.lineno - 1
 
 
+def _meldung_regel(text, versatz):
+    """Nachbesserung 2 (Abnahme 1, M2): kein Meldungstext (zweites Argument von ende()/genau_eine()) darf eine Funktion
+    rufen, die im Urteil selbst definiert ist (ende, genau_eine, tuer_soll, ...). Meldungstexte werden nicht mutiert -
+    eine Pruefung darin (so stand tuer_soll() bis Nachbesserung 2 im Grund von ende(0, ...)) liesse sich ohne Signal
+    entfernen. -> Liste der Verstoesse ("Zeile n: name()")."""
+    fn = ast.parse(text).body[0]
+    eigene = {n.name for n in ast.walk(fn) if isinstance(n, ast.FunctionDef)}
+    out = []
+    for c in ast.walk(fn):
+        if (isinstance(c, ast.Call) and isinstance(c.func, ast.Name) and c.func.id in ("ende", "genau_eine")
+                and len(c.args) == 2):
+            for k in ast.walk(c.args[1]):
+                if isinstance(k, ast.Call) and isinstance(k.func, ast.Name) and k.func.id in eigene:
+                    out.append("Zeile %d: %s()" % (k.lineno + versatz, k.func.id))
+    return out
+
+
 def _mutant(text, versatz, nr):
     neu = ast.parse(text).body[0]
     m = _Mutierer(text.encode("utf-8").splitlines(keepends=True), nr)
@@ -831,6 +944,9 @@ def selbsttest():
                                                          "" if gut else "  %s: %s" % (art[0], grund[:100])))
     n_f = len(faelle)
     text, versatz = _urteil_quelle()
+    for v in _meldung_regel(text, versatz):
+        print("   [FEHLER] Pruefung im Meldungstext (wird nicht mutiert - als eigene Anweisung davor schreiben): " + v)
+        falsch += 1
     n_m = erkannt = gleich = 0
     ueberlebt, aeq_gesehen = [], set()
     nr = 0
