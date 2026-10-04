@@ -1490,11 +1490,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                                ? (int16_t)(((int)pl->rot_y + 0x800) & 0xfff)
                                : pl->rot_y;
             re15_player_knockback_delta(kb_yaw, s_hit_kb, &dx, &dz);
-            int32_t nx = pl->x + dx, nz = pl->z + dz;
-            re15_collision_ensure_band(pl->y);
-            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
-            re15_collision_objects(&nx, &nz);
-            pl->x = nx; pl->z = nz;
+            int32_t nx = pl->x + dx, nz = pl->z + dz; (void)ox; (void)oz;   /* Runde 35 Spur J (14): Handler = nur FUN_800245d8 @0x80035f18 (keine Klemme darin), */
+            pl->x = nx; pl->z = nz;                                        /* Klemme @0x80031d70 im Schwanz, Objekt-Pass @0x8001ce14 danach */
             s_hit_kb -= 0x32;                                              /* DAT_800acaf2 = 50 */
             if (s_hit_kb < 0) s_hit_kb = 0;
         }
@@ -1519,6 +1516,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* @0x80031cbc/@0x80031d70 — NACH dem cmd-2-Handler, genau wie im Original. Ohne das
          * lief der Boss dem flinchenden Spieler 22 Bilder lang in den Koerper (gemessen). */
         re15_player_body_and_walls(c, pl, fl_ax, fl_az);
+        if (c->rdt_ok) re15_collision_objects(&pl->x, &pl->z);   /* Runde 35 Spur J (14): FUN_8002bd44 @0x8001ce14 NACH dem Dispatcher */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original

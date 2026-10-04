@@ -701,7 +701,15 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
     int f_ende = 196 + 720;   /* N4: alle 14 Bisse bis zum Tod (Original-Zeile F892) */
     for (int f = 196; f < f_ende; f++) {
         if (desync && f == 203) b->dog_blocked_ctr = 30;   /* = GDB-Schreiben M800ad1f0,2:1e00 im Original */
+        re15_schritt_station_reset();
         frame(0, 0);
+        if (spur && !desync) {   /* N5: Spieler-Stationen wie die GDB-Haltepunkte 0x80031cbc / 0x80031cc4 / 0x80031d78 */
+            int32_t st[4][2] = {{0}};
+            for (int k = 0; k < 4; k++) re15_schritt_station_hole(k, &st[k][0], &st[k][1]);
+            printf("P%4d r%d c%d/%d anf(%d,%d) tick(%d,%d) schub(%d,%d) klemme(%d,%d)\n", f, (int)pl->rot_y, (int)pl->motion,
+                   (int)pl->anim_frame, (int)st[0][0], (int)st[0][1], (int)st[1][0],
+                   (int)st[1][1], (int)st[2][0], (int)st[2][1], (int)st[3][0], (int)st[3][1]);
+        }
         if (spur && !desync)
             printf("S%4d hp%d %d/%d c%d/%d (%d,%d) | e1 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f | e2 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f\n",
                    f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (int)pl->x, (int)pl->z,
