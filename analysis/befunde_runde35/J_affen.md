@@ -1405,3 +1405,80 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
   ein Gorilla ihn wieder erreichen. Fuer diese Lage gibt es keine Original-Spur (OFFEN N4-2).
 - Dossier-Aussage N3 "Fuer den Nutzer (3)" ist damit zu eng formuliert: berichtigt im Abschnitt "Fuer den Nutzer
   (Stand Nachbesserung 4)". Z. 1189 nennt "Bahn T265-T290 im Mittel 31" — gemessen waren 34 (`jnb3/griff6.txt`).
+
+### Messung nachher, exe ueber den ECHTEN Tuerweg (exe-Kopie re15_pc_jnb4.exe, md5 b519af3d... = re15_pc.exe; `jnb4/exe/run.sh`)
+- Env wie Abnahme 3 (RE15_SET_FLAG=4:243,3:130, RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der 11B0-Tuer, Quadrat-Tasten);
+  debug.log: `DOOR FIRE slot=1 ... spawn=(-25279,0,17268)` -> `PC loaded room11c0.rdt` -> F6 sub02 -> F1088 sub07.
+- `t1` (keine Eingabe, `jnb4/exe/takt.py`): Freigabe F1088 bei (-7148,-12363); Heavy **+363** (Original +364); Bisse
+  **+468, 521, 571, 624, 674, 727, 777, 830, 880, 933, 983, 1036, 1086, 1139**; Tod **+1189 = 39,6 s** (Original
+  +468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139, Tod +1194 = 39,8 s).
+  **Slot 2 (Treffer 3, 5, ... 15) = 521, 624, 727, 830, 933, 1036, 1139: 7/7 im selben Bild wie das Original** (Abnahme 3:
+  +524 ... +1148). Slot 3: 468/571/674 gleich, dann 777/880/983/1086 = -1/-2/-3/-4 (OFFEN N4-1). Abstaende 53/50 im Wechsel.
+- `o7` (RE15_INPUT_SCRIPT=W34.5,U2.5,W1, Leon im Freien, Bilder F1180-F1400/4): Rear-up S3 F1272, **Pin F1276**; Leon Clip
+  0x10 **F1359 = Pin + 83**, Clip 0xb **F1375 = +16**, Leerlauf **F1401 = +26** (Original +83/+16/+26); Brustschlag Clip 3
+  nach jedem Griff (F1324 `15/5 c3`, F1351 Sub 2 `c3`, F1685, F2044). Zweiter Griff F1648 (Rueckgriff im Clip-0x1c-Bild 16,
+  Ritt bis Clipende = 72 statt 83 Bilder, dieselbe Phase-3-Regel @0x8011acb4). Biss nach der Freigabe: F1415 (Slot 2,
+  14 Bilder nach F1401). Leon liegt hier im Freien in Reichweite; fuer diese Lage gibt es keine Original-Spur (OFFEN N4-2).
+  Bild `jnb4/exe/o7_griff_brust.png` (RE15_FRAMEDUMP, weil das Fenster-Capture weisse Bilder liefert): F1276 Zupacken,
+  F1324-F1372 aufrecht im Brustschlag, F1396 wieder auf allen vieren.
+
+### Tests (Stand Nachbesserung 4) — probes/r35_affen.cmake unveraendert (17 Eintraege), test_r35_affen.c
+- `takt`: Soll-Listen auf die gemessene Zeilen-Zuordnung (Port-Bild f = GDB-Zeile f) korrigiert und auf **alle 14 Bisse**
+  erweitert. Neue Pruefung **Slot 2 (e1): 7/7 Bisse im selben Bild wie das Original**. HEAD 458635e1 haette mit
+  218/321/425/529/633/737/841 gegen 219/322/425/528/631/734/837 rot gemeldet. Gleichtakt-Schranke 6, Wechseltakt jetzt 3
+  (gemessen 2). Pool und Zeichenstand des Startbildes F195 sind vorbelegt (re15_affen_pool_anim auf Bild 9/15); sonst verliert
+  der erste Tick die Fusssperre (Harness-Artefakt, gemessen: e1 39 / e2 78 Einheiten im ersten Bild).
+  Messspur `R35_TAKT_SPUR=1 test_r35_affen.exe takt` (nur Test-Code): je Bild Leon/e1/e2 im Format von g_orig_dec.
+- `szene`: neue **Einzelbiss-Pruefung gegen die Original-Liste** (+468 ... +1139). Der Versatz der 7 Slot-2-Bisse muss
+  gleich bleiben (max - min <= 1, |Versatz| <= 3; gemessen -1 .. -1; HEAD +3 .. +9 = rot). Slot 3: groesste Abweichung <= 6
+  (gemessen 4).
+- `griff`: Pool vorbelegt (wie takt). Die Wurf-Bahn-Schranke 200 gilt jetzt fuer T266-T290 (gemessen 183). **T265 hat eine
+  eigene Pruefung**: die Klemme liefert mit den Original-Eingaben die Original-Lage (-7804,-10186) und mit den Lauf-0-Eingaben
+  (Bezug 13 / Eingang 14 daneben) genau die Lauf-0-Lage. Die Abweichung von 1238 ist also die Empfindlichkeit der Klemme,
+  kein fremder Beweger. **Neue N1-Pruefung Lauf 0: kein Biss bis T495, Leon an der Original-Ruhelage (<= 60), e1/e2
+  3917/4927 entfernt (Original ~3925/~4990, Schranke 250)**.
+- Alle 17 Riegel + unit_maggot_ai/unit_member/unit_plc_back_yaw_1090 gruen (`jnb4/ctest_r35_b.log`, 22/22).
+
+### OFFEN (Stand Nachbesserung 4; ersetzt die Liste "Stand Nachbesserung 3")
+- **N4-1 Slot 3 (e2): Zyklus 103 statt 104 ab dem 4. Biss** (takt -1 je Zyklus; exe t1 777/880/983/1086 statt 778/882/986/
+  1090; Tod +1189 statt +1194). Gemessen: die Zustandsfolge ist Tick fuer Tick gleich, aber e2 trifft bei +0x95 = 14 statt 15
+  (15 = letztes Fensterbild {12..15} @0x8012146c), weil seine Lage 40-120 neben dem Original liegt. Herkunft: die e2-Yaw im
+  Wartebild am 2050-Kreis (Original 91 -> 83 in T196-T210, Port bleibt 91; Leon kriecht in beiden +1/+1 je Bild), also eine
+  tangentiale Drift der Ruhelage aus Koerper-Schub (FUN_8002aec4/b544) und Fusssperre von je 1-2 Einheiten. Dazu kommen die
+  Ueberblend-Bilder 2-6 des Bissclips, je 3-11 Einheiten kuerzer als im Original (T206-T210: -17/-63/-94/-112/-113 gegen
+  -19/-71/-97/-123/-121; "frac nach dem Abbau" ist widerlegt). Naechster Messweg: GDB-Haltepunkte FUN_8002b544 und
+  FUN_8011bf50 (Ein-/Ausgang je Bild) im takt-Experiment (g_orig-Savestate s033), Vergleich mit `R35_TAKT_SPUR`. Kandidaten:
+  GTE-Rundung GPF12/GPL12 (zwei Shifts) und das Record-Flag 0x800 in FUN_8001e9ec (Translation * Entity+0x88..+0x8c,
+  Decompilat Z. 15-24) im Zeichenstand.
+- **N4-2 Biss nach der Freigabe in freier Lage** (exe o7: Freigabe F1401, Slot-2-Biss F1415). Das A[3]-Gate ist das Original
+  (Spieler +0x93 == 0 @0x80117a54-5c, a804(0xbb8,0x180) @0x80117a60-74, +0x1dc == 0 @0x80117a88-90); eine Original-Spur fuer
+  einen Wurf ins Freie fehlt. Messweg: r3-Savestate s033, Leon vor dem Griff per GDB ins Freie setzen (wie das
+  Griff-Experiment jnb1/g_griff), dann Freigabe-Bild und naechsten HP-Wechsel lesen.
+- **N4-3 A[15]-Treffer mit +0x93 & 0x40** (Rear-up angeschossen, Wechsel auf Zustand 2 / Sub 7 @0x8011a8c8-fc): der B-Aufruf
+  @0x80117378 prueft +0x4 nicht, im Original laeuft im selben Tick B[7] (Sprung) einmal mit. Der Port fuehrt (10) nur bei
+  Zustand 1 aus. Messweg: GDB-Haltepunkt 0x8011a960/0x80118908 im selben VSync nach einem Krit-Treffer in Sub 15.
+- **N4-4 RNG-a0 im A->B-Wechselbild** (A[0]/A[4] -> B[3] im selben Tick): B[3] erbt im Original das a0 des vorigen A, der
+  Port bildet mit re15_affen_b3_a0 das A[3]-a0 nach. Messweg wie OFFEN 6 (Nachbesserung 2): a0 an `jal 0x8001af20`
+  @0x80117d1c im Wechselbild per GDB lesen.
+- **N4-5 Rueckwaerts-Abspiel Sub 15 Phase 7** (Fehlgriff, f314 a2 = 1 @0x8011ae5c): der Port zaehlt +0x95 ohne anim_set
+  herunter, der Pool (12) bleibt in diesen Bildern stehen. In Phase 7 laeuft kein bf50, die Auswirkung beschraenkt sich auf
+  den ersten Clip-6-Schritt danach. Messweg: Fehlgriff im Riegel erzwingen und diesen Schritt gegen eine GDB-Spur pruefen.
+- Weiter offen aus Nachbesserung 3: 5 (typ-unabhaengige Zombie-Paar-Naeherung fuer 0x20/0x21) und 6 (Spieler-Schub-
+  Reihenfolge @0x80031cbc; RNG-a0-Reste @0x801180a8/@0x8011898c, B[1], B[4]; dz-Rundung climb_common.c:360 /
+  enemy_ai_re2_spider.c:257; NPC-Klemme +0x82 hinter Flags; Knockdown-Sonde nur 11C0; Gorilla-Schatten @0x801171d8-ec;
+  Heckklappe @0x8002c254; Member_set 0x13 in anderen Raeumen).
+- Erledigt durch N4: OFFEN 3 (gemischte Pose) und 4 (Clip-Wechsel-Bild) von Nachbesserung 3 sowie "A/B im selben Bild" aus
+  OFFEN 6. OFFEN 1/2 (Startversatz Lauf 0, e2-Kriechen) sind auf N4-1 geschrumpft (e1 beim Pin hoechstens 37 daneben, Lauf 0
+  landet an der Original-Ruhelage).
+
+### Fuer den Nutzer (Stand Nachbesserung 4)
+- Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
+- Spuerbar neu: (1) Die Gorillas beissen jetzt im Rhythmus des Originals. Der erste Gorilla trifft ohne Eingabe in genau
+  denselben Bildern wie das PSX-Original (vorher lief er pro Biss ein Bild nach). Der Kampf bis zum Tod dauert 39,6 s
+  (Original 39,8 s). (2) Der Biss setzt im selben Bild ein, in dem sich der Gorilla dazu entscheidet (vorher ein Bild
+  Verzoegerung), und der Kiefer trifft erst, wenn er Leon im Bild wirklich erreicht hat. (3) Nach dem Ende eines Bisses
+  kriecht der Gorilla sofort weiter, statt kurz stehen zu bleiben und zurueckzurutschen.
+- Berichtigt (Aussage (3) aus Nachbesserung 3): Landet Leon nach dem Wurf hinter den Wagen, also dort, wo ihn das Original
+  ablegt, bleiben beide Gorillas zwischen den Wagen haengen und beissen nicht nach. Das ist jetzt im Riegel mit dem
+  Original-Startzustand UND mit dem eigenen Port-Zustand gemessen. Landet Leon im Freien, kann ihn der andere Gorilla sofort
+  wieder beissen (exe o7: 14 Bilder nach der Freigabe); dazu gibt es keine Original-Messung.
