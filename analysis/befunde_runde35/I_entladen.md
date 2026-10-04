@@ -817,3 +817,10 @@ Registriert nur in `tests/unit/probes/r35_entladen.cmake` (Foreach-Listen um n3b
 * Wirkung: die gruenen Lampen des Generator-Bedienfelds (ROOM11F0) werden nach Tuer und Tod mit dem Raum
   entladen und beim naechsten Oeffnen des Bedienfelds neu geladen; Aussehen unveraendert (A/B 8/8 bytegleich).
 * Messschiene: 19. Fach `lampe` in `RE15_ENTLADEN_LOG`.
+
+### Suite (N3)
+Eigener Bau, Code-Stand c7d97614 (danach nur Dossier), `bash re15_port/tools/local_build.sh all`:
+`=== LOCAL-BUILD-OK (all) — Tests 534/534` (Beleg re15_port/build/local_build_ctest.log:
+`100% tests passed, 0 tests failed out of 534`, `Total Test time (real) = 2635.41 sec`). Kein
+Flatter-Haken rot, nichts nachgefahren. 531 (N2) -> 534: + unit_r35_entladen_n3beleg +
+integration_r35_entladen_k + integration_r35_entladen_l.
