@@ -1,0 +1,17 @@
+# RE2-Welt-Item-Modell mesh049 md5=7b3e1ce8ea9eaab0f6b99fe08511e023 (W. Box Key)
+v 0 0 0
+v -76 0 -38
+v 76 0 -38
+f 1 2 3
+v 76 0 38
+v 0 0 0
+v 76 0 -38
+f 4 5 6
+v 0 0 0
+v 76 0 38
+v -76 0 38
+f 7 8 9
+v -76 0 -38
+v 0 0 0
+v -76 0 38
+f 10 11 12

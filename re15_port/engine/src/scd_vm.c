@@ -53,6 +53,7 @@
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
 #include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
+#include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 
 scd_vm_t g_scd;
 
@@ -3744,6 +3745,9 @@ static int op_sce_em_set(scd_thread_t *t)
     if ((g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
         type == 0x30u)
         type = 0x36u;
+    /* Runde 35 Spur F: Zombies ROOM1010/1220 weiter von der Eintrittstuer (NUTZER-VORGABE, nur x/z
+     * der genannten Original-Saetze; Herleitung include/re15_zombie_abstand.h). */
+    (void)re15_zombie_abstand_anwenden((uint16_t)g_current_room_id, slot, type, &x, &z);
 
     if (getenv("RE15_SPAWN_DIAG"))
         fprintf(stderr, "[spawn-diag] Sce_em_set type=0x%02X behavior=0x%02X slot=%u pos=(%d,%d,%d) dir=%d\n",

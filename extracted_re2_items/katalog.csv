@@ -1,0 +1,74 @@
+item_id;item_hex;name;karte;meshes;dateien;platzierungen
+1;0x01;Knife;;mesh000;modelle/mesh000_790e56fc_a.png;room2040/sub24@0x0248E
+5;0x05;Magnum;;mesh001;modelle/mesh001_36f33a09_a.png;room1150/sub00@0x01514 room2100/sub00@0x012D8
+7;0x07;Shotgun;;mesh002 mesh003;modelle/mesh002_78d92b1d_a.png modelle/mesh003_341ef2e2_a.png;room1150/sub00@0x014D4 room2000/sub00@0x027F8
+15;0x0F;S. Machine Gun;;mesh004 mesh005;modelle/mesh004_1e22b140_a.png modelle/mesh005_b4f6e99f_a.png;room2140/sub02@0x004CE room60F0/sub00@0x007BE
+17;0x11;R. Launcher;;mesh006;modelle/mesh006_9c7f444b_a.png;room7020/sub00@0x01202 roomD090/main00@0x021B8
+20;0x14;H. Gun Bullets;;mesh007 mesh008 mesh009 mesh010 mesh011 mesh012;modelle/mesh007_a74d5c8d_a.png modelle/mesh008_93142508_a.png modelle/mesh009_9895e839_a.png modelle/mesh010_4e995948_a.png modelle/mesh011_5cce8332_a.png modelle/mesh012_649a0c9b_a.png;room1010/sub02@0x01852 room1010/sub02@0x01868 room1020/sub19@0x01E9E room1020/sub19@0x01EB8 room1060/sub00@0x00C58 room1060/sub00@0x00C72 room1090/sub03@0x022E8 room10F0/sub00@0x00734 room1130/sub00@0x00E64 room1150/sub00@0x01422 room11A0/sub00@0x0053A room2000/sub00@0x027B8 room2010/sub00@0x00D3E room2020/sub00@0x01D0A room2020/sub00@0x01D24 room2030/sub00@0x007D0 room2060/sub00@0x016BC room2060/sub00@0x016FE room20B0/sub08@0x03730 room20D0/sub00@0x01376 room20E0/sub00@0x01B2C room2130/sub00@0x00EDC room2140/sub00@0x003BA room2140/sub00@0x003D0 room2190/sub00@0x00ACA room40E0/sub00@0x0388A room5040/sub00@0x01CF4 room5060/sub00@0x00DC0 roomA1A0/main00@0x00500 roomE030/main00@0x00812 roomE030/main00@0x0084E roomE030/main00@0x008D6 roomE030/main00@0x00912 roomE030/main00@0x00956 roomE030/main00@0x00992
+21;0x15;Shotgun Shells;;mesh013 mesh014 mesh015 mesh016 mesh017;modelle/mesh013_e2baafec_a.png modelle/mesh014_3e818121_a.png modelle/mesh015_11f139fa_a.png modelle/mesh016_a08ae8ef_a.png modelle/mesh017_907ac125_a.png;room10B0/sub00@0x01816 room1130/sub00@0x00EA4 room2010/sub00@0x00D7E room2090/sub00@0x00ED2 room20B0/sub00@0x03142 room20C0/sub00@0x01D6E room20F0/sub00@0x01904 room2140/sub00@0x00408 room3070/sub00@0x010F0 room30B0/sub00@0x00DCA room4010/sub00@0x02444 room4030/sub27@0x02DD0 room4080/main00@0x0293E room40E0/sub00@0x03874 room5030/sub03@0x009F0 room5070/sub00@0x022BE room6030/sub00@0x02D56 room6090/sub00@0x00498 room6090/sub00@0x004D4
+22;0x16;M. Bullets;;mesh018 mesh019 mesh020 mesh021;modelle/mesh018_1eaae0b8_a.png modelle/mesh019_a6b5b04c_a.png modelle/mesh020_28e852d2_a.png modelle/mesh021_75f68719_a.png;room10D0/sub00@0x008C2 room2100/sub00@0x01318 room2140/sub00@0x003EE room4010/sub00@0x02480 room4030/sub27@0x02DE6 room5030/sub03@0x00A2C room5050/sub02@0x00C9E room5050/sub02@0x00CDE room6020/sub00@0x00A5C room6070/sub00@0x00CA4 room6100/sub11@0x0132E room6100/sub11@0x0136E
+24;0x18;G. Rounds;;mesh022;modelle/mesh022_15f1e94f_a.png;roomE030/main00@0x00892
+25;0x19;Flame Rounds;;mesh014 mesh015 mesh019;modelle/mesh014_3e818121_a.png modelle/mesh015_11f139fa_a.png modelle/mesh019_a6b5b04c_a.png;room4080/main00@0x02958 room5050/sub02@0x00D28 room5050/sub02@0x00D68 room6030/sub00@0x02D96
+26;0x1A;Acid Rounds;;mesh015;modelle/mesh015_11f139fa_a.png;room5070/sub00@0x022D8
+27;0x1B;M.G. Bullets;;mesh023;modelle/mesh023_0e2d156d_a.png;room60F0/sub00@0x007FE
+29;0x1D;Bow Gun Bolts;;mesh015;modelle/mesh015_11f139fa_a.png;room20C0/sub00@0x01DAE
+30;0x1E;Ink Ribbon;;mesh024 mesh025 mesh026 mesh027;modelle/mesh024_f7fecddf_a.png modelle/mesh025_bcd32339_a.png modelle/mesh026_46639887_a.png modelle/mesh027_69bb142d_a.png;room1060/sub00@0x00C24 room10F0/main00@0x0069C room2000/main00@0x026E0 room2030/main00@0x006F4 room2080/main00@0x0137A room20B0/sub08@0x036EC room30C0/sub00@0x004B6 room4010/sub03@0x02690 room4030/sub25@0x02C98 room4080/main00@0x0299E room5030/sub03@0x00AA4 room6030/sub00@0x02D12 room6070/sub00@0x00C3C room7040/sub00@0x0135A
+31;0x1F;Small Key;;mesh028 mesh029;modelle/mesh028_c5d49ef6_a.png modelle/mesh029_1f0d7a9d_a.png;room10F0/sub00@0x006F0 room2020/sub00@0x01C44 room20E0/sub00@0x019C0
+32;0x20;H. Gun Parts;;mesh030;modelle/mesh030_ecf38671_a.png;room1130/sub00@0x00E18
+33;0x21;Magnum Parts;;mesh031;modelle/mesh031_f61cf689_a.png;room6150/sub00@0x02BD6
+34;0x22;Shotgun Parts;;mesh030;modelle/mesh030_ecf38671_a.png;room5020/sub00@0x01582 room5020/sub00@0x015C2
+35;0x23;F. Aid Spray;;mesh014 mesh032 mesh033 mesh034;modelle/mesh014_3e818121_a.png modelle/mesh032_0a6084ff_a.png modelle/mesh033_5dbfd677_a.png modelle/mesh034_2173872e_a.png;room2030/sub00@0x00868 room20E0/sub00@0x01A12 room20E0/sub00@0x01B5C room5030/sub03@0x00A68 room60D0/sub02@0x00A8A room6100/sub11@0x012F2 room6150/sub00@0x02C50
+36;0x24;Antivirus bomb;;mesh035 mesh036;modelle/mesh035_60476f8e_a.png modelle/mesh036_a67a0838_a.png;roomA050/main00@0x0122E roomA0E0/main00@0x01CF0 roomA110/main00@0x02042 roomB060/main00@0x014C6 roomB0D0/main00@0x010D0 roomB100/main00@0x01328 roomC010/main00@0x01A98
+38;0x26;Green Herb;;mesh037 mesh038 mesh039 mesh040 mesh041;modelle/mesh037_9e2117d6_a.png modelle/mesh038_e31f15cc_a.png modelle/mesh039_4a1500dd_a.png modelle/mesh040_90aa7b4b_a.png modelle/mesh041_648a7dd3_a.png;room1090/sub03@0x0235E room1160/sub00@0x00A26 room1160/sub00@0x00A3C room1160/sub00@0x00A52 room2020/sub00@0x01D54 room2040/sub00@0x01A62 room2070/main00@0x00FFA room2070/main00@0x01036 room20A0/sub00@0x009FA room20F0/main00@0x01810 room20F0/main00@0x01854 room2130/sub03@0x00FAA room2160/sub13@0x021EA room3010/sub00@0x01E68 room4010/sub00@0x024BC room4010/sub00@0x024F8 room4010/sub00@0x02534 room4080/main00@0x028E4 room4080/main00@0x028FA room5080/sub02@0x0154C room5080/sub02@0x01590 room6030/sub00@0x02CFC room6070/sub00@0x00C52 room60E0/sub02@0x00460 room60E0/sub02@0x0049C room6160/sub00@0x01DF8 room6160/sub00@0x01E34 room6160/sub00@0x01E70 roomB080/main00@0x01362 roomB080/main00@0x0139E roomB080/main00@0x013DA roomD010/main00@0x026C2 roomD010/main00@0x026FE roomD010/main00@0x0273A
+39;0x27;Red Herb;;mesh037 mesh040 mesh042;modelle/mesh037_9e2117d6_a.png modelle/mesh040_90aa7b4b_a.png modelle/mesh042_25908d32_a.png;room1120/sub02@0x02C08 room20C0/sub00@0x01E40 room2120/main00@0x0088E room21A0/sub00@0x01DE0 room6140/sub00@0x00C70 roomA060/main00@0x00BEA roomA060/main00@0x00C26 roomF030/sub00@0x02C36 roomF030/sub00@0x02C72
+40;0x28;Blue Herb;;mesh037 mesh040 mesh041;modelle/mesh037_9e2117d6_a.png modelle/mesh040_90aa7b4b_a.png modelle/mesh041_648a7dd3_a.png;room21A0/main00@0x01ABA room3010/sub00@0x01E52 room30C0/main00@0x00470 room4000/sub08@0x01A66 room4000/sub08@0x01AA2 room4020/sub06@0x00AA8 room4020/sub06@0x00AE4 room5080/sub02@0x015D0 roomD010/main00@0x02394 roomD010/main00@0x023D0 roomF060/main00@0x00EB2 roomF060/main00@0x00EEE
+50;0x32;Valve Handle;;mesh043;modelle/mesh043_24185873_a.png;room1060/sub00@0x00C42 room20B0/sub00@0x03208
+51;0x33;Red Jewel;;mesh044;modelle/mesh044_d098068f_a.png;room10C0/sub00@0x01A5A room2060/sub00@0x01534
+53;0x35;Blue Card Key;ja;mesh045;modelle/mesh045_2c827b7c_a.png;room10B0/main00@0x01714
+57;0x39;Blue Stone;;mesh046;modelle/mesh046_9f999de8_a.png;room1110/sub00@0x0204E
+58;0x3A;Eagle Stone;;mesh047;modelle/mesh047_2e686bfb_a.png;room20E0/sub00@0x01AF2 room20E0/sub00@0x01B0C
+59;0x3B;Bishop Plug;;mesh048;modelle/mesh048_7d2b4019_a.png;room1120/sub00@0x029A0
+60;0x3C;Rook Plug;;mesh047;modelle/mesh047_2e686bfb_a.png;room20E0/sub00@0x01986 room20E0/sub00@0x019A0
+62;0x3E;King Plug;;mesh047;modelle/mesh047_2e686bfb_a.png;room10B0/sub00@0x017BC
+63;0x3F;W. Box Key;;mesh049;modelle/mesh049_7b3e1ce8_a.png;room5010/sub00@0x0142E
+67;0x43;Crank;;mesh050 mesh051;modelle/mesh050_7b0fac24_a.png modelle/mesh051_4f0301a2_a.png;room10E0/sub00@0x01D3C room2030/sub00@0x00828
+68;0x44;Film;;mesh052;modelle/mesh052_fedc467a_a.png;room2090/main00@0x00D02 room2090/sub00@0x00EF0
+69;0x45;Film;;mesh052;modelle/mesh052_fedc467a_a.png;room2090/main00@0x00D1C room2090/sub00@0x00F0A room20D0/sub00@0x0119E
+70;0x46;Film;;mesh052;modelle/mesh052_fedc467a_a.png;room2190/sub00@0x00B0A
+71;0x47;Unicorn Medal;;mesh053 mesh054;modelle/mesh053_aba42f2c_a.png modelle/mesh054_94f2465e_a.png;room1100/main00@0x027B0 room1150/sub00@0x01498
+72;0x48;Eagle Medal;;mesh055 mesh056;modelle/mesh055_6e2f8bc1_a.png modelle/mesh056_df76d656_a.png;room4090/main00@0x0230E room4090/main00@0x0234E
+74;0x4A;G. Cogwheel;;mesh057;modelle/mesh057_910ff371_a.png;room20D0/sub00@0x01158
+75;0x4B;Manhole Opener;;mesh058;modelle/mesh058_1b6143c1_a.png;room3010/sub00@0x01E3C
+76;0x4C;Main Fuse;;mesh059;modelle/mesh059_06baa0b1_a.png;room60D0/sub02@0x008E6
+77;0x4D;Fuse Case;;mesh060;modelle/mesh060_7427552f_a.png;room60D0/sub02@0x008FC
+82;0x52;G-virus;;mesh061;modelle/mesh061_b2358234_a.png;room60C0/sub10@0x017E6
+86;0x56;Cord;;mesh012 mesh028;modelle/mesh012_649a0c9b_a.png modelle/mesh028_c5d49ef6_a.png;room20E0/sub00@0x019FA room20E0/sub00@0x01B7C
+88;0x58;Cabin Key;;mesh062;modelle/mesh062_569def98_a.png;room1050/sub00@0x01208
+89;0x59;Precinct Key;;mesh063;modelle/mesh063_1cfed0c6_a.png;room2000/main00@0x02662 room2000/main00@0x0267C
+90;0x5A;Precinct Key;;mesh064 mesh065;modelle/mesh064_06375225_a.png modelle/mesh065_14263bdb_a.png;room10B0/main00@0x016D4 room1130/sub00@0x00F2A
+91;0x5B;Precinct Key;;mesh066;modelle/mesh066_4b543edc_a.png;room2020/sub00@0x01C5C
+92;0x5C;Precinct Key;;mesh067 mesh068;modelle/mesh067_6f93df01_a.png modelle/mesh068_2bd069a3_a.png;room3060/sub00@0x01F74 room30B0/sub00@0x00D1E room30B0/sub00@0x00D5E
+93;0x5D;C. Panel Key;;mesh069;modelle/mesh069_ff2413d0_a.png;room5050/sub17@0x0109E
+94;0x5E;C. Panel Key;;mesh070;modelle/mesh070_c2ccc4bb_a.png;room5070/sub00@0x0237C
+95;0x5F;P. Room Key;;mesh071;modelle/mesh071_3c9176ee_a.png;room6150/sub00@0x02CBE
+96;0x60;MO disk;;mesh070;modelle/mesh070_c2ccc4bb_a.png;room6100/sub11@0x012B6
+97;0x61;Lab Card Key;ja;mesh072 mesh073;modelle/mesh072_130188d6_a.png modelle/mesh073_c8967851_a.png;room60A0/sub18@0x014B4 room6150/sub00@0x02CFE
+98;0x62;Master Key;;mesh029;modelle/mesh029_1f0d7a9d_a.png;room6040/sub00@0x02068
+99;0x63;Platform Key;;mesh074;modelle/mesh074_070227d1_a.png;room7040/sub00@0x01370
+104;0x68;CHRIS's diary;;mesh075;modelle/mesh075_0541704e_a.png;room1150/sub00@0x015A2 room1150/sub00@0x0169C
+106;0x6A;Memo to LEON;;mesh076;modelle/mesh076_ae2d0a30_a.png;room2020/sub00@0x01D3E
+107;0x6B;Police memorandum;;mesh077;modelle/mesh077_cf9f316d_a.png;room2010/main00@0x00C58
+108;0x6C;Operation report 1;;mesh078;modelle/mesh078_ca09c4ac_a.png;room2060/sub00@0x01626 room2060/sub00@0x01666
+111;0x6F;Secretary's diary A;;mesh077;modelle/mesh077_cf9f316d_a.png;room10F0/main00@0x00660
+112;0x70;Secretary's diary B;;mesh077;modelle/mesh077_cf9f316d_a.png;room10E0/sub00@0x01D26
+113;0x71;Operation report 2;;mesh078;modelle/mesh078_ca09c4ac_a.png;room2080/sub00@0x0148C
+114;0x72;User registration;;mesh079;modelle/mesh079_cab7b32d_a.png;room60A0/sub18@0x01470
+119;0x77;Watchman's diary;;mesh080;modelle/mesh080_64f36fa9_a.png;room2100/sub03@0x0140C
+120;0x78;Chief's diary;;mesh081;modelle/mesh081_3909288c_a.png;room21B0/sub02@0x026AE
+121;0x79;Sewer manager diary;;mesh082 mesh083;modelle/mesh082_bfc30e27_a.png modelle/mesh083_61be2721_a.png;room4090/main00@0x02288 room4090/main00@0x022C8
+122;0x7A;Sewer manager fax;;mesh084;modelle/mesh084_722734a1_a.png;room4030/sub25@0x02CF8
+125;0x7D;Lab security manual;;mesh085;modelle/mesh085_494cb230_a.png;room60A0/sub18@0x01434
+126;0x7E;P-epsilon report;;mesh086;modelle/mesh086_6f2c45d4_a.png;room6030/sub00@0x02DD4
+;;police B1 map (Lageplan) / police station map (Lageplan);ja;karte00;modelle/karte00_735097e1_a.png;room20B0/obj8@sub00@0x03158 Aufnahme sub10@0x037BA room2130/obj0@sub03@0x00FDC Aufnahme sub05@0x01824
+;;sewage disposal map (Lageplan) / sewer map (Lageplan);ja;karte01;modelle/karte01_99dae133_a.png;room3060/obj7@sub00@0x01F92 Aufnahme sub22@0x0283E room4040/obj2@sub05@0x00F7E Aufnahme sub06@0x00FA8
+;;factory map (Lageplan);ja;karte02;modelle/karte02_5cdae635_a.png;room5040/obj1@sub00@0x01D54 Aufnahme sub13@0x02164 room5060/obj2@sub00@0x00E20 Aufnahme sub04@0x0101A

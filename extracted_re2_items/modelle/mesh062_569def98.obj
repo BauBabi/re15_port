@@ -1,0 +1,6 @@
+# RE2-Welt-Item-Modell mesh062 md5=569def980f500800614301d40744b741 (Cabin Key)
+v 90 0 90
+v 90 0 -90
+v -90 0 90
+v -90 0 -90
+f 1 2 4 3

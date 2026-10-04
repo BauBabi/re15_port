@@ -30,6 +30,7 @@
 #include "re15_tuer1060.h"    /* Runde 35 Spur L: Tuer ROOM1060 -> ROOM1040 bis der Chief geholt ist */
 #include "re15_irons_tod.h"   /* Runde 35 Spur L: Irons-Todesszene 1150 + Knall-Montage + 11C0-Schnitt */
 #include "re15_fenster1120.h"  /* Runde 35 Spur M: Fenster ROOM1120 */
+#include "re15_inhalt_r35.h"   /* Runde 35 Spur F: Memory Card 1010 + Schrot 1090 (inhalt_r35.c) */
 
 extern scd_vm_t g_scd;
 
@@ -443,6 +444,9 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — NACH dem Init-Lauf: main00 hat die Props und
      * die Tisch-Nachricht ROOM1020/1021 angelegt, die Flags des Raums sind gelesen (Bits 57..60
      * entscheiden). Tut in jedem anderen Raum nichts. Herleitung: include/re15_dokumente.h. */
+    /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — VOR den Dokumenten, damit das Dokument-Prop
+     * wie bisher als LETZTES angehaengt wird (Riegel unit_r34n_e_dokumente "hinten angehaengt"). */
+    re15_inhalt_r35_install((uint16_t)g_current_room_id);
     re15_dokumente_install((uint16_t)g_current_room_id);
     /* Die TUER ROOM1130 -> ROOM1120 bis zur ersten Irons-Szene sperren (Runde 33, Thema R,
      * Nutzerwunsch): solange Flag (3,94) fehlt, wird der Tuer-Slot 1, den main00 @0x008AE gerade
