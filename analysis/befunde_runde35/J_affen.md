@@ -1291,8 +1291,8 @@ Ausgangslage: Baum sauber, HEAD e286b87c (Bericht J_abnahme_3.md, geprueft 45863
 Scratch: `scratchpad/jnb4/`.
 
 ### Stand (fortlaufend)
-- [ ] N2 (a) Haken messen  - [ ] N2 (b) Beleg + Fix  - [ ] N2 (c) Dossier Z. 1197  - [ ] N2 (d) Riegel szene Einzelbisse
-- [ ] N1 Mechanismus Biss nach Freigabe  - [ ] N1 Fix/Aussage  - [ ] N1 Z. 1189 (31 -> 34)  - [ ] Suite  - [ ] exe Tuerweg
+- [x] N2 (a) Haken messen  - [x] N2 (b) Beleg + Fix  - [x] N2 (c) Dossier Z. 1197  - [x] N2 (d) Riegel szene Einzelbisse
+- [x] N1 Mechanismus Biss nach Freigabe  - [x] N1 Fix/Aussage  - [x] N1 Z. 1189 (31 -> 34)  - [x] Suite  - [x] exe Tuerweg
 
 ### N2 (a) — Messung: welcher Haken verlaengert den Biss-Zyklus (Riegel `takt` Gleichtakt, Bild-fuer-Bild)
 - Messweg: neue Spur `R35_TAKT_SPUR=1 test_r35_affen.exe takt` (nur Test-Code, 720 Bilder ab dem Original-Zustand F195,
@@ -1482,3 +1482,21 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
   ablegt, bleiben beide Gorillas zwischen den Wagen haengen und beissen nicht nach. Das ist jetzt im Riegel mit dem
   Original-Startzustand UND mit dem eigenen Port-Zustand gemessen. Landet Leon im Freien, kann ihn der andere Gorilla sofort
   wieder beissen (exe o7: 14 Bilder nach der Freigabe); dazu gibt es keine Original-Messung.
+
+### Nachbesserung 4 — Ergebnis je Mangel
+| Mangel | Ursache (gemessen) | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| N2 (a) welcher Haken | (9) Fusssperre mit der Pool-Pose verschob e1/Slot 2 auf Zyklus 104 (ohne (9): 7/7 = Original) | takt-Spur HEAD / ohne (9) gegen jnb1/g_orig_dec | — (Haken (9) bleibt, er ist byte-true) | — |
+| N2 (b) Beleg + Behebung | (9) nahm einen Ausgleichsfehler weg: A/B-Folge fehlte (+1 Tick je A-Wechsel), Trefferpunkt aus der Pose NACH dem Vorschub ohne Versatz (1-2 Bilder zu frueh), Fusssperre ungemischt / Clip-Wechsel-Bild uebersprungen | @0x80117344 / @0x80117358-78; bff8 @0x8001c078, Record 9+0x40 @0x801183c0, (0x64,0,0) @0x80118380-84, Zeichner @0x8001d108; f3bc Ueberblendung (Decompilat Z. 40-88), Rate @0x80118320 / @0x8001f380-88, bf50 @0x8011bfd8/@0x8011bff8 | (10) A/B-Haken, (11) re15_affen_trefferpunkt, (12) re15_affen_pool_anim / _zeichen_merk / _fusssperre | takt Slot 2 7/7 bitgleich; exe t1 Slot 2 +521 ... +1139 = Original 7/7; Tod +1189 (Original +1194) |
+| N2 (c) Dossier Z. 1197-1198 | "unveraendert" war falsch | Abnahme 3 Tabelle | KORREKTUR-Vermerk an der Stelle | — |
+| N2 (d) Riegel szene | prueft keine Einzelbisse | — | Einzelbiss-Pruefung (Slot-2-Versatz gleichbleibend, Slot 3 <= 6) | gruen (-1 .. -1; HEAD waere +3 .. +9 = rot) |
+| N1 (a) Nutzer-Aussage | galt nur im Weg-2-Lauf | Riegel griff Lauf 0 HEAD: Biss T405 | Aussage eingeschraenkt ("Fuer den Nutzer (Stand Nachbesserung 4)"), KORREKTUR-Vermerk bei N3 | — |
+| N1 (b) Biss T405 offenlegen + Mechanismus | Landeort (-4200,-10658) in Reichweite von e2 (Klemmen-Iteration aus dem Startversatz); das A[3]-Gate ist das Original | @0x80117a54-90; M1 (c) Klemmen-Chaos | Startversatz durch (10)-(12) verkleinert; N1-Pruefung im Riegel griff | Lauf 0: kein Biss bis T495, Ruhelage (-3018,-11651), e1/e2 3917/4927 (Original ~3925/~4990) |
+| N1 (c) Z. 1189 | 31 statt gemessen 34 | jnb3/griff6.txt | KORREKTUR-Vermerk | — |
+
+### Suite (Nachbesserung 4)
+- `bash re15_port/tools/local_build.sh all` (Endstand Code, Tests 1156,8 s) -> `test OK — 495/495 bestanden` /
+  **`=== LOCAL-BUILD-OK (all) — Tests 495/495`** (Schranke 478; kein Fenster-Haken rot). re15_pc.exe md5 b519af3d... = die
+  exe-Kopie der Tuerweg-Messung.
+- Abschluss-Commit: fix(r35-affen): Nachbesserung 4 (Haken enemy_ai_common.c 19 Hunks je 1-2 Zeilen; affen_11c0.c (11)/(12);
+  re15_affen.h (10)/(11)/(12); test_r35_affen.c takt/szene/griff).
