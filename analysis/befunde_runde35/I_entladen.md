@@ -640,3 +640,11 @@ Suite-Zahl nach Merge + N2: `ctest -N` = 531 (master 517 + Spur I 14).
   werden beim naechsten Bedarf im neuen Raum wieder geladen. Aussehen unveraendert (A/B bytegleich).
 * Messschiene: drei neue Faecher `rbj`, `bg_prev`, `re2ton` in `RE15_ENTLADEN_LOG`; VORHER-Zeilen nennen
   eine geladene RBJ-Datei mit Raum und Groesse (`| rbj_datei raum=1170 bytes=55060 gen=3`).
+
+### Suite (N2)
+Eigener Bau, Code-Stand e1cee092 (danach nur Dossier), `bash re15_port/tools/local_build.sh all`:
+`=== LOCAL-BUILD-OK (all) — Tests 531/531` (Beleg: re15_port/build/local_build_ctest.log 07:03:19, nach
+dem exe-Bau 06:16:09: `100% tests passed, 0 tests failed out of 531`, `Total Test time (real) = 2559.82 sec`
+— langsamer als N1 durch parallel bauende Baeume). Kein Flatter-Haken rot, nichts nachgefahren; die
+K/L-Integration (integration_r35_cut10f0 242.9 s, r35_cut1150*) gruen mit dem gemergten master.
+486 (N1) -> 531: + master (Spuren A/B/E/K/L) + unit_r35_entladen_n2beleg + integration_r35_entladen_f/g/h/i/j.
