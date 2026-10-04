@@ -313,13 +313,13 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
   * ROOM1210: Leon wird beim Griff an die Stelle gestellt, die das RE2-Original nimmt; von vorn gegriffen
     steckt keine Zombiehand mehr in seinem Oberkoerper. Von hinten gegriffen (Leon schaut beim Zupacken vom
     Fenster weg) liegt die Hand an bzw. in Leons Brust — das ist im RE2-Original genauso gebaut: dieselbe
-    Opfer-Animation, nur Leon um 180 Grad gedreht (Nachbesserung 1, M2). Unter der KI-Einstellung RE1.5 steht
-    Leon beim Griff ein Stueck vom Arm entfernt (kein Kontakt, OFFEN 6).
+    Opfer-Animation, nur Leon um 180 Grad gedreht (Nachbesserung 1, M2). Unter der KI-Einstellung RE1.5 greift
+    seit Nachbesserung 2 derselbe RE2-Arm mit Kontakt (s. Nachtrag "Fuer den Nutzer" am Ende).
 * **Messschienen (env, kein Spielverhalten):** `RE15_HUNDESCHATTEN_LOG=<datei>`, `RE15_GEGNER_Y_LOG=<datei>`,
   `[re2arm] PIN` in re2_ki.log bei `RE15_RE2_TRACE=1`.
 
 ## OFFEN
-1. **ROOM1210 Ruecken-Griff (Punkt 4) — Sichtpruefung am RE2-Original.** Statisch belegt (Nachbesserung 1,
+1. **[Stand: Nachbesserung 2, OFFEN 1 dort]** **ROOM1210 Ruecken-Griff (Punkt 4) — Sichtpruefung am RE2-Original.** Statisch belegt (Nachbesserung 1,
    M2): RE2 hat fuer den Griff von hinten keinen eigenen Pfad (eine Opferbank @0x80100C3C-5C, ein Clip
    @0x801012A8-AC, nur der Flip @0x8010130C-18; der Arm liest PL+0x76 nie); der Riegel prueft diese
    Konstruktion (4a-c). Ein BILD eines RE2-Ruecken-Griffs fehlt. Naechster Messweg: pcsx-redux mit
@@ -337,7 +337,7 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
    Funktion, je eine Zeile in der jeweiligen Wurzel; nicht Teil dieser Spur.
 5. **Zielscheiben, zweite Raetsel-Variante** ((3,112)=1, nur aus ROOM1241 @0x055E): dort waeren Scheibe 1+3
    die Loesung; die Texte bleiben nach Nutzer-Vorgabe fest auf 0+2 = viele.
-6. **ROOM1210 Gitterarme unter RE1.5-KI: Griff ohne Kontakt** (Nachbesserung 1, M4, Bild
+6. **[ERLEDIGT in Nachbesserung 2, M1: Typ 0x1A in jedem Flavor RE2-EM2D]** **ROOM1210 Gitterarme unter RE1.5-KI: Griff ohne Kontakt** (Nachbesserung 1, M4, Bild
    `H_raeume/nb1_m4_re15ki_griff_F276-320.png`): Leon steht im Halten 1300-1560 Einheiten neben der Hand und
    spielt die geliehene Zombie-Opfer-Animation. Ursache: der RE1.5-Writher hat im Original keinen Griff
    (@0x8010c8cc-f4: nach der Lunge +0x5 := 2/3); der Port-Griff dieses Geschmacks ist eine Nachruestung mit dem
