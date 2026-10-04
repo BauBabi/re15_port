@@ -420,3 +420,13 @@ das Original schickt Raumindex 8 immer auf Blatt 2 (`ori v0,zero,0x2` @0x8004b68
 @0x8004b88c) und liest DAT_800b0fe6 fuer die Karte nicht; belegt sind nur die Konstanten. Keine
 Verhaltensaenderung.
 
+### Tests (Nachbesserung 1)
+
+| Test | Was er misst | alt 154a73c1 | Vorgaenger 8fee1bb4 | jetzt |
+|---|---|---|---|---|
+| `integration_r35_karte_fahrstuhl` (NEU, tests/integration/test_r35_karte_fahrstuhl.cmake) | echte exe, echter Tuerweg 1040/1120 -> ROOM1080, 6 Lagen (laufen), Ring-Mitte aus dem Kartenabzug: im gemalten Innenraum, Spanne >= 6 px je Achse (1F) / quer (3F), 180 Grad | ROT (x 5 / y 2 px unter der Kabine; 3F kein Marker) | ROT (2 / 2 px) | gruen (7 / 7 px) |
+| `unit_r35_karte_fahrstuhl` Teil (c) NEU | 6 begehbare Lagen (Wand -468) je Etage, Spanne >= 6 px je Achse, Ring-Mitte auf Kachel-Index 1 | ROT | ROT | gruen |
+| `unit_r35_karte_fahrstuhl` Teil (d) NEU | die 4 SCA-Waende der Kabine landen ueber die Zonen-Abbildung auf Kachel-Index 4 (gemalte Wand) - Mechanik "Kunst im RE2-Massstab" | ROT | ROT | gruen |
+| `unit_r35_karte_fahrstuhl` (b) | Ecken: jetzt an der sichtbaren Ring-Mitte (mx-1,my-1) gemessen | - | - | gruen |
+| probe `marker` (NEU) | Ring im Abzug finden (Pixel ohne Kartenfarbe) | - | - | - |
+
