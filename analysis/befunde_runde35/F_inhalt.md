@@ -331,7 +331,9 @@ test_r35_inhalt_zombies `mess` | `suche` | `tempo <i> [0/1]` | `karte` | `sca <r
    6x4 Pixel, Lichtsatz Cut 7). Optische Nutzer-Abnahme; eine Aufhellung waere PORT-WAHL wie der
    Lichtsatz am Irons-Tisch (re15_irons_tisch.h) — nicht gemacht, weil kein Befund dazu vorliegt.
    Kamera-Weg: Cut 7 ist ueber keine RVD-Zone von 1010 erreichbar, die die Sonde `zonen` findet
-   (17 Zonen, Rasterabfrage); das Nutzerbild beweist aber, dass Cut 7 im Spiel erscheint.
+   (17 Zonen, Rasterabfrage). ~~das Nutzerbild beweist aber, dass Cut 7 im Spiel erscheint~~ —
+   FALSCH (Abnahme 0, M2): add_card.bmp ist ein Hintergrundbild ohne Spielerfigur. ERLEDIGT in
+   Nachbesserung 1 (M2): die Karte steht jetzt und ist in Cut 4 sichtbar.
 4. Punkt 3 — ROOM1011 (Elza): sub00 spawnt die Zombies dort nur hinter einer Bedingung; der
    Tabellen-Schluessel (Typ + Original-Lage) deckt die Saetze, gemessen ist nur ROOM1010/1220/1221.
 5. Punkt 1 — P1B3 (DOOR1B V3) hat je Seite nur einen Griff (kein Paar) -> nicht messbar; dieselbe
@@ -461,7 +463,49 @@ dort kommt der Pool-Slot nicht aus der Raumtabelle (OFFEN, wie zuvor; vorher 8 F
 Korrektur einer falschen Dossier-Aussage: OFFEN 3 oben sagt "das Nutzerbild beweist aber, dass Cut 7
 im Spiel erscheint". Das ist NICHT gemessen und falsch begruendet: add_card.bmp (wie Shotgun.bmp)
 enthaelt keine Spielerfigur, ist also ein Hintergrundbild (Cut-7-BSS), kein Spielbild.
-(in Arbeit)
+
+**Ursache / Messung vorher.** Cut 7 ist im Spiel nicht erreichbar — selbst nachgeprueft:
+`probe_r34n_e_dokumente zonenliste 1010`: 17 RVD-Saetze; Zone 14 "Cut 7 -> 0" ist der
+Bereichskopf (Quad = ganze Suedhaelfte x -4200..6800 z -7600..1400, wie Zone 8 fuer Cut 4 und
+Zone 10 fuer Cut 5); Uebergaenge in der Suedhaelfte nur 9 (4->5) und 11 (5->4); KEIN Satz mit Ziel
+Cut 7. Tueren nach 1010 nur Cut 0/4 (Abnahme), kein Cut_chg im SCD. Am Regal ist Cut 4 aktiv.
+Dort lag die Karte FLACH auf Brett B; Cut 4 sieht das Brett nur 14,3 Grad von oben (Sichtseite
+gegen die Richtung zur Kamera: 0,247) -> 10x2-Pixel-Strich. Modell (scratchpad
+`f_n1/karte_opt.py`, Kamera = VIEW-Matrix + H 208 wie `projiziere()`, Drehung = `pc_prop_rot_q12`,
+Welt = m * v wie `re15_camera_compose_view_bone` out_rot = view_rot * bone_rot) gegen die
+Abnahme-Messung: flach rot 0 -> Cut 4 bbox 95,0..105,2 x 105,7..107,8 (gemessen 95..105 x 105..107),
+11,2 px^2; Cut 7 54,1 px^2 (gemessen 56 Diff-Pixel) -> Modell stimmt. Die Karte (Quad 161 x 270)
+kann in Cut 4 hoechstens ~48 px^2 gross werden (Abstand 6400, H 208: 5 x 8,5 px).
+
+**Beleg (FORM).** Prop = Obj_model_set-Felder; die drei Euler-Winkel liegen im Pool bei
++0x68/+0x6A/+0x6C (scd_vm.c Member 3..5, `case 3/5`), der Port zeichnet sie ueber
+`pc_prop_rot_q12` (main.c:670-694). Werte = PORT-WAHL (Nutzer-Marke + Sichtbarkeit).
+
+**Aenderung.** Suche ueber alle Drehungen (Raster 64): Kartenmitte bleibt GENAU auf dem
+Markenstrahl von Cut 7, tiefste Kante auf Brett B (y -1725), alle Ecken im Regal (x 3630..4570,
+z -2020..1420, oberhalb Brett A -2370), Stand auf einer KANTE (zwei Ecken auf dem Brett), Cut-7-
+Flaeche >= alter; Ziel = groesste Cut-4-Flaeche. Ergebnis rot (896, 128, 3584): die Karte steht auf
+ihrer kurzen Kante, 15,9 Grad nach hinten geneigt, Sichtseite zur Raumecke zwischen Cut 4 und Cut 7
+(Normale (-0,694; -0,273; -0,667)); Ursprung (3748,-1725,-1383), Mitte (3719,-1855,-1299), Ecken
+(3748,-1725,-1383) (3801,-1985,-1331) (3689,-1984,-1215) (3636,-1725,-1267). Aufhebe-Rechteck mittig
+auf die neue Mitte: x 3219..4219 z -1799..-799 (PORT-WAHL wie vorher 1000 x 1000). Masken ueber den
+Ecken in Cut 4/7: 0 (`probe_r34n_e_dokumente sicht`). Dateien: `include/re15_inhalt_r35.h`
+(RE15_R35I_KARTE_X/Y/Z, _ROT_X/_ROT_Y/_ROT_Z, _RECT_X/_RECT_Z), `engine/src/inhalt_r35.c`
+(Felder rot_x/rot_z). Commit 39930a8c.
+
+**Messung nachher (echte exe, Kopie re15_pc_r35f_n1.exe, RE15_FRAMEDUMP, beschleunigter Renderer).**
+- Framedump F120 mit/ohne Bit (9,80) (`RE15_FORCE_CUT=4` bzw. `7`, Karte (3650,6900) rot 2048):
+  **Cut 4: 53 Diff-Pixel, bbox 101..107 x 99..107** (vorher 11 Pixel, 95..105 x 105..107; Modell
+  102,0..108,4 x 99,5..108,7). **Cut 7: 114 Diff-Pixel, bbox 268..279 x 156..172**, Mitte auf der
+  Marke (Huelle 269..278 x 158..170; vorher 56 Pixel). Bild: `F_belege/n1_m2_karte_cut4_cut7.png`.
+- Echter Tuerweg (Karte ROOM1020 (-4000,-7250) rot 0, START 6, Skript der Abnahme
+  `A0.2,W0.6,U0.25,R0.35,U1.3,R0.35,W0.3,A0.2,W4,A0.2,W1.5,A0.2,W2,S0.2,W3`): `cam=4` auf dem
+  ganzen Weg; F100 zeigt die stehende Karte im Regal neben Leon (Ausschnitt im Belegbild); Leon steht
+  bei (3147,-1064) rot 64 -> F140..F200 "Will you take the **Memory Card**?" -> Ja -> F360ff Inventar
+  mit der Memory Card x3 (scratchpad `f_n1/m2_tuer_sheet.png`).
+- Riegel `unit_r35_inhalt_items` 27/27 (neu: P mit rot (896,128,3584); V Cut 4 47,6 px^2 >= 40,
+  Sichtseite zugewandt 0,99; V Cut 7 126,0 px^2 >= 100, zugewandt 0,87; M Mitte (274,01;164,51) in
+  der Marke; D echter Aktionsdruck von (3300,-1033) yaw 0 -> Modal -> Ja -> Menge 3).
 
 ### M3 (P1) — Riegel-Luecke Seitenzuordnung + V3-Restbefund 1 px
 (in Arbeit)
