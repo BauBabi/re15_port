@@ -276,3 +276,16 @@ Gegenprobe ohne Fix: der exe-Lauf vorher_tuer6 (M4) — dieselbe Tuer, kein Spaw
 * Neue Dateien: tools/r35_zgirl/{em_zensus.py, selbsttuer_zensus.py, ovl_reloc_diff.py, lauf.sh},
   tests/unit/test_r35_zgirl.c, tests/unit/probes/r35_zgirl.cmake, tests/integration/test_r35_zgirl.cmake,
   analysis/befunde_runde35/C_zgirl_bilder/*.png. Keine Assets fuer das Paket-/Android-Gate.
+
+## Nachbesserung 1 (2026-10-04, nach Abnahme 0 = C_abnahme_0.md: M1 blockierend, M2, M3)
+
+Stand vor der Nachbesserung: HEAD 43396082 (Code = 0ab1e6f5). Der Fix U1 (aot_common.c) bleibt —
+er ist byte-true (@0x8001d988) und traegt das Zombie-Maedchen. Nachgebessert wird, was er in
+ROOM5090 freilegt (M1), die Absicherung der uebrigen neu einsteigenden Raeume (M2) und der
+Kommentar (M3).
+
+Betroffene Raeume (selbsttuer_zensus.py, `port_neu=0` vor U1): ROOM2040/2041 (Slots 2,3),
+20A0/20A1 (1), 30E0 (2), 4000 (7), 4050/4051 (1-3, 5-13), 40A0/40A1 (10), 5090/5091 (0,2,3,4),
+6030/6031 (0,1).
+
+### M1 — Endkampf ROOM5090: Boss-HP 0 nach Selbst-Tuer (in Arbeit)
