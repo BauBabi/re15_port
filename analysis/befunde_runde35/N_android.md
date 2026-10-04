@@ -14,7 +14,12 @@ hat weder Entpacker noch APK). Belege sind hier Messungen (Geometrie-Rechnung, T
 Mutanten-Lauf des Gates) und Quelltext-Zeilen des Ports, keine @0x-Adressen. Jede Zahl im Code wird
 mit ihrer Herleitung (Messung/Zeile) kommentiert.
 
-Status: IN ARBEIT
+Status: FERTIG bis auf die Suite-Zeile (unten "Abschluss"). Kurz: (1) Schrift aus Hoehe UND Breite - auf dem
+Emulator 2400x1080 Titel und laengster Fehlertext vollstaendig; (2) Datei<->Ordner-Konflikte werden im selben Start
+geraeumt (Pruefstand am echten Code + Emulator), abgesichert durch Leser-Regeln R1/R2 in Geraet, Gate und Gradle;
+(3) das Urteil ist ausgelagert, gepinnt, an 119 Faellen und 260 eigenen Mutanten selbstgeprueft, vor jeder Nutzung und
+in ctest; eine zweite Instanz verhindert, dass ein Urteil ein richtiges Gate ueberstimmt; die fuenf F-Y1-Mutanten des
+Gates werden jetzt erkannt.
 
 Herkunft der drei Punkte (Runde 34a, gelesen): Memory `reai-v2-runde34a-android-gate` "Offen (alle niedrig)";
 Befunde `analysis/befunde_runde34_android/pruefer_echtlauf_r4_2.md` 3.9 (**E2-1**, Fortschrittsanzeige),
@@ -248,6 +253,27 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
     Dateien darin - entfernt`, `Entpacken fertig (Groessen-Nachlauf): ... 1 kopiert ... 1 Konflikte geraeumt ... 0 Fehler`,
     `main04.wav` 2017588 B wieder da.
   Emulator danach beendet (`emu kill`).
+
+## Konstanten (alle PORT-WAHL; kein RE1.5/RE2-Original, die PSX las von CD - Herkunft je Zahl)
+| Konstante | Wert | Herkunft |
+|---|---|---|
+| Rand der Textzeilen | 0.4u, u = H/12 | Randabstand der Bedienelemente touch_overlay_pc.c:175 (L1/R1), Einheit touch_overlay_pc.c:151 |
+| Vorschub je Zeichen | 6 x Skalierung | Glyphe 5x7 + 1 Spalte, touch_overlay_pc.c:483 `penx += 6 * scale` |
+| Zeilenabstand beim Umbruch | 9 x Skalierung | Glyphe 7 Zeilen hoch (touch_overlay_pc.c:477) + 2 frei (PORT-WAHL, nur unter Skalierung 1 benutzt) |
+| Zeilen je Block | <= 6 | PORT-WAHL; laengster Text 58 Zeichen braucht bei 160x120 3 Zeilen (gemessen) |
+| Zeile max. | 160 Zeichen | Puffer `l2[160]` in re15_android_bootstrap_assets |
+| Raeum-Tiefe / Pfadlaenge | 64 / 4096 | wie re15_abgleich_waisen (asset_abgleich.c WAISEN_TIEFE/WAISEN_PFAD) |
+| Gate-Mindestzahlen | 261 Faelle / 148 Proben | gemessen: Selbsttest 261/261, 148/148 |
+| Urteils-Mindestzahlen | 119 Faelle / 257 erkannt / <= 3 gleichwertig | gemessen: URTEIL-SELBSTTEST-OK 119/119, 257/260, 3 |
+
+## Tests (alle in re15_port/tests/unit/probes/r35_android.cmake)
+| ctest | misst | Punkt |
+|---|---|---|
+| unit_r35_android_anzeige | echter android_glue.c im Pruefstand, 11 Displaygroessen x 3 Texte: jede Zeile/jedes Rechteck im Bild, keine Ueberlappung, ganzer Text sichtbar | 1 |
+| unit_r35_android_konflikt | echter android_glue.c: K1-K6 Update im selben Start fertig, Baum = APK, Start 3 schneller Weg; L1/L2 fail closed | 2 |
+| unit_r35_android_abgleich | asset_abgleich.c: R1/R2 (15 Pruefungen scheitern am alten Stand), F-Y1-Proben, weg_frei/leere_eltern im Temp-Ordner | 2 (+3) |
+| unit_r34a_asset_abgleich | (bestehend) eine Zeile an R1 angepasst | 2 |
+| unit_r35_android_pruefkette | echte Kette apk_pruefen.sh + Gate + Urteil: Positiv P0-P2, Negativ N1-N9 muessen ROT werden | 3 |
 
 ## OFFEN
 - Ein Update-Lauf (APK A -> APK B) mit dem H8-Muster auf dem Emulator ist nicht gemacht (braucht eine zweite, echt
