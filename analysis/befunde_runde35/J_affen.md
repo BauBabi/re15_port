@@ -1784,9 +1784,9 @@ Biss-Takt j1 14/14 + Tod bildgleich, Riegel 17/17, Suite 495/495. Offen:
 Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederverwendet, nicht wiederholt).
 
 ### Stand (fortlaufend)
-- [ ] M1 Disasm 0x8011c3d4  - [ ] M1 Umsetzung  - [ ] M1 Riegel  - [ ] M1 exe nachher
-- [ ] M2 Mechanismus Port  - [ ] M2 Original  - [ ] M2 Entscheidung/Umsetzung
-- [ ] M3  - [ ] M4  - [ ] M5  - [ ] Suite
+- [x] M1 Disasm 0x8011c3d4  - [x] M1 Umsetzung  - [x] M1 Riegel  - [x] M1 Original (GDB)  - [x] M1 exe nachher
+- [x] M2 Mechanismus Port  - [x] M2 Original (GDB)  - [x] M2 Entscheidung (Original-Verhalten, Riegel)
+- [x] M3  - [x] M4  - [x] M5  - [x] H1 (Kommentar)  - [ ] Suite (Endstand)
 
 ### M1 — Messung vorher (aus Abnahme 5, nicht wiederholt)
 - Abnahme 5 Lauf w3y (Tuerweg, Item 3, Feuerskript): `F2806 S2 1/8/1 mo=21` (B[8], Clip 0x15), `F2813 PL hp 46 -> -554`,
@@ -1985,3 +1985,61 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   Leon F2817 einmal 1 Einheit geschoben ((-9974,-10421)), pst 7 ab F2883 (= Treffer + 70), danach unbewegt bis F3060.
   Bild `jnb6/exe/w3q_finisher.png`: F2816 Gorilla auf Leon, F2900 Todeskamera Leon in der Blutlache unter dem Gorilla,
   F2960/F3040 "YOU DIED".
+
+### Tests (Stand Nachbesserung 6) — probes/r35_affen.cmake (20 Eintraege), test_r35_affen.c
+- Neu **`finisher`** (M1): Teil A echter Weg (LEAP ab der w3y-Lage, Leon hp 46): B[8] trifft, Opfer-Zustand 2 / Greifer 0x27
+  / Opfer-Bank, +0x93 Bit 1, **+0x8f 7..0**, Clip 0 Bild 0..69 lueckenlos, groesster Schritt je Bild <= 2 (kein
+  Platzierungssprung; alt 14000), Eintritt im Treffer-Bild, Koerperfall + Blut bei Bild 0x3c = Treffer + 60, Tod =
+  Treffer + 70, Endpose gehalten. Teil B ab dem Original-Zustand F204 gegen die GDB-Spur `s_fin_orig` (93 Bilder):
+  Gorilla Sub/Phase/Bild 93/93, Leon hp/Kommando 93/93, Clip/Bild/+0x8f 70/70, Leon-Lage <= 2, Gorilla-Lage im Sprung
+  <= 12. Gegenprobe Teil A mit abgeschalteten Haken: rot (Leon bis 15116, Clip 1/0xb, kein Tod); Teil B ohne die
+  Schub-Zeile: Leon 6 daneben = rot.
+- Neu **`zonensprung`** (M2): Gorilla 2 ab (-13518,-403) Yaw 0 Sub 4, Leon (-9975,-10422): 400/400 Bilder gleich der
+  GDB-Spur des Originals (Periode 40), 10 Spruenge, Leon hp 82 unveraendert.
+- Neu **`kette`** (M4): Elternketten von affen_kette (affen_glieder) fuer Knochen 14/17/6/10 = die fest verdrahteten Ketten
+  von FUN_8011bf50 (@0x8011bf80-c4) und FUN_8011c024 (@0x8011c054-b8).
+- Unveraendert und gruen (Suite): teile, band, ada, sprung, flug, wagen, brust, kdsonde, biss, frac, anker, takt (14/14 +
+  Slot 3 7/7), griff, npcband, schrot, wand, szene.
+
+### OFFEN (Stand Nachbesserung 6; ersetzt die Liste "Stand Nachbesserung 5")
+- **N6-1 (M5) Heavy +363 gegen Original +364** (j1, t1, Riegel szene): erster Angriff 1 Bild frueh, alle 14 Bisse und der
+  Tod danach bildgleich. Messweg: r3/s026 mit GDB, Schreib-Haltepunkt (Z2) auf player.hp 0x800acaee in vs9763-9767, PC der
+  Schreibstelle + Gorilla-Zustand (+0x5/+0x6/+0x95/+0x9c) im Heavy-Bild gegen die Port-Spur des Riegels szene.
+- **N6-2 Koerper-Schub auf den toten Leon fuer andere Greifer / ab cmd 7**: im Gorilla-Finisher (cmd 6) am Original
+  gemessen und portiert; fuer Zombie/Hund/Kraehe und fuer cmd 7 setzt `re15_body_push_player` bei hp < 0 weiter aus
+  (Port-Annahme ohne Adresse). Messweg: dieselbe GDB-Spur (gdbfin.py) mit einem fressenden Zombie bzw. ab cmd 7 vor der
+  Schnappschuss-Wiedergabe (Treffer + 70 .. + 95).
+- **N6-3 Flugschritt-Rundung** B[7]/B[8]: bei Yaw 2517 / +0x8c 260 fliegt der Port je Bild (-196,+172), das Original
+  (-196,+171) (g_fin F204-F233) -> nach 29 Bildern 12 Einheiten; Port `re15_dog_advance` gegen FUN_800245d8 (RotMatrixY
+  + MVMVA 0x4a486012 @0x800246ac). Wirkt auf alle Nutzer von re15_dog_advance, deshalb nicht in dieser Spur geaendert.
+  Messweg: FUN_800245d8 per GDB fuer Yaw 0..4095 bei festem +0x8c tabellieren und gegen re15_dog_advance vergleichen.
+- **N6-4 Blut-Anker** im Finisher: der Port nimmt Part 8 aus dem laufenden Opfer-Bild; FUN_80019700 kopiert die
+  Part-Matrix des zuletzt GEZEICHNETEN Bildes (Decompilat: `param_3[0..7]` in den Effekt-Record) — beim Eintritt also
+  Leons Zielpose, bei Bild 0x3c das Bild 0x3b (dieselbe Naeherung wie beim Hunde-/Zombie-Kollaps). Messweg: Effekt-Record
+  0x800a73b8 + 0x42*i nach dem Spawn per GDB lesen.
+- **N6-5 Todes-SE positional**: CORE 3 im Finisher mono (Se_on a1 = Spieler+0x34 @0x8011c4ac), wie O5 im Zombie-Kollaps.
+- Weiter offen aus Nachbesserung 5: N5-1 (Rest-Lageabweichung im takt-Lauf, KORREKTUR N6: 26 / 22), N5-2 (Knockdown-
+  Klemme im Handler), N5-3 (Tuerweg ohne Original-Aufnahme); aus Nachbesserung 4: N4-2..N4-5; aus Nachbesserung 3: 5, 6.
+- **Kein OFFEN zu M2**: der Endlos-Blind-Zonensprung ist Original-Verhalten (GDB 400 Bilder, Riegel zonensprung 400/400).
+
+### Fuer den Nutzer (Stand Nachbesserung 6)
+- Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
+- Spuerbar neu: (1) **Der Todessprung des Gorillas** (hat Leon weniger als 50 HP, packt ihn der springende Gorilla in der
+  Luft): Leon bleibt jetzt an seinem Platz, bricht dort mit Blutspritzer und Todesschrei zusammen und stirbt nach
+  70 Bildern (2,3 s) — gleicher Ablauf, gleiche Bildzahl, gleiche Animation wie auf der PlayStation (am Original gemessen).
+  Vorher sprang Leon im Treffer-Bild quer durch den Raum, verschwand aus dem Bild, und erst danach kam "YOU DIED".
+  (2) **Der Gorilla, der hinter den Wagen auf der Stelle hochspringt und Leon nicht angreift**: das macht das Original
+  genauso — am Original gemessen, alle 40 Bilder ein Sprung gegen dieselbe Wand, solange er Leon nicht sieht. Bleibt so.
+- Berichtigt: "Die Gorillas kriechen genauer: ihre Lage am Biss-Kreis stimmt Bild fuer Bild mit dem Original ueberein"
+  (Nachbesserung 5) war zu weit. Richtig: bis zum ersten Biss Bild fuer Bild gleich, danach bis rund 25 Einheiten
+  daneben; die Biss-Zeitpunkte sind gleich. Der erste Angriff kommt 1 Bild frueher als im Original (offen).
+
+### Nachbesserung 6 — Ergebnis je Mangel
+| Mangel | Ursache (gemessen) | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| M1 Finisher durch den Wurf-Handler | B[8] -> re15_player_victim_devour -> Wurf-Pfad 0x8011c118 mit altem Anker (w3y F2814 +14000) | cmd-6-Hook 0x8011c3d4 -> Tabelle 0x80121580 -> 0x8011c414 (+0x8f := 7 @0x8011c468-70, Clip 0 @0x8011c490, Blut @0x8011c4a0, CORE 3 @0x8011c4b8, Bild 0x3c @0x8011c4e0-518, f314 @0x8011c534, Wunden @0x8011c55c-74, aca58 := 7 @0x8011c57c-84, kein ad68); GDB g_fin am Original | affen_11c0.c (15), 4 Haken enemy_ai_common.c | Riegel finisher A+B (Original 93/93, 70/70, Leon <= 2); exe w3q: Leon bleibt, Tod F2883 = +70, Todeskamera zeigt Leon |
+| M2 Endlos-Zonensprung | Original-Verhalten | GDB g_m2b: 10 Spruenge alle 40 Bilder, LOS 0, hp 82 | keine (offengelegt) | Riegel zonensprung 400/400 Bilder gleich dem Original |
+| M3 Nutzer-Aussage zu weit | 14/695 Bilder bitgleich (F196-F209), max e1 26 / e2 22 | takt-Spur gegen g_orig_dec | KORREKTUR an der N5-Stelle + neue Aussage | — |
+| M4 kette_test toter Code | eigene Schleife, kein Aufrufer | FUN_8011bf50 @0x8011bf80-c4, FUN_8011c024 @0x8011c054-b8 | affen_glieder gemeinsam, Riegel kette | kette 4/4 Ketten gleich |
+| M5 Heavy +363/+364 still | Abweichung 1 Bild beim ersten Angriff | vs9765 - vs9037 = 728 VSyncs | OFFEN N6-1 mit Messweg | — |
+| H1 Kopfkommentar | Klemme seit (14) nicht mehr im Handler | @0x80035f18 / @0x80031d70 | game_step_common.c 1 Kommentarzeile | — |
