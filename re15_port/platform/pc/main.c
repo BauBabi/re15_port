@@ -9630,6 +9630,9 @@ re_title:;
                     if (npc->type == 0x21 && re15_ai_re2_for_type(npc->type)
                         && npc->crow_shadow_w == 0)
                         crow_no_record = 1;
+                    /* Runde 35 Spur M: die versteckte Fensterkraehe (RE2-State 4, word0 0x80000 =
+                     * nicht zeichnen) wirft keinen Schatten an den Fuss der Rueckwand. */
+                    if (npc->type == 0x21 && npc->state == 4 && npc->crow_hide) crow_no_record = 1;
                     /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
                      * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
                      * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);
