@@ -190,6 +190,34 @@ nachher: 94 Raeume, 1953 gueltige Streams, 169 Haenger = 120 x Id 13 (A 24/25) +
 Die 504 Brocken-Streams (84 Raeume x Subs 0..5) sind geschlossen. Id 13 / Id 1 -> OFFEN (nicht
 Hund/Waffe, s.u.).
 
+### N5 Echte exe, vorher/nachher (gleicher deterministischer Lauf)
+Lauf: `RE15_DEBUG_JUMP=11D0@250 RE15_SET_FLAG=3:152 RE15_AI_FLAVOR=re2 RE15_GIVE=7:30 RE15_EQUIP=7
+RE15_PLAYER_POS=-7000,-15900,0 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=18
+RE15_INPUT_SCRIPT=M0.3,MA0.1,M0.6,MA0.1,... RE15_STATE_LOG=state.log` (Bildzaehler beginnt nach dem
+Sprung neu). "vorher" = dieselbe exe mit ausgeschaltetem Haken in esp_fx_dispatch_b (temporaer
+`if (0)`, inkrementell gebaut als re15_pc_r35d_vorher.exe, danach zurueckgesetzt; git diff leer).
+state.log Feld `fx=` = re15_esp_fx_count() = lebende ESP-Plaetze:
+```
+                     F112        F119   F133  F168  F244  F336  F544
+Hund 1               st=3 ss1=7  (Redhawk-Tod, Waffe 7)
+vorher  fx           23          59     6     6     6     6     6     <- 6 Brocken fuer immer
+nachher fx           23          59     6     0     0     0     0
+```
+fx.log (RE15_FX_LOG, gezeichnete Partikel) mit RE15_FORCE_CUT=6 (der Cut, der den Zwinger zeigt;
+Cut 0 = der Sprung-Cut zeigt den Flur ohne Leon, dort zeichnet nichts): Raum-Id 7 gezeichnet in
+139 Bildern bis zum letzten Bild 250 (vorher) gegen 52 Bilder, letztes Bild 163 (nachher).
+
+Bild (RE15_FRAMEDUMP, Software-Framebuffer; gdigrab liefert in dieser Sitzung weisse Bilder):
+`analysis/befunde_runde35/D_redhawk_zoom.png` — Ausschnitt (170..250, 155..210) x4, links vorher,
+rechts nachher, oben Bild 185, unten Bild 245: links liegen die roten Fleisch-Brocken hinter Leons
+Waffe und wechseln ihr Bild (Flug-Zyklus 0..4), rechts sind sie weg. Gesamtbild Bild 245:
+`D_redhawk_bild245.png`. Pixel-Differenz vorher/nachher: Bild 125 = 0 (Brocken fliegen in beiden),
+Bild 185 = 59 px, Bild 245 = 92 px, alle in der Box (201..221, 180..193).
+
+Integrationshaken `integration_r35_redhawk` gegen die vorher-exe gefahren: ROT mit
+"NUTZER-BEFUND - bis 90 Bilder nach dem Redhawk-Tod (Bild 112) kein Bild mit fx = 0"; gegen die
+gebaute exe GRUEN ("fx = 0 ab Bild 164").
+
 ### N4 Wer wirft Id-7-Brocken im Port (alle betroffen, alle durch denselben Fix geheilt)
 * Hund RE2 (enemy_ai_re2_dog.c re2d_fx, FX-Tabelle @0x801056AC Art 9 -> Raum-Id 7):
   Tod Zeilen {5,6,9,17,19} ueber Router 0x80104610 (Waffe 7 Redhawk = Zeile 5; Waffe 9/15 HE = Zeile 9;
@@ -210,6 +238,10 @@ Hund/Waffe, s.u.).
   - Pin 3 (30-31): alle 84 Raeume mit Raum-Id 7, je Brocken-Sub (504) gespawnt und 300 Bilder getaktet:
     0 Haenger, 0 Mechanik-Fehler.
   Ergebnis lokal: GRUEN (0 Fehler).
+* `integration_r35_redhawk` (tests/integration/test_r35_redhawk.cmake, ~16-20 s): echte exe (eigene
+  Kopie re15_pc_r35d_haken_*.exe), Lauf wie N5, Pruefung: Redhawk-Tod eines Hundes (st=3 ss1=7),
+  fx max >= 6, binnen 90 Bildern nach dem Tod ein Bild mit fx = 0, Endbild 230 fx = 0.
+  Ergebnis: GRUEN ("Redhawk-Tod Bild 112, fx max 59, fx = 0 ab Bild 164"); gegen die vorher-exe ROT.
 * Messwerkzeuge (kein Test): `probe_r35_redhawk zensus | haenger [vorher] | messung [bilder]`.
 
 ## OFFEN
