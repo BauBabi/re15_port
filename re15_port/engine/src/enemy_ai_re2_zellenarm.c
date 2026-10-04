@@ -372,10 +372,13 @@ void re15_re2arm_player_look(re15_actor_t *pl)
         pl->neck_target_slot = s_look_tgt;              /* PL+0x1B8 -> FUN_800177C0 */
     }
 }
-/* Test-/Mess-Auskunft (kein getenv): Zaehler setzen (set_cd >= 0) und Zaehler/Ziel lesen. */
-void re15_re2arm_look_debug(int set_cd, int *cd, int *ziel)
+/* Test-/Mess-Auskunft (kein getenv, das Spiel ruft das nie): Zaehler (set_cd >= 0) und Ziel (set_ziel >= 0,
+ * 0 = SELBST) setzen — damit stellt der Riegel die Ausgangslage der Original-Mitschnitte her (Ziel SELBST im
+ * ersten Halte-Bild, erste Suche im gemessenen Bild) — und Zaehler/Ziel lesen. */
+void re15_re2arm_look_debug(int set_cd, int set_ziel, int *cd, int *ziel)
 {
     if (set_cd >= 0) s_look_cd = (uint8_t)set_cd;
+    if (set_ziel >= 0 && set_ziel < RE15_ACTOR_MAX) s_look_tgt = (int8_t)set_ziel;
     if (cd)   *cd   = (int)s_look_cd;
     if (ziel) *ziel = (int)s_look_tgt;
 }

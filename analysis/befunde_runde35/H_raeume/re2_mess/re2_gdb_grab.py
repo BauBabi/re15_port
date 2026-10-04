@@ -6,7 +6,8 @@ PL-Entity + Leons Parts + haltender Arm + dessen Parts. Danach Haltepunkt weg, w
 geordnet schliessen (SaveStateOnExit -> Bild der Halte-Phase aus der VRAM).
 
 Aufruf: python re2_gdb_grab.py <spielstand.sav> <ausgabeordner> <x> <z> <yaw> [halte_bilder] [schliessen_nach]
-Runde 35 Spur H, Nachbesserung 3. settings.ini wird gesichert und am Ende zurueckgeschrieben."""
+Runde 35 Spur H, Nachbesserung 3. settings.ini wird gesichert und am Ende zurueckgeschrieben.
+NB4: R2_EXTRA=1 schreibt je Halte-Bild extra.txt (Blick-Zaehler DAT_800a4004, PL+0x1B8, alle Arme)."""
 import os, shutil, socket, struct, subprocess, sys, time
 
 DUCK = r"C:\Users\mjoedicke\AppData\Local\Programs\DuckStation\duckstation-qt-x64-ReleaseLTCG.exe"
@@ -161,6 +162,7 @@ def main():
         L("Z0:", g.cmd("Z0,%x,4" % BP_HALTEN))
         binf = open(os.path.join(out, "frames.bin"), "wb")
         txt = open(os.path.join(out, "frames.txt"), "w")
+        extra = open(os.path.join(out, "extra.txt"), "w")
         n = 0
         while n < nhold:
             g.sk.sendall(b"$c#63")
@@ -181,6 +183,17 @@ def main():
                 struct.unpack_from("<h", hent, 0x76)[0], struct.unpack_from("<I", hent, 4)[0],
                 struct.unpack_from("<I", hent, 0x14C)[0], struct.unpack_from("<H", hent, 0x10E)[0]))
             txt.flush()
+            if os.getenv("R2_EXTRA") == "1":   # NB4: Blick-Zaehler DAT_800a4004 + alle Arme (Satz, word0, +0x10E, x, z)
+                ex = "%d cd=%d ziel=%08x" % (n, g.mem(0x800A4004, 1)[0], struct.unpack_from("<I", ent, 0x1B8)[0])
+                for k in range(1, 33):
+                    p = g.u32(ETAB + 4 * k)
+                    if 0x80000000 <= p < 0x80200000 and p != 0x800D424C and g.mem(p + 8, 1)[0] == 0x2D:
+                        e2 = g.mem(p, 0x110)
+                        ex += " | S%d %08x w0=%08x w4=%08x f10e=%04x (%d,%d)" % (
+                            e2[0xC] - 2, p, struct.unpack_from("<I", e2, 0)[0], struct.unpack_from("<I", e2, 4)[0],
+                            struct.unpack_from("<H", e2, 0x10E)[0], struct.unpack_from("<i", e2, 0x38)[0],
+                            struct.unpack_from("<i", e2, 0x40)[0])
+                extra.write(ex + chr(10)); extra.flush()
             if n == 0:
                 L("erster Halte-Stopp:", r, "Halter %08x" % h)
             n += 1

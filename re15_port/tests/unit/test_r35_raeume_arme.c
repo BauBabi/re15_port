@@ -15,8 +15,13 @@
  *       Leon auf dem Strahl Ursprung->Pin im Abstand, den das ORIGINAL in allen zwoelf Griffen zeigt.
  *   (2) GLEICHLAUF: Leon zeigt jedes Halte-Bild Arm-Bild + 1 (im Original-RAM ebenso, Clipwort-Bytes).
  *   (6a) PORT = ORIGINAL: der Port-Griff in der Lage eines Original-Griffs (gleiche Armhoehe, Arm vor Leon,
- *       Gesicht und Ruecken) zeigt Bild fuer Bild dieselbe Hand im Kopf-Rahmen Leons und dieselbe Zahl
- *       Arm-Vertices in Leons Kopf/Rumpf wie die Original-RAM.
+ *       Gesicht und Ruecken) zeigt Bild fuer Bild dieselbe Hand im KOPF-Rahmen Leons, denselben Blick-Akku
+ *       (Part 8 +0x98/+0x9A) und dasselbe Blickziel wie die Original-RAM und dieselbe Zahl Arm-Vertices in
+ *       Leons Kopf/Rumpf. Leon wird dafuer posiert WIE DER ZEICHNER (main.c: g_anim_pose_actor = Spieler,
+ *       Nacken-FSM in re15_skel_compute_pose, jedes Bild), nicht ohne Kopfdrehung (Nachbesserung 4).
+ *   (N1) RE2-ZIELWAHL FUN_8003DB38 auf der ORIGINAL-Geometrie: Kegel +-1500 (re15_ai_arc_test = FUN_80015614),
+ *       Radius 7000, naechster Kandidat — liefert in allen zwoelf Griffen das Ziel, das die RAM zeigt (Halter,
+ *       Nachbar-Satz oder SELBST).
  *   (6b) Der Nutzerfall (Arm 5 in ROOM1210, Port-Hoehe -2500): nicht mehr Ueberschneidung als das Original
  *       an seinen Nachbarhoehen (Satz 5 -2480 / Satz 8 -2540 / Satz 0 -2580).
  *   (4a-d) Konstruktion: Ruecken-Blick = Gesicht-Blick + 2048 bei gleicher Hand-Bahn (Port) — im Original-RAM
@@ -78,12 +83,13 @@ typedef struct {
  *    2048) zum Arm (Fixture: Leon - Arm (14,-1251), Blick 3061 bei Arm 1024), der Port-Leon auf dem Pin-Strahl
  *    ohne Seitenversatz (Blick 2055). 14 seitlich + 18 Blick-Einheiten (1,6 Grad) bei ~650 Hand-Abstand ergeben
  *    bis ~20 Einheiten; gemessen max 10 (Dossier Nachbesserung 3).
- *  - Zahl der Ueberschneidungsbilder: das Original dreht Leons KOPF (Part 8) waehrend des Haltens zu einem Ziel
- *    — im Original-RAM unterscheidet sich zwischen Gesicht- und Ruecken-Griff NUR Part 8 (Rumpf/Arme gleich);
- *    der Port dreht den Kopf im Halten nicht (OFFEN im Dossier). Gemessen: Port bis 2 Bilder WENIGER als das
- *    Original (g7 5/7, g11 2/4), sonst gleich. */
-#define R35_6A_TOL  20
-#define R35_6A_ZTOL 2
+ *  - Kopf-Rahmen / Blick-Akku / Zahl der Ueberschneidungsbilder: seit Nachbesserung 4 dreht der Port Leons Kopf im
+ *    Halten wie RE2 (FUN_8003DB38 + FUN_800177C0, s. enemy_ai_re2_zellenarm.c); die Grenzen sind die gemessene
+ *    Restabweichung derselben Versuchsanordnung (Dossier H_raeume.md "Nachbesserung 4"), kein Spielwert. */
+#define R35_6A_TOL   20
+#define R35_6A_KTOL  40
+#define R35_6A_NTOL  24
+#define R35_6A_ZTOL  1
 typedef struct { const char *name; int satz, hoehe, griff, var, wechsel; r2o_bild_t b[R2O_BILDER]; } r2o_lauf_t;
 #include "r35_raeume_re2orig.inc"
 
@@ -143,8 +149,10 @@ static int aufsetzen(int *slots)
 
 #include "r35_raeume_volumen.h"   /* Huelle Leon Kopf/Rumpf (PL00.MD1), vol_innen / vol_innen_welt */
 static re15_skel_pose_t s_leon_pose[2];
-/* Leons Opfer-Pose (Opfer-Override main.c: PL00-Knochen, Keyframes + Clips der Greifer-Opferbank). */
-static int leon_pose(const re15_actor_t *pl)
+/* Leons Opfer-Pose WIE DER ZEICHNER (main.c Spieler-Zweig: PL00-Knochen, Keyframes + Clips der Greifer-Opferbank,
+ * `g_anim_pose_actor = player_ref` -> Ueberblendung + Nacken-FSM in re15_skel_compute_pose). Jedes Halte-Bild
+ * genau einmal aufrufen, wie der Zeichner — die FSM schreitet je Aufruf einen Schritt. */
+static int leon_pose(re15_actor_t *pl)
 {
     re15_enemy_bank_t *vb = re15_enemy_find(0x1A);
     if (!vb || !vb->victim_ok) return 0;
@@ -153,11 +161,10 @@ static int leon_pose(const re15_actor_t *pl)
     vs.keyframe_data_size = vb->skel_victim.keyframe_data_size;
     vs.keyframe_count = vb->skel_victim.keyframe_count;
     vs.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
-    re15_actor_t pr = *pl;
-    int kf = re15_compute_actor_kf(&vb->anim_victim, &vs, &pr, (int)pl->motion, pl->anim_frame);
+    int kf = re15_compute_actor_kf(&vb->anim_victim, &vs, pl, (int)pl->motion, pl->anim_frame);
     if (kf < 0) return 0;
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    void *save = g_anim_pose_actor; g_anim_pose_actor = pl;
     int rv = re15_skel_compute_pose(&vs, kf, poses);
     g_anim_pose_actor = save;
     if (rv != 0) return 0;
@@ -176,7 +183,7 @@ static void port_kopf_rahmen(const re15_actor_t *pl, const int32_t P[3], int32_t
     out[2] = (int32_t)((p->rot[2] * mx + p->rot[5] * my + p->rot[8] * mz) >> 12);
 }
 /* Punkt im WURZEL-Rahmen Leons (Lage x/z, Boden y, Blick): R_y^T (P - Wurzel) — dieselbe Konvention wie
- * vol_innen. Unabhaengig von Leons Kopfdrehung (s. (6a)). */
+ * vol_innen. Unabhaengig von Leons Kopfdrehung; (6a) prueft zusaetzlich den KOPF-Rahmen. */
 static void wurzel_rahmen(int32_t x, int32_t z, int yaw, const int32_t P[3], int32_t out[3])
 {
     int64_t cs = re15_cos_q12(yaw), sn = re15_sin_q12(yaw);
@@ -236,7 +243,8 @@ static const r2o_lauf_t *orig_lauf(const char *name)
 }
 
 /* Aufzeichnung je Halte-Bild f. */
-typedef struct { int ok; int32_t h[3], lx, lz, rel[3], hw[3], kw[3]; int yaw; int pfr, afr; int vi, vs; } bild_t;
+typedef struct { int ok; int32_t h[3], lx, lz, rel[3], hw[3], kw[3]; int yaw; int pfr, afr; int vi, vs;
+                 int nyaw, npit, nziel; } bild_t;
 #define FAELLE 8
 static bild_t s_auf[FAELLE][60];
 static int    s_auf_yaw[FAELLE];
@@ -244,10 +252,16 @@ static int    s_zyk[FAELLE], s_zyk_max[FAELLE];        /* Volumenmass ueber EINE
 static int32_t s_pin[FAELLE][3], s_wurzel[FAELLE][3];  /* Pin-Quelle und Arm-Ursprung im Griff-Bild       */
 static int    s_dist[FAELLE];                          /* Leon - Arm-Ursprung nach dem Griff-Bild          */
 static int    s_gleich[FAELLE];
+static int    s_halter[FAELLE];                        /* Slot des haltenden Arms (Messarm 5)              */
+static int    s_ziele[FAELLE][4], s_nziele[FAELLE];    /* gewaehlte Blickziele im Halten (Slots, 0 = SELBST) */
 
 /* Ein Griff des Messarms mit Leon-Blick `yaw0` vor dem Zugriff, Armhoehe `hoehe` (0 = Port-Wert
- * RE2ARM_1210_Y; sonst ueber den Mess-Haken RE15_ARM_ANKER des Moduls). */
-static int griff(int yaw0, const char *name, int fall, int hoehe)
+ * RE2ARM_1210_Y; sonst ueber den Mess-Haken RE15_ARM_ANKER des Moduls).
+ * NB4 `wechsel`: -2 = Blickwahl laeuft frei (Nutzerfall, ROOM1210 mit allen zehn Armen). Sonst die Ausgangslage
+ * eines Original-Mitschnitts: Ziel SELBST im ersten Halte-Bild (RAM aller zwoelf Griffe), die anderen neun Arme
+ * schlafen (im Original war nur die Fuenfergruppe des Halters wach, die Gegenreihe 15000 entfernt, > 7000), erste
+ * Suche FUN_8003DB38 in dem Port-Bild, das per Arm-Bild auf das Original-Halte-Bild `wechsel` faellt. */
+static int griff(int yaw0, const char *name, int fall, int hoehe, int wechsel)
 {
     memset(s_auf[fall], 0, sizeof s_auf[fall]);
     s_zyk[fall] = s_zyk_max[fall] = 0; s_auf_yaw[fall] = -1; s_gleich[fall] = 0;
@@ -276,6 +290,15 @@ static int griff(int yaw0, const char *name, int fall, int hoehe)
     snprintf(nm, sizeof nm, "[%s] Griff kommt zustande (A3 0x401 @0x80100A50)", name);
     CHECK(nm, grab);
     if (!grab) return -1;
+    s_halter[fall] = a5; s_nziele[fall] = 0;
+    int ziel_bild_afr = -1;
+    if (wechsel != -2) {
+        re15_re2arm_look_debug(255, RE15_ACTOR_SLOT_PLAYER, NULL, NULL);    /* SELBST, keine Suche */
+        for (int i = 0; i < n; i++) if (slots[i] != a5) g_actors[slots[i]].grid_id = 0;   /* Schlaf */
+        /* Original-Halte-Bild i (RAM am Bildanfang = Ende von Bild i-1) <-> Port-Aufzeichnung mit Arm-Bild
+         * (acw(i) + 18) % 19 (dieselbe Ausrichtung wie vergleiche()); acw(i) = i % 19 (Clip 5 ab Bild 0). */
+        if (wechsel >= 0) ziel_bild_afr = ((wechsel % 19) + 18) % 19;
+    }
     int32_t rein[3];
     (void)re15_re2arm_hand_parts(a5, s_pin[fall], rein);
     s_wurzel[fall][0] = arm->x; s_wurzel[fall][1] = arm->y; s_wurzel[fall][2] = arm->z;
@@ -284,14 +307,25 @@ static int griff(int yaw0, const char *name, int fall, int hoehe)
            name, (int)arm->y, s_pin[fall][0], s_pin[fall][2], pl->x, pl->z, s_dist[fall], arm->x, arm->z);
     int gleich = 1, zyk = 0;
     for (int f = 0; f < 60; f++) {
+        /* erste Suche im ausgerichteten Bild: Zaehler 0 VOR dem Schritt (FUN_8003DB38 laeuft im Spieler-Pass
+         * dieses Schritts, @0x8003db90-a4); naechstes Arm-Bild = jetziges + 1 (Clip 5, Takt @0x80100D18). */
+        if (ziel_bild_afr >= 0 && arm->motion == 5 && abs(f - wechsel) <= 9 &&
+            ((int)arm->anim_frame + 1) % 19 == ziel_bild_afr) {
+            re15_re2arm_look_debug(0, -1, NULL, NULL); ziel_bild_afr = -1;
+        }
         frame_step();
         if (f == 0) s_auf_yaw[fall] = (int)pl->rot_y & 0xfff;      /* nach Hook-P0 (@0x801012E0-18) */
         if (arm->sub_state_1 != 4 || re15_player_victim_state() != 4) break;
+        int pose = leon_pose(pl);                                   /* Zeichner: jedes Bild (Nacken-FSM) */
+        {   int z = (int)pl->neck_target_slot, neu = 1;
+            for (int q = 0; q < s_nziele[fall]; q++) if (s_ziele[fall][q] == z) neu = 0;
+            if (neu && s_nziele[fall] < 4) s_ziele[fall][s_nziele[fall]++] = z; }
         if (pl->motion != 0 || arm->motion != 5) continue;
         if ((int)pl->anim_frame != (((int)arm->anim_frame + 1) % 19)) gleich = 0;
         if (f < 16) continue;                                       /* Ueberblendung Rate 15 */
-        if (!leon_pose(pl)) continue;
+        if (!pose) continue;
         bild_t *a = &s_auf[fall][f];
+        a->nyaw = pl->neck_yaw; a->npit = pl->neck_pitch; a->nziel = pl->neck_target_slot;
         re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), a->h);
         a->ok = 1; a->lx = pl->x; a->lz = pl->z; a->yaw = (int)pl->rot_y & 0xfff;
         a->pfr = pl->anim_frame; a->afr = arm->anim_frame;
@@ -306,16 +340,20 @@ static int griff(int yaw0, const char *name, int fall, int hoehe)
     s_gleich[fall] = gleich;
     snprintf(nm, sizeof nm, "[%s] (2) Leon zeigt jedes Halte-Bild Arm-Bild + 1 (Clip 0/Clip 5, 19 Bilder)", name);
     CHECK(nm, gleich);
-    printf("  [%s] Volumenmass ueber einen Halte-Zyklus (Bilder 16..34): Arm in Leon in %d/19 (max %d Vertices)\n",
-           name, s_zyk[fall], s_zyk_max[fall]);
+    printf("  [%s] Volumenmass ueber einen Halte-Zyklus (Bilder 16..34, Kopf wie gezeichnet): Arm in Leon in %d/19 "
+           "(max %d Vertices) | Blickziele im Halten:", name, s_zyk[fall], s_zyk_max[fall]);
+    for (int q = 0; q < s_nziele[fall]; q++)
+        printf(" %d%s", s_ziele[fall][q], s_ziele[fall][q] == 0 ? "=SELBST" : (s_ziele[fall][q] == a5 ? "=Halter" : ""));
+    printf("\n");
     putenv((char *)"RE15_ARM_ANKER=");
     return 0;
 }
 
 /* (6a) Port gegen Original-Lauf, Bild fuer Bild ueber das Arm-Bild ausgerichtet. */
-static int vergleiche(int fall, const r2o_lauf_t *l, int *maxdev, int *bilder)
+static int vergleiche(int fall, const r2o_lauf_t *l, int *maxdev, int *bilder, int *maxkopf, int *maxnacken,
+                      int *zielgleich)
 {
-    *maxdev = 0; *bilder = 0;
+    *maxdev = 0; *bilder = 0; *maxkopf = 0; *maxnacken = 0; *zielgleich = 1;
     for (int i = 0; i < R2O_BILDER; i++) {
         const r2o_bild_t *b = &l->b[i];
         /* Ausrichtung: am Haltepunkt B4 P1 (Bildanfang) zeigt +0x14D das Bild, das 0x8002959C IN diesem Bild
@@ -333,12 +371,20 @@ static int vergleiche(int fall, const r2o_lauf_t *l, int *maxdev, int *bilder)
         for (int j = 0; j < 3; j++) {
             int d = abs(ohw[j] - a->hw[j]); if (d > *maxdev) *maxdev = d;
             d = abs(okw[j] - a->kw[j]);     if (d > *maxdev) *maxdev = d;
+            d = abs(o[j] - a->rel[j]);      if (d > *maxkopf) *maxkopf = d;      /* Hand im KOPF-Rahmen */
         }
+        {   int dy = abs(((b->nyaw - a->nyaw + 2048) & 0xfff) - 2048), dp = abs(((b->npit - a->npit + 2048) & 0xfff) - 2048);
+            if (dy > *maxnacken) *maxnacken = dy;
+            if (dp > *maxnacken) *maxnacken = dp; }
+        {   int oz = (b->nziel < 0) ? 0 : (b->nziel == l->satz ? 1 : 2);             /* SELBST / Halter / anderer */
+            int pz = (a->nziel == RE15_ACTOR_SLOT_PLAYER) ? 0 : (a->nziel == s_halter[fall] ? 1 : 2);
+            if (oz != pz) *zielgleich = 0; }
         if (getenv("R35_ARME_DUMP"))
             printf("    DUMP %s Port-Arm-Bild %2d: Hand/Wurzel O (%5d,%5d,%5d) P (%5d,%5d,%5d) | Kopf/Wurzel O (%5d,%5d,%5d) "
-                   "P (%5d,%5d,%5d) | Hand/Kopf-Rahmen O (%4d,%4d,%4d) P (%4d,%4d,%4d)\n", l->name, afr, ohw[0], ohw[1], ohw[2],
+                   "P (%5d,%5d,%5d) | Hand/Kopf-Rahmen O (%4d,%4d,%4d) P (%4d,%4d,%4d) | Blick O (%4d,%4d) z%d P (%4d,%4d) z%d\n",
+                   l->name, afr, ohw[0], ohw[1], ohw[2],
                    a->hw[0], a->hw[1], a->hw[2], okw[0], okw[1], okw[2], a->kw[0], a->kw[1], a->kw[2], o[0], o[1], o[2],
-                   a->rel[0], a->rel[1], a->rel[2]);
+                   a->rel[0], a->rel[1], a->rel[2], b->nyaw, b->npit, b->nziel, a->nyaw, a->npit, a->nziel);
         (*bilder)++;
     }
     return 1;
@@ -362,14 +408,17 @@ int main(void)
     /* ---- ORIGINAL-WERTE aus der RAM ------------------------------------------------------------ */
     if (!load_re2_bank_1A()) { printf("FAIL: RE2/CDEMD0.EMS (EM2D-Mesh fuer das Original-Volumenmass)\n"); return 1; }
     int odmin = 1 << 30, odmax = 0, ogleich = 1;
+    /* (1)-Spanne NUR aus den sauberen Griffen: in g3/g4 (Halter Satz 2) hat der weiter sichtbare Nachbar Satz 0
+     * geschoben — Leon steht dort 1295 vom Halter, aber 1251 vom Ursprung von Satz 0 (Abnahme 3, M3). */
     printf("  Original-RAM (ROOM2050, Halte-Bilder 16..34):\n");
     for (int k = 0; k < R2O_LAEUFE; k++) {
         const r2o_lauf_t *l = &s_r2o[k];
         int mx = 0, z = orig_zyklus(l, &mx);
         const r2o_bild_t *b = &l->b[0];
         int d = (int)lround(sqrt((double)(b->lx - b->ax) * (b->lx - b->ax) + (double)(b->lz - b->az) * (b->lz - b->az)));
-        if (d < odmin) odmin = d;
-        if (d > odmax) odmax = d;
+        const int sauber = strcmp(l->name, "g3_west_gesicht") && strcmp(l->name, "g4_west_ruecken");
+        if (sauber && d < odmin) odmin = d;
+        if (sauber && d > odmax) odmax = d;
         for (int i = 0; i < R2O_BILDER; i++)
             if ((int)((l->b[i].lcw >> 8) & 0xff) != (int)(((l->b[i].acw >> 8) & 0xff) + 1) % 19) ogleich = 0;
         printf("    %-16s Satz %d y %5d Arm %c %s: Leon %d vom Ursprung, Arm in Leon %2d/19 (max %d)\n", l->name, l->satz,
@@ -392,9 +441,36 @@ int main(void)
               "Hand-Bahn (vier Paare; Flip @0x8010130C-18)", paare);
     }
 
+    /* (N1) RE2-Zielwahl FUN_8003DB38 auf der ORIGINAL-Geometrie (Leon-Lage/-Blick aus der RAM, Kandidaten = die
+     * wache Fuenfergruppe des Halters, ROOM2050-Saetze): Kegel FUN_80015614(PL, E.x, E.z, 1500) @0x8003dc8c ueber
+     * re15_ai_arc_test (dieselbe Funktion, die re15_re2arm_player_look benutzt), Radius 7000 @0x8003c1b0, der
+     * naechste gewinnt (@0x8003dcb0). Die Sichtpruefung 0x80050858 ist in RE2-Geometrie nicht nachrechenbar; in
+     * allen gemessenen Faellen war sie frei (das gewaehlte Ziel liegt jeweils im Fensterloch). */
+    {   int ok = 1;
+        for (int k = 0; k < R2O_LAEUFE; k++) {
+            const r2o_lauf_t *l = &s_r2o[k];
+            re15_actor_t lp; memset(&lp, 0, sizeof lp);
+            lp.x = l->b[0].lx; lp.z = l->b[0].lz; lp.rot_y = l->b[0].lyaw;
+            int best = -1; uint32_t bd = 7000u;
+            for (int sz = (l->satz < 5 ? 0 : 5); sz < (l->satz < 5 ? 5 : 10); sz++) {
+                if (re15_ai_arc_test(&lp, s_r2o_saetze[sz][0], s_r2o_saetze[sz][2], 1500) != 0) continue;
+                int32_t dx = s_r2o_saetze[sz][0] - lp.x, dz = s_r2o_saetze[sz][2] - lp.z;
+                uint32_t d = (uint32_t)lround(sqrt((double)dx * dx + (double)dz * dz));
+                if (d < bd) { bd = d; best = sz; }
+            }
+            int orig = l->b[R2O_BILDER - 1].nziel;           /* Ziel in Halte-Bild 34 (alle Wechsel <= 31) */
+            printf("  (N1) %-16s Leon (%d,%d) Blick %d: Regel -> %s%d | RAM: Ziel %s%d ab Halte-Bild %d\n", l->name,
+                   lp.x, lp.z, (int)lp.rot_y, best < 0 ? "SELBST " : "Satz ", best, orig < 0 ? "SELBST " : "Satz ", orig,
+                   l->wechsel);
+            if (best != orig) ok = 0;
+        }
+        CHECK("(N1) RE2-Zielwahl FUN_8003DB38 (Kegel 1500 @0x8003dc8c, Radius 7000 @0x8003c1b0, naechster @0x8003dcb0) "
+              "trifft auf der Original-Geometrie in allen 12 Griffen das Ziel der RAM (Halter / Nachbar / SELBST)", ok);
+    }
+
     /* ---- PORT ------------------------------------------------------------------------------------ */
-    griff(2048, "Gesicht", 0, 0);                 /* Leon dem Fenster zugewandt -> kein Flip */
-    griff(0, "Ruecken", 1, 0);                    /* vom Fenster abgewandt -> Flip +2048 (@0x80101304-18) */
+    griff(2048, "Gesicht", 0, 0, -2);             /* Leon dem Fenster zugewandt -> kein Flip */
+    griff(0, "Ruecken", 1, 0, -2);                /* vom Fenster abgewandt -> Flip +2048 (@0x80101304-18) */
     /* Lagen der Original-Griffe mit Arm vor Leon (Arm-Blick = Heimat-Blick): gleiche Hoehe, gleicher Griff. */
     static const struct { const char *lauf; int yaw0; int fall; } VG[5] = {
         { "g5_r5_gesicht", 2048, 3 }, { "g6_r5_ruecken", 0, 4 }, { "g7_r0_gesicht", 2048, 5 },
@@ -402,7 +478,13 @@ int main(void)
     for (int k = 0; k < 5; k++) {
         const r2o_lauf_t *l = orig_lauf(VG[k].lauf);
         char nm[64]; snprintf(nm, sizeof nm, "wie %s (y %d)", VG[k].lauf, l ? l->hoehe : 0);
-        if (l) griff(VG[k].yaw0, nm, VG[k].fall, l->hoehe);
+        if (l) {
+            /* Wechselbild: Gesicht = gemessen; Ruecken (Original ohne Wechsel in 40 Bildern) = das des Gesicht-
+             * Zwillings derselben Lage — dort laeuft dieselbe Suche, der Halter liegt nur hinter Leon. */
+            int w = l->wechsel;
+            if (w < 0) { const r2o_lauf_t *zw = orig_lauf(k == 1 ? "g5_r5_gesicht" : "g7_r0_gesicht"); w = zw ? zw->wechsel : 20; }
+            griff(VG[k].yaw0, nm, VG[k].fall, l->hoehe, w);
+        }
     }
 
     /* (1) Pin + Koerper-Push: Abstand wie im Original, auf dem Strahl Ursprung -> Pin. */
@@ -420,7 +502,8 @@ int main(void)
                    odmin, odmax, kreuz);
         }
         CHECK("(1) Pin auf der gemischten Hand (@0x80100C18-38), danach RE2-Koerper-Push FUN_80034D0C (r 800 @0x80100338-3C "
-              "+ 450 @0x8003bdc0-c4): Leon auf dem Strahl Ursprung->Pin im Abstand des ORIGINALS (alle 12 Griffe)", ok);
+              "+ 450 @0x8003bdc0-c4): Leon auf dem Strahl Ursprung->Pin im Abstand des ORIGINALS (10 saubere Griffe, "
+              "ohne g3/g4)", ok);
     }
 
     /* (6a) Port = Original in denselben Lagen. */
@@ -428,15 +511,18 @@ int main(void)
         for (int k = 0; k < 5; k++) {
             const r2o_lauf_t *l = orig_lauf(VG[k].lauf);
             if (!l) { ok = 0; continue; }
-            int maxdev = 0, bilder = 0, omx = 0;
-            vergleiche(VG[k].fall, l, &maxdev, &bilder);
+            int maxdev = 0, bilder = 0, omx = 0, maxkopf = 0, maxnacken = 0, zielgleich = 0;
+            vergleiche(VG[k].fall, l, &maxdev, &bilder, &maxkopf, &maxnacken, &zielgleich);
             int oz = orig_zyklus(l, &omx);
-            printf("  (6a) %-15s Hand + Kopfgelenk im Wurzel-Rahmen: %d Bilder, max Abweichung %d | Arm in Leon Port %d/19 (max %d), "
-                   "Original %d/19 (max %d)\n", VG[k].lauf, bilder, maxdev, s_zyk[VG[k].fall], s_zyk_max[VG[k].fall], oz, omx);
-            if (bilder < 19 || maxdev > R35_6A_TOL || abs(s_zyk[VG[k].fall] - oz) > R35_6A_ZTOL) ok = 0;
+            printf("  (6a) %-15s %d Bilder: Wurzel-Rahmen max %d, KOPF-Rahmen max %d, Blick-Akku max %d, Ziel %s | Arm in "
+                   "Leon Port %d/19 (max %d), Original %d/19 (max %d)\n", VG[k].lauf, bilder, maxdev, maxkopf, maxnacken,
+                   zielgleich ? "gleich" : "VERSCHIEDEN", s_zyk[VG[k].fall], s_zyk_max[VG[k].fall], oz, omx);
+            if (bilder < 19 || maxdev > R35_6A_TOL || maxkopf > R35_6A_KTOL || maxnacken > R35_6A_NTOL || !zielgleich ||
+                abs(s_zyk[VG[k].fall] - oz) > R35_6A_ZTOL) ok = 0;
         }
-        CHECK("(6a) Port = RE2-Original in fuenf Original-Lagen (Hoehe -2480/-2580/-2700, Gesicht + Ruecken): Hand im "
-              "Kopf-Rahmen Bild fuer Bild und Zahl der Ueberschneidungsbilder wie in der Original-RAM", ok);
+        CHECK("(6a) Port = RE2-Original in fuenf Original-Lagen (Hoehe -2480/-2580/-2700, Gesicht + Ruecken), Leon posiert "
+              "wie der Zeichner: Hand im Wurzel- UND Kopf-Rahmen, Blick-Akku Part 8 und Blickziel Bild fuer Bild, Zahl der "
+              "Ueberschneidungsbilder wie in der Original-RAM", ok);
     }
     /* (6b) Nutzerfall Port-Hoehe -2500 gegen die Nachbarhoehen des Originals. */
     {   int og = 0, orr = 0, mx = 0;
@@ -474,7 +560,7 @@ int main(void)
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     CHECK("(5a) RE1.5-KI: Typ 0x1A gehoert dem RE2-EM2D-Gehirn (re15_ai_re2_for_type(0x1A) = 1)",
           re15_ai_re2_for_type(0x1Au) == 1);
-    griff(2048, "RE1.5-KI Gesicht", 2, 0);
+    griff(2048, "RE1.5-KI Gesicht", 2, 0, -2);
     {   int gleich = 1, vergl = 0;
         for (int f = 0; f < 60; f++) {
             const bild_t *g = &s_auf[0][f], *r = &s_auf[2][f];
