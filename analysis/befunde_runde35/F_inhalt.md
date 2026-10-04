@@ -363,3 +363,20 @@ begruendet durch den Riegel der Runde 34 (Dokument bleibt das zuletzt angehaengt
 mit Kommentar "Runde 35 Spur F", keine fremde Zeile veraendert. Danach `unit_r34n_e_dokumente` gruen.
 Lauf 2 (nach der Umstellung, Stand dieses Commits): `=== LOCAL-BUILD-OK (all) — Tests 482/482`
 (478 + 4 Riegel dieser Spur).
+
+## Nachbesserung 1 (2026-10-04, nach Abnahme 0 — Maengel M1/M2/M3)
+
+Grundlage: `analysis/befunde_runde35/F_abnahme_0.md` (bestanden = NEIN: P4 teilweise, P6 teilweise,
+M3 gering). Stand bei Beginn: HEAD ce1354a8.
+
+### M1 (P6) — RE2-Lageplan-Weltmodelle
+(in Arbeit)
+
+### M2 (P4) — Memory Card in der erreichbaren Kamera (Cut 4) sichtbar
+Korrektur einer falschen Dossier-Aussage: OFFEN 3 oben sagt "das Nutzerbild beweist aber, dass Cut 7
+im Spiel erscheint". Das ist NICHT gemessen und falsch begruendet: add_card.bmp (wie Shotgun.bmp)
+enthaelt keine Spielerfigur, ist also ein Hintergrundbild (Cut-7-BSS), kein Spielbild.
+(in Arbeit)
+
+### M3 (P1) — Riegel-Luecke Seitenzuordnung + V3-Restbefund 1 px
+(in Arbeit)
