@@ -45,6 +45,7 @@
 #include "re15_engine.h"          /* SCREEN_XRES / SCREEN_YRES */
 #include "re15_panel_zeiger.h"
 #include "asset_root_pc.h"        /* re15_pc_read_re2 */
+#include "re15_entladen.h"        /* Runde 35 Spur I: Generation + Freigabe an jeder Grenze */
 
 extern uint32_t *re15_pc_framebuffer(void);   /* render_pc.c: RGBA8888, R in Bit 24..31 */
 
@@ -54,6 +55,7 @@ extern uint32_t *re15_pc_framebuffer(void);   /* render_pc.c: RGBA8888, R in Bit
 static int      s_zustand = 0;
 /* Zelle 3 und Zelle 4, schon ueber CLUT-Zeile 2 aufgeloest: PSX-15-Bit-Farbe inkl. Bit 15. */
 static uint16_t s_zelle[2][ZS * ZS];
+static unsigned s_gen = 0;                    /* Runde 35 Spur I: Generation beim Laden (Zensus) */
 
 static uint32_t rd32(const uint8_t *p)
 {
@@ -97,6 +99,7 @@ static int laden(void)
 {
     if (s_zustand) return s_zustand;
     s_zustand = -1;
+    s_gen = g_re15_entladen_gen;
     int n = 0;
     uint8_t *tim = re15_pc_read_re2("LAMPE2130.TIM", &n);
     if (!tim || re15_panel_lampen_pc_dekodieren(tim, n, s_zelle[0], s_zelle[1]) != 0) {
@@ -109,6 +112,13 @@ static int laden(void)
     s_zustand = 1;
     return s_zustand;
 }
+
+/* Runde 35 Spur I, Nachbesserung 3: die Kunst ist ESP-TIM der Raum-RDT (RE2 ROOM2130 Kopfwort [20]);
+ * RE2 laedt sie bei JEDEM Raumladen aus der neuen RDT hoch (@0x8004a2ec -> @0x8001bc80/84 ->
+ * `jal 0x8001bd38` @0x8001bc88). Also faellt die dekodierte Kopie an jeder Grenze (entladen_pc.c
+ * Schritt 13); laden() holt sie beim naechsten sichtbaren Bild neu (0 = ungeprueft). */
+void re15_panel_lampen_pc_entladen(void) { s_zustand = 0; memset(s_zelle, 0, sizeof s_zelle); }
+int  re15_panel_lampen_pc_belegt(unsigned *gen) { if (gen) *gen = s_gen; return s_zustand == 1; }
 
 /* Eine Zelle als achsparalleles Viereck (Ecke x0/y0, Kante k) additiv in den Framebuffer. */
 void re15_panel_lampen_pc_zelle(uint32_t *fb, const uint16_t *zelle, int x0, int y0, int k)

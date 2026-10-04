@@ -44,7 +44,7 @@ extern int  re15_audio_raum_belegt(void);
 const char *const re15_entladen_fachname[RE15_FACH_ANZAHL] = {
     "pri_masken", "pri_atlas", "sld", "msk", "tim", "gegner",
     "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg", "stimme", "figur",
-    "rbj", "bg_prev", "re2ton"
+    "rbj", "bg_prev", "re2ton", "lampe"
 };
 
 /* ---- Raum-Animationsbank (Nachbesserung 2, Abnahme 1 M1) -------------------------------------
@@ -183,6 +183,11 @@ void re15_entladen_zensus(re15_entladen_zensus_t *z)
     z->belegt[RE15_FACH_BG_PREV] = bp ? 1 : 0;
     z->fremd [RE15_FACH_BG_PREV] = (bp && pg != g) ? 1 : 0;
     z->belegt[RE15_FACH_RE2TON] = re15_audio_re2_raumbaenke_belegt();
+    /* Nachbesserung 3: Generator-Lampen ROOM11F0 (dekodierte ESP-TIM-Kunst der RE2-RDT ROOM2130). */
+    unsigned lg = 0;
+    int la = re15_panel_lampen_pc_belegt(&lg);
+    z->belegt[RE15_FACH_LAMPE] = la ? 1 : 0;
+    z->fremd [RE15_FACH_LAMPE] = (la && lg != g) ? 1 : 0;
 
     for (int f = 0; f < RE15_FACH_ANZAHL; f++) {
         z->belegt_summe += z->belegt[f];
@@ -368,6 +373,13 @@ static void alles_entladen(const char *anlass)
      *     RAUMBANK (Bank 2 = SND0 der RDT, re15_audio.h). Die Tuersequenz-Baenke (TORSE + je
      *     Archiv) bleiben: Tuerbank @0x3DC50 ausserhalb des Key-Off-Bereichs (Runde 31, O2). */
     re15_audio_re2_raumbaenke_entladen();
+    /* (13) Nachbesserung 3 (Abnahme 2, Mangel 1): Generator-Lampen ROOM11F0 Cut 10. Die Kunst
+     *     (LAMPE2130.TIM) ist die ESP-TIM der RE2-RDT ROOM2130 (Kopfwort [20] = RDT+0x58). RE2-
+     *     Raumlader: neue RDT nach *(0x800ce324) (`jal 0x80012fb8` @0x8004a1c4), dann `jal 0x8001bba4`
+     *     @0x8004a2ec -> `lw a0,92(v0)` @0x8001bc80 / `lw a1,88(v0)` @0x8001bc84 -> `jal 0x8001bd38`
+     *     @0x8001bc88 (LoadImage) — bei JEDEM Raumladen aus der NEUEN RDT. RE1.5: RDT in der Arena
+     *     (@0x800397e8, Reset @0x80039738). Derselbe Satz wie der PANEL2130-Ton in Schritt (12). */
+    re15_panel_lampen_pc_entladen();
 }
 
 void re15_entladen_ereignis(const char *anlass)

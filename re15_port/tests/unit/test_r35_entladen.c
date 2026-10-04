@@ -178,6 +178,40 @@ static int test_n2beleg(void)
     return 0;
 }
 
+/* Nachbesserung 3 (Abnahme 2, Mangel 1): die Generator-Lampen-Kunst LAMPE2130.TIM ist die ESP-TIM der
+ * RE2-RDT ROOM2130 (Kopfwort [20] = RDT+0x58), und RE2 laedt die ESP-TIMs bei JEDEM Raumladen aus der
+ * NEUEN RDT hoch — also Lebensdauer = ein Raum. */
+static int test_n3beleg(void)
+{
+    size_t n2 = 0, nr = 0, nl = 0;
+    uint8_t *r   = datei_lesen("info/re2leon/PSX.EXE", &n2);
+    uint8_t *rdt = datei_lesen("info/re2leon/PL0/RDT/ROOM2130.RDT", &nr);
+    uint8_t *lam = datei_lesen("re15_port/shared_assets/RE2/LAMPE2130.TIM", &nl);
+    if (!r || !rdt || !lam) { free(r); free(rdt); free(lam); return 1; }
+    const uint32_t t2 = rd32(r, 0x18);
+#define W2(a)  rd32(r, 0x800u + (uint32_t)(a) - t2)
+    /* Raumlader FUN_80049e48: s0 = 0x800cc1e8, RDT-Ziel = 8508(s0) = *(0x800ce324) */
+    PRUEF(W2(0x80049e50) == 0x3c10800du, "RE2 @0x80049e50 lui s0,0x800d, %08x", W2(0x80049e50));
+    PRUEF(W2(0x80049e54) == 0x2610c1e8u, "RE2 @0x80049e54 addiu s0,s0,-15896 (0x800cc1e8), %08x", W2(0x80049e54));
+    PRUEF(W2(0x8004a178) == 0x8e05213cu, "RE2 @0x8004a178 lw a1,8508(s0) (RDT-Ziel 0x800ce324), %08x", W2(0x8004a178));
+    PRUEF(W2(0x8004a1c4) == JAL(0x80012fb8), "RE2 @0x8004a1c4 jal 0x80012fb8 (neue RDT lesen), %08x", W2(0x8004a1c4));
+    PRUEF(jal_einzig(r, n2, t2, 0x8001bba4u, 0x8004a2ecu), "RE2 jal 0x8001bba4: nicht genau einmal @0x8004a2ec (Raumlader)");
+    /* FUN_8001bba4: RDT-Zeiger, Kopfwort [21]/[20], Hochladen */
+    PRUEF(W2(0x8001bc78) == 0x8c42e324u, "RE2 @0x8001bc78 lw v0,-7388(v0) (0x800ce324), %08x", W2(0x8001bc78));
+    PRUEF(W2(0x8001bc80) == 0x8c44005cu, "RE2 @0x8001bc80 lw a0,92(v0) (RDT+0x5C), %08x", W2(0x8001bc80));
+    PRUEF(W2(0x8001bc84) == 0x8c450058u, "RE2 @0x8001bc84 lw a1,88(v0) (RDT+0x58 = ESP-TIM-Basis), %08x", W2(0x8001bc84));
+    PRUEF(jal_einzig(r, n2, t2, 0x8001bd38u, 0x8001bc88u), "RE2 jal 0x8001bd38: nicht genau einmal @0x8001bc88");
+#undef W2
+    /* Die Port-Datei IST diese ESP-TIM: ROOM2130.RDT Kopfwort [20] (Datei 0x58) = 0x0E398, 4256 B */
+    PRUEF(nr > 0x5C && rd32(rdt, 0x58) == 0x0E398u, "ROOM2130.RDT [0x58] = %08x statt 0x0E398", nr > 0x5C ? rd32(rdt, 0x58) : 0u);
+    PRUEF(nl == 4256u && nr >= 0x0E398u + 4256u && memcmp(rdt + 0x0E398u, lam, 4256u) == 0,
+          "LAMPE2130.TIM (%u B) ist nicht ROOM2130.RDT[0x0E398, +4256)", (unsigned)nl);
+    free(r); free(rdt); free(lam);
+    printf("n3beleg: LAMPE2130.TIM = ESP-TIM der RDT ROOM2130 ([0x58]); RE2 laedt sie je Raumladen "
+           "(@0x8004a2ec -> @0x8001bc80/84 -> jal 0x8001bd38 @0x8001bc88)\n");
+    return 0;
+}
+
 static int test_gegner(void)
 {
     re15_enemy_reset();
@@ -216,6 +250,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "gegner") || !strcmp(teil, "alle")) test_gegner();
     if (!strcmp(teil, "n1beleg") || !strcmp(teil, "alle")) test_n1beleg();
     if (!strcmp(teil, "n2beleg") || !strcmp(teil, "alle")) test_n2beleg();   /* Nachbesserung 2 */
+    if (!strcmp(teil, "n3beleg") || !strcmp(teil, "alle")) test_n3beleg();   /* Nachbesserung 3 */
     if (s_fehler) { printf("unit_r35_entladen_%s: %d Fehler\n", teil, s_fehler); return 1; }
     printf("unit_r35_entladen_%s OK\n", teil);
     return 0;

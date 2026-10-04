@@ -40,6 +40,10 @@
 #   I  RE2-Raumbank TUERSE (Dummy-Ton): verschlossene Tuer 1170 (AOT 5) -> 1130: re2ton>=1 -> 0.
 #   J  RE2-ENEMSE-Bank (Dummy-Ton): Kraehen-Raum ROOM10C0, Tod: '[re2se] ENEMSE Bank N geladen', VORHER
 #      spielende 10C0 re2ton>=1 -> EREIGNIS 0 (RE2 @0x8004a33c -> FUN_8005a09c schliesst @0x8005a108).
+# Nachbesserung 3 (Abnahme 2, Mangel 1) — Fach lampe (Generator-Lampen ROOM11F0, ESP-TIM der RE2-RDT
+# ROOM2130, RE2 @0x8004a2ec -> @0x8001bc80/84 -> jal 0x8001bd38 @0x8001bc88):
+#   K  Tod in 11F0 (Lampe sichtbar) -> NEW GAME: VORHER spielende 11F0 lampe=1, EREIGNIS 0.
+#   L  Tuer AOT 0 11F0 -> 11E0 (Lampe sichtbar): VORHER raum 11F0 lampe=1, EREIGNIS 0.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_entladen_karte> -DWORKDIR=<dir>
 #               [-DTEIL=A|B|C|D|alle] -P test_r35_entladen.cmake
 # =============================================================================
@@ -397,6 +401,44 @@ if(TEIL STREQUAL "J" OR TEIL STREQUAL "alle")
         message(FATAL_ERROR "r35_entladen[j]: ENEMSE-Bank am Tod nicht gezaehlt: '${_vj}'")
     endif()
     message(STATUS "r35_entladen[J] OK: RE2-ENEMSE-Bank (Kraehe ROOM10C0) am Tod entladen")
+endif()
+
+
+# --- K/L: Generator-Lampen ROOM11F0 (Nachbesserung 3, Abnahme 2 Mangel 1) --------------------------
+# Die Kunst LAMPE2130.TIM ist die ESP-TIM der RE2-RDT ROOM2130 (Kopfwort [20] = RDT+0x58); RE2 laedt
+# sie bei JEDEM Raumladen aus der neuen RDT (@0x8004a2ec -> @0x8001bc80/84 -> jal 0x8001bd38 @0x8001bc88).
+# Lampe sichtbar machen wie die Abnahme (Laeufe g6c/g6d): Cut 10 + Schalter-Maske 0x015 (obere Lampe).
+#   K  Tod in 11F0 -> Titel -> NEW GAME: VORHER spielende 11F0 lampe=1 -> jede EREIGNIS-Zeile 0.
+#   L  Tuer AOT 0 11F0 -> 11E0 (main00 @0x00CC6): VORHER raum 11F0 lampe=1 -> EREIGNIS 0, 60 Bilder 11E0.
+function(lampe_vorbedingung _name _grenze)
+    file(STRINGS "${_basis}_${_name}/panel.log" _pl REGEX "raum=11F0 cut=10 .* lampe_o=1 ")
+    if(NOT _pl)
+        message(FATAL_ERROR "r35_entladen[${_name}]: obere Lampe in ROOM11F0 Cut 10 nie sichtbar — der Lauf misst Mangel 1 nicht")
+    endif()
+    vorher_zeile(${_name} ${_grenze} 11F0 _v)
+    if(NOT _v MATCHES " lampe=1 ")
+        message(FATAL_ERROR "r35_entladen[${_name}]: Lampen-Kunst vor der Grenze '${_grenze}' nicht geladen/gezaehlt: '${_v}'")
+    endif()
+endfunction()
+if(TEIL STREQUAL "K" OR TEIL STREQUAL "alle")
+    entladen_lauf(k 240 RE15_TITLE_SHOT=t.bmp RE15_FPS=240 RE15_DEBUG_JUMP=11F0@5 RE15_FORCE_CUT=10
+                        "RE15_SET_FLAG_AT=5:13,5:15,5:17@100" RE15_KILL_AT=400 RE15_BOOT_EXIT_AT=2
+                        "RE15_PANEL_LOG=${_basis}_k/panel.log")
+    entladen_pruefen(k 1 2 1)
+    lampe_vorbedingung(k spielende)
+    message(STATUS "r35_entladen[K] OK: Generator-Lampen ROOM11F0 am Tod entladen")
+endif()
+if(TEIL STREQUAL "L" OR TEIL STREQUAL "alle")
+    entladen_lauf(l 240 RE15_TITLE_SHOT=t.bmp RE15_DEBUG_JUMP=11F0@5 RE15_FORCE_CUT=10
+                        "RE15_SET_FLAG_AT=5:13,5:15,5:17@100" "RE15_FIRE_AOT=0@300#11F0"
+                        "RE15_EXIT_AT=60#11E0" "RE15_PANEL_LOG=${_basis}_l/panel.log")
+    entladen_pruefen(l 2 1 0)
+    file(STRINGS "${_basis}_l/debug.log" _r11e0 REGEX "PC loaded room11e0.rdt")
+    if(NOT _r11e0)
+        message(FATAL_ERROR "r35_entladen[l]: Tuer AOT 0 fuehrte nicht nach ROOM11E0")
+    endif()
+    lampe_vorbedingung(l raum)
+    message(STATUS "r35_entladen[L] OK: Generator-Lampen ROOM11F0 an der Tuer 11F0 -> 11E0 entladen")
 endif()
 
 

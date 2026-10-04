@@ -75,6 +75,9 @@ enum {
     RE15_FACH_BG_PREV,         /* Montage-Schnappschuss des vorigen Bildes (bg_pc s_bg_prev)    */
     RE15_FACH_RE2TON,          /* RE2-Raumbank-Ergaenzungen: ENEMSE-Cache, ELEVSE, HINTSE,       */
                                /* TUERSE (verschlossen), PANEL2130 — in RE2 je Raum (Bank 2/ENEMSE) */
+    /* Nachbesserung 3 (Abnahme 2, Mangel 1): */
+    RE15_FACH_LAMPE,           /* Generator-Lampen ROOM11F0 Cut 10 (panel_lampen_pc.c, dekodiert aus */
+                               /* LAMPE2130.TIM = ESP-TIM der RE2-RDT ROOM2130, Kopfwort [20])       */
     RE15_FACH_ANZAHL
 };
 
@@ -138,6 +141,16 @@ int  re15_bg_prev_belegt(unsigned *gen);
 /* H2/H3 RE2-Raumbank-Ergaenzungen (audio_pc.c): Zahl der geladenen Baenke + Freigabe. */
 int  re15_audio_re2_raumbaenke_belegt(void);
 void re15_audio_re2_raumbaenke_entladen(void);
+
+/* ---- Nachbesserung 3 -------------------------------------------------------------------- */
+/* Mangel 1 Generator-Lampen (platform/pc/src/panel_lampen_pc.c). Die Kunst ist ESP-TIM der Raum-RDT
+ * (LAMPE2130.TIM = ROOM2130.RDT[0x0E398, +4256), Kopfwort [20] = RDT+0x58). RE2-Raumlader FUN_80049e48
+ * liest die neue RDT nach *(0x800ce324) (`jal 0x80012fb8` @0x8004a1c4) und laedt ihre ESP-TIMs bei
+ * JEDEM Raumladen hoch: `jal 0x8001bba4` @0x8004a2ec -> RDT+0x5C/+0x58 @0x8001bc80/@0x8001bc84 ->
+ * `jal 0x8001bd38` @0x8001bc88 (LoadImage). RE1.5: RDT in der Arena (@0x800397e8, Reset @0x80039738).
+ * -> die dekodierte Kopie faellt an jeder Grenze; der Zeichner laedt beim naechsten sichtbaren Bild neu. */
+void re15_panel_lampen_pc_entladen(void);
+int  re15_panel_lampen_pc_belegt(unsigned *gen);
 
 #ifdef __cplusplus
 }

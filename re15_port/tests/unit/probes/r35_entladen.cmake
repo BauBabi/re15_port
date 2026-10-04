@@ -21,6 +21,8 @@
 #   integration_r35_entladen_{f,g,h,i}  Nachbesserung 2: f Tuer 1170 -> 1130 (RBJ-Datei + bg_prev),
 #       g Leihe Spur K 10F0 -> 1030, h Boot-Puffer (Karte 1170), i RE2-Raumbank TUERSE (Dummy-Ton),
 #       j RE2-ENEMSE-Bank (Kraehe ROOM10C0) am Tod (Dummy-Ton)
+#   integration_r35_entladen_{k,l}  Nachbesserung 3: Generator-Lampen ROOM11F0 (k Tod, l Tuer 11F0 -> 11E0)
+#   unit_r35_entladen_n3beleg  Nachbesserung 3: RE2 Raum-ESP-TIM je Raumladen (@0x8004a2ec, @0x8001bc80/84/88)
 add_executable(test_r35_entladen ${CMAKE_CURRENT_LIST_DIR}/../test_r35_entladen.c)
 target_link_libraries(test_r35_entladen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_entladen PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -29,7 +31,7 @@ target_compile_definitions(test_r35_entladen PRIVATE RE15_REPO_ROOT="${_r35i_rep
 if(NOT WIN32)
     target_link_libraries(test_r35_entladen PRIVATE m)
 endif()
-foreach(_r35i_teil beleg gegner n1beleg n2beleg)
+foreach(_r35i_teil beleg gegner n1beleg n2beleg n3beleg)
     add_test(NAME unit_r35_entladen_${_r35i_teil} COMMAND test_r35_entladen ${_r35i_teil})
     set_tests_properties(unit_r35_entladen_${_r35i_teil} PROPERTIES TIMEOUT 60)
 endforeach()
@@ -42,7 +44,7 @@ if(NOT WIN32)
 endif()
 
 if(TARGET re15_pc)
-    foreach(_r35i_lauf A B C D E F G H I J)
+    foreach(_r35i_lauf A B C D E F G H I J K L)
         string(TOLOWER "${_r35i_lauf}" _r35i_klein)
         add_test(NAME integration_r35_entladen_${_r35i_klein}
                  COMMAND "${CMAKE_COMMAND}"
