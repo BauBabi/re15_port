@@ -16,9 +16,11 @@
 # AUFRUF
 #   urteil_kontrollen.sh anlegen <apk_pruefen.sh> <attrappen-ordner>      Attrappen + Pins einmal anlegen (die Zahlen
 #                                                                          F/E/G aus GATE_URTEIL_MIN_* dieser Datei)
-#   urteil_kontrollen.sh pruefen <apk_pruefen.sh> <attrappen> <arbeit> [--schnell]
+#   urteil_kontrollen.sh pruefen <apk_pruefen.sh> <attrappen> <arbeit> [--schnell] [<reihe>]
 #       Zeilen "ok      <name>" / "FALSCH  <name> ..."; Schluss "KONTROLLEN: n ok, m FALSCH"; Rueckgabe 0 nur ohne
-#       FALSCH. --schnell: Ende beim ersten FALSCH (Mutantenlauf). PY wird aus der Umgebung genommen, wenn gesetzt.
+#       FALSCH. --schnell: Ende beim ersten FALSCH (Mutantenlauf). <reihe>: Reihenfolge der Gruppen, Standard
+#       "P,ST,LAUF,PIN,FH" (der Mutantenlauf beginnt mit der Gruppe der mutierten Funktion; es laufen immer ALLE).
+#       PY wird aus der Umgebung genommen, wenn gesetzt.
 # =============================================================================================
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -53,6 +55,7 @@ anlegen() {
     echo "== SELBSTTEST-OK: x ==" > "$A/G0.txt"
     : > "$A/U_leer.py"; pin "$A/U_leer.py" "$A/pin_U_leer"
     printf 'abc\n' > "$A/pin_kaputt"; printf '%064d\n' 0 | tr 0 g > "$A/pin_nichthex"; head -c 63 "$A/pin_G0" > "$A/pin_63"
+    { printf '0'; cat "$A/pin_G0"; } > "$A/pin_65"      # 65 Hexziffern: faengt ein fehlendes ^ ODER $ im Pin-Muster
     # Urteils-Attrappe: $1 Name, $2 Rueckgabe des Selbsttests, $3 Schlusszeile, $4 Urteilszeile ("" = keine),
     # $5 Rueckgabe des Urteils ("ehrlich" = 0/1/2 nach der Gate-Rueckgabe), [$6 Zeile NACH der Schlusszeile]
     ua() {
@@ -99,6 +102,7 @@ anlegen() {
     ua zvor 0 "$OK" "X   Gate-Urteil (<modus>, Rueckgabe 0): x" 0
     ua zdp 0 "$OK" "   Gate-Urteil (<modus>, Rueckgabe 0) x" 0
     ua zein 0 "$OK" "  Gate-Urteil (<modus>, Rueckgabe 0): x" 0
+    ua zdl 0 "$OK" "   Gate-Urteil (<modus>, Rueckgabe 0):x" 0
     for w in Gate Urteil Rueckgabe; do
         ua "zw_$w" 0 "$OK" "$(echo "   Gate-Urteil (<modus>, Rueckgabe 0): x" | sed "s/\\b$w\\b/XX/")" 0
     done
@@ -107,7 +111,7 @@ anlegen() {
 
 # ------------------------------------------------------------------------------------------- Pruefen
 pruefen() {
-    AP="$1"; A="$2"; W="$3"; SCHNELL="${4:-}"
+    AP="$1"; A="$2"; W="$3"; SCHNELL="${4:-}"; REIHE="${5:-P,ST,LAUF,PIN,FH}"
     rm -rf "$W" && mkdir -p "$W" || exit 9
     read -r F E G < "$A/zahlen"
     [[ "$(zahlen "$AP")" == "$F $E $G" ]] || { echo "FALSCH  Attrappen fuer andere Mindestzahlen angelegt ($F $E $G)"; exit 1; }
@@ -152,9 +156,10 @@ pruefen() {
     MR="Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe"
     MF="Faelle, verlangt n/n"
     MM="Mutanten erkannt, $G gleichwertig - verlangt"
-    local i w
+    local i w g
 
-    # ---- P: Positiv-Kontrollen ZUERST (ein Mutant, der den guten Weg bricht, faellt hier)
+    # ---- P: Positiv-Kontrollen (ein Mutant, der den guten Weg bricht, faellt hier)
+    grp_P() {
     k P3_selbsttest_angenommen "0:Gate-Urteil selbstgeprueft: $F/$F Faelle, $E/$M Mutanten erkannt, $G gleichwertig" st gut
     k P4_gate_0_urteil_0 0 lauf gut G0
     k P5_gate_1_befund_bleibt_1 1 lauf gut G1
@@ -167,8 +172,11 @@ pruefen() {
     k P8_zweiter_aufruf_aus_dem_zwischenspeicher "0:P8 Ende" c_P8
     c_D5p() { GATE_PIN_DATEI="$A/pin_G0"; gate_pin_pruefen "$A/G0.py"; echo "GATE_SHA256=$GATE_SHA256"; }
     k P9_gate_pin_richtig "0:GATE_SHA256=$(cat "$A/pin_G0")" c_D5p
+    }
 
-    # ---- Selbsttest des Urteils: Rueckgabe (beide Seiten von rc == 0)
+    # ---- ST: Selbsttest des Urteils (gate_urteil_selbsttest)
+    grp_ST() {
+    # Rueckgabe (beide Seiten von rc == 0)
     k N10_ok_zeile_rueckgabe_1 "die:$MR 1" st r1
     k N10b_ok_zeile_rueckgabe_2 "die:$MR 2" st r2
     # ---- Faelle: f1 == f2 von beiden Seiten, Mindestzahl
@@ -193,8 +201,15 @@ pruefen() {
     for w in URTEIL SELBSTTEST OK Faelle Mutanten erkannt als gleichwertig begruendet; do
         k "N24_wort_$w" "die:$MS" st "w_$w"
     done
+    c_D11() { mit gut G0; TMPDIR="$W/gibt_es_nicht"; gate_urteil_selbsttest "$A/U_gut.py"; }
+    k D11_selbsttest_kein_temp "die:gate_urteil_selbsttest: kein Temp-Platz" c_D11
+    c_D11b() { mit gut G0; gate_urteil_selbsttest "$A/U_gut.py"; GATE_URTEIL_PIN_DATEI="$A/pin_U_r1"; gate_urteil_selbsttest "$A/U_r1.py"; }
+    k D11b_zwischenspeicher_nur_gleiche_kopie "die:$MR 1" c_D11b
+    }
 
-    # ---- zweite Instanz in gate_laufen: Urteil 0 trotz Gate-Rueckgabe 1 bzw. 2 -> 2 (beide Seiten von rc != 0)
+    # ---- LAUF: gate_laufen (zweite Instanz) und gate_urteil
+    grp_LAUF() {
+    # zweite Instanz: Urteil 0 trotz Gate-Rueckgabe 1 bzw. 2 -> 2 (beide Seiten von rc != 0)
     k N8c_urteil_luegt_gate_1 2 lauf luegt G1
     k N8b_urteil_luegt_gate_2 2 lauf luegt G2
     k N8m_meldung_ueberstimmt 0 grep -aq "ueberstimmt (zweite Instanz)" "$W/N8b_urteil_luegt_gate_2.txt"
@@ -206,14 +221,24 @@ pruefen() {
     k N19d_zeile_mit_vorsatz 2 lauf zvor G0
     k N19e_zeile_ohne_doppelpunkt 2 lauf zdp G0
     k N19f_zeile_zwei_leerzeichen 2 lauf zein G0
+    k N19g_zeile_ohne_leerzeichen_nach_doppelpunkt 2 lauf zdl G0
     for w in Gate Urteil Rueckgabe; do k "N19w_wort_$w" 2 lauf "zw_$w" G0; done
+    c_D17() { GATE_URTEIL_KOPIE=""; gate_urteil selbsttest "$A/G0.txt" 0; }
+    k D17_urteil_ohne_festhalten "die:gate_urteil: erst gate_festhalten" c_D17
+    c_D18() { GATE_URTEIL_KOPIE=""; GATE_PIN_DATEI="$A/pin_G0"; gate_laufen selbsttest "$A/G0.py" --selbsttest; }
+    k D18_laufen_ohne_festhalten "die:gate_laufen: erst gate_festhalten" c_D18
+    c_D19() { mit gut G0; gate_urteil_selbsttest "$A/U_gut.py"; TMPDIR="$W/gibt_es_nicht"; gate_laufen selbsttest "$A/G0.py" --selbsttest; }
+    k D19_laufen_kein_temp "die:gate_laufen: kein Temp-Platz" c_D19
+    }
 
-    # ---- Pins: Pin-Datei fehlt / kein SHA-256 / Datei fehlt / nicht lesbar / nicht festgehalten - Gate UND Urteil
+    # ---- PIN: Pin-Datei fehlt / kein SHA-256 / Datei fehlt / nicht lesbar / nicht festgehalten - Gate UND Urteil
+    grp_PIN() {
     c_pg() { GATE_PIN_DATEI="$1"; gate_pin_pruefen "$2"; }
     k D1_gate_pin_fehlt "die:Gate-Pin fehlt" c_pg "$W/gibt_es_nicht" "$A/G0.py"
     k D2_gate_pin_kein_sha "die:ist kein SHA-256" c_pg "$A/pin_kaputt" "$A/G0.py"
     k D2b_gate_pin_nicht_hex "die:ist kein SHA-256" c_pg "$A/pin_nichthex" "$A/G0.py"
     k D2c_gate_pin_63_ziffern "die:ist kein SHA-256" c_pg "$A/pin_63" "$A/G0.py"
+    k D2d_gate_pin_65_ziffern "die:ist kein SHA-256" c_pg "$A/pin_65" "$A/G0.py"
     k D3_gate_fehlt "die:Asset-Gate fehlt" c_pg "$A/pin_G0" "$W/gibt_es_nicht.py"
     c_D4() { GATE_PIN_DATEI="$A/pin_G0"; PY=false; gate_pin_pruefen "$A/G0.py"; }
     k D4_gate_nicht_lesbar "die:Asset-Gate nicht lesbar" c_D4
@@ -222,16 +247,16 @@ pruefen() {
     k D6_urteil_pin_fehlt "die:Urteils-Pin fehlt" c_pu "$W/gibt_es_nicht" "$A/U_gut.py"
     k D7_urteil_pin_kein_sha "die:ist kein SHA-256" c_pu "$A/pin_kaputt" "$A/U_gut.py"
     k D7b_urteil_pin_63_ziffern "die:ist kein SHA-256" c_pu "$A/pin_63" "$A/U_gut.py"
+    k D7c_urteil_pin_65_ziffern "die:ist kein SHA-256" c_pu "$A/pin_65" "$A/U_gut.py"
+    k D7d_urteil_pin_nicht_hex "die:ist kein SHA-256" c_pu "$A/pin_nichthex" "$A/U_gut.py"
     k D8_urteil_fehlt "die:Gate-Urteil fehlt" c_pu "$A/pin_U_gut" "$W/gibt_es_nicht.py"
     c_D9() { GATE_URTEIL_PIN_DATEI="$A/pin_U_gut"; PY=false; gate_urteil_pin_pruefen "$A/U_gut.py"; }
     k D9_urteil_nicht_lesbar "die:Gate-Urteil nicht lesbar" c_D9
     k D10_urteil_nicht_festgehalten "die:Gate-Urteil ist NICHT das festgehaltene" c_pu "$A/pin_U_gut" "$A/U_r1.py"
-    # ---- Selbsttest: kein Temp-Platz; der Zwischenspeicher gilt nur fuer GENAU die gepruefte Kopie
-    c_D11() { mit gut G0; TMPDIR="$W/gibt_es_nicht"; gate_urteil_selbsttest "$A/U_gut.py"; }
-    k D11_selbsttest_kein_temp "die:gate_urteil_selbsttest: kein Temp-Platz" c_D11
-    c_D11b() { mit gut G0; gate_urteil_selbsttest "$A/U_gut.py"; GATE_URTEIL_PIN_DATEI="$A/pin_U_r1"; gate_urteil_selbsttest "$A/U_r1.py"; }
-    k D11b_zwischenspeicher_nur_gleiche_kopie "die:$MR 1" c_D11b
-    # ---- gate_festhalten: Ordner, schon vorhandene Ziele, Quellen, Pins der Quellen, Selbsttest
+    }
+    # ---- FH: gate_festhalten (Ordner, schon vorhandene Ziele, Quellen, Pins der Quellen, Selbsttest) und die Pins VOR
+    # JEDEM Lauf (private Kopien nach gate_festhalten veraendert; das Urteil wird VOR dem Gate-Lauf erkannt)
+    grp_FH() {
     k D12_festhalten_ordner_fehlt "die:gate_festhalten: Ordner fehlt" fh x 'rmdir "$d"'
     k D13_festhalten_gate_ziel_da "die:apk_asset_gate.py existiert schon" fh a ': > "$d/apk_asset_gate.py"'
     k D14_festhalten_urteil_ziel_da "die:gate_urteil.py existiert schon" fh b ': > "$d/gate_urteil.py"'
@@ -240,14 +265,6 @@ pruefen() {
     k D20_festhalten_gate_nicht_gepinnt "die:Asset-Gate ist NICHT das festgehaltene" fh f 'GATE_QUELLE="$A/G1.py"'
     k D21_festhalten_urteil_nicht_gepinnt "die:Gate-Urteil ist NICHT das festgehaltene" fh g 'GATE_URTEIL_QUELLE="$A/U_r1.py"'
     k D22_festhalten_urteil_selbsttest_rot "die:$MR 1" fh h 'GATE_URTEIL_QUELLE="$A/U_r1.py"; GATE_URTEIL_PIN_DATEI="$A/pin_U_r1"'
-    # ---- ohne gate_festhalten; gate_laufen ohne Temp-Platz
-    c_D17() { GATE_URTEIL_KOPIE=""; gate_urteil selbsttest "$A/G0.txt" 0; }
-    k D17_urteil_ohne_festhalten "die:gate_urteil: erst gate_festhalten" c_D17
-    c_D18() { GATE_URTEIL_KOPIE=""; GATE_PIN_DATEI="$A/pin_G0"; gate_laufen selbsttest "$A/G0.py" --selbsttest; }
-    k D18_laufen_ohne_festhalten "die:gate_laufen: erst gate_festhalten" c_D18
-    c_D19() { mit gut G0; gate_urteil_selbsttest "$A/U_gut.py"; TMPDIR="$W/gibt_es_nicht"; gate_laufen selbsttest "$A/G0.py" --selbsttest; }
-    k D19_laufen_kein_temp "die:gate_laufen: kein Temp-Platz" c_D19
-    # ---- Pins VOR JEDEM Lauf: private Kopien nach gate_festhalten veraendert (Urteil: VOR dem Gate-Lauf erkannt)
     c_N20() { fh n20 :; echo "# veraendert" >> "$GATE_URTEIL_KOPIE"; gate_laufen selbsttest "$GATE_KOPIE" --selbsttest; }
     k N20_urteil_kopie_veraendert "die:Gate-Urteil ist NICHT das festgehaltene" c_N20
     k N20c_urteil_vor_dem_gatelauf_geprueft 1 grep -aq "Attrappe ==" "$W/N20_urteil_kopie_veraendert.txt"
@@ -255,12 +272,14 @@ pruefen() {
     k N20b_urteil_kopie_veraendert_gate_urteil "die:Gate-Urteil ist NICHT das festgehaltene" c_N20b
     c_N21() { fh n21 :; echo "# veraendert" >> "$GATE_KOPIE"; gate_laufen selbsttest "$GATE_KOPIE" --selbsttest; }
     k N21_gate_kopie_veraendert "die:Asset-Gate ist NICHT das festgehaltene" c_N21
+    }
+    for g in ${REIHE//,/ }; do "grp_$g"; done
     fertig
 }
 
 case "${1:-}" in
     anlegen) anlegen "$2" "$3" ;;
-    pruefen) pruefen "$2" "$3" "$4" "${5:-}" ;;
+    pruefen) pruefen "$2" "$3" "$4" "${5:-}" "${6:-}" ;;
     *) echo "Aufruf: urteil_kontrollen.sh anlegen <apk_pruefen.sh> <ordner> | pruefen <apk_pruefen.sh> <attrappen> <arbeit> [--schnell]"
        exit 9 ;;
 esac

@@ -41,8 +41,23 @@ FUNKTIONEN = ["gate_pin_pruefen", "gate_urteil_pin_pruefen", "gate_urteil_selbst
 TAUSCH = {"==": ("!=", "<=", ">=", "<", ">"), "!=": ("==", "<", ">", "<=", ">="), "<": ("<=", ">"), "<=": ("<", ">="),
           ">": (">=", "<"), ">=": (">", "<=")}
 
+# Reihenfolge der Kontroll-Gruppen je mutierter Funktion (nur Laufzeit: --schnell endet beim ersten FALSCH; ein
+# ueberlebender Mutant durchlaeuft immer ALLE Gruppen)
+REIHE = {"gate_pin_pruefen": "PIN,P,FH,LAUF,ST", "gate_urteil_pin_pruefen": "PIN,P,FH,ST,LAUF",
+         "gate_urteil_selbsttest": "ST,P,FH,LAUF,PIN", "gate_festhalten": "FH,P,PIN,ST,LAUF",
+         "gate_urteil": "LAUF,P,FH,ST,PIN", "gate_laufen": "LAUF,P,FH,ST,PIN"}
+
 # Mutanten, die keine Kontrolle erkennen KANN - je Eintrag die Begruendung. Schluessel = Beschreibung ohne Zeilennummer.
 AEQUIVALENT = {
+    # rc ist die Rueckgabe eines Programms ($? in bash: 0..255, nie negativ) - "<= 0" ist dort dasselbe wie "== 0"
+    "A (( rc == 0 )): == -> <=":
+        "gate_urteil_selbsttest: rc = $? des Urteils-Selbsttests (0..255): rc <= 0 und rc == 0 sind gleich",
+    # urteil ist $? von gate_urteil (0..255) oder die Zuweisung 0/2 - nie negativ
+    "A (( urteil == 0 )): == -> <=":
+        "gate_laufen: urteil = $? von gate_urteil (0..255): urteil <= 0 und urteil == 0 sind gleich",
+    # rc ist $? des Gate-Laufs (0..255) - "> 0" ist dort dasselbe wie "!= 0"
+    "A (( rc != 0 )): != -> >":
+        "gate_laufen: rc = $? des Gate-Laufs (0..255): rc > 0 und rc != 0 sind gleich",
 }
 
 
@@ -152,21 +167,22 @@ def lockerungen(p, ere):
 
 
 def mutanten(text):
-    """-> Liste (zeilennummer, beschreibung, neuer_text)"""
+    """-> Liste (zeilennummer, beschreibung, neuer_text, funktion)"""
     zeilen = text.split("\n")
     bereiche = []
     for name in FUNKTIONEN:
         a = next(i for i, z in enumerate(zeilen) if re.match(r"%s\(\) *\{" % re.escape(name), z))
         e = next(i for i in range(a + 1, len(zeilen)) if zeilen[i].startswith("}"))
-        bereiche.append((a + 1, e))
+        bereiche.append((a + 1, e, name))
     out = []
+    fname = [None]
 
     def m(i, was, neu_zeile):
         z = list(zeilen)
         z[i] = neu_zeile
-        out.append((i + 1, was, "\n".join(z)))
+        out.append((i + 1, was, "\n".join(z), fname[0]))
 
-    for a, e in bereiche:
+    for a, e, fname[0] in bereiche:
         for i, (mk, ce) in zip(range(a, e), masken(zeilen, a, e)):
             z = zeilen[i]
             if not any(mk[:ce]):
@@ -247,13 +263,13 @@ def main():
         print("== BASH-URTEIL-MUTANTEN-FEHLER: Attrappen nicht angelegt ==")
         return 1
 
-    def lauf(nr, neu):
+    def lauf(nr, neu, reihe="P,ST,LAUF,PIN,FH"):
         d = "%s/m%03d" % (arbeit, nr)
         os.makedirs(d)
         f = d + "/apk_pruefen.sh"
         open(f, "w", encoding="utf-8", newline="").write(neu)
         try:
-            q = subprocess.run([bash, kontrollen, "pruefen", f, att, d + "/w", "--schnell"],
+            q = subprocess.run([bash, kontrollen, "pruefen", f, att, d + "/w", "--schnell", reihe],
                                capture_output=True, text=True, timeout=300)
         except subprocess.TimeoutExpired:
             return 124, "Zeitlimit"
@@ -265,13 +281,13 @@ def main():
     print("   Kontrolle (unveraendert): Rueckgabe %d %s" % (k_rc, k_z[:150]))
     ms = mutanten(text)
     zaehl = {}
-    for _n, was, _t in ms:
+    for _n, was, _t, _f in ms:
         zaehl[was[0]] = zaehl.get(was[0], 0) + 1
     print("   Mutanten je Operator: " + ", ".join("%s %d" % kv for kv in sorted(zaehl.items())))
     erkannt = gleich = 0
     ueberlebt, gesehen = [], set()
     with cf.ThreadPoolExecutor(par) as ex:
-        futs = [(zl, was, ex.submit(lauf, nr, neu)) for nr, (zl, was, neu) in enumerate(ms, 1)]
+        futs = [(zl, was, ex.submit(lauf, nr, neu, REIHE[fn])) for nr, (zl, was, neu, fn) in enumerate(ms, 1)]
         for zl, was, fut in futs:
             rc, z = fut.result()
             if rc != 0:
