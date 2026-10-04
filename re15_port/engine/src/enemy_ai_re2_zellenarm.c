@@ -81,14 +81,16 @@
  *     (wie beim Hund dokumentiert).
  *   - Schatten FUN_80016480 (INIT @0x80100378-A4): der Port zeichnet den generischen Aktor-
  *     Schatten; verborgen (Bit 2) wird auch er nicht gezeichnet (platform/pc/main.c).
- *   - Der Trefferkasten des Ports bleibt der RE1.5-Kasten (300/1440, re15_enemy_apply_hitbox
- *     0x1A); RE2s +0x9A/+0x9C/+0x90/+0x92 = 800, +0x9E = 500 (@0x8010032C-348) sind NICHT
- *     uebernommen, weil die Push-Semantik von FUN_80034D0C (Root-Tail FUN_80035530 -> 0x80035408
- *     + 0x80034D0C) nicht zu Ende RE'd ist. Was belegt ist: FUN_80034D0C steigt aus, wenn eine
- *     der beiden Entities Bit 2 traegt (`(*a | *b) & 2`, Decompile Z.1) -> ein verborgener Arm
- *     schiebt und wird nicht geschoben; der Port setzt dafuer hit_radius_min = 0 solange
- *     verborgen (das nimmt ihn zugleich aus dem Trefferfilter — RE2: Schlaf 0x8000 = kein
- *     Ziel in FUN_800470C0 & Co, nach 0x701 hp = -1 = Gate @0x80047148).
+ *   - Der TREFFER-Kasten des Ports bleibt der RE1.5-Kasten (300/1440, re15_enemy_apply_hitbox 0x1A).
+ *     Der KOERPER-PUSH gegen den Spieler laeuft dagegen seit Runde 35 Spur H (Nachbesserung 3) mit
+ *     dem RE2-Segment (+0x9A = 800 @0x80100338-3C, +0x9E = 500 @0x8010032C-30, Lokal-Lage 0
+ *     @0x8010035C-64) ueber re15_re2arm_body_push_player = FUN_80034D0C aus dem Spieler-Pass
+ *     FUN_800355C4 (@0x80026628) — am RE2-Original gemessen (GDB-Wachpunkt: pc 0x800350cc/d0 schiebt
+ *     Leon nach dem Pin auf 1251 vom Ursprung). FUN_80034D0C steigt aus, wenn eine der beiden
+ *     Entities Bit 2 traegt (`(*a | *b) & 2`) -> ein verborgener Arm schiebt nicht; der Port setzt
+ *     hit_radius_min = 0 solange verborgen (re15_body_push_player ueberspringt ihn; zugleich aus dem
+ *     Trefferfilter — RE2: Schlaf 0x8000 = kein Ziel in FUN_800470C0 & Co, nach 0x701 hp = -1 =
+ *     Gate @0x80047148).
  */
 #include <stdint.h>
 #include <stdlib.h>
@@ -251,7 +253,8 @@ static void arm_anker_1210(re15_actor_t *e)
 #define RE2ARM_PL_H    1530    /* @0x8003bde8-ec */
 int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
 {
-    if (!e || !pl || !pl->active || pl->hp < 0) return 0;
+    if (!e || !pl || !pl->active || pl->hp < 0) return 0;   /* hp < 0: Port-Konvention aller Schub-Paesse
+                                                              * (re15_body_push_player / re15_g5_body_push_player) */
     const int slot = (int)(e - g_actors);
     if (slot < 0 || slot >= RE15_ACTOR_MAX || s_arm[slot].hidden) return 0;   /* (w|w) & 2 */
     const int32_t rs = RE2ARM_SEG_R + RE2ARM_PL_R;
@@ -803,8 +806,11 @@ int re15_re2arm_tick(int slot)
     default: break;                                       /* 4 = SKRIPT-Hook (nur ueber den Scheduler
                                                            * erreichbar, s. Kopf), 5/6 = 0, 7 = jr ra */
     }
-    /* Root-Tail FUN_80035530 (Part-Matrizen + Koerper-Push, Bit-2-Ausstieg): Push im Port ueber
-     * hit_radius (0 solange verborgen), Matrizen ueber den Renderer. */
+    /* Root-Tail FUN_80035530 (Segmente + Push des ARMS aus anderen Entities): den Arm schiebt niemand — sein
+     * word0 traegt Bit 0x4 (INIT `ori v0,v0,0x1404` @0x80100394, im RAM 0x0c003405), und FUN_80034D0C steigt bei wGeschobener & 4
+     * aus (Decompile Z.1); der Spieler-Push durch den Arm (FUN_800355C4 ->
+     * FUN_80034D0C(Arm, Spieler) @0x80035630) ist re15_re2arm_body_push_player, gerufen aus
+     * re15_body_push_player. Matrizen ueber den Renderer. */
 
     /* Spieler-Routine 5 laeuft im Original NACH allen Entities (@0x80026620 FUN_8003BFAC). */
     if (s_holder == slot) {
