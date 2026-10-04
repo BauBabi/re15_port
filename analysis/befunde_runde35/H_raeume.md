@@ -307,22 +307,27 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
     stehen muessen.
   * ROOM1190 Hunde: beim Sprung durch die Luke haengt kein Schatten mehr in der Luft (er liegt am Raumboden).
   * ROOM1200: der Zombie von der Bahre faellt beim Herunterlaufen an der Kante auf den Boden und kommt auf
-    Leons Ebene (in beiden KI-Einstellungen).
+    Leons Ebene (in beiden KI-Einstellungen). Bleibt Leon nach dem Aufnehmen direkt unter der Kante stehen,
+    schnappt der Zombie (RE2-KI) einmal von oben nach ihm, geht dann los und faellt herunter (Nachbesserung 1).
   * ROOM1210: Leon wird beim Griff an die Stelle gestellt, die das RE2-Original nimmt; von vorn gegriffen
-    steckt keine Zombiehand mehr in seinem Oberkoerper. Von hinten gegriffen bleibt Ueberschneidung (OFFEN 1).
+    steckt keine Zombiehand mehr in seinem Oberkoerper. Von hinten gegriffen (Leon schaut beim Zupacken vom
+    Fenster weg) liegt die Hand an bzw. in Leons Brust — das ist im RE2-Original genauso gebaut: dieselbe
+    Opfer-Animation, nur Leon um 180 Grad gedreht (Nachbesserung 1, M2). Unter der KI-Einstellung RE1.5 steht
+    Leon beim Griff ein Stueck vom Arm entfernt (kein Kontakt, OFFEN 6).
 * **Messschienen (env, kein Spielverhalten):** `RE15_HUNDESCHATTEN_LOG=<datei>`, `RE15_GEGNER_Y_LOG=<datei>`,
   `[re2arm] PIN` in re2_ki.log bei `RE15_RE2_TRACE=1`.
 
 ## OFFEN
-1. **ROOM1210 Ruecken-Griff (Punkt 4):** greift der Arm Leon, waehrend Leon vom Fenster wegschaut, dreht der
-   Hook ihn mit dem Ruecken zum Arm (FUN_80015910 = 1 -> +2048 @0x80101304-18). Mit dem einzigen Opfer-Clip 0
-   der EM2D-Bank liegt die Hand dann in 14 von 19 Bildern nicht klar hinter der Brust (Hals/Ruecken) — bei
-   JEDEM Phasenversatz (Sonde: 11..15 von 19 fuer Versatz 0..18). Alles daran ist RE2-byte-true (Pin, Flip,
-   Takt); ob RE2 selbst so aussieht, ist ohne Referenz NICHT belegt. Naechster Messweg: RE2 ROOM2050 im
-   Emulator (pcsx-redux, Skill re15-pcsx-watchpoint) einen Ruecken-Griff aufnehmen und PL+0x38/+0x40/+0x76 +
-   Arm-Parts gegen den Port vergleichen.
-2. **RE1.5-Flavor der Gitterarme** (EM01A + Opferbank-Leihgabe vom Zombie 0x10): nicht angefasst; der
-   Nutzerbefund ist am Default (RE2) gemessen.
+1. **ROOM1210 Ruecken-Griff (Punkt 4) — Sichtpruefung am RE2-Original.** Statisch belegt (Nachbesserung 1,
+   M2): RE2 hat fuer den Griff von hinten keinen eigenen Pfad (eine Opferbank @0x80100C3C-5C, ein Clip
+   @0x801012A8-AC, nur der Flip @0x8010130C-18; der Arm liest PL+0x76 nie); der Riegel prueft diese
+   Konstruktion (4a-c). Ein BILD eines RE2-Ruecken-Griffs fehlt. Naechster Messweg: pcsx-redux mit
+   `C:/Users/mjoedicke/Downloads/ePSXe2018/re2leon.cue`, Raum der EM2D-Gitterarme, Leon so an einem Arm
+   vorbei, dass `((Arm.yaw - PL.yaw + 0x400) & 0xFFF) < 0x800` (FUN_80015910), PL+0x38/+0x40/+0x76 + Bild im
+   Halten. (Ein Versuch, den Ruecken-Griff in der Port-exe per Eingabeskript zu provozieren — Laeufe
+   m2_back_a/b, `U3.6,R1.4,D2.5/3.5` — erreichte den Arm nicht; der Riegel deckt den Fall ab.)
+2. **RE1.5-Flavor der Gitterarme** (EM01A + Opferbank-Leihgabe vom Zombie 0x10): gemessen in Nachbesserung 1
+   (M4) — kein Clipping, s. OFFEN 6.
 3. **Schubladen-Kriecher ROOM1200 (Slot 3, grid 0x81) unter RE2** steht nach dem Wecken still (Sub 2, Clip 23)
    — nicht Teil des Nutzerbefunds (der laufende Bahren-Zombie ist id 1), unter RE1.5 kriecht er und faellt
    jetzt ebenfalls an der Kante (Zelle 17). Naechster Weg: RE2-Kriecher-Wurzel 0x80101210 gegen grid 0x81.
@@ -331,6 +336,20 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
    Funktion, je eine Zeile in der jeweiligen Wurzel; nicht Teil dieser Spur.
 5. **Zielscheiben, zweite Raetsel-Variante** ((3,112)=1, nur aus ROOM1241 @0x055E): dort waeren Scheibe 1+3
    die Loesung; die Texte bleiben nach Nutzer-Vorgabe fest auf 0+2 = viele.
+6. **ROOM1210 Gitterarme unter RE1.5-KI: Griff ohne Kontakt** (Nachbesserung 1, M4, Bild
+   `H_raeume/nb1_m4_re15ki_griff_F276-320.png`): Leon steht im Halten 1300-1560 Einheiten neben der Hand und
+   spielt die geliehene Zombie-Opfer-Animation. Ursache: der RE1.5-Writher hat im Original keinen Griff
+   (@0x8010c8cc-f4: nach der Lunge +0x5 := 2/3); der Port-Griff dieses Geschmacks ist eine Nachruestung mit dem
+   Zombie-Wurzelversatz relativ zum Hand-Anker. Das RE2-Ziel (EM2D: Pin auf die Hand @0x80100C18-38, Opferbank
+   des Arms @0x80100C3C-5C) faehrt der Default-Geschmack. Naechster Schritt (Nutzer-Entscheid noetig, ob der
+   RE1.5-Geschmack ueberhaupt greifen soll): entweder ohne Griff wie das RE1.5-Original (Greifen-Schleife und
+   Zurueck), oder den RE2-EM2D-Griff auch fuer EM01A (Pin auf die EM01A-Hand, Leon zur Arm-Wurzel gedreht).
+7. **RE2-Sichtstrahl ohne Hoehenteil:** RE2 0x80050858 prueft bei a3=1 (Zombie-Navigator) zusaetzlich die
+   Hoehe der Saetze (@0x80050b00-74 und die YZ-/YX-Projektionen danach). Der Port-Stand-in kennt nur das Band
+   des Gegners (Zell-Strahl) bzw. +0x82 (Region-Ray) und hat jetzt den Maskenfilter (@0x800508bc-c8). Folge:
+   eine Band-1-Wand blockt die Sicht eines Band-1-Zombies auch dort, wo der Strahl im Original unter ihr zu
+   Leon hinab laeuft (Sonde: (-24300,-12500) durch Zelle 9). Fuer ROOM1200 nicht noetig (Abstieg gemessen);
+   naechster Schritt: Band -> Hoehenbereich [-(b+1)*1800, -b*1800) und Teilhoehen der Strahl-Enden.
 
 ---
 
