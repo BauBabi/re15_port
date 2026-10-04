@@ -691,6 +691,10 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
     b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
     b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
+    /* Nachbesserung 4: Pool + Zeichenstand des Original-Bildes F195 vorbelegen (das letzte anim_set vor F195 posierte
+     * Bild 9 bzw. 15, re15_affen.h (12)) — sonst verliert der erste Tick die Fuss-Sperre (Harness-Artefakt). */
+    a->anim_frame = 9;  re15_affen_pool_anim(a); a->anim_frame = 10;
+    b->anim_frame = 15; re15_affen_pool_anim(b); b->anim_frame = 16;
     int hp_alt = pl->hp, treffer[64], nt = 0;
     char alt[256] = "";
     const char *spur = getenv("R35_TAKT_SPUR");   /* Nachbesserung 4: Bild-fuer-Bild-Spur im Format von jnb1/g_orig_dec.txt */
@@ -699,8 +703,8 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
         if (desync && f == 203) b->dog_blocked_ctr = 30;   /* = GDB-Schreiben M800ad1f0,2:1e00 im Original */
         frame(0, 0);
         if (spur && !desync)
-            printf("S%4d hp%d %d/%d c%d/%d | e1 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f | e2 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f\n",
-                   f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame,
+            printf("S%4d hp%d %d/%d c%d/%d (%d,%d) | e1 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f | e2 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f\n",
+                   f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (int)pl->x, (int)pl->z,
                    a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->dog_blocked_ctr,
                    (int)a->x, (int)a->z, (int)a->rot_y, dist2d(a->x, a->z, pl->x, pl->z),
                    b->state, b->sub_state_1, b->sub_state_2, (int)b->motion, (int)b->anim_frame, (int)b->dog_blocked_ctr,

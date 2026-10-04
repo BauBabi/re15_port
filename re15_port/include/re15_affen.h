@@ -242,7 +242,22 @@ void     re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latc
  *      Versatz: B[5] vx := 0x64 (`ori v0,zero,0x64` / `sw v0,16(sp)` @0x80118380-84), alle anderen (0,0,0)
  *      aus 0x80072d60. Merken am Anfang des Gorilla-Ticks (= Zeichenstand: die Spieler-Schiebung bewegt nur den
  *      Spieler, re15_body_push(const pusher, ..., gepusht)); Pose = (Clip, Bild) des letzten anim_set. */
-void     re15_affen_zeichen_merk(const re15_actor_t *e, uint8_t clip, uint8_t bild);
+void     re15_affen_zeichen_merk(const re15_actor_t *e);
 int      re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3]);
+
+/* (12) POOL-UEBERBLENDUNG IN DER FUSS-SPERRE (Nachbesserung 4, N2; schliesst OFFEN 3/4 von Nachbesserung 3).
+ *      FUN_8001f3bc schreibt die Pool-Winkel NICHT als reinen Keyframe: bei +0x8f != 0 mischt es die gespeicherten
+ *      Winkel (Record+0x60) mit dem Keyframe (FUN_80020510(r, kf, r, 0x1000 - 0x200*frac), Decompilat Z. 77-88) und die
+ *      Wurzel per GPF12/GPL12 (Z. 40-61), +0x8f-- erst danach (Z. 78). FUN_8011bf50/c024 ketten +0x20 mit DIESEN
+ *      Pool-Matrizen (@0x8011bf80-c4) und ziehen die Welt-t ab, die der Zeichner im Vortick in Record+0x40 schrieb
+ *      (`lw a0,84(s0)` @0x8011bfd8, `lw a0,92(s0)` @0x8011bff8). +0x20 traegt dabei die Yaw des Zeichners (RotMatrix
+ *      nur in FUN_8001e8c8) und als t die laufende Lage (+0x34..+0x3c): neue Lage = Zeichenlage - R*S*(jetzt - zeichen).
+ *      Der Port posierte ungemischt (Keyframe Bild gegen Bild-1), mit der frisch gesteuerten Yaw und ueberging das
+ *      Bild jedes Clip-Wechsels (s_prev_clip) — gemessen: nach dem Biss-Ende (Clip 0x12 -> 5) kriecht e2 im Original
+ *      sofort weiter ((-9087) -> (-9142) -> (-9223)), im Port stand er und lief dann rueckwaerts (+9, +19), Ruhelage
+ *      40-73 daneben -> Treffer ein Fenster-Bild frueher (Zyklus 103 statt 104). Haken: re15_maggot_anim ruft
+ *      re15_affen_pool_anim (VOR Vorschub und Abbau), re15_maggot_footlock zuerst re15_affen_fusssperre. */
+void     re15_affen_pool_anim(re15_actor_t *e);
+int      re15_affen_fusssperre(re15_actor_t *e, int bone);
 
 #endif /* RE15_AFFEN_H */
