@@ -87,10 +87,13 @@ typedef struct {
  *    Halten wie RE2 (FUN_8003DB38 + FUN_800177C0, s. enemy_ai_re2_zellenarm.c); die Grenzen sind die gemessene
  *    Restabweichung derselben Versuchsanordnung (Dossier H_raeume.md "Nachbesserung 4"), kein Spielwert. */
 #define R35_6A_TOL   20
-#define R35_6A_KTOL  40
-#define R35_6A_NTOL  24
+#define R35_6A_KTOL  20
+#define R35_6A_NTOL  16
 #define R35_6A_ZTOL  1
 typedef struct { const char *name; int satz, hoehe, griff, var, wechsel; r2o_bild_t b[R2O_BILDER]; } r2o_lauf_t;
+/* NB4 (N1b): Blickziel-Suchen aus RE2-Laeufen mit allen zehn Armen (re2_gdb_grab.py R2_EXTRA=1, extra.txt). */
+typedef struct { int satz; uint8_t aktiv; uint16_t f10e; int32_t x, z; uint8_t sicht; } r2n_arm_t;
+typedef struct { const char *name; int bild; int32_t lx, lz; int16_t lyaw; int ziel; r2n_arm_t arm[10]; } r2n_suche_t;
 #include "r35_raeume_re2orig.inc"
 
 static uint8_t *slurp(const char *p, size_t *n)
@@ -139,6 +142,7 @@ static int aufsetzen(int *slots)
     scd_room_reenter(&s_rdt, 0, 0, 0);
     if (!load_re2_bank_1A()) return 0;
     re15_re2arm_audio_hook(se_cap, bank_cap);
+    re15_re2arm_look_debug(45, RE15_ACTOR_SLOT_PLAYER, NULL, NULL);   /* Spielstart: DAT_800a4004 .data 0x2D, INIT SELBST */
     pl->x = -19500; pl->z = 5000;
     for (int f = 0; f < 8; f++) frame_step();
     int n = 0;
@@ -322,7 +326,7 @@ static int griff(int yaw0, const char *name, int fall, int hoehe, int wechsel)
             if (neu && s_nziele[fall] < 4) s_ziele[fall][s_nziele[fall]++] = z; }
         if (pl->motion != 0 || arm->motion != 5) continue;
         if ((int)pl->anim_frame != (((int)arm->anim_frame + 1) % 19)) gleich = 0;
-        if (f < 16) continue;                                       /* Ueberblendung Rate 15 */
+        if (f < 14) continue;     /* Aufzeichnung ab 14 (Ausrichtung (6a) braucht Bild 15); Mass ab 16 (Rate 15) */
         if (!pose) continue;
         bild_t *a = &s_auf[fall][f];
         a->nyaw = pl->neck_yaw; a->npit = pl->neck_pitch; a->nziel = pl->neck_target_slot;
@@ -335,7 +339,7 @@ static int griff(int yaw0, const char *name, int fall, int hoehe, int wechsel)
             wurzel_rahmen(pl->x, pl->z, pl->rot_y, k8, a->kw); }
         a->vi = vol_arm_in_leon(arm, s_leon_pose, pl->rot_y, pl->x, pl->z, 0);
         a->vs = vol_arm_in_leon(arm, s_leon_pose, pl->rot_y, pl->x, pl->z, 1);
-        if (zyk < 19) { zyk++; if (a->vi > 0) s_zyk[fall]++; if (a->vi > s_zyk_max[fall]) s_zyk_max[fall] = a->vi; }
+        if (f >= 16 && zyk < 19) { zyk++; if (a->vi > 0) s_zyk[fall]++; if (a->vi > s_zyk_max[fall]) s_zyk_max[fall] = a->vi; }
     }
     s_gleich[fall] = gleich;
     snprintf(nm, sizeof nm, "[%s] (2) Leon zeigt jedes Halte-Bild Arm-Bild + 1 (Clip 0/Clip 5, 19 Bilder)", name);
@@ -361,8 +365,12 @@ static int vergleiche(int fall, const r2o_lauf_t *l, int *maxdev, int *bilder, i
          * Zeichnen des VORbilds = Pose (+0x14D - 1). Der Port fragt die Pose seines aktuellen anim_frame ab
          * (nach dem Zaehlen) -> Port-Bild k <-> Original-Clipwort-Bild k + 1 (Leon wie Arm, Arm + 1 bleibt). */
         int afr = ((int)((b->acw >> 8) & 0xff) + 18) % 19;
-        const bild_t *a = NULL;
-        for (int f = 16; f < 60; f++) if (s_auf[fall][f].ok && s_auf[fall][f].afr == afr) { a = &s_auf[fall][f]; break; }
+        /* NB4: der Blick laeuft ueber die Zeit (Suche, Akku) -> dasselbe Arm-Bild im SELBEN Zyklus nehmen: Original-
+         * Halte-Bild i = 16 + Index, Port-Aufzeichnung f am naechsten an i - 1 (Port-Bild f <-> RAM am Anfang von f+1). */
+        const int oi = 16 + i;
+        const bild_t *a = NULL; int bd = 1 << 30;
+        for (int f = 14; f < 60; f++)
+            if (s_auf[fall][f].ok && s_auf[fall][f].afr == afr && abs(f - (oi - 1)) < bd) { a = &s_auf[fall][f]; bd = abs(f - (oi - 1)); }
         if (!a) continue;
         int32_t o[3]; orig_kopf_rahmen(b, o);
         int32_t ohw[3], okw[3];
@@ -441,31 +449,57 @@ int main(void)
               "Hand-Bahn (vier Paare; Flip @0x8010130C-18)", paare);
     }
 
-    /* (N1) RE2-Zielwahl FUN_8003DB38 auf der ORIGINAL-Geometrie (Leon-Lage/-Blick aus der RAM, Kandidaten = die
-     * wache Fuenfergruppe des Halters, ROOM2050-Saetze): Kegel FUN_80015614(PL, E.x, E.z, 1500) @0x8003dc8c ueber
-     * re15_ai_arc_test (dieselbe Funktion, die re15_re2arm_player_look benutzt), Radius 7000 @0x8003c1b0, der
-     * naechste gewinnt (@0x8003dcb0). Die Sichtpruefung 0x80050858 ist in RE2-Geometrie nicht nachrechenbar; in
-     * allen gemessenen Faellen war sie frei (das gewaehlte Ziel liegt jeweils im Fensterloch). */
+    /* (N1) RE2-Zielwahl FUN_8003DB38 auf der ORIGINAL-Geometrie, gerechnet mit DERSELBEN Port-Funktion
+     * re15_re2arm_look_waehle, die re15_re2arm_player_look benutzt (Kegel re15_ai_arc_test = FUN_80015614 1500
+     * @0x8003dc8c, Radius 7000 @0x8003c1b0, naechster @0x8003dcb0, +0x10E-Ausschluss @0x8003dc08). Die Sicht
+     * 0x80050858 kommt aus re2_los.py (FUN_80050858 Zeile fuer Zeile auf ROOM2050 collision.sca) mit dem Zielpunkt,
+     * den das Original nimmt: Part[+0x1C1]+0x5C = gezeichnete Lage (Halter: Ursprung; nie gezeichnet: (0,0,0)).
+     * (N1b) Laeufe mit ALLEN zehn Armen im RAM (n4_g8c Ruecken, n4_g1b Gesicht): Bild der Suche + Ziel gemessen.
+     * (N1a) die zwoelf Halte-Mitschnitte (RAM nur Leon + Halter): ENDE-Arme nie gezeichnet wie in n4_g8c/n4_g1b
+     *       gemessen. Gilt fuer die neun sauberen Laeufe; in g1/g3/g4 blickt Leon auf einen ENDE-Nachbarn, der
+     *       also gezeichnet war (g3/g4: der sichtbare, schiebende Nachbar, Abnahme 3 M3) — dort nur berichtet. */
     {   int ok = 1;
+        for (int k = 0; k < R2N_SUCHEN; k++) {
+            const r2n_suche_t *u = &s_r2n[k];
+            re15_actor_t lp; memset(&lp, 0, sizeof lp);
+            lp.x = u->lx; lp.z = u->lz; lp.rot_y = u->lyaw;
+            re2look_kand_t kd[10];
+            for (int a2 = 0; a2 < 10; a2++) {
+                kd[a2].aktiv = u->arm[a2].aktiv; kd[a2].f10e = u->arm[a2].f10e; kd[a2].sicht_frei = u->arm[a2].sicht;
+                kd[a2].x = u->arm[a2].x; kd[a2].z = u->arm[a2].z;
+            }
+            int w = re15_re2arm_look_waehle(&lp, 10, kd);
+            int port = (w < 0) ? -1 : u->arm[w].satz;
+            printf("  (N1b) %-20s Suche in Halte-Bild %d, Leon (%d,%d) Blick %d: Port-Wahl %s%d | RAM-Ziel danach %s%d\n",
+                   u->name, u->bild, u->lx, u->lz, (int)u->lyaw, port < 0 ? "SELBST " : "Satz ", port,
+                   u->ziel < 0 ? "SELBST " : "Satz ", u->ziel);
+            if (port != u->ziel) ok = 0;
+        }
+        CHECK("(N1b) RE2-Zielwahl (re15_re2arm_look_waehle) = Ziel der RE2-RAM in den Laeufen mit allen zehn Armen "
+              "(Ruecken: SELBST trotz Satz 4 im Kegel — nie gezeichnet, Sicht auf (0,0,0) verdeckt; Gesicht: der Halter)", ok);
+        ok = 1;
         for (int k = 0; k < R2O_LAEUFE; k++) {
             const r2o_lauf_t *l = &s_r2o[k];
             re15_actor_t lp; memset(&lp, 0, sizeof lp);
             lp.x = l->b[0].lx; lp.z = l->b[0].lz; lp.rot_y = l->b[0].lyaw;
-            int best = -1; uint32_t bd = 7000u;
-            for (int sz = (l->satz < 5 ? 0 : 5); sz < (l->satz < 5 ? 5 : 10); sz++) {
-                if (re15_ai_arc_test(&lp, s_r2o_saetze[sz][0], s_r2o_saetze[sz][2], 1500) != 0) continue;
-                int32_t dx = s_r2o_saetze[sz][0] - lp.x, dz = s_r2o_saetze[sz][2] - lp.z;
-                uint32_t d = (uint32_t)lround(sqrt((double)dx * dx + (double)dz * dz));
-                if (d < bd) { bd = d; best = sz; }
+            const int g0 = (l->satz < 5) ? 0 : 5;
+            re2look_kand_t kd[5];
+            for (int n = 0; n < 5; n++) {
+                kd[n].aktiv = 1; kd[n].f10e = 0; kd[n].sicht_frei = (uint8_t)((s_r2o_sicht[k] >> n) & 1);
+                kd[n].x = s_r2o_saetze[g0 + n][0]; kd[n].z = s_r2o_saetze[g0 + n][2];
             }
+            int w = re15_re2arm_look_waehle(&lp, 5, kd);
+            int port = (w < 0) ? -1 : g0 + w;
             int orig = l->b[R2O_BILDER - 1].nziel;           /* Ziel in Halte-Bild 34 (alle Wechsel <= 31) */
-            printf("  (N1) %-16s Leon (%d,%d) Blick %d: Regel -> %s%d | RAM: Ziel %s%d ab Halte-Bild %d\n", l->name,
-                   lp.x, lp.z, (int)lp.rot_y, best < 0 ? "SELBST " : "Satz ", best, orig < 0 ? "SELBST " : "Satz ", orig,
-                   l->wechsel);
-            if (best != orig) ok = 0;
+            const int nachbar = !strcmp(l->name, "g1_ost_gesicht") || !strcmp(l->name, "g3_west_gesicht") ||
+                                !strcmp(l->name, "g4_west_ruecken");
+            printf("  (N1a) %-16s Leon (%d,%d) Blick %d: Port-Wahl %s%d | RAM %s%d (ab Halte-Bild %d)%s\n", l->name,
+                   lp.x, lp.z, (int)lp.rot_y, port < 0 ? "SELBST " : "Satz ", port, orig < 0 ? "SELBST " : "Satz ", orig,
+                   l->wechsel, nachbar ? " — ENDE-Nachbar war gezeichnet, nur berichtet" : "");
+            if (!nachbar && port != orig) ok = 0;
         }
-        CHECK("(N1) RE2-Zielwahl FUN_8003DB38 (Kegel 1500 @0x8003dc8c, Radius 7000 @0x8003c1b0, naechster @0x8003dcb0) "
-              "trifft auf der Original-Geometrie in allen 12 Griffen das Ziel der RAM (Halter / Nachbar / SELBST)", ok);
+        CHECK("(N1a) RE2-Zielwahl = Ziel der RE2-RAM in den neun sauberen Halte-Mitschnitten (Gesicht: Halter ab dem "
+              "gemessenen Wechselbild; Ruecken g2/g6/g8: SELBST, Kopf in der Animationspose)", ok);
     }
 
     /* ---- PORT ------------------------------------------------------------------------------------ */

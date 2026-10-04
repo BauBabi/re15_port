@@ -8,6 +8,7 @@ ungefaltet) und das Blickziel PL+0x1B8 als Satz-Nummer (-1 = SELBST; Entity-Adre
 Adressen aller Laeufe, derselbe Spielstand), je Lauf das erste Halte-Bild 0..39 mit Ziel != SELBST (-1 = keins) = Bild
 der ersten Zielwahl FUN_8003DB38 im Griff; dazu die zehn Arm-Saetze aus ROOM2050.RDT @0x1970 + n*0x16 (x/y/z/Blick s16
 an +10/+12/+14/+16, info/re2leon/PL0/RDT/ROOM2050.RDT).
+NB4 (N1): s_r2o_sicht (Sicht je Satz, re2_los.py) und s_r2n (Suchen aus den Laeufen n4_g8c / n4_g1b mit allen Armen).
 Aufruf: python re2_fixture.py   (Runde 35 Spur H, Nachbesserung 3/4)"""
 import os, struct
 import re2_frames as F
@@ -74,5 +75,47 @@ for name, satz, hoehe, griff in LAEUFE:
             falte(ny), falte(npi), ziel(f)))
     lines.append("  } },")
 lines.append("};")
+
+# ---- NB4: Blickziel-Suche FUN_8003DB38 (N1) -------------------------------------------------------------------
+import re
+import re2_los as R
+# (N1a) die zwoelf Laeufe: Sicht je Satz der Gruppe, Zielpunkt Part[+0x1C1]+0x5C = Ursprung beim gezeichneten
+# Halter (RAM k1 = Ursprung), (0,0,0) bei den nie gezeichneten ENDE-Armen (RAM n4_g8c/n4_g1b: alle k = (0,0,0)).
+lines.append("static const uint8_t s_r2o_sicht[R2O_LAEUFE] = {   /* Bit n: Satz Gruppe+n frei (re2_los.py, FUN_80050858) */")
+for name, satz, hoehe, griff in LAEUFE:
+    fr = F.frames(os.path.join(HERE, "daten", name, "frames.bin"))
+    _, kopf = F.part(fr[0]["lparts"], 8)
+    g0 = 0 if satz < 5 else 5
+    m = 0
+    for n in range(5):
+        pkt = R.SAETZE[g0 + n] if g0 + n == satz else (0, 0, 0)
+        if not R.los(kopf, pkt, 0x2080, 1):
+            m |= 1 << n
+    lines.append("  0x%02x,   /* %s */" % (m, name))
+lines.append("};")
+# (N1b) neu gemessene Laeufe mit allen zehn Armen (extra.txt, R2_EXTRA=1): Bild der Suche (cd == 0 am Bildanfang),
+# Leon-Lage/-Blick, je Arm aktiv/+0x10E/Lage/Sicht (Zielpunkt = gemessene Part-Lage k), Ziel nach der Suche.
+ARMRE = re.compile(r"S(\d) (\w+) w0=(\w+) w4=\w+ f10e=(\w+) \((-?\d+),(-?\d+)\) d=\d+ k\d+=\((-?\d+),(-?\d+),(-?\d+)\)")
+lines.append("static const r2n_suche_t s_r2n[] = {")
+nn = 0
+for name in ("n4_g8c_r0_ruecken", "n4_g1b_ost_gesicht"):
+    ex = open(os.path.join(HERE, "daten", name, "extra.txt")).read().splitlines()
+    fr = F.frames(os.path.join(HERE, "daten", name, "frames.bin"))
+    i = next(k for k, l in enumerate(ex) if " cd=0 " in l)
+    adr = {}
+    arme = []
+    for m in ARMRE.finditer(ex[i]):
+        st, a, w0, f10e, x, z, kx, ky, kz = m.groups()
+        adr[int(a, 16)] = int(st)
+        _, kopf = F.part(fr[i]["lparts"], 8)
+        frei = 0 if R.los(kopf, (int(kx), int(ky), int(kz)), 0x2080, 1) else 1
+        arme.append("{%s,%d,0x%sU,%s,%s,%d}" % (st, int(w0, 16) & 1, f10e, x, z, frei))
+    zw = int(re.search(r"ziel=(\w+)", ex[i + 1]).group(1), 16)
+    ziel = -1 if zw == PL else adr.get(zw, 99)
+    px, py, pz = F.ent_pos(fr[i]["pl"])
+    lines.append("  { \"%s\", %d, %d, %d, %d, %d, { %s } }," % (name, i, px, pz, F.ent_yaw(fr[i]["pl"]), ziel, ",".join(arme)))
+    nn += 1
+lines.append("};")
+lines.append("#define R2N_SUCHEN %d" % nn)
 open(OUT, "w", newline="\n").write("\n".join(lines) + "\n")
 print("geschrieben:", os.path.normpath(OUT), os.path.getsize(OUT), "Bytes")
