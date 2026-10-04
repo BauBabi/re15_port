@@ -687,3 +687,30 @@ bash_urteil_mutanten.py (neu), test_r35_android_bash_mutanten.sh (neu), test_r35
 re15_port/tests/unit/probes/r35_android.cmake, re15_port/platform/android/README.md, Dossier + Belege + Werkzeuge.
 Nicht: release/RELEASE_NOTES.md, make_package.sh, tests/*/CMakeLists.txt, Engine, platform/android/jni (Punkte 1/2
 unberuehrt).
+
+## Nachbesserung 3 (nach Abnahme 2, `N_abnahme_2.md`: Punkt 1 + 2 erfuellt, Punkt 3 teilweise, Maengel M1-M3)
+
+Stand vor der Nachbesserung: HEAD 876a9f90 (= 009afe17 + Abnahmebericht), Arbeitsbaum sauber. Punkte 1 und 2 sind laut
+Abnahme 2 erfuellt und werden NICHT angefasst (kein C-Code, kein platform/android/-Code). Kein RE1.5/RE2-Original:
+reine Port-Infrastruktur (Release-Pruefkette), die PSX hat weder Entpacker noch APK - jede Zahl unten ist gemessen
+oder eine PORT-WAHL mit Herkunft.
+
+Plan (nur Punkt 3) - je Mangel die ANGEFRAGTE Abhilfe UND ein Mechanismus, der die ganze Klasse kuenftig faengt:
+- M1 (bash -> Python-Urteil, Uebergabe ungeprueft): (a) urteil_kontrollen.sh bekommt eine Urteils-Attrappe, die ihre
+  Argumente (Modus, Rueckgabe, min_faelle, min_innen, apk_eintraege, letzte Zeile der Ausgabe-Datei) ausgibt, und
+  Kontrollen, die GENAU die Werte aus apk_pruefen.sh verlangen; dazu eine Gate-Attrappe, die ihre Argumente ausgibt
+  ("$@" kommt beim Gate an). (b) bash_urteil_mutanten.py bekommt den Operator I (Uebergabe): jedes Argument an "$PY",
+  an eine Pruef-Funktion und jede Uebernahme eines Parameters (local x="$1") -> "" bzw. 0 bzw. ein anderes Argument
+  desselben Aufrufs (J11/J12/J13 sind genau solche Mutanten). (c) die echte Kette faehrt das ECHTE Urteil mit
+  umgepinnten Gate-Attrappen an der Grenze: Gate-Selbsttest MIN-1 Faelle bzw. MIN-1 innere Proben -> 2, genau MIN -> 0;
+  APK-OK-Ausgabe mit GATE_APK_EINTRAEGE = n+1 -> 0 und n+2 -> 2.
+- M2/M3 (Python-Urteil, ganze Regel entfernbar): (a) die angefragten Faelle (letzte Fallzeile fehlt bei lueckenlosen
+  Nummern; Fallzeile zuviel; pk Quelle != gleich in zwei Baeumen mit gleichen Summen; pk-Baumzeile mit drei Zahlen; qb-
+  Baumzeile mit zwei Zahlen). (b) Stoerungsfaelle: aus jeder guten Ausgabe (selbsttest/apk/quellbaum/paket) werden
+  automatisch Faelle erzeugt - jede Zeile weg, jede Zeile doppelt, jede Zahl +-1, hinter jeder Zahl eine Zusatzzahl,
+  je zwei Zahlen derselben Spalte gegenlaeufig (-1/+1). Soll ist nach REGEL 2 (keine Aussage), ausser die Stelle steht
+  begruendet in einer Liste UNGEPRUEFT (Soll 0: das Urteil liest sie absichtlich nicht, z.B. Kopfzeile, Laufzeit).
+  Die Soll-Werte werden NICHT aus dem Urteil berechnet (das waere selbstbestaetigend), sondern aus der Regel + Liste.
+  H10 (Fallzeile weg), H17 (gegenlaeufiges Paar) und H18 (Zusatzzahl) sind dann je eine Stoerung.
+- Danach die H-/J-Reihe der Abnahme 2 selbst nachfahren (Selbsttest, Kontrollen, Mutanten, echte Kette mit Neu-Pin
+  und nachgezogener Mindestzahl wie G4b) - alle muessen rot werden.
