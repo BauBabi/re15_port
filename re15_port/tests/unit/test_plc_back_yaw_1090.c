@@ -145,8 +145,11 @@ int main(void)
         reset_actor(a);
         int ticks = run_walk(a, 0x05, tx, tz, (int16_t)bear, sx, sz, 400);
         ok(a->walk_active == 0, "Mode 5 kommt an", ticks, 0);
-        ok(a->rot_y == bear, "Mode 5 Endyaw == bearing (unveraendert vorwaerts)",
-           a->rot_y, bear);
+        /* Runde 35 Spur J: Toleranz 0x20 wie R1 — der Schritt rundet dz nach UNTEN ((R31=-sin)*v SAR 12, GTE MVMVA
+         * @0x800246ac), der Aktor driftet von der Linie und die Peilung wandert mit (Original-GDB ROOM11C0 sub02, Bein 1:
+         * Yaw 191 -> 189 -> 185 -> 183, jnb2/g_gang.txt). Der alte exakte Gleichstand war ein Artefakt der Rundung zur Null. */
+        ok(iabs_(ydiff(a->rot_y, bear)) <= 0x20, "Mode 5 Endyaw ~ bearing (vorwaerts, Drift <= 0x20)",
+           iabs_(ydiff(a->rot_y, bear)), 0x20);
     }
 
     /* R1c — Mode 7 verhaelt sich wie Mode 8 (@0x800310e4 rate -48, @0x800310ec a0=0x800). */
@@ -288,8 +291,11 @@ int main(void)
 
         /* Regressions-Pin auf den gemessenen Ist-Wert des byte-true Walkers (Messung
          * 2026-08-21 nach dem Fix; vorher 2203 bei (-76,-2001)). */
-        ok(pl->rot_y == 111, "Regressions-Pin Endyaw == 111", pl->rot_y, 111);
-        ok(pl->x == -77 && pl->z == -1997, "Regressions-Pin Endposition == (-77,-1997)",
+        /* Runde 35 Spur J: neu gemessen nach der dz-Rundung nach unten (@0x800246ac) und dem halboffenen Kegeltest
+         * (FUN_8001ab9c @0x8001abfc); derselbe Walker laeuft in ROOM11C0 sub02 207/207 Zustaende bitgleich mit der
+         * Original-GDB-Spur (Riegel unit_r35_affen_szene). Vorher (Rundung zur Null): (-77,-1997) yaw 111. */
+        ok(pl->rot_y == 133, "Regressions-Pin Endyaw == 133", pl->rot_y, 133);
+        ok(pl->x == -77 && pl->z == -1999, "Regressions-Pin Endposition == (-77,-1999)",
            (long)pl->x, -77);
         printf("       Mode-8-Start (%ld,%ld) -> Ende (%ld,%ld) yaw=%d, Laufrichtung=%d\n",
                (long)leg8_x, (long)leg8_z, (long)pl->x, (long)pl->z, pl->rot_y, travel);

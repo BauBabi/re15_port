@@ -151,6 +151,8 @@ int re15_emd_parse_skeleton(const uint8_t *emr_data, size_t emr_size,
 
     out->bone_count           = bone_count;
     out->keyframe_size_bytes  = keyframe_size;
+    out->emr_raw              = emr_data;      /* Runde 35 Spur J (re15_affen_surplus_part_world) */
+    out->emr_raw_size         = emr_size;
 
     /* Bone relative positions table follows the header. */
     int pos_table = 8;

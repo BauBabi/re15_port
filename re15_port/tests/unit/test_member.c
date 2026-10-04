@@ -41,9 +41,12 @@ static int test_member_table(void)
     if (re15_actor_get_member(0, 8) != 5) { fprintf(stderr, "FAIL: get id8 != 5\n"); return 1; }
 
     /* id19 (+0x1ba hp, lh signed) — negativer Wert sign-extend. */
+    /* Runde 35 Spur J: +0x1ba ist das BODEN-Y (Sce_em_set `sh v0,442(s0)` @0x80042210 = -(pc[4]*1800);
+     * c1a4-Boden des Gorillas), NICHT die HP (+0x9a, Resolver `sh v1,154(s1)` @0x80013000) — Port-Feld
+     * dog_floor_y. */
     re15_actor_set_member(0, 19, -7);
-    if (p->hp != -7) { fprintf(stderr, "FAIL: id19 -> hp sollte -7 sein, ist %d\n", p->hp); return 1; }
-    if (re15_actor_get_member(0, 19) != -7) { fprintf(stderr, "FAIL: get id19 (hp) sign-extend != -7\n"); return 1; }
+    if (p->dog_floor_y != -7) { fprintf(stderr, "FAIL: id19 -> +0x1ba (dog_floor_y) sollte -7 sein, ist %d\n", p->dog_floor_y); return 1; }
+    if (re15_actor_get_member(0, 19) != -7) { fprintf(stderr, "FAIL: get id19 (+0x1ba) sign-extend != -7\n"); return 1; }
 
     /* Koords id0/1/2 + rot id3/4/5 — byte-true UNVERAENDERT ggue. altem Modell (=> ROOM1170 identisch). */
     re15_actor_set_member(0, 0, -6010); re15_actor_set_member(0, 1, 42); re15_actor_set_member(0, 2, 6265);
@@ -76,6 +79,7 @@ static int run_cmp(int16_t hp, int16_t state, uint8_t id, uint8_t op, int16_t va
     scd_vm_init();
     re15_actor_init();
     g_actors[0].hp     = hp;
+    g_actors[0].dog_floor_y = hp;   /* id 19 liest +0x1ba (Boden-Y), nicht +0x9a (Runde 35 Spur J) */
     g_actors[0].state  = (uint8_t)state;
     /* Member_cmp 0x3E — 6 B: [op,_,member_id,cmp_op,val_lo,val_hi]; Wert LE. */
     uint8_t bc[7] = { 0x3E, 0x00, id, op, (uint8_t)(val & 0xff), (uint8_t)((val >> 8) & 0xff), SCD_OP_EVT_END };
@@ -90,7 +94,7 @@ static int run_cmp(int16_t hp, int16_t state, uint8_t id, uint8_t op, int16_t va
 static int test_member_cmp(void)
 {
     int rc = 0;
-    /* Feld-Quelle: id19 liest hp; id8 liest state (NICHT motion). */
+    /* Feld-Quelle: id19 liest +0x1ba (Boden-Y, FUN_80041358 Fall 0x13); id8 liest state (NICHT motion). */
     rc |= run_cmp(50, 0, 19, 0, 50, 1, "hp==50");          /* == true  */
     rc |= run_cmp(50, 0, 19, 0, 51, 0, "hp==51");          /* == false */
     rc |= run_cmp(50, 7,  8, 0,  7, 1, "state==7");        /* id8=state */

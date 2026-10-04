@@ -3847,6 +3847,7 @@ static int op_sce_em_set(scd_thread_t *t)
         a->rot_x  = 0;
         a->rot_y  = dir;
         a->rot_z  = 0;
+        a->dog_floor_y = (int16_t)(-(int32_t)t->pc[4] * 1800);   /* Runde 35 Spur J: +0x1ba := -(pc[4]*1800) @0x800421d4-8004220c, `sh v0,442(s0)` @0x80042210 */
         a->floor  = t->pc[4];   /* byte-true: Sce_em_set seeds the enemy FLOOR/BAND +0x82 from spawn byte
                                  * pc[4] (@0x800421c8 `lbu v0,2(pc+2)` = pc[4]; @0x800421d0 `sb v0,0x82`).
                                  * The port left it struct-zero, so band-gated AI/collision (e.g. the WATER/

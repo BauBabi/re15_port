@@ -41,6 +41,7 @@
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
+#include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -489,7 +490,7 @@ static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int 
     re15_collision_ensure_band(pl->y);
     re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
     re15_collision_objects(&nx, &nz);
-    int wall = (nx != ox + dx || nz != oz + dz);
+    int wall = re15_affen_kd_sonde(c->rdt, ox + dx, pl->y, oz + dz, RE15_KD_SONDE_RADIUS);   /* Runde 35 Spur J: Sonde @0x80036214 (re15_affen.h (4a)) */
     pl->x = nx; pl->z = nz;
     return wall;
 }
@@ -619,8 +620,9 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
                 break;
             }
         } else if ((int)pl->anim_frame < 0xf) {            /* Move-Gate frame<15 @0x80036544 */
-            if (kd_move(c, pl, s_kd_speed, 0)) s_kd_speed = 0;   /* Wand=Stopp @0x800365ac-b0 */
             s_kd_speed -= 5 * s_kd_t; s_kd_t++;            /* Decel 5*t @0x8003656c-8c */
+            if (re15_affen_kd_sonde(c->rdt, pl->x, pl->y, pl->z, RE15_KD_SONDE_RADIUS)) s_kd_speed = 0;   /* Runde 35 Spur J: Sonde @0x80036594 -> +0x8c=0 @0x800365ac-b0 */
+            (void)kd_move(c, pl, s_kd_speed, 0);           /* Vorschub 245d8 @0x800365b4 */
         }
         if (kd_adv(pl, KD_FC(pl->motion))) {
             if (s_kd_dir == 0) { kd_clip(pl, 0x0e, 0); s_kd_phase = 2; }  /* [4] Ph2/3 Clip 0xe */
@@ -1252,6 +1254,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_menu_fsm_tick(c->pad_pressed, c->pad_current);
         return;
     }
+    int wurf = 0; int32_t wurf_alt_x = 0, wurf_alt_z = 0;   /* Runde 35 Spur J (6d): Gorilla-Wurf, Spiegel +0x40/+0x44 */
     int grabbed_branch = 0;      /* the grabbed-pin branch ran this tick (its body push happens AFTER
                                   * the victim placement at the end of the step; the normal branch
                                   * already pushed inline — never both, no same-tick double push) */
@@ -1450,7 +1453,8 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* @0x80031cbc/@0x80031d70: der GRAB haelt den Spieler, aber der Koerper-Schub laeuft
          * weiter (das Paar selbst ist per +0x1000-AND ausgenommen, FUN_8002af14 — ein DRITTER
          * Gegner schiebt sehr wohl). */
-        re15_player_body_and_walls(c, pl, pl->x, pl->z);
+        wurf = re15_player_victim_gorilla(); wurf_alt_x = pl->x; wurf_alt_z = pl->z;   /* Runde 35 Spur J (6d) */
+        if (!wurf) re15_player_body_and_walls(c, pl, pl->x, pl->z);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_knockdown) {
         /* KNOCKDOWN-Klasse (cmd-2 [4]/[5], 0x800360e8/0x8003644c): engine-getrieben wie
@@ -1468,7 +1472,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * cam scan running. Each frame apply the BACKWARD KNOCKBACK (byte-true FUN_800245d8(0x800)
          * @0x80035f18): shove the player along facing + 0x800 (= 180 deg, away from the front) by the
          * current DAT_800acae0 magnitude — rotate (mag,0,0) by Ry(angle) exactly like the walker step
-         * (actor_locomotion.c) — then clamp to the room walls/objects so a shove into a wall stops. Then
+         * (actor_locomotion.c) — KEINE Klemme im Handler (Runde 35 Spur J (14): Klemme @0x80031d70 danach). Then
          * DAT_800acae0 -= DAT_800acaf2 (50), clamp at 0 (@0x80035f20) -> 200,150,100,50 over 4 frames.
          * When the clip plays out (timer -> 0) motion returns to idle. Unreachable unless a non-lethal
          * hit landed, so a room with no combat never enters it = no 1170 regression. */
@@ -1490,11 +1494,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                                ? (int16_t)(((int)pl->rot_y + 0x800) & 0xfff)
                                : pl->rot_y;
             re15_player_knockback_delta(kb_yaw, s_hit_kb, &dx, &dz);
-            int32_t nx = pl->x + dx, nz = pl->z + dz;
-            re15_collision_ensure_band(pl->y);
-            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
-            re15_collision_objects(&nx, &nz);
-            pl->x = nx; pl->z = nz;
+            int32_t nx = pl->x + dx, nz = pl->z + dz; (void)ox; (void)oz;   /* Runde 35 Spur J (14): Handler = nur FUN_800245d8 @0x80035f18 (keine Klemme darin), */
+            pl->x = nx; pl->z = nz;                                        /* Klemme @0x80031d70 im Schwanz, Objekt-Pass @0x8001ce14 danach */
             s_hit_kb -= 0x32;                                              /* DAT_800acaf2 = 50 */
             if (s_hit_kb < 0) s_hit_kb = 0;
         }
@@ -1519,6 +1520,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* @0x80031cbc/@0x80031d70 — NACH dem cmd-2-Handler, genau wie im Original. Ohne das
          * lief der Boss dem flinchenden Spieler 22 Bilder lang in den Koerper (gemessen). */
         re15_player_body_and_walls(c, pl, fl_ax, fl_az);
+        if (c->rdt_ok) re15_collision_objects(&pl->x, &pl->z);   /* Runde 35 Spur J (14): FUN_8002bd44 @0x8001ce14 NACH dem Dispatcher */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original
@@ -2400,7 +2402,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * tick (normal branch already pushed inline) does not double-push. Ordered AFTER the victim
      * placement above == the original's placement->push->walls order (walls win: a third zombie
      * cannot shove the pinned player through the SCA perimeter). */
-    if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
+    if (wurf && c->rdt_ok) re15_player_body_and_walls(c, pl, wurf_alt_x, wurf_alt_z);   /* Runde 35 Spur J (6d): Platzierung -> @0x80031cbc -> @0x80031d70 */
+    else if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         int32_t ox = pl->x, oz = pl->z;                   /* the anchored placement = the valid pos */
         re15_body_push_player();

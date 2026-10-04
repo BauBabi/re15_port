@@ -78,6 +78,10 @@ typedef struct {
     int              keyframe_count;
     const uint8_t   *keyframe_data;        /* points into EMR buffer (caller-owned) */
     size_t           keyframe_data_size;
+    const uint8_t   *emr_raw;              /* Runde 35 Spur J: die ganze EMR-Sektion (caller-owned) — der
+                                            * Binder FUN_8001e5b0 liest rel-Positionen auch HINTER der
+                                            * Knochentabelle (Parts >= bone_count, re15_affen_surplus_part_world) */
+    size_t           emr_raw_size;
 #ifdef RE15_PLATFORM_PC
     /* HYBRID-WURZELHOEHE (nur PC, nur die drei umgebauten RE2-Hybrid-Kopien).
      *

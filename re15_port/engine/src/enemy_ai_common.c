@@ -39,6 +39,7 @@
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
+#include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -1218,6 +1219,7 @@ static void re15_player_victim_bone_pos(int bone, int32_t out[3])
     re15_skel_bone_to_world(poses[bone].trans, player->rot_y,
                             player->x, player->y, player->z, out);
 }
+void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]) { re15_player_victim_bone_pos(bone, out); }   /* Runde 35 Spur J (15): Blut des Gorilla-Finishers */
 
 /* ============ LEONS FINALES TODES-STOEHNEN IM FRESS-KOLLAPS — Se_on(0x04030001) ============
  * Nutzer-Report 2026-08-24 (RE2-KI): "finales todes Stoehnen von Leon fehlt beim Zombie Finisher,
@@ -1347,6 +1349,8 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
         return;
     }
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (zombie->type == 0x27) { g_player_victim_type = 0x27; g_player_victim_zombie = (int)(zombie - g_actors);   /* Runde 35 Spur J (15): cmd 6 -> */
+        g_player_victim_variant = 0; g_player_victim = 2; re15_affen_finisher_start(); return; }                /* Hook 0x8011c3d4, re15_affen.h (15) */
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);
     g_player_victim_variant = (zombie->type == 0x20)
@@ -1487,6 +1491,7 @@ int re15_player_victim_own_bank(void)
     return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
         && s_gthrow_phase != 0;
 }
+int re15_player_victim_gorilla(void) { return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27; }   /* Runde 35 Spur J (6d) */
 
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
@@ -1534,7 +1539,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
      * Der Greifer war ein Zombie (0x10..0x18), fuer den die Klemme bisher NICHT lief.
      * Sie ist konservativ: sie haelt den letzten nachweislich begehbaren Standpunkt
      * dieses Griffs und kann die Opfer-Animation deshalb nicht verreissen. */
-    if (vg_ty != 0u && g_room_rdt_ok) {
+    if (vg_ty != 0u && vg_ty != 0x27u && g_room_rdt_ok) {   /* Runde 35 Spur J (6d): 0x27 klemmt im Spieler-Schwanz @0x80031d70 */
         /* ⛔ DIE WANDKLEMME DES GITTER-GREIFERS (Nutzer 2026-08-26: "wenn ich zu oft
          * hintereinander gegriffen werde, werde ich trotzdem noch in die Wand gezogen").
          *
@@ -1597,6 +1602,7 @@ void re15_player_victim_tick(void)
      * blend seed (7) never decayed = a non-terminating fade that leaked into the post-release idle.
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
+    if (g_player_victim == 2 && re15_player_victim_grabber_type() == 0x27) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
     /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
      * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
@@ -1604,7 +1610,7 @@ void re15_player_victim_tick(void)
      * Original-Phasen (Tabelle @0x80100404):
      *   P0 @0x8011c194: Opfer-Bank-CLIP 1 (der 83-Frame-WURF), Zwangs-Yaw = Gorilla;
      *      RUECK-Variante (aca59!=0): Clip startet bei Frame 0xc (@0x8011c208-1c).
-     *   P1 @0x8011c228: anim_set; Frame 0xb -> P2 (Front-Intro 0..0xb OHNE ad68 —
+     *   P1 @0x8011c228: anim_set; Frame 0xb -> P2 (Front-Intro 0..0xa OHNE ad68, 0xb = erstes P2-Bild, re15_affen.h (6a) —
      *      der Latch-Anker haelt Leons Position).
      *   P2 @0x8011c268: Root-PLATZIERUNG am Gorilla NUR solange Frame < 0x25
      *      (sltiu @0x8011c278, ad68 @0x8011c294); Clip-ENDE -> P3 + UNPIN
@@ -1613,7 +1619,7 @@ void re15_player_victim_tick(void)
      *      laeuft unabhaengig weiter).
      *   P3-P6: Leons EIGENE Bank ([acad8]/[acbc0]): Clip 0x10 (@0x8011c2e8, anim_set
      *      0x200 @0x8011c34c-60), dann Clip 0xb (@0x8011c31c, anim_set @0x8011c348).
-     *   P7 @0x8011c384: aca58=2 (frei), player.+0x93=0 @0x8011c3a0, Freeze-Bits
+     *   P7 @0x8011c384: aca58=1 (frei, `ori v0,zero,0x1` @0x8011c384), player.+0x93=0 @0x8011c3a0, Freeze-Bits
      *      aca3c &= ~0xc0 @0x8011c398-b4.
      * VORHER loopte der Port den Wurf-Clip als "Hold" und released auf der GORILLA-
      * Timeline (sub-15 Phase 4/5) — komplett andere Choreographie (Kern des Nutzer-
@@ -1622,7 +1628,7 @@ void re15_player_victim_tick(void)
         if (s_victim_fresh) {
             s_gthrow_phase = 0;
             player->motion = 1;                                   /* acae8=1 @0x8011c1c4 */
-            player->anim_frame = (uint8_t)(g_player_victim_variant ? 0x0c : 0);  /* @0x8011c208-1c */
+            player->anim_frame = (uint8_t)(g_player_victim_variant ? 0x0b : 0);  /* Runde 35 Spur J: re15_affen.h (6b), @0x8011c208-20 */
             player->anim_frac = 7; player->anim_blend_rate = 0x200;
         }
         if (s_gthrow_phase == 0) {                                /* P0-P2: der WURF */
@@ -1632,14 +1638,14 @@ void re15_player_victim_tick(void)
                 if ((int)player->anim_frame + 1 < fc) player->anim_frame++;
                 else {                                            /* Clip-Ende -> P3: UNPIN */
                     s_gthrow_phase = 1;
-                    player->motion = 0x10; player->anim_frame = 0;   /* acae8=0x10 @0x8011c2e8 */
+                    player->motion = 0x10; player->anim_frame = 0; player->anim_flags &= (uint16_t)~0x80u;   /* acae8=0x10 @0x8011c2e8; vorwaerts a2=0 @0x8011c318 (Runde 35 Spur J (6c)) */
                     player->anim_frac = 7; player->anim_blend_rate = 0x200;  /* anim_set 0x200 @0x8011c34c-60 */
                     return;
                 }
             }
             s_victim_fresh = 0;
             player->motion = 1;
-            if (player->anim_frame >= 0x0c && player->anim_frame < 0x25)   /* P2-Fenster @0x8011c278 */
+            if (player->anim_frame >= 0x0b + g_player_victim_variant && player->anim_frame < 0x25)   /* Runde 35 Spur J: (6a)/(6b), @0x8011c244-5c/@0x8011c278 */
                 re15_victim_place(player, vb, 1, (int)player->anim_frame);
             return;
         }
@@ -1652,14 +1658,15 @@ void re15_player_victim_tick(void)
             if ((int)player->anim_frame + 1 < fc) { player->anim_frame++; return; }
             if (s_gthrow_phase == 1) {
                 s_gthrow_phase = 2;
-                player->motion = 0x0b; player->anim_frame = 0;    /* acae8=0xb @0x8011c31c */
+                player->motion = 0x0b; player->anim_frame = 0; player->anim_flags |= 0x80u;   /* acae8=0xb @0x8011c31c; RUECKWAERTS a2=1 @0x8011c348 (Runde 35 Spur J (6c)) */
                 player->anim_frac = 7; player->anim_blend_rate = 0x200;
                 return;
             }
-            /* P7: frei — aca58=2 @0x8011c38c, +0x93=0 @0x8011c3a0 */
+            /* P7: frei — aca58=1 @0x8011c384-8c, +0x93=0 @0x8011c3a0 */
             g_player_victim = 0;
             s_gthrow_phase = 0;
             player->hit_react = 0;
+            if (player->anim_flags & 0x80u) { player->anim_frame = 0; player->anim_flags &= (uint16_t)~0x80u; }   /* Runde 35 Spur J (6c): Endpose = Vorwaerts-Slot 0 */
             return;
         }
     }
@@ -4439,7 +4446,7 @@ int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
 void re15_body_push_player(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    if (pl->hp < 0) return;                                   /* dead: the devour overlaps the corpse */
+    if (pl->hp < 0 && !(re15_player_victim_gorilla() && pl->state != 7)) return;  /* dead: the devour overlaps the corpse; Runde 35 Spur J (15): nicht im Gorilla-Finisher cmd 6 (Schwanz @0x80031cbc ungegatet, B[8] ohne Bit 0x1000, GDB g_fin F224-F228) */
     int pl_locked = re15_player_is_grabbed();                 /* player +0x0 & 0x1000 (set at grab [0]
                                                                * @0x80102624, cleared at release end
                                                                * @0x8010a680) */
@@ -4451,8 +4458,9 @@ void re15_body_push_player(void)
          * `and v0,a0,v1; andi 0x1000; bne -> return`): only the pair skips — a THIRD zombie still
          * pushes the grabbed player. Zombie-side bit: set at [0] @0x80102610, cleared at [8]
          * @0x80102bb8 = its sub_state_1 stays 3..6 for exactly that window. */
-        if (pl_locked && e->state == 1 &&
+        if (pl_locked && e->state == 1 && e->type != 0x27u &&   /* Runde 35 Spur J (8): Gorilla-Sub 3..6 = Jagd/Wahl/Biss/Heavy OHNE Bit 0x1000 (@0x8002af14) */
             e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
+        if (pl_locked && re15_affen_griff_paar(e)) continue;   /* Runde 35 Spur J (6e): Gorilla-Bit 0x1000 @0x8011ac34-38 / @0x8011ad8c-94 */
         /* G5-ENDBOSS (Typ 0x36): RE2 gibt ihm KEINEN +0x78-Zylinder, sondern ZWEI
          * Kollisionssegmente (+0x1E8 = 2 @0x80100530, r 6000 @0x80100540 und r 1300
          * @0x8010055c) und schiebt den Spieler ueber FUN_80034D0C statt FUN_8002AEC4
@@ -8677,11 +8685,15 @@ static void re15_spider_ai_tick(int slot)
 static const uint8_t s_maggot_clip_len[29] =   /* EM027 clip frame-counts, byte-true (CDEMD0.EMS idx 12, dir[1]) */
     { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,52 };
 static void re15_maggot_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static uint8_t s_maggot_pose_bild[RE15_ACTOR_MAX];   /* Runde 35 Spur J (9): Bild, dessen Pose anim_set in den Pool schrieb */
 static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the real EM027 clip length */
 {
     uint8_t c = e->motion; int fc = (c < 29) ? s_maggot_clip_len[c] : 1; if (fc < 1) fc = 1;
+    if (e >= g_actors && e < g_actors + RE15_ACTOR_MAX) s_maggot_pose_bild[e - g_actors] = e->anim_frame;   /* Pose VOR dem Vorschub @0x8001f40c..@0x8001f61c */
+    re15_affen_pool_anim(e);   /* Runde 35 Spur J (12): FUN_8001f3bc-Pool (Ueberblendung mit +0x8f vor dem Abbau @0x8001f5a8) */
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    if (e->anim_frac > 0) e->anim_frac--;   /* Runde 35 Spur J: +0x8f-Abbau @0x8001f5a8-b4 (re15_affen.h (4c)) */
     return done;
 }
 /* hit-blood/gore burst func_0x80019700(0x2000, +0x6a, skel_part, &vec) — the maggot passes part
@@ -8707,7 +8719,7 @@ static int re15_maggot_a9cc(const re15_actor_t *e, const re15_actor_t *pl, int t
  * & 0xfff < 0x800 (both facing the same way), else 0 (@0x8001a788-94, re15_damage.c F2 cite). */
 static int re15_maggot_a780(const re15_actor_t *e, const re15_actor_t *pl)
 {
-    return ((((int)e->rot_y - (int)pl->rot_y) + 0x400) & 0xfff) < 0x800;
+    return ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;   /* Runde 35 Spur J (H2): a0.Yaw - cur.Yaw @0x8001a788-94, +0x400 / &0xfff / slti 0x800 @0x8001a798-a4 */
 }
 /* FUN_8001bff8 — der ORIGINAL-Trefferpruefer der Affen-Angriffe (Nutzer-Report 2026-08-29
  * "Die Affen treffen Leon so gut wie nie"; analysis/nutzer_batch_2026-08-29/
@@ -8726,6 +8738,7 @@ static int re15_maggot_bone_square(const re15_actor_t *e, const re15_actor_t *pl
                                    int bone, int32_t r)
 {
     int32_t g[3];
+    if (re15_affen_trefferpunkt(e, bone, g)) goto quadrat;   /* Runde 35 Spur J (11): Record+0x40 des Zeichners + Versatz @0x8001c078 (re15_affen.h (11)) */
     re15_enemy_bone_world_pos((re15_actor_t *)e, bone, g);
     /* ENTITY-SCALE (D4, gorilla_11c0/verhalten.md): das Original transformiert den
      * Angriffs-Bone durch die POOL-Bone-Matrix (@0x8001c078), die ueber die skalierte
@@ -8736,6 +8749,7 @@ static int re15_maggot_bone_square(const re15_actor_t *e, const re15_actor_t *pl
         g[0] = e->x + (((g[0] - e->x) * (int32_t)e->render_scale_q12) >> 12);
         g[2] = e->z + (((g[2] - e->z) * (int32_t)e->render_scale_q12) >> 12);
     }
+quadrat:;
     uint16_t dx = (uint16_t)((uint16_t)(uint32_t)pl->x - (uint16_t)(uint32_t)g[0] + (uint16_t)r);
     uint16_t dz = (uint16_t)((uint16_t)(uint32_t)pl->z - (uint16_t)(uint32_t)g[2] + (uint16_t)r);
     return dx <= (uint16_t)(2 * r) && dz <= (uint16_t)(2 * r);   /* @0x8001c088-c0c0 */
@@ -8758,6 +8772,7 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
 {
     static uint8_t s_prev_clip[RE15_ACTOR_MAX];
     int slot = (int)(e - g_actors);
+    if (re15_affen_fusssperre(e, bone)) return;        /* Runde 35 Spur J (12): Pool gegen Zeichenstand @0x8011bf80-c008 */
     re15_enemy_bank_t *bank = re15_enemy_find(0x27);
     if (!bank || !bank->ok) return;
     const re15_emd_skeleton_t  *sk = &bank->skel;
@@ -8770,17 +8785,17 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
         uint8_t pc = s_prev_clip[slot]; s_prev_clip[slot] = (uint8_t)clip;
         if (pc != (uint8_t)clip) return;               /* clip change: stored prev = old clip -> skip the pop */
     }
-    int s_now  = (int)e->anim_frame % c->frame_count;
+    int s_now  = (int)s_maggot_pose_bild[slot] % c->frame_count;   /* Runde 35 Spur J (9): Pool-Pose = Bild vor dem Vorschub (re15_affen.h (9)) */
     int s_prev = (s_now + c->frame_count - 1) % c->frame_count;
     int kf_n = (int)(an->frames[c->first_frame + s_now ] & 0xFFFu);
     int kf_p = (int)(an->frames[c->first_frame + s_prev] & 0xFFFu);
     static re15_skel_pose_t s_pose[RE15_EMD_MAX_BONES];
     int32_t mn[3], mp[3], wn[3], wp[3];
     int16_t rx, ry, rz;
-    if (re15_skel_compute_pose(sk, kf_n, s_pose)) return;
+    if (re15_affen_pose_abfrage(sk, kf_n, s_pose)) return;   /* Runde 35 Spur J: Abfrage ohne Blend (re15_affen.h (4d)) */
     mn[0] = s_pose[bone].trans[0]; mn[1] = s_pose[bone].trans[1]; mn[2] = s_pose[bone].trans[2];
     if (re15_emd_get_keyframe_position(sk, kf_n, &rx, &ry, &rz)) { mn[0] += rx; mn[2] += rz; }
-    if (re15_skel_compute_pose(sk, kf_p, s_pose)) return;
+    if (re15_affen_pose_abfrage(sk, kf_p, s_pose)) return;
     mp[0] = s_pose[bone].trans[0]; mp[1] = s_pose[bone].trans[1]; mp[2] = s_pose[bone].trans[2];
     if (re15_emd_get_keyframe_position(sk, kf_p, &rx, &ry, &rz)) { mp[0] += rx; mp[2] += rz; }
     re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
@@ -8797,6 +8812,7 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
         }
         e->x -= dx;                                    /* @0x8011bfe4-e8 */
         e->z -= dz;                                    /* @0x8011c004-08 */
+        re15_affen_fuss_log(slot, clip, s_now, bone, kf_n, kf_p, dx, dz, e->rot_y);   /* Runde 35 Spur J: Mess-Schiene RE15_AFFEN_FUSS */
     }
 }
 static void re15_maggot_bf50(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 14 + 3 * a1); }
@@ -8852,8 +8868,9 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_pin_cd = 0;                                    /* +0x1e1 @0x8011708c */
         e->mag_boost = 4;                                     /* +0x1e2 = 4 @0x80117098-9c */
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
+        e->mag_hit_ctr = 0;                                   /* Runde 35 Spur J: Port-Zaehler, INIT-geloescht wie +0x1e0..+0x1e3 */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
-        e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
+        /* Runde 35 Spur J: +0x1ba hat KEINEN INIT-Store (FUN_80116f50, kein 442(.)) — Seed @0x80042210 */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
          * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
          * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
@@ -8880,14 +8897,16 @@ static void re15_maggot_ai_tick(int slot)
         if ((los >> 1) == 0) e->dog_flags = (uint16_t)((e->dog_flags & ~1u) | (unsigned)(los & 1));
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 @0x80117300 */
         e->dog_dist = (int16_t)dist;                          /* +0x1d4 @0x80117314 */
+        int ab_nur_b = 0, ab = 0;                             /* Runde 35 Spur J (10): A-Wechsel -> B[neu] im selben Tick @0x80117358-78 */
+    ab_b:
         switch (e->sub_state_1) {
         case 0:   /* A[0] 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */
             if (e->dog_blocked_ctr == 0) {                    /* +0x1dc!=0 -> NO decision @0x80117490-98 (audit wf_827f186d maggot #14) */
-                if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; break; }  /* @0x801174a8-cc */
-                if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 4); e->sub_state_3 = 0; break; }  /* aca58==0x701 grab/aim-assist @0x801174e4-504 (#14; 0x701 = state1-sub7 aim, dog #7 proof) */
-                if (dist < 3000) { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }  /* blind @0x8011753c-68 */
+                if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; ab = 1; break; }  /* @0x801174a8-cc */
+                if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 4); e->sub_state_3 = 0; ab = 1; break; }  /* aca58==0x701 grab/aim-assist @0x801174e4-504 (#14; 0x701 = state1-sub7 aim, dog #7 proof) */
+                if (dist < 3000) { re15_dog_sub(e, 3); e->sub_state_3 = 1; ab = 1; break; }  /* blind @0x8011753c-68 */
             }
-            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, clip 0x16 @0x801175a4-c8 */
+            if (e->sub_state_2 == 0) { uint32_t a0_b0 = re15_affen_b0_a0(e, pl); e->ai_timer = (int16_t)(re15_affen_rng_a0(&a0_b0) + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, clip 0x16 @0x801175a4-c8; Runde 35 Spur J (7b): a0 = Entity */
             {   /* unconditional -1 INCLUDING the seed tick (sh in the branch delay slot @0x801175f8-608);
                  * transition at PRE-decrement 0 @0x80117618 -> period exactly rng+59 (audit #18) */
                 int16_t t = e->ai_timer; e->ai_timer = (int16_t)(t - 1);
@@ -8897,9 +8916,9 @@ static void re15_maggot_ai_tick(int slot)
             break;
 
         case 1:   /* A[1] 0x80117668 + B[1] 0x80117764 — grid&1 dormant spawn (clip 0), wakes to sub 2 */
-            if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 2); e->sub_state_3 = 0; break; }  /* @0x80117674-9c */
-            if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 2); e->sub_state_3 = 1; break; }  /* @0x801176cc-714 */
-            if (dist < 3000) { re15_dog_sub(e, 2); e->sub_state_3 = 2; break; }  /* @0x80117724-58 */
+            if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 2); e->sub_state_3 = 0; ab = 1; break; }  /* @0x80117674-9c */
+            if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 2); e->sub_state_3 = 1; ab = 1; break; }  /* @0x801176cc-714 */
+            if (dist < 3000) { re15_dog_sub(e, 2); e->sub_state_3 = 2; ab = 1; break; }  /* @0x80117724-58 */
             if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); e->sub_state_2 = 1; re15_maggot_clip(e, 0); }  /* clip 0 @0x80117784-d8 */
             { int16_t t = e->ai_timer; e->ai_timer = (int16_t)(t - 1);
               if (t == 0) { re15_dog_sub(e, 2); e->sub_state_3 = 2; break; } }   /* @0x801177f0-828 */
@@ -8927,6 +8946,7 @@ static void re15_maggot_ai_tick(int slot)
             break;
 
         case 3: {  /* CHASE — A[3] 0x80117a3c decide + B[3] 0x80117c90 crawl */
+            if (ab_nur_b) goto b3;                            /* Runde 35 Spur J (10): B-Lauf ohne A[3] */
             if (pl->hit_react == 0                            /* bite needs player NOT in hit-react @0x80117a54-5c (audit #15) */
                 && re15_dog_arc(e, pl, 3000, 384)             /* a804(0xbb8,0x180) @0x80117a60-74 */
                 && e->dog_blocked_ctr == 0) {                 /* +0x1dc @0x80117a88-90 */
@@ -8940,7 +8960,7 @@ static void re15_maggot_ai_tick(int slot)
                     && !re15_dog_blocked(e)                   /* +0x1d6 = FUN_8003b0a4 wall clamp (root @0x80116e64-84); port = run_all clamp contact */
                     && e->mag_pin_cd == 0)
                     e->sub_state_1 = 15;                      /* @0x80117b34-3c */
-                break;
+                ab = 1; break;                                /* Runde 35 Spur J (10): B[5]/B[15] im selben Tick */
             }
             /* decision tail @0x80117b40-c74 */
             if (pl->hit_react != 0) {
@@ -8948,19 +8968,21 @@ static void re15_maggot_ai_tick(int slot)
             } else if (dist < 6001) {
                 if ((e->dog_flags & 1) && e->sub_state_3 != 0) { e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* @0x80117bb4-c08 */
             } else if (e->dog_flags & 1) {
-                re15_dog_sub(e, 4); e->sub_state_3 = 0; break;   /* far+LOS -> SELECTOR @0x80117c2c-74 */
+                re15_dog_sub(e, 4); e->sub_state_3 = 0; ab = 1; break;   /* far+LOS -> SELECTOR @0x80117c2c-74 */
             }
             /* B[3] crawl */
+        b3:;
+            uint32_t a0_b3 = re15_affen_b3_a0(e, pl);   /* Runde 35 Spur J (7b): a0 aus A[3] */
             if (e->sub_state_2 == 0) {
                 e->sub_state_2 = 1;                           /* @0x80117cac-b0 */
                 re15_maggot_clip(e, 4);                       /* provisional clip 4 @0x80117cc0 */
                 if (e->sub_state_3 == 0) {                    /* SIGHTED -> clip 5 (audit #3; @0x80117cd8 bne +0x7; clip 5 delay-slot store @0x80117cdc-e4) */
                     e->motion = 5;
-                    e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0x1f) + 2);   /* +0x9e seed @0x80117ce8-cf8 */
+                    e->grab_kill_ctr = (int16_t)((re15_affen_rng_a0(&a0_b3) & 0x1f) + 2);   /* +0x9e seed @0x80117ce8-cf8 */
                 }
             }
             {   /* fresh random slew 6-37 EVERY tick (audit #5) @0x80117d1c-34, a8f8 @0x80117d50 */
-                int slew = (int)(re15_engine_rand8() & 0x1f) + 6;
+                int slew = (int)(re15_affen_rng_a0(&a0_b3) & 0x1f) + 6;
                 e->grab_kill_ctr = (int16_t)slew;
                 re15_enemy_steer_point(e, pl->x, pl->z, slew);
             }
@@ -8976,9 +8998,10 @@ static void re15_maggot_ai_tick(int slot)
         case 4: {  /* SELECTOR — A[4] 0x80117e40 decide + B[4] 0x80118110 heavy-approach (clip 6) */
             /* abort: player in hit-react + LOS -> CHASE @0x80117e44-70 -> 0x801180d4 (audit #10:
              * there is NO distance-based abandon anywhere in A[4]) */
-            if (pl->hit_react != 0 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; break; }
+            if (ab_nur_b) goto b4;                            /* Runde 35 Spur J (10): B-Lauf ohne A[4] */
+            if (pl->hit_react != 0 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; ab = 1; break; }
             if (pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0) && e->dog_blocked_ctr == 0) {
-                re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* HEAVY @0x80117e88-ec4 (clip by B[6] entry) */
+                re15_dog_sub(e, 6); e->sub_state_3 = 0; ab = 1; break;   /* HEAVY @0x80117e88-ec4 (clip by B[6] entry) */
             }
             /* Path-A ZONE-LEAPS @0x80117ecc-8011802c — PORTIERT 2026-09-05 (S5-Fix, Nutzer:
              * "Gorillas haengen zwischen den Autos"; diag_gorilla_stuck.md + verify_gorilla.md).
@@ -9030,7 +9053,7 @@ static void re15_maggot_ai_tick(int slot)
                     /* LOS-Latch gesetzt -> Durchfall in die Path-B-Gates (== Sprung nach
                      * 0x80118048: nur deren dann ohnehin wahres LOS-Gate wird uebersprungen). */
                 }
-                if (committed) break;
+                if (committed) { ab = 1; break; }
             }
             /* Path-B far leap @0x80118028-8100 */
             if ((e->dog_flags & 1)                            /* +0x1d0&1 @0x80118034-40 */
@@ -9040,12 +9063,14 @@ static void re15_maggot_ai_tick(int slot)
                 && (re15_dog_player_aiming()                  /* aca58==0x701 bypasses the coin-flip @0x80118090-a0 (audit #15) */
                     || (re15_engine_rand8() & 1))             /* rng&1 @0x801180a8-b4 */
                 && re15_maggot_a780(e, pl) == 0) {            /* player faces the maggot @0x801180bc-c4 */
-                re15_dog_sub(e, 7); e->sub_state_3 = 0; break;   /* @0x801180cc-f8 (clip by B[7] entry) */
+                re15_dog_sub(e, 7); e->sub_state_3 = 0; ab = 1; break;   /* @0x801180cc-f8 (clip by B[7] entry) */
             }
             /* B[4] heavy-approach (audit #4) */
+        b4:;
             if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_maggot_clip(e, 6); }   /* clip 6 @0x80118128-60 */
-            e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180);   /* +0x8c = 180-211 per tick @0x80118164-80 */
-            {   int slew = (int)(re15_engine_rand8() & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
+            uint32_t a0_b4 = re15_affen_psx_entity(e) + 0x34u; int b4_fest = !((e->dog_flags & 1) && !re15_dog_blocked(e) && dist >= 6001);   /* Runde 35 Spur J (7) */
+            e->crow_speed = (int16_t)(((b4_fest ? re15_affen_rng_a0(&a0_b4) : re15_engine_rand8()) & 0x1f) + 180);   /* +0x8c = 180-211 per tick @0x80118164-80 */
+            {   int slew = (int)((b4_fest ? re15_affen_rng_a0(&a0_b4) : re15_engine_rand8()) & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
                 if (dist < 2000) slew += 24;                                 /* +24 inside 2000 @0x801181a4-c4 */
                 e->grab_kill_ctr = (int16_t)slew;
                 re15_enemy_steer_point(e, pl->x, pl->z, slew);               /* a8f8 @0x801181e0 */
@@ -9072,6 +9097,7 @@ static void re15_maggot_ai_tick(int slot)
                     re15_audio_room_se(6);                       /* Se(6) @0x80118474 (a0=6 @0x80118454) */
                     pl->hit_react |= 1;                          /* @0x801184c0-d4. The stagger cmd aca58=2/aca59=facing+2 (hp<0 -> 3)
                                                                   * @0x8011847c-b8 = the player-command FSM; port convention = hit_react (audit #17, dog/crow parity) */
+                    if (pl->hp >= 0) re15_player_stagger_cmd2(re15_affen_biss_clip(e, pl));   /* Runde 35 Spur J @0x80118488-9c (re15_affen.h (4b)) */
                 }
                 break;
             default:  /* exit @0x801184e0-8520: lockout 0x14 if clear, -> CHASE */
@@ -9144,7 +9170,8 @@ static void re15_maggot_ai_tick(int slot)
                 re15_maggot_anim(e);
                 if (e->anim_frame == 0x0a) {                  /* LAUNCH at frame 10 @0x80118a2c-40 */
                     e->sub_state_2 = 2;
-                    e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 200   /* @0x80118a44-54 */
+                    uint32_t a0_l = re15_affen_psx_entity(e);   /* Runde 35 Spur J (7c): `lw a0,-14460(a0)` = g_entity(cur) @0x80118a24 */
+                    e->crow_speed = (int16_t)((re15_affen_rng_a0(&a0_l) & 0x1f) + 200   /* @0x80118a44-54 */
                                               + (int)e->mag_boost * 10);           /* += +0x1e2*10 = +40 @0x80118a64-80 (audit #6) */
                     if (e->sub_state_3 == 3) e->crow_speed = 0x32a;                /* blind zone leap @0x80118a94-aa0 */
                     e->mag_airborne = 1;                                           /* +0x1e0=1 @0x80118aa4-b0 */
@@ -9187,7 +9214,7 @@ static void re15_maggot_ai_tick(int slot)
                     re15_audio_room_se(7);                    /* @0x80118d64-68 */
                     break;
                 }
-                re15_dog_advance_ofs(e, 0);                   /* the flight DOUBLE-advance: c1a4 + 245d8(0) @0x80118dbc */
+                /* Runde 35 Spur J: KEIN 245d8(0) im Flug — Phase 2 endet im Epilog 0x80118dc4 (re15_affen.h (4e)) */
                 break; }
             default:  /* phase 3 landing tail @0x80118d74-dc0: play out, slide at +0x8c=100, -> SELECTOR */
                 if (re15_maggot_anim(e)) { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
@@ -9247,7 +9274,7 @@ static void re15_maggot_ai_tick(int slot)
         case 15: {  /* REAR-UP GRAB/PIN — A[15] 0x8011a878 + B[15] 0x8011a960, phases @0x801003cc
                      * = {a9a8,aa24,abe8,acb4,ad10,ad98,add8,ae5c} (audit #1). */
             /* A[15]: shot during the rear-up/pin */
-            if (e->hit_react & 0x02) {
+            if (!ab_nur_b && (e->hit_react & 0x02)) {         /* Runde 35 Spur J (10): B-Lauf ohne A[15] */
                 if (e->hit_react & 0x40) {                    /* crit-shot -> abort to HURT air lane @0x8011a898-8fc */
                     e->y = (int32_t)e->dog_floor_y;           /* restore ground @0x8011a8a4-ac */
                     e->ai_timer = 0;                          /* +0x9c=0 @0x8011a8bc */
@@ -9289,13 +9316,15 @@ static void re15_maggot_ai_tick(int slot)
                 re15_audio_room_se(10);                       /* Se(10) @0x8011abe8-f8 */
                 e->sub_state_2 = 3;                           /* @0x8011abf4-fc */
                 s_player_grabbed = 1;                         /* aca58=5 @0x8011ac40-48 (+ entity/player flags|=0x1000 @0x8011ac2c-54) */
-                re15_player_victim_latch(e, pl);              /* player anchor 0x8001ac38 @0x8011ac18 + a8f8(player,0x800) yaw latch @0x8011acac-b0 */
-                g_player_victim_variant = (uint8_t)re15_maggot_a780(e, pl);   /* aca59 = a780 ret @0x8011ac50-68 */
+                re15_player_victim_latch_ex(e, pl, re15_maggot_a780(e, pl));   /* Runde 35 Spur J: aca59 = a780 @0x8011ac50-68 VOR dem Yaw-Latch a8f8 @0x8011acac */
+                re15_affen_pin_anker(e, pl);                  /* Runde 35 Spur J: FUN_8001ac38 @0x8011ac18 ausfuehren (re15_affen.h (5)) */
                 pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
+                re15_affen_ritt_platz(e, pl, 1);              /* Runde 35 Spur J (8): a8f8(0x800) @0x8011acac, ad68(g_entity) @0x8011accc */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
                 break;
             case 3:   /* RIDE @0x8011acb4: hold the pin (0x8001ad68 root-place) until clip 0x1c ends */
                 s_player_grabbed = 1;
+                re15_affen_ritt_platz(e, pl, 0);              /* Runde 35 Spur J (8): ad68(g_entity,+0x84,+0x16c) @0x8011accc */
                 if (re15_maggot_anim(e)) e->sub_state_2 = 4;
                 break;
             case 4:   /* RELEASE init @0x8011ad10 */
@@ -9335,6 +9364,7 @@ static void re15_maggot_ai_tick(int slot)
             e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
             break;
         }
+        if (ab && !ab_nur_b && e->state == 1) { ab_nur_b = 1; goto ab_b; }   /* Runde 35 Spur J (10): B[+0x5 neu] @0x80117358-78 */
         /* AIM-BAND-Stempel (Brain-Tail @0x80117380-e8, VOR den Timern): Baender loeschen
          * (flags &= 0x1fffffff @0x80117380-98), dann Boden: LEVEL @0x801173a8-b8 +
          * DOWN wenn dist<0xfa0=4000 (jal FUN_80012974(0xfa0) @0x801173a4 -> |=0x20000000
@@ -9371,6 +9401,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->hit_react |= 2;                            /* @0x8011b064-70 */
                 e->sub_state_3 = 1;                           /* @0x8011b07c-80 */
                 e->motion = 7; e->anim_frame = 0; e->anim_frac = 7;   /* flinch clip 7 @0x8011b08c-90 */
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: ein Flinch = ein Treffer */
                 re15_maggot_gore(e);                          /* vec @0x80121388[(+0x6&1)*0x20] @0x8011b0bc-130 */
                 re15_audio_room_se(3);                        /* Se(3) @0x8011b134-38 */
                 /* fall through */
@@ -9380,7 +9411,7 @@ static void re15_maggot_ai_tick(int slot)
             default:  /* exit @0x8011b178-1d8: -> ACTIVE sub 7 = RETALIATION LEAP (sub 9 if +0x1e3) */
                 e->hit_react = 0;                             /* @0x8011b178 */
                 e->state = 1;                                 /* sb 1 @0x8011b188 */
-                e->sub_state_1 = (uint8_t)((e->mag_1e3 != 0) ? 9 : 7);   /* @0x8011b194-98 / @0x8011b1c8-d8 */
+                e->sub_state_1 = re15_affen_flinch_exit_sub(e);   /* 7 @0x8011b194-98 / 9 @0x8011b1c8-d8; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 e->sub_state_2 = 0; e->sub_state_3 = 0;
                 break;
             }
@@ -9390,6 +9421,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b238-54 */
                 e->motion = (int16_t)((e->hit_react & 0x80) ? 9 : 8);   /* clip 8 @0x8011b260-64, 9 if front-latch @0x8011b274-8c */
                 e->anim_frame = 0; e->anim_frac = 7;
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: Spur 1 zaehlt mit (re15_affen.h (3)) */
                 re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b2b0-334 */
                 /* fall through */
             case 1:
@@ -9397,7 +9429,7 @@ static void re15_maggot_ai_tick(int slot)
                 re15_maggot_bf50(e, (e->motion == 8) ? 0 : 1);   /* @0x8011b370-a0 */
                 break;
             default:  /* @0x8011b3ac-ec */
-                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = re15_affen_sprung_oder_jagd(e); e->sub_state_2 = 0; e->sub_state_3 = 0;   /* 7 @0x8011b3c8-cc; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 break;
             }
         } else {                                              /* 0x8011b400 CRASH: 9..11/15..18, phases @0x801003ec */
@@ -9408,6 +9440,7 @@ static void re15_maggot_ai_tick(int slot)
                 e->anim_frame = 0; e->anim_frac = 7;
                 e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* +0x8c @0x8011b4c4-d4 */
                 e->ai_timer = 0;                              /* +0x9c=0 @0x8011b4e4 */
+                re15_affen_treffer_zaehlen(e);                /* Runde 35 Spur J: Spur 2 zaehlt mit (re15_affen.h (3)) */
                 re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b4f0-56c */
                 /* fall through */
             case 1:
@@ -9425,7 +9458,7 @@ static void re15_maggot_ai_tick(int slot)
                 if (re15_maggot_anim(e)) e->sub_state_3 = 4;  /* @0x8011b660-98 */
                 break;
             default:  /* @0x8011b69c-e8 */
-                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = re15_affen_sprung_oder_jagd(e); e->sub_state_2 = 0; e->sub_state_3 = 0;   /* 7 @0x8011b6c4-c8; Runde 35 Spur J: 3-Treffer-Vorgabe */
                 break;
             }
         }
@@ -9530,7 +9563,8 @@ static void re15_maggot_ai_tick(int slot)
      * Kraehen-Root aec4 @0x801121d4). */
     {
         re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        re15_body_push(plr, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
+        if (!(re15_player_is_grabbed() && re15_affen_griff_paar(e)))   /* Runde 35 Spur J (8): Paar-Ausnahme `and`/`andi 0x1000` @0x8002af14-1c */
+            re15_body_push(plr, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
     }
 }
 
@@ -10177,8 +10211,8 @@ static void re15_npc_pos_advance(re15_actor_t *e)
 static void re15_npc_wall_clamp(re15_actor_t *e, int32_t ox, int32_t oz)
 {
     int32_t nx = e->x, nz = e->z;
-    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
-                                   (int32_t)e->hit_radius_min, e->y, 4u);
+    re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz, (int32_t)e->hit_radius_min,
+                                          re15_affen_npc_band(e), 4u, NULL, NULL);   /* Runde 35 Spur J: Band +0x82 @0x8003b228-3c (re15_affen.h (1)) */
     e->x = nx; e->z = nz;
 }
 
@@ -14385,7 +14419,7 @@ void re15_enemy_spawn_root(int slot)
     if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return;
-    if (e->type != 0x30 && e->type != 0x36) return;
+    if (e->type != 0x30 && e->type != 0x36 && e->type != 0x27) return;   /* Runde 35 Spur J: 0x27 Spawn-Wurzel */
     if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {   /* G5-Modul */
         /* Runde 35 Spur C: +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC (HP 600 @0x801003fc) */
         extern void re15_g5_boss_spawn(int slot);
@@ -14394,7 +14428,8 @@ void re15_enemy_spawn_root(int slot)
     }
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
-    re15_birkin_root(slot);                             /* @0x8004259c jalr 0x80072bac[typ] */
+    if (e->type == 0x27) re15_maggot_ai_tick(slot);     /* Runde 35 Spur J: Gorilla-INIT im Spawn-Bild (re15_affen.h (4f)) */
+    else re15_birkin_root(slot);                        /* @0x8004259c jalr 0x80072bac[typ] */
     e->grid_id = (uint8_t)(e->grid_id | s4);            /* @0x80042604 or / @0x80042608 sb */
 }
 
@@ -14653,6 +14688,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * seit dem Zonen-Leap-Port laeuft das ueber
                                  * re15_collision_zone_query, s. case 4.) */
             int32_t mag_ox = e->x, mag_oz = e->z;
+            re15_affen_zeichen_merk(e);   /* Runde 35 Spur J (11)/(12): Stand der Zeichen-Schleife @0x8001d108 */
             re15_maggot_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
             /* S5-Fix 2026-09-05: Band = +0x82-Zustands-Byte (e->floor), NICHT band_from_y —

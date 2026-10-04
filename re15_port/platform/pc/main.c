@@ -73,6 +73,7 @@ static inline int RNDI(float f) {
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Hebetisch-Cursor (ROOM1150/1151) */
 #include "re15_dokumente.h"     /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
 #include "re15_inhalt_r35.h"    /* Runde 35 Spur F: Memory Card 1010 + Schrot 1090 (inhalt_r35.c) */
+#include "re15_affen.h"         /* Runde 35 Spur J: Parts ohne Knochen weltfest (FUN_8001e5b0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -10223,6 +10224,8 @@ re_title:;
                                   r0->rot[rr*3+2]*g5o[2]) >> 12);
                         np = &np_kind;
                     }
+                    if (nbi >= npc_bones && !npc_remap && re15_affen_part_attach(npc->type, nbi, npc_poses, npc_bones, &np_kind))
+                        np = &np_kind;   /* Runde 35 Spur J: Gorilla-Part 18 am Rumpf @0x80117200-3c (re15_affen.h (2a)) */
                     /* ---- G5-ENDKAMPF: 2-BONE-SKINNING (Phase 2, birkin-g5.md 2.2b/4.2.1) ----
                      * Mesh 0 des Bosses (Kopf+Rumpf) haengt im Original NICHT starr an Bone 0:
                      * FUN_800197f4 (@0x80103b70/84) schreibt je Frame die gewichtete Mischung
@@ -10278,6 +10281,8 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
+                    if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
+                        (void)re15_affen_teil_weltfest(npc->type, npc_skel, nbi, nyawed_rot, nbone_world_trans);
                     /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die
                      * PART-SICHT des finalen Birkin (Typ 0x36) — welche nbi laufen
                      * und wo jeder Part in WELT-Y landet (Blob-Bodenkontakt!). */
