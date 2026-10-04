@@ -40,7 +40,14 @@ Temp-Ordnern, mehrere Starts je Szenario) am echten Code gemessen - vorher (Stan
   Rechnung fuer 2400x1080: u=90, fs=10, Titel 44x60 = 2640 px -> x = -120 = genau 2 Zeichen links ("RE") und 2 rechts
   ("FT") abgeschnitten; Fehlertext 57 Zeichen x 54 px = 3078 -> x = -339 -> Zeichen 0..5 ("1 DATE") ganz und 'I' halb
   weg, rechts endet die Sicht bei Zeichen 50 ('B' von DEBUG). Beides deckt sich Zeichen fuer Zeichen mit den Bildern -
-  das Modell erklaert den Befund vollstaendig. Messung am echten Code im Pruefstand: folgt.
+  das Modell erklaert den Befund vollstaendig.
+- **Pruefstand am echten Code (Stand 154a73c1, mingw, Beleg `N_android_belege/pruefstand_vorher_anzeige.txt`):**
+  `PRUEFSTAND-AUSSERHALB Text W=2400 H=1080 x=-120..2510 'RE1.5 PORT - ASSETS WERDEN EINMALIG GEPRUEFT'`,
+  `x=-339..2730 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'`, `x=-366..2757 'FEHLER: ALTE ASSET-LISTE
+  NICHT LOESCHBAR - SIEHE DEBUG.LOG'` - dieselben x-Werte wie die Rechnung, also wie die Geraetebilder. Von 11
+  Displaygroessen x 3 Texten sind 27 Laeufe ausserhalb: 2400x1080, 1920x1080, 1280x720, 2560x1080, 3200x1440, 800x480,
+  1080x2400, 320x240, 160x120 je alle drei; nur 3840x1080 und 5120x1440 (32:9, H gross genug) passen. Der Fehler haengt
+  also nicht an "sehr breit" allein, sondern am Verhaeltnis Textlaenge x 6 x H/108 zu W - 20:9 und 16:9 sind betroffen.
 
 ## Punkt 2 — Datei<->Ordner-Konflikt im Update
 
@@ -52,7 +59,22 @@ Temp-Ordnern, mehrere Starts je Szenario) am echten Code gemessen - vorher (Stan
 - Code (android_glue.c:499-545): weg-Schleife `if (unlink(dst) == 0) {...}` ohne else (F-Y6), danach je Eintrag nur
   `unlink(tmp)`, `file_size(dst)` (stat, kein Ordnertest auf dem Weg), `entpacken()` -> `mkdirs_for` (mkdir-Fehler
   verschluckt), `open(tmp)`, `rename(tmp,dst)`. Kein Schritt raeumt einen Ordner auf dem Zielnamen, eine Datei auf
-  einem Elternnamen oder einen Ordner auf `<ziel>.neu`. Messung am echten Code im Pruefstand: folgt.
+  einem Elternnamen oder einen Ordner auf `<ziel>.neu`.
+- **Pruefstand am echten Code (Stand 154a73c1, Beleg `N_android_belege/pruefstand_vorher_konflikt.txt`)**, je Szenario
+  Start 1 = APK A frisch, Start 2 = APK B als Update, Start 3 = B noch einmal:
+  | Szenario | Start 2 | Start 3 |
+  |---|---|---|
+  | K1 = H8: Ordner `PSX/q/` (mit c) wird Datei `PSX/q` | EXIT 1, `rename .../PSX/q` scheitert, ABBRUCH | EXIT 0 (voller Lauf "ohne Liste") |
+  | K2 = H7: Datei `PSX/q` wird Ordner `PSX/q/c` | EXIT 0 | schneller Weg |
+  | K3: verwaister Ordner `PSX/X.neu/` (Zwischendatei-Name), X geaendert | EXIT 1 (`X.neu nicht anlegbar`) | EXIT 0 |
+  | K4: verwaiste Datei `PSX/q`, Update bringt `PSX/q/c` | EXIT 1 | EXIT 0 |
+  | K5: verwaister Ordner `PSX/q/x/y/` auf dem Namen einer neuen Datei `PSX/q` | EXIT 1 (rename) | EXIT 0 |
+  | K6: wie H8, nur Gross/klein (`PSX/Q/c` -> `PSX/q`; NTFS wie Geraet case-insensitiv) | EXIT 1 (rename) | EXIT 0 |
+  | L1: Liste mit `PSX/X` + `PSX/X.neu/B` | Geraete-Leser NIMMT AN (bricht erst beim Dateizugriff ab) | - |
+  | L2: Liste mit Datei `PSX/q` + `psx/Q/c` | Leser NIMMT AN | - |
+  Genau das Nutzerbild: "bricht sauber ab; erst der zweite Start stellt den Stand her" (K1/K3-K6). L1/L2 zeigen,
+  warum ein blosses "Konfliktpfad loeschen" ohne Leser-Regel nicht sicher waere: eine Liste darf heute einen Pfad
+  zugleich als Datei und als Ordner fuehren - ein Raeumer wuerde dann gelistete Dateien loeschen.
 
 ## Punkt 3 — Urteilslogik des Pruefskripts selbst mittesten
 

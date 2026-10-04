@@ -1,0 +1,191 @@
+== K1_ordner_wird_datei_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (12 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 31 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K1_ordner_wird_datei_2_update (1280x720): EXIT=1 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q/c
+     [android] FEHLER beim Entpacken: rename <tmp>/vorher/konflikt/s_K1_ordner_wird_datei/shared_assets/PSX/q: Is 
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 16 ms
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: K1_ordner_wird_datei_2_update: EXIT=1, soll 0
+   FEHLER: K1_ordner_wird_datei_2_update: 'PRUEFSTAND: SPIELSTART' fehlt in der Ausgabe
+   FEHLER: K1_ordner_wird_datei_2_update: shared_assets/PSX/q fehlt im Speicher (oder ist ein Ordner)
+   FEHLER: K1_ordner_wird_datei_2_update: Ordner shared_assets/PSX/q/ im Speicher traegt keine gelistete Datei
+   FEHLER: K1_ordner_wird_datei_2_update: re15_assets_entpackt.txt fehlt (Lauf nicht fertig)
+== K1_ordner_wird_datei_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 1 kopiert (5 B, 16 ms), 2 per SHA-256 geprueft (8 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 16 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+   FEHLER: K1_ordner_wird_datei_3_neustart: 'Assets aktuell (schneller Weg)' fehlt in der Ausgabe
+== K2_datei_wird_ordner_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 16 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K2_datei_wird_ordner_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (12 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (4 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 16 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K2_datei_wird_ordner_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 12 Bytes unter <tmp>/vorher/konflikt/s_K2_datei_wird_ord
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K3_ordner_auf_zwischendatei_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 31 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K3_ordner_auf_zwischendatei_2_update (1280x720): EXIT=1 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 1, neu 0, pruefen 0, weg 0
+     [android] FEHLER beim Entpacken: <tmp>/vorher/konflikt/s_K3_ordner_auf_zwischendatei/shared_assets/PSX/X.neu 
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 16 ms
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: EXIT=1, soll 0
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: 'PRUEFSTAND: SPIELSTART' fehlt in der Ausgabe
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: 'Konflikt geraeumt' fehlt in der Ausgabe
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: shared_assets/PSX/X hat anderen Inhalt als die APK
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: Ordner shared_assets/PSX/X.neu/ im Speicher traegt keine gelistete Datei
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: zusaetzliche Datei im Speicher: shared_assets/PSX/X.neu/rest
+   FEHLER: K3_ordner_auf_zwischendatei_2_update: re15_assets_entpackt.txt fehlt (Lauf nicht fertig)
+== K3_ordner_auf_zwischendatei_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/X.neu/rest
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 1 kopiert (5 B, 0 ms), 3 per SHA-256 geprueft (13 B, 0 ms, 1 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 16 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+   FEHLER: K3_ordner_auf_zwischendatei_3_neustart: 'Assets aktuell (schneller Weg)' fehlt in der Ausgabe
+== K4_datei_auf_ordnername_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 32 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K4_datei_auf_ordnername_2_update (1280x720): EXIT=1 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (12 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 0
+     [android] FEHLER beim Entpacken: <tmp>/vorher/konflikt/s_K4_datei_auf_ordnername/shared_assets/PSX/q/c.neu ni
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 15 ms
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: K4_datei_auf_ordnername_2_update: EXIT=1, soll 0
+   FEHLER: K4_datei_auf_ordnername_2_update: 'PRUEFSTAND: SPIELSTART' fehlt in der Ausgabe
+   FEHLER: K4_datei_auf_ordnername_2_update: 'Konflikt geraeumt' fehlt in der Ausgabe
+   FEHLER: K4_datei_auf_ordnername_2_update: shared_assets/PSX/q/c fehlt im Speicher (oder ist ein Ordner)
+   FEHLER: K4_datei_auf_ordnername_2_update: zusaetzliche Datei im Speicher: shared_assets/PSX/q
+   FEHLER: K4_datei_auf_ordnername_2_update: re15_assets_entpackt.txt fehlt (Lauf nicht fertig)
+== K4_datei_auf_ordnername_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/q
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 1 kopiert (4 B, 0 ms), 2 per SHA-256 geprueft (8 B, 0 ms, 0 abweichend), 0 entfernt, 1 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 15 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+   FEHLER: K4_datei_auf_ordnername_3_neustart: 'Assets aktuell (schneller Weg)' fehlt in der Ausgabe
+== K5_ordner_auf_dateiname_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 31 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K5_ordner_auf_dateiname_2_update (1280x720): EXIT=1 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 0
+     [android] FEHLER beim Entpacken: rename <tmp>/vorher/konflikt/s_K5_ordner_auf_dateiname/shared_assets/PSX/q: 
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 16 ms
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: K5_ordner_auf_dateiname_2_update: EXIT=1, soll 0
+   FEHLER: K5_ordner_auf_dateiname_2_update: 'PRUEFSTAND: SPIELSTART' fehlt in der Ausgabe
+   FEHLER: K5_ordner_auf_dateiname_2_update: 'Konflikt geraeumt' fehlt in der Ausgabe
+   FEHLER: K5_ordner_auf_dateiname_2_update: shared_assets/PSX/q fehlt im Speicher (oder ist ein Ordner)
+   FEHLER: K5_ordner_auf_dateiname_2_update: Ordner shared_assets/PSX/q/ im Speicher traegt keine gelistete Datei
+   FEHLER: K5_ordner_auf_dateiname_2_update: Ordner shared_assets/PSX/q/x/ im Speicher traegt keine gelistete Datei
+   FEHLER: K5_ordner_auf_dateiname_2_update: Ordner shared_assets/PSX/q/x/y/ im Speicher traegt keine gelistete Datei
+   FEHLER: K5_ordner_auf_dateiname_2_update: zusaetzliche Datei im Speicher: shared_assets/PSX/q/x/y/rest
+   FEHLER: K5_ordner_auf_dateiname_2_update: zusaetzliche Datei im Speicher: shared_assets/PSX/q/z
+   FEHLER: K5_ordner_auf_dateiname_2_update: re15_assets_entpackt.txt fehlt (Lauf nicht fertig)
+== K5_ordner_auf_dateiname_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/q/x/y/rest
+     [android] Waise entfernt (steht in keiner Liste): shared_assets/PSX/q/z
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 1 kopiert (5 B, 0 ms), 2 per SHA-256 geprueft (8 B, 0 ms, 0 abweichend), 0 entfernt, 2 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 15 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+   FEHLER: K5_ordner_auf_dateiname_3_neustart: 'Assets aktuell (schneller Weg)' fehlt in der Ausgabe
+== K6_gross_klein_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 31 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K6_gross_klein_2_update (1280x720): EXIT=1 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/Q/c
+     [android] FEHLER beim Entpacken: rename <tmp>/vorher/konflikt/s_K6_gross_klein/shared_assets/PSX/q: Is a dire
+     [android] Entpacken fertig (Update): 3 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Fehler, 16 ms
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: K6_gross_klein_2_update: EXIT=1, soll 0
+   FEHLER: K6_gross_klein_2_update: 'PRUEFSTAND: SPIELSTART' fehlt in der Ausgabe
+   FEHLER: K6_gross_klein_2_update: shared_assets/PSX/q fehlt im Speicher (oder ist ein Ordner)
+   FEHLER: K6_gross_klein_2_update: Ordner shared_assets/PSX/Q/ im Speicher traegt keine gelistete Datei
+   FEHLER: K6_gross_klein_2_update: re15_assets_entpackt.txt fehlt (Lauf nicht fertig)
+== K6_gross_klein_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 1 kopiert (5 B, 0 ms), 2 per SHA-256 geprueft (8 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Fehler, 15 ms
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+   FEHLER: K6_gross_klein_3_neustart: 'Assets aktuell (schneller Weg)' fehlt in der Ausgabe
+== L1_ordner_mit_neu_endung (1280x720): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 2 Dateien (9 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/X fehlt in der APK
+     [android] FEHLER beim Entpacken: shared_assets/PSX/X.neu/B fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 2 Fehler, 15 ms
+     [android] ABBRUCH: 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: L1: 'unzulaessiger Pfad' fehlt in der Ausgabe
+== L2_datei_und_ordner_gleich (1280x720): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 2 Dateien (9 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/q fehlt in der APK
+     [android] FEHLER beim Entpacken: shared_assets/psx/Q/c fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 0 kopiert (0 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 2 Fehler, 16 ms
+     [android] ABBRUCH: 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-AUSSERHALB Text W=1280 H=720 x=-215..1490 y=420..455 '2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=1 ueberlappung=0 text='RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (3 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 2 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+   FEHLER: L2: 'Datei und Ordner gleichen Namens' fehlt in der Ausgabe
+   FEHLER: s_L1: trotz ungueltiger Liste wurde entpackt
+   FEHLER: s_L2: trotz ungueltiger Liste wurde entpackt
+CMake Error at re15_port/tests/unit/r35_android/test_r35_android_entpacker.cmake:264 (message):
+  42 Fehler (Protokolle:
+  <tmp>/vorher/konflikt/logs)
+
+
