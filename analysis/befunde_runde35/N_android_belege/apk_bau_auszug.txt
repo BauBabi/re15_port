@@ -1,0 +1,48 @@
+stageAssets: re15_port/shared_assets/RE2/DOOR: 27 x *.DO2
+stageAssets: re15_port/shared_assets/RE15DOOR: 30 x *.DO2
+re15_assets.txt (v2): 3629 Dateien, 357340865 Bytes, sha256 je Datei
+BUILD SUCCESSFUL in 3m 17s
+   Stichproben ok; unzip zaehlt 3630 Asset-Eintraege (Pruefung jedes Eintrags: Schritt 5)
+   package: name='de.re15.port' versionCode='82200' versionName='v0.8.22-r35test' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+   zipalign -c -P 16 4: Ausrichtung ok (Stored-Daten 4 B, .so 16 KiB)
+   Verified using v1 scheme (JAR signing): false
+   Verified using v2 scheme (APK Signature Scheme v2): true
+   Verified using v3 scheme (APK Signature Scheme v3): false
+   Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+   Verified using v4 scheme (APK Signature Scheme v4): false
+   Signer #1 certificate SHA-256 digest: 432bc7497b52032497dcc4d51198caec297ff897180dfca32bc2863b81eebd18
+         sha256 f73c3b1a770d424ddec8c57480227813ee353ea361a96d4e5b6997903bb8f9b6 = festgehalten (release/apk_asset_gate.sha256)
+   (Selbsttest des Gate-Urteils, sha256 2b78069e1e00cc91...)
+   Gate-Urteil selbstgeprueft: 119/119 Faelle, 257/260 Mutanten erkannt, 3 gleichwertig (Mindestzahlen 119/257/<=3)
+         sha256 2b78069e1e00cc912e3bfc1297f1fecc7741a8883da3abb64e3d48e241f92f70 = festgehalten (release/gate_urteil.sha256)
+   [ok] 08 Manifest: falsche Groesse                                  rc=1 (soll 1)
+   [ok] 09 Manifest: fehlende Zeile                                   rc=1 (soll 1)
+   [ok] 14 Manifest: Kopfzeile Anzahl falsch                          rc=1 (soll 1)
+   [ok] 15 Manifest: BOM                                              rc=1 (soll 1)
+   [ok] 17 Manifest: Zeile mit nur einem Tab (Summe + Pfad verschmolzen) rc=1 (soll 1)
+   [ok] 18 Manifest: Pfad mit '..'                                    rc=1 (soll 1)
+   [ok] 21 TORSE.VBS fehlt (Quelle und APK)                           rc=1 (soll 1)
+   [ok] 32 Manifest: Geisterzeile (weder APK noch Quelle)             rc=1 (soll 1)
+   [ok] 33 Manifest: Doppelzeile, erste mit falscher Groesse          rc=1 (soll 1)
+   [ok] 34 Manifest: Groessenfeld '4_396'                             rc=1 (soll 1)
+   [ok] 35 Manifest: kein UTF-8                                       rc=1 (soll 1)
+   [ok] 36 Manifest: Kommentarzeile '# Notiz'                         rc=1 (soll 1)
+   [ok] 37 Manifest: nennt sich selbst                                rc=1 (soll 1)
+   [ok] 38 Manifest: Kopfzeile fehlt                                  rc=1 (soll 1)
+   [ok] 160 Manifest: Geisterzeile, die vor dem Manifest sortiert      rc=1 (soll 1)
+   [ok] 161 Manifest: Pfad mit Backslash                               rc=1 (soll 1)
+   [ok] 162 Manifest: Kopfzeile Bytes 1 zu gross                       rc=1 (soll 1)
+   [ok] 163 Manifest: Kopfzeile Anzahl 1 zu klein                      rc=1 (soll 1)
+   [ok] 164 Manifest: Kommentarzeile direkt nach dem Kopf              rc=1 (soll 1)
+   [ok] 192 TORSE.VBS 0 B in Quelle UND APK                            rc=1 (soll 1)
+   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 261/261, jede Fallzeile [ok] mit rc = soll, innere Proben 148/148 (Mindestzahlen 261/148)
+   Tuer-Soll: Port-Tuerarchiv re15_port/shared_assets/RE15DOOR   30/30 wie die Engine-Tabelle (Groesse, Aufbau, FNV-1a)
+   Tuer-Soll: RE2-Tuerarchiv  re15_port/shared_assets/RE2/DOOR   27/27 wie die Engine-Tabelle (Groesse, Aufbau)
+   SUMME                           3629    3629     3629    357340865
+   RE2/DOOR:  Quelle 27, APK 27, sha256 gleich 27/27
+   RE15DOOR:  Quelle 30, APK 30, sha256 gleich 30/30
+   TORSE.VBS: Quelle 19176 B, APK 19176 B, sha256 gleich
+   Manifest:  3629 Zeilen / 357340865 Bytes (Kopfzeile + Zeilen gegen die APK geprueft)
+   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 3629 Dateien, Quelle = APK = unzip-Zaehlung - 1 = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS gleich, 2 Tuer-Soll-Zeilen g/g
+== APK-PRUEFUNG-OK: <baum>/release/re15_port_v0.8.22-r35test_android.apk.ungeprueft (sha256 crc32 Bytes: 06c8e01c862d28d6451ad520f6531c8bf168e6c012aa739f7d63ef1b84a31ffe 3d157877 364777306) ==
+APK-BAU rc=0

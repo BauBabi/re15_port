@@ -233,8 +233,11 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
   (Emulator-Start + Installation ~20 min; Messweg: `adb install -r`, Speicherordner per `adb shell run-as`/`adb push`
   praeparieren wie `pruefer_echtlauf_r4_2.md` 3.9, Bild per `adb exec-out screencap`). Der APK-Bau mit der vollen
   Kette (Gate + Urteil + Signer) steht unter "APK-Bau".
-- Linux-Lauf des Pruefstands: die Probe uebersetzt unter Linux ohne kompat_win.h (POSIX direkt, `_GNU_SOURCE`); in
-  dieser Sitzung nur unter mingw gelaufen. Naechster Messweg: `release/build_linux_deck.sh` (ctest im Container).
+- (erledigt) Linux-Lauf: Pruefstand, beide C-Tests und beide Szenario-Teile im Container `re15-linux-build:deb11`
+  (gcc 10.2, ext4/overlay = case-SENSITIV, uid 0) - 0 Warnungen, `OK: 63 Pruefungen`, r34a 324/0, anzeige + konflikt
+  bestanden, dieselben Konflikt-Meldungen (Beleg `N_android_belege/pruefstand_linux.txt`). Nicht gelaufen: die
+  Rechte-Faelle (als root ohne Aussage) - Konflikt "nicht raeumbar" ist nur ueber den Code-Pfad (`FEHLER: Konflikt nicht
+  raeumbar` -> n_fehler -> fail closed wie jeder Dateifehler) belegt.
 
 ## Fuer den Nutzer
 - Keine neuen Sprachzeilen, keine neuen Assets (shared_assets unveraendert) - nichts fuers Paket-Gate nachzutragen.
