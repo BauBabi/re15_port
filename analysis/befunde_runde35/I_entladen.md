@@ -564,3 +564,38 @@ r5 (H3 TUERSE) SDL_AUDIODRIVER=dummy RE15_DEBUG_JUMP=1170@5 RE15_FIRE_AOT=5@10#1
    VORHER raum gen=3 raum=1170 | ... ton=2 ... rbj=1 bg_prev=0 re2ton=1 ; EREIGNIS raum gen=4 alle 0
 H1 bg_prev in jedem Lauf: VORHER raum raum=1240 ... bg_prev=1 -> EREIGNIS raum gen=3 ... bg_prev=0.
 ```
+
+### N2 Tests
+Registriert NUR in `tests/unit/probes/r35_entladen.cmake` (Foreach-Listen erweitert):
+| Test | misst | Ergebnis (einzeln, `ctest -R r35_entladen -j3`, 13/13) |
+|---|---|---|
+| unit_r35_entladen_n2beleg (neu) | RE1.5 `8c42c778` @0x8001b3fc, `8c46005c` @0x8001b404, `10c00033` @0x8001b40c, jal 0x8001b3f8 GENAU EINMAL (@0x80039a08, Voll-Scan); RE2 jal 0x80053528 genau @0x8004a334, jal 0x80052b38 @0x80053610, jal 0x8005a09c genau @0x8004a33c, jal 0x80084ec0 @0x8005a108, `a2020000` @0x8005a114 | Passed |
+| integration_r35_entladen_f (neu) | Intro -> 1170 -> echte Tuer 4 -> 1130: Vorbedingung VORHER raum 1170 `rbj=1` + `rbj_datei raum=1170 bytes=55060`, `room 1130 has no RBJ`; VORHER raum 1240 `bg_prev=1`; jede EREIGNIS-Zeile 0, keine BILD-Zeile | Passed 27.5 s |
+| integration_r35_entladen_g (neu) | Leihe K: `Animationsblock von ROOM11B0 geliehen`, VORHER raum 10F0 `rbj=1` ohne rbj_datei, EREIGNIS 0 | Passed 5.1 s |
+| integration_r35_entladen_h (neu) | Boot-Weg: Karte 1170, `loading cinematic bank: RBJ/ROOM1170.RBJ (55060 bytes)`, VORHER raum 1170 `rbj=1` + rbj_datei, EREIGNIS 0 | Passed 22.2 s |
+| integration_r35_entladen_i (neu) | Dummy-Ton, AOT 5 in 1170 (verschlossen): tuerse.log `raum=1170 ... satz=0`, VORHER raum 1170 `re2ton>=1`, EREIGNIS 0 | Passed 3.7 s |
+| integration_r35_entladen_d (erweitert) | + Tod in 1170 mit `rbj=1` + `rbj_datei raum=1170 bytes=55060` (Vorbedingung Mangel 1) | Passed 45.8 s |
+| unit beleg/gegner/n1beleg, integration a/b/c/e | unveraendert (Zeilen jetzt mit 18 Faechern) | Passed |
+
+**Gegenprobe** (N2-Freigaben temporaer auskommentiert: Schritt (11) beide Aufrufe, Schritt (12), bg_prev
+wieder nur an Spielstart/-ende, main.c Zweig "has no RBJ" ohne Loslassen; gebaut als
+`re15_pc_gegenprobe_n2.exe`, danach `git checkout` + Neubau). Pins direkt per `cmake -P` mit dieser exe:
+D/F/G/H/I alle **FAILED** ("nach dem Entladen noch belegt"). Die EREIGNIS-Zeilen der Gegenprobe zeigen
+jeden Mangel einzeln:
+```
+f: EREIGNIS raum gen=4 raum=1170 rbj=1 bg_prev=1        (Tuer 1170 -> 1130; 105 BILD-Zeilen in 1130)
+d: EREIGNIS spielende gen=4 raum=1170 rbj=1 / spielstart gen=5 rbj=1 / raum gen=6 raum=1240 rbj=1 (329 BILD)
+g: EREIGNIS raum gen=4 raum=10F0 rbj=1 bg_prev=1        (Leihe K ueberlebt)
+h: EREIGNIS raum gen=3 raum=1170 rbj=1 / spielende gen=4 rbj=1 / spielstart gen=5 rbj=1  (Boot-Puffer)
+i: EREIGNIS raum gen=4 raum=1170 rbj=1 bg_prev=1 re2ton=1   (TUERSE ueberlebt)
+alle: EREIGNIS raum gen=3 raum=1240 bg_prev=1           (Montage-Schnappschuss ueberlebt die Tuer)
+```
+=> die Gegenprobe reproduziert die gdb-Befunde der Abnahme (r9/r10/r11) mit dem Zensus; die Pins messen
+genau Mangel 1 und H1/H3.
+
+**Aussehen unveraendert (A/B, H1 + RBJ)**: N2-exe gegen Gegenprobe-exe, `RE15_NO_INTRO=1 RE15_NOAUDIO=1
+RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60`, Montage 1240 -> Tuer -> 1170:
+`RE15_FRAMEDUMP=0-60/1:fd_ RE15_EXIT_AT=61#1170` -> **61/61 Bilder bytegleich** (die ersten 61 Bilder
+in 1170 inkl. Tuerbild; Gegenprobe hatte dort bg_prev=1, N2 bg_prev=0), und
+`RE15_FRAMEDUMP=200-1600/100:fd_ RE15_EXIT_AT=1601#1170` -> **15/15 bytegleich** (Helipad, Bild
+1100/1400 hell, Mittelwert 45/46). Rueckleser vor dem Present (gdigrab liefert in dieser Sitzung Weiss).
