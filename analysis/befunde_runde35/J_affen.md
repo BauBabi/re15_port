@@ -1197,3 +1197,51 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 - `szene`: Gang 207/207, Heavy Freigabe + 365 (Original +364), Takt Mittel 52,1 / kuerzester 51, Tod + 1198
   (Original +1193) — unveraendert gegenueber Nachbesserung 2.
 - `schrot`: Exit F275 -> Sub 7 (Original F276), Landung F311 (Original F312), danach SELECTOR, kein Zonen-Sprung.
+
+### Tests (Stand Nachbesserung 3) — probes/r35_affen.cmake unveraendert (17 Eintraege), test_r35_affen.c
+- `griff` erweitert (M1/M2), neue Pruefungen:
+  - M2: e1 T254-T288 <= 40 neben dem Original (Schranke = Anker-Versatz 39); Abstand e1-e2 T256-T264 in 3150..3230
+    und e2-Weg T254->T262 >= 400 (Original 542; vorher 4); Wurf-Bahn jetzt T265-T290 (26 Bilder, die Ausnahme
+    T265-T267 entfaellt), T265-T267 <= 200.
+  - M1: Klemmen-Iteration ab dem Original-T290 = Original-Bahn 124/124 (T291-T414); Riegel-Freigabe = Iteration ab der
+    eigenen T290-Lage (88/88); 24/24 Starts 1-2 Einheiten neben dem Original-T290 enden > 100 neben der Original-
+    Freigabe; die alten Dossier-Zahlen (-4580,-10518)/(-3018,-11651) = Iteration ab (-5374,-10724), dieselbe ab
+    (-5376,-10728) = (-5433,-10693).
+  - Weg 2 (Original-Startzustand T253): e1 T254/T255 bitgleich; Anker (-7507,-10327), Kette T268-T290 23/23, Freigabe
+    T378 (-4759,-10633); Leon T291-T414 124/124 = Original und am Laufende T495 (-3009,-11643) = Original; e1 in Sub 2
+    <= 100 je Bild (vorher ~1300 im Clip-3-Wrap).
+- Die zwei in 1ac1ea84 entfernten Pruefungen (Freigabe <= 400, Ruhelage <= 60) kommen NICHT in Lauf 0 zurueck: dort
+  entscheidet der Anker-Versatz 39 aus dem Anlauf ueber die chaotische Klemmen-Iteration (gemessen, s. M1 (c)); im
+  Lauf Weg 2 gelten sie verschaerft (bitgleich).
+- Diagnose-Teil `fuss` (nur von Hand: `test_r35_affen.exe fuss`, nicht in ctest): Locator je Bild fuer Clip 3/5.
+
+### OFFEN (Stand Nachbesserung 3; ersetzt die Liste "Stand Nachbesserung 2")
+1. **Startversatz im Riegel-Lauf 0 / im Spiel:** e1 steht beim Pin 30 Einheiten / Yaw 2815 statt 2825 neben dem Original
+   (Anlauf T196-T253) -> Anker 39 daneben -> Freigabe chaotisch verschieden (Lauf 0 T378 (-6153,-9995)). Herkunft =
+   die A1-Reste unten (Spieler-Schub-Reihenfolge @0x80031cbc, A/B im selben Bild @0x80117358/78, RNG-a0-Reste).
+   Messweg: Riegel griff Lauf 0 gegen Weg 2 (gleiches Programm, nur der Zustand T253 verschieden).
+2. **e2-Eigenbewegung ab T271** (Kriechen B[3]) bis ~200 neben dem Original, ab T289 Kontakt e1-e2 -> e1 77-116.
+   Gleiche Restursachen wie 1. Messweg: Riegel griff, e2-Tabelle s_e12_orig (bis T302).
+3. **Sub-2-Eintritt (Brustschlag-Rest, Phase 6 -> Sub 2 Bild 0x1d, +0x8f = 7):** Port e1 bis 64 je Bild (T331-T335),
+   Original bis 34. Im Original mischt FUN_8001f3bc die Pool-Pose mit +0x8f gegen die letzte (GPF12/GPL12-Wurzel,
+   FUN_80020510-Winkel, Decompilat Z. 37-57/76-85), die Port-Fusssperre posiert ungemischt (re15_affen_pose_abfrage).
+   Messweg: Fusssperre mit gemischter Pose gegen g_griff F331-F337.
+4. **Clip-Wechsel-Sprung der Fusssperre:** der Port ueberspringt bf50 im Bild eines Clip-Wechsels (s_prev_clip), das
+   Original rechnet die neue Pool-Pose (gemischt) gegen die letzte gerenderte (g_griff F372 -> F373: (46,-43); F373-F377
+   schwingt e1 bis z -15022 aus, Port nicht). Gleicher Messweg wie 3.
+5. Typ-unabhaengige Zombie-Paar-Naeherung in re15_body_push_player (Sub 3..6 waehrend Leon gehalten wird): fuer den
+   Gorilla jetzt ausgenommen; ob sie andere Greifer-Typen (0x20 Hund, 0x21 Kraehe, ...) falsch ausnimmt, ist nicht
+   geprueft (andere Spuren). Beleg fuer das Original: FUN_8002aec4 `and`/`andi 0x1000` @0x8002af14-1c.
+6. Weiter offen aus Nachbesserung 2 (unveraendert): Spieler-Schub-Reihenfolge (@0x80031cbc); A/B im selben Bild
+   (@0x80117358/@0x80117378); RNG-a0 an Path-B-Muenze @0x801180a8, B[7]-Anlauf @0x8011898c, B[1], B[4] im
+   A[3]->4-Wechselbild, Spieler-Ziehungen; dz-Rundung in climb_common.c:360 / enemy_ai_re2_spider.c:257
+   (@0x800246ac); NPC-Klemme +0x82 in Szenen hinter Flags; Knockdown-Sonde spielweit nur in 11C0; Gorilla-Schatten
+   (Box[6]+100/+200 @0x801171d8-ec); Heckklappe dunkler (@0x8002c254); Member_set 0x13 in anderen Raeumen.
+
+### Fuer den Nutzer (Stand Nachbesserung 3)
+- Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
+- Spuerbar neu: (1) Packt ein Gorilla Leon, springt er jetzt wie im Original mit dem ganzen Koerper auf ihn zu (vorher
+  blieb er beim Zupacken an Ort und Stelle stehen) und schiebt dabei den zweiten Gorilla zur Seite. (2) Der zweite
+  Gorilla schiebt Leon beim Wurf wie im Original an. (3) Am Ende des Brustschlags springt der Gorilla nicht mehr ~13 m
+  ueber den Platz; nach einem Wurf bleiben beide Gorillas wie im Original zwischen den Wagen haengen, statt Leon
+  gleich wieder zu beissen.
