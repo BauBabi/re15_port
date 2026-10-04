@@ -14,7 +14,9 @@ hat weder Entpacker noch APK). Belege sind hier Messungen (Geometrie-Rechnung, T
 Mutanten-Lauf des Gates) und Quelltext-Zeilen des Ports, keine @0x-Adressen. Jede Zahl im Code wird
 mit ihrer Herleitung (Messung/Zeile) kommentiert.
 
-Status: FERTIG bis auf die Suite-Zeile (unten "Abschluss"). Kurz: (1) Schrift aus Hoehe UND Breite - auf dem
+Status: FERTIG (Abschluss unten); Nachbesserung 1 nach Abnahme 0 am Ende (M1-M3: Urteil-Mutator mutiert jetzt auch
+Zeichenketten/Regex-Muster, 243 Faelle / 781 von 785 Mutanten, 32/32 simulierte Aenderungen; bash-Urteil mit
+Kontrollen N10-N21, Streich-Messung 17/17; Doku auf den gemessenen Umfang). Kurz: (1) Schrift aus Hoehe UND Breite - auf dem
 Emulator 2400x1080 Titel und laengster Fehlertext vollstaendig; (2) Datei<->Ordner-Konflikte werden im selben Start
 geraeumt (Pruefstand am echten Code + Emulator), abgesichert durch Leser-Regeln R1/R2 in Geraet, Gate und Gradle;
 (3) das Urteil ist ausgelagert, gepinnt, an 119 Faellen und 260 eigenen Mutanten selbstgeprueft, vor jeder Nutzung und
@@ -295,7 +297,9 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
   anderer Spuren): `"$PY" release/apk_asset_gate.py --selbsttest` (jetzt 261/261, 148/148) und den neuen sha256 in
   `release/apk_asset_gate.sha256` - wie bisher. Wer `release/gate_urteil.py` aendert: `--selbsttest` muss
   `URTEIL-SELBSTTEST-OK` melden (sonst einen Fall fuer die neue Regel schreiben), dann sha256 in
-  `release/gate_urteil.sha256`. Merge-Hinweis: diese Spur aendert apk_asset_gate.py (Proben/Faelle/R1/R2) und dessen
+  `release/gate_urteil.sha256` und ggf. `GATE_URTEIL_MIN_*` (Stand Nachbesserung 1: 243 / 781 / <= 4,
+  Pin `c8fed5ca...`). Wer eine Pruefzeile des bash-Urteils in apk_pruefen.sh aendert: eine Kontrolle in
+  test_r35_android_pruefkette.sh (Werkzeug fuer die Streich-Messung: N_android_belege/werkzeug/kette_streichen.sh). Merge-Hinweis: diese Spur aendert apk_asset_gate.py (Proben/Faelle/R1/R2) und dessen
   Pin - traegt der Orchestrator parallel PFLICHT_DATEI-Zeilen ein, danach Selbsttest + Pin neu.
 - Jede vor diesem Stand gebaute APK besteht die Kette weiter nur, wenn ihr Manifest R1/R2 erfuellt (alle bisherigen:
   kein Segment `*.neu`, keine Datei+Ordner-Paare - am Quellbaum geprueft: `--quellbaum` 3629 Dateien OK).
@@ -434,3 +438,14 @@ als zu weit markiert. Was main()/urteil_rufen() angeht: deren Fehler faengt die 
   Pfad, "Ungueltige Option"); B0 war rot (`build.gradle fehlt`) und hat das sofort gezeigt - Anlauf verworfen, mit
   `MSYS_NO_PATHCONV=1` neu. Der abgebrochene Lauf lebte nach TaskStop weiter (MSYS-Prozessbaum); nur dessen eigene
   Nachfahren (Elternkette ab der eigenen PID) beendet, nichts Fremdes.
+
+### Nachbesserung 1 - Tests und Querpruefungen
+- `release/gate_urteil.py --selbsttest` unter Python 3.10.11 (python_finden.sh), 3.9.0 und 3.14.7 (msys64): jeweils
+  `== URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet ==` (~4 s).
+- `release/apk_asset_gate.py` unveraendert (Pin `f73c3b1a...`, Selbsttest 261/261, 148/148 - in der Kette P1).
+- ctest `unit_r35_android_pruefkette` = die Kette oben (P0-P3, N1-N21); die anderen r35_android-Tests (anzeige,
+  konflikt, abgleich) und Punkt 1/2 sind von der Nachbesserung nicht beruehrt (kein C-Code geaendert).
+- Geaenderte Dateien: release/gate_urteil.py (+ .sha256), release/apk_pruefen.sh (Mindestzahlen + Kopfkommentar, keine
+  Pruefzeile geaendert), re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh, probes/r35_android.cmake
+  (nur Kommentar), re15_port/platform/android/README.md, Dossier + Belege. Nicht: RELEASE_NOTES.md, make_package.sh,
+  tests/*/CMakeLists.txt, Engine.
