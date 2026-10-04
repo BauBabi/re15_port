@@ -97,18 +97,20 @@ void re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latch)
         re15_clip_root_motion_abs_pub(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
 }
 
-/* (11)/(12) POOL DES GORILLAS + ZEICHENSTAND (re15_affen.h (11)/(12)).
- *   jetzt   = Knochenkette aus dem Pool nach dem letzten anim_set (FUN_8001f3bc: Ueberblendung mit +0x8f VOR dem
- *             Abbau, Decompilat Z. 40-61 / 77-88, Rate 0x200 = a3 der Gorilla-Aufrufe, z.B. @0x80118320);
- *   zeichen = die Kette, die der Zeichner am Ende des Vorticks in Record+0x40 komponierte (@0x8001d108), mit Lage/Yaw
- *             von damals (RotMatrix(+0x68 -> +0x20) nur in FUN_8001e8c8). */
+/* (11)/(12) POOL DES GORILLAS + ZEICHENSTAND (re15_affen.h (11)/(12)/(13)).
+ *   jetzt   = Pool nach dem letzten anim_set: Winkel (Record+0x60) und Wurzel (Record0+0x2c..+0x34) wie FUN_8001f3bc
+ *             (Ueberblendung mit +0x8f VOR dem Abbau, Rate 0x200 = a3 der Gorilla-Aufrufe, z.B. @0x80118320);
+ *   zeichen = der Pool, den der Zeichner am Ende des Vorticks in Record+0x40 komponierte (@0x8001d108), mit Lage und
+ *             +0x68 von damals (RotMatrix(+0x68 -> +0x20) nur in FUN_8001e8c8).
+ * (13) Nachbesserung 5: die Ketten werden wie im Original auf der GTE gerechnet (affen_kette), Entity-Matrix zuerst. */
 typedef struct {
-    re15_actor_t     blend;                           /* Schatten-Aktor: prev_angles/prev_root = Pool-Winkel/-Wurzel */
-    re15_skel_pose_t jetzt[RE15_EMD_MAX_BONES];
-    re15_skel_pose_t zeichen[RE15_EMD_MAX_BONES];
-    int32_t zx, zy, zz; int16_t zrot;
-    uint8_t jetzt_ok, zeichen_ok;
-} re15_affen_pool_t;
+    int16_t ang[RE15_EMD_MAX_BONES][3];               /* Record+0x60 (RotMatrix-Eingang, FUN_8001f3bc Z. 66-87) */
+    int32_t root[3];                                  /* Record0+0x2c..+0x34 (Wurzel-t, Z. 28-61) */
+    int32_t x, y, z;                                  /* +0x34..+0x3c = t-Spalte von +0x20 */
+    int16_t rx, ry, rz;                               /* +0x68..+0x6c (RotMatrix in FUN_8001e8c8) */
+    uint8_t ok;
+} affen_stand_t;
+typedef struct { affen_stand_t jetzt, zeichen; } re15_affen_pool_t;
 static re15_affen_pool_t s_pool[RE15_ACTOR_MAX];
 
 static re15_affen_pool_t *affen_pool(const re15_actor_t *e)
@@ -117,53 +119,136 @@ static re15_affen_pool_t *affen_pool(const re15_actor_t *e)
     return (s >= 0 && s < RE15_ACTOR_MAX) ? &s_pool[s] : NULL;
 }
 
+void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9]);   /* skeleton_common.c: RotMatrix @0x80068130 byte-true */
+
+static int32_t affen_ir(int64_t mac)                  /* IR1..3 bei lm = 0: Saettigung auf 16 Bit */
+{
+    return (int32_t)(mac > 0x7fff ? 0x7fff : (mac < -0x8000 ? -0x8000 : mac));
+}
+
+/* FUN_80022da0 (PSX.EXE, selbst disassembliert): R' = M.R * L.R spaltenweise ueber `lhu`/`mtc2` IR1..3 (16 Bit mit
+ * Vorzeichen) + MVMVA 0x4a49e012 (sf=1, RT*IR, kein Zusatz, lm=0) @0x80022df0/@0x80022e38/@0x80022e84, `sh` der IR;
+ * t' = (TR<<12 + M.R*V0) >> 12 ueber `lw`/`ctc2` TR (32 Bit) @0x80022eb0-c4, V0 = 16-Bit-Haelften von L.t (`lhu` /
+ * `lwc2` @0x80022ecc-e0), MVMVA 0x4a480012 (sf=1, RT*V0+TR) @0x80022eec, `swc2` MAC1..3 (32 Bit) @0x80022ef8-f00. */
+static void affen_comp(int32_t mr[9], int32_t mt[3], const int32_t lr[9], const int32_t lt[3])
+{
+    int32_t r[9], t[3];
+    for (int col = 0; col < 3; col++)
+        for (int row = 0; row < 3; row++)
+            r[row * 3 + col] = affen_ir(((int64_t)(int16_t)mr[row * 3 + 0] * (int16_t)lr[0 * 3 + col] +
+                                         (int64_t)(int16_t)mr[row * 3 + 1] * (int16_t)lr[1 * 3 + col] +
+                                         (int64_t)(int16_t)mr[row * 3 + 2] * (int16_t)lr[2 * 3 + col]) >> 12);
+    for (int row = 0; row < 3; row++)
+        t[row] = (int32_t)((((int64_t)mt[row] << 12) + (int64_t)(int16_t)mr[row * 3 + 0] * (int16_t)lt[0] +
+                            (int64_t)(int16_t)mr[row * 3 + 1] * (int16_t)lt[1] +
+                            (int64_t)(int16_t)mr[row * 3 + 2] * (int16_t)lt[2]) >> 12);
+    memcpy(mr, r, sizeof r); memcpy(mt, t, sizeof t);
+}
+
+/* Welt-t des Knochens `bone` wie Zeichner/Fuss-Sperre: m = +0x20 = RotMatrix(+0x68) * ScaleMatrix(+0x166) (FUN_8001e8c8;
+ * ScaleMatrix je Element `(short)m * s >> 12`, ScaleMatrix-Decompilat), t = Lage; dann CompMatrix mit Record+0x18 von der
+ * Wurzel abwaerts (FUN_8001ef54/FUN_8001e9ec `FUN_80022da0(rec[0x1b], rec+0x18, rec+0x40)`; FUN_8011bf50 `jal 0x80022da0`
+ * @0x8011bf80/a4/b4/c4). Record+0x18 = RotMatrix(Record+0x60) (FUN_8001f3bc), t = Wurzel bzw. EMR-Versatz.
+ * a1 != NULL: zusaetzlich FUN_8001bff8 = CompMatrix(Record+0x40, (I | a1)) (@0x8001c058-78). */
+static int affen_kette(const re15_emd_skeleton_t *sk, const affen_stand_t *S, int bone, int16_t scale,
+                       const int32_t *a1, int32_t out[3])
+{
+    int ch[RE15_EMD_MAX_BONES], n = 0;
+    for (int b = bone; n < RE15_EMD_MAX_BONES; ) {
+        ch[n++] = b;
+        int p = (int)sk->bone_parent[b];
+        if (p < 0 || p >= b) break;
+        b = p;
+    }
+    int32_t mr[9], mt[3] = { S->x, S->y, S->z };
+    re15_skel_euler_matrix_for_test(S->rx, S->ry, S->rz, mr);
+    if (scale)
+        for (int k = 0; k < 9; k++) mr[k] = (int16_t)(((int32_t)(int16_t)mr[k] * (int32_t)scale) >> 12);
+    for (int i = n - 1; i >= 0; i--) {
+        int b = ch[i];
+        int32_t lr[9], lt[3];
+        re15_skel_euler_matrix_for_test(S->ang[b][0], S->ang[b][1], S->ang[b][2], lr);
+        if (i == n - 1) { lt[0] = S->root[0]; lt[1] = S->root[1]; lt[2] = S->root[2]; }
+        else for (int k = 0; k < 3; k++) lt[k] = (int32_t)sk->bone_relative_pos[b][k];
+        affen_comp(mr, mt, lr, lt);
+    }
+    if (a1) {
+        static const int32_t id[9] = { 0x1000, 0, 0, 0, 0x1000, 0, 0, 0, 0x1000 };   /* 0x80072d4c */
+        affen_comp(mr, mt, id, a1);
+    }
+    out[0] = mt[0]; out[1] = mt[1]; out[2] = mt[2];
+    return n;
+}
+
+/* FUN_80020510 + LoadAverageShort12: prev auf 12 Bit maskiert, kf auf +-0x800 um prev gefaltet, dann `gpf12_b`
+ * (IR0 = 0x200*frac, prev) und `gpl12_b` (IR0 = 0x1000 - 0x200*frac, kf) = zwei getrennte >> 12. */
+static int16_t affen_winkel(int prev, int kf, int wp)
+{
+    prev &= 0xfff;
+    unsigned d = (unsigned)(uint16_t)((kf - prev) + 0x800);
+    if (d > 0x1000u) kf += (d & 0x8000u) ? 0x1000 : -0x1000;
+    return (int16_t)affen_ir((int64_t)((prev * wp) >> 12) + ((kf * (0x1000 - wp)) >> 12));
+}
+
 void re15_affen_pool_anim(re15_actor_t *e)
 {
     re15_affen_pool_t *P = affen_pool(e);
     re15_enemy_bank_t *b = re15_enemy_find(0x27);
     if (!P) return;
-    P->jetzt_ok = 0;
-    if (!b || !b->ok || (int)e->motion >= b->anim.clip_count) return;
+    affen_stand_t *J = &P->jetzt;
+    if (!b || !b->ok || (int)e->motion >= b->anim.clip_count) { J->ok = 0; return; }
     const re15_emd_clip_t *c = &b->anim.clips[e->motion];
-    if (c->frame_count <= 0) return;
+    if (c->frame_count <= 0) { J->ok = 0; return; }
     int kf = (int)(b->anim.frames[c->first_frame + (int)e->anim_frame % c->frame_count] & 0xFFFu);   /* +0x95 VOR dem Vorschub @0x8001f344 */
-    P->blend.type = 0x27; P->blend.hurt_bend_bone = -1; P->blend.neck_bone = 0;
-    P->blend.anim_blend_rate = 0x200;                 /* FUN_8001f314 a3 = 0x200 (@0x80118320 u.a.) */
-    P->blend.anim_frac = e->anim_frac;                /* +0x8f vor dem Abbau (Decompilat Z. 23 / Z. 78) */
-    void *pa = g_anim_pose_actor; re15_kf_tween_t tw = g_anim_kf_tween;
-    g_anim_pose_actor = &P->blend; g_anim_kf_tween.active = 0;
-    int rc = re15_skel_compute_pose(&b->skel, kf, P->jetzt);
-    g_anim_pose_actor = pa; g_anim_kf_tween = tw;
-    P->jetzt_ok = (rc == 0);
+    int frac = (int)e->anim_frac;                     /* +0x8f vor dem Abbau (Decompilat Z. 23 / Z. 78) */
+    int wp = frac * 0x200;                            /* FUN_8001f314 a3 = 0x200 (@0x80118320), 5. Argument @0x8001f380-88 */
+    int misch = (frac != 0 && J->ok);
+    int16_t px = 0, py = 0, pz = 0;
+    re15_emd_get_keyframe_position(&b->skel, kf, &px, &py, &pz);
+    int32_t kr[3] = { px, py, pz };
+    for (int k = 0; k < 3; k++)                       /* frac 0: Wurzel := kf (Z. 28-37); sonst gpf12 + gpl12 (Z. 40-61) */
+        J->root[k] = misch ? affen_ir((int64_t)((kr[k] * (0x1000 - wp)) >> 12) + (((int32_t)(int16_t)J->root[k] * wp) >> 12))
+                           : kr[k];
+    for (int bn = 0; bn < b->skel.bone_count && bn < RE15_EMD_MAX_BONES; bn++) {
+        int16_t ax = 0, ay = 0, az = 0;
+        re15_emd_get_keyframe_angles(&b->skel, kf, bn, &ax, &ay, &az);
+        if (misch) {                                  /* FUN_80020510(r, kf, r, 0x1000 - 0x200*frac) (Z. 77-87) */
+            J->ang[bn][0] = affen_winkel(J->ang[bn][0], ax, wp);
+            J->ang[bn][1] = affen_winkel(J->ang[bn][1], ay, wp);
+            J->ang[bn][2] = affen_winkel(J->ang[bn][2], az, wp);
+        } else {                                      /* Record+0x60 := Record+0x78 (Z. 66-72) */
+            J->ang[bn][0] = ax; J->ang[bn][1] = ay; J->ang[bn][2] = az;
+        }
+    }
+    J->ok = 1;
 }
 
 void re15_affen_zeichen_merk(const re15_actor_t *e)
 {
     re15_affen_pool_t *P = affen_pool(e);
     if (!P) return;
-    if (P->jetzt_ok) memcpy(P->zeichen, P->jetzt, sizeof P->zeichen);
-    P->zeichen_ok = P->jetzt_ok;
-    P->zx = e->x; P->zy = e->y; P->zz = e->z; P->zrot = e->rot_y;
+    P->zeichen = P->jetzt;
+    P->zeichen.x = e->x; P->zeichen.y = e->y; P->zeichen.z = e->z;
+    P->zeichen.rx = e->rot_x; P->zeichen.ry = e->rot_y; P->zeichen.rz = e->rot_z;
 }
 
 /* FUN_8011bf50 / FUN_8011c024: m = +0x20 * Kette(jetzt) (@0x8011bf80-c4), rec[84]/[92] = Welt-t des Zeichners;
- * +0x34 -= m.tx - rec[84] (@0x8011bfd4-e8), +0x3c -= m.tz - rec[92] (@0x8011bfec-c008). +0x20 traegt die Yaw des
- * Zeichners und die LAUFENDE Lage (+0x34/+0x3c = Matrix-t) -> Ergebnis = Zeichenlage - R*S*(jetzt - zeichen). */
+ * +0x34 -= m.tx - rec[84] (@0x8011bfd4-e8), +0x3c -= m.tz - rec[92] (@0x8011bfec-c008). +0x20 traegt +0x68 des
+ * Zeichners und die LAUFENDE Lage (+0x34/+0x3c = Matrix-t). */
 int re15_affen_fusssperre(re15_actor_t *e, int bone)
 {
     re15_affen_pool_t *P = affen_pool(e);
     re15_enemy_bank_t *b = re15_enemy_find(0x27);
     if (!P || !b || !b->ok) return 0;
     if (bone < 0 || bone >= b->skel.bone_count) return 1;
-    if (!P->jetzt_ok || !P->zeichen_ok) return 1;
-    int32_t d[3], w[3];
-    for (int k = 0; k < 3; k++) d[k] = P->jetzt[bone].trans[k] - P->zeichen[bone].trans[k];
-    re15_skel_bone_to_world(d, P->zrot, 0, 0, 0, w);
-    if (e->render_scale_q12) {                        /* ScaleMatrix +0x166 (FUN_8001e8c8) */
-        w[0] = (w[0] * (int32_t)e->render_scale_q12) >> 12;
-        w[2] = (w[2] * (int32_t)e->render_scale_q12) >> 12;
-    }
-    int32_t dx = w[0] + (e->x - P->zx), dz = w[2] + (e->z - P->zz);   /* m.t - rec[84/92] */
+    if (!P->jetzt.ok || !P->zeichen.ok) return 1;
+    affen_stand_t S = P->jetzt;                       /* Pool jetzt, Matrix +0x20 des Zeichners, t = laufende Lage */
+    S.rx = P->zeichen.rx; S.ry = P->zeichen.ry; S.rz = P->zeichen.rz;
+    S.x = e->x; S.y = e->y; S.z = e->z;
+    int32_t m[3], rec[3];
+    affen_kette(&b->skel, &S, bone, e->render_scale_q12, NULL, m);
+    affen_kette(&b->skel, &P->zeichen, bone, e->render_scale_q12, NULL, rec);
+    int32_t dx = m[0] - rec[0], dz = m[2] - rec[2];   /* m.t - rec[84/92] */
     e->x -= dx;                                       /* @0x8011bfe4-e8 */
     e->z -= dz;                                       /* @0x8011c004-08 */
     re15_affen_fuss_log((int)(e - g_actors), (int)e->motion, (int)e->anim_frame, bone, 0, 0, dx, dz, e->rot_y);
@@ -175,18 +260,25 @@ int re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3])
 {
     re15_affen_pool_t *P = affen_pool(e);
     re15_enemy_bank_t *b = re15_enemy_find(0x27);
-    if (!P || !b || !b->ok || !P->zeichen_ok || bone < 0 || bone >= b->skel.bone_count) return 0;
-    int32_t vx = (bone == 9) ? 0x64 : 0;              /* B[5] Knochen 9 @0x80118380-84, sonst (0,0,0) aus 0x80072d60 */
-    int32_t v[3], w[3];
-    for (int k = 0; k < 3; k++)
-        v[k] = P->zeichen[bone].trans[k] + (int32_t)(((int64_t)P->zeichen[bone].rot[k * 3] * vx) >> 12);
-    re15_skel_bone_to_world(v, P->zrot, 0, 0, 0, w);
-    if (e->render_scale_q12) {
-        w[0] = (w[0] * (int32_t)e->render_scale_q12) >> 12;
-        w[2] = (w[2] * (int32_t)e->render_scale_q12) >> 12;
-    }
-    out[0] = P->zx + w[0]; out[1] = P->zy + w[1]; out[2] = P->zz + w[2];
+    if (!P || !b || !b->ok || !P->zeichen.ok || bone < 0 || bone >= b->skel.bone_count) return 0;
+    const int32_t a1[3] = { (bone == 9) ? 0x64 : 0, 0, 0 };   /* B[5] Knochen 9 @0x80118380-84, sonst (0,0,0) aus 0x80072d60 */
+    affen_kette(&b->skel, &P->zeichen, bone, e->render_scale_q12, a1, out);
     return 1;
+}
+
+/* Riegel-Zugang (nur Tests): Elternkette eines Knochens wie affen_kette (Wurzel zuletzt). */
+int re15_affen_kette_test(int bone, int out[RE15_EMD_MAX_BONES])
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    if (!b || !b->ok || bone < 0 || bone >= b->skel.bone_count) return 0;
+    int n = 0;
+    for (int k = bone; n < RE15_EMD_MAX_BONES; ) {
+        out[n++] = k;
+        int p = (int)b->skel.bone_parent[k];
+        if (p < 0 || p >= k) break;
+        k = p;
+    }
+    return n;
 }
 
 /* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50

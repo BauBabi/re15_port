@@ -260,4 +260,16 @@ int      re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3]
 void     re15_affen_pool_anim(re15_actor_t *e);
 int      re15_affen_fusssperre(re15_actor_t *e, int bone);
 
+/* (13) KETTE AUF DER GTE (Nachbesserung 5, P1). Zeichner (FUN_8001ef54/FUN_8001e9ec), Fuss-Sperre (FUN_8011bf50/c024)
+ *      und Trefferpunkt (FUN_8001bff8) rechnen die Knochen-Weltlage als CompMatrix-Kette FUN_80022da0, die ENTITY-MATRIX
+ *      +0x20 = RotMatrix(+0x68) * ScaleMatrix(+0x166) als ERSTER Faktor (FUN_8001e8c8), dann Record+0x18 von der Wurzel
+ *      abwaerts. Jede Stufe rundet auf der GTE: R' ueber MVMVA 0x4a49e012 (sf=1, IR 16 Bit gesaettigt) @0x80022df0/
+ *      @0x80022e38/@0x80022e84, t' = (TR<<12 + R*V0) >> 12 ueber MVMVA 0x4a480012 @0x80022eec, V0 = 16-Bit-Haelften
+ *      (`lhu`/`lwc2` @0x80022ecc-e0). Der Port rechnete bis Nachbesserung 4 die Kette im Objektraum (ohne +0x20), bildete
+ *      die Differenz und drehte/skalierte zuletzt — je Tick 1-4 Einheiten neben dem Original (GDB jnb5/g_stufe, Fuss-
+ *      Sperre F196 e1 (-39,75) gegen Port (-37,75)). Dazu die Pool-Ueberblendung mit zwei getrennten >> 12: Wurzel
+ *      `gpf12`/`gpl12` (FUN_8001f3bc Z. 40-61), Winkel FUN_80020510 -> LoadAverageShort12 `gpf12_b`/`gpl12_b`.
+ *      re15_affen_kette_test: Elternkette eines Knochens (nur Riegel). */
+int      re15_affen_kette_test(int bone, int out[RE15_EMD_MAX_BONES]);
+
 #endif /* RE15_AFFEN_H */
