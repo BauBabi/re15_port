@@ -14383,7 +14383,12 @@ void re15_enemy_spawn_root(int slot)
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return;
     if (e->type != 0x30 && e->type != 0x36) return;
-    if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) return;   /* G5-Modul */
+    if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {   /* G5-Modul */
+        /* Runde 35 Spur C: +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC (HP 600 @0x801003fc) */
+        extern void re15_g5_boss_spawn(int slot);
+        re15_g5_boss_spawn(slot);
+        return;
+    }
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
     re15_birkin_root(slot);                             /* @0x8004259c jalr 0x80072bac[typ] */

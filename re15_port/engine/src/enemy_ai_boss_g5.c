@@ -1414,6 +1414,25 @@ int re15_g5_boss_active(const re15_actor_t *e)
            ((g_current_room_id & 0xFFFEu) == 0x5090u);
 }
 
+/* JEDER SPAWN = NEUER KONSTRUKTOR (Runde 35 Spur C, Nachbesserung 1 M1, Dossier
+ * analysis/befunde_runde35/C_zgirl.md). Selbst disassembliert:
+ *   PSX.EXE Sce_em_set  800421e0  sw   zero,4(s0)   (04 00 00 ae)  ; +0x4..+0x7 = 0 am neuen Entity
+ *   RE2 EM36-Main       80100164  lbu  v0,4(s3)                   ; Routine +0x4
+ *                       80100178  lw   v0,21964(at)               ; Tabelle @0x801055CC, [0] = 0x801003CC
+ *   Konstruktor         801003e8  sw   v0,4(s0)     (04 00 02 ae)  ; +0x4 = 1 (v0 = 1 @0x801003d8)
+ *                       801003fc  addiu v0,zero,600 (58 02 02 24) / 80100400 sh v0,342(s0) ; HP 600
+ * Jeder Sce_em_set baut den Boss also neu auf, auch der zweite im selben Raum: die Selbst-Tueren
+ * von ROOM5090 laden den Raum neu (@0x8001d988 `jal 0x800396fc`), sub00 spawnt ihn erneut
+ * (@0x0124A). Der Port fuehrt +0x4 im Modul (s_g5.aktiv/routine), nicht im Aktor; bisher lief der
+ * Konstruktor nur bei neuem Slot oder inaktivem Modul, und der zweite Spawn (gleicher Slot) behielt
+ * die HP 0 aus op_sce_em_set -> Tod beim Kampfstart. Gerufen aus dem Spawn-Haken
+ * re15_enemy_spawn_root (enemy_ai_common.c), der Konstruktor laeuft im naechsten Tick. */
+void re15_g5_boss_spawn(int slot)
+{
+    (void)slot;
+    s_g5.aktiv = 0;                                    /* +0x4 = 0 @0x800421e0 -> Ctor faellig */
+}
+
 void re15_g5_boss_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];

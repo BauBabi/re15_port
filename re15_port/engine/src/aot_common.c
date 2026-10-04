@@ -791,13 +791,15 @@ static int aot_fire_door(int i)
      * startete nie. Wirkung: 10 Selbst-Tueren in Variante-1-Raeumen kommen dazu (ROOM1031
      * Slot 19, ROOM1111 Slots 1-4, ROOM1171 Slots 0/5, ROOM1191 Slot 15, ROOM11A1 Slots
      * 2/3); Leons 11 (Variante 0: g_current_room_id & 0xF == 0) bleiben unveraendert.
-     * BEWUSST NICHT verallgemeinert: Stage >= 2 und Raum 0 (46 weitere Selbst-Tueren, 24
-     * davon in Leons Raeumen) — byte-true waere es (@0x8001d988 unbedingt), aber es aendert
-     * Leons Verhalten und gehoert in eine eigene Runde mit eigener Messung.
-     * Runde 35 Spur C (analysis/befunde_runde35/C_zgirl.md): verallgemeinert. Hier kommt nur an,
-     * wessen dest_id (oben, mit dest_stage) == aktueller Raum ist; @0x8001d968 vergleicht nur die
-     * Stage, @0x8001d988 `jal 0x800396fc` laedt unbedingt. Das Zombie-Maedchen (ROOM4050 Cut 9/14)
-     * erreicht man NUR ueber die Selbst-Tueren 6/7; Stage 1 (21/21) bleibt unveraendert. */
+     * Runde 30 liess Stage >= 2 noch aus (46 weitere Selbst-Tueren) und verlangte dafuer eine
+     * eigene Messung. Runde 35 Spur C hat sie gemacht (analysis/befunde_runde35/C_zgirl.md):
+     * jetzt steigt JEDE Selbst-Tuer neu ein. Hier kommt nur an, wessen dest_id (oben, mit
+     * dest_stage) == aktueller Raum ist; @0x8001d968 vergleicht nur die Stage, @0x8001d988
+     * `jal 0x800396fc` laedt unbedingt. Das Zombie-Maedchen (ROOM4050 Cut 9/14) erreicht man NUR
+     * ueber die Selbst-Tueren 6/7; Stage 1 (21/21) bleibt unveraendert. Die Messung fand auch die
+     * Port-Zustaende, die bisher nur der Raumwechsel zuruecksetzte: G5-Konstruktor
+     * (enemy_ai_boss_g5.c re15_g5_boss_spawn, ROOM5090) und Spawn-Zaehler @0x8003f014
+     * (scd_room_setup.c scd_room_reenter); beide setzt jetzt auch der Wiedereintritt. */
     g_scd_pending_scenario = (int)d->target_cut;
     /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ. RE1.5 startet hier die Tuermaschine
      * (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript

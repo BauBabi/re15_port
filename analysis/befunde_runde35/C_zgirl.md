@@ -289,3 +289,63 @@ Betroffene Raeume (selbsttuer_zensus.py, `port_neu=0` vor U1): ROOM2040/2041 (Sl
 6030/6031 (0,1).
 
 ### M1 — Endkampf ROOM5090: Boss-HP 0 nach Selbst-Tuer (in Arbeit)
+
+**Ursache (gelesen):** op_sce_em_set setzt `a->hp = 0` (scd_vm.c, Sce_em_set traegt keine HP). Den
+G5 baut das Port-Modul enemy_ai_boss_g5.c; sein Konstruktor (HP 600) lief nur bei
+`s_g5_slot != slot || !g->aktiv`. Der zweite Spawn nach einer Selbst-Tuer landet im selben Slot 2
+bei aktivem Modul -> kein Konstruktor -> HP 0 -> Todes-Trigger `e->hp <= 0` beim Kampfstart.
+Das Modul fuehrt +0x4 nicht im Aktor: state.log zeigt fuer den Boss durchgehend `st=0`.
+
+**Messung vorher (Abnahme-Laeufe, scratchpad/c_mess, eigene Auswertung g5_log.py):**
+```
+o3_5090_kampf (U1):        F101 hp=600 -> F201 (nach FIRE_AOT 2) hp=0 -> F408 cam=15 mo=6 hp=-1, mo 7/8/10, x bleibt -9000
+basis_o3_5090_kampf:       F201 hp=600 -> F408 mo=1 hp=600, F587 x=-3891, F679 mo=3 x=-1986 (Boss laeuft an)
+o3_5090_echt (U1):         Boss hp=0 im ganzen Lauf;  basis_o3_5090_echt: hp=600 ab F100
+```
+
+**RE-Beleg (selbst disassembliert):**
+```
+PSX.EXE  Sce_em_set 800421e0  sw   zero,4(s0)          04 00 00 ae   ; +0x4..+0x7 = 0 am neuen Entity
+RE2 EM36 (CDEMD0.EMS @0x6C0000, 23476 B, md5 b57f8315dc8a = Dossier Runde 6)
+         Main       80100164  lbu  v0,4(s3)                         ; Routine +0x4
+                    80100178  lw   v0,21964(at)                     ; Tabelle @0x801055CC
+         Tabelle    801055cc  {801003cc, 80100784, 801025bc, 80102bbc, 80103834, 0, 0, 80103878}
+         Ctor       801003d8  addiu v0,zero,1 / 801003e8 sw v0,4(s0)   04 00 02 ae ; +0x4 = 1
+                    801003fc  addiu v0,zero,600            58 02 02 24
+                    80100400  sh   v0,342(s0)              56 01 02 a6   ; HP 600 (easy-Bit -> 400 @0x80100414)
+```
+=> Jeder Sce_em_set des G5 fuehrt im naechsten Tick durch den Konstruktor (Routine 0), auch der
+zweite im selben Raum. Das Original laedt bei der Selbst-Tuer neu (@0x8001d988), sub00 @0x0124A spawnt
+ihn erneut -> volle HP.
+
+**Aenderung:** enemy_ai_boss_g5.c neue Funktion `re15_g5_boss_spawn(slot)` setzt `s_g5.aktiv = 0`
+(= +0x4 = 0, Konstruktor faellig); gerufen aus dem vorhandenen Spawn-Haken
+`re15_enemy_spawn_root` (enemy_ai_common.c, G5-Zweig, +4 Zeilen), der nach jedem Sce_em_set laeuft.
+Der Konstruktor selbst ist unveraendert (Tentakel-Reset, HP 600, Intro-Zustand sub 2).
+Nebenwirkung, gleiche Regel: auch Tod + CONTINUE in ROOM5090 (gleicher Slot, Modul aktiv) baut den
+Boss jetzt neu auf.
+
+### M2 — Zensus der neu einsteigenden Raeume (a) und exe-Pin ROOM5090 (b) (in Arbeit)
+
+**(a) Methode.** Der Raumwechsel-Pfad (room_common.c re15_room_apply_pending) und der
+Selbst-Tuer-Pfad (game_step_common.c, Same-Room-Reenter) rufen beide scd_room_reenter
+(= SCD-Raum-Init FUN_8003ef6c). Was NUR der Raumwechsel-Pfad zuruecksetzt, ueberlebt eine Selbst-Tuer —
+das ist die Kandidatenmenge. Dazu je Raum die gespawnten Typen (neues Werkzeug
+`re15_port/tools/r35_zgirl/reentry_zensus.py`, opcode-exakt) und die raumgebundenen Port-Haken
+(grep auf die Raum-Ids im Engine-Code).
+
+Gespawnte Typen (reentry_zensus.py): 2040/2041 keine; 20A0/20A1 0x25 (Adult-Spinne, 4 Records);
+30E0 0x10, 0x11 (sub00), NPC 0x40/0x42 (sub11); 4000 0x29 (Kakerlake), NPC 0x40/0x42; 4050/4051 0x13,
+0x18; 40A0/40A1 0x18; 5090 0x30 (-> 0x36 G5, sub00 @0x0124a) + NPC 0x4d; 5091 0x30; 6030/6031 NPC
+0x40/0x49/0x4b/0x4d. Kein Raum hat Obj_model_set.
+
+Nur im Raumwechsel-Pfad (room_common.c) zurueckgesetzt — Bewertung fuer die Selbst-Tuer:
+| Zustand | Bewertung |
+|---|---|
+| G5-Modul s_g5/s_g5_slot + Tentakel s_tent_bereit (5090/5091) | **brach (M1)**, jetzt ueber re15_g5_boss_spawn je Spawn |
+| Spawn-Zaehler DAT_800aca4e (re15_enemy_reset) | **brach**: Original nullt ihn in FUN_8003ef6c @0x8003f014 `sb zero,-13746(at)` (an @0x80039a00, also auch nach Selbst-Tuer). Leser: geteilter Zombie-Engage @0x801022c4 und Treffer-Rueckkehr @0x80105ea4 (STAGE1; `lbu v0,-13746(v0)` / `sltiu v0,v0,0x5`; STAGE4 -0x4c). In ROOM4050 spawnt jeder Eintritt <= 1 Gegner; der Port zaehlte ueber Selbst-Tueren weiter und waehlte ab 5 die andere Verhaltenstabelle. Jetzt in scd_room_reenter (alle Ladewege). |
+| Kraehen-Schwarm 0x800aca50 (re15_crow_flock_reset) | in den 46 Raeumen kein Typ 0x21 -> ohne Wirkung (Stage-1 ROOM1170 unveraendert) |
+| Opfer-Zustand des Spielers (re15_player_victim_reset), Treppe, Klettern | nicht erreichbar: Griff/Treppe/Klettern/Tod setzen `g_aot_action_pressed = 0` (game_step_common.c), Tueren feuern nur auf Aktion |
+| savepoint/itembox/pauseflags | Bildschirme halten den Spielschritt an; Tuer feuert dort nicht |
+| Modelle/RBJ/Licht/Nachrichten/Bank/BGM | gleicher Raum = gleiche Daten |
+| Kollisionsband | setzt aot_fire_door selbst aus spawn_y (re15_collision_set_band) |
