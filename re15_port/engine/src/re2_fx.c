@@ -1114,7 +1114,7 @@ int re2fx_register_raum(const uint8_t *raw, size_t size)
         s_bank_off[id] = (int32_t)(off | RE2FX_RAUM_MARKE);
         s_tab_off[id]  = (int32_t)(tab | RE2FX_RAUM_MARKE);
         n++;
-        if (n >= 8) break;                             /* `sltiu v0,t0,0x8` */
+        if (n >= 8) break;                             /* `sltiu v0,t0,0x8` @0x8001bd24 / `bne` @0x8001bd28 */
     }
     if (n == 0) return -5;
     s_raum = raw; s_raum_size = size;

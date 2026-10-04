@@ -320,7 +320,10 @@ Commit-Messages 55554779/1e958236 nennen p0/0x18 ebenfalls nicht. Gegenprobe: `g
 * `re15_port/include/re15_fenster1120.h`: Beleg fuer P0 (ROOM1050 @0x0C30 `ff 00`, Zensus 287/287, Semantik
   0x8003ee3c @0x8003ee54/@0x8003ee70) und fuer das Unterbyte 0x18 (ROOM1050 @0x0C32 `18 02`, Zensus 287/287, ungelesen:
   Handler @0x800430fc/@0x80043100, Aot_reset @0x8004079c).
-* `re15_port/engine/src/re2_fx.c`: `sltiu v0,t0,0x8` mit eigener Adresse @0x8001bd24 (`bne v0,zero,0x8001bcc8`
-  @0x8001bd28), an beiden Stellen.
+* `re15_port/engine/src/re2_fx.c` (re2fx_register_raum, Spur-M-Zeile): `sltiu v0,t0,0x8` mit eigener Adresse
+  @0x8001bd24 (`bne v0,zero,0x8001bcc8` @0x8001bd28, RE2 PSX.EXE, re2_disasm.py). Die gleichlautende Stelle in
+  re2fx_register_core (Z. 176) stammt aus master und bleibt unberuehrt, damit der Merge keinen weiteren Konflikt bekommt.
+* Praezisierung zu Punkt 4: Der Scan 0x80042bac liest die Geometrie vor der Nutzlast (Rechteck +4..+0xB, Viereck
+  bis +0x13), nie die Nutzlast selbst.
 
 **Messung nachher.** Siehe unten (Bau, Suite, Spur-Tests).

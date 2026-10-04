@@ -46,12 +46,23 @@
 /* AOT-Slot 4 (Zensus: main00 belegt 0..3, Kamerazonen 48..63, kein Port-Installer in 1120).
  * Form = RE2 room1090 sub03 @0x0014 `2c 06 05 41 ...`: AUTO-Ausloeser sat 0x41 (Bit 0x10 frei =
  * AUTO-Pass FUN_80042bac @0x80042ca4, 0x40 = CENTRE-Test). RE1.5-Form des Ereignis-Platzes =
- * sce 3 (Typtabelle @0x8007469c[3] = 0x800430f0, Ereignis in Nutzlast-Byte 3 @0x80043100). */
+ * sce 3 (Typtabelle @0x8007469c[3] = 0x800430f0, Ereignis in Nutzlast-Byte 3 @0x80043100).
+ * Nutzlast p0/p1 = Original-Satzform: ROOM1050.RDT sub00 @0x0C22 `2c 07 03 31 ... ff 00 18 02 00 00`
+ * (p0 @0x0C30 `ff 00`, p1 @0x0C32 `18 02`). Spielweiter Zensus (aot_sce_census.py, 240 RDTs, Abdeckung
+ * 100 %): alle 287 sce-3-Saetze tragen p0 = 0x00FF und p1-Unterbyte 0x18, davon 54+9 mit sat 0x41
+ * (z.B. ROOM1020 main00 @0x1E18 `... ff 00 18 03 00 00`); RE2 room1090 sub03 @0x0022 ebenso `ff 00 18 0f`.
+ *   p0: der Handler gibt es als a0 weiter (`lhu a0,0(v0)` @0x800430fc -> `jal 0x8003ee3c` @0x80043104);
+ *       0x8003ee3c: a0 < 10 = fester Faden-Platz (`sltiu v0,a2,0xa` @0x8003ee54), a0 >= 10 = erster freier
+ *       Ereignis-Faden (Platz 2 @0x8003ee70, sonst Suche 3..9 @0x8003ee74-a0). 0x00FF waehlt den freien
+ *       Faden = scd_event_fire (erster freier Ereignis-Faden).
+ *   0x18 (Nutzlast +2): von RE1.5 nie gelesen — der sce-3-Handler liest nur +0 und +3 (@0x800430fc/
+ *       @0x80043100), Aot_reset LAB_80040738 schreibt +2 nur (`sh v0,2(v1)` @0x8004079c), der Scan
+ *       0x80042bac liest nur die Geometrie davor. Reine Satzform, woertlich wie die 287 Originale. */
 #define RE15_FENSTER_SLOT          4
 #define RE15_FENSTER_SCE           3
 #define RE15_FENSTER_SAT           0x41
-#define RE15_FENSTER_P0            0x00FF
-#define RE15_FENSTER_P1            ((uint16_t)((RE15_FENSTER_EREIGNIS << 8) | 0x18))
+#define RE15_FENSTER_P0            0x00FF   /* ROOM1050 @0x0C30 `ff 00`; 0x8003ee3c @0x8003ee54 (>= 0xa = freier Faden) */
+#define RE15_FENSTER_P1            ((uint16_t)((RE15_FENSTER_EREIGNIS << 8) | 0x18))  /* 0x18 = ROOM1050 @0x0C32 */
 
 /* Band quer ueber den Gang (RE2-Form: 2100 tief, ganze Gangbreite — sub03 @0x0014 w 0x0834 /
  * d 0x157c). PORT-WAHL der Lage: x 3500..6650 = Gang in Cut 1 (SCA-Block (-10500,1650,14000,4750)
