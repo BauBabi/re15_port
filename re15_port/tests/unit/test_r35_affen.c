@@ -853,9 +853,12 @@ static void griff_lauf(int erzwinge)
     b->x = -8915; b->z = -12487; b->y = 0; b->rot_y = 93; b->grid_id = 0x10; b->floor = 0;
     b->state = 1; b->sub_state_1 = 3; b->sub_state_2 = 1; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 16;
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
+    a->anim_frame = 9;  re15_affen_pool_anim(a); a->anim_frame = 10;   /* Nachbesserung 4: Pool/Zeichenstand F195 (wie takt) */
+    b->anim_frame = 15; re15_affen_pool_anim(b); b->anim_frame = 16;
     const int T0 = 254, NT = (int)(sizeof s_wurf_orig / sizeof s_wurf_orig[0]);
     int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0, fx = 0, fz = 0;
-    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
+    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0, d265 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
+    int biss_nach_frei = -1; double e1_ende = 0, e2_ende = 0;   /* N4 (N1): Biss nach der Freigabe, Abstaende am Laufende */
     int n_nach = 0, n_fremd = 0, n_klemme = 0;   /* T291..Freigabe: Bilder / Bilder mit fremdem Beweger / Bilder mit Klemm-Schub */
     int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
     memset(s_gl_st[erzwinge], 0, sizeof s_gl_st[erzwinge]);
@@ -899,10 +902,13 @@ static void griff_lauf(int erzwinge)
         if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) { f_frei = f; fx = pl->x; fz = pl->z; }
         if (o && f >= 265 && f <= 290) {            /* P2: Platzierung + Schub + Klemme je Bild */
             double d = dist2d(pl->x, pl->z, o[0], o[1]);
-            abw_p2_mitte += d; n_p2++; if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }   /* N3: T265-T267 mit (Schub von e2) */
-            if (f <= 267 && d > abw_e2) abw_e2 = d;
+            abw_p2_mitte += d; n_p2++; if (f >= 266 && d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }   /* N3: T265-T267 mit (Schub von e2); N4: T265 eigene Pruefung */
+            if (f == 265) d265 = d;
+            if (f >= 266 && f <= 267 && d > abw_e2) abw_e2 = d;
         }
         if (f_frei == f) hp_frei = pl->hp;
+        if (f_frei >= 0 && f > f_frei && biss_nach_frei < 0 && pl->hp < hp_frei) biss_nach_frei = f;
+        e1_ende = dist2d(a->x, a->z, pl->x, pl->z); e2_ende = dist2d(b->x, b->z, pl->x, pl->z);
         if (f >= 291 && f_frei < 0 && re15_player_victim_gorilla()) {   /* nach Bild 0x24: keine Platzierung mehr */
             int32_t ax = 0, az = 0, opx = 0, opz = 0, kx = 0, kz = 0, ex = 0, ez = 0, tx = 0, tz = 0;
             re15_schritt_station_hole(RE15_SCHRITT_ANFANG, &ax, &az);
@@ -933,10 +939,29 @@ static void griff_lauf(int erzwinge)
     PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original T254: (-6660,-12486))", (int)px0, (int)pz0);
     PRUEF(f_sprung == 265, "erste Wurf-Platzierung in T%d = Opfer-Bild 0x0b (Original T265 = VSync 10171, +0x95 0x0b beim Eintritt;"
           " P1->P2 @0x8011c244-5c, Fenster @0x8011c278)", f_sprung);
-    PRUEF(n_p2 == 26 && abw_p2 <= 200.0 && abw_e2 <= 200.0, "Wurf-Bahn T265-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub)"
-          " im Mittel %.0f, hoechstens %.0f (T%d) neben dem Original, T265-T267 mit dem Schub von e2 hoechstens %.0f (Nachbesserung 2: 1573,"
-          " e2 stand still; Schranke 200 = Anker-Versatz 39 aus dem Anlauf, in T289/T290 von der Wandklemme verstaerkt, s. Weg 2)",
+    PRUEF(n_p2 == 26 && abw_p2 <= 200.0 && abw_e2 <= 200.0, "Wurf-Bahn T266-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub)"
+          " im Mittel %.0f (T265-T290), hoechstens %.0f (T%d) neben dem Original, T266-T267 mit dem Schub von e2 hoechstens %.0f (Nachbesserung 2: 1573,"
+          " e2 stand still; Schranke 200 = Anker-Versatz aus dem Anlauf, in T289/T290 von der Wandklemme verstaerkt, s. Weg 2)",
           abw_p2_mitte, abw_p2, f_abw_p2, abw_e2);
+    {   /* N4: T265 = erstes Klemmen-Bild nach der Platzierung. Die Klemme ist eine Abbildung (Bezug, Eingang) -> Ausgang (Riegel wand:
+         * FUN_8003b0a4 bitgleich); mit den ORIGINAL-Eingaben (kette[0]) liefert sie die Original-Lage, mit den Lauf-0-Eingaben (je
+         * <= 20 daneben) die Lauf-0-Lage — die Abweichung in T265 ist die Empfindlichkeit der Klemme (M1 (c)), kein anderer Beweger. */
+        const int i = 265 - GRIFF_T0;
+        int32_t ox = -7190, oz = -10771, lx = s_gl_st[0][i][2], lz = s_gl_st[0][i][3];
+        re15_collision_set_band(0); re15_collision_constrain(&s_rdt, -6659, -12487, &ox, &oz);
+        re15_collision_set_band(0); re15_collision_constrain(&s_rdt, s_gl_st[0][i][0], s_gl_st[0][i][1], &lx, &lz);
+        double din = dist2d(s_gl_st[0][i][2], s_gl_st[0][i][3], -7190, -10771), dbz = dist2d(s_gl_st[0][i][0], s_gl_st[0][i][1], -6659, -12487);
+        PRUEF(ox == -7804 && oz == -10186 && lx == s_gl_st[0][i][4] && lz == s_gl_st[0][i][5] && din <= 20.0 && dbz <= 20.0,
+              "T265 (Abweichung %.0f): Klemme mit Original-Eingaben -> (%d,%d) (Original (-7804,-10186)), mit Lauf-0-Eingaben (Bezug %.0f, Eingang %.0f"
+              " daneben) -> (%d,%d) = Lauf 0 (%d,%d): Empfindlichkeit der Klemme, kein fremder Beweger", d265, (int)ox, (int)oz, dbz, din,
+              (int)lx, (int)lz, (int)s_gl_st[0][i][4], (int)s_gl_st[0][i][5]);
+    }
+    /* N4 (N1): nach der Freigabe bleiben beide Gorillas zwischen den Wagen haengen, kein Biss bis zum Laufende (Original g_griff F496:
+     * HP 76, e1 ~3925 / e2 ~4990 entfernt, beide +0x1d6 = 1). Gilt fuer die Landung an der Original-Ruhelage (-3009,-11643). */
+    PRUEF(biss_nach_frei < 0 && dist2d(pl->x, pl->z, -3009, -11643) <= 60.0 && fabs(e1_ende - 3925.0) <= 250.0 && fabs(e2_ende - 4990.0) <= 250.0,
+          "Lauf 0 nach der Freigabe: kein Biss bis T495 (erster Biss T%d), Leon (%d,%d) an der Original-Ruhelage (-3009,-11643), e1 %.0f / e2 %.0f"
+          " entfernt (Original ~3925 / ~4990) — HEAD 458635e1: Landung (-4200,-10658), Biss e2 T405", biss_nach_frei, (int)pl->x, (int)pl->z,
+          e1_ende, e2_ende);
     PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
     PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
     PRUEF(f_frei == 378, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
