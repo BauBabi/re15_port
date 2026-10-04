@@ -38,6 +38,15 @@
 #include "re15_damage.h"
 #include "re15_ai_flavor.h"
 #include "re15_inventory.h"
+#include "re15_enemy.h"
+#include "re15_player.h"
+#include "re15_camera.h"
+#include "re15_game_step.h"
+#include "re15_collision.h"
+#include "re15_msg.h"
+#include "re15_emd.h"
+#include "re15_ems.h"
+#include "re2_ems.h"
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -84,9 +93,11 @@ static int raum_laden(uint16_t rid)
  * loeschen (Wiedereintritt nach Kill). */
 static void raum_start(int32_t px, int32_t pz, uint8_t cut, int keep_flags)
 {
-    if (!keep_flags) re15_game_state_init();
+    /* scd_vm_init ruft re15_game_state_init (scd_vm.c) und loescht damit die Flags — der
+     * Wiedereintritt des Spiels laeuft nur ueber scd_room_reenter, die Flags bleiben. */
+    if (!keep_flags) { re15_game_state_init(); scd_vm_init(); }
     re15_inv_init();
-    scd_vm_init(); re15_actor_init(); re15_aot_init();
+    re15_actor_init(); re15_aot_init();
     re15_enemy_ai_set_paused(0);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->state = 1;
@@ -189,44 +200,102 @@ static void t_tuer(void)
            g_room_change.pending && g_room_change.room_id == 0x4040 && g_scd_pending_scenario == -1);
     g_room_change.pending = 0;
 
-    /* Gegenprobe Stage 1 (Verhalten vor Runde 35): ROOM1090 Slot 3 = Selbst-Tuer, Cut 6 (@0x2352). */
-    if (raum_laden(0x1090) == 0) {
-        raum_start(0, 0, 0, 0);
+    /* Gegenprobe Stage 1 (Verhalten vor Runde 35, dort stiegen alle 21 Selbst-Tueren schon neu ein):
+     * ROOM1110 main00 Slot 1 @0x00a6e -> Cut 7 (selbsttuer_zensus.py). */
+    if (raum_laden(0x1110) == 0) {
+        raum_start(-4550, -3000, 0, 0);
         g_scd_pending_scenario = -1; g_room_change.pending = 0;
-        if (g_aot.slots[3].type == RE15_AOT_TYPE_DOOR) {
-            re15_aot_fire_slot(3);
-            char m[120];
-            snprintf(m, sizeof m, "Stage 1 unveraendert: ROOM1090 Slot 3 -> Szenario 6 (ist %d)", g_scd_pending_scenario);
-            pruefe(m, g_scd_pending_scenario == 6 && !g_room_change.pending);
-        } else {
-            printf("   (ROOM1090 Slot 3 ist ohne sub06 nicht gesetzt — Gegenprobe ueber ROOM1170)\n");
-        }
+        char m[140];
+        int ist_tuer = (g_aot.slots[1].type == RE15_AOT_TYPE_DOOR);
+        if (ist_tuer) re15_aot_fire_slot(1);
+        snprintf(m, sizeof m, "Stage 1 unveraendert: ROOM1110 Slot 1 -> Szenario 7 (Tuer=%d, ist %d)",
+                 ist_tuer, g_scd_pending_scenario);
+        pruefe(m, ist_tuer && g_scd_pending_scenario == 7 && !g_room_change.pending);
         g_scd_pending_scenario = -1; g_room_change.pending = 0;
     }
     raum_laden(0x4050);
 }
 
 /* --------------------------------------------------------------------------- T4/T5 ki */
+/* Echter Spielschritt wie probe_1030_crawl_live: scd_vm_tick VOR re15_game_step, Gegner-Baenke
+ * geladen (ohne Bank keine Wurzelbewegung -> keine Annaeherung). RE1.5-Bank aus EMD/CDEMD0.EMS
+ * (re15_ems_index_for_type), RE2-Bank aus ../RE2/CDEMD0.EMS (re2_ems_load_bank) — dieselben
+ * Quellen wie der PC-Lader. */
+static re15_camera_view_t s_cam;
+static re15_game_ctx_t    s_ctx;
+static uint8_t *s_re2_ems = NULL; static size_t s_re2_n = 0;
+static uint8_t *s_re15_ems = NULL; static size_t s_re15_n = 0;
+static uint8_t  s_blob[0x80000];
+static int bank_re2(uint8_t type)
+{
+    if (!s_re2_ems) s_re2_ems = datei("../RE2/CDEMD0.EMS", &s_re2_n);
+    if (!s_re2_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return 1;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    if (re2_ems_load_bank(s_re2_ems, s_re2_n, (int)type, eb, NULL) == 0) { eb->buf = NULL; eb->ok = 1; return 1; }
+    eb->type = 0; return 0;
+}
+static int bank_re15(uint8_t type)
+{
+    if (!s_re15_ems) s_re15_ems = datei("EMD/CDEMD0.EMS", &s_re15_n);
+    if (!s_re15_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return 1;
+    int idx = re15_ems_index_for_type(type);
+    size_t off = 0, len = 0;
+    if (idx < 0 || re15_ems_get_entry(s_re15_ems, s_re15_n, idx, &off, &len) != 0) return 0;
+    if (len > sizeof s_blob) return 0;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return 0;
+    memcpy(s_blob, s_re15_ems + off, len);
+    re15_tim_t tim = (re15_tim_t){0};
+    if (re15_emd_parse_container(s_blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) { eb->type = 0; return 0; }
+    eb->ok = 1; eb->buf = NULL;
+    re15_emd_parse_own_bank(s_blob, len, &eb->skel_own, &eb->anim_own);
+    eb->own_ok = (eb->anim_own.clip_count > 0);
+    eb->loco_ok = (re15_emd_parse_loco_bank(s_blob, len, &eb->skel_loco, &eb->anim_loco) == 0);
+    return 1;
+}
+static void schritt(void)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+    scd_vm_tick();
+    re15_game_step(&s_ctx);
+}
+
 static void t_ki(int re2)
 {
-    printf(" %s ROOM4050 Cut 9, %s-KI\n", re2 ? "T5 ki_re2" : "T4 ki_re15", re2 ? "RE2" : "RE1.5");
+    printf(" %s ROOM4050 Cut 9, %s-KI (echter Spielschritt)\n", re2 ? "T5 ki_re2" : "T4 ki_re15", re2 ? "RE2" : "RE1.5");
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 9;
     re15_ai_flavor_set(re2 ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15);
+    re15_enemy_reset(); re15_player_cmd_reset();
     re15_damage_seed_rng(0x4050u);
+    re15_collision_set_band(0);
     raum_start(-9350, -2600, 9, 0);
+    re15_inv_load_briefing();
+    int ok_bank = re2 ? bank_re2(0x13) : bank_re15(0x13);
+    char m[200];
+    snprintf(m, sizeof m, "Gegner-Bank 0x13 geladen (%s)", re2 ? "RE2 CDEMD0.EMS" : "RE1.5 EMD/CDEMD0.EMS");
+    pruefe(m, ok_bank);
     int gs = -1;
     pruefe("Spawn Cut 9", gegner(0x13, &gs) == 1);
     if (gs < 0) return;
     re15_actor_t *g = &g_actors[gs];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->x = -9350; pl->z = -2600; pl->hp = 100; pl->hit_react = 0;
+    pl->x = -9350; pl->z = -2600; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->rot_y = 3072;
     uint32_t d0 = 0, dmin = 0xffffffffu;
     int init_hp = -1, grab = 0, armed = 0, f_grab = -1;
     int16_t hp_vor = 100; int erster_abzug = 0, zweiter_abzug = 0;
-    for (int f = 0; f < 600; f++) {
-        re15_enemy_ai_run_all(0);
+    for (int f = 0; f < 900; f++) {
+        schritt();
         if (f == 0) init_hp = g->hp;
         if (f == 1) d0 = g->ai_dist;
-        if (g->ai_dist < dmin && f > 0) dmin = g->ai_dist;
+        if (f > 0 && g->ai_dist < dmin) dmin = g->ai_dist;
         if (g->ai_flags & 0x100) armed = 1;
         if (re15_player_is_grabbed() || (g->state == 1 && (g->sub_state_1 == 3 || g->sub_state_1 == 4))) {
             if (!grab) f_grab = f;
@@ -237,9 +306,8 @@ static void t_ki(int re2)
             if (!erster_abzug) erster_abzug = d; else if (!zweiter_abzug) zweiter_abzug = d;
             hp_vor = pl->hp;
         }
-        if (pl->hp < 0) break;
+        if (zweiter_abzug || pl->hp < 0) break;
     }
-    char m[200];
     if (!re2) {
         snprintf(m, sizeof m, "INIT: Zustand 1, HP %d in 50..81 (@0x8010abb8-d0)", init_hp);
         pruefe(m, g->state >= 1 && init_hp >= 50 && init_hp <= 81);
@@ -248,19 +316,20 @@ static void t_ki(int re2)
         pruefe(m, g->state >= 1 && init_hp > 0);
     }
     snprintf(m, sizeof m, "Annaeherung: Abstand %u -> min %u", d0, dmin);
-    pruefe(m, d0 > 2000 && dmin < 1300);
+    pruefe(m, d0 > 3000 && dmin < 1300);
     snprintf(m, sizeof m, "Griff (ab Bild %d)", f_grab);
     pruefe(m, grab);
     if (!re2) {
-        snprintf(m, sizeof m, "Schaden: erster Abzug %d (Aufprall -10), zweiter %d (Biss -5)",
+        snprintf(m, sizeof m, "Schaden: erster Abzug %d (Aufprall -10 @0x8010277c), zweiter %d (Biss -5 @0x801027dc)",
                  erster_abzug, zweiter_abzug);
         pruefe(m, erster_abzug == 10 && zweiter_abzug == 5);
         pruefe("Ansprung nie scharf (+0x1d8 & 0x100 == 0; @0x8010aca4, kein Set(1,31) in ROOM4050)", !armed);
     } else {
-        snprintf(m, sizeof m, "Schaden: Spieler-HP 100 -> %d (erster Abzug %d)", hp_vor, erster_abzug);
+        snprintf(m, sizeof m, "Schaden: erster Abzug %d, Spieler-HP 100 -> %d", erster_abzug, hp_vor);
         pruefe(m, erster_abzug > 0 && hp_vor < 100);
     }
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_enemy_reset();
 }
 
 /* -------------------------------------------------------------------------------- T6 tod */
