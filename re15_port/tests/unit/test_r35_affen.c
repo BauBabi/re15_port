@@ -698,7 +698,7 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
     int hp_alt = pl->hp, treffer[64], nt = 0;
     char alt[256] = "";
     const char *spur = getenv("R35_TAKT_SPUR");   /* Nachbesserung 4: Bild-fuer-Bild-Spur im Format von jnb1/g_orig_dec.txt */
-    int f_ende = spur ? 196 + 720 : 196 + 420;
+    int f_ende = 196 + 720;   /* N4: alle 14 Bisse bis zum Tod (Original-Zeile F892) */
     for (int f = 196; f < f_ende; f++) {
         if (desync && f == 203) b->dog_blocked_ctr = 30;   /* = GDB-Schreiben M800ad1f0,2:1e00 im Original */
         frame(0, 0);
@@ -740,8 +740,14 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
     }
     /* Schranke 6 Bilder kumuliert ueber 8 Bisse: das Original selbst streut je Biss um +-3 (Abstaende 49..55 bzw.
      * 35..36 — Treffer in Fenster-Bild 0x0c oder 0x0d je nach Knochenabstand, bff8 r=0x3e8 @0x801183c0-cc). */
-    PRUEF(fehlend == 0 && abw <= 6, "%s: %d Bisse wie im Original (GDB-Einzelbild-Spur), groesste Abweichung %d Bilder (Schranke 6), fehlend %d",
-          desync ? "Wechseltakt nach Desync (+0x1dc := 30 in F203)" : "Gleichtakt ab Original-Lage F195", nsoll, abw, fehlend);
+    PRUEF(fehlend == 0 && abw <= (desync ? 3 : 6), "%s: %d Bisse wie im Original (GDB-Einzelbild-Spur), groesste Abweichung %d Bilder (Schranke %d), fehlend %d",
+          desync ? "Wechseltakt nach Desync (+0x1dc := 30 in F203)" : "Gleichtakt ab Original-Lage F195", nsoll, abw, desync ? 3 : 6, fehlend);
+    if (!desync) {   /* N4 (N2): e1 = Slot 2 beisst die Treffer 1, 3, ... 13 — jeder Treffer im SELBEN Bild wie das Original */
+        int e1_gleich = 0, e1_n = 0;
+        for (int i = 0; i < nsoll && i < nt; i += 2) { e1_n++; if (treffer[i] == soll[i]) e1_gleich++; }
+        PRUEF(e1_n == 7 && e1_gleich == 7, "Slot 2 (e1): %d/%d Bisse im selben Bild wie das Original (Zyklus 103; HEAD 458635e1: 218/321/425/529/633/737/841"
+              " = Zyklus 104 nach (9), weil A/B-Folge @0x80117358-78 und Trefferpunkt Record+0x40 @0x801183c0 fehlten)", e1_gleich, e1_n);
+    }
     if (nt >= nsoll && nsoll >= 2) {
         double mitte = (double)(treffer[nsoll - 1] - treffer[0]) / (double)(nsoll - 1);
         double soll_m = (double)(soll[nsoll - 1] - soll[0]) / (double)(nsoll - 1);
@@ -751,11 +757,12 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
 
 static void teil_takt(void)
 {
-    /* Original (VSync-Bild, Treffer im Bild davor): Gleichtakt 218/268/321/371/424/475/527/579; nach dem
-     * Desync 218/254/290/326/362/397/433/469 (36er-Wechseltakt, scratch jnb1/g_orig.txt / g_desync.txt). */
-    static const int gleich[8]  = { 218, 268, 321, 371, 424, 475, 527, 579 };
-    static const int wechsel[8] = { 218, 254, 290, 326, 362, 397, 433, 469 };
-    takt_lauf(0, gleich, 8);
+    /* Original (GDB-Zeile mit dem HP-Wechsel = Port-Bild des Treffers; N4: die Zeile F zeigt den Zustand beim Eintritt in die
+     * Gorilla-Wurzel von Bild F, Port-Bild f = Zeile f — gemessen an den Lagen, Startzeile F195 = Port-Startzustand):
+     * Gleichtakt jnb1/g_orig_dec.txt, Wechseltakt jnb1/g_desync.txt (Liste bisher Treffer-Tick = Zeile - 1, jetzt Zeile). */
+    static const int gleich[14] = { 219, 269, 322, 372, 425, 476, 528, 580, 631, 684, 734, 788, 837, 892 };
+    static const int wechsel[8] = { 219, 255, 291, 327, 363, 398, 434, 470 };
+    takt_lauf(0, gleich, 14);
     takt_lauf(1, wechsel, 8);
 }
 
@@ -1084,6 +1091,23 @@ static void teil_szene(void)
     } else PRUEF(0, "mindestens 15 Bisse bis zum Tod (%d)", nb);
     PRUEF(f_tod > 0 && f_tod - f_frei >= 1181 && f_tod - f_frei <= 1205, "Tod Freigabe + %d Bilder (Original +1193 = 39,8 s; vorher 33,3 s)",
           f_tod - f_frei);
+    {   /* N4 (N2 (d)): EINZELBISSE gegen die Original-Liste (GDB, Abnahme 2 jnb2/g_frei.txt + jnb1/g_orig.txt, relativ zur Freigabe):
+         * Slot 2 beisst die Bisse 2, 4, ... 14 (+521, 624, ... 1139 = Zyklus 103). Eine Drift von 1 Bild je Zyklus (HEAD 458635e1:
+         * +524 ... +1148) faellt hier auf: der Versatz zum Original muss fuer alle sieben Slot-2-Bisse GLEICH bleiben (+-1). */
+        static const int orig[14] = { 468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139 };
+        int d0 = (nb >= 2) ? (biss[1] - f_frei) - orig[1] : 999, dmin = 999, dmax = -999, s3max = 0;
+        printf("  Einzelbisse (Port - Original):");
+        for (int i = 0; i < 14 && i < nb; i++) {
+            int d = (biss[i] - f_frei) - orig[i];
+            printf(" %+d", d);
+            if (i & 1) { if (d < dmin) dmin = d; if (d > dmax) dmax = d; }
+            else if (abs(d) > s3max) s3max = abs(d);
+        }
+        printf("\n");
+        PRUEF(nb >= 14 && dmax - dmin <= 1 && abs(d0) <= 3, "Slot 2: Versatz der 7 Bisse zum Original %+d .. %+d (gleichbleibend = Zyklus 103 wie das Original;"
+              " HEAD 458635e1: +3 .. +9)", dmin, dmax);
+        PRUEF(nb >= 14 && s3max <= 6, "Slot 3: groesste Abweichung %d Bilder (Schranke 6; Rest-Drift ab dem 4. Biss, Dossier OFFEN N4-1)", s3max);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------- */
