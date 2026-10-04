@@ -348,3 +348,40 @@ unit_r35_karte_fahrstuhl: x 112..117 (5 px), y 143..145 (2 px) ausserhalb des In
 ```
 Damit ist der neue Riegel am alten UND am Vorgaenger-Stand ROT (Abnahme M2).
 
+### M1 — Umsetzung (Dateien, Konstanten)
+
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| `engine/src/re15_map_zones.h` 0x1080/0x1081 Blatt 2 rect 9 + Gast Blatt 3 rect 4 | ox,oy,sx,sy = **155,73,2330,2330**, flip 1,1 (vorher 129,117,795,805) | sx=sy=2^20/450: RE2 FUN_8006e120 @0x8006e1dc-0x8006e218 / @0x8006e1f8-0x8006e268; Versatz PORT-WAHL aus der Kunst (MAP03.PIX @0x1454, Ring-Mitte TEX.TIM @0x14910) |
+| dto. Gast Blatt 4 rect 0 | **173,76,2330,2330**, flip 1,1 (vorher 147,120,795,805) | dto., MAP05.PIX @0x1454 (Kasten um +18/+3) |
+| `engine/src/karte_fahrstuhl_1080.c` NEU `re15_karte_fahrstuhl_fenster` | Klemmfenster in der Kabine = gemalter Innenraum + Glyph-Versatz: x rx+2..rx+9, y ry+2..ry+9 (KF_INNEN_LO 1 / KF_INNEN_HI 8 / KF_GLYPH_MITTE 1) | Kachel uv(168,40) @0x1454 (Wand Spalte/Zeile 0 und 9); TEX.TIM @0x14910; Original klemmt nicht (RE1.5 @0x800475d8, RE2 @0x8006e2f0) |
+| `engine/src/re15_inv_screen.c` | Haken 2 Zeilen + 1 include: Aufruf nach der Rect+4-Rechnung, vor dem Klemmen | — |
+| `analysis/befunde_runde35/G_karte_zeilen.py` | NEU-Abschnitt rechnet die Zeilen + Probe (Waende/Reichweite) nach | — |
+
+Warum der Massstab nicht frei ist: mit 1/450 und EINEM Versatz je Achse treffen BEIDE Waende je
+Achse die gemalte Wand (4200/450 = 9,33 px gegen 9 px gemalt). Der Vorgaenger hatte den Massstab
+frei gewaehlt (795, "Innenraum auf das Klemmfenster"), um das 4-px-Klemmfenster zu treffen - das war
+die Ursache der 2 px.
+
+### M1 — Messung nachher (Stand nach 11d1d8ea + Riegel, gebaut)
+```
+integration_r35_karte_fahrstuhl (169 s): Passed
+  f1_steh   pl pos=(-13650,0,-900)  -> MARKER 113 141  bbox (111,139)-(115,143)
+  f1_vor    pl pos=(-13650,0,-3682) -> MARKER 113 135
+  f1_rechts pl pos=(-15282,0,-518)  -> MARKER 117 142
+  f1_links  pl pos=(-12018,0,-518)  -> MARKER 110 142
+  f3_rechts pl pos=(-15282,0,-518)  -> MARKER 135 145
+  f3_links  pl pos=(-12018,0,-518)  -> MARKER 128 145
+  1F quer x 110..117 = 7 px, laengs y 135..142 = 7 px, 3F quer 128..135 = 7 px, 180 Grad PASS
+unit_r35_karte_fahrstuhl: OK - 1F/2F/3F je x 7 px / y 7 px im gemalten Innenraum (Index 1);
+  Kollisionswaende -> W(118,138) O(109,138) N(113,134) S(113,143) (3F: 136/127/137/146) = Index 4
+```
+= exakt die Vorhersage aus G_karte_zeilen.py (steh (113,141), vor (113,135), rechts (117,142),
+links (110,142)). Bild: `G_karte_bilder/n1_fahrstuhl_marker.png` (Ausschnitte 8x, RE15_INV_FB_SHOT;
+gdigrab liefert in dieser Sitzung weisse Bilder): der Ring steht nach der Ankunft an der gelben
+Tuermarke unten, vorwaerts oben an der Rueckwand, rechts/links in den unteren Ecken. Er ragt in den
+Ecklagen bis 2 px ueber die gemalte Wand - der Ring ist 5 px breit, der Innenraum 8 px; so zeichnen
+auch RE1.5/RE2 (keine Klemmung).
+Vorher -> nachher (sichtbare Ring-Mitte, gleiche 4 Lagen, exe): 154a73c1 x 5 / y 2 px (unter der
+Kabine), 8fee1bb4 x 2 / y 2 px, **jetzt x 7 / y 7 px**.
+
