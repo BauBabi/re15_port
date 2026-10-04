@@ -2360,6 +2360,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * tickt unabhaengig vom Branch, solange das Script den Halt haelt (Exit = naechster
      * Plc-Befehl, kein Timeout; marvin_10d0.md D3). */
     re15_player_event_reach_tick(pl);
+    {   extern void re15_re2arm_player_look(re15_actor_t *pl);  /* Runde 35 Spur H NB4: RE2 FUN_8003DB38 */
+        re15_re2arm_player_look(pl); }                         /* nach dem Zustands-Dispatch @0x8003c1b4 */
 
     /* Body push WHILE GRABBED (byte-true FUN_80031c44: the cmd-5 victim handler — placement — is
      * followed by FUN_8002b544 body push then the walls in the SAME player tick): a THIRD zombie

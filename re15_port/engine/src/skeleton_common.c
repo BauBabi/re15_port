@@ -447,7 +447,9 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                                                * player @0x8011c738; player auto-look writes
                                                * it via FUN_8003703c). */
                 int ts = (int)a->neck_target_slot;
-                if (ts >= 0 && ts < RE15_ACTOR_MAX && g_actors[ts].active) {
+                if (ts == (int)(a - g_actors)) {
+                    /* Runde 35 Spur H NB4: Ziel = SELBST -> RE2-SELBST-Zweig unten, kein Weltpunkt */
+                } else if (ts >= 0 && ts < RE15_ACTOR_MAX && g_actors[ts].active) {
                     have_world = 1;
                     if (g_actors[ts].head_world_ok) {
                         twx = g_actors[ts].head_world[0];
@@ -509,6 +511,10 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
              * (lane17_NECK.md 7.2). Der alte Port setzte resP = 0 -> der eingebackene
              * Keyframe-Pitch (~16 Grad gesenkt) blieb waehrend des ganzen Intros stehen. */
             if (fl & 0x10) tgt_pit = 0;
+            /* Runde 35 Spur H NB4 — RE2 FUN_800177C0 SELBST-Zweig @0x80017a28-60 (`bne s0,s4`, `andi 0x80`,
+             * Ziel-yaw = +0x6A Keyframe `lhu v0,106(s1)`, Ziel-pitch = +0x6C `lhu v0,108(s1)`): Akku -> 0.
+             * Auf sich selbst zeigt im Port nur Leon im Opfer-Zustand des RE2-Arms (re15_re2arm_player_look). */
+            if ((int)a->neck_target_slot == (int)(a - g_actors) && !(fl & 0x80)) { tgt_yaw = ay; tgt_pit = az; }
             if (fl & 0x20) {                                        /* @0x800376f0-f4 */
                 if (a->neck_tz == 0) {                              /* @0x800376fc-704 */
                     a->neck_tz = 1;                                 /* @0x80037708-0c */
@@ -582,10 +588,10 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
               if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
               /* F<bild> seit Runde 30 (cut-blitz): der Riegel prueft damit, dass die FSM auch in
                * einem Bild ohne gezeichnetes 3D (NPC ausserhalb des Regions-Vierecks) taktet. */
-              if (nt) { fprintf(nt, "F%u slot=%d fl=%02x tgt=(%d,%d) res=(%d,%d) acc=(%d,%d) kf=(%d,%d) step=(%d,%d)\n",
+              if (nt) { fprintf(nt, "F%u slot=%d fl=%02x tgt=(%d,%d) res=(%d,%d) acc=(%d,%d) kf=(%d,%d) step=(%d,%d) ts=%d\n",
                                 (unsigned)g_engine.frame_count, (int)(a - g_actors), fl, (int)tgt_yaw, (int)tgt_pit, (int)resY, (int)resP,
                                 (int)a->neck_yaw, (int)a->neck_pitch, (int)ay, (int)az,
-                                (int)stepY, (int)stepP); fflush(nt); } }
+                                (int)stepY, (int)stepP, (int)a->neck_target_slot); fflush(nt); } }
         neck_apply_acc:
             /* Sprungziel des Freeze-Gates oben: der Akku wird IMMER addiert (im Freeze der
              * eingefrorene Stand — der Kopf haelt seine letzte Pose statt auf den Keyframe

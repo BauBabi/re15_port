@@ -108,6 +108,7 @@
 #include "re15_room.h"           /* g_current_room_id / g_room_rdt                               */
 #include "re15_esp.h"            /* RE1.5-Raumbank-Blut (Stand-in fuer FUN_8001BF10)             */
 #include "re15_audio.h"          /* re15_audio_core_se (Hook-P0 0x8005BA28)                      */
+#include "re15_scd.h"            /* g_re15_pauseflags / RE15_PAUSE_PLAYER (NB4 Blick)              */
 #include "re15_enemy_ai_re2_zellenarm.h"
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew); /* FUN_80015558 */
@@ -287,6 +288,97 @@ int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
     return 1;
 }
 int re15_re2arm_take_pin_bild(void) { int r = s_pin_bild; s_pin_bild = 0; return r; }
+
+/* ---- LEONS BLICK IM GRIFF (Runde 35 Spur H, Nachbesserung 4) ----------------------------------
+ * GEMESSEN im RE2-Original-RAM (12 Griffe x 40 Halte-Bilder, analysis/.../re2_mess/re2_neck.py,
+ * Dossier H_raeume.md "Nachbesserung 4"): PL+0x1C0 = 0 in jedem Bild (die Nacken-FSM laeuft auch im
+ * Griff, niemand sperrt sie); im Ruecken-Griff (g2/g6/g8) Ziel PL+0x1B8 = SELBST und Akku Part8
+ * +0x98/+0x9A = (0,0) in allen 40 Bildern -> Kopf = Animationspose; im Gesicht-Griff SELBST bis zur
+ * ersten Suche, dann der naechste Arm VOR Leon (Bild 15..31, Zielpunkt = Arm-Ursprung).
+ * MECHANISMUS (RE2 PSX.EXE, selbst disassembliert):
+ *   FUN_8003BFAC ruft NACH dem Zustands-Dispatch (`jalr v0` @0x8003c1a4) in JEDEM Spielerzustand
+ *   FUN_8003DB38(PL, 7000, 1500) @0x8003c1ac-b8 und die Nacken-FSM FUN_800177C0 @0x8003c1c0. Die
+ *   Opfer-Routine 5 (0x8004006C: |= 0x40 auf 0x800CFBD8, word0 &= ~4, Hook des Halters) und das
+ *   Arm-Overlay (schreibt +0x1C0/+0x1C1 nur am EIGENEN Eintrag @0x801001a8/@0x801001d0) fassen
+ *   +0x1B8/+0x1C0 des Spielers nicht an; die Spieler-INIT setzt +0x1B8 = SELBST `sw s1,440(s1)`
+ *   @0x8003c250, +0x1C1 = 8 @0x8003c268, +0x1C0 = 0 `sb zero,448(s1)` @0x8003c270, und die
+ *   Raum-INIT FUN_80049E48 schickt den Spieler dorthin (`sw zero,4(s2)` @0x80049ffc).
+ *   FUN_8003DB38: +0x1C0 & 1 -> aus (@0x8003db78-84, VOR dem Zaehler); Zaehler DAT_800a4004 -1, Suche
+ *   nur bei altem Wert 0, dann 45 (@0x8003db90-a4 / `addiu v0,zero,45` @0x8003dba8 / sb @0x8003dbb8;
+ *   .data 0x2D, einziger Schreiber); Tor DAT_800cfbf3 (em_set-Zaehler, ++ @0x80057218-24) oder
+ *   0x800cfbd8 & 0x10000000 (@0x8003dbac-d4) — im Port erfuellt, sobald es einen Kandidaten gibt (jeder
+ *   Port-Aktor ab Slot 1 stammt aus Sce_em_set); Liste word0 & 1 (@0x8003dbf4), Ausschluss
+ *   +0x10E & 0xC000 (@0x8003dc08), Sicht 0x80050858(Kopf-Part, Ziel-Part, 0x2080, 1) @0x8003dc10-78,
+ *   Kegel FUN_80015614(PL, E.x, E.z, 1500) @0x8003dc84-94, Abstand +0x1F0 (@0x8003dc24); Klasse A
+ *   (+0x10E & 0x2000 = 0, @0x8003dca4) streng < 7000 (`sltu v0,s1,s4` @0x8003dcb0), Klasse B < 0x7fffffff
+ *   (@0x8003dcac); Speicher A @0x8003dcfc, B @0x8003dd0c, sonst SELBST `sw s3,440(s3)` @0x8003dd10.
+ * PORT: Leons Blick laeuft sonst ueber die RE1.5-Zielwahl (Prolog des cmd-1-Handlers @0x80031e04-40,
+ * game_step_common.c); im Opfer-Zustand laeuft der Prolog nicht und das zuletzt gewaehlte RE1.5-Ziel
+ * (der Arm HINTER Leon) blieb stehen -> Klemme -512 im Ruecken-Griff (Abnahme 3, neck.log). RE1.5 hat
+ * diesen Griff nicht (Writher ohne Griff, NB2 M1) -> im Opfer-Zustand des RE2-Arms gilt die RE2-Wahl.
+ * Die RE2-Suche laeuft dafuer frei mit (wie im Original jedes Bild), verbraucht wird sie nur dort.
+ * PORT-MAPPINGS (benannt): Sicht = re15_re2_los_clear (RE1.5-Region-Ray, Praezedenz Kraehe/Zombie —
+ * RE1.5-Raeume haben keine RE2-Saetze mit Attribut 0x2080); Schlaf-Bit 0x8000 eines Arms = die Port-
+ * Abbildung "+0x9 & 0x1F != 1" (s. Kopf, wie im Tick @0x80026590-9C). */
+#define RE2LOOK_ZAEHLER   45        /* `addiu v0,zero,45` @0x8003dba8, `sb` @0x8003dbb8; .data 0x2D */
+#define RE2LOOK_RADIUS    7000u     /* `addiu a1,zero,7000` @0x8003c1b0 */
+#define RE2LOOK_KEGEL     1500      /* `addiu a2,zero,1500` @0x8003c1b8 */
+#define RE2LOOK_AUS       0xC000u   /* `andi v0,v0,0xc000` @0x8003dc08 */
+#define RE2LOOK_KLASSE_B  0x2000u   /* `andi v0,v0,0x2000` @0x8003dca4 */
+static uint8_t  s_look_cd   = RE2LOOK_ZAEHLER;           /* DAT_800a4004 (laeuft frei, kein Raum-Reset) */
+static int8_t   s_look_tgt  = RE15_ACTOR_SLOT_PLAYER;    /* PL+0x1B8; SELBST = Spieler-Slot          */
+static unsigned s_look_room = 0xFFFFFFFFu;
+
+static int re2look_ausgeschlossen(const re15_actor_t *e)
+{
+    if (e->type == 0x1Au && re15_re2arm_owns(e)) return (e->grid_id & 0x1Fu) != 1u;   /* Schlaf 0x8000 */
+    return (e->re2z_f10e & RE2LOOK_AUS) != 0u;
+}
+
+static void re2look_suche(re15_actor_t *pl)            /* Rumpf von FUN_8003DB38 nach dem Zaehler */
+{
+    uint32_t best_a = RE2LOOK_RADIUS, best_b = 0x7fffffffu;
+    int ziel_a = -1, ziel_b = -1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *e = &g_actors[i];
+        if (!e->active) continue;                                       /* word0 & 1 @0x8003dbf4 */
+        if (re2look_ausgeschlossen(e)) continue;                        /* +0x10E & 0xC000 */
+        if (!re15_re2_los_clear(e, pl)) continue;                       /* 0x80050858 != 0 */
+        if (re15_ai_arc_test(pl, e->x, e->z, RE2LOOK_KEGEL) != 0) continue;   /* FUN_80015614 != 0 */
+        const int32_t dx = e->x - pl->x, dz = e->z - pl->z;              /* +0x1F0 @0x800265A4-E0 */
+        const uint32_t d = re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+        if (e->re2z_f10e & RE2LOOK_KLASSE_B) { if (d < best_b) { best_b = d; ziel_b = i; } }
+        else                                  { if (d < best_a) { best_a = d; ziel_a = i; } }
+    }
+    s_look_tgt = (int8_t)(ziel_a >= 0 ? ziel_a : (ziel_b >= 0 ? ziel_b : RE15_ACTOR_SLOT_PLAYER));
+}
+
+void re15_re2arm_player_look(re15_actor_t *pl)
+{
+    if (!pl) return;
+    if (g_re15_pauseflags & RE15_PAUSE_PLAYER) return;  /* RE2 `bltz v0` @0x8003bfc0: Spieler-Main aus */
+    if (s_look_room != g_current_room_id) {             /* Raum-INIT -> Spieler-INIT: +0x1B8 = SELBST */
+        s_look_room = g_current_room_id;
+        s_look_tgt  = RE15_ACTOR_SLOT_PLAYER;           /* @0x80049ffc -> @0x8003c250 */
+    }
+    if (!(pl->neck_flags & 0x01u)) {                    /* @0x8003db78-84 */
+        const uint8_t alt = s_look_cd;
+        s_look_cd = (uint8_t)(alt - 1u);                /* @0x8003db98-a0 */
+        if (alt == 0u) { s_look_cd = RE2LOOK_ZAEHLER; re2look_suche(pl); }
+    }
+    /* Verbrauch NUR im Opfer-Zustand des RE2-Arms (Routine 5 / Hook laeuft, s_holder gueltig). */
+    if (s_holder >= 0 && re15_player_victim_state() == 4) {
+        pl->neck_flags       = 0x00u;                   /* +0x1C0 = 0 (INIT @0x8003c270, gemessen fl=00) */
+        pl->neck_target_slot = s_look_tgt;              /* PL+0x1B8 -> FUN_800177C0 */
+    }
+}
+/* Test-/Mess-Auskunft (kein getenv): Zaehler setzen (set_cd >= 0) und Zaehler/Ziel lesen. */
+void re15_re2arm_look_debug(int set_cd, int *cd, int *ziel)
+{
+    if (set_cd >= 0) s_look_cd = (uint8_t)set_cd;
+    if (cd)   *cd   = (int)s_look_cd;
+    if (ziel) *ziel = (int)s_look_tgt;
+}
 
 /* ---- kleine Helfer ------------------------------------------------------------------------ */
 int re15_re2arm_owns(const re15_actor_t *e)

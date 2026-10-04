@@ -46,5 +46,9 @@ int  re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl);
 /* 1 genau einmal nach einem Pin B4 P0 (@0x80100C18-38) in diesem Bild — der Spieler-Pass schiebt im
  * Original im SELBEN Bild nach dem Pin. */
 int  re15_re2arm_take_pin_bild(void);
+/* Runde 35 Spur H NB4: RE2-Zielwahl fuer Leons Blick (FUN_8003DB38 @0x8003c1b4), jedes Bild aus dem
+ * Spieler-Pass; verbraucht nur im Opfer-Zustand des RE2-Arms. look_debug: Test-/Mess-Auskunft. */
+void re15_re2arm_player_look(re15_actor_t *pl);
+void re15_re2arm_look_debug(int set_cd, int *cd, int *ziel);
 
 #endif /* RE15_ENEMY_AI_RE2_ZELLENARM_H */
