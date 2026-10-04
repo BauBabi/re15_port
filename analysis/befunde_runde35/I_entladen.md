@@ -464,3 +464,26 @@ Eigener Bau, Stand ef842ef1 (Code = 86f65b95), `bash re15_port/tools/local_build
 `=== LOCAL-BUILD-OK (all) — Tests 486/486` (Beleg: re15_port/build/local_build_ctest.log `100% tests passed, 0 tests failed out of 486`,
 `Total Test time (real) = 1291.62 sec`). Kein Flatter-Haken rot, nichts nachgefahren.
 484 -> 486: + unit_r35_entladen_n1beleg, + integration_r35_entladen_e.
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-04)
+
+Abnahmebericht `I_abnahme_1.md`: Punkt 1 erfuellt, Punkt 2 teilweise. Mangel M1: die Raum-
+Animationsbank (RBJ, z.B. `RBJ/ROOM1170.RBJ`, 55 060 B) bleibt nach Raumwechsel und Tod geladen
+(main.c `static uint8_t *s_room_rbj` gibt nur frei, wenn der NAECHSTE Raum eine Animation hat; Boot-Pfad
+`rbj_buf` wird nie freigegeben); der Zensus hat kein Fach dafuer. Die Abnahme-Messungen r9 (Tuer
+1170->1130, gdb Bild 100) und r10 (Tod in 1170, gdb Bild 200 ROOM1240 des neuen Spiels) werden
+NICHT wiederholt, sie sind die Messung vorher.
+Stand zu Beginn: HEAD c5ead020, Baum sauber. Schritt 0: `git merge master` (170 Commits, Spuren
+A/B/E/K/L) -> Merge 7f547d99; zwei Konflikte, beide "beide Seiten behalten":
+`include/re15_enemy.h` (meine `re15_rbj_room` + L `re15_rbj_set_alias`), `engine/src/enemy_common.c`
+(meine Include-Zeile re15_entladen.h + K re15_cut10f0.h). main.c/audio_pc.c ohne Konflikt.
+
+### N2 Bestandsaufnahme nach dem Merge (Code gelesen, Zeilen Stand 7f547d99)
+Drei Besitzer von Raum-Animationsbloecken:
+1. main.c:8121 `static uint8_t *s_room_rbj` (Tuer-Weg, Datei `RBJ/ROOM%04X.RBJ`); frei nur in
+   main.c:8151 (naechster Raum MIT Block). Zweig "has no RBJ" (main.c:8167ff) und Tod: liegen lassen.
+2. main.c:4197 `uint8_t *rbj_buf = pc_read_shared(rbj_path, ...)` (Boot-Weg, auch `RE15_RBJ`): nie frei.
+3. NEU durch Spur K (master): platform/pc/src/cut10f0_pc.c:24 `static uint8_t *s_leih_buf` — die GANZE
+   RDT-Datei von ROOM11B0, deren Block @0x5C ROOM10F0 leiht; frei nur bei der naechsten Leihe. Nach
+   ROOM10F0 -> anderer Raum bzw. Tod bleibt sie liegen (gleicher Mangel, dritter Weg).
+RDT-Alias (`rbj_borrowed`, Block IN der residenten RDT) faellt schon mit Schritt (7) (RDT-Bytes).
