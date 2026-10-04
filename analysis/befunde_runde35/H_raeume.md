@@ -389,4 +389,25 @@ nicht — das ist der Defekt (Port-Mapping, kein RE2-Verhalten).
 Maske des Aktors (+0x1D7, Default 4) und ueberspringt Zellen ohne `u0 & Maske` (@0x800508bc-c8). Der
 RE1.5-Sensor FUN_8001bc08 ruft mit 0 = unveraendert FUN_8003dcc4. Commit d0684bcc.
 
+**Messung nachher** (gleicher Lauf, neue exe; `m1_D_nach`, `m1_still_nach` (keine Eingabe), `m1_LU_nach`
+(`L0.7,U4`) — alle drei Bild fuer Bild gleich, weil Slot 2 Leon packt, bevor die Eingabe ab F2100 wirkt):
+* Sonde: alle Plaetze unter der Kante `los_clear=1`; nur die Band-1-Wand Zelle 9 (u0 FF) blockt weiter
+  ((-24049,-15000), (-24300,-12500)).
+* Lauf: `los=1` durchgehend. F2062-2094 Sub 14 (Schnappbiss, cd 60), **F2095 Sub 1** (Gang, Sicht -> 0x101),
+  F2101 betritt Zelle 13, **F2118 Absturzkante** `@(-24487,-1810,-16917) b0 f1ba=0 f1c0=8001`, Folge -1810,
+  -1800, -1770, -1720, -1650, -1560, -1450, -1320, -1170, -1000, -810, -600, -370, -120, **F2132 y=0
+  f1c0=000f** (= -10+20t, 15 Bilder), danach Sub 3 (Griff) auf Leon. Vorher: 1011 Bilder oben (Abnahme) bzw.
+  F2370 nur per Partner-Stoss Sub 9 (m1_D_vorher).
+* Beobachtung (kein Eingriff): ab F2127 (y=-1000, noch im Fall) waehlt die RE2-Leiter Block G (Griff,
+  `e->floor == pl->floor` @0x80102140) — weil FUN_8001bd60 +0x82 schon an der Kante senkt (@0x8001be4c-54),
+  bevor der Koerper unten ist. Das ist die Original-Reihenfolge beider Funktionen; der Griff greift in der
+  Landephase (Sub 3 P1/P2 bis F2132, dann P3 am Boden).
+
+**Test:** `unit_r35_raeume_trage` erweitert — (D) Sicht von der Kante (-24049,-17373) Band 1 zu 5 Plaetzen
+unter der Kante = frei, Band-1-Wand Zelle 9 blockt; (B') "Spieler unter der Kante" (steht am Minidisc-Platz
+(-25880,-16450), Blick 2048) fuer RE2 und RE1.5: Sturz < Bild 600 + Landung y=0 Band 0 + Folge -10+20t.
+Ergebnis: RE2 Sturz Bild 218, Landung 232; RE1.5 Sturz 168, Landung 182; (D) 5/5. **Gegenprobe** (Filter im
+RE2-Aufruf abgeschaltet, Maske 0): 8 FAIL — (D) 5x geblockt, RE2 unter der Kante "Sturz ab Bild -1" (in 1500
+Bildern nie) = genau der Abnahme-Befund. Commit 1f3e68f4.
+
 (in Arbeit)
