@@ -229,6 +229,7 @@ Startlog: `[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen 
 | unit_r35_fenster_kraehe | RE2-State 4 Sub 2 (versteckt, +0x1D4, 7 Bilder/1883, ACTIVE 4, Flavor RE1.5) |
 | unit_r35_fenster_knall | RE2-Raumbank Satz 0x21 -> Ton 7..10 / VAG 5 |
 | unit_r35_fenster_ereignis | Tor/Raum/Einmaligkeit, VM-Spawn, AOT-Scan, Zeitlinie, Schaden nur Cut 1 |
+| unit_r35_fenster_satzform | (Nachbesserung 1) p0 0x00FF / p1-Unterbyte 0x18 gegen ROOM1050 @0x0C22 und ROOM1020 @0x1E18; freier Ereignis-Faden |
 | integration_r35_fenster | echte exe: Log der ganzen Kette + Framedump-Pixel vor/nach + Wiedereintritt |
 
 Suite (local_build.sh test, 2026-10-04): `=== LOCAL-BUILD-OK (test) — Tests 483/483` (478 + 5 neue),
@@ -344,3 +345,12 @@ Commit-Messages 55554779/1e958236 nennen p0/0x18 ebenfalls nicht. Gegenprobe: `g
   STAGE1/ROOM1020.RDT @0x1e18: op 0x2c sce 3 sat 0x41 p0 0x00ff p1 0x0318
   Ereignis-Faeden: 10 dann 11 (erster freier ab 10)
   ```
+* Abschluss-Suite mit dem neuen Riegel (`local_build.sh all`, Stand 2676c6cb): **`=== LOCAL-BUILD-OK (all) — Tests 484/484`**
+  (478 Schranke + 5 Spur-M-Tests aus dem Bau + 1 neuer Riegel satzform), 0 Failed, kein Fenster-Haken rot.
+
+**Tests nach Nachbesserung 1:** unit_r35_fenster_glas / _kraehe / _ereignis / _knall / **_satzform** (neu) +
+integration_r35_fenster, alle gruen. `ctest -R r35_fenster` faehrt alle 6 (Hinweis Abnahme §5: `-R r35_cut11c0_fenster`
+trifft 0 Tests, die Namen heissen `*_r35_fenster*`).
+
+**OFFEN nach Nachbesserung 1:** unveraendert die Punkte unter "OFFEN" oben (RE2-Kraehe Sub 0/1 nicht portiert,
+Zielhilfe auf die versteckte Kraehe, Rumble-Weitergabe, PSX-Zeichner). Neu kommt nichts dazu.
