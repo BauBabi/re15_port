@@ -49,7 +49,7 @@ endif()
 foreach(_r35n_teil anzeige konflikt)
     add_test(NAME unit_r35_android_${_r35n_teil}
              COMMAND ${CMAKE_COMMAND} -DPRUEFSTAND=$<TARGET_FILE:r35_android_pruefstand>
-                     -DARBEIT=${CMAKE_CURRENT_BINARY_DIR}/r35_android_pruefstand -DTEIL=${_r35n_teil}
+                     -DARBEIT=${CMAKE_CURRENT_BINARY_DIR}/r35_android_pruefstand_wd -DTEIL=${_r35n_teil}
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/r35_android/test_r35_android_entpacker.cmake)
     set_tests_properties(unit_r35_android_${_r35n_teil} PROPERTIES TIMEOUT 240)
 endforeach()
