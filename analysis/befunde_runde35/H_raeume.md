@@ -1193,3 +1193,69 @@ Nachbarhoehen: Gesicht 7..11/19, Ruecken 17..19/19 (Satz 0/5).
   @0x80100c20 / @0x80100c38) — Hinweis der Abnahme 3. Ebenso Riegel-Kopf und `test_p2_1210_arme_re2.c` (4d).
 * Riegel (1) ohne g3/g4 (s. M2). Die Commit-Message 9bcc9edd (Spannen mit g3/g4) laesst sich nicht aendern — dieser
   Abschnitt ersetzt sie.
+
+### M1 — RE1.5-KI (Lauf `n4_re15_front` / `n4_re15_back`, RE15_AI_FLAVOR=re15, debug.log "Opferbank von EM010 geliehen
+(victim_ok=1, 14 Clips)" = wirklich RE1.5-Flavor): die Nacken-Spur Slot 0 in ROOM1210 F240-F430 ist byte-gleich mit
+dem RE2-Flavor-Lauf (md5 Gesicht ab4651ca…, Ruecken 113ba660… in beiden Flavors). Der Griff und Leons Blick im Griff
+gehoeren in jedem Flavor dem RE2-Arm (NB2 M1).
+
+### Bild (kein Beleg, Anschauung)
+`H_raeume/nb4_ruecken_kopf_alt_neu_F300-330.png` (Framedump Cut 4, Kopf-Ausschnitt 4x, Ruecken-Griff): oben Abnahme-3-
+Stand (Kopf zur Klemme gedreht, z.B. F306/F330), unten NB4 (Kopf folgt der Rumpf-Animation wie im Original g2/g6/g8).
+Das Fenster-Capture lieferte in dieser Sitzung weisse Bilder -> RE15_FRAMEDUMP.
+
+### Je Mangel (Abnahme 3)
+* **M1** — Mechanismus im Original belegt: niemand sperrt die Nacken-FSM; FUN_8003DB38 (@0x8003c1b4, alle 46 Bilder,
+  Kegel 1500, Radius 7000, Sicht 0x2080 zur GEZEICHNETEN Part-Lage) waehlt das Ziel, FUN_800177C0 (@0x8003c1c0) dreht,
+  SELBST = Keyframe (@0x80017a28-60). Im Ruecken-Griff liegt der Halter hinter Leon (ausserhalb des Kegels) -> SELBST ->
+  Animationspose; im Gesicht-Griff der Halter (bzw. ein gezeichneter Nachbar) -> Kopf dreht zu ihm. So gebaut
+  (re15_re2arm_player_look/look_waehle + SELBST-Zweig), gemessen an der exe (Ruecken Akku 0 in 147/152 Halte-Bildern,
+  vorher Klemme bis -598), Volumenmass mit dem gezeichneten Kopf (Ruecken 15/19 max 6 statt 17/19 max 12).
+* **M2** — Riegel posiert wie der Zeichner, prueft Kopf-Rahmen (max 17 statt 182), Blick-Akku (max 14) und Ziel Bild fuer
+  Bild gegen die Original-RAM, Spanne (1) ohne g3/g4; neue Regel-Pruefung N1a/N1b auf der Original-Geometrie.
+* **M3** — Aussagen berichtigt (Dossier, zellenarm.c, Tests); g3/g4 aus Spanne und (1) genommen und als Nachbar-Push
+  gekennzeichnet.
+
+### Tests (Nachbesserung 4)
+* `unit_r35_raeume_arme`: neu/umgestellt (N1b), (N1a), (6a) mit Kopf-Rahmen/Blick-Akku/Ziel, (1) ohne g3/g4; Leon
+  posiert wie der Zeichner. Lauf: alle Pruefungen ok.
+* `unit_1210_arme_re2` (4d): Kommentar berichtigt, Pruefung unveraendert gruen.
+* Gezielter Lauf `ctest -R "r35_raeume|1210|writher|neck|headlook|blitz|irons|grab|victim|arme"`: 26/26 gruen
+  (u.a. unit_neck_headlook-, irons_neck- und cut_blitz-Haken: die Nacken-FSM ausserhalb des RE2-Griffs ist unveraendert).
+* Sonde `probe_r35_raeume_arme` EXE-KOPF (ohne add_test): Volumenmass an der exe-Lage mit dem exe-Akku.
+
+### OFFEN (Stand Nachbesserung 4, ersetzt OFFEN 1 der Nachbesserung 3)
+1. Phase des Blick-Zaehlers: RE2 zaehlt DAT_800a4004 frei ab dem Start (einziger Schreiber FUN_8003DB38); der Port
+   zaehlt ab dem Programmstart in jedem Spielerbild (re15_re2arm_player_look aus game_step) — die Phase ist im Original
+   verlaufsabhaengig (gemessen: erste Suche im Griff in Halte-Bild 2..31), im Port ebenso. Kein Mangel, benannt.
+2. Sicht: der Port prueft sie ueber die RE1.5-Zellen (PORT-MAPPING re15_re2_los_clear), RE2 ueber RE2-Saetze mit
+   Attribut 0x2080 (RE1.5-Raeume haben keine). In ROOM1210 gemessen: gezeichneter Halter frei, nie gezeichnete Arme
+   zum Punkt (0,0,0) verdeckt — wie RE2 in allen 13 gemessenen Lagen ROOM2050.
+3. Werden in ROOM1210 Arme der GEGENWAND gezeigt (Leon laeuft zuerst an der Ostwand entlang), sind sie danach
+   Blickziele: die Reihen stehen 4600 auseinander (< 7000) — RE2-Regel, in ROOM2050 (15000) nicht beobachtbar. Dann
+   blickt Leon im Ruecken-Griff zu diesem Arm (Riegel-Nutzerfall Ruecken: Ziel Slot 8 nach dem Zeigen). Wie im Original
+   g4 (Ruecken, Blick auf den gezeichneten Satz 3). Kein Mangel, benannt.
+4. Unveraendert aus NB3: Satz 1/4 ohne Griff-Mitschnitt, Koerper-Push schon waehrend REACH (RE2-Verhalten),
+   Zeichner-Ueberblendung einen Schritt voraus (NB2 OFFEN 2), tote RE1.5-Writher-Maschine (NB2 OFFEN 3).
+5. Werkzeug: DuckStation-GDB fuer RE2 (`re2_gdb_grab.py`, R2_EXTRA=1, R2_INI_RESTORE=1 setzt settings.ini zurueck,
+   gemessen: EnableGDBServer = false nach jedem Lauf).
+
+### Fuer den Nutzer (Nachtrag Nachbesserung 4)
+* ROOM1210: Leons Kopf im Griff folgt jetzt der RE2-Regel: packt ihn ein Arm von hinten, haelt er den Kopf wie in der
+  Animation (vorher drehte er ihn bis zum Anschlag nach dem Arm hinter sich — dabei ging die Hand durch den Kopf);
+  packt ihn der Arm von vorn, schaut er den Arm an. Wie in Resident Evil 2 schaut Leon nur nach Armen, die vor ihm und
+  schon sichtbar gewesen sind.
+* Keine neuen Sprachdateien, keine neuen Assets (Original-Messdaten nur unter analysis/ und als Test-Datei).
+
+### Dateien (Nachbesserung 4)
+* `re15_port/engine/src/enemy_ai_re2_zellenarm.c` (eigen): re15_re2arm_player_look, re15_re2arm_look_waehle,
+  re2look_suche, re15_re2arm_look_debug, re2arm_t.gezeichnet; Konstanten RE2LOOK_ZAEHLER/RADIUS/KEGEL/AUS/KLASSE_B
+  mit @0x; Kommentar Koerper-Push berichtigt.
+* `re15_port/include/re15_enemy_ai_re2_zellenarm.h`: Deklarationen, re2look_kand_t.
+* `re15_port/engine/src/game_step_common.c` (gemeinsam, 2 Zeilen): Aufruf re15_re2arm_player_look.
+* `re15_port/engine/src/skeleton_common.c` (gemeinsam, 5 Zeilen): RE2-SELBST-Zweig, ` ts=` in der Nacken-Spur.
+* Tests: `tests/unit/test_r35_raeume_arme.c`, `tests/unit/r35_raeume_re2orig.inc` (erzeugt), `tests/unit/
+  probe_r35_raeume_arme.c` (EXE-KOPF), `tests/unit/test_p2_1210_arme_re2.c` (Kommentar).
+* Messwerkzeug/Daten: `re2_mess/re2_neck.py`, `re2_mess/re2_los.py` (FUN_80050858), `re2_mess/re2_fixture.py`,
+  `re2_mess/re2_gdb_grab.py` (R2_EXTRA), `re2_mess/daten/n4_g8b_r0_ruecken|n4_g8c_r0_ruecken|n4_g1b_ost_gesicht/`
+  (frames.bin, frames.txt, extra.txt, log.txt). Bild `H_raeume/nb4_ruecken_kopf_alt_neu_F300-330.png`.
