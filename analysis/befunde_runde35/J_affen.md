@@ -1916,3 +1916,17 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   landet auf ihm (Blutspritzer am Kopf), F2824-F2864 Leon sinkt hinter der Motorhaube zusammen, ab F2876 Weissblende,
   F2900 Todeskamera: **Leon liegt in der Blutlache unter dem Gorilla**, F2960/F3040 "YOU DIED" mit Leon und Gorilla.
   Leon verschwindet nicht mehr aus dem Bild.
+
+### M3 — Aussage "Lage Bild fuer Bild wie das Original" eingeschraenkt
+- Nachgerechnet (Riegel-Spur `jabn5/pt/takt.txt` = Stand N5, unveraendert durch N6, gegen `jnb1/g_orig_dec.txt`; Port-Zeile
+  S f gegen GDB-Zeile F f — die Zuordnung mit den bitgleichen Bildern; S f gegen F f+1 hat 0 bitgleiche): 695 Bilder
+  F196-F891, **beide Gorilla-Lagen bitgleich in 14 Bildern = F196-F209** (Kriechen bis zum ersten Biss), danach hoechstens
+  **e1 26 (F585), e2 22 (F594)** Einheiten daneben, Median e1 4,5 / e2 3,2, Leon hoechstens 123 (F219, erstes Biss-Bild).
+  Die Biss-BILDER (14/14 + Tod) sind gleich — das traegt der Riegel `takt`.
+- KORREKTUR-Vermerk an der N5-Stelle ("Fuer den Nutzer (Stand Nachbesserung 5)" (3)) und an OFFEN N5-1 (25/17 -> 26/22).
+  Die neue Nutzer-Aussage steht unter "Fuer den Nutzer (Stand Nachbesserung 6)".
+
+### M5 — Heavy +363 gegen Original +364: als OFFEN N6-1 gefuehrt
+- j1/t1/Riegel `szene`: erster Angriff (Heavy) 1 Bild vor dem Original (+363 gegen vs9765 - vs9037 = 728 VSyncs = +364,
+  Dossier Z. 934-936); alle 14 Bisse und der Tod danach bildgleich. In N3/N4 noch mit Original-Vergleich gefuehrt, in N5
+  still geworden (KORREKTUR-Vermerk an der N5-Stelle). Messweg unter OFFEN N6-1.
