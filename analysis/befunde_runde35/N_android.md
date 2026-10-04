@@ -730,3 +730,33 @@ Plan (nur Punkt 3) - je Mangel die ANGEFRAGTE Abhilfe UND ein Mechanismus, der d
   Zaehlung aus falschem Variablennamen). Bemerkt nur Y1/Y4 (Rueckgabe 0 statt $rc -> P5) und Y8 (Modus fest apk -> P4/P6).
   Die Luecke ist also nicht nur J11-J13, sondern die GANZE Uebergabe (Argumente an Urteil und Gate): keine Attrappe liest
   argv[2], argv[4..6] oder die Gate-Argumente.
+
+### Nachbesserung 3 - M2/M3 Python-Urteil (release/gate_urteil.py)
+**Ursache (Code gelesen, wie Abnahme 2 3.7):** Die Fallsammlung hielt "genau n Fallzeilen" nur ueber Luecken/Doppelte/
+falsche Nummer fest (073 "6 statt 5", "Fallzeile fehlt" = Nr. 03, also mit Luecke) - eine lueckenlos zu kurze oder zu lange
+Liste kam nicht vor, also ueberlebte `range(1, n+1)` -> `range(1, len(faelle)+1)`. Im Modus paket wich Quelle != gleich
+immer nur in EINEM Baum ab, und keine Baumzeile hatte eine Zusatzspalte. Allgemein: die Faelle sind handgeschrieben -
+welche Zahl/Zeile der Ausgabe eine Regel stuetzt, wusste nur der Autor.
+**Aenderung 1 - `_faelle_nb3` (5 Faelle, Soll 2):** "letzte Fallzeile fehlt (01..04 lueckenlos, 5/5)", "Fallzeile zuviel
+(01..06, 5/5)", "pk: Quelle != gleich in 2 Baeumen, Summen gleich (9/10 + 3/2)", "pk: Baumzeile mit drei Zahlen (10 9
+10)", "qb: Baumzeile mit zwei Zahlen (10 9 Dateien)".
+**Aenderung 2 - Stoerungsfaelle (`_stoerungen`, `_faelle_stoerung`, Liste `UNGEPRUEFT`):** aus jeder der vier guten
+Ausgaben werden Faelle ERZEUGT: jede Zeile weg / doppelt, jede Zahl -1/+1, hinter jeder Zahl dieselbe Zahl noch einmal
+(Zusatzspalte), je zwei Zahlen derselben Spalte zweier Zeilen mit gleich vielen Zahlen gegenlaeufig (-1/+1, +1/-1; reine
+Vertauschungen zweier Werte einer Spalte entstehen nicht). Soll nach REGEL 2; Soll 0 nur, wo `UNGEPRUEFT` die Stelle
+mit Grund nennt (10 Eintraege: Kopfzeile, Spaltenkopf, apk-Baumzeile = Summanden der SUMME, apk-Baumzahl k, TORSE.VBS-
+Bytezahlen, Tuer-Soll-Anzahl/unlesbare Zeile neben einer erkannten, Fallbeschreibung, Zusatzzahl in der Beschreibung,
+Laufzeit, quellbaum-Paar ohne Vergleichswert je Baum). Das Soll wird NICHT aus dem Urteil berechnet (selbstbestaetigend
+waere es sonst - Memory "Gate liest sein eigenes Feld"). Jeder Eintrag muss mindestens eine Stoerung decken (sonst
+`[FEHLER] UNGEPRUEFT-Eintrag deckt keine Stoerung mehr`). Erster Lauf gegen das UNVERAENDERTE Urteil: 492 Stoerungen,
+**0 falsch** (390 Soll 2, 102 Soll 0) - die Liste beschreibt also genau, was das Urteil heute liest; das Urteil selbst
+ist unveraendert (`urteil()` nicht angefasst).
+**Aenderung 3 - Schlusszeile:** `== URTEIL-SELBSTTEST-OK: f/f Faelle, e/m Mutanten erkannt, g als gleichwertig begruendet,
+u Stoerungen begruendet ungeprueft ==` - u wird in release/apk_pruefen.sh begrenzt (GATE_URTEIL_MAX_UNGEPRUEFT), damit
+eine neue UNGEPRUEFT-Ausnahme (der einzige Weg, eine entfernte Regel am Selbsttest vorbeizubringen) eine sichtbare Zeile
+im bash-Urteil braucht - wie AEQUIVALENT/MAX_GLEICH. (Stand dieses wip: bash-Seite noch NICHT nachgezogen.)
+**Zwischenmessung** (Selbsttest 5,7 s): `777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102
+Stoerungen begruendet ungeprueft`. nb3_urteil_aenderungen.py: **31 von 32 bemerkt**; H10 -> 5 Faelle falsch (281/282
+N3 + Stoerungen "Z6 '[ok] 05' weg", "Z6 Zahl 2/3 Zusatz"), H17 -> 5 (283 + 4 gegenlaeufige Paare pk Z1/Z2 Spalte 0 und 1),
+H18 -> 5 (284 + 4 Zusatzspalten pk). Nicht bemerkt nur X8 (pk Summe ueber Quelle statt gleich): gleichwertig - der Teil
+steht hinter `any(qq != gg ...) or`, an der Stelle gilt qq = gg in jedem Baum, also sum(qq) = sum(gg).

@@ -284,6 +284,125 @@ def _faelle_seiten(f, S, A, Q, P):
     f("pk/S: Summe gleich 13 > 12", "paket", _ersetze(P, "synchro   2   2", "synchro   3   3"), 0, 2)
 
 
+def _faelle_nb3(f, S, A, Q, P):
+    """Nachbesserung 3 (Abnahme 2, M2/M3): die drei Regeln, die sich mit EINER Zeile entfernen liessen (H10, H17, H18 der
+    Abnahme), je mit dem fehlenden Fall - zusaetzlich zu den Stoerungsfaellen, die dieselben Klassen allgemein abdecken."""
+    # H10: "genau n Fallzeilen" - bisher nur Fallnummern mit Luecke/doppelt/6 statt 5; jetzt lueckenlos zu WENIG bzw. zu VIEL
+    f("st/N3: letzte Fallzeile fehlt (01..04 lueckenlos, 5/5)", "selbsttest",
+      "\n".join(z for z in S if not z.startswith("   [ok] 05")), 0, 2)
+    f("st/N3: Fallzeile zuviel (01..06 lueckenlos, 5/5)", "selbsttest",
+      _ersetze(_selbsttest_log(6, 3), "6/6 Faelle", "5/5 Faelle"), 0, 2)
+    # H17: "je Baum Quelle = gleich" - bisher nur EIN Baum abweichend; jetzt zwei gegenlaeufig, beide Summen gleich (12/12)
+    f("pk/N3: Quelle != gleich in 2 Baeumen, Summen gleich", "paket",
+      _ersetze(_ersetze(P, "PSX   10   10", "PSX   9   10").split("\n"), "synchro   2   2", "synchro   3   2"), 0, 2)
+    # H18: Form der Baumzeile - genau zwei Zahlen (paket) bzw. genau eine (quellbaum); eine Zusatzspalte ist keine Baumzeile
+    f("pk/N3: Baumzeile mit drei Zahlen (10 9 10)", "paket", _ersetze(P, "PSX   10   10", "PSX   10 9 10"), 0, 2)
+    f("qb/N3: Baumzeile mit zwei Zahlen (10 9 Dateien)", "quellbaum", _ersetze(Q, "PSX   10 Dateien", "PSX   10 9 Dateien"), 0, 2)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# STOERUNGSFAELLE (Nachbesserung 3, Abnahme 2 M2/M3): aus jeder guten Ausgabe werden Faelle ERZEUGT - jede Zeile weg, jede
+# Zeile doppelt, jede Zahl -1/+1, hinter jeder Zahl dieselbe Zahl noch einmal (Zusatzspalte), je zwei Zahlen derselben
+# Spalte in zwei Zeilen mit gleich vielen Zahlen gegenlaeufig (-1/+1 und +1/-1; nur Vertauschungen zweier Werte einer
+# Spalte entstehen nicht - die Reihenfolge ist keine Aussage des Gates). Soll nach REGEL: 2 (keine Aussage) - es sei denn,
+# die Stelle steht hier begruendet als UNGEPRUEFT (Soll 0: das Urteil liest sie absichtlich nicht). Das Soll wird NIE aus
+# dem Urteil berechnet (das bestaetigte jede Aenderung selbst). Wer eine Regel entfernt, macht eine Stoerung zu "Urteil 0
+# (soll 2)" = SELBSTTEST-FEHLER - so faellt die ganze Klasse der Abnahme 2 (H10 = Zeile weg, H17 = gegenlaeufiges Paar,
+# H18 = Zusatzspalte) und jede kuenftige Aenderung, die eine Zahl oder Zeile der Ausgabe nicht mehr prueft. Wer eine
+# Stelle als ungeprueft erklaert, schreibt sie hier mit Grund hin; die Zahl der so begruendeten Stoerungen steht in der
+# Schlusszeile, und release/apk_pruefen.sh begrenzt sie (GATE_URTEIL_MAX_UNGEPRUEFT) - sichtbar im Diff.
+# Eintrag: (modi ("*" = alle), Zeilenmuster (re.match auf die ORIGINAL-Zeile), Arten, Spalten (None = alle Zahlen der
+# Zeile; Index der Zahl in der Zeile), Grund). Ein Paar gilt als ungeprueft, wenn beide Zahlen einzeln als "zahl"
+# ungeprueft sind ODER ein Eintrag mit "paar" beide Zeilen deckt. Jeder Eintrag muss mindestens eine Stoerung decken.
+UNGEPRUEFT = [
+    ("*", r"== APK-Asset-Gate: ", {"weg", "doppelt"}, None,
+     "Kopfzeile des Gates: sie traegt keine Aussage, das Urteil liest die Schlusszeile und die Zaehlzeilen"),
+    (("apk",), r"   Baum ", {"weg", "doppelt"}, None, "Spaltenkopf der Baumtabelle: keine Zahl, keine Aussage"),
+    (("apk",), r"   shared_assets/PSX ", {"weg", "doppelt", "zahl", "zusatz"}, None,
+     "Modus apk: das Urteil wertet die SUMME-Zeile (Quelle = APK = gleich = Manifest = Schlusszeile), nicht ihre Summanden"),
+    (("apk",), r"== APK-ASSET-GATE-OK: ", {"zahl"}, {1},
+     "Modus apk: die Baumzahl 'in k Baeumen' liest das Urteil nicht - die SUMME-Zeile traegt die Zaehlung"),
+    (("apk",), r"   TORSE\.VBS: ", {"zahl"}, None,
+     "TORSE.VBS: das Urteil verlangt genau eine Zeile mit 'sha256 gleich'; die Bytezahlen vergleicht es nicht"),
+    (("apk", "quellbaum", "paket"), r"   Tuer-Soll: ", {"weg", "doppelt", "zusatz"}, None,
+     "Tuer-Soll: das Urteil verlangt mindestens eine erkannte Zeile und jede erkannte g/g; die Anzahl der Zeilen und eine "
+     "unlesbare Zeile neben einer erkannten prueft es nicht (eine Zusatzzahl vor g/g faellt in '.*' des Musters)"),
+    (("selbsttest",), r"   \[ok\] \d+ Fall ", {"zahl"}, {1}, "Fallbeschreibung: freier Text des Gates ((.*) im Muster)"),
+    (("selbsttest",), r"   \[ok\] \d+ Fall ", {"zusatz"}, {0, 1},
+     "eine Zusatzzahl hinter der Fallnummer bzw. der Beschreibungszahl gehoert zur Beschreibung (freier Text)"),
+    (("selbsttest",), r"   Laufzeit: ", {"weg", "doppelt", "zahl", "zusatz"}, None, "Laufzeit: nur Information"),
+    (("quellbaum",), r"   \S+\s+\d+ Dateien$", {"paar"}, None,
+     "Modus quellbaum: je Baum gibt es keinen Vergleichswert (anders als paket: Quelle/gleich) - nur die Summe"),
+]
+_ZAHL = re.compile(r"(?<![A-Za-z0-9_])\d+(?![A-Za-z0-9_])")
+_UNGEPRUEFT_GENUTZT = set()
+
+
+def _ungeprueft(modus, zeile, art, spalte):
+    """-> Index des ersten passenden UNGEPRUEFT-Eintrags oder None"""
+    for i, (modi, muster, arten, spalten, _grund) in enumerate(UNGEPRUEFT):
+        if (modi == "*" or modus in modi) and art in arten and re.match(muster, zeile) \
+                and (spalten is None or spalte in spalten):
+            return i
+    return None
+
+
+def _stoerungen(modus, L):
+    """-> Liste (titel, text, soll) aller Stoerungen der guten Ausgabe L (Liste von Zeilen) - siehe UNGEPRUEFT."""
+    out = []
+    zahlen = [[(m.start(), m.end(), m.group(0)) for m in _ZAHL.finditer(z)] for z in L]
+    kurz = {"selbsttest": "st", "apk": "apk", "quellbaum": "qb", "paket": "pk"}[modus]
+
+    def dazu(titel, zeilen, deckung):
+        if all(d is not None for d in deckung):
+            _UNGEPRUEFT_GENUTZT.update(deckung)
+            out.append(("%s/St: %s" % (kurz, titel), "\n".join(zeilen), 0))
+        else:
+            out.append(("%s/St: %s" % (kurz, titel), "\n".join(zeilen), 2))
+
+    def neu_wert(v, d):
+        w = int(v) + d
+        return "%0*d" % (len(v), w) if v.startswith("0") and len(v) > 1 and w >= 0 else str(w)
+
+    def ersetzt(z, tok, wert):
+        a, e, _v = tok
+        return z[:a] + wert + z[e:]
+
+    for i, z in enumerate(L):
+        kopf = "Z%d %r" % (i, z.strip()[:14])
+        dazu(kopf + " weg", L[:i] + L[i + 1:], [_ungeprueft(modus, z, "weg", None)])
+        dazu(kopf + " doppelt", L[:i + 1] + L[i:], [_ungeprueft(modus, z, "doppelt", None)])
+        for c, tok in enumerate(zahlen[i]):
+            for d in (-1, 1):
+                dazu("%s Zahl %d %+d" % (kopf, c, d), L[:i] + [ersetzt(z, tok, neu_wert(tok[2], d))] + L[i + 1:],
+                     [_ungeprueft(modus, z, "zahl", c)])
+            dazu("%s Zahl %d Zusatz" % (kopf, c), L[:i] + [z[:tok[1]] + " " + tok[2] + z[tok[1]:]] + L[i + 1:],
+                 [_ungeprueft(modus, z, "zusatz", c)])
+    for i in range(len(L)):
+        for j in range(i + 1, len(L)):
+            if not zahlen[i] or len(zahlen[i]) != len(zahlen[j]):
+                continue
+            for c in range(len(zahlen[i])):
+                vi, vj = int(zahlen[i][c][2]), int(zahlen[j][c][2])
+                for d in (-1, 1):
+                    if sorted((vi + d, vj - d)) == sorted((vi, vj)):
+                        continue                  # nur eine Vertauschung zweier Werte der Spalte - keine Aussage
+                    zl = list(L)
+                    zl[i] = ersetzt(L[i], zahlen[i][c], neu_wert(zahlen[i][c][2], d))
+                    zl[j] = ersetzt(L[j], zahlen[j][c], neu_wert(zahlen[j][c][2], -d))
+                    paar = _ungeprueft(modus, L[i], "paar", c)
+                    deck = [paar, _ungeprueft(modus, L[j], "paar", c)] if paar is not None else \
+                        [_ungeprueft(modus, L[i], "zahl", c), _ungeprueft(modus, L[j], "zahl", c)]
+                    dazu("Z%d/Z%d Spalte %d %+d/%+d" % (i, j, c, d, -d), zl, deck)
+    return out
+
+
+def _faelle_stoerung(f, S, A, Q, P):
+    for modus, L in (("selbsttest", S), ("apk", A), ("quellbaum", Q), ("paket", P)):
+        for titel, text, soll in _stoerungen(modus, L):
+            f(titel, modus, text, 0, soll)
+
+
 def _quellbaum_log():
     return ["== APK-Asset-Gate: nur Quellbaum ==", "   shared_assets/PSX   10 Dateien", "   synchro   2 Dateien"] + TUER + [
             "== APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen, Tuer-Soll erfuellt =="]
@@ -589,6 +708,8 @@ def _faelle():
     f("pk: Tuer-Soll fehlt", "paket", "\n".join(z for z in P if not z.startswith("   Tuer-Soll:")), 0, 2)
     _faelle_muster(f, S, A, Q, P)
     _faelle_seiten(f, S, A, Q, P)
+    _faelle_nb3(f, S, A, Q, P)
+    _faelle_stoerung(f, S, A, Q, P)
     return F
 
 
@@ -943,6 +1064,18 @@ def selbsttest():
         print("   [%s] %03d %-52s Urteil %d (soll %d)%s" % ("ok" if gut else "FEHLER", nr, titel[:52], code, soll,
                                                          "" if gut else "  %s: %s" % (art[0], grund[:100])))
     n_f = len(faelle)
+    # Nachbesserung 3: Stoerungsfaelle - Umfang, begruendet ungepruefte (Soll 0), und jeder UNGEPRUEFT-Eintrag deckt etwas
+    n_st = sum("/St: " in t[0] for t in faelle)
+    n_ug = sum("/St: " in t[0] and t[5] == 0 for t in faelle)
+    print("   Stoerungen: %d erzeugt, %d mit Soll 2, %d begruendet ungeprueft (Soll 0, %d UNGEPRUEFT-Eintraege)"
+          % (n_st, n_st - n_ug, n_ug, len(UNGEPRUEFT)))
+    for i, e in enumerate(UNGEPRUEFT):
+        if i not in _UNGEPRUEFT_GENUTZT:
+            print("   [FEHLER] UNGEPRUEFT-Eintrag deckt keine Stoerung mehr (entfernen): %r %r" % (e[0], e[1]))
+            falsch += 1
+    if n_st == 0:
+        print("   [FEHLER] keine Stoerungsfaelle erzeugt")
+        falsch += 1
     text, versatz = _urteil_quelle()
     for v in _meldung_regel(text, versatz):
         print("   [FEHLER] Pruefung im Meldungstext (wird nicht mutiert - als eigene Anweisung davor schreiben): " + v)
@@ -988,8 +1121,8 @@ def selbsttest():
         print("== URTEIL-SELBSTTEST-FEHLER: %d von %d Faellen falsch, %d Mutanten ueberlebt, %d veraltete Eintraege =="
               % (falsch, n_f, len(ueberlebt), len(veraltet)))
         return 1
-    print("== URTEIL-SELBSTTEST-OK: %d/%d Faelle, %d/%d Mutanten erkannt, %d als gleichwertig begruendet =="
-          % (n_f, n_f, erkannt, n_m, gleich))
+    print("== URTEIL-SELBSTTEST-OK: %d/%d Faelle, %d/%d Mutanten erkannt, %d als gleichwertig begruendet, "
+          "%d Stoerungen begruendet ungeprueft ==" % (n_f, n_f, erkannt, n_m, gleich, n_ug))
     return 0
 
 
