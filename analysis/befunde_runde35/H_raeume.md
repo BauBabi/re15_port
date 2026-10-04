@@ -1107,3 +1107,89 @@ Sichtstrahl FUN_80050858 Zeile fuer Zeile in Python nachgebaut (`re2_mess/re2_lo
 DAT_800a73b4-Tabelle aus der EXE) mit Arm-URSPRUNG als Zielpunkt: frei fuer ALLE Arme aller Laeufe (auch S4 in
 g8). Offen war damit nur der Zielpunkt selbst: FUN_8003DB38 nimmt Part[+0x1C1]+0x5C (gezeichnete Lage), nicht den
 Ursprung — Lauf mit Part-Lage folgt.
+
+### M1 — der Zielpunkt eines verborgenen Arms ist (0,0,0) — gemessen und gerechnet
+Zwei weitere GDB-Laeufe mit Part-Lage je Arm (`re2_gdb_grab.py`, R2_EXTRA liest jetzt auch +0x1C1, Part[+0x1C1]+0x5C
+und +0x1F0): `daten/n4_g8c_r0_ruecken` (Ruecken, Satz 0) und `daten/n4_g1b_ost_gesicht` (Gesicht, Satz 9).
+```
+n4_g8c Bild 0: S0 (Halter) w0=0c003405 k1=(-27150,-2581,-12350) = Ursprung; S1..S4 (ENDE, w0 Bit 0x2 verborgen) k=(0,0,0)
+       Suche in Halte-Bild 2 (cd 0 -> 45), Ziel bleibt SELBST
+n4_g1b Bild 0: S9 (Halter) k1=(-12450,-2161,-7000); S5..S8 (ENDE) k=(0,0,0), d = 1241/1254/1247/1234
+       Suche in Halte-Bild 31 -> Ziel 80162094 = S9 (der Halter), obwohl S8 naeher (1234 < 1247) und im Kegel
+```
+re2_los.py: der Strahl von Leons Kopf (Part 8 +0x5C) nach (0,0,0) ist von JEDER gemessenen Leon-Lage verdeckt (13
+Laeufe, beide Fensterreihen). => Ein nie gezeichneter Arm (RE2 schreibt part+0x5C nur beim Zeichnen) faellt durch die
+Sichtpruefung; das erklaert g8 (S4 im Kegel, aber nie gezeigt) und g1b (S8). In g1/g3/g4 blickt Leon auf einen
+ENDE-Nachbarn — der war also gezeichnet (g3/g4: der sichtbare, schiebende Nachbar aus Abnahme 3 M3).
+**Port** (Commit cf13938d): `re2arm_t.gezeichnet` (gesetzt, sobald arm_show den Arm zeigt, Reset beim Raumwechsel);
+die Sicht eines nie gezeigten Arms wird zum Punkt (0,0,0) geprueft (re15_re2_los_clear mit Ursprungs-Kopie), sonst zur
+Arm-Lage (= Part[+0x1C1]+0x5C des gezeichneten Arms, RAM). Die Wahl selbst ist jetzt die reine Funktion
+`re15_re2arm_look_waehle` (Schleife @0x8003dbe4-0x8003dcec, Speicher @0x8003dcf0-0x8003dd10), die der Riegel mit der
+Original-RAM speist (N1).
+
+### M1 — Messung nachher (2), exe mit der Part-Lagen-Regel (Laeufe `n4_front2`, `n4_back2`, Tuerweg wie oben)
+```
+n4_front2 Halten F244-F395 (152 Bilder): ts=5 (Halter) durchgehend, |acc_yaw| max 415 mittel 198, |acc_pitch| max 199
+n4_back2  Halten F277-F428 (152 Bilder): ts=0 (SELBST) durchgehend; acc -433 -> -337 -> -241 -> -145 -> -49 -> 0
+          (F277-F282, Schritt 96 zurueck zur Pose), danach Akku (0,0) in 147 von 152 Bildern
+          Die Ostarme wurden in diesem Lauf nie gezeigt (re2_ki.log: nur Slot 5/6 je hidden=0) -> Sicht auf (0,0,0)
+```
+Vergleich Abnahme 3 (gleiche Eingaben, alter Stand): Gesicht fl=00 acc_yaw -209..415 (Mittel 198) — unveraendert,
+weil schon damals der Halter das Ziel war; Ruecken acc_yaw -598..248 an der Klemme tgt -512 (Mittel 284) -> jetzt 0.
+Original: Ruecken g2/g6/g8 Akku (0,0) in allen Bildern, Gesicht g5/g7/g9/g11 acc_yaw -207..417.
+
+**Volumenmass mit dem GEZEICHNETEN Kopf an der exe-Lage** (Sonde `probe_r35_raeume_arme`, neuer Abschnitt EXE-KOPF:
+Akku je Bild aus der exe-Nacken-Spur, FSM eingefroren -> `goto neck_apply_acc`, Halte-Bilder 16..34 ab dem Pin-Bild):
+```
+NB4  n4_front2 Gesicht Leon (-20439,-15060) Blick 1671: Kopf wie gezeichnet  5/19 (max 4) | ohne Drehung  5/19 (max 4)
+NB4  n4_back2  Ruecken Leon (-20411,-15111) Blick 3749: Kopf wie gezeichnet 15/19 (max 6) | ohne Drehung 15/19 (max 6)
+alt  a3_p4_neck      Gesicht (Abnahme-3-Lauf):           Kopf wie gezeichnet  5/19 (max 4)
+alt  a3_p4_neck_back Ruecken (Abnahme-3-Lauf):           Kopf wie gezeichnet 17/19 (max 12)
+```
+=> Die Abnahme-3-Zahl "5/19 an der exe-Lage" galt im Gesicht-Griff auch fuer die gezeichnete Kopfpose (die Drehung
+aendert die Zahl dort nicht), "15/19" im Ruecken-Griff NICHT (gezeichnet waren es 17/19, max 12 Vertices). Seit NB4
+zeichnet die exe im Ruecken-Griff die Animationspose wie das Original -> 15/19 (max 6). Original an den
+Nachbarhoehen: Gesicht 7..11/19, Ruecken 17..19/19 (Satz 0/5).
+
+### M2 — Riegel unit_r35_raeume_arme auf Kopf-Rahmen und Original-Werte umgestellt (Commits 263f00fd, 5a6672d2)
+* Leon wird posiert WIE DER ZEICHNER: `g_anim_pose_actor = pl` (g_actors[0]), jedes Halte-Bild genau einmal
+  (`leon_pose`), damit Ueberblendung und Nacken-FSM wie in main.c laufen (vorher: Kopie, NULL, keine Kopfdrehung).
+* Fixture `r35_raeume_re2orig.inc` (re2_fixture.py, aus den frames.bin neu erzeugt) traegt je Halte-Bild Leons
+  Blick-Akku Part 8 +0x98/+0x9A (gefaltet) und das Ziel PL+0x1B8 als Satz, je Lauf das Wechselbild, die zehn
+  ROOM2050-Saetze (RDT @0x1970 + n*0x16), die Sicht je Satz (re2_los.py) und die zwei Suchen mit allen Armen (N1b).
+* (6a) in den fuenf Original-Lagen: Ausgangslage des Mitschnitts hergestellt (Ziel SELBST im ersten Halte-Bild, die
+  anderen neun Arme schlafen wie im Original die Gegenreihe, erste Suche im ausgerichteten Bild = Original-Wechselbild
+  g5 20 / g7 25 / g11 28; Ruecken g6/g8 im Bild des Gesicht-Zwillings). Geprueft Bild fuer Bild: Hand im Wurzel-
+  UND im KOPF-Rahmen, Blick-Akku, Blickziel, Zahl der Ueberschneidungsbilder. Zeitliche Ausrichtung jetzt im SELBEN
+  Zyklus (Port-Bild am naechsten an Original-Bild - 1; vorher erste Fundstelle, die fuer Bild 15/16 einen Zyklus
+  spaeter lag). Gemessen:
+```
+(6a) g5_r5_gesicht  Wurzel  9, KOPF 17, Akku 14, Ziel gleich | Port 10/19 (max 4)  Original 11/19 (max 4)
+(6a) g6_r5_ruecken  Wurzel  9, KOPF  9, Akku  0, Ziel gleich | Port 19/19 (max 16) Original 19/19 (max 14)
+(6a) g7_r0_gesicht  Wurzel 10, KOPF 10, Akku 10, Ziel gleich | Port  6/19 (max 6)  Original  7/19 (max 8)
+(6a) g8_r0_ruecken  Wurzel 10, KOPF 10, Akku  0, Ziel gleich | Port 17/19 (max 20) Original 17/19 (max 22)
+(6a) g11_r7_gesicht Wurzel  9, KOPF 10, Akku 10, Ziel gleich | Port  3/19 (max 6)  Original  4/19 (max 6)
+```
+  Vorher (Abnahme 3, R35_ARME_DUMP): Kopf-Rahmen bis 182 Einheiten. Akku Bild fuer Bild z.B. g5 Bild 10 Original
+  (184,198) / Port (184,198), Bild 2 (-28,-138) / (-36,-146). Grenzen (TEST-TOLERANZ der Versuchsanordnung, Original-
+  Leon 14 seitlich / 1,6 Grad): Wurzel 20, Kopf 20 (gemessen 17), Akku 16 (gemessen 14), Ueberschneidungsbilder +-1
+  (gemessen 1; vorher +-2 mit der falschen Begruendung "der Port dreht den Kopf nicht").
+* (1) Original-Spanne nur aus den zehn sauberen Griffen: 1251..1255 (vorher 1251..1295 mit g3/g4).
+* (N1b) neu: `re15_re2arm_look_waehle` mit der RAM der Laeufe n4_g8c/n4_g1b (alle zehn Arme, Sicht aus re2_los.py mit
+  der gemessenen Part-Lage) -> Port-Wahl = RAM-Ziel (SELBST trotz S4 im Kegel / S9 statt des naeheren S8).
+* (N1a) neu: dieselbe Funktion auf den zwoelf Halte-Mitschnitten (ENDE-Arme nie gezeichnet wie gemessen) -> in den
+  neun sauberen Laeufen = RAM-Ziel (Gesicht Halter, Ruecken g2/g6/g8 SELBST); g1/g3/g4 nur berichtet (Nachbar war
+  gezeichnet).
+* (5b) RE1.5-KI = RE2-KI weiter Bild fuer Bild gleich (Blick-Zustand je Lauf auf den Spielstart gesetzt: Zaehler 0x2D,
+  Ziel SELBST — sonst erbte der zweite Lauf Zaehlerphase und Ziel des ersten).
+* Lauf: `test_r35_raeume_arme: OK` (alle Pruefungen ok).
+
+### M3 — Belegdaten/Doku berichtigt (Commit be45304f)
+* Dossier :822/:830/:905/:912/:941 mit `[NB4 berichtigt …]` markiert: "in ALLEN zwoelf Griffen 1251..1252" falsch —
+  gemessen 1251 (g5-g8, g11), 1252 (g9, g12, g13), 1255 (g1/g2), 1295 (g3/g4, Nachbar-Push); Spannen ohne g3/g4:
+  Gesicht 4..17/19, Ruecken 12..19/19 (vorher 6..19/19); "der Port dreht den Kopf im Halten nicht" falsch fuer die exe.
+* `enemy_ai_re2_zellenarm.c` Kommentar des Koerper-Pushs: "in JEDEM der elf … 1251..1252" ersetzt durch die Werte je
+  Griff; GDB-PC durch die Store-Adressen ersetzt (`sw v0,56(s1)` @0x800350c8 / `sw v1,64(s1)` @0x800350cc, Pin
+  @0x80100c20 / @0x80100c38) — Hinweis der Abnahme 3. Ebenso Riegel-Kopf und `test_p2_1210_arme_re2.c` (4d).
+* Riegel (1) ohne g3/g4 (s. M2). Die Commit-Message 9bcc9edd (Spannen mit g3/g4) laesst sich nicht aendern — dieser
+  Abschnitt ersetzt sie.
