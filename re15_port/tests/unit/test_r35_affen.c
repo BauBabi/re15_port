@@ -842,13 +842,19 @@ static int pl00_laden(void)
  * bisher, Lauf 1 = "Weg 2": Leon, e1, e2 am Ende von T253 auf die Original-Lage/-Yaw gesetzt (jnb1/g_griff.txt F254). */
 #define GRIFF_T0 250
 #define GRIFF_N  246
-static int32_t s_gl_pl[2][GRIFF_N][2], s_gl_e1[2][GRIFF_N][3], s_gl_e2[2][GRIFF_N][3];
-static int32_t s_gl_st[2][GRIFF_N][6];         /* Bezug, Eingang (nach Schub), Ausgang der Klemme je Bild (Wurf) */
-static int32_t s_gl_anker[2][2];
-static int     s_gl_frei[2];
-static int32_t s_gl_frei_xy[2][2];
-static void griff_lauf(int erzwinge)
+static int32_t s_gl_pl[3][GRIFF_N][2], s_gl_e1[3][GRIFF_N][3], s_gl_e2[3][GRIFF_N][3];   /* N5: [2] = Lauf 0 mit Versatz bei T291 */
+static int32_t s_gl_st[3][GRIFF_N][6];         /* Bezug, Eingang (nach Schub), Ausgang der Klemme je Bild (Wurf) */
+static int32_t s_gl_anker[3][2];
+static int     s_gl_frei[3];
+static int32_t s_gl_frei_xy[3][2];
+static int     s_gl_biss[3];          /* N5: erster Biss nach der Freigabe (-1 = keiner bis T495) */
+static double  s_gl_e12[3][2];        /* N5: Abstand e1/e2 zu Leon am Laufende */
+static void griff_lauf_v(int erzwinge, int vx, int vz);
+static void griff_lauf(int erzwinge) { griff_lauf_v(erzwinge, 0, 0); }
+/* N5 (P2): vx/vz != 0 -> Lauf 0, Leon vor Bild T291 um (vx,vz) versetzt (Start der Klemmen-Iteration), Ablage in [2]. */
+static void griff_lauf_v(int erzwinge, int vx, int vz)
 {
+    const int L = (vx || vz) ? 2 : erzwinge;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_game_state_init();
     re15_game_flag_set(4, 0x40, 1);
@@ -872,11 +878,11 @@ static void griff_lauf(int erzwinge)
     b->anim_frame = 15; re15_affen_pool_anim(b); b->anim_frame = 16;
     const int T0 = 254, NT = (int)(sizeof s_wurf_orig / sizeof s_wurf_orig[0]);
     int f_pin = -1, f_sprung = -1, f_frei = -1, hp_griff = -1; int32_t px0 = 0, pz0 = 0, fx = 0, fz = 0;
-    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0, d265 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
+    double abw_p2 = 0, abw_p2_mitte = 0, abw_e2 = 0, d265 = 0, d290 = 0; int n_p2 = 0, f_abw_p2 = -1, hp_frei = -1;
     int biss_nach_frei = -1; double e1_ende = 0, e2_ende = 0;   /* N4 (N1): Biss nach der Freigabe, Abstaende am Laufende */
     int n_nach = 0, n_fremd = 0, n_klemme = 0;   /* T291..Freigabe: Bilder / Bilder mit fremdem Beweger / Bilder mit Klemm-Schub */
     int p3_bilder = 0, p3_pl00 = 0, p5_bilder = 0, p5_rueck = 0;
-    memset(s_gl_st[erzwinge], 0, sizeof s_gl_st[erzwinge]);
+    memset(s_gl_st[L], 0, sizeof s_gl_st[L]);
     for (int f = 196; f < 196 + 300; f++) {
         if (f == 250) { a->sub_state_1 = 15; a->sub_state_2 = 0; a->sub_state_3 = 0; }
         if (erzwinge && f == 254) {   /* Weg 2: Lage/Yaw am Ende von T253 = Original (jnb1/g_griff.txt F254) */
@@ -884,25 +890,26 @@ static void griff_lauf(int erzwinge)
             a->x = -5895; a->z = -14394; a->rot_y = 2825;
             b->x = -8709; b->z = -12400; b->rot_y = 27;
         }
+        if (L == 2 && f == 291) { pl->x += vx; pl->z += vz; }   /* N5 (P2): Versatz vor dem ersten Klemmen-Bild */
         int32_t ox = pl->x, oz = pl->z;
         re15_schritt_station_reset();
         frame(0, 0);
         if (f >= GRIFF_T0 && f < GRIFF_T0 + GRIFF_N) {
             int i = f - GRIFF_T0;
-            s_gl_pl[erzwinge][i][0] = pl->x; s_gl_pl[erzwinge][i][1] = pl->z;
-            s_gl_e1[erzwinge][i][0] = a->x; s_gl_e1[erzwinge][i][1] = a->z; s_gl_e1[erzwinge][i][2] = a->rot_y;
-            s_gl_e2[erzwinge][i][0] = b->x; s_gl_e2[erzwinge][i][1] = b->z; s_gl_e2[erzwinge][i][2] = b->rot_y;
+            s_gl_pl[L][i][0] = pl->x; s_gl_pl[L][i][1] = pl->z;
+            s_gl_e1[L][i][0] = a->x; s_gl_e1[L][i][1] = a->z; s_gl_e1[L][i][2] = a->rot_y;
+            s_gl_e2[L][i][0] = b->x; s_gl_e2[L][i][1] = b->z; s_gl_e2[L][i][2] = b->rot_y;
             int32_t rx = 0, rz = 0, ix = 0, iz = 0, kx = 0, kz = 0;
             if (re15_schritt_station_hole(RE15_SCHRITT_ANFANG, &rx, &rz) && re15_schritt_station_hole(RE15_SCHRITT_SCHUB, &ix, &iz) &&
                 re15_schritt_station_hole(RE15_SCHRITT_KLEMME, &kx, &kz)) {
-                s_gl_st[erzwinge][i][0] = rx; s_gl_st[erzwinge][i][1] = rz; s_gl_st[erzwinge][i][2] = ix;
-                s_gl_st[erzwinge][i][3] = iz; s_gl_st[erzwinge][i][4] = kx; s_gl_st[erzwinge][i][5] = kz;
+                s_gl_st[L][i][0] = rx; s_gl_st[L][i][1] = rz; s_gl_st[L][i][2] = ix;
+                s_gl_st[L][i][3] = iz; s_gl_st[L][i][4] = kx; s_gl_st[L][i][5] = kz;
             }
-            if (f == 254) { s_gl_anker[erzwinge][0] = pl->anchor_x; s_gl_anker[erzwinge][1] = pl->anchor_z; }
+            if (f == 254) { s_gl_anker[L][0] = pl->anchor_x; s_gl_anker[L][1] = pl->anchor_z; }
         }
         int k = f - T0;
         const int32_t *o = (k >= 0 && k < NT) ? s_wurf_orig[k] : NULL;
-        int zeigen = (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)));
+        int zeigen = L != 2 && (f >= 249 && (f < 300 || (f % 6) == 0 || (f >= 370 && f <= 382) || (f >= 405 && f <= 412)));
         if (zeigen)
             printf("    T%d hp%d pl %d/%d c%d/%d%s h%d (%d,%d) r%d | e1 %d/%d/%d c%d/%d (%d,%d) r%d | e2 %d/%d c%d/%d (%d,%d) r%d\n", f, (int)pl->hp,
                    pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame, (pl->anim_flags & 0x80) ? "R" : "",
@@ -917,7 +924,8 @@ static void griff_lauf(int erzwinge)
         if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) { f_frei = f; fx = pl->x; fz = pl->z; }
         if (o && f >= 265 && f <= 290) {            /* P2: Platzierung + Schub + Klemme je Bild */
             double d = dist2d(pl->x, pl->z, o[0], o[1]);
-            abw_p2_mitte += d; n_p2++; if (f >= 266 && d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }   /* N3: T265-T267 mit (Schub von e2); N4: T265 eigene Pruefung */
+            abw_p2_mitte += d; n_p2++; if (f <= 289 && d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }   /* N5: T265-T289 (T265 wieder drin), T290 = Klemmen-Start */
+            if (f == 290) d290 = d;   /* N3: T265-T267 mit (Schub von e2); N4: T265 eigene Pruefung */
             if (f == 265) d265 = d;
             if (f >= 266 && f <= 267 && d > abw_e2) abw_e2 = d;
         }
@@ -943,10 +951,12 @@ static void griff_lauf(int erzwinge)
         }
     }
     if (n_p2) abw_p2_mitte /= n_p2;
-    s_gl_frei[erzwinge] = f_frei; s_gl_frei_xy[erzwinge][0] = fx; s_gl_frei_xy[erzwinge][1] = fz;
+    s_gl_frei[L] = f_frei; s_gl_frei_xy[L][0] = fx; s_gl_frei_xy[L][1] = fz;
+    if (L != 2)
     printf("  %sPin T%d bei (%d,%d) hp %d, erste Platzierung T%d, frei T%d bei (%d,%d), Ende (%d,%d) hp %d\n", erzwinge ? "[Weg 2] " : "",
            f_pin, (int)px0, (int)pz0, hp_griff, f_sprung, f_frei, (int)fx, (int)fz, (int)pl->x, (int)pl->z, (int)pl->hp);
-    if (erzwinge) return;
+    s_gl_biss[L] = biss_nach_frei; s_gl_e12[L][0] = e1_ende; s_gl_e12[L][1] = e2_ende;
+    if (L) return;
     printf("  Bahn P2 gegen das Original (%s): mittlere Abweichung %.0f, groesste %.0f in T%d; T265-T267 (Schub von e2) %.0f;"
            " P3/P4 %d Bilder Clip 0x10 (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n",
            "T265-T290", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, p3_bilder, p3_pl00, p5_bilder, p5_rueck);
@@ -954,10 +964,10 @@ static void griff_lauf(int erzwinge)
     PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original T254: (-6660,-12486))", (int)px0, (int)pz0);
     PRUEF(f_sprung == 265, "erste Wurf-Platzierung in T%d = Opfer-Bild 0x0b (Original T265 = VSync 10171, +0x95 0x0b beim Eintritt;"
           " P1->P2 @0x8011c244-5c, Fenster @0x8011c278)", f_sprung);
-    PRUEF(n_p2 == 26 && abw_p2 <= 200.0 && abw_e2 <= 200.0, "Wurf-Bahn T266-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub)"
-          " im Mittel %.0f (T265-T290), hoechstens %.0f (T%d) neben dem Original, T266-T267 mit dem Schub von e2 hoechstens %.0f (Nachbesserung 2: 1573,"
-          " e2 stand still; Schranke 200 = Anker-Versatz aus dem Anlauf, in T289/T290 von der Wandklemme verstaerkt, s. Weg 2)",
-          abw_p2_mitte, abw_p2, f_abw_p2, abw_e2);
+    PRUEF(n_p2 == 26 && abw_p2 <= 100.0 && abw_e2 <= 100.0, "Wurf-Bahn T265-T289 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub)"
+          " im Mittel %.0f (T265-T290), hoechstens %.0f (T%d) neben dem Original, T266-T267 mit dem Schub von e2 hoechstens %.0f; T290 (erstes"
+          " Bild der Klemmen-Iteration) %.0f (N5: Schranke 100 jetzt auch fuer T265 — N3 64/166, N4 1238 in T265 — T290 = Empfindlichkeit"
+          " der Klemme, s. M1 und die N5-Messung unten)", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, d290);
     {   /* N4: T265 = erstes Klemmen-Bild nach der Platzierung. Die Klemme ist eine Abbildung (Bezug, Eingang) -> Ausgang (Riegel wand:
          * FUN_8003b0a4 bitgleich); mit den ORIGINAL-Eingaben (kette[0]) liefert sie die Original-Lage, mit den Lauf-0-Eingaben (je
          * <= 20 daneben) die Lauf-0-Lage — die Abweichung in T265 ist die Empfindlichkeit der Klemme (M1 (c)), kein anderer Beweger. */
@@ -971,12 +981,11 @@ static void griff_lauf(int erzwinge)
               " daneben) -> (%d,%d) = Lauf 0 (%d,%d): Empfindlichkeit der Klemme, kein fremder Beweger", d265, (int)ox, (int)oz, dbz, din,
               (int)lx, (int)lz, (int)s_gl_st[0][i][4], (int)s_gl_st[0][i][5]);
     }
-    /* N4 (N1): nach der Freigabe bleiben beide Gorillas zwischen den Wagen haengen, kein Biss bis zum Laufende (Original g_griff F496:
-     * HP 76, e1 ~3925 / e2 ~4990 entfernt, beide +0x1d6 = 1). Gilt fuer die Landung an der Original-Ruhelage (-3009,-11643). */
-    PRUEF(biss_nach_frei < 0 && dist2d(pl->x, pl->z, -3009, -11643) <= 60.0 && fabs(e1_ende - 3925.0) <= 250.0 && fabs(e2_ende - 4990.0) <= 250.0,
-          "Lauf 0 nach der Freigabe: kein Biss bis T495 (erster Biss T%d), Leon (%d,%d) an der Original-Ruhelage (-3009,-11643), e1 %.0f / e2 %.0f"
-          " entfernt (Original ~3925 / ~4990) — HEAD 458635e1: Landung (-4200,-10658), Biss e2 T405", biss_nach_frei, (int)pl->x, (int)pl->z,
-          e1_ende, e2_ende);
+    /* N5 (P2): KEIN Pin auf den Ausgang von Lauf 0 — die Landung ist ein Ausgang der chaotischen Klemmen-Iteration
+     * (Messung in teil_griff: 24 Starts 1-2 Einheiten neben der Lauf-0-Lage T290). Der N1-Mechanismus (an der Original-
+     * Ruhelage kein Biss) wird im Weg-2-Lauf geprueft, der den Original-Zustand traegt. */
+    printf("  Lauf 0 nach der Freigabe: erster Biss T%d, Ende (%d,%d), e1 %.0f / e2 %.0f entfernt (Original-Ruhelage (-3009,-11643),"
+           " ~3925 / ~4990)\n", biss_nach_frei, (int)pl->x, (int)pl->z, e1_ende, e2_ende);
     PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
     PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
     PRUEF(f_frei == 378, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
@@ -1601,6 +1610,34 @@ static void teil_griff(void)
         PRUEF(sprung <= 100.0, "Fusssperre mit der Pool-Pose (FUN_8001f3bc Pose vor +0x95++ @0x8001f40c/@0x8001f610-1c, bf50 @0x8011bf80-c008):"
               " e1 in Sub 2 T331-T372 hoechstens %.0f je Bild (T%d) — vorher ~1300 im Clip-3-Wrap-Bild T370 (Original F370 -> F371: (4,-4));"
               " Rest am Sub-2-Eintritt (Port bis 64, Original bis 34) = OFFEN Frac-Mischung der Pool-Pose", sprung, t_sprung);
+    }
+
+    /* ---- N5 (P2): N1-Mechanismus am Original-Zustand; Empfindlichkeit des Lauf-0-Ausgangs (kein Pin darauf) ---- */
+    PRUEF(s_gl_biss[1] < 0 && fabs(s_gl_e12[1][0] - 3925.0) <= 250.0 && fabs(s_gl_e12[1][1] - 4990.0) <= 250.0,
+          "N1 (Weg 2 = Original-Zustand): an der Original-Ruhelage kein Biss bis T495 (erster Biss T%d), e1 %.0f / e2 %.0f entfernt"
+          " (Original g_griff F496: HP 76, ~3925 / ~4990; A[3]-Gate @0x80117a54-90 sperrt ausser Reichweite)", s_gl_biss[1],
+          s_gl_e12[1][0], s_gl_e12[1][1]);
+    {
+        const int32_t bx = s_gl_pl[0][290 - GRIFF_T0][0], bz = s_gl_pl[0][290 - GRIFF_T0][1];
+        const int32_t lx = s_gl_pl[0][GRIFF_N - 1][0], lz = s_gl_pl[0][GRIFF_N - 1][1];
+        const int lbiss = s_gl_biss[0];
+        int n_ruhe = 0, n_biss = 0, n_gleich = 0;
+        for (int k = 0; k < 24; k++) {               /* 5x5-Gitter +-1/+-2 ohne die Mitte, wie M1 */
+            int j = k < 12 ? k : k + 1, vx = (j % 5) - 2, vz = (j / 5) - 2;
+            griff_lauf_v(0, vx, vz);
+            int32_t ex = s_gl_pl[2][GRIFF_N - 1][0], ez = s_gl_pl[2][GRIFF_N - 1][1];
+            int ruhe = dist2d(ex, ez, -3009, -11643) <= 60.0;
+            n_ruhe += ruhe; n_biss += (s_gl_biss[2] >= 0); n_gleich += (ex == lx && ez == lz && s_gl_biss[2] == lbiss);
+            printf("    N5 Start T290 (%d,%d) [%+d,%+d]: frei T%d (%d,%d), Ende (%d,%d)%s, erster Biss T%d\n", (int)(bx + vx), (int)(bz + vz),
+                   vx, vz, s_gl_frei[2], (int)s_gl_frei_xy[2][0], (int)s_gl_frei_xy[2][1], (int)ex, (int)ez, ruhe ? " = Ruhelage" : "", s_gl_biss[2]);
+        }
+        printf("  N5 Empfindlichkeit Lauf 0: von 24 Starts 1-2 Einheiten neben der Lauf-0-Lage T290 (%d,%d) enden %d an der Original-Ruhelage,"
+               " %d werden bis T495 gebissen, %d gleich wie Lauf 0 (Ende (%d,%d), Biss T%d)\n", (int)bx, (int)bz, n_ruhe, n_biss, n_gleich,
+               (int)lx, (int)lz, lbiss);
+        PRUEF(n_gleich < 24 && (n_ruhe > 0 || n_biss > 0) && (n_ruhe < 24 || n_biss < 24),
+              "N5 (P2): der Ausgang von Lauf 0 ist empfindlich — von 24 Starts 1-2 Einheiten daneben enden %d gleich wie Lauf 0, %d an der"
+              " Original-Ruhelage, %d mit Biss bis T495; ein Pin auf Ruhelage/Biss in Lauf 0 misst keinen Mechanismus (Nachbesserung 3, Z. 1217)",
+              n_gleich, n_ruhe, n_biss);
     }
 }
 
