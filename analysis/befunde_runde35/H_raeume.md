@@ -922,3 +922,58 @@ nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Ori
   `re2_mess/re2_fixture.py` aus den Mitschnitten): (O1) Arm + 1 im Original, (4d) Konstruktion im Original, (1) Abstand
   Leon-Ursprung = Originalbereich 1251..1295 und Strahl, (6a) Port = Original in fuenf Lagen (Lage <= 20, Zahl <= 2),
   (6b) Nutzerfall <= Original-Nachbarhoehen.
+
+### Tests (Nachbesserung 3)
+* `unit_r35_raeume_arme` neu gefasst (Kopf des Tests): (O1) Original-RAM Arm + 1 (12 x 19 Bilder), (4d) Original-RAM
+  Konstruktion (vier Paare), (1) Pin + Push: Leon 1251 vom Ursprung (Originalbereich 1251..1295) auf dem Strahl durch
+  den Pin (sin < 0.01) in sieben Port-Laeufen, (2) Arm + 1 je Lauf, (6a) Port = Original in fuenf Lagen
+  (Wurzel-Rahmen-Abweichung <= 20, gemessen <= 10; Ueberschneidungsbilder +-2, gemessen 0/0/2/0/2), (6b) Nutzerfall
+  y -2500: Gesicht 7/19 <= 11/19, Ruecken 19/19 <= 19/19 (Original Satz 5/8/0), (4a/4b) Port-Konstruktion, (5a/5b)
+  RE1.5-KI = RE2-KI Bild fuer Bild. Die Original-Werte rechnet der Test selbst aus der RAM (keine abgeschriebenen
+  Zahlen). Lauf: alle Pruefungen ok.
+* `unit_1210_arme_re2` (4d): Pin auf der Hand, danach Push -> Leon 1251 vom Ursprung auf dem Strahl (gemessen 1251,
+  sin 0.0005); (8) Begehbarkeit unveraendert ok.
+* Sonden ohne add_test: `probe_r35_raeume_re2orig` (Volumenmass auf frames.bin), `probe_r35_raeume_arme` EXE-PIN auf
+  die nb3-Lagen. Gezielter Lauf `ctest -R "r35_raeume|1210|writher|arme|g5|birkin|body|push|grab"`: 30/30 gruen.
+
+### OFFEN (Stand Nachbesserung 3, ersetzt OFFEN 1 der Nachbesserung 2)
+1. **Leons Kopfdrehung im Halten (RE2)** — im Original-RAM unterscheidet sich zwischen Gesicht- und Ruecken-Griff nur
+   Part 8; der Port dreht den Kopf im Halten nicht (Port hat den Spieler-Hals-Blick neck_bone 8 / step 96 / clamp
+   0x200, actor_common.c, aber nicht im Opfer-Zustand des Arms). Wirkung gemessen: bis 2 Ueberschneidungsbilder
+   weniger als das Original (6a). Naechster Messweg: `re2_mess/re2_gdb_push.py`-Muster mit Schreib-Wachpunkt auf die
+   gemischte Rotation von Leons Part 8 (PL+0x198 -> Part 8 +0x68..+0x6C) im Halten -> schreibender PC -> Zielwahl
+   des RE2-Halsblicks; dann im Opfer-Zustand nachbauen.
+2. Saetze 1 und 4 griffen an der gewaehlten Stelle nicht (g10/g14) — fuer den Vergleich nicht noetig (acht Hoehen
+   gemessen); Messweg wie g5..g13 mit anderer Leon-Lage.
+3. Koerper-Push auch WAEHREND REACH (RE2-Verhalten, gemessen: Original-Leon wurde vor dem Griff von -26384 auf 1250 vom
+   Ursprung geschoben; exe nb3_front "Leon vorher (-20613,-14853)" = 1252 vom Arm 5): sichtbare Arme draengen Leon in
+   ROOM1210 bis x -20240 von der Westwand ab. Kein Nutzerbefund, als Folge genannt.
+4. Unveraendert: Port-Zeichner-Ueberblendung einen Schritt voraus (NB2 OFFEN 2, skeleton_common.c), tote RE1.5-
+   Writher-Maschine (NB2 OFFEN 3), OFFEN 2-5 und 7 der Grundrunde.
+5. Werkzeug: PCSX-Redux laeuft in einer Sitzung ohne Monitor nicht (ImGui-Assert "Monitors.Size > 0", `-no-ui`
+   Segfault). RE2-Messungen gehen ueber DuckStation-GDB: `%LOCALAPPDATA%/DuckStation/settings.ini` `[Debug]
+   EnableGDBServer = true` setzen (nach den Messungen wieder auf false zurueckgesetzt), `re2_mess/re2_gdb_grab.py`.
+
+### Fuer den Nutzer (Nachtrag Nachbesserung 3)
+* ROOM1210: Wenn ein Gitterarm zupackt, schiebt er Leon jetzt wie im RE2-Original eine Armlaenge vom Fenster weg
+  (RE2 macht das mit dem Koerper des Arms). Die Hand liegt dann an Leons Kopf/Nacken, statt dass der Unterarm durch
+  seinen Kopf geht. Gemessen am echten Weg von der Tuer: in 5 von 19 Halte-Bildern beruehrt die Hand den Kopf (vorher
+  12 von 19, im Original 7 bis 11 von 19).
+* Zum Vergleich liegen jetzt echte Bilder aus Resident Evil 2 bei: `analysis/befunde_runde35/H_raeume/
+  nb3_re2_original_halten_satz5_satz0.png` und `nb3_re2_original_halten_ost_rec9_y-2160.png` — auch dort liegt der
+  Zombie-Arm im Griff an bzw. in Leons Kopf; das gehoert zur RE2-Animation.
+* Keine neuen Sprachdateien, keine neuen Assets (die Original-Messdaten liegen nur unter analysis/ und als Test-Datei).
+
+### Dateien (Nachbesserung 3)
+* `re15_port/engine/src/enemy_ai_re2_zellenarm.c` (eigen): `re15_re2arm_body_push_player` (FUN_80034D0C, Konstanten
+  RE2ARM_SEG_R/H, RE2ARM_PL_R/Y/H mit @0x), `s_pin_bild` + `re15_re2arm_take_pin_bild`, Kopf-/Root-Tail-Kommentar.
+* `re15_port/include/re15_enemy_ai_re2_zellenarm.h`: zwei Deklarationen.
+* `re15_port/engine/src/enemy_ai_common.c` (gemeinsam, 2 Zeilen): Haken in `re15_body_push_player`.
+* `re15_port/engine/src/game_step_common.c` (gemeinsam, 2 Zeilen): Push nach dem Pin im selben Bild.
+* Tests: `tests/unit/test_r35_raeume_arme.c` (neu gefasst), neu `tests/unit/r35_raeume_re2orig.inc` (erzeugt),
+  `tests/unit/r35_raeume_volumen.h` (vol_innen_welt), neu `tests/unit/probe_r35_raeume_re2orig.c`,
+  `tests/unit/probe_r35_raeume_arme.c` (EXE-PIN), `tests/unit/test_p2_1210_arme_re2.c` (4d), `tests/unit/probes/
+  r35_raeume.cmake` (Sonde registriert, kein add_test).
+* Messwerkzeug + Daten: `analysis/befunde_runde35/H_raeume/re2_mess/` (re2_gdb_grab.py, re2_gdb_push.py, re2_ss.py,
+  re2_frames.py, re2_fixture.py; die PCSX-Redux-Versuche re2_run.py/re2_loader.lua/re2_arm_grab.lua; daten/<lauf>/
+  frames.bin|frames.txt|log.txt, daten/push_s2/push_log.txt). Bilder `H_raeume/nb3_*.png`.
