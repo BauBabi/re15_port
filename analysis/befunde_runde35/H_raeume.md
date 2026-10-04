@@ -319,7 +319,7 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
   `[re2arm] PIN` in re2_ki.log bei `RE15_RE2_TRACE=1`.
 
 ## OFFEN
-1. **[Stand: Nachbesserung 2, OFFEN 1 dort]** **ROOM1210 Ruecken-Griff (Punkt 4) — Sichtpruefung am RE2-Original.** Statisch belegt (Nachbesserung 1,
+1. **[ERLEDIGT in Nachbesserung 3: RE2-Original per DuckStation-GDB gemessen, Bilder + RAM]** **[Stand: Nachbesserung 2, OFFEN 1 dort]** **ROOM1210 Ruecken-Griff (Punkt 4) — Sichtpruefung am RE2-Original.** Statisch belegt (Nachbesserung 1,
    M2): RE2 hat fuer den Griff von hinten keinen eigenen Pfad (eine Opferbank @0x80100C3C-5C, ein Clip
    @0x801012A8-AC, nur der Flip @0x8010130C-18; der Arm liest PL+0x76 nie); der Riegel prueft diese
    Konstruktion (4a-c). Ein BILD eines RE2-Ruecken-Griffs fehlt. Naechster Messweg: pcsx-redux mit
@@ -723,7 +723,7 @@ Arm-Bild und Volumenmass Bild fuer Bild gleich dem RE2-Lauf.
 * Suite: s. "Suite (Nachbesserung 2)".
 
 ### OFFEN (Stand Nachbesserung 2, ersetzt OFFEN 1 und 6 oben)
-1. **RE2-Emulatorbild eines Ruecken-Griffs** — weiter nicht vorhanden. Die Opferbank-Analyse oben belegt jede
+1. **[ERLEDIGT in Nachbesserung 3]** **RE2-Emulatorbild eines Ruecken-Griffs** — (damals) weiter nicht vorhanden. Die Opferbank-Analyse oben belegt jede
    Eingangsgroesse; ein Bild braucht einen RE2-Spielstand im 2F-Flur (ROOM2050). Messweg: pcsx-redux (Skill
    re15-pcsx-watchpoint) mit `C:/Users/mjoedicke/Downloads/ePSXe2018/re2leon.cue`, Raumsprung per RAM (RE2-Tuer-
    Globals aus Door_aot_se), Leon mit Blick vom Fenster weg an einem Arm vorbei, Bild + PL+0x38/+0x40/+0x76 im Halten.
