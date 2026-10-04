@@ -324,6 +324,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * faehrt die volle Raum-Lade-Kette des RE2-Flavors (PRNG-Seed 0x800CE318 + One-Save-Latch
      * + Flag-Wort) — im RE1.5-Default wirkungsfrei (nur unbenutzte RE2-Zustaende). */
     re15_re2z_rng_reset();
+    /* Runde 35 Spur C (Nachbesserung 1, M2): Spawn-Zaehler DAT_800aca4e = 0 in der SCD-Raum-Init
+     * FUN_8003ef6c @0x8003f014 `sb zero,-13746(at)` (an @0x80039a00, auch nach Selbst-Tuer
+     * @0x8001d988). Bisher nur im Raumwechsel (re15_enemy_reset); Leser: Zombie-Verhaltenstabelle
+     * @0x801022c4/@0x80105ea4 (>= 5 Spawns -> andere Tabelle). */
+    { extern void re15_enemy_spawn_count_reset(void); re15_enemy_spawn_count_reset(); }
     /* A same-room re-entry mirrors the original's room-reload PLAYER re-init.
      * Our run-to-door is a PERSISTENT walker (actor.walk_active + motion
      * 100/105 — an engine construct with NO original counterpart; the original

@@ -145,3 +145,12 @@ Rohbytes/Backticks per `git commit -F <datei>` ([[commit-backticks]]). Nur die e
    Adresse und naechstem Messweg im Dossier unter OFFEN — nicht still im Code.
 5. Das Dossier ist das Produkt der Ermittlung; die Abnahme eines anderen Agenten liest es und misst
    nach. Abschlussantwort < 15 Zeilen, alles Wesentliche steht in der Datei.
+
+## 3. Hinweis des Orchestrators fuer Spur C (2026-10-04, aus Spur H gemessen)
+Spur H (ROOM1200 Trage-Zombie) fand: der Port hatte die Engine-Schwerkraft FUN_8001bd60(-10, 0x14)
+nie umgesetzt (Absturzkante @0x8001bdb0-be54, Fall @0x8001be78-e8; Aufruf z.B. `jal` @0x80100514).
+Spur H portiert sie fuer den Trage-Zombie (Zweig r35/raeume, lesbar ueber
+`git -C <baum> show r35/raeume:<pfad>`; Dossier analysis/befunde_runde35/H_raeume.md). Weitere
+Aufrufer laut Spur H: Zombie-Maedchen @0x8010a9b8 und @0x8010c288. Wenn die Zombie-Maedchen-KI
+diese Routine braucht: dieselbe Port-Funktion von Spur H verwenden (nicht doppelt bauen) und die
+Abhaengigkeit im Dossier fuer die Zusammenfuehrung vermerken.
