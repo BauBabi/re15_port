@@ -1757,6 +1757,7 @@ static void teil_schrot(void)
  * jedem Bild bis zum Tod am Bildende gleich der am Bildanfang (kein 0x8001ad68 im Hook). Abnahme 5 (w3y F2814) mass
  * am alten Stand einen Sprung um 14000 Einheiten; mit abgeschalteten Haken ist dieser Riegel rot (gemessen: Leon bis
  * 15116 vom Treffer-Ort, Clip 1 dann 0xb statt 0, +0x93 = 1, kein Tod). */
+static int finisher_lauf_orig(int32_t spur[][16], int nmax);
 static void teil_finisher(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -1832,6 +1833,45 @@ static void teil_finisher(void)
           "Tod (Wunden + Leiche @0x8011c55c-84) in T%d = Bild nach dem letzten Clip-Bild %d (erwartet T%d), Endpose bleibt", t_tod, fc - 1, t_hit + fc);
     PRUEF(pl->state == 7 && pl->anim_frame == fc - 1 && pl->motion == 0 && re15_player_victim_state() == 2,
           "nach dem Tod: Zustand %d, Clip %d Bild %d gehalten, Opfer-Zustand %d", (int)pl->state, (int)pl->motion, (int)pl->anim_frame, re15_player_victim_state());
+    {   static int32_t spur[100][16];
+        int n = finisher_lauf_orig(spur, 93);
+        printf("  Teil B: %d Bilder ab dem Original-Zustand F204" BSN, n);
+    }
+}
+
+/* Teil B (Nachbesserung 6, M1): derselbe Finisher ab dem ORIGINAL-Zustand (GDB jnb6/g_fin.txt, r3 s033, F204 = Abflug von
+ * e2 aus der w3y-Lage, +0x8c = 260) — Gorilla und Leon Bild fuer Bild gegen das Original. Liefert die Port-Spur fuer
+ * finisher_orig_vgl(). */
+static int finisher_lauf_orig(int32_t spur[][16], int nmax)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -9975, -10422, 587, 5, 3) != 0) return 0;
+    if (!bank_laden_27()) return 0;
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    if (!a || !b) return 0;
+    a->grid_id |= 0x20; a->x = 30000; a->z = 30000;
+    pl->x = -9975; pl->z = -10422; pl->y = 0; pl->rot_y = 587; pl->hp = 46; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();
+    /* Original-Wurzeleintritt F204: e2 (-6299,0,-13987) r2517 s1/7/2/0 c20/10, +0x8c 260 (Abflug-Bild der LEAP-Phase 1) */
+    b->x = -6299; b->y = 0; b->z = -13987; b->rot_y = 2517; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 7; b->sub_state_2 = 2; b->sub_state_3 = 0; b->motion = 0x14; b->anim_frame = 10;
+    b->anim_frac = 0; b->hit_react = 1; b->dog_flags = 0; b->mag_boost = 4; b->mag_airborne = 1; b->crow_speed = 260;
+    b->ai_timer = 0; b->dog_floor_y = 0; b->dog_blocked_ctr = 0;
+    b->anim_frame = 9; re15_affen_pool_anim(b); b->anim_frame = 10;
+    int n = 0;
+    for (int i = 0; i < nmax; i++) {
+        frame(0, 0);
+        int32_t *r = spur[n++];
+        r[0] = 205 + i; r[1] = b->x; r[2] = b->y; r[3] = b->z; r[4] = b->sub_state_1; r[5] = b->sub_state_2; r[6] = b->anim_frame;
+        r[7] = pl->x; r[8] = pl->z; r[9] = pl->hp; r[10] = (re15_player_victim_state() == 2) ? (pl->state == 7 ? 7 : 6) : 1;
+        r[11] = 0; r[12] = pl->motion; r[13] = pl->anim_frame; r[14] = pl->anim_frac; r[15] = pl->hit_react;
+        if (getenv("R35_FIN_SPUR"))
+            printf("O %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d" BSN, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9],
+                   r[10], r[11], r[12], r[13], r[14], r[15]);
+    }
+    return n;
 }
 
 /* ---------------------------------------------------------------------------------------------- */
