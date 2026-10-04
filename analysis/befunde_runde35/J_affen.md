@@ -1663,3 +1663,10 @@ Scratch: `scratchpad/jnb5/`.
   1037, 1088, 1140, Tod +1192 = 39,7 s. Slot 2: +1 gleichbleibend (Zyklus 103 wie das Original); Slot 3: 0, 0, 0, -1, -2,
   -2, -2, Tod -2 (N4: 0 ... -5, wachsend). Der Kampf verstaerkt einen Startunterschied von 13 Einheiten ueber die
   Klemmen/Schub-Kontakte zu 1-2 Bildern; der Tuerweg ist deshalb kein bildgenauer Vergleich mit r3 — j1 ist es.
+- **o7 = Griff im Freien** (Einstellung wie Abnahme 4: `RE15_INPUT_SCRIPT=W34.5,U2.5,W1`, `_BASIS=spiel`, `_START=60`; der erste
+  Versuch ohne BASIS/START lief zeitbasiert und brachte Leon nicht in Bewegung = Messfehler, verworfen): Rear-up S3 F1258,
+  **Pin F1262** (Leon mo 1), Clip 0x10 **F1345 = Pin + 83**, Clip 0xb **F1361 = +16**, Leerlauf **F1387 = +26** (Original
+  +83/+16/+26); Brustschlag Clip 3 nach jedem Griff (S3 15/5 c3 F1310, Sub 2 c3 F1337; 2. Griff S3 Pin F1620, c3 F1657/
+  F1684; 3. Griff S2 Pin F1749, c3 F1786/F1813), Ritt bis Clipende 72 im 2./3. Griff wie N4. Biss nach der Freigabe in
+  freier Lage F1401 (14 Bilder nach F1387) = OFFEN N4-2 unveraendert. Bild `jnb5/exe/o7_griff_brust.png` (RE15_FRAMEDUMP
+  F1260-F1392): Zupacken, aufrechter Gorilla mit den Armen an Brust/Kopf, Leon am Boden, kein Fremdteil am Oberkoerper.
