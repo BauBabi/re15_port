@@ -549,3 +549,50 @@ Funktion rufen - sonst `[FEHLER] Pruefung im Meldungstext`. Gegenprobe am alten 
 - Pin `release/gate_urteil.sha256` = `107de123f9aa2b733d089280f1920d33a5c442a8c8e6fff578eec993e1507a2e`;
   `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` = 280/887/7 (apk_pruefen.sh; Kommentar dort nennt die 3 neuen
   Gleichwertigen). Commit e28f9568.
+
+### Nachbesserung 2 - M3 einseitige Kontrollen des bash-Urteils (apk_pruefen.sh)
+**Ursache (Code gelesen, wie Abnahme 3.4):** test_r35_android_pruefkette.sh pruefte jede Pruefzeile des bash-Urteils von
+EINER Seite: N8 nur Gate-Rueckgabe 1, N10 nur Selbsttest-Rueckgabe 1, N11 nur f1 < f2, N13 nur e + g < m; keine
+Kontrolle mit einer leeren oder nicht-numerischen Zahl. Und es gab - anders als beim Python-Urteil - keinen
+Mechanismus, der eine KUENFTIGE Aenderung einer bash-Pruefzeile von selbst mittestet: nur feste Kontrollen.
+
+**Aenderung 1 - `re15_port/tests/unit/r35_android/urteil_kontrollen.sh` (neu):** alle Attrappen-Kontrollen des
+bash-Urteils (vorher P3 + N10-N21 in der Kette) in einer eigenen Datei, je Kontrolle genau EINE verletzte Bedingung,
+Soll = genaue Rueckgabe bzw. Abbruch MIT der Meldung genau dieser Pruefzeile, jede Kontrolle in einer Unterschale mit
+`set -euo pipefail` (so laufen die echten Aufrufer build_android.sh/make_package.sh, Kopf apk_pruefen.sh). Gruppen:
+- P (Positiv, muss angenommen werden): P3 Selbsttest, P4/P5/P5b gate_laufen mit Gate-Rueckgabe 0/1/2 -> genau 0/1/2
+  (ein Befund bleibt Befund, "keine Aussage" bleibt 2), P6 gate_festhalten + gate_laufen, P7 gate_urteil direkt, P8
+  zweiter Aufruf aus dem Zwischenspeicher, P9 Gate-Pin richtig.
+- ST (gate_urteil_selbsttest): N10/N10b Rueckgabe 1 UND 2, N11/N11b f1 < f2 UND f1 > f2, N12 Mindestzahl, N13/N13b
+  e + g < m UND > m, N14, N15, N16-N18 Lage/Anker, N7 leeres Urteil, **N22 je Zahl leer** (5), **N23 je Zahl keine
+  Ziffer** (5), **N24 je Wort der Schlusszeile ein anderes** (9), D11 kein Temp-Platz, D11b Zwischenspeicher nur fuer
+  GENAU die gepruefte Kopie.
+- LAUF (zweite Instanz, gate_urteil): **N8c/N8b luegendes Urteil bei Gate-Rueckgabe 1 UND 2** -> genau 2, N8m Meldung
+  "ueberstimmt"; N19a-g Urteilszeile fehlt / anderer Modus / "Rueckgabe 1" / Text davor / ohne Doppelpunkt / zwei statt
+  drei Leerzeichen / ohne Leerzeichen nach dem Doppelpunkt, N19w je Wort; D17-D19.
+- PIN: D1-D10 Pin-Datei fehlt / kein SHA-256 (abc, 64 x g, 63 und 65 Ziffern) / Datei fehlt / nicht lesbar (PY=false) /
+  nicht festgehalten - fuer Gate UND Urteil.
+- FH (gate_festhalten): D12-D16, D20-D22 (Ordner fehlt, Ziel schon da, Quelle fehlt, Quelle nicht gepinnt, Selbsttest
+  rot), N20/N20b/N21 private Kopien veraendert (N20c: das veraenderte Urteil wird VOR dem Gate-Lauf erkannt).
+Die Kette (test_r35_android_pruefkette.sh) ruft die Datei auf (Abschnitt "bash-Urteil (Attrappen)"); P0-P2, N1-N9 mit
+echtem Gate/Urteil bleiben dort.
+
+**Nebenbefund + Fix (gemessen):** unter `set -euo pipefail` brach `gate_urteil_selbsttest` bei einem Urteil OHNE jede
+Ausgabe (0-Byte-Urteil, N7) in der Zeile `letzte="$(tr ... | grep -v '^[[:space:]]*$' | tail -1)"` ab - grep findet
+nichts, Rueckgabe 1, pipefail -> die Shell endet OHNE die Meldung "ohne gueltige Schlusszeile" (Kontrolle N7 rot:
+`Rueckgabe 1 ... (Selbsttest des Gate-Urteils, sha256 e3b0c44298fc1c14...)`, danach nichts). Fail-closed war es, aber
+ohne Grund. Fix `release/apk_pruefen.sh`: `... | tail -1 || true)"`. Danach N7 gruen; gegen die alte Zeile weiter rot
+(Gegenprobe mit `git show HEAD:release/apk_pruefen.sh`). Die alte Kette lief ohne `set -e` und sah das nicht.
+
+**Aenderung 2 - `bash_urteil_mutanten.py` + ctest `unit_r35_android_bash_mutanten` (neu):** das Gegenstueck zum
+Mutanten-Selbsttest des Python-Urteils fuer das bash-Urteil. Je Lauf genau EINE Aenderung an den sechs Funktionen
+gate_pin_pruefen, gate_urteil_pin_pruefen, gate_urteil_selbsttest, gate_festhalten, gate_urteil, gate_laufen, nur im
+Code (nicht in Kommentaren/Meldungstexten; Anfuehrungszeichen ueber Zeilen verfolgt). Operatoren: A `(( ))`-Vergleiche
+mit derselben Tabelle wie TAUSCH im Python-Urteil (== / != -> jeder andere, < <-> <=, > <-> >=, < <-> >, <= <-> >=) und
+&& <-> ||; B `[[ ]]` == <-> != und Verneinung; C `grep -q`-Muster gelockert (Rest -> .*, Wort -> .*, Zeichen weg);
+D `=~`-Muster gelockert (dazu `[0-9]+` -> `[0-9]*` und -> `.*`, Klasse -> `.`, `{64}` -> `+`); E jedes `die` -> `true`;
+F Zuweisung name=Zahl -> 0/+-1; G Aufruf einer Pruef-Funktion weg; H `return x` -> 0/1. Je Mutant laeuft
+urteil_kontrollen.sh `--schnell` (Ende beim ersten FALSCH; Reihenfolge der Gruppen nach der mutierten Funktion), die
+unveraenderte Datei muss ALLE Kontrollen bestehen. Ueberlebt ein Mutant und steht nicht begruendet in AEQUIVALENT ->
+`BASH-URTEIL-MUTANTEN-FEHLER`. Gleichwertig (3, je mit Begruendung): `(( rc == 0 ))` -> `<=`, `(( urteil == 0 ))` ->
+`<=`, `(( rc != 0 ))` -> `>` - rc/urteil sind Rueckgaben (`$?` 0..255), nie negativ.
