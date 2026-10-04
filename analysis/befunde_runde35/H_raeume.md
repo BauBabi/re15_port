@@ -858,3 +858,67 @@ schiebt im selben Bild nach dem Pin (game_step_common.c, 2 Zeilen; FUN_800355C4 
 Tick, also nach dem Pin).
 **Erste Messung nachher (Riegel-Lauf, Arm y -2500):** Leon nach dem Griff (-20239,-15759) = Ursprung (-21490) + 1251
 (wie das Original), vorher (-20496) = Pin.
+
+### Messung nachher — echte exe, Tuerweg 1220 -> 1210 (Laeufe `runs/nb3_front|back|re15_front`, Eingaben wie Abnahme 2)
+```
+nb3_front  PIN slot 5 yaw 3664: Parts gemischt Clip 3 Bild 4 -> (-20609,-15171)   st.log F244..F395 PL(-20439,-15060,rot=1671)  d=1254
+nb3_back   PIN slot 5 yaw 3697: Parts gemischt Clip 3 Bild 4 -> (-20610,-15228)   st.log F277..F428 PL(-20411,-15111,rot=3749)  d=1254
+nb3_re15_front (RE15_AI_FLAVOR=re15): identisch mit nb3_front (PIN, F244, PL(-20439,-15060,rot=1671))
+```
+Leon steht nach dem Pin auf dem Strahl Ursprung -> Hand im Original-Abstand (1251..1255), nicht mehr auf der Hand.
+Sonde `probe_r35_raeume_arme` Abschnitt EXE-PIN (Halte-Zyklus an genau diesen Lagen, Volumenmass wie die Abnahme):
+
+| Fall | Leon-Lage | waagerecht < 120 (min) | Volumen (max Vertices) |
+|---|---|---|---|
+| Gesicht (Nutzerfall) | **nach Push (-20439,-15060)** | **0/19 (242)** | **5/19 (4)** |
+| Gesicht | Pin ohne Push (Stand NB2, Abnahme 2) | 0/19 (175) | 12/19 (8) |
+| Gesicht | Clip 5 Bild 0 (Basisstand Nutzerbefund) | 9/19 (33) | 16/19 (10) |
+| Ruecken | **nach Push (-20411,-15111)** | 7/19 (48) | **15/19 (6)** |
+| Ruecken | Pin ohne Push (NB2) | 9/19 (24) | 18/19 (12) |
+| Ruecken | Clip 5 Bild 0 (Basis) | 2/19 (117) | 18/19 (14) |
+
+Original an den Nachbarhoehen (Tabelle oben): Gesicht 11/19 (Satz 5, -2480), 11/19 (Satz 8, -2540), 7/19 (Satz 0,
+-2580); Ruecken 19/19 (Satz 5), 17/19 (Satz 0). Der Nutzerfall liegt jetzt UNTER dem Original (5/19, max 4 Vertices:
+die Hand liegt an Kopf/Nacken an), der Ruecken-Griff darunter oder gleich. Bilder (Framedump, Cut 4, 5x):
+`H_raeume/nb3_port_gesicht_nach_push_F262-292.png` (Hand an Hinterkopf/Nacken bzw. vor dem Gesicht, kein Unterarm
+mehr durch den Kopf wie in Abnahme 2 F274/F276) und `H_raeume/nb3_port_ruecken_nach_push_F296-326.png`
+(Hand von hinten an Kopf/Nacken, wie das Original-Bild Satz 5/0 Ruecken).
+
+### Port = Original (Riegel (6a), gleicher Lauf wie die Original-Lagen)
+Port-Griff in fuenf Original-Lagen (Arm vor Leon, Hoehe ueber den Mess-Haken RE15_ARM_ANKER = Satz-Hoehe), Bild fuer
+Bild gegen die Original-RAM (Ausrichtung: am Haltepunkt B4 P1 zeigt das Clipwort das Bild, das IN diesem Bild posiert
+wird, die Part-Matrizen sind vom Zeichnen des Vorbilds -> Port-Bild k <-> Original-Clipwort k+1, fuer Arm UND Leon):
+```
+(6a) g5_r5_gesicht  (y -2480) Hand + Kopfgelenk im Wurzel-Rahmen: 19 Bilder, max Abweichung 9  | Arm in Leon Port 11/19 (max 4),  Original 11/19 (max 4)
+(6a) g6_r5_ruecken  (y -2480)                                   19 Bilder, max Abweichung 9  | Port 19/19 (max 16), Original 19/19 (max 14)
+(6a) g7_r0_gesicht  (y -2580)                                   19 Bilder, max Abweichung 10 | Port  5/19 (max 6),  Original  7/19 (max 8)
+(6a) g8_r0_ruecken  (y -2580)                                   19 Bilder, max Abweichung 10 | Port 17/19 (max 20), Original 17/19 (max 22)
+(6a) g11_r7_gesicht (y -2700)                                   19 Bilder, max Abweichung 9  | Port  2/19 (max 2),  Original  4/19 (max 6)
+```
+Restabweichung 9-10 = Versuchsanordnung (Original-Leon 14 seitlich / Blick 2037 statt 2055 zum Arm). **Zweiter
+Befund dabei (nicht Teil des Nutzerbefunds, OFFEN):** im Original unterscheidet sich zwischen Gesicht- und Ruecken-
+Griff NUR Leons Part 8 (Kopf) — Rumpf und Arme (Parts 0/9/12) sind Bild fuer Bild gleich (Rotation im Wurzel-Rahmen,
+re2_frames.py-Auswertung, z.B. Halt 25 Part 8 Zeile 0 Gesicht (3325,2365,-175) / Ruecken (3236,2318,940), Part 0
+(3366,1445,1818) / (3367,1446,1819)): RE2 dreht Leons Kopf im Halten zu einem Ziel. Der Port dreht den Kopf im Halten
+nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Original (g7, g11), sonst gleich.
+
+### Je Mangel (Abnahme 2)
+* **M1 (Gesicht-Griff 12/19)** — Ursache gefunden: der fehlende RE2-Koerper-Push (s.o.). Messung vorher 12/19 (max 8)
+  an der exe-Lage; Beleg Wachpunkt pc 0x800350cc/d0 in FUN_80034D0C, Arm-Segment @0x80100328-64, Spieler-Segment
+  @0x8003bdc0-ec; Aenderung re15_re2arm_body_push_player + 2 Haken; nachher **5/19 (max 4)** an der exe-Lage, das
+  Original zeigt an den Nachbarhoehen 7..11/19. Riegel auf den Originalwert: (6a)/(6b).
+* **M2 (Armhoehe = Port-Bruecke)** — die Hoehe bleibt die gekennzeichnete PORT-BRUECKE aus der ROOM1210-Fensterbank
+  (-2500, enemy_ai_re2_zellenarm.c), aber die Folgerung "das Original ueberschneidet genauso" steht jetzt auf
+  ORIGINAL-MESSUNGEN in acht Hoehen (-1930..-2700, Saetze 0/2/3/5/6/7/8/9): Gesicht 4..17/19, Ruecken 6..19/19; der
+  Port reproduziert in den Original-Lagen die Original-Zahl (6a); bei -2500 liegt er unter den Original-Nachbarn (6b).
+  RE2 hat KEINE einheitliche Hoehe: dieselben fuenf Arme eines Fensters stehen auf -2000..-2700 (Saetze 5-9, alle
+  z -7000, x -12500..-12100) — die Ueberschneidung des Originals schwankt mit dem Arm, der zugreift.
+* **M3 (Ruecken-Griff 18/19, RE2-Bild/-RAM fehlte)** — RE2-Bilder und -RAM liegen jetzt vor (g2/g4/g6/g8, Bild
+  `nb3_re2_original_halten_satz5_satz0.png` rechts): Original 6/12/19/17 von 19; Port nach dem Push 15/19 (exe-Lage),
+  in der Original-Lage Satz 5 19/19 = Original 19/19. Konstruktion (Flip, gleicher Pin, gleiche Hand-Bahn) im
+  Original-RAM bestaetigt (4d).
+* **M4 (Riegel teils selbstbestaetigend)** — (3b) Spiegel-Tautologie und (3)/(3c) Port-Varianten-Vergleiche sind
+  entfernt. Neu, alle gegen die Original-RAM (Fixture `tests/unit/r35_raeume_re2orig.inc`, erzeugt von
+  `re2_mess/re2_fixture.py` aus den Mitschnitten): (O1) Arm + 1 im Original, (4d) Konstruktion im Original, (1) Abstand
+  Leon-Ursprung = Originalbereich 1251..1295 und Strahl, (6a) Port = Original in fuenf Lagen (Lage <= 20, Zahl <= 2),
+  (6b) Nutzerfall <= Original-Nachbarhoehen.

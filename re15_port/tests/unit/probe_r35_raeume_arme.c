@@ -211,10 +211,12 @@ int main(void)
         vs.keyframe_size_bytes = eb->skel_victim.keyframe_size_bytes;
         const int fcv = eb->anim_victim.clips[0].frame_count, fca = eb->anim.clips[5].frame_count;
         static const struct { const char *name; int armyaw; int ruecken; int32_t pin[3][2]; } fall[2] = {
-            { "front (exe nb2_front)", 3664, 0, { { -20609, -15171 }, { -20588, -15148 }, { -20728, -15056 } } },
-            { "back  (exe nb2_back) ", 3705, 1, { { -20603, -15239 }, { -20552, -15206 }, { -20686, -15106 } } },
+            /* Nachbesserung 3: [0] = Leon NACH dem RE2-Koerper-Push (exe nb3_front/nb3_back, st.log Halte-Bild 1),
+             * [1] = Pin auf der gemischten Hand (Stand Nachbesserung 2, ohne Push), [2] = Clip 5 Bild 0 (Basisstand). */
+            { "front (exe nb3_front)", 3664, 0, { { -20439, -15060 }, { -20609, -15171 }, { -20728, -15056 } } },
+            { "back  (exe nb3_back) ", 3697, 1, { { -20411, -15111 }, { -20610, -15228 }, { -20694, -15096 } } },
         };
-        static const char *quelle[3] = { "gemischt (byte-true)", "rein C3B4 (NB1)", "Clip5B0 (Basis)" };
+        static const char *quelle[3] = { "nach Push (byte-true)", "Pin ohne Push (NB2)", "Clip5B0 (Basis)" };
         e->x = -21490; e->y = -2500; e->z = -15747;
         for (int c = 0; c < 2; c++) for (int q = 0; q < 3; q++) {
             e->rot_y = (int16_t)fall[c].armyaw;
