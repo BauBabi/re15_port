@@ -884,9 +884,8 @@ static void griff_lauf(int erzwinge)
         if (f_pin >= 0 && f_frei < 0 && f > f_pin + 5 && !re15_player_is_grabbed() && pl->state == 1) { f_frei = f; fx = pl->x; fz = pl->z; }
         if (o && f >= 265 && f <= 290) {            /* P2: Platzierung + Schub + Klemme je Bild */
             double d = dist2d(pl->x, pl->z, o[0], o[1]);
-            if (f >= 268) {   /* T265-T267 schiebt e2 (Lage aus seiner KI) — Kette im Riegel wand */
-                 abw_p2_mitte += d; n_p2++; if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; } }
-            else if (d > abw_e2) abw_e2 = d;
+            abw_p2_mitte += d; n_p2++; if (d > abw_p2) { abw_p2 = d; f_abw_p2 = f; }   /* N3: T265-T267 mit (Schub von e2) */
+            if (f <= 267 && d > abw_e2) abw_e2 = d;
         }
         if (f_frei == f) hp_frei = pl->hp;
         if (f >= 291 && f_frei < 0 && re15_player_victim_gorilla()) {   /* nach Bild 0x24: keine Platzierung mehr */
@@ -914,13 +913,15 @@ static void griff_lauf(int erzwinge)
     if (erzwinge) return;
     printf("  Bahn P2 gegen das Original (%s): mittlere Abweichung %.0f, groesste %.0f in T%d; T265-T267 (Schub von e2) %.0f;"
            " P3/P4 %d Bilder Clip 0x10 (PL00 vorwaerts %d), P5/P6 %d Bilder Clip 0xb (PL00 rueckwaerts %d)\n",
-           "T268-T290", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, p3_bilder, p3_pl00, p5_bilder, p5_rueck);
+           "T265-T290", abw_p2_mitte, abw_p2, f_abw_p2, abw_e2, p3_bilder, p3_pl00, p5_bilder, p5_rueck);
     PRUEF(f_pin >= 253 && f_pin <= 255, "Pin-Latch in T%d (Original T254: Clip 0x1c Bild 4, a780 = 0 -> Front-Griff @0x8011aa4c-bc)", f_pin);
     PRUEF(dist2d(px0, pz0, -6658, -12487) < 60.0, "beim Zupacken bleibt Leon stehen (%d,%d) (Original T254: (-6660,-12486))", (int)px0, (int)pz0);
     PRUEF(f_sprung == 265, "erste Wurf-Platzierung in T%d = Opfer-Bild 0x0b (Original T265 = VSync 10171, +0x95 0x0b beim Eintritt;"
           " P1->P2 @0x8011c244-5c, Fenster @0x8011c278)", f_sprung);
-    PRUEF(n_p2 == 23 && abw_p2 <= 200.0, "Wurf-Bahn T268-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub) im Mittel %.0f,"
-          " hoechstens %.0f (T%d) neben dem Original — vorher ab T273 bis 744 (Paar-Schub) und ab T289 festgeklemmt", abw_p2_mitte, abw_p2, f_abw_p2);
+    PRUEF(n_p2 == 26 && abw_p2 <= 200.0 && abw_e2 <= 200.0, "Wurf-Bahn T265-T290 (Platzierung -> Schub -> Wandklemme, Gorilla-Paar ohne Schub)"
+          " im Mittel %.0f, hoechstens %.0f (T%d) neben dem Original, T265-T267 mit dem Schub von e2 hoechstens %.0f (Nachbesserung 2: 1573,"
+          " e2 stand still; Schranke 200 = Anker-Versatz 39 aus dem Anlauf, in T289/T290 von der Wandklemme verstaerkt, s. Weg 2)",
+          abw_p2_mitte, abw_p2, f_abw_p2, abw_e2);
     PRUEF(p3_bilder == 16 && p3_pl00 == 16, "P3/P4: Clip 0x10 aus PL00 vorwaerts, %d/%d Bilder (Original 16: T338-T353, a2 = 0 @0x8011c318)", p3_pl00, p3_bilder);
     PRUEF(p5_bilder == 25 && p5_rueck == 25, "P5/P6: Clip 0xb aus PL00 RUECKWAERTS, %d/%d Bilder (Original 25: T354-T378, a2 = 1 @0x8011c348)", p5_rueck, p5_bilder);
     PRUEF(f_frei == 378, "Freigabe in T%d (Original T378: aca58 = 1 @0x8011c384-8c)", f_frei);
@@ -1409,6 +1410,22 @@ static void teil_griff(void)
     double e2_weg = dist2d(s_gl_e2[0][262 - GRIFF_T0][0], s_gl_e2[0][262 - GRIFF_T0][1], s_gl_e2[0][254 - GRIFF_T0][0], s_gl_e2[0][254 - GRIFF_T0][1]);
     printf("  M2: e1 T254-T301 hoechstens %.0f (T%d) neben dem Original; e2 T254-T264 hoechstens %.0f (T%d); e2-Weg T254->T262 %.0f (Original 542)\n",
            e1_max, e1_t, e2_max, e2_t, e2_weg);
+    {
+        double e1_ritt = 0, kmin = 1e9, kmax = 0;
+        for (int t = 254; t <= 288; t++) {           /* Ritt bis vor den Koerperkontakt mit e2 (ab T289, Rest = OFFEN) */
+            const int32_t *q = s_e12_orig[t - 250]; int i = t - GRIFF_T0;
+            double d1 = dist2d(s_gl_e1[0][i][0], s_gl_e1[0][i][1], q[1], q[2]); if (d1 > e1_ritt) e1_ritt = d1;
+        }
+        for (int t = 256; t <= 264; t++) {
+            int i = t - GRIFF_T0;
+            double k = dist2d(s_gl_e1[0][i][0], s_gl_e1[0][i][1], s_gl_e2[0][i][0], s_gl_e2[0][i][1]);
+            if (k < kmin) kmin = k; if (k > kmax) kmax = k;
+        }
+        PRUEF(e1_ritt <= 40.0, "M2: der Greifer reitet die Clip-0x1c-Bahn (Yaw-Fang a8f8 0x800 @0x8011acac, ad68(g_entity) @0x8011accc,"
+              " Paar ohne aec4 @0x8002af14): e1 T254-T288 hoechstens %.0f neben dem Original (Schranke = Anker-Versatz 39; vorher bis 844)", e1_ritt);
+        PRUEF(kmin >= 3150.0 && kmax <= 3230.0 && e2_weg >= 400.0, "M2: e1 schiebt e2 (b544): Abstand e1-e2 T256-T264 %.0f..%.0f (Original"
+              " 3168..3209 = 2 x 1600), e2-Weg T254->T262 %.0f (Original 542; vorher 4 = e2 stand still)", kmin, kmax, e2_weg);
+    }
     griff_kette(0);
 
     /* ---- M1: die Wandklemme allein ab T290 ---- */
@@ -1461,6 +1478,14 @@ static void teil_griff(void)
         }
         printf("  M1 Empfindlichkeit: von 24 Starts 1-2 Einheiten neben dem Original-T290 enden bei T378 %d gleich, %d > 100 und %d > 400"
                " Einheiten neben der Original-Freigabe (hoechstens %.0f)\n", n0, n100, n400, dmax);
+        PRUEF(n0 == 0 && n100 == 24, "M1: die Klemmen-Iteration ist empfindlich — alle 24 Starts 1-2 Einheiten neben dem Original-T290"
+              " enden bei T378 mehr als 100 neben der Original-Freigabe (%d/24, %d davon > 400)", n100, n400);
+        int32_t h1[124][2], h2[124][2];
+        klemme_iter(hist[0][0], hist[0][1], 414, h1); klemme_iter(hist[1][0], hist[1][1], 414, h2);
+        PRUEF(h1[378 - 291][0] == -4580 && h1[378 - 291][1] == -10518 && h1[392 - 291][0] == -3018 && h1[392 - 291][1] == -11651 &&
+              h2[378 - 291][0] == -5433 && h2[378 - 291][1] == -10693,
+              "M1: die Dossier-Zahlen von Nachbesserung 2 (frei (-4580,-10518), Ruhe (-3018,-11651)) gehoeren zum T290-Stand (-5374,-10724)"
+              " vor den A1-Aenderungen; derselbe Code ab (-5376,-10728) (2/4 Einheiten weiter) gibt frei (%d,%d)", (int)h2[378 - 291][0], (int)h2[378 - 291][1]);
     }
 
     /* ---- Weg 2: Startversatz entfernt (Leon/e1/e2 am Ende von T253 = Original) ---- */
@@ -1470,6 +1495,41 @@ static void teil_griff(void)
     griff_kette(1);
     printf("  [Weg 2] T290 (%d,%d) (Original (-5381,-10551)), frei T%d bei (%d,%d) (Original T378 (-4759,-10633))\n",
            (int)s_gl_pl[1][290 - GRIFF_T0][0], (int)s_gl_pl[1][290 - GRIFF_T0][1], s_gl_frei[1], (int)s_gl_frei_xy[1][0], (int)s_gl_frei_xy[1][1]);
+    {
+        int ritt_ok = s_gl_e1[1][254 - GRIFF_T0][0] == -5882 && s_gl_e1[1][254 - GRIFF_T0][1] == -14389 && s_gl_e1[1][254 - GRIFF_T0][2] == 2823 &&
+                      s_gl_e1[1][255 - GRIFF_T0][0] == -5953 && s_gl_e1[1][255 - GRIFF_T0][1] == -14268;
+        PRUEF(ritt_ok, "Weg 2 / M2: e1 T254 (%d,%d) r%d, T255 (%d,%d) = Original (-5882,-14389) r2823 / (-5953,-14268) — Yaw-Fang @0x8011acac +"
+              " Ritt-Platzierung @0x8011accc bitgleich", (int)s_gl_e1[1][254 - GRIFF_T0][0], (int)s_gl_e1[1][254 - GRIFF_T0][1],
+              (int)s_gl_e1[1][254 - GRIFF_T0][2], (int)s_gl_e1[1][255 - GRIFF_T0][0], (int)s_gl_e1[1][255 - GRIFF_T0][1]);
+        int kette = 0;
+        for (int t = 268; t <= 290; t++) {
+            const int32_t *w = s_wand_orig[t - 247]; const int32_t *q = s_gl_st[1][t - GRIFF_T0];
+            if (q[2] == w[3] && q[3] == w[4] && q[4] == w[5] && q[5] == w[6]) kette++;
+        }
+        int bahn_w2 = 0;
+        for (int t = 291; t <= 414; t++)
+            if (s_gl_pl[1][t - GRIFF_T0][0] == s_wurf_orig[t - 254][0] && s_gl_pl[1][t - GRIFF_T0][1] == s_wurf_orig[t - 254][1]) bahn_w2++;
+        PRUEF(s_gl_anker[1][0] == -7507 && s_gl_anker[1][1] == -10327 && kette == 23 && s_gl_frei[1] == 378 &&
+              s_gl_frei_xy[1][0] == -4759 && s_gl_frei_xy[1][1] == -10633,
+              "Weg 2 (Startversatz entfernt): Anker (%d,%d) = Original (-7507,-10327), Kette T268-T290 %d/23 Bilder bitgleich (Eingang und"
+              " Ausgang der Klemme), Freigabe T%d bei (%d,%d) = Original T378 (-4759,-10633) (Lauf 0: Anker (%d,%d))",
+              (int)s_gl_anker[1][0], (int)s_gl_anker[1][1], kette, s_gl_frei[1], (int)s_gl_frei_xy[1][0], (int)s_gl_frei_xy[1][1],
+              (int)s_gl_anker[0][0], (int)s_gl_anker[0][1]);
+        int n = GRIFF_N - 1;
+        PRUEF(bahn_w2 == 124 && s_gl_pl[1][n][0] == -3009 && s_gl_pl[1][n][1] == -11643,
+              "Weg 2: nach der Freigabe Leons Bahn T291-T414 %d/124 Bilder = Original, Ruhelage (-3009,-11643) ab T410, am Laufende T%d"
+              " (%d,%d) wie das Original (g_griff F496: (-3009,-11643), HP 76)", bahn_w2, GRIFF_T0 + n,
+              (int)s_gl_pl[1][n][0], (int)s_gl_pl[1][n][1]);
+        double sprung = 0; int t_sprung = -1;
+        for (int t = 331; t <= 372; t++) {          /* Sub 2 (Brustschlag-Rest, Clip 3 ab Bild 0x1d bis zum Wrap) */
+            int i = t - GRIFF_T0;
+            double d = dist2d(s_gl_e1[1][i][0], s_gl_e1[1][i][1], s_gl_e1[1][i - 1][0], s_gl_e1[1][i - 1][1]);
+            if (d > sprung) { sprung = d; t_sprung = t; }
+        }
+        PRUEF(sprung <= 100.0, "Fusssperre mit der Pool-Pose (FUN_8001f3bc Pose vor +0x95++ @0x8001f40c/@0x8001f610-1c, bf50 @0x8011bf80-c008):"
+              " e1 in Sub 2 T331-T372 hoechstens %.0f je Bild (T%d) — vorher ~1300 im Clip-3-Wrap-Bild T370 (Original F370 -> F371: (4,-4));"
+              " Rest am Sub-2-Eintritt (Port bis 64, Original bis 34) = OFFEN Frac-Mischung der Pool-Pose", sprung, t_sprung);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------- */
