@@ -1445,6 +1445,9 @@ static void op_70(void)
     wr16(b, 0x0E, 20);                                 /* `addiu v0,zero,20 / sh v0,14` @0x8002351c-20 */
     b[0x02] = 6;                                       /* @0x80023524-28 */
     b[0x03] = 1;                                       /* @0x80023534-38 */
+}
+
+/* =============================================================================================
  * Runde 35 Spur M — RAUM-ESP + die Ops der Glassplitter (RE2 Leon room1090, Fenster-Ereignis
  * sub15). Dossier analysis/befunde_runde35/M_cut11c0_fenster.md §2.3. Alle Adressen RE2 PSX.EXE.
  * ============================================================================================= */
