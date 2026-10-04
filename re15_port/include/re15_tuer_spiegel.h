@@ -28,19 +28,33 @@
  *   Fluegels deshalb mit rot[2] + 2048 (= ohne Spiegeldrehung) — gemessen 0,0 Grad. ⛔ PORT-WAHL
  *   (NUTZER-VORGABE "Das ist so im allgemeinen nicht"); das RE2-Archiv DOOR0C selbst bleibt
  *   unveraendert, die Korrektur gilt nur fuer die Port-Archive dieser Tabelle.
+ * NACHBESSERUNG 1 (Abnahme 0, Mangel M3): die Messung oben paarte Griffe nach dem Vorzeichen der
+ *   LOKALEN pos[0] — am zweiten Fluegel (um die Senkrechte gedreht) zeigt lokales +x aber auf die
+ *   andere Seite; gemessen wurden also Vorderseite gegen Rueckseite. Neu: Paarung nach der
+ *   KAMERASEITE (Huelle ragt vor/hinter die Blattmitte, Kameraraum der Tuerszene) plus Bildmass
+ *   (Huellen in Pixeln, H 290). Ergebnis: Ursache 1 gilt nur fuer Spender DOOR07 (DOOR23 wurde
+ *   dadurch schief: 37,1 Grad / 3,27 px), P0CD braucht dy 2048 + dz 2048 (dz allein: 33,9 Grad),
+ *   und DOOR1D V3 obj 3 wandert fuer den getauschten Druecker auf die Vorderseite (1,28 -> 0,17 px).
  */
 #ifndef RE15_TUER_SPIEGEL_H
 #define RE15_TUER_SPIEGEL_H
 
 #include <stdint.h>
 
-/* Zusatz-z-Drehung fuer die Griffe des Fluegels `fluegel` (Objektindex des Eltern-Fluegels) im
- * Port-Archiv `kennung` (re15_tuer_eigen_t.kennung, NULL = RE2-Archiv) — 0 = unveraendert. */
+/* Zusatz-Drehung (z bzw. y) fuer die Griffe des Fluegels `fluegel` (Objektindex des
+ * Eltern-Fluegels) im Port-Archiv `kennung` (re15_tuer_eigen_t.kennung, NULL = RE2-Archiv) —
+ * 0 = unveraendert. */
 uint16_t re15_tuer_spiegel_dz(const char *kennung, int fluegel);
+uint16_t re15_tuer_spiegel_dy(const char *kennung, int fluegel);
 
 /* Drehung eines GETAUSCHTEN Griffs (Ursache 1): Grund-Drehung des Spenders + Ausschlag (x) +
- * Spiegel-Drehung des Archiv-Objekts (z). basis = rot_vorn/rot_hinten des Tausch-Satzes. */
-void re15_tuer_griff_tausch_rot(const uint16_t basis[3], int32_t ausschlag_x, uint16_t rot0_z,
+ * Spiegel-Drehung des Archiv-Objekts (z, nur fuer Spender DOOR07 — Nachbesserung 1).
+ * basis = rot_vorn/rot_hinten des Tausch-Satzes, spender = re15_griff_tausch_t.spender. */
+void re15_tuer_griff_tausch_rot(const uint16_t basis[3], int32_t ausschlag_x, uint16_t rot0_z, int spender,
                                 uint16_t out[3]);
+
+/* Versatz von pos[0] fuer einen GETAUSCHTEN Griff (Nachbesserung 1, M3b): DOOR1D V3 obj 3 auf
+ * die Vorderseite des zweiten Fluegels. 0 = unveraendert. */
+int32_t re15_tuer_griff_tausch_dx(int spender, int fluegel, int32_t pos0, uint16_t rot0_z);
 
 #endif /* RE15_TUER_SPIEGEL_H */
