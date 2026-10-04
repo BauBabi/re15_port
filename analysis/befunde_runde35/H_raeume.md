@@ -591,3 +591,16 @@ Verhalten, sondern ein Abbildungsfehler. Der Port bleibt daher bei `u0 & sca_mas
 PORT-MAPPING markiert (enemy_ai_common.c re15_los_ray_blocked + Aufrufstelle in re15_re2_los_clear), mit beiden
 RE2-Konstanten und dem RE1.5-Beleg. Korrektur zum Dossier-Satz in Nachbesserung 1/M1 "uebergibt die Maske des
 Aktors (+0x1D7, Default 4)": das ist die PORT-Abbildung, nicht das, was RE2 uebergibt. Kein Verhaltenswechsel.
+
+**Messung nach Einbau der Parts-Ueberblendung (unit_r35_raeume_arme, echter game_step-Weg, Messarm 5):**
+Pin Leon (-20496,-15757) — 120 Einheiten neben der REINEN Clip-3-Bild-4-Hand (-20410,-15841), 81 neben der
+Clip-5-Bild-0-Hand (-20463,-15682). Waagerechtes Mass Hand <-> Brustachse (Knochen 8) nach der Ueberblendung
+(f >= 16, 44 Bilder): Gesicht 4 von 44 < 120 (min 83; vorher 0/44 min 170), Ruecken 18 von 44 (min 62; vorher
+24/44 min 5). 3D-Dump (R35_ARME_DUMP, Hand relativ zu Leons Halsgelenk Knochen 8 in Leons Rahmen v=vor,
+s=seitlich, h=Hoehe ueber Knochen 8): Hand liegt in BEIDEN Faellen auf Hals-/Kopfansatz-Hoehe (h 0..58).
+Gesicht: v +421 .. -119, s -20 .. -152 — die Hand faehrt von vorn seitlich am Hals vorbei in den Nacken
+(naechster Punkt f28: v -6 / s -83). Ruecken: v -31 .. +238, s -97 .. +23 — die Hand kommt von HINTEN und
+steht in 9 von 19 Bildern 150-238 VOR Leons Hals bei fast mittiger Seitenlage (s -35..+23): der Unterarm
+laeuft dann durch Kopf/Hals. Die Ueberblendung verschiebt den Pin, aendert aber die Konstruktion nicht
+(eine Bank, ein Clip, Flip) — der Ruecken-Fall bleibt geometrisch die gespiegelte Brust (Riegel 4c gruen,
+Spiegel-Abweichung 2).

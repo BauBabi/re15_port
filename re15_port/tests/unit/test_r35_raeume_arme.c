@@ -115,6 +115,7 @@ static int aufsetzen(int *slots)
     return n;
 }
 
+static int32_t s_knochen[16][3];
 /* Leons Brust-/Halsknochen 8 in Weltkoordinaten (Opfer-Override main.c: PL00-Knochen + Bindpose,
  * Keyframes + Clips der Greifer-Opferbank, clip_override = pl->motion). */
 static int leon_brust(const re15_actor_t *pl, int32_t out[3])
@@ -135,6 +136,10 @@ static int leon_brust(const re15_actor_t *pl, int32_t out[3])
     g_anim_pose_actor = save;
     if (rv != 0) return 0;
     re15_skel_bone_to_world(poses[8].trans, pl->rot_y, pl->x, 0, pl->z, out);
+    if (getenv("R35_ARME_DUMP")) {               /* Messdump: alle Leon-Knochen dieses Bilds */
+        for (int b = 0; b < s_ps.bone_count && b < 16; b++)
+            re15_skel_bone_to_world(poses[b].trans, pl->rot_y, pl->x, 0, pl->z, s_knochen[b]);
+    }
     return 1;
 }
 
@@ -211,6 +216,16 @@ static int griff(int yaw0, const char *name, int fall)
             a->ok = 1; memcpy(a->h, h, sizeof h); memcpy(a->b, b8, sizeof b8);
             a->lx = pl->x; a->lz = pl->z; a->yaw = (int)pl->rot_y & 0xfff;
             a->pfr = pl->anim_frame; a->afr = arm->anim_frame; }
+        if (getenv("R35_ARME_DUMP")) {
+            double c = cos(pl->rot_y * 3.14159265358979 / 2048.0), sn = sin(pl->rot_y * 3.14159265358979 / 2048.0);
+            printf("  DUMP [%s] f%2d afr %2d hand=(%d,%d,%d)", name, f, (int)arm->anim_frame, h[0], h[1], h[2]);
+            for (int b = 0; b < 16; b++) {
+                int dx = h[0]-s_knochen[b][0], dz = h[2]-s_knochen[b][2], dy = h[1]-s_knochen[b][1];
+                int vor = (int)(dx * c - dz * sn), seit = (int)(dx * sn + dz * c);
+                if (b == 0 || b == 8 || b == 9 || b == 12) printf(" | b%d v%d s%d h%d", b, vor, seit, -dy);
+            }
+            printf("\n");
+        }
         if (d < mind) mind = d;
         if (d < 120) im_koerper++;
         bilder++;
