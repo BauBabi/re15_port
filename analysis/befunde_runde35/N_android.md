@@ -596,3 +596,20 @@ urteil_kontrollen.sh `--schnell` (Ende beim ersten FALSCH; Reihenfolge der Grupp
 unveraenderte Datei muss ALLE Kontrollen bestehen. Ueberlebt ein Mutant und steht nicht begruendet in AEQUIVALENT ->
 `BASH-URTEIL-MUTANTEN-FEHLER`. Gleichwertig (3, je mit Begruendung): `(( rc == 0 ))` -> `<=`, `(( urteil == 0 ))` ->
 `<=`, `(( rc != 0 ))` -> `>` - rc/urteil sind Rueckgaben (`$?` 0..255), nie negativ.
+
+**Messung (bash-Urteil):**
+- urteil_kontrollen.sh gegen das echte release/apk_pruefen.sh: `KONTROLLEN: 87 ok, 0 FALSCH` (~46 s; Beleg
+  `N_android_belege/nb2_urteil_kontrollen.txt` = Stand mit 83 Kontrollen, danach +4: D2d, D7c, D7d, N19g).
+- **Erster Mutantenlauf** (83 Kontrollen, ohne AEQUIVALENT; Beleg `nb2_bash_mutanten_erster_lauf.txt`): 220 Mutanten,
+  **12 ueberlebt**: Pin-Muster `^[0-9a-f]{64}$` ohne `^` bzw. ohne `$` (Gate und Urteil, 6) und Klasse -> `.` (Urteil-Pin,
+  1) - keine Kontrolle hatte 65 Ziffern bzw. 64 Nicht-Hex-Zeichen beim Urteils-Pin; grep-Muster der Urteilszeile ohne das
+  Leerzeichen nach dem Doppelpunkt (2); und die drei `$?`-Gleichwertigen. Dazu D2d/D7c (65 Ziffern), D7d (64 x g beim
+  Urteil), N19g (Urteilszeile ohne Leerzeichen nach `:`) und die drei AEQUIVALENT-Eintraege.
+- **Endstand** (`test_r35_android_bash_mutanten.sh`, 10 parallel, Beleg `nb2_bash_mutanten.txt`): Kontrolle
+  `KONTROLLEN: 87 ok, 0 FALSCH`; `Mutanten je Operator: A 34, B 18, C 34, D 93, E 23, F 9, G 7, H 2`;
+  **`== BASH-URTEIL-MUTANTEN-OK: 220 Mutanten, 217 erkannt, 3 als gleichwertig begruendet ==`**, Laufzeit 224 s.
+  Haeufigste Toeter: N10 (56), N8c (14), N19b (11), N17 (11), P4 (8), N13/N11 (je 7) - die neuen Gegenseiten-Kontrollen
+  N8c, N11b, N13b, N22, N24, D2d/D7c toeten je mindestens einen Mutanten, den sonst keine Kontrolle faengt.
+  Beispiel G (Aufruf weg): `gate_urteil_selbsttest` in gate_laufen gestrichen -> N20 rot, weil dann die Abbruchmeldung von
+  gate_urteil in `$log.urteil` landet und vor dem `cat` verloren geht - die Vorab-Pruefung in gate_laufen ist also nicht
+  doppelt, sie macht den Grund sichtbar.
