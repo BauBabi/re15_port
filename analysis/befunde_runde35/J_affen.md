@@ -1186,8 +1186,10 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 ### Messung nachher (Riegel, Endstand Code; `jnb3/griff6.txt`, `takt5.txt`, `szene5.txt`, `schrot5.txt`)
 - `griff` Lauf 0: e1 T254-T288 hoechstens 28 neben dem Original (vorher bis 844), Abstand e1-e2 T256-T264 3171..3211
   (Original 3168..3209), e2-Weg T254->T262 570 (Original 542, vorher 4); Kette T265-T267 Eingang 22/31/19, Ausgang
-  64/104/4 (vorher 213/276/496 bzw. 1241/1573/207); Bahn T265-T290 im Mittel 31, hoechstens 166 (T290); Freigabe T378
+  64/104/4 (vorher 213/276/496 bzw. 1241/1573/207); Bahn T265-T290 im Mittel 31 [KORREKTUR N4: gemessen 34, `jnb3/griff6.txt`], hoechstens 166 (T290); Freigabe T378
   (-6153,-9995) = Klemmen-Iteration ab der eigenen T290-Lage (-5348,-10714) in 88/88 Bildern; Anker (-7539,-10347).
+  [NACHTRAG N4 (N1): derselbe Lauf 0 biss danach — T405 HP 76 -> 70 durch e2, Ende (-4200,-10658) HP 70 (`jnb3/griff6.txt`);
+  das fehlte hier und in OFFEN 1. Mechanismus und Behebung: Abschnitt "N1" in Nachbesserung 4.]
 - `griff` Weg 2: Anker (-7507,-10327), e1 T254/T255 bitgleich, Kette T268-T290 23/23 bitgleich, Freigabe T378
   (-4759,-10633), Leon T291-T414 124/124 = Original, Ruhe (-3009,-11643) ab T410, **bis T495 kein Biss (HP 76)** wie das
   Original (g_griff F496: (-3009,-11643) HP 76; vor dem Fusssperren-Fix: Bisse T420/T480). e1/e2 nach der Ruhe 35-200
@@ -1195,7 +1197,9 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 - `takt`: Gleichtakt 8 Bisse, groesste Abweichung 3 Bilder (vorher 3), Mittel 52,0 (Original 51,6); Wechseltakt
   nach Desync groesste Abweichung **2** (vorher 4), Mittel 35,6 (Original 35,9).
 - `szene`: Gang 207/207, Heavy Freigabe + 365 (Original +364), Takt Mittel 52,1 / kuerzester 51, Tod + 1198
-  (Original +1193) — unveraendert gegenueber Nachbesserung 2.
+  (Original +1193) — unveraendert gegenueber Nachbesserung 2. [KORREKTUR N4 (N2 (c)): NICHT unveraendert — die Einzelbisse von
+  Slot 2 lagen jetzt bei 523, 627, ... 1147 (Zyklus 104, Original 103; Nachbesserung 2 Mittel 51,5/kuerzester 46). Ursache und
+  Behebung: Abschnitt "N2" in Nachbesserung 4.]
 - `schrot`: Exit F275 -> Sub 7 (Original F276), Landung F311 (Original F312), danach SELECTOR, kein Zonen-Sprung.
 
 ### Tests (Stand Nachbesserung 3) — probes/r35_affen.cmake unveraendert (17 Eintraege), test_r35_affen.c
@@ -1245,6 +1249,8 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
   Gorilla schiebt Leon beim Wurf wie im Original an. (3) Am Ende des Brustschlags springt der Gorilla nicht mehr ~1300 Einheiten
   ueber den Platz; nach einem Wurf bleiben beide Gorillas wie im Original zwischen den Wagen haengen, statt Leon
   gleich wieder zu beissen.
+  [KORREKTUR N4 (N1): der zweite Teil von (3) galt nur im Riegel-Lauf Weg 2 (Original-Zustand bei T253); berichtigte Fassung
+  im Abschnitt "Fuer den Nutzer (Stand Nachbesserung 4)".]
 
 ### Messung nachher, exe ueber den ECHTEN Tuerweg (exe-Kopie re15_pc_jnb3.exe, md5 62b8fb5a... = re15_pc.exe; `jnb3/run.sh`)
 - Env wie Abnahme 2: RE15_SET_FLAG=4:243,3:130, RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der 11B0-Tuer,
