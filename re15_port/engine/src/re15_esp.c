@@ -16,6 +16,7 @@
 #include "re15_damage.h"   /* re15_resolve_attack = FUN_80012d60 (Routine 31, Runde 34 A5) */
 #include "re15_skeleton.h" /* re15_sin_q12/re15_cos_q12 = Tabelle 0x800794c4 (RotMatrix-Zwilling) */
 #include "re15_engine.h"   /* g_engine.frame_count — nur RE15_GRANATE_LOG */
+#include "re15_granate_r35.h"   /* Runde 35 Spur A: Wand/Kontakt im Flug, RE2-Reichweite, RE2-SE */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
@@ -947,12 +948,9 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * = 10/11 @0x8006f433/34, ohne Aufrufer im Original), `jal 0x80012d60` @0x800185b8.
                      * Kein Gegner ausgeschlossen: Gate A vergleicht Platz+0x74 (Anker = Spieler-
                      * Knochen) mit Gegner+0x188+0x40 (@0x80012f38-4c) -> attacker -1. */
-                    re15_attack_box_t box;
-                    box.x = p[0]; box.y = p[1]; box.z = p[2];
-                    box.radius = 500;
-                    int treffer = re15_resolve_attack(&box, art, -1);
+                    int treffer = re15_granate_r35_explosion(p, f->param, art);   /* Runde 35 Spur A: RE2 Op 47 @0x80020c3c (granate_r35.c) */
                     s_granate_resolver_calls++;
-                    if (gl) fprintf(gl, "T=%u EV resolver art=%u P=(%d,%d,%d) r=500 eingriffe=%d\n",
+                    if (gl) fprintf(gl, "T=%u EV resolver art=%u P=(%d,%d,%d) r=2000 eingriffe=%d\n",
                                     s_gr_tick, (unsigned)art, (int)p[0], (int)p[1], (int)p[2], treffer);
                 }
                 if (art == 2) {
@@ -962,8 +960,8 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * (`lui a0,0x408` / `ori a0,a0,0x1` / `jal 0x80045024` @0x800185e4-ec, a1 = &P). */
                     esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
                     if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d)\n", s_gr_tick,
-                                    0x04080001u, (int)p[0], (int)p[1], (int)p[2]);
-                    if (re15_esp_se_hook) re15_esp_se_hook(0x04080001u, p);
+                                    RE15_GRANATE_R35_SE_EXPLOSION, (int)p[0], (int)p[1], (int)p[2]);
+                    re15_granate_r35_explosion_se(p);   /* Runde 35 Spur A: RE2-SE 0x01110001 @0x80020d40-48 statt 0x04080001 */
                 } else {
                     /* E8: Aufschlag an der Granaten-WELTLAGE Q = slot+0x28/2a/2c (nicht P), Gier =
                      * slot+0x2e. re2_art per expliziter Tabelle (esp_granate_re2_art). */
@@ -1128,6 +1126,7 @@ void (*re15_esp_shell_clink_hook)(void) = NULL;
  *    `sll a0,a0,8` / `or` @0x80018420/28, `jal 0x80045024` @0x80018424). vz wird NIE gedaempft. */
 static void esp_fx_dispatch_b_29(re15_esp_fx_t *f)
 {
+    if (re15_granate_r35_flug(f)) return;   /* Runde 35 Spur A: Wand im Flug -> Explosion sofort (granate_r35.c) */
     /* t1 = Eindringtiefe unter die Bezugsebene. Original: Ebene y 0 (`lh t1,42(t0)` / `blez t1`
      * @0x80018330-38). granate_boden (re15_esp.h) = Standhoehe des Werfers, PORT-ZUORDNUNG fuer
      * Raeume mit Boden != 0; bei Boden 0 (granate_boden == 0) byte-gleich. */
@@ -1476,6 +1475,10 @@ static void esp_fx_weltlage(re15_esp_fx_t *f)
     f->wpos[1] = (int16_t)(r[1] + f->y);
     f->wpos[2] = (int16_t)(r[2] + f->z);
 }
+/* Runde 35 Spur A — Dienste fuer granate_r35.c (Weltlage neu, Routine A im selben Tick, Granaten-Log). */
+void  re15_esp_r35_weltlage(re15_esp_fx_t *f)  { esp_fx_weltlage(f); }
+void  re15_esp_r35_routine_a(re15_esp_fx_t *f) { esp_fx_dispatch(f); }
+FILE *re15_esp_r35_log(unsigned *tick)         { if (tick) *tick = s_gr_tick; return esp_granate_log(); }
 
 /* RE15_GRANATE_LOG: Zustandszeile je Granatenplatz (Diagnose). */
 static void esp_granate_log_tick(void)

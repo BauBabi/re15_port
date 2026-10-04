@@ -34,6 +34,7 @@
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
+#include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -1080,7 +1081,7 @@ void re15_audio_prime_weapon(int weapon_id)
  * ist Port-Zuordnung (E9): FEST, NICHT ueber die Bank der ausgeruesteten Waffe (die Granaten-
  * baenke ARMS09/0A/0B haben keinen Aufschlagton, nur VAG 2). Deshalb eigene, einmal geladene
  * Baenke neben s_weap_*; Satz-Aufloesung und Stimmen/Prio-Maschine = se_play_layers wie ARMS. */
-#define ARMS_ZUSATZ_N 2
+#define ARMS_ZUSATZ_N 3   /* Runde 35 Spur A/B: + ARMS0F (Explosiv-Aufschlag 0x01110001 -> Satz 10) */
 typedef struct {
     int         id;                                   /* ARMS-Id (0x10/0x11), -1 = leer         */
     int         state;                                /* 0 ungeprueft, 1 geladen, -1 fehlt       */
@@ -1090,7 +1091,7 @@ typedef struct {
     uint8_t    *edt;                                  /* EDH-Puffer, EDT-Praefix @0             */
     int         edt_count;
 } arms_zusatz_t;
-static arms_zusatz_t s_arms_zusatz[ARMS_ZUSATZ_N] = { { .id = -1 }, { .id = -1 } };
+static arms_zusatz_t s_arms_zusatz[ARMS_ZUSATZ_N] = { { .id = -1 }, { .id = -1 }, { .id = -1 } };
 
 static arms_zusatz_t *arms_zusatz_laden(int arms_id)
 {
@@ -1100,7 +1101,7 @@ static arms_zusatz_t *arms_zusatz_laden(int arms_id)
             return (s_arms_zusatz[i].state == 1) ? &s_arms_zusatz[i] : NULL;
         if (!frei && s_arms_zusatz[i].id < 0) frei = &s_arms_zusatz[i];
     }
-    if (!frei) return NULL;                           /* nur die zwei Aufschlag-Baenke vorgesehen */
+    if (!frei) return NULL;                           /* ARMS_ZUSATZ_N Plaetze: ARMS10/11 (Aufschlag) + ARMS0F (Explosion) */
     frei->id = arms_id;
     frei->state = -1;
     char path[64];
@@ -1140,6 +1141,71 @@ void re15_audio_arms_zusatz_se(int arms_id, int satz)
         if (wl) fprintf(wl, "    SE  zusatz ARMS%02X satz=%d\n", arms_id, satz); }
     if (!g_audio.initialized) return;
     arms_zusatz_t *b = arms_zusatz_laden(arms_id);
+    if (!b || satz < 0 || satz >= b->edt_count) return;
+    se_play_layers(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+}
+
+/* ===== Runde 35 Spur B — RE2-ARMS-Baenke (Beta -> Retail, "Sound ist RE2") ==================
+ * RE2 Bank 1 = ARMS-Datei der gefuehrten Waffe (FUN_80059c74, Datei DAT_800A8118[Waffe], Satz-
+ * Deskriptor 4 Byte @0, `pBAV` @ u32[size-8] — dasselbe EDH-Layout wie RE1.5, geprueft an
+ * info/re2leon/COMMON/SOUND/ARMS10/11.EDH: Trailer 0x80, pBAV @0x80). Gebraucht fuer den
+ * Flammenwerfer (RE2 [16] 0x800454a0: Satz 0 `00001416` Bild 1, Satz 11 `00002417` Bild 11 —
+ * RE1.5 ARMS0E hat keinen Satz 11, VAG 8928 B fehlt dort) und die Raketen-Explosion (Op 47 Sub 13
+ * 0x01140001 = RE2 ARMS11 Satz 20 `00003320`, VAG 12672 B; RE1.5 ARMS12 Satz 10 traegt ein
+ * anderes Sample 17104 B). Dateien: shared_assets/RE2/SOUND/ARMS<id>.EDH + .VB. */
+#define RE2_ARMS_N 2
+static arms_zusatz_t s_re2_arms[RE2_ARMS_N] = { { .id = -1 }, { .id = -1 } };
+
+static arms_zusatz_t *re2_arms_laden(int arms_id)
+{
+    arms_zusatz_t *frei = NULL;
+    for (int i = 0; i < RE2_ARMS_N; i++) {
+        if (s_re2_arms[i].id == arms_id)
+            return (s_re2_arms[i].state == 1) ? &s_re2_arms[i] : NULL;
+        if (!frei && s_re2_arms[i].id < 0) frei = &s_re2_arms[i];
+    }
+    if (!frei) return NULL;
+    frei->id = arms_id;
+    frei->state = -1;
+    char path[64];
+    uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
+    snprintf(path, sizeof path, "SOUND/ARMS%02X.EDH", arms_id);
+    edh = re15_pc_read_re2(path, &edh_sz);
+    snprintf(path, sizeof path, "SOUND/ARMS%02X.VB", arms_id);
+    vb = re15_pc_read_re2(path, &vb_sz);
+    if (!edh || !vb || edh_sz < 8) {
+        fprintf(stderr, "[re2arms] shared_assets/RE2/SOUND/ARMS%02X.EDH/.VB fehlt -> stumm\n", arms_id);
+        free(edh); free(vb); return NULL;
+    }
+    uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
+                    ((uint32_t)edh[edh_sz-6] << 16) | ((uint32_t)edh[edh_sz-5] << 24);
+    if (pbav + 0x20u > (uint32_t)edh_sz ||
+        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &frei->vab) != 0) {
+        free(edh); free(vb); return NULL;
+    }
+    for (int i = 0; i < frei->vab.vag_count; i++) {
+        uint32_t off = frei->vab.samples[i].offset, sz = frei->vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        frei->decoded[i]     = pcm;
+        frei->decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vb);
+    frei->edt       = edh;
+    frei->edt_count = (int)(pbav / 4);
+    frei->state     = 1;
+    return frei;
+}
+
+void re15_audio_re2_arms_se(int arms_id, int satz)
+{
+    {   extern FILE *re15_waffen_log(void);
+        FILE *wl = re15_waffen_log();
+        if (wl) fprintf(wl, "    SE  re2arms ARMS%02X satz=%d\n", arms_id, satz); }
+    if (!g_audio.initialized) return;
+    arms_zusatz_t *b = re2_arms_laden(arms_id);
     if (!b || satz < 0 || satz >= b->edt_count) return;
     se_play_layers(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
@@ -2717,6 +2783,9 @@ static const uint16_t SS_BGMTBL[106] = {  /* UNK_80074828 @ PSX.EXE 0x80074828 *
 /* == FUN_800443ec + FUN_80044564/80044774: resolve the MAIN/SUB BGM slots for a
  * room. main = entry&0x3f; sub = (entry>>8)&0x3f (0xff high byte = no sub). -1 none. */
 static int ss_bgm_entry(int stage, int room) {
+    /* Runde 35 Spur K (re15_cut10f0.h): MAIN01 vom Ende der ROOM10F0-Szene bis zum Parkplatz —
+     * erzwungener Tabellen-Eintrag 0xFF01 statt UNK_80074828[...], sonst -1 = Tabelle. */
+    { int k = re15_cut10f0_bgm_eintrag(stage, room); if (k >= 0) return k; }
     if (stage < 0 || stage > 5) return -1;
     int idx = room + SS_STAGE_OFF[stage];
     if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
@@ -3529,6 +3598,9 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
+                /* Runde 35 Spur K (cut_10f0.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
+                 * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
+                if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);
@@ -3559,6 +3631,9 @@ void re15_audio_tick(void)
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
                  * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
+                /* Runde 35 Spur K (cut_10f0.c): im MAIN01-Fenster gilt ein Befehl an den MAIN-Slot nicht —
+                 * FUN_80044da4 op 2 @0x80044e50 stoppte sonst MAIN01, die Nutzlast @0x80044f50 traefe dessen Bank. */
+                if (re15_cut10f0_main_gesperrt((unsigned)evt.bank, (int)evt.volume, s_cap_ticks)) break;
                 ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;

@@ -202,6 +202,7 @@ void re15_pc_licht_latch_zurueck(re15_light_set_t *ls)
 
 #include "re15_audio.h"
 #include "re15_damage.h"     /* re15_re2_gl_apply (V2b) */
+#include "re15_granate_r35.h" /* Runde 35 Spur A: re15_granate_r35_explosion (FORCE_EXPLOSION) */
 #include <stdio.h>
 
 extern FILE *re15_waffen_log(void);   /* engine/src/player_common.c — Mess-Log RE15_WAFFEN_LOG */
@@ -223,6 +224,7 @@ int re15_pc_re2fx_se_weiche(uint32_t code, int *arms_id, int *satz)
     int id;
     if (code == RE15_PC_RE2FX_SE_SAEURE)     id = RE15_PC_ARMS_SAEURE;
     else if (code == RE15_PC_RE2FX_SE_BRAND) id = RE15_PC_ARMS_BRAND;
+    else if (code == RE15_PC_RE2FX_SE_EXPLOSIV) id = RE15_PC_ARMS_EXPLOSIV;   /* Runde 35 Spur A */
     else return 0;
     if (arms_id) *arms_id = id;
     if (satz) *satz = RE15_PC_ARMS_AUFSCHLAG_SATZ;
@@ -253,11 +255,24 @@ void re15_pc_re2fx_se(uint32_t code, const int32_t pos[3])
     (void)pos;
     int arms = 0, satz = 0;
     int ok = re15_pc_re2fx_se_weiche(code, &arms, &satz);
+    /* Runde 35 Spur B (Werfer-Klasse, re2_fx.c Ops 7/47):
+     *   0x01000001  Op 7 Muendungsblitz (`(+0x16 << 16) + 1` @0x8001e1b8, rr = 256) = ARMS Satz 0
+     *               der gefuehrten Waffe (RE2 Bank 1) -> re15_audio_weapon_se(0);
+     *   0x01110001  Op 47 Sub 12 Explosiv-Aufschlag (@0x80020d40-48) -> RE1.5 ARMS0F Satz 10
+     *               (`00003320`, VAG 12800 B = bytegleich RE2 ARMS09 Satz 17, Dossier §2.1);
+     *   0x01140001  Op 47 Sub 13 Raketen-Explosion (@0x80020d3c/dc0-c4) -> RE2 ARMS11 Satz 20
+     *               (`00003320`, shared_assets/RE2/SOUND/ARMS11). */
+    const char *was = ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" :
+                            arms == RE15_PC_ARMS_EXPLOSIV ? "ARMS0F Satz 10" : "ARMS11 Satz 10")
+                         : (code == 0x01000001u) ? "ARMS Satz 0 (Waffe)"
+                         : (code == 0x01110001u) ? "ARMS0F Satz 10"
+                         : (code == 0x01140001u) ? "RE2 ARMS11 Satz 20" : "unbekannt (stumm)";
     {   FILE *wl = re15_waffen_log();
-        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s\n", (unsigned)code,
-                        ok ? (arms == RE15_PC_ARMS_SAEURE ? "ARMS10 Satz 10" : "ARMS11 Satz 10")
-                           : "unbekannt (stumm)"); }
-    if (ok) re15_audio_arms_zusatz_se(arms, satz);
+        if (wl) fprintf(wl, "    SE  re2fx code=0x%08x -> %s @(%d,%d,%d)\n", (unsigned)code, was,
+                        pos ? (int)pos[0] : 0, pos ? (int)pos[1] : 0, pos ? (int)pos[2] : 0); }   /* Mess-Harness: Lage */
+    if (ok) { re15_audio_arms_zusatz_se(arms, satz); return; }   /* Saeure/Brand + Explosiv (Spur A, Weiche) */
+    if (code == 0x01000001u)      re15_audio_weapon_se(0);
+    else if (code == 0x01140001u) { extern void re15_audio_re2_arms_se(int, int); re15_audio_re2_arms_se(0x11, 20); }
 }
 
 void re15_pc_r34_haken_binden(void)
@@ -334,10 +349,13 @@ int re15_pc_force_explosion(int art, const re15_actor_t *ziel)
     /* Wie Routine 31 im Zuender-7-Bild (re15_esp.c): P = (x, y - 500, z) der liegenden Granate
      * (`lh v0,42(v1)` @0x800185a0 / `addiu v0,v0,-500` @0x800185a8), FUN_80012d60(500, &P, Art) (`ori a0,zero,0x1f4`
      * @0x80018598, `jal 0x80012d60` @0x800185b8) — hier liegt die "Granate" am Ziel. */
-    re15_attack_box_t box;
-    box.x = ziel->x; box.y = ziel->y - 500; box.z = ziel->z;
-    box.radius = 500;
-    int n = re15_resolve_attack(&box, (uint8_t)art, -1);
+    /* Runde 35 Spur A: dieselbe Zustellung wie Routine 31 (RE2-Reichweite Box +-2000 @0x80010918 an P und
+     * P+900 @0x80020d98 -> RE1.5-Gegnerzweig; kein Spielerzweig), granate_r35.c. Die "Granate am Gegner" liegt
+     * auf dem BODEN DES WERFERS (granate_boden = Standhoehe des Werfers, Runde 34; Spieler-y), nicht auf der
+     * y des Ziels: der Gator-Boss (ROOM2090) liegt im Wasser GB_WATER_Y -1200 mit Kasten +1200 auf Deckhoehe —
+     * mit ziel->y - 500 lag P 1200 neben dem Deck und verfehlte ihn (gemessen int1: Treffer=0). */
+    int32_t p[3] = { ziel->x, g_actors[RE15_ACTOR_SLOT_PLAYER].y - 500, ziel->z };
+    int n = re15_granate_r35_explosion(p, (int16_t)ziel->rot_y, (uint8_t)art);
     if (art != 2) {
         /* E8: Art 3/4 -> Aufschlag Op 49 (Saeure, re2_art 2) / Op 48 (Brand, re2_art 1) an der Lage */
         int32_t q[3] = { ziel->x, ziel->y, ziel->z };

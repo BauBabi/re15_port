@@ -3887,11 +3887,15 @@ enum { RE2Z_ATK_MAX = 19 };   /* Ids 1..19 (Beleg (a)/(b)/(c) oben)             
  * SPAS + hoch zielen zerreisst deterministisch (HOCH-Gate @0x80108C94-A0).
  * W8 auf 8 umlegen waere eine bewusste Original-Abweichung -> nur auf
  * ausdrueckliche Nutzer-Entscheidung. */
+/* Runde 35 Spur B: w20 Colt Python 13 -> 5. RE1.5 fuehrt die Python als zweiten MAGNUM-Revolver
+ * (ARMS14 = Record-Layout des Redhawk ARMS07, Bank W14 = Revolver-Clips; Dossier
+ * analysis/befunde_runde35/B_werfer.md §3.5), Schaden = Spalte des Redhawk (w7 -> RE2-Zeile 5).
+ * Die Colt S.A.A. (13, Handfeuer-Schaden 16/15/14) war die Klassen-Fehlzuordnung der "6 Schuss". */
 static const uint8_t re2z_row_from_weapon[22] = {
     /* 0*/  1, /* 1*/  1, /* 2*/  1, /* 3*/  3, /* 4*/  2, /* 5*/  4,
     /* 6*/  4, /* 7*/  5, /* 8*/  7, /* 9*/  9, /*10*/ 11, /*11*/ 10,
     /*12*/ 15, /*13*/  8, /*14*/ 16, /*15*/  9, /*16*/ 11, /*17*/ 10,
-    /*18*/ 17, /*19*/ 18, /*20*/ 13, /*21*/  1
+    /*18*/ 17, /*19*/ 18, /*20*/  5, /*21*/  1
 };
 
 /* Der zweite Port-Erzeuger von +0x5: re15_enemy_take_damage (FUN_80012D60-Gegner-Zweig) fuettert
@@ -3919,7 +3923,11 @@ static const uint8_t re2z_row_from_weapon[22] = {
  * der alten Schadensklassen-Zuordnung. Im Spiel kommt Art 5 nur ueber den Applier (GL-Bruecke
  * re15_re15_re2z_gore_hit_gl mit der Hitcode-Zeile); der Eintrag hier deckt den Direktaufruf.
  * Die uebrigen Eintraege (0/1, 6..10) bleiben die dokumentierte Klassen-Zuordnung. */
-static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 10, 9, 10, 11, 17, 1 };
+/* Runde 35 Spur B: DAT_8006f430 = [3,3,9,10,11,14,15,16,17,18,20] (@0x8006f430-3a) ist die
+ * RE1.5-WAFFEN-Id je Art — Art 6 = w15 GL Explosiv -> 9, Art 7 = w16 GL SAEURE -> 11, Art 8 = w17
+ * GL BRAND -> 10, Art 9 = w18 Rakete -> 17, Art 10 = w20 Python -> 5 (wie re2z_row_from_weapon).
+ * Vorher standen 7/8 nach "Schadensklasse" auf 10/11 (vertauscht) und 10 auf 1. */
+static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 9, 11, 10, 10, 9, 11, 10, 17, 5 };
 
 /* INVARIANTE "kein stummer Treffer": faellt die gewaehlte Zeile in der TATSAECHLICH gestempelten
  * Spalte auf NULL, obwohl der Zombie den Treffer UEBERLEBT hat (also die HURT-Wurzel wirklich

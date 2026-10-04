@@ -35,6 +35,7 @@
 #include "re15_menu.h"
 #include "re15_inv_screen.h"
 #include "re15_fade.h"
+#include "re2_fx.h"          /* Runde 35 Spur A: re2fx_se_hook (Explosions-SE 0x01110001) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -91,6 +92,7 @@ static void spione_reset(void)
 {
     s_se_n = 0; s_auf_n = 0; s_auf_art = -1; s_auf_bild = -1;
     re15_esp_se_hook = spy_se;
+    re2fx_se_hook    = spy_se;      /* Runde 35 Spur A: Explosions-SE 0x01110001 kommt ueber den RE2-FX-Tonhaken */
     re15_esp_aufschlag_hook = spy_auf;
     g_re15_licht_latch = 0;
 }
@@ -327,7 +329,8 @@ static void abschnitt_mitte(void)
         for (int i = 0; i < s_se_n && i < 9; i++)
             printf("  SE %d: %08x Bild %d pos (%d,%d,%d)\n", i, s_se_code[i], s_se_bild[i],
                    s_se_pos[i][0], s_se_pos[i][1], s_se_pos[i][2]);
-        PRUEF(21, s_se_n == 9 && s_se_code[8] == 0x04080001u && s_se_bild[8] == 109 &&
+        /* Runde 35 Spur A: Explosions-SE = RE2 0x01110001 (@0x80020d40-48) ueber re2fx_se_hook (derselbe Spion). */
+        PRUEF(21, s_se_n == 9 && s_se_code[8] == 0x01110001u && s_se_bild[8] == 109 &&
                    s_se_pos[8][0] == w.wl[0] && s_se_pos[8][1] == w.wl[1] - 500 && s_se_pos[8][2] == w.wl[2],
               "Explosions-SE: n=%d code %08x Bild %d pos (%d,%d,%d)", s_se_n, s_se_n > 8 ? s_se_code[8] : 0,
               s_se_n > 8 ? s_se_bild[8] : -1, s_se_n > 8 ? s_se_pos[8][0] : 0, s_se_n > 8 ? s_se_pos[8][1] : 0,
@@ -340,8 +343,9 @@ static void abschnitt_mitte(void)
                s_dum->sub_state_1 == 9 && s_dum->sub_state_2 == 1,
           "Dummy 0x27: hp %d state %u +5 %u +6 %u (soll -820/3/9/1)", s_dum->hp, s_dum->state,
           s_dum->sub_state_1, s_dum->sub_state_2);
-    PRUEF(25, g_actors[0].hp == 100 - 1000 && g_actors[0].state == 3,
-          "Spieler 900 entfernt: hp %d state %u (soll -900/3)", g_actors[0].hp, g_actors[0].state);
+    /* Runde 35 Spur A: KEIN Spielerzweig mehr (RE2 FUN_800470C0 nur Gegnerliste @0x800470c4-0x8004740c). */
+    PRUEF(25, g_actors[0].hp == 100 && g_actors[0].state == 0,
+          "Spieler 900 entfernt: hp %d state %u (soll 100/0 — RE2: kein Eigenschaden)", g_actors[0].hp, g_actors[0].state);
     PRUEF(26, s_kind_x_ok, "Kind 0x03195000 im Explosionsbild nicht sichtbar/initialisiert (Flags 0x13, Satz 10, an P)");
     PRUEF(27, s_kind_z2_ok, "Zuender 2 (Bild 114): Feuerball #2 + Rauch #1 (0x030B5400) fehlen/falsch");
     PRUEF(28, s_kind_frei_ok, "Zuender 0 (Bild 116): Granatenplatz nicht frei bzw. Rauch #2 nicht auf dem Platz");
@@ -580,11 +584,11 @@ static void abschnitt_rand(void)
     g_actors[0].x = xL - 1000; g_actors[0].y = 0; g_actors[0].z = zL;
     wurf(2, 0x4000, -2474, 0, 130, &w, NULL);
     PRUEF(77, g_actors[0].hp == 100, "Spieler 1000 entfernt: hp %d (soll 100)", g_actors[0].hp);
-    /* und 949 entfernt: getroffen (R = 450 + 500 = 950, streng <) */
+    /* und 949 entfernt: Runde 34 getroffen (R = 450 + 500 = 950); Runde 35 Spur A: kein Spielerzweig (RE2). */
     welt_leer();
     g_actors[0].x = xL - 949; g_actors[0].y = 0; g_actors[0].z = zL;
     wurf(2, 0x4000, -2474, 0, 130, &w, NULL);
-    PRUEF(78, g_actors[0].hp == -900, "Spieler 949 entfernt: hp %d (soll -900)", g_actors[0].hp);
+    PRUEF(78, g_actors[0].hp == 100, "Spieler 949 entfernt: hp %d (soll 100 — RE2: kein Eigenschaden)", g_actors[0].hp);
 
     /* A7: Routine 9 (Muendungsknall, 2. Bild des Muendungsfeuers id 2 sub 0: R8 -> R9) setzt den
      * Licht-Latch (`sb v0,21336(at)` @0x80017694); vorher (Bild 1, Routine 8) steht er noch 0. */
@@ -1291,7 +1295,7 @@ int main(int argc, char **argv)
     if (!nur || !strcmp(nur, "kinder"))     { printf("[8] Kind-Spawns R8/R15\n");  abschnitt_kinder(); }
 
     re15_player_acaec_override_for_test(0, 0);
-    re15_esp_se_hook = NULL; re15_esp_aufschlag_hook = NULL;
+    re15_esp_se_hook = NULL; re15_esp_aufschlag_hook = NULL; re2fx_se_hook = NULL;
     free(buf);
     if (s_fehler) { fprintf(stderr, "probe_r34_wurf: %d Fehler, erste Pruefung %d\n", s_fehler, s_erste); return s_erste; }
     printf("probe_r34_wurf: ALLE PRUEFUNGEN GRUEN\n");

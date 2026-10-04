@@ -141,6 +141,9 @@ void re15_enemy_reset(void);
  * re15_enemy_reset. Typ 0x47 (Elliot) ist ausgenommen (marvin_10d0.md O3). */
 void re15_rbj_bind_room(const uint8_t *rbj, size_t size);
 const uint8_t *re15_rbj_room(size_t *size);   /* Runde 35 Spur I: die zuletzt gebundene Raum-RBJ */
+/* Runde 35 Spur L: Aktor-Slot `slot` spielt den RBJ-Record des Marker-Slots `marker_slot`
+ * (0 = eigener Slot). Wird bei re15_rbj_bind_room zurueckgesetzt. */
+void re15_rbj_set_alias(int slot, int marker_slot);
 const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
 const re15_emd_skeleton_t  *re15_actor_rbj_skel(int slot);
 

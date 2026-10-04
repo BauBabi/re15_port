@@ -50,6 +50,8 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
+#include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
+#include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
 
 scd_vm_t g_scd;
 
@@ -620,6 +622,11 @@ int scd_event_fire(uint8_t event_id)
      * Port-Programm "Ada-Ruf", solange (9,65)=0 und (3,0xBB)=0; sonst NULL = ausgelieferter sub.
      * Integration: A (Ereignis 2) und D (Ereignis 13) sind disjunkt, die Reihenfolge ist gleichgueltig. */
     if (!pc) pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);
+    /* Runde 35 Spur K (cut_10f0.c): ROOM10F0 Ereignis 20 = Szene Ada/Leon/Marvin, solange (9,71)=0. */
+    if (!pc) pc = re15_cut10f0_ereignis((uint16_t)g_current_room_id, event_id);
+    /* Runde 35 Spur L (irons_tod_1150.c): Ereignis 21 in 1150/1130/1040/1030/11C0 = Szene / Montage-Schritt /
+     * Rueckkehr / Nachspawn; sonst NULL. Disjunkt zu A (2) und D (13). */
+    if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -691,8 +698,11 @@ void scd_vm_tick(void)
      * Trigger IN sub01 sitzt, hiess das: der Trigger feuerte live nie und detonierte erst beim
      * naechsten Raum-Load im Tuer-Frame — ROOM1030s Zombie-Cutscene "triggert komisch" und
      * ROOM1040s Schalter tat beim Druecken gar nichts (Nutzer-Report). */
-    if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1])
+    /* Runde 35 Spur L: waehrend eines Montage-Schritts in einem fremden Raum (irons_tod_1150.c) bleibt
+     * dessen sub01 aus (ROOM11C0 sub01 @0x01824 wuerde sonst die Ada-Szene verbrauchen). */
+    if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1] && !re15_irons_tod_sub01_gesperrt())
         scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
+    if (!s_vm_room_init) re15_irons_tod_tick();   /* Runde 35 Spur L: Signal (5,12) -> Irons' Arm faellt */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 

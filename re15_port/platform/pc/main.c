@@ -79,6 +79,7 @@ static inline int RNDI(float f) {
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_map_hint.h"    /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
+#include "re15_cut10f0.h"     /* Runde 35 Spur K: Gestenblock-Leihe ROOM10F0 <- ROOM11B0 */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
@@ -4205,6 +4206,10 @@ re_title:;
         rbj_size = rdt.animation_size;
         rbj_borrowed = 1;
     }
+    /* Runde 35 Spur K: Boot/CONTINUE in ROOM10F0 mit ausstehender Szene -> Gestenblock von ROOM11B0 leihen
+     * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+    { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
+      if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -4363,7 +4368,8 @@ re_title:;
      * scd_vm_init just cleared it; populate the game-start inventory here. (Per-room persistence
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
-    re15_inv_load_briefing();
+    { extern void re15_messer_startinventar(void);   /* Runde 35 Spur E: Starttabelle @0x80074bb8 OHNE */
+      re15_messer_startinventar(); }                 /* Messer, 25c8 = 0x80 -> Messer (re15_messer.h)  */
     re15_itembox_init();   /* ITEM BOX starts empty (the RE1.5 new-game zero loop shape
                             * FUN_8003e4f4 @0x8003e52c-554; a CONTINUE load overwrites
                             * it from the v4 save block right after). */
@@ -4857,6 +4863,11 @@ re_title:;
      * Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter. Zustand AUS, Signatur-Cache leer.
      * Herleitung: include/re15_hebetisch_cursor.h. */
     re15_hebetisch_cursor_install((uint16_t)g_current_room_id);
+    /* Runde 35 Spur L: derselbe Grund (Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter): Tuer 1060 und
+     * die Irons-Todesszene (Spielstand + CONTINUE in ROOM1150 mit (9,71),(3,94),(9,73)=0 startet sie). */
+    { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
+      re15_tuer1060_install((uint16_t)g_current_room_id);
+      re15_irons_tod_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
      * Granate darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN
      * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem
@@ -4869,6 +4880,9 @@ re_title:;
                 fprintf(stderr, "[dokumente] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+    /* Runde 35 Spur K: Szene ROOM10F0 auch am Boot-/CONTINUE-Weg (alter Spielstand im Raum, (9,71)=0) —
+     * derselbe Grund wie die Installer darueber. Herleitung: include/re15_cut10f0.h. */
+    re15_cut10f0_install((uint16_t)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -7598,7 +7612,8 @@ re_title:;
                         int n = re15_pc_force_explosion(fe_art, fz);
                         fprintf(stderr, "[harness] RE15_FORCE_EXPLOSION F%u art=%d slot=%d t=%02x P=(%d,%d,%d) "
                                         "Treffer=%d\n", (unsigned)g_engine.frame_count, fe_art, fe_slot,
-                                (unsigned)fz->type, fz->x, fz->y - 500, fz->z, n);
+                                (unsigned)fz->type, fz->x, g_actors[RE15_ACTOR_SLOT_PLAYER].y - 500, fz->z, n);
+                                /* Runde 35 Spur A: P.y = Spieler-Boden - 500 (fx_plattform_pc.c) */
                     }
                 }
                 {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein
@@ -8128,6 +8143,10 @@ re_title:;
                                 rsz  = rdt.animation_size;
                                 rbj_borrowed = 1;
                             }
+                            /* Runde 35 Spur K: ROOM10F0 ohne eigenen Block, Szene steht aus -> den von ROOM11B0
+                             * leihen (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
+                            { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
+                              if (kb) { rbuf = kb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
                                 if (s_room_rbj) free(s_room_rbj);
                                 s_room_rbj = rbj_borrowed ? NULL : rbuf;
@@ -8463,6 +8482,11 @@ re_title:;
                  * FUN_80036b68 die Bank base_table[charid]+item, also
                  * PL00W<item> - und die liegen hier alle bereits geparst. */
                 int wid_now = re15_player_equipped_weapon();
+                {   /* Runde 35 Spur B: 16/17 fuehren die Bank der 15 (PL00W10 = PL00W11 ist eine
+                     * Ingram-foermige Platzhalterbank; Elza PL04W0F = W10 = W11, RE2 PL01W09 = 0A = 0B). */
+                    extern int re15_werfer_bank_id(int id);
+                    wid_now = re15_werfer_bank_id(wid_now);
+                }
                 const re15_emd_animation_t *want_anim;
                 const re15_emd_skeleton_t  *want_skel;
                 int want_ok;
@@ -9300,6 +9324,8 @@ re_title:;
                  * which patched the HAND band and left the blade/barrel reading stale skin = untextured.) */
                 static int s_wpn_key = -1; static unsigned s_wpn_gen = 0u;
                 int eqw = re15_player_equipped_weapon();
+                {   extern int re15_werfer_bank_id(int id);   /* Runde 35 Spur B: 16/17 -> dir[3] der W0F */
+                    eqw = re15_werfer_bank_id(eqw); }
                 int key = (g_gameflow.character << 8) | (eqw & 0xFF);
                 unsigned gen = re15_render_pc_slot0_generation();
                 /* Re-composite when the weapon changes OR slot 0 was re-uploaded (which wipes the
@@ -9346,6 +9372,8 @@ re_title:;
             {
                 extern int re15_player_equipped_weapon(void);
                 int eq = re15_player_equipped_weapon();     /* aca5d = the equipped weapon id */
+                {   extern int re15_werfer_bank_id(int id);   /* Runde 35 Spur B: 16/17 -> Mesh dir[2] der W0F */
+                    eq = re15_werfer_bank_id(eq); }
                 int wi = (eq >= 0 && eq < RE15_WPN_MDL_MAX) ? eq : 0;
                 int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
                 if (vis && wpn_bone_valid && player_visible &&

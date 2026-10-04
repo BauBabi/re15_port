@@ -50,7 +50,8 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
         g_inv.slots[0].id = type; g_inv.slots[0].qty = amount; g_inv.slots[0].flags = 1;
         g_inv.slots[1].id = type; g_inv.slots[1].qty = amount; g_inv.slots[1].flags = 2;
         re15_inv_icon_blank(0); re15_inv_icon_blank(1);   /* fresh upload = identity art */
-        re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
+        if (re15_inv_equipped_slot() != 0x80)            /* Runde 35 Spur E: RE2-Schutz @0x8006999c */
+            re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
     } else {
         /* everything else = 1 cell in the first FREE slot (raw qty, flags 0). The insert
          * uploads the item's icon (FUN_800492b8 @0x8004df08) = identity art. */
@@ -189,29 +190,41 @@ int re15_ammo_consume(void)
  * 15 -> 0x19. Only ids < 9 can reload (the HOLD gate `sltiu aca5d,9` @0x80033368), so the
  * 9..15 rows are carried for the table's byte-truth, not reachability. */
 typedef struct { uint8_t chunk; uint8_t ammo_id; } re15_wpn_prop_t;
-static const re15_wpn_prop_t s_wpn_props[16] = {
+/* Runde 35 Spur B: Zeilen 15..20 aus den Waffen-Records @0x80074da8 + id*0xC (u32 Magazin):
+ * [15] 6 @0x80074e5c, [16] 6 @0x80074e68, [17] 6 @0x80074e74, [18] 4 @0x80074e80, [19] 100
+ * @0x80074e8c, [20] 6 @0x80074e98 (Nachbesserung 1 M3: vorher standen hier die Adressen der
+ * Pistolen-Records 3..8). Munitions-Zeiger dieser Zeilen = NULL-Record 0x80074c88
+ * (unverdrahtet); die Records der GL-Runden EXISTIEREN unverwiesen: 0x80074cb4 `19 0f 02 00`,
+ * 0x80074cb8 `1a 10 04 0c`, 0x80074cbc `1b 11 04 0c` (Munitions-Id, Waffen-Id, ..) -> 15/16/17
+ * laden EXPLOSIVE/ACID/INCEND. ROUNDS (0x19/0x1a/0x1b). 18 Rakete: kein Record, auch RE2 Id 17
+ * ohne Kombinations-Satz (@0x800a9ea4 `04 00 00 00`). 19 MC51: Record 0x80074cb0 `15 13 02 00`
+ * existiert ebenfalls unverwiesen — BLEIBT 0 (Dauerfeuer-Sub 4 im Auslieferungsstand tot, SPEC
+ * §1.2). 20 Colt Python: 6 Schuss, MAGNUM BULLETS 0x17 = PORT-WAHL (Magnum-Revolver wie w7,
+ * Record 0x80074c9c `17 07 02 00`; Dossier B_werfer.md §3.5). */
+static const re15_wpn_prop_t s_wpn_props[21] = {
     {0,0}, {0,0}, {0,0},                       /* 0-2 melee: no ammo               */
     {15,0x15}, {15,0x15}, {15,0x15}, {15,0x15},/* 3-6 handgun class -> H.GUN BULLETS */
     {6,0x17},  {7,0x16},                       /* 7 REDHAWK -> MAGNUM; 8 M870 -> SHELLS */
     {250,0},   {250,0},  {250,0},              /* 9-11 grenades (no reload: gate <9) */
-    {100,0x15},{12,0x16},{100,0x18},{6,0},     /* 12 M10; 13 SPAS; 14 FLAME; 15 GL (ammo_id 0: the
-                                                * grenade-launcher row's ammo ptr @0x80074E5C[1]=
-                                                * 0x80074C88 dereferences to byte 0, like the 9-11
-                                                * grenades; the port had 0x19 = FLAME ammo by mistake) */
+    {100,0x15},{12,0x16},{100,0x18},{6,0x19},  /* 12 M10; 13 SPAS; 14 FLAME; 15 GL EXPLOSIV */
+    {6,0x1a},  {6,0x1b}, {4,0},  {100,0},      /* 16 GL ACID; 17 GL INCEND; 18 ROCKET; 19 MC51 */
+    {6,0x17},                                  /* 20 COLT PYTHON -> MAGNUM (PORT-WAHL) */
 };
 
 /* FUN_8004eb70 @0x8004eb70 — reserve-ammo-present: property-table lookup of the equipped
  * weapon's ammo item id -> FUN_8004dfec(ammo_id) -> **slot > 0** (@0x8004ebc4-c8 `slt
  * zero,slot` — the byte-true QUIRK: ammo sitting in inventory slot 0 is NOT recognized).
- * Returns the ammo slot (>0) or 0. */
+ * Returns the ammo slot (>0) or 0.  ⛔ Seit Runde 35 (Spur E): Platz >= 0 oder -1 (RE2-Regel, s.u.). */
 int re15_ammo_reserve_slot(void)
 {
     int ws = inv_resolve_slot();
-    if (ws < 0) return 0;
+    if (ws < 0) return -1;
     uint8_t wid = g_inv.slots[ws].id;
-    if (wid >= 16 || s_wpn_props[wid].ammo_id == 0) return 0;
+    if (wid >= 21 || s_wpn_props[wid].ammo_id == 0) return -1;   /* Spur B: Tabelle bis Id 20; Spur E: keine Reserve = -1 */
     int as = re15_inv_find_item(s_wpn_props[wid].ammo_id);
-    return (as > 0) ? as : 0;                  /* slot-0 quirk byte-true (slt zero,slot) */
+    /* Runde 35 Spur E: RE2-Regel Platz >= 0 (FUN_8006a23c @0x8006a294 `nor` / @0x8006a2a0 `srl 31`)
+     * statt RE1.5 `slt zero,slot` @0x8004ebc8 — Platz 0 ist ohne Messer nicht mehr dauerhaft belegt. */
+    return as;                                 /* -1 = keine Reserve */
 }
 
 /* FUN_8004ebdc @0x8004ebdc — reload execute: chunk = props[weapon_id].chunk; if chunk <
@@ -222,9 +235,9 @@ void re15_ammo_reload_exec(void)
 {
     int ws = inv_resolve_slot();
     int as = re15_ammo_reserve_slot();
-    if (ws < 0 || as <= 0) return;
+    if (ws < 0 || as < 0) return;                 /* Runde 35 Spur E: Platz 0 zaehlt (RE2) */
     uint8_t wid   = g_inv.slots[ws].id;
-    uint8_t chunk = (wid < 16) ? s_wpn_props[wid].chunk : 0;
+    uint8_t chunk = (wid < 21) ? s_wpn_props[wid].chunk : 0;
     uint8_t box   = g_inv.slots[as].qty;
     if (chunk < box) {
         g_inv.slots[ws].qty = (uint8_t)(g_inv.slots[ws].qty + chunk);

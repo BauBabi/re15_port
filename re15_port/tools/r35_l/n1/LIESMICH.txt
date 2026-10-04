@@ -1,0 +1,5 @@
+# Spur L Nachbesserung 1 — Messwerkzeuge (Abschrift aus dem Scratchpad, Pfade dort fest verdrahtet)
+# lauf.sh/kette.sh/waechter.sh: exe-Laeufe mit Karte + CONTINUE; sheet.py: Kontaktbogen aus RE15_FRAMEDUMP-PPMs;
+# kniezensus*.py: Wurzelhoehe aller Leon-Clips RE1.5/RE2 (M3); streifen_*.py: Posenstreifen (RE2-RBJ @+0x60, PL00.EDD);
+# ton_diff.py/ton_probe.py: Differenz zweier RE15_AUDIO_CAP_SYNC-Mitschnitte + ADPCM-Referenzkorrelation (M7).
+# Dossier analysis/befunde_runde35/L_cut1150.md §9.

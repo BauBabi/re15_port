@@ -27,11 +27,13 @@ void re15_debug_text(int x, int y, int z, const char *text)
     (void)x; (void)y; (void)z; (void)text;
 }
 
-void re15_audio_bgm_status_reset(void) { /* No-op (kein BGM in Tests) */ }
+/* Runde 35 Spur K: Spion (unit_r35_cut10f0_bgm zaehlt den Anstoss der Raummusik); sonst No-op. */
+int g_test_bgm_reset_count = 0, g_test_bgm_start_count = 0, g_test_bgm_start_room = -1;
+void re15_audio_bgm_status_reset(void) { g_test_bgm_reset_count++; }
 
 void re15_audio_start_room_bgm(int stage, int room)
 {
-    (void)stage; (void)room;
+    (void)stage; g_test_bgm_start_room = room; g_test_bgm_start_count++;
 }
 
 void re15_audio_load_room_banks(void)
@@ -54,6 +56,10 @@ void re15_audio_room_se(int se_id)
     }
 }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
+/* Runde 35 Spur B: RE2-ARMS-Bank (audio_pc.c re15_audio_re2_arms_se) — in Tests nur gezaehlt. */
+int g_test_re2arms_last_id = -1, g_test_re2arms_last_satz = -1, g_test_re2arms_count = 0;
+void re15_audio_re2_arms_se(int arms_id, int satz)
+{ g_test_re2arms_last_id = arms_id; g_test_re2arms_last_satz = satz; g_test_re2arms_count++; }
 /* snd0-Bank (FUN_80045024 Bank 2/5). Spion fuer den Schiebe-SE 0x02070000 @0x80035a18. */
 int g_test_snd0_se_last = -1;
 int g_test_snd0_se_count = 0;
@@ -77,12 +83,23 @@ void re15_audio_re2_hint_se(int se_id) { g_test_hint_se_last = se_id; g_test_hin
 int g_test_door_se_last = -1;
 int g_test_door_se_count = 0;
 void re15_audio_re2_door_se(int se_id) { g_test_door_se_last = se_id; g_test_door_se_count++; }
+/* Runde 35 Spur K (engine/src/cut_10f0.c): RE2-Tuerbank (Tonteil eines DOORxx-Archivs) — Spion fuer
+ * den Riegel unit_r35_cut10f0_*: Groesse des zuletzt geladenen Tonteils, Satz des letzten Abspielens. */
+int g_test_tuer_laden_groesse = 0;
+int g_test_tuer_laden_count = 0;
+int re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse)
+{ (void)ton; g_test_tuer_laden_groesse = groesse; g_test_tuer_laden_count++; return 1; }
+int g_test_tuer_se_last = -1;
+int g_test_tuer_se_count = 0;
+void re15_audio_re2_tuer_se(int se) { g_test_tuer_se_last = se; g_test_tuer_se_count++; }
 /* RE2-Ergaenzung: die Panel-Klick-Bank (RE2 ROOM2130 snd0, Gruppe 2 / 0x0A + 0x0C).
  * Belege in include/re15_audio.h; hier nur der Spion, damit die Sonden die Aufrufstellen
  * pruefen koennen. */
 int g_test_panel_se_last = -1;
 int g_test_panel_se_count = 0;
 void re15_audio_re2_panel_se(int se_id) { g_test_panel_se_last = se_id; g_test_panel_se_count++; }
+/* Runde 35 Spur L: die Knall-Tonbank der 1150-Montage (irons_tod_1150.c) nutzt dieselben Spione
+ * re15_audio_re2_tuer_laden / re15_audio_re2_tuer_se wie Spur K (oben) — Integration: L-Kopie entfernt. */
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
 /* game_step_common.c haengt seit der Knockdown-Klasse an den Test-Links (enemy_ai_common
  * ruft re15_player_knockdown_begin) — die zwei restlichen Plattform-Audio-Symbole stubben. */

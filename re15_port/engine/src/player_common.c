@@ -274,19 +274,30 @@ void re15_player_set_aim_clip_len(int fc)
 {
     for (int i = 0; i < RE15_AIM_CLIP_MAX; i++) s_aim_clip_fcs[i] = (uint16_t)fc;
 }
+static int s_aim_clip_n = 0;        /* Runde 35 Spur B: Clip-Zahl der Bank (11 = Leon PL00W0F) */
 void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n)
 {
     if (!fcs) return;
+    s_aim_clip_n = n;
     if (n > RE15_AIM_CLIP_MAX) n = RE15_AIM_CLIP_MAX;
     for (int i = 0; i < n; i++) s_aim_clip_fcs[i] = fcs[i];
 }
+/* Runde 35 Spur B: der WIRKSAME Clip — fuer die 11-Clip-Bank PL00W0F (Ids 15..17) um die
+ * fehlenden Clips 3/5/13 verschoben (re15_werfer_clip_remap, Belege include/re15_werfer.h);
+ * alle anderen Baenke unveraendert. Der Renderer (re15_player_aim_clip) und die Bildzahl
+ * (aim_cur_fc) lesen beide hier, damit Zustand und Bild dieselbe Umsetzung sehen. */
+static int aim_clip_wirksam(void)
+{
+    extern int re15_player_werfer_clip(int clip, int clip_n);
+    return re15_player_werfer_clip(s_aim_cur_clip, s_aim_clip_n);
+}
 static int aim_cur_fc(void)
 {
-    return (s_aim_cur_clip >= 0 && s_aim_cur_clip < RE15_AIM_CLIP_MAX)
-               ? (int)s_aim_clip_fcs[s_aim_cur_clip] : 0;
+    int c = aim_clip_wirksam();
+    return (c >= 0 && c < RE15_AIM_CLIP_MAX) ? (int)s_aim_clip_fcs[c] : 0;
 }
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
-int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
+int  re15_player_aim_clip(void)   { return aim_clip_wirksam(); }
 int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
 
 /* Runde 34 A3 — das WORT 0x800acaec (Spieler +0x98, u16), wie Routine 30 es liest
@@ -818,9 +829,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * BEFORE the AI seeds in run_all @:499). SCD Plc_motion seeds (scd_vm_tick, before game_step)
      * are consumed identically at either position.
      *
-     * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — a "half-rate" divider citing FUN_80030660 bit
-     * 0x10 was tried + REVERTED; DAT_800acc18 bit 0x10 is NEVER set (only `xori 0x20` toggle +
-     * `sh zero` clear), so the half-rate path is dead and the original advances every frame. */
+     * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — ausser im HALBTAKT (Runde 35 Spur L, unten):
+     * DAT_800acc18 Bit 0x10 setzt das Skript INDIREKT (Plc_flg ueber den Work-Zeiger @0x80042020,
+     * Plc_motion pc[3] @0x80041bc8); die alte Aussage "NEVER set" zaehlte nur direkte Xrefs. */
     /* AUSNAHME EVENT-REACH (Plc_dest-Sub 6 @0x800517f0, Spieler-Tabelle 0x80073e30[6]): dieser
      * Sub advanct +0x95 SELBST. Sein Body ruft `jal 0x8001f314` genau EINMAL pro Tick
      * (Phase 0/1 @0x8005188c, Phase 2/3 @0x800518f0), und anim_set erhoeht dort +0x95 um 1
@@ -833,7 +844,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * also +2 pro 30-Hz-Tick — der Halte-Clip lief exakt doppelt so schnell wie im Original
      * (16 Bilder PL00W01 Clip 1 in 8 statt 16 Ticks). */
     extern int re15_player_event_reach_clip(void);   /* game_step_common.c: >=0 = Sub 6 aktiv */
-    if (re15_player_event_reach_clip() >= 0) {
+    /* HALBTAKT (Runde 35 Spur L, L_cut1150.md §9.2): Kommando 4 = 0x80030660 ueberspringt den Motion-
+     * Handler bei +0x1c4 & 0x10 UND & 0x20 (@0x80030670-80), 0x20 kippt jedes Bild (@0x800306c4/c8). */
+    int halbtakt_aus = (p->state == 4) && (p->anim_flags & 0x10u) && (p->anim_flags & 0x20u);
+    if (p->state == 4) p->anim_flags ^= 0x20u;
+    if (halbtakt_aus || re15_player_event_reach_clip() >= 0) {
         /* Sub 6 besitzt den Frame-Zaehler — hier NICHT advancen. */
     } else if (p->motion_init_delay > 0) {
         /* State-4 init hold (PSX +0x4=4): render keyframe 0 once WITHOUT advancing
@@ -980,8 +995,10 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
              * for the Glock/Beretta/Redhawk/M870/SPAS). */
             static const uint8_t recoil_break[16] = {0,0,7,7,10,10,10,10,10,10,10,10,10,0,0,0};
             extern int re15_player_equipped_weapon(void);   /* re15_damage.c (DAT_800aca5d) */
+            extern int re15_werfer_recoil_break(int id);    /* Runde 35 Spur B: 15..18/20 (Saetze 0 @0x800740d6-ef) */
             int eq_w = re15_player_equipped_weapon();
             int rb_thr = (eq_w >= 1 && eq_w <= 16) ? recoil_break[eq_w - 1] : 7;
+            if (re15_werfer_recoil_break(eq_w) >= 0) rb_thr = re15_werfer_recoil_break(eq_w);
             if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil)
                 enter_lower = 1;                        /* HOLD + !R1 */
             else if (s_aim_auto && s_aim_recoil) {

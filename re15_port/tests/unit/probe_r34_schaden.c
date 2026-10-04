@@ -482,8 +482,9 @@ static void teil_stempel(void)
     re15_actor_t *a = mk_re2z(1, 0x10, 0, 0, 0, 80);
     re15_attack_box_t b = box_at(-300, -500, 0);
     int n = re15_resolve_attack(&b, 2, -1);
+    /* Runde 35 Spur A (NUTZER-VORGABE Brutalitaet, A_granate.md par.3.5): +0x1D2 = 1 (K0, Zone 1 fest) statt 3 (K1). */
     CHECK(31, n == 1 && a->hp == -120 && a->state == 3 && a->sub_state_1 == 9 && a->sub_state_2 == 0 &&
-              a->re2z_hits1d2 == 3 && a->re2z_self1d3 == 15 && a->re2_gl_stamp == 1 &&
+              a->re2z_hits1d2 == 1 && a->re2z_self1d3 == 15 && a->re2_gl_stamp == 1 &&
               a->re2z_pool152 == 13,
           "HE 0x10: n=%d hp=%d st=%d +5=%d +6=%d 1D2=%d 1D3=%d gl=%d pool152=%d", n, a->hp, a->state,
           a->sub_state_1, a->sub_state_2, a->re2z_hits1d2, a->re2z_self1d3, a->re2_gl_stamp, a->re2z_pool152);
@@ -516,8 +517,9 @@ static void teil_stempel(void)
     re15_actor_init(); pl_far();
     a = mk_re2z(1, 0x11, 0, 0, 0, 250);
     re15_resolve_attack(&b, 2, -1);
-    CHECK(34, a->hp == 50 && a->state == 2 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 3,
-          "Brad: hp=%d st=%d +5=%d 1D2=%d (3)", a->hp, a->state, a->sub_state_1, a->re2z_hits1d2);
+    /* Runde 35 Spur A: Spalte 1 (HURT[9][1] = 0x80105BC0 Taumeln, `table 0x8010C940`) statt 3. */
+    CHECK(34, a->hp == 50 && a->state == 2 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 1,
+          "Brad: hp=%d st=%d +5=%d 1D2=%d (1)", a->hp, a->state, a->sub_state_1, a->re2z_hits1d2);
     /* (30) ABGRENZUNG der Klammer-1-Spalte (NACHBESSERUNG K1): NUR HE an der Zombie-Familie.
      *      Saeure/Brand an 0x10 -> Spalte 0 (E6 K0; DEATH 10/11 spaltenunabhaengig `table
      *      0x8010CD8C` = 0x80108530, HURT 10/11 Spalte 0 = 0x80105BC0); Hund HE -> Spalte < 3 (K0,

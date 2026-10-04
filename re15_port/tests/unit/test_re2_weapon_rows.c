@@ -316,7 +316,10 @@ int main(void)
             { 13,  8, "SPAS-12 -> Custom-Schrotflinte (300/80/60)" },
             { 14, 16, "Flammenwerfer -> RE2-Id 16 IST der Flammenwerfer (Fuel 0x17)" },
             { 18, 17, "Rocket Launcher -> RE2-Id 17 IST der Raketenwerfer (900 Schaden)" },
-            { 20, 13, "Colt Python -> Colt S.A.A. (Single-Action-Revolver)" },
+            /* Runde 35 Spur B: 13 -> 5. RE1.5 fuehrt die Python als zweiten MAGNUM-Revolver (ARMS14
+             * = Record-Layout des Redhawk ARMS07 `00001330 00003310 00004210 .. 00009314`, Bank W14 =
+             * Revolver-Clips 10/26/27/50, Magazin 6 @0x80074e98; Dossier B_werfer.md §3.5). */
+            { 20,  5, "Colt Python -> Magnum-Klasse (zweiter Magnum-Revolver, Runde 35 Spur B)" },
         };
         for (unsigned k = 0; k < sizeof id / sizeof id[0]; k++) {
             unsigned got = re15_re2z_row_for_weapon((unsigned)id[k].w, 1u, 0);  /* ungefiltert */
@@ -358,10 +361,14 @@ int main(void)
             for (int k = 0; k < 7; k++) {
                 int w = reported[k]; react_t r;
                 if (measure(e, w, 5000, w, &r) != 0) continue;
-                int mute = (r.state == 2 && r.handler == 0);
+                /* Runde 35 Spur B, Nachbesserung 2 (Abnahme 1 N2, Dossier B_werfer.md §9): die Python (w20)
+                 * gehoert jetzt zur Kritklasse des Redhawk (+0x93 |= 0x40 @0x800123b4-b8, HP -1 am Bit
+                 * @0x800124fc-1c) — ihr Treffer toetet den Zombie (Typ < 0x20) sofort und laeuft wie w7 gar
+                 * nicht durch HURT. Fuer sie gilt hier deshalb DEATH (state 3) als erwartetes Ergebnis. */
+                int mute = (w == 20) ? (r.state == 3) : (r.state == 2 && r.handler == 0);
                 if (mute) silent++;
                 printf("      w=%-2d %-16s -> Zeile %-2d -> %-19s %s\n", w, wname(w), r.row,
-                       hname(r.handler), mute ? "<== STUMM (erwartet)" : "reagiert");
+                       hname(r.handler), mute ? (w == 20 ? "<== TOT (Kritklasse, erwartet)" : "<== STUMM (erwartet)") : "reagiert");
             }
             CHECK(silent == 7,
                   "NEGATIV-KONTROLLE: mit der rohen Waffen-Id muessen GENAU die 7 gemeldeten Ids "

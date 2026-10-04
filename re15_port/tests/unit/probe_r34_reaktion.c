@@ -352,15 +352,17 @@ static void teil_ausgang(void)
             if (!e) { CHECK(220, 0, "kein Zombie 0x10 in ROOM1140"); return; }
             for (int i = 0; i < k; i++) (void)re15_re2_rand();
             explosion_bei(e, 300, 2);
-            if (e->state != 3 || e->re2z_hits1d2 != 3) spalte_ok = 0;
+            /* Runde 35 Spur A: Spalte 1 (K0 + Zone 1, A_granate.md par.3.5) -> DEATH[9][1] = 0x80108BEC
+             * Zerreissen (Port 5) bzw. ueber dessen Zeile-9-Wuerfe 0x80109610 Wegschleudern (6); Ausgang Leiche. */
+            if (e->state != 3 || e->re2z_hits1d2 != 1) spalte_ok = 0;
             int ende = ausgang_lauf(e);
-            if (re15_re2z_last_death_handler() != 1) zelle_ok = 0;
+            { int h = re15_re2z_last_death_handler(); if (h != 5 && h != 6) zelle_ok = 0; }
             laeufe++;
             if (ende == 7 && e->hp < 0) leiche++;
             else if (ende == 1 && e->hp == 10 && (e->re2z_f10e & 1u)) kriecher++;
         }
         CHECK(220, laeufe == 8 && leiche == 8 && kriecher == 0 && spalte_ok && zelle_ok,
-              "HE an stehendem 0x10: %d Laeufe, Leiche %d (8), Kriecher %d (0), Spalte 3 %d, DEATH-Zelle 0x80108530 %d",
+              "HE an stehendem 0x10: %d Laeufe, Leiche %d (8), Kriecher %d (0), Spalte 1 %d, DEATH-Zelle 0x80108BEC/0x80109610 %d",
               laeufe, leiche, kriecher, spalte_ok, zelle_ok);
     }
     /* (221) NEGATIV-KONTROLLE: derselbe Treffer, die Spalte von Hand auf 0 (der Stand VOR der
@@ -393,8 +395,9 @@ static void teil_ausgang(void)
         const int sp_br = e->re2z_hits1d2;
         frame();
         const int h_br = re15_re2z_last_hit_handler();
-        CHECK(222, st_he == 2 && sp_he == 3 && h_he == 1 && sp_br == 0 && h_br == 2,
-              "Brad HE: st %d (2) Spalte %d (3) Handler %d (1 = 0x80105438); Brand: Spalte %d (0) Handler %d (2)",
+        /* Runde 35 Spur A: HE-Spalte 1 -> HURT[9][1] = 0x80105BC0 Taumeln (RE2ZH_STAGGER = 2). */
+        CHECK(222, st_he == 2 && sp_he == 1 && h_he == 2 && sp_br == 0 && h_br == 2,
+              "Brad HE: st %d (2) Spalte %d (1) Handler %d (2 = 0x80105BC0); Brand: Spalte %d (0) Handler %d (2)",
               st_he, sp_he, h_he, sp_br, h_br);
     }
 }
