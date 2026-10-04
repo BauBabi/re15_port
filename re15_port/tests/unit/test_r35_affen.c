@@ -1831,6 +1831,64 @@ static void teil_finisher(void)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
+/* Nachbesserung 6, M2: der Blind-Zonen-Sprung von Gorilla 2 auf der Stelle (Abnahme 5 w3y: 9 Spruenge (-13518,-403) <->
+ * (-13418,-403), F2524-F2844, Leon rund 800 Bilder nicht angegriffen) ist ORIGINAL-VERHALTEN. Gegenprobe im Original
+ * (DuckStation-GDB, r3-Savestate s033, scratch jnb6/gdbm2.py -> g_m2b.txt): beim ersten e2-Halt der Gorilla-Wurzel
+ * 0x80116db8 ab VSync 10029 (F194) e2 := (-13518,0,-403) Yaw 0, +0x4..+0x7 := 1/4/0/0, +0x82 := 0, +0x1d0 := 0; Leon :=
+ * (-9975,-10422) r587; e1 weit weg. Ergebnis F195-F594: 10 Blind-Zonen-Spruenge (+0x7 = 3, Impuls 0x32a = 810), alle 40
+ * Bilder, nur die zwei Lagen, LOS-Latch 0, Leon hp 82 unveraendert — streng periodisch (Periode 40, 0 Abweichungen).
+ * Diese Periode (Lage, Hoehe, Sub/Phase/+0x7, Bild, +0x82 je Bild, Wurzel-Eintritt = Stand nach dem Vortick) steht unten;
+ * der Port muss sie ab derselben Lage Bild fuer Bild treffen. Entscheidung (A[4] @0x80117f78-8011802c), Flug (B[7]
+ * @0x80118a94-af0) und Klemme (FUN_8003b0a4 auf +0x82, @0x80116e70) sind dieselben. */
+static const int16_t s_zone_orig[40][7] = {   /* x, y, +0x5, +0x6, +0x7, +0x95, +0x82 (z immer -403, Yaw immer 0) */
+    {-13518,0,7,1,3,1,0}, {-13518,0,7,1,3,2,0}, {-13518,0,7,1,3,3,0}, {-13518,0,7,1,3,4,0}, {-13518,0,7,1,3,5,0},
+    {-13518,0,7,1,3,6,0}, {-13518,0,7,1,3,7,0}, {-13518,0,7,1,3,8,0}, {-13518,0,7,1,3,9,0}, {-13418,0,7,2,3,10,1},
+    {-13418,-720,7,2,3,11,1}, {-13418,-1380,7,2,3,12,1}, {-13418,-1980,7,2,3,13,1}, {-13418,-2520,7,2,3,14,1}, {-13418,-3000,7,2,3,15,1},
+    {-13418,-3420,7,2,3,16,1}, {-13418,-3780,7,2,3,17,1}, {-13418,-4080,7,2,3,18,1}, {-13418,-4320,7,2,3,19,1}, {-13418,-4500,7,2,3,20,1},
+    {-13418,-4620,7,2,3,21,1}, {-13418,-4680,7,2,3,22,1}, {-13418,-4680,7,2,3,23,1}, {-13418,-4620,7,2,3,24,1}, {-13418,-4500,7,2,3,25,1},
+    {-13418,-4320,7,2,3,26,1}, {-13418,-4080,7,2,3,27,1}, {-13418,-3780,7,2,3,28,1}, {-13418,-3420,7,2,3,29,1}, {-13418,-3000,7,2,3,30,1},
+    {-13418,-2520,7,2,3,31,1}, {-13418,-1980,7,2,3,32,1}, {-13418,-1380,7,2,3,33,1}, {-13418,-720,7,2,3,34,1}, {-13418,0,7,2,3,35,1},
+    {-13518,0,7,3,0,36,0}, {-13518,0,7,3,0,37,0}, {-13518,0,7,3,0,38,0}, {-13518,0,7,3,0,39,0}, {-13518,0,4,0,0,0,0},
+};
+static void teil_zonensprung(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -9975, -10422, 587, 5, 3) != 0) return;
+    PRUEF(bank_laden_27(), "EM027-Bank geladen");
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    if (!a || !b) { PRUEF(0, "zwei Gorillas im Kampf-Layout"); return; }
+    a->grid_id |= 0x20; a->x = 30000; a->z = 30000;              /* e1 weit weg (Original: e1 bei (8000,15000), griff nicht ein) */
+    pl->x = -9975; pl->z = -10422; pl->y = 0; pl->rot_y = 587; pl->hp = 82; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();
+    b->x = -13518; b->y = 0; b->z = -403; b->rot_y = 0; b->grid_id = 0x10; b->floor = 0;
+    b->state = 1; b->sub_state_1 = 4; b->sub_state_2 = 0; b->sub_state_3 = 0; b->motion = 5; b->anim_frame = 15;   /* Original F194: c5/15 */
+    b->anim_frac = 0; b->hit_react = 0; b->dog_flags = 0; b->mag_boost = 4; b->mag_airborne = 0; b->crow_speed = 188;
+    int n_gleich = 0, erste = -1, n_spr = 0, hp_min = pl->hp, n_bild = 400;
+    for (int i = 0; i < n_bild; i++) {
+        frame(0, 0);
+        const int16_t *o = s_zone_orig[i % 40];
+        int gleich = (b->x == o[0] && b->y == o[1] && b->z == -403 && b->rot_y == 0 && b->state == 1 && b->sub_state_1 == o[2]
+                      && b->sub_state_2 == o[3] && b->sub_state_3 == o[4] && b->anim_frame == o[5] && b->floor == o[6]);
+        if (gleich) n_gleich++;
+        else if (erste < 0) {
+            erste = i;
+            printf("  erste Abweichung F%d: Port (%d,%d,%d) r%d s%d/%d/%d/%d f%d b%d, Original (%d,%d,-403) r0 s1/%d/%d/%d f%d b%d\n",
+                   195 + i, (int)b->x, (int)b->y, (int)b->z, (int)b->rot_y, (int)b->state, (int)b->sub_state_1, (int)b->sub_state_2,
+                   (int)b->sub_state_3, (int)b->anim_frame, (int)b->floor, o[0], o[1], o[2], o[3], o[4], o[5], o[6]);
+        }
+        if (b->sub_state_1 == 7 && b->sub_state_2 == 1 && b->sub_state_3 == 3 && b->anim_frame == 1) n_spr++;
+        if (pl->hp < hp_min) hp_min = pl->hp;
+    }
+    printf("  Port F195-F%d: %d/%d Bilder gleich dem Original, %d Blind-Zonen-Anlaeufe, Leon hp min %d\n", 194 + n_bild, n_gleich, n_bild,
+           n_spr, hp_min);
+    PRUEF(n_gleich == n_bild, "Blind-Zonen-Schleife Bild fuer Bild wie das Original (%d/%d; Lage, Hoehe, Sub/Phase/+0x7, Bild, +0x82)", n_gleich, n_bild);
+    PRUEF(n_spr == 10, "10 Spruenge in 400 Bildern, alle 40 Bilder (Original 10; %d)", n_spr);
+    PRUEF(hp_min == 82, "Leon wird dabei nicht angegriffen (hp min %d, Original 82)", hp_min);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -1853,6 +1911,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "wand")   || !strcmp(teil, "alle")) teil_wand();
     if (!strcmp(teil, "szene")  || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "finisher") || !strcmp(teil, "alle")) teil_finisher();
+    if (!strcmp(teil, "zonensprung") || !strcmp(teil, "alle")) teil_zonensprung();
     if (!strcmp(teil, "fuss")) teil_fuss();   /* Diagnose, nicht in ctest */
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;

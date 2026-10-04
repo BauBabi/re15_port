@@ -1861,3 +1861,28 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   @0x80116e38-44 ohne HP-Abfrage, Y-Band `-(hA+hB) < dy < hA+hB` (Decompilat FUN_8002aec4, Port re15_body_push) — bei
   y -3000 noch im Band. In w3y war Leon zu diesem Zeitpunkt schon weggesprungen. Gegen eine Original-Aufnahme nicht
   gemessen -> OFFEN N6-2.
+
+### M2 — Messung am Original (GDB) und Entscheidung: ORIGINAL-VERHALTEN, offengelegt
+- Port-Mechanismus (gelesen, enemy_ai_common.c B[4]): A[4] fragt bei +0x1e2 != 0 die SCA-Zonen ab (FUN_8003b93c attr 0x10,
+  dann 0x20, Radius hit_radius + 100, @0x80117ecc-8011802c); attr 0x20 + LOS-Latch +0x1d0 frei + Yaw-Fenster
+  `((zc & 0xf0) << 4 - Yaw + 512) & 0xfff < 1024` (@0x80117fc8-e4) -> B[7] mit +0x7 = 3 (@0x80118000-24): Windup-Slew auf
+  die Pad-Richtung, Abflug Bild 10 mit Impuls 0x32a (@0x80118a94-aa0), +0x82 := 1 (@0x80118ab4-af0); die Wandklemme laeuft
+  auch im Flug (`jal 0x8003b0a4`, a2 = 4, @0x80116e70) auf dem Band +0x82.
+- **Original-Experiment** (DuckStation-GDB-Server, settings.ini [Debug] EnableGDBServer nur waehrend des Laufs, danach
+  zurueckgespielt, diff leer; Werkzeug `jnb6/gdbm2.py`): r3-Savestate s033 direkt geladen, beim ersten Halt der
+  Gorilla-Wurzel 0x80116db8 mit cur = e2 (0x800ad014) ab VSync 10029 (F194) geschrieben: e2 +0x34/+0x38/+0x3c :=
+  (-13518,0,-403), Vorlage +0x40/+0x42/+0x44 dito, Yaw +0x6a := 0, +0x4..+0x7 := 1/4/0/0, +0x82 := 0, +0x1d0 := 0;
+  e1 (0x800ace20) nach (8000,15000) (aktiv gelassen — ein erster Versuch mit e1-Wort0 &= ~1 blieb nach dem Patch
+  stehen, verworfen); Leon (0x800aca54) := (-9975,-10422) r587 (Lage aus Abnahme 5 w3y). Je e2-Halt eine Zeile
+  (`jnb6/g_m2b.txt`, dekodiert `g_m2b_dec.txt`, F = (VSync-9641)/2).
+- **Ergebnis Original F195-F594 (400 Bilder):** 10 Blind-Zonen-Spruenge (s1/7/x/3, Impuls v810 = 0x32a), Anlauf-Starts
+  F195, 235, 275, ..., 555 = **alle 40 Bilder**; nur die Lagen (-13518,-403) und (-13418,-403); Flughoehe bis -4680;
+  +0x82 0 am Boden / 1 im Flug; LOS-Latch durchgehend 0; **Leon hp 82 unveraendert** (kein Angriff). Die Folge ist streng
+  periodisch (Periode 40, 0 Abweichungen ueber 400 Bilder).
+- **Port gegen Original** (neuer Riegel `zonensprung`, gleiche Startlage, e1 geparkt): **400/400 Bilder gleich** (Lage,
+  Hoehe, Sub/Phase/+0x7, Bild +0x95, +0x82, z, Yaw), 10 Anlaeufe, Leon hp min 82.
+- **Entscheidung:** Der Endlos-Blind-Zonensprung gegen die Wand ist Original-Verhalten (RE1.5 STAGE1-Overlay), der Port
+  bildet ihn bildgenau nach. Keine Code-Aenderung. Was der Nutzer sieht: steht Leon dort, wo der Gorilla keine Sicht hat
+  (w3y: (-9975,-10422), Gorilla hinter den Wagen bei (-13518,-403)), springt der Gorilla alle 40 Bilder auf der Stelle
+  hoch und greift nicht an, bis Leon sich bewegt oder der Gorilla Sicht bekommt. Die "Zielstrebigkeit" aus Punkt 4 ist
+  dadurch nicht verletzt — das Original macht dasselbe.
