@@ -64,12 +64,17 @@ if(_p LESS 0)
     message(FATAL_ERROR "${_tag}: Endbild 230 in ROOM11D0 nicht erreicht (exit=${_rv}, ${WORKDIR})")
 endif()
 
-# Zeilen der LETZTEN Sitzung (der Sprung setzt den Bildzaehler auf 0 zurueck).
+# Zeilen der LETZTEN Sitzung. Gemessen: das Log beginnt mit dem Boot-Raum (F0..F250), der Sprung setzt
+# den Bildzaehler zurueck und ROOM11D0 beginnt bei F1 — Sitzungsgrenze = Bildnummer faellt.
 file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "^F[0-9]+ ")
 set(_sitzung "")
+set(_f_vor -1)
 foreach(_z IN LISTS _zeilen)
-    if(_z MATCHES "^F0 ")
-        set(_sitzung "")
+    if(_z MATCHES "^F([0-9]+) ")
+        if(CMAKE_MATCH_1 LESS_EQUAL _f_vor)
+            set(_sitzung "")
+        endif()
+        set(_f_vor "${CMAKE_MATCH_1}")
     endif()
     list(APPEND _sitzung "${_z}")
 endforeach()
