@@ -188,11 +188,13 @@ def main():
                 for k in range(1, 33):
                     p = g.u32(ETAB + 4 * k)
                     if 0x80000000 <= p < 0x80200000 and p != 0x800D424C and g.mem(p + 8, 1)[0] == 0x2D:
-                        e2 = g.mem(p, 0x110)
-                        ex += " | S%d %08x w0=%08x w4=%08x f10e=%04x (%d,%d)" % (
+                        e2 = g.mem(p, 0x1F4)
+                        kb = e2[0x1C1]; pp = struct.unpack_from("<I", e2, 0x198)[0]
+                        kt = struct.unpack("<3i", g.mem(pp + kb * PART_SZ + 0x5C, 12)) if 0x80000000 <= pp < 0x80200000 else (0, 0, 0)
+                        ex += " | S%d %08x w0=%08x w4=%08x f10e=%04x (%d,%d) d=%d k%d=(%d,%d,%d)" % (
                             e2[0xC] - 2, p, struct.unpack_from("<I", e2, 0)[0], struct.unpack_from("<I", e2, 4)[0],
                             struct.unpack_from("<H", e2, 0x10E)[0], struct.unpack_from("<i", e2, 0x38)[0],
-                            struct.unpack_from("<i", e2, 0x40)[0])
+                            struct.unpack_from("<i", e2, 0x40)[0], struct.unpack_from("<I", e2, 0x1F0)[0], kb, kt[0], kt[1], kt[2])
                 extra.write(ex + chr(10)); extra.flush()
             if n == 0:
                 L("erster Halte-Stopp:", r, "Halter %08x" % h)

@@ -1056,3 +1056,48 @@ am EIGENEN Eintrag (`sb zero,448(s0)` @0x801001a8/@0x80100260, `sb a0,449(s0)` @
 @0x80031e04-40, FUN_8003703C ohne Kegel, Radius 4000, jedes Bild) — im Opfer-Zustand laeuft der Prolog nicht, das
 Ziel bleibt das zuletzt gewaehlte (der Arm HINTER Leon), die FSM klemmt bei -512. RE1.5 hat keinen Griff dieses Arms
 (Writher unfertig, NB2 M1) -> fuer den Opfer-Zustand des RE2-Arms gilt die RE2-Regel.
+
+### M1 — Umsetzung (Commits f8f856d2, 263f00fd)
+* `enemy_ai_re2_zellenarm.c` (eigen): `re15_re2arm_player_look(pl)` = FUN_8003DB38 — Zaehler `s_look_cd`
+  (RE2LOOK_ZAEHLER 45 @0x8003dba8/@0x8003dbb8, .data 0x2D, frei laufend wie DAT_800a4004), Pause-Tor
+  (`bltz v0` @0x8003bfc0), +0x1C0 & 1 (@0x8003db78-84), Kandidaten word0 & 1 / Ausschluss +0x10E & 0xC000
+  (RE2LOOK_AUS @0x8003dc08; Arm-Schlaf = Port-Abbildung "+0x9 & 0x1F != 1"), Sicht = PORT-MAPPING
+  re15_re2_los_clear, Kegel re15_ai_arc_test(…,1500) (RE2LOOK_KEGEL @0x8003c1b8, FUN_80015614), Abstand
+  SquareRoot0 (+0x1F0 @0x800265A4-E0), Klasse A < 7000 (RE2LOOK_RADIUS @0x8003c1b0) vor Klasse B (0x2000
+  @0x8003dca4), SELBST sonst (@0x8003dd10); Raumwechsel -> SELBST (Raum-INIT `sw zero,4(s2)` @0x80049ffc ->
+  Spieler-INIT `sw s1,440(s1)` @0x8003c250). Verbrauch nur im Opfer-Zustand des RE2-Arms: +0x1C0 = 0
+  (@0x8003c270), Ziel = Suchergebnis. `re15_re2arm_look_debug` = Test-Auskunft (kein getenv).
+* `game_step_common.c` (gemeinsam, 2 Zeilen): Aufruf nach `re15_player_event_reach_tick` — laeuft jedes Bild in
+  jedem Spielerzweig, nach den Gegnern (RE2: Entities @0x80026570.., dann Spieler-Main @0x80026620/@0x8003c1b4).
+* `skeleton_common.c` (gemeinsam, 4 Zeilen): RE2-SELBST-Zweig FUN_800177C0 @0x80017a28-60 (Ziel = eigener Slot
+  und kein 0x80 -> Ziel-yaw/-pitch = Keyframe, Akku -> 0); im Port zeigt nur dieser Verbrauch auf sich selbst
+  (alle anderen Schreiber von neck_target_slot geprueft: actor_common.c:56/69, enemy_ai_common.c:10561,
+  game_step_common.c:848-854/943). Nacken-Spur RE15_NECK_TRACE um ` ts=` (Zielslot) am Zeilenende erweitert
+  (einziger Leser test_r30_cut_blitz.cmake prueft nur den Praefix `^F[0-9]+ slot=`).
+
+### M1 — Messung nachher, exe (Kopie re15_pc_nb4h.exe, Tuerweg 1220 -> 1210, Eingaben wie Abnahme 3)
+Laeufe `SCR/runs/n4_front`, `n4_back` (RE15_NECK_TRACE, RE15_RE2_TRACE, RE15_STATE_LOG; SCR = Scratchpad):
+```
+n4_front PIN slot 5 (Halter) F244: fl=00 ts=5 schon vor dem Griff (RE2-Suche hatte den Halter gewaehlt); im Halten
+         ts=5 durchgehend, acc folgt dem Arm-Ursprung, z.B. F279 tgt=(347,-29) acc=(315,10)
+n4_back  PIN slot 5 F277: F277-F280 ts=0 (SELBST) acc -433 -> -337 -> -241 -> -145 (Schritt 96 zurueck zur Pose),
+         F281 Suche -> ts=8 = Ostarm (-15876,-2500,-14197), 4626 vor Leon im Kegel, frei -> Kopf dreht zu ihm
+```
+=> Die exe fuehrt jetzt die RE2-Regel. Im Ruecken-Griff ist das Ziel NICHT mehr der Halter hinter Leon (vorher Klemme
+-512 auf Slot 5), sondern SELBST bzw. — in ROOM1210 — der Arm der Gegenwand: die Reihen stehen hier 4600 auseinander
+(< 7000), in ROOM2050 15000 (> 7000, darum dort SELBST). Dass RE2 im Ruecken-Griff einen Arm VOR/NEBEN Leon
+anblickt, zeigt das Original selbst: g4 (Ruecken, Satz 2) blickt ab Bild 25 auf Satz 3 (seitlich, im Kegel).
+
+### M1 — RE2 nachgemessen: g8 (Ruecken, Satz 0) — die Suche lief, Ergebnis SELBST
+Die Regel-Pruefung (N1, Riegel) traf 11 von 12 Griffen; g8 (SELBST in der RAM) ergab per Regel Satz 4
+(-27130,-14000): FUN_80015614 exakt nachgerechnet `(1500 + 1440 - 4087) & 0xfff = 2949 < 3000` -> im Kegel
+(Rand 51), Abstand 2070. Neu gemessen (DuckStation-GDB, `re2_gdb_grab.py` mit R2_EXTRA=1, Lauf
+`re2_mess/daten/n4_g8b_r0_ruecken`, extra.txt: DAT_800a4004, PL+0x1B8, alle zehn Arme je Halte-Bild):
+```
+Halte-Bild 22 cd=0 -> Bild 23 cd=45 (Suche lief in Bild 22), Ziel bleibt 800cfbf8 (SELBST) alle 40 Bilder
+S4 80143ce8 w0=0c003407 w4=00000701 f10e=0000 (-27130,-14000)   wach (kein 0x8000), word0 & 1, Sub 7 (ENDE)
+```
+Sichtstrahl FUN_80050858 Zeile fuer Zeile in Python nachgebaut (`re2_mess/re2_los.py`, collision.sca ROOM2050,
+DAT_800a73b4-Tabelle aus der EXE) mit Arm-URSPRUNG als Zielpunkt: frei fuer ALLE Arme aller Laeufe (auch S4 in
+g8). Offen war damit nur der Zielpunkt selbst: FUN_8003DB38 nimmt Part[+0x1C1]+0x5C (gezeichnete Lage), nicht den
+Ursprung — Lauf mit Part-Lage folgt.
