@@ -546,9 +546,9 @@ unangetastet.
 ### Stand je Mangel (fortlaufend)
 | Mangel | Ergebnis |
 |---|---|
-| M1 | in Arbeit |
-| M2 | in Arbeit |
-| M3 | in Arbeit |
+| M1 | **behoben, nach der Regel entschieden (Beta -> Retail)** — der RE1.5-Writher 0x8010c1ec-0x8010d774 hat keinen Griff (jal-Zensus, Spieler nur gelesen, kein Store auf feste Adressen); Typ 0x1A laeuft jetzt in JEDEM Flavor auf dem RE2-EM2D-Gehirn (`re15_ai_re2_for_type`, eine Zeile). exe unter RE15_AI_FLAVOR=re15: PIN wie RE2 (-20609,-15171), Hand an Kopf/Schulter (Bild nb2_m1_*); vorher 1300-1500 neben der Hand. Riegel (5a/5b). |
+| M2 | **Port-Defekt gefunden und behoben + am Original belegt (Opferbank-Analyse)** — der Pin ignorierte die +0x14E-Ueberblendung der Parts (RE2 0x80029614 @0x800296a8-bc / @0x800299f0-0x80029ab0; part+0x5C schreibt das Zeichnen FUN_80027434). Mit der byte-true Pin-Quelle: Gesicht (Nutzerfall, exe) waagerecht 0/19 (min 175); Ruecken (exe) 9/19 statt 11/19. Neues Volumenmass (Arm-Vertices in Leons Kopf/Rumpf, PL00.MD1) zeigt: im Ruecken-Griff beruehrt der Unterarm Leon in 18/19 Bildern bei JEDER Pin-Quelle (auch dem Basisstand, dessen "2/19" ein Artefakt des waagerechten Masses war) — die Konstruktion selbst (eine Bank dir[5]/dir[6] @0x8001abf0/ac00 -> @0x80100C3C-5C, ein Clip @0x801012A8, Flip @0x8010130C-18, Leon-Skelett RE2 = RE1.5 fuer Kopf/Rumpf byte-gleich). Riegel misst den Ruecken-Fall als PRUEFUNG (3b/3c). |
+| M3 | **behoben** — PORT-MAPPING im Code und Dossier gekennzeichnet (RE2 0x2000 @0x8004a868 / 0x8400 -> RE1.5 u0 & +0x1D7 @0x80100624, Test @0x8003b248-58). |
 
 ### M2 — Befund beim Nachlesen: die Parts tragen die +0x14E-Ueberblendung, der Port-Pin nicht
 Selbst disassembliert (re2_disasm.py, info/re2leon/PSX.EXE), Kern 0x80029614 (von 0x8002959C):
@@ -604,3 +604,153 @@ steht in 9 von 19 Bildern 150-238 VOR Leons Hals bei fast mittiger Seitenlage (s
 laeuft dann durch Kopf/Hals. Die Ueberblendung verschiebt den Pin, aendert aber die Konstruktion nicht
 (eine Bank, ein Clip, Flip) — der Ruecken-Fall bleibt geometrisch die gespiegelte Brust (Riegel 4c gruen,
 Spiegel-Abweichung 2).
+
+**Umsetzung M2** (`engine/src/enemy_ai_re2_zellenarm.c`, eigene Datei des Arms): `re2arm_t` traegt jetzt die
+Parts selbst (`pa[]` gemischte Rotation je Part = +0x68, `proot` = Wurzel +0x2C..+0x34, `ptrans[]` modell-lokale
+Part-Lage). `arm_parts()` ist 0x80029614 auf diesen Parts: Ziel = Keyframe des Bilds +0x14D VOR dem Zaehlen,
+Mischgewicht t1 = a3 * +0x14E VOR dem Dekrement (Schatten-Aktor mit `anim_frac` = +0x14E, `anim_blend_rate` = a3 =
+256 an allen Advance-Stellen, Beleg `addiu a3,zero,256` z.B. @0x80100B28), Formel = re15_blend_angle12 (prev*wp +
+kf*(4096-wp), Kuerzestweg ±4096 — dieselbe wie @0x80029a10-aa4). `arm_adv()` ruft sie vor jedem
+re15_re2_advance_959c; `arm_hand_pose()` (A1 @0x801007C4, A3 @0x801009BC, Pin B4 P0 @0x80100C18-38) liest die Hand
+aus diesen Parts mit Lage/Blick des Arms (FUN_80027160: Entity-Matrix aus +0x74/+0x38). Neue Auskunft
+`re15_re2arm_hand_parts(slot, gemischt, rein)` (Header re15_enemy_ai_re2_zellenarm.h). Messschiene `[re2arm] PIN`
+zeigt jetzt gemischt / rein / Clip 5 Bild 0.
+
+**Messung nachher M2 — exe, echter Tuerweg 1220 -> 1210** (Laeufe `runs/nb2_front|back|re15|re15front`,
+`RE15_DEBUG_JUMP=1220@gp RE15_PLAYER_POS=-21750,-6400,0 RE15_PAD_AT=45:A,46:A RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=80 RE15_RE2_TRACE=1`, Eingaben wie Abnahme 1):
+```
+nb2_front  PIN slot 5 yaw 3664: Parts gemischt Clip 3 Bild 4 -> (-20609,-15171); rein -> (-20588,-15148); Clip 5 Bild 0 -> (-20728,-15056); Leon vorher (-20622,-15020) yaw 1440
+nb2_back   PIN slot 5 yaw 3705: Parts gemischt Clip 3 Bild 4 -> (-20603,-15239); rein -> (-20552,-15206); Clip 5 Bild 0 -> (-20686,-15106); Leon vorher (-20622,-15220) yaw 3072
+```
+Im echten Weg ist der Ueberblend-Rest klein (31 bzw. 61 Einheiten), weil B1 lange genug lief. Sonde
+`probe_r35_raeume_arme` mit genau diesen Pins (Halte-Zyklus Arm Clip 5 Bild f / Leon Opfer-Clip 0 Bild f+1):
+
+| Fall | Pin-Quelle | waagerecht < 120 (min) | Volumen: Bilder mit Arm-Vertex in Kopf/Rumpf (max Vertices) |
+|---|---|---|---|
+| Gesicht (Nutzerfall) | gemischt (byte-true) | **0/19 (175)** | 12/19 (8) |
+| Gesicht | rein C3B4 (Nachbesserung 1) | 0/19 (169) | 7/19 (6) |
+| Gesicht | Clip 5 Bild 0 (Basisstand) | 9/19 (33) | 16/19 (10) |
+| Ruecken | gemischt (byte-true) | **9/19 (24)** | 18/19 (12) |
+| Ruecken | rein C3B4 (Nachbesserung 1) | 11/19 (4) | 18/19 (10) |
+| Ruecken | Clip 5 Bild 0 (Basisstand) | 2/19 (118) | 18/19 (14) |
+
+Volumenmass (neu, `tests/unit/r35_raeume_volumen.h`): Arm-Vertices von Unterarm + Hand (EM2D-Mesh Bone 2/3) in
+Leons Kopf (PL00.MD1 Mesh 8) bzw. Rumpf (Mesh 0), Volumen = je 32-Einheiten-Hoehenband die Bounding-Box der
+Mesh-Vertices im Knochen-Rahmen (eher zu gross: Auflegen auf Schulter/Hals zaehlt mit). Lesart: das waagerechte Mass
+der Nachbesserung 1 sah nur den Handpunkt gegen die Halsachse; im Ruecken-Griff des Basisstands stand die Hand weit
+vor dem Hals (daher "2/19"), aber der Unterarm lief durch Hals/Schulter — das Volumenmass zeigt 18/19 Bilder fuer
+ALLE drei Pin-Quellen. Der "bessere Stand" der Abnahme war also ein Artefakt des Masses; kein Pin beseitigt die
+Ruecken-Ueberschneidung, sie ist die Konstruktion (Leon um 180 Grad um die Hand gedreht, gleiche Hand-Bahn).
+
+**Am Original belegt — Opferbank-Analyse (RE2 PSX.EXE + EM2D-Overlay, selbst disassembliert):**
+1. Welche Bank Leon bekommt: RE2-EMD-Lader `8001abe4: lw v1,20(s0)` (dir[5]) / `8001abf0: sw v1,396(s1)` (+0x18C),
+   `8001abf4: lw v1,24(s0)` (dir[6]) / `8001ac00: sw v1,392(s1)` (+0x188) -> B4 P0 `80100c3c: lw v0,392(s0)` /
+   `80100c44: sw v0,-640(at)` (PL+0x188), `80100c48: lw v1,396(s0)` / `80100c5c: sw v1,-636(at)` (PL+0x18C). Leon
+   spielt also EM2D dir[5] (EDD, 2 Clips 19/20 Bilder) mit dir[6]-Keyframes auf SEINEM Skelett. Port:
+   `re2_parse_pair(emd, D[5], D[2], D[6])` -> anim_victim/skel_victim (re2_ems.c:149), Opfer-Override auf PL00 —
+   dieselben Bytes.
+2. Leons Skelett im Original = im Port, wo es zaehlt: RE2 `info/re2leon/PL0/PLD/PL00/PL00.emr` gegen RE1.5
+   `PLD/PL00.EMR`, Versatztabelle ab Byte 8 (je 3 x s16): Bones 1-6, 8, 9, 12 byte-gleich (u.a. Kopf 8 =
+   (-98,-704,0)), Bone 7 (-54,810,8) / (-54,811,8), Wurzel 0 (wird vom Keyframe ersetzt), nur Leons eigene
+   Unterarme/Haende 10/11/13/14 sind in RE2 laenger (422/408 gegen 485/454) — fuer Hand-in-Kopf/Rumpf ohne Belang.
+3. Ein Clip, ein Flip, ein Pin: Hook P0 `801012a8: lui v0,0xf` / `801012ac: sw v0,332(s1)`, Flip `8010130c: lhu
+   v0,118(s1)` / `80101314: addiu v0,v0,2048` / `80101318: sh v0,118(s1)` hinter FUN_80015910 (@0x801012E0); Pin =
+   gezeichnete Hand inkl. Ueberblendung (oben).
+4. Die Arm-Hand-Bahn ist reines EM2D (der Port laedt EM2D "REIN, kein Hybrid", main.c pc_enemy_load_ex).
+=> Jede Eingangsgroesse der Ruecken-Griff-Geometrie ist ein RE2-Byte; der Port rechnet sie mit derselben
+Konstruktion. Das Original zeigt im Ruecken-Griff dieselbe Ueberschneidung (Unterarm durch Hals/Schulter). Ein
+Bild aus dem RE2-Emulator liegt weiterhin NICHT vor (keine RE2-Spielstaende auf den Memory-Cards: epsxe000/001.mcr
+tragen nur BISLPS-00222; ePSXe-Savestates SLU__024.54/SLU__096.08 sind nicht RE2 Leon SLUS-00421) — Messweg
+s. OFFEN 1.
+
+**Tests M2:** `unit_r35_raeume_arme` neu gefasst — (1) Pin = gemischte Parts-Hand (Abstand 0), reine Clip-3-Hand
+und Clip-5-Hand liegen daneben (> 30); (2) Arm + 1; (3) Gesicht: weniger Kontaktbilder als der Basisstand-Pin in
+Volumen- UND waagerechtem Mass (Riegel-Lauf: 30 < 37, 4 < 19); (3b) **Ruecken-Griff als PRUEFUNG**: Volumenmass
+Bild fuer Bild = Gesicht-Lauf an der Pin-Wurzel gespiegelt (RE2-Konstruktion), Zahl gleich (35 = 35); (3c)
+Ruecken-Griff: weniger Kontaktbilder als mit der reinen Clip-3-Pose (35 < 42) und nicht mehr als im Basisstand
+(35 <= 41); (4a-c) wie Nachbesserung 1. `unit_1210_arme_re2` (4b/4d): A1/Pin aus der gemischten Hand (A1 nach 3
+Bildern, Pin Abstand 0). Sonde `probe_r35_raeume_arme`: Abschnitt EXE-PIN (Tabelle oben).
+
+### M1 (P4, RE1.5-KI) — Entscheidung nach der Regel: RE1.5-Writher unfertig -> RE2-EM2D-Arm in jedem Flavor
+**Messung vorher:** Abnahme 1 (a1_p4_re15) und Nachbesserung 1 (m4_re15_stand): Griff F277/F278 ohne Kontakt,
+Leon 1300-1560 neben dem Hand-Anker, Zombie-Opfer-Animation geliehen, -40 HP.
+
+**Beleg — der RE1.5-Writher hat keinen Griff** (STAGE1.BIN, re15_disasm.py dis 0x8010c1ec 1400, Bereich bis
+0x8010d774 = 1379 Instruktionen, Datei scratchpad/nb2_writher.dis):
+* jal-Zensus: 15x 0x8001af20 (rng), 11x 0x8001f314 (anim_set), 5x 0x800245d8 (Schritt), 3x 0x80019700 (FX), je 1x
+  0x80065f60 (SquareRoot0, @0x8010c27c), 0x8003b0a4 (Wandklemme), 0x8002b544 / 0x8002b498 / 0x8002aec4 (Push-Kette,
+  Koerper als Hindernis), 0x8001bd60 (Schwerkraft), 0x8001af5c (Schatten). Kein Schadenseinstieg (FUN_80012d60),
+  keine Opfer-/Spielerzustands-Funktion. jalr nur ueber die eigenen Zustandstabellen (@0x8010c2bc/c4f8/c540/...).
+* Spielerzugriff nur LESEND: `8010c238: lhu v0,-13688(v0)` / `8010c258: lhu v0,-13680(v0)` (playerX/Z, Abstand),
+  `8010c360`/`8010c378` (INIT-Lenkziel). Globale Zeigerladungen ausschliesslich `lw ...,-14460(..)` = g_entity(cur)
+  (165x); KEIN Store mit negativem Versatz (= keine feste Adresse) im ganzen Bereich.
+* Nach der Lunge `8010c8cc: jal 0x8001af20` / `8010c8d4: andi v0,v0,0x1` / `8010c8e0: addiu v0,v0,2` / `8010c8e4: sb
+  v0,5(v1)` -> Greif-Schleife 2 oder Rueckzug 3, ohne Spielerkontakt.
+Einordnung (Memory "Beta -> Retail"): das ist kein fertiges, anderes System, sondern ein Greifarm, dessen Griff
+fehlt — der Nutzer verlangt ausdruecklich den Griff nach RE2-Vorbild (test_1210_gitterhaende.c Kopf: "kommen die
+Haende der Zombies mit Stoehnen und greifen einen ... Ja, stell das um ... hole die Animation aus Resident Evil 2").
+RE2 hat ihn vollstaendig (EM2D: Pin @0x80100C18-38, Opferbank @0x80100C3C-5C, Hook @0x801012A8). Also RE2 das Ziel,
+auch unter der KI-Einstellung RE1.5 — keine Wahlfrage an den Nutzer.
+
+**Umsetzung M1:** `engine/src/enemy_ai_re2_zombie.c` `re15_ai_re2_for_type()`: `if (type == 0x1Au &&
+!s_writher_re15_pin) return 1;` vor dem Flavor-Schalter (die vom Flavor-Modul vorgeschriebene EINE Stelle; damit
+waehlen Lader main.c:1105, Gehirn-Weiche enemy_ai_common.c:14735, Opfer-FSM und Schadenszeilen typbezogen RE2).
+Begruendung + Adressen im Code-Kommentar. Die RE1.5-Writher-Maschine (enemy_ai_common.c re15_writher_ai_tick)
+bleibt im Code als Referenz; ihre sechs Pins (test_writher_ai/_hit_feedback/_kill_flag/_abtauchen,
+test_1210_gitterhaende, test_1210_arme) rufen dafuer `re15_ai_writher_re15_pin(1)` (re15_ai_flavor.h; kein getenv,
+kein Menue, das Spiel ruft es nie).
+
+**Messung nachher M1:** exe `nb2_re15` / `nb2_re15front` (RE15_AI_FLAVOR=re15, Tuerweg wie oben): re2_ki.log
+`[re2arm] PIN slot 5 yaw 3664: Parts gemischt Clip 3 Bild 4 -> (-20609,-15171) ... Leon vorher (-20622,-15020) yaw
+1440` — Bild fuer Bild derselbe Griff wie unter RE2-KI. Bild `H_raeume/nb2_m1_re15ki_griff_F244-292.png`
+(Framedump Cut 4, 3x, Lauf nb2_re15_bild): der EM2D-Arm haelt Leon an Kopf/Schulter (vorher Bild
+nb1_m4_re15ki_griff_F276-320.png: Arm greift ins Leere, Leon mitten im Flur). Kein HP-Verlust mehr (RE2: der Griff
+kostet nichts, Zensus im zellenarm.c-Kopf).
+
+**Tests M1:** `unit_r35_raeume_arme` (5a) re15_ai_re2_for_type(0x1A) = 1 unter RE15_AI_FLAVOR_RE15; Griff unter
+RE1.5-KI ueber denselben game_step-Weg: (1) Pin auf der gemischten Hand, (2) Arm + 1, (5b) Wurzel, Blick, Leon-/
+Arm-Bild und Volumenmass Bild fuer Bild gleich dem RE2-Lauf.
+
+### Tests (Nachbesserung 2)
+* geaendert: `unit_r35_raeume_arme` (1)(3)(3b)(3c)(5a)(5b) + Messdump R35_ARME_DUMP, `unit_1210_arme_re2` (4b/4d),
+  Referenz-Pins des RE1.5-Writhers (Haken re15_ai_writher_re15_pin) `unit_writher_ai`, `unit_writher_hit_feedback`,
+  `unit_writher_kill_flag`, `unit_writher_abtauchen`, `unit_1210_gitterhaende`, `unit_1210_arme`.
+* Gegenproben im selben Lauf: die reine Clip-3-Pose (Stand Nachbesserung 1) liegt 120 neben der gemischten Hand und
+  ergibt 42 statt 35 Ruecken-Kontaktbilder (Pin-Quellen-Zeile des Riegels). Die Flavor-Zeile: nach ihrem Einbau und
+  VOR dem Test-Haken kippten unit_writher_ai/_hit_feedback/_kill_flag/_abtauchen, unit_1210_gitterhaende,
+  unit_1210_arme (test_support.c erzwingt RE15 fuer alle Tests) — gemessen, dass die Zeile unter RE1.5-KI greift.
+* Suite: s. "Suite (Nachbesserung 2)".
+
+### OFFEN (Stand Nachbesserung 2, ersetzt OFFEN 1 und 6 oben)
+1. **RE2-Emulatorbild eines Ruecken-Griffs** — weiter nicht vorhanden. Die Opferbank-Analyse oben belegt jede
+   Eingangsgroesse; ein Bild braucht einen RE2-Spielstand im 2F-Flur (ROOM2050). Messweg: pcsx-redux (Skill
+   re15-pcsx-watchpoint) mit `C:/Users/mjoedicke/Downloads/ePSXe2018/re2leon.cue`, Raumsprung per RAM (RE2-Tuer-
+   Globals aus Door_aot_se), Leon mit Blick vom Fenster weg an einem Arm vorbei, Bild + PL+0x38/+0x40/+0x76 im Halten.
+2. **Port-Zeichner-Ueberblendung einen Schritt voraus** (allgemein, nicht nur Arm): re15_skel_compute_pose mischt mit
+   dem `anim_frac` NACH dem Dekrement des Ticks (re15_re2_advance_959c) und zeigt das Bild NACH dem Zaehlen; RE2
+   0x80029614 mischt mit +0x14E VOR dem Dekrement (@0x800296a8) und posiert das Bild VOR dem Zaehlen (@0x80029B30).
+   Der Arm-Pin rechnet jetzt RE2-genau (Gehirn-Parts), das gezeichnete Bild weicht in den Uebergangsbildern um einen
+   Mischschritt ab. Gemeinsame Datei skeleton_common.c — nicht Teil dieser Spur.
+3. **Tote RE1.5-Writher-Maschine** (enemy_ai_common.c ~12130-12800) wird vom Spiel nicht mehr erreicht; Loeschen
+   waere ein grosser Eingriff in eine gemeinsame Datei — Integrations-Entscheid, die Referenz-Pins halten sie bis
+   dahin geprueft.
+(OFFEN 2-5 und 7 von oben unveraendert.)
+
+### Dateien (Nachbesserung 2)
+* `re15_port/engine/src/enemy_ai_re2_zellenarm.c` (eigen): Parts mit +0x14E-Ueberblendung, Pin/A1/A3 daraus, Auskunft.
+* `re15_port/include/re15_enemy_ai_re2_zellenarm.h`: `re15_re2arm_hand_parts`.
+* `re15_port/engine/src/enemy_ai_re2_zombie.c` (Flavor-Liste, 1 Zeile + Test-Haken) und `re15_port/include/re15_ai_flavor.h`.
+* `re15_port/engine/src/enemy_ai_common.c` (gemeinsam): nur Kommentare (M3 PORT-MAPPING, 7+1 Zeilen).
+* Tests: `tests/unit/test_r35_raeume_arme.c`, neu `tests/unit/r35_raeume_volumen.h`, `tests/unit/probe_r35_raeume_arme.c`,
+  `tests/unit/test_p2_1210_arme_re2.c`, je 1-2 Zeilen in den sechs Writher-Pins. Keine CMakeLists, keine Assets.
+* Bild `analysis/befunde_runde35/H_raeume/nb2_m1_re15ki_griff_F244-292.png`.
+
+### Fuer den Nutzer (Nachtrag Nachbesserung 2)
+* ROOM1210: die Gitterarme greifen jetzt auch unter der KI-Einstellung "RE1.5" richtig zu — es ist dort derselbe
+  Arm wie unter "RE2" (RE2-Modell, RE2-Griff, kein HP-Verlust beim Griff). Grund: der RE1.5-Arm hatte im Original
+  gar keinen Griff.
+* Von vorn gegriffen (wie man von der Tuer aus den Flur entlang geht): die Hand liegt an Kopf/Schulter, nicht im
+  Gesicht. Von hinten gegriffen (Leon schaut beim Zupacken vom Fenster weg): der Unterarm laeuft durch Hals/Schulter
+  — das ist im RE2-Original genauso gebaut (eine Opfer-Animation, Leon nur umgedreht); belegt, nicht geschoent.
+* Keine neuen Sprachdateien, keine neuen Assets.
