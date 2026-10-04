@@ -307,3 +307,15 @@ Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Emulator-
 
 (478 vorher + 4 neue: unit_r35_android_abgleich, unit_r35_android_anzeige, unit_r35_android_konflikt,
 unit_r35_android_pruefkette.) Keine Fenster-Haken rot, kein Nachfahren noetig.
+
+## Nachbesserung 1 (nach Abnahme 0, `N_abnahme_0.md`: Punkt 1 + 2 erfuellt, Punkt 3 teilweise, Maengel M1-M3)
+
+Stand vor der Nachbesserung: HEAD b19c39fa (= 5c1f0af4 + Abnahmebericht). Plan:
+- M1: der Mutator von `release/gate_urteil.py` mutiert auch Zeichenketten (Regex-Muster, MARKE-Tabelle, Pruef-Literale)
+  mit festgelegten Operatoren; fuer jeden dann ueberlebenden Mutanten ein fester Gegenbeispiel-Fall (mit Soll) oder eine
+  begruendete Gleichwertigkeit. Messweg wie die Abnahme: A5/A6/A11 als Textaenderung in einer Kopie -> `--selbsttest`
+  muss `URTEIL-SELBSTTEST-FEHLER` melden.
+- M2: Negativ-Kontrolle N10 (umgepinntes Urteil: richtige OK-Schlusszeile, Rueckgabe 1 -> Abbruch verlangt) und fuer
+  JEDE weitere Pruefung in `gate_urteil_selbsttest` eine eigene Kontrolle; dazu eine Streich-Messung aller
+  Urteils-Pruefzeilen in apk_pruefen.sh gegen die Kette.
+- M3: README + Dossier auf den gemessenen Umfang.
