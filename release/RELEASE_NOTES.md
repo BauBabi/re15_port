@@ -1,3 +1,83 @@
+# v0.8.23 - 2026-10-04
+
+Der zweite und letzte Teil Ihres Auftrags der Runde 35 ist gebaut. Mit v0.8.22 sind damit alle
+Punkte umgesetzt; jeder wurde von einem zweiten Agenten unabhaengig am gebauten Spiel gegen Ihren
+Wortlaut nachgemessen, bei den Affen sieben Mal. Suite 517 -> 592/592.
+
+## Was Sie merken
+
+**Gorillas in ROOM11C0.**
+* Ada versteckt sich nach ihrer Szene und kommt zurueck, wenn beide Gorillas tot sind.
+* Der Gorilla steigt an derselben Stelle wie im Original aus dem Auto.
+* Der bewegliche Teil an der Brust ist weg.
+* Die Brust-Schlag-Animation ist da (nach jedem Griff).
+* Sie springen erst nach dem dritten Treffer, bei jeder Waffe.
+* Die KI ist so zielstrebig wie im Original: ohne Gegenwehr stirbt Leon nach 39,8 s, die Bisse
+  fallen bildgleich auf die Bilder des Originals (14 von 14).
+* Der Todessprung (Leon unter 50 HP) laeuft wie auf der PlayStation: Leon bricht an seinem Platz
+  zusammen, statt durch den Raum zu springen.
+* Ein Gorilla, der hinter den Wagen auf der Stelle hochspringt und Leon nicht angreift, tut das im
+  Original genauso (am Original gemessen).
+
+**Nach Tod und New Game** bleiben keine PRIs des alten Spielstands mehr stehen. Beim Tod und bei
+jedem Raumwechsel werden alle Assets der Raeume davor entladen: Masken, Gegner-Texturen, Stimmen,
+Animationsbaenke, Tonbaenke, die Lampen des Generator-Bedienfelds.
+
+**Karte.** Im Fahrstuhl ROOM1080 bewegt sich der Spieler-Marker ueber die ganze gemalte Kabine.
+ROOM11F0 und ROOM1200 erscheinen, wenn man drin ist. ROOM1230 zeigt seine eigene Karte. ROOM1210 hat
+den richtigen Korridor und alle sechs Tueren.
+
+**ROOM1190.** Die Hunde haben beim Sprung durch die Luke keinen Schatten mehr in der Luft. Die
+Zielscheibe ganz links und die dritte von links sagen "This target has a surprisingly large number
+of bullet holes.", die anderen beiden "This target does not have many bullet holes".
+
+**ROOM1200.** Der Zombie von der Trage faellt nach dem Minidisc-Player auf die Spielerebene herunter
+(die Schwerkraft-Routine des Originals fehlte dem Port).
+
+**ROOM1210.** Leon steht beim Griff der Gitterarme dort, wo er im echten RE2 steht, und haelt den
+Kopf wie dort (beim Griff von hinten in der Animationspose, von vorn schaut er den Arm an).
+
+**Super Redhawk an Hunden.** Die Fleisch-Brocken fliegen, schlagen auf und verschwinden nach etwa
+zwei Sekunden, statt endlos zu kreisen.
+
+**Inhalt.**
+* Die Doppeltueren haben spiegelgleiche Griffe.
+* In den eigenen Dokumenten stehen die Codes gruen (4312, 5632).
+* In ROOM1010 und ROOM1220 starten die Zombies weiter von der Tuer: man kann sofort umdrehen und
+  wieder hinaus.
+* ROOM1010: eine Memory Card (x3) im Regal neben der Tuer zu ROOM1020.
+* ROOM1090: Schrotflinten-Munition auf dem rechten Aussenluefter.
+
+**Fenster ROOM1120.** Nach Irons' Tod: laeuft Leon in Cut 1 auf das hintere Fenster zu, brechen die
+Scheiben mit RE2-Glassplittern und dem RE2-Glasknall, eine Kraehe bricht herein und greift an. Das
+Fenster bleibt beschaedigt, auch nach Speichern und Laden.
+
+**Zombie-Maedchen.** Das ist Gegnertyp 0x13 (EM013), eine weibliche Zombie-Variante. Sie kommt nur in
+ROOM4050 vor (hinter Tuer 6 und Tuer 7). Sie erschien im Port nie, weil Tueren in denselben Raum nur
+in Stage 1 neu luden; jetzt laden sie wie im Original in allen Stages neu. Sie laeuft an, packt,
+stirbt und bleibt tot. Der Endkampf ROOM5090 laeuft dabei weiter mit 600 HP.
+
+**Android.** Die Fortschrittsanzeige beim Entpacken bleibt auch auf sehr breiten Displays im Bild. Ein
+Datei/Ordner-Konflikt beim Update heilt im selben Start. Das Pruefskript testet seine Urteilslogik
+jetzt selbst mit (777 Faelle, 887 erkannte Mutanten, beidseitige Vergleiche).
+
+## RE2-Weltmodelle zum Ansehen
+
+`extracted_re2_items/uebersicht.html` im Browser oeffnen: 87 Item-Modelle aus RE2, oben die "Karten" -
+3 Schluesselkarten und die 3 Lageplan-Modelle zum Aufsammeln (Polizeistation, Kanalisation,
+Fabrik). Dazu `karten.png`, `kontaktbogen.png`, `katalog.csv`, `lageplaene.csv`.
+
+## Grenzen
+
+* Das Pruefskript erkennt nicht jede denkbare Aenderung an sich selbst: die Funktion apk_pruefen()
+  selbst ist noch durch keine Kontrolle abgedeckt (Dossier N_abnahme_3.md).
+* Gorillas: nach dem ersten Biss weicht ihre Lage um bis zu 25 Einheiten vom Original ab; der erste
+  Angriff kommt ein Bild frueher als im Original.
+* Gitterarme ROOM1210: wie im Original ueberschneiden sich Arm und Leon beim Griff in einem Teil der
+  Bilder.
+* Aus v0.8.22 weiter offen: Sichtlinie und Fresser-Sperre im allgemeinen Schusspfad; der Port fuehrt
+  15 statt 20 Gegner je Raum.
+
 # v0.8.22 - 2026-10-04
 
 Der erste Teil Ihres Auftrags der Runde 35 ist gebaut: Handgranate, Werfer und Python, Messer und

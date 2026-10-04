@@ -253,8 +253,12 @@ check_tree() {           # $1 = fertiger Paketordner
     # shared_assets/RE2/SOUND/ARMS10/ARMS11 (audio_pc.c re15_audio_re2_arms_se). Fehlen sie, bleiben
     # Flammenstrahl, Raketen-Explosion und der Leer-Klick des Raketenwerfers still - Gate statt Stille.
     local rs
-    for rs in SOUND/ARMS10.EDH SOUND/ARMS10.VB SOUND/ARMS11.EDH SOUND/ARMS11.VB; do
-        [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Werfer-Toene waeren stumm)"
+    # Seit Runde 35 (Spur M, Fenster ROOM1120): RE2-Glassplitter-ESP/-TIMs und der Glasknall aus RE2
+    # room1090 (fenster_1120.c). Fehlen sie, bricht die Scheibe ohne Splitter und ohne Ton.
+    for rs in SOUND/ARMS10.EDH SOUND/ARMS10.VB SOUND/ARMS11.EDH SOUND/ARMS11.VB \
+              GLAS1090.ESP GLAS1090_10.TIM GLAS1090_11.TIM GLAS1090_12.TIM GLAS1090_13.TIM GLAS1090_14.TIM \
+              GLAS1090.EDT GLAS1090.VH GLAS1090.VB; do
+        [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Werfer-Toene bzw. Fenster ROOM1120 waeren stumm/ohne Splitter)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done
     # Seit Runde 31: die RE2-Tuersequenzen der 184 abgedeckten Tuerseiten lesen ihr Archiv
