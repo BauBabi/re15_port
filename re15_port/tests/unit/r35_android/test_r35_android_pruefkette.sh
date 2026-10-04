@@ -16,6 +16,14 @@
 #      N8 Urteil voellig kompromittiert (Selbsttest LUEGT OK, Urteil sagt immer 0 mit Urteilszeile), umgepinnt ->
 #         die zweite Instanz in gate_laufen (Rueckgabe des Gates != 0) haelt die leere APK trotzdem ROT
 #      N9 Urteils-Selbsttest mit weniger Mutanten als festgehalten (GATE_URTEIL_MIN_ERKANNT) -> Abbruch
+#   Nachbesserung 1 (Abnahme 0, M2) - jede Pruefzeile des bash-Urteils hat eine eigene Kontrolle:
+#      P3  Attrappe des Urteils mit richtiger Schlusszeile + Rueckgabe 0 -> angenommen (Gegenprobe der Attrappe)
+#      N10 richtige OK-Schlusszeile, Rueckgabe 1 -> Abbruch (die Pruefung "(( rc == 0 ))")
+#      N11-N15 je eine Zahl der Schlusszeile verletzt (f1 != f2, f < Mindestzahl, erkannt + gleich != alle,
+#          erkannt < Mindestzahl, gleichwertig > Hoechstzahl) -> Abbruch
+#      N16-N18 OK-Zeile nicht zuletzt / mit Zusatz dahinter / mit Text davor -> Abbruch (Anker des bash-Musters)
+#      N19a/b Urteil 0 ohne Urteilszeile bzw. mit der eines anderen Modus, Gate-Rueckgabe 0 -> rot (zweite Instanz)
+#      N20/N21 private Kopie von Urteil bzw. Gate nach gate_festhalten veraendert -> gate_laufen bricht ab (Pin je Lauf)
 #   Am Ende: release/apk_asset_gate.py, gate_urteil.py und beide Pins unveraendert (cmp gegen den Start).
 # Aufruf: test_r35_android_pruefkette.sh <repo-wurzel> <arbeitsordner>
 # =============================================================================================
@@ -113,10 +121,16 @@ PY
 urteil_umgepinnt N6_urteil_fy2_ein_zeichen "$W/U_fy2.py" "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile"
 : > "$W/U_leer.py"
 urteil_umgepinnt N7_urteil_leer "$W/U_leer.py" "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile"
-cat > "$W/U_luegt.py" <<'PY'
+# Schlusszeile eines Urteils-Selbsttests mit den Mindestzahlen aus apk_pruefen.sh (Nachbesserung 1: vorher hier fest
+# "119/119 ... 257/260" - mit neuen Mindestzahlen waere N8 am Selbsttest statt an der zweiten Instanz gescheitert)
+okz() {        # $1 f1, $2 f2, $3 erkannt, $4 alle, $5 gleichwertig -> Schlusszeile im Format von gate_urteil.py
+    echo "== URTEIL-SELBSTTEST-OK: $1/$2 Faelle, $3/$4 Mutanten erkannt, $5 als gleichwertig begruendet =="
+}
+F=$GATE_URTEIL_MIN_FAELLE; E=$GATE_URTEIL_MIN_ERKANNT; G=$GATE_URTEIL_MAX_GLEICH; M=$((E + G))
+cat > "$W/U_luegt.py" <<PY
 import sys
 if sys.argv[1:] == ["--selbsttest"]:
-    print("== URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==")
+    print("$(okz $F $F $E $M $G)")
     sys.exit(0)
 print("   Gate-Urteil (%s, Rueckgabe 0): alles bestens" % sys.argv[1])
 sys.exit(0)
@@ -139,6 +153,94 @@ sed 's/^GATE_URTEIL_MIN_ERKANNT=.*/GATE_URTEIL_MIN_ERKANNT=999/' release/apk_pru
 ) > "$W/N9.txt" 2>&1 && { falsch "N9 Mindestzahl 999 Mutanten angenommen"; } \
     || { grep -aq "Mutanten erkannt" "$W/N9.txt" && gut "N9 Mindestzahl Mutanten: $(grep -a -m1 'DIE:' "$W/N9.txt" | cut -c1-120)" \
          || falsch "N9 falsche Meldung: $(tail -2 "$W/N9.txt")"; }
+
+# ---------------------------------------------------------------------------------------------- N10-N18: bash-Urteil
+# Nachbesserung 1 (Abnahme 0, M2): JEDE Pruefung in gate_urteil_selbsttest bekommt eine eigene Kontrolle. Eine Attrappe
+# des Urteils druckt bei --selbsttest genau die vorgegebene Schlusszeile und endet mit der vorgegebenen Rueckgabe; je
+# Kontrolle verletzt GENAU EINE Bedingung (alle anderen Zahlen = die Mindestzahlen aus apk_pruefen.sh). P3 = dieselbe
+# Attrappe mit allem richtig MUSS angenommen werden - sonst waeren die Abbrueche N10-N18 nichts wert.
+attrappe() {   # $1 = Datei, $2 = Rueckgabe, Rest = Zeilen (die letzte ist die Schlusszeile)
+    local d="$1" r="$2"
+    shift 2
+    {
+        echo "import sys"
+        echo "if sys.argv[1:] == ['--selbsttest']:"
+        local z
+        for z in "$@"; do printf '    print(%s)\n' "$("$PY" -c 'import sys; print(repr(sys.argv[1]))' "$z")"; done
+        echo "    sys.exit($r)"
+        echo "sys.exit(2)"
+    } > "$d"
+}
+attrappe "$W/U_P3.py" 0 "$(okz $F $F $E $M $G)"
+(
+    GATE_URTEIL_PIN_DATEI="$W/pin_P3"; sha "$W/U_P3.py" > "$GATE_URTEIL_PIN_DATEI"; GATE_URTEIL_GEPRUEFT=""
+    gate_urteil_selbsttest "$W/U_P3.py"
+) > "$W/P3.txt" 2>&1 && grep -aq "Gate-Urteil selbstgeprueft: $F/$F Faelle, $E/$M Mutanten" "$W/P3.txt" \
+    && gut "P3 Attrappe mit richtiger Schlusszeile + Rueckgabe 0 angenommen (Gegenprobe zu N10-N18)" \
+    || { falsch "P3 Attrappe mit richtiger Schlusszeile abgelehnt - N10-N18 waeren ohne Aussage"; tail -3 "$W/P3.txt"; }
+n_attrappe() { # $1 Titel, $2 Rueckgabe, $3 erwartete Meldung (Teilstring), Rest = Zeilen
+    local t="$1" r="$2" m="$3"
+    shift 3
+    attrappe "$W/U_$t.py" "$r" "$@"
+    urteil_umgepinnt "$t" "$W/U_$t.py" "$m"
+}
+n_attrappe N10_ok_zeile_rueckgabe_1 1 "OK-Schlusszeile, aber Rueckgabe 1" "$(okz $F $F $E $M $G)"
+n_attrappe N11_faelle_f1_ungleich_f2 0 "Faelle, verlangt n/n" "$(okz $((F - 1)) $F $E $M $G)"
+n_attrappe N12_faelle_unter_mindestzahl 0 "Faelle, verlangt n/n" "$(okz $((F - 1)) $((F - 1)) $E $M $G)"
+n_attrappe N13_mutanten_summe_falsch 0 "Mutanten erkannt, $G gleichwertig - verlangt" "$(okz $F $F $E $((M + 1)) $G)"
+n_attrappe N14_erkannt_unter_mindestzahl 0 "Mutanten erkannt, $G gleichwertig - verlangt" "$(okz $F $F $((E - 1)) $((M - 1)) $G)"
+n_attrappe N15_zu_viele_gleichwertige 0 "Mutanten erkannt, $((G + 1)) gleichwertig - verlangt" "$(okz $F $F $E $((M + 1)) $((G + 1)))"
+n_attrappe N16_ok_zeile_nicht_zuletzt 0 "ohne gueltige Schlusszeile" "$(okz $F $F $E $M $G)" "nachgeschoben"
+n_attrappe N17_ok_zeile_mit_zusatz 0 "ohne gueltige Schlusszeile" "$(okz $F $F $E $M $G) X"
+n_attrappe N18_ok_zeile_mit_vorsatz 0 "ohne gueltige Schlusszeile" "X $(okz $F $F $E $M $G)"
+
+# ---------------------------------------------------------------------------------------------- N19: zweite Instanz
+# Urteil sagt 0, druckt aber KEINE Urteilszeile (N19a) bzw. die eines anderen Modus (N19b), bei einem Gate-Lauf mit
+# Rueckgabe 0 - gate_laufen muss das selbst ablehnen (Zweig "ohne Urteilszeile"; N8 deckt den Zweig "Gate gab
+# Rueckgabe != 0"). Das Gate ist hier eine umgepinnte Attrappe mit Rueckgabe 0 (dieser Zweig haengt nicht am Gate).
+printf '%s\n' 'print("== SELBSTTEST-OK: Attrappe ==")' 'raise SystemExit(0)' > "$W/G0.py"
+for v in a b; do
+    zeile="   (keine Urteilszeile)"
+    [[ "$v" == b ]] && zeile="   Gate-Urteil (apk, Rueckgabe 0): falscher Modus"
+    cat > "$W/U_N19$v.py" <<PY
+import sys
+if sys.argv[1:] == ["--selbsttest"]:
+    print("$(okz $F $F $E $M $G)")
+    sys.exit(0)
+print("$zeile")
+sys.exit(0)
+PY
+    (
+        fehler=0
+        GATE_URTEIL_PIN_DATEI="$W/pin_N19$v"; sha "$W/U_N19$v.py" > "$GATE_URTEIL_PIN_DATEI"
+        GATE_URTEIL_KOPIE="$W/U_N19$v.py"; GATE_URTEIL_GEPRUEFT=""
+        GATE_PIN_DATEI="$W/pin_G0"; sha "$W/G0.py" > "$GATE_PIN_DATEI"
+        lauf "N19${v}_urteil_ohne_urteilszeile" rot selbsttest "$W/G0.py" --selbsttest
+        grep -aq "ohne Urteilszeile" "$W/N19${v}_urteil_ohne_urteilszeile.txt" \
+            && gut "N19$v die zweite Instanz verlangt die Urteilszeile" || falsch "N19$v ohne 'ohne Urteilszeile'"
+        exit "$fehler"
+    ) || fehler=$((fehler + $?))
+done
+
+# ---------------------------------------------------------------------------------------------- N20/N21: Pin je Lauf
+# Die PRIVATEN Kopien nach gate_festhalten veraendern (eine Kommentarzeile): gate_laufen prueft beide Pins vor JEDEM
+# Lauf (README "vor jeder Nutzung erneut geprueft") und muss abbrechen. Je in einer Unterschale mit eigener Kopie.
+for v in N20_urteil N21_gate; do
+    (
+        rm -rf "$W/fest_$v"; mkdir -p "$W/fest_$v"
+        gate_festhalten "$W/fest_$v" > /dev/null 2>&1 || { echo "gate_festhalten scheitert"; exit 1; }
+        if [[ "$v" == N20_urteil ]]; then echo "# veraendert" >> "$GATE_URTEIL_KOPIE"; m="Gate-Urteil ist NICHT das festgehaltene"
+        else echo "# veraendert" >> "$GATE_KOPIE"; m="Asset-Gate ist NICHT das festgehaltene"; fi
+        ( gate_laufen selbsttest "$GATE_KOPIE" --selbsttest ) > "$W/$v.txt" 2>&1 && exit 3
+        grep -aq "$m" "$W/$v.txt" || exit 4
+        exit 0
+    )
+    case $? in
+        0) gut "$v private Kopie veraendert -> Abbruch: $(grep -a -m1 'DIE:' "$W/$v.txt" | cut -c1-110)" ;;
+        3) falsch "$v private Kopie veraendert, gate_laufen lief trotzdem" ;;
+        *) falsch "$v ohne erwartete Meldung"; tail -3 "$W/$v.txt" ;;
+    esac
+done
 
 # ---------------------------------------------------------------------------------------------- unveraendert?
 for f in release/apk_asset_gate.py release/gate_urteil.py release/apk_asset_gate.sha256 release/gate_urteil.sha256; do

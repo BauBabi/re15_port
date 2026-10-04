@@ -15,16 +15,26 @@ exec "$PY" "$0" "$@" #
 # APK-ASSET-GATE-ABWEICHUNG des echten, gepinnten Gates ein ANDROID-GATES-OK fuer ein falsches Tuerarchiv. Eine
 # nachsichtige Regression im Urteil ist STILL: jeder gute Lauf bleibt gruen. Nutzer (Runde 35): "Kuenftige Aenderungen
 # am Pruefskript muessen dessen Urteilslogik selbst sorgfaeltig mittesten." Deshalb:
-#   * --selbsttest prueft das Urteil an FESTEN Ausgaben (gute Laeufe je Modus, und je Regel ein Gegenbeispiel) UND an
-#     MUTANTEN des eigenen Urteilscodes: jede Ein-Stellen-Aenderung (Vergleich, und/oder, not, Zahl, Rueckgabewert,
-#     weggelassener Aufruf) muss von mindestens einem Fall erkannt werden - sonst ist sie als gleichwertig begruendet
-#     (AEQUIVALENT unten) oder der Selbsttest scheitert. Wer das Urteil aendert und keinen Fall dazu schreibt,
-#     bekommt einen ueberlebenden Mutanten = SELBSTTEST-FEHLER.
+#   * --selbsttest prueft das Urteil an FESTEN Ausgaben (gute Laeufe je Modus, je Regel ein Gegenbeispiel, je gelesenem
+#     Muster Gegenbeispiele fuer jede Lockerung) UND an MUTANTEN der Funktion urteil(). Mutiert werden (Umfang, Stand
+#     Nachbesserung 1 - Abnahme 0, M1/M3): Vergleiche (==/!=, </<=, >/>=, in/not in), and/or, not, if-Bedingungen
+#     (True/False), ganze Zahlen (+-1, auch die Urteilszahlen 0/1/2 in ende()), weggelassene Ausdrucks-Aufrufe, JEDE
+#     Zeichenkette ausserhalb der Meldungstexte (MARKE-Tabelle, Modusnamen, "[FEHLER]", "ABBRUCH", "Traceback", "ok",
+#     "\r"/"\n" ...: + ein fremdes Zeichen) und jedes Regex-Muster mit den Lockerungen R0-R6 (_regex_lockerungen: Text
+#     hinter dem Muster erlaubt, Rest ab Stueck k -> .*, Wort -> .*, \d+ -> .*, \s+ -> \s*, Einzelzeichen weg,
+#     Alternative weg). Jeder Mutant muss von mindestens einem Fall erkannt werden - sonst ist er als gleichwertig
+#     begruendet (AEQUIVALENT unten) oder der Selbsttest scheitert. Wer das Urteil aendert und keinen Fall dazu
+#     schreibt, bekommt einen ueberlebenden Mutanten = SELBSTTEST-FEHLER.
+#     NICHT mutiert: die Meldungstexte (zweites Argument von ende() und genau_eine()), urteil_rufen(), main() und der
+#     Selbsttest selbst; Aenderungen, die keiner dieser Operatoren abbildet (z.B. any -> all, Funktions- oder
+#     Methodentausch, Zeichenklassen in Regex), faengt nur die Fallsammlung - gemessen in
+#     analysis/befunde_runde35/N_android_belege/nb1_urteil_aenderungen_nachher.txt. main()/urteil_rufen() und das
+#     bash-Urteil in apk_pruefen.sh pruefen die Negativ-Kontrollen von ctest unit_r35_android_pruefkette.
 #   * release/apk_pruefen.sh haelt diese Datei wie das Gate fest (Pin release/gate_urteil.sha256, private Kopie),
 #     laesst den Selbsttest vor JEDER Nutzung laufen und prueft dessen Schlusszeile in bash (Mindestzahlen dort), und
 #     verlangt fuer ein OK-Urteil zusaetzlich - unabhaengig von diesem Code - Rueckgabe 0 des Gates (gate_laufen).
 #   * ctest unit_r35_android_pruefkette laesst den Selbsttest und Negativ-Kontrollen mit dem echten Gate bei jedem
-#     Suite-Lauf laufen.
+#     Suite-Lauf laufen (Nachbesserung 1: auch je Pruefzeile des bash-Urteils eine Kontrolle, N10-N21).
 #
 # AUFRUF
 #   gate_urteil.py <modus> <ausgabe-datei> <rueckgabe> <min_faelle> <min_innen> [<apk_eintraege>]
@@ -436,6 +446,12 @@ def _faelle():
     f("[FEHLER] im Lauf", "apk", "   [FEHLER] x\n" + a, 0, 2)
     f("zwei Urteilszeilen", "selbsttest", "== APK-ASSET-GATE-OK: x ==\n" + s, 0, 2)
     f("zwei Urteilszeilen (FEHLER davor)", "quellbaum", "== SELBSTTEST-FEHLER: x ==\n" + q, 0, 2)
+    # Nachbesserung 1: jede Alternative des Urteilszeilen-Musters einmal als fremde Zeile davor (Gegenprobe D5/R6)
+    f("zwei Urteilszeilen (ABWEICHUNG davor)", "apk", "== APK-ASSET-GATE-ABWEICHUNG: x ==\n" + a, 0, 2)
+    f("zwei Urteilszeilen (PAKET-OK davor)", "selbsttest", "== APK-ASSET-GATE-PAKET-OK: x ==\n" + s, 0, 2)
+    f("zwei Urteilszeilen (QUELLBAUM-FEHLER davor)", "paket", "== APK-ASSET-GATE-QUELLBAUM-FEHLER: x ==\n" + p, 0, 2)
+    # Nachbesserung 1: "[FEHLER]" zaehlt IRGENDWO in der Zeile, nicht nur am Anfang (Gegenprobe D1)
+    f("[FEHLER] tiefer eingerueckt im Lauf", "apk", "      Probe 3: [FEHLER] x\n" + a, 0, 2)
     f("unbekannter Modus", "xyz", s, 0, 2)
     # selbsttest
     f("st: Schluss ohne n/n Faelle", "selbsttest", _ersetze(S, "5/5 Faelle (", "5/5 Fall ("), 0, 2)
@@ -521,6 +537,10 @@ AEQUIVALENT = {
     # der paket-Zweig ist der letzte: jeder andere bekannte Modus hat vorher mit ende() geendet, ein unbekannter oben
     'if-Bedingung -> True: modus == "paket"':
         "nur modus == 'paket' erreicht diese Stelle (alle anderen Zweige enden vorher mit ende())",
+    # Fallzeilen-Muster \[(ok|FEHLER)\]: jede Zeile mit "[FEHLER]" hat schon die Schleife davor ("[FEHLER]" in z) mit 2
+    # beendet - die Alternative FEHLER wird nie mehr gebraucht (Nachbesserung 1, Operator R6)
+    r'''Regex R6 Gruppe bei 5: Alternative 'FEHLER' weg: r" \[(ok|FEHLER)\] (\d+) (.*) rc=(-?\d+) \(soll (-?\d+)\)(.*)"''':
+        "eine [FEHLER]-Fallzeile enthaelt '[FEHLER]' und endet schon in der Schleife davor mit 2",
 }
 
 
@@ -615,6 +635,34 @@ def _regex_lockerungen(p, voll):
     for k, (a, e, art) in enumerate(st):
         if art == "zeichen":
             dazu("Regex R5 Zeichen %d %r weg" % (k, p[a:e]), p[:a] + p[e:])
+    for a, alt_anf, alt_end in _regex_alternativen(p):
+        for j, (x, y) in enumerate(zip(alt_anf, alt_end)):
+            rest = [p[u:v] for i, (u, v) in enumerate(zip(alt_anf, alt_end)) if i != j]
+            dazu("Regex R6 Gruppe bei %d: Alternative %r weg" % (a, p[x:y]), p[:alt_anf[0]] + "|".join(rest) + p[alt_end[-1]:])
+    return out
+
+
+def _regex_alternativen(p):
+    """-> je Gruppe (auf jeder Tiefe) mit mindestens zwei Alternativen: (Position der Klammer, Anfaenge, Enden)"""
+    out, stapel, i, n = [], [], 0, len(p)
+    while i < n:
+        c = p[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "[":
+            i += 1
+            while i < n and p[i] != "]":
+                i += 2 if p[i] == "\\" else 1
+        elif c == "(":
+            stapel.append((i, [i + 1]))
+        elif c == "|" and stapel:
+            stapel[-1][1].append(i + 1)
+        elif c == ")" and stapel:
+            a, anf = stapel.pop()
+            if len(anf) > 1:
+                out.append((a, anf, [x - 1 for x in anf[1:]] + [i]))
+        i += 1
     return out
 
 

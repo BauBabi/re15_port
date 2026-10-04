@@ -66,15 +66,20 @@
 #   (ende(1, ...) -> ende(0, ...)) machte aus der richtigen ABWEICHUNG des echten Gates ANDROID-GATES-OK. Jetzt:
 #   - der Code steht in release/gate_urteil.py (wortgleich, nur als Funktion) und wird wie das Gate festgehalten: private
 #     Kopie neben der des Gates (gate_festhalten), sha256 = release/gate_urteil.sha256, vor JEDER Nutzung erneut geprueft;
-#   - gate_festhalten laesst dessen Selbsttest laufen (feste Gate-Ausgaben + Mutanten des Urteilscodes: jede
-#     Ein-Stellen-Aenderung muss ein Fall erkennen) und prueft die Schlusszeile HIER in bash, mit Mindestzahlen
-#     (GATE_URTEIL_MIN_*): weniger Faelle/Mutanten oder mehr "gleichwertige" als festgehalten = Abbruch;
+#   - gate_festhalten laesst dessen Selbsttest laufen (feste Gate-Ausgaben + Mutanten der Funktion urteil() - Umfang
+#     der Operatoren im Kopf von release/gate_urteil.py; Meldungstexte, main() und urteil_rufen() werden NICHT mutiert)
+#     und prueft die Schlusszeile HIER in bash, mit Mindestzahlen (GATE_URTEIL_MIN_*): weniger Faelle/Mutanten oder
+#     mehr "gleichwertige" als festgehalten = Abbruch; jede dieser bash-Pruefungen hat in ctest
+#     unit_r35_android_pruefkette eine eigene Negativ-Kontrolle (N10-N18, Nachbesserung 1);
 #   - gate_laufen verlangt fuer ein OK-Urteil ZUSAETZLICH, unabhaengig vom Urteilscode: Rueckgabe 0 des Gates und die
 #     Urteilszeile "Gate-Urteil (<modus>, Rueckgabe 0): " in der Ausgabe des Urteils (zweite Instanz - ein richtiges
 #     Gate kann nicht mehr ueberstimmt werden);
 #   - ctest unit_r35_android_pruefkette (re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh) faehrt das
 #     alles bei jedem Suite-Lauf, mit Negativ-Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes
-#     Urteil), die ROT werden muessen.
+#     Urteil, je Pruefzeile des bash-Urteils eine Attrappe, veraenderte private Kopien), die ROT werden muessen.
+#   Wer eine Pruefzeile in gate_urteil_selbsttest/gate_laufen/gate_*pin_pruefen aendert oder neu schreibt: eine
+#   Negativ-Kontrolle dazu in test_r35_android_pruefkette.sh (Streich-Messung: analysis/befunde_runde35/N_android.md,
+#   Nachbesserung 1).
 #   Wer gate_urteil.py aendert: --selbsttest muss OK sein (sonst Fall ergaenzen), dann den neuen sha256 in
 #   release/gate_urteil.sha256 festhalten und ggf. GATE_URTEIL_MIN_* anpassen - im selben Commit.
 # =============================================================================
@@ -90,14 +95,15 @@ GATE_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_asset_gate.sha
 # hier senken (git-Diff), nicht still.
 GATE_SELBSTTEST_MIN_FAELLE=261
 GATE_SELBSTTEST_MIN_INNEN=148
-# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand: 119 Faelle, 257 von 260 Mutanten
-# erkannt, 3 als gleichwertig begruendet). Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum
+# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 1: 243 Faelle, 781 von
+# 785 Mutanten erkannt, 4 als gleichwertig begruendet - vorher 119 / 257 von 260 / 3; seitdem werden auch Zeichenketten
+# und Regex-Muster mutiert, Abnahme 0 M1). Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum
 # gleichwertigen erklaert statt einen Fall zu schreiben, muss das HIER sichtbar tun.
 GATE_URTEIL_QUELLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.py"
 GATE_URTEIL_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.sha256"
-GATE_URTEIL_MIN_FAELLE=119
-GATE_URTEIL_MIN_ERKANNT=257
-GATE_URTEIL_MAX_GLEICH=3
+GATE_URTEIL_MIN_FAELLE=243
+GATE_URTEIL_MIN_ERKANNT=781
+GATE_URTEIL_MAX_GLEICH=4
 GATE_URTEIL_KOPIE=""              # gate_festhalten: gepruefte private Kopie von release/gate_urteil.py
 GATE_URTEIL_GEPRUEFT=""           # sha256 der Urteils-Kopie, deren Selbsttest in dieser Shell bestanden hat
 if [[ -n "${APK_GATE_DATEI:-}" ]]; then
