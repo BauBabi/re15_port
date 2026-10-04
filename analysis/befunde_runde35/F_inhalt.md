@@ -352,3 +352,14 @@ test_r35_inhalt_zombies `mess` | `suche` | `tempo <i> [0/1]` | `karte` | `sca <r
   Marvin's Notes / Armory Notice: Code 4312 / 5632 gruen; Doppeltueren P0CD/P1DG/P1DK/P1DL/P1BD
   mit spiegelgleichen Griffen; ROOM1010/1220: Zombies starten ausserhalb der Sprungweite, man kann
   sofort umdrehen und wieder hinaus.
+
+## Suite
+Lauf 1 (`local_build.sh all`): 480/482 — rot: `unit_r34n_e_dokumente` (Pin "Pool = Raum-Props +
+Dokument hinten angehaengt": meine Karte stand hinter dem Dokument-Prop) und
+`integration_r30_irons_tisch_bild` (Fenster-Haken, ROOM1150, einzeln nachgefahren: gruen 37 s).
+Behebung: `re15_inhalt_r35_install` steht in scd_room_setup.c und main.c jetzt direkt VOR
+`re15_dokumente_install` (statt am Blockende) — ⛔ Abweichung vom VERTRAG 1.4 "am Ende des Blocks",
+begruendet durch den Riegel der Runde 34 (Dokument bleibt das zuletzt angehaengte Prop); eigene Zeile
+mit Kommentar "Runde 35 Spur F", keine fremde Zeile veraendert. Danach `unit_r34n_e_dokumente` gruen.
+Lauf 2 (nach der Umstellung, Stand dieses Commits): `=== LOCAL-BUILD-OK (all) — Tests 482/482`
+(478 + 4 Riegel dieser Spur).
