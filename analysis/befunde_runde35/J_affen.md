@@ -1526,7 +1526,7 @@ Scratch: `scratchpad/jnb5/`.
 
 ### Stand (fortlaufend)
 - [x] P1 Messung Stufen (Original GDB / Port)  - [x] P1 Beleg  - [x] P1 Aenderung/Riegel  - [x] P1 Dossier (a)/(b)
-- [x] P2 (a) Kausal-Aussage  - [x] P2 (b) Pin/Empfindlichkeit  - [x] P2 (c) OFFEN  - [ ] Suite  - [x] H2 Sprungmarke  - [x] exe j1/t1/o7
+- [x] P2 (a) Kausal-Aussage  - [x] P2 (b) Pin/Empfindlichkeit  - [x] P2 (c) OFFEN  - [x] Suite  - [x] H2 Sprungmarke  - [x] exe j1/t1/o7
 
 ### P1 — Messung vorher: welche Stufe der Gorilla-Wurzel weicht ab (Original GDB je Stufe gegen Port)
 - Werkzeug `jnb5/gdbstufe.py` (DuckStation-GDB-Server, settings.ini [Debug] EnableGDBServer nur waehrend des Laufs,
@@ -1696,9 +1696,9 @@ Scratch: `scratchpad/jnb5/`.
   (Weg 2): kein Biss bis T495, e1 3925 / e2 4996**; **Empfindlichkeit Lauf 0: 24 Starts +-1/+-2 um T290 -> 4 Ruhelage,
   16 Biss, 0 gleich wie Lauf 0** (Pruefung verlangt Streuung, pinnt keinen Ausgang); der Ruhelage-/Biss-Pin in Lauf 0
   ist entfernt.
-- Einzeln gefahren vor der Suite (`jnb5/ctest_r35_a.log`, `jnb5/r/`): 22 Riegel (17 r35_affen + maggot/member/plc_back)
-  gruen nach den Riegel-Aenderungen (griff war am Zwischenstand rot: Pin Lauf 0 + Schranke 200 in T290 — beide oben
-  ersetzt und begruendet).
+- Vor der Suite (`jnb5/ctest_r35_a.log`, nach (13)/(14), vor den Riegel-Aenderungen): 21/22 gruen, rot nur `griff` (Pin Lauf 0
+  und Schranke 200 in T290 — beide oben ersetzt und begruendet). Nach den Riegel-Aenderungen griff/takt/szene einzeln
+  gruen (`jnb5/r/griff2.txt`, `takt3.txt`, `szene3.txt`), alle 22 in der Suite gruen.
 
 ### OFFEN (Stand Nachbesserung 5; ersetzt die Liste "Stand Nachbesserung 4")
 - **N4-1 geschlossen**: war eine Nebenwirkung von Nachbesserung 4 (e2 Zyklus 104 -> 103); behoben durch (13)/(14), Riegel
@@ -1752,3 +1752,13 @@ Scratch: `scratchpad/jnb5/`.
 | P2 (b) Pin Lauf 0 | Ausgang chaotisch | 24 Starts +-1/+-2 um Lauf-0-T290: 4 Ruhelage, 16 Biss, 0 gleich | Pin entfernt; N1 am Original-Zustand (Weg 2); Empfindlichkeit im Riegel; Schranke T265-T289 <= 100 | griff gruen; Weg 2 kein Biss, e1 3925 / e2 4996 |
 | P2 (c) Startversatz unter OFFEN | Rest 1-2 Einheiten je Bild (Biss-Ueberblendung, aec4) | gdbstufe F210+ | OFFEN N5-1 mit Messweg | — |
 | H2 | Doku-Marke | enemy_ai_common.c:8894 `ab_b:` | re15_affen.h (10) | — |
+
+### Suite (Nachbesserung 5)
+- `bash re15_port/tools/local_build.sh all` am Endstand Code (`jnb5/suite1.log`, Tests 1141,4 s): `test OK — 495/495 bestanden` /
+  **`=== LOCAL-BUILD-OK (all) — Tests 495/495`** (Schranke 478). Im selben Lauf gruen: alle 17 unit_r35_affen_*, die fuenf
+  Fenster-Haken (weste_load_pin 5,7 s, boot_bg_pin 17,7 s, dark_start_pin 17,6 s, relatch_pin 22,1 s, save_counter_pin 13,5 s)
+  und alle Riegel, die Leons Treffer-Rueckstoss beruehren (keiner musste fuer (14) angepasst werden).
+- re15_pc.exe nach der Suite md5 f4f4fbc3... (neu gelinkt nach dem Kommentar-Haken H2); j1 mit genau dieser exe wiederholt
+  (`jnb5/exe/j2`): Freigabe (-7138,-12372), Bisse +468 ... +1139 und Tod +1194 identisch mit j1 und dem Original.
+- Abschluss-Commit: fix(r35-affen): Nachbesserung 5 (affen_11c0.c (13); game_step_common.c (14), 2 Haken; re15_affen.h (13)/H2;
+  test_r35_affen.c takt/szene/griff).
