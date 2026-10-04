@@ -846,3 +846,52 @@ Nachbesserung aendert kein Urteil, nur Faelle/Stoerungen/Schlusszeile; Selbsttes
 | Hinweis H2 (fester Modus) | J6 | nur die Kette | N25e rot |
 | Hinweis H3 (Mutanten ohne release-Dateien) | - | - | Operator I erzeugt keinen Mutanten, der GATE_QUELLE/GATE_URTEIL_QUELLE benutzt; nb3_bash_aenderungen.py legt die release-Dateien neben jede Kopie |
 | Hinweis H4 (neue Funktion nicht mutiert) | - | - | unveraendert: FUNKTIONEN im Kopf von bash_urteil_mutanten.py pflegen (OFFEN) |
+
+### Nachbesserung 3 - Konstanten (alle PORT-WAHL bzw. gemessen; kein RE1.5/RE2-Original - Port-Infrastruktur)
+| Konstante | Wert | Herkunft |
+|---|---|---|
+| GATE_URTEIL_MIN_FAELLE (apk_pruefen.sh) | 777 | gemessen: `--selbsttest` 777/777 (280 + 5 N3-Faelle + 492 Stoerungen) |
+| GATE_URTEIL_MIN_ERKANNT | 887 (unveraendert) | gemessen: 887/894 - urteil() unveraendert, also dieselben Mutanten |
+| GATE_URTEIL_MAX_GLEICH | 7 (unveraendert) | gemessen |
+| GATE_URTEIL_MAX_UNGEPRUEFT (neu) | 102 | gemessen: Stoerungen mit Soll 0 nach UNGEPRUEFT (10 Eintraege) |
+| release/gate_urteil.sha256 | 4aa6bdfa3ef9f043bf109ce02df27d1fff2c39635ad606e595cbf5dba9d32753 | sha256sum release/gate_urteil.py (LF) |
+| Stoerung Zahl +-1, Zusatz = dieselbe Zahl, Paar -1/+1 | PORT-WAHL | kleinste Abweichung, die eine Pruefung einer Zahl/Spalte/Summe sichtbar macht |
+| N26 Grenze MIN-1 / MIN; N27 unzip 12/13/14 | aus apk_pruefen.sh gelesen | GATE_SELBSTTEST_MIN_FAELLE/_INNEN = 261/148; 12 Dateien + Manifest = 13 |
+
+### Nachbesserung 3 - Tests (probes/r35_android.cmake; KEIN neuer ctest, die Spur bleibt bei +5)
+| ctest | misst | Aenderung in NB3 |
+|---|---|---|
+| unit_r35_android_pruefkette | echte Kette: P0 (Urteils-Selbsttest 777/887/7/102), P1/P2, N1-N9, **N26a-c/N27a-c/N28** (echtes Urteil an der Grenze 261/148 bzw. unzip n+1), urteil_kontrollen.sh (102) | N26-N28, 6-Zahlen-Schlusszeile in N8 |
+| unit_r35_android_bash_mutanten | 328 Mutanten des bash-Urteils (A-I), je Mutant urteil_kontrollen.sh --schnell | Operator I (86) |
+| unit_r35_android_abgleich / _anzeige / _konflikt, unit_r34a_asset_abgleich | Punkt 1/2 | unveraendert (kein C-Code beruehrt) |
+Die Stoerungsfaelle laufen im Urteils-Selbsttest, also in P0 jeder Kette und vor jeder Nutzung in build_android.sh/
+make_package.sh (gate_festhalten).
+
+### Nachbesserung 3 - OFFEN
+- Wie bisher (Punkt 2, laut Abnahme 1/2 kein Mangel): echtes APK-A -> APK-B-Update mit dem H8-Muster auf dem Emulator.
+  Kein APK-Neubau in NB3: kein C-/Gradle-Code geaendert; die Kette ist dieselbe Funktion mit strengerem Selbsttest und
+  mehr Kontrollen, und sie laeuft mit echtem Gate + Urteil in jedem Suite-Lauf (P0-P2, N1-N9, N26-N28).
+- Was das Urteil HEUTE nicht liest, steht jetzt sichtbar in gate_urteil.py `UNGEPRUEFT` (10 Eintraege, 102 Stoerungen):
+  apk-Baumzeilen (nur die SUMME zaehlt), die Baumzahl k im Modus apk, die TORSE.VBS-Bytezahlen, Anzahl/Lesbarkeit der
+  Tuer-Soll-Zeilen neben einer erkannten, Kopfzeilen, Laufzeit, Fallbeschreibung, quellbaum-Paare. Das sind keine
+  entfernbaren Regeln (es gibt dort keine), sondern Stellen ohne Regel. Sie strenger zu pruefen, aendert das Urteil ueber
+  ECHTE Gate-Ausgaben und gehoert in eine eigene Runde mit einem echten APK-Lauf; der Weg ist vorbereitet: Eintrag aus
+  UNGEPRUEFT streichen -> die Stoerungen haben automatisch Soll 2 -> Regel im Urteil schreiben -> MAX_UNGEPRUEFT senken.
+- Hinweis H4 der Abnahme 2 gilt weiter: eine Pruefung in einer NEUEN bash-Funktion wird erst mutiert, wenn sie in
+  `FUNKTIONEN` (bash_urteil_mutanten.py) steht; ebenso deckt Operator I nur Aufrufe von "$PY" und den Pruef-Funktionen
+  sowie `local x="$n"` (nicht `$( ... )`-Argumente wie in `apk_kennung "$datei"` - deren Fehler bricht ueber `|| die`
+  ab und faellt in P9/D4/D9).
+- Gemessen ist die Wirksamkeit an 32 + 29 + 32 Python- und 14 + 13 + 17 bash-Aenderungen (nb1/nb2/nb3) und 7 + 15 + 17
+  Ketten-Varianten - nicht fuer jede denkbare Aenderung bewiesen.
+- Laufzeit (unter Last parallel laufender Messungen): bash_mutanten 782 s, Kette 490 s; allein deutlich kuerzer
+  (Suite-Werte im Abschluss).
+
+### Nachbesserung 3 - Fuer den Nutzer / Orchestrator
+- Keine Sprachzeilen, keine neuen Assets (shared_assets unveraendert), nichts fuers Paket-Gate.
+- Pins/Mindestzahlen fuer den Merge: `release/gate_urteil.sha256` = `4aa6bdfa3ef9f043bf109ce02df27d1fff2c39635ad606e595cbf5dba9d32753`;
+  `GATE_URTEIL_MIN_FAELLE/MIN_ERKANNT/MAX_GLEICH/MAX_UNGEPRUEFT` = 777/887/7/102. `release/apk_asset_gate.py` und sein Pin
+  unveraendert (f73c3b1a...). release/RELEASE_NOTES.md und make_package.sh nicht beruehrt.
+- Die Schlusszeile des Urteils-Selbsttests hat jetzt sechs Zahlen (`..., u Stoerungen begruendet ungeprueft ==`); wer die
+  Kette anderswo nachbaut, liest sie mit dem Muster aus apk_pruefen.sh gate_urteil_selbsttest.
+- Merge: die Spur bringt weiter +5 Tests (abgleich, anzeige, konflikt, pruefkette, bash_mutanten); master hatte
+  RE15_MIN_TESTS 517 (6e1a3771).
