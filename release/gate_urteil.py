@@ -36,6 +36,7 @@ exec "$PY" "$0" "$@" #
 # Nur Python-Standardbibliothek (>= 3.8: ast.get_source_segment).
 # =============================================================================
 import ast
+import functools
 import re
 import sys
 
@@ -67,9 +68,11 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
 
     def tuer_soll():
         t = [m for m in (re.fullmatch(r"   Tuer-Soll: .* (\d+)/(\d+) wie die Engine-Tabelle .*", z) for z in zeilen) if m]
-        if not t or any(m.group(1) != m.group(2) or int(m.group(2)) == 0 for m in t):
+        # Nachbesserung 1: als Zahlen vergleichen (das Gate druckt "%d/%d", apk_asset_gate.py _tuer_zeilen_drucken) -
+        # so endet ein gelockertes Muster (\d+ -> .*) bei einer Nicht-Zahl in einer Ausnahme statt still gleich
+        if not t or any(int(m.group(1)) != int(m.group(2)) or int(m.group(2)) == 0 for m in t):
             ende(2, "Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage")
-        return "%d Tuer-Soll-Zeilen g/g" % len(t)
+        return len(t)                             # nur fuer den Grund in ende(0, ...) (Meldungstext)
 
     if not zeilen:
         ende(2, "KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)")
@@ -107,7 +110,8 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         if sorted(int(f.group(2)) for f in faelle) != list(range(1, n + 1)):
             ende(2, "%d Fallzeilen, Nummern nicht genau 1..%d - keine Aussage" % (len(faelle), n))
         for f in faelle:
-            if f.group(1) != "ok" or f.group(4) != f.group(5) or f.group(6).strip():
+            # Nachbesserung 1: rc/soll als Zahlen (das Gate druckt "rc=%d (soll %d)", apk_asset_gate.py selbsttest())
+            if f.group(1) != "ok" or int(f.group(4)) != int(f.group(5)) or f.group(6).strip():
                 ende(2, "Fallzeile %s nicht [ok] mit rc = soll: %r" % (f.group(2), f.group(0).strip()[:140]))
         ende(0, "SELBSTTEST-OK %d/%d, jede Fallzeile [ok] mit rc = soll, innere Proben %d/%d (Mindestzahlen %d/%d)"
              % (n, n, a, b, min_faelle, min_innen))
@@ -127,13 +131,11 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
             if not (t[0] == t[1] == t[2] == t[3] > 0):
                 ende(2, "%s: Quelle/APK/gleich %r nicht gleich bzw. 0" % (label, t))
         genau_eine(r"   TORSE\.VBS: Quelle (\d+) B, APK (\d+) B, sha256 gleich", "TORSE.VBS ... sha256 gleich")
-        zusatz = ""
         if apk_eintraege:
             if int(apk_eintraege) != a + 1:
                 ende(2, "unzip zaehlt %s Eintraege unter assets/, das Gate %d Asset-Dateien + Manifest" % (apk_eintraege, a))
-            zusatz = " = unzip-Zaehlung - 1"
         ende(0, "APK-ASSET-GATE-OK: %d Dateien, Quelle = APK%s = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS "
-                "gleich, %s" % (n, zusatz, tuer_soll()))
+                "gleich, %d Tuer-Soll-Zeilen g/g" % (n, " = unzip-Zaehlung - 1" if apk_eintraege else "", tuer_soll()))
     if modus == "quellbaum":
         m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen, Tuer-Soll erfuellt", rest)
         if not m:
@@ -142,7 +144,8 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         baum = [int(x.group(1)) for x in (re.fullmatch(r"   \S+\s+(\d+) Dateien", z) for z in zeilen) if x]
         if n <= 0 or len(baum) != k or sum(baum) != n or 0 in baum:
             ende(2, "Baumzeilen %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
-        ende(0, "APK-ASSET-GATE-QUELLBAUM-OK: %d Dateien in %d Baeumen (Summe der Baumzeilen), %s" % (n, k, tuer_soll()))
+        ende(0, "APK-ASSET-GATE-QUELLBAUM-OK: %d Dateien in %d Baeumen (Summe der Baumzeilen), %d Tuer-Soll-Zeilen g/g"
+             % (n, k, tuer_soll()))
     if modus == "paket":
         m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen bytegleich, nichts zusaetzlich", rest)
         if not m:
@@ -151,7 +154,8 @@ def urteil(modus, text, rc, min_faelle, min_innen, apk_eintraege):
         baum = [(int(x.group(1)), int(x.group(2))) for x in (re.fullmatch(r"   \S+\s+(\d+)\s+(\d+)", z) for z in zeilen) if x]
         if n <= 0 or len(baum) != k or any(qq != gg or qq == 0 for qq, gg in baum) or sum(gg for _qq, gg in baum) != n:
             ende(2, "Baumzeilen (Quelle, gleich) %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
-        ende(0, "APK-ASSET-GATE-PAKET-OK: %d Dateien in %d Baeumen, je Baum Quelle = gleich, %s" % (n, k, tuer_soll()))
+        ende(0, "APK-ASSET-GATE-PAKET-OK: %d Dateien in %d Baeumen, je Baum Quelle = gleich, %d Tuer-Soll-Zeilen g/g"
+             % (n, k, tuer_soll()))
     # hierher kommt kein bekannter Modus (jeder Zweig endet mit ende()); urteil_rufen wertet "ohne Ergebnis" als 2
 
 
@@ -224,6 +228,161 @@ def _ersetze(zeilen, alt, neu, n=1):
     t = "\n".join(zeilen)
     assert t.count(alt) >= 1, alt
     return t.replace(alt, neu, n)
+
+
+def _in_zeile(zeilen, anfang, alt, neu, alle=False):
+    """in der Zeile, die mit anfang beginnt (alle=True: in JEDER solchen Zeile), das erste alt durch neu ersetzen"""
+    out, n = [], 0
+    for z in zeilen:
+        if z.startswith(anfang) and alt in z and (alle or n == 0):
+            z, n = z.replace(alt, neu, 1), n + 1
+        out.append(z)
+    assert n >= 1 and (alle or sum(z.startswith(anfang) for z in zeilen) == 1), (anfang, alt)
+    return "\n".join(out)
+
+
+def _wort_in_zeile(zeilen, anfang, wort, alle=False):
+    """in der Zeile/den Zeilen mit anfang das erste ganze Wort wort durch 'XX' ersetzen (hinter dem Anfang)"""
+    muster = r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % re.escape(wort)
+    out, n = [], 0
+    for z in zeilen:
+        if z.startswith(anfang) and (alle or n == 0) and re.search(muster, z[len(anfang):]):
+            z, n = anfang + re.sub(muster, "XX", z[len(anfang):], count=1), n + 1
+        out.append(z)
+    assert n >= 1, (anfang, wort)
+    return "\n".join(out)
+
+
+def _faelle_muster(f, S, A, Q, P):
+    """Nachbesserung 1 (Abnahme 0, M1): Gegenbeispiele zu jedem Muster, das das Urteil liest - jedes mit festem Soll.
+    Je gelesene Zeile: (a) letztes Zeichen weg bzw. falscher Schluss (das Muster verlangt die GANZE Zeile - faengt jede
+    Lockerung "Rest -> .*", z.B. A5/A6/A11 der Abnahme), (b) je Literal-Wort ein anderes Wort, (c) je Zahlfeld 'x',
+    (d) je Zwischenraum-Pflicht die Zeile ohne Zwischenraum. Soll 2 = keine Aussage, wo nichts anderes steht."""
+    # ---- selbsttest: Schlusszeile, Innere Proben, Fallzeilen
+    SCHLUSS_S = "== SELBSTTEST-OK:"
+    f("st/M: Schluss ohne Klammerteil (A5)", "selbsttest", _in_zeile(S, SCHLUSS_S, " (gute APKs angenommen, jede Faelschung "
+                                                                     "abgelehnt) ==", " =="), 0, 2)
+    f("st/M: Schluss, Klammer nicht geschlossen", "selbsttest", _in_zeile(S, SCHLUSS_S, "abgelehnt) ==", "abgelehnt =="), 0, 2)
+    f("st/M: Schluss endet ' ==X'", "selbsttest", _in_zeile(S, SCHLUSS_S, ") ==", ") ==X"), 0, 2)
+    f("st/M: Schluss endet ' =' (ein = fehlt)", "selbsttest", _in_zeile(S, SCHLUSS_S, ") ==", ") ="), 0, 2)
+    f("st/M: Schluss '-OK-X:'", "selbsttest", _in_zeile(S, SCHLUSS_S, "-OK:", "-OK-X:"), 0, 2)
+    f("st/M: Schluss x/5 Faelle", "selbsttest", _in_zeile(S, SCHLUSS_S, "5/5 Faelle", "x/5 Faelle"), 0, 2)
+    f("st/M: Schluss 5/x Faelle", "selbsttest", _in_zeile(S, SCHLUSS_S, "5/5 Faelle", "5/x Faelle"), 0, 2)
+    IP = "   Innere Proben:"
+    f("st/M: Innere Proben, Klammer nicht geschlossen", "selbsttest", _in_zeile(S, IP, "v2)", "v2"), 0, 2)
+    f("st/M: Innere Proben ohne Klammerteil", "selbsttest", _in_zeile(S, IP, " (_ant_passt, manifest_lesen v2)", ""), 0, 2)
+    f("st/M: 'Aeussere Proben'", "selbsttest", _in_zeile(S, IP, "Innere", "Aeussere"), 0, 2)
+    f("st/M: 'Innere Probe:'", "selbsttest", _in_zeile(S, IP, "Proben:", "Probe:"), 0, 2)
+    f("st/M: Innere Proben x/3", "selbsttest", _in_zeile(S, IP, "3/3", "x/3"), 0, 2)
+    f("st/M: Innere Proben 3/x", "selbsttest", _in_zeile(S, IP, "3/3", "3/x"), 0, 2)
+    f("st/M: Fallzeile 'rx=' statt 'rc='", "selbsttest", _in_zeile(S, "   [ok] 02", "rc=", "rx="), 0, 2)
+    f("st/M: Fallzeile '(sol 1)'", "selbsttest", _in_zeile(S, "   [ok] 02", "(soll", "(sol"), 0, 2)
+    f("st/M: Fallzeile rc=x", "selbsttest", _in_zeile(S, "   [ok] 02", "rc=1", "rc=x"), 0, 2)
+    f("st/M: Fallzeile (soll x)", "selbsttest", _in_zeile(S, "   [ok] 02", "(soll 1)", "(soll x)"), 0, 2)
+    # ---- Befund-Schluss (gleiches Muster in jedem Modus): Text hinter ' ==' -> keine Befund-Zeile -> keine Aussage
+    f("M: FEHLER-Schluss endet ' ==X', Rueckgabe 1", "apk", "   x\n== APK-ASSET-GATE-FEHLER: 1 Befunde ==X", 1, 2)
+    f("M: 'FEHLERHAFT:'-Schluss, Rueckgabe 1", "apk", "   x\n== APK-ASSET-GATE-FEHLERHAFT: 1 Befunde ==", 1, 2)
+    # ---- Urteilszeilen-Zaehlung: nur MARKE-OK/-FEHLER/-ABWEICHUNG als ganzes Wort ist eine Urteilszeile (\b)
+    f("M: Zeile '== SELBSTTEST-OKAY: x ==' ist keine Urteilszeile", "selbsttest",
+      "\n".join(S[:-1] + ["== SELBSTTEST-OKAY: x ==", S[-1]]), 0, 0)
+    f("M: Zeile '== SELBSTTEST-HINWEIS: x ==' ist keine Urteilszeile", "selbsttest",
+      "\n".join(S[:-1] + ["== SELBSTTEST-HINWEIS: x ==", S[-1]]), 0, 0)
+    # ---- apk: Schlusszeile
+    SCHLUSS_A = "== APK-ASSET-GATE-OK:"
+    f("apk/M: Schluss 'sie lies' (letztes Zeichen weg)", "apk", _in_zeile(A, SCHLUSS_A, "liest ==", "lies =="), 0, 2)
+    for w in ("Dateien", "in", "Baeumen", "bytegleich", "Tuer", "Soll", "erfuellt", "Manifest", "stimmt", "ZIP",
+              "Struktur", "wie", "Android", "sie"):
+        f("apk/M: Schluss Wort '%s' anders" % w, "apk", _wort_in_zeile(A, SCHLUSS_A + " ", w), 0, 2)
+    f("apk/M: Schluss x Dateien", "apk", _in_zeile(A, SCHLUSS_A, "OK: 12 Dateien", "OK: x Dateien"), 0, 2)
+    f("apk/M: Schluss in x Baeumen", "apk", _in_zeile(A, SCHLUSS_A, "in 1 Baeumen", "in x Baeumen"), 0, 2)
+    # ---- apk: SUMME (1-Datei-Log fuer die Zwischenraum-Faelle: "11" teilt sich nur bei n = 1 wieder in 1 + 1)
+    A1 = _apk_log(1, 7)
+    for k in range(4):
+        w = ["12", "12", "12", "4096"]
+        w[k] = "x"
+        f("apk/M: SUMME Feld %d = x" % (k + 1), "apk", _mit(A, "   SUMME", "   SUMME   %s   %s   %s   %s" % tuple(w)), 0, 2)
+    f("apk/M: SUMME ohne Zwischenraum nach SUMME", "apk", _mit(A1, "   SUMME", "   SUMME1   1   1   7"), 0, 2)
+    for k, z in enumerate(("   SUMME   11   1   7", "   SUMME   1   11   7", "   SUMME   1   1   17")):
+        f("apk/M: SUMME ohne Zwischenraum %d" % (k + 2), "apk", _mit(A1, "   SUMME", z), 0, 2)
+    # ---- apk: Manifest-Zeile
+    MF = "   Manifest:"
+    f("apk/M: Manifest, Klammer nicht geschlossen", "apk", _in_zeile(A, MF, "Datei)", "Datei"), 0, 2)
+    f("apk/M: Manifest ohne Klammerteil", "apk", _in_zeile(A, MF, " (Format v2, sha256 je Datei)", ""), 0, 2)
+    for w in ("Manifest", "Zeilen", "Bytes"):
+        f("apk/M: Manifest Wort '%s' anders" % w, "apk", _in_zeile(A, MF, w, "XX"), 0, 2)
+    f("apk/M: Manifest x Zeilen", "apk", _in_zeile(A, MF, "12 Zeilen", "x Zeilen"), 0, 2)
+    f("apk/M: Manifest x Bytes", "apk", _in_zeile(A, MF, "4096 Bytes", "x Bytes"), 0, 2)
+    f("apk/M: Manifest ohne Zwischenraum", "apk", _in_zeile(A, MF, "Manifest:   12", "Manifest:12"), 0, 2)
+    # ---- apk: Tuerarchiv-Zeilen (dasselbe Muster fuer RE2/DOOR und RE15DOOR: eine reicht je Mutant)
+    D = "   RE2/DOOR:"
+    for w in ("Quelle", "APK", "sha256", "gleich"):
+        f("apk/M: RE2/DOOR Wort '%s' anders" % w, "apk", _wort_in_zeile(A, D, w), 0, 2)
+    for k, (alt, neu) in enumerate((("Quelle 27", "Quelle x"), ("APK 27", "APK x"), ("gleich 27/", "gleich x/"),
+                                    ("/27", "/x"))):
+        f("apk/M: RE2/DOOR Zahl %d = x" % (k + 1), "apk", _in_zeile(A, D, alt, neu), 0, 2)
+    f("apk/M: RE2/DOOR ohne Zwischenraum", "apk", _in_zeile(A, D, "RE2/DOOR:  Quelle", "RE2/DOOR:Quelle"), 0, 2)
+    # ---- apk: TORSE.VBS (Wortlaut des Gates bei Abweichung: apk_asset_gate.py pruefen() "sha256 NICHT gleich/...")
+    T = "   TORSE.VBS:"
+    f("apk/M: TORSE.VBS 'sha256 NICHT gleich/nicht geprueft' (A11)", "apk",
+      _in_zeile(A, T, "sha256 gleich", "sha256 NICHT gleich/nicht geprueft"), 0, 2)
+    f("apk/M: TORSE.VBS 'sha256 gleic' (letztes Zeichen weg)", "apk", _in_zeile(A, T, "gleich", "gleic"), 0, 2)
+    f("apk/M: TORSE.VBS Wort 'TORSE' anders", "apk", _in_zeile(A, T, "TORSE", "XX"), 0, 2)
+    for w in ("VBS", "Quelle", "APK", "sha256"):
+        f("apk/M: TORSE.VBS Wort '%s' anders" % w, "apk", _wort_in_zeile(A, "   TORSE", w), 0, 2)
+    f("apk/M: TORSE.VBS Quelle x B", "apk", _in_zeile(A, T, "Quelle 1234 B", "Quelle x B"), 0, 2)
+    f("apk/M: TORSE.VBS APK x B", "apk", _in_zeile(A, T, "APK 1234 B", "APK x B"), 0, 2)
+    # ---- Tuer-Soll (beide Zeilen gleich veraendert - eine einzelne fremde Zeile ignoriert das Urteil)
+    TS = "   Tuer-Soll:"
+    f("apk/M: Tuer-Soll 'Engine-Tabelle(' (Zwischenraum weg)", "apk", _in_zeile(A, TS, "Tabelle (", "Tabelle(", True), 0, 2)
+    for w in ("Tuer", "Soll", "wie", "die", "Engine", "Tabelle"):
+        f("apk/M: Tuer-Soll Wort '%s' anders" % w, "apk", _wort_in_zeile(A, TS if w not in ("Tuer", "Soll") else "   ", w,
+                                                                       True), 0, 2)
+    TP, TR = TS + " Port", TS + " RE2"
+    f("apk/M: Tuer-Soll x/n", "apk", _in_zeile(_in_zeile(A, TP, "30/30", "x/30").split("\n"), TR, "27/27", "x/27"), 0, 2)
+    f("apk/M: Tuer-Soll n/x", "apk", _in_zeile(_in_zeile(A, TP, "30/30", "30/x").split("\n"), TR, "27/27", "27/x"), 0, 2)
+    # ---- quellbaum
+    SCHLUSS_Q = "== APK-ASSET-GATE-QUELLBAUM-OK:"
+    for w in ("Dateien", "in", "Baeumen", "Tuer", "Soll"):
+        f("qb/M: Schluss Wort '%s' anders" % w, "quellbaum", _wort_in_zeile(Q, SCHLUSS_Q + " ", w), 0, 2)
+    f("qb/M: Schluss x Dateien", "quellbaum", _in_zeile(Q, SCHLUSS_Q, "OK: 12", "OK: x"), 0, 2)
+    f("qb/M: Schluss in x Baeumen", "quellbaum", _in_zeile(Q, SCHLUSS_Q, "in 2 Baeumen", "in x Baeumen"), 0, 2)
+    f("qb/M: Baumzeile '2 Dateie' (A6)", "quellbaum", _in_zeile(Q, "   synchro", "2 Dateien", "2 Dateie"), 0, 2)
+    f("qb/M: Baumzeile '2 Bytes'", "quellbaum", _in_zeile(Q, "   synchro", "2 Dateien", "2 Bytes"), 0, 2)
+    f("qb/M: Baumzeile x Dateien", "quellbaum", _in_zeile(Q, "   synchro", "2 Dateien", "x Dateien"), 0, 2)
+    f("qb/M: Baumzeile ohne Zwischenraum", "quellbaum", _in_zeile(Q, "   synchro", "synchro   2", "synchro2"), 0, 2)
+    # ---- paket
+    SCHLUSS_P = "== APK-ASSET-GATE-PAKET-OK:"
+    f("pk/M: Schluss 'nichts zusaetzlic'", "paket", _in_zeile(P, SCHLUSS_P, "zusaetzlich ==", "zusaetzlic =="), 0, 2)
+    for w in ("Dateien", "in", "Baeumen", "bytegleich", "nichts"):
+        f("pk/M: Schluss Wort '%s' anders" % w, "paket", _wort_in_zeile(P, SCHLUSS_P + " ", w), 0, 2)
+    f("pk/M: Schluss x Dateien", "paket", _in_zeile(P, SCHLUSS_P, "OK: 12", "OK: x"), 0, 2)
+    f("pk/M: Schluss in x Baeumen", "paket", _in_zeile(P, SCHLUSS_P, "in 2 Baeumen", "in x Baeumen"), 0, 2)
+    f("pk/M: Baumzeile Quelle x", "paket", _in_zeile(P, "   synchro", "2   2", "x   2"), 0, 2)
+    f("pk/M: Baumzeile gleich x", "paket", _in_zeile(P, "   synchro", "2   2", "2   x"), 0, 2)
+    f("pk/M: Baumzeile ohne Zwischenraum 1", "paket", _in_zeile(P, "   synchro", "synchro   2", "synchro2"), 0, 2)
+    f("pk/M: Baumzeile ohne Zwischenraum 2", "paket", _in_zeile(P, "   synchro", "2   2", "22"), 0, 2)
+    # ---- (e) Text hinter der gelesenen Zeile (das Muster gilt fuer die GANZE Zeile, re.fullmatch) - je Muster einer
+    for titel, modus, L, anfang, alt, neu in (
+            ("st/M: Schluss '(...) X'", "selbsttest", S, SCHLUSS_S, "abgelehnt) ==", "abgelehnt) X =="),
+            ("st/M: Innere Proben '(...) X'", "selbsttest", S, IP, "v2)", "v2) X"),
+            ("apk/M: Schluss 'sie liest X'", "apk", A, SCHLUSS_A, "liest ==", "liest X =="),
+            ("apk/M: SUMME mit Zusatz", "apk", A, "   SUMME", " 4096", " 4096 X"),
+            ("apk/M: Manifest '(...) X'", "apk", A, MF, "Datei)", "Datei) X"),
+            ("apk/M: RE2/DOOR '27/27 X'", "apk", A, D, "27/27", "27/27 X"),
+            ("apk/M: TORSE.VBS 'sha256 gleich, aber X'", "apk", A, T, "sha256 gleich", "sha256 gleich, aber X"),
+            ("qb/M: Schluss 'erfuellt X'", "quellbaum", Q, SCHLUSS_Q, "erfuellt ==", "erfuellt X =="),
+            ("qb/M: Baumzeile '2 Dateien X'", "quellbaum", Q, "   synchro", "2 Dateien", "2 Dateien X"),
+            ("pk/M: Schluss 'zusaetzlich X'", "paket", P, SCHLUSS_P, "zusaetzlich ==", "zusaetzlich X =="),
+            ("pk/M: Baumzeile '2   2 X'", "paket", P, "   synchro", "2   2", "2   2 X")):
+        f(titel, modus, _in_zeile(L, anfang, alt, neu), 0, 2)
+    # ---- (f) ein Pflicht-Leerzeichen weg, das ein benachbartes .* sonst schlucken wuerde
+    f("apk/M: 'Tuer-Soll:' ohne Leerzeichen dahinter", "apk", _in_zeile(A, TS, "Tuer-Soll: ", "Tuer-Soll:", True), 0, 2)
+    f("M: 'FEHLER:1 Befunde' (ohne Leerzeichen), Rueckgabe 1", "apk", "   x\n== APK-ASSET-GATE-FEHLER:1 Befunde ==", 1, 2)
+    f("M: '1 Befunde==' (ohne Leerzeichen), Rueckgabe 1", "apk", "   x\n== APK-ASSET-GATE-FEHLER: 1 Befunde==", 1, 2)
+    f("st/M: Fallzeile '02Fall' (ohne Leerzeichen nach der Nummer)", "selbsttest", _in_zeile(S, "   [ok] 02", "02 Fall", "02Fall"),
+      0, 2)
+    f("st/M: Fallzeile 'Fall 2rc=' (ohne Leerzeichen vor rc=)", "selbsttest",
+      _in_zeile(S, "   [ok] 02", "Fall 2" + " " * 20 + " rc=", "Fall 2rc="), 0, 2)
 
 
 def _faelle():
@@ -344,6 +503,7 @@ def _faelle():
     f("pk: 0 Dateien in 0 Baeumen", "paket", "\n".join(TUER + ["== APK-ASSET-GATE-PAKET-OK: 0 Dateien in 0 Baeumen bytegleich, "
                                                                "nichts zusaetzlich =="]), 0, 2)
     f("pk: Tuer-Soll fehlt", "paket", "\n".join(z for z in P if "Tuer-Soll" not in z), 0, 2)
+    _faelle_muster(f, S, A, Q, P)
     return F
 
 
@@ -365,43 +525,158 @@ AEQUIVALENT = {
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+def _regex_stuecke(p):
+    """Zerlegt ein Regex-Muster (die hier benutzte Teilmenge der re-Syntax) in Stuecke AUF OBERSTER EBENE:
+    -> Liste (anfang, ende, art). art: "wort" (Literal aus Buchstaben/Ziffern/_ ab 2 Zeichen, ohne Quantor), "zeichen"
+    (sonstiges Literal), "esc" (\\x), "klasse" ([...]), "gruppe" ((...), samt Inhalt), "punkt" (.), "fmt" (%s);
+    ein Quantor (*, +, ?, {m,n}, auch lazy) gehoert zum Stueck davor (art + "+q")."""
+    out, i, n = [], 0, len(p)
+    while i < n:
+        a, c = i, p[i]
+        if c == "\\":
+            i, art = i + 2, "esc"
+        elif c == "[":
+            j = i + 1
+            if j < n and p[j] == "^":
+                j += 1
+            if j < n and p[j] == "]":
+                j += 1
+            while j < n and p[j] != "]":
+                j += 2 if p[j] == "\\" else 1
+            i, art = j + 1, "klasse"
+        elif c == "(":
+            tiefe, j = 0, i
+            while j < n:
+                if p[j] == "\\":
+                    j += 2
+                    continue
+                if p[j] == "[":
+                    j += 1
+                    while j < n and p[j] != "]":
+                        j += 2 if p[j] == "\\" else 1
+                elif p[j] == "(":
+                    tiefe += 1
+                elif p[j] == ")":
+                    tiefe -= 1
+                    if tiefe == 0:
+                        break
+                j += 1
+            i, art = j + 1, "gruppe"
+        elif c == "%" and i + 1 < n and p[i + 1] in "s%":
+            i, art = i + 2, "fmt"
+        elif c == ".":
+            i, art = i + 1, "punkt"
+        elif c.isalnum() or c == "_":
+            while i < n and (p[i].isalnum() or p[i] == "_"):
+                i += 1
+            if i < n and p[i] in "*+?{" and i - a > 1:
+                i -= 1                            # Quantor bindet nur das letzte Zeichen: "ab+" = "a" + "b+"
+            art = "wort" if i - a > 1 else "zeichen"
+        else:
+            i, art = i + 1, "zeichen"
+        q = re.match(r"(?:[*+?]|\{\d*(?:,\d*)?\})\??", p[i:])
+        if q:
+            i += q.end()
+            art += "+q"
+        out.append((a, i, art))
+    return out
+
+
+@functools.lru_cache(maxsize=None)
+def _regex_lockerungen(p, voll):
+    """Die Lockerungen eines Musters, die der Selbsttest als Mutanten einsetzt (Abnahme 0, M1):
+      R1 "Rest ab Stueck k -> .*"   je Stueck auf oberster Ebene (die Abnahme-Aenderungen A5, A6, A11 sind von dieser Art)
+      R2 "Wort k -> .*"             je Literal-Wort auf oberster Ebene (ein Wort wird nicht mehr verlangt)
+      R3 "\\d+ Nr. k -> .*"         je Vorkommen, auch in Gruppen (eine Zahl wird nicht mehr verlangt)
+      R4 "\\s+ Nr. k -> \\s*"       je Vorkommen (ein Zwischenraum wird nicht mehr verlangt)
+      R5 "Zeichen k weg"            je einzelnes Literal-Zeichen auf oberster Ebene (Leerzeichen, Satzzeichen ...)
+      R0 "Muster + .*"              nur fuer re.fullmatch/genau_eine: Text hinter dem Muster wird erlaubt
+    -> Liste (beschreibung, neues_muster); jedes neue Muster nur einmal, das Original nie."""
+    st = _regex_stuecke(p)
+    out, gesehen = [], {p}
+    if voll and not p.endswith((".*", "(.*)")):   # endet es schon mit (.*), bliebe ein angehaengtes .* immer leer
+        out.append(("Regex R0 Muster + .*", p + ".*"))
+        gesehen.add(p + ".*")
+
+    def dazu(was, neu):
+        if neu not in gesehen:
+            gesehen.add(neu)
+            out.append((was, neu))
+    for k, (a, _e, _art) in enumerate(st):
+        if p[a:] != ".*":
+            dazu("Regex R1 Rest ab Stueck %d %r -> .*" % (k, p[a:a + 24]), p[:a] + ".*")
+    for k, (a, e, art) in enumerate(st):
+        if art == "wort":
+            dazu("Regex R2 Wort %d %r -> .*" % (k, p[a:e]), p[:a] + ".*" + p[e:])
+    for k, m in enumerate(re.finditer(r"(?<!\\)\\d\+", p)):
+        dazu("Regex R3 \\d+ Nr. %d -> .*" % k, p[:m.start()] + ".*" + p[m.end():])
+    for k, m in enumerate(re.finditer(r"(?<!\\)\\s\+", p)):
+        dazu("Regex R4 \\s+ Nr. %d -> \\s*" % k, p[:m.start()] + "\\s*" + p[m.end():])
+    for k, (a, e, art) in enumerate(st):
+        if art == "zeichen":
+            dazu("Regex R5 Zeichen %d %r weg" % (k, p[a:e]), p[:a] + p[e:])
+    return out
+
+
 class _Mutierer(ast.NodeTransformer):
-    """Erzeugt je Lauf genau EINE Aenderung an der Stelle nr (Zaehlung in Besuchsreihenfolge)."""
+    """Erzeugt je Lauf genau EINE Aenderung an der Stelle nr (Zaehlung in Besuchsreihenfolge). Operatoren (Stand
+    Nachbesserung 1, Abnahme 0 M1/M3): Vergleich ==/!=, </<=, >/>=, in/not in, is/is not; and/or; not weg;
+    if-Bedingung -> False/True; ganze Zahl +-1; Ausdrucks-Aufruf weg; JEDE Zeichenkette ausserhalb von Meldungstexten
+    (Regex-Muster, MARKE-Tabelle, Modusnamen, Pruef-Literale wie "[FEHLER]"/"ABBRUCH"/"ok"/"\\r") -> + Zeichen U+00A7;
+    jedes Regex-Muster (erstes Argument von re.fullmatch/re.match/re.search/genau_eine, auch links von %) zusaetzlich
+    die Lockerungen R0-R5 aus _regex_lockerungen. Meldungstext = zweites Argument von ende() und von genau_eine() - nur
+    dort wird nichts mutiert."""
     TAUSCH = {ast.Eq: ast.NotEq, ast.NotEq: ast.Eq, ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt,
               ast.In: ast.NotIn, ast.NotIn: ast.In, ast.Is: ast.IsNot, ast.IsNot: ast.Is}
+    REGEX_RUFE = {"fullmatch", "match", "search", "genau_eine"}
 
     def __init__(self, quelle, ziel):
-        self.quelle, self.ziel, self.nr, self.beschreibung = quelle, ziel, -1, None
+        self.quelle, self.ziel, self.nr, self.beschreibung, self.zeile = quelle, ziel, -1, None, 0
         self.meldung = 0                  # > 0: innerhalb eines Meldungstextes (nur Text, nie das Urteil)
+        self.regex = 0                    # 1: Regex-Muster fuer die ganze Zeile (fullmatch), 2: nur Anfang (match)
+        self.zaehler = {}                 # Operator -> Anzahl Stellen (fuer die Ausgabe des Selbsttests)
 
-    def _als_meldung(self, node):
-        self.meldung += 1
+    def visit(self, node):                # nach dem Treffer bleibt der Rest des Baums unberuehrt
+        return node if self.beschreibung is not None else ast.NodeTransformer.visit(self, node)
+
+    def _in(self, feld, node, wert=None):
+        alt = getattr(self, feld)
+        setattr(self, feld, alt + 1 if wert is None else wert)
         try:
             return self.visit(node)
         finally:
-            self.meldung -= 1
+            setattr(self, feld, alt)
 
-    def visit_BinOp(self, node):          # "text %d" % (...): die Argumente formen nur den Text
-        if isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str):
-            node.right = self._als_meldung(node.right)
+    def visit_Call(self, node):
+        f = node.func
+        name = f.id if isinstance(f, ast.Name) else (
+            f.attr if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) and f.value.id == "re" else None)
+        if name in ("ende", "genau_eine") and len(node.args) == 2 and not node.keywords:
+            # ende(code, grund) / genau_eine(muster, name): grund und name sind nur Meldungstext
+            node.args[0] = self._in("regex", node.args[0], 1) if name == "genau_eine" else self.visit(node.args[0])
+            node.args[1] = self._in("meldung", node.args[1])
             return node
-        self.generic_visit(node)
+        if name in self.REGEX_RUFE and node.args:
+            node.args[0] = self._in("regex", node.args[0], 1 if name in ("fullmatch", "genau_eine") else 2)
+            node.args[1:] = [self._in("regex", x, 0) for x in node.args[1:]]
+            return node
+        node.func = self._in("regex", node.func, 0)
+        node.args = [self._in("regex", x, 0) for x in node.args]
         return node
 
-    def visit_Call(self, node):           # ende(code, grund): grund ist nur Text; code wird mutiert
-        if isinstance(node.func, ast.Name) and node.func.id == "ende" and len(node.args) == 2:
-            node.args[0] = self.visit(node.args[0])
-            node.args[1] = self._als_meldung(node.args[1])
-            return node
-        self.generic_visit(node)
+    def visit_BinOp(self, node):          # r"... %s ..." % re.escape(x): links bleibt Muster, rechts nicht
+        node.left = self.visit(node.left) if isinstance(node.op, ast.Mod) else self._in("regex", node.left, 0)
+        node.right = self._in("regex", node.right, 0)
         return node
 
     def _treffer(self, node, was):
         if self.meldung:
             return False
+        op = " ".join(was.split(" ")[:2]) if was.startswith("Regex") else was.split(" ")[0]
+        self.zaehler[op] = self.zaehler.get(op, 0) + 1
         self.nr += 1
         if self.nr == self.ziel:
-            seg = (ast.get_source_segment(self.quelle, node) or "?").replace("\n", " ")
+            seg = _segment(self.quelle, node).replace("\n", " ")
             self.beschreibung = "%s: %s" % (was, re.sub(r"\s+", " ", seg))
             self.zeile = getattr(node, "lineno", 0)
             return True
@@ -430,12 +705,22 @@ class _Mutierer(ast.NodeTransformer):
     def visit_If(self, node):
         self.generic_visit(node)
         if self._treffer(node.test, "if-Bedingung -> False"):
-            node.test = ast.Constant(value=False)
+            node.test = ast.copy_location(ast.Constant(value=False), node.test)
         elif self._treffer(node.test, "if-Bedingung -> True"):
-            node.test = ast.Constant(value=True)
+            node.test = ast.copy_location(ast.Constant(value=True), node.test)
         return node
 
     def visit_Constant(self, node):
+        if isinstance(node.value, str):
+            if self.meldung:
+                return node
+            if self._treffer(node, "Zeichenkette + U+00A7"):
+                return ast.copy_location(ast.Constant(value=node.value + "\u00a7"), node)
+            if self.regex:
+                for was, neu in _regex_lockerungen(node.value, self.regex == 1):
+                    if self._treffer(node, was):
+                        return ast.copy_location(ast.Constant(value=neu), node)
+            return node
         if isinstance(node.value, bool) or not isinstance(node.value, int):
             return node
         if self._treffer(node, "Zahl %d -> %d" % (node.value, node.value + 1)):
@@ -451,26 +736,36 @@ class _Mutierer(ast.NodeTransformer):
         return node
 
 
+def _segment(zeilen, node):
+    """wie ast.get_source_segment, aber auf vorab zerlegten Zeilen (Bytes; col_offset zaehlt UTF-8-Bytes)"""
+    if getattr(node, "end_lineno", None) is None:
+        return "?"
+    a, e = node.lineno - 1, node.end_lineno - 1
+    if a == e:
+        return zeilen[a][node.col_offset:node.end_col_offset].decode("utf-8")
+    teile = [zeilen[a][node.col_offset:]] + zeilen[a + 1:e] + [zeilen[e][:node.end_col_offset]]
+    return b"".join(teile).decode("utf-8")
+
+
 def _urteil_quelle():
+    """-> (Quelltext NUR der Funktion urteil, Zeilenversatz in der Datei). Jeder Mutant parst diesen Text neu (kein
+    deepcopy - Nachbesserung 1: mit den Zeichenketten-Mutanten waere der Selbsttest sonst ~3x langsamer)."""
     with open(__file__, encoding="utf-8") as f:
         text = f.read()
-    baum = ast.parse(text)
-    fn = next(n for n in baum.body if isinstance(n, ast.FunctionDef) and n.name == "urteil")
-    return text, fn
+    fn = next(n for n in ast.parse(text).body if isinstance(n, ast.FunctionDef) and n.name == "urteil")
+    return ast.get_source_segment(text, fn), fn.lineno - 1
 
 
-def _mutant(text, fn, nr):
-    import copy
-    neu = copy.deepcopy(fn)
-    m = _Mutierer(text, nr)
+def _mutant(text, versatz, nr):
+    neu = ast.parse(text).body[0]
+    m = _Mutierer(text.encode("utf-8").splitlines(keepends=True), nr)
     neu = m.visit(neu)
     if m.beschreibung is None:
         return None, None
-    ast.fix_missing_locations(neu)
-    modul = ast.Module(body=[neu], type_ignores=[])
+    modul = ast.Module(body=[neu], type_ignores=[])       # jede neue Ausdrucks-Stelle traegt copy_location
     ns = {"re": re, "_Urteil": _Urteil}
     exec(compile(modul, "<mutant %d>" % nr, "exec"), ns)    # noqa: S102 - eigener Code, im Selbsttest
-    return ns["urteil"], (m.beschreibung, m.zeile)
+    return ns["urteil"], (m.beschreibung, m.zeile + versatz)
 
 
 def selbsttest():
@@ -487,12 +782,12 @@ def selbsttest():
         print("   [%s] %03d %-52s Urteil %d (soll %d)%s" % ("ok" if gut else "FEHLER", nr, titel[:52], code, soll,
                                                          "" if gut else "  %s: %s" % (art[0], grund[:100])))
     n_f = len(faelle)
-    text, fn = _urteil_quelle()
+    text, versatz = _urteil_quelle()
     n_m = erkannt = gleich = 0
     ueberlebt, aeq_gesehen = [], set()
     nr = 0
     while True:
-        mfn, besch = _mutant(text, fn, nr)
+        mfn, besch = _mutant(text, versatz, nr)
         nr += 1
         if mfn is None:
             break
@@ -516,6 +811,13 @@ def selbsttest():
     veraltet = sorted(set(AEQUIVALENT) - aeq_gesehen)
     for b in veraltet:
         print("   [FEHLER] AEQUIVALENT-Eintrag passt zu keinem gleichwertigen Mutanten mehr (entfernen): " + b)
+    # Umfang je Operator (ein Zaehllauf ohne Treffer) - steht im Log, damit der gemessene Umfang nachlesbar ist
+    zaehl = _Mutierer(text.encode("utf-8").splitlines(keepends=True), -2)
+    zaehl.visit(ast.parse(text).body[0])
+    print("   Mutanten je Operator: " + ", ".join("%s %d" % kv for kv in sorted(zaehl.zaehler.items())))
+    if sum(zaehl.zaehler.values()) != n_m:
+        print("   [FEHLER] Zaehllauf %d Stellen, erzeugt %d Mutanten" % (sum(zaehl.zaehler.values()), n_m))
+        falsch += 1
     print("   Mutanten: %d erzeugt, %d erkannt, %d als gleichwertig begruendet, %d ueberlebt" % (n_m, erkannt, gleich,
                                                                                          len(ueberlebt)))
     if falsch or ueberlebt or veraltet or n_m == 0:
