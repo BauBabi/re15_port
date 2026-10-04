@@ -237,7 +237,8 @@ Neue Dateien (nur aus `tests/unit/probes/r35_zgirl.cmake` registriert):
 | integration_r35_zgirl | echte exe, Aktionstaste an Tuer 6 und Tuer 7: DOOR FIRE, `Sce_em_set type=0x13` an beiden Lagen, >= 300 Bilder mit ihr, Annaeherung >= 1500, Tuer 6 zusaetzlich Spieler-HP < 100 | gruen (253 s) |
 
 Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gruen.
-Suite vor T8: `=== LOCAL-BUILD-OK (all) — Tests 486/486` (1370 s, scratchpad suite1.log).
+Suite vor T8: `=== LOCAL-BUILD-OK (all) — Tests 486/486` (1370 s).
+**Endstand (mit T8): `=== LOCAL-BUILD-OK (all) — Tests 487/487`** (Schranke 478; keine Flatterer).
 Gegenprobe ohne Fix: der exe-Lauf vorher_tuer6 (M4) — dieselbe Tuer, kein Spawn; die alte Bedingung
 `0x1000|room<<4|var == Raum` kann fuer 0x4050 nie wahr werden, T3/T8 waeren dort rot.
 
