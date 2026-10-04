@@ -333,4 +333,14 @@ Commit-Messages 55554779/1e958236 nennen p0/0x18 ebenfalls nicht. Gegenprobe: `g
   misst er so: Ein Ereignis belegt Faden SCD_EVENT_SLOT_FIRST, das naechste laeuft in FIRST+1 (erster freier Faden,
   kein fester Platz). Damit steht der Beleg nicht nur im Kommentar, die Suite prueft ihn auch.
 
-**Messung nachher.** Siehe unten (Bau, Suite, Spur-Tests).
+**Messung nachher.**
+* Diff gegen 16a396f7 in re15_port: nur Kommentare in re15_fenster1120.h/re2_fx.c (die Werte 0x00FF und 0x18 sind
+  unveraendert) sowie der neue Riegel. Verhalten unveraendert.
+* Suite auf dem reinen Kommentarstand c6263a47 (`local_build.sh all`, 1139 s, alles neu gebaut, 642 Schritte):
+  `=== LOCAL-BUILD-OK (all) — Tests 483/483`, kein Fenster-Haken rot.
+* Riegel einzeln (`ctest -R unit_r35_fenster -V`), 5/5 gruen:
+  ```
+  STAGE1/ROOM1050.RDT @0x0c22: op 0x2c sce 3 sat 0x31 p0 0x00ff p1 0x0218
+  STAGE1/ROOM1020.RDT @0x1e18: op 0x2c sce 3 sat 0x41 p0 0x00ff p1 0x0318
+  Ereignis-Faeden: 10 dann 11 (erster freier ab 10)
+  ```
