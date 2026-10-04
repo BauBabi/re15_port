@@ -27,7 +27,7 @@ if [[ -z "${PY:-}" ]]; then
     # shellcheck source=/dev/null
     source "$RELEASE/python_finden.sh" > /dev/null 2>&1 || { echo "kein Python >= 3.8"; exit 9; }
 fi
-pin() { sha256sum "$1" | cut -c1-64 > "$2"; }
+pin() { sha256sum < "$1" | cut -c1-64 > "$2"; }   # stdin: bei einem Pfad mit Backslash setzt sha256sum einen davor
 zahlen() {   # $1 = apk_pruefen.sh -> F E G (GATE_URTEIL_MIN_FAELLE, _MIN_ERKANNT, _MAX_GLEICH), ohne die Datei zu laden
     local f e g
     f="$(sed -n 's/^GATE_URTEIL_MIN_FAELLE=\([0-9]*\)$/\1/p' "$1")"
