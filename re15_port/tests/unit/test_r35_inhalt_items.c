@@ -212,8 +212,13 @@ int main(void)
                     }
                     for (int e = 0; e < 4; e++) fl += px[e] * py[(e + 1) % 4] - px[(e + 1) % 4] * py[e];
                     fl = fabs(fl) / 2.0;
-                    /* Blickrichtung: Kamera-z-Achse in Weltkoordinaten = Zeile 2 der Sichtmatrix */
-                    zug = -(nn[0] * cv.rot[6] + nn[1] * cv.rot[7] + nn[2] * cv.rot[8]) / 4096.0;
+                    /* Kamera-Ort in Welt = -R^T * T (R nahezu orthonormal), Richtung Kartenmitte -> Kamera */
+                    double cw[3], d[3], dl = 0;
+                    for (int a = 0; a < 3; a++)
+                        cw[a] = -(cv.rot[a] * cv.trans[0] + cv.rot[3 + a] * cv.trans[1] + cv.rot[6 + a] * cv.trans[2]) / 4096.0;
+                    d[0] = cw[0] - s->mitte_x; d[1] = cw[1] - s->mitte_y; d[2] = cw[2] - s->mitte_z;
+                    dl = sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+                    zug = (nn[0] * d[0] + nn[1] * d[1] + nn[2] * d[2]) / dl;
                 }
                 CHECK(fl >= minf[ci] && zug > 0.5,
                       "V ROOM1010 Cut %d: Memory Card %.1f px^2 (>= %.0f), Sichtseite zugewandt %.2f", cuts[ci], fl,
