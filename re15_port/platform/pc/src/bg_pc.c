@@ -526,13 +526,16 @@ int re15_bg_is_loaded(void)
  * ================================================================================== */
 static uint32_t s_bg_prev[BG_PIXELS];
 static int      s_bg_prev_ok = 0;
+static unsigned s_bg_prev_gen = 0;   /* Runde 35 Spur I (N2): Generation des Schnappschusses */
 
 void re15_bg_snapshot_prev(void)
 {
     if (!s_bg_loaded) { s_bg_prev_ok = 0; return; }
     memcpy(s_bg_prev, s_bg_cache, sizeof s_bg_prev);
     s_bg_prev_ok = 1;
+    s_bg_prev_gen = g_re15_entladen_gen;   /* Runde 35 Spur I (N2) */
 }
+int re15_bg_prev_belegt(unsigned *gen) { if (gen) *gen = s_bg_prev_gen; return s_bg_prev_ok; }   /* Zensus */
 int re15_bg_prev_ready(void) { return s_bg_prev_ok; }
 void re15_bg_prev_invalidate(void) { s_bg_prev_ok = 0; }
 

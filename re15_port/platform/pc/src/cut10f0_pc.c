@@ -15,14 +15,22 @@
 #include "re15_cut10f0.h"
 #include "re15_rdt.h"
 #include "asset_root_pc.h"   /* re15_pc_read_any: dieselbe Wurzelliste wie main.c pc_read_shared */
+#include "re15_entladen.h"    /* Runde 35 Spur I (N2): Generation + Freigabe an jeder Grenze */
 
 /* Den Animationsblock leihen, den die ausstehende Szene im Raum room_id braucht. Rueckgabe: Zeiger IN
  * den residenten Dateipuffer der Quell-RDT (bleibt bis zur naechsten Leihe gueltig; der Aufrufer behandelt
  * ihn wie einen RDT-Alias — rbj_borrowed = 1, nie free) und *size, oder NULL (keine Leihe noetig/moeglich). */
+/* Runde 35 Spur I (N2): Leihe auf Dateiebene, damit jede Grenze (raum/spielstart/spielende) sie freigibt —
+ * vorher lebte die ROOM11B0-RDT bis zur naechsten Leihe weiter (Original: Block = RDT+0x5C @0x8001b404 der
+ * NEUEN RDT, Arena-Reset @0x80039738). */
+static uint8_t   *s_leih_buf = NULL;
+static re15_rdt_t s_leih_rdt;
+static unsigned   s_leih_gen = 0;
+void re15_cut10f0_pc_rbj_freigeben(void) { free(s_leih_buf); s_leih_buf = NULL; s_leih_rdt.animation = NULL; }
+int  re15_cut10f0_pc_rbj_belegt(unsigned *gen) { if (gen) *gen = s_leih_gen; return s_leih_buf != NULL; }
+
 uint8_t *re15_cut10f0_pc_rbj_leihen(unsigned room_id, int *size)
 {
-    static uint8_t   *s_leih_buf = NULL;
-    static re15_rdt_t s_leih_rdt;
     const unsigned quelle = re15_cut10f0_rbj_quelle(room_id);
     char rel[48];
     int n = 0;
@@ -34,6 +42,7 @@ uint8_t *re15_cut10f0_pc_rbj_leihen(unsigned room_id, int *size)
         s_leih_rdt.animation_size <= 0) { free(b); return NULL; }
     free(s_leih_buf);
     s_leih_buf = b;
+    s_leih_gen = g_re15_entladen_gen;   /* Runde 35 Spur I (N2) */
     *size = s_leih_rdt.animation_size;
     fprintf(stderr, "[rbj] Animationsblock von ROOM%04X geliehen (%d B, Runde 35 Spur K)\n", quelle, *size);
     return (uint8_t *)s_leih_rdt.animation;

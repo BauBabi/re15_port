@@ -43,8 +43,33 @@ extern int  re15_audio_raum_belegt(void);
 
 const char *const re15_entladen_fachname[RE15_FACH_ANZAHL] = {
     "pri_masken", "pri_atlas", "sld", "msk", "tim", "gegner",
-    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg", "stimme", "figur"
+    "esp_bank", "esp_fx", "esp_pool", "re2fx", "rdt", "ton", "bg", "stimme", "figur",
+    "rbj", "bg_prev", "re2ton"
 };
+
+/* ---- Raum-Animationsbank (Nachbesserung 2, Abnahme 1 M1) -------------------------------------
+ * Vorher hielt main.c den Dateipuffer selbst (`static uint8_t *s_room_rbj`, frei nur, wenn der
+ * NAECHSTE Raum wieder einen Block hatte; Boot-Puffer `rbj_buf` nie). Original: Block = RDT+0x5C
+ * (`lw a2,92(v0)` @0x8001b404, v0 = RDT-Zeiger 0x800ac778 @0x8001b3fc), RDT ab der Arena-Basis
+ * (`jal 0x80013b60` @0x800397e8) -> mit dem Arena-Reset @0x80039738 weg, bei JEDEM Raumladen. */
+static uint8_t *s_rbj      = NULL;
+static int      s_rbj_size = 0;
+static unsigned s_rbj_raum = 0;
+static unsigned s_rbj_gen  = 0;
+
+void re15_entladen_rbj_halten(uint8_t *buf, int size, unsigned raum)
+{
+    if (buf != s_rbj) free(s_rbj);
+    s_rbj      = buf;
+    s_rbj_size = buf ? size : 0;
+    s_rbj_raum = buf ? raum : 0;
+    s_rbj_gen  = g_re15_entladen_gen;
+}
+int re15_entladen_rbj_belegt(unsigned *gen)
+{
+    if (gen) *gen = s_rbj_gen;
+    return s_rbj != NULL;
+}
 
 /* ---- Nachgezeichnete Masken (vorher main.c-Cache, Schluessel nur der Raum) ------------------ */
 static unsigned char *s_msk      = NULL;
@@ -147,6 +172,18 @@ void re15_entladen_zensus(re15_entladen_zensus_t *z)
     z->belegt[RE15_FACH_FIGUR] = fig ? 1 : 0;
     z->fremd [RE15_FACH_FIGUR] = (fig && eg != g) ? 1 : 0;
 
+    /* Nachbesserung 2: Raum-Animationsbank (eigener Dateipuffer + Leihe Spur K), Montage-
+     * Schnappschuss, RE2-Raumbank-Ergaenzungen (ohne Generation: nur am Ereignis, wie "ton"). */
+    unsigned rg1 = 0, rg2 = 0;
+    int rb1 = re15_entladen_rbj_belegt(&rg1), rb2 = re15_cut10f0_pc_rbj_belegt(&rg2);
+    z->belegt[RE15_FACH_RBJ] = rb1 + rb2;
+    z->fremd [RE15_FACH_RBJ] = (rb1 && rg1 != g) + (rb2 && rg2 != g);
+    unsigned pg = 0;
+    int bp = re15_bg_prev_belegt(&pg);
+    z->belegt[RE15_FACH_BG_PREV] = bp ? 1 : 0;
+    z->fremd [RE15_FACH_BG_PREV] = (bp && pg != g) ? 1 : 0;
+    z->belegt[RE15_FACH_RE2TON] = re15_audio_re2_raumbaenke_belegt();
+
     for (int f = 0; f < RE15_FACH_ANZAHL; f++) {
         z->belegt_summe += z->belegt[f];
         z->fremd_summe  += z->fremd[f];
@@ -169,7 +206,7 @@ static void zensus_schreiben(FILE *f, const re15_entladen_zensus_t *z, int am_er
     for (int i = 0; i < RE15_FACH_ANZAHL; i++) {
         /* am Ereignis ist JEDE noch lebende Instanz fremd (s.o.) */
         int fr = am_ereignis && (i == RE15_FACH_ESP_FX || i == RE15_FACH_ESP_POOL || i == RE15_FACH_RE2FX ||
-                                 i == RE15_FACH_TON)
+                                 i == RE15_FACH_TON || i == RE15_FACH_RE2TON)
                ? z->belegt[i] : z->fremd[i];
         fprintf(f, " %s=%d", re15_entladen_fachname[i], fr);
     }
@@ -181,6 +218,8 @@ static void zensus_schreiben(FILE *f, const re15_entladen_zensus_t *z, int am_er
                 fprintf(f, " %d%s", s, (am_ereignis || tg != g_re15_entladen_gen) ? "f" : "");
         }
     }
+    if (s_rbj)   /* Nachbesserung 2: welcher Raum, wie gross (Abnahme 1: ROOM1170.RBJ, 55060 B) */
+        fprintf(f, " | rbj_datei raum=%04X bytes=%d gen=%u", s_rbj_raum, s_rbj_size, s_rbj_gen);
 }
 
 /* Laufende Summen seit dem letzten Ereignis (fuer die SUMME-Zeile, die der Pin liest). */
@@ -295,11 +334,14 @@ static void alles_entladen(const char *anlass)
      *     (`jal 0x80021634` a0=2 @0x8001d620-28 Boot / @0x8001d830-34 Tuer, Spielmodul-Init
      *     @0x8001d248-50) und gibt das neue Bild erst nach dem Laden frei (@0x8001dadc-ec). Der
      *     Port laedt das Eintrittsbild direkt danach (room_common.c Schritt 9 / Boot-Preload);
-     *     schlaegt das fehl, bleibt es schwarz statt beim Bild des Raums davor. Der Montage-
-     *     Schnappschuss (s_bg_prev) bleibt beim Raumwechsel stehen — er gehoert zu einer
-     *     laufenden Ueberblendung —, faellt aber an Spielstart/-ende. */
+     *     schlaegt das fehl, bleibt es schwarz statt beim Bild des Raums davor.
+     *     Nachbesserung 2 (Abnahme 1 H1): auch der Montage-Schnappschuss (s_bg_prev) faellt an
+     *     JEDER Grenze. Die fruehere Ausnahme "raum" (laufende Ueberblendung) traf nicht zu: die
+     *     Montage ist nur in ROOM1240 aktiv (main.c re15_montage_fx_set_active(Raum == 0x1240)),
+     *     der Schnappschuss wird nur dort beim Cut-Wechsel neu genommen (re15_bg_snapshot_prev)
+     *     und nur vom Montage-Blit gelesen; hinter der Tuer liest ihn niemand mehr. */
     re15_bg_invalidate();
-    if (anlass && strcmp(anlass, "raum") != 0) re15_bg_prev_invalidate();
+    re15_bg_prev_invalidate();
     /* (9) Nachbesserung 1, M1: dekodierte Raum-Stimmen + Loesen des Stimm-Stroms. RE2-Raumlader
      *     FUN_80049e48 liest die neue RDT `jal 0x80012fb8` @0x8004a1c4 -> Pause @0x800130d4,
      *     Setmode 0xA0 (XA-ADPCM-Bit 6 = 0) @0x800130f0, ReadN @0x80013140: keine Stimme
@@ -309,6 +351,23 @@ static void alles_entladen(const char *anlass)
      *     Arena (`jal 0x80022300` @0x80042328 mit dem Kopf 0x800ac77c @0x800422c4), also mit dem
      *     Arena-Reset @0x80039738 weg. Neu geladen beim naechsten Spawn eines 0x47-Aktors. */
     re15_elliot_pc_entladen();
+    /* (11) Nachbesserung 2, M1: Raum-Animationsbank. Der eigene Dateipuffer (RBJ/ROOM%04X.RBJ,
+     *     Tuer- und Boot-Weg in main.c) und die Leihe der Spur K (ganze ROOM11B0-RDT fuer
+     *     ROOM10F0) fallen. Original: Block = RDT+0x5C (@0x8001b404), die RDT liegt in der Arena
+     *     (@0x800397e8) -> mit dem Reset @0x80039738 weg; der Binder `jal 0x8001b3f8` @0x80039a08
+     *     liest bei JEDEM Raumladen den Block der NEUEN RDT. Leons/Elliots Overlay-Zeiger stellt
+     *     main.c direkt danach im selben Raumaufbau neu (Overlay aus der neuen Bank bzw. PL00-Basis)
+     *     — dasselbe Fenster wie beim RDT-Alias, dessen Bytes Schritt (7) schon freigibt. */
+    re15_entladen_rbj_halten(NULL, 0, 0);
+    re15_cut10f0_pc_rbj_freigeben();
+    /* (12) Nachbesserung 2 (Abnahme 1 H2/H3): RE2-Raumbank-Ergaenzungen. RE2-Raumlader
+     *     FUN_80049e48 `jal 0x8005a09c` @0x8004a33c: dort schliesst FUN_8005a09c die ENEMSE-Bank
+     *     des Raums davor (Handle 0x800d4c4b != -1 -> `jal 0x80084ec0` @0x8005a108, `sb -1`
+     *     @0x8005a114) und laedt die per FUN_80052b38 (@0x80053610 im Raum-Setup, `jal 0x80053528`
+     *     @0x8004a334) neu bestimmte. ELEVSE/HINTSE/TUERSE/PANEL2130 sind in RE2 Saetze der
+     *     RAUMBANK (Bank 2 = SND0 der RDT, re15_audio.h). Die Tuersequenz-Baenke (TORSE + je
+     *     Archiv) bleiben: Tuerbank @0x3DC50 ausserhalb des Key-Off-Bereichs (Runde 31, O2). */
+    re15_audio_re2_raumbaenke_entladen();
 }
 
 void re15_entladen_ereignis(const char *anlass)

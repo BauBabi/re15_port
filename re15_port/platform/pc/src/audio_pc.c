@@ -3756,6 +3756,47 @@ void re15_audio_raum_entladen(void)
 
 int re15_audio_raum_belegt(void) { return (s_foot_loaded ? 1 : 0) + (s_se_loaded ? 1 : 0); }   /* Zensus */
 
+/* Runde 35 Spur I, Nachbesserung 2 (Abnahme 1 H2/H3): die RE2-RAUMBANK-Ergaenzungen fallen an jeder
+ * Grenze und werden beim naechsten Ruf wieder geladen (alle Lader sind lazy). RE2: ENEMSE-Bank je Raum
+ * neu (Raumlader `jal 0x8005a09c` @0x8004a33c; FUN_8005a09c schliesst die alte `jal 0x80084ec0`
+ * @0x8005a108, Handle -1 @0x8005a114); ELEVSE/HINTSE/TUERSE/PANEL2130 sind RAUMBANK-Saetze (Bank 2 =
+ * SND0). Tuersequenz-Baenke (TORSE, je Archiv) bleiben (Tuerbank @0x3DC50, Runde 31). Sperre wie
+ * re15_audio_stimmen_entladen; Stimmen, die noch in einen der Puffer zeigen, werden geloest (nach
+ * re15_audio_raum_entladen ist ohnehin jede Nicht-Tuer-Stimme aus). */
+static void re2_minibank_frei(int16_t **dec, int *len)
+{
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        if (!dec[i]) continue;
+        for (int s = 0; s < MIXER_MAX_ACTIVE_SAMPLES; s++)
+            if (s_active[s].pcm == dec[i]) { s_active[s].active = 0; s_active[s].pcm = NULL; }
+        for (int v = 0; v < RE15_SE_VOICE_COUNT; v++)
+            if (s_se_pend[v].pcm == dec[i]) memset(&s_se_pend[v], 0, sizeof s_se_pend[v]);
+        free(dec[i]); dec[i] = NULL; len[i] = 0;
+    }
+}
+int re15_audio_re2_raumbaenke_belegt(void)
+{
+    int n = 0;
+    for (int k = 0; k < RE2SE_CACHE_N; k++) if (s_re2se_cache[k].loaded) n++;
+    return n + (s_elev_loaded ? 1 : 0) + (s_hint_loaded ? 1 : 0) + (s_door_loaded ? 1 : 0)
+             + (s_panel_state == 1 ? 1 : 0);
+}
+void re15_audio_re2_raumbaenke_entladen(void)
+{
+    if (s_audio_dev) SDL_LockAudioDevice(s_audio_dev);
+    for (int k = 0; k < RE2SE_CACHE_N; k++) if (s_re2se_cache[k].loaded) re2se_bank_free(&s_re2se_cache[k]);
+    s_re2se_cur = NULL;
+    re2_minibank_frei(s_elev_decoded,  s_elev_decoded_len);  free(s_elev_edt);  s_elev_edt  = NULL;
+    s_elev_loaded = 0; s_elev_failed = 0;
+    re2_minibank_frei(s_hint_decoded,  s_hint_decoded_len);  free(s_hint_edt);  s_hint_edt  = NULL;
+    s_hint_loaded = 0; s_hint_failed = 0;
+    re2_minibank_frei(s_door_decoded,  s_door_decoded_len);  free(s_door_edt);  s_door_edt  = NULL;
+    s_door_loaded = 0; s_door_failed = 0;
+    re2_minibank_frei(s_panel_decoded, s_panel_decoded_len); free(s_panel_edt); s_panel_edt = NULL;
+    s_panel_edt_count = 0; s_panel_state = 0;
+    if (s_audio_dev) SDL_UnlockAudioDevice(s_audio_dev);
+}
+
 /* Runde 35 Spur I, Nachbesserung 1 (Abnahme 0, M1): die dekodierten RAUM-STIMMEN fallen an jeder
  * Grenze (raum / spielstart / spielende) — vorher erst, wenn in einem ANDEREN Raum die naechste
  * Zeile angefordert wurde (re15_voice_load_clip oben), also z.B. nie nach dem letzten Satz eines

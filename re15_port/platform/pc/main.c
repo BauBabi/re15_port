@@ -4210,6 +4210,7 @@ re_title:;
      * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
     { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
       if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
+    if (rbj_buf && !rbj_borrowed) re15_entladen_rbj_halten(rbj_buf, rbj_size, boot_room);   /* Runde 35 Spur I (N2): frei an jeder Grenze */
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -8118,7 +8119,7 @@ re_title:;
                      * room's cinematics live in ITS RBJ → reload + re-overlay Leon
                      * (and Elliot) from the PRESERVED base PL00 on every room change. */
                     {
-                        static uint8_t *s_room_rbj = NULL;   /* keep alive: parse_rbj refs it */
+                        /* Runde 35 Spur I (N2): der Dateipuffer gehoert entladen_pc.c (re15_entladen_rbj_halten). */
                         static unsigned s_rbj_room  = 0xFFFFFFFFu;
                         /* Runde 35 Spur I: der Riegel ueberlebte Tod -> Titel -> Spielstart (erster
                          * Tuer-Raum == letzter Raum vor dem Tod -> Bank des Boot-Raums blieb). Das
@@ -8148,8 +8149,7 @@ re_title:;
                             { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
                               if (kb) { rbuf = kb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
-                                if (s_room_rbj) free(s_room_rbj);
-                                s_room_rbj = rbj_borrowed ? NULL : rbuf;
+                                re15_entladen_rbj_halten(rbj_borrowed ? NULL : rbuf, rsz, dest_room);   /* Runde 35 Spur I (N2) */
                                 s_rbj_room = dest_room;
                                 /* SHARED overlay (enemy_common.c) — identical math to the PSX
                                  * re15_load_room_cinematic: Leon (from pl00 base) + Elliot (from
@@ -8204,6 +8204,7 @@ re_title:;
                                     elliot_anim = elliot_base_anim;
                                 }
                                 s_rbj_room = dest_room;
+                                re15_entladen_rbj_halten(NULL, 0, dest_room);   /* Runde 35 Spur I (N2): keine Bank des Raums davor */
                                 fprintf(stderr, "[rbj] room %04X has no RBJ (%s) — Leon auf PL00-Basis "
                                         "zurueckgesetzt (Arena-Reset @0x80039738)\n", dest_room, rpath);
                             } else {

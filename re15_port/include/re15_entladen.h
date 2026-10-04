@@ -32,6 +32,8 @@
 #ifndef RE15_ENTLADEN_H
 #define RE15_ENTLADEN_H
 
+#include <stdint.h>   /* Nachbesserung 2: uint8_t (re15_entladen_rbj_halten) */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -67,6 +69,12 @@ enum {
     RE15_FACH_STIMME,          /* dekodierte Raum-Stimmen synchro/STAGEn/room<id>/mainNN.wav  */
     RE15_FACH_FIGUR,           /* Elliot-Modell (Typ 0x47, elliot_pc.c) — Raum-Arena wie jedes */
                                /* Sce_em_set-Modell (`jal 0x80022300` @0x80042328)             */
+    /* Nachbesserung 2 (Abnahme 1, M1 + Hinweise H1-H3): */
+    RE15_FACH_RBJ,             /* Raum-Animationsbank: RBJ-Datei (main.c Tuer/Boot) + Leihe Spur K */
+                               /* (cut10f0_pc.c). Original RDT+0x5C (@0x8001b404), RDT in der Arena */
+    RE15_FACH_BG_PREV,         /* Montage-Schnappschuss des vorigen Bildes (bg_pc s_bg_prev)    */
+    RE15_FACH_RE2TON,          /* RE2-Raumbank-Ergaenzungen: ENEMSE-Cache, ELEVSE, HINTSE,       */
+                               /* TUERSE (verschlossen), PANEL2130 — in RE2 je Raum (Bank 2/ENEMSE) */
     RE15_FACH_ANZAHL
 };
 
@@ -111,6 +119,25 @@ void re15_elliot_pc_anmelden(void *md1 /* re15_md1_t */, int *md1_ok,
 int  re15_elliot_pc_sicherstellen(void);
 void re15_elliot_pc_entladen(void);
 int  re15_elliot_pc_belegt(unsigned *gen);
+
+/* ---- Nachbesserung 2 -------------------------------------------------------------------- */
+/* M1 Raum-Animationsbank. Original: der Block ist Teil der RDT — FUN_8001b3f8 liest den RDT-Zeiger
+ * `lw v0,-0x3888(v0)` 0x800ac778 @0x8001b3fc und den Block `lw a2,92(v0)` (RDT+0x5C) @0x8001b404,
+ * gerufen bei JEDEM Raumladen (`jal 0x8001b3f8` @0x80039a08); die RDT liegt ab der Arena-Basis
+ * (`jal 0x80013b60` @0x800397e8), die der Reset @0x80039738 zuruecksetzt. Der PC liest den Block
+ * fuer manche Raeume aus einer eigenen Datei (RBJ/ROOM%04X.RBJ): diesen Puffer uebernimmt
+ * entladen_pc.c (gibt den vorigen frei) und gibt ihn an jeder Grenze frei. NULL = kein eigener
+ * Puffer (RDT-Alias / Leihe), der vorige faellt trotzdem. */
+void re15_entladen_rbj_halten(uint8_t *buf, int size, unsigned raum);
+int  re15_entladen_rbj_belegt(unsigned *gen);
+/* Leihe Spur K (platform/pc/src/cut10f0_pc.c): ganze RDT von ROOM11B0 fuer ROOM10F0. */
+void re15_cut10f0_pc_rbj_freigeben(void);
+int  re15_cut10f0_pc_rbj_belegt(unsigned *gen);
+/* H1 Montage-Schnappschuss (bg_pc.c). */
+int  re15_bg_prev_belegt(unsigned *gen);
+/* H2/H3 RE2-Raumbank-Ergaenzungen (audio_pc.c): Zahl der geladenen Baenke + Freigabe. */
+int  re15_audio_re2_raumbaenke_belegt(void);
+void re15_audio_re2_raumbaenke_entladen(void);
 
 #ifdef __cplusplus
 }
