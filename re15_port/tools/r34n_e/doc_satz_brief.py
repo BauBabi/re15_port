@@ -25,6 +25,19 @@ GEMESSEN (Bericht <out>/FILEnn_satz.txt nennt die Zaehlung):
      rechtsbuendig ("William Birkin" FILE05/FILE06 p03/p06/p09: Kern-x1 250/249/250/250/249/250).
      Die Kante wird aus diesen sechs Zeilen gemessen (Modus).
 
+  Optional 5. CODES GRUEN (--gruen TOKEN, mehrfach; Runde 35 Spur F, NUTZER-VORGABE "der Code
+     darin mit diesem Gruen hervorgehoben"). Das Gruen ist das der Spieltexte, in denen das
+     Original seine Codes faerbt: ROOM1110.RDT @0x0DB0 `61 05 01 10 0f 0d 0e 05 00` ("4312") und
+     ROOM1230.RDT @0x172F `61 05 01 11 12 0f 0e 05 00` ("5632") — Steuerbyte 0x05 Argument 1.
+     Textmaler FUN_80028868: `andi v1,v0,0x4` @0x80028974 ... `addiu v1,v1,480` @0x80028984 ...
+     `ori s5,v0,0x10` @0x80028994 -> CLUT-Zeile y = 480 + (N&3)*2 + ((N&4)!=0) = 482 fuer N = 1
+     = Zeile 2 des CLUT-Blocks von DATA/TEX.TIM (Kopf x 256 y 480, 32x24; Zeile 2 @0x94).
+     Die weisse Zeile 0 (@0x14) traegt in 1..6 dieselben Farbworte wie der Kern-Grauverlauf 1..6
+     jeder RE2-Dokumentseite (wird hier geprueft, sonst Abbruch) -> Kernindex v des Tokens wird
+     v + 8 (9..14), CLUT-Eintraege 9..14 der Seite = TEX.TIM Zeile 2 Eintraege 1..6, aus der Datei
+     gelesen. Index 9..14 nutzt keine der 191 RE2-Textseiten (Zensus F_inhalt.md Punkt 2). Die
+     Kontur (Index 8) bleibt die der Seite.
+
 Aufruf:
   python re15_port/tools/r34n_e/doc_satz_brief.py --out build/r34n_e/satz/FILE26 \
       --font build/r34n_e/atlas/re2_doc_font.json \
@@ -33,6 +46,7 @@ Aufruf:
 """
 import argparse
 import os
+import struct
 import sys
 from collections import Counter
 
@@ -109,6 +123,87 @@ def titel_breite_max():
     return best
 
 
+# ------------------------------------------------------------------ Gruen (Optional 5)
+GRUEN_VERSATZ = 8                 # Kern 1..6 -> 9..14 (9..14 auf keiner RE2-Textseite belegt)
+TEX_TIM = os.path.join(R.REPO, "re15_port", "shared_assets", "PSX", "DATA", "TEX.TIM")
+
+
+def tex_zeile(n_attr):
+    """Die 16 Farbworte der CLUT-Zeile, die FUN_80028868 fuer Steuerbyte 0x05 Argument n waehlt
+    (@0x80028974-94: y = 480 + (n&3)*2 + ((n&4)!=0)), aus DATA/TEX.TIM."""
+    b = open(TEX_TIM, "rb").read()
+    magic, flags = struct.unpack_from("<II", b, 0)
+    assert magic == 0x10 and flags & 8, "TEX.TIM ohne CLUT"
+    clen, cx, cy, cw, ch = struct.unpack_from("<IHHHH", b, 8)
+    y = 480 + (n_attr & 3) * 2 + (1 if n_attr & 4 else 0)
+    zeile = y - cy
+    assert cx == 256 and 0 <= zeile < ch, "TEX.TIM-CLUT nicht bei (256,480)"
+    return list(struct.unpack_from("<16H", b, 8 + 12 + zeile * cw * 2))
+
+
+def gruen_vorlage(vor):
+    """Kopie der Seitenvorlage mit CLUT 9..14 = gruene Textmaler-Zeile 1..6 (Argument 1)."""
+    weiss, gruen = tex_zeile(0), tex_zeile(1)
+    if vor["clut"][1:7] != weiss[1:7]:
+        raise SystemExit("Kernverlauf der Vorlage != TEX.TIM Zeile 0 (1..6): %s / %s"
+                         % (vor["clut"][1:7], weiss[1:7]))
+    clut = list(vor["clut"])
+    for i in range(1, 7):
+        clut[i + GRUEN_VERSATZ] = gruen[i]
+    roh = bytearray(vor["clut_roh"])
+    for i in range(1, 7):
+        struct.pack_into("<H", roh, 12 + 2 * (i + GRUEN_VERSATZ), gruen[i])
+    neu = dict(vor)
+    neu["clut"] = clut
+    neu["clut_roh"] = bytes(roh)
+    return neu
+
+
+def ist_kern_g(v):
+    return 1 <= v <= 6 or 1 + GRUEN_VERSATZ <= v <= 6 + GRUEN_VERSATZ
+
+
+def kontur_ziehen_g(px):
+    """R.kontur_ziehen mit Kern 1..6 UND 9..14 (sonst ueberschriebe die Kontur gruene Kerne)."""
+    H = len(px)
+    W = len(px[0])
+    neu = [row[:] for row in px]
+    for y in range(H):
+        for x in range(W):
+            if ist_kern_g(px[y][x]):
+                continue
+            if any(0 <= y + dy < H and 0 <= x + dx < W and ist_kern_g(px[y + dy][x + dx])
+                   for dy in (-1, 0, 1) for dx in (-1, 0, 1)):
+                neu[y][x] = R.KONTUR
+    return neu
+
+
+def gruen_faerben(font, px, z, pen, y0, tokens):
+    """Kernpixel der Glyphen jedes Tokens in Zeile z auf v + 8. Rueckgabe: [(token, x0, x1)]."""
+    treffer = []
+    l = R.lauf(font, z, pen)                  # nur Nicht-Leerzeichen, in Textreihenfolge
+    for tok in tokens:
+        start = 0
+        while True:
+            i = z.find(tok, start)
+            if i < 0:
+                break
+            start = i + len(tok)
+            k0 = len(z[:i].replace(" ", ""))
+            k1 = k0 + len(tok.replace(" ", ""))
+            xs = []
+            for ch, x in l[k0:k1]:
+                g = font["glyphen"][ch]
+                for r, row in enumerate(g["bitmap"]):
+                    for s, chx in enumerate(row):
+                        v = int(chx, 16)
+                        if 1 <= v <= 6 and 0 <= y0 + r < len(px) and 0 <= x + s < len(px[0]):
+                            px[y0 + r][x + s] = v + GRUEN_VERSATZ
+                            xs.append(x + s)
+            treffer.append((tok, min(xs), max(xs)))
+    return treffer
+
+
 # ------------------------------------------------------------------ Satz
 def titel_zeilen(font, titel, wmax):
     a, b = R.breite_von(font, titel, 0)
@@ -133,6 +228,9 @@ def setze(args):
     import json
     font = json.load(open(args.font, encoding="utf-8"))
     vor_seite = R.tim_lesen(os.path.join(R.FILES, "FILE%02d_p01_page.TIM" % args.vorlage))
+    gruen = list(args.gruen or [])
+    vor_seite_gruen = gruen_vorlage(vor_seite) if gruen else None   # CLUT 9..14 = TEX.TIM Zeile 2
+    gruen_treffer = []
     vor_titel = R.tim_lesen(os.path.join(R.FILES, "FILE%02d_title_page.TIM" % args.vorlage))
     papier = R.tim_lesen(os.path.join(R.FILES, "FILE%02d_title_paper.TIM" % args.vorlage))
     W, H = vor_seite["W"], vor_seite["H"]
@@ -174,7 +272,8 @@ def setze(args):
             zl.pop(0)                     # keine Leerzeile am Kopf einer Folgeseite (§6.3)
         seiten.append(seite)
 
-    farbe = [((c & 31) << 3, ((c >> 5) & 31) << 3, ((c >> 10) & 31) << 3) for c in vor_seite["clut"]]
+    farbe = [((c & 31) << 3, ((c >> 5) & 31) << 3, ((c >> 10) & 31) << 3)
+             for c in (vor_seite_gruen or vor_seite)["clut"]]   # 0..8 gleich, 9..14 gruen
     from PIL import Image
 
     def png(px, name):
@@ -249,16 +348,31 @@ def setze(args):
         for k, (z, pen) in enumerate(seite):
             if z:
                 R.zeile_setzen(font, px, z, pen, k * ZEILE)
+                if gruen:
+                    for tok, gx0, gx1 in gruen_faerben(font, px, z, pen, k * ZEILE, gruen):
+                        gruen_treffer.append((i + 1, k, tok, gx0, gx1))
                 x0, x1 = R.breite_von(font, z, pen)
                 xm = max(xm, x1)
                 xl = min(xl, x0)
-        px = R.kontur_ziehen(px)
+        px = kontur_ziehen_g(px) if gruen else R.kontur_ziehen(px)
         name = "FILE%02d_p%02d_page" % (args.doc, i + 1)
-        n = R.tim_schreiben_4bpp(os.path.join(args.out, name + ".TIM"), vor_seite, px)
+        hat_gruen = any(t[0] == i + 1 for t in gruen_treffer)
+        # nur Seiten MIT gruenem Token bekommen die erweiterte CLUT; alle anderen bleiben byte-gleich
+        n = R.tim_schreiben_4bpp(os.path.join(args.out, name + ".TIM"),
+                                 vor_seite_gruen if hat_gruen else vor_seite, px)
         png(px, name)
         bericht.append("%s.TIM  %d B  %d Zeilen  Kern-x %d..%d" % (name, n, len(seite), xl, xm))
         for z, pen in seite:
             bericht.append("      | %s%s" % (z, "" if pen in (None, rand) else "   [Stift %d]" % pen))
+    if gruen:
+        for tok in gruen:
+            if not any(t[2] == tok for t in gruen_treffer):
+                raise SystemExit("--gruen %r kommt im Text nicht vor" % tok)
+        bericht.append("GRUEN (Steuerbyte 0x05 Arg 1 -> TEX.TIM CLUT-Zeile 2, @0x80028974-94): "
+                       "CLUT 9..14 = %s" % ["%04x" % c for c in vor_seite_gruen["clut"][9:15]])
+        for seite_nr, zeile, tok, gx0, gx1 in gruen_treffer:
+            bericht.append("   p%02d Zeile %d (y %d..%d): %r Kern-x %d..%d gruen"
+                           % (seite_nr, zeile, zeile * ZEILE, zeile * ZEILE + ZEILE - 1, tok, gx0, gx1))
     bericht.append("")
     bericht.append("max_page (RE2-Record +0, u16) = %d   y_off (+2, u8) = %d   H = %d"
                    % (len(seiten), 256 - H, H))
@@ -277,6 +391,8 @@ def main():
     ap.add_argument("--vorlage", type=int, required=True)
     ap.add_argument("--rand", type=int, default=None, help="Stiftlage; Standard = gemessen an der Vorlage")
     ap.add_argument("--xmax", type=int, default=None, help="Grenze; Standard = gemessen an der Vorlage")
+    ap.add_argument("--gruen", action="append", default=None,
+                    help="Token (z.B. Code), dessen Glyphen im Textmaler-Gruen gesetzt werden (mehrfach)")
     ap.add_argument("--unterschrift", action="store_true",
                     help="letzte Textzeile rechtsbuendig wie RE2s einzeilige Unterschriften")
     setze(ap.parse_args())

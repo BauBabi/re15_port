@@ -13,6 +13,9 @@ BAUM="$(cd "$(dirname "$0")/../../.." && pwd)"
 PY=C:/Python310/python.exe
 OUT="${1:-$BAUM/build/r34n_e/satz_neu}"
 T="$BAUM/analysis/befunde_runde34_nacht/E_texte"
+# Runde 35 Spur F: FILE28/FILE29 mit --gruen (Codes im Textmaler-Gruen, doc_satz_brief.py Optional 5);
+# Soll-Liste seitdem analysis/befunde_runde35/F_belege/satz_md5.txt (FILE26/27 = Zeilen der r34-Liste).
+MD5="$BAUM/analysis/befunde_runde35/F_belege/satz_md5.txt"
 mkdir -p "$OUT"
 cd "$BAUM"
 "$PY" re15_port/tools/re2_doc_satz.py atlas --out "$OUT/atlas" > "$OUT/atlas.log"
@@ -22,16 +25,16 @@ F="$OUT/atlas/re2_doc_font.json"
 "$PY" re15_port/tools/r34n_e/doc_satz_brief.py --out "$OUT/FILE27" --font "$F" --text "$T/dok2_elliot.txt" \
       --titel "ELLIOT'S DIARY" --doc 27 --vorlage 8 > "$OUT/FILE27.log"
 "$PY" re15_port/tools/r34n_e/doc_satz_brief.py --out "$OUT/FILE28" --font "$F" --text "$T/dok3_marvin.txt" \
-      --titel "MARVIN'S NOTES" --doc 28 --vorlage 2 --unterschrift > "$OUT/FILE28.log"
+      --titel "MARVIN'S NOTES" --doc 28 --vorlage 2 --unterschrift --gruen 4312 > "$OUT/FILE28.log"
 "$PY" re15_port/tools/r34n_e/doc_satz_brief.py --out "$OUT/FILE29" --font "$F" --text "$T/dok4_armory.txt" \
-      --titel "ARMORY NOTICE" --doc 29 --vorlage 6 > "$OUT/FILE29.log"
+      --titel "ARMORY NOTICE" --doc 29 --vorlage 6 --gruen 5632 > "$OUT/FILE29.log"
 fehler=0
 for n in 26 27 28 29; do
   zeile=""
   for f in $(cd "$OUT/FILE$n" && ls FILE${n}_*.TIM | sort); do
     zeile="$zeile$(md5sum < "$OUT/FILE$n/$f" | cut -c1-8) $f;"
   done
-  soll="$(grep "FILE${n}_" "$BAUM/analysis/befunde_runde34_nacht/E_belege/satz_md5.txt" | tr -d '\r')"
+  soll="$(grep "FILE${n}_" "$MD5" | tr -d '\r')"
   if [ "$zeile" = "$soll" ]; then echo "FILE$n gleich der md5-Liste"; else echo "FILE$n ABWEICHUNG"; echo " ist:  $zeile"; echo " soll: $soll"; fehler=1; fi
 done
 exit $fehler
