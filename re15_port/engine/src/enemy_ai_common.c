@@ -211,7 +211,7 @@ int re15_enemy_ai_tick(int slot)
 
     /* cache dist @+0x1d0 (byte-true: 16-bit-wrapped ΔX/ΔZ, SquareRoot0). */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
-    /* func_0x8001bd60(-10,20) setup helper — deferred. func_0x80039e7c(&player,0,0) steer-writer is RESOLVED, IMPLEMENTED as re15_nav_update_steer (live tick @L2517/2523). */
+    /* func_0x8001bd60(-10,0x14) = Engine-Schwerkraft (Absturzkante -> Fall auf +0x1ba), portiert als re15_schwerkraft_8001bd60 und aufgerufen in re15_enemy_ai_live_tick (Zombie-Wurzel `jal` @0x80100514, Runde 35 Spur H). func_0x80039e7c(&player,0,0) steer-writer is RESOLVED, IMPLEMENTED as re15_nav_update_steer (live tick @L2517/2523). */
 
     /* main-state dispatch (*PTR_FUN_801217a0[entity+0x4])(). */
     switch (e->state) {
@@ -10692,7 +10692,8 @@ static void re15_zgirl_ai_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return;     /* +0x9 & 0x20 @0x8010a8f4-900 */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);   /* +0x1d0 @0x8010a908-64 */
     /* mercy +0x1d5 tick @0x8010a974-9b4 -> the global s_grab_mercy_timer (run_all) stands in;
-     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (look aux) is unmodeled port-wide. */
+     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (Engine-Schwerkraft, re15_schwerkraft_8001bd60) laeuft bisher nur in
+     * der Zombie-Wurzel (@0x80100514, Runde 35 Spur H); HIER (Zombie-Maedchen) noch nicht — OFFEN H_raeume.md. */
     re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));  /* FUN_80039e7c @0x8010a9c0-e0 */
     e->ai_flags &= (uint16_t)~8u;                   /* the one-shot clear @0x8010a9f0-fc */
@@ -14665,7 +14666,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * HP=-1 + idle clip 2 → shared executor state 4 @0x80050be8 + shared watcher states [6-11]
              * @0x8004f2xx). STAGE1: 0x40 Irons / 0x42 / 0x45 / 0x47 Annette / 0x49 / 0x4b. STAGE6 adds
              * 0x4d — the STAGE6 overlay registers its root @0x801017a0 (dispatch @0x80072ce0), which is
-             * byte-for-byte the NPC root pattern (pause gate → look helper 0x8001bd60 → nav-steer
+             * byte-for-byte the NPC root pattern (pause gate → Schwerkraft 0x8001bd60 [hier noch nicht portiert] → nav-steer
              * 0x80039e7c → +0x4 state dispatch) and whose state table @0x80102794 has the IDENTICAL
              * EXE-shared entries ([4]=0x80050be8, [6-11]=0x8004fxxx) as the STAGE1 NPCs; its INIT
              * @0x80101918 sets entity+0x9a = -1 (invulnerable). re15_npc_ai_tick is type-agnostic
