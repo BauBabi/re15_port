@@ -69,17 +69,21 @@
 #   - gate_festhalten laesst dessen Selbsttest laufen (feste Gate-Ausgaben + Mutanten der Funktion urteil() - Umfang
 #     der Operatoren im Kopf von release/gate_urteil.py; Meldungstexte, main() und urteil_rufen() werden NICHT mutiert)
 #     und prueft die Schlusszeile HIER in bash, mit Mindestzahlen (GATE_URTEIL_MIN_*): weniger Faelle/Mutanten oder
-#     mehr "gleichwertige" als festgehalten = Abbruch; jede dieser bash-Pruefungen hat in ctest
-#     unit_r35_android_pruefkette eine eigene Negativ-Kontrolle (N10-N18, Nachbesserung 1);
+#     mehr "gleichwertige" als festgehalten = Abbruch; jede dieser bash-Pruefungen hat Negativ-Kontrollen von BEIDEN
+#     Seiten (re15_port/tests/unit/r35_android/urteil_kontrollen.sh, Nachbesserung 2);
 #   - gate_laufen verlangt fuer ein OK-Urteil ZUSAETZLICH, unabhaengig vom Urteilscode: Rueckgabe 0 des Gates und die
 #     Urteilszeile "Gate-Urteil (<modus>, Rueckgabe 0): " in der Ausgabe des Urteils (zweite Instanz - ein richtiges
 #     Gate kann nicht mehr ueberstimmt werden);
 #   - ctest unit_r35_android_pruefkette (re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh) faehrt das
 #     alles bei jedem Suite-Lauf, mit Negativ-Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes
-#     Urteil, je Pruefzeile des bash-Urteils eine Attrappe, veraenderte private Kopien), die ROT werden muessen.
-#   Wer eine Pruefzeile in gate_urteil_selbsttest/gate_laufen/gate_*pin_pruefen aendert oder neu schreibt: eine
-#   Negativ-Kontrolle dazu in test_r35_android_pruefkette.sh (Streich-Messung: analysis/befunde_runde35/N_android.md,
-#   Nachbesserung 1).
+#     Urteil, die Attrappen-Kontrollen aus urteil_kontrollen.sh, veraenderte private Kopien), die ROT werden muessen;
+#   - ctest unit_r35_android_bash_mutanten (bash_urteil_mutanten.py, Nachbesserung 2) MUTIERT die sechs Funktionen
+#     gate_pin_pruefen, gate_urteil_pin_pruefen, gate_urteil_selbsttest, gate_festhalten, gate_urteil, gate_laufen
+#     (Vergleiche in (( )) in beide Richtungen, [[ ]], grep -q-/=~-Muster, die -> true, Zahlen, Pruef-Aufrufe, return)
+#     und verlangt fuer jeden Mutanten eine rote Kontrolle aus urteil_kontrollen.sh.
+#   Wer eine Pruefzeile in diesen Funktionen aendert oder neu schreibt: eine Kontrolle dazu in urteil_kontrollen.sh
+#   (sonst ueberlebt ein Mutant = BASH-URTEIL-MUTANTEN-FEHLER); Dossier analysis/befunde_runde35/N_android.md,
+#   Nachbesserung 2. Die Kontrollen laufen unter "set -euo pipefail" - wie die Aufrufer hier.
 #   Wer gate_urteil.py aendert: --selbsttest muss OK sein (sonst Fall ergaenzen), dann den neuen sha256 in
 #   release/gate_urteil.sha256 festhalten und ggf. GATE_URTEIL_MIN_* anpassen - im selben Commit.
 # =============================================================================
