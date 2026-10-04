@@ -430,3 +430,31 @@ Verhaltensaenderung.
 | `unit_r35_karte_fahrstuhl` (b) | Ecken: jetzt an der sichtbaren Ring-Mitte (mx-1,my-1) gemessen | - | - | gruen |
 | probe `marker` (NEU) | Ring im Abzug finden (Pixel ohne Kartenfarbe) | - | - | - |
 
+### OFFEN (Stand Nachbesserung 1)
+* Erledigt: alter OFFEN-Punkt 2 (Fahrstuhl-Marker) - jetzt 7 px je Achse.
+* Unveraendert offen (nicht Teil der Maengel, Adressen/Messwege oben): 1 (Blatt 0: 1190/11A0 vermutlich
+  vertauscht, Zeilen @0x80076978/@0x80076980), 3 (Gang 1180/1230 schematisch gemalt, 11B0-Tuer), 4
+  (ROOM5020 Blatt 9 ohne sichtbares Rot in integration_map_raum_live), 5 (Fahrstuhl-Etage nach Laden in
+  der Kabine aus den Bits 54/55/56).
+* Neu, klein: der Ring (5x5) ragt in den Ecklagen der Kabine bis 2 px ueber die gemalte Wand (Innenraum
+  8x8). So zeichnen auch RE1.5 (@0x800475d8) und RE2 (@0x8006e2f0) - beide klemmen nicht. Wer das
+  aendern will, muesste die Reichweite des Rings kleiner abbilden als die des Spielers (= wieder weniger
+  Bewegung) - nicht gemacht.
+* Der 1-px-Glyph-Versatz (Ring-Mitte = mx-1/my-1, TEX.TIM @0x14910) gilt fuer ALLE Raeume; nur die
+  Fahrstuhlzeilen sind darauf geeicht. Fuer die uebrigen ist er bei Kacheln von 30-90 px unerheblich und
+  hier nicht angefasst.
+
+### Fuer den Nutzer (Stand Nachbesserung 1)
+* Fahrstuhl ROOM1080: der Spieler-Marker wandert jetzt ueber die GANZE gemalte Kabine - 7 Pixel quer
+  und 7 Pixel laengs (vorher 2). Nach dem Einsteigen steht er unten an der Tuer, an der Rueckwand oben,
+  in den Ecken links/rechts unten; 180 Grad gedreht wie der Raum. Massstab wie in RE2 (ein Massstab
+  fuer alle Raeume), damit fallen die Kabinenwaende genau auf die gemalten Waende.
+* Etage der Kabine = Etage, aus der man eingestiegen ist (Port-Ergaenzung; das Original zeigt immer 1F).
+* Keine neuen Sprachdateien, keine neuen Assets (kein Eintrag fuers Paket-/Android-Gate).
+* Neuer Test integration_r35_karte_fahrstuhl dauert ~170 s (6 echte Laeufe).
+
+### Abschluss-Suite Nachbesserung 1
+`bash re15_port/tools/local_build.sh all` (2026-10-04, configure + Vollbau + ctest, 1365 s):
+`=== LOCAL-BUILD-OK (all) — Tests 484/484` (483 + integration_r35_karte_fahrstuhl; keiner der
+Fenster-Haken musste nachgefahren werden; integration_r35_karte 70,7 s, integration_r35_karte_fahrstuhl
+169,3 s, integration_map_raum_live / _uebergang / unit_map_etagenzeile Passed).
