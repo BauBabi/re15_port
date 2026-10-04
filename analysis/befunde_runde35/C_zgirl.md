@@ -50,14 +50,68 @@ STAGE1 0x8010a8c8, STAGE2 0x8010a75c, STAGE3 0x8010a9b4, **STAGE4 0x8010a87c** (
 sie vorkommt), STAGE5 0x8010a9fc. Die bisherige Portierung (RE15_ZOMBIEGIRL_AI.md) wurde an der
 STAGE1-Kopie (0x8010a8c8) gelesen.
 
+### M3 STAGE4-Kopie == STAGE1-Kopie (relokationsbewusster Wortvergleich, ovl_reloc_diff.py)
+* Zombie-Maedchen-Code STAGE1 [0x8010a8c8, +0x1924) gegen STAGE4 [0x8010a87c, +0x1924):
+  1609 Woerter: 1551 gleich, 13 j/jal (alle Zieldelta -0x4c), 45 nur-Immediate (44x addiu, 1x lw,
+  alle Delta -27352 = -0x6ad8 = Datenrelokation), **0 echte Unterschiede**.
+* Geteilte Standard-Zombie-Phasen-Handler STAGE1 [0x80100424, +0xa4a4) gegen STAGE4 [0x801003d8]:
+  10537 Woerter, 163 j/jal (-0x4c), 127 Immediate (Daten -0x6ad8, ein Zeiger -0x6a94 = die HP-Tabelle
+  0x8011f034, die das Maedchen nicht liest), **0 echte Unterschiede**.
+* Tabellen: Zustands-/Modus-/Phasen-Tabellen STAGE1 [0x80120208, +0x4f8) gegen STAGE4 (-0x6ad8):
+  196 gleich, 122 Code-Zeiger mit -0x4c, 0 echte; Daten [0x8011f760, +0xa0): 28 gleich, 11 Code -0x4c,
+  1 Datenzeiger, 0 echte.
+* => Jede STAGE1-Adresse der Portierung gilt fuer STAGE4 mit Code -0x4c / Daten -0x6ad8
+  (z.B. Wurzel 0x8010a8c8 -> 0x8010a87c, Zustands-Tabelle 0x80120208 -> 0x80119730).
+
+### M4 Warum sie im Port nicht erscheint (gemessen, Lauf build/r35_zgirl_mess/vorher_tuer6)
+`RE15_DEBUG_JUMP=4050@gp` (Sprung kommt mit Cut 0 -> kein Case) + `RE15_FIRE_AOT=6@60#4050`:
+```
+[aot] DOOR FIRE slot=6 rect=(-9300,-22700,hw=1000,hh=500) target_cut=9 spawn=(-9350,0,-2600)
+F400 PL(-9350,-2600,...) cam=9   — 3590 Zeilen state.log, 0 Zeilen mit t=13, kein [spawn-diag]
+```
+Tuer feuert, Leon wird versetzt, Kamera Cut 9 — aber main00 laeuft NICHT neu, also kein Switch,
+kein Spawn. Ursache im Port: aot_common.c (vor dem Fix Z.797-800) setzte
+`g_scd_pending_scenario` nur, wenn `0x1000|room<<4|var == Raum` — d.h. NUR fuer Stage 1
+("BEWUSST NICHT verallgemeinert: Stage >= 2 ..."). Zensus `selbsttuer_zensus.py`: 67 Selbst-Tueren,
+der Port stieg bei 21 neu ein (alle 21 in Stage 1), bei 0 von 46 in Stage 2..6.
+Zum Zombie-Maedchen fuehren AUSSCHLIESSLICH Selbst-Tueren: Tueren von aussen nach ROOM4050 kommen
+nur aus ROOM4040 (Slot 3 -> Cut 2, Slot 4 -> Cut 0). Deckt sich mit Runde 34 (mess_geg.md M-H3).
+
 ## RE-Belege
-(laufend)
+
+### R1 Tuer-Warp laedt JEDES Ziel neu, auch den eigenen Raum (PSX.EXE FUN_8001d600, selbst disassembliert)
+```
+8001d930  lbu  v1,10(a0)          ; Tuer-Payload Byte 10 = Ziel-Cut
+8001d940  sb   v1,-1099(at)       ; 0x800afbb5 angeforderter Cut
+8001d948  sh   v1,4068(at)        ; 0x800b0fe4 = work_vars[0x0A] = Eintritts-Cut  <- Switch-Variable ROOM4050
+8001d94c  lbu  v0,9(a0)           ; Raum
+8001d95c  sh   v0,4066(at)        ; 0x800b0fe2 aktueller Raum
+8001d960  lbu  v0,8(a0)           ; Stage
+8001d968  beq  v1,v0,0x8001d988   ; NUR Stage verglichen (gleich -> kein Overlay-Wechsel 0x80039a30)
+8001d988  jal  0x800396fc         ; Raumlader UNBEDINGT
+  80039a00  jal 0x8003ef6c        ; darin SCD-Raum-Init (main00 + sub00 neu)
+```
 
 ## Umsetzung
-(laufend)
+
+### U1 Selbst-Tueren in allen Stages (aot_common.c, 1 Zeile + Kommentar)
+`g_scd_pending_scenario = (int)d->target_cut;` jetzt unbedingt. An dieser Stelle kommt nur an, wessen
+`dest_id = ((dest_stage+1)<<12)|(room<<4)|var` == aktueller Raum ist (Kreuz-Raum-Tueren kehren vorher
+zurueck) — das ist exakt der Original-Zweig @0x8001d968/@0x8001d988. Stage 1 unveraendert (alle 21
+Selbst-Tueren erfuellten die alte Bedingung), neu: 46 Selbst-Tueren in Stage 2..6 (u.a. ROOM4050
+Slots 1-3, 5-13). Commit 8ec202f9.
 
 ## Messung nachher
-(laufend)
+
+### N1 ROOM4050 Tuer 6 -> Cut 9 (Lauf build/r35_zgirl_mess/nachher_tuer6, Default-KI = RE2)
+```
+[aot] DOOR FIRE slot=6 ... target_cut=9 spawn=(-9350,0,-2600)
+[spawn-diag] Sce_em_set type=0x13 behavior=0x00 slot=0 pos=(-9900,0,1150) dir=512
+F61  [1 t=13 st=1 ss1=0 ... @(-9900,1150,r512)] hp=98
+F231 [1 t=13 st=1 ss1=3 ss2=3 mo=12 d=834]  (Griff)     Spieler-HP 100 -> 80 (F246) -> 60 (F291)
+F336 [1 t=13 st=1 ss1=5 g=80 mo=2]           (zurueckgestossen/liegt), F484 wieder ss1=1 Anlauf
+```
+540 Bilder mit dem Zombie-Maedchen in state.log. Sie erscheint jetzt.
 
 ## Tests
 (laufend)
