@@ -1786,7 +1786,7 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
 ### Stand (fortlaufend)
 - [x] M1 Disasm 0x8011c3d4  - [x] M1 Umsetzung  - [x] M1 Riegel  - [x] M1 Original (GDB)  - [x] M1 exe nachher
 - [x] M2 Mechanismus Port  - [x] M2 Original (GDB)  - [x] M2 Entscheidung (Original-Verhalten, Riegel)
-- [x] M3  - [x] M4  - [x] M5  - [x] H1 (Kommentar)  - [ ] Suite (Endstand)
+- [x] M3  - [x] M4  - [x] M5  - [x] H1 (Kommentar)  - [x] Suite (Endstand)
 
 ### M1 — Messung vorher (aus Abnahme 5, nicht wiederholt)
 - Abnahme 5 Lauf w3y (Tuerweg, Item 3, Feuerskript): `F2806 S2 1/8/1 mo=21` (B[8], Clip 0x15), `F2813 PL hp 46 -> -554`,
@@ -2017,7 +2017,7 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   Part-Matrix des zuletzt GEZEICHNETEN Bildes (Decompilat: `param_3[0..7]` in den Effekt-Record) — beim Eintritt also
   Leons Zielpose, bei Bild 0x3c das Bild 0x3b (dieselbe Naeherung wie beim Hunde-/Zombie-Kollaps). Messweg: Effekt-Record
   0x800a73b8 + 0x42*i nach dem Spawn per GDB lesen.
-- **N6-5 Todes-SE positional**: CORE 3 im Finisher mono (Se_on a1 = Spieler+0x34 @0x8011c4ac), wie O5 im Zombie-Kollaps.
+- **N6-5 Todes-SE positional**: CORE 3 im Finisher mono (Se_on a1 = [g_entity(cur)] + 0x34 = Spieler + 0x34 @0x8011c4ac-bc), wie O5 im Zombie-Kollaps.
 - Weiter offen aus Nachbesserung 5: N5-1 (Rest-Lageabweichung im takt-Lauf, KORREKTUR N6: 26 / 22), N5-2 (Knockdown-
   Klemme im Handler), N5-3 (Tuerweg ohne Original-Aufnahme); aus Nachbesserung 4: N4-2..N4-5; aus Nachbesserung 3: 5, 6.
 - **Kein OFFEN zu M2**: der Endlos-Blind-Zonensprung ist Original-Verhalten (GDB 400 Bilder, Riegel zonensprung 400/400).
@@ -2043,3 +2043,16 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
 | M4 kette_test toter Code | eigene Schleife, kein Aufrufer | FUN_8011bf50 @0x8011bf80-c4, FUN_8011c024 @0x8011c054-b8 | affen_glieder gemeinsam, Riegel kette | kette 4/4 Ketten gleich |
 | M5 Heavy +363/+364 still | Abweichung 1 Bild beim ersten Angriff | vs9765 - vs9037 = 728 VSyncs | OFFEN N6-1 mit Messweg | — |
 | H1 Kopfkommentar | Klemme seit (14) nicht mehr im Handler | @0x80035f18 / @0x80031d70 | game_step_common.c 1 Kommentarzeile | — |
+
+### Suite (Nachbesserung 6)
+- Zwischenlauf (Stand 9a53df1b, vor Teil B und der Schub-Zeile, `jnb6/suite1.log`): `=== LOCAL-BUILD-OK (all) — Tests 498/498`.
+- Ein zweiter Lauf nach der ersten Schub-Zeile wurde von mir abgebrochen (eigene Task), weil der exe-Lauf w3p das
+  Rutschen der Leiche in cmd 7 zeigte; danach Grenze auf cmd 6 gezogen.
+- **Endstand** (`bash re15_port/tools/local_build.sh all`, `jnb6/suite3.log`, ctest-Log `jnb6/ctest_suite3.log`, Tests
+  1205,5 s): `test OK — 498/498 bestanden` / **`=== LOCAL-BUILD-OK (all) — Tests 498/498`** (Schranke 478). Im selben Lauf
+  gruen: alle 20 `unit_r35_affen_*` (neu: finisher, zonensprung, kette) und die fuenf Fenster-Haken (weste_load_pin 6,1 s,
+  boot_bg_pin 17,7 s, dark_start_pin 17,7 s, relatch_pin 22,2 s, save_counter_pin 13,7 s). re15_pc.exe nach der Suite
+  md5 43b83e18... = die exe-Kopie des Laufs w3q.
+- DuckStation settings.ini nach allen GDB-Laeufen auf den Ausgangsstand zurueckgespielt (diff leer, EnableGDBServer = false);
+  meine zwei haengen gebliebenen DuckStation-Prozesse (erster M2-Versuch) per eigener PID beendet.
+- Abschluss-Commit: fix(r35-affen): Nachbesserung 6.
