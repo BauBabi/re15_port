@@ -14,7 +14,9 @@ hat weder Entpacker noch APK). Belege sind hier Messungen (Geometrie-Rechnung, T
 Mutanten-Lauf des Gates) und Quelltext-Zeilen des Ports, keine @0x-Adressen. Jede Zahl im Code wird
 mit ihrer Herleitung (Messung/Zeile) kommentiert.
 
-Status: FERTIG (Abschluss unten); Nachbesserung 1 nach Abnahme 0 am Ende (M1-M3: Urteil-Mutator mutiert jetzt auch
+Status: Nachbesserung 2 nach Abnahme 1 am Ende (M1-M3 zu Punkt 3: Vergleiche in beide Richtungen mutiert + Faelle
+beider Seiten 280/887/7, tuer_soll() eigene Pruefung + Strukturregel, bash-Urteil mit 87 Kontrollen beider Seiten und
+eigenem Mutantenlauf 220/217/3; E-Reihe 29/29). Vorher: FERTIG (Abschluss unten); Nachbesserung 1 nach Abnahme 0 am Ende (M1-M3: Urteil-Mutator mutiert jetzt auch
 Zeichenketten/Regex-Muster, 243 Faelle / 781 von 785 Mutanten, 32/32 simulierte Aenderungen; bash-Urteil mit
 Kontrollen N10-N21, Streich-Messung 17/17; Doku auf den gemessenen Umfang). Kurz: (1) Schrift aus Hoehe UND Breite - auf dem
 Emulator 2400x1080 Titel und laengster Fehlertext vollstaendig; (2) Datei<->Ordner-Konflikte werden im selben Start
