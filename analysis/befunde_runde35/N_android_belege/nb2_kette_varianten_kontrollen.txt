@@ -1,0 +1,14 @@
+# NB2: Aenderungen F1-F13 der Abnahme 1 (nb2_kette_varianten.py) direkt gegen urteil_kontrollen.sh pruefen --schnell (erste rote Kontrolle)
+F1: FALSCH  N8b_urteil_luegt_gate_2 -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): alles bestens 
+F2: FALSCH  N8c_urteil_luegt_gate_1 -> Rueckgabe 0 (soll 2): == SELBSTTEST-FEHLER: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): alles bestens 
+F3: FALSCH  N11b_f1_groesser_f2 -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 281/280 Faelle, 887/894 Mutanten erkannt, 7 al
+F4: FALSCH  N13b_summe_groesser_alle -> Rueckgabe 0 (soll die:Mutanten erkannt, 7 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/280 Faelle, 88
+F5: FALSCH  N10_ok_zeile_rueckgabe_1 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 1):    == URTEIL-SELBSTTEST-OK:
+F6: FALSCH  N10b_ok_zeile_rueckgabe_2 -> Rueckgabe 0 (soll die:Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 2):    == URTEIL-SELBSTTEST-OK
+F7: FALSCH  P5_gate_1_befund_bleibt_1 -> Rueckgabe 0 (soll 1): == SELBSTTEST-FEHLER: Attrappe ==    Gate-Urteil (selbsttest, Rueckgabe 0): Attrappe 
+F8: FALSCH  N22_zahl5_leer -> Rueckgabe 1 (soll die:Selbsttest des Gate-Urteils ohne gueltige Schlusszeile): DIE: Selbsttest des Gate-Urteils: 887/894 Mut
+F9: FALSCH  P3_selbsttest_angenommen -> Rueckgabe 1 (soll 0:Gate-Urteil selbstgeprueft: 280/280 Faelle, 887/894 Mutanten erkannt, 7 gleichwertig):    == U
+F10: FALSCH  P4_gate_0_urteil_0 -> Rueckgabe 2 (soll 0):    Gate-Urteil (selbsttest, Rueckgabe 0): Attrappe    Gate-Urteil ohne Urteilszeile '   Gate-Urtei
+F11: FALSCH  N19b_zeile_anderer_modus -> Rueckgabe 0 (soll 2): == SELBSTTEST-OK: Attrappe ==    Gate-Urteil (apk, Rueckgabe 0): falscher Modus 
+F12: FALSCH  N12_faelle_unter_mindestzahl -> Rueckgabe 0 (soll die:Faelle, verlangt n/n):    == URTEIL-SELBSTTEST-OK: 279/279 Faelle, 887/894 Mutanten erka
+F13: FALSCH  N15_zu_viele_gleichwertige -> Rueckgabe 0 (soll die:Mutanten erkannt, 8 gleichwertig - verlangt):    == URTEIL-SELBSTTEST-OK: 280/280 Faelle, 
