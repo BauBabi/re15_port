@@ -599,3 +599,34 @@ RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60`, Montage 1240 -> Tuer 
 in 1170 inkl. Tuerbild; Gegenprobe hatte dort bg_prev=1, N2 bg_prev=0), und
 `RE15_FRAMEDUMP=200-1600/100:fd_ RE15_EXIT_AT=1601#1170` -> **15/15 bytegleich** (Helipad, Bild
 1100/1400 hell, Mittelwert 45/46). Rueckleser vor dem Present (gdigrab liefert in dieser Sitzung Weiss).
+
+**H2 ENEMSE gemessen (Lauf r6 = Pin j)**: `SDL_AUDIODRIVER=dummy RE15_FPS=240 RE15_DEBUG_JUMP=10C0@5
+RE15_KILL_AT=1500 RE15_BOOT_EXIT_AT=2 RE15_RE2SE_LOG=re2se.log` (Kraehen-Raum, Memory reai-v2-crow-ai):
+`[re2se] ENEMSE Bank 7 geladen: 8 VAGs, Map 32 Eintraege (Cache-Slot 0)`;
+`VORHER spielende gen=3 raum=10C0 ... gegner=1 ton=2 ... re2ton=1` -> `EREIGNIS spielende gen=4 ... re2ton=0`.
+Gegenprobe-exe: `EREIGNIS spielende raum=10C0 ... re2ton=1` (Bank ueberlebt den Tod) -> Pin j FAILED dort.
+| integration_r35_entladen_j (neu) | Dummy-Ton, Kraehe ROOM10C0, Tod: `ENEMSE Bank N geladen`, VORHER spielende 10C0 `re2ton>=1`, EREIGNIS 0 | Passed (einzeln per cmake -P) |
+Suite-Zahl nach Merge + N2: `ctest -N` = 531 (master 517 + Spur I 14).
+
+### N2 Hinweise der Abnahme 1 — Entscheidungen
+* H1 Montage-Schnappschuss: faellt jetzt an JEDER Grenze (s. Umsetzung, A/B bytegleich).
+* H2 ENEMSE-Cache: faellt an jeder Grenze (RE2 @0x8004a33c / @0x8005a108), gemessen Pin j.
+* H3 RE2-Mini-Baenke: ELEVSE/HINTSE/TUERSE/PANEL2130 = RE2-Raumbank-Saetze (Bank 2) -> fallen, gemessen
+  fuer TUERSE (Pin i); ELEVSE/HINTSE/PANEL2130 laufen durch dieselbe Funktion (gleiche Lazy-Lader-Bauart,
+  loaded/failed -> 0), nicht einzeln gemessen. TORSE + Tuersequenz-Bank je Archiv bleiben mit Beleg
+  (Tuerbank @0x3DC50 ausserhalb des Key-Off-Bereichs @0x800597a4ff; laufender Schliesston klingt ueber
+  die Tuer weiter, Runde 31) — der Ton der TUER, nicht eines Raums.
+* H4 heli_md1/pilot_md1: unveraendert O4 (totes Erbe, main.c-Umfang).
+* H5 bestaetigt (re15_rbj_room nach jeder Grenze NULL).
+* H6 Spur L: deren Sprachzeilen liegen je Raum (synchro/STAGE1/room1150/main22..29, room11C0/main10..12,
+  L_cut1150.md:316ff) und laufen innerhalb ihres Raums; eine an der Montage-Grenze noch laufende Zeile
+  wuerde Schritt (9) abschneiden — das ist das RE2-Verhalten (N1-Beleg @0x8004a1c4 -> Setmode 0xA0).
+  Die L-Integration (integration_r35_cut1150*, _cut10f0) laeuft in der Suite mit.
+* H7 Neue Quelldateien seit N1 (elliot_pc.c, entladen_pc.c, entladen_common.c): Android-GLOB neu
+  konfigurieren. N2 fuegt KEINE neue .c-Datei hinzu.
+
+### OFFEN (N2)
+* O1 (PSX) und O4 (heli/pilot-Parse in main.c) unveraendert.
+* O6 ELEVSE/HINTSE/PANEL2130 nicht einzeln mit einem Lauf belegt (s. H3). Naechster Messweg: Fahrstuhl
+  ROOM1080 (scd_elev_se.c, Se 0x11/0x12) bzw. Kartenhinweis (map_hint_common.c) bzw. Hebetisch 1150
+  (hebetisch_cursor_1150.c) mit SDL_AUDIODRIVER=dummy + RE15_ENTLADEN_LOG, dann Tuer/Tod: re2ton -> 0.
