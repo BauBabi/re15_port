@@ -10739,9 +10739,13 @@ static void re15_zgirl_ai_tick(int slot)
     if (s_ai_paused) return;                        /* g_pauseflags & 0x20000000 @0x8010a8d0-e0 */
     if (e->grid_id & RE15_AI_GRID_SKIP) return;     /* +0x9 & 0x20 @0x8010a8f4-900 */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);   /* +0x1d0 @0x8010a908-64 */
-    /* mercy +0x1d5 tick @0x8010a974-9b4 -> the global s_grab_mercy_timer (run_all) stands in;
-     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (Engine-Schwerkraft, re15_schwerkraft_8001bd60) laeuft bisher nur in
-     * der Zombie-Wurzel (@0x80100514, Runde 35 Spur H); HIER (Zombie-Maedchen) noch nicht — OFFEN H_raeume.md. */
+    /* mercy +0x1d5 tick @0x8010a974-9b4 -> the global s_grab_mercy_timer (run_all) stands in.
+     * Runde 35 Integration C+H (C_zgirl.md O1): FUN_8001bd60(-10,0x14) — STAGE1 `jal` @0x8010a9b8 /
+     * a1 `ori 0x14` @0x8010a9bc; STAGE4 `addiu a0,zero,-10` @0x8010a934, `jal 0x8001bd60` @0x8010a96c,
+     * `ori a1,zero,0x14` @0x8010a970 — Engine-Schwerkraft aus Spur H (trage_1200.c). In ROOM4050 ohne
+     * Wirkung (alle 410 SCA-Woerter 0x0300, kein Absturzkanten-Bit 0x2, C_zgirl.md R5); die Modus-0-
+     * Unterbrechung (fall_1c0 & 0x9fff) == 0x8001 @0x8010b698-bc bleibt deshalb OFFEN (nie ausloesbar). */
+    re15_schwerkraft_8001bd60(e, -10, 0x14, (int32_t)e->hit_radius_min);
     re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));  /* FUN_80039e7c @0x8010a9c0-e0 */
     e->ai_flags &= (uint16_t)~8u;                   /* the one-shot clear @0x8010a9f0-fc */
