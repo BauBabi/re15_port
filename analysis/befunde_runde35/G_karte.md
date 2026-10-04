@@ -336,3 +336,15 @@ Logik-Marker (115,141) (unit) -> Ring-Bbox (112..116, 138..142), Mitte (114,140)
 @0x80047564 `addiu a1,t0,4`, @0x80047578 `ori v1,zero,0xfffc` (y-4), @0x800475ac/0x800475c0
 `addiu v0,v0,4` (y+4), dann @0x800475d8 `jal 0x8006b538` (AddPrim) - kein min/max.
 
+**Gegenprobe Stand 154a73c1** (die drei Engine-Dateien re15_map_zones.c/.h + re15_inv_screen.c
+voruebergehend auf 154a73c1 zurueckgesetzt, gebaut, beide Riegel gefahren, danach `git checkout
+HEAD --` zurueck): ROT.
+```
+integration_r35_karte_fahrstuhl (142 s): f1_steh (113,144) f1_vor (113,145) f1_rechts (112,143)
+  f1_links (117,143) -> sichtbar x 5 px / y 2 px UNTER der Kabine; f3_rechts: "MARKER fehlt im
+  Fenster" (Karte zeigte Blatt 2 statt 3F) -> FATAL
+unit_r35_karte_fahrstuhl: x 112..117 (5 px), y 143..145 (2 px) ausserhalb des Innenraums;
+  aus 10C0/1120 Blatt 2 statt 3/4; Waende nicht auf der Kunst -> FAIL
+```
+Damit ist der neue Riegel am alten UND am Vorgaenger-Stand ROT (Abnahme M2).
+
