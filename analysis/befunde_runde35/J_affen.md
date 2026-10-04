@@ -1949,15 +1949,20 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   der Spieler-Schwanz FUN_80031c44 ruft `jal 0x8002b544` @0x80031cbc ohne Kommando-/HP-Abfrage (selbst disassembliert,
   s. M1-Umsetzung), FUN_8002b544 (Decompilat) ruft aec4 fuer jede aktive Entity ohne HP-Abfrage, und B[8] setzt kein Bit
   0x1000 (@0x801191c4-9204, kein Wort-0-Store) -> das Paar ist nicht ausgenommen. Aenderung (1 Zeile, "Runde 35 Spur J
-  (15)"): das hp-Gate gilt nicht, solange der Greifer ein Gorilla ist (`re15_player_victim_gorilla()`); fuer alle anderen
-  Greifer bleibt es (dort nicht gemessen). Port nachher: Leon F225-F228 je 1 Einheit, Ende (-9973,-10418) — 1 Bild spaeter
+  (15)"): das hp-Gate gilt nicht, solange der Greifer ein Gorilla ist und Leon noch im cmd-6-Ablauf steht
+  (`re15_player_victim_gorilla() && pl->state != 7`) = das gemessene Fenster F221-F290. Fuer alle anderen Greifer und ab
+  cmd 7 bleibt es (nicht gemessen; ein erster Bau ohne die cmd-7-Grenze liess im exe-Lauf w3p den toten Leon ab F2910 =
+  Treffer + 97 je Bild 1,4 Einheiten vom jagenden Gorilla schieben, bis F3060 rund 210 Einheiten — im Original beginnt
+  bei Treffer + 96 die Schnappschuss-Wiedergabe der Todesszene (GDB: ab F316 wiederholen sich die Zeilen ab F221),
+  der lebende Raum laeuft dort also nicht weiter; Grenze deshalb auf cmd 6 gezogen, w3q ohne Rutschen). Port nachher: Leon F225-F228 je 1 Einheit, Ende (-9973,-10418) — 1 Bild spaeter
   als das Original, weil der Gorilla bis dahin 8 Einheiten neben dem Original fliegt (Rest-Penetration am 2050-Kreis,
   Port 2049,5 gegen Original 2056; Flugschritt OFFEN N6-3).
 - **Riegel `finisher` Teil B** ab dem Original-Zustand F204 (e2 (-6299,0,-13987) r2517 Phase 2 Bild 10, +0x8c 260, +0x9c 0),
   Vergleich Port-Zeile F (Stand nach Tick F-1) gegen Original-Wurzeleintritt F, Leons Bild +1 / +0x8f -1 (Original zaehlt nach
   dem Posieren, FUN_8001f3bc Z. 78/89-93): **Gorilla Sub/Phase/Bild 93/93 gleich**, **Leon hp und Kommando 93/93**,
   **Clip/Bild/+0x8f 70/70**, **Leon-Lage hoechstens 2 daneben** (F226), Gorilla-Lage im Sprung/Finisher hoechstens 12 (F233),
-  nach der Landung in der Jagd bis 54 (F278, nicht geprueft). Gegenprobe ohne die Schub-Zeile: Leon 6 daneben -> rot.
+  nach der Landung in der Jagd bis 54 (F278, nicht geprueft). Gegenprobe ohne die Schub-Zeile (`jnb6/finB.txt`, gleicher
+  Lauf vor der Aenderung): Leon bleibt auf (-9975,-10422), Original (-9972,-10417) -> 6 Einheiten -> die Pruefung waere rot.
 
 ### Umsetzung Nachbesserung 6 (Dateien, Konstanten mit Beleg)
 - `re15_port/engine/src/affen_11c0.c` (15) Gorilla-Finisher = cmd-6-Hook 0x8011c414: `re15_affen_finisher_start` (Wort
@@ -1968,10 +1973,15 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   @0x8011c55c-74, Leiche aca58 := 7 @0x8011c57c-84; keine Platzierung), Ereignis-Protokoll fuer den Riegel.
   (M4) `affen_glieder` = Glieder-Aufbau fuer `affen_kette` und `re15_affen_kette_test`.
 - `re15_port/include/re15_affen.h`: Abschnitt (15), (13) Hinweis auf den Riegel `kette`, `#include "re15_enemy.h"`.
-- `re15_port/engine/src/enemy_ai_common.c` (3 Haken, je "Runde 35 Spur J (15)"): `re15_player_victim_bone_pos_pub`
+- `re15_port/engine/src/enemy_ai_common.c` (4 Haken, je "Runde 35 Spur J (15)"): `re15_player_victim_bone_pos_pub`
   (1 Zeile), `re15_player_victim_devour` Typ 0x27 -> `re15_affen_finisher_start` (2 Zeilen), `re15_player_victim_tick`
-  Zustand 2 + Greifer 0x27 -> `re15_affen_finisher_tick` (1 Zeile).
+  Zustand 2 + Greifer 0x27 -> `re15_affen_finisher_tick` (1 Zeile), `re15_body_push_player` hp-Gate nicht im
+  Gorilla-Finisher cmd 6 (1 Zeile geaendert; Schwanz `jal 0x8002b544` @0x80031cbc ungegatet, B[8] ohne Bit 0x1000).
 - `re15_port/engine/src/game_step_common.c`: nur der Kopfkommentar des Flinch-Zweigs (Hinweis H1 aus Abnahme 5, 1 Zeile).
 - `re15_port/tests/unit/test_r35_affen.c` + `probes/r35_affen.cmake`: Riegel `finisher`, `zonensprung`, `kette` (20 Eintraege).
 - Keine Assets, keine Bank-9-Bits, Nachrichten-IDs, AOT-Slots oder Ereignisse; nichts unter release/, platform/android/,
   shared_assets/PSX/.
+- **exe nachher (Endstand, Kopie re15_pc_jnb6.exe md5 43b83e18... = re15_pc.exe), Lauf w3q** (wie w3m): F2813 Treffer,
+  Leon F2817 einmal 1 Einheit geschoben ((-9974,-10421)), pst 7 ab F2883 (= Treffer + 70), danach unbewegt bis F3060.
+  Bild `jnb6/exe/w3q_finisher.png`: F2816 Gorilla auf Leon, F2900 Todeskamera Leon in der Blutlache unter dem Gorilla,
+  F2960/F3040 "YOU DIED".

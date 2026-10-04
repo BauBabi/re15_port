@@ -4445,7 +4445,7 @@ int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
 void re15_body_push_player(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    if (pl->hp < 0 && !re15_player_victim_gorilla()) return;  /* dead: the devour overlaps the corpse; Runde 35 Spur J (15): nicht im Gorilla-Finisher (Schwanz @0x80031cbc ungegatet, B[8] ohne Bit 0x1000) */
+    if (pl->hp < 0 && !(re15_player_victim_gorilla() && pl->state != 7)) return;  /* dead: the devour overlaps the corpse; Runde 35 Spur J (15): nicht im Gorilla-Finisher cmd 6 (Schwanz @0x80031cbc ungegatet, B[8] ohne Bit 0x1000, GDB g_fin F224-F228) */
     int pl_locked = re15_player_is_grabbed();                 /* player +0x0 & 0x1000 (set at grab [0]
                                                                * @0x80102624, cleared at release end
                                                                * @0x8010a680) */
