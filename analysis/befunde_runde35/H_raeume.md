@@ -761,3 +761,20 @@ committet, Lauf 1125 s, alle Fenster-Haken im ersten Lauf gruen):
 `=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478). Danach nur der Kopfkommentar von
 test_r35_raeume_arme.c auf die neuen Pruefungen gezogen (kein Code): `local_build.sh build` + `ctest -R
 ^unit_r35_raeume_arme$` -> 1/1 gruen.
+
+---
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-04)
+
+Maengel aus `H_abnahme_2.md` (alle Punkt 4 ROOM1210): M1 Gesicht-Griff Volumen 12/19 an der exe-Pin-Lage, Riegel
+gelockert; M2 die Armhoehe `RE2ARM_1210_Y = -2500` ist eine Port-Bruecke, RE2 stellt zehn Arme auf zehn Hoehen
+(-1930..-2700), Mass und Riegel kippen damit; M3 Ruecken-Griff 18/19, RE2-Emulatorbild/-RAM nicht gegangen;
+M4 Riegel (3b) Tautologie, (3)/(3c) nur Port-Varianten. Punkte 1-3 erfuellt, unangetastet.
+
+### Plan (Stand Beginn)
+Der einzige freie Parameter der Griff-Geometrie ist die senkrechte Lage Arm <-> Leon (Pin x/z = Hand, Leon-Blick
+= zur Arm-Wurzel, Opfer-Clip, Takt: alles RE2-Logik in Arm-Koordinaten). Daher zuerst das RE2-ORIGINAL messen:
+PCSX-Redux + `re2leon.cue`, Raumsprung per RAM (RE2-Tuermechanik: Tuer-AOT-Handler `sb 1 -> 0x800DF348`
+@0x800516d4, `sw s0 -> 0x800CE550` @0x800516e8; Tuerwechsel FUN_80026b7c liest den Satz: x/y/z/yaw s16 +0..+6,
+Stage +8 (%9), Raum +9, Cut +10, Ebene +11), Leon in ROOM2050 neben die Arme, Griff abwarten, je Bild RAM der
+Halte-Phase (PL, Arm, Parts beider) + Bildschirm.
