@@ -370,6 +370,8 @@ static int teil_messung(int room, const char *stage, int bilder)
     re15_actor_t *e = hund_arena(2000);
     if (!e) { printf("kein Hund 0x20 in ROOM%04X\n", room); return 1; }
     int16_t hp0 = e->hp;
+    printf("Hund @(%d,%d,%d) r%d, Spieler @(%d,%d,%d) r%d\n", (int)e->x, (int)e->y, (int)e->z, (int)e->rot_y,
+           (int)g_actors[0].x, (int)g_actors[0].y, (int)g_actors[0].z, (int)g_actors[0].rot_y);
     int r = re15_player_weapon_fire(7);
     printf("ROOM%04X Schuss Waffe 7: Treffer=%d hp %d -> %d st=%d +5=%d\n", room, r, hp0, e->hp, e->state, e->sub_state_1);
     int spitze = 0, letztes = -1;

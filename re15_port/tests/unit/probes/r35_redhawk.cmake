@@ -20,3 +20,16 @@ endif()
 #                    PIN 3: alle Raeume mit Raum-Id 7, jeder Brocken-Sub gespawnt -> 0 Haenger.
 add_test(NAME unit_r35_redhawk COMMAND probe_r35_redhawk pin)
 set_tests_properties(unit_r35_redhawk PROPERTIES TIMEOUT 300)
+
+# integration_r35_redhawk   echte exe, ROOM11D0 per RE15_DEBUG_JUMP, RE2-Hunde, Super Redhawk: nach dem
+#                           Redhawk-Tod eines Hundes faellt die Zahl lebender ESP-Plaetze (state.log fx=)
+#                           binnen 90 Bildern auf 0 (vorher dauerhaft 6 = die Brocken). Skript und Belege:
+#                           tests/integration/test_r35_redhawk.cmake.
+if(TARGET re15_pc)
+    add_test(NAME integration_r35_redhawk
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_redhawk_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_redhawk.cmake)
+    set_tests_properties(integration_r35_redhawk PROPERTIES TIMEOUT 300)
+endif()
