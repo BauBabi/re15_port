@@ -233,9 +233,13 @@ Neue Dateien (nur aus `tests/unit/probes/r35_zgirl.cmake` registriert):
 | unit_r35_zgirl_ki_re2 | dito RE2-KI (RE2-Bank aus RE2/CDEMD0.EMS): Abstand 3788 -> 386, Griff ab Bild 155, Spieler-HP 100 -> 60 (2 x 20) | gruen |
 | unit_r35_zgirl_tod | toedlich -> Zustand 3 -> Leiche 7 -> Flag (8,0xa0)=1 -> Wiedereintritt Cut 9 ohne Maedchen | gruen |
 | unit_r35_zgirl_messer | re15_player_weapon_fire(1): Zustand 2, +0x5 = 1, HP 60 -> 54, Rueckkehr in Zustand 1 | gruen |
+| unit_r35_zgirl_selbsttueren | alle Raeume: 60 Selbst-Tueren aus main00 (Stage 1: 14, Stage 2..6: 46) -> Szenario = Ziel-Cut, Wiedereintritt + 60 SCD-Bilder | gruen (60/60) |
 | integration_r35_zgirl | echte exe, Aktionstaste an Tuer 6 und Tuer 7: DOOR FIRE, `Sce_em_set type=0x13` an beiden Lagen, >= 300 Bilder mit ihr, Annaeherung >= 1500, Tuer 6 zusaetzlich Spieler-HP < 100 | gruen (253 s) |
 
 Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gruen.
+Suite vor T8: `=== LOCAL-BUILD-OK (all) — Tests 486/486` (1370 s, scratchpad suite1.log).
+Gegenprobe ohne Fix: der exe-Lauf vorher_tuer6 (M4) — dieselbe Tuer, kein Spawn; die alte Bedingung
+`0x1000|room<<4|var == Raum` kann fuer 0x4050 nie wahr werden, T3/T8 waeren dort rot.
 
 
 ## OFFEN
@@ -257,10 +261,12 @@ Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gr
   Maedchen-Modus 1 (Kriecher, FUN_8010b738 STAGE4, Tabellen 0x80119814/0x80119830) erreichbar. Im
   Default-KI-Modus (RE2) uebernimmt der RE2-Zerleger das Beine-ab/Kriechen (Familie re15_re2z_owns_type
   inkl. 0x13). Eigene Runde (betrifft Spur A "abplatzende Beine/Arme").
-* **O3 Selbst-Tueren Stage 2..6 im Spiel.** 46 Tueren steigen jetzt neu ein (byte-true). T8 faehrt jede
-  Selbst-Tuer, die main00 beim Cut-0-Eintritt setzt, durch (Szenario + Wiedereintritt + 60 SCD-Bilder);
-  Tueren, die erst Unterskripte setzen, sind dort nicht abgedeckt. Naechster Messweg bei einem Befund:
-  RE15_DEBUG_JUMP + RE15_FIRE_AOT=<slot>@<bild>#<raum> wie in lauf.sh.
+* **O3 Selbst-Tueren Stage 2..6 im Spiel.** 46 Tueren steigen jetzt neu ein (byte-true @0x8001d988).
+  T8 (unit_r35_zgirl_selbsttueren) faehrt ALLE 60 Selbst-Tueren, die main00 beim Cut-0-Eintritt setzt
+  (Stage 1: 14, Stage 2..6: alle 46 aus dem Zensus), durch: Szenario = Ziel-Cut, kein Raumwechsel,
+  Wiedereintritt + 60 SCD-Bilder ohne Absturz. Am Bildschirm einzeln gesehen sind nur die zwei
+  ROOM4050-Tueren 6/7; die uebrigen 44 Stage-2..6-Tueren sind nicht am Bild abgenommen (Stage 2+ ist nicht
+  der aktuelle Spielweg). Naechster Messweg bei einem Befund: RE15_DEBUG_JUMP + RE15_FIRE_AOT wie lauf.sh.
 
 ## Zusammenfuehrung
 * aot_common.c: eine Zeile (+4 Kommentarzeilen) im Selbst-Tuer-Zweig von aot_fire_door, Kommentar
