@@ -1525,8 +1525,8 @@ Ausgangslage: Baum sauber, HEAD 23c2c930 (Bericht J_abnahme_4.md, geprueft 21947
 Scratch: `scratchpad/jnb5/`.
 
 ### Stand (fortlaufend)
-- [ ] P1 Messung Stufen (Original GDB / Port)  - [ ] P1 Beleg  - [ ] P1 Aenderung/Riegel  - [ ] P1 Dossier (a)/(b)
-- [ ] P2 (a) Kausal-Aussage  - [ ] P2 (b) Pin/Empfindlichkeit  - [ ] P2 (c) OFFEN  - [ ] Suite  - [ ] H2 Sprungmarke
+- [x] P1 Messung Stufen (Original GDB / Port)  - [x] P1 Beleg  - [x] P1 Aenderung/Riegel  - [x] P1 Dossier (a)/(b)
+- [x] P2 (a) Kausal-Aussage  - [x] P2 (b) Pin/Empfindlichkeit  - [x] P2 (c) OFFEN  - [ ] Suite  - [x] H2 Sprungmarke  - [x] exe j1/t1/o7
 
 ### P1 — Messung vorher: welche Stufe der Gorilla-Wurzel weicht ab (Original GDB je Stufe gegen Port)
 - Werkzeug `jnb5/gdbstufe.py` (DuckStation-GDB-Server, settings.ini [Debug] EnableGDBServer nur waehrend des Laufs,
