@@ -988,3 +988,71 @@ Abschnitts ersetzt (acht Hoehen, Push gemessen und gebaut, Port = Original in fu
 und Test-Aenderungen der Nachbesserung 3 enthalten; danach nur Dossier), alle Fenster-Haken im ersten Lauf gruen:
 `=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478). exe-Kopie re15_pc_nb3h.exe nach den Messlaeufen entfernt;
 DuckStation-settings.ini auf den Stand vor den Messungen zurueckgesetzt (EnableGDBServer = false, LogToFile = false).
+
+## Nachbesserung 4 (nach Abnahme 3, 2026-10-04)
+
+Maengel aus `H_abnahme_3.md` (alle Punkt 4 ROOM1210; Punkte 1-3 erfuellt, unangetastet): M1 die exe fuehrt im
+Opfer-Zustand die Spieler-Nacken-FSM mit dem veralteten RE1.5-Ziel (neck.log Slot 0 fl=00 in allen 151 Halte-Bildern,
+Ruecken acc_yaw bis -598 an der Klemme tgt -512), das Original haelt den Kopf im Ruecken-Griff in der Animationspose;
+M2 Riegel (6a) nur im Wurzel-Rahmen, Leon ohne Nacken-FSM posiert; M3 g3/g4 (Nachbar-Push) in den Original-Spannen,
+falsche Abstandsaussagen (H_raeume.md:830, enemy_ai_re2_zellenarm.c:229-230). Vorgaenger-Sitzung um 12:00 vom Limit
+beendet, ohne NB4-Commit; dieser Abschnitt beginnt neu.
+
+### M1 — Messung im ORIGINAL-RAM (vorhandene Mitschnitte, keine neue Emulator-Messung noetig)
+Die frames.bin der zwoelf Griffe (`re2_mess/daten/g*/`) tragen je Halte-Bild Leons PL (0x248 B) und seine 16 Parts.
+Ausgewertet (Skript `re2_mess/re2_neck.py`, neu): PL+0x1B8 (Blickziel-Zeiger), PL+0x1C0 (Blick-Flags), PL+0x1C1
+(Kopf-Part), Part 8 +0x98/+0x9A (Akku yaw/pitch), +0x9C/+0x9E (Schritt), +0xA0/+0xA2 (Klemme), +0x68.. (Keyframe).
+```
+alle 12 Laeufe, alle 40 Halte-Bilder: fl=00, Kopf-Part 8, Schritt (96,96), Klemme (512,312)
+Gesicht g5  Ziel SELBST Bild 0..19 -> HALTER ab Bild 20   (g7: 25, g9: 21, g11: 28, g12: 26, g13: 15)
+Gesicht g1  Ziel SELBST -> 0x80155f1c (= Arm Satz 7, gleiche x/z wie der Halter Satz 9, 1 Einheit naeher) ab Bild 30
+Gesicht g3  Ziel SELBST -> 0x801266d8 (= Arm Satz 0, der naechste; g3 ist der Nachbar-Push-Lauf) ab Bild 31
+Ruecken g2/g6/g8  Ziel SELBST in ALLEN 40 Bildern, Akku (0,0) in allen 40 Bildern
+Ruecken g4  Ziel SELBST -> 0x8013dc2c (= Arm Satz 3, seitlich; g4 = Nachbar-Push-Lauf) ab Bild 25
+```
+=> Im Original laeuft die Nacken-FSM auch im Griff (fl=00), niemand sperrt sie. Im Ruecken-Griff steht das Ziel auf
+SELBST -> Akku 0 -> Kopf = Animationspose. Im Gesicht-Griff wechselt das Ziel einmal (Bild 15..31) auf den naechsten
+Arm vor Leon, danach dreht der Kopf zu dessen Ursprung (Ziel-Part +0x1C1 = 1 bzw. 8, Weltlage = Arm-Ursprung, gemessen).
+
+### M1 — RE-Beleg (RE2 PSX.EXE, selbst disassembliert)
+**Aufruf** im Spieler-Main FUN_8003BFAC, nach dem Zustands-Dispatch (`jalr v0` @0x8003c1a4, Tabelle 0x800a4030[PL+4]),
+also in JEDEM Spielerzustand inkl. Opfer-Routine 5:
+```
+8003c1ac addu a0,s0,zero ; 8003c1b0 addiu a1,zero,7000 ; 8003c1b4 jal 0x8003db38 ; 8003c1b8 addiu a2,zero,1500
+8003c1bc lh a1,118(s0)   ; 8003c1c0 jal 0x800177c0 ; 8003c1c4 addu a0,s0,zero
+```
+**Zielwahl FUN_8003DB38(PL, 7000, 1500)** (Decompile RE2_Quellcode_V2/FUN_8003db38.c, Bytes selbst gelesen):
+```
+8003db78 lbu v0,448(s3) / andi 0x1 / bne -> Ende        PL+0x1C0 & 1: aus (vor dem Zaehler)
+8003db90 lbu v1,0x800a4004 / addiu v0,v1,255 / sb v0     Zaehler -1 ...
+8003dba4 bne v1,zero -> Ende / 8003dba8 addiu v0,zero,45 / 8003dbb8 sb v0,0x800a4004
+                                                         ... nur bei altem Wert 0 Suche, dann 45 -> alle 46 Bilder
+         DAT_800a4004 .data = 0x2D (ghidra_re2_Leon.txt 800a4004), einziger Schreiber diese Funktion
+8003dbb0 lbu v1,0x800cfbf3 / bne -> Suche ; sonst 0x800cfbd8 & 0x10000000 ; sonst Ziel SELBST
+         DAT_800cfbf3 = em_set-Zaehler des Raums (++ @0x80057218-24 / @0x800578ac-b8, = 0 @0x80049ee4)
+8003dbe0 Liste 0x800cfe18 .. *(0x800ce334); 8003dbf4 word0 & 1; 8003dc08 andi v0,v0,0xc000 / bne -> naechster
+8003dc10 addiu a2,zero,8320 (0x2080) / 8003dc14 addiu a3,zero,1 / 8003dc70 jal 0x80050858
+         (PL-Parts + PL[0x1C1]*0xAC + 92, E-Parts + E[0x1C1]*0xAC + 92): != 0 -> verdeckt
+8003dc84 lw a1,56(s0) / lw a2,64(s0) / 8003dc8c jal 0x80015614 (PL, E.x, E.z, 1500): != 0 -> ausserhalb Kegel
+8003dc24 lw s1,496(s0) (+0x1F0 Abstand); 8003dca4 andi 0x2000: Klasse A `sltu v0,s1,s4` (Start 7000) /
+         Klasse B `sltu v0,s1,s5` (Start 0x7fffffff)
+8003dcfc sw s7,440(s3) (A) / 8003dd0c sw s6,440(s3) (B) / 8003dd10 sw s3,440(s3) (SELBST)
+```
+FUN_80015614 (Decompile): `(1500 + atan(PL->E) - PL.yaw) & 0xfff`, 0 nur fuer `< 2*1500` -> Kegel +-1500 um Leons
+Blick. Der Halter im Ruecken-Griff liegt 180 Grad hinter Leon -> nie Kandidat -> SELBST (g2/g6/g8).
+**Nacken-FSM FUN_800177C0(PL, PL.yaw)**: Ziel = Part[+0x1C1] des Ziels (+0x5C..), Winkel ueber FUN_8001820C
+(Byte-gleich mit RE1.5 FUN_8003790C, Decompile verglichen), Klemme Part+0xA0/+0xA2 (`lhu a0,160(s1)` @0x80017a6c),
+Schritt Part+0x9C (`lhu a1,156(s1)` @0x80017a64). **SELBST-Zweig** @0x80017a28-60:
+```
+80017a28 bne s0,s4 (PL != Ziel) / 80017a38 andi v0,v0,0x80 / bne
+80017a44 lhu v0,106(s1) (+0x6A Keyframe-yaw) + s3 (yaw) + s2 (Wurzel) -> sh v0,18(sp)  Ziel-yaw = Keyframe
+80017a58 lhu v0,108(s1) (+0x6C Keyframe-pitch)                    -> sh v0,20(sp)  Ziel-pitch = Keyframe
+```
+=> Akku laeuft auf 0 = Animationspose. Kein Schreiber im Arm-Overlay: CDEMD0_EM2D_ai1.BIN schreibt +0x1C0/+0x1C1 nur
+am EIGENEN Eintrag (`sb zero,448(s0)` @0x801001a8/@0x80100260, `sb a0,449(s0)` @0x801001d0/@0x80100288); das Spieler-
++0x1C0 schreibt in RE2 sonst nur FUN_800645D8 (Entity-Phasenmaschine mit eigenem +0x6/+0x14C, nicht der Spieler).
+
+**Warum die exe abweicht:** der Port fuehrt Leons Blick mit der RE1.5-Zielwahl (Prolog des cmd-1-Handlers
+@0x80031e04-40, FUN_8003703C ohne Kegel, Radius 4000, jedes Bild) — im Opfer-Zustand laeuft der Prolog nicht, das
+Ziel bleibt das zuletzt gewaehlte (der Arm HINTER Leon), die FSM klemmt bei -512. RE1.5 hat keinen Griff dieses Arms
+(Writher unfertig, NB2 M1) -> fuer den Opfer-Zustand des RE2-Arms gilt die RE2-Regel.
