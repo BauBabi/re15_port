@@ -493,3 +493,59 @@ eine Kopie + `--selbsttest`, 6 parallel, 29 s). Gegen das Urteil @9e535728 (Pin 
 (243/243, 781/785, 4); **11 von 29 NICHT bemerkt: E1, E2, E3, E4, E5, E6, E7, E9, E11, E29, E24** - genau die Liste der
 Abnahme (E11 = `rc != 0` -> `rc > 0`, dort "in der Praxis gleichwertig"). Die Abnahme ist damit reproduziert.
 Beleg `N_android_belege/nb2_urteil_aenderungen_vorher.txt`.
+
+### Nachbesserung 2 - M1 einseitige Lockerungen von Vergleichen (Python-Urteil)
+**Ursache (Code gelesen, @9e535728, wie die Abnahme 3.4):** `_Mutierer.TAUSCH` bildete `NotEq` nur auf `Eq` ab (und
+`Eq` nur auf `NotEq`) - `!=` -> `<`/`>` und `==` -> `<=`/`>=` waren kein Mutant; und die Fallsammlung pruefte jede
+Ungleichung nur von EINER Seite (qb Summe nur < n, pk qq nur > gg, st ok_n nur < n, tuer_soll g1 nur < g2, apk mb nur
+> b, len(baum) nur < k; "Innere Proben 3/2" verletzte zugleich die Mindestzahl). Kein RE-Original (Port-Infrastruktur).
+
+**Aenderung (release/gate_urteil.py):**
+- `TAUSCH` je Operator eine Liste: `==` und `!=` -> jeder andere der sechs Vergleiche (darunter die einseitigen
+  Lockerungen in beide Richtungen), `<`<->`<=`, `>`<->`>=` (Grenze), `<`<->`>`, `<=`<->`>=` (Richtung). Keine
+  Ordnungs-Operatoren, wenn eine Seite eine Zeichenkette ist (`modus == "paket"`, `f.group(1) != "ok"`). Ergebnis:
+  Vergleich-Mutanten 39 -> 145. Bei den Ungleichungen bewusst NICHT `<` -> `==`/`!=` und `<=` -> `==`: auf den
+  Zaehlwerten (nie negativ) waere z.B. `n <= 0` -> `n == 0` gleichwertig, ohne etwas zu pruefen.
+- `_faelle_seiten` (37 neue Faelle, 243 -> 280), je Fall genau EINE verletzte Bedingung: st 6/5 Faelle (ok_n > n),
+  Innere Proben 4/3 (a > b bei b = Mindestzahl); Rueckgabe -1 je Modus + FEHLER mit -1 (main() nimmt jede ganze Zahl;
+  OK nur bei genau 0, Befund nur bei genau 1 - damit ist auch E11 kein "in der Praxis gleichwertig" mehr); apk-Kette
+  q == a == g == mz == n je Glied beide Seiten (Werte links vom Glied 12 -+ 1, rechts 12: 8 Faelle); Manifest-Bytes
+  4095 < 4096 und 4097 > 4096; Tuerarchiv-Kette Quelle == APK == gleich == von je Glied beide Seiten (6 Faelle);
+  Tuer-Soll 31/30 (apk); qb/pk: 3 Baumzeilen bei "in 2 Baeumen" und 2 bei "in 3 Baeumen" (Summe passt), Summe 13 > 12,
+  pk Quelle 9 < gleich 10 (Summe gleich passt).
+- `AEQUIVALENT` 4 -> 7, je mit Begruendung im Code: `int(m.group(2)) == 0` -> `<= 0` und `qq == 0` -> `<= 0` (beide
+  Werte aus `(\d+)`, nie negativ); `len(urteile) != 1` -> `> 1` (an der Stelle hat m_ok die letzte Zeile als
+  `== <MARKE>-OK: ... ==` erkannt, die passt immer auch auf das Urteilszeilen-Muster -> len >= 1).
+
+### Nachbesserung 2 - M2 Tuer-Soll-Regel nur im Meldungstext
+**Ursache:** `tuer_soll()` stand nur im Grund von `ende(0, ...)` (gate_urteil.py @9e535728 :148/:158/:168); Meldungstexte
+werden nicht mutiert, und die Faelle "Tuer-Soll fehlt" filterten mit `"Tuer-Soll" not in z` auch die Schlusszeile
+(quellbaum: "... Tuer-Soll erfuellt ==") weg - im Modus quellbaum erreichte kein Fall die Regel.
+**Aenderung:** `tuer_soll()` ist eine eigene Anweisung vor `ende(0, ...)` in apk, quellbaum und paket (gibt nichts mehr
+zurueck; die Zahl im Grund zaehlt der Meldungstext selbst mit `sum(z.startswith("   Tuer-Soll:") ...)`); damit hat jede
+Stelle den Mutanten "Aufruf weg: tuer_soll()" (Aufruf-Mutanten 28 -> 31). Die drei Faelle "Tuer-Soll fehlt" entfernen
+nur noch Zeilen, die mit `   Tuer-Soll:` beginnen; qb und pk bekommen 29/30, 31/30, 0/0. Dazu eine **Strukturregel** im
+Selbsttest (`_meldung_regel`): kein Meldungstext (2. Argument von ende()/genau_eine()) darf eine im Urteil definierte
+Funktion rufen - sonst `[FEHLER] Pruefung im Meldungstext`. Gegenprobe am alten Urteil @9e535728:
+`['Zeile 148: tuer_soll()', 'Zeile 158: tuer_soll()', 'Zeile 168: tuer_soll()']` = genau die drei Stellen der Abnahme.
+
+### Nachbesserung 2 - Messung nachher (Python-Urteil)
+- `--selbsttest`: `== URTEIL-SELBSTTEST-OK: 280/280 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet ==`
+  (`Mutanten je Operator: Aufruf 31, BoolOp 10, Regex R0 13, Regex R1 261, Regex R2 49, Regex R3 30, Regex R4 9, Regex R5
+  115, Regex R6 11, Vergleich 145, Zahl 118, Zeichenkette 37, if-Bedingung 56, not 9`), ~5 s; gleich unter Python 3.9.0
+  und 3.14.7. Zwischenstand nur mit dem neuen TAUSCH (vor den neuen Faellen): 26 Mutanten ueberlebt - genau die Klassen
+  der Abnahme (Zeilen 85/99/102/113/117/137/142/158/160/169), nach `_faelle_seiten` 3 = die drei gleichwertigen.
+- **E-Reihe der Abnahme 1 nachgefahren** (`nb2_urteil_aenderungen.py`, Beleg `nb2_urteil_aenderungen_nachher.txt`):
+  K0 Kontrolle OK; **29 von 29 bemerkt** (vorher 18/29), darunter alle zehn der Abnahme und E11: E1 -> Fall "qb/S: Summe
+  der Baumzeilen 13 > 12", E2 -> "pk/S: Quelle 9 < gleich 10", E3 -> "st/S: 6/5 Faelle", E4 -> "apk/S: Tuer-Soll 31/30" +
+  "qb/S: Tuer-Soll 31/30", E5 -> "qb/S: 3 Baumzeilen", E6 -> "pk/S: 3 Baumzeilen", E7 -> "pk/S: Summe gleich 13 > 12",
+  E9 -> "st/S: Innere Proben 4/3", E11 -> "... gut, Rueckgabe -1" (4 Faelle), E29 -> "apk/S: Manifest 4095 Bytes <
+  SUMME 4096", E24 (Form 2 = Anweisung `tuer_soll()` in quellbaum gestrichen; Form 1 `% (n, k, tuer_soll())` gibt es nicht
+  mehr) -> "qb: Tuer-Soll fehlt" + "qb/S: Tuer-Soll 29/30" u.a. (4 Faelle), E24b (Form 2) -> 14 Faelle.
+- NB1-Reihe (`urteil_aenderungen.py`, 32 Aenderungen) gegen das neue Urteil: weiter **32 von 32** (Beleg
+  `nb2_nb1_aenderungen_neu.txt`).
+- Alt (@9e535728) gegen neu auf allen 280 Faellen (`urteil_alt_neu_nb1.py`): `280 Faelle, 280 gleiches Urteil, 0 anders`
+  (Beleg `nb2_urteil_alt_neu.txt`) - die Nachbesserung aendert kein Urteil, sie haelt nur fest.
+- Pin `release/gate_urteil.sha256` = `107de123f9aa2b733d089280f1920d33a5c442a8c8e6fff578eec993e1507a2e`;
+  `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` = 280/887/7 (apk_pruefen.sh; Kommentar dort nennt die 3 neuen
+  Gleichwertigen). Commit e28f9568.
