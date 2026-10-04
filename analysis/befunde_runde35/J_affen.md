@@ -1762,3 +1762,23 @@ Scratch: `scratchpad/jnb5/`.
   (`jnb5/exe/j2`): Freigabe (-7138,-12372), Bisse +468 ... +1139 und Tod +1194 identisch mit j1 und dem Original.
 - Abschluss-Commit: fix(r35-affen): Nachbesserung 5 (affen_11c0.c (13); game_step_common.c (14), 2 Haken; re15_affen.h (13)/H2;
   test_r35_affen.c takt/szene/griff).
+
+## Nachbesserung 6 (2026-10-04, nach Abnahme 5 = NICHT BESTANDEN, M1-M5)
+
+Ausgangslage: Baum sauber, HEAD 2853783f (Bericht J_abnahme_5.md, geprueft e635342a). Punkte 1, 2, 3, 5, 6 "erfuellt",
+Biss-Takt j1 14/14 + Tod bildgleich, Riegel 17/17, Suite 495/495. Offen:
+- **M1 (Punkt 4):** Gorilla-Finisher B[8] (600 Schaden, aca58 = 6 @0x801191c4-cc) laeuft im Port durch den Wurf-Handler
+  (0x8011c118, cmd 5) statt durch den cmd-6-Hook 0x8011c3d4 (Registrierung @0x8011eab8-c8, Dispatch 0x800368c0
+  `lw -514` @0x8003692c). Folge (Abnahme w3y): Leon F2813 -> F2814 rund 14000 Einheiten nach (-327,483), aus dem Bild,
+  dann YOU DIED. Auftrag: 0x8011c3d4 disassemblieren, portieren, Riegel.
+- **M2 (Punkt 4):** Gorilla 2 springt 9-mal auf der Stelle gegen eine Wand ((-13518,-403) <-> (-13418,-403), F2524-F2844),
+  rund 800 Bilder ohne Angriff. Auftrag: am Original pruefen, offenlegen oder beheben.
+- **M3:** "Fuer den Nutzer (Stand N5)" (3) "Bild fuer Bild wie das Original" auf 14/696 bitgleiche Bilder einschraenken.
+- **M4:** `re15_affen_kette_test` (affen_11c0.c) toter Code -> in einen Riegel nehmen oder entfernen.
+- **M5:** Heavy +363 gegen Original +364 als OFFEN fuehren.
+Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederverwendet, nicht wiederholt).
+
+### Stand (fortlaufend)
+- [ ] M1 Disasm 0x8011c3d4  - [ ] M1 Umsetzung  - [ ] M1 Riegel  - [ ] M1 exe nachher
+- [ ] M2 Mechanismus Port  - [ ] M2 Original  - [ ] M2 Entscheidung/Umsetzung
+- [ ] M3  - [ ] M4  - [ ] M5  - [ ] Suite
