@@ -92,6 +92,66 @@ nur aus ROOM4040 (Slot 3 -> Cut 2, Slot 4 -> Cut 0). Deckt sich mit Runde 34 (me
   80039a00  jal 0x8003ef6c        ; darin SCD-Raum-Init (main00 + sub00 neu)
 ```
 
+### R2 Die STAGE4-KI (dort, wo sie vorkommt) — Kernadressen selbst disassembliert (STAGE4.BIN)
+Registrierung 0x80072bac[0x13] = 0x8010a87c (re15_reg_scan.py). Zustands-Tabelle @0x80119730:
+[0]=0x8010aae0 INIT, [1]=0x8010b228 ACTIVE, [2]=0x8010bf34 HURT, [3]=0x8010bfc8 DEATH,
+[4]=0x80109150, [5]/[6]=0, [7]=0x80109508 (geteilte Leichen-Ruhe). (= STAGE1 0x80120208 -0x4c.)
+```
+8010a96c  jal  0x8001bd60          ; Engine-Schwerkraft (Spur H), a1 = ori 0x14 im Delay-Slot
+8010ab58  ori  v0,zero,0x1 / 8010ab5c sb v0,4(v1)   ; INIT -> +0x4 = 1
+8010ab74  sh   v0,444(v1) / 8010ab8c sh v0,446(v1)  ; Steuerziel = Spieler x/z
+8010abb4  ori  v0,zero,0x14 / 8010abbc sh v0,156(v1); +0x9c = 20
+8010abb8  jal  0x8001af20 (rng) / 8010abc0 andi v0,v0,0x1f / 8010abcc addiu v0,v0,50
+8010abd0  sh   v0,154(v1)          ; HP = (rng & 0x1f) + 50 = 50..81
+8010ac9c  lw   v0,-13764(v0)       ; DAT_800aca3c
+8010aca4  andi v0,v0,0x1 / 8010aca8 beq v0,zero,0x8010afc0   ; Ansprung-Lauerzeit nur bei Bit 0
+8010b648  lbu  v0,9(v0) / 8010b650 andi 0xf / 8010b65c addiu at,at,-26792 (=0x80119758) / jalr
+                                    ; MODUS-Dispatch ueber +0x9 & 0xf, 16 Eintraege
+8010b688  Modus 0: lhu v0,448(a0) / ori v1,0x8001 / andi 0x9fff / bne  (+0x1c0-Unterbrechung)
+          danach DECIDE @0x8011978c[+0x5] (8010b6dc) und ANIMATE @0x801197d0[+0x5] (8010b710)
+```
+Modus-Tabelle @0x80119758: [0]=0x8010b688 (Phasen-FSM des Standard-Zombies), [1]=0x8010b738
+(Tabellen 0x80119814/0x80119830), [2]=0x8010b7b4, [3]=0x8010b830, [4]=0x8010b8ac, [5]/[6]=0x8010b928,
+[7]/[8]=0x8010b9a4, [9]/[10]=0x8010ba20, [11]=0x8010ba9c, [12]=0x8010bb18, [13..15] zeigen in
+geteilten Code (0x80101b18/0x80101d98/0x8010200c; ohne Spawn-Weg).
+
+### R3 Welcher Modus ist erreichbar? (Spawn-Byte + Laufzeit-Schreiber von +0x9)
+* Beide Spawns tragen Verhalten pc[3] = 0x00 -> +0x9 = 0 -> **Modus 0**.
+* Laufzeit-Schreiber von +0x9 in [0x801003d8, 0x8010c1a0) (STAGE4, eigener Scan): nur 0, &0x7f, |0x80
+  und **0x81** an 0x80104ee0 / 0x80105088 / 0x80108904 / 0x8010a140 (STAGE1 +0x4c). Zugeordnet:
+  0x80105088 = Kriechtor-Uebergabe FUN_80104f80 (Zeile [0x10], nur per ROOM1030-Skript);
+  0x80108904 = Todeszeile (Waffe 8, Richtung 1) FUN_80107ee0 = **Beine ab -> Kriecher** (Fall 2:
+  +0x9=0x81, +0x4=1, HP=0x1e; Decompilat STAGE1_full/FUN_80107ee0.c); 0x8010a140 = Zeile [0xf]
+  FUN_80109e4c; 0x80104ee0 = Modus-12-ANIMATE FUN_80104b40. Damit wird das Maedchen im Original nur
+  ueber den Kriecher-Tod (Waffe 8 aus Richtung 1) zu Modus 1. Der Port fuehrt den RE1.5-Tod
+  zombieweit ueber das vereinfachte Steh-/Liege-Modell (re15_enemy_ai_live_death, keine Todeszeilen-
+  Tabelle) — siehe OFFEN O2.
+* Todes-/Treffer-Haupttabellen: Maedchen @0x8012063c/@0x8012039c == Standard @0x8011feac/@0x8011fb90
+  Wort fuer Wort, AUSSER Waffe 1 (Messer) Richtung 0/1 = 0x00000000 bei beiden Tabellen des Maedchens
+  (eigener Dump). Messer gegen das Maedchen = `jalr 0` im Original (unfertig) -> Beta->Retail: RE2
+  behandelt sie als gewoehnlichen Zombie (Lader klemmt 0x10..0x1F auf eine Gruppe), der Port nimmt die
+  Standard-Zeile (Zurueckzucken). Gemessen in T5 (Tests).
+
+### R4 Ansprung ("Lunge") ist im Original fuer sie AUS
+* Gate @0x8010aca4 (oben): nur bei DAT_800aca3c & 1.
+* Der Raumlader loescht die unteren 16 Bit bei jedem Laden (PSX.EXE): `80039710 lui v1,0xffff` /
+  `80039728 and v0,v0,v1` / `80039730 sw v0,-13764(at)` (0x800aca3c).
+* Kein `ori ...,1`-Schreiber auf 0x800aca3c in EXE und STAGE4 (eigener Scan, 38 + 11 Stores, alle
+  ori 0x40/0x80/0xc0/0x2000/0x4000/0x8000 oder and). Gesetzt wird Bit 0 nur per SCD `Set(1,31,1)`
+  (`22 01 1f 01`); Zensus aller RDTs: NUR ROOM5120/5121 main00 @0x01402 und ROOM5140/5141 main00
+  @0x01a5a — nicht ROOM4050. => Im einzigen Raum des Maedchens ist der Ansprung nie scharf. Der Port
+  traegt die Spur (enemy_ai_common.c ACTIVE, `ai_flags & 0x100`) und schaltet sie nie scharf
+  (s_live_combat_active = 0) — deckungsgleich. Gepinnt in T4.
+
+### R5 Schwerkraft FUN_8001bd60 in ROOM4050 ohne Wirkung (gemessen am RDT)
+Das Maedchen ruft sie @0x8010a96c (STAGE4). Sie faellt nur in Zellen mit Attribut-Bit 0x2 (Absturzkante,
+Spur H: `r & 2` @0x8001bdb0-b4). ROOM4050-SCA (RDT+0x20): 5 x 82 = 410 Zellen, Attributwort
+(u1 | floor<<8) bei ALLEN 410 = 0x0300 -> Bit 0x2 nirgends gesetzt, Band 0 ueberall. Die Routine kann
+dort weder einen Fall starten noch +0x1c0 setzen (also auch die Modus-0-Unterbrechung
+`(+0x1c0 & 0x9fff) == 0x8001` @0x8010b698-a4 nie ausloesen). Die Port-Funktion baut Spur H
+(re15_schwerkraft_8001bd60, Zweig r35/raeume, Feld e->fall_1c0 in re15_actor.h) — siehe
+"Zusammenfuehrung".
+
 ## Umsetzung
 
 ### U1 Selbst-Tueren in allen Stages (aot_common.c, 1 Zeile + Kommentar)
