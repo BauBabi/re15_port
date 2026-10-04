@@ -410,4 +410,50 @@ Ergebnis: RE2 Sturz Bild 218, Landung 232; RE1.5 Sturz 168, Landung 182; (D) 5/5
 RE2-Aufruf abgeschaltet, Maske 0): 8 FAIL — (D) 5x geblockt, RE2 unter der Kante "Sturz ab Bild -1" (in 1500
 Bildern nie) = genau der Abnahme-Befund. Commit 1f3e68f4.
 
+### M2 (P4, Griff von hinten) — Widerlegung per Adresse: im RE2-Original ist der Ruecken-Griff der um 180 Grad gedrehte Gesicht-Griff
+**Ursache/Messung vorher** (Abnahme 0, `probe_r35_raeume_arme`): Leon-Blick 3713 (Ruecken zum Arm, d=1) -> Hand
+< 120 an der Brustachse in 11 von 19 Halte-Bildern, Minimum 4; bei jedem Phasenversatz d=0..18 6..16 von 19.
+Der Riegel protokollierte das nur.
+
+**Beleg — der Ruecken-Griff hat im RE2-Original keinen eigenen Pfad** (EM2D-Overlay CDEMD0_EM2D_ai1.BIN
+@0x80100000, Volltext `analysis/befunde_2026-09-19/arme-1210-re2_em2d_ai1.dis`; RE2 PSX.EXE selbst disassembliert):
+* **EINE Opferbank.** B4 P0 (Arm) nach dem Pin: `80100c3c lw v0,392(s0)` (+0x188) / `80100c44 sw v0,-640(at)`
+  = 0x800CFD80 = PL+0x188; `80100c48 lw v1,396(s0)` (+0x18C) / `80100c5c sw v1,-636(at)` = PL+0x18C;
+  `80100c4c addiu v0,zero,5` / `80100c54 sw v0,-1028(at)` = PL+0x4 (Spieler-Routine 5); `80100c30 sw s0,-596(at)`
+  = PL+0x1B4 (Greifer). (PL-Basis 0x800CFBF8: PL.x = 0x800CFC30 = +0x38.) Leon bekommt die Bank des Arms —
+  dieselbe fuer jeden Griff.
+* **EIN Opfer-Clip.** Spieler-Hook 0x80101258 (Sprungtabelle @0x80100004: P0 0x801012A8, P1 0x8010131C,
+  P2 0x80101338, P3 0x8010134C, P4 0x80101374): P0 `801012a8 lui v0,0xf` / `801012ac sw v0,332(s1)` = Clipwort
+  0x000F0000 = Clip 0; P1 (Halten) nur `jal 0x8002959c` (@0x80101328) — kein Clip-Wechsel, keine Weiche.
+* **Der einzige Unterschied ist der Blick.** `801012e0 jal 0x80015910` (PL, Greifer) -> s0;
+  `801012f8 jal 0x80015558` (PL, Greifer.x @0x801012F0, Greifer.z @0x801012F4, a3 = 2048 @0x801012EC);
+  `80101304 beq s0,zero,0x80101320` / `8010130c lhu v0,118(s1)` / `80101314 addiu v0,v0,2048` /
+  `80101318 sh v0,118(s1)`. FUN_80015558 (RE2 PSX.EXE): Zielwinkel `jal 0x800154ac` @0x8001558C, Differenz
+  `(Ziel - yaw + 2048) & 0xfff` @0x800155B8-C0 < `2048<<1` @0x800155C4-CC -> immer `sh v1,118(s1)` @0x800155DC
+  = Leon blickt exakt zur Arm-Wurzel; danach +2048 im Ruecken-Fall. s0 ist ein Register des Hooks und wird
+  nirgends gespeichert.
+* **Die Hand-Bahn haengt nicht an Leons Blick.** Im ganzen Overlay greifen nur @0x8010130C und @0x80101318 auf
+  Offset 118 (+0x76) zu (beide im Hook, auf PL). Der Arm liest PL.x/z (0x800CFC30/0x800CFC38) nur vor dem Griff
+  (@0x80100028, 0x80100520-54, 0x801007B8, 0x801008DC-E4, 0x801009B0, 0x80100B04-0C) und schreibt sie im Pin
+  (@0x80100C20/38). B4 P1 (Halten, @0x80100CB4-0x80100D68) = Vibration, SE, `jal 0x8002959c` @0x80100D18,
+  `jal 0x8001598c` (Schuettel-Zaehler) — kein Bezug auf Leons Lage.
+=> Im RE2-Original ist der Ruecken-Griff zwingend der Gesicht-Griff mit Leon um seine Wurzel (= Pin-Punkt =
+Hand) um 180 Grad gedreht: gleiche Hand-Bahn (Arm-Clip 5), gleiche Leon-Pose relativ zu seinem Blick (Opfer-
+Clip 0), Brust an der Wurzel gespiegelt. Die Abnahme-Zahl (11 von 19 < 120) ist damit die geometrische Folge
+der RE2-Daten, kein Port-Defekt; eine "Korrektur" haette kein Original-Vorbild (kein zweiter Clip, keine
+Lage-Weiche, keine Versatz-Konstante im Overlay). Der Port bildet alle vier Glieder schon byte-true ab
+(enemy_ai_re2_zellenarm.c:594-596, Pin @0x80100C18-38, Leon = Arm + 1).
+
+**Aenderung:** keine am Spielcode. Der Riegel prueft den Ruecken-Fall jetzt als Konstruktion statt ihn nur zu
+protokollieren (unit_r35_raeume_arme (4), gleicher Arm, gleiche Startlage, nur Leons Blick vor dem Griff
+verschieden): (4a) Ruecken-Blick = Gesicht-Blick + 2048; (4b) Wurzel, Bildtakt (Leon-/Arm-Bild) und Hand-Bahn
+Bild fuer Bild gleich; (4c) Brust(Ruecken) - Wurzel = -(Brust(Gesicht) - Wurzel).
+
+**OFFEN (Sichtpruefung am RE2-Original):** ein Bild eines RE2-Ruecken-Griffs liegt nicht vor. Fundort fuer den
+naechsten Messweg: RE2-Leon-Abbild `C:/Users/mjoedicke/Downloads/ePSXe2018/re2leon.cue` (+ .bin), Emulator
+pcsx-redux (Skill re15-pcsx-watchpoint); Arme = EM2D im RE2-Raum der Gitterhaende, Leon parallel zur Wand an
+einem Arm vorbei so laufen, dass `((Arm.yaw - PL.yaw + 0x400) & 0xFFF) < 0x800` (FUN_80015910 @0x80015910-2C),
+dann PL+0x38/+0x40/+0x76 und den Bildschirm im Halten vergleichen. Nach der Konstruktion oben muss das Bild
+dieselbe Ueberschneidung zeigen.
+
 (in Arbeit)

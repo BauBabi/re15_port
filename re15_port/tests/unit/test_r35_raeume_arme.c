@@ -138,10 +138,17 @@ static int leon_brust(const re15_actor_t *pl, int32_t out[3])
     return 1;
 }
 
+/* Aufzeichnung je Halte-Bild f (Nachbesserung 1, M2): Hand, Brust, Leon-Wurzel/-Blick. */
+typedef struct { int ok; int32_t h[3], b[3], lx, lz; int yaw; int pfr, afr; } bild_t;
+static bild_t s_auf[2][60];
+static int    s_auf_yaw[2];                    /* Leon-Blick unmittelbar nach dem Hook-P0 */
+
 /* Ein Griff des Messarms mit Leon-Blick `yaw0` vor dem Zugriff. Liefert die Zahl der Halte-Bilder mit
- * Hand < 120 an der Brustachse (oder -1). */
-static int griff(int yaw0, const char *name)
+ * Hand < 120 an der Brustachse (oder -1). `fall` (0 = Gesicht, 1 = Ruecken) waehlt die Aufzeichnung. */
+static int griff(int yaw0, const char *name, int fall)
 {
+    memset(s_auf[fall], 0, sizeof s_auf[fall]);
+    s_auf_yaw[fall] = -1;
     int slots[RE15_ACTOR_MAX]; int n = aufsetzen(slots);
     if (n < 10) { CHECK("zehn Arme + EM2D-Bank", 0); return -1; }
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -191,6 +198,7 @@ static int griff(int yaw0, const char *name)
     int gleich = 1, im_koerper = 0, bilder = 0; int mind = 1 << 30;
     for (int f = 0; f < 60; f++) {
         frame_step();
+        if (f == 0) s_auf_yaw[fall] = (int)pl->rot_y & 0xfff;      /* nach Hook-P0 (@0x801012E0-18) */
         if (arm->sub_state_1 != 4 || re15_player_victim_state() != 4) break;
         if (pl->motion != 0 || arm->motion != 5) continue;
         if ((int)pl->anim_frame != (((int)arm->anim_frame + 1) % 19)) gleich = 0;
@@ -199,6 +207,10 @@ static int griff(int yaw0, const char *name)
         if (!leon_brust(pl, b8)) continue;
         re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), h);
         int d = (int)sqrt((double)(h[0]-b8[0])*(h[0]-b8[0]) + (double)(h[2]-b8[2])*(h[2]-b8[2]));
+        {   bild_t *a = &s_auf[fall][f];
+            a->ok = 1; memcpy(a->h, h, sizeof h); memcpy(a->b, b8, sizeof b8);
+            a->lx = pl->x; a->lz = pl->z; a->yaw = (int)pl->rot_y & 0xfff;
+            a->pfr = pl->anim_frame; a->afr = arm->anim_frame; }
         if (d < mind) mind = d;
         if (d < 120) im_koerper++;
         bilder++;
@@ -225,13 +237,47 @@ int main(void)
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 
     /* Leon dem Fenster zugewandt (Blick -x = 2048): FUN_80015910 -> 0, kein Flip -> Gesicht zum Arm */
-    int k_gesicht = griff(2048, "Gesicht");
+    int k_gesicht = griff(2048, "Gesicht", 0);
     CHECK("(3) Gesicht-Griff: Arm-Hand steckt in KEINEM Halte-Bild in Leons Oberkoerper (< 120)",
           k_gesicht == 0);
-    /* Leon vom Fenster abgewandt (Blick +x = 0): Flip +2048 (@0x80101304-18) -> Ruecken zum Arm.
-     * Kein Soll fuer das Clipping-Mass (Dossier OFFEN): gemessen und protokolliert. */
-    int k_ruecken = griff(0, "Ruecken");
+    /* Leon vom Fenster abgewandt (Blick +x = 0): Flip +2048 (@0x80101304-18) -> Ruecken zum Arm. */
+    int k_ruecken = griff(0, "Ruecken", 1);
     printf("  Ruecken-Griff: %d Halte-Bilder mit Hand < 120 an der Brustachse\n", k_ruecken);
+
+    /* (4) Nachbesserung 1, M2 — der Ruecken-Griff ist im RE2-Original KEIN eigener Fall, sondern der
+     * Gesicht-Griff mit Leon um 180 Grad gedreht. Belegt (EM2D-Overlay CDEMD0_EM2D_ai1.BIN / RE2 PSX.EXE):
+     *   - EINE Opferbank: B4 P0 kopiert +0x188/+0x18C des Arms nach PL+0x188/+0x18C (@0x80100C3C-5C);
+     *   - EIN Opfer-Clip: Hook P0 `lui v0,0xf / sw v0,332(s1)` = Clip 0 (@0x801012A8-AC), P1 nur Advance;
+     *   - der EINZIGE Unterschied: `lhu v0,118(s1) / addiu v0,v0,2048 / sh v0,118(s1)` (@0x8010130C-18),
+     *     gegatet von FUN_80015910 (@0x801012E0); das Ergebnis s0 lebt nur im Hook;
+     *   - der Arm liest PL+0x76 nirgends (einzige Zugriffe auf Offset 118 im Overlay: @0x8010130C/18) und
+     *     PL.x/z nur VOR dem Griff (@0x80100028..0x80100B0C) — seine Hand-Bahn haengt nicht an Leons Blick.
+     * Geprueft wird genau diese Konstruktion: (4a) Ruecken-Blick = Gesicht-Blick + 2048, (4b) Wurzel und
+     * Hand-Bahn Bild fuer Bild gleich, (4c) Brust im Ruecken-Griff = an Leons Wurzel gespiegelte Brust des
+     * Gesicht-Griffs. Das Clipping-Mass des Ruecken-Griffs ist damit die zwingende Folge der RE2-Daten. */
+    {
+        int vergl = 0, wurzel = 1, hand = 1, spiegel = 1, maxdh = 0, maxdb = 0;
+        for (int f = 0; f < 60; f++) {
+            const bild_t *g = &s_auf[0][f], *r = &s_auf[1][f];
+            if (!g->ok || !r->ok) continue;
+            vergl++;
+            if (g->lx != r->lx || g->lz != r->lz || g->pfr != r->pfr || g->afr != r->afr) wurzel = 0;
+            int dh = abs(g->h[0] - r->h[0]) + abs(g->h[2] - r->h[2]);
+            if (dh > maxdh) maxdh = dh;
+            if (dh > 2) hand = 0;
+            int db = abs((r->b[0] - r->lx) + (g->b[0] - g->lx)) + abs((r->b[2] - r->lz) + (g->b[2] - g->lz));
+            if (db > maxdb) maxdb = db;
+            if (db > 4) spiegel = 0;
+        }
+        printf("  (4) Ruecken vs. Gesicht: %d Bilder verglichen, Blick %d / %d, Hand-Abweichung max %d, "
+               "Spiegel-Abweichung max %d\n", vergl, s_auf_yaw[1], s_auf_yaw[0], maxdh, maxdb);
+        CHECK("(4a) Ruecken-Griff: Leon-Blick = Gesicht-Blick + 2048 (Flip @0x8010130C-18)",
+              s_auf_yaw[0] >= 0 && s_auf_yaw[1] == ((s_auf_yaw[0] + 2048) & 0xfff));
+        CHECK("(4b) Wurzel, Bildtakt und Hand-Bahn haengen nicht an Leons Blick (Arm liest PL+0x76 nie)",
+              vergl >= 30 && wurzel && hand);
+        CHECK("(4c) Brust im Ruecken-Griff = an Leons Wurzel gespiegelte Brust (EINE Bank @0x80100C3C-5C, "
+              "EIN Clip @0x801012A8-AC)", vergl >= 30 && spiegel);
+    }
 
     printf(g_fail ? "test_r35_raeume_arme: FAIL\n" : "test_r35_raeume_arme: OK\n");
     return g_fail ? 1 : 0;
