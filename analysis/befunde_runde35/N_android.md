@@ -49,6 +49,37 @@ Temp-Ordnern, mehrere Starts je Szenario) am echten Code gemessen - vorher (Stan
   1080x2400, 320x240, 160x120 je alle drei; nur 3840x1080 und 5120x1440 (32:9, H gross genug) passen. Der Fehler haengt
   also nicht an "sehr breit" allein, sondern am Verhaeltnis Textlaenge x 6 x H/108 zu W - 20:9 und 16:9 sind betroffen.
 
+### Beleg / Herleitung (kein RE1.5/RE2-Original: die PSX hat keinen Entpacker - PORT-WAHL)
+- Glyphe: 5x7 Punkte, Vorschub 6 Spalten je Skalierung (touch_overlay_pc.c:405-486, `penx += 6 * scale` :483), Kasten
+  einer Zeile = (6 x Zeichen - 1) x s breit, 7 x s hoch.
+- Einheit u = H/12 (android_glue.c draw_progress, = touch_overlay_pc.c:151 tp_layout); Randabstand der Bedienelemente
+  0.4u (touch_overlay_pc.c:175, Schultertasten L1/R1) - derselbe Rand fuer den Text.
+- Laengste Texte des Entpackers (grep der fehler_halten-/titel-Literale in android_glue.c): Titel 44 Zeichen
+  (`... EINMALIG GEPRUEFT`), Fehler 57 (`%ld DATEIEN KONNTEN ...` mit 1 Datei) und 58 (`FEHLER: ALTE ASSET-LISTE NICHT
+  LOESCHBAR - SIEHE DEBUG.LOG`); Fortschrittszeile ~37; Puffer l2 = 160 Zeichen.
+
+### Umsetzung (android_glue.c, Commit 3becd16f)
+- `text_block()` neu, `draw_progress` zeichnet beide Zeilen darueber: Skalierung = min(Hoehen-Groesse wie bisher
+  (`u/9` bzw. `fs-1`), `(W - 2*0.4u) / (6 * Zeichen)`); nur wenn selbst Skalierung 1 nicht passt, Umbruch an Leerzeichen
+  (Zeilenabstand 9 = 7 Glyphe + 2), Titel waechst nach oben, Zeile 2 nach unten (Balken bleibt frei); hoechstens 6 Zeilen.
+- Nebenbei `if (frac < 0) ...; if (frac > 1) ...` auf zwei Zeilen (gcc -Wmisleading-indentation, Randnotiz R4-2).
+
+### Messung nachher (Pruefstand, echter Code; Beleg `N_android_belege/pruefstand_nachher_anzeige.txt`)
+33/33 Laeufe ohne `PRUEFSTAND-AUSSERHALB`/`-UEBERLAPPUNG`, jeder Text vollstaendig im Bild. Gewaehlte Groessen:
+| Display | Titel 44 Z. | Fehler 58 Z. |
+|---|---|---|
+| 2400x1080 (Geraet E2-1) | s=8, x=144..2248 (vorher s=10, x=-120) | s=6, x=156..2238 (vorher x=-366) |
+| 1920x1080 | s=7, x=36..1877 | s=5, x=90..1825 |
+| 1280x720 | s=4, x=112..1164 | s=3, x=118..1159 |
+| 2560x1080 | s=9 | s=7 |
+| 3200x1440 | s=11 | s=8 |
+| 3840x1080 / 5120x1440 | s=10 / 13 (unveraendert, Hoehe begrenzt) | s=9 / 12 |
+| 800x480 | s=2 | s=2 |
+| 1080x2400 hochkant | s=3 | s=2 |
+| 320x240 | s=1 einzeilig | s=1, 2 Zeilen |
+| 160x120 | s=1, 2 Zeilen | s=1, 3 Zeilen |
+Auf breiten Displays, die vorher passten (32:9), aendert sich nichts - nur wo es abschnitt, wird die Schrift kleiner.
+
 ## Punkt 2 — Datei<->Ordner-Konflikt im Update
 
 ### Messung vorher
@@ -75,6 +106,51 @@ Temp-Ordnern, mehrere Starts je Szenario) am echten Code gemessen - vorher (Stan
   Genau das Nutzerbild: "bricht sauber ab; erst der zweite Start stellt den Stand her" (K1/K3-K6). L1/L2 zeigen,
   warum ein blosses "Konfliktpfad loeschen" ohne Leser-Regel nicht sicher waere: eine Liste darf heute einen Pfad
   zugleich als Datei und als Ordner fuehren - ein Raeumer wuerde dann gelistete Dateien loeschen.
+
+### Beleg / Herleitung (PORT-WAHL, kein Original)
+Ursache je Szenario (android_glue.c Stand 154a73c1): K1/K6 - die weg-Schleife (:499-506) loescht nur Dateien, der
+leere Ordner `q/` bleibt, `rename(q.neu, q)` (:265) -> EISDIR; K5 - Ordner mit Inhalt auf dem Zielnamen, gleiches
+rename; K3 - `unlink(tmp)` (:516) scheitert still an einem Ordner, `open(tmp, O_CREAT)` (:233) -> EISDIR; K4 -
+`mkdirs_for` (:182-189) verschluckt das mkdir-Scheitern an der Datei `q`, `open(q/c.neu)` -> ENOTDIR. Heilung im
+naechsten Start nur, weil dann die Liste fehlt und `re15_abgleich_waisen` (asset_abgleich.c:527) alles Ungelistete
+loescht. Damit ist der Fix vorgegeben: dasselbe Raeumen gezielt fuer den einen Pfad, im laufenden Start.
+
+### Umsetzung (Commit 3becd16f)
+- `asset_abgleich.c` (reiner C-Teil, auch im PC-Test): `re15_abgleich_weg_frei(wurzel, rel, melde, ctx)` - Eltern-
+  segment, das kein echter Ordner ist -> unlink; echter Ordner auf `<rel>.neu` bzw. `<rel>` -> samt Inhalt loeschen (lstat,
+  Symlinks nie verfolgt, Tiefe <= 64 und Pfad < 4096 wie re15_abgleich_waisen); nur fuer Pfade nach
+  `re15_abgleich_pfad_ok` (nie ausserhalb der Wurzel). `re15_abgleich_leere_eltern` - leer gewordene Elternordner
+  nach dem Loeschen eines weg-Pfads, bis unter das erste Segment.
+- Sicherheits-Regeln im Leser `re15_abgleich_lesen`: **R1** kein SEGMENT endet auf `.neu` (vorher nur der ganze Pfad;
+  = Abhilfe "D25" der Gegenpruefung R4-2 zu F-Y4), **R2** kein Pfad ist zugleich Ordner eines anderen (ASCII-Gross/
+  klein egal, bsearch je Praefix in der gefalteten Liste). Erst damit traegt kein geraeumter Ordner/keine geraeumte
+  Datei je etwas Gelistetes. Dieselben Regeln im Gate und in build.gradle (Punkt 3).
+- `android_glue.c`: vor JEDEM Entpacken `re15_abgleich_weg_frei` (Meldung `Konflikt geraeumt: <rel> war ...` bzw.
+  `FEHLER: Konflikt nicht raeumbar` -> Lauffehler, fail closed wie bisher); weg-Schleife: nach Erfolg
+  `re15_abgleich_leere_eltern`; Fehler ausser ENOENT nicht mehr verschluckt (F-Y6): Ordner -> weg_frei, sonst
+  `WARNUNG: nicht mehr gelistet, aber nicht loeschbar` + Zaehler. Schlusszeile zusaetzlich `%ld Konflikte geraeumt, %ld
+  nicht loeschbar`.
+
+### Messung nachher (Pruefstand, echter Code; Beleg `N_android_belege/pruefstand_nachher_konflikt.txt`)
+| Szenario | Start 2 (Update) | Start 3 |
+|---|---|---|
+| K1 = H8 | EXIT 0, `entfernt ... PSX/q/c` (leerer Ordner q/ per leere_eltern weg), Baum = B | schneller Weg |
+| K2 = H7 | EXIT 0 (unveraendert) | schneller Weg |
+| K3 Ordner `X.neu/` | EXIT 0, `Konflikt geraeumt: shared_assets/PSX/X.neu war ein Ordner auf dem Namen der Zwischendatei` | schneller Weg |
+| K4 Datei `q` auf Ordnername | EXIT 0, `Konflikt geraeumt: shared_assets/PSX/q war eine Datei, wo ein Ordner hin muss` | schneller Weg |
+| K5 Ordner `q/x/y/` auf Dateiname | EXIT 0, `... war ein Ordner, wo die Datei hin muss` (2 Dateien) | schneller Weg |
+| K6 `Q/c` -> `q` | EXIT 0 | schneller Weg |
+| L1 Liste mit `X.neu/B` | EXIT 1, `ungueltig (Zeile 3: unzulaessiger Pfad)`, nichts entpackt | - |
+| L2 Liste `q` + `psx/Q/c` | EXIT 1, `ungueltig (Datei und Ordner gleichen Namens: shared_assets/PSX/q / shared_assets/psx/Q/c)` | - |
+Jeder Update-Start endet mit SPIELSTART, Speicher bytegleich der APK, kein verwaister Ordner, "zuletzt entpackt" = Liste.
+
+### Tests (ctest, probes/r35_android.cmake)
+- `unit_r35_android_konflikt` - die Szenarien oben am echten android_glue.c (Pruefstand `r35_android_pruefstand`).
+  Gegenprobe am Stand 154a73c1: K1/K3/K4/K5/K6 Start 2 EXIT 1, L1/L2 angenommen (Beleg vorher).
+- `unit_r35_android_abgleich` (63 Pruefungen): R1/R2 im Leser (15 davon scheitern am alten asset_abgleich.c -
+  gemessen), F-Y1-Proben, weg_frei (Ordner auf Ziel mit Unterordnern, Ordner auf .neu, Datei auf Elternsegment, nichts
+  im Weg, 6 unzulaessige Pfade raeumen nie), leere_eltern (stoppt an nicht leerem Ordner, Baum bleibt).
+- `unit_r34a_asset_abgleich`: eine Zeile an R1 angepasst (`a/b.neu/c` jetzt abgelehnt, vorher ausdruecklich erlaubt).
 
 ## Punkt 3 — Urteilslogik des Pruefskripts selbst mittesten
 
