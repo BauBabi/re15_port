@@ -50,6 +50,11 @@
  *     die Meldung stehen, bis die App geschlossen wird - das Spiel startet nicht mit altem/gemischtem Baum.
  *   - U1: scheitert das Loeschen der "zuletzt entpackt"-Liste, laeuft kein Lauf.
  *   - H5/U3 (asset_abgleich.c): Pfade nur druckbares ASCII, Segment <= 251 B.
+ * Runde 35 Spur N (Dossier analysis/befunde_runde35/N_android.md; gemessen im Pruefstand tests/unit/r35_android/):
+ *   - E2-1 Fortschrittsanzeige: Schrift aus Hoehe UND Breite (text_block), auf 20:9/16:9 nichts mehr abgeschnitten.
+ *   - F-Y4/H8 Datei <-> Ordner gleichen Namens im Update: re15_abgleich_weg_frei vor jedem Entpacken und leer gewordene
+ *     Ordner nach dem Loeschen (re15_abgleich_leere_eltern) - das Update wird im SELBEN Start fertig, nicht erst im
+ *     naechsten; F-Y6 nicht loeschbare weg-Pfade werden gemeldet statt verschluckt.
  * ============================================================================================= */
 #include <SDL.h>
 #include <SDL_system.h>
