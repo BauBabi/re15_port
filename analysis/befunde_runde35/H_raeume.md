@@ -982,3 +982,9 @@ nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Ori
 ist ein RE2-Byte; ... Das Original zeigt im Ruecken-Griff dieselbe Ueberschneidung" war fuer die Armhoehe falsch
 (`RE2ARM_1210_Y` ist eine Port-Bruecke) und uebersah den Koerper-Push. Er ist durch die Original-Messungen dieses
 Abschnitts ersetzt (acht Hoehen, Push gemessen und gebaut, Port = Original in fuenf Lagen).
+
+### Suite (Nachbesserung 3)
+`bash re15_port/tools/local_build.sh all` am Code-Endstand (Commit "NB3 Modulkopf/Root-Tail-Kommentar", alle Code-
+und Test-Aenderungen der Nachbesserung 3 enthalten; danach nur Dossier), alle Fenster-Haken im ersten Lauf gruen:
+`=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478). exe-Kopie re15_pc_nb3h.exe nach den Messlaeufen entfernt;
+DuckStation-settings.ini auf den Stand vor den Messungen zurueckgesetzt (EnableGDBServer = false, LogToFile = false).
