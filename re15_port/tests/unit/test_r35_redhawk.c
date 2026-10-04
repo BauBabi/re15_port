@@ -12,6 +12,7 @@
  *            +0x26 und die Anim-Records (Dauer/Schleife). Reines Messwerkzeug, immer 0.
  */
 #include "re15_esp.h"
+#include "re15_esp_brocken.h"
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -387,9 +388,250 @@ static int teil_messung(int room, const char *stage, int bilder)
     return 0;
 }
 
+/* ===================================== PINS ==============================================
+ * Spurverfolgung je Id-7-Platz: Entstehung, Landung (B 36 -> 37), Abschluss (B 37 -> Zeile 1) und
+ * Freigabe. Geprueft wird der Mechanismus gegen die Disassembly (Dossier R3/R4/R6):
+ *   L1 Landebild: B wird 37 genau im ersten Bild mit Weltlage-y > h = room_coll(x, z, 0, 8, 0x100)
+ *      (`slt v0,v0,v1` @0x80018810), im Vorbild war Weltlage-y <= h (an der Vorbild-Lage). Die
+ *      Geschwindigkeit wurde VOR der Physik genullt (@0x8001882c-38): nach dem Takt steht sie genau
+ *      auf der Beschleunigung (Physik @0x8001a324-388: xlat += vel, DANN vel += acc).
+ *   L2 Abschlussbild = erstes Bild nach der Landung mit B != 37: R37 schlug an, weil slot+0x1e (das
+ *      h des letzten Nein-Zweigs von R36, `sh a0,30` @0x80018848) < Weltlage-y (`slt` @0x80018878).
+ *      Dort: B = 0 (Zeile 1), Flags = row0[0x0e] = 0x13 (@0x8001888c), Zeile 1/2 (@0x800188a0),
+ *      Anim-Index 6 oder - wenn der Takt-Zaehler im selben Bild ablief - 7 (@0x800188a4 + Anim-Stufe
+ *      @0x8001a3bc). Bis dahin vel.x = vel.z = 0: ein Brocken, der seitlich in eine hohe Zelle
+ *      faellt (h = -1800*(Band+1)), faellt senkrecht bis auf die zuletzt gemessene Bodenhoehe.
+ *   L3 Freigabe: der Platz endet ueber den Terminator Record 10 (@0x8001a40c), spaetestens
+ *      3 (Rest-Takt) + 3*3 (Records 7..9, Dauer 3 = p2003/p1003) + 1 Bilder nach dem Abschlussbild. */
+typedef struct {
+    int     lebt, landebild, folgebild, ende;
+    int16_t vor_wy;          /* Weltlage-y des Vorbilds */
+    int16_t vor_h;           /* room_coll an der Weltlage des Vorbilds */
+    int16_t h1e;             /* slot+0x1e waehrend B 37 (von R36 zuletzt im Nein-Zweig gespeichert) */
+    int     vor_gueltig;     /* Vorbild = ein Takt mit B 36 und gerechneter Weltlage */
+    int     fehler;
+} spur_t;
+static spur_t s_spur[RE15_ESP_FX_MAX];
+static int    s_n_spawn, s_n_lande, s_n_ende, s_n_fehler, s_bild;
+
+static void spur_reset(void)
+{
+    memset(s_spur, 0, sizeof s_spur);
+    s_n_spawn = s_n_lande = s_n_ende = s_n_fehler = 0; s_bild = 0;
+}
+
+/* nach jedem Bild (Spielschritt + ESP-Takt) */
+static void spur_bild(int laut)
+{
+    s_bild++;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        spur_t *s = &s_spur[i];
+        int ist7 = f && f->effect_id == 7 && f->rows_base && (f->flags & 0x01);
+        if (!ist7) {
+            if (s->lebt) {
+                s->lebt = 0; s_n_ende++;
+                int frist = s->folgebild ? (s_bild - s->folgebild) : -1;
+                if (!s->landebild || !s->folgebild || frist > 3 + 9 + 1) {
+                    s_n_fehler++;
+                    if (laut) printf("  FEHLER Platz %d: Ende in Bild %d ohne Landung/Abschluss (lande %d folge %d frist %d)\n",
+                                     i, s_bild, s->landebild, s->folgebild, frist);
+                }
+            }
+            continue;
+        }
+        const unsigned B = u16le(f->row, 2);
+        if (!s->lebt) {
+            memset(s, 0, sizeof *s);
+            s->lebt = 1; s_n_spawn++;
+            s->vor_wy = f->wpos[1];
+            s->vor_h  = re15_collision_room_coll(g_room_rdt_ok ? &g_room_rdt : NULL, f->wpos[0], f->wpos[2], 0, 8, 0x100u);
+            /* vor dem ersten Takt (Spawn ausserhalb des Spielschritts) ist die Weltlage noch nicht gerechnet */
+            s->vor_gueltig = B == 36 && (f->wpos[0] | f->wpos[1] | f->wpos[2]) != 0;
+            continue;
+        }
+        const int16_t h_jetzt = re15_collision_room_coll(g_room_rdt_ok ? &g_room_rdt : NULL, f->wpos[0], f->wpos[2],
+                                                         0, 8, 0x100u);
+        if (!s->landebild && B == 37) {
+            s->landebild = s_bild; s_n_lande++;
+            int ok = (int32_t)h_jetzt < (int32_t)f->wpos[1] &&
+                     (!s->vor_gueltig || (int32_t)s->vor_wy <= (int32_t)s->vor_h) &&
+                     f->drift_x == f->accel_x && f->drift_y == f->accel_y && f->drift_z == f->accel_z;
+            if (!ok) { s_n_fehler++; s->fehler = 1; }
+            if (laut) printf("  Platz %2d sub %u: Landung Bild %d, h=%d Weltlage-y %d (Vorbild %d bei h %d), "
+                             "vel=(%d,%d,%d) = acc (%d,%d,%d) %s\n",
+                             i, f->sub_index, s_bild, h_jetzt, f->wpos[1], s->vor_wy, s->vor_h, f->drift_x, f->drift_y,
+                             f->drift_z, f->accel_x, f->accel_y, f->accel_z, ok ? "ok" : "FEHLER");
+        } else if (s->landebild && !s->folgebild && B == 37) {
+            if (f->drift_x != 0 || f->drift_z != 0) { s_n_fehler++; s->fehler = 1; }   /* senkrechter Fall */
+        } else if (s->landebild && !s->folgebild) {
+            s->folgebild = s_bild;
+            int ok = B == 0 && f->flags == 0x13 && f->row_cursor == 1 && (f->frame == 6 || f->frame == 7) &&
+                     (int32_t)s->h1e < (int32_t)f->wpos[1];
+            if (!ok) { s_n_fehler++; s->fehler = 1; }
+            if (laut) printf("  Platz %2d: Abschluss Bild %d (+%d) B=%u Flags %02x Zeile %d/%d Anim %d, slot+0x1e %d < "
+                             "Weltlage-y %d %s\n", i, s_bild, s_bild - s->landebild, B, f->flags, f->row_cursor,
+                             f->row_count, f->frame, s->h1e, f->wpos[1], ok ? "ok" : "FEHLER");
+        }
+        if (B == 37) s->h1e = (int16_t)u16le(f->row, 0x1e);
+        s->vor_gueltig = (B == 36);
+        s->vor_wy = f->wpos[1];
+        s->vor_h  = h_jetzt;
+    }
+}
+
+static int s_first_fail = 0, s_fails = 0;
+#define CHECK(nr, c, ...) do { if (!(c)) { printf("FAIL %d: ", (nr)); printf(__VA_ARGS__); printf("\n"); \
+    s_fails++; if (!s_first_fail) s_first_fail = (nr); } else { printf("ok   %d: ", (nr)); printf(__VA_ARGS__); printf("\n"); } } while (0)
+
+/* PIN 1 — der Nutzer-Weg: Super Redhawk (Waffe 7) toetet den Hund (ROOM11D0, RE2-KI). */
+static void pin_redhawk_hund(void)
+{
+    printf("== pin 1: Redhawk -> Hund (ROOM11D0)\n");
+    if (room_load(0x11D0, "STAGE1") != 0) { CHECK(10, 0, "ROOM11D0 fehlt"); return; }
+    re15_actor_t *e = hund_arena(2000);
+    if (!e) { CHECK(10, 0, "kein Hund 0x20 in ROOM11D0"); return; }
+    const unsigned l0 = re15_esp_brocken_landungen(), a0 = re15_esp_brocken_abschluesse();
+    int r = re15_player_weapon_fire(7);
+    CHECK(10, r != 0 && e->state == 3 && e->sub_state_1 == 7,
+          "Schuss Waffe 7 trifft und toetet: Treffer %d, st=%d (3), +5=%d (7 = Waffen-Id, Zeile 5 -> Router 0x80104610)",
+          r, e->state, e->sub_state_1);
+    spur_reset();
+    int bei90 = -1, spitze = 0;
+    for (int f = 1; f <= 900; f++) {
+        frame(); spur_bild(1);
+        int n = lebend(7, 0);
+        if (n > spitze) spitze = n;
+        if (f == 90) bei90 = n;
+    }
+    CHECK(11, s_n_spawn == 6 && spitze == 6,
+          "Router-Blut wirft 6 Brocken (Raum-Id 7, FX(2,1|2) je Bild @0x80104664-7C bis Budget 18 leer): "
+          "Entstehungen %d, Spitze %d", s_n_spawn, spitze);
+    CHECK(12, s_n_lande == s_n_spawn && s_n_ende == s_n_spawn && s_n_fehler == 0,
+          "jeder Brocken landet (B 36 -> 37 @0x80018828), schliesst ab (@0x800188a0) und endet am Terminator "
+          "(@0x8001a40c): Landungen %d, Enden %d, Mechanik-Fehler %d", s_n_lande, s_n_ende, s_n_fehler);
+    CHECK(13, re15_esp_brocken_landungen() - l0 == (unsigned)s_n_spawn &&
+              re15_esp_brocken_abschluesse() - a0 == (unsigned)s_n_spawn,
+          "Messschiene esp_brocken.c: %u Landungen, %u Abschluesse", re15_esp_brocken_landungen() - l0,
+          re15_esp_brocken_abschluesse() - a0);
+    CHECK(14, bei90 == 0 && lebend(7, 0) == 0,
+          "NUTZER-BEFUND: 90 Bilder (3 s) nach dem Schuss lebende Fleisch-Plaetze %d (0), nach 900 Bildern %d (0; "
+          "vorher 6/6, Dossier M2)", bei90, lebend(7, 0));
+}
+
+/* PIN 2 — andere Waffen, gleicher Gegner:
+ *  (a) HE-Granate: Resolver-Art 2 an P = (x+300, y-500, z) (@0x800185a0-ac, wie probe_r34_reaktion
+ *      explosion_bei) -> +0x5 = 9 -> Zeile 9 -> derselbe Router 0x80104610 (Zeilen {5,6,9,17,19},
+ *      @0x801055CC) wie die Redhawk -> Brocken FX(2,1|2) je Bild; alle muessen enden.
+ *  (b) Pistole (Waffe 3, Browning) bis zum Tod: Zeile 3 hat KEINEN Brocken-Router; nur die HURT-
+ *      Bild-Bits (FX 1/2 @0x80102838-48, Zufall rand&3) koennen Brocken werfen; was entsteht, endet. */
+static void pin_andere_waffen_hund(void)
+{
+    printf("== pin 2a: HE-Granate -> Hund (ROOM11D0)\n");
+    if (room_load(0x11D0, "STAGE1") != 0) { CHECK(20, 0, "ROOM11D0 fehlt"); return; }
+    re15_actor_t *e = hund_arena(8000);
+    if (!e) { CHECK(20, 0, "kein Hund"); return; }
+    {
+        re15_attack_box_t box;
+        box.x = e->x + 300; box.y = e->y - 500; box.z = e->z; box.radius = 500;
+        re15_resolve_attack(&box, 2, -1);
+    }
+    CHECK(20, e->state == 3 && e->sub_state_1 == 9, "Explosion toetet: st=%d (3), +5=%d (9 -> Zeile 9)", e->state,
+          e->sub_state_1);
+    spur_reset();
+    int spitze = 0;
+    for (int k = 0; k < 300; k++) { frame(); spur_bild(0); int n = lebend(7, 0); if (n > spitze) spitze = n; }
+    CHECK(21, s_n_spawn > 0 && lebend(7, 0) == 0 && s_n_ende == s_n_spawn && s_n_lande == s_n_spawn && s_n_fehler == 0,
+          "Granate: %d Brocken (Spitze %d), nach 300 Bildern lebend %d (0), Landungen %d, Enden %d, Mechanik-Fehler %d",
+          s_n_spawn, spitze, lebend(7, 0), s_n_lande, s_n_ende, s_n_fehler);
+
+    printf("== pin 2b: Pistole (Waffe 3) -> Hund (ROOM11D0)\n");
+    e = hund_arena(2000);
+    if (!e) { CHECK(22, 0, "kein Hund"); return; }
+    spur_reset();
+    int schuesse = 0, f = 0;
+    while (f < 3000 && !(e->state == 3 || e->state == 7)) {
+        if ((f % 25) == 0) {
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            pl->x = e->x - 2000; pl->z = e->z; pl->y = e->y; pl->rot_y = 0;   /* Aufstellung halten */
+            if (re15_player_weapon_fire(3)) schuesse++;   /* Waffe 3 = Browning (ENT[3], Handler 0x800337BC) */
+        }
+        frame(); spur_bild(0); f++;
+    }
+    for (int k = 0; k < 300; k++) { frame(); spur_bild(0); }
+    CHECK(22, (e->state == 3 || e->state == 7) && schuesse > 0, "Hund tot nach %d Pistolentreffern (st=%d)", schuesse, e->state);
+    CHECK(23, lebend(7, 0) == 0 && s_n_ende == s_n_spawn && s_n_fehler == 0,
+          "300 Bilder nach dem Tod: lebende Brocken %d (0), Entstehungen %d = Enden %d, Mechanik-Fehler %d",
+          lebend(7, 0), s_n_spawn, s_n_ende, s_n_fehler);
+}
+
+/* PIN 3 — Zensus ueber ALLE Raeume, deren ESP-Bank die Id 7 traegt: jeder gueltige Sub (0..5,
+ * Zensus M1) wird gespawnt (wie re2d_fx / re2z_gore_fx_ex: re15_esp_fx_spawn_rows), 300 Bilder
+ * getaktet - jeder Brocken muss landen, abschliessen und enden. */
+static void pin_alle_raeume(void)
+{
+    printf("== pin 3: alle Raeume mit Raum-Id 7\n");
+    int raeume = 0, spawns = 0, haenger = 0, fehler = 0;
+    for (int st = 1; st <= 6; st++) {
+        for (int r = 0; r < 0x100; r++) {
+            char path[512];
+            int id = (st << 12) | (r << 4);
+            snprintf(path, sizeof path, RE15_ASSET_PSX_DIR "/STAGE%d/ROOM%04X.RDT", st, id);
+            size_t n = 0; uint8_t *b = slurp(path, &n);
+            if (!b) continue;
+            re15_rdt_t rdt; re15_esp_t esp; memset(&esp, 0, sizeof esp);
+            if (re15_rdt_parse(b, n, &rdt) != 0 || room_esp(b, n, &esp) != 0 || re15_esp_find_id(&esp, 7) < 0) {
+                free(b); continue;
+            }
+            raeume++;
+            g_room_rdt = rdt; g_room_rdt_ok = 1; g_scd.prop_count = 0;
+            re15_esp_set_room_bank(&esp);
+            int ei = re15_esp_find_id(&esp, 7);
+            for (int sub = 0; sub < 6; sub++) {
+                int nr = 0;
+                const uint8_t *row = re15_esp_row_stream(&esp, ei, sub, 0, &nr);
+                if (!row || nr != 2 || u16le(row, 2) != 36) continue;    /* nur die Brocken-Form (M1) */
+                re15_esp_fx_reset(); spur_reset();
+                re15_esp_fx_spawn_rows(&esp, 7, (uint8_t)sub, 0x1500, 0, -500, 0, 0, 0);
+                spawns++;
+                spur_bild(0);                                  /* Entstehung registrieren */
+                for (int k = 0; k < 300; k++) { re15_esp_fx_tick(&esp); spur_bild(0); }
+                if (lebend(7, 0) != 0) { haenger++; printf("  HAENGER ROOM%04X sub %d\n", id, sub); }
+                if (s_n_fehler || s_n_lande != 1 || s_n_ende != 1) {
+                    fehler++;
+                    printf("  FEHLER ROOM%04X sub %d: Landungen %d Enden %d Fehler %d\n", id, sub, s_n_lande, s_n_ende, s_n_fehler);
+                    if (fehler == 1) {                         /* den ersten Fall laut nachfahren */
+                        re15_esp_fx_reset(); spur_reset();
+                        re15_esp_fx_spawn_rows(&esp, 7, (uint8_t)sub, 0x1500, 0, -500, 0, 0, 0);
+                        spur_bild(1);
+                        for (int k = 0; k < 300; k++) { re15_esp_fx_tick(&esp); spur_bild(1); }
+                    }
+                }
+            }
+            re15_esp_set_room_bank(NULL);
+            g_room_rdt_ok = 0;
+            free(b);
+        }
+    }
+    CHECK(30, raeume > 0 && spawns >= 6 * raeume, "%d Raeume mit Id 7, %d Brocken-Subs gespawnt", raeume, spawns);
+    CHECK(31, haenger == 0 && fehler == 0,
+          "nach 300 Bildern: Haenger %d (0), Mechanik-Fehler %d (0) — Landung/Abschluss/Terminator je Brocken",
+          haenger, fehler);
+}
+
+static int teil_pin(void)
+{
+    pin_redhawk_hund();
+    pin_andere_waffen_hund();
+    pin_alle_raeume();
+    printf("%s (%d Fehler, erster %d)\n", s_fails ? "ROT" : "GRUEN", s_fails, s_first_fail);
+    return s_first_fail;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
+    if (!strcmp(teil, "pin") || !strcmp(teil, "alle")) return teil_pin();
     if (!strcmp(teil, "zensus")) return teil_zensus();
     if (!strcmp(teil, "haenger")) { s_mit_brocken = !(argc > 2 && !strcmp(argv[2], "vorher")); return teil_haenger(); }
     if (!strcmp(teil, "messung")) return teil_messung(0x11D0, "STAGE1", argc > 2 ? atoi(argv[2]) : 900);
