@@ -241,9 +241,20 @@ static const re15_map_zone_t s_map_zones[] = {
      * (den T-Korridor) - vertauscht. 1210 -> rect 3 (eigene Zeile @0x800769b8: Huelle
      * (184..230,68..133), Tueren je 1 px an den gemalten Nischen). 1220 (Stub @0x800769c0)
      * teilt den Weltrahmen mit 1210 (Tuerpaare: Tuer-Rechteck der einen Seite liegt auf dem
-     * Spawn der anderen) -> die 1210-Zeile gilt; die 5 Zellen (Teiler aus der SCA:
-     * z -4500/-11925/-19875, Waende x -21836/-17275) sind 5 Orte = rect 4/6/5/7/8.
-     * Kaesten an den Zellteilern um ZONE_SLACK (1500) eingezogen. */
+     * Spawn der anderen) -> die 1210-Zeile gilt; die 5 Zellen sind 5 Orte = rect 4/6/5/7/8.
+     * KAESTEN AUS DER SCA von ROOM1220.RDT (Block @0x530, Band-0-Eintraege ab @0x548, 12 B
+     * {u16 w, u16 d, s16 x, s16 z, ...}; Nachbesserung 1, Abnahme 0 G1). Innenflaechen:
+     *   x West -27611 = @0x05C0 (x -28186..-27611) | x -21836 = @0x05CC/@0x05D8 (x -21836..)
+     *   x Ost  -17075 = @0x0590 (x -17275..-17075) | x -11311 = @0x065C (x -11311..-10736)
+     *   z Nord -4500 = @0x0560 (West, z -4500..-4300) | -4525 = @0x0578 (Ost, z -4525..-4300)
+     *   Teiler 1/2 z -11925..-11725 = @0x062C (West) / @0x0668 (Ost)
+     *   Teiler 2/3 z -19875..-19675 = @0x05B4 (West) / @0x0698 (Ost)
+     *   z Sued -26750 = @0x05A8 (z -28750..-26750)
+     * An den GEMEINSAMEN Teilern ist jeder Kasten um ZONE_SLACK = 1500 eingezogen (Port-
+     * Toleranz des Zonentests, re15_map_zones.c:39 - sonst ueberlappten sich die Zellen):
+     *   idx0 z -10225 = -11725 + 1500 | idx1 z -10225 | idx2 z -13425 = -11925 - 1500, unten
+     *   -19675 (Teilerflaeche, die SW-Kammer z < -19875 hat keine Tuer und ist nicht gemalt) |
+     *   idx3 z -18175 = -19675 + 1500 .. -13425 | idx4 z -26750 .. -21375 = -19875 - 1500. */
     { 0x1210, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1211, -28928, -28640,  -9776,   1366,  1,   3, 0,  34,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1220, -27611, -10225, -21836,  -4500,  1,   4, 0,  35,   177,   140,  2496,  2250, 0, 0,   0, 0 },

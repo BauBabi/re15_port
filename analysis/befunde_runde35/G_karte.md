@@ -385,3 +385,31 @@ auch RE1.5/RE2 (keine Klemmung).
 Vorher -> nachher (sichtbare Ring-Mitte, gleiche 4 Lagen, exe): 154a73c1 x 5 / y 2 px (unter der
 Kabine), 8fee1bb4 x 2 / y 2 px, **jetzt x 7 / y 7 px**.
 
+### G1 — SCA-Byte-Offsets der 1220-Zellkaesten (nachgetragen)
+
+Selbst geparst (scratch nb1/sca.py, Format wie gen_map_zones.py read_rdt: SCA-Zeiger RDT+0x20,
+Kopf 24 B mit 5 Zaehlern, je Eintrag 12 B {u16 w, u16 d, s16 x, s16 z, u8 typ, u8 u0, u8 u1,
+u8 floor}). ROOM1220.RDT: SCA @0x530, Zaehler (35,35,35,35,35), Band-0-Block ab @0x548:
+
+| Wert | Eintrag | Inhalt |
+|---|---|---|
+| x -27611 (West aussen) | @0x05C0 | x -28186..-27611, z -28850..-322, typ 01 |
+| x -21836 (West innen) | @0x05CC / @0x05D8 | x -21836..-21561 (z -28850..-22572 / -20750..-19647) |
+| x -17275/-17075 (Ost innen) | @0x0590 | x -17275..-17075, z -28650..-4300 |
+| x -11311 (Ost aussen) | @0x065C | x -11311..-10736 |
+| z -4500 / -4525 (Nordwand West/Ost) | @0x0560 / @0x0578 | z -4500..-4300 / -4525..-4300 |
+| z -11925..-11725 (Teiler 1/2) | @0x062C West / @0x0668 Ost | |
+| z -19875..-19675 (Teiler 2/3) | @0x05B4 West / @0x0698 Ost | |
+| z -26750 (Suedwand) | @0x05A8 | z -28750..-26750 |
+
+Kaesten: an gemeinsamen Teilern um ZONE_SLACK 1500 eingezogen (re15_map_zones.c:39, Port-Toleranz
+des Zonentests): -10225 = -11725+1500, -13425 = -11925-1500, -18175 = -19675+1500, -21375 =
+-19875-1500. Steht jetzt so im Kommentar des Blocks in re15_map_zones.h. Keine Wertaenderung.
+
+### G2 — Fahrstuhl-Blattwahl als PORT-WAHL gekennzeichnet
+
+karte_fahrstuhl_1080.c `re15_karte_fahrstuhl_blatt`: Kopfkommentar "PORT-WAHL (Abnahme 0, G2)" -
+das Original schickt Raumindex 8 immer auf Blatt 2 (`ori v0,zero,0x2` @0x8004b684, `sb v0,0x260e`
+@0x8004b88c) und liest DAT_800b0fe6 fuer die Karte nicht; belegt sind nur die Konstanten. Keine
+Verhaltensaenderung.
+
