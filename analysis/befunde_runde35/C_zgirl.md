@@ -15,6 +15,8 @@ Baum: .claude/worktrees/r35_zgirl, Zweig r35/zgirl, Basis 154a73c1 (+ e7e7131c O
 4. Jetzt: jede solche Tuer laedt wie im Original neu (alle Stages); sie erscheint an beiden Stellen, laeuft
    an, packt (RE2-KI: 2x -20; RE1.5-KI: -10 dann -5 und Fressen), stirbt, bleibt tot (Kill-Flag 0xA0/0x7D).
 5. Keine neuen Sprachdateien, keine neuen Assets (Modell und Toene kommen aus den Original-Daten).
+6. Nachbesserung: dieselbe Tuer-Regel brach den Endkampf (ROOM5090) — Birkin starb nach den zwei Wagentueren
+   ohne Treffer. Jetzt baut jeder Neuspawn den Boss wie im Original neu auf (600 HP), der Kampf laeuft an.
 
 ## Messung vorher
 
@@ -235,6 +237,8 @@ Neue Dateien (nur aus `tests/unit/probes/r35_zgirl.cmake` registriert):
 | unit_r35_zgirl_messer | re15_player_weapon_fire(1): Zustand 2, +0x5 = 1, HP 60 -> 54, Rueckkehr in Zustand 1 | gruen |
 | unit_r35_zgirl_selbsttueren | alle Raeume: 60 Selbst-Tueren aus main00 (Stage 1: 14, Stage 2..6: 46) -> Szenario = Ziel-Cut, Wiedereintritt + 60 SCD-Bilder | gruen (60/60) |
 | integration_r35_zgirl | echte exe, Aktionstaste an Tuer 6 und Tuer 7: DOOR FIRE, `Sce_em_set type=0x13` an beiden Lagen, >= 300 Bilder mit ihr, Annaeherung >= 1500, Tuer 6 zusaetzlich Spieler-HP < 100 | gruen (253 s) |
+| unit_r35_zgirl_wiedereintritt (N1) | echter Spielschritt durch die Selbst-Tuer: ROOM5090 Boss nach Tuer 2 HP 600, Kampfstart ohne Routine 3; Spawn-Zaehler je Eintritt (ROOM5090 2, ROOM4050 Tuer 6 sechsmal je 1) | gruen; Gegenprobe ohne Fixes rot (4 Fehler) |
+| integration_r35_zgirl_5090 (N1) | echte exe, Aktionstaste an Tuer 2 in ROOM5090, dann geradeaus: zweiter Sce_em_set 0x36, Boss-HP 600 am Ende, nie < 0, Boss laeuft an (x max >= -7500) | s. Suite |
 
 Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gruen.
 Suite vor T8: `=== LOCAL-BUILD-OK (all) — Tests 486/486` (1370 s).
@@ -268,11 +272,20 @@ Gegenprobe ohne Fix: der exe-Lauf vorher_tuer6 (M4) — dieselbe Tuer, kein Spaw
   Wiedereintritt + 60 SCD-Bilder ohne Absturz. Am Bildschirm einzeln gesehen sind nur die zwei
   ROOM4050-Tueren 6/7; die uebrigen 44 Stage-2..6-Tueren sind nicht am Bild abgenommen (Stage 2+ ist nicht
   der aktuelle Spielweg). Naechster Messweg bei einem Befund: RE15_DEBUG_JUMP + RE15_FIRE_AOT wie lauf.sh.
+  Nachbesserung 1: T8 tickte nur das SCD und war damit blind fuer den Endkampf-Bruch (M1). Der Zensus
+  M2a (Abschnitt Nachbesserung 1) prueft jetzt alle Port-Zustaende der 46 Raeume: ausser dem G5-Modul und
+  dem Spawn-Zaehler (beide behoben) uebersteht alles eine Selbst-Tuer wie einen Raumwechsel; T9 faehrt den
+  echten Spielschritt (ROOM5090, ROOM4050), integration_r35_zgirl_5090 die echte exe.
 
 ## Zusammenfuehrung
 * aot_common.c: eine Zeile (+4 Kommentarzeilen) im Selbst-Tuer-Zweig von aot_fire_door, Kommentar
   "Runde 35 Spur C".
 * Abhaengigkeit Spur H (O1): nur ein Aufruf nach dem Merge, keine Code-Kopie.
+* Nachbesserung 1: enemy_ai_boss_g5.c neue Funktion re15_g5_boss_spawn (vor re15_g5_boss_tick);
+  enemy_ai_common.c re15_enemy_spawn_root G5-Zweig +4 Zeilen; scd_room_setup.c scd_room_reenter +5 Zeilen
+  (Spawn-Zaehler-Reset hinter re15_re2z_rng_reset, Kommentar "Runde 35 Spur C"); aot_common.c nur
+  Kommentar. Beruehrung mit Spur I (entladen): beide aendern Raumlade-Pfade — der Zaehler-Reset sitzt in
+  scd_room_reenter (gilt fuer alle drei Ladewege), nicht in room_common.c.
 * Neue Dateien: tools/r35_zgirl/{em_zensus.py, selbsttuer_zensus.py, ovl_reloc_diff.py, lauf.sh},
   tests/unit/test_r35_zgirl.c, tests/unit/probes/r35_zgirl.cmake, tests/integration/test_r35_zgirl.cmake,
   analysis/befunde_runde35/C_zgirl_bilder/*.png. Keine Assets fuer das Paket-/Android-Gate.
