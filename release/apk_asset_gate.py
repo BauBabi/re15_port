@@ -54,9 +54,9 @@ WAS GEPRUEFT WIRD
      abgeschnitten, leere Zeilen uebersprungen, Zeile 1 = "# re15 assets v2 <anzahl> <bytes>",
      jede weitere = "<bytes>\\t<sha256>\\t<pfad>" (1-18 Ziffern 0-9, 64 Zeichen 0-9a-f klein, Pfad
      1-512 Bytes relativ mit '/', NUR druckbares ASCII 0x20-0x7e ohne '\\', jedes Segment 1-251 Bytes und
-     nicht '.'/'..', nicht auf ".neu" - Nachbesserung R4-1: der App-Speicher faltet Unicode-Gross/klein und
-     -Normalform, und Namen > 255 B legt er nicht an); weitere '#'-Zeilen, doppelte (auch nur in Gross/klein verschiedene) Pfade,
-     NUL, keine Datei, falsche Kopfzeile, > 64 MiB -> das Geraet verwirft die GANZE Liste. Die alte
+     nicht '.'/'..', KEIN Segment auf ".neu" (Runde 35, R1; vorher nur der ganze Pfad) - Nachbesserung R4-1: der
+     App-Speicher faltet Unicode-Gross/klein und -Normalform, und Namen > 255 B legt er nicht an); weitere '#'-Zeilen,
+     doppelte (auch nur in Gross/klein verschiedene) Pfade, ein Pfad zugleich Datei und Ordner (Runde 35, R2), NUL, keine Datei, falsche Kopfzeile, > 64 MiB -> das Geraet verwirft die GANZE Liste. Die alte
      Liste v1 ("# re15 assets <n> <b>", "<bytes>\\t<pfad>", bis v0.8.19) wird ausdruecklich abgelehnt.
      Jede Zeile muss genau einen APK-Eintrag assets/<pfad> treffen, mit derselben Groesse UND demselben
      sha256 wie dessen Daten, und jede Asset-Datei der APK muss im Manifest stehen - sonst wird sie auf
@@ -1134,8 +1134,13 @@ def _pfad_fehler(p):
     if lang > SEGMENT_MAX:
         return ("Segment mit %d Bytes > %d (Geraet: Name <= 255 B, der Entpacker haengt '.neu' an)"
                 % (lang, SEGMENT_MAX))
+    # Runde 35 Spur N, Regel R1 (Dossier analysis/befunde_runde35/N_android.md Punkt 2): kein SEGMENT endet auf .neu - bis
+    # dahin nur der ganze Pfad (Gegenpruefung R4-2 F-Y4: Datei X + Ordner X.neu/B - die Zwischendatei X.neu war auf dem
+    # Geraet ein Ordner, jedes Update mit geaendertem X scheiterte dauerhaft). = asset_abgleich.c re15_abgleich_pfad_ok.
     if p[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG:
         return "endet auf .neu (Endung der Zwischendatei beim Entpacken)"
+    if any(t[-len(NEU_ENDUNG):].translate(_ASCII_KLEIN) == NEU_ENDUNG for t in teile):
+        return "Ordner-Segment endet auf .neu (stuende auf dem Geraet der Zwischendatei <ziel>.neu im Weg)"
     return None
 
 
@@ -1222,6 +1227,17 @@ def manifest_lesen(roh, grenze=MANIFEST_MAX):
     for gruppe in sorted(v for v in klein.values() if len(v) > 1):
         fehler.append("Manifest: Pfade nur in Gross/klein verschieden: %s (auf dem Geraet EINE Datei)"
                       % " / ".join(sorted(gruppe)))
+    # Runde 35 Spur N, Regel R2 (= asset_abgleich.c re15_abgleich_lesen): kein Pfad ist zugleich Ordner eines anderen
+    # (ASCII-Gross/klein egal) - der App-Speicher haelt nicht beides, und der Geraete-Entpacker raeumt Datei<->Ordner-
+    # Konflikte nur, weil dort nie etwas Gelistetes liegt (re15_abgleich_weg_frei).
+    for p in sorted(eintraege):
+        teile = p.encode("utf-8").translate(_ASCII_KLEIN).split(b"/")
+        for i in range(1, len(teile)):
+            vor = klein.get(b"/".join(teile[:i]))
+            if vor:
+                fehler.append("Manifest: Datei und Ordner gleichen Namens: %s / %s (auf dem Geraet nicht beides "
+                              "moeglich)" % (vor[0], p))
+                break
     return eintraege, zeile_von, False, fehler
 
 
@@ -3109,6 +3125,17 @@ def _faelle():
         ("R4-1 V1: Manifestzeile nur ein Tab", man_anhang("\t\n"), 1, ["1 Tab(s)"]),
         ("R4-1 V2: Manifestpfad mit 0x1f", man_geister([("shared_assets/PSX/A" + chr(0x1F) + "B.BIN", 5)]), 1,
          ["(Steuerzeichen)"]),
+        # --- Runde 35 Spur N (Gegenpruefung R4-2 F-Y1: falsche Listen-Summe nur KLEINER als die echte geprueft -> der
+        #     Mutant 'a_sha > m_sha' ueberlebte; Regeln R1/R2 aus asset_abgleich.c, Dossier analysis/befunde_runde35/N_android.md)
+        ("R35 F-Y1: Pruefsumme falsch, GROESSER als die echte (ff..ff)",
+         man_ersetzen("\t{S}\t%s\n" % P07M, "\t%s\t%s\n" % ("f" * 64, P07M)), 1,
+         ["Manifest-Pruefsumme falsch: %s Manifest ffffffffffffffff.., APK " % P07M], False,
+         ["Manifest-Groesse falsch", "fehlt im Manifest"]),
+        ("R35 R1: Manifestpfad mit Ordner-Segment .neu", man_geister([("shared_assets/PSX/X.neu/B", 5)]), 1,
+         ["(Ordner-Segment endet auf .neu"]),
+        ("R35 R2: Datei und Ordner gleichen Namens (Gross/klein)",
+         man_geister([("shared_assets/PSX/Q", 5), ("shared_assets/psx/q/c", 5)]), 1,
+         ["Datei und Ordner gleichen Namens: shared_assets/PSX/Q / shared_assets/psx/q/c"]),
     )
 
 
@@ -3243,6 +3270,26 @@ _MANIFEST_PROBEN = (
     ("NUL", _MK + b"a/b\0c\n", False),
     ("Summe > 2^63-1", b"# re15 assets v2 10 999999999999999999\n"
      + b"".join(b"999999999999999999\t" + _MS + b"\ta/%d\n" % i for i in range(10)), False),
+    # Runde 35 Spur N (Gegenpruefung R4-2 F-Y1: die Mutanten D06/D08/D13/D15 ueberlebten, weil diese Proben fehlten;
+    # dieselben Listen prueft re15_port/tests/unit/test_r35_android_abgleich.c gegen den Geraete-Leser)
+    ("Dublette Z/z", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/Z\n5\t" + _MS + b"\ta/z\n", False),
+    ("Kopf-Anzahl 19 Ziffern", b"# re15 assets v2 0000000000000000001 5\n5\t" + _MS + b"\ta/b\n", False),
+    ("CR vor der Kopfzeile", b"\r" + _MK + b"a/b\n", False),
+    ("CR vor einer Datenzeile", b"# re15 assets v2 1 5\n\r5\t" + _MS + b"\ta/b\n", False),
+    ("Zeilenende LF-CR", b"# re15 assets v2 1 5\n\r5\t" + _MS + b"\ta/b\n\r", False),
+    # Runde 35 Spur N, Regeln R1 (kein Segment endet auf .neu) und R2 (kein Pfad zugleich Datei und Ordner)
+    ("R1 Ordner X.neu", _MK + b"a/X.neu/B\n", False),
+    ("R1 Ordner X.NEU", _MK + b"a/X.NEU/B\n", False),
+    ("R1 erstes Segment .Neu", _MK + b"x.Neu/b\n", False),
+    ("R1 Segment nur .neu", _MK + b"a/.neu/b\n", False),
+    ("R1 x.neux/b erlaubt", _MK + b"a/x.neux/b\n", True),
+    ("R1 neu/b erlaubt", _MK + b"a/neu/b\n", True),
+    ("R2 Datei + Ordner", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/q\n5\t" + _MS + b"\ta/q/c\n", False),
+    ("R2 Gross/klein", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/Q\n5\t" + _MS + b"\tA/q/c\n", False),
+    ("R2 tief", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/q/c/d/e\n5\t" + _MS + b"\ta/q/c\n", False),
+    ("R2 a/q + a/qc erlaubt", b"# re15 assets v2 2 10\n5\t" + _MS + b"\ta/q\n5\t" + _MS + b"\ta/qc/c\n", True),
+    ("R2 a/q + a/q-x + a/q.b erlaubt", b"# re15 assets v2 3 15\n5\t" + _MS + b"\ta/q\n5\t" + _MS + b"\ta/q-x/c\n5\t"
+     + _MS + b"\ta/q.b/c\n", True),
 )
 
 

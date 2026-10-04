@@ -113,6 +113,24 @@ Gradle-Seite (`app/build.gradle`):
   release/apk_asset_gate.py` in `release/apk_asset_gate.sha256` ein und committet beides zusammen.
   Werden Selbsttest-Faelle entfernt, bricht die Kette ab, bis die Mindestzahlen
   (`GATE_SELBSTTEST_MIN_FAELLE`/`_INNEN` in `release/apk_pruefen.sh`) bewusst gesenkt sind.
+* **Urteil-Pin** (Runde 35, `analysis/befunde_runde35/N_android.md` Punkt 3): das Urteil ueber jeden
+  Gate-Lauf steht in `release/gate_urteil.py` (vorher ungeprueft als Heredoc in apk_pruefen.sh),
+  festgehalten in `release/gate_urteil.sha256` und vor jeder Nutzung selbstgeprueft (Stand
+  Nachbesserung 1): 243 feste Gate-Ausgaben mit Soll-Urteil, und Mutanten der Funktion `urteil()` -
+  Vergleiche, and/or, not, if-Bedingungen, ganze Zahlen, weggelassene Aufrufe, jede Zeichenkette
+  ausserhalb der Meldungstexte (MARKE-Tabelle, Modusnamen, Pruef-Literale wie `[FEHLER]`) und jedes
+  Regex-Muster mit sieben Lockerungen (Text dahinter erlaubt, Rest ab Stueck k -> `.*`, Wort -> `.*`,
+  `\d+` -> `.*`, `\s+` -> `\s*`, Einzelzeichen weg, Alternative weg): 785 Mutanten, 781 von einem Fall
+  erkannt, 4 im Code als gleichwertig begruendet. NICHT mutiert werden die Meldungstexte, `main()` und
+  `urteil_rufen()`; Aenderungen ausserhalb dieser Operatoren (z.B. `any` -> `all`) faengt nur die
+  Fallsammlung (gemessen: 32 von 32 simulierten Aenderungen erkannt,
+  `analysis/befunde_runde35/N_android_belege/nb1_urteil_aenderungen_nachher.txt`). **Wer das Urteil
+  aendert**, schreibt fuer die neue Regel einen Fall (sonst ueberlebt ein Mutant =
+  `URTEIL-SELBSTTEST-FEHLER`), traegt dann die neue sha256 und ggf. `GATE_URTEIL_MIN_*` ein. Zusaetzlich
+  gilt ein OK-Urteil nur mit Rueckgabe 0 des Gates (zweite Instanz in `gate_laufen`). ctest
+  `unit_r35_android_pruefkette` faehrt die Kette mit Negativ-Kontrollen bei jedem Suite-Lauf - je
+  Pruefzeile des bash-Urteils in `apk_pruefen.sh` eine eigene (N10-N21; wer dort eine Pruefzeile
+  aendert oder neu schreibt, ergaenzt eine Kontrolle).
 
 Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_ANDROID=ON`
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`
@@ -168,6 +186,11 @@ und `synchro/` durchgegangen und alle Dateien, die nicht in der neuen Liste steh
 auch halbe `.neu`-Reste und Dateien, die ein Update nach einem Abbruch gestrichen hat
 ("Waise entfernt" im Log; Nachbesserung R4-1). Was sich nicht loeschen laesst, meldet `debug.log`
 als Warnung.
+Liegt einer Datei etwas mit falschem Typ im Weg - ein Ordner auf ihrem Namen, eine Datei auf einem
+ihrer Ordnernamen oder ein Ordner auf `<ziel>.neu` (z.B. wenn ein Update eine Datei durch einen
+gleichnamigen Ordner ersetzt oder umgekehrt) -, wird es im SELBEN Start entfernt
+(`Konflikt geraeumt: ...` im Log; Runde 35). Sicher, weil Liste, Gate und Gradle keinen Pfad zulassen,
+der zugleich Datei und Ordner ist, und keinen Ordner auf `.neu`.
 **Fehler:** fehlt die Asset-Liste der APK, ist sie ungueltig, oder laesst sich eine Datei nicht
 entpacken (z.B. Speicher voll), bleibt die Fehlermeldung stehen, bis die App geschlossen wird - das
 Spiel startet dann NICHT mit einem alten oder halben Asset-Baum (bis Nachbesserung R4-1: 3 s Meldung,

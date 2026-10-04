@@ -1,0 +1,32 @@
+Python: /c/Python310/python (3.10.11)
+ok      P0 gate_festhalten: Gate-Urteil selbstgeprueft: 243/243 Faelle, 781/785 Mutanten erkannt, 4 gleichwertig (Mindestzahlen 243/781/<=4)
+ok      P1_selbsttest -> 0   Gate-Urteil (selbsttest, Rueckgabe 0): SELBSTTEST-OK 261/261, jede Fallzeile [ok] mit rc = soll, innere Proben 148/148 (Mindestzahlen 261/148)
+ok      P2_quellbaum -> 0   Gate-Urteil (quellbaum, Rueckgabe 0): APK-ASSET-GATE-QUELLBAUM-OK: 3629 Dateien in 5 Baeumen (Summe der Baumzeilen), 2 Tuer-Soll-Zeilen g/g
+ok      N1_null -> 2   Gate-Urteil (apk, Rueckgabe 2): letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern 'ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/Users/MJOE
+ok      N2_leer -> 2   Gate-Urteil (apk, Rueckgabe 2): letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern 'ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/Users/MJOE
+ok      N3_nur_manifest -> 1   Gate-Urteil (apk, Rueckgabe 1): das Gate meldet ABWEICHUNG - Schlusszeile und Rueckgabe stimmen ueberein
+ok      N4_zufall -> 2   Gate-Urteil (apk, Rueckgabe 2): letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern 'ABBRUCH (Rueckgabe 2): APK nicht lesbar: C:/Users/MJOE
+ok      N5a_G1_selbsttest -> 2   Gate-Urteil (selbsttest, Rueckgabe 0): Schlusszeile meldet FEHLER, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+ok      N5b_G1_apk -> 2   Gate-Urteil (apk, Rueckgabe 0): Schlusszeile meldet ABWEICHUNG, aber Rueckgabe 0 statt 1 - Ausgangspfad des Gates defekt
+ok      N6_urteil_fy2_ein_zeichen -> Abbruch: DIE: Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe 1): '== URTEIL-SELBSTTEST-FEHLER: 8 von 243 Faellen falsch, 0 Mutante
+ok      N7_urteil_leer -> Abbruch: DIE: Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe 0): '' - dem Urteil ist nicht zu trauen
+ok      N8_urteil_luegt_leere_apk -> 2   Gate-Urteil ueberstimmt (zweite Instanz): Urteil 0, aber das Gate gab Rueckgabe 1 - keine Aussage
+ok      N8 die zweite Instanz hat ueberstimmt
+ok      N9 Mindestzahl Mutanten: DIE: Selbsttest des Gate-Urteils: 781/785 Mutanten erkannt, 4 gleichwertig - verlangt erkannt + gleichwertig = alle,
+ok      P3 Attrappe mit richtiger Schlusszeile + Rueckgabe 0 angenommen (Gegenprobe zu N10-N18)
+ok      N10_ok_zeile_rueckgabe_1 -> Abbruch: DIE: Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe 1 - dem Urteil ist nicht zu trauen
+ok      N11_faelle_f1_ungleich_f2 -> Abbruch: DIE: Selbsttest des Gate-Urteils: 242/243 Faelle, verlangt n/n mit n >= 243 (GATE_URTEIL_MIN_FAELLE)
+ok      N12_faelle_unter_mindestzahl -> Abbruch: DIE: Selbsttest des Gate-Urteils: 242/242 Faelle, verlangt n/n mit n >= 243 (GATE_URTEIL_MIN_FAELLE)
+ok      N13_mutanten_summe_falsch -> Abbruch: DIE: Selbsttest des Gate-Urteils: 781/786 Mutanten erkannt, 4 gleichwertig - verlangt erkannt + gleichwertig = alle,
+ok      N14_erkannt_unter_mindestzahl -> Abbruch: DIE: Selbsttest des Gate-Urteils: 780/784 Mutanten erkannt, 4 gleichwertig - verlangt erkannt + gleichwertig = alle,
+ok      N15_zu_viele_gleichwertige -> Abbruch: DIE: Selbsttest des Gate-Urteils: 781/786 Mutanten erkannt, 5 gleichwertig - verlangt erkannt + gleichwertig = alle,
+ok      N16_ok_zeile_nicht_zuletzt -> Abbruch: DIE: Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe 0): 'nachgeschoben' - dem Urteil ist nicht zu trauen
+ok      N17_ok_zeile_mit_zusatz -> Abbruch: DIE: Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe 0): '== URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkann
+ok      N18_ok_zeile_mit_vorsatz -> Abbruch: DIE: Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe 0): 'X == URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erka
+ok      N19a_urteil_ohne_urteilszeile -> 2   Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selbsttest, Rueckgabe 0): ...' (zweite Instanz) - keine Aussage
+ok      N19a die zweite Instanz verlangt die Urteilszeile
+ok      N19b_urteil_ohne_urteilszeile -> 2   Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selbsttest, Rueckgabe 0): ...' (zweite Instanz) - keine Aussage
+ok      N19b die zweite Instanz verlangt die Urteilszeile
+ok      N20_urteil private Kopie veraendert -> Abbruch: DIE: Gate-Urteil ist NICHT das festgehaltene: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reA
+ok      N21_gate private Kopie veraendert -> Abbruch: DIE: Asset-Gate ist NICHT das festgehaltene: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi
+FEHLER=0

@@ -1,0 +1,2 @@
+[android] Abgleich (Uebergang v0.8.19): 3629 Dateien (357340865 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3629, weg 0
+[android] Entpacken fertig (Uebergang v0.8.19): 3629 geprueft, 3041 kopiert (318403977 B, 11764 ms), 588 per SHA-256 geprueft (38936888 B, 545 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht loeschbar, 0 Fehler, 14925 ms

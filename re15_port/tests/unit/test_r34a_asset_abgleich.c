@@ -312,7 +312,9 @@ static void test_pfad_ok(void)
     PRUEFE(re15_abgleich_pfad_ok(NULL, 3) == 0, "NULL");
     PRUEFE(re15_abgleich_pfad_ok("a/b.ne", 6) == 1, ".ne");
     PRUEFE(re15_abgleich_pfad_ok("a/bneu", 6) == 1, "bneu (ohne Punkt)");
-    PRUEFE(re15_abgleich_pfad_ok("a/b.neu/c", 9) == 1, ".neu nur am Ende verboten");
+    /* Runde 35 Spur N, Regel R1: ".neu" ist jetzt in JEDEM Segment verboten (ein Ordner <ziel>.neu wuerde der
+     * Zwischendatei im Weg stehen - Befund F-Y4; Dossier analysis/befunde_runde35/N_android.md Punkt 2) */
+    PRUEFE(re15_abgleich_pfad_ok("a/b.neu/c", 9) == 0, ".neu als Ordner-Segment verboten (R1)");
     PRUEFE(re15_abgleich_pfad_ok("../a", 4) == 0, "../a");
     PRUEFE(re15_abgleich_pfad_ok("./a/b", 5) == 0, "./a/b");
     PRUEFE(re15_abgleich_pfad_ok("a/...", 5) == 1, "'...' ist ein Name");

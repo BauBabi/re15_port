@@ -1,0 +1,17 @@
+0
+OK: 63 Pruefungen, 0 Fehler
+== r34a asset_abgleich: 324 Pruefungen, 0 Fehler ==
+anzeige rc=0 == anzeige: alle Szenarien bestanden
+konflikt rc=0 == konflikt: alle Szenarien bestanden
+== K1_ordner_wird_datei_2_update (1280x720): EXIT=0 (soll 0)
+== K2_datei_wird_ordner_2_update (1280x720): EXIT=0 (soll 0)
+== K3_ordner_auf_zwischendatei_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Konflikt geraeumt: shared_assets/PSX/X.neu war ein Ordner auf dem Namen der Zwischendatei mit 1 Dateien darin - entfernt
+== K4_datei_auf_ordnername_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Konflikt geraeumt: shared_assets/PSX/q war eine Datei, wo ein Ordner hin muss - entfernt
+== K5_ordner_auf_dateiname_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Konflikt geraeumt: shared_assets/PSX/q war ein Ordner, wo die Datei hin muss mit 2 Dateien darin - entfernt
+== K6_gross_klein_2_update (1280x720): EXIT=0 (soll 0)
+0
+gcc (Debian 10.2.1-6) 10.2.1 20210110
+cmake version 3.28.6

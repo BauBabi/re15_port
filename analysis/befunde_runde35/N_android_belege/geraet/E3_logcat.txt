@@ -1,0 +1,6 @@
+[android] Liste = zuletzt entpackt, aber 1 Dateien fehlen/falsche Groesse -> neu entpacken
+[android] Abgleich (Groessen-Nachlauf): 3629 Dateien (357340865 Bytes) - behalten 3629, geaendert 0, neu 0, pruefen 0, weg 0
+[android] entpacke synchro/STAGE1/room1240/main04.wav (Groesse falsch/fehlt)
+[android] Konflikt geraeumt: synchro/STAGE1/room1240/main04.wav.neu war ein Ordner auf dem Namen der Zwischendatei mit 1 Dateien darin - entfernt
+[android] Entpacken fertig (Groessen-Nachlauf): 3629 geprueft, 1 kopiert (2017588 B, 20 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Konflikte geraeumt, 0 nicht loeschbar, 0 Fehler, 1228 ms
+-rw-rw----  1 u0_a211 ext_data_rw 2017588 2026-10-04 04:46 main04.wav

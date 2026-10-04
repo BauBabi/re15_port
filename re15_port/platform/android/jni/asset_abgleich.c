@@ -201,6 +201,7 @@ static char ascii_klein(char c) { return (c >= 'A' && c <= 'Z') ? (char)(c - 'A'
 int re15_abgleich_pfad_ok(const char *p, size_t n)
 {
     if (!p || n == 0 || n > RE15_ABGLEICH_PFAD_MAX) return 0;
+    const size_t k = sizeof RE15_ABGLEICH_NEU_ENDUNG - 1;
     int schraeg = 0;
     size_t seg = 0;                                        /* Anfang des laufenden Segments */
     for (size_t i = 0; i <= n; i++) {
@@ -210,6 +211,11 @@ int re15_abgleich_pfad_ok(const char *p, size_t n)
             if (l > RE15_ABGLEICH_SEGMENT_MAX) return 0;
             if (l == 1 && p[seg] == '.') return 0;
             if (l == 2 && p[seg] == '.' && p[seg + 1] == '.') return 0;
+            if (l >= k) {                                  /* Runde 35 Spur N, R1: kein SEGMENT endet auf .neu */
+                size_t j;
+                for (j = 0; j < k && ascii_klein(p[i - k + j]) == RE15_ABGLEICH_NEU_ENDUNG[j]; j++) {}
+                if (j == k) return 0;
+            }
             if (i < n) schraeg = 1;
             seg = i + 1;
             continue;
@@ -217,14 +223,7 @@ int re15_abgleich_pfad_ok(const char *p, size_t n)
         unsigned char c = (unsigned char)p[i];
         if (c < 0x20 || c > 0x7e || c == '\\') return 0;  /* Steuerzeichen, DEL, Nicht-ASCII, '\' */
     }
-    if (!schraeg) return 0;
-    size_t k = sizeof RE15_ABGLEICH_NEU_ENDUNG - 1;
-    if (n >= k) {
-        size_t j;
-        for (j = 0; j < k && ascii_klein(p[n - k + j]) == RE15_ABGLEICH_NEU_ENDUNG[j]; j++) {}
-        if (j == k) return 0;
-    }
-    return 1;
+    return schraeg;
 }
 
 static int pfad_vergleich(const void *a, const void *b)
@@ -367,6 +366,22 @@ int re15_abgleich_lesen(re15_abgleich_liste_t *l, const char *text, size_t len,
                 fehler_setzen(fehler, fehler_n, "Pfade nur in Gross/klein verschieden: %s / %s", klein[i - 1], klein[i]);
             goto raus;
         }
+    /* Runde 35 Spur N, R2: kein Pfad ist zugleich Ordner eines anderen ("a/q" + "a/q/c", ASCII-Gross/klein egal - der
+     * App-Speicher haelt nicht beides). Sonst waere das Raeumen in re15_abgleich_weg_frei nicht sicher. */
+    for (size_t i = 0; i < n; i++) {
+        char vor[RE15_ABGLEICH_PFAD_MAX + 1];
+        for (const char *s = strchr(klein[i], '/'); s; s = strchr(s + 1, '/')) {
+            size_t m = (size_t)(s - klein[i]);
+            memcpy(vor, klein[i], m);
+            vor[m] = '\0';
+            const char *schl = vor;
+            const char **t = (const char **)bsearch(&schl, klein, n, sizeof *klein, pfad_vergleich_klein);
+            if (t) {
+                fehler_setzen(fehler, fehler_n, "Datei und Ordner gleichen Namens: %s / %s", *t, klein[i]);
+                goto raus;
+            }
+        }
+    }
     free(klein);
     l->puffer = b;
     l->e = e;
@@ -553,4 +568,98 @@ long re15_abgleich_waisen(const char *wurzel, const char *const *baeume, size_t 
     }
     if (n_fehler) *n_fehler = w.n_fehler;
     return w.n_weg;
+}
+
+/* =============================================================================== Weg frei (Runde 35 Spur N, F-Y4/H8) */
+/* Regeln und Begruendung: asset_abgleich.h (re15_abgleich_weg_frei). Dossier analysis/befunde_runde35/N_android.md. */
+
+/* Inhalt des Ordners voll (Puffer WAISEN_PFAD, len Zeichen belegt) loeschen, nie einem Symlink folgen; der Ordner
+ * selbst bleibt. Rueckgabe: geloeschte Dateien; *n_fehler zaehlt, was blieb (dann scheitert das rmdir des Aufrufers). */
+static long inhalt_loeschen(char *voll, size_t len, int tiefe, long *n_fehler)
+{
+    char **namen = NULL;
+    size_t n = 0;
+    long weg = 0;
+    if (namen_lesen(voll, &namen, &n) != 0) (*n_fehler)++;
+    for (size_t i = 0; i < n; i++) {
+        size_t k = strlen(namen[i]);
+        if (len + 1 + k >= WAISEN_PFAD) { (*n_fehler)++; free(namen[i]); continue; }
+        voll[len] = '/';
+        memcpy(voll + len + 1, namen[i], k + 1);
+        free(namen[i]);
+        struct stat sb;
+        if (re15_lstat(voll, &sb) != 0) {
+            /* zwischen readdir und lstat verschwunden */
+        } else if (S_ISDIR(sb.st_mode) && !RE15_IST_LINK(sb.st_mode)) {
+            if (tiefe < WAISEN_TIEFE) weg += inhalt_loeschen(voll, len + 1 + k, tiefe + 1, n_fehler);
+            else (*n_fehler)++;
+            if (rmdir(voll) != 0) (*n_fehler)++;
+        } else if (unlink(voll) == 0) {
+            weg++;
+        } else {
+            (*n_fehler)++;
+        }
+        voll[len] = '\0';
+    }
+    free(namen);
+    return weg;
+}
+
+int re15_abgleich_weg_frei(const char *wurzel, const char *rel,
+                           void (*melde)(void *ctx, const char *rel, int art, long n_dateien, int ok), void *ctx)
+{
+    const size_t k_neu = sizeof RE15_ABGLEICH_NEU_ENDUNG - 1;
+    if (!wurzel || !rel || !re15_abgleich_pfad_ok(rel, strlen(rel))) return -1;   /* nie ausserhalb der Wurzel */
+    char voll[WAISEN_PFAD];
+    int k = snprintf(voll, sizeof voll, "%s/%s", wurzel, rel);
+    if (k < 0 || (size_t)k + k_neu >= sizeof voll) return -1;
+    const size_t basis = strlen(wurzel) + 1;
+    struct stat sb;
+
+    /* 1. Elternsegmente: das erste, das es gibt, aber kein echter Ordner ist, muss weg (darunter gibt es dann nichts) */
+    for (size_t i = basis; i < (size_t)k; i++) {
+        if (voll[i] != '/') continue;
+        voll[i] = '\0';
+        int gibt = re15_lstat(voll, &sb) == 0;
+        if (gibt && !(S_ISDIR(sb.st_mode) && !RE15_IST_LINK(sb.st_mode))) {
+            int ok = unlink(voll) == 0;
+            if (melde) melde(ctx, voll + basis, RE15_KONFLIKT_ELTER_DATEI, 1, ok);
+            voll[i] = '/';
+            if (!ok) return -1;
+            break;
+        }
+        voll[i] = '/';
+        if (!gibt) break;                                  /* fehlt: den Rest legt der Entpacker an */
+    }
+
+    /* 2. Ordner auf <rel>.neu, 3. Ordner auf <rel> - samt Inhalt (R1/R2: dort liegt nichts Gelistetes) */
+    int rc = 0;
+    for (int schritt = 0; schritt < 2; schritt++) {
+        if (schritt == 0) memcpy(voll + k, RE15_ABGLEICH_NEU_ENDUNG, k_neu + 1);
+        else voll[k] = '\0';
+        if (re15_lstat(voll, &sb) != 0 || !S_ISDIR(sb.st_mode) || RE15_IST_LINK(sb.st_mode)) continue;
+        long n_fehler = 0;
+        long n = inhalt_loeschen(voll, strlen(voll), 0, &n_fehler);
+        int ok = rmdir(voll) == 0;
+        if (melde) melde(ctx, voll + basis, schritt == 0 ? RE15_KONFLIKT_NEU_ORDNER : RE15_KONFLIKT_ZIEL_ORDNER, n, ok);
+        if (!ok) rc = -1;
+    }
+    return rc;
+}
+
+long re15_abgleich_leere_eltern(const char *wurzel, const char *rel)
+{
+    if (!wurzel || !rel || !re15_abgleich_pfad_ok(rel, strlen(rel))) return 0;
+    char voll[WAISEN_PFAD];
+    int k = snprintf(voll, sizeof voll, "%s/%s", wurzel, rel);
+    if (k < 0 || (size_t)k >= sizeof voll) return 0;
+    char *anfang = voll + strlen(wurzel) + 1;
+    char *erster = strchr(anfang, '/');                    /* Ende des ersten Segments (der Baum bleibt) */
+    long n = 0;
+    for (char *s = strrchr(anfang, '/'); s && s > erster; s = strrchr(anfang, '/')) {
+        *s = '\0';
+        if (rmdir(voll) != 0) break;                       /* nicht leer oder fehlt: hier ist Schluss */
+        n++;
+    }
+    return n;
 }

@@ -1,0 +1,54 @@
+A2   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 109 qb: Baum mit 0 Dateien                               Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+A3   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 084 apk: SUMME Bytes 4095                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+A4   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 073 st: Fallzeile mit Zusatz (fehlende Meldung)          Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+A5   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+A6   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+A7   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 054 [FEHLER] im Lauf                                     Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+A8   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 052 Traceback im Lauf                                    Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+A11  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C1   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C2   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C3   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C4   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C7   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C9   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 106 qb: Schluss anderer Wortlaut                         Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 140: Zahl 2 -> 3: 2
+C10  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C11  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C12  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 053 ABBRUCH im Lauf                                      Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+C14  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C15  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C16  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 112 pk: Schluss anderer Wortlaut                         Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 149: Zahl 2 -> 3: 2
+C17  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 13 von 119 Faellen falsch, 173 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 001 selbsttest gut                                       Urteil 2 (soll 0)  ende: Schlusszeile ohne 'n/n Faelle' - keine Aussage
+         [FEHLER] 002 selbsttest gut, CRLF                                 Urteil 2 (soll 0)  ende: Schlusszeile ohne 'n/n Faelle' - keine Aussage
+C18  NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+C19  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 9 von 119 Faellen falsch, 76 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 004 apk gut                                              Urteil 2 (soll 0)  ende: Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage
+         [FEHLER] 005 apk gut, unzip-Zaehlung = n + 1                      Urteil 2 (soll 0)  ende: Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage
+C20  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 119 Faellen falsch, 29 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 007 paket gut                                            Urteil 2 (soll 0)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-PAK-OK: ... ==', sondern '== APK-ASSE
+         [FEHLER] 012 paket gut, 1 Datei in 1 Baum                         Urteil 2 (soll 0)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-PAK-OK: ... ==', sondern '== APK-ASSE
+D1   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 256/259 Mutanten erkannt, 3 als gleichwertig begruendet ==
+D2   UNGUELTIG (Muster 0-mal)
+D5   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+D6   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+D7   NICHT       rc=0  == URTEIL-SELBSTTEST-OK: 119/119 Faelle, 257/260 Mutanten erkannt, 3 als gleichwertig begruendet ==
+D8   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 002 selbsttest gut, CRLF                                 Urteil 2 (soll 0)  ende: Zeile 'Innere Proben: m/m' 0-mal statt genau einmal - keine Aussage
+D9   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 0 von 119 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 75: Zahl 2 -> 3: 2
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 75: Aufruf weg: ende(2, "KEINE Ausgabe - das Gate lief nicht (lee
+D10  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 119 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 024 selbsttest ABWEICHUNG, Rueckgabe 1                   Urteil 2 (soll 1)  ende: letzte Zeile ist nicht '== SELBSTTEST-OK: ... ==', sondern '== SELBSTTEST-ABWEI
+         [FEHLER] 030 apk ABWEICHUNG, Rueckgabe 1                          Urteil 2 (soll 1)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern '== APK-ASSET-GA
+SUMME: 14 von 32 bemerkt

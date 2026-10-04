@@ -59,6 +59,29 @@
 #   H2  APK_GATE_DATEI kam aus der Umgebung: ein leeres oder altes Gate ersetzte still die ganze Asset-Pruefung
 #       (Gegenpruefung A4/A5: v0.8.19-APK mit Liste v1 -> ANDROID-GATES-OK). Die Variable wird beim Laden verworfen;
 #       make_package.sh setzt NACH dem Laden APK_GATE_KOPIE (seine festgehaltene, selbstgetestete Kopie).
+#
+# DAS URTEIL SELBST PRUEFEN (Runde 35 Spur N, Gegenpruefung R4-2 F-Y2 - Dossier analysis/befunde_runde35/N_android.md
+#   Punkt 3; Nutzer: "Kuenftige Aenderungen am Pruefskript muessen dessen Urteilslogik selbst sorgfaeltig mittesten"):
+#   Bis dahin war gate_urteil ein Python-Heredoc HIER, ungepinnt und von keinem Test beruehrt; eine 1-Zeichen-Aenderung
+#   (ende(1, ...) -> ende(0, ...)) machte aus der richtigen ABWEICHUNG des echten Gates ANDROID-GATES-OK. Jetzt:
+#   - der Code steht in release/gate_urteil.py (wortgleich, nur als Funktion) und wird wie das Gate festgehalten: private
+#     Kopie neben der des Gates (gate_festhalten), sha256 = release/gate_urteil.sha256, vor JEDER Nutzung erneut geprueft;
+#   - gate_festhalten laesst dessen Selbsttest laufen (feste Gate-Ausgaben + Mutanten der Funktion urteil() - Umfang
+#     der Operatoren im Kopf von release/gate_urteil.py; Meldungstexte, main() und urteil_rufen() werden NICHT mutiert)
+#     und prueft die Schlusszeile HIER in bash, mit Mindestzahlen (GATE_URTEIL_MIN_*): weniger Faelle/Mutanten oder
+#     mehr "gleichwertige" als festgehalten = Abbruch; jede dieser bash-Pruefungen hat in ctest
+#     unit_r35_android_pruefkette eine eigene Negativ-Kontrolle (N10-N18, Nachbesserung 1);
+#   - gate_laufen verlangt fuer ein OK-Urteil ZUSAETZLICH, unabhaengig vom Urteilscode: Rueckgabe 0 des Gates und die
+#     Urteilszeile "Gate-Urteil (<modus>, Rueckgabe 0): " in der Ausgabe des Urteils (zweite Instanz - ein richtiges
+#     Gate kann nicht mehr ueberstimmt werden);
+#   - ctest unit_r35_android_pruefkette (re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh) faehrt das
+#     alles bei jedem Suite-Lauf, mit Negativ-Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes
+#     Urteil, je Pruefzeile des bash-Urteils eine Attrappe, veraenderte private Kopien), die ROT werden muessen.
+#   Wer eine Pruefzeile in gate_urteil_selbsttest/gate_laufen/gate_*pin_pruefen aendert oder neu schreibt: eine
+#   Negativ-Kontrolle dazu in test_r35_android_pruefkette.sh (Streich-Messung: analysis/befunde_runde35/N_android.md,
+#   Nachbesserung 1).
+#   Wer gate_urteil.py aendert: --selbsttest muss OK sein (sonst Fall ergaenzen), dann den neuen sha256 in
+#   release/gate_urteil.sha256 festhalten und ggf. GATE_URTEIL_MIN_* anpassen - im selben Commit.
 # =============================================================================
 
 APK_PRUEF_TMP=""
@@ -67,10 +90,22 @@ APK_GEPRUEFT_KOPIE=""
 APK_SIGNER_SOLL_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_signer.sha256"
 GATE_QUELLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_asset_gate.py"
 GATE_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_asset_gate.sha256"
-# Mindestzahlen des Selbsttests (Stand Nachbesserung R4-1: 258 Faelle, 132 innere Proben). Mehr ist gut; weniger
-# heisst, jemand hat Faelle entfernt - dann bewusst hier senken (git-Diff), nicht still.
-GATE_SELBSTTEST_MIN_FAELLE=258
-GATE_SELBSTTEST_MIN_INNEN=132
+# Mindestzahlen des Selbsttests (Stand Runde 35 Spur N: 261 Faelle, 148 innere Proben - vorher 258/132; +3 Faelle und
+# +16 Proben fuer F-Y1 und die Regeln R1/R2). Mehr ist gut; weniger heisst, jemand hat Faelle entfernt - dann bewusst
+# hier senken (git-Diff), nicht still.
+GATE_SELBSTTEST_MIN_FAELLE=261
+GATE_SELBSTTEST_MIN_INNEN=148
+# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 1: 243 Faelle, 781 von
+# 785 Mutanten erkannt, 4 als gleichwertig begruendet - vorher 119 / 257 von 260 / 3; seitdem werden auch Zeichenketten
+# und Regex-Muster mutiert, Abnahme 0 M1). Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum
+# gleichwertigen erklaert statt einen Fall zu schreiben, muss das HIER sichtbar tun.
+GATE_URTEIL_QUELLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.py"
+GATE_URTEIL_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.sha256"
+GATE_URTEIL_MIN_FAELLE=243
+GATE_URTEIL_MIN_ERKANNT=781
+GATE_URTEIL_MAX_GLEICH=4
+GATE_URTEIL_KOPIE=""              # gate_festhalten: gepruefte private Kopie von release/gate_urteil.py
+GATE_URTEIL_GEPRUEFT=""           # sha256 der Urteils-Kopie, deren Selbsttest in dieser Shell bestanden hat
 if [[ -n "${APK_GATE_DATEI:-}" ]]; then
     echo "   (Umgebung APK_GATE_DATEI=$APK_GATE_DATEI wird IGNORIERT - geprueft wird immer mit release/apk_asset_gate.py," \
          "festgehalten in release/apk_asset_gate.sha256; Gegenpruefung R4-1 H2)" >&2
@@ -79,6 +114,7 @@ unset APK_GATE_DATEI
 APK_GATE_KOPIE=""                 # nur make_package.sh setzt es (nach dem source) - nie aus der Umgebung
 GATE_KOPIE=""                     # gate_festhalten: die gepruefte private Kopie
 GATE_SHA256=""                    # gate_pin_pruefen: sha256 der zuletzt gepruften Gate-Datei
+GATE_URTEIL_SHA256=""             # gate_urteil_pin_pruefen: sha256 der zuletzt gepruften Urteils-Datei (Runde 35)
 GATE_APK_EINTRAEGE=""             # nur fuer gate_laufen apk: unzip-Zaehlung der assets/-Eintraege (Gegenprobe)
 
 apk_nativ() {           # Pfad fuer Windows-Programme (aapt.exe, java.exe, python.exe) als C:/...
@@ -221,132 +257,79 @@ gate_pin_pruefen() {       # $1 = Gate-Datei; Abbruch, wenn ihre sha256 nicht di
     GATE_SHA256="$ist"
 }
 
+gate_urteil_pin_pruefen() { # $1 = Urteils-Datei; Abbruch, wenn ihre sha256 nicht release/gate_urteil.sha256 gleicht
+    local datei="$1" soll ist
+    [[ -f "$GATE_URTEIL_PIN_DATEI" ]] || die "Urteils-Pin fehlt: $GATE_URTEIL_PIN_DATEI (festgehaltene sha256 von release/gate_urteil.py)"
+    soll="$(sed -e 's/#.*//' -e 's/[[:space:]]//g' "$GATE_URTEIL_PIN_DATEI" | tr -d '\n')"
+    soll="${soll,,}"
+    [[ "$soll" =~ ^[0-9a-f]{64}$ ]] || die "Urteils-Pin $GATE_URTEIL_PIN_DATEI ist kein SHA-256 (64 Hexziffern): '$soll'"
+    [[ -f "$datei" ]] || die "Gate-Urteil fehlt: $datei"
+    ist="$(apk_kennung "$datei")" || die "Gate-Urteil nicht lesbar: $datei"
+    ist="${ist%% *}"
+    [[ "$ist" == "$soll" ]] || die "Gate-Urteil ist NICHT das festgehaltene: $datei
+        sha256 $ist ($(wc -c < "$datei") B), festgehalten: $soll (release/gate_urteil.sha256)
+        Ein veraendertes Urteil kann ein richtiges Gate ueberstimmen (Gegenpruefung R4-2, F-Y2). Ist die Aenderung Absicht:
+            \"\$PY\" release/gate_urteil.py --selbsttest     (muss URTEIL-SELBSTTEST-OK melden - sonst Fall ergaenzen)
+            sha256sum release/gate_urteil.py              (in release/gate_urteil.sha256 eintragen, im selben Commit)"
+    GATE_URTEIL_SHA256="$ist"
+}
+
+# Selbsttest des Urteils (Runde 35 Spur N): einmal je Shell und Kopie. Die Schlusszeile wird HIER (bash, nicht der
+# gepruefte Python-Code) gegen die Mindestzahlen geprueft - ein leeres oder abgeschnittenes Urteil liefert keine solche
+# Zeile, ein geschwaechter Selbsttest weniger Faelle/Mutanten.
+gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
+    local datei="$1" log rc=0 letzte f1 f2 e m g
+    gate_urteil_pin_pruefen "$datei"
+    [[ "$GATE_URTEIL_GEPRUEFT" == "$GATE_URTEIL_SHA256" ]] && return 0
+    log="$(mktemp "${TMPDIR:-/tmp}/re15_urteil_selbsttest.XXXXXX")" || die "gate_urteil_selbsttest: kein Temp-Platz"
+    echo "   (Selbsttest des Gate-Urteils, sha256 ${GATE_URTEIL_SHA256:0:16}...)"
+    "$PY" "$(apk_nativ "$datei")" --selbsttest > "$log" 2>&1 || rc=$?
+    grep -v '^   \[ok\] ' "$log" | sed 's/^/   /' || true
+    letzte="$(tr -d '\r' < "$log" | grep -v '^[[:space:]]*$' | tail -1)"
+    rm -f "$log"
+    if [[ "$letzte" =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0-9]+)\ Faelle,\ ([0-9]+)/([0-9]+)\ Mutanten\ erkannt,\ ([0-9]+)\ als\ gleichwertig\ begruendet\ ==$ ]]; then
+        f1="${BASH_REMATCH[1]}"; f2="${BASH_REMATCH[2]}"; e="${BASH_REMATCH[3]}"; m="${BASH_REMATCH[4]}"; g="${BASH_REMATCH[5]}"
+    else
+        die "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe $rc): '${letzte:0:160}' - dem Urteil ist nicht zu trauen"
+    fi
+    (( rc == 0 )) || die "Selbsttest des Gate-Urteils: OK-Schlusszeile, aber Rueckgabe $rc - dem Urteil ist nicht zu trauen"
+    (( f1 == f2 && f2 >= GATE_URTEIL_MIN_FAELLE )) \
+        || die "Selbsttest des Gate-Urteils: $f1/$f2 Faelle, verlangt n/n mit n >= $GATE_URTEIL_MIN_FAELLE (GATE_URTEIL_MIN_FAELLE)"
+    (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )) \
+        || die "Selbsttest des Gate-Urteils: $e/$m Mutanten erkannt, $g gleichwertig - verlangt erkannt + gleichwertig = alle,
+        erkannt >= $GATE_URTEIL_MIN_ERKANNT, gleichwertig <= $GATE_URTEIL_MAX_GLEICH (GATE_URTEIL_MIN_ERKANNT/MAX_GLEICH)"
+    echo "   Gate-Urteil selbstgeprueft: $f2/$f2 Faelle, $e/$m Mutanten erkannt, $g gleichwertig (Mindestzahlen $GATE_URTEIL_MIN_FAELLE/$GATE_URTEIL_MIN_ERKANNT/<=$GATE_URTEIL_MAX_GLEICH)"
+    GATE_URTEIL_GEPRUEFT="$GATE_URTEIL_SHA256"
+}
+
 gate_festhalten() {        # $1 = privater Ordner -> GATE_KOPIE = gepruefte Kopie von release/apk_asset_gate.py
-    local ziel="$1/apk_asset_gate.py"
+    local ziel="$1/apk_asset_gate.py" uziel="$1/gate_urteil.py"
     [[ -d "$1" ]] || die "gate_festhalten: Ordner fehlt: $1"
     [[ ! -e "$ziel" ]] || die "gate_festhalten: $ziel existiert schon"
+    [[ ! -e "$uziel" ]] || die "gate_festhalten: $uziel existiert schon"
     cp "$GATE_QUELLE" "$ziel" || die "Asset-Gate nicht kopierbar: $GATE_QUELLE"
     gate_pin_pruefen "$ziel"
     GATE_KOPIE="$ziel"
     echo "   Gate: private Kopie von release/apk_asset_gate.py ($ziel)"
     echo "         sha256 $GATE_SHA256 = festgehalten (release/apk_asset_gate.sha256)"
+    # Runde 35 Spur N: das Urteil ebenso - private Kopie, Pin, Selbsttest (Faelle + Mutanten), bevor es irgendetwas urteilt
+    cp "$GATE_URTEIL_QUELLE" "$uziel" || die "Gate-Urteil nicht kopierbar: $GATE_URTEIL_QUELLE"
+    GATE_URTEIL_KOPIE="$uziel"
+    gate_urteil_selbsttest "$uziel"
+    echo "   Urteil: private Kopie von release/gate_urteil.py ($uziel)"
+    echo "         sha256 $GATE_URTEIL_SHA256 = festgehalten (release/gate_urteil.sha256)"
 }
 
 # gate_urteil <modus> <ausgabe-datei> <rueckgabe> -> 0 = OK, 1 = das Gate meldet Befunde (Ausgabe stimmig),
-# 2 = keine Aussage. Unabhaengiger Code (nicht das Gate): liest nur die Ausgabe.
+# 2 = keine Aussage. Unabhaengiger Code (nicht das Gate): liest nur die Ausgabe. Seit Runde 35 in release/gate_urteil.py
+# (festgehalten + selbstgeprueft in gate_festhalten); vorher stand der Code als Heredoc hier.
 gate_urteil() {
-    "$PY" - "$1" "$2" "$3" "$GATE_SELBSTTEST_MIN_FAELLE" "$GATE_SELBSTTEST_MIN_INNEN" "${GATE_APK_EINTRAEGE:-}" <<'PY'
-import re, sys
-modus, log, rc = sys.argv[1], sys.argv[2], int(sys.argv[3])
-min_faelle, min_innen, apk_eintraege = int(sys.argv[4]), int(sys.argv[5]), sys.argv[6]
-MARKE = {"selbsttest": "SELBSTTEST", "apk": "APK-ASSET-GATE", "quellbaum": "APK-ASSET-GATE-QUELLBAUM",
-         "paket": "APK-ASSET-GATE-PAKET"}[modus]
-text = open(log, "rb").read().decode("utf-8", "replace").replace("\r", "")
-zeilen = [z for z in text.split("\n") if z.strip()]
-
-
-def ende(code, grund):
-    print("   Gate-Urteil (%s, Rueckgabe %d): %s" % (modus, rc, grund))
-    sys.exit(code)
-
-
-def genau_eine(muster, name):
-    t = [m for m in (re.fullmatch(muster, z) for z in zeilen) if m]
-    if len(t) != 1:
-        ende(2, "Zeile '%s' %d-mal statt genau einmal - keine Aussage" % (name, len(t)))
-    return [int(g) for g in t[0].groups()]
-
-
-def tuer_soll():
-    t = [m for m in (re.fullmatch(r"   Tuer-Soll: .* (\d+)/(\d+) wie die Engine-Tabelle .*", z) for z in zeilen) if m]
-    if not t or any(m.group(1) != m.group(2) or int(m.group(2)) == 0 for m in t):
-        ende(2, "Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage")
-    return "%d Tuer-Soll-Zeilen g/g" % len(t)
-
-
-if not zeilen:
-    ende(2, "KEINE Ausgabe - das Gate lief nicht (leere oder abgeschnittene Datei? falscher Interpreter?)")
-letzte = zeilen[-1]
-m_ok = re.fullmatch(r"== %s-OK: (.+) ==" % re.escape(MARKE), letzte)
-m_neg = re.fullmatch(r"== %s-(FEHLER|ABWEICHUNG): (.+) ==" % re.escape(MARKE), letzte)
-if m_neg:
-    if rc == 1:
-        ende(1, "das Gate meldet %s - Schlusszeile und Rueckgabe stimmen ueberein" % m_neg.group(1))
-    ende(2, "Schlusszeile meldet %s, aber Rueckgabe %d statt 1 - Ausgangspfad des Gates defekt" % (m_neg.group(1), rc))
-if not m_ok:
-    ende(2, "letzte Zeile ist nicht '== %s-OK: ... ==', sondern %r - keine Aussage" % (MARKE, letzte[:140]))
-if rc != 0:
-    ende(2, "Schlusszeile OK, aber Rueckgabe %d - Ausgangspfad des Gates defekt" % rc)
-urteile = [z for z in zeilen if re.match(r"== (SELBSTTEST|APK-ASSET-GATE(-PAKET|-QUELLBAUM)?)-(OK|FEHLER|ABWEICHUNG)\b", z)]
-if len(urteile) != 1:
-    ende(2, "%d Urteilszeilen statt genau einer - keine Aussage" % len(urteile))
-for z in zeilen:
-    if z.startswith("ABBRUCH") or z.startswith("Traceback") or "[FEHLER]" in z:
-        ende(2, "OK-Schlusszeile, aber im selben Lauf %r - keine Aussage" % z[:140])
-rest = m_ok.group(1)
-if modus == "selbsttest":
-    m = re.fullmatch(r"(\d+)/(\d+) Faelle \(.*\)", rest)
-    if not m:
-        ende(2, "Schlusszeile ohne 'n/n Faelle' - keine Aussage")
-    ok_n, n = int(m.group(1)), int(m.group(2))
-    if ok_n != n or n < min_faelle:
-        ende(2, "SELBSTTEST-OK meldet %d/%d Faelle, verlangt n/n mit n >= %d (release/apk_pruefen.sh "
-                "GATE_SELBSTTEST_MIN_FAELLE) - weniger Faelle = schwaecherer Selbsttest" % (ok_n, n, min_faelle))
-    a, b = genau_eine(r"   Innere Proben: (\d+)/(\d+) \(.*\)", "Innere Proben: m/m")
-    if a != b or b < min_innen:
-        ende(2, "Innere Proben %d/%d, verlangt m/m mit m >= %d (GATE_SELBSTTEST_MIN_INNEN)" % (a, b, min_innen))
-    faelle = [m for m in (re.fullmatch(r"   \[(ok|FEHLER)\] (\d+) (.*) rc=(-?\d+) \(soll (-?\d+)\)(.*)", z) for z in zeilen) if m]
-    if sorted(int(f.group(2)) for f in faelle) != list(range(1, n + 1)):
-        ende(2, "%d Fallzeilen, Nummern nicht genau 1..%d - keine Aussage" % (len(faelle), n))
-    for f in faelle:
-        if f.group(1) != "ok" or f.group(4) != f.group(5) or f.group(6).strip():
-            ende(2, "Fallzeile %s nicht [ok] mit rc = soll: %r" % (f.group(2), f.group(0).strip()[:140]))
-    ende(0, "SELBSTTEST-OK %d/%d, jede Fallzeile [ok] mit rc = soll, innere Proben %d/%d (Mindestzahlen %d/%d)"
-         % (n, n, a, b, min_faelle, min_innen))
-if modus == "apk":
-    m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen bytegleich, Tuer-Soll erfuellt, Manifest stimmt, "
-                     r"ZIP-Struktur wie Android sie liest", rest)
-    if not m:
-        ende(2, "Schlusszeile nicht im erwarteten Wortlaut - keine Aussage")
-    n = int(m.group(1))
-    q, a, g, b = genau_eine(r"   SUMME\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)", "SUMME")
-    mz, mb = genau_eine(r"   Manifest:\s+(\d+) Zeilen / (\d+) Bytes \(.*\)", "Manifest: n Zeilen")
-    if n <= 0 or not (q == a == g == mz == n) or mb != b:
-        ende(2, "Zaehlung passt nicht zur Schlusszeile (%d): Quelle %d, APK %d, gleich %d, Manifest %d Zeilen / %d B, "
-                "Bytes gleich %d" % (n, q, a, g, mz, mb, b))
-    for label in ("RE2/DOOR", "RE15DOOR"):
-        t = genau_eine(r"   %s:\s+Quelle (\d+), APK (\d+), sha256 gleich (\d+)/(\d+)" % re.escape(label), label)
-        if not (t[0] == t[1] == t[2] == t[3] > 0):
-            ende(2, "%s: Quelle/APK/gleich %r nicht gleich bzw. 0" % (label, t))
-    genau_eine(r"   TORSE\.VBS: Quelle (\d+) B, APK (\d+) B, sha256 gleich", "TORSE.VBS ... sha256 gleich")
-    zusatz = ""
-    if apk_eintraege:
-        if int(apk_eintraege) != a + 1:
-            ende(2, "unzip zaehlt %s Eintraege unter assets/, das Gate %d Asset-Dateien + Manifest" % (apk_eintraege, a))
-        zusatz = " = unzip-Zaehlung - 1"
-    ende(0, "APK-ASSET-GATE-OK: %d Dateien, Quelle = APK%s = gleich = Manifestzeilen, RE2/DOOR + RE15DOOR + TORSE.VBS "
-            "gleich, %s" % (n, zusatz, tuer_soll()))
-if modus == "quellbaum":
-    m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen, Tuer-Soll erfuellt", rest)
-    if not m:
-        ende(2, "Schlusszeile nicht im erwarteten Wortlaut - keine Aussage")
-    n, k = int(m.group(1)), int(m.group(2))
-    baum = [int(x.group(1)) for x in (re.fullmatch(r"   \S+\s+(\d+) Dateien", z) for z in zeilen) if x]
-    if n <= 0 or len(baum) != k or sum(baum) != n or 0 in baum:
-        ende(2, "Baumzeilen %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
-    ende(0, "APK-ASSET-GATE-QUELLBAUM-OK: %d Dateien in %d Baeumen (Summe der Baumzeilen), %s" % (n, k, tuer_soll()))
-if modus == "paket":
-    m = re.fullmatch(r"(\d+) Dateien in (\d+) Baeumen bytegleich, nichts zusaetzlich", rest)
-    if not m:
-        ende(2, "Schlusszeile nicht im erwarteten Wortlaut - keine Aussage")
-    n, k = int(m.group(1)), int(m.group(2))
-    baum = [(int(x.group(1)), int(x.group(2))) for x in (re.fullmatch(r"   \S+\s+(\d+)\s+(\d+)", z) for z in zeilen) if x]
-    if n <= 0 or len(baum) != k or any(qq != gg or qq == 0 for qq, gg in baum) or sum(gg for _qq, gg in baum) != n:
-        ende(2, "Baumzeilen (Quelle, gleich) %r passen nicht zu %d Dateien in %d Baeumen" % (baum, n, k))
-    ende(0, "APK-ASSET-GATE-PAKET-OK: %d Dateien in %d Baeumen, je Baum Quelle = gleich, %s" % (n, k, tuer_soll()))
-ende(2, "unbekannter Modus")
-PY
+    [[ -n "$GATE_URTEIL_KOPIE" ]] || die "gate_urteil: erst gate_festhalten (Urteil festhalten und selbst pruefen)"
+    gate_urteil_selbsttest "$GATE_URTEIL_KOPIE"
+    "$PY" "$(apk_nativ "$GATE_URTEIL_KOPIE")" "$1" "$2" "$3" "$GATE_SELBSTTEST_MIN_FAELLE" "$GATE_SELBSTTEST_MIN_INNEN" \
+        "${GATE_APK_EINTRAEGE:-}"
 }
+
 
 # gate_laufen <modus> <gate> [argumente ...] -> 0 = OK, 1 = Befunde, 2 = keine Aussage (siehe gate_urteil).
 # Pin-Pruefung VOR jedem Lauf; Ausgabe in eine Datei (kein Pipe, das die Rueckgabe verschlucken koennte), danach gezeigt.
@@ -354,13 +337,27 @@ gate_laufen() {
     local modus="$1" gate="$2" log rc=0 urteil=0
     shift 2
     gate_pin_pruefen "$gate"
+    [[ -n "$GATE_URTEIL_KOPIE" ]] || die "gate_laufen: erst gate_festhalten (Gate UND Urteil festhalten)"
+    gate_urteil_selbsttest "$GATE_URTEIL_KOPIE"         # Runde 35: Pin des Urteils vor JEDEM Lauf (Selbsttest einmal)
     log="$(mktemp "${TMPDIR:-/tmp}/re15_gate_ausgabe.XXXXXX")" || die "gate_laufen: kein Temp-Platz fuer die Ausgabe"
     log="$(apk_nativ "$log")"
     echo "   (Gate $modus laeuft, sha256 ${GATE_SHA256:0:16}...; Ausgabe folgt nach dem Ende)"
     "$PY" "$(apk_nativ "$gate")" "$@" > "$log" 2>&1 || rc=$?
     cat "$log"
-    gate_urteil "$modus" "$log" "$rc" || urteil=$?
-    rm -f "$log"
+    gate_urteil "$modus" "$log" "$rc" > "$log.urteil" 2>&1 || urteil=$?
+    cat "$log.urteil"
+    # Runde 35 Spur N (F-Y2): zweite Instanz, unabhaengig vom Urteilscode - "OK" nur mit Rueckgabe 0 des Gates UND der
+    # Urteilszeile des Urteils. So kann ein (veraendertes) Urteil ein richtiges, gepinntes Gate nicht ueberstimmen.
+    if (( urteil == 0 )); then
+        if (( rc != 0 )); then
+            echo "   Gate-Urteil ueberstimmt (zweite Instanz): Urteil 0, aber das Gate gab Rueckgabe $rc - keine Aussage"
+            urteil=2
+        elif ! grep -q "^   Gate-Urteil ($modus, Rueckgabe 0): " "$log.urteil"; then
+            echo "   Gate-Urteil ohne Urteilszeile '   Gate-Urteil ($modus, Rueckgabe 0): ...' (zweite Instanz) - keine Aussage"
+            urteil=2
+        fi
+    fi
+    rm -f "$log" "$log.urteil"
     return "$urteil"
 }
 

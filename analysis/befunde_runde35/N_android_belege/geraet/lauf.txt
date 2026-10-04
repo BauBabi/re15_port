@@ -1,0 +1,12 @@
+[06:45:29] boot_completed=1, Physical size: 1080x2400
+[06:45:36] install: Success
+debug.log
+re15_assets_ok.txt
+[06:46:02] Bild E1_uebergang_3s.png (14019 B)
+[06:46:07] Bild E1_uebergang_6s.png (28307 B)
+[06:46:10] Bild E1_uebergang_9s.png (14048 B)
+[06:46:14] Bild E1_uebergang_12s.png (14097 B)
+[06:46:26] Bild E2_fehler_liste.png (13829 B)
+[06:46:43] Bild E3_nach_konflikt.png (71595 B)
+[06:46:43] fertig
+GERAET rc=0

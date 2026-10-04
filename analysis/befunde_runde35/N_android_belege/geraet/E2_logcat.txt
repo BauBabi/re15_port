@@ -1,0 +1,2 @@
+[android] /storage/emulated/0/Android/data/de.re15.port/files/re15_assets_entpackt.txt nicht loeschbar: Is a directory
+[android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (Meldung bleibt stehen)
