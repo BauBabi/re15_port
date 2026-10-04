@@ -895,3 +895,19 @@ make_package.sh (gate_festhalten).
   Kette anderswo nachbaut, liest sie mit dem Muster aus apk_pruefen.sh gate_urteil_selbsttest.
 - Merge: die Spur bringt weiter +5 Tests (abgleich, anzeige, konflikt, pruefkette, bash_mutanten); master hatte
   RE15_MIN_TESTS 517 (6e1a3771).
+
+### Nachbesserung 3 - Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Ende aller Messlaeufe dieser Spur; configure OK,
+build "ninja: no work to do", ctest 1649 s):
+
+    === LOCAL-BUILD-OK (all) — Tests 483/483
+
+`unit_r35_android_pruefkette` Passed 128,2 s, `unit_r35_android_bash_mutanten` Passed 382,3 s (TIMEOUT 900 bzw. 1500
+bleiben), `unit_r35_android_abgleich` 0,02 s, `_anzeige` 3,30 s, `_konflikt` 1,93 s, `unit_r34a_asset_abgleich` 0,95 s
+Passed. Kein Fenster-Haken rot, kein Nachfahren noetig.
+Geaenderte Dateien der Nachbesserung 3: release/gate_urteil.py (+ .sha256; urteil() selbst zeichengleich), release/
+apk_pruefen.sh (Mindestzahl 777, neu MAX_UNGEPRUEFT 102, Schlusszeilen-Muster + u-Pruefung, Kopfkommentar),
+re15_port/tests/unit/r35_android/{urteil_kontrollen.sh, bash_urteil_mutanten.py, test_r35_android_pruefkette.sh},
+re15_port/tests/unit/probes/r35_android.cmake (nur Kommentar), re15_port/platform/android/README.md, Dossier + Belege
+(`N_android_belege/nb3_*`) + Werkzeuge (`werkzeug/nb3_*`). Nicht: release/RELEASE_NOTES.md, make_package.sh,
+tests/*/CMakeLists.txt, Engine, platform/android/jni (Punkte 1/2 unberuehrt).
