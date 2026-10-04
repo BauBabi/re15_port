@@ -1,0 +1,24 @@
+K0   KONTROLLE-OK rc=0 FALSCH=0  keine Aenderung (Kontrolle der Kopie)
+K2   BEMERKT   rc=1 FALSCH=7  J11: gate_urteil uebergibt 0 0 statt der Mindestzahlen
+        FALSCH  N26a_selbsttest_genau_mindestzahl -> 0 (soll 0, Text 'SELBSTTEST-OK 261/261, jede Fallzeile [ok] mit rc = soll, innere Proben 148/148 (Mindest
+        FALSCH  N26b_selbsttest_ein_fall_weniger -> 0 (soll 2, Text 'meldet 260/260 Faelle, verlangt n/n mit n >= 261')   Gate-Urteil (selbsttest, Rueckgabe 0
+        FALSCH  N26c_selbsttest_eine_probe_weniger -> 0 (soll 2, Text 'Innere Proben 147/147, verlangt m/m mit m >= 148')   Gate-Urteil (selbsttest, Rueckgabe
+K3   BEMERKT   rc=1 FALSCH=6  J12: MIN_INNEN doppelt
+        FALSCH  N26a_selbsttest_genau_mindestzahl -> 0 (soll 0, Text 'SELBSTTEST-OK 261/261, jede Fallzeile [ok] mit rc = soll, innere Proben 148/148 (Mindest
+        FALSCH  N26b_selbsttest_ein_fall_weniger -> 0 (soll 2, Text 'meldet 260/260 Faelle, verlangt n/n mit n >= 261')   Gate-Urteil (selbsttest, Rueckgabe 0
+        FALSCH  bash-Urteil: urteil_kontrollen.sh Rueckgabe 1, 'KONTROLLEN: 99 ok, 3 FALSCH'
+K4   BEMERKT   rc=1 FALSCH=6  J13: unzip-Zaehlung nicht uebergeben
+        FALSCH  N27a_apk_unzip_n_plus_1 -> 0 (soll 0, Text '= unzip-Zaehlung - 1')   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 12 Dateien, Quelle = A
+        FALSCH  N27b_apk_unzip_n_plus_2 -> 0 (soll 2, Text 'unzip zaehlt 14 Eintraege unter assets/')   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 12 
+        FALSCH  N27c_apk_unzip_n -> 0 (soll 2, Text 'unzip zaehlt 12 Eintraege unter assets/')   Gate-Urteil (apk, Rueckgabe 0): APK-ASSET-GATE-OK: 12 Dateien
+K6   BEMERKT   rc=1 FALSCH=8  Y6: MIN_FAELLE/MIN_INNEN vertauscht
+        FALSCH  P1_selbsttest -> 2 (soll 0)   Gate-Urteil (selbsttest, Rueckgabe 0): Innere Proben 148/148, verlangt m/m mit m >= 261 (GATE_SELBSTTEST_MIN_INN
+        FALSCH  N26a_selbsttest_genau_mindestzahl -> 2 (soll 0, Text 'SELBSTTEST-OK 261/261, jede Fallzeile [ok] mit rc = soll, innere Proben 148/148 (Mindest
+        FALSCH  N26b_selbsttest_ein_fall_weniger -> 2 (soll 2, Text 'meldet 260/260 Faelle, verlangt n/n mit n >= 261')   Gate-Urteil (selbsttest, Rueckgabe 0
+G3   BEMERKT   rc=1 FALSCH=1  H10 (range(1, len(faelle)+1)), neu gepinnt
+        FALSCH  P0 gate_festhalten bricht ab
+G4b  BEMERKT   rc=1 FALSCH=1  H17 (Quelle = gleich nur als Summe), neu gepinnt, GATE_URTEIL_MIN_ERKANNT=886 nachgezogen
+        FALSCH  P0 gate_festhalten bricht ab
+G5   BEMERKT   rc=1 FALSCH=1  H18 (Zusatzspalte in der pk-Baumzeile), neu gepinnt
+        FALSCH  P0 gate_festhalten bricht ab
+SUMME: 7 von 7 Aenderungen bemerkt

@@ -819,3 +819,30 @@ D16/D21 je 2, N25b 1, N19m 1 - die neuen Uebergabe-Kontrollen toeten 55 der 86. 
 Querpruefung: `urteil()` in gate_urteil.py ist zeichengleich mit 876a9f90 (ast-Segment verglichen, 7812 Zeichen) - die
 Nachbesserung aendert kein Urteil, nur Faelle/Stoerungen/Schlusszeile; Selbsttest gleich unter Python 3.9.0 und 3.14.7
 (`777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102 Stoerungen begruendet ungeprueft`).
+
+### Nachbesserung 3 - Messung nachher: die Aenderungen der Abnahme 2 an der ECHTEN Kette und am Selbsttest
+- **Kette** (`werkzeug/nb3_kette_varianten.py` + `.sh`, je Variante Kopie von release/ mit GENAU EINER Aenderung,
+  re15_port/synchro als Junction - nach dem Lauf nur mit `cmd /c rmdir` entfernt, danach liegt in jedem repo-Ordner nur
+  `release/`; die echte test_r35_android_pruefkette.sh je Variante, 4 parallel). Beleg `nb3_kette_varianten_nachher.txt`:
+  K0 (unveraendert) `KONTROLLE-OK rc=0 FALSCH=0`; **7 von 7 bemerkt** (Abnahme 2: K2/K3/K4/G3/G4b alle FEHLER=0):
+  K2 = J11 (`0 0`) -> N26a/N26b/N26c + Kontrollen, 7 FALSCH; K3 = J12 -> N26a/N26b + `KONTROLLEN: 99 ok, 3 FALSCH`;
+  K4 = J13 -> N27a/N27b/N27c; K6 = Y6 (vertauscht) -> sogar P1 (echter Gate-Selbsttest: `Innere Proben 148/148, verlangt
+  m/m mit m >= 261`); **G3** = H10 neu gepinnt -> P0 bricht ab (`URTEIL-SELBSTTEST-FEHLER: 5 von 777 Faellen falsch`);
+  **G4b** = H17 neu gepinnt UND GATE_URTEIL_MIN_ERKANNT=886 nachgezogen (der Weg, der in Abnahme 2 durchkam) -> P0 bricht
+  ab, jetzt an FAELLEN (`5 von 777 Faellen falsch`), nicht an einer Mindestzahl - Nachziehen hilft nicht mehr; **G5** =
+  H18 neu gepinnt -> ebenso.
+- **Selbsttest** (`nb3_urteil_aenderungen_nachher.txt`): 31 von 32 (H1-H22 alle, X1-X10 ausser X8 = gleichwertig, s.o.).
+  Die frueheren Reihen gegen das neue Urteil: E-Reihe der Abnahme 1 **29 von 29** (`nb3_ereihe_nachher.txt`), NB1-Reihe
+  der Abnahme 0 **32 von 32** (`nb3_nb1reihe_nachher.txt`).
+- **bash-Urteil** (`nb3_bash_aenderungen_nachher.txt`): J6/J9/J10/J11/J12/J13 + Y1-Y8 **14 von 14** (vorher 3/14).
+
+### Nachbesserung 3 - Bilanz gegen die Maengel der Abnahme 2
+| Mangel | Messweg der Abnahme | vorher (reproduziert) | nachher |
+|---|---|---|---|
+| M1 Uebergabe bash -> Urteil ungeprueft | J11/J12/J13 gegen urteil_kontrollen.sh; K2-K4 an der Kette | 87 ok / 0 FALSCH; Kette FEHLER=0 | J11 -> 3 FALSCH, J12 -> 3, J13 -> 2; K2/K3/K4 rot (N26/N27); dazu Operator I: 86 Mutanten, alle erkannt |
+| M2 "genau n Fallzeilen" (H10) | Ersetzung -> --selbsttest; G3 | OK 280/280; G3 FEHLER=0 | SELBSTTEST-FEHLER (5 Faelle: 2 N3 + 3 Stoerungen); G3 rot |
+| M3 "je Baum Quelle = gleich" (H17), Baumzeilen-Form (H18) | Ersetzung -> --selbsttest; G4b | OK; G4b FEHLER=0 | je SELBSTTEST-FEHLER (5 Faelle); G4b rot an Faellen, G5 rot |
+| Hinweis H1 (Pin nur Praefix) | J9/J10 | unbemerkt | D5b/D10b rot |
+| Hinweis H2 (fester Modus) | J6 | nur die Kette | N25e rot |
+| Hinweis H3 (Mutanten ohne release-Dateien) | - | - | Operator I erzeugt keinen Mutanten, der GATE_QUELLE/GATE_URTEIL_QUELLE benutzt; nb3_bash_aenderungen.py legt die release-Dateien neben jede Kopie |
+| Hinweis H4 (neue Funktion nicht mutiert) | - | - | unveraendert: FUNKTIONEN im Kopf von bash_urteil_mutanten.py pflegen (OFFEN) |
