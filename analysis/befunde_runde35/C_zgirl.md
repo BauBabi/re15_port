@@ -113,6 +113,27 @@ F336 [1 t=13 st=1 ss1=5 g=80 mo=2]           (zurueckgestossen/liegt), F484 wied
 ```
 540 Bilder mit dem Zombie-Maedchen in state.log. Sie erscheint jetzt.
 
+### N2 ECHTER Weg: Aktionstaste an der Tuer (kein FIRE_AOT), beide Spawn-Orte
+Werkzeug `tools/r35_zgirl/lauf.sh` (exe-Kopie re15_pc_zgirl.exe). Leon per `RE15_PLAYER_POS` vor die
+Tuer gestellt, Blick so, dass der Vorwaertspunkt (620 vor dem Spieler, `ori 0x26c` @0x80042bd0,
+aot_common.c) in der Tuerflaeche liegt; `RE15_PRESS=square@60,square@62`:
+* Tuer 6: POS (-9300,-23320) rot 3072 ->
+  `[aot] DOOR FIRE slot=6 ... target_cut=9` -> `[spawn-diag] Sce_em_set type=0x13 pos=(-9900,0,1150)`,
+  241 Bilder mit t=13 (Lauf echt_tuer6).
+* Tuer 7: POS (-16830,-24750) rot 2048 ->
+  `[aot] DOOR FIRE slot=7 rect=(-17450,-24750,hw=500,hh=1000) target_cut=14` ->
+  `[spawn-diag] Sce_em_set type=0x13 pos=(1600,0,4700) dir=1024`, 241 Bilder (Lauf echt_tuer7).
+
+### N3 Modell / Bild (RE15_FRAMEDUMP, nicht gdigrab)
+debug.log: `[enemy] RE2 EM013 loaded: 17 meshes, 15 bones, 31 clips` und
+`Hybrid EM13: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne
+Zuordnung` (Default-KI RE2 = Hybrid-Rig; enemy_dbg.log `ZEICHNE Typ 0x13: 15 Teile`).
+Framedump Bild 150/210/240/300 (Lauf bild_tuer6): Cut 9 = Schlafraum mit Etagenbett und
+Umbrella-Schild; die Zombie-Frau (braunes Haar, gemustertes Kleid) laeuft auf Leon zu und packt ihn.
+⚠ Messumgebung: mit dem Standard-Renderer (Direct3D) lieferte SDL_RenderReadPixels in dieser
+Sitzung `GetRenderTargetData(): DEVICELOST` (nur die Vorspann-Bilder kamen an); mit
+`SDL_RENDER_DRIVER=opengl` (weiterhin beschleunigt, kein SOFTWARE_RENDER) kommen alle Bilder.
+
 ## Tests
 (laufend)
 
