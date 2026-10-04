@@ -153,9 +153,107 @@ Mitte 80/80/73/80 (VH @0x820+k*32) = geschichteter Glasbruch.
   -2200..-2800), Glasebene z -14600 (aeusserste Splitterreihe, sub15 @0x0144 / @0x01D4) -> PORT-WAHL.
 * Zeitlinie = RE2 sub15 woertlich (Sleep 2 / 3 / 5): T+0 Kraehe frei, T+2 Rumble + Splitter, T+5 Knall,
   T+10 zweiter Knall.
+* NICHT uebernommen (begruendet): sub15 @0x0224/@0x022A `Sce_bgm_control` + @0x0230 Gosub 0x25
+  (`Sce_bgmtbl_set`) = RE2s Musikwechsel — NUTZER-VORGABE "Bis Leon dann den Parking Lot erreicht hat,
+  soll durchweg MAIN01 ... gespielt werden" (Spur K/L) hat Vorrang. sub15 @0x004C/50 + @0x0236/3A
+  `Sca_id_set`, @0x023E `Flr_set` = RE2-Kollisionsumbau des Gangs mit den drei Fenstern (Seitenwand);
+  das RE1.5-Fenster sitzt in der Rueckwand, die Kollision bleibt unveraendert. Kraehen 1..3 (sub09
+  @0x0016..0x0042) und Fenster 2/3 (14 der 27 Splitter) — NUTZER-VORGABE "eine Kraehe" / "das hintere
+  Fenster".
+* Kein Blickrichtungs-Tor: RE2 sat 0x41 hat keinen (AUTO = CENTRE-Test). Der Story-Weg nach (9,73)
+  (1130 -> 1120 Tuer 2 -> Cut 3 -> Cut 2 -> Cut 1 nach Norden -> Tuer 0/1) kreuzt das Band
+  nordwaerts, also "Richtung Fenster".
+
+## 4. Umsetzung (Dateien, Konstanten)
+
+| Datei | Inhalt |
+|---|---|
+| `re15_port/include/re15_fenster1120.h`, `engine/src/fenster_1120.c` (neu) | Ausloeser, Port-Programme (RE1.5-Opcodes: Spawn `44 03 21 00 00 00 00 ff 18 15 3c f6 44 2f 00 00 18 04 00 00 01 00`, Ausloeser `22 09 4f 01 46 04 00 .. 01 00`), Ausstattung der Kraehe (+0x10E 0x4002 vor der KI), Zeitlinie T+0/2/5/10/23 mit sub15-Offsets, 13 Splitter-Saetze woertlich, Abbildung, Schadens-Abfrage, Log `RE15_FENSTER_LOG` |
+| `engine/src/re2_fx.c`, `include/re2_fx.h` | `re2fx_register_raum` (Registry 8..15, Offsetmarke Bit 30), `re2fx_bank_registriert`, Ops 5/16/39/84 (am Dateiende), 4 `case`-Zeilen + `esp_at`-Weiche + 1 Zeile in `re2fx_register_core` |
+| `engine/src/enemy_ai_re2_crow.c` | State 4 (`re2c_state4`/`re2c_perch2`, Sub 2 byte-true; Sub 0/1 defensiv), INIT-Zweig +0x10E&0x4000, `+0x1D4`-Tabelle (`re15_re2crow_befehl`), Zwangs-Marke, Wandpass-Tor `word0&8` |
+| `engine/src/enemy_ai_common.c` | 1 Haken: Skript-Kraehe ueber das RE2-Hirn (`re15_re2crow_zwang_ist`) |
+| `engine/src/scd_room_setup.c` / `scd_vm.c` / `game_step_common.c` | je 1 Haken-Zeile (Installer am Blockende "Runde 35 Spur M", Ereignis-Hook, Tick vor der KI) + Include |
+| `platform/pc/src/glas1120_pc.c/.h` (neu) | Raum-ESP laden + registrieren, 5 TIMs -> Texturplatz 55 (Streifen v 0/32/64/128/168, CLUT 481..485), Splitter-Zeichner (Quads der Banken 0x10..0x14, ABR wie re2fx_pc), Schadens-Ueberlagerung in den Framebuffer, Knall-Haken |
+| `platform/pc/src/audio_pc.c` | `re15_audio_re2_glas_laden` / `re15_audio_re2_glas_se` (PANEL-Muster, se_play_layers) |
+| `platform/pc/main.c` | Init nach TEX.TIM, Zeichnen hinter `re2fx_pc_draw`, Schaden nach dem Hintergrund, Installer im Boot-/CONTINUE-Weg, Schatten der versteckten Kraehe aus (5 Haken) |
+| `engine/src/gen/fenster1120_schaden.inc` + `tools/r35_fenster/schaden_bauen.py` | 309 Pixel-Operationen (PORT-WAHL-Kunst: Loch je Scheibe 40/256 abgedunkelt, gezackte Bruchkanten, Spruenge, 13 Scherben-Tupfen auf dem Boden) |
+| `tools/r35_fenster/glas1090_extrakt.py` | bytegleiche Extraktion + Gegenprobe gegen die RDT-Bytes |
+| `shared_assets/RE2/GLAS1090.ESP`, `GLAS1090_10..14.TIM`, `GLAS1090.EDT/.VH/.VB` | neue RE2-Assets (Paket-/Android-Gate!) |
+
+Texturplatz 55 (render_pc.c: 53..55 frei) — falls eine andere Spur 55 nimmt: `RE15_GLAS_TIM_SLOT` in
+glas1120_pc.h.
+
+## 5. Messung nachher
+
+### 5.1 Unit (probe_r35_fenster)
+* `glas`: Landung Bild 27 = unabhaengige Rechnung aus den Schrittbytes (v (64,-60,0), a (0,12,0),
+  Start y -2200: erstes t mit -2200 + Y(t-1) > 0), Op 84 im Folgebild, Platz sofort vom Glitzern
+  (Bank 0x14) uebernommen, 2 Glitzer-Plaetze, nach 6 Anim-Bildern frei, Op 5 x26, Op 16 x1,
+  unbekannte Ops 0; Flug nach -z.
+* `kraehe`: INIT -> State 4/2/1, versteckt + `flags&8`; ohne Befehl 10 Bilder Stillstand; Befehl 4 ->
+  sichtbar, Tempo 300, Clip 4; 7 Bewegungsbilder, z 12100 -> 10217 (1883 = Summe 300..240 mal
+  sin(0x418), ganzzahlig je Bild); danach (1,4), Wandpass an, Zwang aus; RE1.5-Flavor -> State 0.
+* `knall`: EDT @0x84 `00 00 7c 60`, 4 Lagen Ton 7/8/9/10 alle VAG-Index 4 (VH-Feld 5), vol 127,
+  Mitte 80/80/73/80.
+* `ereignis`: Tor zu -> nichts; ROOM1121 -> nichts; scharf: Slot 4 AUTO Ereignis 24 sat 0x41, Band
+  exakt; Spawn ueber die echte VM -> Kraehe (5400,-2500,12100) 0x418; Ausstattung vor der KI; AOT-Scan
+  meldet Ereignis 24 -> Programm setzt (9,79), Slot 4 sce 0; Splitter T+2 (13), Knall T+5/T+10 Satz
+  0x21, Schaden ab T+2, fertig T+23, nur Cut 1; Wiedereintritt: kein Slot, Schaden steht.
+
+### 5.2 Echte exe (integration_r35_fenster, RE15_FRAMEDUMP — gdigrab liefert in dieser Sitzung weisse
+Bilder; RE15_SOFTWARE_RENDER nur Robustheit)
+Lauf A (Stand ROOM1120 Cut 1, (5000,0,2600) Blick Norden, CONTINUE, U1.3):
+```
+[fenster] ROOM1120 scharf: Slot 4 Band x 3500..6650 z 4300..6400 Ereignis 24
+[fenster] Kraehe Slot 4 versteckt bei (5400,-2500,12100)
+[fenster] Ausloeser: Spieler (5000,4325) im Band, Ereignis 24 0
+[fenster] Splitter Bank 0x10 Platz 95 Lage x 4700 z 10200      ... 13 Zeilen, Plaetze 95..83
+[fenster] Knall 1: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001) T+5 0
+[fenster] Knall 2: Raumbank-Satz 0x21 (RE2 Se_on 0x02210001) T+10 0
+[fenster] Zeitlinie fertig T+23 Splitter 13 Knalle 2 0
+Bild 60 (vor): Loch 125 Kante 195 | Bild 150: Loch 55 Kante 763 | 180: 73/2156 | 240: 102/1339 |
+270: 78/1386 | 300: 62/1663 | 330: 80/1663  (Bild 210: Loch 272 = Kraehe/Splitter vor der Scheibe)
+```
+Lauf B (Stand mit (9,79)=1): `ROOM1120 aus: (9,73)=1 (9,79)=1`, kein Ausloeser, Bild 60 Loch 11 /
+Kante 2156 (Fenster sofort beschaedigt, ohne Kraehe und Splitter).
+Sichtpruefung der Framedumps (Ausschnitt x 140..240, y 50..170): Bild 60 heiles Fenster; Bild 120 die
+schwarze Kraehe mit gespreizten Fluegeln vor dem Fenster, beide Scheiben gezackt offen, helle
+RE2-Splitter fallen vor Leon zu Boden; Bild 150 Kraehe ueber Leons Kopf, Scherben-Tupfen unter dem
+Fenster; Lauf B Bild 60 beschaedigtes Fenster + Scherben.
+Startlog: `[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)`.
+
+## 6. Tests
+| Name | misst |
+|---|---|
+| unit_r35_fenster_glas | Raum-ESP-Registrierung + Splitter-Bildfolge Op 1/16/5/39/84 gegen unabhaengige Rechnung |
+| unit_r35_fenster_kraehe | RE2-State 4 Sub 2 (versteckt, +0x1D4, 7 Bilder/1883, ACTIVE 4, Flavor RE1.5) |
+| unit_r35_fenster_knall | RE2-Raumbank Satz 0x21 -> Ton 7..10 / VAG 5 |
+| unit_r35_fenster_ereignis | Tor/Raum/Einmaligkeit, VM-Spawn, AOT-Scan, Zeitlinie, Schaden nur Cut 1 |
+| integration_r35_fenster | echte exe: Log der ganzen Kette + Framedump-Pixel vor/nach + Wiedereintritt |
 
 ## OFFEN
-(wird gefuellt)
+* RE2-Kraehen-State-4 Sub 0 (0x80103554) und Sub 1 (0x8010363c, Wegpunkte (-12500,-12852) /
+  (-3919,-12288) @0x801036fc-704 / @0x8010376c-770, SE 0x8005bd6c, Lautstaerke 0x8010472c(50/350))
+  sind disassembliert (Dossier §2.5), aber nicht portiert — kein Spawn erreicht sie (rec+4 = 2).
+  Naechster Weg, falls je gebraucht: Spawn-Zensus room1090/room2110 auf rec+4 in {0x4000,0x4001}.
+* Zielhilfe auf die VERSTECKTE Kraehe (State 4 P0/P1, hinter der Wand, aim_band 2): ob RE2s
+  Zielsuche word0 0x80000 auslaesst, ist nicht disassembliert. Naechster Weg: RE2-Zielsuche (Xrefs
+  auf 0x800CE384-Opferliste / Waffen-Applier @0x80041AB4 / @0x80047324) auf `0x80000`-Tests pruefen.
+  Messung: in 1120 vor dem Ausloesen zielen — die Kraehe sitzt ~9000 Einheiten entfernt.
+* RE2-Rumble (0x8003947c/0x80039514) wird gerufen; ob die PC-Plattform die Ringe an ein Pad
+  weitergibt, ist Sache von re15_rumble (unveraendert).
+* PSX-Ziel: Engine-Teil laeuft (Ausloeser, Kraehe, Zeitlinie), die Raum-ESP/Texturen/Knall/Schaden
+  sind PC-Plattform (glas1120_pc.c) — PSX-Zeichner/Lader wie bei re2fx_pc offen.
 
 ## Fuer den Nutzer
-(wird gefuellt)
+* Neue Assets fuer das Paket-/Android-Gate (alle unter `re15_port/shared_assets/RE2/`):
+  `GLAS1090.ESP`, `GLAS1090_10.TIM`, `GLAS1090_11.TIM`, `GLAS1090_12.TIM`, `GLAS1090_13.TIM`,
+  `GLAS1090_14.TIM`, `GLAS1090.EDT`, `GLAS1090.VH`, `GLAS1090.VB` (bytegleich RE2 room1090,
+  Werkzeug `re15_port/tools/r35_fenster/glas1090_extrakt.py --pruefen`).
+* Keine neuen Sprachdateien (keine Dialogzeilen; Nachrichten 1120 9..15 nicht gebraucht).
+* Ablauf im Spiel: erst nach der Irons-Todesszene in ROOM1150 ((9,73), Spur L). In ROOM1120 in Cut 1
+  nach Norden auf das hintere Fenster zulaufen: auf Hoehe des Querbands (z 4300..6400) bricht die
+  Scheibe — Rumble, RE2-Glassplitter spritzen in den Gang, zwei RE2-Glasknalle (T+5/T+10), eine
+  Kraehe bricht durch das Fenster herein und greift an. Das Fenster bleibt danach beschaedigt
+  (auch nach Speichern/Laden), das Ereignis kommt nur einmal.
+* Messhaken: `RE15_FENSTER_LOG=<datei>` (Ereignis-Protokoll neben der exe).
