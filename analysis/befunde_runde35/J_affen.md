@@ -1271,3 +1271,19 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 | (neu) Bisse nach der Ruhe / Wrap-Sprung e1 | Fusssperre posierte das Bild nach dem Vorschub | FUN_8001f3bc @0x8001f40c / @0x8001f610-1c, bf50 @0x8011bf80-c008 | Pool-Pose = Bild vor dem Vorschub (2 Zeilen) | Weg 2 bis T495 kein Biss wie das Original; Wechseltakt 2 statt 4 Bilder; Tod +1198 unveraendert |
 - Abschluss-Commit: fix(r35-affen): Nachbesserung 3 (Haken enemy_ai_common.c: 7 Hunks je 1-2 Zeilen; affen_11c0.c +11;
   re15_affen.h (8)/(9); test_r35_affen.c Riegel griff erweitert + Diagnose-Teil fuss).
+
+## Nachbesserung 4 (2026-10-04, nach Abnahme 3 = NICHT BESTANDEN, N1/N2)
+
+Ausgangslage: Baum sauber, HEAD e286b87c (Bericht J_abnahme_3.md, geprueft 458635e1). Alle sechs Nutzer-Punkte dort
+"erfuellt", Riegel 17/17, Suite 495/495. Offen nur:
+- **N1:** Lauf 0 (eigener Port-Zustand) beisst e2 nach dem Wurf zu frueh (frei T378 (-6153,-9995), Biss T405 76 -> 70;
+  exe o7 frei F1329, Biss F1342); Original bis T518 ohne Biss. Aussage "beide Gorillas bleiben zwischen den Wagen
+  haengen" (Fuer den Nutzer N3 (3)) gilt nur im Weg-2-Lauf. Auftrag: Mechanismus belegen und beheben, Aussage berichtigen.
+- **N2:** Biss-Zyklus Slot 2 = 104 statt 103 Bilder seit Nachbesserung 3 (Original +521,624,...,1139; jetzt
+  +524,628,...,1148). Verursachenden Haken messen, gegen das Original belegen, beheben; Z. 1197-1198 korrigieren;
+  Riegel `szene` um Einzelbiss-Pruefung gegen die Original-Liste erweitern.
+Scratch: `scratchpad/jnb4/`.
+
+### Stand (fortlaufend)
+- [ ] N2 (a) Haken messen  - [ ] N2 (b) Beleg + Fix  - [ ] N2 (c) Dossier Z. 1197  - [ ] N2 (d) Riegel szene Einzelbisse
+- [ ] N1 Mechanismus Biss nach Freigabe  - [ ] N1 Fix/Aussage  - [ ] N1 Z. 1189 (31 -> 34)  - [ ] Suite  - [ ] exe Tuerweg
