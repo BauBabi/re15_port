@@ -162,7 +162,9 @@ Punkt 1  Kabine 1F (Bits)  Blatt 2 aktuell 9 | Ecken SW(116,139) SO(114,139) NW(
          Kabine 3F (Bits)  Blatt 4 aktuell 0 | SW(134,142) SO(132,142) NW(134,144) NO(132,144)
          aus ROOM1040/10C0/1120 in die Kabine: Blatt 2/3/4, aktuell 9/4/0 (Vorraum gewinnt)
          -> Marker IMMER im gemalten Kabinen-Innenraum (vorher y 144..146 = unter der Suedwand y143),
-            folgt dem Spieler in beiden Achsen (4 px Fenster: 8x8-Marker auf 10x10-Kabine, Rand 4).
+            ~~folgt dem Spieler in beiden Achsen (4 px Fenster: 8x8-Marker auf 10x10-Kabine, Rand 4).~~
+            [KORRIGIERT N1, Abnahme 0 M4: ueberzeichnet - die eigenen Ecken oben zeigen 2 px je Achse;
+            am echten Weg 2 px. Behoben in Nachbesserung 1: 7 px je Achse.]
 Punkt 2  11F0 Ankunft/Mitte: Blatt 1 aktuell NUR 1, Marker (106,111)/(121,137)
          1200 Ankunft/Mitte: Blatt 1 aktuell NUR 2, Marker (165,135)/(159,113);  11E0: NUR 0
 Punkt 3  1230 und 1180 an 6 Punkten: Blatt 0 (B1) aktuell NUR 0, Marker auf dem Gang:
@@ -217,7 +219,8 @@ Erster Lauf scheiterte an E ohne Strom-Flag (4,243): Spieler stand in der Tuer, 
    heute ROOM11A0, dessen Zeile @0x80076980 (138,113,1776,2048) auf KEIN Rechteck von Blatt 0 faellt
    (y -2..62) und der keine Tuer zu einem B1-Raum hat. Naechster Schritt: 1190 in Haupt (rect 1) und
    Ostkammer (rect 2) teilen, 11A0s Etagenzeile (Band 3 -> Blatt 0 rect 1) gegen seine Tueren pruefen.
-2. **Fahrstuhl-Marker: 4 px Weg je Achse.** Die Kabine ist 10x10 px gemalt (Innenraum 8x8), der Marker ist
+2. ~~**Fahrstuhl-Marker: 4 px Weg je Achse.**~~ [ERLEDIGT in Nachbesserung 1: tatsaechlich waren es 2 px;
+   jetzt RE2-Massstab + Klemmfenster = gemalter Innenraum, 7 px je Achse.] Die Kabine ist 10x10 px gemalt (Innenraum 8x8), der Marker ist
    ein 8x8-Quad (FUN_800473f8: POLY_FT4 uv(224,128)), und re15_inv_screen.c klemmt den Mittelpunkt auf
    Rechteck+4 (`reserve = (zrc == 255) ? 1 : 4`) - beim 16x16-Rechteck mit Kunst oben links bleibt
    x113..117 / y138..142. Mehr ginge nur mit einem Klemmfenster aus der GEMALTEN Flaeche statt aus dem
@@ -234,7 +237,8 @@ Erster Lauf scheiterte an E ohne Strom-Flag (4,243): Spieler stand in der Tuer, 
 ## Fuer den Nutzer
 * Keine neuen Sprachdateien, keine neuen Assets (kein Eintrag fuers Paket-/Android-Gate).
 * Fahrstuhl: die Karte zeigt jetzt die Etage, von der aus man eingestiegen ist (1F/2F/3F), die Kabine rot,
-  und der Spieler-Marker steht IN der gemalten Kabine und bewegt sich mit (180 Grad gedreht wie der Raum).
+  und der Spieler-Marker steht IN der gemalten Kabine ~~und bewegt sich mit~~ [KORRIGIERT N1: bewegte sich
+  nur 2 px; siehe 'Fuer den Nutzer (Stand Nachbesserung 1)' unten].
 * B2: 11F0 (links) und 1200 (Kasten in der Mitte) leuchten jetzt selbst rot, statt der ganzen Garage.
 * B1: In ROOM1230 (und 1180 - derselbe Gang) kommt die B1-Karte; der Gang (Ring um die Kammer) leuchtet
   rot, der Treppenabsatz von 10A0 ist der kleine Kasten darunter.
@@ -244,7 +248,10 @@ Suite (Stand ec76eb0e): === LOCAL-BUILD-OK (all) — Tests 482/482
 
 ## Abschluss-Suite (Stand nach allen Aenderungen inkl. integration_r35_karte)
 
-`=== LOCAL-BUILD-OK (all) — Tests 484/484`
+~~`=== LOCAL-BUILD-OK (all) — Tests 484/484`~~ [KORRIGIERT N1, Abnahme 0 M3: nicht reproduzierbar - der Baum
+registrierte am Stand 8fee1bb4 **483** Tests (`ctest -N`, Basis 478 + 5 neue: unit_r35_karte_fahrstuhl/_b2/
+_r1230/_r1210 + integration_r35_karte), die Abnahme lief 483/483. Die Zahl 484 stammt vermutlich aus einem
+Lauf mit einem fremden Test im selben build/ - nicht belegt, daher gestrichen. Neue Zahl: siehe Abschluss N1.]
 
 ---
 
