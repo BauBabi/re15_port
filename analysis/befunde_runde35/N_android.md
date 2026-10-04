@@ -449,3 +449,19 @@ als zu weit markiert. Was main()/urteil_rufen() angeht: deren Fehler faengt die 
   Pruefzeile geaendert), re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh, probes/r35_android.cmake
   (nur Kommentar), re15_port/platform/android/README.md, Dossier + Belege. Nicht: RELEASE_NOTES.md, make_package.sh,
   tests/*/CMakeLists.txt, Engine.
+
+### Nachbesserung 1 - Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Ende aller Messlaeufe dieser Spur; 1475 s):
+
+    === LOCAL-BUILD-OK (all) — Tests 482/482
+
+`unit_r35_android_pruefkette` Passed 126,9 s (vorher 54-94 s; +P3/N10-N21, Urteils-Selbsttest jetzt ~4 s je Lauf),
+`unit_r35_android_abgleich/anzeige/konflikt`, `unit_r34a_asset_abgleich` Passed. Kein Fenster-Haken rot, kein
+Nachfahren noetig.
+
+OFFEN (unveraendert aus dem Bau, kein Mangel der Abnahme): echtes APK-A -> APK-B-Update mit dem H8-Muster auf dem
+Emulator (braucht zweite, echt gebaute APK); Rechte-Fall "Konflikt nicht raeumbar" hat die Abnahme unter NTFS gemessen
+(fail closed). Zum Urteil: Aenderungen ausserhalb der Mutations-Operatoren deckt nur die Fallsammlung (gemessen 32/32,
+nicht bewiesen fuer jede denkbare Aenderung) - steht so in Kopf/README. Kein APK-Neubau in der Nachbesserung: kein
+C-/Gradle-Code geaendert, die Kette ist dieselbe Funktion mit strengerem Selbsttest (Positiv-Kontrolle P0-P3 am
+echten Gate + Quellbaum in jedem Suite-Lauf).
