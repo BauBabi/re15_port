@@ -20,6 +20,13 @@
  *               Pause (a0=9 @0x800130d4, jal DsCommand @0x800130e0), Setmode (a0=14 @0x800130f0) mit
  *               Byte 0xA0 @0x8009a429 (Bit 6 XA-ADPCM = 0), SeekL (21 @0x80013110), ReadN (6
  *               @0x80013140); Stimme abspielen mit Setmode-Byte 0xC8 @0x8009a415 (Bit 6 = 1).
+ *   n2beleg   Nachbesserung 2 (Abnahme 1, M1 + H2) — Original-Bytes:
+ *               RE1.5: der Raum-Animationsblock ist Teil der RDT — FUN_8001b3f8 liest den RDT-Zeiger
+ *               (`lw v0,-0x3888(v0)` 0x800ac778 @0x8001b3fc) und RDT+0x5C (`lw a2,92(v0)` @0x8001b404),
+ *               `beq a2,zero` @0x8001b40c; genau EIN `jal 0x8001b3f8` (@0x80039a08, Raumlader).
+ *               RE2: Raumlader `jal 0x80053528` @0x8004a334 (-> `jal 0x80052b38` @0x80053610) und
+ *               `jal 0x8005a09c` @0x8004a33c (je genau ein Aufrufer); FUN_8005a09c schliesst die alte
+ *               ENEMSE-Bank (`jal 0x80084ec0` @0x8005a108, Handle `sb v0,0(s0)` = -1 @0x8005a114).
  *   gegner    Mechanik der Generation an der Gegner-Registry (engine): eine angelegte Bank traegt
  *             die laufende Generation; nach einer Grenze ist sie FREMD; re15_enemy_reset leert
  *             alle Baenke (das ruft das Entladen an jeder Grenze).
@@ -134,6 +141,43 @@ static int test_n1beleg(void)
     return 0;
 }
 
+/* Nachbesserung 2: genau ein Aufrufer von ziel in der EXE (jal-Wort voll gescannt), an stelle. */
+static int jal_einzig(const uint8_t *b, size_t n, uint32_t t, uint32_t ziel, uint32_t stelle)
+{
+    int k = 0, ok = 1;
+    for (size_t off = 0x800; off + 4 <= n; off += 4)
+        if (rd32(b, off) == JAL(ziel)) { k++; if ((uint32_t)(off - 0x800) + t != stelle) ok = 0; }
+    return k == 1 && ok;
+}
+
+static int test_n2beleg(void)
+{
+    size_t n = 0, n2 = 0;
+    uint8_t *b = datei_lesen("info/Re1.5/PSX.EXE", &n);
+    uint8_t *r = datei_lesen("info/re2leon/PSX.EXE", &n2);
+    if (!b || !r) { free(b); free(r); return 1; }
+    const uint32_t t = rd32(b, 0x18), t2 = rd32(r, 0x18);
+#define W15(a) rd32(b, 0x800u + (uint32_t)(a) - t)
+#define W2(a)  rd32(r, 0x800u + (uint32_t)(a) - t2)
+    /* M1: Animationsblock = RDT+0x5C der residenten RDT (keine eigene Bank ausserhalb der Arena) */
+    PRUEF(W15(0x8001b3fc) == 0x8c42c778u, "@0x8001b3fc lw v0,-0x3888(v0) (RDT-Zeiger 0x800ac778), %08x", W15(0x8001b3fc));
+    PRUEF(W15(0x8001b404) == 0x8c46005cu, "@0x8001b404 lw a2,92(v0) (RDT+0x5C), %08x", W15(0x8001b404));
+    PRUEF(W15(0x8001b40c) == 0x10c00033u, "@0x8001b40c beq a2,zero (kein Block -> nichts), %08x", W15(0x8001b40c));
+    PRUEF(jal_einzig(b, n, t, 0x8001b3f8u, 0x80039a08u), "jal 0x8001b3f8: nicht genau einmal @0x80039a08 (Raumlader)");
+    /* H2 (RE2): ENEMSE-Bank je Raum neu, die alte wird geschlossen */
+    PRUEF(jal_einzig(r, n2, t2, 0x80053528u, 0x8004a334u), "RE2 jal 0x80053528: nicht genau einmal @0x8004a334");
+    PRUEF(W2(0x80053610) == JAL(0x80052b38), "RE2 @0x80053610 jal 0x80052b38 (Bank bestimmen), %08x", W2(0x80053610));
+    PRUEF(jal_einzig(r, n2, t2, 0x8005a09cu, 0x8004a33cu), "RE2 jal 0x8005a09c: nicht genau einmal @0x8004a33c");
+    PRUEF(W2(0x8005a108) == JAL(0x80084ec0), "RE2 @0x8005a108 jal 0x80084ec0 (alte Bank schliessen), %08x", W2(0x8005a108));
+    PRUEF(W2(0x8005a114) == 0xa2020000u, "RE2 @0x8005a114 sb v0,0(s0) (Handle -1), %08x", W2(0x8005a114));
+#undef W15
+#undef W2
+    free(b); free(r);
+    printf("n2beleg: Animationsblock = RDT+0x5C (@0x8001b404, Binder nur @0x80039a08); "
+           "RE2 schliesst die ENEMSE-Bank je Raum (@0x8004a33c -> @0x8005a108)\n");
+    return 0;
+}
+
 static int test_gegner(void)
 {
     re15_enemy_reset();
@@ -171,6 +215,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "beleg") || !strcmp(teil, "alle"))  test_beleg();
     if (!strcmp(teil, "gegner") || !strcmp(teil, "alle")) test_gegner();
     if (!strcmp(teil, "n1beleg") || !strcmp(teil, "alle")) test_n1beleg();
+    if (!strcmp(teil, "n2beleg") || !strcmp(teil, "alle")) test_n2beleg();   /* Nachbesserung 2 */
     if (s_fehler) { printf("unit_r35_entladen_%s: %d Fehler\n", teil, s_fehler); return 1; }
     printf("unit_r35_entladen_%s OK\n", teil);
     return 0;

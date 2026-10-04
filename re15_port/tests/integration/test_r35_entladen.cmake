@@ -30,6 +30,14 @@
 #      mit Ton (SDL_AUDIODRIVER=dummy). VORHER raum (1240) muss Clips belegt haben (sonst misst der
 #      Lauf nichts), EREIGNIS raum: stimme=0. VORHER Abnahme 0: 6 Clips ~3,2 MB blieben resident.
 #
+# Nachbesserung 2 (Abnahme 1, M1 + H1-H3) — Fach rbj (Raum-Animationsbank, Original RDT+0x5C @0x8001b404,
+# RDT in der Arena @0x800397e8, Reset @0x80039738), bg_prev (Montage-Schnappschuss), re2ton (RE2-Raumbank):
+#   F  Intro -> 1170 -> echte Tuer 4 -> 1130 (240 Bilder/s): VORHER raum 1170 rbj=1 + rbj_datei 1170/55060,
+#      EREIGNIS 0, 100 Bilder ROOM1130 ohne fremde Belegung; VORHER raum 1240 bg_prev=1 (H1).
+#   D  (erweitert) Tod in 1170 mit geladener RBJ-Datei: VORHER spielende rbj=1 + rbj_datei 1170.
+#   G  Leihe Spur K: ROOM10F0 (Block von ROOM11B0) -> 1030: VORHER raum 10F0 rbj=1, EREIGNIS 0.
+#   H  Boot-Weg: Karte ROOM1170 + CONTINUE: VORHER raum 1170 rbj=1 + rbj_datei 1170 (Boot-Puffer).
+#   I  RE2-Raumbank TUERSE (Dummy-Ton): verschlossene Tuer 1170 (AOT 5) -> 1130: re2ton>=1 -> 0.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_entladen_karte> -DWORKDIR=<dir>
 #               [-DTEIL=A|B|C|D|alle] -P test_r35_entladen.cmake
 # =============================================================================
@@ -58,7 +66,7 @@ function(entladen_lauf _name _timeout)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(REMOVE "${WORKDIR}/debug.log" "${WORKDIR}/entladen.log")
-    if(_name STREQUAL "e")   # mit Ton: Dummy-Treiber (kein Geraet noetig), Stimmen werden dekodiert
+    if(_name STREQUAL "e" OR _name STREQUAL "i")   # mit Ton: Dummy-Treiber (kein Geraet noetig), Stimmen werden dekodiert
         set(_ton SDL_AUDIODRIVER=dummy)
     else()
         set(_ton RE15_NOAUDIO=1)
@@ -245,6 +253,18 @@ if(TEIL STREQUAL "D" OR TEIL STREQUAL "alle")
         message(FATAL_ERROR "r35_entladen[d]: kein Tod mit geladenem Elliot (figur=1 + TIM-Slot 1) — "
                             "der Lauf misst das Entladen nicht")
     endif()
+    # Nachbesserung 2 (M1): der Tod in 1170 trifft eine GELADENE RBJ-Datei (Vorbedingung) — das Ereignis
+    # (entladen_pruefen) laesst nichts uebrig.
+    set(_rbj_am_tod 0)
+    foreach(_z IN LISTS _vende)
+        if(_z MATCHES " raum=1170 " AND _z MATCHES " rbj=1 " AND _z MATCHES "rbj_datei raum=1170 bytes=55060 ")
+            set(_rbj_am_tod 1)
+        endif()
+    endforeach()
+    if(NOT _rbj_am_tod)
+        message(FATAL_ERROR "r35_entladen[d]: kein Tod in 1170 mit geladener RBJ-Datei (rbj=1, rbj_datei 1170) — "
+                            "der Lauf misst Mangel 1 (Abnahme 1) nicht")
+    endif()
     message(STATUS "r35_entladen[D] OK: Cinematic-Bank 1170 in beiden Spielen gebunden (${_nbank}/${_nein}), "
                    "Elliot ${_nel}x beim Spawn geladen, am Tod entladen, in 1240 nie resident")
 endif()
@@ -269,6 +289,96 @@ if(TEIL STREQUAL "E" OR TEIL STREQUAL "alle")
     endif()
     message(STATUS "r35_entladen[E] OK: ${_nst} Raum-Stimmen aus ROOM1240 an der Grenze entladen, 0 fremd")
 endif()
+
+# Nachbesserung 2: erste VORHER-Zeile <grenze> im Raum <raum> des Laufs <name> nach <out>.
+function(vorher_zeile _name _grenze _raum _out)
+    file(STRINGS "${_basis}_${_name}/entladen.log" _v REGEX "^VORHER ${_grenze} gen=[0-9]+ raum=${_raum} ")
+    list(LENGTH _v _nv)
+    if(_nv LESS 1)
+        message(FATAL_ERROR "r35_entladen[${_name}]: keine Grenze '${_grenze}' aus ROOM${_raum}")
+    endif()
+    list(GET _v 0 _v0)
+    set(${_out} "${_v0} " PARENT_SCOPE)
+endfunction()
+
+# --- F: Raum-Animationsbank ueber eine echte Tuer (Nachbesserung 2, M1 + H1) ----------------------
+if(TEIL STREQUAL "F" OR TEIL STREQUAL "alle")
+    entladen_lauf(f 300 RE15_FPS=240 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60
+                        "RE15_FIRE_AOT=4@3000#1170" "RE15_EXIT_AT=100#1130")
+    entladen_pruefen(f 2 1 0)
+    file(STRINGS "${_basis}_f/debug.log" _r1130 REGEX "room 1130 has no RBJ")
+    if(NOT _r1130)
+        message(FATAL_ERROR "r35_entladen[f]: ROOM1130 (Raum ohne Animationsblock) nicht ueber die Tuer betreten")
+    endif()
+    vorher_zeile(f raum 1170 _v1170)
+    if(NOT _v1170 MATCHES " rbj=1 " OR NOT _v1170 MATCHES "rbj_datei raum=1170 bytes=55060 ")
+        message(FATAL_ERROR "r35_entladen[f]: an der Tuer 1170 -> 1130 keine geladene RBJ-Datei (Vorbedingung): '${_v1170}'")
+    endif()
+    vorher_zeile(f raum 1240 _v1240)
+    if(NOT _v1240 MATCHES " bg_prev=1 ")
+        message(FATAL_ERROR "r35_entladen[f]: Montage-Schnappschuss in ROOM1240 nicht belegt (Vorbedingung H1): '${_v1240}'")
+    endif()
+    message(STATUS "r35_entladen[F] OK: RBJ/ROOM1170.RBJ (55060 B) an der Tuer 1170 -> 1130 entladen, bg_prev an der Tuer 1240 -> 1170")
+endif()
+
+# --- G: Leihe Spur K (ROOM10F0 <- ROOM11B0) ---------------------------------------------------------
+if(TEIL STREQUAL "G" OR TEIL STREQUAL "alle")
+    entladen_lauf(g 240 RE15_TITLE_SHOT=t.bmp RE15_DEBUG_JUMP=10F0@5 RE15_GOTO_ROOM=1030 "RE15_EXIT_AT=100#1030")
+    entladen_pruefen(g 2 1 0)
+    file(STRINGS "${_basis}_g/debug.log" _leih REGEX "Animationsblock von ROOM11B0 geliehen")
+    if(NOT _leih)
+        message(FATAL_ERROR "r35_entladen[g]: keine Leihe in ROOM10F0 — der Lauf misst die Leihe nicht")
+    endif()
+    vorher_zeile(g raum 10F0 _v10f0)
+    if(NOT _v10f0 MATCHES " rbj=1 " OR _v10f0 MATCHES "rbj_datei")
+        message(FATAL_ERROR "r35_entladen[g]: Leihe an der Grenze 10F0 -> 1030 nicht als rbj gezaehlt: '${_v10f0}'")
+    endif()
+    message(STATUS "r35_entladen[G] OK: geliehener Block (ROOM11B0) an der Grenze 10F0 -> 1030 entladen")
+endif()
+
+# --- H: Boot-Weg (Spielstand in ROOM1170, CONTINUE) -------------------------------------------------
+if(TEIL STREQUAL "H" OR TEIL STREQUAL "alle")
+    if(NOT RE15_KARTE_TOOL OR NOT EXISTS "${RE15_KARTE_TOOL}")
+        message(FATAL_ERROR "r35_entladen[h]: RE15_KARTE_TOOL fehlt: '${RE15_KARTE_TOOL}'")
+    endif()
+    file(MAKE_DIRECTORY "${_basis}_h")
+    execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" 1170
+                    WORKING_DIRECTORY "${_basis}_h" TIMEOUT 60
+                    RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+    if(NOT _rvk EQUAL 0)
+        message(FATAL_ERROR "r35_entladen[h]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
+    endif()
+    entladen_lauf(h 240 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+                        RE15_KILL_AT=60 RE15_BOOT_EXIT_AT=2)
+    entladen_pruefen(h 1 2 1)
+    file(STRINGS "${_basis}_h/debug.log" _boot REGEX "loading cinematic bank: RBJ/ROOM1170.RBJ .55060 bytes")
+    if(NOT _boot)
+        message(FATAL_ERROR "r35_entladen[h]: Boot-Weg lud RBJ/ROOM1170.RBJ nicht — der Lauf misst den Boot-Puffer nicht")
+    endif()
+    vorher_zeile(h raum 1170 _vh)
+    if(NOT _vh MATCHES " rbj=1 " OR NOT _vh MATCHES "rbj_datei raum=1170 bytes=55060 ")
+        message(FATAL_ERROR "r35_entladen[h]: Boot-Puffer RBJ/ROOM1170.RBJ an der ersten Grenze nicht gezaehlt: '${_vh}'")
+    endif()
+    message(STATUS "r35_entladen[H] OK: Boot-Puffer RBJ/ROOM1170.RBJ an der ersten Grenze entladen")
+endif()
+
+# --- I: RE2-Raumbank-Ergaenzung TUERSE (Dummy-Ton) ---------------------------------------------------
+if(TEIL STREQUAL "I" OR TEIL STREQUAL "alle")
+    entladen_lauf(i 240 RE15_TITLE_SHOT=t.bmp RE15_DEBUG_JUMP=1170@5 "RE15_FIRE_AOT=5@10#1170"
+                        RE15_GOTO_ROOM=1130 "RE15_EXIT_AT=60#1130" "RE15_TUERSE_LOG=${_basis}_i/tuerse.log")
+    entladen_pruefen(i 2 1 0)
+    file(STRINGS "${_basis}_i/tuerse.log" _tz REGEX "raum=1170 .*satz=0")
+    if(NOT _tz)
+        message(FATAL_ERROR "r35_entladen[i]: kein 'verschlossen'-Ton in ROOM1170 — der Lauf misst die Raumbank nicht")
+    endif()
+    vorher_zeile(i raum 1170 _vi)
+    string(REGEX MATCH " re2ton=([0-9]+)" _m "${_vi}")
+    if(NOT CMAKE_MATCH_1 OR CMAKE_MATCH_1 LESS 1)
+        message(FATAL_ERROR "r35_entladen[i]: TUERSE vor der Grenze nicht geladen/gezaehlt: '${_vi}'")
+    endif()
+    message(STATUS "r35_entladen[I] OK: RE2-Raumbank (TUERSE) an der Grenze 1170 -> 1130 entladen")
+endif()
+
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r35_entladen OK (${TEIL})")

@@ -16,6 +16,10 @@
 #   unit_r35_entladen_n1beleg  Nachbesserung 1: Sce_em_set-Modell in der Arena (@0x80042328),
 #                              Spieler fest 0x801bd814 (@0x800314c8/cc), Arena-Basis-Schreiber
 #                              @0x80039a58; RE2 Raumlader @0x8004a1c4 -> Setmode 0xA0 (XA aus)
+#   unit_r35_entladen_n2beleg  Nachbesserung 2: Animationsblock = RDT+0x5C (@0x8001b3fc/@0x8001b404,
+#                              Binder nur @0x80039a08); RE2 ENEMSE-Bank je Raum (@0x8004a33c -> @0x8005a108)
+#   integration_r35_entladen_{f,g,h,i}  Nachbesserung 2: f Tuer 1170 -> 1130 (RBJ-Datei + bg_prev),
+#       g Leihe Spur K 10F0 -> 1030, h Boot-Puffer (Karte 1170), i RE2-Raumbank TUERSE (Dummy-Ton)
 add_executable(test_r35_entladen ${CMAKE_CURRENT_LIST_DIR}/../test_r35_entladen.c)
 target_link_libraries(test_r35_entladen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_entladen PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -24,7 +28,7 @@ target_compile_definitions(test_r35_entladen PRIVATE RE15_REPO_ROOT="${_r35i_rep
 if(NOT WIN32)
     target_link_libraries(test_r35_entladen PRIVATE m)
 endif()
-foreach(_r35i_teil beleg gegner n1beleg)
+foreach(_r35i_teil beleg gegner n1beleg n2beleg)
     add_test(NAME unit_r35_entladen_${_r35i_teil} COMMAND test_r35_entladen ${_r35i_teil})
     set_tests_properties(unit_r35_entladen_${_r35i_teil} PROPERTIES TIMEOUT 60)
 endforeach()
@@ -37,7 +41,7 @@ if(NOT WIN32)
 endif()
 
 if(TARGET re15_pc)
-    foreach(_r35i_lauf A B C D E)
+    foreach(_r35i_lauf A B C D E F G H I)
         string(TOLOWER "${_r35i_lauf}" _r35i_klein)
         add_test(NAME integration_r35_entladen_${_r35i_klein}
                  COMMAND "${CMAKE_COMMAND}"
