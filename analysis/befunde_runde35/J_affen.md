@@ -1699,3 +1699,56 @@ Scratch: `scratchpad/jnb5/`.
 - Einzeln gefahren vor der Suite (`jnb5/ctest_r35_a.log`, `jnb5/r/`): 22 Riegel (17 r35_affen + maggot/member/plc_back)
   gruen nach den Riegel-Aenderungen (griff war am Zwischenstand rot: Pin Lauf 0 + Schranke 200 in T290 — beide oben
   ersetzt und begruendet).
+
+### OFFEN (Stand Nachbesserung 5; ersetzt die Liste "Stand Nachbesserung 4")
+- **N4-1 geschlossen**: war eine Nebenwirkung von Nachbesserung 4 (e2 Zyklus 104 -> 103); behoben durch (13)/(14), Riegel
+  takt/szene und exe j1 bildgleich.
+- **N5-1 Rest-Lageabweichung** im Riegel takt ueber 696 Bilder: e1 hoechstens 25, e2 hoechstens 17 Einheiten bei
+  identischer Zustandsfolge (erste Abweichung F210: 1-2 Einheiten in den Ueberblend-Bildern des Bissclips (+0x8f 6..1)
+  und am 2050-Kreis (aec4)). Im griff-Lauf 0 haelt das den Anker 8 neben dem Original, die Klemme macht daraus in T290
+  201 und der Ausgang des Wurfs streut (s. P2). Messweg: gdbstufe.py mit Haltepunkten an den bf50/c024-Rueckkehren in
+  B[5] und an Ein-/Ausgang von FUN_8002aec4 je Bild, gegen eine Port-Stationen-Spur; Kandidaten: Rundung von FUN_8002aec4
+  (ratan2/rsin/SquareRoot0 + Division @0x8002b1xx), Record-Flag 0x800 im Zeichner FUN_8001e9ec (t * Entity+0x88..+0x8c,
+  Decompilat Z. 15-24), Ueberblend-Bilder des Bissclips.
+- **N5-2 Knockdown-Zweig klemmt im Handler** (kd_move, game_step_common.c: re15_collision_constrain + re15_collision_objects),
+  das Original-Handler [4]/[5] ruft nur `jal 0x800245d8` (@0x800361fc / @0x800365b4) und die Sonde `jal 0x8001c2dc`
+  (@0x80036214) — dieselbe Klasse wie (14). In dieser Runde ohne messbare Wirkung (takt/szene/j1 inklusive Heavy-Knockdown
+  bildgleich), deshalb nicht geaendert. Messweg: Spieler-Stationen (0x80031cbc/0x80031cc4/0x80031d78) per GDB in einem
+  Knockdown an einer Wagenkante gegen die Port-`P`-Zeile.
+- **N5-3 Tuerweg ohne Original-Aufnahme**: r3 ist per Debug-JUMP aufgenommen (Spawn (-22604,14455)); ueber die 11B0-Tuer
+  (Spawn (-25279,17268)) endet Leons sub02-Gang im Port bei (-7148,-12363) statt (-7138,-12372), die Bisse liegen dann
+  1-2 Bilder neben der r3-Liste (Slot 2 +1, Slot 3 0..-2). Ob das Original vom Tuer-Spawn dieselbe Ruhelage erreicht,
+  ist nicht gemessen. Messweg: DuckStation-Aufnahme ueber die Tuer (Debug-JUMP 11B0 + Tuer), dann gdbspur.py.
+- Weiter offen aus Nachbesserung 4: N4-2 (Biss nach der Freigabe in freier Lage, exe o7 F1401 = 14 Bilder nach der
+  Freigabe; keine Original-Spur), N4-3 (A[15]-Krit mit B[7] im selben Tick @0x80117378), N4-4 (RNG-a0 im A->B-Wechselbild
+  @0x80117d1c), N4-5 (Rueckwaerts-Abspiel Sub 15 Phase 7 ohne Pool-Update @0x8011ae5c). Aus Nachbesserung 3: 5
+  (Zombie-Paar-Naeherung 0x20/0x21) und 6 (RNG-a0-Reste @0x801180a8/@0x8011898c, B[1], B[4]; dz-Rundung climb_common.c:360 /
+  enemy_ai_re2_spider.c:257; NPC-Klemme +0x82 hinter Flags; Knockdown-Sonde nur 11C0; Gorilla-Schatten @0x801171d8-ec;
+  Heckklappe @0x8002c254; Member_set 0x13 in anderen Raeumen). Die "Spieler-Schub-Reihenfolge @0x80031cbc" aus 6 ist fuer
+  den Treffer-Zweig mit (14) erledigt (Handler -> Schub -> Klemme -> Objekt-Pass), fuer den Knockdown-Zweig N5-2.
+
+### Fuer den Nutzer (Stand Nachbesserung 5)
+- Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
+- Spuerbar neu: (1) **Beide** Gorillas beissen jetzt im Takt des Originals. Bei gleichem Raumeintritt wie die
+  Original-Aufnahme liegen alle 14 Bisse und der Todesbiss im selben Bild wie auf der PlayStation (Tod nach 39,8 s), und
+  der Abstand zwischen den beiden Gorillas wandert wie im Original, statt starr 53/50 Bilder. Kommt man durch die Tuer von
+  11B0, steht Leon nach der Ada-Szene 13 Einheiten anders; dann liegen einzelne Bisse 1-2 Bilder daneben (dafuer gibt es
+  keine Original-Aufnahme). (2) Wird Leon an einer Wagenkante gebissen, fliegt er jetzt in dieselbe Richtung zurueck wie
+  im Original; vorher lenkte der Port den Stoss schon an der Kante ab. Das gilt fuer jeden Gegner, der Leon trifft.
+  (3) Die Gorillas kriechen genauer: ihre Lage am Biss-Kreis stimmt Bild fuer Bild mit dem Original ueberein (vorher bis
+  zu 120 Einheiten daneben).
+- Berichtigt: "Die Gorillas beissen jetzt im Rhythmus des Originals" (Nachbesserung 4) galt nur fuer Gorilla 1, Gorilla 2
+  biss damals je Zyklus ein Bild frueher. Wo Leon nach einem Wurf landet, haengt an einer sehr empfindlichen Wandklemme
+  (1-2 Einheiten Unterschied genuegen); landet er an der Stelle des Originals, beisst keiner nach, landet er im Freien,
+  kann ihn der andere Gorilla wieder erreichen.
+
+### Nachbesserung 5 — Ergebnis je Mangel
+| Mangel | Ursache (gemessen) | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| P1 (a) Nutzer-Aussage zu weit | (1) galt nur fuer Gorilla 1 | Abnahme 4 t1/takt | KORREKTUR an der Stelle, neue Aussage "Fuer den Nutzer (Stand N5)" | — |
+| P1 (b) N4-1 als Nebenwirkung | N4 verschob e2 von Zyklus 104 auf 103 | Abnahme 4 | N4-1 gekennzeichnet (KORREKTUR Z. 1471) und geschlossen | — |
+| P1 (c) e2-Mechanismus | (13) Fuss-Sperren-Kette ohne Entity-Matrix/GTE-Rundung: je Tick 1-4 Einheiten quer (GDB gdbstufe F196: (-39,75) gegen (-37,75)); (14) Leons Rueckstoss im Handler geklemmt (vs10283: (-6560,-12509) gegen (-6593,-12546)) | FUN_80022da0 0x4a49e012 @0x80022df0, 0x4a480012 @0x80022eec; FUN_8011bf50 @0x8011bf80-c008; FUN_8001e8c8; FUN_8001f3bc gpf12/gpl12; FUN_80035af0 `jal 0x800245d8` @0x80035f18/@0x8003609c; Klemme @0x80031d70; Objekt-Pass @0x8001ce14 | affen_11c0.c (13), game_step_common.c (14) | takt 14/14 + Wechsel 8/8 bildgleich, Zustandsfolge 696/696; szene +0 x 14, Tod +1194; exe j1 14/14 + Tod bildgleich; Riegel takt/szene messen Slot 3 |
+| P2 (a) Kausal-Aussage | N4: Startversatz gewachsen, Landung = Iterationsausgang | Abnahme 4 griff-Tabelle | KORREKTUR Z. 1400-1403, 1471, 1494 | N5: Pin 1, Anker 8, T265 30, Bahn 25 (wirklich kleiner, durch (13)/(14)) |
+| P2 (b) Pin Lauf 0 | Ausgang chaotisch | 24 Starts +-1/+-2 um Lauf-0-T290: 4 Ruhelage, 16 Biss, 0 gleich | Pin entfernt; N1 am Original-Zustand (Weg 2); Empfindlichkeit im Riegel; Schranke T265-T289 <= 100 | griff gruen; Weg 2 kein Biss, e1 3925 / e2 4996 |
+| P2 (c) Startversatz unter OFFEN | Rest 1-2 Einheiten je Bild (Biss-Ueberblendung, aec4) | gdbstufe F210+ | OFFEN N5-1 mit Messweg | — |
+| H2 | Doku-Marke | enemy_ai_common.c:8894 `ab_b:` | re15_affen.h (10) | — |
