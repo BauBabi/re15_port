@@ -1468,7 +1468,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * cam scan running. Each frame apply the BACKWARD KNOCKBACK (byte-true FUN_800245d8(0x800)
          * @0x80035f18): shove the player along facing + 0x800 (= 180 deg, away from the front) by the
          * current DAT_800acae0 magnitude — rotate (mag,0,0) by Ry(angle) exactly like the walker step
-         * (actor_locomotion.c) — then clamp to the room walls/objects so a shove into a wall stops. Then
+         * (actor_locomotion.c) — KEINE Klemme im Handler (Runde 35 Spur J (14): Klemme @0x80031d70 danach). Then
          * DAT_800acae0 -= DAT_800acaf2 (50), clamp at 0 (@0x80035f20) -> 200,150,100,50 over 4 frames.
          * When the clip plays out (timer -> 0) motion returns to idle. Unreachable unless a non-lethal
          * hit landed, so a room with no combat never enters it = no 1170 regression. */

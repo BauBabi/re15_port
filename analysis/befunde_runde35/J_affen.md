@@ -1653,7 +1653,8 @@ Scratch: `scratchpad/jnb5/`.
   Laeufe danach mit `SDL_ASSERT=always_ignore` (nur Mess-Umgebung, kein Spielverhalten).
 - **j1 = derselbe Eintritt wie die Original-Aufnahme r3** (r3 wurde per Debug-Menue-JUMP 0x11C aufgenommen, Spawn
   (-22604,14455), Dossier Z. 119-121): `RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-22604,14455,0`, keine Eingabe.
-  Freigabe F1071 bei **(-7138,-12372) = Original**; Heavy +363; Bisse **+468, 521, 571, 624, 674, 727, 778, 830, 882, 933,
+  Freigabe F1071 bei **(-7138,-12372) = Original**; Heavy +363 (Original +364 — KORREKTUR N6/M5: still gewordene
+  Abweichung, jetzt OFFEN N6-1); Bisse **+468, 521, 571, 624, 674, 727, 778, 830, 882, 933,
   986, 1036, 1090, 1139**, Tod **+1194 = 39,8 s** — **alle 14 Bisse und der Tod im selben Bild wie das Original**
   (Original +468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139, Tod +1194). Abstaende 53, 50, 53,
   50, 53, 51, 52, 52, 51, 53, 50, 54, 49, 55 = die Phasenwanderung des Originals (N4: starr 53/50).
@@ -1703,7 +1704,8 @@ Scratch: `scratchpad/jnb5/`.
 ### OFFEN (Stand Nachbesserung 5; ersetzt die Liste "Stand Nachbesserung 4")
 - **N4-1 geschlossen**: war eine Nebenwirkung von Nachbesserung 4 (e2 Zyklus 104 -> 103); behoben durch (13)/(14), Riegel
   takt/szene und exe j1 bildgleich.
-- **N5-1 Rest-Lageabweichung** im Riegel takt ueber 696 Bilder: e1 hoechstens 25, e2 hoechstens 17 Einheiten bei
+- **N5-1 Rest-Lageabweichung** im Riegel takt ueber 696 Bilder: e1 hoechstens 25, e2 hoechstens 17 Einheiten (KORREKTUR
+  N6: nachgerechnet 26 / 22, Abnahme 5 und jnb6) bei
   identischer Zustandsfolge (erste Abweichung F210: 1-2 Einheiten in den Ueberblend-Bildern des Bissclips (+0x8f 6..1)
   und am 2050-Kreis (aec4)). Im griff-Lauf 0 haelt das den Anker 8 neben dem Original, die Klemme macht daraus in T290
   201 und der Ausgang des Wurfs streut (s. P2). Messweg: gdbstufe.py mit Haltepunkten an den bf50/c024-Rueckkehren in
@@ -1736,7 +1738,10 @@ Scratch: `scratchpad/jnb5/`.
   keine Original-Aufnahme). (2) Wird Leon an einer Wagenkante gebissen, fliegt er jetzt in dieselbe Richtung zurueck wie
   im Original; vorher lenkte der Port den Stoss schon an der Kante ab. Das gilt fuer jeden Gegner, der Leon trifft.
   (3) Die Gorillas kriechen genauer: ihre Lage am Biss-Kreis stimmt Bild fuer Bild mit dem Original ueberein (vorher bis
-  zu 120 Einheiten daneben).
+  zu 120 Einheiten daneben). **KORREKTUR (Nachbesserung 6, M3):** zu weit. Gemessen (Riegel takt gegen jnb1/g_orig_dec.txt,
+  Port-Zeile S f gegen GDB-Zeile F f, F196-F891, 695 Bilder): beide Lagen bitgleich nur in **14 Bildern (F196-F209, das
+  Kriechen bis zum ersten Biss)**, danach hoechstens **e1 26 (F585) / e2 22 (F594)** Einheiten daneben (Median 4,5 / 3,2).
+  Gilt: "im Kriechen F196-F209 bitgleich, danach hoechstens rund 25 Einheiten daneben"; die Biss-BILDER sind gleich.
 - Berichtigt: "Die Gorillas beissen jetzt im Rhythmus des Originals" (Nachbesserung 4) galt nur fuer Gorilla 1, Gorilla 2
   biss damals je Zyklus ein Bild frueher. Wo Leon nach einem Wurf landet, haengt an einer sehr empfindlichen Wandklemme
   (1-2 Einheiten Unterschied genuegen); landet er an der Stelle des Originals, beisst keiner nach, landet er im Freien,
@@ -1899,3 +1904,15 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   5+4a1 / 6+4a1). Gemessen: Knochen 14 = {14,13,12,0}, 17 = {17,16,15,0}, 6 = {6,5,4,1,0}, 10 = {10,9,8,1,0} — alle gleich.
 - Die Dossier-Stelle Z. 1579 ("Riegel prueft die Kette") stimmt damit ab Nachbesserung 6; vorher war sie falsch
   (KORREKTUR hier vermerkt, die Stelle selbst bleibt als Protokoll stehen).
+
+### M1 — Messung nachher, exe ueber den ECHTEN Tuerweg (exe-Kopie re15_pc_jnb6.exe, md5 60f19f71... = re15_pc.exe; `jnb6/exe/run.sh`)
+- Lauf **w3m** = Abnahme-Lauf w3y (Tuerweg 11B0 -> 11C0, `RE15_GIVE=3:250 RE15_EQUIP=3`, dasselbe Feuerskript, BASIS spiel,
+  START 60), `RE15_EXIT_AT=3060#11C0`, `RE15_FRAMEDUMP=2800-3056/4` (gdigrab liefert in dieser Sitzung weisse Bilder ->
+  Framedump). debug.log: `DOOR FIRE slot=1 ... spawn=(-25279,0,17268)`, `loaded room11c0.rdt`.
+- state.log bis F2812 identisch mit w3y (Leon (-9975,-10422) hp 46, Gorilla 2 B[8] ab F2806). **F2813 hp 46 -> -554,
+  mo = 0** (Opfer-Bank Clip 0), **Leon bleibt bis zum Ende auf (-9975,-10422)** (w3y: F2814 (-327,483)); **pst = 7 ab
+  F2883 = Treffer + 70** (= Riegel: Bild nach Bild 69). Kein Raumwechsel bis F3060.
+- Bilder `jnb6/exe/w3m_finisher.png` / `w3m_finisher_zoom.png`: F2812 Leon zielt am Streifenwagen, F2816 der Gorilla
+  landet auf ihm (Blutspritzer am Kopf), F2824-F2864 Leon sinkt hinter der Motorhaube zusammen, ab F2876 Weissblende,
+  F2900 Todeskamera: **Leon liegt in der Blutlache unter dem Gorilla**, F2960/F3040 "YOU DIED" mit Leon und Gorilla.
+  Leon verschwindet nicht mehr aus dem Bild.
