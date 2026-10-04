@@ -598,3 +598,11 @@ S049 157,00 / **157,00**, S092 157,20 / **157,22**; V2 unveraendert 155,00 / 155
 `F_belege/n1_m3_tueren_vorher_nachher.png` (je Seite links Abnahme-0-Stand, rechts jetzt): S041/S044
 Stangen jetzt gleich breit, S136/S157 Riegelstangen jetzt gleich lang, S030/S049/S092 Druecker auf
 gleicher Hoehe. Damit ist M3b BEHOBEN (nicht nur gefuehrt).
+
+### Suite Nachbesserung 1
+`bash re15_port/tools/local_build.sh all` (Stand b1553d7c, unter Last anderer Baeume, 1133 s):
+`100% tests passed, 0 tests failed out of 482` /
+`=== LOCAL-BUILD-OK (all) — Tests 482/482` (Anzahl unveraendert: Nachbesserung 1 erweitert die
+vorhandenen Riegel unit_r35_inhalt_items 25 -> 27 Pruefungen und unit_r35_inhalt_tueren 6 -> 7).
+Neue Assets fuer das Paket-/Android-Gate durch Nachbesserung 1: keine (RE2-Ablage
+`extracted_re2_items/` ist kein Laufzeit-Asset). Sprachdateien: keine.
