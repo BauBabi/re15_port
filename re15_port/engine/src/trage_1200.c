@@ -78,10 +78,13 @@ void re15_trage1200_mess(void)
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
         const re15_actor_t *e = &g_actors[s];
         if (!e->active || e->type == 0) continue;
-        fprintf(s_lg, " [%d t=%02x st=%d/%d/%d/%d g=%02x mo=%d af=%d @(%d,%d,%d) b%d f1ba=%d f1c0=%04x]",
+        fprintf(s_lg, " [%d t=%02x st=%d/%d/%d/%d g=%02x mo=%d af=%d @(%d,%d,%d) b%d f1ba=%d f1c0=%04x"
+                      " rot=%d los=%u t158=%d t15a=%d cd=%u]",
                 s, (unsigned)e->type, (int)e->state, (int)e->sub_state_1, (int)e->sub_state_2,
                 (int)e->sub_state_3, (unsigned)e->grid_id, (int)e->motion, (int)e->anim_frame,
-                e->x, e->y, e->z, (int)e->floor, (int)e->dog_floor_y, (unsigned)e->fall_1c0);
+                e->x, e->y, e->z, (int)e->floor, (int)e->dog_floor_y, (unsigned)e->fall_1c0,
+                (int)e->rot_y, (unsigned)e->re2z_los154, (int)e->re2z_t158, (int)e->re2z_t15a,
+                (unsigned)e->re2z_cd23e);
     }
     fputc('\n', s_lg);
     fflush(s_lg);

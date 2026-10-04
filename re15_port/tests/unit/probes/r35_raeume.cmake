@@ -48,3 +48,11 @@ target_compile_definitions(test_r35_raeume_arme PRIVATE
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 add_test(NAME unit_r35_raeume_arme COMMAND test_r35_raeume_arme)
 set_tests_properties(unit_r35_raeume_arme PROPERTIES TIMEOUT 120)
+
+# Nachbesserung 1, M1 MESS-SONDE (kein add_test): RE2-Sichtlinie des Bahren-Zombies an der Kante
+# ROOM1200 in ihre Teile zerlegt (Zell-Strahl Gegnerband / RE1.5-Ray je Region), blockierende Zelle.
+add_executable(probe_r35_raeume_trage_los probe_r35_raeume_trage_los.c)
+target_link_libraries(probe_r35_raeume_trage_los PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r35_raeume_trage_los PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r35_raeume_trage_los PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

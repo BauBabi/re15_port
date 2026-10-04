@@ -2896,7 +2896,8 @@ static int los_seg_straddles_diag(int32_t ex, int32_t ez, int32_t px, int32_t pz
     int32_t s4 = los_cross_z(rx, rz, c2x - ex, c2z - ez);
     return ((uint32_t)(s3 ^ s4) & 0x80000000u) != 0;          /* Diagonal-Enden straddeln */
 }
-static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step)
+static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
+                                unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
 {
     if (!g_room_rdt.sca || step < 0 || step > 3) return 0;
     int start = 0;
@@ -2909,6 +2910,9 @@ static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *playe
         const re15_sca_entry_t *c = &g_room_rdt.sca[start + i];
         if ((c->floor >> 4) != e->floor) continue;            /* w5>>12 == +0x82 */
         if ((c->floor & 0x0f) != 3) continue;                 /* (w5&0xf00) == 0x300 */
+        /* Runde 35 Spur H (M1): nur als RE2-Ray-Stand-in — RE2 0x80050858 ueberspringt Saetze ohne
+         * Maskentreffer (`lhu v1,8(t1)`/`and v0,v1,fp`/`beq v0,zero` @0x800508bc-c8) = Zelle u0 & Maske. */
+        if (re2_maske && !(re2_maske & c->u0)) continue;
         int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12;
         int32_t x1 = ((int32_t)c->x + (int32_t)c->width)   / 0x12;
         int32_t z1 = ((int32_t)c->z + (int32_t)c->density) / 0x12;
@@ -2935,7 +2939,7 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
                                                            * ersetzt den on_floor-Stand-in, der
                                                            * offene Flaechen dauerhaft blockte
                                                            * (crow_shot_attack.md F1) */
-        if (re15_los_ray_blocked(e, player, step))
+        if (re15_los_ray_blocked(e, player, step, 0u))
             s_los_blocked[slot] = 1;
     }
     if (step == 3) {                                      /* the verdict tick */
@@ -3029,7 +3033,7 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
                                    e->sca_mask ? e->sca_mask : 4u))
         return 0;
     for (int k = 0; k < 4; k++)
-        if (re15_los_ray_blocked(e, pl, k)) return 0;
+        if (re15_los_ray_blocked(e, pl, k, e->sca_mask ? e->sca_mask : 4u)) return 0;
     return 1;
 }
 
