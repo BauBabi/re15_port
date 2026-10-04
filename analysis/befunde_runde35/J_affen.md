@@ -1152,3 +1152,33 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
   beide +0x1d6 = 1), Port Weg 2 Bisse T420 (76 -> 70) und T480 (70 -> 64). Ursache im Lauf sichtbar: e1 springt am
   Ende des Brustschlags (Sub 2, Clip 3 Bild 69 -> 0, T370) um ~1300 ((-5674,-14523) -> (-4776,-15477)); Original
   F370 -> F371 (c3/69 -> c3/0) nur (4,-4). affen_fuss.log: Port-Fusssperre im Wrap-Bild kf 74/143 d=(-890,1689).
+
+### Vierte Ursache — Fusssperre posierte das Bild NACH dem Vorschub (gefunden ueber den Befund "Bisse nach der Ruhe")
+- RE (selbst disassembliert): anim_set FUN_8001f314 holt das Bildwort zu +0x95 (`lbu v0,149(t0)` @0x8001f344 /
+  @0x8001f35c, Zeiger `sw a2,360(t0)` (+0x168) @0x8001f36c, 0x8000-Test @0x8001f378, `jal 0x8001f3bc` @0x8001f38c).
+  FUN_8001f3bc schreibt DESSEN Pose in den Pool +0x188 (`lw s1,392(v1)` @0x8001f40c; Decompilat RE_15_Quellcode_V2/
+  FUN_8001f3bc.c: Wurzel aus dem Keyframe, RotMatrix je Record, Stride 0x2b Worte = 172 B) und zaehlt +0x95 erst danach
+  hoch (`lbu v0,149(v1)` / `sb v0,149(v1)` @0x8001f610-1c, `sltu` @0x8001f624, Wrap `sb zero,149(v1)` @0x8001f63c).
+  FUN_8011bf50 (STAGE1): `lw s0,392(v0)` @0x8011bf78, CompMatrix(+0x20, Pool-Record 0) @0x8011bf80, Records
+  12/13/14 (+3*a1) @0x8011bfa4/b4/c4, `+0x34 -= (m.tx - rec[84])` @0x8011bfd4-e8, `+0x3c -= (m.tz - rec[92])`
+  @0x8011bfec-c008 -> die Fusssperre bewegt mit der Pose des Bildes VOR dem Vorschub.
+- Port re15_maggot_footlock nahm s_now = +0x95 NACH re15_maggot_anim (ein Bild voraus). Am Ende des Brustschlags
+  (Sub 2, Clip 3 Bild 69 -> Wrap 0, T370) rechnete er kf 74 gegen kf 143: Locator-Sprung 1118 roh (Diagnose-Teil
+  `fuss`, `jnb3/fuss/fuss_diag.txt`: Wurzel-Versatz der Clip-3-Keyframes (0,0), Locator Bild 69 (-348,-281) -> Bild 0
+  (770,-164)), x 1.7 = ~1900 -> e1 sprang ~1300. Im Original rechnet bf50 im Wrap-Bild Bild 69 gegen 68 (F370 -> F371:
+  (4,-4)); das Folgebild verlaesst Sub 2 ohne bf50 (B[2] Phase 2 0x801179a8).
+- Haken (je 1 Zeile, enemy_ai_common.c): re15_maggot_anim merkt das Bild vor dem Vorschub (s_maggot_pose_bild),
+  re15_maggot_footlock posiert es. Alle sieben bf50/c024-Aufrufe stehen direkt hinter re15_maggot_anim (gezaehlt).
+
+### Umsetzung (Dateien, Konstanten mit Beleg)
+- enemy_ai_common.c (Haken, Kommentar "Runde 35 Spur J (8)/(9)"):
+  - Gorilla case 15 Phase 2: `re15_affen_ritt_platz(e, pl, 1)` (Yaw-Fang a8f8 0x800 @0x8011acac, ad68 @0x8011accc);
+    Phase 3: `re15_affen_ritt_platz(e, pl, 0)` (ad68 @0x8011accc) — je 1 Zeile.
+  - Gorilla-Wurzelschwanz aec4(Spieler, Gorilla): Paar-Ausnahme `and`/`andi 0x1000` @0x8002af14-1c (1 Zeile).
+  - re15_body_push_player: Zombie-Paar-Naeherung (Sub 3..6) nicht fuer Typ 0x27 (Bedingung um `e->type != 0x27u`
+    erweitert, 1 Zeile geaendert).
+  - re15_maggot_anim / re15_maggot_footlock: Pool-Pose = Bild vor dem Vorschub (@0x8001f40c/@0x8001f610-1c,
+    @0x8011bf80-c008) — 1 Zeile + 1 Zeile + 1 Deklaration.
+- affen_11c0.c: re15_affen_ritt_platz (re15_enemy_steer_point mit 0x800 = FUN_8001a8f8-Kern `slt` @0x8001a974,
+  re15_clip_root_motion_abs_pub = FUN_8001ad68 @0x8001adf4-ae18). re15_affen.h: Abschnitte (8) und (9).
+- Keine neue Datei, keine Assets, keine Bank-9-Bits/Nachrichten/AOT/Ereignisse.
