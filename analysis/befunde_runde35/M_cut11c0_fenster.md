@@ -260,3 +260,67 @@ keine flatternden Fenster-Haken in diesem Lauf. Abschlusslauf: `=== LOCAL-BUILD-
   Kraehe bricht durch das Fenster herein und greift an. Das Fenster bleibt danach beschaedigt
   (auch nach Speichern/Laden), das Ereignis kommt nur einmal.
 * Messhaken: `RE15_FENSTER_LOG=<datei>` (Ereignis-Protokoll neben der exe).
+
+## Nachbesserung 1 (2026-10-04, nach Abnahme 0)
+
+Abnahmebericht: `analysis/befunde_runde35/M_abnahme_0.md`. Mangel 1 ist der einzige Mangel. Die Kleinigkeit aus
+Abnahme §2.4 (re2_fx.c `sltiu v0,t0,0x8` ohne eigene Adresse) ist mit erledigt.
+
+### Mangel 1 — @0x-Gate: RE15_FENSTER_P0 = 0x00FF und p1-Unterbyte 0x18 ohne Beleg
+
+**Ursache.** `re15_port/include/re15_fenster1120.h:53-54` (Stand 16a396f7) hatte die Werte ohne Zitat. Der
+Kommentarblock darueber belegte nur die sce-3-Typtabelle (@0x8007469c[3]) und Byte 3 (@0x80043100). Die
+Commit-Messages 55554779/1e958236 nennen p0/0x18 ebenfalls nicht. Gegenprobe: `git log master..HEAD --format=%B | grep -i
+"0x00ff\|ff 00\|0x18\|0c30\|8003ee"` ergibt 0 Treffer zum Thema; der einzige Treffer "P0" gehoert zur Kraehen-Phase P0.
+
+**Messung vorher.**
+* `git show 16a396f7:re15_port/include/re15_fenster1120.h | sed -n 46,54p`: Zeile 53 `#define RE15_FENSTER_P0 0x00FF`,
+  Zeile 54 `... | 0x18))`, keine Adresse und kein Byte-Offset dazu.
+* Verwendung: `fenster_1120.c:146` `re15_aot_retype(RE15_FENSTER_SLOT, RE15_FENSTER_SCE, RE15_FENSTER_SAT,
+  RE15_FENSTER_P0, RE15_FENSTER_P1, 0)`. `aot_common.c:298` (case 3) speichert davon nur `event_id = p1 >> 8`. Den
+  Ereignis-Platz startet der Port ueber `scd_event_fire` (scd_vm.c:602ff), der den ersten freien Ereignis-Faden nimmt.
+  Das entspricht dem Original-Zweig fuer a0 >= 0xa (s. u.).
+
+**Beleg (selbst gemessen).**
+1. Original-Satzform, Datei-Bytes `re15_port/shared_assets/PSX/STAGE1/ROOM1050.RDT` (xxd):
+   ```
+   00000c20: 7900 2c07 0331 0000 a041 0add 2003 2003   -> @0x0C22 2c 07 03 31 00 00 a0 41 0a dd 20 03 20 03
+   00000c30: ff00 1802 0000 ...                         -> @0x0C30 p0 = ff 00, @0x0C32 p1 = 18 02, @0x0C34 p2 = 00 00
+   ```
+   Aot_set sce 3 (Rolltor-Schalter, sub00), Nutzlast = Satz+14 (Satz+2 = AOT-Eintrag, Nutzlast = Eintrag+0xC:
+   FUN_80042bac @0x80042f40ff `(&PTR_LAB_8007469c)[*pb](pb + 0xc)`).
+2. Spielweiter Zensus aller sce-3-Saetze. Werkzeug: `re15_port/tools/aot_sce_census.py`, im Scratchpad mit ROOT auf
+   den eigenen Baum umgebogen (`scratchpad/nb1/sce3.py`), 240 RDTs, Abdeckung 214985/214985 Code-Bytes, 0 Stopps:
+   **287 sce-3-Saetze in 124 Raeumen, alle 287 mit p0 = 0x00FF und p1-Unterbyte 0x18.** Aufgeteilt nach Form:
+   0x2C/0x31: 153, 0x46/0x31: 67, 0x2C/0x41: 54, 0x46/0x41: 9, 0x2C/0xB1: 3, 0x2C/0xC1: 1. Ein AUTO-Beispiel (sat 0x41)
+   wie Slot 4: ROOM1020 main00 @0x1E18 `2c 06 03 41 00 00 3a bc 24 96 b8 0b 30 43 ff 00 18 03 00 00`. Das RE2-Vorbild
+   hat dieselbe Nutzlast: room1090 sub03.scd @0x0014 `2c 06 05 41 ... 7c 15 ff 00 18 0f 00 00` (p0 @0x0022, p1 @0x0024).
+3. Semantik von p0 (RE1.5 PSX.EXE, re15_disasm.py):
+   ```
+   800430fc: lhu a0,0(v0)        ; a0 = p0 (Nutzlast +0)
+   80043100: lbu a1,3(v0)        ; a1 = Ereignis (Nutzlast +3 = p1 Oberbyte)
+   80043104: jal 0x8003ee3c
+   8003ee44: lbu v0,16250(v0)    ; 0x800b3f7a (Sondermodus, im Raumspiel 0)
+   8003ee54: sltiu v0,a2,0xa     ; a0 < 10 -> a0 IST der Faden-Platz (@0x8003ee58 bne -> 0x8003eef8)
+   8003ee64: lbu v0,11821(v0)    ; a0 >= 10: Platz 2 frei? (0x800b2e2d = 0x800b2b4d + 2*0x170)
+   8003ee70: ori a2,zero,0x2     ; ja -> Platz 2
+   8003ee74: ori a0,zero,0x9     ; sonst Suche 3..9 ueber Byte 0x800b2b4d + Platz*0x170,
+   8003ee7c: beq a2,a0,...       ;   Platz 9 als Rueckfall
+   8003ef54: jal 0x8003edec      ; Faden 0x800b2b4c + Platz*0x170 mit Sub a1 starten
+   ```
+   p0 = 0x00FF bedeutet also "ersten freien Ereignis-Faden 2..9 nehmen". Genau das macht scd_event_fire im Port.
+4. Das Unterbyte 0x18 von p1 (Nutzlast +2) liest RE1.5 nirgends. Gemessen sind alle 11 Xrefs der AOT-Tabelle
+   DAT_800ac9b0 (ghidra1_V2.txt): Aot_set 0x80040534/0x800405bc und 0x80040644 legen nur den Zeiger ab
+   (`sw v0,0(v1)` @0x80040584/@0x8004060c/@0x800406d0). Aot_reset LAB_80040738 SCHREIBT die Nutzlast +0/+2/+4
+   (@0x80040790/9c/a8). Der Scan 0x80042bac liest nur die Eintragsbytes 0..0xB. Aot_on 0x800407bc ruft denselben
+   Handler. Der sce-3-Handler 0x800430f0 liest nur +0 (`lhu`) und +3 (`lbu`). 0x18 ist damit reine Satzform ohne
+   Verhalten und wird woertlich uebernommen, wie bei allen 287 ausgelieferten Saetzen.
+
+**Aenderung.** Nur Kommentare, die Werte bleiben gleich:
+* `re15_port/include/re15_fenster1120.h`: Beleg fuer P0 (ROOM1050 @0x0C30 `ff 00`, Zensus 287/287, Semantik
+  0x8003ee3c @0x8003ee54/@0x8003ee70) und fuer das Unterbyte 0x18 (ROOM1050 @0x0C32 `18 02`, Zensus 287/287, ungelesen:
+  Handler @0x800430fc/@0x80043100, Aot_reset @0x8004079c).
+* `re15_port/engine/src/re2_fx.c`: `sltiu v0,t0,0x8` mit eigener Adresse @0x8001bd24 (`bne v0,zero,0x8001bcc8`
+  @0x8001bd28), an beiden Stellen.
+
+**Messung nachher.** Siehe unten (Bau, Suite, Spur-Tests).
