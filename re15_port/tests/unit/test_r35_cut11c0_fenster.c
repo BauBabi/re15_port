@@ -130,13 +130,18 @@ static int pruef_glas(void)
             if (b[0] != 84 || b[1] != 0) return fail(17, "Op 39: Op A 84 / Op B 0");
             if (s16(b, 0x38) >= 10200) return fail(18, "Splitter flog nicht nach -z (Gier 0x400)");
         }
-        if (t_land > 0 && t_frei < 0 && u16(b, 0x18) == 0 && re2fx_op_zaehler(84) >= 1) t_frei = t;
+        if (t_land > 0 && t_frei < 0 && t == t_land + 1) {
+            /* Op 84 (Update-Pass) gibt den Platz frei (`sh zero,24` @0x80025378) und sein Spawn
+             * 0x14000000 (@0x80025384) nimmt den ersten freien Platz von 95 abwaerts (@0x8001cc44-6c)
+             * = denselben: er traegt jetzt Bank 0x14. */
+            if (re2fx_op_zaehler(84) == 1 && b[0x1C] == 0x14) t_frei = t;
+        }
     }
-    printf("Landung Bild %d (erwartet %d), frei Bild %d, Op5 %u Op16 %u Op39 %u Op84 %u unbekannt %u\n",
+    printf("Landung Bild %d (erwartet %d), Op84/Platz neu Bild %d, Op5 %u Op16 %u Op39 %u Op84 %u unbekannt %u\n",
            t_land, t_erwartet, t_frei, re2fx_op_zaehler(5), re2fx_op_zaehler(16), re2fx_op_zaehler(39),
            re2fx_op_zaehler(84), re2fx_op_unbekannt());
     if (t_land != t_erwartet) return fail(19, "Landebild weicht von der unabhaengigen Rechnung ab");
-    if (t_frei != t_land + 1) return fail(20, "Op 84 gibt den Platz nicht im Folgebild frei");
+    if (t_frei != t_land + 1) return fail(20, "Op 84 gibt den Platz nicht im Folgebild frei (Glitzern uebernimmt ihn)");
     if (re2fx_op_unbekannt() != 0) return fail(21, "unbekannte Ops / Lesefehler");
     if (lebende_bank(0x14) != 0) return fail(22, "Glitzern Bank 0x14 nicht nach 6 Anim-Bildern frei");
     /* Glitzern zaehlen: direkt nach der Landung zwei Plaetze Bank 0x14 (Op 39 + Op 84). */
@@ -255,6 +260,10 @@ static int pruef_ereignis(void)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->x = 5000; pl->z = 5000; pl->floor = 0;
     re15_aot_scan(pl->x, pl->z, 1);
+    /* AUTO-Ereignis: der Scan merkt die Nummer (aot_common.c default-Zweig), der Spielschritt
+     * feuert sie (game_step_common.c `scd_event_fire(g_aot.fired_event_id_this_frame)`). */
+    if (g_aot.fired_event_id_this_frame != RE15_FENSTER_EREIGNIS) return fail(59, "AOT-Scan meldet Ereignis 24 nicht");
+    scd_event_fire(g_aot.fired_event_id_this_frame);
     scd_vm_tick();
     if (!re15_game_flag_get(9, RE15_FENSTER_BIT)) return fail(60, "Ausloeser-Programm setzt (9,79)");
     if (g_aot.slots[RE15_FENSTER_SLOT].type != RE15_AOT_TYPE_NONE) return fail(61, "Aot_reset(4) -> sce 0");
