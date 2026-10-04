@@ -1116,3 +1116,28 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
   Haken: Zombie-Bedingung `&& e->type != 0x27u` (der Gorilla hat seine eigene Paar-Abfrage re15_affen_griff_paar).
   Ob die typ-unabhaengige Bedingung auch andere Greifer-Typen (Hund 0x20, Kraehe 0x21) falsch ausnimmt: nicht
   Gegenstand dieser Spur -> OFFEN.
+- **Messung nach Bau 3 (`jnb3/griff3.txt`):** Kette T265-T267 Eingang 5/4/12, Ausgang 17/16/11 neben dem Original
+  (vorher Eingang 213/276/496, Ausgang 1241/1573/207); e1 T254-T288 hoechstens 21, e2 T254-T270 hoechstens 78.
+
+### M1 (c) — Chaos gemessen + Weg 2 (Riegel `griff`, Bau 3)
+- **Weg 1:** re15_collision_constrain ab dem Original-Zustand T290 (-5381,-10551) iteriert (Bezug = Eingang = Vorbild):
+  **124/124 Bilder T291-T414 bitgleich** mit der Original-Bahn, Freigabe T378 (-4759,-10633), Ruhe T410 (-3009,-11643).
+- **Zerlegung des Riegel-Laufs:** dieselbe Iteration ab der Riegel-Lage T290 (-5376,-10728) liefert 88/88 Bilder des
+  Riegels T291-T378 und dessen Freigabe (-5433,-10693) -> die 677 Einheiten bei der Freigabe sind allein der Versatz
+  bei T290 (177).
+- **Empfindlichkeit:** 24 Starts im 5x5-Gitter (+-1/+-2 Einheiten) um den Original-T290: alle 24 laufen nach 1-9 Bildern
+  (T292-T300) > 50 vom Original weg; bei T378 liegen alle 24 > 100 und 20 > 400 neben der Original-Freigabe
+  (153 .. 5825). Die beiden Port-Staende vor/nach A1: (-5374,-10724) -> T378 (-4580,-10518), Ruhe ab T392 bei
+  (-3018,-11651) (= die alten Dossier-Zahlen Z. 858-859); (-5376,-10728) -> (-5433,-10693), keine Ruhe. 2 bzw. 4
+  Einheiten Startunterschied = 873 Einheiten bei der Freigabe. Damit ist "chaotisch" gemessen, nicht behauptet.
+- **Weg 2 (Herkunft des Startversatzes):** Lauf mit Leon/e1/e2 am Ende von T253 auf Original-Lage/-Yaw (g_griff F254):
+  Anker beim Pin **(-7507,-10327) = Original** (Lauf 0: (-7539,-10349), 39 daneben), e1 T254 (-5882,-14389) r2823 und
+  T255 (-5953,-14268) **bitgleich** (Yaw-Fang + Ritt-Platzierung), Kette T268-T290 **d0 in jedem Bild**, T290
+  (-5381,-10551) = Original, **Freigabe T378 (-4759,-10633) = Original**, Ruhe T410 (-3009,-11643) = Original.
+  Kette der Abweichung im Lauf 0 also: Anlauf T196-T253 (e1 30 Einheiten / Yaw 2815 statt 2825 beim Pin, Restpunkte
+  aus OFFEN A1) -> Anker 39 daneben -> Platzierung 2-28 daneben -> Wandklemme in T289/T290 verstaerkt auf 64/177 ->
+  Klemmen-Iteration (empfindlich) -> 677 bei der Freigabe.
+- **Neuer Befund nach der Ruhe (Weg 2):** Original bis T518 ohne Biss (Leon HP 76, e1 ~3925 / e2 ~4990 entfernt,
+  beide +0x1d6 = 1), Port Weg 2 Bisse T420 (76 -> 70) und T480 (70 -> 64). Ursache im Lauf sichtbar: e1 springt am
+  Ende des Brustschlags (Sub 2, Clip 3 Bild 69 -> 0, T370) um ~1300 ((-5674,-14523) -> (-4776,-15477)); Original
+  F370 -> F371 (c3/69 -> c3/0) nur (4,-4). affen_fuss.log: Port-Fusssperre im Wrap-Bild kf 74/143 d=(-890,1689).
