@@ -20,6 +20,13 @@
 #   (Abnahme 1, M3): diese Kontrollen stehen jetzt in urteil_kontrollen.sh (Attrappen) und pruefen jede Vergleichsstelle
 #   von BEIDEN Seiten (N8b/c Gate-Rueckgabe 2 und 1, N10b Selbsttest-Rueckgabe 2, N11b f1 > f2, N13b e + g > m, N22/N23
 #   jede Zahl leer bzw. keine Ziffer, N24 je Wort, N19c-g Urteilszeile, D1-D22 Pins/gate_festhalten); hier ein Aufruf.
+#   Nachbesserung 3 (Abnahme 2, M1): N26-N28 - die UEBERGABE an das ECHTE Urteil an der Grenze. Umgepinnte Gate-Attrappen
+#   geben eine Gate-Ausgabe im Format von apk_asset_gate.py aus (Zeilen aus gate_urteil.py _selbsttest_log/_apk_log):
+#      N26a Gate-Selbsttest mit genau GATE_SELBSTTEST_MIN_FAELLE Faellen und _MIN_INNEN Proben -> 0
+#      N26b ein Fall weniger -> 2 ("verlangt n/n mit n >= ..."), N26c eine Probe weniger -> 2 ("verlangt m/m ...")
+#      N27a APK-OK-Ausgabe (12 Dateien) mit GATE_APK_EINTRAEGE=13 -> 0, N27b =14 -> 2, N27c =12 -> 2 ("unzip zaehlt")
+#   Vorher liessen sich "0 0" / MIN_INNEN doppelt / "" statt GATE_APK_EINTRAEGE in gate_urteil() einsetzen, und die Kette
+#   blieb FEHLER=0 (Abnahme 2 K2-K4).
 #   Am Ende: release/apk_asset_gate.py, gate_urteil.py und beide Pins unveraendert (cmp gegen den Start).
 # Aufruf: test_r35_android_pruefkette.sh <repo-wurzel> <arbeitsordner>
 # =============================================================================================
@@ -120,14 +127,14 @@ urteil_umgepinnt N6_urteil_fy2_ein_zeichen "$W/U_fy2.py" "Selbsttest des Gate-Ur
 urteil_umgepinnt N7_urteil_leer "$W/U_leer.py" "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile"
 # Schlusszeile eines Urteils-Selbsttests mit den Mindestzahlen aus apk_pruefen.sh (Nachbesserung 1: vorher hier fest
 # "119/119 ... 257/260" - mit neuen Mindestzahlen waere N8 am Selbsttest statt an der zweiten Instanz gescheitert)
-okz() {        # $1 f1, $2 f2, $3 erkannt, $4 alle, $5 gleichwertig -> Schlusszeile im Format von gate_urteil.py
-    echo "== URTEIL-SELBSTTEST-OK: $1/$2 Faelle, $3/$4 Mutanten erkannt, $5 als gleichwertig begruendet =="
+okz() {        # $1 f1, $2 f2, $3 erkannt, $4 alle, $5 gleichwertig, $6 ungeprueft -> Schlusszeile wie gate_urteil.py
+    echo "== URTEIL-SELBSTTEST-OK: $1/$2 Faelle, $3/$4 Mutanten erkannt, $5 als gleichwertig begruendet, $6 Stoerungen begruendet ungeprueft =="
 }
-F=$GATE_URTEIL_MIN_FAELLE; E=$GATE_URTEIL_MIN_ERKANNT; G=$GATE_URTEIL_MAX_GLEICH; M=$((E + G))
+F=$GATE_URTEIL_MIN_FAELLE; E=$GATE_URTEIL_MIN_ERKANNT; G=$GATE_URTEIL_MAX_GLEICH; M=$((E + G)); U=$GATE_URTEIL_MAX_UNGEPRUEFT
 cat > "$W/U_luegt.py" <<PY
 import sys
 if sys.argv[1:] == ["--selbsttest"]:
-    print("$(okz $F $F $E $M $G)")
+    print("$(okz $F $F $E $M $G $U)")
     sys.exit(0)
 print("   Gate-Urteil (%s, Rueckgabe 0): alles bestens" % sys.argv[1])
 sys.exit(0)
@@ -150,6 +157,47 @@ sed 's/^GATE_URTEIL_MIN_ERKANNT=.*/GATE_URTEIL_MIN_ERKANNT=999/' release/apk_pru
 ) > "$W/N9.txt" 2>&1 && { falsch "N9 Mindestzahl 999 Mutanten angenommen"; } \
     || { grep -aq "Mutanten erkannt" "$W/N9.txt" && gut "N9 Mindestzahl Mutanten: $(grep -a -m1 'DIE:' "$W/N9.txt" | cut -c1-120)" \
          || falsch "N9 falsche Meldung: $(tail -2 "$W/N9.txt")"; }
+
+# ---------------------------------------------------------------------------------------------- N26-N28: Uebergabe
+# Nachbesserung 3 (Abnahme 2, M1): das ECHTE Urteil (gepinnte Kopie aus gate_festhalten) an der Grenze der Mindestzahlen
+# des Gate-Selbsttests und der unzip-Zaehlung - ueber gate_laufen, also mit genau der Uebergabe aus gate_urteil().
+"$PY" - "$(apk_nativ "$W")" "$GATE_SELBSTTEST_MIN_FAELLE" "$GATE_SELBSTTEST_MIN_INNEN" <<'PY'
+import os, sys
+sys.path.insert(0, "release")
+import gate_urteil as g
+w, mf, mi = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+def gate(name, zeilen):
+    nl = chr(10)
+    with open(os.path.join(w, name + ".py"), "w", encoding="utf-8", newline=nl) as f:
+        f.write(nl.join(["import sys", "sys.stdout.write(%r)" % (nl.join(zeilen) + nl), "sys.exit(0)", ""]))
+gate("GS_grenze", g._selbsttest_log(mf, mi))
+gate("GS_faelle_unter", g._selbsttest_log(mf - 1, mi))
+gate("GS_innen_unter", g._selbsttest_log(mf, mi - 1))
+gate("GA_ok", g._apk_log(12, 4096))
+PY
+grenze() {   # $1 Titel, $2 Gate-Attrappe, $3 Modus, $4 soll (0|2), $5 Teilstring der Urteilszeile, [$6 GATE_APK_EINTRAEGE]
+    local t="$1" u=0
+    (
+        GATE_PIN_DATEI="$W/pin_$t"; sha "$W/$2.py" > "$GATE_PIN_DATEI"
+        GATE_APK_EINTRAEGE="${6:-}"
+        gate_laufen "$3" "$W/$2.py"
+    ) > "$W/$t.txt" 2>&1 || u=$?
+    local z
+    z="$(grep -a 'Gate-Urteil (' "$W/$t.txt" | tail -1 | sed 's/^ *//' | cut -c1-150)"
+    if [[ "$u" == "$4" ]] && grep -aqF -- "$5" "$W/$t.txt"; then
+        gut "$t -> $u   $z"
+    else
+        falsch "$t -> $u (soll $4, Text '$5')   $z"; tail -3 "$W/$t.txt"
+    fi
+}
+MF=$GATE_SELBSTTEST_MIN_FAELLE; MI=$GATE_SELBSTTEST_MIN_INNEN
+grenze N26a_selbsttest_genau_mindestzahl GS_grenze selbsttest 0 "SELBSTTEST-OK $MF/$MF, jede Fallzeile [ok] mit rc = soll, innere Proben $MI/$MI (Mindestzahlen $MF/$MI)"
+grenze N26b_selbsttest_ein_fall_weniger GS_faelle_unter selbsttest 2 "meldet $((MF - 1))/$((MF - 1)) Faelle, verlangt n/n mit n >= $MF"
+grenze N26c_selbsttest_eine_probe_weniger GS_innen_unter selbsttest 2 "Innere Proben $((MI - 1))/$((MI - 1)), verlangt m/m mit m >= $MI"
+grenze N27a_apk_unzip_n_plus_1 GA_ok apk 0 "= unzip-Zaehlung - 1" 13
+grenze N27b_apk_unzip_n_plus_2 GA_ok apk 2 "unzip zaehlt 14 Eintraege unter assets/" 14
+grenze N27c_apk_unzip_n GA_ok apk 2 "unzip zaehlt 12 Eintraege unter assets/" 12
+grenze N28_apk_ohne_unzip GA_ok apk 0 "APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich" ""
 
 # ---------------------------------------------------------------------------------------------- bash-Urteil (Attrappen)
 # Nachbesserung 2 (Abnahme 1, M3): die Kontrollen je Pruefzeile des bash-Urteils (bis dahin hier P3 + N10-N21, je

@@ -321,7 +321,8 @@ gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
         || die "Selbsttest des Gate-Urteils: $e/$m Mutanten erkannt, $g gleichwertig - verlangt erkannt + gleichwertig = alle,
         erkannt >= $GATE_URTEIL_MIN_ERKANNT, gleichwertig <= $GATE_URTEIL_MAX_GLEICH (GATE_URTEIL_MIN_ERKANNT/MAX_GLEICH)"
     # Nachbesserung 3: eine entfernte Regel kommt nur mit einer neuen UNGEPRUEFT-Ausnahme am Selbsttest vorbei - die zaehlt hier
-    (( u <= GATE_URTEIL_MAX_UNGEPRUEFT ))         || die "Selbsttest des Gate-Urteils: $u Stoerungen begruendet ungeprueft, verlangt <= $GATE_URTEIL_MAX_UNGEPRUEFT
+    (( u <= GATE_URTEIL_MAX_UNGEPRUEFT )) \
+        || die "Selbsttest des Gate-Urteils: $u Stoerungen begruendet ungeprueft, verlangt <= $GATE_URTEIL_MAX_UNGEPRUEFT
         (GATE_URTEIL_MAX_UNGEPRUEFT) - eine neue Ausnahme in gate_urteil.py UNGEPRUEFT muss hier sichtbar zugelassen werden"
     echo "   Gate-Urteil selbstgeprueft: $f2/$f2 Faelle, $e/$m Mutanten erkannt, $g gleichwertig, $u Stoerungen ungeprueft (Mindestzahlen $GATE_URTEIL_MIN_FAELLE/$GATE_URTEIL_MIN_ERKANNT/<=$GATE_URTEIL_MAX_GLEICH/<=$GATE_URTEIL_MAX_UNGEPRUEFT)"
     GATE_URTEIL_GEPRUEFT="$GATE_URTEIL_SHA256"

@@ -31,8 +31,13 @@ exec "$PY" "$0" "$@" #
 #     tuer_soll ...) - eine Pruefung im Meldungstext waere fuer die Mutanten unsichtbar; der Selbsttest scheitert sonst.
 #     NICHT mutiert: die Meldungstexte (zweites Argument von ende() und genau_eine()), urteil_rufen(), main() und der
 #     Selbsttest selbst; Aenderungen, die keiner dieser Operatoren abbildet (z.B. any -> all, Funktions- oder
-#     Methodentausch, Zeichenklassen in Regex, Rechenoperatoren wie + -> -), faengt nur die Fallsammlung - gemessen
-#     in analysis/befunde_runde35/N_android_belege/nb1_urteil_aenderungen_nachher.txt und nb2_urteil_aenderungen_nachher.txt.
+#     Methodentausch, Zeichenklassen in Regex, Rechenoperatoren wie + -> -, eine Variable durch einen anderen Ausdruck),
+#     faengt die Fallsammlung - seit Nachbesserung 3 (Abnahme 2, M2/M3) auch die ERZEUGTEN Stoerungsfaelle (STOERUNGSFAELLE
+#     unten): jede Zeile und jede Zahl der vier guten Gate-Ausgaben einzeln gestoert, Soll nach Regel (nicht aus dem
+#     Urteil berechnet), Ausnahmen begruendet in UNGEPRUEFT und in apk_pruefen.sh begrenzt. Damit faellt jede Aenderung,
+#     nach der das Urteil eine bisher gepruefte Zeile/Zahl/Spalte der Ausgabe nicht mehr prueft (H10/H17/H18 der Abnahme
+#     2). Gemessen in analysis/befunde_runde35/N_android_belege/nb1_/nb2_/nb3_urteil_aenderungen_nachher.txt; eine
+#     Aenderung, die das Urteil STRENGER macht oder eine nie gepruefte Stelle betrifft, ist nicht Gegenstand.
 #     main()/urteil_rufen() und das bash-Urteil in apk_pruefen.sh pruefen die Negativ-Kontrollen von ctest
 #     unit_r35_android_pruefkette.
 #   * release/apk_pruefen.sh haelt diese Datei wie das Gate fest (Pin release/gate_urteil.sha256, private Kopie),
@@ -46,8 +51,8 @@ exec "$PY" "$0" "$@" #
 #       modus = selbsttest | apk | quellbaum | paket. Rueckgabe 0 = OK, 1 = das Gate meldet Befunde (Ausgabe stimmig),
 #       2 = keine Aussage. Druckt genau eine Zeile "   Gate-Urteil (<modus>, Rueckgabe <rc>): <grund>".
 #   gate_urteil.py --selbsttest
-#       Schlusszeile "== URTEIL-SELBSTTEST-OK: f/f Faelle, k/m Mutanten erkannt, a als gleichwertig begruendet ==",
-#       Rueckgabe 0; sonst "== URTEIL-SELBSTTEST-FEHLER: ... ==", Rueckgabe 1.
+#       Schlusszeile "== URTEIL-SELBSTTEST-OK: f/f Faelle, k/m Mutanten erkannt, a als gleichwertig begruendet,
+#       u Stoerungen begruendet ungeprueft ==", Rueckgabe 0; sonst "== URTEIL-SELBSTTEST-FEHLER: ... ==", Rueckgabe 1.
 # Nur Python-Standardbibliothek (>= 3.8: ast.get_source_segment).
 # =============================================================================
 import ast
