@@ -648,3 +648,20 @@ dem exe-Bau 06:16:09: `100% tests passed, 0 tests failed out of 531`, `Total Tes
 — langsamer als N1 durch parallel bauende Baeume). Kein Flatter-Haken rot, nichts nachgefahren; die
 K/L-Integration (integration_r35_cut10f0 242.9 s, r35_cut1150*) gruen mit dem gemergten master.
 486 (N1) -> 531: + master (Spuren A/B/E/K/L) + unit_r35_entladen_n2beleg + integration_r35_entladen_f/g/h/i/j.
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-04)
+
+Abnahmebericht `I_abnahme_2.md`: Punkt 1 erfuellt, Punkt 2 teilweise. Mangel 1: die Lampen-Grafik des
+Generator-Bedienfelds ROOM11F0/11F1 Cut 10 (`platform/pc/src/panel_lampen_pc.c`, `static int s_zustand`
+1 = geladen, `static uint16_t s_zelle[2][32*32]`, dekodiert aus `shared_assets/RE2/LAMPE2130.TIM` =
+ROOM2130.RDT[0x0E398, +4256)) bleibt nach Raumwechsel und Tod geladen; `alles_entladen` ruft
+panel_lampen_pc nicht, der Zensus hat kein Fach. Die gdb-Laeufe der Abnahme g6c (Tod in 11F0 ->
+NEW GAME 1240: s_zustand=1 an "spielende", "spielstart", im neuen Spiel) und g6d (Tuer AOT 0 11F0 ->
+11E0: s_zustand=1 bei Bild 60) sind die Messung vorher und werden NICHT wiederholt.
+Stand zu Beginn: HEAD 32239df5, Baum sauber.
+
+### N3 Arbeitsplan
+1. Messung vorher mit der Messschiene (neues Fach `lampe`, Vorbedingung in 11F0 Cut 10 = 1).
+2. RE-Beleg: die Lampen-Kunst ist RDT-Bestand (RE2 ROOM2130, ESP-TIM der RDT) -> Lebensdauer = Raum.
+3. Freigabe in `alles_entladen` (Schritt 13), Fach im Zensus, Pin k (Tod + Tuer), Gegenprobe.
+4. Code-Zensus erneut: weitere raumgebundene Caches ohne Freigabe (seit dem Merge)?
