@@ -1717,6 +1717,94 @@ static void re2c_corpse(re15_actor_t *e)
     }
 }
 
+/* ================================ SKRIPT-PERCH (state 4) =====================================
+ * Runde 35 Spur M (Fenster-Ereignis ROOM1120, Vorbild RE2 room1090 sub09/sub15). Dossier
+ * analysis/befunde_runde35/M_cut11c0_fenster.md §2.5. Selbst disassembliert (EMOVL21_S0.BIN):
+ *   0x801034DC  Navigator 0x8004a808(e, 0x800cfc30, 0, 0) (Port: nicht portiert, s. Datei-Kopf),
+ *               dann Tabelle 0x80104A64[+0x5]: [0] 0x80103554  [1] 0x8010363c  [2] 0x801037f8.
+ * +0x1D4 = SKRIPT-BEFEHLSWORT: RE2-Member 0x17 (Setter 0x80055cb0, Tabelle 0x80011228[23] =
+ * 0x80055d8c `sh a2,468(a0)`), gesetzt von room1090 sub15 `34 17 04 00` (@sub15+0x001E ff.).
+ * Der Port fuehrt +0x1D4 der Kraehe als eigene Tabelle (das Aktorfeld +0x1d4 traegt in re15_actor_t
+ * schon RE1.5-Bedeutungen: hurt_clip/crow_mode/dog_dist). */
+static uint16_t s_re2c_1d4[RE15_ACTOR_MAX];
+static uint8_t  s_re2c_zwang[RE15_ACTOR_MAX];
+
+void re15_re2crow_befehl(int slot, uint16_t wert)          /* Member_set(0x17, wert) */
+{ if (slot > 0 && slot < RE15_ACTOR_MAX) s_re2c_1d4[slot] = wert; }
+uint16_t re15_re2crow_befehl_lesen(int slot)
+{ return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_re2c_1d4[slot] : 0; }
+/* PORT-WAHL: die Skript-Kraehe laeuft in State 0/4 IMMER ueber dieses RE2-Brain — State 4 gibt es
+ * nur im RE2-Kraehenmodul (im RE1.5-Modul ist State 4 der eigene FLIGHT-2). */
+void re15_re2crow_zwang(int slot, int an)
+{ if (slot > 0 && slot < RE15_ACTOR_MAX) s_re2c_zwang[slot] = an ? 1 : 0; }
+int re15_re2crow_zwang_ist(int slot)
+{ return (slot > 0 && slot < RE15_ACTOR_MAX) ? s_re2c_zwang[slot] : 0; }
+
+/* Sub 2 = 0x801037f8: versteckt hinter dem Fenster, auf +0x1D4&4 sieben Bilder Durchflug. */
+static void re2c_perch2(re15_actor_t *e, int slot)
+{
+    switch (e->sub_state_2) {                              /* `lbu v1,6(s0)` @0x80103814 */
+    case 0:                                                /* P0 @0x80103854-74 */
+        e->sub_state_2 = 1;                                /* `addiu v0,zero,1 / sb v0,6` @0x80103858-5c */
+        e->crow_hide = 1;                                  /* word0 |= 0x80000 (`lui a0,0x8 / ori 0x8 / or`
+                                                            * @0x80103834/54/68): 0x80000 = NICHT ZEICHNEN
+                                                            * (RE2-Zeichner `(*p & 0x80000) == 0`) */
+        e->flags |= 0x8u;                                  /* word0 |= 0x8 = Wandpass aus (FUN_8003567c
+                                                            * @0x80035694 `andi v0,v1,0x8` / `bne`) */
+        e->re2z_f10e |= 0x4000u;                           /* `ori v1,v1,0x4000 / sh v1,270` @0x8010386c-74 */
+        /* fallthrough: P1 im selben Aufruf (P0 endet ohne Sprung vor @0x80103878) */
+    case 1:                                                /* P1 @0x80103878 */
+        if (!(s_re2c_1d4[slot] & 0x4u)) break;             /* `andi v0,v0,0x4 / beq` @0x80103880-84 */
+        re2c_clip(e, 4, 0);                                /* Anim-Wort 0x00070004 (`lui v0,0x7 / ori 0x4 /
+                                                            * sw v0,332`) @0x80103888-94 */
+        e->speed_h = 300;                                  /* `addiu v0,zero,300 / sh v0,324` @0x80103898-9c */
+        e->re2d_air219 = 6;                                /* `addiu v0,zero,6 / sb v0,537` @0x801038a0-a4 */
+        e->sub_state_2 = 2;                                /* `sb v0(=2),6` @0x801038a8-ac */
+        s_re2c_1d4[slot] = 0;                              /* `sh zero,468` @0x801038bc */
+        e->re2d_vy146 = 0;                                 /* `sh zero,326` @0x801038c0 */
+        e->crow_hide = 0;                                  /* word0 &= 0xfff7ffff (`lui a0,0xfff7 / ori
+                                                            * 0xffff / and`) @0x80103890/b8/c4: sichtbar */
+        e->re2z_f10e &= (uint16_t)~0x4000u;                /* `andi v1,v1,0xbfff` @0x801038c8 */
+        break;
+    case 2:                                                /* P2 @0x801038d8 */
+        re2c_move3d(e);                                    /* 0x80015350(e,0,0) @0x801038dc */
+        (void)re2c_adv(e);                                 /* 0x8002959c(.., 512) @0x801038f0 */
+        e->speed_h = (int16_t)(e->speed_h - 10);           /* `addiu v0,v0,-10 / sh v0,324` @0x80103900-04 */
+        {
+            uint8_t alt = e->re2d_air219;
+            e->re2d_air219 = (uint8_t)(alt - 1);           /* `addiu v0,v1,255 / sb v0,537` @0x80103908/10 */
+            if (alt != 0) break;                           /* `bne v1,zero` @0x8010390c */
+        }
+        e->flags &= (uint8_t)~0x8u;                        /* `addiu v1,zero,-9 / and` @0x80103924-28: Wandpass an */
+        s_re2c_zwang[slot] = 0;
+        if (re15_ai_re2_for_type(e->type))
+            re2c_state(e, 1, 4);                           /* 0x80104078(e,1,4) @0x80103914-2c = ACTIVE Sub 4 */
+        else {
+            /* PORT-WAHL (RE1.5-Flavor): State 1 Sub 4 ist im RE1.5-Kraehenhirn ein anderer Zustand
+             * (Dive-Launch). Das RE1.5-Hirn uebernimmt deshalb ab seinem INIT (State 0). */
+            e->state = 0; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        }
+        break;
+    default: break;
+    }
+}
+
+static void re2c_state4(re15_actor_t *e, re15_actor_t *pl)
+{
+    int slot = (int)(e - g_actors);
+    (void)pl;
+    switch (e->sub_state_1) {                              /* Tabelle 0x80104A64[+0x5] @0x80103514-30 */
+    case 2: re2c_perch2(e, slot); break;
+    default:
+        /* Sub 0 (0x80103554) / Sub 1 (0x8010363c): RE2-raumfeste Wegpunkte (-12500,-12852) /
+         * (-3919,-12288) @0x801036fc-704 / @0x8010376c-770 — kein RE1.5-Spawn erreicht sie
+         * (OFFEN im Dossier M §OFFEN). Defensive wie bisher: ACTIVE-Idle. */
+        s_re2c_zwang[slot] = 0;
+        re2c_state(e, 1, 0);
+        break;
+    }
+}
+
 /* ================================ INIT (state 0) ============================================ */
 static void re2c_init(re15_actor_t *e)
 {
@@ -1789,6 +1877,20 @@ static void re2c_init(re15_actor_t *e)
      * Port = Victim-Map keyt auf Typ 0x21 (enemy_ai_common.c re15_victim_clip_map). */
     e->root_prev_kf = -1;
     e->sca_mask = 4;
+    /* Runde 35 Spur M: +0x1D4..+0x1DA-Block-Clear (@0x8010036C-78) fuer das Befehlswort, und der
+     * State-4-Zweig selbst (@0x80100428-74): +0x10E & 0x4000 -> +4 := 4, +0x10E &= 0xbfff,
+     * +0x22A |= 1, +5 := +0x10E & 0xf. Der sofortige `jalr` auf 0x80104908[4] (@0x80100480-88)
+     * steht im Root (case 0). */
+    {
+        int slot = (int)(e - g_actors);
+        if (slot > 0 && slot < RE15_ACTOR_MAX) s_re2c_1d4[slot] = 0;
+    }
+    if (e->re2z_f10e & 0x4000u) {                          /* `andi v1,v1,0x4000 / beq` @0x80100430-34 */
+        e->state = 4;                                      /* `addiu v0,zero,4 / sb v0,4` @0x80100444-48 */
+        e->re2z_f10e &= (uint16_t)~0x4000u;                /* `andi v0,v0,0xbfff / sh` @0x80100454-58 */
+        e->re2c_flags22a |= 0x1u;                          /* `ori v1,v1,0x1 / sh v1,554` @0x80100460-64 */
+        e->sub_state_1 = (uint8_t)(e->re2z_f10e & 0xfu);   /* `lbu 270 / andi 0xf / sb v0,5` @0x8010045c-74 */
+    }
 }
 
 /* ================================ root tick ================================================= */
@@ -1834,7 +1936,9 @@ int re15_re2crow_tick(int slot)
     int32_t ox = e->x, oz = e->z;
 
     switch (e->state) {                                    /* Tabelle @0x80104908 */
-    case 0: re2c_init(e); break;                           /* 0x801002FC */
+    case 0: re2c_init(e);                                  /* 0x801002FC */
+        if (e->state == 4) re2c_state4(e, pl);             /* `jalr` 0x80104908[4] @0x80100480-88 (Runde 35 M) */
+        break;
     case 1: {                                              /* ACTIVE 0x801004E4 */
         /* Nav-Reseed 1/32 @0x80100508-540: +0x220=rand&0x7f, +0x21F=0x8004AA50() (MAPPING 0) */
         if (e->re2d_rel220 == 0 && (re15_re2_rand() & 0x1fu) == 0u) {
@@ -1943,9 +2047,10 @@ int re15_re2crow_tick(int slot)
         if (e->state == 1) e->hit_react &= (uint8_t)~1u;   /* andi 0xfe @0x80105fa4 */
         break;
     case 4:
-        /* SKRIPT-PERCH 0x801034DC (Tabelle @0x80104A64) — OFFEN: kein RE1.5-Spawn erreicht
-         * State 4 (+0x10E&0x4000 ohne Produzent, s. INIT-Kommentar). Defensive: ACTIVE-Idle. */
-        re2c_state(e, 1, 0);
+        /* SKRIPT-PERCH 0x801034DC (Tabelle @0x80104A64). Runde 35 Spur M: Sub 2 portiert
+         * (Fensterkraehe ROOM1120, Produzent = re15_fenster1120 setzt +0x10E = 0x4002 wie RE2
+         * room1090 sub09 `44 00 00 21 02 40 ...`). Sub 0/1 weiter defensiv (re2c_state4). */
+        re2c_state4(e, pl);
         break;
     case 7:                                                /* CORPSE 0x80103950 */
         re2c_corpse(e);
@@ -1993,7 +2098,8 @@ int re15_re2crow_tick(int slot)
      *     FUN_8003567c param_1[0x24] -> FUN_8004c1bc; Writer sh a1,144 @0x80104734) —
      *     S1-Fix 2026-09-05: vorher Port-erfundene 200; jetzt 0 (Spawn) / 350 (Release/
      *     Abort/dec13-Fail) / 100 (Harass nah) / 50 / 10 wie die Original-Callsites. */
-    if (g_room_rdt_ok) {
+    if (g_room_rdt_ok && !(e->flags & 0x8u)) {            /* word0&8 -> kein Wandpass (FUN_8003567c
+                                                            * @0x80035694-98, Runde 35 Spur M) */
         int32_t nx = e->x, nz = e->z;
         re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
                                        (int32_t)e->crow_vol90, e->y, 4u);

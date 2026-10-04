@@ -50,6 +50,7 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_leiche.h"     /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
+#include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
 
 scd_vm_t g_scd;
 
@@ -620,6 +621,7 @@ int scd_event_fire(uint8_t event_id)
      * Port-Programm "Ada-Ruf", solange (9,65)=0 und (3,0xBB)=0; sonst NULL = ausgelieferter sub.
      * Integration: A (Ereignis 2) und D (Ereignis 13) sind disjunkt, die Reihenfolge ist gleichgueltig. */
     if (!pc) pc = re15_adaruf_ereignis((uint16_t)g_current_room_id, event_id);
+    if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {

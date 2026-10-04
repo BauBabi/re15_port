@@ -38,6 +38,7 @@
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
+#include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -6765,7 +6766,9 @@ static void re15_crow_ai_tick(int slot)
      * Pause-Gate: der RE2-Root prueft 0x800CFBDC&0x20000000 OHNE die RE1.5-grid&0x20-Ausnahme
      * (@0x80100148-158) -> hier s_ai_paused pur. Der RE1.5-Default darunter bleibt byte-identisch. */
     /* MIXED (2026-08-23): typ-bezogen — 0x21 != 0x20, die Kraehe bleibt dort auf RE1.5. */
-    if (re15_ai_re2_for_type(e->type) && e->type == 0x21) {
+    /* Runde 35 Spur M: die Fensterkraehe ROOM1120 (RE2-State 4) laeuft in jedem Flavor ueber das
+     * RE2-Brain, solange sie im Skript steht (re15_fenster1120.h, re15_re2crow_zwang). */
+    if ((re15_ai_re2_for_type(e->type) || re15_re2crow_zwang_ist(slot)) && e->type == 0x21) {
         if (!s_ai_paused) {
             e->ai_dist = (uint32_t)re15_enemy_player_dist(e, player);
             re15_re2crow_tick(slot);

@@ -65,6 +65,11 @@ static size_t         s_esp_size;
 static int32_t        s_bank_off[64];
 static int32_t        s_tab_off[64];
 static uint8_t        s_registry[16];
+/* Runde 35 Spur M: die RAUM-ESP (Registry-Plaetze 8..15, re2fx_register_raum). Ihre Offsets tragen
+ * RE2FX_RAUM_MARKE, damit EIN Offsetraum fuer beide Dateien gilt (esp_at loest auf). */
+static const uint8_t *s_raum;
+static size_t         s_raum_size;
+#define RE2FX_RAUM_MARKE 0x40000000u   /* Bit 30: s_bank_off/s_tab_off bleiben als int32 >= 0 (Gueltigkeitstest "< 0") */
 
 static unsigned s_op_unbekannt;
 static unsigned s_op_zaehler[96];
@@ -115,6 +120,11 @@ unsigned re2fx_op_zaehler(int op) { return (op >= 0 && op < 96) ? s_op_zaehler[o
 static const uint8_t k_null[32] = {0};             /* groesster Leser: 24-Byte-Step */
 static const uint8_t *esp_at(uint32_t off, uint32_t n)
 {
+    if (off & RE2FX_RAUM_MARKE) {                      /* Runde 35 Spur M: Raum-ESP */
+        off &= ~RE2FX_RAUM_MARKE;
+        if (!s_raum || n > sizeof k_null || (size_t)off + n > s_raum_size) { s_op_unbekannt++; return k_null; }
+        return s_raum + off;
+    }
     if (!s_esp || n > sizeof k_null || (size_t)off + n > s_esp_size) { s_op_unbekannt++; return k_null; }
     return s_esp + off;
 }
@@ -151,6 +161,7 @@ int re2fx_register_core(const uint8_t *raw, size_t size)
     memset(s_registry, 0xFF, sizeof s_registry);
     for (int k = 0; k < 64; k++) { s_bank_off[k] = -1; s_tab_off[k] = -1; }
     s_esp = NULL; s_esp_size = 0;
+    s_raum = NULL; s_raum_size = 0;                    /* Runde 35 Spur M: Raum-ESP mit geloescht */
     re2fx_reset();
     if (!raw || size < 12) return -1;
     /* a1 = Basis + align4(Groesse) - 4 = LETZTES Wort (@0x8001bb54-80: `srl 2 / sll 2`, `andi 3`
@@ -850,6 +861,12 @@ static void op_48(void)
     wr32(b, 0x68, alt68);
 }
 
+/* Runde 35 Spur M (Glassplitter der RE2-Raum-ESP room1090), definiert am Dateiende. */
+static void op_5(void);
+static void op_16(void);
+static void op_39(void);
+static void op_84(void);
+
 static void op_rufen(unsigned op)
 {
     if (op < 96) s_op_zaehler[op]++;
@@ -857,12 +874,15 @@ static void op_rufen(unsigned op)
     case 0:  op_0();  break;    /* 0x8001dc28 */
     case 1:  op_1();  break;    /* 0x8001dc30 */
     case 2:  op_2();  break;    /* 0x8001dd2c */
+    case 5:  op_5();  break;    /* 0x8001df90 (Runde 35 Spur M) */
+    case 16: op_16(); break;    /* 0x8001f128 (Runde 35 Spur M) */
     case 19: op_19(); break;    /* 0x8001f2c0 */
     case 25: op_25(); break;    /* 0x8001fa08 */
     case 27: op_27(); break;    /* 0x8001fa9c */
     case 28: op_28(); break;    /* 0x8001fbd0 */
     case 29: op_29(); break;    /* 0x8001fd5c */
     case 30: op_30(); break;    /* 0x8001fecc */
+    case 39: op_39(); break;    /* 0x800206fc (Runde 35 Spur M) */
     case 40: op_40(); break;    /* 0x80020758 */
     case 46: op_46(); break;    /* 0x80020b60 */
     case 48: op_48(); break;    /* 0x80020f3c */
@@ -870,6 +890,7 @@ static void op_rufen(unsigned op)
     case 50: op_50(); break;    /* 0x80021970 */
     case 58: op_58(); break;    /* 0x80022254 */
     case 64: op_64(); break;    /* 0x80022728 */
+    case 84: op_84(); break;    /* 0x80025348 (Runde 35 Spur M) */
     default: s_op_unbekannt++; break;   /* von keinem Aufschlag-Skript erreicht (bau_d.md §3) */
     }
 }
@@ -1055,4 +1076,108 @@ void re2fx_aufschlag(int re2_art, const int32_t q[3], int16_t gier)
     wr16(b, 0x2A, rd16(b, 0x2A) | 0x20u);              /* @0x8001f1f4-204 */
     b[0x20] = anim_eintrag(b, 18)[2];                  /* @0x8001f208-220 */
     b[0x0B] = 15;                                      /* Brand/Saeure `addiu a2,zero,15` @0x8001f1d4 / `sb a2,11` @0x8001f284 */
+}
+
+/* =============================================================================================
+ * Runde 35 Spur M — RAUM-ESP + die Ops der Glassplitter (RE2 Leon room1090, Fenster-Ereignis
+ * sub15). Dossier analysis/befunde_runde35/M_cut11c0_fenster.md §2.3. Alle Adressen RE2 PSX.EXE.
+ * ============================================================================================= */
+
+/* Raum-Registrierung = FUN_8001bca0 mit Registry-Basis 8 (die Raum-Haelfte der 16er-Id-Liste
+ * 0x800EAE48; der Kern belegt 0..7, re2fx_register_core). Gleiche Kopf-/Tabellenrechnung wie dort
+ * (@0x8001bccc-0x8001bd20). Offsets tragen RE2FX_RAUM_MARKE (Port: zwei Dateien, EIN Offsetraum). */
+int re2fx_register_raum(const uint8_t *raw, size_t size)
+{
+    for (int k = 0; k < 8; k++) {                      /* alte Raum-Banken austragen */
+        uint8_t id = s_registry[8 + k];
+        if (id != 0xFF && id < 64 && s_bank_off[id] >= 0 && ((uint32_t)s_bank_off[id] & RE2FX_RAUM_MARKE)) {
+            s_bank_off[id] = -1; s_tab_off[id] = -1;
+        }
+        s_registry[8 + k] = 0xFF;
+    }
+    s_raum = NULL; s_raum_size = 0;
+    if (!raw || size < 12) return -1;
+    size_t al = (size + 3u) & ~(size_t)3u;
+    int32_t ende = (int32_t)al - 4;                    /* LETZTES Wort, wie @0x8001bb54-80 */
+    int n = 0;
+    for (;;) {
+        uint8_t id = raw[n];
+        s_registry[8 + n] = id;                        /* `sb v1,0(v0)` @0x8001bcdc */
+        if (id == 0xFF) break;                         /* @0x8001bcd8 */
+        if (ende - 4 * n < 0) return -2;
+        uint32_t off = rd32(raw, ende - 4 * n);        /* `lw v1,0(t2)` @0x8001bce0, rueckwaerts */
+        if ((size_t)off + 8 > size || id >= 64) return -3;
+        uint32_t w = rd32(raw, (int)off);
+        uint32_t tab = off + ((w & 0xffffu) * 2u + (w >> 16) + 2u) * 4u;   /* @0x8001bd00-20 */
+        if ((size_t)tab + 16 > size) return -4;
+        if (s_bank_off[id] >= 0 && !((uint32_t)s_bank_off[id] & RE2FX_RAUM_MARKE)) return -6;  /* Kern-Id belegt */
+        s_bank_off[id] = (int32_t)(off | RE2FX_RAUM_MARKE);
+        s_tab_off[id]  = (int32_t)(tab | RE2FX_RAUM_MARKE);
+        n++;
+        if (n >= 8) break;                             /* `sltiu v0,t0,0x8` */
+    }
+    if (n == 0) return -5;
+    s_raum = raw; s_raum_size = size;
+    return 0;
+}
+
+int re2fx_bank_registriert(unsigned bank)
+{
+    return bank < 64 && s_bank_off[bank] >= 0 && s_tab_off[bank] >= 0;
+}
+
+/* Op 16 = FUN_8001f128: Boden unter dem Platz merken, dann Fall-Op 5. */
+static void op_16(void)
+{
+    uint8_t *b = cur();
+    int32_t p[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };   /* `lh v0,52/54/56` @0x8001f13c-54 */
+    int kontakt = 0;
+    int32_t f = re2fx_boden(p, 2, 0x2000u, 0, &kontakt);   /* a1 2 / a2 8192 / a3 0, `jal 0x8004fba0` @0x8001f15c */
+    b = cur();
+    wr32(b, 0x14, (uint32_t)f);                        /* `sw v0,20(v1)` @0x8001f174 */
+    b[0x00] = b[0x0B];                                 /* `lbu a0,11 / sb a0,0` @0x8001f170/78 */
+    b[0x01] = 5;                                       /* `addiu v0,zero,5 / sb v0,1` @0x8001f184/8c */
+}
+
+/* Op 5 = FUN_8001df90: Fall bis Wasser/Boden. */
+static void op_5(void)
+{
+    uint8_t *b = cur();
+    int32_t w = wasser(rds16(b, 0x34), rds16(b, 0x38));    /* `jal 0x800527b4` @0x8001dfa8 */
+    if (w != 0 && w < (int32_t)rds16(b, 0x36)) {       /* `beq a0,zero` @0x8001dfb4 / `slt` @0x8001dfd0 */
+        int16_t ofs[4] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38), rds16(b, 0x3A) };   /* a3 = Platz+52 @0x8001dfe4 */
+        (void)re2fx_spawn(0x1A010000u | rd16(b, 0x3A), 0, re2fx_einheitsmatrix, ofs);   /* `lui a0,0x1a01 / or` @0x8001dfec-f4, `jal 0x8001cbe8` @0x8001dff0 */
+        b = cur();
+        b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0);    /* @0x8001e004-14 */
+        if (b[0x1C] == 29) op_rufen(b[0x02]);          /* `addiu v0,zero,29 / bne` @0x8001e01c-20, Op[step+2] */
+        return;
+    }
+    int32_t p[3] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38) };   /* sp+16/20/24 @0x8001e040-64 */
+    int kontakt = 0;
+    int32_t f = re2fx_boden(p, 2, 0x2000u, 0, &kontakt);   /* `jal 0x8004fba0` @0x8001e060 */
+    b = cur();
+    if (f < p[1]) { op_rufen(b[0x02]); return; }      /* `slt v1,a0,v1 / beq` @0x8001e070-74 -> Op[+2] */
+    if (kontakt == 0) { wr32(b, 0x14, (uint32_t)f); return; }   /* 0x800DCBC8 == 0 -> `sw a0,20(v0)` @0x8001e108 */
+    if (f == (int32_t)rd32(b, 0x14)) op_rufen(b[0x03]);   /* `beq a0,v0` @0x8001e0bc -> Op[+3] @0x8001e0d0 */
+    else                              op_rufen(b[0x02]);   /* @0x8001e0c4 -> Op[+2] */
+}
+
+/* Op 39 = FUN_800206fc: Aufprall — Op A 84, Glitzern Bank 0x14 an der Lage. */
+static void op_39(void)
+{
+    uint8_t *b = cur();
+    b[0x00] = 84;                                      /* `addiu v0,zero,84 / sb v0,0` @0x80020700/14 */
+    b[0x01] = 0;                                       /* `sb zero,1(v0)` @0x80020724 */
+    int16_t ofs[4] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38), rds16(b, 0x3A) };   /* a3 = Platz+52 @0x8002073c */
+    (void)re2fx_spawn(0x14000000u | rd16(b, 0x3A), 0, re2fx_einheitsmatrix, ofs);   /* `lui a0,0x1400` @0x8002070c, `jal 0x8001cbe8` @0x80020740 */
+}
+
+/* Op 84 = FUN_80025348: Platz frei + zweites Glitzern Bank 0x14. */
+static void op_84(void)
+{
+    uint8_t *b = cur();
+    b[0x01] = 0; b[0x00] = 0;                          /* @0x80025360-64 */
+    wr16(b, 0x18, 0);                                  /* `sh zero,24(v0)` @0x80025378 */
+    int16_t ofs[4] = { rds16(b, 0x34), rds16(b, 0x36), rds16(b, 0x38), rds16(b, 0x3A) };   /* a3 = Platz+52 @0x80025380 */
+    (void)re2fx_spawn(0x14000000u | rd16(b, 0x3A), 0, re2fx_einheitsmatrix, ofs);   /* `lui a0,0x1400` @0x8002534c, `jal 0x8001cbe8` @0x80025384 */
 }
