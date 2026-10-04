@@ -17,18 +17,19 @@ typedef struct {
     uint16_t raum;                 /* Leon-Variante; Elza = raum | 1 */
     uint8_t  item, menge, bit, slot, obj, floor;
     int32_t  x, y, z;
-    int16_t  rot_y;
+    int16_t  rot_x, rot_y, rot_z;   /* Pool +0x68/+0x6A/+0x6C (scd_vm.c Member 3..5) */
     int32_t  rect_x, rect_z, rect_w, rect_d;
 } gegenstand_t;
 
 static const gegenstand_t k_gegenstaende[] = {
     { 0x1010, RE15_R35I_KARTE_ITEM, RE15_IRONS_KARTE_MENGE, RE15_R35I_KARTE_BIT,
       RE15_R35I_KARTE_SLOT, RE15_R35I_KARTE_OBJ, 0,
-      RE15_R35I_KARTE_X, RE15_R35I_KARTE_Y, RE15_R35I_KARTE_Z, RE15_R35I_KARTE_ROT_Y,
+      RE15_R35I_KARTE_X, RE15_R35I_KARTE_Y, RE15_R35I_KARTE_Z,
+      RE15_R35I_KARTE_ROT_X, RE15_R35I_KARTE_ROT_Y, RE15_R35I_KARTE_ROT_Z,
       RE15_R35I_KARTE_RECT_X, RE15_R35I_KARTE_RECT_Z, RE15_R35I_KARTE_RECT_W, RE15_R35I_KARTE_RECT_D },
     { 0x1090, RE15_R35I_SCHROT_ITEM, RE15_R35I_SCHROT_MENGE, RE15_R35I_SCHROT_BIT,
       RE15_R35I_SCHROT_SLOT, RE15_R35I_SCHROT_OBJ, RE15_R35I_SCHROT_FLOOR,
-      RE15_R35I_SCHROT_X, RE15_R35I_SCHROT_Y, RE15_R35I_SCHROT_Z, RE15_R35I_SCHROT_ROT_Y,
+      RE15_R35I_SCHROT_X, RE15_R35I_SCHROT_Y, RE15_R35I_SCHROT_Z, 0, RE15_R35I_SCHROT_ROT_Y, 0,
       RE15_R35I_SCHROT_RECT_X, RE15_R35I_SCHROT_RECT_Z, RE15_R35I_SCHROT_RECT_W, RE15_R35I_SCHROT_RECT_D },
 };
 #define N_GEGENSTAENDE ((int)(sizeof k_gegenstaende / sizeof k_gegenstaende[0]))
@@ -65,9 +66,9 @@ void re15_inhalt_r35_install(uint16_t room_id)
         g_scd.props[i].x = g->x;
         g_scd.props[i].y = g->y;
         g_scd.props[i].z = g->z;
-        g_scd.props[i].rot_x = 0;
+        g_scd.props[i].rot_x = g->rot_x;
         g_scd.props[i].rot_y = g->rot_y;
-        g_scd.props[i].rot_z = 0;
+        g_scd.props[i].rot_z = g->rot_z;
         g_scd.props[i].vel_x = g_scd.props[i].vel_y = g_scd.props[i].vel_z = 0;
         g_scd.props[i].vel_ry = 0;
         g_scd.props[i].flags  = RE15_R35I_PROP_FLAGS;      /* 0x000A | 1 @0x80040998         */

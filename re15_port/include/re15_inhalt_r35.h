@@ -54,18 +54,32 @@
  *   (Unterkante -2400) und Brett B; Bretthoehen gemessen in Cut 4 (frontale Sicht, Helligkeit je
  *   Hoehe auf der Regalfront x = 3600): Brett B Vorderkante -1725..-1650 -> Oberseite -1725.
  *   Strahl trifft y = -1725 bei (3796,-1725,-1033) = Kartenmitte, vorwaerts Cut 7 (273,96;164,46).
- *   Keycard-Modell: Ursprung an einer Ecke, Mitte = Ursprung + (-80,5 ; 0 ; 135) bei rot 0
- *   -> Ursprung (3877,-1725,-1168). rot 0 = lange Kante (Modell-Z, 270) laengs der Regalachse z
- *   (Zelle 3500 lang) — PORT-WAHL. */
-#define RE15_R35I_KARTE_X          3877
+ *   Keycard-Modell: Quad (0,0,0) (0,0,270) (-161,0,270) (-161,0,0), Mitte = Ursprung + (-80,5;0;135).
+ * NACHBESSERUNG 1 (Mangel M2 der Abnahme 0): Cut 7 ist im Spiel NICHT erreichbar (RVD 1010: keine
+ *   Zone nach Cut 7, Zone 14 ist nur der Bereichskopf; Tueren nur Cut 0/4; kein Cut_chg im SCD). Am
+ *   Regal ist Cut 4 aktiv — dort war die FLACH liegende Karte ein 10x2-Pixel-Strich (11,2 px^2,
+ *   Kamera nur 14 Grad ueber der Brettebene). Neu: die Karte STEHT auf ihrer kurzen Kante auf
+ *   Brett B, 15,9 Grad nach hinten geneigt, Sichtseite (Modell -y) zur Raumecke zwischen Cut 4 und
+ *   Cut 7 gedreht (Normale (-0,694 ; -0,273 ; -0,667)); Mitte (3719 ; -1855 ; -1299) liegt weiter
+ *   GENAU auf dem Markenstrahl von Cut 7 (Projektion (274,00 ; 164,48)); beide unteren Ecken auf
+ *   y -1725, oberste Ecke y -1985 (Brett A Unterkante -2400). Gesucht mit scratchpad
+ *   f_n1/karte_opt.py (Kamera = VIEW-Matrix + H 208 wie projiziere(), Drehung = pc_prop_rot_q12,
+ *   Welt = m * v wie re15_camera_compose_view_bone): groesste Cut-4-Flaeche bei Cut-7-Flaeche >= der
+ *   alten und Stand auf einer Kante. Ergebnis Cut 4 47,7 px^2 (vorher 11,2), Cut 7 126,2 px^2
+ *   (vorher 54,1); Masken ueber allen Ecken in Cut 4/7: 0 (probe_r34n_e_dokumente sicht).
+ *   FORM belegt: Obj_model_set traegt drei Euler-Winkel (Pool +0x68/+0x6A/+0x6C, scd_vm.c
+ *   Member 3..5); Werte PORT-WAHL. */
+#define RE15_R35I_KARTE_X          3748
 #define RE15_R35I_KARTE_Y          (-1725)
-#define RE15_R35I_KARTE_Z          (-1168)
-#define RE15_R35I_KARTE_ROT_Y      0
-/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 mittig auf der Kartenmitte (3796,-1033) (haeufigste
+#define RE15_R35I_KARTE_Z          (-1383)
+#define RE15_R35I_KARTE_ROT_X      896
+#define RE15_R35I_KARTE_ROT_Y      128
+#define RE15_R35I_KARTE_ROT_Z      3584
+/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 mittig auf der Kartenmitte (3719,-1299) (haeufigste
  * Groesse, 69 von 162 Item_aot_set, groessen_zensus.py). Ueberschneidet keinen Original-Satz von
  * 1010/1011 (naechster: Slot 6 Nachricht x 2300..3300 z -400..600). */
-#define RE15_R35I_KARTE_RECT_X     3296
-#define RE15_R35I_KARTE_RECT_Z     (-1533)
+#define RE15_R35I_KARTE_RECT_X     3219
+#define RE15_R35I_KARTE_RECT_Z     (-1799)
 #define RE15_R35I_KARTE_RECT_W     1000
 #define RE15_R35I_KARTE_RECT_D     1000
 

@@ -6,6 +6,9 @@
  *   Z  die Aufhebe-Zone (Slot, Item, Menge, Bit, Etage) — in beiden Varianten (1010/1011, 1090/1091)
  *   G  Bank-9-Bit gesetzt -> weder Prop noch Zone
  *   M  die Projektion der Lage im Cut des Nutzerbilds liegt in der roten Marke (re15_camera_build_view)
+ *   V  (Nachbesserung 1, M2) die Memory Card ist in Cut 4 — der Kamera, die im Spiel am Regal aktiv
+ *      ist — eine zugewandte Flaeche >= 40 px^2 (vorher flach 11,2 px^2) und in Cut 7 >= 100 px^2;
+ *      Ecken ueber die Prop-Drehung des Ports (pc_prop_rot_q12, main.c:670-694, Welt = m * v)
  *   D  ein echter Aktionsdruck (re15_aot_scan, 620 voraus) vom Standort vor dem Regal / Luefter
  *      oeffnet das Aufnahme-Modal mit dem Item; "Ja" -> Bit gesetzt, Item im Inventar
  *   E  das Modell (eingebackene MD1/TIM) parst
@@ -29,6 +32,7 @@
 #include "re15_files.h"
 #include "re15_md1.h"
 #include "re15_tim.h"
+#include "re15_skeleton.h"     /* re15_sin_q12 / re15_cos_q12 (Prop-Drehung) */
 
 extern re15_aot_state_t g_aot;
 extern uint8_t          g_aot_action_pressed;
@@ -111,9 +115,26 @@ static double proj(const re15_camera_view_t *v, double x, double y, double z, do
     return vz;
 }
 
+/* Nachbildung von pc_prop_rot_q12 (platform/pc/main.c:670-694), Welt = m * v. */
+static void prop_rot(int rx, int ry, int rz, int32_t m[9])
+{
+    int32_t sx = re15_sin_q12(rx), cx = re15_cos_q12(rx);
+    int32_t sy = re15_sin_q12(ry), cy = re15_cos_q12(ry);
+    int32_t sz = re15_sin_q12(rz), cz = re15_cos_q12(rz);
+    m[0] = (int32_t)(((int64_t)cz * cy) >> 12);
+    m[1] = -(int32_t)(((int64_t)sz * cy) >> 12);
+    m[2] = sy;
+    m[3] = (int32_t)((((int64_t)sz * cx << 12) + (int64_t)cz * sy * sx) >> 24);
+    m[4] = (int32_t)((((int64_t)cz * cx << 12) - (int64_t)sz * sy * sx) >> 24);
+    m[5] = -(int32_t)(((int64_t)cy * sx) >> 12);
+    m[6] = (int32_t)((((int64_t)sz * sx << 12) - (int64_t)cz * sy * cx) >> 24);
+    m[7] = (int32_t)((((int64_t)cz * sx << 12) + (int64_t)sz * sy * cx) >> 24);
+    m[8] = (int32_t)(((int64_t)cy * cx) >> 12);
+}
+
 typedef struct {
     const char *name; uint16_t raum; uint8_t item, menge, bit, slot, obj, floor;
-    int32_t x, y, z; int16_t rot;
+    int32_t x, y, z; int16_t rotx, rot, rotz;
     int32_t rx, rz, rw, rd;
     int32_t mitte_x, mitte_y, mitte_z;     /* sichtbare Mitte des Gegenstands (Dossier) */
     int cut, mx0, mx1, my0, my1;           /* rote Marke im Nutzerbild (marken.py) */
@@ -122,13 +143,14 @@ typedef struct {
 
 /* Soll unabhaengig vom Kopf aufgeschrieben (der Riegel soll eine Kopf-Aenderung bemerken). */
 static const soll_t k_soll[2] = {
-    /* Memory Card: Regal ROOM1010 Cut 7, Marke x 269..278 y 158..170; Kartenmitte (3796,-1725,-1033);
-     * Stand vor dem Regal (x < 3600 = Regalfront), Blick +x (yaw 0) -> 620 voraus x 3920 */
-    { "Memory Card", 0x1010, 0x21, 3, 80, 10, 4, 0, 3877, -1725, -1168, 0, 3296, -1533, 1000, 1000,
-      3796, -1725, -1033, 7, 269, 278, 158, 170, 3300, 0, -1033, 0 },
+    /* Memory Card: Regal ROOM1010 Cut 7, Marke x 269..278 y 158..170; steht auf Brett B (Nachbesserung 1),
+     * Kartenmitte (3719,-1855,-1299); Stand vor dem Regal (x < 3600 = Regalfront), Blick +x (yaw 0)
+     * -> 620 voraus x 3920 */
+    { "Memory Card", 0x1010, 0x21, 3, 80, 10, 4, 0, 3748, -1725, -1383, 896, 128, 3584, 3219, -1799, 1000, 1000,
+      3719, -1855, -1299, 7, 269, 278, 158, 170, 3300, 0, -1033, 0 },
     /* Shotgun Shells: rechter Luefter ROOM1090 Cut 2, Marke x 98..117 y 127..146; Kistenmitte
      * (-2408,-10932,-15500); Stand vor dem Luefter (z > -15397), Blick -z (yaw 1024), Boden -9000 */
-    { "Shotgun Shells", 0x1090, 0x16, 7, 81, 4, 4, 5, -2408, -10761, -15500, 0, -2908, -16000, 1000, 1000,
+    { "Shotgun Shells", 0x1090, 0x16, 7, 81, 4, 4, 5, -2408, -10761, -15500, 0, 0, 0, -2908, -16000, 1000, 1000,
       -2408, -10932, -15500, 2, 98, 117, 127, 146, -2408, -9000, -14900, 1024 },
 };
 
@@ -148,9 +170,11 @@ int main(void)
             int p = slot_von(s->obj);
             int pok = p >= 0 && g_scd.props[p].x == s->x && g_scd.props[p].y == s->y &&
                       g_scd.props[p].z == s->z && g_scd.props[p].rot_y == s->rot &&
+                      g_scd.props[p].rot_x == s->rotx && g_scd.props[p].rot_z == s->rotz &&
                       g_scd.props[p].flags == 0x000B && g_scd.props[p].parent_obj == -1;
             CHECK(pok,
-                  "P ROOM%04X obj %d bei (%d,%d,%d) rot %d, Flags 0x000B, Welt", rr->id, s->obj, s->x, s->y, s->z, s->rot);
+                  "P ROOM%04X obj %d bei (%d,%d,%d) rot (%d,%d,%d), Flags 0x000B, Welt", rr->id, s->obj, s->x, s->y, s->z,
+                  s->rotx, s->rot, s->rotz);
             const re15_aot_t *a = &g_aot.slots[s->slot];
             CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[s->slot].item_type == s->item &&
                   g_aot.item_params[s->slot].amount == s->menge && a->sce_flags == 0x31 && a->band == s->floor &&
@@ -170,6 +194,32 @@ int main(void)
         CHECK(sx >= s->mx0 && sx <= s->mx1 + 1 && sy >= s->my0 && sy <= s->my1 + 1,
               "M ROOM%04X Cut %d: Mitte (%.2f ; %.2f) in der Marke x %d..%d y %d..%d",
               s->raum, s->cut, sx, sy, s->mx0, s->mx1, s->my0, s->my1);
+        /* V (nur Memory Card): Flaeche in Cut 4 (im Spiel aktiv) und Cut 7, zugewandte Seite */
+        if (s->item == 0x21) {
+            static const int qv[4][3] = { {0,0,0}, {0,0,270}, {-161,0,270}, {-161,0,0} };  /* ROOM1110 @0x0013D8 */
+            int32_t m[9]; prop_rot(s->rotx, s->rot, s->rotz, m);
+            double nn[3] = { -m[1] / 4096.0, -m[4] / 4096.0, -m[7] / 4096.0 };   /* m * (0,-1,0) */
+            const int cuts[2] = { 4, 7 }; const double minf[2] = { 40.0, 100.0 };
+            for (int ci = 0; ci < 2; ci++) {
+                re15_camera_view_t cv;
+                double px[4], py[4], fl = 0, zug = -1;
+                if (re15_camera_build_view(&r[0].rdt.cuts[cuts[ci]], &cv) == 0) {
+                    for (int e = 0; e < 4; e++) {
+                        double wx = s->x + (m[0]*qv[e][0] + m[1]*qv[e][1] + m[2]*qv[e][2]) / 4096.0;
+                        double wy = s->y + (m[3]*qv[e][0] + m[4]*qv[e][1] + m[5]*qv[e][2]) / 4096.0;
+                        double wz = s->z + (m[6]*qv[e][0] + m[7]*qv[e][1] + m[8]*qv[e][2]) / 4096.0;
+                        proj(&cv, wx, wy, wz, &px[e], &py[e]);
+                    }
+                    for (int e = 0; e < 4; e++) fl += px[e] * py[(e + 1) % 4] - px[(e + 1) % 4] * py[e];
+                    fl = fabs(fl) / 2.0;
+                    /* Blickrichtung: Kamera-z-Achse in Weltkoordinaten = Zeile 2 der Sichtmatrix */
+                    zug = -(nn[0] * cv.rot[6] + nn[1] * cv.rot[7] + nn[2] * cv.rot[8]) / 4096.0;
+                }
+                CHECK(fl >= minf[ci] && zug > 0.5,
+                      "V ROOM1010 Cut %d: Memory Card %.1f px^2 (>= %.0f), Sichtseite zugewandt %.2f", cuts[ci], fl,
+                      minf[ci], zug);
+            }
+        }
         /* D: echter Aktionsdruck in beiden Varianten */
         for (int v = 0; v < 2; v++) {
             raum_t *rr = &r[k * 2 + v];
