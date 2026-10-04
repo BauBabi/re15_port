@@ -37,7 +37,9 @@
  *           waehrend des Umklappens — rot_z-Folge aus Speed_set/Add_speed/Add_aspeed (@0x80040f14/f40/fd4).
  *   takt    Punkt 4 (M1): zwei Gorillas ab der Original-Lage Bild F195 (GDB-Einzelbild-Spur) -> Treffer-Bilder/-Abstaende.
  *   griff   Punkt 4/5 (M1): verbundener Rear-up-Griff ab derselben Lage (e1 sub 15 in F250, wie das GDB-Experiment im
- *           Original): Pin F254, Leon steht bis Bild 0xb, erste Wurf-Platzierung F266, 0 HP.
+ *           Original): Pin F254, Leon steht bis Bild 0xb, erste Wurf-Platzierung F266, 0 HP. Nachbesserung 3: Ritt des
+ *           Greifers + Schub auf e2 (M2), Klemmen-Iteration ab T290 / Empfindlichkeit / Zerlegung (M1), Lauf "Weg 2" mit
+ *           Original-Startzustand T253: Anker, Kette T268-T290, Freigabe, Bahn T291-T414 und Ruhe bitgleich zum Original.
  *   npcband M4: NPC-Wandklemme mit +0x82 statt y — je Raum (10D0, 1050, 1090, 10B1, 1170, 11B0, 4001, 4031, 6030, 6031)
  *           600 Bilder: laeuft ein NPC, dessen +0x82 != band_from_y(y) ist? (10D0/1050 gepinnt: nein).
  *   schrot  M3: Schrot-Treffer (Spur 1, Zeile 7) als 3. Treffer ab der Original-Lage F195 (GDB-Experiment): Exit-Sub 7,
