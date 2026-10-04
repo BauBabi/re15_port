@@ -319,3 +319,55 @@ Stand vor der Nachbesserung: HEAD b19c39fa (= 5c1f0af4 + Abnahmebericht). Plan:
   JEDE weitere Pruefung in `gate_urteil_selbsttest` eine eigene Kontrolle; dazu eine Streich-Messung aller
   Urteils-Pruefzeilen in apk_pruefen.sh gegen die Kette.
 - M3: README + Dossier auf den gemessenen Umfang.
+
+### M1 - Lockerungen der Urteils-Muster blieben unbemerkt (Punkt 3)
+**Ursache (Code gelesen, b19c39fa):** `_Mutierer.visit_Constant` in `release/gate_urteil.py` brach bei jeder
+Nicht-Ganzzahl ab (`if isinstance(node.value, bool) or not isinstance(node.value, int): return node`) - Regex-Muster,
+MARKE-Tabelle und Pruef-Literale wurden NIE veraendert, und `_faelle()` hatte keine Faelle mit gelockerter Zeilenform
+(Schlusszeile ohne Klammerteil, Baumzeile ohne " Dateien", TORSE-Zeile ohne "sha256 gleich"). Kein RE-Original
+(reine Port-Infrastruktur); Beleg = Quelltextzeilen + Messung.
+
+**Messung vorher** (Werkzeug `N_android_belege/werkzeug/urteil_aenderungen.py`: je simulierte Aenderung EINE
+Textaenderung in einer Kopie, dann `--selbsttest`; A* = woertlich die der Abnahme, C* = eigene Lockerungen, D* =
+Aenderungen ausserhalb jeder Mutations-Art): A5, A6, A11 NICHT bemerkt (`URTEIL-SELBSTTEST-OK: 119/119 Faelle,
+257/260 Mutanten`) - die Abnahme ist reproduziert; dazu C1 (Innere Proben ohne Klammerteil), C2 (`\s+` -> `\s*`),
+C3/C4/C7 (Wort -> `.*`), C10 (Text hinter der Paket-Baumzeile), C11 (`\b` weg), C15 (Zahl -> `.*`), C18 (Leerzeichen
+weg) ebenfalls nicht. Beleg `N_android_belege/nb1_urteil_aenderungen_vorher.txt` (Lauf gegen das Urteil @b19c39fa).
+
+**Aenderung (release/gate_urteil.py):**
+- Mutator: JEDE Zeichenkette ausserhalb der Meldungstexte bekommt einen Mutanten (+ ein fremdes Zeichen) - MARKE-Werte
+  und -Schluessel, Modusnamen, "[FEHLER]"/"ABBRUCH"/"Traceback"/"ok", "\r"/"\n"/"" in replace/split, die
+  Tuerarchiv-Labels. Meldungstext = NUR das zweite Argument von `ende()` und `genau_eine()`; die zwei Meldungen, die
+  vorher ausserhalb lagen (`tuer_soll` gab einen Text zurueck, `zusatz = " = unzip-Zaehlung - 1"`), stehen jetzt im
+  Grund von `ende(0, ...)` (gleiches Urteil, nur der Grundtext wird anders zusammengesetzt).
+- Jedes Regex-Muster (erstes Argument von re.fullmatch/re.match/re.search/genau_eine, auch links von `%`) bekommt
+  die Lockerungen R0-R6 (`_regex_lockerungen`, Stuecke auf oberster Ebene aus `_regex_stuecke`):
+  R0 Text hinter dem Muster erlaubt (nur fullmatch, nicht bei Endung `.*`/`(.*)`), R1 Rest ab Stueck k -> `.*`
+  (= Art von A5/A6/A11), R2 Wort -> `.*`, R3 `\d+` -> `.*`, R4 `\s+` -> `\s*`, R5 Einzelzeichen weg, R6 Alternative
+  einer Gruppe weg.
+- Zwei Vergleiche als Zahlen statt als Text: `tuer_soll` `int(g1) != int(g2)` und Fallzeile `int(rc) != int(soll)`.
+  Grund: als Text verglichen liess sich `\d+` -> `.*` in g1 bzw. rc nicht von einem Fall unterscheiden (gleicher Text
+  nur aus Ziffern), mit int() endet die Lockerung bei einer Nicht-Zahl in einer Ausnahme (erkannt). Das Gate druckt
+  diese Felder mit `%d` (apk_asset_gate.py `_tuer_zeilen_drucken` :777 und Fallzeile :3441) - fuer jede echte Ausgabe
+  dasselbe Urteil.
+- Faelle 119 -> 243 (`_faelle_muster` + 5 in `_faelle`): je gelesene Zeile (a) letztes Zeichen weg / falscher Schluss,
+  (b) je Literal-Wort ein anderes, (c) je Zahlfeld 'x', (d) ohne Pflicht-Zwischenraum, (e) Text hinter der Zeile,
+  (f) Pflicht-Leerzeichen weg; dazu der echte Wortlaut des Gates bei Abweichung `TORSE.VBS ... sha256 NICHT
+  gleich/nicht geprueft` (apk_asset_gate.py pruefen() :1395-1397), je Alternative der Urteilszeilen eine fremde Zeile,
+  "[FEHLER]" tiefer eingerueckt. Alle mit festem Soll (meist 2), zwei mit Soll 0 ("== SELBSTTEST-OKAY/-HINWEIS: x =="
+  ist keine Urteilszeile - so ist die Regel `-(OK|FEHLER|ABWEICHUNG)\b` festgehalten).
+- AEQUIVALENT +1 (jetzt 4): `\[(ok|FEHLER)\]` ohne FEHLER - eine [FEHLER]-Fallzeile endet schon in der Schleife davor
+  (`"[FEHLER]" in z`) mit 2.
+- Laufzeit: der Selbsttest parst je Mutant nur den Quelltext von urteil() neu statt deepcopy des AST und zerlegt die
+  Quelle einmal (vorher get_source_segment ueber die ganze Datei je Mutant): 785 Mutanten in ~4 s (vorher 260 in 5 s).
+- Ausgabe: neue Zeile `Mutanten je Operator: ...` (Zaehllauf; muss die Mutantenzahl ergeben, sonst FEHLER).
+
+**Messung nachher:** `URTEIL-SELBSTTEST-OK: 243/243 Faelle, 781/785 Mutanten erkannt, 4 als gleichwertig begruendet`,
+`Mutanten je Operator: Aufruf 28, BoolOp 10, Regex R0 13, Regex R1 261, Regex R2 49, Regex R3 30, Regex R4 9, Regex R5
+115, Regex R6 11, Vergleich 39, Zahl 118, Zeichenkette 37, if-Bedingung 56, not 9`. Simulierte Aenderungen: im
+Zwischenstand (nach R0-R5, vor R6) 29 von 32, D1 (`"[FEHLER]" in z` -> `startswith("   [FEHLER]")`) und D5
+(Alternative ABWEICHUNG aus dem Urteilszeilen-Muster) NICHT (Beleg `nb1_urteil_aenderungen_zwischenstand.txt`) - dafuer
+der Fall "[FEHLER] tiefer eingerueckt", die Alternativen-Faelle und Operator R6. **Endstand 32 von 32 bemerkt**, darunter
+A5 (3 Faelle falsch), A6 (3), A11 (4) - Beleg `nb1_urteil_aenderungen_nachher.txt`. Pin `release/gate_urteil.sha256` =
+`c8fed5cab7016a9d699b0b1dc90dc1532e7f1356ec0219a801d911cbc0a25ba8`, `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` =
+243/781/4 (apk_pruefen.sh).

@@ -1,0 +1,87 @@
+A2   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 113 qb: Baum mit 0 Dateien                               Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+A3   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 088 apk: SUMME Bytes 4095                                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+A4   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 2 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 077 st: Fallzeile mit Zusatz (fehlende Meldung)          Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 118: Regex R1 Rest ab Stueck 19 '\\)(.*)' -> .*: r" \[(ok|FEHLER)
+A5   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 3 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 124 st/M: Schluss ohne Klammerteil (A5)                  Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+         [FEHLER] 125 st/M: Schluss, Klammer nicht geschlossen             Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+A6   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 3 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 212 qb/M: Baumzeile '2 Dateie' (A6)                      Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+         [FEHLER] 213 qb/M: Baumzeile '2 Bytes'                            Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+A7   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 2 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 054 [FEHLER] im Lauf                                     Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] 060 [FEHLER] tiefer eingerueckt im Lauf                  Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+A8   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 052 Traceback im Lauf                                    Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+A11  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 243 Faellen falsch, 2 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 187 apk/M: TORSE.VBS 'sha256 NICHT gleich/nicht geprueft Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] 188 apk/M: TORSE.VBS 'sha256 gleic' (letztes Zeichen weg Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+C1   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 3 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 131 st/M: Innere Proben, Klammer nicht geschlossen       Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+         [FEHLER] 132 st/M: Innere Proben ohne Klammerteil                 Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+C2   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 166 apk/M: SUMME ohne Zwischenraum nach SUMME            Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 1 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR 
+C3   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 173 apk/M: Manifest Wort 'Zeilen' anders                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 135: Regex R5 Zeichen 8 ' ' weg: r" Manifest:\s+(\d+).* / (\d+) B
+C4   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 2 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 180 apk/M: RE2/DOOR Wort 'sha256' anders                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] 181 apk/M: RE2/DOOR Wort 'gleich' anders                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+C7   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 3 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 196 apk/M: Tuer-Soll 'Engine-Tabelle(' (Zwischenraum weg Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] 201 apk/M: Tuer-Soll Wort 'Engine' anders                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+C9   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 110 qb: Schluss anderer Wortlaut                         Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+         [FEHLER] 208 qb/M: Schluss Wort 'Tuer' anders                     Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+C10  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 238 pk/M: Baumzeile '2   2 X'                            Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+C11  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 143 M: Zeile '== SELBSTTEST-OKAY: x ==' ist keine Urteil Urteil 2 (soll 0)  ende: 2 Urteilszeilen statt genau einer - keine Aussage
+C12  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 1 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 053 ABBRUCH im Lauf                                      Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 104: Zeichenkette + U+00A7: "ABBRUCH:"
+C14  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 2 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 149 apk/M: Schluss Wort 'bytegleich' anders              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 129: Regex R5 Zeichen 9 ' ' weg: r"(\d+) Dateien in (\d+) Baeumen
+C15  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 2 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 194 apk/M: TORSE.VBS Quelle x B                          Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 143: Regex R5 Zeichen 9 ' ' weg: r" TORSE\.VBS: Quelle .* B, APK 
+C16  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 116 pk: Schluss anderer Wortlaut                         Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+         [FEHLER] 216 pk/M: Schluss 'nichts zusaetzlic'                    Urteil 0 (soll 2)  ende: APK-ASSET-GATE-PAKET-OK: 12 Dateien in 2 Baeumen, je Baum Quelle = gleich, 2 Tu
+C17  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 15 von 243 Faellen falsch, 566 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 001 selbsttest gut                                       Urteil 2 (soll 0)  ende: Schlusszeile ohne 'n/n Faelle' - keine Aussage
+         [FEHLER] 002 selbsttest gut, CRLF                                 Urteil 2 (soll 0)  ende: Schlusszeile ohne 'n/n Faelle' - keine Aussage
+C18  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 1 Mutanten ueberlebt, 1 veraltete Eintraege ==
+         [FEHLER] 242 st/M: Fallzeile '02Fall' (ohne Leerzeichen nach der  Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 118: Regex R6 Gruppe bei 5: Alternative 'FEHLER' weg: r" \[(ok|FE
+C19  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 9 von 243 Faellen falsch, 339 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 004 apk gut                                              Urteil 2 (soll 0)  ende: Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage
+         [FEHLER] 005 apk gut, unzip-Zaehlung = n + 1                      Urteil 2 (soll 0)  ende: Tuer-Soll-Zeilen fehlen oder melden nicht g/g - keine Aussage
+C20  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 243 Faellen falsch, 81 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 007 paket gut                                            Urteil 2 (soll 0)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-PAK-OK: ... ==', sondern '== APK-ASSE
+         [FEHLER] 012 paket gut, 1 Datei in 1 Baum                         Urteil 2 (soll 0)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-PAK-OK: ... ==', sondern '== APK-ASSE
+D1   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 060 [FEHLER] tiefer eingerueckt im Lauf                  Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+D2   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 2 von 243 Faellen falsch, 4 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 108 apk: Tuer-Soll 29/30                                 Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+         [FEHLER] 109 apk: Tuer-Soll 0/0                                   Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+D5   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 057 zwei Urteilszeilen (ABWEICHUNG davor)                Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+D6   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 5 von 243 Faellen falsch, 6 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 229 st/M: Innere Proben '(...) X'                        Urteil 0 (soll 2)  ende: SELBSTTEST-OK 5/5, jede Fallzeile [ok] mit rc = soll, innere Proben 3/3 (Mindes
+         [FEHLER] 231 apk/M: SUMME mit Zusatz                              Urteil 0 (soll 2)  ende: APK-ASSET-GATE-OK: 12 Dateien, Quelle = APK = gleich = Manifestzeilen, RE2/DOOR
+D7   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 235 qb/M: Schluss 'erfuellt X'                           Urteil 0 (soll 2)  ende: APK-ASSET-GATE-QUELLBAUM-OK: 12 Dateien in 2 Baeumen (Summe der Baumzeilen), 2 
+D8   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 1 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 002 selbsttest gut, CRLF                                 Urteil 2 (soll 0)  ende: Zeile 'Innere Proben: m/m' 0-mal statt genau einmal - keine Aussage
+D9   BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 0 von 243 Faellen falsch, 3 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 88: Zahl 2 -> 3: 2
+         [FEHLER] Mutant UEBERLEBT (kein Fall erkennt ihn - Fall ergaenzen oder in AEQUIVALENT begruenden): Zeile 88: Aufruf weg: ende(2, "KEINE Ausgabe - das Gate lief nicht (lee
+D10  BEMERKT     rc=1  == URTEIL-SELBSTTEST-FEHLER: 4 von 243 Faellen falsch, 0 Mutanten ueberlebt, 0 veraltete Eintraege ==
+         [FEHLER] 024 selbsttest ABWEICHUNG, Rueckgabe 1                   Urteil 2 (soll 1)  ende: letzte Zeile ist nicht '== SELBSTTEST-OK: ... ==', sondern '== SELBSTTEST-ABWEI
+         [FEHLER] 030 apk ABWEICHUNG, Rueckgabe 1                          Urteil 2 (soll 1)  ende: letzte Zeile ist nicht '== APK-ASSET-GATE-OK: ... ==', sondern '== APK-ASSET-GA
+SUMME: 32 von 32 bemerkt
