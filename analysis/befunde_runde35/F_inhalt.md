@@ -430,6 +430,33 @@ der Aufnahmeflaeche (z -10800..-5900). Meshes: room2130 obj 0 = room20B0 obj 8 (
 room5040 obj 1 = room5060 obj 2, room3060 obj 7 / room4040 obj 2 (md5 werden beim Schneiden
 gemessen, siehe Umsetzung).
 
+**Umsetzung M1** (Commits 280b4251, 5914d130):
+- `tools/re2_sicherung/re2_scd_walk.py`: OVERRIDE Switch 0x13 = 4 (@0x80054040); neue Funktion
+  `rdt_blocks(raw)` (RDT+0x48/+0x4C, Belegkette im Docstring).
+- `tools/re2_sicherung/re2_item_worldmodels.py`: `scan_rdt()` liest die Bloecke aus dem RDT (letzter
+  Block der Tabelle endet am letzten Evt_end — dahinter liegen andere RDT-Daten, z.B. ROOM1020 sub19
+  ein MD1-Kopf; Gegenprobe: 87 dieser Enden = Laenge der scd-Datei, 3 Dateien sind noch kuerzer);
+  `lageplaene()` findet die Aufnahmen nach dem Muster oben (Frage-Nachricht mit "map" und "take/file",
+  Ja-Zweig Ck(0x0B,0x1F,0), Work_set(4,n), Pos_set/Member_set, Merkbits), sucht alle Obj_model_set(n)
+  und schneidet Modell-Slot n; `md1_trim()` kuerzt das MD1 auf seine eigene Laenge (rdt_props schnitt
+  room5060 Slot 2 mit 14188 statt 236 Byte -> falsche md5; Gegenprobe gegen die obj/modelNN.md1:
+  596 von 597 gleich lang); Weltmodell nur bei md1 < 0x20 (@0x80054D98) — room2130 sub00 md1 0xE1
+  stand vorher als "Fehler" im Bericht, ist aber "kein Weltmodell".
+- Ablage `extracted_re2_items/`: `modelle/karte00_735097e1.*` (zusammengerollter Plan, police
+  station map + police B1 map), `karte01_99dae133.*` (Planbogen, sewage disposal map + sewer map),
+  `karte02_5cdae635.*` (Planbogen, factory map x2) je .md1/.tim/.obj/_a.png/_b.png; `karten.png`
+  = 3 Card Keys + 3 Lageplaene; `uebersicht.html` Abschnitt "Karten (Card Keys + Lageplaene)";
+  `katalog.csv` 3 neue Zeilen (karte = ja, Platzierung + Aufnahme-Block mit RDT-Offset);
+  neu `lageplaene.csv` (alle 7 Aufnahmen inkl. room6120 "KEIN Weltobjekt", Merkbits, Weg-Record).
+
+**Messung nachher M1** (`_bericht.txt`): 7 Lageplan-Aufnahmen, 6 mit Weltobjekt, 3 Meshes —
+die md5 sind genau die der Abnahme (735097e1 / 99dae133 / 5cdae635). Nebenbefund durch die
+RDT-Bloecke: **312 Item_aot_set-Platzierungen statt 269** (242 mit Weltmodell statt 206), 87 Item-
+Meshes, SCD 2568 Bloecke ohne Desync (vorher 45 desynchron bei 94,55 % der Datei-Bytes). Verbleibend
+3 Platzierungen mit md1 >= nOmodel (room2080 sub00 Id 13 md1 4 bei nOmodel 4, roomG040 sub00 2x) —
+dort kommt der Pool-Slot nicht aus der Raumtabelle (OFFEN, wie zuvor; vorher 8 Faelle).
+`karten.png` angesehen: Rolle (28 Dreiecke), zwei flache Planboegen mit Grundriss-Textur.
+
 ### M2 (P4) — Memory Card in der erreichbaren Kamera (Cut 4) sichtbar
 Korrektur einer falschen Dossier-Aussage: OFFEN 3 oben sagt "das Nutzerbild beweist aber, dass Cut 7
 im Spiel erscheint". Das ist NICHT gemessen und falsch begruendet: add_card.bmp (wie Shotgun.bmp)
