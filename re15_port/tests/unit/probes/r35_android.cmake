@@ -14,7 +14,12 @@
 #                               Urteils-Selbsttest (Faelle + Mutanten), Gate-Selbsttest ueber gate_laufen, Negativ-
 #                               Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes Urteil, je
 #                               Pruefzeile des bash-Urteils eine Attrappe N10-N21 - Nachbesserung 1) muessen
-#                               ROT werden (r35_android/test_r35_android_pruefkette.sh; nur wenn bash da ist)
+#                               ROT werden (r35_android/test_r35_android_pruefkette.sh; nur wenn bash da ist);
+#                               Nachbesserung 2: die Attrappen-Kontrollen stehen in r35_android/urteil_kontrollen.sh
+#                               (beide Seiten jeder Vergleichsstelle, set -euo pipefail)
+#   unit_r35_android_bash_mutanten  Punkt 3, Nachbesserung 2 (Abnahme 1, M3): jede Ein-Stellen-Aenderung des bash-Urteils
+#                               in release/apk_pruefen.sh (Operatoren A-H, r35_android/bash_urteil_mutanten.py) muss eine
+#                               Kontrolle aus urteil_kontrollen.sh rot machen - wie der Mutanten-Selbsttest des Python-Urteils
 add_executable(test_r35_android_abgleich
     test_r35_android_abgleich.c
     ${CMAKE_SOURCE_DIR}/platform/android/jni/asset_abgleich.c)
@@ -66,6 +71,11 @@ if(R35_ANDROID_BASH AND EXISTS "${_r35n_release}/apk_pruefen.sh" AND EXISTS "${_
                  COMMAND "${R35_ANDROID_BASH}" "${CMAKE_CURRENT_SOURCE_DIR}/r35_android/test_r35_android_pruefkette.sh"
                          "${_r35n_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r35_android_pruefkette")
         set_tests_properties(unit_r35_android_pruefkette PROPERTIES TIMEOUT 900)
+        # Nachbesserung 2 (Abnahme 1, M3): Mutanten des bash-Urteils gegen urteil_kontrollen.sh (Attrappen)
+        add_test(NAME unit_r35_android_bash_mutanten
+                 COMMAND "${R35_ANDROID_BASH}" "${CMAKE_CURRENT_SOURCE_DIR}/r35_android/test_r35_android_bash_mutanten.sh"
+                         "${_r35n_repo}" "${CMAKE_CURRENT_BINARY_DIR}/r35_android_bash_mutanten" 10)
+        set_tests_properties(unit_r35_android_bash_mutanten PROPERTIES TIMEOUT 1500)
     else()
         message(STATUS "r35_android: kein Python >= 3.8 ueber release/python_finden.sh - unit_r35_android_pruefkette nicht registriert")
     endif()
