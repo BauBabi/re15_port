@@ -1264,3 +1264,6 @@ Das Fenster-Capture lieferte in dieser Sitzung weisse Bilder -> RE15_FRAMEDUMP.
 * Lauf 1 `bash re15_port/tools/local_build.sh all` (Code-Stand 5a82f1ed): 481/482, einzig `integration_boot_bg_pin`
   Timeout 120 s (Fenster-Haken, bekannt flatternd unter Last der parallelen Baeume, VERTRAG 1.5). Einzeln nachgefahren:
   2x Passed (17,96 s / 17,97 s). Volllauf wiederholt (Ergebnis unten).
+* Lauf 2 `local_build.sh all`: 481/482, einzig `integration_r34n_e_dokumente_bild` (Teil d3_ohne: "kein Framedump von Bild
+  100 (exit=Access…)" = die exe startete nicht, Raum 1000/1050-Dokumente, kein Bezug zu ROOM1210); einzeln 2x Passed
+  (92,99 s / 93,74 s). Lauf 1 hatte diesen Test gruen, Lauf 2 boot_bg_pin gruen. Volllauf 3 folgt.
