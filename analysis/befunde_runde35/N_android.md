@@ -808,3 +808,14 @@ N28 ohne unzip-Zaehlung -> 0. Die U_luegt-Attrappe (N8) bekam die 6-Zahlen-Schlu
 Gate-Selbsttest `261/261 ... 148/148`, P2 echter Quellbaum `3629 Dateien in 5 Baeumen`, N1-N9 wie bisher, N26a-N28 wie
 oben, `urteil_kontrollen.sh KONTROLLEN: 102 ok, 0 FALSCH` (Beleg `N_android_belege/nb3_kette_nachher.txt`; 8 min 11 s,
 weil der Mutantenlauf parallel lief).
+
+### Nachbesserung 3 - Messung bash-Mutanten (test_r35_android_bash_mutanten.sh, 10 parallel)
+Beleg `N_android_belege/nb3_bash_mutanten.txt`: Kontrolle `KONTROLLEN: 102 ok, 0 FALSCH`; `Mutanten je Operator: A 36, B 18,
+C 34, D 112, E 24, F 9, G 7, H 2, I 86`; **`== BASH-URTEIL-MUTANTEN-OK: 328 Mutanten, 325 erkannt, 3 als gleichwertig
+begruendet ==`** - schon im ERSTEN Lauf kein Ueberlebender (die drei Gleichwertigen sind die bekannten $?-Faelle). 782 s,
+weil die echte Kette 8 min parallel lief. Toeter der 86 I-Mutanten: N25a 36, N8c 16, N25d 13, N10 6, N26 3, N25c 2, D4/D9/
+D16/D21 je 2, N25b 1, N19m 1 - die neuen Uebergabe-Kontrollen toeten 55 der 86. Der Einzel-Mutant zu J13
+(`"${GATE_APK_EINTRAEGE:-}" -> ""`) faellt durch N25b, die zu J11/J12/Y6 durch N25a.
+Querpruefung: `urteil()` in gate_urteil.py ist zeichengleich mit 876a9f90 (ast-Segment verglichen, 7812 Zeichen) - die
+Nachbesserung aendert kein Urteil, nur Faelle/Stoerungen/Schlusszeile; Selbsttest gleich unter Python 3.9.0 und 3.14.7
+(`777/777 Faelle, 887/894 Mutanten erkannt, 7 als gleichwertig begruendet, 102 Stoerungen begruendet ungeprueft`).
