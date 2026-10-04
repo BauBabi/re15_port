@@ -714,3 +714,19 @@ Plan (nur Punkt 3) - je Mangel die ANGEFRAGTE Abhilfe UND ein Mechanismus, der d
   H10 (Fallzeile weg), H17 (gegenlaeufiges Paar) und H18 (Zusatzzahl) sind dann je eine Stoerung.
 - Danach die H-/J-Reihe der Abnahme 2 selbst nachfahren (Selbsttest, Kontrollen, Mutanten, echte Kette mit Neu-Pin
   und nachgezogener Mindestzahl wie G4b) - alle muessen rot werden.
+
+### Nachbesserung 3 - Messung vorher (HEAD 876a9f90, Python 3.10.11)
+- Python-Urteil: Werkzeug `werkzeug/nb3_urteil_aenderungen.py` (H1-H22 der Abnahme 2 so woertlich wie ihre Tabelle,
+  dazu 10 eigene X1-X10; je eine Kopie + `--selbsttest`, dazu die FOLGE an einer festen Gate-Ausgabe). Beleg
+  `N_android_belege/nb3_urteil_aenderungen_vorher.txt`: K0 `280/280 Faelle, 887/894`, **29 von 32 bemerkt - NICHT: H10,
+  H17, H18**, genau die Liste der Abnahme. Folge: H10 "5/5 Faelle" mit Fallzeilen 01..04 -> Variante 0
+  (`SELBSTTEST-OK 5/5 ...`); H17 "PSX 9 10" + "synchro 3 2" -> Variante 0 (`... je Baum Quelle = gleich ...`); H18
+  "PSX 10 9 10" -> Variante 0. Die Abnahme ist reproduziert.
+- bash-Urteil: Werkzeug `werkzeug/nb3_bash_aenderungen.py` (J6/J9/J10/J11/J12/J13 der Abnahme 2 + 8 eigene Y1-Y8 an
+  derselben Schnittstelle; je Kopie von release/ ALLE 87 Kontrollen ohne --schnell). Beleg
+  `nb3_bash_aenderungen_vorher.txt`: J0 `KONTROLLEN: 87 ok, 0 FALSCH`; **J6, J9, J10, J11, J12, J13 NICHT bemerkt**
+  (reproduziert) - und von den eigenen ebenso NICHT: **Y2** (Gate bekommt "$@" nicht), **Y3** (gate_laufen: Modus fest),
+  **Y5** (Urteil liest `$log.urteil` statt der Gate-Ausgabe), **Y6** (MIN_FAELLE/MIN_INNEN vertauscht), **Y7** (unzip-
+  Zaehlung aus falschem Variablennamen). Bemerkt nur Y1/Y4 (Rueckgabe 0 statt $rc -> P5) und Y8 (Modus fest apk -> P4/P6).
+  Die Luecke ist also nicht nur J11-J13, sondern die GANZE Uebergabe (Argumente an Urteil und Gate): keine Attrappe liest
+  argv[2], argv[4..6] oder die Gate-Argumente.
