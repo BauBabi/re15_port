@@ -1782,3 +1782,45 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
 - [ ] M1 Disasm 0x8011c3d4  - [ ] M1 Umsetzung  - [ ] M1 Riegel  - [ ] M1 exe nachher
 - [ ] M2 Mechanismus Port  - [ ] M2 Original  - [ ] M2 Entscheidung/Umsetzung
 - [ ] M3  - [ ] M4  - [ ] M5  - [ ] Suite
+
+### M1 — Messung vorher (aus Abnahme 5, nicht wiederholt)
+- Abnahme 5 Lauf w3y (Tuerweg, Item 3, Feuerskript): `F2806 S2 1/8/1 mo=21` (B[8], Clip 0x15), `F2813 PL hp 46 -> -554`,
+  Leon (-9975,-10422); **F2814 PL (-327,483)** = rund 14000 Einheiten in einem Bild; danach `mo=1` bis F2884, dann `mo=16`
+  (Wurf-P3), Bild F2820 ohne Leon. Port-Ursache gelesen: B[8] ruft `re15_player_victim_devour` (Variante 1 nach der
+  Zombie-Regel `sub_state_1 >= 6`), `re15_player_victim_tick` faehrt fuer JEDEN 0x27-Greifer den Wurf (0x8011c118):
+  Start Bild 0x0b, Platzierung `re15_victim_place` Clip 1 relativ zu `pl->anchor_*` — den Anker setzt nur der Rear-up
+  (`re15_affen_pin_anker`), im Finisher ist er alt -> Sprung.
+
+### M1 — RE-Beleg: der cmd-6-Hook des Gorillas (STAGE1.BIN, selbst disassembliert mit re15_disasm.py)
+- B[8]-Treffer (@0x80119198-0x80119204): `addiu v0,v0,-600` / `sh` player.hp @0x801191a8-ac; `sh 0x12c,476(a1)` +0x1dc
+  @0x801191b0-b8; `jal 0x800453d0` @0x801191b4; **`ori v0,zero,0x6` / `sw v0,-13736(at)` = Wort aca58 := 6 @0x801191c4-cc**
+  (aca59 = aca5a = aca5b = 0); acbfc := Gorilla @0x801191dc; acbcc := Gorilla+0x178 @0x801191e0-ec; acbd0 := +0x17c
+  @0x801191f0/@0x80119204; +0x93 |= 1 @0x801191d0-fc. Kein Anker, keine Lage, kein Yaw.
+- Hook 0x8011c3d4 (Registrierung @0x8011eab8-c8, Abnahme 5): `lbu v0,-13735(v0)` = aca59 @0x8011c3d8, `sll 2`,
+  Tabelle **0x80121580** (`addiu at,at,5504` @0x8011c3ec), `jalr v0` @0x8011c3fc. Tabelle (`table 0x80121580`):
+  [0] = [1] = **0x8011c414** (aca59 = 0 aus dem Wort-Store oben -> 0x8011c414).
+- **0x8011c414 (ganzer Koerper bis `jr ra` @0x8011c590)**, Zweig nach aca5a (`lbu v1,0(a1)` a1 = 0x800aca5a @0x8011c424):
+  - **aca5a = 0** (@0x8011c460-d4): aca5a := 1 (`sb` @0x8011c464); **+0x93 := 7** (`ori v0,zero,0x7` / `sb v0,-13597(at)`
+    = 0x800acae3 @0x8011c468-70); **Clip acae8 := 0** (@0x8011c490), **Bild acae9 := 0** (@0x8011c498); **Blut**
+    `jal 0x80019700` (a0 = 0x2000 @0x8011c440, a1 = Spieler+0x6a @0x8011c49c, a2 = [acbdc]+0x5a0 = Spieler-Part 8
+    @0x8011c4a4, a3 = 0x80121570 = Null-Versatz, 16 Byte 0) @0x8011c4a0; **Se_on(0x04030001, Spieler+0x34)** = CORE 3
+    (`lui a0,0x403` / `ori a0,a0,0x1` @0x8011c4a8/b4, `jal 0x80045024` @0x8011c4b8); aca3c |= 0xc0 @0x8011c4c0-d4. Danach
+    faellt der Code in den Zweig aca5a = 1 (kein Sprung zwischen @0x8011c4d4 und @0x8011c4d8) — Eintritt und erstes
+    Bild im selben Aufruf.
+  - **aca5a = 1** (@0x8011c4d8-554): `lbu acae9` / `ori v0,zero,0x3c` / `bne` @0x8011c4dc-e4 -> bei Bild 0x3c:
+    **FUN_80045630(2,0,0)** @0x8011c4f0 (Koerperfall auf dem Boden-Material) und **noch einmal Blut** wie oben @0x8011c518;
+    dann **`jal 0x8001f314`(acbcc, acbd0, a2 = 0, a3 = 0x200)** @0x8011c534 = Bild der OPFER-Bank des Gorillas vorwaerts
+    (Rate 0x200); **aca5a += Rueckgabe** (`addu v1,v1,v0` / `sb` @0x8011c548-50) -> Clip-Ende fuehrt zu aca5a = 2.
+  - **aca5a = 2** (@0x8011c55c-84): Wundstempel `jal 0x80037edc` (0,0xa) @0x8011c55c, (5,0x32) @0x8011c568, (7,0x32)
+    @0x8011c574; **Wort aca58 := 7** (`ori v0,zero,0x7` / `sw v0,-13736(at)` @0x8011c57c-84) = Leiche.
+  - **Kein `jal 0x8001ad68` (Platzierung) im ganzen Hook, kein Write auf +0x34/+0x3c/+0x6a**: Leon bleibt, wo er stand,
+    und spielt Clip 0 der Opfer-Bank. Keine HP-Zeile (die -600 kamen schon in B[8]).
+- Gegenprobe der Effekt-Aufrufe (Decompilate RE_15_Quellcode_V2): FUN_80019700(a0, yaw, Anker, Versatz) = ESP-Spawn
+  (`a0>>24` Bank, `(a0>>16)&7` Effekt, `(short)a0` Groesse; Versatz-Block a3) — dieselbe Signatur, die der Port beim
+  Hunde-/Zombie-Kollaps schon als `re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, Part-8-Lage, yaw)` fuehrt. (Der Katalog-Eintrag
+  "Enemy hitbox-data setup" zu FUN_80019700 passt nicht zum Decompilat.) FUN_80045630(2,0) = Boden-Material unter dem
+  Spieler (FUN_800437d4) + Schritt-SE — im Port `re15_audio_footstep(2, re15_rdt_floor_sound(..))` wie beim Hund
+  (@0x80111da4). FUN_80037edc = `re15_wound_add` (Hund @0x80111e78-90). aca3c |= 0xc0: im Port ohne Gegenstueck (sperrt
+  nur PSX-Anzeige-Neuinitialisierungen @0x8001cd04/@0x800214e8, Beleg im Hunde-Kommentar enemy_ai_common.c).
+- Vergleich: Der Wurf-Hook 0x8011c118 (cmd 5) platziert per ad68 bei Bild < 0x25 relativ zum Anker — genau das, was der
+  Port im Finisher faelschlich tat.
