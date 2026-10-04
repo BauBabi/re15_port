@@ -362,7 +362,8 @@ Nur im Raumwechsel-Pfad (room_common.c) zurueckgesetzt — Bewertung fuer die Se
 | Spawn-Zaehler DAT_800aca4e (re15_enemy_reset) | **brach**: Original nullt ihn in FUN_8003ef6c @0x8003f014 `sb zero,-13746(at)` (an @0x80039a00, also auch nach Selbst-Tuer). Leser: geteilter Zombie-Engage @0x801022c4 und Treffer-Rueckkehr @0x80105ea4 (STAGE1; `lbu v0,-13746(v0)` / `sltiu v0,v0,0x5`; STAGE4 -0x4c). In ROOM4050 spawnt jeder Eintritt <= 1 Gegner; der Port zaehlte ueber Selbst-Tueren weiter und waehlte ab 5 die andere Verhaltenstabelle. Jetzt in scd_room_reenter (alle Ladewege). |
 | Kraehen-Schwarm 0x800aca50 (re15_crow_flock_reset) | in den 46 Raeumen kein Typ 0x21 -> ohne Wirkung (Stage-1 ROOM1170 unveraendert) |
 | Opfer-Zustand des Spielers (re15_player_victim_reset), Treppe, Klettern | nicht erreichbar: Griff/Treppe/Klettern/Tod setzen `g_aot_action_pressed = 0` (game_step_common.c), Tueren feuern nur auf Aktion |
-| savepoint/itembox/pauseflags | Bildschirme halten den Spielschritt an; Tuer feuert dort nicht |
+| savepoint/itembox-Anforderung | wird am Anfang des NAECHSTEN Bilds vor dem Spielschritt verbraucht (main.c `re15_savepoint_pending()` / `re15_itembox_pending()` -> set_pending(0)); eine Selbst-Tuer kann sie nicht ueberspannen |
+| g_re15_pauseflags | auch im Selbst-Tuer-Pfad geloescht: re15_room_transition_present (room_common.c, `re15_pauseflags_clear()` = @0x8001ca44/@0x8001caec) |
 | Modelle/RBJ/Licht/Nachrichten/Bank/BGM | gleicher Raum = gleiche Daten |
 | Kollisionsband | setzt aot_fire_door selbst aus spawn_y (re15_collision_set_band) |
 
