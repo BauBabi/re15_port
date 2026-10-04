@@ -771,3 +771,25 @@ das Laden danach gelingt (lampe=1, Bild gruen, Pins k/l/s5).
 | integration_r35_entladen_k (neu) | Tod in 11F0 mit sichtbarer Lampe: panel.log `raum=11F0 cut=10 ... lampe_o=1`, VORHER spielende 11F0 `lampe=1`, jede EREIGNIS-Zeile 0, keine BILD-Zeile | Passed 3.9 s; Gegenprobe FAILED |
 | integration_r35_entladen_l (neu) | Tuer AOT 0 11F0 -> 11E0 mit sichtbarer Lampe: `PC loaded room11e0.rdt`, VORHER raum 11F0 `lampe=1`, EREIGNIS 0, keine BILD-Zeile | Passed 18.7 s; Gegenprobe FAILED |
 Registriert nur in `tests/unit/probes/r35_entladen.cmake` (Foreach-Listen um n3beleg / K L erweitert).
+
+### N3 Hinweise der Abnahme 2 — Entscheidungen
+* H1 Kinobalken ueber der Charakterwahl nach einem Tod WAEHREND einer Szene (nur per RE15_KILL_AT bei
+  offenen Balken erreichbar). Weiter-RE'd, Ergebnis: der Balken-Zaehler laeuft im Original NICHT nur im
+  Spielmodul. Die Hauptschleife FUN_80020bb0 (Prolog @0x80020bb0, einziger Aufrufer `jal` @0x800544e8,
+  Balken-Init `jal 0x80020f8c` @0x80020be8) ruft je Bild `jal 0x80021a0c` @0x80020f34 und DANACH den
+  Modul-Umschalter `jal 0x80010000` @0x80020f3c (FUN_80010000 vergleicht Modul-Ist 0x800a73a4 mit
+  -Soll 0x800aca34 @0x8001001c-28) — also fuer Titel, Auswahl und Spiel. FUN_80021a0c rampt
+  0x800b5568 nach `0x800aca3c & 0x10` (einziger Schreiber `sb` @0x80021a80, Ghidra-XREF[8]) und
+  haengt die Balken an die OT des LAUFENDEN Moduls (`0x800aa6a8 + 0x800aca34*0x20`), unterdrueckt
+  nur bei `0x800aca38 & 0x4000`. Das Richtungsbit 0x10 loescht der Raumlader (`sw` @0x80039730,
+  Maske der unteren 16 Bit, Kommentar fade_common.c:97ff) — beim Spielstart @0x8001d5ac, also erst bei
+  NEW GAME, nicht am Tod. Die drei Schreiber im Spielmodul @0x8001cd48/@0x8001cd90/@0x8001cdc4 setzen
+  0x8000/0x40, nicht 0x10. => Ob das Original nach einem Tod bei offenen Balken im Titel Balken zeigt,
+  haengt an `0x800aca38 & 0x4000` im Titel-/Auswahlmodul bzw. am Todesweg (YOU-DIED-Sequenz) — nicht
+  belegt. Kein Raum-Asset und kein PRI; ohne diesen Beleg aendere ich das Zeichnen NICHT (STOP-GATE).
+  Steht unter OFFEN O7 mit Messweg.
+* H2 (Titel nach jedem Tod blendet von Weiss ein): kein Raum-Asset, nicht Teil des Auftrags; unveraendert.
+* H3 O6: ELEVSE selbst gemessen (Abnahme g4); HINTSE/PANEL2130-Ton laufen durch dieselbe Funktion.
+  PANEL2130-Ton jetzt zusammen mit der Lampen-Kunst desselben Bedienfelds an jeder Grenze frei.
+* H4 main.c-Zweig "keine PL00-Basis": nur bei nicht ladbarer PL00 erreichbar; unveraendert (main.c-Umfang).
+* H5 O1/O4 unveraendert.
