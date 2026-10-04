@@ -109,14 +109,108 @@ landet nie, der Anim-Index wird nie auf 6 gesetzt, der Terminator nie erreicht.
 `8001a40c sb zero,108(a1)` (Flags := 0 = Platz frei); rec[2]==0xff -> slot+0x6e := rec[0] (Schleife).
 => slot+0x6e IST der Anim-Record-Index (Port: f->frame), slot+0x6d der Timer (Port: f->timer).
 
+### R7 Zeilen-Vorschub FUN_800174e4 (Gegenkontrolle, selbst disassembliert)
+`800174f0-fc` slot+0x6f++; `8001750c-24` Quelle = *(slot+0x80) + Cursor*40; `80017538-d8` 40-Byte-
+Kopie nach slot+0x00 (32 + 8). Zeile 1 der Brocken = Nullen -> Beschl./Geschw. 0, A = B = 0.
+
+### R8 Folgerungen aus der Disassembly (am Port nachgemessen, s. Messung nachher)
+* R36 nullt die Geschwindigkeit im Routine-B-Schritt; die Tick-Physik danach
+  (@0x8001a2fc-388: xlat += vel, DANN vel += acc) laesst sie am Ende des Landebilds auf der
+  Beschleunigung (0,10,0) stehen. Im Folgebild kopiert R37 Zeile 1 (Nullen) -> der Brocken steht.
+* R37 vergleicht mit slot+0x1e = dem h, das R36 im LETZTEN NEIN-Zweig gespeichert hat (im
+  Landebild schreibt R36 es nicht). Faellt ein Brocken seitlich in eine hohe Zelle
+  (room_coll = -1800*(Band+1)), loest R36 sofort aus (vel.x/z = 0), R37 aber erst, wenn der
+  Brocken senkrecht bis unter die zuletzt gemessene Bodenhoehe gefallen ist (gemessen: +10 / +13
+  Bilder). Kein Port-Einfall — so steht es in den Instruktionen.
+* Der Brocken landet OHNE Einrasten: die Weltlage bleibt dort, wo R36 sie zuerst unter h fand
+  (gemessen Weltlage-y 12..110 unter Boden 0) — das Original klemmt nicht.
+
+### R9 RE2-Gegenprobe (Beta -> Retail)
+RE1.5 R36/R37 sind vollstaendige Routinen (kein Stub, kein jalr 0) -> Ziel ist RE1.5. Die Hunde-KI
+ist RE2, ihre Effekte laufen aber im Port ueber die RE1.5-Zeilenmaschine mit RE1.5-Raumdaten (Id 7 ==
+RE2-Raum-Id 9, byte-identischer Sprite-Koerper, Dossier analysis/befunde_runde4_2026-09-12/
+gore-vollausbau.md §1.2; die Zeilen-Programme hat Capcom fuer RE2 weiterentwickelt). Muster-Suche im
+RE2-PSX.EXE nach dem R36/R37-Koerper (Konstanten `ori v1,zero,0x25` + `sh v1,2(v0)`,
+`ori a2,zero,8` + `ori a3,zero,0x100`): KEIN Treffer — RE2 hat die Maschine umgebaut. Fuer den
+Port-Pfad (RE1.5-Daten in der RE1.5-Maschine) ist RE1.5 massgeblich.
+
 ## Umsetzung
-(folgt)
+
+| Datei | Art | Inhalt |
+|---|---|---|
+| `re15_port/engine/src/esp_brocken.c` | NEU | `re15_esp_brocken_b()` = Routine B 36 (@0x800187c4) und 37 (@0x8001885c) + Messschiene |
+| `re15_port/include/re15_esp_brocken.h` | NEU | Vertrag + Belege |
+| `re15_port/engine/src/re15_esp.c` | 3 Zeilen | `#include`, in `esp_fx_dispatch_b` `if (re15_esp_brocken_b(f)) return;`, Export `re15_esp_fx_zeile_weiter` (= `esp_fx_row_advance`, FUN_800174e4) |
+
+Konstanten (alle mit Adresse im Code):
+* room_coll-Argumente r = 0 (`addu a1,zero,zero` @0x800187dc), Startband 8 (`ori a2,zero,0x8`
+  @0x800187e8), Maske 0x100 (`ori a3,zero,0x100` @0x800187f4) -> `re15_collision_room_coll`
+  (= FUN_8001c6e8, re15_collision.c:314).
+* B := 37 (`ori v1,zero,0x25` @0x80018818, `sh v1,2(v0)` @0x80018828).
+* slot+0x1e := h (`sh a0,30(v0)` @0x80018848); Flags := row[0x0e] (@0x80018884/8c);
+  Anim := row[0x16] (@0x8001889c/a4); Vorschub (`jal 0x800174e4` @0x800188a0).
+* PORT-WAHL (keine Original-Adresse, gekennzeichnet): `f->floor_y = INT32_MAX` beim ersten
+  R36-Takt = die Port-Sammelklemme in re15_esp_fx_tick Stufe (f) gilt fuer diesen Platz nicht.
+  Begruendung: das Original HAT keine Klemme (Physik @0x8001a2fc-388 rein xlat += vel, vel += acc),
+  den Boden kennt nur Routine B; mit der Klemme kaeme die Weltlage nie unter h und R36 schluege nie
+  an. Gleicher Wert und gleiche Begruendung wie ESP_KEIN_BODEN fuer Granaten (re15_esp.c:557).
+
+Keine Bank-9-Bits, keine Nachrichten, keine AOT-Slots, keine Ereignisse, keine Assets.
 
 ## Messung nachher
-(folgt)
+
+### N1 probe_r35_redhawk messung (gleicher Lauf wie M2, nach dem Fix)
+```
+Bild   10: id7 lebend 6 (sichtbar 6), id0 52
+Bild   30: id7 lebend 6 ... slot=30 id=7 sub=0 A=0 B=0 fl=13 anim=7 row=1/2 wpos=(-4083,85,-16764)
+Bild   60: id7 lebend 0 (sichtbar 0)
+Bild  900: id7 lebend 0
+ERGEBNIS ROOM11D0: Spitze id7 6, letztes Bild mit id7 57 von 900      (vorher: 900 von 900)
+```
+### N2 Spurverfolgung je Brocken (probe_r35_redhawk pin, Pin 1) gegen R3/R4/R6
+```
+Platz 30 sub 0: Landung Bild 18, h=-1800 Weltlage-y -365 (Vorbild -425 bei h 0), vel=(0,10,0) = acc ok
+Platz 30: Abschluss Bild 28 (+10) B=0 Flags 13 Zeile 1/2 Anim 6, slot+0x1e 0 < Weltlage-y 85 ok
+Platz 12 sub 1: Landung Bild 37, h=0 Weltlage-y 12 (Vorbild -178 bei h 0), vel=(0,10,0) = acc ok
+Platz 12: Abschluss Bild 38 (+1) B=0 Flags 13 Zeile 1/2 Anim 6, slot+0x1e 0 < Weltlage-y 12 ok
+Platz 21: Abschluss Bild 38 (+1) B=0 Flags 13 Zeile 1/2 Anim 7 ...
+Platz 39: Abschluss Bild 47 (+13) ... (seitlich in hohe Zelle, senkrechter Fall wie R8)
+```
+Alle 6: Landebild = erstes Bild mit Weltlage-y > room_coll (Vorbild <= h), Geschwindigkeit genullt
+(nach dem Takt = acc), Abschluss mit Flags 0x13 / Zeile 1 / Anim 6|7, Ende am Terminator
+spaetestens 13 Bilder nach dem Abschluss.
+
+### N3 Haenger-Zensus der Raum-ESP-Daten (probe_r35_redhawk haenger [vorher])
+"Haenger" = gueltiger Stream (alle A,B < 48), dessen Anim ab Record 0 vor dem Terminator auf eine
+Schleifenmarke laeuft UND der eine im Port unbekannte Routine traegt.
+```
+vorher : 94 Raeume, 1953 gueltige Streams, 673 Haenger = 504 x Id 7 (B 36) + 120 x Id 13 (A 24/25) + 49 x Id 1 (A 2)
+nachher: 94 Raeume, 1953 gueltige Streams, 169 Haenger = 120 x Id 13 (A 24/25) + 49 x Id 1 (A 2)
+```
+Die 504 Brocken-Streams (84 Raeume x Subs 0..5) sind geschlossen. Id 13 / Id 1 -> OFFEN (nicht
+Hund/Waffe, s.u.).
+
+### N4 Wer wirft Id-7-Brocken im Port (alle betroffen, alle durch denselben Fix geheilt)
+* Hund RE2 (enemy_ai_re2_dog.c re2d_fx, FX-Tabelle @0x801056AC Art 9 -> Raum-Id 7):
+  Tod Zeilen {5,6,9,17,19} ueber Router 0x80104610 (Waffe 7 Redhawk = Zeile 5; Waffe 9/15 HE = Zeile 9;
+  Waffe 18 = Zeile 17), HURT-Bild-Bits FX 1/2 (@0x80102838-48, Zufall rand&3), Knockdown aus dem Sprung
+  FX 2/3 (@0x801039B8-D0).
+* Zombie RE2 (enemy_ai_re2_zombie.c:5531, 0x09020000 -> Raum-Id 7 Sub 2, Brocken-Tod @0x8010973C-B8).
+* Raum-Skripte (op 0x3A) mit Id 7 laufen ueber dieselbe Maschine.
 
 ## Tests
-(folgt)
+* `unit_r35_redhawk` (probes/r35_redhawk.cmake, test_r35_redhawk.c `pin`):
+  - Pin 1 (10-14): Redhawk-Schuss (re15_player_weapon_fire(7)) toetet den Hund (ROOM11D0, RE2-KI,
+    echter Spielschritt + ESP-Takt wie die Plattform): 6 Brocken, Mechanik je Brocken gegen R3/R4/R6,
+    Messschiene 6 Landungen / 6 Abschluesse, **90 Bilder nach dem Schuss 0 lebende Fleisch-Plaetze**
+    (vorher 6, M2), nach 900 Bildern 0.
+  - Pin 2a (20-21): HE-Granate (Resolver-Art 2) -> Zeile 9 -> derselbe Router: 6 Brocken, alle enden.
+  - Pin 2b (22-23): Pistole (Waffe 3) bis zum Tod: 5 Treffer, 0 Brocken entstanden (Zeile 3 hat keinen
+    Brocken-Router; HURT-Bits nur per Zufall) -> 0 lebend.
+  - Pin 3 (30-31): alle 84 Raeume mit Raum-Id 7, je Brocken-Sub (504) gespawnt und 300 Bilder getaktet:
+    0 Haenger, 0 Mechanik-Fehler.
+  Ergebnis lokal: GRUEN (0 Fehler).
+* Messwerkzeuge (kein Test): `probe_r35_redhawk zensus | haenger [vorher] | messung [bilder]`.
 
 ## OFFEN
 (folgt)
