@@ -164,5 +164,67 @@ Jeder Update-Start endet mit SPIELSTART, Speicher bytegleich der APK, kein verwa
   (apk_asset_gate.py:3177-3246): Z/z-Dublette (nur B/b vorhanden), 19-stellige Kopf-ANZAHL (nur Bytes-Feld), CR VOR
   der Kopfzeile / VOR einer Datenzeile (nur dahinter), Listen-Summe GROESSER als die echte (Faelle 228/248 nur kleiner).
 
+- **Gegenprobe F-Y2 am alten Stand** (Beleg `N_android_belege/urteil_vorher_fy2.txt`, Werkzeug: alte apk_pruefen.sh
+  @154a73c1 mit dem 1-Zeichen-Fehler `ende(1, "das Gate meldet` -> `ende(0, ...`, echtes gepinntes Gate f53fbbea..,
+  APK nur mit Manifest): Gate `== APK-ASSET-GATE-ABWEICHUNG: 3630 Befunde ==`, Rueckgabe 1 -> `gate_laufen ... -> 0`.
+  Genau das Bild der Gegenpruefung (A4): ein richtiges Gate wird von einem unbemerkt veraenderten Urteil ueberstimmt.
+
+### Was "das Pruefskript" und "dessen Urteilslogik" sind (Lesart, belegt aus Runde 34a)
+Pruefskript = die Asset-Pruefkette `release/apk_asset_gate.py` + `release/apk_pruefen.sh` (gate_festhalten/
+gate_laufen/gate_urteil); Urteilslogik = `gate_urteil` (entscheidet aus Rueckgabe UND Ausgabe des Gates OK/Befund/
+keine Aussage) und der Selbsttest des Gates. Die zwei offenen Befunde dazu: F-Y2 (Urteil ungeprueft) und F-Y1 (Selbsttest
+des Gates erkennt fuenf Ein-Zeilen-Aenderungen nicht). "Kuenftige Aenderungen ... mittesten" verlangt einen Mechanismus,
+der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Test.
+
+### Umsetzung (Commits b4b43da5, 3f9d8b16, 93caa0d8, 292c0ded)
+1. **Urteil ausgelagert und selbstpruefend: `release/gate_urteil.py`** (Code wortgleich zum Heredoc, als Funktion; ein
+   unbekannter Modus ergibt jetzt 2 statt Traceback = 1). `--selbsttest`:
+   - 119 feste Faelle: gute Laeufe je Modus (selbsttest/apk/quellbaum/paket, auch CRLF, Randwerte 1 Datei/1 Baum/
+     Tuerarchive 1), dieselben mit Rueckgabe 1/2, FEHLER/ABWEICHUNG je Modus mit Rueckgabe 1 (-> 1) und 0/2 (-> 2), und je
+     Regel ein Gegenbeispiel (Schlusszeile fehlt/falscher Modus, Traceback/ABBRUCH/[FEHLER], zwei Urteilszeilen, n/n,
+     Mindestzahlen, Fallnummern, rc != soll, SUMME/Manifest/Tuerarchive/TORSE/unzip-Zaehlung, Baumzeilen ...).
+   - **Mutanten des eigenen Urteilscodes** (AST, je Lauf genau eine Aenderung: Vergleich ==/!=, </<=, >/>=, in/not in;
+     and/or; not weg; if-Bedingung -> True/False; Zahl +-1 (auch die Urteilszahlen 0/1/2 in ende()); Aufruf weg). Nicht
+     mutiert werden nur Meldungstexte (Format-Argumente, Grund in ende()). Erkannt = mindestens ein Fall entscheidet
+     anders ODER stuerzt ab, wo das Original begruendet entscheidet. Ergebnis: **260 Mutanten, 257 erkannt, 3 als
+     gleichwertig begruendet** (`AEQUIVALENT` mit Begruendung im Code: tuer_soll group(2)->group(1) hinter g1 == g2;
+     das ende() fuer "FEHLER-Schluss mit Rueckgabe != 1" - der naechste Schritt entscheidet denselben Fall mit 2;
+     `if modus == "paket"` -> True - nur paket erreicht die Stelle). Ein ueberlebender Mutant oder ein veralteter
+     AEQUIVALENT-Eintrag = SELBSTTEST-FEHLER. **Wer das Urteil aendert und keinen Fall dazu schreibt, faellt hier.**
+   - Laufzeit 4.5 s.
+2. **apk_pruefen.sh**: `gate_festhalten` kopiert neben dem Gate auch das Urteil privat, prueft dessen sha256 gegen
+   `release/gate_urteil.sha256` (neu) und laesst den Urteils-Selbsttest laufen; die Schlusszeile wird in BASH gegen
+   `GATE_URTEIL_MIN_FAELLE=119`, `GATE_URTEIL_MIN_ERKANNT=257`, `GATE_URTEIL_MAX_GLEICH=3` geprueft (ein geschwaechter
+   Selbsttest oder mehr "gleichwertige" = Abbruch). `gate_laufen` prueft vor JEDEM Lauf beide Pins und verlangt fuer
+   ein OK-Urteil zusaetzlich - unabhaengig vom Urteilscode - **Rueckgabe 0 des Gates und die Urteilszeile**
+   (`Gate-Urteil (<modus>, Rueckgabe 0): `) - die Abhilfe "in gate_laufen zusaetzlich rc == 0 verlangen" aus F-Y2.
+   Der alte Heredoc ist entfernt (git-Historie @154a73c1).
+3. **Gate (F-Y1)**: `_MANIFEST_PROBEN` + Dublette Z/z, Kopf-Anzahl 19 Ziffern, CR vor der Kopfzeile, CR vor einer
+   Datenzeile, Zeilenende LF-CR; Fall 259 "Pruefsumme falsch, GROESSER als die echte (ff..ff)"; dazu R1/R2 als Regeln
+   (`_pfad_fehler`: Ordner-Segment `.neu`; `manifest_lesen`: Datei und Ordner gleichen Namens) mit Proben und Faellen
+   260/261 - Gate und Geraete-Leser lesen wieder nach denselben Regeln (dieselben Proben im C-Test
+   `test_r35_android_abgleich.c`). Selbsttest **261/261, Innere Proben 148/148** (vorher 258/132); Pin
+   `release/apk_asset_gate.sha256` = `f73c3b1a770d424ddec8c57480227813ee353ea361a96d4e5b6997903bb8f9b6`,
+   `GATE_SELBSTTEST_MIN_FAELLE/INNEN` 261/148. build.gradle writeAssetManifest prueft R1/R2 ebenfalls (Bau bricht frueh ab).
+4. **ctest `unit_r35_android_pruefkette`** (probes/r35_android.cmake, `r35_android/test_r35_android_pruefkette.sh`):
+   faehrt die ECHTE Kette mit dem echten, gepinnten Gate und Urteil bei jedem Suite-Lauf (bash nur Git/MSYS, nie WSL;
+   Python ueber python_finden.sh).
+
+### Messung nachher
+- Die fuenf Ueberlebenden der Gegenpruefung R4-2 und je ein R1/R2-Mutant gegen das neue Gate (Werkzeug
+  `N_android_belege/werkzeug/fy1_mutanten.py`, Beleg `gate_fy1_mutanten.txt`): **7/7 erkannt** - E_manifest_pruefen_gt
+  (Fall 259), D06 (Probe Dublette Z/z), D08 (Kopf-Anzahl 19), D13 (CR vor Kopfzeile), D15 (CR vor Datenzeile, LF-CR),
+  R1/R2.
+- Urteil alt (Heredoc @154a73c1) gegen neu (Werkzeug `urteil_alt_neu.sh`, Beleg `urteil_alt_neu.txt`): 118 feste Faelle +
+  4 echte Gate-Ausgaben (Selbsttest 261/261, Quellbaum 3629 Dateien, APK-ABWEICHUNG rc 1, ABBRUCH rc 2) **122 gleich**,
+  1 anders = unbekannter Modus (alt Traceback -> 1 "Befund", neu 2 "keine Aussage") - gewollt.
+- `unit_r35_android_pruefkette` (54 s): P0 gate_festhalten (`119/119 Faelle, 257/260 Mutanten erkannt, 3 gleichwertig`),
+  P1 Gate-Selbsttest -> 0 (`SELBSTTEST-OK 261/261 ... 148/148`), P2 Quellbaum -> 0 (`3629 Dateien in 5 Baeumen`);
+  Negativ-Kontrollen alle ROT: N1 0-Byte-APK -> 2, N2 leeres ZIP -> 2, N3 nur Manifest -> 1 (ABWEICHUNG), N4 Zufallsbytes
+  -> 2, N5 kaputtes Gate (main() ohne sys.exit) umgepinnt -> 2/2, **N6 Urteil mit dem F-Y2-Fehler umgepinnt -> Abbruch**
+  (`URTEIL-SELBSTTEST-FEHLER: 8 von 119 Faellen falsch`), N7 Urteil 0 Byte -> Abbruch, **N8 Urteil luegt komplett
+  (Selbsttest-OK gefaelscht, sagt immer 0) -> die zweite Instanz ueberstimmt (`Urteil 0, aber das Gate gab Rueckgabe 1`)
+  -> 2**, N9 Mindestzahl Mutanten hochgesetzt -> Abbruch; Gate/Urteil/Pins danach unveraendert.
+
 ## OFFEN
 (folgt)
