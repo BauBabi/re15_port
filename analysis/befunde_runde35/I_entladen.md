@@ -793,3 +793,27 @@ Registriert nur in `tests/unit/probes/r35_entladen.cmake` (Foreach-Listen um n3b
   PANEL2130-Ton jetzt zusammen mit der Lampen-Kunst desselben Bedienfelds an jeder Grenze frei.
 * H4 main.c-Zweig "keine PL00-Basis": nur bei nicht ladbarer PL00 erreichbar; unveraendert (main.c-Umfang).
 * H5 O1/O4 unveraendert.
+
+### OFFEN (N3)
+* O1 PSX-Port nicht gebaut/gemessen (PSn00bSDK-Bau nicht Teil der Suite) — unveraendert.
+* O4 `heli_md1/pilot_md1`-Parse in main.c totes Erbe (Entfernen sprengt die main.c-Zeilenregel) — unveraendert.
+* O6 HINTSE und PANEL2130-Ton nicht einzeln gefahren (ELEVSE: Abnahme g4, TUERSE: Pin i, ENEMSE: Pin j).
+  Naechster Messweg: Kartenhinweis (map_hint_common.c) bzw. Panel 11F0 ueber sub16 (Lauf s5 oben) mit
+  SDL_AUDIODRIVER=dummy + RE15_ENTLADEN_LOG, dann Tuer: re2ton -> 0.
+* O7 (neu, H1) Kinobalken ueber Titel/Auswahl nach Tod bei offenen Balken: Port tickt
+  `re15_letterbox_tick` nur in der Spielschleife (main.c:5577/5647), das Original rampt in der
+  Hauptschleife fuer jedes Modul (@0x80020f34). Offen ist, ob das Original die Balken dort zeigt:
+  naechster Weg = Schreiber von `0x800aca38 |= 0x4000` und von `0x800aca3c & ~0x10` im Titel-/Auswahl-
+  modul bzw. im Todesweg suchen (45 Schreiber von 0x800aca3c, Liste in ghidra1_V2.txt; SCD-Handler
+  0x80035xxx/0x80036xxx), dynamisch: Savestate mit Tod waehrend einer Szene -> 0x800b5568/0x800aca3c im
+  Titel lesen. Kein Raum-Asset und kein PRI (Punkt 1 "PRIs" und Punkt 2 "Assets" sind davon nicht betroffen).
+* Gemeinsame Dateien ueber der 1-5-Zeilen-Regel (Stand N3): panel_lampen_pc.c (Spur C) +11 Zeilen
+  (1 Include, 1 Generation, 1 Zeile laden(), 2 Einzeiler-Funktionen + 4 Kommentarzeilen); cut10f0_pc.c
+  (Spur K) 9 Zeilen und audio_pc.c ~40 Zeilen aus N2 unveraendert.
+
+### Fuer den Nutzer (N3)
+* Keine Sprachdateien, keine neuen Assets (Paket-/Android-Gate unveraendert), keine neue .c-Datei
+  (Android-GLOB unveraendert gegenueber N1).
+* Wirkung: die gruenen Lampen des Generator-Bedienfelds (ROOM11F0) werden nach Tuer und Tod mit dem Raum
+  entladen und beim naechsten Oeffnen des Bedienfelds neu geladen; Aussehen unveraendert (A/B 8/8 bytegleich).
+* Messschiene: 19. Fach `lampe` in `RE15_ENTLADEN_LOG`.
