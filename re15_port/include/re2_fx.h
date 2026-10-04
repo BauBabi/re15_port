@@ -155,4 +155,14 @@ int re2fx_quads(const re15_camera_view_t *cam, int cx, int cy, int camf,
                 int has_region, const int16_t rxs[4], const int16_t rzs[4],
                 re2fx_quad_t *out, int max);
 
+/* ---- Runde 35 Spur M: RAUM-ESP (Glassplitter room1090) ---------------------------------------
+ * FUN_8001bca0 mit Registry-Basis 8 (Raum-Haelfte der Id-Liste 0x800EAE48). raw/size = die Raum-ESP
+ * (shared_assets/RE2/GLAS1090.ESP, 3092 B, Ids 29 10 11 12 13 14 0C 19), vom Aufrufer gehalten.
+ * Vorher registrierte Raum-Banken werden ausgetragen; re2fx_register_core loescht die Raum-ESP mit.
+ * Rueckgabe 0 = registriert, < 0 = Fehler (-6 = Id schon vom Kern belegt). Neu umgesetzte Ops der
+ * Splitter: 5 (0x8001df90), 16 (0x8001f128), 39 (0x800206fc), 84 (0x80025348). */
+int re2fx_register_raum(const uint8_t *raw, size_t size);
+/** 1 = Bank `bank` (Kern oder Raum) ist registriert. */
+int re2fx_bank_registriert(unsigned bank);
+
 #endif /* RE2_FX_H */

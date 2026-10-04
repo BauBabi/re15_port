@@ -52,6 +52,7 @@
 #include "re15_adaruf.h"     /* Runde 34 Nacht, Spur D: Ada-Ruf ROOM1050 (adaruf_1050.c) */
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Szene ROOM10F0 (cut_10f0.c) */
 #include "re15_irons_tod.h"  /* Runde 35 Spur L: Irons-Todesszene + Montage (irons_tod_1150.c) */
+#include "re15_fenster1120.h" /* Runde 35 Spur M: Fenster ROOM1120 (fenster_1120.c) */
 
 scd_vm_t g_scd;
 
@@ -627,6 +628,7 @@ int scd_event_fire(uint8_t event_id)
     /* Runde 35 Spur L (irons_tod_1150.c): Ereignis 21 in 1150/1130/1040/1030/11C0 = Szene / Montage-Schritt /
      * Rueckkehr / Nachspawn; sonst NULL. Disjunkt zu A (2) und D (13). */
     if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
+    if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {

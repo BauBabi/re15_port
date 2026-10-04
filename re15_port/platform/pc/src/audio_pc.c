@@ -1037,6 +1037,52 @@ void re15_audio_re2_panel_se(int se_id)
     se_play_layers(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
 }
 
+/* ===== Runde 35 Spur M: die GLASBRUCH-Bank (RE2 ROOM1090 snd0) ========================
+ * RE2 room1090 sub15 @0x0208/@0x0218 `36 02 21 01 ...` -> Se_on 0x02210001 = Raumbank (Bank 2,
+ * `srl t1,a0,24` @0x8005ba30) Satz 0x21 (EDT @0x84 `00 00 7c 60` = Prog 0 Ton 7 + 3 Zusatzlagen).
+ * Bytegleicher snd0-Schnitt (RDT-Kopfworte +0x08/+0x0C/+0x10 = EDT @0x75FC / VH @0x76BC /
+ * VB @0x84DC) als shared_assets/RE2/GLAS1090.EDT/.VH/.VB, Lader = PANEL-Muster darueber. */
+static re15_vab_t s_glas_vab;
+static int16_t  *s_glas_decoded[RE15_VAB_MAX_SAMPLES];
+static int       s_glas_decoded_len[RE15_VAB_MAX_SAMPLES];
+static uint8_t  *s_glas_edt = NULL;
+static int       s_glas_edt_count = 0;
+static int       s_glas_state = 0;           /* 0 = ungeprueft, 1 = geladen, -1 = fehlt */
+
+int re15_audio_re2_glas_laden(void)
+{
+    if (s_glas_state) return (s_glas_state == 1) ? 0 : -1;
+    s_glas_state = -1;
+    int edt_sz = 0, vh_sz = 0, vb_sz = 0;
+    uint8_t *edt = re15_pc_read_re2("GLAS1090.EDT", &edt_sz);
+    uint8_t *vh  = re15_pc_read_re2("GLAS1090.VH",  &vh_sz);
+    uint8_t *vb  = re15_pc_read_re2("GLAS1090.VB",  &vb_sz);
+    if (!edt || !vh || !vb || edt_sz < 4 || re15_vab_parse(vh, (size_t)vh_sz, &s_glas_vab) != 0) {
+        fprintf(stderr, "[glasse] shared_assets/RE2/GLAS1090.* fehlt -> Glasbruch stumm\n");
+        free(edt); free(vh); free(vb); return -1;
+    }
+    for (int i = 0; i < s_glas_vab.vag_count; i++) {
+        uint32_t off = s_glas_vab.samples[i].offset, sz = s_glas_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_glas_decoded[i]     = pcm;
+        s_glas_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vh); free(vb);
+    s_glas_edt = edt; s_glas_edt_count = edt_sz / 4; s_glas_state = 1;
+    return 0;
+}
+
+void re15_audio_re2_glas_se(int satz)
+{
+    if (!g_audio.initialized) return;
+    if (re15_audio_re2_glas_laden() != 0) return;
+    if (satz < 0 || satz >= s_glas_edt_count) return;
+    se_play_layers(s_glas_edt, &s_glas_vab, s_glas_decoded, s_glas_decoded_len, satz);
+}
+
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
  * EDT (bank1) maps se_id -> program+tone -> VAG (identical to re15_footstep_vag). The GUNSHOT is
  * se_id 8. Stimme + Prioritaets-Gate laufen jetzt in se_play_layers (Adressen dort;

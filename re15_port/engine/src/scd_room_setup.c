@@ -29,6 +29,7 @@
 #include "re15_cut10f0.h"     /* Runde 35 Spur K: Szene ROOM10F0 (Ada/Leon/Marvin) */
 #include "re15_tuer1060.h"    /* Runde 35 Spur L: Tuer ROOM1060 -> ROOM1040 bis der Chief geholt ist */
 #include "re15_irons_tod.h"   /* Runde 35 Spur L: Irons-Todesszene 1150 + Knall-Montage + 11C0-Schnitt */
+#include "re15_fenster1120.h"  /* Runde 35 Spur M: Fenster ROOM1120 */
 
 extern scd_vm_t g_scd;
 
@@ -461,6 +462,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * Irons/Ada stehen erst dann im Pool). */
     re15_tuer1060_install((uint16_t)g_current_room_id);
     re15_irons_tod_install((uint16_t)g_current_room_id);
+    re15_fenster1120_install((uint16_t)g_current_room_id);   /* Runde 35 Spur M: Fenster ROOM1120 (re15_fenster1120.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

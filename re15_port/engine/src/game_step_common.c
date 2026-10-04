@@ -22,6 +22,7 @@
 #include "re15_audio.h"         /* re15_audio_footstep */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
+#include "re15_fenster1120.h"   /* Runde 35 Spur M */
 #include "re15_ai_flavor.h"     /* re15_ai_flavor / re15_re2z_owns_type — RE2-Trefferfilter-Nachlauf */
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
@@ -2316,6 +2317,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * identisch (kein Root laeuft). Der bereits vorhandene, aber NIE verdrahtete Hebel
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) {
+        re15_fenster1120_tick();   /* Runde 35 Spur M: Fenster ROOM1120, vor der KI (re15_fenster1120.h) */
         re15_enemy_ai_run_all(g_scd.combat_active);
         /* Runde 34 NACHBESSERUNG (mess_sb 3.1): Abzug der RE2-GL-Sperre der RE1.5-KI-Kandidaten des
          * Bodenfeuers — wie der RE2-Wurzel-Prolog (EMZ0 @0x80100484-98) hinter dem Freeze-Tor
