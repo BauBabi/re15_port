@@ -111,3 +111,14 @@ Keys); die 7 Lageplan-Funde ("police station map" ROOM20B0 @0x3BA6, "police B1 m
 @0x1B41, "sewage disposal map" ROOM3060 @0x2B4E, "sewer map" ROOM4040 @0x1BAE, "factory map"
 ROOM5040 @0x2357 / ROOM5060 @0x110C, "laboratory map" ROOM6120 @0x18B1) laufen ueber
 Nachricht+Ja/Nein-Ereignis, nicht ueber Item_aot_set (OFFEN unten, falls der Nutzer DIESE meinte).
+
+**Messung nachher Punkt 2 (echte exe, beschleunigter Renderer, RE15_FRAMEDUMP; gdigrab liefert in
+dieser Sitzung weisse Bilder).** Kopie `re15_pc_r35f_doc.exe` neben der exe, Arbeitsverzeichnis mit
+`analysis/befunde_runde30/nutzer_marken/re15_card_nutzer_2026-09-27.mcr`, `RE15_CONTINUE_TEST=1
+RE15_CARD_AUTO=1 RE15_DOC=28|29 RE15_PAD_AT=400:S,520:M,580:A,600:A,700:R` (Muster
+tools/r34n_e/leser_lauf.sh, jetzt ohne Umbenennung, die Tabelle kennt FILE28/29), Framedump F780 =
+Seite 2/3: `F_belege/p2_exe_FILE28_p01.png` ("The new code is: 4312", 4312 gruen),
+`F_belege/p2_exe_FILE29_p01.png` ("...with the code: 5632", 5632 gruen). Restlicher Text weiss.
+**Test:** `unit_r35_inhalt_doku` 19/19 (A Gruen = TEX.TIM Zeile 2 aus der Datei; B je Code 82 bzw.
+104 gruene Pixel, alle im Code-Kasten, ganze Breite, 0 weisse Kernpixel im Kasten; C FILE25..29
+sonst 0 gruene Pixel). Gegenprobe: mit den alten Seiten faellt B (0 gruene Pixel).
