@@ -20,8 +20,9 @@
 
 #include <stdint.h>
 
-/* Sce_em_set-Haken: ersetzt x/z, wenn (Raum-Basis, Satz-Slot, Typ) in der Tabelle steht und
- * x/z noch die ORIGINAL-Werte tragen (Satz-Waechter). Rueckgabe 1 = ersetzt. */
+/* Sce_em_set-Haken: ersetzt x/z, wenn (Raum-Basis, Typ, ORIGINAL-x/z) in der Tabelle steht —
+ * die Original-Lage ist Schluessel und Satz-Waechter zugleich (ROOM1011 fuehrt dieselben Saetze
+ * mit um 1 verschobener Slot-Nummer; `slot` wird deshalb nicht verglichen). Rueckgabe 1 = ersetzt. */
 int re15_zombie_abstand_anwenden(uint16_t room_id, uint8_t slot, uint8_t type,
                                  int16_t *x, int16_t *z);
 
