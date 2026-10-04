@@ -787,3 +787,24 @@ ungetestet).
 nb3_bash_aenderungen.py nachher (Beleg `nb3_bash_aenderungen_nachher.txt`): **14 von 14 bemerkt** (vorher 3/14) - J11 ->
 N25a/N25b/N25d, J12 -> dieselben, J13 -> N25b/N25d, J6 -> N25e, J9 -> D5b, J10 -> D10b, Y2 -> N26, Y3 -> N25d, Y5 -> N25d,
 Y6 -> N25a/b/d, Y7 -> N25b/d.
+
+### Nachbesserung 3 - M1 Operator I (bash_urteil_mutanten.py) und Kette N26-N28 (test_r35_android_pruefkette.sh)
+**Operator I (Uebergabe):** in den sechs Funktionen jeder logische Befehl (Fortsetzung mit `\`), dessen erstes Wort
+`"$PY"` oder eine Pruef-Funktion ist, und jedes `local x="$n"`: jedes Argument der Form `"$NAME"`, `"${NAME...}"`, `"$1".."$9"`,
+`"$@"` (nicht das Befehlswort, nicht in `$( ... )`, nicht mit Text dahinter wie `"$log.urteil"`) -> `""`, `0` und jedes
+ANDERE solche Argument desselben Befehls. 86 neue Mutanten (vorher an diesen Stellen 0): `local datei="$1"` (3 Funktionen),
+`gate_urteil_pin_pruefen "$datei"`, `> "$log"` im Selbsttest-Aufruf, `gate_pin_pruefen "$ziel"`, `gate_urteil_selbsttest
+"$uziel"` / `"$GATE_URTEIL_KOPIE"` (2x), der 6-Argument-Aufruf in gate_urteil (6 x 7 = 42, darunter genau J11/J12/J13 als
+Einzel-Mutanten und Y6), `local modus="$1" gate="$2"` (6), `gate_pin_pruefen "$gate"`, `"$@"`/`"$log"` beim Gate (6),
+`gate_urteil "$modus" "$log" "$rc"` (12). Mutanten gesamt 220 -> 328 (A 36, B 18, C 34, D 112, E 24, F 9, G 7, H 2, I 86;
+D/A/E wachsen durch die u-Pruefung der neuen Schlusszeile).
+**Kette N26-N28 (echtes, gepinntes Urteil ueber gate_laufen = genau die Uebergabe aus gate_urteil()):** umgepinnte
+Gate-Attrappen geben eine Ausgabe im Format von apk_asset_gate.py aus (Zeilen aus gate_urteil.py `_selbsttest_log` /
+`_apk_log`). N26a genau 261 Faelle / 148 Proben -> 0; N26b 260 -> 2 (`meldet 260/260 Faelle, verlangt n/n mit n >= 261`);
+N26c 147 Proben -> 2; N27a APK-OK mit GATE_APK_EINTRAEGE=13 -> 0 (`= unzip-Zaehlung - 1`), N27b =14 -> 2, N27c =12 -> 2,
+N28 ohne unzip-Zaehlung -> 0. Die U_luegt-Attrappe (N8) bekam die 6-Zahlen-Schlusszeile.
+**Messung Kette (gegen den neuen Stand, Pin 4aa6bdfa...):** `FEHLER=0`, P0 `Gate-Urteil selbstgeprueft: 777/777 Faelle,
+887/894 Mutanten erkannt, 7 gleichwertig, 102 Stoerungen ungeprueft (Mindestzahlen 777/887/<=7/<=102)`, P1 echter
+Gate-Selbsttest `261/261 ... 148/148`, P2 echter Quellbaum `3629 Dateien in 5 Baeumen`, N1-N9 wie bisher, N26a-N28 wie
+oben, `urteil_kontrollen.sh KONTROLLEN: 102 ok, 0 FALSCH` (Beleg `N_android_belege/nb3_kette_nachher.txt`; 8 min 11 s,
+weil der Mutantenlauf parallel lief).
