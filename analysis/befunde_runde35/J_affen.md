@@ -1646,3 +1646,20 @@ Scratch: `scratchpad/jnb5/`.
   T290 als Klemmen-Start nur gemeldet (201) und ueber M1 (Empfindlichkeit ab dem Original-T290) und die neue Messung
   abgedeckt. Die T265-Pruefung "Klemme auf die eigenen Eingaben" (N4) bleibt als Zusatz, ersetzt aber keine Schranke mehr.
 - (c) Der verbleibende Startversatz steht unter OFFEN N5-1.
+
+### Messung nachher, exe (Kopie re15_pc_jnb5.exe, md5 b1274b76... = re15_pc.exe; `jnb5/exe/run.sh`, `takt.py`)
+- Hinweis Messweg: Das Fenster meldete in dieser Sitzung eine SDL-Assertion (`WIN_AddDisplay 'index == *display_index'`,
+  SDL_windowsmodes.c:380) und blieb im Dialog haengen (zwei eigene Laeufe bei F183, per eigener PID beendet). Alle
+  Laeufe danach mit `SDL_ASSERT=always_ignore` (nur Mess-Umgebung, kein Spielverhalten).
+- **j1 = derselbe Eintritt wie die Original-Aufnahme r3** (r3 wurde per Debug-Menue-JUMP 0x11C aufgenommen, Spawn
+  (-22604,14455), Dossier Z. 119-121): `RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-22604,14455,0`, keine Eingabe.
+  Freigabe F1071 bei **(-7138,-12372) = Original**; Heavy +363; Bisse **+468, 521, 571, 624, 674, 727, 778, 830, 882, 933,
+  986, 1036, 1090, 1139**, Tod **+1194 = 39,8 s** — **alle 14 Bisse und der Tod im selben Bild wie das Original**
+  (Original +468, 521, 571, 624, 674, 727, 778, 830, 882, 933, 986, 1036, 1090, 1139, Tod +1194). Abstaende 53, 50, 53,
+  50, 53, 51, 52, 52, 51, 53, 50, 54, 49, 55 = die Phasenwanderung des Originals (N4: starr 53/50).
+- **t1 = echter Tuerweg** 11B0 -> 11C0 (wie Abnahme 0-4): `DOOR FIRE slot=1 ... spawn=(-25279,0,17268)` -> F6 sub02 ->
+  F1088 sub07. Freigabe F1088 bei **(-7148,-12363)** — 13 Einheiten neben der Original-Freigabe, weil der Tuer-Spawn ein
+  anderer Eintritt ist als der r3-Eintritt. Heavy +363; Bisse +468, 522, 571, 625, 674, 728, 777, 831, 880, 934, 984,
+  1037, 1088, 1140, Tod +1192 = 39,7 s. Slot 2: +1 gleichbleibend (Zyklus 103 wie das Original); Slot 3: 0, 0, 0, -1, -2,
+  -2, -2, Tod -2 (N4: 0 ... -5, wachsend). Der Kampf verstaerkt einen Startunterschied von 13 Einheiten ueber die
+  Klemmen/Schub-Kontakte zu 1-2 Bildern; der Tuerweg ist deshalb kein bildgenauer Vergleich mit r3 — j1 ist es.
