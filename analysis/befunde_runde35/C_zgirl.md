@@ -6,7 +6,15 @@ natürlich mit portiert werden"
 Baum: .claude/worktrees/r35_zgirl, Zweig r35/zgirl, Basis 154a73c1 (+ e7e7131c Orchestrator-Hinweis).
 
 ## Fuer den Nutzer (5 Zeilen)
-(wird am Ende gefuellt)
+1. Das "Zombie-Maedchen" ist Gegnertyp 0x13 = Modell EM013, eine weibliche Zombie-Variante (braunes Haar,
+   Kleid); das Original fuehrt sie mit eigener KI-Wurzel, die die normale Zombie-Kampfmaschine mitbenutzt.
+2. Sie kommt im ganzen Spiel nur in STAGE 4 vor: ROOM4050 (Labor-Schlaftrakt "Private Rooms", 15 Kameras),
+   in zwei Zimmern — hinter Tuer 6 (Kamera 9) und hinter Tuer 7 (Kamera 14), jeweils mit einem Gegenstand.
+3. Vorher: KI, Griff, Treffer, Tod waren schon portiert, aber sie erschien NIE — der Port lud bei Tueren, die
+   in denselben Raum fuehren, nur in Stage 1 neu; ROOM4050 waehlt seine Gegner gerade beim Neuladen.
+4. Jetzt: jede solche Tuer laedt wie im Original neu (alle Stages); sie erscheint an beiden Stellen, laeuft
+   an, packt (RE2-KI: 2x -20; RE1.5-KI: -10 dann -5 und Fressen), stirbt, bleibt tot (Kill-Flag 0xA0/0x7D).
+5. Keine neuen Sprachdateien, keine neuen Assets (Modell und Toene kommen aus den Original-Daten).
 
 ## Messung vorher
 
@@ -231,4 +239,33 @@ Der bestehende unit_zgirl_ai (synthetische FSM-Teile 1-6) bleibt unveraendert gr
 
 
 ## OFFEN
-(laufend)
+
+* **O1 Schwerkraft-Aufruf (Zusammenfuehrung mit Spur H).** Das Original ruft in der Maedchen-Wurzel
+  FUN_8001bd60(-10, 0x14) (STAGE4: `addiu a0,zero,-10` @0x8010a934, `jal 0x8001bd60` @0x8010a96c,
+  `ori a1,zero,0x14` @0x8010a970; STAGE1 @0x8010a9b8). Die Port-Funktion baut Spur H
+  (re15_schwerkraft_8001bd60 in trage_1200.c, Feld e->fall_1c0 in re15_actor.h, Zweig r35/raeume) — hier
+  NICHT doppelt gebaut. Wirkung in ROOM4050 gemessen = keine (R5: alle 410 SCA-Woerter 0x0300, kein
+  Absturzkanten-Bit). Nach dem Zusammenfuehren in re15_zgirl_ai_tick (enemy_ai_common.c, vor
+  re15_nav_update_steer) eine Zeile: `re15_schwerkraft_8001bd60(e, -10, 0x14, (int32_t)e->hit_radius_min);`
+  und in FUN_8010b688-Nachbau (Modus 0) die Unterbrechung `(fall_1c0 & 0x9fff) == 0x8001 -> +0x5=9,+0x6=0`
+  (@0x8010b698-bc STAGE4) scharf schalten. Naechster Messweg: unit_r35_zgirl_ki_re15 erneut (darf sich in
+  ROOM4050 nicht aendern).
+* **O2 Todeszeilen-Tabelle (zombieweit, nicht maedchenspezifisch).** Der RE1.5-Tod des Ports ist das
+  vereinfachte Steh-/Liege-Modell (re15_enemy_ai_live_death); die Haupttabelle @0x8012063c (STAGE4
+  0x80119b64) [Waffe*0x20 + Richtung*4] mit Kopf-ab/Beine-ab (z.B. Waffe 8 Richtung 1 = FUN_80107ee0,
+  Fall 2: +0x9=0x81 @0x80108950, HP 0x1e) ist fuer ALLE Zombies nicht portiert. Erst damit wird der
+  Maedchen-Modus 1 (Kriecher, FUN_8010b738 STAGE4, Tabellen 0x80119814/0x80119830) erreichbar. Im
+  Default-KI-Modus (RE2) uebernimmt der RE2-Zerleger das Beine-ab/Kriechen (Familie re15_re2z_owns_type
+  inkl. 0x13). Eigene Runde (betrifft Spur A "abplatzende Beine/Arme").
+* **O3 Selbst-Tueren Stage 2..6 im Spiel.** 46 Tueren steigen jetzt neu ein (byte-true). T8 faehrt jede
+  Selbst-Tuer, die main00 beim Cut-0-Eintritt setzt, durch (Szenario + Wiedereintritt + 60 SCD-Bilder);
+  Tueren, die erst Unterskripte setzen, sind dort nicht abgedeckt. Naechster Messweg bei einem Befund:
+  RE15_DEBUG_JUMP + RE15_FIRE_AOT=<slot>@<bild>#<raum> wie in lauf.sh.
+
+## Zusammenfuehrung
+* aot_common.c: eine Zeile (+4 Kommentarzeilen) im Selbst-Tuer-Zweig von aot_fire_door, Kommentar
+  "Runde 35 Spur C".
+* Abhaengigkeit Spur H (O1): nur ein Aufruf nach dem Merge, keine Code-Kopie.
+* Neue Dateien: tools/r35_zgirl/{em_zensus.py, selbsttuer_zensus.py, ovl_reloc_diff.py, lauf.sh},
+  tests/unit/test_r35_zgirl.c, tests/unit/probes/r35_zgirl.cmake, tests/integration/test_r35_zgirl.cmake,
+  analysis/befunde_runde35/C_zgirl_bilder/*.png. Keine Assets fuer das Paket-/Android-Gate.

@@ -23,6 +23,8 @@
  *   messer    T7  Messerhieb re15_player_weapon_fire(1) -> +0x5 = Waffen-Id 1 (@0x800124bc); die
  *                 Original-Zeile 1 ist beim Maedchen 0 (jalr 0, unfertig) -> Port faehrt das
  *                 Standard-Zurueckzucken (RE2: ein Zombie wie alle), kein Haenger.
+ *   selbsttueren T8 alle Raeume: jede Selbst-Tuer aus main00 (Cut-0-Eintritt) setzt das Szenario
+ *                 = Ziel-Cut, der Wiedereintritt + 60 SCD-Bilder laufen durch.
  * ============================================================================================ */
 #include <stdint.h>
 #include <stdio.h>
@@ -397,6 +399,58 @@ static void t_messer(void)
     re15_re15_re2z_import_set(1);
 }
 
+/* -------------------------------------------------------------------------- T8 selbsttueren */
+/* Die Verallgemeinerung trifft 46 Selbst-Tueren in Stage 2..6 (selbsttuer_zensus.py). Fuer jeden
+ * Raum der Liste: Raumstart Cut 0, jede DOOR-AOT, deren Ziel (Stage/Raum/Variante, Formel aus
+ * aot_fire_door) der Raum selbst ist, feuern -> Szenario == Ziel-Cut, kein Raumwechsel; dann den
+ * Verbraucher (scd_room_reenter) fahren und 60 SCD-Bilder ticken — der Lauf muss durchkommen. */
+#include "re15_room_list.h"
+static void t_selbsttueren(void)
+{
+    printf(" T8 selbsttueren (alle Raeume, Eintritt Cut 0)\n");
+    int n_tuer = 0, n_ok = 0, n_stage1 = 0, n_neu = 0;
+    for (int i = 0; i < RE15_ROOM_COUNT; i++) {
+        uint16_t rid = (uint16_t)re15_room_ids[i];
+        if (raum_laden(rid) != 0) continue;
+        raum_start(0, 0, 0, 0);
+        int selbst[RE15_AOT_MAX], ns = 0;
+        for (int sl = 0; sl < RE15_AOT_MAX; sl++) {
+            if (g_aot.slots[sl].type != RE15_AOT_TYPE_DOOR) continue;
+            const re15_aot_door_params_t *d = &g_aot.door_params[sl];
+            unsigned ziel = (((unsigned)d->dest_stage + 1u) << 12) | ((unsigned)d->dest_room << 4) | (rid & 0xFu);
+            if (ziel != rid || (d->spawn_x == 0 && d->spawn_y == 0 && d->spawn_z == 0)) continue;
+            selbst[ns++] = sl;
+        }
+        for (int k = 0; k < ns; k++) {
+            int sl = selbst[k];
+            raum_start(0, 0, 0, 0);
+            const re15_aot_door_params_t *d = &g_aot.door_params[sl];
+            n_tuer++;
+            if ((rid >> 12) == 1) n_stage1++; else n_neu++;
+            uint8_t cut = d->target_cut;
+            g_scd_pending_scenario = -1; g_room_change.pending = 0;
+            re15_aot_fire_slot(sl);
+            int ok = (g_scd_pending_scenario == (int)cut && !g_room_change.pending);
+            if (ok) {
+                const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                uint8_t sc = (uint8_t)g_scd_pending_scenario; g_scd_pending_scenario = -1;
+                scd_room_reenter(&s_rdt, pl->x, pl->z, sc);
+                for (int f = 0; f < 60; f++) scd_vm_tick();
+                n_ok++;
+            } else {
+                printf("   [FEHL] ROOM%04X Slot %d Cut %d: Szenario %d, Raumwechsel %d\n",
+                       (unsigned)rid, sl, cut, g_scd_pending_scenario, g_room_change.pending);
+            }
+            g_scd_pending_scenario = -1; g_room_change.pending = 0;
+        }
+    }
+    char m[200];
+    snprintf(m, sizeof m, "%d Selbst-Tueren aus main00 bei Cut-0-Eintritt (Stage 1: %d, Stage 2..6: %d), "
+                          "alle steigen neu ein: %d", n_tuer, n_stage1, n_neu, n_ok);
+    pruefe(m, n_tuer > 0 && n_ok == n_tuer && n_neu >= 20);
+    raum_laden(0x4050);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -411,6 +465,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "ki_re2"))   t_ki(1);
     if (alle || !strcmp(teil, "tod"))      t_tod();
     if (alle || !strcmp(teil, "messer"))   t_messer();
+    if (alle || !strcmp(teil, "selbsttueren")) t_selbsttueren();
     printf("=== %s: %d Fehler ===\n", teil, fehler);
     return fehler ? 1 : 0;
 }
