@@ -465,3 +465,24 @@ Emulator (braucht zweite, echt gebaute APK); Rechte-Fall "Konflikt nicht raeumba
 nicht bewiesen fuer jede denkbare Aenderung) - steht so in Kopf/README. Kein APK-Neubau in der Nachbesserung: kein
 C-/Gradle-Code geaendert, die Kette ist dieselbe Funktion mit strengerem Selbsttest (Positiv-Kontrolle P0-P3 am
 echten Gate + Quellbaum in jedem Suite-Lauf).
+
+## Nachbesserung 2 (nach Abnahme 1, `N_abnahme_1.md`: Punkt 1 + 2 erfuellt, Punkt 3 teilweise, Maengel M1-M3)
+
+Stand vor der Nachbesserung: HEAD 9e535728 (= 575c964d + Abnahmebericht), Arbeitsbaum sauber. Der Vorgaenger wurde um
+12:00 vom Sitzungslimit beendet, bevor er hier etwas geschrieben hatte - diese Sitzung beginnt bei null.
+Punkte 1 und 2 sind laut Abnahme 1 erfuellt und werden NICHT angefasst (kein C-Code, kein platform/android/-Code).
+Plan (nur Punkt 3, "Kuenftige Aenderungen am Pruefskript muessen dessen Urteilslogik selbst sorgfaeltig mittesten"):
+- M1 (Python-Urteil, einseitige Lockerungen von `!=`): Mutations-Operator `TAUSCH` in `release/gate_urteil.py` auf
+  einseitige Lockerungen in BEIDE Richtungen erweitern (`!=` -> `<` UND `>`, `==` -> `<=` UND `>=`, zusaetzlich zu
+  `==`<->`!=`, `<`<->`<=`, `>`<->`>=`); bei Vergleichen mit einer Zeichenkette keine Ordnungs-Mutanten (eine Ordnung
+  auf Texten ist keine "Lockerung"). Dann fuer jeden ueberlebenden Mutanten einen Fall von der ANDEREN Seite (Summe > n,
+  len > k, qq < gg, ok_n > n, g1 > g2, a > b mit b >= Mindestzahl, mb < b, je Glied einer Vergleichskette beide Seiten)
+  oder eine begruendete Gleichwertigkeit. Mindestzahlen nachziehen.
+- M2 (Tuer-Soll-Regel nur im Meldungstext): die Pruefung wird eine eigene Anweisung `tuer_soll()` vor `ende(0, ...)` in
+  apk/quellbaum/paket (Mutant "Aufruf weg" je Stelle); die Faelle "Tuer-Soll fehlt" entfernen nur noch die Zeilen, die
+  mit `   Tuer-Soll:` beginnen (Schlusszeile bleibt); je Modus Faelle 29/30, 31/30, 0/0, fehlt.
+- M3 (bash-Urteil in apk_pruefen.sh, einseitige Kontrollen): Gegenseiten-Kontrollen in test_r35_android_pruefkette.sh:
+  N8b (luegendes Urteil, Gate-Rueckgabe 2), N10b (OK-Zeile, Selbsttest-Rueckgabe 2), N11b (f1 > f2), N13b (e + g > m),
+  N22a-e (je eine Zahl der Schlusszeile leer).
+- Danach die Aenderungen der Abnahme 1 selbst nachfahren (E-Reihe: 28 nicht gleichwertige Python-Aenderungen; F1-F13
+  und G1/G2 an der echten Kette) - alle muessen rot werden.
