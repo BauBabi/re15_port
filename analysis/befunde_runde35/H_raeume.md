@@ -518,4 +518,18 @@ durch Gitterstaebe ist der EM2D-Arm (Pin auf die Hand @0x80100C18-38, Opferbank 
 Clip 0 @0x801012A8) — genau das faehrt der Default-Geschmack RE2. Der Nutzerbefund "Hand clippt durch Leon"
 besteht unter RE1.5-KI nicht; dort ist der Befund ein anderer (kein Kontakt). -> OFFEN 6.
 
-(in Arbeit)
+### Suite (Nachbesserung 1)
+Lauf 1 `local_build.sh all`: 481/482 — rot nur `integration_r30_titel_puls` ("(D) nur 1 auswertbare
+Pulsperiode", Bilddauer im Titel 567 ms unter der Last paralleler Baeume; Titelbild, nicht beruehrt). Einzeln
+2x nachgefahren: 2x Passed (24.9 s). Lauf 2 `local_build.sh all` am Endstand:
+`=== LOCAL-BUILD-OK (all) — Tests 482/482` (Schranke 478; geaendert: unit_r35_raeume_trage (D + "Spieler unter
+der Kante"), unit_r35_raeume_arme (4a-c); neue Sonde ohne add_test: probe_r35_raeume_trage_los).
+
+### Dateien (Nachbesserung 1)
+* `re15_port/engine/src/enemy_ai_common.c` (gemeinsam, 5 Zeilen Haken + 3 Kommentarzeilen): re15_los_ray_blocked
+  Parameter `re2_maske` + Filter `u0 & Maske` (@0x800508bc-c8), RE1.5-Sensor ruft mit 0, re15_re2_los_clear mit
+  der Aktor-Maske; Kommentare :214/:10695/:14669 (M3).
+* `re15_port/engine/src/trage_1200.c` (eigen): Messschiene RE15_GEGNER_Y_LOG um rot/los/t158/t15a/cd.
+* `re15_port/tests/unit/test_r35_raeume_trage.c`, `test_r35_raeume_arme.c`, neu `probe_r35_raeume_trage_los.c`,
+  `tests/unit/probes/r35_raeume.cmake` (Sonde registriert).
+* Bilder `analysis/befunde_runde35/H_raeume/nb1_m4_*.png`. Keine neuen Assets, keine Sprachdateien.
