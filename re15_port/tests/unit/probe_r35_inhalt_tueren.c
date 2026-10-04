@@ -356,12 +356,22 @@ static void alle_wahlen(int bild)
 }
 
 /* RIEGEL unit_r35_inhalt_tueren (Aufruf "test"): beide Masse (Spitze, Huellen-Mitte), Bild 2.
- *   A  ALTER Stand (ohne Spiegel-Drehung beim Tausch, ohne P0CD-Korrektur) zeigt den Befund:
- *      mindestens ein Port-Archiv-Paar > 10 Grad (P1DG/P1DK/P1DL 49,8, P1BD 37,1, P0CD 180).
- *   B  NEUER Stand: JEDES Griff-Paar einer Port-Doppeltuer (eigen != 0) < 10 Grad (Huellen-Mitte:
- *      oder unveraendert gegen den alten Stand, wenn die Geometrie nicht angefasst wird).
- *   C  RE2-Originale (eigen 0) unveraendert: neuer = alter Stand, Wert fuer Wert. */
+ * Paarung nach der KAMERASEITE (Nachbesserung 1, M3a), Bildmass in Pixeln (M3b, H 290).
+ *   A  ALTER Stand (ohne Spiegel-Drehung beim Tausch, ohne P0CD-Korrektur) zeigt den Befund im
+ *      Spitzen-Mass: mindestens ein Port-Archiv-Paar > 10 Grad (P0CD 146,1).
+ *   B  NEUER Stand: JEDES Griff-Paar einer Port-Doppeltuer (eigen != 0), beide Seiten, < 10 Grad
+ *      (Huellen-Mitte: oder unveraendert gegen den alten Stand) UND Bild-Fehler <= 1,0 px.
+ *   C  RE2-Originale (eigen 0) unveraendert: neuer = alter Stand, Wert fuer Wert.
+ *   D  S041 (P0CD V1, vorher ungepinnt): Kameraseiten-Paar alt > 10 Grad, neu < 10 Grad und <= 1 px.
+ *   E  jede der 12 Port-Doppeltuer-Seiten mit Griffpaar hat im neuen Stand ein Kameraseiten-Paar
+ *      (S218 = DOOR2D-Rolltor ohne Griffpaar). */
 static const char NL[] = "\n";
+static const uint16_t k_port_seiten[12] = { 22, 30, 41, 44, 45, 49, 59, 80, 92, 136, 155, 157 };
+static const ergebnis_t *kamera_paar(const ergebnis_t *e, int n, uint16_t seite_id)
+{
+    for (int i = 0; i < n; i++) if (e[i].seite_id == seite_id && e[i].seite == 0) return &e[i];
+    return NULL;
+}
 static int pruefen(void)
 {
     int fails = 0, checks = 0;
@@ -375,31 +385,54 @@ static int pruefen(void)
     for (int m = 0; m < 2; m++) {
         const char *mass = m ? "Huellen-Mitte" : "Spitze";
         int befund = 0, port_paare = 0, port_schief = 0, re2_gleich = 1;
-        double max_port = 0;
+        double max_port = 0, max_bild = 0;
         for (int i = 0; i < nalt[m]; i++) if (alt[m][i].eigen && alt[m][i].winkel > 10.0) befund++;
         for (int i = 0; i < nneu[m]; i++) {
-            if (neu[m][i].eigen) {
-                port_paare++;
-                if (neu[m][i].winkel > max_port) max_port = neu[m][i].winkel;
-                /* Huellen-Mitte: ein Paar, dessen Geometrie gar nicht angefasst wird (kein Tausch, keine
-                 * Spiegel-Korrektur: P04B = DOOR04 wie RE2), darf seinen RE2-Wert behalten — das Mass
-                 * streut bei kurzen Mitte-Vektoren auch an RE2-Originalen (DOOR1B V2 9,0 Grad). */
-                int unveraendert = m == 1 && i < nalt[m] && alt[m][i].winkel == neu[m][i].winkel;
-                if (neu[m][i].winkel >= 10.0 && !unveraendert) { port_schief++;
-                    printf("FAIL: DOOR%02X V%u eigen %u %s: %.1f Grad%s", neu[m][i].re2, neu[m][i].var,
-                           neu[m][i].eigen, neu[m][i].seite ? "hinten" : "vorn", neu[m][i].winkel, NL); }
-            }
+            if (!neu[m][i].eigen) continue;
+            port_paare++;
+            if (neu[m][i].winkel > max_port) max_port = neu[m][i].winkel;
+            if (neu[m][i].hoehe > max_bild) max_bild = neu[m][i].hoehe;
+            int unveraendert = 0;   /* Huellen-Mitte: unangefasste Geometrie (P04B) darf ihren Wert behalten */
+            if (m == 1)
+                for (int k = 0; k < nalt[m]; k++)
+                    if (alt[m][k].seite_id == neu[m][i].seite_id && alt[m][k].seite == neu[m][i].seite &&
+                        alt[m][k].winkel == neu[m][i].winkel) unveraendert = 1;
+            if ((neu[m][i].winkel >= 10.0 && !unveraendert) || neu[m][i].hoehe > 1.0) { port_schief++;
+                printf("FAIL: S%03u DOOR%02X V%u eigen %u %s: %.1f Grad, Bild-Fehler %.2f px%s", neu[m][i].seite_id,
+                       neu[m][i].re2, neu[m][i].var, neu[m][i].eigen, neu[m][i].seite ? "abgewandt" : "KAMERA",
+                       neu[m][i].winkel, neu[m][i].hoehe, NL); }
         }
         if (nalt[m] != nneu[m]) re2_gleich = 0;
         for (int i = 0; i < nneu[m] && i < nalt[m]; i++)
-            if (!neu[m][i].eigen && (alt[m][i].re2 != neu[m][i].re2 || alt[m][i].winkel != neu[m][i].winkel)) re2_gleich = 0;
-        checks++; if (befund == 0) fails++;
-        printf("%s A %s: alter Stand %d unsymmetrische Port-Paare (> 10 Grad)%s", befund ? "ok:  " : "FAIL:", mass, befund, NL);
-        checks++; if (port_schief || port_paare < 6) fails++;
-        printf("%s B %s: neuer Stand %d Port-Paare, alle < 10 Grad (max %.1f)%s",
-               (port_schief || port_paare < 6) ? "FAIL:" : "ok:  ", mass, port_paare, max_port, NL);
+            if (!neu[m][i].eigen && (alt[m][i].re2 != neu[m][i].re2 || alt[m][i].winkel != neu[m][i].winkel ||
+                                     alt[m][i].hoehe != neu[m][i].hoehe)) re2_gleich = 0;
+        if (m == 0) {   /* Befund im Spitzen-Mass (P0CD 146,1: Stangen kippen); die Huellen-Mitte der
+                         * senkrechten Stangen bleibt dabei gleich -> dort nur Anzeige */
+            checks++; if (befund == 0) fails++;
+            printf("%s A %s: alter Stand %d unsymmetrische Port-Paare (> 10 Grad)%s", befund ? "ok:  " : "FAIL:", mass, befund, NL);
+        } else printf("info: A %s: alter Stand %d Port-Paare > 10 Grad%s", mass, befund, NL);
+        checks++; if (port_schief || port_paare < 12) fails++;
+        printf("%s B %s: neuer Stand %d Port-Paare, alle < 10 Grad (max %.1f) und <= 1,0 px (max %.2f)%s",
+               (port_schief || port_paare < 12) ? "FAIL:" : "ok:  ", mass, port_paare, max_port, max_bild, NL);
         checks++; if (!re2_gleich) fails++;
         printf("%s C %s: RE2-Originale unveraendert%s", re2_gleich ? "ok:  " : "FAIL:", mass, NL);
+    }
+    /* D: S041 */
+    {
+        const ergebnis_t *a = kamera_paar(alt[0], nalt[0], 41), *n = kamera_paar(neu[0], nneu[0], 41);
+        int ok = a && n && a->winkel > 10.0 && n->winkel < 10.0 && n->hoehe <= 1.0;
+        checks++; if (!ok) fails++;
+        printf("%s D S041 P0CD V1 Kameraseite: alt %.1f Grad -> neu %.1f Grad, %.2f px%s", ok ? "ok:  " : "FAIL:",
+               a ? a->winkel : -1.0, n ? n->winkel : -1.0, n ? n->hoehe : -1.0, NL);
+    }
+    /* E: Kameraseiten-Abdeckung */
+    {
+        int fehlt = 0;
+        for (int k = 0; k < 12; k++)
+            if (!kamera_paar(neu[0], nneu[0], k_port_seiten[k])) { fehlt++;
+                printf("FAIL: S%03u ohne Kameraseiten-Paar%s", k_port_seiten[k], NL); }
+        checks++; if (fehlt) fails++;
+        printf("%s E 12 Port-Doppeltuer-Seiten mit Kameraseiten-Paar: %d fehlen%s", fehlt ? "FAIL:" : "ok:  ", fehlt, NL);
     }
     printf("%s%d Pruefungen, %d Fehler%s", NL, checks, fails, NL);
     return fails ? 1 : 0;
