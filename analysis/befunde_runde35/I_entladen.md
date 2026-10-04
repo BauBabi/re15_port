@@ -706,3 +706,68 @@ engine/src und alle `re15_pc_read_{re2,cd,any}/pc_read_shared`-Aufrufer gelesen:
 * inv_render_pc.c Karte (`s_map_loaded`), RE2-ST0, Box-Panel; item_icon/itps (ITEMALL.PIX/ITPS.ITP);
   audio_pc.c Fuss/SE/Waffe/CORE/TORSE/Tuer; bg_pc.c, elliot_pc.c — global bzw. schon freigegeben (N1/N2).
 => einziger neu gefundener raumgebundener Cache: LAMPE2130 (= Mangel 1).
+
+### N3 Umsetzung (Commit c7d97614, gebaut)
+* `platform/pc/src/panel_lampen_pc.c` (Datei der Spur C, Runde 34 Nacht; Haken 11 Zeilen: 1 Include,
+  1 Generation `s_gen`, 1 Zeile in `laden()`, 2 Funktionen + 4 Zeilen Kopf): `re15_panel_lampen_pc_entladen()`
+  setzt `s_zustand = 0` (= ungeprueft, der Zustand beim Prozessstart) und nullt `s_zelle`;
+  `re15_panel_lampen_pc_belegt(&gen)` = `s_zustand == 1`. Zeichnen/Laden selbst unveraendert: der
+  naechste sichtbare Lampen-Takt in 11F0/11F1 Cut 10 laedt LAMPE2130.TIM neu.
+* `platform/pc/src/entladen_pc.c`: `alles_entladen` Schritt (13) ruft die Freigabe (Kommentar mit RE2
+  @0x8004a1c4/@0x8004a2ec/@0x8001bc80/@0x8001bc84/@0x8001bc88, RE1.5 @0x800397e8/@0x80039738);
+  19. Zensus-Fach `lampe` (mit Generation -> auch BILD-Zeilen erfassen eine fremde Lampe).
+* `include/re15_entladen.h`: `RE15_FACH_LAMPE` + Deklarationen mit Beleg-Kette.
+* Keine neue Verhaltenskonstante, keine neue .c-Datei, kein neues Asset, kein main.c-Haken.
+
+### N3 Messung nachher (eigener Bau nach c7d97614, Messschiene RE15_ENTLADEN_LOG)
+```
+k (Pin, = Abnahme g6c) RE15_FPS=240 RE15_DEBUG_JUMP=11F0@5 RE15_FORCE_CUT=10 RE15_SET_FLAG_AT=5:13,5:15,5:17@100
+    RE15_KILL_AT=400 RE15_BOOT_EXIT_AT=2 RE15_PANEL_LOG=panel.log
+    panel.log: 561 Bilder "raum=11F0 cut=10 ... maske=015 ... lampe_o=1" (ab F100)
+    VORHER   spielende gen=3 raum=11F0 | belegt ... msk=1 tim=18 gegner=2 esp_bank=1 rdt=1 bg=1 ... lampe=1
+    EREIGNIS spielende gen=4 raum=11F0 | belegt (alle 19 Faecher) 0
+    EREIGNIS spielstart gen=5 | alle 19 Faecher 0 ; keine BILD-Zeile
+l (Pin, = Abnahme g6d) dieselbe Lampe + RE15_FIRE_AOT=0@300#11F0 RE15_EXIT_AT=60#11E0
+    debug.log "PC loaded room11e0.rdt" ; panel.log 201 Bilder lampe_o=1
+    VORHER   raum gen=3 raum=11F0 | ... tim=20 gegner=2 ... lampe=1
+    EREIGNIS raum gen=4 raum=11F0 | alle 19 Faecher 0 ; 60 Bilder ROOM11E0 ohne BILD-Zeile
+s5 ECHTER WEG (Spur-C-Lauf S5, scratchpad/n3_s5.sh): RE15_DEBUG_JUMP=11F0@240 RE15_SUBSTART=16@40#11F0
+    (sub16 = Evt_exec-Ziel des Panel-AOT Slot 1), Meldungen + "Ja" und Schalter 3,1,5 per D-Pad/Quadrat
+    (RE15_INPUT_SCRIPT, Basis spiel, Start 320), echte Tuer RE15_FIRE_AOT=0@720#11F0 -> 11E0,
+    RE15_EXIT_AT=150#11E0. "[substart] sub_scd[16] at F40", obere Lampe F686..F720 (35 Bilder),
+    Bild 700 (Rueckleser vor Present) Lampenrechteck x212..233/y67..85 Mittel RGB (73.6,148.3,72.5)
+    gegen Bild 60 vor dem Panel (8.1,8.1,6.0) = gruen gezeichnet;
+    VORHER raum gen=3 raum=11F0 ... lampe=1 -> EREIGNIS raum gen=4 alle 19 Faecher 0, 0 BILD-Zeilen
+    in 150 Bildern ROOM11E0.
+```
+**Gegenprobe** (Schritt (13) auskommentiert, gebaut als `re15_pc_gegenprobe_n3.exe`, danach
+`git checkout` + Neubau; exe nach der Messung geloescht). Pins K/L per `cmake -P` mit dieser exe:
+beide **FAILED** ("nach dem Entladen noch belegt"); die Zeilen reproduzieren die gdb-Werte der Abnahme:
+```
+k: EREIGNIS spielende gen=4 raum=11F0 lampe=1 ; BILD 1 gen=4 raum=11F0 lampe=1 (fremd 1) ;
+   EREIGNIS spielstart gen=5 lampe=1            (= Abnahme g6c: s_zustand=1 nach spielende/spielstart)
+l: EREIGNIS raum gen=4 raum=11F0 lampe=1 ; BILD 1/30/60 gen=4 raum=11E0 lampe=1 (fremd 1)
+                                                (= Abnahme g6d: s_zustand=1 bei Bild 60 in 11E0)
+```
+=> Der Fix erklaert den Befund: Vorbedingung (`lampe=1` vor der Grenze, Lampe sichtbar) steht im
+Protokoll, mit Freigabe 0, ohne Freigabe 1 — genau das Feld, das gdb in der Abnahme las.
+
+**Aussehen unveraendert / Wiederladen** (A/B neue exe gegen Gegenprobe-exe, scratchpad/n3_ab.sh):
+`RE15_DEBUG_JUMP=11F0@5 RE15_FORCE_CUT=10 RE15_SET_FLAG_AT=5:13,5:15,5:17@10 RE15_GOTO_ROOM=11F0
+RE15_EXIT_AT=100#11F0` (11F0 -> 11F0 ueber die Raumgrenze), `RE15_ENTLADEN_SHOT_BILD=20,25,60,61,90`:
+**8/8 Bilder bytegleich** (SHA1; gen3 b020/b025 mit Lampe: Mittel gruen 148.3 gegen 50.5 ohne).
+Neue exe: VORHER raum 11F0 lampe=1 -> EREIGNIS 0; Gegenprobe: EREIGNIS lampe=1 + 4 BILD-Zeilen.
+Wiederladen: Bank 5 ist RAUMLOKAL (die Schalter-Bits fallen beim Wiedereintritt, gemessen: mit
+RE15_SET_FLAG beim Boot kein lampe_o=1 in 11F0), ein zweites Sichtbarmachen im selben Prozess gibt
+die Messschiene nicht her. Belegt ist es trotzdem am Lauf: in JEDEM Lauf lief
+`re15_panel_lampen_pc_entladen()` schon an "spielstart" gen 2 und "raum" gen 3 VOR dem ersten Laden,
+und der Zustand danach ist unabhaengig vom Zustand davor (`s_zustand = 0`, `s_zelle` = 0, beides fest);
+das Laden danach gelingt (lampe=1, Bild gruen, Pins k/l/s5).
+
+### N3 Tests
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r35_entladen_n3beleg (neu) | RE2 `3c10800d` @0x80049e50, `2610c1e8` @0x80049e54, `8e05213c` @0x8004a178, jal 0x80012fb8 @0x8004a1c4, jal 0x8001bba4 GENAU @0x8004a2ec (Voll-Scan), `8c42e324` @0x8001bc78, `8c44005c` @0x8001bc80, `8c450058` @0x8001bc84, jal 0x8001bd38 GENAU @0x8001bc88; ROOM2130.RDT [0x58] = 0x0E398 und LAMPE2130.TIM == RDT[0x0E398, +4256) | Passed 0.03 s |
+| integration_r35_entladen_k (neu) | Tod in 11F0 mit sichtbarer Lampe: panel.log `raum=11F0 cut=10 ... lampe_o=1`, VORHER spielende 11F0 `lampe=1`, jede EREIGNIS-Zeile 0, keine BILD-Zeile | Passed 3.9 s; Gegenprobe FAILED |
+| integration_r35_entladen_l (neu) | Tuer AOT 0 11F0 -> 11E0 mit sichtbarer Lampe: `PC loaded room11e0.rdt`, VORHER raum 11F0 `lampe=1`, EREIGNIS 0, keine BILD-Zeile | Passed 18.7 s; Gegenprobe FAILED |
+Registriert nur in `tests/unit/probes/r35_entladen.cmake` (Foreach-Listen um n3beleg / K L erweitert).
