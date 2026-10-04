@@ -16,6 +16,7 @@
 #include "re15_emd.h"
 #include "re15_skeleton.h"
 #include "re15_anim_select.h"
+#include "r35_raeume_volumen.h"   /* Nachbesserung 2: Volumenmass */
 
 static uint8_t *slurp(const char *path, long *out_sz)
 {
@@ -189,6 +190,58 @@ int main(void)
                        pinart == 1 ? dv : 1, pinart ? "Parts-Pose C3B4" : "Clip5 B0 (bisher)", yaw, seite ? "Ruecken" : "Gesicht",
                        mind, sum / fca, tief, nah, fca, vmin, vmax, gegen);
             }
+        }
+    }
+    /* ---- Nachbesserung 2: die PINS DER EXE (re2_ki.log [re2arm] PIN, Tuerweg 1220 -> 1210) -------------
+     * front = Eingabe R0.5,W0.3,U14 (Leon Blick 1440, kein Flip), back = R0.5,W0.3,U3.57,W0.3,R0.57,W0.3,D8
+     * (Leon Blick 3072, Flip). Je Pin-Quelle: gemischte Parts (byte-true), rein Clip 3 Bild 4, Clip 5 Bild 0.
+     * Mass ueber einen vollen Halte-Zyklus (Arm Clip 5 Bild f, Leon Opfer-Clip 0 Bild f+1). */
+    {
+        long esz = 0, rsz = 0;
+        uint8_t *edd = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EDD", &esz);
+        uint8_t *emr = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EMR", &rsz);
+        static re15_emd_animation_t pa3; static re15_emd_skeleton_t ps3;
+        if (!edd || !emr || re15_emd_parse_animation(edd, (size_t)esz, &pa3) != 0 ||
+            re15_emd_parse_skeleton(emr, (size_t)rsz, &ps3) != 0) return 1;
+        if (!vol_laden(RE15_ASSET_PSX_DIR "/PLD/PL00.MD1")) { printf("FAIL: PL00.MD1\n"); return 1; }
+        re15_emd_skeleton_t vs = ps3;
+        vs.keyframe_data = eb->skel_victim.keyframe_data;
+        vs.keyframe_data_size = eb->skel_victim.keyframe_data_size;
+        vs.keyframe_count = eb->skel_victim.keyframe_count;
+        vs.keyframe_size_bytes = eb->skel_victim.keyframe_size_bytes;
+        const int fcv = eb->anim_victim.clips[0].frame_count, fca = eb->anim.clips[5].frame_count;
+        static const struct { const char *name; int armyaw; int ruecken; int32_t pin[3][2]; } fall[2] = {
+            { "front (exe nb2_front)", 3664, 0, { { -20609, -15171 }, { -20588, -15148 }, { -20728, -15056 } } },
+            { "back  (exe nb2_back) ", 3705, 1, { { -20603, -15239 }, { -20552, -15206 }, { -20686, -15106 } } },
+        };
+        static const char *quelle[3] = { "gemischt (byte-true)", "rein C3B4 (NB1)", "Clip5B0 (Basis)" };
+        e->x = -21490; e->y = -2500; e->z = -15747;
+        for (int c = 0; c < 2; c++) for (int q = 0; q < 3; q++) {
+            e->rot_y = (int16_t)fall[c].armyaw;
+            const int32_t px = fall[c].pin[q][0], pz = fall[c].pin[q][1];
+            double a = atan2(-(double)(e->z - pz), (double)(e->x - px));
+            int yaw = ((int)(a * 2048.0 / 3.14159265358979) + 4096) & 0xfff;
+            if (fall[c].ruecken) yaw = (yaw + 2048) & 0xfff;
+            int hor = 0, volb = 0, volmax = 0, mind = 1 << 30;
+            for (int f = 0; f < fca; f++) {
+                re15_actor_t pr; memset(&pr, 0, sizeof pr);
+                pr.active = 1; pr.motion = 0; pr.anim_frame = (uint16_t)((f + 1) % fcv); pr.rot_y = (int16_t)yaw;
+                int kf = re15_compute_actor_kf(&eb->anim_victim, &vs, &pr, 0, pr.anim_frame);
+                re15_skel_pose_t poses[RE15_EMD_MAX_BONES]; g_anim_pose_actor = NULL;
+                if (kf < 0 || re15_skel_compute_pose(&vs, kf, poses) != 0) return 1;
+                re15_skel_pose_t leon[2] = { poses[0], poses[8] };
+                int32_t b8[3]; re15_skel_bone_to_world(poses[8].trans, (int16_t)yaw, px, 0, pz, b8);
+                e->motion = 5; e->anim_frame = (uint16_t)f;
+                int32_t h[3]; re15_enemy_bone_world_pos(e, 3, h);
+                int d = (int)sqrt((double)(h[0]-b8[0])*(h[0]-b8[0]) + (double)(h[2]-b8[2])*(h[2]-b8[2]));
+                if (d < mind) mind = d;
+                if (d < 120) hor++;
+                int vi = vol_arm_in_leon(e, leon, yaw, px, pz, 0);
+                if (vi > 0) volb++;
+                if (vi > volmax) volmax = vi;
+            }
+            printf("EXE-PIN %s %-22s Pin (%d,%d) Leon-Yaw %4d: waagerecht <120 in %2d/%d (min %d), Volumen %2d/%d Bilder "
+                   "(max %d Vertices)\n", fall[c].name, quelle[q], px, pz, yaw, hor, fca, mind, volb, fca, volmax);
         }
     }
     return 0;
