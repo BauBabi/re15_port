@@ -168,7 +168,11 @@ static int bank_laden(int re2)
     return ok;
 }
 
-static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
+/* unter_kante = 1 (Nachbesserung 1, M1): der Spieler bleibt nach dem Aufnehmen am Minidisc-Platz stehen
+ * (-25880,-16450), Blick 2048, also DIREKT unter der Kante (Zelle 13 z -17351..-16251) — die Lage des
+ * Nutzers. Unter RE2 beisst der Zombie dort zuerst von oben (Sub 14, Block B @0x80101F7C ff.) und muss
+ * danach ueber das Sicht-Bit (+0x154&0x800 @0x80101308/@0x80101568) wieder losgehen. */
+static void teil_b(const re15_rdt_t *r, int flavor, const char *name, int unter_kante)
 {
     re15_ai_flavor_set(flavor);
     CHECK(bank_laden(flavor == RE15_AI_FLAVOR_RE2), "[%s] Zombie-Bank nicht ladbar", name);
@@ -197,7 +201,12 @@ static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
          * Spiel nach dem Aufnehmen — der RE2-Zombie verliert sonst das Interesse (Leerlauf Sub 0);
          * steht der Spieler DIREKT unter der Kante, beisst der RE2-Zombie von oben (Sub 14, 2D-Abstand)
          * statt weiterzugehen — darum 4500 hinter der Kante (Zelle 13 z -17351..-16251). */
-        pl->motion = 100; pl->x = -24300 + ((f / 60) & 1 ? 600 : -600); pl->z = -12500;
+        if (unter_kante) {
+            if (f == 0) { pl->x = -25880; pl->z = -16450; pl->rot_y = 2048; }
+            pl->motion = 0;                     /* steht; ein Griff darf ihn verschieben */
+        } else {
+            pl->motion = 100; pl->x = -24300 + ((f / 60) & 1 ? 600 : -600); pl->z = -12500;
+        }
         frame();
         if (e->floor == 1 && e->y == -1800) luft_band1++;
         if (sturz_start < 0 && (e->fall_1c0 & 0x8000)) sturz_start = f;
@@ -214,8 +223,12 @@ static void teil_b(const re15_rdt_t *r, int flavor, const char *name)
                    e->sub_state_2, e->grid_id, e->motion, e->anim_frame, e->x, e->y, e->z, e->floor);
         if (landung >= 0 && f > landung + 30) break;
     }
-    printf("  [B %s] slot %d: Sturz ab Bild %d, Landung Bild %d, danach y=%d b%d +0x1ba=%d\n",
-           name, s, sturz_start, landung, e->y, e->floor, (int)e->dog_floor_y);
+    printf("  [B %s%s] slot %d: Sturz ab Bild %d, Landung Bild %d, danach y=%d b%d +0x1ba=%d\n",
+           name, unter_kante ? " Spieler unter der Kante" : "", s, sturz_start, landung, e->y, e->floor,
+           (int)e->dog_floor_y);
+    if (unter_kante)                            /* Abnahme 0: vorher 1011 Bilder oben stehen */
+        CHECK(sturz_start >= 0 && sturz_start < 600,
+              "[%s] Spieler unter der Kante: Sturz erst ab Bild %d (Soll < 600)", name, sturz_start);
     CHECK(sturz_start >= 0, "[%s] der Zombie ist nie von der Bahre gefallen (FUN_8001bd60)", name);
     CHECK(landung >= 0 && e->y == 0 && e->floor == 0,
           "[%s] keine Landung auf der Spieler-Ebene (y=%d b%d)", name, e->y, e->floor);
@@ -257,8 +270,32 @@ int main(void)
         g_room_rdt = rdt;
     }
 
-    teil_b(&rdt, RE15_AI_FLAVOR_RE15, "RE1.5");
-    teil_b(&rdt, RE15_AI_FLAVOR_RE2,  "RE2");
+    teil_b(&rdt, RE15_AI_FLAVOR_RE15, "RE1.5", 0);
+    teil_b(&rdt, RE15_AI_FLAVOR_RE2,  "RE2", 0);
+
+    /* D (Nachbesserung 1, M1): die RE2-Sichtlinie an der Kante. RE2 0x80050858 zaehlt nur Saetze mit
+     * Maskentreffer (`and v0,v1,fp` / `beq v0,zero` @0x800508c4-c8); die Absturzkanten 12/13 (u0 0x01)
+     * kollidieren nicht mit der Zombie-Maske 4 und duerfen die Sicht nicht brechen, die Band-1-Wand 9
+     * (u0 0xFF) schon. Gemessen vorher: los=0 in jedem Bild (Region-Ray an Zelle 13/12). */
+    {
+        re15_actor_t z; memset(&z, 0, sizeof z);
+        re15_actor_t p; memset(&p, 0, sizeof p);
+        z.active = 1; z.type = 0x10; z.floor = 1; z.y = -1800; z.x = -24049; z.z = -17373; z.sca_mask = 4;
+        p.active = 1; p.floor = 0; p.y = 0;
+        static const int32_t frei[][2] = { {-25880, -16450}, {-25788, -16450}, {-24049, -16000},
+                                           {-25000, -16800}, {-22685, -17314} };
+        for (unsigned k = 0; k < sizeof frei / sizeof frei[0]; k++) {
+            p.x = frei[k][0]; p.z = frei[k][1];
+            CHECK(re15_re2_los_clear(&z, &p) == 1,
+                  "D: Sicht von der Kante (-24049,-17373) zu (%d,%d) geblockt (Absturzkante u0 01 als Wand)",
+                  p.x, p.z);
+        }
+        p.x = -24300; p.z = -12500;
+        CHECK(re15_re2_los_clear(&z, &p) == 0, "D: die Band-1-Wand Zelle 9 (u0 FF) muss die Sicht weiter brechen");
+        printf("  [D] Sicht an der Kante: 5/5 Plaetze unter der Kante frei, Wand Zelle 9 blockt\n");
+    }
+    teil_b(&rdt, RE15_AI_FLAVOR_RE2,  "RE2", 1);
+    teil_b(&rdt, RE15_AI_FLAVOR_RE15, "RE1.5", 1);
 
     free(buf);
     if (fails) { printf("test_r35_raeume_trage: %d FAIL\n", fails); return 1; }
