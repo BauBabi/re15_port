@@ -4453,7 +4453,7 @@ void re15_body_push_player(void)
          * `and v0,a0,v1; andi 0x1000; bne -> return`): only the pair skips — a THIRD zombie still
          * pushes the grabbed player. Zombie-side bit: set at [0] @0x80102610, cleared at [8]
          * @0x80102bb8 = its sub_state_1 stays 3..6 for exactly that window. */
-        if (pl_locked && e->state == 1 &&
+        if (pl_locked && e->state == 1 && e->type != 0x27u &&   /* Runde 35 Spur J (8): Gorilla-Sub 3..6 = Jagd/Wahl/Biss/Heavy OHNE Bit 0x1000 (@0x8002af14) */
             e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
         if (pl_locked && re15_affen_griff_paar(e)) continue;   /* Runde 35 Spur J (6e): Gorilla-Bit 0x1000 @0x8011ac34-38 / @0x8011ad8c-94 */
         /* G5-ENDBOSS (Typ 0x36): RE2 gibt ihm KEINEN +0x78-Zylinder, sondern ZWEI

@@ -1105,3 +1105,14 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
   `andi v0,v0,0x1000` / `bne v0,zero,0x8002b464` @0x8002af14-1c -> beide Wort-Bits 0x1000 (Gorilla @0x8011ac34-38,
   Spieler @0x8011ac4c-54) = KEIN Schub. Die Spieler-Seite (re15_body_push_player) hatte die Ausnahme seit
   Nachbesserung 2 (6e), die Gorilla-Seite nicht. Haken: `if (!(re15_player_is_grabbed() && re15_affen_griff_paar(e)))`.
+- **Messung nach Bau 2 (`jnb3/griff2.txt`, Ritt-Platzierung + Paar-Ausnahme im Wurzelschwanz):** e1 T254-T268 2-17
+  neben dem Original (T261 d2; vorher bis 844), e2 T254-T265 hoechstens 78 (T260; T262 d7, T264 d6), e2-Weg T254->T262
+  579 (Original 542), Abstand e1-e2 3189-3214 wie im Original. **M2 im Kern behoben.**
+- **Dritte Ursache (T265-T267):** Leons Eingang T265 im Port = reine Platzierung (-7357,-10904), Original
+  Platzierung + Schub von e2 (-7332,-10884) -> (-7190,-10771). Port-Spielerschub re15_body_push_player ueberspringt
+  waehrend Leon gehalten wird JEDEN Gegner mit Zustand 1 / Sub 3..6 (Zombie-Paar-Naeherung, typ-unabhaengig) — e2
+  steht in Gorilla-Sub 3 (Jagd) und war damit faelschlich "Greifer". Original FUN_8002aec4 nimmt nur das Paar mit
+  BEIDEN Bits 0x1000 aus (@0x8002af14-1c); e2 hat das Bit nie (gesetzt nur im Pin-Latch des Greifers @0x8011ac34-38).
+  Haken: Zombie-Bedingung `&& e->type != 0x27u` (der Gorilla hat seine eigene Paar-Abfrage re15_affen_griff_paar).
+  Ob die typ-unabhaengige Bedingung auch andere Greifer-Typen (Hund 0x20, Kraehe 0x21) falsch ausnimmt: nicht
+  Gegenstand dieser Spur -> OFFEN.
