@@ -778,3 +778,22 @@ PCSX-Redux + `re2leon.cue`, Raumsprung per RAM (RE2-Tuermechanik: Tuer-AOT-Handl
 @0x800516d4, `sw s0 -> 0x800CE550` @0x800516e8; Tuerwechsel FUN_80026b7c liest den Satz: x/y/z/yaw s16 +0..+6,
 Stage +8 (%9), Raum +9, Cut +10, Ebene +11), Leon in ROOM2050 neben die Arme, Griff abwarten, je Bild RAM der
 Halte-Phase (PL, Arm, Parts beider) + Bildschirm.
+
+### RE2-ORIGINAL GEMESSEN (DuckStation-GDB, 2026-10-04) — der Messweg aus OFFEN 1 ist gegangen
+**Werkzeug-Befund:** PCSX-Redux laeuft in dieser Sitzung nicht (GLFW meldet keinen Monitor: Dialog "ImGui assert:
+g.PlatformIO.Monitors.Size > 0", nach OK beendet; `-no-ui` stuerzt nach dem BIOS ab, auch ohne Lua). DuckStation
+laeuft, und dessen GDB-Server (`[Debug] EnableGDBServer = true`, 127.0.0.1:2345; Log "GDB server is now listening")
+liest/schreibt RAM und setzt Haltepunkte. **RE2-Spielstaende gibt es doch:** `%LOCALAPPDATA%/DuckStation/savestates/
+SLUS-00748_3.sav` und `_5.sav` (13.09.) stehen in Stage 1 Raum 5 = **ROOM2050**, alle zehn Arme schlafend
+(+0x10E Bit 0x8000, w4 = 0x00000001, Lage = Record). Die Disc (SLUS-00748, Dual-Shock-Fassung) faehrt **dieselbe
+EXE** wie `info/re2leon/PSX.EXE`: Code 0x80014000-0x80050000 im RAM des Spielstands 61440/61440 Worte gleich
+(`re2_mess/re2_ss.py`), Overlay @0x80100CB4 = `9202014d` = CDEMD0_EM2D_ai1.BIN +0xCB4.
+**Lauf** (`re2_mess/re2_gdb_grab.py`): Spielstand _5 laden, Leon per RAM-Schreiben an (x, z, Blick) stellen (genau
+die Felder, die FUN_80026b7c setzt: +0x38/+0x40 s32, +0x44/+0x48, +0x118/+0x11A s16, +0x76), Haltepunkt auf B4 P1
+des Arms (EM2D @0x80100CB4, laeuft je Bild einmal, solange ein Arm haelt), an jedem Halt PL (0x248 B) + Leons Parts
+(16 x 0xAC ab PL+0x198) + Halter (PL+0x1B4 = 0x800CFDAC) + dessen Parts lesen (`re2_mess/daten/<lauf>/frames.bin`).
+**g1 (Ostfenster, Leon (-12300,-7991) Blick 3072 = zum Fenster):** Griff durch **Satz 9** (x -12450, **y -2160**,
+z -7000, Arm A), Pin Leon (-12353, -8251), Leon-Blick 2967, Arm-Blick 925. Clipwort Leon `000e0100` beim Arm
+`000f0005` -> **Leon = Arm-Bild + 1 im ORIGINAL-RAM** (Riegel (2) bestaetigt). Bild (VRAM des Spielstands beim
+Schliessen waehrend des Haltens): `H_raeume/nb3_re2_original_halten_ost_rec9_y-2160.png` (beide Bildpuffer, 5x) —
+**im RE2-Original liegt der Zombie-Unterarm ueber/in Leons Kopf und Schulter, die Hand auf seinem Oberkoerper.**
