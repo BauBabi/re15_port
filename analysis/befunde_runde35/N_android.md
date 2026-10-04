@@ -264,7 +264,7 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
 | Zeile max. | 160 Zeichen | Puffer `l2[160]` in re15_android_bootstrap_assets |
 | Raeum-Tiefe / Pfadlaenge | 64 / 4096 | wie re15_abgleich_waisen (asset_abgleich.c WAISEN_TIEFE/WAISEN_PFAD) |
 | Gate-Mindestzahlen | 261 Faelle / 148 Proben | gemessen: Selbsttest 261/261, 148/148 |
-| Urteils-Mindestzahlen | 119 Faelle / 257 erkannt / <= 3 gleichwertig | gemessen: URTEIL-SELBSTTEST-OK 119/119, 257/260, 3 |
+| Urteils-Mindestzahlen | 243 Faelle / 781 erkannt / <= 4 gleichwertig (Nachbesserung 1; vorher 119/257/3) | gemessen: URTEIL-SELBSTTEST-OK 243/243, 781/785, 4 |
 
 ## Tests (alle in re15_port/tests/unit/probes/r35_android.cmake)
 | ctest | misst | Punkt |
@@ -273,7 +273,7 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
 | unit_r35_android_konflikt | echter android_glue.c: K1-K6 Update im selben Start fertig, Baum = APK, Start 3 schneller Weg; L1/L2 fail closed | 2 |
 | unit_r35_android_abgleich | asset_abgleich.c: R1/R2 (15 Pruefungen scheitern am alten Stand), F-Y1-Proben, weg_frei/leere_eltern im Temp-Ordner | 2 (+3) |
 | unit_r34a_asset_abgleich | (bestehend) eine Zeile an R1 angepasst | 2 |
-| unit_r35_android_pruefkette | echte Kette apk_pruefen.sh + Gate + Urteil: Positiv P0-P2, Negativ N1-N9 muessen ROT werden | 3 |
+| unit_r35_android_pruefkette | echte Kette apk_pruefen.sh + Gate + Urteil: Positiv P0-P3, Negativ N1-N21 muessen ROT werden (N10-N21 = je Pruefzeile des bash-Urteils, Nachbesserung 1) | 3 |
 
 ## OFFEN
 - Ein Update-Lauf (APK A -> APK B) mit dem H8-Muster auf dem Emulator ist nicht gemacht (braucht eine zweite, echt
@@ -402,3 +402,16 @@ verlangt, `FEHLER=0`. Auszug: `N10_ok_zeile_rueckgabe_1 -> Abbruch: DIE: Selbstt
 OK-Schlusszeile, aber Rueckgabe 1`, `N19a ... Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selbsttest, Rueckgabe 0):
 ...' (zweite Instanz)`, `N20_urteil ... DIE: Gate-Urteil ist NICHT das festgehaltene`, `N21_gate ... DIE: Asset-Gate
 ist NICHT das festgehaltene`.
+
+### M3 - Doku behauptete mehr, als der Mechanismus leistete
+**Ursache:** README "jede Ein-Stellen-Aenderung des eigenen Urteilscodes (260 Mutanten) muss ein Fall erkennen" und
+Dossier Punkt 3 "Nicht mutiert werden nur Meldungstexte" - tatsaechlich wurden (Code @b19c39fa, `visit_Constant`, s. M1)
+keine Zeichenketten/Regex-Muster/MARKE-Werte/Pruef-Literale mutiert, und main()/urteil_rufen() lagen ausserhalb.
+**Aenderung:** M1 behoben UND den Text an den gemessenen Umfang angepasst - an vier Stellen derselbe Wortlaut:
+Kopf von `release/gate_urteil.py` (Operatoren-Liste + Abschnitt "NICHT mutiert: Meldungstexte (zweites Argument von
+ende() und genau_eine()), urteil_rufen(), main(), der Selbsttest selbst; Aenderungen ausserhalb der Operatoren - z.B.
+any -> all - faengt nur die Fallsammlung"), Docstring `_Mutierer`, Kopf von `release/apk_pruefen.sh` und
+`re15_port/platform/android/README.md` (Urteil-Pin: 243 Faelle, 785 Mutanten / 781 erkannt / 4 begruendet, nicht
+mutierte Teile, 32/32 simulierte Aenderungen mit Belegpfad). Die alte Dossier-Aussage in Punkt 3 ist an Ort und Stelle
+als zu weit markiert. Was main()/urteil_rufen() angeht: deren Fehler faengt die Kette (Abnahme B3: `return code` ->
+`return 0` -> N5a/N5b FALSCH), nicht der Mutant - so steht es jetzt auch im Text.
