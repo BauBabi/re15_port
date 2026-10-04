@@ -98,6 +98,102 @@ static void zensus_bank(const char *tag, const re15_esp_t *esp, unsigned seenA[6
     }
 }
 
+/* Routinen, die der Port in esp_fx_dispatch (A) bzw. esp_fx_dispatch_b (B) ausfuehrt (re15_esp.c).
+ * Alles andere laeuft im Port als noop. */
+static int port_kennt_a(unsigned a)
+{
+    static const unsigned k[] = { 0, 3, 4, 5, 8, 9, 10, 11, 15, 16, 17, 18, 30, 31, 38, 41, 42 };
+    for (unsigned i = 0; i < sizeof k / sizeof k[0]; i++) if (k[i] == a) return 1;
+    return 0;
+}
+static int s_mit_brocken = 1;   /* 0 = Stand vor Runde 35 (B 36/37 fehlten) */
+static int port_kennt_b(unsigned b)
+{
+    return b == 0 || b == 12 || b == 29 || (s_mit_brocken && (b == 36 || b == 37));
+}
+
+/* Endet die Anim ab Record 0 von selbst? 1 = Terminator 0/0 erreicht, 0 = Schleifenmarke (0xFF)
+ * vorher (dann endet der Platz NUR ueber eine Routine: Flags := 0 oder Anim-Index-Sprung), -1 = Fehler.
+ * Ablauf wie die Tick-Anim-Stufe @0x8001a38c-47c (Index++, Terminator @0x8001a3e8-40c, Schleife
+ * @0x8001a410-44c). */
+static int anim_endet(const re15_esp_t *esp, int ei)
+{
+    int idx = 0;
+    for (int schritt = 0; schritt < 256; schritt++) {
+        re15_esp_anim_t a;
+        if (re15_esp_anim(esp, ei, idx, &a) != 0) return -1;
+        unsigned dur = a.param & 0xff, loop = a.desc & 0xff;
+        if (dur == 0 && loop == 0) return 1;
+        if (dur == 0xff) return 0;
+        idx++;
+    }
+    return 0;
+}
+
+/* Gueltigkeits- und Haenger-Zensus: ein Stream gilt als GUELTIG, wenn alle Zeilen A,B < 48 tragen
+ * (die Tabelle @0x80071d40 hat 48 Eintraege; groessere Werte = Fehlparse hinter dem Ende). */
+static void zensus_haenger(const char *tag, const re15_esp_t *esp, int *n_streams, int *n_haenger)
+{
+    for (int ei = 0; ei < esp->id_count; ei++) {
+        int endet = anim_endet(esp, ei);
+        for (int sub = 0; sub < 8; sub++) {
+            int ns = re15_esp_row_streams(esp, ei, sub);
+            if (ns <= 0 || ns > 32) continue;
+            for (int s = 0; s < ns; s++) {
+                int nr = 0;
+                const uint8_t *r = re15_esp_row_stream(esp, ei, sub, s, &nr);
+                if (!r || nr <= 0 || nr > 32) continue;
+                int gueltig = 1, unbekannt = 0, flags_null = 0;
+                char liste[128]; liste[0] = 0;
+                for (int k = 0; k < nr; k++) {
+                    unsigned A = u16le(r + k * 40, 0), B = u16le(r + k * 40, 2);
+                    if (A >= 48 || B >= 48) { gueltig = 0; break; }
+                    if (!port_kennt_a(A) || !port_kennt_b(B)) {
+                        unbekannt = 1;
+                        size_t l = strlen(liste);
+                        if (l < sizeof liste - 16) snprintf(liste + l, sizeof liste - l, " %u/%u", A, B);
+                    }
+                    if ((r + k * 40)[0x0e] == 0 && (A == 3 || A == 4)) flags_null = 1;
+                }
+                if (!gueltig) continue;
+                (*n_streams)++;
+                if (unbekannt && endet == 0) {
+                    (*n_haenger)++;
+                    printf("HAENGER %s id=%u sub=%d st=%d: Anim endlos, Port-unbekannte Routinen A/B:%s%s\n",
+                           tag, esp->eff[ei].effect_id, sub, s, liste, flags_null ? " (Flags:=0 ueber R3/4)" : "");
+                } else if (unbekannt) {
+                    printf("LUECKE  %s id=%u sub=%d st=%d: Anim endet selbst, Port-unbekannte Routinen A/B:%s\n",
+                           tag, esp->eff[ei].effect_id, sub, s, liste);
+                }
+            }
+        }
+    }
+}
+
+static int teil_haenger(void)
+{
+    int rooms = 0, n_streams = 0, n_haenger = 0;
+    for (int st = 1; st <= 6; st++) {
+        for (int r = 0; r < 0x100; r++) {
+            char path[512];
+            int id = (st << 12) | (r << 4);
+            snprintf(path, sizeof path, RE15_ASSET_PSX_DIR "/STAGE%d/ROOM%04X.RDT", st, id);
+            size_t n = 0; uint8_t *b = slurp(path, &n);
+            if (!b) continue;
+            re15_esp_t esp; memset(&esp, 0, sizeof esp);
+            if (room_esp(b, n, &esp) == 0) {
+                char tag[32]; snprintf(tag, sizeof tag, "R%04X", id);
+                zensus_haenger(tag, &esp, &n_streams, &n_haenger);
+                rooms++;
+            }
+            free(b);
+        }
+    }
+    printf("HAENGER-ZENSUS: %d Raeume, %d gueltige Streams, %d Haenger (Anim endlos + Port-unbekannte Routine)\n",
+           rooms, n_streams, n_haenger);
+    return 0;
+}
+
 static int teil_zensus(void)
 {
     static unsigned seenA[64], seenB[64];
@@ -295,6 +391,7 @@ int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "zensus")) return teil_zensus();
+    if (!strcmp(teil, "haenger")) { s_mit_brocken = !(argc > 2 && !strcmp(argv[2], "vorher")); return teil_haenger(); }
     if (!strcmp(teil, "messung")) return teil_messung(0x11D0, "STAGE1", argc > 2 ? atoi(argv[2]) : 900);
     printf("unbekannter Teil %s\n", teil);
     return 2;

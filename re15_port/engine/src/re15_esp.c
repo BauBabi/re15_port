@@ -16,6 +16,7 @@
 #include "re15_damage.h"   /* re15_resolve_attack = FUN_80012d60 (Routine 31, Runde 34 A5) */
 #include "re15_skeleton.h" /* re15_sin_q12/re15_cos_q12 = Tabelle 0x800794c4 (RotMatrix-Zwilling) */
 #include "re15_engine.h"   /* g_engine.frame_count — nur RE15_GRANATE_LOG */
+#include "re15_esp_brocken.h" /* Runde 35 Spur D: Routinen B 36/37 (esp_brocken.c) */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
@@ -516,6 +517,7 @@ static void esp_fx_row_advance(re15_esp_fx_t *f)
     f->row_cursor++;
     esp_fx_row_load(f, f->row_cursor);
 }
+void re15_esp_fx_zeile_weiter(re15_esp_fx_t *f) { esp_fx_row_advance(f); }   /* Runde 35 Spur D (esp_brocken.c) */
 
 /* The loop-1 routineA dispatch (FUN_80019e20 @0x80019e84-9c) — the BLOOD subset:
  *   0  noop (@0x80017248 jr-ra)
@@ -1096,6 +1098,7 @@ static void esp_fx_dispatch_b_29(re15_esp_fx_t *f);   /* Runde 34 A4, unten */
 static void esp_fx_dispatch_b(re15_esp_fx_t *f)
 {
     if (!f->rows_base) return;
+    if (re15_esp_brocken_b(f)) return;   /* Runde 35 Spur D: B 36/37 @0x800187c4/0x8001885c */
     if (row_u16(f->row, 0x02) == 29) { esp_fx_dispatch_b_29(f); return; }
     if (row_u16(f->row, 0x02) != 12) return;
     if (f->y + f->xlat_y < f->floor_y) return;           /* airborne */
