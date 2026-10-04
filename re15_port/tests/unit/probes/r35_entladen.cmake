@@ -19,7 +19,8 @@
 #   unit_r35_entladen_n2beleg  Nachbesserung 2: Animationsblock = RDT+0x5C (@0x8001b3fc/@0x8001b404,
 #                              Binder nur @0x80039a08); RE2 ENEMSE-Bank je Raum (@0x8004a33c -> @0x8005a108)
 #   integration_r35_entladen_{f,g,h,i}  Nachbesserung 2: f Tuer 1170 -> 1130 (RBJ-Datei + bg_prev),
-#       g Leihe Spur K 10F0 -> 1030, h Boot-Puffer (Karte 1170), i RE2-Raumbank TUERSE (Dummy-Ton)
+#       g Leihe Spur K 10F0 -> 1030, h Boot-Puffer (Karte 1170), i RE2-Raumbank TUERSE (Dummy-Ton),
+#       j RE2-ENEMSE-Bank (Kraehe ROOM10C0) am Tod (Dummy-Ton)
 add_executable(test_r35_entladen ${CMAKE_CURRENT_LIST_DIR}/../test_r35_entladen.c)
 target_link_libraries(test_r35_entladen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_entladen PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -41,7 +42,7 @@ if(NOT WIN32)
 endif()
 
 if(TARGET re15_pc)
-    foreach(_r35i_lauf A B C D E F G H I)
+    foreach(_r35i_lauf A B C D E F G H I J)
         string(TOLOWER "${_r35i_lauf}" _r35i_klein)
         add_test(NAME integration_r35_entladen_${_r35i_klein}
                  COMMAND "${CMAKE_COMMAND}"

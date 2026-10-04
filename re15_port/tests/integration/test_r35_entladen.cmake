@@ -38,6 +38,8 @@
 #   G  Leihe Spur K: ROOM10F0 (Block von ROOM11B0) -> 1030: VORHER raum 10F0 rbj=1, EREIGNIS 0.
 #   H  Boot-Weg: Karte ROOM1170 + CONTINUE: VORHER raum 1170 rbj=1 + rbj_datei 1170 (Boot-Puffer).
 #   I  RE2-Raumbank TUERSE (Dummy-Ton): verschlossene Tuer 1170 (AOT 5) -> 1130: re2ton>=1 -> 0.
+#   J  RE2-ENEMSE-Bank (Dummy-Ton): Kraehen-Raum ROOM10C0, Tod: '[re2se] ENEMSE Bank N geladen', VORHER
+#      spielende 10C0 re2ton>=1 -> EREIGNIS 0 (RE2 @0x8004a33c -> FUN_8005a09c schliesst @0x8005a108).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r35_entladen_karte> -DWORKDIR=<dir>
 #               [-DTEIL=A|B|C|D|alle] -P test_r35_entladen.cmake
 # =============================================================================
@@ -66,7 +68,7 @@ function(entladen_lauf _name _timeout)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(REMOVE "${WORKDIR}/debug.log" "${WORKDIR}/entladen.log")
-    if(_name STREQUAL "e" OR _name STREQUAL "i")   # mit Ton: Dummy-Treiber (kein Geraet noetig), Stimmen werden dekodiert
+    if(_name STREQUAL "e" OR _name STREQUAL "i" OR _name STREQUAL "j")   # mit Ton: Dummy-Treiber (kein Geraet noetig), Stimmen werden dekodiert
         set(_ton SDL_AUDIODRIVER=dummy)
     else()
         set(_ton RE15_NOAUDIO=1)
@@ -377,6 +379,24 @@ if(TEIL STREQUAL "I" OR TEIL STREQUAL "alle")
         message(FATAL_ERROR "r35_entladen[i]: TUERSE vor der Grenze nicht geladen/gezaehlt: '${_vi}'")
     endif()
     message(STATUS "r35_entladen[I] OK: RE2-Raumbank (TUERSE) an der Grenze 1170 -> 1130 entladen")
+endif()
+
+
+# --- J: RE2-ENEMSE-Bank am Tod (Dummy-Ton) ------------------------------------------------------------
+if(TEIL STREQUAL "J" OR TEIL STREQUAL "alle")
+    entladen_lauf(j 240 RE15_TITLE_SHOT=t.bmp RE15_FPS=240 RE15_DEBUG_JUMP=10C0@5 RE15_KILL_AT=1500
+                        RE15_BOOT_EXIT_AT=2 "RE15_RE2SE_LOG=${_basis}_j/re2se.log")
+    entladen_pruefen(j 1 2 1)
+    file(STRINGS "${_basis}_j/re2se.log" _bank REGEX "ENEMSE Bank [0-9]+ geladen")
+    if(NOT _bank)
+        message(FATAL_ERROR "r35_entladen[j]: keine ENEMSE-Bank in ROOM10C0 geladen — der Lauf misst H2 nicht")
+    endif()
+    vorher_zeile(j spielende 10C0 _vj)
+    string(REGEX MATCH " re2ton=([0-9]+)" _m "${_vj}")
+    if(NOT CMAKE_MATCH_1 OR CMAKE_MATCH_1 LESS 1)
+        message(FATAL_ERROR "r35_entladen[j]: ENEMSE-Bank am Tod nicht gezaehlt: '${_vj}'")
+    endif()
+    message(STATUS "r35_entladen[J] OK: RE2-ENEMSE-Bank (Kraehe ROOM10C0) am Tod entladen")
 endif()
 
 
