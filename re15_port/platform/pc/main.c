@@ -94,6 +94,7 @@ static inline int RNDI(float f) {
 #include "re2_fx.h"           /* Runde 34 V3: RE2-FX-Maschine (Registrierung, Aufschlag-Harness) */
 #include "re2fx_pc.h"         /* Runde 34 V3: re2fx_pc_draw im Effekt-Zeichenpass (Spur D)       */
 #include "glas1120_pc.h"       /* Runde 35 Spur M: Fenster ROOM1120 (Raum-ESP, Glas, Schaden)    */
+#include "re15_fenster1120.h"  /* Runde 35 Spur M: re15_fenster1120_install (Boot-/CONTINUE-Weg)  */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -4894,6 +4895,10 @@ re_title:;
                 fprintf(stderr, "[dokumente] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+
+    /* Runde 35 Spur M: FENSTER ROOM1120 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter),
+     * nach dem Restore der Flags ((9,73)/(9,79) entscheiden). Herleitung: include/re15_fenster1120.h. */
+    re15_fenster1120_install((uint16_t)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

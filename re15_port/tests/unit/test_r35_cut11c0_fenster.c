@@ -313,7 +313,8 @@ static int karte(const char *path, int gebrochen)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100;
     /* Gang Cut 1 (RVD @0x128: x 1000..8500, z -2000..13000), suedlich des Bands, Blick nach Norden. */
-    pl->x = 5000; pl->y = 0; pl->z = 2600; pl->rot_y = 0x400;
+    pl->x = 5000; pl->y = 0; pl->z = 2600; pl->rot_y = 0xC00;   /* 0xC00 = Blick +z (Norden) */
+    g_scd.cam_id = 1;   /* Stand mit Cut 1 (savedata camera_cut v3) */
     re15_game_flag_set(9, RE15_FENSTER_TOR_BIT, 1);
     if (gebrochen) re15_game_flag_set(9, RE15_FENSTER_BIT, 1);
     re15_savedata_t sd;
