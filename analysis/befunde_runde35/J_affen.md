@@ -1559,3 +1559,48 @@ Scratch: `scratchpad/jnb5/`.
   Dazu die Pool-Ueberblendung: FUN_8001f3bc mischt die Wurzel mit `gpf12` + `gpl12` (zwei getrennte >> 12, Decompilat
   Z. 40-61), die Winkel ueber FUN_80020510 -> LoadAverageShort12 ebenfalls `gpf12_b` + `gpl12_b` (zwei >> 12); der Port
   rundete die Summe einmal.
+
+### P1 — Umsetzung (13): Kette auf der GTE wie das Original (affen_11c0.c, re15_affen.h (13))
+- `affen_comp` = FUN_80022da0 (PSX.EXE selbst disassembliert): R' spaltenweise ueber `lhu`/`mtc2` IR1..3 (16 Bit mit
+  Vorzeichen) + MVMVA **0x4a49e012** (sf=1, mx=RT, v=IR, cv=kein, lm=0) @0x80022df0/@0x80022e38/@0x80022e84, `sh` der IR
+  (Saettigung -0x8000..0x7fff); t' = (TR<<12 + RT*V0) >> 12 ueber `lw`/`ctc2` TR (32 Bit) @0x80022eb0-c4, V0 =
+  16-Bit-Haelften von L.t (`lhu` @0x80022ecc-d0, `lwc2` @0x80022ee0), MVMVA **0x4a480012** (sf=1, RT*V0+TR) @0x80022eec,
+  `swc2` MAC1..3 @0x80022ef8-f00.
+- `affen_kette`: m = RotMatrix(+0x68) (skeleton_common.c mat3_from_euler = RotMatrix @0x80068130 byte-true) *
+  ScaleMatrix(+0x166) je Element `(short)m * s >> 12` (ScaleMatrix-Decompilat), t = Lage; dann CompMatrix mit
+  RotMatrix(Record+0x60) / t = Wurzel (Record0) bzw. EMR-Versatz von der Wurzel abwaerts (Elternkette der EMR; fuer bf50
+  = Records 0, 12+3a1, 13+3a1, 14+3a1 @0x8011bf80-c4, Riegel prueft die Kette).
+- Pool (`re15_affen_pool_anim`) haelt jetzt die Winkel/Wurzel wie FUN_8001f3bc selbst: frac 0 -> Keyframe (Z. 28-37 /
+  66-72); sonst Wurzel `gpf12` (IR0 = 0x1000-0x200*frac, kf) + `gpl12` (IR0 = 0x200*frac, alt) (Z. 40-61) und Winkel
+  FUN_80020510 -> LoadAverageShort12 `gpf12_b` (alt, 0x200*frac) + `gpl12_b` (kf gefaltet, 0x1000-0x200*frac) (Z. 77-87)
+  = je zwei getrennte >> 12. Rate 0x200 @0x80118320.
+- Fuss-Sperre: neue Lage = Lage - (Kette(+0x20 des Zeichners mit t = laufende Lage, Pool jetzt) - Kette(Zeichenstand))
+  (@0x8011bfd4-c008). Trefferpunkt: Kette(Zeichenstand) + CompMatrix(.., (I | a1)) (@0x8001c058-78), a1 = (0x64,0,0) nur
+  B[5] Knochen 9 (@0x80118380-84).
+- Messung nach (13) (`jnb5/pt2`, takt): Fuss-Sperren-Schritte F196-F204 beider Gorillas **bitgleich** mit g_stufe
+  (e1 (-39,75) (-42,72) (-42,79) (-42,73) (-43,72) (-43,77) (-35,69) (-42,64) (-35,60); e2 (77,-14) (76,-7) (69,-11)
+  (56,-14) (66,-9) (61,-9) (47,-9) (93,-10) (89,-12)), e2-Yaw 91,91,91,91,89,89,89,87,89 = Original. Lagen bis F294
+  hoechstens 2-9 daneben (vorher 40-120). ABER: Leon lag ab dem 2. Biss (F322) 18-175 neben dem Original, e1 griff
+  in F618 (Sub 15) statt zu beissen -> Treffer 219 ... 578, dann 774 (rot). Die naechste Ursache sass beim Spieler.
+
+### P1 — Messung und Beleg (14): Leons Rueckstoss klemmte schon im Handler
+- GDB (`jnb5/g_spieler322.txt`, Haltepunkte Spieler-Dispatcher 0x80031c44, nach dem Handler 0x80031cbc, nach
+  `jal 0x8002b544` 0x80031cc4, nach `jal 0x8003b0a4` 0x80031d78; Reihenfolge je Bild: Entity-Schleife
+  `jal 0x8001a50c` @0x8001ce04, DANN Spieler `jal 0x80031c44` @0x8001ce0c, Objekt-Pass `jal 0x8002bd44` @0x8001ce14):
+  2. Biss (vs10283): Handler (-6450,-12676) -> **(-6560,-12509)**, Schub -> (-6417,-12546), Klemme -> (-6496,-12633).
+- Port (neue Stationen-Zeile `P` in der takt-Spur, `re15_schritt_station`): Handler -> **(-6593,-12546)**, Schub ->
+  (-6426,-12593), Klemme -> (-6478,-12650). Gleiche Yaw 647, gleicher Clip 8 Bild 0, Betrag gleich, Richtung 14 Grad
+  daneben; beim 1. Biss (freie Lage) beide (-110,+167).
+- Beleg: Treffer-Handler FUN_80035af0 [2] (Clip 8) = anim_set, dann NUR `jal 0x800245d8` mit `ori a0,zero,0x800`
+  @0x80035f18-1c, danach DAT_800acae0 -= DAT_800acaf2 @0x80035f20-50; [3] (Clip 9) `jal 0x800245d8` / `addu a0,zero,zero`
+  @0x8003609c-a0. FUN_800245d8 (Decompilat) = RotMatrixY(+0x6a + a0), (+0x8c,0,0) drehen, auf +0x34/+0x3c addieren —
+  KEINE Kollision. Die Wandklemme laeuft erst im Dispatcher-Schwanz @0x80031d70 (Bezug +0x40), der Objekt-Pass
+  FUN_8002bd44 als eigener Aufruf @0x8001ce14 danach. Der Port klemmte im Flinch-Zweig zusaetzlich IM Handler
+  (re15_collision_constrain + re15_collision_objects, game_step_common.c, vor Runde 35) — das drehte den Schritt an
+  der Wagenkante.
+- Aenderung (game_step_common.c, 2 Haken, Kommentar "Runde 35 Spur J (14)"): im Flinch-Zweig nur noch der Schritt;
+  nach re15_player_body_and_walls (Schub @0x80031cbc + Klemme @0x80031d70) der Objekt-Pass (@0x8001ce14).
+- **Messung nachher (Riegel takt, `jnb5/takt_spur_n5a.txt`): alle 14 Bisse im selben Bild wie das Original
+  (219 269 322 372 425 476 528 580 631 684 734 788 837 892, groesste Abweichung 0), Wechseltakt 8/8 (0).** Ueber 696
+  Bilder (F196-F891): Zustandsfolge beider Gorillas (Zustand/Sub/Phase/Clip/Bild/+0x1dc) in JEDEM Bild gleich, Lagen
+  hoechstens 25 (e1) / 17 (e2) daneben (vorher 40-120; Rest = Ueberblend-Bilder des Bissclips und aec4, 1-2 je Bild).
