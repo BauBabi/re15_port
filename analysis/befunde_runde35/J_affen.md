@@ -1061,7 +1061,7 @@ nicht gemessen) und M2 (Port-e2 steht T250-T264 still, Original-e2 gleitet ~400;
 Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jnb2/g_wer.txt`.
 
 ### Stand (fortlaufend)
-- [ ] M1 (a) Zahlen auf HEAD  - [ ] M1 (b) Entfernung offenlegen  - [ ] M1 (c) Chaos messen  - [ ] M2 Ursache e2
+- [x] M1 (a) Zahlen auf HEAD  - [x] M1 (b) Entfernung offenlegen  - [x] M1 (c) Chaos messen  - [x] M2 Ursache e2 (behoben)  - [x] Suite  - [x] exe Tuerweg
 
 ### M1 — Messung vorher (HEAD 062e8f82) und Herkunft der Dossier-Zahlen
 - Riegel `griff` am HEAD (Abnahme `jabn2/griff_v.txt`, deckungsgleich mit `jnb2/fin_griff.txt` 00:41):
@@ -1242,6 +1242,30 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 - Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
 - Spuerbar neu: (1) Packt ein Gorilla Leon, springt er jetzt wie im Original mit dem ganzen Koerper auf ihn zu (vorher
   blieb er beim Zupacken an Ort und Stelle stehen) und schiebt dabei den zweiten Gorilla zur Seite. (2) Der zweite
-  Gorilla schiebt Leon beim Wurf wie im Original an. (3) Am Ende des Brustschlags springt der Gorilla nicht mehr ~13 m
+  Gorilla schiebt Leon beim Wurf wie im Original an. (3) Am Ende des Brustschlags springt der Gorilla nicht mehr ~1300 Einheiten
   ueber den Platz; nach einem Wurf bleiben beide Gorillas wie im Original zwischen den Wagen haengen, statt Leon
   gleich wieder zu beissen.
+
+### Messung nachher, exe ueber den ECHTEN Tuerweg (exe-Kopie re15_pc_jnb3.exe, md5 62b8fb5a... = re15_pc.exe; `jnb3/run.sh`)
+- Env wie Abnahme 2: RE15_SET_FLAG=4:243,3:130, RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der 11B0-Tuer,
+  Quadrat-Tasten; debug.log jeweils `DOOR FIRE` -> `PC loaded room11c0.rdt` -> F6 sub02 -> F1088 sub07.
+- `t3` (keine Eingabe): Freigabe F1088 bei (-7148,-12363); Treffer +365, 470, 524, 574, 628, ... 1148; **Tod +1198 =
+  39,9 s** (Original +1194 = 39,8 s; Nachbesserung 2 ebenfalls +1198) — unveraendert.
+- `o7` (RE15_INPUT_SCRIPT=W34.5,U2.5,W1, Leon im Freien): Rear-up S3 F1199, **Pin F1204**; S3 reitet die Clip-0x1c-Bahn
+  (F1204 (-5609,-16230) -> F1208 (-6362,-15619) -> F1211 (-6428,-15546) -> zurueck F1214 (-6175,-15843); vorher stand der
+  Greifer); Clip 0x10 **F1287 = Pin + 83**, Clip 0xb **F1303 = +16**, frei **F1329 = +26** (Original +83/+16/+26);
+  Brustschlag Clip 3 nach jedem Griff (F1252 15/5, F1279 Sub 2), Clip-3-Wrap F1319 -> F1320 (-6922,-16439) ->
+  (-6934,-16436) ohne Sprung. Weitere Griffe F1576 und F1914. Bild `jnb3/o7_griff.png` (RE15_FRAMEDUMP, F1200-F1320):
+  der Gorilla richtet sich auf und rueckt vor, Leon fliegt F1232 ueber ihm; kein Koerper im Wagen.
+
+### Suite (Nachbesserung 3)
+- `bash re15_port/tools/local_build.sh all` (Endstand Code, 1123,7 s) -> `test OK — 495/495 bestanden` /
+  **`=== LOCAL-BUILD-OK (all) — Tests 495/495`** (Schranke 478; kein Fenster-Haken rot).
+
+### Nachbesserung 3 — Ergebnis je Mangel
+| Mangel | Ursache (gemessen) | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| M1 (a)/(b) Dossier-Zahl Z. 858-859, zwei Pruefungen still entfernt | Zahlen stammten aus griff_nach3/4 (T290 (-5374,-10724)); nach A1 T290 (-5376,-10728) -> frei (-5433,-10693), keine Ruhe; 1ac1ea84 entfernte die rot gewordenen PRUEFs | jnb2/griff_nach4 vs nach5; Riegel: Iteration ab beiden Staenden gibt genau diese Zahlen | Z. 858-863 und Testliste N2 korrigiert (KORREKTUR-Vermerke), Entfernung offengelegt | — |
+| M1 (c) "chaotisch" unbelegt | Bahn ab T291 = reine Iteration von FUN_8003b0a4 (124/124 Original-Bilder Bezug = Eingang = Vorbild); Iteration hochempfindlich | @0x80031d70; s_wand_orig vs10223-10469 | Riegel griff: Iteration 124/124, Zerlegung 88/88, 24/24 Starts > 100 daneben, Weg 2 | Weg 2 (Original-Zustand T253): Anker, Kette T268-T290, Freigabe T378, Bahn T291-T414 und Ruhe bitgleich |
+| M2 e2 steht T250-T264 still | (1) Greifer ohne Ritt-Platzierung/Yaw-Fang; (2) aec4(Spieler,Gorilla) ohne Paar-Ausnahme; (3) e2 (Sub 3) vom Spielerschub als Greifer ausgenommen | ad68 @0x8011accc, a8f8 0x800 @0x8011acac; `and`/`andi 0x1000` @0x8002af14-1c | re15_affen_ritt_platz (Phase 2/3), 2 Haken im Schub | e1 T254-T288 <= 28, e1-e2 3171..3211 (Original 3168..3209), e2-Weg 570 (Original 542); Kette T265-T267 <= 104 (vorher 1573) |
+| (neu) Bisse nach der Ruhe / Wrap-Sprung e1 | Fusssperre posierte das Bild nach dem Vorschub | FUN_8001f3bc @0x8001f40c / @0x8001f610-1c, bf50 @0x8011bf80-c008 | Pool-Pose = Bild vor dem Vorschub (2 Zeilen) | Weg 2 bis T495 kein Biss wie das Original; Wechseltakt 2 statt 4 Bilder; Tod +1198 unveraendert |
