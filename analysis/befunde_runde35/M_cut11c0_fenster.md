@@ -326,4 +326,11 @@ Commit-Messages 55554779/1e958236 nennen p0/0x18 ebenfalls nicht. Gegenprobe: `g
 * Praezisierung zu Punkt 4: Der Scan 0x80042bac liest die Geometrie vor der Nutzlast (Rechteck +4..+0xB, Viereck
   bis +0x13), nie die Nutzlast selbst.
 
+* Neuer Riegel `unit_r35_fenster_satzform` (test_r35_cut11c0_fenster.c `pruef_satzform`, registriert in
+  probes/r35_cut11c0_fenster.cmake): liest ROOM1050.RDT @0x0C22 und ROOM1020.RDT @0x1E18 aus shared_assets/PSX und
+  vergleicht op 0x2C, sce 3, sat (0x31 bzw. RE15_FENSTER_SAT 0x41), p0 == RE15_FENSTER_P0 und p1-Unterbyte ==
+  RE15_FENSTER_P1 & 0xff. Er prueft p1-Oberbyte == Ereignis (@0x80043100) und p0 >= 0xa (@0x8003ee54). Die Mechanik
+  misst er so: Ein Ereignis belegt Faden SCD_EVENT_SLOT_FIRST, das naechste laeuft in FIRST+1 (erster freier Faden,
+  kein fester Platz). Damit steht der Beleg nicht nur im Kommentar, die Suite prueft ihn auch.
+
 **Messung nachher.** Siehe unten (Bau, Suite, Spur-Tests).
