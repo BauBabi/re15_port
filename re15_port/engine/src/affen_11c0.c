@@ -440,3 +440,92 @@ uint32_t re15_affen_b0_a0(const re15_actor_t *e, const re15_actor_t *pl)
     }
     return re15_affen_psx_entity(e);
 }
+
+/* (15) GORILLA-FINISHER = cmd-6-Hook 0x8011c3d4 -> 0x8011c414 (Nachbesserung 6, M1). Herleitung re15_affen.h (15). */
+#include "re15_audio.h"   /* re15_audio_core_se, re15_audio_footstep */
+#include "re15_damage.h"  /* re15_wound_add = FUN_80037edc */
+#include "re15_esp.h"     /* re15_esp_fx_spawn_ex = FUN_80019700 */
+#include "re15_room.h"    /* g_room_rdt, g_room_rdt_ok */
+void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);   /* enemy_ai_common.c: Part-Lage in der Opfer-Pose */
+void re15_player_aim_interrupt(void);                              /* player_common.c */
+
+static uint8_t s_fin_ph   = 3;   /* = aca5a des Hooks; 3 = Port: Hook fertig (aca58 = 7), nur noch Endpose halten */
+static uint8_t s_fin_f314 = 0;   /* im Vortick lief FUN_8001f314 (+0x8f-Abbau, s. Tick) */
+static int     s_fin_log[RE15_AFFEN_FIN_LOG_N];
+static int     s_fin_log_n = 0;
+
+static void affen_fin_ereignis(int was) { if (s_fin_log_n < RE15_AFFEN_FIN_LOG_N) s_fin_log[s_fin_log_n++] = was; }
+
+static void affen_fin_blut(const re15_actor_t *pl)
+{
+    int32_t p[3];
+    re15_player_victim_bone_pos_pub(8, p);                       /* a2 = [acbdc]+0x5a0 = Part 8 @0x8011c4a4/@0x8011c51c */
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,     /* a0 = 0x2000 @0x8011c440/@0x8011c4f8 */
+                         p[0], p[1], p[2], (int16_t)pl->rot_y);  /* a1 = Spieler+0x6a @0x8011c49c/@0x8011c514 */
+}
+
+void re15_affen_finisher_start(void)
+{
+    /* B[8] schreibt das ganze Wort aca58 := 6 (@0x801191c4-cc) -> aca59 = aca5a = 0: der Hook beginnt mit dem
+     * Eintritt. Das Wort ersetzt das Kommando, die Verteilung @0x80031c8c liest nur aca58 -> eine laufende
+     * Zielphase (cmd 1) laeuft nicht weiter (wie beim cmd-5-Latch, enemy_ai_common.c). */
+    s_fin_ph = 0; s_fin_f314 = 0; s_fin_log_n = 0;
+    re15_player_aim_interrupt();
+}
+
+int re15_affen_finisher_aktiv(void) { return s_fin_ph < 3; }
+
+int re15_affen_finisher_ereignisse(int *out, int max)
+{
+    int n = (s_fin_log_n < max) ? s_fin_log_n : max;
+    for (int i = 0; i < n; i++) out[i] = s_fin_log[i];
+    return n;
+}
+
+void re15_affen_finisher_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
+{
+    if (s_fin_ph >= 3) return;                                   /* Leiche: Endpose (Bild fc-1) bleibt stehen */
+    int fc = (vb && vb->anim_victim.clip_count > 0) ? vb->anim_victim.clips[0].frame_count : 1;
+    if (fc < 1) fc = 1;
+    /* +0x8f: FUN_8001f3bc mischt mit dem Wert und zieht danach 1 ab (Decompilat Z. 78). Der Port zeigt den Stand
+     * nach dem Tick -> Abbau am Anfang des Ticks, der auf einen f314-Aufruf folgt (Eintritt ohne Abbau). */
+    if (s_fin_f314 && pl->anim_frac > 0) pl->anim_frac--;
+    s_fin_f314 = 0;
+    if (s_fin_ph == 2) {                                         /* aca5a = 2 @0x8011c55c-84 */
+        re15_wound_add(0, 0x0a);                                 /* jal 0x80037edc (0,0xa)  @0x8011c55c */
+        re15_wound_add(5, 0x32);                                 /*               (5,0x32) @0x8011c568 */
+        re15_wound_add(7, 0x32);                                 /*               (7,0x32) @0x8011c574 */
+        if (pl->hp >= 0) pl->hp = -1;                            /* PORT-PLUMBING (die Death-FSM keyt auf hp < 0); B[8] zog schon 600 ab */
+        pl->state = 7;                                           /* Wort aca58 := 7 @0x8011c57c-84 = Leiche */
+        affen_fin_ereignis(RE15_AFFEN_FIN_TOD | (int)pl->anim_frame);
+        s_fin_ph = 3;
+        return;
+    }
+    int k;
+    if (s_fin_ph == 0) {                                         /* aca5a = 0 @0x8011c460-d4 */
+        s_fin_ph = 1;                                            /* sb 1 -> aca5a @0x8011c464 */
+        pl->hit_react = 7;                                       /* +0x93 := 7 @0x8011c468-70 */
+        pl->motion = 0;                                          /* Clip acae8 := 0 @0x8011c490 (Opfer-Bank acbcc/acbd0) */
+        pl->anim_frame = 0;                                      /* Bild acae9 := 0 @0x8011c498 */
+        affen_fin_blut(pl);                                      /* jal 0x80019700 @0x8011c4a0 */
+        re15_audio_core_se(3);                                   /* Se_on(0x04030001) @0x8011c4a8-b8 = CORE 3 */
+        affen_fin_ereignis(RE15_AFFEN_FIN_EINTRITT);
+        /* aca3c |= 0xc0 @0x8011c4c0-d4: im Port ohne Gegenstueck (nur PSX-Anzeige, s. Hunde-Kommentar). Kein
+         * `bne` zwischen @0x8011c4d4 und @0x8011c4d8: dasselbe Bild laeuft in den Zweig aca5a = 1. */
+        k = 0;
+    } else {
+        k = (int)pl->anim_frame + 1;                             /* acae9 = vom f314 des Vorticks hochgezaehlt */
+    }
+    if (k == 0x3c) {                                             /* `ori v0,zero,0x3c` / `bne` @0x8011c4e0-e4 */
+        if (g_room_rdt_ok)                                       /* FUN_80045630(2,0,0) @0x8011c4f0 */
+            re15_audio_footstep(2, re15_rdt_floor_sound(&g_room_rdt, pl->x, pl->z));
+        affen_fin_blut(pl);                                      /* zweites Blut @0x8011c518 */
+        affen_fin_ereignis(RE15_AFFEN_FIN_FALL | k);
+    }
+    pl->anim_frame = (uint8_t)k;                                 /* f314(acbcc, acbd0, 0, 0x200) @0x8011c534 posiert k */
+    pl->anim_flags &= (uint16_t)~0x80u;                          /* a2 = 0 = vorwaerts */
+    pl->anim_blend_rate = 0x200;                                 /* a3 = 0x200 @0x8011c538 */
+    s_fin_f314 = 1;
+    if (k + 1 >= fc) s_fin_ph = 2;                               /* f3bc: +0x95+1 >= Bildzahl -> 1; aca5a += 1 @0x8011c548-50 */
+    /* KEINE Platzierung: der Hook ruft kein 0x8001ad68 und schreibt weder +0x34/+0x3c noch +0x6a. */
+}

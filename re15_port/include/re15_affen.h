@@ -76,6 +76,7 @@
 #include "re15_emd.h"
 #include "re15_skeleton.h"
 #include "re15_rdt.h"
+#include "re15_enemy.h"   /* re15_enemy_bank_t (15) */
 
 /* NUTZER-VORGABE (AUFTRAG.md Runde 35): "Ich moechte das die Monkeys erst springen, wenn sie 3x
  * getroffen wurden, nicht nach jeden Schuss." */
@@ -271,5 +272,30 @@ int      re15_affen_fusssperre(re15_actor_t *e, int bone);
  *      `gpf12`/`gpl12` (FUN_8001f3bc Z. 40-61), Winkel FUN_80020510 -> LoadAverageShort12 `gpf12_b`/`gpl12_b`.
  *      re15_affen_kette_test: Elternkette eines Knochens (nur Riegel). */
 int      re15_affen_kette_test(int bone, int out[RE15_EMD_MAX_BONES]);
+
+/* (15) GORILLA-FINISHER (Nachbesserung 6, M1). B[8] (Treffer im Sprung, player.hp -= 600 @0x801191a8-ac) schreibt das
+ *      Wort aca58 := 6 (@0x801191c4-cc, aca59 = aca5a = 0), acbcc/acbd0 := Gorilla+0x178/+0x17c (Opfer-Bank,
+ *      @0x801191e0-9204). Der cmd-6-Hook des Typs 0x27 ist 0x8011c3d4 (Registrierung @0x8011eab8-c8, Dispatch
+ *      0x800368c0 `lw -514` @0x8003692c) und verteilt ueber aca59 (@0x8011c3d8) auf die Tabelle 0x80121580 =
+ *      {0x8011c414, 0x8011c414}. 0x8011c414:
+ *        aca5a 0 (@0x8011c460-d4): aca5a := 1, +0x93 := 7, Clip acae8 := 0, Bild acae9 := 0, Blut FUN_80019700(0x2000,
+ *                 +0x6a, Part 8, Null-Versatz 0x80121570) @0x8011c4a0, Se_on(0x04030001) = CORE 3 @0x8011c4b8,
+ *                 aca3c |= 0xc0; faellt ohne Sprung in den Zweig 1 (dasselbe Bild).
+ *        aca5a 1 (@0x8011c4d8-554): bei Bild 0x3c (@0x8011c4e0) FUN_80045630(2,0,0) @0x8011c4f0 + Blut @0x8011c518;
+ *                 f314(acbcc, acbd0, 0, 0x200) @0x8011c534; aca5a += Clip-Ende (@0x8011c548-50).
+ *        aca5a 2 (@0x8011c55c-84): Wunden FUN_80037edc (0,0xa) (5,0x32) (7,0x32); Wort aca58 := 7 (Leiche).
+ *      KEIN 0x8001ad68 und kein Write auf +0x34/+0x3c/+0x6a: Leon bleibt stehen. Der Port fuhr den Finisher bis
+ *      Nachbesserung 5 durch den Wurf-Hook 0x8011c118 (cmd 5, Platzierung relativ zum alten Rear-up-Anker) -> Sprung
+ *      um 14000 Einheiten (Abnahme 5, w3y F2814). Haken: re15_player_victim_devour (Typ 0x27 -> start) und
+ *      re15_player_victim_tick (Zustand 2 + Greifer 0x27 -> tick), enemy_ai_common.c. Ereignis-Protokoll fuer den
+ *      Riegel: RE15_AFFEN_FIN_* | Bild. */
+#define RE15_AFFEN_FIN_LOG_N    8
+#define RE15_AFFEN_FIN_EINTRITT 0x1000
+#define RE15_AFFEN_FIN_FALL     0x2000
+#define RE15_AFFEN_FIN_TOD      0x4000
+void     re15_affen_finisher_start(void);
+void     re15_affen_finisher_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb);
+int      re15_affen_finisher_aktiv(void);
+int      re15_affen_finisher_ereignisse(int *out, int max);
 
 #endif /* RE15_AFFEN_H */

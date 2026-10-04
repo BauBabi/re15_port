@@ -1218,6 +1218,7 @@ static void re15_player_victim_bone_pos(int bone, int32_t out[3])
     re15_skel_bone_to_world(poses[bone].trans, player->rot_y,
                             player->x, player->y, player->z, out);
 }
+void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]) { re15_player_victim_bone_pos(bone, out); }   /* Runde 35 Spur J (15): Blut des Gorilla-Finishers */
 
 /* ============ LEONS FINALES TODES-STOEHNEN IM FRESS-KOLLAPS — Se_on(0x04030001) ============
  * Nutzer-Report 2026-08-24 (RE2-KI): "finales todes Stoehnen von Leon fehlt beim Zombie Finisher,
@@ -1347,6 +1348,8 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
         return;
     }
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (zombie->type == 0x27) { g_player_victim_type = 0x27; g_player_victim_zombie = (int)(zombie - g_actors);   /* Runde 35 Spur J (15): cmd 6 -> */
+        g_player_victim_variant = 0; g_player_victim = 2; re15_affen_finisher_start(); return; }                /* Hook 0x8011c3d4, re15_affen.h (15) */
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);
     g_player_victim_variant = (zombie->type == 0x20)
@@ -1598,6 +1601,7 @@ void re15_player_victim_tick(void)
      * blend seed (7) never decayed = a non-terminating fade that leaked into the post-release idle.
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
+    if (g_player_victim == 2 && re15_player_victim_grabber_type() == 0x27) { s_gthrow_phase = 0; re15_affen_finisher_tick(player, vb); return; }   /* Runde 35 Spur J (15): Finisher = cmd-6-Hook 0x8011c414, nicht der Wurf */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
     /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
      * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
