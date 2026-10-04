@@ -665,3 +665,44 @@ Stand zu Beginn: HEAD 32239df5, Baum sauber.
 2. RE-Beleg: die Lampen-Kunst ist RDT-Bestand (RE2 ROOM2130, ESP-TIM der RDT) -> Lebensdauer = Raum.
 3. Freigabe in `alles_entladen` (Schritt 13), Fach im Zensus, Pin k (Tod + Tuer), Gegenprobe.
 4. Code-Zensus erneut: weitere raumgebundene Caches ohne Freigabe (seit dem Merge)?
+
+### N3 RE-Beleg — die Lampen-Kunst ist ESP-TIM der Raum-RDT, Lebensdauer = ein Raum
+Die Datei LAMPE2130.TIM ist der byte-gleiche Schnitt ROOM2130.RDT[0x0E398, +4256) = ESP-TIM-Basis aus
+dem RDT-Kopfwort [20] (Datei 0x58), Tabelle bis Kopfwort [21] (0x5C) (`tools/r34n_c/lampe2130_schnitt.py`,
+Pruefausgabe `analysis/befunde_runde34_nacht/C_belege/lampe2130_pruefung.txt`). Wer liest diese zwei
+Kopfwoerter im RE2-Original und wann? Selbst disassembliert (`re2_disasm.py`, jal-Wort-Scan ueber die
+ganze `info/re2leon/PSX.EXE`, Skript scratchpad/jalscan.py):
+```
+RE2 Raumlader FUN_80049e48 (s0 = 0x800cc1e8 @0x80049e50/54 -> 8508(s0) = 0x800ce324 = RDT-Zeiger)
+  8004a178: lw a1,8508(s0)  / 8004a190: lw a1,8508(s0)   Ziel = *(0x800ce324)
+  8004a1c4: jal 0x80012fb8                                NEUE RDT in diesen Puffer lesen (N1-Beleg)
+  8004a2ec: e9 6e 00 0c  jal 0x8001bba4                   Raum-ESP einrichten (einziger Aufrufer, Scan)
+  8004a2f4: jal 0x80059e54                                Raumbank (Bank 2, N2-Beleg)
+  8004a33c: jal 0x8005a09c                                ENEMSE-Bank (N2-Beleg)
+FUN_8001bba4 (Prolog 8001bba4: addiu sp,sp,-24)
+  8001bc78: 24 e3 42 8c  lw v0,-7388(v0)   0x800ce324 = RDT-Zeiger
+  8001bc80: 5c 00 44 8c  lw a0,92(v0)      RDT+0x5C = Kopfwort [21] (Ende der ESP-TIM-Tabelle)
+  8001bc84: 58 00 45 8c  lw a1,88(v0)      RDT+0x58 = Kopfwort [20] (ESP-TIM-Basis = LAMPE2130-Quelle)
+  8001bc88: 4e 6f 00 0c  jal 0x8001bd38    einziger Aufrufer (Scan: genau ['0x8001bc88'])
+FUN_8001bd38 (RE2_Quellcode_V2/FUN_8001bd38.c): tim = basis + *(ende-4) je Eintrag, OpenTIM/ReadTIM,
+  LoadImage(prect) an x = 0xF*0x40 abwaerts / LoadImage(crect) an (0x120, 0x1E0+) -> VRAM; Ende bei
+  0xFF in 0x800eae50.
+```
+=> Im RE2-Original wird die Lampen-Kunst (ESP-TIM der RDT) bei JEDEM Raumladen aus der NEUEN RDT
+hochgeladen (@0x8004a2ec -> @0x8001bc80/84 -> @0x8001bc88); der naechste Raum ueberschreibt RDT-Puffer
+und ESP-TIM-Seite. RE1.5 dasselbe ueber die Arena (RDT ab Basis `jal 0x80013b60` @0x800397e8, Reset
+@0x80039738, R1). Die dekodierte Kopie im Port (`s_zelle`) hat also die Lebensdauer eines Raums und
+faellt an derselben Grenze wie der PANEL2130-Ton desselben Bedienfelds (N2 Schritt 12).
+
+### N3 Code-Zensus erneut (seit dem Merge, alle Lazy-Lader mit Zustandsvariable)
+`grep "static (int|uint8_t) s_*(zustand|state|tried|geladen|loaded|ok|init)"` in platform/pc/src +
+engine/src und alle `re15_pc_read_{re2,cd,any}/pc_read_shared`-Aufrufer gelesen:
+* panel_lampen_pc.c `s_zustand` + `s_zelle` — Mangel 1 (Datei aus shared_assets/RE2, dekodiert).
+* hebetisch_cursor_pc.c `s_md1/s_md1_ok/s_licht/s_licht_ok` (ROOM1150-Cursor): Quelle eingebackene
+  Bytes (`re15_hebetisch_cursor_md1_bytes/_licht_bytes`, Teil der exe), `re15_md1_parse`/`re15_light_parse`
+  allozieren nichts (md1_common.c/light_common.c ohne malloc) -> nur Sichten auf exe-Daten, kein geladenes
+  Asset. Die Textur liegt in TIM-Platz 28 (Prop-Platz, faellt in Schritt (1)); neu hochgeladen je
+  Cursor-Sitzung (`s_hochgeladen != sitzung`).
+* inv_render_pc.c Karte (`s_map_loaded`), RE2-ST0, Box-Panel; item_icon/itps (ITEMALL.PIX/ITPS.ITP);
+  audio_pc.c Fuss/SE/Waffe/CORE/TORSE/Tuer; bg_pc.c, elliot_pc.c — global bzw. schon freigegeben (N1/N2).
+=> einziger neu gefundener raumgebundener Cache: LAMPE2130 (= Mangel 1).
