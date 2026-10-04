@@ -171,6 +171,10 @@ int main(void)
           (arm->motion == 0 || arm->motion == 1) && arm->re2z_t158 >= 60 && arm->re2z_t158 <= 91);
 
     /* (4) A1 -> 0x301 -> A3 -> 0x401 mit Teleport an die Hand */
+    /* Standpunkt: neben der Keyframe-Hand des REACH-Clips (begehbar, 4a). Runde 35 Spur H, Nachbesserung 2:
+     * A1/A3/Pin lesen part[Hand]+0x5C der GEMISCHTEN Parts (+0x14E-Ueberblendung 0x80029614 @0x800296a8-bc /
+     * @0x800299f0-0x80029ab0); direkt nach dem Clipwechsel B1 P0 steht die gemischte Hand noch bei der
+     * B0-Pose hinter dem Gitter — A1 zieht deshalb erst, wenn die Ueberblendung die Hand herausgefuehrt hat. */
     int32_t hand[3]; re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), hand);
     printf("  Hand-Weltpunkt (Bone %d) = (%ld,%ld,%ld)\n", re15_re2arm_hand_bone(arm),
            (long)hand[0], (long)hand[1], (long)hand[2]);
@@ -179,8 +183,9 @@ int main(void)
     {   int32_t cx = stand_x, cz = stand_z; re15_collision_constrain(&s_rdt, -19500, hz, &cx, &cz);
         CHECK("(4a) der Standpunkt neben der Hand ist begehbar (Constrain aus der Flurmitte = kein Versatz)",
               cx == stand_x && cz == stand_z); }
-    frame_step();
-    CHECK("(4b) A1: Hand < 900 -> 0x301 ZUGRIFF, B3 P0 Clip 3 (@0x80100814 / @0x80100AEC)",
+    {   int f1 = 0; do { frame_step(); f1++; } while (f1 < 30 && arm->sub_state_1 == 1);
+        printf("  A1 nach %d Bildern (gemischte Hand)\n", f1); }
+    CHECK("(4b) A1: gemischte Hand < 900 -> 0x301 ZUGRIFF, B3 P0 Clip 3 (@0x80100814 / @0x80100AEC)",
           arm->state == 1 && arm->sub_state_1 == 3 && arm->motion == 3);
     int grab_f = -1;
     /* Runde 35 Spur H: Startbild-Historie fuer (4d) — die Parts im Griff-Takt tragen die Pose, die
@@ -192,10 +197,8 @@ int main(void)
     CHECK("(4c) A3: Hand < 600 ab Bild 5 -> 0x401 HALTEN (@0x801009BC-A54)", grab_f >= 0);
     if (grab_f >= 0) {
         int32_t h2[3];
-        {   const int16_t mo = arm->motion; const uint16_t fr = arm->anim_frame;   /* Parts-Pose */
-            arm->motion = (int16_t)vor_mo; arm->anim_frame = (uint16_t)vor_fr;
-            re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), h2);
-            arm->motion = mo; arm->anim_frame = fr; }
+        (void)vor_mo; (void)vor_fr;
+        re15_re2arm_hand_parts(a5, h2, NULL);   /* B4 P0 rief keinen Advance: die Parts sind die Pin-Quelle */
         printf("  Griff-Bild %d: pl=(%ld,%ld) Hand=(%ld,%ld) Standpunkt davor=(%ld,%ld)\n", grab_f,
                (long)pl->x, (long)pl->z, (long)h2[0], (long)h2[2], (long)stand_x, (long)stand_z);
         CHECK("(4d) Spieler an die Hand teleportiert (PL.x/z := part[Hand]+0x5C/+0x64 @0x80100C18-38), Victim-Modus 4, Riegel gesetzt",
@@ -249,7 +252,7 @@ int main(void)
         pl->x = h9x - 2000; pl->z = h9z;                  /* Ostreihe blickt -x */
         for (int f = 0; f < 3; f++) frame_step();
         CHECK("(7b) Arm 9: A0 -> 0x101 REACH", arm9->sub_state_1 == 1);
-        int32_t h9[3]; re15_enemy_bone_world_pos(arm9, re15_re2arm_hand_bone(arm9), h9);
+        int32_t h9[3]; re15_re2arm_hand_parts(a9, h9, NULL);
         pl->x = h9[0] - 200; pl->z = h9[2];
         int grabbed = 0, f = 0, zugriff = 0;
         for (; f < 60 && !grabbed; f++) {

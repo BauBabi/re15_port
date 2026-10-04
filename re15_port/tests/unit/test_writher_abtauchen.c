@@ -36,6 +36,7 @@
  * Naeherungs-Tor NICHT mehr ausfaehrt. Dazu die Gegenprobe, dass ein UNBESCHOSSENER Arm
  * sehr wohl ausfaehrt; ohne die waere die Zusage wertlos.
  */
+#include "re15_ai_flavor.h"   /* re15_ai_writher_re15_pin (Runde 35 Spur H) */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -117,6 +118,7 @@ static re15_actor_t *arm_spawn(int slot, int32_t x, int32_t z)
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     printf("=== Gitter-Arme: anschiessen und abtauchen ===\n");
 
     re15_actor_init(); re15_aot_init(); scd_vm_init();

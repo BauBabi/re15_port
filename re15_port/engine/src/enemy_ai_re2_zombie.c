@@ -150,8 +150,22 @@ void re15_ai_flavor_set(re15_ai_flavor_t f)
  * EMD0G_MOD0.BIN Root @0x80100004). Bewusst NICHT re15_re2_owns_type gefiltert: diese Funktion
  * beantwortet "WELCHES SPIEL treibt diesen Typ", die Besitzfrage ("hat der Port dafuer ueberhaupt
  * ein RE2-Brain/eine RE2-Zeile") bleibt an den vorhandenen owns-Toren daneben. */
+/* NUR fuer die Referenz-Pins des RE1.5-Writhers (test_writher_*, test_1210_arme/_gitterhaende): sie pruefen
+ * die weiter im Code stehende RE1.5-Maschine 0x8010c1ec ff., die das Spiel seit Runde 35 (Nachbesserung 2)
+ * nicht mehr erreicht. Kein getenv, kein Menue — das Spiel ruft das nie. */
+static int s_writher_re15_pin = 0;
+void re15_ai_writher_re15_pin(int an) { s_writher_re15_pin = an ? 1 : 0; }
+
 int re15_ai_re2_for_type(unsigned type)
 {
+    /* Runde 35 Spur H (Nachbesserung 2, M1) — BETA -> RETAIL: die ROOM1210/1211-Gitterarme (0x1A) laufen in
+     * JEDEM Flavor auf dem RE2-EM2D-Gehirn (enemy_ai_re2_zellenarm.c). Der RE1.5-Writher 0x8010c1ec-0x8010d774
+     * hat KEINEN Griff: alle jal = rng/anim_set/Schritt/FX/SquareRoot0/Wandklemme/Push-Kette (0x8002aec4)/
+     * Schwerkraft/Schatten, kein Schadenseinstieg; Spielerzugriff nur LESEND (playerX/Z @0x8010c238/258/360/378),
+     * kein Store auf eine feste Adresse, kein Laden des Spielerzeigers. Der Griff, den der Nutzer verlangt
+     * ("kommen die Haende ... und greifen einen", Vorbild RE2), existiert nur in RE2 (Pin @0x80100C18-38,
+     * Opferbank @0x80100C3C-5C, Hook @0x801012A8) -> RE1.5 ist hier unfertig, RE2 das Ziel. */
+    if (type == 0x1Au && !s_writher_re15_pin) return 1;
     switch (re15_ai_flavor()) {
         case RE15_AI_FLAVOR_RE2:   return 1;
         case RE15_AI_FLAVOR_MIXED: return type == 0x20u;

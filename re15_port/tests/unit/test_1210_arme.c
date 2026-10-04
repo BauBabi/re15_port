@@ -136,6 +136,7 @@ static int aufsetzen(int *slots, int32_t *az)
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     /* NEU VERANKERT (Runde 16 / Phase 2, 2026-09-19): dieser Pin beschreibt die RE1.5-
      * NACHRUESTUNG (Writher-Zwitter), die unter dem RE1.5-Flavor unveraendert weiterlaeuft.
      * Unter dem RE2-Flavor besitzt seit Phase 2 der RE2-Zellenarm (Typ 0x2D, enemy_ai_re2_

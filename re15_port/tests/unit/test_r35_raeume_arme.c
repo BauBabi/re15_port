@@ -29,6 +29,7 @@
 #include "re15_enemy.h"
 #include "re15_enemy_ai.h"
 #include "re15_emd.h"
+#include "re15_md1.h"
 #include "re15_collision.h"
 #include "re15_msg.h"
 #include "re15_game_step.h"
@@ -116,6 +117,103 @@ static int aufsetzen(int *slots)
 }
 
 static int32_t s_knochen[16][3];
+/* ---- VOLUMENMASS (Runde 35 Spur H, Nachbesserung 2, M2) -------------------------------------------
+ * Das waagerechte Mass "Hand < 120 an der Brustachse" kennt weder Hoehe noch Unterarm. Hier zaehlt der
+ * Riegel ARM-VERTICES (EM2D-Mesh Unterarm + Hand = Bone Hand-1 / Hand, mesh == bone in der reinen
+ * RE2-Bank) in Leons Kopf- und Rumpf-Volumen. Das Volumen kommt aus den Daten: PL00.MD1 Mesh 8 (Kopf)
+ * und Mesh 0 (Rumpf), je Hoehenband 32 Einheiten die Bounding-Box der Mesh-Vertices im Knochen-Rahmen —
+ * eine Querschnitt-Huelle, eher zu gross als zu klein (strenges Mass). Welt -> Knochen: lokal =
+ * R_b^T * (R_y(yaw)^T * (P - Wurzel) - t_b) (Vertex-Transform main.c: R_y * (R_b * v + t_b) + Wurzel). */
+#define VOL_BAND 32
+typedef struct { int ymin, nb; int16_t x0[64], x1[64], z0[64], z1[64]; uint8_t ok[64]; } vol_t;
+static vol_t s_vol[2];                         /* 0 = Rumpf (Mesh 0), 1 = Kopf (Mesh 8) */
+static re15_skel_pose_t s_leon_pose[2];
+static re15_md1_t s_pl_md1; static uint8_t *s_pl_md1_buf = NULL;
+static void vol_add(vol_t *v, const re15_md1_vertex_t *p, int n, int pass)
+{
+    for (int i = 0; i < n; i++) {
+        if (pass == 0) { if (p[i].y < v->ymin) v->ymin = p[i].y; continue; }
+        int b = (p[i].y - v->ymin) / VOL_BAND;
+        if (b < 0 || b >= 64) continue;
+        if (!v->ok[b]) { v->x0[b] = v->x1[b] = p[i].x; v->z0[b] = v->z1[b] = p[i].z; v->ok[b] = 1; }
+        if (p[i].x < v->x0[b]) v->x0[b] = p[i].x;
+        if (p[i].x > v->x1[b]) v->x1[b] = p[i].x;
+        if (p[i].z < v->z0[b]) v->z0[b] = p[i].z;
+        if (p[i].z > v->z1[b]) v->z1[b] = p[i].z;
+        if (b + 1 > v->nb) v->nb = b + 1;
+    }
+}
+static int vol_laden(void)
+{
+    size_t n = 0;
+    if (!s_pl_md1_buf) {
+        s_pl_md1_buf = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.MD1", &n);
+        if (!s_pl_md1_buf || re15_md1_parse(s_pl_md1_buf, (int)n, &s_pl_md1) != 0) return 0;
+    }
+    const int mesh[2] = { 0, 8 };
+    for (int k = 0; k < 2; k++) {
+        vol_t *v = &s_vol[k]; memset(v, 0, sizeof *v); v->ymin = 1 << 30;
+        const re15_md1_mesh_t *m = &s_pl_md1.meshes[mesh[k]];
+        for (int pass = 0; pass < 2; pass++) {
+            vol_add(v, m->tri_vertices, m->tri_vertex_count, pass);
+            vol_add(v, m->quad_vertices, m->quad_vertex_count, pass);
+        }
+    }
+    return s_vol[0].nb > 0 && s_vol[1].nb > 0;
+}
+static int vol_innen(const vol_t *v, const re15_skel_pose_t *p, int yaw, int32_t lx, int32_t lz, const int32_t P[3])
+{
+    int64_t cs = re15_cos_q12(yaw), sn = re15_sin_q12(yaw);
+    int64_t dx = P[0] - lx, dy = P[1], dz = P[2] - lz;
+    int64_t mx = (cs * dx - sn * dz) >> 12, my = dy, mz = (sn * dx + cs * dz) >> 12;   /* R_y^T */
+    mx -= p->trans[0]; my -= p->trans[1]; mz -= p->trans[2];
+    int64_t x = (p->rot[0] * mx + p->rot[3] * my + p->rot[6] * mz) >> 12;              /* R_b^T */
+    int64_t y = (p->rot[1] * mx + p->rot[4] * my + p->rot[7] * mz) >> 12;
+    int64_t z = (p->rot[2] * mx + p->rot[5] * my + p->rot[8] * mz) >> 12;
+    if (y < v->ymin) return 0;
+    int b = (int)((y - v->ymin) / VOL_BAND);
+    if (b < 0 || b >= v->nb || !v->ok[b]) return 0;
+    return x >= v->x0[b] && x <= v->x1[b] && z >= v->z0[b] && z <= v->z1[b];
+}
+/* Arm-Vertices (Unterarm + Hand) in Leons Kopf/Rumpf (Pose aus leon_brust desselben Bilds). spiegel = 1:
+ * die Arm-Punkte vorher waagerecht an Leons Wurzel um 180 Grad gedreht — das ist exakt die RE2-Konstruktion
+ * des Ruecken-Griffs, von der Gesicht-Lage aus gesehen (Leon um seine Wurzel gedreht, @0x8010130C-18, ==
+ * Welt um die Wurzel gegengedreht; Hand-Bahn unabhaengig von PL+0x76). */
+static int arm_in_leon(re15_actor_t *arm, const re15_actor_t *pl, int spiegel)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x1A);
+    if (!b) return -1;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, arm, -1, arm->anim_frame);
+    re15_skel_pose_t ap[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int rv = (kf >= 0) ? re15_skel_compute_pose(&b->skel, kf, ap) : -1;
+    g_anim_pose_actor = save;
+    if (rv != 0) return -1;
+    const int hb = re15_re2arm_hand_bone(arm);
+    const int bones[2] = { hb - 1, hb };
+    int64_t cs = re15_cos_q12(arm->rot_y), sn = re15_sin_q12(arm->rot_y);
+    int innen = 0;
+    for (int k = 0; k < 2; k++) {
+        const re15_skel_pose_t *p = &ap[bones[k]];
+        const re15_md1_mesh_t *m = &b->md1.meshes[bones[k]];
+        for (int q = 0; q < 2; q++) {
+            const re15_md1_vertex_t *vv = q ? m->quad_vertices : m->tri_vertices;
+            int nv = q ? m->quad_vertex_count : m->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                int64_t mx = ((int64_t)p->rot[0]*vv[i].x + (int64_t)p->rot[1]*vv[i].y + (int64_t)p->rot[2]*vv[i].z) >> 12;
+                int64_t my = ((int64_t)p->rot[3]*vv[i].x + (int64_t)p->rot[4]*vv[i].y + (int64_t)p->rot[5]*vv[i].z) >> 12;
+                int64_t mz = ((int64_t)p->rot[6]*vv[i].x + (int64_t)p->rot[7]*vv[i].y + (int64_t)p->rot[8]*vv[i].z) >> 12;
+                mx += p->trans[0]; my += p->trans[1]; mz += p->trans[2];
+                int32_t P[3] = { arm->x + (int32_t)((cs * mx + sn * mz) >> 12), arm->y + (int32_t)my,
+                                 arm->z + (int32_t)((-sn * mx + cs * mz) >> 12) };
+                if (spiegel) { P[0] = 2 * pl->x - P[0]; P[2] = 2 * pl->z - P[2]; }
+                if (vol_innen(&s_vol[0], &s_leon_pose[0], pl->rot_y, pl->x, pl->z, P) ||
+                    vol_innen(&s_vol[1], &s_leon_pose[1], pl->rot_y, pl->x, pl->z, P)) innen++;
+            }
+        }
+    }
+    return innen;
+}
 /* Leons Brust-/Halsknochen 8 in Weltkoordinaten (Opfer-Override main.c: PL00-Knochen + Bindpose,
  * Keyframes + Clips der Greifer-Opferbank, clip_override = pl->motion). */
 static int leon_brust(const re15_actor_t *pl, int32_t out[3])
@@ -136,6 +234,7 @@ static int leon_brust(const re15_actor_t *pl, int32_t out[3])
     g_anim_pose_actor = save;
     if (rv != 0) return 0;
     re15_skel_bone_to_world(poses[8].trans, pl->rot_y, pl->x, 0, pl->z, out);
+    s_leon_pose[0] = poses[0]; s_leon_pose[1] = poses[8];      /* Rumpf / Kopf fuer das Volumenmass */
     if (getenv("R35_ARME_DUMP")) {               /* Messdump: alle Leon-Knochen dieses Bilds */
         for (int b = 0; b < s_ps.bone_count && b < 16; b++)
             re15_skel_bone_to_world(poses[b].trans, pl->rot_y, pl->x, 0, pl->z, s_knochen[b]);
@@ -144,15 +243,19 @@ static int leon_brust(const re15_actor_t *pl, int32_t out[3])
 }
 
 /* Aufzeichnung je Halte-Bild f (Nachbesserung 1, M2): Hand, Brust, Leon-Wurzel/-Blick. */
-typedef struct { int ok; int32_t h[3], b[3], lx, lz; int yaw; int pfr, afr; } bild_t;
-static bild_t s_auf[2][60];
-static int    s_auf_yaw[2];                    /* Leon-Blick unmittelbar nach dem Hook-P0 */
+typedef struct { int ok; int32_t h[3], b[3], lx, lz; int yaw; int pfr, afr; int vi, vs; } bild_t;
+static bild_t s_auf[3][60];
+static int    s_auf_yaw[3];
+static int    s_vol_bilder[3], s_vol_max[3], s_vol_pred[3];
+static int    s_pinvar_vol[3][3], s_pinvar_hor[3][3];      /* [Fall][Pin-Quelle] */   /* Volumenmass je Fall (s. arm_in_leon) */                    /* Leon-Blick unmittelbar nach dem Hook-P0 */
 
 /* Ein Griff des Messarms mit Leon-Blick `yaw0` vor dem Zugriff. Liefert die Zahl der Halte-Bilder mit
  * Hand < 120 an der Brustachse (oder -1). `fall` (0 = Gesicht, 1 = Ruecken) waehlt die Aufzeichnung. */
 static int griff(int yaw0, const char *name, int fall)
 {
     memset(s_auf[fall], 0, sizeof s_auf[fall]);
+    s_vol_bilder[fall] = s_vol_max[fall] = s_vol_pred[fall] = 0;
+    memset(s_pinvar_vol[fall], 0, sizeof s_pinvar_vol[fall]); memset(s_pinvar_hor[fall], 0, sizeof s_pinvar_hor[fall]);
     s_auf_yaw[fall] = -1;
     int slots[RE15_ACTOR_MAX]; int n = aufsetzen(slots);
     if (n < 10) { CHECK("zehn Arme + EM2D-Bank", 0); return -1; }
@@ -164,7 +267,7 @@ static int griff(int yaw0, const char *name, int fall)
     for (int f = 0; f < 20 && arm->sub_state_2 != 2; f++) frame_step();
     pl->x = hx + 2000; pl->z = hz;
     frame_step();                                                     /* A0 -> 0x101 REACH */
-    int32_t hand[3]; re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), hand);
+    int32_t hand[3]; re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), hand);   /* Standpunkt wie unit_1210_arme_re2 (begehbar) */
     pl->x = hand[0] + 300; pl->z = hand[2]; pl->rot_y = (int16_t)yaw0;
     /* Startbild-Historie: die Parts im Griff-Takt T tragen die Pose, die B3 P1 im Takt T-1 aus dem
      * damaligen Startbild baute (Clip 3, Bild = anim_frame zu Beginn von T-1). */
@@ -176,29 +279,30 @@ static int griff(int yaw0, const char *name, int fall)
         frame_step();
         if (arm->sub_state_1 == 4) grab = 1;
     }
-    char nm[200];
+    char nm[400];
     snprintf(nm, sizeof nm, "[%s] Griff kommt zustande (A3 0x401 @0x80100A50)", name);
     CHECK(nm, grab);
     if (!grab) return -1;
-    /* (1) Pin */
-    int32_t erwartet[3], alt[3];
+    /* (1) Pin — Nachbesserung 2: Quelle ist part[Hand]+0x5C der GEMISCHTEN Parts. 0x80029614 mischt die
+     * Rotation +0x68 mit t1 = a3 * +0x14E (VOR dem Dekrement, `lbu t3,334(s2)` @0x800296a8 / `mult v0,t3`
+     * @0x800296bc / Blend @0x800299f0-0x80029ab0); B3 setzt Clip 3 mit +0x14E = 15 (0xF0003 @0x80100AEC),
+     * der Griff kommt ab +0x14D >= 5 (@0x80100A18) — die Ueberblendung laeuft also noch. Erwartet: Leon steht
+     * auf der gemischten Hand; die reine Keyframe-Hand derselben Parts-Pose liegt sichtbar daneben. */
+    int32_t gemischt[3], rein[3], alt[3];
+    int pv = re15_re2arm_hand_parts(a5, gemischt, rein);
     {   const int16_t mo = arm->motion; const uint16_t fr = arm->anim_frame;
-        arm->motion = (int16_t)vor_mo; arm->anim_frame = (uint16_t)vor_fr;
-        re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), erwartet);
         arm->motion = 5; arm->anim_frame = 0;
         re15_enemy_bone_world_pos(arm, re15_re2arm_hand_bone(arm), alt);
         arm->motion = mo; arm->anim_frame = fr; }
-    long dalt = (long)sqrt((double)(alt[0]-erwartet[0])*(alt[0]-erwartet[0]) +
-                           (double)(alt[2]-erwartet[2])*(alt[2]-erwartet[2]));
-    printf("  [%s] Pin Leon (%d,%d) | Parts-Pose Clip %d Bild %d -> (%d,%d) | Clip 5 Bild 0 -> (%d,%d), "
-           "Abstand %ld | Leon-Blick %d\n", name, pl->x, pl->z, vor_mo, vor_fr, erwartet[0], erwartet[2],
-           alt[0], alt[2], dalt, (int)pl->rot_y);
-    snprintf(nm, sizeof nm, "[%s] (1) Pin = part[Hand] der Parts-Pose (Clip 3, Startbild Vortakt) "
-                            "@0x80100C18-38, nicht Clip 5 Bild 0", name);
-    long dneu = (long)sqrt((double)(pl->x-erwartet[0])*(pl->x-erwartet[0]) + (double)(pl->z-erwartet[2])*(pl->z-erwartet[2]));
-    long dbis = (long)sqrt((double)(pl->x-alt[0])*(pl->x-alt[0]) + (double)(pl->z-alt[2])*(pl->z-alt[2]));
-    printf("  [%s] Leon zur Parts-Pose-Hand %ld, zur Clip-5-Hand %ld\n", name, dneu, dbis);
-    CHECK(nm, vor_mo == 3 && dneu <= 30 && dneu < dbis && dalt > 0);
+    long dmisch = (long)sqrt((double)(pl->x-gemischt[0])*(pl->x-gemischt[0]) + (double)(pl->z-gemischt[2])*(pl->z-gemischt[2]));
+    long drein  = (long)sqrt((double)(pl->x-rein[0])*(pl->x-rein[0]) + (double)(pl->z-rein[2])*(pl->z-rein[2]));
+    long dalt   = (long)sqrt((double)(pl->x-alt[0])*(pl->x-alt[0]) + (double)(pl->z-alt[2])*(pl->z-alt[2]));
+    printf("  [%s] Pin Leon (%d,%d) | Parts Clip %d Bild %d: gemischt (%d,%d), rein (%d,%d) | Clip 5 Bild 0 (%d,%d) | "
+           "Leon zu gemischt %ld, zu rein %ld, zu Clip 5 %ld | Leon-Blick %d\n", name, pl->x, pl->z, vor_mo, vor_fr,
+           gemischt[0], gemischt[2], rein[0], rein[2], alt[0], alt[2], dmisch, drein, dalt, (int)pl->rot_y);
+    snprintf(nm, sizeof nm, "[%s] (1) Pin = part[Hand] der GEMISCHTEN Parts (+0x14E @0x800296a8-bc, Pin @0x80100C18-38); "
+                            "reine Clip-3-Hand und Clip-5-Hand liegen daneben", name);
+    CHECK(nm, pv && vor_mo == 3 && dmisch <= 2 && drein > 30 && dalt > 30);
     /* (2) Gleichlauf + (3) Clipping-Mass ueber einen vollen Zyklus nach der Ueberblendung */
     int gleich = 1, im_koerper = 0, bilder = 0; int mind = 1 << 30;
     for (int f = 0; f < 60; f++) {
@@ -215,7 +319,26 @@ static int griff(int yaw0, const char *name, int fall)
         {   bild_t *a = &s_auf[fall][f];
             a->ok = 1; memcpy(a->h, h, sizeof h); memcpy(a->b, b8, sizeof b8);
             a->lx = pl->x; a->lz = pl->z; a->yaw = (int)pl->rot_y & 0xfff;
-            a->pfr = pl->anim_frame; a->afr = arm->anim_frame; }
+            a->pfr = pl->anim_frame; a->afr = arm->anim_frame;
+            a->vi = arm_in_leon(arm, pl, 0); a->vs = arm_in_leon(arm, pl, 1);
+            {   /* Vergleich der drei Pin-Quellen im SELBEN Bild (Leons Pose haengt nicht an der Wurzel):
+                 * [0] gemischte Parts (byte-true), [1] reine Clip-3-Pose (Nachbesserung 1), [2] Clip 5 Bild 0
+                 * (Basisstand vor Runde 35). Nur Messung fuers Dossier. */
+                const int32_t px[3] = { pl->x, rein[0], alt[0] }, pz[3] = { pl->z, rein[2], alt[2] };
+                const int32_t ox = pl->x, oz = pl->z;
+                for (int q = 0; q < 3; q++) {
+                    pl->x = px[q]; pl->z = pz[q];
+                    int32_t bq[3]; re15_skel_bone_to_world(s_leon_pose[1].trans, pl->rot_y, pl->x, 0, pl->z, bq);
+                    int dq = (int)sqrt((double)(h[0]-bq[0])*(h[0]-bq[0]) + (double)(h[2]-bq[2])*(h[2]-bq[2]));
+                    int vq = arm_in_leon(arm, pl, 0);
+                    if (vq > 0) s_pinvar_vol[fall][q]++;
+                    if (dq < 120) s_pinvar_hor[fall][q]++;
+                }
+                pl->x = ox; pl->z = oz;
+            }
+            if (a->vi > 0) s_vol_bilder[fall]++;
+            if (a->vi > s_vol_max[fall]) s_vol_max[fall] = a->vi;
+            if (a->vs > 0) s_vol_pred[fall]++; }
         if (getenv("R35_ARME_DUMP")) {
             double c = cos(pl->rot_y * 3.14159265358979 / 2048.0), sn = sin(pl->rot_y * 3.14159265358979 / 2048.0);
             printf("  DUMP [%s] f%2d afr %2d hand=(%d,%d,%d)", name, f, (int)arm->anim_frame, h[0], h[1], h[2]);
@@ -250,14 +373,47 @@ int main(void)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    CHECK("PL00.MD1 Kopf (Mesh 8) / Rumpf (Mesh 0) als Volumen geladen", vol_laden());
 
     /* Leon dem Fenster zugewandt (Blick -x = 2048): FUN_80015910 -> 0, kein Flip -> Gesicht zum Arm */
     int k_gesicht = griff(2048, "Gesicht", 0);
-    CHECK("(3) Gesicht-Griff: Arm-Hand steckt in KEINEM Halte-Bild in Leons Oberkoerper (< 120)",
-          k_gesicht == 0);
     /* Leon vom Fenster abgewandt (Blick +x = 0): Flip +2048 (@0x80101304-18) -> Ruecken zum Arm. */
     int k_ruecken = griff(0, "Ruecken", 1);
-    printf("  Ruecken-Griff: %d Halte-Bilder mit Hand < 120 an der Brustachse\n", k_ruecken);
+    printf("  waagerechtes Mass (Hand < 120 an der Brustachse): Gesicht %d, Ruecken %d Halte-Bilder\n",
+           k_gesicht, k_ruecken);
+    printf("  Volumenmass (Arm-Vertices Unterarm+Hand in Leons Kopf/Rumpf, PL00.MD1): Gesicht %d Bilder (max %d "
+           "Vertices), Ruecken %d Bilder (max %d); Vorhersage aus dem Gesicht-Lauf fuer den Ruecken %d, aus dem "
+           "Ruecken-Lauf fuer das Gesicht %d\n", s_vol_bilder[0], s_vol_max[0], s_vol_bilder[1], s_vol_max[1],
+           s_vol_pred[0], s_vol_pred[1]);
+    for (int c = 0; c < 2; c++)
+        printf("  Pin-Quellen %s: Volumen/waagerecht  gemischt %d/%d | rein C3B4 %d/%d | Clip5B0 %d/%d (von 44)\n",
+               c ? "Ruecken" : "Gesicht", s_pinvar_vol[c][0], s_pinvar_hor[c][0], s_pinvar_vol[c][1], s_pinvar_hor[c][1],
+               s_pinvar_vol[c][2], s_pinvar_hor[c][2]);
+    /* (3) Gesicht-Griff (der Griff des Nutzers: Leon kommt von der Tuer ROOM1220 und geht -z, Blick zum
+     *     Fenster, kein Flip). Mit der byte-true Pin-Quelle (gemischte Parts) beruehrt die Hand Hals/Schulter
+     *     in einem Teil der Bilder — das ist die RE2-Geometrie (eine Bank, ein Clip, Pin = gezeichnete Hand);
+     *     geprueft wird, dass der Nutzerbefund (Basisstand, Pin Clip 5 Bild 0: Hand durch Kopf/Oberkoerper)
+     *     in beiden Massen zurueckgeht. Zahlen: Dossier H_raeume.md, Nachbesserung 2. */
+    CHECK("(3) Gesicht-Griff: weniger Kontaktbilder als der Basisstand des Nutzerbefunds (Pin Clip 5 Bild 0) — im "
+          "Volumen- UND im waagerechten Mass",
+          k_gesicht >= 0 && s_pinvar_vol[0][0] < s_pinvar_vol[0][2] && s_pinvar_hor[0][0] < s_pinvar_hor[0][2]);
+    /* (3b) Ruecken-Griff als PRUEFUNG: Bild fuer Bild genau das, was die RE2-Konstruktion vorschreibt —
+     *      die Arm-Geometrie des Gesicht-Laufs, an Leons Wurzel gespiegelt, gegen Leons Volumen. */
+    {
+        int vergl = 0, gleich = 1;
+        for (int f = 0; f < 60; f++) {
+            const bild_t *g = &s_auf[0][f], *r = &s_auf[1][f];
+            if (!g->ok || !r->ok) continue;
+            vergl++;
+            if ((r->vi > 0) != (g->vs > 0) || (g->vi > 0) != (r->vs > 0)) gleich = 0;
+        }
+        CHECK("(3b) Ruecken-Griff: Volumenmass Bild fuer Bild = RE2-Konstruktion (Gesicht-Lauf an der Pin-Wurzel "
+              "gespiegelt; EINE Bank @0x80100C3C-5C, EIN Clip @0x801012A8-AC, Flip @0x8010130C-18)",
+              vergl >= 30 && gleich && s_vol_bilder[1] == s_vol_pred[0]);
+        CHECK("(3c) Ruecken-Griff: der Rueckfall aus Nachbesserung 1 ist weg — weniger Kontaktbilder als mit der reinen "
+              "Clip-3-Pose (ohne +0x14E) und nicht mehr als im Basisstand (Volumenmass)",
+              s_pinvar_vol[1][0] < s_pinvar_vol[1][1] && s_pinvar_vol[1][0] <= s_pinvar_vol[1][2]);
+    }
 
     /* (4) Nachbesserung 1, M2 — der Ruecken-Griff ist im RE2-Original KEIN eigener Fall, sondern der
      * Gesicht-Griff mit Leon um 180 Grad gedreht. Belegt (EM2D-Overlay CDEMD0_EM2D_ai1.BIN / RE2 PSX.EXE):
@@ -293,6 +449,30 @@ int main(void)
         CHECK("(4c) Brust im Ruecken-Griff = an Leons Wurzel gespiegelte Brust (EINE Bank @0x80100C3C-5C, "
               "EIN Clip @0x801012A8-AC)", vergl >= 30 && spiegel);
     }
+
+
+    /* (5) Nachbesserung 2, M1 — RE1.5-KI: der RE1.5-Writher 0x8010c1ec-0x8010d774 hat keinen Griff (kein
+     * Schadenseinstieg, Spieler nur gelesen @0x8010c238/258/360/378, kein Store auf feste Adressen) -> Beta ->
+     * Retail: Typ 0x1A laeuft in JEDEM Flavor auf dem RE2-EM2D-Gehirn (re15_ai_re2_for_type). Gemessen wird der
+     * Griff unter RE15_AI_FLAVOR_RE15 ueber denselben echten Weg: Gehirn, Pin auf die gemischte Hand (Kontakt),
+     * Gleichlauf Arm + 1, kein Arm-Vertex in Leons Kopf/Rumpf. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    CHECK("(5a) RE1.5-KI: Typ 0x1A gehoert dem RE2-EM2D-Gehirn (re15_ai_re2_for_type(0x1A) = 1)",
+          re15_ai_re2_for_type(0x1Au) == 1);
+    int k_re15 = griff(2048, "RE1.5-KI Gesicht", 2);
+    printf("  RE1.5-KI: waagerechtes Mass %d, Volumenmass %d Bilder (max %d)\n", k_re15, s_vol_bilder[2], s_vol_max[2]);
+    {   int gleich = 1, vergl = 0;
+        for (int f = 0; f < 60; f++) {
+            const bild_t *g = &s_auf[0][f], *r = &s_auf[2][f];
+            if (!g->ok || !r->ok) continue;
+            vergl++;
+            if (g->lx != r->lx || g->lz != r->lz || g->pfr != r->pfr || g->afr != r->afr || g->yaw != r->yaw) gleich = 0;
+        }
+        CHECK("(5b) RE1.5-KI: Griff mit Kontakt — Leon steht im Halten auf der Arm-Hand und laeuft Bild fuer Bild wie "
+              "unter RE2-KI (Wurzel, Blick, Leon-/Arm-Bild, Volumenmass)",
+              k_re15 >= 0 && vergl >= 30 && gleich && s_vol_bilder[2] == s_vol_bilder[0]);
+    }
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
 
     printf(g_fail ? "test_r35_raeume_arme: FAIL\n" : "test_r35_raeume_arme: OK\n");
     return g_fail ? 1 : 0;

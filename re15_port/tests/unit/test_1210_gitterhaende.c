@@ -115,6 +115,7 @@ static void frame_step(void)
 
 int main(void)
 {
+    re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     char path[600];
     snprintf(path, sizeof path, RE15_ASSET_PSX_DIR "/STAGE1/ROOM1210.RDT");
     size_t sz = 0; uint8_t *buf = slurp(path, &sz);

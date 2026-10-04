@@ -46,6 +46,9 @@ void             re15_ai_flavor_set(re15_ai_flavor_t f);
  * ⚠️ `type` ist der GEGNER-Typ (Kind), nicht der Slot: an den Opfer-Stellen ist das der Typ des
  * GREIFERS (g_player_victim_type), nicht der des Spielers. */
 int re15_ai_re2_for_type(unsigned type);
+/* Runde 35 Spur H (Nachbesserung 2): Typ 0x1A (ROOM1210-Gitterarme) ist in JEDEM Flavor RE2 (Beleg an der
+ * Definition). an = 1 laesst 0x1A wieder dem Flavor folgen — NUR fuer die Referenz-Pins des RE1.5-Writhers. */
+void re15_ai_writher_re15_pin(int an);
 
 /* ---- MODELLHERKUNFT — ⛔ NUR NOCH TEST-HAKEN, KEIN MENUE-ZUSTAND MEHR ----------------------
  * WELLE G (2026-08-19) hatte den OPTIONS→AI-Schalter auf DREI Stufen erweitert:
