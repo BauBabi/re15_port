@@ -85,8 +85,8 @@
  *     Der KOERPER-PUSH gegen den Spieler laeuft dagegen seit Runde 35 Spur H (Nachbesserung 3) mit
  *     dem RE2-Segment (+0x9A = 800 @0x80100338-3C, +0x9E = 500 @0x8010032C-30, Lokal-Lage 0
  *     @0x8010035C-64) ueber re15_re2arm_body_push_player = FUN_80034D0C aus dem Spieler-Pass
- *     FUN_800355C4 (@0x80026628) — am RE2-Original gemessen (GDB-Wachpunkt: pc 0x800350cc/d0 schiebt
- *     Leon nach dem Pin auf 1251 vom Ursprung). FUN_80034D0C steigt aus, wenn eine der beiden
+ *     FUN_800355C4 (@0x80026628) — am RE2-Original gemessen (GDB-Wachpunkt; Schreiber `sw v0,56(s1)` @0x800350c8 /
+ *     `sw v1,64(s1)` @0x800350cc schieben Leon nach dem Pin auf 1251 vom Ursprung). FUN_80034D0C steigt aus, wenn eine der beiden
  *     Entities Bit 2 traegt (`(*a | *b) & 2`) -> ein verborgener Arm schiebt nicht; der Port setzt
  *     hit_radius_min = 0 solange verborgen (re15_body_push_player ueberspringt ihn; zugleich aus dem
  *     Trefferfilter — RE2: Schlaf 0x8000 = kein Ziel in FUN_800470C0 & Co, nach 0x701 hp = -1 =
@@ -230,9 +230,12 @@ static void arm_anker_1210(re15_actor_t *e)
 
 /* ---- KOERPER-PUSH Arm -> Spieler (Runde 35 Spur H, Nachbesserung 3) -------------------------
  * GEMESSEN am RE2-Original (DuckStation-GDB, ROOM2050, Dossier H_raeume.md Nachbesserung 3): nach dem
- * Pin @0x80100C18-38 (Schreib-Wachpunkt auf PL+0x38/+0x40: pc 0x80100c24 / 0x80100c3c) schreibt im SELBEN
- * Bild pc 0x800350cc / 0x800350d0 (in FUN_80034D0C) Leons x/z — Leon steht danach in JEDEM der elf
- * gemessenen Griffe 1251..1252 Einheiten vom Arm-Ursprung (r 800 + 450 + Rundung), nicht auf der Hand.
+ * Pin @0x80100C18-38 (Schreib-Wachpunkt auf PL+0x38/+0x40; Schreiber `sw` @0x80100c20 / @0x80100c38 — GDB meldet
+ * den PC der FOLGE-Instruktion, 0x80100c24/0x80100c3c) schreibt im SELBEN Bild FUN_80034D0C Leons x/z
+ * (`sw v0,56(s1)` @0x800350c8 / `sw v1,64(s1)` @0x800350cc; GDB-PC 0x800350cc/0x800350d0). Leon steht danach im
+ * ersten Halte-Bild 1251 (g5/g6/g7/g8/g11), 1252 (g9/g12/g13) bzw. 1255 (g1/g2) vom Ursprung des Halters
+ * (r 800 + 450 + Rundung), nicht auf der Hand. g3/g4 (1295 vom Halter Satz 2) sind verfaelscht: dort schob der
+ * weiter sichtbare Nachbar Satz 0 mit — 1251 von DESSEN Ursprung (Abnahme 3 M3, Dossier Nachbesserung 4).
  * Der Port liess Leon auf der Hand (~1050 vom Ursprung): Unterarm ~200 tiefer in Leon als im Original.
  * Kette (RE2 PSX.EXE, selbst disassembliert):
  *   Spieler-Pass FUN_800355C4 (@0x80026628, nach dem Spieler-Tick): fuer jeden Listeneintrag

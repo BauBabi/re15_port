@@ -204,7 +204,8 @@ int main(void)
                (long)pl->x, (long)pl->z, (long)h2[0], (long)h2[2], (long)stand_x, (long)stand_z);
         /* Runde 35 Spur H, Nachbesserung 3: nach dem Pin schiebt der Spieler-Pass FUN_800355C4 (@0x80026628)
          * im selben Bild mit FUN_80034D0C aus dem Arm-Segment r 800 (@0x80100338-3C) + 450 (@0x8003bdc0-c4):
-         * Leon steht auf dem Strahl Ursprung -> Hand, 1251 vom Ursprung (RE2-RAM: 1251..1252 in 12 Griffen). */
+         * Leon steht auf dem Strahl Ursprung -> Hand, 1251 vom Ursprung (RE2-RAM: 1251..1255 in den zehn sauberen
+         * Griffen; g3/g4 1295 vom Halter = vom Nachbar-Arm mitgeschoben, Abnahme 3 M3). */
         double hx = h2[0] - arm->x, hz = h2[2] - arm->z, lx = pl->x - arm->x, lz = pl->z - arm->z;
         double ld = sqrt(lx * lx + lz * lz), kreuz = (hx * lz - hz * lx) / (sqrt(hx * hx + hz * hz) * ld + 1e-9);
         printf("  Pin->Push: Leon %.0f vom Arm-Ursprung, Strahl-Abweichung sin %.4f\n", ld, kreuz);

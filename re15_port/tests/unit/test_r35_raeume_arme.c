@@ -12,7 +12,8 @@
  *   (1) PIN + KOERPER-PUSH: B4 P0 setzt Leon auf part[Hand]+0x5C/+0x64 der GEMISCHTEN Parts (@0x80100C18-38,
  *       +0x14E @0x800296a8-bc); im selben Bild schiebt der Spieler-Pass FUN_800355C4 (@0x80026628) ihn mit
  *       FUN_80034D0C aus dem Arm-Segment r 800 (@0x80100338-3C) + Spieler r 450 (@0x8003bdc0-c4). Erwartet:
- *       Leon auf dem Strahl Ursprung->Pin im Abstand, den das ORIGINAL in allen zwoelf Griffen zeigt.
+ *       Leon auf dem Strahl Ursprung->Pin im Abstand, den das ORIGINAL in den zehn sauberen Griffen zeigt
+ *       (1251..1255; g3/g4 ausgenommen — dort schob der sichtbare Nachbar Satz 0 mit, Abnahme 3 M3).
  *   (2) GLEICHLAUF: Leon zeigt jedes Halte-Bild Arm-Bild + 1 (im Original-RAM ebenso, Clipwort-Bytes).
  *   (6a) PORT = ORIGINAL: der Port-Griff in der Lage eines Original-Griffs (gleiche Armhoehe, Arm vor Leon,
  *       Gesicht und Ruecken) zeigt Bild fuer Bild dieselbe Hand im KOPF-Rahmen Leons, denselben Blick-Akku
@@ -20,8 +21,8 @@
  *       Leons Kopf/Rumpf. Leon wird dafuer posiert WIE DER ZEICHNER (main.c: g_anim_pose_actor = Spieler,
  *       Nacken-FSM in re15_skel_compute_pose, jedes Bild), nicht ohne Kopfdrehung (Nachbesserung 4).
  *   (N1) RE2-ZIELWAHL FUN_8003DB38 auf der ORIGINAL-Geometrie: Kegel +-1500 (re15_ai_arc_test = FUN_80015614),
- *       Radius 7000, naechster Kandidat — liefert in allen zwoelf Griffen das Ziel, das die RAM zeigt (Halter,
- *       Nachbar-Satz oder SELBST).
+ *       Radius 7000, naechster Kandidat, Sicht aus re2_los.py — liefert in den neun sauberen Griffen und in zwei
+ *       Laeufen mit allen zehn Armen im RAM das Ziel, das die RAM zeigt (Halter oder SELBST).
  *   (6b) Der Nutzerfall (Arm 5 in ROOM1210, Port-Hoehe -2500): nicht mehr Ueberschneidung als das Original
  *       an seinen Nachbarhoehen (Satz 5 -2480 / Satz 8 -2540 / Satz 0 -2580).
  *   (4a-d) Konstruktion: Ruecken-Blick = Gesicht-Blick + 2048 bei gleicher Hand-Bahn (Port) — im Original-RAM

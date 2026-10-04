@@ -819,7 +819,8 @@ Port (Abnahme 2, exe-Pin, Arm y -2500): Gesicht **12/19** (max 8), Ruecken **18/
 Bilder: `H_raeume/nb3_re2_original_halten_satz5_satz0.png` (VRAM, Satz 5 und 0, beide Griff-Lagen).
 Belegt im ORIGINAL-RAM: (a) Ruecken-Blick = Gesicht-Blick + 2048 bei GLEICHEM Pin (g1/g2, g3/g4, g5/g6, g7/g8) —
 die Konstruktion aus Nachbesserung 1; (b) Leon = Arm-Bild + 1 in jedem Halte-Bild; (c) das Original hat in JEDER
-gemessenen Hoehe Arm-Vertices in Leons Kopf/Rumpf, Gesicht 5..12/19, Ruecken 6..19/19; am naechsten Satz zur
+gemessenen Hoehe Arm-Vertices in Leons Kopf/Rumpf, Gesicht 5..12/19, Ruecken 6..19/19 [NB4 berichtigt: ohne die
+verfaelschten g3/g4 Gesicht 7..12/19, Ruecken 12..19/19]; am naechsten Satz zur
 Port-Hoehe (Satz 5, -2480) 11/19 bzw. 19/19.
 Band-Enden (dazu): g11 Satz 7 (y -2700, A) Gesicht **4/19**; g12 Satz 3 (y -1930, B) Gesicht **17/19** (max 22);
 g13 Satz 6 (y -2000, B) Gesicht **17/19** (max 14). (Satz 1 und 4 griffen an der gewaehlten Stelle nicht binnen
@@ -827,7 +828,9 @@ g13 Satz 6 (y -2000, B) Gesicht **17/19** (max 14). (Satz 1 und 4 griffen an der
 haengt stark an der Hoehe: Gesicht 4/19 (-2700) .. 17/19 (-1930/-2000).
 
 ### DER UNTERSCHIED: RE2 schiebt Leon nach dem Pin aus dem Arm-Segment (FUN_80034D0C) — der Port nicht
-**Messung (Original):** in ALLEN zwoelf Griffen steht Leon im ersten Halte-Bild **1251..1252** vom Arm-Ursprung
+**Messung (Original):** [NB4 BERICHTIGT — die Aussage "in ALLEN zwoelf Griffen 1251..1252" war falsch, gemessen:
+1251 g5/g6/g7/g8/g11, 1252 g9/g12/g13, 1255 g1/g2, 1295 g3/g4 (dort schob der sichtbare Nachbar Satz 0 mit: 1251 von
+dessen Ursprung, Abnahme 3 M3)] in den sauberen Griffen steht Leon im ersten Halte-Bild **1251..1255** vom Arm-Ursprung
 (Leon - Arm: g1 (97,-1251), g3 (1251,-333), g5 (14,-1251), g7 (1251,14), g9 (-6,-1252), g11 (14,-1251), g12 (1252,-6),
 g13 (-6,-1252)) — nicht auf der Hand (Hand-Bone 3 im ersten Halte-Bild ~900..1050 vor dem Ursprung). PL+0x0D (Pusher-
 Id) = Satz + 2 und PL+0x0E (Kontaktbit) != 0 im Griff-Bild.
@@ -900,7 +903,8 @@ Befund dabei (nicht Teil des Nutzerbefunds, OFFEN):** im Original unterscheidet 
 Griff NUR Leons Part 8 (Kopf) — Rumpf und Arme (Parts 0/9/12) sind Bild fuer Bild gleich (Rotation im Wurzel-Rahmen,
 re2_frames.py-Auswertung, z.B. Halt 25 Part 8 Zeile 0 Gesicht (3325,2365,-175) / Ruecken (3236,2318,940), Part 0
 (3366,1445,1818) / (3367,1446,1819)): RE2 dreht Leons Kopf im Halten zu einem Ziel. Der Port dreht den Kopf im Halten
-nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Original (g7, g11), sonst gleich.
+nicht [NB4 BERICHTIGT: falsch fuer die exe — sie fuehrte die Nacken-FSM auch im Halten, mit dem veralteten RE1.5-Ziel
+(Abnahme 3 M1); seit NB4 mit der RE2-Zielwahl, s. Abschnitt Nachbesserung 4]; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Original (g7, g11), sonst gleich.
 
 ### Je Mangel (Abnahme 2)
 * **M1 (Gesicht-Griff 12/19)** — Ursache gefunden: der fehlende RE2-Koerper-Push (s.o.). Messung vorher 12/19 (max 8)
@@ -909,7 +913,8 @@ nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Ori
   Original zeigt an den Nachbarhoehen 7..11/19. Riegel auf den Originalwert: (6a)/(6b).
 * **M2 (Armhoehe = Port-Bruecke)** — die Hoehe bleibt die gekennzeichnete PORT-BRUECKE aus der ROOM1210-Fensterbank
   (-2500, enemy_ai_re2_zellenarm.c), aber die Folgerung "das Original ueberschneidet genauso" steht jetzt auf
-  ORIGINAL-MESSUNGEN in acht Hoehen (-1930..-2700, Saetze 0/2/3/5/6/7/8/9): Gesicht 4..17/19, Ruecken 6..19/19; der
+  ORIGINAL-MESSUNGEN in acht Hoehen (-1930..-2700, Saetze 0/2/3/5/6/7/8/9): Gesicht 4..17/19, Ruecken 6..19/19 [NB4
+  berichtigt: ohne g3/g4 Gesicht 4..17/19, Ruecken 12..19/19]; der
   Port reproduziert in den Original-Lagen die Original-Zahl (6a); bei -2500 liegt er unter den Original-Nachbarn (6b).
   RE2 hat KEINE einheitliche Hoehe: dieselben fuenf Arme eines Fensters stehen auf -2000..-2700 (Saetze 5-9, alle
   z -7000, x -12500..-12100) — die Ueberschneidung des Originals schwankt mit dem Arm, der zugreift.
@@ -938,7 +943,8 @@ nicht; Folge im Mass: Port in den Gesicht-Lagen bis 2 Bilder WENIGER als das Ori
 
 ### OFFEN (Stand Nachbesserung 3, ersetzt OFFEN 1 der Nachbesserung 2)
 1. **Leons Kopfdrehung im Halten (RE2)** — im Original-RAM unterscheidet sich zwischen Gesicht- und Ruecken-Griff nur
-   Part 8; der Port dreht den Kopf im Halten nicht (Port hat den Spieler-Hals-Blick neck_bone 8 / step 96 / clamp
+   Part 8; der Port dreht den Kopf im Halten nicht [NB4 BERICHTIGT: die exe drehte ihn mit dem veralteten RE1.5-Ziel;
+   erledigt in Nachbesserung 4] (Port hat den Spieler-Hals-Blick neck_bone 8 / step 96 / clamp
    0x200, actor_common.c, aber nicht im Opfer-Zustand des Arms). Wirkung gemessen: bis 2 Ueberschneidungsbilder
    weniger als das Original (6a). Naechster Messweg: `re2_mess/re2_gdb_push.py`-Muster mit Schreib-Wachpunkt auf die
    gemischte Rotation von Leons Part 8 (PL+0x198 -> Part 8 +0x68..+0x6C) im Halten -> schreibender PC -> Zielwahl
