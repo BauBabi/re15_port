@@ -1520,3 +1520,42 @@ Scratch: `scratchpad/jnb5/`.
 ### Stand (fortlaufend)
 - [ ] P1 Messung Stufen (Original GDB / Port)  - [ ] P1 Beleg  - [ ] P1 Aenderung/Riegel  - [ ] P1 Dossier (a)/(b)
 - [ ] P2 (a) Kausal-Aussage  - [ ] P2 (b) Pin/Empfindlichkeit  - [ ] P2 (c) OFFEN  - [ ] Suite  - [ ] H2 Sprungmarke
+
+### P1 — Messung vorher: welche Stufe der Gorilla-Wurzel weicht ab (Original GDB je Stufe gegen Port)
+- Werkzeug `jnb5/gdbstufe.py` (DuckStation-GDB-Server, settings.ini [Debug] EnableGDBServer nur waehrend des Laufs,
+  danach zurueckgespielt, diff leer): r3-Savestate s033 direkt geladen (wie jnb1/g_orig), ab VSync 10029 (= F194)
+  Haltepunkte an jeder Stufe der Gorilla-Wurzel 0x80116db8 (selbst disassembliert): Eintritt; nach `jal 0x8001a8f8`
+  (Steuern, B[3] @0x80117d50 -> Rueckkehr 0x80117d58); nach `jal 0x8011bf50` (Fuss-Sperre @0x80117db0/@0x80117dfc ->
+  0x80117db8/0x80117e04); nach dem Handler (`jalr v0` @0x80116e20 -> 0x80116e28); nach `jal 0x8002b498` (0x80116e38);
+  nach `jal 0x8002aec4` (Spieler-Schub, 0x80116e48); nach `jal 0x8002b544` (Paar-Schub, 0x80116e58); nach
+  `jal 0x8003b0a4` (Wandklemme, 0x80116e78). Je Halt cur.+0x34/+0x3c/+0x6a/+0x94/+0x95/+0x8f. Auswertung `jnb5/stufe.py`
+  -> `jnb5/g_stufe_dec.txt` (F195-F246, beide Gorillas).
+- Port: `R35_TAKT_SPUR=1 RE15_AFFEN_FUSS=1 test_r35_affen.exe takt` (`jnb5/pt/`), affen_fuss.log = Fuss-Sperren-Schritt
+  je Tick (Port zieht d ab).
+- Ergebnis: Im Kriechen (Sub 3, Clip 5, F196-F204) bewegt im Original NUR die Fuss-Sperre bf50 die Gorillas, bis zum
+  2050-Kreis; dort schiebt aec4 radial zurueck (e2 ab F198, e1 ab F200), b544 und die Klemme sind 0. Der Port weicht
+  schon im ERSTEN Tick ab, obwohl der Startzustand (Lage, Yaw, Clip/Bild, Pool) gleich ist — und zwar in der Fuss-Sperre:
+
+  | Tick | e1 Original | e1 Port | e2 Original | e2 Port |
+  |---|---|---|---|---|
+  | F196 | (-39,75) | (-37,75) | (77,-14) | (77,-15) |
+  | F197 | (-42,72) | (-40,75) | (76,-7) | (79,-6) |
+  | F198 | (-42,79) | (-39,79) | (69,-11) | (70,-8) |
+  | F199 | (-42,73) | (-42,74) | (56,-14) | (60,-11) |
+  | F200 | (-43,72) | (-42,75) | (66,-9) | (67,-8) |
+
+  Je Tick 1-4 Einheiten, ueberwiegend quer zur Kriechrichtung -> die tangentiale Drift von e2 am 2050-Kreis (OFFEN N4-1:
+  e2-Yaw Original 91 -> 83, Port bleibt 91; die Yaw ist hier reine Folge der Lage, a8f8 schnappt auf die Peilung,
+  FUN_8001a8f8 Decompilat: `uVar2 < param_2 * 2 -> +0x6a = Peilung`).
+- Mechanismus (selbst gelesen, Decompilate + Disasm): FUN_8011bf50 kettet m = CompMatrix(+0x20, rec0+0x18) ->
+  CompMatrix(m, rec[12+3a1]+0x18) -> ... rec[14+3a1] (`jal 0x80022da0` @0x8011bf80/a4/b4/c4) und zieht die Welt-t des
+  Zeichners ab (`lw a0,84(s0)` @0x8011bfd8 / `lw a0,92(s0)` @0x8011bff8). FUN_80022da0 = GTE: R' = M.R * L.R ueber drei
+  `rtir` (MVMVA sf=1, IR saettigt 16 Bit), t' = M.t + (M.R * L.t) >> 12 ueber `rt` + `stlvnl` (L.t als 16-Bit-V0).
+  +0x20 = RotMatrix(+0x68) mit ScaleMatrix(+0x166 = 0x1b33) (FUN_8001e8c8; ScaleMatrix `(short)m * s >> 12` je Element).
+  Der Zeichner (FUN_8001ef54/FUN_8001e9ec: `FUN_80022da0(rec[0x1b], rec+0x18, rec+0x40)`) kettet in DERSELBEN Reihenfolge,
+  Wurzel zuerst, mit der Entity-Matrix als erstem Faktor. Der Port rechnete die Kette OHNE Entity-Matrix im Objektraum
+  (re15_skel_compute_pose: L0*L12*L13*L14), bildete die Differenz, drehte sie danach mit der Yaw und skalierte zuletzt
+  (`(w * 0x1b33) >> 12`). Jede Stufe rundet (>> 12) -> andere Reihenfolge = andere Rundung, je Tick 1-4 Einheiten.
+  Dazu die Pool-Ueberblendung: FUN_8001f3bc mischt die Wurzel mit `gpf12` + `gpl12` (zwei getrennte >> 12, Decompilat
+  Z. 40-61), die Winkel ueber FUN_80020510 -> LoadAverageShort12 ebenfalls `gpf12_b` + `gpl12_b` (zwei >> 12); der Port
+  rundete die Summe einmal.
