@@ -70,6 +70,7 @@ typedef struct {
     int32_t lx, lz; int16_t lyaw; uint32_t lcw;         /* Leon Pin / Blick / Clipwort +0x14C          */
     int32_t ax, ay, az; int16_t ayaw; uint32_t acw;     /* Arm Ursprung / Blick / Clipwort             */
     r2o_mat_t L0, L8, A1, A2;                           /* Leon Part 0/8, Arm Unterarm/Hand (Welt)     */
+    int16_t nyaw, npit; int8_t nziel;                   /* NB4: Blick-Akku Part8 +0x98/+0x9A, Ziel-Satz PL+0x1B8 (-1 SELBST) */
 } r2o_bild_t;
 #define R2O_BILDER 19
 /* (6a) Vergleichsgrenzen — TEST-TOLERANZEN der Versuchsanordnung, kein Spielwert:
@@ -83,7 +84,7 @@ typedef struct {
  *    Original (g7 5/7, g11 2/4), sonst gleich. */
 #define R35_6A_TOL  20
 #define R35_6A_ZTOL 2
-typedef struct { const char *name; int satz, hoehe, griff, var; r2o_bild_t b[R2O_BILDER]; } r2o_lauf_t;
+typedef struct { const char *name; int satz, hoehe, griff, var, wechsel; r2o_bild_t b[R2O_BILDER]; } r2o_lauf_t;
 #include "r35_raeume_re2orig.inc"
 
 static uint8_t *slurp(const char *p, size_t *n)
