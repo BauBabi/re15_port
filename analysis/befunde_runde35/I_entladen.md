@@ -487,3 +487,80 @@ Drei Besitzer von Raum-Animationsbloecken:
    RDT-Datei von ROOM11B0, deren Block @0x5C ROOM10F0 leiht; frei nur bei der naechsten Leihe. Nach
    ROOM10F0 -> anderer Raum bzw. Tod bleibt sie liegen (gleicher Mangel, dritter Weg).
 RDT-Alias (`rbj_borrowed`, Block IN der residenten RDT) faellt schon mit Schritt (7) (RDT-Bytes).
+
+### N2 RE-Belege (selbst disassembliert, `re15_disasm.py` / `re2_disasm.py`)
+```
+RE1.5 PSX.EXE — Raum-Animationsbank = Teil der RDT
+  8001b3f8: lui v0,0x800b
+  8001b3fc: 78 c7 42 8c  lw v0,-14472(v0)   0x800ac778 = RDT-Zeiger (= Arena-Basis, R1)
+  8001b404: 5c 00 46 8c  lw a2,92(v0)       RDT+0x5C = Animationsblock
+  8001b40c: 33 00 c0 10  beq a2,zero,...    kein Block -> nichts binden
+  80039a08: fe 6c 00 0c  jal 0x8001b3f8     im Raumlader FUN_800396fc, unbedingt (nach jal 0x8003ef6c @0x80039a00)
+  800397c0: lw a1,-14472(a1) / 800397e8: jal 0x80013b60   neue RDT ab der Basis; Reset @0x80039738 (R1)
+RE2 info/re2leon/PSX.EXE — ENEMSE-Bank je Raum (fuer H2), jal-Wort-Scan selbst:
+  8004a334: jal 0x80053528  (einziger Aufrufer)  -> 80053610: jal 0x80052b38  (Bank-Zeile bestimmen,
+            RE2_Quellcode_V2/FUN_80052b38.c: DAT_800d424b = Zeile bzw. 0xFF)
+  8004a33c: jal 0x8005a09c  (einziger Aufrufer, im Raumlader FUN_80049e48)
+  8005a0e0/ec: a0 = Handle 0x800d4c4b ; 8005a100: beq a0,-1,... ; 8005a108: b0 13 02 0c jal 0x80084ec0
+  (SsVabClose der alten Bank) ; 8005a114: 00 00 02 a2 sb v0(-1),0(s0) -> Handle = -1
+  8005a11c: beq s2(0x800d424b),0xFF,... ; 8005a13c: sw 0x801f8e10 -> 0x800dbb84 (fester Bankpuffer)
+RE2 Raumbank-Saetze (H3), Belege der Spuren davor, hier nur gelesen: Kartenhinweis Se(Bank 2 = Raumbank,
+  0x2B) @0x8006F234-38; "verschlossen" Se(Bank 2, 0x16) @0x80051610/@0x800516a4, Welle je RAUM
+  (Bank 2 = [RDT+0x08] via FUN_80059e54 @0x80059f44, lock_se_common.c); Fahrstuhl ROOM21B0 SND0
+  (bank 2) @0x2756/@0x2784; Panel ROOM2130 snd0. Tuersequenz-Bank 0x3DC50 ausserhalb des
+  Key-Off-Bereichs 0x14441..0x3DC4F (@0x800597a4ff, Runde 31) -> bleibt (O2).
+```
+=> Im Original gibt es keine Raum-Animationsbank ausserhalb der RDT; mit dem naechsten Raumladen
+(Tuer @0x8001d988 / Spielstart @0x8001d5ac) liegt nur der Block der NEUEN RDT vor. Eine geliehene
+Bank eines fremden Raums (Spur K, Port-Wahl) folgt derselben Lebensdauer.
+
+### N2 Umsetzung
+* `platform/pc/src/entladen_pc.c`: Besitz des RBJ-Dateipuffers (`re15_entladen_rbj_halten(buf,size,raum)`:
+  gibt den vorigen frei, merkt Generation/Raum/Groesse; `re15_entladen_rbj_belegt`). `alles_entladen`
+  Schritt (11): eigener Puffer + Leihe K frei; Schritt (12): RE2-Raumbank-Ergaenzungen frei; Schritt (8):
+  Montage-Schnappschuss an JEDER Grenze (H1, frueher nur Spielstart/-ende). Drei neue Zensus-Faecher
+  `rbj` (Generation, eigener Puffer + Leihe), `bg_prev` (Generation), `re2ton` (wie `ton` nur am
+  Ereignis gewertet); VORHER/BILD-Zeilen zusaetzlich `| rbj_datei raum=.. bytes=.. gen=..`.
+* `platform/pc/main.c` (4 Zeilen): `static uint8_t *s_room_rbj` entfernt; Tuer-Weg uebergibt den
+  Puffer (`re15_entladen_rbj_halten(rbj_borrowed ? NULL : rbuf, rsz, dest_room)` statt eigenem free);
+  Zweig "has no RBJ" laesst ausdruecklich los; Boot-Weg uebergibt `rbj_buf` (wenn kein Alias/Leihe).
+* `platform/pc/src/cut10f0_pc.c` (Spur K, Haken 9 Zeilen): `s_leih_buf/s_leih_rdt` auf Dateiebene
+  + Generation, `re15_cut10f0_pc_rbj_freigeben/_belegt`. Die Leihe selbst unveraendert.
+* `platform/pc/src/bg_pc.c` (3 Zeilen): Generation des Schnappschusses + `re15_bg_prev_belegt`.
+* `platform/pc/src/audio_pc.c`: `re15_audio_re2_raumbaenke_entladen/_belegt` (unter
+  SDL_LockAudioDevice; ENEMSE-Cache ueber das vorhandene `re2se_bank_free`, ELEVSE/HINTSE/TUERSE/
+  PANEL2130: PCM frei, Stimmen/Vormerkungen auf diese Puffer geloest, loaded/failed 0 -> der
+  vorhandene Lazy-Lader holt sie beim naechsten Ruf). TORSE + Tuersequenz-Bank bleiben (O2).
+* `include/re15_entladen.h`: Faecher + Deklarationen. Keine neue Verhaltenskonstante.
+Spur L (`re15_rbj_set_alias`, Alias je Takt) und Spur K (Leihe ROOM11B0 -> ROOM10F0) unveraendert
+wirksam: die Bindung `re15_rbj_bind_room` haengt am gehaltenen Puffer, der bis zur naechsten Grenze lebt.
+
+### N2 Messung nachher (Stand 4c5cca7f, eigener Bau nach `configure` — der Merge brachte neue .c-Dateien)
+Laeufe mit eigener exe-Kopie `re15_pc_i_n2.exe`, Skript `scratchpad/i_n2_lauf.sh` (PATH msys64 zuerst,
+eigenes Arbeitsverzeichnis). Logs: `I_entladen_bilder/n2_nach_<lauf>_entladen.log`. Gekuerzt.
+```
+r1 (= Abnahme r9) RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=t.bmp RE15_TITLE_SHOT_AF=60 RE15_FPS=240
+   RE15_FIRE_AOT=4@3000#1170 RE15_EXIT_AT=100#1130   (Intro -> 1170 -> echte Tuer 4 -> 1130)
+   debug.log: [rbj] room 1170 cinematic overlay: 26 clips / [fire-aot] slot=4 at F3000 / PC loaded room1130
+              / [rbj] room 1130 has no RBJ ... PL00-Basis
+   VORHER raum gen=3 raum=1170 | belegt ... figur=1 rbj=1 ... | rbj_datei raum=1170 bytes=55060 gen=3
+   EREIGNIS raum gen=4 raum=1170 | belegt (alle 18 Faecher) 0 ; 0 BILD-Zeilen in 100 Bildern ROOM1130
+r2 (= Abnahme r10) RE15_FPS=240 RE15_GOTO_ROOM=1170 RE15_KILL_AT=3200 RE15_EXIT_AT=200#1240 (Tod in 1170, NEW GAME)
+   VORHER spielende gen=3 raum=1170 | belegt ... rbj=1 | rbj_datei raum=1170 bytes=55060 gen=3
+   EREIGNIS spielende gen=4 alle 0 ; EREIGNIS spielstart gen=5 alle 0 ; 0 BILD-Zeilen (200 Bilder ROOM1240)
+r3 (= Abnahme r11, Boot-Weg) Karte probe_r35_entladen_karte re15_card.mcr 1170 (Cut 3, 4014,-7200,-7436),
+   RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_KILL_AT=60 RE15_BOOT_EXIT_AT=3
+   debug.log: [rbj] loading cinematic bank: RBJ/ROOM1170.RBJ (55060 bytes) (je Boot, 3x) ; danach
+   wechselt der Port aus 1170 nach 1240 (PC loaded room1240 — vorhandenes Verhalten, nicht Teil dieser Spur)
+   VORHER raum gen=2 raum=1170 | ... rbj=1 | rbj_datei raum=1170 bytes=55060 gen=2   <- der BOOT-Puffer
+   EREIGNIS raum gen=3 alle 0 ; dasselbe in Spiel 2 (gen 5 -> 6); 0 BILD-Zeilen
+r4 (Leihe Spur K) RE15_DEBUG_JUMP=10F0@5 RE15_GOTO_ROOM=1030 RE15_EXIT_AT=100#1030
+   debug.log: [rbj] Animationsblock von ROOM11B0 geliehen (48168 B, Runde 35 Spur K) / room 10F0 cinematic
+   overlay: 25 clips / PC loaded room1030 / room 1030 has no RBJ
+   VORHER raum gen=3 raum=10F0 | ... rbj=1 (keine rbj_datei-Angabe = die Leihe) ; EREIGNIS raum gen=4 alle 0
+r5 (H3 TUERSE) SDL_AUDIODRIVER=dummy RE15_DEBUG_JUMP=1170@5 RE15_FIRE_AOT=5@10#1170 RE15_GOTO_ROOM=1130
+   RE15_EXIT_AT=60#1130 RE15_TUERSE_LOG=tuerse.log
+   tuerse.log: F10 raum=1170 nachricht=12 art=M weg=AOT satz=0(ZU_A) nr=1
+   VORHER raum gen=3 raum=1170 | ... ton=2 ... rbj=1 bg_prev=0 re2ton=1 ; EREIGNIS raum gen=4 alle 0
+H1 bg_prev in jedem Lauf: VORHER raum raum=1240 ... bg_prev=1 -> EREIGNIS raum gen=3 ... bg_prev=0.
+```
