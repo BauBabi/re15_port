@@ -254,3 +254,55 @@ CONTINUE, RE15_FORCE_CUT=7 bzw. 2, RE15_FRAMEDUMP F100): `F_belege/p45_exe_marke
 Viereck im Regalfach unter der Marke, die Kiste steht auf dem rechten Luefter unter der Marke.
 Hinweis: die grosse Kiste rechts im 1090-Bild ist das Original-Prop obj 1 (Obj_model_set @0x02190,
 Typ 4, (-5960,-9000,-15482)) — nicht von dieser Spur.
+
+### Punkt 1 — unsymmetrische Griffe an Doppeltueren der Tuersequenzen
+
+**Messung vorher** (neue Sonde `probe_r35_inhalt_tueren`, Tuer-Maschine re15_door_seq_start /
+re15_door_seq_bild = Door_init FUN_80013c1c / Door_move FUN_80013eb4; jede Wahl der Tuer-Tabelle
+(Archiv, Variante, Port-Archiv, Spender), Bild 2; je Griff-Objekt die Weltmatrix, mit der der Laeufer
+zeichnet — ohne Tausch o->welt, mit Tausch die Formel aus door_scene_pc.c griff_zeichnen; Mass:
+Spitze (fernste Ecke) bzw. Huellen-Mitte relativ zum Anhaengepunkt; Spiegelebene = Mittelebene
+zwischen den SCHWERPUNKTEN der beiden Fluegel-Meshes; nur Paare gleicher Griffe):
+```
+                      Spitze   Huellen-Mitte
+RE2 DOOR1B V2          2,7      9,0      (Original, Referenz)
+RE2 DOOR1D V3          0,0      0,0      (Original, Referenz)
+P04B DOOR04 V2         0,2     18,4      (RE2-Geometrie, Mitte-Mass streut bei kurzen Vektoren)
+P1DG/P1DK/P1DL 1D V3  49,7     55,7      <- UNSYMMETRISCH (Griff-Tausch <- DOOR07)
+P1BD DOOR1B V2        37,1     47,6      <- UNSYMMETRISCH (Griff-Tausch <- DOOR23)
+P0CD DOOR0C V0       180,0    179,9      <- UNSYMMETRISCH (Archiv-Griff, Stangen oben/unten)
+```
+Alle drei Befunde sind PORT-Archive der Runde 33 ("die wir erstellt haben"); kein RE2-Original ist
+betroffen. (DOOR26/DOOR31 V0 sind RE2-Archive mit Rad + Hebel = verschiedene Meshes, kein Paar.)
+
+**RE-Beleg (Ursache).** Die Archive spiegeln den Griff des zweiten Fluegels ueber die z-Drehung
+ihres Door_model_set (pc+16..21 -> rot0, Port-Feld re15_door_obj_t.rot0): DOOR1D V3 obj 2
+(62708,2048,0) / obj 3 (62708,2048,2048); DOOR1B obj 4 (63488,2048,0) / obj 5 (63488,2048,2048);
+DOOR0C obj 2 (0,0,0) / obj 3 (0,0,2048), obj 4 (0,2048,0) / obj 5 (0,2048,2048). Gemessen: jeder
+Griff mit rot0[2] = 2048 haengt am zweiten Fluegel (obj 1); alle Eintueren und alle Griffe am ersten
+Fluegel tragen rot0[2] = 0 (Liste der Sonde, 27 getauschte Griffe).
+1. Griff-Tausch (PORT-WAHL der Runden 31/33, door_scene_pc.c griff_zeichnen): Drehung =
+   Grund-Drehung des Spenders (rot_vorn/rot_hinten) + Ausschlag — die Spiegel-Drehung rot0[2] des
+   Archiv-Objekts wurde verworfen -> beide Fluegel trugen denselben Griff.
+2. P0CD (ohne Tausch): DOOR0C-Stangen liegen nicht um den Anhaengepunkt (Huellen-Mitte 344 daneben);
+   die z-Spiegeldrehung klappt die Stange des zweiten Fluegels auf die andere Seite (oben statt unten).
+
+**Umsetzung (keine DO2-Aenderung — Tonteil/SCD/MD1 bleiben bytegleich dem Basis-Archiv, wie
+probe_r33_tueren `archive` pinnt; geaendert wird nur, WIE der Laeufer die Griffe zeichnet):**
+- `engine/src/tuer_spiegel_r35.c` + `include/re15_tuer_spiegel.h`: `re15_tuer_griff_tausch_rot`
+  (rot[2] = Grund-Drehung[2] + rot0[2] des Archiv-Objekts) und `re15_tuer_spiegel_dz` (Tabelle:
+  P0CD, Fluegel 1, dz 2048 = Spiegeldrehung aufgehoben; PORT-WAHL nach NUTZER-VORGABE "Das ist so
+  im allgemeinen nicht", nur fuer Port-Archive, das RE2-Archiv DOOR0C selbst bleibt unveraendert).
+- `platform/pc/src/door_scene_pc.c`: griff_zeichnen nutzt re15_tuer_griff_tausch_rot (1 Zeile),
+  objekt_zeichnen zeichnet Griffe am Fluegel 1 mit +dz, wenn das Archiv in der Tabelle steht.
+  Gefunden wurde dz 2048 mit den Versuchsdrehungen der Sonde (dz:2048 -> 0,0/0,1 Grad;
+  dy:2048 -> 146,1/2,8; dy+dz -> 33,9/177,2).
+
+**Messung nachher.** Riegel `unit_r35_inhalt_tueren` (= Sonde mit "test") 6/6: A alter Stand 7 (Spitze)
+bzw. 8 (Mitte) unsymmetrische Port-Paare; B neuer Stand alle 8 Port-Paare < 10 Grad (max 0,2 Spitze;
+Mitte max 18,4 nur P04B unveraendert = RE2-Geometrie); C RE2-Originale Wert fuer Wert unveraendert.
+Echte exe (`RE15_TUER_SEITE=S044,S049,S155,S030 RE15_TUER_BOGEN`, beschleunigter Renderer,
+alter Stand = door_scene_pc.c aus 154a73c1 kurz eingebaut): `F_belege/p1_tuergriffe_vorher_nachher.png`
+— S044 P0CD Stangen vorher auf verschiedener Hoehe, nachher gleich; S049 P1DG / S030 P1DK rechter
+Druecker vorher verdreht, nachher spiegelgleich; S155 P1BD Riegelstangen nachher spiegelgleich.
+Neue DO2-Dateien: KEINE (bewusst, s.o.).

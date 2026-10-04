@@ -403,6 +403,16 @@ int main(int argc, char **argv)
         }
         return 0;
     }
+    if (argc > 3 && strcmp(argv[1], "sca") == 0) {       /* SCA-Zellen eines beliebigen RDT */
+        size_t n = 0; uint8_t *raw = slurp(argv[2], &n);
+        if (!raw) return 1;
+        re15_rdt_t rd; re15_rdt_parse(raw, n, &rd);
+        for (int i = 0; i < rd.sca_count; i++)
+            printf("SCA %s %d %d %d %d %d %d 0x%02X 0x%02X %d\n", argv[3], i,
+                   rd.sca[i].x, rd.sca[i].z, rd.sca[i].width, rd.sca[i].density,
+                   rd.sca[i].type, rd.sca[i].u0, rd.sca[i].u1, rd.sca[i].floor);
+        return 0;
+    }
     if (argc > 1 && strcmp(argv[1], "karte") == 0) {     /* Grundriss-Rohdaten fuers Dossier */
         for (int r = 0; r < 2; r++) {
             const uint8_t *raw = r ? s_raw1220 : s_raw1010; size_t n = r ? s_n1220 : s_n1010;
