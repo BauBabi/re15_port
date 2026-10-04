@@ -1267,3 +1267,8 @@ Das Fenster-Capture lieferte in dieser Sitzung weisse Bilder -> RE15_FRAMEDUMP.
 * Lauf 2 `local_build.sh all`: 481/482, einzig `integration_r34n_e_dokumente_bild` (Teil d3_ohne: "kein Framedump von Bild
   100 (exit=Access…)" = die exe startete nicht, Raum 1000/1050-Dokumente, kein Bezug zu ROOM1210); einzeln 2x Passed
   (92,99 s / 93,74 s). Lauf 1 hatte diesen Test gruen, Lauf 2 boot_bg_pin gruen. Volllauf 3 folgt.
+* Lauf 3 `bash re15_port/tools/local_build.sh all` am Code-Endstand (alle Code- und Test-Aenderungen der Nachbesserung 4,
+  danach nur Dossier): `100% tests passed, 0 tests failed out of 482` (1169,52 s) ->
+  **`=== LOCAL-BUILD-OK (all) — Tests 482/482`** (Schranke 478). Messkopie re15_pc_nb4h.exe vor den Suite-Laeufen
+  entfernt; DuckStation-settings.ini nach jedem RE2-Lauf zurueckgeschrieben (EnableGDBServer = false geprueft);
+  Spielstaende/ini-Sicherungen der RE2-Laeufe aus dem Baum genommen (Scratchpad nb4/re2_sav/).
