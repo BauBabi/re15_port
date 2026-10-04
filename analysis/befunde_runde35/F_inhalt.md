@@ -122,3 +122,71 @@ Seite 2/3: `F_belege/p2_exe_FILE28_p01.png` ("The new code is: 4312", 4312 gruen
 **Test:** `unit_r35_inhalt_doku` 19/19 (A Gruen = TEX.TIM Zeile 2 aus der Datei; B je Code 82 bzw.
 104 gruene Pixel, alle im Code-Kasten, ganze Breite, 0 weisse Kernpixel im Kasten; C FILE25..29
 sonst 0 gruene Pixel). Gegenprobe: mit den alten Seiten faellt B (0 gruene Pixel).
+
+### Punkt 3 — Zombies ROOM1010 / ROOM1220 weiter von der Eintrittstuer
+
+**Original-Daten (selbst gelesen, scd_dump_room.py).** Spawns = Sce_em_set (Op 0x44, 20 Byte, x/y/z
+pc+8/10/12, Richtung pc+16, Kill-Flag pc+7) in sub00, Switch auf work_vars[0x0A] = Eintritts-Cut
+(Tuer-Payload Byte 10, FUN_8001d600 @0x8001d948).
+- ROOM1010 sub00 Case 0: @0x009E2 Typ 0x10 beh 0x00 (3750,5000) Richtung 3072; @0x009F6 (1200,7150)
+  Richtung 0 (= die "stehenden"); Case 4: @0x00A12/@0x00A26 beh 0x81 (Kriecher) (950,-1700)/(-50,-3800).
+- ROOM1220 sub00 (5 Zellen, je Cut 2 Zombies Typ 0x16): Case 0 @0x00F2A/@0x00F3E, Case 2 @0x00F5A
+  (-15850,-11100)/@0x00F6E (-14900,-8050), Case 4 @0x00F8A/@0x00F9E, Case 6 @0x00FBA/@0x00FCE,
+  Case 8 @0x00FEA/@0x00FFE. ROOM1221 bytegleich; ROOM1011 dieselben Saetze mit Slot+1 (Slot 0 = Typ 0x47).
+- Eintrittspunkte = Ziele der Tuer-Saetze im Nachbarraum (Door_aot_set +14/+18/+20/+24):
+  ROOM1020 @0x01CA2 -> 1010 (3650,6900) yaw 2048 Cut 0; @0x01C82 -> 1010 (3650,-3950) Cut 4;
+  ROOM1210 @0x01CE6/@0x01D06/@0x01D26/@0x01D46/@0x01D66 -> 1220 Cut 0/2/4/6/8.
+
+**RE-Belege (Mechanik, die "Chance" begrenzt):**
+- Drehen auf der Stelle 96/Bild: TURN-IN-PLACE-Paar @0x80073ee4 = [0,96] (player_common.c) ->
+  180 Grad = 22 Bilder.
+- RE2-Zombie (Auslieferungs-KI): DECISION[0] @0x80101294: `dist<0x1388` -> Gang 0x101
+  (@0x80101308-1C); `dist<0xBB8` + Kegel 800 + Sicht + rand -> Sprung-Biss 0x0C01 (@0x80101374-78);
+  DECISION[2] @0x80101F7C: `sltiu 0xbb8` @0x801020A8 -> 0x0C01; Griff 0x0301 bei `sltiu 0x4b0`
+  (1200) @0x80102114. EXEC[12] @0x80104748 = Sprung-Biss mit Schub-Clip 0x1B (82/141/212 je Bild).
+  => unter 3000 (0xBB8) kann der Zombie jederzeit in den Schub-Sprung gehen.
+
+**Messung vorher (echte Spielschleife, Riegel `test_r35_inhalt_zombies mess`, RE2-KI):**
+```
+Raum Cut Eintritt         naechster STEHEN-Griff  FLUCHT (sofort drehen + VIERECK)  Flucht-min
+1010  0  (3650,6900)        1902        48        raus Bild 23                        1546
+1010  4  (3650,-3950)       3514         0        raus Bild 22                        3514
+1220  0  (-22400,-6500)     2607         0        raus Bild 22                        2607
+1220  2  (-16600,-9900)     1415        12        GEGRIFFEN Bild 12                    998
+1220  4  (-22400,-14000)    3567       347        raus                                3567
+1220  6  (-16600,-17900)    2683        86        raus                                2327
+1220  8  (-16600,-25050)    2912       168        raus                                2912
+```
+Echte exe (Karte probe_r35_inhalt_karte in ROOM1020 (-4000,-18000) rot 0, VIERECK -> Tuer -> 1010):
+ohne Eingabe nach dem Eintritt Griff in Bild 53 (state.log gr=1); mit sofortigem Drehen ab Bild 1
+zurueck in ROOM1020 in Bild 26 — also nur mit sofortiger, fehlerfreier Reaktion; 1220 Cut 2 ist
+gar nicht zu entkommen (Griff Bild 12 waehrend des Drehens).
+
+**Regel (PORT-WAHL zur NUTZER-VORGABE, Form belegt).** Ein Zombie ist zu nah, wenn er waehrend der
+schnellstmoeglichen Flucht unter die Sprungschwelle 0xBB8 = 3000 kommt. Er wird um die KLEINSTE
+Strecke versetzt (Ringe 100, 200, ..., 64 Richtungen um die Original-Lage), bei der er die ganze
+Flucht ueber >= 3000 bleibt und die Flucht "raus" endet; auf dem Ring gewinnt der Ort mit dem
+groessten Abstand zum Eintritt (= "weiter zurueck"); nur Orte mit freiem Weg von der Original-Lage
+(Zellen-Strahl der Gegner-Wandklemme, Band 0, Maske 4) und freier Grundflaeche
+(re15_collision_box_blocked = FUN_8003b558-Port, Radius hit_radius_min). Zwei Durchgaenge (einzeln,
+dann gemeinsam). Werkzeug: `test_r35_inhalt_zombies suche`.
+
+**Umsetzung.** `engine/src/zombie_abstand_r35.c` + `include/re15_zombie_abstand.h` (Tabelle,
+Schluessel = Raum-Basis + Typ + ORIGINAL-x/z = Satz-Waechter), Haken 3 Zeilen in
+`engine/src/scd_vm.c` op_sce_em_set nach der 5090-Umtypung (+1 include). KEIN RDT-Patch; Typ,
+Verhalten, Richtung, Kill-Flag bleiben.
+```
+1010 @0x009E2 (3750,5000)    -> (3750,3500)     Versatz 1500
+1010 @0x009F6 (1200,7150)    -> (205,7248)      Versatz 1000
+1220 @0x00F2A (-25000,-6700) -> (-25398,-6739)  Versatz  400
+1220 @0x00F5A (-15850,-11100)-> (-13362,-10345) Versatz 2600
+1220 @0x00F6E (-14900,-8050) -> (-14264,-7414)  Versatz  900
+1220 @0x00FBA (-15400,-15500)-> (-15070,-14883) Versatz  700
+1220 @0x00FFE (-14350,-23200)-> (-14267,-23144) Versatz  100
+```
+Unveraendert (schon >= 3000): 1010 Kriecher, 1220 @0x00F3E, Cut 4 beide, @0x00FCE, @0x00FEA.
+
+**Messung nachher (Riegel `unit_r35_inhalt_zombies` 22/22):** alle Eintritte FLUCHT raus (Bild
+22/23), Flucht-Mindestabstand 3044/3514/3007/3005/3567/3083/3012/3005 >= 3000; STEHEN-Griff 1010 Cut 0
+48 -> 102, 1220 Cut 2 12 -> 96 (1221 ebenso); Spawn: 9 Saetze auf neuer Lage, 7 unveraendert,
+0 falsch. Gegenprobe A: ohne Tabelle 1220 Cut 2 gegriffen (Bild 12), 1010 Cut 0 Flucht-min 1546.
