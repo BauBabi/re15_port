@@ -72,6 +72,7 @@ static inline int RNDI(float f) {
 #include "re15_granate.h"       /* Runde 30 Nachtrag K: Handgranate im Hebetisch (ROOM1150/1151) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Hebetisch-Cursor (ROOM1150/1151) */
 #include "re15_dokumente.h"     /* Runde 34 Nacht Spur E: vier Dokumente (1050/1000/1020/1010) */
+#include "re15_inhalt_r35.h"    /* Runde 35 Spur F: Memory Card 1010 + Schrot 1090 (inhalt_r35.c) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -1530,6 +1531,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                           re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(dok_oid)); }
         }
     }
+    {   /* Runde 35 Spur F: Memory Card 1010 / Schrot 1090 — eingebackenes MD1+TIM, Muster oben. */
+        const int r35_oid = re15_inhalt_r35_obj_id((uint16_t)g_current_room_id);
+        int msz = 0, tsz = 0; const uint8_t *mb = re15_inhalt_r35_md1_bytes((uint16_t)g_current_room_id, &msz);
+        const uint8_t *tb = re15_inhalt_r35_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
+        if (r35_oid >= 0 && nprops <= r35_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[r35_oid]) == 0) ok[r35_oid] = 1;
+        if (r35_oid >= 0 && nprops <= r35_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(r35_oid)); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -4886,6 +4893,7 @@ re_title:;
      * Restore der Flags: die Genommen-Bits (9,57..60) entscheiden. Die Logzeile ist reine
      * Diagnose fuer den Lade-Riegel. Herleitung: include/re15_dokumente.h. */
     re15_dokumente_install((uint16_t)g_current_room_id);
+    re15_inhalt_r35_install((uint16_t)g_current_room_id);   /* Runde 35 Spur F (Boot-/CONTINUE-Weg) */
     if (re15_dokumente_obj_id((uint16_t)g_current_room_id) >= 0)
         for (int k = 0; k < (int)g_scd.prop_count; k++)
             if ((int)g_scd.props[k].obj_id == re15_dokumente_obj_id((uint16_t)g_current_room_id))
