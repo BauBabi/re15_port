@@ -1670,3 +1670,32 @@ Scratch: `scratchpad/jnb5/`.
   F1684; 3. Griff S2 Pin F1749, c3 F1786/F1813), Ritt bis Clipende 72 im 2./3. Griff wie N4. Biss nach der Freigabe in
   freier Lage F1401 (14 Bilder nach F1387) = OFFEN N4-2 unveraendert. Bild `jnb5/exe/o7_griff_brust.png` (RE15_FRAMEDUMP
   F1260-F1392): Zupacken, aufrechter Gorilla mit den Armen an Brust/Kopf, Leon am Boden, kein Fremdteil am Oberkoerper.
+
+### Umsetzung Nachbesserung 5 (Dateien, Konstanten mit Beleg)
+- `re15_port/engine/src/affen_11c0.c` (13): Pool je Gorilla als Winkel/Wurzel (Record+0x60 / Record0+0x2c), `affen_comp`
+  (FUN_80022da0: MVMVA 0x4a49e012 @0x80022df0/38/84, 0x4a480012 @0x80022eec, IR-Saettigung, V0 16 Bit), `affen_kette`
+  (+0x20 = RotMatrix(+0x68) * ScaleMatrix(+0x166) zuerst, FUN_8001e8c8; Record+0x18 von der Wurzel abwaerts, FUN_8001ef54 /
+  FUN_8011bf50 @0x8011bf80-c4), `affen_winkel` (FUN_80020510 + LoadAverageShort12 gpf12_b/gpl12_b), Wurzel gpf12/gpl12
+  (FUN_8001f3bc Z. 40-61), Rate 0x200 @0x80118320; Fuss-Sperre @0x8011bfd4-c008, Trefferpunkt @0x8001c058-78 mit
+  a1 = (0x64,0,0) @0x80118380-84; `re15_affen_kette_test` (Elternkette, nur Riegel).
+- `re15_port/include/re15_affen.h`: Abschnitt (13); (10) Sprungmarke `ab_b` (Hinweis H2).
+- `re15_port/engine/src/game_step_common.c` (14), 2 Haken mit Kommentar "Runde 35 Spur J (14)": Flinch-Zweig ohne
+  Klemme/Objekt-Pass im Handler (FUN_80035af0 [2] `jal 0x800245d8` @0x80035f18, [3] @0x8003609c; FUN_800245d8 ohne
+  Kollision); Objekt-Pass FUN_8002bd44 nach dem Schwanz (`jal 0x8002bd44` @0x8001ce14 nach `jal 0x80031c44` @0x8001ce0c).
+  Hunk -5/+2 und +1 Zeile.
+- `re15_port/tests/unit/test_r35_affen.c`: takt-Spur mit Spieler-Stationen (`P`-Zeile), takt Slot 3, szene Slot 3 +
+  Todesbiss, griff (Lauf-Versatz-Variante, N1 am Original-Zustand, Empfindlichkeit, Schranke T265-T289).
+- enemy_ai_common.c unveraendert gegenueber Nachbesserung 4. Keine Assets, keine Bank-9-Bits, Nachrichten, AOT, Ereignisse.
+
+### Tests (Stand Nachbesserung 5) — probes/r35_affen.cmake unveraendert (17 Eintraege), test_r35_affen.c
+- `takt`: Gleichtakt 14/14 Bisse im selben Bild (Abweichung 0, vorher 5), Wechseltakt 8/8 (0, vorher 2), **neu: Slot 3 (e2)
+  7/7** (am N4-Stand 2/7 = rot). Messspur zusaetzlich mit den Spieler-Stationen (`R35_TAKT_SPUR=1`).
+- `szene`: Einzelbisse +0 x 14, Tod +1194; **Slot 3 + Todesbiss gleichbleibender Versatz (<= 1, |.| <= 3)** statt
+  "groesste Abweichung <= 6" (am N4-Stand 0 .. -5 = rot).
+- `griff`: Wurf-Bahn **T265-T289 <= 100** (gemessen 62; T265 wieder drin), T290 gemeldet (201); **N1 am Original-Zustand
+  (Weg 2): kein Biss bis T495, e1 3925 / e2 4996**; **Empfindlichkeit Lauf 0: 24 Starts +-1/+-2 um T290 -> 4 Ruhelage,
+  16 Biss, 0 gleich wie Lauf 0** (Pruefung verlangt Streuung, pinnt keinen Ausgang); der Ruhelage-/Biss-Pin in Lauf 0
+  ist entfernt.
+- Einzeln gefahren vor der Suite (`jnb5/ctest_r35_a.log`, `jnb5/r/`): 22 Riegel (17 r35_affen + maggot/member/plc_back)
+  gruen nach den Riegel-Aenderungen (griff war am Zwischenstand rot: Pin Lauf 0 + Schranke 200 in T290 — beide oben
+  ersetzt und begruendet).
