@@ -97,6 +97,41 @@ void re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latch)
         re15_clip_root_motion_abs_pub(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
 }
 
+/* (11) Trefferpunkt der Gorilla-Angriffe (re15_affen.h (11)): gezeichneter Stand des Vorticks. */
+static struct { int32_t x, y, z; int16_t rot; uint8_t clip, bild, ok; } s_zeichen[RE15_ACTOR_MAX];
+void re15_affen_zeichen_merk(const re15_actor_t *e, uint8_t clip, uint8_t bild)
+{
+    int s = (int)(e - g_actors);
+    if (s < 0 || s >= RE15_ACTOR_MAX) return;
+    s_zeichen[s].x = e->x; s_zeichen[s].y = e->y; s_zeichen[s].z = e->z; s_zeichen[s].rot = e->rot_y;
+    s_zeichen[s].clip = clip; s_zeichen[s].bild = bild; s_zeichen[s].ok = 1;
+}
+int re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3])
+{
+    int s = (int)(e - g_actors);
+    if (s < 0 || s >= RE15_ACTOR_MAX || !s_zeichen[s].ok) return 0;
+    re15_enemy_bank_t *b = re15_enemy_find(0x27);
+    if (!b || !b->ok || bone < 0 || bone >= b->skel.bone_count) return 0;
+    int clip = s_zeichen[s].clip;
+    if (clip >= b->anim.clip_count) return 0;
+    const re15_emd_clip_t *c = &b->anim.clips[clip];
+    if (c->frame_count <= 0) return 0;
+    int kf = (int)(b->anim.frames[c->first_frame + (int)s_zeichen[s].bild % c->frame_count] & 0xFFFu);
+    static re15_skel_pose_t pose[RE15_EMD_MAX_BONES];
+    if (re15_affen_pose_abfrage(&b->skel, kf, pose)) return 0;
+    int32_t vx = (bone == 9) ? 0x64 : 0;                          /* B[5] Knochen 9 @0x80118380-84, sonst 0x80072d60 = 0 */
+    int32_t v[3], w[3];
+    for (int k = 0; k < 3; k++)                                   /* CompMatrix(Record, (I | a1)): t = R*a1 + t @0x8001c078 */
+        v[k] = pose[bone].trans[k] + (int32_t)(((int64_t)pose[bone].rot[k * 3] * vx) >> 12);
+    re15_skel_bone_to_world(v, s_zeichen[s].rot, 0, 0, 0, w);    /* RotMatrix(+0x68 -> +0x20) im Zeichner */
+    if (e->render_scale_q12) {                                    /* ScaleMatrix +0x166 (FUN_8001e8c8) */
+        w[0] = (w[0] * (int32_t)e->render_scale_q12) >> 12;
+        w[2] = (w[2] * (int32_t)e->render_scale_q12) >> 12;
+    }
+    out[0] = s_zeichen[s].x + w[0]; out[1] = s_zeichen[s].y + w[1]; out[2] = s_zeichen[s].z + w[2];
+    return 1;
+}
+
 /* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50
  *      `lw v0,392(v0)` @0x80117200; rec18.Elternmatrix = &rec1.Matrix (`sw v1,3204(v0)`
  *      @0x80117214, v1 = v0+236), rec18.Eltern-Record = rec1 (`sw v1,3240(v0)` @0x8011721c),

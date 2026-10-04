@@ -224,4 +224,25 @@ void     re15_affen_ritt_platz(re15_actor_t *e, const re15_actor_t *pl, int latc
  *     (g_griff F370 -> F371: (4,-4)) und das Folgebild verlaesst Sub 2 ohne bf50. Haken: re15_maggot_anim merkt das
  *     Bild vor dem Vorschub, re15_maggot_footlock posiert es (je 1 Zeile). */
 
+/* (10) A/B IM SELBEN TICK (Nachbesserung 4, N2). Der Brain-Rumpf 0x80117254 ruft A[+0x5] (Tabelle 0x801213e8,
+ *      `lbu v0,5(v0)` @0x80117324, `jalr` @0x80117344), liest +0x5 NEU (`lbu v0,5(v0)` @0x80117358) und ruft
+ *      B[+0x5] (Tabelle 0x80121428, `jalr` @0x80117378) im SELBEN Tick; +0x1dc-- erst danach (@0x801173f8-40c).
+ *      Wechselt A[3] auf den Biss, laeuft B[5] (Clip 0x12 + anim_set) sofort. Der Port brach nach dem A-Entscheid
+ *      ab und fuehrte B erst im Folgetick aus: +1 Tick je A-Wechsel (2 je Biss-Zyklus). Haken in enemy_ai_common.c:
+ *      die A-Wechsel (A[0], A[1], A[3], A[4]) springen nach `ab_wechsel`; dort laeuft der Sub-Schalter ein zweites
+ *      Mal NUR mit dem B-Teil (A[3]/A[4]/A[15] werden im B-Lauf uebersprungen; A[2]/A[5..8] sind `jr ra`). */
+
+/* (11) TREFFERPUNKT DER ANGRIFFE = GEZEICHNETE KNOCHENMATRIX (Nachbesserung 4, N2). FUN_8001bff8 (PSX.EXE)
+ *      komponiert die Knochenmatrix a0 mit einem Versatz a1 (Identitaet 0x80072d4c, t := a1 @0x8001c058-7c,
+ *      `jal 0x80022da0` @0x8001c078) und prueft das Quadrat um den Spieler (@0x8001c080-c0). a0 = Pool-Record
+ *      + 0x40 (B[5] `addiu a0,s2,1612` = Record 9 @0x801183c0; B[6]/B[8] 1096/1784 = Records 6/10 @0x801186f4-f8 /
+ *      @0x801190e0-e4; Sub 15 924 = Record 5 @0x8011ab68). Record + 0x40 schreibt NUR der Zeichner (FUN_8001e9ec /
+ *      FUN_8001ef54 `FUN_80022da0(rec[0x1b], rec+0x18, rec+0x40)`, aus FUN_8001e8c8, Zeichen-Schleife @0x8001d108
+ *      NACH den KI-Ticks) -> Pose des im Vortick gezeichneten Bildes an Lage/Yaw vom Ende des Vorticks.
+ *      Versatz: B[5] vx := 0x64 (`ori v0,zero,0x64` / `sw v0,16(sp)` @0x80118380-84), alle anderen (0,0,0)
+ *      aus 0x80072d60. Merken am Anfang des Gorilla-Ticks (= Zeichenstand: die Spieler-Schiebung bewegt nur den
+ *      Spieler, re15_body_push(const pusher, ..., gepusht)); Pose = (Clip, Bild) des letzten anim_set. */
+void     re15_affen_zeichen_merk(const re15_actor_t *e, uint8_t clip, uint8_t bild);
+int      re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3]);
+
 #endif /* RE15_AFFEN_H */
