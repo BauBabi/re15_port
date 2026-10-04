@@ -20,9 +20,9 @@
  *   ki_re2    T5  RE2-KI (Default des Spiels): Annaeherung + Griff + Spieler-HP sinkt.
  *   tod       T6  toedlicher Treffer -> Tod -> Leiche (Zustand 7) -> Kill-Flag 0xa0 in Zone 8 ->
  *                 Wiedereintritt Cut 9 spawnt NICHT mehr.
- *   messer    T7  Messer (RE1.5-Waffen-Id 1) gegen das Maedchen: Original-Zeile = 0 (jalr 0,
- *                 unfertig) -> Port faehrt die Standard-Zeile (Zurueckzucken, RE2-Verhalten),
- *                 kein Haenger: Zustand 2 kehrt nach 1 zurueck.
+ *   messer    T7  Messerhieb re15_player_weapon_fire(1) -> +0x5 = Waffen-Id 1 (@0x800124bc); die
+ *                 Original-Zeile 1 ist beim Maedchen 0 (jalr 0, unfertig) -> Port faehrt das
+ *                 Standard-Zurueckzucken (RE2: ein Zombie wie alle), kein Haenger.
  * ============================================================================================ */
 #include <stdint.h>
 #include <stdio.h>
@@ -363,6 +363,9 @@ static void t_tod(void)
 }
 
 /* ------------------------------------------------------------------------------ T7 messer */
+/* Der Messerhieb laeuft ueber re15_player_weapon_fire(1) (game_step_common.c, FUN_80011f50) und
+ * stempelt +0x5 = Waffen-Id 1 (@0x800124bc). In der Treffer-Haupttabelle des Maedchens
+ * @0x8012039c (STAGE1; STAGE4 0x801198c4) ist Zeile 1 Richtung 0/1 = 0 -> `jalr 0` im Original. */
 static void t_messer(void)
 {
     printf(" T7 messer ROOM4050 Cut 9, RE1.5-KI\n");
@@ -374,19 +377,23 @@ static void t_messer(void)
     if (gegner(0x13, &gs) != 1) { pruefe("Spawn Cut 9", 0); return; }
     re15_actor_t *g = &g_actors[gs];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->z = -2600 - 20000;
-    for (int f = 0; f < 3; f++) re15_enemy_ai_run_all(0);
+    for (int f = 0; f < 3; f++) re15_enemy_ai_run_all(0);   /* INIT -> Zustand 1, Trefferbox */
     g->hp = 60;
-    re15_enemy_take_damage(g, 0);            /* Art 0 = Messer: +0x5 = DAT_8006f430[0] */
-    char m[160];
-    snprintf(m, sizeof m, "Messer: Zustand 2, Waffen-Id +0x5 = %d (re15_react_table[0])", g->sub_state_1);
-    pruefe(m, g->state == 2 && g->sub_state_1 == re15_react_table[0]);
+    pl->x = g->x; pl->z = g->z - 500; pl->rot_y = 3072;    /* Blick +z (Vorwaertspunkt-Formel aot_common.c) */
+    int16_t hp0 = g->hp;
+    int traf = re15_player_weapon_fire(1);
+    char m[200];
+    snprintf(m, sizeof m, "Messer trifft (ret %d): Zustand %d, +0x5 = %d (Waffen-Id 1), HP %d -> %d",
+             traf, g->state, g->sub_state_1, hp0, g->hp);
+    pruefe(m, g->state == 2 && g->sub_state_1 == 1 && g->hp < hp0);
+    pl->z = g->z - 20000;                                  /* weg, damit kein Griff folgt */
     int zurueck = 0;
     for (int f = 0; f < 120 && !zurueck; f++) {
         re15_enemy_ai_run_all(0);
         if (g->state == 1) zurueck = 1;
     }
-    pruefe("Zurueckzucken endet in Zustand 1 (kein jalr-0-Haenger)", zurueck);
+    snprintf(m, sizeof m, "Zurueckzucken endet in Zustand 1 (kein jalr-0-Haenger), Zustand %d", g->state);
+    pruefe(m, zurueck);
     re15_re15_re2z_import_set(1);
 }
 
