@@ -458,3 +458,9 @@ Slot-Bereich zurueck auf 4..18; gebaut, gefahren, `git checkout` zurueck, neu ge
   (Modell + Textur) nicht mehr geladen; Elliot erscheint unveraendert, sobald er in ROOM1170 gesetzt
   wird. Messschiene: zwei neue Faecher `stimme` und `figur`, VORHER-Zeile mit `stimme_laeuft`.
 
+
+### Suite (N1)
+Eigener Bau, Stand ef842ef1 (Code = 86f65b95), `bash re15_port/tools/local_build.sh all`:
+`=== LOCAL-BUILD-OK (all) — Tests 486/486` (Beleg: re15_port/build/local_build_ctest.log `100% tests passed, 0 tests failed out of 486`,
+`Total Test time (real) = 1291.62 sec`). Kein Flatter-Haken rot, nichts nachgefahren.
+484 -> 486: + unit_r35_entladen_n1beleg, + integration_r35_entladen_e.
