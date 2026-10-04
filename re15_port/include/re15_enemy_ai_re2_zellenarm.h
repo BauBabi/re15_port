@@ -49,6 +49,8 @@ int  re15_re2arm_take_pin_bild(void);
 /* Runde 35 Spur H NB4: RE2-Zielwahl fuer Leons Blick (FUN_8003DB38 @0x8003c1b4), jedes Bild aus dem
  * Spieler-Pass; verbraucht nur im Opfer-Zustand des RE2-Arms. look_debug: Test-/Mess-Auskunft. */
 void re15_re2arm_player_look(re15_actor_t *pl);
+typedef struct { uint8_t aktiv; uint16_t f10e; uint8_t sicht_frei; int32_t x, z; } re2look_kand_t;
+int  re15_re2arm_look_waehle(const re15_actor_t *pl, int n, const re2look_kand_t *k);   /* -1 = SELBST */
 void re15_re2arm_look_debug(int set_cd, int set_ziel, int *cd, int *ziel);
 
 #endif /* RE15_ENEMY_AI_RE2_ZELLENARM_H */

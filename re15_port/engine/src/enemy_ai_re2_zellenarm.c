@@ -171,6 +171,10 @@ typedef struct {
     int32_t  proot[3];
     int32_t  ptrans[RE15_EMD_MAX_BONES][3];   /* modell-lokale Part-Lage der gemischten Pose */
     uint8_t  pvalid;
+    /* NB4: der Arm wurde seit dem Raumladen einmal GEZEICHNET (sichtbar). RE2 schreibt part+0x5C (Weltlage)
+     * nur beim Zeichnen (FUN_80027160 -> FUN_80027434); ein nie gezeigter Arm traegt dort (0,0,0) — im
+     * RE2-RAM gemessen fuer jeden verborgenen Arm (Laeufe n4_g8c / n4_g1b, extra.txt `k1=(0,0,0)`). */
+    uint8_t  gezeichnet;
 } re2arm_t;
 static re2arm_t s_arm[RE15_ACTOR_MAX];
 
@@ -329,28 +333,52 @@ static uint8_t  s_look_cd   = RE2LOOK_ZAEHLER;           /* DAT_800a4004 (laeuft
 static int8_t   s_look_tgt  = RE15_ACTOR_SLOT_PLAYER;    /* PL+0x1B8; SELBST = Spieler-Slot          */
 static unsigned s_look_room = 0xFFFFFFFFu;
 
-static int re2look_ausgeschlossen(const re15_actor_t *e)
+/* Die Wahl selbst (Schleife @0x8003dbe4-0x8003dcec + Speicher @0x8003dcf0-0x8003dd10) als reine Funktion ueber
+ * eine Kandidatenliste — re2look_suche speist sie aus g_actors, der Riegel (N1) mit der RE2-Original-RAM.
+ * Je Kandidat: aktiv (word0 & 1), +0x10E, Sicht frei (Ergebnis von 0x80050858), Lage x/z (+0x38/+0x40, fuer
+ * Kegel und Abstand). Rueckgabe: Index des Ziels oder -1 = SELBST. */
+int re15_re2arm_look_waehle(const re15_actor_t *pl, int n, const re2look_kand_t *k)
 {
-    if (e->type == 0x1Au && re15_re2arm_owns(e)) return (e->grid_id & 0x1Fu) != 1u;   /* Schlaf 0x8000 */
-    return (e->re2z_f10e & RE2LOOK_AUS) != 0u;
+    uint32_t best_a = RE2LOOK_RADIUS, best_b = 0x7fffffffu;               /* a1 = 7000 / s5 = 0x7fffffff */
+    int ziel_a = -1, ziel_b = -1;
+    for (int i = 0; i < n; i++) {
+        if (!k[i].aktiv) continue;                                        /* word0 & 1 @0x8003dbf4 */
+        if (k[i].f10e & RE2LOOK_AUS) continue;                            /* +0x10E & 0xC000 @0x8003dc08 */
+        if (!k[i].sicht_frei) continue;                                   /* 0x80050858 != 0 @0x8003dc78 */
+        if (re15_ai_arc_test(pl, k[i].x, k[i].z, RE2LOOK_KEGEL) != 0) continue;   /* FUN_80015614 @0x8003dc94 */
+        const int32_t dx = k[i].x - pl->x, dz = k[i].z - pl->z;           /* +0x1F0 @0x800265A4-E0 */
+        const uint32_t d = re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+        if (k[i].f10e & RE2LOOK_KLASSE_B) { if (d < best_b) { best_b = d; ziel_b = i; } }   /* @0x8003dcc8 */
+        else                              { if (d < best_a) { best_a = d; ziel_a = i; } }   /* @0x8003dcb0 */
+    }
+    return ziel_a >= 0 ? ziel_a : ziel_b;                                 /* @0x8003dcf0 / @0x8003dd00 */
 }
 
 static void re2look_suche(re15_actor_t *pl)            /* Rumpf von FUN_8003DB38 nach dem Zaehler */
 {
-    uint32_t best_a = RE2LOOK_RADIUS, best_b = 0x7fffffffu;
-    int ziel_a = -1, ziel_b = -1;
+    re2look_kand_t k[RE15_ACTOR_MAX];
+    int slot[RE15_ACTOR_MAX], n = 0;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
-        if (!e->active) continue;                                       /* word0 & 1 @0x8003dbf4 */
-        if (re2look_ausgeschlossen(e)) continue;                        /* +0x10E & 0xC000 */
-        if (!re15_re2_los_clear(e, pl)) continue;                       /* 0x80050858 != 0 */
-        if (re15_ai_arc_test(pl, e->x, e->z, RE2LOOK_KEGEL) != 0) continue;   /* FUN_80015614 != 0 */
-        const int32_t dx = e->x - pl->x, dz = e->z - pl->z;              /* +0x1F0 @0x800265A4-E0 */
-        const uint32_t d = re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
-        if (e->re2z_f10e & RE2LOOK_KLASSE_B) { if (d < best_b) { best_b = d; ziel_b = i; } }
-        else                                  { if (d < best_a) { best_a = d; ziel_a = i; } }
+        if (!e->active) continue;
+        const int arm = (e->type == 0x1Au && re15_re2arm_owns(e));
+        k[n].aktiv = 1;
+        /* +0x10E: der Arm-Schlaf 0x8000 ist im Port "+0x9 & 0x1F != 1" (Kopf, PORT-BRUECKEN). */
+        k[n].f10e  = (uint16_t)(arm ? (((e->grid_id & 0x1Fu) != 1u) ? 0x8000u : 0u) : e->re2z_f10e);
+        k[n].x = e->x; k[n].z = e->z;
+        /* Sicht 0x80050858(Kopf-Part, Ziel-Part +0x1C1 +0x5C, 0x2080, 1): Zielpunkt = gezeichnete Part-Lage — beim
+         * gezeichneten Arm sein Ursprung (RAM: Halter k1 = Ursprung), beim NIE gezeichneten Arm (0,0,0) (RAM, s.o.;
+         * re2_los.py: von jeder gemessenen Leon-Lage ROOM2050 verdeckt). Strahl = PORT-MAPPING re15_re2_los_clear. */
+        if (arm && !s_arm[i].gezeichnet) {
+            re15_actor_t t = *e; t.x = 0; t.y = 0; t.z = 0;
+            k[n].sicht_frei = (uint8_t)re15_re2_los_clear(&t, pl);
+        } else {
+            k[n].sicht_frei = (uint8_t)re15_re2_los_clear(e, pl);
+        }
+        slot[n++] = i;
     }
-    s_look_tgt = (int8_t)(ziel_a >= 0 ? ziel_a : (ziel_b >= 0 ? ziel_b : RE15_ACTOR_SLOT_PLAYER));
+    const int w = re15_re2arm_look_waehle(pl, n, k);
+    s_look_tgt = (int8_t)(w >= 0 ? slot[w] : RE15_ACTOR_SLOT_PLAYER);
 }
 
 void re15_re2arm_player_look(re15_actor_t *pl)
@@ -517,6 +545,7 @@ static int arm_hand_within(re15_actor_t *e, int slot, const re15_actor_t *pl, in
 static void arm_show(re15_actor_t *e, int slot, int show)
 {
     s_arm[slot].hidden = show ? 0 : 1;
+    if (show) s_arm[slot].gezeichnet = 1;                 /* NB4: part+0x5C ab jetzt die Arm-Lage */
     e->no_draw = show ? 0 : 1;
     if (show) { e->hit_radius_min = 300; e->hit_radius_max = 300; e->hit_height = 1440; } /* RE1.5-Kasten 0x1A
                                                                                          * (re15_enemy_apply_hitbox) */
