@@ -1401,6 +1401,9 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
   chaotisch (M1 (c): 24/24 Starts 1-2 Einheiten daneben enden > 100 daneben); der Startversatz kam aus dem Anlauf
   (A/B-Folge, Trefferpunkt, ungemischte Fusssperre = N2-Ursachen). Mit (10)/(11)/(12) landet Lauf 0 an der Original-
   Ruhelage (9/8 Einheiten daneben) und bleibt bis T495 ohne Biss; beide Gorillas haengen 3917/4927 entfernt fest.
+  **[KORREKTUR Nachbesserung 5: falsch. Der Startversatz war durch N4 GEWACHSEN (Abnahme 4: Pin 8 -> 14, Anker 37 -> 40,
+  T265 64 -> 1238); die Landung an der Ruhelage war ein anderer Ausgang der chaotischen Klemmen-Iteration. Siehe
+  Nachbesserung 5, P2.]**
 - Grenze (ehrlich): die Landung bleibt eine Klemmen-Iteration; landet Leon anderswo (z. B. exe o7, Leon im Freien), kann
   ein Gorilla ihn wieder erreichen. Fuer diese Lage gibt es keine Original-Spur (OFFEN N4-2).
 - Dossier-Aussage N3 "Fuer den Nutzer (3)" ist damit zu eng formuliert: berichtigt im Abschnitt "Fuer den Nutzer
@@ -1469,10 +1472,14 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
   Heckklappe @0x8002c254; Member_set 0x13 in anderen Raeumen).
 - Erledigt durch N4: OFFEN 3 (gemischte Pose) und 4 (Clip-Wechsel-Bild) von Nachbesserung 3 sowie "A/B im selben Bild" aus
   OFFEN 6. OFFEN 1/2 (Startversatz Lauf 0, e2-Kriechen) sind auf N4-1 geschrumpft (e1 beim Pin hoechstens 37 daneben, Lauf 0
-  landet an der Original-Ruhelage).
+  landet an der Original-Ruhelage). **[KORREKTUR Nachbesserung 5: N4-1 (e2 Zyklus 103) war eine NEBENWIRKUNG von
+  Nachbesserung 4 (vorher Zyklus 104 wie das Original, exe +4 konstant); der Startversatz war gewachsen, nicht
+  geschrumpft. Behoben in Nachbesserung 5 (13)/(14).]**
 
 ### Fuer den Nutzer (Stand Nachbesserung 4)
 - Sprachdateien: keine neuen Zeilen. Neue Assets fuer das Paket-/Android-Gate: keine. Bedienhinweise: keine.
+- **[KORREKTUR Nachbesserung 5: (1) galt nur fuer Gorilla 1. Gorilla 2 biss seit Nachbesserung 4 je Zyklus 1 Bild frueher
+  als das Original (vorher konstant 4 Bilder spaeter). Seit Nachbesserung 5 beissen beide bildgleich, s. dort.]**
 - Spuerbar neu: (1) Die Gorillas beissen jetzt im Rhythmus des Originals. Der erste Gorilla trifft ohne Eingabe in genau
   denselben Bildern wie das PSX-Original (vorher lief er pro Biss ein Bild nach). Der Kampf bis zum Tod dauert 39,6 s
   (Original 39,8 s). (2) Der Biss setzt im selben Bild ein, in dem sich der Gorilla dazu entscheidet (vorher ein Bild
@@ -1491,7 +1498,7 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
 | N2 (c) Dossier Z. 1197-1198 | "unveraendert" war falsch | Abnahme 3 Tabelle | KORREKTUR-Vermerk an der Stelle | — |
 | N2 (d) Riegel szene | prueft keine Einzelbisse | — | Einzelbiss-Pruefung (Slot-2-Versatz gleichbleibend, Slot 3 <= 6) | gruen (-1 .. -1; HEAD waere +3 .. +9 = rot) |
 | N1 (a) Nutzer-Aussage | galt nur im Weg-2-Lauf | Riegel griff Lauf 0 HEAD: Biss T405 | Aussage eingeschraenkt ("Fuer den Nutzer (Stand Nachbesserung 4)"), KORREKTUR-Vermerk bei N3 | — |
-| N1 (b) Biss T405 offenlegen + Mechanismus | Landeort (-4200,-10658) in Reichweite von e2 (Klemmen-Iteration aus dem Startversatz); das A[3]-Gate ist das Original | @0x80117a54-90; M1 (c) Klemmen-Chaos | Startversatz durch (10)-(12) verkleinert; N1-Pruefung im Riegel griff | Lauf 0: kein Biss bis T495, Ruhelage (-3018,-11651), e1/e2 3917/4927 (Original ~3925/~4990) |
+| N1 (b) Biss T405 offenlegen + Mechanismus | Landeort (-4200,-10658) in Reichweite von e2 (Klemmen-Iteration aus dem Startversatz); das A[3]-Gate ist das Original | @0x80117a54-90; M1 (c) Klemmen-Chaos | ~~Startversatz durch (10)-(12) verkleinert~~ [KORREKTUR N5: gewachsen, Landung = Iterationsausgang]; N1-Pruefung im Riegel griff [N5: entfernt, ersetzt durch Weg 2 + Empfindlichkeit] | Lauf 0: kein Biss bis T495, Ruhelage (-3018,-11651), e1/e2 3917/4927 (Original ~3925/~4990) |
 | N1 (c) Z. 1189 | 31 statt gemessen 34 | jnb3/griff6.txt | KORREKTUR-Vermerk | — |
 
 ### Suite (Nachbesserung 4)
