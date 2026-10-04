@@ -1747,7 +1747,8 @@ static void teil_schrot(void)
 /* Nachbesserung 6, M1: der Finisher B[8] (Treffer im Sprung, -600 @0x801191a8-ac) fuehrt Leon durch den cmd-6-Hook
  * 0x8011c3d4 -> 0x8011c414 (re15_affen.h (15)), NICHT durch den Wurf 0x8011c118. Gemessen wird die Mechanik je Bild:
  * Opfer-Zustand 2 / Greifer 0x27, Clip 0 der Opfer-Bank (acae8 := 0 @0x8011c490) vorwaerts ab Bild 0 (@0x8011c498),
- * +0x93 = 7 (@0x8011c468-70), Eintritt im Treffer-Bild, Koerperfall + Blut bei Bild 0x3c (@0x8011c4e0-518), Tod
+ * Blend-Saat +0x8f = 7 (0x800acae3 @0x8011c468-70) und Abbau 7, 6, ..., 0 je f314, +0x93 Bit 1 aus B[8]
+ * (@0x801191d0-fc), Eintritt im Treffer-Bild, Koerperfall + Blut bei Bild 0x3c (@0x8011c4e0-518), Tod
  * (Wunden + Leiche @0x8011c55c-84) im Bild NACH dem letzten Clip-Bild, und KEINE Platzierung: Leons Lage ist in
  * jedem Bild bis zum Tod am Bildende gleich der am Bildanfang (kein 0x8001ad68 im Hook). Abnahme 5 (w3y F2814) mass
  * am alten Stand einen Sprung um 14000 Einheiten; mit abgeschalteten Haken ist dieser Riegel rot (gemessen: Leon bis
@@ -1773,7 +1774,7 @@ static void teil_finisher(void)
     a->state = 1; a->sub_state_1 = 7; a->sub_state_2 = 0; a->sub_state_3 = 0; a->hit_react = 0; a->crow_speed = 0;
     a->mag_boost = 4; a->mag_airborne = 0; a->dog_blocked_ctr = 0;
     int t_hit = -1, t_tod = -1, f_fall = -1, n_tick_weg = 0, max_weg = 0, n_clip_falsch = 0, n_bild_falsch = 0;
-    int pl_x0 = 0, pl_z0 = 0, hr_nach = -1, typ = -1, eigen = -1, bild_vorher = -1;
+    int pl_x0 = 0, pl_z0 = 0, hr_nach = -1, typ = -1, eigen = -1, bild_vorher = -1, frac[10], nfrac = 0;
     for (int f = 0; f < 200; f++) {
         int32_t x0 = pl->x, z0 = pl->z;
         int hp0 = pl->hp;
@@ -1787,10 +1788,12 @@ static void teil_finisher(void)
                    (int)pl->hp, (int)pl->hit_react, (int)pl->motion, (int)pl->anim_frame, re15_player_victim_state());
         if (t_hit < 0 && hp0 >= 0 && pl->hp < 0) {
             t_hit = f; pl_x0 = x0; pl_z0 = z0; hr_nach = pl->hit_react;
+            for (int k = 0; k < 10; k++) frac[k] = -1;
             typ = re15_player_victim_type(); eigen = re15_player_victim_own_bank();
             printf("  Treffer T%d: hp %d -> %d, Leon (%d,%d), Gorilla (%d,%d) Bild %d, Opfer-Zustand %d Typ 0x%02x\n", f, hp0,
                    (int)pl->hp, (int)x0, (int)z0, (int)a->x, (int)a->z, (int)a->anim_frame, re15_player_victim_state(), typ);
         }
+        if (t_hit >= 0 && f - t_hit < 10) frac[nfrac++] = (int)pl->anim_frac;
         if (t_hit >= 0 && t_tod < 0) {
             if (pl->x != x0 || pl->z != z0) n_tick_weg++;   /* Bildanfang -> Bildende (der Opfer-Tick laeuft nach der KI) */
             int dg = (int)dist2d(pl->x, pl->z, pl_x0, pl_z0); if (dg > max_weg) max_weg = dg;
@@ -1799,8 +1802,8 @@ static void teil_finisher(void)
             if (pl->anim_frame == 0x3c && f_fall < 0) f_fall = f;
             if (pl->state == 7) t_tod = f;
             if ((f - t_hit) % 10 == 0 || pl->state == 7 || pl->anim_frame == 0x3c)
-                printf("  T%-3d Leon (%d,%d) Bildanfang (%d,%d) Clip %d Bild %d +0x93 %d hp %d Zustand %d\n", f, (int)pl->x,
-                       (int)pl->z, (int)x0, (int)z0, (int)pl->motion, (int)pl->anim_frame, (int)pl->hit_react, (int)pl->hp, (int)pl->state);
+                printf("  T%-3d Leon (%d,%d) Bildanfang (%d,%d) Clip %d Bild %d +0x8f %d hp %d Zustand %d\n", f, (int)pl->x,
+                       (int)pl->z, (int)x0, (int)z0, (int)pl->motion, (int)pl->anim_frame, (int)pl->anim_frac, (int)pl->hp, (int)pl->state);
             bild_vorher = (int)pl->anim_frame;
         }
         if (t_tod >= 0 && f > t_tod + 5) break;
@@ -1810,7 +1813,10 @@ static void teil_finisher(void)
     PRUEF(t_hit >= 0, "B[8] trifft (hp 46 -> %d in T%d)", (int)pl->hp, t_hit);
     if (t_hit < 0) return;
     PRUEF(typ == 0x27 && eigen == 0, "Opfer-Zustand mit Greifer 0x%02x, Opfer-Bank (eigene Bank %d = nein) — nicht der Wurf", typ, eigen);
-    PRUEF(hr_nach == 7, "+0x93 = %d nach dem Eintritt (7 @0x8011c468-70)", hr_nach);
+    PRUEF((hr_nach & 1) != 0, "+0x93 = 0x%02x nach dem Treffer (Bit 1 aus B[8] @0x801191d0-fc; der Hook schreibt +0x93 nicht)", hr_nach);
+    {   int ok = 1; for (int k = 0; k < 10; k++) if (frac[k] != (k < 8 ? 7 - k : 0)) ok = 0;
+        PRUEF(ok, "+0x8f ab dem Treffer-Bild %d %d %d %d %d %d %d %d %d %d (Saat 7 @0x8011c468-70, -1 je f314 Decompilat FUN_8001f3bc Z. 78)",
+              frac[0], frac[1], frac[2], frac[3], frac[4], frac[5], frac[6], frac[7], frac[8], frac[9]); }
     PRUEF(n_clip_falsch == 0, "Clip 0 der Opfer-Bank in jedem Bild bis zum Tod (%d Bilder mit anderem Clip; Wurf waere 1/0x10/0xb)", n_clip_falsch);
     PRUEF(n_bild_falsch == 0, "Bild 0, 1, 2, ... ohne Luecke ab dem Treffer-Bild (%d Abweichungen)", n_bild_falsch);
     PRUEF(n_tick_weg == 0, "keine Platzierung: Lage am Bildende = Bildanfang in jedem Bild bis zum Tod (%d Bilder bewegt; kein 0x8001ad68 im Hook)", n_tick_weg);

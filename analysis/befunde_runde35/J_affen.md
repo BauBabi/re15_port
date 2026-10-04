@@ -1800,8 +1800,9 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   Tabelle **0x80121580** (`addiu at,at,5504` @0x8011c3ec), `jalr v0` @0x8011c3fc. Tabelle (`table 0x80121580`):
   [0] = [1] = **0x8011c414** (aca59 = 0 aus dem Wort-Store oben -> 0x8011c414).
 - **0x8011c414 (ganzer Koerper bis `jr ra` @0x8011c590)**, Zweig nach aca5a (`lbu v1,0(a1)` a1 = 0x800aca5a @0x8011c424):
-  - **aca5a = 0** (@0x8011c460-d4): aca5a := 1 (`sb` @0x8011c464); **+0x93 := 7** (`ori v0,zero,0x7` / `sb v0,-13597(at)`
-    = 0x800acae3 @0x8011c468-70); **Clip acae8 := 0** (@0x8011c490), **Bild acae9 := 0** (@0x8011c498); **Blut**
+  - **aca5a = 0** (@0x8011c460-d4): aca5a := 1 (`sb` @0x8011c464); **+0x8f := 7** (`ori v0,zero,0x7` / `sb v0,-13597(at)`
+    = 0x800acae3 = Spieler 0x800aca54 + 0x8f = Blend-Saat @0x8011c468-70; KORREKTUR: zuerst als +0x93 gelesen, auch in
+    der Commit-Message 5d99c837 — +0x93 ist 0x800acae7, das schreibt nur B[8] (|= 1 @0x801191d0-fc)); **Clip acae8 := 0** (@0x8011c490), **Bild acae9 := 0** (@0x8011c498); **Blut**
     `jal 0x80019700` (a0 = 0x2000 @0x8011c440, a1 = Spieler+0x6a @0x8011c49c, a2 = [acbdc]+0x5a0 = Spieler-Part 8
     @0x8011c4a4, a3 = 0x80121570 = Null-Versatz, 16 Byte 0) @0x8011c4a0; **Se_on(0x04030001, Spieler+0x34)** = CORE 3
     (`lui a0,0x403` / `ori a0,a0,0x1` @0x8011c4a8/b4, `jal 0x80045024` @0x8011c4b8); aca3c |= 0xc0 @0x8011c4c0-d4. Danach
@@ -1846,7 +1847,9 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
 - Echter Weg: Gorilla im LEAP B[7] ab der w3y-Lage F2786 ((-5125,-14706) r2517), Leon (-9975,-10422) r587 hp 46 ->
   Commit B[8] bei Bild 0x13, **Treffer T26** im Fenster (Gorilla Bild 8 bei (-9763,-11662); w3y: Bild 8 bei
   (-9992,-11485)). hp 46 -> -554.
-- Danach je Bild: Opfer-Zustand 2 / Greifer 0x27 / eigene Bank nein, **+0x93 = 7**, **Clip 0, Bild 0..69 lueckenlos**
+- Danach je Bild: Opfer-Zustand 2 / Greifer 0x27 / eigene Bank nein, +0x93 = 0x01 (aus B[8]), **+0x8f 7, 6, 5, 4, 3, 2, 1, 0**
+  ab dem Treffer-Bild (Saat 7, Abbau je f314; KORREKTUR der ersten Fassung, die +0x93 := 7 setzte — `jnb6/fin8.txt`),
+  **Clip 0, Bild 0..69 lueckenlos**
   (Opfer-Bank Clip 0 hat 70 Bilder), **Leon in jedem Bild unveraendert auf (-9975,-10422)** (0 bewegte Bilder, groesste
   Entfernung 0; alt 14000), Ereignisse `0x1000` (Eintritt T26), `0x203c` (Koerperfall + Blut bei Bild 0x3c = T86 =
   Treffer + 60), `0x4045` (Tod in T96 = Bild nach Bild 69), danach Zustand 7 mit Clip 0 Bild 69 gehalten.

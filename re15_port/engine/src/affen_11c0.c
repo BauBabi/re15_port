@@ -488,7 +488,8 @@ void re15_affen_finisher_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
     int fc = (vb && vb->anim_victim.clip_count > 0) ? vb->anim_victim.clips[0].frame_count : 1;
     if (fc < 1) fc = 1;
     /* +0x8f: FUN_8001f3bc mischt mit dem Wert und zieht danach 1 ab (Decompilat Z. 78). Der Port zeigt den Stand
-     * nach dem Tick -> Abbau am Anfang des Ticks, der auf einen f314-Aufruf folgt (Eintritt ohne Abbau). */
+     * nach dem Tick -> Abbau am Anfang des Ticks, der auf einen f314-Aufruf folgt (Eintritt ohne Abbau: die Saat 7
+     * wird einmal voll gezeigt, wie beim Wurf-Hook). */
     if (s_fin_f314 && pl->anim_frac > 0) pl->anim_frac--;
     s_fin_f314 = 0;
     if (s_fin_ph == 2) {                                         /* aca5a = 2 @0x8011c55c-84 */
@@ -504,7 +505,7 @@ void re15_affen_finisher_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
     int k;
     if (s_fin_ph == 0) {                                         /* aca5a = 0 @0x8011c460-d4 */
         s_fin_ph = 1;                                            /* sb 1 -> aca5a @0x8011c464 */
-        pl->hit_react = 7;                                       /* +0x93 := 7 @0x8011c468-70 */
+        pl->anim_frac = 7;                                       /* +0x8f := 7 (Blend-Saat; 0x800acae3 = Spieler 0x800aca54 + 0x8f) @0x8011c468-70 */
         pl->motion = 0;                                          /* Clip acae8 := 0 @0x8011c490 (Opfer-Bank acbcc/acbd0) */
         pl->anim_frame = 0;                                      /* Bild acae9 := 0 @0x8011c498 */
         affen_fin_blut(pl);                                      /* jal 0x80019700 @0x8011c4a0 */
