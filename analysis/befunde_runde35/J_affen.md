@@ -1604,3 +1604,38 @@ Scratch: `scratchpad/jnb5/`.
   (219 269 322 372 425 476 528 580 631 684 734 788 837 892, groesste Abweichung 0), Wechseltakt 8/8 (0).** Ueber 696
   Bilder (F196-F891): Zustandsfolge beider Gorillas (Zustand/Sub/Phase/Clip/Bild/+0x1dc) in JEDEM Bild gleich, Lagen
   hoechstens 25 (e1) / 17 (e2) daneben (vorher 40-120; Rest = Ueberblend-Bilder des Bissclips und aec4, 1-2 je Bild).
+
+### P1 (c) — Riegel messen jetzt den Slot-3-Zyklus
+- `takt`: neue Pruefung **Slot 3 (e2): 7/7 Bisse im selben Bild wie das Original** (gemessen 7/7). Am Stand
+  Nachbesserung 4 waere sie rot gewesen (e2 269/372/475/578/681/784/887 gegen 269/372/476/580/684/788/892 = 2/7).
+  Die Gesamt-Abweichung ist jetzt 0 (vorher 5), Wechseltakt 0 (vorher 2).
+- `szene`: Slot 3 wie Slot 2 auf GLEICHBLEIBENDEN Versatz geprueft, Todesbiss (+1194) eingeschlossen (max - min <= 1,
+  |Versatz| <= 3). Gemessen: Einzelbisse **+0 +0 +0 +0 +0 +0 +0 +0 +0 +0 +0 +0 +0 +0**, Tod **+1194 = Original**,
+  Slot 2 +0 .. +0, Slot 3 +0 .. +0. Am Stand Nachbesserung 4 (0,0,0,-1,-2,-3,-4,-5) rot. Die alte Schranke
+  "groesste Abweichung <= 6" ist ersetzt.
+
+### P2 — Messung, Berichtigung, Riegel
+- **(a) Berichtigung der Kausal-Aussage von Nachbesserung 4** (Z. 1400-1403, Z. 1471, Ergebnis-Tabelle N1 (b) Z. 1494):
+  "Startversatz durch (10)-(12) verkleinert / Lauf 0 landet deshalb an der Original-Ruhelage" war FALSCH. Abnahme 4 hat
+  am Stand 21947700 gemessen, dass der Startversatz in jeder Groesse GEWACHSEN war (Leon beim Pin 8 -> 14, e1 T254
+  24 -> 33, e2 30 -> 43, Anker 37 -> 40, T265 64 -> 1238, Bahn-Mittel 34 -> 74, T290 166 -> 183). Die Landung an der
+  Ruhelage (-3018,-11651) war ein anderer Ausgang derselben chaotischen Klemmen-Iteration (derselbe Punkt, den schon
+  die Dossier-Zahlen von Nachbesserung 2 aus einem anderen T290-Stand lieferten), keine Folge von (10)-(12).
+- **Messung am Stand Nachbesserung 5** (Riegel griff Lauf 0, `jnb5/griff_n5.txt`): mit (13)/(14) ist der Startversatz
+  jetzt wirklich kleiner: Leon beim Pin **1** (-6660,-12485) (N4: 14), Anker **8** ((-7511,-10334) gegen (-7507,-10327);
+  N4: 40), e1 T254-T288 hoechstens **22** (N4: 37), T265 **30** (N4: 1238), Wurf-Bahn T265-T290 im Mittel **25** (N4: 74),
+  T265-T289 hoechstens **62** (T266). T290 = erstes Bild der Klemmen-Iteration: **201** (N4: 183) — die Klemme verstaerkt
+  den Anker-Versatz 8 auf 201 (Weg 2 mit Anker-Versatz 0: Kette T268-T290 23/23 bitgleich). Lauf 0 landet jetzt
+  NICHT an der Ruhelage: frei T378 (-7563,-8940), Ende (-8370,-8559), Biss T414. Der in N4 wieder eingefuehrte Pin waere
+  damit rot geworden, ohne dass sich am Gorilla etwas Falsches geaendert hat — genau der Einwand von Abnahme 4.
+- **(b) Pin entfernt, Empfindlichkeit gemessen** (neuer Teil in teil_griff): 24 Laeufe, Leon vor T291 im 5x5-Gitter
+  +-1/+-2 Einheiten neben der Lauf-0-Lage T290 (-5358,-10751) versetzt, sonst identisch: **4/24 enden an der
+  Original-Ruhelage, 16/24 werden bis T495 gebissen, 0/24 enden wie Lauf 0** (Liste im Riegel-Protokoll; Biss-Bilder
+  T393 ... T484, Endlagen von (-3004,-11639) bis (-12161,-7509)). Die Pruefung verlangt diese Empfindlichkeit
+  (`n_gleich < 24`, beide Ausgaenge kommen vor) und pinnt KEINEN Ausgang. Der N1-Mechanismus (an der Original-Ruhelage
+  beisst keiner) wird jetzt am ORIGINAL-ZUSTAND gemessen (Weg 2): **kein Biss bis T495, e1 3925 / e2 4996 entfernt**
+  (Original g_griff F496: HP 76, ~3925 / ~4990). Lauf 0 meldet seinen Ausgang nur noch als Zeile.
+- Wurf-Bahn-Schranke: wieder **T265 eingeschlossen**, jetzt **100** fuer T265-T289 (gemessen 62; N3 64/166, N4 1238),
+  T290 als Klemmen-Start nur gemeldet (201) und ueber M1 (Empfindlichkeit ab dem Original-T290) und die neue Messung
+  abgedeckt. Die T265-Pruefung "Klemme auf die eigenen Eingaben" (N4) bleibt als Zusatz, ersetzt aber keine Schranke mehr.
+- (c) Der verbleibende Startversatz steht unter OFFEN N5-1.
