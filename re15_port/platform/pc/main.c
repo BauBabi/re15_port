@@ -124,6 +124,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_memcard.h"      /* FE-4 byte-true PSX .mcr backend */
 #include "re15_savepoint.h"    /* FE-4 phone save-point pending signal */
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
+#include "re15_entladen.h"     /* Runde 35 Spur I: Raum-Assets entladen (Raumwechsel/Spielstart/Tod) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
@@ -208,6 +209,7 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
     int rc = re15_esp_parse(rdt_buf, (size_t)rdt_size, idh, pe, tb, te, &s_room_esp);
     if (rc == 0) {
         re15_esp_set_room_bank(&s_room_esp);
+        { extern void re15_entladen_esp_bank_merken(void); re15_entladen_esp_bank_merken(); }   /* Runde 35 Spur I */
         fprintf(stderr, "[esp] room %04X: %d effect bank(s) parsed (e.g. id 0x%02x: %u anim/%u cells)\n",
                 room_id, s_room_esp.id_count,
                 s_room_esp.id_count ? s_room_esp.eff[0].effect_id : 0,
@@ -3747,6 +3749,8 @@ re_title:;
     /* Phase 4.5.6.4: software MDEC + decode bundled BG (PC: no-op chip init).
      * Der eigentliche Boot-BG-Preload ist NACH die Raum-Initialisierung verschoben
      * (vor den Game-Loop, s.u.) — Beleg + Messung dort. */
+    re15_entladen_ereignis("spielstart");   /* Runde 35 Spur I: Arena-Reset der Spielmodul-Init
+                                             * @0x8001d590-a0 vor Spieler/Raum @0x8001d5a4/ac */
     re15_bg_init();
 
     /* Phase 4.5.9 / globalization Phase 3-A (2026-06-13): load + parse the room RDT
@@ -3769,6 +3773,8 @@ re_title:;
     char rdt_path[32]; snprintf(rdt_path, sizeof rdt_path, "STAGE%u/ROOM%04X.RDT",
                                 (boot_room >> 12) & 0xFu, boot_room);
     uint8_t *rdt_buf = pc_read_shared(rdt_path, &rdt_size);
+    { extern void re15_room_pc_uebernehmen(unsigned char *buf, int size);   /* Runde 35 Spur I: room_pc */
+      if (rdt_buf) re15_room_pc_uebernehmen(rdt_buf, rdt_size); }           /* besitzt + entlaedt die Boot-RDT */
     fprintf(stderr, "[boot] room RDT: %s (%d bytes)\n", rdt_path, rdt_size);
     re15_rdt_t rdt = {0};
     int rdt_ok = 0;
@@ -4041,32 +4047,15 @@ re_title:;
         }
     }
 
-    /* Phase 4.5.13-R23: Elliot's actual model is PL05.PLD (not em47 EMD).
-     * Load his MD1 mesh + EDD/EMR for skeletal animation so NPC[1] (type
-     * 0x47) renders as Elliot instead of a Leon-clone. */
-    int elliot_md1_size = 0;
-    uint8_t *elliot_md1_buf = pc_read_shared("PLD/ELLIOT.MD1", &elliot_md1_size);
+    /* Phase 4.5.13-R23: Elliot's actual model is PL05.PLD (not em47 EMD) — NPC[1] (type 0x47)
+     * renders as Elliot instead of a Leon-clone. Runde 35 Spur I (Nachbesserung 1, M2): er ist ein
+     * RAUM-Modell (Sce_em_set -> `jal 0x80022300` @0x80042328 in die Arena 0x800ac77c) — geladen
+     * beim Spawn (elliot_pc.c), entladen an jeder Grenze. Hier nur die Ablage, angemeldet unten. */
     re15_md1_t elliot_md1 = {0};
-    int elliot_ok = (elliot_md1_buf && re15_md1_parse(elliot_md1_buf, elliot_md1_size, &elliot_md1) == 0);
-    int elliot_edd_size = 0, elliot_emr_size = 0;
-    uint8_t *elliot_edd_buf = pc_read_shared("PLD/ELLIOT.EDD", &elliot_edd_size);
-    uint8_t *elliot_emr_buf = pc_read_shared("PLD/ELLIOT.EMR", &elliot_emr_size);
+    int elliot_ok = 0;
     re15_emd_animation_t elliot_anim = {0};
     re15_emd_skeleton_t  elliot_skel = {0};
     int elliot_skel_ok = 0;
-    if (elliot_edd_buf && elliot_emr_buf) {
-        if (re15_emd_parse_animation(elliot_edd_buf, elliot_edd_size, &elliot_anim) == 0 &&
-            re15_emd_parse_skeleton (elliot_emr_buf, elliot_emr_size, &elliot_skel) == 0) {
-            elliot_skel_ok = 1;
-            fprintf(stderr, "[elliot] PL05 loaded: %d meshes, %d bones, %d clips\n",
-                    elliot_md1.mesh_count, elliot_skel.bone_count, elliot_anim.clip_count);
-        }
-    }
-    /* Register Elliot's own cinematic EDD with the NPC motion executor so his Plc_motion GESTURE
-     * clips (ROOM1170 intro "Hey!" wave etc.) wrap anim_frame at THEIR real length, not the shared
-     * EM040/Irons table (which froze clips 15/16/20/25 on frame 0). Stable function-scope storage. */
-    { extern void re15_npc_set_elliot_anim(const re15_emd_animation_t *);
-      re15_npc_set_elliot_anim(&elliot_anim); }
 
     /* AD-round (2026-05-26): load PL00W01 (handgun weapon track) for the
      * RUN/WALK_FORWARD animation. PL00.EDD only has Walk_Backward / Damage
@@ -4178,21 +4167,7 @@ re_title:;
                 nloaded, RE15_WPN_MDL_MAX, wpn_fam);
     }
 
-    /* Elliot TIM into slot 1. */
-    int elliot_tim_size = 0;
-    uint8_t *elliot_tim_buf = pc_read_shared("PLD/ELLIOT.TIM", &elliot_tim_size);
-    re15_tim_t elliot_tim;
-    if (elliot_tim_buf && re15_tim_parse(elliot_tim_buf, elliot_tim_size, &elliot_tim) == 0) {
-        re15_render_pc_upload_tim_slot(&elliot_tim, 1);
-        fprintf(stderr, "[tim] elliot TIM in slot 1: %dx%d\n", elliot_tim.width, elliot_tim.height);
-    } else {
-        fprintf(stderr, "[tim] elliot TIM FAILED to load — NPC type 0x47 will use Leon's TIM\n");
-    }
-    if (elliot_ok) {
-        fprintf(stderr, "[md1] loaded elliot mesh: %d meshes\n", elliot_md1.mesh_count);
-    } else {
-        fprintf(stderr, "[md1] elliot MD1 FAILED to load — NPC type 0x47 will use Leon's mesh\n");
-    }
+    /* Elliot TIM (Slot 1): elliot_pc.c beim Spawn (Runde 35 Spur I, Nachbesserung 1). */
 
     /* Phase 4.5.7.3: load EDD (animation) + EMR (skeleton) for the
      * skeletal renderer. The EMR pointer is held by skel.keyframe_data
@@ -4245,6 +4220,7 @@ re_title:;
      * (platform/pc/src/cut10f0_pc.c; NULL = keine Leihe). */
     { uint8_t *kb = rbj_buf ? NULL : re15_cut10f0_pc_rbj_leihen(boot_room, &rbj_size);
       if (kb) { rbj_buf = kb; rbj_borrowed = 1; } }
+    if (rbj_buf && !rbj_borrowed) re15_entladen_rbj_halten(rbj_buf, rbj_size, boot_room);   /* Runde 35 Spur I (N2): frei an jeder Grenze */
     fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
             rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
@@ -4355,6 +4331,8 @@ re_title:;
      * zuruecksetzen koennte. Das Original braucht das nicht — dort verschwindet die Bank mit dem
      * Arena-Reset (@0x80039738) von selbst. */
     re15_emd_animation_t elliot_base_anim = elliot_anim;
+    re15_elliot_pc_anmelden(&elliot_md1, &elliot_ok, &elliot_skel, &elliot_anim, &elliot_skel_ok,
+                            &elliot_base_skel, &elliot_base_anim);   /* Runde 35 Spur I (N1-M2) */
     /* SHARED room-cinematic overlay (enemy_common.c) — the SAME single source of truth the
      * PSX port (re15_load_room_cinematic) and the cross-room reload below use: Leon (overlaid
      * from the clean pl00 base) + Elliot (from his base) + per-room RBJ→enemy rebind
@@ -5926,9 +5904,13 @@ re_title:;
              * Cut-Wechsel UND beim Raumeintritt, und ruehrt Fade/Montage/Licht nicht an. */
             static unsigned s_pri_room = 0xFFFFu;
             static int      s_pri_cut  = -1;
-            if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut) {
+            static unsigned s_pri_gen  = 0;   /* Runde 35 Spur I: entladen (re15_entladen.h) -> neu ableiten,
+                                               * auch wenn (Raum,Cut) gleich bleibt (Tod -> LOAD im Todesraum) */
+            if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut ||
+                s_pri_gen != g_re15_entladen_gen) {
                 s_pri_room = g_current_room_id;
                 s_pri_cut  = active_cut_idx;
+                s_pri_gen  = g_re15_entladen_gen;
                 /* AZ-round 2026-05-28: parse sprite.pri for this cut and
                  * push the mask list to the renderer's BG-overdraw layer.
                  * NULL section (pri_offset bytes 0xFFFFFFFF) → no masks,
@@ -5949,15 +5931,8 @@ re_title:;
                  * Kuenstler bearbeitet haben, bleibt unangetastet byte-true. */
                 int pri_nachgezeichnet = 0;
                 if (pri_n == 0 && active_cut_idx >= 0) {
-                    static uint8_t *s_msk = NULL; static int s_msk_size = 0;
-                    static unsigned s_msk_room = 0xFFFFu;
-                    if (s_msk_room != g_current_room_id) {
-                        char mrel[64];
-                        free(s_msk); s_msk = NULL; s_msk_size = 0;
-                        s_msk_room = g_current_room_id;
-                        snprintf(mrel, sizeof mrel, "MASKS/ROOM%04X.MSK", g_current_room_id);
-                        s_msk = re15_pc_read_cd(mrel, &s_msk_size);
-                    }
+                    int s_msk_size = 0;   /* Runde 35 Spur I: Cache liegt in entladen_pc.c (entladbar) */
+                    const uint8_t *s_msk = re15_entladen_msk(g_current_room_id, &s_msk_size);
                     if (s_msk) {
                         uint32_t moff = re15_pri_msk_section_offset(s_msk, (size_t)s_msk_size,
                                                                     active_cut_idx);
@@ -7552,6 +7527,8 @@ re_title:;
                         pc_enemy_load_ex(g_actors[_pi].type,
                                          g_actors[_pi].type != 0x26u
                                              || g_actors[_pi].re2s_baby_spawned);
+                for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)   /* Runde 35 Spur I (N1-M2): Elliot beim */
+                    if (g_actors[_pi].active && g_actors[_pi].type == 0x47u) { re15_elliot_pc_sicherstellen(); break; }   /* Spawn, `jal 0x80022300` @0x80042328 */
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
                  * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
                  * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Die Roster-Schleife darueber
@@ -8160,8 +8137,14 @@ re_title:;
                      * room's cinematics live in ITS RBJ → reload + re-overlay Leon
                      * (and Elliot) from the PRESERVED base PL00 on every room change. */
                     {
-                        static uint8_t *s_room_rbj = NULL;   /* keep alive: parse_rbj refs it */
+                        /* Runde 35 Spur I (N2): der Dateipuffer gehoert entladen_pc.c (re15_entladen_rbj_halten). */
                         static unsigned s_rbj_room  = 0xFFFFFFFFu;
+                        /* Runde 35 Spur I: der Riegel ueberlebte Tod -> Titel -> Spielstart (erster
+                         * Tuer-Raum == letzter Raum vor dem Tod -> Bank des Boot-Raums blieb). Das
+                         * Original bindet die Raum-Animation bei JEDEM Raumladen neu aus der neuen
+                         * RDT (`jal 0x8001b3f8` @0x80039a08, unbedingt) -> nach jedem Entladen neu. */
+                        static unsigned s_rbj_gen = 0;
+                        if (s_rbj_gen != g_re15_entladen_gen) { s_rbj_room = 0xFFFFFFFFu; s_rbj_gen = g_re15_entladen_gen; }
                         if (dest_room != s_rbj_room) {
                             char rpath[64];
                             snprintf(rpath, sizeof rpath, "RBJ/ROOM%04X.RBJ", dest_room);
@@ -8184,8 +8167,7 @@ re_title:;
                             { uint8_t *kb = (rbuf && rsz > 0) ? NULL : re15_cut10f0_pc_rbj_leihen(dest_room, &rsz);
                               if (kb) { rbuf = kb; rbj_borrowed = 1; } }
                             if (rbuf && rsz > 0) {
-                                if (s_room_rbj) free(s_room_rbj);
-                                s_room_rbj = rbj_borrowed ? NULL : rbuf;
+                                re15_entladen_rbj_halten(rbj_borrowed ? NULL : rbuf, rsz, dest_room);   /* Runde 35 Spur I (N2) */
                                 s_rbj_room = dest_room;
                                 /* SHARED overlay (enemy_common.c) — identical math to the PSX
                                  * re15_load_room_cinematic: Leon (from pl00 base) + Elliot (from
@@ -8240,6 +8222,7 @@ re_title:;
                                     elliot_anim = elliot_base_anim;
                                 }
                                 s_rbj_room = dest_room;
+                                re15_entladen_rbj_halten(NULL, 0, dest_room);   /* Runde 35 Spur I (N2): keine Bank des Raums davor */
                                 fprintf(stderr, "[rbj] room %04X has no RBJ (%s) — Leon auf PL00-Basis "
                                         "zurueckgesetzt (Arena-Reset @0x80039738)\n", dest_room, rpath);
                             } else {
@@ -9537,6 +9520,7 @@ re_title:;
                      * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
                     pc_enemy_load_ex(npc->type,
                                      npc->type != 0x26u || npc->re2s_baby_spawned);
+                if (npc->type == 0x47u) re15_elliot_pc_sicherstellen();   /* Runde 35 Spur I (N1-M2): frueheste Stelle, s.o. */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
@@ -11490,6 +11474,10 @@ re_title:;
     /* FE-5.3: the death FSM set mode=TITLE and broke the game loop — go back to the title menu
      * (YOU DIED -> TITLE). CONTINUE there reloads the last card save; NEW GAME restarts. Any other
      * exit (SDL_QUIT calls exit() directly) falls through to a normal return. */
-    if (re15_gameflow_mode() == RE15_MODE_TITLE) goto re_title;
+    if (re15_gameflow_mode() == RE15_MODE_TITLE) {
+        re15_entladen_ereignis("spielende");   /* Runde 35 Spur I: Modul-Ende @0x8001d1f8/@0x8001d200 —
+                                                * Raum-Masken zeichnet nur das Spielmodul (@0x8001ce54) */
+        goto re_title;
+    }
     return 0;
 }

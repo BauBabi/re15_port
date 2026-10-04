@@ -33,6 +33,7 @@
 #include "re15_bg.h"
 #include "re15_tim.h"    /* re15_tim_parse — per-cut foreground atlas decode */
 #include "re15_sld.h"    /* Laufzeit-Auszug des Vordergrundatlas aus dem BSS-Chunk */
+#include "re15_entladen.h"   /* Runde 35 Spur I: Generation des SLD-Auszugs */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 extern int re15_fade_log_on(void);   /* fade_common.c — Messlauf-Log-Gate */
@@ -89,6 +90,7 @@ static uint8_t s_pri_tim[RE15_SLD_MAX_UNPACKED];
 static int     s_pri_tim_len  = 0;
 static int     s_pri_tim_room = -1;
 static int     s_pri_tim_cut  = -1;
+static unsigned s_pri_tim_gen = 0;   /* Runde 35 Spur I: Generation des Auszugs (re15_entladen.h) */
 
 /* Cut-Laengentabelle des Stage-Overlays, einmal je Stage geladen. */
 static uint8_t *s_stage_bin      = NULL;
@@ -138,7 +140,13 @@ void re15_pri_cache_from_chunk(const uint8_t *chunk, int chunk_size, int cut_idx
     s_pri_tim_len  = len;
     s_pri_tim_room = (int)g_current_room_id;
     s_pri_tim_cut  = cut_idx;
+    s_pri_tim_gen  = g_re15_entladen_gen;   /* Runde 35 Spur I */
 }
+
+/* Runde 35 Spur I (re15_entladen.h): Belegung + Entladen des SLD-Atlas-Auszugs. Der Auszug ist
+ * ein Stueck BSS-Chunk des Raums — im Original Raum-Arena (@0x80039738). */
+int re15_pri_sld_belegt(unsigned *gen) { if (gen) *gen = s_pri_tim_gen; return s_pri_tim_len > 0; }
+void re15_pri_sld_entladen(void) { s_pri_tim_len = 0; s_pri_tim_room = -1; s_pri_tim_cut = -1; }
 
 /* 8-bpp-TIM + CLUT -> RGBA fuer den Renderer. Index 0 = transparent (das Original
  * zeichnet die Masken als SPRT mit ABE=0; Farbindex 0 ist bei 8-bpp-Sprites die
@@ -227,6 +235,8 @@ int re15_pri_load_cut_atlas(int cut_idx) { return re15_pri_load_cut_atlas_ex(cut
 /* Cached BG frame, RGBA8888 layout (matches the PC framebuffer). */
 static uint32_t s_bg_cache[BG_PIXELS];
 static int      s_bg_loaded = 0;
+static unsigned s_bg_gen    = 0;   /* Runde 35 Spur I: Generation des Hintergrundbilds */
+int re15_bg_belegt(unsigned *gen) { if (gen) *gen = s_bg_gen; return s_bg_loaded; }   /* Zensus */
 
 /* RE15_FADE_LOG-Messlauf-Instrumentierung (env-gegatet, Normalpfad stumm):
  * s_bg_tag = Herkunft des Cache-Inhalts ("room1170#00"), gesetzt bei jedem
@@ -305,6 +315,7 @@ int re15_bg_load_from_bss(const uint8_t *bss_chunk, size_t size)
     free(rgb_bytes);
 
     s_bg_loaded = 1;
+    s_bg_gen    = g_re15_entladen_gen;   /* Runde 35 Spur I */
 
     /* AZ-round: hand the freshly decoded BG to the renderer so its
      * sprite.pri overdraw layer can sample from the matching image. */
@@ -515,13 +526,16 @@ int re15_bg_is_loaded(void)
  * ================================================================================== */
 static uint32_t s_bg_prev[BG_PIXELS];
 static int      s_bg_prev_ok = 0;
+static unsigned s_bg_prev_gen = 0;   /* Runde 35 Spur I (N2): Generation des Schnappschusses */
 
 void re15_bg_snapshot_prev(void)
 {
     if (!s_bg_loaded) { s_bg_prev_ok = 0; return; }
     memcpy(s_bg_prev, s_bg_cache, sizeof s_bg_prev);
     s_bg_prev_ok = 1;
+    s_bg_prev_gen = g_re15_entladen_gen;   /* Runde 35 Spur I (N2) */
 }
+int re15_bg_prev_belegt(unsigned *gen) { if (gen) *gen = s_bg_prev_gen; return s_bg_prev_ok; }   /* Zensus */
 int re15_bg_prev_ready(void) { return s_bg_prev_ok; }
 void re15_bg_prev_invalidate(void) { s_bg_prev_ok = 0; }
 

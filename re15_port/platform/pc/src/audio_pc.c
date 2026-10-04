@@ -2304,6 +2304,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
 
     s_voice_clip[voice_id].pcm = pcm;
     s_voice_clip[voice_id].len = (int)out_n;
+    { extern unsigned g_re15_entladen_gen; extern unsigned re15_audio_stimme_gen_setzen(unsigned);
+      re15_audio_stimme_gen_setzen(g_re15_entladen_gen); }   /* Runde 35 Spur I: Zensus */
     fprintf(stderr, "[voice] clip loaded: main%02d.wav (%d Hz x%d → %ld @%d Hz)\n",
             voice_id, rate, ch, (long)out_n, RE15_AUDIO_RATE);
     return 1;
@@ -3757,7 +3759,10 @@ void re15_audio_footstep(int foot, int sound_type)
  * RDT-Parse und bei JEDEM Raumwechsel laufen, weil beide Baenke aus dem RDT geschnitten werden. */
 static int ist_tuer_pcm(const int16_t *pcm);   /* Tuerbank (Tor + RE2-Tuer), s.u. */
 
-void re15_audio_load_room_banks(void)
+/* Runde 35 Spur I: Freigabe-Haelfte von re15_audio_load_room_banks als eigener Schritt, damit
+ * die Raum-Tonbaenke auch an den Grenzen Spielstart/Spielende fallen (re15_entladen.h).
+ * Inhalt unveraendert (Stimmen aus, Prioritaeten/Vormerkungen weg, PCM frei; Tuerbank bleibt). */
+void re15_audio_raum_entladen(void)
 {
     if (!g_audio.initialized) return;
     SDL_LockAudioDevice(s_audio_dev);
@@ -3793,6 +3798,91 @@ void re15_audio_load_room_banks(void)
     memset(s_re2se_pend, 0, sizeof s_re2se_pend);
     free_room_bank_pcm();
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+int re15_audio_raum_belegt(void) { return (s_foot_loaded ? 1 : 0) + (s_se_loaded ? 1 : 0); }   /* Zensus */
+
+/* Runde 35 Spur I, Nachbesserung 2 (Abnahme 1 H2/H3): die RE2-RAUMBANK-Ergaenzungen fallen an jeder
+ * Grenze und werden beim naechsten Ruf wieder geladen (alle Lader sind lazy). RE2: ENEMSE-Bank je Raum
+ * neu (Raumlader `jal 0x8005a09c` @0x8004a33c; FUN_8005a09c schliesst die alte `jal 0x80084ec0`
+ * @0x8005a108, Handle -1 @0x8005a114); ELEVSE/HINTSE/TUERSE/PANEL2130 sind RAUMBANK-Saetze (Bank 2 =
+ * SND0). Tuersequenz-Baenke (TORSE, je Archiv) bleiben (Tuerbank @0x3DC50, Runde 31). Sperre wie
+ * re15_audio_stimmen_entladen; Stimmen, die noch in einen der Puffer zeigen, werden geloest (nach
+ * re15_audio_raum_entladen ist ohnehin jede Nicht-Tuer-Stimme aus). */
+static void re2_minibank_frei(int16_t **dec, int *len)
+{
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        if (!dec[i]) continue;
+        for (int s = 0; s < MIXER_MAX_ACTIVE_SAMPLES; s++)
+            if (s_active[s].pcm == dec[i]) { s_active[s].active = 0; s_active[s].pcm = NULL; }
+        for (int v = 0; v < RE15_SE_VOICE_COUNT; v++)
+            if (s_se_pend[v].pcm == dec[i]) memset(&s_se_pend[v], 0, sizeof s_se_pend[v]);
+        free(dec[i]); dec[i] = NULL; len[i] = 0;
+    }
+}
+int re15_audio_re2_raumbaenke_belegt(void)
+{
+    int n = 0;
+    for (int k = 0; k < RE2SE_CACHE_N; k++) if (s_re2se_cache[k].loaded) n++;
+    return n + (s_elev_loaded ? 1 : 0) + (s_hint_loaded ? 1 : 0) + (s_door_loaded ? 1 : 0)
+             + (s_panel_state == 1 ? 1 : 0);
+}
+void re15_audio_re2_raumbaenke_entladen(void)
+{
+    if (s_audio_dev) SDL_LockAudioDevice(s_audio_dev);
+    for (int k = 0; k < RE2SE_CACHE_N; k++) if (s_re2se_cache[k].loaded) re2se_bank_free(&s_re2se_cache[k]);
+    s_re2se_cur = NULL;
+    re2_minibank_frei(s_elev_decoded,  s_elev_decoded_len);  free(s_elev_edt);  s_elev_edt  = NULL;
+    s_elev_loaded = 0; s_elev_failed = 0;
+    re2_minibank_frei(s_hint_decoded,  s_hint_decoded_len);  free(s_hint_edt);  s_hint_edt  = NULL;
+    s_hint_loaded = 0; s_hint_failed = 0;
+    re2_minibank_frei(s_door_decoded,  s_door_decoded_len);  free(s_door_edt);  s_door_edt  = NULL;
+    s_door_loaded = 0; s_door_failed = 0;
+    re2_minibank_frei(s_panel_decoded, s_panel_decoded_len); free(s_panel_edt); s_panel_edt = NULL;
+    s_panel_edt_count = 0; s_panel_state = 0;
+    if (s_audio_dev) SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* Runde 35 Spur I, Nachbesserung 1 (Abnahme 0, M1): die dekodierten RAUM-STIMMEN fallen an jeder
+ * Grenze (raum / spielstart / spielende) — vorher erst, wenn in einem ANDEREN Raum die naechste
+ * Zeile angefordert wurde (re15_voice_load_clip oben), also z.B. nie nach dem letzten Satz eines
+ * Raums. RE2 (Ton = RE2): eine Stimme ist CD-XA, das Laufwerk speist sie direkt in den SPU-Eingang
+ * (Abspielen FUN_800129b4: Setmode 0xC8 = Bit 6 XA-ADPCM, Byte @0x8009a415; ReadS 0x1B) — im RAM
+ * liegt nichts Dekodiertes. Der Raumlader FUN_80049e48 liest die neue RDT `jal 0x80012fb8`
+ * @0x8004a1c4; der Leser sendet Pause (9) @0x800130d4, Setmode 0xA0 (Bit 6 = 0, Byte @0x8009a429)
+ * @0x800130f0, SeekL @0x80013110, ReadN @0x80013140 — ab da erreicht keine Stimme die SPU mehr.
+ * Deshalb wird der Strom hier geloest, nicht weitergespielt. Sperre wie oben (Mixer-Thread). */
+static unsigned s_voice_gen = 0;   /* Generation der zuletzt geladenen Clips (re15_entladen.h) */
+unsigned re15_audio_stimme_gen_setzen(unsigned g) { unsigned alt = s_voice_gen; s_voice_gen = g; return alt; }
+int re15_audio_stimmen_belegt(unsigned *gen, int *laeuft)
+{
+    int n = 0;
+    for (int i = 0; i < VOICE_MAX_MSG; i++) if (s_voice_clip[i].pcm) n++;
+    if (gen) *gen = s_voice_gen;
+    if (laeuft) *laeuft = (s_xa.active && s_xa.pcm) ? 1 : 0;
+    return n;
+}
+void re15_audio_stimmen_entladen(void)
+{
+    int n = 0;
+    for (int i = 0; i < VOICE_MAX_MSG; i++) if (s_voice_clip[i].pcm || s_voice_clip[i].tried) n++;
+    if (n == 0 && !s_xa.pcm) return;
+    if (s_audio_dev) SDL_LockAudioDevice(s_audio_dev);
+    for (int i = 0; i < VOICE_MAX_MSG; i++) {
+        if (s_voice_clip[i].pcm && s_xa.pcm == s_voice_clip[i].pcm) {
+            s_xa.active = 0; s_xa.pcm = NULL; s_xa.pcm_len = 0; s_xa.pos = 0;
+        }
+        free(s_voice_clip[i].pcm);
+        s_voice_clip[i].pcm = NULL; s_voice_clip[i].len = 0; s_voice_clip[i].tried = 0;
+    }
+    s_voice_room = 0;
+    if (s_audio_dev) SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+void re15_audio_load_room_banks(void)
+{
+    if (!g_audio.initialized) return;
+    re15_audio_raum_entladen();
     load_footstep_vab_pc();   /* room snd0 + EDT (Schritt-SE) */
     load_room_se_vab_pc();    /* room snd1 + SE-Tabelle (FUN_800453d0) */
 }

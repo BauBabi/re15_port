@@ -7,6 +7,7 @@
 #include "re15_enemy.h"
 #include "re15_enemy_ai.h"   /* re15_player_victim_reset */
 #include "re15_actor.h"      /* RBJ-Marker-Binder: Aktor-Slots (g_actors) */
+#include "re15_entladen.h"   /* Runde 35 Spur I: Generation je Bank */
 #include "re15_cut10f0.h"    /* Runde 35 Spur K: Record-Alias fuer den geliehenen Gestenblock */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
@@ -32,6 +33,7 @@ re15_enemy_bank_t *re15_enemy_alloc(uint8_t type)
             g_enemy[i].xshift      = -1;
             g_enemy[i].pc_tex_slot = -1;
             g_enemy[i].pc_tex_slot_gore = -1;
+            re15_entladen_gegner_merken(i);   /* Runde 35 Spur I: Generation der Bank (re15_entladen.h) */
             return &g_enemy[i];
         }
     }
@@ -77,6 +79,8 @@ void re15_rbj_bind_room(const uint8_t *rbj, size_t size)
     memset(s_rbj_alias, 0, sizeof s_rbj_alias);   /* Runde 35 Spur L */
     for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++) { s_rbj_cache[i].slot = -1; s_rbj_cache[i].valid = 0; }
 }
+/* Runde 35 Spur I (N1-M2): die registrierte Raum-RBJ fuer das Elliot-Overlay beim Spawn (elliot_pc.c). */
+const uint8_t *re15_rbj_room(size_t *size) { if (size) *size = s_room_rbj_size; return s_room_rbj; }
 
 /* Marker-Wort des Records r (u32 @trailer[r].EMR_prefix — die 4 Bytes, die parse_rbj_record
  * mit prefix+4 ueberspringt). -1 = kein Record/kein RBJ. */
