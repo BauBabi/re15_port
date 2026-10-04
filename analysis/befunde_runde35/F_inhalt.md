@@ -381,6 +381,21 @@ Lauf 2 (nach der Umstellung, Stand dieses Commits): `=== LOCAL-BUILD-OK (all) �
 Grundlage: `analysis/befunde_runde35/F_abnahme_0.md` (bestanden = NEIN: P4 teilweise, P6 teilweise,
 M3 gering). Stand bei Beginn: HEAD ce1354a8.
 
+**Ergebnis je Mangel (Kurzfassung, Details unten):**
+- M1 BEHOBEN: 6 Lageplan-Weltobjekte belegt (Platzierung + Ausblenden im Ja-Zweig + Merkbit, RDT-
+  Offsets), 3 Meshes in `extracted_re2_items/` (karten.png, uebersicht.html, katalog.csv, neu
+  lageplaene.csv); room6120-Kandidat widerlegt (Aufnahme blendet nichts aus, obj 11 7560 abseits).
+  Nebenbefund behoben: Blockdateien scd/*.scd abgeschnitten -> Bloecke jetzt aus RDT+0x48/+0x4C
+  (@0x800535d4/@0x800535f4): 312 statt 269 Item-Platzierungen; Walker-Switch 0x13 = 4 (@0x80054040).
+- M2 BEHOBEN: Cut 7 unerreichbar selbst nachgeprueft (RVD-Zensus); die Karte steht jetzt aufrecht
+  (rot 896/128/3584) mit der Mitte weiter auf dem Cut-7-Markenstrahl; Cut 4 53 Diff-Pixel (vorher 11),
+  Cut 7 114 (vorher 56); echter Tuerweg zeigt sie neben Leon, Aufnahme klappt. Falsche Dossier-Aussage
+  korrigiert.
+- M3 BEHOBEN: Paarung nach der Kameraseite + Bildmass (H 290) — deckte auf, dass Punkt 1 an falschen
+  Paaren korrigiert hatte (S136/S157 37,1 Grad, S041 33,9 Grad); jetzt alle 12 Seiten <= 0,1 Grad und
+  <= 0,91 px, S041 gepinnt; V3-Rest 1 px war Tiefe (+260) des Archiv-Anhaengepunkts, jetzt 0,00 px,
+  exe-Balkenschwerpunkt 157,00/157,25.
+
 ### M1 (P6) — RE2-Lageplan-Weltmodelle
 
 **Ursache (gemessen).** Zwei Fehler im Extraktor, nicht nur die Auslegung von "Karten":
