@@ -68,7 +68,7 @@ function(fenster_lauf _name _karte_arg _skript _ende _out_log)
         message(FATAL_ERROR "r35_fenster[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_ok}")
     endif()
     re15_start_spiel(_rv 200
-        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=70
         "RE15_INPUT_SCRIPT=${_skript}"
