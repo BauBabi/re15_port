@@ -16,10 +16,12 @@
 #                               Pruefzeile des bash-Urteils eine Attrappe N10-N21 - Nachbesserung 1) muessen
 #                               ROT werden (r35_android/test_r35_android_pruefkette.sh; nur wenn bash da ist);
 #                               Nachbesserung 2: die Attrappen-Kontrollen stehen in r35_android/urteil_kontrollen.sh
-#                               (beide Seiten jeder Vergleichsstelle, set -euo pipefail)
+#                               (beide Seiten jeder Vergleichsstelle, set -euo pipefail); Nachbesserung 3: N26-N28 das
+#                               echte Urteil an der Grenze der Mindestzahlen 261/148 und der unzip-Zaehlung
 #   unit_r35_android_bash_mutanten  Punkt 3, Nachbesserung 2 (Abnahme 1, M3): jede Ein-Stellen-Aenderung des bash-Urteils
-#                               in release/apk_pruefen.sh (Operatoren A-H, r35_android/bash_urteil_mutanten.py) muss eine
-#                               Kontrolle aus urteil_kontrollen.sh rot machen - wie der Mutanten-Selbsttest des Python-Urteils
+#                               in release/apk_pruefen.sh (Operatoren A-I, r35_android/bash_urteil_mutanten.py; I = jedes
+#                               uebergebene Argument, Nachbesserung 3) muss eine Kontrolle aus urteil_kontrollen.sh rot
+#                               machen - wie der Mutanten-Selbsttest des Python-Urteils
 add_executable(test_r35_android_abgleich
     test_r35_android_abgleich.c
     ${CMAKE_SOURCE_DIR}/platform/android/jni/asset_abgleich.c)

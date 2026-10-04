@@ -116,7 +116,11 @@ Gradle-Seite (`app/build.gradle`):
 * **Urteil-Pin** (Runde 35, `analysis/befunde_runde35/N_android.md` Punkt 3): das Urteil ueber jeden
   Gate-Lauf steht in `release/gate_urteil.py` (vorher ungeprueft als Heredoc in apk_pruefen.sh),
   festgehalten in `release/gate_urteil.sha256` und vor jeder Nutzung selbstgeprueft (Stand
-  Nachbesserung 2): 280 feste Gate-Ausgaben mit Soll-Urteil (jede Vergleichsstelle von BEIDEN Seiten),
+  Nachbesserung 3): 777 feste Gate-Ausgaben mit Soll-Urteil - 285 handgeschriebene (jede Vergleichsstelle
+  von BEIDEN Seiten) und 492 ERZEUGTE Stoerungsfaelle (aus jeder guten Ausgabe: jede Zeile weg/doppelt,
+  jede Zahl -1/+1, Zusatzspalte hinter jeder Zahl, zwei Zahlen derselben Spalte gegenlaeufig; Soll nach
+  Regel "keine Aussage", Ausnahmen nur mit Grund in `UNGEPRUEFT`, deren Zahl (102) `apk_pruefen.sh` mit
+  `GATE_URTEIL_MAX_UNGEPRUEFT` begrenzt) -
   und Mutanten der Funktion `urteil()` - Vergleiche (`==`/`!=` durch jeden anderen Vergleich, also auch
   die einseitigen Lockerungen `!=` -> `<`/`>` und `==` -> `<=`/`>=`; `<`/`<=`/`>`/`>=` Grenze und
   Richtung), and/or, not, if-Bedingungen, ganze Zahlen, weggelassene Aufrufe (auch die Pruef-Anweisung
@@ -126,22 +130,30 @@ Gradle-Seite (`app/build.gradle`):
   weg): 894 Mutanten, 887 von einem Fall erkannt, 7 im Code als gleichwertig begruendet. Strukturregel:
   kein Meldungstext ruft eine Funktion des Urteils (eine Pruefung dort waere fuer die Mutanten
   unsichtbar). NICHT mutiert werden die Meldungstexte, `main()` und `urteil_rufen()`; Aenderungen
-  ausserhalb dieser Operatoren (z.B. `any` -> `all`) faengt nur die Fallsammlung (gemessen: 32 von 32
-  und 29 von 29 simulierten Aenderungen erkannt, `analysis/befunde_runde35/N_android_belege/
-  nb2_nb1_aenderungen_neu.txt` und `nb2_urteil_aenderungen_nachher.txt`). **Wer das Urteil aendert**,
-  schreibt fuer die neue Regel einen Fall (sonst ueberlebt ein Mutant = `URTEIL-SELBSTTEST-FEHLER`),
-  traegt dann die neue sha256 und ggf. `GATE_URTEIL_MIN_*` ein. Zusaetzlich gilt ein OK-Urteil nur mit
+  ausserhalb dieser Operatoren (z.B. `any` -> `all`, eine Variable durch einen anderen Ausdruck) faengt
+  die Fallsammlung samt Stoerungsfaellen: jede Aenderung, nach der das Urteil eine bisher gepruefte
+  Zeile, Zahl oder Spalte nicht mehr prueft, macht eine Stoerung zu "Urteil 0 (soll 2)" (gemessen: 32/32,
+  29/29 und 31/32 simulierte Aenderungen erkannt - die eine ist gleichwertig -, `analysis/befunde_runde35/
+  N_android_belege/nb2_nb1_aenderungen_neu.txt`, `nb2_urteil_aenderungen_nachher.txt`,
+  `nb3_urteil_aenderungen_nachher.txt`). **Wer das Urteil aendert**, schreibt fuer die neue Regel einen
+  Fall (sonst ueberlebt ein Mutant = `URTEIL-SELBSTTEST-FEHLER`) und traegt dann die neue sha256 ein;
+  `GATE_URTEIL_MIN_*` nur, wenn Faelle bzw. Mutationsstellen dazugekommen sind. Eine Regel entfernen
+  geht nur mit einer neuen begruendeten Ausnahme in `UNGEPRUEFT` UND einer hoeheren
+  `GATE_URTEIL_MAX_UNGEPRUEFT` - zwei sichtbare Zeilen. Zusaetzlich gilt ein OK-Urteil nur mit
   Rueckgabe 0 des Gates (zweite Instanz in `gate_laufen`).
   Das **bash-Urteil** in `apk_pruefen.sh` (gate_pin_pruefen, gate_urteil_pin_pruefen,
   gate_urteil_selbsttest, gate_festhalten, gate_urteil, gate_laufen) hat seine Kontrollen in
-  `re15_port/tests/unit/r35_android/urteil_kontrollen.sh` (87 Attrappen-Kontrollen, jede Vergleichsstelle
-  von beiden Seiten, unter `set -euo pipefail` wie die echten Aufrufer) und wird von ctest
-  `unit_r35_android_bash_mutanten` selbst mutiert (`bash_urteil_mutanten.py`: Vergleiche in `(( ))` mit
-  derselben Tabelle, `[[ ]]`, `grep -q`- und `=~`-Muster, `die` -> `true`, Zahlen, weggelassene
-  Pruef-Aufrufe, `return`; 220 Mutanten, 217 erkannt, 3 begruendet gleichwertig). **Wer dort eine
-  Pruefzeile aendert oder neu schreibt**, ergaenzt in `urteil_kontrollen.sh` eine Kontrolle, sonst
+  `re15_port/tests/unit/r35_android/urteil_kontrollen.sh` (102 Attrappen-Kontrollen, jede Vergleichsstelle
+  von beiden Seiten, die UEBERGABE an Urteil und Gate woertlich - Modus, Rueckgabe, Mindestzahlen,
+  unzip-Zaehlung, Ausgabe-Datei, `"$@"` -, unter `set -euo pipefail` wie die echten Aufrufer) und wird von
+  ctest `unit_r35_android_bash_mutanten` selbst mutiert (`bash_urteil_mutanten.py`: Vergleiche in `(( ))`
+  mit derselben Tabelle, `[[ ]]`, `grep -q`- und `=~`-Muster, `die` -> `true`, Zahlen, weggelassene
+  Pruef-Aufrufe, `return`, und jedes uebergebene Argument -> `""`/`0`/ein anderes Argument desselben
+  Aufrufs; 328 Mutanten, 325 erkannt, 3 begruendet gleichwertig). **Wer dort eine Pruefzeile oder eine
+  Argumentliste aendert oder neu schreibt**, ergaenzt in `urteil_kontrollen.sh` eine Kontrolle, sonst
   ueberlebt ein Mutant. ctest `unit_r35_android_pruefkette` faehrt die ganze Kette (echtes Gate +
-  Urteil + diese Kontrollen) bei jedem Suite-Lauf.
+  Urteil + diese Kontrollen, dazu das echte Urteil an der Grenze der Mindestzahlen 261/148 und der
+  unzip-Zaehlung) bei jedem Suite-Lauf.
 
 Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_ANDROID=ON`
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`
