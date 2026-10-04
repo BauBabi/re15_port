@@ -190,3 +190,7 @@ Unveraendert (schon >= 3000): 1010 Kriecher, 1220 @0x00F3E, Cut 4 beide, @0x00FC
 22/23), Flucht-Mindestabstand 3044/3514/3007/3005/3567/3083/3012/3005 >= 3000; STEHEN-Griff 1010 Cut 0
 48 -> 102, 1220 Cut 2 12 -> 96 (1221 ebenso); Spawn: 9 Saetze auf neuer Lage, 7 unveraendert,
 0 falsch. Gegenprobe A: ohne Tabelle 1220 Cut 2 gegriffen (Bild 12), 1010 Cut 0 Flucht-min 1546.
+Echte exe nachher (derselbe Tuerweg 1020 -> 1010, ohne Eingabe nach dem Eintritt): Spawn
+`[1 t=10 @(3750,3500,r3072)] [2 t=10 @(205,7248,r0)]` (state.log F1), Griff erst in Bild 107
+(vorher 53). Framedumps F20/F50/F80 nach dem Eintritt: `F_belege/p3_exe_1010_cut0_F20_F50_F80.png`
+(beide Zombies im Raum, laufen an; keiner in Wand/Moebel).
