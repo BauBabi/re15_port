@@ -232,7 +232,7 @@ Startlog: `[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen 
 | integration_r35_fenster | echte exe: Log der ganzen Kette + Framedump-Pixel vor/nach + Wiedereintritt |
 
 Suite (local_build.sh test, 2026-10-04): `=== LOCAL-BUILD-OK (test) — Tests 483/483` (478 + 5 neue),
-keine flatternden Fenster-Haken in diesem Lauf. Abschlusslauf `all` siehe Commit-Message.
+keine flatternden Fenster-Haken in diesem Lauf. Abschlusslauf: `=== LOCAL-BUILD-OK (all) — Tests 483/483`.
 
 ## OFFEN
 * RE2-Kraehen-State-4 Sub 0 (0x80103554) und Sub 1 (0x8010363c, Wegpunkte (-12500,-12852) /
