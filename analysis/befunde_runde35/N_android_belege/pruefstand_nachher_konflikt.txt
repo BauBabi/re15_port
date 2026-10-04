@@ -1,0 +1,91 @@
+== K1_ordner_wird_datei_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (12 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nic
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K1_ordner_wird_datei_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q/c
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (5 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht loe
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K1_ordner_wird_datei_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 13 Bytes unter <tmp>/nachher/konflikt/s_K1_ordner_wird_d
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K2_datei_wird_ordner_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nic
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K2_datei_wird_ordner_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (12 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/q
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (4 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht lo
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K2_datei_wird_ordner_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 12 Bytes unter <tmp>/nachher/konflikt/s_K2_datei_wird_or
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K3_ordner_auf_zwischendatei_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (13 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (13 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nic
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K3_ordner_auf_zwischendatei_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 1, neu 0, pruefen 0, weg 0
+     [android] Konflikt geraeumt: shared_assets/PSX/X.neu war ein Ordner auf dem Namen der Zwischendatei (1 Dateien darin) - entfernt
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (5 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Konflikte geraeumt, 0 nicht loe
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K3_ordner_auf_zwischendatei_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 13 Bytes unter <tmp>/nachher/konflikt/s_K3_ordner_auf_zw
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K4_datei_auf_ordnername_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K4_datei_auf_ordnername_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (12 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 0
+     [android] Konflikt geraeumt: shared_assets/PSX/q war eine Datei, wo ein Ordner hin muss (1 Dateien darin) - entfernt
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (4 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Konflikte geraeumt, 0 nicht loe
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K4_datei_auf_ordnername_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 12 Bytes unter <tmp>/nachher/konflikt/s_K4_datei_auf_ord
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K5_ordner_auf_dateiname_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 2 Dateien (8 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 2, weg 0
+     [android] Entpacken fertig (ohne Liste): 2 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K5_ordner_auf_dateiname_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 0
+     [android] Konflikt geraeumt: shared_assets/PSX/q war ein Ordner, wo die Datei hin muss (2 Dateien darin) - entfernt
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (5 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 1 Konflikte geraeumt, 0 nicht lo
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K5_ordner_auf_dateiname_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 13 Bytes unter <tmp>/nachher/konflikt/s_K5_ordner_auf_da
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K6_gross_klein_1_frisch (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K6_gross_klein_2_update (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Update): 3 Dateien (13 Bytes) - behalten 2, geaendert 0, neu 1, pruefen 0, weg 1
+     [android] entfernt (nicht mehr in der Liste): shared_assets/PSX/Q/c
+     [android] Entpacken fertig (Update): 3 geprueft, 1 kopiert (5 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 1 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht loe
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== K6_gross_klein_3_neustart (1280x720): EXIT=0 (soll 0)
+     [android] Assets aktuell (schneller Weg): 3 Dateien, 13 Bytes unter <tmp>/nachher/konflikt/s_K6_gross_klein (
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== L1_ordner_mit_neu_endung (1280x720): EXIT=1 (soll 1)
+     [android] FEHLER: assets/re15_assets.txt ungueltig (Zeile 3: unzulaessiger Pfad) - es wird NICHTS entpackt.
+     [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1280 H=720 x=298..976 y=240..282 s=6 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=1280 H=720 x=85..1190 y=420..455 s=5 'FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+== L2_datei_und_ordner_gleich (1280x720): EXIT=1 (soll 1)
+     [android] FEHLER: assets/re15_assets.txt ungueltig (Datei und Ordner gleichen Namens: shared_assets/PSX/q / shared_assets/psx/Q/c) - es wird NICHTS entpackt.
+     [android] ABBRUCH: FEHLER: ASSET-LISTE DER APK UNGUELTIG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1280 H=720 x=298..976 y=240..282 s=6 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=1280 H=720 x=85..1190 y=420..455 s=5 'FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ASSET-LISTE DER APK UNGUELTIG'
+== konflikt: alle Szenarien bestanden

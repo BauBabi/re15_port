@@ -288,6 +288,58 @@ static int liste_schreiben(const char *ziel, const char *text, size_t len)
 
 /* ------------------------------------------------------------------------------ Anzeige */
 
+/* Runde 35 Spur N (Befund E2-1, Dossier analysis/befunde_runde35/N_android.md Punkt 1). PORT-WAHL, kein
+ * Originalverhalten (die PSX hatte keinen Entpacker). Bis dahin kam die Schriftgroesse NUR aus der Hoehe (fs = H/108),
+ * die Breite des Textes (Zeichen x 6 x fs) wurde nie gegen W geprueft: auf 2400x1080 stand der 44-Zeichen-Titel bei
+ * x = -120 ("RE" und "FT" weg), die 57/58-Zeichen-Fehlertexte bei x = -339/-366 (gemessen im Pruefstand und auf dem
+ * Emulator der Runde 34a). Jetzt:
+ *   - seitlicher Rand 0.4u (u = H/12) - derselbe Randabstand wie die Bedienelemente des Ports
+ *     (touch_overlay_pc.c:175 Schultertasten bei 0.4u, gleiche Einheit u = H/12, touch_overlay_pc.c:151);
+ *   - Schrift = min(Hoehen-Groesse wie bisher, (W - 2 Rand) / (6 x Zeichen)): auf jedem Seitenverhaeltnis ganz im Bild;
+ *   - passt der Text selbst mit Skalierung 1 nicht (sehr schmale Ausgabe), wird er an Leerzeichen umbrochen
+ *     (Zeilenabstand 9 Pixel je Skalierung: Glyphe 7 hoch + 2 frei). Die Titelzeilen wachsen nach OBEN, die Zeile unter
+ *     dem Balken nach UNTEN - der Balken bleibt frei. */
+#define FORTSCHRITT_ZEILEN_MAX 6
+#define FORTSCHRITT_ZEILE_MAX  160                           /* l2 (fehler_halten/Fortschritt) ist char[160] */
+
+static void text_block(SDL_Renderer *r, int W, int rand, const char *s, int fs_max, int y, int nach_oben, Uint8 c)
+{
+    const int glyph = 6;                                     /* Vorschub je Zeichen in Skalierung 1 (touch_overlay_pc.c:483) */
+    int avail = W - 2 * rand;
+    int len = (int)strlen(s);
+    if (len <= 0 || avail < glyph) return;
+    int fs = avail / (glyph * len);
+    if (fs > fs_max) fs = fs_max;
+    if (fs >= 1) {
+        re15_touch_pc_text(r, (W - len * glyph * fs) / 2, y, fs, s, c, c, c, 255);
+        return;
+    }
+    int max_z = avail / glyph;                               /* Zeichen je Zeile bei Skalierung 1 */
+    char zeile[FORTSCHRITT_ZEILEN_MAX][FORTSCHRITT_ZEILE_MAX + 1];
+    int n = 0;
+    const char *p = s;
+    while (*p && n < FORTSCHRITT_ZEILEN_MAX) {
+        while (*p == ' ') p++;
+        int rest = (int)strlen(p);
+        if (rest == 0) break;
+        int k = rest <= max_z ? rest : max_z;
+        if (k < rest) {                                      /* am letzten Leerzeichen innerhalb der Zeile umbrechen */
+            int b = k;
+            while (b > 0 && p[b] != ' ') b--;
+            if (b > 0) k = b;
+        }
+        if (k > FORTSCHRITT_ZEILE_MAX) k = FORTSCHRITT_ZEILE_MAX;
+        memcpy(zeile[n], p, (size_t)k);
+        zeile[n][k] = '\0';
+        n++;
+        p += k;
+    }
+    for (int i = 0; i < n; i++) {
+        int yy = nach_oben ? y - (n - 1 - i) * 9 : y + i * 9;
+        re15_touch_pc_text(r, (W - (int)strlen(zeile[i]) * glyph) / 2, yy, 1, zeile[i], c, c, c, 255);
+    }
+}
+
 static void draw_progress(SDL_Renderer *r, const char *l1, const char *l2, double frac)
 {
     if (!r) return;
@@ -302,22 +354,22 @@ static void draw_progress(SDL_Renderer *r, const char *l1, const char *l2, doubl
 
     int u  = H / 12; if (u < 8) u = 8;
     int fs = u / 9;  if (fs < 2) fs = 2;
-    int tw1 = (int)strlen(l1) * 6 * fs;
-    re15_touch_pc_text(r, (W - tw1) / 2, H / 2 - 2 * u, fs, l1, 230, 230, 230, 255);
+    int rand = (int)(0.4f * (float)u);                       /* Runde 35 Spur N: Rand wie touch_overlay_pc.c:175 */
+    text_block(r, W, rand, l1, fs, H / 2 - 2 * u, 1, 230);
 
     int bx = W / 6, bw = W * 2 / 3, by = H / 2 - u / 2, bh = u;
     SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
     SDL_SetRenderDrawColor(r, 110, 110, 110, 255);
     { SDL_Rect o[4] = { { bx, by, bw, 3 }, { bx, by + bh - 3, bw, 3 }, { bx, by, 3, bh }, { bx + bw - 3, by, 3, bh } };
       for (int i = 0; i < 4; i++) SDL_RenderFillRect(r, &o[i]); }
-    if (frac < 0) frac = 0; if (frac > 1) frac = 1;
+    if (frac < 0) frac = 0;
+    if (frac > 1) frac = 1;
     SDL_SetRenderDrawColor(r, 200, 40, 40, 255);
     { SDL_Rect f = { bx + 5, by + 5, (int)((double)(bw - 10) * frac), bh - 10 };
       if (f.w > 0) SDL_RenderFillRect(r, &f); }
 
     int fs2 = (fs > 2) ? fs - 1 : fs;
-    int tw2 = (int)strlen(l2) * 6 * fs2;
-    re15_touch_pc_text(r, (W - tw2) / 2, by + bh + u / 2, fs2, l2, 200, 200, 200, 255);
+    text_block(r, W, rand, l2, fs2, by + bh + u / 2, 0, 200);
 
     SDL_RenderPresent(r);
     SDL_RenderSetLogicalSize(r, lw, lh);
@@ -361,6 +413,27 @@ static void waise_melden(void *ctx, const char *rel, int ok)
         int err = errno;
         fprintf(stderr, "[android] WARNUNG: Waise nicht loeschbar: %s (%s)\n", rel, strerror(err));
         LOGE("[android] Waise nicht loeschbar: %s (%s)", rel, strerror(err));
+    }
+}
+
+/* Runde 35 Spur N (F-Y4/H8): re15_abgleich_weg_frei meldet jeden geraeumten Konflikt (Datei <-> Ordner gleichen Namens).
+ * ctx zaehlt die geraeumten. Nicht raeumbar = Fehler des Laufs (fail closed wie jeder Dateifehler). */
+static void konflikt_melden(void *ctx, const char *rel, int art, long n_dateien, int ok)
+{
+    static const char *const was[] = { "?", "eine Datei, wo ein Ordner hin muss",
+                                       "ein Ordner, wo die Datei hin muss",
+                                       "ein Ordner auf dem Namen der Zwischendatei" };
+    const char *w = (art >= 1 && art <= 3) ? was[art] : was[0];
+    if (ok) {
+        char inhalt[48] = "";
+        if (art != RE15_KONFLIKT_ELTER_DATEI) snprintf(inhalt, sizeof inhalt, " mit %ld Dateien darin", n_dateien);
+        if (ctx) (*(long *)ctx)++;
+        fprintf(stderr, "[android] Konflikt geraeumt: %s war %s%s - entfernt\n", rel, w, inhalt);
+        LOGI("[android] Konflikt geraeumt: %s war %s%s - entfernt", rel, w, inhalt);
+    } else {
+        int err = errno;
+        fprintf(stderr, "[android] FEHLER: Konflikt nicht raeumbar: %s ist %s (%s)\n", rel, w, strerror(err));
+        LOGE("[android] Konflikt nicht raeumbar: %s ist %s (%s)", rel, w, strerror(err));
     }
 }
 
@@ -487,6 +560,7 @@ void re15_android_bootstrap_assets(void)
     const size_t BUF = 1u << 20;
     char *buf = (char *)malloc(BUF);
     long n_kopiert = 0, n_summe = 0, n_summe_neu = 0, n_fehler = 0, n_reste = 0, n_weg = 0;
+    long n_konflikt = 0, n_weg_fehler = 0;                /* Runde 35 Spur N */
     long long b_kopiert = 0, b_summe = 0, done_b = 0;
     Uint32 ms_summe = 0, ms_kopie = 0, last_draw = 0;
     char l2[160];
@@ -496,10 +570,25 @@ void re15_android_bootstrap_assets(void)
      * s_root). Erst danach entpacken: der App-Speicher ist case-insensitiv (Dossier N1, 1.3) - stuende "a/X.BIN"
      * nur in der alten und "a/x.bin" in der neuen Liste, loeschte ein unlink NACH dem Entpacken die frische
      * Datei (Dossier N1, 2.5). */
+    /* Runde 35 Spur N: danach leer gewordene Ordner weg (H8: Ordner q/ mit c wird Datei q - der leere Ordner q/ liess
+     * das rename scheitern), und ein Fehler wird nicht mehr verschluckt (F-Y6): liegt dort ein Ordner, raeumt ihn
+     * re15_abgleich_weg_frei; sonst WARNUNG mit Grund (wie re15_abgleich_waisen - die Datei steht in keiner Liste). */
     for (size_t j = 0; j < plan.n_weg; j++) {
         if (pfad_bauen(dst, sizeof dst, plan.weg[j], NULL) != 0) continue;
-        if (unlink(dst) == 0) {
+        int ok = unlink(dst) == 0;
+        if (!ok && errno != ENOENT) {
+            int err = errno;
+            ok = re15_abgleich_weg_frei(s_root, plan.weg[j], konflikt_melden, &n_konflikt) == 0 && access(dst, F_OK) != 0;
+            if (!ok) {
+                n_weg_fehler++;
+                fprintf(stderr, "[android] WARNUNG: nicht mehr gelistet, aber nicht loeschbar: %s (%s)\n", plan.weg[j],
+                        strerror(err));
+                LOGE("[android] nicht mehr gelistet, aber nicht loeschbar: %s (%s)", plan.weg[j], strerror(err));
+            }
+        }
+        if (ok) {
             n_weg++;
+            re15_abgleich_leere_eltern(s_root, plan.weg[j]);
             fprintf(stderr, "[android] entfernt (nicht mehr in der Liste): %s\n", plan.weg[j]);
             LOGI("[android] entfernt (nicht mehr in der Liste): %s", plan.weg[j]);
         }
@@ -539,7 +628,9 @@ void re15_android_bootstrap_assets(void)
         }
         if (tun == RE15_TUN_ENTPACKEN) {
             Uint32 tk = SDL_GetTicks();
-            if (entpacken(am, e, dst, tmp, buf, BUF) == 0) { n_kopiert++; b_kopiert += e->groesse; }
+            /* Runde 35 Spur N (F-Y4/H8): Datei <-> Ordner gleichen Namens auf dem Weg im SELBEN Start raeumen */
+            if (re15_abgleich_weg_frei(s_root, e->pfad, konflikt_melden, &n_konflikt) != 0) n_fehler++;
+            else if (entpacken(am, e, dst, tmp, buf, BUF) == 0) { n_kopiert++; b_kopiert += e->groesse; }
             else n_fehler++;
             ms_kopie += SDL_GetTicks() - tk;
         }
@@ -567,14 +658,14 @@ void re15_android_bootstrap_assets(void)
     Uint32 ms = SDL_GetTicks() - t0;
     fprintf(stderr, "[android] Entpacken fertig (%s): %zu geprueft, %ld kopiert (%lld B, %u ms), %ld per SHA-256 geprueft "
                     "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld Waisen entfernt (%ld nicht loeschbar), "
-                    "%ld .neu-Reste, %ld Fehler, %u ms\n",
+                    "%ld .neu-Reste, %ld Konflikte geraeumt, %ld nicht loeschbar, %ld Fehler, %u ms\n",
             modus, neu.n, n_kopiert, b_kopiert, (unsigned)ms_kopie, n_summe, b_summe, (unsigned)ms_summe, n_summe_neu,
-            n_weg, n_waisen, n_waisen_fehler, n_reste, n_fehler, (unsigned)ms);
+            n_weg, n_waisen, n_waisen_fehler, n_reste, n_konflikt, n_weg_fehler, n_fehler, (unsigned)ms);
     LOGI("[android] Entpacken fertig (%s): %zu geprueft, %ld kopiert (%lld B, %u ms), %ld per SHA-256 geprueft "
          "(%lld B, %u ms, %ld abweichend), %ld entfernt, %ld Waisen entfernt (%ld nicht loeschbar), "
-         "%ld .neu-Reste, %ld Fehler, %u ms",
+         "%ld .neu-Reste, %ld Konflikte geraeumt, %ld nicht loeschbar, %ld Fehler, %u ms",
          modus, neu.n, n_kopiert, b_kopiert, (unsigned)ms_kopie, n_summe, b_summe, (unsigned)ms_summe, n_summe_neu,
-         n_weg, n_waisen, n_waisen_fehler, n_reste, n_fehler, (unsigned)ms);
+         n_weg, n_waisen, n_waisen_fehler, n_reste, n_konflikt, n_weg_fehler, n_fehler, (unsigned)ms);
     re15_abgleich_plan_frei(&plan);
     re15_abgleich_frei(&alt);
     re15_abgleich_frei(&neu);

@@ -25,7 +25,9 @@
  *   - Pfad: 1-512 Bytes, relativ, mindestens ein '/' (Assets liegen nie direkt im Speicherordner -
  *     dort liegen Logs, Spielstand und diese Listen), NUR druckbares ASCII 0x20-0x7e (also keine
  *     Steuerzeichen, kein 0x7f, kein Byte >= 0x80), kein '\\', jedes Segment 1-251 Bytes und nicht
- *     '.'/'..', endet nicht auf ".neu" (ASCII, Gross/klein egal: Endung der Zwischendatei).
+ *     '.'/'..', KEIN Segment endet auf ".neu" (ASCII, Gross/klein egal: Endung der Zwischendatei; bis Runde 35 nur
+ *     der ganze Pfad - Regel R1, siehe re15_abgleich_weg_frei unten).
+ *   - kein Pfad ist zugleich Ordner eines anderen ("a/q" und "a/q/c", ASCII-Gross/klein egal; Regel R2, Runde 35).
  *     Nachbesserung R4-1 (Gegenpruefung H5/U3): bis dahin war jedes wohlgeformte UTF-8 erlaubt - der
  *     App-Speicher faltet aber Unicode-Gross/klein, NFC/NFD und 'ss'/U+00DF (Emulator API 36:
  *     Kelvin-Zeichen/K je EINE Datei), NTFS nicht; ein solches Paar wurde auf dem Geraet still eine
@@ -136,6 +138,33 @@ int  re15_abgleich_tun(int aktion, long long groesse_ist, long long groesse_soll
 long re15_abgleich_waisen(const char *wurzel, const char *const *baeume, size_t n_baeume,
                           const re15_abgleich_liste_t *l,
                           void (*melde)(void *ctx, const char *rel, int ok), void *ctx, long *n_fehler);
+
+/* ---------------------------------------------------------------------------- Weg frei (Runde 35 Spur N, F-Y4/H8) */
+/* Datei <-> Ordner gleichen Namens im SELBEN Start heilen (Dossier analysis/befunde_runde35/N_android.md Punkt 2).
+ * Bis dahin brach ein Update ab, wenn auf dem Weg einer Datei etwas mit falschem Typ lag (Ordner auf dem Zielnamen,
+ * Datei auf einem Ordnernamen, Ordner auf dem Namen der Zwischendatei <ziel>.neu), und erst der naechste Start (ohne
+ * Liste -> Waisen-Lauf) stellte den Stand her - bei <ziel>.neu nie.
+ * Sicher, weil der Leser zwei Regeln erzwingt (re15_abgleich_lesen, gleich im Gate und in build.gradle):
+ *   R1  kein Segment endet auf ".neu" (bis dahin nur der ganze Pfad) -> ein Ordner <ziel>.neu traegt nie Gelistetes;
+ *   R2  kein Pfad ist zugleich Ordner eines anderen (ASCII-Gross/klein egal) -> ein Ordner auf einem Dateinamen und eine
+ *       Datei auf einem Ordnernamen tragen nie Gelistetes.
+ * re15_abgleich_weg_frei: vor dem Schreiben von <wurzel>/<rel> (rel nach re15_abgleich_pfad_ok)
+ *   - ein Elternsegment, das es gibt, das aber kein echter Ordner ist (Datei, Symlink, ...)  -> unlink
+ *   - <rel>.neu ist ein echter Ordner                                                       -> samt Inhalt loeschen
+ *   - <rel> ist ein echter Ordner                                                           -> samt Inhalt loeschen
+ *   Symlinks werden nie verfolgt (nur der Link selbst geloescht). melde(ctx, rel_des_konflikts, art, n_dateien, ok) je
+ *   Konflikt (darf NULL sein). 0 = Weg frei, -1 = ein Konflikt liess sich nicht raeumen (oder rel unzulaessig). */
+enum {
+    RE15_KONFLIKT_ELTER_DATEI = 1,   /* Datei (o.ae.) liegt auf einem Ordnernamen des Pfads */
+    RE15_KONFLIKT_ZIEL_ORDNER = 2,   /* Ordner liegt auf dem Dateinamen */
+    RE15_KONFLIKT_NEU_ORDNER  = 3    /* Ordner liegt auf dem Namen der Zwischendatei <rel>.neu */
+};
+int  re15_abgleich_weg_frei(const char *wurzel, const char *rel,
+                            void (*melde)(void *ctx, const char *rel, int art, long n_dateien, int ok), void *ctx);
+
+/* Nach dem Loeschen von <wurzel>/<rel>: leer gewordene Elternordner entfernen (rmdir, nur wenn leer), hoechstens bis
+ * unter das erste Segment (der Baum selbst bleibt, wie bei re15_abgleich_waisen). Rueckgabe: Zahl entfernter Ordner. */
+long re15_abgleich_leere_eltern(const char *wurzel, const char *rel);
 
 #ifdef __cplusplus
 }

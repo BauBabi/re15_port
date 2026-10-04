@@ -170,6 +170,14 @@ void SDL_RenderPresent(SDL_Renderer *r)
                     k->y1);
         }
     }
+    /* Geometrie je Zeile, wenn sich der Bildinhalt gegenueber dem vorigen Bild aendert (Beleg der gewaehlten Skalierung) */
+    static char s_vorher[2048];
+    if (strcmp(s_vorher, s_letzter_text) != 0) {
+        for (int i = 0; i < s_zn; i++)
+            fprintf(stderr, "PRUEFSTAND-ZEILE W=%d H=%d x=%d..%d y=%d..%d s=%d '%s'\n", s_w, s_h, s_zk[i].x0, s_zk[i].x1,
+                    s_zk[i].y0, s_zk[i].y1, (s_zk[i].y1 - s_zk[i].y0) / 7, s_zt[i]);
+        snprintf(s_vorher, sizeof s_vorher, "%s", s_letzter_text);
+    }
     s_bilder++;
     if (aus) s_bilder_ausserhalb++;
     if (ueber) s_bilder_ueberlappung++;

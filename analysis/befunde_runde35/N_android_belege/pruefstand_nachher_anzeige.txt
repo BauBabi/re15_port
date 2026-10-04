@@ -1,0 +1,254 @@
+== A_2400x1080_uebergang (2400x1080): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 15 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_2400x1080_dateifehler (2400x1080): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=2400 H=1080 x=630..1760 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_2400x1080_liste (2400x1080): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_2400x1080/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=2400 H=1080 x=630..1760 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=2400 H=1080 x=156..2238 y=630..672 s=6 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2400 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_1920x1080_uebergang (1920x1080): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_1920x1080_dateifehler (1920x1080): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1920 H=1080 x=390..1520 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_1920x1080_liste (1920x1080): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_1920x1080/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1920 H=1080 x=390..1520 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=1920 H=1080 x=90..1825 y=630..665 s=5 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1920 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_1280x720_uebergang (1280x720): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_1280x720_dateifehler (1280x720): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1280 H=720 x=298..976 y=240..282 s=6 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_1280x720_liste (1280x720): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_1280x720/re15_assets_entpackt.txt nicht loeschbar (Permission den
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1280 H=720 x=298..976 y=240..282 s=6 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=1280 H=720 x=118..1159 y=420..441 s=3 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1280 H=720 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_2560x1080_uebergang (2560x1080): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_2560x1080_dateifehler (2560x1080): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=2560 H=1080 x=710..1840 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_2560x1080_liste (2560x1080): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_2560x1080/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=2560 H=1080 x=710..1840 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=2560 H=1080 x=62..2491 y=630..679 s=7 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=2560 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_3200x1440_uebergang (3200x1440): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_3200x1440_dateifehler (3200x1440): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=3200 H=1440 x=859..2328 y=480..571 s=13 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_3200x1440_liste (3200x1440): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_3200x1440/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=3200 H=1440 x=859..2328 y=480..571 s=13 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=3200 H=1440 x=208..2984 y=840..896 s=8 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3200 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_3840x1080_uebergang (3840x1080): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_3840x1080_dateifehler (3840x1080): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=3840 H=1080 x=1350..2480 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_3840x1080_liste (3840x1080): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_3840x1080/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=3840 H=1080 x=1350..2480 y=360..430 s=10 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=3840 H=1080 x=354..3477 y=630..693 s=9 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=3840 H=1080 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_5120x1440_uebergang (5120x1440): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_5120x1440_dateifehler (5120x1440): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=5120 H=1440 x=1819..3288 y=480..571 s=13 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_5120x1440_liste (5120x1440): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_5120x1440/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=5120 H=1440 x=1819..3288 y=480..571 s=13 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=5120 H=1440 x=472..4636 y=840..924 s=12 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=5120 H=1440 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_800x480_uebergang (800x480): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_800x480_dateifehler (800x480): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=800 H=480 x=172..624 y=160..188 s=4 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_800x480_liste (800x480): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_800x480/re15_assets_entpackt.txt nicht loeschbar (Permission deni
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=800 H=480 x=172..624 y=160..188 s=4 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=800 H=480 x=52..746 y=280..294 s=2 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=800 H=480 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_1080x2400_uebergang (1080x2400): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_1080x2400_dateifehler (1080x2400): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1080 H=2400 x=84..988 y=800..856 s=8 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_1080x2400_liste (1080x2400): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_1080x2400/re15_assets_entpackt.txt nicht loeschbar (Permission de
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=1080 H=2400 x=84..988 y=800..856 s=8 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=1080 H=2400 x=192..886 y=1400..1414 s=2 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=1080 H=2400 zeilen=2 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_320x240_uebergang (320x240): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_320x240_dateifehler (320x240): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 16 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nich
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=320 H=240 x=46..272 y=80..94 s=2 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_320x240_liste (320x240): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_320x240/re15_assets_entpackt.txt nicht loeschbar (Permission deni
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=320 H=240 x=46..272 y=80..94 s=2 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=320 H=240 x=16..303 y=140..147 s=1 'FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=320 H=240 zeilen=3 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== A_160x120_uebergang (160x120): EXIT=0 (soll 0)
+     [android] Abgleich (Uebergang v0.8.19): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] Entpacken fertig (Uebergang v0.8.19): 3 geprueft, 3 kopiert (12 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt,
+     PRUEFSTAND: SPIELSTART (bootstrap_assets kehrte zurueck)
+== A_160x120_dateifehler (160x120): EXIT=1 (soll 1)
+     [android] Abgleich (ohne Liste): 3 Dateien (12 Bytes) - behalten 0, geaendert 0, neu 0, pruefen 3, weg 0
+     [android] FEHLER beim Entpacken: shared_assets/PSX/weg.bin fehlt in der APK
+     [android] Entpacken fertig (ohne Liste): 3 geprueft, 2 kopiert (8 B, 0 ms), 0 per SHA-256 geprueft (0 B, 0 ms, 0 abweichend), 0 entfernt, 0 Waisen entfernt (0 nicht loeschbar), 0 .neu-Reste, 0 Konflikte geraeumt, 0 nicht
+     [android] ABBRUCH: 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=160 H=120 x=23..136 y=40..47 s=1 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 5 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER 1 DATEIEN KONNTEN NICHT ENTPACKT WERDEN - SIEHE DEBUG.LOG'
+== A_160x120_liste (160x120): EXIT=1 (soll 1)
+     [android] FEHLER: <tmp>/nachher/anzeige/s_l_160x120/re15_assets_entpackt.txt nicht loeschbar (Permission deni
+     [android] ABBRUCH: FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG - das Spiel startet nicht (die Meldung bleibt, bis die App geschlossen wird)
+     PRUEFSTAND-ZEILE W=160 H=120 x=23..136 y=40..47 s=1 'RE1.5 PORT - FEHLER'
+     PRUEFSTAND-ZEILE W=160 H=120 x=8..151 y=70..77 s=1 'FEHLER: ALTE ASSET-LISTE'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND-BILD W=160 H=120 zeilen=4 ausserhalb=0 ueberlappung=0 text='RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+     PRUEFSTAND: Ende, 3 Bilder (0 mit Text/Rechteck ausserhalb, 0 mit Ueberlappung), letzte Anzeige 'RE1.5 PORT - FEHLER FEHLER: ALTE ASSET-LISTE NICHT LOESCHBAR - SIEHE DEBUG.LOG'
+== anzeige: alle Szenarien bestanden
