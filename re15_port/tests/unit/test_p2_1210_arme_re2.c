@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>    /* Runde 35 Spur H NB3: Strahl-/Abstandspruefung (4d) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -201,10 +202,17 @@ int main(void)
         re15_re2arm_hand_parts(a5, h2, NULL);   /* B4 P0 rief keinen Advance: die Parts sind die Pin-Quelle */
         printf("  Griff-Bild %d: pl=(%ld,%ld) Hand=(%ld,%ld) Standpunkt davor=(%ld,%ld)\n", grab_f,
                (long)pl->x, (long)pl->z, (long)h2[0], (long)h2[2], (long)stand_x, (long)stand_z);
-        CHECK("(4d) Spieler an die Hand teleportiert (PL.x/z := part[Hand]+0x5C/+0x64 @0x80100C18-38), Victim-Modus 4, Riegel gesetzt",
+        /* Runde 35 Spur H, Nachbesserung 3: nach dem Pin schiebt der Spieler-Pass FUN_800355C4 (@0x80026628)
+         * im selben Bild mit FUN_80034D0C aus dem Arm-Segment r 800 (@0x80100338-3C) + 450 (@0x8003bdc0-c4):
+         * Leon steht auf dem Strahl Ursprung -> Hand, 1251 vom Ursprung (RE2-RAM: 1251..1252 in 12 Griffen). */
+        double hx = h2[0] - arm->x, hz = h2[2] - arm->z, lx = pl->x - arm->x, lz = pl->z - arm->z;
+        double ld = sqrt(lx * lx + lz * lz), kreuz = (hx * lz - hz * lx) / (sqrt(hx * hx + hz * hz) * ld + 1e-9);
+        printf("  Pin->Push: Leon %.0f vom Arm-Ursprung, Strahl-Abweichung sin %.4f\n", ld, kreuz);
+        CHECK("(4d) Spieler an die Hand teleportiert (PL.x/z := part[Hand]+0x5C/+0x64 @0x80100C18-38) und im selben Bild "
+              "per FUN_80034D0C auf 1251 vom Arm-Ursprung geschoben (Strahl durch die Hand), Victim-Modus 4, Riegel gesetzt",
               re15_player_is_grabbed() && re15_player_victim_state() == 4 &&
               (pl->re2z_self1d3 & 0x80u) && re15_re2arm_holder_slot() == a5 &&
-              labs(pl->x - h2[0]) <= 60 && labs(pl->z - h2[2]) <= 60);
+              fabs(ld - 1251.0) <= 1.5 && fabs(kreuz) < 0.01);
         {   int32_t cx = pl->x, cz = pl->z; re15_collision_constrain(&s_rdt, stand_x, stand_z, &cx, &cz);
             printf("  Teleport-Constrain-Versatz = (%ld,%ld)\n", (long)(cx - pl->x), (long)(cz - pl->z));
             CHECK("(8) der Teleport-Punkt ist begehbar (Constrain vom Standpunkt davor = 0 Versatz)",
