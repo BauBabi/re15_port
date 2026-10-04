@@ -434,9 +434,10 @@ Der Riegel protokollierte das nur.
   nirgends gespeichert.
 * **Die Hand-Bahn haengt nicht an Leons Blick.** Im ganzen Overlay greifen nur @0x8010130C und @0x80101318 auf
   Offset 118 (+0x76) zu (beide im Hook, auf PL). Der Arm liest PL.x/z (0x800CFC30/0x800CFC38) nur vor dem Griff
-  (@0x80100028, 0x80100520-54, 0x801007B8, 0x801008DC-E4, 0x801009B0, 0x80100B04-0C) und schreibt sie im Pin
+  (0x80100520-54, 0x801007B8, 0x801008DC-E4, 0x801009B0, 0x80100B04-0C) und schreibt sie im Pin
   (@0x80100C20/38). B4 P1 (Halten, @0x80100CB4-0x80100D68) = Vibration, SE, `jal 0x8002959c` @0x80100D18,
-  `jal 0x8001598c` (Schuettel-Zaehler) — kein Bezug auf Leons Lage.
+  `jal 0x8001598c` (Schuettel-Zaehler) — kein Bezug auf Leons Lage. (Die Wurzel @0x80100018-38 uebergibt &PL.x
+  jedes Bild an den Navigator `jal 0x8004a808` — der fuehrt Sicht-/Wegfelder, die B4 P1 nicht liest.)
 => Im RE2-Original ist der Ruecken-Griff zwingend der Gesicht-Griff mit Leon um seine Wurzel (= Pin-Punkt =
 Hand) um 180 Grad gedreht: gleiche Hand-Bahn (Arm-Clip 5), gleiche Leon-Pose relativ zu seinem Blick (Opfer-
 Clip 0), Brust an der Wurzel gespiegelt. Die Abnahme-Zahl (11 von 19 < 120) ist damit die geometrische Folge
@@ -455,5 +456,11 @@ pcsx-redux (Skill re15-pcsx-watchpoint); Arme = EM2D im RE2-Raum der Gitterhaend
 einem Arm vorbei so laufen, dass `((Arm.yaw - PL.yaw + 0x400) & 0xFFF) < 0x800` (FUN_80015910 @0x80015910-2C),
 dann PL+0x38/+0x40/+0x76 und den Bildschirm im Halten vergleichen. Nach der Konstruktion oben muss das Bild
 dieselbe Ueberschneidung zeigen.
+
+**Messung nachher (Riegel, gebaut):** `unit_r35_raeume_arme` gruen — Gesicht: 44 Halte-Bilder, 0 mit Hand < 120,
+Minimum 170; Ruecken: 24 von 44 < 120, Minimum 5; **(4) 44 Bilder verglichen, Blick 57 / 2105 (= +2048),
+Hand-Abweichung max 0, Spiegel-Abweichung max 2** -> (4a) (4b) (4c) ok. Die Ueberschneidung im Ruecken-Griff ist
+also exakt die an Leons Wurzel gespiegelte Brust des sauberen Gesicht-Griffs bei unveraenderter Hand-Bahn —
+das, was die RE2-Konstruktion vorschreibt.
 
 (in Arbeit)
