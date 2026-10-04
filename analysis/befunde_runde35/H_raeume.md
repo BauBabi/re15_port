@@ -214,7 +214,8 @@ Slot 2 laeuft bis F380 auf Band 1, betritt die Kante (Zelle 13) -> F380 y -1810,
 0x000F = exakt -10 + 20*t; danach geht er Leon auf der Spieler-Ebene an (Sub 3/5 Griff). Im Bild sieht man
 ihn von der Schrankoberkante herunterfallen und neben Leon landen.
 RE2 (Default-Geschmack): Slot 2 erreicht die Kante spaeter (der RE2-Zombie steht zuerst am Rand und beisst
-nach unten, Sub 14), faellt bei F~680 und geht auf y=0 weiter (`p3_nachher_re2_F300-650.png`, Log).
+nach unten, Sub 14), faellt bei F~680 und geht auf y=0 weiter (`p3_nachher_re2_F300-650.png`, Log) — das galt
+nur, wenn Leon sich entfernt; bleibt er direkt unter der Kante, stand der Zombie bis Nachbesserung 1 oben (M1).
 
 ### 3.5 Test
 `unit_r35_raeume_trage` (tests/unit/test_r35_raeume_trage.c): (A) Funktion an den echten ROOM1200-Zellen —
