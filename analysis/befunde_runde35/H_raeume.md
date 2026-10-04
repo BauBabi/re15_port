@@ -331,3 +331,13 @@ begrenzt, weil dog_floor_y bei RE2-Spinne (0x25, ROOM2030/2050/2060/20A0 Band 2-
    Funktion, je eine Zeile in der jeweiligen Wurzel; nicht Teil dieser Spur.
 5. **Zielscheiben, zweite Raetsel-Variante** ((3,112)=1, nur aus ROOM1241 @0x055E): dort waeren Scheibe 1+3
    die Loesung; die Texte bleiben nach Nutzer-Vorgabe fest auf 0+2 = viele.
+
+---
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-04)
+
+Maengel aus `H_abnahme_0.md`: M1 (P3 Bahren-Zombie bleibt unter RE2-KI in der Nutzerlage oben stehen),
+M2 (P4 Ruecken-Griff clippt), M3 (veraltete Kommentare enemy_ai_common.c:214/:10695), M4 (P4 RE1.5-KI der
+Gitterarme ungeprueft). Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher.
+
+(in Arbeit)
