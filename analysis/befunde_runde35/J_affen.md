@@ -1333,3 +1333,69 @@ T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 1
    (100,0,0) im Knochenraum** (x 1.7 ueber die skalierte Wurzelmatrix). Der Port nahm die Pose NACH dem Vorschub in T
    (zwei Bilder voraus), die Lage NACH bf50 in T und keinen Versatz (`re15_maggot_bone_square`, "dokumentierter Rest").
    Damit trifft der Port 1-2 Clip-Bilder frueher; vor (9) sogar noch eines frueher, was die fehlende A/B-Folge ausglich.
+- **KORREKTUR der Bildzuordnung (gemessen an den Lagen, nicht vermutet):** die Port-Zeile S f entspricht der GDB-Zeile F f
+  (Startzustand = Zeile F195: e1 c5/10 (-5525,-14883); Port S196 = Zeile F196 c5/11). Der HP-Wechsel steht in der Zeile
+  NACH dem Treffer-Tick; Port-Treffer f und Original-HP-Zeile f sind also direkt vergleichbar. Die `takt`-Soll-Liste
+  (218, 268, ...) ist um 1 kleiner — HEAD lag damit bei e1 schon im ersten Biss 1 Bild ZU FRUEH (218 statt 219).
+  Original-Trefferzeilen: **219, 269, 322, 372, 425, 476, 528, 580, 631, 684, 734, 788, 837, 892**.
+- **Dritte Port-Abweichung (gemessen nach (10)/(11), `jnb4/takt_spur_n4a.txt`, Vergleich `jnb4/cmp.py`):** e2 kriecht nach
+  dem Biss-Ende (Clip 0x12 -> 5) im Original sofort weiter (T384 -> T387: (-9087) -> (-9142) -> (-9223) -> (-9312)), im
+  Port stand er (Fusssperre uebersprang das Clip-Wechsel-Bild, s_prev_clip) und lief dann rueckwaerts (+9, +19); Ruhelage
+  40-73 daneben. Das sind OFFEN 3/4 von Nachbesserung 3. Beleg: FUN_8001f3bc mischt bei +0x8f != 0 die gespeicherten
+  Pool-Winkel mit dem Keyframe (FUN_80020510 + LoadAverageShort12, Gewicht alt = 0x200 * frac, Decompilat Z. 77-88;
+  Wurzel GPF12/GPL12 Z. 40-61), +0x8f-- erst danach (Z. 78); Rate = a3 der Gorilla-anim_set-Aufrufe (`ori a3,zero,0x200`
+  @0x80118320), von FUN_8001f314 als 5. Argument weitergereicht (`sll v0,a3,16` / `sw v0,16(sp)` @0x8001f380-88).
+  FUN_8011bf50 kettet +0x20 mit DIESEN Pool-Matrizen (Ziel immer der Stapel sp+16, `addiu a2,sp,16` @0x8011bf6c, kein
+  Pool-Schreiben; c024 ebenso @0x8011c054-b8) und zieht `lw a0,84(s0)` / `lw a0,92(s0)` (@0x8011bfd8 / @0x8011bff8) ab =
+  Welt-t des Zeichners aus dem Vortick. +0x20 wird nur in FUN_8001e8c8 aus +0x68 gebaut (RotMatrix), seine t-Spalte IST
+  +0x34..+0x3c -> neue Lage = Zeichenlage - R(Yaw des Zeichners)*S*(Kette jetzt - Kette gezeichnet).
+  Gegenprobe "frac nach dem Abbau" (Experiment, verworfen): Bissclip-Schritte T206-T210 weiter vom Original weg
+  (-31/-64/-84/-96/-105 statt Port -17/-63/-94/-112/-113, Original -19/-71/-97/-123/-121).
+
+### N2 — Umsetzung (Dateien, Konstanten mit Beleg)
+- `re15_port/engine/src/affen_11c0.c` (neu, Abschnitt (11)/(12)): `re15_affen_pool_anim` (Pool je Gorilla-Slot:
+  Schatten-Aktor fuer re15_skel_compute_pose mit +0x8f VOR dem Abbau, Rate 0x200 @0x80118320 / @0x8001f380-88),
+  `re15_affen_zeichen_merk` (Kette/Lage/Yaw am Anfang des Gorilla-Ticks = Stand der Zeichen-Schleife @0x8001d108),
+  `re15_affen_fusssperre` (Zeichenlage - R*S*(jetzt - gezeichnet), @0x8011bf80-c008), `re15_affen_trefferpunkt`
+  (gezeichnete Knochenmatrix * (I | a1), a1 = (0x64,0,0) nur B[5] Knochen 9 @0x80118380-84, sonst 0x80072d60 = 0;
+  @0x8001c078).
+- `re15_port/include/re15_affen.h`: Abschnitte (10), (11), (12).
+- `re15_port/engine/src/enemy_ai_common.c` (Haken, je 1-2 Zeilen, Kommentar "Runde 35 Spur J (10)/(11)/(12)"):
+  - (10) `int ab_nur_b = 0, ab = 0;` + Marke `ab_b:` vor dem Sub-Schalter; jeder A-Wechsel (A[0] 3x, A[1] 3x, A[3]
+    Biss/Rear-up + Fern->4, A[4] ->3/->6/Zonen-Sprung/Fern-Sprung) setzt `ab = 1`; `if (ab_nur_b) goto b3;` /
+    `goto b4;` (Marken vor B[3]/B[4]), A[15] mit `!ab_nur_b`; nach dem Schalter
+    `if (ab && !ab_nur_b && e->state == 1) { ab_nur_b = 1; goto ab_b; }` (@0x80117358-78).
+  - (11) `re15_maggot_bone_square`: `if (re15_affen_trefferpunkt(e, bone, g)) goto quadrat;` + Marke.
+  - (12) `re15_maggot_anim`: `re15_affen_pool_anim(e);` vor Vorschub/Abbau; `re15_maggot_footlock`:
+    `if (re15_affen_fusssperre(e, bone)) return;`; Gorilla-Wurzel: `re15_affen_zeichen_merk(e);` vor dem Tick.
+- Keine Assets, keine Bank-9-Bits/Nachrichten/AOT/Ereignisse.
+
+### N2 — Messung nachher (Riegel, `jnb4/takt_spur_n4c.txt`, `szene_n4b.txt`)
+- `takt` Gleichtakt (Original-Zustand F195, Pool vorbelegt): **219, 269, 322, 372, 425, 475, 528, 578, 631, 681, 734,
+  784, 837, 887** gegen Original 219, 269, 322, 372, 425, 476, 528, 580, 631, 684, 734, 788, 837, 892:
+  **e1 (Slot 2) 7/7 Treffer bitgleich (Zyklus 103)**; e2 die ersten zwei gleich, dann Zyklus 103 statt 104 (-1 je Zyklus,
+  T475 Port-Treffer bei +0x95 = 14, Original bei 15 = letztes Fensterbild, s. OFFEN N4-1).
+  Zustandsfolge (Sub/Phase/Clip/Bild/+0x1dc) beider Gorillas Tick fuer Tick gleich dem Original; Bissclip-Schritte e1
+  T205-T221 je 0-11 Einheiten neben dem Original (HEAD: Clip um 1 Bild versetzt, 40-80 daneben).
+- `szene` (Raumeintritt ohne Eingabe, Tod nach Freigabe): Heavy +363 (Original +364); Bisse **468, 520, 571, 623, 674,
+  726, 777, 829, 880, 932, 983, 1035, 1086, 1138**, Tod **+1189** (Original 468, 521, 571, 624, 674, 727, 778, 830, 882,
+  933, 986, 1036, 1090, 1139, Tod +1194). **Slot 2 (Treffer 3, 5, ... 15): 520, 623, 726, 829, 932, 1035, 1138 =
+  Original - 1 durchgehend, Zyklus 103** (HEAD: +3 ... +9, Zyklus 104). Slot 3: 468/571/674 gleich, dann -1 je Zyklus.
+- `griff` Lauf 0 (Pool vorbelegt): Pin T254, e1 T254-T288 hoechstens 37 neben dem Original, T266-T290 hoechstens 183,
+  T265 1238 = Empfindlichkeit der Klemme (Bezug 13 / Eingang 14 daneben; mit den Original-Eingaben liefert dieselbe Klemme
+  (-7804,-10186) = Original), Freigabe T378, **kein Biss bis T495**, Ende (-3018,-11651) (Original-Ruhelage
+  (-3009,-11643)), e1/e2 3917/4927 entfernt (Original ~3925/~4990). Weg 2 unveraendert bitgleich.
+
+### N1 — Mechanismus des Bisses nach dem Wurf (Lauf 0) und Ergebnis
+- HEAD Lauf 0: Freigabe T378 bei (-6153,-9995), Ende (-4200,-10658) -> e2 erreicht Leon, A[3]-Gate (Spieler +0x93 == 0
+  @0x80117a54-5c, a804(0xbb8,0x180) @0x80117a60-74, +0x1dc == 0 @0x80117a88-90) wahr -> Biss T405 (76 -> 70). Im Original
+  landet Leon an der Ruhelage (-3009,-11643) hinter den Wagen; dort haengen beide Gorillas an der Wandklemme (+0x1d6 = 1,
+  e1 ~3925 / e2 ~4990 entfernt, g_griff F496 HP 76) und es gibt keinen Biss bis T518.
+- Ursache des HEAD-Bisses = der Landeort, nicht die Biss-Logik: die Wurf-Bahn ab T291 ist reine Klemmen-Iteration und
+  chaotisch (M1 (c): 24/24 Starts 1-2 Einheiten daneben enden > 100 daneben); der Startversatz kam aus dem Anlauf
+  (A/B-Folge, Trefferpunkt, ungemischte Fusssperre = N2-Ursachen). Mit (10)/(11)/(12) landet Lauf 0 an der Original-
+  Ruhelage (9/8 Einheiten daneben) und bleibt bis T495 ohne Biss; beide Gorillas haengen 3917/4927 entfernt fest.
+- Grenze (ehrlich): die Landung bleibt eine Klemmen-Iteration; landet Leon anderswo (z. B. exe o7, Leon im Freien), kann
+  ein Gorilla ihn wieder erreichen. Fuer diese Lage gibt es keine Original-Spur (OFFEN N4-2).
+- Dossier-Aussage N3 "Fuer den Nutzer (3)" ist damit zu eng formuliert: berichtigt im Abschnitt "Fuer den Nutzer
+  (Stand Nachbesserung 4)". Z. 1189 nennt "Bahn T265-T290 im Mittel 31" — gemessen waren 34 (`jnb3/griff6.txt`).
