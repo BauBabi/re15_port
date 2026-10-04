@@ -12,13 +12,19 @@
 #   unit_r35_zgirl_messer    T7 Messer (Original-Zeile 0 = jalr 0) -> Standard-Zurueckzucken, kein Haenger
 #   integration_r35_zgirl    echte exe: Aktionstaste an Tuer 6 (Cut 9) und Tuer 7 (Cut 14) -> Spawn,
 #                            Annaeherung, Griff (tests/integration/test_r35_zgirl.cmake)
+#   unit_r35_zgirl_selbsttueren  T8 alle Selbst-Tueren aus main00 -> Szenario = Ziel-Cut, Wiedereintritt
+#   unit_r35_zgirl_wiedereintritt T9 (Nachbesserung 1) echter Spielschritt durch die Selbst-Tuer:
+#                            ROOM5090 Boss nach Tuer 2 HP 600, kein Tod beim Kampfstart (@0x800421e0 ->
+#                            Ctor @0x801003CC); Spawn-Zaehler je Eintritt neu (@0x8003f014)
+#   integration_r35_zgirl_5090  echte exe: Aktionstaste an Tuer 2 in ROOM5090, Boss-HP 600, Kampf laeuft an
+#                            (tests/integration/test_r35_zgirl_5090.cmake)
 add_executable(test_r35_zgirl ${CMAKE_CURRENT_LIST_DIR}/../test_r35_zgirl.c)
 target_link_libraries(test_r35_zgirl PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_zgirl PRIVATE ${CMAKE_SOURCE_DIR}/include)
 if(NOT WIN32)
     target_link_libraries(test_r35_zgirl PRIVATE m)
 endif()
-foreach(_r35c_teil zensus killflag tuer ki_re15 ki_re2 tod messer selbsttueren)
+foreach(_r35c_teil zensus killflag tuer ki_re15 ki_re2 tod messer selbsttueren wiedereintritt)
     add_test(NAME unit_r35_zgirl_${_r35c_teil} COMMAND test_r35_zgirl ${_r35c_teil})
     set_tests_properties(unit_r35_zgirl_${_r35c_teil} PROPERTIES TIMEOUT 120)
 endforeach()
@@ -30,4 +36,12 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_zgirl_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_zgirl.cmake)
     set_tests_properties(integration_r35_zgirl PROPERTIES TIMEOUT 900)
+    # Nachbesserung 1 (M2b): Endkampf ROOM5090 nach Selbst-Tuer 2 - Boss-HP 600 und Kampf laeuft an
+    # (Sce_em_set +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC, HP 600 @0x801003fc).
+    add_test(NAME integration_r35_zgirl_5090
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_zgirl_5090_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_zgirl_5090.cmake)
+    set_tests_properties(integration_r35_zgirl_5090 PROPERTIES TIMEOUT 400)
 endif()

@@ -25,6 +25,9 @@
  *                 Standard-Zurueckzucken (RE2: ein Zombie wie alle), kein Haenger.
  *   selbsttueren T8 alle Raeume: jede Selbst-Tuer aus main00 (Cut-0-Eintritt) setzt das Szenario
  *                 = Ziel-Cut, der Wiedereintritt + 60 SCD-Bilder laufen durch.
+ *   wiedereintritt T9 (Nachbesserung 1) echter Spielschritt durch die Selbst-Tuer: ROOM5090 Boss
+ *                 nach Tuer 2 wieder HP 600, kein Tod beim Kampfstart; Spawn-Zaehler @0x8003f014
+ *                 je Eintritt neu (ROOM5090, ROOM4050 Tuer 6 sechsmal).
  * ============================================================================================ */
 #include <stdint.h>
 #include <stdio.h>
@@ -451,6 +454,84 @@ static void t_selbsttueren(void)
     raum_laden(0x4050);
 }
 
+/* ------------------------------------------------------------------------ T9 wiedereintritt */
+/* Nachbesserung 1 (Abnahme 0, M1/M2): T8 tickt nach dem Wiedereintritt nur das SCD. Hier laeuft der
+ * ECHTE Spielschritt (re15_game_step mit Gegner-KI und Raum-Modulen) durch die Selbst-Tuer:
+ *   a) ROOM5090: Boss-Modul (enemy_ai_boss_g5.c). Erstbetritt Cut 0 -> G5 HP 600; Selbst-Tuer 2
+ *      (RDT main00 @0x0108e) -> der Verbraucher in game_step_common.c steigt neu ein, sub00 @0x0124A
+ *      spawnt den Boss erneut -> HP wieder 600 (Sce_em_set +0x4 = 0 @0x800421e0 -> RE2-Ctor
+ *      @0x801003CC, HP @0x801003fc). Dann Kampfstart wie sub04 Member_set(0x0c,0x13) @0x130A:
+ *      KEIN Todes-Trigger (Routine 3), HP bleibt 600. Vor dem Fix: HP 0 -> Routine 3.
+ *   b) Spawn-Zaehler DAT_800aca4e (@0x8003f014 Raum-Init): nach jedem Wiedereintritt nur die
+ *      Spawns DIESES Eintritts — ROOM5090 2 (0x4d + Boss), ROOM4050 Tuer 6 sechsmal je 1. */
+extern int re15_g5_routine(void);
+static int g5_hp(int *slot)
+{
+    int gs = -1;
+    if (gegner(0x36, &gs) != 1) return -9999;
+    if (slot) *slot = gs;
+    return g_actors[gs].hp;
+}
+static void t_wiedereintritt(void)
+{
+    char m[220];
+    printf(" T9 wiedereintritt (echter Spielschritt durch die Selbst-Tuer)\n");
+    if (raum_laden(0x5090) != 0) { pruefe("ROOM5090 lesbar", 0); return; }
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
+    re15_enemy_reset(); re15_player_cmd_reset();
+    re15_collision_set_band(0);
+    raum_start(500, 5125, 0, 0);
+    int n0 = re15_enemy_spawn_count();
+    for (int f = 0; f < 5; f++) schritt();
+    int gs = -1, hp1 = g5_hp(&gs);
+    snprintf(m, sizeof m, "ROOM5090 Erstbetritt: Boss 0x36 HP %d (Ctor 600 @0x801003fc), Spawns %d", hp1, n0);
+    pruefe(m, hp1 == 600 && n0 == 2);
+    if (gs < 0) return;
+
+    g_scd_pending_scenario = -1; g_room_change.pending = 0;
+    int ist_tuer = (g_aot.slots[2].type == RE15_AOT_TYPE_DOOR);
+    if (ist_tuer) re15_aot_fire_slot(2);
+    snprintf(m, sizeof m, "Selbst-Tuer 2 -> Szenario 14 (Tuer=%d, ist %d), kein Raumwechsel",
+             ist_tuer, g_scd_pending_scenario);
+    pruefe(m, ist_tuer && g_scd_pending_scenario == 14 && !g_room_change.pending);
+    schritt();                                       /* Verbraucher: scd_room_reenter(..., 14) */
+    int n1 = re15_enemy_spawn_count();
+    snprintf(m, sizeof m, "Wiedereintritt verbraucht (Szenario %d), Spawns dieses Eintritts %d "
+                          "(0x4d + Boss; Zaehler-Reset @0x8003f014)", g_scd_pending_scenario, n1);
+    pruefe(m, g_scd_pending_scenario == -1 && n1 == 2);
+    for (int f = 0; f < 5; f++) schritt();
+    int hp2 = g5_hp(&gs);
+    snprintf(m, sizeof m, "nach dem Neuspawn: Boss HP %d (erwartet 600, vor dem Fix 0)", hp2);
+    pruefe(m, hp2 == 600);
+    if (gs < 0) return;
+
+    g_actors[gs].grid_id = 0x13;                     /* sub04 Member_set(0x0c,0x13) @0x130A */
+    int tod = 0;
+    for (int f = 0; f < 120; f++) { schritt(); if (re15_g5_routine() == 3) tod = 1; }
+    snprintf(m, sizeof m, "Kampfstart: kein Todes-Trigger (Routine 3 gesehen %d), HP %d, Boss x %d (Start -9000 @0x801011d0)",
+             tod, g_actors[gs].hp, g_actors[gs].x);
+    pruefe(m, !tod && g_actors[gs].hp == 600);
+
+    /* b) ROOM4050: sechs Wiedereintritte ueber Tuer 6 (-> Cut 9, ein Zombie-Maedchen je Eintritt). */
+    raum_laden(0x4050);
+    s_ctx.active_cut = 0;
+    raum_start(-7000, -24800, 0, 0);
+    int zaehler_ok = 1, z[6];
+    for (int k = 0; k < 6; k++) {
+        g_scd_pending_scenario = -1; g_room_change.pending = 0;
+        re15_aot_fire_slot(6);
+        const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        uint8_t sc = (uint8_t)g_scd_pending_scenario; g_scd_pending_scenario = -1;
+        scd_room_reenter(&s_rdt, pl->x, pl->z, sc);
+        z[k] = re15_enemy_spawn_count();
+        if (z[k] != 1 || gegner(0x13, NULL) != 1) zaehler_ok = 0;
+    }
+    snprintf(m, sizeof m, "ROOM4050 Tuer 6 sechsmal: Spawn-Zaehler je Eintritt %d %d %d %d %d %d (je 1; "
+                          ">= 5 waehlte die andere Zombie-Tabelle @0x801022c4)", z[0], z[1], z[2], z[3], z[4], z[5]);
+    pruefe(m, zaehler_ok);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -466,6 +547,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tod"))      t_tod();
     if (alle || !strcmp(teil, "messer"))   t_messer();
     if (alle || !strcmp(teil, "selbsttueren")) t_selbsttueren();
+    if (alle || !strcmp(teil, "wiedereintritt")) t_wiedereintritt();
     printf("=== %s: %d Fehler ===\n", teil, fehler);
     return fehler ? 1 : 0;
 }
