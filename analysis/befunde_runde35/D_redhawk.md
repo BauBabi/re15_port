@@ -10,6 +10,17 @@ Ereignis. Nur Code + Tests.
 
 ## Fortschritt (fortlaufend)
 - 2026-10-04: Baum geprueft (status leer, HEAD 154a73c1). AUFTRAG.md + VERTRAG.md gelesen.
+- Befund reproduziert (Sonde M2 + echte exe N5: 6 Raum-Id-7-Brocken leben ewig).
+- Ursache: ESP-Routinen B 36/37 fehlten im Port (R3/R4). Umgesetzt in esp_brocken.c + 3 Zeilen
+  re15_esp.c. Nachher: Brocken enden binnen ~10 Bildern nach dem Aufschlag (N1/N2/N5).
+- Tests unit_r35_redhawk + integration_r35_redhawk gruen; integration gegen vorher-exe rot.
+
+## Kurzfassung
+Ursache: Die Fleisch-Brocken (Raum-Effekt-Id 7, vom Hund bei Redhawk-Toetung je Bild per
+FX(2,1|2) geworfen) fliegen mit Zeile 0 (Routine B 36) und einer Endlos-Anim (Schleifenmarke
+Record 5). Nur Routine B 36 (Bodentest @0x800187c4) -> 37 (Landung @0x8001885c: Flags,
+Anim-Index 6, Zeilen-Vorschub) fuehrt zum Anim-Terminator (@0x8001a40c). Der Port kannte 36/37
+nicht -> Brocken lagen fuer immer im Flug-Zyklus. Fix = beide Routinen byte-true portiert.
 
 ## Messung vorher
 
