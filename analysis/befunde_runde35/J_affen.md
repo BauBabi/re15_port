@@ -1182,3 +1182,18 @@ Scratch: `scratchpad/jnb3/`. Original-Spuren: `jnb1/g_griff.txt` (+ `_dec`), `jn
 - affen_11c0.c: re15_affen_ritt_platz (re15_enemy_steer_point mit 0x800 = FUN_8001a8f8-Kern `slt` @0x8001a974,
   re15_clip_root_motion_abs_pub = FUN_8001ad68 @0x8001adf4-ae18). re15_affen.h: Abschnitte (8) und (9).
 - Keine neue Datei, keine Assets, keine Bank-9-Bits/Nachrichten/AOT/Ereignisse.
+
+### Messung nachher (Riegel, Endstand Code; `jnb3/griff6.txt`, `takt5.txt`, `szene5.txt`, `schrot5.txt`)
+- `griff` Lauf 0: e1 T254-T288 hoechstens 28 neben dem Original (vorher bis 844), Abstand e1-e2 T256-T264 3171..3211
+  (Original 3168..3209), e2-Weg T254->T262 570 (Original 542, vorher 4); Kette T265-T267 Eingang 22/31/19, Ausgang
+  64/104/4 (vorher 213/276/496 bzw. 1241/1573/207); Bahn T265-T290 im Mittel 31, hoechstens 166 (T290); Freigabe T378
+  (-6153,-9995) = Klemmen-Iteration ab der eigenen T290-Lage (-5348,-10714) in 88/88 Bildern; Anker (-7539,-10347).
+- `griff` Weg 2: Anker (-7507,-10327), e1 T254/T255 bitgleich, Kette T268-T290 23/23 bitgleich, Freigabe T378
+  (-4759,-10633), Leon T291-T414 124/124 = Original, Ruhe (-3009,-11643) ab T410, **bis T495 kein Biss (HP 76)** wie das
+  Original (g_griff F496: (-3009,-11643) HP 76; vor dem Fusssperren-Fix: Bisse T420/T480). e1/e2 nach der Ruhe 35-200
+  neben dem Original (Rest: OFFEN 3/4), e1 in Sub 2 hoechstens 64 je Bild (Wrap-Sprung ~1300 weg).
+- `takt`: Gleichtakt 8 Bisse, groesste Abweichung 3 Bilder (vorher 3), Mittel 52,0 (Original 51,6); Wechseltakt
+  nach Desync groesste Abweichung **2** (vorher 4), Mittel 35,6 (Original 35,9).
+- `szene`: Gang 207/207, Heavy Freigabe + 365 (Original +364), Takt Mittel 52,1 / kuerzester 51, Tod + 1198
+  (Original +1193) — unveraendert gegenueber Nachbesserung 2.
+- `schrot`: Exit F275 -> Sub 7 (Original F276), Landung F311 (Original F312), danach SELECTOR, kein Zonen-Sprung.
