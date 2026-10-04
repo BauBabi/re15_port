@@ -821,3 +821,40 @@ Belegt im ORIGINAL-RAM: (a) Ruecken-Blick = Gesicht-Blick + 2048 bei GLEICHEM Pi
 die Konstruktion aus Nachbesserung 1; (b) Leon = Arm-Bild + 1 in jedem Halte-Bild; (c) das Original hat in JEDER
 gemessenen Hoehe Arm-Vertices in Leons Kopf/Rumpf, Gesicht 5..12/19, Ruecken 6..19/19; am naechsten Satz zur
 Port-Hoehe (Satz 5, -2480) 11/19 bzw. 19/19.
+Band-Enden (dazu): g11 Satz 7 (y -2700, A) Gesicht **4/19**; g12 Satz 3 (y -1930, B) Gesicht **17/19** (max 22);
+g13 Satz 6 (y -2000, B) Gesicht **17/19** (max 14). (Satz 1 und 4 griffen an der gewaehlten Stelle nicht binnen
+120 s — Laeufe g10/g14 ohne Halt; kein Befund daraus.) => Das Original ueberschneidet in jeder Hoehe, und die Zahl
+haengt stark an der Hoehe: Gesicht 4/19 (-2700) .. 17/19 (-1930/-2000).
+
+### DER UNTERSCHIED: RE2 schiebt Leon nach dem Pin aus dem Arm-Segment (FUN_80034D0C) — der Port nicht
+**Messung (Original):** in ALLEN zwoelf Griffen steht Leon im ersten Halte-Bild **1251..1252** vom Arm-Ursprung
+(Leon - Arm: g1 (97,-1251), g3 (1251,-333), g5 (14,-1251), g7 (1251,14), g9 (-6,-1252), g11 (14,-1251), g12 (1252,-6),
+g13 (-6,-1252)) — nicht auf der Hand (Hand-Bone 3 im ersten Halte-Bild ~900..1050 vor dem Ursprung). PL+0x0D (Pusher-
+Id) = Satz + 2 und PL+0x0E (Kontaktbit) != 0 im Griff-Bild.
+**Wer schreibt:** `re2_mess/re2_gdb_push.py` (Haltepunkt B4 P0 @0x80100BC4, dann GDB-Schreib-Wachpunkt Z2 auf PL+0x38/
++0x40; Mitschnitt `re2_mess/daten/push_s2/push_log.txt`, Satz 2):
+```
+vor dem Pin PL x/z -25982 -12508            (schon waehrend REACH vom sichtbaren Arm auf ~1250 geschoben)
+Treffer 0: pc=80100c24  PL x=-26256          Pin x  (B4 P0, sw -976(at))
+Treffer 1: pc=80100c3c  PL z=-12388          Pin z
+Treffer 2: pc=800350cc  PL x=-25981          FUN_80034D0C: x += dx*pen/(dist+1)
+Treffer 3: pc=800350d0  PL z=-12492          FUN_80034D0C: z += dz*pen/(dist+1)  -> Abstand zum Ursprung 1249.8
+```
+**Beleg der Kette** (RE2 PSX.EXE selbst disassembliert): Spieler-Pass FUN_800355C4 = `jal 0x80035408` (Segmente) /
+Listenschleife 0x800CFE14..*(0x800CE334) / `andi v0,v0,0x1` @0x80035624 / `jal 0x80034d0c` (Eintrag, Spieler)
+@0x80035630 / `sh s3,14(s1)` @0x80035658; FUN_80034D0C (Decompile RE2_Quellcode_V2/FUN_80034d0c.c): Ausstieg
+(w|w)&2, w&w&0x1000, wSpieler&4; Breitphase |d| <= R; pen = R - SquareRoot0; Band |dy| < hA+hB; Schub d*pen/(dist+1).
+Arm-Segment (INIT, EM2D): `sw v0,488(s0)` @0x80100328 (+0x1E8 = 1 Segment), `addiu v0,zero,500 / sh v0,158(s0)`
+@0x8010032C-30 (Halbhoehe), `addiu v1,zero,800 / sh v1,154(s0)` @0x80100338-3C (Radius), `sh zero,148/152/150(s0)`
+@0x8010035C-64 (Lokal-Lage 0). Spieler-Segment r 450 / Y -1530 / 1530 (@0x8003bdc0-ec; im RAM PL+0x9A/+0x98/+0x9E).
+Im RAM: Arm word0 0x0c003405 (Bit 2 aus = sichtbar), PL word0 0x40000001 (kein 0x1000 -> kein Paar-Ausstieg).
+Der Port gab dem Arm den RE1.5-Kasten (hit_radius 300, re15_enemy_apply_hitbox) und der Paar-Ausnahme der Zombie-
+Familie unterworfen -> Leon blieb auf der Hand, ~200 naeher am Arm als im Original (exe: 1052 statt 1251).
+**Umsetzung:** `enemy_ai_re2_zellenarm.c` `re15_re2arm_body_push_player()` = FUN_80034D0C mit Arm-Segment
+(RE2ARM_SEG_R 800 @0x80100338-3C, RE2ARM_SEG_H 500 @0x8010032C-30) gegen Spieler-Segment (RE2ARM_PL_R/Y/H
+@0x8003bdc0-ec), Bit-2-Ausstieg = `s_arm[].hidden`; Haken in `re15_body_push_player` (enemy_ai_common.c, 2 Zeilen,
+VOR der Zombie-Paar-Ausnahme — RE2 hat sie fuer den Arm nicht). Pin-Bild: B4 P0 setzt `s_pin_bild`, game_step
+schiebt im selben Bild nach dem Pin (game_step_common.c, 2 Zeilen; FUN_800355C4 laeuft @0x80026628 nach dem Spieler-
+Tick, also nach dem Pin).
+**Erste Messung nachher (Riegel-Lauf, Arm y -2500):** Leon nach dem Griff (-20239,-15759) = Ursprung (-21490) + 1251
+(wie das Original), vorher (-20496) = Pin.
