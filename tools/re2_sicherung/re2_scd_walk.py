@@ -32,7 +32,11 @@ sys.path.insert(0, HERE)
 import re2_scd_lens
 DOC = os.path.join(REPO, "info", "Resident_Evil_und_Playstation_Information",
                    "information293.txt")
-RDT = os.path.join(REPO, "info", "re2leon", "PL0", "RDT")
+# Schlanker Arbeitsbaum (Runde 35): info/Resident_Evil_und_Playstation_Information/ liegt nur im
+# Hauptbaum -> per RE15_INFO_DIR auf dessen Verzeichnis zeigen (nur gelesen).
+if not os.path.exists(DOC) and os.environ.get("RE15_INFO_DIR"):
+    DOC = os.path.join(os.environ["RE15_INFO_DIR"], "information293.txt")
+RDT =os.path.join(REPO, "info", "re2leon", "PL0", "RDT")
 
 ROW = re.compile(r"^0x([0-9a-f]{2})\t([A-Za-z_0-9]+)\t(\d+)\t", re.M)
 

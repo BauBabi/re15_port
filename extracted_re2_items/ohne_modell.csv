@@ -1,0 +1,64 @@
+raum;block;rdt_offset;item_id;item_hex;name;menge;x;z;flag
+room1010;sub00;0x0182C;7;0x07;Shotgun;5;-17422;-15899;15
+room60A0;sub18;0x014D4;16;0x10;Flamethrower;100;-6911;-18409;51
+room1080;sub00;0x01B16;20;0x14;H. Gun Bullets;15;-25048;-17910;213
+room1090;sub03;0x0227A;20;0x14;H. Gun Bullets;30;-900;-900;205
+room1090;sub03;0x02340;20;0x14;H. Gun Bullets;15;32000;32000;13
+room1150;sub00;0x01462;20;0x14;H. Gun Bullets;15;-22895;-9423;101
+room1180;main00;0x01EFA;20;0x14;H. Gun Bullets;15;-19542;-8806;161
+room2020;sub00;0x01CE2;20;0x14;H. Gun Bullets;15;-5560;-18350;115
+room2030;sub00;0x00810;20;0x14;H. Gun Bullets;15;-20023;-26525;34
+room2060;sub00;0x01750;20;0x14;H. Gun Bullets;15;-27532;-23412;28
+room2080;sub00;0x014F0;20;0x14;H. Gun Bullets;15;-15280;-18310;216
+room20B0;sub08;0x036B0;20;0x14;H. Gun Bullets;15;-2703;-24979;74
+room20D0;sub00;0x012A2;20;0x14;H. Gun Bullets;30;-900;-900;208
+room20E0;sub00;0x019DA;20;0x14;H. Gun Bullets;15;-17900;-23800;61
+room20E0;sub00;0x01B46;20;0x14;H. Gun Bullets;15;-17900;-23800;61
+room21B0;sub00;0x02526;20;0x14;H. Gun Bullets;15;-21170;-23600;2
+room4010;sub00;0x02408;20;0x14;H. Gun Bullets;15;-17033;-17326;130
+room4030;sub25;0x02CE2;20;0x14;H. Gun Bullets;30;-27517;-13973;173
+room5040;sub00;0x01D34;20;0x14;H. Gun Bullets;15;-25512;-18360;68
+room5060;sub00;0x00E00;20;0x14;H. Gun Bullets;15;-25512;-18360;68
+room1080;sub00;0x01B40;21;0x15;Shotgun Shells;7;-25048;-17910;213
+room10B0;sub00;0x01856;21;0x15;Shotgun Shells;7;-26051;-16619;99
+room10D0;sub00;0x00856;21;0x15;Shotgun Shells;7;-900;-900;206
+room20C0;sub00;0x01CF6;21;0x15;Shotgun Shells;7;-900;-900;207
+room2100;sub00;0x01330;21;0x15;Shotgun Shells;7;-26016;-20995;87
+room4050;sub00;0x00F52;21;0x15;Shotgun Shells;7;-9010;-25500;191
+room5070;sub00;0x0217A;21;0x15;Shotgun Shells;7;-900;-900;76
+room6070;sub00;0x00C68;21;0x15;Shotgun Shells;7;-32000;-32000;53
+room6020;sub00;0x009FC;22;0x16;M. Bullets;8;-900;-900;73
+room1080;sub00;0x01B62;26;0x1A;Acid Rounds;6;-25048;-17910;213
+room5070;sub00;0x02194;26;0x1A;Acid Rounds;6;-900;-900;76
+room20C0;sub00;0x01D10;29;0x1D;Bow Gun Bolts;36;-900;-900;207
+room60A0;sub18;0x014EE;29;0x1D;Bow Gun Bolts;36;-6911;-18409;51
+room10B0;main00;0x0175A;30;0x1E;Ink Ribbon;3;-20151;-19699;220
+room2100;sub00;0x01362;30;0x1E;Ink Ribbon;3;-24213;-17961;219
+room4100;sub00;0x013EC;30;0x1E;Ink Ribbon;3;6293;-17432;181
+room4100;sub16;0x01C0A;30;0x1E;Ink Ribbon;3;-6567;1910;255
+room6090;main00;0x00454;30;0x1E;Ink Ribbon;3;-9687;-7704;6
+room6150;sub04;0x02FDC;30;0x1E;Ink Ribbon;3;-10110;-11600;82
+room4050;sub00;0x00F38;31;0x1F;Small Key;1;-9010;-25500;191
+room1150;sub00;0x01482;35;0x23;F. Aid Spray;1;-18346;-25420;40
+room20D0;sub00;0x01140;35;0x23;F. Aid Spray;1;-21450;-13350;215
+room4030;sub25;0x02CAE;35;0x23;F. Aid Spray;1;0;0;52
+room4100;sub00;0x013D6;35;0x23;F. Aid Spray;1;593;-15432;180
+room4100;sub16;0x01C20;35;0x23;F. Aid Spray;1;-6567;1910;255
+room6150;sub00;0x02C36;35;0x23;F. Aid Spray;1;-22900;-17000;55
+room1030;main00;0x03702;38;0x26;Green Herb;1;25562;-16667;211
+room20B0;sub08;0x03748;38;0x26;Green Herb;1;-5465;-13751;81
+room20B0;sub08;0x03766;38;0x26;Green Herb;1;-5465;-13751;217
+room2150;main00;0x012A8;52;0x34;Red Card Key;1;-18507;-23529;50
+room4050;sub00;0x00F1A;73;0x49;Wolf Medal;1;-9100;-27180;190
+room1150;sub12;0x01998;80;0x50;Film;1;0;0;209
+room2080;sub00;0x01508;80;0x50;Film;1;20000;20000;159
+room1030;sub15;0x040B6;83;0x53;Special Key;1;-1000;-1000;156
+room7010;sub02;0x01ECE;84;0x54;Joint S Plug;1;0;0;34
+room7010;sub02;0x01EE4;85;0x55;Joint N Plug;1;0;0;39
+room3010;sub00;0x01B90;110;0x6E;Mail to the chief;1;0;0;44
+room3010;sub00;0x01CC0;110;0x6E;Mail to the chief;1;0;0;44
+room2080;sub00;0x013E8;115;0x73;Film A;1;20000;20000;125
+room2080;sub00;0x013FE;116;0x74;Film B;1;20000;20000;126
+room2080;sub00;0x01414;117;0x75;Film C;1;20000;20000;127
+room2030;main00;0x006DE;118;0x76;Patrol report;1;-23098;-25955;153
+room2080;sub00;0x0151E;123;0x7B;Film D;1;20000;20000;160

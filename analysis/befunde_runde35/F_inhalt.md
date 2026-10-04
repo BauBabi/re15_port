@@ -73,3 +73,41 @@ des Textmalers (56,48,72), es gibt kein Original-Gegenstueck fuer eine gruene Do
   (1,9)..(6,14); FILE29_p01 104 Pixel, x 5..36 y 148..155; CLUT 0..8 und 15 unveraendert.
   Bericht: FILE28 "p01 Zeile 6 (y 96..111): '4312' Kern-x 147..179 gruen", FILE29 "p01 Zeile 9
   (y 144..159): '5632' Kern-x 5..36 gruen".
+
+### Punkt 6 — RE2-Welt-Item-Modelle extrahiert und abgelegt
+
+**Wortlaut** "die Karten Modelle in der Welt zum Einsammeln, also die World items, aus Resident
+Evil 2 extrahierst und irgendwo ablegst wo ich es sehen kann". Abgelegt sind ALLE RE2-Welt-Items
+(Leon, info/re2leon/PL0/RDT, 495 RDTs) — "die World items" — mit eigenem Karten-Bogen fuer die
+einsammelbaren Karten (Card Keys).
+
+**RE-Beleg (Mechanismus, RE2 PSX.EXE, Belegkette aus re2_doc_worldmodels.py, Commit 2b95b592):**
+Item_aot_set Op 0x4E -> LAB_80054CD4 (Tabelleneintrag @0x800A7600); Record 22 Byte, +18 flag
+(`lhu a1,0x12(s0)` @0x80054CF4), +20 md1 (`lbu s2,0x14(s0)` @0x80054CF8); md1 < 32
+(`sltiu v0,s2,0x20` @0x80054D98) = Slot der Raum-Modelltabelle (Lader FUN_80052D14: nOmodel
+`lbu s2,0x2(v0)` @0x80052D70, Tabelle `lw s4,0x30(v0)` @0x80052D74, Schritt 8 @0x80052DF4);
+md1 = 255 = kein Weltmodell. Das Modell haengt an der PLATZIERUNG, nicht an der Item-Id.
+
+**Umsetzung.** Neues Werkzeug `tools/re2_sicherung/re2_item_worldmodels.py` (verallgemeinert
+re2_doc_worldmodels.py von Dokumenten auf alle Ids; Op 0x69 4-Punkt-Zonen mit erstem Punkt als
+Lage). `tools/re2_sicherung/re2_scd_walk.py`: `RE15_INFO_DIR`-Ausweichpfad fuer
+information293.txt (schlanker Baum; nur gelesen aus dem Hauptbaum).
+Aufruf: `RE15_INFO_DIR=C:/workspace/git/reAi_v2/info/Resident_Evil_und_Playstation_Information
+C:/Python310/python.exe tools/re2_sicherung/re2_item_worldmodels.py` (18 s).
+
+**Ergebnis (gemessen, `extracted_re2_items/_bericht.txt`):** 269 Item_aot_set-Platzierungen,
+206 mit Weltmodell, 63 ohne (md1 255); **81 verschiedene Meshes** (md5 der MD1-Bytes), 63 Item-Ids
+mit Weltmodell. SCD 2553 Bloecke, 45 desynchron (94,55 % der Bytes gewalkt — dieselbe Dunkelziffer
+wie re2_doc_worldmodels). Karten: mesh043 Blue Card Key (room10B0 main00 @0x01714), mesh066/067 Lab
+Card Key (room60A0 sub18 @0x014B4, room6150 sub00 @0x02CFE); Red Card Key (room2150 @0x012A8) hat
+md1 255 = kein Weltobjekt. 8 Platzierungen mit md1 >= nOmodel (im Bericht einzeln, z.B. room1000
+sub01 Id 6 md1 7 bei nOmodel 0) — der Pool-Slot kommt dort nicht aus der Raumtabelle.
+**Fuer den Nutzer:** `extracted_re2_items/uebersicht.html` (Galerie, zwei Ansichten je Mesh, Namen,
+Ids, Raeume), `kontaktbogen.png` (alle 81), `karten.png` (die 3 Card-Key-Meshes), `katalog.csv`
+(Item-Id; Name; Karte; Meshes; Bilddateien; Platzierungen), `platzierungen.csv`,
+`ohne_modell.csv`, `modelle/meshNNN_<md5>.{md1,tim,obj,_a.png,_b.png}`.
+Lageplaene ("map") sind in RE2 KEINE Items: die Namentabelle 0x00..0x8B fuehrt 0 Maps (3 Card
+Keys); die 7 Lageplan-Funde ("police station map" ROOM20B0 @0x3BA6, "police B1 map" ROOM2130
+@0x1B41, "sewage disposal map" ROOM3060 @0x2B4E, "sewer map" ROOM4040 @0x1BAE, "factory map"
+ROOM5040 @0x2357 / ROOM5060 @0x110C, "laboratory map" ROOM6120 @0x18B1) laufen ueber
+Nachricht+Ja/Nein-Ereignis, nicht ueber Item_aot_set (OFFEN unten, falls der Nutzer DIESE meinte).

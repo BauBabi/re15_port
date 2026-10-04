@@ -1,0 +1,18 @@
+# RE2-Welt-Item-Modelle (Runde 35 Spur F, Punkt 6)
+Item_aot_set-Platzierungen gesamt: 269
+  mit Weltmodell (md1 != 255):     206
+  ohne (md1 == 255):               63
+verschiedene Meshes (md5 MD1):     81
+  davon Karten (Name Card/Map):    3  (mesh043 Blue Card Key; mesh066 Lab Card Key; mesh067 Lab Card Key)
+Item-Ids mit Weltmodell:           63
+SCD-Bloecke 2553, desynchron 45; Bytes 331419 / gewalkt 313356 (94.55%)
+Kontaktbogen (1440, 3920), Karten-Bogen (1440, 280)
+Fehler: 8
+  room6030 sub26 Id 0: md1=58 >= nOmodel=10
+  roomF030 sub21 Id 0: md1=58 >= nOmodel=7
+  room1000 sub01 Id 6: md1=7 >= nOmodel=0
+  room2080 sub00 Id 13: md1=4 >= nOmodel=4
+  room2130 sub00 Id 20: md1=225 >= nOmodel=10
+  roomA070 main00 Id 20: md1=36 >= nOmodel=0
+  roomF040 sub00 Id 30: md1=5 >= nOmodel=1
+  roomF040 sub00 Id 99: md1=6 >= nOmodel=1
