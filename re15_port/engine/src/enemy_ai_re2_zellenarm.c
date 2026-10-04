@@ -99,7 +99,9 @@
 #include "re15_enemy_ai.h"       /* re15_ai_set_state_word / re15_player_victim_force / _end   */
 #include "re15_enemy.h"          /* re15_enemy_find (Opfer-Bank-Cliplaenge)                     */
 #include "re15_damage.h"         /* re15_ai_arc_test (== FUN_80015614), re15_enemy_bone_world_pos */
-#include "re15_skeleton.h"       /* re15_sin_q12 / re15_cos_q12                                 */
+#include "re15_skeleton.h"       /* re15_sin_q12 / re15_cos_q12 / re15_skel_compute_pose (Parts)  */
+#include "re15_anim_select.h"    /* re15_compute_actor_kf (Parts-Keyframe, Nachbesserung 2)     */
+#include "re15_emd.h"            /* RE15_EMD_MAX_BONES                                          */
 #include "re15_math.h"           /* re15_squareroot0 (SquareRoot0)                              */
 #include "re15_room.h"           /* g_current_room_id / g_room_rdt                               */
 #include "re15_esp.h"            /* RE1.5-Raumbank-Blut (Stand-in fuer FUN_8001BF10)             */
@@ -154,6 +156,17 @@ typedef struct {
     int16_t  pose_clip;
     uint16_t pose_frame;
     uint8_t  pose_ok;
+    /* Runde 35 Spur H, Nachbesserung 2: die Parts SELBST, wie 0x80029614 sie fuehrt — gemischte
+     * Rotation je Part (+0x68) und Wurzel (+0x2C..+0x34), Mischung t1 = a3 * +0x14E VOR dem
+     * Dekrement (`lbu t3,334(s2)` @0x800296a8, `mult v0,t3` @0x800296bc; Rotation
+     * +0x68 := (t1*aktuell + (4096-t1)*Ziel) >> 12 @0x800299f0-0x80029ab0, Wurzel ebenso
+     * @0x800296e4-f0). part+0x5C (Welt-Hand) entsteht beim Zeichnen aus genau diesen Matrizen
+     * (FUN_80027160 -> FUN_80027434 `gte_stlvnl(part+0x48 .t)`), also traegt der Pin die
+     * Ueberblendung mit — die reine Keyframe-Pose (re15_enemy_bone_world_pos, QUERY) nicht. */
+    int16_t  pa[RE15_EMD_MAX_BONES][3];
+    int32_t  proot[3];
+    int32_t  ptrans[RE15_EMD_MAX_BONES][3];   /* modell-lokale Part-Lage der gemischten Pose */
+    uint8_t  pvalid;
 } re2arm_t;
 static re2arm_t s_arm[RE15_ACTOR_MAX];
 
@@ -247,20 +260,71 @@ static int arm_frame(const re15_actor_t *e)        /* +0x14D */
 }
 /* 0x8002959C mit Pose-Merker (s. re2arm_t.pose_*): erst die Pose des AKTUELLEN Bilds merken
  * (= das, was 0x80029614 in die Parts schreibt), dann zaehlen. */
+/* 0x80029614 auf die Parts des Arms (Nachbesserung 2): Ziel = Keyframe des Bilds +0x14D VOR dem
+ * Zaehlen, Mischung mit t1 = a3 * +0x14E (VOR dem Dekrement, @0x800296a8-bc) gegen die Parts des
+ * letzten Aufrufs. Die Mischformel ist die des Port-Renderers (re15_skel_compute_pose: wp = frac *
+ * rate, prev*wp + kf*(4096-wp), Kuerzestweg) — hier auf einem Schatten-Aktor, damit der Takt des
+ * Gehirns die Parts traegt wie im Original und nicht erst der Zeichner. */
+static void arm_parts(re15_actor_t *e, int slot, int rate)
+{
+    static re15_actor_t sh;
+    re2arm_t *a = &s_arm[slot];
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || b->skel.bone_count <= 0 || b->skel.bone_count > RE15_EMD_MAX_BONES) { a->pvalid = 0; return; }
+    sh = *e;
+    sh.anim_frac = e->anim_frac;                         /* t3 = +0x14E vor `addiu -1` @0x800299c8 */
+    sh.anim_blend_rate = (uint16_t)rate;                 /* a3 (Arm: 256 an allen Advance-Stellen) */
+    sh.anim_prev_valid = a->pvalid;
+    sh.neck_bone = 0; sh.hurt_bend_bone = -1;            /* keine Kopf-/Treffer-Zusaetze im Schatten */
+    memcpy(sh.prev_angles, a->pa, sizeof a->pa);
+    memcpy(sh.prev_root, a->proot, sizeof a->proot);
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, &sh, -1, e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = &sh;
+    int rv = (kf >= 0) ? re15_skel_compute_pose(&b->skel, kf, poses) : -1;
+    g_anim_pose_actor = save;
+    if (rv != 0) { a->pvalid = 0; return; }
+    memcpy(a->pa, sh.prev_angles, sizeof a->pa);
+    memcpy(a->proot, sh.prev_root, sizeof a->proot);
+    for (int i = 0; i < b->skel.bone_count; i++) memcpy(a->ptrans[i], poses[i].trans, sizeof a->ptrans[i]);
+    a->pvalid = 1;
+}
 static int arm_adv(re15_actor_t *e, int slot, int blend)
 {
     s_arm[slot].pose_clip  = e->motion;                  /* +0x14C beim Aufruf              */
     s_arm[slot].pose_frame = e->anim_frame;              /* +0x14D VOR `addiu +1` @0x80029B30 */
     s_arm[slot].pose_ok    = 1;
+    arm_parts(e, slot, blend);                           /* 0x8002959C -> 0x80029614 (Parts)   */
     return re15_re2_advance_959c(e, blend);
 }
-/* part[Hand]+0x5C/+0x60/+0x64 = Hand-Weltpunkt der Pose, die die Parts tragen (s. o.). */
+/* part[Hand]+0x5C/+0x60/+0x64 = Hand-Weltpunkt der GEMISCHTEN Parts des letzten Advance (s. o.),
+ * mit Lage/Blick des Arms wie beim Zeichnen (FUN_80027160: Entity-Matrix aus +0x74/+0x38..). */
 static void arm_hand_pose(re15_actor_t *e, int slot, int32_t out[3])
 {
+    const int hb = re15_re2arm_hand_bone(e);
+    if (s_arm[slot].pvalid && hb >= 0 && hb < RE15_EMD_MAX_BONES) {
+        re15_skel_bone_to_world(s_arm[slot].ptrans[hb], e->rot_y, e->x, e->y, e->z, out);
+        return;
+    }
     const int16_t mo = e->motion; const uint16_t fr = e->anim_frame;
     if (s_arm[slot].pose_ok) { e->motion = s_arm[slot].pose_clip; e->anim_frame = s_arm[slot].pose_frame; }
-    re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), out);
+    re15_enemy_bone_world_pos(e, hb, out);
     e->motion = mo; e->anim_frame = fr;
+}
+/* Mess-/Test-Auskunft (Nachbesserung 2): Hand der gemischten Parts (= Pin-Quelle) und die reine
+ * Keyframe-Hand der Parts-Pose (ohne +0x14E), beide in Weltkoordinaten. */
+int re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    re15_actor_t *e = &g_actors[slot];
+    if (gemischt) arm_hand_pose(e, slot, gemischt);
+    if (rein) {
+        const int16_t mo = e->motion; const uint16_t fr = e->anim_frame;
+        if (s_arm[slot].pose_ok) { e->motion = s_arm[slot].pose_clip; e->anim_frame = s_arm[slot].pose_frame; }
+        re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), rein);
+        e->motion = mo; e->anim_frame = fr;
+    }
+    return s_arm[slot].pvalid;
 }
 
 /* FUN_800152C8(self, yaw_ofs): x += cos(yaw+ofs)*+0x144 >> 12, z -= sin(...)*+0x144 >> 12
@@ -465,12 +529,13 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
          * Clip 5 Bild 0: Leon stand bis ~170 Einheiten seitlich versetzt (Messung Dossier 4.1). */
         arm_hand_pose(e, slot, h);
         if (getenv("RE15_RE2_TRACE")) {                   /* Messschiene: alter gegen neuer Pin */
-            int32_t alt[3]; re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), alt);
+            int32_t alt[3], rein[3]; re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), alt);
+            (void)re15_re2arm_hand_parts(slot, NULL, rein);
             FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
-            fprintf(o, "[re2arm] PIN slot %d yaw %d: Parts-Pose Clip %d Bild %u -> (%d,%d); Clip 5 Bild 0 "
-                       "(bisher) -> (%d,%d); Leon vorher (%d,%d) yaw %d\n", slot, (int)e->rot_y,
-                    (int)s_arm[slot].pose_clip, (unsigned)s_arm[slot].pose_frame, h[0], h[2], alt[0], alt[2],
-                    pl->x, pl->z, (int)pl->rot_y);
+            fprintf(o, "[re2arm] PIN slot %d yaw %d: Parts gemischt Clip %d Bild %u -> (%d,%d); rein (ohne +0x14E) "
+                       "-> (%d,%d); Clip 5 Bild 0 -> (%d,%d); Leon vorher (%d,%d) yaw %d\n", slot, (int)e->rot_y,
+                    (int)s_arm[slot].pose_clip, (unsigned)s_arm[slot].pose_frame, h[0], h[2], rein[0], rein[2],
+                    alt[0], alt[2], pl->x, pl->z, (int)pl->rot_y);
         }
         pl->x = h[0];                                     /* sw v0,0x800CFC30 (PL+0x38) @0x80100C18-20 */
         pl->z = h[2];                                     /* sw v0,0x800CFC38 (PL+0x40) @0x80100C24-38 */

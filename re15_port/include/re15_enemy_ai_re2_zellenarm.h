@@ -35,6 +35,9 @@ uint16_t re15_re2arm_part_hide_mask(const re15_actor_t *e);
  * Cooldown 0x800CFBF4 (== g_re2_room_gflags, EIN Wort mit Hund/Kraehe). */
 void re15_re2arm_home(int slot, int16_t *yaw, int32_t *x, int32_t *z);
 int  re15_re2arm_holder_slot(void);      /* -1 = kein Arm haelt den Spieler */
+/* Runde 35 Spur H, Nachbesserung 2: Hand der GEMISCHTEN Parts (+0x14E-Ueberblendung wie 0x80029614,
+ * = Pin-Quelle @0x80100C18-38) und die reine Keyframe-Hand derselben Parts-Pose; 1 = Parts gueltig. */
+int  re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3]);
 int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* 3 (Arm A) oder 10 (Arm B) */
 
 #endif /* RE15_ENEMY_AI_RE2_ZELLENARM_H */
