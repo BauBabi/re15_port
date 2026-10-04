@@ -30,6 +30,7 @@
 #include "re15_tim.h"
 #include "re15_fade.h"
 #include "asset_root_pc.h"   /* re15_pc_read_re2: shared_assets/RE2/DOOR (Runde 31) */
+#include "re15_tuer_spiegel.h" /* Runde 35 Spur F: symmetrische Griffe der Port-Doppeltueren */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern void re15_render_pc_bind_tim_slot(int slot);
@@ -159,7 +160,8 @@ static void griff_zeichnen(const re15_door_seq_t *s, griff_tausch_t *g, int oi, 
     const uint16_t *basis = hinten ? g->gt->rot_hinten : g->gt->rot_vorn;
     int32_t delta = (int16_t)(uint16_t)(o->rot[0] - o->rot0[0]);  /* Griffbewegung des Archivs */
     int32_t d2 = g->gt->aus_archiv ? delta * g->gt->aus_spender / g->gt->aus_archiv : 0;
-    uint16_t rot[3] = { (uint16_t)(basis[0] + d2), basis[1], basis[2] };
+    uint16_t rot[3];   /* Runde 35 Spur F: + Spiegel-Drehung rot0[2] des Archiv-Objekts (re15_tuer_spiegel.h) */
+    re15_tuer_griff_tausch_rot(basis, d2, o->rot0[2], rot);
     /* Runde 33: Versatz (P1B3: Riegelstange am Spender-Anhaengepunkt), sonst 0 */
     const int16_t *vs = hinten ? g->gt->versatz_hinten : g->gt->versatz_vorn;
     int32_t pos[3] = { o->pos[0] + vs[0], o->pos[1] + vs[1], o->pos[2] + vs[2] };
@@ -171,12 +173,24 @@ static void griff_zeichnen(const re15_door_seq_t *s, griff_tausch_t *g, int oi, 
     g->vor[oi] = welt;
 }
 
+static uint16_t s_spiegel_dz;   /* Runde 35 Spur F: re15_tuer_spiegel_dz des laufenden Archivs (Fluegel 1) */
+static re15_door_mat_t s_spiegel_vor[RE15_DOOR_OBJEKTE];
+
 static void objekt_zeichnen(const re15_door_seq_t *s, int oi, int *lfd, griff_tausch_t *g)
 {
     const re15_door_obj_t *o = &s->obj[oi];
     if (!o->on) return;
     if (griff_getauscht(g, o)) { griff_zeichnen(s, g, oi, lfd); return; }
     if (!s->md1_ok || o->mesh >= (unsigned)s->md1.mesh_count) return;
+    if (s_spiegel_dz && o->eltern == 1 && s->obj[1].eltern < 0) {   /* Griff am 2. Fluegel (P0CD) */
+        uint16_t rot[3] = { o->rot[0], o->rot[1], (uint16_t)(o->rot[2] + s_spiegel_dz) };
+        int32_t pos[3] = { o->pos[0], o->pos[1], o->pos[2] };
+        re15_door_mat_t welt;
+        re15_door_seq_objmatrix(&s->obj[1].welt, rot, pos, &welt);
+        mesh_zeichnen(&s->md1.meshes[o->mesh], &welt, &s_spiegel_vor[oi], o->flags, lfd);
+        s_spiegel_vor[oi] = welt;
+        return;
+    }
     mesh_zeichnen(&s->md1.meshes[o->mesh], &o->welt, &o->welt_vor, o->flags, lfd);
 }
 
@@ -333,6 +347,8 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     const char *bogen = getenv("RE15_TUER_BOGEN");
     int schnell = getenv("RE15_TUER_SCHNELL") != NULL;   /* Pruefhaken: ohne VSync-Takt */
     const re15_tuer_eigen_t *eig = re2 ? re15_door_seq_eigen(a->eigen) : NULL;
+    s_spiegel_dz = re15_tuer_spiegel_dz(eig ? eig->kennung : NULL, 1);   /* Runde 35 Spur F */
+    for (int k = 0; k < RE15_DOOR_OBJEKTE; k++) s_spiegel_vor[k] = s.obj[k].welt;
     fprintf(stderr, "[tuer] Sequenz Archiv %d DOOR%02X%s%s Variante %d Bit7 %d Tuer %u Seite S%03u T%03u "
                     "Spender %02X (%d Skripte)\n",
             a->archiv, re2 ? a->re2_nr : 0x2E, eig ? " Port-Archiv " : "", eig ? eig->kennung : "",

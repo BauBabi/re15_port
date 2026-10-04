@@ -49,3 +49,18 @@ endif()
 add_test(NAME unit_r35_inhalt_items COMMAND test_r35_inhalt_items
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r35_inhalt_items PROPERTIES TIMEOUT 120)
+
+# MESS-SONDE (kein add_test), Punkt 1: Griff-Symmetrie jeder Doppeltuer-Wahl der Tuer-Tabelle.
+add_executable(probe_r35_inhalt_tueren ${CMAKE_CURRENT_LIST_DIR}/../probe_r35_inhalt_tueren.c)
+target_link_libraries(probe_r35_inhalt_tueren PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r35_inhalt_tueren PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r35_inhalt_tueren PRIVATE
+    RE15_ASSET_SHARED_DIR="${CMAKE_SOURCE_DIR}/shared_assets")
+if(NOT WIN32)
+    target_link_libraries(probe_r35_inhalt_tueren PRIVATE m)
+endif()
+#   unit_r35_inhalt_tueren  Punkt 1: Griff-Symmetrie aller Port-Doppeltueren (alt: Befund, neu: < 10 Grad,
+#                           RE2-Originale unveraendert) — dieselbe Sonde mit Argument "test".
+add_test(NAME unit_r35_inhalt_tueren COMMAND probe_r35_inhalt_tueren test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r35_inhalt_tueren PROPERTIES TIMEOUT 120)
