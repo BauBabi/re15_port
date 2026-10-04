@@ -299,3 +299,11 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
   Pin - traegt der Orchestrator parallel PFLICHT_DATEI-Zeilen ein, danach Selbsttest + Pin neu.
 - Jede vor diesem Stand gebaute APK besteht die Kette weiter nur, wenn ihr Manifest R1/R2 erfuellt (alle bisherigen:
   kein Segment `*.neu`, keine Datei+Ordner-Paare - am Quellbaum geprueft: `--quellbaum` 3629 Dateien OK).
+
+## Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Emulator-Ende, ohne Parallel-Last dieser Spur):
+
+    === LOCAL-BUILD-OK (all) — Tests 482/482
+
+(478 vorher + 4 neue: unit_r35_android_abgleich, unit_r35_android_anzeige, unit_r35_android_konflikt,
+unit_r35_android_pruefkette.) Keine Fenster-Haken rot, kein Nachfahren noetig.
