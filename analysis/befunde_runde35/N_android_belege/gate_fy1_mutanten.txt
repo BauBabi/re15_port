@@ -1,0 +1,18 @@
+E_manifest_pruefen_gt      rc=1  ERKANNT  == SELBSTTEST-FEHLER: 1 von 258 Faellen falsch, 3 nicht gelaufen (Schnellmodus) - das Gate
+      [FEHLER] 259 R35 F-Y1: Pruefsumme falsch, GROESSER als die echte (ff..ff) rc=0 (soll 1)  fehlende Meldung: ['M
+D06_ASCII_KLEIN_ohne_Z     rc=1  ERKANNT  == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(Dublette Z/z) nimmt an = True, soll False ()
+D08_KOPF_RE_plus_anzahl    rc=1  ERKANNT  == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(Kopf-Anzahl 19 Ziffern) nimmt an = True, soll False ()
+D13_kopf_strip_cr          rc=1  ERKANNT  == SELBSTTEST-FEHLER: 1 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(CR vor der Kopfzeile) nimmt an = True, soll False ()
+D15_zeile_strip_cr         rc=1  ERKANNT  == SELBSTTEST-FEHLER: 2 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(CR vor einer Datenzeile) nimmt an = True, soll False ()
+      [FEHLER] manifest_lesen(Zeilenende LF-CR) nimmt an = True, soll False ()
+R1_nur_ganzer_pfad         rc=1  ERKANNT  == SELBSTTEST-FEHLER: 4 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(R1 Ordner X.neu) nimmt an = True, soll False ()
+      [FEHLER] manifest_lesen(R1 Ordner X.NEU) nimmt an = True, soll False ()
+R2_weg                     rc=1  ERKANNT  == SELBSTTEST-FEHLER: 3 innere Probe(n) falsch - das Gate ist NICHT verlaesslich ==
+      [FEHLER] manifest_lesen(R2 Datei + Ordner) nimmt an = True, soll False ()
+      [FEHLER] manifest_lesen(R2 Gross/klein) nimmt an = True, soll False ()
+7 von 7 Mutanten erkannt
