@@ -486,3 +486,10 @@ Plan (nur Punkt 3, "Kuenftige Aenderungen am Pruefskript muessen dessen Urteilsl
   N22a-e (je eine Zahl der Schlusszeile leer).
 - Danach die Aenderungen der Abnahme 1 selbst nachfahren (E-Reihe: 28 nicht gleichwertige Python-Aenderungen; F1-F13
   und G1/G2 an der echten Kette) - alle muessen rot werden.
+
+### Nachbesserung 2 - Messung vorher (Python-Urteil, E-Reihe der Abnahme 1)
+Werkzeug `N_android_belege/werkzeug/nb2_urteil_aenderungen.py` (die 29 Aenderungen der Abnahme 1, 3.2, woertlich; je
+eine Kopie + `--selbsttest`, 6 parallel, 29 s). Gegen das Urteil @9e535728 (Pin c8fed5ca...): Kontrolle K0 OK
+(243/243, 781/785, 4); **11 von 29 NICHT bemerkt: E1, E2, E3, E4, E5, E6, E7, E9, E11, E29, E24** - genau die Liste der
+Abnahme (E11 = `rc != 0` -> `rc > 0`, dort "in der Praxis gleichwertig"). Die Abnahme ist damit reproduziert.
+Beleg `N_android_belege/nb2_urteil_aenderungen_vorher.txt`.
