@@ -288,7 +288,7 @@ Betroffene Raeume (selbsttuer_zensus.py, `port_neu=0` vor U1): ROOM2040/2041 (Sl
 20A0/20A1 (1), 30E0 (2), 4000 (7), 4050/4051 (1-3, 5-13), 40A0/40A1 (10), 5090/5091 (0,2,3,4),
 6030/6031 (0,1).
 
-### M1 — Endkampf ROOM5090: Boss-HP 0 nach Selbst-Tuer (in Arbeit)
+### M1 — Endkampf ROOM5090: Boss-HP 0 nach Selbst-Tuer (behoben)
 
 **Ursache (gelesen):** op_sce_em_set setzt `a->hp = 0` (scd_vm.c, Sce_em_set traegt keine HP). Den
 G5 baut das Port-Modul enemy_ai_boss_g5.c; sein Konstruktor (HP 600) lief nur bei
@@ -325,7 +325,23 @@ Der Konstruktor selbst ist unveraendert (Tentakel-Reset, HP 600, Intro-Zustand s
 Nebenwirkung, gleiche Regel: auch Tod + CONTINUE in ROOM5090 (gleicher Slot, Modul aktiv) baut den
 Boss jetzt neu auf.
 
-### M2 — Zensus der neu einsteigenden Raeume (a) und exe-Pin ROOM5090 (b) (in Arbeit)
+**Messung nachher (dieselben zwei Laeufe, identische Eingabe, eigene exe-Kopie
+`scratchpad/c_nb1_lauf.sh`, Laufordner `scratchpad/c_mess/nb1_echt` / `nb1_kampf`):**
+```
+nb1_kampf: [fire-aot] slot=2 at F200 -> DOOR FIRE slot=2 target_cut=14 -> 2. Sce_em_set type=0x36
+           F201 hp=600; F408 cam=15 mo=1 x=-9000 hp=600; F587 x=-3891; F679 mo=3 x=-1986;
+           F1001 x=856; F1060 x=1960 hp=600 (Boss laeuft an, kein Todesclip)
+nb1_echt:  DOOR FIRE slot=0 target_cut=9 -> 2. Sce_em_set type=0x36, Boss hp=600 ab F100 bis F1700
+Boss-Eintrag (Zustand, Clip, Lage, HP) Bild fuer Bild gegen die Basis-exe ohne U1:
+           nb1_kampf vs basis_o3_5090_kampf: 1000 Bilder, 0 verschieden
+           nb1_echt  vs basis_o3_5090_echt:   400 Bilder, 0 verschieden
+```
+Bild (RE15_FRAMEDUMP, opengl, kein SOFTWARE_RENDER): `C_zgirl_bilder/nb1_5090_kampf_F500-1100.png`
+— der G5 kommt im Suedwagen auf Leon zu (F500 hinter ihm, F700 an ihm, F900/F1100 im Gang).
+Gegenprobe (Fixes 1 und 2 aus dem Arbeitsbaum genommen, gebaut, T9 gefahren): `Boss HP 0`,
+`Routine 3 gesehen 1, HP -1`, Spawn-Zaehler 4 bzw. 5..10 -> T9 rot; mit den Fixes gruen.
+
+### M2 — Zensus der neu einsteigenden Raeume (a) und exe-Pin ROOM5090 (b)
 
 **(a) Methode.** Der Raumwechsel-Pfad (room_common.c re15_room_apply_pending) und der
 Selbst-Tuer-Pfad (game_step_common.c, Same-Room-Reenter) rufen beide scd_room_reenter
@@ -349,3 +365,38 @@ Nur im Raumwechsel-Pfad (room_common.c) zurueckgesetzt — Bewertung fuer die Se
 | savepoint/itembox/pauseflags | Bildschirme halten den Spielschritt an; Tuer feuert dort nicht |
 | Modelle/RBJ/Licht/Nachrichten/Bank/BGM | gleicher Raum = gleiche Daten |
 | Kollisionsband | setzt aot_fire_door selbst aus spawn_y (re15_collision_set_band) |
+
+Raumgebundene Port-Haken in den 46 Raeumen (grep auf die Raum-Ids, engine/src + main.c):
+| Raum | Haken | Zustand | Wiedereintritt |
+|---|---|---|---|
+| 5090/5091 | enemy_ai_boss_g5.c + enemy_ai_tentakel_g5.c (Dispatch enemy_ai_common.c `t == 0x36 && (room & 0xFFFE) == 0x5090`) | s_g5, s_g5_slot, s_tent*, s_devour_ph | war kaputt (M1), jetzt Konstruktor je Spawn |
+| 5090/5091 | scd_vm.c Umtypung 0x30 -> 0x36, sub02-Riegel; re15_damage.c Waffen-/Granatenzeile, RE2-Trefferbox; main.c RE2-Modell-Lader | keiner (Funktion von Raum + Typ) | unveraendert |
+| 20A0/20A1 | scd_room_setup.c Ereignis 2 (Effektschleife sub02) | Thread in g_scd | scd_room_reenter wischt g_scd und feuert neu — wie beim Betreten |
+| 6030/6031 | re15_itembox.c Raum-Tabelle | keiner | unveraendert |
+| 2040, 30E0, 4000, 4050, 40A0 | keine raumgebundenen Haken | — | — |
+
+Typgebundene KI der gespawnten Typen: Zombies 0x10/0x11/0x13/0x18, Adult-Spinne 0x25, Kakerlake 0x29,
+NPC 0x40..0x4d setzen ihren Zustand im INIT des Aktors (`e->state == 0` aus Sce_em_set, scd_vm.c
+`a->state = 0`); scd_room_reenter nullt die Aktoren vorher. Die Modul-Woerter der RE2-KI
+(g_re2_room_gflags inkl. Spinnen-Mutex 0x20, PRNG, One-Save-Latch) setzt re15_re2z_rng_reset in
+scd_room_reenter zurueck (auch Selbst-Tuer). Die per-Slot-Tabellen in enemy_ai_common.c (s_wander_*,
+s_gait_variant, s_zfoot_*, s_los_*) verhalten sich in beiden Pfaden gleich (auch der Raumwechsel nullt
+sie nicht; der INIT/Engage schreibt sie). Ergebnis: ausser G5 und Spawn-Zaehler kein Zustand, der eine
+Selbst-Tuer anders uebersteht als einen Raumwechsel.
+
+**(b) Pins.**
+* `unit_r35_zgirl_wiedereintritt` (T9, test_r35_zgirl.c): echter Spielschritt (scd_vm_tick +
+  re15_game_step mit KI) durch die Selbst-Tuer. ROOM5090: Erstbetritt Boss HP 600, Spawns 2; Tuer 2 ->
+  Szenario 14, Verbraucher in game_step_common.c steigt neu ein, Spawns dieses Eintritts 2; Boss HP 600;
+  Kampfstart (grid 0x13 wie sub04 Member_set @0x130A) 120 Bilder ohne Routine 3, HP 600. ROOM4050 Tuer 6
+  sechsmal: Spawn-Zaehler je 1. Gegenprobe ohne Fixes rot (s. M1).
+* `integration_r35_zgirl_5090` (tests/integration/test_r35_zgirl_5090.cmake, echte exe, eigener
+  exe-Name): Leon vor Tuer 2 (500,-9175) rot 2048, Aktionstaste per Eingabeskript `A0.1,W1,U12` ab
+  Bild 100, dann geradeaus bis zum Kampfstart; prueft DOOR FIRE slot=2 -> Cut 14, zweiten
+  Sce_em_set type=0x36 nach der Tuer, Boss-HP am Ende 600, nie < 0, Boss x max >= -7500 (Start -9000).
+
+### M3 — Kommentar aot_common.c (behoben)
+Der Satz "BEWUSST NICHT verallgemeinert ... eigene Runde mit eigener Messung" ist ersetzt: Runde 30
+liess Stage >= 2 aus und verlangte eine Messung; Runde 35 Spur C hat sie gemacht, jede Selbst-Tuer
+steigt neu ein, und die Messung fand die zwei Zustaende (G5-Konstruktor, Spawn-Zaehler), die jetzt auch
+der Wiedereintritt zuruecksetzt.
