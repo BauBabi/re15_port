@@ -12,7 +12,8 @@
 #                               Baum = APK, dritter Start schneller Weg; Listen mit R1/R2-Verstoss fail closed
 #   unit_r35_android_pruefkette Punkt 3 (F-Y1/F-Y2): release/apk_pruefen.sh + gate_urteil.py + apk_asset_gate.py -
 #                               Urteils-Selbsttest (Faelle + Mutanten), Gate-Selbsttest ueber gate_laufen, Negativ-
-#                               Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes Urteil) muessen
+#                               Kontrollen (leere/kaputte APK, kaputtes umgepinntes Gate, verstuemmeltes Urteil, je
+#                               Pruefzeile des bash-Urteils eine Attrappe N10-N21 - Nachbesserung 1) muessen
 #                               ROT werden (r35_android/test_r35_android_pruefkette.sh; nur wenn bash da ist)
 add_executable(test_r35_android_abgleich
     test_r35_android_abgleich.c

@@ -190,7 +190,7 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
      Mindestzahlen, Fallnummern, rc != soll, SUMME/Manifest/Tuerarchive/TORSE/unzip-Zaehlung, Baumzeilen ...).
    - **Mutanten des eigenen Urteilscodes** (AST, je Lauf genau eine Aenderung: Vergleich ==/!=, </<=, >/>=, in/not in;
      and/or; not weg; if-Bedingung -> True/False; Zahl +-1 (auch die Urteilszahlen 0/1/2 in ende()); Aufruf weg). Nicht
-     mutiert werden nur Meldungstexte (Format-Argumente, Grund in ende()). Erkannt = mindestens ein Fall entscheidet
+     mutiert werden nur Meldungstexte (Format-Argumente, Grund in ende()) [Abnahme 0, M3: zu weit - Zeichenketten, Regex-Muster, MARKE-Tabelle und Pruef-Literale wurden in diesem Stand NICHT mutiert, main()/urteil_rufen() lagen ausserhalb; gemessener Umfang ab Nachbesserung 1 unten]. Erkannt = mindestens ein Fall entscheidet
      anders ODER stuerzt ab, wo das Original begruendet entscheidet. Ergebnis: **260 Mutanten, 257 erkannt, 3 als
      gleichwertig begruendet** (`AEQUIVALENT` mit Begruendung im Code: tuer_soll group(2)->group(1) hinter g1 == g2;
      das ende() fuer "FEHLER-Schluss mit Rueckgabe != 1" - der naechste Schritt entscheidet denselben Fall mit 2;
@@ -371,3 +371,34 @@ der Fall "[FEHLER] tiefer eingerueckt", die Alternativen-Faelle und Operator R6.
 A5 (3 Faelle falsch), A6 (3), A11 (4) - Beleg `nb1_urteil_aenderungen_nachher.txt`. Pin `release/gate_urteil.sha256` =
 `c8fed5cab7016a9d699b0b1dc90dc1532e7f1356ec0219a801d911cbc0a25ba8`, `GATE_URTEIL_MIN_FAELLE/ERKANNT/MAX_GLEICH` =
 243/781/4 (apk_pruefen.sh).
+
+**Gegenprobe "aendert die Nachbesserung ein Urteil?"** (Werkzeug `werkzeug/urteil_alt_neu_nb1.py`): das Urteil
+@b19c39fa und das neue Urteil auf allen 243 Faellen des neuen Selbsttests -> `243 Faelle, 243 gleiches Urteil, 0 anders`
+(Beleg `nb1_urteil_alt_neu.txt`). Die neuen Faelle halten also nur fest, was das Urteil schon tat; die echten
+Gate-Ausgaben (P1 Gate-Selbsttest 261/261, P2 Quellbaum 3629 Dateien, N3 ABWEICHUNG rc 1) urteilen in der Kette wie
+vorher.
+
+### M2 - Pruefzeile `(( rc == 0 )) || die` ohne Negativ-Kontrolle (Punkt 3)
+**Ursache:** `test_r35_android_pruefkette.sh` hatte fuer `gate_urteil_selbsttest` nur N6/N7 (keine gueltige
+Schlusszeile) und N9 (Mindestzahl erkannt ueber die echte Datei); fuer `rc != 0` bei richtiger Schlusszeile, f1 != f2,
+Mindestzahl Faelle, Summe erkannt + gleich, Hoechstzahl gleichwertig, die Anker des bash-Musters, den Zweig "ohne
+Urteilszeile" der zweiten Instanz und die Pin-Pruefung VOR JEDEM Lauf gab es keine Kontrolle.
+
+**Aenderung (test_r35_android_pruefkette.sh, nur Test):** Attrappe des Urteils (`attrappe`: druckt bei --selbsttest
+genau die vorgegebenen Zeilen, endet mit der vorgegebenen Rueckgabe; die Zahlen kommen aus den Mindestzahlen von
+apk_pruefen.sh, `okz`), umgepinnt wie N6. **P3** = alles richtig -> MUSS angenommen werden (sonst waeren die Abbrueche
+wertlos). Je Kontrolle genau EINE verletzte Bedingung: **N10** richtige OK-Zeile + Rueckgabe 1 (= M2), N11 f1 != f2,
+N12 f < Mindestzahl, N13 erkannt + gleich != alle, N14 erkannt < Mindestzahl, N15 gleichwertig > Hoechstzahl, N16
+OK-Zeile nicht zuletzt, N17 Zusatz dahinter, N18 Text davor; **N19a/b** Urteil 0 ohne Urteilszeile bzw. mit der eines
+anderen Modus bei Gate-Rueckgabe 0 (Gate = umgepinnte Attrappe G0) -> rot ueber den Zweig "ohne Urteilszeile";
+**N20/N21** private Kopie von Urteil bzw. Gate NACH gate_festhalten um eine Kommentarzeile veraendert -> gate_laufen
+bricht mit "... ist NICHT das festgehaltene" ab. Nebenbefund: N8 hatte die Schlusszeile "119/119 ... 257/260" fest im
+Text - mit den neuen Mindestzahlen waere N8 am Selbsttest statt an der zweiten Instanz rot geworden (die eigene Pruefung
+"ueberstimmt (zweite Instanz)" hat das sofort gemeldet: Lauf `kette1`, `FALSCH N8 ohne 'ueberstimmt (zweite
+Instanz)'`); jetzt kommt auch dort die Zeile aus `okz`.
+
+**Messung Kette nachher** (echter Baum, `bash test_r35_android_pruefkette.sh`, 77 s): P0-P3 ok, N1-N21 alle wie
+verlangt, `FEHLER=0`. Auszug: `N10_ok_zeile_rueckgabe_1 -> Abbruch: DIE: Selbsttest des Gate-Urteils:
+OK-Schlusszeile, aber Rueckgabe 1`, `N19a ... Gate-Urteil ohne Urteilszeile '   Gate-Urteil (selbsttest, Rueckgabe 0):
+...' (zweite Instanz)`, `N20_urteil ... DIE: Gate-Urteil ist NICHT das festgehaltene`, `N21_gate ... DIE: Asset-Gate
+ist NICHT das festgehaltene`.

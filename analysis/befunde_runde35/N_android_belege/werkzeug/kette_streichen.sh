@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runde 35 Spur N, Nachbesserung 1 (M2): Streich-Messung der bash-Urteilslogik (siehe kette_streichen.py).
 # Aufruf: bash kette_streichen.sh <repo-wurzel> <ziel> [parallel=4]
-# Junctions (re15_port, synchro) werden NUR mit "cmd /c rmdir" entfernt - nie rm -rf (das liefe in den Baum hinein).
+# Junctions (re15_port, synchro; MSYS_NO_PATHCONV=1, sonst wird /J zum Pfad) werden NUR mit "cmd /c rmdir" entfernt - nie rm -rf (das liefe in den Baum hinein).
 set -u
 REPO="$1"; ZIEL="$2"; PAR="${3:-4}"
 TEST="$REPO/re15_port/tests/unit/r35_android/test_r35_android_pruefkette.sh"
@@ -11,7 +11,8 @@ ids="$("$PY" "$(cygpath -w "$REPO/analysis/befunde_runde35/N_android_belege/werk
        "$(cygpath -w "$REPO")" "$(cygpath -w "$ZIEL")" | tr -d '\r')" || exit 9
 for id in $ids; do
     for j in re15_port synchro; do
-        [[ -e "$ZIEL/$id/repo/$j" ]] || cmd //c mklink /J "$(cygpath -w "$ZIEL/$id/repo/$j")" "$(cygpath -w "$REPO/$j")" > /dev/null
+        [[ -e "$ZIEL/$id/repo/$j" ]] || MSYS_NO_PATHCONV=1 cmd /c mklink /J "$(cygpath -w "$ZIEL/$id/repo/$j")"             "$(cygpath -w "$REPO/$j")" > /dev/null || { echo "Junction $id/$j nicht anlegbar"; exit 9; }
+        [[ -d "$ZIEL/$id/repo/$j" ]] || { echo "Junction $id/$j fehlt"; exit 9; }
     done
 done
 lauf_eine() {
@@ -27,7 +28,7 @@ for id in $ids; do
 done
 wait
 for id in $ids; do
-    for j in re15_port synchro; do cmd //c rmdir "$(cygpath -w "$ZIEL/$id/repo/$j")" > /dev/null 2>&1; done
+    for j in re15_port synchro; do MSYS_NO_PATHCONV=1 cmd /c rmdir "$(cygpath -w "$ZIEL/$id/repo/$j")" > /dev/null 2>&1; done
 done
 bemerkt=0; gesamt=0
 for id in $ids; do
