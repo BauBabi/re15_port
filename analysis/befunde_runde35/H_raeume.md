@@ -480,8 +480,10 @@ RE15_PLAYER_POS=-21750,-6400,0 RE15_PAD_AT=45:A,46:A`, dann `RE15_INPUT_SCRIPT_B
 * Gegenlauf `m4_re2_stand` (Default RE2, gleiche Eingabe): Griff F244, Pin (-20588,-15148) = Parts-Pose-Hand,
   Hand an Kopf/Schulter (Bild `H_raeume/nb1_m4_re15ki_oben_re2ki_unten.png`, untere Haelfte).
 
-**Einordnung (belegt, nicht geaendert):** der RE1.5-Writher hat im Original KEINEN Griff (Ausgang
-@0x8010c8e4 auf +0x5 = 2/3, enemy_ai_common.c Writher-Block); der ganze RE1.5-KI-Griff ist eine
+**Einordnung (belegt, nicht geaendert):** der RE1.5-Writher hat im Original KEINEN Griff — selbst
+disassembliert (STAGE1.BIN): `8010c8cc jal 0x8001af20` (rng) / `8010c8d4 andi v0,v0,0x1` / `8010c8e0 addiu v0,v0,2`
+/ `8010c8e4 sb v0,5(v1)` / `8010c8f4 sb zero,6(v0)` = nach der Lunge +0x5 := 2 oder 3 (Greifen-Schleife bzw.
+Zurueck), kein Spieler-Kommando; der ganze RE1.5-KI-Griff ist eine
 gekennzeichnete Nachruestung (Anker-Kommentar enemy_ai_common.c:12770ff) mit geliehener Zombie-Opferbank,
 deren Wurzelversatz Leon relativ zum Anker setzt (re15_clip_root_motion_abs). Das RE2-Ziel fuer einen Griff
 durch Gitterstaebe ist der EM2D-Arm (Pin auf die Hand @0x80100C18-38, Opferbank des Arms @0x80100C3C-5C,
