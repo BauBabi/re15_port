@@ -1824,3 +1824,37 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   nur PSX-Anzeige-Neuinitialisierungen @0x8001cd04/@0x800214e8, Beleg im Hunde-Kommentar enemy_ai_common.c).
 - Vergleich: Der Wurf-Hook 0x8011c118 (cmd 5) platziert per ad68 bei Bild < 0x25 relativ zum Anker — genau das, was der
   Port im Finisher faelschlich tat.
+
+### M1 — Umsetzung (affen_11c0.c (15), re15_affen.h (15), 3 Haken enemy_ai_common.c)
+- `re15_affen_finisher_start()` (aus `re15_player_victim_devour` fuer Typ 0x27, Haken 2 Zeilen mit "Runde 35 Spur J (15)"):
+  Opfer-Zustand 2, Greifer = Gorilla, Variante 0 (aca59 = 0 aus dem Wort-Store @0x801191c4-cc), aca5a := 0; die
+  laufende Zielphase endet (Wort aca58 ersetzt das Kommando, Verteilung `lbu aca58` @0x80031c8c — wie beim cmd-5-Latch).
+  Der Zombie-Kollaps (SE CORE 1 + Blut 0x1500 von FUN_8010a6f8) laeuft fuer 0x27 NICHT mehr.
+- `re15_affen_finisher_tick()` (aus `re15_player_victim_tick` vor dem +0x8f-Abbau, Haken 1 Zeile; setzt auch die
+  Wurf-Phase auf 0, damit der Renderer die Opfer-Bank nimmt): Zweige aca5a 0/1/2 wie oben; Bild k = alter Stand + 1
+  (Eintritt k = 0), Pruefung `k == 0x3c` VOR dem Posieren (@0x8011c4dc-e4 vor `jal 0x8001f314` @0x8011c534);
+  Clip-Ende `k + 1 >= Bildzahl` (FUN_8001f3bc Decompilat Z. 89-95: +0x95+1 >= Bildzahl -> 0, Rueckgabe 1) -> aca5a 2;
+  aca5a 2 im naechsten Bild: Wunden (0,0xa)/(5,0x32)/(7,0x32), Zustand 7 (hp -1 nur als Port-Plumbing, hp ist schon
+  -554). +0x8f: Abbau je f314-Aufruf (Z. 78), im Port am Anfang des Folgebilds (Eintritt ohne Abbau), Rate 0x200
+  (@0x8011c538). Keine Lage-/Yaw-Schreibung.
+- Pub-Zugang `re15_player_victim_bone_pos_pub` (1 Zeile) fuer das Blut an Part 8 in der Opfer-Pose.
+- Der Spieler-Schwanz (Schub @0x80031cbc, Klemme @0x80031d70) laeuft unveraendert weiter (im Original ungegatet fuer jedes
+  Kommando, FUN_80031c44 selbst disassembliert: `jalr` @0x80031cb4 -> `jal 0x8002b544` @0x80031cbc -> ... `jal 0x8003b0a4`
+  @0x80031d70 ohne Kommando-Abfrage); im Port der (6d)-Schwanz in game_step_common.c.
+
+### M1 — Messung nachher (Riegel `finisher`, `jnb6/fin7.txt`)
+- Echter Weg: Gorilla im LEAP B[7] ab der w3y-Lage F2786 ((-5125,-14706) r2517), Leon (-9975,-10422) r587 hp 46 ->
+  Commit B[8] bei Bild 0x13, **Treffer T26** im Fenster (Gorilla Bild 8 bei (-9763,-11662); w3y: Bild 8 bei
+  (-9992,-11485)). hp 46 -> -554.
+- Danach je Bild: Opfer-Zustand 2 / Greifer 0x27 / eigene Bank nein, **+0x93 = 7**, **Clip 0, Bild 0..69 lueckenlos**
+  (Opfer-Bank Clip 0 hat 70 Bilder), **Leon in jedem Bild unveraendert auf (-9975,-10422)** (0 bewegte Bilder, groesste
+  Entfernung 0; alt 14000), Ereignisse `0x1000` (Eintritt T26), `0x203c` (Koerperfall + Blut bei Bild 0x3c = T86 =
+  Treffer + 60), `0x4045` (Tod in T96 = Bild nach Bild 69), danach Zustand 7 mit Clip 0 Bild 69 gehalten.
+- **Gegenprobe** (beide Haken per `0 &&` abgeschaltet, gebaut, `jnb6/fin_alt.txt`, danach zurueckgestellt): rot — Leon T36
+  (-2067,2398), T56 (-4330,-284), groesste Entfernung **15116**, Clip 1 dann 0xb, +0x93 = 1, kein Tod; derselbe Fehler wie
+  Abnahme 5 w3y.
+- Beobachtung (keine Aenderung): nach dem Treffer schiebt FUN_8002aec4 den noch fliegenden Gorilla (y -3000) einmal auf
+  den 2050-Kreis um Leon (T29, rund 1200 Einheiten). Mechanismus wie im Original: aec4(a0 = Spieler, a1 = Gorilla)
+  @0x80116e38-44 ohne HP-Abfrage, Y-Band `-(hA+hB) < dy < hA+hB` (Decompilat FUN_8002aec4, Port re15_body_push) — bei
+  y -3000 noch im Band. In w3y war Leon zu diesem Zeitpunkt schon weggesprungen. Gegen eine Original-Aufnahme nicht
+  gemessen -> OFFEN N6-2.

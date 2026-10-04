@@ -1744,6 +1744,87 @@ static void teil_schrot(void)
     PRUEF(f_sel >= 0 && zonen == 0, "danach SELECTOR (F%d) und KEIN Zonen-Sprung (Original: Clip-6-Anlauf bis F444, dann CHASE); Zonen-Sprung-Bilder %d", f_sel, zonen);
 }
 /* ---------------------------------------------------------------------------------------------- */
+/* Nachbesserung 6, M1: der Finisher B[8] (Treffer im Sprung, -600 @0x801191a8-ac) fuehrt Leon durch den cmd-6-Hook
+ * 0x8011c3d4 -> 0x8011c414 (re15_affen.h (15)), NICHT durch den Wurf 0x8011c118. Gemessen wird die Mechanik je Bild:
+ * Opfer-Zustand 2 / Greifer 0x27, Clip 0 der Opfer-Bank (acae8 := 0 @0x8011c490) vorwaerts ab Bild 0 (@0x8011c498),
+ * +0x93 = 7 (@0x8011c468-70), Eintritt im Treffer-Bild, Koerperfall + Blut bei Bild 0x3c (@0x8011c4e0-518), Tod
+ * (Wunden + Leiche @0x8011c55c-84) im Bild NACH dem letzten Clip-Bild, und KEINE Platzierung: Leons Lage ist in
+ * jedem Bild bis zum Tod am Bildende gleich der am Bildanfang (kein 0x8001ad68 im Hook). Abnahme 5 (w3y F2814) mass
+ * am alten Stand einen Sprung um 14000 Einheiten; mit abgeschalteten Haken ist dieser Riegel rot (gemessen: Leon bis
+ * 15116 vom Treffer-Ort, Clip 1 dann 0xb statt 0, +0x93 = 1, kein Tod). */
+static void teil_finisher(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_game_state_init();
+    re15_game_flag_set(4, 0x40, 1);
+    if (room_boot(0x11C0, -9975, -10422, 1024, 5, 3) != 0) return;
+    PRUEF(bank_laden_27(), "EM027-Bank geladen (Opfer-Bank fuer den Finisher)");
+    re15_enemy_bank_t *eb = re15_enemy_find(0x27);
+    int fc = (eb && eb->victim_ok && eb->anim_victim.clip_count > 0) ? eb->anim_victim.clips[0].frame_count : 0;
+    PRUEF(fc > 0x3c, "Opfer-Bank Clip 0 hat %d Bilder (> 0x3c: der Koerperfall @0x8011c4e0 ist erreichbar)", fc);
+    re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
+    if (!a || !b || fc <= 0) { PRUEF(0, "zwei Gorillas im Kampf-Layout"); return; }
+    b->grid_id |= 0x20; b->x = 30000; b->z = 30000;
+    pl->x = -9975; pl->z = -10422; pl->y = 0; pl->rot_y = 587; pl->hp = 46; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
+    re15_player_cmd_zero();
+    /* Der echte Weg in den Finisher: Gorilla im LEAP B[7] (Phase 0), Leon vor ihm mit hp 46 < 50 -> Commit B[8] in
+     * Phase 2 bei Bild 0x13 (@0x80118cc8-d68), Treffer im B[8]-Fenster Bild 8..0xa (@0x80121478). Yaw 3072 = +Z. */
+    a->x = -5125; a->z = -14706; a->y = 0; a->rot_y = 2517; a->grid_id = 0x10; a->floor = 0;   /* w3y F2786 */
+    a->state = 1; a->sub_state_1 = 7; a->sub_state_2 = 0; a->sub_state_3 = 0; a->hit_react = 0; a->crow_speed = 0;
+    a->mag_boost = 4; a->mag_airborne = 0; a->dog_blocked_ctr = 0;
+    int t_hit = -1, t_tod = -1, f_fall = -1, n_tick_weg = 0, max_weg = 0, n_clip_falsch = 0, n_bild_falsch = 0;
+    int pl_x0 = 0, pl_z0 = 0, hr_nach = -1, typ = -1, eigen = -1, bild_vorher = -1;
+    for (int f = 0; f < 200; f++) {
+        int32_t x0 = pl->x, z0 = pl->z;
+        int hp0 = pl->hp;
+        re15_schritt_station_reset();
+        frame(0, 0);
+        int32_t tx = pl->x, tz = pl->z;
+        re15_schritt_station_hole(RE15_SCHRITT_TICK, &tx, &tz);
+        if (getenv("R35_FIN_SPUR") && f < 120)
+            printf("  S%-3d G st %d/%d/%d c%d/%d (%d,%d,%d) r%d | PL (%d,%d) hp %d hr %d c%d/%d vs %d\n", f, (int)a->state, (int)a->sub_state_1,
+                   (int)a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->x, (int)a->y, (int)a->z, (int)a->rot_y, (int)pl->x, (int)pl->z,
+                   (int)pl->hp, (int)pl->hit_react, (int)pl->motion, (int)pl->anim_frame, re15_player_victim_state());
+        if (t_hit < 0 && hp0 >= 0 && pl->hp < 0) {
+            t_hit = f; pl_x0 = x0; pl_z0 = z0; hr_nach = pl->hit_react;
+            typ = re15_player_victim_type(); eigen = re15_player_victim_own_bank();
+            printf("  Treffer T%d: hp %d -> %d, Leon (%d,%d), Gorilla (%d,%d) Bild %d, Opfer-Zustand %d Typ 0x%02x\n", f, hp0,
+                   (int)pl->hp, (int)x0, (int)z0, (int)a->x, (int)a->z, (int)a->anim_frame, re15_player_victim_state(), typ);
+        }
+        if (t_hit >= 0 && t_tod < 0) {
+            if (pl->x != x0 || pl->z != z0) n_tick_weg++;   /* Bildanfang -> Bildende (der Opfer-Tick laeuft nach der KI) */
+            int dg = (int)dist2d(pl->x, pl->z, pl_x0, pl_z0); if (dg > max_weg) max_weg = dg;
+            if (pl->motion != 0) n_clip_falsch++;
+            if (pl->state != 7 && (int)pl->anim_frame != bild_vorher + 1 && !(f == t_hit && pl->anim_frame == 0)) n_bild_falsch++;   /* Todesbild: aca5a 2 ruft kein f314 */
+            if (pl->anim_frame == 0x3c && f_fall < 0) f_fall = f;
+            if (pl->state == 7) t_tod = f;
+            if ((f - t_hit) % 10 == 0 || pl->state == 7 || pl->anim_frame == 0x3c)
+                printf("  T%-3d Leon (%d,%d) Bildanfang (%d,%d) Clip %d Bild %d +0x93 %d hp %d Zustand %d\n", f, (int)pl->x,
+                       (int)pl->z, (int)x0, (int)z0, (int)pl->motion, (int)pl->anim_frame, (int)pl->hit_react, (int)pl->hp, (int)pl->state);
+            bild_vorher = (int)pl->anim_frame;
+        }
+        if (t_tod >= 0 && f > t_tod + 5) break;
+    }
+    int ev[RE15_AFFEN_FIN_LOG_N], nev = re15_affen_finisher_ereignisse(ev, RE15_AFFEN_FIN_LOG_N);
+    printf("  Ereignisse:"); for (int i = 0; i < nev; i++) printf(" 0x%04x", ev[i]); printf("\n");
+    PRUEF(t_hit >= 0, "B[8] trifft (hp 46 -> %d in T%d)", (int)pl->hp, t_hit);
+    if (t_hit < 0) return;
+    PRUEF(typ == 0x27 && eigen == 0, "Opfer-Zustand mit Greifer 0x%02x, Opfer-Bank (eigene Bank %d = nein) — nicht der Wurf", typ, eigen);
+    PRUEF(hr_nach == 7, "+0x93 = %d nach dem Eintritt (7 @0x8011c468-70)", hr_nach);
+    PRUEF(n_clip_falsch == 0, "Clip 0 der Opfer-Bank in jedem Bild bis zum Tod (%d Bilder mit anderem Clip; Wurf waere 1/0x10/0xb)", n_clip_falsch);
+    PRUEF(n_bild_falsch == 0, "Bild 0, 1, 2, ... ohne Luecke ab dem Treffer-Bild (%d Abweichungen)", n_bild_falsch);
+    PRUEF(n_tick_weg == 0, "keine Platzierung: Lage am Bildende = Bildanfang in jedem Bild bis zum Tod (%d Bilder bewegt; kein 0x8001ad68 im Hook)", n_tick_weg);
+    PRUEF(max_weg <= 200, "Leon bleibt am Ort: groesste Entfernung vom Treffer-Ort %d (<= 200; Abnahme 5 alt: rund 14000)", max_weg);
+    PRUEF(nev >= 3 && ev[0] == RE15_AFFEN_FIN_EINTRITT, "Eintritt im Treffer-Bild (Ereignis 0 = 0x%04x)", nev ? ev[0] : -1);
+    PRUEF(nev >= 3 && ev[1] == (RE15_AFFEN_FIN_FALL | 0x3c) && f_fall == t_hit + 0x3c,
+          "Koerperfall + zweites Blut bei Bild 0x3c = T%d (Treffer + 60 = T%d) @0x8011c4e0-518", f_fall, t_hit + 0x3c);
+    PRUEF(nev >= 3 && ev[2] == (RE15_AFFEN_FIN_TOD | (fc - 1)) && t_tod == t_hit + fc,
+          "Tod (Wunden + Leiche @0x8011c55c-84) in T%d = Bild nach dem letzten Clip-Bild %d (erwartet T%d), Endpose bleibt", t_tod, fc - 1, t_hit + fc);
+    PRUEF(pl->state == 7 && pl->anim_frame == fc - 1 && pl->motion == 0 && re15_player_victim_state() == 2,
+          "nach dem Tod: Zustand %d, Clip %d Bild %d gehalten, Opfer-Zustand %d", (int)pl->state, (int)pl->motion, (int)pl->anim_frame, re15_player_victim_state());
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -1765,6 +1846,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "schrot") || !strcmp(teil, "alle")) teil_schrot();
     if (!strcmp(teil, "wand")   || !strcmp(teil, "alle")) teil_wand();
     if (!strcmp(teil, "szene")  || !strcmp(teil, "alle")) teil_szene();
+    if (!strcmp(teil, "finisher") || !strcmp(teil, "alle")) teil_finisher();
     if (!strcmp(teil, "fuss")) teil_fuss();   /* Diagnose, nicht in ctest */
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;
