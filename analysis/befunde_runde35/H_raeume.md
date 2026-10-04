@@ -533,3 +533,47 @@ der Kante"), unit_r35_raeume_arme (4a-c); neue Sonde ohne add_test: probe_r35_ra
 * `re15_port/tests/unit/test_r35_raeume_trage.c`, `test_r35_raeume_arme.c`, neu `probe_r35_raeume_trage_los.c`,
   `tests/unit/probes/r35_raeume.cmake` (Sonde registriert).
 * Bilder `analysis/befunde_runde35/H_raeume/nb1_m4_*.png`. Keine neuen Assets, keine Sprachdateien.
+
+---
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-04)
+
+Maengel aus `H_abnahme_1.md` (alle Punkt 4 ROOM1210 bzw. Gate): M1 RE1.5-KI-Arme greifen ohne Kontakt (als
+Nutzer-Wahlfrage offen gelassen), M2 RE2-KI-Ruecken-Griff clippt (nach Nachbesserung 1 schlechter: 11 statt 2 von
+19), M3 Maskenwert des Sichtfilters ohne PORT-MAPPING-Kennzeichnung. Punkte 1-3 sind erfuellt und bleiben
+unangetastet.
+
+### Stand je Mangel (fortlaufend)
+| Mangel | Ergebnis |
+|---|---|
+| M1 | in Arbeit |
+| M2 | in Arbeit |
+| M3 | in Arbeit |
+
+### M2 — Befund beim Nachlesen: die Parts tragen die +0x14E-Ueberblendung, der Port-Pin nicht
+Selbst disassembliert (re2_disasm.py, info/re2leon/PSX.EXE), Kern 0x80029614 (von 0x8002959C):
+```
+800296a8: lbu t3,334(s2)        ; +0x14E Blendzaehler (VOR dem Dekrement)
+800296b0: beq t3,zero,0x8002973c ; 0 -> keine Ueberblendung
+800296b8: andi v0,a3,0xffff     ; a3 = Rate des Aufrufers (Arm: 256)
+800296bc: mult v0,t3            ; t1 = a3 * +0x14E (mflo @0x800296e8)
+800296e4: addiu v0,zero,4096 / 800296ec: subu v0,v0,t1 / 800296f0: mtc2 v0,IR0  ; Wurzel-Translation:
+                                ;   neu = ((4096-t1)*Keyframe + t1*vorher) >> 12
+800299c0: lbu v0,334(s2) / 800299c8: addiu v0,v0,-1 / 800299cc: sb v0,334(s2)    ; +0x14E -= 1
+800299f0: mtc2 t1,IR0           ; Gewicht t1 auf die AKTUELLE Part-Rotation +0x68 (lhu 0/2/4 von t0+104)
+80029a3c: GPF                   ; MAC = t1 * aktuell
+80029a10-aa4: Ziel +0x7C (lh 124/126/128) mit +-4096-Kuerzestweg (sltiu 0x1001 / andi 0x8000)
+80029aac: subu v0,zero+4096,t1 / 80029ab0: mtc2 v0,IR0 / GPL / Store nach +0x68
+                                ; -> +0x68 := (t1*aktuell + (4096-t1)*Ziel) >> 12
+```
+danach RotMatrix(+0x68 -> +0x18) je Part (Decompile RE2_Quellcode_V2/FUN_80029614.c Ende). Die Welt-Matrix
+part+0x48 (Translation +0x5C/+0x60/+0x64, die B4 P0 @0x80100C18-38 und A1/A3 lesen) schreibt NICHT 0x80029614,
+sondern das Zeichnen: FUN_80027160 (Modell) -> FUN_80027434(entity, part, flags, part+0x48) `gte_stlvnl
+(param_4->t)` (Decompile FUN_80027434.c:56) bzw. FUN_80027ff0 — aus den eben gemischten +0x18-Matrizen.
+Folge: der Pin ist die GEZEICHNETE Hand des Vortakts = Clip 3 Bild k **gemischt** mit der Pose vor dem
+Clipwechsel. B3 setzt Clip 3 mit +0x14E = 15 (`0xF0003` @0x80100ACC/AEC-F0); der Griff kommt fruehestens bei
++0x14D >= 5 (`sltiu 5` @0x80100A18), also nach 5 Mischschritten mit t1 = 256*15, 14, 13, 12, 11 -> Restanteil der
+alten Pose 0.9375*0.875*0.8125*0.75*0.6875 = 0.34. Der Port (arm_hand_pose -> re15_enemy_bone_world_pos im
+QUERY-Modus, g_anim_pose_actor = NULL) rechnet die REINE Keyframe-Pose Clip 3 Bild 4 — ein Drittel der alten
+Pose fehlt im Pin. Das ist ein Port-Defekt, der den Ruecken-Fall direkt betrifft (der Pin bestimmt die Lage von
+Leons Wurzel zur Hand-Bahn; Nachbesserung 1 hat gezeigt, dass 168 Einheiten Pin-Versatz das Ergebnis kippen).
