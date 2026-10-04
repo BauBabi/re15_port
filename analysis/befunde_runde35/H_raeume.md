@@ -463,4 +463,29 @@ Hand-Abweichung max 0, Spiegel-Abweichung max 2** -> (4a) (4b) (4c) ok. Die Uebe
 also exakt die an Leons Wurzel gespiegelte Brust des sauberen Gesicht-Griffs bei unveraenderter Hand-Bahn —
 das, was die RE2-Konstruktion vorschreibt.
 
+### M4 (P4, Gitterarme unter RE1.5-KI) — gemessen
+**Messung** (echte exe, Tuer ROOM1220 -> ROOM1210 wie die Abnahme: `RE15_DEBUG_JUMP=1220@gp
+RE15_PLAYER_POS=-21750,-6400,0 RE15_PAD_AT=45:A,46:A`, dann `RE15_INPUT_SCRIPT_BASIS=spiel START=80`):
+* Lauf `m4_re15` (`RE15_AI_FLAVOR=re15`, Abnahme-Eingabe `R0.5,W0.3,U14,R0.7,U8`): im Vorbeilaufen KEIN Griff —
+  Arm 5 (-25000,-15747) faehrt F255 aus (Sub 1, Lunge bis x -22600), Arm 6 F301, Leon laeuft durch.
+* Lauf `m4_re15_stand` (`R0.5,W0.3,U4.8`, Leon bleibt bei (-20622,-15200) vor Arm 5 stehen): **Griff F277**
+  (Arm 5 Sub 4 bei (-22580,-15747), Clip 1 Schleife, 76 Bilder bis Abwurf F353). Leon springt im Griff-Bild auf
+  (-19659,-15477) und pendelt waehrend des Haltens zwischen x -19064 und -19317 (z -15311..-15382) — die Hand
+  (Anker = Arm + MESH_REACH 1671 entlang +0x6a, auf die begehbare Flaeche geklemmt, also an die Flurkante
+  x ≈ -20622) liegt **rund 1300-1560 Einheiten** neben Leons Wurzel. Bild
+  `H_raeume/nb1_m4_re15ki_griff_F276-320.png` (Framedump, 3x): der bleiche EM01A-Arm haengt im Gitterfenster,
+  Leon steht mitten im Flur und spielt die geliehene Zombie-Opfer-Animation (Haende nach vorn) **ohne Kontakt**
+  — keine Hand im Koerper (kein Clipping), aber auch kein Griff, den man sieht; Gleichlauf gibt es nicht
+  (EM01A Clip 1 = 39 Bilder Schleife gegen den geliehenen Opfer-Clip).
+* Gegenlauf `m4_re2_stand` (Default RE2, gleiche Eingabe): Griff F244, Pin (-20588,-15148) = Parts-Pose-Hand,
+  Hand an Kopf/Schulter (Bild `H_raeume/nb1_m4_re15ki_oben_re2ki_unten.png`, untere Haelfte).
+
+**Einordnung (belegt, nicht geaendert):** der RE1.5-Writher hat im Original KEINEN Griff (Ausgang
+@0x8010c8e4 auf +0x5 = 2/3, enemy_ai_common.c Writher-Block); der ganze RE1.5-KI-Griff ist eine
+gekennzeichnete Nachruestung (Anker-Kommentar enemy_ai_common.c:12770ff) mit geliehener Zombie-Opferbank,
+deren Wurzelversatz Leon relativ zum Anker setzt (re15_clip_root_motion_abs). Das RE2-Ziel fuer einen Griff
+durch Gitterstaebe ist der EM2D-Arm (Pin auf die Hand @0x80100C18-38, Opferbank des Arms @0x80100C3C-5C,
+Clip 0 @0x801012A8) — genau das faehrt der Default-Geschmack RE2. Der Nutzerbefund "Hand clippt durch Leon"
+besteht unter RE1.5-KI nicht; dort ist der Befund ein anderer (kein Kontakt). -> OFFEN 6.
+
 (in Arbeit)
