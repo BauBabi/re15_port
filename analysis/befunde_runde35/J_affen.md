@@ -857,10 +857,18 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
     (-4588,-11243) / (-5381,-10551)); P3/P4 16 Bilder Clip 0x10 PL00 vorwaerts, P5/P6 25 Bilder Clip 0xb PL00
     rueckwaerts; **Freigabe T378** (Original T378) bei (-4580,-10518) (Original (-4759,-10633)); 0 HP; danach
     schiebt die Wandklemme Leon zur Ruhelage **(-3018,-11651)** (Original (-3009,-11643)).
+    **[KORREKTUR Nachbesserung 3, Abnahme 2 M1]** Diese beiden Zahlen galten nur fuer den Zwischenstand
+    `jnb2/griff_nach3/4.txt` (T290 (-5374,-10724)). Am Stand b3755c41/062e8f82 lieferte der Riegel: T290
+    (-5376,-10728), **frei T378 bei (-5433,-10693)** (677 vom Original), **keine Ruhelage**, Bisse T396 (76 -> 70) und
+    T450 (70 -> 64), Ende (-5893,-10250) HP 64. Die Pruefungen "Freigabe <= 400 vom Original" und "Ruhelage <= 60 bis
+    T412" waren damit rot und wurden in 1ac1ea84 entfernt, ohne dass das Dossier es sagte. Messung, Ursache und neue
+    Pruefungen: Abschnitt "Nachbesserung 3".
   - T265-T267 im Harness weicht ab (bis 1573), weil der Port-e2 dort ~400 weiter weg steht (Port e2 T264
     (-8707,-12438), Original (-8890,-12048)) und Leon nicht schiebt — die Kette selbst ist bitgleich (s. `wand`).
     Der Port-e2 steht T250-T264 still, das Original-e2 gleitet in derselben Zeit ~400 an Leons Koerper entlang
-    -> gehoert zu A1 (Lage/Bewegung im Koerperkontakt), dort weiter.
+    -> gehoert zu A1 (Lage/Bewegung im Koerperkontakt), dort weiter. **[KORREKTUR N3, M2]** Das wurde dort nicht
+    weiterverfolgt; Ursache (Ritt-Platzierung des Greifers fehlte, aec4 ohne Paar-Ausnahme, e2 faelschlich als
+    Greifer vom Schub ausgenommen) und Behebung: Abschnitt "Nachbesserung 3".
 - **Messung nachher, exe ueber den ECHTEN Tuerweg** (`jnb2/w6`, exe-Kopie re15_pc_jnb2.exe, Env wie Abnahme n6b:
   RE15_SET_FLAG=4:243,3:130, RE15_DEBUG_JUMP=11B0@240, RE15_PLAYER_POS an der Tuer, Quadrat-Tasten,
   RE15_INPUT_SCRIPT=W34.5,U2.5,W1; debug.log `DOOR FIRE` -> room11c0, sub02 F6, sub07 F1088):
@@ -968,6 +976,9 @@ Riegel) -> A1 (Szenen-Endlage / Takt im JUMP-Szenario).
 - `griff` NEU gefasst (A2): Pin T254, erste Platzierung T265 (= Opfer-Bild 0x0b), Wurf-Bahn T268-T290 gegen die
   Original-Spur (Mittel 18-19, max 177), P3/P4 Clip 0x10 aus PL00 vorwaerts (16 Bilder), P5/P6 Clip 0xb aus PL00
   RUECKWAERTS (25 Bilder), Freigabe T378, nach Bild 0x24 bewegt nur noch die Wandklemme (87/87 Bilder), 0 HP.
+  **[KORREKTUR N3]** Nicht genannt war: Commit 1ac1ea84 hat zwei rot gewordene Pruefungen ENTFERNT ("Lage bei der
+  Freigabe <= 400 vom Original (-4759,-10633)" und "Ruhelage <= 60 von (-3009,-11643) bis T412"); der Riegel lieferte
+  frei (-5433,-10693) und keine Ruhelage. Ersatz mit Messung: Abschnitt "Nachbesserung 3" (Tests).
 - NEU `wand` (A2): re15_collision_constrain = FUN_8003b0a4 in 168/168 Original-Bildern; Schub + Klemme T265-T267
   mit e2 auf Original-Lage bitgleich.
 - NEU `szene` (A1): Raumeintritt wie r3, keine Eingabe: sub02-Gang 207/207 bitgleich, Heavy Freigabe+365
