@@ -693,9 +693,18 @@ static void takt_lauf(int desync, const int *soll, int nsoll)
     b->anim_frac = 0; b->dog_blocked_ctr = 15; b->hit_react = 0; b->dog_flags = 1; b->mag_boost = 4;
     int hp_alt = pl->hp, treffer[64], nt = 0;
     char alt[256] = "";
-    for (int f = 196; f < 196 + 420; f++) {
+    const char *spur = getenv("R35_TAKT_SPUR");   /* Nachbesserung 4: Bild-fuer-Bild-Spur im Format von jnb1/g_orig_dec.txt */
+    int f_ende = spur ? 196 + 720 : 196 + 420;
+    for (int f = 196; f < f_ende; f++) {
         if (desync && f == 203) b->dog_blocked_ctr = 30;   /* = GDB-Schreiben M800ad1f0,2:1e00 im Original */
         frame(0, 0);
+        if (spur && !desync)
+            printf("S%4d hp%d %d/%d c%d/%d | e1 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f | e2 %d/%d/%d c%d/%d L%d (%d,%d) r%d d%.0f\n",
+                   f, (int)pl->hp, pl->state, pl->sub_state_1, (int)pl->motion, (int)pl->anim_frame,
+                   a->state, a->sub_state_1, a->sub_state_2, (int)a->motion, (int)a->anim_frame, (int)a->dog_blocked_ctr,
+                   (int)a->x, (int)a->z, (int)a->rot_y, dist2d(a->x, a->z, pl->x, pl->z),
+                   b->state, b->sub_state_1, b->sub_state_2, (int)b->motion, (int)b->anim_frame, (int)b->dog_blocked_ctr,
+                   (int)b->x, (int)b->z, (int)b->rot_y, dist2d(b->x, b->z, pl->x, pl->z));
         int ev = (pl->hp != hp_alt);
         if (ev && nt < 64) treffer[nt++] = f;
         char z[256];

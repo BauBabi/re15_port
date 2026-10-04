@@ -1287,3 +1287,49 @@ Scratch: `scratchpad/jnb4/`.
 ### Stand (fortlaufend)
 - [ ] N2 (a) Haken messen  - [ ] N2 (b) Beleg + Fix  - [ ] N2 (c) Dossier Z. 1197  - [ ] N2 (d) Riegel szene Einzelbisse
 - [ ] N1 Mechanismus Biss nach Freigabe  - [ ] N1 Fix/Aussage  - [ ] N1 Z. 1189 (31 -> 34)  - [ ] Suite  - [ ] exe Tuerweg
+
+### N2 (a) — Messung: welcher Haken verlaengert den Biss-Zyklus (Riegel `takt` Gleichtakt, Bild-fuer-Bild)
+- Messweg: neue Spur `R35_TAKT_SPUR=1 test_r35_affen.exe takt` (nur Test-Code, 720 Bilder ab dem Original-Zustand F195,
+  je Bild Leon/e1/e2 Zustand, Clip/Bild, +0x1dc, Lage, Yaw) gegen `jnb1/g_orig_dec.txt` (GDB-Haltepunkt am Eintritt der
+  Gorilla-Wurzel 0x80116db8: Zeile F = Zustand NACH Tick F-1; Port-Zeile S f = Zustand nach Tick f, also S f <-> F f+1).
+- Original (HP-Wechsel in g_orig_dec, Tick = F-1): **218, 268, 321, 371, 424, 475, 527, 579, 630, 683, 733, 787, 836, 891**.
+  e1 (ungerade): 218, 321, 424, 527, 630, 733, 836 = Zyklus **103** durchgehend; e2: 268, 371, 475, 579, 683, 787, 891 =
+  103, 104, 104, 104, 104, 104.
+- HEAD (`jnb4/takt_spur_head.txt`): 218, 270, 321, 374, **425, 478, 529, 582, 633, 686, 737, 790, 841, 894** -> e1 103, 104,
+  104, 104, 104, 104 (bis +5 bei 841), e2 104 durchgehend (+2 .. +3).
+- HEAD ohne Haken (9) (eine Zeile zurueck auf `e->anim_frame`, `jnb4/takt_spur_ohne9.txt`): 218, 270, 321, 374, **424**, 478,
+  **527**, 582, **630**, 686, **733**, 790, 83x -> e1 = Original bitgleich (103), e2 unveraendert (+2/+3).
+- **Ergebnis (a): der Haken (9) (Fusssperre mit der Pool-Pose, Nachbesserung 3) verlaengert den Zyklus von e1 = Slot 2.**
+  (Ritt-Platzierung/Paar-Ausnahme/Schub-Ausnahme wirken nur waehrend eines Griffs; im takt-Lauf gibt es keinen Sub 15.)
+
+### N2 (b) — Warum: (9) ist byte-true, aber er nahm einen Ausgleichsfehler weg (Zyklus-Zerlegung am Original)
+Zyklus e1 im Original (g_orig_dec, Tick-Nummern): Treffer T321 (+0x1dc := 0x2d @0x80118470, nach dem Tick 44) -> +0x1dc 0
+nach T365 -> **T366: Biss-Entscheid UND Bissclip-Bild 1 im SELBEN Tick** (F367 `1/5/1 c18/1`) -> Fehlbiss (Leon im Flinch)
+bis T390 `1/5/2` -> T391 `1/3/0` +0x1dc := 0x14 -> 0 nach T410 -> **T411 `1/5/1 c18/1`** -> Treffer T424 bei +0x95 = 14.
+= 45 + 45 + 13 = 103.
+Port HEAD: Treffer T321 -> +0x1dc 0 nach T365 -> **T366 `1/5/0 c5/30` (nur Entscheid, kein Clip)** -> T367 c18/1 -> ... ->
+T412 `1/5/0` -> T413 c18/1 -> Treffer T425 bei anim_frame 13. = 46 + 46 + 12 = 104. Ohne (9): Treffer schon bei Bild 12
+(46 + 46 + 11 = 103) — zwei Port-Fehler hoben sich auf:
+1. **A/B im selben Tick fehlt** (OFFEN 6 seit Nachbesserung 2). STAGE1.BIN, selbst disassembliert:
+   `lbu v0,5(v0)` @0x80117324, A-Tabelle `addiu at,at,5096` = 0x801213e8 @0x80117334, `jalr v0` @0x80117344; danach
+   **+0x5 NEU gelesen** `lbu v0,5(v0)` @0x80117358, B-Tabelle 0x80121428 (`addiu at,at,5160` @0x80117368), `jalr v0`
+   @0x80117378; erst danach +0x1dc-- (`lh v0,476(a0)` / `sh v0,476(a0)` @0x801173f8-40c). A = {7484, 7668, 7858, 7a3c,
+   7e40, 8268, 8544, 8900, 8dd4, 9284, 9634, 9998, 9c38, 9f70, a378, a878}, B = {7574, 7764, 7860, 7c90, 8110, 8270, 854c,
+   8908, 8ddc, 936c, 971c, 9a6c, 9d0c, a1f8, a44c, a960} (0x8011xxxx, `read` selbst). Wechselt A[3] auf 5, laeuft B[5]
+   (Clip 0x12 + anim_set) im selben Tick. Der Port bricht nach dem A-Entscheid ab -> +1 Tick je A-Wechsel.
+2. **Trefferpunkt des Bisses** (FUN_8001bff8, PSX.EXE selbst disassembliert): Identitaet 0x80072d4c nach sp+48
+   (@0x8001c010-54), Translation := a1-Vektor (@0x8001c058-7c), `jal 0x80022da0` (CompMatrix a0, lokal) @0x8001c078,
+   Welt-X `lhu v0,36(sp)` / Spieler-X `lhu v1,0(s1)` @0x8001c080-84, `(pl - p + r) & 0xffff` `slt` 2r @0x8001c088-a0,
+   Z @0x8001c0a8-c0. Aufruf in B[5]: anim_set @0x8011831c, bf50(0,0) @0x8011833c, a1 = sp+16 aus 0x80072d60 (= (0,0,0))
+   mit **vx := 0x64 (100)** `ori v0,zero,0x64` / `sw v0,16(sp)` @0x80118380-84, **a0 = Pool + 1612 = Record 9 + 0x40**
+   `addiu a0,s2,1612` @0x801183c0 (s2 = `lw s2,392(v0)` @0x80118350), r = 0x3e8 @0x801183c8, `jal 0x8001bff8`
+   @0x801183cc; Fenster-Tabelle 0x8012146c = {12,13,14,15} (`read` selbst) gegen +0x95 @0x801183fc-28.
+   Record + 0x40 ist die WELT-Matrix, die nur der ZEICHNER schreibt: FUN_8001e9ec / FUN_8001ef54 `FUN_80022da0(rec[0x1b],
+   rec+0x18, rec+0x40)` (Decompilat), gerufen aus FUN_8001e8c8 (RotMatrix(+0x68 -> +0x20), ScaleMatrix +0x166), und die
+   Zeichen-Schleife ruft FUN_8001e8c8 NACH den KI-Ticks: `jal 0x8001e8c8` @0x8001d09c (Spieler) / @0x8001d108 (je aktive
+   Entity, Bit 1 @0x8001d0fc), danach Spiegel `+0x40 := +0x34` @0x8001d11c-24 (derselbe Spiegel, den die Wandklemme als
+   Bezug liest). FUN_8001f3bc schreibt nur Record+0x18 (RotMatrix, Decompilat Z. 71/84) und die Wurzel (+0x2c..+0x34).
+   -> der Original-Trefferpunkt im Tick T = **Pose des in T-1 gezeichneten Bildes, an Lage/Yaw vom Ende von T-1, plus
+   (100,0,0) im Knochenraum** (x 1.7 ueber die skalierte Wurzelmatrix). Der Port nahm die Pose NACH dem Vorschub in T
+   (zwei Bilder voraus), die Lage NACH bf50 in T und keinen Versatz (`re15_maggot_bone_square`, "dokumentierter Rest").
+   Damit trifft der Port 1-2 Clip-Bilder frueher; vor (9) sogar noch eines frueher, was die fehlende A/B-Folge ausglich.
