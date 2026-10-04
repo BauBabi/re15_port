@@ -44,6 +44,10 @@
  *           600 Bilder: laeuft ein NPC, dessen +0x82 != band_from_y(y) ist? (10D0/1050 gepinnt: nein).
  *   schrot  M3: Schrot-Treffer (Spur 1, Zeile 7) als 3. Treffer ab der Original-Lage F195 (GDB-Experiment): Exit-Sub 7,
  *           Landung, SELECTOR, Heavy-Anlauf, KEIN Zonen-Sprung — Bild fuer Bild wie das Original.
+ *   finisher    N6/M1: Finisher B[8] -> cmd-6-Hook 0x8011c414 (Clip 0 der Opfer-Bank, +0x8f 7, keine Platzierung, Koerperfall
+ *               Bild 0x3c, Tod im Bild nach dem Clip-Ende).
+ *   zonensprung N6/M2: Blind-Zonen-Sprung auf der Stelle ab (-13518,-403) — 400 Bilder gegen die GDB-Spur des Originals.
+ *   kette       N6/M4: Elternketten von affen_kette gegen die fest verdrahteten Ketten von FUN_8011bf50 / FUN_8011c024.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"

@@ -5,8 +5,9 @@
 # game_step_common.c Knockdown-Sonde; main.c Part 18 am Rumpf / Parts ohne Knochen weltfest; emd_common.c
 # EMR-Rohdaten am Skelett). Die Riegel takt/griff/schrot messen gegen GDB-Einzelbild-Spuren des Originals.
 #
-# RIEGEL: Teile teile / band / ada / sprung / flug / wagen / brust / kdsonde / biss / frac / anker / takt / griff / npcband / schrot (Beschreibung im Kopf von
-# test_r35_affen.c).
+# RIEGEL: Teile teile / band / ada / sprung / flug / wagen / brust / kdsonde / biss / frac / anker / takt / griff / npcband / schrot /
+# wand / szene / finisher / zonensprung / kette (Beschreibung im Kopf von test_r35_affen.c; Nachbesserung 6: finisher = cmd-6-Hook
+# 0x8011c414, zonensprung = Blind-Zonen-Schleife gegen die GDB-Spur des Originals, kette = Elternketten gegen FUN_8011bf50/c024).
 add_executable(test_r35_affen ${CMAKE_CURRENT_SOURCE_DIR}/test_r35_affen.c)
 target_link_libraries(test_r35_affen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r35_affen PRIVATE ${CMAKE_SOURCE_DIR}/include)
