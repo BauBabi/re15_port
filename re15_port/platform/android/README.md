@@ -113,6 +113,14 @@ Gradle-Seite (`app/build.gradle`):
   release/apk_asset_gate.py` in `release/apk_asset_gate.sha256` ein und committet beides zusammen.
   Werden Selbsttest-Faelle entfernt, bricht die Kette ab, bis die Mindestzahlen
   (`GATE_SELBSTTEST_MIN_FAELLE`/`_INNEN` in `release/apk_pruefen.sh`) bewusst gesenkt sind.
+* **Urteil-Pin** (Runde 35, `analysis/befunde_runde35/N_android.md` Punkt 3): das Urteil ueber jeden
+  Gate-Lauf steht in `release/gate_urteil.py` (vorher ungeprueft als Heredoc in apk_pruefen.sh),
+  festgehalten in `release/gate_urteil.sha256` und vor jeder Nutzung selbstgeprueft: 119 feste
+  Gate-Ausgaben UND jede Ein-Stellen-Aenderung des eigenen Urteilscodes (260 Mutanten) muss ein Fall
+  erkennen. **Wer das Urteil aendert**, schreibt fuer die neue Regel einen Fall (sonst ueberlebt ein
+  Mutant = `URTEIL-SELBSTTEST-FEHLER`), traegt dann die neue sha256 ein. Zusaetzlich gilt ein
+  OK-Urteil nur mit Rueckgabe 0 des Gates (zweite Instanz in `gate_laufen`). ctest
+  `unit_r35_android_pruefkette` faehrt die Kette mit Negativ-Kontrollen bei jedem Suite-Lauf.
 
 Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_ANDROID=ON`
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`
@@ -168,6 +176,11 @@ und `synchro/` durchgegangen und alle Dateien, die nicht in der neuen Liste steh
 auch halbe `.neu`-Reste und Dateien, die ein Update nach einem Abbruch gestrichen hat
 ("Waise entfernt" im Log; Nachbesserung R4-1). Was sich nicht loeschen laesst, meldet `debug.log`
 als Warnung.
+Liegt einer Datei etwas mit falschem Typ im Weg - ein Ordner auf ihrem Namen, eine Datei auf einem
+ihrer Ordnernamen oder ein Ordner auf `<ziel>.neu` (z.B. wenn ein Update eine Datei durch einen
+gleichnamigen Ordner ersetzt oder umgekehrt) -, wird es im SELBEN Start entfernt
+(`Konflikt geraeumt: ...` im Log; Runde 35). Sicher, weil Liste, Gate und Gradle keinen Pfad zulassen,
+der zugleich Datei und Ordner ist, und keinen Ordner auf `.neu`.
 **Fehler:** fehlt die Asset-Liste der APK, ist sie ungueltig, oder laesst sich eine Datei nicht
 entpacken (z.B. Speicher voll), bleibt die Fehlermeldung stehen, bis die App geschlossen wird - das
 Spiel startet dann NICHT mit einem alten oder halben Asset-Baum (bis Nachbesserung R4-1: 3 s Meldung,
