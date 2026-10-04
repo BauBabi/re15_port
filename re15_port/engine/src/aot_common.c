@@ -793,11 +793,12 @@ static int aot_fire_door(int i)
      * 2/3); Leons 11 (Variante 0: g_current_room_id & 0xF == 0) bleiben unveraendert.
      * BEWUSST NICHT verallgemeinert: Stage >= 2 und Raum 0 (46 weitere Selbst-Tueren, 24
      * davon in Leons Raeumen) — byte-true waere es (@0x8001d988 unbedingt), aber es aendert
-     * Leons Verhalten und gehoert in eine eigene Runde mit eigener Messung. */
-    if (d->dest_room != 0 &&
-        (0x1000u | ((unsigned)d->dest_room << 4) | (g_current_room_id & 0x000Fu))
-            == g_current_room_id)
-        g_scd_pending_scenario = (int)d->target_cut;
+     * Leons Verhalten und gehoert in eine eigene Runde mit eigener Messung.
+     * Runde 35 Spur C (analysis/befunde_runde35/C_zgirl.md): verallgemeinert. Hier kommt nur an,
+     * wessen dest_id (oben, mit dest_stage) == aktueller Raum ist; @0x8001d968 vergleicht nur die
+     * Stage, @0x8001d988 `jal 0x800396fc` laedt unbedingt. Das Zombie-Maedchen (ROOM4050 Cut 9/14)
+     * erreicht man NUR ueber die Selbst-Tueren 6/7; Stage 1 (21/21) bleibt unveraendert. */
+    g_scd_pending_scenario = (int)d->target_cut;
     /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ. RE1.5 startet hier die Tuermaschine
      * (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript
      * Evt_end ist; RE2 spielt an derselben Stelle die Sequenz (FUN_80026b7c @0x80026bf8/bfc,
