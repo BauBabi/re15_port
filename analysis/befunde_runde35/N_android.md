@@ -226,13 +226,33 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
   (Selbsttest-OK gefaelscht, sagt immer 0) -> die zweite Instanz ueberstimmt (`Urteil 0, aber das Gate gab Rueckgabe 1`)
   -> 2**, N9 Mindestzahl Mutanten hochgesetzt -> Abbruch; Gate/Urteil/Pins danach unveraendert.
 
+## APK-Bau und Emulator (echte libmain.so, alle drei Punkte)
+- **APK-Bau** `release/build_android.sh --version v0.8.22-r35test` (Stand 292c0ded, danach nur Kommentar/Dossier;
+  Beleg `N_android_belege/apk_bau_auszug.txt`): BUILD SUCCESSFUL 3m17s, versionName `v0.8.22-r35test`, Signer
+  `432bc749...` = Pin, Gate-Pin `f73c3b1a...`, **Urteil selbstgeprueft 119/119 + 257/260**, Urteils-Pin `2b78069e...`,
+  Gate-Selbsttest 261/261 + 148/148, `APK-ASSET-GATE-OK: 3629 Dateien ... = unzip-Zaehlung - 1`, `APK-PRUEFUNG-OK`,
+  APK `06c8e01c862d28d6451ad520f6531c8bf168e6c012aa739f7d63ef1b84a31ffe`, 364777306 B. = Positiv-Kontrolle der neuen
+  Kette an einer echten APK. APK danach geloescht, `release/SHA256SUMS_android.txt` zurueckgesetzt (nicht committet).
+- **Emulator** (eigene AVD-Kopie `Medium_Phone_API_36_r35n` im Scratchpad: config.ini des Nutzer-AVD mit den 5
+  Aenderungen der Runde 34a, Port 5600, `-wipe-data`, Nutzer-AVD nicht gestartet; Android 16, 1080x2400, App quer =
+  2400x1080; Werkzeug `N_android_belege/werkzeug/geraet_r35n.sh`, Belege `N_android_belege/geraet/`):
+  - **E1** Uebergang (alter Marker `re15_assets_ok.txt` im Speicherordner): Bild `E1_uebergang_3s.png` (ANGESEHEN):
+    `RE1.5 PORT - ASSETS WERDEN EINMALIG GEPRUEFT` **vollstaendig**, x ~142..2248 von 2400 (Pruefstand: 144..2248), darunter
+    Balken und `518 / 3629 DATEIEN  (9%)  32 MB`. Runde 34a auf demselben AVD-Typ: `1.5 PORT - ... GEPRUE`.
+    logcat: `Abgleich (Uebergang v0.8.19) ... pruefen 3629` -> `Entpacken fertig ... 0 Konflikte geraeumt ... 0 Fehler`.
+  - **E2** "zuletzt entpackt" als Ordner: Bild `E2_fehler_liste.png` (ANGESEHEN): `FEHLER: ALTE ASSET-LISTE NICHT
+    LOESCHBAR - SIEHE DEBUG.LOG` (58 Zeichen, der laengste Text) **vollstaendig**, x ~154..2239 (Pruefstand 156..2238).
+  - **E3** (der Fall i1 der Runde 34a, damals `ABBRUCH`): Ordner `synchro/STAGE1/room1240/main04.wav.neu/` mit Inhalt +
+    `main04.wav` geloescht, Liste "zuletzt entpackt" vorhanden -> **im selben Start**: `entpacke .../main04.wav`,
+    `Konflikt geraeumt: synchro/STAGE1/room1240/main04.wav.neu war ein Ordner auf dem Namen der Zwischendatei mit 1
+    Dateien darin - entfernt`, `Entpacken fertig (Groessen-Nachlauf): ... 1 kopiert ... 1 Konflikte geraeumt ... 0 Fehler`,
+    `main04.wav` 2017588 B wieder da.
+  Emulator danach beendet (`emu kill`).
+
 ## OFFEN
-- **Geraete-/Emulatorlauf der neuen libmain.so**: Punkt 1 und 2 sind am ECHTEN android_glue.c gemessen, aber im
-  Pruefstand (Attrappen fuer SDL/JNI/AAssetManager, mingw/NTFS case-insensitiv wie der App-Speicher). Ein Lauf im
-  Emulator (AVD-Kopie der Runde 34a, 2400x1080) mit Bild des Uebergangs-Titels und einem H8-Update ist nicht gemacht
-  (Emulator-Start + Installation ~20 min; Messweg: `adb install -r`, Speicherordner per `adb shell run-as`/`adb push`
-  praeparieren wie `pruefer_echtlauf_r4_2.md` 3.9, Bild per `adb exec-out screencap`). Der APK-Bau mit der vollen
-  Kette (Gate + Urteil + Signer) steht unter "APK-Bau".
+- Ein Update-Lauf (APK A -> APK B) mit dem H8-Muster auf dem Emulator ist nicht gemacht (braucht eine zweite, echt
+  gebaute APK mit anderem Baum, Sandbox wie `pruefer_echtlauf_r4_2.md` 3.0). Der Update-Weg ist am ECHTEN
+  android_glue.c im Pruefstand gemessen (mingw/NTFS und Linux/ext4), der Raeum-Mechanismus selbst auf dem Emulator (E3).
 - (erledigt) Linux-Lauf: Pruefstand, beide C-Tests und beide Szenario-Teile im Container `re15-linux-build:deb11`
   (gcc 10.2, ext4/overlay = case-SENSITIV, uid 0) - 0 Warnungen, `OK: 63 Pruefungen`, r34a 324/0, anzeige + konflikt
   bestanden, dieselben Konflikt-Meldungen (Beleg `N_android_belege/pruefstand_linux.txt`). Nicht gelaufen: die
