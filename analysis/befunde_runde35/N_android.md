@@ -671,3 +671,19 @@ build_android.sh/make_package.sh.
   re15_port/tests/unit/r35_android/urteil_kontrollen.sh, sonst `unit_r35_android_bash_mutanten` rot.
 - Merge: diese Spur bringt jetzt +5 Tests (abgleich, anzeige, konflikt, pruefkette, bash_mutanten); master hatte
   RE15_MIN_TESTS 517 (6e1a3771). release/RELEASE_NOTES.md und make_package.sh nicht beruehrt.
+
+### Nachbesserung 2 - Abschluss
+Suite im eigenen Baum (`bash re15_port/tools/local_build.sh all`, nach Ende aller Messlaeufe dieser Spur; ctest
+1438 s):
+
+    === LOCAL-BUILD-OK (all) — Tests 483/483
+
+(482 + 1 neu: unit_r35_android_bash_mutanten.) `unit_r35_android_pruefkette` Passed 114,1 s,
+`unit_r35_android_bash_mutanten` Passed 203,7 s, `unit_r35_android_abgleich/anzeige/konflikt` und
+`unit_r34a_asset_abgleich` Passed. Kein Fenster-Haken rot, kein Nachfahren noetig.
+Geaenderte Dateien der Nachbesserung 2: release/gate_urteil.py (+ .sha256), release/apk_pruefen.sh (Mindestzahlen,
+pipefail-Fix der Zeile `letzte=`, Kopfkommentar), re15_port/tests/unit/r35_android/{urteil_kontrollen.sh (neu),
+bash_urteil_mutanten.py (neu), test_r35_android_bash_mutanten.sh (neu), test_r35_android_pruefkette.sh},
+re15_port/tests/unit/probes/r35_android.cmake, re15_port/platform/android/README.md, Dossier + Belege + Werkzeuge.
+Nicht: release/RELEASE_NOTES.md, make_package.sh, tests/*/CMakeLists.txt, Engine, platform/android/jni (Punkte 1/2
+unberuehrt).
