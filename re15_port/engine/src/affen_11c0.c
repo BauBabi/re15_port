@@ -150,16 +150,25 @@ static void affen_comp(int32_t mr[9], int32_t mt[3], const int32_t lr[9], const 
  * Wurzel abwaerts (FUN_8001ef54/FUN_8001e9ec `FUN_80022da0(rec[0x1b], rec+0x18, rec+0x40)`; FUN_8011bf50 `jal 0x80022da0`
  * @0x8011bf80/a4/b4/c4). Record+0x18 = RotMatrix(Record+0x60) (FUN_8001f3bc), t = Wurzel bzw. EMR-Versatz.
  * a1 != NULL: zusaetzlich FUN_8001bff8 = CompMatrix(Record+0x40, (I | a1)) (@0x8001c058-78). */
-static int affen_kette(const re15_emd_skeleton_t *sk, const affen_stand_t *S, int bone, int16_t scale,
-                       const int32_t *a1, int32_t out[3])
+/* Glieder der Kette: Knochen, Eltern, ..., Wurzel (Elternkette der EMR). Dieselbe Funktion liefert dem Riegel `kette`
+ * die Kette, die affen_kette rechnet (re15_affen_kette_test). */
+static int affen_glieder(const re15_emd_skeleton_t *sk, int bone, int ch[RE15_EMD_MAX_BONES])
 {
-    int ch[RE15_EMD_MAX_BONES], n = 0;
+    int n = 0;
     for (int b = bone; n < RE15_EMD_MAX_BONES; ) {
         ch[n++] = b;
         int p = (int)sk->bone_parent[b];
         if (p < 0 || p >= b) break;
         b = p;
     }
+    return n;
+}
+
+static int affen_kette(const re15_emd_skeleton_t *sk, const affen_stand_t *S, int bone, int16_t scale,
+                       const int32_t *a1, int32_t out[3])
+{
+    int ch[RE15_EMD_MAX_BONES];
+    int n = affen_glieder(sk, bone, ch);
     int32_t mr[9], mt[3] = { S->x, S->y, S->z };
     re15_skel_euler_matrix_for_test(S->rx, S->ry, S->rz, mr);
     if (scale)
@@ -266,19 +275,12 @@ int re15_affen_trefferpunkt(const re15_actor_t *e, int bone, int32_t out[3])
     return 1;
 }
 
-/* Riegel-Zugang (nur Tests): Elternkette eines Knochens wie affen_kette (Wurzel zuletzt). */
+/* Riegel-Zugang (Riegel `kette`): die Glieder, die affen_kette fuer diesen Knochen rechnet (Wurzel zuletzt). */
 int re15_affen_kette_test(int bone, int out[RE15_EMD_MAX_BONES])
 {
     re15_enemy_bank_t *b = re15_enemy_find(0x27);
     if (!b || !b->ok || bone < 0 || bone >= b->skel.bone_count) return 0;
-    int n = 0;
-    for (int k = bone; n < RE15_EMD_MAX_BONES; ) {
-        out[n++] = k;
-        int p = (int)b->skel.bone_parent[k];
-        if (p < 0 || p >= k) break;
-        k = p;
-    }
-    return n;
+    return affen_glieder(&b->skel, bone, out);
 }
 
 /* (2a) Gorilla-Part 18 (Brust-/Halsschale) haengt am Rumpf: INIT-Schwanz FUN_80116f50

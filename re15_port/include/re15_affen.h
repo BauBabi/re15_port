@@ -270,7 +270,8 @@ int      re15_affen_fusssperre(re15_actor_t *e, int bone);
  *      die Differenz und drehte/skalierte zuletzt — je Tick 1-4 Einheiten neben dem Original (GDB jnb5/g_stufe, Fuss-
  *      Sperre F196 e1 (-39,75) gegen Port (-37,75)). Dazu die Pool-Ueberblendung mit zwei getrennten >> 12: Wurzel
  *      `gpf12`/`gpl12` (FUN_8001f3bc Z. 40-61), Winkel FUN_80020510 -> LoadAverageShort12 `gpf12_b`/`gpl12_b`.
- *      re15_affen_kette_test: Elternkette eines Knochens (nur Riegel). */
+ *      re15_affen_kette_test: die Glieder, die affen_kette rechnet (affen_glieder) — Riegel `kette` prueft sie gegen die
+ *      fest verdrahteten Ketten von FUN_8011bf50 (@0x8011bf80-c4) und FUN_8011c024 (@0x8011c054-b8) (Nachbesserung 6, M4). */
 int      re15_affen_kette_test(int bone, int out[RE15_EMD_MAX_BONES]);
 
 /* (15) GORILLA-FINISHER (Nachbesserung 6, M1). B[8] (Treffer im Sprung, player.hp -= 600 @0x801191a8-ac) schreibt das

@@ -1889,6 +1889,34 @@ static void teil_zonensprung(void)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
+/* Nachbesserung 6, M4: die Elternkette, die affen_kette (Fuss-Sperre + Trefferpunkt, re15_affen.h (13)) aus der EMR baut,
+ * gegen die im Original FEST verdrahteten Ketten (STAGE1.BIN selbst disassembliert):
+ *   FUN_8011bf50: `jal 0x80022da0` @0x8011bf80 (Record 0), s0 = Pool + a1*516 + 2408, @0x8011bfa4 (s0-320 = Record 12+3a1),
+ *                 @0x8011bfb4 (s0-148 = 13+3a1), @0x8011bfc4 (s0+24 = 14+3a1)  -> 0, 12+3a1, 13+3a1, 14+3a1;
+ *   FUN_8011c024: @0x8011c054 (Record 0), @0x8011c064 (s0+196 = Record 1), s0 += a1*688 + 1032 (@0x8011c06c-8c),
+ *                 @0x8011c098 (s0-320 = 4+4a1), @0x8011c0a8 (s0-148 = 5+4a1), @0x8011c0b8 (s0+24 = 6+4a1)
+ *                 -> 0, 1, 4+4a1, 5+4a1, 6+4a1.
+ * Gemessen wird re15_affen_kette_test = derselbe Glieder-Aufbau (affen_glieder), den affen_kette rechnet. */
+static void teil_kette(void)
+{
+    PRUEF(bank_laden_27(), "EM027-Bank geladen");
+    static const struct { int knochen; int n; int glieder[5]; const char *quelle; } soll[4] = {
+        { 14, 4, { 14, 13, 12, 0 },    "FUN_8011bf50 a1=0 @0x8011bf80/a4/b4/c4" },
+        { 17, 4, { 17, 16, 15, 0 },    "FUN_8011bf50 a1=1" },
+        {  6, 5, {  6,  5,  4, 1, 0 }, "FUN_8011c024 a1=0 @0x8011c054/64/98/a8/b8" },
+        { 10, 5, { 10,  9,  8, 1, 0 }, "FUN_8011c024 a1=1" },
+    };
+    for (int i = 0; i < 4; i++) {
+        int out[RE15_EMD_MAX_BONES];
+        int n = re15_affen_kette_test(soll[i].knochen, out);
+        int ok = (n == soll[i].n);
+        for (int k = 0; ok && k < n; k++) if (out[k] != soll[i].glieder[k]) ok = 0;
+        char ist[64] = ""; for (int k = 0; k < n && k < 8; k++) { char t[8]; snprintf(t, sizeof t, k ? ",%d" : "%d", out[k]); strncat(ist, t, sizeof ist - strlen(ist) - 1); }
+        PRUEF(ok, "Kette Knochen %d = {%s} wie %s", soll[i].knochen, ist, soll[i].quelle);
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -1912,6 +1940,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "szene")  || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "finisher") || !strcmp(teil, "alle")) teil_finisher();
     if (!strcmp(teil, "zonensprung") || !strcmp(teil, "alle")) teil_zonensprung();
+    if (!strcmp(teil, "kette")  || !strcmp(teil, "alle")) teil_kette();
     if (!strcmp(teil, "fuss")) teil_fuss();   /* Diagnose, nicht in ctest */
     printf("test_r35_affen %s: %s (%d Fehler)\n", teil, g_fail ? "FEHLER" : "OK", g_fail);
     return g_fail ? 1 : 0;

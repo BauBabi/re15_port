@@ -1886,3 +1886,16 @@ Scratch: `scratchpad/jnb6/` (Abnahme-Laeufe `scratchpad/jabn5/` werden wiederver
   (w3y: (-9975,-10422), Gorilla hinter den Wagen bei (-13518,-403)), springt der Gorilla alle 40 Bilder auf der Stelle
   hoch und greift nicht an, bis Leon sich bewegt oder der Gorilla Sicht bekommt. Die "Zielstrebigkeit" aus Punkt 4 ist
   dadurch nicht verletzt — das Original macht dasselbe.
+
+### M4 — `re15_affen_kette_test` in einen Riegel genommen (statt toter Code)
+- Befund Abnahme 5 bestaetigt: die Funktion rief niemand auf, und sie hatte eine EIGENE Kopie der Glieder-Schleife.
+- Umsetzung: affen_11c0.c `affen_glieder()` baut die Glieder (Knochen -> Eltern -> ... -> Wurzel, EMR-Elternkette) und
+  wird von `affen_kette` (Fuss-Sperre + Trefferpunkt) UND von `re15_affen_kette_test` benutzt — der Riegel misst also
+  genau die Kette, die gerechnet wird.
+- Neuer Riegel `kette` gegen die im Original fest verdrahteten Ketten (STAGE1.BIN selbst disassembliert):
+  FUN_8011bf50 `jal 0x80022da0` @0x8011bf80 (Record 0), s0 = Pool + a1*516 + 2408, @0x8011bfa4/@0x8011bfb4/@0x8011bfc4
+  (s0-320 / s0-148 / s0+24 = Records 12+3a1 / 13+3a1 / 14+3a1); FUN_8011c024 @0x8011c054 (Record 0), @0x8011c064
+  (s0+196 = Record 1), s0 += a1*688 + 1032 (@0x8011c06c-8c), @0x8011c098/@0x8011c0a8/@0x8011c0b8 (Records 4+4a1 /
+  5+4a1 / 6+4a1). Gemessen: Knochen 14 = {14,13,12,0}, 17 = {17,16,15,0}, 6 = {6,5,4,1,0}, 10 = {10,9,8,1,0} — alle gleich.
+- Die Dossier-Stelle Z. 1579 ("Riegel prueft die Kette") stimmt damit ab Nachbesserung 6; vorher war sie falsch
+  (KORREKTUR hier vermerkt, die Stelle selbst bleibt als Protokoll stehen).
