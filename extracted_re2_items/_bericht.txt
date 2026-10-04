@@ -1,18 +1,23 @@
 # RE2-Welt-Item-Modelle (Runde 35 Spur F, Punkt 6)
-Item_aot_set-Platzierungen gesamt: 269
-  mit Weltmodell (md1 != 255):     206
-  ohne (md1 == 255):               63
-verschiedene Meshes (md5 MD1):     81
-  davon Karten (Name Card/Map):    3  (mesh043 Blue Card Key; mesh066 Lab Card Key; mesh067 Lab Card Key)
-Item-Ids mit Weltmodell:           63
-SCD-Bloecke 2553, desynchron 45; Bytes 331419 / gewalkt 313356 (94.55%)
-Kontaktbogen (1440, 3920), Karten-Bogen (1440, 280)
-Fehler: 8
-  room6030 sub26 Id 0: md1=58 >= nOmodel=10
-  roomF030 sub21 Id 0: md1=58 >= nOmodel=7
-  room1000 sub01 Id 6: md1=7 >= nOmodel=0
+Item_aot_set-Platzierungen gesamt: 312
+  mit Weltmodell (md1 < 0x20):     242
+  ohne (md1 >= 0x20, meist 255):   70
+verschiedene Meshes (md5 MD1):     87
+  davon Karten (Card Keys):        3  (mesh045 Blue Card Key; mesh072 Lab Card Key; mesh073 Lab Card Key)
+Lageplan-Aufnahmen (Frage mit 'map' + Ja-Zweig): 7, mit Weltobjekt 6, verschiedene Meshes 3
+  room20B0 police station map     obj 8    Aufnahme sub10@0x037BA  Platzierung sub00@0x03158(20000,20000,20000)  karte00 md5 735097e1
+  room2130 police B1 map          obj 0    Aufnahme sub05@0x01824  Platzierung sub03@0x00FDC(-16900,-1200,-10400)  karte00 md5 735097e1
+  room3060 sewage disposal map    obj 7    Aufnahme sub22@0x0283E  Platzierung sub00@0x01F92(-13800,-7200,-25250)  karte01 md5 99dae133
+  room4040 sewer map              obj 2    Aufnahme sub06@0x00FA8  Platzierung sub05@0x00F7E(-22814,-2350,-11768)  karte01 md5 99dae133
+  room5040 factory map            obj 1    Aufnahme sub13@0x02164  Platzierung sub00@0x01D54(-11599,-2000,-21188)  karte02 md5 5cdae635
+  room5060 factory map            obj 2    Aufnahme sub04@0x0101A  Platzierung sub00@0x00E20(-10449,-21800,-20988)  karte02 md5 5cdae635
+  room6120 laboratory map         obj -    Aufnahme sub03@0x014DE  Platzierung -  KEIN Weltobjekt
+Item-Ids mit Weltmodell:           70
+Bloecke aus den RDT-Tabellen (RDT+0x48/+0x4C @0x800535d4/@0x800535f4), nicht aus scd/*.scd
+  am letzten Evt_end beendet: 130 Bloecke, 327376 Byte dahinter (letzter Block: andere RDT-Daten; sonst <= 3 Byte Ausrichtung)
+SCD-Bloecke 2568, desynchron 0; Bytes 348160 / gewalkt 348160 (100.00%)
+Kontaktbogen (1440, 4200), Karten-Bogen (1440, 280)
+Fehler: 3
   room2080 sub00 Id 13: md1=4 >= nOmodel=4
-  room2130 sub00 Id 20: md1=225 >= nOmodel=10
-  roomA070 main00 Id 20: md1=36 >= nOmodel=0
-  roomF040 sub00 Id 30: md1=5 >= nOmodel=1
-  roomF040 sub00 Id 99: md1=6 >= nOmodel=1
+  roomG040 sub00 Id 30: md1=5 >= nOmodel=2
+  roomG040 sub00 Id 99: md1=6 >= nOmodel=2

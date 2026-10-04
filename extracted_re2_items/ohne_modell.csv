@@ -4,16 +4,21 @@ room60A0;sub18;0x014D4;16;0x10;Flamethrower;100;-6911;-18409;51
 room1080;sub00;0x01B16;20;0x14;H. Gun Bullets;15;-25048;-17910;213
 room1090;sub03;0x0227A;20;0x14;H. Gun Bullets;30;-900;-900;205
 room1090;sub03;0x02340;20;0x14;H. Gun Bullets;15;32000;32000;13
+room10C0;sub00;0x01AB8;20;0x14;H. Gun Bullets;15;-22480;-15250;210
+room1130;sub00;0x00EEE;20;0x14;H. Gun Bullets;15;-27854;-4717;145
 room1150;sub00;0x01462;20;0x14;H. Gun Bullets;15;-22895;-9423;101
 room1180;main00;0x01EFA;20;0x14;H. Gun Bullets;15;-19542;-8806;161
 room2020;sub00;0x01CE2;20;0x14;H. Gun Bullets;15;-5560;-18350;115
 room2030;sub00;0x00810;20;0x14;H. Gun Bullets;15;-20023;-26525;34
+room2040;sub00;0x01A4C;20;0x14;H. Gun Bullets;15;32000;32000;3
 room2060;sub00;0x01750;20;0x14;H. Gun Bullets;15;-27532;-23412;28
 room2080;sub00;0x014F0;20;0x14;H. Gun Bullets;15;-15280;-18310;216
 room20B0;sub08;0x036B0;20;0x14;H. Gun Bullets;15;-2703;-24979;74
 room20D0;sub00;0x012A2;20;0x14;H. Gun Bullets;30;-900;-900;208
 room20E0;sub00;0x019DA;20;0x14;H. Gun Bullets;15;-17900;-23800;61
 room20E0;sub00;0x01B46;20;0x14;H. Gun Bullets;15;-17900;-23800;61
+room2110;main00;0x01782;20;0x14;H. Gun Bullets;15;11338;-11166;221
+room2130;sub00;0x00EC2;20;0x14;H. Gun Bullets;15;-14870;-27180;24
 room21B0;sub00;0x02526;20;0x14;H. Gun Bullets;15;-21170;-23600;2
 room4010;sub00;0x02408;20;0x14;H. Gun Bullets;15;-17033;-17326;130
 room4030;sub25;0x02CE2;20;0x14;H. Gun Bullets;30;-27517;-13973;173
@@ -22,7 +27,9 @@ room5060;sub00;0x00E00;20;0x14;H. Gun Bullets;15;-25512;-18360;68
 room1080;sub00;0x01B40;21;0x15;Shotgun Shells;7;-25048;-17910;213
 room10B0;sub00;0x01856;21;0x15;Shotgun Shells;7;-26051;-16619;99
 room10D0;sub00;0x00856;21;0x15;Shotgun Shells;7;-900;-900;206
+room1130;sub00;0x00F08;21;0x15;Shotgun Shells;7;-27854;-4717;145
 room20C0;sub00;0x01CF6;21;0x15;Shotgun Shells;7;-900;-900;207
+room20F0;sub00;0x0191E;21;0x15;Shotgun Shells;7;-27616;-3320;143
 room2100;sub00;0x01330;21;0x15;Shotgun Shells;7;-26016;-20995;87
 room4050;sub00;0x00F52;21;0x15;Shotgun Shells;7;-9010;-25500;191
 room5070;sub00;0x0217A;21;0x15;Shotgun Shells;7;-900;-900;76
