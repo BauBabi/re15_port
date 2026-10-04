@@ -577,3 +577,17 @@ alten Pose 0.9375*0.875*0.8125*0.75*0.6875 = 0.34. Der Port (arm_hand_pose -> re
 QUERY-Modus, g_anim_pose_actor = NULL) rechnet die REINE Keyframe-Pose Clip 3 Bild 4 — ein Drittel der alten
 Pose fehlt im Pin. Das ist ein Port-Defekt, der den Ruecken-Fall direkt betrifft (der Pin bestimmt die Lage von
 Leons Wurzel zur Hand-Bahn; Nachbesserung 1 hat gezeigt, dass 168 Einheiten Pin-Versatz das Ergebnis kippen).
+
+### M3 (Gate) — Maskenwert als PORT-MAPPING gekennzeichnet (erledigt)
+Abnahme 1 hat richtig gesehen: das Original uebergibt im Zombie-Navigator die KONSTANTE `addiu a2,zero,8192`
+(0x2000) @0x8004a868 (Kraehe 0x8400 @0x801001C0-E8) auf RE2-Satzattribut-Bits; der Port nimmt `u0 & e->sca_mask`.
+Die Abbildung ist eine PORT-WAHL, Beleg fuer ihre Form (selbst disassembliert, info/Re1.5/PSX.EXE + STAGE1.BIN):
+RE1.5-Raeume haben keine RE2-Saetze, sondern Zellen mit dem Maskenbyte u0 (Zellwort-Hi-Byte), und RE1.5 selbst
+prueft genau diese Aktor-Maske gegen u0: Zombie-Wurzel `80100624: lbu a2,471(a0)` (+0x1D7) -> `8010062c: jal
+0x8003b0a4`; dort `8003b128: sb a2,24(sp)` ... `8003b244: lhu v0,-2(s2)` / `8003b248: lbu v1,24(sp)` /
+`8003b250: sra v0,v0,24` (u0) / `8003b254: and v1,v1,v0` / `8003b258: bne v1,zero` (Zelle zaehlt). Ein Wert 0x2000
+haette auf das 8-Bit-u0 keinen Treffer (jede Zelle uebersprungen = Sicht nie verdeckt) — das waere kein RE2-
+Verhalten, sondern ein Abbildungsfehler. Der Port bleibt daher bei `u0 & sca_mask`, jetzt im Code ausdruecklich als
+PORT-MAPPING markiert (enemy_ai_common.c re15_los_ray_blocked + Aufrufstelle in re15_re2_los_clear), mit beiden
+RE2-Konstanten und dem RE1.5-Beleg. Korrektur zum Dossier-Satz in Nachbesserung 1/M1 "uebergibt die Maske des
+Aktors (+0x1D7, Default 4)": das ist die PORT-Abbildung, nicht das, was RE2 uebergibt. Kein Verhaltenswechsel.

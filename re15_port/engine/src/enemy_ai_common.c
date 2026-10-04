@@ -2911,7 +2911,12 @@ static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *playe
         if ((c->floor >> 4) != e->floor) continue;            /* w5>>12 == +0x82 */
         if ((c->floor & 0x0f) != 3) continue;                 /* (w5&0xf00) == 0x300 */
         /* Runde 35 Spur H (M1): nur als RE2-Ray-Stand-in — RE2 0x80050858 ueberspringt Saetze ohne
-         * Maskentreffer (`lhu v1,8(t1)`/`and v0,v1,fp`/`beq v0,zero` @0x800508bc-c8) = Zelle u0 & Maske. */
+         * Maskentreffer (`lhu v1,8(t1)`/`and v0,v1,fp`/`beq v0,zero` @0x800508bc-c8). PORT-MAPPING der
+         * MASKE: RE2 uebergibt eine KONSTANTE auf RE2-Satzattribut-Bits (Zombie-Navigator a2 = 0x2000
+         * `addiu a2,zero,8192` @0x8004a868, Kraehe 0x8400 @0x801001C0-E8); RE1.5-Raeume haben statt der
+         * Saetze Zellen mit Maskenbyte u0, und RE1.5 selbst prueft die Aktor-Maske +0x1D7 gegen u0
+         * (`lbu a2,471(a0)` @0x80100624 -> FUN_8003b0a4 `lbu v1,24(sp)`/`and`/`bne` @0x8003b248-58).
+         * Hier daher u0 & re2_maske (= e->sca_mask), nicht 0x2000 — eine Abbildung, kein RE2-Wert. */
         if (re2_maske && !(re2_maske & c->u0)) continue;
         int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12;
         int32_t x1 = ((int32_t)c->x + (int32_t)c->width)   / 0x12;
@@ -3033,7 +3038,7 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
                                    e->sca_mask ? e->sca_mask : 4u))
         return 0;
     for (int k = 0; k < 4; k++)
-        if (re15_los_ray_blocked(e, pl, k, e->sca_mask ? e->sca_mask : 4u)) return 0;
+        if (re15_los_ray_blocked(e, pl, k, e->sca_mask ? e->sca_mask : 4u)) return 0;   /* PORT-MAPPING statt RE2 0x2000 @0x8004a868 / 0x8400, s. re15_los_ray_blocked */
     return 1;
 }
 
