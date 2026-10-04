@@ -360,6 +360,14 @@ Maengel aus `H_abnahme_0.md`: M1 (P3 Bahren-Zombie bleibt unter RE2-KI in der Nu
 M2 (P4 Ruecken-Griff clippt), M3 (veraltete Kommentare enemy_ai_common.c:214/:10695), M4 (P4 RE1.5-KI der
 Gitterarme ungeprueft). Je Mangel: Ursache / Messung vorher / Beleg / Aenderung / Messung nachher.
 
+**Stand je Mangel:**
+| Mangel | Ergebnis |
+|---|---|
+| M1 | **behoben** — Ursache war der Port-Sichtstrahl (Region-Ray ohne Maskenfilter sah die begehbare Absturzkante als Wand, los=0 in jedem Bild); Filter nach RE2 @0x800508bc-c8. Nutzerlage: Biss F2062, Gang F2095, Sturz F2118-2132 (vorher 1011 Bilder oben). Riegel um "Spieler unter der Kante" + Sichtpruefung erweitert, Gegenprobe rot. |
+| M2 | **widerlegt per Adresse** — RE2 hat fuer den Griff von hinten keinen eigenen Pfad (eine Opferbank @0x80100C3C-5C, ein Clip @0x801012A8-AC, nur Flip @0x8010130C-18, Arm liest PL+0x76 nie); Riegel prueft die Konstruktion (4a-c, Hand-Bahn max 0, Spiegel max 2). Sichtpruefung am RE2-Abbild bleibt OFFEN 1. |
+| M3 | **behoben** — Kommentare enemy_ai_common.c:214/:10695/:14669. |
+| M4 | **gemessen** — RE1.5-KI: kein Clipping; Leon steht im Halten 1300-1560 neben der Hand (Griff ohne Kontakt, Nachruestung ohne Original, @0x8010c8cc-f4) -> OFFEN 6. |
+
 ### M3 (Doku) — erledigt
 enemy_ai_common.c:214 ("func_0x8001bd60(-10,20) setup helper — deferred") -> jetzt: Engine-Schwerkraft,
 portiert als re15_schwerkraft_8001bd60, aufgerufen in re15_enemy_ai_live_tick (`jal` @0x80100514).
