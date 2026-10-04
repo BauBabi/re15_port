@@ -361,9 +361,68 @@ static int karte(const char *path, int gebrochen)
     return rr == RE15_FENSTER_RAUM ? 0 : fail(82, "Raum");
 }
 
+/* ============================================================================================ */
+/* Nachbesserung 1: Satzform p0/p1 des Ereignis-Platzes gegen die ausgelieferten Bytes.
+ *   ROOM1050.RDT @0x0C22 `2c 07 03 31 ... ff 00 18 02 00 00` (p0 @0x0C30, p1 @0x0C32)
+ *   ROOM1020.RDT @0x1E18 `2c 06 03 41 ... ff 00 18 03 00 00` (AUTO-Form sat 0x41 wie Slot 4)
+ * und die Bedeutung von p0 = 0x00FF: 0x8003ee3c nimmt bei a0 >= 0xa (`sltiu v0,a2,0xa` @0x8003ee54)
+ * den ERSTEN FREIEN Ereignis-Faden — im Port scd_event_fire (erster freier Faden ab SCD_EVENT_SLOT_FIRST). */
+static uint8_t *psx_datei(const char *rel, size_t *n)
+{
+    char p[1024];
+    snprintf(p, sizeof p, "%s/%s", RE15_XSTR(RE15_ASSETS_PATH), rel);
+    FILE *f = fopen(p, "rb");
+    if (!f) { printf("kann %s nicht oeffnen\n", p); return NULL; }
+    fseek(f, 0, SEEK_END); long l = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *b = (uint8_t *)malloc((size_t)l);
+    if (b && fread(b, 1, (size_t)l, f) != (size_t)l) { free(b); b = NULL; }
+    fclose(f);
+    if (b && n) *n = (size_t)l;
+    return b;
+}
+
+static int satz_pruefen(const char *rel, size_t off, uint8_t sat_soll)
+{
+    size_t n = 0;
+    uint8_t *b = psx_datei(rel, &n);
+    if (!b || off + 20 > n) { free(b); return fail(90, "RDT fehlt/zu kurz"); }
+    const uint8_t *r = b + off;
+    uint16_t p0 = u16(r, 14), p1 = u16(r, 16);
+    printf("%s @0x%04zx: op 0x%02x sce %u sat 0x%02x p0 0x%04x p1 0x%04x\n", rel, off, r[0], r[2], r[3], p0, p1);
+    int ok = r[0] == 0x2c && r[2] == RE15_FENSTER_SCE && r[3] == sat_soll &&
+             p0 == RE15_FENSTER_P0 && (p1 & 0xff) == (RE15_FENSTER_P1 & 0xff);
+    free(b);
+    return ok ? 0 : fail(91, "Satzform weicht von RE15_FENSTER_P0/P1 ab");
+}
+
+static int pruef_satzform(void)
+{
+    if (satz_pruefen("STAGE1/ROOM1050.RDT", 0x0C22, 0x31)) return 1;
+    if (satz_pruefen("STAGE1/ROOM1020.RDT", 0x1E18, RE15_FENSTER_SAT)) return 1;
+    if ((RE15_FENSTER_P1 >> 8) != RE15_FENSTER_EREIGNIS) return fail(92, "p1 Oberbyte = Ereignis (@0x80043100)");
+    if (RE15_FENSTER_P0 < 0xa) return fail(93, "p0 >= 0xa = freier Faden (@0x8003ee54)");
+
+    /* Freier Faden statt festem Platz: Platz FIRST belegt -> das naechste Ereignis laeuft in FIRST+1. */
+    static const uint8_t prog[] = { 0x01, 0x00 };          /* Evt_end */
+    static re15_rdt_t rdt;
+    memset(&rdt, 0, sizeof rdt);
+    rdt.sub_scd[RE15_FENSTER_EREIGNIS] = prog;
+    scd_vm_init();
+    scd_register_current_rdt(&rdt);
+    g_current_room_id = 0x1000;                            /* kein Port-Haken greift */
+    re15_fenster1120_install(0x1000);
+    int s1 = scd_event_fire(RE15_FENSTER_EREIGNIS);
+    int s2 = scd_event_fire(RE15_FENSTER_EREIGNIS);
+    printf("Ereignis-Faeden: %d dann %d (erster freier ab %d)\n", s1, s2, SCD_EVENT_SLOT_FIRST);
+    if (s1 != SCD_EVENT_SLOT_FIRST || s2 != SCD_EVENT_SLOT_FIRST + 1)
+        return fail(94, "p0 0x00FF: erster freier Ereignis-Faden");
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *was = argc > 1 ? argv[1] : "glas";
+    if (!strcmp(was, "satzform")) return pruef_satzform();
     if (!strcmp(was, "glas"))     return pruef_glas();
     if (!strcmp(was, "kraehe"))   return pruef_kraehe();
     if (!strcmp(was, "ereignis")) return pruef_ereignis();

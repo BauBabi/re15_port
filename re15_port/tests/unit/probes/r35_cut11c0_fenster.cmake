@@ -6,6 +6,8 @@
 #   unit_r35_fenster_kraehe    RE2-Kraehe State 4 Sub 2 (versteckt, Befehl +0x1D4, 7 Bilder 1890, ACTIVE 4)
 #   unit_r35_fenster_knall     RE2-Raumbank GLAS1090 Satz 0x21 = Prog 0 Ton 7..10 (VAG 5), Wellen vorhanden
 #   unit_r35_fenster_ereignis  install/VM/AOT/Zeitlinie T+0/2/5/10/23, Schaden nur Cut 1, Tor + Einmaligkeit
+#   unit_r35_fenster_satzform  Nachbesserung 1: p0 0x00FF / p1-Unterbyte 0x18 = ROOM1050 @0x0C30/@0x0C32 und
+#                              ROOM1020 @0x1E18 (sat 0x41); p0 >= 0xa = erster freier Faden (0x8003ee3c @0x8003ee54)
 #   integration_r35_fenster    echte exe: Spielstand ROOM1120 + CONTINUE, Leon laeuft nach Norden ins Band,
 #                              Log + Framedump vor/nach (Schadenspixel), Wiedereintritt mit (9,79)=1
 add_executable(probe_r35_fenster ${CMAKE_CURRENT_LIST_DIR}/../test_r35_cut11c0_fenster.c)
@@ -14,7 +16,7 @@ target_include_directories(probe_r35_fenster PRIVATE ${CMAKE_SOURCE_DIR}/include
 if(NOT WIN32)
     target_link_libraries(probe_r35_fenster PRIVATE m)
 endif()
-foreach(_r35m_teil glas kraehe ereignis knall)
+foreach(_r35m_teil glas kraehe ereignis knall satzform)
     add_test(NAME unit_r35_fenster_${_r35m_teil} COMMAND probe_r35_fenster ${_r35m_teil})
     set_tests_properties(unit_r35_fenster_${_r35m_teil} PROPERTIES TIMEOUT 120)
 endforeach()
