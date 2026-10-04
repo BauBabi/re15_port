@@ -227,4 +227,26 @@ der bei JEDER spaeteren Aenderung von selbst greift - nicht einen einmaligen Tes
   -> 2**, N9 Mindestzahl Mutanten hochgesetzt -> Abbruch; Gate/Urteil/Pins danach unveraendert.
 
 ## OFFEN
-(folgt)
+- **Geraete-/Emulatorlauf der neuen libmain.so**: Punkt 1 und 2 sind am ECHTEN android_glue.c gemessen, aber im
+  Pruefstand (Attrappen fuer SDL/JNI/AAssetManager, mingw/NTFS case-insensitiv wie der App-Speicher). Ein Lauf im
+  Emulator (AVD-Kopie der Runde 34a, 2400x1080) mit Bild des Uebergangs-Titels und einem H8-Update ist nicht gemacht
+  (Emulator-Start + Installation ~20 min; Messweg: `adb install -r`, Speicherordner per `adb shell run-as`/`adb push`
+  praeparieren wie `pruefer_echtlauf_r4_2.md` 3.9, Bild per `adb exec-out screencap`). Der APK-Bau mit der vollen
+  Kette (Gate + Urteil + Signer) steht unter "APK-Bau".
+- Linux-Lauf des Pruefstands: die Probe uebersetzt unter Linux ohne kompat_win.h (POSIX direkt, `_GNU_SOURCE`); in
+  dieser Sitzung nur unter mingw gelaufen. Naechster Messweg: `release/build_linux_deck.sh` (ctest im Container).
+
+## Fuer den Nutzer
+- Keine neuen Sprachzeilen, keine neuen Assets (shared_assets unveraendert) - nichts fuers Paket-Gate nachzutragen.
+- Android: beim ersten Start nach dem Update ist der Titel auf 20:9/16:9 kleiner, steht aber ganz im Bild; ein Update,
+  das eine Datei durch einen gleichnamigen Ordner ersetzt (oder umgekehrt), laeuft im selben Start durch
+  (debug.log: `Konflikt geraeumt: ...`).
+- Fuer den Orchestrator (Paketbau): `release/gate_urteil.py` + `release/gate_urteil.sha256` sind neu und Pflicht
+  (apk_pruefen.sh bricht ohne sie ab). Wer `release/apk_asset_gate.py` aendert (z.B. PFLICHT_DATEI fuer neue Assets
+  anderer Spuren): `"$PY" release/apk_asset_gate.py --selbsttest` (jetzt 261/261, 148/148) und den neuen sha256 in
+  `release/apk_asset_gate.sha256` - wie bisher. Wer `release/gate_urteil.py` aendert: `--selbsttest` muss
+  `URTEIL-SELBSTTEST-OK` melden (sonst einen Fall fuer die neue Regel schreiben), dann sha256 in
+  `release/gate_urteil.sha256`. Merge-Hinweis: diese Spur aendert apk_asset_gate.py (Proben/Faelle/R1/R2) und dessen
+  Pin - traegt der Orchestrator parallel PFLICHT_DATEI-Zeilen ein, danach Selbsttest + Pin neu.
+- Jede vor diesem Stand gebaute APK besteht die Kette weiter nur, wenn ihr Manifest R1/R2 erfuellt (alle bisherigen:
+  kein Segment `*.neu`, keine Datei+Ordner-Paare - am Quellbaum geprueft: `--quellbaum` 3629 Dateien OK).
