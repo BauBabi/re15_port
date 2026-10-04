@@ -21,7 +21,13 @@
 #   F  Zuweisung name=<Zahl> -> 0 bzw. +-1
 #   G  Aufruf einer der Pruef-Funktionen als eigene Zeile -> weg
 #   H  return <x> -> return 0 (bzw. 1, wenn x = 0)
-# NICHT mutiert: Meldungstexte, Ausgaben (echo, grep -v fuer die Anzeige), Pfade/Dateinamen, die Mindestzahlen
+#   I  Uebergabe (Nachbesserung 3, Abnahme 2 M1): jedes Argument der Form "$NAME", "${NAME...}", "$1".."$9", "$@" eines
+#      Aufrufs von "$PY" oder einer Pruef-Funktion (FUNKTIONEN; auch ueber Fortsetzungszeilen mit \) und jede Uebernahme
+#      eines Parameters (local x="$1") -> "" bzw. 0 bzw. ein anderes solches Argument DESSELBEN Aufrufs (Kopierfehler,
+#      Vertauschung). J11/J12/J13 der Abnahme 2 ("0 0", MIN_INNEN doppelt, "" statt GATE_APK_EINTRAEGE) sind genau solche
+#      Mutanten - vorher erzeugte das Werkzeug an dieser Stelle keinen, und keine Kontrolle las die Argumente.
+# NICHT mutiert: Meldungstexte, Ausgaben (echo, grep -v fuer die Anzeige), Pfade/Dateinamen (auch Argumente mit Text
+# hinter der Variablen wie "$log.urteil" oder "$1/apk_asset_gate.py"), Argumente in $( ... ), die Mindestzahlen
 # (GATE_URTEIL_MIN_*: deren Senkung ist eine sichtbare Zeile im Diff, Kopf von apk_pruefen.sh).
 #
 # Aufruf: python bash_urteil_mutanten.py <apk_pruefen.sh> <urteil_kontrollen.sh> <arbeit> <bash> [parallel]
@@ -245,11 +251,55 @@ def mutanten(text):
                 if imfrei(mm.start()):
                     neu = "1" if mm.group(1) == "0" else "0"
                     m(i, "H return %s -> %s" % (mm.group(1), neu), z[:mm.start(1)] + neu + z[mm.end(1):])
+        # I: Uebergabe (Nachbesserung 3)
+        for zl, was, nz in uebergaben(zeilen, a, e):
+            m(zl, was, nz)
+    return out
+
+
+_ARG = re.compile(r'"\$(?:\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}"]*)?\}|[A-Za-z_][A-Za-z0-9_]*|[1-9@])"')
+
+
+def uebergaben(zeilen, a, e):
+    """Operator I: -> Liste (zeile, beschreibung, neue_zeile). Logische Befehle (Fortsetzung mit \\ am Zeilenende) in den
+    Zeilen a..e-1, deren erstes Wort "$PY" bzw. eine Pruef-Funktion ist (Argumente) oder 'local' (Uebernahme x="$n")."""
+    out = []
+    mk_alle = masken(zeilen, a, e)
+    i = a
+    while i < e:
+        befehl = [i]
+        while befehl[-1] + 1 < e and zeilen[befehl[-1]][:mk_alle[befehl[-1] - a][1]].rstrip().endswith("\\"):
+            befehl.append(befehl[-1] + 1)
+        i = befehl[-1] + 1
+        kopf = zeilen[befehl[0]].strip()
+        if not kopf or kopf.startswith("#"):
+            continue
+        wort = kopf.split()[0]
+        art = "aufruf" if wort == '"$PY"' or wort in FUNKTIONEN else "local" if wort == "local" else None
+        if art is None:
+            continue
+        toks = []
+        for zl in befehl:
+            mk, ce = mk_alle[zl - a]
+            z = zeilen[zl]
+            for mm in _ARG.finditer(z[:ce]):
+                p = mm.start()
+                if p > 0 and not mk[p - 1]:
+                    continue                      # das Anfuehrungszeichen gehoert zu einem umgebenden "..." bzw. $( ... )
+                if art == "local" and (p == 0 or z[p - 1] != "="):
+                    continue
+                if art == "aufruf" and zl == befehl[0] and p == len(z) - len(z.lstrip()):
+                    continue                      # das Befehlswort selbst ("$PY")
+                toks.append((zl, p, mm.end(), mm.group(0)))
+        for zl, p, q, t in toks:
+            z = zeilen[zl]
+            for neu in ['""', "0"] + sorted({u for _zl, _p, _q, u in toks if u != t}):
+                out.append((zl, "I %s: %s -> %s" % (kopf[:50], t, neu), z[:p] + neu + z[q:]))
     return out
 
 
 def main():
-    ap, kontrollen, arbeit, bash = (x.replace("\\", "/") for x in sys.argv[1:5])   # bash bekommt nur C:/...-Pfade
+    ap, kontrollen, arbeit, bash =(x.replace("\\", "/") for x in sys.argv[1:5])   # bash bekommt nur C:/...-Pfade
     par = int(sys.argv[5]) if len(sys.argv) > 5 else 6
     text = open(ap, encoding="utf-8", newline="").read()
     if os.path.isdir(arbeit):
