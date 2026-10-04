@@ -630,3 +630,13 @@ Suite-Zahl nach Merge + N2: `ctest -N` = 531 (master 517 + Spur I 14).
 * O6 ELEVSE/HINTSE/PANEL2130 nicht einzeln mit einem Lauf belegt (s. H3). Naechster Messweg: Fahrstuhl
   ROOM1080 (scd_elev_se.c, Se 0x11/0x12) bzw. Kartenhinweis (map_hint_common.c) bzw. Hebetisch 1150
   (hebetisch_cursor_1150.c) mit SDL_AUDIODRIVER=dummy + RE15_ENTLADEN_LOG, dann Tuer/Tod: re2ton -> 0.
+
+### Fuer den Nutzer (N2)
+* Keine Sprachdateien, keine neuen Assets (Paket-/Android-Gate unveraendert), keine neue .c-Datei.
+* Wirkung: nach Raumwechsel und Tod ist jetzt auch die Raum-Animationsbank des Raums davor entladen
+  (RBJ/ROOM1170.RBJ nach dem Helipad, die von ROOM11B0 geliehene Bank nach ROOM10F0, die Bank eines
+  Spielstands in ROOM1170 nach dem ersten Raumwechsel), dazu der Montage-Schnappschuss des Pre-Intros
+  und die RE2-Raumtonbaenke (Gegner-Toene, "verschlossen", Fahrstuhl, Kartenhinweis, Panel-Klick). Sie
+  werden beim naechsten Bedarf im neuen Raum wieder geladen. Aussehen unveraendert (A/B bytegleich).
+* Messschiene: drei neue Faecher `rbj`, `bg_prev`, `re2ton` in `RE15_ENTLADEN_LOG`; VORHER-Zeilen nennen
+  eine geladene RBJ-Datei mit Raum und Groesse (`| rbj_datei raum=1170 bytes=55060 gen=3`).
