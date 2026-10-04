@@ -1259,3 +1259,8 @@ Das Fenster-Capture lieferte in dieser Sitzung weisse Bilder -> RE15_FRAMEDUMP.
 * Messwerkzeug/Daten: `re2_mess/re2_neck.py`, `re2_mess/re2_los.py` (FUN_80050858), `re2_mess/re2_fixture.py`,
   `re2_mess/re2_gdb_grab.py` (R2_EXTRA), `re2_mess/daten/n4_g8b_r0_ruecken|n4_g8c_r0_ruecken|n4_g1b_ost_gesicht/`
   (frames.bin, frames.txt, extra.txt, log.txt). Bild `H_raeume/nb4_ruecken_kopf_alt_neu_F300-330.png`.
+
+### Suite (Nachbesserung 4)
+* Lauf 1 `bash re15_port/tools/local_build.sh all` (Code-Stand 5a82f1ed): 481/482, einzig `integration_boot_bg_pin`
+  Timeout 120 s (Fenster-Haken, bekannt flatternd unter Last der parallelen Baeume, VERTRAG 1.5). Einzeln nachgefahren:
+  2x Passed (17,96 s / 17,97 s). Volllauf wiederholt (Ergebnis unten).
