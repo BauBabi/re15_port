@@ -80,12 +80,19 @@
 #   - ctest unit_r35_android_bash_mutanten (bash_urteil_mutanten.py, Nachbesserung 2) MUTIERT die sechs Funktionen
 #     gate_pin_pruefen, gate_urteil_pin_pruefen, gate_urteil_selbsttest, gate_festhalten, gate_urteil, gate_laufen
 #     (Vergleiche in (( )) in beide Richtungen, [[ ]], grep -q-/=~-Muster, die -> true, Zahlen, Pruef-Aufrufe, return)
-#     und verlangt fuer jeden Mutanten eine rote Kontrolle aus urteil_kontrollen.sh.
+#     und verlangt fuer jeden Mutanten eine rote Kontrolle aus urteil_kontrollen.sh. Seit Nachbesserung 3 (Abnahme 2,
+#     M1) auch die UEBERGABE (Operator I): jedes Argument an "$PY" und an die Pruef-Funktionen und jede Uebernahme
+#     eines Parameters (local x="$1") -> "" / 0 / ein anderes Argument desselben Aufrufs; dazu Kontrollen, die die
+#     Argumente beim Urteil (Modus, Rueckgabe, GATE_SELBSTTEST_MIN_*, GATE_APK_EINTRAEGE, Ausgabe-Datei) und beim Gate
+#     ("$@") woertlich verlangen, und in der Kette das ECHTE Urteil an der Grenze der Mindestzahlen bzw. der unzip-Zaehlung.
 #   Wer eine Pruefzeile in diesen Funktionen aendert oder neu schreibt: eine Kontrolle dazu in urteil_kontrollen.sh
 #   (sonst ueberlebt ein Mutant = BASH-URTEIL-MUTANTEN-FEHLER); Dossier analysis/befunde_runde35/N_android.md,
-#   Nachbesserung 2. Die Kontrollen laufen unter "set -euo pipefail" - wie die Aufrufer hier.
+#   Nachbesserung 2/3. Die Kontrollen laufen unter "set -euo pipefail" - wie die Aufrufer hier.
 #   Wer gate_urteil.py aendert: --selbsttest muss OK sein (sonst Fall ergaenzen), dann den neuen sha256 in
-#   release/gate_urteil.sha256 festhalten und ggf. GATE_URTEIL_MIN_* anpassen - im selben Commit.
+#   release/gate_urteil.sha256 festhalten und GATE_URTEIL_MIN_FAELLE/MIN_ERKANNT nur anpassen, wenn Faelle bzw.
+#   Mutationsstellen dazugekommen sind - im selben Commit. Eine entfernte Regel macht eine Stoerung (gate_urteil.py
+#   UNGEPRUEFT, Nachbesserung 3) rot; das laesst sich nur mit einer NEUEN begruendeten Ausnahme dort umgehen, und die
+#   zaehlt gegen GATE_URTEIL_MAX_UNGEPRUEFT HIER.
 # =============================================================================
 
 APK_PRUEF_TMP=""
@@ -99,18 +106,23 @@ GATE_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apk_asset_gate.sha
 # hier senken (git-Diff), nicht still.
 GATE_SELBSTTEST_MIN_FAELLE=261
 GATE_SELBSTTEST_MIN_INNEN=148
-# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 2: 280 Faelle, 887 von
-# 894 Mutanten erkannt, 7 als gleichwertig begruendet - Nachbesserung 1: 243 / 781 von 785 / 4, Bau: 119 / 257 von 260 /
-# 3; NB1 mutiert auch Zeichenketten und Regex-Muster, NB2 auch die einseitigen Lockerungen != -> < / >, == -> <= / >=
-# und hat je Vergleichsstelle Faelle von beiden Seiten - die 3 neuen "gleichwertigen" sind Ordnungs-Mutanten auf
-# Werten, die nie negativ bzw. nie 0 sein koennen, Begruendung je Eintrag in gate_urteil.py AEQUIVALENT).
-# Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige": wer einen Mutanten zum gleichwertigen erklaert statt einen Fall zu
-# schreiben, muss das HIER sichtbar tun.
+# Urteil (Runde 35 Spur N): Quelle, Pin, Mindestzahlen seines Selbsttests (Stand Nachbesserung 3: 777 Faelle, 887 von
+# 894 Mutanten erkannt, 7 als gleichwertig begruendet, 102 Stoerungen begruendet ungeprueft - Nachbesserung 2: 280 /
+# 887 von 894 / 7, Nachbesserung 1: 243 / 781 von 785 / 4, Bau: 119 / 257 von 260 / 3; NB1 mutiert auch Zeichenketten
+# und Regex-Muster, NB2 auch die einseitigen Lockerungen != -> < / >, == -> <= / >= und hat je Vergleichsstelle Faelle
+# von beiden Seiten - die 3 neuen "gleichwertigen" sind Ordnungs-Mutanten auf Werten, die nie negativ bzw. nie 0 sein
+# koennen, Begruendung je Eintrag in gate_urteil.py AEQUIVALENT; NB3: +5 Faelle H10/H17/H18 der Abnahme 2 und 492
+# erzeugte Stoerungsfaelle, davon 102 mit Soll 0 = Stellen, die das Urteil absichtlich nicht liest, je Grund in
+# gate_urteil.py UNGEPRUEFT; das Urteil selbst ist unveraendert, daher dieselben 894 Mutanten).
+# Hoechstens GATE_URTEIL_MAX_GLEICH "gleichwertige" und GATE_URTEIL_MAX_UNGEPRUEFT begruendet ungepruefte Stoerungen:
+# wer einen Mutanten zum gleichwertigen oder eine Stelle der Gate-Ausgabe zur ungeprueften erklaert, statt einen Fall
+# zu schreiben bzw. die Regel zu behalten, muss das HIER sichtbar tun.
 GATE_URTEIL_QUELLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.py"
 GATE_URTEIL_PIN_DATEI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gate_urteil.sha256"
-GATE_URTEIL_MIN_FAELLE=280
+GATE_URTEIL_MIN_FAELLE=777
 GATE_URTEIL_MIN_ERKANNT=887
 GATE_URTEIL_MAX_GLEICH=7
+GATE_URTEIL_MAX_UNGEPRUEFT=102
 GATE_URTEIL_KOPIE=""              # gate_festhalten: gepruefte private Kopie von release/gate_urteil.py
 GATE_URTEIL_GEPRUEFT=""           # sha256 der Urteils-Kopie, deren Selbsttest in dieser Shell bestanden hat
 if [[ -n "${APK_GATE_DATEI:-}" ]]; then
@@ -285,7 +297,7 @@ gate_urteil_pin_pruefen() { # $1 = Urteils-Datei; Abbruch, wenn ihre sha256 nich
 # gepruefte Python-Code) gegen die Mindestzahlen geprueft - ein leeres oder abgeschnittenes Urteil liefert keine solche
 # Zeile, ein geschwaechter Selbsttest weniger Faelle/Mutanten.
 gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
-    local datei="$1" log rc=0 letzte f1 f2 e m g
+    local datei="$1" log rc=0 letzte f1 f2 e m g u
     gate_urteil_pin_pruefen "$datei"
     [[ "$GATE_URTEIL_GEPRUEFT" == "$GATE_URTEIL_SHA256" ]] && return 0
     log="$(mktemp "${TMPDIR:-/tmp}/re15_urteil_selbsttest.XXXXXX")" || die "gate_urteil_selbsttest: kein Temp-Platz"
@@ -296,8 +308,9 @@ gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
     # (die echten Aufrufer) brach die Shell HIER ab, ohne die Meldung unten (gemessen: Kontrolle N7, urteil_kontrollen.sh)
     letzte="$(tr -d '\r' < "$log" | grep -v '^[[:space:]]*$' | tail -1 || true)"
     rm -f "$log"
-    if [[ "$letzte" =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0-9]+)\ Faelle,\ ([0-9]+)/([0-9]+)\ Mutanten\ erkannt,\ ([0-9]+)\ als\ gleichwertig\ begruendet\ ==$ ]]; then
+    if [[ "$letzte" =~ ^==\ URTEIL-SELBSTTEST-OK:\ ([0-9]+)/([0-9]+)\ Faelle,\ ([0-9]+)/([0-9]+)\ Mutanten\ erkannt,\ ([0-9]+)\ als\ gleichwertig\ begruendet,\ ([0-9]+)\ Stoerungen\ begruendet\ ungeprueft\ ==$ ]]; then
         f1="${BASH_REMATCH[1]}"; f2="${BASH_REMATCH[2]}"; e="${BASH_REMATCH[3]}"; m="${BASH_REMATCH[4]}"; g="${BASH_REMATCH[5]}"
+        u="${BASH_REMATCH[6]}"
     else
         die "Selbsttest des Gate-Urteils ohne gueltige Schlusszeile (Rueckgabe $rc): '${letzte:0:160}' - dem Urteil ist nicht zu trauen"
     fi
@@ -307,7 +320,10 @@ gate_urteil_selbsttest() {   # $1 = Urteils-Kopie (gepinnt)
     (( e + g == m && e >= GATE_URTEIL_MIN_ERKANNT && g <= GATE_URTEIL_MAX_GLEICH )) \
         || die "Selbsttest des Gate-Urteils: $e/$m Mutanten erkannt, $g gleichwertig - verlangt erkannt + gleichwertig = alle,
         erkannt >= $GATE_URTEIL_MIN_ERKANNT, gleichwertig <= $GATE_URTEIL_MAX_GLEICH (GATE_URTEIL_MIN_ERKANNT/MAX_GLEICH)"
-    echo "   Gate-Urteil selbstgeprueft: $f2/$f2 Faelle, $e/$m Mutanten erkannt, $g gleichwertig (Mindestzahlen $GATE_URTEIL_MIN_FAELLE/$GATE_URTEIL_MIN_ERKANNT/<=$GATE_URTEIL_MAX_GLEICH)"
+    # Nachbesserung 3: eine entfernte Regel kommt nur mit einer neuen UNGEPRUEFT-Ausnahme am Selbsttest vorbei - die zaehlt hier
+    (( u <= GATE_URTEIL_MAX_UNGEPRUEFT ))         || die "Selbsttest des Gate-Urteils: $u Stoerungen begruendet ungeprueft, verlangt <= $GATE_URTEIL_MAX_UNGEPRUEFT
+        (GATE_URTEIL_MAX_UNGEPRUEFT) - eine neue Ausnahme in gate_urteil.py UNGEPRUEFT muss hier sichtbar zugelassen werden"
+    echo "   Gate-Urteil selbstgeprueft: $f2/$f2 Faelle, $e/$m Mutanten erkannt, $g gleichwertig, $u Stoerungen ungeprueft (Mindestzahlen $GATE_URTEIL_MIN_FAELLE/$GATE_URTEIL_MIN_ERKANNT/<=$GATE_URTEIL_MAX_GLEICH/<=$GATE_URTEIL_MAX_UNGEPRUEFT)"
     GATE_URTEIL_GEPRUEFT="$GATE_URTEIL_SHA256"
 }
 

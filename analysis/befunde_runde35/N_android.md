@@ -760,3 +760,30 @@ Stoerungen begruendet ungeprueft`. nb3_urteil_aenderungen.py: **31 von 32 bemerk
 N3 + Stoerungen "Z6 '[ok] 05' weg", "Z6 Zahl 2/3 Zusatz"), H17 -> 5 (283 + 4 gegenlaeufige Paare pk Z1/Z2 Spalte 0 und 1),
 H18 -> 5 (284 + 4 Zusatzspalten pk). Nicht bemerkt nur X8 (pk Summe ueber Quelle statt gleich): gleichwertig - der Teil
 steht hinter `any(qq != gg ...) or`, an der Stelle gilt qq = gg in jedem Baum, also sum(qq) = sum(gg).
+
+### Nachbesserung 3 - M1 bash-Urteil: Uebergabe an Urteil und Gate (urteil_kontrollen.sh, apk_pruefen.sh)
+**Ursache (Code gelesen, wie Abnahme 2 3.7):** Alle Urteils-Attrappen entschieden nur nach argv[3] (Gate-Rueckgabe) und
+lasen weder die Ausgabe-Datei (argv[2]) noch die Mindestzahlen (argv[4], argv[5]) noch die unzip-Zaehlung (argv[6]); die
+Gate-Attrappen ignorierten ihre Argumente; bash_urteil_mutanten.py hatte keinen Operator fuer Argumente; die Kette fuetterte
+nie eine Gate-Ausgabe an der Grenze der Mindestzahlen und setzte GATE_APK_EINTRAEGE nie.
+**Aenderung (urteil_kontrollen.sh, jetzt 102 Kontrollen):**
+- Urteils-Attrappe `U_argv`: druckt `   ARGV n=<anzahl> modus=<1> rc=<3> min_faelle=<4> min_innen=<5> apk=<6> letzte=<letzte
+  nicht-leere Zeile der Datei argv[2]>` und urteilt ehrlich nach der Gate-Rueckgabe. Gate-Attrappe `GA`: druckt
+  `   GATE-ARGV <argumente|...>`. Die Soll-Werte liest das Skript per sed aus der GEPRUEFTEN apk_pruefen.sh
+  (`GATE_SELBSTTEST_MIN_FAELLE`/`_MIN_INNEN`; deren Senkung ist eine sichtbare Zeile, Kopf apk_pruefen.sh).
+- N25a gate_urteil selbsttest -> genau `ARGV n=6 modus=selbsttest rc=0 min_faelle=261 min_innen=148 apk= letzte=== SELBSTTEST-OK: x ==`;
+  N25b mit GATE_APK_EINTRAEGE=14 -> `apk=14`; N25c gate_laufen apk mit Gate-Rueckgabe 1 -> genau 1, N25d dessen ARGV-Zeile
+  (`modus=apk rc=1 ... apk=13 letzte=== SELBSTTEST-FEHLER: Attrappe ==` = die Gate-Ausgabe kam an); N25e gate_laufen
+  quellbaum -> 0 (Hinweis H2: Urteilszeile mit $modus ausserhalb von selbsttest); N26 Gate bekommt `--selbsttest|a b|c`.
+- Hinweis H1: D5b/D10b Pin mit falscher LETZTER Hexziffer -> Abbruch "ist NICHT das festgehaltene" (J9/J10).
+- Schlusszeile mit 6 Zahlen: N15u u = MAX+1 -> Abbruch, P3b u = MAX-1 -> angenommen, N22/N23 je Zahl 1..6, N24 je Wort
+  inkl. "Stoerungen", "ungeprueft" und dem ZWEITEN "begruendet" (sed .../2).
+- `pruefen` macht AP/A/W absolut und wechselt nach W (ein Mutant, der nach "0" umleitet, schreibt nur dorthin).
+**apk_pruefen.sh:** GATE_URTEIL_MIN_FAELLE 280 -> 777 (gemessen, Selbsttest), neu GATE_URTEIL_MAX_UNGEPRUEFT=102 (gemessen),
+Schlusszeilen-Muster mit `,\ ([0-9]+)\ Stoerungen\ begruendet\ ungeprueft`, Pruefung `(( u <= GATE_URTEIL_MAX_UNGEPRUEFT ))
+|| die ...`, Kopfkommentar. gate_urteil() und gate_laufen() selbst sind UNVERAENDERT (die Uebergabe war richtig, nur
+ungetestet).
+**Messung (Zwischenstand, urteil_kontrollen.sh gegen das echte apk_pruefen.sh):** `KONTROLLEN: 102 ok, 0 FALSCH` (60 s).
+nb3_bash_aenderungen.py nachher (Beleg `nb3_bash_aenderungen_nachher.txt`): **14 von 14 bemerkt** (vorher 3/14) - J11 ->
+N25a/N25b/N25d, J12 -> dieselben, J13 -> N25b/N25d, J6 -> N25e, J9 -> D5b, J10 -> D10b, Y2 -> N26, Y3 -> N25d, Y5 -> N25d,
+Y6 -> N25a/b/d, Y7 -> N25b/d.
