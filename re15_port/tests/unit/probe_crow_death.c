@@ -23,6 +23,7 @@
 #include "re15_player.h"
 #include "re15_collision.h"
 #include "re15_damage.h"
+#include "re15_schuss_r36.h"   /* Runde 36 Spur C: Sichtlinien-Diagnose */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -75,8 +76,9 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
     re15_actor_t *e = &g_actors[tgt];
     pl->rot_y = (int16_t)((re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0xfff);
     int hit = re15_player_weapon_fire(weapon);
-    printf("== weapon %d: fire=%d slot=%d -> hp=%d st=%d ss1=%d ss3=%d\n",
-           weapon, hit, tgt, (int)e->hp, e->state, e->sub_state_1, e->sub_state_3);
+    printf("== weapon %d: fire=%d slot=%d -> hp=%d st=%d ss1=%d ss3=%d | kraehe (%d,%d,%d) band=%u spieler (%d,%d,%d) band=%u los=%d\n",
+           weapon, hit, tgt, (int)e->hp, e->state, e->sub_state_1, e->sub_state_3,
+           e->x, e->y, e->z, e->floor, pl->x, pl->y, pl->z, pl->floor, re15_schuss_r36_sichtlinie_blockiert(pl, e));
 
     /* Death-Lauf bis state 7 (max 300 Ticks) */
     int dt = 0;

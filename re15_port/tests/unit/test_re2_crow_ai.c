@@ -340,7 +340,15 @@ static void test_gib_and_launch_rows(void)
     tick();
     CHECK(CROW->state == 7 && CROW->sub_state_1 == 1,
           "Zeile 5 -> GIB -> (7,1) (@0x80102EC8-D4), state=%d sub=%d", CROW->state, CROW->sub_state_1);
-    CHECK(CROW->crow_hide == 1, "GIB verbirgt das Mesh (Part-Scatter-Stand-in)");
+    /* Runde 36 Spur C: der GIB verbirgt das Netz NICHT mehr — die 13 Zeilen fliegen ueber die
+     * Part-Bruecke (Wurf 0x80102EF4 Flags |= 0x4A / Wirbel 0x80102F34 Flags |= 0x1062, Zeile 0
+     * immer Wurf @0x80102CE8-F0); Belege include/re15_schuss_r36.h Punkt 3. */
+    {   int zerlegt = 0;
+        for (int i = 0; i < 13; i++) zerlegt += (CROW->re2z_part_flags[i] & 0x40u) ? 1 : 0;
+        CHECK(CROW->crow_hide == 0 && zerlegt == 13 && (CROW->re2z_part_flags[0] & 0x4Au) == 0x4Au,
+              "GIB: 13 Zeilen mit eigener Matrix (Bit 0x40), Zeile 0 Wurf 0x4A, crow_hide 0 (ist %d/%u/%04x)",
+              zerlegt, CROW->crow_hide, CROW->re2z_part_flags[0]);
+    }
     tick();
     CHECK(CROW->crow_shadow_w == 0, "GIB-Leiche: Schatten-Disable (@0x80103C34), w=%d",
           CROW->crow_shadow_w);
