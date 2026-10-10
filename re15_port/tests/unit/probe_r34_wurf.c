@@ -765,8 +765,11 @@ static void abschnitt_spielschritt(void)
     }
     PRUEF(115, r30_mitte_ok, "6a: Routine 30 im Spawnbild mit echtem Wort (MITTE gesund) nicht K1 MITTE / Zaehler 7");
 
-    /* 6b — R1 los nach Clipbild 10 -> kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
-     * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c) */
+    /* 6b — R1 los nach Clipbild 10: ORIGINAL kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
+     * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c, `j 0x800337ac` @0x80033650 vor dem Spawn).
+     * RUNDE 36 SPUR D (NUTZER-VORGABE "Granate wird manchmal nicht geworfen", re15_granate_r36.h, Dossier
+     * D_granate.md §3): die Abbruch-Schwelle der Granate liegt auf dem Spawnbild (22 MITTE @0x800336a4) —
+     * der Wurf geht ab, R1 senkt den Arm erst danach. Die Menge bleibt -1 (Abzug im Bild 0 @0x80033b40). */
     {
         if (sp_bringup(9, 5) != 0) { PRUEF(109, 0, "Bringup 6b"); return; }
         for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
@@ -778,7 +781,7 @@ static void abschnitt_spielschritt(void)
             sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
             if (spawn < 0 && granate_platz() >= 0) spawn = b;
         }
-        PRUEF(109, spawn < 0 && g_inv.slots[3].qty == 4, "R1 los: Spawn %d, Menge %d (soll kein Spawn, 4)",
+        PRUEF(109, spawn == 22 && g_inv.slots[3].qty == 4, "R1 los im Bild 15: Spawn %d, Menge %d (soll 22 = Wurf geht ab [Runde 36 Spur D], 4)",
               spawn, g_inv.slots[3].qty);
         /* Negativ-Kontrolle: R1 nur in den Clipbildern 3..8 los (<= 10) und danach wieder
          * gehalten -> KEIN Bruch (Schwelle `sltu v0,v0,a0` = Bild > 10, @0x8003363c), Spawn 22 */

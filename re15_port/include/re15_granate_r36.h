@@ -22,6 +22,24 @@
  *     die Russ-Tinten @0x80106478-f8, das Zerreissen (0x80108BEC) und das Wegschleudern (0x80109610)
  *     bleiben; die Brand-Verkohlung FUN_80106128 (Zeile 10 = Brandgranate 0x0B / Art 4, Zeile 16
  *     Flammenwerfer) und die Saeure FUN_80106310 (Zeile 11) bleiben unveraendert.
+ *
+ * (2) WURF-AUSSETZER. Gemessen (Dossier §3.1, r1_sweep): 8 Abzuege, R1 nach 0,0..0,7 s losgelassen -> 2 Wuerfe,
+ *     8 Granaten verbraucht. Ursache = RE1.5 Standard-Feuer-Handler Substate 2 (LAB_80033460), jedes Bild:
+ *     `andi v0,a0,0x100 / bne` @0x80033600-04 (R1 gehalten -> weiter), sonst `lbu 0x800aca5d / lbu 0x800acae9`
+ *     (Waffe, Cursor) und `lbu v0,0(at)` @0x80033634 = Byte 2 des Waffensatzes @0x80074092+(id-1)*5 (Waffe 9:
+ *     @0x800740b8 `18 30 0a 01 00` -> 10), `sltu v0,v0,a0 / beq` @0x8003363c-40, `ori v0,zero,0x3 / sh
+ *     v0,0x800aca5a` @0x80033644-4c (Substate 3 LOWER) und `j 0x800337ac` @0x80033650 = RETURN vor dem
+ *     Granaten-Spawn @0x80033680-7a8 (Cursor 19 HOCH `ori v0,zero,0x13` @0x80033690, 22 MITTE `0x16`
+ *     @0x800336a4, 24 TIEF `0x18` @0x80033758). Der Munitionsabzug faellt aber schon im Rueckstossbild 0
+ *     (`jalr v0` @0x800334e0 -> 0x80033B38 `jal 0x8004eae4` @0x80033b40). R1 loslassen zwischen Cursor 11 und
+ *     18/21/23 = Granate weg, kein Wurf — im Original wie im Port (byte-true).
+ *     Beta -> Retail: die Abbruch-Regel ist fuer Schusswaffen gebaut (Schuss im Bild 0, Abbruch ab 11 kostet
+ *     nichts); die Handgranate ist eine RE1.5-eigene Waffe ohne RE2-Gegenstueck, ihr Wurfkoerper haengt am
+ *     Loslass-Bild der Animation. Das Retail-Vorbild (RE2-Granatwerfer) gibt die Runde im Rueckstossbild 1
+ *     ab (werfer_r35.c, Tabelle @0x800A6FDC, Aufruf @0x800431ac-cc) — ein Abzug ist dort immer ein Schuss.
+ *     NUTZER-VORGABE/PORT-WAHL: fuer die Granate (Ids 9/10/11) liegt die Abbruch-Schwelle auf dem Spawnbild
+ *     der aktuellen Zielhoehe (19/22/24) statt auf 10; die Form der Regel (`Cursor > Schwelle` -> LOWER)
+ *     bleibt, nur die Schwelle folgt dem "Schuss-Bild" wie bei den Schusswaffen.
  */
 #ifndef RE15_GRANATE_R36_H
 #define RE15_GRANATE_R36_H
@@ -39,5 +57,14 @@ int re15_granate_r36_russ_flammen(unsigned zeile);
 /** Zaehlung fuer Sonden: wie oft der Spreng-Russ seine Flammen UNTERDRUECKT hat (seit Reset). */
 unsigned re15_granate_r36_russ_unterdrueckt(void);
 void     re15_granate_r36_zaehler_reset(void);
+
+/** Punkt 2 — Rueckstoss-Abbruch-Schwelle der Granate (Ids 9/10/11; Spawn-Gate `id == 9` @0x8003368c, die
+ *  Port-Zuordnung E1 fuehrt 10/11 ueber denselben Wurf): das Spawnbild der Zielhoehe `elev` (+1 HOCH -> 19
+ *  @0x80033690, 0 MITTE -> 22 @0x800336a4, -1 TIEF -> 24 @0x80033758). Andere Ids: -1 = kein Eingriff (der
+ *  Aufrufer nimmt Byte 2 @0x80074092+(id-1)*5). Der Aufrufer prueft `Cursor > Schwelle` (sltu @0x8003363c). */
+int re15_granate_r36_recoil_break(int id, int elev);
+
+/** Spawnbild der Granate je Zielhoehe (19/22/24, @0x80033690/@0x800336a4/@0x80033758) — fuer Sonden. */
+int re15_granate_r36_spawnbild(int elev);
 
 #endif /* RE15_GRANATE_R36_H */

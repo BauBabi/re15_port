@@ -999,6 +999,10 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             int eq_w = re15_player_equipped_weapon();
             int rb_thr = (eq_w >= 1 && eq_w <= 16) ? recoil_break[eq_w - 1] : 7;
             if (re15_werfer_recoil_break(eq_w) >= 0) rb_thr = re15_werfer_recoil_break(eq_w);
+            {   /* Runde 36 Spur D: Granate 9/10/11 -> Schwelle = Spawnbild 19/22/24 (re15_granate_r36.h) */
+                extern int re15_granate_r36_recoil_break(int id, int elev);
+                if (re15_granate_r36_recoil_break(eq_w, s_aim_elev) >= 0) rb_thr = re15_granate_r36_recoil_break(eq_w, s_aim_elev);
+            }
             if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil)
                 enter_lower = 1;                        /* HOLD + !R1 */
             else if (s_aim_auto && s_aim_recoil) {

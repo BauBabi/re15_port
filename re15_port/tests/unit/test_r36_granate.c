@@ -231,11 +231,157 @@ static void abschnitt_feuer(void)
 }
 
 /* ================================================================================================
- * [2] WURF — "Manchmal selten loest die Granate nicht aus / wird nicht geworfen" (s. Dossier §3).
+ * [2] WURF — "Manchmal selten loest die Granate nicht aus / wird nicht geworfen" (Dossier §3).
+ * Gemessen (r1_sweep): R1 innerhalb von 21 Bildern nach dem Abzug losgelassen -> Rueckstoss-Abbruch ab
+ * Cursor 11 (`sltu v0,v0,a0` @0x8003363c mit Byte 2 = 10 @0x800740ba, `j 0x800337ac` @0x80033650 vor dem
+ * Spawn @0x80033680-7a8), Granate weg (Abzug Bild 0 @0x80033b40), kein Wurf. Vorgabe: jeder Abzug = ein
+ * Wurf — Schwelle der Granate = Spawnbild 19/22/24 (@0x80033690/@0x800336a4/@0x80033758).
+ * Spielschritt-Sandkasten wie probe_r34_wurf.c Abschnitt 6 (ROOM1140, keine Gegner, Knochen-Mock).
  * ================================================================================================ */
+extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+extern int  re15_player_aim_ready(void);
+extern int  re15_player_aim_phase_debug(void);   /* Phase | 0x10 = Rueckstoss (player_common.c) */
+extern int  re15_player_granate_frame(void);
+extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
+extern void re15_player_set_hand_rot(const int32_t r[9]);
+extern void re15_player_cmd_reset(void);
+
+static void sp_bild(uint16_t cur, uint16_t edge)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = cur; s_ctx.pad_pressed = edge;
+    re15_game_step(&s_ctx);
+    re15_esp_fx_tick(re15_esp_room_bank());
+}
+static int sp_bringup(int waffe, int menge)
+{
+    if (room_load(0x1140, "STAGE1") != 0) return -1;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(1);
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    re15_esp_fx_reset();
+    g_current_room_id = 0x1140;
+    g_re15_pauseflags = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0;
+    pl->x = -7600; pl->y = 0; pl->z = -17600; pl->rot_y = 0;
+    re15_player_apply_hitbox(pl);
+    re15_collision_set_band(0);
+    {   /* W09: Clip 7/9/11 = 35/40/40 Bilder (PLD/PL00W09.PLW @0x24/0x2c/0x34); Rest Mock 12 */
+        uint16_t fcs[16];
+        for (int i = 0; i < 16; i++) fcs[i] = 12;
+        fcs[7] = 35; fcs[9] = 40; fcs[11] = 40;
+        re15_player_set_aim_clip_lens(fcs, 16);
+    }
+    re15_inv_load_briefing();
+    g_inv.slots[3].id = (uint8_t)waffe; g_inv.slots[3].qty = (uint8_t)menge; g_inv.slots[3].flags = 0;
+    re15_player_set_equipped_weapon(waffe);
+    {   int32_t r[9] = { 4096, 0, 0, 0, 4096, 0, 0, 0, 4096 };
+        re15_player_set_hand_rot(r);
+        re15_player_set_hand_world(pl->x, pl->y - 1500, pl->z);
+    }
+    return 0;
+}
+/* R1 (+ Zielhoehe) halten bis ZIELBEREIT; danach die Zielhoehe ein Bild lang anlegen (HOLD-Wechsel 8/10/12). */
+static int sp_zielen(int elev)
+{
+    int n = 0;
+    for (; n < 80 && !re15_player_aim_ready(); n++) sp_bild(RE15_PAD_BIT_R1, n == 0 ? RE15_PAD_BIT_R1 : 0);
+    if (!re15_player_aim_ready()) return -1;
+    uint16_t eb = (elev > 0) ? RE15_PAD_BIT_UP : (elev < 0) ? RE15_PAD_BIT_DOWN : 0;
+    for (int k = 0; k < 3; k++) sp_bild((uint16_t)(RE15_PAD_BIT_R1 | eb), 0);
+    return re15_player_aim_ready() ? n : -1;
+}
+static int granate_platz(void)
+{
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (f && f->granate_art) return i;
+    }
+    return -1;
+}
+/* Ein Wurf: Abzug im Bild 0 (SQUARE 6 Bilder wie das Skript MA0.2), R1 bis einschliesslich Bild `r1_bis`
+ * gehalten (danach 0; -1 = nie loslassen). Liefert das Spawnbild (-1 = keiner), *lower = erstes Bild der
+ * Phase LOWER (4) nach dem Abzug (-1 = nie), *menge = Menge nach 60 Bildern. */
+static int wurf(int elev, int r1_bis, int *lower, int *menge)
+{
+    int spawn = -1; *lower = -1;
+    uint16_t eb = (elev > 0) ? RE15_PAD_BIT_UP : (elev < 0) ? RE15_PAD_BIT_DOWN : 0;
+    for (int b = 0; b < 60; b++) {
+        uint16_t pad = 0;
+        if (r1_bis < 0 || b <= r1_bis) pad = (uint16_t)(RE15_PAD_BIT_R1 | eb);
+        if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
+        sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+        if (spawn < 0 && granate_platz() >= 0) spawn = b;
+        if (*lower < 0 && (re15_player_aim_phase_debug() & 0x0f) == 4) *lower = b;
+    }
+    *menge = g_inv.slots[3].qty;
+    return spawn;
+}
 static void abschnitt_wurf(void)
 {
-    printf("   (Abschnitt wurf: siehe Dossier §3 — wird mit der Ursache ergaenzt)\n");
+    static const int k_spawn[3] = { 19, 22, 24 };     /* HOCH / MITTE / TIEF */
+    static const int k_elev [3] = { 1, 0, -1 };
+    static const char *k_name[3] = { "HOCH", "MITTE", "TIEF" };
+    int gesamt_abzuege = 0, gesamt_wuerfe = 0, gesamt_menge_ok = 0, gesamt_lower_ok = 0, gesamt_spawn_ok = 0;
+    for (int ei = 0; ei < 3; ei++) {
+        int abz = 0, wu = 0, menge_ok = 0, lower_ok = 0, spawn_ok = 0;
+        int erster_fehl = -1;
+        /* R1 losgelassen in JEDEM Bild r = 0..30 nach dem Abzug, dazu r = -1 (nie) */
+        for (int r = -1; r <= 30; r++) {
+            if (sp_bringup(9, 5) != 0) { PRUEF(200, 0, "Bringup wurf"); return; }
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+            if (sp_zielen(k_elev[ei]) < 0) { PRUEF(200, 0, "%s: nicht zielbereit", k_name[ei]); return; }
+            int lower = -1, menge = -1;
+            int spawn = wurf(k_elev[ei], r, &lower, &menge);
+            abz++;
+            if (spawn >= 0) wu++; else if (erster_fehl < 0) erster_fehl = r;
+            if (spawn == k_spawn[ei]) spawn_ok++;
+            if (menge == 4) menge_ok++;
+            /* R1 vor dem Spawnbild losgelassen: LOWER fruehestens im Bild nach dem Spawn, spaetestens 2 danach
+             * (Schwelle = Spawnbild, `Cursor > Schwelle`); R1 danach oder nie: LOWER erst nach dem Loslassen */
+            if (r >= 0 && r < k_spawn[ei]) { if (lower > k_spawn[ei] && lower <= k_spawn[ei] + 2) lower_ok++; }
+            else if (r < 0)                 { if (lower < 0) lower_ok++; }
+            else                            { if (lower > r && lower <= r + 2) lower_ok++; }
+            if (r == 15 || r == -1 || r == k_spawn[ei] - 1)
+                printf("   %s r1_bis=%d: Spawn %d, LOWER %d, Menge %d\n", k_name[ei], r, spawn, lower, menge);
+        }
+        printf("   %s: %d Abzuege, %d Wuerfe (erster Fehlwurf r=%d), Spawnbild %d ok %d, Menge ok %d, LOWER ok %d\n",
+               k_name[ei], abz, wu, erster_fehl, k_spawn[ei], spawn_ok, menge_ok, lower_ok);
+        gesamt_abzuege += abz; gesamt_wuerfe += wu; gesamt_menge_ok += menge_ok; gesamt_lower_ok += lower_ok;
+        gesamt_spawn_ok += spawn_ok;
+    }
+    PRUEF(201, gesamt_wuerfe == gesamt_abzuege, "N Abzuege = N Granaten: %d Wuerfe bei %d Abzuegen (R1 los in Bild 0..30 nach dem Abzug, HOCH/MITTE/TIEF; vorher: r <= 18/21/23 ohne Wurf)",
+          gesamt_wuerfe, gesamt_abzuege);
+    PRUEF(202, gesamt_spawn_ok == gesamt_abzuege, "Spawnbild bleibt 19/22/24 (@0x80033690/@0x800336a4/@0x80033758) in %d/%d", gesamt_spawn_ok, gesamt_abzuege);
+    PRUEF(203, gesamt_menge_ok == gesamt_abzuege, "je Abzug genau eine Granate abgezogen (Bild 0 @0x80033b40) in %d/%d", gesamt_menge_ok, gesamt_abzuege);
+    PRUEF(204, gesamt_lower_ok == gesamt_abzuege, "R1-Loslassen senkt den Arm (LOWER) im Bild nach dem Abgang bzw. nach dem Loslassen in %d/%d", gesamt_lower_ok, gesamt_abzuege);
+    PRUEF(205, re15_granate_r36_recoil_break(9, 1) == 19 && re15_granate_r36_recoil_break(9, 0) == 22 &&
+               re15_granate_r36_recoil_break(9, -1) == 24 && re15_granate_r36_recoil_break(10, 0) == 22 &&
+               re15_granate_r36_recoil_break(11, 0) == 22 && re15_granate_r36_recoil_break(3, 0) == -1 &&
+               re15_granate_r36_recoil_break(15, 0) == -1,
+          "Schwelle: 9/10/11 -> 19/22/24 je Zielhoehe, Schusswaffen und Werfer-Klasse unveraendert (-1)");
+    /* Negativ-Kontrolle: Schusswaffe 3 (Browning, Byte 2 = 7 @0x8007409c): R1 los im Bild 8 -> LOWER im
+     * Bild 9 (unveraendert) */
+    {
+        if (sp_bringup(3, 15) != 0) { PRUEF(206, 0, "Bringup Browning"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        {   uint16_t fcs[16]; for (int i = 0; i < 16; i++) fcs[i] = 23; fcs[6] = 10; fcs[8] = 1; fcs[10] = 1; fcs[12] = 1;
+            re15_player_set_aim_clip_lens(fcs, 16); }
+        if (sp_zielen(0) < 0) { PRUEF(206, 0, "Browning: nicht zielbereit"); return; }
+        int lower = -1;
+        for (int b = 0; b < 40; b++) {
+            uint16_t pad = (b <= 8) ? RE15_PAD_BIT_R1 : 0;
+            if (b == 0) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (lower < 0 && (re15_player_aim_phase_debug() & 0x0f) == 4) lower = b;
+        }
+        PRUEF(206, lower == 9, "Browning (Schwelle 7): R1 los im Bild 8 -> LOWER im Bild %d (soll 9, unveraendert)", lower);
+    }
 }
 
 int main(int argc, char **argv)
