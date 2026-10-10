@@ -21,6 +21,8 @@
 # liegt vollstaendig im Figurenkasten x150..240 / y80..210 (gemessen 2026-10-10: 121 Pixel in
 # (176,103)-(190,125) = Weste/Brust; Schwelle = halber Messwert).
 #
+# SDL_ASSERT=always_ignore (Nachbesserung 1, M2): SDL-eigener Assertion-Handler, kein Spielverhalten —
+# in einer RDP-Sitzung blieb jede exe an WIN_AddDisplay (SDL_windowsmodes.c:380) stehen (B_abnahme_0.md §5).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<test_r36_kleidung> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -63,7 +65,7 @@ foreach(_i RANGE 87)
 endforeach()
 string(APPEND _skript "R1.2,W5")
 re15_start_spiel(_rv 240
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
     RE15_KLEIDUNG_LOG=1
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=${_skript}"
@@ -111,7 +113,7 @@ function(weg_bild _name _karte _out_bild)
     file(MAKE_DIRECTORY "${WORKDIR}")
     file(COPY_FILE "${_karte}" "${WORKDIR}/re15_card.mcr")
     re15_start_spiel(_rv 200
-        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         "RE15_FRAMEDUMP=60:bild.ppm"
         "RE15_EXIT_AT=70#1140"

@@ -393,3 +393,73 @@ Hund prueft diesen Claim (`re15_player_is_grabbed`, @0x80104E5C-68) und beisst n
 steht. Der Port laesst den Claim aus (enemy_ai_re2_dog.c re2d_contact, Kommentar "der Claim ueber den
 Grab-Pin unterbleibt") -> mehrere Hunde beissen im selben Augenblick. Das veraendert die HP-Kurve,
 nicht das Verhaeltnis Wundpunkte:HP — keine Spur-B-Zuteilung (Hunde-KI), Adresse + Messweg unter OFFEN.
+
+### N1.4 M1 — Aenderung
+
+* `engine/src/kleidung_r36.c` `re15_kleidung_hundebiss(hund, spieler, schaden)`: `n = schaden / 10`
+  Stempel (10 = RE1.5-Biss-Schaden `addiu a0,v0,-10` @0x8010f2c8); jeder Stempel zieht seinen eigenen
+  Engine-rng-Wert (FUN_8001af20 @0x8010f334, `andi v0,v0,0x1` @0x8010f34c) und addiert +0x32
+  (@0x8010f364) auf byte[0x80121014 + (aca59-2)*2 + (rng&1)] (05 07 04 06). Messhaken-Zeile je Biss
+  mit beiden Tabellenindizes (`dir=a+b`).
+* `engine/src/enemy_ai_re2_dog.c` re2d_contact: `enum { RE2D_BISS_SCHADEN = 20 }` (`addiu a0,zero,20`
+  @0x80104EB8) speist BEIDE Stellen — `re15_re2_player_damage(pl, RE2D_BISS_SCHADEN)` und
+  `re15_kleidung_hundebiss(e, pl, RE2D_BISS_SCHADEN)` (Schaden und Stempelzahl koennen nicht
+  auseinanderlaufen). 3 Zeilen.
+* `include/re15_kleidung_r36.h`: Signatur + Massstab-Beleg.
+* Die Hunde-KI selbst ist unveraendert: Bisse fallen bildgleich (F582/F585/F587/F673/F708 vorher wie
+  nachher); die Hunde ziehen aus dem RE2-Strom (re2z_rand), der Zusatzzug liegt im Engine-Strom.
+* Gegenprobe Zufallsquelle: P(gleiches Bit 0 bei zwei aufeinanderfolgenden re15_engine_rand8-Zuegen)
+  = 0,500 / 0,499 / 0,499 (200000 Zuege, drei Saaten) — die zwei Stempel eines Bisses sind
+  unabhaengig wie zwei RE1.5-Bisse.
+
+### N1.5 M1 — Messung nachher (gebauter Stand, Messkopie `re15_pc_r36b_nb1_nachher.exe`)
+
+Derselbe Befehl wie N1.1:
+```
+[kleidung] F582 hundebiss typ=0x20 dir=2+2 hp=80 gen=1 panels=0/0,0/0,0/0,0/0,0/100,0/0,0/0,0/0
+[kleidung] F585 hundebiss typ=0x20 dir=3+2 hp=60 gen=2 panels=0/0,0/0,0/0,0/0,1/0,0/0,0/50,0/0
+[wound] sync: applied=1 ok=1 gen=2 slotgen=2
+[kleidung] F587 hundebiss typ=0x20 dir=0+1 hp=40 gen=2 panels=0/0,0/0,0/0,0/0,1/0,0/50,0/50,0/50
+[kleidung] F673 hundebiss typ=0x20 dir=0+1 hp=20 gen=2 panels=0/0,0/0,0/0,0/0,1/0,0/100,0/50,0/100
+[kleidung] F708 hundebiss typ=0x20 dir=0+0 hp=0 gen=3 panels=0/0,0/0,0/0,0/0,1/0,1/50,0/50,0/100
+[wound] sync: applied=1 ok=1 gen=3 slotgen=4
+```
+Erstes Decal beim ZWEITEN Biss (Panel 4 = 150 >= 0x78 -> Stufe 1, @0x80037f14/24/2c) bei **hp 60**
+(Caution/"Warning"), lange vor Danger (hp < 20); beim fuenften Biss das zweite (Panel 5). Zum Vergleich
+das RE1.5-Original auf demselben Weg: 8 Knockdown-Bisse von 100 bis 20 HP, je einer Stempel -> gleiche
+Stempelzahl je HP wie jetzt (10 Stempel auf 100 HP).
+
+Bild (Weg der Abnahme bis Bild 600, Spielstand vom SPIEL geschrieben: `[save] saved (room 1190)`,
+Slot 0 = `Raum 1190 char 0 pos (3550,0,-11650) rot 0 hp 40 cut 0 wunden 0/0 0/0 0/0 0/0 1/0 0/50 0/50
+0/50`; CONTINUE mit und mit genullter Wund-Tabelle, Leon dreht sich ab Bild 30 nach links):
+
+| Bild | Pixel verschieden | Kasten | ausserhalb der Figur |
+|---|---|---|---|
+| 30 (Seitenansicht) | 0 | — | 0 |
+| 38 / 42 (Ruecken zur Kamera) | 27 / 27 | (196,96)-(207,109) | 0 |
+| 78 / 82 / 86 (zweite Umdrehung) | 26 / 25 / 24 | (195,95)-(208,109) | 0 |
+| 122 / 126 (dritte Umdrehung) | 25 / 26 | (197,94)-(206,110) | 0 |
+| 54..70, 94..110, 138..170 (Seite/Front) | 0 | — | 0 |
+Panel 4 liegt auf der Westen-RUECKSEITE (rechts neben "R.P.D.", rot-zerrissener Streifen; Sichtpruefung
+der 6x-Vergroesserung Bild 42 ohne/mit/Maske) — beim Biss von hinten (aca59 = 3 -> 04/06) genau dort, wo
+der Hund zugebissen hat. Die Seitenansicht des Kampfs (Bild 560..700 des Laufs, Kamera "Firing Range")
+zeigt sie nicht (0 Pixel gegen den Vorher-Lauf; Bild 720..760: 2..4 Pixel = Panel 5 nach F708).
+
+### N1.6 M2 — Hinweis der Abnahme (kein Code-Mangel)
+Abnahme 0 war ein Teilstand (Sitzungslimit); die Spur-Riegel laufen jetzt RDP-fest: alle drei exe-Riegel
+(`integration_r36_kleidung_bild`, `_spielweg`, `_hundeweg`) setzen `SDL_ASSERT=always_ignore` (SDL-
+eigener Assertion-Handler, kein Spielverhalten; in RDP blieb jede exe an WIN_AddDisplay
+SDL_windowsmodes.c:380 stehen) und starten das Spiel ueber CONTINUE bzw. den Titel-Haken. Der
+Zombie-Weg (Abnahme §5.2, dort offen) ist der Riegel `integration_r36_kleidung_spielweg` (§5.3: drei
+ueberlebte RE2-Griffe 100 -> 70 -> 50 -> 20, Decal beim dritten bei hp 20 = Caution, vor Danger).
+
+### N1.7 Tests (Nachbesserung 1)
+* `unit_r36_kleidung_hund` VERSCHAERFT: je Boden-Biss HP-Verlust == 20 (@0x80104EB8) UND der Zustand
+  danach ist exakt zwei Akkumulator-Schritten +0x32 auf EINEM Paar {5,7}/{4,6} nachgerechnet
+  (FUN_80037edc @0x80037efc-f50 im Test nachgebaut); vorher (ein Stempel) scheitert jeder Biss.
+  Gemessen: F30/F78/F111/F116, hp 100 -> 80 -> 60 -> 40 -> 20, Panel 7 Stufe 1 beim 4. Biss (hp 20).
+* `integration_r36_kleidung_hundeweg` NEU (Lauf 1 Hundeweg + Save, Lauf 2/3 CONTINUE mit/ohne Wunden):
+  jede Biss-Zeile traegt `dir=a+b`, das erste Panel mit Stufe >= 1 kommt bei hp >= 20, `[wound] sync`
+  geblittet, Spielstand geschrieben, `nullen` findet die Wunde, Bild 42: >= 13 Pixel (gemessen 27),
+  alle in x170..240/y80..170. ~50 s. GEGENPROBE mit der Vorher-exe (re15_pc_r36b_nb1_vorher.exe):
+  der Riegel scheitert an der ersten Biss-Zeile ("Biss ohne genau zwei Stempel").

@@ -17,6 +17,8 @@
 # Figurenkasten x177..247 / y81..205 (befund.log: kasten=x186..228,y137..214, scr=(207,211)),
 # Schwellen = halbe gemessene Werte (gemessen 2026-10-10: LA/LB 737, LA/LC 250, EA/EB 458).
 #
+# SDL_ASSERT=always_ignore (Nachbesserung 1, M2): SDL-eigener Assertion-Handler, kein Spielverhalten —
+# in einer RDP-Sitzung blieb jede exe an WIN_AddDisplay (SDL_windowsmodes.c:380) stehen (B_abnahme_0.md §5).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<test_r36_kleidung> -DWORKDIR=<dir> -P <diese Datei>
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -54,7 +56,7 @@ function(kleid_lauf _name _raum _char _wunden _out_bild)
         message(FATAL_ERROR "r36_kleidung_bild[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_ok}")
     endif()
     re15_start_spiel(_rv 200
-        RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+        SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         "RE15_FRAMEDUMP=150:bild.ppm"
         "RE15_EXIT_AT=160#${_raum}"
