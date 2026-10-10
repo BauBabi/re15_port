@@ -42,6 +42,7 @@
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Aktion am Tisch -> Cursor (GENERIC-Ausgabe) */
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
+#include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -1666,6 +1667,7 @@ void re15_game_step(const re15_game_ctx_t *c)
              * Objekt-Pass HIER zwischen Wandklemme und Ausschiebung, nicht am Frame-Ende. */
             pl->x = nx; pl->z = nz;                      /* Wandklemme steht (FUN_8003b0a4) */
             schritt_station(RE15_SCHRITT_KLEMME, pl->x, pl->z);
+            re15_objfall_vor_schub(c->rdt);              /* Runde 36 Spur A: Typ-Handler @0x8002bde0-be08 VOR dem Schub */
             re15_prop_push_tick(c->rdt, c->pad_current); /* @0x8002bd44 (Schub + Zaehler + Bit) */
             re15_collision_objects(&nx, &nz);            /* @0x8002c0d8 (Spieler aus der Kiste) */
             pl->x = nx;
@@ -2336,6 +2338,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * er der Bewegung um ein Bild hinterher. Begruendung + Bytes: re15_actor_prop_pushout. */
     if (c->rdt_ok)
         re15_actor_prop_pushout();
+    if (c->rdt_ok)   /* Runde 36 Spur A: Ende von FUN_8002bd44 (Ausloeser @0x8002c0fc-c14c, +0x88 @0x8002c154) + Wasser-Stempel @0x8001ce1c */
+        re15_objfall_nach_pass(c->rdt);
 
     /* ⛔ RE2-TREFFERFILTER AUCH FUER GEGNER, DEREN KI-TICK AUSFAELLT.
      * Im Original steht der Vier-Gate-Filter in der Kandidatenschleife des Angriffs-Aufloesers
