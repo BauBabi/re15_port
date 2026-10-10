@@ -6,7 +6,7 @@ liegen im Scratchpad dieser Abnahme (nicht im Repo):
 `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/abn2C_r36/`
 (Kurzform `abn2C/...`).
 
-(Bericht wird fortlaufend geschrieben — Stand: in Arbeit.)
+(Bericht abgeschlossen 2026-10-10. Ergebnis §8: bestanden = false, Punkt 2 teilweise — Mangel M1 §6.)
 
 ## 0. Gelesen / gebaut
 * AUFTRAG.md (Wortlaut der drei Punkte), VERTRAG.md (Spur C, §1.4, §2), Dossier C_schuss.md §9 (Nachbesserung 2),
@@ -48,7 +48,7 @@ bis Tod + 150 Bilder), 4784 Spawns (`abn2C/blut/*.txt`, Klassierung `abn2C/klass
 
 | Klasse | Spawns | d(gezeichnet, Bild T) | Einordnung |
 |---|---|---|---|
-| Treffer-/Todes-/Aufsteh-/Tropf-/RIP-/Magnum-/Burst-/Arm-Emitter (a3 und Gruppe B) | ~3000 | 0..3 (Loco-Bank-Treffer bis 30, AUF Part 8 4x 42-43) | Anker = gezeichnete Matrix — **bestaetigt** |
+| Treffer-/Todes-/Aufsteh-/Tropf-/RIP-/Magnum-/Burst-/Ragdoll-Emitter (a3 und Gruppe B) | 2815 | 0..3 (Loco-Bank-Treffer bis 30, AUF Part 8 4x 42-43) | Anker = gezeichnete Matrix — **bestaetigt** |
 | Aufschlag-Blut fliegender Teile (Spawn beim Zeichnen, @0x80028C4C) | 112 | **0** | am Glied auf dem Boden — **bestaetigt** |
 | Teil fliegt in diesem Bild ab (Seed-Pose vs. 1. Physikschritt): Arm Part 3 / RIP-Kopf Part 8 / MG-Glied Part 10,13 | 256 / 16 / 24 | <=10 / 361 / 150-185 | Mechanismus wie Original (Anker = zuletzt gezeichnete Matrix, das Teil fliegt erst beim Zeichnen) |
 | MG-Trefferbilder (Ingram/MC51) | 1250 | <=103 | Drehung/Schub NACH dem Spawn @0x8010810C-6C (T-1-Abstand <=79) |
@@ -164,7 +164,8 @@ an der gezeichneten Matrix).
   unit/probes/r36_schuss.cmake, probe_r36_blut.c, test_r36_schuss(_kraehe).c + 6 angepasste Riegel. Keine release/,
   platform/android/, shared_assets/PSX/, RELEASE_NOTES, tests/unit/CMakeLists.txt, tests/integration/CMakeLists.txt — ok.
 * Nachbesserung 2 beruehrt gemeinsame Dateien nur in enemy_ai_re2_zombie.c (1 Zeile in re2z_gore_fx_core + Lesezugriff
-  re15_re2z_gore_part_matrix_peek, +26/-? Zeilen; VERTRAG §1.4: C = "Blut-Anker"), sonst eigene Dateien schuss_r36.c/.h.
+  re15_re2z_gore_part_matrix_peek, +22/-4 Zeilen; VERTRAG §1.4: C = "Blut-Anker"), sonst eigene Dateien schuss_r36.c (+99/-46)
+  und re15_schuss_r36.h (+28/-3).
 * Bank-9-Bits / Nachrichten-IDs / Ereignisse: keine (Diff-Suche re15_game_flag_set / re15_msg_install_text / scd_event_fire leer).
 * Konfliktpruefung `git merge-tree --write-tree HEAD <zweig>` gegen alle 17 r36-Zweige (zombieki 517a7dca, granate, gegnerzahl
   1e4e373d, elza, klettern cfc2a1b6, kleidung, szenenleon f8be5533, integration 6bb56610, inventar, karte, kartenitems, pri,
@@ -175,7 +176,13 @@ an der gezeichneten Matrix).
 * Gezielter ctest-Lauf: s. 5.1.
 
 ### 5.1 ctest (gezielt im Spurbaum, keine Voll-Suite)
-(laeuft)
+`ctest --test-dir re15_port/build -R "<Regex des Bau-Agenten + stomp>" --timeout 600 --output-on-failure -j 2` (Regex
+`abn2C/ctest_regex.txt`; deckt enemy_ai_re2_zombie.c, schuss_r36.c, re15_damage.c-Haken, enemy_ai_common.c-LOS, Kraehe, Raeume
+1140/1030/1040/10d0/1100/1210, Kriecher/Stomp) -> **`100% tests passed, 0 tests failed out of 203`**, `Total Test time (real) =
+909.61 sec` (Log `abn2C/ctest_gezielt.log`), ohne Wiederholungslauf. Darin integration_r36_schuss 130.93 s, unit_r36_schuss,
+unit_r36_schuss_kraehe, unit_r36_blut_pin_{eben,tief,mg,rip,arm,burst,glied}, unit_re2_zombie_teardeath, unit_re2_crawler,
+probe_re2z_stomp, unit_re2_gore(_render/_fly/_decoder), unit_r26_mg_blut, unit_crow_death_corpse, unit_re2_zombie_hitfilter.
+Nach dem Lauf keine `re15_pc_r36c_haken_*`-Kopie im Ausgabeordner (Messkopie-Regel M7 haelt).
 
 ## 6. Maengel (nummeriert, nachpruefbar)
 * **M1 (Punkt 2) — Kriecher-Kopfabriss: zwei Blut-Emitter mit Welt- statt Anker-Versatz.**
@@ -189,5 +196,30 @@ an der gezeichneten Matrix).
   `abn2C/abn2_blut.exe 12 px eben 2` -> Zeile `-> Welt-Versatz (0,-600,0) an Part 0; ... Abstand 937`. Fix-Weg ohne neue Zahl:
   re2z_gore_fx_a3 mit den belegten Vektoren; Pin: Kriecher-Variante in probe_r36_blut (der mg-Lauf bricht heute beim Kriecher ab).
 
-## 7. Ergebnis
-(nach 5.1)
+## 7. Beobachtungen ohne Maengel-Status (fuer Orchestrator/Nutzer)
+* B1 (aus Abnahme 1, unveraendert) Anker im LAUFENDEN Bild statt im Vorbild (PORT-KONVENTION, Dossier §2.3/§8.2/§9.3). Gemessen
+  (abn2_blut, Spalte d(T-1)): grosse T-1-Abstaende (bis 716 bei Pistolen-Nachtreffer im Taumel, 556-593 beim SPAS-Tod) entstehen,
+  weil die Port-Pose selbst springt (z.B. w3 nx Platz 3 F89 -> F90 Wurzel (-1760,-20896) -> (-1530,-21281), Stagger-P0-Schub
+  -450 statt Wurzelspur, Dossier OFFEN 7, Spur F). Mit Vorbild-Anker laege das Blut dort 0,7 m neben dem gezeichneten Koerper;
+  die Port-Konvention ist hier die sichtbar richtige Wahl, solange OFFEN 7 offen ist.
+* B2 OFFEN 12 des Bau-Agenten bestaetigt: Ragdoll-Emitter im Original a0 = 0x00031000 (`lui a0,0x3` / `ori a0,a0,0x1000`
+  @0x80106D6C-70), Port re2z_blood_fx_at Skala 0x1500 (Code: "⛔ OPEN", ohne Beleg); Winkel a1 = rand<<4 an Gliedabriss/Ragdoll/
+  Aufschlag (@0x80105360/@0x801053C8/@0x80106D74/@0x80028C30), Port +0x76. Groesse/Richtung, nicht Lage.
+* B3 Die Sonde des Bau-Agenten ruft re15_re2z_gore_part_matrix fuer JEDEN Knochen, main.c:10172 ueberspringt nicht gezeichnete
+  Teile (kein Physikschritt). In meinen 320 Laeufen ohne Wirkung auf das Ergebnis (Aufschlag-Blut d = 0 in beiden Zwillingen),
+  aber die Sonde ist an dieser Stelle kein woertlicher Zeichner-Zwilling; ebenso laedt sie die reine RE2-Bank statt des Hybrids
+  der exe.
+* B4 Kraehe + Colt Python (Abnahme 1 B2) unveraendert: Python laesst Kraehen nicht zerplatzen (exe w20 `st=3 ss1=20`), nicht Teil
+  des Wortlauts.
+
+## 8. Ergebnis
+| Punkt | Urteil | Beleg |
+|---|---|---|
+| 1 Tisch + Fresser, alle Schusswaffen | **erfuellt** | exe: 15 Waffen ueber den Tisch (RE1.5-KI) + Diagonale ohne Treffer, Kontrolle frei mit Treffern; 15 Waffen gegen Fresser (RE2-KI) ohne Treffer, geweckte treffbar (§2) |
+| 2 Blut an der richtigen Stelle | **teilweise** | M1 der Abnahme 1 behoben und unabhaengig bestaetigt (woertlicher Zeichner-Zwilling mit Hybrid-Bank, 4784 Spawns: Anker = gezeichnete Matrix; Aufschlag-Blut am Boden, auch exe F77/F81 y 0); aber Kriecher-Kopfabriss: Blut 936-937 neben der Original-Lage (Welt- statt Anker-Versatz), an der exe reproduziert (§1.3/§1.4, Mangel M1) |
+| 3 Redhawk/Kraehe wie RE2 | **erfuellt** | Antwort am RE2-Dispatch belegt, exe zeigt das RE2-Zerplatzen (§3) |
+RE-Gate: haelt (11 Stichproben selbst disassembliert, keine Rate-Woerter, keine neue Zahl). Vertrag: haelt (Pfade, Bits/IDs/
+Ereignisse, merge-tree gegen 17 Zweige konfliktfrei). Tests: 203/203 gezielt.
+**bestanden = false** (Punkt 2 teilweise, Mangel M1).
+
+(Bericht abgeschlossen 2026-10-10.)
