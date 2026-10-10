@@ -299,3 +299,19 @@ Lauf 1 gelten also fuer denselben Motor-Stand.
 - Neue/geaenderte Assets fuer das Paket-Gate: `re15_port/shared_assets/RE2/TUERSE.VBS` (geaendert, 42808 B,
   md5 9ce7576443eecfb46355339994b89b35). Alles andere ist eingebacken (gen/schluessel_r36.inc). Keine Sprachdateien.
 - Texte (PORT-WAHL, Form aus RE2/RE1.5 belegt, Abschnitt 2.5) — bei Wunsch einfach anderen Wortlaut nennen.
+
+## Nachbesserung 1 (2026-10-11, nach Abnahme 0 `Q_abnahme_0.md`)
+
+Mangel aus der Abnahme: **M1** — der Prison Key bekommt nach der Befreiungsszene ROOM1211 sub02 keine
+Wegwerf-Abfrage und bleibt dauerhaft im Inventar (Lauf Z3_nach_szene). Dazu der Hinweis **H4** (Begruendung
+"v0 = 0 -> kein Durchgang" ungenau). Alle als erfuellt bewerteten Punkte bleiben unangetastet (ihre Riegel
+werden mitgefahren).
+
+### N1.0 Plan
+1. Messung vorher am gebauten Stand (HEAD 6af69ce2): Lauf Z3 nachfahren, Zeitlinie von sub02 (msg 9 auf/zu,
+   Szenenende Set(1,0x1B)=0 / Plc_ret / Evt_end), Inventar danach.
+2. Belege: ROOM1211 sub02 Bytes (Message_on-Masken, Ablauf nach msg 9), Leser von (4,0xEC)/(4,0xFC),
+   RE2-Regel @0x80051670/@0x80051718..@0x80051834, Spur L (gleiche Szene, Unlock-Ton @0x020F8).
+3. Umsetzung ohne neue Id: (ROOM1211, msg 9) als Port-Benutzungsstelle fuer 0x42 in
+   `re15_schluessel_r36_discard_stelle`.
+4. Messung nachher (Unit + echte exe wie Z3), Riegel.
