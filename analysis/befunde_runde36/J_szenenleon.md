@@ -24,10 +24,14 @@ mit `Aot_on 05` = Gully), ueberschreibt der Folgeraum die Bilder; deshalb immer 
 
 ## Stand / Fortschritt
 
-- [ ] Punkt 1 Container-Schieben — Messung + RE fertig (§1), Umsetzung offen
-- [ ] Punkt 2 Erweiterung Werkstatt-Tuer
-- [ ] Punkt 3 10F0 Kamera/Abgang
-- [ ] Punkt 4 Irons-Kopf nach Tod — RE fertig (§4)
+- [ ] Punkt 1 Container-Schieben — Messung + RE fertig (§1), Umsetzung im Code (3d394d71), Messung nachher §1.4
+- [ ] Punkt 2 Erweiterung Werkstatt-Tuer — RE fertig (§2.1), Umsetzung §2.2
+- [ ] Punkt 3 10F0 Kamera/Abgang — umgesetzt + gemessen (§3), Test offen
+- [ ] Punkt 4 Irons-Kopf nach Tod — RE fertig (§4), Code in 3d394d71, Messung nachher offen
+
+FORTSETZUNG 2026-10-10 ~20:45 (Nachfolger nach dem Sitzungslimit): 3d394d71 BAUT (ninja: no work to do nach
+configure, Objekt szenenleon_r36.c.obj vorhanden, exe 18:10 nach den Quellen 18:07). Der Vorgaenger hatte noch
+einen Messlauf m8_11b0 (Bilder 1600..1880/4) mit dem neuen Code gefahren — Auswertung §1.4.
 
 ## §1 Punkt 1 — Container-Schieben ROOM11B0 sub06
 
@@ -139,3 +143,31 @@ Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder 
 - Pixel-Differenz aufeinanderfolgender Bilder (Schwelle 60, 2er-Schritt): bis F2668 wandert die Aenderung nach unten
   aus dem Bild (bbox y bis 215 = Unterkante des Bildfelds), **ab F2670 0 geaenderte Pixel** — die beiden Park-
   Zeitpunkte F2671..2675 und F2686..2690 aendern im Bild NICHTS: kein Ploppen.
+
+## §2 Punkt 2 — Erweiterung der 11B0-Szene: Marvin schliesst die Werkstatt-Tuer ab
+
+### 2.1 RE-Belege
+**Die "Werkstatt-Tuer" ist die Durchgangszelle der Trennwand** (analysis/story_leon_elza/D_gegenpruefung.md §2.1,
+hier nachgeprueft): SCA ROOM11B0 @0xDE4, Region 3 Index 12 @0x00EC8 `x -22150..-21410 z -17230..-15230 u0=ff fl=03`
+(solid im Auslieferungszustand); Leon sub00 @0x0118C `37 03 0c 00` + @0x01190 `39 03 0c 40` oeffnet sie bei Strom
+((4,6) @0x01170). Elza ROOM11B1 sub00 @0x0112A `2c 08 01 31 00 00 80 a8 d0 bc b0 04 a4 06 0c 00 ff ff 00 00`
+= Text-Platz 8, Rechteck (-22400,-17200,1200,1700), Nachricht 12 @0x179F "The door is locked."
+(`rdt_msgdump.py`), solange (3,0x83)==0. Bei Leon liegt dort KEIN Platz. Im Bild: Cut 8 (= Cut 2 mit Licht,
+sub00 @0x01188 `4b 02 08`, Kamera RDT @0x0160 (-15552,-1476,-26712) -> (-19998,-1764,-17082)) zeigt die Tuer
+(gemalt, geschlossen) an der Trennwand, Zellen-Ostkante projiziert auf x 134..151 (`J36/tools/kam.py`).
+**Kendo schliesst ab — RE2 Leon ROOM1010 (Gun Shop) sub09 @0x01C00..@0x01C64** (`tools/r34n_c/re2_scd_dump.py`):
+`2e 03 00` Work_set Kendo (Sce_em_set sub04 @0x01A94 `44 00 00 48 ...` Typ 0x48) / @0x01C04 `40 00 04 21 f4 c3 01 c9`
+gehen zur Tuer (-15372,-14079) / @0x01C0E `40 00 09 21 d3 d5 92 c8` zur Tuer drehen / @0x01C18 `3f 00 00 00`
+**Clip 0** / @0x01C1C `09 0a 14 00` Sleep 20 / @0x01C20 `36 02 0a 01 00 00 d8 c3 f8 f8 c6 c8` **Se_on Raumbank 2
+Satz 0x0A** / @0x01C2C Sleep 10 / @0x01C30 `3f 00 00 c0` / Sleep 5 / @0x01C38 `3f 00 00 40` / @0x01C3C `5b 0a`
+Plc_cnt / Sleep 5 / @0x01C42 `66` Plc_stop / Sleep 25 / @0x01C48 zurueckdrehen. Tuer = Door_aot_set INIT @0x017A2
+Rechteck x -14900.. z -14025.. — Kendo steht davor und sieht nach Osten.
+**Der Clip ist bytegleich in RE1.5:** RE2 room1010/animation.rbj (= ROOM1010.RDT @0x47DC, 22632 B, 1 Record,
+Marker 0x5, 15 Knochen, ksize 80, 14 Clips) Clip 0 == ROOM11B0 RBJ Record 1 (Marker 0x2 = Marvin) **Clip 15**
+— Bildwoerter UND Keyframe-Bytes aller 20 Bilder gleich (`J36/tools/rbj_vgl.py`; ebenso RE2 Clip 1/2/3/4 ==
+RE1.5 Clip 18/19/20/23: die Gesten-Bibliothek ist dieselbe). Marvin spielt also mit `3f 00 0f 00` in ROOM11B0
+GENAU Kendos Abschliess-Bewegung (linke Hand vor + hoch, Hand max (544,-707,120), `gesten_arme.py`).
+**Der Ton:** RE2 ROOM1010 snd0 (RDT-Kopfworte +0x08/+0x0C/+0x10 = EDT @0xA044 192 B / VH @0xA104 3616 B / VB
+@0xAF24 82736 B = room1010/snd0.edt/.vh/.vb), EDT Satz 0x0A @0x28 `00 00 83 01` = Prog 0 Ton 8 (vab_common.c
+re15_edt_decode: tone = e[2]>>4) -> VAG 4 (6800 B). Bank 2 = Raumbank (`srl t1,a0,24` @0x8005ba30, Herleitung
+re15_lock_se.h). RE2_SOUND_LISTE.md: "ROOM101.SAP - Gun Shop".
