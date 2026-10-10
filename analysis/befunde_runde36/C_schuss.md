@@ -1120,3 +1120,29 @@ nie (Liste aller Speicher auf 0(s1)/484(s1) in dem Bereich). Der Anker des Origi
   selben Bild, in dem er blutet, von einer Wand zurueckgehalten wird (Kriecher am Tisch, Taumel-Treffer an der Wand), sitzt das
   Blut jetzt am gezeichneten Koerper statt dort, wo die Bewegung ihn ohne Wand hingesetzt haette (gemessen bis 666 bzw. 30
   daneben). Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits / Nachrichten / Ereignisse.
+
+### 10.9 Stand je Mangel (Abnahme 2), Tests, Commits
+| Mangel / Fund | Ursache | Vorher (gemessen) | Beleg | Aenderung | Nachher (gemessen) |
+|---|---|---|---|---|---|
+| M1 Kopfabriss @0x80102B24 | Welt- statt Anker-Versatz | Sonde 25x d 600 (Abstand zur Original-Lage 937), exe F226 `w(-2732,-849,-19781)` | `addiu a3,sp,24` @0x80102AEC, (0,-600,0) @0x80102B10-1C, a2 Part 0 @0x80102B28 | re2z_gore_fx_a3 {0,-600,0} | 32/32 d 0; exe F226 `w(-3302,-117,-19659)` am Hals |
+| M1 Hals-Stumpf @0x80102BBC | dito | 286x d 100 (148-149 zur Original-Lage) | `addiu a3,sp,24` @0x80102BA8, (0,100,0) @0x80102B8C-A0, a2 Part 8 @0x80102BC0 | re2z_gore_fx_a3 {0,100,0} | 282x d 0 |
+| dazu: Id @0x80102B24 (Abnahme-Aussage "Id 0" widerlegt) | `lui a0,0x800` als 0x00800000 gelesen | fx.log `id=0 sub=128` | Bytes `00 08 04 3c` / `00 10 84 34` @0x80102AD4/DC = 0x08001000 | 0x08001000 (Id 8 -> Raum-Id 5) | fx.log `id=5 sub=0`; Pin prueft die Id |
+| dazu: Anker-Zeitpunkt (Kriecher an der Wand, Taumel an der Wand) | Spawn mitten im Tick vor Schub/SCA-Klemme | 5 Kopfabrisse 601..896, Loco-Bank-Treffer bis 30 | FUN_80015cb8 @0x80015D58-90; RE2-Root `jal 0x8003567c` @0x80100638 | Nachfuehrung (marke + nachfuehren_alle) | alle d 0; Lauf-Folgen bitgleich |
+| Zensus §8.8 C | a0 nicht ausgewertet | 2 Blut-Emitter als "kein Blut" | zensus3.txt | §10.4 | berichtigt; OFFEN 13 neu |
+| Pin-Luecke | mg-Lauf bricht beim Kriecher ab | kein Pin | — | unit_r36_blut_pin_kriecher/_kriecher5 | gegen alten Stand rot (600/896 bzw. 666), neu gruen |
+
+Punkte 1 und 3 (Abnahme 2: erfuellt): Code unberuehrt (re15_damage.c, enemy_ai_re2_crow.c, Sichtlinie, Fresser-Sperre, GIB);
+ihre Riegel im gezielten Lauf (integration_r36_schuss, unit_r36_schuss, unit_r36_schuss_kraehe, unit_crow_death_corpse,
+unit_re2_zombie_hitfilter/_abc, unit_re2_crow_ai).
+
+Vertrag: gemeinsame Dateien nur mit Haken — enemy_ai_re2_zombie.c (die zwei Emitter-Zeilen + 3 Haken-Zeilen fx_nach/fx_id in
+den Blut-Anker-Helfern, VERTRAG §1.4 "C = Blut-Anker"), enemy_ai_common.c (+3 Zeilen: include, marke, nachfuehren_alle);
+eigene Dateien schuss_r36.c / re15_schuss_r36.h / probe_r36_blut.c / probes/r36_schuss.cmake; probe_re2z_stomp.c nur ein
+Kommentar (Id). Keine Bank-9-Bits, Nachrichten-IDs, Ereignisse, Assets. `git merge-tree --write-tree HEAD <zweig>` gegen alle
+17 r36-Zweige (elza, gegnerzahl, granate, integration, inventar, karte, kartenitems, kleidung, klettern, pri, schluessel, story,
+szene1150, szenenleon, tueren, ziel1190, zombieki): alle rc=0, 0 CONFLICT (Stand 6b21dd7b; ab4187c3 aendert nur schuss_r36.c).
+Hinweis fuer die Integration: r36/zombieki fuegt hinter re15_enemy_sca_clamp re15_r36_wurf_klemme ein — die Nachfuehrung am
+Ende von run_all erfasst diese Lage-Korrektur mit.
+
+Messkopien: re15_pc_r36c_nb3_alt.exe / _neu.exe nach den Laeufen geloescht; zwei Kopien re15_pc_r35c/r35l_haken_* aus
+abgebrochenen eigenen ctest-Laeufen geloescht (die aelteren re15_pc_r35e/r35k_haken_* von 15:44/16:49 stammen nicht von hier).
