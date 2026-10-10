@@ -27,6 +27,11 @@ set_tests_properties(unit_r36_klettern_10f0_endlage unit_r36_klettern_10f0_start
 #                               (obj 1/2 Tritt, statisch), 2060/2061 (Tritt, (3,172)), 20A0/20A1
 #                               (Kiste, (3,204)), 5020/5021 (Kiste, (4,203)); Riegel = je Objekt
 #                               mindestens eine Seite mit Substate 9 / KIND 0x81 / oben angekommen.
+#                               Dazu (Nachbesserung 1, Abnahme 0 Mangel 1) die Null-Box ROOM3091
+#                               obj 1 (@0x01508, h 0): FUN_8002da4c vergleicht vorzeichenlos
+#                               (@0x8002da8c-c0), bei h 0 / Rand -112 (@0x8002d398) Treffer genau
+#                               bei |dx| >= 112 UND |dz| >= 112 — Riegel: Wahrheitstafel 12 Punkte,
+#                               achsgerade 4/4 ohne Objekt-Treffer, Querversatz +-300 8/8 Start.
 add_executable(probe_r36_klettern_zensus
     ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_klettern_zensus.c)
 target_link_libraries(probe_r36_klettern_zensus PRIVATE re15_engine re15_test_support)

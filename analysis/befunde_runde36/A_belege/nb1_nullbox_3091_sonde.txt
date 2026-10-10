@@ -1,0 +1,34 @@
+# probe_r36_klettern_zensus pin (Nachbesserung 1, Stand nach Commit 8d7257f4 + Sonde), Auszug: ROOM3091 + Null-Box-Abschnitt
+1022:--- ROOM3091 flag(-1,0)=0: prop_count=2, Typ-4 ohne 0x100: 1
+1028:    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=   0 start=(-15522,-1010) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15522,0,-1010)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+1034:    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=1024 start=(-15072,-560) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15072,0,-560)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+1040:    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=2048 start=(-14622,-1010) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-14622,0,-1010)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+1046:    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=3072 start=(-15072,-1460) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15072,0,-1460)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+1047:Zensus: 24/24 Objekte (Raum x Lage) kletterbar
+1053:--- Null-Box ROOM3091 obj 1 (sub00 @0x01508): prop 1
+1054:    Tafel FUN_8002da4c h=0 Rand=-112 dx=    0 dz=    0 -> 0 (soll 0)
+1055:    Tafel FUN_8002da4c h=0 Rand=-112 dx=    0 dz=  300 -> 0 (soll 0)
+1056:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  300 dz=    0 -> 0 (soll 0)
+1057:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  111 dz=  111 -> 0 (soll 0)
+1058:    Tafel FUN_8002da4c h=0 Rand=-112 dx= -111 dz=  500 -> 0 (soll 0)
+1059:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  112 dz= -111 -> 0 (soll 0)
+1060:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  112 dz=  112 -> 1 (soll 1)
+1061:    Tafel FUN_8002da4c h=0 Rand=-112 dx= -112 dz= -112 -> 1 (soll 1)
+1062:    Tafel FUN_8002da4c h=0 Rand=-112 dx= -112 dz=  500 -> 1 (soll 1)
+1063:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  300 dz=  300 -> 1 (soll 1)
+1064:    Tafel FUN_8002da4c h=0 Rand=-112 dx= -500 dz=  800 -> 1 (soll 1)
+1065:    Tafel FUN_8002da4c h=0 Rand=-112 dx=  900 dz= -900 -> 1 (soll 1)
+1071:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=   0 quer=   0 start=(-15522,-1800,-1010) sonde=(-14722,-1010) d=(350,0) reach=1 boxhit(-112)=0 try=0 sub=0 kind=0x00 obj=-1 ende=-1 end=(-15522,0,-1010) band=0 stand=-1 -> kein Objekt-Treffer
+1077:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=   0 quer=-300 start=(-15522,-1800,-1310) sonde=(-14722,-1310) d=(350,-300) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-14374,-3600,-1310) band=2 stand=-1 -> Objekt-Treffer (Start)
+1083:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=   0 quer= 300 start=(-15522,-1800,-710) sonde=(-14722,-710) d=(350,300) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-14374,-3600,-710) band=2 stand=-1 -> Objekt-Treffer (Start)
+1089:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=1024 quer=   0 start=(-15072,-1800,-560) sonde=(-15072,-1360) d=(0,-350) reach=1 boxhit(-112)=0 try=0 sub=0 kind=0x00 obj=-1 ende=-1 end=(-15072,0,-560) band=0 stand=-1 -> kein Objekt-Treffer
+1095:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=1024 quer=-300 start=(-15372,-1800,-560) sonde=(-15372,-1360) d=(-300,-350) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-15372,-3600,-1708) band=2 stand=-1 -> Objekt-Treffer (Start)
+1101:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=1024 quer= 300 start=(-14772,-1800,-560) sonde=(-14772,-1360) d=(300,-350) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-14772,-3600,-1708) band=2 stand=-1 -> Objekt-Treffer (Start)
+1107:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=2048 quer=   0 start=(-14622,-1800,-1010) sonde=(-15422,-1010) d=(-350,0) reach=1 boxhit(-112)=0 try=0 sub=0 kind=0x00 obj=-1 ende=-1 end=(-14622,0,-1010) band=0 stand=-1 -> kein Objekt-Treffer
+1113:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=2048 quer=-300 start=(-14622,-1800,-1310) sonde=(-15422,-1310) d=(-350,-300) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-15770,-3600,-1310) band=2 stand=-1 -> Objekt-Treffer (Start)
+1119:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=2048 quer= 300 start=(-14622,-1800,-710) sonde=(-15422,-710) d=(-350,300) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-15770,-3600,-710) band=2 stand=-1 -> Objekt-Treffer (Start)
+1125:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=3072 quer=   0 start=(-15072,-1800,-1460) sonde=(-15072,-660) d=(0,350) reach=1 boxhit(-112)=0 try=0 sub=0 kind=0x00 obj=-1 ende=-1 end=(-15072,0,-1460) band=0 stand=-1 -> kein Objekt-Treffer
+1131:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=3072 quer=-300 start=(-15372,-1800,-1460) sonde=(-15372,-660) d=(-300,350) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-15372,-3600,-312) band=2 stand=-1 -> Objekt-Treffer (Start)
+1137:    ROOM3091 obj=1(prop 1) fl=0x0081 band=1 box=h(0,0,0) yaw=3072 quer= 300 start=(-14772,-1800,-1460) sonde=(-14772,-660) d=(300,350) reach=1 boxhit(-112)=1 try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-14772,-3600,-312) band=2 stand=-1 -> Objekt-Treffer (Start)
+1138:Null-Box: Tafel 0 Abweichungen, achsgerade ohne Objekt-Treffer 4/4, Querversatz +-300 mit Start 8/8
+1139:PASS
