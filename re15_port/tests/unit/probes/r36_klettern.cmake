@@ -20,6 +20,22 @@ add_test(NAME unit_r36_klettern_10f0_startlage COMMAND probe_r36_klettern_10f0 p
 set_tests_properties(unit_r36_klettern_10f0_endlage unit_r36_klettern_10f0_startlage
                      PROPERTIES TIMEOUT 120)
 
+#   probe_r36_klettern_zensus   Der Wortlaut ist PLURAL ("Leitern/Tritte"): ALLE Typ-4-Objekte ohne
+#                               Bit 0x100 (Zensus A_belege/zensus_obj_typ4_flags.txt) in der VM, je
+#                               Raum (Leon + Elza), je Lage (Flag 0/1), von vier Seiten:
+#                               10F0/10F1 (Tritt, (3,102)), 11A0/11A1 (Kiste, (5,6)), 2040/2041
+#                               (obj 1/2 Tritt, statisch), 2060/2061 (Tritt, (3,172)), 20A0/20A1
+#                               (Kiste, (3,204)), 5020/5021 (Kiste, (4,203)); Riegel = je Objekt
+#                               mindestens eine Seite mit Substate 9 / KIND 0x81 / oben angekommen.
+add_executable(probe_r36_klettern_zensus
+    ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_klettern_zensus.c)
+target_link_libraries(probe_r36_klettern_zensus PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_klettern_zensus PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r36_klettern_zensus PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_klettern_zensus COMMAND probe_r36_klettern_zensus pin)
+set_tests_properties(unit_r36_klettern_zensus PROPERTIES TIMEOUT 300)
+
 # ECHTER WEG mit der exe (tests/integration/test_r36_klettern.cmake): Leon ROOM10F0 (Sprung, Szene gesehen),
 # Elza ROOM10F1 (RE15_GOTO_ROOM = Tuer-Spawn, Weg durch den Raum), Leon ROOM10F0 ERSTES Betreten (Szene
 # der Runde 35 laeuft zu Ende, dann Tritt): Tritt verschieben -> hochklettern -> oben ankommen -> Tuer

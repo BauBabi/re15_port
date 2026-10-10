@@ -1,0 +1,1048 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-4850,0,-850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+--- ROOM10F0 flag(3,102)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=   0 start=(-7125,4950) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-5977,-1800,4950)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=1024 start=(-6000,6000) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6000,-1800,4852)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=2048 start=(-4875,4950) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6023,-1800,4950)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=3072 start=(-6000,3900) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6000,-1800,5048)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+--- ROOM10F0 flag(3,102)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM10F0 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=   0 start=(-5925,-850) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4777,-1800,-850)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=1024 start=(-4800,200) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4800,-1800,-948)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=2048 start=(-3675,-850) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4823,-1800,-850)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F0 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=3072 start=(-4800,-1900) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4800,-1800,-752)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+--- ROOM10F1 flag(3,102)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM10F1 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=   0 start=(-7125,4950) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-5977,-1800,4950)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=1024 start=(-6000,6000) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6000,-1800,4852)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=2048 start=(-4875,4950) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6023,-1800,4950)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=3072 start=(-6000,3900) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-6000,-1800,5048)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+--- ROOM10F1 flag(3,102)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM10F1 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=   0 start=(-5925,-850) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4777,-1800,-850)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=1024 start=(-4800,200) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4800,-1800,-948)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=2048 start=(-3675,-850) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4823,-1800,-850)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+    ROOM10F1 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=3072 start=(-4800,-1900) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4800,-1800,-752)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+--- ROOM11A0 flag(5,6)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A0 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=   0 start=(8700,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(9848,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A0 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=1024 start=(10050,10150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,9002)(soll y -7200) band=4(soll 4)[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+ stand=0 -> OBEN
+    ROOM11A0 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=2048 start=(11400,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10252,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A0 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A0 flag(5,6)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A0 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=   0 start=(8700,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(9848,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A0 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=1024 start=(10050,10150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,9002)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A0 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=2048 start=(11400,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10252,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A0 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A1 flag(5,6)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A1 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=   0 start=(8700,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(9848,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=1024 start=(10050,10150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,9002)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=2048 start=(11400,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10252,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A1 flag(5,6)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A1 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=   0 start=(8700,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(9848,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=1024 start=(10050,10150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,9002)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=2048 start=(11400,8800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10252,-7200,8800)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM11A1 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM2040 flag(-1,0)=0: prop_count=4, Typ-4 ohne 0x100: 2
+    ROOM2040 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=   0 start=(-17650,1700) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16502,-7200,1700)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2040 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=1024 start=(-16525,2750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16525,-7200,1602)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2040 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=2048 start=(-15400,1700) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16548,-7200,1700)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2040 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=3072 start=(-16525,650) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16525,-7200,1798)(soll [scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2040 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=   0 start=(21850,-5400) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22998,-7200,-5400)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2040 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=1024 start=(22975,-4350) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22975,-7200,-5498)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2040 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=2048 start=(24100,-5400) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22952,-7200,-5400)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2040 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=3072 start=(22975,-6450) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22975,-7200,-5302)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+--- ROOM2041 flag(-1,0)=0: prop_count=4, Typ-4 ohne 0x100: 2
+    ROOM2041 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=   0 start=(-17650,1700) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16502,-7200,1700)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2041 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=1024 start=(-16525,2750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16525,-7200,1602)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2041 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=2048 start=(-15400,1700) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16548,-7200,1700)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2041 flag=0 obj=1(prop 0) fl=0x0001 band=3 pos=(-16575,-5400,1700) yaw=3072 start=(-16525,650) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-16525,-7200,1798)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+    ROOM2041 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=   0 start=(21850,-5400) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22998,-7200,-5400)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2041 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=1024 start=(22975,-4350) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22975,-7200,-5498)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2041 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=2048 start=(24100,-5400) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22952,-7200,-5400)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+    ROOM2041 flag=0 obj=2(prop 1) fl=0x0001 band=3 pos=(22925,-5400,-5400) yaw=3072 start=(22975,-6450) reach=1 try=1 sub=9 kind=0x81 obj=1 ende=51 oben=(22975,-7200,-5302)(soll y -7200) band=4(soll 4) stand=1 -> OBEN
+--- ROOM2060 flag(3,172)=0: prop_count=9, Typ-4 ohne 0x100: 1
+    ROOM2060 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=   0 start=(-4200,2075) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3052,-1800,2075)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2060 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=1024 start=(-3075,3125) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3075,-1800,1977)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2060 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=2048 start=(-1950,2075) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3098,-1800,2075)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2060 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=3072 start=(-3075,1025) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3075,-1800,2173)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+--- ROOM2060 flag(3,172)=1: prop_count=9, Typ-4 ohne 0x100: 1
+    ROOM2060 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=   0 start=(-600,-7375) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(548,-1800,-7375)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2060 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=1024 start=(525,-6325) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(525,-1800,-7473)(soll y -1800) band=1(soll 1) stand=2 -> [scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(-3125,0,2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5775,-4860,5325) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-5525,-4860,825) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=4 pos=(475,0,-7375) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=4 pos=(19571,0,-22542) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-24433,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-21333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18333,10,19398) rot=(1536,0,0)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-15133,10,19398) rot=(1536,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+OBEN
+    ROOM2060 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=2048 start=(1650,-7375) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(502,-1800,-7375)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2060 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=3072 start=(525,-8425) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(525,-1800,-7277)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+--- ROOM2061 flag(3,172)=0: prop_count=9, Typ-4 ohne 0x100: 1
+    ROOM2061 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=   0 start=(-4200,2075) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3052,-1800,2075)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=1024 start=(-3075,3125) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3075,-1800,1977)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=2048 start=(-1950,2075) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3098,-1800,2075)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=0 obj=2(prop 2) fl=0x0001 band=0 pos=(-3125,0,2075) yaw=3072 start=(-3075,1025) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(-3075,-1800,2173)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+--- ROOM2061 flag(3,172)=1: prop_count=9, Typ-4 ohne 0x100: 1
+    ROOM2061 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=   0 start=(-600,-7375) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(548,-1800,-7375)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=1024 start=(525,-6325) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(525,-1800,-7473)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=2048 start=(1650,-7375) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(502,-1800,-7375)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+    ROOM2061 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=3072 start=(525,-8425) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(525,-1800,-7277)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+--- ROOM20A0 flag(3,204)=0: prop_count=8, Typ-4 ohne 0x100: 1
+    ROOM20A0 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=   0 start=(10900,-12400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12048,-9000,-12400)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A0 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=1024 start=(12250,-11050) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12250,-9000,-12198)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A0 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=2048 start=(13600,-12400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12452,-9000,-12400)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A0 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=3072 start=(12250,-13750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12250,-9000,-12602)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+--- ROOM20A0 flag(3,204)=1: prop_count=8, Typ-4 ohne 0x100: 1
+    ROOM20A0 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=   0 start=(21800,-24400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(22948,-1800,-24400)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A0 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=1024 start=(23150,-23050) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23150,-1800,-24198)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A0 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=2048 start=(24500,-24400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23352,-1800,-24400)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A0 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=3072 start=(23150,-25750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23150,-1800,-24602)(soll y -1800) band=1(soll 1) stand=0 -> O[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(12250,-7200,-12400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=10 first_op=0x3A
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(23150,0,-24400) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(7942,-7200,-20510) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(22532,-6610,-27050) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(20448,-4860,-13500) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=3 pos=(-2840,-2376,-23400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=3 pos=(20460,-540,-27000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=3 pos=(20600,-1800,-26850) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(3268,-3600,4980) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+BEN
+--- ROOM20A1 flag(3,204)=0: prop_count=8, Typ-4 ohne 0x100: 1
+    ROOM20A1 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=   0 start=(10900,-12400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12048,-9000,-12400)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A1 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=1024 start=(12250,-11050) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12250,-9000,-12198)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A1 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=2048 start=(13600,-12400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12452,-9000,-12400)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM20A1 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(12250,-7200,-12400) yaw=3072 start=(12250,-13750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(12250,-9000,-12602)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+--- ROOM20A1 flag(3,204)=1: prop_count=8, Typ-4 ohne 0x100: 1
+    ROOM20A1 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=   0 start=(21800,-24400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(22948,-1800,-24400)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A1 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=1024 start=(23150,-23050) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23150,-1800,-24198)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A1 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=2048 start=(24500,-24400) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23352,-1800,-24400)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM20A1 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(23150,0,-24400) yaw=3072 start=(23150,-25750) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(23150,-1800,-24602)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+--- ROOM5020 flag(4,203)=0: prop_count=1, Typ-4 ohne 0x100: 1
+    ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=   0 start=(-12350,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11202,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=1024 start=(-11000,-21800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11000,-9000,-22948)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=2048 start=(-9650,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-10798,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=3072 start=(-11000,-24500) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11000,-9000,-23352)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+--- ROOM5020 flag(4,203)=1: prop_count=1, Typ-4 ohne 0x100: 1
+    ROOM5020 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=   0 start=(-4750,-25300) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3602,-1800,-25300)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5020 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=1024 start=(-3400,-23950) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3400,-1800,-25098)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5020 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=2048 start=(-2050,-25300) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3198,-1800,-25300)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5020 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=3072 start=(-3400,-26650) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3400,-1800,-25502)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+--- ROOM5021 flag(4,203)=0: prop_count=1, Typ-4 ohne 0x100: 1
+    ROOM5021 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=   0 start=(-12350,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11202,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5021 flag=0 obj=0(prop 0) fl=0x0001[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-11000,-7200,-23150) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-3400,0,-25300) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-23550,0,-8024) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-15072,950,-1010) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-23550,0,-8024) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-15072,950,-1010) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-23550,0,-8024) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-15072,950,-1010) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-23550,0,-8024) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-15072,950,-1010) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-23550,0,-8024) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-15072,950,-1010) rot=(0,1024,0)
+ band=4 pos=(-11000,-7200,-23150) yaw=1024 start=(-11000,-21800) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11000,-9000,-22948)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5021 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=2048 start=(-9650,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-10798,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+    ROOM5021 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=3072 start=(-11000,-24500) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11000,-9000,-23352)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+--- ROOM5021 flag(4,203)=1: prop_count=1, Typ-4 ohne 0x100: 1
+    ROOM5021 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=   0 start=(-4750,-25300) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3602,-1800,-25300)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5021 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=1024 start=(-3400,-23950) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3400,-1800,-25098)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5021 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=2048 start=(-2050,-25300) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3198,-1800,-25300)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    ROOM5021 flag=1 obj=0(prop 0) fl=0x0001 band=0 pos=(-3400,0,-25300) yaw=3072 start=(-3400,-26650) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-3400,-1800,-25502)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+--- ROOM3091 flag(-1,0)=0: prop_count=2, Typ-4 ohne 0x100: 1
+    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=   0 start=(-15522,-1010) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15522,0,-1010)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=1024 start=(-15072,-560) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15072,0,-560)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=2048 start=(-14622,-1010) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-14622,0,-1010)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+    ROOM3091 flag=0 obj=1(prop 1) fl=0x0081 band=1 pos=(-15072,950,-1010) yaw=3072 start=(-15072,-1460) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 oben=(-15072,0,-1460)(soll y 950) band=0(soll 2) stand=-1 -> kein Start
+Zensus: 24/24 Objekte (Raum x Lage) kletterbar
+PASS

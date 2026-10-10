@@ -1,0 +1,5 @@
+--- ROOM10F0 flag(3,102)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=   0 spieler=(-7125,4950) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 y=0(soll -1800) band=0(soll 1) stand=-1 -> kein Start
+    ROOM10F0 flag=0 obj=0(prop 3) fl=0x0001 band=0 pos=(-6050,0,4950) yaw=1024 spieler=(-6000,6000) reach=1 try=0 sub=0 kind=0x00 obj=-1 ende=-1 y=0(soll -1800) band=0(soll 1) stand=-1 -> kein Start
+Zensus: 0/24 Objekte (Raum x Lage) kletterbar
+Zeilen "kein Start" (altes Gate != 0x101): 100
