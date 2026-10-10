@@ -168,6 +168,36 @@ das ist die raumeigene Aufstellung (sub00 For-20-Schleife mit Opcode 0x53 Art 2 
 s. §3.2 Punkt 3), dieselbe, die bisher die Aktoren 1..6 setzte; danach gehen sie auf den Spieler zu (Aktor 16: d 5369 ->
 3347 in 160 Bildern).
 
+ROOM2090 (Port-Alligator, main.c "hoechster freier Platz"): `Alligator (0x23) in Wasserzone gesetzt, Slot 20`;
+integration_r35_granate Lauf gator: `RE15_FORCE_EXPLOSION F60 art=2 slot=20 t=23 ... Treffer=1`, HP 3000 -> 2000.
+
+### 6.4 Folgebefund aus dem Zensus: die SCHATTENLISTE hing an der alten Grenze (gemessen, behoben)
+render_pc.c `#define SHADOW_QUAD_MAX 16` = Spieler + 15. Ein Schatten je Aktor und Bild (Spieler-Block main.c "RE1.5
+CHARACTER SHADOW" + NPC-Schleife main.c:9505ff., im Original FUN_8001b064 je Entity, ohne eigene Obergrenze; Katalog
+RE15_FUN_CATALOG.md FUN_8001b064 "per entity"). Messhaken `RE15_SCHATTEN_LOG=1` (neu, eine Zeile je Aenderung),
+ROOM20B0 per Debug-Sprung, Bild 0..300 (scratchpad E36/runs/s20b0_*):
+| Kapazitaet | Zeilen |
+|---|---|
+| 16 (Zwischenstand: 21 Aktoren, alte Liste) | `gezeichnet 16, verworfen 5` (3x), `gezeichnet 16, verworfen 1` |
+| RE15_ACTOR_MAX = 21 (Fix) | `gezeichnet 21, verworfen 0` (3x), `gezeichnet 17, verworfen 0` |
+Ohne den Fix haetten fuenf Emitter in ROOM20B0 keinen Schatten gehabt (die letzten nach Slot). In ROOM1030/1040 bleibt
+die gleichzeitige Zahl beim Limit (6/5, Montage hoechstens 6 + 7 = 13 Zombies + Spieler), dort griff die Grenze nicht.
+Weitere Render-Kapazitaeten geprueft: Dreieckswarteschlange TEXTRI_QUEUE_MAX 8192 (je Dreieck, nicht je Aktor; die
+hoechste gleichzeitige Zombiezahl je Raum ist unveraendert, s. §4 Laufzeit), TIM-Slots/Modellbaenke je TYP (4), SPU
+24 Stimmen (= PSX-Hardware) — keine weitere Kopplung an 16.
+
+### 6.5 ROOM20B0/20B1: 15 -> 20 FX-Emitter, Slots 20..34 bleiben verworfen
+unit_r36_gegnerzahl_raum20b0 und integration_r36_gegnerzahl Lauf e: Aktor 1..20 vom Typ 0x24. Original: 35 Records
+(sub00 @0x1aae..@0x1d56, Slot 0..34, Tot-Bit 0xFF, kein Limit). Die Slots 20..34 liegen hinter dem 20er-Feld: Entity =
+0x800acc2c + Slot*0x1F4 (§3.1) = 0x800af33c (NPC-Feld, FUN_80039b2c/FUN_80039ca0) bis 0x800b1087 — darin die SCD-Variablen
+0x800b0fd0.. (Save/Calc, Limit 0x800b0ff2/0x800b0ff4) und die Tot-Bit-Zonen 7/8 (0x800b1038/0x800b1058). Sce_em_set
+schreibt fuer Slot 34 u.a. `sh v0,442(s0)` @0x80042210 -> 0x800b104e (Zone 7) und `sh zero,452(s0)` @0x8004216c /
+`sb v0,454(s0)` @0x80042170 -> 0x800b1058/0x800b105a (Zone 8) — alles VOR dem Limit-Gate @0x80042214 (ohne Save(0x12) gilt
+die Vorgabe 0xFF), und der Aktiv-Zaehler 0x800aca4e steigt auf 35 (@0x8004254c-60), den die Pro-Bild-Schleife als Grenze
+nimmt (@0x8001a528/@0x8001a5b4, sie sucht ueber das Feld hinaus weiter). Ob das Original dabei sichtbar 35 Emitter zeigt,
+ist dynamisch nicht gemessen (OFFEN §8). Das ist ein Ueberlauf des Prototyps in fremde Felder, kein 21. Platz — der Port
+bildet ihn nicht nach (PORT-ENTSCHEIDUNG, Beleg = Feldende §3.2) und verwirft die Slots 20..34 wie bisher die 15..34.
+
 ## 7. Tests (Namen, Ergebnis)
 
 | Test | misst | Ergebnis |
@@ -177,11 +207,38 @@ s. §3.2 Punkt 3), dieselbe, die bisher die Aktoren 1..6 setzte; danach gehen si
 | unit_r36_gegnerzahl_raum1040 / _raum1041 | dito, Limit 5 (@0x11f0/@0x1218), beide Zweige (Ck(4,5) @0x011F8) | gruen (je 42 Faelle) |
 | unit_r36_gegnerzahl_raum20b0 | ROOM20B0/20B1: Slots 0..19 = Aktor 1..20 (Typ 0x24), Slots 20..34 verworfen, keine fremden Aktoren | gruen |
 | unit_r36_gegnerzahl_kein_platz | alle 20 Plaetze belegt + Nachspawn-Programm 14 (irons_tod_1150.c): 5/5 Port-Spawns tragen Slot 20 + Tot-Bit 0xFF, nach 10 Bildern alle 20 Plaetze unveraendert | gruen; GEGENPROBE mit dem alten Wert 0x0f: rot (0/5, nur 19/20 heil = Aktor 16 ueberschrieben) |
-| integration_r36_gegnerzahl | ECHTER Weg: Karte (probe_r36_gegnerzahl_karte) + CONTINUE + Aktionstaste an der Original-Tuer; letzte state.log-Zeile im Zielraum: a 1030->1040 (1040 Records 0..14 tot) {16..20}; b 1040->1030 (1030 Records 0..14 tot) {16..20}; c Kontrolle 1040 alle leben {1..5}; d 1030 Records 0..16 tot {18,19,20} | gruen, 69,5 s |
+| integration_r36_gegnerzahl | ECHTER Weg: Karte (probe_r36_gegnerzahl_karte) + CONTINUE + Aktionstaste an der Original-Tuer; letzte state.log-Zeile im Zielraum: a 1030->1040 (1040 Records 0..14 tot) {16..20}; b 1040->1030 (1030 Records 0..14 tot) {16..20}; c Kontrolle 1040 alle leben {1..5}; d 1030 Records 0..16 tot {18,19,20}; e ROOM20B0 (Debug-Sprung, beschleunigter Renderer, RE15_SCHATTEN_LOG): Aktor 1..20 Typ 0x24, ein Bild mit `gezeichnet 21, verworfen 0`, nie `verworfen >= 1` | gruen, 100,1 s (a-d allein: 69,5 s) |
+| integration_r35_cut1150 (angepasst) | Kette ueber den echten Weg, Lauf F jetzt "5 erscheinen im Port, Auffuellung 0", "Zaehler 5 -> 5" | gruen, 509,91 s (§6.2) |
+| integration_r35_granate (angepasst) | Lauf gator auf Slot 20 | gruen, 172,53 s |
+| gezielter Lauf (Montage-/Spawn-Raeume + geaenderte Tests) | `ctest -R "^(integration_r35_cut1150\|integration_r35_granate\|integration_r36_gegnerzahl\|integration_room_probe_sweep\|integration_room_transition\|integration_headless_run\|integration_cross_stage\|integration_r34n_g_schrift1150\|prop_spawn_entered\|probe_r16_tuer1040_[ABFN])$" --timeout 600` | `100% tests passed, 0 tests failed out of 13` (816,47 s) |
 | alle 484 Unit-Tests (`ctest -R "^unit_" -E "android_bash" --timeout 600 -j4`) | Gesamtbestand mit RE15_ACTOR_MAX 21 | `100% tests passed, 0 tests failed out of 484` (183,8 s), darunter unit_r35_cut1150_montage_1040_reihe (k = 0..20 je 5 Zombies) |
 
 ## 8. OFFEN
-(folgt)
+
+* **Original dynamisch nicht gemessen** (kein Savestate des Auslieferungsstands in ROOM1030/1040/20B0 vorhanden; die
+  sechs PATCHED-EXE-Staende scheiden aus). Der Mechanismus ist statisch vollstaendig belegt (§3: Feld 20, Sce_em_set
+  ohne Grenze, Tot-Bit vor Limit). Messweg, falls gewuenscht: DuckStation-GDB (Muster analysis/befunde_runde35/
+  H_raeume.md "RE2-ORIGINAL GEMESSEN": `[Debug] EnableGDBServer = true`, 127.0.0.1:2345, danach zurueck) — Zone-7-Bits
+  0x14..0x22 bei 0x800b1038 setzen, per Debug-Menue ROOM1040 laden, Entities 0x800acc2c + s*0x1F4 (s = 15..19) lesen:
+  Wort +0x00 Bit 0 und Typbyte +0x08 = 0x16 erwartet. Fuer ROOM20B0 dieselbe Lesung fuer s = 20..34 plus
+  0x800b1038..0x800b1077 vor/nach dem Laden (Ueberlauf in die Tot-Bit-Zonen, §6.5).
+* **CONTINUE in ROOM20B0 mit einer Werkzeug-Karte** (Kamera aus der Karte = Cut 0): 300 Bilder lang `[schatten]
+  gezeichnet 0`, die Kamera blieb in Cut 0, waehrend die Raumszene den Spieler von x 2380 nach -15920 fuehrte
+  (Lauf lauf_*_e in build/r36_gegnerzahl_wd, verworfen zugunsten des Sprungs). Ursache vermutlich der synthetische
+  Kartenstand (camera_cut 0 statt des Schnitts am Standplatz) — nicht Teil dieser Spur, nicht weiter verfolgt.
+* PSX-Ziel: Speicher von g_actors +5 x sizeof(re15_actor_t) (PC 1884 B -> +9420 B); das PSX-Ziel ist in diesem Baum
+  nicht baubar (PSn00bSDK fehlt).
 
 ## 9. Fuer den Nutzer
-(folgt)
+
+* ROOM1030/1031/1040/1041: hat Leon (oder Elza) die ersten Zombies eines Raums erledigt, kommen jetzt wie im Original
+  die naechsten aus der Liste nach — bis zu allen 20 Records je Raum (gleichzeitig weiterhin hoechstens 6 in 1030 und
+  5 in 1040, das ist die Original-Grenze im Raumskript). Vorher war ab 15 erledigten Zombies Schluss.
+* Die Montage in 1040 (Irons-Szene) nimmt jetzt die echten restlichen Raum-Zombies statt der Port-Ersatzzombies, wenn
+  genug davon uebrig sind; das Ergebnis bleibt "5 Zombies durchs Tor".
+* ROOM20B0 (Stage 2) zeigt jetzt 20 statt 15 der kleinen gruenen Schwebe-Effekte; das Original fuehrt dort 35 Eintraege,
+  von denen 15 ueber sein eigenes Gegner-Feld hinausschreiben — die bleiben weg.
+* Alte Spielstaende laden unveraendert (das Speicherformat enthaelt keine Gegnerliste; gemessen mit der Karte
+  vom 27.09.).
+* Keine neuen Assets, keine Sprachdateien, kein Paket-Gate. Neuer Messhaken: `RE15_SCHATTEN_LOG=1` (Schattenliste je
+  Bild ins debug.log). Keine Entscheidungsfragen.
