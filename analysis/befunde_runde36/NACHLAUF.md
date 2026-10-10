@@ -20,4 +20,7 @@ Fortlaufend gepflegt; Quelle je Eintrag = Abnahmebericht im Spurbaum.
 | 12 | E_abnahme_0.md H5 | PSX-Ziel: g_actors waechst um 5 x sizeof(re15_actor_t); RAM-Budget ungemessen (PSn00bSDK fehlt) | offen (reai-v2-psx-build-gap) |
 | 13 | E_abnahme_0.md H6 | ROOM20B0/20B1: Original schreibt Slots 20..34 hinter sein 20er-Feld (bis 0x800b1087); Port verwirft sie (PORT-ENTSCHEIDUNG) | offen, ausserhalb des Nutzer-Punkts |
 | 14 | E_abnahme_0.md H2 | CONTINUE in ROOM20B0: Kamera bleibt Cut 0 (alt = neu, Ursache offen) | offen |
+| 16 | C Nachbesserung 3 OFFEN 13 | Fress-Tropfen des fressenden RE2-Zombies fehlen (@0x80103C8C, Blut Id 0, Skala 5072 @0x80103C80, Part 8 @0x80103C90, a3 (200,0,0) @0x80103C68-7C, nur bei Bild-Wort & 0x10000 @0x80103C50-64) | offen — Beta->Retail: portieren |
+| 17 | C Nachbesserung 3 OFFEN 9 | Feuer-Emitter (Id 5, @0x80106180/220/254/440/470) tragen Welt-Versatz (0,200,0) statt Anker-Versatz | offen |
+| 18 | C Nachbesserung 3 | Kriecher-Kopfabriss = Id 8 (Fleischbrocken, @0x80102AD4-DC), nicht Blut; in Raeumen ohne Raum-Id 5 erscheinen keine Brocken (gore-vollausbau §2.1) | Hinweis |
 | 15 | A Nachbesserung 3 | Neu fallfaehig ohne exe-Lauf: ROOM1090/1091 obj 1 (Band 5 -> 3; Zweck der Kiste = Frage an Spur H), ROOM3050/3051 obj 1, ROOM2050/2051 obj 6; DuckStation-Gegenmessung 5020 nicht gefahren | in Abnahme 3 / Integration pruefen |
