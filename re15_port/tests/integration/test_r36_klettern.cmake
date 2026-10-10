@@ -142,6 +142,14 @@ klettern_lauf(A_leon_10f0 10f0 1090 1400 240
 klettern_lauf(B_elza_10f1 10f1 1091 1320 240
     RE15_TITLE_SHOT_CHAR=1 RE15_GOTO_ROOM=10F1 "RE15_SET_FLAG=9:71"
     RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_weg_tuer},${_schluss}")
+# Zusatz fuer B: wirklich ELZA im Spiel (Spieler-Familie PL04, Muster test_r35_werfer_elza.cmake), nicht
+# ein stiller Rueckfall auf Leon im Elza-Raum.
+if(EXISTS "${_basis}_B_elza_10f1/debug.log")
+    file(STRINGS "${_basis}_B_elza_10f1/debug.log" _logb REGEX "\\[pl\\] Spieler-Familie PL04")
+    if("${_logb}" STREQUAL "")
+        befund("[B_elza_10f1] kein '[pl] Spieler-Familie PL04' im debug.log — Elza nicht im Spiel")
+    endif()
+endif()
 
 # C — Leon, ERSTES Betreten (Szene laeuft, Ende bei Bild ~2994, Kartenhinweis bis ~3250), Weg ab 3400.
 klettern_lauf(C_leon_szene 10f0 1090 4550 480

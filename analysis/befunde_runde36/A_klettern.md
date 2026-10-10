@@ -1,7 +1,9 @@
 # Runde 36 — Spur A: klettern (BLOCKER)
 
-Zweig `r36/klettern`, Basis master 5a9dbb7b (= v0.8.23 3ec5b1f8 + Runde-36-Auftrag). Dossier wird
-fortlaufend geschrieben.
+Zweig `r36/klettern`, Basis master 5a9dbb7b (= v0.8.23 3ec5b1f8 + Runde-36-Auftrag), zuletzt auf master
+78a4a748 nachgezogen (Merges 386d41fe, a234bbe5). Dossier wird fortlaufend geschrieben; die Sitzung vom
+Vormittag endete am Limit nach Commit 406523e9, die Fortsetzung (2026-10-10 nachmittags) ergaenzt den
+Zensus-Pin, die OFFEN-Kritik gegen den Wortlaut und die volle Suite.
 
 ## Auftrag (Wortlaut)
 
@@ -137,8 +139,11 @@ oben), der Tritt ist also im Original NUR ueber s5 (FUN_8002d2c0) kletterbar —
 | `tests/unit/test_1090_climb_pin.c` | N4 prueft jetzt Flags 0 (= AUS, @0x8004098c `sw zero`); NEU N4b: Flags 0x0001 (ohne 0x100) -> Substate 9, KIND 0x81. T1-Kommentar berichtigt. |
 | `platform/pc/main.c:3703` | Messhaken (2 Zeilen): `RE15_TITLE_SHOT_CHAR=1` startet den Titel-Kurzweg als Elza (derselbe Aufruf `re15_gameflow_new_game(ch)` wie das Player-Select-Ende @main.c:3622). |
 | `tests/unit/probe_r36_klettern_10f0.c`, `tests/unit/probes/r36_klettern.cmake`, `tests/integration/test_r36_klettern.cmake` | Sonde + Riegel (unten). |
+| `tests/unit/probe_r36_klettern_zensus.c` (Fortsetzung, Commit fd9c0f48) | Zensus-Sonde/-Pin ueber alle Typ-4-Objekte ohne 0x100 (Abschnitt "Zensus-Pin"). |
 
 Keine neuen Assets, keine Patches an `shared_assets/PSX/*`, keine Nachrichten-IDs/Flags/Ereignisse belegt.
+Die Engine-Aenderung ist genau EINE Zeile (climb_common.c:99); alles Weitere sind Kommentare, Messhaken
+(env-gegatet) und Tests.
 
 ## Messung nachher (exe-Kopie re15_pc_r36a.exe aus dem eigenen Baum, RE15_CLIMB_TRACE)
 
@@ -184,21 +189,63 @@ deshalb laeuft Lauf B ueber RE15_GOTO_ROOM, das den Raum mit Elza-Bit korrekt la
 | `unit_r36_klettern_10f0_endlage` | ROOM10F0.RDT in der VM, Flag (3,102)=1: Tritt obj 0 Typ 4 Flags 0x0001 Band 0 bei (-4850,-850); Leon suedlich davor, Blick -Z: Reichweite FUN_8002d1e8 = 1, `try_start` = 1, Substate 9, KIND 0x81, Objekt = Tritt; Aufstieg endet mit y = obj.y - 2*box_hy = -1800, Band 1, Standobjekt = Tritt |
 | `unit_r36_klettern_10f0_startlage` | dasselbe in der Startlage (-6050,4950), Flag (3,102)=0 |
 | `unit_1090_climb_pin` (bestehend, berichtigt) | N4: Flags 0 -> kein Klettern; N4b: Flags 0x0001 -> Klettern (Substate 9, KIND 0x81) |
-| `integration_r36_klettern` | die drei Laeufe A/B/C oben mit der echten exe; je Lauf: Tritt in der Startlage gesehen, Schieben (`push=5`), `sub=9 kind=0x81`, oben (y=-1800, band=1, stand=Tritt) mit Tritt in der Schiebezone (x > -5800, z < 250 = Aot_set Slot 10 @0x010E0), Zielraum 1090/1091 per EXIT_AT erreicht; C zusaetzlich Szene gestartet + zu Ende. Laufzeit ~540 s (TIMEOUT 1200) |
+| `integration_r36_klettern` | die drei Laeufe A/B/C oben mit der echten exe; je Lauf: Tritt in der Startlage gesehen, Schieben (`push=5`), `sub=9 kind=0x81`, oben (y=-1800, band=1, stand=Tritt) mit Tritt in der Schiebezone (x > -5800, z < 250 = Aot_set Slot 10 @0x010E0), Zielraum 1090/1091 per EXIT_AT erreicht; C zusaetzlich Szene gestartet + zu Ende; B zusaetzlich `[pl] Spieler-Familie PL04` (Elza wirklich im Spiel). Laufzeit ~540 s (TIMEOUT 1200) |
+| `unit_r36_klettern_zensus` (NEU, Fortsetzung) | ALLE Typ-4-Objekte ohne Bit 0x100 des Zensus in der VM (Abschnitt "Zensus-Pin" unten): 12 Raeume (Leon + Elza), je Lage (Flag 0/1), je Objekt vier Anlaufseiten; Riegel = je Objekt mindestens eine Seite mit Substate 9, KIND 0x81, Objekt = Tritt, Aufstieg endet y = obj.y - 2*box_hy, Band + 1, Standobjekt = Tritt |
 
-Vorher (ohne Fix) fallen `unit_r36_klettern_10f0_*` an P2 (`try_start` = 0) und `integration_r36_klettern`
-an "KEIN Klettern" (gemessen: K1 auf master UND v0.8.21).
+Vorher (ohne Fix) fallen `unit_r36_klettern_10f0_*` an P2 (`try_start` = 0), `unit_r36_klettern_zensus`
+mit 0/24 (gemessen, unten) und `integration_r36_klettern` an "KEIN Klettern" (gemessen: K1 auf master UND
+v0.8.21).
 
-## OFFEN
+## Zensus-Pin — der Wortlaut ist PLURAL ("Leitern/Tritte", 10F0 nur "z.B.") (Fortsetzung 2026-10-10)
 
-- FUN_8002dc48 @0x8002dc48 (Spieler-Dispatcher @0x80031d38): die Herunterfall-Pruefung (Substate 0xd) ist
-  im Port nicht portiert (nur erwaehnt in game_step_common.c:1369). Fuer das Klettern ohne Belang; wer von
-  einem Objekt herunter will, nimmt wie bisher die Aktionstaste (Substate 10, FUN_8002d474 Abwaerts-Zweig,
-  portiert). Messweg bei Bedarf: Objekt mit Bit 0x100 (z.B. ROOM1090 Kiste), auf der Kiste zur Kante gehen,
-  Original setzt +0x05 = 0xd (DuckStation-Savestate / GDB auf 0x800aca59).
-- Die uebrigen Raeume mit Typ-4-Objekten ohne 0x100 (11A0/11A1, 2040/2041, 2060/2061, 20A0/20A1, 3091,
-  5020/5021) sind durch dieselbe Sonde abgedeckt (eine Zeile, ein Gate), aber nicht einzeln mit der exe
-  gefahren — Messweg wie Lauf A (RE15_DEBUG_JUMP + RE15_PLAYER_POS + RE15_CLIMB_TRACE).
+Die uebrigen Typ-4-Objekte ohne Bit 0x100 (Zensus-Anhang) sind dieselbe Objektklasse wie der 10F0-Tritt
+und fielen am selben Gate durch. Lage-Flags und Schiebezonen (aus `tools/scd_dump_room.py`, RDT selbst
+gelesen):
+
+| Raum | Objekt | Modell/Box | Lage-Flag (Ifel_ck/Ck/Else_ck) | Schiebezone (Aot sce 5) |
+|---|---|---|---|---|
+| 10F0/10F1 | obj 0 | Tritt h(675,900,600) | (3,102): 0 -> (-6050,0,4950) @0x010F4; 1 -> (-4850,0,-850) @0x0111A | Slot 10 @0x010E0 (-5800,-1800,2050,2050) |
+| 11A0/11A1 | obj 0 | Kiste h(900,900,900) | (5,6): 0 -> Band 3 (10050,-5400,8800) @0x01058; 1 -> Band 0 (-19300,0,3300) @0x0107E | Slot 6 @0x01044 (-20150,2350,2050,2050) |
+| 2040/2041 | obj 1, obj 2 | Tritt h(675,900,600) | unbedingt, Band 3: (-16575,-5400,1700) @0x0137A, (22925,-5400,-5400) @0x0139C | keine (statisch; Slot 9 @0x0146A gehoert zu obj 0 = 0x0101-Kiste) |
+| 2060/2061 | obj 2 | Tritt h(675,900,600) | (3,172): 0 -> (-3125,0,2075) @0x00EA6; 1 -> (475,0,-7375) @0x00ECC | Slot 2 @0x00E92 (-550,-8300,2050,2050) |
+| 20A0/20A1 | obj 0 | Kiste h(900,900,900) | (3,204): 0 -> Band 4 (12250,-7200,-12400) @0x01854; 1 -> Band 0 (23150,0,-24400) @0x0187A | Slots 4/7/9 @0x017FC/@0x01840/@0x018B2 |
+| 5020/5021 | obj 0 | Kiste h(900,900,900) | (4,203): 0 -> Band 4 (-11000,-7200,-23150) @0x01242; 1 -> Band 0 (-3400,0,-25300) @0x01268 | Slot 4 @0x0122E (-4450,-26250,2050,2050) |
+| 3091 | obj 1 | Flags 0x0081, Box c(0,-1800,0) **h(0,0,0)** @0x01508 | — | — (kein Tritt: ohne Box trifft FUN_8002da4c mit Rand -112 nie; nur Diagnose) |
+
+Sonde `tests/unit/probe_r36_klettern_zensus.c` (echte VM, `scd_room_reenter` je Raum/Lage; Spieler auf der
+Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re15_climb_tick` bis Substate 0):
+
+- **Vorher** (Gate `!= 0x101` kurz wiederhergestellt, gebaut, gemessen — `A_belege/zensus_sonde_vorher_kompakt.txt`):
+  `Zensus: 0/24 Objekte (Raum x Lage) kletterbar`, 100/100 Seiten "kein Start" (`try=0`), obwohl `reach=1`.
+- **Nachher** (Commit 1c926683, `A_belege/zensus_sonde_nachher.txt`): `Zensus: 24/24 Objekte (Raum x Lage)
+  kletterbar`, alle 96 Seiten (24 Objekte x 4) `try=1 sub=9 kind=0x81`, Aufstieg endet nach 51 Bildern (wie
+  K1: T642 -> T694) auf y = obj.y - 2*box_hy (-1800 / -7200 / -9000), Band + 1, Standobjekt = Objekt, z.B.
+  ```
+  ROOM10F0 flag=1 obj=0(prop 3) fl=0x0001 band=0 pos=(-4850,0,-850) yaw=1024 start=(-4800,200) reach=1 try=1 sub=9 kind=0x81 obj=3 ende=51 oben=(-4800,-1800,-948)(soll y -1800) band=1(soll 1) stand=3 -> OBEN
+  ROOM2060 flag=1 obj=2(prop 2) fl=0x0001 band=0 pos=(475,0,-7375) yaw=1024 start=(525,-6325) reach=1 try=1 sub=9 kind=0x81 obj=2 ende=51 oben=(525,-1800,-7473)(soll y -1800) band=1(soll 1) stand=2 -> OBEN
+  ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=0 start=(-12350,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11202,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
+  ```
+  ROOM3091 obj 1: `reach=1 try=0` auf allen vier Seiten (Null-Box) — unveraendert, kein Riegel.
+
+Damit ist jedes Objekt der betroffenen Klasse in beiden Szenarien und beiden Lagen gemessen, nicht nur
+"durch dieselbe Zeile abgedeckt".
+
+## OFFEN (kritisch gegen den Wortlaut geprueft, Fortsetzung 2026-10-10)
+
+- **Erledigt:** "uebrige Typ-4-Raeume nicht einzeln gefahren" — jetzt je Raum/Szenario/Lage/Objekt in der
+  VM gemessen (Zensus-Pin, 24/24; vorher 0/24). Der exe-Lauf ueber den echten Weg (Schieben + Klettern +
+  oben + Tuer) liegt fuer 10F0/10F1 vor (Laeufe A/B/C); fuer die anderen Raeume ist nur der Kletterstart
+  betroffen (gleiches Gate, gleiche Objektklasse), das Schieben war nie gestoert (Substate 8 kennt das
+  Flags-Wort nicht).
+- **Ausserhalb des Wortlauts (bleibt offen, kein Blocker):** FUN_8002dc48 @0x8002dc48 (Spieler-Dispatcher
+  @0x80031d38), die Herunterfall-Pruefung (Substate 0xd) beim Gehen ueber die Kante eines Objekts, ist im
+  Port nicht portiert (game_step_common.c:1369 nennt sie nur). Sie betrachtet NUR Objekte mit Bit 0x100
+  (@0x8002dd94 `andi v0,v1,0x100` / @0x8002dd98 `beq v0,zero,LAB_8002ddc0` — Bytes `00 01 62 30` /
+  `09 00 40 10`, ghidra1_V2.txt:121133-34). Die vom Nutzer gemeinten verschiebbaren Leitern/Tritte tragen
+  dieses Bit NICHT (Zensus) — fuer sie faellt der Spieler auch im Original nie von der Kante, und das
+  Hinaufklettern ("auf ... klettern") ist davon unabhaengig. Betroffen waeren nur die 0x0101-Kisten (z.B.
+  ROOM1090): dort steht der Spieler im Port an der Kante, statt zu fallen. Messweg bei Bedarf: auf der
+  1090-Kiste zur Kante gehen, Original setzt +0x05 = 0xd (DuckStation-GDB auf 0x800aca59).
 
 ## Fuer den Nutzer
 
@@ -206,9 +253,11 @@ an "KEIN Klettern" (gemessen: K1 auf master UND v0.8.21).
 - Bedienung wie vorher: UP gehalten schiebt den Tritt (nach ~9 Bildern Kontakt), Aktionstaste (Viereck)
   vor dem Tritt klettert hinauf, oben Viereck an der Kante springt herunter.
 - Einordnung des Befunds "nicht mehr": der Tritt in ROOM10F0 war im Port seit dem byte-true Klettern
-  (2026-08-21) nie kletterbar; der Weg fiel erst mit der Runde-35-Szene in 10F0 (Parkplatz-Kette) auf.
-  Betroffen waren alle Tritte/Leitern ohne Bit 0x100 (10F0, 11A0, 2040, 2060, 20A0, 3091, 5020 + Elza-
-  Spiegel); die Kisten in ROOM1090 (0x0101) gingen immer.
+  (2026-08-21, b86957e3) nie kletterbar — `git log -L` auf die Flags-Installation (scd_vm.c, `pc[6..7] | 1`)
+  und auf das Gate (climb_common.c) zeigt seither keine Aenderung; davor gab es im Port gar kein Klettern.
+  Der Weg fiel erst mit der Runde-35-Szene in 10F0 (Parkplatz-Kette) auf. Betroffen waren alle
+  Tritte/Leitern/Kisten ohne Bit 0x100 (10F0, 11A0, 2040 obj 1/2, 2060 obj 2, 20A0, 5020 + Elza-Spiegel),
+  jetzt alle gemessen kletterbar (Zensus-Pin); die Kisten in ROOM1090 (0x0101) gingen immer.
 - Entscheidungsfrage: keine.
 
 ## Anhang — Zensus Typ-4-Objekte (A_belege/zensus_obj_typ4_flags.txt, Auszug)
