@@ -152,6 +152,17 @@ keine Nachrichten-IDs, keine Ereignisnummern.
 | n1040_alle | 5: Aktor 1..5 (unveraendert) |
 | n1040_tot15 | **5: Aktor 16..20 = Records 15..19**, hinter dem Tor (x -29052..-29108, z 12693..18515) |
 
+### 6.2 Montage ROOM1040 (Spur L, re15_irons_tod_sichtbar_1040) ueber den ECHTEN Weg (integration_r35_cut1150, gruen 509,91 s)
+Lauf F (Karte `nach10f0;ersteszene;tot1040_15` = Records 0..14 tot, CONTINUE in 1130, Tuer -> 1150 -> Kette), debug.log:
+`[irons-tod] 1040: 5 Raum-Records leben, 5 erscheinen im Port, Auffuellung 0` / `1040: Gleichzeitig-Zaehler 5 -> 5` /
+`Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5, letzter bei Bild 273 von 363; 16@220 17@202 18@273 19@209 20@244;
+Spieler-HP 100 -> min 100; Kappe 0`. Vorher (Runde 35, gleicher Lauf): `0 erscheinen im Port, Auffuellung 5`,
+`Zaehler 5 -> 0`, die fuenf waren Port-Auffuell-Records. Jetzt kommen die ECHTEN Records 15..19 (Aktor 16..20) durchs
+Tor, mit denselben Durchgangsbildern wie Lauf A (alle leben: `1@220 2@202 3@273 4@209 5@244`, `20 Raum-Records leben,
+5 erscheinen im Port, Auffuellung 0`). Die Auffuellung rechnet weiter ueber ERSCHEINENDE Records und ergibt 5/5
+(Riegel unit_r35_cut1150_montage_1040_reihe k = 0..20 gruen).
+
+### 6.3 Raeume wie im Spiel
 ROOM1030: die fuenf stehen im Bild 1 auf den Plaetzen der Records 0..4 (Aktor 16 @(-8978,-27878) = Record 0 @0x1de6) —
 das ist die raumeigene Aufstellung (sub00 For-20-Schleife mit Opcode 0x53 Art 2 ueber die 20 Plaetze, @0x020CE..@0x0216E,
 s. §3.2 Punkt 3), dieselbe, die bisher die Aktoren 1..6 setzte; danach gehen sie auf den Spieler zu (Aktor 16: d 5369 ->
