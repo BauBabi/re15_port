@@ -131,7 +131,8 @@ int      re15_schuss_r36_fx_holen_id(unsigned nr, uint32_t *packed);
  * Spawn unberuehrt. Mess-Ring (Sonden) wird mitgefuehrt. */
 void re15_schuss_r36_fx_nach(const re15_actor_t *e);          /* direkt nach dem ESP-Spawn eines re2z-Emitters */
 void re15_schuss_r36_nachfuehr_marke(const re15_actor_t *e);  /* run_all: nach dem Handler, vor dem Schwanz */
-void re15_schuss_r36_nachfuehren(const re15_actor_t *e);      /* run_all: nach der SCA-Klemme */
+void re15_schuss_r36_nachfuehren_alle(void);                  /* run_all: am Ende (jeder Gegner ist dann geklemmt;
+                                                              * spaetere Haken im Schwanz eingeschlossen) */
 
 /* ---- Punkt 3: KRAEHE gegen Super Redhawk (RE2 Retail, EMOVL21_S0.BIN, Dossier C_schuss.md 3) ---
  * HURT-Zeilen-Dispatch @0x80104A18 auf +0x5 (RE2-Waffen-Id): [5]/[6] (Magnum/Custom Magnum), [9]/[10]/[11]

@@ -215,10 +215,11 @@ void re15_schuss_r36_nachfuehr_marke(const re15_actor_t *e)
         if (s_nf[j].e == e && s_nf[j].bild == (uint32_t)g_engine.frame_count) { s_nf[j].x = e->x; s_nf[j].z = e->z; }
 }
 
-void re15_schuss_r36_nachfuehren(const re15_actor_t *e)
+void re15_schuss_r36_nachfuehren_alle(void)
 {
     for (int j = 0; j < NF_MAX; j++) {
-        if (s_nf[j].e != e || s_nf[j].bild != (uint32_t)g_engine.frame_count) continue;
+        const re15_actor_t *e = s_nf[j].e;
+        if (!e || s_nf[j].bild != (uint32_t)g_engine.frame_count) continue;
         int32_t dx = e->x - s_nf[j].x, dz = e->z - s_nf[j].z;
         if (!s_nf[j].eigen && (dx || dz)) {
             for (int k = 0; k < s_nf[j].n; k++) {

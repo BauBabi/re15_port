@@ -37,7 +37,7 @@
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
-#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (re15_schuss_r36_nachfuehren) */
+#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (marke / nachfuehren_alle in run_all) */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
@@ -14571,7 +14571,6 @@ void re15_enemy_ai_run_all(int combat_active)
              * und der Ausweich-Zustand +0x5=0xa (@0x80103478/@0x80103518). */
             re15_enemy_sca_clamp(e, sweep_ox, sweep_oz,
                                  e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
-            re15_schuss_r36_nachfuehren(e);      /* Runde 36 Spur C N3: Blut-Spawns dieses Ticks um Schub+Klemme nachfuehren */
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
@@ -14842,6 +14841,7 @@ void re15_enemy_ai_run_all(int combat_active)
          * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
          * covers). */
     }
+    re15_schuss_r36_nachfuehren_alle();  /* Runde 36 Spur C N3: Blut-Spawns dieses Bilds um Schub+Klemme nachfuehren */
 }
 
 
