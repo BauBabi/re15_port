@@ -197,23 +197,116 @@ an Bone 2 bei +0x6 == 0 (@0x80105cb0-d0); der Port-RE1.5-Pfad (re15_enemy_hurt_f
 
 ## 3. Punkt 3 — Super Redhawk gegen Kraehen (RE2-Vergleich)
 
-### 3.1 Messung vorher
-(folgt)
+### 3.0 Antwort fuer den Nutzer
+**Ja — in RE2 ist das auch so.** Der Magnum-Treffer (RE2-Zeile 5 = Super Redhawk) schickt die Kraehe in den
+GIB-Handler 0x80102CA0: sie zerplatzt in ihre 13 Koerperteile, es bleibt KEIN Kadaver und KEINE Blutlache (GIB-
+Leiche 0x80103C0C gibt den Schatten-Record frei). Der Unterschied zum bisherigen Port: in RE2 fliegen die 13
+Teile ~0,5-1 s sichtbar auseinander (dunkelrote Scherben + wirbelnde Teile, die vom Boden abprallen) und
+verschwinden dann; der Port liess das Netz SOFORT verschwinden (crow_hide) und setzte 13 Blut-Splatter als
+Ersatz. Jetzt laufen die 13 Teile ueber dieselbe Teile-Physik wie der Zombie-Zerleger. Pistole/Schrot gibben
+NICHT (Zeilen 2/3/4 -> Flug-Treffer 0x80102934, 7/8 -> Launch 0x8010327C), nur Magnum, GL-Runden und Rakete.
 
-### 3.2 RE-Belege (RE2 Retail)
-(folgt)
+### 3.1 Messung vorher (Port-Stand, Code gelesen + r34 mess_geg.md 3.2)
+enemy_ai_re2_crow.c re2c_hurt_gib: `crow_hide = 1` (main.c ueberspringt das Netz ab dem GIB-Bild) +
+`re15_esp_fx_splatter(.., 13, ..)` + 3 Federbursts; die Wirbel-Zeilen wurden nur als RNG-Draws nachgebildet
+(re2c_gib_swirl_draws). r34 mess_geg.md 3.2: "st 7 (Leiche) sofort, Modell weg" — der Koerper verschwindet im
+Treffer-Bild komplett (das ist der Befund des Nutzers).
+
+### 3.2 RE-Belege (RE2 Retail, EMOVL21_S0.BIN, selbst disassembliert mit re2_disasm.py --bin EMOVL21_S0.BIN)
+* HURT-Zeilen-Dispatch @0x80104A18 (`table 0x80104a18 19`): [0..4] 0x80102934 Flug-Treffer, [5] [6] 0x80102CA0
+  GIB, [7] [8] 0x8010327C Launch, [9] [10] [11] 0x80102CA0, [12] 0x80102FB4 Boden, [13..16] 0x80102934,
+  [17] 0x80102CA0, [18] 0x80102934. Index = +0x5 = RE2-Waffen-Id (Hitscan `sb hi16+1,5` @0x80041AB4); der
+  Super Redhawk (RE1.5 w7) ist RE2-Zeile 5 (Magnum, re2z_row_from_weapon / s_re2c_row_from_weapon).
+* GIB 0x80102CA0: `sh zero,326(s0)` @0x80102CB8 (+0x146 = 0); `jal 0x800154ac` @0x80102CD4 mit (PL.x, PL.z,
+  self+0x38, self+0x40) = Peilung s1; `jal 0x80015fe8` @0x80102CDC = Maske s2; dann die 13 Zeilen
+  ([+0x198] + i*172):
+```
+80102cec: jal 0x80102ef4  (a0 = +0x198 + 0)        ; Zeile 0 IMMER Wurf
+80102cf4: andi v0,s2,0x1 / beq -> 0x80102d24        ; Bit 1: 1,2 Wurf (+172/+344) sonst Wirbel 0x80102f34
+80102d40: andi v0,s2,0x2 / beq -> 0x80102d80        ; Bit 2: 3,4,5 (+516/+688/+860)
+80102dac: andi v0,s2,0x4 / beq -> 0x80102dec        ; Bit 4: 6,7,8 (+1032/+1204/+1376)
+80102e20/e30: jal 0x80102ef4 (+1548 / +1720)        ; 9, 10 IMMER Wurf
+80102e38: andi v0,s2,0x8  / beq -> 0x80102e58       ; Bit 8: 11 (+1892)
+80102e64: andi v0,s2,0x10 / beq -> 0x80102e84       ; Bit 16: 12 (+2064)
+80102e90-ea4: 3x jal 0x8010459c (Federburst); 80102ea8: jal rand / andi 0x3 / ori 0x8 -> 0x80104678 (Federn)
+80102ec0: jal 0x80018fb0 (Kill-Buchhaltung); 80102ec8-d4: 0x80104078(self, 7, 1) = GIB-Leiche
+```
+* WURF 0x80102EF4: `lui a2,0x10 / ori a2,a2,0x1040` -> `sw a2,112(a0)` (+0x70 Tinte 0x00101040), `sh 800,156`
+  (+0x9C), `sh 10,158` (+0x9E), `sh a1,152` (+0x98), `sh zero,160` (+0xA0), `sh zero,154` (+0x9A),
+  `sh -100,164` (+0xA4), `ori v1,v1,0x4a / sw v1,0(a0)` (@0x80102EF4-F30). Flag 0x08 -> FUN_80028DAC (Drift):
+  Tempo 800 - 100/Bild, Fall +10/Bild, Lebensdauer `sltiu 0x1d` @0x80028DCC -> nach 29 Bildern `sw zero,0`
+  @0x80028DDC = das Teil VERSCHWINDET. Flag 0x08 zeichnet ausserdem ueber den Scherben-Renderer FUN_8002D3C8
+  (Tinte flach, Dreiecke entlang der Normalen versetzt — re15_re2z_gore_part_burst).
+* WIRBEL 0x80102F34: `ori v0,v0,0x1062 / sw v0,0(s0)` @0x80102F50-58; `jal rand` @0x80102F54 -> `sll 2 / addu /
+  sh s1,56` (+0x38 = Peilung + rand<<2); `sh zero,134` (+0x86 = 0 -> INIT); `jal rand` @0x80102F68 -> `andi 0x7f /
+  addiu 100 / sh v0,60` (+0x3C); `sh zero,58` (+0x3A); `addiu v0,zero,20 / sb v0,121` (+0x79 = 20); `sh zero,62`;
+  `jal rand` @0x80102F88 -> `sll 4 / sh v0,64` (+0x40); `sh zero,66` (@0x80102F7C-98). Flag 0x20 -> FUN_80028AD8:
+  Fall +20/Bild, Aufschlag v/4, Bodenprobe FUN_8004FBA0 an der Teil-Lage @0x80028B74, beim ZWEITEN
+  Bodenkontakt `and v0,v0,-2` @0x80028CA0 = Bit 0 weg = das Teil VERSCHWINDET.
+* GIB-Leiche 0x80103C0C: +0x1D3 = 128, word0 |= 2, `sb zero,14(rec)` @0x80103C34 = Schatten-/Lachen-Record frei.
 
 ### 3.3 Umsetzung
-(folgt)
+* `schuss_r36.c`: `re15_schuss_r36_kraehe_parts_seed(e)` (Modellblock wie re15_re2z_part_reset: 13 Zeilen Bit 0,
+  Tinte 0x808080, Mesh = i; Marker `re2c_gib_parts = 1`), `re15_schuss_r36_kraehe_gib(e, a1, m)` = der GIB
+  @0x80102CE8-E8C mit `kraehe_wurf` (0x80102EF4) / `kraehe_wirbel` (0x80102F34, drei Draws in Original-Folge).
+* `enemy_ai_re2_crow.c`: re2c_init ruft den Seed; re2c_hurt_gib: Peilung (0x800154AC(PL, self) in der Port-
+  Konvention von re2c_hurt_flight), Maske = rand @0x80102CDC, `re15_schuss_r36_kraehe_gib`, `crow_hide = 0`;
+  die 13 Splatter-Stand-ins und re2c_gib_swirl_draws entfallen; Federbursts/Federn/Zustand (7,1) wie bisher.
+  Test-Einstieg `re15_re2crow_hurt_test`.
+* `enemy_ai_re2_zombie.c` (2 Haken): re15_re2z_gore_active gilt fuer 0x21 unter RE2-KI mit `re2c_gib_parts`
+  (eigener Marker, weil Zeile 0 der Kraehe selbst geworfen wird und nach 29 Bildern Flags 0 traegt — beim
+  Zombie ist das Becken der Marker); re2z_part_phys_ad8 nimmt fuer 0x21 den Boden +0x1C2 (`dog_floor_y`, die
+  Boden-Probe der Kraehe) statt y (die Kraehe fliegt) — das Original probt den Boden an der Teil-Lage
+  (FUN_8004FBA0 @0x80028B74), der Port hat dafuer die Aktor-Bodenhoehe (PORT (1) im Block ueber den Physiken).
+* `re15_actor.h`: neues Feld `re2c_gib_parts` (Marker).
+* Renderer unveraendert: main.c zeichnet die 13 Teile ueber die vorhandene Part-Bruecke (re15_re2z_gore_resolve
+  / re15_re2z_gore_part_matrix / re15_re2z_gore_part_burst), die seit Welle G fuer den Zombie gilt.
 
 ### 3.4 Messung nachher
-(folgt)
+* `unit_r36_schuss_kraehe`: Seed (13 Zeilen Bit 0, 13..15 leer); Maske 0x1F: 0 Draws, alle 13 Zeilen Flags 0x4B,
+  Tinte 0x101040, 800/10/Peilung/0/0/-100; Maske 0: 30 Draws (10 Wirbel x 3), 0/9/10 Wurf, Rest 0x1063 mit
+  +0x3C 100..227, +0x79 20, +0x40 = rand<<4; Maske 0x02: 21 Draws; Physik ueber re15_re2z_gore_part_matrix
+  (Kraehe bei y -1500, Boden 0): Wurf-Zeilen Flags 0 im Bild 30 (= nach 29 Bildern), alle 13 Teile weg bis Bild
+  30, Wirbel-Teile liegen bei y 0 (Boden +0x1C2, nicht Flughoehe); Dispatch: w7 -> GIB (7,1), w3 -> Flug-Treffer.
+  `test_r36_schuss_kraehe: OK`.
+* exe (`run_p3.sh nachher`, ROOM10C0, Kraehe Slot 3 sitzt bei (5100,3600), Leon 3522,5556,581 + FORCE_CUT 1,
+  Redhawk, Eingabe `MD0.6,MDA0.4,MD1.0` = TIEF zielen, weil die sitzende Kraehe im DOWN-Band liegt): state.log
+  `F19 Platz 3 10 -> -1 st=7 ss1=1`; Bilder `C_schuss_mess/p3_nachher_kraehe_bild20_44.png` (Ausschnitt Bilder
+  20/22/24/28/34/44): dunkelrote Scherbenwolke und Teile fliegen von Leon weg ueber den Boden, bei Bild 34 ist
+  nichts mehr da; `p3_nachher_kraehe_bild20.png` das ganze Bild 20. Vorher (r34 mess_geg.md 3.2): "Modell weg"
+  im Treffer-Bild.
 
-## 4. Tests
-(folgt)
+## 4. Tests (alle in tests/unit/probes/r36_schuss.cmake registriert)
+| Test | Misst |
+|---|---|
+| unit_r36_schuss | Sichtlinie FUN_8001b9b4 ueber den Konferenztisch (echte ROOM1140.RDT, 5 Waffenklassen + Messer-Diagonalregel), Fresser-Sperre je Gate, Aufstehen gibt frei (41 Pruefungen) |
+| integration_r36_schuss | exe ROOM1140 Python: Tisch sperrt (5 Plaetze HP gleich), Fresser gesperrt, Gegenprobe trifft (3 Laeufe) |
+| unit_r36_blut_pin_eben / _tief | Blut-Anker = Anker.R*a3 + Anker.T (RE2-Sollpunkt <= 40, Rumpf ueber / Beine unter dem Becken) |
+| unit_r36_schuss_kraehe | RE2 GIB 0x80102CA0: Felder, Draws, Physik bis zum Verschwinden, Dispatch @0x80104A18 |
+Suite: s. Abschluss (Zeile `=== LOCAL-BUILD-OK (all)`).
 
-## 5. OFFEN
-(folgt)
+## 5. OFFEN (mit Adresse und Messweg)
+1. **RE1.5-KI-Pfad des Fressers (nicht Vorgabe):** unter RE1.5-KI fuehrt der Port fuer die 0x86/0x06-Fresser keinen
+   +0x93-Riegel (RE1.5 hat fuer sie keinen Nibble-Dispatch, INIT-Decoder @0x80100E60/EB0 -> +0x5 = 0xc); ob
+   RE1.5 den Fresser im Auslieferungsstand sperrt, ist nicht belegt (Messweg: Savestate ROOM1140 unter DuckStation,
+   +0x93 der Fresser je Bild lesen). Die Vorgabe des Nutzers ist mit RE2-KI (Default) erfuellt.
+2. **RE1.5-KI-Pfad des Bluts:** re15_enemy_hurt_fx spawnt an der Aktor-Wurzel; RE1.5 FUN_80105b7c P0 spawnt am
+   Gore-Bone LAB_8011f784[Typ] (+0x6 == 1 @0x80105c48-a0) bzw. Bone 2 (+0x6 == 0 @0x80105cb0-d0) mit a3 =
+   (200,0,0) @0x8011fe84; die uebrigen +0x6-Zweige (@0x80105ce4 ff.) sind nicht disassembliert. Messweg: probe_r36_blut
+   mit RE15_AI_FLAVOR=re15 und RE1.5-Bank. Nicht Teil der Vorgabe (RE2-KI).
+3. **Sichtlinie bei gesperrtem Fresser als naechstem Kandidaten** (1.3): RE1.5-Reihenfolge (Sichtlinie vor dem
+   +0x93-Latch) statt RE2-Schleife; praktisch nur relevant, wenn ein Fresser naeher als jeder wache Zombie UND
+   hinter Moebeln liegt.
+4. **Kraehen-Teile:** die Drift-Physik FUN_80028DAC hat keine Bodenprobe (Original ebenso), die Wurf-Physik
+   FUN_80028AD8 probt im Original den Boden an der TEIL-Lage (FUN_8004FBA0 @0x80028B74) — der Port nimmt die
+   Boden-Probe der Kraehe (+0x1C2); der Wandtest @0x80028CAC-D20 bleibt wie beim Zombie nicht modelliert.
 
 ## 6. Fuer den Nutzer
-(folgt)
+* Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits/Nachrichten/Ereignisse.
+* Verhalten: (1) Kein Schuss (auch Messer/Rohr) trifft mehr durch Klasse-3-Zellen (Tische, Baenke, Saeulen, Waende)
+  im eigenen Band — wie im Original; (2) fressende Zombies (RE2-KI) sind unverwundbar, bis sie aufstehen (sie
+  wachen auf, sobald man naeher als 4000 kommt); (3) Blut sitzt jetzt an der Trefferzone (Brust bei Rumpf-/
+  Kopftreffer, Knie bei Beintreffer, zur Schuetzenseite); (4) Kraehen zerplatzen beim Magnum-Treffer wie in RE2 in
+  13 sichtbar wegfliegende Teile und sind danach weg.
+* Entscheidungsfrage (optional): der LIEGENDE Spawn-Zombie (EXEC[7], nicht passiv 0x87..0x8A) ist weiterhin
+  treffbar (v0.3.5-Ausnahme) — soll auch er wie in RE2 bis zum Aufstehen gesperrt sein?
