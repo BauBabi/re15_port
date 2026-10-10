@@ -20,8 +20,6 @@ Vorrunde: `analysis/befunde_runde35/A_granate.md` (Wand/Reichweite/Sound/Brutali
   Zuordnung, Sichtpruefung offen" (Runde 4, gore-vollausbau.md §2.1). Dieselbe Klasse 5 nutzt die Brand-Verkohlung
   FUN_80106128 (Zeile 10/16).
 
-(Fortsetzung: Messung vorher / RE-Belege / Umsetzung / Messung nachher / Tests / OFFEN / Fuer den Nutzer)
-
 ## 2. Punkt 1 — HE-Granate: Feuer an den Zombies
 
 ### 2.1 Messung vorher (exe 5a9dbb7b, Messkopie `re15_pc_r36d.exe`, Lauf `build/r36d_mess/he_zombie`)
@@ -65,6 +63,18 @@ Abweichung: die beiden Flammen-Spawns von FUN_8010640C (@0x80106418-44 und @0x80
 (@0x80106478-F8, die Schwaerzung der Teile) bleiben, ebenso das Zerreissen/Wegschleudern (0x80108BEC/0x80109610). Die
 Brand-Verkohlung FUN_80106128 (Zeile 10 = Brandgranate 0x0B Art 4, Zeile 16 Flammenwerfer) bleibt unveraendert (Feuer).
 Saeure (Zeile 11, FUN_80106310) unveraendert.
+
+### 2.4 Umsetzung
+* `engine/src/granate_r36.c` / `include/re15_granate_r36.h`: `re15_granate_r36_russ_flammen(zeile)` = 0 fuer jede Zeile,
+  die den Spreng-Russ erreicht (9/17; `beq v1,9` @0x80108cc8 / `bne v1,17` @0x80108cd0), Zaehler fuer die Sonde.
+* `engine/src/enemy_ai_re2_zombie.c` `re2z_gore_soot` (= FUN_8010640C): die beiden Spawns (@0x80106418-44 / @0x80106450-74)
+  stehen hinter dem Gate; Tinten @0x80106478-f8 unveraendert. Kein Env-Schalter, keine Konstante nach Gefuehl.
+
+### 2.5 Messung nachher (exe e289dd0e+, Lauf `he_zombie_n`, dieselbe Aufstellung wie 2.1)
+`eingriffe=3`, Explosion F119, **0 Zeilen `id=8`** im fx.log (vorher 844), Zombies 2/3 zerrissen (F120 ss1=9 ss2=1 mo=2,
+Lage F120 (-1441,-19915) -> F121 (-1535,-20252)), Blut/Brocken wie vorher (`0/0` 913 Zeilen, `7/2` 153). Gegenprobe
+Brandgranate (`brand_zombie_n`, Item 0x0B): Explosion F119 + `aufschlag re2_art=1`, **`id=8` 9 je Bild ab F120** bis zum
+Ende (3 Zombies x Verkohlung FUN_80106128 Part 0/Kopf/Unterarm) — Feuer bei incendiary unveraendert.
 
 ## 3. Punkt 2 — "Manchmal selten loest die Granate nicht aus / wird nicht geworfen"
 
