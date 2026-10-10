@@ -113,6 +113,22 @@ void     re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t 
 unsigned re15_schuss_r36_fx_zahl(void);
 int      re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[3], int *mit_a3);
 
+/* ---- Nachbesserung 3 (Abnahme 2 M1, Dossier §10.5): Anker-ZEITPUNKT der Spawns eines Gegner-Ticks --------------
+ * Original: Anker a2 = Record+72, vom Zeichner im VORIGEN Bild geschrieben — also NACH dem Schwanz jenes Ticks
+ * (RE2-Zombie-Root EMZ0: Zustands-jalr @0x801004E8, dann `jal 0x80035530` @0x8010062C und der SCA-Resolver
+ * `jal 0x8003567c` mit a1 = 0x400 @0x80100638; dessen Sperren word0 & 8 @0x80035694-98 / +0x1E4 @0x800356A0-A8 setzt der
+ * Kriecher-Griff nicht). Der Port rechnet den Anker im LAUFENDEN Bild schon im Handler (PORT-KONVENTION §2.3/§8.2);
+ * Schub und SCA-Klemme im Schwanz von run_all verschieben den Aktor danach noch. Der Kriecher-Griff setzt die Lage
+ * ABSOLUT (FUN_80015cb8: +0x38/+0x3C/+0x40 = +0x164/+0x166/+0x168 + R*Wurzelversatz @0x80015D58-90); liegt dieses Ziel
+ * hinter einer Wand, holt die Klemme ihn im selben Tick zurueck (gemessen bis 665) und der Spawn sass an der verworfenen
+ * Lage. Nachfuehrung: die Spawns dieses Aktors aus diesem Bild werden nach der Klemme um die Lage-Differenz des
+ * SCHWANZES (Handler-Ende -> Klemme) verschoben — nicht bei Ankern mit eigener Matrix (freifliegende Teile haengen nicht
+ * an der Wurzel). Bewegung IM Handler nach dem Spawn (z.B. MG-Schub @0x80108110-48) bleibt wie im Original vor dem
+ * Spawn unberuehrt. Mess-Ring (Sonden) wird mitgefuehrt. */
+void re15_schuss_r36_fx_nach(const re15_actor_t *e);          /* direkt nach dem ESP-Spawn eines re2z-Emitters */
+void re15_schuss_r36_nachfuehr_marke(const re15_actor_t *e);  /* run_all: nach dem Handler, vor dem Schwanz */
+void re15_schuss_r36_nachfuehren(const re15_actor_t *e);      /* run_all: nach der SCA-Klemme */
+
 /* ---- Punkt 3: KRAEHE gegen Super Redhawk (RE2 Retail, EMOVL21_S0.BIN, Dossier C_schuss.md 3) ---
  * HURT-Zeilen-Dispatch @0x80104A18 auf +0x5 (RE2-Waffen-Id): [5]/[6] (Magnum/Custom Magnum), [9]/[10]/[11]
  * (GL-Runden) und [17] (Rakete) -> GIB 0x80102CA0; der Super Redhawk (w7) ist RE2-Zeile 5.

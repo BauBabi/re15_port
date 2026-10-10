@@ -1075,6 +1075,7 @@ static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_
     if (splatter_n > 0)
         re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, splatter_n,
                              p[0], p[1], p[2], e->y);   /* floor = Aktor-Bodenhoehe */
+    re15_schuss_r36_fx_nach(e);                              /* Runde 36 Spur C N3: Nachfuehrung (Anker-Zeitpunkt) */
 }
 
 /* ⛔ OPEN (RESTBESTAND, seit Runde 4 stark geschrumpft): die 0x1500 traegt KEINE
@@ -1136,6 +1137,7 @@ static void re2z_gore_fx_core(re15_actor_t *e, int part, uint32_t packed, int16_
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
     re15_schuss_r36_fx_merke(part, p, a3);                   /* Mess-Ring (Sonden), Runde 36 Spur C */
     re15_esp_fx_spawn_rows(re15_esp_room_bank(), id, sub, sc, p[0], p[1], p[2], e->y, yaw);
+    re15_schuss_r36_fx_nach(e);                              /* Runde 36 Spur C N3: Nachfuehrung (Anker-Zeitpunkt) */
 }
 static void re2z_gore_fx_ex(re15_actor_t *e, int part, uint32_t packed, int16_t yaw,
                             int32_t ofs_x, int32_t ofs_y, int32_t ofs_z)

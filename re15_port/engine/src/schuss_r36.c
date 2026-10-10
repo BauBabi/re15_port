@@ -34,6 +34,8 @@ int re15_schuss_r36_sichtlinie_blockiert(const re15_actor_t *pl, const re15_acto
 #include "re15_enemy_ai.h"     /* re15_actor_uses_loco_bank, re15_actor_uses_own_bank */
 #include "re15_skeleton.h"     /* re15_skel_compute_pose / g_anim_pose_actor / re15_sin_q12 */
 #include "re15_anim_select.h"  /* re15_compute_actor_kf */
+#include "re15_esp.h"          /* re15_esp_fx_get / RE15_ESP_FX_MAX (Nachfuehrung, Nachbesserung 3) */
+#include "re15_engine.h"       /* g_engine.frame_count */
 
 /* Nachbesserung 2: die BANK, aus der der Port-Renderer den Aktor zeichnet — Zwilling von platform/pc/main.c
  * 9798-9925 fuer einen Gegner mit eigener Bank (re15_actor_anim_select-Gegnerzweig: Hauptbank, clip_override = motion
@@ -126,6 +128,8 @@ int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], in
     return 1;
 }
 
+static int s_anker_eigen = 0;      /* letzter Anker = eigene Matrix eines freifliegenden Teils (Nachbesserung 3) */
+
 int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3])
 {
     int32_t R[9];
@@ -135,6 +139,7 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
      * JEDEN Emitter — auch bei a3 = 0 (FUN_8001BF10 nullt dann nur den Versatz, `sw zero,44/48(t0)` @0x8001C000-04).
      * Ohne geladene Bank (nur Unit-Sonden): Anker.T = Aktor-Wurzel, R = Ryaw (a3 im Aktor-Rahmen, unit_r26_mg_blut). */
     rv = re15_schuss_r36_gezeichnet(e, bone, R, out);
+    s_anker_eigen = (rv == 2);                                /* Nachfuehrung (Nachbesserung 3): eigene Matrix nicht */
     if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return rv ? 1 : 0;
     /* R * a3 (Q12; RE2-Lagen-Tick 0x8001D894: RT = Record+76 @0x8001DB74, V0 = a3 @0x8001DBA0, MVMVA 0x4A486012
      * @0x8001DBB4, + Anker.T @0x8001DBD0-DC1C); R ist schon die Welt-Rotation (Ryaw * R_part bzw. die eigene
@@ -147,10 +152,14 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
 /* ---- Mess-Ring der Zombie-Blut-Spawns (nur Sonden, Header) ----------------------------------- */
 static struct { int part; int32_t pos[3]; int32_t a3[3]; int mit_a3; } s_fx_ring[RE15_SCHUSS_R36_FX_RING];
 static unsigned s_fx_zahl = 0u;
+static uint8_t  s_esp_vor[RE15_ESP_FX_MAX];   /* Nachbesserung 3: ESP-Plaetze vor dem Spawn (aktiv ja/nein) */
+static int      s_esp_vor_ok = 0;
 
 void re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t *a3)
 {
     unsigned i = s_fx_zahl % RE15_SCHUSS_R36_FX_RING;
+    for (int k = 0; k < RE15_ESP_FX_MAX; k++) s_esp_vor[k] = (uint8_t)(re15_esp_fx_get(k) != NULL);
+    s_esp_vor_ok = 1;                                  /* merke steht unmittelbar VOR dem ESP-Spawn (beide Emitter) */
     s_fx_ring[i].part = part;
     s_fx_ring[i].pos[0] = pos[0]; s_fx_ring[i].pos[1] = pos[1]; s_fx_ring[i].pos[2] = pos[2];
     s_fx_ring[i].mit_a3 = (a3 != NULL);
@@ -167,6 +176,50 @@ int re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[
     if (a3)  { a3[0] = s_fx_ring[i].a3[0]; a3[1] = s_fx_ring[i].a3[1]; a3[2] = s_fx_ring[i].a3[2]; }
     if (mit_a3) *mit_a3 = s_fx_ring[i].mit_a3;
     return 1;
+}
+
+/* ---- Nachbesserung 3: Nachfuehrung der Spawns eines Gegner-Ticks auf die gezeichnete Lage (Belege im Header) ---- */
+#define NF_MAX 16
+static struct {
+    const re15_actor_t *e; uint32_t bild; int32_t x, z; unsigned ring; int eigen; int n;
+    uint8_t slot[RE15_ESP_FX_MAX];
+} s_nf[NF_MAX];
+static unsigned s_nf_zahl = 0u;
+
+void re15_schuss_r36_fx_nach(const re15_actor_t *e)
+{
+    if (!s_esp_vor_ok || !e || s_fx_zahl == 0u) return;
+    s_esp_vor_ok = 0;
+    unsigned j = s_nf_zahl++ % NF_MAX;
+    s_nf[j].e = e; s_nf[j].bild = (uint32_t)g_engine.frame_count; s_nf[j].x = e->x; s_nf[j].z = e->z;
+    s_nf[j].ring = s_fx_zahl - 1u; s_nf[j].eigen = s_anker_eigen; s_nf[j].n = 0;
+    for (int k = 0; k < RE15_ESP_FX_MAX; k++)
+        if (!s_esp_vor[k] && re15_esp_fx_get(k)) s_nf[j].slot[s_nf[j].n++] = (uint8_t)k;
+}
+
+void re15_schuss_r36_nachfuehr_marke(const re15_actor_t *e)
+{
+    for (int j = 0; j < NF_MAX; j++)                   /* Lage am Handler-Ende = Bezug fuer den Schwanz */
+        if (s_nf[j].e == e && s_nf[j].bild == (uint32_t)g_engine.frame_count) { s_nf[j].x = e->x; s_nf[j].z = e->z; }
+}
+
+void re15_schuss_r36_nachfuehren(const re15_actor_t *e)
+{
+    for (int j = 0; j < NF_MAX; j++) {
+        if (s_nf[j].e != e || s_nf[j].bild != (uint32_t)g_engine.frame_count) continue;
+        int32_t dx = e->x - s_nf[j].x, dz = e->z - s_nf[j].z;
+        if (!s_nf[j].eigen && (dx || dz)) {
+            for (int k = 0; k < s_nf[j].n; k++) {
+                re15_esp_fx_t *f = (re15_esp_fx_t *)re15_esp_fx_get(s_nf[j].slot[k]);  /* Pool s_esp_fx ist nicht const */
+                if (f) { f->x += dx; f->z += dz; }
+            }
+            if (s_fx_zahl - s_nf[j].ring <= RE15_SCHUSS_R36_FX_RING) {
+                unsigned i = s_nf[j].ring % RE15_SCHUSS_R36_FX_RING;
+                s_fx_ring[i].pos[0] += dx; s_fx_ring[i].pos[2] += dz;
+            }
+        }
+        s_nf[j].e = NULL;
+    }
 }
 
 /* ---- Punkt 3: KRAEHE gegen Magnum — RE2 GIB 0x80102CA0 (EMOVL21_S0.BIN), Belege im Header ----- */

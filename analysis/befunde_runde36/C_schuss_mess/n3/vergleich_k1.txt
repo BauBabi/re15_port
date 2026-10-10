@@ -1,0 +1,32 @@
+w12_nx_eben_p4.txt     typ 0x11 F192  nachher fx=(-2169, -117, -21621) d=0 d(T-1)=23 | vorher fx=(-1585, -849, -21574) d=600
+w12_nx_eben_p5.txt     typ 0x11 F192  nachher fx=(-2158, -117, -19494) d=0 d(T-1)=24 | vorher fx=(-1579, -849, -19579) d=600
+w12_nx_tief_p4.txt     typ 0x11 F192  nachher fx=(-2169, -117, -21621) d=0 d(T-1)=23 | vorher fx=(-1585, -849, -21574) d=600
+w12_nx_tief_p5.txt     typ 0x11 F192  nachher fx=(-2158, -117, -19494) d=0 d(T-1)=24 | vorher fx=(-1579, -849, -19579) d=600
+w12_nz_eben_p2.txt     typ 0x10 F192  nachher fx=(-1881, -114, -21963) d=0 d(T-1)=23 | vorher fx=(-1824, -846, -21380) d=600
+w12_nz_eben_p4.txt     typ 0x11 F243  nachher fx=(399, -117, -23656) d=0 d(T-1)=62 | vorher fx=(180, -849, -23110) d=709
+w12_nz_eben_p5.txt     typ 0x11 F192  nachher fx=(235, -117, -21968) d=0 d(T-1)=23 | vorher fx=(178, -849, -21385) d=600
+w12_nz_tief_p2.txt     typ 0x10 F192  nachher fx=(-1881, -114, -21963) d=0 d(T-1)=23 | vorher fx=(-1824, -846, -21380) d=600
+w12_nz_tief_p4.txt     typ 0x11 F267  nachher fx=(248, -117, -23041) d=0 d(T-1)=54 | vorher fx=(406, -849, -22518) d=601
+w12_nz_tief_p5.txt     typ 0x11 F192  nachher fx=(235, -117, -21968) d=0 d(T-1)=23 | vorher fx=(178, -849, -21385) d=600
+w12_px_eben_p2.txt     typ 0x10 F192  nachher fx=(568, -114, -19589) d=0 d(T-1)=23 | vorher fx=(-16, -846, -19622) d=600
+w12_px_eben_p3.txt     typ 0x10 F192  nachher fx=(563, -114, -21679) d=0 d(T-1)=23 | vorher fx=(-19, -846, -21620) d=600
+w12_px_eben_p4.txt     typ 0x11 F243  nachher fx=(1883, -117, -21635) d=0 d(T-1)=24 | vorher fx=(1322, -849, -21797) d=600
+w12_px_eben_p5.txt     typ 0x11 F243  nachher fx=(2552, -117, -19733) d=0 d(T-1)=24 | vorher fx=(1979, -849, -19619) d=600
+w12_px_tief_p2.txt     typ 0x10 F192  nachher fx=(568, -114, -19589) d=0 d(T-1)=23 | vorher fx=(-16, -846, -19622) d=600
+w12_px_tief_p3.txt     typ 0x10 F192  nachher fx=(563, -114, -21679) d=0 d(T-1)=23 | vorher fx=(-19, -846, -21620) d=600
+w12_px_tief_p4.txt     typ 0x11 F272  nachher fx=(1904, -117, -21648) d=0 d(T-1)=24 | vorher fx=(1365, -849, -21875) d=600
+w12_px_tief_p5.txt     typ 0x11 F268  nachher fx=(1664, -117, -19485) d=0 d(T-1)=23 | vorher fx=(1106, -849, -19310) d=600
+w12_pz_eben_p3.txt     typ 0x10 F192  nachher fx=(-1791, -114, -19233) d=0 d(T-1)=23 | vorher fx=(-1774, -846, -19817) d=600
+w12_pz_eben_p4.txt     typ 0x11 F192  nachher fx=(303, -117, -19242) d=0 d(T-1)=24 | vorher fx=(222, -849, -19821) d=600
+w12_pz_eben_p5.txt     typ 0x11 F243  nachher fx=(292, -117, -18153) d=0 d(T-1)=22 | vorher fx=(357, -849, -18448) d=663
+w12_pz_tief_p3.txt     typ 0x10 F192  nachher fx=(-1791, -114, -19233) d=0 d(T-1)=23 | vorher fx=(-1774, -846, -19817) d=600
+w12_pz_tief_p4.txt     typ 0x11 F192  nachher fx=(303, -117, -19242) d=0 d(T-1)=24 | vorher fx=(222, -849, -19821) d=600
+w12_pz_tief_p5.txt     typ 0x11 F270  nachher fx=(299, -117, -18163) d=0 d(T-1)=24 | vorher fx=(531, -849, -18699) d=600
+w19_nz_eben_p4.txt     typ 0x11 F266  nachher fx=(497, -117, -23656) d=0 d(T-1)=58 | vorher: kein Part-0-Spawn ohne a3 in F266
+w19_nz_tief_p4.txt     typ 0x11 F266  nachher fx=(497, -117, -23656) d=0 d(T-1)=58 | vorher: kein Part-0-Spawn ohne a3 in F266
+w19_px_eben_p4.txt     typ 0x11 F266  nachher fx=(2462, -117, -21495) d=0 d(T-1)=24 | vorher fx=(1899, -849, -21650) d=600
+w19_px_eben_p5.txt     typ 0x11 F266  nachher fx=(2554, -117, -19729) d=0 d(T-1)=24 | vorher fx=(1980, -849, -19618) d=600
+w19_px_tief_p4.txt     typ 0x11 F266  nachher fx=(2462, -117, -21495) d=0 d(T-1)=24 | vorher fx=(1899, -849, -21650) d=600
+w19_px_tief_p5.txt     typ 0x11 F266  nachher fx=(2554, -117, -19729) d=0 d(T-1)=24 | vorher fx=(1980, -849, -19618) d=600
+w19_pz_eben_p5.txt     typ 0x11 F266  nachher fx=(733, -117, -17406) d=0 d(T-1)=25 | vorher: kein Part-0-Spawn ohne a3 in F266
+w19_pz_tief_p5.txt     typ 0x11 F266  nachher fx=(733, -117, -17406) d=0 d(T-1)=25 | vorher: kein Part-0-Spawn ohne a3 in F266

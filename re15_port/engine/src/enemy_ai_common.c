@@ -41,6 +41,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
+#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (re15_schuss_r36_nachfuehren) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -14526,6 +14527,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * tested rooms: ROOM1140/1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
+            re15_schuss_r36_nachfuehr_marke(e);  /* Runde 36 Spur C N3: Lage am Handler-Ende (Blut-Nachfuehrung) */
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
             /* (hit blood moved INTO re15_enemy_ai_live_hurt phase 0 — the byte-true spot,
              * @0x80105c50-d8; the old call here could never fire, see the note there) */
@@ -14569,6 +14571,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * und der Ausweich-Zustand +0x5=0xa (@0x80103478/@0x80103518). */
             re15_enemy_sca_clamp(e, sweep_ox, sweep_oz,
                                  e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
+            re15_schuss_r36_nachfuehren(e);      /* Runde 36 Spur C N3: Blut-Spawns dieses Ticks um Schub+Klemme nachfuehren */
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
