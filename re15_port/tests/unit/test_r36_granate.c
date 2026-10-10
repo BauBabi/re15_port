@@ -8,7 +8,7 @@
  *
  * Dossier: analysis/befunde_runde36/D_granate.md. Arena/Spielschritt wie test_r35_granate.c [4].
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r36_granate [feuer|wurf|alle]
+ * Aufruf: test_r36_granate [feuer|wurf|pool|alle]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -384,6 +384,56 @@ static void abschnitt_wurf(void)
     }
 }
 
+/* ================================================================================================
+ * [3] POOL — voller Effektpool im Spawnbild (FUN_80019700 `ori v0,zero,0xff` @0x800197c8-cc): die
+ * Granate bekommt ihren Platz (ein Blut-Teilchen weicht), Menge -1, Pool bleibt bei 96.
+ * ================================================================================================ */
+static void abschnitt_pool(void)
+{
+    /* 3a — Pool mit Blut (Id 0, Sub 0 = 3 Strahlen je Aufruf) bis 96 fuellen, dann werfen. */
+    if (sp_bringup(9, 5) != 0) { PRUEF(300, 0, "Bringup pool"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    if (sp_zielen(0) < 0) { PRUEF(300, 0, "pool: nicht zielbereit"); return; }
+    re15_granate_r36_zaehler_reset();
+    /* Blut OHNE Boden/Physik-Ende: floor weit unten, damit die Teilchen 60 Bilder leben */
+    int runden = 0;
+    while (re15_esp_fx_count() < RE15_ESP_FX_MAX && runden < 200) {
+        re15_esp_fx_spawn_rows(&s_core, 0, 0, 0x1000, -7600, -3000, -17600, 20000, 0);
+        runden++;
+    }
+    int voll = re15_esp_fx_count();
+    PRUEF(300, voll == RE15_ESP_FX_MAX, "Pool vor dem Wurf: %d/%d Plaetze (%d Blut-Aufrufe)", voll, RE15_ESP_FX_MAX, runden);
+    /* Der Wurf: Abzug Bild 0, R1 gehalten; das Blut wird je Bild nachgefuellt, damit der Pool im
+     * Spawnbild 22 sicher voll ist (die Bodenklemme/Lebensdauer raeumt sonst Plaetze). */
+    int spawn = -1, voll_im_spawnbild = -1, menge = -1;
+    for (int b = 0; b < 40; b++) {
+        while (re15_esp_fx_count() < RE15_ESP_FX_MAX)
+            re15_esp_fx_spawn_rows(&s_core, 0, 0, 0x1000, -7600, -3000, -17600, 20000, 0);
+        if (b == 22) voll_im_spawnbild = re15_esp_fx_count();
+        uint16_t pad = RE15_PAD_BIT_R1;
+        if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
+        sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+        if (spawn < 0 && granate_platz() >= 0) spawn = b;
+    }
+    menge = g_inv.slots[3].qty;
+    PRUEF(301, voll_im_spawnbild == RE15_ESP_FX_MAX && spawn == 22,
+          "Pool voll im Spawnbild (%d/96): Granate spawnt im Bild %d (soll 22; vorher: kein Platz -> kein Wurf, Granate weg)",
+          voll_im_spawnbild, spawn);
+    PRUEF(302, re15_granate_r36_platz_geraeumt() >= 1u && menge == 4,
+          "ein Blut-Teilchen geraeumt (%u), Menge %d (soll >= 1 / 4)", re15_granate_r36_platz_geraeumt(), menge);
+    PRUEF(303, re15_esp_fx_count() <= RE15_ESP_FX_MAX, "Pool nie ueber %d (%d)", RE15_ESP_FX_MAX, re15_esp_fx_count());
+    /* 3b — Negativ-Kontrolle: Pool ohne Blut (nur Huelsen Id 4) voll -> Original-Verhalten, kein Platz */
+    re15_esp_fx_reset(); re15_granate_r36_zaehler_reset();
+    while (re15_esp_fx_count() < RE15_ESP_FX_MAX)
+        re15_esp_fx_spawn_ex(&s_core, 4, 0, 0x1000, -7600, -3000, -17600, 0);
+    int frei = re15_granate_r36_platz_freimachen();
+    re15_esp_fx_t *g = re15_esp_granate_spawn(&s_core, 2, -7600, -1500, -17600, 0);
+    PRUEF(304, frei == -1 && g == NULL && re15_granate_r36_platz_geraeumt() == 0u,
+          "ohne Blut im vollen Pool: kein Raeumen (%d), kein Platz (%s) = Original (0xFF @0x800197c8-cc)",
+          frei, g ? "Platz" : "NULL");
+    re15_esp_fx_reset();
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -398,6 +448,7 @@ int main(int argc, char **argv)
 
     if (alle || strstr(teil, "feuer")) { printf("[1] Feuer\n"); abschnitt_feuer(); }
     if (alle || strstr(teil, "wurf"))  { printf("[2] Wurf\n");  abschnitt_wurf(); }
+    if (alle || strstr(teil, "pool"))  { printf("[3] Pool\n");  abschnitt_pool(); }
 
     free(buf);
     if (s_fehler) { printf("test_r36_granate: %d Fehler, erste Pruefung %d\n", s_fehler, s_erste); return s_erste; }

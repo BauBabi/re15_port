@@ -1,8 +1,10 @@
 /* granate_r36.c — Runde 36 Spur D: Handgranate. Belege und Einordnung: include/re15_granate_r36.h,
  * Dossier analysis/befunde_runde36/D_granate.md. */
 #include "re15_granate_r36.h"
+#include "re15_esp.h"
 
 static unsigned s_russ_unterdrueckt = 0;
+static unsigned s_platz_geraeumt    = 0;
 
 /* Punkt 1 — die Flammen des Spreng-Russ FUN_8010640C (@0x80106418-44 Part 0 / @0x80106450-74 Part 3).
  * RE2 Retail spawnt sie fuer die Zeilen 9 (HE-Granate 0x09, GL-Explosivrunde) und 17 (Rakete) — beide
@@ -18,7 +20,28 @@ int re15_granate_r36_russ_flammen(unsigned zeile)
 }
 
 unsigned re15_granate_r36_russ_unterdrueckt(void) { return s_russ_unterdrueckt; }
-void     re15_granate_r36_zaehler_reset(void)     { s_russ_unterdrueckt = 0; }
+unsigned re15_granate_r36_platz_geraeumt(void)    { return s_platz_geraeumt; }
+void     re15_granate_r36_zaehler_reset(void)     { s_russ_unterdrueckt = 0; s_platz_geraeumt = 0; }
+
+/* Punkt 2b — voller Pool im Spawnbild. FUN_80019700 sucht 0..95 (`sltiu` @0x8001978c) und gibt bei
+ * vollem Pool 0xFF zurueck (`ori v0,zero,0xff` @0x800197c8-cc): die Granate ist dann weg (Abzug im
+ * Rueckstossbild 0), ohne Wurf. Gemessen (Dossier §3.1): nach einer HE-Explosion an zwei Zombies 95 von
+ * 96 Plaetzen belegt (F120..F130), drei Zombies fuellen ihn — der RE2-Gore (Blut 0/0, Brocken 5/7) auf
+ * dem RE1.5-Pool ist eine Port-Konstruktion, das Original kennt diese Last nicht. PORT-WAHL: der
+ * Wurfkoerper (Spielobjekt) verdraengt das Blut-Teilchen mit dem kleinsten Index (Effekt-Id 0, die
+ * Mehrzahl des Gore-Schubs; der Spawner fuellt ab Index 0, also das aelteste). Keine Granate und kein
+ * Nicht-Blut-Effekt wird verdraengt; ohne Blut bleibt das Original-Verhalten (kein Platz). */
+int re15_granate_r36_platz_freimachen(void)
+{
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (!f || f->granate_art || f->effect_id != 0) continue;
+        re15_esp_fx_free_slot(i);
+        s_platz_geraeumt++;
+        return i;
+    }
+    return -1;
+}
 
 /* Punkt 2 — Spawnbild des Wurfkoerpers 0x040D1000 je Zielhoehe (Substate 2 @0x80033680-7a8):
  *   HOCH  `ori v0,zero,0x13` @0x80033690 + `andi v0,v0,0x8000` @0x800336b4 -> Cursor 19

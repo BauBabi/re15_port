@@ -40,6 +40,13 @@
  *     NUTZER-VORGABE/PORT-WAHL: fuer die Granate (Ids 9/10/11) liegt die Abbruch-Schwelle auf dem Spawnbild
  *     der aktuellen Zielhoehe (19/22/24) statt auf 10; die Form der Regel (`Cursor > Schwelle` -> LOWER)
  *     bleibt, nur die Schwelle folgt dem "Schuss-Bild" wie bei den Schusswaffen.
+ *
+ * (2b) VOLLER POOL IM SPAWNBILD. Der Spawner FUN_80019700 sucht die Plaetze 0..95 (`sltiu` @0x8001978c)
+ *     und liefert bei vollem Pool 0xFF (`ori v0,zero,0xff` @0x800197c8-cc) — der Wurf unterbleibt, die
+ *     Granate ist weg. Gemessen (Dossier §3.1): nach der HE-Explosion an zwei Zombies 95/96 Plaetze
+ *     (F120..F130, RE2-Gore-Schub Blut 0/0 + Brocken 5/7 auf dem RE1.5-Pool = Port-Konstruktion), ein
+ *     Spawnbild in diesem Fenster (Abzug 22 Bilder vorher) verliert die Granate. PORT-WAHL: das Blut-
+ *     Teilchen mit dem kleinsten Index raeumt den Platz (re15_granate_r36_platz_freimachen).
  */
 #ifndef RE15_GRANATE_R36_H
 #define RE15_GRANATE_R36_H
@@ -66,5 +73,12 @@ int re15_granate_r36_recoil_break(int id, int elev);
 
 /** Spawnbild der Granate je Zielhoehe (19/22/24, @0x80033690/@0x800336a4/@0x80033758) — fuer Sonden. */
 int re15_granate_r36_spawnbild(int elev);
+
+/** Punkt 2b — voller Pool im Spawnbild (FUN_80019700 `ori v0,zero,0xff` @0x800197c8-cc = Wurf verloren,
+ *  Granate weg). PORT-WAHL (Dossier §3.4): das Blut-Teilchen (Effekt-Id 0) mit dem kleinsten Index raeumt
+ *  den Platz; Rueckgabe = freigegebener Platz oder -1 (kein Blut im Pool = Original-Verhalten). Aufrufer:
+ *  re15_esp_granate_spawn, nur wenn re15_esp_fx_count() == RE15_ESP_FX_MAX. */
+int      re15_granate_r36_platz_freimachen(void);
+unsigned re15_granate_r36_platz_geraeumt(void);   /* Zaehlung fuer Sonden */
 
 #endif /* RE15_GRANATE_R36_H */
