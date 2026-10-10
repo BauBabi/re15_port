@@ -24,10 +24,14 @@ mit `Aot_on 05` = Gully), ueberschreibt der Folgeraum die Bilder; deshalb immer 
 
 ## Stand / Fortschritt
 
-- [ ] Punkt 1 Container-Schieben — Messung + RE fertig (§1), Umsetzung im Code (3d394d71), Messung nachher §1.4
-- [ ] Punkt 2 Erweiterung Werkstatt-Tuer — RE fertig (§2.1), Umsetzung §2.2
-- [ ] Punkt 3 10F0 Kamera/Abgang — umgesetzt + gemessen (§3), Test offen
-- [ ] Punkt 4 Irons-Kopf nach Tod — RE fertig (§4), Code in 3d394d71, Messung nachher offen
+- [x] Punkt 1 Container-Schieben — vorher §1.1, RE §1.2 (Sub @0x80052864, Member 6 @0x800411c8, Bit 0x200
+      @0x8002bec0), Umsetzung §1.3, nachher §1.4 (exe + Riegel schub)
+- [x] Punkt 2 Erweiterung Werkstatt-Tuer — RE §2.1 (Zelle (3,0x0C) @0x00EC8, Elzas Platz 8 @0x0112A, Kendo RE2
+      ROOM1010 sub09 @0x01C18 Clip 0 == 11B0 RBJ Clip 15, Ton Satz 0x0A), Umsetzung §2.2, nachher §2.3 (exe + Riegel
+      erweiterung/tuer + integration_r36_szenenleon)
+- [x] Punkt 3 10F0 Kamera/Abgang — vorher §3.1, Beleg §3.2, Umsetzung §3.3, nachher §3.4 (+ Riegel abgang10f0)
+- [x] Punkt 4 Irons-Kopf nach Tod — RE §4.1, Umsetzung §4.2 (+ ROOM1151 fuer Spur L), vorher/nachher §4.3/§4.4
+      (exe 78a4a748 gegen diesen Zweig, Riegel irons)
 
 FORTSETZUNG 2026-10-10 ~20:45 (Nachfolger nach dem Sitzungslimit): 3d394d71 BAUT (ninja: no work to do nach
 configure, Objekt szenenleon_r36.c.obj vorhanden, exe 18:10 nach den Quellen 18:07). Der Vorgaenger hatte noch
@@ -160,6 +164,11 @@ gehalten)`, state.log Irons `st=4 ss1=0 ss2=2 mo=2 af=89`.
   RE15_CD_ROOT): Bilddifferenz A gegen B = Rechteck (244,61)-(279,92) = Irons' KOPF — der Tote dreht den Kopf zu Leon.
 - NACHHER (dieser Zweig): `[szl-r36] ROOM1150 Irons tot: Kopf-FSM +0x1b8 = 0x12 (kein Blickziel mehr)`; Bilddifferenz
   A gegen B = KEINE (bitgleich). `J_belege/p4_irons_kopf_vorher_nachher_F150.png` (Ausschnitt, je A/B).
+- ROOM1151 (Elza): Spur L legt Irons "von Anfang an tot" hin (NUTZER-VORGABE). Dieselbe Regel greift dort, sobald die
+  gehaltene Todespose steht (Clip 2, Phase 2) — das Original-1151 nutzt fuer Irons lebend nur Clip 3/6 (@0x00EB8,
+  @0x00F02, @0x00F12), (9,73) ist ein Leon-Bit. Riegel irons: Stellvertreter-Todespose in 1151 -> 0x12, Kopf an zwei
+  Standpunkten gleich; lebend (Clip 3) bleibt das Tracking. Setzt Spur L eine ANDERE Pose, greift der Zweig nicht
+  (dann im Integrationsbaum nachziehen).
 ## §3 Punkt 3 — ROOM10F0: Kamera bleibt auf Leon, kein "Ploppen", nur Tuer-zu-Ton
 
 ### 3.1 Messung vorher (78a4a748, `RE15_DEBUG_JUMP=10f0@250`, Bilder 2560..2960/4, RE15_STATE_LOG)
