@@ -82,10 +82,44 @@ Nutzer-Entscheidung von v0.3.5 ("Im Dining Room trifft man den am Boden fressend
 Nutzer mit dem Runde-36-Auftrag fuer die FRESSER aufhebt ("Im Original geht beides nicht -> angehen").
 
 ### 1.3 Umsetzung
-(folgt)
+* NEU `re15_port/engine/src/schuss_r36.c` + `include/re15_schuss_r36.h`: `re15_schuss_r36_sichtlinie_blockiert(pl,
+  ziel)` = FUN_8001b9b4-Zwilling: Regionen 3..0 (`ori s0,zero,0x3` @0x8001ba08, Schleife @0x8001ba34-38) je
+  `re15_los_ray_blocked(pl, ziel, region, 0)` (= FUN_8003dcc4 mit 0xf00/0x300, Ursprung + Band des SPIELERS);
+  ohne SCA (g_room_rdt_ok == 0) 0 (leere Region `sltu fp,v0` @0x8003dd94). Mess-Zaehler `verworfen`.
+* Haken `re15_damage.c` re15_player_weapon_fire, direkt nach `if (best < 0) return 0;` (= @0x80012160):
+  `if (re15_schuss_r36_sichtlinie_blockiert(pl, &g_actors[best])) return 0;` (= `jal 0x8001b9b4` /
+  `bne v0,zero,0x80012540` @0x80012168-74) — VOR Kritklasse und +0x93-Latch/Rekursion, fuer ALLE 22 Waffen
+  (auch Messer/Rohr: @0x80012168 liegt hinter der Schleife, die Tester-Tabelle @0x8006e548 aendert daran nichts).
+* Haken `enemy_ai_common.c`: `re15_los_ray_blocked` nicht mehr `static` (Kommentar "Runde 36 Spur C").
+* `enemy_ai_re2_zombie.c` re15_re2z_hit_filter_apply: `spawn_pose = in_pose && !passive_lyer && sub_state_1 != 8`
+  — die v0.3.5-Ausnahme gilt nicht mehr fuer EXEC[8] (Fresser); Gate 2 (+0x1D3 @0x80041270-78) und Gate 4
+  (+0x10E & 0xC000 @0x80041290-9c) sperren ihn, bis P3 (`andi 0x7f` @0x80103CE4-FC) / der Wecker (`andi 0xbfff`
+  @0x80104F0C-10) sie oeffnen. Der LIEGENDE EXEC[7] (nicht passiv) behaelt die Ausnahme (nicht Teil des Auftrags).
+* Port-Semantik, die bleibt (dokumentiert): ein gesperrter Fresser traegt +0x93 Bit 0 und wird wie in RE1.5 als
+  Gewinner gewaehlt, dann ueber `|= 2` / Rueckgriff ausgeschlossen (re15_damage.c-Block "WARUM NICHT IN DER
+  SCHLEIFE"). Die Sichtlinie steht byte-true VOR diesem Latch: ist der naechste Kandidat ein gesperrter Fresser
+  HINTER einer Klasse-3-Zelle, endet der Schuss ohne 2. Kandidaten (RE1.5-Verhalten fuer +0x93-Kandidaten;
+  RE2 haette ihn schon in der Schleife uebersprungen). Praktisch nur, wenn ein Fresser naeher als jeder wache
+  Zombie UND hinter Moebeln liegt.
+* Byte-true-Eigenheit des Zellentests (gemessen am Messer, Test 20/21): FUN_8003dcc4 prueft nur, ob die Strecke
+  eine der beiden ZELLDIAGONALEN kreuzt (@0x8003df28/@0x8003df94, @0x8003e02c/@0x8003e08c). Eine Strecke, die nur
+  150 in die Zelle ragt (Messer 1500 Reichweite an der Tischkante), kreuzt keine Diagonale -> frei; bis hinter
+  die Nebendiagonale (z -14500) -> blockiert.
 
 ### 1.4 Messung nachher
-(folgt)
+* Unit `unit_r36_schuss` (test_r36_schuss.c, echte ROOM1140.RDT): Pistole 3 / Redhawk 7 / Schrot 8 / Python 20 /
+  Ingram 12 ueber den Tisch -> hit=0, hp 250, verworfen=1; neben dem Tisch (x 9000) -> Treffer; Zombie vor dem
+  Tisch (z -11000) -> Treffer; Spieler-Band 1 gegen Band-0-Zelle -> Treffer (Bandfilter @0x8003de60-6c);
+  Diagonale ueber die Tischecke (-6000,-10000)->(0,-19000) blockiert, links vorbei frei; ohne SCA Treffer.
+  Fresser (RE2-KI, ss1 8, 1D3=80, 10E=4004): Pistole/Redhawk/Schrot/Python -> hit=0; zwei Fresser -> hit=0;
+  nach dem Aufstehen (1D3 &= 0x7f, 10E &= ~0x4000) -> Treffer; je Gate einzeln; Liegender 0x08 frei, 0x88 gesperrt.
+  Ergebnis `test_r36_schuss: OK` (41 Pruefungen).
+* exe (`run_p1.sh nachher 20`, dieselben Laeufe wie 1.1, je 6 Schuesse laut wf.log `SE arms_rec=0`):
+  Tisch: Plaetze 1..5 hp 79/50/80/250/250 UNVERAENDERT (vorher 4/5 -> -1); Fresser vom Tuerpunkt: alle fuenf
+  unveraendert (vorher 2/5 -> -1).
+* `integration_r36_schuss` (test_r36_schuss.cmake, 3 Laeufe): tisch alle Plaetze HP gleich, fresser alle Plaetze
+  gleich, GEGENPROBE frei (Leon (200,-18200) hinter dem Tisch, Platz 5 in 1400 -> geweckt, Python) Platz 5
+  250 -> -1. Passed 46.96 s.
 
 ## 2. Punkt 2 — Blut-Anker bei getroffenen Zombies
 

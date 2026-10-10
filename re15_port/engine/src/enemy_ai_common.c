@@ -2904,8 +2904,10 @@ static int los_seg_straddles_diag(int32_t ex, int32_t ez, int32_t px, int32_t pz
     int32_t s4 = los_cross_z(rx, rz, c2x - ex, c2z - ez);
     return ((uint32_t)(s3 ^ s4) & 0x80000000u) != 0;          /* Diagonal-Enden straddeln */
 }
-static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
-                                unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
+/* Runde 36 Spur C: nicht mehr static — der Spieler-Schuss (schuss_r36.c, FUN_8001b9b4 @0x80012168)
+ * zieht denselben Strahl mit dem SPIELER als `e` (Ursprung, Band +0x82) und dem Gewinner als `player`. */
+int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
+                         unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
 {
     if (!g_room_rdt.sca || step < 0 || step > 3) return 0;
     int start = 0;

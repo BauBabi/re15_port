@@ -8882,7 +8882,11 @@ int re15_re2z_tick(int slot)
      *
      * ⚠️ AUSDRUECKLICH GEWUENSCHTE ABWEICHUNG von RE2 (Nutzer-Entscheidung, wie 83b7740c):
      * solange der Zombie die port-synthetisierte SPAWN-POSE haelt (EXEC[7] liegend / EXEC[8]
-     * fressend), zaehlen die Sperren (2) und (4) NICHT. Der Geltungsbereich ist damit exakt der
+     * fressend), zaehlen die Sperren (2) und (4) NICHT.
+     * ⛔ RUNDE 36 SPUR C: fuer den FRESSER (EXEC[8]) ZURUECKGENOMMEN — der Nutzer bestellt das
+     * Original ("Alle Schusswaffen treffen ... fressende Zombies. Im Original geht beides nicht ->
+     * angehen"); s. re15_re2z_hit_filter_apply (`spawn_pose` ohne EXEC[8]) und
+     * include/re15_schuss_r36.h (2). Der Geltungsbereich ist damit exakt der
      * Ort, an dem der Port den Zustand selbst erzeugt hat. UEBERALL SONST bleibt der Filter
      * unveraendert scharf — dort sitzt der echte Nutzen: der walking-immortal-Fall aus EXEC[11]
      * (siehe der Block ueber re2z_exec_eleven) wird weiterhin von Gate (2) gefangen, sobald ein
@@ -8959,7 +8963,16 @@ void re15_re2z_hit_filter_apply(int slot)
          * (re2z_exec_lying default / re2z_exec_feeding case 3), reicht es, die Ausnahme fuer
          * 9/10 NICHT zu gewaehren — danach faellt sie ueber `grid_id = 0` ohnehin weg. */
         int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib >= 7u && nib <= 10u);
-        int spawn_pose = in_pose && !passive_lyer;
+        /* Runde 36 Spur C (Nutzer: "Alle Schusswaffen treffen ... fressende Zombies. Im Original geht
+         * beides nicht -> angehen"): die v0.3.5-Ausnahme gilt NICHT mehr fuer den FRESSER (EXEC[8]).
+         * RE2 FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC) wirft ihn in der
+         * Kandidatenschleife heraus: `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78
+         * (+0x1D3 |= 0x80 aus EXEC[8] P0 @0x80103c04-14) und `lhu v0,270(s2)` / `andi 0xc000` /
+         * `bne` @0x80041290-9c (+0x10E = 0x4004 aus dem Spawn-Remap @0x80100A88-8C). Treffbar wird
+         * er erst mit dem Aufstehen (EXEC[8] P3 `andi 0x7f` @0x80103CE4-FC) bzw. dem Wecker
+         * (`andi 0xbfff` @0x80104F0C-10) — Belege include/re15_schuss_r36.h (2). Der LIEGENDE
+         * (EXEC[7], nicht passiv) behaelt die bisherige Ausnahme (nicht Teil des Auftrags). */
+        int spawn_pose = in_pose && !passive_lyer && e->sub_state_1 != 8;
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
          * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):
          *   [C-ANDERE] seed 4 slot 3 f257: st=1 s1=1 s2=1 hp=49 **1D3=80 10E=4004** clip=2
