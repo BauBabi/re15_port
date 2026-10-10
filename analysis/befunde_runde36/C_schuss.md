@@ -935,3 +935,86 @@ unberuehrt; ihre Riegel muessen gruen bleiben. Eigene Mess-Dateien im Scratchpad
 Kopien der urteilstragenden Skripte/Ausgaben im Repo unter `C_schuss_mess/n3/`.
 Gliederung (wird fortlaufend gefuellt): 10.1 Ursache / 10.2 Messung vorher / 10.3 RE-Beleg / 10.4 Zensus berichtigt
 (alle 88 Stellen mit a0) / 10.5 Aenderung / 10.6 Messung nachher / 10.7 Tests / 10.8 OFFEN + Fuer den Nutzer / 10.9 Stand.
+
+### 10.1 M1 — Ursache (Code gelesen + gemessen)
+* enemy_ai_re2_zombie.c (Kriecher-Zweig P5 des Griffs, Leon-Weiche, Bild 22 bzw. 23..41 ungerade) rief
+  `re2z_gore_fx_ex(e, 0, 0x00801000u, rot_y, 0, -600, 0)` und `re2z_gore_fx_ex(e, 8, 4096u, ang, 0, 100, 0)`: die
+  ofs-Argumente von re2z_gore_fx_ex sind ein WELT-Versatz (p = Anker.T + ofs, re2z_gore_fx_core). Im Original ist a3 ein
+  Zeiger auf einen Stapel-Vektor im ANKER-Rahmen (10.3) — am liegenden Kriecher zeigt (0,-600,0) im Becken-Rahmen den
+  Ruecken entlang zum Hals, als Welt-Versatz senkrecht nach oben (600 ueber dem Becken, "in der Luft auf Kniehoehe").
+* **Dazu (eigener Fund, nicht in der Abnahme): die Id des ersten Emitters ist falsch dekodiert.** `lui a0,0x800` laedt
+  0x0800 << 16 = **0x08000000**, mit `ori a0,a0,0x1000` also **0x08001000** = Id 8 (Fleischbrocken; RE2 ROOM1000 id 8 ==
+  RE1.5-Raum-Id 5, gore-vollausbau.md §1.2), Sub 0, Skala 4096. Der Port trug 0x00801000 (Id 0 = Blut, **Sub 128**) — genau
+  das zeigt fx.log der Abnahme (`id=0 sub=128`). Dieselbe Folge `lui a0,0x800 / ori a0,a0,0x1000` steht beim Arm-Abriss
+  (Zensus @0x80107600 und @0x80107704 = 0x08001000); dort fuehrt der Port richtig 0x08001000. Die Aussage der Abnahme
+  "Id 0 = Blut" fuer @0x80102B24 ist damit widerlegt (Bytes 10.3); der Lage-Mangel selbst ist richtig.
+* Pin-Luecke: `probe_r36_blut pin mg` bricht beim Kriecher ab (probe_r36_blut.c:484-487) — kein Pin sah den Fall.
+
+### 10.2 Messung vorher (Stand 4adb4890 = Code d5c0c14f, exe/Bibliothek 21:43)
+* Sonde der Abnahme unveraendert (`abn2C/abn2_blut.exe`, gegen genau diese libre15_engine.a gelinkt), `12 px eben 2`
+  (Ausgabe `C_schuss_mess/n3/abn2_blut_vorher_w12_px_eben_2.txt`), woertlich:
+  ```
+  -> Welt-Versatz (0,-600,0) an Part 0; mit a3-Semantik (T + R*ofs) laege der Spawn bei (568,-114,-19589): Abstand 937
+  F192 st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  0 fx=(-16,-846,-19622) a3=ohne (0,0,0) | d(gezeichnet T)=600 | d(T-1)=711
+  -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (547,-159,-19613): Abstand 149
+  F193 ... part  8 fliegt fx=(644,-48,-19587) a3=ohne (0,0,0) | d(gezeichnet T)=100   (dito F195..F209, ungerade)
+  ERGEBNIS waffe 12 px eben platz 2 alle 0: Tod F211, Spawns 14 (ohne a3/Null 10 ...) | max d(T) 600, ohne a3 600
+  ```
+* Alle 320 Laeufe der Abnahme (`abn2C/blut`), eigene Klassierung `C_schuss_mess/n3/klassen3.py`
+  (`klassen3_vorher.txt`): `K1 Kopfabriss Part 0 @0x80102B24 Welt-Versatz: Spawns 25 in 25 Laeufen, d 600` /
+  `K2 Hals-Stumpf Part 8 @0x80102BBC Welt-Versatz: Spawns 286 in 32 Laeufen, d 100`. (Die uebrigen 7 Kopfabrisse dieser
+  Laeufe stehen bei der Abnahme in K6 mit d 601/663/709 bzw. sind von stderr-Zeilen zerschnitten — s. 10.6 "Anker-Zeitpunkt".)
+* exe (echter Renderer), eigene Messkopie `re15_pc_r36c_nb3_alt.exe` (= exe 21:43), Aufbau E2f der Abnahme
+  (`RE15_DEBUG_JUMP=1140@250`, `RE15_PLAYER_POS=-3600,-19600,0`, `RE15_AI_FLAVOR=re2`, `RE15_GIVE=12:250`, `RE15_EQUIP=12`,
+  `RE15_INPUT_SCRIPT=W1.2,M0.6,MA3.0,M0.3,W16`, `RE15_EXIT_AT=700#1140`, fx/state-Log, `RE15_FRAMEDUMP=215-250/1`,
+  `RE15_WINDOW_SCALE=1`; Skript `C_schuss_mess/n3/lauf.sh`), exit=0, fx.log bitgleich mit der Abnahme:
+  `id=0 sub=128 eidx=2 frame=1 w(-2732,-849,-19781) ... F=226` und Hals-Stumpf `id=0 sub=0 ... w(-3376,-51,-19641)` F227..F243.
+
+### 10.3 RE-Beleg (selbst disassembliert, `re2_disasm.py --bin EMZ0.BIN`, info/re2leon/COMMON/BIN/EMZ0.BIN)
+```
+; Kriecher-Zweig P5, Leon-Weiche, +0x14D == 22 (Kopf ab)        Bytes (LE)
+80102ac0: addiu v0,zero,22 / 80102ac4: bne v1,v0,0x80102b70
+80102ad0: lw v1,408(s1)                    ; Modellblock +0x198      98 01 23 8e
+80102ad4: lui a0,0x800                     ; a0 = 0x08000000          00 08 04 3c
+80102adc: ori a0,a0,0x1000                 ; a0 = 0x08001000          00 10 84 34   -> Id 8, Sub 0, Skala 4096
+80102ae4: sw v0,1376(v1)                   ; Part 8 Flags |= 0x4A
+80102aec: addiu a3,sp,24                   ; a3 = ZEIGER auf sp+24    18 00 a7 27
+80102b0c: lw a2,408(s1)                    ;                          98 01 26 8e
+80102b10: addiu v0,zero,-600               ;                          a8 fd 02 24
+80102b14: sh zero,24(sp) / 80102b18: sh v0,26(sp) / 80102b1c: sh zero,28(sp)    ; Vektor (0,-600,0)
+80102b20: lh a1,118(s1)                    ; a1 = +0x76 (Gier)        76 00 25 86
+80102b24: jal 0x8001bf10                   ;                          c4 6f 00 0c
+80102b28: addiu a2,a2,72                   ; a2 = Part 0 (+0x198+72)  48 00 c6 24
+; Hals-Stumpf: +0x14D in 23..41, ungerade
+80102b78: addiu v0,v1,-23 / 80102b7c: sltiu v0,v0,0x13 / 80102b84: andi v0,v1,0x1
+80102b8c: addiu v0,zero,100                ;                          64 00 02 24
+80102b90: lw s0,408(s1)
+80102b94: sh zero,24(sp) / 80102b98: sh v0,26(sp) / 80102ba0: sh zero,28(sp)    ; Vektor (0,100,0)
+80102b9c: jal 0x80015fe8                   ; rand (Winkel)
+80102ba4: addiu a0,zero,4096               ; a0 = 0x00001000 -> Id 0 (Blut), Sub 0, Skala 4096   00 10 04 24
+80102ba8: addiu a3,sp,24                   ; a3 = ZEIGER auf sp+24    18 00 a7 27
+80102bac: lh a1,118(s1) / 80102bb0: sll v0,v0,2 / 80102bb4: addu a1,a1,v0 / 80102bb8: addiu a1,a1,-512
+80102bbc: jal 0x8001bf10                   ;                          c4 6f 00 0c
+80102bc0: addiu a2,s0,1448                 ; a2 = Part 8 (8*172+72)   a8 05 06 26
+; FUN_8001BF10 liest a3 (Abnahme 2 §4 selbst gelesen): beq a3,zero @0x8001BFE0 / lw v0,0(a3) / sw v0,44(t0) /
+; lw v0,4(a3) / sw v0,48(t0); Matrix aus a2 (32 Byte) -> slot+76.. @0x8001C03C-78.
+; RE2-Lagen-Tick (PSX.EXE, selbst gelesen): 8001db74: addiu v1,v0,76 ; ctc2 RT <- slot+76..92 (0x48cc0000/0x48cd0800/
+; 0x48cc1000/0x48cd1800/0x48ce2000 @0x8001DB80-9C) ; 8001dba0: addiu v0,v0,44 ; lwc2 VXY0/VZ0 <- slot+44/48
+; (0xc8400000/0xc8410004) ; 8001dbb4: MVMVA 0x4a486012 (sf=1, RT*V0, ohne TR) ; swc2 MAC1-3 @0x8001DBB8-C0 ;
+; 8001dbd0-dc1c: lw 96/100/104(a0) (Anker.T) + R*a3 + Lage +52/+54/+56   => Lage = Anker.R * a3 + Anker.T (+ xlat)
+```
+=> beide Emitter: Lage = Anker.R * a3 + Anker.T; @0x80102B24 ist Id 8 (Fleischbrocken), @0x80102BBC Id 0 (Blut).
+
+### 10.4 Zensus berichtigt (alle 88 `jal 0x8001bf10` mit a0)
+Neues Skript `C_schuss_mess/n3/zensus3.py` (a0 aus `addiu a0,zero,imm` / `lui`+`ori`/`addiu`; Register-Fenster ab dem letzten
+jal, Stapel-Fenster ueber rand-Aufrufe hinweg; Ausgabe `C_schuss_mess/n3/zensus3.txt`). Grenze des Skripts: bei verzweigtem
+Code nimmt es den LETZTEN a0-Schreiber im Fenster (z.B. @0x801086B4 TOD zeigt 6096 = Zone-0-Zweig, der Zone!=0-Zweig setzt
+8096 @0x8010866C) — urteilstragend sind nur die selbst disassemblierten Stellen. Berichtigung von §8.8:
+* **C -> A:** 0x80102B24 (Kopfabriss, **Id 8** Fleischbrocken, Part 0, a3 (0,-600,0)) und 0x80102BBC (Hals-Stumpf, Id 0 Blut,
+  Part 8, a3 (0,100,0)) — Gore am Zombie, den Leon dabei toetet; seit dieser Nachbesserung im Anker-Rahmen.
+* **C, Einordnung berichtigt:** 0x80103C8C ist **Blut** (a0 = 0x13D0 -> Id 0, Skala 5072) am FRESSENDEN Zombie (Part 8,
+  a3 (200,0,0) @0x80103C70-7C, nur bei Bild-Wort & 0x10000 @0x80103C50-64) — kein Treffer-Blut; im Port fehlt der Spawn
+  (enemy_ai_re2_zombie.c "Fress-Tropf-FX ... OPEN") = fehlendes Blut, nicht falsche Lage -> OFFEN 13. Feuer (Id 5):
+  0x80106180, 0x80106220, 0x80106254, 0x80106440, 0x80106470; Funken (Id 6 bzw. 4/12, a0 dynamisch): 0x80106574,
+  0x801065C0, 0x8010660C, 0x80106658, 0x801066AC, 0x801066D4.
+* Gruppen A/B/D sonst unveraendert; Summe 29 (A) + 30 (B) + 12 (C) + 17 (D) = 88.

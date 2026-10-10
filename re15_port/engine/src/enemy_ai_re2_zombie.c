@@ -2022,10 +2022,13 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
                     e->re2z_part_wa4  [8]  = 0;
                     e->re2z_part_tint [8]  = 0x00101040u;
                     e->re2z_part_yaw98[8]  = (int16_t)(e->rot_y & 0x0fff);
-                    /* BLUT am Abriss: Id 0x00801000 (`lui a0,0x800 / ori a0,a0,0x1000`
-                     * @0x80102AD4-DC), Anker Part 0 (`addiu a2,a2,72` @0x80102B28),
-                     * ofs (0,-600,0) @0x80102B10-1C, a1 = rot_y @0x80102B20. */
-                    re2z_gore_fx_ex(e, 0, 0x00801000u, (int16_t)e->rot_y, 0, -600, 0);
+                    /* GORE am Abriss (Runde 36 Spur C, Nachbesserung 3): a0 = `lui a0,0x800` (3c040800)
+                     * @0x80102AD4 / `ori a0,a0,0x1000` @0x80102ADC = 0x08001000 = Id 8 (Fleischbrocken ->
+                     * RE1.5-Raum-Id 5), Sub 0, Skala 4096 — vorher als 0x00801000 (Id 0, Sub 128) gelesen.
+                     * a3 = `addiu a3,sp,24` @0x80102AEC -> (0,-600,0) @0x80102B10-1C im ANKER-Rahmen Part 0
+                     * (`addiu a2,a2,72` @0x80102B28, `jal 0x8001bf10` @0x80102B24), a1 = +0x76 @0x80102B20. */
+                    {   static const int32_t a3_abriss[3] = { 0, -600, 0 };
+                        re2z_gore_fx_a3(e, 0, 0x08001000u, (int16_t)e->rot_y, a3_abriss); }
                     /* >>> DAS GESUCHTE "SMASH": a0 = 2 @0x80102B2C, jal 0x8005BD6C
                      * @0x80102B58 <<< */
                     re2z_se(2);
@@ -2042,10 +2045,12 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
              * `beq v0,zero,0x80102BC4` @0x80102B84-88); Id 4096 @0x80102BA4, ofs (0,+100,0)
              * @0x80102B8C-A0, Anker Part 8 (`addiu a2,s0,1448` = 8*172+72 @0x80102BC0),
              * Winkel = rot_y + rand*4 - 512 (`jal 0x80015fe8` @0x80102B9C,
-             * `sll v0,v0,2 / addu a1,a1,v0 / addiu a1,a1,-512` @0x80102BB0-B8). */
+             * `sll v0,v0,2 / addu a1,a1,v0 / addiu a1,a1,-512` @0x80102BB0-B8).
+             * Nachbesserung 3: a3 = `addiu a3,sp,24` @0x80102BA8 = Versatz im ANKER-Rahmen Part 8. */
             if (fr >= 23 && fr <= 41 && (fr & 1)) {
+                static const int32_t a3_hals[3] = { 0, 100, 0 };          /* @0x80102B8C-A0 */
                 int16_t ang = (int16_t)((int)e->rot_y + (int)(re2z_rand() << 2) - 512);
-                re2z_gore_fx_ex(e, 8, 4096u, ang, 0, 100, 0);
+                re2z_gore_fx_a3(e, 8, 4096u, ang, a3_hals);
             }
             break;                                                 /* @0x80102BC4-C8: der
                                                                     * KRIECHER verlaesst P5

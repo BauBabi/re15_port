@@ -1,0 +1,4 @@
+Laeufe 320 (davon mit Tod 320)
+K1 Kopfabriss Part 0 @0x80102B24 Welt-Versatz: Spawns 25 in 25 Laeufen, d(gezeichnet T) min 600 max 600
+K2 Hals-Stumpf Part 8 @0x80102BBC Welt-Versatz: Spawns 286 in 32 Laeufen, d(gezeichnet T) min 100 max 100
+K9 alle uebrigen Spawns: Spawns 4473 in 320 Laeufen, d(gezeichnet T) min 0 max 709
