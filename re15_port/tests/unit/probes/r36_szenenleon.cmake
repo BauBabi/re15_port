@@ -38,11 +38,20 @@ endforeach()
 #                               RE2-Schlossbank SCHLOSS1010 ueber audio_pc.c, msg 21, ROOM1260; A2 Schliessen < Tuer-zu-
 #                               Ton < Abschliessen < Abschliess-Ton mit Bildnummern); B/C Werkstatt-Tuer mit (9,84):
 #                               Ereignis 23 im Init-Lauf, Tuer-zu-Ton wie Elzas (11B1 msg 12), state.log nie Cut 8/7
-#                               (offen gemalt), vor der Tuer Cut 2/0 (test_r36_szenenleon.cmake)
+#                               (offen gemalt), vor der Tuer Cut 2/0; D/E Spielstand + CONTINUE in ROOM11B0 (Boot-Weg
+#                               main.c): D mit (9,84) nie Cut 8, E ohne (9,84) Gegenprobe Cut 8 (test_r36_szenenleon.cmake)
+# probe_r36_szenenleon_karte: Mess-Werkzeug (kein add_test) — schreibt die Speicherkarte fuer D/E.
+add_executable(probe_r36_szenenleon_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_szenenleon_karte.c)
+target_link_libraries(probe_r36_szenenleon_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_szenenleon_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(probe_r36_szenenleon_karte PRIVATE m)
+endif()
 if(TARGET re15_pc)
     add_test(NAME integration_r36_szenenleon
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_szenenleon_karte>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_szenenleon_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_szenenleon.cmake)
     set_tests_properties(integration_r36_szenenleon PROPERTIES TIMEOUT 900)

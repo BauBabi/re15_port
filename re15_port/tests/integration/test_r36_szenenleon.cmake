@@ -15,6 +15,8 @@
 #      "[szl-r36] Werkstatt-Tuer verschlossen (9,84): Ereignis 23 im Init-Lauf", tuerse.log "raum=11B1 nachricht=12
 #      art=M"; state.log: kein Bild mit Cut 8 (offen gemalt), vor der Tuer Cut 2 (geschlossen gemalt)
 #   C  wie B von Westen: kein Bild mit Cut 7, vor der Tuer Cut 0
+#   D  Spielstand nach der Szene + CONTINUE (RE15_KARTE_TOOL = probe_r36_szenenleon_karte): Boot-/CONTINUE-Weg in
+#      main.c, Ereignis 23 im Init-Lauf, kein Bild mit Cut 8; E Gegenprobe ohne (9,84): Cut 8 (offen) wie im Original
 #
 # RE15_TITLE_SHOT(_AF): Titel-Autovorlauf (Muster test_r30_cut_blitz.cmake). SDL_AUDIODRIVER=dummy: Mischer ohne Geraet (die Bank-Weiche laeuft und loggt mit RE15_SE_DEBUG).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r36_szenenleon.cmake
@@ -175,4 +177,50 @@ if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r36_szenenleon[C]: kein debug.log (exit=${_rv}, ${WORKDIR})")
 endif()
 _tuerbild(C "${WORKDIR}/state.log" 7 0)
+
+# --- D/E: Spielstand + CONTINUE in ROOM11B0 (Boot-/CONTINUE-Weg in main.c, NICHT scd_room_reenter) ----------------
+# D: nach der Szene ((9,84)=1) -> Ereignis 23 im Init-Lauf auch auf diesem Weg, nie Cut 8.
+# E: Gegenprobe ohne (9,84) -> Original, Leon oestlich der Tuer sieht Cut 8 (offen): beweist, dass die Messung D die
+#    offene Tuer erkennen WUERDE.
+if(RE15_KARTE_TOOL AND EXISTS "${RE15_KARTE_TOOL}")
+    foreach(_fall D E)
+        set(WORKDIR "${_basis}_${_fall}")
+        file(MAKE_DIRECTORY "${WORKDIR}")
+        if(_fall STREQUAL "D")
+            set(_karg ost)
+        else()
+            set(_karg ost offen)
+        endif()
+        execute_process(COMMAND "${RE15_KARTE_TOOL}" "re15_card.mcr" ${_karg}
+                        WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 60 RESULT_VARIABLE _rvk OUTPUT_VARIABLE _outk)
+        if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
+            message(FATAL_ERROR "r36_szenenleon[${_fall}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
+        endif()
+        re15_start_spiel(_rv 180
+            RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+            RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+            "RE15_STATE_LOG=${WORKDIR}/state.log" "RE15_EXIT_AT=150#11b0"
+            "${_exe_kopie}")
+        if(NOT EXISTS "${WORKDIR}/debug.log")
+            message(FATAL_ERROR "r36_szenenleon[${_fall}]: kein debug.log (exit=${_rv}, ${WORKDIR})")
+        endif()
+        file(READ "${WORKDIR}/debug.log" _dbg)
+        string(FIND "${_dbg}" "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 im Init-Lauf" _p23)
+        if(_fall STREQUAL "D")
+            if(_p23 LESS 0)
+                message(FATAL_ERROR "r36_szenenleon[D]: Ereignis 23 lief auf dem CONTINUE-Weg nicht im Init-Lauf")
+            endif()
+            _tuerbild(D "${WORKDIR}/state.log" 8 2)
+        else()
+            file(READ "${WORKDIR}/state.log" _st)
+            string(FIND "${_st}" "cam=8 " _p8)
+            if(NOT _p23 LESS 0 OR _p8 LESS 0)
+                message(FATAL_ERROR "r36_szenenleon[E]: Gegenprobe ohne (9,84) zeigt nicht das Original (Cut 8 offen)")
+            endif()
+            message(STATUS "r36_szenenleon[E]: Gegenprobe ohne (9,84): Cut 8 (offen) wie im Original — die Messung sieht es")
+        endif()
+    endforeach()
+else()
+    message(FATAL_ERROR "r36_szenenleon: RE15_KARTE_TOOL fehlt ('${RE15_KARTE_TOOL}')")
+endif()
 file(REMOVE "${_exe_kopie}")
