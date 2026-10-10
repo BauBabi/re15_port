@@ -119,7 +119,35 @@ Nutzer mit dem Runde-36-Auftrag fuer die FRESSER aufhebt ("Im Original geht beid
   unveraendert (vorher 2/5 -> -1).
 * `integration_r36_schuss` (test_r36_schuss.cmake, 3 Laeufe): tisch alle Plaetze HP gleich, fresser alle Plaetze
   gleich, GEGENPROBE frei (Leon (200,-18200) hinter dem Tisch, Platz 5 in 1400 -> geweckt, Python) Platz 5
-  250 -> -1. Passed 46.96 s.
+  250 -> -1. Passed 46.96 s. (Fortsetzung: + gl_tisch/gl_fresser mit dem Granatwerfer 15, Passed 79.00 s.)
+
+**Wortlaut "ALLE Schusswaffen" — Messung je Waffe an der exe** (`C_schuss_mess/run_p1_alle.sh alle`, Tabelle
+`C_schuss_mess/hp_tabelle.py mess_r36c/alle`; dieselben zwei Aufstellungen wie 1.1, RE2-KI, 6 Schuss je Lauf,
+Eingabe `M0.6,MA1.5,M1.0,W4`, `RE15_EXIT_AT=200#1140`; alle 30 Laeufe exit 0). Jede Waffe hat nachweislich
+gefeuert (state.log `mg=` 6 -> Rest, wf.log `SE arms_rec=0 bank=<id>` bzw. `SE re2fx code=0x011x0001` mit der
+Explosionslage): 3/4/13 6->3, 5/6/12/14/19 6->0, 7/8/15/16/17/18/20 6->4. Plaetze (st 1): 1 Liegender hp 79, 2..5
+Fresser hp 50/80/250/250.
+| Id | Waffe | Pfad im Port (Original) | tisch: HP-Verlust | fresser: HP-Verlust | Beleg des Feuerns |
+|---|---|---|---|---|---|
+| 3 | Browning HP | FUN_80011f50 + Sichtlinie @0x80012168 / RE2-Gates ueber +0x93 | keiner | keiner | mg 6->3, `arms_rec=0 bank=3` |
+| 4 | SIG P228 | dito | keiner | keiner | mg 6->3, bank=4 |
+| 5 | Beretta M93R | dito (Feuerstoss) | keiner | keiner | mg 6->0, bank=5 |
+| 6 | Glock 18 | dito (Feuerstoss) | keiner | keiner | mg 6->0, bank=6 |
+| 7 | Super Redhawk | dito (Kritklasse @0x80012380-b8) | keiner | keiner | mg 6->4, bank=7 |
+| 8 | Remington M870 | dito | keiner | keiner | mg 6->4, bank=8 |
+| 12 | Ingram M10 | dito (Dauerfeuer) | keiner | keiner | mg 6->0, bank=12 |
+| 13 | SPAS-12 | dito | keiner | keiner | mg 6->3, bank=13 |
+| 14 | Flammenwerfer | RE2-Strahl 0x031D1200 (werfer_r35.c) -> Applier FUN_800470C0 Gate 2/4 @0x80047138-64 | keiner | keiner | mg 6->0, `re2arms ARMS10 satz=0/11` — Reichweite ~1,5 Koerperlaengen: von beiden Standorten erreicht der Strahl keinen Platz (Mechanik: unit_r35_werfer 104-107, Zellen-Sperre B §8.1) |
+| 15 | GL Explosiv | RE2-Projektil (re2_fx.c, Zellen-Sperre `wandzelle_im_band`) -> Applier | keiner — Explosionen an der TISCHKANTE @(-102,-2101,-11760), (-233,-2101,-11760), (-34,-1961,-11570) (Kante z -11350) | keiner — Explosionen ZWISCHEN den Fressern @(-4897,-497,-19161), (-4745,-499,-18720), (-928,-1892,-20295) (Platz 1 (-800,-20600) 330 entfernt, Platz 2 (-1800,-19600) 1120) | mg 6->4, `ARMS0F Satz 10` |
+| 16 | GL Saeure | dito | keiner — @(-165,-1797,-11262) | keiner — @(2444,-1595,-21462) (Platz 4 (200,-21600) 2250 entfernt) | mg 6->4, `ARMS10 Satz 10` |
+| 17 | GL Brand | dito | keiner — @(-165,-1797,-11262) | keiner — @(2444,-1595,-21462) | mg 6->4, `ARMS11 Satz 10` |
+| 18 | Raketenwerfer | dito | keiner — @(-174,-2530,-10668) (vor der Kante, wie unit_r35_werfer 111) | keiner — @(4165,-3056,-22211) / (3532,-2754,-21817): die Rakete fliegt an den Fressern vorbei (naechster Platz 4 in ~4000), der Lauf prueft hier nur "kein Treffer"; die Gate-Mechanik der Rakete pinnt unit_r35_werfer 104-107 (Applier gegen 1D3=80/10E=4000) | mg 6->4, `RE2 ARMS11 Satz 20` |
+| 19 | H&K MC51 | FUN_80011f50 (Dauerfeuer) | keiner | keiner | mg 6->0, bank=19 |
+| 20 | Colt Python | FUN_80011f50 (PORT-WAHL Streifen) | keiner | keiner | mg 6->4, bank=20 |
+Vorher (1.1, Python): tisch Plaetze 4/5 250 -> -1, fresser Plaetze 2/5 -> -1. Handgranaten 9/10/11 sind Wurfwaffen
+(Spur A r35, A_granate.md) und nicht Teil des Wortlauts "Schusswaffen". Messer 1 / Rohr 2 (Nahkampf): Sichtlinie
+byte-true dabei (@0x80012168 hinter der Schleife), Fresser-Sperre im Port ueber denselben +0x93-Riegel (Info-Zeile
+`unit_r36_schuss`: w1/w2 gegen Fresser in 1200 hit=0 hr=03) — RE2s Messer-Resolver nicht disassembliert (OFFEN 5).
 
 ### 1.5 Bestehende Tests, die durch Punkt 1/3 rot wurden (Suite-Lauf mess_r36c/suite1.log, je Test entschieden)
 Der erste Suite-Lauf (Stand 37d796f3, 7310 s; ab Test 407 brach die Maschine mit Timeouts/0xc0000142 weg —
@@ -291,11 +319,13 @@ Treffer-Bild komplett (das ist der Befund des Nutzers).
 ## 4. Tests (alle in tests/unit/probes/r36_schuss.cmake registriert)
 | Test | Misst |
 |---|---|
-| unit_r36_schuss | Sichtlinie FUN_8001b9b4 ueber den Konferenztisch (echte ROOM1140.RDT, 5 Waffenklassen + Messer-Diagonalregel), Fresser-Sperre je Gate, Aufstehen gibt frei (41 Pruefungen) |
-| integration_r36_schuss | exe ROOM1140 Python: Tisch sperrt (5 Plaetze HP gleich), Fresser gesperrt, Gegenprobe trifft (3 Laeufe) |
+| unit_r36_schuss | Sichtlinie FUN_8001b9b4 ueber den Konferenztisch (echte ROOM1140.RDT, alle zehn Hitscan-Waffen 3/4/5/6/7/8/12/13/19/20 + Messer-Diagonalregel), Fresser-Sperre je Gate fuer alle zehn, Aufstehen gibt frei (63 Pruefungen) |
+| integration_r36_schuss | exe ROOM1140: Python UND Granatwerfer 15 — Tisch sperrt (5 Plaetze HP gleich), Fresser gesperrt, Gegenprobe (Python) trifft (5 Laeufe, 79 s) |
+| unit_crow_death_corpse (bestehend, angepasst) | RE1.5-Kraehen-Tod in ROOM1170 — jetzt mit Tiefzielen auf eine Kraehe mit freier Sichtlinie; Treffer-Pruefung fire != 0 (§1.5) |
+| unit_re2_zombie_hitfilter / _abc, probe_re2z_block, unit_re2_crow_ai (bestehend, angepasst) | §1.5 |
 | unit_r36_blut_pin_eben / _tief | Blut-Anker = Anker.R*a3 + Anker.T (RE2-Sollpunkt <= 40, Rumpf ueber / Beine unter dem Becken) |
 | unit_r36_schuss_kraehe | RE2 GIB 0x80102CA0: Felder, Draws, Physik bis zum Verschwinden, Dispatch @0x80104A18 |
-Suite: s. Abschluss (Zeile `=== LOCAL-BUILD-OK (all)`).
+Suite: §7.
 
 ## 5. OFFEN (mit Adresse und Messweg)
 1. **RE1.5-KI-Pfad des Fressers (nicht Vorgabe):** unter RE1.5-KI fuehrt der Port fuer die 0x86/0x06-Fresser keinen
@@ -312,6 +342,14 @@ Suite: s. Abschluss (Zeile `=== LOCAL-BUILD-OK (all)`).
 4. **Kraehen-Teile:** die Drift-Physik FUN_80028DAC hat keine Bodenprobe (Original ebenso), die Wurf-Physik
    FUN_80028AD8 probt im Original den Boden an der TEIL-Lage (FUN_8004FBA0 @0x80028B74) — der Port nimmt die
    Boden-Probe der Kraehe (+0x1C2); der Wandtest @0x80028CAC-D20 bleibt wie beim Zombie nicht modelliert.
+5. **Messer/Rohr gegen Fresser:** der Port sperrt sie ueber denselben +0x93-Riegel wie die Schusswaffen (gemessen
+   hit=0, hr=03); welche Gates RE2s Messer-Weg fuehrt (FUN_800410CC hat sechs Aufrufer: @0x80043afc, 4x in
+   0x80047ef4..0x80048d48, @0x80062bd4 — nicht zugeordnet), ist nicht disassembliert. Nicht Teil des Wortlauts
+   ("Schusswaffen").
+6. **Werfer-Laeufe 16/17/18 am Fresser-Standort:** die Runden explodieren 2250 (Saeure/Brand) bzw. ~4000 (Rakete)
+   vom naechsten Fresser entfernt — der exe-Lauf belegt fuer sie nur "kein Treffer", die Gate-Mechanik der
+   Werfer belegt unit_r35_werfer 104-107 (Applier FUN_800470C0 Gate 2/4) und der GL-Explosiv-Lauf (Explosion 330
+   neben Platz 1).
 
 ## 6. Fuer den Nutzer
 * Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits/Nachrichten/Ereignisse.
@@ -322,3 +360,13 @@ Suite: s. Abschluss (Zeile `=== LOCAL-BUILD-OK (all)`).
   13 sichtbar wegfliegende Teile und sind danach weg.
 * Entscheidungsfrage (optional): der LIEGENDE Spawn-Zombie (EXEC[7], nicht passiv 0x87..0x8A) ist weiterhin
   treffbar (v0.3.5-Ausnahme) — soll auch er wie in RE2 bis zum Aufstehen gesperrt sein?
+* Bedienhinweis: Kraehen am Boden (ROOM1170, sitzend) liegen im DOWN-Band (vert < 800 @0x80112560-c8) — tief
+  zielen; eine Kraehe hinter der Theke (oder ueber einem Moebel in der Schusslinie) ist wie im Original nicht
+  treffbar, solange man im selben Band davor steht.
+
+## 7. Suite / Abschluss
+* Erster Suite-Lauf (Vorgaenger, `mess_r36c/suite1.log`, 7310 s): 196 rot — davon 5 echte (§1.5) und 191
+  Umgebungsabbrueche (ab Test 407 Timeouts in Reihe, danach 314 x exit 0xc0000142 STATUS_DLL_INIT_FAILED
+  auch fuer reine Unit-Tests ohne Fenster — die Maschine unter der Last der parallelen Spuren, nicht der Code;
+  dieselben Tests laufen einzeln gruen).
+* Zweiter Suite-Lauf (diese Sitzung): s. unten (woertliche Zeile).
