@@ -101,7 +101,8 @@ Weil LAB_80040914 @0x80040990-a4 bei JEDER Installation Bit 0 setzt (`ori v0,v0,
 den Kletterstart ohne Bedeutung.** Der Port (climb_common.c:86) verlangte `(flags & 0x101) == 0x101`,
 also ZUSAETZLICH Bit 0x100 — ein Lesefehler der Instruktion `beq v0,zero` (Rueckgabe 0 nur bei 0).
 Folge: alle Typ-4-Objekte mit pc[7] = 0 (Zensus oben: 10F0, 11A0, 2040, 2060, 20A0, 3091, 5020 und die
-Elza-Spiegel) waren im Port nicht kletterbar.
+Elza-Spiegel) waren im Port nicht kletterbar. (3091 obj 1 ist kein Tritt, sondern eine Null-Box auf Band 1;
+FUN_8002da4c trifft sie nur aus schraeger Lage — Nachbesserung 1.)
 
 ### Was Bit 0x100 wirklich ist — FUN_8002dc48 @0x8002dc48 (Aufrufer FUN_80031c44 @0x80031d38, Spieler-Dispatcher)
 ```
@@ -210,7 +211,7 @@ gelesen):
 | 2060/2061 | obj 2 | Tritt h(675,900,600) | (3,172): 0 -> (-3125,0,2075) @0x00EA6; 1 -> (475,0,-7375) @0x00ECC | Slot 2 @0x00E92 (-550,-8300,2050,2050) |
 | 20A0/20A1 | obj 0 | Kiste h(900,900,900) | (3,204): 0 -> Band 4 (12250,-7200,-12400) @0x01854; 1 -> Band 0 (23150,0,-24400) @0x0187A | Slots 4/7/9 @0x017FC/@0x01840/@0x018B2 |
 | 5020/5021 | obj 0 | Kiste h(900,900,900) | (4,203): 0 -> Band 4 (-11000,-7200,-23150) @0x01242; 1 -> Band 0 (-3400,0,-25300) @0x01268 | Slot 4 @0x0122E (-4450,-26250,2050,2050) |
-| 3091 | obj 1 | Flags 0x0081, Box c(0,-1800,0) **h(0,0,0)** @0x01508 | — | — (kein Tritt: ohne Box trifft FUN_8002da4c mit Rand -112 nie; nur Diagnose) |
+| 3091 | obj 1 | Flags 0x0081, Band 1, Box c(0,-1800,0) **h(0,0,0)** @0x01508 | sub00 unter (4,16)==0 (Ifel_ck @0x0148E) | — (kein Tritt, kein Riegel "oben". ⛔ BERICHTIGT in Nachbesserung 1: hier stand "ohne Box trifft FUN_8002da4c mit Rand -112 nie" — FALSCH; der vorzeichenlose Vergleich @0x8002da8c-c0 trifft bei h=0 / Rand -112 genau bei \|dx\| >= 112 UND \|dz\| >= 112, ein Schraeganlauf startet den Aufstieg) |
 
 Sonde `tests/unit/probe_r36_klettern_zensus.c` (echte VM, `scd_room_reenter` je Raum/Lage; Spieler auf der
 Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re15_climb_tick` bis Substate 0):
@@ -227,6 +228,10 @@ Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re1
   ROOM5020 flag=0 obj=0(prop 0) fl=0x0001 band=4 pos=(-11000,-7200,-23150) yaw=0 start=(-12350,-23150) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-11202,-9000,-23150)(soll y -9000) band=5(soll 5) stand=0 -> OBEN
   ```
   ROOM3091 obj 1: `reach=1 try=0` auf allen vier Seiten (Null-Box) — unveraendert, kein Riegel.
+  ⛔ BERICHTIGT (Nachbesserung 1): die vier Seiten sind ACHSGERADE (Querabstand 0 -> |dx| bzw. |dz| = 0
+  < 112), deshalb "kein Start". Mit Querversatz >= 112 startet der Aufstieg (gemessen 8/8, Abschnitt
+  "Nachbesserung 1"). Die Commit-Message von fd9c0f48 ("kein Start, wie FUN_8002da4c mit Rand -112")
+  ist damit ueberholt.
 
 Damit ist jedes Objekt der betroffenen Klasse in beiden Szenarien und beiden Lagen gemessen, nicht nur
 "durch dieselbe Zeile abgedeckt".

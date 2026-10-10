@@ -84,8 +84,11 @@ static int obj_live(int p)
  *                stand `!= 0x101`, also ZUSAETZLICH Bit 0x100 — ein Lesefehler der
  *                `beq v0,zero`. ROOM10F0 obj 0 (Typ 4, sub00 @0x010F4/@0x0111A) traegt
  *                pc[6..7] = 00 00 -> Flags 0x0001 und fiel damit durch; ebenso die
- *                Tritte/Leitern in 11A0, 2040 (obj 1/2), 2060 (obj 2), 20A0, 3091 (obj 1),
- *                5020 und den Elza-Spiegeln (Zensus analysis/befunde_runde36/A_belege/).
+ *                Tritte/Kisten in 11A0, 2040 (obj 1/2), 2060 (obj 2), 20A0, 5020 und den
+ *                Elza-Spiegeln (Zensus analysis/befunde_runde36/A_belege/) sowie die
+ *                Null-Box ROOM3091 obj 1 (Flags 0x0081, h 0) — die trifft FUN_8002da4c
+ *                wegen des vorzeichenlosen Vergleichs @0x8002da8c-c0 bei Rand -112 genau
+ *                aus schraeger Lage (|dx| >= 112 UND |dz| >= 112), nie achsgerade.
  *                Die Kisten in ROOM1090 (pc[6..7] = 00 01 -> 0x0101) waren nie betroffen.
  *   @0x8002d364-70 `obj[0x82] == DAT_800acad6`  (Objekt-Band == Spieler-Band)
  *   @0x8002d37c  FUN_8002d1e8(player, obj, 0)   (Reichweite 563 voraus, Radius 900)

@@ -93,7 +93,11 @@ void re15_granate_install(uint16_t room_id)
     g_scd.props[i].rot_z = 0;
     g_scd.props[i].vel_x = g_scd.props[i].vel_y = g_scd.props[i].vel_z = 0;
     g_scd.props[i].vel_ry = 0;
-    g_scd.props[i].flags = 0x0001;    /* aktiv, nicht kletterbar                            */
+    g_scd.props[i].flags = 0x0001;    /* aktiv (Bit 0, wie @0x80040998). Bit 0x100 ist KEIN
+                                       * Kletterbit (Runde 36 Spur A, @0x8002d358-35c); die
+                                       * Kletter-Sonde betrachtet das Objekt nur fuer einen
+                                       * Spieler auf Band 1 ohne Standobjekt (@0x8002d2f0,
+                                       * @0x8002d364-70)                                      */
     g_scd.props[i].box_cx = g_scd.props[i].box_cy = g_scd.props[i].box_cz = 0;
     g_scd.props[i].box_hx = g_scd.props[i].box_hy = g_scd.props[i].box_hz = 0;
                                       /* Nullbox: liegt auf der Plattform, kein Hindernis
