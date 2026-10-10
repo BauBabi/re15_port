@@ -1,0 +1,144 @@
+ROOM1140  (re15_port/shared_assets/PSX/STAGE1/ROOM1140.RDT)
+
+=== main00
+  0x00A52 Door_aot_set   3b 00 02 31 00 00 74 dc da b2 e8 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM1130 cut=0
+  0x00A72 Ifel_ck        06 00 3c 00                             
+  0x00A76   Ck             21 04 c3 00                               ; Ck(4,0xC3)==0
+  0x00A7A   Door_aot_set   3b 01 00 31 00 00 c6 df 12 fd d0 07 ..    ; Door_aot_set slot=1 sce=0 -> ROOM1170 cut=9  (sce0 = INERT)
+  0x00A9A   Aot_set        2c 02 03 31 00 00 c6 df 12 fd d0 07 ..    ; Aot_set slot=2 sce=3 ev->sub02 (ff 00 18 02)
+  0x00AAE   Else_ck        07 00 26 00                             
+  0x00AB2   Door_aot_set   3b 01 02 31 00 00 c6 df 12 fd d0 07 ..    ; Door_aot_set slot=1 sce=2 -> ROOM1170 cut=9
+  0x00AD2   Nop            00                                      
+  0x00AD3   Nop            00                                      
+  0x00AD4 Aot_set        2c 03 01 31 00 00 dc ec 78 ba 9c 31 ..    ; Aot_set slot=3 TEXT msg 2 "It's a big table."
+  0x00AE8 Aot_set        2c 04 01 31 00 00 46 ec 0e a2 ee 1b ..    ; Aot_set slot=4 TEXT msg 4 "The streets are infested with / zombies!"
+  0x00AFC Evt_end        01 00                                   
+
+=== sub00
+  0x00B0C Ifel_ck        06 00 3e 00                             
+  0x00B10   Ck             21 03 6a 00                               ; Ck(3,0x6A)==0
+  0x00B14   Aot_set        2c 05 03 31 00 00 d8 dc 08 d5 e8 03 ..    ; Aot_set slot=5 sce=3 ev->sub03 (ff 00 18 03)
+  0x00B28   Obj_model_set  2d 00 00 00 01 00 0a 00 00 00 2c e4 ..    ; Obj_model_set obj=0 pos=(-7124,0,-6976)
+  0x00B4A   Else_ck        07 00 2e 00                             
+  0x00B4E   Sca_id_set     37 00 0d 00                             
+  0x00B52   Sca_id_set     37 01 0d 00                             
+  0x00B56   Sca_id_set     37 02 0d 00                             
+  0x00B5A   Sca_id_set     37 03 0d 00                             
+  0x00B5E   Sca_id_set     37 04 0d 00                             
+  0x00B62   Sca_floor_set  39 00 0d 00                             
+  0x00B66   Sca_floor_set  39 01 0d 00                             
+  0x00B6A   Sca_floor_set  39 02 0d 00                             
+  0x00B6E   Sca_floor_set  39 03 0d 00                             
+  0x00B72   Sca_floor_set  39 04 0d 00                             
+  0x00B76   Nop            00                                      
+  0x00B77   Nop            00                                      
+  0x00B78 Ifel_ck        06 00 96 00                             
+  0x00B7C   Ck             21 03 d2 00                               ; Ck(3,0xD2)==0
+  0x00B80   Aot_set        2c 06 03 41 00 00 80 f3 02 a4 88 13 ..    ; Aot_set slot=6 sce=3 ev->sub04 (ff 00 18 04)
+  0x00B94   Item_aot_set   50 07 09 31 00 00 1e fb c6 ad e8 03 ..    ; Item_aot_set slot=7 ITEM 0x15 H. Gun Bullets x30 flag=168
+  0x00BAA   Sce_em_set     44 00 16 88 00 00 00 d3 e0 fc 00 00 ..    ; Sce_em_set slot=0 TYP=0x16 beh=0x88 pos=(-800, 0, -20600) yaw=1024 b4..7=00 00 00 d3
+  0x00BBE   Sce_em_set     44 01 10 86 00 00 01 d4 f8 f8 00 00 ..    ; Sce_em_set slot=1 TYP=0x10 beh=0x86 pos=(-1800, 0, -19600) yaw=512 b4..7=00 00 01 d4
+  0x00BD2   Sce_em_set     44 02 10 86 00 00 01 d5 f8 f8 00 00 ..    ; Sce_em_set slot=2 TYP=0x10 beh=0x86 pos=(-1800, 0, -21600) yaw=3584 b4..7=00 00 01 d5
+  0x00BE6   Sce_em_set     44 03 11 86 00 00 01 d6 c8 00 00 00 ..    ; Sce_em_set slot=3 TYP=0x11 beh=0x86 pos=(200, 0, -21600) yaw=2560 b4..7=00 00 01 d6
+  0x00BFA   Sce_em_set     44 04 11 86 00 00 01 d7 c8 00 00 00 ..    ; Sce_em_set slot=4 TYP=0x11 beh=0x86 pos=(200, 0, -19600) yaw=1536 b4..7=00 00 01 d7
+  0x00C0E   Else_ck        07 00 6a 00                             
+  0x00C12   Sce_em_set     44 00 16 02 00 00 00 d3 22 0b 00 00 ..    ; Sce_em_set slot=0 TYP=0x16 beh=0x02 pos=(2850, 0, -10300) yaw=0 b4..7=00 00 00 d3
+  0x00C26   Sce_em_set     44 01 10 02 00 00 01 d4 06 e6 00 00 ..    ; Sce_em_set slot=1 TYP=0x10 beh=0x02 pos=(-6650, 0, -10300) yaw=1024 b4..7=00 00 01 d4
+  0x00C3A   Sce_em_set     44 02 10 02 00 00 01 d5 78 ec 00 00 ..    ; Sce_em_set slot=2 TYP=0x10 beh=0x02 pos=(-5000, 0, -19750) yaw=2560 b4..7=00 00 01 d5
+  0x00C4E   Sce_em_set     44 03 11 02 00 00 01 d6 f0 23 00 00 ..    ; Sce_em_set slot=3 TYP=0x11 beh=0x02 pos=(9200, 0, -14450) yaw=2048 b4..7=00 00 01 d6
+  0x00C62   Sce_em_set     44 04 11 02 00 00 01 d7 a8 16 00 00 ..    ; Sce_em_set slot=4 TYP=0x11 beh=0x02 pos=(5800, 0, -19150) yaw=1024 b4..7=00 00 01 d7
+  0x00C76   Nop            00                                      
+  0x00C77   Nop            00                                      
+  0x00C78 Evt_end        01 00                                   
+
+=== sub01
+  0x00C7A Aot_reset      46 05 03 31 ff 00 18 05 00 00             ; Aot_reset slot=5 sce=3 ev->sub05
+  0x00C84 Evt_end        01 00                                   
+
+=== sub02
+  0x00C86 Aot_reset      46 02 00 00 00 00 00 00 00 00             ; Aot_reset slot=2 sce=0 ev->sub00
+  0x00C90 Set            22 04 c3 01                               ; SET (4,0xC3)=1
+  0x00C94 Message_on     2b 00 ff ff                               ; Message_on 0  "You've opened the lock."
+  0x00C98 Evt_next       02                                      
+  0x00C99 Nop            00                                      
+  0x00C9A Aot_reset      46 01 02 31 4f aa 00 00 8f 9b             ; Aot_reset slot=1 sce=2 (TUER scharf)
+  0x00CA4 Evt_end        01 00                                   
+
+=== sub03
+  0x00CA6 Message_on     2b 01 80 ff                               ; Message_on 1  "A beautiful painting.There's a switch below. / Will you push it? "
+  0x00CAA Evt_next       02                                      
+  0x00CAB Nop            00                                      
+  0x00CAC Ifel_ck        06 00 a0 00                             
+  0x00CB0   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x00CB4   Set            22 03 6a 01                               ; SET (3,0x6A)=1
+  0x00CB8   Aot_reset      46 05 00 00 00 00 00 00 00 00             ; Aot_reset slot=5 sce=0 ev->sub00
+  0x00CC2   Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00CC6   Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00CCA   Cut_chg        29 05                                     ; Cut_chg 5
+  0x00CCC   Work_set       2e 03 00                                  ; Work_set -> Prop obj 0
+  0x00CCF   Nop            00                                      
+  0x00CD0   Speed_set      2f 01 00 00                             
+  0x00CD4   Speed_set      2f 07 fe ff                             
+  0x00CD8   For            0d 00 06 00 14 00                       
+  0x00CDE   Add_aspeed     31                                      
+  0x00CDF   Add_speed      30                                      
+  0x00CE0   Evt_next       02                                      
+  0x00CE1   Nop            00                                      
+  0x00CE2   Next           0e 00                                   
+  0x00CE4   For            0d 00 2c 00 0a 00                       
+  0x00CEA   For            0d 00 04 00 0a 00                       
+  0x00CF0   Add_speed      30                                      
+  0x00CF1   Evt_next       02                                      
+  0x00CF2   Next           0e 00                                   
+  0x00CF4   Speed_set      2f 07 03 00                             
+  0x00CF8   For            0d 00 06 00 03 00                       
+  0x00CFE   Add_aspeed     31                                      
+  0x00CFF   Add_speed      30                                      
+  0x00D00   Evt_next       02                                      
+  0x00D01   Nop            00                                      
+  0x00D02   Next           0e 00                                   
+  0x00D04   Speed_set      2f 07 fd ff                             
+  0x00D08   For            0d 00 06 00 03 00                       
+  0x00D0E   Add_aspeed     31                                      
+  0x00D0F   Add_speed      30                                      
+  0x00D10   Evt_next       02                                      
+  0x00D11   Nop            00                                      
+  0x00D12   Next           0e 00                                   
+  0x00D14   Next           0e 00                                   
+  0x00D16   Sca_id_set     37 00 0d 00                             
+  0x00D1A   Sca_id_set     37 01 0d 00                             
+  0x00D1E   Sca_id_set     37 02 0d 00                             
+  0x00D22   Sca_id_set     37 03 0d 00                             
+  0x00D26   Sca_id_set     37 04 0d 00                             
+  0x00D2A   Sca_floor_set  39 00 0d 00                             
+  0x00D2E   Sca_floor_set  39 01 0d 00                             
+  0x00D32   Sca_floor_set  39 02 0d 00                             
+  0x00D36   Sca_floor_set  39 03 0d 00                             
+  0x00D3A   Sca_floor_set  39 04 0d 00                             
+  0x00D3E   Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x00D42   Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x00D46   Cut_auto       3c 01                                   
+  0x00D48   Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D4B   Nop            00                                      
+  0x00D4C   Plc_ret        42                                      
+  0x00D4D   Nop            00                                      
+  0x00D4E   Endif          08 00                                   
+  0x00D50 Evt_end        01 00                                   
+
+=== sub04
+  0x00D52 Aot_reset      46 06 00 00 00 00 00 00 00 00             ; Aot_reset slot=6 sce=0 ev->sub00
+  0x00D5C Sleep          09 0a 01 00                             
+  0x00D60 Set            22 03 d2 01                               ; SET (3,0xD2)=1
+  0x00D64 Evt_end        01 00                                   
+
+=== sub05
+  0x00D66 Message_on     2b 01 80 ff                               ; Message_on 1  "A beautiful painting.There's a switch below. / Will you push it? "
+  0x00D6A Evt_next       02                                      
+  0x00D6B Nop            00                                      
+  0x00D6C Ifel_ck        06 00 0c 00                             
+  0x00D70   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x00D74   Message_on     2b 05 ff ff                               ; Message_on 5  "The switch is not responding..."
+  0x00D78   Evt_next       02                                      
+  0x00D79   Nop            00                                      
+  0x00D7A   Endif          08 00                                   
+  0x00D7C Evt_end        01 00                                   

@@ -1,0 +1,21 @@
+ROOM3021  (re15_port/shared_assets/PSX/STAGE3/ROOM3021.RDT)
+
+=== main00
+  0x00B3A Door_aot_set   3b 00 02 31 00 00 56 96 66 a4 58 02 ..    ; Door_aot_set slot=0 sce=2 -> ROOM3011 cut=6
+  0x00B5A Aot_set        2c 01 01 31 00 00 14 ba 96 ce 80 0c ..    ; Aot_set slot=1 TEXT msg 4 " / It's locked."
+  0x00B6E Aot_set        2c 03 01 31 00 00 44 99 08 bc ae 15 ..    ; Aot_set slot=3 TEXT msg 1 "The car is locked, I can't get inside."
+  0x00B82 Aot_set        2c 04 01 31 00 00 00 ce 6e 92 78 05 ..    ; Aot_set slot=4 TEXT msg 1 "The car is locked, I can't get inside."
+  0x00B96 Aot_set        2c 05 01 31 00 00 16 a9 d0 8a e8 03 ..    ; Aot_set slot=5 TEXT msg 3 "The panel is smashed and doesn't work."
+  0x00BAA Evt_end        01 00                                   
+
+=== sub00
+  0x00BB0 Ifel_ck        06 00 42 00                             
+  0x00BB4   Ck             21 04 c7 01                               ; Ck(4,0xC7)==1
+  0x00BB8   Sce_em_set     44 00 49 00 00 00 00 ff 64 9c 00 00 ..    ; Sce_em_set slot=0 TYP=0x49 beh=0x00 pos=(-25500, 0, -19500) yaw=0 b4..7=00 00 00 ff
+  0x00BCC   Sce_em_set     44 01 4b 00 00 00 00 ff 40 a2 00 00 ..    ; Sce_em_set slot=1 TYP=0x4B beh=0x00 pos=(-24000, 0, -21000) yaw=0 b4..7=00 00 00 ff
+  0x00BE0   Aot_set        2c 02 01 31 00 00 4c d2 64 ce c4 09 ..    ; Aot_set slot=2 TEXT msg 2 "It's an open window. / I could boost Sherry in there.Not a good idea.Too dark, and there m"
+  0x00BF4   Endif          08 00                                   
+  0x00BF6 Evt_end        01 00                                   
+
+=== sub01
+  0x00BF8 Evt_end        01 00                                   

@@ -1,0 +1,136 @@
+ROOM5031  (re15_port/shared_assets/PSX/STAGE5/ROOM5031.RDT)
+
+=== main00
+  0x00E66 Door_aot_set   3b 00 02 31 00 00 5c 95 d0 bc 60 09 ..    ; Door_aot_set slot=0 sce=2 -> ROOM5041 cut=0
+  0x00E86 Door_aot_set   3b 01 02 31 00 00 d0 bc b0 eb 10 0e ..    ; Door_aot_set slot=1 sce=2 -> ROOM5001 cut=0
+  0x00EA6 Door_aot_set   3b 02 02 31 00 00 bc e9 d0 bc 60 09 ..    ; Door_aot_set slot=2 sce=2 -> ROOM5071 cut=0
+  0x00EC6 Door_aot_set   3b 03 02 31 00 00 34 bd 94 94 10 0e ..    ; Door_aot_set slot=3 sce=2 -> ROOM50A1 cut=0
+  0x00EE6 Aot_set        2c 04 01 b1 00 00 60 a5 8c d8 78 a1 ..    ; Aot_set slot=4 TEXT msg 46836 "<?>"
+  0x00F02 Obj_model_set  2d 01 03 00 01 00 0a 00 12 00 7a a9 ..    ; Obj_model_set obj=1 pos=(-22150,-7884,-6615)
+  0x00F24 Obj_model_set  2d 02 03 00 01 00 0a 00 12 00 d2 a5 ..    ; Obj_model_set obj=2 pos=(-23086,-4176,-7636)
+  0x00F46 Obj_model_set  2d 03 03 00 01 00 0a 00 12 00 f7 a9 ..    ; Obj_model_set obj=3 pos=(-22025,-4176,-6574)
+  0x00F68 Obj_model_set  2d 04 03 00 01 00 0a 00 12 00 78 9d ..    ; Obj_model_set obj=4 pos=(-25224,-5412,-9760)
+  0x00F8A Obj_model_set  2d 05 03 00 01 00 0a 00 12 00 5e a1 ..    ; Obj_model_set obj=5 pos=(-24226,-5418,-8715)
+  0x00FAC Obj_model_set  2d 06 03 00 01 00 0a 00 12 00 b4 a5 ..    ; Obj_model_set obj=6 pos=(-23116,-2970,-7662)
+  0x00FCE Obj_model_set  2d 07 03 00 01 00 0a 00 12 00 99 a1 ..    ; Obj_model_set obj=7 pos=(-24167,-6649,-8708)
+  0x00FF0 Obj_model_set  2d 08 03 00 01 00 0a 00 12 00 d0 9d ..    ; Obj_model_set obj=8 pos=(-25136,-2970,-9710)
+  0x01012 Obj_model_set  2d 09 03 00 01 00 0a 00 12 00 f4 ad ..    ; Obj_model_set obj=9 pos=(-21004,-2970,-5549)
+  0x01034 Obj_model_set  2d 0a 03 00 01 00 0a 00 12 00 d4 ad ..    ; Obj_model_set obj=10 pos=(-21036,-5412,-5562)
+  0x01056 Obj_model_set  2d 0b 03 00 01 00 0a 00 12 00 de a9 ..    ; Obj_model_set obj=11 pos=(-22050,-6660,-6624)
+  0x01078 Evt_end        01 00                                   
+
+=== sub00
+  0x01088 Ifel_ck        06 00 22 00                             
+  0x0108C   Ck             21 03 73 00                               ; Ck(3,0x73)==0
+  0x01090   Aot_set        2c 05 03 b1 00 00 84 9f b0 d2 9c 9b ..    ; Aot_set slot=5 sce=3 ev->sub218 (78 a1 80 da)
+  0x010AC   Endif          08 00                                   
+  0x010AE Ifel_ck        06 00 2e 00                             
+  0x010B2   Ck             21 03 2f 00                               ; Ck(3,0x2F)==0
+  0x010B6   Sce_em_set     44 00 4b 40 00 00 00 ff 14 37 00 00 ..    ; Sce_em_set slot=0 TYP=0x4B beh=0x40 pos=(14100, 0, 17050) yaw=0 b4..7=00 00 00 ff
+  0x010CA   Sce_em_set     44 01 29 61 00 00 00 ff 18 47 00 00 ..    ; Sce_em_set slot=1 TYP=0x29 beh=0x61 pos=(18200, 0, 17050) yaw=2048 b4..7=00 00 00 ff
+  0x010DE   Endif          08 00                                   
+  0x010E0 Ifel_ck        06 00 22 00                             
+  0x010E4   Ck             21 03 2f 00                               ; Ck(3,0x2F)==0
+  0x010E8   Aot_set        2c 06 03 c1 00 00 c4 be a0 dd ff b4 ..    ; Aot_set slot=6 sce=3 ev->sub239 (b0 b9 9a ef)
+  0x01104   Endif          08 00                                   
+  0x01106 Evt_end        01 00                                   
+
+=== sub01
+  0x01108 Evt_end        01 00                                   
+
+=== sub02
+  0x0110A Message_on     2b 00 ff ff                               ; Message_on 0  "A map of the lab is available here.Will you file the laboratory map? "
+  0x0110E Evt_next       02                                      
+  0x0110F Nop            00                                      
+  0x01110 Ifel_ck        06 00 1e 00                             
+  0x01114   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x01118   Aot_reset      46 05 00 00 00 00 00 00 00 00             ; Aot_reset slot=5 sce=0 ev->sub00
+  0x01122   Sleep          09 0a 01 00                             
+  0x01126   Set            22 03 73 01                               ; SET (3,0x73)=1
+  0x0112A   Message_on     2b 01 ff ff                               ; Message_on 1  "You've taken the laboratory map."
+  0x0112E   Evt_next       02                                      
+  0x0112F   Nop            00                                      
+  0x01130   Endif          08 00                                   
+  0x01132 Evt_end        01 00                                   
+
+=== sub03
+  0x01134 Set            22 03 2f 01                               ; SET (3,0x2F)=1
+  0x01138 Aot_reset      46 06 00 00 00 00 00 00 00 00             ; Aot_reset slot=6 sce=0 ev->sub00
+  0x01142 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x01146 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0114A Cut_chg        29 0a                                     ; Cut_chg 10
+  0x0114C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0114F Nop            00                                      
+  0x01150 Plc_neck       41 01 86 a7 e8 ea b4 e2 64 64           
+  0x0115A Plc_dest       40 00 04 20 32 bb ac e6                   ; Plc_dest mode=4 (-17614,-6484)
+  0x01162 Gosub          18 04                                     ; Gosub -> sub04
+  0x01164 Plc_dest       40 00 09 20 f6 ab 78 de                   ; Plc_dest mode=9 (-21514,-8584)
+  0x0116C Gosub          18 04                                     ; Gosub -> sub04
+  0x0116E Sleep          09 0a 14 00                             
+  0x01172 Cut_chg        29 08                                     ; Cut_chg 8
+  0x01174 Plc_dest       40 00 04 20 f6 ab 78 de                   ; Plc_dest mode=4 (-21514,-8584)
+  0x0117C Gosub          18 04                                     ; Gosub -> sub04
+  0x0117E Plc_dest       40 00 09 20 86 a7 b4 e2                   ; Plc_dest mode=9 (-22650,-7500)
+  0x01186 Gosub          18 04                                     ; Gosub -> sub04
+  0x01188 Sleep          09 0a 0a 00                             
+  0x0118C Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x01190 Sleep          09 0a 32 00                             
+  0x01194 Cut_chg        29 07                                     ; Cut_chg 7
+  0x01196 Sleep          09 0a 14 00                             
+  0x0119A Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x0119D Nop            00                                      
+  0x0119E Member_set     34 0c 41 00                               ; Member_set m=0x0C val=65
+  0x011A2 Sleep          09 0a 14 00                             
+  0x011A6 Cut_chg        29 0b                                     ; Cut_chg 11
+  0x011A8 Set            22 01 1e 01                               ; SET (1,0x1E)=1
+  0x011AC Member_set     34 0c 61 00                               ; Member_set m=0x0C val=97
+  0x011B0 Sleep          09 0a 01 00                             
+  0x011B4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x011B7 Nop            00                                      
+  0x011B8 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x011BC Plc_flg        43 00 80 00                             
+  0x011C0 Sleep          09 0a 01 00                             
+  0x011C4 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x011C7 Nop            00                                      
+  0x011C8 Plc_dest       40 00 08 21 38 31 9a 42                   ; Plc_dest mode=8 (12600,17050)
+  0x011D0 Gosub          18 05                                     ; Gosub -> sub05
+  0x011D2 Plc_dest       40 00 09 21 68 29 9a 42                   ; Plc_dest mode=9 (10600,17050)
+  0x011DA Gosub          18 05                                     ; Gosub -> sub05
+  0x011DC Plc_dest       40 00 05 21 68 29 9a 42                   ; Plc_dest mode=5 (10600,17050)
+  0x011E4 Gosub          18 05                                     ; Gosub -> sub05
+  0x011E6 Set            22 01 1e 00                               ; SET (1,0x1E)=0
+  0x011EA Cut_chg        29 09                                     ; Cut_chg 9
+  0x011EC Message_on     2b 03 00 00                               ; Message_on 3  "Elza: Sherry!"
+  0x011F0 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x011F3 Nop            00                                      
+  0x011F4 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x011F8 Sleep          09 0a 32 00                             
+  0x011FC Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01200 Plc_flg        43 00 80 00                             
+  0x01204 Sleep          09 0a 33 00                             
+  0x01208 Cut_chg        29 01                                     ; Cut_chg 1
+  0x0120A Cut_auto       3c 01                                   
+  0x0120C Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x01210 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x01214 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01217 Nop            00                                      
+  0x01218 Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x01222 Plc_ret        42                                      
+  0x01223 Nop            00                                      
+  0x01224 Evt_end        01 00                                   
+
+=== sub04
+  0x01226 Do             11 00 08 00                             
+  0x0122A Evt_next       02                                      
+  0x0122B Nop            00                                      
+  0x0122C Edwhile        12 04                                   
+  0x0122E Ck             21 05 20 00                               ; Ck(5,0x20)==0
+  0x01232 Evt_end        01 00                                   
+
+=== sub05
+  0x01234 Do             11 00 08 00                             
+  0x01238 Evt_next       02                                      
+  0x01239 Nop            00                                      
+  0x0123A Edwhile        12 04                                   
+  0x0123C Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x01240 Evt_end        01 00                                   

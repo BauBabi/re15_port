@@ -1,0 +1,722 @@
+ROOM1030  (re15_port/shared_assets/PSX/STAGE1/ROOM1030.RDT)
+
+=== main00
+  0x01C5E Sce_bgm_control 54 00 01 00 00 00                       
+  0x01C64 Sce_bgm_control 54 01 01 00 00 00                       
+  0x01C6A Door_aot_set   3b 00 02 31 00 00 dc 05 18 ca dc 05 ..    ; Door_aot_set slot=0 sce=2 -> ROOM1050 cut=0
+  0x01C8A Door_aot_set   3b 01 02 31 00 00 fc bd dc ec dc 05 ..    ; Door_aot_set slot=1 sce=2 -> ROOM1070 cut=0
+  0x01CAA Door_aot_set   3b 02 02 31 00 00 94 94 a4 ed b0 04 ..    ; Door_aot_set slot=2 sce=2 -> ROOM1040 cut=0
+  0x01CCA Aot_set        2c 03 04 41 00 00 44 b2 10 dc 74 0e ..    ; Aot_set slot=3 sce=4 ev->sub00 (05 00 20 00)
+  0x01CDE Aot_set        2c 04 04 42 00 00 30 c6 1c a8 e0 2e ..    ; Aot_set slot=4 sce=4 ev->sub00 (05 00 21 00)
+  0x01CF2 Aot_set        2c 05 04 42 00 00 9c cd 2c 9d f0 23 ..    ; Aot_set slot=5 sce=4 ev->sub00 (05 00 22 00)
+  0x01D06 Aot_set        2c 06 00 42 00 00 5c 95 4c a0 88 77 ..    ; Aot_set slot=6 sce=0 ev->sub00 (00 00 00 00)
+  0x01D1A Aot_set        2c 07 01 31 00 00 4a c8 6c 9d 72 05 ..    ; Aot_set slot=7 TEXT msg 2 "The emergency shutters have / already been activated."
+  0x01D2E Aot_set        2c 08 01 31 00 00 60 ef dc 9a 00 10 ..    ; Aot_set slot=8 TEXT msg 3 "A payphone.The line appears to be down..."
+  0x01D42 Aot_set        2c 09 01 31 00 00 e0 01 67 c2 50 09 ..    ; Aot_set slot=9 TEXT msg 4 "Some sort of reference chart for / identifying emergency severity.""
+  0x01D56 Aot_set        2c 0a 01 31 00 00 ca be 08 d5 7e 4a ..    ; Aot_set slot=10 TEXT msg 6 "There's nothing useful on the counter."
+  0x01D6A Aot_set        2c 0b 01 31 00 00 f7 d1 6a d0 4d 13 ..    ; Aot_set slot=11 TEXT msg 8 "Seems like whoever rode this crashed / it through the front gate.Wonder if they're ok..."
+  0x01D7E Aot_set        2c 0c 01 31 00 00 ae d0 38 ab 97 1e ..    ; Aot_set slot=12 TEXT msg 12 "There's glass from the front door / all over the floor."
+  0x01D92 Aot_set        2c 0d 01 31 00 00 62 f0 14 ad 81 04 ..    ; Aot_set slot=13 TEXT msg 13 "Desks for filling out inquiry forms."
+  0x01DA6 Aot_set        2c 0e 01 31 00 00 a2 ef d8 b5 33 05 ..    ; Aot_set slot=14 TEXT msg 14 "Seems like even the emergency / broadcast has gone offline..."
+  0x01DBA Aot_set        2c 0f 01 31 00 00 5f b3 ab d0 41 04 ..    ; Aot_set slot=15 TEXT msg 15 "A map of dowtown Raccoon City. / Population est. 100,000 or more..."
+  0x01DCE Aot_set        2c 10 01 31 00 00 ec b2 86 e4 8d 04 ..    ; Aot_set slot=16 TEXT msg 16 "An emergency alarm.The red light works, but the alarm / bell appears to be malfunctioning."
+  0x01DE2 Save           24 12 06 00                             
+  0x01DE6 Sce_em_set     44 00 16 0d 00 00 00 00 ee dc 00 00 ..    ; Sce_em_set slot=0 TYP=0x16 beh=0x0D pos=(-8978, 0, -27878) yaw=3072 b4..7=00 00 00 00
+  0x01DFA Sce_em_set     44 01 16 0d 00 00 01 01 4c d2 00 00 ..    ; Sce_em_set slot=1 TYP=0x16 beh=0x0D pos=(-11700, 0, -26671) yaw=3072 b4..7=00 00 01 01
+  0x01E0E Sce_em_set     44 02 16 0d 00 00 01 02 f0 d8 00 00 ..    ; Sce_em_set slot=2 TYP=0x16 beh=0x0D pos=(-10000, 0, -30000) yaw=3072 b4..7=00 00 01 02
+  0x01E22 Sce_em_set     44 03 16 0d 00 00 01 03 e8 ea 00 00 ..    ; Sce_em_set slot=3 TYP=0x16 beh=0x0D pos=(-5400, 0, -28110) yaw=3072 b4..7=00 00 01 03
+  0x01E36 Sce_em_set     44 04 16 0d 00 00 01 04 7c e3 00 00 ..    ; Sce_em_set slot=4 TYP=0x16 beh=0x0D pos=(-7300, 0, -25655) yaw=3072 b4..7=00 00 01 04
+  0x01E4A Sce_em_set     44 05 16 0d 00 00 01 05 7c e3 00 00 ..    ; Sce_em_set slot=5 TYP=0x16 beh=0x0D pos=(-7300, 0, -29655) yaw=3072 b4..7=00 00 01 05
+  0x01E5E Sce_em_set     44 06 16 0d 00 00 01 06 50 c9 00 00 ..    ; Sce_em_set slot=6 TYP=0x16 beh=0x0D pos=(-14000, 0, -28000) yaw=3072 b4..7=00 00 01 06
+  0x01E72 Sce_em_set     44 07 16 0d 00 00 01 07 68 c5 00 00 ..    ; Sce_em_set slot=7 TYP=0x16 beh=0x0D pos=(-15000, 0, -28000) yaw=3072 b4..7=00 00 01 07
+  0x01E86 Sce_em_set     44 08 16 0d 00 00 01 08 80 c1 00 00 ..    ; Sce_em_set slot=8 TYP=0x16 beh=0x0D pos=(-16000, 0, -28000) yaw=3072 b4..7=00 00 01 08
+  0x01E9A Sce_em_set     44 09 16 0d 00 00 01 09 98 bd 00 00 ..    ; Sce_em_set slot=9 TYP=0x16 beh=0x0D pos=(-17000, 0, -28000) yaw=3072 b4..7=00 00 01 09
+  0x01EAE Sce_em_set     44 0a 16 0d 00 00 01 0a b0 b9 00 00 ..    ; Sce_em_set slot=10 TYP=0x16 beh=0x0D pos=(-18000, 0, -28000) yaw=3072 b4..7=00 00 01 0a
+  0x01EC2 Sce_em_set     44 0b 16 0d 00 00 01 0b c8 b5 00 00 ..    ; Sce_em_set slot=11 TYP=0x16 beh=0x0D pos=(-19000, 0, -28000) yaw=3072 b4..7=00 00 01 0b
+  0x01ED6 Sce_em_set     44 0c 16 0d 00 00 01 0c 24 c8 00 00 ..    ; Sce_em_set slot=12 TYP=0x16 beh=0x0D pos=(-14300, 0, -28000) yaw=3072 b4..7=00 00 01 0c
+  0x01EEA Sce_em_set     44 0d 16 0d 00 00 01 0d 3c c4 00 00 ..    ; Sce_em_set slot=13 TYP=0x16 beh=0x0D pos=(-15300, 0, -28000) yaw=3072 b4..7=00 00 01 0d
+  0x01EFE Sce_em_set     44 0e 16 0d 00 00 01 0e 54 c0 00 00 ..    ; Sce_em_set slot=14 TYP=0x16 beh=0x0D pos=(-16300, 0, -28000) yaw=3072 b4..7=00 00 01 0e
+  0x01F12 Sce_em_set     44 0f 16 0d 00 00 01 0f 6c bc 00 00 ..    ; Sce_em_set slot=15 TYP=0x16 beh=0x0D pos=(-17300, 0, -28000) yaw=3072 b4..7=00 00 01 0f
+  0x01F26 Sce_em_set     44 10 16 0d 00 00 01 10 84 b8 00 00 ..    ; Sce_em_set slot=16 TYP=0x16 beh=0x0D pos=(-18300, 0, -28000) yaw=3072 b4..7=00 00 01 10
+  0x01F3A Sce_em_set     44 11 16 0d 00 00 01 11 9c b4 00 00 ..    ; Sce_em_set slot=17 TYP=0x16 beh=0x0D pos=(-19300, 0, -28000) yaw=3072 b4..7=00 00 01 11
+  0x01F4E Sce_em_set     44 12 16 0d 00 00 01 12 f8 c6 00 00 ..    ; Sce_em_set slot=18 TYP=0x16 beh=0x0D pos=(-14600, 0, -28000) yaw=3072 b4..7=00 00 01 12
+  0x01F62 Sce_em_set     44 13 16 0d 00 00 01 13 10 c3 00 00 ..    ; Sce_em_set slot=19 TYP=0x16 beh=0x0D pos=(-15600, 0, -28000) yaw=3072 b4..7=00 00 01 13
+  0x01F76 Obj_model_set  2d 00 00 00 01 00 0a 00 00 00 c4 ea ..    ; Obj_model_set obj=0 pos=(-5436,-5400,-18000)
+  0x01F98 Ifel_ck        06 00 1c 00                             
+  0x01F9C   Ck             21 04 0f 00                               ; Ck(4,0x0F)==0
+  0x01FA0   Aot_set        2c 11 01 31 00 00 2a cd 5b 9d f3 24 ..    ; Aot_set slot=17 TEXT msg 0 "This should keep those things out...For now..."
+  0x01FB4   Else_ck        07 00 1a 00                             
+  0x01FB8   Aot_set        2c 11 01 31 00 00 2a cd 5b 9d f3 24 ..    ; Aot_set slot=17 TEXT msg 1 "Guess it was only a matter of time..."
+  0x01FCC   Nop            00                                      
+  0x01FCD   Nop            00                                      
+  0x01FCE Evt_end        01 00                                   
+
+=== sub00
+  0x01FE8 Set            22 03 74 01                               ; SET (3,0x74)=1
+  0x01FEC Ifel_ck        06 00 1e 00                             
+  0x01FF0   Ck             21 04 0f 01                               ; Ck(4,0x0F)==1
+  0x01FF4   Cut_replace    4b 00 09                                
+  0x01FF7   Cut_replace    4b 03 0a                                
+  0x01FFA   Cut_replace    4b 04 0b                                
+  0x01FFD   Cut_replace    4b 06 0c                                
+  0x02000   Sca_id_set     37 02 06 f7                             
+  0x02004   Sca_id_set     37 03 06 f7                             
+  0x02008   Set            22 05 14 01                               ; SET (5,0x14)=1
+  0x0200C   Endif          08 00                                   
+  0x0200E Ifel_ck        06 00 b4 00                             
+  0x02012   Ck             21 04 0f 01                               ; Ck(4,0x0F)==1
+  0x02016   Save           24 04 00 00                             
+  0x0201A   Save           24 05 00 00                             
+  0x0201E   For            0d 00 9e 00 14 00                       
+  0x02024   Sce_fade_set   53 02 04                                  ; Sce_fade_set 02 04
+  0x02027   Nop            00                                      
+  0x02028   Ifel_ck        06 00 8e 00                             
+  0x0202C     Member_cmp     3e 00 06 05 00 00                         ; Member_cmp(m06 op5 0)
+  0x02032     Switch         13 05 7c 00                             
+  0x02036       Case           14 00 0e 00 00 00                       
+  0x0203C       Pos_set        32 00 ec e1 00 00 8d cb                   ; Pos_set (-7700,0,-13427)
+  0x02044       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02048       Break          1a 00                                   
+  0x0204A       Case           14 00 0e 00 01 00                       
+  0x02050       Pos_set        32 00 4c e1 00 00 3a bd                   ; Pos_set (-7860,0,-17094)
+  0x02058       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x0205C       Break          1a 00                                   
+  0x0205E       Case           14 00 0e 00 02 00                       
+  0x02064       Pos_set        32 00 3e fb 00 00 8b d3                   ; Pos_set (-1218,0,-11381)
+  0x0206C       Member_set     34 04 cf 01                               ; Member_set m=0x04 val=463
+  0x02070       Break          1a 00                                   
+  0x02072       Case           14 00 0e 00 03 00                       
+  0x02078       Pos_set        32 00 58 c0 00 00 8e d0                   ; Pos_set (-16296,0,-12146)
+  0x02080       Break          1a 00                                   
+  0x02082       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02086       Case           14 00 0e 00 04 00                       
+  0x0208C       Pos_set        32 00 d3 cd 00 00 d0 bc                   ; Pos_set (-12845,0,-17200)
+  0x02094       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02098       Break          1a 00                                   
+  0x0209A       Case           14 00 0e 00 05 00                       
+  0x020A0       Pos_set        32 00 1f d6 00 00 a1 ab                   ; Pos_set (-10721,0,-21599)
+  0x020A8       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x020AC       Break          1a 00                                   
+  0x020AE       Default        15 00 16 00                             
+  0x020B2     Calc           26 00 00 05 01 00                       
+  0x020B8     Endif          08 00                                   
+  0x020BA   Calc           26 00 00 04 01 00                       
+  0x020C0   Next           0e 00                                   
+  0x020C2   Else_ck        07 00 b0 00                             
+  0x020C6   Save           24 04 00 00                             
+  0x020CA   Save           24 05 00 00                             
+  0x020CE   For            0d 00 9c 00 14 00                       
+  0x020D4   Sce_fade_set   53 02 04                                  ; Sce_fade_set 02 04
+  0x020D7   Nop            00                                      
+  0x020D8   Ifel_ck        06 00 8c 00                             
+  0x020DC     Member_cmp     3e 00 06 05 00 00                         ; Member_cmp(m06 op5 0)
+  0x020E2     Switch         13 05 7a 00                             
+  0x020E6       Case           14 00 0e 00 00 00                       
+  0x020EC       Pos_set        32 00 ee dc 00 00 1a 93                   ; Pos_set (-8978,0,-27878)
+  0x020F4       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x020F8       Break          1a 00                                   
+  0x020FA       Case           14 00 0e 00 01 00                       
+  0x02100       Pos_set        32 00 4c d2 00 00 d1 97                   ; Pos_set (-11700,0,-26671)
+  0x02108       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x0210C       Break          1a 00                                   
+  0x0210E       Case           14 00 0e 00 02 00                       
+  0x02114       Pos_set        32 00 f0 d8 00 00 d0 8a                   ; Pos_set (-10000,0,-30000)
+  0x0211C       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02120       Break          1a 00                                   
+  0x02122       Case           14 00 0e 00 03 00                       
+  0x02128       Pos_set        32 00 e8 ea 00 00 32 92                   ; Pos_set (-5400,0,-28110)
+  0x02130       Break          1a 00                                   
+  0x02132       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02136       Case           14 00 0e 00 04 00                       
+  0x0213C       Pos_set        32 00 7c e3 00 00 c9 9b                   ; Pos_set (-7300,0,-25655)
+  0x02144       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x02148       Break          1a 00                                   
+  0x0214A       Case           14 00 0e 00 05 00                       
+  0x02150       Pos_set        32 00 7c e3 00 00 29 8c                   ; Pos_set (-7300,0,-29655)
+  0x02158       Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x0215C       Break          1a 00                                   
+  0x0215E       Eswitch        16 00                                   
+  0x02160     Calc           26 00 00 05 01 00                       
+  0x02166     Endif          08 00                                   
+  0x02168   Calc           26 00 00 04 01 00                       
+  0x0216E   Next           0e 00                                   
+  0x02170   Nop            00                                      
+  0x02171   Nop            00                                      
+  0x02172 Evt_exec       04 ff 18 0b                               ; Evt_exec -> sub11
+  0x02176 Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x0217A Save           24 07 00 00                             
+  0x0217E Evt_end        01 00                                   
+
+=== sub01
+  0x02180 Ifel_ck        06 00 20 00                             
+  0x02184   Ck             21 03 74 01                               ; Ck(3,0x74)==1
+  0x02188   Ck             21 04 0f 00                               ; Ck(4,0x0F)==0
+  0x0218C   Ck             21 05 20 01                               ; Ck(5,0x20)==1
+  0x02190   Ifel_ck        06 00 0e 00                             
+  0x02194     Ck             21 05 22 01                               ; Ck(5,0x22)==1
+  0x02198     Set            22 04 0f 01                               ; SET (4,0x0F)=1
+  0x0219C     Evt_exec       04 ff 18 08                               ; Evt_exec -> sub08
+  0x021A0     Endif          08 00                                   
+  0x021A2   Endif          08 00                                   
+  0x021A4 Evt_end        01 00                                   
+
+=== sub02
+  0x021A6 Gosub          18 04                                     ; Gosub -> sub04
+  0x021A8 Ifel_ck        06 00 2e 00                             
+  0x021AC   Ck             21 05 14 01                               ; Ck(5,0x14)==1
+  0x021B0   Aot_reset      46 04 00 00 00 00 00 00 00 00             ; Aot_reset slot=4 sce=0 ev->sub00
+  0x021BA   Aot_reset      46 06 05 42 00 00 00 00 00 00             ; Aot_reset slot=6 sce=5 ev->sub00
+  0x021C4   Evt_next       02                                      
+  0x021C5   Nop            00                                      
+  0x021C6   Gosub          18 03                                     ; Gosub -> sub03
+  0x021C8   Ifel_ck        06 00 0c 00                             
+  0x021CC     Cmp            23 00 07 03 04 00                         ; Cmp(var07 op3 4)
+  0x021D2     Evt_next       02                                      
+  0x021D3     Nop            00                                      
+  0x021D4     Gosub          18 06                                     ; Gosub -> sub06
+  0x021D6     Endif          08 00                                   
+  0x021D8   Endif          08 00                                   
+  0x021DA Aot_reset      46 04 04 42 05 00 21 00 01 00             ; Aot_reset slot=4 sce=4 ev->sub00
+  0x021E4 Aot_reset      46 06 00 00 00 00 00 00 00 00             ; Aot_reset slot=6 sce=0 ev->sub00
+  0x021EE Evt_next       02                                      
+  0x021EF Nop            00                                      
+  0x021F0 Goto           17 ff ff 00 b6 ff                       
+  0x021F6 Evt_end        01 00                                   
+
+=== sub03
+  0x021F8 Save           24 04 00 00                             
+  0x021FC Save           24 07 00 00                             
+  0x02200 For            0d 00 1e 00 14 00                       
+  0x02206 Sce_fade_set   53 02 04                                  ; Sce_fade_set 02 04
+  0x02209 Nop            00                                      
+  0x0220A Ifel_ck        06 00 0e 00                             
+  0x0220E   Member_cmp     3e 00 0f 00 06 00                         ; Member_cmp(m0F op0 6)
+  0x02214   Calc           26 00 00 07 01 00                       
+  0x0221A   Endif          08 00                                   
+  0x0221C Calc           26 00 00 04 01 00                       
+  0x02222 Next           0e 00                                   
+  0x02224 Evt_end        01 00                                   
+
+=== sub04
+  0x02226 Ifel_ck        06 00 86 02                             
+  0x0222A   Ck             21 05 21 01                               ; Ck(5,0x21)==1
+  0x0222E   Ifel_ck        06 00 1c 00                             
+  0x02232     Ck             21 05 00 01                               ; Ck(5,0x00)==1
+  0x02236     Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x02239     Nop            00                                      
+  0x0223A     Ifel_ck        06 00 0e 00                             
+  0x0223E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02244       Gosub          18 05                                     ; Gosub -> sub05
+  0x02246       Set            22 05 00 00                               ; SET (5,0x00)=0
+  0x0224A       Endif          08 00                                   
+  0x0224C     Endif          08 00                                   
+  0x0224E   Ifel_ck        06 00 1c 00                             
+  0x02252     Ck             21 05 01 01                               ; Ck(5,0x01)==1
+  0x02256     Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x02259     Nop            00                                      
+  0x0225A     Ifel_ck        06 00 0e 00                             
+  0x0225E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02264       Gosub          18 05                                     ; Gosub -> sub05
+  0x02266       Set            22 05 01 00                               ; SET (5,0x01)=0
+  0x0226A       Endif          08 00                                   
+  0x0226C     Endif          08 00                                   
+  0x0226E   Ifel_ck        06 00 1c 00                             
+  0x02272     Ck             21 05 02 01                               ; Ck(5,0x02)==1
+  0x02276     Work_set       2e 02 02                                  ; Work_set -> NPC-Slot 2
+  0x02279     Nop            00                                      
+  0x0227A     Ifel_ck        06 00 0e 00                             
+  0x0227E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02284       Gosub          18 05                                     ; Gosub -> sub05
+  0x02286       Set            22 05 02 00                               ; SET (5,0x02)=0
+  0x0228A       Endif          08 00                                   
+  0x0228C     Endif          08 00                                   
+  0x0228E   Ifel_ck        06 00 1c 00                             
+  0x02292     Ck             21 05 03 01                               ; Ck(5,0x03)==1
+  0x02296     Work_set       2e 02 03                                  ; Work_set -> NPC-Slot 3
+  0x02299     Nop            00                                      
+  0x0229A     Ifel_ck        06 00 0e 00                             
+  0x0229E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x022A4       Gosub          18 05                                     ; Gosub -> sub05
+  0x022A6       Set            22 05 03 00                               ; SET (5,0x03)=0
+  0x022AA       Endif          08 00                                   
+  0x022AC     Endif          08 00                                   
+  0x022AE   Ifel_ck        06 00 1c 00                             
+  0x022B2     Ck             21 05 04 01                               ; Ck(5,0x04)==1
+  0x022B6     Work_set       2e 02 04                                  ; Work_set -> NPC-Slot 4
+  0x022B9     Nop            00                                      
+  0x022BA     Ifel_ck        06 00 0e 00                             
+  0x022BE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x022C4       Gosub          18 05                                     ; Gosub -> sub05
+  0x022C6       Set            22 05 04 00                               ; SET (5,0x04)=0
+  0x022CA       Endif          08 00                                   
+  0x022CC     Endif          08 00                                   
+  0x022CE   Ifel_ck        06 00 1c 00                             
+  0x022D2     Ck             21 05 05 01                               ; Ck(5,0x05)==1
+  0x022D6     Work_set       2e 02 05                                  ; Work_set -> NPC-Slot 5
+  0x022D9     Nop            00                                      
+  0x022DA     Ifel_ck        06 00 0e 00                             
+  0x022DE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x022E4       Gosub          18 05                                     ; Gosub -> sub05
+  0x022E6       Set            22 05 05 00                               ; SET (5,0x05)=0
+  0x022EA       Endif          08 00                                   
+  0x022EC     Endif          08 00                                   
+  0x022EE   Ifel_ck        06 00 1c 00                             
+  0x022F2     Ck             21 05 06 01                               ; Ck(5,0x06)==1
+  0x022F6     Work_set       2e 02 06                                  ; Work_set -> NPC-Slot 6
+  0x022F9     Nop            00                                      
+  0x022FA     Ifel_ck        06 00 0e 00                             
+  0x022FE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02304       Gosub          18 05                                     ; Gosub -> sub05
+  0x02306       Set            22 05 06 00                               ; SET (5,0x06)=0
+  0x0230A       Endif          08 00                                   
+  0x0230C     Endif          08 00                                   
+  0x0230E   Ifel_ck        06 00 1c 00                             
+  0x02312     Ck             21 05 07 01                               ; Ck(5,0x07)==1
+  0x02316     Work_set       2e 02 07                                  ; Work_set -> NPC-Slot 7
+  0x02319     Nop            00                                      
+  0x0231A     Ifel_ck        06 00 0e 00                             
+  0x0231E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02324       Gosub          18 05                                     ; Gosub -> sub05
+  0x02326       Set            22 05 07 00                               ; SET (5,0x07)=0
+  0x0232A       Endif          08 00                                   
+  0x0232C     Endif          08 00                                   
+  0x0232E   Ifel_ck        06 00 1c 00                             
+  0x02332     Ck             21 05 08 01                               ; Ck(5,0x08)==1
+  0x02336     Work_set       2e 02 08                                  ; Work_set -> NPC-Slot 8
+  0x02339     Nop            00                                      
+  0x0233A     Ifel_ck        06 00 0e 00                             
+  0x0233E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02344       Gosub          18 05                                     ; Gosub -> sub05
+  0x02346       Set            22 05 08 00                               ; SET (5,0x08)=0
+  0x0234A       Endif          08 00                                   
+  0x0234C     Endif          08 00                                   
+  0x0234E   Ifel_ck        06 00 1c 00                             
+  0x02352     Ck             21 05 09 01                               ; Ck(5,0x09)==1
+  0x02356     Work_set       2e 02 09                                  ; Work_set -> NPC-Slot 9
+  0x02359     Nop            00                                      
+  0x0235A     Ifel_ck        06 00 0e 00                             
+  0x0235E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02364       Gosub          18 05                                     ; Gosub -> sub05
+  0x02366       Set            22 05 09 00                               ; SET (5,0x09)=0
+  0x0236A       Endif          08 00                                   
+  0x0236C     Endif          08 00                                   
+  0x0236E   Ifel_ck        06 00 1c 00                             
+  0x02372     Ck             21 05 0a 01                               ; Ck(5,0x0A)==1
+  0x02376     Work_set       2e 02 0a                                  ; Work_set -> NPC-Slot 10
+  0x02379     Nop            00                                      
+  0x0237A     Ifel_ck        06 00 0e 00                             
+  0x0237E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02384       Gosub          18 05                                     ; Gosub -> sub05
+  0x02386       Set            22 05 0a 00                               ; SET (5,0x0A)=0
+  0x0238A       Endif          08 00                                   
+  0x0238C     Endif          08 00                                   
+  0x0238E   Ifel_ck        06 00 1c 00                             
+  0x02392     Ck             21 05 0b 01                               ; Ck(5,0x0B)==1
+  0x02396     Work_set       2e 02 0b                                  ; Work_set -> NPC-Slot 11
+  0x02399     Nop            00                                      
+  0x0239A     Ifel_ck        06 00 0e 00                             
+  0x0239E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x023A4       Gosub          18 05                                     ; Gosub -> sub05
+  0x023A6       Set            22 05 0b 00                               ; SET (5,0x0B)=0
+  0x023AA       Endif          08 00                                   
+  0x023AC     Endif          08 00                                   
+  0x023AE   Ifel_ck        06 00 1c 00                             
+  0x023B2     Ck             21 05 0c 01                               ; Ck(5,0x0C)==1
+  0x023B6     Work_set       2e 02 0c                                  ; Work_set -> NPC-Slot 12
+  0x023B9     Nop            00                                      
+  0x023BA     Ifel_ck        06 00 0e 00                             
+  0x023BE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x023C4       Gosub          18 05                                     ; Gosub -> sub05
+  0x023C6       Set            22 05 0c 00                               ; SET (5,0x0C)=0
+  0x023CA       Endif          08 00                                   
+  0x023CC     Endif          08 00                                   
+  0x023CE   Ifel_ck        06 00 1c 00                             
+  0x023D2     Ck             21 05 0d 01                               ; Ck(5,0x0D)==1
+  0x023D6     Work_set       2e 02 0d                                  ; Work_set -> NPC-Slot 13
+  0x023D9     Nop            00                                      
+  0x023DA     Ifel_ck        06 00 0e 00                             
+  0x023DE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x023E4       Gosub          18 05                                     ; Gosub -> sub05
+  0x023E6       Set            22 05 0d 00                               ; SET (5,0x0D)=0
+  0x023EA       Endif          08 00                                   
+  0x023EC     Endif          08 00                                   
+  0x023EE   Ifel_ck        06 00 1c 00                             
+  0x023F2     Ck             21 05 0e 01                               ; Ck(5,0x0E)==1
+  0x023F6     Work_set       2e 02 0e                                  ; Work_set -> NPC-Slot 14
+  0x023F9     Nop            00                                      
+  0x023FA     Ifel_ck        06 00 0e 00                             
+  0x023FE       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02404       Gosub          18 05                                     ; Gosub -> sub05
+  0x02406       Set            22 05 0e 00                               ; SET (5,0x0E)=0
+  0x0240A       Endif          08 00                                   
+  0x0240C     Endif          08 00                                   
+  0x0240E   Ifel_ck        06 00 1c 00                             
+  0x02412     Ck             21 05 0f 01                               ; Ck(5,0x0F)==1
+  0x02416     Work_set       2e 02 0f                                  ; Work_set -> NPC-Slot 15
+  0x02419     Nop            00                                      
+  0x0241A     Ifel_ck        06 00 0e 00                             
+  0x0241E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02424       Gosub          18 05                                     ; Gosub -> sub05
+  0x02426       Set            22 05 0f 00                               ; SET (5,0x0F)=0
+  0x0242A       Endif          08 00                                   
+  0x0242C     Endif          08 00                                   
+  0x0242E   Ifel_ck        06 00 1c 00                             
+  0x02432     Ck             21 05 10 01                               ; Ck(5,0x10)==1
+  0x02436     Work_set       2e 02 10                                  ; Work_set -> NPC-Slot 16
+  0x02439     Nop            00                                      
+  0x0243A     Ifel_ck        06 00 0e 00                             
+  0x0243E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02444       Gosub          18 05                                     ; Gosub -> sub05
+  0x02446       Set            22 05 10 00                               ; SET (5,0x10)=0
+  0x0244A       Endif          08 00                                   
+  0x0244C     Endif          08 00                                   
+  0x0244E   Ifel_ck        06 00 1c 00                             
+  0x02452     Ck             21 05 11 01                               ; Ck(5,0x11)==1
+  0x02456     Work_set       2e 02 11                                  ; Work_set -> NPC-Slot 17
+  0x02459     Nop            00                                      
+  0x0245A     Ifel_ck        06 00 0e 00                             
+  0x0245E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02464       Gosub          18 05                                     ; Gosub -> sub05
+  0x02466       Set            22 05 11 00                               ; SET (5,0x11)=0
+  0x0246A       Endif          08 00                                   
+  0x0246C     Endif          08 00                                   
+  0x0246E   Ifel_ck        06 00 1c 00                             
+  0x02472     Ck             21 05 12 01                               ; Ck(5,0x12)==1
+  0x02476     Work_set       2e 02 12                                  ; Work_set -> NPC-Slot 18
+  0x02479     Nop            00                                      
+  0x0247A     Ifel_ck        06 00 0e 00                             
+  0x0247E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x02484       Gosub          18 05                                     ; Gosub -> sub05
+  0x02486       Set            22 05 12 00                               ; SET (5,0x12)=0
+  0x0248A       Endif          08 00                                   
+  0x0248C     Endif          08 00                                   
+  0x0248E   Ifel_ck        06 00 1c 00                             
+  0x02492     Ck             21 05 13 01                               ; Ck(5,0x13)==1
+  0x02496     Work_set       2e 02 13                                  ; Work_set -> NPC-Slot 19
+  0x02499     Nop            00                                      
+  0x0249A     Ifel_ck        06 00 0e 00                             
+  0x0249E       Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x024A4       Gosub          18 05                                     ; Gosub -> sub05
+  0x024A6       Set            22 05 13 00                               ; SET (5,0x13)=0
+  0x024AA       Endif          08 00                                   
+  0x024AC     Endif          08 00                                   
+  0x024AE   Endif          08 00                                   
+  0x024B0 Evt_end        01 00                                   
+
+=== sub05
+  0x024B2 Member_copy    3d 04 10                                
+  0x024B5 Nop            00                                      
+  0x024B6 Calc           26 00 06 04 ff 0f                       
+  0x024BC Calc           26 00 05 04 00 20                       
+  0x024C2 Member_set2    35 10 04                                
+  0x024C5 Nop            00                                      
+  0x024C6 Evt_end        01 00                                   
+
+=== sub06
+  0x024C8 Ifel_ck        06 00 86 02                             
+  0x024CC   Ck             21 05 22 01                               ; Ck(5,0x22)==1
+  0x024D0   Ifel_ck        06 00 1c 00                             
+  0x024D4     Ck             21 05 00 00                               ; Ck(5,0x00)==0
+  0x024D8     Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x024DB     Nop            00                                      
+  0x024DC     Ifel_ck        06 00 0e 00                             
+  0x024E0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x024E6       Gosub          18 07                                     ; Gosub -> sub07
+  0x024E8       Set            22 05 00 01                               ; SET (5,0x00)=1
+  0x024EC       Endif          08 00                                   
+  0x024EE     Endif          08 00                                   
+  0x024F0   Ifel_ck        06 00 1c 00                             
+  0x024F4     Ck             21 05 01 00                               ; Ck(5,0x01)==0
+  0x024F8     Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x024FB     Nop            00                                      
+  0x024FC     Ifel_ck        06 00 0e 00                             
+  0x02500       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02506       Gosub          18 07                                     ; Gosub -> sub07
+  0x02508       Set            22 05 01 01                               ; SET (5,0x01)=1
+  0x0250C       Endif          08 00                                   
+  0x0250E     Endif          08 00                                   
+  0x02510   Ifel_ck        06 00 1c 00                             
+  0x02514     Ck             21 05 02 00                               ; Ck(5,0x02)==0
+  0x02518     Work_set       2e 02 02                                  ; Work_set -> NPC-Slot 2
+  0x0251B     Nop            00                                      
+  0x0251C     Ifel_ck        06 00 0e 00                             
+  0x02520       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02526       Gosub          18 07                                     ; Gosub -> sub07
+  0x02528       Set            22 05 02 01                               ; SET (5,0x02)=1
+  0x0252C       Endif          08 00                                   
+  0x0252E     Endif          08 00                                   
+  0x02530   Ifel_ck        06 00 1c 00                             
+  0x02534     Ck             21 05 03 00                               ; Ck(5,0x03)==0
+  0x02538     Work_set       2e 02 03                                  ; Work_set -> NPC-Slot 3
+  0x0253B     Nop            00                                      
+  0x0253C     Ifel_ck        06 00 0e 00                             
+  0x02540       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02546       Gosub          18 07                                     ; Gosub -> sub07
+  0x02548       Set            22 05 03 01                               ; SET (5,0x03)=1
+  0x0254C       Endif          08 00                                   
+  0x0254E     Endif          08 00                                   
+  0x02550   Ifel_ck        06 00 1c 00                             
+  0x02554     Ck             21 05 04 00                               ; Ck(5,0x04)==0
+  0x02558     Work_set       2e 02 04                                  ; Work_set -> NPC-Slot 4
+  0x0255B     Nop            00                                      
+  0x0255C     Ifel_ck        06 00 0e 00                             
+  0x02560       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02566       Gosub          18 07                                     ; Gosub -> sub07
+  0x02568       Set            22 05 04 01                               ; SET (5,0x04)=1
+  0x0256C       Endif          08 00                                   
+  0x0256E     Endif          08 00                                   
+  0x02570   Ifel_ck        06 00 1c 00                             
+  0x02574     Ck             21 05 05 00                               ; Ck(5,0x05)==0
+  0x02578     Work_set       2e 02 05                                  ; Work_set -> NPC-Slot 5
+  0x0257B     Nop            00                                      
+  0x0257C     Ifel_ck        06 00 0e 00                             
+  0x02580       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02586       Gosub          18 07                                     ; Gosub -> sub07
+  0x02588       Set            22 05 05 01                               ; SET (5,0x05)=1
+  0x0258C       Endif          08 00                                   
+  0x0258E     Endif          08 00                                   
+  0x02590   Ifel_ck        06 00 1c 00                             
+  0x02594     Ck             21 05 06 00                               ; Ck(5,0x06)==0
+  0x02598     Work_set       2e 02 06                                  ; Work_set -> NPC-Slot 6
+  0x0259B     Nop            00                                      
+  0x0259C     Ifel_ck        06 00 0e 00                             
+  0x025A0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x025A6       Gosub          18 07                                     ; Gosub -> sub07
+  0x025A8       Set            22 05 06 01                               ; SET (5,0x06)=1
+  0x025AC       Endif          08 00                                   
+  0x025AE     Endif          08 00                                   
+  0x025B0   Ifel_ck        06 00 1c 00                             
+  0x025B4     Ck             21 05 07 00                               ; Ck(5,0x07)==0
+  0x025B8     Work_set       2e 02 07                                  ; Work_set -> NPC-Slot 7
+  0x025BB     Nop            00                                      
+  0x025BC     Ifel_ck        06 00 0e 00                             
+  0x025C0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x025C6       Gosub          18 07                                     ; Gosub -> sub07
+  0x025C8       Set            22 05 07 01                               ; SET (5,0x07)=1
+  0x025CC       Endif          08 00                                   
+  0x025CE     Endif          08 00                                   
+  0x025D0   Ifel_ck        06 00 1c 00                             
+  0x025D4     Ck             21 05 08 00                               ; Ck(5,0x08)==0
+  0x025D8     Work_set       2e 02 08                                  ; Work_set -> NPC-Slot 8
+  0x025DB     Nop            00                                      
+  0x025DC     Ifel_ck        06 00 0e 00                             
+  0x025E0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x025E6       Gosub          18 07                                     ; Gosub -> sub07
+  0x025E8       Set            22 05 08 01                               ; SET (5,0x08)=1
+  0x025EC       Endif          08 00                                   
+  0x025EE     Endif          08 00                                   
+  0x025F0   Ifel_ck        06 00 1c 00                             
+  0x025F4     Ck             21 05 09 00                               ; Ck(5,0x09)==0
+  0x025F8     Work_set       2e 02 09                                  ; Work_set -> NPC-Slot 9
+  0x025FB     Nop            00                                      
+  0x025FC     Ifel_ck        06 00 0e 00                             
+  0x02600       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02606       Gosub          18 07                                     ; Gosub -> sub07
+  0x02608       Set            22 05 09 01                               ; SET (5,0x09)=1
+  0x0260C       Endif          08 00                                   
+  0x0260E     Endif          08 00                                   
+  0x02610   Ifel_ck        06 00 1c 00                             
+  0x02614     Ck             21 05 0a 00                               ; Ck(5,0x0A)==0
+  0x02618     Work_set       2e 02 0a                                  ; Work_set -> NPC-Slot 10
+  0x0261B     Nop            00                                      
+  0x0261C     Ifel_ck        06 00 0e 00                             
+  0x02620       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02626       Gosub          18 07                                     ; Gosub -> sub07
+  0x02628       Set            22 05 0a 01                               ; SET (5,0x0A)=1
+  0x0262C       Endif          08 00                                   
+  0x0262E     Endif          08 00                                   
+  0x02630   Ifel_ck        06 00 1c 00                             
+  0x02634     Ck             21 05 0b 00                               ; Ck(5,0x0B)==0
+  0x02638     Work_set       2e 02 0b                                  ; Work_set -> NPC-Slot 11
+  0x0263B     Nop            00                                      
+  0x0263C     Ifel_ck        06 00 0e 00                             
+  0x02640       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02646       Gosub          18 07                                     ; Gosub -> sub07
+  0x02648       Set            22 05 0b 01                               ; SET (5,0x0B)=1
+  0x0264C       Endif          08 00                                   
+  0x0264E     Endif          08 00                                   
+  0x02650   Ifel_ck        06 00 1c 00                             
+  0x02654     Ck             21 05 0c 00                               ; Ck(5,0x0C)==0
+  0x02658     Work_set       2e 02 0c                                  ; Work_set -> NPC-Slot 12
+  0x0265B     Nop            00                                      
+  0x0265C     Ifel_ck        06 00 0e 00                             
+  0x02660       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02666       Gosub          18 07                                     ; Gosub -> sub07
+  0x02668       Set            22 05 0c 01                               ; SET (5,0x0C)=1
+  0x0266C       Endif          08 00                                   
+  0x0266E     Endif          08 00                                   
+  0x02670   Ifel_ck        06 00 1c 00                             
+  0x02674     Ck             21 05 0d 00                               ; Ck(5,0x0D)==0
+  0x02678     Work_set       2e 02 0d                                  ; Work_set -> NPC-Slot 13
+  0x0267B     Nop            00                                      
+  0x0267C     Ifel_ck        06 00 0e 00                             
+  0x02680       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02686       Gosub          18 07                                     ; Gosub -> sub07
+  0x02688       Set            22 05 0d 01                               ; SET (5,0x0D)=1
+  0x0268C       Endif          08 00                                   
+  0x0268E     Endif          08 00                                   
+  0x02690   Ifel_ck        06 00 1c 00                             
+  0x02694     Ck             21 05 0e 00                               ; Ck(5,0x0E)==0
+  0x02698     Work_set       2e 02 0e                                  ; Work_set -> NPC-Slot 14
+  0x0269B     Nop            00                                      
+  0x0269C     Ifel_ck        06 00 0e 00                             
+  0x026A0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x026A6       Gosub          18 07                                     ; Gosub -> sub07
+  0x026A8       Set            22 05 0e 01                               ; SET (5,0x0E)=1
+  0x026AC       Endif          08 00                                   
+  0x026AE     Endif          08 00                                   
+  0x026B0   Ifel_ck        06 00 1c 00                             
+  0x026B4     Ck             21 05 0f 00                               ; Ck(5,0x0F)==0
+  0x026B8     Work_set       2e 02 0f                                  ; Work_set -> NPC-Slot 15
+  0x026BB     Nop            00                                      
+  0x026BC     Ifel_ck        06 00 0e 00                             
+  0x026C0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x026C6       Gosub          18 07                                     ; Gosub -> sub07
+  0x026C8       Set            22 05 0f 01                               ; SET (5,0x0F)=1
+  0x026CC       Endif          08 00                                   
+  0x026CE     Endif          08 00                                   
+  0x026D0   Ifel_ck        06 00 1c 00                             
+  0x026D4     Ck             21 05 10 00                               ; Ck(5,0x10)==0
+  0x026D8     Work_set       2e 02 10                                  ; Work_set -> NPC-Slot 16
+  0x026DB     Nop            00                                      
+  0x026DC     Ifel_ck        06 00 0e 00                             
+  0x026E0       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x026E6       Gosub          18 07                                     ; Gosub -> sub07
+  0x026E8       Set            22 05 10 01                               ; SET (5,0x10)=1
+  0x026EC       Endif          08 00                                   
+  0x026EE     Endif          08 00                                   
+  0x026F0   Ifel_ck        06 00 1c 00                             
+  0x026F4     Ck             21 05 11 00                               ; Ck(5,0x11)==0
+  0x026F8     Work_set       2e 02 11                                  ; Work_set -> NPC-Slot 17
+  0x026FB     Nop            00                                      
+  0x026FC     Ifel_ck        06 00 0e 00                             
+  0x02700       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02706       Gosub          18 07                                     ; Gosub -> sub07
+  0x02708       Set            22 05 11 01                               ; SET (5,0x11)=1
+  0x0270C       Endif          08 00                                   
+  0x0270E     Endif          08 00                                   
+  0x02710   Ifel_ck        06 00 1c 00                             
+  0x02714     Ck             21 05 12 00                               ; Ck(5,0x12)==0
+  0x02718     Work_set       2e 02 12                                  ; Work_set -> NPC-Slot 18
+  0x0271B     Nop            00                                      
+  0x0271C     Ifel_ck        06 00 0e 00                             
+  0x02720       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02726       Gosub          18 07                                     ; Gosub -> sub07
+  0x02728       Set            22 05 12 01                               ; SET (5,0x12)=1
+  0x0272C       Endif          08 00                                   
+  0x0272E     Endif          08 00                                   
+  0x02730   Ifel_ck        06 00 1c 00                             
+  0x02734     Ck             21 05 13 00                               ; Ck(5,0x13)==0
+  0x02738     Work_set       2e 02 13                                  ; Work_set -> NPC-Slot 19
+  0x0273B     Nop            00                                      
+  0x0273C     Ifel_ck        06 00 0e 00                             
+  0x02740       Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x02746       Gosub          18 07                                     ; Gosub -> sub07
+  0x02748       Set            22 05 13 01                               ; SET (5,0x13)=1
+  0x0274C       Endif          08 00                                   
+  0x0274E     Endif          08 00                                   
+  0x02750   Endif          08 00                                   
+  0x02752 Evt_end        01 00                                   
+
+=== sub07
+  0x02754 Member_copy    3d 04 10                                
+  0x02757 Nop            00                                      
+  0x02758 Calc           26 00 05 04 00 10                       
+  0x0275E Member_set2    35 10 04                                
+  0x02761 Nop            00                                      
+  0x02762 Evt_end        01 00                                   
+
+=== sub08
+  0x02764 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x02768 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0276C Aot_reset      46 11 01 31 01 00 ff ff 00 00             ; Aot_reset slot=17 TEXT msg 1 "Guess it was only a matter of time..."
+  0x02776 Se_on          36 02 0c 00 00 00 cc dd f8 f8 f0 a7     
+  0x02782 Cut_replace    4b 00 09                                
+  0x02785 Cut_replace    4b 03 0a                                
+  0x02788 Cut_replace    4b 04 0b                                
+  0x0278B Cut_replace    4b 06 0c                                
+  0x0278E Sca_id_set     37 02 06 f7                             
+  0x02792 Sca_id_set     37 03 06 f7                             
+  0x02796 Save           24 05 00 00                             
+  0x0279A Save           24 07 00 00                             
+  0x0279E Gosub          18 09                                     ; Gosub -> sub09
+  0x027A0 Sleep          09 0a 05 00                             
+  0x027A4 Gosub          18 09                                     ; Gosub -> sub09
+  0x027A6 Sleep          09 0a 14 00                             
+  0x027AA Cut_chg        29 0c                                     ; Cut_chg 12
+  0x027AC Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x027AF Nop            00                                      
+  0x027B0 Member_set     34 04 b7 02                               ; Member_set m=0x04 val=695
+  0x027B4 Gosub          18 09                                     ; Gosub -> sub09
+  0x027B6 Sleep          09 0a 0a 00                             
+  0x027BA Gosub          18 09                                     ; Gosub -> sub09
+  0x027BC Sleep          09 0a 0f 00                             
+  0x027C0 Sleep          09 0a 14 00                             
+  0x027C4 Sleep          09 0a b4 00                             
+  0x027C8 Cut_chg        29 0b                                     ; Cut_chg 11
+  0x027CA Sleep          09 0a c8 00                             
+  0x027CE Cut_chg        29 05                                     ; Cut_chg 5
+  0x027D0 Cut_auto       3c 01                                   
+  0x027D2 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x027D6 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x027DA Set            22 05 14 01                               ; SET (5,0x14)=1
+  0x027DE Evt_end        01 00                                   
+
+=== sub09
+  0x027E0 Ifel_ck        06 00 0a 00                             
+  0x027E4   Cmp            23 00 05 00 14 00                         ; Cmp(var05 op0 20)
+  0x027EA   Return         19 00                                   
+  0x027EC   Endif          08 00                                   
+  0x027EE Save           24 06 14 00                             
+  0x027F2 Calc2          27 01 06 05                             
+  0x027F6 For2           1b 00 00 3b 00 06                       
+  0x027FC Sce_fade_set   53 02 05                                  ; Sce_fade_set 02 05
+  0x027FF Nop            00                                      
+  0x02800 Ifel_ck        06 00 2c 00                             
+  0x02804   Member_cmp     3e 00 0f 00 05 00                         ; Member_cmp(m0F op0 5)
+  0x0280A   Member_copy    3d 04 10                                
+  0x0280D   Nop            00                                      
+  0x0280E   Calc           26 00 05 04 00 10                       
+  0x02814   Member_set2    35 10 04                                
+  0x02817   Nop            00                                      
+  0x02818   Copy           25 04 05                                
+  0x0281B   Nop            00                                      
+  0x0281C   Calc           26 00 00 04 00 00                       
+  0x02822   Xa_on          59 05 04 01                               ; Xa_on 05 04 01
+  0x02826   Calc           26 00 00 05 01 00                       
+  0x0282C   Return         19 00                                   
+  0x0282E   Endif          08 00                                   
+  0x02830 Calc           26 00 00 05 01 00                       
+  0x02836 Next           0e 00                                   
+  0x02838 Evt_end        01 00                                   
+
+=== sub10
+  0x0283A Break_point    1c                                      
+  0x0283B Nop            00                                      
+  0x0283C Save           24 04 00 00                             
+  0x02840 For            0d 00 30 00 14 00                       
+  0x02846 Sce_fade_set   53 02 04                                  ; Sce_fade_set 02 04
+  0x02849 Nop            00                                      
+  0x0284A Member_copy    3d 05 10                                
+  0x0284D Nop            00                                      
+  0x0284E Calc           26 00 06 05 00 10                       
+  0x02854 Ifel_ck        06 00 16 00                             
+  0x02858   Cmp            23 00 05 05 00 00                         ; Cmp(var05 op5 0)
+  0x0285E   Member_copy    3d 06 02                                
+  0x02861   Nop            00                                      
+  0x02862   Calc           26 00 00 06 10 0e                       
+  0x02868   Member_set2    35 02 06                                
+  0x0286B   Nop            00                                      
+  0x0286C   Endif          08 00                                   
+  0x0286E Calc           26 00 00 04 01 00                       
+  0x02874 Next           0e 00                                   
+  0x02876 Evt_end        01 00                                   
+
+=== sub11
+  0x02878 Work_set       2e 03 00                                  ; Work_set -> Prop obj 0
+  0x0287B Nop            00                                      
+  0x0287C Speed_set      2f 04 e0 ff                             
+  0x02880 Add_speed      30                                      
+  0x02881 Evt_next       02                                      
+  0x02882 Goto           17 ff ff 00 fe ff                       
+  0x02888 Evt_end        01 00                                   

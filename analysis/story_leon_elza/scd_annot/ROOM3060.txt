@@ -1,0 +1,110 @@
+ROOM3060  (re15_port/shared_assets/PSX/STAGE3/ROOM3060.RDT)
+
+=== main00
+  0x00E76 Door_aot_set   3b 00 02 31 00 00 04 93 34 a4 dc 05 ..    ; Door_aot_set slot=0 sce=2 -> ROOM3010 cut=0
+  0x00E96 Door_aot_set   3b 01 02 31 00 00 6c ee 5c 95 28 0a ..    ; Door_aot_set slot=1 sce=2 -> ROOM3090 cut=0
+  0x00EB6 Ifel_ck        06 00 1c 00                             
+  0x00EBA   Ck             21 04 c4 00                               ; Ck(4,0xC4)==0
+  0x00EBE   Aot_set        2c 02 01 31 00 00 dc 05 d0 bc 80 0c ..    ; Aot_set slot=2 TEXT msg 10 "It's locked from the other side."
+  0x00ED2   Else_ck        07 00 26 00                             
+  0x00ED6   Door_aot_set   3b 02 02 31 00 00 dc 05 d0 bc 80 0c ..    ; Door_aot_set slot=2 sce=2 -> ROOM3040 cut=9
+  0x00EF6   Nop            00                                      
+  0x00EF7   Nop            00                                      
+  0x00EF8 Door_aot_set   3b 03 02 31 07 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=3 sce=2 -> ROOM3020 cut=6
+  0x00F18 Evt_end        01 00                                   
+
+=== sub00
+  0x00F24 Ifel_ck        06 00 12 00                             
+  0x00F28   Ck             21 03 a0 00                               ; Ck(3,0xA0)==0
+  0x00F2C   Aot_reset      46 01 01 31 00 00 ff ff 00 00             ; Aot_reset slot=1 TEXT msg 0 " / It's locked."
+  0x00F36   Else_ck        07 00 1a 00                             
+  0x00F3A   Ifel_ck        06 00 10 00                             
+  0x00F3E     Ck             21 03 a1 00                               ; Ck(3,0xA1)==0
+  0x00F42     Aot_reset      46 01 03 31 ff 00 18 02 00 00             ; Aot_reset slot=1 sce=3 ev->sub02
+  0x00F4C     Endif          08 00                                   
+  0x00F4E   Nop            00                                      
+  0x00F4F   Nop            00                                      
+  0x00F50 Ifel_ck        06 00 1c 00                             
+  0x00F54   Ck             21 04 c7 01                               ; Ck(4,0xC7)==1
+  0x00F58   Sce_em_set     44 00 40 00 00 00 00 ff 6a 9b 00 00 ..    ; Sce_em_set slot=0 TYP=0x40 beh=0x00 pos=(-25750, 0, -25150) yaw=0 b4..7=00 00 00 ff
+  0x00F6C   Else_ck        07 00 8c 00                             
+  0x00F70   Ifel_ck        06 00 44 00                             
+  0x00F74     Ck             21 03 a0 00                               ; Ck(3,0xA0)==0
+  0x00F78     Sce_em_set     44 00 20 41 00 00 00 50 50 c9 00 00 ..    ; Sce_em_set slot=0 TYP=0x20 beh=0x41 pos=(-14000, 0, -24000) yaw=499 b4..7=00 00 00 50
+  0x00F8C     Sce_em_set     44 01 20 41 00 00 00 51 99 e0 00 00 ..    ; Sce_em_set slot=1 TYP=0x20 beh=0x41 pos=(-8039, 0, -22041) yaw=499 b4..7=00 00 00 51
+  0x00FA0     Sce_em_set     44 02 20 41 00 00 00 52 df fa 00 00 ..    ; Sce_em_set slot=2 TYP=0x20 beh=0x41 pos=(-1313, 0, -19980) yaw=499 b4..7=00 00 00 52
+  0x00FB4     Else_ck        07 00 42 00                             
+  0x00FB8     Sce_em_set     44 00 20 00 00 00 00 50 50 c9 00 00 ..    ; Sce_em_set slot=0 TYP=0x20 beh=0x00 pos=(-14000, 0, -24000) yaw=499 b4..7=00 00 00 50
+  0x00FCC     Sce_em_set     44 01 20 00 00 00 00 51 99 e0 00 00 ..    ; Sce_em_set slot=1 TYP=0x20 beh=0x00 pos=(-8039, 0, -22041) yaw=499 b4..7=00 00 00 51
+  0x00FE0     Sce_em_set     44 02 20 00 00 00 00 52 df fa 00 00 ..    ; Sce_em_set slot=2 TYP=0x20 beh=0x00 pos=(-1313, 0, -19980) yaw=499 b4..7=00 00 00 52
+  0x00FF4     Nop            00                                      
+  0x00FF5     Nop            00                                      
+  0x00FF6   Nop            00                                      
+  0x00FF7   Nop            00                                      
+  0x00FF8 Obj_model_set  2d 00 00 00 01 00 0a 00 00 00 73 b8 ..    ; Obj_model_set obj=0 pos=(-18317,-266,-26828)
+  0x0101A Ifel_ck        06 00 12 00                             
+  0x0101E   Ck             21 04 c4 01                               ; Ck(4,0xC4)==1
+  0x01022   Ck             21 03 a0 00                               ; Ck(3,0xA0)==0
+  0x01026   Set            22 03 a0 01                               ; SET (3,0xA0)=1
+  0x0102A   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x0102E   Endif          08 00                                   
+  0x01030 Evt_end        01 00                                   
+
+=== sub01
+  0x01032 Evt_end        01 00                                   
+
+=== sub02
+  0x01034 Message_on     2b 09 80 ff                               ; Message_on 9  "For some reason the door isn't / locked anymore..."
+  0x01038 Evt_next       02                                      
+  0x01039 Nop            00                                      
+  0x0103A Set            22 03 a1 01                               ; SET (3,0xA1)=1
+  0x0103E Aot_reset      46 01 02 31 65 9f 00 00 77 03             ; Aot_reset slot=1 sce=2 (TUER scharf)
+  0x01048 Evt_end        01 00                                   
+
+=== sub03
+  0x0104A Set            22 04 08 01                               ; SET (4,0x08)=1
+  0x0104E Set            22 04 09 01                               ; SET (4,0x09)=1
+  0x01052 Set            22 04 0a 01                               ; SET (4,0x0A)=1
+  0x01056 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x0105A Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0105E Cut_chg        29 04                                     ; Cut_chg 4
+  0x01060 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01063 Nop            00                                      
+  0x01064 Pos_set        32 00 0f 08 00 00 d8 bc                   ; Pos_set (2063,0,-17192)
+  0x0106C Dir_set        33 00 00 00 28 05 00 00                 
+  0x01074 Sleep          09 0a 14 00                             
+  0x01078 Sce_bgm_control 54 01 01 00 00 00                       
+  0x0107E Cut_chg        29 03                                     ; Cut_chg 3
+  0x01080 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01083 Nop            00                                      
+  0x01084 Plc_neck       41 01 df fa 00 00 f4 b1 64 64           
+  0x0108E Plc_dest       40 00 09 00 df fa f4 b1                   ; Plc_dest mode=9 (-1313,-19980)
+  0x01096 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01099 Nop            00                                      
+  0x0109A Member_set     34 0c 42 00                               ; Member_set m=0x0C val=66
+  0x0109E Sleep          09 0a 05 00                             
+  0x010A2 Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x010A5 Nop            00                                      
+  0x010A6 Member_set     34 0c 42 00                               ; Member_set m=0x0C val=66
+  0x010AA Sleep          09 0a 05 00                             
+  0x010AE Work_set       2e 02 02                                  ; Work_set -> NPC-Slot 2
+  0x010B1 Nop            00                                      
+  0x010B2 Member_set     34 0c 42 00                               ; Member_set m=0x0C val=66
+  0x010B6 Sleep          09 0a 1e 00                             
+  0x010BA Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x010BD Nop            00                                      
+  0x010BE Plc_motion     3f 02 06 00                               ; Plc_motion 2,6,0
+  0x010C2 Sleep          09 0a 28 00                             
+  0x010C6 Ifel_ck        06 00 10 00                             
+  0x010CA   Ck             21 03 75 00                               ; Ck(3,0x75)==0
+  0x010CE   Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x010D1   Nop            00                                      
+  0x010D2   Save           24 10 00 00                             
+  0x010D6   Else_ck        07 00 0e 00                             
+  0x010DA   Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x010DD   Nop            00                                      
+  0x010DE   Save           24 10 01 00                             
+  0x010E2   Nop            00                                      
+  0x010E3   Nop            00                                      
+  0x010E4 Aot_on         47 03                                   
+  0x010E6 Evt_end        01 00                                   
