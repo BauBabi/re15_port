@@ -4796,9 +4796,11 @@ int re15_re2z_gore_part_matrix_peek(const re15_actor_t *e, int bone, int32_t rot
 {
     if (!e || !rot || !trans || !re15_re2z_gore_active(e)) return 0;
     int part = re2z_bone_to_part(e, bone);
-    if (part < 0 || part >= 16) return 0;
+    if (part < 0 || part >= 16) return 0;                      /* 16 Records, Part 15 = Reserve @0x801010DC */
     uint16_t fl = e->re2z_part_flags[part];
-    if (!(fl & 0x40u) || !(fl & 0x01u) || !(e->re2z_part_seeded & (uint16_t)(1u << part))) return 0;
+    if (!(fl & 0x40u) || !(fl & 0x01u) ||                      /* eigene Matrix `andi 0x40` @0x80027498, Bit 0
+                                                                * `andi v0,a2,0x1` @0x8002737C */
+        !(e->re2z_part_seeded & (uint16_t)(1u << part))) return 0;   /* noch nicht gezeichnet -> Skelett-Pose */
     for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
     for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
     return 1;

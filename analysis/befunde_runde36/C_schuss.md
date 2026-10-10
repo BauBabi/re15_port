@@ -910,3 +910,16 @@ Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
   (vorher bis 2,4 m daneben). Ausserdem sitzt das Treffer-Blut bei den ersten Treffern auf einen GEHENDEN Zombie jetzt am
   gezeichneten Koerper (vorher bis ~12 cm daneben, 121 Einheiten, weil der Anker aus der falschen Animationsbank kam). Keine neuen Assets,
   keine Sprachdateien, keine Bits/Nachrichten/Ereignisse.
+
+### 9.8 Stand je Mangel (Abnahme 1)
+| Mangel | Ursache | Vorher (gemessen) | Beleg | Aenderung | Nachher (gemessen) |
+|---|---|---|---|---|---|
+| M1 Gruppe B an der rohen Pose | re2z_gore_fx_core a3 = NULL -> re15_enemy_bone_world_pos (QUERY, Hauptbank) | RIP-Kopf 442-504, RIP-P1 80-109, Gliedabriss 140-204, Arm 4. Spawn 37-93, Ragdoll 98 | FUN_8001BF10 @0x8001C000-04 / @0x8001C03C-78, Zeichner @0x80027390 / @0x8002751C-DC | Anker = re15_schuss_r36_gezeichnet fuer jeden Emitter | 0 (MG-Bild 24, Restabstand = Drehung nach dem Spawn @0x8010810C-6C) |
+| dazu: Aufschlag-Blut | Knochen des Rumpfs statt eigener Matrix des Teils | 1900-2400 (Sonde), exe F77/F81 y -1850/-1821 | @0x80028C34-4C, @0x80027498-9C, @0x800276A0-A4 | re15_re2z_gore_part_matrix_peek | 0 (Sonde), exe y 0 am Glied |
+| dazu: Loco-Bank | blut_anker posierte immer Paar 2 | a3-Emitter 56-121 neben dem gezeichneten Koerper | @0x800295F8-FC, main.c:9834-9843 | zeichen_bank wie der Renderer | 0 |
+| dazu: Ragdoll | Ragdoll-Zweig ohne Crossfade | 98 | wie M1 | Ragdoll-Anker auf der gezeichneten Pose | 0 |
+Punkte 1 und 3 (Abnahme 1: erfuellt) unberuehrt; ihre Riegel im gezielten Lauf gruen (9.6).
+
+Commits der Nachbesserung 2 (Zweig r36/schuss): 3a688104 (Gliederung), 66fea251 (Ursache + Messung vorher), fb3c5932 (RE-Beleg),
+ccc46f65 (Code + Pins), 6b140f55 (Dossier 9.4/9.5 + Sonde), ee9842bc (9.7), a41911ad (Zitate), 0c07d2b3 (exe + Tests), dieser
+Abschluss-Commit (Flag-Zitate im Lesezugriff, 9.8).
