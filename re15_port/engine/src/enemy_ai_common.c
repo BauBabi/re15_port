@@ -3051,6 +3051,12 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
     return 1;
 }
 
+/* Runde 36 Spur F NB1: der Kreuzungstest von re15_los_ray_blocked fuer EINE Zelle (FUN_8003dcc4: /0x12, beide Diagonalen). */
+int re15_r36_los_zelle_kreuzt(int32_t ex, int32_t ez, int32_t px, int32_t pz, const re15_sca_entry_t *c)
+{
+    int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12, x1 = ((int32_t)c->x + (int32_t)c->width) / 0x12, z1 = ((int32_t)c->z + (int32_t)c->density) / 0x12;
+    return los_seg_straddles_diag(ex / 0x12, ez / 0x12, px / 0x12, pz / 0x12, x1, z0, x0, z1) || los_seg_straddles_diag(ex / 0x12, ez / 0x12, px / 0x12, pz / 0x12, x0, z0, x1, z1);
+}
 /* Runde 36 Spur F (Sonde): nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Nibble-3-Zellen, 4 Regionen) von e nach (px,pz). */
 int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz)
 {

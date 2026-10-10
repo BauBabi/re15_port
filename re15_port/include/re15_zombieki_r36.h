@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include "re15_actor.h"
+#include "re15_rdt.h"     /* re15_sca_entry_t */
 
 #define RE15_R36_AFFEN_HITBOX_HALB   1600   /* u16 @0x80121356 (Record 0x80121350[+6], Tabelle 0x80121368[4]) */
 #define RE15_R36_AFFEN_SCHATTEN_X    (RE15_R36_AFFEN_HITBOX_HALB + 100)   /* `addiu a2,a3,100` @0x801171e8 */
@@ -83,6 +84,30 @@ void re15_r36_zombie_sicht_enable(int an);
 /* enemy_ai_common.c: nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Zellen mit Boden-Nibble 3, 4 Regionen,
  * re15_los_ray_blocked, Aktor-Maske) von e nach (px,pz); 1 = verdeckt. */
 int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz);
+
+/* ---- Nachbesserung 1, Mangel 1 (Abnahme 0): NIEDRIGE Nibble-3-Moebel nehmen dem RE2-Zombie keine Sicht -------------
+ * BEFUND (exe, ROOM1010, Abnahme-Lage Leon (3750,4300)): Slot 2 (205,7248) bleibt mit RE2-KI F1..F1000 in 1/0/1/0 —
+ * der Nibble-3-Verhoertisch #5 und der Stuhlkreis #12 nehmen die Sicht; mit RE1.5-KI laeuft derselbe Zombie um den
+ * Tisch auf Leon zu (F300 bei (2853,6614), Sub 12). ROOM1010 traegt in ALLEN Zellen fl = 0x03 (Nibble 3).
+ * RE2 (Ziel): der Strahl laeuft von Kopfteil zu Kopfteil — Zombie +0x1c1 = 8 (`addiu v0,zero,8` / `sb v0,449(s2)`
+ * @0x8010082c-30, EMZ0.BIN), Teil-Lage +0x5c/+0x60/+0x64 (FUN_8004A808 @0x8004a874-dc); FUN_80050858 mit a3 = 1
+ * blockt nur, wo der Strahl im Satz-Rechteck UNTER der Oberkante `-(h>>11)*100 - ((h>>6)&0x1f)*1800` liegt
+ * (@0x80050b34-74, Projektionen YZ/YX @0x80050b78-c30).
+ * GEMESSEN: Kopfteil 8 Zombie y -2484..-2517, Leon -2319..-2514 (exe ROOM1010, re15_enemy_bone_world_pos(8) bzw.
+ * head_world); Tischplatte #5 y = -1600 (Obj_model_set (200,-1600,5500)/(1800,-1600,5750), Anker der r34n_e-Ablage);
+ * Stuhlkreise #12/#13/#14: Oberkante ueber -2000 nicht erreicht (Projektion mit den Engine-Matrizen probe_r34n_e_
+ * dokumente kamera 1010, Cut 0: Marke y=-2000 liegt auf der Wand ueber der Lehne, y=-1600 auf der Tischkante —
+ * F_belege/nb1_r1010_c0_hoehen.png).
+ * PORT: der RE1.5-Strahl bleibt der Kreuzungstest (FUN_8003dcc4 je Zelle, re15_r36_los_zelle_kreuzt); eine gekreuzte
+ * Nibble-3-Zelle mit BELEGTER Oberkante blockt nur, wenn der Kopf-zu-Kopf-Strahl in ihrem Grundriss tiefer liegt
+ * (Form FUN_80050858 a3 = 1). Belegte Oberkante = (a) RDT: Obj_model_set-Objekt (Weltraum) auf der Zelle -> dessen y,
+ * (b) gemessen: Tabelle k_r36_moebel (zombieki_r36.c). Ohne Beleg = volle Hoehe (Wand), wie bisher. */
+int re15_r36_los_zelle_kreuzt(int32_t ex, int32_t ez, int32_t px, int32_t pz, const re15_sca_entry_t *c);
+void re15_r36_zombie_hoehe_enable(int an);   /* NUR Sonden: 0 = Abbildung vor NB1 (jede Nibble-3-Zelle blockt) */
+/* NUR Sonden: Oberkante einer Zelle (0 = unbelegt) und Grund (1 = Obj_model_set, 2 = Messtabelle). */
+int32_t re15_r36_zelle_oberkante(const re15_sca_entry_t *c, int *grund);
+#define RE15_R36_LEON_KOPF_Y  (-2514)   /* GEMESSEN: Leons Kopfteil 8 y im Stand (exe ROOM1010, head_world, Motion 200) —
+                                         * nur, wenn der Renderer head_world noch nicht gesetzt hat (Sonden ohne Bild) */
 
 /* ---------------------------------------------------------------------------------------------------------
  * Punkt 2 — "Die Monkeys scheinen noch oft blockiert zu sein. Das muessen wir irgendwie verbessern."

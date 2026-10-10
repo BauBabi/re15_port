@@ -162,16 +162,41 @@ static const uint16_t k_raeume[] = { 0x1010, 0x1020, 0x1030, 0x1040, 0x1070, 0x1
                                      0x1100, 0x1110, 0x1140, 0x1180, 0x11E0, 0x11F0, 0x1200, 0x1220, 0x1250 };
 #define N_RAEUME ((int)(sizeof k_raeume / sizeof k_raeume[0]))
 
-typedef struct { int nz; long plaetze, zell_blk, ray_blk, zell_nur, steht, steht_zell_nur, steht_frei, steht_ray; } summe_t;
+typedef struct { int nz; long plaetze, zell_blk, ray_blk, zell_nur, steht, steht_zell_nur, steht_frei, steht_ray, steht_wand, steht_moebel, ausserhalb; } summe_t;
 
-/* Der Zensus: vorher = 1 schaltet auf den alten Weg (re15_re2_los_clear mit Slab-Test), sonst der Haken. */
+/* NB1 (Abnahme 0, Mangel 3): Klasse der Nibble-3-Zellen, die der RE1.5-Strahl (FUN_8003dcc4 je Zelle) von e nach (px,pz)
+ * kreuzt: *wand = Zellen OHNE belegte Oberkante (volle Hoehe), *moebel = Zellen MIT belegter Oberkante
+ * (re15_r36_zelle_oberkante: Obj_model_set darauf oder Messtabelle). */
+static void kreuz_klassen(const re15_actor_t *e, int32_t px, int32_t pz, int *wand, int *moebel)
+{
+    *wand = 0; *moebel = 0;
+    unsigned mask = e->sca_mask ? e->sca_mask : 4u;
+    int start = 0;
+    for (int k = 0; k < 4; k++) {
+        int cnt = s_rdt.sca_rgn[k];
+        if (start + cnt > s_rdt.sca_count) break;
+        for (int i = 0; i < cnt; i++) {
+            const re15_sca_entry_t *c = &s_rdt.sca[start + i];
+            if ((c->floor >> 4) != e->floor || (c->floor & 0x0f) != 3 || !(mask & c->u0)) continue;
+            if (!re15_r36_los_zelle_kreuzt(e->x, e->z, px, pz, c)) continue;
+            if (re15_r36_zelle_oberkante(c, NULL) != 0) (*moebel)++; else (*wand)++;
+        }
+        start += cnt;
+    }
+}
+
+/* Der Zensus: modus 1 = Weg vor Runde 36 (re15_re2_los_clear mit Slab-Test), 2 = Abbildung vor NB1 (jede Nibble-3-Zelle
+ * blockt), 0 = NB1 (Nibble-3-Zelle mit belegter Oberkante blockt nur unter dem Kopf-zu-Kopf-Strahl). */
 static summe_t zensus(int vorher, unsigned nur, int lauf_bilder)
 {
-    re15_r36_zombie_sicht_enable(vorher ? 0 : 1);
-    printf("Sicht-Bit: %s\n", vorher ? "VORHER (re15_re2_los_clear, Slab-Test + Nibble-3-Strahl)" : "NACHHER (nur RE1.5-Strahl FUN_8003dcc4 Nibble 3)");
+    re15_r36_zombie_sicht_enable(vorher == 1 ? 0 : 1);
+    re15_r36_zombie_hoehe_enable(vorher == 2 ? 0 : 1);
+    printf("Sicht-Bit: %s\n", vorher == 1 ? "vor Runde 36 (re15_re2_los_clear, Slab-Test + Nibble-3-Strahl)" :
+                              vorher == 2 ? "vor NB1 (jede Nibble-3-Zelle blockt)" : "NB1 (Nibble 3, belegte Moebel-Oberkante gegen den Kopfstrahl)");
     static zomb_t zs[200]; int nz = 0;
     static platz_t steher[2000]; int nsteh = 0;
     long plaetze = 0, zell_blk = 0, ray_blk = 0, zell_nur = 0, steht = 0, steht_zell_nur = 0, steht_frei = 0, steht_ray = 0;
+    long steht_wand = 0, steht_moebel = 0, ausserhalb = 0;
     for (int r = 0; r < N_RAEUME; r++) {
         uint16_t raum = k_raeume[r];
         if (nur && raum != nur) continue;
@@ -200,12 +225,15 @@ static summe_t zensus(int vorher, unsigned nur, int lauf_bilder)
                 z->raum = raum; z->cut = cut; z->slot = slot; z->typ = e->type; z->zx = e->x; z->zz = e->z; z->rot = e->rot_y;
                 int band = re15_collision_band_from_y(e->y);
                 unsigned mask = e->sca_mask ? e->sca_mask : 4u;
-                for (int32_t dx = -4000; dx <= 4000; dx += 400)
-                    for (int32_t dz = -4000; dz <= 4000; dz += 400) {
+                for (int32_t dx = -5000; dx <= 5000; dx += 400)
+                    for (int32_t dz = -5000; dz <= 5000; dz += 400) {
                         int32_t px = e->x + dx, pz = e->z + dz;
                         int32_t dist = isqrt64((long long)dx * dx + (long long)dz * dz);
-                        if (dist < 600 || dist > 4000) continue;
+                        if (dist < 600 || dist >= 0x1388) continue;          /* DECISION[0] dist < 0x1388 @0x80101308 */
                         if (re15_collision_box_blocked(&s_rdt, px, pz, band, 450, 1u)) continue;
+                        if (re15_nav_zone_count() > 0 && re15_nav_zone_from_pos((int16_t)px, (int16_t)pz) == 0xff) { ausserhalb++; continue; }
+                                                                             /* NB1: nur Plaetze in einer BLK-Zone (Capcoms begehbare
+                                                                              * Flaeche) — vorher zaehlten Plaetze hinter Aussenwaenden */
                         /* Vorderkegel +-1024 wie DECISION[0] (re15_ai_arc_test == 0) */
                         if (!eintreten(raum, cut)) continue;
                         e = &g_actors[slot];
@@ -230,6 +258,7 @@ static summe_t zensus(int vorher, unsigned nur, int lauf_bilder)
                         if (reagiert > 60) { z->spaet++; if (zell && !ray) z->spaet_zell++; }
                         if (!reagiert) {
                             steht++; z->steht++;
+                            { int w = 0, m = 0; kreuz_klassen(e, px, pz, &w, &m); if (w) steht_wand++; else if (m) steht_moebel++; }
                             if (zell && !ray) { steht_zell_nur++; z->steht_zell_nur++; }
                             if (!zell && !ray) { steht_frei++; z->steht_frei++; }
                             if (ray) steht_ray++;
@@ -257,22 +286,46 @@ static summe_t zensus(int vorher, unsigned nur, int lauf_bilder)
         printf("  %04X cut%d slot%d Leon@(%d,%d) d=%d zell=%d ray=%d  %s\n", s->raum, s->cut, s->slot, (int)s->px, (int)s->pz,
                (int)s->dist, s->zell, s->ray, s->zelle);
     }
-    printf("\n%d Zombies, %ld Plaetze im Vorderkegel <= 4000: Zell-Strahl blockt %ld (%.1f%%), RE1.5-Strahl (Nibble 3) blockt %ld (%.1f%%), "
-           "nur Zell-Strahl %ld (%.1f%%); STEHT %ld (%.1f%%): davon nur-Zell-Strahl %ld, beide frei %ld, Nibble-3 %ld\n",
-           nz, plaetze, zell_blk, plaetze ? 100.0 * zell_blk / plaetze : 0.0, ray_blk, plaetze ? 100.0 * ray_blk / plaetze : 0.0,
+    printf("\n%d Zombies, %ld Plaetze im Vorderkegel < 0x1388 in einer BLK-Zone (%ld ausserhalb verworfen): Zell-Strahl blockt %ld (%.1f%%), "
+           "RE1.5-Strahl (Nibble 3) blockt %ld (%.1f%%), nur Zell-Strahl %ld (%.1f%%); STEHT %ld (%.1f%%): davon nur-Zell-Strahl %ld, "
+           "beide frei %ld, Nibble-3 %ld; Klassen: hinter WAND %ld, nur hinter belegten MOEBELN %ld\n",
+           nz, plaetze, ausserhalb, zell_blk, plaetze ? 100.0 * zell_blk / plaetze : 0.0, ray_blk, plaetze ? 100.0 * ray_blk / plaetze : 0.0,
            zell_nur, plaetze ? 100.0 * zell_nur / plaetze : 0.0, steht, plaetze ? 100.0 * steht / plaetze : 0.0,
-           steht_zell_nur, steht_frei, steht_ray);
-    summe_t su = { nz, plaetze, zell_blk, ray_blk, zell_nur, steht, steht_zell_nur, steht_frei, steht_ray };
+           steht_zell_nur, steht_frei, steht_ray, steht_wand, steht_moebel);
+    summe_t su = { nz, plaetze, zell_blk, ray_blk, zell_nur, steht, steht_zell_nur, steht_frei, steht_ray, steht_wand, steht_moebel, ausserhalb };
     return su;
 }
 
 int main(int argc, char **argv)
 {
     const int mess = (argc > 1 && strcmp(argv[1], "mess") == 0);
-    const int vorher = (argc > 1 && strcmp(argv[1], "vorher") == 0);   /* Gegenprobe: alter Weg (Slab-Test) */
+    const int vorher = (argc > 1 && strcmp(argv[1], "vorher") == 0) ? 1 : (argc > 1 && strcmp(argv[1], "vornb1") == 0) ? 2 : 0;   /* Gegenproben */
     unsigned nur = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0u;
     const int lauf_bilder = (argc > 3) ? atoi(argv[3]) : 480;
     if (mess || vorher) { zensus(vorher, nur, lauf_bilder); return 0; }
+
+    /* NB1 Mangel 1 — der Abnahme-Fall wortgleich: ROOM1010 Cut 0, Slot 2 (205,7248) rot 0, Leon (3669,3962): Strahl ueber
+     * Tisch #5 (Oberkante -1600, Obj_model_set) und Stuhlkreis #12 (gemessen < -2000) — RE2 (Kopfteil 8, FUN_80050858 a3=1)
+     * sieht darueber; die Abbildung vor NB1 (jede Nibble-3-Zelle blockt) nicht. */
+    {
+        char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE1/ROOM1010.RDT");
+        s_raw = slurp(p, &s_n);
+        int sv = -1, sn = -1;
+        if (s_raw && eintreten(0x1010, 0)) {
+            re15_actor_t *e = &g_actors[2], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            if (e->active && e->x == 205 && e->z == 7248) {
+                pl->x = 3669; pl->z = 3962; pl->y = 0;
+                re15_r36_zombie_sicht_enable(1);
+                re15_r36_zombie_hoehe_enable(0); sv = re15_r36_zombie_sicht_frei(e, pl);
+                re15_r36_zombie_hoehe_enable(1); sn = re15_r36_zombie_sicht_frei(e, pl);
+            }
+        }
+        free(s_raw); s_raw = NULL;
+        CHECK(sv == 0, "Abnahme-Fall ROOM1010 Slot 2 -> Leon (3669,3962), Abbildung vor NB1: Sicht verdeckt (%d) = Befund", sv);
+        CHECK(sn == 1, "Abnahme-Fall mit NB1: Sicht frei (%d) — Tisch -1600 / Stuhl < -2000 unter dem Kopfstrahl", sn);
+    }
+    summe_t m2 = zensus(2, 0x1010u, 480);
+    CHECK(m2.steht_moebel > 0, "Gegenprobe ROOM1010 vor NB1: %ld stehende Plaetze NUR hinter belegten Moebeln (Befund Mangel 1)", m2.steht_moebel);
 
     /* Riegel. (1) Gegenprobe = Befund: mit dem alten Weg (Slab-Test) bleiben in ROOM10B0 Zombies 480 Bilder stehen,
      * obwohl der RE1.5-Sichtstrahl FUN_8003dcc4 (Nibble 3) frei ist (Terrassenkante #9, Nibble 1). (2) Mit dem Haken
@@ -282,10 +335,11 @@ int main(int argc, char **argv)
     CHECK(v.steht_zell_nur > 0, "Gegenprobe ROOM10B0 (alter Weg): %ld Plaetze, an denen der Zombie nur wegen des Slab-Tests steht (Befund)", v.steht_zell_nur);
     summe_t n = zensus(0, 0, 480);
     CHECK(n.nz > 20, "Zensus deckt %d stehende Zombies", n.nz);
-    CHECK(n.plaetze > 500, "Raster deckt %ld Leon-Plaetze", n.plaetze);
+    CHECK(n.plaetze > 500, "Raster deckt %ld Leon-Plaetze (in BLK-Zonen, Abstand < 0x1388)", n.plaetze);
     CHECK(n.steht_zell_nur == 0, "kein Zombie steht 480 Bilder, wo nur der Zell-Rechteck-Strahl die Sicht nimmt (%ld)", n.steht_zell_nur);
     CHECK(n.steht_frei == 0, "kein Zombie steht 480 Bilder bei freier Sicht (%ld)", n.steht_frei);
-    CHECK(n.steht == n.steht_ray, "jeder stehende Zombie-Platz (%ld) liegt hinter einer Nibble-3-Zelle (%ld)", n.steht, n.steht_ray);
+    CHECK(n.steht_moebel == 0, "kein Zombie steht 480 Bilder NUR hinter belegten Moebeln (%ld)", n.steht_moebel);
+    CHECK(n.steht == n.steht_wand, "jeder stehende Zombie-Platz (%ld) liegt hinter einer Nibble-3-Zelle ohne belegte Hoehe = Wand (%ld)", n.steht, n.steht_wand);
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

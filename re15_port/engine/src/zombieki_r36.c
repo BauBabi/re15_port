@@ -6,17 +6,91 @@
 #include "re15_ai_flavor.h"
 #include "re15_collision.h"
 #include "re15_skeleton.h"   /* re15_cos_q12 / re15_sin_q12 */
+#include "re15_scd.h"        /* g_scd.props (Obj_model_set) */
+#include "re15_damage.h"     /* re15_enemy_bone_world_pos (Kopfteil 8) */
 #include <string.h>
 
 /* ----- Punkt 1: Sicht-Bit des RE2-Zombies (Belege: re15_zombieki_r36.h) ----- */
 static int s_r36_zombie_sicht_an = 1;   /* NUR Sonden: 0 = alter Weg re15_re2_los_clear (Slab-Test) */
 void re15_r36_zombie_sicht_enable(int an) { s_r36_zombie_sicht_an = an ? 1 : 0; }
 
+/* ---- NB1 Mangel 1: Oberkante niedriger Nibble-3-Moebel (Belege: re15_zombieki_r36.h) ---- */
+static int s_r36_hoehe_an = 1;   /* NUR Sonden: 0 = Abbildung vor NB1 */
+void re15_r36_zombie_hoehe_enable(int an) { s_r36_hoehe_an = an ? 1 : 0; }
+
+/* (b) GEMESSEN (Projektion mit den Engine-Matrizen, ROOM1010 Cut 0, geeicht an der Tischplatte y = -1600): die drei
+ * Stuhlkreise am Verhoertisch reichen nicht bis y = -2000 — eingetragen als Obergrenze. Raum ohne Varianten-Nibble. */
+static const struct { uint16_t raum; int16_t x, z; uint16_t w, d; int16_t oben; } k_r36_moebel[] = {
+    { 0x1010, 1850, 4100, 1200, 1200, -2000 },   /* #12 Stuhlkreis (2450,4700) r 600 */
+    { 0x1010, 1850, 2200, 1200, 1200, -2000 },   /* #13 Stuhlkreis (2450,2800) r 600 */
+    { 0x1010, -700, 2800, 1200, 1200, -2000 },   /* #14 Stuhlkreis (-100,3400) r 600 */
+};
+
+int32_t re15_r36_zelle_oberkante(const re15_sca_entry_t *c, int *grund)
+{
+    int32_t top = 0; int g = 0;
+    for (int i = 0; i < (int)g_scd.prop_count && i < RE15_SCD_MAX_PROPS; i++) {   /* (a) Obj_model_set auf der Zelle */
+        const int32_t px = g_scd.props[i].x, py = g_scd.props[i].y, pz = g_scd.props[i].z;
+        if (g_scd.props[i].parent_obj >= 0 || py >= 0) continue;                      /* nur Weltraum-Objekte ueber dem Boden */
+        if ((uint32_t)(px - (int32_t)c->x) >= (uint32_t)c->width || (uint32_t)(pz - (int32_t)c->z) >= (uint32_t)c->density) continue;
+        if (g == 0 || py > top) { top = py; g = 1; }                                  /* Standflaeche = das tiefste Objekt darauf */
+    }
+    if (!g) {
+        for (unsigned k = 0; k < sizeof k_r36_moebel / sizeof k_r36_moebel[0]; k++)  /* (b) Messtabelle */
+            if ((g_current_room_id & 0xFFF0u) == k_r36_moebel[k].raum && c->x == k_r36_moebel[k].x && c->z == k_r36_moebel[k].z &&
+                c->width == k_r36_moebel[k].w && c->density == k_r36_moebel[k].d) { top = k_r36_moebel[k].oben; g = 2; break; }
+    }
+    if (grund) *grund = g;
+    return top;
+}
+
+/* RE2 FUN_80050858 mit a3 = 1 (@0x80050b34-c30): blockt nur, wo der Strahl A->B im Satz-Rechteck tiefer liegt als die
+ * Oberkante (y nach oben negativ). Abgetastet im 50er-Schritt ueber die Strecke (Ganzzahl). 1 = Strahl geht darueber. */
+static int r36_strahl_darueber(const re15_sca_entry_t *c, const int32_t a[3], const int32_t b[3], int32_t top)
+{
+    int64_t dx = (int64_t)b[0] - a[0], dz = (int64_t)b[2] - a[2];
+    int64_t len2 = dx * dx + dz * dz; int n = 1;
+    while ((int64_t)n * n * 2500 < len2 && n < 4096) n++;
+    for (int i = 0; i <= n; i++) {
+        int32_t x = a[0] + (int32_t)(dx * i / n), z = a[2] + (int32_t)(dz * i / n);
+        if ((uint32_t)(x - (int32_t)c->x) >= (uint32_t)c->width || (uint32_t)(z - (int32_t)c->z) >= (uint32_t)c->density) continue;
+        int32_t y = a[1] + (int32_t)(((int64_t)b[1] - a[1]) * i / n);
+        if (y >= top) return 0;                                                       /* Strahl im Grundriss nicht ueber der Kante */
+    }
+    return 1;
+}
+
 int re15_r36_zombie_sicht_frei(re15_actor_t *e, re15_actor_t *pl)
 {
     if (!s_r36_zombie_sicht_an) return re15_re2_los_clear(e, pl) ? 1 : 0;
     if (!g_room_rdt_ok) return 1;                                   /* keine Zellen -> frei (wie bisher) */
-    return re15_r36_los_ray_nib3(e, pl->x, pl->z) ? 0 : 1;          /* FUN_8003dcc4(0xf00, 0x300) @0x8001b8d4/8ec */
+    if (!s_r36_hoehe_an) return re15_r36_los_ray_nib3(e, pl->x, pl->z) ? 0 : 1;   /* Sonden: Abbildung vor NB1 */
+    /* FUN_8003dcc4(0xf00, 0x300) @0x8001b8d4/8ec ueber die 4 Regionen wie re15_los_ray_blocked — je Zelle: */
+    unsigned maske = e->sca_mask ? e->sca_mask : 4u;
+    int kopf = 0; int32_t ka[3] = { 0, 0, 0 }, kb[3] = { 0, 0, 0 };
+    int start = 0;
+    for (int k = 0; k < 4; k++) {
+        int cnt = g_room_rdt.sca_rgn[k];
+        if (start + cnt > g_room_rdt.sca_count) break;
+        for (int i = 0; i < cnt; i++) {
+            const re15_sca_entry_t *c = &g_room_rdt.sca[start + i];
+            if ((c->floor >> 4) != e->floor) continue;              /* w5>>12 == +0x82 @0x8003de60-6c */
+            if ((c->floor & 0x0f) != 3) continue;                   /* (w5&0xf00) == 0x300 @0x8003de74-94 */
+            if (!(maske & c->u0)) continue;                         /* Aktor-Maske (Runde 35 Spur H) */
+            if (!re15_r36_los_zelle_kreuzt(e->x, e->z, pl->x, pl->z, c)) continue;
+            int32_t top = re15_r36_zelle_oberkante(c, NULL);
+            if (top == 0) return 0;                                 /* ohne belegte Hoehe: blockt (RE1.5-Klasse, Wand) */
+            if (!kopf) {                                            /* Kopfteil 8 (RE2 +0x1c1 = 8 @0x8010082c-30) */
+                kopf = 1;
+                re15_enemy_bone_world_pos(e, 8, ka);
+                kb[0] = pl->x; kb[2] = pl->z;
+                kb[1] = pl->head_world_ok ? pl->head_world[1] : pl->y + RE15_R36_LEON_KOPF_Y;
+            }
+            if (!r36_strahl_darueber(c, ka, kb, top)) return 0;
+        }
+        start += cnt;
+    }
+    return 1;
 }
 
 /* NUR FUER SONDEN (Gegenprobe "vorher" im selben Lauf): 0 = die Leichen-Haken schreiben nichts. Das Spiel ruft das nie. */

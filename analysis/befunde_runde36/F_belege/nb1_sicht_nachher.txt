@@ -1,0 +1,100 @@
+Sicht-Bit: NB1 (Nibble 3, belegte Moebel-Oberkante gegen den Kopfstrahl)
+Raum Cut Slot Typ  Zombie@(x,z) rot | Plaetze  zell  ray  zellNUR | steht  davon zellNUR  davon frei | Reakt.max  >60 (davon zellNUR)
+1010   0    1  10  (  3750,  3500) 3072 |      54    23   23       0 |     0              0           0 |        2     0     0
+1010   0    2  10  (   205,  7248)    0 |      53     6    6       0 |     0              0           0 |        2     0     0
+1010   4    3  10  (   950, -1700)    0 |      75     0    0       0 |     0              0           0 |        1     0     0
+1010   4    4  10  (   -50, -3800) 3584 |     106     0    0       0 |     0              0           0 |        1     0     0
+1030   0    1  16  ( -8978,-27878) 3072 |     165     0    0       0 |     0              0           0 |        1     0     0
+1030   0    2  16  (-11700,-26671) 3072 |      83    10    3       7 |     0              0           0 |        1     0     0
+1030   0    3  16  (-10000,-30000) 3072 |     139   139    0     139 |     0              0           0 |        1     0     0
+1030   0    4  16  ( -5400,-28110) 3072 |     114     0    0       0 |     0              0           0 |        1     0     0
+1030   0    5  16  ( -7300,-25655) 3072 |      96    58   14      44 |     0              0           0 |        1     0     0
+1030   0    6  16  ( -7300,-29655) 3072 |     151   151    0     151 |     0              0           0 |        1     0     0
+1040   0    1  16  (-24474,   252) 1024 |      47    47   47       0 |     0              0           0 |        1     0     0
+1040   0    2  16  (-25980,  3352) 1024 |      37    13   13       0 |     0              0           0 |        1     0     0
+1040   0    3  16  (-28732, 13368)    0 |      79    79   79       0 |     0              0           0 |        1     0     0
+1040   0    4  16  (-28394, 16505)    0 |      69    69   69       0 |     0              0           0 |        1     0     0
+1040   0    5  16  (-29248, 15000)    0 |      58    58   58       0 |     0              0           0 |        1     0     0
+10B0   0    1  10  (-18052,-11774) -5283 |      78    78    0      78 |     0              0           0 |        2     0     0
+10B0   0    2  10  (-16953,-11774) -5283 |      78    78    0      78 |     0              0           0 |        2     0     0
+10B0   0    3  10  (-16168,-11774) -5283 |      78    78    0      78 |     0              0           0 |        2     0     0
+10B0   0    4  10  (-15069,-12716) -5283 |      40    40    0      40 |     0              0           0 |        2     0     0
+10D0   0    2  10  (  5878, 25694) 1256 |     153     7    7       0 |     0              0           0 |        1     0     0
+1180   0    1  10  ( -1558, 13400) 1024 |      49     2    2       0 |     2              0           0 |        2     0     0
+1180   0    2  10  (  3800, 17000)    0 |      70     0    0       0 |     0              0           0 |        2     0     0
+1180   0    3  10  ( -3758, -8936) 1024 |      70     0    0       0 |     0              0           0 |        2     0     0
+11E0   0    1  10  (-11000,-14000) -1024 |      14     8    0       8 |     0              0           0 |        2     0     0
+11E0   0    2  10  (-10000,-15500) -1024 |      23     0    0       0 |     0              0           0 |        2     0     0
+11E0   0    3  10  (-11000,-16000) -1024 |      26     0    0       0 |     0              0           0 |      225     2     0
+11E0   0    4  10  (-10000,-17500) -1024 |      43     0    0       0 |     0              0           0 |        2     0     0
+1200   0    3  10  (-24618,-13054) 1000 |      16    16   16       0 |    16              0           0 |        0     0     0
+1220   0    1  16  (-25398, -6739)    0 |     107     0    0       0 |     0              0           0 |        1     0     0
+1220   0    2  16  (-23500, -9700) 3072 |      96     3    2       1 |     0              0           0 |        1     0     0
+1220   2    3  16  (-13362,-10345) 3072 |      95     0    0       0 |     0              0           0 |        2     0     0
+1220   2    4  16  (-14264, -7414) 1024 |      82     3    3       0 |     0              0           0 |      147     3     0
+1220   4    5  16  (-25950,-13650) 2048 |      11     0    0       0 |     0              0           0 |        2     0     0
+1220   4    6  16  (-24550,-18600) 3072 |     106     8    7       1 |     0              0           0 |        2     0     0
+1220   6    7  16  (-15070,-14883) 2048 |      74    10   10       0 |    10              0           0 |        2     0     0
+1220   6    8  16  (-13300,-17200) 1024 |      41    19   19       0 |    16              0           0 |      466     3     0
+1220   8    9  16  (-16000,-21050) 1024 |      87     1    1       0 |     0              0           0 |        2     0     0
+1220   8   10  16  (-14267,-23144)    0 |      28     2    2       0 |     0              0           0 |        2     0     0
+1250   0    1  10  (-18200, -4900) 1024 |      87     4    4       0 |     4              0           0 |        2     0     0
+1250   0    2  10  (-18200, -3500) 1024 |      78     1    1       0 |     1              0           0 |        2     0     0
+1250   0    3  10  (-18200, -2100) 1024 |      82     0    0       0 |     0              0           0 |        2     0     0
+1250   0    4  10  (-18200,  -700) 1024 |      82     0    0       0 |     0              0           0 |        2     0     0
+1250   0    5  11  (-18200,   700) 1024 |      82     0    0       0 |     0              0           0 |        2     0     0
+1250   0    6  11  (-18200,  2100) 1024 |      81     0    0       0 |     0              0           0 |        2     0     0
+1250   0    7  11  (-18200,  3500) 1024 |      77     0    0       0 |     0              0           0 |        2     0     0
+
+Stehende Plaetze (Zombie reagiert in 480 Bildern nicht):
+  1180 cut0 slot1 Leon@(3042,11600) d=4939 zell=1 ray=1  #6 t1 nib3 u0=ff #7 t1 nib3 u0=ff #21 t1 nib3 u0=ff #22 t1 nib3 u0=ff #36 t1 nib3 u0=ff
+  1180 cut0 slot1 Leon@(3042,12000) d=4808 zell=1 ray=1  #6 t1 nib3 u0=ff #7 t1 nib3 u0=ff #21 t1 nib3 u0=ff #22 t1 nib3 u0=ff #36 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21618,-15654) d=3969 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21758,-15254) d=3720 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21758,-14854) d=3498 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21358,-16454) d=4808 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21358,-16054) d=4534 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21358,-15654) d=4280 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21358,-15254) d=4049 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-21358,-14854) d=3847 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-16054) d=4841 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-15654) d=4604 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-15254) d=4390 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20958,-14854) d=4204 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-15654) d=4939 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-15254) d=4741 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20558,-14854) d=4569 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1200 cut0 slot3 Leon@(-20158,-14854) d=4939 zell=1 ray=1  #9 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-11083) d=4049 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-10683) d=4427 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16470,-10283) d=4808 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-11083) d=3929 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-10683) d=4317 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-16070,-10283) d=4707 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-11083) d=3847 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-10683) d=4242 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15670,-10283) d=4638 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot7 Leon@(-15270,-10283) d=4604 zell=1 ray=1  #24 t1 nib3 u0=ff #59 t1 nib3 u0=ff #94 t1 nib3 u0=ff #129 t1 nib3 u0=ff #164 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16300,-21000) d=4841 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-22451) d=4939 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-22051) d=4569 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-21651) d=4204 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-21251) d=3847 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-20851) d=3498 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16475,-20451) d=3162 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-14700,-21800) d=4808 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-22051) d=4427 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-21651) d=4049 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-21251) d=3676 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-16075,-20851) d=3310 zell=1 ray=1  #28 t1 nib3 u0=ff #63 t1 nib3 u0=ff #98 t1 nib3 u0=ff #133 t1 nib3 u0=ff #168 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-14300,-21800) d=4707 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-22051) d=4317 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-21651) d=3929 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1220 cut6 slot8 Leon@(-15675,-21251) d=3544 zell=1 ray=1  #28 t1 nib3 u0=ff #29 t1 nib3 u0=ff #63 t1 nib3 u0=ff #64 t1 nib3 u0=ff #98 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-15200,-7900) d=4242 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14800,-8300) d=4808 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14800,-7900) d=4534 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot1 Leon@(-14400,-7900) d=4841 zell=1 ray=1  #14 t1 nib3 u0=ff #38 t1 nib3 u0=ff #62 t1 nib3 u0=ff #86 t1 nib3 u0=ff #110 t1 nib3 u0=ff
+  1250 cut0 slot2 Leon@(-15600,-7700) d=4939 zell=1 ray=1  #7 t1 nib3 u0=ff #14 t1 nib3 u0=ff #31 t1 nib3 u0=ff #38 t1 nib3 u0=ff #55 t1 nib3 u0=ff
+
+45 Zombies, 3360 Plaetze im Vorderkegel < 0x1388 in einer BLK-Zone (2928 ausserhalb verworfen): Zell-Strahl blockt 1011 (30.1%), RE1.5-Strahl (Nibble 3) blockt 386 (11.5%), nur Zell-Strahl 625 (18.6%); STEHT 49 (1.5%): davon nur-Zell-Strahl 0, beide frei 0, Nibble-3 49; Klassen: hinter WAND 49, nur hinter belegten MOEBELN 0
