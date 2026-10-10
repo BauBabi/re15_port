@@ -870,5 +870,5 @@ Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
   (Ingram/MC51; Arm-Abriss mit der Schrotflinte), der zerrissene Zombie am Boden (Ragdoll), und vor allem: wenn ein
   abgerissenes Bein/ein Arm auf dem Boden aufschlaegt, spritzt das Blut jetzt AM GLIED auf dem Boden statt in Armhoehe am Rumpf
   (vorher bis 2,4 m daneben). Ausserdem sitzt das Treffer-Blut bei den ersten Treffern auf einen GEHENDEN Zombie jetzt am
-  gezeichneten Koerper (vorher bis ~1 m daneben, weil der Anker aus der falschen Animationsbank kam). Keine neuen Assets,
+  gezeichneten Koerper (vorher bis ~12 cm daneben, 121 Einheiten, weil der Anker aus der falschen Animationsbank kam). Keine neuen Assets,
   keine Sprachdateien, keine Bits/Nachrichten/Ereignisse.

@@ -46,19 +46,19 @@ static void zeichen_bank(const re15_actor_t *e, const re15_enemy_bank_t *b, cons
     const int slot = (int)(e - g_actors), mo = (int)e->motion;
     *sk = &b->skel; *an = &b->anim;
     *ov = (e->anim_flags & 0x04) ? mo : -1;
-    if (re15_actor_uses_loco_bank(e) && b->loco_ok && mo < b->anim_loco.clip_count) {           /* main.c:9832-9843 */
+    if (re15_actor_uses_loco_bank(e) && b->loco_ok && mo < b->anim_loco.clip_count) {           /* main.c:9834-9843 */
         *sk = &b->skel_loco; *an = &b->anim_loco; *ov = mo;
     }
-    if (e->state == 4 && e->sub_state_1 == 0 && !e->walk_active) {                              /* main.c:9852-9861 */
+    if (e->state == 4 && e->sub_state_1 == 0 && !e->walk_active) {                              /* main.c:9853-9861 */
         const re15_emd_skeleton_t  *rs = (slot >= 0 && slot < RE15_ACTOR_MAX) ? re15_actor_rbj_skel(slot) : NULL;
         const re15_emd_animation_t *ra = (slot >= 0 && slot < RE15_ACTOR_MAX) ? re15_actor_rbj_anim(slot) : NULL;
         if (rs && ra && mo < ra->clip_count) { *sk = rs; *an = ra; *ov = mo; }
     } else if (e->state == 4 && !e->walk_active &&
-               (e->sub_state_1 == 1 || e->sub_state_1 == 7 || e->sub_state_1 == 8)) {         /* main.c:9862-9869 */
+               (e->sub_state_1 == 1 || e->sub_state_1 == 7 || e->sub_state_1 == 8)) {         /* main.c:9862-9870 */
         if (b->loco_ok && mo < b->anim_loco.clip_count) { *sk = &b->skel_loco; *an = &b->anim_loco; *ov = mo; }
-    } else if (e->state == 4 && !e->walk_active && e->sub_state_1 == 3) {                       /* main.c:9870-9875 */
+    } else if (e->state == 4 && !e->walk_active && e->sub_state_1 == 3) {                       /* main.c:9871-9876 */
         if (b->victim_ok && mo < b->anim_victim.clip_count) { *sk = &b->skel_victim; *an = &b->anim_victim; *ov = mo; }
-    } else if (re15_actor_uses_own_bank(e)) {                                                    /* main.c:9876-9912 */
+    } else if (re15_actor_uses_own_bank(e)) {                                                    /* main.c:9877-9912 */
         if (b->own_ok && mo < b->anim_own.clip_count) { *sk = &b->skel_own; *an = &b->anim_own; *ov = mo; }
     } else if (e->re2z_re15_pose) {                                                              /* main.c:9913-9925 */
         const re15_emd_skeleton_t  *rs = re15_re2z_re15_pose_skel();
