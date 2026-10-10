@@ -151,6 +151,15 @@ Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder 
   (+3000,+2500) daneben — der Kopf folgt Leon.
 - NACHHER (unit_r36_szenenleon_irons): tot -> Flags 0x12, Kopf-Akku (Yaw 0, Pitch -153) an BEIDEN Standpunkten
   gleich = Kopf auf der Clip-Pose, Neigung neutral, Leon egal. exe-Messung §4.4.
+
+### 4.4 exe-Messung vorher/nachher (gleiche Schalter, Bild 150, Cut 7 = Nahaufnahme der Liege)
+Lauf `RE15_DEBUG_JUMP=1150@250 RE15_SET_FLAG=9:0x49,3:0x5e RE15_FORCE_CUT=7`, Leon einmal bei A (-17500,-25500), einmal
+bei B (-21000,-22500); debug.log beider Staende `[irons-tod] ROOM1150 Zustand 0: (9,73)=1: Irons tot (Clip 2 Bild 89
+gehalten)`, state.log Irons `st=4 ss1=0 ss2=2 mo=2 af=89`.
+- VORHER = exe aus 78a4a748 (Quellstand per `git archive` in den Notizblock, gebaut mit RE15_TESTS=OFF, Assets ueber
+  RE15_CD_ROOT): Bilddifferenz A gegen B = Rechteck (244,61)-(279,92) = Irons' KOPF — der Tote dreht den Kopf zu Leon.
+- NACHHER (dieser Zweig): `[szl-r36] ROOM1150 Irons tot: Kopf-FSM +0x1b8 = 0x12 (kein Blickziel mehr)`; Bilddifferenz
+  A gegen B = KEINE (bitgleich). `J_belege/p4_irons_kopf_vorher_nachher_F150.png` (Ausschnitt, je A/B).
 ## §3 Punkt 3 — ROOM10F0: Kamera bleibt auf Leon, kein "Ploppen", nur Tuer-zu-Ton
 
 ### 3.1 Messung vorher (78a4a748, `RE15_DEBUG_JUMP=10f0@250`, Bilder 2560..2960/4, RE15_STATE_LOG)
