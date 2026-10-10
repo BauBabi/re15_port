@@ -8,6 +8,7 @@
  *   give:<id>:<n>      legt einen Gegenstand ins Inventar (re15_inv_grant), z.B. give:0x45:1
  *   cut:<n>            gespeicherter Kamera-Cut
  *   elza               Spielfigur Elza (g_gameflow.character = 4, probe_r30_elza-intro.c:241)
+ *   leer               Inventar leeren (vor give:, damit ein Gegenstand auf Platz 0 liegt)
  * Inventar sonst = Einsatzausruestung (re15_inv_load_briefing).
  */
 #include "re15_actor.h"
@@ -54,6 +55,9 @@ int main(int argc, char **argv)
             if (re15_inv_grant((uint8_t)id, (uint8_t)n) != 0) { printf("FAIL: give 0x%02lX\n", id); return 2; }
         } else if (strncmp(argv[a], "cut:", 4) == 0) {
             g_scd.cam_id = (uint8_t)atoi(argv[a] + 4);
+        } else if (strcmp(argv[a], "leer") == 0) {
+            re15_inv_init();
+            re15_inv_set_equipped_slot(0x80);   /* keine Waffe (DAT_800b25c8 0x80 = none) */
         } else if (strcmp(argv[a], "elza") == 0) {
             g_gameflow.character = 4;
         } else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }

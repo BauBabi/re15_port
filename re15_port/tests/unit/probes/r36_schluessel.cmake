@@ -25,3 +25,15 @@ endforeach()
 add_executable(probe_r36_schluessel_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_schluessel_karte.c)
 target_link_libraries(probe_r36_schluessel_karte PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r36_schluessel_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+#   integration_r36_schluessel  ECHTE exe am Lade-Weg: Parkplatz-Tuer zu/auf (ROOM11B0 -> ROOM11C0), Aufnahme
+#                               Parking Lot Key (Leon 10F0) / Prison Key (Elza 10F1, (4,0xEC)), CHECK-Foto beider
+if(TARGET re15_pc)
+    add_test(NAME integration_r36_schluessel
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_schluessel_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_schluessel_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_schluessel.cmake)
+    set_tests_properties(integration_r36_schluessel PROPERTIES TIMEOUT 1500)
+endif()

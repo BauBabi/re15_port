@@ -259,7 +259,13 @@ const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id)
 
 void re15_schluessel_r36_genommen(uint8_t item_id, uint8_t taken_bit)
 {
+    if (item_id != RE15_R36Q_PARK_ITEM && item_id != RE15_R36Q_PRISON_ITEM) return;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[schluessel] %s genommen: Item 0x%02X, Bit (9,%u)\n",
+            re15_schluessel_r36_name_ascii(item_id), (unsigned)item_id, (unsigned)taken_bit);
+#else
     (void)taken_bit;
+#endif
     if (item_id != RE15_R36Q_PRISON_ITEM) return;
     /* wie ROOM1011 sub06 @0x00E2C `22 04 ec 01` */
     re15_game_flag_set(RE15_R36Q_ZELLE_BANK, RE15_R36Q_ZELLE_BIT, 1);
