@@ -1,6 +1,7 @@
 # Runde 36 — Spur D: Granate (HE ohne Feuer an Zombies; Wurf-Aussetzer)
 
-Stand: 2026-10-10, Zweig `r36/granate`, Baum `.claude/worktrees/r36_granate`, Basis master 5a9dbb7b (v0.8.23 + Auftrag).
+Stand: 2026-10-10, Zweig `r36/granate`, Baum `.claude/worktrees/r36_granate`, Basis master 5a9dbb7b (v0.8.23 + Auftrag),
+zuletzt master 78a4a748 eingemischt (d9627833). Fortsetzung nach dem Sitzungslimit ab Commit e93f75b7 (§3.7, §5).
 Dossier wird FORTLAUFEND geschrieben (Sitzungslimit-Schutz). Auftrag: `AUFTRAG.md` (woertlich), Vertrag: `VERTRAG.md`.
 Vorrunde: `analysis/befunde_runde35/A_granate.md` (Wand/Reichweite/Sound/Brutalitaet), `B_werfer.md` (Granatwerfer).
 
@@ -247,3 +248,12 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
 * **Entscheidungsfrage:** Wird Leon WAEHREND der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen, bricht der Wurf ab und
   die Granate ist verbraucht (Original-Verhalten). Soll sie in diesem Fall im Inventar bleiben?
 * Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief.
+
+## 5. Suite (Fortsetzung, Stand 90d559cc + Sonde 208)
+* `bash re15_port/tools/local_build.sh test` (Lauf `build/r36d_mess/suite1.log`, 14:24-15:50, parallel zu fuenf
+  fremden ctest-Laeufen anderer Spuren auf derselben Maschine): **593 von 594 bestanden**, `Total Test time (real) =
+  5150.95 sec`. Einziger Ausfall: `502 - integration_r35_cut1150 (Timeout)` — `***Timeout 900.17 sec` (Szene ROOM1150,
+  Spur K der Runde 35; Normalkosten laut CTestCostData 509 s, Timeout 900 s; nichts mit der Granate zu tun).
+  Nachgefahren allein (`ctest -R ^integration_r35_cut1150$`, `build/r36d_mess/cut1150_rerun1.log`): **Passed 518.94 sec**
+  = Last-Artefakt (VERTRAG §1.5: einzeln nachfahren, nicht als Regression werten). Alle Granaten-Tests im Lauf gruen:
+  `unit_r36_granate`, `integration_r36_granate`, `unit_r35_granate`, `integration_r35_granate`, `probe_r34_wurf`.
