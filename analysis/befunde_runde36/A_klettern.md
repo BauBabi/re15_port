@@ -930,3 +930,92 @@ der Ausloeser verlangt z <= -20551. Die Flutfuellung bestaetigt es (0 Ausloeser-
 dieselbe Arithmetik (FUN_8003b558 selbst gelesen, s.o.) -> die Lage (3,204)=1 (@0x0187A) und der Latch @0x01AD4-e2
 entstehen im Auslieferungsstand im Spiel nie; nur ein Spielstand mit gesetztem Flag baut sie auf. Die Fall-KETTE
 dahinter (Laufsteg / Kanal / Wasser / Spritzer) ist trotzdem als Mechanik gepinnt (gesetzte Lage).
+
+### Nachbesserung 3 — Messung nachher an der exe, ELZA ROOM5021 (Spiegel, echter Weg in EINEM Stueck)
+
+Lauf `e5021c` (`A_belege/nb3_5021_elza_echter_weg.txt`, exe md5 e468162b...): `RE15_TITLE_SHOT_CHAR=1 RE15_GOTO_ROOM=5021`
+(Tuer-Spawn (-12300,0,-25800) Band 0, `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`), Weg: am Kistenschatten
+vorbei nach Norden, Treppe (Slot 1 sce 13) hoch auf Band 4, Kiste nach Sueden an die Wand, aussen herum, nach Osten
+ueber die Kante, Treppe hinunter, unten nach Osten schieben, Aktionstaste:
+```
+F1329 AUSLOESER wort=0x4002 band=4 pos=(-8093,-7200,-25338) spieler=(-9443,-25815) richt=(1,0)
+F1342 BODEN FUN_8001c6e8=0 band 4 -> 0      F1351 LANDUNG y=0 band=0      F1352 AUFSETZEN
+F2254 FLAG (4,203)=1   KERBE m0b=4 pos=(-4375,0,-25338) band=0               <- Latch sub01 @0x0133A-348 (5021)
+climb.txt: 52 Zeilen sub=9 kind=0x81 obj=0 ... T3031 pos=(-3530,-1800,-25243) band=1 stand=0   <- oben auf der gefallenen Kiste
+```
+Bild: `A_belege/nb3_5020_kiste_gelandet_F812.png` (RE15_FRAMEDUMP, RE15_WINDOW_SCALE=1, Lauf wie m5_nachher): die Kiste
+liegt nach der Landung (F807) auf dem Boden (Band 0) vor der Ostwand — vorher (Abnahme 2 M5) stand sie in Band-4-Hoehe
+ueber dem Abgrund.
+
+Raum-Toene (`A_belege/nb3_snd0_saetze.txt`, snd0-EDT RDT+0x08): ROOM5020/5021 haben Satz 6/7/8 LEER (der Original-Ton
+fuer Aufsetzen und Schieben ist dort stumm — FUN_80045024 spielt einen leeren Satz nicht); ROOM1090/1091 Satz 6+7;
+ROOM20A0/20A1, 2050/2051 und 11A0/11A1 Satz 6, 7 UND 8 (Aufsetzen, Schieben, Spritzer). Dass gerade die beiden
+unerreichbaren Wasser-Faelle (20A0, 11A0) den Spritzer-Ton tragen, zeigt die Absicht der Entwickler; die Geometrie der
+Auslieferung laesst die Kiste dort trotzdem nicht an die Kante (Freiraum-Zensus).
+
+### Nachbesserung 3 — Tests (gezielt, KEINE volle Suite)
+
+Bau: `bash re15_port/tools/local_build.sh configure` (neue Dateien objfall_r36.c, probe_r36_objfall.c) ->
+`=== LOCAL-BUILD-OK (configure)`; `... build` -> `=== LOCAL-BUILD-OK (build)`, ohne Warnungen in objfall_r36.c.
+exe md5 e468162bc5f95bdd8c506c561074bcda (alle exe-Laeufe ab l5020a und der Integrationslauf).
+
+Schnelle Gruppe (Spur + 1090/10F0/Treppe/Wasser/AOT/ESP-Module, die der Diff beruehrt):
+```
+ctest --test-dir re15_port/build -R "^(unit_r36_.*|unit_1090_.*|probe_1090_.*|unit_re2_room1090_ab|unit_plc_back_yaw_1090|unit_map_1090|unit_rvd_scan_ungated_by_climb|unit_re2z_pushoff_crawl|unit_enemy_body_push|unit_r20_birkin_push_pin|unit_r22_10f0_figur|unit_r35_cut10f0_.*|unit_r35_inventar1050_kiste|unit_stair_1170_regression|unit_stair_hwtruth_1060|unit_re2_spider_water_2090|unit_r34_wasser|unit_esp_parse|unit_aot_edge|unit_scd_aot_opcodes|unit_aot_sce_census|unit_prop_texel_key_11f0|prop_sca_collision)$" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 41
+```
+Riegel des erfuellten Nutzer-Punkts (echte exe, echter Weg 10F0/10F1, Leon + Elza + Szene):
+```
+ctest --test-dir re15_port/build -R "^integration_r36_klettern$" --timeout 1500 --output-on-failure
+1/1 Test #575: integration_r36_klettern .........   Passed  506.40 sec
+100% tests passed, 0 tests failed out of 1
+```
+Weil game_step_common.c und scd_room_setup.c jeden Raum beruehren, zusaetzlich ALLE VM-Sonden/Pins (kein
+Integrations-/Fensterhaken):
+```
+ctest --test-dir re15_port/build -R "^(unit_|probe_|prop_)" -j4 --timeout 600
+100% tests passed, 0 tests failed out of 521
+```
+NEU: `unit_r36_objfall` (Sonde `tests/unit/probe_r36_objfall.c`, registriert in `tests/unit/probes/r36_klettern.cmake`).
+
+### OFFEN (Stand Nachbesserung 3)
+
+- **Gegenmessung am laufenden Original (nicht gefahren).** Die Fall-Arithmetik ist Instruktion fuer Instruktion
+  portiert (B1-B6), die Ganzzahl-Endwerte (z.B. Drehung 1029 statt 1024 nach 17 Winkelschritten, Endlage x -5169 bzw.
+  -5264) sind aber nur am Port gemessen. Messweg: DuckStation mit der Auslieferungs-EXE (NICHT die PATCHED-EXE-Savestates),
+  ROOM5020 per Debug-Menue (Skill re15-room-capture; Sprung-Spawn (-12350,-7200,-23150) Band 4, Kiste (-11000,-23150)),
+  Kiste nach Sueden an die Wand, dann nach Osten ueber die Kante schieben; je Bild obj 0 = 0x800b3f98 +0x04 (faellt),
+  +0x05 (Zustand), +0x06 (Zaehler), +0x34/+0x38/+0x3C (Lage), +0x68/+0x6A/+0x6C (Drehung), +0x82 (Band) und Bank 4 Wort 6
+  0x800b1030 Maske 0x00100000 (= Bit 203) lesen (GDB-Haltepunkt auf @0x8002c42c bzw. Savestates per LB-Hotkey,
+  Muster analysis/befunde_runde35/H_raeume.md). Erwartet: Ausloeser ab Mitte x >= -8125, Bild 13 +0x82 = 0, Landung
+  nach 22 Bildern auf y 0, +0x6C nahe 1024.
+- **SquareRoot12 ausserhalb 0 < a < 2^19** (objfall_r36.c `gte_squareroot12`): nicht nachgebildet (liefert 0 und
+  schreibt eine Zeile in `RE15_OBJFALL_LOG`). Unerreicht: a = 4096 - (y*y >> 12) mit y ~ m02 ~ 0 fuer alle fallfaehigen
+  Objekte der Auslieferung (rot_y 0 oder 2048). Ein Objekt mit rot_y +-1024 koennte a leicht negativ machen; dann liest
+  das Original ein Tabellenwort vor 0x8007d984 — keines der 12 fallfaehigen Records hat diese Lage.
+- **Unveraendert offen** (ausserhalb der Maengel): FUN_8002dc48 (Herunterfall des SPIELERS, Substate 0xd, nur
+  0x100-Objekte) nicht portiert; H1 ROOM2060 Spinne; H3 Null-/Kleinbox-Objekte (siehe OFFEN oben).
+- **Nicht gefahren an der exe:** 3050/3051, 1090/1091 (obj 1), 2050/2051 (obj 6) — der Fall ist dort erreichbar
+  (Freiraum-Zensus) und laeuft mit derselben Mechanik; ein echter Schubweg ist nicht gemessen.
+
+### Fuer den Nutzer (Nachbesserung 3)
+
+- **Neu im Spiel:** verschiebbare Kisten FALLEN jetzt von Kanten, wie im Original (vorher blieben sie in der Luft
+  stehen). Kippen, Fallen, Aufsetzen mit Geraeusch (Raum-Ton-Bank, Satz 6), im Wasser mit Spritzern (Satz 8 +
+  Spritzer-Effekt), danach liegt die Kiste auf der unteren Ebene und kann wieder geschoben und bestiegen werden.
+  In ROOM5020/5021 ist das Aufsetzen STUMM — die Ton-Bank des Raums hat Satz 6 (und auch den Schiebe-Satz 7) nicht
+  belegt, im Original genauso.
+  - ROOM5020/5021 (Cargo Storage): die Kiste auf der Empore nach Sueden an die Wand und dann nach Osten ueber die
+    Kante schieben -> sie faellt auf den Boden. Unten in die Ecke vor der Ostwand geschoben, merkt sich das Spiel die
+    Lage (beim naechsten Betreten liegt sie unten). An der exe gemessen mit Leon (5020) UND Elza (5021), jeweils
+    einschliesslich Treppe, Merken der Lage und Klettern auf die gefallene Kiste.
+  - ROOM1090/1091: auch die Kiste auf der oberen Ebene (dort, wo man von ROOM10F0 ankommt) kann ueber die Kante
+    geschoben werden und landet eine Ebene tiefer (in der Sonde gemessen, an der exe nicht gefahren). Das betrifft
+    die Frage der Spur H ("Kiste in ROOM1090 — Verwendungszweck?").
+  - ROOM20A0/20A1 (Service Tunnel): die Kiste passt — im Original wie im Port — nicht in die schmale Luecke zur
+    Kante (sie ist auf die Einheit genau zu schmal); sie faellt dort nie. Die Boden-Lage aus dem Raumskript entsteht
+    nur mit einem Spielstand, der sie schon traegt.
+  - ROOM11A0/11A1: unveraendert, die Kiste erreicht die Kante nicht (umbaute Ebene).
+- Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien, keine Bank-9-Bits / Nachrichten-IDs / Ereignisse.
+- Messschrieb fuer Rueckmeldungen: `RE15_OBJFALL_LOG=objfall.txt` schreibt Ausloeser, Fallbilder, Landung, Flags.
+- Entscheidungsfrage: keine (Orchestrator-Entscheidung "Original oder nicht": portiert).

@@ -1,0 +1,13 @@
+# snd0-EDT der Fall-Raeume (RDT+0x08 = EDT, je Satz 4 Byte; 00000000 = leer -> FUN_80045024 spielt nichts)
+STAGE5/ROOM5020 EDT @0x02dc4 Satz6(Aufsetzen) 00000000 Satz7(Schieben) 00000000 Satz8(Spritzer) 00000000
+STAGE5/ROOM5021 EDT @0x09c78 Satz6(Aufsetzen) 00000000 Satz7(Schieben) 00000000 Satz8(Spritzer) 00000000
+STAGE2/ROOM20A0 EDT @0x068d8 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
+STAGE2/ROOM20A1 EDT @0x068d8 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
+STAGE1/ROOM1090 EDT @0x118d0 Satz6(Aufsetzen) 00005510 Satz7(Schieben) 00004510 Satz8(Spritzer) 00000000
+STAGE1/ROOM1091 EDT @0x045bc Satz6(Aufsetzen) 00005510 Satz7(Schieben) 00004510 Satz8(Spritzer) 00000000
+STAGE3/ROOM3050 EDT @0x06be4 Satz6(Aufsetzen) 00000000 Satz7(Schieben) 00004511 Satz8(Spritzer) 00000000
+STAGE3/ROOM3051 EDT @0x06be4 Satz6(Aufsetzen) 00000000 Satz7(Schieben) 00004511 Satz8(Spritzer) 00000000
+STAGE2/ROOM2050 EDT @0x097c0 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
+STAGE2/ROOM2051 EDT @0x097c0 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
+STAGE1/ROOM11A0 EDT @0x04d34 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
+STAGE1/ROOM11A1 EDT @0x04d48 Satz6(Aufsetzen) 00011510 Satz7(Schieben) 0000d511 Satz8(Spritzer) 00012510
