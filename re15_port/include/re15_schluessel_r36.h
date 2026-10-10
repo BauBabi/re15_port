@@ -86,19 +86,28 @@
 #define RE15_R36Q_PROP_FLAGS       0x000B
 #define RE15_R36Q_PROP_BAND        1
 #define RE15_R36Q_AOT_SAT          0x31     /* 160 von 164 Item_aot_set (RE15_R35I_AOT_SAT) */
-/* LAGE — PORT-WAHL aus Messung (Dossier 3.2): der Holzschreibtisch mit Lampe = Suedende der
- * Kollisionszelle SCA 9 (x -2650..-950, z 3150..16800); auf DEMSELBEN Tisch legt das Original die
- * Remington ab (ROOM10F0 main00 Obj_model_set obj 3 (-1450,-1300,3850) rot 2627, Zone Slot 13
- * x[-1450..-450] z[3200..4200]) — Hoehe y = -1300 ist DIESE Original-Tischhoehe. Der Schluessel
- * liegt westlich daneben (eigene Zone ohne Ueberschneidung mit Slot 13). Werte in Abschnitt 3.2. */
-#define RE15_R36Q_X                (-2150)
-#define RE15_R36Q_Y                (-1300)
-#define RE15_R36Q_Z                3500
-#define RE15_R36Q_ROT_Y            1024
-/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 mittig auf dem Schluessel (haeufigste Groesse, 69 von
- * 162 Item_aot_set, RE15_R35I_KARTE_RECT_*); x -2650..-1650 endet 200 vor Slot 13 (x ab -1450). */
-#define RE15_R36Q_RECT_X           (-2650)
-#define RE15_R36Q_RECT_Z           3000
+/* LAGE — PORT-WAHL aus Messung (Dossier 3.2): auf dem Suedende der Funkkonsole an der Ostwand
+ * (Kollisionszelle SCA 10 x 7400..9300, z 2500..14750), gleich links im Eintrittsbild Cut 0 (Tuer von
+ * ROOM10D0, Slot 0). Plattenhoehe TRIANGULIERT am gelben Ordner auf derselben Konsole (Cut 1 (90,8 ;
+ * 156,7) + Cut 2 (235,0 ; 150,0), Strahlen der Engine-Matrix, Restabstand je 18): Welt (7808,-1482,
+ * 6246) = Ordner-Oberseite -> Platte -1460. Verworfen (gemessen, Dossier 3.2): der Holzschreibtisch
+ * (SCA 9 Suedende, Remington-Tisch y -1300) — in Cut 5 und 6, den einzigen Kameras auf ihn, deckt
+ * JEDE Stelle der Platte eine Maske (Sonde `sicht`, 28 von 28 Punkten), auch die Original-Remington.
+ * Hier: Cut 0 (95..102 ; 170) und Cut 1 ohne Maske (Sonde `sicht`), Framedump-Differenz mit/ohne
+ * Bit 82: Cut 0 9 Bildpunkte, Cut 1 2 (der RE2-Schluessel ist 152 x 76 gross, die Kameras weit).
+ * rot_y 256 = 22,5 Grad schraeg zur Konsolenkante. */
+#define RE15_R36Q_X                8050
+#define RE15_R36Q_Y                (-1460)
+#define RE15_R36Q_Z                2700
+#define RE15_R36Q_ROT_Y            256
+/* AUFHEBE-RECHTECK — PORT-WAHL 1000 x 1000 (haeufigste Groesse, 69 von 162 Item_aot_set,
+ * RE15_R35I_KARTE_RECT_*) x 7850..8850, z 2050..3050: der Aktions-Scan nimmt je Druck den KLEINSTEN
+ * treffenden Slot (`j 0x80043028` @0x80042f94) — der Text-Platz Slot 2 "A large communications
+ * device..." (x 7000..7800, z 2600..12300) wuerde jede Zone mit x <= 7800 schlucken, deshalb beginnt
+ * diese bei 7850. Stand zum Aufheben: suedlich der Konsole (z ~ 2050), Blick +z, 620 voraus
+ * (@0x80042bd0) liegt in der Zone. Kein anderer Satz von 10F0/10F1 schneidet sie. */
+#define RE15_R36Q_RECT_X           7850
+#define RE15_R36Q_RECT_Z           2050
 #define RE15_R36Q_RECT_W           1000
 #define RE15_R36Q_RECT_D           1000
 

@@ -157,29 +157,40 @@ static void teil_raum(void)
         { 0x10F0, 0x45, 82, 0, "Parking Lot Key" },
         { 0x10F1, 0x42, 83, 1, "Prison Key" },
     };
-    const int32_t stand_x = -2150, stand_z = 2600; const int16_t stand_rot = 3072;   /* Blick +z */
+    /* Stand suedlich der Konsole (SCA 10 beginnt bei z 2500), Blick +z: 620 voraus = (8350,2670) */
+    const int32_t stand_x = 8350, stand_z = 2050; const int16_t stand_rot = 3072;   /* Blick +z */
     for (int i = 0; i < 2; i++) {
         raum_t r;
         if (raum_laden(&r, k[i].raum) != 0) { printf("FAIL: ROOM%04X nicht lesbar\n", k[i].raum); fails++; continue; }
         printf("\n[raum] ROOM%04X %s\n", k[i].raum, k[i].name);
         hochfahren(&r, stand_x, stand_z, stand_rot, NULL, k[i].elza);
         int p = slot_von(4);
-        CHECK(p >= 0 && g_scd.props[p].x == -2150 && g_scd.props[p].y == -1300 && g_scd.props[p].z == 3500 &&
-              g_scd.props[p].rot_y == 1024 && g_scd.props[p].flags == 0x000B && g_scd.props[p].parent_obj == -1 &&
+        CHECK(p >= 0 && g_scd.props[p].x == 8050 && g_scd.props[p].y == -1460 && g_scd.props[p].z == 2700 &&
+              g_scd.props[p].rot_y == 256 && g_scd.props[p].flags == 0x000B && g_scd.props[p].parent_obj == -1 &&
               g_scd.props[p].band == 1,
-              "P obj 4 bei (-2150,-1300,3500) rot 1024, Flags 0x000B, Band 1, Welt");
+              "P obj 4 bei (8050,-1460,2700) rot 256, Flags 0x000B, Band 1, Welt");
         const re15_aot_t *a = &g_aot.slots[15];
         CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[15].item_type == k[i].item &&
               g_aot.item_params[15].amount == 1 && g_aot.item_params[15].taken_bit == k[i].bit &&
               g_aot.item_params[15].taken_prop == 4 && a->sce_flags == 0x31 && a->band == 0 &&
-              a->x - a->half_w == -2650 && a->x + a->half_w == -1650 && a->z - a->half_h == 3000 &&
-              a->z + a->half_h == 4000,
-              "Z Slot 15: Item 0x%02X x1, Bit (9,%d), Prop 4, sat 0x31, x[-2650..-1650] z[3000..4000]",
+              a->x - a->half_w == 7850 && a->x + a->half_w == 8850 && a->z - a->half_h == 2050 &&
+              a->z + a->half_h == 3050,
+              "Z Slot 15: Item 0x%02X x1, Bit (9,%d), Prop 4, sat 0x31, x[7850..8850] z[2050..3050]",
               k[i].item, k[i].bit);
-        /* Original-Saetze unberuehrt: Slot 13 Remington (Zone x[-1450..-450]) bleibt, keine Ueberschneidung */
-        CHECK(g_aot.slots[13].active && g_aot.item_params[13].item_type == 0x08 &&
-              g_aot.slots[13].x - g_aot.slots[13].half_w > a->x + a->half_w,
-              "Z Slot 13 (Remington 0x08) unveraendert, beginnt rechts der neuen Zone");
+        /* Kein Original-Aktionssatz (Slots 0..14) schneidet die neue Zone — sonst nimmt der Scan den
+         * kleineren Slot (@0x80042f94); insbesondere Slot 2 (Text x 7000..7800, z 2600..12300). */
+        {
+            int schnitt = -1;
+            for (int s2 = 0; s2 < 15; s2++) {
+                const re15_aot_t *b = &g_aot.slots[s2];
+                if (!b->active || b->has_quad) continue;
+                if (b->x - b->half_w <= a->x + a->half_w && a->x - a->half_w <= b->x + b->half_w &&
+                    b->z - b->half_h <= a->z + a->half_h && a->z - a->half_h <= b->z + b->half_h) schnitt = s2;
+            }
+            CHECK(schnitt < 0 && g_aot.slots[2].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[2].x + g_aot.slots[2].half_w < a->x - a->half_w,
+                  "Z kein Original-Satz 0..14 schneidet die Zone (zuletzt gefunden: %d); Slot 2 endet bei x %d", schnitt,
+                  g_aot.slots[2].x + g_aot.slots[2].half_w);
+        }
         const int bitflag[3] = { 9, k[i].bit, -1 };
         hochfahren(&r, stand_x, stand_z, stand_rot, bitflag, k[i].elza);
         CHECK(slot_von(4) < 0 && !(g_aot.slots[15].active && g_aot.slots[15].type == RE15_AOT_TYPE_ITEM),
@@ -193,7 +204,7 @@ static void teil_raum(void)
         int modal = re15_item_modal_active();
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800) re15_item_modal_tick(0, 0);
         re15_item_modal_prompt(&typ, &wahl);
-        CHECK(modal && typ == k[i].item, "D Druck (%d,%d) Blick +z: Aufnahme-Modal Item 0x%02X (ist 0x%02X)",
+        CHECK(modal && typ == k[i].item, "D Druck (%d,%d) Blick +z vor der Konsole: Aufnahme-Modal Item 0x%02X (ist 0x%02X)",
               stand_x, stand_z, k[i].item, typ);
         w = 0;
         while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick((uint16_t)0x4000u, 0);
