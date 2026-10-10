@@ -191,7 +191,7 @@ deshalb laeuft Lauf B ueber RE15_GOTO_ROOM, das den Raum mit Elza-Bit korrekt la
 | `unit_r36_klettern_10f0_startlage` | dasselbe in der Startlage (-6050,4950), Flag (3,102)=0 |
 | `unit_1090_climb_pin` (bestehend, berichtigt) | N4: Flags 0 -> kein Klettern; N4b: Flags 0x0001 -> Klettern (Substate 9, KIND 0x81) |
 | `integration_r36_klettern` | die drei Laeufe A/B/C oben mit der echten exe; je Lauf: Tritt in der Startlage gesehen, Schieben (`push=5`), `sub=9 kind=0x81`, oben (y=-1800, band=1, stand=Tritt) mit Tritt in der Schiebezone (x > -5800, z < 250 = Aot_set Slot 10 @0x010E0), Zielraum 1090/1091 per EXIT_AT erreicht; C zusaetzlich Szene gestartet + zu Ende; B zusaetzlich `[pl] Spieler-Familie PL04` (Elza wirklich im Spiel). Laufzeit ~540 s (TIMEOUT 1200) |
-| `unit_r36_klettern_zensus` (NEU, Fortsetzung) | ALLE Typ-4-Objekte ohne Bit 0x100 des Zensus in der VM (Abschnitt "Zensus-Pin" unten): 12 Raeume (Leon + Elza), je Lage (Flag 0/1), je Objekt vier Anlaufseiten; Riegel = je Objekt mindestens eine Seite mit Substate 9, KIND 0x81, Objekt = Tritt, Aufstieg endet y = obj.y - 2*box_hy, Band + 1, Standobjekt = Tritt |
+| `unit_r36_klettern_zensus` (NEU, Fortsetzung) | ALLE Typ-4-Objekte ohne Bit 0x100 des Zensus in der VM (Abschnitt "Zensus-Pin" unten): 12 Raeume (Leon + Elza), je Lage (Flag 0/1), je Objekt vier Anlaufseiten; Riegel = je Objekt mindestens eine Seite mit Substate 9, KIND 0x81, Objekt = Tritt, Aufstieg endet y = obj.y - 2*box_hy, Band + 1, Standobjekt = Tritt. **Nachbesserung 1:** dazu Null-Box ROOM3091 obj 1 — Wahrheitstafel FUN_8002da4c (h 0, Rand -112, 12 Punkte, @0x8002da8c-c0), achsgerade 4/4 ohne Objekt-Treffer, Querversatz +-300 8/8 Start auf Band 1, derselbe Schraeganlauf vom Boden (Band 0) 8/8 ohne Objekt-Treffer (@0x8002d370) |
 
 Vorher (ohne Fix) fallen `unit_r36_klettern_10f0_*` an P2 (`try_start` = 0), `unit_r36_klettern_zensus`
 mit 0/24 (gemessen, unten) und `integration_r36_klettern` an "KEIN Klettern" (gemessen: K1 auf master UND
@@ -284,6 +284,28 @@ C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 ob
   Hinaufklettern ("auf ... klettern") ist davon unabhaengig. Betroffen waeren nur die 0x0101-Kisten (z.B.
   ROOM1090): dort steht der Spieler im Port an der Kante, statt zu fallen. Messweg bei Bedarf: auf der
   1090-Kiste zur Kante gehen, Original setzt +0x05 = 0xd (DuckStation-GDB auf 0x800aca59).
+- **H1 aus Abnahme 0 (§7/§10) — ROOM2060, Tritt in der Startlage (Nachbesserung 1 hier eingetragen):** die
+  adulte Spinne (Typ 0x25, Slot 2) schiebt Leon im ersten Normalbild nach dem Aufstieg von der Trittflaeche;
+  Leon bleibt auf y = -1800 / Band 1 ohne Standobjekt ("schwebt"). Reihenfolge im Original selbst
+  disassembliert: FUN_80031c44 ruft den Koerper-Schub `jal 0x8002b544` @0x80031cbc VOR dem Standtest
+  `jal 0x8002d100` @0x80031ce8 (a1 = 0x12); eine Bodenhoehen-Nachfuehrung fuer einen von einem
+  Nicht-0x100-Objekt geschobenen Spieler gibt es danach nicht (FUN_8002dc48 @0x8002dd94 betrachtet nur
+  0x100-Objekte). Der Port bildet diese Reihenfolge nach; NEU erreichbar ist der Zustand, weil der Tritt
+  (Flags 0x0001) seit dem Fix kletterbar ist. Offen ist allein, ob die Spinne Leon auf dem Tritt im Original
+  ueberhaupt erreicht (Y-Band-Gate @0x8002b1f0-b228, Port enemy_ai_common.c:4435-4439; Spinnen-Y im Original
+  ungemessen). **Messweg:** DuckStation mit der Auslieferungs-EXE (NICHT die PATCHED-EXE-Savestates), ROOM2060
+  per Debug-Menue (Skill re15-room-capture), Tritt in der Startlage (-3125,0,2075) von Sueden besteigen,
+  danach Spieler-Y 0x800aca8c (= 0x800aca54 + 0x38, Schreiber @0x800381ec), Spieler-Band 0x800acad6,
+  Standobjekt 0x800ac788 und die Y der Spinne (Aktorfeld DAT_800acc2c, Stride 0x1f4, +0x38) Bild fuer Bild
+  lesen (GDB-Haltepunkt auf @0x80031ce8). Bleibt Leon im Original oben (Spinne erreicht ihn nicht), ist das
+  Y-Gate des Port-Schubs zu pruefen; faellt/schwebt er auch dort, ist der Port byte-true. Kein Mangel der
+  Spur (Original-Reihenfolge, keine Abhaengigkeit von der geaenderten Gate-Zeile).
+- **H3 aus Abnahme 0 (§5) — Nebenwirkungen des breiteren Gates:** 619 von 672 Records passieren das Gate
+  jetzt. Fuer Null-Boxen UND (Nachbesserung 1) fuer die 14 Records mit 0 < h < 112 kippt FUN_8002da4c auf
+  der kleinen Achse (Treffer bei |d| >= 112 - h); praktisch erreichbar ist davon nichts (Abnahme 0 §5 fuer die
+  Null-Boxen, Nachbesserung 1 fuer 3091 obj 1 und die 14 Records: Spieler dort nie auf dem Objekt-Band ohne
+  Standobjekt). Ein Abgleich gegen das laufende Original fuer ein Null-Box-Objekt auf Spieler-Band fehlt —
+  es gibt keinen Raum, in dem das ohne Fremd-Schub entsteht.
 
 ## Fuer den Nutzer
 
@@ -315,4 +337,106 @@ trifft FUN_8002da4c mit Rand -112 nie") ist widerlegt. Plan: (1) FUN_8002da4c se
 Wahrheitstafel fuer h=0 / Rand -112 belegen, (2) Dossier + Sondenkommentar berichtigen, (3) 3091 obj 1 in der
 VM mit Querversatz >= 112 fahren (Diagnose) und die Wahrheitstafel als Riegel festhalten, (4) Erreichbarkeit
 von 3091 obj 1 (Spieler auf Band 1 in Reichweite?) messen, (5) H1 (ROOM2060 Spinne) als OFFEN mit Messweg.
-(Abschnitt wird fortlaufend gefuellt.)
+Am Engine-Fix (climb_common.c:99) aendert die Nachbesserung NICHTS — Engine-Dateien nur Kommentare.
+
+### Mangel 1 — widerlegte Null-Box-Aussage zu ROOM3091 obj 1
+
+**Ursache.** Die Zensus-Sonde fuhr je Objekt nur die vier ACHSGERADEN Anlaeufe (Querabstand 0). Bei der
+Null-Box ist dann |dx| bzw. |dz| = 0, und genau diese Achse lehnt FUN_8002da4c ab — "kein Start" war richtig
+gemessen, aber zu "trifft NIE" verallgemeinert; der vorzeichenlose Vergleich mit negativem h + Rand wurde
+nicht ausgewertet. Betroffen: Zensus-Pin-Tabelle (Zeile 3091), die Messzeile darunter, der Kopfkommentar
+`probe_r36_klettern_zensus.c:16-17`, der Kommentar climb_common.c (3091 obj 1 als "Tritt/Leiter") und die
+Commit-Message fd9c0f48 (Historie, nicht aenderbar — hier als ueberholt vermerkt).
+
+**Messung vorher.** `A_belege/zensus_sonde_nachher.txt` (Stand vor der Nachbesserung): ROOM3091 obj 1 nur
+`yaw=0/1024/2048/3072 start=(-15522,-1010)/(-15072,-560)/(-14622,-1010)/(-15072,-1460) reach=1 try=0` — vier
+achsgerade Seiten, kein Schraeganlauf gefahren, die Behauptung "nie" war ungemessen.
+
+**Beleg — FUN_8002da4c selbst disassembliert** (`re15_disasm.py dis 0x8002da4c 32` / `bytes 0x8002da8c 64`,
+info/Re1.5/PSX.EXE):
+```
+8002d394: jal   0x8002da4c          93 b6 00 0c      (FUN_8002d2c0, Kletter-Sonde)
+8002d398: addiu a2,zero,-112        90 ff 06 24      Rand -112 im Delay-Slot
+8002da50: lbu   v0,130(t0)                           Objekt-Band obj+0x82
+8002da58: bne   v0,a3,0x8002daac                     Band-Gate -> 0
+8002da5c: addu  t1,a2,zero                           t1 = Rand
+8002da60: lw    a2,120(t0)                           Box-Zeiger obj+0x78
+8002da64-88:    dx = p.x - (box.cx + obj.x) ; dz = p.z - (box.cz + obj.z)
+8002da8c: lhu   v0,6(a2)            06 00 c2 94      box.hx
+8002da90: lhu   v1,10(a2)           0a 00 c3 94      box.hz
+8002da94: addu  v0,v0,t1            21 10 49 00      hx + Rand
+8002da98: addu  a1,a1,v0            21 28 a2 00      dx + (hx + Rand)
+8002da9c: sll   v0,v0,1             40 10 02 00      2 * (hx + Rand)
+8002daa0: sltu  v0,v0,a1            2b 10 45 00      VORZEICHENLOS
+8002daa4: beq   v0,zero,0x8002dab4  03 00 40 10
+8002daa8: addu  a2,v1,t1            21 30 69 00      hz + Rand (Delay-Slot)
+8002daac: j     0x8002dac4 / 8002dab0: addu v0,zero,zero        -> 0
+8002dab4: addu  v1,a0,a2 / 8002dab8: sll v0,a2,1 / 8002dabc: sltu v0,v0,v1 (2b 10 43 00)
+8002dac0: xori  v0,v0,0x1           01 00 42 38      Rueckgabe = Z-Bedingung
+```
+h = 0, Rand = -112: h + Rand = 0xFFFFFF90, 2*(h + Rand) = 0xFFFFFF20. Abgelehnt wird nur, wenn
+(dx - 112) mod 2^32 > 0xFFFFFF20, d.h. -223 <= dx - 112 <= -1, also **-111 <= dx <= 111**. Damit:
+**Treffer <=> |dx| >= 112 UND |dz| >= 112** (vom Boxmittelpunkt obj + box.c). Nachgerechnet mit einer
+Emulation genau dieser Instruktionen (`A_belege/nb1_tafel_8002da4c.py/.txt`): die zwoelf Tafelpunkte der
+Abnahme bestaetigt (0/0, 0/300, 300/0, 111/111, -111/500, 112/-111 -> 0; 112/112, -112/-112, -112/500,
+300/300, -500/800, 900/-900 -> 1) und 1D-Brute-force je Achse ueber dx, dz in [-30000, 30000]: **0
+Abweichungen** von der geschlossenen Form. Der Port (re15_collision.c:308-311, u32-Arithmetik) rechnet
+identisch (Riegel unten). Allgemein: eine Achse kippt immer dann, wenn h + Rand < 0, also h < 112 —
+Zensus aller 672 Obj_model_set-Records (`A_belege/nb1_hzensus.txt`): 558 mit h(x,z) = 0, dazu 14 mit
+0 < h < 112 auf einer Achse (ROOM1190/1191 obj 0-3 und 11C0/11C1/4030/4031 obj 0: h(45,1260,700) Band 1;
+50C0/50C1 obj 0: h(2160,2700,90) Band 1).
+
+**Aenderung.**
+| Datei | Aenderung |
+|---|---|
+| `A_klettern.md` | Zensus-Pin-Zeile 3091, Messzeile "reach=1 try=0" und RE-Belege berichtigt (dieser Abschnitt) |
+| `tests/unit/probe_r36_klettern_zensus.c` | Kopfkommentar berichtigt (vorher Z. 16-17). NEU Abschnitt "Null-Box" (`nullbox_3091`): (a) Wahrheitstafel `re15_collision_prop_box_hit` an der echt installierten obj 1 (12 Punkte), (b) `seite_quer`: Anlauf mit Querversatz q und waehlbarem Spieler-Band, je yaw 0/1024/2048/3072: q = 0 und q = +-300 auf Band 1, q = +-300 vom Boden (Band 0). Riegel im bestehenden `unit_r36_klettern_zensus`. stdout ungepuffert (die Abnahme sah 5 von stderr zerschnittene Zeilen) |
+| `tests/unit/probes/r36_klettern.cmake` | nur Kommentar (Null-Box-Riegel beschrieben) |
+| `engine/src/climb_common.c` | nur Kommentar: 3091 obj 1 ist eine Null-Box (Treffer nur schraeg), kein Tritt/keine Leiter |
+| `engine/src/granate_1150.c:96`, `engine/src/sicherung_1150.c:132` | nur Kommentar (Abnahme 0 H2): "nicht kletterbar (kein 0x100)" war die alte, falsche Gate-Semantik — jetzt: Bit 0 @0x80040998, Gate @0x8002d358-35c, Sonde nur fuer Spieler auf Band 1 ohne Standobjekt (@0x8002d2f0, @0x8002d364-70) |
+
+**Messung nachher** (`probe_r36_klettern_zensus pin`, Auszug `A_belege/nb1_nullbox_3091_sonde.txt`):
+```
+Tafel FUN_8002da4c h=0 Rand=-112: 12/12 wie die Instruktionen (0 Abweichungen)
+quer=   0, Spieler Band 1, alle 4 yaw: d=(+-350,0)/(0,+-350) boxhit(-112)=0 try=0 -> kein Objekt-Treffer (4/4)
+yaw=1024 quer= 300 start=(-14772,-1800,-560) sonde=(-14772,-1360) d=(300,-350) reach=1 boxhit(-112)=1
+         try=1 sub=9 kind=0x81 obj=1 ende=51 end=(-14772,-3600,-1708) band=2 stand=-1 -> Objekt-Treffer (Start)
+quer=+-300, Spieler Band 1, alle 4 yaw: 8/8 Start (sub=9, kind=0x81, obj=1), Aufstieg endet nach 51 Bildern auf
+         y = -3600 (y -= 1800 @0x800381e4-ec), Band 2 (@0x80038200-08), stand=-1: kein Standobjekt, die
+         Null-Box liegt nach dem Vorschub nie unter dem Spieler (Standtest Rand 0x12 @0x80031ce8 braucht
+         |dx|,|dz| <= 18) -> der Spieler bliebe auf y = -3600 ohne Boden stehen
+quer=+-300, Spieler Band 0 (Boden):     8/8 kein Objekt-Treffer (try=0), obwohl boxhit(-112)=1 — Band-Gate
+         FUN_8002d2c0 @0x8002d370 `bne v1,v0` (Spieler-Band 0x800acad6 != obj+0x82)
+Null-Box: Tafel 0 Abweichungen, achsgerade ohne Objekt-Treffer 4/4, Querversatz +-300 mit Start 8/8 (Spieler
+Band 1), vom Boden (Band 0) ohne Objekt-Treffer 8/8 -> PASS
+```
+Die berichtigte Aussage lautet damit: **3091 obj 1 passiert seit dem Fix das Gate und wird von FUN_8002da4c
+aus jeder Lage mit |dx| >= 112 UND |dz| >= 112 getroffen — achsgerade nie, schraeg ja. Ein Kletterstart
+braucht zusaetzlich einen Spieler auf Band 1 ohne Standobjekt.** Das ist byte-true (dieselben Instruktionen
+wie im Original), aber im Spiel nicht erreichbar (naechster Absatz).
+
+**Erreichbarkeit im Spiel (statisch belegt, `A_belege/nb1_erreichbarkeit.txt`).** Der Start auf obj 1 verlangt
+Spieler-Band == 1 (@0x8002d364-70) UND kein Standobjekt (@0x8002d2e8-f4 `andi v0,v0,0x4000` / `beq`; das
+Bit setzt der Standtest @0x80031ce8-d24 `jal 0x8002d100` (a1 = 0x12) / `bne` Band+1 / `sw a0 -> 0x800ac788` /
+`ori v0,v0,0x4000`, geloescht @0x80031cd0-e4 — selbst disassembliert). In ROOM3091:
+- ALLE Tueren nach 309x setzen den Spieler auf y = 0 = Band 0 (Door_aot_set ROOM3060/3061 @0x00E96,
+  30A0/30A1 @0x00722, 30B0/30B1 @0x00912, 30C0/30C1 @0x00B5A, 30D0/30D1 @0x01266: next_y = 0).
+- KEINE Treppen-Zonen (sce 12/13, stair_common.c) — AOT-sce in 3091: 0/1/2/5. KEINE SCA-Aufstiegszelle
+  (Attributwort & 1, FUN_8002d474 @0x8002d544 `andi v0,s0,0x1`): 0 von 125 Zellen.
+- Auf Band 1 kommt der Spieler nur auf die Kiste obj 0 (sub00 @0x01448, Typ 4, Flags 0x0101, h(900,900,900),
+  Band 0, Lage (-23550,0,-8024) — 8478/7014 von obj 1 entfernt). Darauf steht er = 0x4000 gesetzt =
+  FUN_8002d2c0 liefert 0 (@0x8002d2f4/2fc). Herunter nur per Absprung (Substate 10, Band 0); die Eingrenzung
+  FUN_8002cfd4 (FUN_8002bd44 @0x8002bef8-bf0c) haelt ihn sonst auf der Kiste, im Original laesst ihn
+  zusaetzlich FUN_8002dc48 (obj 0 traegt 0x100, @0x8002dd94) fallen.
+- Einzig ein Fremd-Schub von der Kiste (Mechanismus H1, FUN_8002b544 @0x80031cbc VOR dem Standtest
+  @0x80031ce8) koennte "Band 1 ohne Standobjekt" erzeugen; in 3091 stehen nur zwei NPC-Records
+  (Sce_em_set Typ 0x49 @0x014E0, Typ 0x42 @0x014F4). Nicht gemessen (kein Spielweg bekannt, der das ausloest).
+Dieselbe Pruefung fuer die 14 Records mit 0 < h < 112 (alle Band 1, in 1190/1191, 11C0/11C1, 4030/4031,
+50C0/50C1): Tueren hinein durchweg next_y = 0, keine Treppen-AOTs, 0 SCA-Aufstiegszellen, keine Typ-4-Objekte
+-> der Spieler ist dort immer auf Band 0, das Band-Gate @0x8002d370 haelt diese Objekte aus der Sonde. (Die
+Null-Box-Records insgesamt hat Abnahme 0 §5 geprueft: 0 Paare in Reichweite einer Standflaeche gleichen Bands.)
+
+### Tests der Nachbesserung
+`unit_r36_klettern_zensus` traegt jetzt zusaetzlich den Null-Box-Riegel (Tafel 12/12, achsgerade 4/4 ohne
+Objekt-Treffer, quer +-300 8/8 Start auf Band 1, quer vom Boden 8/8 ohne Objekt-Treffer). Gezielter Lauf:
+siehe "Messung nachher / Tests (Nachbesserung 1)" unten.
