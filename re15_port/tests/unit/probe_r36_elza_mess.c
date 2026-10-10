@@ -25,6 +25,8 @@
 #include "re15_ems.h"
 #include "re15_emd.h"
 #include "re15_tim.h"
+#include "re15_elza_r36.h"
+#include "re15_fenster1120.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -177,6 +179,24 @@ int main(int argc, char **argv)
         }
         int mid = g_scd.message_active ? (int)g_scd.message_id : -1;
         if (mid != last_msg) { printf("F%4d nachricht %d\n", f, mid); last_msg = mid; }
+        {   /* Runde 36 Spur L: Anker-Aktionen (re15_elza_r36.h) */
+            static int z_alt[RE15_ELZA_AKT_N];
+            for (int k = 1; k < RE15_ELZA_AKT_N; k++) {
+                int z = re15_elza_r36_zaehler(k);
+                if (z != z_alt[k]) { printf("F%4d elza-aktion %d (n=%d, takt %d)\n", f, k, z, re15_elza_r36_letzter_takt(k)); z_alt[k] = z; }
+            }
+        }
     }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type)
+            printf("Ende Aktor %d Typ 0x%02X (%d,%d,%d) clip %d bild %d ph %d st %d neck fl %02X sp %d acc (%d,%d)\n", s,
+                   g_actors[s].type, (int)g_actors[s].x, (int)g_actors[s].y, (int)g_actors[s].z, g_actors[s].motion,
+                   g_actors[s].anim_frame, g_actors[s].sub_state_2, g_actors[s].state, g_actors[s].neck_flags,
+                   g_actors[s].neck_speed, g_actors[s].neck_yaw, g_actors[s].neck_pitch);
+    for (int k = 0; k < RE15_AOT_MAX; k++)
+        if (getenv("R36_AOT") && g_aot.slots[k].active)
+            printf("AOT %d typ %d ev %d\n", k, g_aot.slots[k].type, g_aot.slots[k].event_id);
+    printf("Fenster-Schaden Cut 1 = %d, Elza-Kraehe-Programm = %d\n", re15_fenster1120_schaden_sichtbar(1),
+           re15_fenster1120_elza_gespawnt());
     return 0;
 }
