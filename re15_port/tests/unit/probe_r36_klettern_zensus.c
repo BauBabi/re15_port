@@ -46,12 +46,21 @@
  *     gespeicherter Spielstand VOR dem Raum-Init gesetzt = "beim Laden erreichbar".
  *   - (5,6)=1 ist beim Laden NIE gesetzt (der Latch in sub01 @0x012B2-c4 wirkt erst auf das
  *     naechste main00, und vor dem steht wieder der Wisch; er feuert auch nie: Slot 6 hat Floor 0,
- *     das Band-Gate der Objekt-Abtastung @0x80042cac-ccc laesst die Band-3-Kiste vor dem Stempel
- *     +0x0B @0x80042f5c/@0x80042fc4 aus; das Objekt-Band +0x82 schreiben nur der Installer
- *     @0x80040974 und Member 18 @0x80041228, ROOM11A0/11A1 setzen nur Member 1). Der
+ *     das Band-Gate der Objekt-Abtastung @0x80042cac-ccc laesst die Kiste vor dem Stempel
+ *     +0x0B @0x80042f5c/@0x80042fc4 aus, solange sie auf Band 3 steht). Der
  *     Record @0x0107E wird deshalb ERZWUNGEN gefahren: Flag NACH dem Wisch, ueber den einzigen
  *     Rueckruf zwischen Wisch und main00-Start (re15_scd_set_player_model_sync, scd_room_reenter),
  *     und getrennt gezaehlt.
+ *     ⛔ BERICHTIGT (Nachbesserung 3, Abnahme 2 Mangel 1): hier stand "das Objekt-Band +0x82 schreiben
+ *     nur der Installer @0x80040974 und Member 18 @0x80041228" — FALSCH. Zur Laufzeit schreibt es auch
+ *     der Fall eines Typ-4-OBJEKTS FUN_8002c444 @0x8002c6c4 (`sb v1,130(s1)`, s1 = Objekt; einziger
+ *     Aufrufer @0x8002c42c in FUN_8002c40c = Typ-Tabelle @0x80073c70[4]; Ausloeser im Objekt-Pass
+ *     @0x8002c0fc-c14c), portiert in engine/src/objfall_r36.c. Dass die 11A0/11A1-Kiste trotzdem auf
+ *     Band 3 bleibt, hat einen ANDEREN Grund, gemessen in probe_r36_objfall (Freiraum-Zensus): keine
+ *     ungesperrte Kistenmitte (FUN_8003b558 Klasse 2, @0x8003b634-660 / @0x8003b738-794) verbindet die
+ *     Startlage mit einer Lage, an der FUN_8003b7f0(.,0x1c2,3) & 2 greift — die Band-3-Flaeche ist von
+ *     u0-255-Zellen umschlossen, die einzige Absprungzelle (x 5944..13525, z -253..2667, Wort 0x3102)
+ *     liegt hinter der Kantenwand (z 1797..3028, Wort 0x3300).
  *   - Gegenprobe: (5,6)=1 VOR dem Raum-Init (der alte Weg) -> Flag danach 0, installiert ist
  *     @0x01058 statt @0x0107E - die Lage-Pruefung MUSS das melden, sonst ist sie selbst blind.
  *

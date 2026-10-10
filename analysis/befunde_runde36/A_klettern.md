@@ -208,11 +208,11 @@ gelesen):
 | Raum | Objekt | Modell/Box | Lage-Flag (Ifel_ck/Ck/Else_ck) | Schiebezone (Aot sce 5) |
 |---|---|---|---|---|
 | 10F0/10F1 | obj 0 | Tritt h(675,900,600) | (3,102): 0 -> (-6050,0,4950) @0x010F4; 1 -> (-4850,0,-850) @0x0111A | Slot 10 @0x010E0 (-5800,-1800,2050,2050) |
-| 11A0/11A1 | obj 0 | Kiste h(900,900,900) | (5,6): 0 -> Band 3 (10050,-5400,8800) @0x01058; 1 -> Band 0 (-19300,0,3300) @0x0107E. ⛔ BERICHTIGT (Nachbesserung 2): (5,6) liegt in Bank 5 Wort 0, das der Raum-Init vor main00 nullt (@0x8003ed74) — beim Laden steht die Kiste IMMER auf Band 3; @0x0107E wird im Auslieferungsstand nie installiert (auch nicht zur Laufzeit) und war bis Nachbesserung 1 auch in der Sonde NICHT gefahren; seit Nachbesserung 2 ERZWUNGEN gefahren und getrennt gezaehlt | Slot 6 @0x01044 (-20150,2350,2050,2050), nur unter (5,6) == 0 installiert |
+| 11A0/11A1 | obj 0 | Kiste h(900,900,900) | (5,6): 0 -> Band 3 (10050,-5400,8800) @0x01058; 1 -> Band 0 (-19300,0,3300) @0x0107E. ⛔ BERICHTIGT (Nachbesserung 2): (5,6) liegt in Bank 5 Wort 0, das der Raum-Init vor main00 nullt (@0x8003ed74) — beim Laden steht die Kiste IMMER auf Band 3; @0x0107E wird im Auslieferungsstand nie installiert (auch nicht zur Laufzeit) und war bis Nachbesserung 1 auch in der Sonde NICHT gefahren; seit Nachbesserung 2 ERZWUNGEN gefahren und getrennt gezaehlt. ⛔ BERICHTIGT (Nachbesserung 3): "auch nicht zur Laufzeit" stimmt im Ergebnis, aber NICHT, weil kein Code das Objekt-Band zur Laufzeit schreibt (der Objekt-Fall FUN_8002c444 tut es @0x8002c6c4), sondern weil die Kiste die Band-3-Absprungzelle nie erreicht (Freiraum-Zensus `unit_r36_objfall`: 31 ungesperrte Elementarzellen ab der Startlage, 0 mit Ausloeser) | Slot 6 @0x01044 (-20150,2350,2050,2050), nur unter (5,6) == 0 installiert |
 | 2040/2041 | obj 1, obj 2 | Tritt h(675,900,600) | unbedingt, Band 3: (-16575,-5400,1700) @0x0137A, (22925,-5400,-5400) @0x0139C | keine (statisch; Slot 9 @0x0146A gehoert zu obj 0 = 0x0101-Kiste) |
 | 2060/2061 | obj 2 | Tritt h(675,900,600) | (3,172): 0 -> (-3125,0,2075) @0x00EA6; 1 -> (475,0,-7375) @0x00ECC | Slot 2 @0x00E92 (-550,-8300,2050,2050) |
-| 20A0/20A1 | obj 0 | Kiste h(900,900,900) | (3,204): 0 -> Band 4 (12250,-7200,-12400) @0x01854; 1 -> Band 0 (23150,0,-24400) @0x0187A | Slots 4/7/9 @0x017FC/@0x01840/@0x018B2 |
-| 5020/5021 | obj 0 | Kiste h(900,900,900) | (4,203): 0 -> Band 4 (-11000,-7200,-23150) @0x01242; 1 -> Band 0 (-3400,0,-25300) @0x01268 | Slot 4 @0x0122E (-4450,-26250,2050,2050) |
+| 20A0/20A1 | obj 0 | Kiste h(900,900,900) | (3,204): 0 -> Band 4 (12250,-7200,-12400) @0x01854; 1 -> Band 0 (23150,0,-24400) @0x0187A. ⛔ NACHBESSERUNG 3: die Lage 1 entsteht im Spiel NIE — weder im Original noch im Port: die Tasche vor der Absprungzelle 45 ist genau kistenbreit, FUN_8003b558 sperrt ab Mitte x >= 16700 (Wand 37) und bis x < 16700 (Wand 38) -> keine freie Mitte (Freiraum-Zensus `unit_r36_objfall`); "beim Laden erreichbar" gilt nur fuer einen Spielstand mit gesetztem Flag | Slots 4/7/9 @0x017FC/@0x01840/@0x018B2 |
+| 5020/5021 | obj 0 | Kiste h(900,900,900) | (4,203): 0 -> Band 4 (-11000,-7200,-23150) @0x01242; 1 -> Band 0 (-3400,0,-25300) @0x01268. ⛔ NACHBESSERUNG 3: die Lage 1 entsteht im Port erst seit dem portierten Objekt-Fall (vorher schwebte die Kiste hinter der Kante, Abnahme 2 M5); an der exe gemessen: Fall -> Band 0 -> Schub in Slot 4 -> (4,203)=1 (Latch @0x012F4-302) | Slot 4 @0x0122E (-4450,-26250,2050,2050) |
 | 3091 | obj 1 | Flags 0x0081, Band 1, Box c(0,-1800,0) **h(0,0,0)** @0x01508 | sub00 unter (4,16)==0 (Ifel_ck @0x0148E) | — (kein Tritt, kein Riegel "oben". ⛔ BERICHTIGT in Nachbesserung 1: hier stand "ohne Box trifft FUN_8002da4c mit Rand -112 nie" — FALSCH; der vorzeichenlose Vergleich @0x8002da8c-c0 trifft bei h=0 / Rand -112 genau bei \|dx\| >= 112 UND \|dz\| >= 112, ein Schraeganlauf startet den Aufstieg) |
 
 Sonde `tests/unit/probe_r36_klettern_zensus.c` (echte VM, `scd_room_reenter` je Raum/Lage; Spieler auf der
@@ -330,6 +330,11 @@ C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 ob
   Kisten in ROOM1090 (0x0101) gingen immer. ⛔ Berichtigt (Nachbesserung 2): die Kiste in ROOM11A0/11A1 steht
   bei jedem Betreten auf der erhoehten Ebene (Band 3) — im Original genauso; die zweite Lage im Raumskript
   (Boden, @0x0107E) baut das Original nie auf.
+  ⛔ Ergaenzt (Nachbesserung 3): die Boden-Lagen der Kisten in ROOM5020/5021 und ROOM20A0/20A1 entstehen im Spiel
+  nur, wenn die Kiste von der Kante FAELLT. Diesen Fall hatte der Port nicht (die Kiste blieb in der Luft stehen);
+  er ist jetzt portiert (objfall_r36.c). 5020/5021: an der exe gemessen (Kiste faellt, Schub in die Zone setzt
+  (4,203)). 20A0/20A1: die Tasche zur Kante ist genau kistenbreit und laesst im Original wie im Port keine Kiste
+  durch — diese Lage entsteht nur mit einem Spielstand, der das Flag schon traegt.
 - Entscheidungsfrage: keine.
 - Nachbesserung 1 (Abnahme 0): KEINE Verhaltensaenderung im Spiel — berichtigt wurde eine falsche
   RE-Aussage im Dossier/Testkommentar (Sonderfall Null-Box ROOM3091), dazu ein zusaetzlicher Riegel und
@@ -544,7 +549,17 @@ Zugriffe auf (5,6): nur sub01 (11A0 @0x012B2 Ck / @0x012BE `3e 00 0f 00 06 00` M
 Set 5,6,1; 11A1 @0x012C6 / @0x012D2 / @0x012D8). Kein weiterer Obj_model_set fuer obj 0 ausserhalb main00.
 Folge: der Latch in sub01 wirkt nur auf das NAECHSTE main00 — und vor dem steht wieder der Wisch.
 
-**Beleg 3 — das Objekt-Band (+0x82) aendert sich zur Laufzeit nicht** (Scan `A_belege/nb2_band_schreiber.py`
+> ⛔ **BERICHTIGT (Nachbesserung 3, Abnahme 2 Mangel 1): Beleg 3 ist FALSCH.** @0x8002c6c4 ist nicht der
+> "Spieler-Fall", sondern liegt im Fall-Handler FUN_8002c444 der Typ-4-OBJEKTE (s1 = a0 = Objekt; einziger Aufrufer
+> `jal 0x8002c444` @0x8002c42c in FUN_8002c40c = Typ-Tabelle @0x80073c70[4]; Ausloeser im Objekt-Pass @0x8002c0fc-c14c).
+> Das Objekt-Band aendert sich im Original ZUR LAUFZEIT: eine Kiste, die auf eine Zelle ihres Bandes mit Wort & 2
+> geschoben wird, kippt, faellt und bekommt @0x8002c6c4 das Band des Bodens darunter. Ausserdem fehlte @0x800421d0
+> (Sce_em_set, Aktorfelder) in der Einordnung. Richtige Einordnung aller Schreiber: Abschnitt "Nachbesserung 3",
+> Beleg B7. Der Schluss "weder beim Laden noch zur Laufzeit erreichbar" fuer 11A0/11A1 stimmt im Ergebnis, aber aus
+> einem ANDEREN Grund: die Kiste erreicht die Band-3-Absprungzelle nie (Freiraum-Zensus, Nachbesserung 3). Die
+> Commit-Message eeca9a89 ("Objekt-Band nur Installer @0x80040974 + Member 18 @0x80041228") ist damit ueberholt.
+
+**Beleg 3 — das Objekt-Band (+0x82) aendert sich zur Laufzeit nicht** (⛔ FALSCH, s.o.) (Scan `A_belege/nb2_band_schreiber.py`
 aller `sb/sh rt,130(rs)` in PSX.EXE und STAGE1.BIN, dazu `sw/swl/swr` mit 128..131):
 - Objekt-Pool: NUR der Installer @0x80040974 `sb v0,130(a1)` und der Member-Schreiber FUN_8004116c
   (Sprungtabelle @0x80010c8c, 20 Eintraege, Eintrag 18 = 0x80041224 `j 0x80041230` mit Delay @0x80041228
@@ -614,7 +629,12 @@ Objekt; vgl. aot_common.c:925-946). VOR beiden Stempeln im selben Slot-Durchlauf
 Slot 6 hat Floor 0 (Aot_set @0x01044 `2c 06 05 44 00 ...`, Byte [4] = 0, kein 0x80), die Kiste steht auf Band 3
 (Beleg 3: keine Laufzeit-Aenderung) -> Slot 6 stempelt sie nie -> `Member_cmp 15 == 6` nie wahr -> (5,6) wird im
 Spiel nie gesetzt. Record @0x0107E und der Latch @0x012B2-c4 sind damit doppelt tot (Prototyp-Rest; die Kiste
-muesste dafuer auf Band 0 gelangen, was kein Code tut). Fuer den Nutzer aendert sich nichts: die Kiste steht im
+muesste dafuer auf Band 0 gelangen, was kein Code tut — ⛔ BERICHTIGT (Nachbesserung 3): FALSCH, der Objekt-Fall
+FUN_8002c444 bringt eine Kiste auf das Band unter ihr (@0x8002c6c4); er greift hier nicht, weil die Kiste die
+Absprungzelle x 5944..13525 / z -253..2667 nie erreicht — gemessen im Freiraum-Zensus `unit_r36_objfall`: von der
+Startlage aus 31 ungesperrte Elementarzellen (FUN_8003b558 Klasse 2 @0x8003b634-660, @0x8003b738-794), keine mit
+FUN_8003b7f0(.,0x1c2,3) & 2; die Band-3-Flaeche ist von u0-255-Zellen umschlossen, die Absprungzelle liegt hinter der
+Kantenwand z 1797..3028). Fuer den Nutzer aendert sich nichts: die Kiste steht im
 Port wie im Original bei jedem Betreten auf Band 3 und ist dort kletterbar (Zensus-Record @0x01058, exe-Lauf E3
 der Abnahme 1).
 
@@ -667,6 +687,13 @@ y = -1800 zitiert, dort die erste mit Substate 0.)
   ROOM11A0 per Debug-Menue (Skill re15-room-capture), Kiste auf der Band-3-Ebene schieben und Bild fuer Bild
   0x800b3f98+0x82 (obj 0 Band), 0x800b3f98+0x0B (Stempel) und 0x800b1028 (Bank 5 Wort 0, Maske 0x02000000)
   lesen — erwartet: Band 3, Stempel nie 6, Bit nie gesetzt.
+  ⛔ BERICHTIGT (Nachbesserung 3, Abnahme 2 Mangel 1): die Begruendung "statisch NEIN (Beleg 3: kein
+  Laufzeit-Schreiber ...)" ist FALSCH — der Objekt-Fall FUN_8002c444 schreibt obj+0x82 zur Laufzeit (@0x8002c6c4).
+  Die Antwort lautet: der Mechanismus existiert (jetzt portiert, objfall_r36.c); fuer die 11A0/11A1-Kiste greift er
+  nicht, weil keine ungesperrte Kistenmitte die Startlage mit der Absprungzelle verbindet (Freiraum-Zensus
+  `unit_r36_objfall`, gemessen am Port-Code von FUN_8003b558/FUN_8003b7f0, beide selbst gegen die Bytes gelesen).
+  Das erwartete Ergebnis des Gegenchecks bleibt (Band 3, Stempel nie 6, Bit nie gesetzt), jetzt mit dem richtigen
+  Grund; am laufenden Original ungemessen (siehe OFFEN der Nachbesserung 3).
 
 ### Fuer den Nutzer (Nachbesserung 2)
 
@@ -861,3 +888,45 @@ F1665 spieler=(-6519,0,-24966) band=0 -> Schub +X auf Band 0
 F1712 FLAG (4,203)=1   KERBE m0b=4 pos=(-4393,0,-25332) band=0     <- Latch sub01 @0x012F4-302 (Slot 4 Floor 0)
 climb.txt: T2138 sub=9 kind=0x81 obj=0 ... T2951 pos=(-3522,-1800,-25212) band=1 stand=0   <- auf die GEFALLENE Kiste geklettert
 ```
+
+### Nachbesserung 3 — Messung nachher in der VM (Pin `unit_r36_objfall`, `A_belege/nb3_probe_objfall.txt`)
+
+Sonde `tests/unit/probe_r36_objfall.c` (echte VM, `scd_room_reenter`, Raum-ESP gebunden wie `pc_load_room_esp`):
+
+| Raum | gemessen | Riegel |
+|---|---|---|
+| 5020 / 5021 | Kiste 30 Bilder in der Startlage: kein Fall. Kistenmitte x -8126: kein Ausloeser, x -8125: Ausloeser (Zelle 36 x0 -7675 - 450, untere Grenze INKLUSIV, `sltu` @0x8003b8c8-d0). Richtung (+1,0). Bild 1/2: Vorschub 13/26, Absinken 8/13, Kippwinkel 0/8. Bild 13: Band 4 -> 0. Landung Bild 22 auf y 0, 24 Bilder bis obj+4 = 0, snd0:6 genau 1x, kein snd0:8. Endrotation (0,0,1029). Kiste auf Band 0 in Slot 4 -> Kerbe 4 -> (4,203) = 1. Klettern auf die GEFALLENE Kiste von Westen: Substate 9, oben y -1800, Band 1, Standobjekt = Kiste | alles |
+| 20A0 / 20A1 (Mechanik, Lage GESETZT — durch Schieben unerreichbar, s.u.) | Fall 1 (Tasche): z -20550 kein Ausloeser (obere Grenze EXKLUSIV, `sltu` @0x8003b8f0-f4), z -20551 Ausloeser, Richtung (0,-1), Bild 13 Band 2 (Zelle 12 Band 1 u0 255 -> Boden -3600), Landung y -3600, snd0:6 1x. Fall 2 (Laufsteg-Kante, Zelle 28 0x2102): Band 1, y -1800, obj+0x88 = -540 (Wasser Slot 5 Floor 1 gestempelt) -> KEIN Landeton, KEIN Spritzer (Spiegel -540 liegt unter der Kiste: -540 < y falsch). Fall 3 (Kanal-Kante, Zelle 15 0x1002, x 20099 nein / 20100 ja): Band 0, y 0 in Slot 6 -> SPRITZER: snd0:8 1x, 36 ESP-Plaetze (12 Aufrufe x 3 Stroeme Effekt 6 sub 2 der Raum-Bank), kein Landeton. Kiste in Slot 7 -> Kerbe 7 -> (3,204) = 1. Klettern ok | alles |
+| 10F0 / 10F1 (Gegenprobe) | Tritt ueber 16641 Rasterpunkte (x, z in -16000..16000, Schritt 250): 0 Ausloeser — Band 0 hat keine Zelle mit Wort & 2 | 0 Ausloeser |
+
+**Freiraum-Zensus (Schieb-Erreichbarkeit des Ausloesers)** — exakte Flutfuellung ueber ungesperrte Kistenmitten
+(FUN_8003b558 Klasse 2: Band-Nibble `sll 16 / sra 28` @0x8003b63c-644, `u0 & 2` @0x8003b64c-660, Kisten-Halbmesser
+r = box.hx @0x8003b68c-690, Rechteck [x0-r, x0+w+r) per `sltu` @0x8003b764 / @0x8003b790; eine gesperrte Lage nimmt der
+Schub zurueck @0x8002c0b8-d4) ab der Startlage bis zu einer Lage mit FUN_8003b7f0(.,0x1c2,Band) & 2:
+
+| Raum / Objekt | Band | ungesperrt erreichbar | davon Ausloeser | Ergebnis |
+|---|---|---|---|---|
+| 5020, 5021 obj 0 | 4 | 96 Elementarzellen | 2 (erste (-8125,-25100)) | Fall erreichbar (an der exe gefahren) — Riegel > 0 |
+| 20A0, 20A1 obj 0 | 4 | 165 | **0** | **durch Schieben unerreichbar** — Riegel == 0 |
+| 11A0, 11A1 obj 0 | 3 | 31 | **0** | **durch Schieben unerreichbar** — Riegel == 0 (Mangel 1: der RICHTIGE Grund) |
+| 3050, 3051 obj 1 (0x0101) | 4 | 1316 | 4 (erste (-23875,-18500)) | Fall erreichbar (Diagnose) |
+| 1090, 1091 obj 1 (0x0101) | 5 | 777 | 8 (erste (-9328,3376)) | Fall erreichbar (Diagnose) |
+| 2050, 2051 obj 6 (0x0101) | 3 | 485 | 1 (erste (7550,-12050)) | Fall erreichbar (Diagnose) |
+
+Diagnose-Fall an der ersten erreichten Lage (Spieler auf der Startlage der Kiste, also eine kuenstliche
+Schubrichtung): 1090 obj 1 landet auf Band 3 (y -5400); 3050 obj 1 und 2050 obj 6 "landen" OBERHALB (y -10800 bzw.
+-9000): FUN_8001c6e8 findet dort zuerst einen hohen Wandblock, und @0x8002c904-928 setzt y = Boden ohne
+Richtungspruefung (`slt` + `sw`). Das ist der Original-Code; ob ein echter Schub dort ankommt, ist nicht gemessen
+(keine Riegel darauf).
+
+### Nachbesserung 3 — 20A0/20A1: warum die Kiste die Kante nie erreicht (Abnahme 2: "Grenzfall, nicht gemessen")
+
+Band-4-Zellen der Plattform (Quadrant 2, `A_belege/nb3_absprung_zensus.txt` / SCA selbst gelesen): Wand 32 (x 8000..14700,
+z -21000..-20500) sperrt die breite Absprungzelle 44; vor der Absprungzelle 45 (x 15800..17600, z -22000..-21000) liegt
+die Tasche zwischen Wand 38 (x 14700..15800, z -21000..-20000) und Wand 37 (x 17600..19600, z -21000..-15100). Mit r = 900:
+Wand 37 sperrt ab Kistenmitte x >= 17600 - 900 = 16700 (untere Grenze inklusiv), Wand 38 sperrt bis x < 15800 + 900 =
+16700 (obere Grenze exklusiv), beide fuer Mitte z in (-21900, -19100). Es gibt also KEINE Kistenmitte, die dort frei ist;
+der Ausloeser verlangt z <= -20551. Die Flutfuellung bestaetigt es (0 Ausloeser-Zellen erreichbar). Im Original gilt
+dieselbe Arithmetik (FUN_8003b558 selbst gelesen, s.o.) -> die Lage (3,204)=1 (@0x0187A) und der Latch @0x01AD4-e2
+entstehen im Auslieferungsstand im Spiel nie; nur ein Spielstand mit gesetztem Flag baut sie auf. Die Fall-KETTE
+dahinter (Laufsteg / Kanal / Wasser / Spritzer) ist trotzdem als Mechanik gepinnt (gesetzte Lage).

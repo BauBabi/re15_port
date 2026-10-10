@@ -33,8 +33,12 @@ set_tests_properties(unit_r36_klettern_10f0_endlage unit_r36_klettern_10f0_start
 #                               Records sind beim Laden erreichbar (Flags Bank 3/4 persistent); die
 #                               11A0/11A1-Lage (5,6)=1 (@0x0107E, Band 0) NICHT — Bank 5 Wort 0 wird
 #                               vor main00 genullt (FUN_8003ecec @0x8003ed74, Aufruf @0x8003ef84,
-#                               main00-Start @0x8003efa0-b0) und das Objekt-Band aendert nur der
-#                               Installer @0x80040974 bzw. Member 18 @0x80041228. Die Sonde faehrt sie
+#                               main00-Start @0x8003efa0-b0), und zur Laufzeit kommt die Kiste nicht auf
+#                               Band 0: ⛔ BERICHTIGT (Nachbesserung 3) — hier stand "das Objekt-Band
+#                               aendert nur der Installer @0x80040974 bzw. Member 18 @0x80041228"; FALSCH,
+#                               der Objekt-Fall FUN_8002c444 schreibt es @0x8002c6c4 (objfall_r36.c). Der
+#                               Grund ist die Geometrie: keine ungesperrte Kistenmitte fuehrt zur
+#                               Absprungzelle (Freiraum-Zensus in unit_r36_objfall). Die Sonde faehrt sie
 #                               ERZWUNGEN (Flag nach dem Wisch) und zaehlt sie getrennt; Gegenprobe:
 #                               Flag VOR dem Raum-Init -> Flag 0, Lage @0x01058 -> Pruefung meldet es.
 #                               Dazu (Nachbesserung 1, Abnahme 0 Mangel 1) die Null-Box ROOM3091
