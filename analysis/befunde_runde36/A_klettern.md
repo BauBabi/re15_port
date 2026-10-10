@@ -302,3 +302,12 @@ ROOM11A0 obj=0 type=4 band=3 flags=0x0001 ohne-0x100      ROOM2040 obj=1/2 type=
 ROOM2060 obj=2 type=4 band=0 flags=0x0001 ohne-0x100      ROOM20A0 obj=0 type=4 band=4/0 flags=0x0001 ohne-0x100
 ROOM3091 obj=1 type=4 band=1 flags=0x0081 ohne-0x100      ROOM5020 obj=0 type=4 band=4/0 flags=0x0001 ohne-0x100
 ```
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-10 abends)
+
+Abnahme 0 (`A_abnahme_0.md`): Punkt 1 erfuellt, EIN Mangel — die RE-Aussage zu ROOM3091 obj 1 ("ohne Box
+trifft FUN_8002da4c mit Rand -112 nie") ist widerlegt. Plan: (1) FUN_8002da4c selbst disassemblieren und die
+Wahrheitstafel fuer h=0 / Rand -112 belegen, (2) Dossier + Sondenkommentar berichtigen, (3) 3091 obj 1 in der
+VM mit Querversatz >= 112 fahren (Diagnose) und die Wahrheitstafel als Riegel festhalten, (4) Erreichbarkeit
+von 3091 obj 1 (Spieler auf Band 1 in Reichweite?) messen, (5) H1 (ROOM2060 Spinne) als OFFEN mit Messweg.
+(Abschnitt wird fortlaufend gefuellt.)
