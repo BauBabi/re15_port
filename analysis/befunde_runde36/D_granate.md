@@ -153,3 +153,51 @@ Keine neuen Assets, kein Patch an shared_assets, keine Bits/IDs/Ereignisse, kein
   7/2 153 Zeilen).
 * `brand_zombie_n` (Brandgranate 0x0B, gleiche Aufstellung): Explosion F119, `aufschlag re2_art=1`, **id=8 ab F120 9 je
   Bild** (3 Zombies x Verkohlung Part 0/Kopf/Unterarm) bis zum Ende — Feuer bei incendiary unveraendert.
+
+(Nachtrag 2.2: die drei Aufrufer von FUN_8010640C selbst disassembliert — Zerreiss-Tod `jal 0x8010640c` @0x80108cec,
+DEATH-Leiter `beq v1,9` @0x80108490 / `bne v1,17` @0x80108498 / `lhu 270 / andi 0x80 / bne` @0x801084a0-ac /
+`jal 0x8010640c` @0x801084b4, HURT-Leiter `lhu 270 / andi 0x80 / bne` @0x801051f0-fc / `jal 0x8010640c` @0x80105204.
+Alle drei laufen ueber dasselbe Gate im Port (re2z_gore_soot).)
+
+## 4. Tests
+* `unit_r36_granate` (tests/unit/test_r36_granate.c, probes/r36_granate.cmake):
+  [1] feuer 103-108 — 4 Laeufe HE: Flammen-Slots (Id 8) nach dem Tod = 0 (vorher 2 je Zombie), Spreng-Russ erreicht
+  und unterdrueckt (Zaehler), Zerreissen (Handler 5/6, Teile 0x4A, FX im Pool) und Russ-Tinte 0x404040 bleiben; 4 Laeufe
+  Brand: Flammen-Slots > 0 (min 3); Gate Zeile 9/17 = 0.
+  [2] wurf 201-206 — 96 Wuerfe bei 96 Abzuegen (R1 los in Bild 0..30 nach dem Abzug, HOCH/MITTE/TIEF), Spawnbild
+  19/22/24, je Abzug genau eine Granate, LOWER im Bild nach dem Abgang bzw. nach dem Loslassen, Schwellen-Tabelle,
+  Negativ-Kontrolle Browning (Schwelle 7, LOWER Bild 9 unveraendert).
+  [3] pool 300-304 — Pool 96/96 im Spawnbild: Granate spawnt im Bild 22, ein Blut-Teilchen geraeumt, Menge -1, Pool nie
+  > 96; Negativ-Kontrolle ohne Blut = kein Platz (Original 0xFF).
+  Ergebnis: `test_r36_granate: ALLE PRUEFUNGEN GRUEN`.
+* `integration_r36_granate` (tests/integration/test_r36_granate.cmake, echte exe): he (X=119, 2 Zombies zerrissen,
+  Flammen nach X: 0), brand (X=119, Eingriffe 3, Flammen nach X: 1899), serie (8 Abzuege = 8 Wuerfe = 8 Explosionen,
+  Granaten 30 -> 22). Eigener Lauf `build/r36d_mess/int_run1.log`: alle drei ok.
+* Angepasst (verhaltensbedingt): `probe_r34_wurf.c` PRUEF 109 (R1 los im Bild 15 -> Spawn 22 statt keiner, Menge 4);
+  `probe_r34_wurf: ALLE PRUEFUNGEN GRUEN`.
+
+## OFFEN
+1. **Griff/Treffer waehrend der Wurfbewegung** (Bild 0 bis 19/22/24): das Kommando 2/5 ersetzt die Ziel-FSM
+   (re15_player_aim_interrupt; Original @0x80113b00 ohne Ziel-Gate) — die Granate ist weg (Abzug Bild 0), kein Wurf.
+   Byte-true und sichtbar begruendet (Leon wird gepackt); gemessen `pool_voll` (zweiter Abzug F99, Griff F119, mg 5 -> 3
+   bei einem Wurf). Nicht geaendert; Entscheidungsfrage unten.
+2. **Russ-Tinten bleiben** (@0x80106478-f8: Teile dunkelgrau nach der HE-Explosion) — nach dem Wortlaut "nur das
+   Zerplatzen" koennte der Nutzer auch die Schwaerzung nicht wollen; sie ist kein Feuer-Effekt, deshalb belassen.
+3. **Flammen-Lebensdauer der Brandgranate**: RE1.5-CORE00-Id 8 Sub 3 (Routine 17/18) brennt bis zum Raumwechsel; RE2
+   Id 5 Sub 3 fuehrt Op B 25 (Lebensdauer/Verhalten nicht gelesen). "Feuer wie bisher" laut Auftrag — nicht angefasst.
+   Naechster Messweg: re2_fx.c Op 25 lesen, DuckStation-Brandrunde an einem Zombie zaehlen.
+4. **Wurfbild-Regel** (Runde 35, PORT-WAHL): Hand in/hinter einer Zelle -> Explosion ueber dem Werfer im Wurfbild. Ist ein
+   Wurf mit Explosion, kein Aussetzer; unveraendert.
+
+## Fuer den Nutzer
+* Keine neuen Assets (Paket-Gate), keine Sprachdateien, keine Aenderung an shared_assets.
+* **Handgranate (und Granatwerfer-Explosivrunde/Rakete):** Zombies zerplatzen wie bisher (Kopf/Beine ab, Wegschleudern),
+  brennen aber nicht mehr; die Teile sind weiterhin russ-geschwaerzt. **Brandgranate:** Feuer wie bisher. Saeure unveraendert.
+* **Wurf:** jeder Druck auf den Abzug wirft jetzt eine Granate — auch wenn R1 (Zielen) sofort nach dem Abzug losgelassen
+  wird. Vorher ging die Granate verloren, wenn R1 innerhalb von ~0,6-0,8 s nach dem Abzug losgelassen wurde (Leon setzte an
+  und senkte den Arm; die Granate fehlte im Inventar). Nach dem Abgang senkt R1-Loslassen den Arm wie bisher.
+  Zusaetzlich geht eine Granate nicht mehr verloren, wenn der Effektpool im Wurfbild voll ist (viel Gore nach der
+  vorigen Explosion).
+* **Entscheidungsfrage:** Wird Leon WAEHREND der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen, bricht der Wurf ab und
+  die Granate ist verbraucht (Original-Verhalten). Soll sie in diesem Fall im Inventar bleiben?
+* Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief.
