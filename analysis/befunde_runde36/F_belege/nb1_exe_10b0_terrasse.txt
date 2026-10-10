@@ -1,0 +1,10 @@
+== nb1 (RE15_DEBUG_JUMP=10B0@250 RE15_PLAYER_POS=-17000,-8500,2048,0 RE15_AI_FLAVOR=re2 RE15_EXIT_AT=1500#10B0)
+Slot 1: erste Reaktion F7, Ende F1500 st1/1 (-18468,-11832), Leon (-17000,-8500), Abstand 3641
+Slot 2: erste Reaktion F7, Ende F1500 st1/1 (-17669,-11832), Leon (-17000,-8500), Abstand 3398
+Slot 3: erste Reaktion F7, Ende F1500 st1/1 (-16868,-11832), Leon (-17000,-8500), Abstand 3334
+Slot 4: erste Reaktion F7, Ende F1500 st1/1 (-16031,-11832), Leon (-17000,-8500), Abstand 3470
+== abn0f_basis (RE15_DEBUG_JUMP=10B0@250 RE15_PLAYER_POS=-17000,-8500,2048,0 RE15_AI_FLAVOR=re2 RE15_EXIT_AT=1500#10B0)
+Slot 1: erste Reaktion F0, Ende F1500 st1/0 (-16055,-11832), Leon (-17000,-8500), Abstand 3463
+Slot 2: erste Reaktion F0, Ende F1500 st1/0 (-15253,-11832), Leon (-17000,-8500), Abstand 3762
+Slot 3: erste Reaktion F0, Ende F1500 st1/0 (-10993,-11825), Leon (-17000,-8500), Abstand 6865
+Slot 4: erste Reaktion F0, Ende F1500 st1/0 (-12852,-11832), Leon (-17000,-8500), Abstand 5320

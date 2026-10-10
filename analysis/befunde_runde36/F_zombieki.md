@@ -470,3 +470,52 @@ Grundlage: `F_abnahme_0.md` (Stand 853cbfb3, NICHT BESTANDEN, Maengel 1-8). Plan
 
 ### NB1 Mangel 8 — Voll-Suite
 Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie im Integrationsbaum. Hier gezielte Laeufe (unten).
+
+### NB1 Tests (probes/r36_zombieki.cmake; ersetzt die Tabelle "Tests" oben)
+| Test | Punkt/Mangel | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_wecker` | 1 | Weck-Zensus 45 stehende Zombies, Leon 800 vor der Nase | gruen (unveraendert) |
+| `unit_r36_zombieki_szenen` | 1 | Griff/Abwehr/Schuss ROOM1010, erneuter Angriff | gruen |
+| `unit_r36_zombieki_sicht` | 1, M1, M3 | Abnahme-Fall ROOM1010 (vor NB1 verdeckt / NB1 frei); Gegenproben vor NB1 (24 Moebel-Plaetze) und vor R36 (267 Slab-Plaetze); Zensus 45 Zombies / 3360 Plaetze in BLK-Zonen < 0x1388: 0 frei, 0 nur Moebel, 49 = 49 Wand | 10/10 |
+| `unit_r36_zombieki_eintritt` (NEU) | 1, M1, M2 | 78 Tueren x Zombie x steht/hin (266 Faelle): kein stehender Zombie passiv; Kriecher lauert und greift (Bild 2); ROOM10B0 Terrasse Gegenprobe 13025 -> mit Haken 3643 | 5/5 |
+| `unit_r36_zombieki_affen_block` | 2, M4-M6 | 16 Seeds AUS/AN je eigener Prozess (28653 -> 721, schlechtester +194, Griffe 73 -> 80) + 3 Befund-Szenen | 11/11 |
+| `unit_r36_zombieki_affen` | 3 | Gorilla-Leiche: Record 1700/1800, Lache 0x00ffff38 +8 x 91 | 9/9 (unveraendert) |
+
+### NB1 OFFEN (ersetzt "OFFEN" oben)
+- **Taschenfall ROOM1010 Slot 1 (Innenraum, Normalfluss):** nach dem Griff traegt der RE2-Rueckstoss (EXEC[3] P8:
+  Keyframe-Wurzeldelta + `-30` @0x80102CA0-AC, ~300 Einheiten/Bild) den Zombie in die Ueberlappung #13/#15/#3/#5, wo die
+  Klemme (FUN_8003b0a4-Zwilling, einmal je Bild nach dem KI-Takt) keine freie Lage findet; er tritt ab F780 auf der
+  Stelle. Messweg: `test_r36_zombieki_eintritt spur 1010 1020 0 1 1 900 30` + `raster 1010 1 250`. Weder RE2 noch RE1.5
+  haben einen Ausweg aus einer solchen Ueberlappung; naechster Weg: den P8-Wurf in Teilschritten <= Radius klemmen
+  (verhindert das Eintunneln) und gegen die Spur-Riegel der RE2-Zombies (Griff/Sturz bildgenau) messen. Einziger Fall
+  im Eintritts-Zensus (266 Faelle).
+- **ROOM10B0:** die Terrassen-Zombies kommen nicht herunter — per Daten ausgeschlossen (SCA #9 Band 1 u0=0xff ueber der
+  Treppe #18, Treppen-AOT Pool-Maske 1 = nur Spieler @0x80042c84); sie stehen jetzt vor Leon an der Kante (M2).
+- **Moebelhoehen anderer Raeume:** die Messtabelle traegt nur ROOM1010 (der einzige Stage-1-Raum, in dem der Sicht-Zensus
+  Moebel-Blocker fand); Obj_model_set-Belege wirken in allen Raeumen. Messweg fuer weitere: `nb1_hoehe_1010.py` mit
+  `probe_r34n_e_dokumente kamera <raum>`.
+- Gorillas: 3 von 52 Seeds leicht schlechter (+34..+194 Bilder); Rest-Blockade 2380 Bilder (Sub 4 1311, Sub 3 1033).
+
+### NB1 Fuer den Nutzer (ersetzt "Fuer den Nutzer" oben)
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine. Entscheidungsfragen: keine.
+- Spuerbar neu: (1) **Zombies** sehen Leon ueber niedrige Moebel (Verhoertisch, Stuehle, Tische mit Gegenstaenden darauf)
+  wie in RE2 und kommen um den Tisch herum; Waende nehmen weiter die Sicht. (2) Die vier **Zombies auf der Terrasse
+  (Vorhof 10B0)** laufen nicht mehr ans andere Ende, sondern stellen sich an der Kante vor Leon (herunter koennen sie
+  weder in RE1.5 noch in RE2). (3) **Monkeys 11C0**: ein Gorilla, der an Wagen oder in der engen Gasse festhaengt,
+  sucht jetzt den Weg um die Wagen bzw. springt ueber das Pad auf Leons Seite (der Sprung des Originals); im
+  Zufallsgang-Test sinkt die Zeit, die Gorillas feststecken, um 97 %. (4) Gorilla-Leiche: Blutlache (unveraendert erfuellt).
+- Hinweis aus Abnahme 0: der lebende Gorilla wirft den Record-Schatten 1700/1800 (disassemblierter INIT) — beim Spieltest
+  ansehen.
+
+### NB1 Messung nachher in der exe (Zusammenfassung)
+- ROOM10B0 (Abnahme-Kommandozeile, 1500 Bilder, `F_belege/nb1_exe_10b0_terrasse.txt`): neu alle vier Terrassen-Zombies
+  Reaktion F7, Ende vor Leon an der Kante (x -18468 / -17669 / -16868 / -16031, z -11832, Abstand 3334..3641);
+  v0.8.23 keine Reaktion (Sub 0, Abstand 3463..6865); Stand Abnahme 0: Reaktion F7, Ende 10713..13013 im Osten.
+- ROOM1010 Abnahme-Fall (`F_belege/nb1_exe_1010_abnahmefall.txt`): Slot 2 Reaktion F10, Griff F300.
+- ROOM11C0 Kampf-Layout (`F_belege/nb1_affen_exe_kampflayout.txt`): Slot 2 Angriff F896 (v0.8.23 nie), Slot 3 F606.
+
+### NB1 Gezielte Tests (keine Voll-Suite im Spurbaum)
+- `ctest -R "affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|r35_raeume|r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav" --timeout 600 -j 6`
+  -> **100% tests passed, 0 tests failed out of 154**
+- nach dem letzten Neubau `ctest -R "r36_zombieki" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 6**
+- Gorilla-Gruppe `ctest -R "unit_r35_affen|unit_maggot|unit_r36_zombieki_affen$|r17_waffen_loop"` -> 100% tests passed, 0 tests failed out of 25
