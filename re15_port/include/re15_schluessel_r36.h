@@ -29,7 +29,10 @@
  *       gefunden: 8005164c jal FUN_8002fe38 (a1 0x100, a2 5 = "You have used the <Name>."
  *                 @0x8009F0E5), 80051654 lui a0,0x225 / 80051658 jal 0x8005ba28 (Aufschliess-Ton),
  *                 80051670 Wegwerf-Fortsetzung, 80051690 jal FUN_8007730c (Schlossbit setzen),
- *                 80051698 j LAB_800516f8 mit v0 = 0 -> KEIN Durchgang bei diesem Druck
+ *                 80051698 `be 45 01 08` j 0x800516f8 -> KEIN Durchgang bei diesem Druck: der Sprung
+ *                 laesst den Uebergangs-Block 800516cc..800516f4 aus (800516cc addiu v1,zero,1 /
+ *                 800516d4 sb v1 -> 0x800df348, 800516e0-f4 Freeze |= 0xff000000). v0 ist dabei KEIN
+ *                 Unterscheider — 0 in allen Zweigen (Delay-Slots 8005169c / 800516c4, 800516c8).
  *       fehlt:    800516a0 lui a0,0x216 / 800516a4 jal 0x8005ba28 (Verschlossen-Ton),
  *                 800516b4 addiu a2,s0,-0x4c / 800516b8 jal FUN_8002fe38 (Text key_type-0x4c)
  *   RE2-Text fuer key_type 0x5F ("P. Room Key", das Modell des Parking Lot Key) = Index 0x13
@@ -147,6 +150,33 @@
 #define RE15_R36Q_ROY_SUB_SCHL     6
 #define RE15_R36Q_ROY_SUB_ZETTEL   7
 
+/* ---- ROOM1211 (Elza): Benutzungsstelle des Prison Key (Nachbesserung 1, Mangel M1) -------------
+ * NUTZER-REGEL Runde 21 (analysis/befunde_2026-09-21/discard-umsetzung.md, woertlich: "bei KEy Items,
+ * die verwendet wurden, und nicht mehr im Spiel danach benoetigt werden genauso wie in Resident Evil 2
+ * fragst - ... drop it? Yes No"). FORM = RE2 (info/re2leon/PSX.EXE, selbst disassembliert):
+ *   80051670 sw v0,-32080(at)            Fortsetzung beim Oeffnen der Benutzungs-Nachricht
+ *   800517f0 andi v0,v0,0x80 / 800517f4 bne v0,zero,0x80051870   warten, solange belegt
+ *   80051810 addiu v0,v0,-1 / 80051824 bne v0,zero,0x8005185c     Zaehler -1, bei 0 fragen:
+ *   80051830 addiu a2,zero,9 / 80051834 jal 0x8002fe38             Abfrage 9 (im Port die RE1.5-Zeile
+ *                                        DEBUG.BIN @0x800C508B, re15_item_discard.h)
+ * BENUTZT wird der Prison Key in der Befreiungsszene ROOM1211 sub02 (Elza schliesst auf: @0x020F8
+ * `3f 00 00 00` Plc_motion(0,0,0), die Zellentuer schwingt ab @0x0210C; Spur L haengt dort den
+ * Aufschliess-Ton ein). DANACH NIE WIEDER GEBRAUCHT: (4,0xEC) liest im Elza-Spiel nur ROOM1211 sub00
+ * @0x01DEA `21 04 ec 00` (der zweite Leser ROOM3070 @0x03408 ist Leons Raum, ROOM3071 hat keinen), und
+ * sub02 @0x01F76 `22 04 fc 01` setzt (4,0xFC), das sub00 @0x01E1A `21 04 fc 00` abfragt — die Szene
+ * loest nie wieder aus (Zensus analysis/story_leon_elza/flag_xref.txt).
+ * STELLE = PORT-WAHL: die LETZTE Nachricht der Szene, sub02 @0x0226A `2b 09 00 00` Message_on 9
+ * "Elza: John. Wait!" (Text @0x2582, Ende @0x259B `01 63` = 99 Bilder Standzeit). Dahinter folgen nur
+ * noch Plc_motion/Sleep 50+51 (@0x02272-@0x02282), John weg (@0x0228A Pos_set), Set(2,7)=0 @0x0229A
+ * und Plc_ret @0x022A8 — die Abfrage steht also am Szenenende, waehrend sie die Szene einfriert
+ * (RE2 @0x80051844/@0x80051850); nach der Antwort laeuft der Rest der Szene (Messung im Dossier).
+ * Maske 0 (pc[2..3] = 00 00) friert ueber die Nachricht selbst nichts ein, aber die ganze Szene haelt
+ * das Pad: sub02 @0x01F9C `22 02 07 01` Set(2,7)=1 = RE15_PAUSE_PAD (FUN_80030444 @0x800304f8) bis
+ * @0x0229A — in der Spanne "vorgemerkt" kann also weder Spieler noch Skript den Raum wechseln (sub02
+ * traegt keinen Tuer-/Raumwechsel-Opcode). */
+#define RE15_R36Q_ZELLE_RAUM       0x1211
+#define RE15_R36Q_ZELLE_MSG        9
+
 /* Beim Raumaufbau NACH dem Init-Lauf von main00 rufen (scd_room_setup.c scd_room_reenter und
  * platform/pc/main.c Boot/CONTINUE). Legt in 10F0/10F1 Prop + Zone an (nur ohne Bit 82/83) und
  * widmet in ROOM11B0 den Parkplatz-Tuer-Slot um (nur ohne Bit 93 und nur, wenn Slot 1 eine Tuer ist). */
@@ -162,10 +192,13 @@ uint8_t re15_schluessel_r36_umleiten(uint16_t room_id, uint8_t event_id);
 const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id);
 
 /* Haken in re15_discard_besitz_vor_nachricht (item_discard_common.c), hinter der erzeugten Tabelle
- * gen/discard_sites.inc: (ROOM11B0, msg 29 "You've used the Parking Lot Key.") ist eine Benutzungsstelle
- * des Parking Lot Key — RE2 haengt genau dort die Wegwerf-Fortsetzung ein (@0x80051670, nach Text 5
- * @0x8005164c), die bei Anzahl 0 "This key is useless now. Discard?" fragt (@0x80051834; im Port
- * RE1.5s eigene Zeile DEBUG.BIN @0x800C508B "You don't need this key any more. Discard it?").
+ * gen/discard_sites.inc. Zwei Port-Benutzungsstellen:
+ *   (ROOM11B0, msg 29 "You've used the Parking Lot Key.") -> 0x45 — RE2 haengt genau dort die Wegwerf-
+ *     Fortsetzung ein (@0x80051670, nach Text 5 @0x8005164c), die bei Anzahl 0 "This key is useless now.
+ *     Discard?" fragt (@0x80051834; im Port RE1.5s eigene Zeile DEBUG.BIN @0x800C508B "You don't need
+ *     this key any more. Discard it?");
+ *   (ROOM1211, msg 9 "Elza: John. Wait!", sub02 @0x0226A) -> 0x42 — Ende der Befreiungsszene, in der der
+ *     Prison Key benutzt wird (RE15_R36Q_ZELLE_*, Nachbesserung 1).
  * 1 + *out_item = Gegenstand fuer diese Stelle, sonst 0. */
 int re15_schluessel_r36_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);
 

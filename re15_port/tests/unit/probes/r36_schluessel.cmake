@@ -8,13 +8,16 @@
 #                              ohne Strom / ROOM11B1 unberuehrt
 #   unit_r36_schluessel_zelle  ROOM1011 Roy-Ereignis 6 -> sub07 (msg 18), ROOM1211 Zelle mit (4,0xEC) -> John
 #   unit_r36_schluessel_namen  Prompt-Name, CHECK-Text, Icon-Tile, ITPS-Block (Rechtecke + Leser)
+#   unit_r36_schluessel_befreiung  (Nachbesserung 1) ROOM1211 Befreiungsszene sub02 am echten VM + Spielschritt:
+#                              nach msg 9 @0x0226A "Discard it?" fuer den Prison Key 0x42 (RE2 @0x80051670/@0x80051834),
+#                              Ja -> weg, Nein -> bleibt, ohne Schluessel im Inventar keine Abfrage
 add_executable(test_r36_schluessel ${CMAKE_CURRENT_LIST_DIR}/../test_r36_schluessel.c)
 target_link_libraries(test_r36_schluessel PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_schluessel PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src)
 target_compile_definitions(test_r36_schluessel PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_RE2_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon")
-foreach(_teil raum tuer zelle namen)
+foreach(_teil raum tuer zelle namen befreiung)
     add_test(NAME unit_r36_schluessel_${_teil} COMMAND test_r36_schluessel ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r36_schluessel_${_teil} PROPERTIES TIMEOUT 120)

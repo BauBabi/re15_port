@@ -13,6 +13,11 @@
  *   test_r36_schluessel zelle   ROOM1011: Roy-Ereignis 6 laeuft als sub07 (msg 18), (4,0xEC) bleibt 0;
  *                               ROOM1211: ohne (4,0xEC) Text msg 10, mit (4,0xEC) John + Befreiungs-Platz
  *   test_r36_schluessel namen   Prompt "Will you take the <Name>?", CHECK-Text, Icon-Tile, Item-Bild
+ *   test_r36_schluessel befreiung  (Nachbesserung 1, Mangel M1) ROOM1211 Befreiungsszene sub02 am echten
+ *                               VM + Spielschritt: Prison Key im Inventar -> nach msg 9 @0x0226A "Discard
+ *                               it?" fuer 0x42 (RE2 @0x80051670/@0x800517f4/@0x80051834), nicht frueher;
+ *                               Ja -> weg, (4,0xEC)/(4,0xFC) bleiben, Szene laeuft zu Ende; Nein -> bleibt
+ *                               (@0x800517c4); Schluessel nicht im Inventar -> keine Abfrage (@0x80051634)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +42,14 @@
 #include "re15_msg.h"
 #include "re15_gameflow.h"
 #include "re15_tim.h"
+#include "re15_player.h"
+#include "re15_camera.h"
+#include "re15_game_step.h"
+#include "re15_enemy_ai.h"
+#include "re15_enemy.h"
+#include "re15_fade.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
 
 #include "gen/re2_door_bank.inc"
 
@@ -297,7 +310,8 @@ static void teil_tuer(void)
     CHECK(ev == 25 && g_scd.message_id == 29 && g_test_door_se_count == se0 + 1 &&
           g_test_door_se_last == RE2_DOOR_SE_AUF_KEY && re15_game_flag_get(9, 93) && !g_room_change.pending,
           "B Druck mit Schluessel: msg %d (29), Ton Satz %d (AUF_KEY = RE2 ROOM1140 0x25), (9,93)=1, "
-          "KEIN Durchgang bei diesem Druck (RE2 v0 = 0 @0x80051698)", g_scd.message_id, g_test_door_se_last);
+          "KEIN Durchgang bei diesem Druck (RE2 @0x80051698 j 0x800516f8 ueber den Uebergangs-Block @0x800516cc)",
+          g_scd.message_id, g_test_door_se_last);
     CHECK(re15_discard_active() && re15_discard_pending_item() == 0x45,
           "W Wegwerf-Fortsetzung eingehaengt (RE2 @0x80051670): vorgemerkt Item 0x%02X",
           re15_discard_pending_item());
@@ -400,6 +414,210 @@ static void teil_zelle(void)
     free(r.buf); free(z.buf);
 }
 
+/* =================================================================================== befreiung */
+/* Nachbesserung 1 (Mangel M1 der Abnahme 0). Die Befreiungsszene ROOM1211 sub02 laeuft am ECHTEN VM mit
+ * Spielschritt in der Bild-Reihenfolge von platform/pc/main.c (Muster test_r35_cut1150.c frame()); die
+ * Abfrage-FSM tickt wie main.c: Abfrage sichtbar -> KEIN Spielbild (main.c re15_discard_frozen-Zweig,
+ * RE2 @0x80051850), aktiv -> re15_discard_tick NACH dem Spielbild. Ausgeloest wird die Szene wie im Spiel:
+ * Elza steht im Rechteck von Slot 6 (sce 3, sat 0x41, sub00 @0x01E22) und der Spielschritt feuert es. */
+void re15_actor_step_all_walkers(void);
+static re15_camera_view_t s_bf_cam;
+static re15_game_ctx_t    s_bf_ctx;
+static int                s_bf_shown = 0, s_bf_cine_was = 0;
+static uint8_t           *s_bf_ems = NULL;
+static int                s_bf_ems_sz = 0;
+static uint8_t            s_bf_bank[0x60000];
+
+/* John (Typ 0x49) braucht seine Bank, sonst bewegt Plc_dest ihn nicht (Muster test_r35_cut1150.c). */
+static void bf_bank_john(void)
+{
+    if (!s_bf_ems) {
+        char p[600]; snprintf(p, sizeof p, "%s/EMD/CDEMD0.EMS", RE15_ASSET_PSX_DIR);
+        s_bf_ems = slurp(p, &s_bf_ems_sz);
+    }
+    if (!s_bf_ems) return;
+    int idx = re15_ems_index_for_type(0x49);
+    size_t off = 0, len = 0;
+    if (idx < 0 || re15_ems_get_entry(s_bf_ems, (size_t)s_bf_ems_sz, idx, &off, &len) != 0) return;
+    re15_enemy_bank_t *eb = re15_enemy_alloc(0x49);
+    if (!eb || len > sizeof s_bf_bank) return;
+    memcpy(s_bf_bank, s_bf_ems + off, len);
+    re15_tim_t tim = (re15_tim_t){0};
+    if (re15_emd_parse_container(s_bf_bank, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
+    eb->ok = 1; eb->buf = NULL;
+    eb->loco_ok   = (re15_emd_parse_loco_bank(s_bf_bank, len, &eb->skel_loco, &eb->anim_loco) == 0);
+    eb->victim_ok = (re15_emd_parse_victim_bank(s_bf_bank, len, &eb->skel_victim, &eb->anim_victim) == 0);
+    eb->own_ok    = (re15_emd_parse_own_bank(s_bf_bank, len, &eb->skel_own, &eb->anim_own) == 0);
+}
+
+static void bf_frame(void)
+{
+    const unsigned char *raw; int len, id;
+    scd_vm_tick();
+    re15_actor_step_all_walkers();
+    re15_letterbox_tick(re15_game_flag_get(1, 27));
+    {
+        int cine = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s_bf_cine_was) g_scd.letterbox_countdown = 15;
+        s_bf_cine_was = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) {
+            g_scd.player_mode = 0;
+            re15_aot_settle_at(g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+        }
+    }
+    re15_msg_tick(&raw, &len, &id);
+    if (re15_cam_present_tick()) s_bf_shown = (int)g_scd.cam_id;
+    s_bf_ctx.active_cut  = s_bf_shown;
+    s_bf_ctx.pad_current = 0;
+    s_bf_ctx.pad_pressed = 0;
+    re15_game_step(&s_bf_ctx);
+    scd_audio_event_t e;
+    while (scd_audio_queue_pop(&e)) { }
+}
+
+/* Ein Bild wie main.c: eingefroren -> nur die Abfrage; sonst Spielbild, danach die Abfrage-FSM. */
+static void bf_bild(uint16_t antwort_edge)
+{
+    if (!re15_discard_frozen()) bf_frame();
+    if (re15_discard_active()) re15_discard_tick(antwort_edge, 0);
+}
+
+static void bf_boot(raum_t *z, int mit_schluessel)
+{
+    re15_game_state_init();
+    re15_game_flag_set(4, 0xEC, 1);                 /* Prison Key genommen (re15_schluessel_r36_genommen) */
+    re15_game_flag_set(9, RE15_R36Q_PRISON_BIT, 1);
+    re15_inv_init();
+    re15_inv_set_equipped_slot(0x80);
+    if (mit_schluessel) re15_inv_grant(RE15_R36Q_PRISON_ITEM, 1);
+    re15_files_reset();
+    re15_discard_reset();
+    g_gameflow.character = 4;
+    memset(&s_bf_cam, 0, sizeof s_bf_cam); memset(&s_bf_ctx, 0, sizeof s_bf_ctx);
+    s_bf_ctx.rdt = &z->rdt; s_bf_ctx.rdt_ok = 1; s_bf_ctx.cam_view = &s_bf_cam; s_bf_ctx.active_cut = 0;
+    re15_game_state_t flags_vorher = g_game;
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    g_game = flags_vorher;
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    bf_bank_john();
+    re15_player_cmd_reset();
+    re15_pauseflags_clear();
+    g_letterbox_level = 0;
+    g_current_room_id = z->id; g_room_change.pending = 0;
+    g_room_rdt = z->rdt; g_room_rdt_ok = 1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    /* Mitte von Slot 6: Rechteck (-21567,-19911) 4425 x 1550 (sub00 @0x01E22) */
+    pl->x = -21567 + 4425 / 2; pl->z = -19911 + 1550 / 2; pl->rot_y = 1024;
+    re15_collision_set_band(0);
+    s_bf_shown = 0; s_bf_cine_was = 0;
+    g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
+    re15_msg_load_room_block(z->rdt.messages, z->rdt.messages_size);
+    re15_rbj_bind_room(z->rdt.animation, z->rdt.animation_size);
+    scd_room_reenter(&z->rdt, pl->x, pl->z, 0);
+    re15_msg_load_room_block(z->rdt.messages, z->rdt.messages_size);
+}
+
+typedef struct {
+    int f_start, f_msg9_auf, f_msg9_zu, f_frage, frage_vor_msg9, f_ende;
+    int pad_frei_bei_frage, john_weg_bei_frage, ende_nach_antwort;
+    uint8_t item;
+} bf_lauf_t;
+
+/* Szene fahren; antwort: 0 = Ja, 1 = Nein (CROSS = virtuell 0x8000), -1 = nie antworten. */
+static bf_lauf_t bf_fahren(int antwort)
+{
+    bf_lauf_t L; memset(&L, 0, sizeof L);
+    L.f_start = L.f_msg9_auf = L.f_msg9_zu = L.f_frage = L.f_ende = -1;
+    int gefragt0 = re15_discard_gefragt();
+    int beantwortet = -1;
+    for (int f = 0; f < 6000; f++) {
+        uint16_t edge = 0;
+        if (beantwortet < 0 && antwort >= 0 && re15_discard_ready())
+            edge = (antwort == 0) ? 0x4000u : 0x8000u;
+        bf_bild(edge);
+        if (edge) beantwortet = f;
+        if (L.f_start < 0 && re15_game_flag_get(4, 0xFC)) L.f_start = f;          /* sub02 @0x01F76 */
+        if (L.f_msg9_auf < 0 && g_scd.message_active && g_scd.message_id == RE15_R36Q_ZELLE_MSG)
+            L.f_msg9_auf = f;
+        if (L.f_msg9_auf >= 0 && L.f_msg9_zu < 0 && !re15_pauseflags_belegt()) L.f_msg9_zu = f;
+        if (L.f_frage < 0 && re15_discard_prompt(&L.item, NULL)) {
+            L.f_frage = f;
+            if (L.f_msg9_auf < 0) L.frage_vor_msg9 = 1;
+            L.pad_frei_bei_frage = !re15_game_flag_get(2, 7);
+            L.john_weg_bei_frage = (g_actors[1].x == 0 && g_actors[1].z == 0);
+        }
+        if (L.f_start >= 0 && L.f_ende < 0 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) {
+            L.f_ende = f;
+            L.ende_nach_antwort = (beantwortet >= 0 && f > beantwortet);
+        }
+        if (L.f_ende >= 0 && !re15_discard_active()) break;
+    }
+    if (re15_discard_gefragt() == gefragt0) L.f_frage = -1;
+    return L;
+}
+
+static void teil_befreiung(void)
+{
+    raum_t z;
+    if (raum_laden(&z, RE15_R36Q_ZELLE_RAUM) != 0) { printf("FAIL: ROOM1211\n"); fails++; return; }
+    printf("\n[befreiung] ROOM1211 sub02 (Elza befreit John), Prison Key danach wegwerfen\n");
+    {   /* Bytes der Stelle selbst pruefen (Beleg im Kopf von re15_schluessel_r36.h) */
+        const uint8_t mo[4] = { 0x2b, 0x09, 0x00, 0x00 }, fc[4] = { 0x22, 0x04, 0xfc, 0x01 };
+        const uint8_t ende[2] = { 0x01, 0x63 }, pad1[4] = { 0x22, 0x02, 0x07, 0x01 }, pad0[4] = { 0x22, 0x02, 0x07, 0x00 };
+        CHECK(z.n > 0x2600 && !memcmp(z.buf + 0x0226A, mo, 4) && !memcmp(z.buf + 0x01F76, fc, 4) &&
+              !memcmp(z.buf + 0x0259B, ende, 2) && !memcmp(z.buf + 0x01F9C, pad1, 4) && !memcmp(z.buf + 0x0229A, pad0, 4),
+              "B ROOM1211: @0x0226A Message_on 9 (Maske 0), @0x01F76 Set(4,0xFC)=1, msg 9 Ende @0x0259B `01 63`, "
+              "Pad-Sperre Set(2,7) @0x01F9C=1 .. @0x0229A=0");
+        uint8_t it = 0;
+        CHECK(re15_schluessel_r36_discard_stelle(0x1211, 9, &it) && it == RE15_R36Q_PRISON_ITEM &&
+              !re15_schluessel_r36_discard_stelle(0x1211, 8, NULL) && !re15_schluessel_r36_discard_stelle(0x1210, 9, NULL) &&
+              re15_schluessel_r36_discard_stelle(0x11B0, 29, &it) && it == RE15_R36Q_PARK_ITEM,
+              "B Port-Stellen: (1211, msg 9) -> 0x42, (11B0, msg 29) -> 0x45; (1211, msg 8) / (1210, msg 9) nicht");
+    }
+
+    /* 1. mit Prison Key, Antwort JA */
+    bf_boot(&z, 1);
+    int belegt0 = re15_discard_vorentscheid_belegt();
+    bf_lauf_t L = bf_fahren(0);
+    printf("      Szene ab Bild %d, msg 9 auf %d / zu %d, Abfrage %d (Item 0x%02X), Szenenende %d\n",
+           L.f_start, L.f_msg9_auf, L.f_msg9_zu, L.f_frage, L.item, L.f_ende);
+    CHECK(L.f_start >= 0 && L.f_msg9_auf > L.f_start, "J Szene sub02 laeuft (Set(4,0xFC) ab Bild %d) bis msg 9 (Bild %d)",
+          L.f_start, L.f_msg9_auf);
+    CHECK(L.f_frage >= 0 && !L.frage_vor_msg9 && L.item == RE15_R36Q_PRISON_ITEM && L.f_frage >= L.f_msg9_zu &&
+          L.f_frage <= L.f_msg9_zu + 1,
+          "J \"You don't need this key any more. Discard it?\" fuer 0x%02X im Bild, in dem msg 9 ausgeredet hat "
+          "(%d / %d; RE2 @0x800517f4 Belegt-Bit, @0x80051834), nicht frueher", L.item, L.f_frage, L.f_msg9_zu);
+    CHECK(re15_discard_vorentscheid_belegt() == belegt0,
+          "J Vorentscheid VOR dem Oeffnen von msg 9 (Belegt-Bit frei, RE2-Kettenposition @0x80051628 vor @0x8005164c)");
+    CHECK(!L.pad_frei_bei_frage && !L.john_weg_bei_frage,
+          "J Abfrage am Szenenende, waehrend die Szene noch steht (Pad-Sperre (2,7)=1, John noch nicht weg @0x0228A) "
+          "- die Abfrage friert sie ein (RE2 @0x80051844/@0x80051850)");
+    CHECK(menge_im_inventar(RE15_R36Q_PRISON_ITEM) == 0 && re15_discard_weggeworfen() > 0 &&
+          re15_game_flag_get(4, 0xEC) && re15_game_flag_get(4, 0xFC) && re15_game_flag_get(9, RE15_R36Q_PRISON_BIT),
+          "J Ja: Prison Key weg, (4,0xEC) / (4,0xFC) / (9,83) bleiben");
+    CHECK(L.f_ende > L.f_frage && L.ende_nach_antwort && g_actors[1].x == 0 && g_actors[1].z == 0 &&
+          g_scd.player_mode != 2,
+          "J Szene laeuft NACH der Antwort zu Ende (Bild %d: Set(2,7)=0 @0x0229A, John weg @0x0228A)", L.f_ende);
+
+    /* 2. mit Prison Key, Antwort NEIN -> bleibt (RE2 @0x800517c4 Anzahl := 1) */
+    bf_boot(&z, 1);
+    L = bf_fahren(1);
+    CHECK(L.f_frage >= 0 && L.item == RE15_R36Q_PRISON_ITEM && menge_im_inventar(RE15_R36Q_PRISON_ITEM) == 1 &&
+          L.f_ende > L.f_frage,
+          "N Nein: Prison Key bleibt mit Anzahl 1 (RE2 @0x800517c4), Szene laeuft zu Ende");
+
+    /* 3. ohne Prison Key im Inventar (z.B. in der Item-Box; (4,0xEC) gesetzt) -> keine Abfrage (@0x80051634) */
+    bf_boot(&z, 0);
+    L = bf_fahren(0);
+    CHECK(L.f_msg9_auf >= 0 && L.f_frage < 0 && !re15_discard_active() && L.f_ende > L.f_msg9_auf,
+          "O Schluessel nicht im Inventar: Szene bis zum Ende (msg 9 Bild %d, Ende %d), keine Abfrage "
+          "(RE2 @0x80051634 bltz -> keine Fortsetzung)", L.f_msg9_auf, L.f_ende);
+    free(z.buf);
+}
+
 /* ======================================================================================= namen */
 typedef struct { unsigned char g[256]; int n; } glyphen_t;
 static void sammle(void *ctx, unsigned char code, int attr, int nl)
@@ -486,6 +704,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "tuer"))  teil_tuer();
     if (alle || !strcmp(teil, "zelle")) teil_zelle();
     if (alle || !strcmp(teil, "namen")) teil_namen();
+    if (alle || !strcmp(teil, "befreiung")) teil_befreiung();
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

@@ -15,7 +15,7 @@
 #include "re15_audio.h"        /* re15_audio_core_se — CORE-Bank 4 (Se_on 0x04NN0000) */
 
 #include "gen/discard_sites.inc"
-#include "re15_schluessel_r36.h"  /* Runde 36 Spur Q: Port-Benutzungsstelle Parking Lot Key (11B0 msg 29) */
+#include "re15_schluessel_r36.h"  /* Runde 36 Spur Q: Port-Benutzungsstellen 11B0 msg 29 (0x45) / 1211 msg 9 (0x42) */
 
 /* Port-Prompt-Schluessel 8 -> BSS-Skript [6] (item_prompt_common.c:60). */
 #define RE15_DISCARD_PROMPT_KEY 8
@@ -110,7 +110,7 @@ int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id)
         if (re15_discard_sites[i].room == (uint16_t)room_id
             && re15_discard_sites[i].msg == msg_id) { s = &re15_discard_sites[i]; break; }
     }
-    if (!s) {   /* Runde 36 Spur Q: Port-Stelle "You've used the Parking Lot Key." (re15_schluessel_r36.h) */
+    if (!s) {   /* Runde 36 Spur Q: Port-Stellen 11B0 msg 29 / 1211 msg 9 (re15_schluessel_r36.h) */
         static re15_discard_site_t q;
         if (re15_schluessel_r36_discard_stelle(room_id, msg_id, &q.item)) {
             q.room = (uint16_t)room_id; q.msg = msg_id; q.gate_zone = 0; q.gate_bit = 0; s = &q; } }

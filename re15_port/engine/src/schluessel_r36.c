@@ -236,7 +236,8 @@ const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id)
     if (re15_inv_find_item(RE15_R36Q_PARK_ITEM) >= 0) {
         /* gefunden: Text (@0x8005164c), Aufschliess-Ton (@0x80051654/58 Se_on(2,0x25)), Wegwerf-
          * Fortsetzung (@0x80051670), Schlossbit (@0x80051690 FUN_8007730c) — KEIN Durchgang bei
-         * diesem Druck (v0 = 0 @0x80051698); der Platz wird wieder die Original-Tuer, der naechste
+         * diesem Druck (@0x80051698 `j 0x800516f8` laesst den Uebergangs-Block @0x800516cc-f4 aus);
+         * der Platz wird wieder die Original-Tuer, der naechste
          * Druck geht hindurch. Die Wegwerf-Kette des Ports in RE2s Reihenfolge (re15_item_discard.h):
          * Besitz VOR dem Oeffnen (@0x80051628/34), Fortsetzung NACH dem Oeffnen (@0x80051670). */
         (void)re15_discard_besitz_vor_nachricht(room_id, RE15_R36Q_MSG_BENUTZT);
@@ -264,8 +265,13 @@ const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id)
 
 int re15_schluessel_r36_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item)
 {
-    if ((uint16_t)room_id != RE15_R36Q_TUER_RAUM || msg_id != RE15_R36Q_MSG_BENUTZT) return 0;
-    if (out_item) *out_item = RE15_R36Q_PARK_ITEM;
+    uint8_t item = 0;
+    if ((uint16_t)room_id == RE15_R36Q_TUER_RAUM && msg_id == RE15_R36Q_MSG_BENUTZT)
+        item = RE15_R36Q_PARK_ITEM;     /* 11B0 msg 29, Port-Tuer-Handler (RE2 @0x80051670)        */
+    else if ((uint16_t)room_id == RE15_R36Q_ZELLE_RAUM && msg_id == RE15_R36Q_ZELLE_MSG)
+        item = RE15_R36Q_PRISON_ITEM;   /* 1211 sub02 @0x0226A Message_on 9 = Ende der Befreiung     */
+    if (!item) return 0;
+    if (out_item) *out_item = item;
     return 1;
 }
 
