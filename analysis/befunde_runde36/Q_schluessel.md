@@ -227,7 +227,7 @@ test_r30_tuer.c Teil bank angepasst (Groesse/Satzzahl + Soll-Zeilen AUF_KEY/AUF_
 
 | Lauf | Eingabe | Ergebnis (debug.log / Framedump RE15_WINDOW_SCALE=1) |
 |---|---|---|
-| Leon 11B0 Strom an, ohne Schluessel, vor der Tuer (-25480,-26000) Blick -z | Quadrat Bild 45 | "Parkplatz-Tuer verschlossen", kein DOOR FIRE, Bild 150 noch 11B0; Text "It's locked." + Seitenpfeil (`q_tuer_11b0_texte.png` oben) |
+| Leon 11B0 Strom an, ohne Schluessel, vor der Tuer (-25480,-26000) Blick -z | Quadrat Bild 45 (Seite 2: 115) | "Parkplatz-Tuer verschlossen", kein DOOR FIRE, Bild 150 noch 11B0; Text "It's locked." + Seitenpfeil (`q_tuer_11b0_texte.png` oben), Seite 2 "The door is marked / "Parking Lot."" mit Anfuehrung 0x61/0x19 (`q_tuer_11b0_seite2.png`) |
 | dasselbe mit Parking Lot Key | Quadrat 45 / 140 / 245, Halten 270-282 | "Parking Lot Key benutzt -> Tuer offen, Flag (9,93) = 1", Text "You've used the Parking Lot Key." (Name gruen), Abfrage "You don't need this key any more. Discard it? Yes No", dann `DOOR FIRE slot=1 ... spawn=(-25279,0,17268)`, Bild 5 in ROOM11C0 |
 | Leon 10F0 vor der Konsole (8350,2050) Blick +z | Quadrat 45, Bestaetigen | Aufnahme-Modal mit RE2-Bild P. Room Key, "Will you take the Parking Lot Key?", "PARKING LOT KEY genommen: Item 0x45, Bit (9,82)" (`q_aufnahme_modal_10f0_10f1.png`) |
 | Elza 10F1 gleiche Stelle | dito | Modal mit RE2-Bild Cabin Key (Ring), "Will you take the Prison Key?", "PRISON KEY genommen ... (9,83)", "Prison Key genommen -> Flag (4,0xEC) = 1" |
@@ -264,7 +264,11 @@ keine Regressionen, und beide Riegel wurden angepasst:
 - `integration_r35_cut10f0` Teil E (Leon geht von ROOM11B0 durch die Parkplatz-Tuer nach ROOM11C0, ohne
   Schluessel): die Tuer ist jetzt bis zum Parking Lot Key zu (Auftrag). Das Kartenwerkzeug
   probe_r35_cut10f0_karte setzt bei `vor11c0` zusaetzlich (9,93)=1 (= Tuer schon aufgeschlossen).
-Lauf 2 (die zwei + eigene): siehe unten.
+Lauf 2 (nach den Anpassungen, die zwei Riegel + eigene + Bank/Tuer + Wegwerfen), -R woertlich:
+`^unit_r26_inventar$|^integration_r35_cut10f0$|r36_schluessel|r30_tuer|r21_discard`
+-> **`100% tests passed, 0 tests failed out of 14`** (integration_r35_cut10f0 248 s, integration_r36_schluessel
+117 s). Die Engine-Dateien sind seit Lauf 1 unveraendert (nur Riegel-Code und Dossier), die 100 uebrigen Tests von
+Lauf 1 gelten also fuer denselben Motor-Stand.
 
 ## 6. OFFEN
 - **Holzschreibtisch 10F0/10F1 Cut 5/6 vollstaendig maskiert** (Sonde `sicht`, 28/28 Stellen): auch die
