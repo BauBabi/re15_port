@@ -286,6 +286,30 @@ re15_lock_se.h). RE2_SOUND_LISTE.md: "ROOM101.SAP - Gun Shop".
   aufgeschwungen an der Nordwand, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — genau so sieht Elza sie, waehrend
   ihr Text "The door is locked." sagt. Die Erweiterung aendert das Bild nicht (Entscheidungsfrage unten).
 
+## Tests (gezielt, KEINE volle Suite — VERTRAG/Auftrag)
+Neue Riegel (tests/unit/probes/r36_szenenleon.cmake):
+| Test | Punkt | misst | Ergebnis |
+|---|---|---|---|
+| unit_r36_szenenleon_programm | 2 | Erweiterung/Tuerprogramm statisch: Laengen -> Evt_end, Set(9,84) zuerst, Kendo-Form Clip 15 + Sleep 20 + Se_on 0x3A/0x0A, Tuer zu, Schwanz `47 05 01 00`, msg 22 == 11B1 msg 12, Platz 8 == 11B1 @0x0112A bis auf die Nachricht | gruen |
+| unit_r36_szenenleon_schub | 1 | Sub 0x13 Leon (PL00 0x11/0x12/0x11-rueck) + Marvin (Loco 0x11/0x12), Container 0x0201 -> +1369 in z -> 0x0081, Leon +1536, snd0 Satz 7 x8 | gruen |
+| unit_r36_szenenleon_erweiterung | 2 | Umleitung @0x017EA nach dem Schub, msg 20, Marvin < 300 an der Tuer, Clip 15 + Se_on 0x3A/0x0A, Zelle (3,0x0C)=0xff + Platz 8 = msg 22, zurueck (1152,-20190), msg 21, dann Aot_on 5 -> ROOM1260, Kameras 6-10-8-10-6 | gruen |
+| unit_r36_szenenleon_tuer | 2 | (9,84): Init oeffnet (sub00), Ereignis 23 schliesst (u0 0xff fl 0x03), Platz 8 Text "The door is locked.", Ton wie (0x11B1,12), Leon kommt nicht durch; ohne (9,84) Original; ROOM11B1 unberuehrt | gruen |
+| unit_r36_szenenleon_abgang10f0 | 3 | nach Zeile 23 kein Cut_chg, Cut 2 bis zum Ende; Marvin/Ada vor dem Parken AUSSERHALB des Bildes von Cut 2; ein Tuerton zum Schluss | gruen |
+| unit_r36_szenenleon_irons | 4 | lebend Tracking (A -615 / B -491); tot (9,73): 0x12, Akku (0,-153) an beiden Standpunkten; ROOM1151 tote Pose -> 0x12, lebend Tracking | gruen |
+| integration_r36_szenenleon | 1+2 | echte exe: A Sub 0x13 Start/Ende, Umleitung, msg 20, "-> RE2-Schlossbank SCHLOSS1010" (audio_pc.c), msg 21, ROOM1260; B Ereignis 23 + tuerse.log "raum=11B1 nachricht=12 art=M weg=AOT" | gruen |
+
+Gezielter Lauf (Testgruppen der beruehrten Module: scd_vm/aot/enemy_ai/anim_select/game_step/lock_se/audio/cut_10f0/
+irons_tod + eigene), woertlich:
+```
+ctest --test-dir re15_port/build -R "r36_szenenleon|unit_r35_cut10f0|unit_r35_cut1150|integration_r35_cut1150|unit_member|unit_npc|unit_marvin|unit_1090_|unit_irons_neck_1150|unit_neck_headlook|unit_r34n_d_adaruf|unit_r30_tuer|unit_r31_tuer_ton|unit_door_1170_lock|unit_scd_|unit_aot_|prop_scd_pc_advance|prop_sca_collision|unit_r35_affen|unit_enemy_body_push|unit_r35_inventar1050_kiste|unit_r20_birkin_push_pin|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_room_transition_cmd|unit_audio_|unit_re2z_pushoff_crawl|integration_door_lock|integration_room_transition" --timeout 900
+100% tests passed, 0 tests failed out of 105
+```
+Davor (Stand 2237ed0a, vor Boot-Haken/1151-Zweig, beide beruehren 10F0 nicht):
+```
+ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lock|integration_r35_cut1150|integration_room_transition" --timeout 900
+100% tests passed, 0 tests failed out of 4
+```
+
 ## OFFEN (mit Adresse + Messweg)
 1. **Bild der Werkstatt-Tuer**: ROOM11B.BSS (von 11B0 und 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
    an der Nordwand aufgeschwungen, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — Elzas "The door is locked." steht im
