@@ -853,6 +853,44 @@ Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
   rip 0, arm 0, burst 0, glied 73 (MG-Bilder); Zaehler rip: Kopf 1, RIP-P1 2, Aufschlag 4; arm: 4. Spawn 1; burst: Ragdoll 1;
   glied: Gliedabriss 2, Aufschlag 2; eben/tief: je 2 Spawns in Loco-Bank-Bildern.
 
+* **exe (echter Renderer), Vorher/Nachher im SELBEN Lauf** (`C_schuss_mess/n2/run_n2_exe.sh`, Aufbau = abn1C/p2_batch.sh:
+  ROOM1140 per RE15_DEBUG_JUMP, Leon (-5000,-19600) Blick +x, RE2-KI, Ingram 12 Dauerfeuer `W1.2,M0.6,MA9.0,M0.5,W2`,
+  RE15_FX_LOG/RE15_STATE_LOG/RE15_FRAMEDUMP; "alt" = dieselbe exe neu gelinkt gegen libre15_engine.a mit den Objekten
+  schuss_r36/enemy_ai_re2_zombie aus 6fa888c2, Messkopien re15_pc_r36c_n2(a).exe, danach geloescht; beide exit=0). Zustandsfolge
+  Platz 2 in beiden Laeufen gleich (state.log: F55..F74 MG-Treffer 50 -> 2, F75 Tod st 3/15/1, F136 st 7). Blut-Spawns
+  (`C_schuss_mess/n1/fx_auswertung.py`, Ausgaben `n2/exe/mg_{alt,neu}_fx_auswertung.txt`), einzige Lageaenderungen:
+  ```
+  alt: Blut-Spawn F77 sub=0 w(-2514,-1850,-19270)   neu: Blut-Spawn F77 sub=0 w(-2325,0,-19731)    <- Aufschlag eines Glieds
+  alt: Blut-Spawn F81 sub=0 w(-2563,-1821,-19324)   neu: Blut-Spawn F81 sub=0 w(-2333,0,-19727)    <- zweiter Aufschlag
+  ```
+  = das Aufschlag-Blut lag in der Auslieferung 1,8 m hoch am Rumpf und liegt jetzt am Boden beim Glied. Alle uebrigen Spawns
+  +-1..2 (Rundung: R_Welt * a3 in EINEM Schritt wie der Lagen-Tick, RT = Welt-Matrix @0x8001DB74 / MVMVA @0x8001DBB4, statt
+  R_part * a3 und danach Ryaw). Bild-Differenz (`n2/exe/mg_bilddiff.txt`, Bogen `n2/exe/mg_vergleich_F76-109.png`): nur
+  F61-F163 im linken Bildrand (x 0-55), max. 168 Pixel — der Aufschlag liegt in diesem Kamerabild am Rand, im Blut des
+  MG-Feuers; die Zahlen aus fx.log sind hier der Beleg, das Bild nur die Gegenprobe "keine weiteren Aenderungen".
+  (Der SPAS-Lauf der Abnahme, `spas_x`, trifft einen AUFSTEHENDEN Fresser -> anderer Todes-Handler ohne Gruppe-B-Spawn;
+  nachgefahren: fx.log bis auf +-1 gleich, Bilddiff <= 21 Pixel.)
+
+### 9.6 Tests
+* Neu/erweitert (tests/unit/probes/r36_schuss.cmake, Sonde tests/unit/probe_r36_blut.c): `unit_r36_blut_pin_rip`, `_arm`,
+  `_burst`, `_glied` (Gruppe B + Aufschlag-Blut + Ragdoll, Pruefung (G) + Zaehler je Emitter), `_eben`/`_tief`/`_mg` jetzt mit
+  dem Renderer-Zwilling als Zeichner und (G) fuer jeden Spawn (eben/tief sehen je 2 Spawns in Loco-Bank-Bildern). Gegen den
+  alten Engine-Stand rot (9.5), neu gruen.
+* Gezielter Lauf (keine volle Suite im Spurbaum), Regex = die von Nachbesserung 1 (`mess_r36c/n1/regex2.txt`, deckt
+  enemy_ai_re2_zombie.c, schuss_r36.c, re15_damage.c-Haken und die Raeume) — woertlich:
+  ```
+  ctest --test-dir re15_port/build -R "r36|crow|kraehe|hitfilter|zombie|re2z|re2_|1140|1030|1040|10d0|1100|1210|damage|werfer|dog_hit|spider|gator|birkin|g5_|shootable|hit_|autofire|waffen|blood|blut|gore|feeder|straight_shot|enemy_ai|combat|aim|r16_|rise_|knockdown|stagger|death|crawl|writher|r26_mg|r35_inhalt|r35_raeume|r35_cut1150|r35_zgirl|r30_hund|redhawk|r17_|zfall|situp|fx_region|granate" --timeout 600 --output-on-failure -j 2
+  100% tests passed, 0 tests failed out of 203
+  Total Test time (real) = 883.02 sec
+  ```
+  (Stand ccc46f65; danach nur Kommentar-Zeilennummern in schuss_r36.c (a41911ad) -> neu gebaut und
+  `ctest -R "r36_blut|r36_schuss"`: `100% tests passed, 0 tests failed out of 10`, integration_r36_schuss 125.94 s.)
+  Darin u.a. die Riegel, die Punkt 1/3 der Abnahme tragen (integration_r36_schuss, unit_r36_schuss, unit_r36_schuss_kraehe,
+  unit_crow_death_corpse, unit_re2_zombie_hitfilter/_abc, unit_re2_crow_ai) und die Blut-/Gore-Riegel (unit_r26_mg_blut,
+  unit_re2_gore*, test_re2_gore_decoder, unit_re2_zombie_teardeath, probe_re2_zfall, probe_10d0_situp_re2, stagger/knockdown).
+* Konfliktpruefung `git merge-tree --write-tree HEAD <zweig>` gegen r36/zombieki, granate, gegnerzahl, elza, klettern,
+  kleidung, szenenleon, integration: alle konfliktfrei.
+
 ### 9.7 OFFEN (Stand Nachbesserung 2) + Fuer den Nutzer
 * **OFFEN 11 (N1, Anker-Pose der a3 = 0-Emitter): erledigt** (9.4) — dazu die drei Faelle, die dieselbe Ursache hatten und die
   Metrik der Abnahme nicht sehen konnte: Loco-Bank-Phasen (a3-Emitter 56-121 neben dem gezeichneten Koerper), Aufschlag-Blut
