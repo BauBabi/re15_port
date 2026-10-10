@@ -425,9 +425,17 @@ Derselbe Befehl wie N1.1:
 [wound] sync: applied=1 ok=1 gen=3 slotgen=4
 ```
 Erstes Decal beim ZWEITEN Biss (Panel 4 = 150 >= 0x78 -> Stufe 1, @0x80037f14/24/2c) bei **hp 60**
-(Caution/"Warning"), lange vor Danger (hp < 20); beim fuenften Biss das zweite (Panel 5). Zum Vergleich
-das RE1.5-Original auf demselben Weg: 8 Knockdown-Bisse von 100 bis 20 HP, je einer Stempel -> gleiche
-Stempelzahl je HP wie jetzt (10 Stempel auf 100 HP).
+(Caution/"Warning"), lange vor Danger (hp < 20); beim fuenften Biss das zweite (Panel 5).
+
+Gegenprobe Massstab — derselbe Weg unter dem RE1.5-Gehirn (`RE15_AI_FLAVOR=re15`, Port-Zwilling der
+Original-Hunde FUN_8010f15c, enemy_ai_common.c Zustand 8), HP aus `RE15_STATE_LOG` je Bild:
+```
+F667 hp 90 | F722 80 | F780 70 | F850 60 | F890 50 | F959 40 | F1008 30 | F1057 20 | F1229 -1 (Griff)
+[walk] F840 ... / [wound] sync: applied=1 ok=1 gen=2 slotgen=2 / [walk] F870 ...
+```
+Zehn-HP-Bisse wie im Original (@0x8010f2c8); das erste Decal faellt mit dem Biss F850 bei **hp 60** —
+dieselbe HP-Stufe wie jetzt unter dem RE2-Gehirn (zweiter 20-HP-Biss, hp 60). Vorher (ein Stempel je
+RE2-Biss) kam es unter RE2 nie.
 
 Bild (Weg der Abnahme bis Bild 600, Spielstand vom SPIEL geschrieben: `[save] saved (room 1190)`,
 Slot 0 = `Raum 1190 char 0 pos (3550,0,-11650) rot 0 hp 40 cut 0 wunden 0/0 0/0 0/0 0/0 1/0 0/50 0/50
