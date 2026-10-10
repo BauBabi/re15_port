@@ -1018,3 +1018,101 @@ Code nimmt es den LETZTEN a0-Schreiber im Fenster (z.B. @0x801086B4 TOD zeigt 60
   0x80106180, 0x80106220, 0x80106254, 0x80106440, 0x80106470; Funken (Id 6 bzw. 4/12, a0 dynamisch): 0x80106574,
   0x801065C0, 0x8010660C, 0x80106658, 0x801066AC, 0x801066D4.
 * Gruppen A/B/D sonst unveraendert; Summe 29 (A) + 30 (B) + 12 (C) + 17 (D) = 88.
+
+### 10.5 Aenderung
+**(a) Die zwei Emitter (Commit 01445c3e), enemy_ai_re2_zombie.c Kriecher-Zweig P5:**
+* @0x80102B24: `re2z_gore_fx_a3(e, 0, 0x08001000u, rot_y, {0,-600,0})` statt `re2z_gore_fx_ex(e, 0, 0x00801000u, rot_y, 0,
+  -600, 0)` — a3 im Anker-Rahmen Part 0 und die richtige Id (8 -> Raum-Id 5 ueber den vorhandenen Dekoder `case 8: id = 5`).
+* @0x80102BBC: `re2z_gore_fx_a3(e, 8, 4096u, ang, {0,100,0})` statt `re2z_gore_fx_ex(..., 0, 100, 0)`.
+* Keine neue Zahl: -600 @0x80102B10, 100 @0x80102B8C, 0x08001000 @0x80102AD4-DC, 4096 @0x80102BA4 (alle im Kommentar).
+
+**(b) Anker-ZEITPUNKT (Commit 3a60ef41) — gefunden bei der Messung nachher (10.6), dieselbe Fehlerklasse "Blut nicht am
+gezeichneten Koerper":** Nach (a) lagen 27 der 32 Kopfabrisse der 320-Lauf-Matrix exakt an der gezeichneten Matrix (d 0), 5
+aber 41..666 daneben (`vergleich_k1.txt` Zwischenstand: w12_nz_eben_p4 378, w12_nz_tief_p4 41, w12_pz_eben_p5 284,
+w19_nz_*_p4 445, w19_pz_*_p5 666; vorher lagen dieselben 5 bei 601/663/709 bzw. 896 statt 600 — die Abnahme fuehrte 3 davon
+in K6 ohne Wertung). Gemessen mit einem Debug-Zwilling von re2z_gore_fx_core (Objekt vor die Bibliothek gelinkt,
+`C_schuss_mess/n3/patch_engine_fxdbg.py`, Sonde `abn2_blut_dbg2.c`), Lauf 19 pz eben 5:
+```
+  POS F266 vor (903,-17974) r2917 mo 16 af 21 | nach (889,-17969) r2917 mo 16 af 22 | spawns 1
+  FXDBG part 0 a3 (0,-600,0) p (68,-117,-17366) | e (224,0,-17929) r2917 mo 16 af 22 st 1/1/5 | anker rv 1 T (224,-249,-17929)
+  DBG F266 post-Anker T=(889,-249,-17969) == gezeichnet T=(889,-249,-17969) | anker(a3) post=(733,-117,-17406) fx=(68,-117,-17366)
+```
+d.h. im Spawn-Moment stand der Kriecher bei x 224, vor und nach dem Tick bei ~900: der Griff setzt die Lage ABSOLUT —
+`jal 0x80015cb8` @0x80102A50 (P5 vor dem Advance @0x80102A64); FUN_80015cb8 (RE2 PSX.EXE, selbst gelesen): Wurzelversatz
+des Bilds ueber FUN_80015db0 @0x80015CE8, Gier-Matrix `jal 0x8008e8b4` @0x80015D40, ApplyMatrix `jal 0x8008dba4` @0x80015D50,
+dann `lh v0,356(s1)` / `addu` / `sw v0,56(s1)` @0x80015D58-68 (+0x38 = +0x164 + v.x), dito +0x3C/+0x40 aus +0x166/+0x168
+@0x80015D6C-90 — und die SCA-Klemme im Schwanz holt ihn zurueck (Port: run_all Zombie-Zweig, re15_enemy_sca_clamp nach den
+Schueben). Das Original ruft dieselbe Klemme unbedingt nach dem Handler: EMZ0-Root Zustands-`jalr v0` @0x801004E8, Schwanz
+`jal 0x80035530` @0x8010062C, `jal 0x8003567c` mit a1 = 1024 @0x80100638; FUN_8003567c ueberspringt nur bei word0 & 8
+(`andi v0,v1,0x8` / `bne` @0x80035694-98) oder +0x1E4 != 0 (@0x800356A0-A8), sonst SCA-Resolver `jal 0x8004c1bc` @0x800356D0;
+der Griff-Executor 0x801025EC-0x80102C30 schreibt word0 nur @0x80102778 (`ori v0,v0,0x1000`) und im Tod @0x80102C20, +0x1E4
+nie (Liste aller Speicher auf 0(s1)/484(s1) in dem Bereich). Der Anker des Originals ist Record+72 des VORIGEN Zeichnens
+= nach der Klemme jenes Ticks. Der Port rechnet ihn (PORT-KONVENTION "laufendes Bild") mitten im Tick, VOR Schub und Klemme.
+* Umsetzung (eigene Datei schuss_r36.c + kleine Haken): `re15_schuss_r36_fx_merke` merkt die belegten ESP-Plaetze unmittelbar
+  vor dem Spawn, `re15_schuss_r36_fx_nach(e)` (1 Zeile nach dem Spawn in re2z_blood_fx_scaled und re2z_gore_fx_core) legt
+  {Aktor, Bild, Lage, neue Plaetze, Ring-Nr., eigene Matrix?} ab; run_all Zombie-Zweig (enemy_ai_common.c, 2 Zeilen + include):
+  `re15_schuss_r36_nachfuehr_marke(e)` direkt nach re15_enemy_ai_live_step = Lage am Handler-Ende, `re15_schuss_r36_nachfuehren(e)`
+  direkt nach re15_enemy_sca_clamp = die Plaetze (x/z) und der Mess-Ring werden um die Lage-Differenz des SCHWANZES verschoben.
+  Nicht verschoben: Anker mit eigener Matrix (freifliegende Teile, re15_schuss_r36_gezeichnet == 2) und Bewegung IM Handler
+  nach dem Spawn (MG-Schub @0x80108110-48 — auch im Original spawnt der Handler vor dem Schub). Schub/Klemme aendern nur x/z,
+  nicht die Gier (re15_enemy_sca_clamp, re15_body_push) -> die Verschiebung ist exakt die Lage der gezeichneten Matrix.
+  Keine neue Zahl.
+* Mess-Ring: zusaetzlich die gepackte RE2-Id (`re15_schuss_r36_fx_id`, 1 Zeile in re2z_gore_fx_core) fuer den Id-Pin.
+
+### 10.6 Messung nachher
+* **Sonde der Abnahme (abn2_blut.c unveraendert, neu gegen die Bibliothek dieses Stands gelinkt), 320 Laeufe**
+  (`batch_neu.sh`, Klassierung `klassen3_nachher.txt`, Gegenueberstellung je Lauf `vergleich_k1.txt`):
+  ```
+  K1 Kopfabriss Part 0 @0x80102B24 a3 (0,-600,0): Spawns 32 in 32 Laeufen, d(gezeichnet T) min 0 max 0     (vorher 25x d 600 + 7x 601..896)
+  K2 Hals-Stumpf Part 8 @0x80102BBC a3 (0,100,0): Spawns 282 in 32 Laeufen, d(gezeichnet T) min 0 max 0    (vorher d 100)
+  K9 alle uebrigen Spawns: Spawns 4470 in 320 Laeufen, d(gezeichnet T) min 0 max 361                         (361 = RIP-Kopf vs. gedriftet, bekannt)
+  ```
+  Klassen der Abnahme (`klassen.py` der Abnahme auf die neuen Laeufe, `klassen_abn_nachher.txt`), einzige Aenderungen:
+  K1/K2 und "K6 w12 ev - part 0 ohne" (601..709) entfallen (jetzt a3, d 0); **Loco-Bank-Treffer w3/w4/w5/w6 TREF part 0/1
+  bank 1: d max 30 -> 0** (die Restabstaende der Abnahme 2 kamen von derselben Ursache: Taumel-Schub in die Wand, Klemme im
+  Schwanz — z.B. w3 nx eben p4 F102 fx (-740,...) d 25 -> (-715,...) d 0). Alle uebrigen Klassen bitgleich.
+  Lauf-Folgen: in allen 320 Laeufen gleiches Todesbild und gleiche Spawn-Zahl wie vorher (`lauf_diff.py`; die 4 Abweichungen
+  der Zeilenzahl "part 8 fliegt" sind von stderr zerschnittene Zeilen, keine Verhaltensaenderung).
+  Woertlich 12 px eben 2: `F192 ... part  0 fx=(568,-114,-19589) a3=(0,-600,0) | d(gezeichnet T)=0` (= die Original-Lage, die die
+  Abnahme ausgerechnet hatte), `F193 ... part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0`;
+  19 pz eben 5: `F266 ... part  0 fx=(733,-117,-17406) a3=(0,-600,0) | d(gezeichnet T)=0 | d(T-1)=25` (vorher ERGEBNIS max d 896).
+* **exe (echter Renderer), derselbe E2f-Aufbau, Messkopie `re15_pc_r36c_nb3_neu.exe`:** Zustandsfolge bitgleich (state.log F226
+  beide: Kriecher `[5 ... st=1 ss1=1 ss2=5 ... mo=16 af=22 ... @(-2728,-19774,r2199)] hp=226`, Leon `(-3812,-19450)` hp 70).
+  fx.log: `id=5 sub=0 eidx=0 frame=1 w(-3302,-117,-19659) ... F=226` (vorher `id=0 sub=128 ... w(-2732,-849,-19781)`) = Fleischbrocken
+  (Raum-Id 5) 117 ueber dem Boden, 585 vor dem Becken Richtung Leon = am Hals des liegenden Kriechers; Hals-Stumpf
+  `id=0 sub=0 ... w(-3277,-162,-19642)` F227..F243 (vorher `w(-3376,-51,-19641)`). Bilder (`C_schuss_mess/n3/exe_e2f_vorher_F222-233.png`
+  / `exe_e2f_nachher_F222-233.png`, Ausschnitt x0-130/y60-160, 3x, RE15_FRAMEDUMP mit RE15_WINDOW_SCALE=1): vorher ab F226 der
+  rote Blutballen in der Luft auf Kniehoehe Leons; nachher kein Ballen in der Luft, rote Brocken/Spritzer unten am Kopf des
+  Kriechers auf dem Boden.
+
+### 10.7 Tests
+* Neu (tests/unit/probes/r36_schuss.cmake): `unit_r36_blut_pin_kriecher` (`probe_r36_blut pin kriecher`: Ingram, Platz 2, Typ 0x10)
+  und `unit_r36_blut_pin_kriecher5` (`pin kriecher5`: MC51 von +z, Platz 5, Typ 0x11 — der Klemm-Fall). Die Varianten laden die
+  Bank WIE DIE EXE (Hybrid, Abnahme 2 B3), zeichnen auch im Vorlauf (wie abn2_blut) und fahren bis zum Kriecher-Tod + 80 Bilder
+  (kein Abbruch beim Kriecher). Pruefung: (G) jeder Spawn an der gezeichneten Matrix (Schranke 40, MG-Trefferbilder 100),
+  Kopfabriss traegt Id 0x08001000, Hals-Stumpf 0x00001000, Zaehler Kriecher / Kopfabriss >= 1 / Hals-Stumpf >= 1.
+  Neu (Ausgaben `C_schuss_mess/n3/pins/neu_*.txt`): `kriecher: F192 KOPFABRISS Id 0x08001000 d=0 ... Kriecher ab Bild 91:
+  Kopfabriss 1, Hals-Stumpf 9 / probe_r36_blut: OK`, `kriecher5: F266 KOPFABRISS Id 0x08001000 d=0 ... probe_r36_blut: OK`.
+  **Trennschaerfe** (Sonde gegen alte Objekte gelinkt, `pins/probe_v*_*.txt`): Stand vor N3 (enemy_ai_re2_zombie.c +
+  enemy_ai_common.c aus 4adb4890): kriecher exit 1 (12 FAIL: `F192 Spawn part=0 ohne a3 liegt 600`, Hals-Stumpf 9x 100, kein
+  Kopfabriss-/Hals-Stumpf-Spawn mit a3), kriecher5 exit 1 (`F266 ... liegt 896`). Nur ohne Nachfuehrung (enemy_ai_common.c aus
+  4adb4890, Rest neu): kriecher OK, **kriecher5 exit 1 (`F266 Spawn part=0 mit a3 liegt 666`)** — der Pin traegt beide Teile.
+* Die sieben bisherigen Pins unveraendert gruen, gleiche Kennzahlen wie §9.5 ((G) max d: eben 24, tief 32, mg 88, rip 0, arm 0,
+  burst 0, glied 73).
+* Gezielter ctest-Lauf: s. 10.9.
+
+### 10.8 OFFEN (Stand Nachbesserung 3) + Fuer den Nutzer
+* **OFFEN 13 (neu, fehlendes Blut, nicht Lage): Fress-Tropfen @0x80103C8C** — EXEC[8] P1 spawnt bei Bild-Wort & 0x10000
+  (`lw v0,376(s1)` / `lw v0,0(v0)` / `lui v1,0x1` / `and` / `beq` @0x80103C50-64) Blut Id 0 Skala 5072 (`addiu a0,zero,5072`
+  @0x80103C80) an Part 8 (`addiu a2,s0,1448` @0x80103C90) mit a3 (200,0,0) (@0x80103C68-7C), Winkel rand<<4 (@0x80103C84). Der Port
+  hat den Spawn nicht ("Fress-Tropf-FX ... OPEN", enemy_ai_re2_zombie.c EXEC[8] P1). Am FRESSENDEN Zombie, nicht am getroffenen —
+  nicht Teil von Punkt 2; Messweg: RE2-Bank-Fress-Clip 0x12/0x13 auf Bild-Worte & 0x10000 pruefen, dann a3-Emitter wie hier.
+* OFFEN 9 praezisiert: die Feuer-Emitter (Id 5) tragen weiter Welt-Versatz (0,200,0) — Brand-Darstellung (Spur D/Granate), kein Blut.
+* OFFEN 7, 8, 10, 12 (§5/§9.7) unveraendert.
+* **Fuer den Nutzer:** Wenn Leon sich aus dem Beinbiss eines KRIECHENDEN Zombies befreit und ihm dabei den Kopf zertritt, erschien
+  bisher ein roter Blutballen in der Luft auf Kniehoehe ueber dem liegenden Zombie (der Versatz wurde senkrecht statt den Koerper
+  entlang gerechnet) — und es war der falsche Effekt (Blut mit verdrehter Unternummer statt RE2-Fleischbrocken). Jetzt spritzen wie
+  in RE2 Fleischbrocken am Hals des liegenden Zombies, und der abgetrennte Kopf blutet am Halsende. Dazu: wenn ein Zombie im
+  selben Bild, in dem er blutet, von einer Wand zurueckgehalten wird (Kriecher am Tisch, Taumel-Treffer an der Wand), sitzt das
+  Blut jetzt am gezeichneten Koerper statt dort, wo die Bewegung ihn ohne Wand hingesetzt haette (gemessen bis 666 bzw. 30
+  daneben). Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits / Nachrichten / Ereignisse.

@@ -34,7 +34,8 @@
  *  (5) Mechanik: y des Versatzes im ANKER-Rahmen (Anker.R^T * (Lage - Anker.T)) im Band der Familie
  *      (HURT/TOD/NACH < -400, FLINCH/TROPF < -200, ZONE0 > 600, AUF/KRIECH > 200) — stehend wie liegend.
  *
- * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg|rip|arm|burst]  (mg = Ingram 12 von +z, MG-Blutstoss 0x80107EF0)
+ * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg|rip|arm|burst|glied|kriecher|kriecher5]  (mg = Ingram 12 von +z,
+ *         MG-Blutstoss 0x80107EF0; kriecher/kriecher5 = Kriecher-Kopfabriss, Nachbesserung 3, s. main)
  *
  * NACHBESSERUNG 2 (Abnahme 1 M1, Dossier C_schuss.md §9): "der Zeichner" dieser Sonde ist jetzt ein ZWILLING DES
  * PORT-RENDERERS (platform/pc/main.c: Bankwahl 9798-9925 — Loco-Bank in den Paar-1-Phasen, clip_override bei +0x1C4 & 4,
@@ -70,6 +71,7 @@
 #include "re15_anim_select.h"
 #include "re15_engine.h"
 #include "re2_ems.h"
+#include "re15_ems.h"          /* Nachbesserung 3: Hybrid-Bank wie die exe (re15_ems_index_for_type/_get_entry) */
 #include "re15_schuss_r36.h"
 
 #include <stdint.h>
@@ -112,6 +114,40 @@ static void load_bank2(uint8_t type)
     if (!eb) return;
     if (re2_ems_load_bank(s_ems, s_ems_n, (int)type, eb, NULL) == 0) { eb->buf = NULL; eb->ok = 1; }
     else eb->type = 0;
+}
+/* Nachbesserung 3 (Abnahme 2 B3): die Bank WIE DIE EXE — RE2-Bank + HYBRID mit der RE1.5-EMD (platform/pc/main.c
+ * pc_enemy_load_re2_kind + pc_enemy_hybrid_re15_models: re2_rig = 1, re2_hybrid_apply, Typ 0x10 mit Sitz-Import),
+ * Muster der Abnahme-Sonde abn2_blut.c. Nur die Varianten kriecher/kriecher5 laden so. */
+static uint8_t *s_ems15 = NULL; static size_t s_ems15_n = 0;
+static void load_bank_hybrid(uint8_t type)
+{
+    if (!s_ems)   s_ems   = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &s_ems_n);
+    if (!s_ems15) s_ems15 = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &s_ems15_n);
+    if (!s_ems) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return;
+    if (re2_ems_load_bank(s_ems, s_ems_n, (int)type, eb, NULL) != 0) { eb->type = 0; return; }
+    eb->buf = NULL; eb->re2_rig = 1; eb->ok = 1;
+    int idx = re15_ems_index_for_type(type);
+    size_t off = 0, len = 0;
+    if (!s_ems15 || idx < 0 || re15_ems_get_entry(s_ems15, s_ems15_n, idx, &off, &len) != 0) return;
+    uint8_t *buf = (uint8_t *)malloc(len);
+    if (!buf) return;
+    memcpy(buf, s_ems15 + off, len);
+    static re15_md1_t s_md15[4]; static re15_emd_skeleton_t s_sk15[4]; static re15_emd_animation_t s_an15[4];
+    static int s_n15 = 0;
+    if (s_n15 >= 4) { free(buf); return; }
+    int k = s_n15++;
+    if (re15_emd_parse_container(buf, len, &s_md15[k], &s_sk15[k], &s_an15[k], NULL) != 0) { free(buf); return; }
+    int unm = -1;
+    if (re2_hybrid_apply(eb, (int)type, &s_md15[k], &s_sk15[k], &unm) != 0) { free(buf); return; }
+    eb->buf = buf;
+    if (type == 0x10) {
+        static re15_emd_skeleton_t s_sk; static re15_emd_animation_t s_an;
+        s_sk = s_sk15[k]; s_an = s_an15[k]; re15_re2z_set_re15_pose_bank(&s_sk, &s_an);
+    }
 }
 static void frame(uint16_t cur, uint16_t edge)
 {
@@ -251,7 +287,13 @@ int main(int argc, char **argv)
     int burst = (argc > 2 && strcmp(argv[2], "burst") == 0);  /* Remington 8 von +x: Ragdoll-Emitter @0x80106D7C */
     int glied = (argc > 2 && strcmp(argv[2], "glied") == 0);  /* Ingram 12 von +z, Dauerfeuer, Saat der Abnahme 1:
                                                                * Gliedabriss @0x80105368/@0x801053D0 + Aufschlag-Blut */
-    int grp_b = rip || arm || burst || glied;                 /* nur Pruefung (G) + Zaehler, keine Pistolen-Familien */
+    /* Nachbesserung 3 (Abnahme 2 M1): KRIECHER-KOPFABRISS — Leon toetet den Kriecher bei der Befreiung aus dem
+     * Bein-Biss (EMZ0 P5 @0x80102AC0-BC0). Bank wie die exe (Hybrid), Dauerfeuer, Saat 0x1234567 = die Laeufe der
+     * Abnahme-Sonde abn2_blut "12 px eben 2" (kriecher, Platz 2, Typ 0x10) und "19 pz eben 5" (kriecher5, Platz 5,
+     * Typ 0x11: dort holt die SCA-Klemme den Kriecher im Kopfab-Bild ~665 zurueck = Pin der Nachfuehrung). */
+    int kriecher5 = (argc > 2 && strcmp(argv[2], "kriecher5") == 0);
+    int kriecher  = kriecher5 || (argc > 2 && strcmp(argv[2], "kriecher") == 0);
+    int grp_b = rip || arm || burst || glied || kriecher;     /* nur Pruefung (G) + Zaehler, keine Pistolen-Familien */
     if (arm) tief = 1;
     const char *base = getenv("RE15_ASSET_DIR");
     char path[600];
@@ -266,13 +308,15 @@ int main(int argc, char **argv)
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();
-    re15_damage_seed_rng(glied ? 0x1234567u : 0x0badf00du);  /* glied: Saat von abn1_blut (Abnahme 1 §3.1, F76 Abriss) */
+    re15_damage_seed_rng((glied || kriecher) ? 0x1234567u : 0x0badf00du);  /* glied: Saat von abn1_blut (Abnahme 1 §3.1,
+                                                               * F76 Abriss); kriecher: Saat von abn2_blut (Abnahme 2) */
     g_current_room_id = 0x1140;
     if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
     if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
     g_scd.work_vars[10] = 0;
     for (int i = 0; i < 120; i++) scd_vm_tick();
-    load_bank2(0x10); load_bank2(0x11); load_bank2(0x16);
+    if (kriecher) { for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active) load_bank_hybrid(g_actors[s].type); }
+    else { load_bank2(0x10); load_bank2(0x11); load_bank2(0x16); }
     re15_enemy_bank_t *bk = re15_enemy_find(0x10);
     if (!bk || !bk->ok) { printf("FAIL: RE2-Bank 0x10 fehlt (RE2/CDEMD0.EMS)\n"); return 1; }
     printf("Bank 0x10: bones=%d P8.loc=(%d,%d,%d)\n", bk->skel.bone_count,
@@ -285,22 +329,27 @@ int main(int argc, char **argv)
     re15_collision_set_band(0);
     re15_player_set_aim_clip_len(12);
     re15_inv_load_briefing();
-    int waffe = (mg || glied) ? 12 : rip ? 13 : (arm || burst) ? 8 : 3;
+    int waffe = kriecher5 ? 19 : (mg || glied || kriecher) ? 12 : rip ? 13 : (arm || burst) ? 8 : 3;
     if (waffe != 3) re15_inv_grant(waffe, 250);
     re15_player_set_equipped_weapon(waffe);
     {   int es = re15_inv_equipped_slot(); if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
     int zs = -1;
+    const int32_t zx = kriecher5 ? 200 : -1800, zz = -19600;    /* kriecher5: Platz 5 der Abnahme-Sonde (Typ 0x11) */
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (g_actors[s].active && g_actors[s].type == 0x10 && g_actors[s].x == -1800 && g_actors[s].z == -19600) zs = s;
-    if (zs < 0) { printf("FAIL: Platz (-1800,-19600) nicht gefunden\n"); return 1; }
+        if (g_actors[s].active && (kriecher5 || g_actors[s].type == 0x10) && g_actors[s].x == zx && g_actors[s].z == zz) zs = s;
+    if (zs < 0) { printf("FAIL: Platz (%d,%d) nicht gefunden\n", (int)zx, (int)zz); return 1; }
     re15_actor_t *z = &g_actors[zs];
     /* Nur dieser eine Zombie: alle anderen Plaetze aus (Auto-Zielen und Koerperschub sonst auf Platz 5). */
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != zs) g_actors[s].active = 0;
     pl->x = z->x + 1800; pl->z = z->z; pl->rot_y = 2048;          /* Blick -x auf den Zombie */
-    if (mg || arm || glied) { pl->x = z->x; pl->z = z->z + 1800; pl->rot_y = 1024; }  /* MG: von +z (Blick -z), damit der Zombie
+    if (mg || arm || glied || kriecher5) { pl->x = z->x; pl->z = z->z + 1800; pl->rot_y = 1024; }  /* MG: von +z (Blick -z), damit der Zombie
                                                                     * NICHT mit Gier 0 steht — Welt- und Anker-Versatz
                                                                     * fielen sonst fast zusammen (Ryaw = 1) */
-    for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); g_engine.frame_count++; }
+    for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) {
+        pl->hp = 100; frame(RE15_PAD_BIT_R1, 0);
+        if (kriecher) { static drawn_t vor; zeichne(z, &vor); }  /* wie abn2_blut: auch im Vorlauf zeichnen (Crossfade) */
+        g_engine.frame_count++;
+    }
 
     static drawn_t prev, cur; memset(&prev, 0, sizeof prev); memset(&cur, 0, sizeof cur);
     unsigned ring0 = re15_schuss_r36_fx_zahl();
@@ -310,12 +359,13 @@ int main(int argc, char **argv)
     int64_t mg_sum_anker = 0, mg_sum_welt = 0;
     /* (G)-Zaehler (Nachbesserung 2) */
     int g_n = 0, g_max = 0, g_null = 0, g_zeichnen = 0, g_loco = 0, g_kopf = 0, g_rip1 = 0, g_glied = 0, g_arm4 = 0, g_rag = 0;
+    int g_abriss = 0, g_hals = 0, kr_seit = -1;               /* Nachbesserung 3: Kriecher-Kopfabriss */
     for (int f = 0; f < 2400; f++) {
         pl->hp = 100;
         uint16_t cr = RE15_PAD_BIT_R1 | (tief ? RE15_PAD_BIT_DOWN : 0), ed = 0;
         /* Schuss alle 12 Bilder, sobald der Zombie steht (nicht mehr Fresser EXEC[8]), bis zum Tod. */
         if (steht_seit < 0 && z->state == 1 && z->sub_state_1 != 8) steht_seit = f;
-        if (glied) {                                         /* Dauerfeuer wie abn1_blut: Taste gehalten, Flanke je 30 */
+        if (glied || kriecher) {                             /* Dauerfeuer wie abn1_blut: Taste gehalten, Flanke je 30 */
             if (tot_ab < 0 && steht_seit >= 0 && f >= steht_seit + 20) {
                 cr |= RE15_PAD_BIT_SQUARE; if (((f - steht_seit) % 30) == 0) ed = RE15_PAD_BIT_SQUARE;
             }
@@ -350,7 +400,7 @@ int main(int argc, char **argv)
             else if (prev.ok && prev.flieg[part]) { appl_k(prev.Rd[part], prev.Td[part], a3, ref); quelle = "eigene Matrix (fliegt)"; }
             else { appl_k(cur.R[part], cur.T[part], a3, ref); quelle = cur.flieg[part] ? "Skelett = Seed (fliegt ab)" : "Skelett"; }
             int32_t dg = abst(fx, ref), droh = abst(fx, roh[part]);
-            int schranke = ((mg || glied) && hit && !beim_zeichnen) ? 100 : 40;   /* MG-P0 dreht/schiebt NACH dem Spawn @0x8010810C-6C */
+            int schranke = ((mg || glied || kriecher) && hit && !beim_zeichnen) ? 100 : 40;   /* MG-P0 dreht/schiebt NACH dem Spawn @0x8010810C-6C */
             printf("F%-4d (G) %s part=%2d fx=(%d,%d,%d) a3=%s(%d,%d,%d) bank %s rag %u -> %s d=%d (Schranke %d) | roh d=%d\n",
                    f, beim_zeichnen ? "Z" : " ", part, fx[0], fx[1], fx[2], mit ? "" : "ohne ", a3[0], a3[1], a3[2],
                    cur.bank == 1 ? "loco" : cur.bank == 2 ? "re15" : "haupt", (unsigned)z->re2z_rag_anchor_on, quelle, dg,
@@ -364,6 +414,24 @@ int main(int argc, char **argv)
             if (rip && died && part == 0 && !mit) g_rip1++;              /* RIP-P1 @0x80109108/@0x8010913C (Port a3 = 0) */
             if (!beim_zeichnen && !mit && (part == 9 || part == 12 || part == 10 || part == 13) && !died) g_glied++;
             if (arm && part == 3 && !mit) g_arm4++;                      /* Arm-Abriss 4. Spawn @0x80107704 */
+            if (kriecher && mit && !beim_zeichnen) {
+                /* Nachbesserung 3: Kopfabriss @0x80102B24 = Part 0, a3 (0,-600,0) @0x80102B10-1C, a0 0x08001000 (Id 8,
+                 * `lui a0,0x800` / `ori a0,a0,0x1000` @0x80102AD4-DC); Hals-Stumpf @0x80102BBC = Part 8, a3 (0,100,0)
+                 * @0x80102B8C-A0, a0 4096 (Id 0, @0x80102BA4). Lage-Pruefung = (G) oben (Schranke 40, kein Trefferbild). */
+                uint32_t id = 0xFFFFFFFFu; re15_schuss_r36_fx_holen_id(nr, &id);
+                int ist_abriss = (part == 0 && a3[0] == 0 && a3[1] == -600 && a3[2] == 0);
+                int ist_hals   = (part == 8 && a3[0] == 0 && a3[1] == 100 && a3[2] == 0);
+                if (ist_abriss) g_abriss++;
+                if (ist_hals) g_hals++;
+                if (ist_abriss || ist_hals)
+                    printf("F%-4d     %s Id 0x%08X d=%d\n", f, ist_abriss ? "KOPFABRISS" : "HALS-STUMPF", (unsigned)id, dg);
+                if (pin && ist_abriss && id != 0x08001000u) {
+                    printf("FAIL: F%d Kopfabriss traegt Id 0x%08X statt 0x08001000 (@0x80102AD4-DC)\n", f, (unsigned)id); fails++;
+                }
+                if (pin && ist_hals && id != 0x00001000u) {
+                    printf("FAIL: F%d Hals-Stumpf traegt Id 0x%08X statt 0x00001000 (@0x80102BA4)\n", f, (unsigned)id); fails++;
+                }
+            }
             if (pin && dg > schranke) {
                 printf("FAIL: F%d Spawn part=%d %s liegt %d von der gezeichneten Matrix (%s), Schranke %d (roh %d)\n", f, part,
                        mit ? "mit a3" : "ohne a3", dg, quelle, schranke, droh); fails++;
@@ -481,6 +549,7 @@ int main(int argc, char **argv)
         }
         prev = cur;
         if (tot_ab < 0 && died) tot_ab = f;
+        if (kriecher && kr_seit < 0 && (z->re2z_f10e & 1u)) kr_seit = f;   /* +0x10E Bit 0 = Kriecher */
         if ((mg || glied) && (z->re2z_f10e & 1u)) {     /* Kriecher (+0x10E Bit 0): danach Griff/Biss, kein Treffer-Emitter */
             printf("F%-4d Kriecher (10E=%04X) — MG-Lauf endet hier\n", f, z->re2z_f10e);
             break;
@@ -493,6 +562,7 @@ int main(int argc, char **argv)
     printf("(G): %d Spawns, max d %d, davon ohne a3 %d, beim Zeichnen (Aufschlag) %d, Loco-Bank %d, Ragdoll ohne a3 %d, "
            "RIP-Kopf %d, RIP-P1 %d, Gliedabriss %d, Arm-Abriss 4. Spawn %d\n", g_n, g_max, g_null, g_zeichnen, g_loco, g_rag,
            g_kopf, g_rip1, g_glied, g_arm4);
+    if (kriecher) printf("Kriecher ab Bild %d: Kopfabriss %d, Hals-Stumpf %d\n", kr_seit, g_abriss, g_hals);
     if (pin && grp_b) {
         /* Zaehler je Gruppe-B-Variante (gemessen, Dossier §9.6): der Lauf muss die Emitter wirklich sehen. */
         if (tot_ab < 0) { printf("FAIL: Zombie nicht gestorben\n"); fails++; }
@@ -503,6 +573,9 @@ int main(int argc, char **argv)
         if (burst && g_rag < 1)    { printf("FAIL: kein Ragdoll-Spawn ohne a3 (@0x80106D7C)\n"); fails++; }
         if (glied && g_glied < 1)  { printf("FAIL: kein Gliedabriss-Spawn (@0x80105368/@0x801053D0)\n"); fails++; }
         if (glied && g_zeichnen < 1) { printf("FAIL: kein Aufschlag-Blut des abgerissenen Glieds (@0x80028C4C)\n"); fails++; }
+        if (kriecher && kr_seit < 0) { printf("FAIL: der Zombie wurde kein Kriecher (+0x10E Bit 0)\n"); fails++; }
+        if (kriecher && g_abriss < 1) { printf("FAIL: kein Kopfabriss-Spawn (Part 0, a3 (0,-600,0) @0x80102B24)\n"); fails++; }
+        if (kriecher && g_hals < 1)   { printf("FAIL: kein Hals-Stumpf-Spawn (Part 8, a3 (0,100,0) @0x80102BBC)\n"); fails++; }
         if (fails) { printf("probe_r36_blut: %d FAILURES\n", fails); return 1; }
         printf("probe_r36_blut: OK\n");
         return 0;

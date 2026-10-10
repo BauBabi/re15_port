@@ -1,0 +1,49 @@
+abn2_blut: waffe 19 seite pz eben platz 5 D 1800 alle 0 saat 0x1234567 slot 5 typ 0x11 bank ok hybrid 1 remap 1 Leon (200,-17800) rot 1024
+F66     TREF st 1/1/1->2/18/1 hp 250->242 rag 0 bank 0 | part  0        fx=(104,-1664,-19903) a3=(-214,240,64) | d(gezeichnet T)=59 | d(T-1)=40
+F68     TREF st 2/18/1->2/18/1 hp 242->234 rag 0 bank 0 | part  0        fx=(132,-1657,-19890) a3=(-218,208,24) | d(gezeichnet T)=58 | d(T-1)=17
+F74     TREF st 1/1/1->2/18/1 hp 234->226 rag 0 bank 0 | part  0        fx=(-291,-1991,-19823) a3=(190,-228,88) | d(gezeichnet T)=34 | d(T-1)=19
+F76     TREF st 2/18/1->2/18/1 hp 226->218 rag 0 bank 0 | part  0        fx=(-71,-1549,-19940) a3=(64,280,80) | d(gezeichnet T)=76 | d(T-1)=16
+F78     TREF st 2/18/1->2/18/1 hp 218->210 rag 0 bank 0 | part  0        fx=(213,-1583,-20016) a3=(-196,244,34) | d(gezeichnet T)=44 | d(T-1)=12
+F80     TREF st 2/18/1->2/18/1 hp 210->202 rag 0 bank 0 | part  0        fx=(243,-2400,-20152) a3=(-146,-592,214) | d(gezeichnet T)=38 | d(T-1)=46
+F86     TREF st 1/2/1->2/18/1 hp 202->194 rag 0 bank 0 | part  0        fx=(116,-2308,-19680) a3=(142,-484,-200) | d(gezeichnet T)=16 | d(T-1)=38
+F88     TREF st 2/18/1->2/18/1 hp 194->186 rag 0 bank 0 | part  0        fx=(33,-1864,-20118) a3=(2,-36,242) | d(gezeichnet T)=45 | d(T-1)=4
+F90     TREF st 2/18/1->2/18/1 hp 186->178 rag 0 bank 0 | part  0        fx=(427,-2268,-19838) a3=(-100,-460,-192) | d(gezeichnet T)=65 | d(T-1)=9
+F92     TREF st 2/18/1->2/18/1 hp 178->170 rag 0 bank 0 | part  0        fx=(103,-1882,-20131) a3=(10,-44,214) | d(gezeichnet T)=37 | d(T-1)=5
+F98     TREF st 1/2/1->2/18/1 hp 170->162 rag 0 bank 0 | part  0        fx=(359,-1534,-20049) a3=(-164,260,-6) | d(gezeichnet T)=80 | d(T-1)=18
+F100    TREF st 2/18/1->2/18/1 hp 162->154 rag 0 bank 0 | part  0        fx=(514,-1634,-20035) a3=(-186,160,-112) | d(gezeichnet T)=76 | d(T-1)=6
+F102    TREF st 2/18/1->2/18/1 hp 154->146 rag 0 bank 0 | part  0        fx=(543,-1871,-20351) a3=(-248,-108,122) | d(gezeichnet T)=70 | d(T-1)=3
+F104    TREF st 2/18/1->2/18/1 hp 146->138 rag 0 bank 0 | part  0        fx=(560,-2334,-20424) a3=(-98,-544,190) | d(gezeichnet T)=92 | d(T-1)=21
+F110    TREF st 1/2/1->2/18/1 hp 138->130 rag 0 bank 0 | part  0        fx=(734,-1666,-20211) a3=(-158,216,-84) | d(gezeichnet T)=65 | d(T-1)=27
+F112    TREF st 2/18/1->2/18/1 hp 130->122 rag 0 bank 0 | part  0        fx=(649,-1891,-20430) a3=(-220,-52,150) | d(gezeichnet T)=54 | d(T-1)=27
+F114    TREF st 2/18/1->2/18/1 hp 122->114 rag 0 bank 0 | part  0        fx=(548,-2313,-20448) a3=(-70,-488,218) | d(gezeichnet T)=74 | d(T-1)=12
+F116    TREF st 2/18/1->2/18/1 hp 114->106 rag 0 bank 0 | part  0        fx=(520,-2435,-20277) a3=(164,-592,106) | d(gezeichnet T)=25 | d(T-1)=9
+F122    TREF st 1/1/1->2/18/1 hp 106->98 rag 0 bank 0 | part  0        fx=(638,-1765,-20548) a3=(-182,40,212) | d(gezeichnet T)=34 | d(T-1)=5
+F124    TREF st 2/18/1->2/18/1 hp 98->90 rag 0 bank 0 | part  0        fx=(677,-2314,-20511) a3=(-54,-488,186) | d(gezeichnet T)=52 | d(T-1)=36
+F126    TREF st 2/18/1->2/18/1 hp 90->82 rag 0 bank 0 | part  0        fx=(759,-2284,-20061) a3=(226,-404,-248) | d(gezeichnet T)=42 | d(T-1)=25
+F128    TREF st 2/18/1->2/18/1 hp 82->74 rag 0 bank 0 | part  0        fx=(614,-1851,-20413) a3=(74,-12,134) | d(gezeichnet T)=61 | d(T-1)=9
+F134    TREF st 1/1/1->2/18/1 hp 74->66 rag 0 bank 0 | part  0        fx=(664,-1737,-20608) a3=(-152,76,206) | d(gezeichnet T)=10 | d(T-1)=25
+F136    TREF st 2/18/1->2/18/1 hp 66->58 rag 0 bank 0 | part  0        fx=(901,-2167,-20291) a3=(6,-324,-200) | d(gezeichnet T)=89 | d(T-1)=10
+F138    TREF st 2/18/1->2/18/1 hp 58->50 rag 0 bank 0 | part  0        fx=(788,-1584,-20204) a3=(160,272,-124) | d(gezeichnet T)=44 | d(T-1)=5
+F140    TREF st 2/18/1->2/18/1 hp 50->42 rag 0 bank 0 | part  0        fx=(954,-1555,-20425) a3=(-94,256,-152) | d(gezeichnet T)=86 | d(T-1)=20
+    -> Welt-Versatz (-665,-600,40) an Part 0; mit a3-Semantik (T + R*ofs) laege der Spawn bei (690,-767,-17265): Abstand 815
+F266         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  0        fx=(224,-[scd] WARN: event 4 DROPPED (no free event slot)
+849,-17929) a3=ohne (0,0,0) | d(gezeichnet T)=896 | d(T-1)=984
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F267         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F269         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F271         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F273         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F275         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F277         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F279         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F281         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+    -> fliegendes Teil: Versatz zur Matrix des Vorbilds (0,100,0); mit a3-Semantik laege er bei (759,-162,-17421): Abstand 148
+F283         st 1/1/5->1/1/5 hp 42->42 rag 0 bank 0 | part  8 fliegt fx=(715,-51,-17332) a3=ohne (0,0,0) | d(gezeichnet T)=100 | d(T-1)=100
+ERGEBNIS waffe 19 pz eben platz 5 alle 0: Tod F285, Spawns 36 (ohne a3/Null 10, beim Zeichnen 0, Part nicht gezeichnet 0) | max d(T) 896, ohne a3 896, beim Zeichnen 0, d>40: 29 | max d(T-1) 984

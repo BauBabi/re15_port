@@ -1136,6 +1136,7 @@ static void re2z_gore_fx_core(re15_actor_t *e, int part, uint32_t packed, int16_
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
     re15_schuss_r36_fx_merke(part, p, a3);                   /* Mess-Ring (Sonden), Runde 36 Spur C */
+    re15_schuss_r36_fx_id(packed);                           /* N3: gepackte RE2-Id in den Mess-Ring (Pin) */
     re15_esp_fx_spawn_rows(re15_esp_room_bank(), id, sub, sc, p[0], p[1], p[2], e->y, yaw);
     re15_schuss_r36_fx_nach(e);                              /* Runde 36 Spur C N3: Nachfuehrung (Anker-Zeitpunkt) */
 }

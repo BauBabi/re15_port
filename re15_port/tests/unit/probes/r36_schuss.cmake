@@ -55,8 +55,18 @@ add_test(NAME unit_r36_blut_pin_rip   COMMAND probe_r36_blut pin rip)
 add_test(NAME unit_r36_blut_pin_arm   COMMAND probe_r36_blut pin arm)
 add_test(NAME unit_r36_blut_pin_burst COMMAND probe_r36_blut pin burst)
 add_test(NAME unit_r36_blut_pin_glied COMMAND probe_r36_blut pin glied)
+#                             Nachbesserung 3 (Abnahme 2 M1): KRIECHER-KOPFABRISS (EMZ0 P5 Leon-Weiche): Kopfabriss
+#                             @0x80102B24 (Part 0, a3 (0,-600,0) @0x80102B10-1C, Id 0x08001000 @0x80102AD4-DC) und
+#                             Hals-Stumpf @0x80102BBC (Part 8, a3 (0,100,0) @0x80102B8C-A0, Id 4096 @0x80102BA4) an der
+#                             gezeichneten Matrix; Bank wie die exe (Hybrid). kriecher = Ingram, Platz 2 (Typ 0x10);
+#                             kriecher5 = MC51 von +z, Platz 5 (Typ 0x11): die SCA-Klemme holt den Kriecher im Kopfab-Bild
+#                             zurueck -> pinnt die Nachfuehrung re15_schuss_r36_nachfuehren (RE2-Root `jal 0x8003567c`
+#                             @0x80100638 nach dem Handler).
+add_test(NAME unit_r36_blut_pin_kriecher  COMMAND probe_r36_blut pin kriecher)
+add_test(NAME unit_r36_blut_pin_kriecher5 COMMAND probe_r36_blut pin kriecher5)
 set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief unit_r36_blut_pin_mg
                      unit_r36_blut_pin_rip unit_r36_blut_pin_arm unit_r36_blut_pin_burst unit_r36_blut_pin_glied
+                     unit_r36_blut_pin_kriecher unit_r36_blut_pin_kriecher5
                      PROPERTIES TIMEOUT 120)
 
 #   unit_r36_schuss_kraehe    Punkt 3: Kraehe gegen Super Redhawk = RE2 GIB 0x80102CA0 (13 Teile Wurf/Wirbel, Draws,

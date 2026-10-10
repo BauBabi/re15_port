@@ -150,7 +150,7 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
 }
 
 /* ---- Mess-Ring der Zombie-Blut-Spawns (nur Sonden, Header) ----------------------------------- */
-static struct { int part; int32_t pos[3]; int32_t a3[3]; int mit_a3; } s_fx_ring[RE15_SCHUSS_R36_FX_RING];
+static struct { int part; int32_t pos[3]; int32_t a3[3]; int mit_a3; uint32_t id; } s_fx_ring[RE15_SCHUSS_R36_FX_RING];
 static unsigned s_fx_zahl = 0u;
 static uint8_t  s_esp_vor[RE15_ESP_FX_MAX];   /* Nachbesserung 3: ESP-Plaetze vor dem Spawn (aktiv ja/nein) */
 static int      s_esp_vor_ok = 0;
@@ -164,6 +164,7 @@ void re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t *a3)
     s_fx_ring[i].pos[0] = pos[0]; s_fx_ring[i].pos[1] = pos[1]; s_fx_ring[i].pos[2] = pos[2];
     s_fx_ring[i].mit_a3 = (a3 != NULL);
     s_fx_ring[i].a3[0] = a3 ? a3[0] : 0; s_fx_ring[i].a3[1] = a3 ? a3[1] : 0; s_fx_ring[i].a3[2] = a3 ? a3[2] : 0;
+    s_fx_ring[i].id = 0xFFFFFFFFu;                     /* gepackte RE2-Id: nur re2z_gore_fx_core setzt sie (fx_id) */
     s_fx_zahl++;
 }
 unsigned re15_schuss_r36_fx_zahl(void) { return s_fx_zahl; }
@@ -175,6 +176,17 @@ int re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[
     if (pos) { pos[0] = s_fx_ring[i].pos[0]; pos[1] = s_fx_ring[i].pos[1]; pos[2] = s_fx_ring[i].pos[2]; }
     if (a3)  { a3[0] = s_fx_ring[i].a3[0]; a3[1] = s_fx_ring[i].a3[1]; a3[2] = s_fx_ring[i].a3[2]; }
     if (mit_a3) *mit_a3 = s_fx_ring[i].mit_a3;
+    return 1;
+}
+
+void re15_schuss_r36_fx_id(uint32_t packed)
+{
+    if (s_fx_zahl) s_fx_ring[(s_fx_zahl - 1u) % RE15_SCHUSS_R36_FX_RING].id = packed;
+}
+int re15_schuss_r36_fx_holen_id(unsigned nr, uint32_t *packed)
+{
+    if (nr >= s_fx_zahl || s_fx_zahl - nr > RE15_SCHUSS_R36_FX_RING) return 0;
+    if (packed) *packed = s_fx_ring[nr % RE15_SCHUSS_R36_FX_RING].id;
     return 1;
 }
 

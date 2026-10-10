@@ -1,0 +1,30 @@
+Bank 0x10: bones=15 P8.loc=(-40,-783,0)
+F66   (G)   part= 1 fx=(-1390,-1195,-19645) a3=(0,800,0) bank loco rag 0 -> Skelett d=0 (Schranke 40) | roh d=822
+F66   SPAWN part=1 fx=(-1390,-1195,-19645) a3=(0,800,0) [Treffer, zone 0] -> ZONE0 d=0 | Defekt BECKEN(ohne a3) d=794 | Becken y=-1992
+F78   (G)   part= 1 fx=(-1276,-1241,-19646) a3=(0,800,0) bank loco rag 0 -> Skelett d=0 (Schranke 40) | roh d=771
+F78   SPAWN part=1 fx=(-1276,-1241,-19646) a3=(0,800,0) [Treffer, zone 0] -> ZONE0 d=0 | Defekt BECKEN(ohne a3) d=796 | Becken y=-2037
+F90   (G)   part= 1 fx=(-1462,-1206,-19785) a3=(0,800,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=683
+F90   (G)   part= 0 fx=(-1504,-2495,-19859) a3=(0,-500,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=616
+F90   SPAWN part=1 fx=(-1462,-1206,-19785) a3=(0,800,0) [Treffer, zone 0] -> ZONE0 d=0 | Defekt BECKEN(ohne a3) d=799 | Becken y=-1999
+F90   SPAWN part=0 fx=(-1504,-2495,-19859) a3=(0,-500,0) [Treffer, zone 0] -> NACH d=0 | Defekt PART8(ohne a3) d=286 | Becken y=-1999
+F92   (G)   part= 0 fx=(-1783,-2329,-19885) a3=(0,-500,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=514
+F92   SPAWN part=0 fx=(-1783,-2329,-19885) a3=(0,-500,0) [ohne Treffer, zone 0] -> NACH d=0 | Defekt PART8(ohne a3) d=285 | Becken y=-1889
+F94   (G)   part= 0 fx=(-1842,-2277,-19876) a3=(0,-500,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=499
+F94   SPAWN part=0 fx=(-1842,-2277,-19876) a3=(0,-500,0) [ohne Treffer, zone 0] -> NACH d=0 | Defekt PART8(ohne a3) d=286 | Becken y=-1872
+F96   (G)   part= 0 fx=(-1863,-2163,-19895) a3=(0,-500,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=500
+F96   SPAWN part=0 fx=(-1863,-2163,-19895) a3=(0,-500,0) [ohne Treffer, zone 0] -> NACH d=0 | Defekt PART8(ohne a3) d=284 | Becken y=-1776
+F98   (G)   part= 0 fx=(-1871,-1981,-19927) a3=(0,-500,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=499
+F98   SPAWN part=0 fx=(-1871,-1981,-19927) a3=(0,-500,0) [ohne Treffer, zone 0] -> NACH d=0 | Defekt PART8(ohne a3) d=285 | Becken y=-1609
+F102  (G)   part= 1 fx=(-1277,-872,-19826) a3=(0,800,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=797
+F102  SPAWN part=1 fx=(-1277,-872,-19826) a3=(0,800,0) [Treffer, zone 0] -> ZONE0 d=0 | Defekt BECKEN(ohne a3) d=785 | Becken y=-1620
+F163  (G)   part= 0 fx=(-1556,-222,-19809) a3=ohne (0,0,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=13
+F163  SPAWN part=0 fx=(-1556,-222,-19809) a3=ohne (0,0,0) [ohne Treffer, zone 0] -> LIEGE(a3=0) d=0 | Defekt BECKEN(ohne a3) d=0 | Becken y=-222
+F174  (G)   part= 8 fx=(-900,-291,-19903) a3=(0,300,0) bank haupt rag 0 -> Skelett d=32 (Schranke 40) | roh d=306
+F174  SPAWN part=8 fx=(-900,-291,-19903) a3=(0,300,0) [Treffer, zone 0] -> AUF d=32 | Defekt PART8(ohne a3) d=276 | Becken y=-198
+F186  (G)   part= 0 fx=(-1072,-773,-19783) a3=(-40,-483,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=734
+F186  SPAWN part=0 fx=(-1072,-773,-19783) a3=(-40,-483,0) [TOD-Bild, zone 0] -> HURT16A d=0 | Defekt PART8(ohne a3) d=300 | Becken y=-777
+F186  TOD hp 2->-14 st 2/3/2 -> 3/3/1 10E=2004
+Treffer 7, Spawns 12 (Ring 0..12), Tod bei Bild 186, Tropfblut nach dem Tod 0
+Zuordnung: HURT16A=1 ZONE0=4 NACH=5 AUF=1 LIEGE(a3=0)=1
+(G): 12 Spawns, max d 32, davon ohne a3 1, beim Zeichnen (Aufschlag) 0, Loco-Bank 2, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 0, Arm-Abriss 4. Spawn 0
+probe_r36_blut: OK

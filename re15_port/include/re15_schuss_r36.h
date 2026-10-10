@@ -112,6 +112,10 @@ int re15_re2z_gore_part_matrix_peek(const re15_actor_t *e, int bone, int32_t rot
 void     re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t *a3);
 unsigned re15_schuss_r36_fx_zahl(void);
 int      re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[3], int *mit_a3);
+/* Nachbesserung 3: die GEPACKTE RE2-Id (a0 von FUN_8001BF10) des zuletzt gemerkten Spawns (nur re2z_gore_fx_core;
+ * sonst 0xFFFFFFFF) — fuer den Pin des Kriecher-Kopfabrisses (Id 8 = 0x08001000 @0x80102AD4-DC). */
+void     re15_schuss_r36_fx_id(uint32_t packed);
+int      re15_schuss_r36_fx_holen_id(unsigned nr, uint32_t *packed);
 
 /* ---- Nachbesserung 3 (Abnahme 2 M1, Dossier §10.5): Anker-ZEITPUNKT der Spawns eines Gegner-Ticks --------------
  * Original: Anker a2 = Record+72, vom Zeichner im VORIGEN Bild geschrieben — also NACH dem Schwanz jenes Ticks
