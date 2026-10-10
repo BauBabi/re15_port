@@ -187,7 +187,8 @@ static void teil_feld(void)
 
 /* ---- Teile: raum1030 / raum1031 / raum1040 / raum1041 ---------------------------------------------------
  * Je k = 0..20: Records 0..k-1 tot (Zone 7 = re15_em_status_zone Stage 1-3, Tot-Bit = tot0 + Slot). */
-typedef struct { uint16_t raum; uint8_t tot0; int limit; int32_t px, pz; int16_t rot; uint8_t cut; } raum_t;
+typedef struct { uint16_t raum; uint8_t tot0; int limit; int32_t px, pz; int16_t rot; uint8_t cut;
+                 uint8_t vor_bank, vor_bit; /* Vorbedingung der Spawn-Liste (0xFF = keine) */ } raum_t;
 
 /* Pos_set-Faelle 0..5 der Aufstellung ROOM1030 sub00 Else-Zweig ((4,15)=0): @0x020EC `32 00 ee dc 00 00 1a 93`,
  * @0x02100, @0x02114, @0x02128, @0x0213C, @0x02150 (x = Halbwort +2, z = Halbwort +6). */
@@ -200,6 +201,7 @@ static void raum_reihe(const raum_t *r, int tor_bit /* -1 = keins, sonst (4,tor_
     for (int k = 0; k <= 20; k++) {
         re15_game_state_init();
         if (tor_bit >= 0) re15_game_flag_set(4, (uint8_t)tor_bit, 1);
+        if (r->vor_bank != 0xFF) re15_game_flag_set(r->vor_bank, r->vor_bit, 1);
         for (int i = 0; i < k; i++) re15_game_flag_set(7, (uint8_t)(r->tot0 + i), 1);
         re15_irons_tod_zustand_setzen(RE15_IT_AUS);
         if (room_boot(r->raum, r->px, r->pz, r->rot, r->cut) != 0) return;
@@ -227,10 +229,12 @@ static void raum_reihe(const raum_t *r, int tor_bit /* -1 = keins, sonst (4,tor_
 
 /* Standplaetze = Tuer-Ziele: 1040 Slot 1 @0x010B8 -> ROOM1030 (-26214,-3861) Blick 0 Cut 8;
  * 1030 Slot 2 @0x01CAA -> ROOM1040 (-20083,-3559) Blick 2048 Cut 0. */
-static const raum_t k_1030 = { 0x1030, 0x00, 6, -26214, -3861, 0, 8 };
-static const raum_t k_1031 = { 0x1031, 0x00, 6, -26214, -3861, 0, 8 };
-static const raum_t k_1040 = { 0x1040, 0x14, 5, -20083, -3559, 2048, 0 };
-static const raum_t k_1041 = { 0x1041, 0x14, 5, -20083, -3559, 2048, 0 };
+/* ROOM1031 (Elza) setzt seine Spawn-Liste unter Ck(3,0x7d)==1: main00 @0x01E50 `06 00 c0 01` Ifel_ck +
+ * @0x01E54 `21 03 7d 01`; ROOM1030/1040/1041 haben keine solche Bedingung vor Save(0x12,n). */
+static const raum_t k_1030 = { 0x1030, 0x00, 6, -26214, -3861, 0, 8, 0xFF, 0 };
+static const raum_t k_1031 = { 0x1031, 0x00, 6, -26214, -3861, 0, 8, 3, 0x7d };
+static const raum_t k_1040 = { 0x1040, 0x14, 5, -20083, -3559, 2048, 0, 0xFF, 0 };
+static const raum_t k_1041 = { 0x1041, 0x14, 5, -20083, -3559, 2048, 0, 0xFF, 0 };
 
 static void teil_raum1030(void) { printf("== raum1030 ==\n"); raum_reihe(&k_1030, -1); }
 static void teil_raum1031(void) { printf("== raum1031 ==\n"); raum_reihe(&k_1031, -1); }
