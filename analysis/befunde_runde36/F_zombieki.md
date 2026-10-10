@@ -224,6 +224,12 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
   1200/1200 Sub 3 — nachher 3 Spruenge, erster Angriff Bild 290, Abstand min 954; (2) (-7000,12500)/(-5525,-14883):
   vorher min 24545 — nachher Angriff Bild 893, min 955; (3) (7000,4000)/(-8915,-12487): vorher min 22222 — nachher
   Angriff Bild 523, min 954.
+- exe (Kopie `re15_pc_r36f.exe` = Stand mit beiden Haken; `RE15_SET_FLAG=4:243,3:130 RE15_DEBUG_JUMP=11C0@250
+  RE15_PLAYER_POS=-7000,12500,2048,0 RE15_GEGNER_Y_LOG RE15_EXIT_AT=2400#11C0`, `r36f/l3/gy.log`): die Ada/Marvin-Szene
+  setzt Leon auf (-7107,-12395) (PLAYER_POS wird von der Szene ueberschrieben), die Gorillas kommen F900/F1200 aus den
+  Wagen, Jagd ab F1201 (Sub 3), erste Bisse F1651 (Slot 2) / F1801 (Slot 3) — der normale Fluss ist unveraendert.
+  Ein exe-Lauf mit Eingabeskript "Leon rennt nach der Szene um den Westblock" wurde nicht gefahren (OFFEN); die
+  Mechanik ist im Riegel mit derselben Spielschleife (scd_room_reenter + re15_game_step) belegt.
 - OFFEN (gemessen, Original-Regel): in der AUSWAHL (Sub 4, B[4]) ohne Sicht an der Klemme bleibt der Gorilla stehen
   (A[4] ohne Sicht ohne Ausgang, B[4] steuert geradeaus) — z.B. Leon (-14000,2000) westlich, Gorilla nach dem Sprung
   in der Ost-Gasse (6418,2500): 1500 Bilder Sub 4. Jede gemessene Erweiterung auf Sub 4 war schlechter (oben).
@@ -286,14 +292,40 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
 
 ---
 
-## Tests
-
-(folgt)
+## Tests (probes/r36_zombieki.cmake, alle in der Suite)
+| Test | Punkt | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_wecker` | 1 | Weck-Zensus: 45 stehende Zombies, Leon 800 vor der Nase (Plaetze mit freiem Zell-Strahl), 480 Bilder | 2/2 (Vorgaenger) |
+| `unit_r36_zombieki_szenen` | 1 | Griff/Abwehr/Schuss in ROOM1010: erneuter Angriff danach | gruen (Vorgaenger) |
+| `unit_r36_zombieki_sicht` | 1 | Sicht-Zensus 45 Zombies x Raster (2657 Plaetze): Gegenprobe alter Weg ROOM10B0 = 68 Befund-Plaetze; Haken: 0 nur-Zell-Strahl, 0 bei freier Sicht, 250 = 250 hinter Nibble-3 | 6/6 |
+| `unit_r36_zombieki_affen_block` | 2 | Zufallsgang 6000 Bilder (0 Stillstand, 12 Griffe) + 3 Befund-Szenen Gegenprobe (kein Angriff, Abstand bleibt) gegen Pad-Suche (Angriff Bild 290/893/523) | 7/7 |
+| `unit_r36_zombieki_affen` | 3 | Gorilla-Leiche: Schattenrecord 1700/1800, Lache 0x00ffff38 +8/Takt ueber 91 Takte am echten Schusspfad, Gegenprobe = Befund | 9/9 |
 
 ## OFFEN
-
-(folgt)
+- **Punkt 1, ROOM10B0 Terrasse (Navigation, nicht Sicht):** nach dem Wecken laufen die vier Zombies an der Terrassen-
+  kante entlang nach Osten und treten bei x ~ -6800 auf der Stelle — die Terrasse liegt in keiner der 5 Nav-Zonen
+  (ROOM10B0.RDT @0x1680), FUN_80039e7c findet keinen Pfad, die Treppe #18 wird nicht genommen. Gleiche Datenlage wie im
+  Original; ob RE1.5s eigene Zombies dort herunterkommen: DuckStation ROOM10B0 nicht gemessen. RE2-Ziel (Zombies auf
+  Treppen) braeuchte die Band-/Treppenlogik fuer Gegner — nicht Spur F.
+- **Punkt 1, Sichtstrahl-Maske:** `re15_los_ray_blocked` filtert seit Runde 35 Spur H mit der Aktor-Maske (`u0 & Maske`);
+  der RE1.5-Sensor FUN_8003dcc4 prueft u0 NICHT (nur Band + Nibble). Beibehalten (H-Entscheidung); eine Nibble-3-Zelle
+  ohne Bit 4 in u0 wuerde dem Zombie die Sicht lassen, dem RE1.5-Sensor nicht — in Stage 1 nicht gezaehlt.
+- **Punkt 2, Auswahl (Sub 4) ohne Sicht an der Klemme:** Original-Regel ohne Ausgang (A[4]), bleibt; alle drei
+  gemessenen Erweiterungen waren schlechter (Dossier Punkt 2). Zufallsgang Seed 0xbeef: 219 blockierte Bilder (1,8 %).
+- **Punkt 2, exe-Lauf mit Eingabeskript** (Leon rennt nach der Szene um den Westblock, Gorilla verliert die Sicht):
+  nicht gefahren; die Szene ueberschreibt RE15_PLAYER_POS, ein Laufskript waere noetig.
+- **Punkt 2, Original-Gegenmessung per GDB:** die Pad-Suche ist PORT-WAHL; eine DuckStation-Messung des Originals in den
+  drei Szenen (Erwartung: Gorilla bleibt in Sub 3 an der Klemme, wie A[3] @0x80117b40-c74 zeigt) wurde aus Zeitgruenden
+  nicht gefahren; die Regel ist statisch belegt.
+- Vorgaenger-Punkte aus Punkt 3: keine.
 
 ## Fuer den Nutzer
-
-(folgt)
+- Neue Assets fuer das Paket-/Android-Gate: keine. Sprachdateien: keine. Bedienhinweise: keine.
+- Spuerbar neu: (1) **Zombies** wecken jetzt auch dann, wenn zwischen ihnen und Leon niedrige Hindernisse (Tresen,
+  Terrassenkante, Tischchen, Gitterstaebe) liegen — nur Waende und hohe Objekte (Capcoms Sicht-Klasse 3 je Zelle) nehmen
+  die Sicht, wie in RE2 (dort Satzhoehe). Im Vorhof ROOM10B0 reagieren die vier Zombies auf der Terrasse jetzt, kommen
+  aber (noch) nicht herunter (Nav-Daten, s. OFFEN). (2) **Monkeys ROOM11C0**: verliert ein Gorilla in der Jagd die
+  Sicht und drueckt gegen einen Wagen, laeuft er jetzt zum naechsten Sprungpad der Gasse und springt (der Original-
+  Sprung) statt stehenzubleiben; der Blind-Sprung auf der Stelle hinter den Wagen bleibt Original. (3) **Gorilla-
+  Leiche** laesst Blut aus (Punkt 3, 1. Sitzung).
+- Entscheidungsfragen: keine.
