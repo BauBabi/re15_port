@@ -32,6 +32,9 @@ mit `Aot_on 05` = Gully), ueberschreibt der Folgeraum die Bilder; deshalb immer 
 - [x] Punkt 3 10F0 Kamera/Abgang — vorher §3.1, Beleg §3.2, Umsetzung §3.3, nachher §3.4 (+ Riegel abgang10f0)
 - [x] Punkt 4 Irons-Kopf nach Tod — RE §4.1, Umsetzung §4.2 (+ ROOM1151 fuer Spur L), vorher/nachher §4.3/§4.4
       (exe 78a4a748 gegen diesen Zweig, Riegel irons)
+- [x] Nachbesserung 1 (Abnahme 0 M1-M4) — Abschnitt "Nachbesserung 1" am Ende: Tuer sichtbar zu (Cut_replace-
+      Rueck-Tausch, Ereignis 23 im Init-Lauf), Schliessen vor dem Abschliessen (Clip 20 + Tuerbild 8->2 + RE2-Tuer-zu-
+      Ton DOOR1A), Falschaussage berichtigt, Riegel auf Tuerbild/Ereignisfolge
 
 FORTSETZUNG 2026-10-10 ~20:45 (Nachfolger nach dem Sitzungslimit): 3d394d71 BAUT (ninja: no work to do nach
 configure, Objekt szenenleon_r36.c.obj vorhanden, exe 18:10 nach den Quellen 18:07). Der Vorgaenger hatte noch
