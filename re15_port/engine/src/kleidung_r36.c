@@ -6,8 +6,26 @@
 #include "re15_kleidung_r36.h"
 #include "re15_damage.h"
 #include "re15_esp.h"
+#include "re15_engine.h"   /* g_engine.frame_count (nur Messhaken) */
+#include <stdio.h>
+#include <stdlib.h>
 
 extern void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);   /* enemy_ai_common.c (Spur J r35) */
+
+/* MESSHAKEN RE15_KLEIDUNG_LOG=1 (env-gegatet, kein Verhalten): je Stempel-Ereignis eine Zeile
+ * mit Bild, Quelle, Richtung, Spieler-HP und der Wund-Tabelle (Level/Akku je Panel) DANACH —
+ * belegt auf dem echten Spielweg, welcher Griff/Biss welche Panels fuellt (Dossier §5.3). */
+static void kleid_log(const char *quelle, int typ, int dir)
+{
+    static int s_log = -1;
+    if (s_log < 0) s_log = getenv("RE15_KLEIDUNG_LOG") ? 1 : 0;
+    if (!s_log) return;
+    fprintf(stderr, "[kleidung] F%u %s typ=0x%02x dir=%d hp=%d gen=%d panels=",
+            (unsigned)g_engine.frame_count, quelle, typ, dir,
+            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp, re15_wound_generation());
+    for (int p = 0; p < 8; p++)
+        fprintf(stderr, "%d/%d%s", re15_wound_level(p), re15_wound_acc(p), (p < 7) ? "," : "\n");
+}
 
 /* STAGE1-Registrierung FUN_8011e864 (@0x8011e9c0-0x8011eac8, player_hit_chain.md §1):
  * Hook A @0x800ac758+Typ*4 = LAB_8010a28c fuer 0x10,0x11,0x12,0x16,0x18,0x1c..0x1f; 0x13 ->
@@ -74,6 +92,7 @@ void re15_kleidung_abwurf(uint8_t greifer_typ, int dir)
     /* Wund-Helper `lbu aca59 / jalr 0x801201b8[aca59]` @0x8010a580-5b0 (Tabelle re15_damage.c
      * s_wound_helper = 0x8010a1cc / 0x8010a208 / 0x8010a244 / 0x8010a268, selbst disassembliert). */
     re15_wound_release_stamp(dir);
+    kleid_log("abwurf", greifer_typ, dir);
 }
 
 void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spieler)
@@ -87,6 +106,7 @@ void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spiel
     static const uint8_t panel[4] = { 5, 7, 4, 6 };     /* @0x80121014 */
     int idx = (gleich ? 2 : 0) + (re15_engine_rand8() & 1);
     re15_wound_add(panel[idx], 0x32);                   /* `ori a1,zero,0x32` @0x8010f364 */
+    kleid_log("hundebiss", hund->type, idx);
 }
 
 void re15_kleidung_kraehe(const re15_actor_t *kraehe, const re15_actor_t *spieler)
@@ -101,4 +121,5 @@ void re15_kleidung_kraehe(const re15_actor_t *kraehe, const re15_actor_t *spiele
                             re15_wound_add(6, 0x28); re15_wound_add(5, 0x28); }   /* @0x80116244/50-70 */
     else if (vert < 3600) { re15_wound_add(0, 0x08); re15_wound_add(7, 0x28); }   /* @0x80116260/68-70 */
     /* >= 3600: nichts (beq @0x80116258 -> Epilog) */
+    kleid_log("kraehe", kraehe->type, (int)vert);
 }

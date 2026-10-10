@@ -302,6 +302,33 @@ static int teil_karte(int argc, char **argv)
 }
 
 /* ---------------------------------------------------------------------------------------------- */
+/* nullen <datei> [slot] — liest einen ECHTEN Spielstand (vom Spiel selbst geschrieben, z.B. nach
+ * ueberlebten Griffen auf dem Spielweg), setzt NUR die Wund-Tabelle (v5 wounds[8][2]) auf 0,
+ * rechnet die Pruefsumme neu und schreibt ihn in denselben Slot zurueck. Liefert die Referenz
+ * "derselbe Spielstand ohne Wunden" fuer den Bildvergleich (Dossier §5.3): Position, Blickrichtung,
+ * HP, Kamera-Cut und Inventar bleiben bytegleich. Gibt die gelesenen Wunden aus (Beleg, dass der
+ * Spielweg sie erzeugt hat). Exit 0 = ok, 1 = Karte leer/unlesbar, 3 = keine Wunde im Spielstand. */
+static int teil_nullen(int argc, char **argv)
+{
+    if (argc < 3) { printf("nullen <datei> [slot]\n"); return 2; }
+    const char *path = argv[2];
+    int slot = (argc > 3) ? atoi(argv[3]) : 0;
+    re15_savedata_t sd;
+    if (re15_memcard_load(path, slot, &sd) != 0) { printf("FAIL: Karte %s Slot %d nicht lesbar\n", path, slot); return 1; }
+    int summe = 0;
+    printf("Spielstand %s Slot %d: Raum %04X char %d pos (%d,%d,%d) rot %d hp %d cut %d wunden(level/akku)",
+           path, slot, (unsigned)sd.room, (int)sd.character, (int)sd.player_x, (int)sd.player_y,
+           (int)sd.player_z, (int)sd.player_rot, (int)sd.player_hp, (int)sd.camera_cut);
+    for (int p = 0; p < 8; p++) { printf(" %u/%u", sd.wounds[p][0], sd.wounds[p][1]); summe += sd.wounds[p][0]; }
+    printf("\n");
+    memset(sd.wounds, 0, sizeof sd.wounds);
+    sd.checksum = re15_savedata_checksum(&sd);
+    if (re15_memcard_save(path, slot, &sd, "LEON  NULL ") != 0) { printf("FAIL: Karte %s nicht schreibbar\n", path); return 1; }
+    printf("Karte %s Slot %d: Wunden genullt, Pruefsumme neu\n", path, slot);
+    return summe ? 0 : 3;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
 /* bild <a.ppm> <b.ppm> <min_diff> <x0> <y0> <x1> <y1> — zaehlt die Pixel, die sich zwischen zwei
  * Framedumps (P6 320x240) unterscheiden. min_diff = 0: es darf KEIN Pixel abweichen (Determinismus);
  * sonst: mindestens min_diff Pixel weichen ab und ALLE Abweichungen liegen im Kasten [x0,x1)x[y0,y1)
@@ -352,6 +379,7 @@ int main(int argc, char **argv)
     const char *teil = (argc > 1) ? argv[1] : "griff";
     if (strcmp(teil, "karte") == 0) return teil_karte(argc, argv);
     if (strcmp(teil, "bild") == 0)  return teil_bild(argc, argv);
+    if (strcmp(teil, "nullen") == 0) return teil_nullen(argc, argv);
     if (strcmp(teil, "hund") == 0 || strcmp(teil, "kraehe") == 0 || strcmp(teil, "lut") == 0) {
         int budget = (argc > 2) ? atoi(argv[2]) : 3000;
         int rc = (teil[0] == 'h') ? teil_hund(budget) : (teil[0] == 'k') ? teil_kraehe(budget) : teil_lut();

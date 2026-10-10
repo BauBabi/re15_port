@@ -256,6 +256,7 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);
 void re15_wound_reset(void);
 void re15_wound_add(int panel, int amount);
 int  re15_wound_level(int panel);
+int  re15_wound_acc(int panel);     /* Runde 36 Spur B: Akku-Byte (+1, @0x80037f0c) nur fuer Messhaken/Tests */
 /* v5-Save-Serialisierung der Wund-Tabelle (8 Panels x {level, acc}) — das Original speichert
  * sie im Save-Blob (GSB+0x130 @0x800b10ec im 0x1230-memcpy @0x800261c4-d8). Load bumpt die
  * Generation (Wound-Sync re-stempelt nach dem TIM-Upload). */

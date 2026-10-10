@@ -11,6 +11,10 @@
 #   unit_r36_kleidung_lut                Panel-LUT @0x80074208: Leon Zeile 0, Elza Zeile 4 (nicht 1).
 #   integration_r36_kleidung_bild        echte exe: Spielstand mit Wunden -> CONTINUE -> Framedump:
 #                                        Leon UND Elza zeigen die Decals (Pixel-Differenz im Kasten).
+#   integration_r36_kleidung_spielweg    echte exe, der WEG des Nutzers unter dem RE2-Standardgehirn:
+#                                        drei ueberlebte Griffe (hp 100 -> 20) -> Spielstand vom Spiel
+#                                        geschrieben -> CONTINUE -> Pixel-Differenz gegen denselben
+#                                        Spielstand mit genullter Wund-Tabelle (Werkzeug `nullen`).
 add_executable(test_r36_kleidung ${CMAKE_CURRENT_SOURCE_DIR}/test_r36_kleidung.c)
 target_link_libraries(test_r36_kleidung PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_kleidung PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -33,4 +37,11 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_kleidung_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kleidung_bild.cmake)
     set_tests_properties(integration_r36_kleidung_bild PROPERTIES TIMEOUT 900)
+    add_test(NAME integration_r36_kleidung_spielweg
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:test_r36_kleidung>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_kleidung_weg_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kleidung_spielweg.cmake)
+    set_tests_properties(integration_r36_kleidung_spielweg PROPERTIES TIMEOUT 900)
 endif()

@@ -153,6 +153,7 @@ void re15_wound_add(int panel, int amount)
 }
 
 int re15_wound_level(int panel) { return (panel >= 0 && panel < 8) ? s_wounds[panel].level : 0; }
+int re15_wound_acc(int panel)   { return (panel >= 0 && panel < 8) ? s_wounds[panel].acc : 0; }   /* Runde 36 Spur B (Messhaken) */
 int re15_wound_generation(void) { return s_wounds_gen; }
 
 /* Save-Serialisierung (analysis/save_injured_state.md SI-1): die Wund-Tabelle @0x800b10ec
