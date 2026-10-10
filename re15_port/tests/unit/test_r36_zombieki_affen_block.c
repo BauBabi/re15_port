@@ -28,6 +28,7 @@
 #include "re15_skeleton.h"
 #include "re15_emd.h"
 #include "re15_ems.h"
+#include "re15_zombieki_r36.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -152,18 +153,16 @@ static void zellen_nahe(const re15_actor_t *e, char *out, size_t n)
 
 typedef struct { int f0, f1; int32_t x, z; int dist; int subs[32]; int los1; int klemme; int spruenge; int leon_sicht; char zellen[300]; } seg_t;
 
-int main(int argc, char **argv)
+/* Raum + Baenke + beide Gorillas in der Original-Lage F195 (test_r35_affen takt): beide in der Jagd (Sub 3). */
+static int aufbau(re15_actor_t **gout, re15_actor_t **plout)
 {
-    int bilder = (argc > 1) ? atoi(argv[1]) : 6000;
-    uint32_t seed = (argc > 2) ? (uint32_t)strtoul(argv[2], NULL, 0) : 0x1234567u;
     re15_game_state_init();
     re15_game_flag_set(4, 0x40, 1);
-    if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) { printf("ROOM11C0 nicht ladbar\n"); return 1; }
-    if (!bank_laden_27()) { printf("EM027-Bank fehlt\n"); return 1; }
+    if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) { printf("ROOM11C0 nicht ladbar\n"); return 0; }
+    if (!bank_laden_27()) { printf("EM027-Bank fehlt\n"); return 0; }
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *g[2] = { aktor_vom_typ(0x27, 0), aktor_vom_typ(0x27, 1) };
-    if (!g[0] || !g[1]) { printf("zwei Gorillas fehlen\n"); return 1; }
-    /* Original-Lage F195 (test_r35_affen takt): beide in der Jagd (Sub 3) */
+    if (!g[0] || !g[1]) { printf("zwei Gorillas fehlen\n"); return 0; }
     g[0]->x = -5525; g[0]->z = -14883; g[0]->y = 0; g[0]->rot_y = 2731; g[0]->grid_id = 0x10; g[0]->floor = 0;
     g[0]->state = 1; g[0]->sub_state_1 = 3; g[0]->sub_state_2 = 1; g[0]->sub_state_3 = 0; g[0]->motion = 5; g[0]->anim_frame = 10;
     g[0]->anim_frac = 0; g[0]->dog_blocked_ctr = 9; g[0]->hit_react = 0; g[0]->dog_flags = 1; g[0]->mag_boost = 4;
@@ -172,6 +171,94 @@ int main(int argc, char **argv)
     g[1]->anim_frac = 0; g[1]->dog_blocked_ctr = 15; g[1]->hit_react = 0; g[1]->dog_flags = 1; g[1]->mag_boost = 4;
     pl->hp = 100; pl->hit_react = 0; pl->state = 1; pl->sub_state_1 = 0;
     re15_player_cmd_zero();
+    gout[0] = g[0]; gout[1] = g[1]; *plout = pl;
+    return 1;
+}
+
+/* Riegel-Szene: Leon fest auf (lx,lz), Gorilla 1 auf (gx,gz) in der Jagd mit Sicht-Latch, Gorilla 2 geparkt. */
+typedef struct { int erst, dmin, sub3, spr; } szene_t;
+static szene_t szene(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
+{
+    szene_t r = { 0, 1 << 30, 0, 0 };
+    re15_actor_t *g[2]; re15_actor_t *pl;
+    if (!aufbau(g, &pl)) return r;
+    pl->x = lx; pl->z = lz; pl->y = 0; pl->floor = 0;
+    g[0]->x = gx; g[0]->z = gz; g[1]->x = 20000; g[1]->z = -20000;
+    g[0]->dog_flags = 0; g[0]->sub_state_3 = 1; g[0]->motion = 4;   /* BLINDE Jagd (+0x7 = 1, Latch 0) — der Befund-Zustand, unabhaengig von der Phase des 16-Takt-Sensors */
+    pl->rot_y = (int16_t)((((int)re15_atan2_q12(g[0]->z - pl->z, g[0]->x - pl->x) - 0x400)) & 0xfff);
+    int prev7 = 0;
+    for (int f = 1; f <= bilder; f++) {
+        frame(0, 0);
+        if (pl->hp < 100) pl->hp = 100;
+        re15_actor_t *e = g[0]; int sub = e->sub_state_1 & 31;
+        long long dx = e->x - pl->x, dz = e->z - pl->z; int d = isqrt64(dx * dx + dz * dz);
+        if (d < r.dmin) r.dmin = d;
+        if (sub == 3) r.sub3++;
+        if (!r.erst && (sub == 5 || sub == 6 || sub == 8 || sub == 15)) r.erst = f;
+        if (sub == 7 && !prev7) r.spr++;
+        prev7 = (sub == 7);
+    }
+    printf("    [szene Ende: Gorilla st=%d/%d/%d/%d @(%d,%d) hp %d los=%d klemme=%d aktiv=%d]\n", g[0]->state, g[0]->sub_state_1, g[0]->sub_state_2,
+           g[0]->sub_state_3, (int)g[0]->x, (int)g[0]->z, (int)g[0]->hp, g[0]->dog_flags & 1, g[0]->sca_wall_hit != 0, re15_r36_affen_padsuche_aktiv((int)(g[0] - g_actors)));
+    return r;
+}
+
+static int fails = 0, checks = 0;
+#define CHECK(c, ...) do { checks++; if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } \
+                           else { printf("ok:   " __VA_ARGS__); printf("\n"); } } while (0)
+
+int main(int argc, char **argv)
+{
+    /* "fest <x> <z> [bilder]": Leon steht still auf (x,z) und blickt auf Gorilla 1 — Spur je 30 Bilder + Summe
+     * (Abstand min/Ende, erster Angriff, Anteile Sub-Zustaende, Klemme, Sicht, Zonenspruenge). */
+    const int fest = (argc > 3 && strcmp(argv[1], "fest") == 0);
+    const int riegel = (argc > 1 && strcmp(argv[1], "riegel") == 0);
+    int bilder = fest ? ((argc > 4) ? atoi(argv[4]) : 1500) : ((argc > 1 && !riegel) ? atoi(argv[1]) : 6000);
+    uint32_t seed = (argc > 2 && !fest) ? (uint32_t)strtoul(argv[2], NULL, 0) : 0x1234567u;
+    int32_t fest_x = fest ? atoi(argv[2]) : 0, fest_z = fest ? atoi(argv[3]) : 0;
+
+
+    re15_actor_t *g[2]; re15_actor_t *pl;
+    if (!aufbau(g, &pl)) return 1;
+    if (fest) {
+        pl->x = fest_x; pl->z = fest_z; pl->y = 0; pl->floor = 0;
+        if (argc > 6) { g[0]->x = atoi(argv[5]); g[0]->z = atoi(argv[6]); g[1]->x = 20000; g[1]->z = -20000; }   /* Gorilla 1 versetzt, Gorilla 2 geparkt */
+        if (argc > 7) { g[0]->sub_state_3 = (uint8_t)atoi(argv[7]); g[0]->dog_flags = g[0]->sub_state_3 ? 0 : 1; g[0]->motion = g[0]->sub_state_3 ? 4 : 5; }   /* +0x7: 0 = Jagd mit Sicht, 1 = blind */
+        pl->rot_y = (int16_t)((((int)re15_atan2_q12(g[0]->z - pl->z, g[0]->x - pl->x) - 0x400)) & 0xfff);
+        int subs[2][32]; memset(subs, 0, sizeof subs); int klemme[2] = {0,0}, los[2] = {0,0}, spr[2] = {0,0}, sprb[2] = {0,0};
+        int dmin[2] = { 1 << 30, 1 << 30 }, erst[2] = {0,0}; int spr_prev2[2] = {0,0};
+        for (int f = 1; f <= bilder; f++) {
+            frame(0, 0);
+            if (pl->hp < 100) pl->hp = 100;
+            for (int k = 0; k < 2; k++) {
+                re15_actor_t *e = g[k]; int sub = e->sub_state_1 & 31;
+                long long dx = e->x - pl->x, dz = e->z - pl->z; int d = isqrt64(dx * dx + dz * dz);
+                if (d < dmin[k]) dmin[k] = d;
+                subs[k][sub]++; klemme[k] += (e->sca_wall_hit != 0); los[k] += (e->dog_flags & 1);
+                if (!erst[k] && (sub == 5 || sub == 6 || sub == 8 || sub == 15)) erst[k] = f;
+                if (sub == 7 && !spr_prev2[k]) { spr[k]++; if (e->sub_state_3 == 3) sprb[k]++; }
+                spr_prev2[k] = (sub == 7);
+            }
+            if ((f % 30) == 0) {
+                re15_actor_t *e = g[0]; uint8_t zc = 0, zc2 = 0;
+                int hit = re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zc);
+                int hit2 = re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x20u, &zc2);
+                long long dx = e->x - pl->x, dz = e->z - pl->z;
+                printf("  F%d G1 st=%d/%d/%d/%d @(%d,%d) rot=%d y=%d los=%d klemme=%d 1dc=%d dist=%d | pad10 %d/%02x pad20 %d/%02x | G2 st=%d/%d/%d/%d @(%d,%d) los=%d klemme=%d\n",
+                       f, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y, (int)e->y, e->dog_flags & 1,
+                       e->sca_wall_hit != 0, (int)e->dog_blocked_ctr, isqrt64(dx * dx + dz * dz), hit, zc, hit2, zc2,
+                       g[1]->state, g[1]->sub_state_1, g[1]->sub_state_2, g[1]->sub_state_3, (int)g[1]->x, (int)g[1]->z, g[1]->dog_flags & 1, g[1]->sca_wall_hit != 0);
+            }
+        }
+        for (int k = 0; k < 2; k++) {
+            printf("Gorilla %d: Leon fest @(%d,%d), %d Bilder: Abstand min %d, Ende %d, erster Angriff Bild %d, Klemme %d, Sicht %d, Spruenge %d (blind %d) | Subs:",
+                   k + 1, (int)fest_x, (int)fest_z, bilder, dmin[k], (int)isqrt64((long long)(g[k]->x - pl->x) * (g[k]->x - pl->x) + (long long)(g[k]->z - pl->z) * (g[k]->z - pl->z)),
+                   erst[k], klemme[k], los[k], spr[k], sprb[k]);
+            for (int q = 0; q < 32; q++) if (subs[k][q]) printf(" %d:%d", q, subs[k][q]);
+            printf("\n");
+        }
+        return 0;
+    }
 
     static seg_t segs[2][64]; int nseg[2] = { 0, 0 };
     int32_t ax[2], az[2]; int fa[2]; int subs_akk[2][32]; int los_akk[2], kl_akk[2], spr_akk[2]; int32_t lx[2], lz[2];
@@ -246,5 +333,30 @@ int main(int argc, char **argv)
         }
     }
     printf("blockierte Bilder gesamt: %d von %d (%.1f%%)\n", gesamt, 2 * bilder, 100.0 * gesamt / (2.0 * bilder));
+    if (riegel) {
+        CHECK(griffe > 0, "Zufallsgang %d Bilder: die Gorillas erreichen Leon (%d Griffe; blockiert %d Bilder)", bilder, griffe, gesamt);
+    {
+        /* Punkt 2 (PORT-WAHL Pad-Suche, re15_zombieki_r36.h): drei Szenen "Leon noerdlich der Wagenbloecke, Gorilla in
+         * der Jagd suedlich/westlich, Sicht faellt". Gegenprobe (Suche aus) = Original-Regel A[3] @0x80117b40-c74:
+         * kein Ausgang ohne Sicht -> 1200 Bilder nur Sub 3, kein Angriff, Abstand bleibt. Mit der Suche: Pad ->
+         * Sub 4 -> Sprung des Originals -> Angriff. Dazu der Zufallsgang (6000 Bilder, Seed 0x1234567): keine Strecke
+         * >= 90 Bilder ohne Bewegung (wie vor der Aenderung). */
+        static const int32_t sz[3][4] = { { -7000, 12500, -14000, -3000 }, { -7000, 12500, -5525, -14883 }, { 7000, 4000, -8915, -12487 } };
+        /* Leon noerdlich (bzw. oestlich) der Wagenbloecke #2/#7 (Nibble 3), Gorilla suedlich/westlich in der blinden Jagd. */
+        for (int i = 0; i < 3; i++) {
+            re15_r36_affen_padsuche_enable(0);
+            szene_t v = szene(sz[i][0], sz[i][1], sz[i][2], sz[i][3], 1200);
+            re15_r36_affen_padsuche_enable(1);
+            szene_t n = szene(sz[i][0], sz[i][1], sz[i][2], sz[i][3], 1200);
+            printf("Szene %d Leon (%d,%d) Gorilla (%d,%d): VORHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d | NACHHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d\n",
+                   i + 1, (int)sz[i][0], (int)sz[i][1], (int)sz[i][2], (int)sz[i][3], v.erst, v.dmin, v.sub3, v.spr, n.erst, n.dmin, n.sub3, n.spr);
+            CHECK(v.erst == 0 && v.dmin > 6001, "Szene %d Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min %d, Sub 3 %d / Sub 4 %d (Befund)", i + 1, v.dmin, v.sub3, 1200 - v.sub3);
+            CHECK(n.erst > 0 && n.erst <= 1200 && n.dmin < 1200, "Szene %d Pad-Suche: Sprung %d, erster Angriff Bild %d (<= 1200), Abstand min %d (< 1200)", i + 1, n.spr, n.erst, n.dmin);
+        }
+        re15_r36_affen_padsuche_enable(1);
+    }
+        printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
+        return fails ? 1 : 0;
+    }
     return 0;
 }

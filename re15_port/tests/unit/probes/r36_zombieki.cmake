@@ -47,8 +47,10 @@ add_test(NAME unit_r36_zombieki_affen COMMAND test_r36_zombieki_affen
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)
 
-# MESS-SONDE (kein add_test), Punkt 2: Gorilla-Blockaden in ROOM11C0 bei Leons Zufallsgang (Strecken >= 90 Bilder
-# ohne Bewegung: Lage, Sicht, Klemme, Zonenspruenge, Zellen). Aufruf: test_r36_zombieki_affen_block [bilder] [seed]
+#   unit_r36_zombieki_affen_block  Punkt 2: Gorilla "blockiert" in ROOM11C0 — drei Szenen Jagd ohne Sicht an der Klemme
+#                                  (Gegenprobe = Original-Regel A[3] @0x80117b40-c74 ohne Ausgang) gegen die PORT-WAHL
+#                                  Pad-Suche (re15_zombieki_r36.h) + Zufallsgang 6000 Bilder ohne Stillstand.
+#                                  Sonden: `fest <x> <z> [bilder] [gx gz [+0x7]]` = Szene, `[bilder] [seed] [0|1]` = Zufallsgang.
 add_executable(test_r36_zombieki_affen_block ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen_block.c)
 target_link_libraries(test_r36_zombieki_affen_block PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_zombieki_affen_block PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -72,3 +74,6 @@ endif()
 add_test(NAME unit_r36_zombieki_sicht COMMAND test_r36_zombieki_sicht
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_zombieki_sicht PROPERTIES TIMEOUT 900)
+add_test(NAME unit_r36_zombieki_affen_block COMMAND test_r36_zombieki_affen_block riegel
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r36_zombieki_affen_block PROPERTIES TIMEOUT 600)

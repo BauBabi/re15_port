@@ -1,0 +1,43 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+ROOM11C0 6000 Bilder, Seed 0x1234567: Leon-Weg 503596, Griffe 12, Bisse(hp<40) 0; Gorillas: (-22774,15260) hp 180 / (-19097,15141) hp 180
+== Gorilla 1: 0 blockierte Strecken >= 90 Bilder
+== Gorilla 2: 0 blockierte Strecken >= 90 Bilder
+blockierte Bilder gesamt: 0 von 12000 (0.0%)
+ok:   Zufallsgang 6000 Bilder: die Gorillas erreichen Leon (12 Griffe; blockiert 0 Bilder)
+    [szene Ende: Gorilla st=1/3/1/1 @(-13566,7218) hp 180 los=0 klemme=1 aktiv=0]
+    [szene Ende: Gorilla st=1/3/1/0 @(-12093,12774) hp 180 los=0 klemme=1 aktiv=1]
+Szene 1 Leon (-7000,12500) Gorilla (-14000,-3000): VORHER Angriff 0, min 8416, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 290, min 954, Sub3 480/1200, Spruenge 3
+ok:   Szene 1 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 8416, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 1 Pad-Suche: Sprung 3, erster Angriff Bild 290 (<= 1200), Abstand min 954 (< 1200)
+    [szene Ende: Gorilla st=1/3/1/1 @(-8427,-12007) hp 180 los=0 klemme=1 aktiv=0]
+    [szene Ende: Gorilla st=1/3/1/0 @(-7037,13123) hp 180 los=1 klemme=1 aktiv=0]
+Szene 2 Leon (-7000,12500) Gorilla (-5525,-14883): VORHER Angriff 0, min 24545, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 893, min 955, Sub3 720/1200, Spruenge 3
+ok:   Szene 2 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 24545, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 2 Pad-Suche: Sprung 3, erster Angriff Bild 893 (<= 1200), Abstand min 955 (< 1200)
+    [szene Ende: Gorilla st=1/3/1/1 @(-8079,-12325) hp 180 los=0 klemme=1 aktiv=0]
+    [szene Ende: Gorilla st=1/3/1/0 @(6517,-807) hp 180 los=1 klemme=1 aktiv=0]
+Szene 3 Leon (7000,4000) Gorilla (-8915,-12487): VORHER Angriff 0, min 22222, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 523, min 954, Sub3 710/1200, Spruenge 2
+ok:   Szene 3 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 22222, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 3 Pad-Suche: Sprung 2, erster Angriff Bild 523 (<= 1200), Abstand min 954 (< 1200)
+
+7 Pruefungen, 0 Fehler

@@ -84,4 +84,48 @@ void re15_r36_zombie_sicht_enable(int an);
  * re15_los_ray_blocked, Aktor-Maske) von e nach (px,pz); 1 = verdeckt. */
 int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz);
 
+/* ---------------------------------------------------------------------------------------------------------
+ * Punkt 2 — "Die Monkeys scheinen noch oft blockiert zu sein. Das muessen wir irgendwie verbessern."
+ *
+ * MESSUNG (test_r36_zombieki_affen_block fest ..., Stand nach Punkt 1): ein Gorilla in der JAGD (Sub 3), dessen
+ * Sichtlatch +0x1d0 faellt (Wagenblock #2/#7 = Nibble 3 dazwischen) und der an der Wandklemme haengt, bleibt
+ * 1200/1200 Bilder in Sub 3 an derselben Stelle (z.B. Leon (-7000,12500), Gorilla (-14000,-3000): Abstand 8415
+ * -> 8476, Klemme 1200, Sicht 0, nur Sub 3) — das ist das "Blockiert" des Nutzers.
+ * ORIGINAL (STAGE1.BIN, A[3] @0x80117b40-c74, selbst disassembliert): die Entscheidung der Jagd kennt nur die
+ *   Ausgaenge Biss (a804(0xbb8,0x180) @0x80117a60-74), Wiedereintritt mit Sicht (`sltiu v0,v0,0xbb8` + `andi 1` +
+ *   `lbu 7` @0x80117b60-98 bzw. `sltiu v0,v0,0x1771` @0x80117bc8-c08) und FERN + SICHT -> Auswahl Sub 4
+ *   (`sltiu v0,v0,0x1771` / `bne` @0x80117c34-38, `andi v0,v0,0x1` / `beq` @0x80117c48-4c, `ori v0,zero,4` /
+ *   `sb v0,5(v1)` @0x80117c50-54). Fuer "keine Sicht" gibt es KEINEN Ausgang; B[3] steuert dabei immer auf
+ *   playerX (`addiu a0,a0,-13688` = 0x800aca88 @0x80117d4c, `jal 0x8001a8f8` @0x80117d50) — gegen den Wagen.
+ *   Die Wagen ueberquert das Original NUR per Sprungpad aus Sub 4 (A[4] @0x80117ecc-8011802c: FUN_8003b93c attr
+ *   0x10, Yaw-Fenster `((zc&0xf0)<<4 - Yaw + 512) & 0xfff < 1024` @0x80117f18-38, +0x7 = 1 @0x80117f50-74).
+ *   Der Blind-Zonensprung auf der Stelle ist Original (Runde 35 Spur J, GDB 400/400).
+ * PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern", kein Original-Verhalten): in der Jagd OHNE Sicht und MIT
+ *   Wandklemme (+0x1d6 != 0, dasselbe Flag, das A[3] @0x80117b18-20 und A[4] @0x80118054-5c lesen) steuert
+ *   B[3] statt auf playerX auf die Mitte des naechsten Sprungpads (SCA-Zelle u1 == 0x10, Band des Gorillas — die
+ *   Daten, die A[4] abfragt); steht er auf dem Pad (FUN_8003b93c attr 0x10 trifft) und im Yaw-Fenster, fuehrt
+ *   er den 0x10-Sprung des Originals aus (+0x9f = Code, +0x5/6/7 = 7/0/1 @0x80117f40-74, Flug = B[7] wie im
+ *   Original); steht er falsch gedreht darauf, dreht er in die
+ *   Pad-Richtung ((zc&0xf0)<<4, die Richtung, die das Fenster verlangt). Sicht zurueck -> sofort wieder
+ *   Original. Keine neue Zahl: Radius box[6] + 100 (@0x80117ee0-f00), Fenster und Impuls bleiben die des
+ *   Originals; 3000 ist nur die Laenge des Richtungs-Zielpunkts (beliebig > 0, a8f8 nutzt nur den Winkel).
+ *   GEMESSEN UND VERWORFEN (test_r36_zombieki_affen_block riegel, je 3 Szenen + Zufallsgang): (a) die Suche
+ *   auch in der AUSWAHL (Sub 4, B[4]) mit den 0x20-Pads (Blind-Sprung @0x80118000-24) -> Endlos-Sprungketten
+ *   (19-22 Spruenge je 1500 Bilder, Leon nie erreicht); (b) Sub 4 nur mit 0x10-Pads -> Hin-und-her am selben
+ *   Pad (Szene 1: 15 Spruenge, kein Angriff); (c) dazu "zuletzt benutztes Pad meiden" -> Zufallsgang 1116
+ *   blockierte Bilder, 1 Griff (vorher 0 / 6-9). Die AUSWAHL (Sub 4) bleibt deshalb Original (A[4] ohne Sicht
+ *   ohne Ausgang — OFFEN, s. Dossier).
+ * --------------------------------------------------------------------------------------------------------- */
+
+/* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine
+ * Wirkung). Rueckgabe 1 = der 0x10-Sprung (Sub 7, +0x7 = 1) wurde ausgeloest. */
+int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub);
+
+/* Haken in B[3]: Steuerziel (playerX oder Pad-Mitte bzw. Punkt in Pad-Richtung); 1 = Pad-Suche aktiv. */
+int re15_r36_affen_padsuche_ziel(const re15_actor_t *e, int slot, int sub, int32_t plx, int32_t plz, int32_t *tx, int32_t *tz);
+
+/* Nur fuer Sonden: Pad-Suche abschalten (Gegenprobe = Original-Verhalten). */
+void re15_r36_affen_padsuche_enable(int an);
+int  re15_r36_affen_padsuche_aktiv(int slot);
+
 #endif /* RE15_ZOMBIEKI_R36_H */

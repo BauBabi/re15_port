@@ -8992,6 +8992,7 @@ static void re15_maggot_ai_tick(int slot)
             } else if (e->dog_flags & 1) {
                 re15_dog_sub(e, 4); e->sub_state_3 = 0; ab = 1; break;   /* far+LOS -> SELECTOR @0x80117c2c-74 */
             }
+            if (re15_r36_affen_padsuche_decide(e, slot, 3)) { ab = 1; break; }   /* Runde 36 Spur F Punkt 2 (PORT-WAHL): blind + Klemme -> Pad -> 0x10-Sprung (Sub 7) */
             /* B[3] crawl */
         b3:;
             uint32_t a0_b3 = re15_affen_b3_a0(e, pl);   /* Runde 35 Spur J (7b): a0 aus A[3] */
@@ -9006,7 +9007,8 @@ static void re15_maggot_ai_tick(int slot)
             {   /* fresh random slew 6-37 EVERY tick (audit #5) @0x80117d1c-34, a8f8 @0x80117d50 */
                 int slew = (int)(re15_affen_rng_a0(&a0_b3) & 0x1f) + 6;
                 e->grab_kill_ctr = (int16_t)slew;
-                re15_enemy_steer_point(e, pl->x, pl->z, slew);
+                int32_t st_x, st_z; re15_r36_affen_padsuche_ziel(e, slot, 3, pl->x, pl->z, &st_x, &st_z);   /* Runde 36 Spur F Punkt 2: playerX (@0x80117d4c) oder Pad-Mitte */
+                re15_enemy_steer_point(e, st_x, st_z, slew);
             }
             re15_maggot_anim(e);
             {   /* locator root-motion, window <0x18 (sighted clip 5) / <0x29 (blind clip 4)

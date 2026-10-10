@@ -16,8 +16,8 @@ Datum: 2026-10-10.
 - [x] Punkt 1 Zombies: Messung vorher (exe 1010/1040/1030/1140, Weck-Zensus 45 Faelle, Szenen)
 - [x] Punkt 1 Zombies: Bisect (keine Regression; Ursache 3486be93 v0.7.18) / RE-Beleg (RE2 FUN_80050858 Hoehe + Attribut, RE1.5 FUN_8003dcc4 Nibble 3)
 - [x] Punkt 1 Zombies: Ursache gefunden (Slab-Test im Sicht-Bit) + Umsetzung (zombieki_r36.c) + Messung nachher + Riegel unit_r36_zombieki_sicht
-- [ ] Punkt 2 Monkeys blockiert: Messung vorher
-- [ ] Punkt 2 Monkeys blockiert: Beleg / Umsetzung / Messung nachher / Pin
+- [x] Punkt 2 Monkeys blockiert: Messung vorher (Zufallsgang 0 Stillstand; feste Plaetze: Jagd ohne Sicht an der Klemme = 1500/1500 Bilder)
+- [x] Punkt 2 Monkeys blockiert: Beleg (A[3] @0x80117b40-c74 ohne Ausgang, B[3] playerX @0x80117d4c) / Umsetzung PORT-WAHL Pad-Suche / Messung nachher / Riegel unit_r36_zombieki_affen_block 7/7
 - [x] Punkt 3 Monkey-Blutlache: Messung vorher (Code + Gegenprobe im Riegel)
 - [x] Punkt 3 Monkey-Blutlache: Beleg (FUN_80116f50/FUN_8011be54) / Umsetzung (zombieki_r36.c) / Messung nachher (Riegel 9/9, exe-Bild) / Pin unit_r36_zombieki_affen
 - [ ] Suite gruen (RE15_MIN_TESTS=592)
@@ -165,21 +165,68 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
 
 ## Punkt 2 — Monkeys ROOM11C0 blockiert
 
-### Messung vorher
+### Messung vorher (Stand nach Punkt 1; Sonde `test_r36_zombieki_affen_block`, echte Spielschleife, beide Gorillas in der Original-Lage F195 aus test_r35_affen)
+- **Zufallsgang** (Leon rennt 6000 Bilder mit zufaelliger Richtung alle 90 Bilder, HP je Bild auf 100 gehalten; Seeds
+  0x1234567 / 0xbeef): **0 Strecken >= 90 Bilder ohne Bewegung**, 9 bzw. 3 Griffe — solange Leon in Bewegung und meist
+  sichtbar ist, jagen beide Gorillas ihn ueber den ganzen Parkplatz (Spur `block_seed1/2.txt`). Das "Blockiert" liegt
+  also nicht in der Bewegung an sich.
+- **Feste Leon-Plaetze** (`fest x z`): steht Leon NOERDLICH der beiden Wagenbloecke (SCA #2 x -11900..-1940 / z -6810..
+  10849 und #7 x -3862..4800 / z -7200..8400, beide Nibble 3 = Sichtblocker) — (-7000,12500), (7000,4000), (-24000,
+  10000), (9000,10000) — bleiben BEIDE Gorillas (Start suedlich, Jagd Sub 3) **1500/1500 Bilder** an derselben Stelle
+  ((-6048,-14181) / (-8410,-12022)): Sicht 0, Klemme 1500/1500, nur Sub 3, Abstand 18000..28000 unveraendert. Mit
+  versetztem Gorilla ebenso: (-14000,-3000) -> Leon (-7000,12500): 1200 Bilder, Abstand 8415 -> 8476, Klemme 1200,
+  Sicht 0 (Spur `fest*.txt`, `fest2*.txt`). Steht Leon mit Sicht ((-16000,3000), (-14000,7000), (6000,-9000)):
+  Angriff in Bild 32..221. => **Blockiert = Jagd OHNE Sicht gegen ein Nibble-3-Hindernis**: A[3] hat dafuer keinen
+  Ausgang (Beleg unten), B[3] steuert geradeaus auf Leon. Dasselbe Bild in der AUSWAHL (Sub 4, B[4]).
+- Was das Nutzer-Erlebnis ist: Leon laeuft um den Wagenblock, der Gorilla verliert die Sicht und drueckt gegen die
+  Wagen (oder springt hinter den Wagen auf der Stelle = der Blind-Zonensprung, Runde 35 Spur J: Original).
 
-(folgt)
+### RE-Belege (STAGE1.BIN, selbst disassembliert)
+- A[3] Entscheidungsschwanz @0x80117b40-c74: `lbu player.hit_react` @0x80117b44; dist `lhu 468(v1)` / `sltiu
+  v0,v0,0xbb8` @0x80117b60-68 + Latch `lhu 464(v1)` / `andi 1` @0x80117b74-7c + `lbu 7(v1)` @0x80117b88 -> Wieder-
+  eintritt `sb zero,6` / `sb zero,7` @0x80117b9c/c74; `sltiu v0,v0,0x1771` @0x80117bc8 (< 6001: bleiben @0x80117c38
+  `bne -> 0x80117c78` = Return); FERN: `andi v0,v0,0x1` / `beq v0,zero,0x80117c78` @0x80117c48-4c -> ohne Latch
+  Return, mit Latch `ori v0,zero,0x4` / `sb v0,5(v1)` @0x80117c50-54 (Auswahl). **Kein Ausgang fuer "keine Sicht".**
+- B[3] Steuern @0x80117d1c-54: `jal 0x8001af20` (rng) / `andi 0x1f` / `addiu v0,v0,6` / `sb v0,158(v1)` (+0x9e = 6..37)
+  @0x80117d1c-34, `lb a1,158(v0)` @0x80117d44, **`addiu a0,a0,-13688` = 0x800aca88 = Spieler +0x34 (playerX)**
+  @0x80117d4c, `jal 0x8001a8f8` @0x80117d50. FUN_8001a8f8: atan2 auf (a0.x, a0.z) gegen +0x34/+0x3c @0x8001a918-28 —
+  geradeaus auf den Spieler, kein Navigator (ROOM11C0 hat ohnehin nur EINE Nav-Zone @ROOM11C0.RDT 0x16f0).
+- A[4] Sprungpads @0x80117ecc-8011802c (Runde 35 Spur J belegt, hier nachgelesen): `+0x1e2 != 0` @0x80117ed4-dc,
+  FUN_8003b93c(+0x34, box[6]+100, +0x82, attr 0x10) @0x80117ee0-f00, Yaw-Fenster `((+0x90&0xf0)<<4 - Yaw + 512) & 0xfff
+  < 1024` @0x80117f18-38, `+0x9f = +0x90` @0x80117f40, `+0x5/6/7 = 7/0/1` @0x80117f50-74 (Sprung auch MIT Sicht);
+  attr 0x20 + Latch frei + Fenster -> `+0x7 = 3` @0x80118000-24 (Blind-Sprung). Pads in ROOM11C0: #36 (4900..9500,
+  -6080..-2180) und #47 (-17397..-12096, -6590..-1690) mit u1 = 0x10 in der Ost-/West-Gasse; #4/#31 und #19/#55
+  mit u1 = 0x20 an den Blockkanten; alle u0 = 0 (reine Marker). Der Sprungcode (zc & 0xf0) kommt aus der Kontakt-
+  seite des Pads (`(Code>>4)+8+(u1&3)` @0x8003ba8c), die Pads sind also in beide Richtungen nutzbar.
+- Der Blind-Zonensprung auf der Stelle: Original (J r35 GDB 400/400, Riegel `unit_r35_affen_zonensprung`).
 
-### RE-Belege
+### Umsetzung — PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern"; das Original hat hier KEIN Verhalten, das man nachbauen koennte)
+- NEU in `zombieki_r36.c` / `re15_zombieki_r36.h`: **Pad-Suche in der blinden Jagd**: `re15_r36_affen_padsuche_decide`
+  (A[3]-Haken, nach dem Biss-Test) — nur wenn Latch +0x1d0 = 0 UND Wandklemme +0x1d6 != 0 (das Flag, das A[3]
+  @0x80117b18-20 / A[4] @0x80118054-5c lesen) UND der Raum ein 0x10-Pad hat; dann steuert B[3] (`re15_r36_affen_
+  padsuche_ziel`, 1 Zeile statt playerX) auf die Mitte des naechsten 0x10-Pads; steht der Gorilla darauf
+  (FUN_8003b93c attr 0x10, Radius box[6]+100 wie A[4]) und im Yaw-Fenster des Originals, fuehrt er den 0x10-Sprung
+  des Originals aus (+0x9f = Code, +0x5/6/7 = 7/0/1 @0x80117f40-74; Flug B[7] unveraendert); steht er falsch
+  gedreht darauf, dreht er in die Pad-Richtung ((zc&0xf0)<<4). Sicht zurueck -> sofort Original-Jagd.
+- Haken `enemy_ai_common.c` Fall 3: 1 Zeile vor `b3:` (decide) + 1 Zeile im Steuern (Ziel). Sonst nichts.
+- Konstanten: keine neuen (Radius, Fenster, Impuls, Sprungcode = Original); 3000 = Laenge des Richtungs-Zielpunkts
+  (a8f8 nutzt nur den Winkel, jeder Wert > 0 gleichwertig).
+- **Gemessen und VERWORFEN** (im Riegel dokumentiert): (a) dieselbe Suche auch in der Auswahl (Sub 4) mit den 0x20-
+  Pads -> Endlos-Sprungketten (19-22 Spruenge je 1500 Bilder, Leon nie erreicht); (b) Sub 4 nur mit 0x10-Pads ->
+  Hin-und-her am selben Pad (Szene 1: 15 Spruenge, kein Angriff); (c) dazu "zuletzt benutztes Pad meiden" ->
+  Zufallsgang 1116 blockierte Bilder, 1 Griff. Die Auswahl (Sub 4) bleibt Original.
 
-(folgt)
-
-### Umsetzung
-
-(folgt)
-
-### Messung nachher
-
-(folgt)
+### Messung nachher (Riegel `unit_r36_zombieki_affen_block` 7/7, `F_belege/p2_riegel.txt`)
+- Zufallsgang 6000 Bilder Seed 0x1234567: 0 blockierte Strecken, **12 Griffe** (vorher 9); Seed 0xbeef: 219 blockierte
+  Bilder (1,8 %, Gorilla 2 in Sub 4 = Auswahl, Original), 4 Griffe (vorher 3).
+- Drei Befund-Szenen (Leon noerdlich/oestlich der Bloecke, Gorilla in der blinden Jagd suedlich/westlich), je 1200
+  Bilder, Gegenprobe (Suche aus) gegen Haken: (1) (-7000,12500)/(-14000,-3000): vorher kein Angriff, Abstand min 8416,
+  1200/1200 Sub 3 — nachher 3 Spruenge, erster Angriff Bild 290, Abstand min 954; (2) (-7000,12500)/(-5525,-14883):
+  vorher min 24545 — nachher Angriff Bild 893, min 955; (3) (7000,4000)/(-8915,-12487): vorher min 22222 — nachher
+  Angriff Bild 523, min 954.
+- OFFEN (gemessen, Original-Regel): in der AUSWAHL (Sub 4, B[4]) ohne Sicht an der Klemme bleibt der Gorilla stehen
+  (A[4] ohne Sicht ohne Ausgang, B[4] steuert geradeaus) — z.B. Leon (-14000,2000) westlich, Gorilla nach dem Sprung
+  in der Ost-Gasse (6418,2500): 1500 Bilder Sub 4. Jede gemessene Erweiterung auf Sub 4 war schlechter (oben).
 
 ---
 
