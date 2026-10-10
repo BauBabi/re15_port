@@ -23,4 +23,8 @@ Fortlaufend gepflegt; Quelle je Eintrag = Abnahmebericht im Spurbaum.
 | 16 | C Nachbesserung 3 OFFEN 13 | Fress-Tropfen des fressenden RE2-Zombies fehlen (@0x80103C8C, Blut Id 0, Skala 5072 @0x80103C80, Part 8 @0x80103C90, a3 (200,0,0) @0x80103C68-7C, nur bei Bild-Wort & 0x10000 @0x80103C50-64) | offen — Beta->Retail: portieren |
 | 17 | C Nachbesserung 3 OFFEN 9 | Feuer-Emitter (Id 5, @0x80106180/220/254/440/470) tragen Welt-Versatz (0,200,0) statt Anker-Versatz | offen |
 | 18 | C Nachbesserung 3 | Kriecher-Kopfabriss = Id 8 (Fleischbrocken, @0x80102AD4-DC), nicht Blut; in Raeumen ohne Raum-Id 5 erscheinen keine Brocken (gore-vollausbau §2.1) | Hinweis |
+| 19 | L_elza.md §8 | Neues Asset fuer das Paket-Gate: re15_port/shared_assets/RE2/ELZASE.VBS (13144 B, md5 8e996ef238defe2188292e55af7f8ab2, tools/r36_l/re2_elza_se_cut.py --install); neue Quelldateien engine/src/elza_r36.c + platform/pc/src/elza_se_pc.c (Android-Configure frisch) | beim Paketbau: make_package.sh check_tree + Android-GLOB |
+| 20 | L_elza.md §8 | main16.5 = ein einzelnes Stoehnen; Untertitel jetzt "Roy: groans" (wie Roys Original-Zeile msg 10), ROOM1011 Nachricht 24 (nicht 1101) | Frage an den Nutzer: anderer Wortlaut? |
+| 21 | L_elza.md §8 / OFFEN 1 | Roy sackt in ROOM1021 beim Schuss nicht sichtbar zusammen | naechste Runde (Original messen) |
+| 22 | Orchestrator | Elza-Sprachdateien des Nutzers waren unversioniert (synchro/STAGE1/room1011/1021/1031/1041/1141/11B1/1211) — versioniert auf master 565da62b | erledigt |
 | 15 | A Nachbesserung 3 | Neu fallfaehig ohne exe-Lauf: ROOM1090/1091 obj 1 (Band 5 -> 3; Zweck der Kiste = Frage an Spur H), ROOM3050/3051 obj 1, ROOM2050/2051 obj 6; DuckStation-Gegenmessung 5020 nicht gefahren | in Abnahme 3 / Integration pruefen |
