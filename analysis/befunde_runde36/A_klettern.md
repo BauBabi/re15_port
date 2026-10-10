@@ -565,6 +565,12 @@ Auslieferungsstand totes Datum — weder beim Laden noch zur Laufzeit erreichbar
 |---|---|
 | `tests/unit/probe_r36_klettern_zensus.c` | Tabelle je RECORD (`R[]`, 24 Eintraege: Raum, Lage-Flag + Wert, Datei-Byte-Offset des Obj_model_set, erwartete Kandidatenzahl, `laden` 1/0). (a) LAGE-PRUEFUNG `lage_pruefen`: liest die Record-Bytes am Offset (Opcode 0x2D, Typ 4, obj_id) und vergleicht das installierte Objekt Feld fuer Feld (aktiv, Typ, Band pc[4], x/y/z pc[10..15], Flags pc[6..7]\|1 @0x80040990-a4, Box pc[22..33]) — Abweichung = FAIL "Lage-Flag wirkungslos?"; dazu Kandidaten-Zaehlung (aktive Typ-4 ohne 0x100 == erwartet, Record-Objekt dabei). (b) Lage-Flags Bank 3/4 wie ein Spielstand VOR dem Raum-Init; Bank 5 ((5,6)=1, 11A0/11A1 @0x0107E) ERZWUNGEN NACH dem Wisch ueber den Modell-Sync-Rueckruf (`re15_scd_set_player_model_sync`, in scd_room_reenter nach `g_game.flags[5][0] = 0` und vor `scd_thread_start`) und getrennt gezaehlt ("beim Laden erreichbar" / "nur ERZWUNGEN"). (c) GEGENPROBE: (5,6)=1 VOR dem Raum-Init (der alte Weg) -> Flag danach muss 0 sein UND die Lage-Pruefung muss @0x0107E als FALSCH melden, sonst FAIL. Kopfkommentar berichtigt (11A0-Zeile, Abschnitt "NACHBESSERUNG 2"). Null-Box-Teil unveraendert (nur Typ `rec_t`, RDT-Laden gecacht) |
 | `tests/unit/probes/r36_klettern.cmake` | nur Kommentar (Records, Lage-Pruefung, 22 + 2 erzwungen, Belege) |
+
+Warum der Rueckruf und nicht "main00 ein zweites Mal" (Plan-Punkt 4): ein zweiter Obj_model_set derselben obj_id
+trifft im Original denselben Pool-Slot und schaltet das Objekt AUS (LAB_80040914 @0x80040980 `beq v0,zero` /
+@0x8004098c `sw zero,0x0(a1)`, im Port scd_vm.c op_obj_model_set `reinstall`) — die Kiste waere danach
+inaktiv statt in der Lage @0x0107E. Der Rueckruf setzt das Flag an der einzigen Stelle zwischen Wisch und
+main00-Start; main00 laeuft dann genau einmal, wie beim echten Laden.
 | `A_klettern.md` | Zensus-Tabelle Zeile 11A0/11A1, "Damit ist jedes Objekt ... beiden Lagen gemessen", die "x/24"-Zeilen, Testbeschreibung, OFFEN "Erledigt", "Fuer den Nutzer" berichtigt (⛔-Vermerke), dieser Abschnitt |
 
 **Messung nachher** (`build/tests/unit/probe_r36_klettern_zensus.exe pin`, exit 0, `A_belege/nb2_zensus_nachher.txt`):
