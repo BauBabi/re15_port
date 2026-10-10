@@ -8,40 +8,84 @@
 #include "re15_skeleton.h"   /* re15_cos_q12 / re15_sin_q12 */
 #include "re15_scd.h"        /* g_scd.props (Obj_model_set) */
 #include "re15_damage.h"     /* re15_enemy_bone_world_pos (Kopfteil 8) */
+#include "re15_enemy_ai.h"   /* re15_re2z_owns_type, re15_nav_* */
 #include <string.h>
 
 /* ----- Punkt 1: Sicht-Bit des RE2-Zombies (Belege: re15_zombieki_r36.h) ----- */
 static int s_r36_zombie_sicht_an = 1;   /* NUR Sonden: 0 = alter Weg re15_re2_los_clear (Slab-Test) */
 void re15_r36_zombie_sicht_enable(int an) { s_r36_zombie_sicht_an = an ? 1 : 0; }
 
-/* ---- NB1 Mangel 1: Oberkante niedriger Nibble-3-Moebel (Belege: re15_zombieki_r36.h) ---- */
-static int s_r36_hoehe_an = 1;   /* NUR Sonden: 0 = Abbildung vor NB1 */
-void re15_r36_zombie_hoehe_enable(int an) { s_r36_hoehe_an = an ? 1 : 0; }
+/* ---- NB1 Mangel 1 / NB2 Mangel 2: Oberkante niedriger Nibble-3-Moebel (Belege: re15_zombieki_r36.h) ---- */
+static int s_r36_hoehe_an = 1;   /* NUR Sonden: 0 = Abbildung vor NB1, 2 = NB1-Abbildung (Gegenprobe Mangel 2) */
+void re15_r36_zombie_hoehe_enable(int an) { s_r36_hoehe_an = (an == 2) ? 2 : (an ? 1 : 0); }
 
-/* (b) GEMESSEN (Projektion mit den Engine-Matrizen, ROOM1010 Cut 0, geeicht an der Tischplatte y = -1600): die drei
- * Stuhlkreise am Verhoertisch reichen nicht bis y = -2000 — eingetragen als Obergrenze. Raum ohne Varianten-Nibble. */
-static const struct { uint16_t raum; int16_t x, z; uint16_t w, d; int16_t oben; } k_r36_moebel[] = {
-    { 0x1010, 1850, 4100, 1200, 1200, -2000 },   /* #12 Stuhlkreis (2450,4700) r 600 */
-    { 0x1010, 1850, 2200, 1200, 1200, -2000 },   /* #13 Stuhlkreis (2450,2800) r 600 */
-    { 0x1010, -700, 2800, 1200, 1200, -2000 },   /* #14 Stuhlkreis (-100,3400) r 600 */
+/* BELEG-TABELLE (Nachbesserung 2, Abnahme 1 Mangel 2): NUR diese Zellen sind Moebel; jede andere Nibble-3-Zelle hat volle
+ * Hoehe (Wand). Schluessel = Raum ohne Varianten-Nibble (Leon/Elza teilen die Zellen) + Zell-Rechteck (SCA-Satz).
+ * grund 1 = (a) Obj_model_set RUHT auf der Zelle: Oberkante = sein y-Operand pc[12..13] (Datei-Byte-Offset genannt);
+ *           das MD1-Modell liegt ganz UEBER seinem Ursprung (Vertex-y nur <= 0, Unterkante = Ursprung = Standflaeche).
+ * grund 2 = (b) PORT-WAHL (Messwert): Projektion mit den Engine-Matrizen (probe_r34n_e_dokumente kamera 1010, Kamera-Record
+ *           Cut 0 @ROOM1010.RDT 0x60) auf das Hintergrundbild Cut 0, geeicht an der Tischplatte (Ecken bei y -1600 liegen auf
+ *           den Tischkanten); die Marke y -2000 der Stuhlsaeule liegt auf der Wand UEBER der Lehne -> Oberkante tiefer als
+ *           -2000, als OBERGRENZE eingetragen (Bild F_belege/nb1_r1010_c0_hoehen.png, Skript F_belege/nb1_hoehe_1010.py). */
+static const struct { uint16_t raum; int16_t x, z; uint16_t w, d; int16_t oben; uint8_t grund; } k_r36_moebel[] = {
+    /* ROOM1010/1011 Verhoerraum: Tisch #5 (SCA @0x004f8). Obj_model_set id0 (200,-1600,5500) @ROOM1010.RDT 0x00930, y-Bytes
+     * @0x0093c = c0 f9 (ROOM1011 @0x008ee / @0x008fa); id1 (1800,-1600,5750) @0x00952, y @0x0095e (ROOM1011 @0x00910 / @0x0091c);
+     * MD1 id0 y -489..0, id1 y -72..0 (Gegenstaende auf der Platte). */
+    { 0x1010,   -50,   1550, 2500, 4350, -1600, 1 },
+    /* ROOM1010/1011 Stuhlkreise (t3) #12/#13/#14 (SCA @0x0054c/@0x00558/@0x00564): (b) Messwert, Obergrenze. */
+    { 0x1010,  1850,   4100, 1200, 1200, -2000, 2 },
+    { 0x1010,  1850,   2200, 1200, 1200, -2000, 2 },
+    { 0x1010,  -700,   2800, 1200, 1200, -2000, 2 },
+    /* ROOM1220/1221 Zellentrakt: Betten (je Zelle Bett 1950/2125 x 3650..4150, Kreis 1200 = WC, 1375 x 1000 = Becken; Zell-
+     * waende 200 dick). Auf drei Betten ruht ein Obj_model_set (MD1 nv40 x -136..113 y -176..-1 z -255..256) bei y -1000:
+     * #18 (SCA @0x00620) id0 @ROOM1220.RDT 0x00e72, y-Bytes @0x00e7e = 18 fc; #21 (@0x00644) id2 @0x00eb6, y @0x00ec2;
+     * #34 (@0x006e0) id1 @0x00e94, y @0x00ea0 (ROOM1221 bytegleich an denselben Offsets). */
+    { 0x1220, -27600, -11700, 1950, 3650, -1000, 1 },
+    { 0x1220, -27600, -19750, 1950, 4150, -1000, 1 },
+    { 0x1220, -13475, -23600, 2125, 3800, -1000, 1 },
 };
+
+/* NB1-Abbildung (nur noch Gegenprobe der Sonden, s_r36_hoehe_an == 2): jedes Weltraum-Obj_model_set im Rechteck. */
+static int32_t r36_oberkante_nb1(const re15_sca_entry_t *c, int *g)
+{
+    int32_t top = 0;
+    for (int i = 0; i < (int)g_scd.prop_count && i < RE15_SCD_MAX_PROPS; i++) {
+        const int32_t px = g_scd.props[i].x, py = g_scd.props[i].y, pz = g_scd.props[i].z;
+        if (g_scd.props[i].parent_obj >= 0 || py >= 0) continue;
+        if ((uint32_t)(px - (int32_t)c->x) >= (uint32_t)c->width || (uint32_t)(pz - (int32_t)c->z) >= (uint32_t)c->density) continue;
+        if (*g == 0 || py > top) { top = py; *g = 1; }
+    }
+    return top;
+}
 
 int32_t re15_r36_zelle_oberkante(const re15_sca_entry_t *c, int *grund)
 {
     int32_t top = 0; int g = 0;
-    for (int i = 0; i < (int)g_scd.prop_count && i < RE15_SCD_MAX_PROPS; i++) {   /* (a) Obj_model_set auf der Zelle */
-        const int32_t px = g_scd.props[i].x, py = g_scd.props[i].y, pz = g_scd.props[i].z;
-        if (g_scd.props[i].parent_obj >= 0 || py >= 0) continue;                      /* nur Weltraum-Objekte ueber dem Boden */
-        if ((uint32_t)(px - (int32_t)c->x) >= (uint32_t)c->width || (uint32_t)(pz - (int32_t)c->z) >= (uint32_t)c->density) continue;
-        if (g == 0 || py > top) { top = py; g = 1; }                                  /* Standflaeche = das tiefste Objekt darauf */
-    }
-    if (!g) {
-        for (unsigned k = 0; k < sizeof k_r36_moebel / sizeof k_r36_moebel[0]; k++)  /* (b) Messtabelle */
+    if (s_r36_hoehe_an == 2) top = r36_oberkante_nb1(c, &g);
+    else
+        for (unsigned k = 0; k < sizeof k_r36_moebel / sizeof k_r36_moebel[0]; k++)
             if ((g_current_room_id & 0xFFF0u) == k_r36_moebel[k].raum && c->x == k_r36_moebel[k].x && c->z == k_r36_moebel[k].z &&
-                c->width == k_r36_moebel[k].w && c->density == k_r36_moebel[k].d) { top = k_r36_moebel[k].oben; g = 2; break; }
-    }
+                c->width == k_r36_moebel[k].w && c->density == k_r36_moebel[k].d) { top = k_r36_moebel[k].oben; g = k_r36_moebel[k].grund; break; }
     if (grund) *grund = g;
     return top;
+}
+
+/* ---- NB2 Mangel 1: der Wurf endet nicht in einer unaufloesbaren Lage (Belege + PORT-WAHL: re15_zombieki_r36.h) ---- */
+static int s_r36_wurf_an = 1;
+void re15_r36_wurf_klemme_enable(int an) { s_r36_wurf_an = an ? 1 : 0; }
+void re15_r36_wurf_klemme(re15_actor_t *e, int32_t ox, int32_t oz)
+{
+    if (!s_r36_wurf_an || !e || !g_room_rdt_ok || e->hit_radius_min == 0) return;
+    if (!re15_ai_re2_for_type(e->type) || !re15_re2z_owns_type(e->type)) return;     /* nur das RE2-Zombie-Hirn */
+    if (!(e->state == 1 && e->sub_state_1 == 3 && (e->sub_state_2 == 7 || e->sub_state_2 == 8))) return;
+                                                                                     /* EXEC[3] P7 @0x80102C30 / P8 @0x80102C60 */
+    int32_t nx = e->x, nz = e->z; uint8_t ct = e->ai_contact; uint16_t at = 0;
+    re15_collision_constrain_contact(&g_room_rdt, e->x, e->z, &nx, &nz, e->hit_radius_min, e->y,
+                                     e->sca_mask ? e->sca_mask : 4u, &ct, &at);     /* dieselbe Klemme wie eben (Maske +0x1d7) */
+    if (nx == e->x && nz == e->z) return;                                            /* stabile Lage: nichts */
+    e->x = ox; e->z = oz;                                                            /* Rueckfall auf die Vorlage (Form
+                                                                                      * `lh v0,0(s4)` / `sw v0,0(t2)` / `lh v1,4(s4)` /
+                                                                                      * `sw v1,8(t2)` @0x8003ced4-ceec, LAB_8003cb9c) */
 }
 
 /* RE2 FUN_80050858 mit a3 = 1 (@0x80050b34-c30): blockt nur, wo der Strahl A->B im Satz-Rechteck tiefer liegt als die
@@ -80,11 +124,12 @@ int re15_r36_zombie_sicht_frei(re15_actor_t *e, re15_actor_t *pl)
             if (!re15_r36_los_zelle_kreuzt(e->x, e->z, pl->x, pl->z, c)) continue;
             int32_t top = re15_r36_zelle_oberkante(c, NULL);
             if (top == 0) return 0;                                 /* ohne belegte Hoehe: blockt (RE1.5-Klasse, Wand) */
+            if (!pl->head_world_ok) return 0;                       /* NB2 Mangel 5: ohne Leons Kopf kein Hoehenvergleich */
             if (!kopf) {                                            /* Kopfteil 8 (RE2 +0x1c1 = 8 @0x8010082c-30) */
                 kopf = 1;
                 re15_enemy_bone_world_pos(e, 8, ka);
                 kb[0] = pl->x; kb[2] = pl->z;
-                kb[1] = pl->head_world_ok ? pl->head_world[1] : pl->y + RE15_R36_LEON_KOPF_Y;
+                kb[1] = pl->head_world[1];                          /* Plc_neck-Ursprung (skeleton_common.c), je Bild */
             }
             if (!r36_strahl_darueber(c, ka, kb, top)) return 0;
         }

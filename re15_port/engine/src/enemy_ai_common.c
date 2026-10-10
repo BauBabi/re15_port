@@ -14586,6 +14586,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * und der Ausweich-Zustand +0x5=0xa (@0x80103478/@0x80103518). */
             re15_enemy_sca_clamp(e, sweep_ox, sweep_oz,
                                  e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
+            re15_r36_wurf_klemme(e, sweep_ox, sweep_oz);   /* Runde 36 Spur F NB2 (PORT-WAHL): Wurf P7/P8 endet nicht in unaufloesbarer Lage (Form @0x8003ced4-ceec) */
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */

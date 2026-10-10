@@ -534,3 +534,73 @@ Grundlage: `F_abnahme_1.md` (Stand 7a9a0e7f, NICHT BESTANDEN, Maengel 1-6). Plan
 | 4 | Riegel-Definition zaehlt Spruenge/Pendeln nicht; Stelle nicht gepinnt; Szenen parken Gorilla 2 | Anker 400 (wie Abnahme), Stelle (-24000,10000) mit beiden Gorillas pinnen |
 | 5 | -2514 / -2000 ohne Beleg | aus Daten herleiten (PLD-Knochen / Kamera+Bild) mit Byte-Offset, sonst als PORT-WAHL kennzeichnen |
 | 6 | Voll-Suite | Orchestrator; hier gezielte Laeufe |
+
+### NB2 Mangel 1 — Taschenfall ROOM1010 Slot 1
+- **Messung vorher** (Stand 7a9a0e7f, `test_r36_zombieki_eintritt spur 1010 1020 0 1 1 140 1` + `RE15_COLL_TRACE=1`,
+  `F_belege/nb2_m1_spur1010_vorher.txt`): Griff F26, P5 ab F107, P7 F114, **P8 ab F115**; Lage je Bild (3541,3990) ->
+  (3539,3803) -> (3537,3563) -> (3530,3276) -> (3463,3012) -> (3292,2842) -> (3167,2716) -> (3065,2615) -> (2969,2519) ->
+  (3023,2573) -> **(2955,1895)** (F125) -> ab F129 Sub 5, danach Sub 1 Gang auf der Stelle bei (2934,1917) bis Laufende.
+  Klemmen-Spur F124->F125: Lage nach dem Wurfschritt (3031,2336) -> Kreis #13 (t3, Mitte (2450,2800) r 600) radial auf
+  (3234,2174), also UNTER die Mitte z 2200 der Raute #15 (t2 = Raute 3050..4650 / 1400..3000, Mitte (3850,2200)) -> #15
+  schiebt im unteren linken Quadranten nach SUEDWEST auf (2955,1895). Die Tasche zwischen #3 (z 1450..1550), #5
+  (x -50..2450), #13 und #15 hat fuer Radius 400 KEINE stabile Lage (aufgeblasener Kreis und aufgeblasene Raute
+  ueberlappen an der Rautenspitze (3050,2200)); jedes Bild kaempfen #3/#13/#15 (Spur (2954,1866) -> #3 (2954,1968) ->
+  #13 (2968,1945) -> #15 (2937,1914)).
+- **Beleg RE2 (Ziel)**: P8 @0x80102C60: `jal 0x80015e7c` (Wurzeldelta), `jal 0x8002959c` (a3 = 512), `lhu a2,324(s1)` /
+  `addiu a2,a2,-30` / `jal 0x800152c8` / `sh a2,324(s1)` @0x80102C98-AC (EMZ0.BIN, selbst gelesen). Die Klemme ruft die
+  Zombie-Wurzel EINMAL je Bild nach dem Zustand: `jal 0x8003567c` @0x80100638 -> FUN_8003567c -> FUN_8004c1bc
+  (RE2_Quellcode_V2: Satz fuer Satz, je Form ein Schieber, kein Rueckfall auf die Vorlage). Die Keil-Lage folgt aus den
+  RE1.5-Raumdaten (Kreis und Raute 600 auseinander) unter dem RE2-Wurf (140..290 Einheiten je Bild).
+- **Beleg RE1.5 (Form des Rueckfalls)**: die Original-Klemme faellt im Kontaktcode-0-Zweig des Diagonal-Schiebers
+  LAB_8003cb9c auf die Vorlage zurueck: `lh v0,0(s4)` / `sw v0,0(t2)` / `lh v1,4(s4)` / `clear v0` / `sw v1,8(t2)`
+  @0x8003ced4-ceec (ghidra1_V2.txt, selbst gelesen; s4 = Vorlage, t2 = Lage; Port push_diag6/push_diag7).
+- **Aenderung (PORT-WAHL, Nutzer "Das darf so nicht sein")**: `re15_r36_wurf_klemme` (zombieki_r36.c); Haken
+  enemy_ai_common.c 1 Zeile direkt nach der Zombie-Klemme `re15_enemy_sca_clamp` (Original-Reihenfolge @0x8010062c):
+  NUR waehrend EXEC[3] P7/P8 (+0x5 = 3, +0x6 = 7/8): verschiebt die Klemme die eben geklemmte Lage erneut (keine stabile
+  Lage), bleibt der Zombie auf der Lage vor dem Bild. Keine neue Zahl.
+- **Nachher** (`F_belege/nb2_m1_spur1010_nachher.txt`): der Wurf endet bei (3463,3012) -> (3434,2983) VOR dem Keil, Sturz,
+  F300 Gang, **F360 erneuter Griff**, F450 zweiter Wurf (wieder vor dem Keil), F1320 dritter Griff — 0 Bilder Gang auf
+  der Stelle.
+- **Riegel** `unit_r36_zombieki_eintritt`: Gegenprobe Wurf-Klemme aus = Befund (Griff Bild 26, 450 Bilder auf der Stelle
+  bei (2934,1916)); mit Wurf-Klemme laengster Stillstand aufrecht 0, kleinster Abstand ab Griff+300 = 85. KLEMME zaehlt
+  nur noch AUFRECHT (Sub 0/1) NACH der Reaktion (Sub 5 = RE2-Knockdown liegt, Abnahme 1 Abschnitt 2.3) und ist jetzt
+  **gepinnt: KLEMME 0** (266 Faelle, PASSIV 0).
+
+### NB2 Mangel 2 — Waende wurden zu Moebeln (Regression eab5925a)
+- **Messung vorher** (neue Sonden-Modi von `test_r36_zombieki_sicht`, `F_belege/nb2_m2_*`): `oberkante` — die
+  NB1-Abbildung gab 961 von 17700 Nibble-3-Saetzen (99 verschiedene Zellen) eine Oberkante. Die Modelle zeigen, was dort
+  "ruht": ROOM1040 #4 drei SENKRECHTE Tafeln (MD1 nv4, x -1800..1800, y -2232..0, **z 0..0**), ROOM2000/2090 waagrechte
+  Flaechen (y 0..0, 7200 x 32400 bzw. 21600 x 16200), ROOM1200 #0 Kuehlfach-Tueren in zwei Hoehen (-2858 / -1818).
+  `durchwand` (alle 240 RDTs, 182 Zombies, 72900 begehbare Plaetze in BLK-Zonen < 0x1388, Raster 250, je Platz Sicht
+  ohne/mit Hoehenregel): die NB1-Abbildung oeffnet 1829 Plaetze, **1814 davon ueber die Wand ROOM1040 #4**, der Rest ueber
+  ROOM1010 #5 (Tisch), #12 (Stuhl) und ROOM1220 #18 (Bett).
+- **Ursache**: `re15_r36_zelle_oberkante` nahm jedes Weltraum-Obj_model_set im Zell-Rechteck als Standflaeche — ohne
+  Original-Gegenstueck (RE2 liest die Hoehe aus dem Satz selbst @0x80050b34-74; RE1.5-Saetze haben keine).
+- **Aenderung**: Oberkante NUR fuer die Zellen der Beleg-Tabelle `k_r36_moebel` (Zell-Rechteck, Raum ohne
+  Varianten-Nibble), je Zelle mit Beleg (Header + Code): ROOM1010/1011 Tisch #5 = -1600 (Obj_model_set id0 @ROOM1010.RDT
+  0x00930, y-Bytes @0x0093c = c0 f9; id1 @0x00952 / @0x0095e; ROOM1011 @0x008ee/@0x008fa, @0x00910/@0x0091c; MD1 y -489..0
+  / -72..0 = ruht auf der Platte); Stuhlkreise #12/#13/#14 = -2000 (PORT-WAHL Messwert, Mangel 5); ROOM1220/1221 Betten
+  #18/#21/#34 = -1000 (Obj_model_set @0x00e72/@0x00eb6/@0x00e94, y-Bytes @0x00e7e/@0x00ec2/@0x00ea0 = 18 fc; MD1 nv40
+  y -176..-1 = ruht darauf; Zellentrakt je Zelle Bett 1950/2125 x 3650..4150 + WC-Kreis 1200 + Becken 1375 x 1000,
+  Zellwaende 200). Jede andere Nibble-3-Zelle hat volle Hoehe (RE1.5-Datenlage). Die NB1-Abbildung bleibt nur als
+  Sonden-Gegenprobe (`re15_r36_zombie_hoehe_enable(2)`).
+- **Nachher**: `durchwand` NB2: 74 geoeffnete Plaetze, **0 ueber ROOM1040 #4**, alle ueber Beleg-Zellen (1010 #5 52,
+  #12 59, 1220 #18 8 — je Platz jede Zelle einmal gezaehlt). ROOM1040 Leon im Westgang (-29900,6000): Ostgang-Zombies
+  NB1 2/2 "sehen", NB2 0/2.
+- **Riegel** `unit_r36_zombieki_sicht` 15/15: zusaetzlich Gegenprobe NB1 (1829 / 1814 ueber #4), NB2 0 ueber #4 + nur
+  Beleg-Zellen, ROOM1040-Westgang 0/2 (Gegenprobe 2/2); die NB1-Pruefungen (Abnahme-0-Fall, 49 = 49 hinter Waenden, 0
+  hinter Moebeln, 0 bei freier Sicht) bleiben gruen.
+
+### NB2 Mangel 5 — Belegform -2514 / -2000
+- **-2514 (Leons Kopf)**: die Konstante RE15_R36_LEON_KOPF_Y ist entfernt. Das Spiel liest Leons Kopf nur aus head_world
+  (Plc_neck-Ursprung, skeleton_common.c: hm = Wurzel-Rot * relpos[8] + Wurzel-Trans, je gezeichnetem Bild; neck_bone = 8
+  @0x80031938). Ohne head_world gibt es keinen Hoehenvergleich: die Zelle blockt (RE1.5-Datenlage). Die Sonden setzen
+  head_world mit DERSELBEN Formel aus PLD/PL00.EMR + PL00.EDD (neu `tests/unit/test_r36_zombieki_kopf.h`):
+  `test_r36_zombieki_sicht kopf` -> Clip 0 Bild 0 Kopf (-51,**-2513**,0); Clips 11/17/19/20/21 -2514 — der NB1-exe-Wert
+  (-2514) war derselbe Datenwert.
+- **-2000 (Stuhlkreise)**: als **PORT-WAHL (Messwert)** gekennzeichnet, mit Herleitung im Code: Projektion mit den
+  Engine-Matrizen (`probe_r34n_e_dokumente kamera 1010`, Kamera-Record Cut 0 @ROOM1010.RDT 0x60) auf das Hintergrundbild
+  Cut 0, geeicht an der Tischplatte (Ecken y -1600 liegen auf den Tischkanten); die Marke y -2000 der Stuhlsaeule liegt
+  auf der Wand ueber der Lehne -> Oberkante tiefer, eingetragen als OBERGRENZE (`F_belege/nb1_r1010_c0_hoehen.png`,
+  `F_belege/nb1_hoehe_1010.py`). Die RE1.5-Daten tragen keine Stuhlhoehe; ohne die Zahl blockten die Stuehle wie Waende
+  (Abnahme-0-Fall Slot 2 stand dann wieder).

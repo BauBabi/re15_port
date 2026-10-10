@@ -100,14 +100,43 @@ int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz);
  * F_belege/nb1_r1010_c0_hoehen.png).
  * PORT: der RE1.5-Strahl bleibt der Kreuzungstest (FUN_8003dcc4 je Zelle, re15_r36_los_zelle_kreuzt); eine gekreuzte
  * Nibble-3-Zelle mit BELEGTER Oberkante blockt nur, wenn der Kopf-zu-Kopf-Strahl in ihrem Grundriss tiefer liegt
- * (Form FUN_80050858 a3 = 1). Belegte Oberkante = (a) RDT: Obj_model_set-Objekt (Weltraum) auf der Zelle -> dessen y,
- * (b) gemessen: Tabelle k_r36_moebel (zombieki_r36.c). Ohne Beleg = volle Hoehe (Wand), wie bisher. */
+ * (Form FUN_80050858 a3 = 1).
+ * ⛔ NACHBESSERUNG 2 (Abnahme 1, Mangel 2): die NB1-Abbildung "jedes Obj_model_set-Objekt im Zell-Rechteck = Oberkante"
+ * machte WAENDE mit Wandobjekten zu Moebeln (ROOM1040 #4 2052 x 37566: drei senkrechte Tafeln, MD1 nv4 x -1800..1800
+ * y -2232..0 z 0..0, bei y -1900 -> Ostgang-Zombies sahen Leon im Westgang; Durchwand-Zensus 3628 Plaetze). Seit NB2 gilt
+ * die Oberkante NUR fuer die Moebel-Zellen der Beleg-Tabelle k_r36_moebel (zombieki_r36.c), je Zelle mit Beleg:
+ *   (a) RDT: Obj_model_set, dessen Modell AUF der Zelle ruht (MD1-Unterkante = Ursprung, y-Spanne nur nach oben) ->
+ *       dessen y (Datei-Byte-Offset des y-Operanden pc[12..13]);
+ *   (b) PORT-WAHL (Messwert): Projektion mit den Engine-Matrizen auf das Hintergrundbild (Kamera-Record + Bild genannt),
+ *       eingetragen als OBERGRENZE.
+ * Jede andere Nibble-3-Zelle hat volle Hoehe (Wand) — wie die RE1.5-Daten selbst (FUN_8003dcc4 kennt keine Hoehe).
+ * LEONS KOPF (Abnahme 1, Mangel 5): nur aus head_world (Plc_neck-Ursprung, skeleton_common.c, je gezeichnetem Bild aus
+ * Leons PLD-Pose gesetzt). Ohne head_world gibt es keinen Hoehenvergleich: die Zelle blockt (RE1.5-Datenlage) — keine
+ * Ersatzzahl mehr. Die Sonden setzen head_world aus PL00.EMR/EDD (Bindpose-Knochen 8 wie skeleton_common.c). */
 int re15_r36_los_zelle_kreuzt(int32_t ex, int32_t ez, int32_t px, int32_t pz, const re15_sca_entry_t *c);
-void re15_r36_zombie_hoehe_enable(int an);   /* NUR Sonden: 0 = Abbildung vor NB1 (jede Nibble-3-Zelle blockt) */
-/* NUR Sonden: Oberkante einer Zelle (0 = unbelegt) und Grund (1 = Obj_model_set, 2 = Messtabelle). */
+void re15_r36_zombie_hoehe_enable(int an);   /* NUR Sonden: 0 = Abbildung vor NB1 (jede Nibble-3-Zelle blockt),
+                                              * 2 = NB1-Abbildung (jedes Obj_model_set im Rechteck; Gegenprobe Mangel 2) */
+/* NUR Sonden: Oberkante einer Zelle (0 = unbelegt) und Grund (1 = Obj_model_set ruht darauf, 2 = Messwert). */
 int32_t re15_r36_zelle_oberkante(const re15_sca_entry_t *c, int *grund);
-#define RE15_R36_LEON_KOPF_Y  (-2514)   /* GEMESSEN: Leons Kopfteil 8 y im Stand (exe ROOM1010, head_world, Motion 200) —
-                                         * nur, wenn der Renderer head_world noch nicht gesetzt hat (Sonden ohne Bild) */
+
+/* ---- Nachbesserung 2, Mangel 1 (Abnahme 1): der TASCHENFALL ROOM1010 Slot 1 -----------------------------------------
+ * GEMESSEN (test_r36_zombieki_eintritt spur 1010 1020 0 1 1 140 1 + RE15_COLL_TRACE): der RE2-Rueckstoss nach dem Griff
+ * (EXEC[3] P8: Wurzeldelta + `addiu a2,a2,-30` / `jal 0x800152c8` / `sh a2,324(s1)` @0x80102CA0-AC, EMZ0.BIN; 140..290
+ * Einheiten je Bild) traegt den Zombie in den Keil zwischen Stuhlkreis #13 (t3, Mitte (2450,2800) r 600) und Raute #15
+ * (t2 3050..4650 / 1400..3000). Die Klemme (FUN_8003b0a4-Zwilling, Zellen nacheinander) schiebt ihn je Bild erst aus
+ * dem Kreis (radial, ueber die Rautenmitte z 2200 hinweg) und dann aus der Raute nach SUEDWEST: F124 (3031,2336) ->
+ * #13 (3234,2174) -> #15 (2955,1895). Die Tasche (2450..3050 / 1550..2200, zwischen #3, #5, #13, #15) hat fuer Radius
+ * 400 KEINE stabile Lage (die aufgeblasenen #13 und #15 ueberlappen an der Rautenspitze): er tritt dort fuer immer
+ * auf der Stelle (st1/1/1, 1220..2500 vor Leon).
+ * RE2 (Ziel): die Zombie-Wurzel ruft die Klemme EINMAL je Bild nach dem Zustand (FUN_8003567c -> FUN_8004c1bc
+ * @0x80100638), ebenfalls Satz fuer Satz ohne Rueckgabe-auf-Vorlage — die Keil-Lage gibt es in RE2s Raeumen nicht.
+ * PORT-WAHL (Nutzer: "Das darf so nicht sein"): waehrend des Wurfs (EXEC[3] P7/P8, +0x5 = 3, +0x6 = 7/8) endet ein Bild
+ * nicht in einer Lage, die die Klemme nicht aufloesen kann: verschiebt die Klemme die eben geklemmte Lage erneut,
+ * bleibt der Zombie auf der Lage VOR dem Bild. FORM = der Rueckfall der Original-Klemme auf die Vorlage
+ * (`*lx = prevx; *lz = prevz` im Kontaktcode-0-Zweig der Diagonal-Schieber LAB_8003cb9c / LAB_8003c2cc, re15_collision.c
+ * push_diag6/push_diag7). Keine neue Zahl. */
+void re15_r36_wurf_klemme(re15_actor_t *e, int32_t ox, int32_t oz);
+void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gegenprobe) */
 
 /* ---------------------------------------------------------------------------------------------------------
  * Punkt 2 — "Die Monkeys scheinen noch oft blockiert zu sein. Das muessen wir irgendwie verbessern."

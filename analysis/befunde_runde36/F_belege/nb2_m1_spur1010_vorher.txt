@@ -1,0 +1,346 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-4400,0,-325) rot=(0,2513,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-4300,0,4575) rot=(0,1542,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(200,-1600,5500) rot=(0,3084,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(1800,-1600,5750) rot=(0,2513,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1800,-1600,-1900) rot=(0,3084,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21550,-5400,-19800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21550,-5400,-12600) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-14350,-5400,-19800) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-14350,-5400,-12600) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(-23700,-1500,-10000) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-23350,-1500,-10000) rot=(0,0,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-4488,0,-10684) rot=(0,3072,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x2E
+[scd] thread start slot=12 first_op=0x2E
+[scd] thread start slot=13 first_op=0x2E
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x22
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-5436,-5400,-18000) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x18
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-25200,0,-360) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-27038,-1900,4196) rot=(0,3072,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-27038,-1900,8914) rot=(0,3072,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-27038,-1900,15468) rot=(0,3072,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(14775,0,-10125) rot=(0,1199,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(15432,0,-10424) rot=(0,2048,0)
+[adaruf] ROOM1050 Slot 4 -> Ereignis-Platz sce 3 / Ereignis 13 (Szene) (Flags (3,187)=0, (9,65)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[tuer1060] ROOM1060 Slot 2 -> Text-Platz msg 1 ((9,73)=0 (9,71)=0 (3,94)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(12344,-1500,500) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-19554,0,-23216) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(6964,0,21694) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(2650,-1248,7750) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x02 type=0 pos=(2550,-1248,-2850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(-1450,-1300,3850) rot=(0,2627,0)
+[scd] Obj_model_set[3] id=0x00 type=4 pos=(-6050,0,4950) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x22
+[cut10f0] ROOM10F0: Szene gestartet (Ereignis 20, Faden 10, Flag (9,71)=0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-9600,-1600,575) rot=(0,2341,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-8300,-1600,575) rot=(0,2341,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(3400,-1800,5275) rot=(0,457,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-9900,0,-1825) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-1240,0,16300) rot=(0,3072,0)
+[tuer1120] ROOM1130 Slot 1 -> Text-Platz msg 6 (Flag (3,94) = 0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-20700,-20324,-17460) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-24300,0,-11700) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x45
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x13
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(4990,-8300,-7350) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(4990,-10150,-7350) rot=(0,0,0)
+[scd] thread start slot=10 first_op=0x22
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x13
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21340,-4446,-24516) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21340,-4446,-20916) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-21340,-4446,-17316) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-21340,-4446,-13716) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(310,-4500,-26946) rot=(-2048,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(3920,0,-25952) rot=(0,3072,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(4304,-1340,-26600) rot=(0,2912,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(10050,-5400,8800) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(6400,-5400,2750) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(4375,-900,-2075) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x03 type=3 pos=(-16925,-16200,2675) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2168,0,-20918) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-22838,0,-20368) rot=(0,3769,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-7463,0,-24868) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-2390,-1830,-18510) rot=(-200,-1400,1752)
+[prop-member F0] prop[0] obj=0x00 m=0 → val=-840
+[prop-member F0] prop[0] obj=0x00 m=1 → val=-2930
+[prop-member F0] prop[0] obj=0x00 m=2 → val=-19110
+[prop-member F0] prop[0] obj=0x00 m=3 → val=-72
+[prop-member F0] prop[0] obj=0x00 m=4 → val=-1400
+[prop-member F0] prop[0] obj=0x00 m=5 → val=48
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x37
+[scd] Obj_model_set[0] id=0x02 type=0 pos=(-8300,0,-11625) rot=(0,2304,3072)
+[scd] Obj_model_set[1] id=0x03 type=0 pos=(-8900,0,-14425) rot=(0,2048,0)
+[scd] Obj_model_set[2] id=0x04 type=0 pos=(-8900,0,-17025) rot=(0,2048,0)
+[scd] Obj_model_set[3] id=0x05 type=0 pos=(-4600,0,-13725) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x06 type=0 pos=(-4600,0,-16525) rot=(0,0,0)
+[scd] Obj_model_set[5] id=0x07 type=0 pos=(-4600,0,-19125) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x02 type=4 pos=(19446,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-9072,0,-11954) rot=(3072,-1024,-1024)
+[scd] thread start slot=10 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(11040,-16200,-15084) rot=(0,1656,0)
+[scd] Obj_model_set[1] id=0x00 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-25975,10,26000) rot=(0,0,512)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25975,10,24000) rot=(0,0,512)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(-25975,10,22000) rot=(0,0,512)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-25975,10,19800) rot=(0,0,512)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-25975,10,17800) rot=(0,0,512)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18775,10,26000) rot=(0,0,512)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-18775,10,24000) rot=(0,0,512)
+[scd] Obj_model_set[9] id=0x09 type=0 pos=(-18775,10,22000) rot=(0,0,512)
+[scd] Obj_model_set[10] id=0x0A type=0 pos=(-18775,10,19800) rot=(0,0,512)
+[scd] Obj_model_set[11] id=0x0B type=0 pos=(-18775,10,17800) rot=(0,0,512)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x50
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-19782,-2858,-14382) rot=(0,2624,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-25182,-1818,-14382) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1216,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x13
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-26128,-1000,-9748) rot=(0,3883,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-12693,-1000,-22725) rot=(0,457,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-26193,-1000,-17425) rot=(0,1428,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x01
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-19554,0,-23216) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(4661,0,24020) rot=(0,3312,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x13
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(8975,-900,16825) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(200,-1600,5500) rot=(0,3084,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(1800,-1600,5750) rot=(0,2513,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1800,-1600,-1900) rot=(0,3084,0)
+Eintritt 1010<-1020 cut0 Leon(3650,6900) rot2048
+  F6    Z(  3708,  3593) st1/1/1 clip0   af15  rot3057 | L(  3659,  6530) d 2937 grab0 | los1 steer(  3659,  6530) wand00 hp95
+  F12   Z(  3640,  3729) st1/1/1 clip0   af21  rot3077 | L(  3661,  6082) d 2353 grab0 | los1 steer(  3661,  6082) wand00 hp95
+  F18   Z(  3631,  3813) st1/1/1 clip0   af27  rot3085 | L(  3655,  5637) d 1824 grab0 | los1 steer(  3655,  5637) wand00 hp95
+  F24   Z(  3632,  3875) st1/1/1 clip0   af33  rot3083 | L(  3649,  5193) d 1318 grab0 | los1 steer(  3649,  5193) wand00 hp95
+  F30   Z(  3642,  3896) st1/3/2 clip11  af4   rot3083 | L(  3565,  4876) d  983 grab1 | los1 steer(  3565,  4877) wand00 hp95
+  F36   Z(  3668,  4061) st1/3/3 clip12  af5   rot3083 | L(  3569,  4889) d  833 grab1 | los1 steer(  3569,  4889) wand00 hp95
+  F42   Z(  3650,  4261) st1/3/3 clip12  af11  rot3083 | L(  3559,  4906) d  651 grab1 | los1 steer(  3559,  4906) wand00 hp95
+  F48   Z(  3535,  4406) st1/3/3 clip12  af17  rot3083 | L(  3512,  4887) d  481 grab1 | los1 steer(  3512,  4895) wand00 hp95
+  F54   Z(  3637,  4521) st1/3/3 clip12  af23  rot3083 | L(  3494,  4902) d  406 grab1 | los1 steer(  3494,  4902) wand00 hp95
+  F60   Z(  3558,  4411) st1/3/3 clip12  af29  rot3083 | L(  3511,  5051) d  641 grab1 | los1 steer(  3450,  5074) wand00 hp95
+  F66   Z(  3604,  4014) st1/3/3 clip12  af35  rot3083 | L(  3593,  4907) d  893 grab1 | los1 steer(  3605,  4931) wand00 hp95
+  F72   Z(  3655,  3980) st1/3/3 clip12  af3   rot3083 | L(  3566,  4881) d  905 grab1 | los1 steer(  3566,  4881) wand00 hp95
+  F78   Z(  3672,  4214) st1/3/3 clip12  af9   rot3083 | L(  3567,  4904) d  697 grab1 | los1 steer(  3567,  4904) wand00 hp95
+  F84   Z(  3545,  4362) st1/3/3 clip12  af15  rot3083 | L(  3520,  4899) d  537 grab1 | los1 steer(  3532,  4902) wand00 hp95
+  F90   Z(  3599,  4491) st1/3/3 clip12  af21  rot3083 | L(  3519,  4870) d  387 grab1 | los1 steer(  3526,  4860) wand00 hp95
+  F96   Z(  3645,  4509) st1/3/3 clip12  af27  rot3083 | L(  3494,  4902) d  421 grab1 | los1 steer(  3494,  4902) wand00 hp95
+  F102  Z(  3535,  4156) st1/3/3 clip12  af33  rot3083 | L(  3612,  4957) d  804 grab1 | los1 steer(  3611,  4981) wand00 hp95
+  F108  Z(  3644,  3914) st1/3/5 clip13  af1   rot3083 | L(  3541,  4879) d  970 grab1 | los1 steer(  3565,  4876) wand00 hp95
+  F114  Z(  3541,  3990) st1/3/7 clip13  af7   rot3083 | L(  3488,  4916) d  927 grab1 | los1 steer(  3487,  5059) wand00 hp95
+  F120  Z(  3292,  2842) st1/3/8 clip13  af13  rot3083 | L(  3504,  3894) d 1073 grab1 | los1 steer(  3495,  3965) wand01 hp95
+  F126  Z(  2937,  1914) st1/3/8 clip13  af19  rot3083 | L(  3564,  3985) d 2163 grab1 | los0 steer(  3561,  3942) wand01 hp95
+  F132  Z(  2934,  1917) st1/5/1 clip2   af23  rot3083 | L(  3559,  4349) d 2511 grab1 | los0 steer(  3559,  4330) wand01 hp95
+  F138  Z(  2934,  1917) st1/5/1 clip2   af29  rot3083 | L(  3467,  3989) d 2139 grab0 | los0 steer(  3467,  3989) wand01 hp95
+  F144  Z(  2934,  1917) st1/5/1 clip2   af35  rot3083 | L(  3356,  3557) d 1693 grab0 | los0 steer(  3356,  3557) wand01 hp95
+  F150  Z(  2934,  1917) st1/5/1 clip2   af41  rot3083 | L(  3414,  3221) d 1389 grab0 | los0 steer(  3414,  3221) wand01 hp95
+  F156  Z(  2934,  1917) st1/5/1 clip2   af47  rot3083 | L(  3433,  3032) d 1221 grab0 | los0 steer(  3433,  3032) wand01 hp95
+  F162  Z(  2934,  1917) st1/5/1 clip2   af53  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F168  Z(  2934,  1917) st1/5/2 clip2   af59  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F174  Z(  2934,  1917) st1/5/3 clip22  af5   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F180  Z(  2934,  1917) st1/5/5 clip22  af9   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F186  Z(  2934,  1917) st1/5/5 clip22  af9   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F192  Z(  2934,  1917) st1/5/5 clip22  af9   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F198  Z(  2934,  1917) st1/5/5 clip22  af9   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F204  Z(  2934,  1917) st1/5/7 clip9   af1   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F210  Z(  2934,  1917) st1/5/7 clip9   af7   rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F216  Z(  2934,  1917) st1/5/7 clip9   af13  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F222  Z(  2934,  1917) st1/5/7 clip9   af19  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F228  Z(  2934,  1917) st1/5/7 clip9   af25  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F234  Z(  2934,  1917) st1/5/7 clip9   af31  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F240  Z(  2934,  1917) st1/5/7 clip9   af37  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F246  Z(  2934,  1917) st1/5/7 clip9   af43  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F252  Z(  2934,  1917) st1/5/7 clip9   af49  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F258  Z(  2934,  1917) st1/5/7 clip9   af55  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F264  Z(  2934,  1917) st1/5/7 clip9   af61  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F270  Z(  2934,  1917) st1/5/7 clip9   af67  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F276  Z(  2934,  1917) st1/5/7 clip9   af73  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F282  Z(  2934,  1917) st1/5/8 clip9   af79  rot3083 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F288  Z(  2934,  1917) st1/1/1 clip0   af11  rot3203 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F294  Z(  2934,  1916) st1/1/1 clip0   af17  rot3347 | L(  3432,  3031) d 1221 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F300  Z(  2935,  1916) st1/1/1 clip0   af23  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F306  Z(  2935,  1916) st1/1/1 clip0   af29  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F312  Z(  2935,  1916) st1/1/1 clip0   af35  rot3349 | L(  3536,  3214) d 1430 grab1 | los0 steer(  3526,  3227) wand01 hp95
+  F318  Z(  2935,  1916) st1/1/1 clip0   af41  rot3379 | L(  3583,  3182) d 1422 grab1 | los0 steer(  3570,  3170) wand01 hp95
+  F324  Z(  2935,  1916) st1/1/1 clip0   af47  rot3389 | L(  3627,  3226) d 1481 grab1 | los0 steer(  3620,  3220) wand01 hp95
+  F330  Z(  2935,  1916) st1/1/1 clip0   af53  rot3383 | L(  3566,  3166) d 1400 grab1 | los0 steer(  3591,  3190) wand01 hp95
+  F336  Z(  2935,  1916) st1/1/1 clip0   af59  rot3375 | L(  3549,  3148) d 1376 grab1 | los0 steer(  3551,  3150) wand01 hp95
+  F342  Z(  2935,  1916) st1/1/1 clip0   af0   rot3419 | L(  3682,  3281) d 1556 grab1 | los0 steer(  4020,  3279) wand01 hp95
+  F348  Z(  2935,  1916) st1/1/1 clip0   af6   rot3373 | L(  3553,  3250) d 1470 grab1 | los0 steer(  3590,  3243) wand01 hp95
+  F354  Z(  2935,  1916) st1/1/1 clip0   af12  rot3365 | L(  3570,  3170) d 1405 grab1 | los0 steer(  3514,  3126) wand01 hp95
+  F360  Z(  2935,  1916) st1/1/1 clip0   af18  rot3385 | L(  3620,  3220) d 1472 grab1 | los0 steer(  3602,  3202) wand01 hp95
+  F366  Z(  2935,  1916) st1/1/1 clip0   af24  rot3389 | L(  3591,  3190) d 1432 grab1 | los0 steer(  3615,  3214) wand01 hp95
+  F372  Z(  2935,  1916) st1/1/1 clip0   af30  rot3381 | L(  3569,  3168) d 1403 grab1 | los0 steer(  3579,  3179) wand01 hp95
+  F378  Z(  2935,  1916) st1/1/1 clip0   af36  rot3391 | L(  3666,  3266) d 1535 grab1 | los0 steer(  3637,  3237) wand01 hp95
+  F384  Z(  2935,  1916) st1/1/1 clip0   af42  rot3393 | L(  3633,  3233) d 1490 grab1 | los0 steer(  3650,  3249) wand01 hp95
+  F390  Z(  2935,  1916) st1/1/1 clip0   af48  rot3353 | L(  3514,  3126) d 1341 grab1 | los0 steer(  3513,  3162) wand01 hp95
+  F396  Z(  2935,  1916) st1/1/1 clip0   af54  rot3383 | L(  3597,  3197) d 1441 grab1 | los0 steer(  3588,  3188) wand01 hp95
+  F402  Z(  2935,  1916) st1/1/1 clip0   af60  rot3307 | L(  3498,  3869) d 2032 grab1 | los0 steer(  3525,  3690) wand01 hp95
+  F408  Z(  2934,  1917) st1/1/1 clip0   af1   rot3229 | L(  3546,  4323) d 2482 grab1 | los0 steer(  3525,  4334) wand01 hp95
+  F414  Z(  2934,  1916) st1/1/1 clip0   af7   rot3247 | L(  3486,  3951) d 2108 grab1 | los0 steer(  3516,  4059) wand01 hp95
+  F420  Z(  2934,  1917) st1/1/1 clip0   af13  rot3247 | L(  3397,  3624) d 1768 grab0 | los0 steer(  3397,  3624) wand01 hp95
+  F426  Z(  2934,  1917) st1/1/1 clip0   af19  rot3289 | L(  3396,  3256) d 1416 grab0 | los0 steer(  3396,  3256) wand01 hp95
+  F432  Z(  2934,  1916) st1/1/1 clip0   af25  rot3347 | L(  3435,  3035) d 1226 grab0 | los0 steer(  3435,  3035) wand01 hp95
+  F438  Z(  2934,  1916) st1/1/1 clip0   af31  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F444  Z(  2934,  1916) st1/1/1 clip0   af37  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F450  Z(  2934,  1916) st1/1/1 clip0   af43  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F456  Z(  2934,  1916) st1/1/1 clip0   af49  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F462  Z(  2934,  1916) st1/1/1 clip0   af55  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F468  Z(  2934,  1916) st1/1/1 clip0   af61  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F474  Z(  2934,  1916) st1/1/1 clip0   af2   rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F480  Z(  2934,  1916) st1/1/1 clip0   af8   rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F486  Z(  2934,  1916) st1/1/1 clip0   af14  rot3347 | L(  3432,  3032) d 1222 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F492  Z(  2934,  1917) st1/1/1 clip0   af20  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F498  Z(  2935,  1916) st1/1/1 clip0   af26  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F504  Z(  2935,  1916) st1/1/1 clip0   af32  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F510  Z(  2935,  1916) st1/1/1 clip0   af38  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F516  Z(  2935,  1916) st1/1/1 clip0   af44  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F522  Z(  2935,  1916) st1/1/1 clip0   af50  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F528  Z(  2935,  1916) st1/1/1 clip0   af56  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F534  Z(  2935,  1916) st1/1/1 clip0   af62  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F540  Z(  2935,  1916) st1/1/1 clip0   af3   rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F546  Z(  2935,  1916) st1/1/1 clip0   af9   rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F552  Z(  2935,  1916) st1/1/1 clip0   af15  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F558  Z(  2935,  1916) st1/1/1 clip0   af21  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F564  Z(  2935,  1916) st1/1/1 clip0   af27  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F570  Z(  2935,  1916) st1/1/1 clip0   af33  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F576  Z(  2935,  1916) st1/1/1 clip0   af39  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F582  Z(  2935,  1916) st1/1/1 clip0   af45  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F588  Z(  2935,  1916) st1/1/1 clip0   af51  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F594  Z(  2935,  1916) st1/1/1 clip0   af57  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F600  Z(  2935,  1916) st1/1/1 clip0   af63  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F606  Z(  2935,  1916) st1/1/1 clip0   af4   rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F612  Z(  2935,  1916) st1/1/1 clip0   af10  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F618  Z(  2935,  1916) st1/1/1 clip0   af16  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F624  Z(  2935,  1916) st1/1/1 clip0   af22  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F630  Z(  2935,  1916) st1/1/1 clip0   af28  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F636  Z(  2935,  1916) st1/1/1 clip0   af34  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F642  Z(  2935,  1916) st1/1/1 clip0   af40  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F648  Z(  2935,  1916) st1/1/1 clip0   af46  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F654  Z(  2935,  1916) st1/1/1 clip0   af52  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F660  Z(  2935,  1916) st1/1/1 clip0   af58  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F666  Z(  2935,  1916) st1/1/1 clip0   af64  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F672  Z(  2935,  1916) st1/1/1 clip0   af5   rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F678  Z(  2935,  1916) st1/1/1 clip0   af11  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F684  Z(  2935,  1916) st1/1/1 clip0   af17  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F690  Z(  2935,  1916) st1/1/1 clip0   af23  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F696  Z(  2935,  1916) st1/1/1 clip0   af29  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F702  Z(  2935,  1916) st1/1/1 clip0   af35  rot3343 | L(  3432,  3032) d 1221 grab0 | los0 steer(  3432,  3032) wand01 hp95
+  F708  Z(  2935,  1916) st1/1/1 clip0   af41  rot3381 | L(  3583,  3182) d 1422 grab1 | los0 steer(  3578,  3177) wand01 hp95
+  F714  Z(  2935,  1916) st1/1/1 clip0   af47  rot3385 | L(  3619,  3230) d 1481 grab1 | los0 steer(  3610,  3210) wand01 hp95
+  F720  Z(  2935,  1916) st1/1/1 clip0   af53  rot3389 | L(  3603,  3203) d 1450 grab1 | los0 steer(  3621,  3221) wand01 hp95
+  F726  Z(  2935,  1916) st1/1/1 clip0   af59  rot3385 | L(  3588,  3187) d 1428 grab1 | los0 steer(  3603,  3202) wand01 hp95
+  F732  Z(  2935,  1916) st1/1/1 clip0   af0   rot3395 | L(  3689,  3288) d 1565 grab1 | los0 steer(  3656,  3256) wand01 hp95
+  F738  Z(  2935,  1916) st1/1/1 clip0   af6   rot3395 | L(  3615,  3256) d 1502 grab1 | los0 steer(  3658,  3257) wand01 hp95
+  F744  Z(  2935,  1916) st1/1/1 clip0   af12  rot3347 | L(  3504,  3140) d 1349 grab1 | los0 steer(  3498,  3176) wand01 hp95
+  F750  Z(  2935,  1916) st1/1/1 clip0   af18  rot3383 | L(  3610,  3210) d 1459 grab1 | los0 steer(  3594,  3193) wand01 hp95
+  F756  Z(  2934,  1917) st1/1/1 clip0   af24  rot3385 | L(  3621,  3221) d 1473 grab1 | los0 steer(  3620,  3241) wand01 hp95
+  F762  Z(  2934,  1917) st1/1/1 clip0   af30  rot3381 | L(  3587,  3187) d 1428 grab1 | los0 steer(  3572,  3171) wand01 hp95
+  F768  Z(  2934,  1917) st1/1/1 clip0   af36  rot3381 | L(  3617,  3217) d 1468 grab1 | los0 steer(  3581,  3181) wand01 hp95
+  F774  Z(  2934,  1917) st1/1/1 clip0   af42  rot3401 | L(  3677,  3276) d 1548 grab1 | los0 steer(  3693,  3292) wand01 hp95
+  F780  Z(  2934,  1917) st1/1/1 clip0   af48  rot3337 | L(  3499,  3217) d 1417 grab1 | los0 steer(  3507,  3251) wand01 hp95
+  F786  Z(  2934,  1917) st1/1/1 clip0   af54  rot3369 | L(  3557,  3168) d 1397 grab1 | los0 steer(  3527,  3132) wand01 hp95
+  F792  Z(  2934,  1917) st1/1/1 clip0   af60  rot3341 | L(  3497,  3534) d 1712 grab1 | los0 steer(  3546,  3386) wand01 hp95
+  F798  Z(  2935,  1916) st1/1/1 clip0   af1   rot3197 | L(  3341,  4122) d 2243 grab1 | los0 steer(  3341,  4122) wand01 hp95
+  F804  Z(  2933,  1918) st1/1/1 clip0   af7   rot3193 | L(  3403,  4180) d 2310 grab1 | los0 steer(  3341,  4122) wand01 hp95
+  F810  Z(  2933,  1918) st1/1/1 clip0   af13  rot3217 | L(  3344,  3767) d 1894 grab0 | los0 steer(  3344,  3767) wand01 hp95
+  F816  Z(  2932,  1918) st1/1/1 clip0   af19  rot3243 | L(  3323,  3383) d 1516 grab0 | los0 steer(  3323,  3383) wand01 hp95
+  F822  Z(  2932,  1918) st1/1/1 clip0   af25  rot3349 | L(  3462,  3084) d 1280 grab0 | los0 steer(  3462,  3084) wand01 hp95
+  F828  Z(  2932,  1918) st1/1/1 clip0   af31  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F834  Z(  2932,  1918) st1/1/1 clip0   af37  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F840  Z(  2932,  1918) st1/1/1 clip0   af43  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F846  Z(  2932,  1918) st1/1/1 clip0   af49  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F852  Z(  2932,  1918) st1/1/1 clip0   af55  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F858  Z(  2932,  1918) st1/1/1 clip0   af61  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F864  Z(  2932,  1918) st1/1/1 clip0   af2   rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F870  Z(  2932,  1918) st1/1/1 clip0   af8   rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F876  Z(  2932,  1918) st1/1/1 clip0   af14  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F882  Z(  2935,  1916) st1/1/1 clip0   af20  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F888  Z(  2934,  1917) st1/1/1 clip0   af26  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F894  Z(  2934,  1917) st1/1/1 clip0   af32  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95
+  F900  Z(  2934,  1917) st1/1/1 clip0   af38  rot3347 | L(  3432,  3031) d 1220 grab0 | los0 steer(  3432,  3031) wand01 hp95

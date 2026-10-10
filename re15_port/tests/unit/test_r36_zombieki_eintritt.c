@@ -35,6 +35,7 @@
 #include "re15_skeleton.h"
 #include "re2_ems.h"
 #include "re15_zombieki_r36.h"
+#include "test_r36_zombieki_kopf.h"   /* NB2 Mangel 5: Leons Kopf aus PL00 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -83,6 +84,7 @@ static void load_bank_re2(uint8_t type)
 static void frame(void)
 {
     const unsigned char *raw; int len, id;
+    kopf_setzen(&g_actors[RE15_ACTOR_SLOT_PLAYER]);   /* NB2 Mangel 5: head_world wie der Renderer (PL00-Daten) */
     scd_vm_tick();
     re15_actor_step_all_walkers();
     re15_msg_tick(&raw, &len, &id);
@@ -178,6 +180,7 @@ typedef struct {
     int still_max;          /* laengste Strecke ohne Bewegung (Bilder), Leon < 5000, kein Griff */
     int32_t still_x, still_z, still_d; int still_ab;   /* wo/wann die laengste Strecke begann */
     int griff;              /* Bild des ersten Griffs */
+    int32_t dmin_spaet;     /* NB2: kleinster Abstand ab 300 Bildern nach dem ersten Griff (erreicht er Leon wieder?) */
     int los_end, sub_end, st_end;
     int32_t x_end, z_end;
     int klasse;             /* 0 ok, 1 PASSIV, 2 KLEMME, 3 liegt (Skript-Wecker) */
@@ -197,7 +200,7 @@ static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zst
         if (!e->active || !zombie_typ(e->type)) continue;
         zstat_t *z = &zs[(*nz)++]; memset(z, 0, sizeof *z);
         z->slot = s; z->typ = e->type; z->grid = e->grid_id; z->st0 = e->state; z->sub0 = e->sub_state_1;
-        z->x0 = e->x; z->z0 = e->z; z->dmin = 1 << 30;
+        z->x0 = e->x; z->z0 = e->z; z->dmin = 1 << 30; z->dmin_spaet = 1 << 30;
     }
     if (modus == 1) {
         int ok = 0; for (int k = 0; k < *nz; k++) if (zs[k].slot == ziel_slot) ok = 1;
@@ -232,10 +235,13 @@ static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zst
             if (fr == 1) { z->st0 = e->state; z->sub0 = e->sub_state_1; }   /* Basis = Zustand NACH dem INIT (Bild 1) */
             else if (!z->reakt && (e->state != z->st0 || e->sub_state_1 != z->sub0)) z->reakt = fr;
             if (!z->griff && grab && d < 1500) z->griff = fr;
+            if (z->griff && fr >= z->griff + 300 && d < z->dmin_spaet) z->dmin_spaet = d;
             if (!z->reakt && d < 5000 && re15_ai_arc_test(e, pl->x, pl->z, 1024) == 0) z->kegel_nah++;
             if ((fr % 30) == 0) {
                 long long dx = e->x - ax[k], dz = e->z - az[k];
-                if (dx * dx + dz * dz < 40LL * 40LL && d < 5000 && !grab && e->state == 1) {
+                if (dx * dx + dz * dz < 40LL * 40LL && d < 5000 && !grab && e->state == 1 && e->sub_state_1 <= 1 && z->reakt && fr - 30 >= z->reakt) {
+                                                   /* NB2: nur AUFRECHT (Sub 0 Stand / Sub 1 Gang) — Sub 5 = RE2-Knockdown EXEC[5]
+                                                    * (Liegezeit +0x15A @0x80103548-64) liegt, Abnahme 1 Abschnitt 2.3 */
                     if (still[k] == 0) { z->still_x = e->x; z->still_z = e->z; z->still_d = d; z->still_ab = fr - 30; }
                     still[k] += 30;
                     if (still[k] > z->still_max) z->still_max = still[k];
@@ -359,7 +365,31 @@ int main(int argc, char **argv)
     if (mess) return 0;
     CHECK(n_faelle > 200, "Zensus deckt %d Faelle (Eintritt x Zombie x Szenario)", n_faelle);
     CHECK(passiv == 0, "kein STEHENDER Zombie bleibt passiv (nie reagiert, Leon >= 120 Bilder < 5000 im Kegel): %d", passiv);
-    printf("(KLEMME %d: Faelle nach Griff/Sturz bzw. an Raumgrenzen — Dossier NB1, OFFEN Taschenfall ROOM1010)\n", klemme);
+    CHECK(klemme == 0, "kein Zombie tritt nach einer Reaktion >= 300 Bilder AUFRECHT auf der Stelle (Leon < 5000, > 1500): "
+          "KLEMME %d (NB2 Mangel 1: Taschenfall ROOM1010<-1020 Slot 1)", klemme);
+    {   /* NB2 Mangel 1 — der TASCHENFALL wortgleich: Tuer 1020 -> 1010 Cut 0, Leon geht auf Slot 1 zu, Griff, Rueckstoss
+         * EXEC[3] P8 (@0x80102CA0-AC). Gegenprobe (Wurf-Klemme aus) = Befund: Slot 1 tritt in der Tasche (2934,1917)
+         * >= 300 Bilder auf der Stelle (KLEMME). Mit der Wurf-Klemme: keine KLEMME, und er erreicht Leon wieder (< 1500). */
+        int idx = -1;
+        for (int i = 0; i < s_nein; i++) if (s_ein[i].ziel == 0x1010 && s_ein[i].von == 0x1020 && s_ein[i].cut == 0) { idx = i; break; }
+        static zstat_t zz[RE15_ACTOR_MAX]; int nzz = 0;
+        int kl[2] = { -1, -1 }, still[2] = { 0, 0 }, griff[2] = { 0, 0 }; int32_t spaet[2] = { 0, 0 }, sx[2] = { 0, 0 }, sz[2] = { 0, 0 };
+        for (int h = 0; h < 2 && idx >= 0; h++) {
+            re15_r36_wurf_klemme_enable(h);
+            if (!lauf(&s_ein[idx], 1, 1, 1500, zz, &nzz)) continue;
+            for (int k = 0; k < nzz; k++) if (zz[k].slot == 1) {
+                kl[h] = zz[k].klasse; still[h] = zz[k].still_max; griff[h] = zz[k].griff; spaet[h] = zz[k].dmin_spaet;
+                sx[h] = zz[k].still_x; sz[h] = zz[k].still_z;
+            }
+        }
+        re15_r36_wurf_klemme_enable(1);
+        CHECK(idx >= 0 && kl[0] == 2 && still[0] >= 300, "Gegenprobe Taschenfall (Wurf-Klemme aus): Slot 1 Griff Bild %d, dann %d Bilder auf der Stelle "
+              "bei (%d,%d) = Befund", griff[0], still[0], (int)sx[0], (int)sz[0]);
+        CHECK(kl[1] != 2 && still[1] < 300 && griff[1] > 0, "Taschenfall mit Wurf-Klemme: Griff Bild %d, laengster Stillstand aufrecht %d Bilder (< 300)",
+              griff[1], still[1]);
+        CHECK(spaet[1] < 1500, "Taschenfall mit Wurf-Klemme: Slot 1 erreicht Leon nach dem Rueckstoss wieder (kleinster Abstand ab Griff+300: %d)",
+              (int)spaet[1]);
+    }
     {   /* Kriecher-Lauern: Leon 900 VOR dem Gesicht von ROOM1010 Slot 4 (Deskriptor 0x81 -> RE2-Zeile 1 `0x201`
          * @0x80100b6c-74) -> Griff 0x101 binnen 30 Bildern (DECIDE[2] @0x80103A70: Kegel 512, dist < 0x514, Sicht). */
         eintritt_t ein; memset(&ein, 0, sizeof ein);

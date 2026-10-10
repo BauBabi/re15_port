@@ -32,6 +32,8 @@
 #include "re15_skeleton.h"
 #include "re2_ems.h"
 #include "re15_zombieki_r36.h"
+#include "re15_md1.h"
+#include "test_r36_zombieki_kopf.h"   /* NB2 Mangel 5: Leons Kopf aus PL00 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -77,6 +79,7 @@ static void load_bank_re2(uint8_t type)
 static void frame(void)
 {
     const unsigned char *raw; int len, id;
+    kopf_setzen(&g_actors[RE15_ACTOR_SLOT_PLAYER]);   /* NB2 Mangel 5: head_world wie der Renderer (PL00-Daten) */
     scd_vm_tick();
     re15_actor_step_all_walkers();
     re15_msg_tick(&raw, &len, &id);
@@ -296,8 +299,149 @@ static summe_t zensus(int vorher, unsigned nur, int lauf_bilder)
     return su;
 }
 
+/* NB2 (Abnahme 1, Mangel 2): alle RDTs aller Stages — welche Nibble-3-Zellen bekommen eine Oberkante (Grund, Objekt,
+ * Lage zu den BLK-Zonen)? `oberkante [nur-hex]`. */
+static void oberkante_liste(unsigned nur)
+{
+    int n_zellen = 0, n_ok = 0;
+    for (unsigned st = 1; st <= 7; st++)
+        for (unsigned r = 0; r < 0x100; r++)
+            for (unsigned v = 0; v < 2; v++) {
+                uint16_t raum = (uint16_t)((st << 12) | (r << 4) | v);
+                if (nur && raum != nur) continue;
+                char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE%X/ROOM%04X.RDT", st, raum);
+                s_raw = slurp(p, &s_n);
+                if (!s_raw) continue;
+                if (!eintreten(raum, 0)) { free(s_raw); s_raw = NULL; continue; }
+                for (int i = 0; i < s_rdt.sca_count; i++) {
+                    const re15_sca_entry_t *c = &s_rdt.sca[i];
+                    if ((c->floor & 0x0f) != 3) continue;
+                    n_zellen++;
+                    int g = 0; int32_t top = re15_r36_zelle_oberkante(c, &g);
+                    if (!top) continue;
+                    n_ok++;
+                    int inzone = -1;
+                    for (int b = 0; b < s_rdt.block_count; b++) {
+                        const uint8_t *nd = s_rdt.blocks + b * 12;
+                        int16_t x1 = (int16_t)(nd[0] | nd[1] << 8), z1 = (int16_t)(nd[2] | nd[3] << 8);
+                        int16_t x2 = (int16_t)(nd[4] | nd[5] << 8), z2 = (int16_t)(nd[6] | nd[7] << 8);
+                        if ((int32_t)c->x >= x1 && (int32_t)c->x + (int32_t)c->width <= x2 && (int32_t)c->z >= z1 && (int32_t)c->z + (int32_t)c->density <= z2) { inzone = b; break; }
+                    }
+                    printf("%04X #%-3d x %6d..%6d z %6d..%6d (%5dx%5d) t%d u0=%02x u1=%02x fl=%02x top %6d grund %d zone %d |", raum, i,
+                           (int)c->x, (int)c->x + (int)c->width, (int)c->z, (int)c->z + (int)c->density, (int)c->width, (int)c->density,
+                           c->type, c->u0, c->u1, c->floor, (int)top, g, inzone);
+                    for (int k = 0; k < (int)g_scd.prop_count && k < RE15_SCD_MAX_PROPS; k++) {
+                        const int32_t px = g_scd.props[k].x, pz = g_scd.props[k].z;
+                        if (g_scd.props[k].parent_obj >= 0 || g_scd.props[k].y >= 0) continue;
+                        if ((uint32_t)(px - (int32_t)c->x) >= (uint32_t)c->width || (uint32_t)(pz - (int32_t)c->z) >= (uint32_t)c->density) continue;
+                        printf(" obj%d(%d,%d,%d r%d box %d,%d,%d/%d,%d,%d fl%04x)", k, (int)px, (int)g_scd.props[k].y, (int)pz, (int)g_scd.props[k].rot_y,
+                               g_scd.props[k].box_cx, g_scd.props[k].box_cy, g_scd.props[k].box_cz, g_scd.props[k].box_hx, g_scd.props[k].box_hy,
+                               g_scd.props[k].box_hz, g_scd.props[k].flags);
+                        int oid = g_scd.props[k].obj_id; re15_md1_t md;
+                        if (oid < RE15_RDT_MAX_PROPS && s_rdt.prop_md1[oid] && re15_md1_parse(s_rdt.prop_md1[oid], s_rdt.prop_md1_size[oid], &md) == 0) {
+                            int mn[3] = { 99999, 99999, 99999 }, mx[3] = { -99999, -99999, -99999 }, nv = 0;
+                            for (int pass = 0; pass < 2 * md.mesh_count; pass++) {
+                                const re15_md1_mesh_t *ms = &md.meshes[pass / 2];
+                                const re15_md1_vertex_t *vv = (pass & 1) ? ms->quad_vertices : ms->tri_vertices; int cnt = (pass & 1) ? ms->quad_vertex_count : ms->tri_vertex_count;
+                                for (int q = 0; q < cnt && vv; q++) {
+                                    int a[3] = { vv[q].x, vv[q].y, vv[q].z }; nv++;
+                                    for (int ax = 0; ax < 3; ax++) { if (a[ax] < mn[ax]) mn[ax] = a[ax]; if (a[ax] > mx[ax]) mx[ax] = a[ax]; }
+                                }
+                            }
+                            printf("[md1 id%d nv%d x%d..%d y%d..%d z%d..%d]", oid, nv, mn[0], mx[0], mn[1], mx[1], mn[2], mx[2]);
+                        }
+                    }
+                    printf("\n");
+                }
+                free(s_raw); s_raw = NULL;
+            }
+    printf("\n%d Nibble-3-Zellen, %d mit Oberkante\n", n_zellen, n_ok);
+}
+
+/* NB2 (Abnahme 1, Mangel 2): DURCHWAND-Zensus — alle RDTs aller Stages (beide Varianten), jeder Zombie (Typ 0x10/11/12/16/18,
+ * auch Kriecher), Raster von Leon-Plaetzen (Schritt 250, 600 <= d < 0x1388 @0x80101308, Leon-Klemme frei r 450 Maske 1, in einer
+ * BLK-Zone): wo OEFFNET die Hoehenregel die Sicht, die ohne sie (jede Nibble-3-Zelle blockt) zu ist — und ueber WELCHE Zellen
+ * (gekreuzte Nibble-3-Zellen mit Oberkante). Ergebnis je (Raum, Zelle). Rueckgabe: Zahl geoeffneter Plaetze; *wand1040 = davon
+ * ueber ROOM1040/1041 #4 (die Wand der Abnahme 1). */
+typedef struct { uint16_t raum; int zelle; int16_t x, z; uint16_t w, d; int32_t top; long n, kegel; } dw_t;
+static dw_t s_dw[400]; static int s_ndw = 0;
+static long durchwand(unsigned nur, int ausgabe, long *wand1040, int modus)   /* modus 1 = NB2 (Beleg-Tabelle), 2 = NB1-Abbildung */
+{
+    long offen = 0, plaetze = 0; int nzomb = 0; s_ndw = 0; *wand1040 = 0;
+    re15_r36_zombie_sicht_enable(1);
+    for (unsigned st = 1; st <= 6; st++)
+        for (unsigned r = 0; r < 0x100; r++)
+            for (unsigned v = 0; v < 2; v++) {
+                uint16_t raum = (uint16_t)((st << 12) | (r << 4) | v);
+                if (nur && raum != nur) continue;
+                char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE%X/ROOM%04X.RDT", st, raum);
+                s_raw = slurp(p, &s_n);
+                if (!s_raw) continue;
+                if (!eintreten(raum, 0)) { free(s_raw); s_raw = NULL; continue; }
+                for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+                    re15_actor_t *e = &g_actors[s];
+                    if (!e->active || !zombie_typ(e->type)) continue;
+                    nzomb++;
+                    int band = re15_collision_band_from_y(e->y);
+                    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                    for (int32_t dx = -5000; dx <= 5000; dx += 250)
+                        for (int32_t dz = -5000; dz <= 5000; dz += 250) {
+                            int32_t px = e->x + dx, pz = e->z + dz;
+                            int32_t dist = isqrt64((long long)dx * dx + (long long)dz * dz);
+                            if (dist < 600 || dist >= 0x1388) continue;
+                            if (re15_collision_box_blocked(&s_rdt, px, pz, band, 450, 1u)) continue;
+                            if (re15_nav_zone_count() > 0 && re15_nav_zone_from_pos((int16_t)px, (int16_t)pz) == 0xff) continue;
+                            plaetze++;
+                            pl->x = px; pl->z = pz; pl->y = e->y; pl->floor = e->floor; kopf_setzen(pl);   /* Kopf aus PL00 (NB2 M5) */
+                            re15_r36_zombie_hoehe_enable(0); int s0 = re15_r36_zombie_sicht_frei(e, pl);
+                            re15_r36_zombie_hoehe_enable(modus); int s1 = re15_r36_zombie_sicht_frei(e, pl);
+                            if (!s1 || s0) continue;
+                            offen++;
+                            int kegel = re15_ai_arc_test(e, px, pz, 1024) == 0;
+                            unsigned mask = e->sca_mask ? e->sca_mask : 4u;
+                            int gesehen[64]; int ng = 0, w1040 = 0;   /* je Platz jede Zelle EINMAL (SCA-Saetze stehen je Partition mehrfach) */
+                            for (int i = 0; i < s_rdt.sca_count; i++) {
+                                const re15_sca_entry_t *c = &s_rdt.sca[i];
+                                if ((c->floor >> 4) != e->floor || (c->floor & 0x0f) != 3 || !(mask & c->u0)) continue;
+                                if (!re15_r36_los_zelle_kreuzt(e->x, e->z, px, pz, c)) continue;
+                                int32_t top = re15_r36_zelle_oberkante(c, NULL);
+                                if (!top) continue;
+                                int k = 0;
+                                for (k = 0; k < s_ndw; k++)
+                                    if ((s_dw[k].raum & 0xFFF0u) == (raum & 0xFFF0u) && s_dw[k].x == c->x && s_dw[k].z == c->z && s_dw[k].w == c->width && s_dw[k].d == c->density) break;
+                                if (k == s_ndw && s_ndw < 400) { s_dw[k].raum = raum; s_dw[k].zelle = i; s_dw[k].x = c->x; s_dw[k].z = c->z; s_dw[k].w = c->width; s_dw[k].d = c->density; s_dw[k].top = top; s_dw[k].n = 0; s_dw[k].kegel = 0; s_ndw++; }
+                                int neu = 1; for (int q = 0; q < ng; q++) if (gesehen[q] == k) neu = 0;
+                                if (k < s_ndw && neu) { s_dw[k].n++; if (kegel) s_dw[k].kegel++; if (ng < 64) gesehen[ng++] = k; }
+                                if ((raum & 0xFFF0u) == 0x1040u && c->x == -28641 && c->width == 2052) w1040 = 1;
+                            }
+                            if (w1040) (*wand1040)++;
+                        }
+                }
+                free(s_raw); s_raw = NULL;
+            }
+    re15_r36_zombie_hoehe_enable(1);
+    if (ausgabe) {
+        for (int k = 0; k < s_ndw; k++)
+            printf("  %04X #%-3d x %6d..%6d z %6d..%6d (%5dx%5d) Oberkante %6d: %5ld Plaetze geoeffnet (%ld im Kegel)\n", s_dw[k].raum, s_dw[k].zelle,
+                   (int)s_dw[k].x, (int)s_dw[k].x + (int)s_dw[k].w, (int)s_dw[k].z, (int)s_dw[k].z + (int)s_dw[k].d, (int)s_dw[k].w, (int)s_dw[k].d,
+                   (int)s_dw[k].top, s_dw[k].n, s_dw[k].kegel);
+        printf("DURCHWAND: %d Zombies, %ld Plaetze, Hoehenregel oeffnet %ld (davon ueber ROOM1040 #4: %ld)\n", nzomb, plaetze, offen, *wand1040);
+    }
+    return offen;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc > 1 && strcmp(argv[1], "oberkante") == 0) { oberkante_liste(argc > 2 ? (unsigned)strtoul(argv[2], NULL, 16) : 0u); return 0; }
+    if (argc > 1 && strcmp(argv[1], "kopf") == 0) {   /* NB2 Mangel 5: Leons Kopf (Knochen 8) je Clip, Bild 0 */
+        if (!kopf_laden()) { printf("PL00 nicht ladbar\n"); return 1; }
+        for (int c = 0; c < s_kopf_anim.clip_count; c++) {
+            int32_t hm[3]; int fc = s_kopf_anim.clips[c].frame_count;
+            if (kopf_modell(c, 0, hm) == 0) printf("Clip %2d (%3d Bilder): Kopf Bild 0 (%d,%d,%d)\n", c, fc, (int)hm[0], (int)hm[1], (int)hm[2]);
+        }
+        return 0;
+    }
+    if (argc > 1 && strcmp(argv[1], "durchwand") == 0) { long w = 0; durchwand(argc > 2 ? (unsigned)strtoul(argv[2], NULL, 16) : 0u, 1, &w, argc > 3 ? atoi(argv[3]) : 1); return 0; }
     const int mess = (argc > 1 && strcmp(argv[1], "mess") == 0);
     const int vorher = (argc > 1 && strcmp(argv[1], "vorher") == 0) ? 1 : (argc > 1 && strcmp(argv[1], "vornb1") == 0) ? 2 : 0;   /* Gegenproben */
     unsigned nur = (argc > 2) ? (unsigned)strtoul(argv[2], NULL, 16) : 0u;
@@ -314,7 +458,7 @@ int main(int argc, char **argv)
         if (s_raw && eintreten(0x1010, 0)) {
             re15_actor_t *e = &g_actors[2], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
             if (e->active && e->x == 205 && e->z == 7248) {
-                pl->x = 3669; pl->z = 3962; pl->y = 0;
+                pl->x = 3669; pl->z = 3962; pl->y = 0; kopf_setzen(pl);
                 re15_r36_zombie_sicht_enable(1);
                 re15_r36_zombie_hoehe_enable(0); sv = re15_r36_zombie_sicht_frei(e, pl);
                 re15_r36_zombie_hoehe_enable(1); sn = re15_r36_zombie_sicht_frei(e, pl);
@@ -340,6 +484,50 @@ int main(int argc, char **argv)
     CHECK(n.steht_frei == 0, "kein Zombie steht 480 Bilder bei freier Sicht (%ld)", n.steht_frei);
     CHECK(n.steht_moebel == 0, "kein Zombie steht 480 Bilder NUR hinter belegten Moebeln (%ld)", n.steht_moebel);
     CHECK(n.steht == n.steht_wand, "jeder stehende Zombie-Platz (%ld) liegt hinter einer Nibble-3-Zelle ohne belegte Hoehe = Wand (%ld)", n.steht, n.steht_wand);
+
+    /* NB2 Mangel 2 (Abnahme 1): WAENDE sind keine Moebel. (1) Durchwand-Zensus aller Stages (jeder Zombie, Raster 250 bis
+     * 0x1388, begehbar + BLK-Zone): Gegenprobe NB1-Abbildung oeffnet Plaetze ueber die Wand ROOM1040 #4 (Befund); NB2 oeffnet
+     * dort 0, und JEDE Zelle, ueber die die Hoehenregel ueberhaupt Sicht oeffnet, steht in der Beleg-Tabelle. */
+    {
+        long w_alt = 0, w_neu = 0;
+        long o_alt = durchwand(0, 0, &w_alt, 2);
+        CHECK(w_alt > 0, "Gegenprobe NB1-Abbildung: Hoehenregel oeffnet %ld Plaetze, davon %ld ueber die Wand ROOM1040 #4 (Befund Abnahme 1)", o_alt, w_alt);
+        long o_neu = durchwand(0, 1, &w_neu, 1);
+        CHECK(w_neu == 0, "NB2: 0 Plaetze ueber die Wand ROOM1040 #4 geoeffnet (%ld; gesamt %ld)", w_neu, o_neu);
+        static const struct { uint16_t raum; int16_t x, z; uint16_t w, d; } beleg[] = {
+            { 0x1010, -50, 1550, 2500, 4350 }, { 0x1010, 1850, 4100, 1200, 1200 }, { 0x1010, 1850, 2200, 1200, 1200 }, { 0x1010, -700, 2800, 1200, 1200 },
+            { 0x1220, -27600, -11700, 1950, 3650 }, { 0x1220, -27600, -19750, 1950, 4150 }, { 0x1220, -13475, -23600, 2125, 3800 } };
+        int fremd = 0;
+        for (int k = 0; k < s_ndw; k++) {
+            int ok = 0;
+            for (unsigned b = 0; b < sizeof beleg / sizeof beleg[0]; b++)
+                if ((s_dw[k].raum & 0xFFF0u) == beleg[b].raum && s_dw[k].x == beleg[b].x && s_dw[k].z == beleg[b].z && s_dw[k].w == beleg[b].w && s_dw[k].d == beleg[b].d) ok = 1;
+            if (!ok) { fremd++; printf("  fremde Zelle %04X #%d (%d,%d %ux%u)\n", s_dw[k].raum, s_dw[k].zelle, (int)s_dw[k].x, (int)s_dw[k].z, s_dw[k].w, s_dw[k].d); }
+        }
+        CHECK(o_neu > 0 && fremd == 0, "NB2: die Hoehenregel oeffnet %ld Plaetze nur ueber belegte Moebel-Zellen (%d Zellen, fremd %d)", o_neu, s_ndw, fremd);
+    }
+    /* (2) Die exe-Lage der Abnahme 1 (ROOM1040, Leon im Westgang (-29900,6000)): Sicht-Bit der Ostgang-Zombies. */
+    {
+        char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/STAGE1/ROOM1040.RDT");
+        s_raw = slurp(p, &s_n);
+        int sicht[3] = { 0, 0, 0 }, ost = 0;
+        for (int m = 1; m <= 2 && s_raw; m++) {
+            if (!eintreten(0x1040, 0)) break;
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            pl->x = -29900; pl->z = 6000; pl->y = 0; pl->floor = 0; kopf_setzen(pl);
+            re15_r36_zombie_hoehe_enable(m);
+            for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+                re15_actor_t *e = &g_actors[s];
+                if (!e->active || !zombie_typ(e->type) || e->x <= -26589) continue;   /* oestlich der Wand #4 (x -28641..-26589) */
+                if (m == 1) ost++;
+                if (re15_r36_zombie_sicht_frei(e, pl)) sicht[m]++;
+            }
+        }
+        re15_r36_zombie_hoehe_enable(1);
+        free(s_raw); s_raw = NULL;
+        CHECK(ost > 0 && sicht[2] > 0, "Gegenprobe ROOM1040 Leon im Westgang, NB1-Abbildung: %d von %d Ostgang-Zombies 'sehen' ihn durch die Wand", sicht[2], ost);
+        CHECK(sicht[1] == 0, "ROOM1040 Leon im Westgang, NB2: %d von %d Ostgang-Zombies sehen ihn (0 = Wand haelt)", sicht[1], ost);
+    }
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

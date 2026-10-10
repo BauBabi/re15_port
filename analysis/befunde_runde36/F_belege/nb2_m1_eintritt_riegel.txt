@@ -1,0 +1,10 @@
+266 Faelle (Eintritt x Zombie x Szenario): PASSIV 0, KLEMME 0
+ok:   Zensus deckt 266 Faelle (Eintritt x Zombie x Szenario)
+ok:   kein STEHENDER Zombie bleibt passiv (nie reagiert, Leon >= 120 Bilder < 5000 im Kegel): 0
+ok:   kein Zombie tritt nach einer Reaktion >= 300 Bilder AUFRECHT auf der Stelle (Leon < 5000, > 1500): KLEMME 0 (NB2 Mangel 1: Taschenfall ROOM1010<-1020 Slot 1)
+ok:   Gegenprobe Taschenfall (Wurf-Klemme aus): Slot 1 Griff Bild 26, dann 450 Bilder auf der Stelle bei (2934,1916) = Befund
+ok:   Taschenfall mit Wurf-Klemme: Griff Bild 26, laengster Stillstand aufrecht 0 Bilder (< 300)
+ok:   Taschenfall mit Wurf-Klemme: Slot 1 erreicht Leon nach dem Rueckstoss wieder (kleinster Abstand ab Griff+300: 85)
+ok:   Kriecher ROOM1010 Slot 4 lauert und greift, sobald Leon 900 vor dem Gesicht steht (Bild 2)
+ok:   Gegenprobe ROOM10B0 (Haken aus): 4 Terrassen-Zombies, groesster Endabstand 13025 (Befund: weg nach Osten)
+ok:   ROOM10B0 mit Haken: alle 4 Terrassen-Zombies enden vor Leon an der Kante (groesster Endabstand 3643 <= 4000)

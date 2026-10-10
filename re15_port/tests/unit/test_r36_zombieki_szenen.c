@@ -33,6 +33,7 @@
 #include "re15_fade.h"
 #include "re15_skeleton.h"
 #include "re2_ems.h"
+#include "test_r36_zombieki_kopf.h"   /* NB2 Mangel 5: Leons Kopf aus PL00 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -82,6 +83,7 @@ static void load_bank_re2(uint8_t type)
 static void frame(uint16_t held, uint16_t edge)
 {
     const unsigned char *raw; int len, id;
+    kopf_setzen(&g_actors[RE15_ACTOR_SLOT_PLAYER]);   /* NB2 Mangel 5: head_world wie der Renderer (PL00-Daten) */
     scd_vm_tick();
     re15_actor_step_all_walkers();
     re15_msg_tick(&raw, &len, &id);
