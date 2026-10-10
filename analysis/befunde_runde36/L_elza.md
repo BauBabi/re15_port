@@ -124,3 +124,70 @@ Irons-Texte 1151.
   1,13 s, Anschlag 270 ms, Nulldurchgang 0,07 (stimmhaftes Sterbe-Stoehnen).
 * Zeitpunkt: Roys Todes-Clip startet im Bild von Schuss 2 (@0x020DE nach @0x020D6); der Treffer kommt mit dem
   Schuss -> Sterbe-Ton im Bild des Schuss-Tons (Ursache vor Wirkung, beide im selben Takt).
+
+### P1 Fenster + Kraehe ROOM1121
+* ROOM1121.RDT == ROOM1120.RDT (cmp), Hintergrund ROOM112.BSS ohne Variante -> die Schadens-Ueberlagerung der
+  Runde 35 (gen/fenster1120_schaden.inc, 309 Pixel-Operationen, Cut 1) passt unveraendert. Leon-Ereignis (Splitter,
+  Knall, (9,79)) bleibt Leon; bei Elza "bereits immer kaputt" = ohne Ereignis.
+* Zusatz-Kraehe = die Fensterkraehe, schon hereingeflogen:
+  - Form: RE1.5-Sce_em_set wie die drei Raum-Kraehen main00 @0x00D0C/@0x00D20/@0x00D34 (`44 0n 21 00 00 00 00 a7..a9`,
+    alle y = 0), Gegner-Slot 3 (main00 belegt 0..2).
+  - Lage: Ende des 7-Bilder-Durchflugs der Leon-Fensterkraehe (RE2-Perch Sub 2 P2 @0x801038d8..: speed 300, -10/Bild
+    @0x80103900-04, 7 Bilder @0x801038a0 `+0x219 = 6`), gemessen probe_r36_elza_mess 1120 9:73: Start
+    (5400,-2500,12100) -> Bild 8 (5327,-2500,10217) -> am Boden (5327, 0, 10217). Gier 0x0418 (= Fensterkraehe).
+  - Kill-Flag: Zensus pc[7] aller Sce_em_set + Set/Ck(7,..) in den 132 RDTs von STAGE1-3 (Zone 7 =
+    re15_em_status_zone, Stage 1-3); frei u.a. 0xA0-0xA3, 0xAC, 0xAE, 0xAF; nicht in der Montage-Liste der Runde 35
+    (test_r35_cut1150.c frei_zone7). Gewaehlt 0xAC (neben den 1120-Kraehen 0xA7-0xA9). Erlegt -> Gate @0x80042128-38.
+  - Spawn: Port-Programm (22 B: Sce_em_set + Evt_end) ueber Ereignis 26 (VERTRAG L), Weiche in re15_fenster1120_ereignis.
+
+### P2 Irons ROOM1151
+* Original (ROOM1151 main00 @0x00E6A Irons, sub00 -> sub02 @0x00EB8 Plc_motion(0,3)+@0x00EBC Plc_flg 4 = Atem-Loop;
+  Slot 2 @0x00D92 sce 5 -> work_vars[0] = 2 -> sub01 @0x00E9E -> sub03 msg 2 "I'll be fine"). NUTZER-VORGABE: tot.
+* Totenpose = Leons Irons nach der Todesszene (Runde 35 Spur L): Clip 2 Bild 89 gehalten (Halt @0x80050da4). ROOM1151
+  RBJ rec1 (Datei 0x1387C) = ROOM1150 rec1 {36,60,90,35,30,102,34} -> Clip 2 hat 90 Bilder, Bild 89 = Ende.
+* Kopf: der NPC-Wurzelknoten ruft die Kopf-FSM 0x80037358 in JEDEM Takt (Irons-Wurzel 0x8011d140: @0x8011d278
+  `jal 0x80037358`, nur @0x8011d160 Pause / @0x8011d180 +0x9&0x20 springen darueber). Daten-Weg, die Verfolgung zu
+  beenden = Plc_neck: Modus 0 -> +0x1b8 = 0x80|0x12 (@0x80041ed8-f10), Geschwindigkeit pc[8..9] -> +0x9e/+0x9f
+  (@0x80041f5c-6c); der Slew bewegt um das woertliche Byte (@0x800375dc / @0x800377a0), 0 haelt die Achse (ROOM10D0
+  Plc_neck mit 0x0A00 = Gier steht). Mit Akkus 0 liegt der Kopf genau auf dem Clip.
+* Text: "He has already passed..." (NUTZER-VORGABE woertlich), Form `04 02 .. 01 00` wie ROOM1021 msg 9 @0x024FB;
+  Glyphen aus ROOM1011 @0x01233 ("He has"), ROOM10D0 @0x02226 (" already"), ROOM1011 @0x01239 (" passed"),
+  @0x012BA ("..."). Id 20 (VERTRAG 1151 L 20..23). Platz: Slot 2 per Aot_reset-Semantik auf sce 1 (Flags 0x31 des
+  Platzes, Maske 0xffff wie alle 524 sce-1-Saetze) -> work_vars[0] wird nie 2, sub03/msg 2 laufen nie.
+
+## 4. Umsetzung
+
+| Datei | Inhalt |
+|---|---|
+| engine/src/elza_r36.c + include/re15_elza_r36.h (NEU) | P2 Installer (Totenpose, Kopf, Text 20, Slot 2); Anker-Tabelle (Raum, Datei-Offset, 8-Byte-Signatur, Aktion, Verzug) fuer P3-P6; Takt fuer verzoegerte Aktionen; Stimmen-Dateistamm (1011,24)->main16.5; Messschiene RE15_ELZA_LOG |
+| engine/src/fenster_1120.c + include/re15_fenster1120.h (Elza-Zweig) | schaden_sichtbar in 1121 = Cut 1; Zusatz-Kraehe per Port-Programm Ereignis 26 |
+| platform/pc/src/elza_se_pc.c (NEU) | Lader der Mini-Bank ELZASE.VBS, re15_audio_re2_elza_se, Haken-Init |
+| engine/src/gen/re2_elza_bank.inc + shared_assets/RE2/ELZASE.VBS (NEU) | tools/r36_l/re2_elza_se_cut.py --install (Satz 0 ROOM1140 0x25, Satz 1 ROOM40A0 0x08, bytegleich bis auf Satz-/Tonindex) |
+| engine/src/scd_vm.c (3 Haken) | Anker-Scan in scd_register_current_rdt, Opcode-Haken (Wachposten Ankerzahl), Takt neben re15_irons_tod_tick |
+| engine/src/scd_room_setup.c (1 Zeile + include) | re15_elza_r36_install am Ende des Installer-Blocks ("Runde 36 Spur L") |
+| platform/pc/main.c (2 Zeilen) | Boot-/CONTINUE-Weg: re15_elza_r36_install; re15_pc_elza_se_init neben re15_pc_glas1120_init |
+| platform/pc/src/audio_pc.c (klein) | re15_audio_se_play_bank (Durchreiche auf se_play_layers); Stimmen-Lader: Dateistamm ueber re15_elza_stimme_datei, Log nennt den echten Stamm |
+
+Konstanten mit Beleg: Anker @0x020F8 (+20, RE2 ROOM1010 @0x01C1C), @0x020CE/@0x020D6 (+1, RE2 ROOM1010 sub31
+@0x02680), @0x020DE (+1, im Takt von Schuss 2), @0x00D54 (0); Toene RE2 ROOM1140 Satz 0x25 / ROOM40A0 Satz 0x08, RE1.5
+Raum-SE 5 (@0x80106da8); Kraehe Slot 3/Typ 0x21/Kill 0xAC/(5327,0,10217)/0x0418; Irons Clip 2/Bild 89/Neck 0x92,0;
+Nachrichten 20 (1151) / 24 (1011).
+
+## 5. Messung nachher (echte exe, Kopie re15_pc_r36l.exe)
+
+* P1 (n1, Raumwechsel-Weg GOTO, Cut 1 Bild 90): `[spawn-diag]` 4 Kraehen, Slot 3 `pos=(5327,0,10217) dir=1048`;
+  state.log Aktor 4 Typ 0x21 @(5327,10217). Bildvergleich Leon 1120 / Elza 1121 an den 309 Schadens-Pixeln:
+  309/309 = LEON (+) Op exakt, 309 verschieden. Bild: Fenster mit Spruengen, die vierte Kraehe am Fenster.
+* P2 (n2b, Spielstand + CONTINUE, Boot-Weg): Irons alle Bilder `[1 t=45 st=4 ss1=0 ss2=2 .. mo=2 af=89]`;
+  Anklicken (AOT-Feuer-Pfad, Bild 60) -> `msg(a=1 fsm=1 id=20)`; Framedump Cut 7: Irons liegt tot (Arm herab) auf
+  der Liege, Untertitel "He has already passed...".
+* P3 (n3, CONTINUE in 1211 im Auto-Feld): elza.log `F924 Anker @0x020F8 -> Aktion 1`; Mitschnitt (CAP_SYNC):
+  Spitze 9363 in Bild 935 (Median 1900) — der Ton setzt in 924 ein, die Welle hat ihren Anschlag ~11 Bilder spaeter
+  (Ton-Tonhoehe Note 67 gegen Mitte 89 = langsam abgespielt).
+* P4/P5 (n4b, AOT-Ereignis 2): Anker 699 (Schuss 1), 729 (Schuss 2 + Roy). Mitschnitt: Bild 699 Spitze 6513->7039
+  (vorher ~1000), Bild 729 6228->7137, abklingend bis ~740 (Knall-Form); ab Bild 741 stimmhaft (Nulldurchgang
+  0,02-0,03), Spitze 8073 bei 764 = Roys Sterbe-Stoehnen (Anschlag 270 ms + tiefe Tonhoehe).
+* P6 (n6, CONTINUE 1021 -> Tuer 1 -> 1011 Cut 0, Nutzer-Ordner room1011 im Arbeitsordner): debug.log
+  `[voice] clip loaded: main16.5.wav (32000 Hz x1 -> 63488 @44100 Hz)`, elza.log `F1939 Anker @0x00D54 -> Aktion 4`,
+  state.log ab F1939 `msg(a=1 fsm=1 id=24)`; Mitschnitt-Korrelation mit main16.5.wav = 0,607 (Versatz 1 Bild),
+  Energie steigt ab Bild 1952 (0,35 s Vorlauf der Datei) und klingt bis 1990 ab.
