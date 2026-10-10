@@ -1,0 +1,20 @@
+nb2_blut: waffe 3 seite px eben D 1800 platz 2 slot 2 typ 0x10
+F66   TREF  st 1->2/3/1 hp 98->82 rag 0 bank loco fl 0 | part  0 fx=(-1423,-2495,-19649) a3=(-140,-483,0) | d_r 0 | d_alt 102
+F78   TREF  st 2->2/3/1 hp 82->66 rag 0 bank loco fl 0 | part  0 fx=(-1304,-2540,-19677) a3=(-140,-483,0) | d_r 0 | d_alt 120
+F90   TREF  st 2->2/3/1 hp 66->50 rag 0 bank haupt fl 0 | part  0 fx=(-1645,-2493,-19860) a3=(-140,-483,0) | d_r 0 | d_alt 0
+F90   TREF  st 2->2/3/1 hp 66->50 rag 0 bank haupt fl 0 | part  0 fx=(-1504,-2495,-19859) a3=(0,-500,0) | d_r 0 | d_alt 0
+F92         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1783,-2329,-19885) a3=(0,-500,0) | d_r 0 | d_alt 0
+F94         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1842,-2277,-19876) a3=(0,-500,0) | d_r 0 | d_alt 0
+F96         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1863,-2163,-19895) a3=(0,-500,0) | d_r 0 | d_alt 0
+F98         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1871,-1981,-19927) a3=(0,-500,0) | d_r 0 | d_alt 0
+F102  TREF  st 2->1/5/0 hp 50->34 rag 0 bank haupt fl 0 | part  0 fx=(-1750,-1807,-19916) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F330  TREF  st 1->2/3/1 hp 34->18 rag 0 bank haupt fl 0 | part  8 fx=(-1185,-2251,-19849) a3=(0,300,0) | d_r 24 | d_alt 24
+F342  TREF  st 2->2/3/1 hp 18->2 rag 0 bank haupt fl 0 | part  8 fx=(-1349,-2386,-19867) a3=(0,300,0) | d_r 6 | d_alt 6
+F354  TOD   st 1->3/3/1 hp 2->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1319,-2504,-19787) a3=(-40,-483,0) | d_r 0 | d_alt 0
+F359        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1410,-2272,-19761) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F361        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1399,-2224,-19750) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F363        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1391,-2114,-19743) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F365        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1405,-1863,-19745) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F367        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1434,-1502,-19751) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F369        st 3->3/3/1 hp -14->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1440,-1193,-19752) a3=(-40,-283,0) | d_r 0 | d_alt 0
+ERGEBNIS waffe 3 px eben: Tod 354, Spawns 18 (ohne a3 0), Spawns mit Loco/RE15-Bank 2 | d_r max mit a3 24 (>40: 0), ohne a3 0 (>40: 0)

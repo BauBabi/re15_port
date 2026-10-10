@@ -1,0 +1,31 @@
+Bank 0x10: bones=15 P8.loc=(-50,-667,0)
+F66   (G)   part= 0 fx=(-1696,-1631,-19626) a3=(-214,240,64) bank haupt rag 0 -> Skelett d=59 (Schranke 100) | roh d=262
+F67   (G)   part= 0 fx=(-1744,-1651,-19642) a3=(-218,208,24) bank haupt rag 0 -> Skelett d=55 (Schranke 100) | roh d=259
+F68   (G)   part= 0 fx=(-1666,-2418,-19369) a3=(-158,-584,250) bank haupt rag 0 -> Skelett d=61 (Schranke 100) | roh d=606
+F69   (G)   part= 0 fx=(-1533,-2480,-19450) a3=(88,-640,186) bank haupt rag 0 -> Skelett d=48 (Schranke 100) | roh d=656
+F192  (G)   part= 0 fx=(568,-114,-19589) a3=(0,-600,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=599
+F192      KOPFABRISS Id 0x08001000 d=0
+F193  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=83
+F193      HALS-STUMPF Id 0x00001000 d=0
+F195  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=90
+F195      HALS-STUMPF Id 0x00001000 d=0
+F197  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=102
+F197      HALS-STUMPF Id 0x00001000 d=0
+F199  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=111
+F199      HALS-STUMPF Id 0x00001000 d=0
+F201  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=114
+F201      HALS-STUMPF Id 0x00001000 d=0
+F203  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=110
+F203      HALS-STUMPF Id 0x00001000 d=0
+F205  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=111
+F205      HALS-STUMPF Id 0x00001000 d=0
+F207  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=115
+F207      HALS-STUMPF Id 0x00001000 d=0
+F209  (G)   part= 8 fx=(547,-159,-19613) a3=(0,100,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=0 (Schranke 40) | roh d=111
+F209      HALS-STUMPF Id 0x00001000 d=0
+F211  TOD hp 82->-1 st 1/1/6 -> 7/0/0 10E=2001
+Treffer 5, Spawns 0 (Ring 0..14), Tod bei Bild 211, Tropfblut nach dem Tod 0
+Zuordnung:
+(G): 14 Spawns, max d 61, davon ohne a3 0, beim Zeichnen (Aufschlag) 0, Loco-Bank 0, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 0, Arm-Abriss 4. Spawn 0
+Kriecher ab Bild 91: Kopfabriss 1, Hals-Stumpf 9
+probe_r36_blut: OK

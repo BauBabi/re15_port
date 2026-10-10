@@ -1,0 +1,16 @@
+abn2_blut: waffe 12 seite px eben platz 2 D 1800 alle 0 saat 0x1234567 slot 2 typ 0x10 bank ok hybrid 1 remap 1 Leon (0,-19600) rot 2048
+F66     TREF st 1/1/1->2/15/1 hp 98->94 rag 0 bank 0 | part  0        fx=(-1696,-1631,-19626) a3=(-214,240,64) | d(gezeichnet T)=59 | d(T-1)=36
+F67     TREF st 2/15/1->2/15/1 hp 94->90 rag 0 bank 0 | part  0        fx=(-1744,-1651,-19642) a3=(-218,208,24) | d(gezeichnet T)=55 | d(T-1)=17
+F68     TREF st 2/15/1->2/15/1 hp 90->86 rag 0 bank 0 | part  0        fx=(-1666,-2418,-19369) a3=(-158,-584,250) | d(gezeichnet T)=61 | d(T-1)=49
+F69     TREF st 2/15/1->2/15/1 hp 86->82 rag 0 bank 0 | part  0        fx=(-1533,-2480,-19450) a3=(88,-640,186) | d(gezeichnet T)=48 | d(T-1)=47
+F192         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  0        fx=(568,-114,-19589) a3=(0,-600,0) | d(gezeichnet T)=0 | d(T-1)=23
+F193         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F195         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F197         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F199         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F201         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F203         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F205         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F207         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+F209         st 1/1/5->1/1/5 hp 82->82 rag 0 bank 0 | part  8 fliegt fx=(547,-159,-19613) a3=(0,100,0) | d(gezeichnet T)=0 | d(T-1)=0
+ERGEBNIS waffe 12 px eben platz 2 alle 0: Tod F211, Spawns 14 (ohne a3/Null 0, beim Zeichnen 0, Part nicht gezeichnet 0) | max d(T) 61, ohne a3 0, beim Zeichnen 0, d>40: 4 | max d(T-1) 49

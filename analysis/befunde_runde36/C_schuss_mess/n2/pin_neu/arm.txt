@@ -1,0 +1,9 @@
+F66   (G)   part= 3 fx=(-1301,-1016,-19854) a3=(0,0,0) bank haupt rag 0 -> Skelett = Seed (fliegt ab) d=0 (Schranke 40) | roh d=93
+F66   (G)   part= 3 fx=(-1513,-678,-19849) a3=(0,400,0) bank haupt rag 0 -> Skelett = Seed (fliegt ab) d=0 (Schranke 40) | roh d=461
+F66   (G)   part= 3 fx=(-1724,-339,-19843) a3=(0,800,0) bank haupt rag 0 -> Skelett = Seed (fliegt ab) d=0 (Schranke 40) | roh d=857
+F66   (G)   part= 3 fx=(-1301,-1016,-19854) a3=ohne (0,0,0) bank haupt rag 0 -> Skelett = Seed (fliegt ab) d=0 (Schranke 40) | roh d=93
+F66   TOD hp 98->-1 st 1/1/1 -> 3/7/1 10E=0004
+Treffer 1, Spawns 0 (Ring 0..4), Tod bei Bild 66, Tropfblut nach dem Tod 0
+Zuordnung:
+(G): 4 Spawns, max d 0, davon ohne a3 2, beim Zeichnen (Aufschlag) 0, Loco-Bank 0, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 0, Arm-Abriss 4. Spawn 1
+probe_r36_blut: OK

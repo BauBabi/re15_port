@@ -1,0 +1,72 @@
+K3 Teil fliegt ab (Seed-Pose vs. 1. Physikschritt) Part 10 ev TREF: n=12 d(T) max 185 (>40: 12) | d(T-1) max 25
+K3 Teil fliegt ab (Seed-Pose vs. 1. Physikschritt) Part 13 ev TREF: n=12 d(T) max 150 (>40: 12) | d(T-1) max 43
+K3 Teil fliegt ab (Seed-Pose vs. 1. Physikschritt) Part 3 ev TOD: n=256 d(T) max 10 (>40: 0) | d(T-1) max 30
+K3 Teil fliegt ab (Seed-Pose vs. 1. Physikschritt) Part 8 ev -: n=282 d(T) max 0 (>40: 0) | d(T-1) max 0
+K3 Teil fliegt ab (Seed-Pose vs. 1. Physikschritt) Part 8 ev TOD: n=16 d(T) max 361 (>40: 16) | d(T-1) max 593
+K4 Aufschlag beim Zeichnen: n=112 d(T) max 0 (>40: 0) | d(T-1) max 442
+K5 MG-Trefferbild (Drehung/Schub nach dem Spawn): n=1250 d(T) max 103 (>40: 916) | d(T-1) max 79
+K6 w12 ev - part 0 a3 rag 0 bank 0: n=48 d(T) max 0 (>40: 0) | d(T-1) max 62
+K6 w12 ev TOD part 0 a3 rag 0 bank 0: n=4 d(T) max 0 (>40: 0) | d(T-1) max 7
+K6 w12 ev TOD part 1 a3 rag 0 bank 0: n=4 d(T) max 0 (>40: 0) | d(T-1) max 14
+K6 w13 ev - part 0 ohne rag 0 bank 0: n=128 d(T) max 0 (>40: 0) | d(T-1) max 93
+K6 w13 ev TOD part 0 a3 rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 556
+K6 w13 ev TOD part 0 ohne rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 451
+K6 w19 ev - part 0 a3 rag 0 bank 0: n=80 d(T) max 0 (>40: 0) | d(T-1) max 58
+K6 w19 ev TOD part 0 a3 rag 0 bank 0: n=12 d(T) max 0 (>40: 0) | d(T-1) max 7
+K6 w19 ev TOD part 1 a3 rag 0 bank 0: n=12 d(T) max 0 (>40: 0) | d(T-1) max 11
+K6 w20 ev TOD part 0 a3 rag 0 bank 0: n=48 d(T) max 0 (>40: 0) | d(T-1) max 136
+K6 w3 ev - part 0 a3 rag 0 bank 0: n=176 d(T) max 0 (>40: 0) | d(T-1) max 151
+K6 w3 ev - part 0 ohne rag 0 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 1
+K6 w3 ev TOD part 0 a3 rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 137
+K6 w3 ev TREF part 0 a3 rag 0 bank 0: n=64 d(T) max 3 (>40: 0) | d(T-1) max 716
+K6 w3 ev TREF part 0 a3 rag 0 bank 1: n=112 d(T) max 0 (>40: 0) | d(T-1) max 175
+K6 w3 ev TREF part 1 a3 rag 0 bank 0: n=32 d(T) max 2 (>40: 0) | d(T-1) max 388
+K6 w3 ev TREF part 1 a3 rag 0 bank 1: n=112 d(T) max 0 (>40: 0) | d(T-1) max 31
+K6 w3 ev TREF part 12 ohne rag 0 bank 1: n=2 d(T) max 19 (>40: 0) | d(T-1) max 198
+K6 w3 ev TREF part 8 a3 rag 0 bank 0: n=32 d(T) max 43 (>40: 4) | d(T-1) max 128
+      w3_nx_eben_p5.txt F366    TREF st 1/5/7->2/3/1 hp 26->10 rag 0 bank 0 | part  8        fx=(-504,-1564,-19828) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w3_pz_eben_p4.txt F366    TREF st 1/5/7->2/3/1 hp 26->10 rag 0 bank 0 | part  8        fx=(-7,-1564,-20904) a3=(0,300,0) | d(gezeichnet T)=42 | d(T-1)=46
+      w3_nz_eben_p5.txt F366    TREF st 1/5/7->2/3/1 hp 26->10 rag 0 bank 0 | part  8        fx=(72,-1564,-20286) a3=(0,300,0) | d(gezeichnet T)=42 | d(T-1)=46
+K6 w3 ev TREF part 9 ohne rag 0 bank 1: n=2 d(T) max 13 (>40: 0) | d(T-1) max 201
+K6 w4 ev - part 0 a3 rag 0 bank 0: n=176 d(T) max 0 (>40: 0) | d(T-1) max 151
+K6 w4 ev - part 0 ohne rag 0 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 1
+K6 w4 ev TOD part 0 a3 rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 137
+K6 w4 ev TREF part 0 a3 rag 0 bank 0: n=64 d(T) max 3 (>40: 0) | d(T-1) max 716
+K6 w4 ev TREF part 0 a3 rag 0 bank 1: n=112 d(T) max 0 (>40: 0) | d(T-1) max 175
+K6 w4 ev TREF part 1 a3 rag 0 bank 0: n=32 d(T) max 2 (>40: 0) | d(T-1) max 388
+K6 w4 ev TREF part 1 a3 rag 0 bank 1: n=112 d(T) max 0 (>40: 0) | d(T-1) max 31
+K6 w4 ev TREF part 12 ohne rag 0 bank 1: n=2 d(T) max 19 (>40: 0) | d(T-1) max 198
+K6 w4 ev TREF part 8 a3 rag 0 bank 0: n=32 d(T) max 43 (>40: 4) | d(T-1) max 128
+      w4_nx_eben_p5.txt F366    TREF st 1/5/7->2/2/1 hp 26->10 rag 0 bank 0 | part  8        fx=(-504,-1564,-19828) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w4_pz_eben_p4.txt F366    TREF st 1/5/7->2/2/1 hp 26->10 rag 0 bank 0 | part  8        fx=(-7,-1564,-20904) a3=(0,300,0) | d(gezeichnet T)=42 | d(T-1)=46
+      w4_nz_eben_p5.txt F366    TREF st 1/5/7->2/2/1 hp 26->10 rag 0 bank 0 | part  8        fx=(72,-1564,-20286) a3=(0,300,0) | d(gezeichnet T)=42 | d(T-1)=46
+K6 w4 ev TREF part 9 ohne rag 0 bank 1: n=2 d(T) max 13 (>40: 0) | d(T-1) max 201
+K6 w5 ev - part 0 a3 rag 0 bank 0: n=198 d(T) max 0 (>40: 0) | d(T-1) max 151
+K6 w5 ev - part 0 ohne rag 0 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 1
+K6 w5 ev TOD part 0 a3 rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 137
+K6 w5 ev TREF part 0 a3 rag 0 bank 0: n=64 d(T) max 3 (>40: 0) | d(T-1) max 716
+K6 w5 ev TREF part 0 a3 rag 0 bank 1: n=104 d(T) max 0 (>40: 0) | d(T-1) max 175
+K6 w5 ev TREF part 1 a3 rag 0 bank 0: n=32 d(T) max 2 (>40: 0) | d(T-1) max 388
+K6 w5 ev TREF part 1 a3 rag 0 bank 1: n=104 d(T) max 0 (>40: 0) | d(T-1) max 31
+K6 w5 ev TREF part 12 ohne rag 0 bank 1: n=2 d(T) max 19 (>40: 0) | d(T-1) max 198
+K6 w5 ev TREF part 8 a3 rag 0 bank 0: n=48 d(T) max 43 (>40: 4) | d(T-1) max 136
+      w5_pz_eben_p5.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(-742,-1520,-18512) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w5_px_eben_p5.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(1199,-1520,-20373) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w5_px_eben_p4.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(1258,-1520,-20776) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+K6 w5 ev TREF part 9 ohne rag 0 bank 1: n=2 d(T) max 13 (>40: 0) | d(T-1) max 201
+K6 w6 ev - part 0 a3 rag 0 bank 0: n=198 d(T) max 0 (>40: 0) | d(T-1) max 151
+K6 w6 ev - part 0 ohne rag 0 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 1
+K6 w6 ev TOD part 0 a3 rag 0 bank 0: n=32 d(T) max 0 (>40: 0) | d(T-1) max 137
+K6 w6 ev TREF part 0 a3 rag 0 bank 0: n=64 d(T) max 3 (>40: 0) | d(T-1) max 716
+K6 w6 ev TREF part 0 a3 rag 0 bank 1: n=104 d(T) max 0 (>40: 0) | d(T-1) max 175
+K6 w6 ev TREF part 1 a3 rag 0 bank 0: n=32 d(T) max 2 (>40: 0) | d(T-1) max 388
+K6 w6 ev TREF part 1 a3 rag 0 bank 1: n=104 d(T) max 0 (>40: 0) | d(T-1) max 31
+K6 w6 ev TREF part 12 ohne rag 0 bank 1: n=2 d(T) max 19 (>40: 0) | d(T-1) max 198
+K6 w6 ev TREF part 8 a3 rag 0 bank 0: n=48 d(T) max 43 (>40: 4) | d(T-1) max 136
+      w6_pz_eben_p5.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(-742,-1520,-18512) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w6_px_eben_p5.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(1199,-1520,-20373) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+      w6_px_eben_p4.txt F486    TREF st 1/5/7->2/4/1 hp 42->26 rag 0 bank 0 | part  8        fx=(1258,-1520,-20776) a3=(0,300,0) | d(gezeichnet T)=43 | d(T-1)=46
+K6 w6 ev TREF part 9 ohne rag 0 bank 1: n=2 d(T) max 13 (>40: 0) | d(T-1) max 201
+K6 w7 ev TOD part 0 a3 rag 0 bank 0: n=48 d(T) max 0 (>40: 0) | d(T-1) max 136
+K6 w8 ev - part 1 ohne rag 1 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 339
+K6 w8 ev TOD part 0 ohne rag 0 bank 0: n=16 d(T) max 0 (>40: 0) | d(T-1) max 253

@@ -195,10 +195,16 @@ int main(void)
     /* (4)+(5)+(6): 64 Treffer mit fortlaufendem RNG-Stand. */
     {
         int32_t ank[3];
-        {   /* Ankerposition OHNE Versatz: der Pistolenstoss am selben Aktor, gleicher Part. */
+        {   /* Ankerposition OHNE Versatz. Runde 36 Spur C (Nachbesserung 1): der Pistolenstoss taugt nicht mehr
+             * als Nullpunkt — er traegt seit Runde 36 seinen eigenen a3-Versatz (EMZ0 @0x80105680-B4, P8 + (-100*s,
+             * 300, 0)), und der MG-Versatz liegt jetzt im ANKER-Rahmen (Anker.R*a3 + Anker.T, RE2-Lagen-Tick
+             * @0x8001DB74-DC1C). Ohne geladene Bank ist der Anker die Aktor-Wurzel (re15_enemy_bone_world_pos) mit
+             * R_part = Einheit (re15_schuss_r36_blut_anker); der Treffer-Aktor steht bei (1000, 0, 2000), Gier 0
+             * (treffer() oben), und der MG-Stoss spawnt VOR Schub/Drehung seines P0 (@0x80108110-6C). Der Pistolen-
+             * lauf bleibt fuer die Part-Pruefung (3). */
             uint32_t dd; int pp; int32_t p3[3];
             (void)treffer(3, 1, 0, &dd, &pp, p3);
-            ank[0] = p3[0]; ank[1] = p3[1]; ank[2] = p3[2];
+            ank[0] = 1000; ank[1] = 0; ank[2] = 2000;
             CHECK(pp == p_mg, "(3) Pistole nimmt Part %d, MG Part %d — nicht vergleichbar",
                   pp, p_mg);
         }

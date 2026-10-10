@@ -23,6 +23,7 @@
 #include "re15_player.h"
 #include "re15_collision.h"
 #include "re15_damage.h"
+#include "re15_schuss_r36.h"   /* Runde 36 Spur C: Sichtlinien-Diagnose */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -53,6 +54,13 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
     re15_game_flag_set(3, 125, 1);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = 530; pl->y = -7200; pl->z = -5150; pl->hp = 100;
+    /* Runde 36 Spur C: TIEF zielen. Die Kraehen sitzen nach 60 Bildern am Boden (y -7600, vert 400 ->
+     * DOWN-Band des ACTIVE-Tail-Stempels @0x80112560-c8: 0x80012974 bei vert < 800), nur eine fliegt —
+     * und die sitzt hinter der Theke (s. Zielwahl). Der Schuss auf eine Boden-Kraehe braucht das
+     * Tiefzielen des Spielers (pband 0x20000000). */
+    {   extern void re15_player_set_aim_elevation_for_test(int);
+        re15_player_set_aim_elevation_for_test(-1);
+    }
     pl->rot_y = 0; pl->hit_react = 0;
     memcpy((void *)&g_room_rdt, rdt, sizeof(g_room_rdt));
     g_room_rdt_ok = 1;
@@ -62,21 +70,36 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
 
     for (int f = 0; f < 60; f++) { scd_vm_tick(); re15_enemy_ai_run_all(1); re15_actors_anim_advance(); }
 
-    /* naechste State-1-Kraehe suchen und erschiessen */
+    /* naechste State-1-Kraehe MIT FREIER SICHTLINIE suchen und erschiessen.
+     * Runde 36 Spur C: der Spieler-Schuss zieht jetzt byte-true die Sichtlinie FUN_8001b9b4
+     * (`jal 0x8001b9b4` / `bne v0,zero,0x80012540` @0x80012168-74) ueber FUN_8003dcc4, die
+     * OHNE y-Komponente (liest nur cur+0x34/+0x3c @0x8003dd00/10 und delta+0/+8 @0x8003dd20/4c)
+     * jede Klasse-3-Zelle im SPIELER-Band (+0x82 @0x8003de60) sperrt. ROOM1170 traegt die
+     * Theken-Zelle x -12422..9682 / z -10910..-8498 (RDT @0xb10, Wort 0x43 = Band 4 / Klasse 3):
+     * die bisher naechste Kraehe (1719,-10522,-10983) sass dahinter -> im Original kein
+     * Treffer (fire=0, gemessen C_schuss.md §1.5). Der Test prueft die Todes-Handler, nicht die
+     * Geometrie: Ziel ist die naechste Kraehe, die der Spieler im Original treffen KANN. */
     int tgt = -1; uint32_t bd = 0xffffffffu;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
         if (!e->active || e->type != 0x21 || e->state != 1) continue;
         int32_t dx = e->x - pl->x, dz = e->z - pl->z;
         uint32_t d2 = (uint32_t)(dx * dx + dz * dz);
+        int los = re15_schuss_r36_sichtlinie_blockiert(pl, e);
+        int vert = (int)(pl->y - e->y);
+        printf("   kraehe slot %d (%d,%d,%d) band=%u d2=%u vert=%d los=%d\n", i, e->x, e->y, e->z, e->floor, d2, vert, los);
+        if (los) continue;
         if (d2 < bd) { bd = d2; tgt = i; }
     }
-    if (tgt < 0) { printf("== weapon %d: keine Kraehe gefunden\n", weapon); return; }
+    if (tgt < 0) { CHECK(0, "(w%d) keine Kraehe mit freier Sichtlinie gefunden", weapon); return; }
     re15_actor_t *e = &g_actors[tgt];
     pl->rot_y = (int16_t)((re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0xfff);
     int hit = re15_player_weapon_fire(weapon);
-    printf("== weapon %d: fire=%d slot=%d -> hp=%d st=%d ss1=%d ss3=%d\n",
-           weapon, hit, tgt, (int)e->hp, e->state, e->sub_state_1, e->sub_state_3);
+    printf("== weapon %d: fire=%d slot=%d -> hp=%d st=%d ss1=%d ss3=%d | kraehe (%d,%d,%d) band=%u spieler (%d,%d,%d) band=%u los=%d\n",
+           weapon, hit, tgt, (int)e->hp, e->state, e->sub_state_1, e->sub_state_3,
+           e->x, e->y, e->z, e->floor, pl->x, pl->y, pl->z, pl->floor, re15_schuss_r36_sichtlinie_blockiert(pl, e));
+    CHECK(hit != 0, "(w%d) der Schuss trifft die Kraehe Slot %d (Sichtlinie frei, DOWN-Band), got fire=%d",
+          weapon, tgt, hit);
 
     /* Death-Lauf bis state 7 (max 300 Ticks) */
     int dt = 0;

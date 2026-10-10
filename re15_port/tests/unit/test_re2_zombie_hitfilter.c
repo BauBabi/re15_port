@@ -134,24 +134,30 @@ int main(void)
      * @0x80103CE4-FC, `andi 0xbfff` @0x80104F0C).
      * Beide neuen Faelle werden hier POSITIV gepinnt statt die alte Aussage stillschweigend
      * umzuschreiben. */
-    {   /* (4a) IN der Spawn-Pose: 0x4000 sperrt NICHT — Sollseite ist RE1.5, dessen
-         *      Kandidaten-Sammelschleife FUN_80011F50 pro Aktor NUR auf "aktiv" gatet:
-         *        80011ffc: lw v0,0(s0) / 80012004: andi v0,v0,0x1 / 80012008: beq v0,zero,…
-         *        80012038: addiu s0,s0,500   (Stride 0x1F4 = RE1.5-Entity)
-         *      Ein liegender/fressender RE1.5-Zombie ist dort ein ganz normaler Kandidat. */
+    {   /* (4a) IN der Spawn-Pose des FRESSERS (EXEC[8]): seit Runde 36 Spur C GESPERRT.
+         *      Bis Runde 35 stand hier "muss TREFFBAR sein" (v0.3.5-Entscheidung, Sollseite RE1.5
+         *      FUN_80011F50 @0x80011FFC-38). Der Nutzer hat das mit dem Runde-36-Auftrag fuer die
+         *      Fresser aufgehoben ("Alle Schusswaffen treffen ... fressende Zombies. Im Original geht
+         *      beides nicht -> angehen"): Sollseite ist RE2 FUN_800410CC, Gate 2 `lbu v0,467(s2)` /
+         *      `bne v0,zero,0x80041300` @0x80041270-78 (+0x1D3 |= 0x80 aus EXEC[8] P0 @0x80103C04-14).
+         *      Gate 2 ALLEIN sperrt den RE2-Fresser: sein Spawn-Remap ist Deskriptor 8 @0x80100AC0-DC
+         *      (Clip 18, `sw 2049,4`) ohne +0x10E. Gate 4 `lhu v0,270(s2)` / `andi 0xc000` / `bne`
+         *      @0x80041290-9c greift im Port zusaetzlich, weil der Port-Fresser aus re2z_init +0x10E =
+         *      0x4004 traegt (im Original gehoert `sh 0x4004,270` @0x80100A88-8C zu Deskriptor 7 =
+         *      EXEC[7], HP -1, @0x80100A64-A4). Frei erst mit dem Aufstehen (P3 `andi 0x7f`
+         *      @0x80103CE4-FC). Belege und Messung: analysis/befunde_runde36/C_schuss.md 1.2/1.4/8.5,
+         *      include/re15_schuss_r36.h (2). */
         re15_actor_t *e = mk();
         e->sub_state_1 = 8;                     /* EXEC[8] FRESSEN */
         e->sub_state_2 = 1;                     /* P1 = Limpet-Halt, kein Phasenwechsel */
-        e->re2z_f10e = 0x4004u;                 /* Spawn-Remap des Fressers @0x80100A88-8C */
+        e->re2z_f10e = 0x4004u;                 /* Port-Fresser (re2z_init); RE2-Deskriptor 8 @0x80100AC0-DC ohne +0x10E */
         e->re2z_self1d3 = 0x80u;                /* EXEC[8] P0 `ori 0x80` @0x80103C04-14 */
-        e->ai_dist = 6000u;                     /* GENAU der gemeldete Abstand: ausserhalb des
-                                                 * port-gemappten Naehe-Weckers (dist < 0xFA0),
-                                                 * also der Fall, in dem der Nutzer NICHT traf */
+        e->ai_dist = 6000u;                     /* ausserhalb des port-gemappten Naehe-Weckers (dist < 0xFA0) */
         e->hit_react = 0;
         uint8_t hr = tick_latch(e);
-        CHECK((hr & 1) == 0,
-              "GATE 4a: der FRESSER in der Spawn-Pose muss TREFFBAR sein (RE1.5-Sollseite "
-              "FUN_80011F50 @0x80011FFC-38) (+0x93 = 0x%02X, 1D3 = 0x%02X, 10E = 0x%04X)",
+        CHECK((hr & 1) == 1,
+              "GATE 4a: der FRESSER in der Spawn-Pose ist GESPERRT (RE2 Gate 2 @0x80041270-78 / Gate 4 "
+              "@0x80041290-9c; Runde 36 Spur C) (+0x93 = 0x%02X, 1D3 = 0x%02X, 10E = 0x%04X)",
               hr, e->re2z_self1d3, e->re2z_f10e);
         CHECK(e->re2z_f10e == 0x4004u && e->re2z_self1d3 == 0x80u,
               "GATE 4a: IN der Pose bleiben beide Latches STEHEN (die Executor-Ketten lesen sie: "

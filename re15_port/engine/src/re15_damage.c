@@ -33,6 +33,7 @@
 #include "re15_ai_flavor.h"  /* re15_re2_owns_type — der +0x1D2-Stempel des RE2-Flavors (s.u.) */
 #include "re15_door_seq.h"   /* re15_door_rotmatrix = RE2 libgte RotMatrix @0x8008e1f4 (Runde 34 B4) */
 #include "re15_enemy_ai_re2_zellenarm.h" /* re15_re2arm_owns (RE2-GL-Applier-Kandidat, Runde 34 B4) */
+#include "re15_schuss_r36.h" /* re15_schuss_r36_sichtlinie_blockiert — FUN_8001b9b4 @0x80012168 (Runde 36 C) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -2658,6 +2659,9 @@ retry_after_latch:
         if (dist < best_dist) { best_dist = dist; best = s; }
     }
     if (best < 0) return 0;   /* no target in cone/reach */
+    /* Runde 36 Spur C: SICHTLINIE auf den Gewinner — `jal 0x8001b9b4` / `bne v0,zero,0x80012540`
+     * @0x80012168-74, VOR Typ-Pruefung und +0x93-Latch (Belege include/re15_schuss_r36.h). */
+    if (re15_schuss_r36_sichtlinie_blockiert(pl, &g_actors[best])) return 0;
     /* CRIT-CLASS flag +0x93 |= 0x40 (byte-true FUN_80011f50 LAB_80012370, decompile lines 145-148:
      * `+0x93 &= 1; if ((wpn==8 && dist<3000) || wpn==7) +0x93 |= 0x40`) — set BEFORE the bit0-latch
      * branch, so it also lands on a hit-guarded target. Types < 0x20 die from it (the hp=-1 crit

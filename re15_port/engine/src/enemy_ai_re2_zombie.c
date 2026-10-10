@@ -65,6 +65,7 @@
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
+#include "re15_schuss_r36.h" /* re15_schuss_r36_blut_anker — Anker.R*a3 + Anker.T (Runde 36 Spur C) */
 #include "re15_anim_select.h" /* re15_actor_playback_slot — dieselbe Spiegel-Regel wie der Renderer */
 
 /* RE1.5-snd1-Raum-SE (FUN_800453d0-Pfad) — bewusst extern statt re15_audio.h
@@ -1059,20 +1060,24 @@ static int re2z_bearing_to(const re15_actor_t *e, const re15_actor_t *pl);  /* f
 #define RE2Z_BLOOD_TRIGGERS 8
 
 static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_t scale16,
-                                 int splatter_n)
+                                 int splatter_n, const int32_t *a3)
 {
     int32_t p[3];
     /* `part` ist eine RE2-PART-Nummer, re15_enemy_bone_world_pos will einen BONE-SLOT der
      * geladenen Bank — im RE1.5-Modus sind das verschiedene Nummernraeume (Block ueber
-     * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet. */
-    re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p);
-                                             /* == die Translation der Part-Matrix +0x198+n*172+72 */
+     * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet.
+     * Runde 36 Spur C: Lage = Anker.R * a3 + Anker.T (FUN_8001BF10 a2/a3, RE2-Lagen-Tick @0x8001DB74-DC1C) statt nur
+     * Anker.T — Belege include/re15_schuss_r36.h (Punkt 2). a3 == NULL = kein Versatz (wie bisher). */
+    re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);
+                                             /* == die Part-Matrix +0x198+n*172+72, mal a3 */
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
+    re15_schuss_r36_fx_merke(part, p, a3);                   /* Mess-Ring (Sonden), Runde 36 Spur C */
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, scale16, p[0], p[1], p[2], yaw);
     if (splatter_n > 0)
         re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, splatter_n,
                              p[0], p[1], p[2], e->y);   /* floor = Aktor-Bodenhoehe */
+    re15_schuss_r36_fx_nach(e);                              /* Runde 36 Spur C N3: Nachfuehrung (Anker-Zeitpunkt) */
 }
 
 /* ⛔ OPEN (RESTBESTAND, seit Runde 4 stark geschrumpft): die 0x1500 traegt KEINE
@@ -1083,7 +1088,7 @@ static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_
  * @0x80106D7C/@0x801071A0). Wer eine davon fixt: erst die Id am Original auslesen. */
 static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
 {
-    re2z_blood_fx_scaled(e, part, yaw, 0x1500, 0);
+    re2z_blood_fx_scaled(e, part, yaw, 0x1500, 0, NULL);
 }
 
 /* FUN_8001BF10 als DEKODER (Umbau 2026-09-12, Dossier
@@ -1106,8 +1111,12 @@ static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
  * Weltkoordinaten gegen die statische Matrix DAT_80072d4c). floor = e->y wie im Ragdoll.
  * Raum ohne Ziel-Id (ROOM1190 traegt nur {7}): auch der Global-Fallback findet 5/7
  * nicht -> spawnt nichts, harmlos. */
-static void re2z_gore_fx_ex(re15_actor_t *e, int part, uint32_t packed, int16_t yaw,
-                            int32_t ofs_x, int32_t ofs_y, int32_t ofs_z)
+/* Runde 36 Spur C: `a3` != NULL = der Original-Versatz im ANKER-Rahmen (Lage = Anker.R * a3 + Anker.T,
+ * FUN_8001BF10 + RE2-Lagen-Tick @0x8001DB74-DC1C, re15_schuss_r36_blut_anker); NULL = ohne Versatz (Anker.T) plus
+ * Welt-Versatz ofs_*. Aufrufer mit a3: re2z_gore_fx_a3. Der Anker ist in BEIDEN Faellen die gezeichnete Matrix
+ * (Nachbesserung 2, include/re15_schuss_r36.h). */
+static void re2z_gore_fx_core(re15_actor_t *e, int part, uint32_t packed, int16_t yaw, const int32_t *a3,
+                              int32_t ofs_x, int32_t ofs_y, int32_t ofs_z)
 {
     uint8_t  id  = (uint8_t)(packed >> 24);
     uint8_t  sub = (uint8_t)((packed >> 16) & 0xFFu);
@@ -1122,11 +1131,25 @@ static void re2z_gore_fx_ex(re15_actor_t *e, int part, uint32_t packed, int16_t 
     case 4:  if (sub == 15) { id = 0; sub = 3; break; } return;
     default: return;
     }
-    re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p);
+    re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);   /* Runde 36 Spur C; a3 = 0 (Gruppe B) seit
+                                                                          * Nachbesserung 2 ebenfalls an der gezeichneten
+                                                                          * Matrix (`sw zero,44/48` @0x8001C000-04) */
     p[0] += ofs_x; p[1] += ofs_y; p[2] += ofs_z;
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
+    re15_schuss_r36_fx_merke(part, p, a3);                   /* Mess-Ring (Sonden), Runde 36 Spur C */
+    re15_schuss_r36_fx_id(packed);                           /* N3: gepackte RE2-Id in den Mess-Ring (Pin) */
     re15_esp_fx_spawn_rows(re15_esp_room_bank(), id, sub, sc, p[0], p[1], p[2], e->y, yaw);
+    re15_schuss_r36_fx_nach(e);                              /* Runde 36 Spur C N3: Nachfuehrung (Anker-Zeitpunkt) */
+}
+static void re2z_gore_fx_ex(re15_actor_t *e, int part, uint32_t packed, int16_t yaw,
+                            int32_t ofs_x, int32_t ofs_y, int32_t ofs_z)
+{
+    re2z_gore_fx_core(e, part, packed, yaw, NULL, ofs_x, ofs_y, ofs_z);
+}
+static void re2z_gore_fx_a3(re15_actor_t *e, int part, uint32_t packed, int16_t yaw, const int32_t a3[3])
+{
+    re2z_gore_fx_core(e, part, packed, yaw, a3, 0, 0, 0);
 }
 
 /* Die ANKER-WAHL der drei Treffer-Emitter (Wurzel-Flinch @0x801050B0-158, Haupt-Handler-P0
@@ -1184,17 +1207,75 @@ static int re2z_blood_anchor(const re15_actor_t *e)
  * ⛔ OPEN: die Original-Geschwindigkeit a3 (Zone 0 = {0,800,0} @0x801056E0-F4; sonst aus der
  *      Part-8-Matrix mit x -= 100*+0x15A und y += 300 @0x80105680-B4) hat im positionslosen
  *      Port-Stand-in keinen Konsumenten. */
-static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
+/* Runde 36 Spur C — der a3-VERSATZ der drei Treffer-Emitter (Belege include/re15_schuss_r36.h, Punkt 2):
+ *   Zone 0 (Beine)     : Part 1, a3 = (0, 800, 0)                        (@0x801056DC-F4 / @0x80105D90-A8 / @0x801050F0-104)
+ *   Zone 1/2 (Rumpf/Kopf): Part 0, a3 = (P8.x - 100*seite, P8.y + dy, P8.z) (@0x80105680-B4 / @0x80105D2C-70 / @0x80105124-48)
+ * P8 = lokale Translation von Part 8 (+0x198 + 8*172 + 0x2C) = Bind-Versatz des Teils in der geladenen Bank;
+ * seite = +0x15A (Haupt-Handler) bzw. +0x16A (Stagger) = +-1, 0 beim Wurzel-Flinch; dy = 300 bzw. 500 (Flinch). */
+static void re2z_blood_a3(const re15_actor_t *e, int zone, int seite, int dy, int32_t a3[3])
+{
+    if (zone == 0) { a3[0] = 0; a3[1] = 800; a3[2] = 0; return; }       /* sh zero,16 / sh 800,18 / sh zero,20 */
+    a3[0] = a3[1] = a3[2] = 0;
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    int b8 = re2z_part_to_bone(e, 8);
+    if (b && b->skel.bone_count > b8 && b8 >= 0) {
+        a3[0] = b->skel.bone_relative_pos[b8][0];                          /* lw 1420 -> sh 16  */
+        a3[1] = b->skel.bone_relative_pos[b8][1];                          /* lw 1424 -> sh 18  */
+        a3[2] = b->skel.bone_relative_pos[b8][2];                          /* lw 1428 -> sh 20  */
+    }
+    a3[0] -= 100 * seite;                                                  /* `subu v1,v1,v0` (100 * +0x15A) */
+    a3[1] += dy;                                                           /* `addiu v0,v0,300` bzw. 500 */
+}
+
+static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw, int seite, int dy)
 {
     /* scale16 = 0x2000 (@0x80105c54 / @0x80105cbc, RE1.5-Praesentation) statt der RE2-eigenen
      * 6096 = 0x17D0 (@0x8010567C) — Mandats-Entscheidung, beide Werte oben zitiert.
-     * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78). */
-    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, RE2Z_BLOOD_TRIGGERS);
+     * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78); seit Runde 36 mit
+     * dem a3-Versatz des Originals (re2z_blood_a3). */
+    int zone = (int)((unsigned)e->re2z_hits1d2 % 3u);
+    int32_t a3[3];
+    re2z_blood_a3(e, zone, seite, dy, a3);
+    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, RE2Z_BLOOD_TRIGGERS, a3);
 }
 
 static void re2z_blood_fx(re15_actor_t *e)
 {
-    re2z_blood_fx_dir(e, (int16_t)e->rot_y);
+    /* Wurzel-Flinch @0x801050B0-158: kein Seitenversatz, y + 500 (@0x80105138), Gier = +0x76. */
+    re2z_blood_fx_dir(e, (int16_t)e->rot_y, 0, 500);
+}
+
+/* Runde 36 Spur C (Abnahme 0 M2): a3 des Aufsteh-Treffers FUN_80107A78 — Prolog `sh zero,24/26/28(sp)`
+ * @0x80107A98-AA0, `addiu v0,zero,300` / `sh v0,26(sp)` @0x80107B20-24, `addiu a3,sp,24` @0x80107B18 / @0x80107BAC. */
+static const int32_t s_re2z_a3_aufstehen[3] = { 0, 300, 0 };
+
+/* Runde 36 Spur C (Abnahme 0 M2, Nebenbefund) — das NACHBLUTEN des Stagger-P1, FUN_80105BC0 @0x80105F5C-60C
+ * (EMZ0.BIN, selbst disassembliert). Aufrufer: nur bei GERADEM +0x15A (`andi v0,v1,0x1` / `bne v0,zero,
+ * 0x80105ffc` @0x80105F78-7C; ungerade -> nur `+0x15A -= 1` @0x80105FFC-60C):
+ *   80105f84: lbu v0,546(s4)              ; +0x222
+ *   80105f8c: bne v0,zero,0x80105fbc      ; != 0 -> Zweig B
+ *   A: 80105f94/9c: 2x jal 0x80015fe8 (r1, r2) / 80105fa4: addiu a0,zero,8000 / 80105fa8: addiu a2,s3,72 (Part 0)
+ *      80105fac: addiu a3,s4,324           ; a3 = der +0x144-Vektor (dx,dy,dz) des e7c @0x80105F28
+ *   B: 80105fbc: lhu v0,326(s4) / 80105fc4: addiu v0,v0,-500 / 80105fcc: sh v0,326(s4)   ; +0x146 -= 500
+ *      80105fc8/d0: 2x jal 0x80015fe8 / 80105fd8: addiu a0,zero,5096 / 80105fdc: addiu a2,s3,72 / 80105fe0: addiu a3,s4,324
+ *   80105fe8-f8: a1 = +0x76 + (r1 << 4) - (r2 << 4); jal 0x8001bf10 @0x80105FF4
+ * Der Stagger-Handler laeuft nur bei +0x222 == 1 (`lbu v0,546(s1)` / `bne v0,a0` @0x80105458-60), und +0x222
+ * faellt erst in P2 (`sb zero,546` @0x80106034) — im P1 nimmt das Original also Zweig B: a3.y = dy - 500.
+ * a3 = +0x144-Vektor: dy = 0, weil die Stagger-Clips 3/4 der Hauptbank (der Stagger posiert nicht aus dem
+ * Gang-Paar, re15_re2z_poses_loco_bank: nur Zustand 1) in JEDEM Bild sy = 0 tragen (gemessen, Dossier §8.2);
+ * (dx, dz) ist die Wurzelbewegung dieses Ticks, die FUN_800152C8 @0x80105F54 VOR dem Spawn anwendet, waehrend
+ * der Anker die Matrix des VORBILDS ist — der Term setzt das Blut also an den bewegten Koerper. Der Port rechnet
+ * den Anker im LAUFENDEN Bild (re15_schuss_r36_blut_anker, nach jeder Bewegung dieses Ticks); derselbe Term ist
+ * dort schon enthalten, daher (dx, dz) = 0. (Die Stagger-Wurzelbewegung selbst fuehrt der Port nicht —
+ * re2z_hit_move bewegt nur im Gang-Clip; OFFEN im Dossier.) */
+static void re2z_stagger_bleed(re15_actor_t *e)
+{
+    int b = (e->re2z_flag222 != 0);                                /* @0x80105F84-8C */
+    uint32_t r1 = re2z_rand();                                     /* @0x80105F94 / @0x80105FC8 */
+    uint32_t r2 = re2z_rand();                                     /* @0x80105F9C / @0x80105FD0 */
+    int16_t yaw = (int16_t)((int32_t)e->rot_y + (int32_t)(r1 << 4) - (int32_t)(r2 << 4));   /* @0x80105FE8-F8 */
+    int32_t a3[3] = { 0, b ? -500 : 0, 0 };                        /* +0x144-Vektor, B: +0x146 - 500 @0x80105FBC-CC */
+    re2z_gore_fx_a3(e, 0, b ? 5096u : 8000u, yaw, a3);             /* @0x80105FD8 / @0x80105FA4, Part 0 @0x80105FDC / @0x80105FA8 */
 }
 
 /* FUN_800152C8(self, yaw_off) — applies the +0x144 vector yaw-rotated (self-disasm'd:
@@ -1947,10 +2028,13 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
                     e->re2z_part_wa4  [8]  = 0;
                     e->re2z_part_tint [8]  = 0x00101040u;
                     e->re2z_part_yaw98[8]  = (int16_t)(e->rot_y & 0x0fff);
-                    /* BLUT am Abriss: Id 0x00801000 (`lui a0,0x800 / ori a0,a0,0x1000`
-                     * @0x80102AD4-DC), Anker Part 0 (`addiu a2,a2,72` @0x80102B28),
-                     * ofs (0,-600,0) @0x80102B10-1C, a1 = rot_y @0x80102B20. */
-                    re2z_gore_fx_ex(e, 0, 0x00801000u, (int16_t)e->rot_y, 0, -600, 0);
+                    /* GORE am Abriss (Runde 36 Spur C, Nachbesserung 3): a0 = `lui a0,0x800` (3c040800)
+                     * @0x80102AD4 / `ori a0,a0,0x1000` @0x80102ADC = 0x08001000 = Id 8 (Fleischbrocken ->
+                     * RE1.5-Raum-Id 5), Sub 0, Skala 4096 — vorher als 0x00801000 (Id 0, Sub 128) gelesen.
+                     * a3 = `addiu a3,sp,24` @0x80102AEC -> (0,-600,0) @0x80102B10-1C im ANKER-Rahmen Part 0
+                     * (`addiu a2,a2,72` @0x80102B28, `jal 0x8001bf10` @0x80102B24), a1 = +0x76 @0x80102B20. */
+                    {   static const int32_t a3_abriss[3] = { 0, -600, 0 };
+                        re2z_gore_fx_a3(e, 0, 0x08001000u, (int16_t)e->rot_y, a3_abriss); }
                     /* >>> DAS GESUCHTE "SMASH": a0 = 2 @0x80102B2C, jal 0x8005BD6C
                      * @0x80102B58 <<< */
                     re2z_se(2);
@@ -1967,10 +2051,12 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
              * `beq v0,zero,0x80102BC4` @0x80102B84-88); Id 4096 @0x80102BA4, ofs (0,+100,0)
              * @0x80102B8C-A0, Anker Part 8 (`addiu a2,s0,1448` = 8*172+72 @0x80102BC0),
              * Winkel = rot_y + rand*4 - 512 (`jal 0x80015fe8` @0x80102B9C,
-             * `sll v0,v0,2 / addu a1,a1,v0 / addiu a1,a1,-512` @0x80102BB0-B8). */
+             * `sll v0,v0,2 / addu a1,a1,v0 / addiu a1,a1,-512` @0x80102BB0-B8).
+             * Nachbesserung 3: a3 = `addiu a3,sp,24` @0x80102BA8 = Versatz im ANKER-Rahmen Part 8. */
             if (fr >= 23 && fr <= 41 && (fr & 1)) {
+                static const int32_t a3_hals[3] = { 0, 100, 0 };          /* @0x80102B8C-A0 */
                 int16_t ang = (int16_t)((int)e->rot_y + (int)(re2z_rand() << 2) - 512);
-                re2z_gore_fx_ex(e, 8, 4096u, ang, 0, 100, 0);
+                re2z_gore_fx_a3(e, 8, 4096u, ang, a3_hals);
             }
             break;                                                 /* @0x80102BC4-C8: der
                                                                     * KRIECHER verlaesst P5
@@ -4435,6 +4521,9 @@ static int re2z_bone_to_part(const re15_actor_t *e, int bone)
 int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
+    /* Runde 36 Spur C: auch die RE2-KRAEHE (0x21) faehrt die Part-Bruecke — ihr GIB 0x80102CA0 wirft
+     * dieselben 13 Zeilen mit denselben Flagworten 0x4A/0x1062 (schuss_r36.c); Seed in re2c_init. */
+    if (e->type == 0x21u) return re15_ai_re2_for_type(0x21u) && e->re2c_gib_parts != 0u;
     if (!re15_re2z_owns_type(e->type)) return 0;
     if (!re15_ai_re2_for_type(e->type) &&
         !re15_re15_re2z_import_owns(e->type)) return 0;
@@ -4594,7 +4683,9 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
     }
 
     if (e->re2z_part_st86[i] >= 2) {                           /* slti v0,v0,2 @0x80028B60 */
-        int32_t floor_y = (int32_t)e->y;                       /* [PORT (1)] @0x80028B74 */
+        int32_t floor_y = (e->type == 0x21u) ? (int32_t)e->dog_floor_y   /* Runde 36 Spur C: die Kraehe fliegt —
+                                                                            * ihr Boden ist +0x1C2 (Boden-Probe), nicht y */
+                                             : (int32_t)e->y;           /* [PORT (1)] @0x80028B74 */
         t[0] += v[0];                                          /* @0x80028B80-8C */
         v[1]  = (int16_t)(v[1] + e->re2z_part_grav[i]);        /* +0x3A += +0x79 @0x80028B90-A4 */
         t[1] += v[1];                                          /* @0x80028BAC-B8 */
@@ -4705,6 +4796,22 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
         if (fl & 0x08u) re2z_part_phys_dac(e, part);           /* @0x80027B98 */
     }
 
+    for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
+    for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
+    return 1;
+}
+
+/* Runde 36 Spur C, Nachbesserung 2 — Lesezugriff auf dieselbe eigene Matrix fuer den Blut-Anker (Aufschlag-Blut
+ * `addiu a2,s1,72` @0x80028C34): kein Seeding, kein Physikschritt (Deklaration include/re15_schuss_r36.h). */
+int re15_re2z_gore_part_matrix_peek(const re15_actor_t *e, int bone, int32_t rot[9], int32_t trans[3])
+{
+    if (!e || !rot || !trans || !re15_re2z_gore_active(e)) return 0;
+    int part = re2z_bone_to_part(e, bone);
+    if (part < 0 || part >= 16) return 0;                      /* 16 Records, Part 15 = Reserve @0x801010DC */
+    uint16_t fl = e->re2z_part_flags[part];
+    if (!(fl & 0x40u) || !(fl & 0x01u) ||                      /* eigene Matrix `andi 0x40` @0x80027498, Bit 0
+                                                                * `andi v0,a2,0x1` @0x8002737C */
+        !(e->re2z_part_seeded & (uint16_t)(1u << part))) return 0;   /* noch nicht gezeichnet -> Skelett-Pose */
     for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
     for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
     return 1;
@@ -5065,7 +5172,10 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
          * die -1 ueberschreibt ihn nur im Ruecken-Treffer (@0x80105CE4-F8). Frueher stand hier
          * fest 1, weil +0x1D0 keinen Produzenten hatte; den gibt es jetzt (re2z_stamp_hitdir). */
         e->re2z_dir16a = (e->re2z_hitdir1d0 & 0x20u) ? (uint8_t)0xffu : (uint8_t)1u;
-        re2z_blood_fx(e);                                          /* @0x80105D80 / @0x80105DB8 */
+        /* Runde 36 Spur C: Stagger-Emitter @0x80105D14-DBC — seite = +0x16A (`lb v1,362` @0x80105D2C),
+         * y + 300 (@0x80105D5C), Gier = +0x76 - t0 (t0 = 2048 bei Ruecken, @0x80105D68-7C). */
+        re2z_blood_fx_dir(e, (int16_t)((int)e->rot_y - ((e->re2z_hitdir1d0 & 0x20u) ? 2048 : 0)),
+                          (int)(int8_t)e->re2z_dir16a, 300);       /* @0x80105D80 / @0x80105DB8 */
         /* Zeile 10 = GL Brand -> Verkohlung (@0x80105DC4-E08), Zeile 11 = GL Saeure -> das
          * BEIN WEGAETZEN (@0x80105E08-F18) + FUN_80106310 (@0x80105F14). */
         if (e->sub_state_1 == 10u && !(e->re2z_f10e & 0x80u)) {    /* @0x80105DC4-E00 */
@@ -5082,11 +5192,10 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
         re2z_hit_move(e);                                          /* @0x80105F28-58 */
         if (re2z_clip_done(e)) e->sub_state_2 = (uint8_t)(e->sub_state_2 + 1);  /* @0x80105F50-58 */
         if (e->re2z_t15a != 0 && e->re2z_dir16a != 0) {            /* @0x80105F5C-74 */
-            re2z_blood_fx_at(e, 0, (int16_t)e->rot_y);             /* Anker in BEIDEN Zweigen
-                                                                    * `addiu a2,s3,72` = Part 0
-                                                                    * (@0x80105FA8 / @0x80105FDC) */
-                                                                   /* @0x80105FF4 (Effekt-Ids
-                                                                    * 8000/5096 je +0x222) */
+            if ((e->re2z_t15a & 1) == 0)                           /* `andi v0,v1,0x1` / `bne v0,zero,
+                                                                    * 0x80105ffc` @0x80105F78-7C — Runde 36
+                                                                    * Spur C: vorher JEDES Bild (10 statt 5) */
+                re2z_stagger_bleed(e);                             /* @0x80105F84-FF8 */
             e->re2z_t15a = (int16_t)(e->re2z_t15a - 1);            /* @0x80105FFC-0C */
         }
         break;
@@ -5217,8 +5326,12 @@ static void re2z_hit_light(re15_actor_t *e, re15_actor_t *pl)
             }
             /* Der Anker folgt derselben Regel wie re2z_blood_anchor() (Zone 0 -> Part 1).
              * Gepacktes Wort wie das Original: `sll s0,s0,16` @0x80108048/@0x801080A8 und
-             * `or a0,s0,v0` @0x80108054/@0x801080B4; Id-Byte 0 = Blut (a0 hat kein Bit >= 24). */
-            re2z_gore_fx_ex(e, anker,
+             * `or a0,s0,v0` @0x80108054/@0x801080B4; Id-Byte 0 = Blut (a0 hat kein Bit >= 24).
+             * Runde 36 Spur C (Nachbesserung 1): (ox,oy,oz) ist a3 = sp+16 (`addiu a3,sp,16` @0x80108058 /
+             * @0x801080B8; `sh 16/18/20(sp)` @0x80108014/28/38 bzw. @0x8010807C/8C/98) und liegt im ANKER-Rahmen
+             * (Anker.R * a3 + Anker.T, RE2-Lagen-Tick @0x8001DB74-DC1C) — vorher als Welt-Versatz addiert. */
+            {   const int32_t a3[3] = { ox, oy, oz };
+            re2z_gore_fx_a3(e, anker,
                                ((uint32_t)(r_sub & 1u) << 16)   /* `andi s0,s0,0x1` @0x80108044 */
                                    | (uint32_t)(uint16_t)(basis + (r_sc << 3)),
                                (int16_t)re2z_bearing_to(e, pl),
@@ -5232,7 +5345,8 @@ static void re2z_hit_light(re15_actor_t *e, re15_actor_t *pl)
                                 * traegt +0x158 als Budget/Timer; diese Ueberladung wird hier
                                 * bewusst NICHT persistiert, der Winkel nur berechnet. NICHT
                                 * e->rot_y: das ist die Eigen-Blickrichtung und weicht bis 180 ab. */
-                               ox, oy, oz);   /* a3 = Versatzvektor @0x80108058/@0x801080B8 */
+                               a3);           /* a3 = Versatzvektor @0x80108058/@0x801080B8 */
+            }
         }
         if (e->re2z_cd239 == 0) {                                  /* @0x801080CC-D4 */
             re2z_se(12);                                           /* @0x801080D8-E0 */
@@ -5356,7 +5470,9 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
         if (e->sub_state_1 != 16u) {                               /* @0x80105640-48 */
             int16_t bdir = (int16_t)((int)e->rot_y -
                                      ((e->re2z_hitdir1d0 & 0x20u) ? 2048 : 0));
-            re2z_blood_fx_dir(e, bdir);                            /* Id 6096 @0x8010567C */
+            /* Runde 36 Spur C: seite = +0x15A = 1 (@0x801055BC) bzw. -1 bei +0x1D0 & 0x20 (@0x80105638),
+             * y + 300 (@0x801056B0) — Belege include/re15_schuss_r36.h (Punkt 2). */
+            re2z_blood_fx_dir(e, bdir, (e->re2z_hitdir1d0 & 0x20u) ? -1 : 1, 300);   /* Id 6096 @0x8010567C */
         }
         break;
     case 1:
@@ -5533,11 +5649,14 @@ static void re2z_death_burst(re15_actor_t *e, re15_actor_t *pl)
         unsigned n = (re2z_rand() & 3u) + 1u;      /* jal @0x801096C8, `andi 0x3 / addiu 1`
                                                     * @0x801096D0-D4 */
         if (e->sub_state_1 != 12u) {               /* `beq v1,12` @0x801096E0 */
-            re2z_gore_fx_ex(e, 0, 8096u, (int16_t)bear, 0, -300, 0); /* Id 8096 @0x801096E8, ofs {0,-300,0}
-                                                    * @0x801096F8-704, Anker Part 0
+            /* Runde 36 Spur C (Nachbesserung 1): a3 = s1 = sp+24 (`addiu s1,sp,24` @0x801096E4, `addu a3,s1,zero`
+             * @0x801096EC / @0x80109738) liegt im ANKER-Rahmen (vorher Welt-Versatz). */
+            static const int32_t a3_8096[3] = { 0, -300, 0 };   /* `addiu v0,zero,-300` / `sh zero,24` / `sh v0,26` /
+                                                                 * `sh zero,28` @0x801096F8-704 */
+            static const int32_t a3_6096[3] = { 0, -100, 0 };   /* `addiu v0,zero,-100` / `sh` @0x80109720-2C */
+            re2z_gore_fx_a3(e, 0, 8096u, (int16_t)bear, a3_8096);  /* Id 8096 @0x801096E8, Anker Part 0
                                                     * (`addiu s0,s3,72` @0x8010970C) @0x80109710 */
-            re2z_gore_fx_ex(e, 0, 6096u, (int16_t)bear, 0, -100, 0); /* Id 6096 @0x80109718, ofs {0,-100,0}
-                                                    * @0x80109720-2C, @0x80109734 */
+            re2z_gore_fx_a3(e, 0, 6096u, (int16_t)bear, a3_6096);  /* Id 6096 @0x80109718, @0x80109734 */
             /* DIE FLEISCHBROCKEN @0x8010973C-B8: n Durchlaeufe zu je FUENF RNG-Wuerfen
              * (vx = 256-2r @0x80109744-48, vy = 56-2r @0x80109754-5C, vz = 256-2r
              * @0x80109768-6C, Id-Anteil @0x80109778-7C, Winkel-Anteil @0x80109798-A8).
@@ -5545,9 +5664,16 @@ static void re2z_death_burst(re15_actor_t *e, re15_actor_t *pl)
              * DELAY-SLOT des ersten Wurfs (@0x80109740). */
             for (;;) {
                 n--;
-                (void)re2z_rand();                 /* vx */
-                (void)re2z_rand();                 /* vy */
-                (void)re2z_rand();                 /* vz */
+                /* Runde 36 Spur C (Nachbesserung 1): die drei Wuerfe sind a3 = sp+24 (`addiu a3,sp,24` @0x80109794),
+                 * der VERSATZ im Anker-Rahmen (FUN_8001BF10 liest a3 nur, @0x8001BFE8-FFC; Lage = Anker.R*a3 +
+                 * Anker.T, @0x8001DB74-DC1C) — keine Start-Geschwindigkeit. s5 = 256 (`addiu s5,zero,256` @0x801096F0):
+                 * x = 256 - 2r (`sll v0,v0,1` / `subu v0,s5,v0` / `sh v0,24(sp)` @0x80109744-50),
+                 * y = 56 - 2r (`addiu v1,zero,56` / `subu` / `sh v1,26(sp)` @0x80109754-64),
+                 * z = 256 - 2r (`subu v0,s5,v0` / `sh v0,28(sp)` @0x80109768-74). */
+                int32_t a3[3];
+                a3[0] = 256 - 2 * (int32_t)re2z_rand();   /* vx */
+                a3[1] = 56  - 2 * (int32_t)re2z_rand();   /* vy */
+                a3[2] = 256 - 2 * (int32_t)re2z_rand();   /* vz */
                 uint32_t r4 = re2z_rand();         /* Id 0x09020000 | (r*4 + 1536)
                                                     * (`sll 2 / addiu 1536 / lui 0x902 / or`
                                                     * @0x80109778-88) -> RE1.5-Raum-Id 7 Sub 2
@@ -5557,7 +5683,7 @@ static void re2z_death_burst(re15_actor_t *e, re15_actor_t *pl)
                 uint32_t r5 = re2z_rand();         /* @0x80109784 */
                 int ang = bear - (int)((r5 * 4u) - 512u);      /* `sll v0,v0,2 / addiu -512 /
                                                                 * subu a1,a1,v0` @0x80109798-A8 */
-                re2z_gore_fx_ex(e, 0, 0x09020000u | (r4 * 4u + 1536u), (int16_t)ang, 0, 0, 0);
+                re2z_gore_fx_a3(e, 0, 0x09020000u | (r4 * 4u + 1536u), (int16_t)ang, a3);
                                                    /* Anker Part 0 (`addiu a2,s3,72`
                                                                 * @0x80109790) @0x801097A4 */
                 if (n == 0u) break;
@@ -5610,9 +5736,14 @@ static void re2z_death_burst(re15_actor_t *e, re15_actor_t *pl)
                                                     * `andi a1,0x1` @0x801098D4-D8 */
                 uint32_t rid = re2z_rand();        /* Id = r*8 + 4048 @0x80109914-24 */
                 uint32_t r2 = re2z_rand();         /* Winkel = r*16 @0x80109920-2C */
-                re2z_gore_fx_ex(e, 0, rid * 8u + 4048u, (int16_t)(r2 * 16u), 0, 500, 0);
-                                                   /* Anker Part 0 (`addiu a2,s3,72`
-                                                    * @0x80109938), ofs y+500 @0x801098FC */
+                /* Runde 36 Spur C (Nachbesserung 1): a3 = sp+24 = (P8.x, P8.y + 500, P8.z) — `lw v0,1420(v1)` /
+                 * `sh v0,24(sp)` @0x801098E8-F0, `lw v0,1424(v1)` / `addiu v0,v0,500` / `sh v0,26(sp)` @0x801098F4-900,
+                 * `lw v0,1428(v1)` / `sh v0,28(sp)` @0x80109904-0C, `addiu a3,sp,24` @0x80109930 (wie das Tropfblut
+                 * @0x8010887C-D4). Vorher Welt-Versatz (0, +500, 0) = 500 UNTER dem Becken statt 283 darueber. */
+                int32_t a3[3];
+                re2z_blood_a3(e, 1, 0, 500, a3);
+                re2z_gore_fx_a3(e, 0, rid * 8u + 4048u, (int16_t)(r2 * 16u), a3);
+                                                   /* Anker Part 0 (`addiu a2,s3,72` @0x80109938) */
             }
         }
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
@@ -5669,17 +5800,24 @@ static void re2z_death_magnum(re15_actor_t *e, re15_actor_t *pl)
         /* HALS-ANKER (Dossier 2): a2 ist zwar die Part-0-Matrix, aber a3 = {rec8+0x2C,
          * rec8+0x30+300, rec8+0x34} @0x801093A0-C4 = die KOPF-Part-Position im Anker-Raum.
          * Port-Aequivalent: Kopf-Bone-Weltposition mit ofs_y. Vorher spawnten alle drei
-         * an der HUEFTE - sichtbare Divergenz (die Fontaene gehoert an den Hals). */
-        re2z_gore_fx_ex(e, 8, 8000u, (int16_t)e->rot_y, 0, 300, 0); /* Id 8000 @0x801093C0, Anker Part 0
-                                                    * (`addiu s1,s1,72` @0x801093D0), ofs
-                                                    * (m+1420, m+1424+300, m+1428)
-                                                    * @0x801093A0-C4, @0x801093D4 */
+         * an der HUEFTE - sichtbare Divergenz (die Fontaene gehoert an den Hals).
+         * Runde 36 Spur C (Nachbesserung 1): jetzt woertlich — Anker Part 0, a3 im ANKER-Rahmen
+         * (Anker.R*a3 + Anker.T, @0x8001DB74-DC1C), a3 = s2 = sp+24 (`addiu s2,sp,24` @0x801093A4,
+         * `addu a3,s2,zero` @0x801093B0 / @0x80109418 / @0x8010943C):
+         *   1: (P8.x, P8.y + 300, P8.z) — `lw v0,1420(v1)` / `sh v0,24(sp)` @0x801093A0-A8, `lw v0,1424(v1)` /
+         *      `addiu v0,v0,300` / `sh v0,26(sp)` @0x801093AC-B8, `lw v0,1428(v1)` / `sh v0,28(sp)` @0x801093BC-C4
+         *   2/3: a3.y -= 400 (`lhu v0,26(sp)` / `addiu v0,v0,-400` / `sh v0,26(sp)` @0x80109414-24, Delay-Slot
+         *      des 2. Aufrufs) -> (P8.x, P8.y - 100, P8.z) fuer Spawn 2 UND 3. Vorher: Kopf-Lage + Welt-Versatz. */
+        int32_t a3m[3];
+        re2z_blood_a3(e, 1, 0, 300, a3m);                          /* (P8.x, P8.y + 300, P8.z) */
+        re2z_gore_fx_a3(e, 0, 8000u, (int16_t)e->rot_y, a3m);      /* Id 8000 @0x801093C0, Anker Part 0
+                                                    * (`addiu s1,s1,72` @0x801093D0), @0x801093D4 */
         int bear = re2z_bearing_to(e, pl);         /* jal 0x800154AC @0x801093F4 */
-        re2z_gore_fx_ex(e, 8, 0x08001B58u, (int16_t)bear, 0, -400, 0); /* Id 0x08001B58 (= Raum-Id 5,
+        a3m[1] -= 400;                             /* @0x80109414-24 */
+        re2z_gore_fx_a3(e, 0, 0x08001B58u, (int16_t)bear, a3m);    /* Id 0x08001B58 (= Raum-Id 5,
                                                     * Fleischbrocken) @0x801093FC-400, Winkel =
-                                                    * Peilung @0x80109408-0C, ofs y-400
-                                                    * @0x8010941C-24, @0x80109420 */
-        re2z_gore_fx_ex(e, 8, 0x00021F40u, (int16_t)e->rot_y, 0, -400, 0); /* Id 0x00021F40 (FONTAENE)
+                                                    * Peilung @0x80109408-0C, @0x80109420 */
+        re2z_gore_fx_a3(e, 0, 0x00021F40u, (int16_t)e->rot_y, a3m); /* Id 0x00021F40 (FONTAENE)
                                                     * @0x80109428-2C, Winkel
                                                     * +0x76 @0x80109434, @0x80109438 */
         /* ---- DER KOPF AB (Part 8 = Kopf; `addiu a2,v1,1448` = 8*172+72 @0x80109464) --------
@@ -5962,14 +6100,19 @@ static void re2z_death_rip(re15_actor_t *e, re15_actor_t *pl)
             int ang = (int)e->rot_y + (int)(r1 * 16u) - (int)(r2 * 16u);
                                                    /* `sll s0,s0,4` @0x8010900C, `sll v0,v0,4`
                                                     * @0x80109014, `addu/subu` @0x80109018-1C */
-            re2z_gore_fx_ex(e, 0, 8000u, (int16_t)ang, 0, -500, 0); /* Id 8000 @0x80109000, ofs {0,-500,0}
-                                                    * @0x80108FE4-F4, Anker Part 0 (`addiu s1,
+            /* Runde 36 Spur C (Nachbesserung 1): a3 = s2 = sp+24 = (0,-500,0) (`addiu v0,zero,-500` / `sh zero,24` /
+             * `sh v0,26` / `sh zero,28` @0x80108FE4-F4, `addiu s2,sp,24` @0x80109004, `addu a3,s2,zero` @0x80109008)
+             * im ANKER-Rahmen (vorher Welt-Versatz). */
+            static const int32_t a3r[3] = { 0, -500, 0 };
+            re2z_gore_fx_a3(e, 0, 8000u, (int16_t)ang, a3r); /* Id 8000 @0x80109000, Anker Part 0 (`addiu s1,
                                                     * s1,72` @0x80109020) @0x80109024 */
         }
         {   uint32_t r3 = re2z_rand();             /* Id 0x08000000 | ((r+4000)*4)
                                                     * @0x8010902C-44 -> Raum-Id 5 (Dossier 1.2) */
             uint32_t r4 = re2z_rand();             /* Winkel @0x80109040-4C */
-            re2z_gore_fx_ex(e, 0, 0x08000000u | ((r3 + 4000u) * 4u), (int16_t)(r4 * 16u), 0, 0, 0);
+            /* Runde 36 Spur C: derselbe a3 (`addu a3,s2,zero` @0x80109058, Delay-Slot) — vorher OHNE Versatz. */
+            static const int32_t a3r2[3] = { 0, -500, 0 };
+            re2z_gore_fx_a3(e, 0, 0x08000000u | ((r3 + 4000u) * 4u), (int16_t)(r4 * 16u), a3r2);
                                                    /* Anker Part 0 @0x80109050,
                                                             * FUN_8001BF10 @0x80109054 */
         }
@@ -6601,13 +6744,23 @@ static void re2z_knockdown_gore(re15_actor_t *e)
     }
     /* Die Blutfontaene am Part 3 laeuft IMMER — der Abriss faellt hier durch (@0x80107680-708). */
     /* Alle vier Fontaenen haengen am PART 3 (`addiu s0,s0,588` @0x801076A0, a2 = s0). */
-    re2z_gore_fx(e, 3, 5000u);                                     /* v={0,0,0}   @0x801076A4 */
-    (void)re2z_rand();                                             /* @0x801076B0 */
-    re2z_gore_fx_ex(e, 3, 6000u, (int16_t)e->rot_y, 0, 400, 0);       /* v={0,400,0} @0x801076C4 */
-    (void)re2z_rand();                                             /* @0x801076D0 */
-    re2z_gore_fx_ex(e, 3, 4000u, (int16_t)e->rot_y, 0, 800, 0);       /* v={0,800,0} @0x801076E4 */
-    (void)re2z_rand();                                             /* @0x801076EC */
-    re2z_gore_fx(e, 3, 0x08001000u);                               /* @0x80107704 */
+    /* Runde 36 Spur C (Nachbesserung 1): a3 = s1 = sp+24 (`addiu s1,sp,24` @0x80107688, `addu a3,s1,zero`
+     * @0x80107690/@0x801076C8/@0x801076E8) liegt im ANKER-Rahmen des Parts 3 (Anker.R*a3 + Anker.T,
+     * @0x8001DB74-DC1C; am waagerechten Arm zeigt (0,400,0) den Arm ENTLANG, nicht nach unten — vorher
+     * Welt-Versatz). Die Winkel a1 sind die Original-Werte: 0 (`addu a1,zero,zero` @0x80107684), r<<2
+     * (`sll a1,v0,2` @0x801076BC), r<<4 (`sll a1,v0,4` @0x801076DC / @0x801076FC) — vorher +0x76. */
+    {   static const int32_t a3_0[3] = { 0, 0, 0 };                /* `sh zero,24/26/28(sp)` @0x80107694-9C */
+        static const int32_t a3_400[3] = { 0, 400, 0 };            /* `addiu v0,zero,400` / `sh v0,26(sp)` @0x801076AC-B4 */
+        static const int32_t a3_800[3] = { 0, 800, 0 };            /* `addiu v0,zero,800` / `sh v0,26(sp)` @0x801076CC-D4 */
+        uint32_t r;
+        re2z_gore_fx_a3(e, 3, 5000u, 0, a3_0);                     /* @0x801076A4 */
+        r = re2z_rand();                                           /* @0x801076B0 */
+        re2z_gore_fx_a3(e, 3, 6000u, (int16_t)(r << 2), a3_400);   /* @0x801076C4 */
+        r = re2z_rand();                                           /* @0x801076D0 */
+        re2z_gore_fx_a3(e, 3, 4000u, (int16_t)(r << 4), a3_800);   /* @0x801076E4 */
+        r = re2z_rand();                                           /* @0x801076EC */
+        re2z_gore_fx_ex(e, 3, 0x08001000u, (int16_t)(r << 4), 0, 0, 0);   /* a3 = 0, @0x80107704 */
+    }
 }
 
 /* `death` = 1: die Wurzel ist die DEATH-Tabelle (+0x4 == 3, Zelle RE2ZD_7438 — SPALTE 0 der
@@ -7052,8 +7205,11 @@ static void re2z_getup_hurt(re15_actor_t *e, re15_actor_t *pl)
          * derselbe Anker wie der Kopf-Emitter der Verkohlung @0x801061AC), a1 = +0x76 (rot_y
          * @0x80107B28), v = {0,300,0} @0x80107B20-24. Auftritt nach dem Nutzer-Mandat (RE2-
          * Entscheidung, RE1.5-Praesentation) wie die drei Treffer-Emitter der HURT-Wurzel
-         * (s. re2z_blood_fx_dir: scale16 0x2000 @0x80105C54, 8 Splatter). */
-        re2z_blood_fx_scaled(e, 8, (int16_t)e->rot_y, 0x2000, 8);
+         * (s. re2z_blood_fx_dir: scale16 0x2000 @0x80105C54, 8 Splatter).
+         * Runde 36 Spur C (Abnahme 0 M2): a3 = sp+24 = (0, 300, 0) — der Prolog nullt den Vektor
+         * (`sh zero,24/26/28(sp)` @0x80107A98-AA0), `addiu v0,zero,300` / `sh v0,26(sp)` @0x80107B20-24,
+         * `addiu a3,sp,24` @0x80107B18; Lage = Part8.R * a3 + Part8.T. */
+        re2z_blood_fx_scaled(e, 8, (int16_t)e->rot_y, 0x2000, 8, s_re2z_a3_aufstehen);
         e->anim_frac = 15;                                         /* sb 15,334 @0x80107B3C: NUR das
                                                                     * Blend-Byte, Clip/Bild bleiben */
         if ((e->re2z_word228 & 0xffu) == 1u)                       /* andi 0xff / bne v0,s0(=1)
@@ -7065,8 +7221,10 @@ static void re2z_getup_hurt(re15_actor_t *e, re15_actor_t *pl)
             e->hp = 0;                                             /* sh zero,342 @0x80107B94 */
             e->re2z_dir16a = 1;                                    /* sb 1,362 @0x80107B9C */
             /* Blut 0x31F40 = 8000 | 0x30000 (@0x80107BA0-A4), Anker Part 8 (+1448 @0x80107BB4),
-             * a1 = rand << 4 (`jal 0x80015fe8` @0x80107B98 / `sll a1,v0,4` @0x80107BA8) */
-            re2z_gore_fx_ex(e, 8, 0x00031F40u, (int16_t)(re2z_rand() << 4), 0, 0, 0);
+             * a1 = rand << 4 (`jal 0x80015fe8` @0x80107B98 / `sll a1,v0,4` @0x80107BA8).
+             * Runde 36 Spur C (Abnahme 0 M2): `addiu a3,sp,24` @0x80107BAC — derselbe Vektor (0,300,0)
+             * wie oben (FUN_8001BF10 liest a3 nur, @0x8001BFE8-FFC; dazwischen kein Store auf sp+24..28). */
+            re2z_gore_fx_a3(e, 8, 0x00031F40u, (int16_t)(re2z_rand() << 4), s_re2z_a3_aufstehen);
             e->anim_frac = 15;                                     /* sb 15,334 @0x80107BB8-BC */
         }
         if (e->re2z_cd239 == 0) {                                  /* lbu 569 / bne @0x80107BC0-C8 */
@@ -7502,9 +7660,12 @@ static void re2z_death_crawler(re15_actor_t *e)
         e->re2z_flags21a &= (uint16_t)~0x4u;                       /* andi 0xfffb @0x80108AA0-A4 —
                                                                     * Leichen-Pose 23 (Ruecken) */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x80108AB4-B8 */
-        re2z_gore_fx(e, 0, 8096u);                                 /* Part 0 (`addiu a2,a2,72`
-                                                                    * @0x80108AD4), ofs y+300
-                                                                    * @0x80108ABC-C4 */
+        {   /* Runde 36 Spur C (Abnahme 0 M1): a3 = sp+24 (`addiu a3,sp,24` @0x80108A98) = (0, 300, 0):
+             * `addiu v0,zero,300` / `sh zero,24(sp)` / `sh v0,26(sp)` / `sh zero,28(sp)` @0x80108ABC-C8;
+             * Id 8096 (`addiu a0,zero,8096` @0x80108A84), a1 = +0x76 (`lh a1,118(s0)` @0x80108ACC). */
+            static const int32_t a3[3] = { 0, 300, 0 };
+            re2z_gore_fx_a3(e, 0, 8096u, (int16_t)e->rot_y, a3);  /* Part 0 (`addiu a2,a2,72` @0x80108AD4) */
+        }
         re2z_se((re2z_rand() & 1u) ? 13 : 11);                     /* @0x80108AD8-F4 */
         /* jal 0x80018FB0 @0x80108AF8 (Praesentation, OPEN) */
         if (e->sub_state_1 == 10u && !(e->re2z_f10e & 0x80u))
@@ -7567,10 +7728,15 @@ static void re2z_death_lying(re15_actor_t *e)
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80109b10-14 */
         /* +0x1C0 |= 1 @0x80109b0c/18-1c — Modell-/Kollisions-Byte, im Port nicht gefuehrt (OPEN) */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x80109b20-2c */
-        re2z_gore_fx(e, 0, 8096u);                                 /* Id 8096 @0x80109b40, Anker
-                                                                    * `addiu a2,a2,72` @0x80109b64
-                                                                    * = Part 0, ofs y+300
-                                                                    * @0x80109b44 */
+        {   /* Runde 36 Spur C (Nachbesserung 1, von probe_r36_blut tief gefunden): a3 = sp+32 =
+             * (P8.x, P8.y + 300, P8.z) — `lw v0,1420(v1)` / `sh v0,32(sp)` @0x80109B30-38, `lw v0,1424(v1)` /
+             * `addiu v0,v0,300` / `sh v0,34(sp)` @0x80109B3C-48, `lw v0,1428(v1)` / `sh v0,36(sp)` @0x80109B4C-54,
+             * `addiu a3,sp,32` @0x80109B50; a1 = +0x76 (`lh a1,118(s0)` @0x80109B5C). */
+            int32_t a3[3];
+            re2z_blood_a3(e, 1, 0, 300, a3);
+            re2z_gore_fx_a3(e, 0, 8096u, (int16_t)e->rot_y, a3);  /* Id 8096 @0x80109b40, Anker
+                                                                    * `addiu a2,a2,72` @0x80109b64 = Part 0 */
+        }
         re2z_se((re2z_rand() & 1u) ? 13 : 11);                     /* @0x80109b68-84 */
         /* jal 0x80018FB0 @0x80109b88 (Praesentation, OPEN) */
         {   unsigned r = e->sub_state_1;                           /* lbu 5 @0x80109b90 */
@@ -7691,15 +7857,24 @@ static void re2z_death_main(re15_actor_t *e)
         }
 
         /* ---- Blut: Zone-0 generisch an Part 1, sonst am Part 0 (`+0x1D2 % 3`, magisches
-         * multu 0xAAAAAAAB @0x801085F4-4C / @0x80108634-4C) ---- */
-        if (((unsigned)e->re2z_hits1d2 % 3u) != 0u)
-            re2z_gore_fx(e, 0, 8096u);                             /* Id 8096 @0x8010866C, Anker
-                                                                    * `addiu a2,s2,72` @0x80108690,
-                                                                    * ofs y+300 @0x80108670 */
-        else
-            re2z_gore_fx(e, 1, 6096u);                             /* Id 6096 @0x80108694, Anker
-                                                                    * `addiu a2,a2,244` @0x801086B0,
-                                                                    * ofs {0,800,0} @0x801086A0-A8 */
+         * multu 0xAAAAAAAB @0x801085F4-4C / @0x80108634-4C) ----
+         * Runde 36 Spur C (Abnahme 0 M1): mit dem a3-Versatz, a3 = sp+24 in BEIDEN Zweigen
+         * (`addiu a3,sp,24` @0x80108650, Delay-Slot):
+         *   Zone != 0: `lw v0,1420(v1)` / `sh v0,24(sp)` @0x8010865C-64, `lw v0,1424(v1)` / `addiu v0,v0,300` /
+         *              `sh v0,26(sp)` @0x80108668-74, `lw v0,1428(v1)` / `sh v0,28(sp)` @0x80108678-80
+         *              -> a3 = (P8.x, P8.y + 300, P8.z) OHNE Seitenversatz, Anker Part 0
+         *   Zone 0   : `addiu v0,zero,800` / `sh zero,24` / `sh v0,26` / `sh zero,28` @0x8010869C-A8 -> (0,800,0), Part 1
+         * a1 = +0x76 (`lh a1,118(s1)` @0x80108688 / @0x801086AC), `jal 0x8001bf10` @0x801086B4. */
+        {   int32_t a3[3];
+            int zone = (int)((unsigned)e->re2z_hits1d2 % 3u);
+            re2z_blood_a3(e, zone, 0, 300, a3);                    /* seite 0: kein `subu` wie im HURT */
+            if (zone != 0)
+                re2z_gore_fx_a3(e, 0, 8096u, (int16_t)e->rot_y, a3);   /* Id 8096 @0x8010866C, Anker
+                                                                        * `addiu a2,s2,72` @0x80108690 */
+            else
+                re2z_gore_fx_a3(e, 1, 6096u, (int16_t)e->rot_y, a3);   /* Id 6096 @0x80108694, Anker
+                                                                        * `addiu a2,a2,244` @0x801086B0 */
+        }
         re2z_se((re2z_rand() & 1u) ? 13 : 11);                     /* EIN Wurf @0x801086BC-D8 */
         /* jal 0x80018FB0(self) @0x801086DC (Praesentation, OPEN) */
         re2z_death_dismember(e);                                   /* @0x801086E4-808 */
@@ -7718,17 +7893,18 @@ static void re2z_death_main(re15_actor_t *e)
             int d  = (int)(e->re2z_dir16a & 1u) * 10;
             int fr = re2z_frame_slot(e);
             if (fr >= d + 4 && fr <= d + 16 && (fr & 1)) {
+                /* Runde 36 Spur C (Nachbesserung 1, Zensus der FUN_8001BF10-Aufrufe): a3 = sp+24 =
+                 * (P8.x, P8.y + 500, P8.z) — `lw v0,1420(v1)` / `sh v0,24(sp)` @0x80108884-8C,
+                 * `lw v0,1424(v1)` / `addiu v0,v0,500` / `sh v0,26(sp)` @0x80108890-9C, `lw v0,1428(v1)` /
+                 * `sh v0,28(sp)` @0x801088A0-A8, `addiu a3,sp,24` @0x801088CC; Winkel a1 = r2 << 4
+                 * (`sll a1,v0,4` @0x801088C8) statt +0x76. */
                 uint32_t r1 = re2z_rand();                         /* @0x801088B0 */
-                uint32_t r2 = re2z_rand();                         /* @0x801088BC — Winkel
-                                                                    * `sll a1,v0,4` @0x801088C8;
-                                                                    * der Port-Stand-in nimmt
-                                                                    * +0x76 als Winkel */
-                (void)r2;
-                re2z_gore_fx(e, 0, (uint32_t)((r1 << 3) + 4048u)); /* Id `sll s0,v0,3` @0x801088B8
-                                                                    * `addiu s0,s0,4048` @0x801088C0,
-                                                                    * Anker `addiu a2,s2,72`
-                                                                    * @0x801088D4, ofs y+500
-                                                                    * @0x80108898 */
+                uint32_t r2 = re2z_rand();                         /* @0x801088BC */
+                int32_t a3[3];
+                re2z_blood_a3(e, 1, 0, 500, a3);                   /* (P8.x, P8.y + 500, P8.z) */
+                re2z_gore_fx_a3(e, 0, (uint32_t)((r1 << 3) + 4048u),   /* Id `sll s0,v0,3` @0x801088B8
+                                                                        * `addiu s0,s0,4048` @0x801088C0 */
+                                (int16_t)(r2 << 4), a3);               /* Anker `addiu a2,s2,72` @0x801088D4 */
             }
         }
         if (re2z_clip_done(e)) {
@@ -8889,7 +9065,11 @@ int re15_re2z_tick(int slot)
      *
      * ⚠️ AUSDRUECKLICH GEWUENSCHTE ABWEICHUNG von RE2 (Nutzer-Entscheidung, wie 83b7740c):
      * solange der Zombie die port-synthetisierte SPAWN-POSE haelt (EXEC[7] liegend / EXEC[8]
-     * fressend), zaehlen die Sperren (2) und (4) NICHT. Der Geltungsbereich ist damit exakt der
+     * fressend), zaehlen die Sperren (2) und (4) NICHT.
+     * ⛔ RUNDE 36 SPUR C: fuer den FRESSER (EXEC[8]) ZURUECKGENOMMEN — der Nutzer bestellt das
+     * Original ("Alle Schusswaffen treffen ... fressende Zombies. Im Original geht beides nicht ->
+     * angehen"); s. re15_re2z_hit_filter_apply (`spawn_pose` ohne EXEC[8]) und
+     * include/re15_schuss_r36.h (2). Der Geltungsbereich ist damit exakt der
      * Ort, an dem der Port den Zustand selbst erzeugt hat. UEBERALL SONST bleibt der Filter
      * unveraendert scharf — dort sitzt der echte Nutzen: der walking-immortal-Fall aus EXEC[11]
      * (siehe der Block ueber re2z_exec_eleven) wird weiterhin von Gate (2) gefangen, sobald ein
@@ -8966,7 +9146,19 @@ void re15_re2z_hit_filter_apply(int slot)
          * (re2z_exec_lying default / re2z_exec_feeding case 3), reicht es, die Ausnahme fuer
          * 9/10 NICHT zu gewaehren — danach faellt sie ueber `grid_id = 0` ohnehin weg. */
         int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib >= 7u && nib <= 10u);
-        int spawn_pose = in_pose && !passive_lyer;
+        /* Runde 36 Spur C (Nutzer: "Alle Schusswaffen treffen ... fressende Zombies. Im Original geht
+         * beides nicht -> angehen"): die v0.3.5-Ausnahme gilt NICHT mehr fuer den FRESSER (EXEC[8]).
+         * RE2 FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC) wirft ihn in der
+         * Kandidatenschleife heraus: `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78
+         * (Gate 2: +0x1D3 |= 0x80 aus EXEC[8] P0 @0x80103c04-14). NUR Gate 2 sperrt den RE2-Fresser:
+         * sein Spawn-Remap ist Deskriptor 8 @0x80100AC0-DC (`addiu v1,zero,8` / `addiu v0,zero,18` /
+         * `sw v0,332` / `addiu v0,zero,2049` / `sw v0,4`) und schreibt +0x10E NICHT. Das `sh 0x4004,270`
+         * @0x80100A88-8C gehoert zu Deskriptor 7 (EXEC[7] 0x701, Clip 23, HP -1 @0x80100A64-A4); das
+         * 0x4004 des Port-Fressers stammt aus der aelteren Port-Abbildung in re2z_init (Gate 4
+         * `andi 0xc000` @0x80041290-9c ist fuer ihn im Port nur zusaetzlich). Treffbar wird er erst mit
+         * dem Aufstehen (EXEC[8] P3 `andi 0x7f` @0x80103CE4-FC) — Belege include/re15_schuss_r36.h (2).
+         * Der LIEGENDE (EXEC[7], nicht passiv) behaelt die bisherige Ausnahme (nicht Teil des Auftrags). */
+        int spawn_pose = in_pose && !passive_lyer && e->sub_state_1 != 8;
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
          * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):
          *   [C-ANDERE] seed 4 slot 3 f257: st=1 s1=1 s2=1 hp=49 **1D3=80 10E=4004** clip=2

@@ -1,0 +1,14 @@
+nb2_blut: waffe 3 seite pz tief D 1800 platz 2 slot 2 typ 0x10
+F66   TREF  st 1->2/3/1 hp 98->82 rag 0 bank loco fl 0 | part  1 fx=(-1345,-1224,-19664) a3=(0,800,0) | d_r 56 | d_alt 1
+F78   TREF  st 2->2/3/1 hp 82->66 rag 0 bank loco fl 0 | part  1 fx=(-1196,-1213,-19689) a3=(0,800,0) | d_r 110 | d_alt 1
+F90   TREF  st 2->2/3/1 hp 66->50 rag 0 bank haupt fl 0 | part  1 fx=(-1414,-1206,-19841) a3=(0,800,0) | d_r 2 | d_alt 2
+F90   TREF  st 2->2/3/1 hp 66->50 rag 0 bank haupt fl 0 | part  0 fx=(-1422,-2495,-19925) a3=(0,-500,0) | d_r 2 | d_alt 2
+F92         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1653,-2329,-20077) a3=(0,-500,0) | d_r 0 | d_alt 0
+F94         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1700,-2277,-20109) a3=(0,-500,0) | d_r 1 | d_alt 1
+F96         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1697,-2163,-20147) a3=(0,-500,0) | d_r 1 | d_alt 1
+F98         st 2->2/3/1 hp 50->50 rag 0 bank haupt fl 0 | part  0 fx=(-1672,-1981,-20188) a3=(0,-500,0) | d_r 1 | d_alt 1
+F102  TREF  st 2->1/5/0 hp 50->34 rag 0 bank haupt fl 0 | part  1 fx=(-1272,-872,-19733) a3=(0,800,0) | d_r 1 | d_alt 1
+F163        st 1->1/5/7 hp 18->18 rag 0 bank haupt fl 0 | part  0 fx=(-1482,-222,-19912) a3=(0,0,0) (ohne) | d_r 14 | d_alt 14
+F174  TREF  st 1->2/3/1 hp 18->2 rag 0 bank haupt fl 0 | part  8 fx=(-938,-291,-19541) a3=(0,300,0) | d_r 32 | d_alt 32
+F186  TOD   st 2->3/3/1 hp 2->-14 rag 0 bank haupt fl 0 | part  0 fx=(-1146,-773,-19566) a3=(-40,-483,0) | d_r 2 | d_alt 2
+ERGEBNIS waffe 3 pz tief: Tod 186, Spawns 12 (ohne a3 1), Spawns mit Loco/RE15-Bank 2 | d_r max mit a3 110 (>40: 2), ohne a3 14 (>40: 0)

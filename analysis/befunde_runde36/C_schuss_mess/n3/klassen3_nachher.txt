@@ -1,0 +1,4 @@
+Laeufe 320 (davon mit Tod 320)
+K1 Kopfabriss Part 0 @0x80102B24 a3 (0,-600,0): Spawns 32 in 32 Laeufen, d(gezeichnet T) min 0 max 0
+K2 Hals-Stumpf Part 8 @0x80102BBC a3 (0,100,0): Spawns 282 in 32 Laeufen, d(gezeichnet T) min 0 max 0
+K9 alle uebrigen Spawns: Spawns 4470 in 320 Laeufen, d(gezeichnet T) min 0 max 361

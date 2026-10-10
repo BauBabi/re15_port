@@ -997,6 +997,11 @@ typedef struct {
                               * Ticks (`sw zero,0(part)` @0x80114b78) -> Koerper weg; der Port
                               * verbirgt das Mesh ab GIB-step-0 (Part-Scatter-Mover nicht RE'd,
                               * crow_death_pool.md §4.2) */
+    uint8_t  re2c_gib_parts; /* Runde 36 Spur C: 1 = Modellblock der RE2-Kraehe geseedet (re2c_init) -> die
+                              * Part-Bruecke (re15_re2z_gore_active) gilt; beim RE2-GIB 0x80102CA0 fliegen die 13
+                              * Zeilen ueber dieselbe Physik wie der Zombie-Zerleger (schuss_r36.c). Eigener Marker,
+                              * weil Zeile 0 der Kraehe (anders als das Zombie-Becken) selbst geworfen wird und
+                              * nach 29 Bildern Flags = 0 traegt. */
 
     /* Dog (Cerberus, type 0x20) AI state — byte-true 0x8010d7f8 family (RE15_DOG_AI.md).
      * A ground chase/lunge/bite enemy; shares the zombie steering/collision + take_damage.

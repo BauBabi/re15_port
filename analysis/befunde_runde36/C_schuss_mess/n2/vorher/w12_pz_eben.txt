@@ -1,0 +1,37 @@
+nb2_blut: waffe 12 seite pz eben D 1800 platz 2 slot 2 typ 0x10
+F66   TREF  st 1->2/15/1 hp 98->94 rag 0 bank haupt fl 0 | part  0 fx=(-1697,-1789,-19626) a3=(-214,240,64) | d_r 58 | d_alt 58
+F67   TREF  st 2->2/15/1 hp 94->90 rag 0 bank haupt fl 0 | part  0 fx=(-1745,-1810,-19643) a3=(-218,208,24) | d_r 55 | d_alt 55
+F68   TREF  st 2->2/15/1 hp 90->86 rag 0 bank haupt fl 0 | part  0 fx=(-1667,-2577,-19369) a3=(-158,-584,250) | d_r 60 | d_alt 60
+F69   TREF  st 2->2/15/1 hp 86->82 rag 0 bank haupt fl 0 | part  0 fx=(-1534,-2640,-19450) a3=(88,-640,186) | d_r 47 | d_alt 47
+F74   TREF  st 1->2/15/1 hp 82->78 rag 0 bank haupt fl 0 | part  0 fx=(-1671,-2494,-19876) a3=(-128,-500,-196) | d_r 68 | d_alt 68
+F75   TREF  st 2->2/15/1 hp 78->74 rag 0 bank haupt fl 0 | part  0 fx=(-1774,-1907,-19799) a3=(18,68,-146) | d_r 72 | d_alt 72
+F76   TREF  st 2->2/15/1 hp 74->70 rag 0 bank haupt fl 0 | part 12 fx=(-1952,-2610,-19256) a3=(0,0,0) (ohne) | d_r 204 | d_alt 204
+F76   TREF  st 2->2/15/1 hp 74->70 rag 0 bank haupt fl 1 | part 13 fx=(-1712,-2097,-19216) a3=(0,0,0) (ohne) | d_r 108 | d_alt 93
+F76   TREF  st 2->2/15/1 hp 74->70 rag 0 bank haupt fl 0 | part  0 fx=(-1862,-2501,-19885) a3=(-124,-516,-228) | d_r 62 | d_alt 62
+F77   TREF  st 2->2/15/1 hp 70->66 rag 0 bank haupt fl 0 | part  0 fx=(-1852,-2031,-19419) a3=(-4,-60,218) | d_r 43 | d_alt 43
+F78   TREF  st 2->2/15/1 hp 66->62 rag 0 bank haupt fl 0 | part  0 fx=(-1965,-2347,-19717) a3=(-78,-360,-86) | d_r 53 | d_alt 53
+F79   TREF  st 2->2/15/1 hp 62->58 rag 0 bank haupt fl 0 | part  0 fx=(-2005,-2264,-19640) a3=(-52,-284,-24) | d_r 42 | d_alt 42
+F80   TREF  st 2->2/15/1 hp 58->54 rag 0 bank haupt fl 0 | part  0 fx=(-1929,-1813,-19720) a3=(64,168,-88) | d_r 58 | d_alt 58
+F81   TREF  st 2->2/15/1 hp 54->50 rag 0 bank haupt fl 0 | part  0 fx=(-1844,-2214,-19586) a3=(230,-212,32) | d_r 59 | d_alt 59
+F86   TREF  st 1->2/15/1 hp 50->46 rag 0 bank haupt fl 0 | part  0 fx=(-1790,-2603,-19631) a3=(116,-696,46) | d_r 51 | d_alt 51
+F87   TREF  st 2->2/15/1 hp 46->42 rag 0 bank haupt fl 0 | part  0 fx=(-1899,-2304,-19826) a3=(194,-396,-172) | d_r 50 | d_alt 50
+F88   TREF  st 2->2/15/1 hp 42->38 rag 0 bank haupt fl 0 | part  0 fx=(-2180,-1896,-19842) a3=(60,72,-224) | d_r 43 | d_alt 43
+F89   TREF  st 2->2/15/1 hp 38->34 rag 0 bank haupt fl 0 | part  0 fx=(-2446,-1791,-19699) a3=(-158,208,-96) | d_r 57 | d_alt 57
+F89   TREFZ st 2->2/15/1 hp 38->34 rag 0 bank haupt fl 1 | part 13 fx=(-2462,-2052,-19161) a3=(0,0,0) (ohne) | d_r 2124 | d_alt 148
+F90   TREF  st 2->2/15/1 hp 34->30 rag 0 bank haupt fl 0 | part  0 fx=(-2238,-1807,-19748) a3=(92,168,-144) | d_r 35 | d_alt 35
+F91   TREF  st 2->2/15/1 hp 30->26 rag 0 bank haupt fl 0 | part  0 fx=(-2527,-1862,-19804) a3=(-172,116,-206) | d_r 44 | d_alt 44
+F92   TREF  st 2->2/15/1 hp 26->22 rag 0 bank haupt fl 0 | part  0 fx=(-2516,-1700,-19672) a3=(-130,272,-56) | d_r 50 | d_alt 50
+F93   TREF  st 2->2/15/1 hp 22->18 rag 0 bank haupt fl 0 | part  0 fx=(-2668,-1958,-19444) a3=(-192,4,178) | d_r 43 | d_alt 43
+F94       Z st 2->2/15/1 hp 18->18 rag 0 bank haupt fl 1 | part 13 fx=(-2582,-2102,-19165) a3=(0,0,0) (ohne) | d_r 2201 | d_alt 76
+F98   TREF  st 1->2/15/1 hp 18->14 rag 0 bank haupt fl 0 | part  0 fx=(-2450,-1765,-19782) a3=(116,184,-168) | d_r 47 | d_alt 47
+F99   TREF  st 2->2/15/1 hp 14->10 rag 0 bank haupt fl 0 | part  0 fx=(-2736,-1728,-19723) a3=(-108,292,-70) | d_r 35 | d_alt 35
+F100  TREF  st 2->2/15/1 hp 10->6 rag 0 bank haupt fl 0 | part  0 fx=(-2713,-1850,-19879) a3=(-138,160,-208) | d_r 30 | d_alt 30
+F101  TREF  st 2->2/15/1 hp 6->2 rag 0 bank haupt fl 0 | part  0 fx=(-2675,-2685,-19691) a3=(-90,-688,-42) | d_r 40 | d_alt 40
+F102  TOD   st 2->3/15/1 hp 2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2692,-2476,-19654) a3=(-40,-483,0) | d_r 1 | d_alt 1
+F107        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2660,-2263,-19624) a3=(-40,-283,0) | d_r 0 | d_alt 0
+F109        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2636,-2222,-19609) a3=(-40,-283,0) | d_r 1 | d_alt 1
+F111        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2622,-2114,-19599) a3=(-40,-283,0) | d_r 1 | d_alt 1
+F113        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2636,-1863,-19603) a3=(-40,-283,0) | d_r 1 | d_alt 1
+F115        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2662,-1502,-19614) a3=(-40,-283,0) | d_r 1 | d_alt 1
+F117        st 3->3/15/1 hp -2->-2 rag 0 bank haupt fl 0 | part  0 fx=(-2668,-1193,-19618) a3=(-40,-283,0) | d_r 1 | d_alt 1
+ERGEBNIS waffe 12 pz eben: Tod 102, Spawns 35 (ohne a3 4), Spawns mit Loco/RE15-Bank 0 | d_r max mit a3 72 (>40: 20), ohne a3 2201 (>40: 4)

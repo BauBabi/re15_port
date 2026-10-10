@@ -1,0 +1,56 @@
+Bank 0x10: bones=15 P8.loc=(-50,-667,0)
+F66   (G)   part= 0 fx=(104,-1664,-19903) a3=(-214,240,64) bank haupt rag 0 -> Skelett d=59 (Schranke 100) | roh d=243
+F68   (G)   part= 0 fx=(132,-1657,-19890) a3=(-218,208,24) bank haupt rag 0 -> Skelett d=58 (Schranke 100) | roh d=245
+F74   (G)   part= 0 fx=(-291,-1991,-19823) a3=(190,-228,88) bank haupt rag 0 -> Skelett d=34 (Schranke 100) | roh d=327
+F76   (G)   part= 0 fx=(-71,-1549,-19940) a3=(64,280,80) bank haupt rag 0 -> Skelett d=76 (Schranke 100) | roh d=271
+F78   (G)   part= 0 fx=(213,-1583,-20016) a3=(-196,244,34) bank haupt rag 0 -> Skelett d=44 (Schranke 100) | roh d=272
+F80   (G)   part= 0 fx=(243,-2400,-20152) a3=(-146,-592,214) bank haupt rag 0 -> Skelett d=38 (Schranke 100) | roh d=656
+F86   (G)   part= 0 fx=(116,-2308,-19680) a3=(142,-484,-200) bank haupt rag 0 -> Skelett d=16 (Schranke 100) | roh d=517
+F88   (G)   part= 0 fx=(33,-1864,-20118) a3=(2,-36,242) bank haupt rag 0 -> Skelett d=45 (Schranke 100) | roh d=233
+F90   (G)   part= 0 fx=(427,-2268,-19838) a3=(-100,-460,-192) bank haupt rag 0 -> Skelett d=65 (Schranke 100) | roh d=535
+F92   (G)   part= 0 fx=(103,-1882,-20131) a3=(10,-44,214) bank haupt rag 0 -> Skelett d=37 (Schranke 100) | roh d=224
+F98   (G)   part= 0 fx=(359,-1534,-20049) a3=(-164,260,-6) bank haupt rag 0 -> Skelett d=80 (Schranke 100) | roh d=264
+F100  (G)   part= 0 fx=(514,-1634,-20035) a3=(-186,160,-112) bank haupt rag 0 -> Skelett d=76 (Schranke 100) | roh d=213
+F102  (G)   part= 0 fx=(543,-1871,-20351) a3=(-248,-108,122) bank haupt rag 0 -> Skelett d=70 (Schranke 100) | roh d=245
+F104  (G)   part= 0 fx=(560,-2334,-20424) a3=(-98,-544,190) bank haupt rag 0 -> Skelett d=92 (Schranke 100) | roh d=503
+F110  (G)   part= 0 fx=(734,-1666,-20211) a3=(-158,216,-84) bank haupt rag 0 -> Skelett d=65 (Schranke 100) | roh d=243
+F112  (G)   part= 0 fx=(649,-1891,-20430) a3=(-220,-52,150) bank haupt rag 0 -> Skelett d=54 (Schranke 100) | roh d=244
+F114  (G)   part= 0 fx=(548,-2313,-20448) a3=(-70,-488,218) bank haupt rag 0 -> Skelett d=74 (Schranke 100) | roh d=560
+F116  (G)   part= 0 fx=(520,-2435,-20277) a3=(164,-592,106) bank haupt rag 0 -> Skelett d=25 (Schranke 100) | roh d=656
+F122  (G)   part= 0 fx=(638,-1765,-20548) a3=(-182,40,212) bank haupt rag 0 -> Skelett d=34 (Schranke 100) | roh d=250
+F124  (G)   part= 0 fx=(677,-2314,-20511) a3=(-54,-488,186) bank haupt rag 0 -> Skelett d=52 (Schranke 100) | roh d=549
+F126  (G)   part= 0 fx=(759,-2284,-20061) a3=(226,-404,-248) bank haupt rag 0 -> Skelett d=42 (Schranke 100) | roh d=566
+F128  (G)   part= 0 fx=(614,-1851,-20413) a3=(74,-12,134) bank haupt rag 0 -> Skelett d=61 (Schranke 100) | roh d=169
+F134  (G)   part= 0 fx=(664,-1737,-20608) a3=(-152,76,206) bank haupt rag 0 -> Skelett d=10 (Schranke 100) | roh d=245
+F136  (G)   part= 0 fx=(901,-2167,-20291) a3=(6,-324,-200) bank haupt rag 0 -> Skelett d=89 (Schranke 100) | roh d=419
+F138  (G)   part= 0 fx=(788,-1584,-20204) a3=(160,272,-124) bank haupt rag 0 -> Skelett d=44 (Schranke 100) | roh d=346
+F140  (G)   part= 0 fx=(954,-1555,-20425) a3=(-94,256,-152) bank haupt rag 0 -> Skelett d=86 (Schranke 100) | roh d=289
+F266  (G)   part= 0 fx=(224,-849,-17929) a3=ohne (0,0,0) bank haupt rag 0 -> Skelett d=896 (Schranke 40) | roh d=896
+FAIL: F266 Spawn part=0 ohne a3 liegt 896 von der gezeichneten Matrix (Skelett), Schranke 40 (roh 896)
+F267  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=115
+FAIL: F267 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 115)
+F269  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=121
+FAIL: F269 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 121)
+F271  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=129
+FAIL: F271 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Sc[scd] WARN: event 4 DROPPED (no free event slot)
+hranke 40 (roh 129)
+F273  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=146
+FAIL: F273 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 146)
+F275  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=165
+FAIL: F275 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 165)
+F277  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=180
+FAIL: F277 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 180)
+F279  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=276
+FAIL: F279 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 276)
+F281  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=437
+FAIL: F281 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 437)
+F283  (G)   part= 8 fx=(715,-51,-17332) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (fliegt) d=100 (Schranke 40) | roh d=185
+FAIL: F283 Spawn part=8 ohne a3 liegt 100 von der gezeichneten Matrix (eigene Matrix (fliegt)), Schranke 40 (roh 185)
+F285  TOD hp 42->-1 st 1/1/6 -> 7/0/0 10E=2001
+Treffer 27, Spawns 0 (Ring 0..36), Tod bei Bild 285, Tropfblut nach dem Tod 0
+Zuordnung:
+(G): 36 Spawns, max d 896, davon ohne a3 10, beim Zeichnen (Aufschlag) 0, Loco-Bank 0, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 0, Arm-Abriss 4. Spawn 0
+Kriecher ab Bild 162: Kopfabriss 0, Hals-Stumpf 0
+FAIL: kein Kopfabriss-Spawn (Part 0, a3 (0,-600,0) @0x80102B24)
+FAIL: kein Hals-Stumpf-Spawn (Part 8, a3 (0,100,0) @0x80102BBC)
+probe_r36_blut: 12 FAILURES

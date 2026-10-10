@@ -263,6 +263,11 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
                  * sich also). Deshalb zaehlt jetzt nur noch, was wirklich haengt: cwin Bilder
                  * gesperrt UND in der ganzen Zeit kein einziger Zustandswechsel. */
                 int blocked = (e->hp >= 0) && (e->hit_react & 1u);
+                /* Runde 36 Spur C: der FRESSER in der Spawn-Pose (EXEC[8], +0x1D3 & 0x80 aus P0
+                 * @0x80103C04-14) ist seit dem Nutzer-Auftrag ("Im Original geht beides nicht")
+                 * byte-true gesperrt (RE2 Gate 2 @0x80041270-78 / Gate 4 @0x80041290-9c), bis er
+                 * aufsteht — das ist kein haengender Latch, sondern die Regel; er zaehlt hier nicht. */
+                if (e->state == 1 && e->sub_state_1 == 8 && (e->re2z_self1d3 & 0x80u)) blocked = 0;
                 if (!blocked) block_start[s] = -1;
                 else if (block_start[s] >= 0
                          && (e->state != block_st[s] || e->sub_state_1 != block_s1[s])) {

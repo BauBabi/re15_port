@@ -37,6 +37,7 @@
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
+#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (marke / nachfuehren_alle in run_all) */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
@@ -2901,8 +2902,10 @@ static int los_seg_straddles_diag(int32_t ex, int32_t ez, int32_t px, int32_t pz
     int32_t s4 = los_cross_z(rx, rz, c2x - ex, c2z - ez);
     return ((uint32_t)(s3 ^ s4) & 0x80000000u) != 0;          /* Diagonal-Enden straddeln */
 }
-static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
-                                unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
+/* Runde 36 Spur C: nicht mehr static — der Spieler-Schuss (schuss_r36.c, FUN_8001b9b4 @0x80012168)
+ * zieht denselben Strahl mit dem SPIELER als `e` (Ursprung, Band +0x82) und dem Gewinner als `player`. */
+int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step,
+                         unsigned re2_maske /* 0 = RE1.5-Sensor (ungefiltert) */)
 {
     if (!g_room_rdt.sca || step < 0 || step > 3) return 0;
     int start = 0;
@@ -14516,6 +14519,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * tested rooms: ROOM1140/1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
+            re15_schuss_r36_nachfuehr_marke(e);  /* Runde 36 Spur C N3: Lage am Handler-Ende (Blut-Nachfuehrung) */
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
             /* (hit blood moved INTO re15_enemy_ai_live_hurt phase 0 — the byte-true spot,
              * @0x80105c50-d8; the old call here could never fire, see the note there) */
@@ -14829,6 +14833,7 @@ void re15_enemy_ai_run_all(int combat_active)
          * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
          * covers). */
     }
+    re15_schuss_r36_nachfuehren_alle();  /* Runde 36 Spur C N3: Blut-Spawns dieses Bilds um Schub+Klemme nachfuehren */
 }
 
 
