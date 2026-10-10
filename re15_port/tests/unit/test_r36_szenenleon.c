@@ -513,14 +513,22 @@ static int em045(void)
 }
 
 /* ROOM1150 aufbauen (inkl. re15_irons_tod_install), Leon hinstellen, N Bilder mit Pose (Neck-FSM im Pose-Builder). */
-static re15_actor_t *irons_lauf(int tot, int32_t lx, int32_t lz, int bilder)
+static re15_actor_t *irons_lauf_raum(uint16_t raum, int tot, int32_t lx, int32_t lz, int bilder)
 {
     re15_game_state_init();
-    if (tot) re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_GESEHEN, 1);
-    if (room_boot(RE15_IT_RAUM_1150, lx, lz, 0x05dc, 0) != 0) return NULL;
+    if (tot && raum == RE15_IT_RAUM_1150) re15_game_flag_set(RE15_IT_BANK, RE15_IT_BIT_GESEHEN, 1);
+    if (room_boot(raum, lx, lz, 0x05dc, 0) != 0) return NULL;
     static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     re15_actor_t *a = &g_actors[RE15_IT_IRONS_SLOT];
     for (int f = 0; f < bilder; f++) {
+        if (tot && raum != RE15_IT_RAUM_1150 && a->active && a->type == RE15_IT_IRONS_TYP) {
+            /* Stellvertreter fuer Spur L (Elza: Irons "von Anfang an tot"): dieselbe gehaltene Todespose wie
+             * irons_tod_1150.c irons_pose(RE15_IT_IRONS_CLIP_TOT, RE15_IT_IRONS_BILD_TOT, 1). */
+            re15_actor_set_motion(a, (int16_t)RE15_IT_IRONS_CLIP_TOT);
+            a->state = 4; a->sub_state_1 = 0; a->sub_state_2 = 2;
+            a->anim_frame = (uint8_t)RE15_IT_IRONS_BILD_TOT; a->anim_flags = 0; a->anim_frac = 0;
+            a->motion_init_delay = 0;
+        }
         frame(0, 0);
         g_actors[RE15_ACTOR_SLOT_PLAYER].x = lx; g_actors[RE15_ACTOR_SLOT_PLAYER].z = lz;
         if (a->active && a->type == RE15_IT_IRONS_TYP) {
@@ -532,6 +540,10 @@ static re15_actor_t *irons_lauf(int tot, int32_t lx, int32_t lz, int bilder)
         }
     }
     return (a->active && a->type == RE15_IT_IRONS_TYP) ? a : NULL;
+}
+static re15_actor_t *irons_lauf(int tot, int32_t lx, int32_t lz, int bilder)
+{
+    return irons_lauf_raum(RE15_IT_RAUM_1150, tot, lx, lz, bilder);
 }
 
 static void teil_irons(void)
@@ -559,6 +571,19 @@ static void teil_irons(void)
     PRUEF(tot_a == tot_b && tot_ap == tot_bp && tot_a == 0,
           "tot: Kopf auf der Clip-Pose (Yaw-Akku 0, Pitch-Akku %d = -Keyframe-Neigung), an beiden Standpunkten gleich",
           tot_ap);
+    /* Elza ROOM1151: Spur L legt Irons tot hin -> dieselbe Regel (Todespose gehalten); lebend (Original, Clip 3)
+     * bleibt das Tracking */
+    a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 1, ax_, az_, 150);
+    int e_a = a ? a->neck_yaw : 99, e_ap = a ? a->neck_pitch : 99, e_fl = a ? a->neck_flags : -1;
+    a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 1, bx_, bz_, 150);
+    int e_b = a ? a->neck_yaw : 99, e_bp = a ? a->neck_pitch : 99;
+    a = irons_lauf_raum(RE15_SZL_IRONS_ELZA_RAUM, 0, ax_, az_, 150);
+    int el_fl = a ? a->neck_flags : -1, el_mo = a ? a->motion : -1;
+    printf("  ROOM1151 tot: Flags 0x%02X Akku A (%d,%d) / B (%d,%d) | lebend: Clip %d Flags 0x%02X\n",
+           e_fl, e_a, e_ap, e_b, e_bp, el_mo, el_fl);
+    PRUEF(e_fl == RE15_SZL_HALS_FREI && e_a == e_b && e_ap == e_bp && e_a == 0,
+          "ROOM1151 (Elza, Irons tot gelegt): +0x1b8 = 0x12, Kopf an beiden Standpunkten gleich");
+    PRUEF(el_mo != RE15_IT_IRONS_CLIP_TOT && el_fl == 0x00, "ROOM1151 lebend (Original Clip %d): Tracking bleibt", el_mo);
 }
 
 int main(int argc, char **argv)

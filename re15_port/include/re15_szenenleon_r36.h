@@ -47,6 +47,9 @@ int  re15_szl_objekt_schub(int prop_idx);
                                          * @0x80042618 (Sce_em_set-Ausnahme +0x9&0x40) = Plc_neck Modus 0
                                          * (caseD @0x80041ed8): Ziel = Keyframe (0x02) + Pitch 0 (0x10) */
 
+#define RE15_SZL_IRONS_ELZA_RAUM 0x1151u /* Elza: Spur L legt Irons tot hin; Original-1151 nutzt fuer Irons nur
+                                         * Clip 3/6 (@0x00EB8/@0x00F02/@0x00F12), Clip 2 nie lebend      */
+
 /* ---- Takt (game_step_common.c, neben re15_cut10f0_tick) ---------------------------------------------- */
 void re15_szl_tick(void);
 
