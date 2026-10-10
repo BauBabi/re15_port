@@ -488,17 +488,17 @@ static void bf_boot(raum_t *z, int mit_schluessel)
     re15_game_state_init();
     re15_game_flag_set(4, 0xEC, 1);                 /* Prison Key genommen (re15_schluessel_r36_genommen) */
     re15_game_flag_set(9, RE15_R36Q_PRISON_BIT, 1);
-    re15_inv_init();
-    re15_inv_set_equipped_slot(0x80);
-    if (mit_schluessel) re15_inv_grant(RE15_R36Q_PRISON_ITEM, 1);
     re15_files_reset();
     re15_discard_reset();
     g_gameflow.character = 4;
     memset(&s_bf_cam, 0, sizeof s_bf_cam); memset(&s_bf_ctx, 0, sizeof s_bf_ctx);
     s_bf_ctx.rdt = &z->rdt; s_bf_ctx.rdt_ok = 1; s_bf_ctx.cam_view = &s_bf_cam; s_bf_ctx.active_cut = 0;
     re15_game_state_t flags_vorher = g_game;
-    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_actor_init(); re15_aot_init(); scd_vm_init();   /* scd_vm_init leert auch das Inventar (scd_vm.c) */
     g_game = flags_vorher;
+    re15_inv_init();
+    re15_inv_set_equipped_slot(0x80);
+    if (mit_schluessel) re15_inv_grant(RE15_R36Q_PRISON_ITEM, 1);
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     bf_bank_john();
     re15_player_cmd_reset();
@@ -584,6 +584,9 @@ static void teil_befreiung(void)
     bf_lauf_t L = bf_fahren(0);
     printf("      Szene ab Bild %d, msg 9 auf %d / zu %d, Abfrage %d (Item 0x%02X), Szenenende %d\n",
            L.f_start, L.f_msg9_auf, L.f_msg9_zu, L.f_frage, L.item, L.f_ende);
+    printf("      Zaehler: Vorentscheide %d (mit Besitz %d, belegt %d), gefragt %d, weggeworfen %d, 0x42 im Inventar %d, Raum %04X\n",
+           re15_discard_vorentscheide(), re15_discard_vorentscheide_mit_besitz(), re15_discard_vorentscheid_belegt(),
+           re15_discard_gefragt(), re15_discard_weggeworfen(), menge_im_inventar(0x42), (unsigned)g_current_room_id);
     CHECK(L.f_start >= 0 && L.f_msg9_auf > L.f_start, "J Szene sub02 laeuft (Set(4,0xFC) ab Bild %d) bis msg 9 (Bild %d)",
           L.f_start, L.f_msg9_auf);
     CHECK(L.f_frage >= 0 && !L.frage_vor_msg9 && L.item == RE15_R36Q_PRISON_ITEM && L.f_frage >= L.f_msg9_zu &&

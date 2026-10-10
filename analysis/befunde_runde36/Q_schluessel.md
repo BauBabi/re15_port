@@ -315,3 +315,66 @@ werden mitgefahren).
 3. Umsetzung ohne neue Id: (ROOM1211, msg 9) als Port-Benutzungsstelle fuer 0x42 in
    `re15_schluessel_r36_discard_stelle`.
 4. Messung nachher (Unit + echte exe wie Z3), Riegel.
+
+### N1.1 M1 — Messung vorher (HEAD 6af69ce2, echte exe, Lauf Z3 nachgefahren)
+Messkopie `re15_pc_Qn1.exe`, Kartenwerkzeug `1211 -19355 -17300 1024 elza flag:3:0x8B flag:4:0x24 flag:4:0xEC
+flag:9:83 leer give:0x42:1` + CONTINUE, `RE15_PAD_AT` U F40..F100, START F2400, `RE15_DISCARD_LOG`/`RE15_STATE_LOG`/
+`RE15_MSG_LOG` (Laufordner Scratchpad `Q_n1/runs/V_Z3`). Zeitlinie (discard.log/state.log):
+- F55 `pausepad=1` (Szene sub02 laeuft, Set(2,7)=1 @0x01F9C), msg 0..8 nacheinander, **msg 9 auf F1771, zu F1870**
+  (99 Bilder = Ende `01 63`), F1872 John `@(0,0)` (Pos_set @0x0228A), **F1873 `pf=00000000 pm=1`** = Szenenende.
+- In KEINEM Bild `abfrage=1`; `gefragt=0 weg=0` bis zum Ende. Statusschirm F2440: Ring-Icon (0x42) in der
+  Item-Liste (Bild `Q_belege/q_n1_prison_key_wegwerfen.png` unten links). = Befund der Abnahme bestaetigt.
+- Ursache: (ROOM1211, msg 9) stand weder in `gen/discard_sites.inc` (der Generator leitet nur "You've used the
+  <Name>."-Zeilen ab; RE1.5 hat fuer die Zelle keine) noch in `re15_schluessel_r36_discard_stelle` (kannte nur
+  11B0 msg 29). Kein anderer Weg entfernt einen RE1.5-Gegenstand (kein Opcode, re15_item_discard.h Punkt 2).
+
+### N1.2 M1 — Belege (selbst gelesen)
+- **RE2-Regel** (info/re2leon/PSX.EXE, `re2_disasm.py dis`): @0x80051634 `bltz s1,0x800516a0` (nicht im Inventar ->
+  kein Einhaengen), @0x80051640 `addiu a2,zero,5`, @0x80051670 `sw v0,-32080(at)` (Fortsetzung),
+  @0x800517f0 `andi v0,v0,0x80` / @0x800517f4 `bne v0,zero,0x80051870` (warten, solange die Nachricht belegt),
+  @0x80051810 `addiu v0,v0,-1`, @0x80051824 `bne v0,zero,0x8005185c`, @0x80051830 `addiu a2,zero,9` /
+  @0x80051834 `jal 0x8002fe38` (Abfrage), @0x80051838 `lui a3,0xff00` / @0x80051844 `lui v1,0xff00` (Freeze).
+- **ROOM1211 sub02** (`scd_dump_room.py --sub sub02`, Datei-Offsets): @0x01F76 `22 04 fc 01` Set(4,0xFC)=1,
+  @0x01F9C `22 02 07 01` Set(2,7)=1 (= RE15_PAUSE_PAD, Pad gesperrt; game_state.c Zone 2 Wort 0),
+  @0x020F8 `3f 00 00 00` Elza Aufschliess-Geste (Spur L: Ton-Anker), @0x0210C Zellentuer schwingt,
+  Message_on 0..9 alle mit Maske `00 00`, **@0x0226A `2b 09 00 00` Message_on 9** = letzte Nachricht, Text @0x2582
+  `04 00 05 01 21 48 56 3d 16 05 00 00 26 4b 44 4a 57 00 33 3d 45 50 1a 04 01 01 63` "Elza: John. Wait!", Ende
+  @0x0259B `01 63` (Standzeit 99). Danach nur Plc_motion/Sleep 0x32+0x33 (@0x02272..@0x02282), Pos_set John
+  @0x0228A, Sleep 1, @0x0229A `22 02 07 00` Set(2,7)=0, Set(1,0x1B)=0, Cut_auto, @0x022A8 Plc_ret, Evt_end. Kein
+  Tuer-/Raumwechsel-Opcode in sub02.
+- **Nicht mehr gebraucht**: (4,0xEC) Leser = ROOM1211 sub00 @0x01DEA `21 04 ec 00` und ROOM3070 sub00 @0x03408 (Leons
+  Raum; Rohsuche `21 04 ec` ueber alle RDTs: ROOM3071 ohne Treffer, die Treffer mit Wertbyte 0x43 in 1260/2000/..
+  sind Datenbytes, nicht im SCD — Zensus flag_xref.txt fuehrt sie nicht). (4,0xFC) wird nur von sub02 @0x01F76
+  gesetzt und nur von sub00 @0x01E1A `21 04 fc 00` gelesen -> die Befreiung laeuft genau einmal. Kein Skript prueft
+  den Gegenstand 0x42 (Keep_Item_ck 0x5E 0 Vorkommen, re15_item_discard.h Punkt 4); kein Port-Code liest 0x42
+  ausser Name/Icon/Bild (grep).
+- **Abstimmung Spur L** (gelesen per `git show r36/elza:...`, nicht geaendert): Spur L ankert in 1211 nur
+  @0x020F8 (Aufschliess-Ton, Verzug 20 Bilder; elza_r36.c k_anker), fasst Message_on 9 und das Szenenende nicht an.
+  Beide Haken sind disjunkt: Ton beim Aufschliessen (Szenenmitte), Abfrage am Szenenende.
+
+### N1.3 M1 — Umsetzung
+- `re15_schluessel_r36_discard_stelle`: neben (0x11B0, msg 29) -> 0x45 jetzt **(0x1211, msg 9) -> 0x42**
+  (`RE15_R36Q_ZELLE_RAUM 0x1211`, `RE15_R36Q_ZELLE_MSG 9`, Belege im Kopf von re15_schluessel_r36.h). Keine neue
+  Nachrichten-Id, kein neues Bit, kein neuer Haken: der vorhandene Haken in `re15_discard_besitz_vor_nachricht`
+  (item_discard_common.c, Kommentar nachgezogen) und die Kette in `op_message_on` (Vorentscheid VOR dem Oeffnen,
+  Einhaengen danach) tragen die Stelle. PORT-WAHL = die STELLE (letzte Nachricht der Szene, Vorschlag Bau-Agent +
+  Abnahme); FORM = RE2 (oben).
+- Spanne "vorgemerkt" (msg 9 auf bis Abfrage): Maske 0 friert ueber die Nachricht nichts ein, aber die Szene haelt
+  das Pad selbst (Set(2,7)=1 @0x01F9C bis @0x0229A) und sub02 hat keinen Raumwechsel -> weder Spieler noch Skript
+  koennen den Raum wechseln (gemessen: `pausepad=1` in jedem Bild F1771..F1870).
+- H4: Kommentar in re15_schluessel_r36.h/.c und Pruefzeile `tuer` B berichtigt: @0x80051698 `be 45 01 08`
+  `j 0x800516f8` laesst den Uebergangs-Block @0x800516cc..@0x800516f4 aus (`addiu v1,zero,1`, `sb v1` -> 0x800df348,
+  Freeze |= 0xff000000); v0 ist in allen Zweigen 0 (@0x8005169c, @0x800516c4, @0x800516c8).
+
+### N1.4 M1 — Messung nachher (echte exe, gleicher Lauf)
+- `Q_n1/runs/N_Z3_mess` (ohne Antwort): msg 9 auf F1771 -> `abfrage=1 frage=0` (vorgemerkt) ab F1771; **F1870**
+  (msg 9 zu, `belegt=0`) im selben Bild `frage=8 gegenstand=0x42 text=0/44 frost=1`; Text fertig F1957 (44/44).
+  John bleibt waehrend der Abfrage bei (-19551,-6708) (Szene eingefroren; vorher F1872 weg). Bild F1960:
+  "You don't need this key any more. Discard it? > Yes No" (Bild oben rechts).
+- `Q_n1/runs/N_Z3_ja` (Ja = Viereck F1980): F1980 `abfrage=0 gefragt=1 weg=1`; F1982 John weg, **F1983 `pst=1
+  mo=200`** = Szenenende (dieselben 2..3 Bilder hinter der Abfrage wie vorher hinter msg 9). START F2100 ->
+  Statusschirm F2150: Item-Liste LEER (Bild unten rechts) — der Prison Key ist weg; (4,0xEC)/(4,0xFC) bleiben
+  (Unit-Riegel). Beleg: `Q_belege/q_n1_prison_key_wegwerfen.png`.
+- Unit-Riegel `test_r36_schluessel befreiung` (Szene am echten VM + Spielschritt, John-Bank): msg 9 auf 1709 / zu
+  1808, Abfrage 1808 fuer 0x42, Vorentscheid mit Besitz bei freiem Belegt-Bit, Ja -> 0x42 weg, Szenenende 1899 nach
+  der Antwort; Nein -> bleibt (Anzahl 1, @0x800517c4); ohne Schluessel im Inventar keine Abfrage, Ende 1809.
