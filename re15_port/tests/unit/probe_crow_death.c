@@ -77,7 +77,7 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
      * jede Klasse-3-Zelle im SPIELER-Band (+0x82 @0x8003de60) sperrt. ROOM1170 traegt die
      * Theken-Zelle x -12422..9682 / z -10910..-8498 (RDT @0xb10, Wort 0x43 = Band 4 / Klasse 3):
      * die bisher naechste Kraehe (1719,-10522,-10983) sass dahinter -> im Original kein
-     * Treffer (fire=0, gemessen C_schuss.md §4.1). Der Test prueft die Todes-Handler, nicht die
+     * Treffer (fire=0, gemessen C_schuss.md §1.5). Der Test prueft die Todes-Handler, nicht die
      * Geometrie: Ziel ist die naechste Kraehe, die der Spieler im Original treffen KANN. */
     int tgt = -1; uint32_t bd = 0xffffffffu;
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
