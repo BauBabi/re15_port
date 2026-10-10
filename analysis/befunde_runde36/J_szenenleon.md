@@ -365,8 +365,9 @@ SCA-Zelle"): NUR im Hintergrund.
   Cut 7 @0x0140, Cut 3 @0x00C0 == 9 @0x0180, Cut 4 @0x00E0 == 10 @0x01A0 — gleiche Kamera, anderes Bild.
 - RVD (RDT @0x258): zwei Netze, geschlossen 0..6 (@0x0258..@0x03D4) und offen 7..10 (@0x03E8..@0x04C4).
 - Kein Tuer-Objekt: main00 Obj_model_set nur obj 0 Container (-2168,-20918) @0x010C4, obj 1 (-22838,-20368) @0x0110E,
-  obj 2 (-7463,-24868) @0x01130 (Box 0); Door_aot_set nur Slot 0/1/5 (West-Tuer, Parkplatz, Gully); nSprite=0 (kein
-  ESP); SCA (3,0x0C) @0x00EC8 ist nur Kollision.
+  obj 2 (-7463,-24868) @0x01130 (Box 0); Door_aot_set nur Slot 0/1/5 (West-Tuer, Parkplatz, Gully); kein ESP
+  (RDT @0x4C effectStart = 0, @0x54 espTimStart = 0, nSprite 0, kein Sce_espr in main/sub); SCA (3,0x0C) @0x00EC8
+  ist nur Kollision.
 **Mechanik des Tuerbildes (Original):**
 - Leon sub00 @0x0116C `06 00 36 00` + @0x01170 `21 04 06 01` (Strom): @0x01174 `06 00 0c 00` / @0x01178
   `23 00 0a 00 00 00` / @0x0117E `29 07` / @0x01180 `3c 01` (steht der Cut auf 0 -> 7), @0x01184 `4b 00 07`,
@@ -382,6 +383,11 @@ SCA-Zelle"): NUR im Hintergrund.
   (a0 = -257, Bit 0x100 weg = Auto an).
 - Ohne Strom laeuft die Szene nie: sub01 @0x011F2 (4,0xF3)==0 -> Cut 13/14 + @0x01216 Aot_reset Slot 1 (Parkplatz-Tuer
   -> Text) — (3,0x43) aus 11C0 ist ohne Strom unerreichbar; an der Szene sind die Bilder also immer auf 7/8 getauscht.
+**Init-Lauf (fuer M1, Zeitpunkt von Ereignis 23):** FUN_8003ef6c @0x8003efd4 `jal 0x8003ee3c` mit @0x8003efd8
+`addu a1,zero,zero` (Slot 1 = sub00), @0x8003f018 `jal 0x8003f0a0` = der Dispatcher-Lauf beim Raumaufbau; dessen
+Schleife @0x8003f17c `addiu s2,s2,1` / @0x8003f180 `sltiu v0,s2,0xa` / @0x8003f188 `addiu s1,s1,368` geht die Slots
+der Reihe nach durch — ein in diesem Lauf gestarteter Faden in einem hoeheren Slot laeuft im selben Lauf (Evt_exec
+aus sub00, Form ROOM1050 @0x00C8A; scd_vm.c: Port-Ereignis-Slots 10..23).
 **Tuer-zu-Ton (RE2-Tuerbank):** RE2 PSX.EXE @0x800141f0 `jal 0x8005ba28` mit @0x800141f4 `lui a0,0x1` = Satz 1
 (Door_exit) nach dem Ausblenden (selbst disassembliert, info/re2leon/PSX.EXE). Archiv: RE2-Tabelle @0x8009A658
 `38 53 fc 92 0b 00 00 00 f5 f4 00 00` = DOOR1A, Tonteil 0x5338 B (selbst gelesen), Tonkopf `00 00 14 16 | 00 00 24
