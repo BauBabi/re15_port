@@ -173,16 +173,63 @@ stempeln NICHT — das Original stempelt nur ueber Phase 4 (aca5a := 4 durch den
 
 ## 5. Messung nachher
 
-(wird gefuellt)
+### 5.1 Mechanik (Sonde griff, derselbe Lauf wie §1.2)
+| Flavor | Abwurf 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| RE2 (DEFAULT) | L0 (F98) | L0 (F198) | **p4=L1 p7=L1, gen 3 (F492)** | unveraendert (F848) |
+| RE1.5 | L0 (F152) | L0 (F284) | p4=L1 p7=L1, gen 3 (F416) | unveraendert (F548) |
+RE2 stempelt jetzt wie RE1.5 (Griff von hinten -> Helper 0x8010a208: 3x50 auf Panel 4 und 7);
+RE1.5 ist bildgleich zu vorher (kein Doppelstempel durch die Umhaengung).
 
-## 6. Tests
+Hund (Sonde hund, ROOM11D0 RE2, 5 Hunde frei): Bisse F30/F78/F111/F116 (hp -20 je Biss) -> je
+genau ein Panel aus {4,5,6,7} +50 (0/0 -> 0/50), Panels 0..3 unberuehrt.
+Kraehe (Sonde kraehe, ROOM10C0 RE2): Griffe F348/F1278 -> je +130 Wundpunkte (= Band 1500..2999:
+10+40+40+40), die Band-Grenzen 1499/1500/2999/3000/3599/3600 liefern exakt die Tabellen von 0x801161e8.
 
-(wird gefuellt)
+### 5.2 Bild (echte exe, CONTINUE mit Spielstand, Framedump Bild 150, RE15_WINDOW_SCALE=1)
+ROOM1130/1131 Cut 2, Figur bei (-1024,0,-3336) rot 856, hp 20 (Danger-Haltung Clip 23):
+| Vergleich | Pixel verschieden | Kasten |
+|---|---|---|
+| Leon ohne / ohne (zwei Laeufe) | 0 | — (deterministisch) |
+| Leon ohne / alle 8 Panels Stufe 2 | 737 | (192,96)-(231,179) = Brust, Weste, Schulter, Oberschenkel |
+| Leon ohne / Panel 5+7 Stufe 1 (= 3 ueberlebte Griffe von vorn) | 250 | (204,103)-(230,139) = Brust/Weste |
+| Elza ohne / alle 8 Panels Stufe 2, LUT-Zeile 1 (ALT) | 765 | blaue Saeume an Jacke/Hose (falsche Panels) |
+| Elza ohne / alle 8 Panels Stufe 2, LUT-Zeile 4 (NEU) | 458 | Blut auf Shirt, Aermel, Hose |
+Alle Abweichungen liegen im Figurenkasten x177..247 / y81..205; die Kulisse ist bitgleich.
+Belegbilder (Scratchpad, nicht versioniert): AB1130.png (Leon Fine/Stufe 2), ABCelza.png.
+
+### 5.3 Spielweg (echte exe, ROOM1140, Spielstand neben dem Zombie, CROSS-Hammern per Skript)
+debug.log: `[save] CONTINUE: resumed in room 1140 (hp=100)` ... `[wound] sync: applied=1 ok=1 gen=2`
+(F~228) ... `[wound] sync: applied=1 ok=1 gen=3` (F~366) — der Griff-Stempel kommt im echten Spiel
+unter der RE2-KI an und der Renderer legt ihn auf die Textur (vorher in keinem Lauf eine solche Zeile).
+
+## 6. Tests (tests/unit/probes/r36_kleidung.cmake, alle gruen)
+* unit_r36_kleidung_griff_re2 / _re15 — ROOM1140, game_step, 4 ueberlebte Griffe: Abwurf 1/2 ohne
+  Stempel, Abwurf 3: Panel 7 Stufe 1 UND genau eines von 4/5, Panel 0/1/2/3/6 = 0, Generation springt.
+* unit_r36_kleidung_hund — ROOM11D0 RE2-Hund: >= 3 Boden-Bisse, je genau ein Panel aus 05 07 04 06 um
+  0x32, Panels 0..3 unberuehrt.
+* unit_r36_kleidung_kraehe — 0x801161e8-Baender an den Grenzen + Live-Griff ROOM10C0 (jeder Griff stempelt).
+* unit_r36_kleidung_lut — LUT @0x80074208: Leon Zeile 0, Elza Zeile 4, Zeile 8 ungueltig, Rechtecke
+  innerhalb der Body-Seiten.
+* integration_r36_kleidung_bild — 6 exe-Laeufe (Leon A/A2/B/C, Elza A/B), Pixel-Differenz: 0 /
+  >= 350 / >= 120 / >= 220, alles im Figurenkasten (Schwellen = halbe Messwerte).
+Bestehende Riegel unveraendert gruen: unit_wound_accumulator, probe_save_injured, probe_r17_weste_karte,
+Dog-/Kraehen-/Zombie-Griff-Tests (Suite-Zeile s.u.).
 
 ## 7. OFFEN
-
-(wird gefuellt)
+* STAGE5 (Birkin): das Overlay traegt dieselben vier generischen Helper (FUN_80109b00/b3c/b78/b9c)
+  und Birkin-eigene Stempel (FUN_8010c61c/8010cd88/8010d7a4: (0,0x32); FUN_801110c4/801110f8;
+  FUN_80112294 tabellen-indiziert). Der Port-Birkin (enemy_ai_common.c :13719/:13757 Releases,
+  Treffer) stempelt nicht — vorbestehende Luecke ausserhalb dieser Regression (STAGE1). Naechster
+  Schritt: STAGE5-Hook-A-Registrierung (Zwilling von FUN_8011e864) lesen, Birkin-Release ->
+  `re15_kleidung_abwurf`, Treffer-Sites -> (0,0x32).
+* RE2-Kraehe: Dive/Strike-Angriffe der RE1.5-Kraehe (@0x80113b7c/@0x801144bc) haben in der RE2-Kraehe
+  keinen eigenen Zwilling (sie kennt nur den Griff-Peck) — abgedeckt ist der Griff-Eintritt.
 
 ## 8. Fuer den Nutzer
-
-(wird gefuellt)
+* Keine neuen Assets, keine Sprachdateien, keine Paket-Gate-Eintraege.
+* Bedienung unveraendert: Blut/Risse entstehen wie im Original durch Treffer — drei ueberlebte
+  Zombie-Griffe auf dieselbe Koerperseite (je +50 auf zwei Brust- bzw. Rueckenpanels, Schwelle 120),
+  Hundebisse (+50 je Biss auf ein Brust-/Rueckenpanel), Kraehengriffe; Heilung loescht sie nicht,
+  Speichern/Laden erhaelt sie (v9-Spielstand). Unter "AI RE2" (Standard) und "AI RE1.5" gleich.
+* Elza: die Decals liegen jetzt auf Elzas eigenen Panels (LUT-Zeile 4) — vorher sassen sie daneben.
