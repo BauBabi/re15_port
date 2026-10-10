@@ -519,3 +519,18 @@ Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie im Integrationsbaum.
   -> **100% tests passed, 0 tests failed out of 154**
 - nach dem letzten Neubau `ctest -R "r36_zombieki" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 6**
 - Gorilla-Gruppe `ctest -R "unit_r35_affen|unit_maggot|unit_r36_zombieki_affen$|r17_waffen_loop"` -> 100% tests passed, 0 tests failed out of 25
+
+---
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-10) — fortlaufend
+
+Grundlage: `F_abnahme_1.md` (Stand 7a9a0e7f, NICHT BESTANDEN, Maengel 1-6). Plan je Mangel:
+
+| Mangel | Kern | Weg |
+|---|---|---|
+| 1 | Taschenfall ROOM1010 Slot 1: nach Griff + Rueckstoss Gang auf der Stelle (2934,1917), Riegel druckt KLEMME nur | Rueckstoss Bild fuer Bild messen (Lage, Clip, Wurzeldelta), RE2 EXEC[3] P8 @0x80102CA0-AC + Klemme des Originals lesen; Ursache des Eintunnelns belegen, beheben; Riegel KLEMME == 0 fuer den Fall |
+| 2 | Regression eab5925a: jede Obj_model_set-Lage im Zell-Rechteck = Oberkante -> Waende werden Moebel (ROOM1040 #4) | Oberkante nur fuer Moebel-Zellen mit Beleg je Zelle; Riegel: 0 Plaetze hinter Waenden geoeffnet, ROOM1040 Westgang Sicht 0 |
+| 3 | Befundstelle (-24000,10000): Gorilla 1 Endlos-Blindsprung, Gorilla 2 Sub 4 mit Sicht an der Klemme | messen, Ursache je Gorilla, beheben |
+| 4 | Riegel-Definition zaehlt Spruenge/Pendeln nicht; Stelle nicht gepinnt; Szenen parken Gorilla 2 | Anker 400 (wie Abnahme), Stelle (-24000,10000) mit beiden Gorillas pinnen |
+| 5 | -2514 / -2000 ohne Beleg | aus Daten herleiten (PLD-Knochen / Kamera+Bild) mit Byte-Offset, sonst als PORT-WAHL kennzeichnen |
+| 6 | Voll-Suite | Orchestrator; hier gezielte Laeufe |
