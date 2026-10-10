@@ -212,3 +212,44 @@ Neu (registriert NUR in tests/unit/probes/r36_elza.cmake): 8 Unit-Teile + 5 Inte
 | integration_r36_elza_unlock | echte exe, Spielstand + CONTINUE: Unlock-Aktion einmal, Mitschnitt-Spitze >= 3x Median im Fenster danach |
 | integration_r36_elza_schuss | echte exe: 2 Schuesse 30 Bilder auseinander, Roy im Bild von Schuss 2, Mitschnitt-Spitzen (Schuss >= 4x, Roy >= 2x Median) |
 | integration_r36_elza_stoehnen | echte exe, CONTINUE 1021 -> Tuer -> 1011: Aktion, `clip loaded: main16.5.wav`, Nachricht 24 offen |
+
+Zusatzmessung Kopf (echte exe, RE15_NECK_TRACE, CONTINUE, Cut 7, je 201 Kopf-Takte, gleicher Bau):
+* Elza ROOM1151: jede Zeile `slot=1 fl=92 ... acc=(0,0) ... step=(0,0)` -> Kopf liegt auf dem Clip, keine Verfolgung.
+* Gegenprobe Leon ROOM1150 mit (9,73)=1 (Irons tot nach der Todesszene, Spur-J-Thema): `fl=00 ... acc=(-111,-52)
+  step=(64,48)` -> der Kopf verfolgt den Spieler. Genau das waere Elzas toter Irons ohne den Plc_neck-Halt.
+
+### Ergebnis gezielte Tests (KEINE volle Suite)
+* `ctest -R "r36_elza|r35_fenster|r35_cut1150|irons_neck|crow|synchro_stimme|voice_ausreden|se_voice_machine|msg_dialog|text_freeze|elza_zweig|elza_vollstart|r35_werfer_elza|r33_tuer1120|r34n_d_adaruf_elza|r34n_f_leiche_stimme|r30_elza_selbsttuer|r30_tuerse_bank|r30_tuer_stimme|r30_irons|irons_mittelmodell|r35_inventar1050_elza" --timeout 600`
+  -> `100% tests passed, 0 tests failed out of 69` (Engine-/Plattform-Stand dieses Zweigs; integration_r35_cut1150 531,9 s).
+* Nach den letzten Test-Aenderungen (Kopf-Pruefung, Kartenwerkzeug): `ctest -R "r36_elza" --timeout 1200`
+  -> `100% tests passed, 0 tests failed out of 13`.
+
+## 7. OFFEN
+
+1. **Roy faellt nicht sichtbar** (nicht beauftragt, Beobachtung): ROOM1021 sub02 @0x020DE `3f 01 07 00` = Motion-Sub 1
+   = Loco-Kanal +0x84/+0x16c (Executor @0x80050e64 `lw a0,132(v0)` / @0x80050e6c `lw a1,364(v0)`); EM047 dir[1] Clip 7
+   hat 1 Bild -> der Port zeigt Roy beim zweiten Schuss stehend. Die RBJ von ROOM1021 traegt in rec1 einen Clip 7 mit
+   50 Bildern ({20,30,30,20,30,25,35,50,24,20}, Datei 0xCE50); ob das Original Roys Kanal dorthin legt, ist UNGEMESSEN
+   (Weg: DuckStation-Savestate in der Szene, Roy-Entity +0x84/+0x16c lesen). Der Sterbe-Ton (P5) haengt am Treffer,
+   nicht am Clip — er bleibt richtig, wenn der Clip spaeter korrigiert wird.
+2. **Muendungsfeuer**: RE2 setzt zum Skript-Schuss ESP-Muendungsfeuer (ROOM40A0 @0x028A2, ROOM1010 sub31 `3a 00 18 ..`);
+   nicht beauftragt, nicht gebaut.
+3. **Wortlaut main16.5**: Untertitel = "Roy: groans" (RE1.5s eigene Zeile fuer Roys Stoehnen). Falls die Aufnahme Worte
+   enthaelt: Wortlaut vom Nutzer (s. 8.).
+4. Die Unit-Pruefung des Kopfes laeuft ohne Render-Pfad (die Kopf-FSM lebt in skeleton_common.c); belastbar ist
+   integration_r36_elza_irons (RE15_NECK_TRACE an der echten exe).
+
+## 8. Fuer den Nutzer / Orchestrator
+
+* **Neue Assets (Paket-Gate)**: `re15_port/shared_assets/RE2/ELZASE.VBS` (13144 B, md5 8e996ef238defe2188292e55af7f8ab2;
+  erzeugt von re15_port/tools/r36_l/re2_elza_se_cut.py --install).
+* **Sprachdatei**: `synchro/STAGE1/room1011/main16.5.wav` (Nutzer-Datei, im Hauptbaum unversioniert, NICHT umbenannt) —
+  der Port laedt sie unter genau diesem Namen fuer ROOM1011 Nachricht 24 (re15_elza_stimme_datei). Im Paket muss sie
+  neben den anderen synchro-Dateien liegen.
+* **Neue Quelldateien** (Android-Configure frisch, Memory reai-v2-android-glob-cache): engine/src/elza_r36.c,
+  platform/pc/src/elza_se_pc.c. **RE15_MIN_TESTS +13** (8 Unit + 5 Integration).
+* **Id-Abweichung vom VERTRAG**: main16.5 gehoert zu ROOM1011 (nicht 1101) -> Nachricht 24 (RDT-Zahl 1011); 1101 bleibt frei.
+* **Frage an den Nutzer**: main16.5 ist ein einzelnes Stoehnen (gemessen) und traegt den Untertitel "Roy: groans" wie
+  Roys Original-Zeile msg 10. Soll dort ein anderer Text stehen (welcher Wortlaut)?
+* **Hinweis**: Roy sackt in ROOM1021 beim Schuss nicht sichtbar zusammen (OFFEN 1) — soll das als eigener Punkt
+  (Original messen, ggf. RE2-Vorlage) in die naechste Runde?
