@@ -1,0 +1,63 @@
+--- ROOM5020 (Kiste Band 4, Absprungzelle x -7675..-7175 z -26275..-24025 Wort 0x4002)
+    Grenze x -8126: kein Ausloeser (fall=0)
+    ROOM5020: AUSLOESER pos=(-8125,-7200,-25332) band=4 richt=(1,0)
+    ROOM5020: ENDE nach 24 Bildern, Landung bei Bild 22 y=0, Band nach Bild 13 = 0, Endlage (-5264,0,-25332) Band 0 rot=(0,0,1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+    Latch: Kerbe obj+0x0B = 4, Flag (4,203) = 1
+    Klettern auf die gefallene Kiste: Start 1, oben y=-1800 Band 1 Stand 0
+--- ROOM5021 (Kiste Band 4, Absprungzelle x -7675..-7175 z -26275..-24025 Wort 0x4002)
+    Grenze x -8126: kein Ausloeser (fall=0)
+    ROOM5021: AUSLOESER pos=(-8125,-7200,-25332) band=4 richt=(1,0)
+    ROOM5021: ENDE nach 24 Bildern, Landung bei Bild 22 y=0, Band nach Bild 13 = 0, Endlage (-5264,0,-25332) Band 0 rot=(0,0,1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+    Latch: Kerbe obj+0x0B = 4, Flag (4,203) = 1
+    Klettern auf die gefallene Kiste: Start 1, oben y=-1800 Band 1 Stand 0
+--- ROOM20A0 (Kiste Band 4, Tasche x 15800..17600 vor Absprungzelle 45 z -22000..-21000 Wort 0x4206)
+    Fall 1 (Tasche): AUSLOESER pos=(16700,-7200,-20551) band=4 richt=(0,-1)
+    Fall 1 (Tasche): ENDE nach 21 Bildern, Landung bei Bild 19 y=-3600, Band nach Bild 13 = 2, Endlage (16700,-3600,-22866) Band 2 rot=(1030,0,0), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+    Fall 2 (Laufsteg -> Kanal): AUSLOESER pos=(16700,-3600,-22951) band=2 richt=(0,-1)
+    Fall 2 (Laufsteg -> Kanal): ENDE nach 19 Bildern, Landung bei Bild 17 y=-1800, Band nach Bild 13 = 1, Endlage (16700,-1800,-24902) Band 1 rot=(-2038,0,0), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x0, snd0:8 x0, Spritzer-Plaetze 0
+    nach Fall 2: obj+0x88 = -540
+    Fall 3 (Kanal-Kante -> Boden, Wasser): AUSLOESER pos=(20100,-1800,-25000) band=1 richt=(1,0)
+    Fall 3 (Kanal-Kante -> Boden, Wasser): ENDE nach 19 Bildern, Landung bei Bild 17 y=0, Band nach Bild 13 = 0, Endlage (22051,0,-25000) Band 0 rot=(2048,0,-1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x0, snd0:8 x1, Spritzer-Plaetze 36
+    Latch: Kerbe obj+0x0B = 7, Flag (3,204) = 1
+    Klettern auf die gefallene Kiste: Start 1, oben y=-1800 Band 1 Stand 0
+--- ROOM20A1 (Kiste Band 4, Tasche x 15800..17600 vor Absprungzelle 45 z -22000..-21000 Wort 0x4206)
+    Fall 1 (Tasche): AUSLOESER pos=(16700,-7200,-20551) band=4 richt=(0,-1)
+    Fall 1 (Tasche): ENDE nach 21 Bildern, Landung bei Bild 19 y=-3600, Band nach Bild 13 = 2, Endlage (16700,-3600,-22866) Band 2 rot=(1030,0,0), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+    Fall 2 (Laufsteg -> Kanal): AUSLOESER pos=(16700,-3600,-22951) band=2 richt=(0,-1)
+    Fall 2 (Laufsteg -> Kanal): ENDE nach 19 Bildern, Landung bei Bild 17 y=-1800, Band nach Bild 13 = 1, Endlage (16700,-1800,-24902) Band 1 rot=(-2038,0,0), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x0, snd0:8 x0, Spritzer-Plaetze 0
+    nach Fall 2: obj+0x88 = -540
+    Fall 3 (Kanal-Kante -> Boden, Wasser): AUSLOESER pos=(20100,-1800,-25000) band=1 richt=(1,0)
+    Fall 3 (Kanal-Kante -> Boden, Wasser): ENDE nach 19 Bildern, Landung bei Bild 17 y=0, Band nach Bild 13 = 0, Endlage (22051,0,-25000) Band 0 rot=(2048,0,-1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x0, snd0:8 x1, Spritzer-Plaetze 36
+    Latch: Kerbe obj+0x0B = 7, Flag (3,204) = 1
+    Klettern auf die gefallene Kiste: Start 1, oben y=-1800 Band 1 Stand 0
+--- ROOM10F0 Tritt Band 0: 16641 Rasterpunkte, Ausloeser 0
+--- ROOM10F1 Tritt Band 0: 16641 Rasterpunkte, Ausloeser 0
+--- FREIRAUM ROOM5020 obj 0 Band 4 r 900 Start (-11000,-23150): 96 ungesperrte Elementarzellen erreichbar, davon Ausloeser 2, Flaeche 88200, erste erreichte Ausloeser-Lage (-8125,-25100)
+    ROOM5020 obj 0 (Diagnose): AUSLOESER pos=(-8125,-7200,-25100) band=4 richt=(1,0)
+    ROOM5020 obj 0 (Diagnose): ENDE nach 24 Bildern, Landung bei Bild 22 y=0, Band nach Bild 13 = 0, Endlage (-5264,0,-25100) Band 0 rot=(0,0,1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM5021 obj 0 Band 4 r 900 Start (-11000,-23150): 96 ungesperrte Elementarzellen erreichbar, davon Ausloeser 2, Flaeche 88200, erste erreichte Ausloeser-Lage (-8125,-25100)
+    ROOM5021 obj 0 (Diagnose): AUSLOESER pos=(-8125,-7200,-25100) band=4 richt=(1,0)
+    ROOM5021 obj 0 (Diagnose): ENDE nach 24 Bildern, Landung bei Bild 22 y=0, Band nach Bild 13 = 0, Endlage (-5264,0,-25100) Band 0 rot=(0,0,1029), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM20A0 obj 0 Band 4 r 900 Start (12250,-12400): 165 ungesperrte Elementarzellen erreichbar, davon Ausloeser 0, Flaeche 0 -> durch Schieben UNERREICHBAR
+--- FREIRAUM ROOM20A1 obj 0 Band 4 r 900 Start (12250,-12400): 165 ungesperrte Elementarzellen erreichbar, davon Ausloeser 0, Flaeche 0 -> durch Schieben UNERREICHBAR
+--- FREIRAUM ROOM11A0 obj 0 Band 3 r 900 Start (10050,8800): 31 ungesperrte Elementarzellen erreichbar, davon Ausloeser 0, Flaeche 0 -> durch Schieben UNERREICHBAR
+--- FREIRAUM ROOM11A1 obj 0 Band 3 r 900 Start (10050,8800): 31 ungesperrte Elementarzellen erreichbar, davon Ausloeser 0, Flaeche 0 -> durch Schieben UNERREICHBAR
+--- FREIRAUM ROOM3050 obj 1 Band 4 r 900 Start (-18000,-20800): 1316 ungesperrte Elementarzellen erreichbar, davon Ausloeser 4, Flaeche 68750, erste erreichte Ausloeser-Lage (-23875,-18500)
+    ROOM3050 obj 1 (Diagnose): AUSLOESER pos=(-23875,-7200,-18500) band=4 richt=(-1,0)
+    ROOM3050 obj 1 (Diagnose): ENDE nach 15 Bildern, Landung bei Bild 13 y=-10800, Band nach Bild 13 = 6, Endlage (-25098,-10800,-18500) Band 6 rot=(0,0,-628), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM3051 obj 1 Band 4 r 900 Start (-18000,-20800): 1316 ungesperrte Elementarzellen erreichbar, davon Ausloeser 4, Flaeche 68750, erste erreichte Ausloeser-Lage (-23875,-18500)
+    ROOM3051 obj 1 (Diagnose): AUSLOESER pos=(-23875,-7200,-18500) band=4 richt=(-1,0)
+    ROOM3051 obj 1 (Diagnose): ENDE nach 15 Bildern, Landung bei Bild 13 y=-10800, Band nach Bild 13 = 6, Endlage (-25098,-10800,-18500) Band 6 rot=(0,0,-628), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM1090 obj 1 Band 5 r 900 Start (-5960,-15482): 777 ungesperrte Elementarzellen erreichbar, davon Ausloeser 8, Flaeche 239054, erste erreichte Ausloeser-Lage (-9328,3376)
+    ROOM1090 obj 1 (Diagnose): AUSLOESER pos=(-9328,-9000,3376) band=5 richt=(-1,0)
+    ROOM1090 obj 1 (Diagnose): ENDE nach 21 Bildern, Landung bei Bild 19 y=-5400, Band nach Bild 13 = 3, Endlage (-11643,-5400,3376) Band 3 rot=(0,0,-1030), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM1091 obj 1 Band 5 r 900 Start (-5960,-15482): 777 ungesperrte Elementarzellen erreichbar, davon Ausloeser 8, Flaeche 239054, erste erreichte Ausloeser-Lage (-9328,3376)
+    ROOM1091 obj 1 (Diagnose): AUSLOESER pos=(-9328,-9000,3376) band=5 richt=(-1,0)
+    ROOM1091 obj 1 (Diagnose): ENDE nach 21 Bildern, Landung bei Bild 19 y=-5400, Band nach Bild 13 = 3, Endlage (-11643,-5400,3376) Band 3 rot=(0,0,-1030), Bild1 d=-13 dy=8 w=0, Bild2 d=-26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM2050 obj 6 Band 3 r 900 Start (-1600,-9348): 485 ungesperrte Elementarzellen erreichbar, davon Ausloeser 1, Flaeche 35000, erste erreichte Ausloeser-Lage (7550,-12050)
+    ROOM2050 obj 6 (Diagnose): AUSLOESER pos=(7550,-5400,-12050) band=3 richt=(1,0)
+    ROOM2050 obj 6 (Diagnose): ENDE nach 15 Bildern, Landung bei Bild 13 y=-9000, Band nach Bild 13 = 5, Endlage (8773,-9000,-12050) Band 5 rot=(2048,0,1435), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+--- FREIRAUM ROOM2051 obj 6 Band 3 r 900 Start (-1600,-9348): 485 ungesperrte Elementarzellen erreichbar, davon Ausloeser 1, Flaeche 35000, erste erreichte Ausloeser-Lage (7550,-12050)
+    ROOM2051 obj 6 (Diagnose): AUSLOESER pos=(7550,-5400,-12050) band=3 richt=(1,0)
+    ROOM2051 obj 6 (Diagnose): ENDE nach 15 Bildern, Landung bei Bild 13 y=-9000, Band nach Bild 13 = 5, Endlage (8773,-9000,-12050) Band 5 rot=(2048,0,1435), Bild1 d=13 dy=8 w=0, Bild2 d=26 dy=13 w=8, snd0:6 x1, snd0:8 x0, Spritzer-Plaetze 0
+PASS

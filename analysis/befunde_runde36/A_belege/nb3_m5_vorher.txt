@@ -1,0 +1,23 @@
+# M5 vorher (Stand 8b489051, exe vor Nachbesserung 3) — Abnahme-2-Eingabe
+RE15_NO_INTRO=1
+RE15_NOAUDIO=1
+RE15_TITLE_SHOT=title.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=1
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=1
+RE15_CLIMB_TRACE=climb.txt
+RE15_DEBUG_JUMP=5020@250
+RE15_PLAYER_POS=-11000,-21800,1024,4
+RE15_INPUT_SCRIPT=W8,U5,W0.5,R0.37,W0.3,U2.0,W0.3,L0.37,W0.3,U1.8,W0.3,L0.37,W0.5,U8,W2
+RE15_EXIT_AT=1100#5020
+74a17d614423a4502cfd9be8b8bca52c *C:/workspace/git/reAi_v2/.claude/worktrees/r36_klettern/re15_port/build/platform/pc/re15_pc.exe
+74a17d614423a4502cfd9be8b8bca52c *C:/workspace/git/reAi_v2/.claude/worktrees/r36_klettern/re15_port/build/platform/pc/re15_pc_nb3a_m5_vorher.exe
+T540 room=5020 pm=0 pad=0010 pos=(-10991,-7200,-22380) rot=1024 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=3 f
+T630 room=5020 pm=0 pad=0010 pos=(-10975,-7200,-23982) rot=1024 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=105 af=2 
+T930 room=5020 pm=0 pad=0010 pos=(-11749,-7200,-25742) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=4 fra
+T1050 room=5020 pm=0 pad=0010 pos=(-9278,-7200,-25816) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=24 fr
+T1080 room=5020 pm=0 pad=0010 pos=(-8677,-7200,-25805) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=4 fra
+T1110 room=5020 pm=0 pad=0000 pos=(-8254,-7200,-25810) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=5 fr
+T1200 room=5020 pm=0 pad=0000 pos=(-8254,-7200,-25810) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=95 f
+T1350 room=5020 pm=0 pad=0000 pos=(-8254,-7200,-25810) rot=30 band=4 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=211 af=116 

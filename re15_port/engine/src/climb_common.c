@@ -73,7 +73,23 @@ static int obj_live(int p)
 
 /* ---- FUN_8002d2c0 @0x8002d2c0 — "steht ein kletterbares Objekt an der Sonde?" ------
  *   @0x8002d2f0  `DAT_800aca3c & 0x4000` gesetzt -> 0 (man steht schon auf einem)
- *   @0x8002d358  `obj[0x00] & 0x101`
+ *   @0x8002d358  `andi v0,v0,0x101` (Bytes 01 01 42 30)
+ *   @0x8002d35c  `beq  v0,zero,0x8002d3a4` — uebersprungen wird das Objekt NUR, wenn
+ *                KEINES der beiden Bits steht. Bit 0 setzt LAB_80040914 @0x80040990-a4
+ *                (`lhu v0,6(a2); ori v0,v0,0x1; sw v0,0(a1)`) bei JEDER Installation,
+ *                das Gate ist also ein reines "aktiv"-Gate; Bit 0x100 ist fuer den
+ *                Kletterstart ohne Bedeutung (es gehoert zur Herunterfall-Pruefung
+ *                FUN_8002dc48 @0x8002dd94 `andi v0,v1,0x100`, Substate 0xd).
+ *                ⛔ RUNDE 36 SPUR A (BLOCKER "Tritt in ROOM10F0 nicht kletterbar"): hier
+ *                stand `!= 0x101`, also ZUSAETZLICH Bit 0x100 — ein Lesefehler der
+ *                `beq v0,zero`. ROOM10F0 obj 0 (Typ 4, sub00 @0x010F4/@0x0111A) traegt
+ *                pc[6..7] = 00 00 -> Flags 0x0001 und fiel damit durch; ebenso die
+ *                Tritte/Kisten in 11A0, 2040 (obj 1/2), 2060 (obj 2), 20A0, 5020 und den
+ *                Elza-Spiegeln (Zensus analysis/befunde_runde36/A_belege/) sowie die
+ *                Null-Box ROOM3091 obj 1 (Flags 0x0081, h 0) — die trifft FUN_8002da4c
+ *                wegen des vorzeichenlosen Vergleichs @0x8002da8c-c0 bei Rand -112 genau
+ *                aus schraeger Lage (|dx| >= 112 UND |dz| >= 112), nie achsgerade.
+ *                Die Kisten in ROOM1090 (pc[6..7] = 00 01 -> 0x0101) waren nie betroffen.
  *   @0x8002d364-70 `obj[0x82] == DAT_800acad6`  (Objekt-Band == Spieler-Band)
  *   @0x8002d37c  FUN_8002d1e8(player, obj, 0)   (Reichweite 563 voraus, Radius 900)
  *   @0x8002d394  FUN_8002da4c(probe, obj, -112, obj[0x82])
@@ -83,7 +99,7 @@ static int climb_probe_object(const re15_actor_t *pl, int32_t px, int32_t pz, in
     if (s_on_obj) return 0;                                        /* @0x8002d2f0 */
     for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {
         if (p >= 16 || !g_scd.props[p].active) continue;
-        if ((g_scd.props[p].flags & 0x101u) != 0x101u) continue;    /* @0x8002d358 */
+        if ((g_scd.props[p].flags & 0x101u) == 0u) continue;       /* @0x8002d358-35c */
         if ((int)g_scd.props[p].band != pband) continue;            /* @0x8002d370 */
         if (!re15_prop_reach_test(pl->x, pl->z, pl->rot_y, p, 0)) continue; /* @0x8002d37c */
         if (re15_collision_prop_box_hit(p, px, pz, -112,            /* @0x8002d394 */
@@ -152,8 +168,13 @@ static void climb_trace(void)
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     extern int re15_player_push_substate(void);
     extern int re15_player_push_phase(void);
+    /* Runde 36 Spur A: Lage des ERSTEN Typ-4-Objekts (verschiebbarer Tritt/Kiste) mitschreiben,
+     * damit der echte Weg "Tritt verschieben + hochklettern" im Log messbar ist. */
+    int t4 = -1;
+    for (int q = 0; q < (int)g_scd.prop_count && q < 16; q++)
+        if (g_scd.props[q].active && g_scd.props[q].obj_type == 4) { t4 = q; break; }
     fprintf(f, "T%u room=%04X pm=%d pad=%04X pos=(%ld,%ld,%ld) rot=%d band=%d sub=%d kind=0x%02X ph=%d "
-               "obj=%d stand=%d mo=%d af=%d frac=%d push=%d rc_b8=%d rc_bnd=%d\n",
+               "obj=%d stand=%d mo=%d af=%d frac=%d push=%d rc_b8=%d rc_bnd=%d t4=%d t4pos=(%ld,%ld) t4fl=0x%04X\n",
             tick, (unsigned)g_current_room_id, (int)g_scd.player_mode,
             (unsigned)g_engine.pad_current,
             (long)pl->x, (long)pl->y, (long)pl->z, (int)pl->rot_y,
@@ -163,7 +184,9 @@ static void climb_trace(void)
             re15_player_push_substate() ? re15_player_push_phase() : -1,
             (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1, 8, 0x100),
             (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1,
-                                          re15_collision_debug_band(), 0x100));
+                                          re15_collision_debug_band(), 0x100),
+            t4, t4 >= 0 ? (long)g_scd.props[t4].x : 0L, t4 >= 0 ? (long)g_scd.props[t4].z : 0L,
+            t4 >= 0 ? (unsigned)g_scd.props[t4].flags : 0u);
     fflush(f);
 }
 

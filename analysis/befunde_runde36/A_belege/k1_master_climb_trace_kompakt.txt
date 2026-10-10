@@ -1,0 +1,5 @@
+T1 room=1240 pm=2 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=0 frac=7 push=-1 rc_b8=0 rc_bnd=0
+T252 room=10F0 pm=0 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=210 af=0 frac=0 push=-1 rc_b8=0 rc_bnd=0
+T642 room=10F0 pm=0 pad=8000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=211 af=60 frac=0 push=-1 rc_b8=0 rc_bnd=0
+T645 room=10F0 pm=0 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=211 af=63 frac=0 push=-1 rc_b8=0 rc_bnd=0
+(letzte Zeile) T811 room=10F0 pm=0 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=211 af=47 frac=0 push=-1 rc_b8=0 rc_bnd=0

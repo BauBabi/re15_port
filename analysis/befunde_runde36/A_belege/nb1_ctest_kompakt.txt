@@ -1,0 +1,35 @@
+# Nachbesserung 1 - gezielter ctest-Lauf (Regex siehe A_klettern.md, Abschnitt Tests der Nachbesserung)
+1/26 Test #128: unit_sicherung_1150 ................   Passed    0.03 sec
+2/26 Test #201: unit_1090_push_pin .................   Passed    0.02 sec
+3/26 Test #210: unit_1090_push_anim ................   Passed    0.02 sec
+4/26 Test #222: unit_1090_climb_pin ................   Passed    0.03 sec
+5/26 Test #227: unit_rvd_scan_ungated_by_climb .....   Passed    0.02 sec
+6/26 Test #233: unit_1090_stay_on_crate ............   Passed    0.02 sec
+7/26 Test #322: unit_r22_10f0_figur ................   Passed    8.73 sec
+8/26 Test #343: unit_r30_granate ...................   Passed    0.53 sec
+9/26 Test #344: integration_r30_granate_laden ......   Passed   89.47 sec
+10/26 Test #365: unit_r30_sicherung_nein ............   Passed    0.17 sec
+11/26 Test #366: unit_r30_sicherung_modell ..........   Passed    0.03 sec
+12/26 Test #367: unit_r30_sicherung_sitz ............   Passed    0.02 sec
+13/26 Test #368: unit_r30_sicherung_bild ............   Passed    0.02 sec
+14/26 Test #369: integration_r30_sicherung_laden ....   Passed   36.84 sec
+15/26 Test #370: integration_r30_sicherung_bild .....   Passed   10.85 sec
+16/26 Test #481: unit_r35_cut10f0_programm ..........   Passed    0.01 sec
+17/26 Test #482: unit_r35_cut10f0_texte .............   Passed    0.01 sec
+18/26 Test #483: unit_r35_cut10f0_tuerton ...........   Passed    0.01 sec
+19/26 Test #484: unit_r35_cut10f0_szene .............   Passed    0.16 sec
+20/26 Test #485: unit_r35_cut10f0_einmal ............   Passed    0.12 sec
+21/26 Test #486: unit_r35_cut10f0_karte .............   Passed    0.01 sec
+22/26 Test #487: unit_r35_cut10f0_bgm ...............   Passed    0.01 sec
+23/26 Test #572: unit_r36_klettern_10f0_endlage .....   Passed    0.01 sec
+24/26 Test #573: unit_r36_klettern_10f0_startlage ...   Passed    0.01 sec
+25/26 Test #574: unit_r36_klettern_zensus ...........   Passed    0.30 sec
+26/26 Test #575: integration_r36_klettern ...........   Passed  531.61 sec
+100% tests passed, 0 tests failed out of 26
+Total Test time (real) = 679.12 sec
+
+# nach Kommentar-Zitaten in der Sonde: ctest -R "^unit_r36_klettern_"
+1/3 Test #572: unit_r36_klettern_10f0_endlage .....   Passed    0.02 sec
+2/3 Test #573: unit_r36_klettern_10f0_startlage ...   Passed    0.02 sec
+3/3 Test #574: unit_r36_klettern_zensus ...........   Passed    0.32 sec
+100% tests passed, 0 tests failed out of 3

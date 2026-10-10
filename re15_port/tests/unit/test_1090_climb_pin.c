@@ -3,8 +3,11 @@
  * Gepinnt werden AUSSCHLIESSLICH Groessen mit Disassembly-Beleg:
  *
  *  T1  Objekt-FLAGS aus dem Opcode-Strom = pc[6..7] | 1  (LAB_80040914 @0x80040990-a4).
- *      ROOM1090 obj0/obj1 tragen 0x0101 — das Bit 0x100, das FUN_8002d2c0 @0x8002d358
- *      mit `& 0x101` als "kletterbar" abfragt. obj2/obj3 (Typ 0) tragen es NICHT.
+ *      ROOM1090 obj0/obj1 tragen 0x0101. FUN_8002d2c0 @0x8002d358-35c (`andi 0x101` /
+ *      `beq v0,zero`) ueberspringt ein Objekt NUR, wenn KEINES der beiden Bits steht —
+ *      Bit 0 ist bei jedem installierten Objekt gesetzt, Bit 0x100 ist KEIN Kletterbit
+ *      (Runde 36 Spur A: der Tritt in ROOM10F0 traegt 0x0001 und ist kletterbar).
+ *      obj2/obj3 (Typ 0) tragen 0x100 ebenfalls nicht.
  *  T2  Sonde FUN_8002d474: Punkt 800 voraus (DAT_800109c8 = 0x320 @0x8002d49c/@0x8002d500),
  *      Kurs auf 90 Grad gerastet (`(yaw+512) & ~1023` @0x8002d4d4-dc). Vor Kiste 0
  *      -> Substate 9 (@0x8002d604) und KIND 0x81 (@0x8002d614/@0x8002d618).
@@ -19,7 +22,9 @@
  *  N1  Kein ACTION -> 0.
  *  N2  Zu weit weg: FUN_8002d1e8-Reichweite (563 voraus, Radius 900 @0x8002d224) faellt durch.
  *  N3  Falsches Band: `obj[0x82] != DAT_800acad6` @0x8002d370.
- *  N4  Falscher Objekt-Typ: obj2 hat Bit 0x100 nicht -> `& 0x101` @0x8002d358 faellt durch.
+ *  N4  Flags-Wort 0 (= AUS, wie @0x8004098c bei einer Zweitinstallation schreibt) ->
+ *      `& 0x101 == 0` @0x8002d35c faellt durch. N4b: NUR Bit 0x100 weg (0x0001, die Form
+ *      des Tritts in ROOM10F0) -> die Sonde greift trotzdem (Runde 36 Spur A).
  *  N5  Man steht bereits auf einem Objekt: `DAT_800aca3c & 0x4000` @0x8002d2f0 -> 0
  *      (kein Stapeln), und in der Kistenmitte blockt zusaetzlich @0x8002d6a0 den Absprung.
  *  N6  Vor einer TUER (kein Objekt in Reichweite): die Sonde MUSS 0 liefern, damit
@@ -124,8 +129,8 @@ int main(void)
     chk("T1 obj0.flags (pc[6..7]|1)", (long)g_scd.props[0].flags, 0x0101);
     chk("T1 obj1.flags", (long)g_scd.props[1].flags, 0x0101);
     chk("T1 obj0.band", (long)g_scd.props[0].band, 1);
-    chk("T1 obj2 kein Kletterbit",
-        (long)((g_scd.props[2].flags & 0x101u) == 0x101u), 0);
+    chk("T1 obj2 ohne Bit 0x100 (Typ 0)",
+        (long)((g_scd.props[2].flags & 0x100u) != 0u), 0);
 
     /* ---- N1: kein ACTION ----------------------------------------------------------- */
     stand_at_crate_front();
@@ -144,13 +149,28 @@ int main(void)
     re15_collision_set_band(3);                    /* Kiste ist Band 1 */
     chk("N3 falsches Band", re15_climb_try_start(&s_rdt, 1), 0);
 
-    /* ---- N4: falscher Objekt-Typ (Kletterbit fehlt) -------------------------------- */
+    /* ---- N4: Flags-Wort 0 = AUS (@0x8004098c `sw zero,0x0(a1)`) ----------------------
+     * `andi v0,v0,0x101` @0x8002d358 / `beq v0,zero` @0x8002d35c faellt NUR bei 0 durch. */
     reset_room(raw, sz);
     stand_at_crate_front();
     {
         uint16_t save = g_scd.props[0].flags;
-        g_scd.props[0].flags = (uint16_t)(save & ~0x100u);   /* nur Bit 0x100 wegnehmen */
-        chk("N4 Objekt ohne Bit 0x100", re15_climb_try_start(&s_rdt, 1), 0);
+        g_scd.props[0].flags = 0u;
+        chk("N4 Objekt mit Flags 0 (AUS)", re15_climb_try_start(&s_rdt, 1), 0);
+        g_scd.props[0].flags = save;
+    }
+    /* ---- N4b: NUR Bit 0x100 weg (0x0001) -> kletterbar (Runde 36 Spur A) ---------------
+     * Das ist die Flags-Form des Tritts in ROOM10F0 (sub00 @0x010F4 pc[6..7] = 00 00). Der
+     * Port verlangte hier bis Runde 36 faelschlich == 0x101 und liess den Tritt durchfallen. */
+    reset_room(raw, sz);
+    stand_at_crate_front();
+    {
+        uint16_t save = g_scd.props[0].flags;
+        g_scd.props[0].flags = (uint16_t)(save & ~0x100u);   /* 0x0101 -> 0x0001 */
+        chk("N4b Objekt ohne Bit 0x100 ist kletterbar", re15_climb_try_start(&s_rdt, 1), 1);
+        chk("N4b Substate 9", re15_climb_dbg_sub(), 9);
+        chk("N4b KIND 0x81", re15_climb_dbg_kind(), 0x81);
+        re15_climb_reset();
         g_scd.props[0].flags = save;
     }
 

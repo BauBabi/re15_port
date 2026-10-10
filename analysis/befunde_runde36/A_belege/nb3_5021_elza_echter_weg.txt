@@ -1,0 +1,107 @@
+# ROOM5021 ELZA, echter Weg in EINEM Stueck (Lauf e5021c): Tuer-Spawn (RE15_GOTO_ROOM) -> Treppe hoch (Band 0 -> 4) -> Kiste nach Sueden, dann nach Osten ueber die Kante -> Fall -> Treppe runter -> Schub in Slot 4 -> (4,203)=1 -> Klettern auf die gefallene Kiste
+RE15_NO_INTRO=1
+RE15_NOAUDIO=1
+RE15_TITLE_SHOT=title.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=1
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=1
+RE15_CLIMB_TRACE=climb.txt
+RE15_TITLE_SHOT_CHAR=1
+RE15_GOTO_ROOM=5021
+RE15_INPUT_SCRIPT=W3,L0.37,W0.2,U0.07,W0.2,R0.37,W0.2,U2.9,W0.2,R0.37,W0.2,U0.27,W0.2,L0.37,W0.2,U5.7,W0.2,L0.37,W0.2,U1.0,W0.2,L0.37,W0.2,U0.8,W0.2,A0.1,W5,L0.37,W0.2,U1.23,W0.2,R0.37,W0.3,U5,W0.5,R0.37,W0.3,U2.0,W0.3,L0.37,W0.3,U1.8,W0.3,L0.37,W0.5,U8,W1,L0.37,W0.3,U2.2,W0.3,L0.37,W0.3,U2.45,W0.3,R0.37,W0.3,U0.3,W0.3,A0.1,W7,R0.37,W0.3,U1.2,W0.3,R0.37,W0.3,U5,W0.3,L0.37,W0.3,U9,W1,A0.1,W4
+RE15_EXIT_AT=3000#5021
+RE15_OBJFALL_LOG=objfall.txt
+e468162bc5f95bdd8c506c561074bcda *C:/workspace/git/reAi_v2/.claude/worktrees/r36_klettern/re15_port/build/platform/pc/re15_pc.exe
+e468162bc5f95bdd8c506c561074bcda *C:/workspace/git/reAi_v2/.claude/worktrees/r36_klettern/re15_port/build/platform/pc/re15_pc_nb3a_e5021c.exe
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+## objfall.txt (Ereignisse + jede 4. Periodenzeile)
+F0 room=1241 FLAG (4,203)=0
+F0 room=1241 FLAG (3,204)=0
+F0 room=1241 FLAG (3,93)=0
+F0 room=1241 FLAG (5,6)=0
+F1329 room=5021 p=0 AUSLOESER wort=0x4002 band=4 pos=(-8093,-7200,-25338) spieler=(-9443,-25815) richt=(1,0)
+F1330 room=5021 p=0 zust 0->1 n=1 pos=(-8080,-7192,-25338) band=4 rot=(0,0,0) dreh=(0,0,0) 67c=26 684=8 690=0 68c=0 wasser=0
+F1331 room=5021 p=0 zust 1->1 n=2 pos=(-7998,-7179,-25338) band=4 rot=(0,0,8) dreh=(0,0,8) 67c=39 684=16 690=8 68c=0 wasser=0
+F1332 room=5021 p=0 zust 1->1 n=3 pos=(-7959,-7162,-25338) band=4 rot=(0,0,24) dreh=(0,0,16) 67c=52 684=24 690=24 68c=0 wasser=0
+F1333 room=5021 p=0 zust 1->1 n=4 pos=(-7907,-7141,-25338) band=4 rot=(0,0,48) dreh=(0,0,24) 67c=65 684=32 690=48 68c=0 wasser=0
+F1334 room=5021 p=0 zust 1->1 n=5 pos=(-7842,-7115,-25338) band=4 rot=(0,0,80) dreh=(0,0,32) 67c=78 684=40 690=80 68c=0 wasser=0
+F1335 room=5021 p=0 zust 1->1 n=6 pos=(-7764,-7085,-25338) band=4 rot=(0,0,120) dreh=(0,0,40) 67c=91 684=48 690=120 68c=0 wasser=0
+F1336 room=5021 p=0 zust 1->1 n=7 pos=(-7673,-7051,-25338) band=4 rot=(0,0,168) dreh=(0,0,48) 67c=104 684=56 690=168 68c=0 wasser=0
+F1337 room=5021 p=0 zust 1->1 n=8 pos=(-7569,-7012,-25338) band=4 rot=(0,0,224) dreh=(0,0,56) 67c=117 684=64 690=224 68c=0 wasser=0
+F1338 room=5021 p=0 zust 1->1 n=9 pos=(-7452,-6969,-25338) band=4 rot=(0,0,288) dreh=(0,0,64) 67c=130 684=72 690=288 68c=0 wasser=0
+F1339 room=5021 p=0 zust 1->1 n=10 pos=(-7322,-6922,-25338) band=4 rot=(0,0,360) dreh=(0,0,72) 67c=143 684=80 690=360 68c=0 wasser=0
+F1340 room=5021 p=0 zust 1->1 n=11 pos=(-7179,-6870,-25338) band=4 rot=(0,0,440) dreh=(0,0,80) 67c=156 684=88 690=440 68c=0 wasser=0
+F1341 room=5021 p=0 zust 1->1 n=12 pos=(-7023,-6814,-25338) band=4 rot=(0,0,528) dreh=(0,0,88) 67c=169 684=96 690=528 68c=0 wasser=0
+F1342 room=5021 p=0 BODEN FUN_8001c6e8=0 band 4 -> 0 pos=(-6854,-6814,-25338)
+F1342 room=5021 p=0 zust 1->1 n=13 pos=(-6854,-6814,-25338) band=0 rot=(0,0,625) dreh=(0,0,96) 67c=182 684=104 690=624 68c=160 wasser=0
+F1343 room=5021 p=0 zust 1->1 n=14 pos=(-6672,-6654,-25338) band=0 rot=(0,0,730) dreh=(0,0,104) 67c=182 684=112 690=728 68c=320 wasser=0
+F1344 room=5021 p=0 zust 1->1 n=15 pos=(-6490,-6334,-25338) band=0 rot=(0,0,843) dreh=(0,0,112) 67c=182 684=120 690=840 68c=480 wasser=0
+F1345 room=5021 p=0 zust 1->1 n=16 pos=(-6308,-5854,-25338) band=0 rot=(0,0,964) dreh=(0,0,120) 67c=182 684=128 690=960 68c=640 wasser=0
+F1346 room=5021 p=0 zust 1->1 n=17 pos=(-6126,-5214,-25338) band=0 rot=(0,0,1029) dreh=(0,0,64) 67c=182 684=72 690=1088 68c=800 wasser=0
+F1347 room=5021 p=0 zust 1->1 n=18 pos=(-5944,-4414,-25338) band=0 rot=(0,0,1029) dreh=(0,0,0) 67c=182 684=80 690=1088 68c=960 wasser=0
+F1348 room=5021 p=0 zust 1->1 n=19 pos=(-5762,-3454,-25338) band=0 rot=(0,0,1029) dreh=(0,0,0) 67c=182 684=88 690=1088 68c=1120 wasser=0
+F1349 room=5021 p=0 zust 1->1 n=20 pos=(-5580,-2334,-25338) band=0 rot=(0,0,1029) dreh=(0,0,0) 67c=182 684=96 690=1088 68c=1280 wasser=0
+F1350 room=5021 p=0 zust 1->1 n=21 pos=(-5398,-1054,-25338) band=0 rot=(0,0,1029) dreh=(0,0,0) 67c=182 684=104 690=1088 68c=1440 wasser=0
+F1351 room=5021 p=0 LANDUNG y=0 band=0 pos=(-5216,-25338)
+F1351 room=5021 p=0 zust 1->2 n=22 pos=(-5216,0,-25338) band=0 rot=(0,0,1029) dreh=(0,0,0) 67c=182 684=112 690=1088 68c=1600 wasser=0
+F1352 room=5021 p=0 AUFSETZEN se=snd0:6
+F1352 room=5021 p=0 zust 2->3 n=22 pos=(-5196,-30,-25338) band=0 rot=(0,0,1059) dreh=(0,0,30) 67c=182 684=112 690=1088 68c=1600 wasser=0
+F1353 room=5021 p=0 zust 3->3 n=22 pos=(-5176,0,-25338) band=0 rot=(0,0,1029) dreh=(0,0,-30) 67c=182 684=112 690=1088 68c=1600 wasser=0
+F2254 room=5021 FLAG (4,203)=1
+F2254 room=5021 p=0 KERBE m0b=4 pos=(-4375,0,-25338) band=0
+F0 room=1241 spieler=(-26214,0,-3861) rot=0 band=0
+F30 room=5021 spieler=(-12300,0,-25800) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F90 room=5021 spieler=(-12300,0,-25800) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F150 room=5021 spieler=(-12448,0,-24456) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F210 room=5021 spieler=(-12448,0,-21543) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F270 room=5021 spieler=(-11856,0,-21567) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F330 room=5021 spieler=(-11856,0,-17292) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F390 room=5021 spieler=(-11856,0,-13293) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F450 room=5021 spieler=(-11856,0,-13293) rot=3072 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F510 room=5021 spieler=(-13895,0,-13383) rot=1344 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F570 room=5021 spieler=(-13721,-712,-15272) rot=1024 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F630 room=5021 spieler=(-13743,-4323,-19064) rot=1024 band=0 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F690 room=5021 spieler=(-13772,-7200,-21945) rot=1024 band=4 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F750 room=5021 spieler=(-11832,-7200,-21782) rot=-32 band=4 | p0 (-11000,-7200,-23150) b4 r(0,0,0)
+F810 room=5021 spieler=(-11309,-7200,-21999) rot=1024 band=4 | p0 (-11000,-7200,-23349) b4 r(0,0,0)
+F870 room=5021 spieler=(-11299,-7200,-23315) rot=1024 band=4 | p0 (-11000,-7200,-24665) b4 r(0,0,0)
+F930 room=5021 spieler=(-11289,-7200,-23988) rot=1024 band=4 | p0 (-11000,-7200,-25338) b4 r(0,0,0)
+F990 room=5021 spieler=(-12917,-7200,-23922) rot=2080 band=4 | p0 (-11000,-7200,-25338) b4 r(0,0,0)
+F1050 room=5021 spieler=(-13895,-7200,-23808) rot=1024 band=4 | p0 (-11000,-7200,-25338) b4 r(0,0,0)
+F1110 room=5021 spieler=(-13895,-7200,-25798) rot=1024 band=4 | p0 (-11000,-7200,-25338) b4 r(0,0,0)
+F1170 room=5021 spieler=(-12350,-7200,-25726) rot=-32 band=4 | p0 (-11000,-7200,-25338) b4 r(0,0,0)
+F1230 room=5021 spieler=(-11358,-7200,-25762) rot=30 band=4 | p0 (-10008,-7200,-25338) b4 r(0,0,0)
+F1290 room=5021 spieler=(-10366,-7200,-25810) rot=30 band=4 | p0 (-9016,-7200,-25338) b4 r(0,0,0)
+F1335 room=5021 spieler=(-9374,-7200,-25798) rot=30 band=4 | p0 (-7764,-7085,-25338) b4 r(0,0,120)
+F1395 room=5021 spieler=(-8143,-7200,-25801) rot=30 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1455 room=5021 spieler=(-8143,-7200,-24376) rot=-1026 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1515 room=5021 spieler=(-8143,-7200,-21593) rot=-1410 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1575 room=5021 spieler=(-11399,-7200,-21725) rot=-2082 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1635 room=5021 spieler=(-13619,-7200,-21740) rot=-1026 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1695 room=5021 spieler=(-13581,-4518,-18823) rot=3072 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1755 room=5021 spieler=(-13523,-918,-14869) rot=3072 band=4 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1815 room=5021 spieler=(-13502,0,-13551) rot=3072 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1875 room=5021 spieler=(-13502,0,-13551) rot=4032 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1935 room=5021 spieler=(-10838,0,-13659) rot=4608 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F1995 room=5021 spieler=(-11153,0,-16989) rot=5184 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F2055 room=5021 spieler=(-11573,0,-21429) rot=5184 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F2115 room=5021 spieler=(-11888,0,-24759) rot=4608 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F2175 room=5021 spieler=(-8484,0,-24897) rot=4128 band=0 | p0 (-5176,0,-25338) b0 r(0,0,1029)
+F2235 room=5021 spieler=(-6030,0,-25017) rot=4120 band=0 | p0 (-4680,0,-25338) b0 r(0,0,1029)
+F2295 room=5021 spieler=(-5038,0,-25059) rot=4120 band=0 | p0 (-3688,0,-25338) b0 r(0,0,1029)
+F2355 room=5021 spieler=(-4678,0,-25155) rot=4120 band=0 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2415 room=5021 spieler=(-4678,0,-25243) rot=4120 band=0 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2475 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2535 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2595 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2655 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2715 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2775 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2835 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2895 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+F2955 room=5021 spieler=(-3530,-1800,-25243) rot=0 band=1 | p0 (-3328,0,-25338) b0 r(0,0,1029)
+## climb.txt (Klettern)
+T2461 room=5021 pm=0 pad=8000 pos=(-4678,0,-25243) rot=4120 band=0 sub=9 kind=0x81 ph=0 obj=0 stand=-1 mo=200 af=30 frac=0 push=-1 rc_b8=0 rc_bnd=0 t4=0 t4pos=(-3328,-25338) t4fl=0x0001
+T2462 room=5021 pm=0 pad=8000 pos=(-4678,0,-25243) rot=0 band=0 sub=9 kind=0x81 ph=2 obj=0 stand=-1 mo=230 af=0 frac=7 push=-1 rc_b8=0 rc_bnd=0 t4=0 t4pos=(-3328,-25338) t4fl=0x0001
+T3031 room=5021 pm=0 pad=0000 pos=(-3530,-1800,-25243) rot=0 band=1 sub=0 kind=0x00 ph=0 obj=0 stand=0 mo=211 af=41 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800 t4=0 t4pos=(-3328,-25338) t4fl=0x0001

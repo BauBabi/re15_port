@@ -1,0 +1,17 @@
+h=0 m=-112 dx=    0 dz=    0 -> 0
+h=0 m=-112 dx=    0 dz=  300 -> 0
+h=0 m=-112 dx=  300 dz=    0 -> 0
+h=0 m=-112 dx=  111 dz=  111 -> 0
+h=0 m=-112 dx=  112 dz=  112 -> 1
+h=0 m=-112 dx=  300 dz=  300 -> 1
+h=0 m=-112 dx= -500 dz=  800 -> 1
+h=0 m=-112 dx=  900 dz= -900 -> 1
+h=0 m=-112 dx= -111 dz=  500 -> 0
+h=0 m=-112 dx= -112 dz=  500 -> 1
+h=0 m=-112 dx=  112 dz= -111 -> 0
+X-Bedingung erfuellt fuer dx in -111 .. 111 NICHT
+h=675 m=-112: dx 562 -> 1  dx 563 -> 1  dx -563 -> 1  dx -564 -> 0
+h=0 m=18 (Standtest 0x12): dx 18 -> 1  dx 19 -> 0  dx -18 -> 1  dx -19 -> 0
+h=0 m=200: dx 200 -> 1  dx 201 -> 0
+(-112,-112) -> 1
+Abweichungen geschlossene Form X: 0  Z: 0

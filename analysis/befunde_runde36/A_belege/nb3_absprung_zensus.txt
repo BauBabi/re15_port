@@ -1,0 +1,76 @@
+ROOM1080 0x004FA obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM1081 0x004FA obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM1090 0x0216E obj=0x00 band=1 pos=(-8136,-1800,4753) fl=0100 drop-cells-on-band=0 
+ROOM1090 0x02190 obj=0x01 band=5 pos=(-5960,-9000,-15482) fl=0100 drop-cells-on-band=5 [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -11752..-8058 z 3826..8129 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1]
+ROOM1091 0x021BE obj=0x00 band=1 pos=(-8136,-1800,4753) fl=0100 drop-cells-on-band=0 
+ROOM1091 0x021E0 obj=0x01 band=5 pos=(-5960,-9000,-15482) fl=0100 drop-cells-on-band=5 [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -11752..-8058 z 3826..8129 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1] [x -4100..3100 z -3600..7896 w=0x530e u0=1]
+ROOM10D0 0x0114E obj=0x01 band=0 pos=(-19554,0,-23216) fl=0100 drop-cells-on-band=0 
+ROOM10D1 0x0114E obj=0x01 band=0 pos=(-19554,0,-23216) fl=0100 drop-cells-on-band=0 
+ROOM10F0 0x010F4 obj=0x00 band=0 pos=(-6050,0,4950) fl=0000 drop-cells-on-band=0 
+ROOM10F0 0x0111A obj=0x00 band=0 pos=(-4850,0,-850) fl=0000 drop-cells-on-band=0 
+ROOM10F1 0x010F4 obj=0x00 band=0 pos=(-6050,0,4950) fl=0000 drop-cells-on-band=0 
+ROOM10F1 0x0111A obj=0x00 band=0 pos=(-4850,0,-850) fl=0000 drop-cells-on-band=0 
+ROOM1100 0x00B64 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM1101 0x00B64 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11A0 0x01058 obj=0x00 band=3 pos=(10050,-5400,8800) fl=0000 drop-cells-on-band=5 [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1]
+ROOM11A0 0x0107E obj=0x00 band=0 pos=(-19300,0,3300) fl=0000 drop-cells-on-band=0 
+ROOM11A1 0x01058 obj=0x00 band=3 pos=(10050,-5400,8800) fl=0000 drop-cells-on-band=5 [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1] [x 5944..13525 z -253..2667 w=0x3102 u0=1]
+ROOM11A1 0x0107E obj=0x00 band=0 pos=(-19300,0,3300) fl=0000 drop-cells-on-band=0 
+ROOM11E0 0x0169E obj=0x02 band=0 pos=(19446,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11E0 0x017F8 obj=0x01 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11E1 0x0169E obj=0x02 band=0 pos=(19446,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11E1 0x017F8 obj=0x01 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11F0 0x00E54 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM11F1 0x00E54 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM1230 0x00CC0 obj=0x00 band=0 pos=(-19554,0,-23216) fl=0100 drop-cells-on-band=0 
+ROOM1231 0x00CC0 obj=0x00 band=0 pos=(-19554,0,-23216) fl=0100 drop-cells-on-band=0 
+ROOM2040 0x0137A obj=0x01 band=3 pos=(-16575,-5400,1700) fl=0000 drop-cells-on-band=0 
+ROOM2040 0x0139C obj=0x02 band=3 pos=(22925,-5400,-5400) fl=0000 drop-cells-on-band=0 
+ROOM2040 0x0147E obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2041 0x0137A obj=0x01 band=3 pos=(-16575,-5400,1700) fl=0000 drop-cells-on-band=0 
+ROOM2041 0x0139C obj=0x02 band=3 pos=(22925,-5400,-5400) fl=0000 drop-cells-on-band=0 
+ROOM2041 0x0147E obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2050 0x01D0E obj=0x06 band=3 pos=(-1600,-5400,-9348) fl=0100 drop-cells-on-band=5 [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1]
+ROOM2050 0x01D4C obj=0x08 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2050 0x01DB4 obj=0x01 band=0 pos=(2052,0,-5552) fl=0100 drop-cells-on-band=0 
+ROOM2050 0x01DD6 obj=0x02 band=0 pos=(-1256,0,-64) fl=0100 drop-cells-on-band=0 
+ROOM2050 0x01DF8 obj=0x03 band=0 pos=(4248,0,1400) fl=0100 drop-cells-on-band=0 
+ROOM2051 0x01D0E obj=0x06 band=3 pos=(-1600,-5400,-9348) fl=0100 drop-cells-on-band=5 [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1] [x 6350..8750 z -13950..-12150 w=0x3202 u0=1]
+ROOM2051 0x01D4C obj=0x08 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2051 0x01DB4 obj=0x01 band=0 pos=(2052,0,-5552) fl=0100 drop-cells-on-band=0 
+ROOM2051 0x01DD6 obj=0x02 band=0 pos=(-1256,0,-64) fl=0100 drop-cells-on-band=0 
+ROOM2051 0x01DF8 obj=0x03 band=0 pos=(4248,0,1400) fl=0100 drop-cells-on-band=0 
+ROOM2060 0x00EA6 obj=0x02 band=0 pos=(-3125,0,2075) fl=0000 drop-cells-on-band=0 
+ROOM2060 0x00ECC obj=0x02 band=0 pos=(475,0,-7375) fl=0000 drop-cells-on-band=0 
+ROOM2060 0x00EF0 obj=0x03 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2060 0x00F12 obj=0x04 band=0 pos=(19571,0,-22542) fl=0100 drop-cells-on-band=0 
+ROOM2061 0x00EA6 obj=0x02 band=0 pos=(-3125,0,2075) fl=0000 drop-cells-on-band=0 
+ROOM2061 0x00ECC obj=0x02 band=0 pos=(475,0,-7375) fl=0000 drop-cells-on-band=0 
+ROOM2061 0x00EF0 obj=0x03 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM2061 0x00F12 obj=0x04 band=0 pos=(19571,0,-22542) fl=0100 drop-cells-on-band=0 
+ROOM20A0 0x01854 obj=0x00 band=4 pos=(12250,-7200,-12400) fl=0000 drop-cells-on-band=10 [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253]
+ROOM20A0 0x0187A obj=0x00 band=0 pos=(23150,0,-24400) fl=0000 drop-cells-on-band=0 
+ROOM20A1 0x01854 obj=0x00 band=4 pos=(12250,-7200,-12400) fl=0000 drop-cells-on-band=10 [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253] [x 8000..14700 z -22000..-21000 w=0x4206 u0=253] [x 15800..17600 z -22000..-21000 w=0x4206 u0=253]
+ROOM20A1 0x0187A obj=0x00 band=0 pos=(23150,0,-24400) fl=0000 drop-cells-on-band=0 
+ROOM3050 0x01F1A obj=0x01 band=4 pos=(-18000,-7200,-20800) fl=0100 drop-cells-on-band=5 [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1]
+ROOM3050 0x01F40 obj=0x01 band=0 pos=(-24000,0,-22200) fl=0100 drop-cells-on-band=0 
+ROOM3050 0x01FDC obj=0x03 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM3051 0x01F1A obj=0x01 band=4 pos=(-18000,-7200,-20800) fl=0100 drop-cells-on-band=5 [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1] [x -25000..-22950 z -18050..-16800 w=0x4002 u0=1]
+ROOM3051 0x01F40 obj=0x01 band=0 pos=(-24000,0,-22200) fl=0100 drop-cells-on-band=0 
+ROOM3051 0x01FDC obj=0x03 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM3090 0x0140C obj=0x00 band=0 pos=(-23550,0,-8024) fl=0100 drop-cells-on-band=0 
+ROOM3091 0x01448 obj=0x00 band=0 pos=(-23550,0,-8024) fl=0100 drop-cells-on-band=0 
+ROOM3091 0x01508 obj=0x01 band=1 pos=(-15072,950,-1010) fl=0080 drop-cells-on-band=0 
+ROOM30E0 0x00A96 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM4020 0x006B6 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM4021 0x006B6 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM5020 0x01242 obj=0x00 band=4 pos=(-11000,-7200,-23150) fl=0000 drop-cells-on-band=5 [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1]
+ROOM5020 0x01268 obj=0x00 band=0 pos=(-3400,0,-25300) fl=0000 drop-cells-on-band=0 
+ROOM5021 0x01262 obj=0x00 band=4 pos=(-11000,-7200,-23150) fl=0000 drop-cells-on-band=5 [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1] [x -7675..-7175 z -26275..-24025 w=0x4002 u0=1]
+ROOM5021 0x01288 obj=0x00 band=0 pos=(-3400,0,-25300) fl=0000 drop-cells-on-band=0 
+ROOM5050 0x00794 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM5051 0x00794 obj=0x00 band=0 pos=(-19554,0,22684) fl=0100 drop-cells-on-band=0 
+ROOM50D0 0x01276 obj=0x00 band=0 pos=(-18200,0,-19650) fl=0100 drop-cells-on-band=0 
+ROOM50D0 0x0129C obj=0x00 band=0 pos=(-13950,0,-3210) fl=0100 drop-cells-on-band=0 
+ROOM50D1 0x01276 obj=0x00 band=0 pos=(-18200,0,-19650) fl=0100 drop-cells-on-band=0 
+ROOM50D1 0x0129C obj=0x00 band=0 pos=(-13950,0,-3210) fl=0100 drop-cells-on-band=0 

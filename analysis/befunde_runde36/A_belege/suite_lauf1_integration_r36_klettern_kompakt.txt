@@ -1,0 +1,21 @@
+== re15_port/build/tests/integration/r36_klettern_wd/lauf_48c843d7_C_leon_szene
+T252 room=10F0 pm=0 pad=0000 pos=(8400,0,-350) rot=0 band=0 sub=0 kind=0x00 ph=0 obj=-1 st
+T3771 room=10F0 pm=0 pad=0010 pos=(-7125,0,4923) rot=4122 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=0 frac=7 
+T4316 room=10F0 pm=0 pad=8000 pos=(-5083,0,-58) rot=5145 band=0 sub=9 kind=0x81 ph=0 obj=3 stand=-1 mo=200 af=28 frac=0 
+T4368 room=10F0 pm=0 pad=0000 pos=(-5083,-1800,-1206) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=3 stand=3 mo=231 af=49 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800 t4=3 t4pos=(-4970,-1108) t4fl=0x0001
+[flow] EXIT_AT: Bild 4550 in Raum 1090 erreicht -> exit
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+== re15_port/build/tests/integration/r36_klettern_wd/lauf_48c843d7_B_elza_10f1
+T32 room=10F1 pm=0 pad=0000 pos=(8400,0,-350) rot=2048 band=0 sub=0 kind=0x00 ph=0 obj=-1 
+T590 room=10F1 pm=0 pad=0010 pos=(-7125,0,4960) rot=4123 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=0 frac=7 p
+T1137 room=10F1 pm=0 pad=8000 pos=(-5015,0,-26) rot=5146 band=0 sub=9 kind=0x81 ph=0 obj=3 stand=-1 mo=200 af=25 frac=0 
+T1189 room=10F1 pm=0 pad=0000 pos=(-5015,-1800,-1174) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=3 stand=3 mo=231 af=49 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800 t4=3 t4pos=(-4892,-1076) t4fl=0x0001
+[flow] EXIT_AT: Bild 1320 in Raum 1091 erreicht -> exit
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+== re15_port/build/tests/integration/r36_klettern_wd/lauf_48c843d7_A_leon_10f0
+T252 room=10F0 pm=0 pad=0000 pos=(-7125,0,4950) rot=0 band=0 sub=0 kind=0x00 ph=0 obj=-1 s
+T572 room=10F0 pm=0 pad=0010 pos=(-7125,0,4950) rot=0 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=18 af=0 frac=7 push
+T1121 room=10F0 pm=0 pad=8000 pos=(-4899,0,-58) rot=1048 band=0 sub=9 kind=0x81 ph=0 obj=3 stand=-1 mo=200 af=30 frac=0 
+T1173 room=10F0 pm=0 pad=0000 pos=(-4899,-1800,-1206) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=3 stand=3 mo=231 af=49 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800 t4=3 t4pos=(-4785,-1108) t4fl=0x0001
+[flow] EXIT_AT: Bild 1400 in Raum 1090 erreicht -> exit
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
