@@ -205,7 +205,8 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
   Brand: Flammen-Slots > 0 (min 3); Gate Zeile 9/17 = 0.
   [2] wurf 201-206 — 96 Wuerfe bei 96 Abzuegen (R1 los in Bild 0..30 nach dem Abzug, HOCH/MITTE/TIEF), Spawnbild
   19/22/24, je Abzug genau eine Granate, LOWER im Bild nach dem Abgang bzw. nach dem Loslassen, Schwellen-Tabelle,
-  Negativ-Kontrolle Browning (Schwelle 7, LOWER Bild 9 unveraendert).
+  Negativ-Kontrolle Browning (Schwelle 7, LOWER Bild 9 unveraendert). (Nachbesserung 1: 209 Verbrauch im Spawnbild,
+  208 umgestellt, [4] griff 400-404 — §6.6.)
   [2c] 207 — letzte Granate (Menge 1): Spawn 22, Menge 0, danach kein Wurf ohne Granate (Menge bleibt 0).
   [2d] 208 — Quadrat waehrend des Hebens gehalten (Held-Bit @0x80033300-0c): Abzug 1 = erstes HOLD-Bild, Spawn =
   Abzug + 22, Abzug k+1 = Abzug k + 34 (Clip 7 = 35 Bilder, PLW @0x24), Menge = 5 - Abzuege (3 Abzuege / 3 Spawns).
@@ -219,10 +220,9 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
   `probe_r34_wurf: ALLE PRUEFUNGEN GRUEN`.
 
 ## OFFEN
-1. **Griff/Treffer waehrend der Wurfbewegung** (Bild 0 bis 19/22/24): das Kommando 2/5 ersetzt die Ziel-FSM
-   (re15_player_aim_interrupt; Original @0x80113b00 ohne Ziel-Gate) — die Granate ist weg (Abzug Bild 0), kein Wurf.
-   Byte-true und sichtbar begruendet (Leon wird gepackt); gemessen `pool_voll` (zweiter Abzug F99, Griff F119, mg 5 -> 3
-   bei einem Wurf). Nicht geaendert; Entscheidungsfrage unten.
+1. ~~Griff/Treffer waehrend der Wurfbewegung~~ — **ERLEDIGT in Nachbesserung 1 (§6)**: die Granate wird erst im
+   Spawnbild verbraucht; ein Griff/Treffer vor dem Abgang bricht den Wurf ab (Original @0x80113b00/@0x80113b30), die
+   Granate bleibt im Inventar (Lauf c2: vorher Menge 5 -> 3, nachher 5 -> 4). Keine Wahlfrage mehr.
 2. **Russ-Tinten bleiben** (@0x80106478-f8: Teile dunkelgrau nach der HE-Explosion) — nach dem Wortlaut "nur das
    Zerplatzen" koennte der Nutzer auch die Schwaerzung nicht wollen; sie ist kein Feuer-Effekt, deshalb belassen.
 3. **Flammen-Lebensdauer der Brandgranate**: RE1.5-CORE00-Id 8 Sub 3 (Routine 17/18) brennt bis zum Raumwechsel; RE2
@@ -230,12 +230,10 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
    Naechster Messweg: re2_fx.c Op 25 lesen, DuckStation-Brandrunde an einem Zombie zaehlen.
 4. **Wurfbild-Regel** (Runde 35, PORT-WAHL): Hand in/hinter einer Zelle -> Explosion ueber dem Werfer im Wurfbild. Ist ein
    Wurf mit Explosion, kein Aussetzer; unveraendert.
-5. **Statusschirm waehrend der Wurfbewegung** (nicht gemessen, nicht geaendert): der Port laesst den Statusschirm im
-   Zielen zu (game_step_common.c:1246, kein Ziel-Gate; der Menue-Code setzt die Ziel-FSM nicht zurueck). Wird START
-   zwischen Abzug und Spawnbild (<= 24 Bilder) gedrueckt UND im Schirm die Waffe gewechselt, scheitert das Spawn-Gate
-   `id == 9` (@0x8003368c) im Spawnbild — Granate weg, kein Wurf. Ohne Waffenwechsel laeuft der Rueckstoss nach dem
-   Schliessen weiter und die Granate geht ab. Bewusst konstruierter Fall (START + Waffenwechsel innerhalb 0,4 s nach
-   dem Abzug), nicht der Befund des Nutzers (der war der R1-Abbruch, 6 von 8 Abzuegen); offen fuer eine spaetere Runde.
+5. ~~Statusschirm waehrend der Wurfbewegung~~ — **durch Nachbesserung 1 mit erledigt**: scheitert das Spawn-Gate
+   (`id == 9` @0x8003368c) nach einem Waffenwechsel, gibt es keinen Abgang und damit keinen Verbrauch mehr (Sonde 403:
+   Waffenwechsel im Bild 10 -> kein Spawn, Granaten 5). Am Statusschirm der exe selbst nicht gefahren (START +
+   Waffenwechsel innerhalb 0,4 s); die Sonde setzt die ausgeruestete Waffe ueber denselben Setter mit Platz-Sync.
 
 ## Fuer den Nutzer
 * Keine neuen Assets (Paket-Gate), keine Sprachdateien, keine Aenderung an shared_assets.
@@ -246,8 +244,14 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
   und senkte den Arm; die Granate fehlte im Inventar). Nach dem Abgang senkt R1-Loslassen den Arm wie bisher.
   Zusaetzlich geht eine Granate nicht mehr verloren, wenn der Effektpool im Wurfbild voll ist (viel Gore nach der
   vorigen Explosion).
-* **Entscheidungsfrage:** Wird Leon WAEHREND der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen, bricht der Wurf ab und
-  die Granate ist verbraucht (Original-Verhalten). Soll sie in diesem Fall im Inventar bleiben?
+* **Wurf abgebrochen = Granate bleibt (Nachbesserung 1):** eine Granate wird erst verbraucht, wenn sie Leons Hand
+  verlaesst. Wird Leon waehrend der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen (oder wird im Statusschirm die Waffe
+  gewechselt), bricht der Wurf ab und die Granate bleibt im Inventar (vorher war sie in diesem Fall weg). Im Statusschirm
+  sieht man die Menge waehrend der Wurfbewegung deshalb erst nach dem Abgang sinken.
+* Hinweis fuer das Zusammenfuehren mit Spur I ("Handgranaten bei 0 aus dem Inventar entfernen"): die Menge erreicht 0
+  jetzt erst im Spawnbild, also NACH dem Abgang — das Entfernen kann den letzten Wurf nicht mehr verhindern (vorher fiel
+  die Menge im Abzugsbild; legte das Entfernen dabei auch die Waffe ab, koennte das Spawn-Gate `id == 9` @0x8003368c
+  im Spawnbild scheitern — Spur I ist hier nicht gelesen, nur die Reihenfolge ist belegt).
 * Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief.
 
 ## 6. Nachbesserung 1 (nach Abnahme 0, `D_abnahme_0.md`; Beginn 2026-10-10 abends, HEAD 95d15ec7)
@@ -305,7 +309,69 @@ fallen damit in DASSELBE Bild (Retail-Eigenschaft "abgezogen = abgefeuert", RE2 
 Griff/Treffer/Statusschirm-Waffenwechsel vor dem Spawnbild -> kein Wurf UND kein Verbrauch; kein Platz im Pool
 (0xFF @0x800197c8-cc, trotz Raeumung) -> kein Wurf und kein Verbrauch.
 
-(Fortsetzung: 6.3 Messung vorher, 6.4 Umsetzung, 6.5 Messung nachher, 6.6 Tests.)
+### 6.3 Messung vorher (M1 reproduziert; exe HEAD 95d15ec7 = re15_pc.exe sha1 e18c61ef, Messkopie `re15_pc_r36dn1_vor.exe`)
+Aufstellung der Abnahme (Lauf c2): `RE15_DEBUG_JUMP=1140@250 RE15_PLAYER_POS=-1000,-17000,1024 RE15_GIVE=9:5 RE15_EQUIP=9
+RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.667,MDA0.2,MD2.0,W3
+RE15_EXIT_AT=300#1140` (+ NO_INTRO/NOAUDIO/WINDOW_SCALE=1/TITLE_SHOT, Default-KI RE2), Ordner `build/r36d_mess/n1/c2_vor`:
+```
+state.log (nach dem Sprung)  F19  pad=8840 mg=4      Abzug 1 (Menge 5 -> 4 im Abzugsbild)
+gr.log                       F=43 SPAWN granate art=2 anker=(-1735,-772,-18641)   (= 19 + 24, TIEF @0x80033758)
+state.log                    F105 pad=8840 mg=3      Abzug 2 (Menge 4 -> 3 im Abzugsbild)
+state.log                    F113 gr=1 PL(-1000,-17918) -> (-1043,-18081)        Zombie packt Leon (8 Bilder nach Abzug 2)
+wf.log                       F113 rec=1 frame=8 -> F114 ph=0 rec=0               Ziel-FSM abgebrochen (aim_interrupt)
+gr.log                       kein zweites SPAWN (Spawnbild waere F129 = 105 + 24); T=365 EV resolver art=2 eingriffe=3
+state.log                    F300 mg=3 hp=40
+```
+= **2 Abzuege, 1 Wurf, Menge 5 -> 3** — bitgleich zum Abnahme-Befund (M1).
+
+### 6.4 Umsetzung (Dateien, Konstanten)
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| `include/re15_granate_r36.h`, `engine/src/granate_r36.c` | `re15_granate_r36_verbrauch_im_spawnbild(id)` (1 fuer 9/10/11), `re15_granate_r36_geworfen()` (= `re15_ammo_consume` = FUN_8004eae4), Zaehler `re15_granate_r36_verbraucht()` | Entlade-Tabelle @0x80074100 [9..11] = 0x80033B38/58/78, `jal 0x8004eae4` @0x80033b40/60/80 |
+| `engine/src/game_step_common.c` | Include + 1 Zeile vor der Munitions-Schleife des Entlade-Handlers (`if (!re15_granate_r36_verbrauch_im_spawnbild(eq_item))`), 1 Zeile hinter `re15_esp_granate_spawn` (`if (gs) re15_granate_r36_geworfen();`), Kommentarzeile am Spawn-Block | Bild 0 `jalr` @0x800334e0; Spawn `jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4 |
+Keine neue Konstante ausser den Ids 9/10/11 (Tabelle @0x80074100). Kein Env-Schalter, keine Assets, keine Bits/IDs.
+Nebenwirkung (gewollt, Folge derselben Regel): Statusschirm-Waffenwechsel waehrend der Wurfbewegung (OFFEN 5) und
+"kein Platz im Pool trotz Raeumung" kosten ebenfalls keine Granate mehr — beide erreichen den Spawn nicht.
+
+### 6.5 Messung nachher (exe 0bb12234, Messkopie `re15_pc_r36dn1_nach.exe` sha1 0cbfb9ea, Ordner `n1/c2_nach`)
+Dieselbe Aufstellung, dieselben Eingaben:
+```
+state.log  F19  pad=8840 mg=5                       Abzug 1 — Menge bleibt im Abzugsbild
+gr.log     F=43 SPAWN granate art=2 anker=(-1735,-772,-18641)
+state.log  F43  mg=4                                Menge 5 -> 4 IM Spawnbild
+state.log  F105 pad=8840 mg=4                       Abzug 2
+state.log  F113 gr=1                                Griff (gleiches Bild wie vorher)
+gr.log     kein zweites SPAWN; T=365 EV resolver art=2 P=(-2365,-480,-20050) eingriffe=3 (gleich)
+state.log  F300 PL(-902,-18596) hp=40 mg=4          Endlage/HP gleich, Granate 2 noch im Inventar
+```
+= **2 Abzuege, 1 Wurf, Menge 5 -> 4.** Die abgebrochene Granate bleibt im Inventar; alles andere (Anker, Explosion,
+Griff, Endlage) ist bitgleich zum Vorher-Lauf.
+Gegenprobe des Pins an der ALTEN exe (`cmake -DRE15_PC_EXE=.../re15_pc_r36dn1_vor.exe -DR36_NUR=griff -P
+tests/integration/test_r36_granate.cmake`): `r36_granate [griff]: Granaten 5 -> 3, soll 5 -> 4 (vorher 5 -> 3:
+verbraucht, aber nicht geworfen)` = rot. Mit der neuen exe: s. 6.6.
+
+### 6.6 Tests (Nachbesserung 1)
+* `unit_r36_granate`:
+  - **209 neu**: in allen 96 Wuerfen von [2] faellt die Menge IM Spawnbild (19/22/24).
+  - **208 umgestellt**: Abzug-Bilder ueber den Neubeginn des Rueckstoss-Clipzaehlers (`re15_player_granate_frame`;
+    beim gehaltenen Quadrat faellt das Rueckstoss-Bit nie), Verbrauchsbilder = Spawnbilder: `READY Bild 11, 3 Abzuege
+    (11,45,79) / 3 Spawns (33,67,101) / 3 Verbrauchsbilder (33,67,101), Menge 2`.
+  - **[4] griff neu**: 400 Treffer im Bild 8 (echter HP-Drop-Detektor -> `re15_player_stagger_cmd2` ->
+    `re15_player_aim_interrupt`, dieselbe Unterbrechung wie der Griff) -> `Spawn -1, Menge 5, Verbrauch 0`;
+    401 danach neu zielen + werfen -> `Spawn 22, Menge 4, Verbrauchsbild 22`; 402 Treffer im Bild 23 (nach dem
+    Abgang) -> `Spawn 22, Menge 4`; 403 Waffenwechsel (Browning) im Bild 10 -> `Spawn -1, Granaten 5`;
+    404 Zuordnung nur 9/10/11.
+  - **Mutationsprobe** (alte Verbrauchsstelle zurueck, gebaut, gefahren): 209 `0/96`, 208 `Verbrauchsbilder
+    (11,45,79)`, 400 `Menge 4`, 401 `Menge 3`, 403 `Granaten 4`, 404 rot; probe_r34_wurf 92/98/104 `Menge nach dem
+    Abzug 4` rot — die Pins haben Zaehne. Danach `git checkout` + Neubau.
+* `integration_r36_granate`: **Lauf `griff` neu** (= Abnahme-Lauf c2, RE15_AI_FLAVOR=re2): 2 Abzuege, Griff zwischen
+  Abzug 2 und dessen Spawnbild, 1 Wurf, Granaten 5 -> 4, Verbrauchsbilder = Spawnbilder; **`serie`** prueft
+  zusaetzlich Verbrauchsbilder = Spawnbilder. Auswerter `r36_wurfspur` mit Negativ-Kontrolle (synthetisches Protokoll).
+* Verhaltensbedingt angepasst (fremde Pins, deren Messgroesse die alte Verbrauchsstelle war):
+  - `probe_r34_wurf.c` PRUEF 92/98/104: `Menge nach dem Abzug 5, im Spawnbild 4` (vorher 4 nach dem Abzug).
+  - `test_r34_granaten.cmake` `r34_abzug`: Abzugsbild = erstes Bild des Rueckstoss-Clips 7/9/11 (`ac=`; Clip =
+    7 + 2*HOCH + 4*TIEF @0x800334a8-c8) statt "erstes Bild mit Menge -1" (das waere jetzt das Spawnbild S).
+* Gezielte Laeufe: s. 6.7.
 
 ## 5. Suite (Fortsetzung, Stand 90d559cc + Sonde 208)
 * `bash re15_port/tools/local_build.sh test` (Lauf `build/r36d_mess/suite1.log`, 14:24-15:50, parallel zu fuenf
