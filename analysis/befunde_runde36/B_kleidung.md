@@ -264,8 +264,9 @@ zugewandt stehen; darum die Drehung R1.2 vor dem Spielstand.
 ## 6. Tests (tests/unit/probes/r36_kleidung.cmake, alle gruen)
 * unit_r36_kleidung_griff_re2 / _re15 — ROOM1140, game_step, 4 ueberlebte Griffe: Abwurf 1/2 ohne
   Stempel, Abwurf 3: Panel 7 Stufe 1 UND genau eines von 4/5, Panel 0/1/2/3/6 = 0, Generation springt.
-* unit_r36_kleidung_hund — ROOM11D0 RE2-Hund: >= 3 Boden-Bisse, je genau ein Panel aus 05 07 04 06 um
-  0x32, Panels 0..3 unberuehrt.
+* unit_r36_kleidung_hund — ROOM11D0 RE2-Hund: >= 3 Boden-Bisse, je 20 HP und je GENAU ZWEI Stempel
+  0x32 auf einem Paar 05/07 bzw. 04/06 (Massstab 1 Stempel je 10 HP @0x8010f2c8, Nachbesserung 1;
+  vorher: ein Panel je Biss).
 * unit_r36_kleidung_kraehe — 0x801161e8-Baender an den Grenzen + Live-Griff ROOM10C0 (jeder Griff stempelt).
 * unit_r36_kleidung_lut — LUT @0x80074208: Leon Zeile 0, Elza Zeile 4, Zeile 8 ungueltig, Rechtecke
   innerhalb der Body-Seiten.
@@ -275,6 +276,9 @@ zugewandt stehen; darum die Drehung R1.2 vor dem Spielstand.
   RE2-Standardgehirn: 3 ueberlebte Griffe (Log-Zeilen [kleidung] F97/F163/F229, hp 70/50/20, 3. Abwurf
   gen=2), Spielstand vom Spiel geschrieben, `nullen` meldet die Wunde (Exit 3 = keine), CONTINUE
   vorher/nachher: >= 60 Pixel, alle in x150..240/y80..210 (gemessen 131). ~35 s.
+* integration_r36_kleidung_hundeweg (NEU, Nachbesserung 1) — der Hundeweg ROOM1190 der Abnahme mit
+  der exe: Decal vor Danger (gemessen hp 60), Spielstand vom Spiel, CONTINUE mit/ohne Wunden, Bild 42
+  (Ruecken) >= 13 Pixel (gemessen 27) im Figurenkasten. ~50 s.
 Bestehende Riegel unveraendert gruen: unit_wound_accumulator, probe_save_injured, probe_r17_weste_karte,
 Dog-/Kraehen-/Zombie-Griff-Tests (Suite-Zeile s.u.).
 unit_pri_hashes war auf dem Basisstand 5a9dbb7b rot (Nutzer-Maske 10F0/02_02.png ungelistet) — auf
@@ -313,6 +317,13 @@ RE_15_Quellcode_Overlays/STAGE{N}_full):
   `re15_wound_add(0,0x32)`, Birkin-Release -> `re15_kleidung_abwurf`.
 * RE2-Kraehe: Dive/Strike der RE1.5-Kraehe (@0x80113b7c/@0x801144bc) haben in der RE2-Kraehe keinen
   Zwilling (sie kennt nur den Griff-Peck); abgedeckt ist der Griff-Eintritt (Form 0x801161e8).
+* RE2-Hund-Claim (Nachbesserung 1, N1.3, keine Spur-B-Zuteilung): der RE2-Boden-Biss setzt PL+0x1D3 |=
+  0x80 (`ori v1,v1,0x80` / `sb v1,467(a0)` @0x801051f8/0x80105200, EMD0G_MOD0.BIN), jeder Hund prueft ihn
+  vor dem Kontakt (`lbu v0,467(s1)` / `andi 0x80` / `bne` @0x80104e5c-68). Der Port setzt ihn nicht
+  (enemy_ai_re2_dog.c re2d_contact) -> auf dem Hundeweg beissen drei Hunde in fuenf Bildern
+  (F582/F585/F587, hp 100 -> 40). Messweg: Befehl N1.1, Zeilen `[kleidung] ... hundebiss`. Naechster
+  Schritt: wer loescht das Bit im RE2-Spieler (Ende des HURT-Zustands 2, Spieler-Routine RE2-EXE)
+  disassemblieren, dann den Claim im Port setzen/loesen. Aendert die HP-Kurve, nicht den Wund-Massstab.
 * Der Port verliert die Stempel NICHT beim Laden (v5-Spielstand traegt wounds[8][2]); das Original
   nullt beim Spieler-Load (FUN_80037c1c @0x800316c8/0x800318cc, blood_decals.md §5). Vorbestehende
   PORT-WAHL (analysis/save_injured_state.md SI-1: der Original-Save-Blob enthaelt die Tabelle, der
@@ -322,7 +333,9 @@ RE_15_Quellcode_Overlays/STAGE{N}_full):
 * Keine neuen Assets, keine Sprachdateien, keine Paket-Gate-Eintraege.
 * Bedienung unveraendert: Blut/Risse entstehen wie im Original durch Treffer — drei ueberlebte
   Zombie-Griffe auf dieselbe Koerperseite (je +50 auf zwei Brust- bzw. Rueckenpanels, Schwelle 120),
-  Hundebisse (+50 je Biss auf ein Brust-/Rueckenpanel), Kraehengriffe; Heilung loescht sie nicht,
+  Hundebisse (+50 je 10 HP Biss-Schaden auf ein Brust-/Rueckenpanel — der RE2-Hund beisst mit 20 HP,
+  also zwei Stempel je Biss; seit Nachbesserung 1 kommt das erste Decal beim zweiten Biss, bei hp 60,
+  wie unter dem RE1.5-Gehirn), Kraehengriffe; Heilung loescht sie nicht,
   Speichern/Laden erhaelt sie (v9-Spielstand). Unter "AI RE2" (Standard) und "AI RE1.5" gleich.
 * Elza: die Decals liegen jetzt auf Elzas eigenen Panels (LUT-Zeile 4) — vorher sassen sie daneben.
 * Messhaken (nur fuer Messungen, kein Spielverhalten): RE15_KLEIDUNG_LOG=1 schreibt je Stempel eine
@@ -452,6 +465,13 @@ Panel 4 liegt auf der Westen-RUECKSEITE (rechts neben "R.P.D.", rot-zerrissener 
 der 6x-Vergroesserung Bild 42 ohne/mit/Maske) — beim Biss von hinten (aca59 = 3 -> 04/06) genau dort, wo
 der Hund zugebissen hat. Die Seitenansicht des Kampfs (Bild 560..700 des Laufs, Kamera "Firing Range")
 zeigt sie nicht (0 Pixel gegen den Vorher-Lauf; Bild 720..760: 2..4 Pixel = Panel 5 nach F708).
+
+Elza (Stempel sind figur-unabhaengig, die Panel-Ziele kommen aus LUT-Zeile 4): Spielstand per
+Kartenwerkzeug `karte re15_card.mcr 1190 4 3050 0 -11650 0 100 - 0` (Elza, Startpunkt des Leon-Laufs),
+CONTINUE + `RE15_DEBUG_SUB=13@60 RE15_DEBUG_DOGWAKE=110`: `[pl] Spieler-Familie PL04 (character=4)`,
+Bisse F192/F195/F197/F283/F318 mit `dir=2+2 / 3+2 / 0+1 / 0+1 / 0+0`, erstes Decal F195 bei hp 60,
+`[wound] sync: applied=1 ok=1 gen=2` — dieselbe Kette wie bei Leon. (Elzas Darstellung der Decals:
+Riegel integration_r36_kleidung_bild EA/EB.)
 
 ### N1.6 M2 — Hinweis der Abnahme (kein Code-Mangel)
 Abnahme 0 war ein Teilstand (Sitzungslimit); die Spur-Riegel laufen jetzt RDP-fest: alle drei exe-Riegel
