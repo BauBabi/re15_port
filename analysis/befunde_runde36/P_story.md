@@ -268,7 +268,13 @@ Ergebnisse (woertlich):
 * Beruehrte Module/Raeume (msg_common.c, scd_room_setup.c, Raeume 1020/1090/1091/1210/6030/...):
   `ctest -R "^unit_(msg|text|savepoint|action_msg|1090|1210|r34n_e|r34n_f|r34n_b_kreuztext|r35_inhalt|r35_cut10f0|r35_cut1150|r33_tuer1120|r34n_d|r34n_a|r35_karte_r1210|r35_raeume|re2_room1090|map_1090|plc_back_yaw_1090|room1050|r36_story|scd|room)" -j 4`
   -> `100% tests passed, 0 tests failed out of 96`
-* Schlusslauf: siehe Abschnitt "Schlusslauf" unten.
+* Beruehrte Wege der exe (Boot-/CONTINUE-Block main.c, Raum 1020 Dokument, Montage-Raeume):
+  `ctest -R "^(integration_weste_load_pin|integration_r34n_e_dokumente_bild|integration_boot_bg_pin|integration_r35_cut1150|integration_r33_speichern)$"`
+  -> `100% tests passed, 0 tests failed out of 5` (767 s)
+* Schlusslauf (Stand des letzten Commits): `ctest -R "^(unit_r36_story_|integration_r36_story_)" --timeout 1500`
+  -> `100% tests passed, 0 tests failed out of 8` (integration_r36_story_leon 372 s, _elza 220 s, gesamt 592 s)
+* Fuer den Orchestrator: +8 Tests (6 unit + 2 integration) — RE15_MIN_TESTS (local_build.sh) beim Zusammenfuehren
+  um 8 anheben (bewusst NICHT im Spurbaum geaendert: gemeinsame Datei, Konfliktstelle aller Spuren).
 
 ## OFFEN
 * Keine offenen Punkte der Spur P. Hinweise ausserhalb des Auftrags (nur gemeldet, nicht geaendert):
@@ -276,6 +282,11 @@ Ergebnisse (woertlich):
     msg 4/6). Kein Leon-Elza-Thema; Entscheidungsfrage an den Nutzer.
   - ROOM6030 msg 6 "Leon: Where's Annette?" ist in der Reihenfolge "vorne zuerst" (s.o.) ebenso schief wie im
     Original (Leon hat Annette dann schon gesehen) — kein Begegnungs-Thema, unveraendert.
+* Grenze des Sweeps: geprueft sind ALLE RDT-Texte beider Szenarien + die Port-Texte, die bis Runde 35 im Bestand
+  sind (cut_10f0.c, irons_tod_1150.c, adaruf/rolltor/leiche/ziel/tuer*: nur Leon-Szenen, kein Elza-Bezug). Die neuen
+  Port-Texte der anderen Runde-36-Spuren (J 11B0 Marvin, L 1151/1101, Q Schluessel) liegen in deren Baeumen; laut
+  AUFTRAG-Wortlaut erwaehnt keiner den jeweils anderen. Messweg im Integrationsbaum: `ctest -R
+  "^unit_r36_story_sweep$"` (laedt alle RDTs ueber den Port-Lader) + `RE15_MSG_LOG` -> `[msgtext]` der neuen Szenen.
 
 ## Fuer den Nutzer
 * **Freigabe der Wortlaute:** Tabelle "Umsetzung (alt -> neu)" oben (11 Zeilen) + die zwei neuen Spuren:
