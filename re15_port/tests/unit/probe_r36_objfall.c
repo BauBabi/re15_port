@@ -264,7 +264,11 @@ static void raum_5020(const char *room, uint16_t id)
           room, ks, ye, be, st);
 }
 
-/* ---- ROOM20A0/20A1: Tasche -> Laufsteg (Band 2) -> Kanal (Band 1, Wasser) -> Kante -> Band 0 (Spritzer) --- */
+/* ---- ROOM20A0/20A1: Tasche -> Laufsteg (Band 2) -> Kanal (Band 1, Wasser) -> Kante -> Band 0 (Spritzer) ---
+ * MECHANIK-TEST mit GESETZTER Lage: durch Schieben ist die Tasche UNERREICHBAR (Freiraum-Zensus unten: Wand 37
+ * sperrt ab Kistenmitte x >= 16700, Wand 38 bis x < 16700 — FUN_8003b558 `sltu` @0x8003b764, untere Grenze inklusiv,
+ * obere exklusiv; die 1800 breite Tasche laesst keine einzige Mitte frei). Geprueft wird hier nur, dass der Fall
+ * die Kette Laufsteg / Kanal / Wasser / Spritzer so faehrt, wie FUN_8002c444 sie vorgibt. */
 static void raum_20a0(const char *room, uint16_t id)
 {
     printf("--- %s (Kiste Band 4, Tasche x 15800..17600 vor Absprungzelle 45 z -22000..-21000 Wort 0x4206)\n", room);
@@ -334,6 +338,97 @@ static void raum_20a0(const char *room, uint16_t id)
           room, ks, ye, be, st);
 }
 
+/* ---- FREIRAUM-ZENSUS: kann eine GESCHOBENE Kiste den Ausloeser ueberhaupt erreichen? ---------------------
+ * Notwendige Bedingung fuer einen Fall durch Schieben: von der Startlage aus fuehrt ein zusammenhaengender Weg
+ * UNGESPERRTER Kistenmitten zu einer Lage, an der der Ausloeser greift. Praedikate:
+ *   Ausloeser  FUN_8003b7f0(&obj+0x34, 0x1c2, Band) & 2 (@0x8002c120-134; ERSTE Zelle des Bandes im Quadranten,
+ *              Rechteck um 450 erweitert, halboffen [x0-450, x0+w+450) — `sltu` @0x8003b8c8-d0 / @0x8003b8f0-f4).
+ *   gesperrt   FUN_8003b558(obj, 2) != 0 (@0x8002bfb0; Zellen des Objekt-Bands mit u0 & 2, Rechteck um den
+ *              Kisten-Halbmesser r = box.hx erweitert [x0-r, x0+w+r) — `sltu` @0x8003b764 / @0x8003b790; hx == hz ->
+ *              r = hx @0x8003b68c-690). Eine gesperrte Lage nimmt der Schub sofort zurueck (@0x8002c0b8-d4), die
+ *              Kiste bewegt sich also nur durch ungesperrte Lagen.
+ * Beide sind auf halboffenen achsparallelen Rechtecken stueckweise konstant -> EXAKT ueber Koordinaten-Kompression
+ * (alle Zellgrenzen +-450 und +-r, Quadranten-Grenze ceil_x/ceil_z), Flutfuellung ueber ungesperrte Elementarzellen
+ * ab der Startlage (4er-Nachbarschaft = gemeinsame Kante). Eine erreichte Ausloeser-Zelle beendet den Weg (die Kiste
+ * faellt dort). Ergebnis = erreichbare Ausloeser-Flaeche (Einheiten^2). Spieler-Kollision bleibt aussen vor (nur die
+ * notwendige Bedingung der Kiste). */
+static int cmp_i32(const void *a, const void *b)
+{
+    const int32_t x = *(const int32_t *)a, y = *(const int32_t *)b;
+    return (x > y) - (x < y);
+}
+static int uniq(int32_t *v, int n)
+{
+    qsort(v, (size_t)n, sizeof v[0], cmp_i32);
+    int m = 0;
+    for (int i = 0; i < n; i++) if (m == 0 || v[i] != v[m - 1]) v[m++] = v[i];
+    return m;
+}
+static int idx_of(const int32_t *v, int n, int32_t x)
+{
+    int lo = 0, hi = n - 2;
+    if (x < v[0] || x >= v[n - 1]) return -1;
+    while (lo < hi) { int mid = (lo + hi + 1) / 2; if (v[mid] <= x) lo = mid; else hi = mid - 1; }
+    return lo;
+}
+static long long freiraum(const char *stage, const char *room, uint16_t id, int obj_id, int bank, int bit,
+                          int32_t *bx, int32_t *bz)
+{
+    if (raum(stage, room, id, bank, bit, 0) != 0) { g_fail++; return -1; }
+    int p = -1;
+    for (int k = 0; k < (int)g_scd.prop_count && k < RE15_SCD_MAX_PROPS; k++)
+        if (g_scd.props[k].active && g_scd.props[k].obj_type == 4 && g_scd.props[k].obj_id == obj_id) p = k;
+    if (p < 0) { printf("--- FREIRAUM %s: obj %d nicht installiert (Lage-Flag 0)\n", room, obj_id); return -2; }
+    const int band = (int)g_scd.props[p].band;
+    const int32_t r = (int32_t)(uint16_t)g_scd.props[p].box_hx;
+    const int32_t sx = g_scd.props[p].x + g_scd.props[p].box_cx, sz = g_scd.props[p].z + g_scd.props[p].box_cz;
+    static int32_t xs[8192], zs[8192];
+    int nx = 0, nz = 0;
+    xs[nx++] = (int16_t)s_rdt.ceiling_x; zs[nz++] = (int16_t)s_rdt.ceiling_z;
+    xs[nx++] = -40000; xs[nx++] = 40000; zs[nz++] = -40000; zs[nz++] = 40000;
+    for (int i = 0; i < s_rdt.sca_count && nx < 8186; i++) {
+        const re15_sca_entry_t *e = &s_rdt.sca[i];
+        const int32_t x0 = e->x, z0 = e->z, w = e->width, d = e->density;
+        xs[nx++] = x0 - 450; xs[nx++] = x0 + w + 450; xs[nx++] = x0 - r; xs[nx++] = x0 + w + r;
+        zs[nz++] = z0 - 450; zs[nz++] = z0 + d + 450; zs[nz++] = z0 - r; zs[nz++] = z0 + d + r;
+    }
+    nx = uniq(xs, nx); nz = uniq(zs, nz);
+    const int W = nx - 1, H = nz - 1;
+    uint8_t *st = (uint8_t *)calloc((size_t)W * (size_t)H, 1);      /* 0 neu, 1 gesperrt, 2 frei, 3 besucht */
+    int *q = (int *)malloc(sizeof(int) * (size_t)W * (size_t)H);
+    long long erreicht = 0; int n_aus = 0, n_besucht = 0;
+    *bx = 0; *bz = 0;
+    const int i0 = idx_of(xs, nx, sx), j0 = idx_of(zs, nz, sz);
+    int qh = 0, qt = 0;
+    if (i0 >= 0 && j0 >= 0 && !re15_collision_box_blocked(&s_rdt, xs[i0], zs[j0], band, r, 2u)) {
+        st[(size_t)j0 * W + i0] = 3; q[qt++] = j0 * W + i0;
+    }
+    while (qh < qt) {
+        const int c = q[qh++], i = c % W, j = c / W;
+        n_besucht++;
+        if (re15_collision_floor_typeword(&s_rdt, xs[i], zs[j], band, 450) & 2) {
+            erreicht += (long long)(xs[i + 1] - xs[i]) * (long long)(zs[j + 1] - zs[j]);
+            if (n_aus++ == 0) { *bx = xs[i]; *bz = zs[j]; }
+            continue;                                   /* faellt hier: kein Weiterweg */
+        }
+        static const int di[4] = { 1, -1, 0, 0 }, dj[4] = { 0, 0, 1, -1 };
+        for (int k = 0; k < 4; k++) {
+            const int ni = i + di[k], nj = j + dj[k];
+            if (ni < 0 || nj < 0 || ni >= W || nj >= H) continue;
+            uint8_t *s2 = &st[(size_t)nj * W + ni];
+            if (*s2) continue;
+            if (re15_collision_box_blocked(&s_rdt, xs[ni], zs[nj], band, r, 2u)) { *s2 = 1; continue; }
+            *s2 = 3; q[qt++] = nj * W + ni;
+        }
+    }
+    free(st); free(q);
+    printf("--- FREIRAUM %s obj %d Band %d r %d Start (%d,%d): %d ungesperrte Elementarzellen erreichbar, davon "
+           "Ausloeser %d, Flaeche %lld%s", room, obj_id, band, (int)r, (int)sx, (int)sz, n_besucht, n_aus, erreicht,
+           n_aus ? "" : " -> durch Schieben UNERREICHBAR\n");
+    if (n_aus) printf(", erste erreichte Ausloeser-Lage (%d,%d)\n", (int)*bx, (int)*bz);
+    return erreicht;
+}
+
 /* ---- Gegenprobe: ROOM10F0/10F1-Tritt (Band 0 ohne Absprungzelle) faellt nirgends ------------------------- */
 static void raster_ohne_fall(const char *stage, const char *room, uint16_t id)
 {
@@ -365,6 +460,42 @@ int main(int argc, char **argv)
     raum_20a0("ROOM20A1", 0x20A1);
     raster_ohne_fall("STAGE1", "ROOM10F0", 0x10F0);
     raster_ohne_fall("STAGE1", "ROOM10F1", 0x10F1);
+    {   /* Freiraum-Zensus aller fallfaehigen Objekte (A_belege/nb3_absprung_zensus.txt), Lage-Flag 0 = obere Lage. */
+        int32_t bx, bz;
+        static const struct { const char *st, *rm; uint16_t id; int obj, bank, bit, soll; } F[] = {
+            /* soll: 1 = Flaeche > 0 (Fall erreichbar), 0 = Flaeche 0 (unerreichbar), -1 = nur Diagnose */
+            { "STAGE5", "ROOM5020", 0x5020, 0, 4, 203, 1 }, { "STAGE5", "ROOM5021", 0x5021, 0, 4, 203, 1 },
+            { "STAGE2", "ROOM20A0", 0x20A0, 0, 3, 204, 0 }, { "STAGE2", "ROOM20A1", 0x20A1, 0, 3, 204, 0 },
+            { "STAGE1", "ROOM11A0", 0x11A0, 0, 5,   6, 0 }, { "STAGE1", "ROOM11A1", 0x11A1, 0, 5,   6, 0 },
+            { "STAGE3", "ROOM3050", 0x3050, 1, 3,  93, -1 }, { "STAGE3", "ROOM3051", 0x3051, 1, 3,  93, -1 },
+            { "STAGE1", "ROOM1090", 0x1090, 1, -1,  0, -1 }, { "STAGE1", "ROOM1091", 0x1091, 1, -1,  0, -1 },
+            { "STAGE2", "ROOM2050", 0x2050, 6, -1,  0, -1 }, { "STAGE2", "ROOM2051", 0x2051, 6, -1,  0, -1 },
+        };
+        for (size_t i = 0; i < sizeof F / sizeof F[0]; i++) {
+            const long long a = freiraum(F[i].st, F[i].rm, F[i].id, F[i].obj, F[i].bank, F[i].bit, &bx, &bz);
+            if (a == -2 && F[i].soll >= 0) PRUEF(0, "%s: obj %d nicht installiert", F[i].rm, F[i].obj);
+            if (a < 0) continue;
+            if (F[i].soll == 1) PRUEF(a > 0, "%s: Ausloeser nicht ungesperrt erreichbar (Flaeche 0)", F[i].rm);
+            if (F[i].soll == 0) PRUEF(a == 0, "%s: Ausloeser ungesperrt erreichbar (Flaeche %lld)", F[i].rm, a);
+            if (a > 0) {
+                /* Diagnose: an der ersten erreichten Ausloeser-Lage fallen lassen (Spieler auf der Startlage der
+                 * Kiste = hinter der Schubrichtung) -> wo landet sie? */
+                int p = -1;
+                for (int k = 0; k < (int)g_scd.prop_count && k < RE15_SCD_MAX_PROPS; k++)
+                    if (g_scd.props[k].active && g_scd.props[k].obj_type == 4 && g_scd.props[k].obj_id == F[i].obj) p = k;
+                if (p >= 0) {
+                    s_pl->x = g_scd.props[p].x; s_pl->z = g_scd.props[p].z;
+                    re15_collision_set_band((int)g_scd.props[p].band);
+                    g_scd.props[p].x = bx; g_scd.props[p].z = bz;
+                    fall_t o;
+                    char tag[64]; snprintf(tag, sizeof tag, "%s obj %d (Diagnose)", F[i].rm, F[i].obj);
+                    const int ok = fall_fahren(p, &o, tag);
+                    if (F[i].soll == 1) PRUEF(ok && o.y_lande == 0 && g_scd.props[p].band == 0,
+                                              "%s: Fall von der erreichten Ausloeser-Lage endet nicht auf Band 0", F[i].rm);
+                }
+            }
+        }
+    }
     if (!pin) return 0;
     printf(g_fail ? "FAIL %d\n" : "PASS\n", g_fail);
     return g_fail ? 1 : 0;
