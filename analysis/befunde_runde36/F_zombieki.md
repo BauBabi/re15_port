@@ -808,3 +808,74 @@ Routen-Erweiterung schadet, enger gaten statt global umsteuern.
 Anker 40 (Stillstand) faellt um 83 % gegenueber NB2; Anker 400 (Pendeln/Springen im 400er-Fenster) steigt um 2118 Bilder:
 NB2s sofortiger Umweg-Beginn holte mehr Gorillas aus der Nahjagd an Wagen-Diagonalen (Rest NB3: nah 14662, Sub 7 2352), lenkte
 aber dafuer auch rutschende Gorillas um (oben). Abwaegung im Sinne des Orchestrators ("lieber enger gaten").
+
+### NB3 Messung nachher in der exe (`F_belege/nb3_exe_zehn_stellen.txt`, Kopie `re15_pc_nb3f.exe`)
+Kommandozeile der Abnahme 2 (`RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=<x,z>,1024,0 RE15_EXIT_AT=2700`), keine
+Eingabe. Auswertung eigenes Skript (erster Angriff = Sub 5/6/8/15; fest = aktiv, Sub != 0, kein Angriff, >= 90 Bilder im Anker
+400, Leon > 3000); Eichung an v0.8.23 (-14000,2000): Slot 2 F680, Slot 3 fest 991 (Abnahme 2: F680 / 930). v0.8.23 und NB2 aus
+der Abnahme-2-Tabelle.
+
+| Leon | v0.8.23 Slot 2 / Slot 3 | NB2 Slot 2 / Slot 3 | **NB3 Slot 2 / Slot 3** (fest) |
+|---|---|---|---|
+| (-7000,12500) | nie / F1012 | F1514 / F606 | **nie / F730** (863 / 0) |
+| (-14000,2000) NW-Gang | F680 / nie | F2438 / F1600 | **F680 / nie** (0 / 0) |
+| (6000,-9000) | nie / F324 | F1246 / F339 | **nie / F324** (1654 / 1874) |
+| (-24000,10000) Befundstelle | nie / nie | F1913 / F851 | **F853 / F1570** (0 / 1086) |
+| (7000,4000) | nie / F18 | nie / F18 | **nie / F18** (97 / 0) |
+| (9000,10000) | nie / F309 | F1045 / F309 | **F1175 / F309** (0 / 0) |
+| (-14746,-4140) West-Pad | F364 / nie | F364 / F1186 | **F364 / F1021** (174 / 0) |
+| (7200,-4130) Ost-Pad | F1246 / F274 | F981 / F274 | **F1050 / F274** (0 / 468) |
+| (-14000,4000) NW-Gang | F704 / nie | F1939 / F1577 | **F704 / F1496** (244 / 0) |
+| (-14500,6000) NW-Gang | F694 / F1256 | F1806 / F1534 | **F694 / F892** (0 / 0) |
+| (-26000,7000) Tasche* | nie / nie | nie / nie | nie / nie (1754 / 584) |
+| (-27000,12000) Tasche* | nie / nie | nie / nie | nie / nie (1765 / 567) |
+| (-22000,7000) Tasche* | nie / nie | nie / nie | nie / nie (1927 / 726) |
+
+\* Leon steht dort IN den Zellen (exe F300: (-26000,6332) / (-26932,9532) / (-22000,6332)), im Spiel nicht erreichbar (oben).
+
+- **Kein Gorilla greift an einer der zehn Stellen spaeter an als in v0.8.23** (NB2: an fuenf Stellen spaeter, u. a. Nordwest-Gang
+  F2438/F1939/F1806 und Slot 3 (6000,-9000) F339 > F324). Nordwest-Gang Slot 2 = v0.8.23 (F680/F704/F694), Slot 3 greift dort neu
+  an (F1496/F892). Befundstelle beide.
+- fest an den zehn Stellen: v0.8.23 14726 (Abnahme-Skript) -> NB2 2662 -> **NB3 6460** (eigenes Skript). Der Rest ist NAH:
+  (6000,-9000) Slot 2 d ~5400 / Slot 3 d ~3100 nach seinem Angriff, Befundstelle Slot 3 in der Nordwest-Ecke nach dem Angriff,
+  (-7000,12500) Slot 2 am Nordende des Nordwest-Gangs 3560 vor Leon (Wagenblock #2 dazwischen) — Original-Nahjagd, die die
+  Spur-J-Riegel pinnen (oben). NB2 hatte dort weniger, weil sein sofortiger Umweg-Beginn die Gorillas auf anderen Wegen
+  heranfuehrte — um den Preis der Verspaetungen gegenueber v0.8.23.
+
+### NB3 Tests (probes/r36_zombieki.cmake)
+| Test | Mangel | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_affen_block` | M1, M2 | 16 Seeds Anker 400 (38439 -> 5725, schlechtester +59, Griffe 73 -> 74); 7 Szenen mit beiden Gorillas je eigener Prozess: Gegenprobe Original-Regel, erster Angriff nicht spaeter, angreifende Gorillas, KEINE FERN-Blockade nach dem ersten Angriff, keine Blind-Schleife; Szene 5 Nordwest-Gang (kein Pad #36, 352 statt 430); Szenen 6/7 Taschenrand; 4b Tasche nicht begehbar (leonlauf 4 Plaetze) + Raster ohne Zurueckschnapp-Knoten (87 -> 0) | 46/46 |
+| `unit_r36_zombieki_sicht`, `_eintritt`, `_wecker`, `_szenen`, `_affen` | P1/P3 (erfuellt) | unveraendert | gruen |
+| Spur-J `unit_r35_affen_*` (20), `unit_maggot_*` (3), `unit_r17_waffen_loop_pin` | Nahjagd/Original | bildgenau gegen GDB | gruen |
+
+**Gezielte Laeufe (keine Voll-Suite im Spurbaum):**
+- `ctest --test-dir re15_port/build -R "affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|1010|1220|11c0|r35_raeume|r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav|unit_enemy_|room1070_wake|ai_flavor|re2_room1090|ada_eintritt|r17_waffen_loop|schatten|shadow|grab|griff|victim" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 163** (508,3 s; `F_belege/nb3_ctest_gezielt.txt`)
+- nach dem letzten Neubau `ctest --test-dir re15_port/build -R "r36_zombieki|unit_r35_affen|unit_maggot|r17_waffen_loop" --timeout 600 -j 6`
+  -> **100% tests passed, 0 tests failed out of 30**
+
+### NB3 OFFEN
+- **Nahjagd (Leon < 0x1771):** der Rest der Blockade (exe zehn Stellen 6460, Zufallsgang 52 Seeds nah 14662 von 17975) ist die
+  Original-Nahjagd an Klemmen (Wagenblock/Ecke, Sub 3 auf playerX @0x80117d4c). Jede gemessene Umlenkung NAH brach die
+  Spur-J-Riegel griff/szene (GDB-Spuren des Originals: e1/e2 warten ~3925/~4990 vor Leon an der Klemme, kein Biss bis T495).
+  Naechster Weg: GDB-Messung des Originals an der Nordwest-Ecke / am Nordende des Nordwest-Gangs (Muster J_affen.md) — wartet
+  das Original dort ebenso, ist es RE1.5-Verhalten; sonst den Unterschied zu griff/szene benennen und nur dort lenken.
+- Zufallsgang Anker 400: NB3 17975 gegen NB2 15857 (Anker 40: 221 gegen 1329), Abwaegung s. oben.
+- PSX-Laufzeit: Raster (~5000 Knoten x 9 Klemmen-Aufrufe je Raum) + A* je Gorilla und Bild im Umweg — vor einem PSX-Port fuer
+  ROOM11C0 als Tabelle vorzuberechnen (Nutzer-Regel 2026-09-03). Statische Puffer ~110 KB (12288 x (1+1+2) + 4 x 24 KB).
+- Vorgaenger-OFFEN (ROOM10B0-Terrasse, Moebel-Tabelle) unveraendert.
+
+### NB3 Fuer den Nutzer
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine. Entscheidungsfragen: keine.
+- Spuerbar: (1) Steht Leon im Gang an der Westseite des Parkplatzes, kommt der suedliche Gorilla wieder direkt ueber den
+  westlichen Sprungplatz (wie vorher im Original) statt den Umweg ueber die Ostseite zu nehmen; der zweite Gorilla findet jetzt
+  ebenfalls hin. (2) Gorillas, die an der Wand entlang zu Leon rutschen, werden nicht mehr umgelenkt — nur wer wirklich
+  feststeckt. (3) Die "Nordwest-Ecke" der Abnahme (unterhalb der Hecke/Mauer links oben) kann Leon im Spiel nicht betreten.
+
+### NB3 Ergebnis je Mangel (Kurzfassung)
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| 1 Umleitung Ost-Pad | ungewichtete Komponenten-Suche, erste Pad-Kante in SCA-Reihenfolge (#36 @0x015d8 vor #47 @0x0165c) | Code + Sonde (Pad 36 ab F60) | A* nach Weglaenge; Beginn erst beim Haengen (+0x1de @0x80117448-6c) | exe NW-Gang Slot 2 F680/F704/F694 = v0.8.23, Slot 3 nie->nie / nie->F1496 / F1256->F892; Riegel Szene 5 |
+| 2 Nordwest-Tasche | Plaetze IN den Zellen #13/#20/#21 (nur per RE15_PLAYER_POS); "Tasche" im Raster = Zurueckschnapp-Artefakt @0x8003be8c-a0; Startknoten ohne Erreichbarkeit | leonlauf (1938..5174 entfernt), klemme-Sonde, Raster 286/708 | Frei-Test Vorlage+1, Kanten, Startknoten gerade erreichbar, Leon-Seite | Riegel 4b; Taschenrand beide Angriff; Blockade NACH dem ersten Angriff: FERN 0, Rest NAH = Original (Spur J) |
+| 3 Voll-Suite | — | — | Orchestrator | gezielt 163/163 |

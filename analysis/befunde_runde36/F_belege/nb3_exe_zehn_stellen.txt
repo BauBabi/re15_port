@@ -1,0 +1,16 @@
+exe NB3 (re15_pc_nb3f.exe = Stand 8e754270-Code, md5 c42db60de618...): RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_GEGNER_Y_LOG=gy.log RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=x,z,1024,0 RE15_EXIT_AT=2700
+Auswertung: erster Angriff = Sub 5/6/8/15; fest = Zustand 1, Sub != 0, kein Angriff, >= 90 Bilder im Anker 400, Leon > 3000 (Bilder ab dem ersten R11C0-Bild)
+Eichung v0.8.23 (re15_pc_abn0f_basis.exe) (-14000,2000): Slot 2 F680, Slot 3 nie fest 991 (Abnahme 2: F680 / nie fest 930)
+nb3_-14000_2000/gy.log: Bilder in 11C0 1870   Slot 2: erster Angriff F680, fest 0, dmin 2049   Slot 3: erster Angriff nie, fest 0, dmin 2049 
+nb3_-14000_4000/gy.log: Bilder in 11C0 2162   Slot 2: erster Angriff F704, fest 244, dmin 955   Slot 3: erster Angriff F1496, fest 0, dmin 956 
+nb3_-14500_6000/gy.log: Bilder in 11C0 2520   Slot 2: erster Angriff F694, fest 0, dmin 407   Slot 3: erster Angriff F892, fest 0, dmin 475 
+nb3_-14746_-4140/gy.log: Bilder in 11C0 1636   Slot 2: erster Angriff F364, fest 174, dmin 1098   Slot 3: erster Angriff F1021, fest 0, dmin 1976 
+nb3_-22000_7000/gy.log: Bilder in 11C0 2700   Slot 2: erster Angriff nie, fest 1927, dmin 5828   Slot 3: erster Angriff nie, fest 726, dmin 7819 
+nb3_-24000_10000/gy.log: Bilder in 11C0 2700   Slot 2: erster Angriff F853, fest 0, dmin 739   Slot 3: erster Angriff F1570, fest 1086, dmin 955 
+nb3_-26000_7000/gy.log: Bilder in 11C0 2700   Slot 2: erster Angriff nie, fest 1754, dmin 7274   Slot 3: erster Angriff nie, fest 584, dmin 9394 
+nb3_-27000_12000/gy.log: Bilder in 11C0 2700   Slot 2: erster Angriff nie, fest 1765, dmin 5081   Slot 3: erster Angriff nie, fest 567, dmin 7954 
+nb3_-7000_12500/gy.log: Bilder in 11C0 2079   Slot 2: erster Angriff nie, fest 863, dmin 3558   Slot 3: erster Angriff F730, fest 0, dmin 954 
+nb3_6000_-9000/gy.log: Bilder in 11C0 2700   Slot 2: erster Angriff nie, fest 1654, dmin 5387   Slot 3: erster Angriff F324, fest 1874, dmin 1603 
+nb3_7000_4000/gy.log: Bilder in 11C0 1407   Slot 2: erster Angriff nie, fest 97, dmin 9616   Slot 3: erster Angriff F18, fest 0, dmin 954 
+nb3_7200_-4130/gy.log: Bilder in 11C0 1799   Slot 2: erster Angriff F1050, fest 0, dmin 2001   Slot 3: erster Angriff F274, fest 468, dmin 1892 
+nb3_9000_10000/gy.log: Bilder in 11C0 1639   Slot 2: erster Angriff F1175, fest 0, dmin 955   Slot 3: erster Angriff F309, fest 0, dmin 212 

@@ -188,6 +188,16 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *   Pad #36 schoben sich 1200 Bilder fest). Keine neue Zahl.
  *   MESSUNG: Befundstelle beide Gorillas Angriff (Sonde F597/F929, exe F850/F1912), 0 Blind-Spruenge (NB1: 48);
  *   Zufallsgang 52 Seeds mit Anker 400: AUS 114029 -> AN 15857 (NB1 27597), Anker 40: 75408 -> NB2 siehe Dossier.
+ * NACHBESSERUNG 3 (Abnahme 2, Maengel 1/2), Belege in zombieki_r36.c:
+ *   (1) Weg = der KUERZESTE (A*, Pads als Kanten mit ihrer Weglaenge) statt der ersten Pad-Kante in SCA-Reihenfolge
+ *       (#36 vor #47 -> Nordwest-Gang ueber das Ost-Pad, Angriff 850..920 Bilder spaeter als v0.8.23).
+ *   (2) Frei-Test mit Vorlage = Knoten + 1: mit Vorlage = Knoten setzte der Rechteck-Schieber im Code-0-Zweig auf die
+ *       Vorlage zurueck (@0x8003be8c-a0) — Knoten IN Zellen galten als frei (die "Nordwest-Tasche"). Kanten = Schritt, den
+ *       die Klemme in beide Richtungen nicht aufhebt; Startknoten gerade erreichbar; Leons Knoten auf Leons Seite.
+ *   (3) Beginn erst, wenn der Gorilla FERN haengt (Verbraucher des Original-Zaehlers +0x1de @0x80117448-6c), sofort in
+ *       der Jagd an einer 0x10-Pad-Kante mit Weg ueber das Pad; NAH bleibt Original (Spur-J-Riegel griff/szene).
+ *   MESSUNG: Sonde Nordwest-Gang erster Angriff 352 (Original-Regel 430), kein Gorilla ueber #36; Zufallsgang 52 Seeds
+ *   Anker 400 AUS 114029 -> 17975, Anker 40 75408 -> 221; exe zehn Stellen: Dossier NB3.
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine
