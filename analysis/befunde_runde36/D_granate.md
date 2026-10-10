@@ -169,6 +169,33 @@ DEATH-Leiter `beq v1,9` @0x80108490 / `bne v1,17` @0x80108498 / `lhu 270 / andi 
 `jal 0x8010640c` @0x801084b4, HURT-Leiter `lhu 270 / andi 0x80 / bne` @0x801051f0-fc / `jal 0x8010640c` @0x80105204.
 Alle drei laufen ueber dasselbe Gate im Port (re2z_gore_soot).)
 
+### 3.7 Fortsetzung nach dem Sitzungslimit (2026-10-10 nachmittags) — Sonden 207/208 geprueft
+Der ungeprueft committete Zwischenstand 41d1b0f7 (+33 Zeilen test_r36_granate.c) kompiliert; Pruefung 207 (letzte
+Granate im Stapel, Menge 1: Spawn 22, Menge 0; zweiter Abzug ohne Granate = kein Wurf, Menge bleibt 0) ist gruen.
+Pruefung 208 (Quadrat schon waehrend des Hebens gedrueckt und gehalten) war FALSCH GEMESSEN, nicht der Code:
+`re15_player_aim_ready()` wird im selben Spielschritt vom Abzug ueberdeckt (READY -> Rueckstoss im selben Bild),
+und das gehaltene Quadrat zieht nach dem Ende des Rueckstoss-Clips byte-true ERNEUT ab (Menge 3 statt der
+erwarteten 4 nach 60 Bildern). Beleg, selbst disassembliert (`re15_disasm.py dis 0x800332e0 24`):
+```
+80033300 lw v0,-14488(v0)      0x800ac768 = das GEHALTENE Pad-Wort (DAT_800ac768; das Flanken-Wort 0x800ac76c
+80033308 andi v0,v0,0x40        liest erst der Leer-Magazin-Zweig @0x80033338)
+8003330c beq v0,zero,0x80033394  kein Abzug -> weiter im HOLD
+80033314 jal 0x8004ea6c         Magazin > 0 ?
+80033320-28 ori v0,zero,0x2 / sh v0,0x800aca5a   Substate 2 (Rueckstoss)
+```
+Rueckstoss-Clips der Granate: PL00W09.PLW EDD-Tabelle (Datei-Bytes) Clip 7 @0x24 = 0x23 (35 Bilder, MITTE),
+Clip 9 @0x2c = 0x28 (40, HOCH), Clip 11 @0x34 = 0x28 (40, TIEF); Clip 6 @0x20 = 0x0a (Heben, 10). Der Rueckstoss
+endet bei Bild fc-1 (player_common.c:1200), HOLD und Held-Abzug fallen ins selbe Bild -> Abzug k+1 = Abzug k + 34.
+Neue Messung der Sonde (Abzug-Bilder ueber die Menge, Spawn-Bilder ueber die Granaten-Plaetze):
+`READY Bild 11, 3 Abzuege (11,45,79) / 3 Spawns (33,67,101), Menge 2` = Abzug 1 im ersten HOLD-Bild, jeder Spawn
+= Abzug + 22 (@0x800336a4), Abzug k+1 = Abzug k + 34, Menge 5 - 3. N Abzuege = N Granaten gilt also auch fuer den
+gehaltenen Abzug (Dauer-Wurf).
+Die Port-Aufrufer von `re2z_gore_soot` (alle laufen durch das Gate IN der Funktion): enemy_ai_re2_zombie.c:4883
+(HURT/DEATH-Leitern @0x801051E8-208 / @0x801084A0-B8), :5824 (Zerreissen `jal 0x8010640C` @0x80108CEC), :7513
+(@0x80108B58-88), :7589 (@0x80109c2c-50, Wegschleudern), :7640 (@0x80108790-C0) — fuenf Stellen, kein Aufruf
+ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-Verkohlung :4771-4786
+(FUN_80106128, Ids 0x05032710/0x05031388/0x050313E8 an Part 0/Kopf/Unterarm) ist davon unberuehrt.
+
 ## 4. Tests
 * `unit_r36_granate` (tests/unit/test_r36_granate.c, probes/r36_granate.cmake):
   [1] feuer 103-108 — 4 Laeufe HE: Flammen-Slots (Id 8) nach dem Tod = 0 (vorher 2 je Zombie), Spreng-Russ erreicht
@@ -177,9 +204,12 @@ Alle drei laufen ueber dasselbe Gate im Port (re2z_gore_soot).)
   [2] wurf 201-206 — 96 Wuerfe bei 96 Abzuegen (R1 los in Bild 0..30 nach dem Abzug, HOCH/MITTE/TIEF), Spawnbild
   19/22/24, je Abzug genau eine Granate, LOWER im Bild nach dem Abgang bzw. nach dem Loslassen, Schwellen-Tabelle,
   Negativ-Kontrolle Browning (Schwelle 7, LOWER Bild 9 unveraendert).
+  [2c] 207 — letzte Granate (Menge 1): Spawn 22, Menge 0, danach kein Wurf ohne Granate (Menge bleibt 0).
+  [2d] 208 — Quadrat waehrend des Hebens gehalten (Held-Bit @0x80033300-0c): Abzug 1 = erstes HOLD-Bild, Spawn =
+  Abzug + 22, Abzug k+1 = Abzug k + 34 (Clip 7 = 35 Bilder, PLW @0x24), Menge = 5 - Abzuege (3 Abzuege / 3 Spawns).
   [3] pool 300-304 — Pool 96/96 im Spawnbild: Granate spawnt im Bild 22, ein Blut-Teilchen geraeumt, Menge -1, Pool nie
   > 96; Negativ-Kontrolle ohne Blut = kein Platz (Original 0xFF).
-  Ergebnis: `test_r36_granate: ALLE PRUEFUNGEN GRUEN`.
+  Ergebnis: `test_r36_granate: ALLE PRUEFUNGEN GRUEN` (103-108, 201-208, 300-304).
 * `integration_r36_granate` (tests/integration/test_r36_granate.cmake, echte exe): he (X=119, 2 Zombies zerrissen,
   Flammen nach X: 0), brand (X=119, Eingriffe 3, Flammen nach X: 1899), serie (8 Abzuege = 8 Wuerfe = 8 Explosionen,
   Granaten 30 -> 22). Eigener Lauf `build/r36d_mess/int_run1.log`: alle drei ok.
@@ -198,6 +228,12 @@ Alle drei laufen ueber dasselbe Gate im Port (re2z_gore_soot).)
    Naechster Messweg: re2_fx.c Op 25 lesen, DuckStation-Brandrunde an einem Zombie zaehlen.
 4. **Wurfbild-Regel** (Runde 35, PORT-WAHL): Hand in/hinter einer Zelle -> Explosion ueber dem Werfer im Wurfbild. Ist ein
    Wurf mit Explosion, kein Aussetzer; unveraendert.
+5. **Statusschirm waehrend der Wurfbewegung** (nicht gemessen, nicht geaendert): der Port laesst den Statusschirm im
+   Zielen zu (game_step_common.c:1246, kein Ziel-Gate; der Menue-Code setzt die Ziel-FSM nicht zurueck). Wird START
+   zwischen Abzug und Spawnbild (<= 24 Bilder) gedrueckt UND im Schirm die Waffe gewechselt, scheitert das Spawn-Gate
+   `id == 9` (@0x8003368c) im Spawnbild — Granate weg, kein Wurf. Ohne Waffenwechsel laeuft der Rueckstoss nach dem
+   Schliessen weiter und die Granate geht ab. Bewusst konstruierter Fall (START + Waffenwechsel innerhalb 0,4 s nach
+   dem Abzug), nicht der Befund des Nutzers (der war der R1-Abbruch, 6 von 8 Abzuegen); offen fuer eine spaetere Runde.
 
 ## Fuer den Nutzer
 * Keine neuen Assets (Paket-Gate), keine Sprachdateien, keine Aenderung an shared_assets.
