@@ -202,7 +202,9 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
 
 ### Umsetzung — PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern"; das Original hat hier KEIN Verhalten, das man nachbauen koennte)
 - NEU in `zombieki_r36.c` / `re15_zombieki_r36.h`: **Pad-Suche in der blinden Jagd**: `re15_r36_affen_padsuche_decide`
-  (A[3]-Haken, nach dem Biss-Test) — nur wenn Latch +0x1d0 = 0 UND Wandklemme +0x1d6 != 0 (das Flag, das A[3]
+  (A[3]-Haken, nach dem Biss-Test) — nur wenn FERN (+0x1d4 >= 6001 = dieselbe Schwelle `sltiu v0,v0,0x1771`
+  @0x80117bc8/@0x80117c34, hinter der das Original MIT Sicht in die Auswahl geht; die Suche ist genau das fehlende
+  Gegenstueck "fern OHNE Sicht") UND Latch +0x1d0 = 0 UND Wandklemme +0x1d6 != 0 (das Flag, das A[3]
   @0x80117b18-20 / A[4] @0x80118054-5c lesen) UND der Raum ein 0x10-Pad hat; dann steuert B[3] (`re15_r36_affen_
   padsuche_ziel`, 1 Zeile statt playerX) auf die Mitte des naechsten 0x10-Pads; steht der Gorilla darauf
   (FUN_8003b93c attr 0x10, Radius box[6]+100 wie A[4]) und im Yaw-Fenster des Originals, fuehrt er den 0x10-Sprung
@@ -211,14 +213,19 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
 - Haken `enemy_ai_common.c` Fall 3: 1 Zeile vor `b3:` (decide) + 1 Zeile im Steuern (Ziel). Sonst nichts.
 - Konstanten: keine neuen (Radius, Fenster, Impuls, Sprungcode = Original); 3000 = Laenge des Richtungs-Zielpunkts
   (a8f8 nutzt nur den Winkel, jeder Wert > 0 gleichwertig).
+- Die Schwelle 6001 kam nach dem ersten Suitelauf dazu: ohne sie waren `unit_r35_affen_takt` und `unit_r35_affen_griff`
+  (Spur J, Biss-Zyklus / Griff bildgenau gegen das Original, Gorillas NAH an Leon) rot — die Suche griff in der nahen
+  blinden Jagd an der Klemme und veraenderte die Original-Spur. Mit der Schwelle: alle 20 `unit_r35_affen_*` gruen,
+  die nahe Jagd ist byte-true unveraendert.
 - **Gemessen und VERWORFEN** (im Riegel dokumentiert): (a) dieselbe Suche auch in der Auswahl (Sub 4) mit den 0x20-
   Pads -> Endlos-Sprungketten (19-22 Spruenge je 1500 Bilder, Leon nie erreicht); (b) Sub 4 nur mit 0x10-Pads ->
   Hin-und-her am selben Pad (Szene 1: 15 Spruenge, kein Angriff); (c) dazu "zuletzt benutztes Pad meiden" ->
   Zufallsgang 1116 blockierte Bilder, 1 Griff. Die Auswahl (Sub 4) bleibt Original.
 
 ### Messung nachher (Riegel `unit_r36_zombieki_affen_block` 7/7, `F_belege/p2_riegel.txt`)
-- Zufallsgang 6000 Bilder Seed 0x1234567: 0 blockierte Strecken, **12 Griffe** (vorher 9); Seed 0xbeef: 219 blockierte
-  Bilder (1,8 %, Gorilla 2 in Sub 4 = Auswahl, Original), 4 Griffe (vorher 3).
+- Zufallsgang 6000 Bilder (chaotisch: kleinste Aenderungen -> anderer Weg, deshalb nur "erreicht Leon" als Riegel):
+  Seed 0x1234567 3 Griffe, 2067 blockierte Bilder — ALLE in Sub 4 (Auswahl) mit Leon 14000..33000 entfernt und
+  Latch 0 (Original-Regel A[4], s. OFFEN); Seed 0xbeef 5 Griffe, 0 blockierte Bilder (vorher 3 / 219).
 - Drei Befund-Szenen (Leon noerdlich/oestlich der Bloecke, Gorilla in der blinden Jagd suedlich/westlich), je 1200
   Bilder, Gegenprobe (Suche aus) gegen Haken: (1) (-7000,12500)/(-14000,-3000): vorher kein Angriff, Abstand min 8416,
   1200/1200 Sub 3 — nachher 3 Spruenge, erster Angriff Bild 290, Abstand min 954; (2) (-7000,12500)/(-5525,-14883):

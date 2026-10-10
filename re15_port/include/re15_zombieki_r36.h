@@ -100,7 +100,10 @@ int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz);
  *   Die Wagen ueberquert das Original NUR per Sprungpad aus Sub 4 (A[4] @0x80117ecc-8011802c: FUN_8003b93c attr
  *   0x10, Yaw-Fenster `((zc&0xf0)<<4 - Yaw + 512) & 0xfff < 1024` @0x80117f18-38, +0x7 = 1 @0x80117f50-74).
  *   Der Blind-Zonensprung auf der Stelle ist Original (Runde 35 Spur J, GDB 400/400).
- * PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern", kein Original-Verhalten): in der Jagd OHNE Sicht und MIT
+ * PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern", kein Original-Verhalten): in der Jagd FERN (+0x1d4 >= 6001,
+ *   dieselbe Schwelle `sltiu v0,v0,0x1771` @0x80117bc8/@0x80117c34, hinter der das Original mit Sicht in die
+ *   Auswahl geht — die Suche ist also genau das fehlende Gegenstueck "fern OHNE Sicht"; nah bleibt die Jagd
+ *   unveraendert, die Spur-J-Riegel takt/griff gegen das Original bleiben bildgenau), OHNE Sicht und MIT
  *   Wandklemme (+0x1d6 != 0, dasselbe Flag, das A[3] @0x80117b18-20 und A[4] @0x80118054-5c lesen) steuert
  *   B[3] statt auf playerX auf die Mitte des naechsten Sprungpads (SCA-Zelle u1 == 0x10, Band des Gorillas — die
  *   Daten, die A[4] abfragt); steht er auf dem Pad (FUN_8003b93c attr 0x10 trifft) und im Yaw-Fenster, fuehrt
