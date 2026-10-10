@@ -399,21 +399,48 @@ static void abschnitt_wurf(void)
               "letzte Granate: Spawn %d, Menge %d, zweiter Abzug Spawn %d, Menge %d (soll 22 / 0 / keiner / 0)",
               spawn, menge, spawn2, g_inv.slots[3].qty);
     }
-    /* 2d — Abzug schon WAEHREND des Hebens (Clip 6, 10 Bilder) gedrueckt und gehalten: der Abzug ist ein
-     * HELD-Bit (`andi 0x40` im HOLD @0x80033308, kein Edge) -> Wurf im ersten HOLD-Bild + 22 */
+    /* 2d — Abzug schon WAEHREND des Hebens (Clip 6) gedrueckt und DAUERHAFT gehalten. Der Abzug der
+     * Standard-Waffen-FSM ist ein HELD-Bit: HOLD-Substate `lw v0,0x800ac768` @0x80033300 (das GEHALTENE
+     * Pad-Wort, nicht das Flanken-Wort 0x800ac76c @0x80033338) / `andi v0,v0,0x40` @0x80033308 /
+     * `beq v0,zero,0x80033394` @0x8003330c -> `jal 0x8004ea6c` (Magazin) @0x80033314 -> Substate 2
+     * (`ori v0,zero,0x2 / sh v0,0x800aca5a` @0x80033320-28). Folgen: (a) der Wurf geht im ersten HOLD-Bild
+     * ab (Abzug = Bild, in dem die Phase READY wird, Spawn = Abzug + 22 @0x800336a4), (b) bleibt das
+     * Quadrat gehalten, zieht die FSM nach dem Ende des Rueckstoss-Clips im naechsten HOLD-Bild ERNEUT ab
+     * (Rueckstoss MITTE = Clip 7 = 35 Bilder, PL00W09.PLW EDD-Tabelle @0x24 = 0x23; Ende bei Bild 34 = fc-1,
+     * HOLD + Held-Abzug im selben Bild -> Abzug k+1 = Abzug k + 34), Spawn = Abzug + 22. Jeder Abzug = eine
+     * Granate (Punkt 2); gemessen ueber die Menge (Abzug-Bilder) und die Granaten-Plaetze (Spawn-Bilder). */
     {
         if (sp_bringup(9, 5) != 0) { PRUEF(208, 0, "Bringup Heben"); return; }
         for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
-        int ready = -1, spawn = -1;
-        for (int b = 0; b < 60; b++) {
+        enum { K_MAX = 8 };
+        int ready = -1, n_abzug = 0, n_spawn = 0, abzug[K_MAX], spawn[K_MAX];
+        int qty_vor = g_inv.slots[3].qty, gran_vor = 0;
+        for (int b = 0; b < 110; b++) {
             sp_bild((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
                     (uint16_t)(b == 0 ? (RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE) : 0));
-            if (ready < 0 && re15_player_aim_ready()) ready = b;
-            if (spawn < 0 && granate_platz() >= 0) spawn = b;
+            int ph = re15_player_aim_phase_debug() & 0x0f;
+            if (ready < 0 && ph == 2) ready = b;                      /* erstes HOLD-Bild (READY) */
+            int qty = g_inv.slots[3].qty;
+            if (qty < qty_vor) { if (n_abzug < K_MAX) abzug[n_abzug++] = b; qty_vor = qty; }
+            int gran = 0;
+            for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+                const re15_esp_fx_t *f = re15_esp_fx_get(i);
+                if (f && f->granate_art) gran++;
+            }
+            if (gran > gran_vor && n_spawn < K_MAX) spawn[n_spawn++] = b;
+            gran_vor = gran;
         }
-        PRUEF(208, ready >= 0 && spawn >= 0 && (spawn - ready == 22 || spawn - ready == 23) && g_inv.slots[3].qty == 4,
-              "Abzug waehrend des Hebens gehalten: zielbereit Bild %d, Spawn Bild %d (soll zielbereit + 22 [Abzug im HOLD-Bild] oder + 23 [Folgebild]), Menge %d (4)",
-              ready, spawn, g_inv.slots[3].qty);
+        int ok = ready >= 0 && n_abzug >= 2 && n_abzug == n_spawn && abzug[0] == ready
+                 && g_inv.slots[3].qty == 5 - n_abzug;
+        for (int k = 0; k < n_abzug && k < n_spawn; k++) {
+            if (spawn[k] != abzug[k] + 22) ok = 0;                     /* Spawnbild MITTE @0x800336a4 */
+            if (k > 0 && abzug[k] != abzug[k - 1] + 34) ok = 0;         /* Clip 7 = 35 Bilder (PLW @0x24) */
+        }
+        PRUEF(208, ok, "Quadrat waehrend des Hebens gehalten: READY Bild %d, %d Abzuege (%d,%d,%d) / %d Spawns (%d,%d,%d), Menge %d "
+                       "(soll Abzug 1 = READY, Spawn = Abzug + 22, Abzug k+1 = Abzug k + 34 [Clip 7 = 35 Bilder], Menge 5 - Abzuege)",
+              ready, n_abzug, n_abzug > 0 ? abzug[0] : -1, n_abzug > 1 ? abzug[1] : -1, n_abzug > 2 ? abzug[2] : -1,
+              n_spawn, n_spawn > 0 ? spawn[0] : -1, n_spawn > 1 ? spawn[1] : -1, n_spawn > 2 ? spawn[2] : -1,
+              g_inv.slots[3].qty);
     }
 }
 
