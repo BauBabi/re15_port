@@ -98,10 +98,43 @@ Kein anderer Raum benutzt Slot >= 15.
 Ueberlauf des Prototyps, kein 21. Platz. Der Port verwirft sie weiter (Aktor > 20); dokumentiert unter OFFEN.
 
 ## 4. Zensus der Nutzer von RE15_ACTOR_MAX / festen 16/15 / Slot-Bitmasken
-(folgt)
+
+`grep -rn RE15_ACTOR_MAX re15_port`: 1012 Stellen in 268 Dateien (engine/platform/include ~250 in 30 Dateien, der Rest
+Sonden/Tests). Geprueft nach Klassen (grep-Muster je Klasse in Klammern):
+
+| Klasse | Befund | Folge |
+|---|---|---|
+| Felder `[RE15_ACTOR_MAX]` (43 in engine/platform: affen_11c0 s_pool, enemy_ai_common s_zfoot_*/s_los_*/s_wander_*/s_gait_variant/s_zcrawl_*/s_dogpaw_*/s_maggot_pose_bild/s_prev_clip/s_writher_*, re2_crow/dog/zellenarm, boss_gator s_gb, enemy_common s_rbj_alias, granate_r35, irons_tod s_b1040_*, re15_damage s_re2_probe/collected, re15_g5_skin s_bone_add) | wachsen mit | keine |
+| Schleifen/Grenzen `< RE15_ACTOR_MAX`, `RE15_ACTOR_MAX - 1` | symbolisch | laufen ueber 20 Gegner |
+| feste 16/15 statt der Konstante (`\[16\]`, `< 16`, `<= 15`, `0x0f`, Text "Aktor 16"/"Slot 15") | **1 Fehler**: irons_tod_1150.c slots_zuweisen `s_prog[o + 1] = 0x0f` = "kein Platz: Slot 15 -> Aktor 16 = verworfen" — mit 21 Plaetzen ist Aktor 16 GUELTIG, der Port-Spawn haette einen belegten Platz ueberschrieben | behoben (Slot RE15_ACTOR_MAX-1), Pin `kein_platz` (alter Wert gemessen rot: 19/20 Plaetze heil, Aktor 16 ueberschrieben) |
+| | alle anderen `[16]`-Felder sind Bone-/Part-/Clip-/HP-Tabellen (re2z_part_* je Teil, HP-Tabellen `rng&0xf`, s_registry der ESP-Bank, nav A/B/C je Tiefe, s_prop_push_count je Objekt) | keine |
+| "hoechster freier Platz" | main.c ROOM2090: Alligator-Port-Spawn sucht rueckwaerts ab RE15_ACTOR_MAX-1 -> Slot 15 wird Slot 20 (gemessen r36e n2090: "Alligator (0x23) in Wasserzone gesetzt, Slot 20") | kein Code-Fehler; integration_r35_granate Lauf gator auf Slot 20 angepasst |
+| Bitmasken `(1u << slot)` | enemy_common.c rbj_record_marker `& (1u << mslot)` (u32), main.c s_diag_seen (u32, ai < 32) — keine uint16-Maske | keine |
+| Slot in Halbbytes / `& 0xf` | keine | keine |
+| Slot-Felder int8_t/uint8_t (work_slot, contact_slot, ...) | bis 127 | keine |
+| Render | Texturen/Modelle je TYP (g_enemy[RE15_ENEMY_MAX=4]), nicht je Aktor; NPC-Zeichenschleife main.c:9505 symbolisch | keine |
+| Spielstand | re15_savedata_t traegt KEINEN Aktor-Pool (Spieler-Felder + Flags + Inventar/Kiste/Karte), Tot-Bits je Record in Zone 7/8 schon immer gespeichert; Pin test_map_speichern_laden "sizeof 944" gruen; alte Nutzerkarte `tests/unit/probes/r30_karte_nutzer_2026-09-27.mcr` mit der neuen exe: `[save] CONTINUE: resumed in room 1150 (hp=100)` | kompatibel |
+| PSX | platform/psx/main.c nutzt nur den Spieler-Platz; Speicher g_actors 16*1884 = 30144 -> 21*1884 = 39564 Bytes (PC-Groesse, +9420) | PSX-Ziel hier nicht baubar (PSn00bSDK fehlt, Memory reai-v2-psx-build-gap) |
+| Tests | 484 Unit-Tests gruen ohne Aenderung; Sonden mit `int x[16]` sind per `na < 16` begrenzt; integration_r35_cut1150 Lauf F (Erwartung "0 erscheinen, Auffuellung 5") und integration_r35_granate (Gator Slot 15) angepasst; test_r35_cut1150.c "Nachspawn 1030 +7 oder 15" bleibt (13 < 15) | s. §7 |
+| Kommentare | irons_tod_1150.c Kopf "(RE15_ACTOR_MAX = 16)" berichtigt; re15_irons_tod.h Z.172 / L-Dossier beschreiben den Stand von Runde 35 (Historie, unveraendert) | — |
+
+Laufzeit: die GLEICHZEITIGE Zahl in ROOM1030/1040 bleibt durch das Original-Limit (Save(0x12,6) @0x1de2 / Save(0x12,5)
+@0x11f0) bei 6/5 (§6.1: 6/5 vorher und nachher), es aendert sich nur, WELCHE Records stehen. Einziger Raum mit mehr
+gleichzeitigen Aktoren: ROOM20B0/20B1 (FX-Emitter 0x24, Drift ohne Schaden) 15 -> 20 (§6.2).
 
 ## 5. Umsetzung (Dateien, Konstanten)
-(folgt)
+
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| re15_port/include/re15_actor.h | `RE15_ACTOR_MAX 16 -> 21` (Spieler + 20) mit Belegkommentar | §3.1/§3.2: @0x800372b4 `sltiu v0,v0,0x14`, Feld-Ende 0x800af33c @0x80039b38/@0x80039b40, Sce_em_set @0x800420f8/@0x80042118 |
+| re15_port/engine/src/irons_tod_1150.c | slots_zuweisen: "kein Platz" = Slot `RE15_ACTOR_MAX - 1` (Aktor 21, verworfen) statt fest `0x0f` (Aktor 16, jetzt gueltig); Kopfkommentar "(RE15_ACTOR_MAX = 21 ...)" | §4 Zensus; Pin kein_platz |
+| re15_port/tests/integration/test_r35_cut1150.cmake | Lauf F: "5 erscheinen im Port, Auffuellung 0" / "Gleichzeitig-Zaehler 5 -> 5" (vorher "0 erscheinen ... Auffuellung 5" / "5 -> 0") | Records 15..19 erscheinen selbst (§6.1) |
+| re15_port/tests/integration/test_r35_granate.cmake | Lauf gator: Boss-Slot 15 -> 20 | gemessen r36e n2090 (§4) |
+| re15_port/tests/unit/test_r36_gegnerzahl.c, probe_r36_gegnerzahl_karte.c, probes/r36_gegnerzahl.cmake, tests/integration/test_r36_gegnerzahl.cmake | NEU: Riegel + Karte + Integration | §7 |
+| re15_port/tools/r36_e/sce_em_slot_zensus.py | NEU: RDT-Zensus der Sce_em_set-Slots | §3.4 |
+
+Keine neue Engine-Datei noetig (eine Konstante + ein Sentinel); keine Assets, keine Sprachdateien, keine Bank-9-Bits,
+keine Nachrichten-IDs, keine Ereignisnummern.
 
 ## 6. Messung nachher
 
