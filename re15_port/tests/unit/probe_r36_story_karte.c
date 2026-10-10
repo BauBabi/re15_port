@@ -28,8 +28,9 @@
  *   vor6031   Elza ROOM6001 dito (Tuer Slot 3 @0x00DDA -> 6031 Cut 6 -> sub06 @0x00E42) -> sub02 (msg 0..2)
  * Zusatz:
  *   strom     (4,0xF3) = 1 (Generator, ROOM11F0 sub18 @0x016F6)
+ *   cut=N     gespeicherter Kamera-Cut (CONTINUE stellt ihn her, main.c s_resume_cut) — fuer Bildbelege
  *
- * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom]
+ * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom] [cut=N]
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -41,6 +42,7 @@
 #include "re15_story_r36.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct { const char *name; unsigned raum; int elza; int32_t x, y, z; int16_t rot; } stand_t;
@@ -58,6 +60,7 @@ static const stand_t k_staende[] = {
     { "ada",      0x50B0, 0, -16000,     0, -12300,    0 },
     { "vor6030",  0x6000, 0,   1763, -3600,  -9700, 1024 },
     { "vor6031",  0x6001, 1,   1763, -3600,  -9700, 1024 },
+    { "feuer",    0x1090, 0,      0, -1800,    250,    0 },   /* Gegenstueck zu "schuppen": Leon vor dem Feuer */
 };
 
 int main(int argc, char **argv)
@@ -68,9 +71,10 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < sizeof k_staende / sizeof k_staende[0]; i++)
         if (strcmp(argv[2], k_staende[i].name) == 0) s = &k_staende[i];
     if (!s) { printf("FAIL: unbekannter Stand '%s'\n", argv[2]); return 2; }
-    int strom = 0;
+    int strom = 0, cut = -1;
     for (int a = 3; a < argc; a++) {
         if (strcmp(argv[a], "strom") == 0) strom = 1;
+        else if (strncmp(argv[a], "cut=", 4) == 0) cut = atoi(argv[a] + 4);
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
     scd_vm_init();
@@ -86,6 +90,7 @@ int main(int argc, char **argv)
     if (s->raum == 0x30C1) re15_game_flag_set(3, 0x39, 1);
     if (strcmp(s->name, "vor6030") == 0) re15_game_flag_set(3, 0x64, 1);   /* Annette-Treffen 6000 gesehen */
 
+    if (cut >= 0) g_scd.cam_id = (uint8_t)cut;   /* gespeicherter Kamera-Cut (re15_savedata camera_cut, v3) */
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
     if (re15_memcard_save(path, 0, &sd, s->elza ? "ELZA  STORY36" : "LEON  STORY36") != 0) {
