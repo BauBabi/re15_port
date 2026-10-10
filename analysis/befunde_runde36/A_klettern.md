@@ -485,3 +485,64 @@ pruefen — ein wirkungsloses Lage-Flag wird rot; (4) die Lage @0x0107E WIRKLICH
 main00 erneut) und ausdruecklich als "beim Laden unerreichbar" ausweisen; Zaehlung getrennt (beim Laden
 erreichbar / nur erzwungen); (5) Aussagen berichtigen (Dossier-Tabelle, "24/24", "beide Lagen gemessen",
 "Fuer den Nutzer", r36_klettern.cmake, Sondenkopf); (6) bauen, gezielte Tests, Commit.
+
+### Mangel 1 (Abnahme 1) — Lage (5,6)=1 ROOM11A0/11A1 nie gefahren
+
+**Ursache.** `reset_room` der Zensus-Sonde setzte das Lage-Flag VOR `scd_room_reenter`; der Raum-Init nullt
+Bank 5 Wort 0 (scd_room_setup.c:297 = @0x8003ed74), bevor main00 die Lage liest. Bank 3/4 (10F0, 2060, 20A0,
+5020) ueberleben, Bank 5 (11A0/11A1) nicht. Der Riegel verglich die installierte Lage mit nichts und zaehlte die
+Wiederholung als eigenes "Objekt (Raum x Lage)".
+
+**Messung vorher** (`A_belege/nb2_zensus_vorher_11a0.txt`, Sonde am Stand 5f4e3ae1): `ROOM11A0 flag=1 ...
+band=3 pos=(10050,-5400,8800)` und `ROOM11A1 flag=1 ... band=3 pos=(10050,-5400,8800)` = dieselbe Lage wie
+flag=0; Summe `Zensus: 24/24 Objekte (Raum x Lage) kletterbar`, `PASS`. Reproduziert.
+
+**Beleg 1 — der Wisch laeuft bei JEDEM Raumladen unbedingt VOR main00** (info/Re1.5/PSX.EXE, md5
+b55fdaa5..., Auslieferungsstand @0x80026e4c `08 00 e0 03` geprueft; `re15_disasm.py dis`, Scan
+`A_belege/nb2_jalscan.py` -> `A_belege/nb2_scans.txt`):
+```
+FUN_800396fc (Raumlader; Aufrufer NUR 0x8001d5ac und 0x8001d988 = Tuer-/Selbst-Tuer-Weg der Transitions-FSM)
+  Verzweigungen im Rumpf: 0x80039770/808/830/84c/894/8c8/934 — Ziele alle < 0x80039990, keine springt hinter
+  80039a00: jal 0x8003ef6c            (einziger Aufrufer von FUN_8003ef6c)
+FUN_8003ef6c (SCD-Raum-Init, gerader Code ohne Verzweigung)
+  8003ef74: jal 0x8003ea3c            (RNG 0x800b3f6c)
+  8003ef7c: jal 0x8003ebf4            (work_vars 0x800b0fd0..d6, @0x8003ec1c sw zero -> 0x800b102c = Bank 5 Wort 1)
+  8003ef84: jal 0x8003ecec            (einziger Aufrufer von FUN_8003ecec)
+  8003ef90: lw v0,-14472(v0)          Raumkopf 0x800ac778
+  8003efa0: lw v0,64(v0) / 8003efac: sw v0 -> 0x800b3f70 / 8003efb0: jal 0x8003ee3c (a0 = 0)   Thread 0 = main00
+  8003efc4: lw v0,68(v0) / 8003efd0: sw v0 -> 0x800b3f70 / 8003efd4: jal 0x8003ee3c (a0 = 1)   Thread 1 = sub-SCD
+  8003f018: jal 0x8003f0a0            Dispatcher (Init-Lauf)
+FUN_8003ecec (nach der 10er-Schleife @0x8003ed00-4c gerader Code bis jr ra)
+  8003ed70: lui at,0x800b             0b 80 01 3c
+  8003ed74: sw zero,4136(at)          28 10 20 ac   -> 0x800b1028 = Bank 5 Wort 0 (Tabelle 0x80074664[5])
+```
+Kopf+0x40 (main00) schreibt NUR @0x8003efa0/ac in den Skript-Zeiger 0x800b3f70 (Scan aller `sw ...,0x3f70(at)`:
+0x8003efac Kopf+64, 0x8003efd0/0x8003f07c/0x8004234c Kopf+68 = sub-SCD, 0x80016564 und 0x8004c720 fremde
+Skripte mit Modus 0x800b3f7a = 1/2). main00 laeuft also genau einmal je Raumladen und immer nach dem Wisch.
+(5,6) = Wort 0 Maske 0x02000000 (MSB-zuerst, game_state.c `0x80000000 >> (idx & 0x1f)` = FUN_8004ef90).
+Banks 3/4 (0x800b0ff8 / 0x800b1018) fasst keine der Init-Funktionen an (FUN_8003ea3c, FUN_8003ebf4,
+FUN_8003ecec, FUN_8003edbc @0x8003edc8 = 0x800ac9b0..0x800aca2c) — deshalb wirkt (3,102)/(3,172)/(3,204)/(4,203)
+beim Laden, (5,6) nicht.
+
+**Beleg 2 — ROOM11A0/11A1-SCD** (`tools/scd_dump_room.py`, RDT md5 = info/Re1.5, 11A0 0f47fa3d..., 11A1 e2d462fe...):
+main00 @0x0103C `Ifel_ck` / @0x01040 `21 05 06 00` (Ck 5,6 == 0) -> Aot_set Slot 6 sce 5 @0x01044 + Obj_model_set
+@0x01058 (`2d 00 04 00 03 00 00 00 00 00 42 27 e8 ea 60 22 ...` Band 3 (10050,-5400,8800)); @0x0107A Else_ck ->
+Obj_model_set @0x0107E (`2d 00 04 00 00 00 00 00 00 00 9c b4 00 00 e4 0c ...` Band 0 (-19300,0,3300)). Weitere
+Zugriffe auf (5,6): nur sub01 (11A0 @0x012B2 Ck / @0x012BE `3e 00 0f 00 06 00` Member_cmp 15 == 6 / @0x012C4
+Set 5,6,1; 11A1 @0x012C6 / @0x012D2 / @0x012D8). Kein weiterer Obj_model_set fuer obj 0 ausserhalb main00.
+Folge: der Latch in sub01 wirkt nur auf das NAECHSTE main00 — und vor dem steht wieder der Wisch.
+
+**Beleg 3 — das Objekt-Band (+0x82) aendert sich zur Laufzeit nicht** (Scan `A_belege/nb2_band_schreiber.py`
+aller `sb/sh rt,130(rs)` in PSX.EXE und STAGE1.BIN, dazu `sw/swl/swr` mit 128..131):
+- Objekt-Pool: NUR der Installer @0x80040974 `sb v0,130(a1)` und der Member-Schreiber FUN_8004116c
+  (Sprungtabelle @0x80010c8c, 20 Eintraege, Eintrag 18 = 0x80041224 `j 0x80041230` mit Delay @0x80041228
+  `sb a2,130(a0)`); gerufen von Member_set FUN_800410b8 (@0x800410d0 `lbu a1,1(v0)` Member, @0x800410d4
+  `lh a2,2(v0)` Wert, @0x800410d8 `jal 0x8004116c`) und Member_set2 (@0x8004113c).
+- Alle uebrigen Schreiber zielen auf Aktoren ueber g_entity(cur) 0x800ac784 (@0x8001be54, @0x8005276c,
+  @0x80052dd0), den Spieler-Fall (@0x8002c6c4), Effekte (@0x8001f1b4/@0x8001f254, Halbwort) oder den Stapel.
+- ROOM11A0/11A1: 7 Member_set, ALLE Member 1 (= Eintrag 1 @0x8004119c `sw a2,56(a0)`, y; Objekte 2/3 der
+  Kamera-Ausblendung), kein Member_set2 (0x35), kein Member 18.
+-> Im Original steht die Kiste in JEDEM Besuch auf Band 3 (Record @0x01058); der Record @0x0107E (Band 0) ist im
+Auslieferungsstand totes Datum — weder beim Laden noch zur Laufzeit erreichbar. Der Port tut dasselbe
+(scd_room_setup.c:297 Wisch; Member_set auf Objekte schreibt nur x/y/z/rot, scd_vm.c). Die Frage der Abnahme
+1 ("ob das Original die Kiste dynamisch auf Band 0 bringt, ist ungemessen") ist damit statisch beantwortet: nein.

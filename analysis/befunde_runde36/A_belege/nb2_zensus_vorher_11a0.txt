@@ -1,0 +1,11 @@
+# Nachbesserung 2 - Messung vorher: probe_r36_klettern_zensus.exe pin (Stand 5f4e3ae1, build 2026-10-10 19:32), Auszug ROOM11A0/11A1
+--- ROOM11A0 flag(5,6)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A0 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A0 flag(5,6)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A0 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A1 flag(5,6)=0: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A1 flag=0 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+--- ROOM11A1 flag(5,6)=1: prop_count=4, Typ-4 ohne 0x100: 1
+    ROOM11A1 flag=1 obj=0(prop 0) fl=0x0001 band=3 pos=(10050,-5400,8800) yaw=3072 start=(10050,7450) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(10050,-7200,8598)(soll y -7200) band=4(soll 4) stand=0 -> OBEN
+Zensus: 24/24 Objekte (Raum x Lage) kletterbar
+PASS

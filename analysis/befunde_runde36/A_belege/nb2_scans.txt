@@ -1,0 +1,31 @@
+# nb2_jalscan.py info/Re1.5/PSX.EXE
+t_addr=0x80010000 t_size=0xaf000
+FUN_8003ef6c jal-word 0x0c00fbdb callers: 0x80039a00
+FUN_8003ecec jal-word 0x0c00fb3b callers: 0x8003ef84
+FUN_8003ee3c jal-word 0x0c00fb8f callers: 0x8003efb0 0x8003efd4 0x8003f080 0x8003f2c0 0x80043104 0x8004c734 0x8004cd18 0x8004d74c 0x8004d7b0
+FUN_800396fc jal-word 0x0c00e5bf callers: 0x8001d5ac 0x8001d988
+Stores sw/sh/sb ...,0x1028(at): 0x8003e5bc:ac201028 0x8003ed74:ac201028
+
+# nb2_band_schreiber.py info/Re1.5/PSX.EXE info/Re1.5/PSX/BIN/STAGE1.BIN (sb/sh imm 130 = +0x82)
+PSX.EXE: 9
+0x8001be54 sb r2,130(r4)
+0x8001f1b4 sh r2,130(r6)
+0x8001f254 sh r0,130(r4)
+0x8002c6c4 sb r3,130(r17)
+0x80040974 sb r2,130(r5)
+0x80041228 sb r6,130(r4)
+0x800421d0 sb r2,130(r16)
+0x8005276c sb r2,130(r3)
+0x80052dd0 sb r3,130(r5)
+info/Re1.5/PSX/BIN/STAGE1.BIN 11
+0x801035a8 sb r2,130(r3)
+0x80108664 sh r2,130(r18)
+0x8010bde8 sb r2,130(r3)
+0x8011049c sb r2,130(r3)
+0x801107b0 sb r2,130(r4)
+0x801115fc sb r0,130(r2)
+0x80112154 sb r2,130(r4)
+0x80114e98 sb r2,130(r4)
+0x80118af0 sb r4,130(r2)
+0x80118ca4 sb r0,130(r2)
+0x80119034 sb r0,130(r2)
