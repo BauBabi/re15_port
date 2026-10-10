@@ -393,3 +393,69 @@ Z.256) = die elektronische Tuer des Nutzers (AUFTRAG.md Z.129). Gemessen in der 
 `tools/r34n_d/rbj_zensus.py liste`): `tools/r34n_d/gesten_arme.py ROOM11B0.RDT 1 20` -> linke Hand vor +362 / hoch 515 /
 links 219 mit Maximum bei Bild 15 (Clip 15 = Kendo +544/707 bei Bild 19, Clip 16 +333/403 bei 23). FORM: Plc_motion
 `3f 00 14 00` wie sub06 @0x014F6, rueckwaerts `43 00 80 00` wie ROOM11C0 sub02 @0x018E4.
+
+### N1.2 Umsetzung (je Mangel)
+**M2 — erst schliessen, dann abschliessen** (`tools/r36_j/szene11b0_bauen.py` -> `gen/szl11b0_szene.inc`, 294 B):
+an der Tuer (Marvin nach Modus-9-Drehung, Cut 8 = Tuer offen) neu +0x005C..+0x0089:
+`3f 00 14 00` Plc_motion(0,20) / `09 0a 0f 00` Sleep 15 (Hand-Maximum) / `4b 00 07 00` + `4b 02 08 00` = sub00
+@0x01184..@0x0118B Byte fuer Byte (Rueck-Tausch) / `29 02` Cut_chg 2 (gleiche Kamera, Tuer geschlossen gemalt) /
+`36 0e 01 00 ..` Se_on Port-Bank 0x0E Satz 1 (Door_exit) / Sleep 10 / Clip 20 + `43 00 80 00` rueckwaerts / Sleep 25;
+DANN unveraendert Kendos Abschliessen (+0x008A) und Zelle/Text (+0x00AE). Rueckweg `29 04` statt `29 0a`.
+Tuerbank: `re15_szl_aot_on_umleitung` laedt beim Start der Erweiterung den Tonteil DOOR1A
+(`re15_audio_re2_tuer_laden`, `gen/szl11b0_tuerton.inc` aus `tools/r36_j/tuerton_bauen.py`, 21304 B, sha1 b5312b10);
+die Port-Bank 0x0E fuehrt audio_pc.c schon heute vor der Bank-Weiche auf `re15_audio_re2_tuer_se` (cut_10f0.c,
+Runde 35) — kein neuer Haken in audio_pc.c.
+**M1 — Tuer bleibt sichtbar zu:** in der Szene durch denselben Rueck-Tausch (Zonen danach wie ausgeliefert = Netz
+0..6). Beim Raumaufbau mit (9,84) Ereignis 23 (80 B): Zelle + Text-Platz wie bisher, dazu `06 00 2e 00 21 04 06 01`
+(Strom-Zweig, Kopf sub00 @0x0116C/@0x01170) { Cut_replace 0/7 + 2/8; `06 00 0c 00 23 00 0a 00 07 00 29 00 3c 01 08 00`
+(Cut 7 -> 0); dasselbe 8 -> 2 } — Form sub00 @0x01174..@0x01183, nur Wert/Ziel umgekehrt.
+Ereignis 23 laeuft jetzt IM Init-Lauf hinter sub00: `re15_szl_init_lauf` (szenenleon_r36.c) wird nach dem Start von
+Slot 1 und vor dem Init-Tick gerufen — 1 Zeile in scd_room_setup.c (nach `scd_thread_start(1, rdt->sub_scd[0])`) und
+2 Zeilen im Boot-/CONTINUE-Weg von main.c (ebenso nach `scd_thread_start(1, ...)`, NACH der Pre-Intro-Erkennung, die
+belegte Ereignis-Slots als Pre-Intro wertet). Ereignis-Slot 10 laeuft in derselben Slot-Schleife nach Slot 1.
+Grund (gemessen, Stand 48043096 mit dem Faden-Start nach dem Init-Lauf): der erste Spielbild-Lauf der VM kam erst in
+Bild 6 (Einblenden); Bild 1..6 zeigten Cut 8 (`[scd F6] Cut_chg(2)`, state.log F1..F5 cam=8; Bild 6 voll hell mit
+|Bild-8| = 0.0 im Tuerbereich = OFFENE Tuer sichtbar).
+**M3:** §2.3, OFFEN 1 und "Fuer den Nutzer/Entscheidungsfrage" berichtigt (durchgestrichen + Verweis auf N1.1).
+**M4:** Riegel N1.5.
+Messhaken (nur Log): `[szl-r36] ROOM11B0 F<bild> +0x<marke> ...` je Marke (Schliessen, Tuer zu, Tuer-zu-Ton,
+Abschliessen, Abschliess-Ton), `re15_szl_marke()` / `re15_szl_programm_versatz()` fuer den Riegel.
+
+### N1.3 Messung nachher — Szene (Echtweg Tuer 11C0 -> 11B0, Lauf n2)
+`lauf.sh n2_11b0 480 RE15_DEBUG_JUMP=11c0@250 RE15_SET_FLAG=3:0x43,3:0x82,4:0xf3,4:0x40 RE15_FIRE_AOT=0@60#11c0
+RE15_MSG_LOG=1 RE15_SE_DEBUG=1 RE15_STATE_LOG=... RE15_FRAMEDUMP=2300-2800/1:... RE15_EXIT_AT=30#1260`
+(beschleunigt, SDL_RENDER_DRIVER=direct3d11, RE15_WINDOW_SCALE=1; Notizblock N1/):
+```
+[scd F2320] Cut_chg(8)
+[szl-r36] ROOM11B0 F2381 +0x005C Schliessen: Plc_motion(0,20) Marvin greift zur offenen Tuer
+[scd F2396] Cut_chg(2)
+[se] Se_on bank=14 id=1 -> RE2-Tuerbank (Runde 35 Spur K)
+[se] Stimme: se=1 layer=0 vag=2 note=61 fine=109 center=83 vol=110 pitch=0x4f3 (13641 Hz) -> SE-Stimme 7 (SPU 23)
+[szl-r36] ROOM11B0 F2396 +0x0064 Tuer zu: Cut_replace 0<->7 + 2<->8 (sub00 @0x01184/@0x01188 zurueck), Cut_chg 2
+[szl-r36] ROOM11B0 F2396 +0x006E Tuer-zu-Ton: Se_on Port-Bank 0x0E Satz 1 (RE2 DOOR1A Door_exit)
+[szl-r36] ROOM11B0 F2431 +0x008A Abschliessen: Plc_motion(0,15) (RE2 Kendo Clip 0)
+[se] Se_on bank=0x3A id=10 -> RE2-Schlossbank SCHLOSS1010 (Runde 36 Spur J)
+[szl-r36] ROOM11B0 F2451 +0x0092 Abschliess-Ton: Se_on Port-Bank 0x3A Satz 0x0A (SCHLOSS1010)
+[scd F2556] Cut_chg(4)  ...  [scd F2641] Cut_chg(6)  ...  [msg] room=11b0 id=21  ...  room1260.rdt
+```
+**Schliessen F2381 < Tuer-zu-Ton F2396 < Abschliessen F2431 < Abschliess-Ton F2451.** Der Tuer-zu-Ton ist derselbe
+Ton wie beim Durchgang 11C0 -> 11B0 (gleiche Stimmzeile beim Eintritt, debug.log Z.88).
+Tuerbild je Bild (`tuerzustand.py`: Tuerbereich (128..142, 92..112) gegen BSS Bild 2/8): F2348..F2396 OFFEN
+(|Bild-8| 1.1..1.4), **ab F2397 ZU** (|Bild-2| 0.1..0.4) bis zum Kamerawechsel F2556 (F2320..F2347 verdeckt Marvin
+auf dem Weg zur Tuer den Bereich). Framedump-Serie `J_belege/nb1_m2_schliessen_abschliessen_F2378_F2468.png`:
+F2378 Marvin vor der offenen Tuer, F2384..F2396 Arm zur Tuer, F2402 Tuer geschlossen gemalt mit der Hand am Blatt,
+F2408..F2426 Arm zurueck, F2432..F2456 Kendos Griff zum Schloss, F2462 zurueck.
+
+### N1.4 Messung nachher — spaetere Besuche (Abnahme-Laeufe d1/d2 mit Framedump JEDES Bildes 0..400)
+`lauf.sh e_ost 150 RE15_DEBUG_JUMP=11b0@250 RE15_SET_FLAG=4:0xf3,3:0x43,3:0x82,3:0x83,4:0xcd,9:0x54
+RE15_PLAYER_POS=-20500,-16300,2048 RE15_TUERSE_LOG=... RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=300
+RE15_INPUT_SCRIPT=U1.5,W0.5,A0.2,W3 RE15_MSG_LOG=1 RE15_STATE_LOG=... RE15_FRAMEDUMP=0-400/1:... RE15_EXIT_AT=420#11b0`
+(West: `RE15_PLAYER_POS=-23300,-16300,0`):
+- debug.log: `Werkstatt-Tuer verschlossen (9,84): Ereignis 23 im Init-Lauf nach sub00 ...`, `[scd F250] Cut_chg(7)`
+  (sub00 @0x0117E) und im SELBEN Init-Lauf `[scd F250] Cut_chg(0)` (Ereignis 23).
+- state.log: Ost 420 Bilder cam=2 (nie 8), West 420 Bilder cam=0 (nie 7).
+- Pixel (Tuerbereich gegen BSS): Ost Bild 1..400 alle ZU (ab Bild 6 |Bild-2| = 0.0; 1..5 Einblenden, naeher an 2 als
+  an 8), West Bild 1..400 alle ZU (ab Bild 6 |Bild-0| = 0.0..0.7).
+- F360 "The door is locked." + tuerse.log `F360 raum=11B1 nachricht=12 art=M weg=AOT satz=0(ZU_A) nr=1` (Ost und West).
+- Bild `J_belege/nb1_m1_tuer_spaeter_vorher_nachher_F370.png`: Abnahme-Laeufe d1/d2 (vorher: Cut 8/7 offen) gegen
+  nachher (Cut 2/0 geschlossen), je mit Ausschnitt.
