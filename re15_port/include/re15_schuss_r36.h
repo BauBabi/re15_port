@@ -75,4 +75,31 @@ void re15_schuss_r36_sichtlinie_reset(void);
  * 2 = mit Versatz. */
 int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3]);
 
+/* ---- Punkt 3: KRAEHE gegen Super Redhawk (RE2 Retail, EMOVL21_S0.BIN, Dossier C_schuss.md 3) ---
+ * HURT-Zeilen-Dispatch @0x80104A18 auf +0x5 (RE2-Waffen-Id): [5]/[6] (Magnum/Custom Magnum), [9]/[10]/[11]
+ * (GL-Runden) und [17] (Rakete) -> GIB 0x80102CA0; der Super Redhawk (w7) ist RE2-Zeile 5.
+ * GIB 0x80102CA0: +0x146 = 0 (@0x80102CB8), Peilung 0x800154AC(PL, self) (@0x80102CD4), rand -> Maske s2
+ * (@0x80102CDC), dann die 13 Part-Zeilen [+0x198] + i*172:
+ *   Zeile 0 immer WURF (@0x80102CE8-F0); Bit 1: 1,2 Wurf sonst Wirbel; Bit 2: 3..5; Bit 4: 6..8;
+ *   9/10 immer Wurf (@0x80102E20-34); Bit 8: 11; Bit 0x10: 12 (@0x80102CF4-E8C)
+ *   WURF 0x80102EF4   : +0x70 = 0x00101040, +0x9C = 800, +0x9E = 10, +0x98 = Peilung, +0xA0 = 0, +0x9A = 0,
+ *                       +0xA4 = -100, Flags |= 0x4A  -> Drift-Physik FUN_80028DAC (Bit 0x08): Tempo 800 - 100/Bild,
+ *                       Fall +10/Bild, nach 29 Bildern Flags = 0 (`sw zero,0` @0x80028DDC) = das Teil VERSCHWINDET
+ *   WIRBEL 0x80102F34 : Flags |= 0x1062, +0x38 = Peilung + rand<<2, +0x86 = 0, +0x3C = (rand&0x7f)+100, +0x3A = 0,
+ *                       +0x79 = 20, +0x3E = 0, +0x40 = rand<<4, +0x42 = 0 -> Wurf-Physik FUN_80028AD8 (Bit 0x20):
+ *                       Fall +20/Bild, Aufschlag v/4, beim ZWEITEN Bodenkontakt Bit 0 weg (`and v0,v0,-2`
+ *                       @0x80028CA0) = das Teil VERSCHWINDET
+ *   danach 3x Federburst 0x8010459C (@0x80102E90-A4), Federn (rand&3)|8 (@0x80102EA8-BC), 0x80018FB0,
+ *   Zustand (7,1) (@0x80102EC8-D4) = GIB-Leiche 0x80103C0C: Schatten-Record frei, keine Lache.
+ * => In RE2 zerplatzt die Kraehe beim Magnum-Treffer ebenfalls in ihre 13 Teile und ist danach komplett weg
+ *    (kein Kadaver, keine Lache); die Teile fliegen ~0,5-1 s sichtbar auseinander. Der Port verbarg das
+ *    Netz bisher SOFORT (crow_hide) und setzte 13 Blut-Splatter als Stand-in; jetzt laufen die 13 Teile
+ *    ueber dieselbe Part-Bruecke wie der Zombie-Zerleger (re15_re2z_gore_part_matrix, Physik DAC/AD8). */
+#define RE15_SCHUSS_R36_KRAEHE_PARTS 13          /* 13 Zeilen @0x80102CE8-E8C; RE2-EM021-Rig = 13 Bones */
+/* Modellblock-Seed beim RE2-INIT der Kraehe (wie re15_re2z_part_reset: Bit 0, Tinte 0x808080, Mesh = i). */
+void re15_schuss_r36_kraehe_parts_seed(re15_actor_t *e);
+/* Der GIB: a1 = Peilung (0x800154AC(PL, self)), m = der Masken-Draw (rand @0x80102CDC); verbraucht die drei
+ * Draws je Wirbel-Zeile in der Original-Reihenfolge. */
+void re15_schuss_r36_kraehe_gib(re15_actor_t *e, int16_t a1, uint32_t m);
+
 #endif /* RE15_SCHUSS_R36_H */

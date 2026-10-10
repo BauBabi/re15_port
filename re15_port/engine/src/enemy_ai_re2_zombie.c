@@ -4460,6 +4460,9 @@ static int re2z_bone_to_part(const re15_actor_t *e, int bone)
 int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
+    /* Runde 36 Spur C: auch die RE2-KRAEHE (0x21) faehrt die Part-Bruecke — ihr GIB 0x80102CA0 wirft
+     * dieselben 13 Zeilen mit denselben Flagworten 0x4A/0x1062 (schuss_r36.c); Seed in re2c_init. */
+    if (e->type == 0x21u) return re15_ai_re2_for_type(0x21u) && e->re2c_gib_parts != 0u;
     if (!re15_re2z_owns_type(e->type)) return 0;
     if (!re15_ai_re2_for_type(e->type) &&
         !re15_re15_re2z_import_owns(e->type)) return 0;
@@ -4619,7 +4622,9 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
     }
 
     if (e->re2z_part_st86[i] >= 2) {                           /* slti v0,v0,2 @0x80028B60 */
-        int32_t floor_y = (int32_t)e->y;                       /* [PORT (1)] @0x80028B74 */
+        int32_t floor_y = (e->type == 0x21u) ? (int32_t)e->dog_floor_y   /* Runde 36 Spur C: die Kraehe fliegt —
+                                                                            * ihr Boden ist +0x1C2 (Boden-Probe), nicht y */
+                                             : (int32_t)e->y;           /* [PORT (1)] @0x80028B74 */
         t[0] += v[0];                                          /* @0x80028B80-8C */
         v[1]  = (int16_t)(v[1] + e->re2z_part_grav[i]);        /* +0x3A += +0x79 @0x80028B90-A4 */
         t[1] += v[1];                                          /* @0x80028BAC-B8 */

@@ -40,3 +40,14 @@ endif()
 add_test(NAME unit_r36_blut_pin_eben COMMAND probe_r36_blut pin eben)
 add_test(NAME unit_r36_blut_pin_tief COMMAND probe_r36_blut pin tief)
 set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief PROPERTIES TIMEOUT 120)
+
+#   unit_r36_schuss_kraehe    Punkt 3: Kraehe gegen Super Redhawk = RE2 GIB 0x80102CA0 (13 Teile Wurf/Wirbel, Draws,
+#                             Physik bis zum Verschwinden, Dispatch @0x80104A18).
+add_executable(test_r36_schuss_kraehe ${CMAKE_CURRENT_LIST_DIR}/../test_r36_schuss_kraehe.c)
+target_link_libraries(test_r36_schuss_kraehe PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_schuss_kraehe PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r36_schuss_kraehe PRIVATE m)
+endif()
+add_test(NAME unit_r36_schuss_kraehe COMMAND test_r36_schuss_kraehe)
+set_tests_properties(unit_r36_schuss_kraehe PROPERTIES TIMEOUT 120)

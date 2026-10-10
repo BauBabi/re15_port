@@ -76,6 +76,7 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex / re15_esp_fx_splatter (Stand-ins) */
 #include "re15_collision.h"  /* re15_collision_constrain_enemy (SCA-Wand-Klemme) */
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok */
+#include "re15_schuss_r36.h" /* re15_schuss_r36_kraehe_parts_seed / _gib (Runde 36 Spur C) */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -1310,27 +1311,20 @@ static void re2c_hurt_flight(re15_actor_t *e, re15_actor_t *pl)
  * (jal 0x80015fe8 @0x80102F54, @0x80102F68 [&0x7f+100], @0x80102F88 [<<4]); der Wurf-Helfer
  * 0x80102EF4 ist RNG-frei (nur Stores, Speed 800/vy −100). Der Part-Mover selbst ist
  * Render-OPEN — aber die DRAW-ZAHL ist Verhalten am geteilten RE2-Strom. */
-static void re2c_gib_swirl_draws(void)
-{
-    (void)re15_re2_rand(); (void)re15_re2_rand(); (void)re15_re2_rand();
-}
+/* (Runde 36 Spur C: re2c_gib_swirl_draws entfallen — die drei Draws je Wirbel-Zeile macht jetzt
+ * kraehe_wirbel in schuss_r36.c, zusammen mit den Feldern, die sie im Original fuellen.) */
 static void re2c_hurt_gib(re15_actor_t *e, re15_actor_t *pl)
 {
     e->re2d_vy146 = 0;                                     /* sh zero,326 @0x80102CB8 */
-    (void)re15_atan2_q12(e->z - pl->z, e->x - pl->x);      /* Bearing-Draw 0x800154AC @0x80102CD4 */
-    {   /* Scatter-Maske @0x80102CDC; pro Mask-Bit-CLEAR WIRBELN die Zeilen (beq → 0x80102F34):
-         * Bit1→Zeilen 1,2 (Zeile 0 nur bei SET geworfen), Bit2→3..5, Bit4→6..8, Zeilen 9/10
-         * IMMER Wurf, Bit8→11, Bit16→12 (@0x80102CF4-E90 selbst gelesen). */
-        uint32_t m = re15_re2_rand();
-        if (!(m & 0x01u)) { re2c_gib_swirl_draws(); re2c_gib_swirl_draws(); }               /* 1,2   */
-        if (!(m & 0x02u)) { re2c_gib_swirl_draws(); re2c_gib_swirl_draws(); re2c_gib_swirl_draws(); }  /* 3..5 */
-        if (!(m & 0x04u)) { re2c_gib_swirl_draws(); re2c_gib_swirl_draws(); re2c_gib_swirl_draws(); }  /* 6..8 */
-        if (!(m & 0x08u)) re2c_gib_swirl_draws();                                           /* 11    */
-        if (!(m & 0x10u)) re2c_gib_swirl_draws();                                           /* 12    */
-    }
-    e->crow_hide = 1;                                      /* Part-Scatter-Stand-in (RE1.5-GIB-Muster) */
-    re15_esp_fx_splatter(re15_esp_room_bank(), 0, 13, e->x, e->y, e->z,
-                         (int32_t)e->dog_floor_y);         /* 13 Zeilen → 13 Kinder-Stand-in */
+    /* Runde 36 Spur C: der GIB ist jetzt der echte 13-Teile-Zerleger ueber die Part-Bruecke
+     * (re15_schuss_r36_kraehe_gib, Belege include/re15_schuss_r36.h Punkt 3) statt crow_hide +
+     * 13 Splatter-Stand-ins. Peilung = 0x800154AC(PL, self) @0x80102CD4 (Port-Konvention wie
+     * re2c_hurt_flight), Maske = der rand-Draw @0x80102CDC (Bit1: Zeilen 1,2 Wurf sonst Wirbel,
+     * Bit2: 3..5, Bit4: 6..8, Zeile 0 und 9/10 immer Wurf, Bit8: 11, Bit16: 12 @0x80102CE8-E8C). */
+    int16_t a1 = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0xfff);
+    uint32_t m = re15_re2_rand();                          /* @0x80102CDC */
+    re15_schuss_r36_kraehe_gib(e, a1, m);                  /* @0x80102CE8-E8C */
+    e->crow_hide = 0;                                      /* die Teile zeichnen sich selbst (Bit 0 / 0x40) */
     re2c_featherburst(e); re2c_featherburst(e); re2c_featherburst(e);   /* 3× @0x80102E90-A4 */
     re2c_feather(e, (int)(re15_re2_rand() & 0x3u) | 0x8);  /* 8..11 Federn @0x80102EA8-BC */
     /* 0x80018FB0 @0x80102EC0 (EXE-Kill, doc) */
@@ -1499,6 +1493,8 @@ static void re2c_hurt(re15_actor_t *e, re15_actor_t *pl)
         re2c_hurt_flight(e, pl); break;                    /* @0x80104A18-28/4C-58/60 */
     }
 }
+/* NUR FUER TESTS (Runde 36 Spur C, test_r36_schuss_kraehe): der Zeilen-Dispatch am nackten Aktor. */
+int re15_re2crow_hurt_test(re15_actor_t *e, re15_actor_t *pl) { re2c_hurt(e, pl); return 1; }
 
 /* ================================ CORPSE (state 7) ========================================== */
 /* Tabelle @0x80104A70 auf +0x5: [0] 0x8010398C Normal (Lache+Zucken), [1] 0x80103C0C GIB,
@@ -1821,6 +1817,7 @@ static void re2c_init(re15_actor_t *e)
     e->re2z_t158 = 0; e->re2z_t15a = 0;
     e->re2z_self1d3 = 0; e->re2z_prev_sub = 0; e->re2z_prev_hp = 10;
     e->crow_hide = 0; e->crow_contact = 0; e->crow_wall = 0;
+    re15_schuss_r36_kraehe_parts_seed(e);                  /* Runde 36 Spur C: Modellblock (13 Zeilen) fuer den GIB */
     /* Anim-Wort = 0 (Clip 0 Frame 0) + EIN Advancer-Tick (sw zero,332; jal 0x8002959c a3=512
      * @0x8010037C-80): */
     re2c_clip(e, 0, 0);
