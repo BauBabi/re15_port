@@ -590,3 +590,26 @@ dass die neue Lage-Pruefung ihn erkennt.
 `build_nb2gate`, Quelle danach mit Original-mtime zurueck — `A_belege/nb2_zensus_altes_gate.txt`): `Zensus: 0/24
 Records ... beim Laden erreichbar 0/22, nur ERZWUNGEN 0/2`, 96/96 Seiten "kein Start", alle 24 Lage-Pruefungen
 OK (die Lage haengt nicht am Gate), Null-Box quer 0/8 (0x0081 faellt am alten Gate durch), `FAIL 25`, exit 1.
+
+**Beleg 4 — auch der Latch in sub01 kann im Auslieferungsstand nicht feuern** (selbst disassembliert): sub01
+prueft `Member_cmp 15 == 6` = obj+0x0B (Member-Tabelle @0x80010c8c Eintrag 15 -> @0x8004120c `j` / Delay
+`sb a2,11(a0)`). obj+0x0B stempelt die AOT-Abtastung FUN_80042bac im Objekt-Pool-Pass (Aufruf aus FUN_800436a8
+@0x8004378c, a1 = 4, Stride 148): `80042f58 addiu v0,s2,255` / `80042f5c sb v0,11(s1)` (Slot-Index auf das
+Objekt). VOR dem Stempel im selben Slot-Durchlauf das Band-Gate:
+```
+80042cac: lbu  v0,2(s0)          ; Floor-Byte des AOT
+80042cb4: andi v0,v0,0x80        ; 0x80 = Platzhalter (jedes Band)
+80042cb8: bne  v0,zero,0x80042cd4
+80042cc0: lbu  v1,130(s1)        ; Band des Objekts (+0x82)
+80042cc4: lbu  v0,2(s0)
+80042ccc: bne  v1,v0,0x8004301c  ; anderes Band -> Slot uebersprungen, kein Stempel
+```
+Slot 6 hat Floor 0 (Aot_set @0x01044 `2c 06 05 44 00 ...`, Byte [4] = 0, kein 0x80), die Kiste steht auf Band 3
+(Beleg 3: keine Laufzeit-Aenderung) -> Slot 6 stempelt sie nie -> `Member_cmp 15 == 6` nie wahr -> (5,6) wird im
+Spiel nie gesetzt. Record @0x0107E und der Latch @0x012B2-c4 sind damit doppelt tot (Prototyp-Rest; die Kiste
+muesste dafuer auf Band 0 gelangen, was kein Code tut). Fuer den Nutzer aendert sich nichts: die Kiste steht im
+Port wie im Original bei jedem Betreten auf Band 3 und ist dort kletterbar (Zensus-Record @0x01058, exe-Lauf E3
+der Abnahme 1).
+
+Die Commit-Message fd9c0f48 ("je Lage per Flag ... (5,6) ... 24/24") ist Historie und nicht aenderbar — sie ist
+durch diesen Abschnitt ueberholt (wie in Nachbesserung 1 fuer die 3091-Aussage).
