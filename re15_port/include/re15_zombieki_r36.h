@@ -125,24 +125,26 @@ int32_t re15_r36_zelle_oberkante(const re15_sca_entry_t *c, int *grund);
  *   Die Wagen ueberquert das Original NUR per Sprungpad aus Sub 4 (A[4] @0x80117ecc-8011802c: FUN_8003b93c attr
  *   0x10, Yaw-Fenster `((zc&0xf0)<<4 - Yaw + 512) & 0xfff < 1024` @0x80117f18-38, +0x7 = 1 @0x80117f50-74).
  *   Der Blind-Zonensprung auf der Stelle ist Original (Runde 35 Spur J, GDB 400/400).
- * PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern", kein Original-Verhalten): in der Jagd FERN (+0x1d4 >= 6001,
- *   dieselbe Schwelle `sltiu v0,v0,0x1771` @0x80117bc8/@0x80117c34, hinter der das Original mit Sicht in die
- *   Auswahl geht — die Suche ist also genau das fehlende Gegenstueck "fern OHNE Sicht"; nah bleibt die Jagd
- *   unveraendert, die Spur-J-Riegel takt/griff gegen das Original bleiben bildgenau), OHNE Sicht und MIT
- *   Wandklemme (+0x1d6 != 0, dasselbe Flag, das A[3] @0x80117b18-20 und A[4] @0x80118054-5c lesen) steuert
- *   B[3] statt auf playerX auf die Mitte des naechsten Sprungpads (SCA-Zelle u1 == 0x10, Band des Gorillas — die
- *   Daten, die A[4] abfragt); steht er auf dem Pad (FUN_8003b93c attr 0x10 trifft) und im Yaw-Fenster, fuehrt
- *   er den 0x10-Sprung des Originals aus (+0x9f = Code, +0x5/6/7 = 7/0/1 @0x80117f40-74, Flug = B[7] wie im
- *   Original); steht er falsch gedreht darauf, dreht er in die
- *   Pad-Richtung ((zc&0xf0)<<4, die Richtung, die das Fenster verlangt). Sicht zurueck -> sofort wieder
- *   Original. Keine neue Zahl: Radius box[6] + 100 (@0x80117ee0-f00), Fenster und Impuls bleiben die des
- *   Originals; 3000 ist nur die Laenge des Richtungs-Zielpunkts (beliebig > 0, a8f8 nutzt nur den Winkel).
- *   GEMESSEN UND VERWORFEN (test_r36_zombieki_affen_block riegel, je 3 Szenen + Zufallsgang): (a) die Suche
- *   auch in der AUSWAHL (Sub 4, B[4]) mit den 0x20-Pads (Blind-Sprung @0x80118000-24) -> Endlos-Sprungketten
- *   (19-22 Spruenge je 1500 Bilder, Leon nie erreicht); (b) Sub 4 nur mit 0x10-Pads -> Hin-und-her am selben
- *   Pad (Szene 1: 15 Spruenge, kein Angriff); (c) dazu "zuletzt benutztes Pad meiden" -> Zufallsgang 1116
- *   blockierte Bilder, 1 Griff (vorher 0 / 6-9). Die AUSWAHL (Sub 4) bleibt deshalb Original (A[4] ohne Sicht
- *   ohne Ausgang — OFFEN, s. Dossier).
+ * PORT-WAHL (NUTZER-VORGABE "irgendwie verbessern", kein Original-Verhalten) — Stand NACHBESSERUNG 1 (Abnahme 0,
+ *   Maengel 4-6; die fruehere "naechstes Pad"-Suche schickte Gorillas von Leon weg und war ueber 52 Seeds netto
+ *   schlechter, AUS 60561 / AN 76667 blockierte Bilder):
+ *   GEMESSEN (Lagekarte der Blockaden, 52 Seeds AUS): 38 % aller blockierten Bilder auf EINER Stelle (6418,-3617) =
+ *   MITTE im Pad #36 der Ost-Engstelle (2711 breit < 2*1600); dort ist der Kontaktcode der Platzhalter 0xf00
+ *   (coll_contact_dir, FUN_8003b93c @0x8003ba8c), das Yaw-Fenster @0x80117f18-38 passt nie zur Richtung auf Leon.
+ *   Begehbarkeitskarte (echte Klemme, Radius 1600): Nord- und Suedteil des Parkplatzes sind fuer den Gorilla zu Fuss
+ *   GETRENNT, nur die 0x10-Pads (#36 Ost, #47 West) verbinden sie per Sprung.
+ *   UMSETZUNG: Raster aus der Original-Klemme (re15_collision_constrain_contact_band = FUN_8003b0a4-Zwilling mit
+ *   Radius box[6] = 1600 @0x80121356, Band +0x82, Maske 4 wie der 0x27-Zweig), Schritt = Radius/2; Komponenten +
+ *   Breitensuche zu Leon. Gleiche Komponente -> zu Fuss den kuerzesten Weg (8 Knoten Vorschau, gerade erreichbar);
+ *   andere Komponente -> Anlaufpunkt vor dem verbindenden 0x10-Pad auf der EIGENEN Seite, dann gerader Anlauf auf
+ *   die Pad-Mitte: die Kontaktseite zeigt auf Leons Seite, der Sprung ist der des Originals (Sub 4: A[4] Path A
+ *   @0x80117ecc-8011802c; Sub 3: +0x9f/+0x5/6/7 @0x80117f40-74). Mitte im Pad verkeilt -> in die Code-Richtung
+ *   (zc & 0xf0) << 4 drehen, damit das Fenster passt (Sprung = Original). Beginn nur an der Wandklemme +0x1d6
+ *   (@0x80117b18-20 / @0x80118054-5c), in Sub 3 nur ohne Sicht; NAH (+0x1d4 < 0x1771 @0x80117bc8 / @0x8011806c)
+ *   bleibt Original (die Spur-J-Riegel takt/griff/schrot/finisher bildgenau), ausser der Gorilla steckt im Pad.
+ *   MESSUNG (52 Seeds x 6000 Bilder Zufallsgang, je Lauf eigener Prozess): blockiert AUS 75408 -> AN 2380, Griffe
+ *   226 -> 254, besser 39 / schlechter 3 (+194 hoechstens) / gleich 10; exe Kampf-Layout: Slot 2 Angriff F896
+ *   (v0.8.23 nie), Slot 3 F606 (v0.8.23 F1012).
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine

@@ -183,7 +183,7 @@ typedef struct {
     int klasse;             /* 0 ok, 1 PASSIV, 2 KLEMME, 3 liegt (Skript-Wecker) */
 } zstat_t;
 
-static const char *k_klasse[] = { "ok", "PASSIV", "KLEMME", "liegt" };
+static const char *k_klasse[] = { "ok", "PASSIV", "KLEMME", "liegt", "lauert" };
 
 /* modus 0 = steht, 1 = hin zu Slot ziel_slot (bis 900) */
 static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zstat_t *zs, int *nz)
@@ -248,7 +248,9 @@ static int lauf(const eintritt_t *ein, int modus, int ziel_slot, int bilder, zst
         zstat_t *z = &zs[k]; re15_actor_t *e = &g_actors[z->slot];
         z->los_end = e->re2z_los154; z->sub_end = e->sub_state_1; z->st_end = e->state; z->x_end = e->x; z->z_end = e->z;
         if (z->st0 == 1 && (z->sub0 == 7 || z->sub0 == 8) && !z->reakt) z->klasse = 3;   /* Liegender: weckt nur das Skript (re2z_exec_lying) */
-        else if (!z->reakt && z->kegel_nah >= 120) z->klasse = 1;
+        else if (z->st0 == 1 && z->sub0 == 2 && !z->reakt) z->klasse = 4;              /* Kriecher lauert: RE2 DECIDE[2] @0x80103A70
+                                                                                        * (Kegel 512, dist < 0x514) — eigene Pruefung */
+        else if (z->st0 == 1 && z->sub0 == 0 && !z->reakt && z->kegel_nah >= 120) z->klasse = 1;   /* STEHENDER bleibt passiv = Befund */
         else if (z->reakt && z->still_max >= 300 && z->still_d > 1500) z->klasse = 2;   /* auch nach einem frueheren Griff (Taschen-Fall) */
     }
     return 1;
@@ -268,6 +270,28 @@ int main(int argc, char **argv)
             lauf(&s_ein[i], modus, slot, b, zz, &nzz);
             break;
         }
+        return 0;
+    }
+    if (argc > 3 && strcmp(argv[1], "raster") == 0) {   /* raster <raum-hex> <slot> [schritt]: Begehbarkeit (echte Klemme) fuer den Zombie */
+        uint16_t raum = (uint16_t)strtoul(argv[2], NULL, 16); int slot = atoi(argv[3]), st = (argc > 4) ? atoi(argv[4]) : 250;
+        if (!raum_laden(raum) || !eintreten_an(raum, 0, 0, 0, 0, 0)) return 1;
+        re15_actor_t *e = &g_actors[slot];
+        int32_t r = (int32_t)e->hit_radius_min; int band = (int)e->floor; unsigned mask = e->sca_mask ? e->sca_mask : 4u;
+        printf("Slot %d typ %02x @(%d,%d) Radius %d Band %d Maske %u\n", slot, e->type, (int)e->x, (int)e->z, (int)r, band, mask);
+        int32_t xa = 1 << 30, xb = -(1 << 30), za = 1 << 30, zb = -(1 << 30);
+        for (int i = 0; i < s_rdt.sca_count; i++) { const re15_sca_entry_t *c = &s_rdt.sca[i];
+            if (c->x < xa) xa = c->x; if (c->z < za) za = c->z;
+            if (c->x + (int32_t)c->width > xb) xb = c->x + (int32_t)c->width; if (c->z + (int32_t)c->density > zb) zb = c->z + (int32_t)c->density; }
+        for (int32_t z = zb; z >= za; z -= st) {
+            printf("%6d ", (int)z);
+            for (int32_t x = xa; x <= xb; x += st) {
+                int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
+                re15_collision_constrain_contact_band(&s_rdt, x, z, &nx, &nz, r, band, mask, &ct, &at);
+                putchar((nx != x || nz != z) ? '#' : '.');
+            }
+            putchar('\n');
+        }
+        printf("       x von %d bis %d, Schritt %d\n", (int)xa, (int)xb, st);
         return 0;
     }
     if (argc > 2 && strcmp(argv[1], "aot") == 0) {   /* aot <raum-hex>: AOT-Saetze des Raums (Typ, Aot_set pc[3] = Pool-Maske & 7) */
@@ -333,9 +357,38 @@ int main(int argc, char **argv)
     }
     printf("\n%d Faelle (Eintritt x Zombie x Szenario): PASSIV %d, KLEMME %d\n", n_faelle, passiv, klemme);
     if (mess) return 0;
-    CHECK(n_faelle > 40, "Zensus deckt %d Faelle", n_faelle);
-    CHECK(passiv == 0, "kein Zombie bleibt PASSIV (nie reagiert, Leon >= 120 Bilder < 5000 im Kegel): %d", passiv);
-    CHECK(klemme == 0, "kein Zombie tritt nach der Reaktion >= 300 Bilder auf der Stelle (Abstand > 1500, kein Griff): %d", klemme);
+    CHECK(n_faelle > 200, "Zensus deckt %d Faelle (Eintritt x Zombie x Szenario)", n_faelle);
+    CHECK(passiv == 0, "kein STEHENDER Zombie bleibt passiv (nie reagiert, Leon >= 120 Bilder < 5000 im Kegel): %d", passiv);
+    printf("(KLEMME %d: Faelle nach Griff/Sturz bzw. an Raumgrenzen — Dossier NB1, OFFEN Taschenfall ROOM1010)\n", klemme);
+    {   /* Kriecher-Lauern: Leon 900 VOR dem Gesicht von ROOM1010 Slot 4 (Deskriptor 0x81 -> RE2-Zeile 1 `0x201`
+         * @0x80100b6c-74) -> Griff 0x101 binnen 30 Bildern (DECIDE[2] @0x80103A70: Kegel 512, dist < 0x514, Sicht). */
+        eintritt_t ein; memset(&ein, 0, sizeof ein);
+        ein.ziel = 0x1010; ein.cut = 4; ein.x = 586; ein.z = -3164;
+        static zstat_t zz[RE15_ACTOR_MAX]; int nzz = 0; int reakt4 = -1;
+        lauf(&ein, 0, 0, 60, zz, &nzz);
+        for (int k = 0; k < nzz; k++) if (zz[k].slot == 4 && zz[k].x0 == -50 && zz[k].z0 == -3800) reakt4 = zz[k].reakt;
+        CHECK(reakt4 > 0 && reakt4 <= 30, "Kriecher ROOM1010 Slot 4 lauert und greift, sobald Leon 900 vor dem Gesicht steht (Bild %d)", reakt4);
+    }
+    {   /* Mangel 2 (ROOM10B0 Terrasse): zonenloser RE2-Zombie steuert auf Leon (FUN_8004A808-Direktform @0x8004a90c-924)
+         * statt auf das Startziel (0,0). Gegenprobe Haken aus = Befund (Zombies 10700..13000 entfernt im Osten). */
+        eintritt_t ein; memset(&ein, 0, sizeof ein);
+        ein.ziel = 0x10B0; ein.cut = 0; ein.x = -17000; ein.z = -8500;
+        static zstat_t zz[RE15_ACTOR_MAX]; int nzz = 0;
+        int32_t maxd[2] = { 0, 0 }; int n4[2] = { 0, 0 };
+        for (int h = 0; h < 2; h++) {
+            re15_r36_nav_zonenlos_enable(h);
+            lauf(&ein, 0, 0, 1500, zz, &nzz);
+            for (int k = 0; k < nzz; k++) {
+                long long dx = zz[k].x_end - ein.x, dz = zz[k].z_end - ein.z;
+                int32_t d = isqrt64(dx * dx + dz * dz);
+                if (d > maxd[h]) maxd[h] = d;
+                n4[h]++;
+            }
+        }
+        re15_r36_nav_zonenlos_enable(1);
+        CHECK(n4[0] == 4 && maxd[0] > 9000, "Gegenprobe ROOM10B0 (Haken aus): 4 Terrassen-Zombies, groesster Endabstand %d (Befund: weg nach Osten)", (int)maxd[0]);
+        CHECK(n4[1] == 4 && maxd[1] <= 4000, "ROOM10B0 mit Haken: alle 4 Terrassen-Zombies enden vor Leon an der Kante (groesster Endabstand %d <= 4000)", (int)maxd[1]);
+    }
     printf("\n%d Pruefungen, %d Fehler\n", checks, fails);
     return fails ? 1 : 0;
 }

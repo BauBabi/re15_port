@@ -397,3 +397,76 @@ Grundlage: `F_abnahme_0.md` (Stand 853cbfb3, NICHT BESTANDEN, Maengel 1-8). Plan
   Gegner laufen mit kind 2 @0x80043724, FUN_800436a8) — Zombies verlassen die Terrasse weder in RE1.5 noch in RE2.
 - **Nachher** (Haken an): die vier Zombies stehen VOR Leon an der Kante (x -18474 / -17671 / -16870 / -16061,
   z -11832, Abstand 3317..3643, Ziel = Leon) statt 10700..13000 entfernt im Osten.
+
+### NB1 Mangel 1 — Innenraumfall im Normalfluss + niedrige Nibble-3-Moebel
+- **Ursache 1 (Innenraum, Normalfluss):** Eintritts-Zensus (`test_r36_zombieki_eintritt`, oben): kein STEHENDER Zombie bleibt
+  im Normalfluss passiv; der einzige Innenraum-Dauerstillstand ist ROOM1010 Slot 1 nach dem Griff (Tuer aus 1020,
+  Leon geht auf ihn zu): Rueckstoss EXEC[3] P8 (Clip-Delta + `-30` @0x80102CA0-AC) traegt ihn in die Ueberlappung
+  der Zellen #13/#15/#3/#5; die echte Klemme (FUN_8003b0a4-Zwilling) findet dort keine freie Lage — Raster
+  `test_r36_zombieki_eintritt raster 1010 1 250`: (2933,1918) gesperrt, naechster freier Knoten (3600,3350), dazwischen
+  alles gesperrt. Der Zombie tritt ab F780 auf der Stelle, 1894 vor Leon. -> OFFEN (Wurf/Kollision, s. unten).
+- **Ursache 2 (Abbildungsluecke Moebel, Abnahme-Fall):** ROOM1010 traegt in ALLEN 16 Zellen (x5 Partitionen) fl = 0x03
+  (`sca.py 1010`): Tisch #5, Stuhlkreise #12/#13/#14, Waende — das Nibble trennt dort nicht. Messung exe (Abnahme-Lage,
+  Leon (3750,4300) r1024): RE2-KI Slot 2 F1..F1000 in 1/0/1/0 bei (205,7248); **RE1.5-KI (RE15_AI_FLAVOR=re15) laeuft
+  derselbe Zombie um den Tisch auf Leon zu (F300 bei (2853,6614), Sub 12)** — der Port war dort passiver als BEIDE Originale.
+- **Belege:**
+  - RE2-Strahl Kopf zu Kopf: Zombie +0x1c1 = 8 (`addiu v0,zero,8` / `sb v0,449(s2)` @0x8010082c-30, EMZ0.BIN), Teil-Lage
+    `lw a0,408(s0)` + +0x1c1*0xac + 0x5c @0x8004a874-a4, Spieler DAT_800cfd90/DAT_800cfdb9 @0x8004a8a8-dc,
+    `jal 0x80050858` mit `addiu a3,zero,1` @0x8004a86c; +0x1c1 ist der Blickteil (FUN_800177c0 Neck-FSM liest ihn).
+    FUN_80050858 a3=1: Oberkante `-(h>>11)*100 - ((h>>6)&0x1f)*0x708` (Z. 71), blockt nur bei Schnitt in XZ, YZ und YX.
+  - Kopfhoehen GEMESSEN (exe ROOM1010, temporaere Ausgabe, nicht eingecheckt): Zombie re15_enemy_bone_world_pos(e,8)
+    y -2484..-2517, Leon head_world y -2319..-2514 (Stand -2514, Motion 200).
+  - Tischplatte #5 = y -1600: Obj_model_set (200,-1600,5500) / (1800,-1600,5750) liegen im Grundriss von #5 (Sonden-Log
+    `[scd] Obj_model_set[0/1]`); #6 im Suedteil ebenso ((-1800,-1600,-1900)).
+  - Stuhlkreise: Projektion mit den Engine-Matrizen (`probe_r34n_e_dokumente kamera 1010`, geom.py): die Tisch-Ecken bei
+    y -1600 liegen exakt auf den Tischkanten (Eichung), die Marke y -2000 der Stuhlsaeulen #12/#13 liegt auf der Wand
+    ueber der Lehne -> Oberkante unter -2000 (`F_belege/nb1_r1010_c0_hoehen.png`, Skript `F_belege/nb1_hoehe_1010.py`).
+- **Aenderung:** `re15_r36_zombie_sicht_frei` (zombieki_r36.c): Kreuzungstest je Zelle wie FUN_8003dcc4 (Export
+  `re15_r36_los_zelle_kreuzt`, enemy_ai_common.c, 4 Zeilen); gekreuzte Nibble-3-Zelle MIT belegter Oberkante blockt nur,
+  wenn der Strahl Kopfteil 8 Zombie -> Kopfteil 8 Leon im Grundriss tiefer liegt (Abtastung 50er-Schritt). Belegte
+  Oberkante: (a) Obj_model_set-Objekt (Weltraum) auf der Zelle -> dessen y; (b) Messtabelle `k_r36_moebel` (die drei
+  Stuhlkreise ROOM1010, -2000). Ohne Beleg = volle Hoehe (Wand) wie bisher. Leons Kopf: head_world, sonst y - 2514 (gemessen).
+- **Nachher:** exe Abnahme-Lage: Slot 2 reagiert F10 (Sub 1, Sicht 1), laeuft um den Tisch ((642,6969) -> (1921,6326)
+  -> (2884,5712)), Griff F300 (`F_belege/nb1_exe_1010_abnahmefall.txt`). Riegel `unit_r36_zombieki_sicht`: Abnahme-Fall
+  vor NB1 verdeckt / mit NB1 frei.
+
+### NB1 Mangel 3 — Zensus klassifiziert richtig
+- **Ursache:** der alte Zensus zaehlte Plaetze HINTER Aussenwaenden (z.B. ROOM1010 (7350,3500) jenseits Wand #0) und
+  nannte jeden Nibble-3-Blocker "Wand"; Raster nur bis 4000.
+- **Aenderung (`test_r36_zombieki_sicht`):** Raster bis < 0x1388 (DECISION[0] @0x80101308), nur Plaetze IN einer
+  BLK-Zone (re15_nav_zone_from_pos != 0xff = Capcoms begehbare Flaeche), Klassen je stehendem Platz: hinter Zelle OHNE
+  belegte Oberkante (Wand) / NUR hinter belegten Moebeln.
+- **Nachher (`F_belege/nb1_sicht_nachher.txt`):** 45 Zombies, 3360 Plaetze (2928 ausserhalb verworfen), STEHT 49 = alle
+  hinter Waenden (ROOM1220 Zellwaende #24/#28 200 dick, ROOM1250 #14 19100x2000, ROOM1200 #8/#9 Band-1-Reihe 2000 dick,
+  ROOM1180), 0 nur hinter Moebeln, 0 bei freier Sicht. Gegenproben: vor NB1 ROOM1010 24 Moebel-Plaetze; vor Runde 36
+  ROOM10B0 267 Slab-Plaetze.
+
+### NB1 Maengel 4/5/6 — Monkeys ROOM11C0
+- **Messung vorher (Stand 72050beb, 52 Seeds x 6000 Bilder):** im selben Prozess AUS 60561 / AN 76667 blockierte Bilder
+  (besser 22, schlechter 28) — die "naechstes Pad"-Suche war netto schlechter. Mess-Falle gefunden: Laeufe im selben
+  Prozess sind NICHT unabhaengig (nur-AUS 73006 gegen 61502 im Wechsel mit AN, trotz festem Engine-Zufall) -> seitdem je
+  Lauf ein eigener Prozess (Modus `eins`): AUS 75408 blockiert / 226 Griffe. Aufschluesselung: 95 % fern (>= 6001),
+  22 % mit Sicht, 100 % an der Klemme; 90 % Sub 4.
+- **Ursache (gemessen):** Lagekarte der Blockaden (`stat ... 0 1`): 23030 von 60561 blockierten Bildern auf EINER Stelle
+  (6418,-3617) = Mitte im 0x10-Pad #36 der Ost-Engstelle; zweiter Brennpunkt das West-Pad #47. Spur Seed 0x708f5bfa:
+  Gorilla F426-F2744 dort, `zc = 0xf8` (Platzhalter 0xf00, Mitte im Pad, coll_contact_dir @0x8003ba8c), Fenster
+  1800-2700 statt < 1024 (@0x80117f18-38), B[4] dreht ihn zu Leon. Begehbarkeitskarte (`raster 800 1600`, echte
+  Klemme): Nord-/Suedteil fuer den Gorilla zu Fuss getrennt, nur die Pads verbinden.
+- **Aenderung (PORT-WAHL, Nutzer "irgendwie verbessern"; Header re15_zombieki_r36.h Punkt 2):** Umweg statt
+  Naechstes-Pad: Raster aus der Original-Klemme, Komponenten + Breitensuche; gleiche Komponente -> zu Fuss; andere ->
+  Anlauf am verbindenden Pad von der eigenen Seite (Sprung = Original A[4] Path A / Sub 3 @0x80117f40-74); Mitte im Pad
+  -> in Code-Richtung drehen. Sub 3 und Sub 4 (Haken: enemy_ai_common.c vor B[4] und B[4]-Ziel, je 1 Zeile). Gemessen
+  und verworfen auf dem Weg: (i) "Pad zwischen G und L" allein (wirkungslos: im Keil liegt kein Pad zwischen G und L);
+  (ii) Nah-Tor weg (23114 statt 12288 — stoert die Nahkampf-Logik); (iii) Gerade-Strecke-Test (12560/228 statt
+  12288/285 — Raster "frei", Klemme haelt trotzdem).
+- **Nachher:** 52 Seeds: AUS 75408 -> AN 2380 blockiert (-96,8 %), Griffe 226 -> 254, besser 39 / schlechter 3 (+194,
+  +34, +143) / gleich 10 (`F_belege/nb1_affen_52seeds_nachher.txt`); exe Kampf-Layout (`RE15_SET_FLAG=4:64
+  RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-7000,12500,1024,0`): Slot 2 Angriff F896 (v0.8.23 nie, Ende 22376 entfernt),
+  Slot 3 F606 (v0.8.23 F1012) (`F_belege/nb1_affen_exe_kampflayout.txt`).
+- **Mangel 6 (Riegel):** `unit_r36_zombieki_affen_block` misst jetzt die Blockade: 16 Seeds AUS/AN je eigener Prozess
+  (AUS 28653 / AN 721, schlechtester +194, Griffe 73 -> 80) + drei Befund-Szenen (Angriff Bild 140/628/533, Gegenprobe
+  ohne Angriff) — 11/11 (`F_belege/nb1_affen_riegel.txt`). Die frueheren Dossier-Zahlen "Seed 0xbeef vorher 3 / 219"
+  und "Zufallsgang 0 Stillstand, 12 Griffe" sind damit ueberholt (sie stammten aus Laeufen im selben Prozess).
+
+### NB1 Mangel 8 — Voll-Suite
+Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie im Integrationsbaum. Hier gezielte Laeufe (unten).

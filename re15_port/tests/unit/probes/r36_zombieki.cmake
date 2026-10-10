@@ -90,3 +90,6 @@ target_compile_definitions(test_r36_zombieki_eintritt PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r36_zombieki_eintritt PRIVATE m)
 endif()
+add_test(NAME unit_r36_zombieki_eintritt COMMAND test_r36_zombieki_eintritt
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r36_zombieki_eintritt PROPERTIES TIMEOUT 600)
