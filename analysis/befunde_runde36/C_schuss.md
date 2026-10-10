@@ -1,6 +1,7 @@
 # Runde 36 — Spur C "schuss" (2026-10-10)
 
-Baum: `.claude/worktrees/r36_schuss`, Zweig `r36/schuss`, Basis master 5a9dbb7b (v0.8.23 + Auftrag).
+Baum: `.claude/worktrees/r36_schuss`, Zweig `r36/schuss`, Basis master 5a9dbb7b (v0.8.23 + Auftrag), master d0420938 /
+78a4a748 (Nachtrag 14:00, PRI-Hashes) gemerged.
 
 ## 0. Auftrag (Wortlaut, AUFTRAG.md / VERTRAG.md Spur C)
 
@@ -377,4 +378,8 @@ Suite: §7.
   Umgebungsabbrueche (ab Test 407 Timeouts in Reihe, danach 314 x exit 0xc0000142 STATUS_DLL_INIT_FAILED
   auch fuer reine Unit-Tests ohne Fenster — die Maschine unter der Last der parallelen Spuren, nicht der Code;
   dieselben Tests laufen einzeln gruen).
-* Zweiter Suite-Lauf (diese Sitzung): s. unten (woertliche Zeile).
+* Zweiter Suite-Lauf (diese Sitzung, Stand b1f910fd ohne den Kommentar-Commit, `mess_r36c/suite2.log`,
+  `local_build.sh test` = Bau + ctest seriell, 4889,67 s): `100% tests passed, 0 tests failed out of 597`,
+  woertlich `=== LOCAL-BUILD-OK (test) — Tests 597/597` — ohne einen einzigen Wiederholungslauf, auch die
+  Fenster-Haken gruen.
+* Dritter Lauf `local_build.sh all` (configure + build + test) auf dem Endstand: s. letzte Zeile dieses Abschnitts.
