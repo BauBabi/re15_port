@@ -718,3 +718,20 @@ zombieki_r36.c, Zombie-/Gorilla-/Raum-Riegel):
 | 4 Riegel | Anker 40, geparkter Gorilla 2, Stelle ungepinnt | Abnahme-Messung | Anker 400, beide Gorillas, Szene 4, eigene Prozesse | 17/17; 52 Seeds 114029 -> 15857 |
 | 5 Belegform | -2514 / -2000 ohne Beleg | PL00 Clip 0 Bild 0 = -2513; Kamera Cut 0 @ROOM1010.RDT 0x60 | Konstante entfernt (head_world); -2000 PORT-WAHL Messwert | Sonden-Kopf aus PL00 |
 | 6 Voll-Suite | — | — | Orchestrator | gezielt 163/163 |
+
+---
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-11) — fortlaufend
+
+Grundlage: `F_abnahme_2.md` (Stand 4285214f, P1/P3 erfuellt, P2 teilweise, Maengel 1-3). P1/P3 nicht anfassen
+(ihre Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen halten). Ziel-Kriterium (Orchestrator):
+an KEINER gemessenen Stelle (drei Nordwest-Gang-Plaetze, drei Nordwest-Taschen-Plaetze, gepinnter Punkt, zehn
+exe-Stellen der Abnahme 2) greift ein Gorilla spaeter an als in v0.8.23, und die Blockade sinkt insgesamt; wo eine
+Routen-Erweiterung schadet, enger gaten statt global umsteuern.
+
+| Mangel | Kern | Weg |
+|---|---|---|
+| 1 | `r36_uw_komp_bfs` ungewichtet: Pad #36 (Ost) vor #47 (West) nach SCA-Reihenfolge -> Nordwest-Gang-Umleitung | Routenwahl nach Weglaenge (Raster-Abstand + Sprung + Abstand ab Landung); Riegel-Szene Nordwest-Gang mit Gorilla-Start (-9013,-15461) |
+| 2 | Nordwest-Tasche nur am gepinnten Punkt; Startknoten ohne Erreichbarkeit; Path-B-Weitsprung ungenutzt | Startknoten nur aus der eigenen Komponente; am Rand der unerreichbaren Tasche der Original-Weitsprung (A[4] Path B @0x801180cc-f8); Riegel prueft Blockade auch NACH dem ersten Angriff, drei Taschen-Plaetze |
+| 3 | Voll-Suite | Orchestrator; hier gezielt |
+
