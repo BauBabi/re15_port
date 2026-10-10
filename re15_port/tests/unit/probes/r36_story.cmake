@@ -33,3 +33,17 @@ endforeach()
 add_executable(probe_r36_story_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_story_karte.c)
 target_link_libraries(probe_r36_story_karte PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r36_story_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+#   integration_r36_story_leon / _elza  echte exe (test_r36_story.cmake, Laeufe dort beschrieben)
+if(TARGET re15_pc AND TARGET probe_r36_story_karte)
+    foreach(_teil leon elza)
+        add_test(NAME integration_r36_story_${_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_story_karte>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_story_${_teil}_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_story.cmake)
+        set_tests_properties(integration_r36_story_${_teil} PROPERTIES TIMEOUT 1500)
+    endforeach()
+endif()

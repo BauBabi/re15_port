@@ -16,12 +16,16 @@
  *   schuppen  Elza ROOM1091 vor dem Schuppen (0,-1800,250) Blick +X: 620 voraus im Viereck Slot 5
  *   vor1091   Elza ROOM1051 vor der Tuer Slot 5 (Rechteck (18100,-23900,3500,1000) -> 1091), (19850,0,-22300)
  *             Blick -Z
- *   zug_leon  Leon ROOM6030 im Markierungs-Platz Slot 5 (main00 @0x00CC6, sce 5 auto) (-18930,0,-22420):
- *             sub01 Cmp(work_vars[1]==5) -> sub02 (msg 0..8), (3,0x16)=0
- *   zug_elza  Elza ROOM6031 dito -> sub02 (msg 0..2)
+ *   zug_leon  Leon ROOM6030 (-18930,0,-22420): der Lade-Weg betritt mit Eintritts-Cut 0 -> sub00 @0x00D2C
+ *             Gosub 7 -> sub08 (Annette vorne, msg 11..19) — die Reihenfolge "vorne zuerst" (Dossier P4)
  *   marvin    Elza ROOM30C1 (-17000,0,-9000) mit (3,0x39)=1: sub00 @0x00BEA -> sub03 (msg 1..8)
  *   annette   Leon ROOM6000 (2500,-3600,0) Band 2, (3,0x64)=0: sub00 @0x00F40 -> sub06 (msg 0..3)
  *   ada       Leon ROOM50B0 (-16000,0,-12300) im Auto-Platz Slot 3 @0x004FE ((3,0x62)=0) -> sub02 (msg 0..)
+ *   vor6030   Leon ROOM6000 (1763,-3600,-9700) Blick -Z vor der Tuer Slot 3 @0x00DDA (Rechteck (693,-11104,2140,
+ *             854), Ziel 6030 Cut 6 -> sub06 setzt John/Marvin/Sherry in den Wagen); (3,0x64)=1 Treffen mit
+ *             Annette schon gesehen (sub00 @0x00F40 startet es sonst); 3 s vorwaerts -> Marke Slot 5 @0x00CC6
+ *             -> sub02 (msg 0..8)
+ *   vor6031   Elza ROOM6001 dito (Tuer Slot 3 @0x00DDA -> 6031 Cut 6 -> sub06 @0x00E42) -> sub02 (msg 0..2)
  * Zusatz:
  *   strom     (4,0xF3) = 1 (Generator, ROOM11F0 sub18 @0x016F6)
  *
@@ -49,10 +53,11 @@ static const stand_t k_staende[] = {
     { "schuppen", 0x1091, 1,      0, -1800,    250,    0 },
     { "vor1091",  0x1051, 1,  19850,     0, -22300, 1024 },
     { "zug_leon", 0x6030, 0, -18930,     0, -22420,    0 },
-    { "zug_elza", 0x6031, 1, -18930,     0, -22420,    0 },
     { "marvin",   0x30C1, 1, -17000,     0,  -9000,    0 },
     { "annette",  0x6000, 0,   2500, -3600,      0,    0 },
     { "ada",      0x50B0, 0, -16000,     0, -12300,    0 },
+    { "vor6030",  0x6000, 0,   1763, -3600,  -9700, 1024 },
+    { "vor6031",  0x6001, 1,   1763, -3600,  -9700, 1024 },
 };
 
 int main(int argc, char **argv)
@@ -79,6 +84,7 @@ int main(int argc, char **argv)
     if (strom) re15_game_flag_set(RE15_S36_STROM_BANK, RE15_S36_STROM_BIT, 1);
     if (s->raum == 0x11E0) re15_game_flag_set(3, 0x8B, 1);
     if (s->raum == 0x30C1) re15_game_flag_set(3, 0x39, 1);
+    if (strcmp(s->name, "vor6030") == 0) re15_game_flag_set(3, 0x64, 1);   /* Annette-Treffen 6000 gesehen */
 
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 0, 1);
