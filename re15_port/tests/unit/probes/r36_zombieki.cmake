@@ -46,3 +46,14 @@ endif()
 add_test(NAME unit_r36_zombieki_affen COMMAND test_r36_zombieki_affen
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)
+
+# MESS-SONDE (kein add_test), Punkt 2: Gorilla-Blockaden in ROOM11C0 bei Leons Zufallsgang (Strecken >= 90 Bilder
+# ohne Bewegung: Lage, Sicht, Klemme, Zonenspruenge, Zellen). Aufruf: test_r36_zombieki_affen_block [bilder] [seed]
+add_executable(test_r36_zombieki_affen_block ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen_block.c)
+target_link_libraries(test_r36_zombieki_affen_block PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_zombieki_affen_block PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_zombieki_affen_block PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r36_zombieki_affen_block PRIVATE m)
+endif()
