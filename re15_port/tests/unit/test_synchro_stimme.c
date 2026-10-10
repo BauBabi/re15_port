@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (Sonderbindung main16.5.wav) */
 #include "re15_scd.h"
 #include "re15_room.h"
 
@@ -141,10 +142,23 @@ int main(void)
                         unzugeordnet++;
                         continue;
                     }
+                    /* Runde 36 Spur L: der Loader (audio_pc.c re15_voice_load_clip) nimmt fuer
+                     * einzelne (Raum, Id) einen SONDER-Dateinamen aus re15_elza_stimme_datei —
+                     * die Nutzer-Aufnahme synchro/STAGE1/room1011/main16.5.wav (ROOM1011
+                     * Nachricht 24, nicht umbenannt, VERTRAG §1.2). Eine solche Datei ist KEIN
+                     * Ablage-Fehler, aber nur, wenn genau dieser Raum sie fuer eine Id bindet;
+                     * ihr Format prueft P4 wie bei jeder anderen Datei. */
+                    int sonder = 0;
+                    for (int m = 0; m < 64 && !sonder; m++) {
+                        const char *sd = re15_elza_stimme_datei(rid, m);
+                        char sn[64];
+                        if (sd) { snprintf(sn, sizeof sn, "%s.wav", sd); sonder = (strcmp(sn, f->d_name) == 0); }
+                    }
+                    if (sonder) printf("  = %s/%s: Sonderbindung re15_elza_stimme_datei\n", rdir, f->d_name);
                     /* n == 10 = strlen("mainNN.wav"): der Loader formatiert %02d, eine
                      * einstellige "main5.wav" wuerde er also NIE finden. */
-                    if (sscanf(f->d_name, "main%d.wav", &id) != 1 ||
-                        id < 0 || id >= 64 || n != 10) {
+                    if (!sonder && (sscanf(f->d_name, "main%d.wav", &id) != 1 ||
+                        id < 0 || id >= 64 || n != 10)) {
                         printf("  ! %s/%s: heisst main..., verfehlt aber die Regel "
                                "(NN dezimal, zweistellig, < 64) -> bleibt stumm\n",
                                rdir, f->d_name);
