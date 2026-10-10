@@ -327,3 +327,9 @@ RE_15_Quellcode_Overlays/STAGE{N}_full):
 * Elza: die Decals liegen jetzt auf Elzas eigenen Panels (LUT-Zeile 4) — vorher sassen sie daneben.
 * Messhaken (nur fuer Messungen, kein Spielverhalten): RE15_KLEIDUNG_LOG=1 schreibt je Stempel eine
   Zeile `[kleidung] F<bild> <quelle> typ dir hp gen panels=level/akku,...` ins debug.log.
+
+## Nachbesserung 1 (2026-10-10, nach Abnahme 0 — B_abnahme_0.md)
+
+Maengel: M1 (Nutzer-Weg Hunde ROOM1190: fuenf RE2-Bisse 100 -> 0, 250 Wundpunkte, kein Decal) und
+M2 (Hinweis: Abnahme 0 Teilstand; Messumgebung RDP -> `SDL_ASSERT=always_ignore`). In Arbeit —
+Abschnitte folgen fortlaufend (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher).
