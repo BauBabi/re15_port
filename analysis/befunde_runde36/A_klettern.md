@@ -467,3 +467,21 @@ B_elza_10f1 : T590 push=5 | T1137 sub=9 kind=0x81 obj=3 | T1189 pos=(-5015,-1800
 C_leon_szene: T3741 push=5 | T4286 sub=9 kind=0x81 obj=3 | T4338 pos=(-5083,-1800,-1206) band=1 stand=3 | T4392 room=1090 | PL00
 ```
 (A und B bildgleich zum Suite-Lauf 1 der Fortsetzung; C mit derselben Kette, Bildnummern um ~30 frueher.)
+
+## Nachbesserung 2 (nach Abnahme 1, 2026-10-10 spaet)
+
+Abnahme 1 (`A_abnahme_1.md`): Punkt 1 erfuellt (E1/E2/E3, Gegenprobe V1), EIN Mangel — der Zensus-Pin gibt
+fuer ROOM11A0/11A1 die Lage (5,6)=1 (Record @0x0107E, Band 0 (-19300,0,3300)) als gemessen aus, faehrt sie aber
+nie: `reset_room` setzt das Flag VOR `scd_room_reenter`, die Raum-Init nullt Bank 5 Wort 0, der Riegel prueft
+die installierte Lage nicht und zaehlt die Wiederholung mit ("24/24"). Am Engine-Fix (climb_common.c, Gate
+@0x8002d358-35c) aendert die Nachbesserung NICHTS.
+
+Plan: (1) REPRODUZIEREN (`probe_r36_klettern_zensus pin`, die vier 11A0/11A1-Zeilen); (2) SELBST
+disassemblieren: Bank-5-Wisch FUN_8003ecec @0x8003ed74, Kette @0x80039a00 -> FUN_8003ef6c @0x8003ef84, SCD-Start
+danach; Flag-Adressierung (5,6) -> Wort 0 von Bank 5 belegen; ROOM11A0 main00/sub01 selbst lesen (Lage-Ck,
+Latch sub01 @0x012B2-c4); pruefen, ob irgendein Original-Pfad die Kiste zur Laufzeit auf Band 0 bringt (Schub-
+Code, Member_set); (3) Riegel: je Lage die installierte Lage (x/y/z/Band) gegen den RDT-Record (Byte-Offset)
+pruefen — ein wirkungsloses Lage-Flag wird rot; (4) die Lage @0x0107E WIRKLICH fahren (Flag NACH dem Wisch,
+main00 erneut) und ausdruecklich als "beim Laden unerreichbar" ausweisen; Zaehlung getrennt (beim Laden
+erreichbar / nur erzwungen); (5) Aussagen berichtigen (Dossier-Tabelle, "24/24", "beide Lagen gemessen",
+"Fuer den Nutzer", r36_klettern.cmake, Sondenkopf); (6) bauen, gezielte Tests, Commit.
