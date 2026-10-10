@@ -215,6 +215,9 @@ unter der RE2-KI an und der Renderer legt ihn auf die Textur (vorher in keinem L
   >= 350 / >= 120 / >= 220, alles im Figurenkasten (Schwellen = halbe Messwerte).
 Bestehende Riegel unveraendert gruen: unit_wound_accumulator, probe_save_injured, probe_r17_weste_karte,
 Dog-/Kraehen-/Zombie-Griff-Tests (Suite-Zeile s.u.).
+Vorbestehend ROT auf dem Basisstand 5a9dbb7b (nicht Spur B): unit_pri_hashes — die vom Orchestrator
+eingecheckte Nutzer-Maske pri/STAGE1/10F0/02_02.png ist in der Hash-Liste ungelistet ("119 Dateien
+im Baum, 118 gelistet, 1 ungelistet"); Liste mit tools/maske/pri_hashes.py neu erzeugen = Spur O (PRI).
 
 ## 7. OFFEN
 * STAGE5 (Birkin): das Overlay traegt dieselben vier generischen Helper (FUN_80109b00/b3c/b78/b9c)
