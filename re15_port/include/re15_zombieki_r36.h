@@ -131,4 +131,18 @@ int re15_r36_affen_padsuche_ziel(const re15_actor_t *e, int slot, int sub, int32
 void re15_r36_affen_padsuche_enable(int an);
 int  re15_r36_affen_padsuche_aktiv(int slot);
 
+/* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
+ * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt
+ * in keiner BLK-Zone (ROOM10B0.RDT @0x1680), der Navigator (FUN_80039e7c-Zwilling re15_nav_update_steer)
+ * findet fuer "keine Zone" keinen Pfad und laesst das Ziel stehen; die Zombies liefen zum Weltursprung (Osten).
+ * RE2 FUN_8004A808 (selbst gelesen): Ziel +0x1c4/+0x1c6 schreibt NUR der Navigator — gleiche Zone `sh` @Z.46,
+ * Route FUN_8004ab60 @Z.347, oder DIREKT die Zielposition im Zweig +0x10E & 0x1000 (`lw v0,0(s3)` /
+ * `sh v0,452(s0)` / `lw v1,8(s3)` / `sh v1,454(s0)` @0x8004a90c-924). Mit Zone 0xff (FUN_8004aab8) und a3 = 0
+ * schreibt er nichts (`return 2`) — ein Zustand, den RE2s eigene Raumdaten nicht erzeugen.
+ * PORT-WAHL (Nutzer: "Das darf so nicht sein"): steht der RE2-Zombie in KEINER Zone eines Raums MIT Graph,
+ * gilt die direkte Form (Ziel = Spielerlage) — dieselbe, die der Port-Navigator ohne Graph schon nimmt
+ * (nav_zone_common.c "no BLK graph: raw target"). Keine neue Konstante. */
+void re15_r36_nav_zonenlos(re15_actor_t *e, const re15_actor_t *pl);
+void re15_r36_nav_zonenlos_enable(int an);   /* NUR Sonden: 0 = alter Weg (Gegenprobe) */
+
 #endif /* RE15_ZOMBIEKI_R36_H */

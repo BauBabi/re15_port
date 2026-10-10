@@ -77,3 +77,16 @@ set_tests_properties(unit_r36_zombieki_sicht PROPERTIES TIMEOUT 900)
 add_test(NAME unit_r36_zombieki_affen_block COMMAND test_r36_zombieki_affen_block riegel
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_zombieki_affen_block PROPERTIES TIMEOUT 600)
+
+#   unit_r36_zombieki_eintritt  Punkt 1 (Nachbesserung 1): Eintritts-Zensus NACH LAGE — jede Tuer in einen Stage-1-
+#                               Raum mit Zombies (Door_aot_set-Spawn), Leon steht bzw. geht per Pad auf jeden Zombie zu;
+#                               PASSIV (nie reagiert, Leon im Kegel nah) / KLEMME (reagiert, dann auf der Stelle).
+#                               `test_r36_zombieki_eintritt mess [raum] [bilder]` = Tabelle.
+add_executable(test_r36_zombieki_eintritt ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_eintritt.c)
+target_link_libraries(test_r36_zombieki_eintritt PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_zombieki_eintritt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_zombieki_eintritt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r36_zombieki_eintritt PRIVATE m)
+endif()

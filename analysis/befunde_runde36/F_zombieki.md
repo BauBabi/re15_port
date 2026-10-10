@@ -353,3 +353,47 @@ Grundlage: `F_abnahme_0.md` (Stand 853cbfb3, NICHT BESTANDEN, Maengel 1-8). Plan
 | 6 | Riegel prueft nur griffe > 0 | Riegel auf blockierte Bilder (Seed-Satz), Dossier-Zahlen korrigieren |
 | 7 | ROOM1030 "kein Spielweg" falsch | Dossier korrigieren |
 | 8 | keine Voll-Suite | Orchestrator; hier gezielte Laeufe |
+
+### NB1 Zwischenstand 1 — Eintritts-Zensus nach LAGE (neue Sonde `test_r36_zombieki_eintritt`)
+- Sonde: jede Door_aot_set-Tuer eines Stage-1-Raums in einen Raum mit Zombies (78 Eintritte, Ziel-Id
+  ((pc22+1)<<12)|(pc23<<4) wie aot_common.c), Leon am Spawnpunkt; Szenario "steht" und "hin" (Leon geht per Pad UP
+  mit Blick auf JEDEN Zombie bis 900 vor ihn); je Zombie Reaktion ab der Basis NACH dem INIT (Bild 1), kleinster
+  Abstand, laengste Strecke ohne Bewegung (< 40 je 30 Bilder, Leon < 5000, kein Griff). 253 Faelle, Rohdaten
+  `F_belege/nb1_eintritt_vorher.txt` (Stand 72050beb + Sonde).
+- Ergebnis: KEIN stehender Zombie (Basis Sub 0) bleibt im Normalfluss passiv. Lange Stillstaende mit Leon nah:
+  1. **ROOM1010 Slot 1 (Tuer aus 1020, Cut 0, "hin")**: Griff F26, Rueckstoss in die Tasche (2933,1918), danach
+     **auf der Stelle ab F780 bis Laufende, 1894 vor Leon, los 0** — der Innenraumfall im NORMALFLUSS.
+  2. Kriecher Deskriptor 0x81 (ROOM1010 Slot 3/4, ROOM1220 Slot 1/2): Sub 2 = RE2-Lauern (INIT Zeile 1 `0x201`
+     @0x80100b6c-74; DECIDE[2] @0x80103A70: Kegel 512, dist < 0x514, Sicht, Riegel, gleiche Etage -> 0x101), fruehere
+     NUTZER-VORGABE 2026-09-19 ("stellen sich erst einmal tot ... in RE2 auf jeden Fall auch") — kein Defekt.
+  3. Nach Griffen Sub 5 = RE2-Knockdown EXEC[5] @0x80103188 (Liegezeit +0x15A, @0x80103548-64) — Liegezeit, kein Stehen.
+     Der Rueckstoss davor (EXEC[3] P8: Clip-Delta + `-30` @0x80102CA0-AC) traegt den Zombie ~3000 Einheiten
+     (ROOM1220 Slot 4 F186-F198 je Bild 190-330) — Keyframe-Wurzeln der RE2-Bank, nicht Spur F.
+  4. ROOM1040 (Tuer aus 1030/1080): Deskriptor 0x0D (Sub 1 ab Start) drueckt gegen Zelle #14/#17 (x -27866..-21782,
+     z -722..782, Nibble 3), Leon kommt selbst nicht naeher (dmin 2372) — Raumgeometrie.
+  5. ROOM1030 aus 1050: die geskriptete Tor-Szene (Abnahme 0, Original).
+- **Mangel 7 (Dossier-Fakt ROOM1030):** die Aussage "Debug-Spawn ... kein Spielweg" ist FALSCH und hiermit
+  zurueckgenommen: die Tueren ->1050 (2250,-12700), ->1070 (-16150,-3800), ->1040 (-26900,-3650) liegen auf Leons
+  Seite (Abnahme-AOT-Dump), der Zensus faehrt den Eintritt aus 1050 (Leon (1172,-12558), Cut 2). Verhaltensfolge
+  keine: main00 setzt die Zombies bedingungslos (Sce_em_set @0x1DE6..0x1F62), das Haengen am Tor ist die geskriptete
+  Kriech-Szene (Original, Abnahme 0).
+
+### NB1 Mangel 2 — ROOM10B0 Terrasse: Ursache gemessen, behoben
+- **Messung:** `test_r36_zombieki_eintritt platz 10B0 0 -17000 -8500 1 1500 300 0` (Haken aus): die vier Zombies
+  reagieren (Bild 2), ihr Steuerziel ist **steer = (0,0)**, sie laufen nach Osten zum Weltursprung (Ende x -6825 /
+  -6024 / -5223 / -4416, Abstand bis 10706). Ursache: die Terrasse liegt in keiner BLK-Zone (ROOM10B0.RDT @0x1680),
+  re15_nav_update_steer (FUN_80039e7c-Zwilling) ruft fuer Zone 0xff den Pfadsucher ohne Ergebnis und laesst das Ziel
+  stehen (Startwert 0).
+- **RE2 (Ziel):** +0x1c4/+0x1c6 schreibt NUR der Navigator FUN_8004A808 (RE2_Quellcode_V2 Z. 46/60) bzw. FUN_8004ab60
+  (Z. 347); das Zombie-Overlay EMZ0.BIN liest sie nur (13 `lh ...,452/454`-Stellen, kein Store — eigener Voll-Dump).
+  Bei Zone 0xff (FUN_8004aab8) und a3 = 0 schreibt er nichts (`return 2`). Die DIREKTE Form (Ziel = Zielposition)
+  steht im Zweig +0x10E & 0x1000: `lw v0,0(s3)` / `sh v0,452(s0)` / `lw v1,8(s3)` / `sh v1,454(s0)` @0x8004a90c-924.
+- **Umsetzung (PORT-WAHL, Nutzer "Das darf so nicht sein"):** `re15_r36_nav_zonenlos` (zombieki_r36.c): RE2-Zombie in
+  KEINER Zone eines Raums MIT Graph -> Ziel = Spielerlage (die direkte Form; dieselbe, die der Port-Navigator ohne Graph
+  nimmt). Haken: enemy_ai_common.c 1 Zeile direkt nach dem Navigator-Aufruf (FUN_80039e7c @0x8010a9c0-e0-Zwilling).
+- **Abstieg gibt es nicht (Daten):** SCA #9 (Band 1, u0 = 0xff, x -24392..-3980, z -11414..-9380) klemmt jedes
+  Band-1-Wesen an der Kante, auch ueber der Treppe #18 (Band 1, u0 = 0x01, u1 = 0x02, x -9070..-7162); der einzige
+  AOT am Treppenbereich (aot2, Typ 8, Aot_set pc[3] = 0x41 -> Pool-Maske 1 = NUR Spieler, Test `&kind` @0x80042c84;
+  Gegner laufen mit kind 2 @0x80043724, FUN_800436a8) — Zombies verlassen die Terrasse weder in RE1.5 noch in RE2.
+- **Nachher** (Haken an): die vier Zombies stehen VOR Leon an der Kante (x -18474 / -17671 / -16870 / -16061,
+  z -11832, Abstand 3317..3643, Ziel = Leon) statt 10700..13000 entfernt im Osten.

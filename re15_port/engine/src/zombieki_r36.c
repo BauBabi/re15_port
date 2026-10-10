@@ -126,3 +126,17 @@ int re15_r36_affen_padsuche_ziel(const re15_actor_t *e, int slot, int sub, int32
     *tx = cx; *tz = cz;
     return 1;
 }
+
+/* ----- Nachbesserung 1, Mangel 2: zonenloser RE2-Zombie -> Ziel = Spielerlage (Belege: re15_zombieki_r36.h) ----- */
+#include "re15_enemy_ai.h"   /* re15_nav_zone_count / re15_nav_zone_from_pos */
+static int s_r36_nav_an = 1;
+void re15_r36_nav_zonenlos_enable(int an) { s_r36_nav_an = an ? 1 : 0; }
+void re15_r36_nav_zonenlos(re15_actor_t *e, const re15_actor_t *pl)
+{
+    if (!s_r36_nav_an || !e || !pl) return;
+    if (!re15_ai_re2_for_type(e->type) || !re15_re2z_owns_type(e->type)) return;   /* nur das RE2-Zombie-Hirn */
+    if (re15_nav_zone_count() <= 0) return;                                      /* ohne Graph steuert der Navigator schon direkt */
+    if (re15_nav_zone_from_pos((int16_t)e->x, (int16_t)e->z) != 0xffu) return;   /* in einer Zone: Original (FUN_8004aab8 != 0xff) */
+    e->steer_x = (int16_t)pl->x;                                                 /* +0x1c4 := Ziel.x @0x8004a90c-914 (Direkt-Form) */
+    e->steer_z = (int16_t)pl->z;                                                 /* +0x1c6 := Ziel.z @0x8004a918-924 */
+}

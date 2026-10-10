@@ -5738,6 +5738,7 @@ int re15_enemy_ai_live_tick(int slot)
                              (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));
     e->ai_flags &= (uint16_t)~8u;                        /* the @0x8010a9f8 one-shot clear */
+    re15_r36_nav_zonenlos(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);   /* Runde 36 Spur F (Nachbesserung 1, M2): zonenlos -> Ziel = Spieler (Form FUN_8004A808 @0x8004a90c-924) */
 
     /* PORT OPTION (WELLE B): with the RE2 AI flavor the WHOLE state dispatch is the RE2 brain
      * (re15_re2z_tick, enemy_ai_re2_zombie.c) — root prolog + decision-then-executor exactly as
