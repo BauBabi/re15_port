@@ -191,3 +191,24 @@ Nachrichten 20 (1151) / 24 (1011).
   `[voice] clip loaded: main16.5.wav (32000 Hz x1 -> 63488 @44100 Hz)`, elza.log `F1939 Anker @0x00D54 -> Aktion 4`,
   state.log ab F1939 `msg(a=1 fsm=1 id=24)`; Mitschnitt-Korrelation mit main16.5.wav = 0,607 (Versatz 1 Bild),
   Energie steigt ab Bild 1952 (0,35 s Vorlauf der Datei) und klingt bis 1990 ab.
+
+## 6. Tests
+
+Neu (registriert NUR in tests/unit/probes/r36_elza.cmake): 8 Unit-Teile + 5 Integrationsteile = 13 Tests
+(Orchestrator: RE15_MIN_TESTS um 13 anheben).
+
+| Test | misst |
+|---|---|
+| unit_r36_elza_fenster | 1121: vier Kraehen, Elza-Kraehe Aktor 4 bei (5327,10217), Kill-Flag 0xAC gelatcht; Schaden nur Cut 1 ohne Ereignis/(9,79); erlegt -> drei; Leon 1120 unberuehrt |
+| unit_r36_elza_irons | 1151: 150 Bilder Clip 2 Bild 89 Phase 2; Kopf 0x92/0/(0,0); Slot 2 = Text 20 Maske 0xffff; Anklicken -> Text 20, kein msg 2, (3,0x9D)=0; Glyphen = zitierte RDT-Bytes; Leon 1150 unberuehrt |
+| unit_r36_elza_unlock | 1211: genau ein Ton Satz AUF, 20 Bilder nach der Geste @0x020F8, vor dem Aufschwingen @0x0210C |
+| unit_r36_elza_schuss | 1021: Feuer-Clips 30 Bilder auseinander, zwei Schuss-Toene je +1 Bild |
+| unit_r36_elza_roy | 1021: genau ein Raum-SE 5 im Bild von Schuss-Ton 2, gleicher VM-Takt, Schuss zuerst |
+| unit_r36_elza_stoehnen | 1011: Nachricht 24 + Stimme 24 im Bild von @0x00D54 (Roy Clip 9), Datei (1011,24)->main16.5, Text = msg 10 @0x010C9 woertlich, danach msg 17 |
+| unit_r36_elza_bank | ELZASE.VBS: 2 VAGs 5264/4736, EDT/Ton, VAG-Daten bytegleich RE2 ROOM1140 @0x04480 / ROOM40A0 @0x17B80 |
+| unit_r36_elza_signatur | Anker nur bei passender 8-Byte-Signatur; Leon-Raeume ohne Anker |
+| integration_r36_elza_fenster | echte exe: 4 Kraehen-Spawns, 309 Schadens-Pixel = Leon (+) Op |
+| integration_r36_elza_irons | echte exe, Spielstand + CONTINUE: Irons alle Bilder tot, Anklicken -> Text 20, kein msg 2 |
+| integration_r36_elza_unlock | echte exe, Spielstand + CONTINUE: Unlock-Aktion einmal, Mitschnitt-Spitze >= 3x Median im Fenster danach |
+| integration_r36_elza_schuss | echte exe: 2 Schuesse 30 Bilder auseinander, Roy im Bild von Schuss 2, Mitschnitt-Spitzen (Schuss >= 4x, Roy >= 2x Median) |
+| integration_r36_elza_stoehnen | echte exe, CONTINUE 1021 -> Tuer -> 1011: Aktion, `clip loaded: main16.5.wav`, Nachricht 24 offen |
