@@ -7,9 +7,10 @@
 #   g09/g0a/g0b x re2/re15  — Leon per RE15_PLAYER_POS so, dass die TIEF geworfene Granate an einem
 #                zuvor fressenden (RE2: 0x80103B74 EXEC[8]), dann AUFGESTANDENEN Zombie 0x10 explodiert
 #                (Aufstellung je KI-Variante gemessen, integration.md W9). Pruefungen:
-#     (a) Abzugsbild A = erstes Bild mit Munition -1 (mg 5 -> 4; Entlade-Handler 0x80033B38/58/78 =
-#         nur `jal 0x8004eae4`, `sb v0,0(at)` @0x8004eb60): in Zeile A hat KEIN Gegner HP verloren
-#         (Port-Bruecke ENT[9].resolve ist weg, @0x80033b40 nur Munition).
+#     (a) Abzugsbild A = erstes Bild des Rueckstoss-Clips 7/9/11 (bis Runde 36: erstes Bild mit Munition -1;
+#         seit Runde 36 Spur D Nachbesserung 1 faellt die Menge erst im Spawnbild, re15_granate_r36.h 2c;
+#         Entlade-Handler 0x80033B38/58/78 = nur `jal 0x8004eae4`, `sb v0,0(at)` @0x8004eb60): in Zeile A hat
+#         KEIN Gegner HP verloren (Port-Bruecke ENT[9].resolve ist weg, @0x80033b40 nur Munition).
 #     (b) genau EIN Wurf: "SPAWN granate" genau einmal, art = 2/3/4 (E1/E3), Spawnbild S = A + 24
 #         (TIEF: Clipbild 0x18, @0x80033758).
 #     (c) Explosion im Bild X = L + 36 (Liegen setzt den Zuender 42 `ori v0,zero,0x2a` @0x80018474,
@@ -193,7 +194,10 @@ function(r34_feld _zeile _rx _aus)
     endif()
 endfunction()
 
-# Abzugsbild: erstes Nachsprung-Bild, in dem die Munition des ausgeruesteten Platzes (mg=) faellt.
+# Abzugsbild: erstes Nachsprung-Bild, in dem der Rueckstoss-Clip beginnt (ac = 7/9/11 = 7 + 2*HOCH + 4*TIEF,
+# @0x800334a8-c8 -> 0x800acae8; im Bild davor ein anderer Clip). Runde 36 Spur D Nachbesserung 1: NICHT mehr
+# ueber die Menge — die Granate wird erst im Spawnbild verbraucht (re15_granate_r36.h 2c; Original
+# `jal 0x8004eae4` @0x80033b40 im Bild 0), die Menge faellt also erst in S.
 function(r34_abzug _aus)
     set(${_aus} "" PARENT_SCOPE)
     set(_alt "")
@@ -201,12 +205,16 @@ function(r34_abzug _aus)
         if(NOT DEFINED _Z_${_f})
             continue()
         endif()
-        r34_feld("${_Z_${_f}}" " mg=(-?[0-9]+) " _mg)
-        if(NOT "${_alt}" STREQUAL "" AND NOT "${_mg}" STREQUAL "" AND _mg LESS _alt)
+        r34_feld("${_Z_${_f}}" " ac=([0-9]+) " _ac)
+        set(_rueck 0)
+        if("${_ac}" STREQUAL "7" OR "${_ac}" STREQUAL "9" OR "${_ac}" STREQUAL "11")
+            set(_rueck 1)
+        endif()
+        if(_rueck AND "${_alt}" STREQUAL "0")
             set(${_aus} ${_f} PARENT_SCOPE)
             return()
         endif()
-        set(_alt "${_mg}")
+        set(_alt "${_rueck}")
     endforeach()
 endfunction()
 
@@ -418,7 +426,7 @@ foreach(_ki re2 re15)
         r34_zustand("${_dir}/state.log")
         r34_abzug(_A)
         if("${_A}" STREQUAL "")
-            r34_fehler("${_lauf}" "kein Abzug gefunden (Munition faellt nie)")
+            r34_fehler("${_lauf}" "kein Abzug gefunden (kein Rueckstoss-Clip 7/9/11)")
         endif()
         r34_granatenlog("${_dir}/gr.log" _G)
         if(NOT _G_SPAWN_N EQUAL 1)

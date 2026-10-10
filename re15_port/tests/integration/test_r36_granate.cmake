@@ -9,7 +9,10 @@
 #   brand   dieselbe Aufstellung mit der Brandgranate (Item 0x0B, Art 4): nach der Explosion gezeichnete Flammen
 #           (id=8) > 0 — die Brand-Verkohlung FUN_80106128 bleibt, Feuer nur bei incendiary.
 #   serie   ROOM1220, 8 Abzuege der HE-Granate mit R1-Freigabe 0,0..0,7 s nach jedem Abzug (der Aussetzer des Nutzers):
-#           8 SPAWN- und 8 Explosions-Zeilen (N Abzuege = N Granaten), Granaten 30 -> 22 (vorher 2 Wuerfe, 8 weg).
+#           8 SPAWN- und 8 Explosions-Zeilen (N Abzuege = N Granaten), Granaten 30 -> 22 (vorher 2 Wuerfe, 8 weg);
+#           Nachbesserung 1: jede Mengen-Stufe faellt im Spawnbild.
+#   griff   Nachbesserung 1 (Abnahme-Lauf c2): ROOM1140, Zombie packt Leon zwischen Abzug 2 und dessen Spawnbild ->
+#           2 Abzuege, 1 Wurf, Granaten 5 -> 4 (vorher 5 -> 3), Verbrauch nur im Spawnbild.
 # Ein Lauf OHNE Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen = Startfehler) wird EINMAL wiederholt.
 
 cmake_minimum_required(VERSION 3.16)
@@ -149,11 +152,82 @@ function(r36_gegner _zeile _slot _p)
     endif()
 endfunction()
 
+# Wurfspur (Nachbesserung 1) aus dem Zustandslog NACH dem Sprung (_Z_<F>, r36_zustand) und dem Granatenlog:
+#   <p>_ABZUEGE   Bilder, in denen der Rueckstoss-Clip 7/9/11 beginnt (ac=, Clip 7 + 2*HOCH + 4*TIEF @0x800334a8-c8)
+#   <p>_VERBRAUCH Bilder, in denen die Menge des ausgeruesteten Platzes (mg=) faellt
+#   <p>_SPAWNS    Bilder der Zeilen "F=<n> SPAWN granate" (Abgang des Wurfkoerpers)
+#   <p>_GRIFF     erstes Bild mit gr=1 (Spieler gepackt), <p>_MG_VOR / <p>_MG_NACH erste/letzte Menge
+function(r36_wurfspur _grlog _p)
+    set(_abz "")
+    set(_verb "")
+    set(_griff "")
+    set(_mg_alt "")
+    set(_mg_vor "")
+    set(_rueck_alt "")
+    foreach(_f RANGE 0 ${_ZMAX})
+        if(NOT DEFINED _Z_${_f})
+            continue()
+        endif()
+        set(_z "${_Z_${_f}}")
+        if(_z MATCHES " ac=([0-9]+) ")
+            set(_rueck 0)
+            if("${CMAKE_MATCH_1}" STREQUAL "7" OR "${CMAKE_MATCH_1}" STREQUAL "9" OR "${CMAKE_MATCH_1}" STREQUAL "11")
+                set(_rueck 1)
+            endif()
+            if(_rueck AND "${_rueck_alt}" STREQUAL "0")
+                list(APPEND _abz ${_f})
+            endif()
+            set(_rueck_alt ${_rueck})
+        endif()
+        if(_z MATCHES " mg=([0-9]+) ")
+            set(_mg "${CMAKE_MATCH_1}")
+            if("${_mg_vor}" STREQUAL "")
+                set(_mg_vor "${_mg}")
+            endif()
+            if(NOT "${_mg_alt}" STREQUAL "" AND _mg LESS _mg_alt)
+                list(APPEND _verb ${_f})
+            endif()
+            set(_mg_alt "${_mg}")
+        endif()
+        if("${_griff}" STREQUAL "" AND _z MATCHES " gr=1")
+            set(_griff ${_f})
+        endif()
+    endforeach()
+    set(_sp "")
+    file(STRINGS "${_grlog}" _gl REGEX "^F=[0-9]+ SPAWN granate ")
+    foreach(_l IN LISTS _gl)
+        if(_l MATCHES "^F=([0-9]+) SPAWN granate ")
+            list(APPEND _sp ${CMAKE_MATCH_1})
+        endif()
+    endforeach()
+    set(${_p}_ABZUEGE "${_abz}" PARENT_SCOPE)
+    set(${_p}_VERBRAUCH "${_verb}" PARENT_SCOPE)
+    set(${_p}_SPAWNS "${_sp}" PARENT_SCOPE)
+    set(${_p}_GRIFF "${_griff}" PARENT_SCOPE)
+    set(${_p}_MG_VOR "${_mg_vor}" PARENT_SCOPE)
+    set(${_p}_MG_NACH "${_mg_alt}" PARENT_SCOPE)
+endfunction()
+
 # NEGATIV-KONTROLLE der Auswerter.
 r36_gegner("F120 PL(-1676,-18070,rot=1076,hp=100) [3 t=10 st=3 ss1=9 ss2=1 ss3=0 g=00 mo=2 af=15 stun=6 d=2660 @(-1509,-21329,r3037)] hp=-120" 3 _nk)
 if(NOT "${_nk_HP}" STREQUAL "-120" OR NOT "${_nk_MO}" STREQUAL "2" OR NOT "${_nk_SS1}" STREQUAL "9")
     message(FATAL_ERROR "${_tag}: Auswerter r36_gegner defekt (hp '${_nk_HP}' mo '${_nk_MO}' ss1 '${_nk_SS1}')")
 endif()
+function(r36_nk_wurfspur)   # r36_wurfspur: synthetisches Protokoll (Abzug im Bild 2, Verbrauch 4 = Spawn 4, Griff 3)
+    set(_ZMAX 4)
+    set(_Z_0 "F0 pad=0840 PL(0,0,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=0 ac=12 fx=0 mg=5 bx=50 pm=0 gr=0")
+    set(_Z_1 "F1 pad=0840 PL(0,0,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=0 ac=12 fx=0 mg=5 bx=50 pm=0 gr=0")
+    set(_Z_2 "F2 pad=8840 PL(0,0,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=0 ac=11 fx=0 mg=5 bx=50 pm=0 gr=0")
+    set(_Z_3 "F3 pad=8840 PL(0,0,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=0 ac=11 fx=0 mg=5 bx=50 pm=0 gr=1 [2 t=10 g=00]")
+    set(_Z_4 "F4 pad=0840 PL(0,0,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=0 ac=11 fx=1 mg=4 bx=50 pm=0 gr=1")
+    file(WRITE "${_wurzel}/nk_gr.log" "F=4 SPAWN granate art=2 slot=0 anker=(0,0,0) gier=0\nT=9 EV resolver art=2 P=(0,0,0) r=2000 eingriffe=0\n")
+    r36_wurfspur("${_wurzel}/nk_gr.log" _nkw)
+    if(NOT "${_nkw_ABZUEGE}" STREQUAL "2" OR NOT "${_nkw_VERBRAUCH}" STREQUAL "4" OR NOT "${_nkw_SPAWNS}" STREQUAL "4"
+       OR NOT "${_nkw_GRIFF}" STREQUAL "3" OR NOT "${_nkw_MG_VOR}" STREQUAL "5" OR NOT "${_nkw_MG_NACH}" STREQUAL "4")
+        message(FATAL_ERROR "${_tag}: Auswerter r36_wurfspur defekt (Abzuege '${_nkw_ABZUEGE}' Verbrauch '${_nkw_VERBRAUCH}' Spawns '${_nkw_SPAWNS}' Griff '${_nkw_GRIFF}' Menge '${_nkw_MG_VOR}'->'${_nkw_MG_NACH}')")
+    endif()
+endfunction()
+r36_nk_wurfspur()
 message(STATUS "${_tag}: Negativ-Kontrolle der Auswerter ok")
 
 function(r36_laeuft _lauf _aus)
@@ -300,5 +374,48 @@ if(_an)
     if(NOT "${_mg_nach}" STREQUAL "${_mg_soll}")
         r36_fehler(serie "Granaten ${_mg_vor} -> ${_mg_nach} (soll ${_mg_soll}: je Abzug eine)")
     endif()
-    message(STATUS "${_tag} [serie]: ok — ${_abzuege} Abzuege = ${_n_sp} Wuerfe = ${_n_rs} Explosionen, Granaten ${_mg_vor} -> ${_mg_nach}")
+    # Nachbesserung 1: jede Mengen-Stufe faellt IM Spawnbild (gr.log "F=<n> SPAWN"), nicht im Abzugsbild.
+    r36_wurfspur("${_dir}/gr.log" _W)
+    if(NOT "${_W_VERBRAUCH}" STREQUAL "${_W_SPAWNS}")
+        r36_fehler(serie "Verbrauchsbilder '${_W_VERBRAUCH}' != Spawnbilder '${_W_SPAWNS}' (Nachbesserung 1: Verbrauch = Abgang)")
+    endif()
+    message(STATUS "${_tag} [serie]: ok — ${_abzuege} Abzuege = ${_n_sp} Wuerfe = ${_n_rs} Explosionen, Granaten ${_mg_vor} -> ${_mg_nach}, Verbrauch in den Spawnbildern ${_W_SPAWNS}")
+endif()
+
+# ---------------------------------------------------------------------------------------------------
+# Lauf "griff" — Nachbesserung 1 (Abnahme 0, M1/M2; Dossier §6): die Aufstellung des Abnahme-Laufs c2 (ROOM1140,
+# Leon (-1000,-17000) Blick 1024, RE2-KI, 5 HE-Granaten, Skript MD0.6,MDA0.2,MD2.667,MDA0.2,MD2.0,W3): Wurf 1 geht
+# ab (Spawnbild = Abzug + 24, TIEF @0x80033758), Abzug 2 im Bild ~105, ein Zombie packt Leon VOR dessen Spawnbild
+# (gr=1; der Griff ersetzt das Kommando, STAGE1 @0x80113b00/@0x80113b30). Soll: 2 Abzuege, 1 Wurf, Menge 5 -> 4
+# (vorher 5 -> 3: Abzug im Bild 0 `jal 0x8004eae4` @0x80033b40), die Menge faellt nur im Spawnbild.
+# ---------------------------------------------------------------------------------------------------
+r36_laeuft(griff _an)
+if(_an)
+    set(_dir "${_wurzel}/griff")
+    r36_exe(griff "${_dir}" 240 ${_env_basis}
+        RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=-1000,-17000,1024" RE15_AI_FLAVOR=re2 RE15_GIVE=9:5 RE15_EQUIP=9
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.667,MDA0.2,MD2.0,W3"
+        "RE15_EXIT_AT=300#1140")
+    r36_zustand("${_dir}/state.log")
+    r36_wurfspur("${_dir}/gr.log" _W)
+    list(LENGTH _W_ABZUEGE _n_abz)
+    list(LENGTH _W_SPAWNS _n_sp)
+    if(NOT _n_abz EQUAL 2)
+        r36_fehler(griff "${_n_abz} Abzuege (${_W_ABZUEGE}), soll 2 — Aufstellung/Skript verschoben?")
+    endif()
+    list(GET _W_ABZUEGE 1 _a2)
+    math(EXPR _s2 "${_a2} + 24")
+    if("${_W_GRIFF}" STREQUAL "" OR _W_GRIFF LESS_EQUAL _a2 OR _W_GRIFF GREATER_EQUAL _s2)
+        r36_fehler(griff "kein Griff zwischen Abzug 2 (${_a2}) und dessen Spawnbild ${_s2} (erstes gr=1: '${_W_GRIFF}') — der Fall der Abnahme ist nicht nachgestellt")
+    endif()
+    if(NOT _n_sp EQUAL 1)
+        r36_fehler(griff "${_n_sp} Wuerfe (${_W_SPAWNS}), soll 1 (Wurf 2 vom Griff abgebrochen)")
+    endif()
+    if(NOT "${_W_MG_VOR}" STREQUAL "5" OR NOT "${_W_MG_NACH}" STREQUAL "4")
+        r36_fehler(griff "Granaten ${_W_MG_VOR} -> ${_W_MG_NACH}, soll 5 -> 4 (vorher 5 -> 3: verbraucht, aber nicht geworfen)")
+    endif()
+    if(NOT "${_W_VERBRAUCH}" STREQUAL "${_W_SPAWNS}")
+        r36_fehler(griff "Verbrauchsbilder '${_W_VERBRAUCH}' != Spawnbilder '${_W_SPAWNS}'")
+    endif()
+    message(STATUS "${_tag} [griff]: ok — Abzuege ${_W_ABZUEGE}, Griff ${_W_GRIFF} (vor dem Spawnbild ${_s2}), Wurf ${_W_SPAWNS}, Granaten ${_W_MG_VOR} -> ${_W_MG_NACH}, Verbrauch in ${_W_VERBRAUCH}")
 endif()
