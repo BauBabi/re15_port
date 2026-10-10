@@ -336,3 +336,20 @@ Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e0
   Sprung) statt stehenzubleiben; der Blind-Sprung auf der Stelle hinter den Wagen bleibt Original. (3) **Gorilla-
   Leiche** laesst Blut aus (Punkt 3, 1. Sitzung).
 - Entscheidungsfragen: keine.
+
+---
+
+## Nachbesserung 1 (nach Abnahme 0, 2026-10-10) — fortlaufend
+
+Grundlage: `F_abnahme_0.md` (Stand 853cbfb3, NICHT BESTANDEN, Maengel 1-8). Plan je Mangel:
+
+| Mangel | Kern | Weg |
+|---|---|---|
+| 1 | P1 innen: keine Normalfluss-Reproduktion; Nibble-3-Moebel nehmen die Sicht (gegen RE2-Hoehenregel @0x80050b34-74) | RE2-Koerperteil-Hoehen des Strahls belegen (+0x1c1/+0x5c), Moebelhoehen aus RDT-Daten, Stillstand-Zensus nach LAGE (nicht nach Reaktion) mit echten Tuer-Eintrittsplaetzen |
+| 2 | ROOM10B0 Terrasse: Zombies laufen weg, bleiben an der Kante | Nav/Band-Weg der Gegner belegen, Original/RE2 messen, beheben |
+| 3 | Zensus klassifiziert Moebel als Wand, Raster laesst Tisch-Ostseite aus | Zensus neu (Klassen Wand/Moebel aus Daten), Riegel pinnt die richtige Abbildung |
+| 4 | Pad-Suche schickt von Leon weg | Zielwahl mit Bezug auf Leon |
+| 5 | Sub 4 unbehandelt (93,5 % Rest-Blockade) | Sub 4 einbeziehen, Statistik ueber viele Seeds als Riegel |
+| 6 | Riegel prueft nur griffe > 0 | Riegel auf blockierte Bilder (Seed-Satz), Dossier-Zahlen korrigieren |
+| 7 | ROOM1030 "kein Spielweg" falsch | Dossier korrigieren |
+| 8 | keine Voll-Suite | Orchestrator; hier gezielte Laeufe |
