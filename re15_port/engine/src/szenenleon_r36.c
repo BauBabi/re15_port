@@ -402,6 +402,19 @@ int re15_szl_programm_laeuft(void)
     return 0;
 }
 
+int re15_szl_marke(int m)
+{
+    switch (m) {
+    case RE15_SZL_M_SCHLIESSEN:    return RE15_SZL_OFF_SCHLIESSEN;
+    case RE15_SZL_M_TUER_BILD_ZU:  return RE15_SZL_OFF_TUER_BILD_ZU;
+    case RE15_SZL_M_TUER_TON:      return RE15_SZL_OFF_TUER_TON;
+    case RE15_SZL_M_ABSCHLIESSEN:  return RE15_SZL_OFF_ABSCHLIESSEN;
+    case RE15_SZL_M_SCHLOSS_TON:   return RE15_SZL_OFF_SCHLOSS_TON;
+    case RE15_SZL_M_TUER_ZU:       return RE15_SZL_OFF_TUER_ZU;
+    default:                       return -1;
+    }
+}
+
 /* Versatz des Fadens in der Erweiterung (-1 = laeuft nicht) — Messhaken fuer Log und Riegel. */
 int re15_szl_programm_versatz(void)
 {

@@ -111,5 +111,9 @@ const uint8_t *re15_szl_tuerprogramm(int *out_len);
 const uint8_t *re15_szl_meldung(int msg_id, int *out_len);
 int re15_szl_programm_laeuft(void);
 int re15_szl_programm_versatz(void);   /* Versatz des Fadens in der Erweiterung, -1 = laeuft nicht */
+/* Marken der Erweiterung (gen/szl11b0_szene.inc RE15_SZL_OFF_*), fuer Log und Riegel */
+enum { RE15_SZL_M_SCHLIESSEN, RE15_SZL_M_TUER_BILD_ZU, RE15_SZL_M_TUER_TON, RE15_SZL_M_ABSCHLIESSEN,
+       RE15_SZL_M_SCHLOSS_TON, RE15_SZL_M_TUER_ZU, RE15_SZL_M_ANZAHL };
+int re15_szl_marke(int m);             /* Versatz der Marke m im Programm, -1 = unbekannt */
 
 #endif

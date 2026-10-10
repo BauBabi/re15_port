@@ -13,10 +13,12 @@
  *               Objekt-Wort 0x0201 (Bit 0x200 @0x8002bec0) -> wird von Leon um >= 1300 in +z geschoben, am Ende 0x0081,
  *               Schiebe-Ton snd0 Satz 7 (0x02070000 @0x80052acc/@0x80052bcc)
  *   erweiterung Punkt 2: dieselbe Szene weiter: Umleitung @0x017EA, msg 20 vor dem Lauf, Marvin an der Tuer, dort
- *               Clip 15 + Se_on 0x3A/0x0A, danach Zelle (3,0x0C) solid + Text-Platz 8 = msg 22, zurueck, msg 21, dann
- *               erst Aot_on 5 (Raumwechsel ROOM1260); Kameras 6 -> 10 -> 8 -> 10 -> 6
- *   tuer        Punkt 2 danach: ROOM11B0 mit (9,84)=1 -> Tuer zu (Zelle + Text 22 mit Elzas Bytes, RE2-Ton wie Elza);
- *               ohne (9,84) bleibt die Original-Tuer offen (sub00 @0x0118C); ROOM11B1 unberuehrt
+ *               (Nachbesserung 1) ERST schliessen: Clip 20, Tuerbild 8 -> 2 (Zonen zurueckgetauscht), Tuer-zu-Ton
+ *               0x0E/1 — DANN Clip 15 + Se_on 0x3A/0x0A (Bildnummern streng steigend), danach Zelle (3,0x0C) solid +
+ *               Text-Platz 8 = msg 22, zurueck, msg 21, dann erst Aot_on 5 (ROOM1260); Kameras 6-10-8-2-4-6
+ *   tuer        Punkt 2 danach: ROOM11B0 mit (9,84)=1 -> Tuer zu SCHON NACH DEM INIT-LAUF (Zelle, Text 22 mit Elzas
+ *               Bytes, RE2-Ton wie Elza, Zonen/Tuerbild 0/2, Eintritts-Cut 8 -> 2 bzw. 7 -> 0, Ost Bild 2 / West Bild 0,
+ *               nie 7/8); ohne (9,84) bleibt die Original-Tuer offen (sub00 @0x0118C, Bild 8); ROOM11B1 unberuehrt
  *   abgang10f0  Punkt 3: ROOM10F0 nach der letzten Zeile kein Cut_chg mehr, Kamera Cut 2 (Leon), Marvin/Ada erst
  *               AUSSERHALB des Bildes geparkt, Tuerton (Bank 0x0E Satz 1) erst danach
  *   irons       Punkt 4: ROOM1150, Irons tot ((9,73)) -> Kopf-FSM +0x1b8 = 0x12, Kopf folgt Leon nicht mehr (zwei
@@ -225,10 +227,16 @@ static void teil_programm(void)
 {
     int plen = 0; const uint8_t *p = re15_szl_programm(&plen);
     int off = 0, ende = -1, ok = 1, se_n = 0, se_ok = 1, msgs[4], msg_n = 0, sca_zu = 0, aot8 = 0, plc13 = 0;
+    int se_tuer = -1, se_schloss = -1;   /* Nachbesserung 1: erst der Tuer-zu-Ton, dann der Abschliess-Ton */
     while (off < plen) {
         int l = op_len(p + off);
         if (l <= 0 || off + l > plen) { ok = 0; break; }
-        if (p[off] == 0x36) { se_n++; if (!(p[off + 1] == RE15_SZL_SE_BANK && p[off + 2] == RE15_SZL_SE_SCHLOSS)) se_ok = 0; }
+        if (p[off] == 0x36) {
+            se_n++;
+            if (p[off + 1] == RE15_SZL_SE_TUERBANK && p[off + 2] == RE15_SZL_SE_TUER_ZU && se_tuer < 0) se_tuer = off;
+            else if (p[off + 1] == RE15_SZL_SE_BANK && p[off + 2] == RE15_SZL_SE_SCHLOSS && se_schloss < 0) se_schloss = off;
+            else se_ok = 0;
+        }
         if (p[off] == 0x2B && msg_n < 4) msgs[msg_n++] = p[off + 1];
         if (p[off] == 0x37 && p[off + 1] == 3 && p[off + 2] == 0x0C && p[off + 3] == 0xFF) sca_zu++;
         if (p[off] == 0x2C && p[off + 1] == 8 && p[off + 14] == RE15_SZL_MSG_ZU) aot8++;
@@ -240,22 +248,65 @@ static void teil_programm(void)
     PRUEF(ok && ende == plen - 2, "Opcode-Laengen schliessen genau auf das Evt_end am Ende");
     PRUEF(plen >= 4 && p[0] == 0x22 && p[1] == RE15_SZL_BANK_ZU && p[2] == RE15_SZL_BIT_ZU && p[3] == 1,
           "ERSTES Opcode = Set(9,84)=1 (Einmal-Riegel, Form ROOM11B0 sub06 @0x01478)");
-    PRUEF(se_n == 1 && se_ok, "genau ein Se_on = Port-Bank 0x3A Satz 0x0A (RE2 ROOM1010 sub09 @0x01C20)");
+    PRUEF(se_n == 2 && se_ok && se_tuer >= 0 && se_schloss > se_tuer,
+          "zwei Se_on: ERST Tuer-zu-Ton Port-Bank 0x0E Satz 1 (RE2 Door_exit @0x800141f4) +0x%04X, DANN Abschliess-Ton "
+          "Port-Bank 0x3A Satz 0x0A (RE2 ROOM1010 sub09 @0x01C20) +0x%04X", se_tuer, se_schloss);
     PRUEF(msg_n == 2 && msgs[0] == RE15_SZL_MSG_HOLD && msgs[1] == RE15_SZL_MSG_FOLLOW, "Message_on 20, dann 21");
     PRUEF(sca_zu == 1 && aot8 == 1, "Tuer zu: Sca_id_set(3,0x0C)=0xff + Aot_set Platz 8 Text 22");
     PRUEF(plc13 == 0, "kein Schub-Modus in der Erweiterung");
     PRUEF(plen >= 4 && p[plen - 4] == 0x47 && p[plen - 3] == 0x05 && p[plen - 2] == 0x01 && p[plen - 1] == 0x00,
           "Schwanz = sub06 @0x017EA `47 05 01 00` (Aot_on 5 = Gully, Evt_end)");
     {
-        int si = -1;
-        for (int i = 0; i < plen; i++) if (p[i] == 0x36) { si = i; break; }
+        int si = se_schloss;
         int clip15_davor = si >= 8 && p[si - 8] == 0x3F && p[si - 6] == 0x0F && p[si - 4] == 0x09 && p[si - 2] == 0x14;
         PRUEF(clip15_davor, "Kendo-Form: Plc_motion Clip 15 (= RE2 1010 RBJ Clip 0), Sleep 20, dann Se_on (@0x01C18..@0x01C20)");
     }
+    /* Nachbesserung 1 (M2): an der Tuer ERST schliessen — Clip 20, Sleep bis zum Hand-Maximum, Rueck-Tausch der
+     * Tuerbilder mit GENAU den Saetzen aus Leons sub00 @0x01184..@0x0118B, Cut_chg 2, Tuer-zu-Ton; Abschliessen danach */
+    size_t lsz = 0; char lp[600];
+    snprintf(lp, sizeof lp, "%s/STAGE1/ROOM11B0.RDT", RE15_ASSET_PSX_DIR);
+    uint8_t *l0 = slurp(lp, &lsz);
+    {
+        int m[RE15_SZL_M_ANZAHL];
+        for (int i = 0; i < RE15_SZL_M_ANZAHL; i++) m[i] = re15_szl_marke(i);
+        const uint8_t *s = p + m[RE15_SZL_M_SCHLIESSEN];
+        int form = s[0] == 0x3F && s[2] == RE15_SZL_CLIP_SCHLIESS && s[4] == 0x09 && s[6] == 15 &&
+                   l0 && memcmp(s + 8, l0 + 0x01184, 8) == 0 && s[16] == 0x29 && s[17] == RE15_SZL_CUT_TUER_ZU &&
+                   s + 18 == p + se_tuer && m[RE15_SZL_M_TUER_BILD_ZU] == m[RE15_SZL_M_SCHLIESSEN] + 8 &&
+                   m[RE15_SZL_M_TUER_TON] == se_tuer && m[RE15_SZL_M_SCHLOSS_TON] == se_schloss;
+        printf("  Schliessen +0x%04X: %02X %02X %02X %02X | %02X %02X %02X %02X | Cut_replace %02X %02X %02X %02X %02X %02X "
+               "%02X %02X | %02X %02X | Se_on +0x%04X\n", m[RE15_SZL_M_SCHLIESSEN], s[0], s[1], s[2], s[3], s[4], s[5],
+               s[6], s[7], s[8], s[9], s[10], s[11], s[12], s[13], s[14], s[15], s[16], s[17], se_tuer);
+        PRUEF(form, "Schliessen: Plc_motion(0,20), Sleep 15, Cut_replace == ROOM11B0 sub00 @0x01184..@0x0118B (Rueck-"
+                    "Tausch, LAB_80040414), Cut_chg 2, Tuer-zu-Ton");
+        PRUEF(m[RE15_SZL_M_SCHLIESSEN] < m[RE15_SZL_M_TUER_TON] && m[RE15_SZL_M_TUER_TON] < m[RE15_SZL_M_ABSCHLIESSEN] &&
+              m[RE15_SZL_M_ABSCHLIESSEN] < m[RE15_SZL_M_SCHLOSS_TON] && m[RE15_SZL_M_SCHLOSS_TON] < m[RE15_SZL_M_TUER_ZU],
+              "Programmfolge Schliessen < Tuer-zu-Ton < Abschliessen < Abschliess-Ton < Zelle zu");
+    }
     int tl = 0; const uint8_t *t = re15_szl_tuerprogramm(&tl);
-    PRUEF(tl == 30 && t[0] == 0x37 && t[1] == 3 && t[2] == 0x0C && t[3] == 0xFF && t[4] == 0x39 && t[7] == 0x03 &&
-          t[8] == 0x2C && t[9] == 8 && t[22] == RE15_SZL_MSG_ZU && t[28] == 0x01,
-          "Tuerprogramm: Zelle (3,0x0C) u0=0xff fl=0x03 (RDT @0x00EC8), Text-Platz 8 msg 22, Evt_end");
+    PRUEF(tl == 80 && t[0] == 0x37 && t[1] == 3 && t[2] == 0x0C && t[3] == 0xFF && t[4] == 0x39 && t[7] == 0x03 &&
+          t[8] == 0x2C && t[9] == 8 && t[22] == RE15_SZL_MSG_ZU && t[78] == 0x01,
+          "Tuerprogramm: Zelle (3,0x0C) u0=0xff fl=0x03 (RDT @0x00EC8), Text-Platz 8 msg 22, ..., Evt_end (%d B)", tl);
+    /* Nachbesserung 1 (M1): Strom-Zweig = Kopf von sub00 @0x0116C/@0x01170 (Laenge eigen), dieselben Cut_replace, dann
+     * die Ansicht 7 -> 0 und 8 -> 2 in der Form von sub00 @0x01174..@0x01183 (nur Vergleichswert/Ziel getauscht) */
+    {
+        static const uint8_t k_ansicht_70[16] = { 0x06,0x00,0x0c,0x00, 0x23,0x00,0x0a,0x00,0x07,0x00, 0x29,0x00, 0x3c,0x01, 0x08,0x00 };
+        static const uint8_t k_ansicht_82[16] = { 0x06,0x00,0x0c,0x00, 0x23,0x00,0x0a,0x00,0x08,0x00, 0x29,0x02, 0x3c,0x01, 0x08,0x00 };
+        int kopf = l0 && t[28] == 0x06 && t[29] == 0x00 && memcmp(t + 32, l0 + 0x01170, 4) == 0;
+        int tausch = l0 && memcmp(t + 36, l0 + 0x01184, 8) == 0;
+        int form_sub00 = l0 && l0[0x01174] == 0x06 && l0[0x01178] == 0x23 && l0[0x0117A] == 0x0A && l0[0x0117E] == 0x29 &&
+                         l0[0x01180] == 0x3C && l0[0x01182] == 0x08;
+        int ansicht = memcmp(t + 44, k_ansicht_70, 16) == 0 && memcmp(t + 60, k_ansicht_82, 16) == 0 && t[76] == 0x08;
+        PRUEF(kopf && tausch && form_sub00 && ansicht,
+              "Ereignis 23: Ifel Ck(4,6)==1 (sub00 @0x01170) { Cut_replace == sub00 @0x01184..@0x0118B; Cut 7 -> 0; "
+              "Cut 8 -> 2 (Form sub00 @0x01174..@0x01183) }");
+    }
+    free(l0);
+    {
+        int n = 0; const uint8_t *b = re15_szl_tuerton(&n);
+        PRUEF(b && n == 0x5338 && b[2] == 0x14 && b[3] == 0x16 && b[6] == 0x24 && b[7] == 0x17 && !memcmp(b + 0x10, "pBAV", 4),
+              "Tuer-zu-Ton: Tonteil DOOR1A 0x%X B (RE2 @0x8009A658), Tonkopf Satz 0/1 `14 16`/`24 17`, VH pBAV", n);
+    }
     /* Text 22 = Elzas Nachricht 12 Byte fuer Byte */
     size_t esz = 0; char rp[600];
     snprintf(rp, sizeof rp, "%s/STAGE1/ROOM11B1.RDT", RE15_ASSET_PSX_DIR);
@@ -274,7 +325,41 @@ typedef struct {
     int umleitung, msg20, msg21, aot_on_bild, tuer_bild, se_bild, se_bank, se_satz, mv_tuer_dist, mv_motion_se;
     int zelle_zu_bild, aot8_bild, mv_heim_x, mv_heim_z, msg21_mv_x, msg21_mv_z, raumwechsel;
     int cuts[24], n_cuts, snd0_vorher, snd0_nachher;
+    /* Nachbesserung 1: Schliessen vor dem Abschliessen + Tuerbild */
+    int clip20_bild, tuerton_bild, cut2_bild, clip15_bild, zonen_offen_an_tuer, zonen_zu_nach, zonen_zu_ende;
 } lauf11b0_t;
+
+/* ---- Zonen-Zustand (Nachbesserung 1, M1/M4): RVD der ausgelieferten RDT (= Tuerbilder 0/2, geschlossen) gegen den
+ * laufenden Stand. Cut_replace LAB_80040414 tauscht cam_from/cam_to (@0x80040458..@0x80040494). ----------------- */
+static uint8_t s_zon_from[RE15_RDT_MAX_ZONES], s_zon_to[RE15_RDT_MAX_ZONES];
+static int     s_zon_n = -1;
+static int zonen_original_laden(void)
+{
+    if (s_zon_n >= 0) return s_zon_n;
+    char rp[600]; size_t n = 0;
+    snprintf(rp, sizeof rp, "%s/STAGE1/ROOM11B0.RDT", RE15_ASSET_PSX_DIR);
+    uint8_t *b = slurp(rp, &n);
+    static re15_rdt_t r;
+    memset(&r, 0, sizeof r);
+    if (!b || re15_rdt_parse(b, n, &r) < 0) { free(b); return s_zon_n = 0; }
+    for (int i = 0; i < r.zone_count; i++) { s_zon_from[i] = r.zones[i].cam_from; s_zon_to[i] = r.zones[i].cam_to; }
+    s_zon_n = r.zone_count;
+    return s_zon_n;   /* b bleibt: re15_rdt_t zeigt hinein */
+}
+static uint8_t tausch_0782(uint8_t c) { return c == 0 ? 7 : c == 7 ? 0 : c == 2 ? 8 : c == 8 ? 2 : c; }
+/* 1 = Zonen wie ausgeliefert (Tuer zu: Bild 0/2), 2 = um 0<->7 + 2<->8 getauscht (Tuer offen, sub00 @0x01184/@0x01188),
+ * 0 = weder noch */
+static int zonen_zustand(void)
+{
+    int n = zonen_original_laden();
+    if (n <= 0 || n != s_rdt.zone_count) return 0;
+    int gleich = 1, getauscht = 1;
+    for (int i = 0; i < n; i++) {
+        if (s_rdt.zones[i].cam_from != s_zon_from[i] || s_rdt.zones[i].cam_to != s_zon_to[i]) gleich = 0;
+        if (s_rdt.zones[i].cam_from != tausch_0782(s_zon_from[i]) || s_rdt.zones[i].cam_to != tausch_0782(s_zon_to[i])) getauscht = 0;
+    }
+    return gleich ? 1 : getauscht ? 2 : 0;
+}
 
 #define LAUF_MAX 4200
 static lauf11b0_t lauf_11b0(void)
@@ -282,6 +367,7 @@ static lauf11b0_t lauf_11b0(void)
     lauf11b0_t r; memset(&r, 0, sizeof r);
     r.msg20 = r.msg21 = r.aot_on_bild = r.tuer_bild = r.se_bild = r.zelle_zu_bild = r.aot8_bild = -1;
     r.schub_leon_ende = r.schub_mv_ende = -1; r.mv_tuer_dist = 1 << 30;
+    r.clip20_bild = r.tuerton_bild = r.cut2_bild = r.clip15_bild = -1;
     re15_game_state_init();
     re15_game_flag_set(3, 0x43, 1); re15_game_flag_set(3, 0x82, 1); re15_game_flag_set(4, 0xF3, 1);
     if (room_boot(RE15_SZL_RAUM, -26130, -18455, 1024, 0) != 0) return r;
@@ -319,10 +405,24 @@ static lauf11b0_t lauf_11b0(void)
             if (d < r.mv_tuer_dist) r.mv_tuer_dist = d;
             if (d < 300 && r.tuer_bild < 0) r.tuer_bild = f;
         }
-        for (int i = 0; i < s_se_n; i++)
+        for (int i = 0; i < s_se_n; i++) {
             if (s_se[i].bank == RE15_SZL_SE_BANK && r.se_bild < 0) {
                 r.se_bild = s_se[i].bild; r.se_bank = s_se[i].bank; r.se_satz = s_se[i].satz; r.mv_motion_se = mv->motion;
             }
+            if (s_se[i].bank == RE15_SZL_SE_TUERBANK && s_se[i].satz == RE15_SZL_SE_TUER_ZU && r.umleitung &&
+                r.tuerton_bild < 0) r.tuerton_bild = s_se[i].bild;
+        }
+        /* Nachbesserung 1: Folge an der Tuer + Tuerbild (gezeigter Cut, Zonen) */
+        if (r.umleitung && r.tuer_bild > 0) {
+            if (mv->motion == RE15_SZL_CLIP_SCHLIESS && r.clip20_bild < 0) {
+                r.clip20_bild = f;
+                r.zonen_offen_an_tuer = (zonen_zustand() == 2 && s_shown == RE15_SZL_CUT_TUER_OFFEN);
+            }
+            if (r.clip20_bild > 0 && s_shown == RE15_SZL_CUT_TUER_ZU && r.cut2_bild < 0) {
+                r.cut2_bild = f; r.zonen_zu_nach = (zonen_zustand() == 1);
+            }
+            if (r.clip20_bild > 0 && mv->motion == 15 && r.clip15_bild < 0) r.clip15_bild = f;
+        }
         const re15_sca_entry_t *z = zelle(3, 0x0C);
         if (r.umleitung && z && z->u0 == 0xFF && r.zelle_zu_bild < 0) r.zelle_zu_bild = f;
         if (r.umleitung && g_aot.slots[8].active && g_aot.slots[8].type == RE15_AOT_TYPE_MESSAGE &&
@@ -330,6 +430,7 @@ static lauf11b0_t lauf_11b0(void)
         if (g_room_change.pending && r.aot_on_bild < 0) {
             r.aot_on_bild = f; r.raumwechsel = 1; r.mv_heim_x = mv->x; r.mv_heim_z = mv->z;
             r.box_flags_ende = g_scd.props[0].flags;
+            r.zonen_zu_ende = (zonen_zustand() == 1);
             break;
         }
     }
@@ -377,40 +478,64 @@ static void teil_erweiterung(void)
           r.mv_tuer_dist);
     PRUEF(r.se_bild >= r.tuer_bild && r.se_bank == RE15_SZL_SE_BANK && r.se_satz == RE15_SZL_SE_SCHLOSS &&
           r.mv_motion_se == 15, "an der Tuer: Clip 15 (Kendo Clip 0) und Zuschliess-Ton Port-Bank 0x3A Satz 0x0A");
+    /* Nachbesserung 1 (M2, Nachtrag abends): Bildnummern Schliessen < Tuer-zu-Ton < Abschliessen < Abschliess-Ton */
+    printf("  Folge an der Tuer: Schliessen (Clip 20) B%d < Tuer-zu-Ton (0x0E/1) B%d, Bild 2 gezeigt B%d < Abschliessen "
+           "(Clip 15) B%d < Abschliess-Ton (0x3A/0x0A) B%d | Zonen: an der Tuer offen %d, nach dem Schliessen zu %d, "
+           "am Ende zu %d\n", r.clip20_bild, r.tuerton_bild, r.cut2_bild, r.clip15_bild, r.se_bild,
+           r.zonen_offen_an_tuer, r.zonen_zu_nach, r.zonen_zu_ende);
+    PRUEF(r.tuer_bild > 0 && r.clip20_bild >= r.tuer_bild && r.tuerton_bild > r.clip20_bild &&
+          r.clip15_bild > r.tuerton_bild && r.se_bild > r.clip15_bild,
+          "Schliessen B%d < Tuer-zu-Ton B%d < Abschliessen B%d < Abschliess-Ton B%d", r.clip20_bild, r.tuerton_bild,
+          r.clip15_bild, r.se_bild);
+    PRUEF(r.zonen_offen_an_tuer, "an der Tuer vor dem Schliessen: Bild 8 gezeigt, Zonen getauscht (Tuer offen, sub00 "
+                                 "@0x01184/@0x01188)");
+    PRUEF(r.cut2_bild > r.clip20_bild && r.cut2_bild <= r.tuerton_bild + 1 && r.cut2_bild < r.clip15_bild && r.zonen_zu_nach,
+          "Tuer geht im Bild zu: Bild 2 (geschlossen gemalt) ab B%d, im Bild des Tuer-zu-Tons; Zonen zurueck wie ausgeliefert",
+          r.cut2_bild);
     PRUEF(r.zelle_zu_bild > r.se_bild && r.aot8_bild > r.se_bild,
           "danach Tuer zu: Zelle (3,0x0C) u0=0xff (B%d), Text-Platz 8 = msg 22 (B%d)", r.zelle_zu_bild, r.aot8_bild);
     PRUEF(r.msg21 > r.aot8_bild && abs(r.msg21_mv_x - 1100) < 400 && abs(r.msg21_mv_z - (-19999)) < 400,
           "Marvin zurueck bei Leon/Ada (%d,%d), dann \"I just want to make sure ...\" (msg 21)", r.msg21_mv_x, r.msg21_mv_z);
     PRUEF(r.raumwechsel && r.aot_on_bild > r.msg21 && g_room_change.room_id == 0x1260,
           "erst danach Aot_on 5 -> Raumwechsel ROOM1260 (Ziel ROOM%04X)", (unsigned)g_room_change.room_id);
+    PRUEF(r.zonen_zu_ende, "am Szenenende bleiben die Zonen auf Bild 0/2 (Tuer zu)");
     {
-        int i6 = -1, i10 = -1, i8 = -1, j10 = -1, j6 = -1;
+        int i6 = -1, i10 = -1, i8 = -1, i2 = -1, j4 = -1, j6 = -1;
         for (int i = 0; i < r.n_cuts && i < 24; i++) {
             if (r.cuts[i] == 6 && i10 < 0) i6 = i;
             if (r.cuts[i] == 10 && i6 >= 0 && i10 < 0) i10 = i;
             if (r.cuts[i] == 8 && i10 >= 0 && i8 < 0) i8 = i;
-            if (r.cuts[i] == 10 && i8 >= 0 && j10 < 0) j10 = i;
-            if (r.cuts[i] == 6 && j10 >= 0 && j6 < 0) j6 = i;
+            if (r.cuts[i] == 2 && i8 >= 0 && i2 < 0) i2 = i;
+            if (r.cuts[i] == 4 && i2 >= 0 && j4 < 0) j4 = i;
+            if (r.cuts[i] == 6 && j4 >= 0 && j6 < 0) j6 = i;
         }
-        PRUEF(i6 >= 0 && i10 > i6 && i8 > i10 && j10 > i8 && j6 > j10, "Kameras 6 -> 10 -> 8 (Tuer) -> 10 -> 6");
+        PRUEF(i6 >= 0 && i10 > i6 && i8 > i10 && i2 == i8 + 1 && j4 == i2 + 1 && j6 > j4,
+              "Kameras 6 -> 10 -> 8 (Tuer offen) -> 2 (Tuer zu, gleiche Kamera) -> 4 (Rueckweg, Tuer zu) -> 6");
     }
 }
 
 static void teil_tuer(void)
 {
-    /* mit (9,84): Tuer zu */
+    /* mit (9,84): Tuer zu — Nachbesserung 1: schon NACH DEM INIT-LAUF (Ereignis 23 laeuft hinter sub00), vor dem
+     * ersten Bild; Tuerbilder zurueck auf 0/2 (M1/M4) */
     re15_game_state_init();
     re15_game_flag_set(4, 0xF3, 1); re15_game_flag_set(3, 0x82, 1); re15_game_flag_set(3, 0x83, 1);
     re15_game_flag_set(4, 0xCD, 1); re15_game_flag_set(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU, 1);
     if (room_boot(RE15_SZL_RAUM, -20900, -16230, 2048, 8) != 0) return;
     const re15_sca_entry_t *z = zelle(3, 0x0C);
     int u0_init = z ? z->u0 : -1, fl_init = z ? z->floor : -1;
+    int zon_init = zonen_zustand(), cam_init = (int)g_scd.cam_id, wv_init = (int)g_scd.work_vars[0x0A];
     for (int f = 0; f < 5; f++) frame(0, 0);
     z = zelle(3, 0x0C);
-    PRUEF(u0_init == 0x00 && fl_init == 0x40, "Init-Lauf: Leon sub00 @0x0118C/@0x01190 oeffnet die Zelle (u0 0x%02X fl 0x%02X)",
+    printf("  (9,84)=1, Eintritt Cut 8: nach dem Init-Lauf Zelle u0 0x%02X fl 0x%02X, Zonen %d, Cut %d (work_vars[0x0A] %d); "
+           "nach 5 Bildern gezeigt Cut %d, Zonen %d\n", u0_init, fl_init, zon_init, cam_init, wv_init, s_shown, zonen_zustand());
+    PRUEF(u0_init == 0xFF && fl_init == 0x03, "(9,84)=1: Zelle (3,0x0C) schon nach dem Init-Lauf zu (u0 0x%02X fl 0x%02X)",
           u0_init, fl_init);
-    PRUEF(z && z->u0 == 0xFF && z->floor == 0x03, "(9,84)=1: Ereignis 23 schliesst sie im ersten Spielbild (u0 0x%02X fl 0x%02X)",
-          z ? z->u0 : -1, z ? z->floor : -1);
+    PRUEF(zon_init == 1 && cam_init == RE15_SZL_CUT_TUER_ZU && wv_init == RE15_SZL_CUT_TUER_ZU,
+          "(9,84)=1: Zonen nach dem Init-Lauf wie ausgeliefert (Bild 0/2), Eintritts-Cut 8 -> 2 (Ereignis 23, Form sub00 "
+          "@0x01174) VOR dem ersten Bild");
+    PRUEF(z && z->u0 == 0xFF && z->floor == 0x03 && s_shown == RE15_SZL_CUT_TUER_ZU && zonen_zustand() == 1,
+          "(9,84)=1: nach 5 Bildern Zelle zu, gezeigt Bild 2 (Tuer geschlossen gemalt)");
     const re15_aot_t *a = &g_aot.slots[8];
     PRUEF(a->active && a->type == RE15_AOT_TYPE_MESSAGE && a->event_id == RE15_SZL_MSG_ZU &&
           a->x == -22400 + 600 && a->z == -17200 + 850,
@@ -428,13 +553,45 @@ static void teil_tuer(void)
     for (int f = 0; f < 45; f++) frame(RE15_PAD_BIT_UP, 0);
     PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].x >= -21410, "Leon kommt nicht durch (x %ld >= Zellen-Ostkante -21410)",
           (long)g_actors[RE15_ACTOR_SLOT_PLAYER].x);
-    /* ohne (9,84): Original — offen, kein Platz 8 */
+    /* Eintritt mit Cut 0 (West-Tuer / Debug-Sprung): sub00 @0x0117E stellt 0 -> 7, Ereignis 23 zurueck 7 -> 0; die
+     * Zonen-Maschine fuehrt Leon dann nach dem ausgelieferten Netz: oestlich der Trennwand Bild 2, westlich Bild 0 —
+     * nie die OFFEN-Bilder 8/7 */
+    {
+        static const struct { int32_t x, z; int16_t rot; int soll; const char *wo; } k_platz[2] = {
+            { -20500, -16300, 2048, RE15_SZL_CUT_TUER_ZU,  "Ost"  },
+            { -23300, -16300, 0,    RE15_SZL_CUT_WEST_ZU,  "West" } };
+        for (int k = 0; k < 2; k++) {
+            re15_game_state_init();
+            re15_game_flag_set(4, 0xF3, 1); re15_game_flag_set(3, 0x82, 1); re15_game_flag_set(3, 0x83, 1);
+            re15_game_flag_set(4, 0xCD, 1); re15_game_flag_set(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU, 1);
+            if (room_boot(RE15_SZL_RAUM, k_platz[k].x, k_platz[k].z, k_platz[k].rot, 0) != 0) return;
+            int c0 = (int)g_scd.cam_id, offen = 0;
+            for (int f = 0; f < 30; f++) {
+                frame(0, 0);
+                if (s_shown == RE15_SZL_CUT_TUER_OFFEN || s_shown == RE15_SZL_CUT_WEST_OFFEN) offen++;
+            }
+            printf("  (9,84)=1, Eintritt Cut 0, Leon %s (%d,%d): nach dem Init-Lauf Cut %d, nach 30 Bildern gezeigt %d, "
+                   "Bilder mit 7/8: %d\n", k_platz[k].wo, k_platz[k].x, k_platz[k].z, c0, s_shown, offen);
+            PRUEF(c0 == RE15_SZL_CUT_WEST_ZU && s_shown == k_platz[k].soll && offen == 0 && zonen_zustand() == 1,
+                  "(9,84)=1 %s: Init-Cut 0 bleibt 0 (sub00 7, Ereignis 23 zurueck), gezeigt Bild %d, nie Bild 7/8",
+                  k_platz[k].wo, k_platz[k].soll);
+        }
+    }
+    /* ohne (9,84): Original — offen, kein Platz 8, Tuerbilder 7/8 (sub00 @0x01184/@0x01188) */
     re15_game_state_init();
     re15_game_flag_set(4, 0xF3, 1); re15_game_flag_set(3, 0x82, 1); re15_game_flag_set(3, 0x83, 1); re15_game_flag_set(4, 0xCD, 1);
     if (room_boot(RE15_SZL_RAUM, -20900, -16230, 2048, 8) != 0) return;
+    {
+        const re15_sca_entry_t *z0 = zelle(3, 0x0C);
+        PRUEF(z0 && z0->u0 == 0x00 && z0->floor == 0x40,
+              "(9,84)=0 Init-Lauf: Leon sub00 @0x0118C/@0x01190 oeffnet die Zelle (u0 0x%02X fl 0x%02X)",
+              z0 ? z0->u0 : -1, z0 ? z0->floor : -1);
+    }
     for (int f = 0; f < 5; f++) frame(0, 0);
     z = zelle(3, 0x0C);
     PRUEF(z && z->u0 == 0x00 && !g_aot.slots[8].active, "(9,84)=0: Tuer offen wie im Original, kein Text-Platz 8");
+    PRUEF(zonen_zustand() == 2 && s_shown == RE15_SZL_CUT_TUER_OFFEN,
+          "(9,84)=0: Zonen getauscht (sub00 @0x01184/@0x01188), gezeigt Bild 8 = Tuer offen wie im Original");
     PRUEF(re15_szl_ereignis(RE15_SZL_RAUM, RE15_SZL_EREIGNIS_TUER) == NULL, "Ereignis 23 nur mit (9,84)");
     /* Elza: ROOM11B1 bleibt Original (Platz 8 = msg 12 solange (3,0x83)==0) */
     re15_game_state_init();

@@ -8,12 +8,14 @@
 #     unit_r36_szenenleon_schub        Punkt 1: Plc_dest Modus 0x13 (Sub @0x80052864) fuer Leon UND Marvin, Clips
 #                                      0x11/0x12/0x11-rueck, Container Wort 0x0201 -> von Leon >= 1300 in +z geschoben,
 #                                      Ende 0x0081, Schiebe-Ton snd0 Satz 7
-#     unit_r36_szenenleon_erweiterung  Punkt 2: Umleitung @0x017EA nach dem Schieben, msg 20, Marvin an der Tuer, Clip 15 +
-#                                      Se_on 0x3A/0x0A, Tuer zu, zurueck, msg 21, dann erst Aot_on 5 (ROOM1260),
-#                                      Kameras 6 -> 10 -> 8 -> 10 -> 6
-#     unit_r36_szenenleon_tuer         Punkt 2 danach: (9,84) -> Zelle solid, Platz 8 Text 22 "The door is locked.",
-#                                      RE2-Ton wie Elzas (0x11B1,12), Leon kommt nicht durch; ohne (9,84) Original;
-#                                      ROOM11B1 unberuehrt
+#     unit_r36_szenenleon_erweiterung  Punkt 2: Umleitung @0x017EA nach dem Schieben, msg 20, Marvin an der Tuer;
+#                                      Nachbesserung 1: ERST schliessen (Clip 20, Tuerbild 8 -> 2 = Zonen zurueckgetauscht,
+#                                      Tuer-zu-Ton 0x0E/1) < DANN Clip 15 + Se_on 0x3A/0x0A (Bildnummern), Tuer zu,
+#                                      zurueck, msg 21, dann erst Aot_on 5 (ROOM1260), Kameras 6-10-8-2-4-6
+#     unit_r36_szenenleon_tuer         Punkt 2 danach: (9,84) -> schon nach dem Init-Lauf Zelle solid, Zonen/Tuerbild 0/2
+#                                      (Eintritt 8 -> 2, 0 bleibt 0; Ost Bild 2, West Bild 0, nie 7/8), Platz 8 Text 22
+#                                      "The door is locked.", RE2-Ton wie Elzas (0x11B1,12), Leon kommt nicht durch;
+#                                      ohne (9,84) Original (Bild 8 offen); ROOM11B1 unberuehrt
 #     unit_r36_szenenleon_abgang10f0   Punkt 3: ROOM10F0 nach Zeile 23 kein Cut_chg, Cut 2 bis zum Ende, Marvin/Ada erst
 #                                      ausserhalb des Bildes geparkt, ein Tuerton danach
 #     unit_r36_szenenleon_irons        Punkt 4: Irons tot -> +0x1b8 = 0x12, Kopf-Akku 0/0 an zwei Standpunkten;
@@ -33,8 +35,10 @@ foreach(_teil programm schub erweiterung tuer abgang10f0 irons)
 endforeach()
 
 #   integration_r36_szenenleon  echte exe: A Szene ROOM11B0 + Erweiterung (Umleitung, msg 20, Se_on 0x3A ->
-#                               RE2-Schlossbank SCHLOSS1010 ueber audio_pc.c, msg 21, ROOM1260); B Werkstatt-Tuer mit
-#                               (9,84): Ereignis 23 + Tuer-zu-Ton wie Elzas (11B1 msg 12) (test_r36_szenenleon.cmake)
+#                               RE2-Schlossbank SCHLOSS1010 ueber audio_pc.c, msg 21, ROOM1260; A2 Schliessen < Tuer-zu-
+#                               Ton < Abschliessen < Abschliess-Ton mit Bildnummern); B/C Werkstatt-Tuer mit (9,84):
+#                               Ereignis 23 im Init-Lauf, Tuer-zu-Ton wie Elzas (11B1 msg 12), state.log nie Cut 8/7
+#                               (offen gemalt), vor der Tuer Cut 2/0 (test_r36_szenenleon.cmake)
 if(TARGET re15_pc)
     add_test(NAME integration_r36_szenenleon
              COMMAND "${CMAKE_COMMAND}"
