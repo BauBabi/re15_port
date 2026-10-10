@@ -44,4 +44,8 @@ void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spiel
  * PORT-MAPPING auf den RE2-Kraehen-Griff (P0 geclaimt @0x80102550-58 -> Opfer-FSM). */
 void re15_kleidung_kraehe(const re15_actor_t *kraehe, const re15_actor_t *spieler);
 
+/* Panel-Ziel auf der Spieler-TIM (8bpp-Texel-Koordinaten, Zeile 0..255) aus der LUT @0x80074208
+ * (8 Zeilen, Index = Charakter-Byte DAT_800aca5c: Leon 0, Elza 4). 0 = ungueltig. */
+int  re15_kleidung_panel_ziel(int charakter, int panel, int *tim_x, int *tim_y);
+
 #endif /* RE15_KLEIDUNG_R36_H */

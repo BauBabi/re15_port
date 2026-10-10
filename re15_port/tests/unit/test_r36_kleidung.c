@@ -40,6 +40,8 @@
 #include "re15_emd.h"
 #include "re2_ems.h"
 #include "re15_ems.h"
+#include "re15_esp.h"
+#include "re15_kleidung_r36.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -185,6 +187,8 @@ static int teil_griff(const char *flavor, int budget)
 
     int grabs = 0, releases = 0, prev_v = 0, prev_s1 = -1, first_grab = -1;
     int min_hp = 100;
+    int lv_nach[5][8]; memset(lv_nach, 0, sizeof lv_nach);   /* Level je Panel nach Abwurf 1..4 */
+    int gen_nach[5]; memset(gen_nach, 0, sizeof gen_nach);
     for (int f = 0; f < budget; f++) {
         int v = re15_player_victim_state();
         if (v == 0 && !(pl->hit_react & 1)) {               /* frei: neben den Greifer stellen */
@@ -213,6 +217,10 @@ static int teil_griff(const char *flavor, int budget)
             releases++;
             char tag[64]; snprintf(tag, sizeof tag, "  F%d Abwurf #%d (hp=%d)", f, releases, pl->hp);
             print_wounds(tag);
+            if (releases <= 4) {
+                for (int p = 0; p < 8; p++) lv_nach[releases][p] = re15_wound_level(p);
+                gen_nach[releases] = re15_wound_generation();
+            }
         }
         prev_v = v;
         if (releases >= 4) break;
@@ -222,13 +230,136 @@ static int teil_griff(const char *flavor, int budget)
     print_wounds("  Ende");
     int any = 0; for (int p = 0; p < 8; p++) if (re15_wound_level(p) > 0) any = 1;
     printf("  Stempel sichtbar (ein Panel Level>0): %s\n", any ? "JA" : "NEIN");
+
+    /* RIEGEL — die Mechanik des Originals (blood_decals.md §3.4, Savestate-verifiziert: drei
+     * ueberlebte Griffe = 3x50 = 150 >= 120 auf den beiden 50er-Panels des Helpers, das 10er-Panel 0
+     * bleibt bei 30): Abwurf 1 und 2 ohne Stempel, Abwurf 3 stempelt Panel 7 UND (4 oder 5) auf
+     * Stufe 1 (Richtung = Helper 0x8010a1cc vorn (5,7) / 0x8010a208 hinten (4,7)), Panel 0 bleibt 0. */
+    CHECK(releases >= 3, "weniger als 3 ueberlebte Griffe im Budget (%d)", releases);
+    if (releases >= 3) {
+        for (int p = 0; p < 8; p++) {
+            CHECK(lv_nach[1][p] == 0, "Abwurf 1: Panel %d schon Stufe %d (2x50 < 120)", p, lv_nach[1][p]);
+            CHECK(lv_nach[2][p] == 0, "Abwurf 2: Panel %d schon Stufe %d (2x50 < 120)", p, lv_nach[2][p]);
+        }
+        CHECK(lv_nach[3][7] == 1, "Abwurf 3: Panel 7 muss Stufe 1 sein (ist %d) — (7,+50) in 0x8010a1cc/0x8010a208", lv_nach[3][7]);
+        CHECK((lv_nach[3][4] == 1) != (lv_nach[3][5] == 1),
+              "Abwurf 3: genau EINES von Panel 4 (hinten) / 5 (vorn) Stufe 1 (ist 4=%d 5=%d)", lv_nach[3][4], lv_nach[3][5]);
+        CHECK(lv_nach[3][0] == 0, "Abwurf 3: Panel 0 bleibt 0 (3x10 = 30 < 120), ist %d", lv_nach[3][0]);
+        for (int p = 1; p <= 3; p++) CHECK(lv_nach[3][p] == 0, "Abwurf 3: Kriecher-Panel %d unberuehrt", p);
+        CHECK(lv_nach[3][6] == 0, "Abwurf 3: Panel 6 unberuehrt (kein Helper schreibt es)");
+        CHECK(gen_nach[3] > gen_nach[2], "Abwurf 3: Generation muss springen (Sync-Marke fuer den Renderer)");
+    }
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     return 0;
 }
 
+/* ---------------------------------------------------------------------------------------------- */
+/* karte <datei> <raum-hex> <char 0|4> <x> <y> <z> <rot> <hp> <wundspec> [cut]
+ * wundspec: "-" = keine Wunden | "alle:N" = alle 8 Panels Level N | "5:1,7:1" = je Panel:Level.
+ * Schreibt Slot 0 einer PSX-Karte (v9-Spielstand mit wounds[8][2], re15_savedata.c:212) — der
+ * Bild-Riegel laedt sie per CONTINUE und misst die Textur. */
+#include "re15_savedata.h"
+#include "re15_memcard.h"
+#include "re15_gameflow.h"
+static int teil_karte(int argc, char **argv)
+{
+    if (argc < 11) { printf("karte <datei> <raum-hex> <char> <x> <y> <z> <rot> <hp> <wundspec>\n"); return 2; }
+    const char *path = argv[2];
+    unsigned room = (unsigned)strtoul(argv[3], NULL, 16);
+    int chr = atoi(argv[4]);
+    scd_vm_init(); re15_actor_init(); re15_aot_init();
+    re15_wound_reset();
+    g_current_room_id = (int)room;
+    g_gameflow.character = (uint8_t)chr;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0;
+    pl->x = atoi(argv[5]); pl->y = atoi(argv[6]); pl->z = atoi(argv[7]);
+    pl->rot_y = (int16_t)atoi(argv[8]); pl->hp = (int16_t)atoi(argv[9]);
+    re15_inv_load_briefing();
+    g_scd.cam_id = (uint8_t)((argc > 11) ? atoi(argv[11]) : 0);   /* Kamera-Cut des Spielstands */
+    const char *w = argv[10];
+    if (strncmp(w, "alle:", 5) == 0) {
+        int lv = atoi(w + 5);
+        for (int p = 0; p < 8; p++) for (int k = 0; k < lv; k++) re15_wound_add(p, 200);
+    } else if (strcmp(w, "-") != 0) {
+        const char *q = w;
+        while (*q) {
+            int p = atoi(q); const char *c = strchr(q, ':'); if (!c) break;
+            int lv = atoi(c + 1);
+            for (int k = 0; k < lv; k++) re15_wound_add(p, 200);
+            const char *k2 = strchr(q, ','); if (!k2) break; q = k2 + 1;
+        }
+    }
+    re15_savedata_t sd; re15_savedata_capture(&sd, 0, 1);
+    if (re15_memcard_save(path, 0, &sd, chr ? "ELZA  KLEID" : "LEON  KLEID") != 0) {
+        printf("FAIL: Karte %s nicht schreibbar\n", path); return 1;
+    }
+    printf("Karte %s: Raum %04X char %d pos (%d,%d,%d) rot %d hp %d wunden", path, room, chr,
+           (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, (int)pl->hp);
+    for (int p = 0; p < 8; p++) printf(" %u", sd.wounds[p][0]);
+    printf("\n");
+    return 0;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* bild <a.ppm> <b.ppm> <min_diff> <x0> <y0> <x1> <y1> — zaehlt die Pixel, die sich zwischen zwei
+ * Framedumps (P6 320x240) unterscheiden. min_diff = 0: es darf KEIN Pixel abweichen (Determinismus);
+ * sonst: mindestens min_diff Pixel weichen ab und ALLE Abweichungen liegen im Kasten [x0,x1)x[y0,y1)
+ * (= die Figur; die Kulisse bleibt unberuehrt). Exit 0 = Bedingung erfuellt. */
+static unsigned char *ppm_lesen(const char *path, int *w, int *h)
+{
+    size_t n = 0; unsigned char *d = slurp(path, &n);
+    if (!d) return NULL;
+    int maxv = 0, pos = 0;
+    if (sscanf((const char *)d, "P6 %d %d %d%n", w, h, &maxv, &pos) != 3) { free(d); return NULL; }
+    pos++;                                                /* das eine Whitespace nach maxval */
+    if ((size_t)pos + (size_t)(*w) * (size_t)(*h) * 3 > n) { free(d); return NULL; }
+    unsigned char *px = (unsigned char *)malloc((size_t)(*w) * (size_t)(*h) * 3);
+    memcpy(px, d + pos, (size_t)(*w) * (size_t)(*h) * 3); free(d);
+    return px;
+}
+static int teil_bild(int argc, char **argv)
+{
+    if (argc < 9) { printf("bild <a.ppm> <b.ppm> <min_diff> <x0> <y0> <x1> <y1>\n"); return 2; }
+    int wa, ha, wb, hb;
+    unsigned char *a = ppm_lesen(argv[2], &wa, &ha), *b = ppm_lesen(argv[3], &wb, &hb);
+    if (!a || !b) { printf("FAIL: PPM nicht lesbar (%s / %s)\n", argv[2], argv[3]); return 1; }
+    if (wa != wb || ha != hb) { printf("FAIL: Groesse %dx%d vs %dx%d\n", wa, ha, wb, hb); return 1; }
+    int min_diff = atoi(argv[4]);
+    int x0 = atoi(argv[5]), y0 = atoi(argv[6]), x1 = atoi(argv[7]), y1 = atoi(argv[8]);
+    int diff = 0, aussen = 0, bx0 = wa, by0 = ha, bx1 = -1, by1 = -1;
+    for (int y = 0; y < ha; y++) for (int x = 0; x < wa; x++) {
+        size_t o = ((size_t)y * (size_t)wa + (size_t)x) * 3;
+        if (a[o] != b[o] || a[o+1] != b[o+1] || a[o+2] != b[o+2]) {
+            diff++;
+            if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (y < by0) by0 = y; if (y > by1) by1 = y;
+            if (x < x0 || x >= x1 || y < y0 || y >= y1) aussen++;
+        }
+    }
+    printf("bild: %d Pixel verschieden, Kasten (%d,%d)-(%d,%d), ausserhalb [%d,%d)x[%d,%d): %d\n",
+           diff, bx0, by0, bx1, by1, x0, x1, y0, y1, aussen);
+    free(a); free(b);
+    if (min_diff == 0) { if (diff != 0) { printf("FAIL: %d Pixel weichen ab, erwartet 0\n", diff); return 1; } return 0; }
+    if (diff < min_diff) { printf("FAIL: nur %d Pixel verschieden, mindestens %d erwartet\n", diff, min_diff); return 1; }
+    if (aussen != 0) { printf("FAIL: %d Abweichungen ausserhalb der Figur\n", aussen); return 1; }
+    return 0;
+}
+
+#include "test_r36_kleidung_teile.inc"   /* hund / kraehe / lut */
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "griff";
+    if (strcmp(teil, "karte") == 0) return teil_karte(argc, argv);
+    if (strcmp(teil, "bild") == 0)  return teil_bild(argc, argv);
+    if (strcmp(teil, "hund") == 0 || strcmp(teil, "kraehe") == 0 || strcmp(teil, "lut") == 0) {
+        int budget = (argc > 2) ? atoi(argv[2]) : 3000;
+        int rc = (teil[0] == 'h') ? teil_hund(budget) : (teil[0] == 'k') ? teil_kraehe(budget) : teil_lut();
+        if (rc == 77) return 77;
+        if (rc != 0) s_fail++;
+        printf("test_r36_kleidung %s: %s\n", teil, s_fail ? "FAILURES" : "OK");
+        return s_fail ? 1 : 0;
+    }
     if (strcmp(teil, "griff") == 0) {
         const char *flavor = (argc > 2) ? argv[2] : "re2";
         int budget = (argc > 3) ? atoi(argv[3]) : 3000;

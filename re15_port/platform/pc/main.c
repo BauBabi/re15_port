@@ -9289,18 +9289,17 @@ re_title:;
                  * Slot-0-Reupload (Atlas-Rebuild wischt die Stempel — das Original persistiert
                  * sie im VRAM, der Port re-appliziert; Modell = der Original-Re-Insert
                  * LAB_80037d1c) alle Panels mit level>0 aus der Damage-Bank blitten.
-                 * LUT @0x80074208 (PSX.EXE file 0x64a08; Halfword-x -> Pixel = x*2):
-                 * Zeile 0 = Leon (PL00), Zeile 1 = Elza-Slot 4 (PL04).
+                 * LUT @0x80074208 (PSX.EXE file 0x64a08; Halfword-x -> Pixel = x*2): 8 Zeilen,
+                 * Index = Charakter-Byte aca5c (Leon 0, Elza 4) — Runde 36 Spur B: die Tabelle
+                 * liegt vollstaendig in kleidung_r36.c (re15_kleidung_panel_ziel); vorher nahm
+                 * der Port fuer Elza Zeile 1 (= PL01, Leon-Variante) statt Zeile 4.
                  * srcX = 576+(p&3)*16 hw (@0x80037c64-84) -> TIM-px 256+(p&3)*32;
                  * srcY = level*128+128+(p>=4?0x40:0) (@0x80037f48-74) -> TIM-Zeile srcY-256. */
                 extern int re15_wound_generation(void);
                 extern int re15_wound_level(int panel);
                 extern int re15_render_pc_wound_blit(int sx,int sy,int dx,int dy,int w,int h);
                 extern unsigned re15_render_pc_slot0_generation(void);
-                static const uint8_t WLUTX[2][8] = { {67,43,31,66,22,16,6,0},
-                                                     {67,43,31,66,23,7,7,24} };
-                static const uint8_t WLUTY[2][8] = { {35,44,192,175,116,26,102,0},
-                                                     {35,44,192,175,99,34,115,6} };
+                extern int re15_kleidung_panel_ziel(int charakter, int panel, int *tim_x, int *tim_y);   /* Runde 36 Spur B */
                 static int s_wnd_gen = -1; static unsigned s_wnd_slot_gen = 0xffffffffu;
                 {   /* Original-Debug-Eingang LAB_80037de4 ("alles verwunden", shipped ohne
                      * Caller) als Render-Pfad-Probe: RE15_WOUND_DEBUG=<level 1|2> */
@@ -9312,7 +9311,6 @@ re_title:;
                 }
                 unsigned wsg = re15_render_pc_slot0_generation();
                 if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
-                    int chr = (g_gameflow.character & 4) ? 1 : 0;   /* @0x80104008 andi 0x4 */
                     int ok = 1, any = 0;
                     for (int p = 0; p < 8; p++) {
                         int lv = re15_wound_level(p);
@@ -9320,9 +9318,9 @@ re_title:;
                         any = 1;
                         int sxp = 256 + (p & 3) * 32;
                         int syp = (lv * 128 + 128 + ((p >= 4) ? 0x40 : 0)) - 256;
-                        ok &= re15_render_pc_wound_blit(sxp, syp,
-                                                        (int)WLUTX[chr][p] * 2, (int)WLUTY[chr][p],
-                                                        32, 64);
+                        int dxp = 0, dyp = 0;   /* Zeile = aca5c (`lbu` @0x80037c8c, `sll 4` @0x80037c94) */
+                        if (!re15_kleidung_panel_ziel((int)g_gameflow.character, p, &dxp, &dyp)) continue;
+                        ok &= re15_render_pc_wound_blit(sxp, syp, dxp, dyp, 32, 64);
                     }
                     if (any)
                         fprintf(stderr, "[wound] sync: applied=%d ok=%d gen=%d slotgen=%u\n",
