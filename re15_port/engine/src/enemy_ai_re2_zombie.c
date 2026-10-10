@@ -1064,7 +1064,7 @@ static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_
     /* `part` ist eine RE2-PART-Nummer, re15_enemy_bone_world_pos will einen BONE-SLOT der
      * geladenen Bank — im RE1.5-Modus sind das verschiedene Nummernraeume (Block ueber
      * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet.
-     * Runde 36 Spur C: Lage = Anker.R * a3 + Anker.T (FUN_8001BF10 a2/a3, re15_esp.c:1455) statt nur
+     * Runde 36 Spur C: Lage = Anker.R * a3 + Anker.T (FUN_8001BF10 a2/a3, RE2-Lagen-Tick @0x8001DB74-DC1C) statt nur
      * Anker.T — Belege include/re15_schuss_r36.h (Punkt 2). a3 == NULL = kein Versatz (wie bisher). */
     re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);
                                              /* == die Part-Matrix +0x198+n*172+72, mal a3 */
@@ -9005,11 +9005,14 @@ void re15_re2z_hit_filter_apply(int slot)
          * beides nicht -> angehen"): die v0.3.5-Ausnahme gilt NICHT mehr fuer den FRESSER (EXEC[8]).
          * RE2 FUN_800410CC (alle Schusswaffen, `jal 0x800410CC` @0x80043AFC) wirft ihn in der
          * Kandidatenschleife heraus: `lbu v0,467(s2)` / `bne v0,zero,0x80041300` @0x80041270-78
-         * (+0x1D3 |= 0x80 aus EXEC[8] P0 @0x80103c04-14) und `lhu v0,270(s2)` / `andi 0xc000` /
-         * `bne` @0x80041290-9c (+0x10E = 0x4004 aus dem Spawn-Remap @0x80100A88-8C). Treffbar wird
-         * er erst mit dem Aufstehen (EXEC[8] P3 `andi 0x7f` @0x80103CE4-FC) bzw. dem Wecker
-         * (`andi 0xbfff` @0x80104F0C-10) — Belege include/re15_schuss_r36.h (2). Der LIEGENDE
-         * (EXEC[7], nicht passiv) behaelt die bisherige Ausnahme (nicht Teil des Auftrags). */
+         * (Gate 2: +0x1D3 |= 0x80 aus EXEC[8] P0 @0x80103c04-14). NUR Gate 2 sperrt den RE2-Fresser:
+         * sein Spawn-Remap ist Deskriptor 8 @0x80100AC0-DC (`addiu v1,zero,8` / `addiu v0,zero,18` /
+         * `sw v0,332` / `addiu v0,zero,2049` / `sw v0,4`) und schreibt +0x10E NICHT. Das `sh 0x4004,270`
+         * @0x80100A88-8C gehoert zu Deskriptor 7 (EXEC[7] 0x701, Clip 23, HP -1 @0x80100A64-A4); das
+         * 0x4004 des Port-Fressers stammt aus der aelteren Port-Abbildung in re2z_init (Gate 4
+         * `andi 0xc000` @0x80041290-9c ist fuer ihn im Port nur zusaetzlich). Treffbar wird er erst mit
+         * dem Aufstehen (EXEC[8] P3 `andi 0x7f` @0x80103CE4-FC) — Belege include/re15_schuss_r36.h (2).
+         * Der LIEGENDE (EXEC[7], nicht passiv) behaelt die bisherige Ausnahme (nicht Teil des Auftrags). */
         int spawn_pose = in_pose && !passive_lyer && e->sub_state_1 != 8;
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
          * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):

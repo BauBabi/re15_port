@@ -67,7 +67,8 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
         re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);   /* Anker.T gezeichnet */
         if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
     }
-    /* R_part * a3 (Q12, GTE ApplyMatrix-Zwilling FUN_800661c0 @0x8001a248) ... */
+    /* R_part * a3 (Q12; RE2-Lagen-Tick 0x8001D894: RT = Record+76 @0x8001DB74, V0 = a3 @0x8001DBA0,
+     * MVMVA 0x4A486012 @0x8001DBB4, + Anker.T @0x8001DBD0-DC1C) ... */
     for (r = 0; r < 3; r++)
         v[r] = (int32_t)(((int64_t)poses[bone].rot[r*3+0] * a3[0] + (int64_t)poses[bone].rot[r*3+1] * a3[1] +
                           (int64_t)poses[bone].rot[r*3+2] * a3[2]) >> 12);

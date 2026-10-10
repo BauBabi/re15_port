@@ -55,8 +55,12 @@ int  re15_schuss_r36_sichtlinie_verworfen(void);
 void re15_schuss_r36_sichtlinie_reset(void);
 /* ---- Punkt 2: BLUT-ANKER des RE2-Zombie-Treffers (Dossier C_schuss.md §2) --------------------
  * Die drei Treffer-Emitter in EMZ0.BIN rufen FUN_8001BF10(id, Gier, a2, a3) mit a2 = Part-WELTMATRIX
- * (+0x198 + part*172 + 72) und a3 = VERSATZ im Part-Rahmen; die ESP-Maschine setzt die Lage auf
- * Anker.R * a3 + Anker.T (re15_esp.c:1455, `jal 0x800661c0` @0x8001a248 / `addu` @0x8001a258-2a4):
+ * (+0x198 + part*172 + 72) und a3 = VERSATZ im Part-Rahmen. FUN_8001BF10 legt a3 in Record +44/+48
+ * ab (`lw v0,0(a3)` / `sw v0,44(t0)` / `lw v0,4(a3)` / `sw v0,48(t0)` @0x8001BFE8-FFC; a3 wird nur
+ * GELESEN) und die Part-Matrix in +76..+107 (@0x8001C03C ff.); der RE2-Lagen-Tick 0x8001D894 rechnet
+ * RT = Record+76 (`addiu v1,v0,76` @0x8001DB74, ctc2), V0 = Record+44 (`addiu v0,v0,44` @0x8001DBA0,
+ * lwc2), MVMVA 0x4A486012 @0x8001DBB4, dazu +96/+100/+104 (`lw v1,96(a0)` ... `addu` @0x8001DBD0-DC1C)
+ * => Welt = Anker.R * a3 + Anker.T. (Das fruehere Zitat @0x8001a248 ist die RE1.5-ESP-Maschine.)
  *   Wurzel-Flinch @0x801050B0-158 : Zone 0 -> Part 1 (+244), a3 = (0, 800, 0), id 6096
  *                                   sonst  -> Part 0 (+72), a3 = (P8.x, P8.y + 500, P8.z), id 4096
  *   Haupt-Handler P0 @0x80105650-708: Zone 0 -> Part 1, (0, 800, 0)

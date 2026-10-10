@@ -402,10 +402,51 @@ Stand: Fortsetzung im selben Baum ab 1e8cd231. Je Mangel: Ursache, Messung vorhe
 (in Arbeit)
 
 ### 8.5 M5 — Zitate (+0x10E 0x4004, a3-Lage RE2)
-(in Arbeit)
+* **Ursache:** zwei falsche Zitate. (a) Das `sh 0x4004,270` @0x80100A88-8C wurde dem FRESSER zugeschrieben; (b) die
+  a3-Lage wurde mit @0x8001a248 belegt (RE1.5-ESP-Maschine, in der RE2-EXE ein Anim-Setter).
+* **Beleg (selbst disassembliert, info/re2leon/COMMON/BIN/EMZ0.BIN bzw. PSX.EXE):**
+  ```
+  ; Spawn-Remap, Deskriptor 7 (= +0x10E & 0x3F)
+  80100a64: lhu v0,270(s2) / 80100a68: addiu v1,zero,7 / 80100a6c: andi v0,v0,0x3f / 80100a70: bne v0,v1,0x80100aa8
+  80100a74: addiu v0,zero,23 / 80100a7c: sw v0,332(s2)        ; Clip 23
+  80100a80: addiu v0,zero,1793 / 80100a84: sw v0,4(s2)        ; 0x701 = EXEC[7]
+  80100a88: addiu v0,zero,16388 / 80100a8c: sh v0,270(s2)     ; +0x10E = 0x4004   <- gehoert zu Deskriptor 7
+  80100a90: addiu v0,zero,-1 / 80100a94: sh v0,342(s2)        ; HP = -1
+  ; Deskriptor 8 = der FRESSER
+  80100ac0: lhu v0,270(s2) / 80100ac4: addiu v1,zero,8 / 80100ac8: andi v0,v0,0x3f / 80100acc: bne v0,v1,0x80100ae0
+  80100ad0: addiu v0,zero,18 / 80100ad4: sw v0,332(s2)        ; Clip 18
+  80100ad8: addiu v0,zero,2049 / 80100adc: sw v0,4(s2)        ; 0x801 = EXEC[8] — KEIN Schreiben auf +0x10E
+  ; RE2 FUN_8001BF10: a3 wird nur GELESEN
+  8001bfe0: beq a3,zero,0x8001c000 / 8001bfe8: lw v0,0(a3) / 8001bff0: sw v0,44(t0) / 8001bff4: lw v0,4(a3) / 8001bffc: sw v0,48(t0)
+  ; RE2-Lagen-Tick 0x8001D894
+  8001db74: addiu v1,v0,76 (RT = Record+76, ctc2 0x48cc0000..0x48ce2000) / 8001dba0: addiu v0,v0,44 (V0 = a3, lwc2)
+  8001dbb4: MVMVA 0x4a486012 / 8001dbd0: lw v1,96(a0) ... 8001dc14: addu v0,v0,v1 / 8001dc1c: sh v0,56(a0)   => Anker.R*a3 + Anker.T
+  ```
+  => Der RE2-Fresser wird NUR ueber Gate 2 (+0x1D3 @0x80041270-78) gesperrt. Das 0x4004 des Port-Fressers stammt aus
+  der aelteren Port-Abbildung in re2z_init (`e->re2z_f10e = 0x4004u` mit dem Zitat @0x80100A88-8C, nicht von Spur C,
+  unveraendert gelassen: das Bit 0x4000 traegt im Port die Wecker-Kette des Fressers, Eigentuemer Spur F). Gate 4
+  ist fuer ihn im Port nur zusaetzlich; die Pruefung 52 von unit_r36_schuss (nur +0x1D3 = 0x80, +0x10E = 0x0004) ist
+  der Zustand des RE2-Fressers und sperrt bereits.
+* **Aenderung (nur Kommentare/Doku):** enemy_ai_re2_zombie.c re15_re2z_hit_filter_apply (Block "Runde 36 Spur C") +
+  Kopfkommentar von re2z_blood_fx_scaled; test_r36_schuss.c (Kopf, Teil B, Pruefungen 52/53); test_re2_zombie_hitfilter.c
+  (4a); include/re15_schuss_r36.h (Punkt 2: FUN_8001BF10 @0x8001BFE8-FFC + Lagen-Tick @0x8001DB74-DC1C);
+  schuss_r36.c (R_part * a3); probe_r36_blut.c (Kopf). Dossier §1.2 und §1.5 bleiben als Verlauf stehen und sind
+  durch diesen Abschnitt berichtigt.
 
 ### 8.6 M6 — "C-Blut": Bisect / Regressionsaussage
-(in Arbeit)
+* **Aussage: KEINE Regression aus v0.8.22/23.** Das Blut sitzt seit 2026-08-20 am Becken.
+* **Beleg 1 (Abnahme 0, nicht wiederholt):** `git log 9362dd7e..3ec5b1f8 -G "re2z_blood_fx|re2z_blood_anchor|re2z_gore_fx_ex|
+  re15_esp_fx_spawn_ex"` ueber enemy_ai_re2_zombie.c/re15_damage.c/re15_esp.c/skeleton_common.c ist leer.
+* **Beleg 2 (neu, funktionsgenau, `git log -L :<funktion>:<datei> 9362dd7e..3ec5b1f8`):** 0 Commits fuer JEDE Funktion
+  der Blut-Lage: re2z_blood_fx_scaled, re2z_gore_fx_ex, re2z_blood_fx_dir (enemy_ai_re2_zombie.c),
+  re15_enemy_bone_world_pos (re15_damage.c), re15_esp_fx_spawn_ex, re15_esp_fx_spawn_rows (re15_esp.c),
+  re15_skel_bone_to_world (skeleton_common.c). (Gegenprobe der Abfrage: master..HEAD liefert df7ecdc5.)
+* **Herkunft:** `git log -S "Der Stand-in war POSITIONSLOS"` -> 76d63ac0 (2026-08-20, "fix(#re2): drei Nutzer-Befunde —
+  Blut am Fuss, ..."): der Anker wurde von der Aktor-Wurzel (Fuss) auf die Knochen-WELTPOSITION gesetzt, OHNE den
+  a3-Versatz (damals ausdruecklich "⛔ OPEN: die Original-Geschwindigkeit a3 ... hat im positionslosen Port-Stand-in
+  keinen Konsumenten"); `git log -S "re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p)"` -> ee97f515
+  (2026-08-20, in v0.3.5 enthalten) und 18d7eff4 (2026-09-12, Dekoder re2z_gore_fx_ex). Der Befund des Nutzers
+  ("manchmal") ist also der seit v0.3.5 fehlende a3-Versatz, kein Bruch in v0.8.22/23.
 
 ### 8.7 M7 — Messkopie der exe im Integrationstest
 (in Arbeit)

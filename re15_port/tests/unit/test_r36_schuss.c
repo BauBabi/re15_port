@@ -10,9 +10,12 @@
  *     und ohne SCA -> Treffer; Spieler in Band 1 (Zelle traegt Band 0) -> Treffer (Bandfilter
  *     `lbu v1,130(cur)` / `bne` @0x8003de60-6c); Zombie VOR dem Tisch (z -11000) -> Treffer.
  *  B  FRESSER-SPERRE (RE2 FUN_800410CC @0x80041270-9c ueber re15_re2z_hit_filter_apply):
- *     RE2-KI, Zombie EXEC[8] (ss1 8) mit +0x1D3 = 0x80 / +0x10E = 0x4004 -> kein Treffer fuer
- *     alle zehn Hitscan-Waffen; nach dem Aufstehen (P3 `andi 0x7f` @0x80103CE4, Wecker `andi 0xbfff`
- *     @0x80104F0C) -> Treffer. Je Gate einzeln. Liegender EXEC[7] (nicht passiv) unveraendert.
+ *     RE2-KI, Zombie EXEC[8] (ss1 8) mit +0x1D3 = 0x80 / +0x10E = 0x4004 (Port-Fresser, s.u.) -> kein
+ *     Treffer fuer alle zehn Hitscan-Waffen; nach dem Aufstehen (P3 `andi 0x7f` @0x80103CE4, Wecker
+ *     `andi 0xbfff` @0x80104F0C) -> Treffer. Je Gate einzeln. Liegender EXEC[7] (nicht passiv) unveraendert.
+ *     Der RE2-Fresser selbst ist Deskriptor 8 @0x80100AC0-DC (Clip 18, `sw 2049,4`) und schreibt +0x10E
+ *     NICHT — ihn sperrt allein Gate 2 (Pruefung 52). `sh 0x4004,270` @0x80100A88-8C gehoert zu
+ *     Deskriptor 7 (EXEC[7], HP -1, @0x80100A64-A4); das 0x4004 traegt der Port-Fresser aus re2z_init.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,7 +179,8 @@ static void teil_b(void)
                                   "Ingram 12", "SPAS 13", "MC51 19", "Python 20" };
     int nr = 200;
     for (int k = 0; k < 10; k++, nr += 3) {
-        /* FRISST: EXEC[8] (ss1 8), +0x1D3 = 0x80 (@0x80103c04-14), +0x10E = 0x4004 (@0x80100A88-8C), Deskriptor 0x06. */
+        /* FRISST: EXEC[8] (ss1 8), +0x1D3 = 0x80 (@0x80103c04-14), Deskriptor 0x06; +0x10E = 0x4004 = Zustand des
+         * PORT-Fressers (re2z_init) — im RE2-Original traegt der Fresser (Deskriptor 8 @0x80100AC0-DC) kein +0x10E. */
         spieler(0, 0, 0, 0);
         re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 2500, 0, 250, 2048);
         z->sub_state_1 = 8; z->grid_id = 0x06; z->re2z_self1d3 = 0x80; z->re2z_f10e = 0x4004;
@@ -208,7 +212,9 @@ static void teil_b(void)
         int hit = feuer(w);
         printf("info Nahkampf w%d gegen Fresser (1200): hit=%d hp=%d hr=%02x\n", w, hit, z->hp, z->hit_react);
     }
-    /* Je Gate einzeln (Pistole): nur 1D3=80 sperrt, nur 10E=4000 sperrt. */
+    /* Je Gate einzeln (Pistole): nur 1D3=80 sperrt (52 = der Zustand des RE2-Fressers, Deskriptor 8
+     * @0x80100AC0-DC ohne +0x10E), nur 10E=4000 sperrt (53 = Gate-4-Aussage @0x80041290-9c fuer jedes
+     * +0x10E & 0xC000, z.B. Deskriptor 7 `sh 0x4004,270` @0x80100A88-8C). */
     {
         spieler(0, 0, 0, 0);
         re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 2500, 0, 250, 2048);
