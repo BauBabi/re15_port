@@ -319,6 +319,9 @@ C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 ob
   Tritte/Leitern/Kisten ohne Bit 0x100 (10F0, 11A0, 2040 obj 1/2, 2060 obj 2, 20A0, 5020 + Elza-Spiegel),
   jetzt alle gemessen kletterbar (Zensus-Pin); die Kisten in ROOM1090 (0x0101) gingen immer.
 - Entscheidungsfrage: keine.
+- Nachbesserung 1 (Abnahme 0): KEINE Verhaltensaenderung im Spiel — berichtigt wurde eine falsche
+  RE-Aussage im Dossier/Testkommentar (Sonderfall Null-Box ROOM3091), dazu ein zusaetzlicher Riegel und
+  drei reine Kommentar-Korrekturen. Keine neuen Assets, keine Sprachdateien.
 
 ## Anhang — Zensus Typ-4-Objekte (A_belege/zensus_obj_typ4_flags.txt, Auszug)
 
@@ -377,9 +380,9 @@ info/Re1.5/PSX.EXE):
 h = 0, Rand = -112: h + Rand = 0xFFFFFF90, 2*(h + Rand) = 0xFFFFFF20. Abgelehnt wird nur, wenn
 (dx - 112) mod 2^32 > 0xFFFFFF20, d.h. -223 <= dx - 112 <= -1, also **-111 <= dx <= 111**. Damit:
 **Treffer <=> |dx| >= 112 UND |dz| >= 112** (vom Boxmittelpunkt obj + box.c). Nachgerechnet mit einer
-Emulation genau dieser Instruktionen (`A_belege/nb1_tafel_8002da4c.py/.txt`): die zwoelf Tafelpunkte der
-Abnahme bestaetigt (0/0, 0/300, 300/0, 111/111, -111/500, 112/-111 -> 0; 112/112, -112/-112, -112/500,
-300/300, -500/800, 900/-900 -> 1) und 1D-Brute-force je Achse ueber dx, dz in [-30000, 30000]: **0
+Emulation genau dieser Instruktionen (`A_belege/nb1_tafel_8002da4c.py/.txt`): die acht Punkte der Abnahme
+plus vier Grenzpunkte bestaetigt (0/0, 0/300, 300/0, 111/111, -111/500, 112/-111 -> 0; 112/112, -112/-112,
+-112/500, 300/300, -500/800, 900/-900 -> 1) und 1D-Brute-force je Achse ueber dx, dz in [-30000, 30000]: **0
 Abweichungen** von der geschlossenen Form. Der Port (re15_collision.c:308-311, u32-Arithmetik) rechnet
 identisch (Riegel unten). Allgemein: eine Achse kippt immer dann, wenn h + Rand < 0, also h < 112 —
 Zensus aller 672 Obj_model_set-Records (`A_belege/nb1_hzensus.txt`): 558 mit h(x,z) = 0, dazu 14 mit
