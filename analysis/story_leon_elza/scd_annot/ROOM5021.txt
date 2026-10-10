@@ -1,0 +1,98 @@
+ROOM5021  (re15_port/shared_assets/PSX/STAGE5/ROOM5021.RDT)
+
+=== main00
+  0x011DE Door_aot_set   3b 00 02 31 00 00 88 c8 82 97 74 0e ..    ; Door_aot_set slot=0 sce=2 -> ROOM5001 cut=2
+  0x011FE Door_aot_set   3b 05 02 31 00 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=5 sce=2 -> ROOM5011 cut=0
+  0x0121E Aot_set        2c 01 0d 31 00 00 0b c8 87 c4 27 06 ..    ; Aot_set slot=1 sce=13 ev->sub00 (01 00 04 00)
+  0x01232 Aot_set        2c 02 0d 31 04 00 0b c8 17 ad 27 06 ..    ; Aot_set slot=2 sce=13 ev->sub00 (01 00 04 00)
+  0x01246 Ifel_ck        06 00 3e 00                             
+  0x0124A   Ck             21 04 cb 00                               ; Ck(4,0xCB)==0
+  0x0124E   Aot_set        2c 04 05 44 00 00 9e ee 76 99 02 08 ..    ; Aot_set slot=4 sce=5 ev->sub00 (00 00 00 00)
+  0x01262   Obj_model_set  2d 00 04 00 04 00 00 00 00 00 08 d5 ..    ; Obj_model_set obj=0 pos=(-11000,-7200,-23150)
+  0x01284   Else_ck        07 00 28 00                             
+  0x01288   Obj_model_set  2d 00 04 00 00 00 00 00 00 00 b8 f2 ..    ; Obj_model_set obj=0 pos=(-3400,0,-25300)
+  0x012AA   Nop            00                                      
+  0x012AB   Nop            00                                      
+  0x012AC Aot_set        2c 07 03 41 00 00 d4 bf 84 94 2b 61 ..    ; Aot_set slot=7 sce=3 ev->sub05 (ff 00 18 05)
+  0x012C0 Aot_set        2c 08 03 41 04 00 d4 bf 84 94 2b 61 ..    ; Aot_set slot=8 sce=3 ev->sub06 (ff 00 18 06)
+  0x012D4 Evt_end        01 00                                   
+
+=== sub00
+  0x012E6 Ifel_ck        06 00 46 00                             
+  0x012EA   Ck             21 04 c0 00                               ; Ck(4,0xC0)==0
+  0x012EE   Aot_set        2c 03 03 41 00 00 c0 f9 82 b0 d0 07 ..    ; Aot_set slot=3 sce=3 ev->sub02 (ff 00 18 02)
+  0x01302   Aot_set        2c 06 01 31 00 00 50 e2 b0 b9 f4 01 ..    ; Aot_set slot=6 TEXT msg 0 "Sherry must have crawled through here, / but the hole is too small for me.There must be an"
+  0x01316   Sce_em_set     44 00 4b 40 00 00 00 ff 24 fa 00 00 ..    ; Sce_em_set slot=0 TYP=0x4B beh=0x40 pos=(-1500, 0, -14200) yaw=0 b4..7=00 00 00 ff
+  0x0132A   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x0132E   Endif          08 00                                   
+  0x01330 Evt_end        01 00                                   
+
+=== sub01
+  0x01332 Ifel_ck        06 00 1a 00                             
+  0x01336   Ck             21 04 cb 00                               ; Ck(4,0xCB)==0
+  0x0133A   Work_set       2e 03 00                                  ; Work_set -> Prop obj 0
+  0x0133D   Nop            00                                      
+  0x0133E   Ifel_ck        06 00 0c 00                             
+  0x01342     Member_cmp     3e 00 0f 00 04 00                         ; Member_cmp(m0F op0 4)
+  0x01348     Set            22 04 cb 01                               ; SET (4,0xCB)=1
+  0x0134C     Endif          08 00                                   
+  0x0134E   Endif          08 00                                   
+  0x01350 Evt_end        01 00                                   
+
+=== sub02
+  0x01352 Set            22 04 c0 01                               ; SET (4,0xC0)=1
+  0x01356 Set            22 04 ed 01                               ; SET (4,0xED)=1
+  0x0135A Set            22 03 3a 01                               ; SET (3,0x3A)=1
+  0x0135E Set            22 03 2f 01                               ; SET (3,0x2F)=1
+  0x01362 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x01366 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0136A Aot_reset      46 03 00 00 00 00 00 00 00 00             ; Aot_reset slot=3 sce=0 ev->sub00
+  0x01374 Cut_chg        29 0c                                     ; Cut_chg 12
+  0x01376 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01379 Nop            00                                      
+  0x0137A Plc_dest       40 00 09 20 18 fc 94 c6                   ; Plc_dest mode=9 (-1000,-14700)
+  0x01382 Gosub          18 04                                     ; Gosub -> sub04
+  0x01384 Plc_dest       40 00 04 20 18 fc 94 c6                   ; Plc_dest mode=4 (-1000,-14700)
+  0x0138C Gosub          18 04                                     ; Gosub -> sub04
+  0x0138E Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x01392 Message_on     2b 01 00 00                               ; Message_on 1  "Elza: Sherry..."
+  0x01396 Sleep          09 0a 64 00                             
+  0x0139A Aot_on         47 05                                   
+  0x0139C Evt_end        01 00                                   
+
+=== sub03
+  0x0139E Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x013A1 Nop            00                                      
+  0x013A2 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x013A6 Plc_flg        43 00 04 00                             
+  0x013AA Evt_end        01 00                                   
+
+=== sub04
+  0x013AC Do             11 00 08 00                             
+  0x013B0 Evt_next       02                                      
+  0x013B1 Nop            00                                      
+  0x013B2 Edwhile        12 04                                   
+  0x013B4 Ck             21 05 20 00                               ; Ck(5,0x20)==0
+  0x013B8 Evt_end        01 00                                   
+
+=== sub05
+  0x013BA Aot_reset      46 07 00 00 00 00 00 00 00 00             ; Aot_reset slot=7 sce=0 ev->sub00
+  0x013C4 Sca_id_set     37 00 1f 00                             
+  0x013C8 Sca_id_set     37 01 1f 00                             
+  0x013CC Sca_id_set     37 02 1f 00                             
+  0x013D0 Sca_id_set     37 03 1f 00                             
+  0x013D4 Sca_id_set     37 04 1f 00                             
+  0x013D8 Sleep          09 0a 02 00                             
+  0x013DC Aot_reset      46 08 03 41 ff 00 18 06 00 00             ; Aot_reset slot=8 sce=3 ev->sub06
+  0x013E6 Evt_end        01 00                                   
+
+=== sub06
+  0x013E8 Aot_reset      46 08 00 00 00 00 00 00 00 00             ; Aot_reset slot=8 sce=0 ev->sub00
+  0x013F2 Sca_id_set     37 00 1f ff                             
+  0x013F6 Sca_id_set     37 01 1f ff                             
+  0x013FA Sca_id_set     37 02 1f ff                             
+  0x013FE Sca_id_set     37 03 1f ff                             
+  0x01402 Sca_id_set     37 04 1f ff                             
+  0x01406 Sleep          09 0a 02 00                             
+  0x0140A Aot_reset      46 07 03 41 ff 00 18 05 00 00             ; Aot_reset slot=7 sce=3 ev->sub05
+  0x01414 Evt_end        01 00                                   

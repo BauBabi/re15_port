@@ -1,0 +1,129 @@
+ROOM50D0  (re15_port/shared_assets/PSX/STAGE5/ROOM50D0.RDT)
+
+=== main00
+  0x011DA Door_aot_set   3b 00 02 31 03 00 60 9b d5 f4 80 0c ..    ; Door_aot_set slot=0 sce=2 -> ROOM50C0 cut=6
+  0x011FA Door_aot_set   3b 01 02 31 00 00 d2 f6 e4 c1 92 02 ..    ; Door_aot_set slot=1 sce=2 -> ROOM50F0 cut=1
+  0x0121A Door_aot_set   3b 02 02 31 03 00 d2 f6 d6 ed 92 02 ..    ; Door_aot_set slot=2 sce=2 -> ROOM50E0 cut=0
+  0x0123A Door_aot_set   3b 03 02 31 00 00 d2 f6 ce 9b 92 02 ..    ; Door_aot_set slot=3 sce=2 -> ROOM5100 cut=9
+  0x0125A Ifel_ck        06 00 3e 00                             
+  0x0125E   Ck             21 04 ca 00                               ; Ck(4,0xCA)==0
+  0x01262   Aot_set        2c 04 03 41 02 00 d4 cc 60 f0 34 08 ..    ; Aot_set slot=4 sce=3 ev->sub06 (ff 00 18 06)
+  0x01276   Obj_model_set  2d 00 04 00 00 00 00 01 00 00 e8 b8 ..    ; Obj_model_set obj=0 pos=(-18200,0,-19650)
+  0x01298   Else_ck        07 00 28 00                             
+  0x0129C   Obj_model_set  2d 00 04 00 00 00 00 01 00 00 82 c9 ..    ; Obj_model_set obj=0 pos=(-13950,0,-3210)
+  0x012BE   Nop            00                                      
+  0x012BF   Nop            00                                      
+  0x012C0 Obj_model_set  2d 01 00 00 04 00 00 00 00 00 78 a1 ..    ; Obj_model_set obj=1 pos=(-24200,-5400,-26050)
+  0x012E2 Evt_end        01 00                                   
+
+=== sub00
+  0x012F2 Ifel_ck        06 00 52 00                             
+  0x012F6   Ck             21 03 53 00                               ; Ck(3,0x53)==0
+  0x012FA   Aot_set        2c 05 03 31 03 00 e8 b8 c0 c7 b0 04 ..    ; Aot_set slot=5 sce=3 ev->sub04 (ff 00 18 04)
+  0x0130E   Aot_set        2c 06 00 31 00 00 e8 b8 c0 c7 b0 04 ..    ; Aot_set slot=6 sce=0 ev->sub02 (ff 00 18 02)
+  0x01322   Obj_model_set  2d 02 00 00 04 00 0a 00 00 00 ec af ..    ; Obj_model_set obj=2 pos=(-20500,-5400,-16000)
+  0x01344   Else_ck        07 00 50 00                             
+  0x01348   Aot_set        2c 05 00 31 03 00 e8 b8 c0 c7 b0 04 ..    ; Aot_set slot=5 sce=0 ev->sub04 (ff 00 18 04)
+  0x0135C   Aot_set        2c 06 03 31 00 00 e8 b8 c0 c7 b0 04 ..    ; Aot_set slot=6 sce=3 ev->sub02 (ff 00 18 02)
+  0x01370   Obj_model_set  2d 02 00 00 04 00 0a 00 00 00 ec af ..    ; Obj_model_set obj=2 pos=(-20500,0,-16000)
+  0x01392   Nop            00                                      
+  0x01393   Nop            00                                      
+  0x01394 Evt_end        01 00                                   
+
+=== sub01
+  0x01396 Evt_end        01 00                                   
+
+=== sub02
+  0x01398 Message_on     2b 00 ff ff                               ; Message_on 0  "There's a button here. Push it?  e         /            4   2  /           /      3  x  x                    "
+  0x0139C Evt_next       02                                      
+  0x0139D Nop            00                                      
+  0x0139E Ifel_ck        06 00 52 00                             
+  0x013A2   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x013A6   Aot_reset      46 06 00 00 00 00 00 00 00 00             ; Aot_reset slot=6 sce=0 ev->sub00
+  0x013B0   Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x013B4   Cut_auto       3c 00                                   
+  0x013B6   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x013BA   Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x013BD   Nop            00                                      
+  0x013BE   Speed_set      2f 01 9c ff                             
+  0x013C2   For            0d 00 06 00 36 00                       
+  0x013C8   Add_speed      30                                      
+  0x013C9   Evt_next       02                                      
+  0x013CA   Evt_next       02                                      
+  0x013CB   Nop            00                                      
+  0x013CC   Next           0e 00                                   
+  0x013CE   Cut_chg        29 01                                     ; Cut_chg 1
+  0x013D0   Member_set     34 01 e8 ea                               ; Member_set m=0x01 val=-5400
+  0x013D4   Member_set     34 12 03 00                               ; Member_set m=0x12 val=3
+  0x013D8   Member_set     34 13 03 00                               ; Member_set m=0x13 val=3
+  0x013DC   Aot_reset      46 05 03 31 ff 00 18 04 00 00             ; Aot_reset slot=5 sce=3 ev->sub04
+  0x013E6   Set            22 03 53 00                               ; SET (3,0x53)=0
+  0x013EA   Plc_ret        42                                      
+  0x013EB   Nop            00                                      
+  0x013EC   Cut_auto       3c 01                                   
+  0x013EE   Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x013F2   Endif          08 00                                   
+  0x013F4 Evt_end        01 00                                   
+
+=== sub03
+  0x013F6 Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x013F9 Nop            00                                      
+  0x013FA Speed_set      2f 01 9c ff                             
+  0x013FE For            0d 00 06 00 36 00                       
+  0x01404 Add_speed      30                                      
+  0x01405 Evt_next       02                                      
+  0x01406 Evt_next       02                                      
+  0x01407 Nop            00                                      
+  0x01408 Next           0e 00                                   
+  0x0140A Member_set     34 01 e8 ea                               ; Member_set m=0x01 val=-5400
+  0x0140E Evt_end        01 00                                   
+
+=== sub04
+  0x01410 Message_on     2b 00 ff ff                               ; Message_on 0  "There's a button here. Push it?  e         /            4   2  /           /      3  x  x                    "
+  0x01414 Evt_next       02                                      
+  0x01415 Nop            00                                      
+  0x01416 Ifel_ck        06 00 52 00                             
+  0x0141A   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x0141E   Aot_reset      46 05 00 00 00 00 00 00 00 00             ; Aot_reset slot=5 sce=0 ev->sub00
+  0x01428   Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x0142C   Cut_auto       3c 00                                   
+  0x0142E   Evt_exec       04 ff 18 05                               ; Evt_exec -> sub05
+  0x01432   Cut_chg        29 0a                                     ; Cut_chg 10
+  0x01434   Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01437   Nop            00                                      
+  0x01438   Speed_set      2f 01 64 00                             
+  0x0143C   For            0d 00 06 00 36 00                       
+  0x01442   Add_speed      30                                      
+  0x01443   Evt_next       02                                      
+  0x01444   Evt_next       02                                      
+  0x01445   Nop            00                                      
+  0x01446   Next           0e 00                                   
+  0x01448   Member_set     34 01 00 00                               ; Member_set m=0x01 val=0
+  0x0144C   Member_set     34 12 00 00                               ; Member_set m=0x12 val=0
+  0x01450   Member_set     34 13 00 00                               ; Member_set m=0x13 val=0
+  0x01454   Aot_reset      46 06 03 31 ff 00 18 02 00 00             ; Aot_reset slot=6 sce=3 ev->sub02
+  0x0145E   Set            22 03 53 01                               ; SET (3,0x53)=1
+  0x01462   Plc_ret        42                                      
+  0x01463   Nop            00                                      
+  0x01464   Cut_auto       3c 01                                   
+  0x01466   Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x0146A   Endif          08 00                                   
+  0x0146C Evt_end        01 00                                   
+
+=== sub05
+  0x0146E Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x01471 Nop            00                                      
+  0x01472 Speed_set      2f 01 64 00                             
+  0x01476 For            0d 00 06 00 36 00                       
+  0x0147C Add_speed      30                                      
+  0x0147D Evt_next       02                                      
+  0x0147E Evt_next       02                                      
+  0x0147F Nop            00                                      
+  0x01480 Next           0e 00                                   
+  0x01482 Member_set     34 01 00 00                               ; Member_set m=0x01 val=0
+  0x01486 Evt_end        01 00                                   
+
+=== sub06
+  0x01488 Set            22 04 ca 01                               ; SET (4,0xCA)=1
+  0x0148C Aot_reset      46 04 00 00 00 00 00 00 00 00             ; Aot_reset slot=4 sce=0 ev->sub00
+  0x01496 Evt_end        01 00                                   

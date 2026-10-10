@@ -1,0 +1,404 @@
+ROOM2001  (re15_port/shared_assets/PSX/STAGE2/ROOM2001.RDT)
+
+=== main00
+  0x0161E Door_aot_set   3b 00 02 31 01 00 3c 0f 18 b1 e8 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM1261 cut=0
+  0x0163E Door_aot_set   3b 01 02 31 01 00 30 94 84 9f e8 03 ..    ; Door_aot_set slot=1 sce=2 -> ROOM1261 cut=8
+  0x0165E Door_aot_set   3b 02 02 31 01 00 30 94 be f1 e8 03 ..    ; Door_aot_set slot=2 sce=2 -> ROOM2011 cut=0
+  0x0167E Door_aot_set   3b 03 02 31 01 00 b4 b0 f8 df e8 03 ..    ; Door_aot_set slot=3 sce=2 -> ROOM2071 cut=3
+  0x0169E Door_aot_set   3b 04 02 31 01 00 30 94 48 26 e8 03 ..    ; Door_aot_set slot=4 sce=2 -> ROOM2051 cut=0
+  0x016BE Aot_set        2c 05 08 47 00 00 90 9d a0 ab de 0d ..    ; Aot_set slot=5 sce=8 ev->sub00 (7c fc 00 00)
+  0x016D2 Aot_set        2c 06 08 47 00 00 90 9d 90 9d ba 77 ..    ; Aot_set slot=6 sce=8 ev->sub00 (7c fc 00 00)
+  0x016E6 Obj_model_set  2d 00 03 00 02 00 0a 00 1a 00 a8 b2 ..    ; Obj_model_set obj=0 pos=(-19800,-900,10800)
+  0x01708 Obj_model_set  2d 01 03 01 02 00 0a 00 1a 00 90 9d ..    ; Obj_model_set obj=1 pos=(-25200,-900,-19800)
+  0x0172A Obj_model_set  2d 02 03 02 02 00 0a 00 1a 00 4e a8 ..    ; Obj_model_set obj=2 pos=(-22450,-5400,16600)
+  0x0174C Sce_espr_on    3a 00 0b 00 00 00 00 19 a4 a2 4c eb ..  
+  0x0175C Sce_espr_on    3a 00 0b 00 00 00 00 19 fc a4 4c eb ..  
+  0x0176C Sce_espr_on    3a 00 0b 00 00 00 00 19 54 a7 4c eb ..  
+  0x0177C Evt_exec       04 ff 18 08                               ; Evt_exec -> sub08
+  0x01780 Evt_end        01 00                                   
+
+=== sub00
+  0x01796 Ifel_ck        06 00 34 00                             
+  0x0179A   Ck             21 03 41 01                               ; Ck(3,0x41)==1
+  0x0179E   Sce_em_set     44 00 49 40 01 00 00 ff 6d 9a f8 f8 ..    ; Sce_em_set slot=0 TYP=0x49 beh=0x40 pos=(-26003, -1800, -26062) yaw=3072 b4..7=01 00 00 ff
+  0x017B2   Aot_set        2c 07 00 41 01 00 98 08 e4 a8 3c 0f ..    ; Aot_set slot=7 sce=0 ev->sub04 (ff 00 18 04)
+  0x017C6   Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x017CA   Else_ck        07 00 38 00                             
+  0x017CE   Ifel_ck        06 00 2e 00                             
+  0x017D2     Ck             21 03 42 01                               ; Ck(3,0x42)==1
+  0x017D6     Sce_em_set     44 00 49 40 01 00 00 ff 85 13 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x49 beh=0x40 pos=(4997, -1800, -20962) yaw=2048 b4..7=01 00 00 ff
+  0x017EA     Aot_set        2c 07 03 41 01 00 98 08 e4 a8 3c 0f ..    ; Aot_set slot=7 sce=3 ev->sub04 (ff 00 18 04)
+  0x017FE     Endif          08 00                                   
+  0x01800   Nop            00                                      
+  0x01801   Nop            00                                      
+  0x01802 Ifel_ck        06 00 20 00                             
+  0x01806   Ck             21 03 44 01                               ; Ck(3,0x44)==1
+  0x0180A   Sce_em_set     44 00 4b 40 01 00 00 ff 05 07 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x4B beh=0x40 pos=(1797, -1800, -20962) yaw=2048 b4..7=01 00 00 ff
+  0x0181E   Evt_exec       04 ff 18 05                               ; Evt_exec -> sub05
+  0x01822   Else_ck        07 00 38 00                             
+  0x01826   Ifel_ck        06 00 2e 00                             
+  0x0182A     Ck             21 03 45 01                               ; Ck(3,0x45)==1
+  0x0182E     Sce_em_set     44 00 16 84 00 00 00 86 78 a1 00 00 ..    ; Sce_em_set slot=0 TYP=0x16 beh=0x84 pos=(-24200, 0, -10700) yaw=3072 b4..7=00 00 00 86
+  0x01842     Sce_em_set     44 01 16 84 00 00 01 87 ea a7 00 00 ..    ; Sce_em_set slot=1 TYP=0x16 beh=0x84 pos=(-22550, 0, -10100) yaw=3072 b4..7=00 00 01 87
+  0x01856     Endif          08 00                                   
+  0x01858   Nop            00                                      
+  0x01859   Nop            00                                      
+  0x0185A Evt_end        01 00                                   
+
+=== sub01
+  0x0185C Evt_end        01 00                                   
+
+=== sub02
+  0x0185E Set            22 03 41 00                               ; SET (3,0x41)=0
+  0x01862 Set            22 03 42 01                               ; SET (3,0x42)=1
+  0x01866 Cut_chg        29 0c                                     ; Cut_chg 12
+  0x01868 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x0186C Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x01870 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01873 Nop            00                                      
+  0x01874 Plc_neck       41 01 6d 9a 00 00 e8 9d 64 00           
+  0x0187E Sleep          09 0a 01 00                             
+  0x01882 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x01886 Sleep          09 0a 02 00                             
+  0x0188A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0188D Nop            00                                      
+  0x0188E Pos_set        32 00 6d 9a f8 f8 08 a1                   ; Pos_set (-26003,-1800,-24312)
+  0x01896 Member_set     34 04 00 00                               ; Member_set m=0x04 val=0
+  0x0189A Sleep          09 0a 01 00                             
+  0x0189E Plc_neck       41 01 6d 9a 00 00 32 9a 64 00           
+  0x018A8 Sleep          09 0a 02 00                             
+  0x018AC Plc_dest       40 00 09 20 6d 9a 32 9a                   ; Plc_dest mode=9 (-26003,-26062)
+  0x018B4 Gosub          18 06                                     ; Gosub -> sub06
+  0x018B6 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x018BA Sleep          09 0a 1e 00                             
+  0x018BE Message_on     2b 00 00 00                               ; Message_on 0  "John: Elza, over here!"
+  0x018C2 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x018C5 Nop            00                                      
+  0x018C6 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x018CA Sleep          09 0a 32 00                             
+  0x018CE Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x018D2 Plc_flg        43 00 80 00                             
+  0x018D6 Sleep          09 0a 33 00                             
+  0x018DA Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x018DE Sleep          09 0a 28 00                             
+  0x018E2 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x018E6 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x018EA Cut_chg        29 04                                     ; Cut_chg 4
+  0x018EC Cut_auto       3c 01                                   
+  0x018EE Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x018F1 Nop            00                                      
+  0x018F2 Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x018FC Plc_ret        42                                      
+  0x018FD Nop            00                                      
+  0x018FE Evt_end        01 00                                   
+
+=== sub03
+  0x01900 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01903 Nop            00                                      
+  0x01904 Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x0190E Plc_dest       40 00 09 21 e1 da 32 9a                   ; Plc_dest mode=9 (-9503,-26062)
+  0x01916 Gosub          18 07                                     ; Gosub -> sub07
+  0x01918 Plc_dest       40 00 05 21 e1 da 32 9a                   ; Plc_dest mode=5 (-9503,-26062)
+  0x01920 Gosub          18 07                                     ; Gosub -> sub07
+  0x01922 Plc_dest       40 00 04 21 75 ec 1e ae                   ; Plc_dest mode=4 (-5003,-20962)
+  0x0192A Gosub          18 07                                     ; Gosub -> sub07
+  0x0192C Plc_dest       40 00 05 21 85 13 1e ae                   ; Plc_dest mode=5 (4997,-20962)
+  0x01934 Gosub          18 07                                     ; Gosub -> sub07
+  0x01936 Plc_dest       40 00 09 21 75 ec 1e ae                   ; Plc_dest mode=9 (-5003,-20962)
+  0x0193E Gosub          18 07                                     ; Gosub -> sub07
+  0x01940 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x01944 Sleep          09 0a 02 00                             
+  0x01948 Aot_reset      46 07 03 41 ff 00 18 04 00 00             ; Aot_reset slot=7 sce=3 ev->sub04
+  0x01952 Evt_end        01 00                                   
+
+=== sub04
+  0x01954 Set            22 03 42 00                               ; SET (3,0x42)=0
+  0x01958 Set            22 03 46 01                               ; SET (3,0x46)=1
+  0x0195C Aot_reset      46 07 00 00 00 00 00 00 00 00             ; Aot_reset slot=7 sce=0 ev->sub00
+  0x01966 Cut_chg        29 0b                                     ; Cut_chg 11
+  0x01968 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x0196C Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x01970 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01973 Nop            00                                      
+  0x01974 Plc_neck       41 01 e1 0c 00 00 1e ae 64 00           
+  0x0197E Sleep          09 0a 01 00                             
+  0x01982 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01985 Nop            00                                      
+  0x01986 Plc_dest       40 00 04 20 e1 0c 1e ae                   ; Plc_dest mode=4 (3297,-20962)
+  0x0198E Gosub          18 06                                     ; Gosub -> sub06
+  0x01990 Plc_neck       41 01 85 13 00 00 1e ae 64 00           
+  0x0199A Sleep          09 0a 01 00                             
+  0x0199E Plc_dest       40 00 09 20 85 13 1e ae                   ; Plc_dest mode=9 (4997,-20962)
+  0x019A6 Gosub          18 06                                     ; Gosub -> sub06
+  0x019A8 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x019AC Sleep          09 0a 14 00                             
+  0x019B0 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x019B3 Nop            00                                      
+  0x019B4 Message_on     2b 01 00 00                               ; Message_on 1  "John: Through this staircase you can / access the basement garage."
+  0x019B8 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x019BC Sleep          09 0a 32 00                             
+  0x019C0 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x019C4 Plc_flg        43 00 80 00                             
+  0x019C8 Sleep          09 0a 32 00                             
+  0x019CC Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x019D0 Sleep          09 0a 14 00                             
+  0x019D4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x019D7 Nop            00                                      
+  0x019D8 Message_on     2b 02 00 00                               ; Message_on 2  "Elza: Okay, I'll go for her."
+  0x019DC Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x019E0 Sleep          09 0a 32 00                             
+  0x019E4 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x019E8 Plc_flg        43 00 80 00                             
+  0x019EC Sleep          09 0a 32 00                             
+  0x019F0 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x019F4 Sleep          09 0a 14 00                             
+  0x019F8 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x019FB Nop            00                                      
+  0x019FC Message_on     2b 03 00 00                               ; Message_on 3  "John: Meanwhile I will take a look / around, maybe she is down here too."
+  0x01A00 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x01A04 Sleep          09 0a 19 00                             
+  0x01A08 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x01A0C Plc_flg        43 00 80 00                             
+  0x01A10 Sleep          09 0a 19 00                             
+  0x01A14 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x01A18 Sleep          09 0a 19 00                             
+  0x01A1C Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x01A20 Plc_flg        43 00 80 00                             
+  0x01A24 Sleep          09 0a 19 00                             
+  0x01A28 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x01A2C Sleep          09 0a 14 00                             
+  0x01A30 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01A33 Nop            00                                      
+  0x01A34 Message_on     2b 04 00 00                               ; Message_on 4  "Elza: Good idea, but be careful."
+  0x01A38 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01A3C Sleep          09 0a 32 00                             
+  0x01A40 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01A44 Plc_flg        43 00 80 00                             
+  0x01A48 Sleep          09 0a 32 00                             
+  0x01A4C Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x01A50 Sleep          09 0a 14 00                             
+  0x01A54 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01A57 Nop            00                                      
+  0x01A58 Message_on     2b 05 00 00                               ; Message_on 5  "John: You too."
+  0x01A5C Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x01A60 Sleep          09 0a 32 00                             
+  0x01A64 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x01A68 Plc_flg        43 00 80 00                             
+  0x01A6C Sleep          09 0a 32 00                             
+  0x01A70 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x01A74 Sleep          09 0a 14 00                             
+  0x01A78 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01A7B Nop            00                                      
+  0x01A7C Plc_dest       40 00 09 20 e1 0c d6 b9                   ; Plc_dest mode=9 (3297,-17962)
+  0x01A84 Gosub          18 06                                     ; Gosub -> sub06
+  0x01A86 Aot_on         47 00                                   
+  0x01A88 Evt_end        01 00                                   
+
+=== sub05
+  0x01A8A Set            22 03 44 00                               ; SET (3,0x44)=0
+  0x01A8E Set            22 03 45 01                               ; SET (3,0x45)=1
+  0x01A92 Set            22 03 4a 01                               ; SET (3,0x4A)=1
+  0x01A96 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x01A9A Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x01A9E Cut_chg        29 0b                                     ; Cut_chg 11
+  0x01AA0 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01AA3 Nop            00                                      
+  0x01AA4 Pos_set        32 00 55 02 f8 f8 1e ae                   ; Pos_set (597,-1800,-20962)
+  0x01AAC Member_set     34 04 00 00                               ; Member_set m=0x04 val=0
+  0x01AB0 Sleep          09 0a 01 00                             
+  0x01AB4 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01AB7 Nop            00                                      
+  0x01AB8 Plc_neck       41 01 55 02 e8 ea 1e ae 64 64           
+  0x01AC2 Sleep          09 0a 01 00                             
+  0x01AC6 Plc_motion     3f 00 0c 00                               ; Plc_motion 0,12,0
+  0x01ACA Plc_flg        43 00 04 00                             
+  0x01ACE Sleep          09 0a 14 00                             
+  0x01AD2 Message_on     2b 06 00 00                               ; Message_on 6  "Elza: Sherry... thank god you're / fine! I was so worried!"
+  0x01AD6 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01AD9 Nop            00                                      
+  0x01ADA Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01ADE Sleep          09 0a 19 00                             
+  0x01AE2 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01AE6 Plc_flg        43 00 80 00                             
+  0x01AEA Sleep          09 0a 19 00                             
+  0x01AEE Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x01AF2 Plc_neck       41 02 00 00 00 00 2c 01 00 0a           
+  0x01AFC Sleep          09 0a 1e 00                             
+  0x01B00 Plc_neck       41 04 03 00 00 00 00 00 64 00           
+  0x01B0A Sleep          09 0a 1e 00                             
+  0x01B0E Plc_neck       41 01 05 07 f8 f8 1e ae 64 64           
+  0x01B18 Sleep          09 0a 01 00                             
+  0x01B1C Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x01B20 Plc_flg        43 00 80 00                             
+  0x01B24 Sleep          09 0a 28 00                             
+  0x01B28 Message_on     2b 07 00 00                               ; Message_on 7  "Elza: What happened? why didn't you / wait for me?"
+  0x01B2C Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x01B30 Sleep          09 0a 19 00                             
+  0x01B34 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x01B38 Plc_flg        43 00 80 00                             
+  0x01B3C Sleep          09 0a 19 00                             
+  0x01B40 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01B44 Sleep          09 0a 19 00                             
+  0x01B48 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x01B4C Plc_flg        43 00 80 00                             
+  0x01B50 Sleep          09 0a 19 00                             
+  0x01B54 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x01B58 Sleep          09 0a 14 00                             
+  0x01B5C Message_on     2b 08 00 00                               ; Message_on 8  "Sherry: It was because of my daddy, / I've heard him call me!"
+  0x01B60 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01B63 Nop            00                                      
+  0x01B64 Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x01B68 Sleep          09 0a 32 00                             
+  0x01B6C Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x01B70 Plc_flg        43 00 80 00                             
+  0x01B74 Sleep          09 0a 33 00                             
+  0x01B78 Message_on     2b 09 00 00                               ; Message_on 9  "Sherry: I went down here to find him, / but I couldn't..."
+  0x01B7C Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01B80 Sleep          09 0a 32 00                             
+  0x01B84 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01B88 Plc_flg        43 00 80 00                             
+  0x01B8C Sleep          09 0a 33 00                             
+  0x01B90 Plc_motion     3f 00 0c 00                               ; Plc_motion 0,12,0
+  0x01B94 Plc_flg        43 00 04 00                             
+  0x01B98 Sleep          09 0a 14 00                             
+  0x01B9C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01B9F Nop            00                                      
+  0x01BA0 Plc_neck       41 01 05 07 b8 d9 1e ae 64 64           
+  0x01BAA Sleep          09 0a 01 00                             
+  0x01BAE Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x01BB2 Sleep          09 0a 1e 00                             
+  0x01BB6 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01BB9 Nop            00                                      
+  0x01BBA Plc_neck       41 01 55 02 f8 f8 1e ae 64 64           
+  0x01BC4 Sleep          09 0a 01 00                             
+  0x01BC8 Message_on     2b 0a 00 00                               ; Message_on 10  "Elza: I understand, don't worry honey, / if he's here we'll find him, okay?"
+  0x01BCC Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01BCF Nop            00                                      
+  0x01BD0 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01BD4 Sleep          09 0a 19 00                             
+  0x01BD8 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01BDC Plc_flg        43 00 80 00                             
+  0x01BE0 Sleep          09 0a 19 00                             
+  0x01BE4 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01BE8 Sleep          09 0a 19 00                             
+  0x01BEC Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01BF0 Plc_flg        43 00 80 00                             
+  0x01BF4 Sleep          09 0a 1a 00                             
+  0x01BF8 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01BFB Nop            00                                      
+  0x01BFC Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x01C06 Sleep          09 0a 02 00                             
+  0x01C0A Plc_neck       41 03 01 00 00 00 00 00 00 32           
+  0x01C14 Sleep          09 0a 28 00                             
+  0x01C18 Plc_neck       41 01 55 02 f8 f8 1e ae 64 64           
+  0x01C22 Sleep          09 0a 14 00                             
+  0x01C26 Message_on     2b 0b 00 00                               ; Message_on 11  "Elza: My, that's a nice pocket watch!"
+  0x01C2A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01C2D Nop            00                                      
+  0x01C2E Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01C32 Sleep          09 0a 32 00                             
+  0x01C36 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01C3A Plc_flg        43 00 80 00                             
+  0x01C3E Sleep          09 0a 33 00                             
+  0x01C42 Message_on     2b 0c 00 00                               ; Message_on 12  "Sherry: My mom gave it to me, she says / it's for good luck."
+  0x01C46 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01C49 Nop            00                                      
+  0x01C4A Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x01C4E Sleep          09 0a 19 00                             
+  0x01C52 Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x01C56 Plc_flg        43 00 80 00                             
+  0x01C5A Sleep          09 0a 19 00                             
+  0x01C5E Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01C62 Sleep          09 0a 19 00                             
+  0x01C66 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01C6A Plc_flg        43 00 80 00                             
+  0x01C6E Sleep          09 0a 19 00                             
+  0x01C72 Plc_motion     3f 00 0c 00                               ; Plc_motion 0,12,0
+  0x01C76 Plc_flg        43 00 04 00                             
+  0x01C7A Sleep          09 0a 14 00                             
+  0x01C7E Message_on     2b 0d 00 00                               ; Message_on 13  "Elza: I see, I guess your mom is right."
+  0x01C82 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01C85 Nop            00                                      
+  0x01C86 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01C8A Sleep          09 0a 19 00                             
+  0x01C8E Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01C92 Plc_flg        43 00 80 00                             
+  0x01C96 Sleep          09 0a 19 00                             
+  0x01C9A Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01C9E Sleep          09 0a 19 00                             
+  0x01CA2 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01CA6 Plc_flg        43 00 80 00                             
+  0x01CAA Sleep          09 0a 1a 00                             
+  0x01CAE Message_on     2b 0e 00 00                               ; Message_on 14  "Elza: Come on Sherry, let's look for / John and get out of here!"
+  0x01CB2 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01CB6 Sleep          09 0a 19 00                             
+  0x01CBA Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x01CBE Plc_flg        43 00 80 00                             
+  0x01CC2 Sleep          09 0a 19 00                             
+  0x01CC6 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01CCA Sleep          09 0a 19 00                             
+  0x01CCE Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x01CD2 Plc_flg        43 00 80 00                             
+  0x01CD6 Sleep          09 0a 1a 00                             
+  0x01CDA Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x01CDE Plc_flg        43 00 80 00                             
+  0x01CE2 Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x01CEC Sleep          09 0a 1e 00                             
+  0x01CF0 Plc_ret        42                                      
+  0x01CF1 Nop            00                                      
+  0x01CF2 Sleep          09 0a 01 00                             
+  0x01CF6 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01CF9 Nop            00                                      
+  0x01CFA Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x01D04 Plc_ret        42                                      
+  0x01D05 Nop            00                                      
+  0x01D06 Aot_on         47 02                                   
+  0x01D08 Cut_chg        29 01                                     ; Cut_chg 1
+  0x01D0A Cut_auto       3c 01                                   
+  0x01D0C Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x01D10 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x01D14 Evt_end        01 00                                   
+
+=== sub06
+  0x01D16 Do             11 00 08 00                             
+  0x01D1A Evt_next       02                                      
+  0x01D1B Nop            00                                      
+  0x01D1C Edwhile        12 04                                   
+  0x01D1E Ck             21 05 20 00                               ; Ck(5,0x20)==0
+  0x01D22 Evt_end        01 00                                   
+
+=== sub07
+  0x01D24 Do             11 00 08 00                             
+  0x01D28 Evt_next       02                                      
+  0x01D29 Nop            00                                      
+  0x01D2A Edwhile        12 04                                   
+  0x01D2C Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x01D30 Evt_end        01 00                                   
+
+=== sub08
+  0x01D32 Sce_espr_on    3a 00 06 00 00 00 00 10 08 9c f0 d8 ..  
+  0x01D42 Sce_espr_on    3a 00 06 00 00 00 00 10 33 0e f0 d8 ..  
+  0x01D52 Sce_espr_on    3a 00 06 00 00 00 00 10 b3 ad f0 d8 ..  
+  0x01D62 For            0d 00 04 00 b4 00                       
+  0x01D68 Evt_next       02                                      
+  0x01D69 Nop            00                                      
+  0x01D6A Next           0e 00                                   
+  0x01D6C Sce_espr_on    3a 00 06 00 00 00 00 10 5c ea f0 d8 ..  
+  0x01D7C Sce_espr_on    3a 00 06 00 00 00 00 10 94 a7 f0 d8 ..  
+  0x01D8C For            0d 00 04 00 b4 00                       
+  0x01D92 Evt_next       02                                      
+  0x01D93 Nop            00                                      
+  0x01D94 Next           0e 00                                   
+  0x01D96 Sce_espr_on    3a 00 06 00 00 00 00 10 74 c7 f0 d8 ..  
+  0x01DA6 Sce_espr_on    3a 00 06 00 00 00 00 10 04 a1 f0 d8 ..  
+  0x01DB6 For            0d 00 04 00 b4 00                       
+  0x01DBC Evt_next       02                                      
+  0x01DBD Nop            00                                      
+  0x01DBE Next           0e 00                                   
+  0x01DC0 Sce_espr_on    3a 00 06 00 00 00 00 10 14 a6 f0 d8 ..  
+  0x01DD0 For            0d 00 04 00 2d 00                       
+  0x01DD6 Evt_next       02                                      
+  0x01DD7 Nop            00                                      
+  0x01DD8 Next           0e 00                                   
+  0x01DDA Goto           17 ff ff 00 58 ff                       
+  0x01DE0 Evt_end        01 00                                   

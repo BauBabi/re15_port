@@ -1,0 +1,52 @@
+ROOM5141  (re15_port/shared_assets/PSX/STAGE5/ROOM5141.RDT)
+
+=== main00
+  0x01A5A Set            22 01 1f 01                               ; SET (1,0x1F)=1
+  0x01A5E Door_aot_set   3b 00 02 31 00 00 06 27 9e d5 ba 13 ..    ; Door_aot_set slot=0 sce=2 -> ROOM50B1 cut=0
+  0x01A7E Door_aot_set   3b 01 02 31 00 00 a6 c8 34 12 48 0d ..    ; Door_aot_set slot=1 sce=2 -> ROOM5111 cut=5
+  0x01A9E Sce_em_set     44 00 18 02 00 00 00 4c 2c b6 00 00 ..    ; Sce_em_set slot=0 TYP=0x18 beh=0x02 pos=(-18900, 0, -25100) yaw=0 b4..7=00 00 00 4c
+  0x01AB2 Sce_em_set     44 01 18 02 00 00 01 4d 28 eb 00 00 ..    ; Sce_em_set slot=1 TYP=0x18 beh=0x02 pos=(-5336, 0, -24300) yaw=1024 b4..7=00 00 01 4d
+  0x01AC6 Sce_em_set     44 02 18 02 00 00 01 4e 80 d4 00 00 ..    ; Sce_em_set slot=2 TYP=0x18 beh=0x02 pos=(-11136, 0, -17500) yaw=2048 b4..7=00 00 01 4e
+  0x01ADA Sce_em_set     44 03 18 02 00 00 01 4f b8 05 00 00 ..    ; Sce_em_set slot=3 TYP=0x18 beh=0x02 pos=(1464, 0, -12936) yaw=3072 b4..7=00 00 01 4f
+  0x01AEE Sce_espr_on    3a 00 08 02 00 00 00 10 b2 f3 00 00 ..  
+  0x01AFE Sce_espr_on    3a 00 08 02 00 00 00 10 58 e9 00 00 ..  
+  0x01B0E Sce_espr_on    3a 00 08 02 00 00 00 10 4e da 00 00 ..  
+  0x01B1E Sce_espr_on    3a 00 08 02 00 00 00 10 e2 d2 00 00 ..  
+  0x01B2E Sce_espr_on    3a 00 08 02 00 00 00 30 61 c2 00 00 ..  
+  0x01B3E Sce_espr_on    3a 00 08 02 00 00 00 20 52 9f 00 00 ..  
+  0x01B4E Sce_espr_on    3a 00 08 02 00 00 00 40 12 99 00 00 ..  
+  0x01B5E Sce_espr_on    3a 00 08 02 00 00 00 20 12 99 00 00 ..  
+  0x01B6E Sce_espr_on    3a 00 08 02 00 00 00 30 43 ae 00 00 ..  
+  0x01B7E Sce_espr_on    3a 00 08 02 00 00 00 40 08 a3 00 00 ..  
+  0x01B8E Sce_espr_on    3a 00 08 02 00 00 00 30 44 99 00 00 ..  
+  0x01B9E Sce_espr_on    3a 00 08 02 00 00 00 30 dc d3 00 00 ..  
+  0x01BAE Sce_espr_on    3a 00 08 02 00 00 00 40 dc d3 00 00 ..  
+  0x01BBE Evt_end        01 00                                   
+
+=== sub00
+  0x01BC6 Obj_model_set  2d 00 00 00 01 00 08 00 10 00 ef 9d ..    ; Obj_model_set obj=0 pos=(-25105,0,-19460)
+  0x01BE8 Obj_model_set  2d 01 00 00 01 00 0a 00 10 00 48 db ..    ; Obj_model_set obj=1 pos=(-9400,0,-4450)
+  0x01C0A Evt_end        01 00                                   
+
+=== sub01
+  0x01C0C Evt_end        01 00                                   
+
+=== sub02
+  0x01C0E Work_set       2e 03 00                                  ; Work_set -> Prop obj 0
+  0x01C11 Nop            00                                      
+  0x01C12 Speed_set      2f 01 28 00                             
+  0x01C16 For            0d 00 04 00 87 00                       
+  0x01C1C Add_speed      30                                      
+  0x01C1D Evt_next       02                                      
+  0x01C1E Next           0e 00                                   
+  0x01C20 Speed_set      2f 01 05 00                             
+  0x01C24 For            0d 00 04 00 04 00                       
+  0x01C2A Add_speed      30                                      
+  0x01C2B Evt_next       02                                      
+  0x01C2C Next           0e 00                                   
+  0x01C2E Speed_set      2f 01 fb ff                             
+  0x01C32 For            0d 00 04 00 04 00                       
+  0x01C38 Add_speed      30                                      
+  0x01C39 Evt_next       02                                      
+  0x01C3A Next           0e 00                                   
+  0x01C3C Evt_end        01 00                                   
