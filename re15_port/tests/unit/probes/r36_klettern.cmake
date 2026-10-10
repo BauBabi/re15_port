@@ -63,3 +63,21 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_klettern.cmake)
     set_tests_properties(integration_r36_klettern PROPERTIES TIMEOUT 1200)
 endif()
+
+# NACHBESSERUNG 3 (Abnahme 2, Mangel 1+2; Orchestrator: Objekt-Fall byte-true portieren) — der OBJEKT-FALL
+# der Typ-4-Objekte (engine/src/objfall_r36.c): Ausloeser FUN_8003b7f0(&obj+0x34, 0x1c2, obj+0x82) & 2
+# @0x8002c120-134 (Grenze exakt an der um 450 erweiterten Absprungzelle), Fall FUN_8002c444 (Vorschub 13/26
+# @0x8002c4a0-a8 / @0x8002c5f4-614, Kippen @0x8002c548-5dc, Bild 13 Band -(FUN_8001c6e8/1800) @0x8002c6c4,
+# Landung @0x8002c904-928, snd0:6 @0x8002c96c-97c, Wasser: snd0:8 + 12 Spritzer @0x8002c6c8-8fc nach dem
+# Stempel LAB_8004330c), Lage-Latches der Raum-SCD (5020 @0x012F4-302 (4,203), 20A0 @0x01AD4-e2 (3,204)),
+# Klettern auf die gefallene Kiste; Gegenprobe ROOM10F0/10F1 (Band 0 ohne Absprungzelle) ueber ein Raster.
+#     unit_r36_objfall   ROOM5020/5021 (Band 4 -> 0, Latch), ROOM20A0/20A1 (Tasche -> Laufsteg Band 2 ->
+#                        Kanal Band 1 mit Wasserstempel -> Kante -> Band 0 mit Spritzern, Latch), 10F0/10F1
+add_executable(probe_r36_objfall
+    ${CMAKE_CURRENT_SOURCE_DIR}/probe_r36_objfall.c)
+target_link_libraries(probe_r36_objfall PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_objfall PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r36_objfall PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r36_objfall COMMAND probe_r36_objfall pin)
+set_tests_properties(unit_r36_objfall PROPERTIES TIMEOUT 300)
