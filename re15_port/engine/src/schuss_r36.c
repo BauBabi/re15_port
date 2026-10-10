@@ -80,6 +80,31 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
     return 2;
 }
 
+/* ---- Mess-Ring der Zombie-Blut-Spawns (nur Sonden, Header) ----------------------------------- */
+static struct { int part; int32_t pos[3]; int32_t a3[3]; int mit_a3; } s_fx_ring[RE15_SCHUSS_R36_FX_RING];
+static unsigned s_fx_zahl = 0u;
+
+void re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t *a3)
+{
+    unsigned i = s_fx_zahl % RE15_SCHUSS_R36_FX_RING;
+    s_fx_ring[i].part = part;
+    s_fx_ring[i].pos[0] = pos[0]; s_fx_ring[i].pos[1] = pos[1]; s_fx_ring[i].pos[2] = pos[2];
+    s_fx_ring[i].mit_a3 = (a3 != NULL);
+    s_fx_ring[i].a3[0] = a3 ? a3[0] : 0; s_fx_ring[i].a3[1] = a3 ? a3[1] : 0; s_fx_ring[i].a3[2] = a3 ? a3[2] : 0;
+    s_fx_zahl++;
+}
+unsigned re15_schuss_r36_fx_zahl(void) { return s_fx_zahl; }
+int re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[3], int *mit_a3)
+{
+    if (nr >= s_fx_zahl || s_fx_zahl - nr > RE15_SCHUSS_R36_FX_RING) return 0;
+    unsigned i = nr % RE15_SCHUSS_R36_FX_RING;
+    if (part) *part = s_fx_ring[i].part;
+    if (pos) { pos[0] = s_fx_ring[i].pos[0]; pos[1] = s_fx_ring[i].pos[1]; pos[2] = s_fx_ring[i].pos[2]; }
+    if (a3)  { a3[0] = s_fx_ring[i].a3[0]; a3[1] = s_fx_ring[i].a3[1]; a3[2] = s_fx_ring[i].a3[2]; }
+    if (mit_a3) *mit_a3 = s_fx_ring[i].mit_a3;
+    return 1;
+}
+
 /* ---- Punkt 3: KRAEHE gegen Magnum — RE2 GIB 0x80102CA0 (EMOVL21_S0.BIN), Belege im Header ----- */
 #include <string.h>
 extern uint32_t re15_re2_rand(void);            /* 0x80015FE8, der geteilte RE2-PRNG */

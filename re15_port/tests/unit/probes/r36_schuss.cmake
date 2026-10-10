@@ -27,9 +27,13 @@ if(TARGET re15_pc)
     set_tests_properties(integration_r36_schuss PROPERTIES TIMEOUT 900)
 endif()
 
-#   probe_r36_blut            Messsonde + Pin fuer den Blut-Anker des RE2-Zombie-Treffers (ROOM1140, echter
-#                             game_step, RE2-Bank): Lage des Bluts gegen R_part*a3 + t_part aus der gezeichneten
-#                             Pose (RE2 EMZ0 @0x80105650-708 / @0x80105D14-DBC / @0x801050B0-158).
+#   probe_r36_blut            Messsonde + Pin fuer den Blut-Anker des RE2-Zombies (ROOM1140, echter game_step,
+#                             RE2-Bank), Schuss bis zum TOD + 80 Bilder: JEDER Spawn aus dem Mess-Ring
+#                             (re15_schuss_r36_fx_*) gegen Anker.R*a3 + Anker.T aus der gezeichneten Pose —
+#                             HURT @0x80105650-708, Stagger @0x80105D14-DBC, Flinch @0x801050B0-158, Nachbluten
+#                             @0x80105F5C-FF8, Aufsteh-Treffer @0x80107B14-30, TOD @0x8010864C-6B4, Tropfblut
+#                             @0x8010887C-D4, Tod des Liegenden @0x80109B30-60, Kriecher-Tod @0x80108A84-D4
+#                             (Nachbesserung 1: Abnahme 0 M1/M2/M3).
 add_executable(probe_r36_blut ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_blut.c)
 target_link_libraries(probe_r36_blut PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r36_blut PRIVATE ${CMAKE_SOURCE_DIR}/include)

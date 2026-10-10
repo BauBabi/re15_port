@@ -79,6 +79,15 @@ void re15_schuss_r36_sichtlinie_reset(void);
  * 2 = mit Versatz. */
 int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3]);
 
+/* Mess-Ring (nur Sonden; die Engine liest ihn nicht): JEDER Spawn der RE2-Zombie-Blut-/Gore-Emitter
+ * (re2z_blood_fx_scaled, re2z_gore_fx_*) mit Anker-Part, Weltlage und dem a3-Versatz (NULL = ohne,
+ * dann a3 = 0 und mit_a3 = 0). `re15_schuss_r36_fx_zahl` zaehlt monoton; `_holen(nr, ...)` liefert den
+ * Spawn Nummer `nr`, solange er noch im Ring liegt (1 = ok, 0 = ueberschrieben/unbekannt). */
+#define RE15_SCHUSS_R36_FX_RING 64
+void     re15_schuss_r36_fx_merke(int part, const int32_t pos[3], const int32_t *a3);
+unsigned re15_schuss_r36_fx_zahl(void);
+int      re15_schuss_r36_fx_holen(unsigned nr, int *part, int32_t pos[3], int32_t a3[3], int *mit_a3);
+
 /* ---- Punkt 3: KRAEHE gegen Super Redhawk (RE2 Retail, EMOVL21_S0.BIN, Dossier C_schuss.md 3) ---
  * HURT-Zeilen-Dispatch @0x80104A18 auf +0x5 (RE2-Waffen-Id): [5]/[6] (Magnum/Custom Magnum), [9]/[10]/[11]
  * (GL-Runden) und [17] (Rakete) -> GIB 0x80102CA0; der Super Redhawk (w7) ist RE2-Zeile 5.

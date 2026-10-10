@@ -389,14 +389,118 @@ Suite: §7.
 Stand: Fortsetzung im selben Baum ab 1e8cd231. Je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher.
 (Wird fortlaufend gefuellt; Reihenfolge der Arbeit: M5/M6 (Belege) -> M1/M2 (Blut) -> M3 (Pin) -> M4/M7 (Integration).)
 
+Gemeinsame Messung fuer M1/M2/M3: die neue Sonde `probe_r36_blut` (§8.3) ueber ALLE Spawns bis zum Tod, vorher
+(Stand 62cc4289 + Mess-Ring, Emitter unveraendert) und nachher, Ausgaben `mess_r36c/n1/{vorher,nachher}_{eben,tief}.txt`
+(unversioniert; die Zeilen unten sind woertlich daraus). "d" = Abstand zum naechsten RE2-Sollpunkt (Anker.R*a3 +
+Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
+
 ### 8.1 M1 — toedlicher Treffer: Blut am Becken statt am RE2-Punkt
-(in Arbeit)
+* **Ursache:** die Todes-Emitter riefen `re2z_gore_fx(e, part, id)` = Knochen-Weltlage ohne a3 (der Kommentar nannte
+  den Versatz, der Code wandte ihn nicht an). Nicht nur der Haupt-Tod: die Sonde fand im Lauf "tief" einen ZWEITEN
+  Todes-Handler mit demselben Fehler (Tod des Liegenden FUN_801099E4), und der Zensus (§8.8) das Tropfblut nach dem Tod.
+* **Messung vorher:** eben `F414 SPAWN part=0 fx=(-1554,-1976,-19822) a3=ohne [TOD-Bild, zone 1] -> FLINCH/TROPF d=284 |
+  Defekt BECKEN(ohne a3) d=5`; danach Tropfblut `F419..F429` je `BECKEN d=0..22` (6 Spawns); tief `F174 SPAWN part=0
+  fx=(-1554,-227,-19822) a3=ohne [TOD-Bild] -> KRIECH d=252 | Defekt BECKEN d=47` (= Abnahme F414 d=482 / F174 d=783).
+* **Beleg (EMZ0.BIN, selbst disassembliert):**
+  ```
+  ; TOD FUN_80108590 P0
+  8010864c: beq a0,zero,0x80108694 / 80108650: addiu a3,sp,24          ; a3 = sp+24 in beiden Zweigen (Delay-Slot)
+  80108654: lw v1,408(s1) / 8010865c: lw v0,1420(v1) / 80108664: sh v0,24(sp)
+  80108668: lw v0,1424(v1) / 8010866c: addiu a0,zero,8096 / 80108670: addiu v0,v0,300 / 80108674: sh v0,26(sp)
+  80108678: lw v0,1428(v1) / 80108680: sh v0,28(sp) / 80108688: lh a1,118(s1) / 80108690: addiu a2,s2,72   ; Part 0
+  80108694: addiu a0,zero,6096 / 8010869c: addiu v0,zero,800 / 801086a0: sh zero,24(sp) / 801086a4: sh v0,26(sp)
+  801086a8: sh zero,28(sp) / 801086b0: addiu a2,a2,244 (Part 1) / 801086b4: jal 0x8001bf10
+  ; Kriecher-Tod FUN_80108A14 P0
+  80108a84: addiu a0,zero,8096 / 80108a98: addiu a3,sp,24 / 80108abc: addiu v0,zero,300 / 80108ac0: sh zero,24(sp)
+  80108ac4: sh v0,26(sp) / 80108ac8: sh zero,28(sp) / 80108acc: lh a1,118(s0) / 80108ad0: jal 0x8001bf10 / 80108ad4: addiu a2,a2,72
+  ; Tod des Liegenden FUN_801099E4 P0
+  80109b30: lw v0,1420(v1) / 80109b38: sh v0,32(sp) / 80109b3c: lw v0,1424(v1) / 80109b40: addiu a0,zero,8096
+  80109b44: addiu v0,v0,300 / 80109b48: sh v0,34(sp) / 80109b4c: lw v0,1428(v1) / 80109b50: addiu a3,sp,32
+  80109b54: sh v0,36(sp) / 80109b5c: lh a1,118(s0) / 80109b60: jal 0x8001bf10 / 80109b64: addiu a2,a2,72
+  ; Tropfblut, Tod P1 (ungerade Bilder in [dir*10+4, dir*10+16])
+  8010887c: lw v1,408(s1) / 80108884: lw v0,1420(v1) / 8010888c: sh v0,24(sp) / 80108890: lw v0,1424(v1)
+  80108898: addiu v0,v0,500 / 8010889c: sh v0,26(sp) / 801088a0: lw v0,1428(v1) / 801088a8: sh v0,28(sp)
+  801088b0: jal 0x80015fe8 / 801088b8: sll s0,v0,3 / 801088bc: jal 0x80015fe8 / 801088c0: addiu s0,s0,4048
+  801088c8: sll a1,v0,4 / 801088cc: addiu a3,sp,24 / 801088d0: jal 0x8001bf10 / 801088d4: addiu a2,s2,72
+  ```
+  => TOD Zone != 0: Part 0, a3 = (P8.x, P8.y+300, P8.z) OHNE den Seitenversatz des HURT; Zone 0: Part 1, (0,800,0);
+  Kriecher-Tod: Part 0, (0,300,0); Tod des Liegenden: Part 0, (P8.x, P8.y+300, P8.z) ohne Zonen-Weiche; Tropfblut:
+  Part 0, (P8.x, P8.y+500, P8.z), Winkel = r2 << 4 (der Port nahm +0x76).
+* **Aenderung (enemy_ai_re2_zombie.c):** neuer Kern `re2z_gore_fx_core(..., a3, ofs)` mit `re2z_gore_fx_a3` (Lage ueber
+  re15_schuss_r36_blut_anker = Anker.R*a3 + Anker.T, Dekoder/Praesentation unveraendert); re2z_gore_fx_ex bleibt der
+  Weg ohne a3. re2z_death_* P0 (TOD) -> `re2z_blood_a3(e, zone, 0, 300, a3)` + gore_fx_a3 (8096 Part 0 / 6096 Part 1);
+  re2z_death_crawler -> (0,300,0); re2z_death_lying -> (P8.x, P8.y+300, P8.z); Tropfblut -> (P8.x, P8.y+500, P8.z) und
+  Winkel r2 << 4.
+* **Messung nachher:** eben `F354 SPAWN part=0 fx=(-1391,-2484,-19813) a3=(-40,-483,0) [TOD-Bild, zone 1] -> d=1 |
+  Defekt PART8 d=300` (Becken y -2004: 480 darueber); Tropfblut `F359..F369 a3=(-40,-283,0) -> FLINCH/TROPF d=0..1`;
+  tief (Tod des Liegenden) `F186 SPAWN part=0 fx=(-1072,-773,-19784) a3=(-40,-483,0) [TOD-Bild] -> d=1 | Defekt d=300`.
+  (Die Bildnummern verschieben sich gegen vorher, weil das Nachbluten jetzt die zwei Original-Wuerfe je Spawn zieht, §8.2.)
 
 ### 8.2 M2 — Treffer beim Aufstehen (Part 8, a3 (0,300,0)) + Nebenbefund Stagger-P1-Nachbluten
-(in Arbeit)
+* **Ursache:** Aufsteh-Treffer `re2z_blood_fx_scaled(e, 8, ..., NULL)` und die HP<0-Variante `re2z_gore_fx_ex(e, 8,
+  0x31F40, ..., 0,0,0)` ohne a3. Das Nachbluten des Stagger-P1 war ein Stand-in: JEDES Bild (10 statt 5 Spawns), am
+  Becken ohne a3, Skala 0x1500 ohne Beleg, ohne die zwei Wuerfe des Originals (RE2-Zufallsfolge verschoben).
+  Das Dossier §2.3 nannte den Aufsteh-Emitter faelschlich "MG-Emitter" (der MG-Handler ist 0x80107EF0).
+* **Messung vorher:** eben `F390 SPAWN part=8 fx=(-1060,-1807,-19527) a3=ohne [Treffer] -> AUF d=300 | Defekt PART8 d=53`,
+  `F402 ... AUF d=313`; tief `F162 ... AUF d=230 | Defekt PART8 d=91`. Nachbluten eben/tief `F90..F99` = 10 Spawns
+  `a3=ohne -> ... | Defekt BECKEN(ohne a3) d=0`.
+* **Beleg (EMZ0.BIN):**
+  ```
+  ; Aufsteh-Treffer FUN_80107A78
+  80107a98: sh zero,24(sp) / 80107a9c: sh zero,26(sp) / 80107aa0: sh zero,28(sp)           ; Prolog nullt den Vektor
+  80107b14: addiu a0,zero,6096 / 80107b18: addiu a3,sp,24 / 80107b20: addiu v0,zero,300 / 80107b24: sh v0,26(sp)
+  80107b28: lh a1,118(s1) / 80107b2c: jal 0x8001bf10 / 80107b30: addiu a2,a2,1448                ; Part 8, a3 (0,300,0)
+  80107ba0: lui a0,0x3 / 80107ba4: ori a0,a0,0x1f40 / 80107ba8: sll a1,v0,4 / 80107bac: addiu a3,sp,24
+  80107bb0: jal 0x8001bf10 / 80107bb4: addiu a2,s0,1448                                           ; derselbe Vektor
+  ; FUN_8001BF10 liest a3 nur: 8001bfe8: lw v0,0(a3) / 8001bff0: sw v0,44(t0) / 8001bff4: lw v0,4(a3) / 8001bffc: sw v0,48(t0)
+  ; Stagger FUN_80105BC0 P1 (Einstieg nur bei +0x222 == 1: 80105458: lbu v0,546(s1) / 80105460: bne v0,a0 / 80105468: jal 0x80105bc0)
+  80105f28: jal 0x80015e7c (+0x144/+0x146/+0x148 = Wurzel-Delta) / 80105f3c: jal 0x8002959c / 80105f54: jal 0x800152c8
+  80105f5c: lh v0,346(s4) / 80105f64: beq v0,zero / 80105f6c: lb v0,362(s4) / 80105f74: beq v0,zero
+  80105f78: andi v0,v1,0x1 / 80105f7c: bne v0,zero,0x80105ffc            ; nur GERADES +0x15A spawnt
+  80105f84: lbu v0,546(s4) / 80105f8c: bne v0,zero,0x80105fbc            ; +0x222 != 0 -> Zweig B
+  A: 80105f94/9c: 2x jal 0x80015fe8 / 80105fa4: addiu a0,zero,8000 / 80105fa8: addiu a2,s3,72 / 80105fac: addiu a3,s4,324
+  B: 80105fbc: lhu v0,326(s4) / 80105fc4: addiu v0,v0,-500 / 80105fcc: sh v0,326(s4) / 80105fc8/d0: 2x jal 0x80015fe8
+     80105fd8: addiu a0,zero,5096 / 80105fdc: addiu a2,s3,72 / 80105fe0: addiu a3,s4,324
+  80105fe8: lh a1,118(s4) ... 80105fec: sll v0,v0,4 / 80105ff0: addu a1,a1,s0 / 80105ff4: jal 0x8001bf10 / 80105ff8: subu a1,a1,v0
+  80105ffc: lhu v0,346(s4) / 80106004: addiu v0,v0,-1 / 8010600c: sh v0,346(s4)
+  ```
+  Im Stagger-Handler 0x80105BC0-0x80106100 wird +0x222 nur bei 0x80105F84 gelesen und erst in P2 geloescht (`sb zero,546`
+  @0x80106034) -> im P1 laeuft Zweig B: Id 5096, a3 = (dx, dy-500, dz) mit (dx,dy,dz) = Wurzel-Delta dieses Ticks.
+  dy: die Stagger-Clips 3/4 der Hauptbank (der Stagger posiert aus der Hauptbank, re15_re2z_poses_loco_bank: Gang-Paar
+  nur in Zustand 1) tragen in JEDEM Bild sy = 0 (gemessen, Sonde kfspeed.c im Scratchpad: Clip 3 40 Bilder
+  `[0:663,0,29] ... [39:1318,0,6]`, Clip 4 44 Bilder `[0:-277,0,-26] ... [43:-1143,0,-49]`) -> dy = 0. (dx, dz) ist die
+  Wurzelbewegung, die 0x800152C8 @0x80105F54 VOR dem Spawn auf die Lage anwendet, waehrend der Anker die Matrix des
+  Vorbilds ist; der Term setzt das Blut an den bewegten Koerper. Der Port rechnet den Anker im laufenden Bild
+  (nach jeder Bewegung dieses Ticks), der Term ist dort enthalten -> (dx, dz) = 0 (PORT-KONVENTION des Ankers, wie bei
+  den HURT-Emittern). Restunterschied: Part0.R*(dx,0,dz) gegen Ryaw*(dx,dz) (Beckenneigung), nicht modelliert.
+* **Aenderung:** `s_re2z_a3_aufstehen = {0,300,0}` fuer beide Aufsteh-Spawns; `re2z_stagger_bleed`: Gate gerades +0x15A,
+  zwei Wuerfe, Winkel +0x76 + (r1<<4) - (r2<<4), Id 5096 (Zweig B) / 8000 (Zweig A), a3 = (0, -500 | 0, 0) ueber
+  re2z_gore_fx_a3 (ersetzt den Stand-in re2z_blood_fx_at mit 0x1500).
+* **Messung nachher:** eben `F330/F342 SPAWN part=8 a3=(0,300,0) -> AUF d=6 | Defekt PART8 d=295`; tief `F174 SPAWN
+  part=8 fx=(-900,-291,-19903) a3=(0,300,0) -> AUF d=32 | Defekt PART8 d=276`. Nachbluten eben/tief `F90/F92/F94/F96/F98`
+  = 5 Spawns `a3=(0,-500,0) -> NACH d=1 | Defekt PART8 d=284..285` (Becken y -1967..-1609, Blut 370..500 darueber).
+* **Offen dazu (nicht Blut):** der Port fuehrt die Stagger-WURZELBEWEGUNG nicht (re2z_hit_move bewegt nur im
+  Gang-Clip, @0x80105B84-90), das Original wendet im P1 jeden Tick e7c + 0x800152C8 an (@0x80105F28-58; Clip 4 bis
+  -1143 Wurzel-x). -> Abschnitt 5 OFFEN 7.
 
 ### 8.3 M3 — Pin sieht toedlichen Treffer und Part-8-Spawn nicht
-(in Arbeit)
+* **Ursache:** probe_r36_blut brach beim Tod ab und wertete nur Part 0/1 aus, und nur den LETZTEN Spawn eines Bilds.
+* **Aenderung:** Mess-Ring in schuss_r36.c (`re15_schuss_r36_fx_merke/_zahl/_holen`, je ein Haken in
+  re2z_blood_fx_scaled und re2z_gore_fx_core): JEDER Spawn mit Part, Lage, a3. probe_r36_blut neu: Schuss alle 12
+  Bilder bis zum TOD + 80 Bilder; jeder Spawn an Part 0/1/8 wird gegen die Sollpunkte aller Emitter-Familien (HURT,
+  HURT16A, FLINCH/TROPF, TOD, ZONE0, NACH, AUF, KRIECH, LIEGE (EXEC[5] P6 @0x801035B0-DC, a3 = 0, nur in diesem
+  Kontext)) und gegen die Defekt-Kandidaten BECKEN/PART1/PART8 (Anker ohne a3) gemessen. Pin: (1) jeder Spawn <= 40 an
+  einem Original-Sollpunkt und naeher als jeder Defekt; (2) Todesbild mit TOD/ZONE0/KRIECH <= 40; (3) Part-8-Treffer =
+  AUF; (5) y des Versatzes im ANKER-Rahmen (Anker.R^T * (fx - Anker.T)) im Band der Familie (HURT/TOD/NACH < -400,
+  FLINCH/TROPF < -200, ZONE0 > 600, AUF/KRIECH > 200) — unabhaengig davon, ob der Koerper steht oder liegt;
+  (4) Zaehler: Tod erreicht, >= 1 HURT, >= 1 NACH, >= 1 AUF, eben >= 1 Tropfblut nach dem Tod.
+* **Trennschaerfe (vorher):** dieselbe Regel (1) schlug am Stand ohne die Fixes fuer jeden Defekt an — `probe_r36_blut
+  pin eben` exit 1 mit 33 FAIL-Zeilen (Nachbluten F90..F99, AUF F390/F402, TOD F414, Tropfblut F419..F429), `pin tief`
+  exit 1 mit 23 (`mess_r36c/n1/vorher_pin_*.txt`).
+* **Nachher:** `probe_r36_blut pin eben` -> `Treffer 7, Spawns 18, Tod bei Bild 354, Tropfblut nach dem Tod 6` /
+  `Zuordnung: HURT=3 HURT16A=1 FLINCH/TROPF=7 NACH=5 AUF=2` / `probe_r36_blut: OK`; `pin tief` -> `Treffer 7, Spawns 12,
+  Tod bei Bild 186` / `Zuordnung: HURT16A=1 ZONE0=4 NACH=5 AUF=1 LIEGE(a3=0)=1` / `probe_r36_blut: OK`
+  (HURT16A im Todesbild = TOD-Sollpunkt, identische Koordinaten bei +0x16A = 0).
 
 ### 8.4 M4 — integration_r36_schuss: treffbare Ziele hinter dem Tisch
 (in Arbeit)
