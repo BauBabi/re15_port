@@ -341,3 +341,15 @@ ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lo
 - **Entscheidungsfrage:** Soll die im Hintergrund OFFEN gemalte Werkstatt-Tuer nach dem Abschliessen sichtbar
   geschlossen werden (neues Tuermodell im Durchgang, z.B. aus den RE2-Tuersequenzen)? Bei Elza ist sie im Original
   ebenso offen gemalt und trotzdem "locked".
+
+## Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde36/J_abnahme_0.md) — STAND: IN ARBEIT
+
+Maengel M1-M4 der Abnahme; Punkte 1/3/4 (erfuellt) bleiben unberuehrt (ihre Riegel gruen halten).
+
+### N1.0 Messung vorher (Abnahme-Laeufe, nicht wiederholt)
+- M1: Erweiterung F2446 Cut 8 = Tuer OFFEN gemalt; spaeter Ost Cut 8 / West Cut 7 offen, waehrend "The door is
+  locked." erscheint (Abnahme §2.3, Laeufe a2/d1/d2). Elza 11B1 gesperrt: Cut 0 geschlossen (Lauf c2).
+- M2: an der Tuer nur Kendos Folge (Programm +0x005C..+0x0080: Clip 15, Sleep 20, Se_on 0x3A/0x0A, Clip 15 rueck,
+  Sleep 35), kein Schliessen, kein Tuer-zu-Ton.
+- M3: Dossier §2.3 / OFFEN 1 / Entscheidungsfrage behaupten "kein geschlossenes Tuerbild im Original" — falsch.
+- M4: kein Riegel auf den gezeigten Cut / die Ereignisfolge.
