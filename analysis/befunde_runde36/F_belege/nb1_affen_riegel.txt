@@ -1,0 +1,32 @@
+ROOM11C0 6000 Bilder, Seed 0x1234567: Leon-Weg 619031, Griffe 4, Bisse(hp<40) 0; Gorillas: (-6839,-13554) hp 180 / (7682,744) hp 180
+  Seed 0x01234567: AUS 0 blockiert / 9 Griffe | AN 194 / 4
+  Seed 0x0000beef: AUS 3241 blockiert / 3 Griffe | AN 0 / 12
+  Seed 0x9b5bf362: AUS 1513 blockiert / 7 Griffe | AN 0 / 1
+  Seed 0x39936d13: AUS 1012 blockiert / 3 Griffe | AN 0 / 9
+  Seed 0xd7cae6c4: AUS 4685 blockiert / 8 Griffe | AN 0 / 8
+  Seed 0x76026075: AUS 2290 blockiert / 2 Griffe | AN 0 / 4
+  Seed 0x1439da26: AUS 759 blockiert / 3 Griffe | AN 153 / 2
+  Seed 0xb27153d7: AUS 1916 blockiert / 3 Griffe | AN 278 / 4
+  Seed 0x50a8cd88: AUS 3020 blockiert / 3 Griffe | AN 0 / 5
+  Seed 0xeee04739: AUS 96 blockiert / 8 Griffe | AN 96 / 6
+  Seed 0x8d17c0ea: AUS 1082 blockiert / 6 Griffe | AN 0 / 6
+  Seed 0x2b4f3a9b: AUS 3817 blockiert / 1 Griffe | AN 0 / 5
+  Seed 0xc986b44c: AUS 944 blockiert / 4 Griffe | AN 0 / 5
+  Seed 0x67be2dfd: AUS 0 blockiert / 6 Griffe | AN 0 / 3
+  Seed 0x05f5a7ae: AUS 3341 blockiert / 4 Griffe | AN 0 / 5
+  Seed 0xa42d215f: AUS 937 blockiert / 3 Griffe | AN 0 / 1
+ok:   16 Zufallsgaenge je AUS und AN gelaufen (16)
+ok:   Gegenprobe Original-Regel: 28653 blockierte Gorilla-Bilder (Befund 'noch oft blockiert')
+ok:   Umweg: blockierte Bilder 721 <= 10% von 28653
+ok:   kein Seed mehr als 600 Bilder schlechter (schlechtester 0x01234567: +194)
+ok:   Griffe AN 80 >= 80% von AUS 73 (die Gorillas erreichen Leon)
+Szene 1 Leon (-7000,12500) Gorilla (-14000,-3000): VORHER Angriff 0, min 8416, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 140, min 955, Sub3 509/1200, Spruenge 1
+ok:   Szene 1 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 8416, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 1 Umweg: Sprung 1, erster Angriff Bild 140 (<= 1200), Abstand min 955 (< 1200)
+Szene 2 Leon (-7000,12500) Gorilla (-5525,-14883): VORHER Angriff 0, min 24545, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 628, min 956, Sub3 761/1200, Spruenge 1
+ok:   Szene 2 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 24545, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 2 Umweg: Sprung 1, erster Angriff Bild 628 (<= 1200), Abstand min 956 (< 1200)
+Szene 3 Leon (7000,4000) Gorilla (-8915,-12487): VORHER Angriff 0, min 22222, Sub3 1200/1200, Spruenge 0 | NACHHER Angriff 533, min 955, Sub3 616/1200, Spruenge 1
+ok:   Szene 3 Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min 22222, Sub 3 1200 / Sub 4 0 (Befund)
+ok:   Szene 3 Umweg: Sprung 1, erster Angriff Bild 533 (<= 1200), Abstand min 955 (< 1200)
+11 Pruefungen, 0 Fehler

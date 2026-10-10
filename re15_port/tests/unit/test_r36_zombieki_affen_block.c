@@ -34,6 +34,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#define popen  _popen    /* Riegel startet die Sonde je Lauf als eigenen Prozess (Modus `eins`) */
+#define pclose _pclose
+#endif
 
 #ifndef RE15_ASSET_PSX_DIR
 #error RE15_ASSET_PSX_DIR fehlt
@@ -459,13 +463,39 @@ int main(int argc, char **argv)
     }
     printf("blockierte Bilder gesamt: %d von %d (%.1f%%)\n", gesamt, 2 * bilder, 100.0 * gesamt / (2.0 * bilder));
     if (riegel) {
-        CHECK(griffe > 0, "Zufallsgang %d Bilder: die Gorillas erreichen Leon (%d Griffe; blockiert %d Bilder)", bilder, griffe, gesamt);
     {
-        /* Punkt 2 (PORT-WAHL Pad-Suche, re15_zombieki_r36.h): drei Szenen "Leon noerdlich der Wagenbloecke, Gorilla in
-         * der Jagd suedlich/westlich, Sicht faellt". Gegenprobe (Suche aus) = Original-Regel A[3] @0x80117b40-c74:
-         * kein Ausgang ohne Sicht -> 1200 Bilder nur Sub 3, kein Angriff, Abstand bleibt. Mit der Suche: Pad ->
-         * Sub 4 -> Sprung des Originals -> Angriff. Dazu der Zufallsgang (6000 Bilder, Seed 0x1234567): keine Strecke
-         * >= 90 Bilder ohne Bewegung (wie vor der Aenderung). */
+        /* NACHBESSERUNG 1 (Abnahme 0, Mangel 6): der Riegel misst die BLOCKADE, nicht nur "es gibt Griffe". 16 Seeds x 6000
+         * Bilder Zufallsgang, AUS (Original-Regel) gegen AN (PORT-WAHL Umweg), jeder Lauf in einem EIGENEN Prozess
+         * (`eins`): im selben Prozess bleibt Modulzustand haengen (gemessen: stat-AUS allein 73006 gegen 61502 im Wechsel).
+         * Messung 2026-10-10 (Dossier NB1): AUS 28653 blockierte Bilder / 73 Griffe, AN 721 / 80, schlechtester Seed +194. */
+        long su_aus = 0, su_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000; uint32_t s_schl = 0;
+        for (int i = 0; i < 16; i++) {
+            long bl[2] = { -1, -1 }; int gr[2] = { 0, 0 };
+            for (int m = 0; m < 2; m++) {
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" eins %d %d 6000", argv[0], i, m);
+                FILE *pp = popen(cmd, "r"); char zl[512];
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    unsigned sd; int mm; long b; int g2;
+                    if (sscanf(zl, "EINS seed 0x%x modus %d blockiert %ld griffe %d", &sd, &mm, &b, &g2) == 4) { bl[m] = b; gr[m] = g2; }
+                }
+                if (pp) pclose(pp);
+            }
+            if (bl[0] < 0 || bl[1] < 0) continue;
+            n_ok++; su_aus += bl[0]; su_an += bl[1]; gr_aus += gr[0]; gr_an += gr[1];
+            if (bl[1] - bl[0] > schlimmer) { schlimmer = bl[1] - bl[0]; s_schl = zg_seed(i); }
+            printf("  Seed 0x%08x: AUS %ld blockiert / %d Griffe | AN %ld / %d\n", zg_seed(i), bl[0], gr[0], bl[1], gr[1]);
+        }
+        CHECK(n_ok == 16, "16 Zufallsgaenge je AUS und AN gelaufen (%d)", n_ok);
+        CHECK(su_aus >= 10000, "Gegenprobe Original-Regel: %ld blockierte Gorilla-Bilder (Befund 'noch oft blockiert')", su_aus);
+        CHECK(su_an * 10 <= su_aus, "Umweg: blockierte Bilder %ld <= 10%% von %ld", su_an, su_aus);
+        CHECK(schlimmer <= 600, "kein Seed mehr als 600 Bilder schlechter (schlechtester 0x%08x: %+ld)", s_schl, schlimmer);
+        CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
+    }
+    {
+        /* Punkt 2 (PORT-WAHL Umweg, re15_zombieki_r36.h): drei Szenen "Leon noerdlich der Wagenbloecke, Gorilla in
+         * der Jagd suedlich/westlich, Sicht faellt". Gegenprobe (Umweg aus) = Original-Regel A[3] @0x80117b40-c74:
+         * kein Ausgang ohne Sicht -> 1200 Bilder ohne Angriff, Abstand bleibt. Mit dem Umweg: Pad-Anlauf von der
+         * eigenen Seite -> Sprung des Originals -> Angriff. */
         static const int32_t sz[3][4] = { { -7000, 12500, -14000, -3000 }, { -7000, 12500, -5525, -14883 }, { 7000, 4000, -8915, -12487 } };
         /* Leon noerdlich (bzw. oestlich) der Wagenbloecke #2/#7 (Nibble 3), Gorilla suedlich/westlich in der blinden Jagd. */
         for (int i = 0; i < 3; i++) {
@@ -476,7 +506,7 @@ int main(int argc, char **argv)
             printf("Szene %d Leon (%d,%d) Gorilla (%d,%d): VORHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d | NACHHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d\n",
                    i + 1, (int)sz[i][0], (int)sz[i][1], (int)sz[i][2], (int)sz[i][3], v.erst, v.dmin, v.sub3, v.spr, n.erst, n.dmin, n.sub3, n.spr);
             CHECK(v.erst == 0 && v.dmin > 6001, "Szene %d Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min %d, Sub 3 %d / Sub 4 %d (Befund)", i + 1, v.dmin, v.sub3, 1200 - v.sub3);
-            CHECK(n.erst > 0 && n.erst <= 1200 && n.dmin < 1200, "Szene %d Pad-Suche: Sprung %d, erster Angriff Bild %d (<= 1200), Abstand min %d (< 1200)", i + 1, n.spr, n.erst, n.dmin);
+            CHECK(n.erst > 0 && n.erst <= 1200 && n.dmin < 1200, "Szene %d Umweg: Sprung %d, erster Angriff Bild %d (<= 1200), Abstand min %d (< 1200)", i + 1, n.spr, n.erst, n.dmin);
         }
         re15_r36_affen_padsuche_enable(1);
     }

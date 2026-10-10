@@ -1,0 +1,10 @@
+== nb1
+Slot 2: Start F1 (-9013,-15461), erster Angriff F896, Abstand min 955, blockiert 254 Bilder in 1 Strecken, Ende F1946 st1/3 (-9309,12540) d2050
+    still ab F1 254 Bilder @(-9013,-15461) Sub 0 Abstand 28033
+Slot 3: Start F1 (9434,2189), erster Angriff F606, Abstand min 954, blockiert 245 Bilder in 1 Strecken, Ende F1946 st1/3 (-6099,12631) d2050
+    still ab F1 245 Bilder @(9434,2189) Sub 0 Abstand 19400
+== abn0f_basis
+Slot 2: Start F1 (-9013,-15461), erster Angriff F0, Abstand min 22339, blockiert 254 Bilder in 1 Strecken, Ende F2361 st1/3 (-9615,-10955) d22376
+    still ab F1 254 Bilder @(-9013,-15461) Sub 0 Abstand 28033
+Slot 3: Start F1 (9434,2189), erster Angriff F1012, Abstand min 955, blockiert 245 Bilder in 1 Strecken, Ende F2361 st1/3 (-8526,12872) d2050
+    still ab F1 245 Bilder @(9434,2189) Sub 0 Abstand 19400
