@@ -64,6 +64,7 @@
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / victim shims / re15_actor_clip_len */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
 #include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
+#include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Hundebiss-Wundstempel am RE2-Boden-Biss */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
 #include "re15_gameflow.h"   /* re15_char_variant — Port-Zwilling von PL+0x8 & 1 (@0x80102010-18) */
 #include <stdio.h>
@@ -569,7 +570,8 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
     if (!(e->y > (int32_t)e->dog_floor_y - 1800)) return 0;/* @0x80104E84-94 (+0x1C2-Analog) */
     if (pl->floor != e->floor) return 0;                   /* @0x80104E9C-A8 */
     e->re2z_flags21a = 0;                                  /* sh zero,2(s3) @0x80104EB4 (Fatigue-Reset) */
-    int r = re15_re2_player_damage(pl, 20);                /* FUN_800401D4(20,0) @0x80104EB8-C0 */
+    enum { RE2D_BISS_SCHADEN = 20 };                       /* `addiu a0,zero,20` @0x80104EB8 */
+    int r = re15_re2_player_damage(pl, RE2D_BISS_SCHADEN); /* FUN_800401D4(20,0) @0x80104EB8-C0 */
     if (r == 2                                             /* bne v1,2 @0x80104EE0-E4 */
         && !re15_ai_facing_aligned(e, pl)) {               /* 0x80015910==0 @0x80104EEC-F8 (MAPPING) */
         /* KEIN drittes Gate im Port (Runde 30, hund-tod.md 3.2/Schritt 4): das Original prueft
@@ -619,6 +621,7 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
          * Schaden ist schon oben gefallen (800401d4); die Spieler-Hit-Reaktion läuft über die
          * Port-Hit-Chain (hit_react), der Claim über den Grab-Pin unterbleibt (kein Latch). */
         pl->hit_react |= 0x1;
+        re15_kleidung_hundebiss(e, pl, RE2D_BISS_SCHADEN); /* Runde 36 Spur B: RE1.5-Biss-Stempel @0x8010f33c-64 (Panel 05 07 04 06 @0x80121014, +0x32) je 10 HP (@0x8010f2c8) am RE2-Boden-Biss */
     } else {
         /* Toedlicher Boden-Biss: `bltz v0,0x80104fb4` @0x80104F90 -> `jal 0x80105204`
          * @0x80104FB4; das Sprungziel (selbst disassembliert) schreibt `sb v0,4(v1)` mit

@@ -372,6 +372,7 @@ int re15_actor_clip_len_legacy(const re15_actor_t *a);
  * re15_player_victim_reset(): clear on room change / death-continue reload. */
 int      re15_player_victim_state(void);
 uint8_t  re15_player_victim_type(void);
+uint8_t  re15_player_victim_variant(void);   /* Runde 36 Spur B: Griff-Richtung aca59 (0 vorn/1 hinten/2,3 Kriecher) */
 /* GORILLA-WURF (0x27, Hook 0x8011c118): 1 waehrend der Aufsteher-Phasen P3-P6 — Leon
  * spielt dann Clips 0x10/0xb aus seiner EIGENEN Bank; der Renderer laesst den
  * Opfer-Bank-Override weg (P4/P6 anim_set auf [acad8]/[acbc0] @0x8011c34c-60). */

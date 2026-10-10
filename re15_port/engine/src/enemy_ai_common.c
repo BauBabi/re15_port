@@ -41,6 +41,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
+#include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -610,6 +611,7 @@ static uint8_t s_victim_fresh = 0;            /* clip (re)set THIS tick -> pose 
 static int     g_player_victim_zombie = -1;   /* grabbing zombie actor slot -> its XZ for the turn-to-face */
 int     re15_player_victim_state(void) { return g_player_victim; }
 uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
+uint8_t re15_player_victim_variant(void) { return g_player_victim_variant; }   /* Runde 36 Spur B: aca59 (Griff-Richtung) */
 
 /* CLIP ROOT MOTION (byte-true func_0x8001ad68 @0x8001ad68): each frame the entity position is the
  * anchor + the CURRENT keyframe's root-translation offset rotated by the entity yaw. Per-frame delta
@@ -2490,12 +2492,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
              * @0x80102640). Devour/Death stempeln NICHT. Dazu das Release-BLUT am Spieler-
              * Bone 8 (scale 0x1500 @0x8010a550, Anker +0x5A0 @0x8010a568/70, a3=(0,0,0)
              * @0x801201c8; bite_blood_fx.md D3). */
-            re15_wound_release_stamp((e->sub_state_1 == 3) ? 0 : 1);
-            {
-                int32_t rb8[3]; re15_player_victim_bone_pos(8, rb8);
-                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
-                                     rb8[0], rb8[1], rb8[2], (int16_t)player->rot_y);
-            }
+            re15_kleidung_abwurf(e->type, (e->sub_state_1 == 3) ? 0 : 1);   /* Runde 36 Spur B: Phase 4 @0x8010a4e8 (Blut + Stempel), kleidung_r36.c */
             s_grab_mercy_timer = 0x5a;
             e->sub_state_2 = 5;
             break;
@@ -4270,13 +4267,7 @@ static void re15_zcrawl_grab_animate(re15_actor_t *e, re15_actor_t *pl)
          * FUN_8010a268: 37edc(2,0x32); Tabelle re15_damage.c s_wound_helper). Release-BLUT
          * variantenspezifisch am SPIELER-Part 3 (Fuss/Bein: `addiu a2,a2,580` = +0x244
          * @0x8010a54c, a1 = acabe @0x8010a530-534, scale 0x1500 @0x8010a524). */
-        re15_wound_release_stamp((int)e->sub_state_1 + 1);   /* aca59 = (+0x5)+1 -> 2/3 */
-        {
-            int32_t rb3[3]; re15_player_victim_bone_pos(3, rb3);
-            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
-                                 rb3[0], rb3[1], rb3[2],
-                                 (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
-        }
+        re15_kleidung_abwurf(e->type, (int)e->sub_state_1 + 1);   /* aca59 = (+0x5)+1 -> 2/3; Runde 36 Spur B: Phase 4 @0x8010a4e8 (Blut Part 3 + Stempel), kleidung_r36.c */
         /* byte-true KEIN ai_flags &= ~1 hier (der Standing-Grab loescht es @Z.75 — der
          * Kriecher nicht; Roh-Case 4 enthaelt keinen +0x1D8-Store). */
         /* fallthrough in [5] (@0x80103fa0 -> 0x80103fa4) */
@@ -12947,6 +12938,7 @@ static void re15_writher_ai_tick(int slot)
 
         case 5:                                          /* ABWERFEN — RE2 P4 @0x80102968 */
             re15_player_victim_throwoff();               /* Spieler+0x6 = 4 @0x8010288C-94 */
+            re15_kleidung_abwurf(e->type, (int)g_player_victim_variant);   /* Runde 36 Spur B: Phase 4 @0x8010a4e8 */
             e->re2z_t158 = 0;                            /* sh zero,344 @0x80102990 */
             e->motion = 1; e->anim_frame = 0;            /* EM01A hat keinen Abwurf-Clip (4 Clips)
                                                           * -> zurueck ueber die Ruhe-Kante */
