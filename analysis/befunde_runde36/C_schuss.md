@@ -496,7 +496,7 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
   Im Stagger-Handler 0x80105BC0-0x80106100 wird +0x222 nur bei 0x80105F84 gelesen und erst in P2 geloescht (`sb zero,546`
   @0x80106034) -> im P1 laeuft Zweig B: Id 5096, a3 = (dx, dy-500, dz) mit (dx,dy,dz) = Wurzel-Delta dieses Ticks.
   dy: die Stagger-Clips 3/4 der Hauptbank (der Stagger posiert aus der Hauptbank, re15_re2z_poses_loco_bank: Gang-Paar
-  nur in Zustand 1) tragen in JEDEM Bild sy = 0 (gemessen, Sonde kfspeed.c im Scratchpad: Clip 3 40 Bilder
+  nur in Zustand 1) tragen in JEDEM Bild sy = 0 (gemessen, Sonde `C_schuss_mess/n1/kfspeed.c`: Clip 3 40 Bilder
   `[0:663,0,29] ... [39:1318,0,6]`, Clip 4 44 Bilder `[0:-277,0,-26] ... [43:-1143,0,-49]`) -> dy = 0. (dx, dz) ist die
   Wurzelbewegung, die 0x800152C8 @0x80105F54 VOR dem Spawn auf die Lage anwendet, waehrend der Anker die Matrix des
   Vorbilds ist; der Term setzt das Blut an den bewegten Koerper. Der Port rechnet den Anker im laufenden Bild
@@ -612,8 +612,8 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
 ### 8.8 Zensus aller FUN_8001BF10-Aufrufe in EMZ0.BIN (Punkt 2 vollstaendig statt drei Emitter)
 Die Abnahme fand zwei Emitter-Familien, die der Bau-Agent uebersehen hatte; die neue Sonde fand im Lauf "tief" eine
 dritte (Tod des Liegenden). Deshalb ein vollstaendiger Zensus: alle 88 Stellen `jal 0x8001bf10` (Wort 0x0C006FC4) in
-info/re2leon/COMMON/BIN/EMZ0.BIN, je Stelle a0/a2/a3 rueckwaerts bis zum vorigen `jal` (Skript `zensus2.py` im
-Scratchpad, Rohliste `zensus2.txt`), dann gegen den Port-Aufruf (Adresse im Port-Kommentar) gestellt.
+info/re2leon/COMMON/BIN/EMZ0.BIN, je Stelle a0/a2/a3 rueckwaerts bis zum vorigen `jal` (Skript und Rohliste
+`C_schuss_mess/n1/zensus2.py` / `zensus2.txt`), dann gegen den Port-Aufruf (Adresse im Port-Kommentar) gestellt.
 
 **A — Blut/Gore am getroffenen bzw. sterbenden Zombie mit a3 != 0 (27 Stellen), jetzt alle Anker.R*a3 + Anker.T:**
 | Stelle(n) | Handler | a3 im Original (Anker) | Port vorher | Stand |
@@ -672,9 +672,9 @@ bzw. ohne -> OFFEN 9.
 Summe 27 + 30 + 14 + 17 = 88.
 
 ### 8.9 Gegenmessung an der exe (Punkt 2, derselbe Aufbau wie die Abnahme 0)
-Skript `run_n1_p2.sh` (Scratchpad c1, Aufbau = `run_abn_p2.sh` der Abnahme): ROOM1140 per RE15_DEBUG_JUMP, Leon
+Skript `C_schuss_mess/n1/run_n1_p2.sh` (Aufbau = `run_abn_p2.sh` der Abnahme): ROOM1140 per RE15_DEBUG_JUMP, Leon
 (-5000,-19600) Blick +x, Pistole, RE2-KI, Dauerfeuer `W1.2,M0.6,MA9.0,M0.5,W2`, RE15_FX_LOG + RE15_STATE_LOG, Messkopie
-`re15_r36c_n1.exe` (danach geloescht), `exit=0`. Auswertung `fx_auswertung.py` (erste Zeile je Blut-Effekt id 0 / frame=1);
+`re15_r36c_n1.exe` (danach geloescht), `exit=0`. Auswertung `C_schuss_mess/n1/fx_auswertung.py` (erste Zeile je Blut-Effekt id 0 / frame=1);
 vorher = Roh-Logs der Abnahme (`abn/p2/tod`, nicht neu gefahren). Die Treffer liegen in beiden Laeufen auf denselben
 Bildern und Lagen (state.log Platz 2: F55 50->34, F77 ->18, F99 ->2, F121 2->-14 st 3), die Lauf-Folge ist also gleich:
 | Bild | Emitter (state.log) | vorher (Abnahme) | nachher | Befund |
