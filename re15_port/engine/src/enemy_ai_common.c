@@ -41,6 +41,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
+#include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -5343,6 +5344,7 @@ router_gate:
 int re15_actor_uses_own_bank(const re15_actor_t *a)
 {
     if (!a || a->type < 0x40 || a->type > 0x4d) return 0;
+    if (re15_szl_schub_npc_kanal(a)) return re15_szl_schub_npc_kanal(a) == 2;   /* Runde 36 Spur J: Sub 0x13 */
     if (a->walk_active) return 1;
     if (a->state == 1) return 1;                       /* ESKORTE, alle Subs */
     if (a->state == 4) {
@@ -5355,6 +5357,7 @@ int re15_actor_uses_own_bank(const re15_actor_t *a)
 int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
+    if (re15_szl_schub_npc_kanal(a) == 1) return 1;   /* Runde 36 Spur J: Sub 0x13 [2..7] = +0x84/+0x16c */
     /* WELLE B (RE2-Flavor): der RE2-WALK (ACTIVE sub 1) posiert/verfaehrt die PAIR-1-Bank —
      * sein 0x80015e7c laedt EXPLIZIT a1=EMR@+0x108 / a2=EDD@+0x17C (@0x80101CB0-BC), waehrend
      * der Dispatcher allen anderen Subs die Pair-2-Action-Bank reicht. Pair 1 == die Port-
@@ -10004,6 +10007,7 @@ static void re15_npc_sub_dispatch(re15_actor_t *e)
     case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
     case 6: re15_npc_sub_event_reach(e); break;
     case 9: re15_npc_sub_turn(e); break;
+    case 0x13: re15_szl_schub_npc(e); break;   /* Runde 36 Spur J: Schub-Sub 0x80076ca0[19] = 0x80052864 */
     default: re15_npc_sub_idle(e); break;
     }
 }
@@ -10556,7 +10560,8 @@ static void re15_npc_ai_tick(int slot)
      * alles ausser Sub 0 (Marvins Mode-6-Idle lief nie, marvin_10d0.md D3); seit die NPC-Plc_dest-
      * Walks byte-true in der Sub-VM laufen (state=4/+0x5=mode @0x80041c14-18, marvin_glide_end.md
      * Fix #1), gilt das auch fuer 4/5/7/8/9. */
-    int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9);
+    int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9) ||
+                         re15_szl_schub_npc_kanal(e);   /* Runde 36 Spur J: auch Schub-Sub 0x13 laeuft im Executor */
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
         e->hp = -1;
         return;

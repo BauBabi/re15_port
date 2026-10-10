@@ -2588,6 +2588,8 @@ static int op_plc_dest(scd_thread_t *t)
                     extern void re15_player_aim_interrupt(void);
                     re15_player_aim_interrupt();
                     if (mode == 0x06) re15_player_event_reach_begin();
+                    else if (mode == 0x13) { extern void re15_szl_schub_spieler_start(void);   /* Runde 36 Spur J: */
+                        re15_szl_schub_spieler_start(); }   /* Schub-Sub @0x80052864 (0x80073e30[19]) */
                 }
             }
 #ifdef RE15_PLATFORM_PC
@@ -3416,6 +3418,9 @@ static int op_member_set(scd_thread_t *t)
             case 0x03: case 0x0E: g_scd.props[pi].rot_x = (int16_t)value; break;
             case 0x04: case 0x0F: g_scd.props[pi].rot_y = (int16_t)value; break;
             case 0x05: case 0x10: g_scd.props[pi].rot_z = (int16_t)value; break;
+            /* Runde 36 Spur J: Id 6 = Objekt-Wort 0 (`sw a2,0(a0)` @0x800411c8) — ROOM11B0 @0x01706 0x0201
+             * (Bit 0x200 = Schub durch den Spieler, szenenleon_r36.c), @0x017D6 0x0081. */
+            case 0x06: g_scd.props[pi].flags = (uint16_t)value; break;
             default: break;
             }
 #ifdef RE15_PLATFORM_PC

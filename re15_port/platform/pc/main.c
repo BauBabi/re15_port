@@ -8620,6 +8620,8 @@ re_title:;
                 extern int re15_player_event_reach_clip(void);
                 extern int re15_player_aim_active(void);
                 int erc = re15_player_event_reach_clip();
+                { extern int re15_szl_schub_spieler_wclip(void);   /* Runde 36 Spur J: Sub 0x13 [0/1] = Clip 5 */
+                  if (erc < 0) erc = re15_szl_schub_spieler_wclip(); }   /* auf +0x170 (@0x8005294c) */
                 if (erc >= 0 && wact_ok && re15_player_victim_state() == 0 &&
                     !re15_player_aim_active()) {
                     p_skel = wact_skel;
