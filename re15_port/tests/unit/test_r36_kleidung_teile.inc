@@ -2,8 +2,35 @@
 
 /* ---------------------------------------------------------------------------------------------- */
 /* hund: ROOM11D0 (Zwinger-Gang, Hunde frei: Flag (3,152)=1 wie probe_r27_hund_biss.c), RE2-Hund.
- * Jeder Boden-Biss (RE2 @0x80104F7C-88, Spieler lebt) muss GENAU EIN Panel aus 05 07 04 06
- * (@0x80121014) um 0x32 erhoehen bzw. es stempeln (RE1.5-Form @0x8010f33c-64); Panels 0..3 bleiben. */
+ * MASSSTAB (Nachbesserung 1): ein RE1.5-Biss kostet 10 HP (`addiu a0,v0,-10` @0x8010f2c8) und
+ * stempelt EINMAL +0x32 (@0x8010f360/64) auf byte[0x80121014 + aca59*2 - 4 + (rng&1)] = 05 07 04 06.
+ * Jeder RE2-Boden-Biss (RE2 @0x80104F7C-88, 20 HP `addiu a0,zero,20` @0x80104EB8) muss deshalb
+ * GENAU 20/10 = 2 solche Stempel tragen: der Zustand nach dem Biss muss sich aus dem davor durch
+ * zwei Akkumulator-Schritte (FUN_80037edc, @0x80037efc-f50 nachgerechnet) mit je +0x32 auf Panels
+ * EINES Blickrichtungs-Paars {5,7} bzw. {4,6} ergeben; alles andere bleibt. Vorher (ein Stempel je
+ * Biss) scheiterte das an jedem Biss. */
+static void hund_sim_add(uint8_t w[8][2], int p, int amt)
+{
+    int sum = (int)w[p][1] + amt;                         /* addu @0x80037f04, sb @0x80037f08 */
+    w[p][1] = (uint8_t)sum;
+    if ((sum & 0xff) < 0x78) return;                      /* lbu @0x80037f0c, sltiu 0x78 @0x80037f14 */
+    w[p][1] = 0;                                          /* @0x80037f24 */
+    w[p][0] = (uint8_t)(w[p][0] + 1);                     /* @0x80037f2c */
+    if (w[p][0] >= 3) w[p][0] = 2;                        /* Clamp @0x80037f40/50 */
+}
+static int hund_zwei_stempel(const uint8_t w0[8][2], const uint8_t w1[8][2])
+{
+    static const int paar[2][2] = { { 5, 7 }, { 4, 6 } };  /* @0x80121014: aca59=2 -> 05 07, 3 -> 04 06 */
+    for (int r = 0; r < 2; r++)
+        for (int a = 0; a < 2; a++)
+            for (int b = 0; b < 2; b++) {
+                uint8_t s[8][2]; memcpy(s, w0, sizeof s);
+                hund_sim_add(s, paar[r][a], 0x32);
+                hund_sim_add(s, paar[r][b], 0x32);
+                if (memcmp(s, w1, sizeof s) == 0) return 1;
+            }
+    return 0;
+}
 static int teil_hund(int budget)
 {
     const char *base = getenv("RE15_ASSET_DIR");
@@ -52,36 +79,36 @@ static int teil_hund(int budget)
     if (nh == 0) { printf("FAIL: keine Hunde gespawnt\n"); return 1; }
 
     uint8_t w0[8][2], w1[8][2]; re15_wound_save(w0);
-    int bisse = 0, fehler = 0;
+    int bisse = 0, fehler = 0, hp_verlust = 0;
     for (int f = 0; f < budget; f++) {
-        int hp0 = pl->hp;
-        if (pl->hp < 30) pl->hp = 100;                    /* am Leben halten */
+        if (pl->hp < 30) pl->hp = 100;                    /* am Leben halten (30 - 20 >= 0: ueberlebt) */
         if (re15_player_victim_state() != 0) { pl->hp = 100; }
+        int hp0 = pl->hp;
         frame(0, 0);
         re15_wound_save(w1);
-        int geaendert = 0, panel = -1, delta = 0;
+        int geaendert = 0;
         for (int p = 0; p < 8; p++)
-            if (w1[p][0] != w0[p][0] || w1[p][1] != w0[p][1]) {
-                geaendert++; panel = p;
-                delta = ((int)w1[p][0] * 120 + w1[p][1]) - ((int)w0[p][0] * 120 + w0[p][1]);
-            }
+            if (w1[p][0] != w0[p][0] || w1[p][1] != w0[p][1]) geaendert++;
         if (geaendert) {
-            printf("  F%d Biss (hp %d -> %d): Panel %d %u/%u -> %u/%u (Punkte %+d)\n", f, hp0, pl->hp,
-                   panel, w0[panel][0], w0[panel][1], w1[panel][0], w1[panel][1], delta);
+            printf("  F%d Biss (hp %d -> %d):", f, hp0, pl->hp);
+            for (int p = 0; p < 8; p++)
+                if (w1[p][0] != w0[p][0] || w1[p][1] != w0[p][1])
+                    printf(" Panel %d %u/%u -> %u/%u", p, w0[p][0], w0[p][1], w1[p][0], w1[p][1]);
+            printf("\n");
             bisse++;
-            if (geaendert != 1) { printf("FAIL: %d Panels in einem Takt geaendert\n", geaendert); fehler++; }
-            if (!(panel == 4 || panel == 5 || panel == 6 || panel == 7)) { printf("FAIL: Panel %d nicht aus 05 07 04 06\n", panel); fehler++; }
-            /* +0x32 = 50 Punkte; beim Stempel verfaellt der Rest ueber 120 (acc := 0 @0x80037f24) */
-            if (!(delta == 50 || (w1[panel][0] > w0[panel][0] && delta >= 50 - 49 && delta <= 50)))
-                { printf("FAIL: Betrag %d statt 0x32\n", delta); fehler++; }
-            if (!(pl->hp < hp0 || hp0 == 100)) { printf("FAIL: Stempel ohne HP-Verlust\n"); fehler++; }
+            hp_verlust += hp0 - pl->hp;
+            if (hp0 - pl->hp != 20) { printf("FAIL: Biss kostet %d HP statt 20 (@0x80104EB8)\n", hp0 - pl->hp); fehler++; }
+            if (!hund_zwei_stempel(w0, w1))
+                { printf("FAIL: Zustand nach dem Biss ist NICHT genau 2 x 0x32 auf einem Paar 05/07 bzw. 04/06\n"); fehler++; }
         }
         memcpy(w0, w1, sizeof w0);
         if (bisse >= 4) break;
     }
     print_wounds("  Ende");
+    printf("Massstab: %d Bisse, %d HP, je Biss 2 Stempel = %d Stempel (RE1.5: 1 je 10 HP @0x8010f2c8)\n",
+           bisse, hp_verlust, 2 * bisse);
     CHECK(bisse >= 3, "weniger als 3 Boden-Bisse des RE2-Hunds im Budget (%d)", bisse);
-    CHECK(fehler == 0, "%d Formfehler an den Biss-Stempeln", fehler);
+    CHECK(fehler == 0, "%d Fehler an den Biss-Stempeln (Massstab 0x32 je 10 HP)", fehler);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     return 0;
 }

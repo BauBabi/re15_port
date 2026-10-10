@@ -13,19 +13,26 @@
 extern void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);   /* enemy_ai_common.c (Spur J r35) */
 
 /* MESSHAKEN RE15_KLEIDUNG_LOG=1 (env-gegatet, kein Verhalten): je Stempel-Ereignis eine Zeile
- * mit Bild, Quelle, Richtung (abwurf: aca59-Richtung; hundebiss: Tabellenindex aca59*2+rng; kraehe:
- * vert = Spieler.y - Kraehe.y), Spieler-HP und der Wund-Tabelle (Level/Akku je Panel) DANACH —
+ * mit Bild, Quelle, Richtung (abwurf: aca59-Richtung; hundebiss: Tabellenindex aca59*2+rng JE
+ * STEMPEL, "a+b" = zwei Stempel eines 20-HP-Bisses; kraehe: vert = Spieler.y - Kraehe.y),
+ * Spieler-HP und der Wund-Tabelle (Level/Akku je Panel) DANACH —
  * belegt auf dem echten Spielweg, welcher Griff/Biss welche Panels fuellt (Dossier §5.3). */
-static void kleid_log(const char *quelle, int typ, int dir)
+static void kleid_log_txt(const char *quelle, int typ, const char *dir)
 {
     static int s_log = -1;
     if (s_log < 0) s_log = getenv("RE15_KLEIDUNG_LOG") ? 1 : 0;
     if (!s_log) return;
-    fprintf(stderr, "[kleidung] F%u %s typ=0x%02x dir=%d hp=%d gen=%d panels=",
+    fprintf(stderr, "[kleidung] F%u %s typ=0x%02x dir=%s hp=%d gen=%d panels=",
             (unsigned)g_engine.frame_count, quelle, typ, dir,
             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp, re15_wound_generation());
     for (int p = 0; p < 8; p++)
         fprintf(stderr, "%d/%d%s", re15_wound_level(p), re15_wound_acc(p), (p < 7) ? "," : "\n");
+}
+static void kleid_log(const char *quelle, int typ, int dir)
+{
+    char t[16];
+    snprintf(t, sizeof t, "%d", dir);
+    kleid_log_txt(quelle, typ, t);
 }
 
 /* STAGE1-Registrierung FUN_8011e864 (@0x8011e9c0-0x8011eac8, player_hit_chain.md §1):
@@ -96,18 +103,30 @@ void re15_kleidung_abwurf(uint8_t greifer_typ, int dir)
     kleid_log("abwurf", greifer_typ, dir);
 }
 
-void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spieler)
+void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spieler, int schaden)
 {
     if (!hund || !spieler) return;
     /* aca59 = FUN_8001a780(Spieler)+2 (@0x8010f310-324): a780 = ((Spieler.yaw - self.yaw + 0x400)
      * & 0xfff) < 0x800 (@0x8001a788-a4) -> 1 = gleichgerichtet (Ruecken zum Hund). */
     int gleich = ((((int32_t)spieler->rot_y - (int32_t)hund->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;
-    /* rng = FUN_8001af20 @0x8010f334 (Engine-Strom), `andi v0,v0,0x1` @0x8010f34c; panel =
-     * byte[0x80121010 + aca59*2 + (rng&1)] (@0x8010f33c-5c), Bytes @0x80121014 = 05 07 04 06. */
     static const uint8_t panel[4] = { 5, 7, 4, 6 };     /* @0x80121014 */
-    int idx = (gleich ? 2 : 0) + (re15_engine_rand8() & 1);
-    re15_wound_add(panel[idx], 0x32);                   /* `ori a1,zero,0x32` @0x8010f364 */
-    kleid_log("hundebiss", hund->type, idx);
+    /* MASSSTAB (Nachbesserung 1, Dossier N1.2): der RE1.5-Knockdown-Biss kostet 10 HP (`addiu
+     * a0,v0,-10` @0x8010f2c8, `sh` @0x8010f2d0) und stempelt dafuer GENAU EINMAL (@0x8010f360) —
+     * je 10 HP Biss-Schaden ein Stempel. Der RE2-Biss kostet `schaden` (20: `addiu a0,zero,20`
+     * @0x80104eb8) = schaden/10 RE1.5-Bisse -> ebenso viele Stempel; jeder zieht wie jeder
+     * RE1.5-Biss seinen eigenen rng-Wert (FUN_8001af20 @0x8010f334, `andi v0,v0,0x1`
+     * @0x8010f34c) und waehlt sein Panel aus byte[0x80121010 + aca59*2 + (rng&1)] (@0x8010f33c-5c).
+     * Vorher: EIN Stempel je 20-HP-Biss = halbes RE1.5-Verhaeltnis -> auf dem Hundeweg ROOM1190
+     * erreichte kein Panel 0x78 bis zum Tod (B_abnahme_0.md §5.1). */
+    int n = schaden / 10;                               /* -10 HP je RE1.5-Biss @0x8010f2c8 */
+    char dirs[48]; int len = 0; dirs[0] = 0;
+    for (int i = 0; i < n; i++) {
+        int idx = (gleich ? 2 : 0) + (re15_engine_rand8() & 1);
+        re15_wound_add(panel[idx], 0x32);               /* `ori a1,zero,0x32` @0x8010f364 */
+        if (len < (int)sizeof dirs - 4)
+            len += snprintf(dirs + len, sizeof dirs - (size_t)len, "%s%d", i ? "+" : "", idx);
+    }
+    kleid_log_txt("hundebiss", hund->type, dirs);
 }
 
 void re15_kleidung_kraehe(const re15_actor_t *kraehe, const re15_actor_t *spieler)

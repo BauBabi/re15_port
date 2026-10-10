@@ -33,9 +33,12 @@ void re15_kleidung_abwurf(uint8_t greifer_typ, int dir);
 /* RE1.5-Hundebiss-Stempel (Biss-Connect FUN_8010f15c @0x8010f33c-60): panel =
  * byte[0x80121010 + aca59*2 + (rng&1)] mit aca59 = a780(Spieler)+2, Bytes 05 07 04 06
  * @0x80121014 -> Spieler gleichgerichtet (Ruecken zum Hund) 4/6, sonst 5/7; Betrag 0x32
- * (@0x8010f35c), rng = FUN_8001af20 @0x8010f334. Nur beim lebenden, nicht gegriffenen Spieler
- * (@0x8010f2dc/e4). PORT-MAPPING auf den RE2-Boden-Biss (@0x80104F7C-88 -> 0x801051BC(0,dir)). */
-void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spieler);
+ * (@0x8010f364), rng = FUN_8001af20 @0x8010f334. Nur beim lebenden, nicht gegriffenen Spieler
+ * (@0x8010f2dc/e4). PORT-MAPPING auf den RE2-Boden-Biss (@0x80104F7C-88 -> 0x801051BC(0,dir)).
+ * MASSSTAB (Nachbesserung 1): ein RE1.5-Biss kostet 10 HP (@0x8010f2c8) und stempelt einmal ->
+ * `schaden` = HP-Schaden des RE2-Bisses (20, `addiu a0,zero,20` @0x80104eb8) ergibt schaden/10
+ * Stempel, jeder mit eigenem rng-Zug. */
+void re15_kleidung_hundebiss(const re15_actor_t *hund, const re15_actor_t *spieler, int schaden);
 
 /* RE1.5-Kraehen-Stempel 0x801161e8 (vert = Spieler.y - Kraehe.y, +0x1ec @0x801124cc/@0x80114f40):
  *   <1500 (1,+0xa)(2,+0xa) | 1500..2999 (3,+0xa)(4,+0x28)(6,+0x28)(5,+0x28) |

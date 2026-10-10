@@ -6,7 +6,11 @@
 #   unit_r36_kleidung_griff_re2 / _re15  ROOM1140 auf dem echten game_step-Weg: der 3. ueberlebte Griff
 #                                        (von hinten, Helper 0x8010a208 (0,10)(4,50)(7,50)) stempelt
 #                                        Panel 4/7 Stufe 1 — unter BEIDEN Gehirnen (RE2 = Standard).
-#   unit_r36_kleidung_hund               RE2-Hund: Boden-Biss stempelt ein Panel aus 05 07 04 06 (+0x32).
+#   unit_r36_kleidung_hund               RE2-Hund: jeder Boden-Biss (20 HP @0x80104EB8) = genau ZWEI
+#                                        RE1.5-Stempel +0x32 auf einem Paar 05/07 bzw. 04/06
+#                                        (1 Stempel je 10 HP @0x8010f2c8, Nachbesserung 1).
+#   integration_r36_kleidung_hundeweg    echte exe, Hundeweg ROOM1190 (Weg der Abnahme): Decal vor
+#                                        Danger, Spielstand -> CONTINUE -> Pixel-Differenz (Ruecken).
 #   unit_r36_kleidung_kraehe             RE2-Kraehe: Griff-Eintritt stempelt die 0x801161e8-Baender.
 #   unit_r36_kleidung_lut                Panel-LUT @0x80074208: Leon Zeile 0, Elza Zeile 4 (nicht 1).
 #   integration_r36_kleidung_bild        echte exe: Spielstand mit Wunden -> CONTINUE -> Framedump:
@@ -44,4 +48,13 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_kleidung_weg_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kleidung_spielweg.cmake)
     set_tests_properties(integration_r36_kleidung_spielweg PROPERTIES TIMEOUT 900)
+    # Nachbesserung 1 (M1): der Hundeweg ROOM1190 — RE2-Biss (20 HP @0x80104EB8) stempelt im
+    # RE1.5-Massstab (1 Stempel je 10 HP @0x8010f2c8), Decal vor Danger, CONTINUE zeigt es.
+    add_test(NAME integration_r36_kleidung_hundeweg
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:test_r36_kleidung>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_kleidung_hund_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_kleidung_hundeweg.cmake)
+    set_tests_properties(integration_r36_kleidung_hundeweg PROPERTIES TIMEOUT 900)
 endif()
