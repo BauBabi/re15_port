@@ -170,13 +170,15 @@ it_muss(E "${_dbg}" "Spieler-HP 100 -> min 100")
 it_muss(E "${_dbg}" "Kappe 0,")
 
 # --- F: Spieler hat in ROOM1040 vorher 15 Raum-Zombies getoetet (Records 0..14, Spawn-Reihenfolge; Nachbesserung 2 M1) ------
-# Abnahme 1: "1040: 5 Raum-Records leben, Auffuellung 0" -> KAPPE, "Bilanz 1040: 0 Zombies". Die Records 15..19 (Slot 15..19 =
-# Aktor 16..20 >= RE15_ACTOR_MAX) belegen das Limit 5 (@0x011F0), erscheinen im Port aber nicht -> fuenf Auffuell-Records,
-# Save(0x11, 0) gibt die Plaetze zurueck. Ende im 5. Bild von ROOM1030.
+# Abnahme 1: "1040: 5 Raum-Records leben, Auffuellung 0" -> KAPPE, "Bilanz 1040: 0 Zombies". Damals belegten die Records
+# 15..19 (Slot 15..19 = Aktor 16..20 >= RE15_ACTOR_MAX 16) das Limit 5 (@0x011F0), erschienen aber nicht -> fuenf Auffuell-
+# Records, Save(0x11, 0). Runde 36 Spur E: RE15_ACTOR_MAX 21 (Gegner-Feld 20 Plaetze, `sltiu v0,v0,0x14` @0x800372b4) ->
+# die Records 15..19 ERSCHEINEN selbst (Aktor 16..20), keine Auffuellung, Save(0x11, 5) laesst den Zaehler bei 5.
+# Ende im 5. Bild von ROOM1030.
 it_lauf(f 1130 "nach10f0;ersteszene;tot1040_15" "W1,A0.2,W200" 5 1030 600 _dbg)
-it_muss(F "${_dbg}" "1040: 5 Raum-Records leben, 0 erscheinen im Port, Auffuellung 5")
+it_muss(F "${_dbg}" "1040: 5 Raum-Records leben, 5 erscheinen im Port, Auffuellung 0")
 it_muss(F "${_dbg}" "Montage 1040 (Programm 2)")
-it_muss(F "${_dbg}" "Gleichzeitig-Zaehler 5 -> 0")
+it_muss(F "${_dbg}" "Gleichzeitig-Zaehler 5 -> 5")
 it_muss(F "${_dbg}" "Bilanz 1040: 5 Zombies, durchs Tor (z < -360) 5,")
 it_muss(F "${_dbg}" "Spieler-HP 100 -> min 100")
 it_muss(F "${_dbg}" "Kappe 0,")

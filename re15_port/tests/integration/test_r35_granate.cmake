@@ -34,6 +34,9 @@
 #           (-6720,-13266): der Punkt liegt im Rechteck der Raute x[-15400..4799] z[-13266..4921], ausserhalb der
 #           Raute. Vorher: Wandzeile im Wurfbild (0 Flugbilder). Jetzt: >= 5 Flugbilder vor der ersten Wandzeile.
 # Boss-Slots nach RE15_DEBUG_JUMP (gemessen r35a_mess/b1_2090 + b2_5090, Bild 100): ROOM2090 Alligator = Slot 15
+# bis Runde 35; seit Runde 36 Spur E (RE15_ACTOR_MAX 16 -> 21, Gegner-Feld 20 Plaetze `sltiu v0,v0,0x14` @0x800372b4)
+# Slot 20 - main.c setzt ihn auf den HOECHSTEN freien Platz (Rueckwaertssuche ab RE15_ACTOR_MAX-1); gemessen r36e n2090:
+# "Alligator (0x23) in Wasserzone gesetzt, Slot 20", Bild 100 `[20 t=23 ...] hp=3000`.
 # (t=23, HP 3000, Lauerstellung), ROOM5090 Birkin = Slot 2 (t=36, HP 600, grid 0x33 vor dem Kampfstart).
 # Ein Lauf OHNE Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen = Startfehler) wird EINMAL wiederholt.
 
@@ -394,7 +397,7 @@ endfunction()
 r35_laeuft(gator _an)
 if(_an)
     # Gator-Boss 0x23 in ROOM2090: GB_HP 3000 (enemy_ai_boss_gator.c, DESIGN), RE1.5 Art 2 = 1000 (@0x8006f41c).
-    r35_boss(gator 2090 15 23 60 1000)
+    r35_boss(gator 2090 20 23 60 1000)   # Slot 20 = RE15_ACTOR_MAX-1 (Runde 36 Spur E, s. Kopf)
 endif()
 # Felder g (grid) und af eines Gegners <slot> (CMake kennt nur 9 Fanggruppen -> eigener Auswerter).
 function(r35_gegner_g _zeile _slot _p)
