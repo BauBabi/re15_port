@@ -705,3 +705,159 @@ Plan:
 5. Mangel 1: Dossier Beleg 3/4/OFFEN, Sondenkopf probe_r36_klettern_zensus.c:50-51, probes/r36_klettern.cmake:36-37
    berichtigen, eeca9a89 als ueberholt vermerken; 11A0/11A1 mit dem richtigen Grund belegen oder als ungemessen.
 6. Pins je Raum, bauen, gezielte Tests, Commit.
+
+### Nachbesserung 3 — Messung vorher (Mangel 2 reproduziert)
+
+Lauf `m5_vorher` (exe des Stands 8b489051, Eingabe = M5 der Abnahme 2: `RE15_DEBUG_JUMP=5020@250
+RE15_PLAYER_POS=-11000,-21800,1024,4 RE15_INPUT_SCRIPT=W8,U5,W0.5,R0.37,W0.3,U2.0,W0.3,L0.37,W0.3,U1.8,W0.3,L0.37,
+W0.5,U8,W2`, `A_belege/nb3_m5_vorher.txt`): bildgleich zur Abnahme — `T1050 t4pos=(-7928,-25332)`, `T1110
+t4pos=(-6904,-25332)`, bis `T1350` unveraendert. Die Kiste steht 271 hinter der Band-4-Kante (x -7175) in
+Band-4-Hoehe ueber dem Abgrund. **Reproduziert.**
+
+### Nachbesserung 3 — RE-Belege (selbst disassembliert, info/Re1.5/PSX.EXE, Auslieferungsstand)
+
+**B1 — Typ-Handler im Objekt-Pass** (`re15_disasm.py dis 0x8002bd44 ...`): FUN_8002bd44 laeuft je Pool-Eintrag
+RUECKWAERTS (@0x8002bdb0-c8, Pool 0x800b3f98, Stride 148), nur aktive (@0x8002bdcc-d8 `andi 0x1` / `beq` ->
+@0x8002c150). ZUERST, vor Schub und Ausschiebung:
+```
+8002bde0: lbu  v0,8(s2)            ; obj+0x08 Typ
+8002bde8: beq  v0,zero,0x8002be0c
+8002bdf0: lui  at,0x8007 / 8002bdf4: addiu at,at,15472     ; 0x80073c70
+8002bdfc: lw   v0,0(at) / 8002be04: jalr v0 / 8002be08: addu a0,s2,zero
+Tabelle @0x80073c70: 06 08 ff 00 | f4 c3 02 80 | fc c3 02 80 | 04 c4 02 80 | 0c c4 02 80 | b4 ca 02 80
+  [1] 0x8002c3f4 `jr ra`  [2] 0x8002c3fc `jr ra`  [3] 0x8002c404 `jr ra`  [4] 0x8002c40c  [5] 0x8002cab4 `jr ra`
+FUN_8002c40c (Bytes ab 8002c414: 04 00 83 90 .. 05 00 60 10 01 00 02 34 03 00 62 14 .. 11 b1 00 0c):
+  8002c414: lbu v1,4(a0) / 8002c41c: beq v1,zero (-> Ende) / 8002c424: bne v1,1 (-> Ende)
+  8002c42c: jal 0x8002c444         ; nur obj+4 == 1
+```
+Einziger `jal 0x8002c444` in PSX.EXE und STAGE1-6.BIN = @0x8002c42c (Abnahme 2 per jal-Scan); FUN_8002c40c steht nur als
+Tabellenwort @0x80073c80.
+
+**B2 — Ausloeser am Ende jedes Objekt-Durchlaufs** (Bytes `8002c0fc: 08 00 43 92 40 00 42 a6 04 00 02 34 11 00 62 14
+44 00 44 a6 04 00 42 92 00 00 00 00 0d 00 40 14 00 00 00 00 34 00 44 26 82 00 46 92 fc ed 00 0c c2 01 05 34 02 00 42
+30 06 00 40 10 00 00 00 00 f6 b4 00 0c 21 20 40 02 01 00 02 34 04 00 42 a2 05 00 40 a2 1d ff 60 16 88 00 40 a6`):
+```
+8002c0ec-c10c: obj+0x40/42/44 = x/y/z (u16, Vorlage fuer FUN_8002cfd4)
+8002c0fc: lbu v1,8(s2) / 8002c104: ori v0,zero,0x4 / 8002c108: bne v1,v0 -> 0x8002c150   ; nur Typ 4
+8002c110: lbu v0,4(s2) / 8002c118: bne v0,zero -> 0x8002c150                            ; faellt noch nicht
+8002c120: addiu a0,s2,52 / 8002c124: lbu a2,130(s2) / 8002c128: jal 0x8003b7f0 / 8002c12c: ori a1,zero,0x1c2
+8002c130: andi v0,v0,0x2 / 8002c134: beq v0,zero -> 0x8002c150                         ; Absprungzelle
+8002c13c: jal 0x8002d3d8 (a0 = obj)                                                       ; Fallrichtung
+8002c144: ori v0,zero,0x1 / 8002c148: sb v0,4(s2) / 8002c14c: sb zero,5(s2)
+8002c150: bne s3,zero,0x8002bdc8 / 8002c154: sh zero,136(s2)                             ; obj+0x88 = 0, JEDER Eintrag
+```
+Jeder aktive Durchlauf erreicht @0x8002c0ec — auch der Standobjekt-Pfad (@0x8002bef8-bf0c `j 0x8002c0ec`) und der
+Bit-0x200-Pfad (@0x8002bee4 `j 0x8002c0b8`, faellt bis c0ec durch). FUN_8003b7f0 = Port
+`re15_collision_floor_typeword` (selbst gegengelesen: Band-Nibble `sll 16 / sra 28` @0x8003b8a8-ac gegen
+`andi a2,s1,0xff` @0x8003b88c, x/z gegen die um a1 erweiterte Zelle @0x8003b8b8-f8 (`sltu`), Rueckgabe `lhu v0,0(a1)`
+= Zellwort +10 @0x8003b900, ERSTER Treffer im Quadranten).
+
+**B3 — FUN_8002d3d8 Fallrichtung** (@0x8002d3d8-46c): dx16 = (s16)(obj.x - 0x800aca88) (`lhu`/`subu`/`sll 16`/`sra
+16` @0x8002d3dc-400), |dx16| < 900 (`slti v0,v0,900` @0x8002d410) -> richt_z = (dz16 >> 31) | 1, richt_x = 0
+(@0x8002d41c-430), sonst richt_x = (dx16 >> 31) | 1, richt_z = 0 (@0x8002d43c-450) -> immer VOM SPIELER WEG.
+@0x8002d454-468 schreibt obj+0x68/+0x6c nach DAT_800b282c/2838 — Leser: keine (Scan aller lh/lhu/lw/sh/sw mit
+Offset 0x282c/0x2838 in PSX.EXE + STAGE1-6.BIN: nur diese zwei Stores; Ghidra-XREF nur W) -> nicht portiert.
+
+**B4 — FUN_8002c444, der Fall (s1 = a0 = OBJEKT)** (`dis 0x8002c444 230` + `dis 0x8002c7dc 220`; Decompilat
+RE_15_Quellcode_V2/FUN_8002c444.c im Ablauf deckungsgleich):
+```
+Zustand obj+5: 1 -> @0x8002c4fc, 0 -> @0x8002c49c, 2 -> @0x8002c96c, 3 -> @0x8002ca10, sonst -> @0x8002ca8c
+0  8002c49c-4f8: 0x8008f680 = 0xd, 0x8008f67c = 0xd, 0x8008f688 = 8, 0x8008f690/684/698/69a/69c/68c = 0,
+                 0x8008f6a0 = 0, obj+5 = 1, obj+6 = 0  (faellt in 1 durch)
+1  8002c4fc-544: x += (s16)67c * (s16)richt_x ; z += (s16)67c * (s16)richt_z          (mult/mflo/sw 52,60)
+   8002c548-5dc: 690 < 1024 (slti): 690 += (u16)684 ; (s16)690 > 1024 -> 684 = 684 + 1024 - 690
+                 698 = 684 * -richt_z ; 69c = richt_x * 684 ; sonst 698 = 69c = 0
+   8002c5e0-614: 684 += 688 ; 67c += 680 ; obj+6++
+   obj+6 < 13 (sltiu 0xd @0x8002c630) -> 8002c92c-968: y += (s16)(67c / 3)   (0x55555556-Idiom)
+   sonst 8002c63c-664: 680 = 0 ; y += 68c ; 68c += 160
+     obj+6 == 13: 8002c674-680 jal 0x8001c6e8 (a0 = obj+0x34, a1 = 0, a2 = 8, a3 = 0x200) -> 694 = Boden,
+                  8002c684-6c4 0x91a2b3c5-Idiom: obj+0x82 = -(Boden / 1800)   `sb v1,130(s1)` (Bytes 82 00 23 a2)
+     8002c6c8-6f8: 6a0 == 0 UND (s16)obj+0x88 != 0 UND obj+0x88 < y -> 6a0 = 1, jal 0x80045024 (a0 = 0x02080000),
+                  12x jal 0x80019700 (a0 = 0x06022000, a1 = Gier, a2 = 0x80072d4c, a3 = &P) @0x8002c70c-8fc
+     8002c904-928: (s16)694 < y -> y = 694, obj+5 = 2
+2  8002c96c-a0c: obj+0x88 == 0 -> jal 0x80045024 (a0 = 0x02060000); y -= 30; x/z += richt*20;
+                 698 = -(richt_z*30), 69c = richt_x*30; obj+5++
+3  8002ca10-a88: y += 30; x/z += richt*20; 698 = richt_z*30, 69c = -(richt_x*30); obj+4 = 0
+   8002ca8c-94:  jal 0x8002dacc (a0 = obj, a1 = 0x8008f698)
+```
+FUN_8001c6e8 ueberspringt das Objekt selbst (`addiu v0,s0,52` / `beq s5,v0` @0x8001c7fc-800) und prueft keine
+Aktiv-Flags; Zellen-Stufe `andi 0xf002` gegen Band<<12 (@0x8001c89c) und Zellwort+8 & a3 (@0x8001c8b0).
+
+**B5 — FUN_8002dacc** (`dis 0x8002dacc 100`): RotMatrix(delta, sp+16) `jal 0x80068098` @0x8002db00, MulMatrix2(sp+16,
+obj+0x20) `jal 0x800684b4` @0x8002db0c; len = (m02^2 + m12^2 + m22^2) >> 12 (@0x8002db14-5c); y = (m02 << 12) / len
+(@0x8002db40/60); obj+0x68 = ratan2(-m12, m22) (@0x8002db8c-98); obj+0x6a = ratan2(y, SquareRoot12(4096 - (y*y >> 12)))
+(@0x8002db94-cc); obj+0x6c = 0, RotMatrix(obj+0x68) -> Transpose -> ApplyMatrix auf (m00, m10, m20) (`lhu 32/38/44`),
+obj+0x6c = ratan2(r.y, r.x) (@0x8002dbd0-c2c). obj+0x20 ist die Matrix, die der Zeichner FUN_8002c18c in jedem Bild aus
+obj+0x68 baut (@0x8002c210-218 `addiu a0,s1,104` / `jal 0x80068098` / a1 = s1+32) -> der Zustand ist das Euler-Tripel.
+libgte selbst gelesen: RotMatrix @0x80068098 (Tabelle 0x800794c4, negativer Winkel: Index -a & 0xfff, sin negiert;
+`multu`/`mflo`/`sra 12`; m10/m20/m11/m21 @0x80068228-314), MulMatrix2 @0x800684b4 (ctc2 RT, je Spalte MVMVA 0x4a486012 =
+sf 1, lm 0 -> IR gesaettigt; alle Spalten vor dem ersten Store gelesen), TransposeMatrix @0x80065d90, ApplyMatrix
+@0x800661c0 (MAC, keine Saettigung), SquareRoot12 @0x80066120 (= SquareRoot0 @0x80065f60 mit `addiu t1,zero,19`
+@0x80066148 statt 31 und ohne `srl 12`; fuer 0 < a < 2^19 exakt SquareRoot0(a << 12), Herleitung in objfall_r36.c).
+
+**B6 — der Laufzeit-Schreiber obj+0x88 (Wasser)**: Scan aller `sh rt,136(rs)`: PSX.EXE @0x8001a59c (`sh zero` Aktor-Pool,
+nach jedem Gegner-Handler), @0x8001f0e4 (Effekt-Struktur, 0x2710), @0x8002c154 (Objekt-Pass, s.o.), @0x8004331c =
+LAB_8004330c `lw v1,0x800ac784 (g_entity(cur)) / lhu v0,0(a0) / sh v0,136(v1)` (Bytes `0b 80 03 3c 84 c7 63 8c 00 00 82
+94 .. 88 00 62 a4`) = Handler sce 8 (WASSER) der AOT-Tabelle @0x8007469c; Stage-Overlays: nur Aktor-Felder. Der
+AUTO-Scan FUN_800436a8 ruft FUN_80042bac fuer JEDEN Objekt-Pool-Eintrag (@0x80043768-b4, a1 = 4, a2 = 0, `sb zero` +0x0B
+@0x80043788 davor, KEIN Aktiv-Test); FUN_80042bac: Pool-Maske @0x80042c8c, AUTO @0x80042ca4, Band-Gate @0x80042cac-ccc,
+CENTRE @0x80042ea8-ed8 (obj+0x34) / FORWARD @0x80042ef8-f2c, Treffer -> Stempel +0x0B @0x80042fc4 und Handler
+@0x80042fc8-43010, Schleife weiter @0x8004301c (letzter Treffer gewinnt). Der Port fuehrte den Wasser-Stempel nur fuer
+Aktoren (aot_common.c:1329-1370, "DEFERRED ... NOTHING consumes a prop water level") — FUN_8002c444 IST dieser Leser.
+(Nebenbei: re15_aot.h:357ff. nennt @0x8002c154 "fuer den Spieler" — es ist der Objekt-Pass; nicht Teil dieser Spur.)
+
+**B7 — Schreiber-Zensus obj+0x82 (berichtigt, Mangel 1)** — Liste `A_belege/nb2_scans.txt` neu eingeordnet:
+
+| Adresse | Funktion | Ziel | Objekt-Band? |
+|---|---|---|---|
+| @0x80040974 | Installer LAB_80040914 (Obj_model_set) | Objekt-Pool | ja (beim Laden) |
+| @0x80041228 | Member-Schreiber FUN_8004116c Eintrag 18 (Member_set/Member_set2) | Work-Entity | ja (SCD) |
+| **@0x8002c6c4** | **FUN_8002c444 = Fall eines Typ-4-OBJEKTS** (einziger Aufrufer @0x8002c42c) | **Objekt-Pool** | **ja, ZUR LAUFZEIT** |
+| @0x800421d0 | Sce_em_set (Spawn-Opcode 0x44) | Aktor (+448/+454-Felder) | nein |
+| @0x8001be54 | FUN_8001bd60 (nur aus Stage-Overlays) | Aktor (+442/+448) | nein |
+| @0x8005276c / @0x80052dd0 | g_entity(cur)-Pfade | Aktor (+442) | nein |
+| @0x8001f1b4 / @0x8001f254 | Halbwort, Effekt-Struktur (+152..+156) | Effekt | nein |
+| STAGE1.BIN (11 Stellen) | g_entity(cur) Aktorfelder bzw. @0x80108664 Grossstruktur (+1321) | Aktor | nein |
+
+Falsch eingeordnet war genau @0x8002c6c4 ("Spieler-Fall", Nachbesserung 2 Beleg 3); @0x800421d0 fehlte.
+
+### Nachbesserung 3 — Umsetzung
+
+| Datei | Aenderung |
+|---|---|
+| `engine/src/objfall_r36.c` (NEU) | Fall-Zustand je Prop-Platz (obj+4/+5/+6/+0x88) und die GLOBALEN Fallgroessen (0x8008f67c..6a0, 0x800b526c/27c) wie im Original; Typ-Handler-Pass (B1), FUN_8002c444 (B4), FUN_8002d3d8 (B3), FUN_8002dacc mit libgte-Zwillingen (B5), Ausloeser + obj+0x88-Nullung (B2), Wasser-Stempel der Objekte (B6). Spritzer = `re15_esp_fx_spawn_rows(Raum-Bank, 6, 2, 0x2000, P, Boden 0x8008f694, Gier)` (= FUN_80019700-Port mit Start-Flags 0x03; Boden-Ebene der Port-Sammelklemme = die FUN_8001c6e8-Abfrage des Falls). Toene = `re15_audio_room_se_snd0(6/8)` (= FUN_80045024 Bank 2). Messschrieb `RE15_OBJFALL_LOG=<datei>` (env, kein Verhalten). |
+| `include/re15_objfall_r36.h` (NEU) | Schnittstelle + Herleitung |
+| `engine/src/game_step_common.c` | 3 Zeilen: Include; `re15_objfall_vor_schub` VOR `re15_prop_push_tick` (Normalzweig = Objekt-Pass-Anfang); `re15_objfall_nach_pass` hinter `re15_actor_prop_pushout` (jedes Bild, Objekt-Pass-Ende + AUTO-Scan-Stempel; holt den Handler nach, wenn der Zweig keinen Schub fuhr) |
+| `engine/src/scd_room_setup.c` | 2 Zeilen: Include; `re15_objfall_install` am Ende des Installer-Blocks ("Runde 36 Spur A") |
+
+Port-Wahl (begruendet, kein Verhaltenswert): Raumaufbau setzt den Fallzustand auf 0. Das Original schreibt obj+4/+5/+6
+beim Installieren NICHT (Installer-Stores nur +0x00/08/09/0C/34-3C/68-6C/74/78/82, @0x8004095c-80040aa0; Raumlader nullt
+nur +0x00 @0x8003eab0-cc) — ein laufender Fall wuerde den Raumwechsel ueberleben; das braucht einen Tuerdurchgang waehrend
+der ~25 Fallbilder vor dem Spieler (kein Spielweg).
+
+Fallfaehige Objekte der Auslieferung (Zensus `A_belege/nb3_absprung_zensus.txt`, alle 240 RDTs: Typ-4-Objekt + Zelle mit
+Wort & 2 im Objekt-Band): ROOM5020/5021 (Band 4, Zelle x -7675..-7175 z -26275..-24025, Wort 0x4002), ROOM20A0/20A1 (Band 4,
+zwei Zellen z -22000..-21000, x 8000..14700 und 15800..17600, Wort 0x4206), ROOM3050/3051 obj 1 (Band 4, x -25000..-22950
+z -18050..-16800, 0x4002; Fall-Lage @0x01F40, Latch (3,93)), ROOM1090/1091 obj 1 (Band 5, Wort 0x530e), ROOM2050/2051 obj 6
+(Band 3, 0x3202), ROOM11A0/11A1 (Band 3, 0x3102). Alle mit rot_y 0 oder 2048 (SquareRoot12-Bereich, B5).
+
+### Nachbesserung 3 — Messung nachher, ROOM5020 an der exe (echter Weg)
+
+Lauf `m5_nachher` (gleiche Eingabe wie vorher, `RE15_OBJFALL_LOG`): Ausloeser bei Kistenmitte x -8078 (>= -8125 = Zelle
+-7675 - 450, wie von der Abnahme vorhergesagt), Wort 0x4002, Richtung (+1, 0) = weg vom Spieler (x -9428). Kippen 13 Bilder,
+Bild 13 Boden FUN_8001c6e8 = 0 -> Band 4 -> 0, freier Fall, Landung Bild 22 auf y 0, Aufsetzen (snd0:6), Nachfedern, obj+4 = 0;
+Endlage (-5169, 0, -25332), Drehung um Z 1029 (Summe der Winkelschritte 1024, Rest = Rundung RotMatrix/ratan2 je Bild).
+
+Lauf `l5020a` (ECHTER WEG in EINEM Stueck, `A_belege/nb3_5020_echter_weg.txt`): `RE15_DEBUG_JUMP=5020@250
+RE15_PLAYER_POS=-11000,-21800,1024,4 RE15_INPUT_SCRIPT=W8,U5,W0.5,R0.37,W0.3,U2.0,W0.3,L0.37,W0.3,U1.8,W0.3,L0.37,W0.5,
+U8,W1,L0.37,W0.3,U2.2,W0.3,L0.37,W0.3,U2.45,W0.3,R0.37,W0.3,U0.3,W0.3,A0.1,W7,R0.37,W0.3,U1.2,W0.3,R0.37,W0.3,U5,W0.3,
+L0.37,W0.3,U9,W1,A0.1,W4 RE15_EXIT_AT=2700#5020`:
+```
+F785  AUSLOESER wort=0x4002 band=4 pos=(-8078,-7200,-25332) spieler=(-9428,-25807) richt=(1,0)
+F798  BODEN FUN_8001c6e8=0 band 4 -> 0 pos=(-6847,-6814,-25332)
+F807  LANDUNG y=0 band=0 pos=(-5209,-25332)       F808 AUFSETZEN se=snd0:6      F809 zust 3 -> obj+4 = 0
+F1125..F1245  Spieler nimmt die Treppe (Slot 2 sce 13) von Band 4 nach Band 0
+F1665 spieler=(-6519,0,-24966) band=0 -> Schub +X auf Band 0
+F1712 FLAG (4,203)=1   KERBE m0b=4 pos=(-4393,0,-25332) band=0     <- Latch sub01 @0x012F4-302 (Slot 4 Floor 0)
+climb.txt: T2138 sub=9 kind=0x81 obj=0 ... T2951 pos=(-3522,-1800,-25212) band=1 stand=0   <- auf die GEFALLENE Kiste geklettert
+```

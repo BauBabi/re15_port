@@ -500,11 +500,55 @@ static void objfall_wasser_stempel(void)
     }
 }
 
+/* Messschrieb: Lage-Flags der Raeume mit Fall-Lage im RDT (Ck vor dem Band-0-Record) und die
+ * Kerbe obj+0x0B (Member 15) der Typ-4-Objekte, je bei Aenderung. Nur Diagnose. */
+static void objfall_log_latches(FILE *lf)
+{
+    static const struct { uint8_t bank, bit; } fl[4] = {
+        { 4, 203 },   /* ROOM5020/5021 Ck @0x0122A/@0x0124A, Latch sub01 @0x012F4-302 */
+        { 3, 204 },   /* ROOM20A0/20A1 Ck @0x0183C, Latch @0x01AD4-e2 */
+        { 3,  93 },   /* ROOM3050/3051 Ck @0x01F02, Latch @0x02188-196 */
+        { 5,   6 },   /* ROOM11A0/11A1 Ck @0x01040, Latch @0x012B2-c4 */
+    };
+    static int alt[4] = { -1, -1, -1, -1 };
+    static uint8_t m0b_alt[RE15_SCD_MAX_PROPS];
+    for (int i = 0; i < 4; i++) {
+        int v = re15_game_flag_get(fl[i].bank, fl[i].bit);
+        if (v != alt[i]) {
+            fprintf(lf, "F%u room=%04X FLAG (%d,%d)=%d\n", g_engine.frame_count, g_current_room_id,
+                    (int)fl[i].bank, (int)fl[i].bit, v);
+            alt[i] = v;
+        }
+    }
+    if ((g_engine.frame_count % 15u) == 0u) {
+        const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        fprintf(lf, "F%u room=%04X spieler=(%d,%d,%d) rot=%d band=%d", g_engine.frame_count,
+                g_current_room_id, pl->x, pl->y, pl->z, (int)pl->rot_y, re15_collision_debug_band());
+        for (int p = 0; p < (int)g_scd.prop_count && p < RE15_SCD_MAX_PROPS; p++)
+            if (g_scd.props[p].active && g_scd.props[p].obj_type == 4)
+                fprintf(lf, " | p%d (%d,%d,%d) b%d r(%d,%d,%d)", p, g_scd.props[p].x,
+                        g_scd.props[p].y, g_scd.props[p].z, (int)g_scd.props[p].band,
+                        (int)g_scd.props[p].rot_x, (int)g_scd.props[p].rot_y,
+                        (int)g_scd.props[p].rot_z);
+        fprintf(lf, "\n");
+    }
+    for (int p = 0; p < (int)g_scd.prop_count && p < RE15_SCD_MAX_PROPS; p++) {
+        if (g_scd.props[p].obj_type != 4) continue;
+        if (g_scd.props[p].member_0b != m0b_alt[p]) {
+            fprintf(lf, "F%u room=%04X p=%d KERBE m0b=%d pos=(%d,%d,%d) band=%d\n",
+                    g_engine.frame_count, g_current_room_id, p, (int)g_scd.props[p].member_0b,
+                    g_scd.props[p].x, g_scd.props[p].y, g_scd.props[p].z, (int)g_scd.props[p].band);
+            m0b_alt[p] = g_scd.props[p].member_0b;
+        }
+    }
+}
+
 void re15_objfall_nach_pass(const re15_rdt_t *rdt)
 {
     if (!s_handler_lief) objfall_handler_pass(rdt);   /* Zweige ohne Objekt-Schub (Klettern, Treppe, ...) */
     s_handler_lief = 0;
     FILE *lf = objfall_log();
+    if (lf) objfall_log_latches(lf);
     for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {
         if (p >= RE15_SCD_MAX_PROPS) continue;
         if (g_scd.props[p].active &&                         /* @0x8002bdcc-d8 (inaktiv -> @0x8002c150) */
