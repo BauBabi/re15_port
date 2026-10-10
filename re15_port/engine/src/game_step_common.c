@@ -34,6 +34,7 @@
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 #include "re15_sicherung.h"
 #include "re15_granate.h"   /* Runde 30 Nachtrag K: Granate in derselben Fahrt */
+#include "re15_granate_r36.h" /* Runde 36 Spur D N1: Granate verbraucht erst im Spawnbild */
 #include "re15_leiche.h"    /* Runde 34 Nacht, Spur F: Leichen ROOM1110/1230 (leiche_1110_1230.c) */
 #include "re15_hebetisch.h" /* Runde 31: Ruhe oben des Hebetischs (Mess-Protokoll) */
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
@@ -1838,6 +1839,8 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int az;
                     if (ent->resolve)
                     re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
+                    /* Runde 36 Spur D N1: Granate 9/10/11 -> Abzug @0x80033b40/60/80 erst im Spawnbild (re15_granate_r36.h 2c) */
+                    if (!re15_granate_r36_verbrauch_im_spawnbild(eq_item))
                     for (az = 0; az < ent->ammo; az++)
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
@@ -1983,7 +1986,8 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* GRANATE (Wurf): Projektil 0x040D1000 bei Rueckstoss-Frame 19 (HOCH, Offs
          * {0,0x12c,0x320}) / 22 (MITTE, {0,0,0x1f4}) / 24 (TIEF, {0,0,0x12c})
          * (@0x800336bc-0x800337a4). R1-Loslassen vor dem Spawn-Frame bricht den Rueckstoss
-         * (Schwelle 10) und unterdrueckt die Granate - Munition ist trotzdem weg (byte-true).
+         * (Schwelle 10) und unterdrueckt die Granate - Munition ist trotzdem weg (Original; Runde 36
+         * Spur D: Schwelle = Spawnbild, Verbrauch erst hier im Spawnbild — re15_granate_r36.h 2/2c).
          * Runde 34 A8:
          *  - SPAWN-GATE: das Original spawnt NUR Id 9 (`lbu v1,-13731(v1)` / `ori v0,zero,0x9` /
          *    `bne v1,v0,0x800337ac` @0x80033684-8c). E1 (Port-Zuordnung): 10/11 nutzen denselben
@@ -2018,6 +2022,7 @@ void re15_game_step(const re15_game_ctx_t *c)
                          * -1800*Band @0x8001d7b8-d4). PORT-ZUORDNUNG fuer Raeume mit Boden != 0
                          * (Original: Ebene y 0 @0x80018330-38; Herleitung re15_esp.h granate_boden). */
                         if (gs) gs->granate_boden = pl->y;
+                        if (gs) re15_granate_r36_geworfen();   /* Runde 36 Spur D N1: Verbrauch = Abgang (FUN_8004eae4) */
                     }
                 }
             }

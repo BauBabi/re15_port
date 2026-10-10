@@ -726,7 +726,7 @@ static void abschnitt_spielschritt(void)
         pl->rot_y = 0;
         int abzug = -1, spawn = -1, spawn_gier = -1, spawn_art = -1, erster_schaden = -1;
         int32_t spawn_pos[3] = {0, 0, 0};
-        int menge_nach_abzug = -1;
+        int menge_nach_abzug = -1, menge_im_spawnbild = -1;
         for (int b = 0; b < 60; b++) {
             int vor_rec = re15_player_granate_frame();
             sp_bild((uint16_t)(RE15_PAD_BIT_R1 | (b == 0 ? RE15_PAD_BIT_SQUARE : 0)),
@@ -738,6 +738,7 @@ static void abschnitt_spielschritt(void)
             int gp = granate_platz();
             if (spawn < 0 && gp >= 0) {
                 const re15_esp_fx_t *g = re15_esp_fx_get(gp);
+                menge_im_spawnbild = g_inv.slots[3].qty;
                 spawn = b; spawn_gier = g->param; spawn_art = g->granate_art;
                 spawn_pos[0] = g->x; spawn_pos[1] = g->y; spawn_pos[2] = g->z;
                 /* Routine 30 im Spawnbild mit dem ECHTEN Wort (MITTE gesund = 0x4000): K1 MITTE
@@ -750,8 +751,11 @@ static void abschnitt_spielschritt(void)
         printf("  Waffe %d: zielbereit nach %d, Abzug Bild %d, Menge %d, Spawn Bild %d (A+%d) art %d gier %d "
                "anker (%d,%d,%d), erster Schaden %d\n", waffe, z, abzug, menge_nach_abzug, spawn,
                spawn - abzug, spawn_art, spawn_gier, spawn_pos[0], spawn_pos[1], spawn_pos[2], erster_schaden);
-        PRUEF(nr + 1, abzug == 0 && menge_nach_abzug == 4, "Waffe %d: Abzug Bild %d, Menge %d (soll 0 / 4)",
-              waffe, abzug, menge_nach_abzug);
+        /* RUNDE 36 SPUR D NACHBESSERUNG 1 (re15_granate_r36.h 2c): die Menge faellt nicht mehr im Abzugsbild
+         * (Original `jal 0x8004eae4` @0x80033b40/60/80), sondern im Spawnbild hinter `jal 0x80019700`. */
+        PRUEF(nr + 1, abzug == 0 && menge_nach_abzug == 5 && menge_im_spawnbild == 4,
+              "Waffe %d: Abzug Bild %d, Menge nach dem Abzug %d, im Spawnbild %d (soll 0 / 5 / 4)",
+              waffe, abzug, menge_nach_abzug, menge_im_spawnbild);
         PRUEF(nr + 2, erster_schaden < 0, "Waffe %d: Zombie 700 vor Leon beschaedigt im Bild %d (Bruecke!)",
               waffe, erster_schaden);
         PRUEF(nr + 3, spawn == abzug + 22, "Waffe %d: Spawn im Bild A+%d (soll A+22, Clipbild 0x16)",
@@ -765,8 +769,11 @@ static void abschnitt_spielschritt(void)
     }
     PRUEF(115, r30_mitte_ok, "6a: Routine 30 im Spawnbild mit echtem Wort (MITTE gesund) nicht K1 MITTE / Zaehler 7");
 
-    /* 6b — R1 los nach Clipbild 10 -> kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
-     * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c) */
+    /* 6b — R1 los nach Clipbild 10: ORIGINAL kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
+     * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c, `j 0x800337ac` @0x80033650 vor dem Spawn).
+     * RUNDE 36 SPUR D (NUTZER-VORGABE "Granate wird manchmal nicht geworfen", re15_granate_r36.h, Dossier
+     * D_granate.md §3): die Abbruch-Schwelle der Granate liegt auf dem Spawnbild (22 MITTE @0x800336a4) —
+     * der Wurf geht ab, R1 senkt den Arm erst danach. Die Menge -1 (seit Nachbesserung 1 im Spawnbild). */
     {
         if (sp_bringup(9, 5) != 0) { PRUEF(109, 0, "Bringup 6b"); return; }
         for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
@@ -778,7 +785,7 @@ static void abschnitt_spielschritt(void)
             sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
             if (spawn < 0 && granate_platz() >= 0) spawn = b;
         }
-        PRUEF(109, spawn < 0 && g_inv.slots[3].qty == 4, "R1 los: Spawn %d, Menge %d (soll kein Spawn, 4)",
+        PRUEF(109, spawn == 22 && g_inv.slots[3].qty == 4, "R1 los im Bild 15: Spawn %d, Menge %d (soll 22 = Wurf geht ab [Runde 36 Spur D], 4)",
               spawn, g_inv.slots[3].qty);
         /* Negativ-Kontrolle: R1 nur in den Clipbildern 3..8 los (<= 10) und danach wieder
          * gehalten -> KEIN Bruch (Schwelle `sltu v0,v0,a0` = Bild > 10, @0x8003363c), Spawn 22 */

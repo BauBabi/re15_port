@@ -84,6 +84,7 @@ const re15_emd_skeleton_t  *re15_re2z_re15_pose_skel(void) { return s_re2z_re15_
 const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_anim; }
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
+#include "re15_granate_r36.h" /* Runde 36 Spur D: Flammen-Gate des Spreng-Russ FUN_8010640C */
 #include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
@@ -4819,9 +4820,13 @@ static void re2z_gore_acid(re15_actor_t *e)
 /* ---- FUN_8010640C — SPRENG-RUSS ----------------------------------------------------------- */
 static void re2z_gore_soot(re15_actor_t *e)
 {
+    /* Runde 36 Spur D (NUTZER-VORGABE: kein Feuer bei der Explosiv-Granate, re15_granate_r36.h):
+     * die beiden Flammen @0x80106418-44 / @0x80106450-74 nur, wenn das Gate sie freigibt. */
+    if (re15_granate_r36_russ_flammen(e->sub_state_1)) {
     re2z_gore_fx_ex(e, 0, 0x05032710u, (int16_t)e->rot_y, 0, 200, 0);     /* Part 0 , v={0,200,0}
                                                                         * @0x80106418-44 */
     if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 3, 0x050313E8u);   /* R-Unterarm @0x80106450-70 */
+    }
     e->re2z_part_tint[0]  = 0x00404040u;       /* sw a0,112  @0x8010648C */
     e->re2z_part_tint[1]  = 0x00484848u;       /* sw a2,284  @0x80106498 */
     e->re2z_part_tint[2]  = 0x00707070u;       /* sw v1,456  @0x801064A4 */

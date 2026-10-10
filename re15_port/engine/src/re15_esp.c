@@ -17,6 +17,7 @@
 #include "re15_skeleton.h" /* re15_sin_q12/re15_cos_q12 = Tabelle 0x800794c4 (RotMatrix-Zwilling) */
 #include "re15_engine.h"   /* g_engine.frame_count — nur RE15_GRANATE_LOG */
 #include "re15_granate_r35.h"   /* Runde 35 Spur A: Wand/Kontakt im Flug, RE2-Reichweite, RE2-SE */
+#include "re15_granate_r36.h"   /* Runde 36 Spur D: Platzvergabe des Wurfkoerpers bei vollem Pool */
 #include "re15_esp_brocken.h" /* Runde 35 Spur D: Routinen B 36/37 (esp_brocken.c) */
 #include <string.h>
 #include <stdio.h>
@@ -321,6 +322,13 @@ const re15_esp_fx_t *re15_esp_fx_get(int i)
 {
     if (i < 0 || i >= RE15_ESP_FX_MAX || !s_esp_fx[i].active) return NULL;
     return &s_esp_fx[i];
+}
+
+/* Runde 36 Spur D: Platz i freigeben (slot+0x6c := 0 wie esp_fx_kill) — fuer die Platzvergabe des
+ * Wurfkoerpers bei vollem Pool (re15_granate_r36_platz_freimachen, granate_r36.c). */
+void re15_esp_fx_free_slot(int i)
+{
+    if (i >= 0 && i < RE15_ESP_FX_MAX) { s_esp_fx[i].flags = 0; s_esp_fx[i].active = 0; }
 }
 
 int re15_esp_fx_visible(const re15_esp_fx_t *f)
@@ -1305,6 +1313,9 @@ re15_esp_fx_t *re15_esp_granate_spawn(const re15_esp_t *bank, uint8_t art,
 {
     re15_esp_fx_t *g = NULL;
     int streams = 0;
+    /* Runde 36 Spur D: Pool voll (Original `ori v0,zero,0xff` @0x800197c8-cc = Wurf verloren) -> ein
+     * Blut-Teilchen raeumt den Platz (PORT-WAHL, re15_granate_r36.h Punkt 2b). */
+    if (re15_esp_fx_count() >= RE15_ESP_FX_MAX) (void)re15_granate_r36_platz_freimachen();
     int n = esp_fx_spawn_rows_core(bank, 0x04, 0x0d, 0x1000, x, y, z, ESP_KEIN_BODEN, gier,
                                    0x03, &g, &streams);
     {   /* Mess-Log wie re15_esp_fx_spawn_rows (Debug-Harness, gleiches Zeilenformat) */

@@ -320,6 +320,8 @@ extern void (*re15_esp_bang_hook)(void);
 void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */
 const re15_esp_fx_t *re15_esp_fx_get(int i);
+/* Runde 36 Spur D: Platz i freigeben (slot+0x6c := 0) — Platzvergabe des Wurfkoerpers (granate_r36.c). */
+void re15_esp_fx_free_slot(int i);
 
 /** Byte-true DRAW-VISIBLE gate (FUN_80053240.c:30: the sprite draws iff flags bit0 active AND
  *  bit1 visible). Row-VM particles carry the flags byte (slot+0x6c) the routines poke — a frozen/
