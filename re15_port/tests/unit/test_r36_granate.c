@@ -547,6 +547,26 @@ static void abschnitt_griff(void)
               "Waffenwechsel (Browning, Platz %d) im Bild 10 der Wurfbewegung: Spawn %d, Granaten %d (soll keiner / 5; "
               "vorher 4 = Abzug Bild 0)", browning, sp4, g_inv.slots[3].qty);
     }
+    /* 4e — Statusschirm in der Wurfbewegung geoeffnet und geschlossen: das Inventar-Ende setzt das Kommandowort auf 0
+     *      (Task 0 -> Zustand 3, `sb zero,0x800aca58` @0x8001cbdc; Port menu_stage3_cmd_zero -> re15_player_cmd_zero,
+     *      menu_common.c) und beendet die laufende Zielaktion -> kein Wurf; die Granate bleibt (vorher weg). */
+    if (sp_bringup(9, 5) != 0) { PRUEF(405, 0, "Bringup griff 4e"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    if (sp_zielen(0) < 0) { PRUEF(405, 0, "griff 4e: nicht zielbereit"); return; }
+    {
+        extern void re15_player_cmd_zero(void);
+        int sp5 = -1;
+        for (int b = 0; b < 60; b++) {
+            if (b == 10) re15_player_cmd_zero();       /* Inventar-Ende @0x8001cbdc */
+            uint16_t pad = RE15_PAD_BIT_R1;
+            if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (sp5 < 0 && granate_platz() >= 0) sp5 = b;
+        }
+        PRUEF(405, sp5 < 0 && g_inv.slots[3].qty == 5,
+              "Statusschirm-Ende (Kommandowort := 0 @0x8001cbdc) im Bild 10 der Wurfbewegung: Spawn %d, Granaten %d "
+              "(soll keiner / 5; vorher 4 = Abzug Bild 0)", sp5, g_inv.slots[3].qty);
+    }
     PRUEF(404, re15_granate_r36_verbrauch_im_spawnbild(9) && re15_granate_r36_verbrauch_im_spawnbild(10) &&
                re15_granate_r36_verbrauch_im_spawnbild(11) && !re15_granate_r36_verbrauch_im_spawnbild(3) &&
                !re15_granate_r36_verbrauch_im_spawnbild(8) && !re15_granate_r36_verbrauch_im_spawnbild(15),

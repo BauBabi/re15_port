@@ -230,10 +230,15 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
    Naechster Messweg: re2_fx.c Op 25 lesen, DuckStation-Brandrunde an einem Zombie zaehlen.
 4. **Wurfbild-Regel** (Runde 35, PORT-WAHL): Hand in/hinter einer Zelle -> Explosion ueber dem Werfer im Wurfbild. Ist ein
    Wurf mit Explosion, kein Aussetzer; unveraendert.
-5. ~~Statusschirm waehrend der Wurfbewegung~~ — **durch Nachbesserung 1 mit erledigt**: scheitert das Spawn-Gate
-   (`id == 9` @0x8003368c) nach einem Waffenwechsel, gibt es keinen Abgang und damit keinen Verbrauch mehr (Sonde 403:
-   Waffenwechsel im Bild 10 -> kein Spawn, Granaten 5). Am Statusschirm der exe selbst nicht gefahren (START +
-   Waffenwechsel innerhalb 0,4 s); die Sonde setzt die ausgeruestete Waffe ueber denselben Setter mit Platz-Sync.
+5. ~~Statusschirm waehrend der Wurfbewegung~~ — **durch Nachbesserung 1 mit erledigt**, und KORREKTUR der alten
+   Annahme ("ohne Waffenwechsel laeuft der Rueckstoss nach dem Schliessen weiter"): das Inventar-Ende setzt das
+   Kommandowort auf 0 (Task 0 -> Zustand 3, `sb zero,0x800aca58` @0x8001cbdc; Port `menu_stage3_cmd_zero` ->
+   `re15_player_cmd_zero`, menu_common.c:1470-1480, seit Runde 30 N1) und beendet damit JEDE laufende Zielaktion —
+   Statusschirm auf/zu zwischen Abzug und Spawnbild bricht den Wurf ab, auch ohne Waffenwechsel (im Original und bis
+   HEAD: Granate weg). Jetzt: kein Abgang, kein Verbrauch (Sonde 405: Inventar-Ende im Bild 10 -> kein Spawn,
+   Granaten 5; Sonde 403: Waffenwechsel im Bild 10 -> Spawn-Gate `id == 9` @0x8003368c scheitert, Granaten 5). Am
+   Statusschirm der exe selbst nicht gefahren (START innerhalb 0,4 s nach dem Abzug); die Sonden rufen dieselben
+   Port-Funktionen (Inventar-Ende bzw. Waffen-Setter mit Platz-Sync).
 
 ## Fuer den Nutzer
 * Keine neuen Assets (Paket-Gate), keine Sprachdateien, keine Aenderung an shared_assets.
@@ -283,6 +288,8 @@ Wurfbewegung vor dem Spawnbild ab, bleibt sie im Inventar. **M3** Hinweis (Abnah
 **RE1.5 STAGE1.BIN — Griff ersetzt das Kommando ohne Ziel-Gate** (`re15_disasm.py dis 0x80113ad8 24 --bin STAGE1.BIN`):
 `80113af8 ori v1,zero,0x2 / 80113b00 sb v1,0x800aca58` (Kommando := 2) ... `80113b30 sh zero,0x800aca5a` (Substate := 0).
 Damit endet Substate 2 vor dem Spawnbild; der Abzug aus Bild 0 ist nicht rueckgaengig — im Original ist die Granate weg.
+Ebenso das Inventar-Ende (`re15_disasm.py dis 0x8001cbb0 12`): `8001cbb4 sb v0,0x800b5359` (Zustand 3) ...
+`8001cbdc sb zero,-13736(at)` = 0x800aca58 := 0 — Statusschirm auf/zu beendet die laufende Zielaktion.
 Fenster zwischen Verbrauch und Abgang im Original: **19/22/24 Bilder**.
 
 **RE2 Retail info/re2leon/PSX.EXE — Granatwerfer (das Retail-Vorbild "Geschoss aus einer Waffe mit Rueckstoss")**
@@ -330,8 +337,9 @@ state.log                    F300 mg=3 hp=40
 | `include/re15_granate_r36.h`, `engine/src/granate_r36.c` | `re15_granate_r36_verbrauch_im_spawnbild(id)` (1 fuer 9/10/11), `re15_granate_r36_geworfen()` (= `re15_ammo_consume` = FUN_8004eae4), Zaehler `re15_granate_r36_verbraucht()` | Entlade-Tabelle @0x80074100 [9..11] = 0x80033B38/58/78, `jal 0x8004eae4` @0x80033b40/60/80 |
 | `engine/src/game_step_common.c` | Include + 1 Zeile vor der Munitions-Schleife des Entlade-Handlers (`if (!re15_granate_r36_verbrauch_im_spawnbild(eq_item))`), 1 Zeile hinter `re15_esp_granate_spawn` (`if (gs) re15_granate_r36_geworfen();`), Kommentarzeile am Spawn-Block | Bild 0 `jalr` @0x800334e0; Spawn `jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4 |
 Keine neue Konstante ausser den Ids 9/10/11 (Tabelle @0x80074100). Kein Env-Schalter, keine Assets, keine Bits/IDs.
-Nebenwirkung (gewollt, Folge derselben Regel): Statusschirm-Waffenwechsel waehrend der Wurfbewegung (OFFEN 5) und
-"kein Platz im Pool trotz Raeumung" kosten ebenfalls keine Granate mehr — beide erreichen den Spawn nicht.
+Nebenwirkung (gewollt, Folge derselben Regel): Statusschirm auf/zu waehrend der Wurfbewegung (Inventar-Ende
+`sb zero,0x800aca58` @0x8001cbdc beendet die Zielaktion, mit oder ohne Waffenwechsel; OFFEN 5) und "kein Platz im
+Pool trotz Raeumung" kosten ebenfalls keine Granate mehr — alle erreichen den Abgang nicht.
 
 ### 6.5 Messung nachher (exe 0bb12234, Messkopie `re15_pc_r36dn1_nach.exe` sha1 0cbfb9ea, Ordner `n1/c2_nach`)
 Dieselbe Aufstellung, dieselben Eingaben:
@@ -360,7 +368,8 @@ verbraucht, aber nicht geworfen)` = rot. Mit der neuen exe: s. 6.6.
     `re15_player_aim_interrupt`, dieselbe Unterbrechung wie der Griff) -> `Spawn -1, Menge 5, Verbrauch 0`;
     401 danach neu zielen + werfen -> `Spawn 22, Menge 4, Verbrauchsbild 22`; 402 Treffer im Bild 23 (nach dem
     Abgang) -> `Spawn 22, Menge 4`; 403 Waffenwechsel (Browning) im Bild 10 -> `Spawn -1, Granaten 5`;
-    404 Zuordnung nur 9/10/11.
+    404 Zuordnung nur 9/10/11; 405 (nachgereicht) Statusschirm-Ende (`re15_player_cmd_zero` = `sb zero,0x800aca58`
+    @0x8001cbdc) im Bild 10 -> kein Spawn, Granaten 5.
   - **Mutationsprobe** (alte Verbrauchsstelle zurueck, gebaut, gefahren): 209 `0/96`, 208 `Verbrauchsbilder
     (11,45,79)`, 400 `Menge 4`, 401 `Menge 3`, 403 `Granaten 4`, 404 rot; probe_r34_wurf 92/98/104 `Menge nach dem
     Abzug 4` rot — die Pins haben Zaehne. Danach `git checkout` + Neubau.
