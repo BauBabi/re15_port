@@ -324,9 +324,11 @@ Treffer-Bild komplett (das ist der Befund des Nutzers).
 | integration_r36_schuss | exe ROOM1140: Python UND Granatwerfer 15 — Tisch sperrt (5 Plaetze HP gleich), Fresser gesperrt, Gegenprobe (Python) trifft (5 Laeufe, 79 s) |
 | unit_crow_death_corpse (bestehend, angepasst) | RE1.5-Kraehen-Tod in ROOM1170 — jetzt mit Tiefzielen auf eine Kraehe mit freier Sichtlinie; Treffer-Pruefung fire != 0 (§1.5) |
 | unit_re2_zombie_hitfilter / _abc, probe_re2z_block, unit_re2_crow_ai (bestehend, angepasst) | §1.5 |
-| unit_r36_blut_pin_eben / _tief | Blut-Anker = Anker.R*a3 + Anker.T (RE2-Sollpunkt <= 40, Rumpf ueber / Beine unter dem Becken) |
+| unit_r36_blut_pin_eben / _tief | (Nachbesserung 1, §8.3) JEDER Blut-Spawn bis zum Tod + 80 Bilder gegen alle Emitter-Sollpunkte Anker.R*a3 + Anker.T (HURT, Stagger, Flinch, Nachbluten, Aufsteh-Treffer, TOD, Tropfblut, Tod des Liegenden, Kriecher-Tod) und die Defekt-Kandidaten (Anker ohne a3); Versatz im Anker-Rahmen je Familie |
+| unit_r36_blut_pin_mg | (Nachbesserung 1, §8.3/§8.8) MG-Blutstoss 0x80107EF0: a3-Band je Zone, Lage gegen Anker.R*a3 + Anker.T, Summe gegen das Welt-Versatz-Modell |
+| integration_r36_schuss | (Nachbesserung 1, §8.4/§8.7) zusaetzlich frei_re15 / tisch_re15 / gl_tisch_re15 (treffbare Ziele hinter dem Tisch), Messkopie der exe (8 Laeufe, 129 s) |
 | unit_r36_schuss_kraehe | RE2 GIB 0x80102CA0: Felder, Draws, Physik bis zum Verschwinden, Dispatch @0x80104A18 |
-Suite: §7.
+Suite: §7; Nachbesserung 1: gezielte Laeufe §8.9.
 
 ## 5. OFFEN (mit Adresse und Messweg)
 1. **RE1.5-KI-Pfad des Fressers (nicht Vorgabe):** unter RE1.5-KI fuehrt der Port fuer die 0x86/0x06-Fresser keinen
@@ -359,6 +361,27 @@ Suite: §7.
    vom naechsten Fresser entfernt — der exe-Lauf belegt fuer sie nur "kein Treffer", die Gate-Mechanik der
    Werfer belegt unit_r35_werfer 104-107 (Applier FUN_800470C0 Gate 2/4) und der GL-Explosiv-Lauf (Explosion 330
    neben Platz 1).
+7. **(Nachbesserung 1) Stagger-WURZELBEWEGUNG fehlt im Port (Bewegung, nicht Blut; Eigentuemer Zombie-KI):** RE2
+   FUN_80105BC0 P1 ruft jeden Tick `jal 0x80015e7c` (a3 = 0) @0x80105F28, Advance @0x80105F3C und `jal 0x800152c8`
+   @0x80105F54 — der Zombie wandert um die Wurzelspur des Stagger-Clips (Hauptbank EM010 Clip 4 x -277 .. -1143,
+   Clip 3 x 663 .. 1318, gemessen kfspeed.c). Der Port-Zwilling re2z_hit_move bewegt nur, wenn `motion ==
+   re2z_walkclip` (Gate aus dem Haupt-Handler @0x80105B84-90) — im Stagger also gar nicht, nur der P0-Schub -450.
+   Ebenso fehlt beim MG-Schub die Seitenkomponente +0x148 = 64-(r&0x7f) (@0x8010812C-40; Port nur +0x144).
+   Messweg: probe mit RE2-Bank, Lage des Zombies ueber den Stagger gegen die Summe der Wurzel-Deltas.
+8. **(N1) Ragdoll-P1-Nachbluten fehlt:** EMZ0 @0x80106A40-7C (Ragdoll-Handler 0x801066FC, P1 nach Advance/Lehne): bei
+   `+0x14D != 0 && (+0x14D & 3) == 0` Id (r1<<3)+6000, Winkel r2<<4, Anker Part 0, a3 = +0x144. Der Port-Ragdoll P1
+   (re2z_hit_ragdoll case 1) hat keinen Emitter (fehlendes Blut, nicht falsche Lage); die Bildnummer liegt hinter
+   dem Advance — die Port-Zaehlung dafuer ist nicht nachgemessen, deshalb nicht blind eingebaut. Messweg: Schrotflinte
+   auf ROOM1140-Zombie, Ring re15_schuss_r36_fx_* mitschreiben, Bildnummern gegen +0x14D.
+9. **(N1) Feuer-/Funken-/Griff-Emitter (Zensus §8.8 C):** dieselbe a3-Semantik, im Port Welt-Versatz (z.B. Brand
+   (0,200,0) an Part 0/3) bzw. kein Spawn (Id 6). Kein Blut am getroffenen Zombie, nicht Teil von Punkt 2.
+10. **(N1) 16 Emitter ab 0x8010A1EC (Zensus §8.8 D):** der Port nennt diese Adressen nirgends; welcher Handler
+   (Oberkoerper-/Unterhaelfte-Maschinen ab 0x8010A440 / 0x8010B7D4?) sie aufruft und ob sie im Port erreichbar
+   sind, ist nicht bestimmt. Messweg: Caller je Funktion (re2_disasm.py scan) und Ring-Mitschnitt im Port.
+11. **(N1) Anker-Pose der a3 = 0-Emitter:** re2z_gore_fx_ex (a3 = NULL) ankert ueber re15_enemy_bone_world_pos (rohe
+   Keyframe-Pose), re2z_gore_fx_a3 / re2z_blood_fx_scaled ueber die gezeichnete (Crossfade-)Pose wie das Original
+   (Record +0x48 des Zeichners). Unterschied nur waehrend eines Crossfades (gemessen bis 98, §2.3); fuer die
+   30 Stellen der Gruppe B nicht umgestellt (keine Verhaltensaenderung ohne eigene Messung).
 
 ## 6. Fuer den Nutzer
 * Keine neuen Assets, keine Sprachdateien, keine Bank-9-Bits/Nachrichten/Ereignisse.
@@ -367,6 +390,12 @@ Suite: §7.
   wachen auf, sobald man naeher als 4000 kommt); (3) Blut sitzt jetzt an der Trefferzone (Brust bei Rumpf-/
   Kopftreffer, Knie bei Beintreffer, zur Schuetzenseite); (4) Kraehen zerplatzen beim Magnum-Treffer wie in RE2 in
   13 sichtbar wegfliegende Teile und sind danach weg.
+* Nachbesserung 1 (Punkt 2, sichtbar): auch das Blut beim TOEDLICHEN Treffer (Brust statt Becken bzw. Knie), beim
+  Treffer waehrend des Aufstehens (unter dem Kopf statt im Kopf), das Nachbluten nach einem Taumel-Treffer (5 Stoesse
+  auf Brusthoehe statt 10 am Becken), das Tropfblut des fallenden Zombies, der Tod am Boden, das MG-Blut (Ingram/MC51)
+  und die Sondertode mit Schrot/Magnum (Hals-Fontaene, Brocken, Tropfblut; beim Arm-Abriss laeuft das Blut den
+  Arm entlang statt senkrecht nach unten) sitzen jetzt an der RE2-Stelle. Das Nachbluten zieht dabei die zwei
+  Zufallswuerfe des Originals — die Zombie-Zufallsfolge nach einem Taumel-Treffer laeuft jetzt wie in RE2.
 * Entscheidungsfrage (optional): der LIEGENDE Spawn-Zombie (EXEC[7], nicht passiv 0x87..0x8A) ist weiterhin
   treffbar (v0.3.5-Ausnahme) — soll auch er wie in RE2 bis zum Aufstehen gesperrt sein?
 * Bedienhinweis: Kraehen am Boden (ROOM1170, sitzend) liegen im DOWN-Band (vert < 800 @0x80112560-c8) — tief
@@ -501,6 +530,16 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
   `Zuordnung: HURT=3 HURT16A=1 FLINCH/TROPF=7 NACH=5 AUF=2` / `probe_r36_blut: OK`; `pin tief` -> `Treffer 7, Spawns 12,
   Tod bei Bild 186` / `Zuordnung: HURT16A=1 ZONE0=4 NACH=5 AUF=1 LIEGE(a3=0)=1` / `probe_r36_blut: OK`
   (HURT16A im Todesbild = TOD-Sollpunkt, identische Koordinaten bei +0x16A = 0).
+* **Variante mg (Zensus §8.8, MG-Handler 0x80107EF0):** `probe_r36_blut pin mg` — Ingram 12, Leon von +z (Blick -z),
+  damit der Zombie nicht mit Gier 0 steht (sonst fielen Welt- und Anker-Versatz fast zusammen). Der MG-a3 ist ein
+  Zufallsvektor (sp+16); gepinnt wird je Stoss: a3 im Ring vorhanden und im Band der Zone (Zone != 0 Part 0
+  x,z in [-254,256], y in [-708,312] @0x80108000-38; Zone 0 Part 1 x,z in [-128,127], y in [672,927] @0x8010806C-98),
+  Lage <= 100 an Anker.R*a3 + Anker.T (Schranke 100 statt 40: der MG-P0 dreht den Zombie NACH dem Spawn um
+  +64-(r&0x7f) @0x8010815C-6C und schiebt ihn 20..83 zurueck @0x80108110-48, die Sonde sieht nur T-1/T), und ueber alle
+  Stoesse Summe d(Anker-Modell) < 1/2 Summe d(Welt-Versatz); der Lauf endet, sobald der Zombie Kriecher wird (danach
+  nur Griff-/Biss-Blut). Vorher (MG-Aufruf voruebergehend auf den alten Welt-Versatz gesetzt, Messung, zurueck):
+  `pin mg` exit 1, `probe_r36_blut: 23 FAILURES` (a3 fehlt im Ring, d 184..598). Nachher: `MG: 22 Stoesse, Summe
+  d(Anker-Modell) 590, Summe d(Welt-Versatz) 6665` / `probe_r36_blut: OK` (je Stoss d 11..53, Welt-Modell 64..415).
 
 ### 8.4 M4 — integration_r36_schuss: treffbare Ziele hinter dem Tisch
 * **Ursache:** unter RE2-KI stehen hinter dem Konferenztisch nur gesperrte Fresser (Plaetze 2..5) und der Liegende;
@@ -569,3 +608,65 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
   exe (Asset-Wurzel = exe-Verzeichnis; `<ext>` = LAST_EXT, ".exe" unter Windows, leer unter Linux), raeumt Reste
   abgebrochener Laeufe vorher weg und loescht die Kopie am Ende (Muster test_r34n_b_cursor.cmake).
 * **Messung:** Lauf oben gruen, danach `ls re15_port/build/platform/pc | grep -c r36c_haken` = 0.
+
+### 8.8 Zensus aller FUN_8001BF10-Aufrufe in EMZ0.BIN (Punkt 2 vollstaendig statt drei Emitter)
+Die Abnahme fand zwei Emitter-Familien, die der Bau-Agent uebersehen hatte; die neue Sonde fand im Lauf "tief" eine
+dritte (Tod des Liegenden). Deshalb ein vollstaendiger Zensus: alle 88 Stellen `jal 0x8001bf10` (Wort 0x0C006FC4) in
+info/re2leon/COMMON/BIN/EMZ0.BIN, je Stelle a0/a2/a3 rueckwaerts bis zum vorigen `jal` (Skript `zensus2.py` im
+Scratchpad, Rohliste `zensus2.txt`), dann gegen den Port-Aufruf (Adresse im Port-Kommentar) gestellt.
+
+**A — Blut/Gore am getroffenen bzw. sterbenden Zombie mit a3 != 0 (27 Stellen), jetzt alle Anker.R*a3 + Anker.T:**
+| Stelle(n) | Handler | a3 im Original (Anker) | Port vorher | Stand |
+|---|---|---|---|---|
+| 0x8010510C, 0x80105154 | Wurzel-Flinch | Zone 0 P1 (0,800,0); sonst P0 (P8.x, P8.y+500, P8.z) | ohne | Bau-Agent (§2) |
+| 0x80105708 | Haupt-Handler P0 | Zone 0 P1 (0,800,0); sonst P0 (P8.x-100s, P8.y+300, P8.z) | ohne | Bau-Agent |
+| 0x80105D80, 0x80105DB8 | Stagger P0 | dito, s = +0x16A | ohne | Bau-Agent |
+| 0x80105FF4 | Stagger P1 Nachbluten | +0x144-Vektor, y-500 (Zweig B) | jedes Bild, ohne | N1 §8.2 |
+| 0x80107B2C, 0x80107BB0 | Aufsteh-Treffer | P8 (0,300,0) | ohne | N1 §8.2 |
+| 0x801080C4 | MG-Handler 0x80107EF0 | Zone!=0 P0 / Zone 0 P1, Zufallsvektor sp+16 | Welt-Versatz | N1 (dieser Abschnitt) |
+| 0x801086B4 | TOD | Zone!=0 P0 (P8.x, P8.y+300, P8.z); Zone 0 P1 (0,800,0) | ohne | N1 §8.1 |
+| 0x801088D0 | Tropfblut Tod P1 | P0 (P8.x, P8.y+500, P8.z), Winkel r<<4 | ohne, +0x76 | N1 §8.1 |
+| 0x80108AD0 | Kriecher-Tod | P0 (0,300,0) | ohne | N1 §8.1 |
+| 0x80109024, 0x80109054 | RIP 0x80108BEC P0 | P0 (0,-500,0) fuer BEIDE | Welt / ohne | N1 |
+| 0x80109108, 0x8010913C | RIP P1 | +0x144 (Bewegung des Ticks) | ohne | Port-Konvention: Anker im laufenden Bild enthaelt die Bewegung (§8.2) — unveraendert |
+| 0x801093D4, 0x80109420, 0x80109438 | MAGNUM 0x801092C4 | P0 (P8.x, P8.y+300, P8.z), dann y-400 fuer 2 und 3 | Part 8 + Welt | N1 |
+| 0x80109710, 0x80109734 | BURST 0x80109610 | P0 (0,-300,0) / (0,-100,0) | Welt | N1 |
+| 0x801097A4 | BURST Fleischbrocken | P0 (256-2r, 56-2r, 256-2r) | ohne ("Start-v") | N1 |
+| 0x80109934 | BURST Tropfblut | P0 (P8.x, P8.y+500, P8.z) | Welt (0,+500,0) = 500 UNTER dem Becken | N1 |
+| 0x80109B60 | Tod des Liegenden 0x801099E4 | P0 (P8.x, P8.y+300, P8.z) | ohne | N1 §8.1 |
+| 0x801076A4, 0x801076C4, 0x801076E4 | Arm-Abriss | P3 (0,0,0) / (0,400,0) / (0,800,0), Winkel 0 / r<<2 / r<<4 | Welt, +0x76 | N1 |
+Belege der N1-Zeilen dieser Tabelle, die nicht in §8.1/§8.2 stehen (EMZ0.BIN, selbst disassembliert):
+```
+; MG 0x80107EF0: Zone!=0 sh v0,16(sp) @0x80108014 / sh v1,18(sp) @0x80108028 / sh s0,20(sp) @0x80108038 / addiu a3,sp,16 @0x80108058
+;                Zone 0  sh v0,16(sp) @0x8010807C / sh v1,18(sp) @0x8010808C / sh s0,20(sp) @0x80108098 / addiu a3,sp,16 @0x801080B8
+;                addiu a2,s1,244 @0x801080C0 (Zone 0) bzw. addiu a2,s1,72 @0x80108064, jal 0x8001bf10 @0x801080C4
+; RIP: 80108fe4: addiu v0,zero,-500 / 80108fe8: sh zero,24(sp) / 80108fec: sh v0,26(sp) / 80108ff4: sh zero,28(sp)
+;      80109004: addiu s2,sp,24 / 80109008: addu a3,s2,zero / 80109024: jal 0x8001bf10 / 80109054: jal 0x8001bf10 / 80109058: addu a3,s2,zero
+; MAGNUM: 801093a0: lw v0,1420(v1) / 801093a4: addiu s2,sp,24 / 801093a8: sh v0,24(sp) / 801093ac: lw v0,1424(v1)
+;      801093b4: addiu v0,v0,300 / 801093b8: sh v0,26(sp) / 801093bc: lw v0,1428(v1) / 801093c4: sh v0,28(sp)
+;      801093d0: addiu s1,s1,72 / 801093d4: jal 0x8001bf10 / 80109414: lhu v0,26(sp) / 8010941c: addiu v0,v0,-400
+;      80109420: jal 0x8001bf10 / 80109424: sh v0,26(sp) / 80109438: jal 0x8001bf10 / 8010943c: addu a3,s2,zero
+; BURST: 801096e4: addiu s1,sp,24 / 801096f0: addiu s5,zero,256 / 801096f8: addiu v0,zero,-300 / 801096fc-704: sh zero/v0/zero,24/26/28(sp)
+;      80109710: jal 0x8001bf10 / 80109720: addiu v0,zero,-100 / 80109724-2c: sh / 80109734: jal 0x8001bf10 / 80109738: addu a3,s1,zero
+;      80109744-50: sll v0,v0,1 / subu v0,s5,v0 / sh v0,24(sp) ; 80109758-64: addiu v1,zero,56 / subu / sh v1,26(sp)
+;      80109768-74: subu v0,s5,v0 / sh v0,28(sp) ; 80109794: addiu a3,sp,24 / 801097a4: jal 0x8001bf10
+;      801098e8-90c: lw 1420 / sh 24 / lw 1424 / addiu v0,v0,500 / sh 26 / lw 1428 / sh 28 ; 80109930: addiu a3,sp,24 / 80109934: jal
+; Arm-Abriss: 80107684: addu a1,zero,zero / 80107688: addiu s1,sp,24 / 80107694-9c: sh zero,24/26/28(sp) / 801076a0: addiu s0,s0,588
+;      801076a4: jal / 801076ac: addiu v0,zero,400 / 801076b4: sh v0,26(sp) / 801076bc: sll a1,v0,2 / 801076c4: jal
+;      801076cc: addiu v0,zero,800 / 801076d4: sh v0,26(sp) / 801076dc: sll a1,v0,4 / 801076e4: jal / 801076fc: sll a1,v0,4 / 80107704: jal (a3 0)
+```
+**B — a3 = 0 bzw. Nullvektor (30 Stellen, Lage = Anker.T, Port ohne Versatz = deckungsgleich):** 0x80104DF4, 0x80105368,
+0x801053D0, 0x80105ED0, 0x80105F0C, 0x801061B0, 0x801061F0, 0x80106390, 0x801063C0, 0x801063F0, 0x80106684, 0x801068D8,
+0x80106908, 0x80106940, 0x80106D7C, 0x801071A0, 0x801075E0, 0x80107600, 0x8010765C, 0x80107704, 0x8010841C, 0x80108780,
+0x80108E28, 0x80109800, 0x80109C1C, 0x8010BF68, 0x8010C07C, 0x8010C514; Nullvektor: 0x801035D8 (EXEC[5] P6, `sh zero,
+24/26/28(sp)` @0x801035C8-D0; die Sonde fuehrt ihn als LIEGE), 0x80107938. (Die Port-Zwillinge ankern ueber
+re15_enemy_bone_world_pos = rohe Pose statt gezeichneter; Unterschied nur waehrend eines Crossfades, s. OFFEN 11.)
+**C — kein Blut am getroffenen Zombie (14 Stellen):** Griff/Biss 0x80102B24, 0x80102BBC; Fressen 0x80103C8C; Feuer
+(Id 5) 0x80106180, 0x80106220, 0x80106254, 0x80106440, 0x80106470; Funken/Spark (Id 6, im Port ohne Spawn)
+0x80106574, 0x801065C0, 0x8010660C, 0x80106658, 0x801066AC, 0x801066D4. Dieselbe a3-Semantik, im Port als Welt-Versatz
+bzw. ohne -> OFFEN 9.
+**D — im Port ohne Zwilling (17 Stellen):** 0x80106A7C (Ragdoll P1 Nachbluten alle 4 Bilder, a3 = +0x144, Id
+(r<<3)+6000 — fehlt im Port, OFFEN 8) und 16 Stellen ab 0x8010A1EC (0x8010A1EC, 0x8010A318, 0x8010A33C, 0x8010A354,
+0x8010AC44, 0x8010AD70, 0x8010B188, 0x8010B244, 0x8010B668, 0x8010B6A8, 0x8010B6D0, 0x8010C1D0, 0x8010C208, 0x8010C240,
+0x8010C278, 0x8010C56C), deren Adressen der Port nirgends nennt (OFFEN 10).
+Summe 27 + 30 + 14 + 17 = 88.
