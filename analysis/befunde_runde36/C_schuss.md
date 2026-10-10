@@ -719,3 +719,7 @@ Regression des Verhaltens, das sie pruefen:
 | M6 Regressionsaussage | keine Regression aus v0.8.22/23 (git log -L je Funktion: 0 Commits), Herkunft 76d63ac0/ee97f515 (2026-08-20) |
 | M7 Messkopie | re15_pc_r36c_haken_<id> neben der exe, am Ende geloescht |
 | dazu (Zensus §8.8) | MG, MAGNUM, RIP, BURST (inkl. Tropfblut 500 UNTER statt 283 ueber dem Becken), Arm-Abriss: a3 im Anker-Rahmen; offen: §5 OFFEN 7-11 |
+
+Commits der Nachbesserung 1 (Zweig r36/schuss): 62cc4289 (M5/M6), a752ff99 (M1/M2/M3), 63d89d9a (M4/M7), c26c5f5a
+(Zensus: MG/MAGNUM/RIP/BURST/Arm-Abriss), f20967a4 (Dossier), fc786782 (Riegel teardeath/r26, Anker ohne Bank),
+97b41606 (fix, Abschluss Code), ee8eabbb (Mess-Skripte), dieser Abschluss-Commit.
