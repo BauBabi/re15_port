@@ -93,4 +93,8 @@ const re15_story_r36_text_t *re15_story_r36_tabelle(int *n);
 /* Letzte Entscheidung von P1 (Tests/Log): 1 = Roy liegt da (Strom an), 0 = versteckt, -1 = anderer Raum. */
 int re15_story_r36_roy_sichtbar(void);
 
+/* Messhaken RE15_MSG_LOG: "[msgtext] room=xxxx id=N "<Wortlaut>"" je geoeffnetem Text (PC). Gerufen am Ende
+ * von re15_dialog_open_mask (msg_common.c). Kein Spielverhalten. */
+void re15_story_r36_text_offen(int msg_id);
+
 #endif /* RE15_STORY_R36_H */

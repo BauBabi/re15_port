@@ -397,6 +397,7 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
     g_scd.message_query       = blocking ? 1 : 0;
     g_scd.message_nachhall    = 0;     /* Nutzer-Nachhall gehoert der VORIGEN Zeile (s. re15_scd.h) */
     g_scd.message_display_frames = 2;  /* keep the box alive while the FSM owns the lifetime */
+    re15_story_r36_text_offen(msg_id); /* Runde 36 Spur P: Messhaken RE15_MSG_LOG (Wortlaut), re15_story_r36.h */
 }
 
 /* Legacy 2-Argument-Form = Caption ohne Freeze (Maske 0). Bestandshalter fuer

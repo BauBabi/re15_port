@@ -9,8 +9,10 @@
 #include "re15_aot.h"        /* g_aot, re15_aot_set, re15_aot_retype                    */
 #include "re15_scd.h"        /* re15_game_flag_get, scd_prop_hide_by_obj_id, g_scd       */
 #include "re15_msg.h"        /* re15_msg_install_text / _durations / _compute_duration   */
+#include "re15_room.h"       /* g_current_room_id (Messhaken)                            */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
+#include <stdlib.h>          /* getenv (Messhaken RE15_MSG_LOG)                          */
 #endif
 
 #include "gen/story_r36_texte.inc"   /* k_s36_texte[] (tools/r36_p/texte_bauen.py) */
@@ -179,3 +181,23 @@ const re15_story_r36_text_t *re15_story_r36_tabelle(int *n)
 }
 
 int re15_story_r36_roy_sichtbar(void) { return s_roy; }
+
+/* MESSHAKEN (env-gegatet, kein Spielverhalten): RE15_MSG_LOG protokolliert jeden geoeffneten Text mit
+ * seinem dekodierten Wortlaut. Der bisherige "[msg] room=.. id=.."-Eintrag (scd_vm.c op_message_on)
+ * nennt nur die Id und fehlt am Untersuchen-Weg (re15_scd_show_message) ganz; die Abnahme von P2-P4
+ * braucht den angezeigten WORTLAUT. Gerufen am Ende von re15_dialog_open_mask (msg_common.c), dem
+ * einzigen Oeffner beider Wege. */
+void re15_story_r36_text_offen(int msg_id)
+{
+#ifdef RE15_PLATFORM_PC
+    static int s_log = -1;
+    if (s_log < 0) s_log = getenv("RE15_MSG_LOG") ? 1 : 0;
+    if (!s_log) return;
+    {
+        const char *t = re15_msg_get_text(msg_id);
+        fprintf(stderr, "[msgtext] room=%04x id=%d \"%s\"\n", (unsigned)g_current_room_id, msg_id, t ? t : "");
+    }
+#else
+    (void)msg_id;
+#endif
+}
