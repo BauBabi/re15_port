@@ -833,7 +833,7 @@ der Abnahme-2-Tabelle.
 
 \* Leon steht dort IN den Zellen (exe F300: (-26000,6332) / (-26932,9532) / (-22000,6332)), im Spiel nicht erreichbar (oben).
 
-- **Kein Gorilla greift an einer der zehn Stellen spaeter an als in v0.8.23** (NB2: an fuenf Stellen spaeter, u. a. Nordwest-Gang
+- **Kein Gorilla greift an einer der zehn Stellen spaeter an als in v0.8.23** (NB2: fuenfmal an vier Stellen spaeter, u. a. Nordwest-Gang
   F2438/F1939/F1806 und Slot 3 (6000,-9000) F339 > F324). Nordwest-Gang Slot 2 = v0.8.23 (F680/F704/F694), Slot 3 greift dort neu
   an (F1496/F892). Befundstelle beide.
 - fest an den zehn Stellen: v0.8.23 14726 (Abnahme-Skript) -> NB2 2662 -> **NB3 6460** (eigenes Skript). Der Rest ist NAH:
@@ -863,7 +863,7 @@ der Abnahme-2-Tabelle.
   das Original dort ebenso, ist es RE1.5-Verhalten; sonst den Unterschied zu griff/szene benennen und nur dort lenken.
 - Zufallsgang Anker 400: NB3 17975 gegen NB2 15857 (Anker 40: 221 gegen 1329), Abwaegung s. oben.
 - PSX-Laufzeit: Raster (~5000 Knoten x 9 Klemmen-Aufrufe je Raum) + A* je Gorilla und Bild im Umweg — vor einem PSX-Port fuer
-  ROOM11C0 als Tabelle vorzuberechnen (Nutzer-Regel 2026-09-03). Statische Puffer ~110 KB (12288 x (1+1+2) + 4 x 24 KB).
+  ROOM11C0 als Tabelle vorzuberechnen (Nutzer-Regel 2026-09-03). Statische Puffer ~144 KB (12288 x (1+1+2) + 4 x 24 KB).
 - Vorgaenger-OFFEN (ROOM10B0-Terrasse, Moebel-Tabelle) unveraendert.
 
 ### NB3 Fuer den Nutzer
@@ -871,7 +871,7 @@ der Abnahme-2-Tabelle.
 - Spuerbar: (1) Steht Leon im Gang an der Westseite des Parkplatzes, kommt der suedliche Gorilla wieder direkt ueber den
   westlichen Sprungplatz (wie vorher im Original) statt den Umweg ueber die Ostseite zu nehmen; der zweite Gorilla findet jetzt
   ebenfalls hin. (2) Gorillas, die an der Wand entlang zu Leon rutschen, werden nicht mehr umgelenkt — nur wer wirklich
-  feststeckt. (3) Die "Nordwest-Ecke" der Abnahme (unterhalb der Hecke/Mauer links oben) kann Leon im Spiel nicht betreten.
+  feststeckt. (3) Die drei "Nordwest-Taschen"-Plaetze der Abnahme liegen in den Kollisionszellen; Leon kann sie im Spiel nicht betreten.
 
 ### NB3 Ergebnis je Mangel (Kurzfassung)
 | Mangel | Ursache | Beleg | Aenderung | Messung nachher |
