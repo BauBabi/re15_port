@@ -37,6 +37,7 @@
 #include "re15_player.h"
 #include "re15_scd.h"
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12 */
+#include "re15_engine.h"       /* g_engine.frame_count — nur fuer das Log der Ereignisfolge (Nachbesserung 1) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -355,17 +356,26 @@ static void irons_kopf_tick(void)
     szl_log("Irons tot: Kopf-FSM +0x1b8 = 0x12 (kein Blickziel mehr)");
 }
 
+static void erweiterung_marken(void);
+
 void re15_szl_tick(void)
 {
     irons_kopf_tick();
+    erweiterung_marken();
 }
 
 /* ===================================================================================================== */
 /*  Punkt 2: ROOM11B0 — Marvin schliesst die Werkstatt-Tuer ab                                           */
 /* ===================================================================================================== */
 #include "gen/szl11b0_szene.inc"
+/* Nachbesserung 1: Tonteil des RE2-Tuerarchivs DOOR1A (tools/r36_j/tuerton_bauen.py, Tabelle @0x8009A658) —
+ * Satz 1 = Door_exit (RE2 @0x800141f0 `jal 0x8005ba28` / @0x800141f4 `lui a0,0x1`) ist der Tuer-zu-Ton, wenn
+ * Marvin die Werkstatt-Tuer SCHLIESST (Programm +RE15_SZL_OFF_TUER_TON, Se_on Port-Bank 0x0E). */
+#include "gen/szl11b0_tuerton.inc"
 
 static int tuer_zu(void) { return re15_game_flag_get(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU) != 0; }
+
+const uint8_t *re15_szl_tuerton(int *out_len) { if (out_len) *out_len = RE15_SZL_TUERTON_LEN; return k_szl_tuerton; }
 
 const uint8_t *re15_szl_programm(int *out_len)     { if (out_len) *out_len = RE15_SZL_PROG_LEN;     return k_szl_prog; }
 const uint8_t *re15_szl_tuerprogramm(int *out_len) { if (out_len) *out_len = RE15_SZL_TUERPROG_LEN; return k_szl_tuerprog; }
@@ -392,6 +402,44 @@ int re15_szl_programm_laeuft(void)
     return 0;
 }
 
+/* Versatz des Fadens in der Erweiterung (-1 = laeuft nicht) — Messhaken fuer Log und Riegel. */
+int re15_szl_programm_versatz(void)
+{
+    for (int s = 0; s < SCD_THREAD_COUNT; s++) {
+        const scd_thread_t *t = &g_scd.threads[s];
+        if (t->active && t->pc >= k_szl_prog && t->pc < k_szl_prog + RE15_SZL_PROG_LEN) return (int)(t->pc - k_szl_prog);
+    }
+    return -1;
+}
+
+/* Ereignisfolge an der Werkstatt-Tuer mit Bildnummern (Nachtrag abends: Abnahme "Schliessen < Tuer-zu-Ton <
+ * Abschliessen < Abschliess-Ton"). Nur Log: der Faden steht nach dem VM-Lauf eines Bildes HINTER der zuletzt
+ * ausgefuehrten Zeile (auf dem naechsten Sleep) — ueberschreitet er eine Marke, lief deren Zeile in diesem Bild.
+ * Alle fuenf Marken liegen vor einem Sleep IM Programm; waehrend eines Gosub (sub11, Warten) steht der Faden
+ * ausserhalb — dann bleibt der Stand erhalten (zurueckgesetzt wird nur beim Raumwechsel). */
+static void erweiterung_marken(void)
+{
+    static int s_vorher = -1;
+    static uint16_t s_raum = 0;
+    if ((uint16_t)g_current_room_id != s_raum) { s_raum = (uint16_t)g_current_room_id; s_vorher = -1; }
+    const int jetzt = re15_szl_programm_versatz();
+    if (jetzt < 0) return;
+#ifdef RE15_PLATFORM_PC
+    static const struct { int off; const char *was; } k_marke[] = {
+        { RE15_SZL_OFF_SCHLIESSEN,   "Schliessen: Plc_motion(0,20) Marvin greift zur offenen Tuer" },
+        { RE15_SZL_OFF_TUER_BILD_ZU, "Tuer zu: Cut_replace 0<->7 + 2<->8 (sub00 @0x01184/@0x01188 zurueck), Cut_chg 2" },
+        { RE15_SZL_OFF_TUER_TON,     "Tuer-zu-Ton: Se_on Port-Bank 0x0E Satz 1 (RE2 DOOR1A Door_exit)" },
+        { RE15_SZL_OFF_ABSCHLIESSEN, "Abschliessen: Plc_motion(0,15) (RE2 Kendo Clip 0)" },
+        { RE15_SZL_OFF_SCHLOSS_TON,  "Abschliess-Ton: Se_on Port-Bank 0x3A Satz 0x0A (SCHLOSS1010)" },
+    };
+    for (unsigned i = 0; i < sizeof k_marke / sizeof k_marke[0]; i++)
+        if (s_vorher <= k_marke[i].off && jetzt > k_marke[i].off)
+            fprintf(stderr, "[szl-r36] ROOM11B0 F%u +0x%04X %s\n", (unsigned)g_engine.frame_count,
+                    (unsigned)k_marke[i].off, k_marke[i].was);
+#endif
+    s_vorher = jetzt;
+}
+
 /* Texte beim Raumaufbau (Muster cut_10f0.c meldungen_einsetzen): IDs 20..22 liegen ueber der RDT-Zahl 16
  * (VERTRAG §1.2), re15_msg_load_room_block ueberschreibt sie also nicht. */
 void re15_szl_install(uint16_t room_id)
@@ -405,10 +453,13 @@ void re15_szl_install(uint16_t room_id)
         if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)id, d);
     }
     if (!tuer_zu()) return;
-    /* Leon sub00 @0x0118C hat die Zelle im Init-Lauf geoeffnet (Strom); das Tuer-Programm schliesst sie im
-     * ersten Spielbild wieder und legt Elzas Text-Platz (Faden wie ein Evt_exec, Muster cut_10f0.c). */
+    /* Leon sub00 @0x0118C hat die Zelle im Init-Lauf geoeffnet und @0x01184/@0x01188 die Tuerbilder auf 7/8
+     * (offen) getauscht (Strom); das Tuer-Programm schliesst die Zelle im ersten Spielbild wieder, legt Elzas
+     * Text-Platz und tauscht die Bilder zurueck auf 0/2 (geschlossen gemalt, wie Elza sie sieht) — Faden wie ein
+     * Evt_exec, Muster cut_10f0.c. */
     int slot = scd_event_fire(RE15_SZL_EREIGNIS_TUER);
-    szl_log(slot >= 0 ? "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 (Zelle (3,0x0C) solid, Text-Platz 8)"
+    szl_log(slot >= 0 ? "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 (Zelle (3,0x0C) solid, Text-Platz 8, "
+                        "Tuerbild zurueck auf 0/2 = geschlossen)"
                       : "Werkstatt-Tuer: KEIN freier Faden fuer Ereignis 23");
 }
 
@@ -429,6 +480,12 @@ int re15_szl_aot_on_umleitung(const uint8_t **pc, const uint8_t *sub06_start)
     if (tuer_zu()) return 0;                                            /* Erweiterung schon gelaufen */
     *pc = k_szl_prog;
     szl_log("sub06 @0x017EA Aot_on 5 -> erst die Erweiterung (Ereignis 22: Marvin schliesst die Werkstatt-Tuer ab)");
+    /* Tuerbank fuer den Tuer-zu-Ton (Se_on Port-Bank 0x0E Satz 1 -> re15_audio_re2_tuer_se): DOOR1A laden. Die
+     * Tuerbank ueberlebt Raumwechsel und haelt sonst den Tonteil der zuletzt durchschrittenen Tuer — die haengt
+     * vom Weg in den Raum ab (Muster cut_10f0.c re15_cut10f0_install). Zu dieser Zeit (Szenenende, ~600 Bilder
+     * nach dem Raumaufbau) klingt kein Tuerton mehr nach. */
+    if (!re15_audio_re2_tuer_laden(k_szl_tuerton, RE15_SZL_TUERTON_LEN))
+        szl_log("Tuerbank DOOR1A nicht geladen (kein Audiogeraet?) -> Tuer-zu-Ton stumm");
     return 1;
 }
 

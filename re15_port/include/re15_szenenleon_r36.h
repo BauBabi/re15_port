@@ -77,6 +77,22 @@ void re15_szl_tick(void);
                                           * @0x28 `00 00 83 01` = Prog 0 Ton 8 -> VAG 4                         */
 #define RE15_SZL_MARVIN_SLOT     1       /* Aktor-Slot = 1 + Sce_em_set-Slot 0 (main00 @0x01080 `44 00 40`)    */
 
+/* ---- Nachbesserung 1 (Dossier N1): Tuerbild + Schliessen vor dem Abschliessen -------------------------
+ * Die Werkstatt-Tuer existiert NUR im Hintergrund ROOM11B.BSS: Bild 2/0 = geschlossen, Bild 8/7 = offen gemalt
+ * (gleiche Kamera: RDT @0x00A0 == @0x0160, @0x0060 == @0x0140). Leon sub00 @0x01184 `4b 00 07` / @0x01188
+ * `4b 02 08` tauscht bei Strom auf die OFFEN-Bilder; Cut_replace ist ein Tausch (LAB_80040414 @0x8004044c..
+ * @0x800404a8) — dieselben Saetze noch einmal stellen 0/2 wieder her (Erweiterung beim Schliessen, Ereignis 23
+ * beim Raumaufbau mit (9,84)). */
+#define RE15_SZL_CUT_TUER_ZU     2       /* Ost-Ansicht, Tuer geschlossen gemalt (Bild 2)                        */
+#define RE15_SZL_CUT_TUER_OFFEN  8       /* dieselbe Kamera, Tuer offen gemalt (Bild 8; sub00 @0x01188)         */
+#define RE15_SZL_CUT_WEST_ZU     0       /* West-Ansicht, Tuer geschlossen (Bild 0)                              */
+#define RE15_SZL_CUT_WEST_OFFEN  7       /* dieselbe Kamera, Tuer offen (Bild 7; sub00 @0x01184)                 */
+#define RE15_SZL_CLIP_SCHLIESS   20      /* PORT-WAHL: Marvin RBJ rec1 Clip 20 (Hand-Maximum Bild 15)            */
+#define RE15_SZL_SE_TUERBANK     0x0E    /* = RE15_CUT10F0_SE_BANK: Port-Bank der RE2-Tuerbank (audio_pc.c)      */
+#define RE15_SZL_SE_TUER_ZU      1       /* Door_exit = Satz 1: RE2 @0x800141f0 jal 0x8005ba28 / @0x800141f4 lui a0,0x1 */
+/* Tonteil DOOR1A (RE2-Archivtabelle @0x8009A658, 0x5338 B) fuer den Tuer-zu-Ton (Riegel-Zugriff). */
+const uint8_t *re15_szl_tuerton(int *out_len);
+
 /* Raumaufbau (scd_room_setup.c, Ende des Installer-Blocks): Texte 20..22 in ROOM11B0; mit (9,84) zusaetzlich
  * Ereignis 23 = Tuer zu (Zelle solid + Text-Platz 8). */
 void re15_szl_install(uint16_t room_id);
@@ -92,5 +108,6 @@ const uint8_t *re15_szl_programm(int *out_len);
 const uint8_t *re15_szl_tuerprogramm(int *out_len);
 const uint8_t *re15_szl_meldung(int msg_id, int *out_len);
 int re15_szl_programm_laeuft(void);
+int re15_szl_programm_versatz(void);   /* Versatz des Fadens in der Erweiterung, -1 = laeuft nicht */
 
 #endif
