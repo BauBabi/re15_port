@@ -387,7 +387,7 @@ SCA-Zelle"): NUR im Hintergrund.
 `addu a1,zero,zero` (Slot 1 = sub00), @0x8003f018 `jal 0x8003f0a0` = der Dispatcher-Lauf beim Raumaufbau; dessen
 Schleife @0x8003f17c `addiu s2,s2,1` / @0x8003f180 `sltiu v0,s2,0xa` / @0x8003f188 `addiu s1,s1,368` geht die Slots
 der Reihe nach durch — ein in diesem Lauf gestarteter Faden in einem hoeheren Slot laeuft im selben Lauf (Evt_exec
-aus sub00, Form ROOM1050 @0x00C8A; scd_vm.c: Port-Ereignis-Slots 10..23).
+aus sub00, Form ROOM1050 sub00 @0x00CA2 `04 ff 18 03`, selbst nachgesehen; Port-Ereignis-Slots 10..23).
 **Tuer-zu-Ton (RE2-Tuerbank):** RE2 PSX.EXE @0x800141f0 `jal 0x8005ba28` mit @0x800141f4 `lui a0,0x1` = Satz 1
 (Door_exit) nach dem Ausblenden (selbst disassembliert, info/re2leon/PSX.EXE). Archiv: RE2-Tabelle @0x8009A658
 `38 53 fc 92 0b 00 00 00 f5 f4 00 00` = DOOR1A, Tonteil 0x5338 B (selbst gelesen), Tonkopf `00 00 14 16 | 00 00 24
