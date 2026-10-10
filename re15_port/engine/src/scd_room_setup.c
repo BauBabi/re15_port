@@ -359,6 +359,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     scd_register_room_events(rdt);      /* … then reinstall RVD@16 + register rdt */
     if (rdt && rdt->main_scd)   scd_thread_start(0, rdt->main_scd);    /* init  = main00 */
     if (rdt && rdt->sub_scd[0]) scd_thread_start(1, rdt->sub_scd[0]);  /* main  = sub00  */
+    re15_szl_init_lauf((uint16_t)g_current_room_id);   /* Runde 36 Spur J: Ereignis 23 im Init-Lauf hinter sub00 */
 
     /* RE2-KARTENSYSTEM: den geladenen Raum als BESUCHT markieren (Port-Erweiterung,
      * re15_map_visited.c) — dieser Choke-Point deckt Boot, Tuer, Selbst-Tuer und Load. */

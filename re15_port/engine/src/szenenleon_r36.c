@@ -452,14 +452,22 @@ void re15_szl_install(uint16_t room_id)
         int d = re15_msg_compute_duration(b, (size_t)n, 0);
         if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)id, d);
     }
-    if (!tuer_zu()) return;
-    /* Leon sub00 @0x0118C hat die Zelle im Init-Lauf geoeffnet und @0x01184/@0x01188 die Tuerbilder auf 7/8
-     * (offen) getauscht (Strom); das Tuer-Programm schliesst die Zelle im ersten Spielbild wieder, legt Elzas
-     * Text-Platz und tauscht die Bilder zurueck auf 0/2 (geschlossen gemalt, wie Elza sie sieht) — Faden wie ein
-     * Evt_exec, Muster cut_10f0.c. */
+}
+
+/* Nachbesserung 1 (M1): Ereignis 23 laeuft IM Init-Lauf, direkt hinter sub00. Gerufen NACH dem Start von Slot 1
+ * (sub00) und VOR dem Init-Tick (scd_room_setup.c bzw. Boot-/CONTINUE-Weg main.c): der Ereignis-Faden liegt in
+ * Slot >= SCD_EVENT_SLOT_FIRST (10) und laeuft in derselben Slot-Schleife NACH Slot 1 — wie im Original alles,
+ * was den Anfangszustand des Raums legt, im Init-Lauf (FUN_8003ef6c -> Dispatcher @0x8003f018) entsteht.
+ * Gemessen vorher (Fortsetzung mit Faden-Start NACH dem Init-Lauf): der erste Spielbild-Lauf der VM kam erst in
+ * Bild 6 (Einblenden), Bild 1..6 zeigten noch Cut 8 = OFFENE Tuer (Dossier N1.4). Leon sub00 @0x0118C oeffnet die
+ * Zelle und tauscht @0x01184/@0x01188 die Tuerbilder auf 7/8 (Strom); Ereignis 23 schliesst die Zelle, legt
+ * Elzas Text-Platz und tauscht die Bilder zurueck auf 0/2 (geschlossen gemalt, wie Elza sie sieht). */
+void re15_szl_init_lauf(uint16_t room_id)
+{
+    if (room_id != RE15_SZL_RAUM || !tuer_zu()) return;
     int slot = scd_event_fire(RE15_SZL_EREIGNIS_TUER);
-    szl_log(slot >= 0 ? "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 (Zelle (3,0x0C) solid, Text-Platz 8, "
-                        "Tuerbild zurueck auf 0/2 = geschlossen)"
+    szl_log(slot >= 0 ? "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 im Init-Lauf nach sub00 (Zelle (3,0x0C) solid, "
+                        "Text-Platz 8, Tuerbild zurueck auf 0/2 = geschlossen)"
                       : "Werkstatt-Tuer: KEIN freier Faden fuer Ereignis 23");
 }
 

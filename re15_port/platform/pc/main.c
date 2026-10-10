@@ -4793,6 +4793,8 @@ re_title:;
     }
     if (!s_preintro && rdt_ok && rdt.sub_scd[0]) {
         scd_thread_start(1, rdt.sub_scd[0]);
+        { extern void re15_szl_init_lauf(uint16_t);   /* Runde 36 Spur J: Ereignis 23 im Init-Lauf hinter sub00 */
+          re15_szl_init_lauf((uint16_t)g_current_room_id); }
         s_sub00_spawned = 1;
         /* sub00 SOFORT einmal laufen lassen — als INIT-Lauf, nicht als Gameplay-Frame.
          * Im Original startet die SCD-Raum-Init FUN_8003ef6c Slot 1 mit sub00 (a1 = 0,

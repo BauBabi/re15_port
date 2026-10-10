@@ -93,9 +93,11 @@ void re15_szl_tick(void);
 /* Tonteil DOOR1A (RE2-Archivtabelle @0x8009A658, 0x5338 B) fuer den Tuer-zu-Ton (Riegel-Zugriff). */
 const uint8_t *re15_szl_tuerton(int *out_len);
 
-/* Raumaufbau (scd_room_setup.c, Ende des Installer-Blocks): Texte 20..22 in ROOM11B0; mit (9,84) zusaetzlich
- * Ereignis 23 = Tuer zu (Zelle solid + Text-Platz 8). */
+/* Raumaufbau (scd_room_setup.c, Ende des Installer-Blocks): Texte 20..22 in ROOM11B0. */
 void re15_szl_install(uint16_t room_id);
+/* Raumaufbau VOR dem Init-Tick (nach dem Start von Slot 1 = sub00): mit (9,84) Ereignis 23 = Tuer zu (Zelle
+ * solid, Text-Platz 8, Tuerbilder zurueck auf 0/2) — laeuft im Init-Lauf direkt hinter sub00 (Slot 10 > 1). */
+void re15_szl_init_lauf(uint16_t room_id);
 /* scd_event_fire: Programm fuer Ereignis 22/23 in ROOM11B0, sonst NULL. */
 const uint8_t *re15_szl_ereignis(uint16_t room_id, uint8_t event_id);
 /* op_aot_on: steht der Faden auf sub06 @0x017EA und ist (9,84)=0, springt er in die Erweiterung
