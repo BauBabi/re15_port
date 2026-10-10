@@ -267,3 +267,35 @@ re15_lock_se.h). RE2_SOUND_LISTE.md: "ROOM101.SAP - Gun Shop".
 - ⛔ BILD: der Hintergrund (ROOM11B.BSS, von 11B0 UND 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
   aufgeschwungen an der Nordwand, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — genau so sieht Elza sie, waehrend
   ihr Text "The door is locked." sagt. Die Erweiterung aendert das Bild nicht (Entscheidungsfrage unten).
+
+## OFFEN (mit Adresse + Messweg)
+1. **Bild der Werkstatt-Tuer**: ROOM11B.BSS (von 11B0 und 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
+   an der Nordwand aufgeschwungen, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — Elzas "The door is locked." steht im
+   Original vor demselben Bild. Ein sichtbar geschlossenes Tuerblatt gibt es in keinem Original-Datensatz (kein
+   Door_model_set/Obj_model_set an der Zelle (3,0x0C)); es waere ein neues 3D-Modell im Durchgang (Entscheidungsfrage).
+2. **Kendos Nachwippen**: RE2 ROOM1010 sub09 @0x01C30..@0x01C44 spielt nach dem Klick Clip 0 5 Bilder rueckwaerts
+   (`3f 00 00 c0`), setzt per Plc_cnt (0x5B @0x80057120 `sb pc[1],333(v1)`) Bild 10 und friert per Plc_stop (0x66
+   @0x80056ff0) 25 Bilder ein. RE1.5 hat beide Opcodes nicht (Tabelle 0x00..0x5E; 0x5B ist ein Feld-Setter
+   @0x800414e0) — hier: voller Rueckwaerts-Clip + Sleep 35 (gleiche Gesamtdauer). Messweg: RE2 in DuckStation, GDB auf
+   Kendos +0x14D waehrend sub09.
+3. **Raumklang des Schloss-Tons**: RE2 spielt Se_on @0x01C20 positional (x,y,z = Kendos Platz); der Port spielt die
+   RE2-Raumbaenke (wie GLAS1090) nicht-positional (audio_pc.c se_play_layers, OFFEN-Block dort, FUN_80045a64).
+4. **Elza / Zeitleiste**: ROOM11B1 bleibt Original (Text-Platz 8 bis (3,0x83), danach offen). Die Story-Spur P
+   (D_gegenpruefung.md §2.1 Punkt 2) muss entscheiden, ob Marvins Schloss bei Elzas Rueckkehr E21 wirken soll —
+   Leons (9,84) liegt im Leon-Spielstand und erreicht ROOM11B1 nicht.
+
+## Fuer den Nutzer
+- **Neue Assets (Paket-Gate, release/make_package.sh - nur Orchestrator):** `re15_port/shared_assets/RE2/SCHLOSS1010.EDT`
+  (192 B), `SCHLOSS1010.VH` (3616 B), `SCHLOSS1010.VB` (82736 B) = RE2 ROOM1010 snd0 bytegleich
+  (`tools/r36_j/schloss1010_extrakt.py --pruefen`). Fehlen sie, bleibt nur der Klick stumm ("[schlossse] ... fehlt").
+- **Sprachdateien (optional):** Marvins neue Zeilen sind ROOM11B0 msg 20 "Hold on." und msg 21 "I just want to make
+  sure / we don't have any unwanted followers." — `synchro/STAGE1/room11b0/main20.wav` / `main21.wav` bindet der Port
+  automatisch, wenn sie da sind.
+- **Ablauf zum Ansehen:** Leon-Spielstand vor der Container-Szene (Strom an, 11C0 erledigt) -> ROOM11B0; nach "Okay! Be
+  careful down there!" folgen "Hold on." (Kamera bleibt am Container), Marvins Lauf durch die Werkstatt (Cut 10), das
+  Abschliessen an der Tuer (Cut 8, linke Hand zum Schloss, RE2-Klick), der Rueckweg und "I just want to make sure...";
+  dann steigt Leon wie im Original in den Gully. Danach zeigt die Tuer von beiden Seiten "The door is locked." mit
+  dem RE2-Tuer-zu-Ton wie bei Elza.
+- **Entscheidungsfrage:** Soll die im Hintergrund OFFEN gemalte Werkstatt-Tuer nach dem Abschliessen sichtbar
+  geschlossen werden (neues Tuermodell im Durchgang, z.B. aus den RE2-Tuersequenzen)? Bei Elza ist sie im Original
+  ebenso offen gemalt und trotzdem "locked".

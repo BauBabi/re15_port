@@ -31,3 +31,15 @@ foreach(_teil programm schub erweiterung tuer abgang10f0 irons)
     add_test(NAME unit_r36_szenenleon_${_teil} COMMAND test_r36_szenenleon ${_teil})
     set_tests_properties(unit_r36_szenenleon_${_teil} PROPERTIES TIMEOUT 240)
 endforeach()
+
+#   integration_r36_szenenleon  echte exe: A Szene ROOM11B0 + Erweiterung (Umleitung, msg 20, Se_on 0x3A ->
+#                               RE2-Schlossbank SCHLOSS1010 ueber audio_pc.c, msg 21, ROOM1260); B Werkstatt-Tuer mit
+#                               (9,84): Ereignis 23 + Tuer-zu-Ton wie Elzas (11B1 msg 12) (test_r36_szenenleon.cmake)
+if(TARGET re15_pc)
+    add_test(NAME integration_r36_szenenleon
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r36_szenenleon_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_szenenleon.cmake)
+    set_tests_properties(integration_r36_szenenleon PROPERTIES TIMEOUT 900)
+endif()
