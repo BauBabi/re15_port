@@ -852,3 +852,23 @@ Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
   **Neuer Stand** (`pin_neu/`): alle sieben `probe_r36_blut: OK` — (G) max d: eben 24, tief 32, mg 88 (MG-Bilder, Schranke 100),
   rip 0, arm 0, burst 0, glied 73 (MG-Bilder); Zaehler rip: Kopf 1, RIP-P1 2, Aufschlag 4; arm: 4. Spawn 1; burst: Ragdoll 1;
   glied: Gliedabriss 2, Aufschlag 2; eben/tief: je 2 Spawns in Loco-Bank-Bildern.
+
+### 9.7 OFFEN (Stand Nachbesserung 2) + Fuer den Nutzer
+* **OFFEN 11 (N1, Anker-Pose der a3 = 0-Emitter): erledigt** (9.4) — dazu die drei Faelle, die dieselbe Ursache hatten und die
+  Metrik der Abnahme nicht sehen konnte: Loco-Bank-Phasen (a3-Emitter 56-121 neben dem gezeichneten Koerper), Aufschlag-Blut
+  der fliegenden Teile (1900-2400 neben dem Glied, jetzt am Boden beim Glied), Ragdoll (98).
+* **OFFEN 12 (neu, nicht Lage): Winkel/Id einzelner Gruppe-B-Emitter.** Das Original uebergibt dort a1 = rand << 4: Gliedabriss
+  `jal 0x80015fe8` / `sll a1,v0,4` @0x80105354-60 und @0x801053BC-C8, Ragdoll-Emitter @0x80106D64-74 (dazu a0 = 0x00031000
+  `lui a0,0x3` / `ori a0,a0,0x1000` @0x80106D6C-70), Aufschlag-Blut @0x80028C28-30 (a0 = Sub aus `lw a0,0(s3)` >> 19 & 0x18
+  | 0x7D0 @0x80028C38-50). Der Port zieht diese Wuerfe (Folge unveraendert), gibt aber +0x76 als Winkel weiter
+  (re2z_gore_fx / re2z_blood_fx_at; Ragdoll-Emitter Skala 0x1500 = alter Stand-in ohne Beleg). Betrifft die RICHTUNG/Groesse
+  des Spritzers, nicht die Lage (Mangel M1); nicht geaendert, damit dieser Schritt nur die Lage bewegt. Messweg: Ring um a1
+  erweitern, gegen r<<4 pruefen.
+* OFFEN 7-10 (§5) unveraendert.
+* **Fuer den Nutzer (Nachbesserung 2):** das Blut sitzt jetzt auch bei den Sonder-Treffern dort, wo der Koerper GEZEICHNET wird:
+  Schrot-Kopfschuss (Hals-Blut am Halsansatz, aus dem der Kopf abfliegt; das Nachbluten am Becken), abgeschossene Glieder
+  (Ingram/MC51; Arm-Abriss mit der Schrotflinte), der zerrissene Zombie am Boden (Ragdoll), und vor allem: wenn ein
+  abgerissenes Bein/ein Arm auf dem Boden aufschlaegt, spritzt das Blut jetzt AM GLIED auf dem Boden statt in Armhoehe am Rumpf
+  (vorher bis 2,4 m daneben). Ausserdem sitzt das Treffer-Blut bei den ersten Treffern auf einen GEHENDEN Zombie jetzt am
+  gezeichneten Koerper (vorher bis ~1 m daneben, weil der Anker aus der falschen Animationsbank kam). Keine neuen Assets,
+  keine Sprachdateien, keine Bits/Nachrichten/Ereignisse.
