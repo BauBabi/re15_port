@@ -22,11 +22,21 @@ set_tests_properties(unit_r36_klettern_10f0_endlage unit_r36_klettern_10f0_start
 
 #   probe_r36_klettern_zensus   Der Wortlaut ist PLURAL ("Leitern/Tritte"): ALLE Typ-4-Objekte ohne
 #                               Bit 0x100 (Zensus A_belege/zensus_obj_typ4_flags.txt) in der VM, je
-#                               Raum (Leon + Elza), je Lage (Flag 0/1), von vier Seiten:
-#                               10F0/10F1 (Tritt, (3,102)), 11A0/11A1 (Kiste, (5,6)), 2040/2041
-#                               (obj 1/2 Tritt, statisch), 2060/2061 (Tritt, (3,172)), 20A0/20A1
-#                               (Kiste, (3,204)), 5020/5021 (Kiste, (4,203)); Riegel = je Objekt
-#                               mindestens eine Seite mit Substate 9 / KIND 0x81 / oben angekommen.
+#                               RECORD (Raum x Objekt x Lage = ein Obj_model_set, Datei-Byte-Offset),
+#                               24 Records, von vier Seiten: 10F0/10F1 (Tritt, (3,102)), 11A0/11A1
+#                               (Kiste, (5,6)), 2040/2041 (obj 1/2 Tritt, statisch), 2060/2061
+#                               (Tritt, (3,172)), 20A0/20A1 (Kiste, (3,204)), 5020/5021 (Kiste,
+#                               (4,203)). Je Record zuerst die LAGE-PRUEFUNG: installiertes Objekt ==
+#                               RDT-Record (Band, x/y/z, Flags pc[6..7]|1, Box), sonst rot. Riegel =
+#                               Lage wie der Record UND mindestens eine Seite mit Substate 9 / KIND
+#                               0x81 / oben angekommen. Nachbesserung 2 (Abnahme 1 Mangel 1): 22
+#                               Records sind beim Laden erreichbar (Flags Bank 3/4 persistent); die
+#                               11A0/11A1-Lage (5,6)=1 (@0x0107E, Band 0) NICHT — Bank 5 Wort 0 wird
+#                               vor main00 genullt (FUN_8003ecec @0x8003ed74, Aufruf @0x8003ef84,
+#                               main00-Start @0x8003efa0-b0) und das Objekt-Band aendert nur der
+#                               Installer @0x80040974 bzw. Member 18 @0x80041228. Die Sonde faehrt sie
+#                               ERZWUNGEN (Flag nach dem Wisch) und zaehlt sie getrennt; Gegenprobe:
+#                               Flag VOR dem Raum-Init -> Flag 0, Lage @0x01058 -> Pruefung meldet es.
 #                               Dazu (Nachbesserung 1, Abnahme 0 Mangel 1) die Null-Box ROOM3091
 #                               obj 1 (@0x01508, h 0): FUN_8002da4c vergleicht vorzeichenlos
 #                               (@0x8002da8c-c0), bei h 0 / Rand -112 (@0x8002d398) Treffer genau
