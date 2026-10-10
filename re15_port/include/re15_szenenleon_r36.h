@@ -50,4 +50,44 @@ int  re15_szl_objekt_schub(int prop_idx);
 /* ---- Takt (game_step_common.c, neben re15_cut10f0_tick) ---------------------------------------------- */
 void re15_szl_tick(void);
 
+/* ---- Punkt 2: ROOM11B0 — Marvin schliesst die Werkstatt-Tuer ab (Dossier §2) --------------------------
+ * Programm: gen/szl11b0_szene.inc (tools/r36_j/szene11b0_bauen.py, Herleitung je Opcode dort).
+ * Die "Werkstatt-Tuer" ist die Durchgangszelle der Trennwand, SCA Region 3 Index 12 @0x00EC8
+ * (x -22150..-21410, z -17230..-15230, u0=ff fl=03); Leon sub00 @0x0118C/@0x01190 oeffnet sie bei Strom.
+ * Elzas Text-Platz: ROOM11B1 sub00 @0x0112A (Platz 8, Rechteck (-22400,-17200,1200,1700), msg 12 @0x179F). */
+#define RE15_SZL_RAUM            0x11B0u /* Leon; ROOM11B1 (Elza) bleibt Original                               */
+#define RE15_SZL_SUB             6       /* sub06 = die Original-Szene (sub01 @0x011D2 Evt_exec 06)            */
+#define RE15_SZL_SUB_START       0x01478 /* Datei-Offset von sub06 (scd_dump_room.py)                          */
+#define RE15_SZL_SUB_AOT_ON      0x017EA /* `47 05` Aot_on 5 (Gully) — HIER haengt die Erweiterung davor      */
+#define RE15_SZL_BANK_ZU         9       /* VERTRAG Runde 36 §1.1: Bit 84 = Werkstatt-Tuer verschlossen (J)    */
+#define RE15_SZL_BIT_ZU          84
+#define RE15_SZL_EREIGNIS_ERW    22      /* VERTRAG §1.3: J = 22, 23 in ROOM11B0                               */
+#define RE15_SZL_EREIGNIS_TUER   23
+#define RE15_SZL_MSG_HOLD        20      /* VERTRAG §1.2: ROOM11B0 J 20..27                                    */
+#define RE15_SZL_MSG_FOLLOW      21
+#define RE15_SZL_MSG_ZU          22      /* = ROOM11B1 msg 12 @0x179F "The door is locked." (Bytes 1:1)        */
+#define RE15_SZL_ELZA_RAUM       0x11B1u
+#define RE15_SZL_ELZA_MSG_ZU     12
+#define RE15_SZL_SE_BANK         0x3A    /* Port-Bank (Se_on pc[1]) der RE2-Schlossbank SCHLOSS1010 — die
+                                          * Bank-Weiche FUN_80045024 kennt nur 0..5 (audio_pc.c Haken davor)   */
+#define RE15_SZL_SE_SCHLOSS      0x0A    /* RE2 ROOM1010 sub09 @0x01C20 `36 02 0a 01` -> EDT Satz 0x0A
+                                          * @0x28 `00 00 83 01` = Prog 0 Ton 8 -> VAG 4                         */
+#define RE15_SZL_MARVIN_SLOT     1       /* Aktor-Slot = 1 + Sce_em_set-Slot 0 (main00 @0x01080 `44 00 40`)    */
+
+/* Raumaufbau (scd_room_setup.c, Ende des Installer-Blocks): Texte 20..22 in ROOM11B0; mit (9,84) zusaetzlich
+ * Ereignis 23 = Tuer zu (Zelle solid + Text-Platz 8). */
+void re15_szl_install(uint16_t room_id);
+/* scd_event_fire: Programm fuer Ereignis 22/23 in ROOM11B0, sonst NULL. */
+const uint8_t *re15_szl_ereignis(uint16_t room_id, uint8_t event_id);
+/* op_aot_on: steht der Faden auf sub06 @0x017EA und ist (9,84)=0, springt er in die Erweiterung
+ * (Rueckgabe 1); deren Schwanz ist dasselbe `47 05 01 00`. sub06_start = rdt->sub_scd[6]. */
+int re15_szl_aot_on_umleitung(const uint8_t **pc, const uint8_t *sub06_start);
+/* lock_se_common.c: (0x11B0, 22) spielt wie Elzas (0x11B1, 12) — 1 = umgeschrieben. */
+int re15_szl_lock_stelle(unsigned *room_id, uint8_t *msg_id);
+/* Riegel/Mess-Zugriff */
+const uint8_t *re15_szl_programm(int *out_len);
+const uint8_t *re15_szl_tuerprogramm(int *out_len);
+const uint8_t *re15_szl_meldung(int msg_id, int *out_len);
+int re15_szl_programm_laeuft(void);
+
 #endif

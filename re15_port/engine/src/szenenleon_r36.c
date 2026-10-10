@@ -33,6 +33,7 @@
 #include "re15_emd.h"
 #include "re15_enemy.h"
 #include "re15_irons_tod.h"
+#include "re15_msg.h"
 #include "re15_player.h"
 #include "re15_scd.h"
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12 */
@@ -351,4 +352,85 @@ static void irons_kopf_tick(void)
 void re15_szl_tick(void)
 {
     irons_kopf_tick();
+}
+
+/* ===================================================================================================== */
+/*  Punkt 2: ROOM11B0 — Marvin schliesst die Werkstatt-Tuer ab                                           */
+/* ===================================================================================================== */
+#include "gen/szl11b0_szene.inc"
+
+static int tuer_zu(void) { return re15_game_flag_get(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU) != 0; }
+
+const uint8_t *re15_szl_programm(int *out_len)     { if (out_len) *out_len = RE15_SZL_PROG_LEN;     return k_szl_prog; }
+const uint8_t *re15_szl_tuerprogramm(int *out_len) { if (out_len) *out_len = RE15_SZL_TUERPROG_LEN; return k_szl_tuerprog; }
+
+const uint8_t *re15_szl_meldung(int msg_id, int *out_len)
+{
+    const uint8_t *b = NULL; int n = 0;
+    switch (msg_id) {
+    case RE15_SZL_MSG_HOLD:   b = k_szl_msg20; n = (int)sizeof k_szl_msg20; break;
+    case RE15_SZL_MSG_FOLLOW: b = k_szl_msg21; n = (int)sizeof k_szl_msg21; break;
+    case RE15_SZL_MSG_ZU:     b = k_szl_msg22; n = (int)sizeof k_szl_msg22; break;
+    default: break;
+    }
+    if (out_len) *out_len = n;
+    return b;
+}
+
+int re15_szl_programm_laeuft(void)
+{
+    for (int s = 0; s < SCD_THREAD_COUNT; s++) {
+        const scd_thread_t *t = &g_scd.threads[s];
+        if (t->active && t->pc >= k_szl_prog && t->pc < k_szl_prog + RE15_SZL_PROG_LEN) return 1;
+    }
+    return 0;
+}
+
+/* Texte beim Raumaufbau (Muster cut_10f0.c meldungen_einsetzen): IDs 20..22 liegen ueber der RDT-Zahl 16
+ * (VERTRAG §1.2), re15_msg_load_room_block ueberschreibt sie also nicht. */
+void re15_szl_install(uint16_t room_id)
+{
+    if (room_id != RE15_SZL_RAUM) return;
+    for (int id = RE15_SZL_MSG_HOLD; id <= RE15_SZL_MSG_ZU; id++) {
+        int n = 0;
+        const uint8_t *b = re15_szl_meldung(id, &n);
+        re15_msg_install_text((unsigned char)id, b, (size_t)n);
+        int d = re15_msg_compute_duration(b, (size_t)n, 0);
+        if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)id, d);
+    }
+    if (!tuer_zu()) return;
+    /* Leon sub00 @0x0118C hat die Zelle im Init-Lauf geoeffnet (Strom); das Tuer-Programm schliesst sie im
+     * ersten Spielbild wieder und legt Elzas Text-Platz (Faden wie ein Evt_exec, Muster cut_10f0.c). */
+    int slot = scd_event_fire(RE15_SZL_EREIGNIS_TUER);
+    szl_log(slot >= 0 ? "Werkstatt-Tuer verschlossen (9,84): Ereignis 23 (Zelle (3,0x0C) solid, Text-Platz 8)"
+                      : "Werkstatt-Tuer: KEIN freier Faden fuer Ereignis 23");
+}
+
+const uint8_t *re15_szl_ereignis(uint16_t room_id, uint8_t event_id)
+{
+    if (room_id != RE15_SZL_RAUM) return NULL;
+    if (event_id == RE15_SZL_EREIGNIS_TUER) return tuer_zu() ? k_szl_tuerprog : NULL;
+    if (event_id == RE15_SZL_EREIGNIS_ERW)  return (!tuer_zu() && !re15_szl_programm_laeuft()) ? k_szl_prog : NULL;
+    return NULL;
+}
+
+int re15_szl_aot_on_umleitung(const uint8_t **pc, const uint8_t *sub06_start)
+{
+    if (!pc || !*pc || !sub06_start) return 0;
+    if ((uint16_t)g_current_room_id != RE15_SZL_RAUM) return 0;
+    if (*pc != sub06_start + (RE15_SZL_SUB_AOT_ON - RE15_SZL_SUB_START)) return 0;
+    if ((*pc)[0] != 0x47 || (*pc)[1] != 0x05) return 0;                 /* @0x017EA `47 05` */
+    if (tuer_zu()) return 0;                                            /* Erweiterung schon gelaufen */
+    *pc = k_szl_prog;
+    szl_log("sub06 @0x017EA Aot_on 5 -> erst die Erweiterung (Ereignis 22: Marvin schliesst die Werkstatt-Tuer ab)");
+    return 1;
+}
+
+int re15_szl_lock_stelle(unsigned *room_id, uint8_t *msg_id)
+{
+    if (!room_id || !msg_id) return 0;
+    if ((uint16_t)*room_id != RE15_SZL_RAUM || *msg_id != RE15_SZL_MSG_ZU) return 0;
+    *room_id = RE15_SZL_ELZA_RAUM;                 /* gen/lock_se_sites.inc { 0x11B1, 12, M, 1 } */
+    *msg_id  = RE15_SZL_ELZA_MSG_ZU;
+    return 1;
 }

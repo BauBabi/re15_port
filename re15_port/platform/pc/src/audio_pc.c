@@ -35,6 +35,7 @@
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
+#include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Port-Bank 0x3A = RE2-Schlossbank SCHLOSS1010 */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 
@@ -1081,6 +1082,56 @@ void re15_audio_re2_glas_se(int satz)
     if (re15_audio_re2_glas_laden() != 0) return;
     if (satz < 0 || satz >= s_glas_edt_count) return;
     se_play_layers(s_glas_edt, &s_glas_vab, s_glas_decoded, s_glas_decoded_len, satz);
+}
+
+/* ===== Runde 36 Spur J: die SCHLOSS-Bank (RE2 ROOM1010 snd0, Robert Kendo im Gun Shop) ===============
+ * RE2 ROOM1010 sub09 @0x01C20 `36 02 0a 01 ...` -> Se_on Raumbank 2 Satz 0x0A (EDT @0x28 `00 00 83 01` =
+ * Prog 0 Ton 8 -> VAG 4), 20 Bilder nach Kendos Clip 0 an der Tuer. Bytegleicher snd0-Schnitt (RDT-Kopfworte
+ * +0x08/+0x0C/+0x10 = EDT @0xA044 / VH @0xA104 / VB @0xAF24) als shared_assets/RE2/SCHLOSS1010.EDT/.VH/.VB
+ * (tools/r36_j/schloss1010_extrakt.py). Lader = GLAS-Muster darueber; Aufruf ueber die Port-Bank
+ * RE15_SZL_SE_BANK im Se_on-Zweig (Marvins Abschliessen ROOM11B0, gen/szl11b0_szene.inc). */
+static re15_vab_t s_schloss_vab;
+static int16_t  *s_schloss_decoded[RE15_VAB_MAX_SAMPLES];
+static int       s_schloss_decoded_len[RE15_VAB_MAX_SAMPLES];
+static uint8_t  *s_schloss_edt = NULL;
+static int       s_schloss_edt_count = 0;
+static int       s_schloss_state = 0;        /* 0 = ungeprueft, 1 = geladen, -1 = fehlt */
+
+static int re2_schloss_laden(void)
+{
+    if (s_schloss_state) return (s_schloss_state == 1) ? 0 : -1;
+    s_schloss_state = -1;
+    int edt_sz = 0, vh_sz = 0, vb_sz = 0;
+    uint8_t *edt = re15_pc_read_re2("SCHLOSS1010.EDT", &edt_sz);
+    uint8_t *vh  = re15_pc_read_re2("SCHLOSS1010.VH",  &vh_sz);
+    uint8_t *vb  = re15_pc_read_re2("SCHLOSS1010.VB",  &vb_sz);
+    if (!edt || !vh || !vb || edt_sz < 4 || re15_vab_parse(vh, (size_t)vh_sz, &s_schloss_vab) != 0) {
+        fprintf(stderr, "[schlossse] shared_assets/RE2/SCHLOSS1010.* fehlt -> Abschliessen stumm\n");
+        free(edt); free(vh); free(vb); return -1;
+    }
+    for (int i = 0; i < s_schloss_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_schloss_vab.samples[i].offset, sz = s_schloss_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_schloss_decoded[i]     = pcm;
+        s_schloss_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vh); free(vb);
+    s_schloss_edt = edt; s_schloss_edt_count = edt_sz / 4; s_schloss_state = 1;
+    return 0;
+}
+
+static void re2_schloss_se(int satz)
+{
+    if (!g_audio.initialized) return;
+    if (re2_schloss_laden() != 0) return;
+    if (satz < 0 || satz >= s_schloss_edt_count) return;
+    if (getenv("RE15_SE_DEBUG"))
+        fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> RE2-Schlossbank SCHLOSS1010 (Runde 36 Spur J)\n",
+                RE15_SZL_SE_BANK, satz);
+    se_play_layers(s_schloss_edt, &s_schloss_vab, s_schloss_decoded, s_schloss_decoded_len, satz);
 }
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
@@ -3647,6 +3698,7 @@ void re15_audio_tick(void)
                 /* Runde 35 Spur K (cut_10f0.c): Port-Bank 0x0E = RE2-Tuerbank (Tuerknall ROOM10F0, Se_on-Form
                  * ROOM10D0 sub21 @0x01A02) — VOR der Bank-Weiche FUN_80045024 (kennt nur Bank 0..5). */
                 if (re15_cut10f0_se_on((unsigned)evt.bank, (int)evt.sample_id)) break;
+                if (evt.bank == RE15_SZL_SE_BANK) { re2_schloss_se((int)evt.sample_id); break; }   /* Runde 36 Spur J */
                 if (getenv("RE15_SE_DEBUG")) {
                     static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
                     int k = (int)re15_audio_se_bank_kind(evt.bank);

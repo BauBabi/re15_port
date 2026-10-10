@@ -56,6 +56,7 @@
 #include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 #include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
+#include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Erweiterung ROOM11B0 sub06 (szenenleon_r36.c) */
 
 scd_vm_t g_scd;
 
@@ -632,6 +633,7 @@ int scd_event_fire(uint8_t event_id)
      * Rueckkehr / Nachspawn; sonst NULL. Disjunkt zu A (2) und D (13). */
     if (!pc) pc = re15_irons_tod_ereignis((uint16_t)g_current_room_id, event_id);
     if (!pc) pc = re15_fenster1120_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 35 Spur M */
+    if (!pc) pc = re15_szl_ereignis((uint16_t)g_current_room_id, event_id);   /* Runde 36 Spur J: 22/23 in ROOM11B0 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -4347,6 +4349,8 @@ static int op_unknown(scd_thread_t *t)
  * Dispatch per port type in re15_aot_fire_slot(). */
 int op_aot_on(scd_thread_t *t)
 {
+    /* Runde 36 Spur J: ROOM11B0 sub06 @0x017EA `47 05` -> erst Marvins Erweiterung (szenenleon_r36.c) */
+    if (re15_szl_aot_on_umleitung(&t->pc, s_current_rdt ? s_current_rdt->sub_scd[RE15_SZL_SUB] : NULL)) return 1;
     uint8_t slot = t->pc[1];
     if (slot < RE15_AOT_MAX) {
         g_aot.slots[slot].active = 1;
