@@ -193,7 +193,7 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
  * NACHBESSERUNG 2 (Abnahme 1 M1, Dossier §10.1): "leben" reicht nicht. Record i traegt Sce_em_set-Slot i
  * (@0x011FD / @0x01391 + 20 i); das Original legt jeden Slot ohne Grenzpruefung ab (Entity = 0x800acc2c + Slot*0x1F4,
  * @0x800420b0/@0x800420dc/@0x80042118), der Port fuehrt Slot i als Aktor i+1 und verwirft Aktor >= RE15_ACTOR_MAX
- * (scd_vm.c op_sce_em_set) - NACH dem Limit-Zaehler. Records 15..19 belegen also Limit-Plaetze, ohne zu erscheinen
+ * (scd_vm.c op_sce_em_set) - NACH dem Limit-Zaehler. Bis Runde 35 (RE15_ACTOR_MAX 16) belegten Records 15..19 also Limit-Plaetze, ohne zu erscheinen; seit Runde 36 Spur E (RE15_ACTOR_MAX 21) erscheinen sie
  * (gemessen: Records 0..14 tot -> 0 Zombies). Deshalb zaehlt die Auffuellung nur, wer im Port ERSCHEINT
  * (re15_irons_tod_sichtbar_1040), und vor den Auffuell-Records steht Save(0x11, sichtbar) = `24 11 nn 00`
  * (Opcode 0x24 LAB_80040018: work_vars[pc[1]] @0x800b0fd0 + 2 i; Index 0x11 = 0x800b0ff2 = der Lebend-Zaehler, den das
@@ -632,7 +632,7 @@ static void umzug_vorbereiten(void)
             re15_game_flag_set(IT_ZONE, (uint8_t)(RE15_IT_BIT_1070_0 + i), 1);
     }
     /* 1040: auf fuenf auffuellen — Auffuell-Record i ist scharf, wenn weniger als 5 - i Raum-Records im Port
-     * ERSCHEINEN (Nachbesserung 2: nicht "leben" — Records 15..19 belegen das Limit, erscheinen aber nicht). */
+     * ERSCHEINEN (Nachbesserung 2: nicht "leben" — bis Runde 35, RE15_ACTOR_MAX 16, belegten Records 15..19 das Limit, ohne zu erscheinen; seit Runde 36 Spur E erscheinen sie). */
     int l1040 = re15_irons_tod_lebend_1040(), s1040 = re15_irons_tod_sichtbar_1040();
     for (int i = 0; i < RE15_IT_N_1040_AUF; i++)
         re15_game_flag_set(IT_ZONE, k_bits_1040[i], (s1040 + i < RE15_IT_N_1040_AUF) ? 0 : 1);

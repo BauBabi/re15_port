@@ -169,8 +169,8 @@
 #define RE15_IT_BIT_1070_0    0xc6
 /* ROOM1040: 20 Raum-Records main00 @0x011FC..@0x01378 (Tot-Bits 0x14..0x27), Gleichzeitig-Limit 5
  * (Save(0x12,5) @0x011F0). Auffuell-Records (Tot-Bits 83,84,90,91,95), damit auch dann fuenf durchs Tor
- * kommen, wenn weniger als fuenf Raum-Records im Port ERSCHEINEN (Nachbesserung 2: Records 15..19 = Aktor 16..20
- * belegen das Limit, erscheinen aber nicht; irons_tod_1150.c EM_1040_LISTE / re15_irons_tod_sichtbar_1040). */
+ * kommen, wenn weniger als fuenf Raum-Records im Port ERSCHEINEN (Nachbesserung 2: bis Runde 35, RE15_ACTOR_MAX 16,
+ * belegten Records 15..19 = Aktor 16..20 das Limit, ohne zu erscheinen; seit Runde 36 Spur E erscheinen sie; irons_tod_1150.c EM_1040_LISTE / re15_irons_tod_sichtbar_1040). */
 #define RE15_IT_BIT_1040_0    0x14
 #define RE15_IT_N_1040        20
 #define RE15_IT_N_1040_AUF    5

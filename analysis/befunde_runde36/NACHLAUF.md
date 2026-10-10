@@ -16,3 +16,8 @@ Fortlaufend gepflegt; Quelle je Eintrag = Abnahmebericht im Spurbaum.
 | 8 | C Dossier "Fuer den Nutzer" | Liegender Spawn-Zombie (EXEC[7]) ist weiter treffbar; Dossier stellt das als Frage — Regel "keine Wahlfragen": RE2-Verhalten belegen und bauen | offen |
 | 9 | A_abnahme_0.md H1 | ROOM2060 Startlage: die Spinne schiebt Leon nach dem Aufstieg vom Tritt, er schwebt auf y=-1800 (Original-Reihenfolge Push vor Standtest @0x80031cbc/@0x80031ce8; Erreichbarkeit im Original unbelegt) | offen |
 | 10 | A_abnahme_0.md H5 | Debug-Sprung mit Elza nach 3091 landet in 3090 | Spur I (Debug-Menue Elza-Raeume) |
+| 11 | E_abnahme_0.md H4 | Veraltete Kommentare nach dem Fix: irons_tod_1150.c:196/:635, include/re15_irons_tod.h:172-173 ("Records 15..19 ... erscheinen aber nicht") | in der Integration berichtigen ("bis Runde 35, RE15_ACTOR_MAX 16") |
+| 12 | E_abnahme_0.md H5 | PSX-Ziel: g_actors waechst um 5 x sizeof(re15_actor_t); RAM-Budget ungemessen (PSn00bSDK fehlt) | offen (reai-v2-psx-build-gap) |
+| 13 | E_abnahme_0.md H6 | ROOM20B0/20B1: Original schreibt Slots 20..34 hinter sein 20er-Feld (bis 0x800b1087); Port verwirft sie (PORT-ENTSCHEIDUNG) | offen, ausserhalb des Nutzer-Punkts |
+| 14 | E_abnahme_0.md H2 | CONTINUE in ROOM20B0: Kamera bleibt Cut 0 (alt = neu, Ursache offen) | offen |
+| 15 | A Nachbesserung 3 | Neu fallfaehig ohne exe-Lauf: ROOM1090/1091 obj 1 (Band 5 -> 3; Zweck der Kiste = Frage an Spur H), ROOM3050/3051 obj 1, ROOM2050/2051 obj 6; DuckStation-Gegenmessung 5020 nicht gefahren | in Abnahme 3 / Integration pruefen |

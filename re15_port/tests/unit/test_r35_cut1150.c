@@ -658,7 +658,7 @@ static void teil_montage_1040(void)
  * @0x011F0, Gate @0x80042214-3c) zeigt immer die fuenf niedrigsten lebenden Records (Tot-Bit-Gate @0x80042128-38 vorher,
  * ohne Zaehler). Abnahme 1 (exe): Records 0..11 tot -> 3 Zombies, 0..14 tot -> 0 (Kappe), 0..17 tot -> 3. Ursache: Record
  * i hat Sce_em_set-Slot i (@0x011FD / @0x01391 + 20 i), der Port fuehrt Slot i als Aktor i+1 und verwirft Aktor >= 16
- * (RE15_ACTOR_MAX) - Records 15..19 belegen einen Platz des Limits, erscheinen aber nie.
+ * (RE15_ACTOR_MAX, bis Runde 35) - Records 15..19 belegten einen Platz des Limits, erschienen aber nie (seit Runde 36 Spur E: RE15_ACTOR_MAX 21).
  * Je k = 0..20 (Records 0..k-1 tot): Szene in 1150 (umzug_vorbereiten ueber den echten Haken), dann 1040: fuenf Zombies
  * hinter dem Tor; fuer die Faelle der Abnahme (12/15/18) die ganze Montage mit Durchgang und Spieler-HP. */
 static void reihe_fall(int k, int tor_offen, int voll)
