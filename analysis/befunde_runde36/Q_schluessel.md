@@ -196,6 +196,14 @@ Ziel/Cut/Richtung bleiben in door_params). Druck -> scd_event_fire(25) -> `re15_
   Druck (@0x80051698 v0 = 0); der naechste Druck geht nach ROOM11C0.
 - sonst: Ton ZU_A + msg 28.
 Rueckgabe ein leeres Programm (`01 00` Evt_end). ROOM11B1 (Elza) bleibt unberuehrt.
+- **Wegwerf-Kette** (RE2 @0x80051670 nach Text 5 @0x8005164c): der vorhandene Port-Mechanismus
+  (item_discard_common.c, Nutzerauftrag 2026-09-21 "bei Key Items, die verwendet wurden ... drop it?") kennt
+  nur die erzeugte Tabelle gen/discard_sites.inc. Haken in re15_discard_besitz_vor_nachricht: hinter der
+  Tabelle fragt er `re15_schluessel_r36_discard_stelle` -> (ROOM11B0, msg 29) = Parking Lot Key. Der
+  Tuer-Handler ruft die Kette in RE2s Reihenfolge: Besitz VOR dem Oeffnen (@0x80051628/34), Fortsetzung
+  NACH dem Oeffnen (@0x80051670). Nach dem Schliessen von msg 29 faellt die Anzahl auf 0 (@0x80051810) und
+  RE1.5s eigene Zeile DEBUG.BIN @0x800C508B "You don't need this key any more. Discard it?" geht auf
+  (@0x80051834; `Q_belege/q_wegwerf_abfrage.png`). Ja -> Schluessel weg, Tuer bleibt offen (Bit 93).
 
 ### 3.4 Reserve-Bit 93 (Begruendung)
 RE2 haelt "aufgeschlossen" in einem eigenen Schlossbit (FUN_8007730c @0x80051690, Feld key_id), getrennt
@@ -209,18 +217,69 @@ tools/r36_schluessel/schluessel_export.py, tests/unit/test_r36_schluessel.c,
 tests/unit/probe_r36_schluessel_karte.c, tests/unit/probes/r36_schluessel.cmake.
 Haken (1-5 Zeilen): scd_room_setup.c, scd_vm.c (scd_event_fire 2x), platform/pc/main.c (Installer,
 Prop-Lader, ITEMALL/ITPS-Ladestelle), platform/pc/src/inv_render_pc.c (2x), item_icon_common.c,
-itps_common.c, item_prompt_common.c, re15_inv_screen.c (3x), item_modal_common.c.
+itps_common.c, item_prompt_common.c, re15_inv_screen.c (3x), item_modal_common.c, item_discard_common.c.
 Asset: shared_assets/RE2/TUERSE.VBS + gen/re2_door_bank.inc (Werkzeug --mit-aufschliessen), Riegel
 test_r30_tuer.c Teil bank angepasst (Groesse/Satzzahl + Soll-Zeilen AUF_KEY/AUF_HIER).
 
-## 4. Messung nachher
-(Abschnitt 5 Riegel; Integrationslaeufe folgen)
+## 4. Messung nachher (echte exe, Lade-Weg: Spielstand vom Kartenwerkzeug probe_r36_schluessel_karte + CONTINUE)
+
+| Lauf | Eingabe | Ergebnis (debug.log / Framedump RE15_WINDOW_SCALE=1) |
+|---|---|---|
+| Leon 11B0 Strom an, ohne Schluessel, vor der Tuer (-25480,-26000) Blick -z | Quadrat Bild 45 | "Parkplatz-Tuer verschlossen", kein DOOR FIRE, Bild 150 noch 11B0; Text "It's locked." + Seitenpfeil (`q_tuer_11b0_texte.png` oben) |
+| dasselbe mit Parking Lot Key | Quadrat 45 / 140 / 245, Halten 270-282 | "Parking Lot Key benutzt -> Tuer offen, Flag (9,93) = 1", Text "You've used the Parking Lot Key." (Name gruen), Abfrage "You don't need this key any more. Discard it? Yes No", dann `DOOR FIRE slot=1 ... spawn=(-25279,0,17268)`, Bild 5 in ROOM11C0 |
+| Leon 10F0 vor der Konsole (8350,2050) Blick +z | Quadrat 45, Bestaetigen | Aufnahme-Modal mit RE2-Bild P. Room Key, "Will you take the Parking Lot Key?", "PARKING LOT KEY genommen: Item 0x45, Bit (9,82)" (`q_aufnahme_modal_10f0_10f1.png`) |
+| Elza 10F1 gleiche Stelle | dito | Modal mit RE2-Bild Cabin Key (Ring), "Will you take the Prison Key?", "PRISON KEY genommen ... (9,83)", "Prison Key genommen -> Flag (4,0xEC) = 1" |
+| Statusschirm, beide Schluessel | START, ITEM | Icons RE2-Tile 95/88 im Raster, Name "Parking Lot Key" / "Prison Key" in Spielschrift (`q_statusschirm_namen_icons.png`) |
+| CHECK (Harness RE15_INV_CHECK_SHOT) | — | "CHECK-Foto Item 0x45 / 0x42: crect (0,489) prect (832,256) 56x72 -> Foto und CLUT geladen", Foto + Text "It looks unique. / Now I can access / the parking lot." bzw. "I can access the / prison cells / with this." (`q_check_foto_text.png`) |
+| 10F0 Cut 0/1 mit/ohne Bit 82 | — | Differenz Cut 0 9 Bildpunkte bei (96..102 ; 169..170), Cut 1 2 Bildpunkte (`q_lage_cut0_framedump.png`) |
+
+Riegel (gleicher Code, Engine-Wege ohne Fenster): Roy-Ereignis 6 laeuft als sub07 (msg 18), keine msg 19/20,
+(4,0xEC) bleibt 0; ROOM1211 mit (4,0xEC) John (Typ 0x49) + Slot 6 -> sub02, ohne Text msg 10.
 
 ## 5. Tests
-- `ctest -R "unit_r36_schluessel|unit_r30_tuer"`: 10/10 (siehe Abschlusszeile unten).
+Neu (tests/unit/probes/r36_schluessel.cmake):
+- `unit_r36_schluessel_raum` — P/Z/G/D/E: Prop + Zone in 10F0 und 10F1, kein Original-Satz 0..14 schneidet die
+  Zone, Bit -> weg, echter Aktionsdruck (re15_aot_scan, 620 voraus) -> Modal mit 0x45/0x42 -> Ja -> Bit 82/83 +
+  Inventar + Modell weg; Zellen-Flag (4,0xEC) nur beim Prison Key; RE2-Modelle parsen.
+- `unit_r36_schluessel_tuer` — S/Z/B/W/O/D/E: Sperre nur mit Strom und ohne Bit 93; ohne Schluessel msg 28 + Satz
+  ZU_A, kein Raumwechsel, auch mit Bit 82 ohne Inventar; mit Schluessel msg 29 + AUF_KEY + Bit 93, Wegwerf-
+  Abfrage fuer 0x45, Ja -> weg, Slot 1 wieder Original-Tuer, naechster Druck -> ROOM11C0; ohne Strom Text 15;
+  ROOM11B1 unberuehrt.
+- `unit_r36_schluessel_zelle` — ROOM1011 Roy (Ereignis 6 -> sub07, msg 18), ROOM1211 Zelle mit/ohne (4,0xEC).
+- `unit_r36_schluessel_namen` — Prompt-Namen [0]/[2], CHECK-Text, Icon-Tiles = RE2-Tiles 95/88 (sonst kein Byte
+  geaendert), ITPS-Rechtecke (0,489)/(832,256) + CLUT/Bild = RE2-Block, Modal-Leser zeichnet.
+- `integration_r36_schluessel` — echte exe (Tabelle Abschnitt 4: zu, auf, leon, elza, check45, check42), 131 s.
+Angepasst: `unit_r30_tuerse_bank` (TUERSE.VBS 42808 B, 6 Saetze, Soll-Zeilen AUF_KEY/AUF_HIER).
+
+### 5a. Summenzeilen (gezielte Laeufe, keine volle Suite)
+(folgt)
 
 ## 6. OFFEN
-(folgt)
+- **Holzschreibtisch 10F0/10F1 Cut 5/6 vollstaendig maskiert** (Sonde `sicht`, 28/28 Stellen): auch die
+  ORIGINAL-Remington (obj 3, Slot 13) ist dort unsichtbar. Masken = nachgezeichnete MSK-Seitendaten; Spur O
+  (PRI 10F0) bzw. der Nutzer koennen pruefen, ob die Tischmasken die Platte freigeben sollten. Der Schluessel
+  liegt deshalb auf der Konsole.
+- Der Schluessel ist klein (Cut 0 9 Bildpunkte): RE2-Originalmodell 152 x 76 und keine 10F0-Kamera naeher als
+  vz ~2600 an einer Platte. Kein Glanz-/Markierungseffekt gebaut (RE2 hat keinen).
+- Prison Key: KEINE "You've used..."-Zeile und KEINE Wegwerf-Abfrage an der Zelle — die Befreiung ist die
+  Original-Szene ROOM1211 sub02 (Spur L haengt dort den Aufschliess-Ton ein); eine Abfrage mitten in die Szene
+  zu legen waere eine eigene Choreografie-Entscheidung (Vorschlag: Benutzungsstelle (1211, msg 9) = Ende der
+  Szene). Der Schluessel bleibt im Inventar.
+- Elza braucht fuer den Prison Key jetzt den Funkraum-Nebenweg (Minidisc 1201 -> Stimmschloss 1101 -> Blue
+  Keycard 1111 -> Kartenleser 10D1, story_leon_elza/ablauf_elza.md Nebenwege) — Folge der Nutzer-Vorgabe.
+- TUERSE.VBS ist eine geteilte Datei: falls Spur G (Karten-"Piep"/Aufschliess-Toene) dieselbe Bank erweitert,
+  muss sie beim Zusammenfuehren neu erzeugt werden (Werkzeug-Aufruf im Kopf von gen/re2_door_bank.inc).
 
 ## 7. Fuer den Nutzer
-(folgt)
+- **Parking Lot Key** (Leon): liegt im Funkraum (ROOM10F0) auf der Konsole gleich links neben der Tuer, durch die
+  man von 10D0 hereinkommt — vor dem Suedende der Konsole stehen und untersuchen. Modell/Icon/Bild = RE2
+  "P. Room Key" (schwarzer Kunststoffkopf, rotes Emblem: der Autoschluessel-Look).
+- **Prison Key** (Elza): dieselbe Stelle in ROOM10F1. Modell/Icon/Bild = RE2 "Cabin Key" (grosser Eisenring mit
+  Bartschluessel). Roy (ROOM1011) haelt nur noch den Zettel "0513"; mit dem Prison Key oeffnet die Zelle in
+  ROOM1211 wie bisher.
+- **Parkplatz-Tuer ROOM11B0 -> 11C0** (nur Leon, sobald Strom da ist): ohne Schluessel "It's locked." / "The door
+  is marked "Parking Lot."" mit RE2-Verschlossen-Ton; mit Schluessel "You've used the Parking Lot Key." mit
+  RE2-Aufschliess-Ton, danach "You don't need this key any more. Discard it?"; der naechste Druck oeffnet die Tuer.
+- Neue/geaenderte Assets fuer das Paket-Gate: `re15_port/shared_assets/RE2/TUERSE.VBS` (geaendert, 42808 B,
+  md5 9ce7576443eecfb46355339994b89b35). Alles andere ist eingebacken (gen/schluessel_r36.inc). Keine Sprachdateien.
+- Texte (PORT-WAHL, Form aus RE2/RE1.5 belegt, Abschnitt 2.5) — bei Wunsch einfach anderen Wortlaut nennen.
