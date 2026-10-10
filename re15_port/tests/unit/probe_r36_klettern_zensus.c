@@ -221,11 +221,11 @@ static int nullbox_tafel(int p)
     return bad;
 }
 
-/* Anlauf mit QUERVERSATZ q (quer zur Blickachse), sonst wie stand_before(). Spieler-Y auf der
- * Bandebene -1800*Band (der Boden des Bands, auf dem der Spieler stehen muesste:
- * @0x8002d364-70 verlangt Spieler-Band == Objekt-Band). Rueckgabe: 1 = Objekt-Treffer der Sonde
- * (Substate 9, KIND 0x81, Objekt = p), 0 = kein Objekt-Treffer. */
-static int seite_quer(const zensus_t *e, int p, int yaw, int q)
+/* Anlauf mit QUERVERSATZ q (quer zur Blickachse), sonst wie stand_before(). Spieler-Band
+ * `sband` (-1 = Objekt-Band: @0x8002d364-70 verlangt Spieler-Band == Objekt-Band), Spieler-Y auf
+ * der Bandebene -1800*Band. Rueckgabe: 1 = Objekt-Treffer der Sonde (Substate 9, KIND 0x81,
+ * Objekt = p), 0 = kein Objekt-Treffer. */
+static int seite_quer(const zensus_t *e, int p, int yaw, int q, int sband)
 {
     reset_room(e, 0);
     if (p >= (int)g_scd.prop_count || !g_scd.props[p].active) return -1;
@@ -239,9 +239,10 @@ static int seite_quer(const zensus_t *e, int p, int yaw, int q)
     default:   s_pl->x = cx + q;        s_pl->z = cz - hz - 450;     break;
     }
     const int pband = (int)g_scd.props[p].band;
-    s_pl->y = -1800 * pband;
+    const int spl   = (sband >= 0) ? sband : pband;
+    s_pl->y = -1800 * spl;
     s_pl->rot_y = (int16_t)yaw;
-    re15_collision_set_band(pband);
+    re15_collision_set_band(spl);
     re15_climb_standing_tick();
     const int32_t sx = s_pl->x, sy = s_pl->y, sz = s_pl->z;
     /* Sondenpunkt wie re15_climb_try_start: 800 voraus, Kurs auf 90 Grad gerastet
@@ -255,12 +256,12 @@ static int seite_quer(const zensus_t *e, int p, int yaw, int q)
     const int treffer = (r && sub == 9 && kind == 0x81 && obj == p) ? 1 : 0;
     int ye = 0, be = 0, fe = -1, stand = -1;
     if (r) { fe = aufstieg(&ye, &be); stand = re15_climb_dbg_standing(); }
-    printf("    %s obj=%d(prop %d) fl=0x%04X band=%d box=h(%d,%d,%d) yaw=%4d quer=%4d start=(%ld,%ld,%ld) "
-           "sonde=(%ld,%ld) d=(%ld,%ld) reach=%d boxhit(-112)=%d try=%d sub=%d kind=0x%02X obj=%d "
-           "ende=%d end=(%ld,%d,%ld) band=%d stand=%d -> %s\n",
+    printf("    %s obj=%d(prop %d) fl=0x%04X band=%d box=h(%d,%d,%d) spieler-band=%d yaw=%4d quer=%4d "
+           "start=(%ld,%ld,%ld) sonde=(%ld,%ld) d=(%ld,%ld) reach=%d boxhit(-112)=%d try=%d sub=%d "
+           "kind=0x%02X obj=%d ende=%d end=(%ld,%d,%ld) band=%d stand=%d -> %s\n",
            e->room, g_scd.props[p].obj_id, p, g_scd.props[p].flags, pband,
            (int)g_scd.props[p].box_hx, (int)g_scd.props[p].box_hy, (int)g_scd.props[p].box_hz,
-           yaw, q, (long)sx, (long)sy, (long)sz, (long)fx, (long)fz, (long)(fx - cx), (long)(fz - cz),
+           spl, yaw, q, (long)sx, (long)sy, (long)sz, (long)fx, (long)fz, (long)(fx - cx), (long)(fz - cz),
            reach, bhit, r, sub, kind, obj, fe, (long)s_pl->x, ye, (long)s_pl->z, be, stand,
            treffer ? "Objekt-Treffer (Start)" : "kein Objekt-Treffer");
     re15_climb_reset();
@@ -287,17 +288,25 @@ static int nullbox_3091(void)
     }
     int bad = nullbox_tafel(p);
     static const int yaws[4] = { 0, 1024, 2048, 3072 };
-    int achs = 0, quer = 0;
+    int achs = 0, quer = 0, boden = 0;
     for (int y = 0; y < 4; y++) {
-        int t = seite_quer(&E, p, yaws[y], 0);
+        int t = seite_quer(&E, p, yaws[y], 0, -1);
         if (t == 0) achs++;
         for (int s = -1; s <= 1; s += 2)
-            if (seite_quer(&E, p, yaws[y], 300 * s) == 1) quer++;
+            if (seite_quer(&E, p, yaws[y], 300 * s, -1) == 1) quer++;
     }
+    /* Derselbe Schraeganlauf vom BODEN (Band 0): so steht der Spieler in ROOM3091 nach jeder Tuer
+     * (alle Door_aot_set nach 309x: next_y = 0) — das Band-Gate @0x8002d370 `bne v1,v0` haelt das
+     * Band-1-Objekt dann aus der Sonde. */
+    for (int y = 0; y < 4; y++)
+        for (int s = -1; s <= 1; s += 2)
+            if (seite_quer(&E, p, yaws[y], 300 * s, 0) == 0) boden++;
     printf("Null-Box: Tafel %d Abweichungen, achsgerade ohne Objekt-Treffer %d/4, Querversatz +-300 mit "
-           "Start %d/8\n", bad, achs, quer);
-    if (achs != 4) { printf("FAIL Null-Box: achsgerader Anlauf traf das Objekt (|dx| < 112)\n"); bad++; }
-    if (quer != 8) { printf("FAIL Null-Box: Schraeganlauf ohne Start (|dx|,|dz| >= 112 muss treffen)\n"); bad++; }
+           "Start %d/8 (Spieler Band 1), vom Boden (Band 0) ohne Objekt-Treffer %d/8\n",
+           bad, achs, quer, boden);
+    if (achs != 4)  { printf("FAIL Null-Box: achsgerader Anlauf traf das Objekt (|dx| < 112)\n"); bad++; }
+    if (quer != 8)  { printf("FAIL Null-Box: Schraeganlauf ohne Start (|dx|,|dz| >= 112 muss treffen)\n"); bad++; }
+    if (boden != 8) { printf("FAIL Null-Box: Spieler auf Band 0 traf das Band-1-Objekt (@0x8002d370)\n"); bad++; }
     return bad;
 }
 
