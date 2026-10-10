@@ -65,3 +65,59 @@ Abweichung: die beiden Flammen-Spawns von FUN_8010640C (@0x80106418-44 und @0x80
 (@0x80106478-F8, die Schwaerzung der Teile) bleiben, ebenso das Zerreissen/Wegschleudern (0x80108BEC/0x80109610). Die
 Brand-Verkohlung FUN_80106128 (Zeile 10 = Brandgranate 0x0B Art 4, Zeile 16 Flammenwerfer) bleibt unveraendert (Feuer).
 Saeure (Zeile 11, FUN_80106310) unveraendert.
+
+## 3. Punkt 2 — "Manchmal selten loest die Granate nicht aus / wird nicht geworfen"
+
+### 3.1 Messung vorher (exe 5a9dbb7b, Messkopie, Laeufe `build/r36d_mess/serie*`, `r1_sweep`)
+* **Wurfserien, R1 durchgehend gehalten** (Skript `M0.6` + 12x `MA0.2,M1.4`, RE15_GIVE=9:30):
+  ROOM1220 (-19533,-9700) Blick 2048, MITTE/HOCH/TIEF: je **12 SPAWN / 12 Explosionen** = 12 von 12 Abzuegen.
+  ROOM1140 (-4311,-19289) RE2-KI MITTE/HOCH: nur 6 von 12 — Ursache im state.log: F179..F283 Griff/Biss der
+  RE2-Zombies (mo 0/1, hp 100 -> 80 -> 60, Lage springt): die Ziel-FSM wird unterbrochen (re15_player_aim_interrupt),
+  Abzuege waehrend des Griffs verfallen — Aufstellungs-Artefakt, kein Wurf-Defekt. TIEF 12/12 (die Zombies wurden
+  vorher zerrissen).
+* **R1-Freigabe nach dem Abzug** (`r1_sweep`, ROOM1220, je Block `M0.5,MA0.2,M<h>,W1.5`, h = 0.0 .. 0.7 s):
+  ```
+  Abzuege (pad 8800-Flanke, Zustand HOLD clip 8): F16, F82, F151, F223, F298, F376, F457, F541   (8 Abzuege)
+  SPAWN granate:                                   F479 (= 457+22, h=0.6), F563 (= 541+22, h=0.7)  (2 Wuerfe)
+  Granaten im Inventar (state.log mg):             30 -> 22  (8 abgezogen)
+  ```
+  **Befund:** wird R1 innerhalb von 21 Bildern (0,7 s) nach dem Abzug losgelassen (MITTE; HOCH 18, TIEF 23 Bilder),
+  bricht der Rueckstoss ab Bild 11 in LOWER ab, die Granate wird NICHT geworfen — aber sie ist WEG (Abzug im
+  Rueckstossbild 0). 6 von 8 Abzuegen ohne Wurf, 6 Granaten verloren. Das ist der Aussetzer: "loest nicht aus"
+  (Leon setzt zum Wurf an und senkt den Arm) und "wird nicht geworfen".
+* Weitere Kandidaten gemessen/gelesen: Clip-Laengen W09 7/9/11 = 35/40/40 Bilder (> 24, kein Abschneiden);
+  Pool voll: nach der HE-Explosion an 2 Zombies steigt die Belegung F120..F130 auf **95 von 96** Plaetzen
+  (state.log fx=, Lauf he_zombie) und faellt bis F141 auf 8 — ein Wurf, dessen Spawnbild (Abzug + 22) in dieses
+  Fenster faellt, ginge ebenfalls verloren (FUN_80019700 `ori v0,zero,0xff` @0x800197c8-cc; s. 3.4).
+
+### 3.2 RE-Beleg (RE1.5 PSX.EXE, selbst disassembliert `re15_disasm.py dis 0x80033600 42`)
+Standard-Feuer-Handler Substate 2 (LAB_80033460), jedes Bild:
+```
+80033600 andi v0,a0,0x100 / 80033604 bne v0,zero,0x80033658     R1 (0x100) gehalten -> weiter zum Anim-Tick
+8003360c-18 lbu v0,0x800aca5d (Waffe) / lbu a0,0x800acae9 (Cursor)
+8003361c-30 addiu v0,v0,-1 / sll v1,v0,2 / addu v1,v1,v0 / addiu at,at,16530 (0x80074092) / addu at,at,v1
+80033634 lbu v0,0(at)        Byte 2 des Waffensatzes: Waffe 9 @0x800740b8 = `18 30 0a 01 00` -> 0x0a = 10
+8003363c sltu v0,v0,a0 / 80033640 beq v0,zero,0x80033658         Cursor <= 10 -> weiter
+80033644 ori v0,zero,0x3 / 8003364c sh v0,0x800aca5a             Cursor > 10 -> Substate 3 (LOWER)
+80033650 j 0x800337ac                                             RETURN — der Granaten-Spawn @0x80033680-7a8 wird uebersprungen
+80033668 jal 0x8001f314 (Anim +1) ... 80033684-8c Waffe == 9? / 80033690 ori v0,zero,0x13 (19) / 800336a4 0x16 (22) /
+80033758 0x18 (24): Spawn 0x040D1000 @0x800336bc-ec / @0x8003371c-48 / @0x80033778-a4
+```
+Der Munitionsabzug liegt im ERSTEN Rueckstossbild: `jalr v0` @0x800334e0 -> Entlade-Handler 0x80033B38 = `jal 0x8004eae4`
+@0x80033b40 (nur Abzug, Dossier analysis/waffen_fsm_2026-09-12/entlade-granaten-burst.md §1). Das Original verliert
+also genau wie der Port die Granate, wenn R1 zwischen Cursor 11 und 18/21/23 losgelassen wird — der Port ist hier
+byte-true (player_common.c:996-1016 `recoil_break[9-1] = 10`, game_step_common.c:2007-2021 Spawn bei 19/22/24).
+Einordnung Beta -> Retail: die Rueckstoss-Abbruch-Regel (Byte 2 je Waffe, 7/10) ist fuer SCHUSSWAFFEN gebaut — deren
+Schuss faellt im Bild 0 (Entlade: Resolve + Munition), der Abbruch ab Bild 11 kostet nichts. Die Handgranate haengt
+ihren Wurfkoerper an das Loslass-Bild der Wurfanimation (19/22/24), behaelt aber Abzug im Bild 0 und Abbruch ab 11:
+eine unfertige Kombination der Beta (die Granate ist eine RE1.5-eigene Waffe ohne RE2-Gegenstueck). Das Retail-
+Vorbild fuer "Geschoss aus einer Waffe mit Rueckstoss" ist der RE2-Granatwerfer: die Runde verlaesst den Lauf im
+Rueckstossbild 1 (werfer_r35.c, RE2 Tabelle @0x800A6FDC, Aufruf je Bild @0x800431ac-cc) — ein Abzug ist dort IMMER
+ein Schuss, R1 kann den Abgang nicht mehr verhindern.
+
+### 3.3 NUTZER-VORGABE / PORT-WAHL
+Jeder Abzug der Handgranate (Ids 9/10/11) ist ein Wurf: der Rueckstoss-Abbruch (`Cursor > Byte 2` @0x8003363c)
+greift fuer die Granate erst ab dem Spawnbild der aktuellen Zielhoehe (19 HOCH @0x80033690 / 22 MITTE @0x800336a4 /
+24 TIEF @0x80033758) statt ab 10 (@0x800740ba) — die Form der Regel (Schwelle je Waffe, LOWER sobald Cursor > Schwelle)
+bleibt die des Originals, nur die Schwelle der Granate wird an ihr "Schuss-Bild" gebunden, wie bei den Schusswaffen
+(Schuss Bild 0 < Schwelle 10). Nach dem Spawnbild senkt R1-Loslassen den Arm wie bisher.
