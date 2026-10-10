@@ -17,7 +17,8 @@
  *   80102ad8-e4    lw v0,1376(v1) / ori v0,v0,0x4a / sw      ; PART 8 = KOPF ab
  *   80102b04       sw a1,1488(v1)                            ; Tint 0x00101040
  *   80102b08       sh v0,1528(v1)                            ; Kurs = rot_y
- *   80102b24-28    jal 0x8001bf10 (Id 0x00801000, Anker Part 0 +72, ofs (0,-600,0))
+ *   80102b24-28    jal 0x8001bf10 (Id 0x08001000 = `lui a0,0x800`/`ori a0,a0,0x1000` @0x80102AD4-DC, Anker Part 0 +72,
+ *                  a3 (0,-600,0) im ANKER-Rahmen — Runde 36 Spur C Nachbesserung 3; vorher hier 0x00801000)
  *   80102b2c/58    addiu a0,zero,2 / jal 0x8005bd6c          ; >>> DER "SMASH"-SE <<<
  *   80102b40-58  Zweig B: +0x14D == 27 -> +0x21A |= 0x80, SE 8
  *   80102b70-c0  Frames 23..41, nur UNGERADE -> Hals-Stumpf (Id 4096, Anker Part 8 +72)

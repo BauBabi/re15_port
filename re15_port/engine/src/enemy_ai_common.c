@@ -37,11 +37,11 @@
 #include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
+#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (re15_schuss_r36_nachfuehren) */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
-#include "re15_schuss_r36.h" /* Runde 36 Spur C N3: Blut-Nachfuehrung (re15_schuss_r36_nachfuehren) */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
