@@ -223,8 +223,10 @@ static int nullbox_tafel(int p)
 
 /* Anlauf mit QUERVERSATZ q (quer zur Blickachse), sonst wie stand_before(). Spieler-Band
  * `sband` (-1 = Objekt-Band: @0x8002d364-70 verlangt Spieler-Band == Objekt-Band), Spieler-Y auf
- * der Bandebene -1800*Band. Rueckgabe: 1 = Objekt-Treffer der Sonde (Substate 9, KIND 0x81,
- * Objekt = p), 0 = kein Objekt-Treffer. */
+ * der Bandebene -1800*Band (0x708 je Band: Aufstieg @0x800381e4 `addiu v0,v0,-1800`, Band +1
+ * @0x80038200-08). q = +-300 ist eine Testplatzierung (>= 112 gemaess Tafel), 450 der Abstand wie
+ * stand_before(). Rueckgabe: 1 = Objekt-Treffer der Sonde (Substate 9, KIND 0x81, Objekt = p),
+ * 0 = kein Objekt-Treffer. */
 static int seite_quer(const zensus_t *e, int p, int yaw, int q, int sband)
 {
     reset_room(e, 0);
@@ -245,8 +247,9 @@ static int seite_quer(const zensus_t *e, int p, int yaw, int q, int sband)
     re15_collision_set_band(spl);
     re15_climb_standing_tick();
     const int32_t sx = s_pl->x, sy = s_pl->y, sz = s_pl->z;
-    /* Sondenpunkt wie re15_climb_try_start: 800 voraus, Kurs auf 90 Grad gerastet
-     * (@0x8002d4d4-dc); bei achsgeradem yaw also exakt 800 entlang der Achse. */
+    /* Sondenpunkt wie re15_climb_try_start: {800,0} (DAT_800109c8, lwl/lwr @0x8002d4a0-bc)
+     * voraus, Kurs auf 90 Grad gerastet (@0x8002d4d4-dc); bei achsgeradem yaw also exakt 800
+     * entlang der Achse. */
     const int32_t fx = sx + (yaw == 0 ? 800 : yaw == 2048 ? -800 : 0);
     const int32_t fz = sz + (yaw == 1024 ? -800 : yaw == 3072 ? 800 : 0);
     const int reach = re15_prop_reach_test(sx, sz, s_pl->rot_y, p, 0);   /* @0x8002d37c */

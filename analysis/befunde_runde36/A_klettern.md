@@ -441,5 +441,29 @@ Null-Box-Records insgesamt hat Abnahme 0 §5 geprueft: 0 Paare in Reichweite ein
 
 ### Tests der Nachbesserung
 `unit_r36_klettern_zensus` traegt jetzt zusaetzlich den Null-Box-Riegel (Tafel 12/12, achsgerade 4/4 ohne
-Objekt-Treffer, quer +-300 8/8 Start auf Band 1, quer vom Boden 8/8 ohne Objekt-Treffer). Gezielter Lauf:
-siehe "Messung nachher / Tests (Nachbesserung 1)" unten.
+Objekt-Treffer, quer +-300 8/8 Start auf Band 1, quer vom Boden 8/8 ohne Objekt-Treffer).
+
+**Bau:** `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)` (climb_common.c,
+granate_1150.c, sicherung_1150.c neu uebersetzt, re15_pc.exe und alle Testprogramme neu gelinkt).
+
+**Gezielt (keine volle Suite, Auftrag)** — eigene Tests + die Testgruppen jedes Moduls, das der Diff
+beruehrt (climb_common.c/1090-Klettern/10F0, granate_1150.c, sicherung_1150.c):
+```
+ctest --test-dir re15_port/build -R "^(unit_r36_klettern_10f0_endlage|unit_r36_klettern_10f0_startlage|unit_r36_klettern_zensus|integration_r36_klettern|unit_1090_climb_pin|unit_1090_stay_on_crate|unit_rvd_scan_ungated_by_climb|unit_1090_push_pin|unit_1090_push_anim|unit_r22_10f0_figur|unit_r35_cut10f0_.*|unit_r30_granate|integration_r30_granate_laden|unit_sicherung_1150|unit_r30_sicherung_.*|integration_r30_sicherung_laden|integration_r30_sicherung_bild)$" --timeout 1500 --output-on-failure
+...
+26/26 Test #575: integration_r36_klettern ...........   Passed  531.61 sec
+100% tests passed, 0 tests failed out of 26
+Total Test time (real) = 679.12 sec
+```
+(Einzelzeilen `A_belege/nb1_ctest_kompakt.txt`.) Nach den letzten reinen Kommentar-Zitaten in der Sonde
+(DAT_800109c8, @0x800381e4) neu gebaut und `ctest --test-dir re15_port/build -R "^unit_r36_klettern_"
+--timeout 600 --output-on-failure` -> `100% tests passed, 0 tests failed out of 3`.
+
+Die Riegel der erfuellten Punkte bleiben gruen — `integration_r36_klettern` (echte exe) in diesem Lauf
+(Arbeitsordner `build/tests/integration/r36_klettern_wd/lauf_e1ec0a7b_*`, selbst gelesen):
+```
+A_leon_10f0 : T572 push=5 | T1121 sub=9 kind=0x81 obj=3 | T1173 pos=(-4899,-1800,-1206) band=1 stand=3 | T1227 room=1090 | PL00
+B_elza_10f1 : T590 push=5 | T1137 sub=9 kind=0x81 obj=3 | T1189 pos=(-5015,-1800,-1174) band=1 stand=3 | T1243 room=1091 | PL04 (Elza-Bit=1)
+C_leon_szene: T3741 push=5 | T4286 sub=9 kind=0x81 obj=3 | T4338 pos=(-5083,-1800,-1206) band=1 stand=3 | T4392 room=1090 | PL00
+```
+(A und B bildgleich zum Suite-Lauf 1 der Fortsetzung; C mit derselben Kette, Bildnummern um ~30 frueher.)
