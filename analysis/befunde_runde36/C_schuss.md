@@ -383,3 +383,29 @@ Suite: §7.
   woertlich `=== LOCAL-BUILD-OK (test) — Tests 597/597` — ohne einen einzigen Wiederholungslauf, auch die
   Fenster-Haken gruen.
 * Dritter Lauf `local_build.sh all` (configure + build + test) auf dem Endstand: s. letzte Zeile dieses Abschnitts.
+
+## 8. Nachbesserung 1 (nach Abnahme 0, `C_abnahme_0.md` §5 M1-M7)
+
+Stand: Fortsetzung im selben Baum ab 1e8cd231. Je Mangel: Ursache, Messung vorher, Beleg, Aenderung, Messung nachher.
+(Wird fortlaufend gefuellt; Reihenfolge der Arbeit: M5/M6 (Belege) -> M1/M2 (Blut) -> M3 (Pin) -> M4/M7 (Integration).)
+
+### 8.1 M1 — toedlicher Treffer: Blut am Becken statt am RE2-Punkt
+(in Arbeit)
+
+### 8.2 M2 — Treffer beim Aufstehen (Part 8, a3 (0,300,0)) + Nebenbefund Stagger-P1-Nachbluten
+(in Arbeit)
+
+### 8.3 M3 — Pin sieht toedlichen Treffer und Part-8-Spawn nicht
+(in Arbeit)
+
+### 8.4 M4 — integration_r36_schuss: treffbare Ziele hinter dem Tisch
+(in Arbeit)
+
+### 8.5 M5 — Zitate (+0x10E 0x4004, a3-Lage RE2)
+(in Arbeit)
+
+### 8.6 M6 — "C-Blut": Bisect / Regressionsaussage
+(in Arbeit)
+
+### 8.7 M7 — Messkopie der exe im Integrationstest
+(in Arbeit)
