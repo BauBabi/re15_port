@@ -296,7 +296,7 @@ static const uint8_t k_p_1040_nach[] = { OP_ZAEHLER_1040, EM_1040_LISTE, OP_END 
  * Warte-Rechteck Slot 5 und ausserhalb des Hauptraum-Rechtecks Slot 6 @0x01D06 z >= -24500) sind die, die
  * kriechen; war die Original-Szene noch nicht gelaufen ((4,15)=0), ist sie damit verbraucht (Tor offen).
  * Save(0x12,20) hebt das Gleichzeitig-Limit 6 (@0x01DE2) fuer die Zusatz-Records (@0x80042214-3c). Slots
- * werden bei der Ausloesung auf freie Aktor-Plaetze gesetzt (RE15_ACTOR_MAX = 16). */
+ * werden bei der Ausloesung auf freie Aktor-Plaetze gesetzt (RE15_ACTOR_MAX = 21 seit Runde 36 Spur E, vorher 16). */
 /* 1070-Kopien: STEHENDE Form des Else-Zweigs von ROOM1070 sub00 ((4,197)=1, @0x01632..@0x01682: grid 0x00,
  * p6 = 00/01/01/01/01); der Erst-Zweig @0x015CA.. (grid 0x88/0x87) sind die liegenden Leichen. */
 #define EM_1070_LISTE \
@@ -694,7 +694,7 @@ static void slots_zuweisen(int von)
         if (n <= 0) break;                                   /* unbekannt: nicht raten */
         if (s_prog[o] == 0x44) {
             while (aktor < RE15_ACTOR_MAX && g_actors[aktor].active) aktor++;
-            if (aktor >= RE15_ACTOR_MAX) { s_prog[o + 7] = 0xff; s_prog[o + 1] = 0x0f; }   /* kein Platz: Slot 15 -> Aktor 16 = verworfen */
+            if (aktor >= RE15_ACTOR_MAX) { s_prog[o + 7] = 0xff; s_prog[o + 1] = (uint8_t)(RE15_ACTOR_MAX - 1); }   /* kein Platz: Slot RE15_ACTOR_MAX-1 -> Aktor RE15_ACTOR_MAX = verworfen (Runde 36 Spur E: war fest 0x0f = Aktor 16, seit RE15_ACTOR_MAX 21 ein gueltiger Platz) */
             else { s_prog[o + 1] = (uint8_t)(aktor - 1); aktor++; }
         }
         o += n;

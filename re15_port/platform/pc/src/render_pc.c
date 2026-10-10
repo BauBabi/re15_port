@@ -66,9 +66,13 @@ static int           s_text_overlay_used = 0;
 static SDL_Texture *s_shadow_tex   = NULL;
 static SDL_BlendMode s_shadow_blend = SDL_BLENDMODE_NONE;
 typedef struct { SDL_Vertex v[6]; } shadow_quad_t;
-#define SHADOW_QUAD_MAX 16
+/* Ein Schatten je Aktor und Bild (Spieler main.c Schattenblock + NPC-Schleife; FUN_8001b064 laeuft im Original je
+ * Entity, ohne eigene Obergrenze). Runde 36 Spur E: war fest 16 = Spieler + 15 = die alte RE15_ACTOR_MAX; mit 20
+ * Gegner-Plaetzen (FUN_80037250 `sltiu v0,v0,0x14` @0x800372b4) verwarf die Liste die Schatten ab dem 17. Aktor. */
+#define SHADOW_QUAD_MAX RE15_ACTOR_MAX
 static shadow_quad_t s_shadow_quads[SHADOW_QUAD_MAX];
 static int           s_shadow_quad_count = 0;
+static int           s_shadow_verworfen = 0;   /* Messhaken RE15_SCHATTEN_LOG: Schatten ueber der Kapazitaet */
 
 /* ── Item-get pickup MODAL overlay (byte-true FUN_8001db28) ─────────────────
  * The picked-up item's 112×72 picture zooming/spinning/flipping in, drawn as a
@@ -706,7 +710,8 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
                                int x2, int y2, int x3, int y3,
                                uint8_t r, uint8_t g, uint8_t b)
 {
-    if (!s_shadow_tex || s_shadow_quad_count >= SHADOW_QUAD_MAX) return;
+    if (!s_shadow_tex) return;
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
     const SDL_Color col = { r, g, b, 255 };
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
@@ -723,7 +728,8 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3)
 {
-    if (!s_shadow_tex || s_shadow_quad_count >= SHADOW_QUAD_MAX) return;
+    if (!s_shadow_tex) return;
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
     const SDL_Color white = { 255, 255, 255, 255 };  /* no extra modulation (0x808080 prim = neutral) */
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
@@ -926,6 +932,14 @@ void re15_render_end_frame(void)
             SDL_RenderGeometry(s_renderer, s_shadow_tex,
                                s_shadow_quads[i].v, 6, NULL, 0);
     }
+    /* Messhaken RE15_SCHATTEN_LOG (Runde 36 Spur E): gezeichnete/verworfene Figurenschatten, eine Zeile je Aenderung. */
+    { static int s_sl = -1, s_sl_n = -1, s_sl_v = -1;
+      if (s_sl < 0) s_sl = getenv("RE15_SCHATTEN_LOG") ? 1 : 0;
+      if (s_sl && (s_shadow_quad_count != s_sl_n || s_shadow_verworfen != s_sl_v)) {
+          s_sl_n = s_shadow_quad_count; s_sl_v = s_shadow_verworfen;
+          fprintf(stderr, "[schatten] gezeichnet %d, verworfen %d (Kapazitaet %d)\n", s_sl_n, s_sl_v, SHADOW_QUAD_MAX);
+      } }
+    s_shadow_verworfen = 0;
     /* STANDBILD: Schatten dieses Bildes aufbewahren (s. Deklaration) */
     s_sb_shadow_n = s_shadow_quad_count;
     if (s_sb_shadow_n > 0) memcpy(s_sb_shadow, s_shadow_quads, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
