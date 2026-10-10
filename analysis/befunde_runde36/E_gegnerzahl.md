@@ -99,6 +99,19 @@ Dazu Work_set (0x2E) Art 2 auf die Gegner 15..19: ROOM1030 sub04 @0x2416..@0x249
 ROOM1040 sub09 @0x1d4e..@0x1e16 und sub10 @0x20e8..@0x2198, ROOM1041 sub09/10 — im Port bisher ins Leere (Aktor >= 16).
 Kein anderer Raum benutzt Slot >= 15.
 
+### 3.5 Savestate-RAM des Auslieferungsstands (Basis, Stride, Zaehler dynamisch bestaetigt)
+Werkzeug scratchpad `E36/feld_ram.py` (re15_ss.Ram), nur saubere Staende (Stub @0x80026e4c = `03e00008` = `jr ra`, nicht
+die PATCHED-EXE-Staende). Gelesen: Zaehler 0x800aca4e und je Platz s Wort +0x00 Bit 0 / Typ +0x08 / x +0x34 / z +0x3c
+bei 0x800acc2c + s*0x1F4:
+| Savestate | 0x800aca4e | aktive Plaetze |
+|---|---|---|
+| room1140_entry.sav | 5 | 0:0x16 (-800,-20600), 1:0x10 (-1800,-19600), 2:0x10 (-1800,-21600), 3:0x11 (200,-21600), 4:0x11 (200,-19600) = ROOM1140-Records Slot 0..4 |
+| room1090_orig.sav | 7 | 0..6: Typ 0x26 (die sieben Feuer-Emitter @0x2214..@0x228C, Slot 0..6) |
+| mzd_stage1_engage_live.sav | 5 | 0..4 (0x16/0x10/0x10/0x11/0x11) |
+| mzd_stage1_npc.sav | 3 | 0:0x40, 1:0x42, 2:0x4b (NPCs im selben Feld) |
+Platz = Script-Slot, Zaehler = Zahl der Spawns: genau die Lesart von §3.1/§3.3. Ein Stand mit mehr als 7 Spawns (Slots
+15..19) liegt nicht vor (OFFEN §8).
+
 **ROOM20B0/20B1 (Slots 20..34):** im Original laegen diese Entities hinter dem 20er-Feld (0x800af33c..0x800b1087: NPC-Feld
 0x800af33c, ..., SCD-Variablen 0x800b0fd0, Limit 0x800b0ff2/0x800b0ff4, Tot-Bit-Zonen 0x800b1038/0x800b1058) — ein
 Ueberlauf des Prototyps, kein 21. Platz. Der Port verwirft sie weiter (Aktor > 20); dokumentiert unter OFFEN.
