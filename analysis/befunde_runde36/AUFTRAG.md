@@ -103,3 +103,50 @@ ROOM1151.RDT (Elza) msg 2: "Irons: I'll be fine. Just worry about yourself for n
 begegnet Elza Irons LEBEND. Der Nutzer bestellt ausdruecklich: bei Elza liegt Irons von Anfang an tot da,
 Text "He has already passed..." (NUTZER-VORGABE, Abweichung vom Original; Spur L setzt sie um, Spur P
 (Story) beruecksichtigt sie in der Zeitleiste).
+
+## Nachtrag 2026-10-10 14:00 — Story-Entscheidungen des Nutzers (woertlich)
+
+Antwort auf die Story-Beratung (analysis/story_leon_elza/, Spur P Analyse-Teil):
+
+> Ok, das klingt gut. Also:
+>
+> Ja, wenn es mehr sinn macht, das Roy erst da liegt, wenn der Strom eingeschaltet wurde, dann machen wir das so.
+>
+> Das Roy Kendo eingesperrt haben soll finde ich nicht so gut, weil er ja möchte das man ihn rettet. Besser fände ich folgendes:
+>
+> Da der communication room sabotiert wurde, wirft den Verdacht auf Kendo, da er die einzige bekannte Person im Police Office ist, die Kein Polizist ist (und kein Kind). Deshalb sperren sie ihn zur Untersuchungshaft in die Zelle. Kendo kam über Gastausweis mit seinen Freund Roy rein. Da die anderen Police officer wissen, das Kendo ein Freund von Roy ist, entziehen sie ihm quasi die Befugnis ihm aus dem Gefängnis zu befreien, deshalb findet man den Gefängnisschlüssel nicht bei Roy, sondern im Communications Room. Diese Information das das passiert ist, würde ich später noch in einem diary verfassen, das ich in Roys room ablegen werde.
+>
+> Bei Marvin - ja - in Elzas Szenario ist für mich auch ok, wenn er nur die Werkstatt Tür abschließt, nicht die Parking Lot tür.
+>
+> Zum Textwiderspruch - ja, da hat der vorherige Modder auf jeden Fall quatsch gebaut. Die dürfen sich niemals begegnet sein, das heißt - alle Textstellen, die darauf hindeuten das sie sich begegnet wären, müssen wir umschreiben.
+>
+> Bei Elza will ich nach wie vor das Irons tot bleibt und das Fenster 1121 bereits kaputt ist. Das macht Sinn für mich.
+>
+> bei Leon ein Text an Elzas Zelle („The cell door is open…") – die leere Zelle als Spur. - kannst du machen.
+>
+> ROOM1090. Elzas 1091 ist bytegleich Leons Zustand nach der Rettung – Leon war zuerst dort. Hinnehmen und eine Spur ergänzen („burnt-out shed") << kannst du machen, - ich weiß nicht was du mit den empty extinguisher meinst....
+>
+> Zu 11B0 wie gesagt ist kein Widerspruch - klar kann das eine elektronische TÜr sein, aber elektronische türen kann man unter umständen dennoch mit schlüssel separat abschließen. Deshalb kann das Marvin durchaus machen.
+>
+> Zu: Prison Key in 10F1: Elza ist vor Leon im Funkraum (ihr Satz „I couldn't call for help using the radio" belegt es). Für Leon bietet sich ein leerer Haken „Prison" als Spur an (K3). << würde ich sagen ist das kein Indiz dafür das sie zuerst da war, kann genauso gut sein, das sie es versucht hat, aber es eben nicht ging, weil die Kommunikationsanlage ja zerstört war. In die Richtung würde ich auch gehen.
+>
+> So, außerdem, setze fort, wo du vorhin als die tokens alle waren abgebrochen hast.
+
+### Folgen fuer die Spuren (Orchestrator)
+* **Spur P wird Bau-Spur** (eigener Baum r36_story, Datei engine/src/story_r36.c): (P1) Roys Leiche in Leons
+  ROOM1020 erst NACH Einschalten des Stroms; (P2) Leon ROOM1210: Anklick-Text an Kendos/Johns Zelle "The cell
+  door is open..." (leere Zelle als Spur; Wortlaut PORT-WAHL); (P3) Elza ROOM1091: Anklick-Text am
+  ausgebrannten Schuppen ("burnt-out shed"-Spur, Wortlaut PORT-WAHL) — KEIN "leerer Feuerloescher" (war nur
+  ein Vorschlag: Leon loescht das Feuer mit dem Feuerloescher, ein leerer Loescher am Boden waere die Spur);
+  (P4) Text-Sweep "nie begegnet": JEDE Textstelle beider Szenarien, die andeutet, dass Leon und Elza sich
+  begegnet sind oder einander kennen, wird umgeschrieben (bekannt: ROOM30C1 msg 2-6, ROOM6030 msg 1-5,
+  ROOM6031 msg 0-2, ROOM3060 msg 1-8 im Leon-RDT; der Sweep sucht den Rest); (P5) Funkraum-Text bleibt
+  ("It's out of commission" = Anlage zerstoert/sabotiert, passt zur Untersuchungshaft-Begruendung); der leere
+  Haken "Prison" (K3) wird NICHT gebaut.
+* **Spur J**: Marvin schliesst NUR die Werkstatt-Tuer ab (Innenseite, ROOM11B0), NICHT die Parkplatz-Tuer
+  11B0->11C0 — Choreografie "Hold on" -> Werkstatt-Tuer -> Zuschliessen -> zurueck -> "I just want to make
+  sure we don't have any unwanted followers." Die Parkplatz-Tuer bleibt fuer Elza erreichbar (11C1).
+* **Spur Q**: Hintergrund fuer das Dossier: Prison Key liegt im Communications Room, weil die Beamten Roy die
+  Befugnis entzogen haben (Kendo in Untersuchungshaft wegen des sabotierten Funkraums; Nutzer schreibt
+  spaeter ein Diary fuer Roys Raum). Kein zusaetzlicher Text/Haken fuer Leon.
+* **Spur L**: Irons tot + Fenster 1121 kaputt "von Anfang an" bleibt (bestaetigt).
