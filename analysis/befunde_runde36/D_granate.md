@@ -249,10 +249,11 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
   und senkte den Arm; die Granate fehlte im Inventar). Nach dem Abgang senkt R1-Loslassen den Arm wie bisher.
   Zusaetzlich geht eine Granate nicht mehr verloren, wenn der Effektpool im Wurfbild voll ist (viel Gore nach der
   vorigen Explosion).
-* **Wurf abgebrochen = Granate bleibt (Nachbesserung 1):** eine Granate wird erst verbraucht, wenn sie Leons Hand
-  verlaesst. Wird Leon waehrend der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen (oder wird im Statusschirm die Waffe
-  gewechselt), bricht der Wurf ab und die Granate bleibt im Inventar (vorher war sie in diesem Fall weg). Im Statusschirm
-  sieht man die Menge waehrend der Wurfbewegung deshalb erst nach dem Abgang sinken.
+* **Wurf abgebrochen = Granate bleibt (Nachbesserung 1):** eine Granate wird erst verbraucht, wenn sie die Hand
+  verlaesst (Leon wie Elza). Wird die Figur waehrend der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen, oder wird in
+  dieser Zeit der Statusschirm geoeffnet, bricht der Wurf ab und die Granate bleibt im Inventar (vorher war sie in diesem
+  Fall weg). Die angezeigte Menge sinkt deshalb erst im Moment des Abwurfs, nicht schon beim Druecken des Abzugs.
+* Entscheidungsfragen: keine.
 * Hinweis fuer das Zusammenfuehren mit Spur I ("Handgranaten bei 0 aus dem Inventar entfernen"): die Menge erreicht 0
   jetzt erst im Spawnbild, also NACH dem Abgang — das Entfernen kann den letzten Wurf nicht mehr verhindern (vorher fiel
   die Menge im Abzugsbild; legte das Entfernen dabei auch die Waffe ab, koennte das Spawn-Gate `id == 9` @0x8003368c
@@ -266,6 +267,12 @@ Wurfbewegung gepackt/getroffen wird (Abnahme-Lauf c2 ROOM1140 P1: 2 Abzuege, 1 W
 **M2** keine Wahlfrage an den Nutzer — ORCHESTRATOR-ENTSCHEIDUNG gemaess Nutzer-Wortlaut ("wird nicht geworfen"):
 eine Granate wird NUR verbraucht, wenn sie wirklich geworfen wird (Spawn); bricht ein Griff/Treffer die
 Wurfbewegung vor dem Spawnbild ab, bleibt sie im Inventar. **M3** Hinweis (Abnahme 0 unvollstaendig).
+
+| Mangel | Ursache | Messung vorher | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|---|
+| M1 | Verbrauch im Rueckstossbild 0, Abgang erst 19/22/24; Griff/Treffer dazwischen beendet die Ziel-FSM | Lauf c2 (6.3): Abzuege F19/F105, Griff F113, 1 Wurf, Menge 5 -> 3 | `jal 0x8004eae4` @0x80033b40 (Bild 0, `jalr` @0x800334e0), `jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4, Griff @0x80113b00/@0x80113b30 | Verbrauch ins Spawnbild hinter die Platzvergabe (6.2/6.4) | Lauf c2 (6.5): 1 Wurf, Menge 5 -> 4, Verbrauch F43 = Spawnbild; Pin `griff` (gegen alte exe rot) |
+| M2 | Dossier legte den Griff-Fall als Wahlfrage vor | OFFEN 1 + "Fuer den Nutzer" (alt) | Regel "Original oder nicht"; Retail-GL Munition @0x80042d3c -> Geschoss Bild 1 @0x80044b98-a0 | ORCHESTRATOR-ENTSCHEIDUNG umgesetzt, Wahlfrage gestrichen | Dossier ohne Wahlfrage; OFFEN 1/5 erledigt |
+| M3 | Abnahme 0 beim Sitzungslimit abgebrochen | — | — | vollstaendige gezielte Testliste der beruehrten Module (6.7) | 26/26 + 2/2 gruen |
 
 ### 6.1 RE-Belege (selbst disassembliert, 2026-10-10 abends)
 **RE1.5 PSX.EXE — Verbrauchsstelle = Rueckstossbild 0** (`re15_disasm.py dis 0x80033460 50`):
@@ -381,6 +388,44 @@ verbraucht, aber nicht geworfen)` = rot. Mit der neuen exe: s. 6.6.
   - `test_r34_granaten.cmake` `r34_abzug`: Abzugsbild = erstes Bild des Rueckstoss-Clips 7/9/11 (`ac=`; Clip =
     7 + 2*HOCH + 4*TIEF @0x800334a8-c8) statt "erstes Bild mit Menge -1" (das waere jetzt das Spawnbild S).
 * Gezielte Laeufe: s. 6.7.
+
+### 6.7 Gezielte Laeufe (KEINE volle Suite; exe sha1 3f5d5a70 = Engine-Stand 0bb12234, spaetere Commits nur Tests/Doku)
+Lauf 1 (alle Tests der beruehrten Module: Granate/Wurf/Werfer/Munition/Ziel-FSM aus game_step_common.c +
+player_common.c, Gore/Zerreissen/ESP aus enemy_ai_re2_zombie.c + re15_esp.c), `build/r36d_mess/n1_ctest1.log`:
+```
+ctest --test-dir re15_port/build -R "^(unit_r36_granate|integration_r36_granate|unit_r34_wurf|integration_r34_granaten|
+  unit_r35_granate|integration_r35_granate|unit_r30_granate|integration_r30_granate_laden|unit_r17_munition_pin|
+  unit_r17_waffen_loop_pin|m93r_nachladen|unit_r35_werfer|unit_r35_werfer_kombi|integration_r35_werfer|
+  integration_r35_werfer_ton|integration_r35_werfer_elza|integration_r35_werfer_form|unit_esp_parse|unit_re2_gore|
+  unit_re2_gore_render|unit_re2_gore_fly|unit_re2_gore_decoder|unit_re2_zombie_teardeath|unit_r19_zerreiss_10e0c7|
+  unit_aim_lower_exit|unit_aim_all_around)$" --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 26
+Total Test time (real) = 787.22 sec
+```
+(integration_r34_granaten mit der neuen Abzug-Erkennung Passed 213.09 s; integration_r35_granate 164.47 s.)
+Lauf 2 nach Sonde 405 (nur test_r36_granate.exe neu gelinkt, re15_pc.exe unveraendert sha1 3f5d5a70),
+`build/r36d_mess/n1_ctest2.log`:
+```
+ctest --test-dir re15_port/build -R "^(unit_r36_granate|integration_r36_granate)$" --timeout 600 -V
+100% tests passed, 0 tests failed out of 2
+  test_r36_granate: ALLE PRUEFUNGEN GRUEN   (103-108, 201-209, 300-304, 400-405)
+  r36_granate [he]: ok — X=119, 2 Zombies zerrissen, Flammen nach X: 0 (vor X: 0)
+  r36_granate [brand]: ok — X=119, Eingriffe 3, Flammen nach X: 1899
+  r36_granate [serie]: ok — 8 Abzuege = 8 Wuerfe = 8 Explosionen, Granaten 30 -> 22, Verbrauch in den Spawnbildern
+                       38;104;173;245;320;398;479;563
+  r36_granate [griff]: ok — Abzuege 19;105, Griff 113 (vor dem Spawnbild 129), Wurf 43, Granaten 5 -> 4, Verbrauch in 43
+```
+Punkt 1 (erfuellt laut Abnahme) unveraendert gruen: `[he]` Flammen 0, `[brand]` Flammen 1899, Sonden 103-108.
+
+### 6.8 M3 und Vertrag
+* M3 (Abnahme 0 unvollstaendig): kein Code-Mangel; die vollstaendige Testliste der beruehrten Module steht in 6.7,
+  Messordner `re15_port/build/r36d_mess/n1/` (c2_vor, c2_nach, int_vor = Pin gegen die alte exe).
+* Vertrag: gemeinsame Datei nur game_step_common.c (Include + 2 Code-Zeilen + Kommentar), neue Logik in
+  granate_r36.c/.h; keine Bits/Nachrichten-IDs/Ereignisse, keine Assets, kein Patch an shared_assets, kein
+  Env-Schalter. Fremde Tests nur verhaltensbedingt angepasst (probe_r34_wurf.c 92/98/104, test_r34_granaten.cmake
+  `r34_abzug`), Registrierung unveraendert (keine CMakeLists-Aenderung).
+* Elza: derselbe Pfad (Waffen-Id, nicht Figur; Bank PL04W09 mit denselben Cliplaengen, Abnahme 0 §5) — in der
+  Nachbesserung nicht eigens gefahren.
 
 ## 5. Suite (Fortsetzung, Stand 90d559cc + Sonde 208)
 * `bash re15_port/tools/local_build.sh test` (Lauf `build/r36d_mess/suite1.log`, 14:24-15:50, parallel zu fuenf
