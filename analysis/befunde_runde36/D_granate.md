@@ -2,6 +2,7 @@
 
 Stand: 2026-10-10, Zweig `r36/granate`, Baum `.claude/worktrees/r36_granate`, Basis master 5a9dbb7b (v0.8.23 + Auftrag),
 zuletzt master 78a4a748 eingemischt (d9627833). Fortsetzung nach dem Sitzungslimit ab Commit e93f75b7 (§3.7, §5).
+**Nachbesserung 1 (nach Abnahme 0): §6** — Granate wird nur noch im Spawnbild verbraucht (M1/M2).
 Dossier wird FORTLAUFEND geschrieben (Sitzungslimit-Schutz). Auftrag: `AUFTRAG.md` (woertlich), Vertrag: `VERTRAG.md`.
 Vorrunde: `analysis/befunde_runde35/A_granate.md` (Wand/Reichweite/Sound/Brutalitaet), `B_werfer.md` (Granatwerfer).
 
@@ -248,6 +249,63 @@ ausserhalb dieser Datei (`grep 0x0503\|gore_soot` ueber engine/src). Die Brand-V
 * **Entscheidungsfrage:** Wird Leon WAEHREND der Wurfbewegung (ca. 0,7 s) gepackt oder getroffen, bricht der Wurf ab und
   die Granate ist verbraucht (Original-Verhalten). Soll sie in diesem Fall im Inventar bleiben?
 * Bedienung unveraendert: Granate ueber Item-Debug (SELECT + R1 im Statusschirm) oder Fund; Zielhoehe hoch/mitte/tief.
+
+## 6. Nachbesserung 1 (nach Abnahme 0, `D_abnahme_0.md`; Beginn 2026-10-10 abends, HEAD 95d15ec7)
+
+Maengel: **M1** "Granate verbraucht, aber nicht geworfen" bleibt, sobald Leon in den 19-24 Bildern der
+Wurfbewegung gepackt/getroffen wird (Abnahme-Lauf c2 ROOM1140 P1: 2 Abzuege, 1 Wurf, Menge 5 -> 3).
+**M2** keine Wahlfrage an den Nutzer — ORCHESTRATOR-ENTSCHEIDUNG gemaess Nutzer-Wortlaut ("wird nicht geworfen"):
+eine Granate wird NUR verbraucht, wenn sie wirklich geworfen wird (Spawn); bricht ein Griff/Treffer die
+Wurfbewegung vor dem Spawnbild ab, bleibt sie im Inventar. **M3** Hinweis (Abnahme 0 unvollstaendig).
+
+### 6.1 RE-Belege (selbst disassembliert, 2026-10-10 abends)
+**RE1.5 PSX.EXE — Verbrauchsstelle = Rueckstossbild 0** (`re15_disasm.py dis 0x80033460 50`):
+```
+80033470 lbu v0,0(v1)  [0x800aca5b]    / 80033478 bne v0,zero,0x80033508   nur beim ERSTEN Durchlauf von Substate 2
+80033480 sb v0(=1),0(v1)               aca5b := 1
+8003349c sb zero,0x800acae9            Bildzaehler := 0
+800334cc lui at,0x8007 / 800334d0 addiu at,at,16640 (0x80074100) / 800334d4 addu at,at,v1(=Waffe*4) / 800334d8 lw v0,0(at)
+800334e0 jalr v0                       Entlade-Handler je Waffe
+80033b38 addiu sp,sp,-24 / 80033b3c sw ra / 80033b40 jal 0x8004eae4 / ... / 80033b50 jr ra   Granate 9: NUR Mengen-Abzug
+```
+**RE1.5 PSX.EXE — Spawn (Abgang) = Rueckstossbild 19/22/24** (`re15_disasm.py dis 0x80033680 76`):
+```
+80033684 lbu v1,0x800aca5d / 80033688 ori v0,zero,0x9 / 8003368c bne v1,v0,0x800337ac   Spawn-Gate Waffe == 9
+80033690 ori v0,zero,0x13 / 800336a0 bne v1(=acae9),v0 / 800336b4 andi v0,v0,0x8000 / 800336ec jal 0x80019700   HOCH 19
+800336a4 ori v0,zero,0x16 / 80033700 bne / 80033714 andi v0,v0,0x4000 / 80033748 jal 0x80019700                 MITTE 22
+80033758 ori v0,zero,0x18 / 8003375c bne / 80033770 andi v0,v0,0x2000 / 800337a4 jal 0x80019700                 TIEF 24
+800336bc-c0 lui a0,0x40d / ori a0,a0,0x1000   Wurfkoerper 0x040D1000 (Rueckgabe von 0x80019700 wird NICHT geprueft)
+```
+**RE1.5 STAGE1.BIN — Griff ersetzt das Kommando ohne Ziel-Gate** (`re15_disasm.py dis 0x80113ad8 24 --bin STAGE1.BIN`):
+`80113af8 ori v1,zero,0x2 / 80113b00 sb v1,0x800aca58` (Kommando := 2) ... `80113b30 sh zero,0x800aca5a` (Substate := 0).
+Damit endet Substate 2 vor dem Spawnbild; der Abzug aus Bild 0 ist nicht rueckgaengig — im Original ist die Granate weg.
+Fenster zwischen Verbrauch und Abgang im Original: **19/22/24 Bilder**.
+
+**RE2 Retail info/re2leon/PSX.EXE — Granatwerfer (das Retail-Vorbild "Geschoss aus einer Waffe mit Rueckstoss")**
+(`re2_disasm.py dis 0x80042c90 56`, `dis 0x80043fcc 10`, `dis 0x80043190 20`, `dis 0x80044b44 24`, `table 0x800a6f90 18`):
+```
+80042ce8 lbu v0,7(s1) / 80042cf0 bne v0,zero,0x80042d78   Feuer-Zustand: nur beim Eintritt (+7 == 0)
+80042d00 sb v1(=1),7(s1)                                  +7 := 1
+80042d28 sw v0,332(s1)                                    Rueckstoss-Clip setzen (Bild 0)
+80042d34 lw v0,28560(at) [0x800a6f90 + 4*Id] / 80042d3c jalr v0     Entlade-Handler: Tabelle [9] = 0x80043fcc
+80043fd4 lhu a0,270(a0) / 80043fdc jal 0x8006a0cc         GL: eine Patrone (Munitions-Abzug) — beim Eintritt
+800431ac lhu v0,270(s1) / 800431c4 lw v0,28636(at) [0x800a6fdc + 4*Id] / 800431cc jalr v0   Effekt-Handler JEDES Bild
+80044b98 lbu v1,333(s0) / 80044b9c addiu v0,zero,1 / 80044ba0 bne v1,v0,0x80044e7c          GL-Geschoss nur im Bild 1
+```
+Fenster zwischen Munitions-Abzug und Abgang im Retail: **1 Bild** (Eintritt -> Bild 1). Ein abgezogenes Geschoss ist
+in RE2 praktisch immer abgefeuert; die RE1.5-Handgranate (Beta, ohne RE2-Gegenstueck) streckt dasselbe auf 19-24
+Bilder — in dieses Fenster fallen Griff (`80113b00`), Treffer und Statusschirm-Waffenwechsel (`8003368c`).
+
+### 6.2 Form der Aenderung (ORCHESTRATOR-ENTSCHEIDUNG / NUTZER-VORGABE "wird nicht geworfen")
+Fuer die Wurf-Ids 9/10/11 wandert der Mengen-Abzug FUN_8004eae4 vom Entlade-Handler im Rueckstossbild 0
+(`jal 0x8004eae4` @0x80033b40 / @0x80033b60 / @0x80033b80) in das Spawnbild, unmittelbar hinter die erfolgreiche
+Platzvergabe des Wurfkoerpers (`jal 0x80019700` @0x800336ec / @0x80033748 / @0x800337a4). Verbrauch und Abgang
+fallen damit in DASSELBE Bild (Retail-Eigenschaft "abgezogen = abgefeuert", RE2 1 Bild, hier 0 Bilder). Abzug-Gate
+(Magazin > 0 `jal 0x8004ea6c` @0x80033314), Rueckstoss, Spawnbilder und Spawn-Gate bleiben unveraendert. Folgen:
+Griff/Treffer/Statusschirm-Waffenwechsel vor dem Spawnbild -> kein Wurf UND kein Verbrauch; kein Platz im Pool
+(0xFF @0x800197c8-cc, trotz Raeumung) -> kein Wurf und kein Verbrauch.
+
+(Fortsetzung: 6.3 Messung vorher, 6.4 Umsetzung, 6.5 Messung nachher, 6.6 Tests.)
 
 ## 5. Suite (Fortsetzung, Stand 90d559cc + Sonde 208)
 * `bash re15_port/tools/local_build.sh test` (Lauf `build/r36d_mess/suite1.log`, 14:24-15:50, parallel zu fuenf
