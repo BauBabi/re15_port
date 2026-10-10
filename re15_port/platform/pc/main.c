@@ -3701,7 +3701,11 @@ re_title:;
             re15_audio_tick();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
             { unsigned t_af = 22; const char *afe = getenv("RE15_TITLE_SHOT_AF"); if (afe) t_af = (unsigned)atoi(afe);
-              if (t_shot && tblink == t_af) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); } }
+              /* Runde 36 Spur A: RE15_TITLE_SHOT_CHAR=1 startet den Messlauf als Elza — derselbe
+               * Aufruf wie das Player-Select-Ende (re15_gameflow_new_game(ch), ch = DAT_800aca5c>>2). */
+              const char *tch = getenv("RE15_TITLE_SHOT_CHAR");
+              if (t_shot && tblink == t_af) { re15_render_pc_screenshot(t_shot);
+                                              re15_gameflow_new_game(tch ? (atoi(tch) & 1) : 0); } }
             tblink++;
         }
         re15_render_pc_hide_title();

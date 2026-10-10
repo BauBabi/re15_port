@@ -401,8 +401,12 @@ typedef struct {
          * `lhu v0,6(a2); ori v0,v0,0x1; sll/sra 16; sw v0,0(a1)` — also das
          * u16 aus dem Opcode-Strom pc[6..7] ODER 1. (Wird das Objekt ein
          * zweites Mal installiert, schreibt @0x8004098c stattdessen 0 = AUS.)
-         * ROOM1090 obj0/obj1 tragen pc[6..7] = 00 01 -> flags = 0x0101.
-         * Gelesen von: FUN_8002d2c0 @0x8002d358 (`& 0x101` = kletterbar),
+         * ROOM1090 obj0/obj1 tragen pc[6..7] = 00 01 -> flags = 0x0101; der Tritt in
+         * ROOM10F0 (obj 0, Typ 4) pc[6..7] = 00 00 -> 0x0001.
+         * Gelesen von: FUN_8002d2c0 @0x8002d358-35c (`andi 0x101` / `beq zero` =
+         * uebersprungen NUR wenn beide Bits fehlen, also ein "aktiv"-Gate — Runde 36
+         * Spur A: Bit 0x100 ist KEIN Kletterbit), FUN_8002dc48 @0x8002dd94 (`& 0x100` =
+         * Objekt zaehlt fuer die Herunterfall-Pruefung des Spielers, Substate 0xd),
          * FUN_8002d474 @0x8002d59c/@0x8002d680 und FUN_8002d100 @0x8002d170
          * (`& 1` = aktiv). */
         uint16_t flags;

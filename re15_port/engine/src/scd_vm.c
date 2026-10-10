@@ -4250,8 +4250,10 @@ static int op_obj_model_set(scd_thread_t *t)
         g_scd.props[i].box_hy = bhy;
         g_scd.props[i].box_hz = bhz;
         /* FLAGS = pool+0x00 (byte-true LAB_80040914 @0x80040990-a4:
-         * `lhu v0,6(a2)` / `ori v0,v0,0x1` / `sw v0,0(a1)`). Bit 0x100 ist das
-         * "kletterbar"-Bit, das FUN_8002d2c0 @0x8002d358 mit `& 0x101` abfragt. */
+         * `lhu v0,6(a2)` / `ori v0,v0,0x1` / `sw v0,0(a1)`). FUN_8002d2c0 @0x8002d358-35c
+         * (`andi 0x101` / `beq v0,zero`) ueberspringt ein Objekt nur bei 0 — Bit 0x100 ist
+         * KEIN Kletterbit (Runde 36 Spur A; es zaehlt in FUN_8002dc48 @0x8002dd94 fuer die
+         * Herunterfall-Pruefung des Spielers). */
         g_scd.props[i].flags  = reinstall
                                 ? 0u   /* @0x8004098c `sw zero,0x0(a1)` */
                                 : (uint16_t)(((uint16_t)t->pc[6] |

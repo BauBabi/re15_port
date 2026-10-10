@@ -1,0 +1,10 @@
+T1 room=1240 pm=2 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=200 af=0 frac=7 push=-1 rc_b8=0 rc_bnd=0
+T252 room=10F0 pm=0 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=0 kind=0x00 ph=0 obj=-1 stand=-1 mo=210 af=0 frac=0 push=-1 rc_b8=0 rc_bnd=0
+T642 room=10F0 pm=0 pad=8000 pos=(-4800,0,400) rot=1024 band=0 sub=9 kind=0x81 ph=0 obj=3 stand=-1 mo=211 af=60 frac=0 push=-1 rc_b8=0 rc_bnd=0
+T643 room=10F0 pm=0 pad=8000 pos=(-4800,0,400) rot=1024 band=0 sub=9 kind=0x81 ph=2 obj=3 stand=-1 mo=230 af=0 frac=7 push=-1 rc_b8=0 rc_bnd=0
+T644 room=10F0 pm=0 pad=8000 pos=(-4800,0,400) rot=1024 band=0 sub=9 kind=0x81 ph=3 obj=3 stand=-1 mo=231 af=0 frac=7 push=-1 rc_b8=0 rc_bnd=0
+T645 room=10F0 pm=0 pad=0000 pos=(-4800,0,400) rot=1024 band=0 sub=9 kind=0x81 ph=3 obj=3 stand=-1 mo=231 af=1 frac=6 push=-1 rc_b8=0 rc_bnd=0
+T673 room=10F0 pm=0 pad=0000 pos=(-4800,-1800,-748) rot=1024 band=1 sub=9 kind=0x81 ph=3 obj=3 stand=3 mo=231 af=29 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800
+T693 room=10F0 pm=0 pad=0000 pos=(-4800,-1800,-748) rot=1024 band=1 sub=9 kind=0x81 ph=4 obj=3 stand=3 mo=231 af=49 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800
+T694 room=10F0 pm=0 pad=0000 pos=(-4800,-1800,-748) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=3 stand=3 mo=231 af=49 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800
+(letzte Zeile) T811 room=10F0 pm=0 pad=0000 pos=(-4800,-1800,-748) rot=1024 band=1 sub=0 kind=0x00 ph=0 obj=3 stand=3 mo=212 af=45 frac=0 push=-1 rc_b8=-1800 rc_bnd=-1800
