@@ -43,7 +43,18 @@ int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3
     if (!e || !out) return 0;
     re15_enemy_bone_world_pos(e, bone, out);                 /* Anker.T (Welt) aus der ROHEN Pose, inkl. Ragdoll */
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
-    if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) return 1;
+    if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) {
+        /* Ohne geladene Bank (nur Unit-Sonden; im Spiel traegt jeder RE2-Zombie seine Bank) gibt es keine
+         * Part-Matrix: Anker.T = Aktor-Wurzel (re15_enemy_bone_world_pos), R_part = Einheit, a3 im Aktor-Rahmen
+         * (Ryaw wie unten). Nachbesserung 1: vorher fiel a3 hier ganz weg — der MG-Stoss (a3 = Zufallsvektor
+         * @0x80108014-38) laege dann ohne Streuung auf der Wurzel (unit_r26_mg_blut). */
+        if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
+        c = re15_cos_q12(e->rot_y); s = re15_sin_q12(e->rot_y);
+        out[0] += (int32_t)(((int64_t)c * a3[0] + (int64_t)s * a3[2]) >> 12);
+        out[1] += a3[1];
+        out[2] += (int32_t)(((int64_t)-s * a3[0] + (int64_t)c * a3[2]) >> 12);
+        return 2;
+    }
     if (e->re2z_rag_anchor_on) {                             /* abgetrennte Unterhaelfte: Anker wie bisher */
         if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
         void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;

@@ -18,6 +18,9 @@
  *   TOD     @0x8010864C-6B4                   : Zone!=0 Part 0 (P8.x, P8.y+300, P8.z) | Zone 0 Part 1 (0,800,0)
  *   TROPF   Tod P1 @0x8010887C-D4             : Part 0 (P8.x, P8.y+500, P8.z)
  *   KRIECH  Kriecher-Tod @0x80108A84-D4       : Part 0 (0,300,0)
+ *   (Tod des Liegenden FUN_801099E4 @0x80109B30-60: Part 0 (P8.x, P8.y+300, P8.z) = TOD-Sollpunkt ohne Zonen-Weiche;
+ *    LIEGE = EXEC[5] P6 @0x801035B0-DC mit a3 = (0,0,0), nur in diesem Kontext ein Original-Sollpunkt)
+ *   MG      0x80107EF0 @0x80107FC8-801080C4  : Zufallsvektor sp+16 (Variante "mg", eigene Pruefung, s. main)
  * Die Sonde liest JEDEN Spawn aus dem Mess-Ring (re15_schuss_r36_fx_*), rechnet alle Sollpunkte aus der
  * GEZEICHNETEN Pose (g_anim_pose_actor = Aktor, wie der Renderer) der Bilder T-1 und T und ordnet den Spawn dem
  * naechsten Sollpunkt zu. BECKEN/PART1/PART8 (Anker OHNE a3) sind die Defekt-Kandidaten des alten Stands.
@@ -25,11 +28,11 @@
  * Pin (Modus "pin"):
  *  (1) jeder Spawn an Part 0/1/8 dieses Zombies liegt <= 40 an einem Original-Sollpunkt UND naeher an ihm als an
  *      jedem Defekt-Kandidaten;
- *  (2) Todesbild: ein Spawn an Part 0/1 liegt <= 40 am TOD- (Zone != 0) / ZONE0- (Zone 0) bzw. KRIECH-Sollpunkt;
+ *  (2) Todesbild: ein Spawn an Part 0/1 liegt <= 40 am TOD-, ZONE0- oder KRIECH-Sollpunkt;
  *  (3) ein Part-8-Spawn in einem Trefferbild liegt <= 40 am AUF-Sollpunkt;
- *  (4) Zaehler: >= 1 HURT-Spawn, >= 1 TOD-Spawn (und je Variante die erwarteten AUF/NACH/TROPF, s. main);
- *  (5) Mechanik: Rumpf-/Tod-/Nachblut-Spawns (Zone != 0) > 300 UEBER dem Becken, Zone 0 > 300 UNTER Part 1,
- *      AUF > 200 von der Part-8-Lage entfernt.
+ *  (4) Zaehler: Tod erreicht, >= 1 HURT, >= 1 NACH, >= 1 AUF, eben >= 1 Tropfblut (mg: >= 5 MG-Stoesse);
+ *  (5) Mechanik: y des Versatzes im ANKER-Rahmen (Anker.R^T * (Lage - Anker.T)) im Band der Familie
+ *      (HURT/TOD/NACH < -400, FLINCH/TROPF < -200, ZONE0 > 600, AUF/KRIECH > 200) — stehend wie liegend.
  *
  * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg]  (mg = Ingram 12 von +z, MG-Blutstoss 0x80107EF0)
  */

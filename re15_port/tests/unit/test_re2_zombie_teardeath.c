@@ -207,6 +207,15 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
     {   int es = re15_inv_equipped_slot();
         if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 200; }
 
+    /* Runde 36 Spur C (Nachbesserung 1): jeder PIN7-Kampf startet mit der Zufallslage des Raumladens
+     * (re15_re2z_rng_reset, wie actor_common.c beim Raumwechsel). Grund, gemessen: seit das Stagger-Nachbluten
+     * die zwei Wuerfe des Originals zieht (FUN_80105BC0 @0x80105FC8/@0x80105FD0, nur bei geradem +0x15A
+     * @0x80105F78-7C), laufen die vorangehenden Kaempfe (w3/w4) mit einer anderen Zahl von Wuerfen, und der
+     * w12-Kampf endete im KRIECHER-GRIFF-TOD (Griff f160, Abwurf, Kriecher 10E 0x2001 f460, FUN_801025EC P6
+     * @0x80102BE8: `sw 7,4` @0x80102BF4 / `sh -1,342` @0x80102BFC) — byte-true, aber kein Schuss-Tod, also
+     * keine Probe fuer die Todes-ZEILE, die dieser Pin prueft. Die Regressionswache darf nicht davon abhaengen,
+     * wie viele Wuerfe ANDERE Pins verbrauchen: Fixture neu verankert, Pruefungen unveraendert. */
+    if (s_reaim) re15_re2z_rng_reset();
     reset_zombie(slot);
     pl->x = e->x - 2600; pl->z = e->z; pl->y = e->y; pl->rot_y = 1024; pl->hp = 100;
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
