@@ -23,12 +23,12 @@ Irons-Texte 1151.
 ## 0. Stand / Fortschritt
 
 - [x] Grundlagen (Variante, Werkzeuge, Baseline-Bau 78a4a748 gruen gebaut)
-- [ ] P1 Fenster 1121 kaputt + Kraehe
-- [ ] P2 Irons 1151 tot + Text
-- [ ] P3 1211 Unlock-Ton
-- [ ] P4 1021 Schuss-Toene
-- [ ] P5 1021 Roy Sterbe-Ton
-- [ ] P6 main16.5 + Untertitel
+- [x] P1 Fenster 1121 kaputt + Kraehe (fenster_1120.c Elza-Zweig; unit + integration gruen)
+- [x] P2 Irons 1151 tot + Text + Kopf fest (elza_r36.c; unit + integration gruen)
+- [x] P3 1211 Unlock-Ton (RE2 ROOM1140 Satz 0x25, Anker @0x020F8 +20; unit + integration gruen)
+- [x] P4 1021 Schuss-Toene (RE2 ROOM40A0 Satz 0x08, Anker @0x020CE/@0x020D6 +1; unit + integration gruen)
+- [x] P5 1021 Roy Sterbe-Ton (RE1.5 Raum-SE 5 @0x80106da8, Anker @0x020DE +1; unit + integration gruen)
+- [x] P6 main16.5 + Untertitel (ROOM1011 @0x00D54, Nachricht 24 = msg 10 "Roy: groans"; unit + integration gruen)
 
 ## 1. Grundlagen
 
