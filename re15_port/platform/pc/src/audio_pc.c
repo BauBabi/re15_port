@@ -34,6 +34,7 @@
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
+#include "re15_elza_r36.h"  /* Runde 36 Spur L: re15_elza_stimme_datei (main16.5.wav) */
 #include "re15_cut10f0.h"  /* Runde 35 Spur K: MAIN01-Weiche + Port-Bank 0x0E (RE2-Tuerbank) */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
@@ -1081,6 +1082,15 @@ void re15_audio_re2_glas_se(int satz)
     if (re15_audio_re2_glas_laden() != 0) return;
     if (satz < 0 || satz >= s_glas_edt_count) return;
     se_play_layers(s_glas_edt, &s_glas_vab, s_glas_decoded, s_glas_decoded_len, satz);
+}
+
+/* Runde 36 Spur L: Mini-Bank-Saetze aus einer ANDEREN Datei (elza_se_pc.c, shared_assets/RE2/ELZASE.VBS) ueber
+ * DIESELBE Stimmen-/Prioritaets-Maschine spielen (se_play_layers = FUN_800453d0/FUN_80045024-Nachbau). */
+void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                             const int *decoded_len, int satz)
+{
+    if (!g_audio.initialized || !edt || !vab) return;
+    se_play_layers(edt, vab, decoded, decoded_len, satz);
 }
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
@@ -2177,14 +2187,17 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
      * (asset_root_pc.c). synchro/ liegt im Paket neben der exe, im Repo an der Repo-Wurzel —
      * beides deckt die Liste ab, ohne vom Arbeitsverzeichnis abzuhaengen. */
     uint8_t *wav = NULL; int wsz = 0; char path[200];
-    snprintf(path, sizeof path, "%smain%02d.wav", reldir, voice_id);
+    /* Runde 36 Spur L: Sonderdatei je (Raum, Id) — Nutzer-Aufnahme synchro/STAGE1/room1011/main16.5.wav (re15_elza_r36.h). */
+    char stamm[24]; snprintf(stamm, sizeof stamm, "main%02d", voice_id);
+    { const char *sd = re15_elza_stimme_datei((unsigned)room, voice_id); if (sd) snprintf(stamm, sizeof stamm, "%s", sd); }
+    snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
     wav = re15_pc_read_base(path, &wsz);
     /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
      * upper-hex probe missed (case-sensitive mounts). */
     if (!wav) {
         snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04x/",
                  (unsigned)(room >> 12), (unsigned)room);
-        snprintf(path, sizeof path, "%smain%02d.wav", reldir, voice_id);
+        snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
         wav = re15_pc_read_base(path, &wsz);
     }
     int rate, ch, bits, dbytes, fmt_tag;
@@ -2306,8 +2319,8 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     s_voice_clip[voice_id].len = (int)out_n;
     { extern unsigned g_re15_entladen_gen; extern unsigned re15_audio_stimme_gen_setzen(unsigned);
       re15_audio_stimme_gen_setzen(g_re15_entladen_gen); }   /* Runde 35 Spur I: Zensus */
-    fprintf(stderr, "[voice] clip loaded: main%02d.wav (%d Hz x%d → %ld @%d Hz)\n",
-            voice_id, rate, ch, (long)out_n, RE15_AUDIO_RATE);
+    fprintf(stderr, "[voice] clip loaded: %s.wav (%d Hz x%d → %ld @%d Hz)\n",
+            stamm, rate, ch, (long)out_n, RE15_AUDIO_RATE);   /* Runde 36 Spur L: echter Dateistamm */
     return 1;
 }
 
