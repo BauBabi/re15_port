@@ -1,0 +1,61 @@
+ROOM3081  (re15_port/shared_assets/PSX/STAGE3/ROOM3081.RDT)
+
+=== main00
+  0x0072A Door_aot_set   3b 00 02 31 00 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=0 sce=2 -> ROOM4001 cut=1
+  0x0074A Obj_model_set  2d 00 00 00 01 00 0a 00 00 00 54 a7 ..    ; Obj_model_set obj=0 pos=(-22700,-3610,-25200)
+  0x0076C Obj_model_set  2d 01 00 00 01 00 0a 00 00 00 54 a7 ..    ; Obj_model_set obj=1 pos=(-22700,10,-25200)
+  0x0078E Evt_end        01 00                                   
+
+=== sub00
+  0x00798 Ifel_ck        06 00 34 00                             
+  0x0079C   Ck             21 04 fd 00                               ; Ck(4,0xFD)==0
+  0x007A0   Sce_em_set     44 00 4b 40 00 01 00 ff 58 9e 00 00 ..    ; Sce_em_set slot=0 TYP=0x4B beh=0x40 pos=(-25000, 0, -24180) yaw=914 b4..7=00 01 00 ff
+  0x007B4   Sce_em_set     44 01 49 40 00 01 00 ff 48 9a 00 00 ..    ; Sce_em_set slot=1 TYP=0x49 beh=0x40 pos=(-26040, 0, -25120) yaw=0 b4..7=00 01 00 ff
+  0x007C8   Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x007CC   Else_ck        07 00 0a 00                             
+  0x007D0   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x007D4   Nop            00                                      
+  0x007D5   Nop            00                                      
+  0x007D6 Evt_end        01 00                                   
+
+=== sub01
+  0x007D8 Evt_end        01 00                                   
+
+=== sub02
+  0x007DA Set            22 04 fd 01                               ; SET (4,0xFD)=1
+  0x007DE Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x007E2 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x007E6 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x007E9 Nop            00                                      
+  0x007EA Pos_set        32 00 06 9b 00 00 d4 9a                   ; Pos_set (-25850,0,-25900)
+  0x007F2 Dir_set        33 00 00 00 a2 03 00 00                 
+  0x007FA Sleep          09 0a 3c 00                             
+  0x007FE Set            22 01 1c 01                               ; SET (1,0x1C)=1
+  0x00802 Sleep          09 0a 3c 00                             
+  0x00806 Set            22 01 1c 00                               ; SET (1,0x1C)=0
+  0x0080A Set            22 01 1d 01                               ; SET (1,0x1D)=1
+  0x0080E Sleep          09 0a 3c 00                             
+  0x00812 Set            22 01 1d 00                               ; SET (1,0x1D)=0
+  0x00816 Set            22 01 1c 01                               ; SET (1,0x1C)=1
+  0x0081A Sleep          09 0a 64 00                             
+  0x0081E Aot_on         47 00                                   
+  0x00820 Evt_end        01 00                                   
+
+=== sub03
+  0x00822 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00826 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0082A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0082D Nop            00                                      
+  0x0082E Pos_set        32 00 06 9b 00 00 d4 9a                   ; Pos_set (-25850,0,-25900)
+  0x00836 Dir_set        33 00 00 00 a2 03 00 00                 
+  0x0083E Sleep          09 0a 3c 00                             
+  0x00842 Set            22 01 1c 01                               ; SET (1,0x1C)=1
+  0x00846 Sleep          09 0a 3c 00                             
+  0x0084A Set            22 01 1c 00                               ; SET (1,0x1C)=0
+  0x0084E Set            22 01 1d 01                               ; SET (1,0x1D)=1
+  0x00852 Sleep          09 0a 3c 00                             
+  0x00856 Set            22 01 1d 00                               ; SET (1,0x1D)=0
+  0x0085A Set            22 01 1c 01                               ; SET (1,0x1C)=1
+  0x0085E Sleep          09 0a 64 00                             
+  0x00862 Aot_on         47 00                                   
+  0x00864 Evt_end        01 00                                   

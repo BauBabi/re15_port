@@ -1,0 +1,178 @@
+ROOM1260  (re15_port/shared_assets/PSX/STAGE1/ROOM1260.RDT)
+
+=== main00
+  0x0112A Door_aot_set   3b 00 02 31 01 00 0e 6a fc 21 e8 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM11B0 cut=6
+  0x0114A Door_aot_set   3b 01 02 31 01 00 1c da 7a db 6c 07 ..    ; Door_aot_set slot=1 sce=2 -> ROOM2000 cut=0
+  0x0116A Door_aot_set   3b 02 02 31 01 00 f8 ad 96 e7 dc 05 ..    ; Door_aot_set slot=2 sce=2 -> ROOM10B0 cut=7
+  0x0118A Door_aot_set   3b 03 02 31 01 00 66 53 a0 dd e8 03 ..    ; Door_aot_set slot=3 sce=2 -> ROOM11D0 cut=7
+  0x011AA Door_aot_set   3b 04 02 31 01 00 0c 49 66 ef 6c 07 ..    ; Door_aot_set slot=4 sce=2 -> ROOM2000 cut=4
+  0x011CA Aot_set        2c 05 08 47 00 00 ca d6 92 3b 26 98 ..    ; Aot_set slot=5 sce=8 ev->sub00 (7c fc 00 00)
+  0x011DE Aot_set        2c 06 08 47 00 00 92 a5 fe ac b0 b3 ..    ; Aot_set slot=6 sce=8 ev->sub00 (7c fc 00 00)
+  0x011F2 Evt_end        01 00                                   
+
+=== sub00
+  0x01200 Switch         13 0a 16 00                             
+  0x01204   Case           14 00 04 00 00 00                       
+  0x0120A   Gosub          18 02                                     ; Gosub -> sub02
+  0x0120C   Break          1a 00                                   
+  0x0120E   Case           14 00 04 00 07 00                       
+  0x01214   Gosub          18 02                                     ; Gosub -> sub02
+  0x01216   Break          1a 00                                   
+  0x01218   Eswitch        16 00                                   
+  0x0121A Switch         13 0a 20 00                             
+  0x0121E   Case           14 00 04 00 08 00                       
+  0x01224   Gosub          18 03                                     ; Gosub -> sub03
+  0x01226   Break          1a 00                                   
+  0x01228   Case           14 00 04 00 09 00                       
+  0x0122E   Gosub          18 03                                     ; Gosub -> sub03
+  0x01230   Break          1a 00                                   
+  0x01232   Case           14 00 04 00 0f 00                       
+  0x01238   Gosub          18 03                                     ; Gosub -> sub03
+  0x0123A   Break          1a 00                                   
+  0x0123C   Eswitch        16 00                                   
+  0x0123E Evt_end        01 00                                   
+
+=== sub01
+  0x01240 Evt_end        01 00                                   
+
+=== sub02
+  0x01242 Ifel_ck        06 00 74 00                             
+  0x01246   Ck             21 04 f4 01                               ; Ck(4,0xF4)==1
+  0x0124A   Switch         13 0a 6a 00                             
+  0x0124E     Case           14 00 32 00 07 00                       
+  0x01254     Sce_em_set     44 00 42 40 01 00 00 ff 7e 68 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x42 beh=0x40 pos=(26750, -1800, 11800) yaw=2048 b4..7=01 00 00 ff
+  0x01268     Sce_em_set     44 01 40 40 01 00 00 ff 38 63 f8 f8 ..    ; Sce_em_set slot=1 TYP=0x40 beh=0x40 pos=(25400, -1800, 9850) yaw=0 b4..7=01 00 00 ff
+  0x0127C     Evt_exec       04 ff 18 04                               ; Evt_exec -> sub04
+  0x01280     Evt_exec       04 ff 18 05                               ; Evt_exec -> sub05
+  0x01284     Break          1a 00                                   
+  0x01286     Case           14 00 2a 00 00 00                       
+  0x0128C     Sce_em_set     44 00 42 40 01 00 00 ff b4 e2 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x42 beh=0x40 pos=(-7500, -1800, -6250) yaw=2048 b4..7=01 00 00 ff
+  0x012A0     Sce_em_set     44 01 40 40 01 00 00 ff 3c dd f8 f8 ..    ; Sce_em_set slot=1 TYP=0x40 beh=0x40 pos=(-8900, -1800, -4600) yaw=0 b4..7=01 00 00 ff
+  0x012B4     Break          1a 00                                   
+  0x012B6     Eswitch        16 00                                   
+  0x012B8   Endif          08 00                                   
+  0x012BA Obj_model_set  2d 00 03 02 02 00 0a 00 1a 00 0f 23 ..    ; Obj_model_set obj=0 pos=(8975,-900,16825)
+  0x012DC Evt_end        01 00                                   
+
+=== sub03
+  0x012DE Obj_model_set  2d 01 03 02 02 00 0a 00 1a 00 83 ff ..    ; Obj_model_set obj=1 pos=(-125,-900,-19675)
+  0x01300 Evt_end        01 00                                   
+
+=== sub04
+  0x01302 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x01305 Nop            00                                      
+  0x01306 Plc_dest       40 00 09 21 7e 68 68 42                   ; Plc_dest mode=9 (26750,17000)
+  0x0130E Do             11 00 08 00                             
+  0x01312 Evt_next       02                                      
+  0x01313 Nop            00                                      
+  0x01314 Edwhile        12 04                                   
+  0x01316 Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x0131A Plc_dest       40 00 04 21 7e 68 68 42                   ; Plc_dest mode=4 (26750,17000)
+  0x01322 Do             11 00 08 00                             
+  0x01326 Evt_next       02                                      
+  0x01327 Nop            00                                      
+  0x01328 Edwhile        12 04                                   
+  0x0132A Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x0132E Plc_dest       40 00 09 21 50 e2 68 42                   ; Plc_dest mode=9 (-7600,17000)
+  0x01336 Do             11 00 08 00                             
+  0x0133A Evt_next       02                                      
+  0x0133B Nop            00                                      
+  0x0133C Edwhile        12 04                                   
+  0x0133E Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x01342 Plc_dest       40 00 05 21 50 e2 68 42                   ; Plc_dest mode=5 (-7600,17000)
+  0x0134A Do             11 00 08 00                             
+  0x0134E Evt_next       02                                      
+  0x0134F Nop            00                                      
+  0x01350 Edwhile        12 04                                   
+  0x01352 Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x01356 Plc_dest       40 00 09 21 50 e2 d4 30                   ; Plc_dest mode=9 (-7600,12500)
+  0x0135E Do             11 00 08 00                             
+  0x01362 Evt_next       02                                      
+  0x01363 Nop            00                                      
+  0x01364 Edwhile        12 04                                   
+  0x01366 Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x0136A Plc_dest       40 00 04 21 50 e2 d4 30                   ; Plc_dest mode=4 (-7600,12500)
+  0x01372 Do             11 00 08 00                             
+  0x01376 Evt_next       02                                      
+  0x01377 Nop            00                                      
+  0x01378 Edwhile        12 04                                   
+  0x0137A Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x0137E Plc_dest       40 00 09 21 b4 e2 96 e7                   ; Plc_dest mode=9 (-7500,-6250)
+  0x01386 Do             11 00 08 00                             
+  0x0138A Evt_next       02                                      
+  0x0138B Nop            00                                      
+  0x0138C Edwhile        12 04                                   
+  0x0138E Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x01392 Plc_dest       40 00 05 21 b4 e2 96 e7                   ; Plc_dest mode=5 (-7500,-6250)
+  0x0139A Do             11 00 08 00                             
+  0x0139E Evt_next       02                                      
+  0x0139F Nop            00                                      
+  0x013A0 Edwhile        12 04                                   
+  0x013A2 Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x013A6 Plc_dest       40 00 09 21 fc d6 96 e7                   ; Plc_dest mode=9 (-10500,-6250)
+  0x013AE Do             11 00 08 00                             
+  0x013B2 Evt_next       02                                      
+  0x013B3 Nop            00                                      
+  0x013B4 Edwhile        12 04                                   
+  0x013B6 Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x013BA Evt_end        01 00                                   
+
+=== sub05
+  0x013BC Sleep          09 0a 28 00                             
+  0x013C0 Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x013C3 Nop            00                                      
+  0x013C4 Plc_dest       40 00 09 22 38 63 de 3f                   ; Plc_dest mode=9 (25400,16350)
+  0x013CC Do             11 00 08 00                             
+  0x013D0 Evt_next       02                                      
+  0x013D1 Nop            00                                      
+  0x013D2 Edwhile        12 04                                   
+  0x013D4 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x013D8 Plc_dest       40 00 04 22 38 63 de 3f                   ; Plc_dest mode=4 (25400,16350)
+  0x013E0 Do             11 00 08 00                             
+  0x013E4 Evt_next       02                                      
+  0x013E5 Nop            00                                      
+  0x013E6 Edwhile        12 04                                   
+  0x013E8 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x013EC Plc_dest       40 00 09 22 d8 dc de 3f                   ; Plc_dest mode=9 (-9000,16350)
+  0x013F4 Do             11 00 08 00                             
+  0x013F8 Evt_next       02                                      
+  0x013F9 Nop            00                                      
+  0x013FA Edwhile        12 04                                   
+  0x013FC Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01400 Plc_dest       40 00 05 22 d8 dc de 3f                   ; Plc_dest mode=5 (-9000,16350)
+  0x01408 Do             11 00 08 00                             
+  0x0140C Evt_next       02                                      
+  0x0140D Nop            00                                      
+  0x0140E Edwhile        12 04                                   
+  0x01410 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01414 Plc_dest       40 00 09 22 d8 dc 4a 2e                   ; Plc_dest mode=9 (-9000,11850)
+  0x0141C Do             11 00 08 00                             
+  0x01420 Evt_next       02                                      
+  0x01421 Nop            00                                      
+  0x01422 Edwhile        12 04                                   
+  0x01424 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01428 Plc_dest       40 00 04 22 d8 dc 4a 2e                   ; Plc_dest mode=4 (-9000,11850)
+  0x01430 Do             11 00 08 00                             
+  0x01434 Evt_next       02                                      
+  0x01435 Nop            00                                      
+  0x01436 Edwhile        12 04                                   
+  0x01438 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x0143C Plc_dest       40 00 09 22 3c dd 08 ee                   ; Plc_dest mode=9 (-8900,-4600)
+  0x01444 Do             11 00 08 00                             
+  0x01448 Evt_next       02                                      
+  0x01449 Nop            00                                      
+  0x0144A Edwhile        12 04                                   
+  0x0144C Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01450 Plc_dest       40 00 05 22 3c dd 08 ee                   ; Plc_dest mode=5 (-8900,-4600)
+  0x01458 Do             11 00 08 00                             
+  0x0145C Evt_next       02                                      
+  0x0145D Nop            00                                      
+  0x0145E Edwhile        12 04                                   
+  0x01460 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01464 Plc_dest       40 00 09 22 f4 e8 08 ee                   ; Plc_dest mode=9 (-5900,-4600)
+  0x0146C Do             11 00 08 00                             
+  0x01470 Evt_next       02                                      
+  0x01471 Nop            00                                      
+  0x01472 Edwhile        12 04                                   
+  0x01474 Ck             21 05 22 00                               ; Ck(5,0x22)==0
+  0x01478 Evt_end        01 00                                   

@@ -1,0 +1,312 @@
+ROOM1011  (re15_port/shared_assets/PSX/STAGE1/ROOM1011.RDT)
+
+=== main00
+  0x008AE Door_aot_set   3b 00 02 31 00 00 36 10 0c 17 e8 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM1021 cut=11
+  0x008CE Door_aot_set   3b 01 02 31 00 00 36 10 aa ec e8 03 ..    ; Door_aot_set slot=1 sce=2 -> ROOM1021 cut=9
+  0x008EE Obj_model_set  2d 00 00 00 01 00 0a 00 00 00 c8 00 ..    ; Obj_model_set obj=0 pos=(200,-1600,5500)
+  0x00910 Obj_model_set  2d 01 00 00 01 00 0a 00 00 00 08 07 ..    ; Obj_model_set obj=1 pos=(1800,-1600,5750)
+  0x00932 Obj_model_set  2d 02 00 00 01 00 0a 00 00 00 f8 f8 ..    ; Obj_model_set obj=2 pos=(-1800,-1600,-1900)
+  0x00954 Item_aot_set   50 02 09 31 00 00 a2 fe 50 14 e8 03 ..    ; Item_aot_set slot=2 ITEM 0x39 Yellow Keycard x1 flag=138
+  0x0096A Item_aot_set   50 03 09 31 00 00 14 05 b4 14 e8 03 ..    ; Item_aot_set slot=3 ITEM 0x15 H. Gun Bullets x15 flag=141
+  0x00980 Item_aot_set   50 04 09 31 00 00 cc f7 a0 f6 e8 03 ..    ; Item_aot_set slot=4 ITEM 0x16 Shotgun Shells x7 flag=142
+  0x00996 Aot_set        2c 06 01 31 00 00 fe f7 20 ea e8 03 ..    ; Aot_set slot=6 TEXT msg 21 "Several books of testimonies / and cases.Nothing useful."
+  0x009AA Aot_set        2c 07 01 31 00 00 fc 08 70 fe e8 03 ..    ; Aot_set slot=7 TEXT msg 22 "An old typewriter.Why use it if there are / computers?"
+  0x009BE Aot_set        2c 08 01 31 00 00 16 0d 60 09 e8 03 ..    ; Aot_set slot=8 TEXT msg 23 "A camera to record the / interrogations."
+  0x009D2 Evt_end        01 00                                   
+
+=== sub00
+  0x009E4 Ifel_ck        06 00 44 00                             
+  0x009E8   Ck             21 04 f1 00                               ; Ck(4,0xF1)==0
+  0x009EC   Switch         13 0a 3a 00                             
+  0x009F0     Case           14 00 32 00 00 00                       
+  0x009F6     Sce_em_set     44 00 47 40 00 00 00 ff 30 f8 00 00 ..    ; Sce_em_set slot=0 TYP=0x47 beh=0x40 pos=(-2000, 0, 7450) yaw=3998 b4..7=00 00 00 ff
+  0x00A0A     Aot_set        2c 05 00 31 00 00 a0 f6 26 1b e8 03 ..    ; Aot_set slot=5 sce=0 ev->sub06 (ff 00 18 06)
+  0x00A1E     Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x00A22     Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x00A26     Break          1a 00                                   
+  0x00A28     Eswitch        16 00                                   
+  0x00A2A   Endif          08 00                                   
+  0x00A2C Ifel_ck        06 00 40 00                             
+  0x00A30   Ck             21 04 fa 01                               ; Ck(4,0xFA)==1
+  0x00A34   Switch         13 0a 36 00                             
+  0x00A38     Case           14 00 2e 00 00 00                       
+  0x00A3E     Sce_em_set     44 00 47 40 00 00 00 ff 30 f8 00 00 ..    ; Sce_em_set slot=0 TYP=0x47 beh=0x40 pos=(-2000, 0, 7450) yaw=3998 b4..7=00 00 00 ff
+  0x00A52     Aot_set        2c 05 03 31 00 00 a0 f6 26 1b e8 03 ..    ; Aot_set slot=5 sce=3 ev->sub06 (ff 00 18 06)
+  0x00A66     Evt_exec       04 ff 18 05                               ; Evt_exec -> sub05
+  0x00A6A     Break          1a 00                                   
+  0x00A6C     Eswitch        16 00                                   
+  0x00A6E   Endif          08 00                                   
+  0x00A70 Ifel_ck        06 00 10 00                             
+  0x00A74   Ck             21 03 78 01                               ; Ck(3,0x78)==1
+  0x00A78   Aot_reset      46 05 03 31 ff 00 18 07 00 00             ; Aot_reset slot=5 sce=3 ev->sub07
+  0x00A82   Endif          08 00                                   
+  0x00A84 Ifel_ck        06 00 3c 00                             
+  0x00A88   Ck             21 03 ba 01                               ; Ck(3,0xBA)==1
+  0x00A8C   Switch         13 0a 32 00                             
+  0x00A90     Case           14 00 2a 00 00 00                       
+  0x00A96     Sce_em_set     44 01 10 00 00 00 00 b8 a6 0e 00 00 ..    ; Sce_em_set slot=1 TYP=0x10 beh=0x00 pos=(3750, 0, 5000) yaw=3072 b4..7=00 00 00 b8
+  0x00AAA     Sce_em_set     44 02 10 00 00 00 01 b9 b0 04 00 00 ..    ; Sce_em_set slot=2 TYP=0x10 beh=0x00 pos=(1200, 0, 7150) yaw=0 b4..7=00 00 01 b9
+  0x00ABE     Break          1a 00                                   
+  0x00AC0     Eswitch        16 00                                   
+  0x00AC2   Endif          08 00                                   
+  0x00AC4 Switch         13 0a 32 00                             
+  0x00AC8   Case           14 00 2a 00 04 00                       
+  0x00ACE   Sce_em_set     44 03 10 81 00 00 00 b6 b6 03 00 00 ..    ; Sce_em_set slot=3 TYP=0x10 beh=0x81 pos=(950, 0, -1700) yaw=0 b4..7=00 00 00 b6
+  0x00AE2   Sce_em_set     44 04 10 81 00 00 01 b7 ce ff 00 00 ..    ; Sce_em_set slot=4 TYP=0x10 beh=0x81 pos=(-50, 0, -3800) yaw=3584 b4..7=00 00 01 b7
+  0x00AF6   Break          1a 00                                   
+  0x00AF8   Eswitch        16 00                                   
+  0x00AFA Evt_end        01 00                                   
+
+=== sub01
+  0x00AFC Evt_end        01 00                                   
+
+=== sub02
+  0x00AFE Set            22 04 f1 01                               ; SET (4,0xF1)=1
+  0x00B02 Set            22 04 fa 01                               ; SET (4,0xFA)=1
+  0x00B06 Set            22 03 74 01                               ; SET (3,0x74)=1
+  0x00B0A Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00B0E Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00B12 Message_on     2b 00 00 00                               ; Message_on 0  "Officer: groans"
+  0x00B16 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00B19 Nop            00                                      
+  0x00B1A Plc_neck       41 01 30 f8 00 00 1a 1d 64 00           
+  0x00B24 Sleep          09 0a 01 00                             
+  0x00B28 Plc_dest       40 00 09 00 30 f8 1a 1d                   ; Plc_dest mode=9 (-2000,7450)
+  0x00B30 Sleep          09 0a 64 00                             
+  0x00B34 Cut_chg        29 03                                     ; Cut_chg 3
+  0x00B36 Sleep          09 0a 1e 00                             
+  0x00B3A Cut_chg        29 02                                     ; Cut_chg 2
+  0x00B3C Plc_dest       40 00 05 00 d4 fe ee 1b                   ; Plc_dest mode=5 (-300,7150)
+  0x00B44 Gosub          18 04                                     ; Gosub -> sub04
+  0x00B46 Plc_dest       40 00 09 00 30 f8 1a 1d                   ; Plc_dest mode=9 (-2000,7450)
+  0x00B4E Gosub          18 04                                     ; Gosub -> sub04
+  0x00B50 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00B54 Plc_neck       41 01 30 f8 c0 e0 1a 1d 64 64           
+  0x00B5E Sleep          09 0a 28 00                             
+  0x00B62 Message_on     2b 01 00 00                               ; Message_on 1  "Elza: Hang in there! Are you the / only officer left in the building?"
+  0x00B66 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00B6A Sleep          09 0a 19 00                             
+  0x00B6E Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00B72 Plc_flg        43 00 80 00                             
+  0x00B76 Sleep          09 0a 19 00                             
+  0x00B7A Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00B7E Sleep          09 0a 19 00                             
+  0x00B82 Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00B86 Plc_flg        43 00 80 00                             
+  0x00B8A Sleep          09 0a 1a 00                             
+  0x00B8E Message_on     2b 02 00 00                               ; Message_on 2  "Officer: Who... who are you?"
+  0x00B92 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00B95 Nop            00                                      
+  0x00B96 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00B9A Sleep          09 0a 32 00                             
+  0x00B9E Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00BA2 Plc_flg        43 00 80 00                             
+  0x00BA6 Sleep          09 0a 32 00                             
+  0x00BAA Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00BAE Plc_flg        43 00 04 00                             
+  0x00BB2 Sleep          09 0a 02 00                             
+  0x00BB6 Message_on     2b 03 00 00                               ; Message_on 3  "Elza: My name's Elza. / What's yours?"
+  0x00BBA Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00BBD Nop            00                                      
+  0x00BBE Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00BC2 Sleep          09 0a 19 00                             
+  0x00BC6 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00BCA Plc_flg        43 00 80 00                             
+  0x00BCE Sleep          09 0a 19 00                             
+  0x00BD2 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00BD6 Sleep          09 0a 19 00                             
+  0x00BDA Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00BDE Plc_flg        43 00 80 00                             
+  0x00BE2 Sleep          09 0a 1a 00                             
+  0x00BE6 Message_on     2b 04 00 00                               ; Message_on 4  "Officer: Elza, huh? I'm Roy."
+  0x00BEA Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00BED Nop            00                                      
+  0x00BEE Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00BF2 Sleep          09 0a 64 00                             
+  0x00BF6 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00BFA Plc_flg        43 00 04 00                             
+  0x00BFE Sleep          09 0a 02 00                             
+  0x00C02 Message_on     2b 05 00 00                               ; Message_on 5  "Elza: That wound... did one of / those things get you? How horrible..."
+  0x00C06 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00C09 Nop            00                                      
+  0x00C0A Plc_neck       41 04 04 00 00 00 00 00 5e 5e           
+  0x00C14 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00C18 Sleep          09 0a 19 00                             
+  0x00C1C Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00C20 Plc_flg        43 00 80 00                             
+  0x00C24 Sleep          09 0a 19 00                             
+  0x00C28 Plc_neck       41 01 30 f8 c0 e0 1a 1d 64 64           
+  0x00C32 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00C36 Sleep          09 0a 19 00                             
+  0x00C3A Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00C3E Plc_flg        43 00 80 00                             
+  0x00C42 Sleep          09 0a 1a 00                             
+  0x00C46 Message_on     2b 06 00 00                               ; Message_on 6  "Roy: This precinct isn't safe anymore."
+  0x00C4A Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00C4D Nop            00                                      
+  0x00C4E Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00C52 Sleep          09 0a 32 00                             
+  0x00C56 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00C5A Plc_flg        43 00 80 00                             
+  0x00C5E Sleep          09 0a 33 00                             
+  0x00C62 Message_on     2b 07 00 00                               ; Message_on 7  "Roy: Those things broke through the / rear shutters and got inside."
+  0x00C66 Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00C6A Sleep          09 0a 64 00                             
+  0x00C6E Message_on     2b 08 00 00                               ; Message_on 8  "Roy: Those bastards at Umbrella / caused all of this..."
+  0x00C72 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00C76 Sleep          09 0a 32 00                             
+  0x00C7A Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00C7E Plc_flg        43 00 80 00                             
+  0x00C82 Sleep          09 0a 32 00                             
+  0x00C86 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00C8A Plc_flg        43 00 04 00                             
+  0x00C8E Sleep          09 0a 02 00                             
+  0x00C92 Message_on     2b 09 00 00                               ; Message_on 9  "Elza: ...What do you mean?"
+  0x00C96 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00C99 Nop            00                                      
+  0x00C9A Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00C9E Sleep          09 0a 32 00                             
+  0x00CA2 Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00CA6 Plc_flg        43 00 80 00                             
+  0x00CAA Sleep          09 0a 33 00                             
+  0x00CAE Message_on     2b 0a 00 00                               ; Message_on 10  "Roy: groans"
+  0x00CB2 Sleep          09 0a 64 00                             
+  0x00CB6 Message_on     2b 0b 00 00                               ; Message_on 11  "Elza: Are you okay?"
+  0x00CBA Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00CBE Sleep          09 0a 32 00                             
+  0x00CC2 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00CC6 Plc_flg        43 00 80 00                             
+  0x00CCA Sleep          09 0a 33 00                             
+  0x00CCE Message_on     2b 0c 00 00                               ; Message_on 12  "Roy: We don't have time to talk / right now."
+  0x00CD2 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00CD5 Nop            00                                      
+  0x00CD6 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00CDA Sleep          09 0a 32 00                             
+  0x00CDE Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00CE2 Plc_flg        43 00 80 00                             
+  0x00CE6 Sleep          09 0a 33 00                             
+  0x00CEA Message_on     2b 0d 00 00                               ; Message_on 13  "Roy: You have to rescue the survivors / in the other rooms."
+  0x00CEE Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00CF2 Sleep          09 0a 64 00                             
+  0x00CF6 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00CFA Plc_flg        43 00 04 00                             
+  0x00CFE Sleep          09 0a 02 00                             
+  0x00D02 Message_on     2b 0e 00 00                               ; Message_on 14  "Elza: But..."
+  0x00D06 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D09 Nop            00                                      
+  0x00D0A Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00D0E Sleep          09 0a 32 00                             
+  0x00D12 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00D16 Plc_flg        43 00 80 00                             
+  0x00D1A Sleep          09 0a 33 00                             
+  0x00D1E Message_on     2b 0f 00 00                               ; Message_on 15  "Roy: My friend John should still be / in the underground cell block."
+  0x00D22 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00D25 Nop            00                                      
+  0x00D26 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00D2A Sleep          09 0a 32 00                             
+  0x00D2E Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00D32 Plc_flg        43 00 80 00                             
+  0x00D36 Sleep          09 0a 33 00                             
+  0x00D3A Message_on     2b 10 00 00                               ; Message_on 16  "Roy: Please, you have to help him..."
+  0x00D3E Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00D42 Sleep          09 0a 32 00                             
+  0x00D46 Plc_motion     3f 00 07 00                               ; Plc_motion 0,7,0
+  0x00D4A Plc_flg        43 00 80 00                             
+  0x00D4E Sleep          09 0a 33 00                             
+  0x00D52 Cut_chg        29 01                                     ; Cut_chg 1
+  0x00D54 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x00D58 Sleep          09 0a 64 00                             
+  0x00D5C Message_on     2b 11 00 00                               ; Message_on 17  "Elza: Roy, wake up! Please wake up!"
+  0x00D60 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D63 Nop            00                                      
+  0x00D64 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00D68 Sleep          09 0a 19 00                             
+  0x00D6C Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00D70 Plc_flg        43 00 80 00                             
+  0x00D74 Sleep          09 0a 19 00                             
+  0x00D78 Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00D7C Sleep          09 0a 19 00                             
+  0x00D80 Plc_motion     3f 00 06 00                               ; Plc_motion 0,6,0
+  0x00D84 Plc_flg        43 00 80 00                             
+  0x00D88 Sleep          09 0a 19 00                             
+  0x00D8C Plc_neck       41 04 04 00 00 00 00 00 5e 5e           
+  0x00D96 Sleep          09 0a 32 00                             
+  0x00D9A Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x00D9E Plc_flg        43 00 04 00                             
+  0x00DA2 Sleep          09 0a 64 00                             
+  0x00DA6 Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x00DB0 Sleep          09 0a 01 00                             
+  0x00DB4 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00DB8 Plc_flg        43 00 80 00                             
+  0x00DBC Sleep          09 0a 28 00                             
+  0x00DC0 Aot_reset      46 05 03 31 ff 00 18 06 00 00             ; Aot_reset slot=5 sce=3 ev->sub06
+  0x00DCA Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x00DCE Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x00DD2 Cut_auto       3c 01                                   
+  0x00DD4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00DD7 Nop            00                                      
+  0x00DD8 Plc_ret        42                                      
+  0x00DD9 Nop            00                                      
+  0x00DDA Evt_end        01 00                                   
+
+=== sub03
+  0x00DDC Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00DDF Nop            00                                      
+  0x00DE0 Plc_motion     3f 00 05 00                               ; Plc_motion 0,5,0
+  0x00DE4 Plc_flg        43 00 04 00                             
+  0x00DE8 Evt_end        01 00                                   
+
+=== sub04
+  0x00DEA Set            22 05 00 00                               ; SET (5,0x00)=0
+  0x00DEE While          0f 04 08 00                             
+  0x00DF2 Ck             21 05 00 00                               ; Ck(5,0x00)==0
+  0x00DF6 Evt_next       02                                      
+  0x00DF7 Nop            00                                      
+  0x00DF8 Ewhile         10 00                                   
+  0x00DFA Evt_end        01 00                                   
+
+=== sub05
+  0x00DFC Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00DFF Nop            00                                      
+  0x00E00 Plc_motion     3f 00 0d 00                               ; Plc_motion 0,13,0
+  0x00E04 Plc_flg        43 00 04 00                             
+  0x00E08 Evt_end        01 00                                   
+
+=== sub06
+  0x00E0A Aot_reset      46 05 00 00 00 00 00 00 00 00             ; Aot_reset slot=5 sce=0 ev->sub00
+  0x00E14 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00E17 Nop            00                                      
+  0x00E18 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00E1C Sleep          09 0a 1e 00                             
+  0x00E20 Message_on     2b 13 ff ff                               ; Message_on 19  "He is holding something..."
+  0x00E24 Evt_next       02                                      
+  0x00E25 Nop            00                                      
+  0x00E26 Message_on     2b 14 ff ff                               ; Message_on 20  "You've taken the Prison key."
+  0x00E2A Evt_next       02                                      
+  0x00E2B Nop            00                                      
+  0x00E2C Set            22 04 ec 01                               ; SET (4,0xEC)=1
+  0x00E30 Set            22 03 78 01                               ; SET (3,0x78)=1
+  0x00E34 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00E38 Plc_flg        43 00 80 00                             
+  0x00E3C Sleep          09 0a 1e 00                             
+  0x00E40 Plc_ret        42                                      
+  0x00E41 Nop            00                                      
+  0x00E42 Aot_reset      46 05 03 31 ff 00 18 07 00 00             ; Aot_reset slot=5 sce=3 ev->sub07
+  0x00E4C Evt_end        01 00                                   
+
+=== sub07
+  0x00E4E Aot_reset      46 05 00 00 00 00 00 00 00 00             ; Aot_reset slot=5 sce=0 ev->sub00
+  0x00E58 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00E5B Nop            00                                      
+  0x00E5C Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00E60 Sleep          09 0a 1e 00                             
+  0x00E64 Message_on     2b 12 ff ff                               ; Message_on 18  "He has passed out from his injuries.He is holding a slip.The numbers 0513" are / printed on the slip."
+  0x00E68 Evt_next       02                                      
+  0x00E69 Nop            00                                      
+  0x00E6A Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00E6E Plc_flg        43 00 80 00                             
+  0x00E72 Sleep          09 0a 1e 00                             
+  0x00E76 Plc_ret        42                                      
+  0x00E77 Nop            00                                      
+  0x00E78 Aot_reset      46 05 03 31 ff 00 18 07 00 00             ; Aot_reset slot=5 sce=3 ev->sub07
+  0x00E82 Evt_end        01 00                                   

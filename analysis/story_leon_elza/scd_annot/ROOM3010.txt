@@ -1,0 +1,134 @@
+ROOM3010  (re15_port/shared_assets/PSX/STAGE3/ROOM3010.RDT)
+
+=== main00
+  0x01FD2 Door_aot_set   3b 00 02 31 00 00 58 9e 7c 29 40 06 ..    ; Door_aot_set slot=0 sce=2 -> ROOM3000 cut=3
+  0x01FF2 Door_aot_set   3b 01 02 31 00 00 9c e3 ce 22 82 05 ..    ; Door_aot_set slot=1 sce=2 -> ROOM3060 cut=0
+  0x02012 Door_aot_set   3b 02 02 31 01 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=2 sce=2 -> ROOM30E0 cut=0
+  0x02032 Ifel_ck        06 00 28 00                             
+  0x02036   Ck             21 03 47 00                               ; Ck(3,0x47)==0
+  0x0203A   Door_aot_set   3b 03 02 31 00 00 e0 e3 00 b5 78 05 ..    ; Door_aot_set slot=3 sce=2 -> ROOM3020 cut=7
+  0x0205A   Else_ck        07 00 26 00                             
+  0x0205E   Door_aot_set   3b 03 02 31 00 00 e0 e3 00 b5 78 05 ..    ; Door_aot_set slot=3 sce=2 -> ROOM30D0 cut=15
+  0x0207E   Nop            00                                      
+  0x0207F   Nop            00                                      
+  0x02080 Aot_set        2c 04 0d 31 80 00 30 a8 7c b6 80 07 ..    ; Aot_set slot=4 sce=13 ev->sub00 (01 00 01 00)
+  0x02094 Item_aot_set   50 05 09 31 01 00 db d6 3a 03 30 02 ..    ; Item_aot_set slot=5 ITEM 0x16 Shotgun Shells x7 flag=20
+  0x020AA Ifel_ck        06 00 1c 00                             
+  0x020AE   Ck             21 03 3b 00                               ; Ck(3,0x3B)==0
+  0x020B2   Aot_set        2c 06 01 31 01 00 c0 95 70 ae 84 03 ..    ; Aot_set slot=6 TEXT msg 0 "It's locked.An ID card is required to open it."
+  0x020C6   Else_ck        07 00 48 00                             
+  0x020CA   Ifel_ck        06 00 1c 00                             
+  0x020CE     Ck             21 03 3c 00                               ; Ck(3,0x3C)==0
+  0x020D2     Aot_set        2c 06 03 31 01 00 c0 95 70 ae 84 03 ..    ; Aot_set slot=6 sce=3 ev->sub02 (ff 00 18 02)
+  0x020E6     Else_ck        07 00 26 00                             
+  0x020EA     Door_aot_set   3b 06 02 31 01 00 c0 95 70 ae 84 03 ..    ; Door_aot_set slot=6 sce=2 -> ROOM30E0 cut=0
+  0x0210A     Nop            00                                      
+  0x0210B     Nop            00                                      
+  0x0210C   Nop            00                                      
+  0x0210D   Nop            00                                      
+  0x0210E Ifel_ck        06 00 0c 00                             
+  0x02112   Ck             21 04 0a 00                               ; Ck(4,0x0A)==0
+  0x02116   Set            22 05 00 01                               ; SET (5,0x00)=1
+  0x0211A   Else_ck        07 00 e6 00                             
+  0x0211E   Set            22 05 00 00                               ; SET (5,0x00)=0
+  0x02122   Sce_em_set     44 00 10 84 01 00 00 40 08 a3 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x10 beh=0x84 pos=(-23800, -1800, -2100) yaw=800 b4..7=01 00 00 40
+  0x02136   Sce_em_set     44 01 10 84 00 00 01 41 74 dc 00 00 ..    ; Sce_em_set slot=1 TYP=0x10 beh=0x84 pos=(-9100, 0, -19800) yaw=111 b4..7=00 00 01 41
+  0x0214A   Sce_em_set     44 02 11 84 00 00 01 42 30 ad 00 00 ..    ; Sce_em_set slot=2 TYP=0x11 beh=0x84 pos=(-21200, 0, -9100) yaw=3390 b4..7=00 00 01 42
+  0x0215E   Ifel_ck        06 00 4a 00                             
+  0x02162     Cmp            23 00 0b 00 06 00                         ; Cmp(var0B op0 6)
+  0x02168     Set            22 05 01 01                               ; SET (5,0x01)=1
+  0x0216C     Sce_em_set     44 03 11 88 00 00 01 43 9c cd 00 00 ..    ; Sce_em_set slot=3 TYP=0x11 beh=0x88 pos=(-12900, 0, 9000) yaw=2592 b4..7=00 00 01 43
+  0x02180     Sce_em_set     44 04 11 87 00 00 01 44 68 c5 00 00 ..    ; Sce_em_set slot=4 TYP=0x11 beh=0x87 pos=(-15000, 0, 7704) yaw=3712 b4..7=00 00 01 44
+  0x02194     Aot_set        2c 07 05 41 00 00 3c e1 b9 21 90 01 ..    ; Aot_set slot=7 sce=5 ev->sub00 (00 00 00 00)
+  0x021A8     Else_ck        07 00 2e 00                             
+  0x021AC     Sce_em_set     44 03 11 85 00 00 01 43 9c cd 00 00 ..    ; Sce_em_set slot=3 TYP=0x11 beh=0x85 pos=(-12900, 0, 9000) yaw=2592 b4..7=00 00 01 43
+  0x021C0     Sce_em_set     44 04 11 84 00 00 01 44 68 c5 00 00 ..    ; Sce_em_set slot=4 TYP=0x11 beh=0x84 pos=(-15000, 0, 7704) yaw=3712 b4..7=00 00 01 44
+  0x021D4     Nop            00                                      
+  0x021D5     Nop            00                                      
+  0x021D6   Sce_em_set     44 05 11 84 00 00 01 45 44 cb 00 00 ..    ; Sce_em_set slot=5 TYP=0x11 beh=0x84 pos=(-13500, 0, -19400) yaw=1344 b4..7=00 00 01 45
+  0x021EA   Sce_em_set     44 06 11 83 01 00 01 46 b4 d7 f8 f8 ..    ; Sce_em_set slot=6 TYP=0x11 beh=0x83 pos=(-10316, -1800, -3946) yaw=2263 b4..7=01 00 01 46
+  0x021FE   Nop            00                                      
+  0x021FF   Nop            00                                      
+  0x02200 Evt_end        01 00                                   
+
+=== sub00
+  0x0220A Ifel_ck        06 00 50 00                             
+  0x0220E   Ck             21 04 c7 01                               ; Ck(4,0xC7)==1
+  0x02212   Sce_em_set     44 00 40 00 00 00 00 ff 8c a6 00 00 ..    ; Sce_em_set slot=0 TYP=0x40 beh=0x00 pos=(-22900, 0, 10850) yaw=0 b4..7=00 00 00 ff
+  0x02226   Switch         13 0a 32 00                             
+  0x0222A     Case           14 00 12 00 00 00                       
+  0x02230     Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x02233     Nop            00                                      
+  0x02234     Member_set     34 00 4a e3                               ; Member_set m=0x00 val=-7350
+  0x02238     Member_set     34 02 4a 2e                               ; Member_set m=0x02 val=11850
+  0x0223C     Member_set     34 04 00 08                               ; Member_set m=0x04 val=2048
+  0x02240     Break          1a 00                                   
+  0x02242     Case           14 00 12 00 06 00                       
+  0x02248     Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0224B     Nop            00                                      
+  0x0224C     Member_set     34 00 18 e3                               ; Member_set m=0x00 val=-7400
+  0x02250     Member_set     34 02 54 c0                               ; Member_set m=0x02 val=-16300
+  0x02254     Member_set     34 04 00 08                               ; Member_set m=0x04 val=2048
+  0x02258     Break          1a 00                                   
+  0x0225A     Eswitch        16 00                                   
+  0x0225C   Endif          08 00                                   
+  0x0225E Evt_end        01 00                                   
+
+=== sub01
+  0x02260 Ifel_ck        06 00 68 00                             
+  0x02264   Ck             21 05 00 00                               ; Ck(5,0x00)==0
+  0x02268   Nop            00                                      
+  0x02269   Nop            00                                      
+  0x0226A   Switch         13 0a 5c 00                             
+  0x0226E     Case           14 00 08 00 00 00                       
+  0x02274     Col_chg_set    45 00 00                                
+  0x02277     Col_chg_set    45 01 00                                
+  0x0227A     Break          1a 00                                   
+  0x0227C     Case           14 00 0e 00 01 00                       
+  0x02282     Col_chg_set    45 00 00                                
+  0x02285     Col_chg_set    45 01 00                                
+  0x02288     Col_chg_set    45 05 00                                
+  0x0228B     Col_chg_set    45 06 00                                
+  0x0228E     Break          1a 00                                   
+  0x02290     Case           14 00 06 00 02 00                       
+  0x02296     Col_chg_set    45 00 00                                
+  0x02299     Nop            00                                      
+  0x0229A     Break          1a 00                                   
+  0x0229C     Case           14 00 08 00 03 00                       
+  0x022A2     Col_chg_set    45 00 00                                
+  0x022A5     Col_chg_set    45 01 00                                
+  0x022A8     Break          1a 00                                   
+  0x022AA     Case           14 00 06 00 04 00                       
+  0x022B0     Col_chg_set    45 00 00                                
+  0x022B3     Nop            00                                      
+  0x022B4     Break          1a 00                                   
+  0x022B6     Case           14 00 08 00 06 00                       
+  0x022BC     Col_chg_set    45 02 00                                
+  0x022BF     Col_chg_set    45 03 00                                
+  0x022C2     Break          1a 00                                   
+  0x022C4     Default        15 00 1a 00                             
+  0x022C8     Eswitch        16 00                                   
+  0x022CA   Endif          08 00                                   
+  0x022CC Ifel_ck        06 00 30 00                             
+  0x022D0   Ck             21 05 01 01                               ; Ck(5,0x01)==1
+  0x022D4   Ifel_ck        06 00 26 00                             
+  0x022D8     Cmp            23 00 01 00 07 00                         ; Cmp(var01 op0 7)
+  0x022DE     Aot_reset      46 07 00 41 00 00 00 00 00 00             ; Aot_reset slot=7 sce=0 ev->sub00
+  0x022E8     Work_set       2e 02 03                                  ; Work_set -> NPC-Slot 3
+  0x022EB     Nop            00                                      
+  0x022EC     Member_set     34 0c 89 00                               ; Member_set m=0x0C val=137
+  0x022F0     Work_set       2e 02 04                                  ; Work_set -> NPC-Slot 4
+  0x022F3     Nop            00                                      
+  0x022F4     Member_set     34 0c 8a 00                               ; Member_set m=0x0C val=138
+  0x022F8     Set            22 05 01 00                               ; SET (5,0x01)=0
+  0x022FC     Endif          08 00                                   
+  0x022FE   Endif          08 00                                   
+  0x02300 Evt_end        01 00                                   
+
+=== sub02
+  0x02302 Set            22 03 3c 01                               ; SET (3,0x3C)=1
+  0x02306 Message_on     2b 01 ff ff                               ; Message_on 1  "You've used the Green Keycard."
+  0x0230A Evt_next       02                                      
+  0x0230B Nop            00                                      
+  0x0230C Aot_on         47 02                                   
+  0x0230E Evt_end        01 00                                   

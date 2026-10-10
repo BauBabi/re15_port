@@ -1,0 +1,58 @@
+ROOM2011  (re15_port/shared_assets/PSX/STAGE2/ROOM2011.RDT)
+
+=== main00
+  0x00746 Door_aot_set   3b 00 02 31 00 00 58 e9 58 e9 e8 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM2001 cut=14
+  0x00766 Item_aot_set   50 01 09 31 00 00 de f4 a8 e4 84 03 ..    ; Item_aot_set slot=1 ITEM 0x16 Shotgun Shells x7 flag=216
+  0x0077C Item_aot_set   50 02 09 31 00 00 de f4 a8 e4 84 03 ..    ; Item_aot_set slot=2 ITEM 0x16 Shotgun Shells x7 flag=217
+  0x00792 Item_aot_set   50 03 09 31 00 00 c4 09 5c 12 20 03 ..    ; Item_aot_set slot=3 ITEM 0x22 First Aid Spray x1 flag=218
+  0x007A8 Aot_set        2c 05 03 31 00 00 42 0e 38 e6 40 06 ..    ; Aot_set slot=5 sce=3 ev->sub03 (ff 00 18 03)
+  0x007BC Aot_set        2c 06 01 31 00 00 9c ff 30 11 78 05 ..    ; Aot_set slot=6 TEXT msg 3 "It's a computer.You can save your progress / with this.Save is not available in / this pre"
+  0x007D0 Aot_set        2c 07 01 31 00 00 02 08 0c e5 e8 03 ..    ; Aot_set slot=7 TEXT msg 4 "An old typewriter.Why use it if there are / computers?"
+  0x007E4 Obj_model_set  2d 00 00 00 01 00 00 00 00 00 3c 11 ..    ; Obj_model_set obj=0 pos=(4412,0,-6772)
+  0x00806 Obj_model_set  2d 01 00 00 01 00 0a 00 00 00 36 f7 ..    ; Obj_model_set obj=1 pos=(-2250,-300,-6875)
+  0x00828 Obj_model_set  2d 02 00 00 01 00 0a 00 00 00 0a f6 ..    ; Obj_model_set obj=2 pos=(-2550,-300,-6875)
+  0x0084A Obj_model_set  2d 04 00 00 01 00 0a 00 00 00 22 0b ..    ; Obj_model_set obj=4 pos=(2850,-1400,6125)
+  0x0086C Evt_end        01 00                                   
+
+=== sub00
+  0x00878 Ifel_ck        06 00 3c 00                             
+  0x0087C   Ck             21 03 72 00                               ; Ck(3,0x72)==0
+  0x00880   Aot_set        2c 04 03 31 00 00 8c 0a f2 f9 e8 03 ..    ; Aot_set slot=4 sce=3 ev->sub02 (ff 00 18 02)
+  0x00894   Obj_model_set  2d 03 00 00 01 00 0a 00 00 00 86 0b ..    ; Obj_model_set obj=3 pos=(2950,-1400,-1075)
+  0x008B6   Endif          08 00                                   
+  0x008B8 Ifel_ck        06 00 1a 00                             
+  0x008BC   Ck             21 03 4a 01                               ; Ck(3,0x4A)==1
+  0x008C0   Sce_em_set     44 00 4b 40 00 00 00 ff 4e f3 00 00 ..    ; Sce_em_set slot=0 TYP=0x4B beh=0x40 pos=(-3250, 0, -5875) yaw=3072 b4..7=00 00 00 ff
+  0x008D4   Endif          08 00                                   
+  0x008D6 Evt_end        01 00                                   
+
+=== sub01
+  0x008D8 Evt_end        01 00                                   
+
+=== sub02
+  0x008DA Message_on     2b 00 ff ff                               ; Message_on 0  "Will you take the Crank? "
+  0x008DE Evt_next       02                                      
+  0x008DF Nop            00                                      
+  0x008E0 Ifel_ck        06 00 26 00                             
+  0x008E4   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x008E8   Set            22 03 72 01                               ; SET (3,0x72)=1
+  0x008EC   Aot_reset      46 04 00 00 00 00 00 00 00 00             ; Aot_reset slot=4 sce=0 ev->sub00
+  0x008F6   Work_set       2e 03 03                                  ; Work_set -> Prop obj 3
+  0x008F9   Nop            00                                      
+  0x008FA   Member_set     34 00 7c 2e                               ; Member_set m=0x00 val=11900
+  0x008FE   Sleep          09 0a 01 00                             
+  0x00902   Message_on     2b 01 ff ff                               ; Message_on 1  "You've taken the Crank."
+  0x00906   Evt_next       02                                      
+  0x00907   Nop            00                                      
+  0x00908   Endif          08 00                                   
+  0x0090A Evt_end        01 00                                   
+
+=== sub03
+  0x0090C Cut_chg        29 05                                     ; Cut_chg 5
+  0x0090E Message_on     2b 02 ff ff                               ; Message_on 2  "Itembox is not available in / this preview."
+  0x00912 Evt_next       02                                      
+  0x00913 Nop            00                                      
+  0x00914 Cut_old        2a                                      
+  0x00915 Nop            00                                      
+  0x00916 Cut_auto       3c 01                                   
+  0x00918 Evt_end        01 00                                   

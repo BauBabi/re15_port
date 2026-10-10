@@ -1,0 +1,77 @@
+ROOM1240  (re15_port/shared_assets/PSX/STAGE1/ROOM1240.RDT)
+
+=== main00
+  0x0051A Door_aot_set   3b 00 02 31 00 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=0 sce=2 -> ROOM1170 cut=0
+  0x0053A Evt_end        01 00                                   
+
+=== sub00
+  0x00544 Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x00548 Evt_end        01 00                                   
+
+=== sub01
+  0x0054A Ifel_ck        06 00 0a 00                             
+  0x0054E   Sce_key_ck     51 01 40 00                               ; Sce_key_ck(01 40 00)
+  0x00552   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x00556   Endif          08 00                                   
+  0x00558 Evt_end        01 00                                   
+
+=== sub02
+  0x0055A Set            22 03 8b 01                               ; SET (3,0x8B)=1
+  0x0055E Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00562 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00566 Cut_chg        29 00                                     ; Cut_chg 0
+  0x00568 Sleep          09 0a a0 00                             
+  0x0056C Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x00570 Sleep          09 0a 02 00                             
+  0x00574 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00578 Cut_chg        29 01                                     ; Cut_chg 1
+  0x0057A Sleep          09 0a 14 00                             
+  0x0057E Message_on     2b 00 00 00                               ; Message_on 0  "A bizarre incident occurred in the / outskirts of an American suburb called / Raccoon City."
+  0x00582 Sleep          09 0a b4 00                             
+  0x00586 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x0058A Sleep          09 0a 02 00                             
+  0x0058E Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00592 Cut_chg        29 02                                     ; Cut_chg 2
+  0x00594 Sleep          09 0a 14 00                             
+  0x00598 Message_on     2b 01 00 00                               ; Message_on 1  "It was later revealed that the terrible / disaster had been caused by the T-Virus,"
+  0x0059C Sleep          09 0a b4 00                             
+  0x005A0 Message_on     2b 02 00 00                               ; Message_on 2  "a mutagenic toxin created by the / international corporation Umbrella / incorporated."
+  0x005A4 Sleep          09 0a b4 00                             
+  0x005A8 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x005AC Sleep          09 0a 02 00                             
+  0x005B0 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x005B4 Cut_chg        29 03                                     ; Cut_chg 3
+  0x005B6 Sleep          09 0a 14 00                             
+  0x005BA Message_on     2b 03 00 00                               ; Message_on 3  "The Raccoon police department special / S.T.A.R.S Unit began an immediate / investigation."
+  0x005BE Sleep          09 0a 5a 00                             
+  0x005C2 Cut_chg        29 04                                     ; Cut_chg 4
+  0x005C4 Sleep          09 0a 5a 00                             
+  0x005C8 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x005CC Sleep          09 0a 02 00                             
+  0x005D0 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x005D4 Cut_chg        29 05                                     ; Cut_chg 5
+  0x005D6 Sleep          09 0a 14 00                             
+  0x005DA Message_on     2b 04 00 00                               ; Message_on 4  "The case was apparently closed thanks / to the efforts of S.T.A.R.S members / Chris Redfield and Jill Valentine."
+  0x005DE Sleep          09 0a 5a 00                             
+  0x005E2 Cut_chg        29 06                                     ; Cut_chg 6
+  0x005E4 Sleep          09 0a 5a 00                             
+  0x005E8 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x005EC Sleep          09 0a 02 00                             
+  0x005F0 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x005F4 Cut_chg        29 07                                     ; Cut_chg 7
+  0x005F6 Sleep          09 0a 14 00                             
+  0x005FA Message_on     2b 05 00 00                               ; Message_on 5  "But the umbrella corporation's / experiments were far from finished."
+  0x005FE Sleep          09 0a 50 00                             
+  0x00602 Cut_chg        29 08                                     ; Cut_chg 8
+  0x00604 Sleep          09 0a 50 00                             
+  0x00608 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x0060C Sleep          09 0a 02 00                             
+  0x00610 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00614 Sleep          09 0a 5a 00                             
+  0x00618 Aot_on         47 00                                   
+  0x0061A Evt_end        01 00                                   
+
+=== sub03
+  0x0061C Sleep          09 0a 01 00                             
+  0x00620 Aot_on         47 00                                   
+  0x00622 Evt_end        01 00                                   
