@@ -74,6 +74,7 @@
 #include "re15_enemy_ai.h"   /* re15_body_push, victim shims, re15_actor_clip_len */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2-Bank des Welle-A-Loaders) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex / re15_esp_fx_splatter (Stand-ins) */
+#include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Kraehen-Wundstempel am RE2-Griff */
 #include "re15_collision.h"  /* re15_collision_constrain_enemy (SCA-Wand-Klemme) */
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok */
 #include <stdio.h>
@@ -1119,6 +1120,7 @@ static void re2c_exec14_grab(re15_actor_t *e, re15_actor_t *pl)
              * selbst gelesen: Ph0 Clip 0 @0x801047B8, Hold Clip 1 @0x801047D8-EC,
              * Release Clip 2 @0x80102844-50, Ende → PL (1,0) @0x80104870-80). */
             re15_re2z_victim_begin(e, pl, 0);              /* Front-Variante (aca59=0-Analog) */
+            re15_kleidung_kraehe(e, pl);                   /* Runde 36 Spur B: RE1.5-Kraehen-Stempel 0x801161e8 (Griff-Eintritt @0x80113ef4) am RE2-Griff */
         }
         e->y = (int32_t)e->re2d_turn224;                   /* y-Snap auf Harass-Hoehe @0x80102580-88 */
         re15_enemy_steer_point(e, pl->x, pl->z, 2048);     /* Snap-Turn @0x8010258C-A0 */

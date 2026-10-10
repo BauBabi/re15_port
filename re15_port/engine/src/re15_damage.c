@@ -140,10 +140,12 @@ void re15_wound_add(int panel, int amount)
 {
     if (panel < 0 || panel > 7) return;
     re15_wound_t *w = &s_wounds[panel];
-    int sum = (int)w->acc + amount;               /* lbu +1; addu (@0x80037f04) — Vergleich auf
-                                                   * dem UNtrunkierten Register wie das Original */
+    int sum = (int)w->acc + amount;               /* lbu +1; addu (@0x80037f04) */
     w->acc = (uint8_t)sum;                        /* sb (@0x80037f08) */
-    if (sum < 0x78) return;                       /* @0x80037f14 sltiu 0x78: <120 -> nur Akku */
+    /* Runde 36 Spur B (selbst disassembliert): der Vergleich liest das Byte NEU — `lbu v0,1(t0)`
+     * @0x80037f0c nach dem `sb` @0x80037f08 — also den auf 8 Bit gekuerzten Akku, nicht das
+     * Register. (Mit den ausgelieferten Betraegen <= 0x32 nie > 169, ohne sichtbare Folge.) */
+    if ((sum & 0xff) < 0x78) return;              /* @0x80037f14 sltiu 0x78: <120 -> nur Akku */
     w->acc = 0;                                   /* @0x80037f24 */
     w->level = (uint8_t)(w->level + 1);           /* @0x80037f2c */
     if (w->level >= 3) w->level = 2;              /* @0x80037f40/f50 Level-Clamp auf 2 */

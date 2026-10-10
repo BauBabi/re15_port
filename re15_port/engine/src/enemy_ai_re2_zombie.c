@@ -85,6 +85,7 @@ const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
 #include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
+#include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Phase-4-Wundstempel (@0x8010a4e8) am RE2-Abwurf */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -1864,6 +1865,7 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
         e->ai_flags &= (uint16_t)~1u;                              /* port latch off (RE1.5 [4] twin) */
         re15_player_victim_throwoff();                             /* PL+0x6=4 shake-off (P3 wrote it
                                                                     * on BOTH sides @0x8010288C-94) */
+        re15_kleidung_abwurf(e->type, (int)re15_player_victim_variant());   /* Runde 36 Spur B: RE1.5-Opfer-FSM Phase 4 @0x8010a4e8 (Blut + Wundstempel 0x801201b8[aca59]) — RE2 kennt das Merkmal nicht, der Port traegt es gehirn-unabhaengig */
         e->sub_state_2 = 5;                                        /* sb 5,6(s1) @0x8010298C */
         break;
     case 5: {                                                      /* P5 @0x801029A4: escape latch */
