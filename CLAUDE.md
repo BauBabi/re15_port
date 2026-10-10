@@ -72,6 +72,7 @@ Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschr
 
 **Format-Referenz (statt Formate zu raten):**
 - `RE15_KNOWLEDGE.md` — alle Dateiformate (§1.1 RDT, §1.2 SCD, §1.3 BSS, §1.4 EMD, §1.5 PLD, §1.6 TIM, §1.7 ESP, §1.8 VAB, … bis §1.19). Das ist die Format-Referenz in reAi_v2. (Das alte `DOCUMENTATION.md`/`docs/` wurde nicht übernommen.)
+- `RE2_SOUND_LISTE.md` — die RE2-Tonbänke (SAP-Liste des Nutzers, 2026-10-10: CORE/ENEMY/ROOM/WEAPON mit Inhalt). Wer einen RE2-Ton sucht (Beta→Retail: Sound ist RE2), schaut ZUERST hier, dann in `info/re2leon/` (gleiche Nummern).
 - `info/Resident_Evil_und_Playstation_Information/`: `psx-spx.github.io-master` (kanonische PSX-Hardware-Spec), `BioClone Redux*`/`bioclone-remake-main`/`BioModels-master` (RE-Engine-RE-Referenz), `RE15Data`/`RE15Editor`/`re1.5-specific` (RE1.5-spezifisch), `information*.txt` (Format-Notizen), `PSYQ_SDK`/`PSn00bSDK-*` (SDK-Header + `psyq*.gdt`), `3dgraph.pdf` (GTE/3D).
 
 **Dynamisch (wenn statisch nicht reicht):**
