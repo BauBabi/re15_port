@@ -17,7 +17,24 @@ Eigentuemer laut VERTRAG §1.4: "E = RE15_ACTOR_MAX + alle Arrays".
 - [start] Baum sauber auf 78a4a748; AUFTRAG/VERTRAG gelesen; L_cut1150.md §10.1/§10.5 (Vorrunde) gelesen.
 
 ## 2. Messung vorher
-(folgt)
+
+Gebauter Stand = Basis 78a4a748 (RE15_ACTOR_MAX 16), exe-Kopie `re15_pc_r36e_mess.exe` neben der exe, eigener
+Arbeitsordner je Lauf (Werkzeug scratchpad `E36/lauf.sh`): `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp
+RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1 RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log RE15_DEBUG_JUMP=<raum>@250
+RE15_EXIT_AT=200#<raum>`, Tot-Bits per `RE15_SET_FLAG` (Zone 7 = re15_em_status_zone Stage 1-3). Gezaehlt: aktive
+Gegner in der letzten state.log-Zeile (Bild 200 im Raum).
+
+| Lauf | Tot-Bits | Records im Skript (spawn-diag) | aktive Gegner Bild 200 (vorher) |
+|---|---|---|---|
+| v1030_alle | keine | 20 (Slots 0..19) | 6: Aktor 1..6 (Limit 6 @0x1de2) |
+| v1030_tot15 | 7:0..7:14 (Records 0..14 tot) | 20 | **0** |
+| v1040_alle | keine | 20 (Else-Zweig @0x1390..) | 5: Aktor 1..5 (Limit 5 @0x11f0) |
+| v1040_tot15 | 7:20..7:34 (Records 0..14 tot) | 20 | **0** |
+
+Befund reproduziert: sind die Records 0..14 erledigt, ist der Raum im Port leer; die Records 15..19 (Slots 15..19 =
+Aktor 16..20) passieren Tot-Bit-Gate und Limit, werden dann von `op_sce_em_set` (`actor_slot < RE15_ACTOR_MAX`) verworfen.
+Im Original stehen dort fuenf (§3: Feld mit 20 Plaetzen, Limit 6/5 nicht erreicht).
+Keine Regression (seit jeher so, AUFTRAG: "das war auch vorher schon so") -> kein Bisect.
 
 ## 3. RE-Belege (Adressen, Bytes)
 
@@ -87,7 +104,19 @@ Ueberlauf des Prototyps, kein 21. Platz. Der Port verwirft sie weiter (Aktor > 2
 (folgt)
 
 ## 6. Messung nachher
-(folgt)
+
+### 6.1 exe, gleiche Laeufe wie §2 (Stand mit RE15_ACTOR_MAX 21)
+| Lauf | aktive Gegner Bild 200 (nachher) |
+|---|---|
+| n1030_alle | 6: Aktor 1..6 (unveraendert) |
+| n1030_tot15 | **5: Aktor 16..20 = Records 15..19** (Typ 0x16, Zustand 1) |
+| n1040_alle | 5: Aktor 1..5 (unveraendert) |
+| n1040_tot15 | **5: Aktor 16..20 = Records 15..19**, hinter dem Tor (x -29052..-29108, z 12693..18515) |
+
+ROOM1030: die fuenf stehen im Bild 1 auf den Plaetzen der Records 0..4 (Aktor 16 @(-8978,-27878) = Record 0 @0x1de6) —
+das ist die raumeigene Aufstellung (sub00 For-20-Schleife mit Opcode 0x53 Art 2 ueber die 20 Plaetze, @0x020CE..@0x0216E,
+s. §3.2 Punkt 3), dieselbe, die bisher die Aktoren 1..6 setzte; danach gehen sie auf den Spieler zu (Aktor 16: d 5369 ->
+3347 in 160 Bildern).
 
 ## 7. Tests (Namen, Ergebnis)
 (folgt)

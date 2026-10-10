@@ -19,7 +19,18 @@
 
 #include <stdint.h>
 
-#define RE15_ACTOR_MAX        16
+/* Spieler + 20 Gegner-Plaetze (Runde 36 Spur E, Dossier analysis/befunde_runde36/E_gegnerzahl.md §3).
+ * Das Original fuehrt ein Gegner-Feld mit ZWANZIG Plaetzen ab 0x800acc2c, Stride 0x1F4:
+ *   - FUN_80037250 laeuft es mit Umbruch bei 20 ab: `sltiu v0,v0,0x14` @0x800372b4, Umbruch auf
+ *     0x800acc2c @0x800372c4/@0x800372c8;
+ *   - das naechste Feld (NPC-Licht, FUN_80039b2c/FUN_80039ca0) beginnt genau bei 0x800acc2c + 20*0x1F4
+ *     = 0x800af33c (`addiu v1,v1,0x11cc` @0x80039b38 + `addiu v1,v1,-0x1e90` @0x80039b40).
+ * Sce_em_set (0x800420a0) legt Slot = pc[1] & 0x7f (@0x800420f8) ohne Grenzpruefung ab
+ * (Entity = 0x800acc2c + Slot*0x1F4, @0x800420dc/@0x80042118); der Port fuehrt Slot s als Aktor s+1
+ * (scd_vm.c SCRIPT_SLOT_TO_ACTOR). Bis Runde 35 stand hier 16 (= 15 Gegner): ROOM1030/1031/1040/1041
+ * (Slots 0..19) verloren damit ihre Records 15..19. Slots >= 20 (nur ROOM20B0/20B1, FX-Emitter 0x24,
+ * Slots 0..34) liegen im Original HINTER dem Feld (Ueberlauf ins NPC-Feld) und bleiben verworfen. */
+#define RE15_ACTOR_MAX        21
 #define RE15_ACTOR_SLOT_PLAYER 0   /* Slot 0 is always the player (RE2-pure) */
 
 /* T-round (2026-05-25): RE2 actor flag bits at +0x1c4 — control anim FSM. */
