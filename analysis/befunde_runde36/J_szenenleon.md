@@ -135,6 +135,22 @@ Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder 
   `41 00 00 00 00 00 00 00 64 00` (Marvin) bzw. ROOM1150 sub08 @0x012D2. Danach slewt die Kopf-FSM auf die Pose des
   Clips zurueck und haelt sie (kein Ziel mehr).
 
+### 4.2 Umsetzung
+- `engine/src/szenenleon_r36.c` irons_kopf_tick (aus re15_szl_tick, game_step_common.c neben re15_cut10f0_tick):
+  ROOM1150, Aktor-Slot 1 Typ 0x45, (9,73)=1 UND Todespose (state 4 / Motion-Sub 0 / Clip 2 = RE15_IT_IRONS_CLIP_TOT,
+  irons_tod_1150.c irons_pose) -> `neck_flags` (+0x1b8) = 0x12 (RE15_SZL_HALS_FREI; Form `ori v0,zero,0x12`
+  @0x80042614 / `sb v0,440(s0)` @0x80042618 bzw. Plc_neck Modus 0 caseD @0x80041ed8). Vor dem Armfall (Clips 4/3/6/5
+  der Sterbeszene) bleibt der Blick auf Leon. Die Kopf-FSM (skeleton_common.c) faehrt dann Yaw auf den Keyframe
+  (0x02 Release-Yaw @0x80037528-48) und die Gesamt-Neigung auf 0 (0x10 Pitch-Null @0x80037554-60).
+
+### 4.3 Messung vorher / nachher
+- VORHER (Stand 78a4a748): `git show 78a4a748:re15_port/engine/src/irons_tod_1150.c` enthaelt kein `neck` — die Spur
+  L/K-Todespose laesst +0x1b8 auf dem Spawn-INIT-Wert 0 (re15_npc_neck_spawn_init, Behavior 0x00 -> kein 0x12
+  @0x8004260c) = ENTITY-TRACKING des Spielers (+0x1a8 = &player @0x8011d314). Gemessen im Riegel als Gegenprobe
+  (gleicher Code-Pfad, lebend): Kopf-Akku -615 bei Leon auf dem Skript-Platz (0xafc6,0x9dc5), -491 bei Leon
+  (+3000,+2500) daneben — der Kopf folgt Leon.
+- NACHHER (unit_r36_szenenleon_irons): tot -> Flags 0x12, Kopf-Akku (Yaw 0, Pitch -153) an BEIDEN Standpunkten
+  gleich = Kopf auf der Clip-Pose, Neigung neutral, Leon egal. exe-Messung §4.4.
 ## §3 Punkt 3 — ROOM10F0: Kamera bleibt auf Leon, kein "Ploppen", nur Tuer-zu-Ton
 
 ### 3.1 Messung vorher (78a4a748, `RE15_DEBUG_JUMP=10f0@250`, Bilder 2560..2960/4, RE15_STATE_LOG)
@@ -170,6 +186,11 @@ Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder 
 - Pixel-Differenz aufeinanderfolgender Bilder (Schwelle 60, 2er-Schritt): bis F2668 wandert die Aenderung nach unten
   aus dem Bild (bbox y bis 215 = Unterkante des Bildfelds), **ab F2670 0 geaenderte Pixel** — die beiden Park-
   Zeitpunkte F2671..2675 und F2686..2690 aendern im Bild NICHTS: kein Ploppen.
+- Riegel unit_r36_szenenleon_abgang10f0 (echte VM, ROOM10F0 ab Raumaufbau): Zeile 23 B2466, danach KEIN
+  Kamerawechsel, Cut 2 bis zum Ende B2721; Marvin geparkt B2651 von (8247,-199), Ada B2676 von (8315,-246) — beide
+  Punkte projizieren in Cut 2 (RDT @0x0A0, re15_camera_build_view) AUSSERHALB des Bildfelds; genau ein Tuerton
+  (Bank 0x0E Satz 1) B2676 = im Bild des letzten Parkens (Programmfolge Pos_set -> Se_on -> Sleep 45).
+- unit_r35_cut10f0_* (7/7) bleiben gruen (Kamerafolge dort jetzt "2 0 1 2 0 2", letzter Cut 2).
 
 ## §2 Punkt 2 — Erweiterung der 11B0-Szene: Marvin schliesst die Werkstatt-Tuer ab
 
