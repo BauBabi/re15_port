@@ -1,6 +1,7 @@
 # Runde 36 — Spur B "kleidung" (2026-10-10)
 
-Zweig `r36/kleidung`, Basis master 5a9dbb7b (= v0.8.23 3ec5b1f8 + Auftrag). Dossier fortlaufend.
+Zweig `r36/kleidung`, Basis master 5a9dbb7b (= v0.8.23 3ec5b1f8 + Auftrag), zuletzt master 78a4a748 eingemergt.
+Dossier fortlaufend; Fortsetzung nach Sitzungslimit am 2026-10-10 14:20 (§0, §5.3, §6, §7 ergaenzt).
 
 ## Auftrag (Wortlaut, AUFTRAG.md Z.32)
 
@@ -8,6 +9,26 @@ Zweig `r36/kleidung`, Basis master 5a9dbb7b (= v0.8.23 3ec5b1f8 + Auftrag). Doss
 
 Spur-Zuteilung (VERTRAG.md §0): "Regression, bisecten, beheben, Pin". Keine Bank-9-Bits, keine
 Nachrichten-IDs, keine Ereignis-Nummern fuer Spur B.
+
+## 0. Wortlaut-Pruefung (kritisch, gegen den Satz des Nutzers)
+
+Der Nutzer beschreibt eine KORRELATION ("wenn er auf Warning/Danger runter kommt"), keinen Mechanismus.
+Im Original gibt es keine HP-gegatete Textur: FUN_8004ed6c (HP-Status >=0x50 -> 0, >=0x14 -> 1, sonst 2,
+Flag&2 -> 3) steuert nur das Inventar-Portrait (@0x800479ec-80047a54, blood_decals.md §3.4); der
+Wund-Akkumulator FUN_80037edc hat in der EXE KEINEN Aufrufer (Byte-Scan `jal 0x80037edc` = 0C00DFB7 ueber
+PSX.EXE: 0 Treffer; STAGE1.BIN 22, STAGE2 10, STAGE3 17, STAGE4 21, STAGE5 21, STAGE6 0). Die Korrelation
+entsteht, weil dieselben Griffe, die HP kosten, die Panels fuellen: RE2-Griff -30/-20/-30 HP, Stempel
++50 je Abwurf, Schwelle 120 -> der DRITTE ueberlebte Griff bringt Leon auf 20 HP (Caution/"Warning",
+naechster Treffer Danger) UND setzt die erste Wund-Stufe. Original-Ground-Truth dazu:
+stage_saves/mzd_blood_decals_hp30.sav (blood_decals.md §3.4) — hp 30 nach drei Griffen von vorn,
+Panels 5/7 Stufe 1. Der Port-Spielweg (§5.3) liefert dieselbe Kopplung: hp 100 -> 70 -> 50 -> 20,
+Panel 7 Stufe 1 beim dritten Abwurf, sichtbar auf der Weste (Bild). Damit ist der Wortlaut erfuellt:
+Leons Kleidung zeigt beim Abstieg auf Warning/Danger wieder Blut/Risse — unter dem Standardgehirn
+(RE2), auf dem echten Weg (Griffe, Spielstand vom Spiel geschrieben, CONTINUE), ohne Sprung.
+
+Was der Satz NICHT abdeckt und offen bleibt (§7): Gegner, deren Original-Stempel der Port nie trug
+(STAGE3-5 (0,0x32)-Stellen, Birkin) — dort kommt Leon auch heute ohne Decal auf Danger; das war vor
+der Regression genauso (nie portiert), ist also keine Regression und nicht Teil dieser Spur.
 
 ## 1. Messung vorher
 
@@ -198,10 +219,47 @@ ROOM1130/1131 Cut 2, Figur bei (-1024,0,-3336) rot 856, hp 20 (Danger-Haltung Cl
 Alle Abweichungen liegen im Figurenkasten x177..247 / y81..205; die Kulisse ist bitgleich.
 Belegbilder (Scratchpad, nicht versioniert): AB1130.png (Leon Fine/Stufe 2), ABCelza.png.
 
-### 5.3 Spielweg (echte exe, ROOM1140, Spielstand neben dem Zombie, CROSS-Hammern per Skript)
-debug.log: `[save] CONTINUE: resumed in room 1140 (hp=100)` ... `[wound] sync: applied=1 ok=1 gen=2`
-(F~228) ... `[wound] sync: applied=1 ok=1 gen=3` (F~366) — der Griff-Stempel kommt im echten Spiel
-unter der RE2-KI an und der Renderer legt ihn auf die Textur (vorher in keinem Lauf eine solche Zeile).
+### 5.3 Spielweg (echte exe, RE2-Standardgehirn, kein Raumsprung; Bilder im Dossier-Ordner)
+Messhaken RE15_KLEIDUNG_LOG=1 (env-gegatet, kleidung_r36.c `kleid_log`; Accessor re15_wound_acc).
+Lauf 1: CONTINUE aus Spielstand ROOM1140 neben dem Briefing-Zombie (Leon (-1400,0,-19600) rot 0,
+hp 100, Zombies Slot 2 Typ 0x10 bei (-1800,0,-19600) u.a.), CROSS-Hammern ab Spielbild 60 (1 Bild
+Taste / 1 Bild Pause), danach R1.2 (Drehung zur Kamera von Cut 1) und Save-Haken RE15_SAVE_TEST_AGAIN=300
+(das SPIEL schreibt den Spielstand, re15_savedata_capture, v5 wounds[8][2]). debug.log (drei Laeufe
+zeilengleich = deterministisch):
+```
+[save] CONTINUE: resumed in room 1140 (hp=100)
+[kleidung] F97  abwurf typ=0x11 dir=0 hp=70 gen=1 panels=0/10,0/0,0/0,0/0,0/0,0/50,0/0,0/50
+[kleidung] F163 abwurf typ=0x10 dir=1 hp=50 gen=1 panels=0/20,0/0,0/0,0/0,0/50,0/50,0/0,0/100
+[kleidung] F229 abwurf typ=0x11 dir=0 hp=20 gen=2 panels=0/30,0/0,0/0,0/0,0/50,0/100,0/0,1/0
+[wound] sync: applied=1 ok=1 gen=2 slotgen=2
+[save] saved (room 1140) slot n=2 -> next=3
+```
+Griff 1 von vorn (Helper 0x8010a1cc: 0+10, 5+50, 7+50), Griff 2 von hinten (0x8010a208: 0+10, 4+50,
+7+50), Griff 3 von vorn: Panel 7 = 150 >= 0x78 -> Stufe 1 (Akku 0, @0x80037f24/2c), Panel 5 = 100,
+Panel 4 = 50, Panel 0 = 30. HP 100 -> 70 -> 50 -> 20 = Caution ("Warning"); ohne Flucht toetet der
+vierte Griff bei F366 (hp 0) — genau deshalb war das Bild des Vorgaengers (griff_exe_4.png) unbrauchbar:
+Leon starb, CONTINUE_TEST lud neu, die Serie lief endlos.
+
+Werkzeug `test_r36_kleidung nullen <karte> [slot]`: liest den vom Spiel geschriebenen Spielstand, meldet
+die Wund-Tabelle (`Raum 1140 char 0 pos (-621,0,-19766) rot 1855 hp 20 cut 1 wunden 0/30 0/0 0/0 0/0
+0/50 0/100 0/0 1/0`), nullt NUR wounds[8][2], Pruefsumme neu, Rest bytegleich (66 Byte Unterschied
+inkl. Titel) — die Referenz "derselbe Spielstand ohne Wunden".
+Laeufe 2/3: CONTINUE aus beiden Spielstaenden, Framedump Bild 30/60/90/120 (RE15_WINDOW_SCALE=1,
+beschleunigter Renderer):
+
+| Bild | Pixel verschieden | Kasten | ausserhalb der Figur |
+|---|---|---|---|
+| 30 / 60 / 90 | 121 | (176,103)-(190,125) = Weste/Brust, Leons linke Schulterseite | 0 |
+| 120 | 118 | (183,105)-(194,127) (Idle-Atmung) | 0 |
+| Software-Renderer (Riegel) Bild 60 | 131 | (176,103)-(190,125) | 0 |
+
+Bilder: `B_kleidung_spielweg_vorher_nachher.png` (Ausschnitt x150..230/y85..205, 4x; links genullt,
+rechts der Spielweg-Spielstand: Blutfleck auf der Weste oberhalb von "R.P.D.", Leon in der
+Caution-Haltung mit hp 20) und `B_kleidung_spielweg_bild60.png` (ganzes Bild 60, Cut 1).
+Gegenprobe an derselben Position/Blickrichtung mit dem Kartenwerkzeug: Panel 7 allein Stufe 1 in der
+SEITENANSICHT (rot 3583) = 3 Pixel, Panel 5 allein = 0, alle Panels Stufe 2 = 267 — die Griff-Panels
+5/7 liegen auf der Brust (Torso-Insel MD1-Mesh 0, blood_decals.md §4), die Figur muss der Kamera
+zugewandt stehen; darum die Drehung R1.2 vor dem Spielstand.
 
 ## 6. Tests (tests/unit/probes/r36_kleidung.cmake, alle gruen)
 * unit_r36_kleidung_griff_re2 / _re15 — ROOM1140, game_step, 4 ueberlebte Griffe: Abwurf 1/2 ohne
@@ -213,21 +271,41 @@ unter der RE2-KI an und der Renderer legt ihn auf die Textur (vorher in keinem L
   innerhalb der Body-Seiten.
 * integration_r36_kleidung_bild — 6 exe-Laeufe (Leon A/A2/B/C, Elza A/B), Pixel-Differenz: 0 /
   >= 350 / >= 120 / >= 220, alles im Figurenkasten (Schwellen = halbe Messwerte).
+* integration_r36_kleidung_spielweg (NEU, Fortsetzung) — der Weg des Nutzers mit der exe unter dem
+  RE2-Standardgehirn: 3 ueberlebte Griffe (Log-Zeilen [kleidung] F97/F163/F229, hp 70/50/20, 3. Abwurf
+  gen=2), Spielstand vom Spiel geschrieben, `nullen` meldet die Wunde (Exit 3 = keine), CONTINUE
+  vorher/nachher: >= 60 Pixel, alle in x150..240/y80..210 (gemessen 131). ~35 s.
 Bestehende Riegel unveraendert gruen: unit_wound_accumulator, probe_save_injured, probe_r17_weste_karte,
 Dog-/Kraehen-/Zombie-Griff-Tests (Suite-Zeile s.u.).
-Vorbestehend ROT auf dem Basisstand 5a9dbb7b (nicht Spur B): unit_pri_hashes — die vom Orchestrator
-eingecheckte Nutzer-Maske pri/STAGE1/10F0/02_02.png ist in der Hash-Liste ungelistet ("119 Dateien
-im Baum, 118 gelistet, 1 ungelistet"); Liste mit tools/maske/pri_hashes.py neu erzeugen = Spur O (PRI).
+unit_pri_hashes war auf dem Basisstand 5a9dbb7b rot (Nutzer-Maske 10F0/02_02.png ungelistet) — auf
+master mit 78a4a748 behoben und in diesen Zweig gemergt (37ed0867); hier gruen.
 
-## 7. OFFEN
-* STAGE5 (Birkin): das Overlay traegt dieselben vier generischen Helper (FUN_80109b00/b3c/b78/b9c)
-  und Birkin-eigene Stempel (FUN_8010c61c/8010cd88/8010d7a4: (0,0x32); FUN_801110c4/801110f8;
-  FUN_80112294 tabellen-indiziert). Der Port-Birkin (enemy_ai_common.c :13719/:13757 Releases,
-  Treffer) stempelt nicht — vorbestehende Luecke ausserhalb dieser Regression (STAGE1). Naechster
-  Schritt: STAGE5-Hook-A-Registrierung (Zwilling von FUN_8011e864) lesen, Birkin-Release ->
-  `re15_kleidung_abwurf`, Treffer-Sites -> (0,0x32).
-* RE2-Kraehe: Dive/Strike-Angriffe der RE1.5-Kraehe (@0x80113b7c/@0x801144bc) haben in der RE2-Kraehe
-  keinen eigenen Zwilling (sie kennt nur den Griff-Peck) — abgedeckt ist der Griff-Eintritt.
+## 7. OFFEN (ausserhalb der Regression; beruehrt den Wortlaut nur fuer Gegner, die nie stempelten)
+
+Zensus aller `jal 0x80037edc`-Stellen je Overlay (Byte-Scan, STAGE*.BIN ohne Header, Funktionen aus
+RE_15_Quellcode_Overlays/STAGE{N}_full):
+* Die vier generischen Phase-4-Helper sind in ALLEN fuenf Stages wertgleich — STAGE2 FUN_8010a060/
+  a09c/a0d8/a0fc, STAGE3 FUN_8010a2b8/a2f4/a330/a354, STAGE4 FUN_8010a180/a1bc/a1f8/a21c, STAGE5
+  FUN_8010a300/a33c/a378/a39c: (0,10)(5,0x32)(7,0x32) / (0,10)(4,0x32)(7,0x32) / (1,0x32) / (2,0x32).
+  `re15_kleidung_abwurf` ist typ-, nicht stage-gebunden und deckt damit den generischen Griff ueberall,
+  sofern der Greifer-Typ in `re15_kleidung_generischer_griff` steht (STAGE1-Registrierung FUN_8011e864;
+  die Zwillinge der anderen Stages sind NICHT gegengelesen — naechster Schritt fuer STAGE2-5).
+* Hund-Zwillinge (tabellen-indizierter Biss `*(byte*)(aca59*2+...)`: STAGE2 FUN_801120b8, STAGE3
+  FUN_8010dc3c, STAGE4 FUN_8011275c, STAGE5 FUN_801128dc; Release (0,10) STAGE2 FUN_801127f0; Finisher
+  (0,10)(5,0x32)(7,0x32) STAGE3 FUN_801160a4, STAGE4 FUN_80111744, STAGE5 FUN_801118c4) — im Port
+  stage-unabhaengig durch den RE1.5-Hund (enemy_ai_common.c) bzw. den RE2-Hund-Haken abgedeckt.
+* NICHT portiert (vorbestehend, kein Teil der Regression): die (0,0x32)-Stellen STAGE3 FUN_80112784,
+  STAGE4 FUN_8010de24, STAGE5 FUN_8010dfa4 (je ein Gegner-Handler, Gegnertyp nicht bestimmt) sowie
+  die Birkin-eigenen Stempel in STAGE5 (FUN_8010c61c/8010cd88/8010d7a4 (0,0x32); FUN_801110c4/801110f8;
+  FUN_80112294 tabellen-indiziert; Port-Birkin enemy_ai_common.c :13719/:13757 stempelt nicht).
+  Naechster Schritt: Hook-A-Registrierung je Stage lesen (Zwilling von FUN_8011e864), Treffer-Sites ->
+  `re15_wound_add(0,0x32)`, Birkin-Release -> `re15_kleidung_abwurf`.
+* RE2-Kraehe: Dive/Strike der RE1.5-Kraehe (@0x80113b7c/@0x801144bc) haben in der RE2-Kraehe keinen
+  Zwilling (sie kennt nur den Griff-Peck); abgedeckt ist der Griff-Eintritt (Form 0x801161e8).
+* Der Port verliert die Stempel NICHT beim Laden (v5-Spielstand traegt wounds[8][2]); das Original
+  nullt beim Spieler-Load (FUN_80037c1c @0x800316c8/0x800318cc, blood_decals.md §5). Vorbestehende
+  PORT-WAHL (analysis/save_injured_state.md SI-1: der Original-Save-Blob enthaelt die Tabelle, der
+  Original-LOAD-Restore @0x80026290-a0 wird vom Builder ueberschrieben) — nicht Teil dieser Spur.
 
 ## 8. Fuer den Nutzer
 * Keine neuen Assets, keine Sprachdateien, keine Paket-Gate-Eintraege.
@@ -236,3 +314,5 @@ im Baum, 118 gelistet, 1 ungelistet"); Liste mit tools/maske/pri_hashes.py neu e
   Hundebisse (+50 je Biss auf ein Brust-/Rueckenpanel), Kraehengriffe; Heilung loescht sie nicht,
   Speichern/Laden erhaelt sie (v9-Spielstand). Unter "AI RE2" (Standard) und "AI RE1.5" gleich.
 * Elza: die Decals liegen jetzt auf Elzas eigenen Panels (LUT-Zeile 4) — vorher sassen sie daneben.
+* Messhaken (nur fuer Messungen, kein Spielverhalten): RE15_KLEIDUNG_LOG=1 schreibt je Stempel eine
+  Zeile `[kleidung] F<bild> <quelle> typ dir hp gen panels=level/akku,...` ins debug.log.
