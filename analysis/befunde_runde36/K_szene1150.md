@@ -91,3 +91,111 @@ im Original mit Bildschuetteln) — ein Einbruch DURCH Holz, kein Schlag gegen e
 (Klopfen, im Skript nie gespielt), ROOM2090/20A0 (Schloss/Ruetteln), ROOM1120 0x13 (Boden bricht), ROOM2040
 (Rolltor-Klicks).
 
+### K1.3 Umsetzung
+* `re15_port/tools/r35_l/knall_cut.py` (Generator der Knall-Bank, Eigentum dieses Moduls) neu: Satz 0 = RE2 ROOM1060
+  (Pruefung gegen die RDT-Bytes: Kopf-Offsets EDT @0x03F58 / VH @0x04018 / VB @0x04C38, Se_on @0x00F48, EDT[0x0a]
+  `00 00 85 20`, Tone 8/9 -> VAG 5 @0x066B8 8768 B; VH-Master 127 und Programm-mvol 0x7f in ROOM1060, ROOM1030 und
+  DOOR04 gleich -> dasselbe RE2-Pegelgesetz). Bank: Tone 0/1 = RE2 Tone 8/9 (Feinstimmung 0/1 wie im Original), Tone 2
+  = ROOM1030 Tone 7; SE-Map Satz 0 `00 00 05 20` (Prio-Nibble 5 und byte3 0x20 = Direkt-Stimme + 1 Zusatzlage
+  woertlich aus RE2), Satz 1 `00 00 27 15` (aus `00 00 77 15`). Der Kopf traegt genau EIN Programm (VH 0xC20 B,
+  re15_vab_parse verlangt die Groessentabelle hinter den Tone-Segmenten) - deshalb ein Programm mit 3 Tones.
+* `engine/src/gen/knall_bank.inc` neu erzeugt (19976 B; VAG 1 sha1 192e09df..., VAG 2 sha1 03dacdcd... unveraendert).
+* Kein neues Asset fuer das Paket-Gate (eingebacken wie bisher), keine Aenderung an audio_pc.c.
+
+## K2 - Dialog Ada/Marvin in ROOM11C0 Cut 13
+
+### K2.1 Messung vorher
+Lauf `vor_11c0` (echte exe, Kette wie K1.1, `RE15_FRAMEDUMP=0-510/10`, `RE15_NECK_LOG`), Kontaktbogen
+`K_belege/k2_vor_11c0.png` (Bilder 10..460): Ada und Marvin stehen nebeneinander mit dem Ruecken zur Kamera, drehen
+sich beide zum Gebaeude (= zur Kamera, die Tuer Slot 0 @0x01712 liegt hinter Cut 13) und sprechen "What was this
+noise?", "Yes!....", "Oh, no, Leon!" frontal in die Kamera (F100..F280); Marvin dreht sich erst bei F310 zu Ada, Ada
+wendet sich Marvin NIE zu und ruft "Marvin!..." in die Kamera. neck.log: in ROOM11C0 kein einziges Plc_neck (nur die
+vier von Leon in 1150). debug.log: Plc_dest Modus 9 nur `slot=1/4 dest=(-27100,15900)` (beide zum Gebaeude) und
+`slot=4 dest=(-8965,-14347)` (Marvin zu Ada, erst vor msg 13). = der Befund des Nutzers ("schauen irgendwo hin").
+
+### K2.2 Beleg (Form aus dem Original-Dialog DESSELBEN Raums)
+ROOM11C0 sub02 (Leon/Ada-Ankunftsszene, `scd_dump_room.py`, Datei-Offsets):
+```
+0x01886 Plc_neck  41 01 fb dc 00 00 f5 c7 64 00   Leon: Kopf auf Ada (-8965,0,-14347), Modus 1 Weltpunkt, Rate 0x64
+0x01890 Plc_dest  40 00 09 00 fb dc f5 c7         Leon: Drehen (Modus 9) zu Ada, Ankunfts-Bit 0
+0x01898 Gosub     18 05                           warten (sub05 @0x01C3E: Set(5,0)=0; While Ck(5,0)==0 {Evt_next})
+0x018C0 Plc_neck  41 01 cb e4 00 00 33 cf 64 00   Ada (Work 2,0): Kopf auf Leon
+0x018CA Plc_dest  40 00 09 01 cb e4 33 cf         Ada: Drehen zu Leon, Ankunfts-Bit 1
+0x018D2 Gosub     18 06                           warten (sub06 @0x01C50, Bit 1)
+0x018D4 Message_on 2b 01 00 00 / 0x018D8 3f 00 13 00 / Sleep 40 / 3f 00 13 00 + 43 00 80 00 / Sleep 50  (Adas Zeile + Geste Clip 19)
+0x01940/0x01952 Plc_neck 41 01 df f1 00 00 7a ba 64 00  beide blicken auf denselben Punkt
+0x01964/0x01974 Plc_dest 40 00 09 00 / 40 00 09 01 ...  beide drehen sich dorthin (Sleep 10 dazwischen), dann 18 06
+```
+sub03 @0x01BB2..@0x01BCA (Ada nickt): `41 00 00 00 00 00 00 00 64 00` (Kopf frei), Sleep 5,
+`41 03 01 00 00 00 00 00 00 3c` (Modus 3 = Nicken), Sleep 20. Zensus Plc_neck Modus 1 in allen RDTs: 200 Saetze,
+y = 0 in 155 (Gespraechspartner stets mit y 0 und Rate 0x0064: 10D0 sub21, 11B0 sub06, 11C0 sub02/sub03).
+Engine (Port, byte-true): Plc_dest Modus 9 fuer NPC = Dreh-Sub `re15_npc_sub_turn` (Kegel 0x60 fuer Typ 0x40/0x42,
+Tabelle @0x80076c41; Ankunfts-Bit `FUN_8004ef90(0x800b1028, +0x1c3)` @0x80051dcc-dd8); Plc_neck Modus 1 =
+`+0x1b8 |= 0x84` (@0x80041ed8-f10), Kopf-FSM skeleton_common.c. Bank-5-Bits 0/1 = die Ankunfts-Bits von sub05/sub06
+(Wort 0, nur beim Raum-Init geloescht); Leon ist waehrend der Montage nicht im Raum.
+
+### K2.3 Umsetzung (irons_tod_1150.c Programm 4 `k_p_11c0`)
+Beats der Nutzer-Vorgabe r35 bleiben (AUFTRAG r35 Z.83-90), "einander zugewandt" (r36) in der Form oben:
+1. beide zum Gebaeude: Marvin Kopf+Drehen (Bit 0), Sleep 10, Ada Kopf+Drehen (Bit 1) + `18 06` (Form @0x01964..@0x0197C);
+2. Marvin Kopf auf Ada; Ada Kopf+Drehen auf Marvin + `18 06`; msg 10 + Adas Geste Clip 19 vor/zurueck (@0x018D8..@0x018E8);
+3. Marvin Drehen auf Ada + `18 05`; msg 11; Kopf frei, Sleep 5, Nicken (sub03 @0x01BB2..@0x01BCA); Kopf wieder auf Ada;
+4. Marvin Kopf+Drehen zum Gebaeude, msg 12 "Oh, no, Leon!" (Ada sieht ihn weiter an);
+5. "Marvin dreht sich zu Ada": Kopf+Drehen auf Ada + `18 05`; msg 13 + Arm (Clip 15, wie r35);
+6. Kopf frei, rennt zur Tuer (Modus 5, wie r35);
+7. Ada Kopf+Drehen zur Tuer + `18 06` (sieht ihm nach); msg 14 + Arm (Clip 15, wie r35).
+Orte: Ada sub00 @0x01770 (-8965,-14347), Marvin (-8163,-13748) (r35 M5, PORT-WAHL mit Herleitung), Gebaeude = Mitte
+des Tuer-Rechtecks Slot 0 @0x01712 (-25100,17250) (r35 drehte auf die Rechteck-Ecke (-27100,15900)). Sleeps = PORT-WAHL
+im Takt der r35-Fassung; die Szene dauert jetzt 500 statt 518 Bilder bis zum Schnitt.
+
+## K3 - Reihenfolge Knall -> Spawn -> Kamera
+
+### K3.1 Messung vorher
+Echte exe (Stand 78a4a748, Messkopie `re15_pc_r36k_vor.exe`), Kette wie K1.1, je Raum ein Lauf mit
+`RE15_EXIT_AT=<n>#<Raum>` und `RE15_FRAMEDUMP` (Laeufe `vor_1130` 170#1130 /2, `vor_1040` 120#1040 /4, `vor_1030`
+260#1030 /4); state.log (eine Zeile je Bild, je Gegner `[slot t=..]`, cam=, pf=) des letzten Raumbesuchs:
+```
+ROOM1130 (F1..F170): F1 cam=0 gegner=0 pf=FF000007 (Einblendung); F6 cam=0 gegner=0 pf=01000007; F31 cam=0 gegner=5
+ROOM1040 (F1..F120): F1 cam=1 gegner=5 pf=FF000007 (Raum-Records an IHREN Plaetzen); F6 Aufstellung hinter das Tor
+ROOM1030 (F1..F260): F1 cam=7 gegner=6 (hinter dem Tor, nicht im Bild); F31 cam=7 gegner=11; F181 cam=6 gegner=11;
+                     F196 cam=6 gegner=14; F218 cam=12
+```
+debug.log: 1130 `[scd F6] Cut_chg(0)` -> `Signal (5,28): Tuerknall` (F21) -> 5x `[spawn-diag] Sce_em_set`;
+1030 `[scd F6] Cut_chg(7)` -> `Signal (5,28)` -> Kopien; `[scd F181] Cut_chg(6)` -> Se_on @0x02776 -> Kriecher ->
+`[scd F218] Cut_chg(12)`. Bilder: `K_belege/k3_vor_1130.png` (F6..F30 leerer Flur auf Cut 0, F32 stehen die fuenf
+Zombies da = "aus dem Nichts"), `K_belege/k3_vor_1030.png` (F24/F28 leerer Gang Cut 7, F32 die Kopien; F192 Cut 6,
+F196/F200 erscheinen hinter dem Gitter weitere Zombies im Bild). = der Befund des Nutzers ("Tuerknallen, dann die
+Kamera Ansicht und dann die Zombies aus dem Nichts"): Kamera (Tuer-Cut ab Bild 1) VOR Knall (Bild 21) VOR Spawn (Bild 31).
+
+### K3.2 Beleg
+* Im Original erscheinen die Gegner eines Raums im INIT-LAUF, bevor das erste Bild eingeblendet wird: Tuer-Warp
+  FUN_8001d600 -> Raumlader `jal 0x800396fc` @0x8001d988 -> darin `jal 0x8003ef6c` @0x80039a00 (SCD-Raum-Init);
+  FUN_8003ef6c ruft den Dispatcher FUN_8003f0a0 DIREKT @0x8003f018 (main00 + sub00, deren Sce_em_set); erst danach
+  laeuft die Einblendung (State-3-Rumpf @0x8001cbb8..@0x8001cc28: `jal FUN_800217b0` @0x8001cc00 = re15_fade_config(0,2,7,
+  -0x1800,0), `jal FUN_800216ec` @0x8001cc18), und waehrend der Einblendung steht die Logik (`g_pauseflags |= 0xff000000`
+  @0x8001cc5c/@0x8001cc6c, darin SCD 0x02000000; Freigabe @0x8001cc84/@0x8001cc94). Ein Faden, den sub00 im Init-Lauf per
+  Evt_exec startet, laeuft im selben Lauf mit (Slot-Schleife ohne Aufschub, scd_vm.c "Evt_exec @0x8003f2a0").
+  Port: room_common.c (Adressen dort), scd_room_setup.c (Init-Lauf `scd_vm_set_room_init(1); scd_vm_tick();`, danach die
+  Installer). Der Montage-Faden startete bisher erst NACH dem Init-Lauf (Installer) und lief damit erst nach der
+  Einblendung (Bild 6).
+* Die Original-Szene ROOM1030 sub08 selbst hat die verlangte Reihenfolge: @0x02776 Se_on (Knall) -> @0x02782..@0x02792
+  Tor bricht -> @0x0279E/@0x027A4 Gosub sub09 (die schon stehenden Zombies kriechen) -> @0x027AA `29 0c` Cut_chg 12.
+* Knall-Signale (5,28)/(5,29): Port-Takt am Kopf des VM-Laufs (r35, re15_irons_tod.h).
+
+### K3.3 Umsetzung (irons_tod_1150.c)
+* `erster_abschnitt_sofort(slot)` + `starten(1)`: die Montage-Schritte (1130/1040/1030/11C0) und die Nachspawns
+  (1130/1040/1030 bei spaeterem Betreten) laufen ihren ersten Abschnitt (bis zum ersten Sleep) noch im Raumaufbau - ein
+  zweiter Init-Lauf NUR fuer diesen Faden (die anderen Faeden des Raums ruhen dabei: aktiv-Bits gemerkt und
+  zurueckgelegt; sub01-Reseed und Port-Takt laufen im Init-Lauf ohnehin nicht). Keine Aenderung an scd_vm.c /
+  scd_room_setup.c. Szene und Rueckkehr in 1150 unveraendert.
+* Knall jedes Schritts an das ENDE des vorigen (noch auf dessen Kamera, 45 Bilder vor dem Tuersatz wie r35 in 1150):
+  1150 -> Satz 0 (1130) bzw. Satz 1 (1140 leer -> 1040), 1130 -> Satz 1 (1040), 1040 -> Satz 0 (1030 Cut 7) bzw. Satz 1
+  (1070 leer -> Tor-Teil); `knall_setzen()` stellt das Signal-Byte. Die Knaelle zu Beginn von 1130/1040/1030-Cut-7 entfallen.
+* 1130: Zombies im Raumaufbau, Sleep 130, Knall 1040, Sleep 45, Tuer (Tuer weiter nach 175 Bildern ab dem ersten Takt).
+* 1040: Kopf + Aufstellung im Raumaufbau (Cut_chg 1 entfaellt, Tuer-Cut 1), Vorlauf 35 (= r35 15 + 20), Tor-Fahrt, Ende.
+* 1030 mit Cut-7-Teil: Kopien im Raumaufbau, Sleep 175, Original-Knall @0x02776 auf Cut 7, Bruch (nur (4,15)=0), Sleep 10,
+  Kriecher (hinter dem Tor, nicht im Bild von Cut 7), Sleep 2, sub09 x4, Sleep 20, Cut_chg 12 (@0x027AA). Ohne Cut-7-Teil:
+  Tuer aus 1040 -> Cut 12, Bruch + Kriecher im Raumaufbau (r35: Cut 6 bzw. 12).
+* 11C0: Marvin im Raumaufbau (r35: erschien in Bild 6 nach der Einblendung).
+* Mess-Haken (kein Spielverhalten): Ereignisfolge `re15_irons_tod_folge` + debug.log `[irons-tod] Folge #n K|S|C ...`
+  (Knall beim Abspielen, Spawn = Gegner beim ersten Bild bzw. Zuwachs im Takt, Kamera = Tuer-Cut beim ersten Bild bzw.
+  Cut_chg) und `[irons-tod] ROOMxxxx: erstes Bild mit n Gegnern (Init-Lauf a + erster Abschnitt b)`.

@@ -19,3 +19,14 @@ foreach(_teil knall_re2 folge dialog11c0)
     add_test(NAME unit_r36_szene1150_${_teil} COMMAND test_r36_szene1150 ${_teil})
     set_tests_properties(unit_r36_szene1150_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# INTEGRATION (echte exe): Spielstand + CONTINUE in ROOM1130, Tuer -> ROOM1150 -> Szene -> Montage bis ROOM11C0 Bild 480:
+# K1 Knall-Satz 0 = RE2 ROOM1060 (Logzeile), K3 Ereignisfolge Knall < Spawn < Kamera je Raum + erstes Bild jedes
+# Montage-Raums traegt die Zombies (state.log), K2 Plc_neck/Plc_dest von Ada und Marvin auf den Partner.
+add_test(NAME integration_r36_szene1150
+    COMMAND ${CMAKE_COMMAND}
+        -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+        -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r35_cut1150_karte>
+        -DWORKDIR=${CMAKE_BINARY_DIR}/r36_szene1150_lauf
+        -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_szene1150.cmake)
+set_tests_properties(integration_r36_szene1150 PROPERTIES TIMEOUT 900)

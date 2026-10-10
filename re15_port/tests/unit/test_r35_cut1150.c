@@ -633,11 +633,19 @@ static void teil_montage_1040(void)
     re15_irons_tod_zustand_setzen(RE15_IT_S1130);
     re15_irons_tod_bilanz_reset();
     if (room_boot(0x1040, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 1) == 0) {
-        int raum = aktive_gegner(0x16);
+        /* Runde 36 Spur K (K3): die Auffuell-Records erscheinen jetzt schon im Raumaufbau (erster Abschnitt) — direkt nach
+         * room_boot stehen also 2 Raum-Records (Tot-Bits 0x14..0x27) + 3 Auffuell-Records (83/84/90). */
+        int raum = 0, auf = 0;
+        for (int sl = 1; sl < RE15_ACTOR_MAX; sl++) {
+            const re15_actor_t *a = &g_actors[sl];
+            if (!a->active || a->type != 0x16) continue;
+            if (a->em_flag_id >= 0x14 && a->em_flag_id <= 0x27) raum++;
+            if (a->em_flag_id == 83 || a->em_flag_id == 84 || a->em_flag_id == 90) auf++;
+        }
         frame(0, 0);
         aufstellung_pruefen("18 tot");
         lauf(&L, RE15_IT_1040_KAPPE + 200, 1);
-        PRUEF(raum == 2 && aktive_gegner(0x16) == 5, "18 tot: %d Raum-Zombies + Auffuellung = %d Zombies", raum, aktive_gegner(0x16));
+        PRUEF(raum == 2 && auf == 3 && aktive_gegner(0x16) == 5, "18 tot: %d Raum-Zombies + %d Auffuellung = %d Zombies", raum, auf, aktive_gegner(0x16));
         durchgang_pruefen("18 tot (2 Raum + 3 Auffuellung)", &L);
         PRUEF(L.raumwechsel && L.ziel == 0x1030, "Schnitt nach ROOM1030 nach %d Bildern", L.bilder);
         /* spaeteres Betreten: die Auffuell-Zombies stehen wieder da (einer inzwischen getoetet) */
