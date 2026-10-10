@@ -15,9 +15,10 @@ endif()
 add_test(NAME unit_r36_schuss COMMAND test_r36_schuss)
 set_tests_properties(unit_r36_schuss PROPERTIES TIMEOUT 120)
 
-#   integration_r36_schuss    echte exe (ROOM1140, RE15_DEBUG_JUMP, RE2-KI): Python ueber den Konferenztisch
+#   integration_r36_schuss    echte exe (ROOM1140, RE15_DEBUG_JUMP, Messkopie re15_pc_r36c_haken_*): Python ueber den Konferenztisch
 #                             trifft NICHT (Plaetze 4/5 hp 250 bleiben), Fresser vom Tuerpunkt (> 4000) werden
-#                             NICHT getroffen, Zombie vor dem Tisch wird getroffen (Gegenprobe).
+#                             NICHT getroffen, Zombie hinter dem Tisch wird getroffen (Gegenprobe); dazu unter RE1.5-KI
+#                             (Fresser treffbar) frei_re15 trifft Platz 4/5, tisch_re15 / gl_tisch_re15 sperren (M4).
 if(TARGET re15_pc)
     add_test(NAME integration_r36_schuss
              COMMAND "${CMAKE_COMMAND}"

@@ -12,6 +12,15 @@
 #   frei     Gegenprobe: Leon (200,-18200) Blick -z, HINTER dem Tisch (Kante -17450), Platz 5 in 1400 -> der
 #            Schuss trifft (Platz 5 verliert HP) — der Resolver schiesst noch.
 #   gl_tisch / gl_fresser  dieselben Aufstellungen mit dem Granatwerfer (15, Explosiv): KEIN Platz verliert HP.
+#   Nachbesserung 1 (Abnahme 0 M4): unter RE2-KI stehen hinter dem Tisch NUR gesperrte Fresser — die Fresser-
+#   Sperre allein haelt dort jeden Treffer ab, "tisch" belegt die Sichtlinie also nicht fuer sich. Darum dieselben
+#   Aufstellungen unter RE15_AI_FLAVOR=re15, wo die Fresser TREFFBAR sind (RE1.5-Kandidatenschleife FUN_80011f50
+#   gatet nur +0x93 & 3 @0x800120f4-100, die Fresser tragen +0x93 = 0; Dossier OFFEN 1):
+#   frei_re15      Gegenprobe Leon (200,-18200) hinter dem Tisch: Platz 4 und 5 verlieren HP (die Ziele sind treffbar);
+#   tisch_re15     Leon (200,-10300) vor dem Tisch, Python: KEIN Platz verliert HP — allein der Tisch sperrt;
+#   gl_tisch_re15  dasselbe mit dem Granatwerfer 15 (Zellen-Sperre des RE2-Projektils, re2_fx.c).
+# Nachbesserung 1 (Abnahme 0 M7): die exe laeuft als Messkopie re15_pc_r36c_haken_<id> neben der Original-exe
+# (Muster test_r34n_b_cursor.cmake; ein fremdes "taskkill /IM re15_pc.exe" trifft sie nicht).
 # Ein Lauf ohne Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
 cmake_minimum_required(VERSION 3.16)
@@ -28,16 +37,27 @@ string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_wurzel "${WORKDIR}/lauf_${_lauf_id}")
 file(MAKE_DIRECTORY "${_wurzel}")
 
+# Messkopie unter eigenem Namen neben der exe (Asset-Wurzel = exe-Verzeichnis), Reste alter Laeufe entfernen.
+get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
+get_filename_component(_exe_ext "${RE15_PC_EXE}" LAST_EXT)          # ".exe" unter Windows, leer unter Linux
+file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r36c_haken_*")
+foreach(_k IN LISTS _alte_kopien)
+    file(REMOVE "${_k}")
+endforeach()
+set(_exe_kopie "${_exe_dir}/re15_pc_r36c_haken_${_lauf_id}${_exe_ext}")
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+set(RE15_PC_EXE "${_exe_kopie}")
+
 function(r36_fehler _lauf _text)
     message(FATAL_ERROR "${_tag} [${_lauf}]: ${_text}")
 endfunction()
 
-function(r36_exe _lauf _dir _pos _waffe)
+function(r36_exe _lauf _dir _pos _waffe _flavor)
     file(MAKE_DIRECTORY "${_dir}")
     set(WORKDIR "${_dir}")
     set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
              RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=${_pos}"
-             RE15_AI_FLAVOR=re2 "RE15_GIVE=${_waffe}:6" "RE15_EQUIP=${_waffe}"
+             "RE15_AI_FLAVOR=${_flavor}" "RE15_GIVE=${_waffe}:6" "RE15_EQUIP=${_waffe}"
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=M0.6,MA1.5,M1.0,W4"
              RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=200#1140")
     re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
@@ -117,7 +137,7 @@ endfunction()
 
 # ---------------------------------------------------------------------------------------------------
 set(_d "${_wurzel}/tisch")
-r36_exe("tisch" "${_d}" "200,-10300,1024" 20)
+r36_exe("tisch" "${_d}" "200,-10300,1024" 20 re2)
 file(STRINGS "${_d}/wf.log" _schuss REGEX "arms_rec=0|SPAWN id=2")
 list(LENGTH _schuss _n_schuss)
 if(_n_schuss LESS 1)
@@ -126,11 +146,11 @@ endif()
 r36_keiner_verliert("tisch" "${_d}/state.log")
 
 set(_d "${_wurzel}/fresser")
-r36_exe("fresser" "${_d}" "-7600,-17600,0" 20)
+r36_exe("fresser" "${_d}" "-7600,-17600,0" 20 re2)
 r36_keiner_verliert("fresser" "${_d}/state.log")
 
 set(_d "${_wurzel}/frei")
-r36_exe("frei" "${_d}" "200,-18200,1024" 20)
+r36_exe("frei" "${_d}" "200,-18200,1024" 20 re2)
 r36_gegner("${_d}/state.log" 5 _hp0 _hpmin)
 if(_hpmin GREATER_EQUAL _hp0)
     r36_fehler("frei" "Gegenprobe: Platz 5 hinter dem Tisch in 1400 verliert keine HP (${_hp0} -> ${_hpmin}) — der Resolver schiesst nicht mehr")
@@ -140,11 +160,38 @@ message(STATUS "${_tag} [frei]: Platz 5 HP ${_hp0} -> ${_hpmin} (Gegenprobe Tref
 # FUN_80011f50, sondern als RE2-Projektil (re2_fx.c, Spur B r35: Zellen-Sperre am Tisch, Applier-Gates
 # +0x1D3/+0x10E @0x80047138-64 gegen Fresser). Dieselben zwei Aufstellungen, dieselbe Erwartung.
 set(_d "${_wurzel}/gl_tisch")
-r36_exe("gl_tisch" "${_d}" "200,-10300,1024" 15)
+r36_exe("gl_tisch" "${_d}" "200,-10300,1024" 15 re2)
 r36_keiner_verliert("gl_tisch" "${_d}/state.log")
 
 set(_d "${_wurzel}/gl_fresser")
-r36_exe("gl_fresser" "${_d}" "-7600,-17600,0" 15)
+r36_exe("gl_fresser" "${_d}" "-7600,-17600,0" 15 re2)
 r36_keiner_verliert("gl_fresser" "${_d}/state.log")
 
-message(STATUS "-- ${_tag}: OK — Tisch sperrt (Python, GL), Fresser gesperrt (Python, GL), Gegenprobe trifft")
+# ---- M4: treffbare Ziele hinter dem Tisch (RE1.5-KI) -------------------------------------------------
+# Wortlaut "Lauf ohne Treffer zaehlt nicht": die Gegenprobe frei_re15 muss Platz 4 UND 5 treffen, sonst belegt
+# tisch_re15 nichts.
+set(_d "${_wurzel}/frei_re15")
+r36_exe("frei_re15" "${_d}" "200,-18200,1024" 20 re15)
+foreach(_s 4 5)
+    r36_gegner("${_d}/state.log" ${_s} _hp0 _hpmin)
+    if(_hp0 LESS 1 OR _hpmin GREATER_EQUAL _hp0)
+        r36_fehler("frei_re15" "Gegenprobe RE1.5-KI: Platz ${_s} hinter dem Tisch verliert keine HP (${_hp0} -> ${_hpmin}) — Ziel nicht treffbar, tisch_re15 waere ohne Aussage")
+    endif()
+    message(STATUS "${_tag} [frei_re15]: Platz ${_s} HP ${_hp0} -> ${_hpmin} (treffbar)")
+endforeach()
+
+set(_d "${_wurzel}/tisch_re15")
+r36_exe("tisch_re15" "${_d}" "200,-10300,1024" 20 re15)
+file(STRINGS "${_d}/wf.log" _schuss REGEX "arms_rec=0|SPAWN id=2")
+list(LENGTH _schuss _n_schuss)
+if(_n_schuss LESS 1)
+    r36_fehler("tisch_re15" "kein Schuss im wf.log (arms_rec=0 / Muendungsblitz)")
+endif()
+r36_keiner_verliert("tisch_re15" "${_d}/state.log")
+
+set(_d "${_wurzel}/gl_tisch_re15")
+r36_exe("gl_tisch_re15" "${_d}" "200,-10300,1024" 15 re15)
+r36_keiner_verliert("gl_tisch_re15" "${_d}/state.log")
+
+file(REMOVE "${_exe_kopie}")
+message(STATUS "-- ${_tag}: OK — Tisch sperrt (Python, GL; RE2- und RE1.5-KI mit treffbaren Zielen), Fresser gesperrt (Python, GL), Gegenproben treffen")

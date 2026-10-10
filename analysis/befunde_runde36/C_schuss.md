@@ -503,7 +503,19 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
   (HURT16A im Todesbild = TOD-Sollpunkt, identische Koordinaten bei +0x16A = 0).
 
 ### 8.4 M4 — integration_r36_schuss: treffbare Ziele hinter dem Tisch
-(in Arbeit)
+* **Ursache:** unter RE2-KI stehen hinter dem Konferenztisch nur gesperrte Fresser (Plaetze 2..5) und der Liegende;
+  die Fresser-Sperre allein haelt jeden Treffer ab (Lauf "fresser"), "tisch"/"gl_tisch" waeren auch ohne Sichtlinie gruen.
+* **Aenderung (tests/integration/test_r36_schuss.cmake):** r36_exe bekommt die KI-Variante als Parameter; drei neue
+  Laeufe unter `RE15_AI_FLAVOR=re15`, wo die Fresser treffbar sind (RE1.5-Kandidatenschleife FUN_80011f50 gatet nur
+  `+0x93 & 3` @0x800120f4-100, die RE1.5-Fresser tragen +0x93 = 0 — Savestate-Befund OFFEN 1):
+  `frei_re15` (Leon (200,-18200) hinter dem Tisch, Python) MUSS Platz 4 UND 5 treffen (sonst waere der Tisch-Lauf ohne
+  Aussage), `tisch_re15` (Leon (200,-10300), Python) und `gl_tisch_re15` (Granatwerfer 15) — KEIN Platz verliert HP.
+* **Messung (ctest -R "^integration_r36_schuss$", LastTest.log):** `[frei_re15]: Platz 4 HP 250 -> -1 (treffbar)`,
+  `Platz 5 HP 250 -> -1`; `[tisch_re15]: Platz 1 HP 65 -> 65 ... Platz 4 HP 250 -> 250, Platz 5 HP 250 -> 250`;
+  `[gl_tisch_re15]`: alle fuenf unveraendert; die RE2-Laeufe unveraendert (`[tisch]` 79/50/80/250/250 gleich,
+  `[frei]: Platz 5 HP 250 -> -1`). `1/1 Test #573: integration_r36_schuss ... Passed 129.42 sec`.
+  => Bei TREFFBAREN Zielen hinter dem Tisch sperrt allein der Tisch (Python und Granatwerfer); die Sichtlinie ist damit
+  an der exe gepinnt, nicht nur ueber unit_r36_schuss A.
 
 ### 8.5 M5 — Zitate (+0x10E 0x4004, a3-Lage RE2)
 * **Ursache:** zwei falsche Zitate. (a) Das `sh 0x4004,270` @0x80100A88-8C wurde dem FRESSER zugeschrieben; (b) die
@@ -553,4 +565,7 @@ Anker.T aus der gezeichneten Pose T-1/T), "Defekt" = naechster Anker OHNE a3.
   ("manchmal") ist also der seit v0.3.5 fehlende a3-Versatz, kein Bruch in v0.8.22/23.
 
 ### 8.7 M7 — Messkopie der exe im Integrationstest
-(in Arbeit)
+* **Aenderung:** test_r36_schuss.cmake kopiert `$<TARGET_FILE:re15_pc>` nach `re15_pc_r36c_haken_<id><ext>` neben die
+  exe (Asset-Wurzel = exe-Verzeichnis; `<ext>` = LAST_EXT, ".exe" unter Windows, leer unter Linux), raeumt Reste
+  abgebrochener Laeufe vorher weg und loescht die Kopie am Ende (Muster test_r34n_b_cursor.cmake).
+* **Messung:** Lauf oben gruen, danach `ls re15_port/build/platform/pc | grep -c r36c_haken` = 0.
