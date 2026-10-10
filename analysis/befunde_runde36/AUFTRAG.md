@@ -150,3 +150,18 @@ Antwort auf die Story-Beratung (analysis/story_leon_elza/, Spur P Analyse-Teil):
   Befugnis entzogen haben (Kendo in Untersuchungshaft wegen des sabotierten Funkraums; Nutzer schreibt
   spaeter ein Diary fuer Roys Raum). Kein zusaetzlicher Text/Haken fuer Leon.
 * **Spur L**: Irons tot + Fenster 1121 kaputt "von Anfang an" bleibt (bestaetigt).
+
+## ⛔ Nachtrag 2026-10-10 abends — NEUE Nutzer-Vorgabe fuer Spur J Punkt 2 (11B0-Szene, Werkstatt-Tuer)
+
+Woertlich:
+
+> bevor der tür schluss sound bei Marvin kommt und die abschließ animation bei der neuen Cutscene in 11B0, muss marvin zunächst die tür Schließen inkl. animation, sonst gibt es ja nichts abzuschließen.
+
+Folge fuer Spur J (gilt fuer Bau, Nachbesserung UND Abnahme — der Wortlaut von Punkt 2 ist damit erweitert):
+Reihenfolge an der Werkstatt-Tuer in ROOM11B0 nach Marvins "Hold on": (1) Marvin laeuft zur (offenen) Werkstatt-Tuer,
+(2) Marvin SCHLIESST die Tuer — Schliess-Animation (Marvin-Clip; sichtbar, wie die Tuer zugeht, soweit die Tuer im
+Bild/als Objekt existiert — belegen, wie die Werkstatt-Tuer im Raum dargestellt ist: Hintergrund, Obj_model_set, ESP,
+SCA-Zelle (3,0x0C) @0x00EC8 / 11B0 sub00 @0x0118C) + Tuer-zu-Ton (RE2-Tuerbank, RE2_SOUND_LISTE.md), (3) DANACH
+Abschliess-Animation + Abschliess-Ton (RE2 Robert Kendo), (4) Tuer bleibt zu mit Elzas Text, (5) Marvin zurueck:
+"I just want to make sure we don't have any unwanted followers." Abnahme: Ereignisfolge im Log mit Bildnummern
+(Schliessen < Tuer-zu-Ton < Abschliessen < Abschliess-Ton) + Framedump-Serie.
