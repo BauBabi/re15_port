@@ -1,0 +1,626 @@
+ROOM4010  (re15_port/shared_assets/PSX/STAGE4/ROOM4010.RDT)
+
+=== main00
+  0x004D2 Door_aot_set   3b 00 02 31 00 00 cc ac 20 9f 84 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM4000 cut=0
+  0x004F2 Aot_set        2c 01 03 31 00 00 44 99 b8 a7 14 05 ..    ; Aot_set slot=1 sce=3 ev->sub08 (ff 00 18 08)
+  0x00506 Aot_set        2c 02 01 31 00 00 df 9c f0 97 d4 08 ..    ; Aot_set slot=2 TEXT msg 36 "It's a row of monitors.They're completely blank, maybe / they're not getting any power?"
+  0x0051A Aot_set        2c 03 01 31 00 00 44 99 ce 9b ec 04 ..    ; Aot_set slot=3 TEXT msg 37 " / The desk is completely empty."
+  0x0052E Aot_set        2c 04 01 31 00 00 cb 97 be bf d0 07 ..    ; Aot_set slot=4 TEXT msg 38 "This equipment seems to be unusable."
+  0x00542 Aot_set        2c 05 01 31 00 00 ff 9f e4 c1 4c 04 ..    ; Aot_set slot=5 TEXT msg 39 "There's a memo here.To Michael: I left an ID card on the / right desk.Don't lose it again,"
+  0x00556 Aot_set        2c 06 01 31 00 00 87 a4 e4 c1 80 0c ..    ; Aot_set slot=6 TEXT msg 40 " / There's nothing useful in this locker."
+  0x0056A Aot_set        2c 07 01 31 00 00 a3 b0 f2 bd 34 08 ..    ; Aot_set slot=7 TEXT msg 41 "This freezer isn't on. It smells pretty / bad."
+  0x0057E Aot_set        2c 08 03 31 00 00 4e a8 70 9a 40 06 ..    ; Aot_set slot=8 sce=3 ev->sub07 (ff 00 18 07)
+  0x00592 Item_aot_set   50 09 09 31 00 00 50 97 20 b8 40 06 ..    ; Item_aot_set slot=9 ITEM 0x47 Blue Master Keycard x1 flag=6
+  0x005A8 Item_aot_set   50 0a 09 31 00 00 50 97 20 b8 40 06 ..    ; Item_aot_set slot=10 ITEM 0x22 First Aid Spray x1 flag=11
+  0x005BE Item_aot_set   50 0b 09 31 00 00 50 97 20 b8 40 06 ..    ; Item_aot_set slot=11 ITEM 0x16 Shotgun Shells x7 flag=12
+  0x005D4 Obj_model_set  2d 00 00 00 01 00 00 00 00 00 64 ab ..    ; Obj_model_set obj=0 pos=(-21660,0,-26030)
+  0x005F6 Obj_model_set  2d 01 00 00 01 00 08 00 00 00 66 9b ..    ; Obj_model_set obj=1 pos=(-25754,-1260,-19510)
+  0x00618 Obj_model_set  2d 02 00 00 01 00 08 00 00 00 a4 99 ..    ; Obj_model_set obj=2 pos=(-26204,-1260,-18900)
+  0x0063A Obj_model_set  2d 03 00 00 01 00 08 00 00 00 16 9b ..    ; Obj_model_set obj=3 pos=(-25834,-1260,-18800)
+  0x0065C Ifel_ck        06 00 46 00                             
+  0x00660   Ck             21 03 48 00                               ; Ck(3,0x48)==0
+  0x00664   Sce_em_set     44 00 42 40 00 00 00 ff 53 bf 00 00 ..    ; Sce_em_set slot=0 TYP=0x42 beh=0x40 pos=(-16557, 0, -23410) yaw=0 b4..7=00 00 00 ff
+  0x00678   Sce_em_set     44 01 40 40 00 00 00 ff bd b4 30 fd ..    ; Sce_em_set slot=1 TYP=0x40 beh=0x40 pos=(-19267, -720, -19865) yaw=3072 b4..7=00 00 00 ff
+  0x0068C   Aot_set        2c 0c 01 31 00 00 07 b1 e2 af d0 07 ..    ; Aot_set slot=12 TEXT msg 31 "I need to hurry up and get that / vaccine!"
+  0x006A0   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x006A4   Endif          08 00                                   
+  0x006A6 Evt_end        01 00                                   
+
+=== sub00
+  0x006BA Ifel_ck        06 00 0c 00                             
+  0x006BE   Ck             21 04 22 00                               ; Ck(4,0x22)==0
+  0x006C2   Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x006C6   Else_ck        07 00 14 00                             
+  0x006CA   Ifel_ck        06 00 0a 00                             
+  0x006CE     Ck             21 04 fa 01                               ; Ck(4,0xFA)==1
+  0x006D2     Evt_exec       04 ff 18 04                               ; Evt_exec -> sub04
+  0x006D6     Endif          08 00                                   
+  0x006D8   Nop            00                                      
+  0x006D9   Nop            00                                      
+  0x006DA Evt_end        01 00                                   
+
+=== sub01
+  0x006DC Ifel_ck        06 00 14 00                             
+  0x006E0   Ck             21 09 06 01                               ; Ck(9,0x06)==1
+  0x006E4   Ifel_ck        06 00 0a 00                             
+  0x006E8     Ck             21 03 65 00                               ; Ck(3,0x65)==0
+  0x006EC     Set            22 03 65 01                               ; SET (3,0x65)=1
+  0x006F0     Endif          08 00                                   
+  0x006F2   Endif          08 00                                   
+  0x006F4 Evt_end        01 00                                   
+
+=== sub02
+  0x006F6 Set            22 04 22 01                               ; SET (4,0x22)=1
+  0x006FA Set            22 03 4f 01                               ; SET (3,0x4F)=1
+  0x006FE Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00702 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00706 Cut_chg        29 00                                     ; Cut_chg 0
+  0x00708 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0070B Nop            00                                      
+  0x0070C Pos_set        32 00 65 ad 00 00 84 b3                   ; Pos_set (-21147,0,-19580)
+  0x00714 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00718 Sleep          09 0a 01 00                             
+  0x0071C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0071F Nop            00                                      
+  0x00720 Dir_set        33 00 00 00 80 08 00 00                 
+  0x00728 Plc_dest       40 00 04 20 30 ab 06 a3                   ; Plc_dest mode=4 (-21712,-23802)
+  0x00730 Gosub          18 05                                     ; Gosub -> sub05
+  0x00732 Plc_neck       41 04 03 00 00 00 00 00 3c 00           
+  0x0073C Sleep          09 0a 28 00                             
+  0x00740 Cut_chg        29 03                                     ; Cut_chg 3
+  0x00742 Plc_dest       40 00 09 20 17 ae bf b3                   ; Plc_dest mode=9 (-20969,-19521)
+  0x0074A Gosub          18 05                                     ; Gosub -> sub05
+  0x0074C Plc_dest       40 00 04 20 7b ac 6b ac                   ; Plc_dest mode=4 (-21381,-21397)
+  0x00754 Gosub          18 05                                     ; Gosub -> sub05
+  0x00756 Plc_neck       41 01 48 b5 00 00 e5 ae 3c 3c           
+  0x00760 Sleep          09 0a 28 00                             
+  0x00764 Message_on     2b 00 00 00                               ; Message_on 0  "Ada: Leon, that wound..."
+  0x00768 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0076B Nop            00                                      
+  0x0076C Plc_neck       41 01 83 ad 00 00 44 b0 3c 00           
+  0x00776 Sleep          09 0a 01 00                             
+  0x0077A Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x0077E Sleep          09 0a 32 00                             
+  0x00782 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00785 Nop            00                                      
+  0x00786 Plc_neck       41 01 65 ad 00 00 84 b3 3c 3c           
+  0x00790 Sleep          09 0a 01 00                             
+  0x00794 Plc_dest       40 00 04 20 3f ae 60 ae                   ; Plc_dest mode=4 (-20929,-20896)
+  0x0079C Gosub          18 05                                     ; Gosub -> sub05
+  0x0079E Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x007A1 Nop            00                                      
+  0x007A2 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x007A6 Plc_flg        43 00 80 00                             
+  0x007AA Sleep          09 0a 33 00                             
+  0x007AE Message_on     2b 01 00 00                               ; Message_on 1  "Leon: Yeah, we need to hurry."
+  0x007B2 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x007B5 Nop            00                                      
+  0x007B6 Plc_motion     3f 00 10 00                               ; Plc_motion 0,16,0
+  0x007BA Sleep          09 0a 32 00                             
+  0x007BE Plc_motion     3f 00 10 00                               ; Plc_motion 0,16,0
+  0x007C2 Plc_flg        43 00 80 00                             
+  0x007C6 Sleep          09 0a 33 00                             
+  0x007CA Message_on     2b 02 00 00                               ; Message_on 2  "Leon: Ada... Just who are you, anyway?"
+  0x007CE Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x007D2 Sleep          09 0a 19 00                             
+  0x007D6 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x007DA Plc_flg        43 00 80 00                             
+  0x007DE Sleep          09 0a 19 00                             
+  0x007E2 Plc_motion     3f 00 10 00                               ; Plc_motion 0,16,0
+  0x007E6 Sleep          09 0a 19 00                             
+  0x007EA Plc_motion     3f 00 10 00                               ; Plc_motion 0,16,0
+  0x007EE Plc_flg        43 00 80 00                             
+  0x007F2 Sleep          09 0a 1a 00                             
+  0x007F6 Message_on     2b 03 00 00                               ; Message_on 3  "Leon: Don't tell me..."
+  0x007FA Plc_motion     3f 00 13 00                               ; Plc_motion 0,19,0
+  0x007FE Sleep          09 0a 32 00                             
+  0x00802 Plc_motion     3f 00 13 00                               ; Plc_motion 0,19,0
+  0x00806 Plc_flg        43 00 80 00                             
+  0x0080A Sleep          09 0a 32 00                             
+  0x0080E Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00812 Sleep          09 0a 14 00                             
+  0x00816 Message_on     2b 04 00 00                               ; Message_on 4  "Ada: That's right. / I'm with Umbrella."
+  0x0081A Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0081D Nop            00                                      
+  0x0081E Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x00822 Sleep          09 0a 32 00                             
+  0x00826 Plc_motion     3f 00 0b 00                               ; Plc_motion 0,11,0
+  0x0082A Plc_flg        43 00 80 00                             
+  0x0082E Sleep          09 0a 33 00                             
+  0x00832 Plc_neck       41 00 00 00 00 00 00 00 3c 00           
+  0x0083C Sleep          09 0a 01 00                             
+  0x00840 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00844 Plc_flg        43 01 80 00                             
+  0x00848 Sleep          09 0a 1e 00                             
+  0x0084C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0084F Nop            00                                      
+  0x00850 Plc_neck       41 00 00 00 00 00 00 00 3c 3c           
+  0x0085A Sleep          09 0a 01 00                             
+  0x0085E Plc_neck       41 01 43 ab 00 00 84 b3 64 00           
+  0x00868 Sleep          09 0a 01 00                             
+  0x0086C Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0086F Nop            00                                      
+  0x00870 Plc_neck       41 01 3f ae 00 00 60 ae 64 00           
+  0x0087A Sleep          09 0a 01 00                             
+  0x0087E Plc_dest       40 00 07 21 43 ab 84 b3                   ; Plc_dest mode=7 (-21693,-19580)
+  0x00886 Gosub          18 06                                     ; Gosub -> sub06
+  0x00888 Message_on     2b 05 00 00                               ; Message_on 5  "Ada: Leon... There's no time to talk / right now."
+  0x0088C Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00890 Sleep          09 0a 19 00                             
+  0x00894 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00898 Plc_flg        43 00 80 00                             
+  0x0089C Sleep          09 0a 19 00                             
+  0x008A0 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x008A4 Sleep          09 0a 19 00                             
+  0x008A8 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x008AC Plc_flg        43 00 80 00                             
+  0x008B0 Sleep          09 0a 1a 00                             
+  0x008B4 Plc_dest       40 00 09 21 13 ae 31 ae                   ; Plc_dest mode=9 (-20973,-20943)
+  0x008BC Gosub          18 06                                     ; Gosub -> sub06
+  0x008BE Message_on     2b 06 00 00                               ; Message_on 6  "Ada: If we don't hurry, he's going / to die."
+  0x008C2 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x008C6 Sleep          09 0a 19 00                             
+  0x008CA Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x008CE Plc_flg        43 00 80 00                             
+  0x008D2 Sleep          09 0a 19 00                             
+  0x008D6 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x008DA Sleep          09 0a 19 00                             
+  0x008DE Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x008E2 Plc_flg        43 00 80 00                             
+  0x008E6 Sleep          09 0a 19 00                             
+  0x008EA Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x008EE Sleep          09 0a 14 00                             
+  0x008F2 Message_on     2b 07 00 00                               ; Message_on 7  "Leon: What should we do?"
+  0x008F6 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x008F9 Nop            00                                      
+  0x008FA Plc_motion     3f 00 13 00                               ; Plc_motion 0,19,0
+  0x008FE Sleep          09 0a 32 00                             
+  0x00902 Plc_motion     3f 00 13 00                               ; Plc_motion 0,19,0
+  0x00906 Plc_flg        43 00 80 00                             
+  0x0090A Sleep          09 0a 32 00                             
+  0x0090E Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00912 Sleep          09 0a 14 00                             
+  0x00916 Message_on     2b 08 00 00                               ; Message_on 8  "Ada: It's a virus that makes people / turn into those things. If we can / get him the vaccine, it won't break out."
+  0x0091A Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x0091D Nop            00                                      
+  0x0091E Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00922 Sleep          09 0a 19 00                             
+  0x00926 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x0092A Plc_flg        43 00 80 00                             
+  0x0092E Sleep          09 0a 19 00                             
+  0x00932 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00936 Sleep          09 0a 19 00                             
+  0x0093A Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x0093E Plc_flg        43 00 80 00                             
+  0x00942 Sleep          09 0a 19 00                             
+  0x00946 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x0094A Sleep          09 0a 14 00                             
+  0x0094E Message_on     2b 09 00 00                               ; Message_on 9  "Leon: And where's this vaccine?"
+  0x00952 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00955 Nop            00                                      
+  0x00956 Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x0095A Sleep          09 0a 32 00                             
+  0x0095E Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x00962 Plc_flg        43 00 80 00                             
+  0x00966 Sleep          09 0a 32 00                             
+  0x0096A Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x0096E Sleep          09 0a 14 00                             
+  0x00972 Message_on     2b 0a 00 00                               ; Message_on 10  "Ada: The vaccine itself isn't here, / but we can make one from a strain of / the virus."
+  0x00976 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00979 Nop            00                                      
+  0x0097A Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x0097E Sleep          09 0a 19 00                             
+  0x00982 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00986 Plc_flg        43 00 80 00                             
+  0x0098A Sleep          09 0a 19 00                             
+  0x0098E Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00992 Sleep          09 0a 19 00                             
+  0x00996 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x0099A Plc_flg        43 00 80 00                             
+  0x0099E Sleep          09 0a 1a 00                             
+  0x009A2 Message_on     2b 0b 00 00                               ; Message_on 11  "Ada: However..."
+  0x009A6 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x009AA Sleep          09 0a 32 00                             
+  0x009AE Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x009B2 Plc_flg        43 00 80 00                             
+  0x009B6 Sleep          09 0a 32 00                             
+  0x009BA Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x009BE Sleep          09 0a 14 00                             
+  0x009C2 Message_on     2b 0c 00 00                               ; Message_on 12  "Leon: Ada? What's wrong?"
+  0x009C6 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x009C9 Nop            00                                      
+  0x009CA Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x009CE Sleep          09 0a 32 00                             
+  0x009D2 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x009D6 Plc_flg        43 00 80 00                             
+  0x009DA Sleep          09 0a 32 00                             
+  0x009DE Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x009E2 Sleep          09 0a 14 00                             
+  0x009E6 Cut_chg        29 00                                     ; Cut_chg 0
+  0x009E8 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x009EB Nop            00                                      
+  0x009EC Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x009F6 Sleep          09 0a 01 00                             
+  0x009FA Plc_dest       40 00 04 21 a1 a4 53 ac                   ; Plc_dest mode=4 (-23391,-21421)
+  0x00A02 Gosub          18 06                                     ; Gosub -> sub06
+  0x00A04 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00A07 Nop            00                                      
+  0x00A08 Plc_neck       41 01 a1 a4 00 00 53 ac 64 00           
+  0x00A12 Sleep          09 0a 01 00                             
+  0x00A16 Plc_dest       40 00 09 20 a1 a4 53 ac                   ; Plc_dest mode=9 (-23391,-21421)
+  0x00A1E Gosub          18 05                                     ; Gosub -> sub05
+  0x00A20 Message_on     2b 0d 00 00                               ; Message_on 13  "Ada: Leon, I can't help you."
+  0x00A24 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00A27 Nop            00                                      
+  0x00A28 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00A2C Sleep          09 0a 32 00                             
+  0x00A30 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00A34 Plc_flg        43 00 80 00                             
+  0x00A38 Sleep          09 0a 32 00                             
+  0x00A3C Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x00A40 Sleep          09 0a 14 00                             
+  0x00A44 Message_on     2b 0e 00 00                               ; Message_on 14  "Leon: Wait, what!?"
+  0x00A48 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00A4B Nop            00                                      
+  0x00A4C Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00A50 Sleep          09 0a 19 00                             
+  0x00A54 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00A58 Plc_flg        43 00 80 00                             
+  0x00A5C Sleep          09 0a 19 00                             
+  0x00A60 Plc_motion     3f 00 11 00                               ; Plc_motion 0,17,0
+  0x00A64 Sleep          09 0a 32 00                             
+  0x00A68 Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00A6C Sleep          09 0a 14 00                             
+  0x00A70 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00A73 Nop            00                                      
+  0x00A74 Plc_neck       41 01 3f ae 00 00 60 ae 64 00           
+  0x00A7E Sleep          09 0a 01 00                             
+  0x00A82 Plc_dest       40 00 09 21 3f ae 60 ae                   ; Plc_dest mode=9 (-20929,-20896)
+  0x00A8A Gosub          18 06                                     ; Gosub -> sub06
+  0x00A8C Message_on     2b 0f 00 00                               ; Message_on 15  "Ada: There's something I have to do."
+  0x00A90 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00A94 Sleep          09 0a 32 00                             
+  0x00A98 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00A9C Plc_flg        43 00 80 00                             
+  0x00AA0 Sleep          09 0a 32 00                             
+  0x00AA4 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x00AA8 Sleep          09 0a 14 00                             
+  0x00AAC Message_on     2b 10 00 00                               ; Message_on 16  "Ada: You've helped me out a lot, but / I have to do this myself! "
+  0x00AB0 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00AB4 Sleep          09 0a 19 00                             
+  0x00AB8 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00ABC Plc_flg        43 00 80 00                             
+  0x00AC0 Sleep          09 0a 19 00                             
+  0x00AC4 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00AC8 Sleep          09 0a 19 00                             
+  0x00ACC Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00AD0 Plc_flg        43 00 80 00                             
+  0x00AD4 Sleep          09 0a 19 00                             
+  0x00AD8 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x00ADC Sleep          09 0a 14 00                             
+  0x00AE0 Message_on     2b 11 00 00                               ; Message_on 17  "Leon: I'll..."
+  0x00AE4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00AE7 Nop            00                                      
+  0x00AE8 Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00AEC Sleep          09 0a 32 00                             
+  0x00AF0 Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00AF4 Plc_flg        43 00 80 00                             
+  0x00AF8 Sleep          09 0a 33 00                             
+  0x00AFC Message_on     2b 12 00 00                               ; Message_on 18  "Leon: ...do it on my own if I have to!"
+  0x00B00 Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x00B04 Sleep          09 0a 32 00                             
+  0x00B08 Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x00B0C Plc_flg        43 00 80 00                             
+  0x00B10 Sleep          09 0a 33 00                             
+  0x00B14 Message_on     2b 13 00 00                               ; Message_on 19  "Leon: So, please tell me! / What should I do!?"
+  0x00B18 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00B1C Sleep          09 0a 19 00                             
+  0x00B20 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00B24 Plc_flg        43 00 80 00                             
+  0x00B28 Sleep          09 0a 19 00                             
+  0x00B2C Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00B30 Sleep          09 0a 19 00                             
+  0x00B34 Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00B38 Plc_flg        43 00 80 00                             
+  0x00B3C Sleep          09 0a 19 00                             
+  0x00B40 Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00B44 Sleep          09 0a 14 00                             
+  0x00B48 Message_on     2b 14 00 00                               ; Message_on 20  "Ada: The viral strain should be stored / in this research center's ultra-low / temperature laboratory."
+  0x00B4C Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00B4F Nop            00                                      
+  0x00B50 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00B54 Sleep          09 0a 32 00                             
+  0x00B58 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00B5C Plc_flg        43 00 80 00                             
+  0x00B60 Sleep          09 0a 33 00                             
+  0x00B64 Message_on     2b 15 00 00                               ; Message_on 21  "Ada: As long as you can start up the / program for it, it should handle the / rest automatically."
+  0x00B68 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00B6C Sleep          09 0a 19 00                             
+  0x00B70 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00B74 Plc_flg        43 00 80 00                             
+  0x00B78 Sleep          09 0a 19 00                             
+  0x00B7C Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00B80 Sleep          09 0a 19 00                             
+  0x00B84 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00B88 Plc_flg        43 00 80 00                             
+  0x00B8C Sleep          09 0a 1a 00                             
+  0x00B90 Message_on     2b 16 00 00                               ; Message_on 22  "Ada: However, the Virus Inhibitor is / very delicate."
+  0x00B94 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00B98 Sleep          09 0a 32 00                             
+  0x00B9C Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00BA0 Plc_flg        43 00 80 00                             
+  0x00BA4 Sleep          09 0a 33 00                             
+  0x00BA8 Message_on     2b 17 00 00                               ; Message_on 23  "Ada: If you don't handle it with / extreme care, it'll all be for naught."
+  0x00BAC Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00BB0 Sleep          09 0a 19 00                             
+  0x00BB4 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00BB8 Plc_flg        43 00 80 00                             
+  0x00BBC Sleep          09 0a 19 00                             
+  0x00BC0 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00BC4 Sleep          09 0a 19 00                             
+  0x00BC8 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00BCC Plc_flg        43 00 80 00                             
+  0x00BD0 Sleep          09 0a 19 00                             
+  0x00BD4 Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x00BD8 Sleep          09 0a 14 00                             
+  0x00BDC Message_on     2b 18 00 00                               ; Message_on 24  "Leon: Well, I have to give it a go."
+  0x00BE0 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00BE3 Nop            00                                      
+  0x00BE4 Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x00BE8 Sleep          09 0a 32 00                             
+  0x00BEC Plc_motion     3f 00 14 00                               ; Plc_motion 0,20,0
+  0x00BF0 Plc_flg        43 00 80 00                             
+  0x00BF4 Sleep          09 0a 32 00                             
+  0x00BF8 Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00BFC Sleep          09 0a 14 00                             
+  0x00C00 Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00C0A Sleep          09 0a 01 00                             
+  0x00C0E Plc_neck       41 01 48 b5 00 00 e5 ae 3c 3c           
+  0x00C18 Sleep          09 0a 01 00                             
+  0x00C1C Plc_dest       40 00 09 20 bd b4 67 b2                   ; Plc_dest mode=9 (-19267,-19865)
+  0x00C24 Gosub          18 05                                     ; Gosub -> sub05
+  0x00C26 Message_on     2b 19 00 00                               ; Message_on 25  "Leon: Marvin... I'll save you!"
+  0x00C2A Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00C2E Sleep          09 0a 19 00                             
+  0x00C32 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00C36 Plc_flg        43 00 80 00                             
+  0x00C3A Sleep          09 0a 19 00                             
+  0x00C3E Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00C42 Sleep          09 0a 19 00                             
+  0x00C46 Plc_motion     3f 00 12 00                               ; Plc_motion 0,18,0
+  0x00C4A Plc_flg        43 00 80 00                             
+  0x00C4E Sleep          09 0a 1a 00                             
+  0x00C52 Message_on     2b 1a 00 00                               ; Message_on 26  "Ada: Leon. When all this is over, / head to the underground shelter!"
+  0x00C56 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00C59 Nop            00                                      
+  0x00C5A Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00C5E Sleep          09 0a 14 00                             
+  0x00C62 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00C65 Nop            00                                      
+  0x00C66 Plc_neck       41 00 00 00 00 00 00 00 3c 3c           
+  0x00C70 Sleep          09 0a 01 00                             
+  0x00C74 Plc_neck       41 01 a1 a4 00 00 53 ac 64 00           
+  0x00C7E Sleep          09 0a 01 00                             
+  0x00C82 Plc_dest       40 00 09 20 a1 a4 53 ac                   ; Plc_dest mode=9 (-23391,-21421)
+  0x00C8A Gosub          18 05                                     ; Gosub -> sub05
+  0x00C8C Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00C8F Nop            00                                      
+  0x00C90 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00C94 Plc_flg        43 00 80 00                             
+  0x00C98 Sleep          09 0a 19 00                             
+  0x00C9C Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00CA0 Sleep          09 0a 19 00                             
+  0x00CA4 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00CA8 Plc_flg        43 00 80 00                             
+  0x00CAC Sleep          09 0a 1a 00                             
+  0x00CB0 Message_on     2b 1b 00 00                               ; Message_on 27  "Ada: If you don't, you probably won't / survive."
+  0x00CB4 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00CB8 Sleep          09 0a 19 00                             
+  0x00CBC Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00CC0 Plc_flg        43 00 80 00                             
+  0x00CC4 Sleep          09 0a 19 00                             
+  0x00CC8 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00CCC Sleep          09 0a 19 00                             
+  0x00CD0 Plc_motion     3f 00 01 00                               ; Plc_motion 0,1,0
+  0x00CD4 Plc_flg        43 00 80 00                             
+  0x00CD8 Sleep          09 0a 1a 00                             
+  0x00CDC Message_on     2b 1c 00 00                               ; Message_on 28  "Ada: And keep in mind that this is an / Umbrella research facility. Be careful."
+  0x00CE0 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00CE4 Sleep          09 0a 19 00                             
+  0x00CE8 Plc_motion     3f 00 03 00                               ; Plc_motion 0,3,0
+  0x00CEC Plc_flg        43 00 80 00                             
+  0x00CF0 Sleep          09 0a 19 00                             
+  0x00CF4 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00CF8 Sleep          09 0a 19 00                             
+  0x00CFC Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00D00 Plc_flg        43 00 80 00                             
+  0x00D04 Sleep          09 0a 1a 00                             
+  0x00D08 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00D0B Nop            00                                      
+  0x00D0C Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00D16 Sleep          09 0a 01 00                             
+  0x00D1A Plc_dest       40 00 04 21 cc ad 1e a4                   ; Plc_dest mode=4 (-21044,-23522)
+  0x00D22 Gosub          18 06                                     ; Gosub -> sub06
+  0x00D24 Cut_chg        29 01                                     ; Cut_chg 1
+  0x00D26 Sleep          09 0a 14 00                             
+  0x00D2A Pos_set        32 00 9b bc 00 00 c9 8c                   ; Pos_set (-17253,0,-29495)
+  0x00D32 Sleep          09 0a 01 00                             
+  0x00D36 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D39 Nop            00                                      
+  0x00D3A Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00D44 Sleep          09 0a 01 00                             
+  0x00D48 Plc_dest       40 00 09 20 cc ad 1e a4                   ; Plc_dest mode=9 (-21044,-23522)
+  0x00D50 Gosub          18 05                                     ; Gosub -> sub05
+  0x00D52 Message_on     2b 1d 00 00                               ; Message_on 29  "Leon: Ada, wait!"
+  0x00D56 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00D5A Sleep          09 0a 32 00                             
+  0x00D5E Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00D62 Plc_flg        43 00 80 00                             
+  0x00D66 Sleep          09 0a 33 00                             
+  0x00D6A Message_on     2b 1e 00 00                               ; Message_on 30  "Leon: I probably won't survive...?"
+  0x00D6E Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00D72 Sleep          09 0a 64 00                             
+  0x00D76 Plc_neck       41 00 00 00 00 00 00 00 3c 3c           
+  0x00D80 Sleep          09 0a 01 00                             
+  0x00D84 Plc_ret        42                                      
+  0x00D85 Nop            00                                      
+  0x00D86 Cut_auto       3c 01                                   
+  0x00D88 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x00D8C Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x00D90 Evt_end        01 00                                   
+
+=== sub03
+  0x00D92 Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x00D95 Nop            00                                      
+  0x00D96 Plc_motion     3f 00 19 00                               ; Plc_motion 0,25,0
+  0x00D9A Plc_flg        43 00 04 00                             
+  0x00D9E Evt_end        01 00                                   
+
+=== sub04
+  0x00DA0 Set            22 04 fa 00                               ; SET (4,0xFA)=0
+  0x00DA4 Set            22 03 3f 01                               ; SET (3,0x3F)=1
+  0x00DA8 Set            22 04 14 00                               ; SET (4,0x14)=0
+  0x00DAC Set            22 03 4c 01                               ; SET (3,0x4C)=1
+  0x00DB0 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00DB4 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00DB8 Aot_reset      46 0c 00 00 00 00 00 00 00 00             ; Aot_reset slot=12 sce=0 ev->sub00
+  0x00DC2 Cut_chg        29 01                                     ; Cut_chg 1
+  0x00DC4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00DC7 Nop            00                                      
+  0x00DC8 Dir_set        33 00 00 00 00 00 00 00                 
+  0x00DD0 Pos_set        32 00 a6 af 00 00 0f b4                   ; Pos_set (-20570,0,-19441)
+  0x00DD8 Sleep          09 0a 01 00                             
+  0x00DDC Plc_neck       41 01 bd b4 c0 e0 67 b2 64 64           
+  0x00DE6 Sleep          09 0a 01 00                             
+  0x00DEA Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00DEE Sleep          09 0a 3c 00                             
+  0x00DF2 Message_on     2b 20 00 00                               ; Message_on 32  "Leon: What's wrong, Marvin? Open your / eyes!!"
+  0x00DF6 Sleep          09 0a 65 00                             
+  0x00DFA Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x00E04 Sleep          09 0a 01 00                             
+  0x00E08 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00E0C Plc_flg        43 00 80 00                             
+  0x00E10 Sleep          09 0a 1e 00                             
+  0x00E14 Plc_neck       41 01 44 ac 00 00 8e a4 64 00           
+  0x00E1E Sleep          09 0a 01 00                             
+  0x00E22 Plc_dest       40 00 07 20 a2 a9 4e b4                   ; Plc_dest mode=7 (-22110,-19378)
+  0x00E2A Gosub          18 05                                     ; Gosub -> sub05
+  0x00E2C Plc_dest       40 00 09 20 44 ac 8e a4                   ; Plc_dest mode=9 (-21436,-23410)
+  0x00E34 Gosub          18 05                                     ; Gosub -> sub05
+  0x00E36 Cut_chg        29 00                                     ; Cut_chg 0
+  0x00E38 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00E3B Nop            00                                      
+  0x00E3C Pos_set        32 00 44 ac 00 00 8e a4                   ; Pos_set (-21436,0,-23410)
+  0x00E44 Dir_set        33 00 00 00 00 0c 00 00                 
+  0x00E4C Sleep          09 0a 14 00                             
+  0x00E50 Cut_chg        29 01                                     ; Cut_chg 1
+  0x00E52 Message_on     2b 21 00 00                               ; Message_on 33  "Leon: Ada!"
+  0x00E56 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00E59 Nop            00                                      
+  0x00E5A Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00E5E Sleep          09 0a 32 00                             
+  0x00E62 Plc_motion     3f 00 0f 00                               ; Plc_motion 0,15,0
+  0x00E66 Plc_flg        43 00 80 00                             
+  0x00E6A Sleep          09 0a 32 00                             
+  0x00E6E Plc_motion     3f 00 17 00                               ; Plc_motion 0,23,0
+  0x00E72 Sleep          09 0a 14 00                             
+  0x00E76 Plc_neck       41 01 cb ad 00 00 81 af 64 00           
+  0x00E80 Sleep          09 0a 01 00                             
+  0x00E84 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00E87 Nop            00                                      
+  0x00E88 Plc_dest       40 00 05 21 cb ad 81 af                   ; Plc_dest mode=5 (-21045,-20607)
+  0x00E90 Gosub          18 06                                     ; Gosub -> sub06
+  0x00E92 Plc_dest       40 00 09 21 04 b5 6c ae                   ; Plc_dest mode=9 (-19196,-20884)
+  0x00E9A Gosub          18 06                                     ; Gosub -> sub06
+  0x00E9C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00E9F Nop            00                                      
+  0x00EA0 Plc_dest       40 00 09 20 cb ad 81 af                   ; Plc_dest mode=9 (-21045,-20607)
+  0x00EA8 Gosub          18 05                                     ; Gosub -> sub05
+  0x00EAA Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00EAD Nop            00                                      
+  0x00EAE Plc_neck       41 01 bd b4 c0 e0 67 b2 64 64           
+  0x00EB8 Sleep          09 0a 01 00                             
+  0x00EBC Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00EC0 Sleep          09 0a 32 00                             
+  0x00EC4 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00EC7 Nop            00                                      
+  0x00EC8 Plc_neck       41 01 cb ad 00 00 81 af 64 64           
+  0x00ED2 Sleep          09 0a 01 00                             
+  0x00ED6 Message_on     2b 22 00 00                               ; Message_on 34  "Ada: Leon! What are you doing!? The / virus is on the loose here as well!"
+  0x00EDA Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00EDD Nop            00                                      
+  0x00EDE Plc_neck       41 01 a2 a9 00 00 4e b4 64 00           
+  0x00EE8 Sleep          09 0a 01 00                             
+  0x00EEC Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x00EF0 Sleep          09 0a 19 00                             
+  0x00EF4 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x00EF8 Plc_flg        43 00 80 00                             
+  0x00EFC Sleep          09 0a 19 00                             
+  0x00F00 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00F04 Sleep          09 0a 19 00                             
+  0x00F08 Plc_motion     3f 00 0a 00                               ; Plc_motion 0,10,0
+  0x00F0C Plc_flg        43 00 80 00                             
+  0x00F10 Sleep          09 0a 1a 00                             
+  0x00F14 Message_on     2b 23 00 00                               ; Message_on 35  "Ada: Hurry to the shelter!"
+  0x00F18 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x00F1C Sleep          09 0a 32 00                             
+  0x00F20 Plc_motion     3f 00 09 00                               ; Plc_motion 0,9,0
+  0x00F24 Plc_flg        43 00 80 00                             
+  0x00F28 Sleep          09 0a 33 00                             
+  0x00F2C Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00F36 Sleep          09 0a 01 00                             
+  0x00F3A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00F3D Nop            00                                      
+  0x00F3E Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x00F48 Sleep          09 0a 01 00                             
+  0x00F4C Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00F4F Nop            00                                      
+  0x00F50 Plc_motion     3f 01 0b 00                               ; Plc_motion 1,11,0
+  0x00F54 Plc_flg        43 00 80 00                             
+  0x00F58 Sleep          09 0a 1e 00                             
+  0x00F5C Plc_motion     3f 00 04 00                               ; Plc_motion 0,4,0
+  0x00F60 Sleep          09 0a 3c 00                             
+  0x00F64 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00F67 Nop            00                                      
+  0x00F68 Plc_ret        42                                      
+  0x00F69 Nop            00                                      
+  0x00F6A Cut_auto       3c 01                                   
+  0x00F6C Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x00F70 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x00F74 Evt_end        01 00                                   
+
+=== sub05
+  0x00F76 Do             11 00 08 00                             
+  0x00F7A Evt_next       02                                      
+  0x00F7B Nop            00                                      
+  0x00F7C Edwhile        12 04                                   
+  0x00F7E Ck             21 05 20 00                               ; Ck(5,0x20)==0
+  0x00F82 Evt_end        01 00                                   
+
+=== sub06
+  0x00F84 Do             11 00 08 00                             
+  0x00F88 Evt_next       02                                      
+  0x00F89 Nop            00                                      
+  0x00F8A Edwhile        12 04                                   
+  0x00F8C Ck             21 05 21 00                               ; Ck(5,0x21)==0
+  0x00F90 Evt_end        01 00                                   
+
+=== sub07
+  0x00F92 Cut_chg        29 05                                     ; Cut_chg 5
+  0x00F94 Message_on     2b 2a ff ff                               ; Message_on 42  "Itembox is not available in / this preview."
+  0x00F98 Evt_next       02                                      
+  0x00F99 Nop            00                                      
+  0x00F9A Cut_old        2a                                      
+  0x00F9B Nop            00                                      
+  0x00F9C Cut_auto       3c 01                                   
+  0x00F9E Evt_end        01 00                                   
+
+=== sub08
+  0x00FA0 Cut_chg        29 02                                     ; Cut_chg 2
+  0x00FA2 Message_on     2b 2b ff ff                               ; Message_on 43  "It's a computer.You can save your progress / with this.Save is not available in / this preview."
+  0x00FA6 Evt_next       02                                      
+  0x00FA7 Nop            00                                      
+  0x00FA8 Cut_old        2a                                      
+  0x00FA9 Nop            00                                      
+  0x00FAA Cut_auto       3c 01                                   
+  0x00FAC Evt_end        01 00                                   

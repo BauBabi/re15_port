@@ -1,0 +1,235 @@
+ROOM11A1  (re15_port/shared_assets/PSX/STAGE1/ROOM11A1.RDT)
+
+=== main00
+  0x00F3A Ifel_ck        06 00 1c 00                             
+  0x00F3E   Ck             21 03 97 00                               ; Ck(3,0x97)==0
+  0x00F42   Aot_set        2c 00 01 31 00 00 18 15 34 ef 98 08 ..    ; Aot_set slot=0 TEXT msg 2 "It's locked from the other side."
+  0x00F56   Else_ck        07 00 26 00                             
+  0x00F5A   Door_aot_set   3b 00 02 31 00 00 18 15 34 ef 98 08 ..    ; Door_aot_set slot=0 sce=2 -> ROOM2071 cut=12
+  0x00F7A   Nop            00                                      
+  0x00F7B   Nop            00                                      
+  0x00F7C Door_aot_set   3b 01 02 31 01 00 76 fd b4 5f 14 05 ..    ; Door_aot_set slot=1 sce=2 -> ROOM3001 cut=0
+  0x00F9C Door_aot_set   3b 02 02 31 01 00 78 37 fc 08 98 08 ..    ; Door_aot_set slot=2 sce=2 -> ROOM11A1 cut=10
+  0x00FBC Aot_reset      46 02 01 31 01 00 ff ff 00 00             ; Aot_reset slot=2 TEXT msg 1 "It's locked."
+  0x00FC6 Door_aot_set   3b 03 02 31 03 00 00 19 2a 2b 98 08 ..    ; Door_aot_set slot=3 sce=2 -> ROOM11A1 cut=8
+  0x00FE6 Ifel_ck        06 00 1c 00                             
+  0x00FEA   Ck             21 03 ce 00                               ; Ck(3,0xCE)==0
+  0x00FEE   Aot_set        2c 04 01 31 01 00 54 6f c8 00 e8 03 ..    ; Aot_set slot=4 TEXT msg 2 "It's locked from the other side."
+  0x01002   Else_ck        07 00 26 00                             
+  0x01006   Door_aot_set   3b 04 02 31 01 00 54 6f c8 00 e8 03 ..    ; Door_aot_set slot=4 sce=2 -> ROOM20A1 cut=8
+  0x01026   Nop            00                                      
+  0x01027   Nop            00                                      
+  0x01028 Aot_set        2c 05 03 31 03 00 26 34 68 10 bc 02 ..    ; Aot_set slot=5 sce=3 ev->sub02 (ff 00 18 02)
+  0x0103C Ifel_ck        06 00 3e 00                             
+  0x01040   Ck             21 05 06 00                               ; Ck(5,0x06)==0
+  0x01044   Aot_set        2c 06 05 44 00 00 4a b1 2e 09 02 08 ..    ; Aot_set slot=6 sce=5 ev->sub00 (00 00 00 00)
+  0x01058   Obj_model_set  2d 00 04 00 03 00 00 00 00 00 42 27 ..    ; Obj_model_set obj=0 pos=(10050,-5400,8800)
+  0x0107A   Else_ck        07 00 28 00                             
+  0x0107E   Obj_model_set  2d 00 04 00 00 00 00 00 00 00 9c b4 ..    ; Obj_model_set obj=0 pos=(-19300,0,3300)
+  0x010A0   Nop            00                                      
+  0x010A1   Nop            00                                      
+  0x010A2 Ifel_ck        06 00 3e 00                             
+  0x010A6   Ck             21 05 07 01                               ; Ck(5,0x07)==1
+  0x010AA   Obj_model_set  2d 01 00 00 05 00 98 00 10 00 00 19 ..    ; Obj_model_set obj=1 pos=(6400,-9000,2750)
+  0x010CC   Sca_id_set     37 00 1c 00                             
+  0x010D0   Sca_id_set     37 01 1c 00                             
+  0x010D4   Sca_id_set     37 02 1c 00                             
+  0x010D8   Sca_id_set     37 03 1c 00                             
+  0x010DC   Sca_id_set     37 04 1c 00                             
+  0x010E0   Else_ck        07 00 28 00                             
+  0x010E4   Obj_model_set  2d 01 00 00 05 00 98 00 10 00 00 19 ..    ; Obj_model_set obj=1 pos=(6400,-5400,2750)
+  0x01106   Nop            00                                      
+  0x01107   Nop            00                                      
+  0x01108 Aot_set        2c 07 08 47 00 00 4a b1 f6 f0 9a bf ..    ; Aot_set slot=7 sce=8 ev->sub00 (7c fc 00 00)
+  0x0111C Aot_set        2c 08 08 47 00 00 4a b1 38 ff 6a 18 ..    ; Aot_set slot=8 sce=8 ev->sub00 (7c fc 00 00)
+  0x01130 Obj_model_set  2d 02 03 02 03 00 0a 00 1a 00 17 11 ..    ; Obj_model_set obj=2 pos=(4375,-900,-2075)
+  0x01152 Obj_model_set  2d 03 03 02 03 00 0a 00 1a 00 e3 bd ..    ; Obj_model_set obj=3 pos=(-16925,-16200,2675)
+  0x01174 Evt_end        01 00                                   
+
+=== sub00
+  0x01184 Ifel_ck        06 00 2e 00                             
+  0x01188   Ck             21 04 c6 00                               ; Ck(4,0xC6)==0
+  0x0118C   Sce_em_set     44 00 49 40 01 00 00 ff 08 07 f8 f8 ..    ; Sce_em_set slot=0 TYP=0x49 beh=0x40 pos=(1800, -1800, 23800) yaw=1536 b4..7=01 00 00 ff
+  0x011A0   Sce_em_set     44 01 4b 40 01 00 00 ff fc 08 f8 f8 ..    ; Sce_em_set slot=1 TYP=0x4B beh=0x40 pos=(2300, -1800, 22600) yaw=1536 b4..7=01 00 00 ff
+  0x011B4   Endif          08 00                                   
+  0x011B6 Evt_end        01 00                                   
+
+=== sub01
+  0x011B8 Ifel_ck        06 00 22 00                             
+  0x011BC   Ck             21 05 00 00                               ; Ck(5,0x00)==0
+  0x011C0   Ifel_ck        06 00 18 00                             
+  0x011C4     Cmp            23 00 0a 00 05 00                         ; Cmp(var0A op0 5)
+  0x011CA     Work_set       2e 03 03                                  ; Work_set -> Prop obj 3
+  0x011CD     Nop            00                                      
+  0x011CE     Member_set     34 01 7c fc                               ; Member_set m=0x01 val=-900
+  0x011D2     Set            22 05 00 01                               ; SET (5,0x00)=1
+  0x011D6     Set            22 05 01 01                               ; SET (5,0x01)=1
+  0x011DA     Endif          08 00                                   
+  0x011DC   Endif          08 00                                   
+  0x011DE Ifel_ck        06 00 22 00                             
+  0x011E2   Ck             21 05 01 01                               ; Ck(5,0x01)==1
+  0x011E6   Ifel_ck        06 00 18 00                             
+  0x011EA     Cmp            23 00 0a 00 04 00                         ; Cmp(var0A op0 4)
+  0x011F0     Work_set       2e 03 03                                  ; Work_set -> Prop obj 3
+  0x011F3     Nop            00                                      
+  0x011F4     Member_set     34 01 b8 c0                               ; Member_set m=0x01 val=-16200
+  0x011F8     Set            22 05 01 00                               ; SET (5,0x01)=0
+  0x011FC     Set            22 05 00 00                               ; SET (5,0x00)=0
+  0x01200     Endif          08 00                                   
+  0x01202   Endif          08 00                                   
+  0x01204 Ifel_ck        06 00 22 00                             
+  0x01208   Ck             21 05 02 00                               ; Ck(5,0x02)==0
+  0x0120C   Ifel_ck        06 00 18 00                             
+  0x01210     Cmp            23 00 0a 00 01 00                         ; Cmp(var0A op0 1)
+  0x01216     Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x01219     Nop            00                                      
+  0x0121A     Member_set     34 01 b8 c0                               ; Member_set m=0x01 val=-16200
+  0x0121E     Set            22 05 02 01                               ; SET (5,0x02)=1
+  0x01222     Set            22 05 03 01                               ; SET (5,0x03)=1
+  0x01226     Endif          08 00                                   
+  0x01228   Endif          08 00                                   
+  0x0122A Ifel_ck        06 00 22 00                             
+  0x0122E   Ck             21 05 02 00                               ; Ck(5,0x02)==0
+  0x01232   Ifel_ck        06 00 18 00                             
+  0x01236     Cmp            23 00 0a 00 02 00                         ; Cmp(var0A op0 2)
+  0x0123C     Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x0123F     Nop            00                                      
+  0x01240     Member_set     34 01 b8 c0                               ; Member_set m=0x01 val=-16200
+  0x01244     Set            22 05 02 01                               ; SET (5,0x02)=1
+  0x01248     Set            22 05 03 01                               ; SET (5,0x03)=1
+  0x0124C     Endif          08 00                                   
+  0x0124E   Endif          08 00                                   
+  0x01250 Ifel_ck        06 00 22 00                             
+  0x01254   Ck             21 05 03 01                               ; Ck(5,0x03)==1
+  0x01258   Ifel_ck        06 00 18 00                             
+  0x0125C     Cmp            23 00 0a 00 03 00                         ; Cmp(var0A op0 3)
+  0x01262     Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x01265     Nop            00                                      
+  0x01266     Member_set     34 01 7c fc                               ; Member_set m=0x01 val=-900
+  0x0126A     Set            22 05 03 00                               ; SET (5,0x03)=0
+  0x0126E     Set            22 05 02 00                               ; SET (5,0x02)=0
+  0x01272     Endif          08 00                                   
+  0x01274   Endif          08 00                                   
+  0x01276 Ifel_ck        06 00 22 00                             
+  0x0127A   Ck             21 05 04 00                               ; Ck(5,0x04)==0
+  0x0127E   Ifel_ck        06 00 18 00                             
+  0x01282     Cmp            23 00 0a 00 0b 00                         ; Cmp(var0A op0 11)
+  0x01288     Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x0128B     Nop            00                                      
+  0x0128C     Member_set     34 01 b8 c0                               ; Member_set m=0x01 val=-16200
+  0x01290     Set            22 05 04 01                               ; SET (5,0x04)=1
+  0x01294     Set            22 05 05 01                               ; SET (5,0x05)=1
+  0x01298     Endif          08 00                                   
+  0x0129A   Endif          08 00                                   
+  0x0129C Ifel_ck        06 00 22 00                             
+  0x012A0   Ck             21 05 05 01                               ; Ck(5,0x05)==1
+  0x012A4   Ifel_ck        06 00 18 00                             
+  0x012A8     Cmp            23 00 0a 00 08 00                         ; Cmp(var0A op0 8)
+  0x012AE     Work_set       2e 03 02                                  ; Work_set -> Prop obj 2
+  0x012B1     Nop            00                                      
+  0x012B2     Member_set     34 01 7c fc                               ; Member_set m=0x01 val=-900
+  0x012B6     Set            22 05 05 00                               ; SET (5,0x05)=0
+  0x012BA     Set            22 05 04 00                               ; SET (5,0x04)=0
+  0x012BE     Endif          08 00                                   
+  0x012C0   Endif          08 00                                   
+  0x012C2 Ifel_ck        06 00 1a 00                             
+  0x012C6   Ck             21 05 06 00                               ; Ck(5,0x06)==0
+  0x012CA   Work_set       2e 03 00                                  ; Work_set -> Prop obj 0
+  0x012CD   Nop            00                                      
+  0x012CE   Ifel_ck        06 00 0c 00                             
+  0x012D2     Member_cmp     3e 00 0f 00 06 00                         ; Member_cmp(m0F op0 6)
+  0x012D8     Set            22 05 06 01                               ; SET (5,0x06)=1
+  0x012DC     Endif          08 00                                   
+  0x012DE   Endif          08 00                                   
+  0x012E0 Evt_end        01 00                                   
+
+=== sub02
+  0x012E2 Message_on     2b 00 80 ff                               ; Message_on 0  "There's a shutter switch here. Press it? "
+  0x012E6 Evt_next       02                                      
+  0x012E7 Nop            00                                      
+  0x012E8 Ifel_ck        06 00 16 00                             
+  0x012EC   Ck             21 0c 1f 00                               ; Ck(12,0x1F)==0
+  0x012F0   Se_on          36 02 0c 00 00 00 d7 35 e0 e3 e9 b7     
+  0x012FC   Evt_exec       04 09 18 03                               ; Evt_exec -> sub03
+  0x01300   Endif          08 00                                   
+  0x01302 Evt_end        01 00                                   
+
+=== sub03
+  0x01304 Ifel_ck        06 00 0a 00                             
+  0x01308   Ck             21 05 07 01                               ; Ck(5,0x07)==1
+  0x0130C   Gosub          18 05                                     ; Gosub -> sub05
+  0x0130E   Else_ck        07 00 08 00                             
+  0x01312   Gosub          18 04                                     ; Gosub -> sub04
+  0x01314   Nop            00                                      
+  0x01315   Nop            00                                      
+  0x01316 Evt_end        01 00                                   
+
+=== sub04
+  0x01318 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0131C Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x01320 Cut_chg        29 0c                                     ; Cut_chg 12
+  0x01322 Work_set       2e 03 01                                  ; Work_set -> Prop obj 1
+  0x01325 Nop            00                                      
+  0x01326 Se_on          36 02 0a 00 03 01 00 00 00 00 00 00     
+  0x01332 Speed_set      2f 01 d8 ff                             
+  0x01336 For            0d 00 04 00 46 00                       
+  0x0133C Add_speed      30                                      
+  0x0133D Evt_next       02                                      
+  0x0133E Next           0e 00                                   
+  0x01340 For            0d 00 04 00 14 00                       
+  0x01346 Add_speed      30                                      
+  0x01347 Evt_next       02                                      
+  0x01348 Next           0e 00                                   
+  0x0134A Speed_set      2f 01 00 00                             
+  0x0134E Se_on          36 02 0b 00 03 01 00 00 00 00 00 00     
+  0x0135A Set            22 05 07 01                               ; SET (5,0x07)=1
+  0x0135E Sca_id_set     37 00 1c 00                             
+  0x01362 Sca_id_set     37 01 1c 00                             
+  0x01366 Sca_id_set     37 02 1c 00                             
+  0x0136A Sca_id_set     37 03 1c 00                             
+  0x0136E Sca_id_set     37 04 1c 00                             
+  0x01372 Cut_chg        29 0b                                     ; Cut_chg 11
+  0x01374 Cut_auto       3c 01                                   
+  0x01376 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x01379 Nop            00                                      
+  0x0137A Plc_ret        42                                      
+  0x0137B Nop            00                                      
+  0x0137C Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x01380 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x01384 Evt_end        01 00                                   
+
+=== sub05
+  0x01386 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x0138A Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x0138E Cut_chg        29 0c                                     ; Cut_chg 12
+  0x01390 Work_set       2e 03 01                                  ; Work_set -> Prop obj 1
+  0x01393 Nop            00                                      
+  0x01394 Se_on          36 02 0a 00 03 01 00 00 00 00 00 00     
+  0x013A0 Speed_set      2f 01 28 00                             
+  0x013A4 For            0d 00 04 00 2d 00                       
+  0x013AA Add_speed      30                                      
+  0x013AB Evt_next       02                                      
+  0x013AC Next           0e 00                                   
+  0x013AE Speed_set      2f 01 00 00                             
+  0x013B2 Speed_set      2f 01 28 00                             
+  0x013B6 For            0d 00 04 00 2d 00                       
+  0x013BC Add_speed      30                                      
+  0x013BD Evt_next       02                                      
+  0x013BE Next           0e 00                                   
+  0x013C0 Speed_set      2f 01 00 00                             
+  0x013C4 Se_on          36 02 0b 00 03 01 00 00 00 00 00 00     
+  0x013D0 Set            22 05 07 00                               ; SET (5,0x07)=0
+  0x013D4 Sca_id_set     37 00 1c ff                             
+  0x013D8 Sca_id_set     37 01 1c ff                             
+  0x013DC Sca_id_set     37 02 1c ff                             
+  0x013E0 Sca_id_set     37 03 1c ff                             
+  0x013E4 Sca_id_set     37 04 1c ff                             
+  0x013E8 Cut_chg        29 0b                                     ; Cut_chg 11
+  0x013EA Cut_auto       3c 01                                   
+  0x013EC Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x013EF Nop            00                                      
+  0x013F0 Plc_ret        42                                      
+  0x013F1 Nop            00                                      
+  0x013F2 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x013F6 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x013FA Evt_end        01 00                                   

@@ -1,0 +1,154 @@
+ROOM3020  (re15_port/shared_assets/PSX/STAGE3/ROOM3020.RDT)
+
+=== main00
+  0x00B3A Door_aot_set   3b 00 02 31 00 00 56 96 66 a4 58 02 ..    ; Door_aot_set slot=0 sce=2 -> ROOM3010 cut=6
+  0x00B5A Aot_set        2c 01 01 31 00 00 14 ba 96 ce 80 0c ..    ; Aot_set slot=1 TEXT msg 6 " / It's locked."
+  0x00B6E Door_aot_set   3b 02 02 31 00 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=2 sce=2 -> ROOM30C0 cut=0
+  0x00B8E Aot_set        2c 04 01 31 00 00 44 99 08 bc ae 15 ..    ; Aot_set slot=4 TEXT msg 4 "The car is locked, I can't get inside."
+  0x00BA2 Aot_set        2c 05 01 31 00 00 00 ce 6e 92 78 05 ..    ; Aot_set slot=5 TEXT msg 4 "The car is locked, I can't get inside."
+  0x00BB6 Aot_set        2c 06 01 31 00 00 16 a9 d0 8a e8 03 ..    ; Aot_set slot=6 TEXT msg 5 "The panel is smashed and doesn't work."
+  0x00BCA Evt_end        01 00                                   
+
+=== sub00
+  0x00BDA Ifel_ck        06 00 2e 00                             
+  0x00BDE   Ck             21 04 c7 01                               ; Ck(4,0xC7)==1
+  0x00BE2   Aot_set        2c 03 03 41 00 00 78 ba 52 b8 da 16 ..    ; Aot_set slot=3 sce=3 ev->sub02 (ff 00 18 02)
+  0x00BF6   Sce_em_set     44 00 40 00 00 00 00 ff 64 9c 00 00 ..    ; Sce_em_set slot=0 TYP=0x40 beh=0x00 pos=(-25500, 0, -19500) yaw=0 b4..7=00 00 00 ff
+  0x00C0A   Endif          08 00                                   
+  0x00C0C Evt_end        01 00                                   
+
+=== sub01
+  0x00C0E Evt_end        01 00                                   
+
+=== sub02
+  0x00C10 Set            22 04 c7 00                               ; SET (4,0xC7)=0
+  0x00C14 Aot_reset      46 03 00 00 00 00 00 00 00 00             ; Aot_reset slot=3 sce=0 ev->sub00
+  0x00C1E Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x00C22 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x00C26 Cut_chg        29 02                                     ; Cut_chg 2
+  0x00C28 Evt_exec       04 ff 18 05                               ; Evt_exec -> sub05
+  0x00C2C Sleep          09 0a 14 00                             
+  0x00C30 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00C33 Nop            00                                      
+  0x00C34 Plc_dest       40 00 04 00 42 c3 48 c2                   ; Plc_dest mode=4 (-15550,-15800)
+  0x00C3C Gosub          18 03                                     ; Gosub -> sub03
+  0x00C3E Plc_dest       40 00 09 00 42 c3 38 cd                   ; Plc_dest mode=9 (-15550,-13000)
+  0x00C46 Gosub          18 03                                     ; Gosub -> sub03
+  0x00C48 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x00C4C Sleep          09 0a 3c 00                             
+  0x00C50 Plc_neck       41 01 b2 c1 00 00 c2 cf 64 00           
+  0x00C5A Plc_dest       40 00 04 00 b2 c1 38 cd                   ; Plc_dest mode=4 (-15950,-13000)
+  0x00C62 Gosub          18 03                                     ; Gosub -> sub03
+  0x00C64 Plc_dest       40 00 09 00 b2 c1 40 d4                   ; Plc_dest mode=9 (-15950,-11200)
+  0x00C6C Gosub          18 03                                     ; Gosub -> sub03
+  0x00C6E Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00C71 Nop            00                                      
+  0x00C72 Plc_neck       41 01 b2 c1 00 00 38 cd 64 00           
+  0x00C7C Sleep          09 0a 01 00                             
+  0x00C80 Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00C83 Nop            00                                      
+  0x00C84 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00C88 Sleep          09 0a 3c 00                             
+  0x00C8C Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00C90 Plc_flg        43 00 80 00                             
+  0x00C94 Sleep          09 0a 1e 00                             
+  0x00C98 Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00CA2 Plc_dest       40 00 09 00 38 cd 86 c0                   ; Plc_dest mode=9 (-13000,-16250)
+  0x00CAA Gosub          18 03                                     ; Gosub -> sub03
+  0x00CAC Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00CAF Nop            00                                      
+  0x00CB0 Plc_dest       40 00 09 01 b2 c1 38 cd                   ; Plc_dest mode=9 (-15950,-13000)
+  0x00CB8 Message_on     2b 00 00 00                               ; Message_on 0  "Leon: Dammit! the door does not open!"
+  0x00CBC Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00CBF Nop            00                                      
+  0x00CC0 Plc_motion     3f 00 02 00                               ; Plc_motion 0,2,0
+  0x00CC4 Sleep          09 0a 28 00                             
+  0x00CC8 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x00CCC Sleep          09 0a 32 00                             
+  0x00CD0 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00CD3 Nop            00                                      
+  0x00CD4 Plc_neck       41 01 0e d4 bc e9 c2 cf 64 64           
+  0x00CDE Sleep          09 0a 32 00                             
+  0x00CE2 Plc_dest       40 00 04 01 0e d4 3e cc                   ; Plc_dest mode=4 (-11250,-13250)
+  0x00CEA Gosub          18 04                                     ; Gosub -> sub04
+  0x00CEC Plc_dest       40 00 09 01 0e d4 46 d3                   ; Plc_dest mode=9 (-11250,-11450)
+  0x00CF4 Gosub          18 04                                     ; Gosub -> sub04
+  0x00CF6 Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x00CFA Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00CFD Nop            00                                      
+  0x00CFE Plc_neck       41 01 0e d4 00 00 3e cc 64 00           
+  0x00D08 Sleep          09 0a 32 00                             
+  0x00D0C Cut_chg        29 06                                     ; Cut_chg 6
+  0x00D0E Evt_exec       04 ff 18 06                               ; Evt_exec -> sub06
+  0x00D12 Message_on     2b 01 00 00                               ; Message_on 1  "Marvin: There's an open window, maybe / we could enter through there?"
+  0x00D16 Sleep          09 0a 64 00                             
+  0x00D1A Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00D1D Nop            00                                      
+  0x00D1E Plc_neck       41 00 00 00 00 00 00 00 64 64           
+  0x00D28 Plc_dest       40 00 09 01 5e cf 5c c7                   ; Plc_dest mode=9 (-12450,-14500)
+  0x00D30 Gosub          18 04                                     ; Gosub -> sub04
+  0x00D32 Message_on     2b 02 00 00                               ; Message_on 2  "Marvin: Leon give me an hand!"
+  0x00D36 Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00D3A Sleep          09 0a 32 00                             
+  0x00D3E Plc_motion     3f 00 00 00                               ; Plc_motion 0,0,0
+  0x00D42 Plc_flg        43 00 80 00                             
+  0x00D46 Sleep          09 0a 28 00                             
+  0x00D4A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D4D Nop            00                                      
+  0x00D4E Plc_neck       41 03 01 00 00 00 00 00 00 3c           
+  0x00D58 Sleep          09 0a 32 00                             
+  0x00D5C Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00D5F Nop            00                                      
+  0x00D60 Plc_dest       40 00 09 01 0e d4 46 d3                   ; Plc_dest mode=9 (-11250,-11450)
+  0x00D68 Gosub          18 04                                     ; Gosub -> sub04
+  0x00D6A Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00D6D Nop            00                                      
+  0x00D6E Plc_dest       40 00 04 00 0e d4 3e cc                   ; Plc_dest mode=4 (-11250,-13250)
+  0x00D76 Sleep          09 0a 0a 00                             
+  0x00D7A Save           24 10 0d 00                             
+  0x00D7E Aot_on         47 02                                   
+  0x00D80 Evt_end        01 00                                   
+
+=== sub03
+  0x00D82 Set            22 05 00 00                               ; SET (5,0x00)=0
+  0x00D86 While          0f 04 08 00                             
+  0x00D8A Ck             21 05 00 00                               ; Ck(5,0x00)==0
+  0x00D8E Evt_next       02                                      
+  0x00D8F Nop            00                                      
+  0x00D90 Ewhile         10 00                                   
+  0x00D92 Evt_end        01 00                                   
+
+=== sub04
+  0x00D94 Set            22 05 01 00                               ; SET (5,0x01)=0
+  0x00D98 While          0f 04 08 00                             
+  0x00D9C Ck             21 05 01 00                               ; Ck(5,0x01)==0
+  0x00DA0 Evt_next       02                                      
+  0x00DA1 Nop            00                                      
+  0x00DA2 Ewhile         10 00                                   
+  0x00DA4 Evt_end        01 00                                   
+
+=== sub05
+  0x00DA6 Work_set       2e 02 00                                  ; Work_set -> NPC-Slot 0
+  0x00DA9 Nop            00                                      
+  0x00DAA Pos_set        32 00 a0 c4 00 00 ee b7                   ; Pos_set (-15200,0,-18450)
+  0x00DB2 Member_set     34 04 00 0c                               ; Member_set m=0x04 val=3072
+  0x00DB6 Plc_dest       40 00 04 01 38 cd 86 c0                   ; Plc_dest mode=4 (-13000,-16250)
+  0x00DBE Gosub          18 04                                     ; Gosub -> sub04
+  0x00DC0 Plc_dest       40 00 09 01 38 cd 3e cc                   ; Plc_dest mode=9 (-13000,-13250)
+  0x00DC8 Gosub          18 04                                     ; Gosub -> sub04
+  0x00DCA Plc_motion     3f 00 08 00                               ; Plc_motion 0,8,0
+  0x00DCE Plc_neck       41 04 03 00 00 00 00 00 3c 00           
+  0x00DD8 Sleep          09 0a 3c 00                             
+  0x00DDC Evt_end        01 00                                   
+
+=== sub06
+  0x00DDE Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x00DE1 Nop            00                                      
+  0x00DE2 Plc_dest       40 00 04 00 1e c9 5c c7                   ; Plc_dest mode=4 (-14050,-14500)
+  0x00DEA Gosub          18 03                                     ; Gosub -> sub03
+  0x00DEC Plc_dest       40 00 04 00 5e cf 5c c7                   ; Plc_dest mode=4 (-12450,-14500)
+  0x00DF4 Gosub          18 03                                     ; Gosub -> sub03
+  0x00DF6 Plc_dest       40 00 09 00 0e d4 3e cc                   ; Plc_dest mode=9 (-11250,-13250)
+  0x00DFE Gosub          18 03                                     ; Gosub -> sub03
+  0x00E00 Plc_neck       41 00 00 00 00 00 00 00 64 00           
+  0x00E0A Evt_end        01 00                                   
