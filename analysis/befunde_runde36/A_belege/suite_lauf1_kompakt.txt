@@ -1,0 +1,17 @@
+# Suite-Lauf 1 (local_build.sh all, Baum r36_klettern, Stand c83d411b, 2026-10-10 ~14:30-16:00, Host unter Last paralleler Agenten)
+99% tests passed, 1 tests failed out of 596
+Total Test time (real) = 5492.33 sec
+502/596 Test #502: integration_r35_cut1150 ..................***Failed  769.59 sec
+222/596 Test #222: unit_1090_climb_pin ......................   Passed    0.03 sec
+572/596 Test #572: unit_r36_klettern_10f0_endlage ...........   Passed    1.13 sec
+573/596 Test #573: unit_r36_klettern_10f0_startlage .........   Passed    0.06 sec
+574/596 Test #574: unit_r36_klettern_zensus .................   Passed    0.33 sec
+575/596 Test #575: integration_r36_klettern .................   Passed  534.27 sec
+
+## Ursache integration_r35_cut1150 (Lauf b, re15_port/build/r35_cut1150/lauf_bf6bed75_b/debug.log, letzte Zeilen):
+
+Assertion failure at WIN_AddDisplay (C:/workspace/git/reAi_v2/.claude/worktrees/r36_klettern/re15_port/build/_deps/sdl2-src/src/video/windows/SDL_windowsmodes.c:380), triggered 1 time:
+  'index == *display_index'
+
+state.log endet bei:
+F370 pad=0000 PL(-20538,-25147,rot=1500,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx

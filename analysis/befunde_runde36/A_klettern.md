@@ -231,6 +231,33 @@ Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re1
 Damit ist jedes Objekt der betroffenen Klasse in beiden Szenarien und beiden Lagen gemessen, nicht nur
 "durch dieselbe Zeile abgedeckt".
 
+## Suite (bash re15_port/tools/local_build.sh all, Baum r36_klettern)
+
+**Lauf 1** (Stand c83d411b, ~14:30-16:00, Host unter Last paralleler Runde-36-Agenten; `A_belege/suite_lauf1_kompakt.txt`):
+```
+99% tests passed, 1 tests failed out of 596
+Total Test time (real) = 5492.33 sec
+502/596 Test #502: integration_r35_cut1150 ..................***Failed  769.59 sec
+572/596 Test #572: unit_r36_klettern_10f0_endlage ...........   Passed    1.13 sec
+573/596 Test #573: unit_r36_klettern_10f0_startlage .........   Passed    0.06 sec
+574/596 Test #574: unit_r36_klettern_zensus .................   Passed    0.33 sec
+575/596 Test #575: integration_r36_klettern .................   Passed  534.27 sec
+```
+Der einzige Fehlschlag ist ein FREMDER Test (Spur L, Runde 35) und extern verursacht: die exe von Lauf b
+blieb bei Bild 370 (state.log) in einer SDL2-Assertion haengen — `Assertion failure at WIN_AddDisplay
+(.../_deps/sdl2-src/src/video/windows/SDL_windowsmodes.c:380) 'index == *display_index'` (debug.log, letzte
+Zeile), d.h. die Anzeige-Konfiguration des Hosts aenderte sich waehrend des Laufs; die Meldung "Endbild
+nicht erreicht - Lauf vorher abgerissen" ist die Folge des 600-s-Timeouts. ROOM1130/1150 enthalten kein
+Typ-4-Objekt, die Spur-A-Aenderung (ein Gate in der Kletter-Sonde) wird dort nie erreicht. Einzel-Nachlauf:
+siehe unten.
+
+Die drei Laeufe von `integration_r36_klettern` aus diesem Suite-Lauf (`A_belege/suite_lauf1_integration_r36_klettern_kompakt.txt`):
+```
+A_leon_10f0  : T252 t4pos=(-6050,4950) | T572 push=5 | T1121 sub=9 kind=0x81 obj=3 | T1173 pos=(-4899,-1800,-1206) band=1 stand=3 t4pos=(-4785,-1108) | EXIT_AT: Bild 1400 in Raum 1090 | PL00
+B_elza_10f1  : T32  t4pos=(-6050,4950) | T590 push=5 | T1137 sub=9 kind=0x81 obj=3 | T1189 pos=(-5015,-1800,-1174) band=1 stand=3 t4pos=(-4892,-1076) | EXIT_AT: Bild 1320 in Raum 1091 | PL04 (character=4, Elza-Bit=1)
+C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 obj=3 | T4368 pos=(-5083,-1800,-1206) band=1 stand=3 t4pos=(-4970,-1108) | EXIT_AT: Bild 4550 in Raum 1090 | PL00
+```
+
 ## OFFEN (kritisch gegen den Wortlaut geprueft, Fortsetzung 2026-10-10)
 
 - **Erledigt:** "uebrige Typ-4-Raeume nicht einzeln gefahren" — jetzt je Raum/Szenario/Lage/Objekt in der
