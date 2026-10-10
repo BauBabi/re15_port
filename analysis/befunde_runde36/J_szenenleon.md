@@ -282,9 +282,10 @@ re15_lock_se.h). RE2_SOUND_LISTE.md: "ROOM101.SAP - Gun Shop".
   x -20942 stehen, von WESTEN bei x -22618 (Zelle (3,0x0C) solid); Aktionstaste -> "The door is locked."
   (`J_belege/p2_nachher_tuer_text_ost_west.png`) und `tuerse.log`: `raum=11B1 nachricht=12 art=M weg=AOT satz=0(ZU_A)`
   = derselbe RE2-Ton wie bei Elza.
-- ⛔ BILD: der Hintergrund (ROOM11B.BSS, von 11B0 UND 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
-  aufgeschwungen an der Nordwand, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — genau so sieht Elza sie, waehrend
-  ihr Text "The door is locked." sagt. Die Erweiterung aendert das Bild nicht (Entscheidungsfrage unten).
+- ~~⛔ BILD: der Hintergrund zeigt die Tuer in Cut 8 OFFEN gemalt — genau so sieht Elza sie ...~~ **FALSCH (Abnahme 0
+  M3, berichtigt in Nachbesserung 1 §N1.1):** ROOM11B.BSS hat BEIDE Zustaende — Bild 2/0 geschlossen, Bild 8/7 offen
+  (gleiche Kamera). Elza sieht im gesperrten Zustand Bild 0/2 (geschlossen); nur Leons sub00 tauscht bei Strom auf
+  8/7. Die Erweiterung tauscht jetzt zurueck (N1.2).
 
 ## Tests (gezielt, KEINE volle Suite — VERTRAG/Auftrag)
 Neue Riegel (tests/unit/probes/r36_szenenleon.cmake):
@@ -311,10 +312,9 @@ ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lo
 ```
 
 ## OFFEN (mit Adresse + Messweg)
-1. **Bild der Werkstatt-Tuer**: ROOM11B.BSS (von 11B0 und 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
-   an der Nordwand aufgeschwungen, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — Elzas "The door is locked." steht im
-   Original vor demselben Bild. Ein sichtbar geschlossenes Tuerblatt gibt es in keinem Original-Datensatz (kein
-   Door_model_set/Obj_model_set an der Zelle (3,0x0C)); es waere ein neues 3D-Modell im Durchgang (Entscheidungsfrage).
+1. ~~**Bild der Werkstatt-Tuer** (offen gemalt, "kein geschlossenes Tuerblatt im Original", Entscheidungsfrage)~~ —
+   ERLEDIGT/BERICHTIGT in Nachbesserung 1 (M1/M3): die Original-Daten haben das geschlossene Bild (BSS 2/0), die
+   Mechanik ist Cut_replace; keine Entscheidungsfrage mehr.
 2. **Kendos Nachwippen**: RE2 ROOM1010 sub09 @0x01C30..@0x01C44 spielt nach dem Klick Clip 0 5 Bilder rueckwaerts
    (`3f 00 00 c0`), setzt per Plc_cnt (0x5B @0x80057120 `sb pc[1],333(v1)`) Bild 10 und friert per Plc_stop (0x66
    @0x80056ff0) 25 Bilder ein. RE1.5 hat beide Opcodes nicht (Tabelle 0x00..0x5E; 0x5B ist ein Feld-Setter
@@ -333,14 +333,14 @@ ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lo
 - **Sprachdateien (optional):** Marvins neue Zeilen sind ROOM11B0 msg 20 "Hold on." und msg 21 "I just want to make
   sure / we don't have any unwanted followers." — `synchro/STAGE1/room11b0/main20.wav` / `main21.wav` bindet der Port
   automatisch, wenn sie da sind.
-- **Ablauf zum Ansehen:** Leon-Spielstand vor der Container-Szene (Strom an, 11C0 erledigt) -> ROOM11B0; nach "Okay! Be
-  careful down there!" folgen "Hold on." (Kamera bleibt am Container), Marvins Lauf durch die Werkstatt (Cut 10), das
-  Abschliessen an der Tuer (Cut 8, linke Hand zum Schloss, RE2-Klick), der Rueckweg und "I just want to make sure...";
-  dann steigt Leon wie im Original in den Gully. Danach zeigt die Tuer von beiden Seiten "The door is locked." mit
-  dem RE2-Tuer-zu-Ton wie bei Elza.
-- **Entscheidungsfrage:** Soll die im Hintergrund OFFEN gemalte Werkstatt-Tuer nach dem Abschliessen sichtbar
-  geschlossen werden (neues Tuermodell im Durchgang, z.B. aus den RE2-Tuersequenzen)? Bei Elza ist sie im Original
-  ebenso offen gemalt und trotzdem "locked".
+- **Ablauf zum Ansehen (Stand Nachbesserung 1):** Leon-Spielstand vor der Container-Szene (Strom an, 11C0 erledigt)
+  -> ROOM11B0; nach "Okay! Be careful down there!" folgen "Hold on." (Kamera bleibt am Container), Marvins Lauf durch
+  die Werkstatt (Cut 10), an der OFFENEN Tuer (Cut 8) greift er zur Tuer — die Tuer ist zu (Bild 2, geschlossen gemalt)
+  mit dem RE2-Tuer-zu-Ton —, dann Kendos Abschliessen (linke Hand zum Schloss, RE2-Klick), der Rueckweg (Cut 4) und
+  "I just want to make sure..."; dann steigt Leon wie im Original in den Gully. Danach ist die Tuer von beiden Seiten
+  GESCHLOSSEN gemalt (Bild 2 Ost / Bild 0 West, wie bei Elza) und zeigt "The door is locked." mit Elzas RE2-Ton.
+- ~~Entscheidungsfrage~~ entfaellt (Abnahme 0 M3: beruhte auf der falschen Behauptung, das Original habe kein
+  geschlossenes Tuerbild).
 
 ## Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde36/J_abnahme_0.md) — STAND: IN ARBEIT
 
@@ -353,3 +353,43 @@ Maengel M1-M4 der Abnahme; Punkte 1/3/4 (erfuellt) bleiben unberuehrt (ihre Rieg
   Sleep 35), kein Schliessen, kein Tuer-zu-Ton.
 - M3: Dossier §2.3 / OFFEN 1 / Entscheidungsfrage behaupten "kein geschlossenes Tuerbild im Original" — falsch.
 - M4: kein Riegel auf den gezeigten Cut / die Ereignisfolge.
+
+### N1.1 RE-Belege (selbst gemessen/disassembliert)
+**Wie die Werkstatt-Tuer im Raum dargestellt ist** (Nachtrag abends: "belegen ... Hintergrund, Obj_model_set, ESP,
+SCA-Zelle"): NUR im Hintergrund.
+- ROOM11B.BSS, dekodiert mit `build/tests/unit/probe_bg_dump.exe shared_assets/PSX <aus> 1`, Pixelvergleich (Schwelle
+  30): Bild 2 vs 8 Unterschied NUR bbox (127,86)-(170,145), 1075 px = die Tuer (2 geschlossen, 8 Blatt aufgeschwungen);
+  Bild 0 vs 7 bbox (206,36)-(231,97), 649 px (0 zu, 7 offen); Bild 3 vs 9 46 px (165..185,79..83), Bild 4 vs 10 36 px
+  (173..187,100..106) = Licht durch die offene Tuer unter dem Wagen.
+- Kamera-Records (RDT @0x24, 0x20 B je Cut, `tools/r36_j/kam.py`): Cut 2 @0x00A0 == Cut 8 @0x0160, Cut 0 @0x0060 ==
+  Cut 7 @0x0140, Cut 3 @0x00C0 == 9 @0x0180, Cut 4 @0x00E0 == 10 @0x01A0 — gleiche Kamera, anderes Bild.
+- RVD (RDT @0x258): zwei Netze, geschlossen 0..6 (@0x0258..@0x03D4) und offen 7..10 (@0x03E8..@0x04C4).
+- Kein Tuer-Objekt: main00 Obj_model_set nur obj 0 Container (-2168,-20918) @0x010C4, obj 1 (-22838,-20368) @0x0110E,
+  obj 2 (-7463,-24868) @0x01130 (Box 0); Door_aot_set nur Slot 0/1/5 (West-Tuer, Parkplatz, Gully); nSprite=0 (kein
+  ESP); SCA (3,0x0C) @0x00EC8 ist nur Kollision.
+**Mechanik des Tuerbildes (Original):**
+- Leon sub00 @0x0116C `06 00 36 00` + @0x01170 `21 04 06 01` (Strom): @0x01174 `06 00 0c 00` / @0x01178
+  `23 00 0a 00 00 00` / @0x0117E `29 07` / @0x01180 `3c 01` (steht der Cut auf 0 -> 7), @0x01184 `4b 00 07`,
+  @0x01188 `4b 02 08`, @0x0118C `37 03 0c 00` (Zelle auf). Elza ROOM11B1 sub00: dieselben Cut_replace @0x0110E/@0x01112
+  NUR im Zweig (3,0x83)==1 (@0x010FA); im gesperrten Zweig (@0x0112A Text-Platz) KEIN Cut_replace -> Bild 0/2.
+- Cut_replace LAB_80040414 (PSX.EXE, selbst disassembliert): @0x80040438 `lbu a2,1(v1)` (a), @0x80040440 `lbu
+  a1,2(v1)` (b); Schleife @0x8004044c..@0x800404a8: cam_from @0x80040458 `bne v0,a2` -> @0x80040464 `sb a1,0(v1)`,
+  sonst @0x80040468 `bne v0,a1` -> @0x80040470 `sb a2,0(v1)`; cam_to @0x8004047c..@0x80040494 ebenso; Schritt 20
+  @0x80040498, Ende bei 0xff @0x800404a4 = TAUSCH a<->b, also selbstinvers. Die Ansicht wechselt er nicht
+  (@0x800404ac..@0x800404c8 nur Anker-Fixup, scd_vm.c op_cut_replace).
+- Cut_chg LAB_800402a0: @0x800402d4 `ori v0,v0,0x100` (Auto-Kamera aus), @0x800402fc `sh a0,4068(at)` (work_vars[0x0A]
+  = Cut), @0x80040300 `jal 0x800142f4` (Cut zeigen). Cut_auto @0x800403ac: pc[1]==1 -> @0x800403d8 `and v1,v1,a0`
+  (a0 = -257, Bit 0x100 weg = Auto an).
+- Ohne Strom laeuft die Szene nie: sub01 @0x011F2 (4,0xF3)==0 -> Cut 13/14 + @0x01216 Aot_reset Slot 1 (Parkplatz-Tuer
+  -> Text) — (3,0x43) aus 11C0 ist ohne Strom unerreichbar; an der Szene sind die Bilder also immer auf 7/8 getauscht.
+**Tuer-zu-Ton (RE2-Tuerbank):** RE2 PSX.EXE @0x800141f0 `jal 0x8005ba28` mit @0x800141f4 `lui a0,0x1` = Satz 1
+(Door_exit) nach dem Ausblenden (selbst disassembliert, info/re2leon/PSX.EXE). Archiv: RE2-Tabelle @0x8009A658
+`38 53 fc 92 0b 00 00 00 f5 f4 00 00` = DOOR1A, Tonteil 0x5338 B (selbst gelesen), Tonkopf `00 00 14 16 | 00 00 24
+17 | ff..` + "pBAV" @0x10 (tuerton_bauen.py prueft), bytegleich DOOR15 (Familie F4). PORT-WAHL DOOR1A: Archiv der
+anderen Tuer desselben Raums (gen/tuer_zuordnung.inc S094 11B0->11C0), "Druecker + Kartenleser" (tueren_02_re2.md
+Z.256) = die elektronische Tuer des Nutzers (AUFTRAG.md Z.129). Gemessen in der exe: derselbe Ton wie beim Durchgang
+11C0->11B0 (`[se] Stimme: se=1 layer=0 vag=2 note=61 ... (13641 Hz)` beim Eintritt UND beim Schliessen).
+**Schliess-Animation:** PORT-WAHL (Nutzer: "geeignete Animationen aussuchen") Marvin RBJ rec1 Clip 20 (25 Bilder,
+`tools/r34n_d/rbj_zensus.py liste`): `tools/r34n_d/gesten_arme.py ROOM11B0.RDT 1 20` -> linke Hand vor +362 / hoch 515 /
+links 219 mit Maximum bei Bild 15 (Clip 15 = Kendo +544/707 bei Bild 19, Clip 16 +333/403 bei 23). FORM: Plc_motion
+`3f 00 14 00` wie sub06 @0x014F6, rueckwaerts `43 00 80 00` wie ROOM11C0 sub02 @0x018E4.
