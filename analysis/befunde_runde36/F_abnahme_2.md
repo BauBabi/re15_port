@@ -1,6 +1,6 @@
 # Runde 36 — Spur F "zombieki": Abnahme 2
 
-Datum: 2026-10-10. Pruefer: unabhaengige Abnahme 2 (kein Code geaendert). Baum `.claude/worktrees/r36_zombieki`,
+Datum: 2026-10-10/11. Pruefer: unabhaengige Abnahme 2 (kein Code geaendert). Baum `.claude/worktrees/r36_zombieki`,
 Zweig `r36/zombieki`, Stand **4285214f** (Basis master 78a4a748). Massgeblich: AUFTRAG.md (Wortlaut), VERTRAG.md,
 Vorgaenger-Abnahme `F_abnahme_1.md` (Stand 7a9a0e7f, Maengel 1-6).
 
@@ -156,8 +156,9 @@ Raumwechsel 1240). Auswertung `affen_ausw2.py` wie Abnahme 1 (erster Angriff = S
 ### 4.3 Nordwest-Tasche: die Befundstelle ist nur ein Punkt (exe + Sonde)
 Die Befundstelle (-24000,10000) liegt in der Nordwest-Tasche (Raster `raster 800 1600`: x -29800..-20200, z 5200..15600, fuer
 Radius 1600 eigene Komponente ohne Pad). Andere Plaetze DERSELBEN Tasche:
-- exe (Kommandozeile 4.2): Leon (-26000,7000): **kein Angriff in 2700 Bildern**, Slot 3 steht ab ~F2000 am Taschenrand
-  (-23314,13088) d 7270 Sub 3 (fest 726), Slot 2 (-20917,15208) d 10228 Sub 4 (fest 608). Leon (-27000,12000): **kein Angriff**,
+- exe (Kommandozeile 4.2): Leon (-26000,7000): **kein Angriff in 2700 Bildern**, Slot 3 steht ab F2100 bis Laufende am Taschenrand
+  (-23314,13088) d 7270 Sub 3 (fest 726), Slot 2 (-20917,15208) d 10228 Sub 4 (fest 608) — Slot 2 kam auch hier ueber das
+  Ost-Pad (F1050 (6253,-9453), F1200 Nordseite, Mangel 1). Leon (-27000,12000): **kein Angriff**,
   Slot 3 (-23302,13088) d 5081 Sub 3 (fest 705), Slot 2 (-20920,15204) d 8265 Sub 4 (fest 668). Leon (-22000,7000): **kein
   Angriff**, Slot 3 (-16172,5572) d 5877 (fest 743), Slot 2 (-14170,8059) d 8018 Sub 4 (fest 775). (v0.8.23 dort ebenfalls kein
   Angriff, Gorillas weit weg festgefahren.)
@@ -179,7 +180,9 @@ Radius 1600 eigene Komponente ohne Pad). Andere Plaetze DERSELBEN Tasche:
   Startknoten mit `r36_uw_knoten(e->x, e->z, 3)` = naechster freier Knoten im Ring 3 (bis 2400 Einheiten) ohne Pruefung, ob der
   Gorilla ihn erreicht; am Taschenrand liegt der naechste freie Knoten in der Tasche (andere Komponente), danach gilt "gleiche
   Komponente -> zu Fuss".
-  Auch an der gepinnten Stelle steht G1 nach dem ersten Angriff 1530 Bilder blockiert (der Riegel prueft nur "erster Angriff").
+  Auch an der gepinnten Stelle steht G1 nach seinen Angriffen (Sub 6/15/5 F600-F840) von F960 bis F2400 in Sub 3 an der Klemme
+  bei (-23302,13088), 3900..4500 vor Leon (Sonde: blockiert 1530 gesamt; der Riegel prueft nur "erster Angriff"). Auch hier
+  laeuft G1 vom Start (-5525,-14883) zuerst ueber das Ost-Pad ("Umweg 1 ... Pad 36" F120-F360, Mangel 1).
   Der vom Bau-Agenten selbst gemessene Weitsprung vom Rand (`weit`, Path B @0x801180cc-f8, Landung 2050 vor Leon) wird vom
   Umweg nicht benutzt. Fuer den Nutzer: steht Leon in der Nordwest-Ecke des Parkplatzes, stehen beide Gorillas am Rand und
   greifen nicht an — Abnahme-1-Mangel 3 ist nur fuer den gepinnten Punkt behoben.
@@ -200,7 +203,7 @@ gefuehrt (GDB-Gegenmessung des Originals steht aus) und wird hier nur als Hinwei
 - **Spur-Tests** (direkt nachgefahren): `unit_r36_zombieki_affen_block` 17/17, `_sicht` 15/15, `_eintritt` 9/9, `_wecker` 2/2,
   `_szenen` 5/5, `_affen` 9/9 — alle messend mit Gegenprobe (Haken aus = Befund). Je Nutzer-Punkt vorhanden (P1: sicht/eintritt/
   wecker/szenen, P2: affen_block, P3: affen). Luecken: der Gorilla-Riegel pinnt in der Nordwest-Tasche nur (-24000,10000) und
-  prueft dort nur den ERSTEN Angriff (G1 danach 1530 Bilder blockiert), keine Szene im Nordwest-Gang (Umleitung, Abschnitt 4.2).
+  prueft dort nur den ERSTEN Angriff (G1 danach F960-F2400 an der Klemme), keine Szene im Nordwest-Gang (Umleitung, Abschnitt 4.2).
 - **Gezielte Regression** (Module/Raeume des Diffs: enemy_ai_common.c = alle Gegner inkl. Zombie-Klemme und Gorilla-Zweig,
   enemy_ai_re2_zombie.c, main.c Schatten; Regex des Bau-Agenten erweitert um re2_crawler|knockdown|stagger|hit_reaction|
   re2_livepath|re2_hit_repeat|sca_contact90|sca_wall_hit|npc_wall_clamp|r16_aufstehen|r34_reaktion|r34_schaden|unit_damage|
@@ -236,7 +239,8 @@ gefuehrt (GDB-Gegenmessung des Originals steht aus) und wird hier nur als Hinwei
 
 1. **P2 Regression durch a76cd217: der Umweg nimmt das Pad nach SCA-Reihenfolge, nicht nach Weg.** `r36_uw_komp_bfs` ist eine
    ungewichtete Breitensuche ueber Komponenten; die erste Kante (Pads in SCA-Index-Reihenfolge, #36 vor #47) setzt den Vorgaenger.
-   NB1 (`r36_uw_pad`, 7a9a0e7f) nahm das Pad mit dem naechsten Anlaufpunkt. Folge: jede Route Sued <-> Nord laeuft ueber das
+   NB1 (`r36_uw_pad`, 7a9a0e7f) nahm das Pad mit dem naechsten Anlaufpunkt. Folge: jede Route Sued -> Nord (gemessen; nach dem
+   Code ebenso Nord -> Sued) laeuft ueber das
    Ost-Pad #36. exe `RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=<-14000,2000 | -14000,4000 | -14500,6000>,1024,0
    RE15_EXIT_AT=2700`: Slot 2 laeuft von (-9013,-15461) nach Osten (F1080 (6435,-9161), F1200 Sprung), erster Angriff F2438 / F1939 /
    F1806 (v0.8.23 F680 / F704 / F694, NB1 F419 bei (-14000,2000)); erster Angriff auf Leon ueberhaupt 850..920 Bilder spaeter als
@@ -247,7 +251,7 @@ gefuehrt (GDB-Gegenmessung des Originals steht aus) und wird hier nur als Hinwei
 2. **P2 Nordwest-Tasche nur am gepinnten Punkt behoben (Abnahme-1-Mangel 3 nicht verallgemeinert).** exe (Kommandozeile wie 1)
    Leon (-26000,7000) / (-27000,12000) / (-22000,7000): **kein Angriff in 2700 Bildern**, Gorillas am Rand festgefahren
    (726/608, 705/668, 743/775 Bilder, d 5081..10228). Sonde `szene2 <lx> <lz> 0 0 2400 1`: (-22000,7000), (-26000,7000),
-   (-27000,12000) beide nie (blockiert 1545..1809); an der gepinnten Stelle G1 nach dem ersten Angriff 1530 Bilder blockiert.
+   (-27000,12000) beide nie (blockiert 1545..1809); an der gepinnten Stelle G1 nach den Angriffen F960-F2400 an der Klemme (Sonde blockiert 1530).
    Teilursache im Code (Sonde `szene2 -26000 7000 0 0 2400 1 1`): `r36_uw_route` nimmt als Startknoten `r36_uw_knoten(e->x, e->z,
    3)` ohne Erreichbarkeitspruefung — am Taschenrand (-23302,13088) liegt er IN der Tasche, der Umweg haelt Leon fuer zu Fuss
    erreichbar ("Umweg 1 (-25800,6500)") und steuert G1 F720-F2400 gegen die Wand (klemme 1). Der selbst belegte Path-B-Weitsprung
