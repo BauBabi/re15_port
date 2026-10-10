@@ -345,7 +345,7 @@ ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lo
 - ~~Entscheidungsfrage~~ entfaellt (Abnahme 0 M3: beruhte auf der falschen Behauptung, das Original habe kein
   geschlossenes Tuerbild).
 
-## Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde36/J_abnahme_0.md) — STAND: IN ARBEIT
+## Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde36/J_abnahme_0.md) — STAND: ABGESCHLOSSEN 2026-10-11
 
 Maengel M1-M4 der Abnahme; Punkte 1/3/4 (erfuellt) bleiben unberuehrt (ihre Riegel gruen halten).
 
@@ -468,3 +468,59 @@ RE15_INPUT_SCRIPT=U1.5,W0.5,A0.2,W3 RE15_MSG_LOG=1 RE15_STATE_LOG=... RE15_FRAME
 - F360 "The door is locked." + tuerse.log `F360 raum=11B1 nachricht=12 art=M weg=AOT satz=0(ZU_A) nr=1` (Ost und West).
 - Bild `J_belege/nb1_m1_tuer_spaeter_vorher_nachher_F370.png`: Abnahme-Laeufe d1/d2 (vorher: Cut 8/7 offen) gegen
   nachher (Cut 2/0 geschlossen), je mit Ausschnitt.
+
+### N1.5 Tests (Riegel M4, gezielt — KEINE volle Suite)
+| Test | Mangel | misst | Ergebnis |
+|---|---|---|---|
+| unit_r36_szenenleon_programm | M2/M1 | zwei Se_on: ERST 0x0E/1 (+0x006E), DANN 0x3A/0x0A (+0x0092); Schliess-Block +0x005C = `3f 00 14 00`, Sleep 15, Cut_replace == RDT sub00 @0x01184..@0x0118B (Byte fuer Byte aus der Datei), `29 02`, Se_on; Marken Schliessen < Tuer-zu-Ton < Abschliessen < Abschliess-Ton < Zelle zu; Ereignis 23 (80 B): Kopf == sub00 @0x01170, Cut_replace == @0x01184.., Ansicht 7->0 / 8->2 in der Form @0x01174..@0x01183; Tonteil DOOR1A 0x5338 B | gruen |
+| unit_r36_szenenleon_erweiterung | M1/M2/M4 | `Schliessen (Clip 20) B2191 < Tuer-zu-Ton (0x0E/1) B2206, Bild 2 gezeigt B2206 < Abschliessen (Clip 15) B2241 < Abschliess-Ton (0x3A/0x0A) B2261; Zonen: an der Tuer offen 1, nach dem Schliessen zu 1, am Ende zu 1`; Kameras `1 7 8 3 4 5 6 10 8 2 4 6` | gruen |
+| unit_r36_szenenleon_tuer | M1/M4 | (9,84)=1 Eintritt 8: NACH DEM INIT-LAUF Zelle u0 0xFF, Zonen wie ausgeliefert, Cut 2 (work_vars[0x0A] 2); Eintritt 0 Ost -> gezeigt 2, West -> 0, 30 Bilder lang nie 7/8; Gegenprobe (9,84)=0: Zelle auf, Zonen getauscht, Bild 8 | gruen |
+| integration_r36_szenenleon | M1/M2/M4 | A2: Log-Reihenfolge + Bildnummern (Lauf: F2361 Schliessen < F2376 Tuer-zu-Ton < F2411 Abschliessen < F2431 Abschliess-Ton), `-> RE2-Tuerbank` vor `-> RE2-Schlossbank`; B/C: state.log nie Cut 8 (Ost) / 7 (West), vor der Tuer 2 / 0; D/E: Spielstand + CONTINUE (Boot-Weg main.c) — D nie Cut 8, E Gegenprobe ohne (9,84) Cut 8 | gruen |
+
+Integration-Lauf (aktueller Stand, -V): `r36_szenenleon[A2]: F2381 Schliessen < F2396 Tuer-zu-Ton < F2431 Abschliessen <
+F2451 Abschliess-Ton`, `[B]: 731 Bilder, keines mit Cut 8 (offen), vor der Tuer Cut 2 (zu)`, `[C]: 371 Bilder, keines mit
+Cut 7 (offen), vor der Tuer Cut 0 (zu)`, `[D]: 151 Bilder, keines mit Cut 8 (offen), vor der Tuer Cut 2 (zu)` (Spielstand +
+CONTINUE, Boot-Weg main.c), `[E]: Gegenprobe ohne (9,84): Cut 8 (offen) wie im Original — die Messung sieht es`.
+Neues Mess-Werkzeug `tests/unit/probe_r36_szenenleon_karte.c` (kein add_test; schreibt die Speicherkarte fuer D/E, Muster
+probe_r30_granate_karte.c; gespeicherter Cut = camera_cut, den CONTINUE nach sub00 wieder setzt, main.c "FE-4 CONTINUE").
+
+Gezielter Lauf 1 (Regex = die 151 der Abnahme 0 + die vom Boot-/CONTINUE-Haken beruehrten Lade-Riegel; Stand 37a5b495,
+exe 01:07:52), woertlich:
+```
+ctest --test-dir re15_port/build -R "r36_szenenleon|unit_r35_cut10f0|integration_r35_cut10f0|unit_r22_10f0|unit_r35_cut1150|integration_r35_cut1150|unit_member|unit_npc|unit_marvin|unit_1090_|unit_irons_|unit_neck_headlook|unit_r34n_d_adaruf|unit_r30_tuer|unit_r31_tuer_ton|unit_r33_tuer|unit_door_1170_lock|unit_door_seq|unit_scd_|unit_aot_|prop_scd_pc_advance|prop_sca_collision|prop_door|unit_r35_affen|unit_enemy_body_push|unit_r35_inventar1050_kiste|unit_r20_birkin_push_pin|unit_ada_eintritt_1050|unit_r27_ada_cutscene_1050|unit_room_transition_cmd|unit_audio_|unit_se_|unit_anim_|unit_re2z_pushoff_crawl|integration_door_lock|integration_door_traversal|integration_keydoor|integration_room_transition|unit_r30_irons|integration_r30_irons|unit_r30_elza|unit_r35_zgirl|unit_r35_inhalt|unit_sicherung_1150|unit_room1150|integration_r34n_g_schrift1150|integration_elza_vollstart|unit_elza|unit_room_load|unit_load_after_death|integration_r30_granate_laden|integration_r30_sicherung_laden|integration_weste_load_pin|integration_boot_bg_pin" --timeout 900 --output-on-failure
+99% tests passed, 1 tests failed out of 157
+Total Test time (real) = 1382.54 sec
+```
+Der eine Fehlschlag: integration_r36_szenenleon an D/E — `RE15_KARTE_TOOL fehlt ('')`: das Skript wird zur Laufzeit gelesen,
+die Registrierung mit -DRE15_KARTE_TOOL (probes/r36_szenenleon.cmake) kam erst mit dem naechsten configure. A/A2/B/C waren in
+diesem Lauf gruen (F2383 < F2398 < F2433 < F2453; B 731 Bilder ohne Cut 8; C 371 ohne Cut 7). Darunter gruen u.a.
+integration_r35_cut10f0 (247.63 s), integration_r35_cut1150 (515.61 s), integration_elza_vollstart, integration_r30_*_laden,
+integration_weste_load_pin, integration_boot_bg_pin, unit_room_load, unit_load_after_death.
+Danach `local_build.sh configure` + `build` (gebaut wurde NUR probe_r36_szenenleon_karte, re15_pc.exe und alle Test-exe
+unveraendert 01:07:52), Lauf 2, woertlich:
+```
+ctest --test-dir re15_port/build -R "r36_szenenleon" --timeout 900 --output-on-failure -V
+100% tests passed, 0 tests failed out of 7
+Total Test time (real) = 162.75 sec
+```
+Punkte 1/3/4 (Abnahme: erfuellt): unit_r36_szenenleon_schub/abgang10f0/irons, unit_r35_cut10f0_*, integration_r35_cut10f0,
+integration_r35_cut1150 gruen — nicht verschlechtert.
+
+### N1.6 Stand der OFFEN-Liste und Hinweise
+- OFFEN 1 (Tuerbild) erledigt (s.o.). OFFEN 2 (Kendos Nachwippen), 3 (Raumklang), 4 (Elza/Zeitleiste, Spur P) unveraendert.
+- NEU OFFEN 5 — Schliess-Geste: das Tuerblatt existiert nur als Hintergrund (Bild 8 -> 2); ein Aufschwingen/Zuschwingen
+  dazwischen gibt es in den Daten nicht (kein Tuer-Objekt, N1.1), die Tuer geht im Bild 1 Bild nach dem Tuer-zu-Ton zu
+  (F2396 Ton/Cut_chg, F2397 Bild). Clip 20 (linke Hand) ist PORT-WAHL; Marvin steht vor dem Tuerblatt, die Hand geht in
+  die Oeffnung. Messweg fuer eine andere Geste: `tools/r34n_d/gesten_arme.py ROOM11B0.RDT 1 <clip>` + Framedump F2380..2430.
+- Hinweis (nicht Spur J): scd_room_setup.c-Kommentar der Spur K zitiert "Evt_exec aus sub00 (ROOM1050 @0x00C8A)" — dort
+  steht `21 03 6e 01` (Ck); das Evt_exec ist @0x00CA2 `04 ff 18 03` (selbst nachgesehen).
+- H1 (audio_pc.c) unveraendert: die Nachbesserung braucht keinen neuen Haken dort (Port-Bank 0x0E existiert).
+
+### N1.7 Fuer den Nutzer (Nachbesserung 1)
+- Keine neuen Asset-Dateien: der Tuer-zu-Ton ist der Satz 1 (Door_exit) des RE2-Tuerarchivs DOOR1A, eingebacken als
+  `engine/src/gen/szl11b0_tuerton.inc` aus `shared_assets/RE2/DOOR/DOOR1A.DO2` (dieselbe Tuer-Tonfamilie wie die
+  Parkplatz-Tuer 11B0 <-> 11C0 — derselbe Klang wie beim Durchgehen). Paket-Gate weiter nur SCHLOSS1010.EDT/.VH/.VB.
+- Ablauf zum Ansehen: siehe "Fuer den Nutzer" oben (berichtigt). Neu: an der offenen Tuer greift Marvin zur Tuer, die Tuer
+  ist zu (Tuer-zu-Ton), DANN schliesst er ab (Klick); bei jedem spaeteren Besuch ist die Tuer von beiden Seiten
+  geschlossen gemalt.
+- Keine Entscheidungsfrage mehr.
