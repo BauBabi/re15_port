@@ -21,6 +21,13 @@ Eigentuemer laut VERTRAG §1.4: "E = RE15_ACTOR_MAX + alle Arrays".
 - 484 Unit-Tests gruen (§7); Riegel unit_r36_gegnerzahl_* + integration_r36_gegnerzahl (Karte + CONTINUE + Tuer) gebaut;
   Sentinel-Pin mit dem alten Wert 0x0f gegengeprueft (rot), dann wieder auf den Fix.
 - r35-Tests mit festen Annahmen angepasst (cut1150 Lauf F, granate Gator-Slot), gezielte Integrationslaeufe (§7).
+- Zensus Render-Listen: Schattenliste fest 16 gefunden, mit Messhaken gemessen (16: 5 verworfen), auf RE15_ACTOR_MAX
+  gehoben (0 verworfen), Lauf e im Integrationshaken (§6.4).
+- Savestate-RAM des Auslieferungsstands gelesen (§3.5), Laufzeit ungebremst gemessen (§4), Endstand: 491 Unit-Tests +
+  7 Render-/Fenster-Haken gruen (§7).
+
+**Stand des Nutzer-Punkts:** erledigt — der Port fuehrt 20 Gegner-Plaetze wie das Original; in ROOM1030/1040 (und den
+Elza-Raeumen 1031/1041) erscheinen die Records 15..19 (§6.1, §6.2, Riegel §7).
 
 ## 2. Messung vorher
 
@@ -100,7 +107,7 @@ ROOM1040 sub09 @0x1d4e..@0x1e16 und sub10 @0x20e8..@0x2198, ROOM1041 sub09/10 �
 Kein anderer Raum benutzt Slot >= 15.
 
 ### 3.5 Savestate-RAM des Auslieferungsstands (Basis, Stride, Zaehler dynamisch bestaetigt)
-Werkzeug scratchpad `E36/feld_ram.py` (re15_ss.Ram), nur saubere Staende (Stub @0x80026e4c = `03e00008` = `jr ra`, nicht
+Werkzeug `re15_port/tools/r36_e/feld_ram.py` (re15_ss.Ram), nur saubere Staende (Stub @0x80026e4c = `03e00008` = `jr ra`, nicht
 die PATCHED-EXE-Staende). Gelesen: Zaehler 0x800aca4e und je Platz s Wort +0x00 Bit 0 / Typ +0x08 / x +0x34 / z +0x3c
 bei 0x800acc2c + s*0x1F4:
 | Savestate | 0x800aca4e | aktive Plaetze |
@@ -114,7 +121,7 @@ Platz = Script-Slot, Zaehler = Zahl der Spawns: genau die Lesart von §3.1/§3.3
 
 **ROOM20B0/20B1 (Slots 20..34):** im Original laegen diese Entities hinter dem 20er-Feld (0x800af33c..0x800b1087: NPC-Feld
 0x800af33c, ..., SCD-Variablen 0x800b0fd0, Limit 0x800b0ff2/0x800b0ff4, Tot-Bit-Zonen 0x800b1038/0x800b1058) — ein
-Ueberlauf des Prototyps, kein 21. Platz. Der Port verwirft sie weiter (Aktor > 20); dokumentiert unter OFFEN.
+Ueberlauf des Prototyps, kein 21. Platz. Der Port verwirft sie weiter (Aktor > 20); Einzelheiten §6.5, OFFEN §8.
 
 ## 4. Zensus der Nutzer von RE15_ACTOR_MAX / festen 16/15 / Slot-Bitmasken
 
@@ -139,7 +146,9 @@ Sonden/Tests). Geprueft nach Klassen (grep-Muster je Klasse in Klammern):
 
 Laufzeit: die GLEICHZEITIGE Zahl in ROOM1030/1040 bleibt durch das Original-Limit (Save(0x12,6) @0x1de2 / Save(0x12,5)
 @0x11f0) bei 6/5 (§6.1: 6/5 vorher und nachher), es aendert sich nur, WELCHE Records stehen. Einziger Raum mit mehr
-gleichzeitigen Aktoren: ROOM20B0/20B1 (FX-Emitter 0x24, Drift ohne Schaden) 15 -> 20 (§6.2).
+gleichzeitigen Aktoren: ROOM20B0/20B1 (FX-Emitter 0x24, Drift ohne Schaden) 15 -> 20 (§6.5). Gemessen ungebremst
+(`RE15_FPS=240`, Debug-Sprung, Differenz EXIT_AT 1200 - 200 = 1000 Bilder): ROOM20B0 mit 20 Emittern + 21 Schatten
+7 s, ROOM1040 mit den 5 Zombies 16..20 6 s = rund 7 bzw. 6 ms je Bild (Budget bei 30 Bildern/s: 33 ms).
 
 ## 5. Umsetzung (Dateien, Konstanten)
 
@@ -147,13 +156,16 @@ gleichzeitigen Aktoren: ROOM20B0/20B1 (FX-Emitter 0x24, Drift ohne Schaden) 15 -
 |---|---|---|
 | re15_port/include/re15_actor.h | `RE15_ACTOR_MAX 16 -> 21` (Spieler + 20) mit Belegkommentar | §3.1/§3.2: @0x800372b4 `sltiu v0,v0,0x14`, Feld-Ende 0x800af33c @0x80039b38/@0x80039b40, Sce_em_set @0x800420f8/@0x80042118 |
 | re15_port/engine/src/irons_tod_1150.c | slots_zuweisen: "kein Platz" = Slot `RE15_ACTOR_MAX - 1` (Aktor 21, verworfen) statt fest `0x0f` (Aktor 16, jetzt gueltig); Kopfkommentar "(RE15_ACTOR_MAX = 21 ...)" | §4 Zensus; Pin kein_platz |
+| re15_port/platform/pc/src/render_pc.c | `SHADOW_QUAD_MAX 16 -> RE15_ACTOR_MAX` (ein Schatten je Aktor, FUN_8001b064 je Entity); Verwurf-Zaehler + Messhaken `RE15_SCHATTEN_LOG` (env-gegated, nur debug.log) | §6.4 gemessen 16: verworfen 5 / 21: verworfen 0 |
 | re15_port/tests/integration/test_r35_cut1150.cmake | Lauf F: "5 erscheinen im Port, Auffuellung 0" / "Gleichzeitig-Zaehler 5 -> 5" (vorher "0 erscheinen ... Auffuellung 5" / "5 -> 0") | Records 15..19 erscheinen selbst (§6.1) |
 | re15_port/tests/integration/test_r35_granate.cmake | Lauf gator: Boss-Slot 15 -> 20 | gemessen r36e n2090 (§4) |
 | re15_port/tests/unit/test_r36_gegnerzahl.c, probe_r36_gegnerzahl_karte.c, probes/r36_gegnerzahl.cmake, tests/integration/test_r36_gegnerzahl.cmake | NEU: Riegel + Karte + Integration | §7 |
 | re15_port/tools/r36_e/sce_em_slot_zensus.py | NEU: RDT-Zensus der Sce_em_set-Slots | §3.4 |
 
-Keine neue Engine-Datei noetig (eine Konstante + ein Sentinel); keine Assets, keine Sprachdateien, keine Bank-9-Bits,
-keine Nachrichten-IDs, keine Ereignisnummern.
+Keine neue Engine-Datei noetig (eine Konstante, ein Sentinel, eine Render-Kapazitaet); keine Assets, keine
+Sprachdateien, keine Bank-9-Bits, keine Nachrichten-IDs, keine Ereignisnummern. Gemeinsame Dateien nur mit kleinen,
+benannten Haken: re15_actor.h (Eigentum Spur E laut VERTRAG §1.4), irons_tod_1150.c (Spur K: 2 Zeilen), render_pc.c
+(1 Konstante + Messhaken). scd_room_setup.c unberuehrt (kein Installer noetig).
 
 ## 6. Messung nachher
 
@@ -223,8 +235,10 @@ bildet ihn nicht nach (PORT-ENTSCHEIDUNG, Beleg = Feldende §3.2) und verwirft d
 | integration_r36_gegnerzahl | ECHTER Weg: Karte (probe_r36_gegnerzahl_karte) + CONTINUE + Aktionstaste an der Original-Tuer; letzte state.log-Zeile im Zielraum: a 1030->1040 (1040 Records 0..14 tot) {16..20}; b 1040->1030 (1030 Records 0..14 tot) {16..20}; c Kontrolle 1040 alle leben {1..5}; d 1030 Records 0..16 tot {18,19,20}; e ROOM20B0 (Debug-Sprung, beschleunigter Renderer, RE15_SCHATTEN_LOG): Aktor 1..20 Typ 0x24, ein Bild mit `gezeichnet 21, verworfen 0`, nie `verworfen >= 1` | gruen, 100,1 s (a-d allein: 69,5 s) |
 | integration_r35_cut1150 (angepasst) | Kette ueber den echten Weg, Lauf F jetzt "5 erscheinen im Port, Auffuellung 0", "Zaehler 5 -> 5" | gruen, 509,91 s (§6.2) |
 | integration_r35_granate (angepasst) | Lauf gator auf Slot 20 | gruen, 172,53 s |
+| ENDSTAND alle Unit-Tests (nach dem Schatten-Fix) | `ctest -R "^unit_" -E "android_bash" --timeout 600 -j4` | `100% tests passed, 0 tests failed out of 491` (270,76 s; 484 + 7 neue) |
+| ENDSTAND Render-/Fenster-Haken + eigener Haken | `ctest -R "^(integration_r36_gegnerzahl\|integration_r30_titel_puls\|integration_boot_bg_pin\|integration_dark_start_pin\|integration_r34_plattform_takt\|integration_r30_sicherung_bild\|integration_headless_run)$" --timeout 600` | `100% tests passed, 0 tests failed out of 7` (177,57 s) |
 | gezielter Lauf (Montage-/Spawn-Raeume + geaenderte Tests) | `ctest -R "^(integration_r35_cut1150\|integration_r35_granate\|integration_r36_gegnerzahl\|integration_room_probe_sweep\|integration_room_transition\|integration_headless_run\|integration_cross_stage\|integration_r34n_g_schrift1150\|prop_spawn_entered\|probe_r16_tuer1040_[ABFN])$" --timeout 600` | `100% tests passed, 0 tests failed out of 13` (816,47 s) |
-| alle 484 Unit-Tests (`ctest -R "^unit_" -E "android_bash" --timeout 600 -j4`) | Gesamtbestand mit RE15_ACTOR_MAX 21 | `100% tests passed, 0 tests failed out of 484` (183,8 s), darunter unit_r35_cut1150_montage_1040_reihe (k = 0..20 je 5 Zombies) |
+| Zwischenstand: alle 484 Unit-Tests (`ctest -R "^unit_" -E "android_bash" --timeout 600 -j4`) | Gesamtbestand mit RE15_ACTOR_MAX 21, vor den neuen Riegeln | `100% tests passed, 0 tests failed out of 484` (183,8 s), darunter unit_r35_cut1150_montage_1040_reihe (k = 0..20 je 5 Zombies) |
 
 ## 8. OFFEN
 
@@ -246,7 +260,8 @@ bildet ihn nicht nach (PORT-ENTSCHEIDUNG, Beleg = Feldende §3.2) und verwirft d
 
 * ROOM1030/1031/1040/1041: hat Leon (oder Elza) die ersten Zombies eines Raums erledigt, kommen jetzt wie im Original
   die naechsten aus der Liste nach — bis zu allen 20 Records je Raum (gleichzeitig weiterhin hoechstens 6 in 1030 und
-  5 in 1040, das ist die Original-Grenze im Raumskript). Vorher war ab 15 erledigten Zombies Schluss.
+  5 in 1040, das ist die Original-Grenze im Raumskript). Vorher erschienen die Records 15..19 nie: ab 10 (1030) bzw.
+  11 (1040) erledigten standen weniger als 6/5 da, ab 15 erledigten keiner mehr.
 * Die Montage in 1040 (Irons-Szene) nimmt jetzt die echten restlichen Raum-Zombies statt der Port-Ersatzzombies, wenn
   genug davon uebrig sind; das Ergebnis bleibt "5 Zombies durchs Tor".
 * ROOM20B0 (Stage 2) zeigt jetzt 20 statt 15 der kleinen gruenen Schwebe-Effekte; das Original fuehrt dort 35 Eintraege,
