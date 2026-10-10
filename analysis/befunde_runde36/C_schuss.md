@@ -123,17 +123,77 @@ Nutzer mit dem Runde-36-Auftrag fuer die FRESSER aufhebt ("Im Original geht beid
 
 ## 2. Punkt 2 — Blut-Anker bei getroffenen Zombies
 
-### 2.1 Messung vorher
-(folgt)
+### 2.1 Messung vorher (`probe_r36_blut mess eben|tief`, ROOM1140, RE2-KI, RE2-Bank CDEMD0.EMS, echter game_step)
+Leon 1800 vor Platz 2 (-1800,-19600) (alle anderen Plaetze aus), Pistole 3, Schuss alle 12 Bilder, sobald der
+Zombie steht. Je Bild wird die GEZEICHNETE Pose (g_anim_pose_actor = Aktor, wie main.c) berechnet und die
+Part-Weltlagen 0/1/8 gemerkt; beim Treffer-Spawn (re15_re2z_last_fx_pos, Part 0/1, HP-Verlust im selben Bild)
+wird die Blutlage gegen den RE2-Sollpunkt (2.2) aus der Pose des Vorbilds (T-1, Original) und dieses Bilds (T)
+verglichen:
+* EBEN (Zone 1 Rumpf): `F66 part=0 fx=(-1468,-2010,-19720)` = 14 Einheiten vom BECKEN (Part 0, y -2011); Soll
+  (-1518,-2513,-19705) -> **d = 505** (503 gegen T). Zweiter Treffer F390: d = 500.
+* TIEF (Zone 0 Beine): `F66 part=1 fx=(-1468,-2010,-19720)` = 14 vom Becken (Part 1 liegt in RE2 bei (0,0,0) =
+  Becken); Soll (-1357,-1225,-19663) = Kniehoehe -> **d = 794**. F306: d = 824.
+=> Das Blut erschien IMMER am Becken: beim Rumpf-/Kopftreffer ~500 zu tief, beim Beintreffer ~800 zu hoch —
+der Befund des Nutzers ("manchmal nicht an der richtigen Stelle" = immer, wenn die Zone nicht die Mitte ist).
+Nebenbefund: der Port laesst HURT P0 im SELBEN Spielbild wie den Treffer laufen; Soll(T-1) und Soll(T) liegen
+12-20 auseinander (ein Bild Bewegung).
 
-### 2.2 RE-Belege
-(folgt)
+### 2.2 RE-Belege (RE2 EMZ0.BIN, selbst disassembliert; RE2 = Vorgabe fuer die Zombie-KI)
+Die drei Treffer-Emitter rufen FUN_8001BF10(a0 = id, a1 = Gier, a2 = Part-WELTMATRIX, a3 = VERSATZ):
+```
+Haupt-Handler P0 (0x80105560, Blut @0x80105650-708):
+80105650: lbu v1,466(s1)  ... multu 0xaaaaaaab ... 80105678: beq v1,zero,0x801056dc  ; Zone = +0x1D2 % 3
+8010567c: addiu a0,zero,6096           ; id (Delay-Slot, beide Zweige)
+80105680: lh v1,346(s1)                ; +0x15A (= 1 @0x801055BC, -1 bei +0x1D0 & 0x20 @0x80105624-38)
+80105684: lw a1,408(s1)                ; +0x198 Modellblock
+80105688-9c: v0 = 100 * v1
+80105698: lw v1,1420(a1) / 801056a0: subu v1,v1,v0 / 801056a4: sh v1,16(sp)   ; a3.x = P8.t.x - 100*seite
+801056a8: lw v0,1424(a1) / 801056b0: addiu v0,v0,300 / 801056b4: sh v0,18(sp) ; a3.y = P8.t.y + 300
+801056b8: lw v0,1428(a1) / 801056c4: sh v0,20(sp)                              ; a3.z = P8.t.z
+801056c8: lh v0,118(s1) / 801056d0: subu a1,v0,a1                              ; Gier = +0x76 - s3 (2048 bei Ruecken)
+801056d8: addiu a2,s2,72                                                       ; a2 = Part 0 (+0x198 + 72)
+801056dc-704 (Zone 0): a3 = (0, 800, 0) (`sh zero,16 / sh 800,18 / sh zero,20`), a2 = +0x198 + 244 = Part 1
+80105708: jal 0x8001bf10
+```
+1420/1424/1428 = 8*172 + 0x2C/0x30/0x34 = die lokale Translation (MATRIX +0x18, t @+0x2C) von Part 8 = sein
+Bind-Versatz (RE2 EM010 Part 8 = (-40,-783,0), aus der Bank gelesen; Messung 2026-08-20 "8 mittig oben").
+Stagger P0 @0x80105D14-DBC: wortgleich, seite = `lb v1,362(s4)` = +0x16A (@0x80105D2C), y + 300 (@0x80105D5C).
+Wurzel-Flinch @0x801050B0-158: Zone 0 -> Part 1 (0,800,0) id 6096 (@0x801050F0-110); sonst Part 0, a3 =
+(P8.x, P8.y + 500, P8.z) ohne Seite, id 4096 (@0x8010511C-58).
+Lage der ESP-Maschine = Anker.R * a3 + Anker.T (re15_esp.c:1455, `jal 0x800661c0` @0x8001a248 + `addu`
+@0x8001a258-2a4); die Anker-Matrix ist die des ZEICHNERS im Vorbild (Record +0x48, J_affen.md N1).
+Zone: Maskentabelle @0x800A6DB4, `srl s7,v1,1` @0x8004149C -> 0 Beine / 1 Rumpf / 2 Kopf (re15_damage.c-Block
+"DIE MASKENTABELLE"). => RE2 setzt Rumpf-/Kopfblut 483 ueber dem Becken (Brustbereich, 100 zur Schuetzenseite)
+und Beinblut 800 unter dem Becken (Knie); der Port setzte beides AM Becken (kein a3).
+RE1.5 (Nebenbefund, nicht Vorgabe): FUN_80105b7c P0 spawnt FUN_80019700(0x2000, +0x6a, Bone +0x40, a3 =
+@0x8011fe84 = (200,0,0)) am Gore-Bone LAB_8011f784[Typ] (Zombie 14 = Brust) bei +0x6 == 1 (@0x80105c48-a0),
+an Bone 2 bei +0x6 == 0 (@0x80105cb0-d0); der Port-RE1.5-Pfad (re15_enemy_hurt_fx) spawnt an der Aktor-WURZEL
+(Fusshoehe) — OFFEN 2 (Abschnitt 5).
 
 ### 2.3 Umsetzung
-(folgt)
+* `schuss_r36.c` `re15_schuss_r36_blut_anker(e, bone, a3, out)`: Lage = Welt(t_part) + Ryaw * (R_part * a3)
+  (ApplyMatrix-Zwilling FUN_800661c0 @0x8001a248 + Ryaw wie re15_skel_bone_to_world). Die Pose kommt wie beim
+  Zeichner CROSSFADE-geblendet (FUN_8001f3bc): ueber einen Schatten-Aktor (Kopie, g_anim_pose_actor = &sh,
+  Muster enemy_ai_re2_zellenarm.c:462-82) — dieselbe Pose, die der Renderer in diesem Bild zeichnet, ohne den
+  Blend-Zustand des echten Aktors zu veraendern (roh vs. gezeichnet gemessen bis 98 Einheiten im zweiten
+  Treffer-Clip). Ragdoll (re2z_rag_anchor_on): Anker wie bisher ueber re15_enemy_bone_world_pos.
+* `enemy_ai_re2_zombie.c`: `re2z_blood_a3(e, zone, seite, dy)` baut a3 aus `bone_relative_pos[Part 8]` (lw 1420/
+  1424/1428), `- 100*seite` (subu), `+ dy` (addiu 300/500); `re2z_blood_fx_dir(e, yaw, seite, dy)` reicht es an
+  `re2z_blood_fx_scaled(..., a3)` -> `re15_schuss_r36_blut_anker`. Aufrufer: Haupt-Handler P0 seite = +-1 aus
+  +0x1D0 & 0x20 (= +0x15A @0x801055BC/@0x80105638), dy 300; Stagger P0 seite = (int8)+0x16A, dy 300, Gier =
+  +0x76 - 2048 bei Ruecken (@0x80105D68-7C); Wurzel-Flinch seite 0, dy 500. Die uebrigen Nebenpfad-Emitter
+  (re2z_blood_fx_at, MG-Emitter Part 8) unveraendert (a3 = NULL). Die Praesentation (Skala 0x2000, 8 Splatter,
+  RE1.5-Mandat) bleibt.
 
-### 2.4 Messung nachher
-(folgt)
+### 2.4 Messung nachher (dieselbe Sonde)
+* EBEN: `F66 part=0 fx=(-1503,-2512,-19712)` Soll(T-1) d = 16, Soll(T) d = 1; F390 d = 19 / 1 — Blut 501 ueber
+  dem Becken (Brust), 100 zur Schuetzenseite.
+* TIEF: `F66 part=1 fx=(-1345,-1224,-19664)` d = 12 / 1; F306 d = 4 / 0 — Blut 800 unter dem Becken (Knie).
+* exe (`run_p2.sh nachher`, ROOM1140, Leon (-5000,-19600) Blick +x, Pistole, Hybrid-Modell): fx.log `id=0 ...
+  w(-1733,-2445,-19605) F=55`, state.log `F55 Platz 2 50 -> 34`; Bild `C_schuss_mess/p2_nachher_bild54_57.png`
+  (Bilder 54..57, Ausschnitt): der Blutstoss sitzt auf Brusthoehe an der dem Schuetzen zugewandten Seite.
+* Pins `unit_r36_blut_pin_eben` / `unit_r36_blut_pin_tief` (probe_r36_blut pin ...): Abstand zum RE2-Sollpunkt
+  <= 40 (Schranke; vorher 500-800) UND Mechanismus: Rumpfblut > 300 ueber, Beinblut > 300 unter dem Becken.
 
 ## 3. Punkt 3 — Super Redhawk gegen Kraehen (RE2-Vergleich)
 

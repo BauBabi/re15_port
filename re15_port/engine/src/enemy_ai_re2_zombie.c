@@ -65,6 +65,7 @@
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
+#include "re15_schuss_r36.h" /* re15_schuss_r36_blut_anker — Anker.R*a3 + Anker.T (Runde 36 Spur C) */
 #include "re15_anim_select.h" /* re15_actor_playback_slot — dieselbe Spiegel-Regel wie der Renderer */
 
 /* RE1.5-snd1-Raum-SE (FUN_800453d0-Pfad) — bewusst extern statt re15_audio.h
@@ -1057,14 +1058,16 @@ static int re2z_bearing_to(const re15_actor_t *e, const re15_actor_t *pl);  /* f
 #define RE2Z_BLOOD_TRIGGERS 8
 
 static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_t scale16,
-                                 int splatter_n)
+                                 int splatter_n, const int32_t *a3)
 {
     int32_t p[3];
     /* `part` ist eine RE2-PART-Nummer, re15_enemy_bone_world_pos will einen BONE-SLOT der
      * geladenen Bank — im RE1.5-Modus sind das verschiedene Nummernraeume (Block ueber
-     * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet. */
-    re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p);
-                                             /* == die Translation der Part-Matrix +0x198+n*172+72 */
+     * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet.
+     * Runde 36 Spur C: Lage = Anker.R * a3 + Anker.T (FUN_8001BF10 a2/a3, re15_esp.c:1455) statt nur
+     * Anker.T — Belege include/re15_schuss_r36.h (Punkt 2). a3 == NULL = kein Versatz (wie bisher). */
+    re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);
+                                             /* == die Part-Matrix +0x198+n*172+72, mal a3 */
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, scale16, p[0], p[1], p[2], yaw);
@@ -1081,7 +1084,7 @@ static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_
  * @0x80106D7C/@0x801071A0). Wer eine davon fixt: erst die Id am Original auslesen. */
 static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
 {
-    re2z_blood_fx_scaled(e, part, yaw, 0x1500, 0);
+    re2z_blood_fx_scaled(e, part, yaw, 0x1500, 0, NULL);
 }
 
 /* FUN_8001BF10 als DEKODER (Umbau 2026-09-12, Dossier
@@ -1182,17 +1185,42 @@ static int re2z_blood_anchor(const re15_actor_t *e)
  * ⛔ OPEN: die Original-Geschwindigkeit a3 (Zone 0 = {0,800,0} @0x801056E0-F4; sonst aus der
  *      Part-8-Matrix mit x -= 100*+0x15A und y += 300 @0x80105680-B4) hat im positionslosen
  *      Port-Stand-in keinen Konsumenten. */
-static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
+/* Runde 36 Spur C — der a3-VERSATZ der drei Treffer-Emitter (Belege include/re15_schuss_r36.h, Punkt 2):
+ *   Zone 0 (Beine)     : Part 1, a3 = (0, 800, 0)                        (@0x801056DC-F4 / @0x80105D90-A8 / @0x801050F0-104)
+ *   Zone 1/2 (Rumpf/Kopf): Part 0, a3 = (P8.x - 100*seite, P8.y + dy, P8.z) (@0x80105680-B4 / @0x80105D2C-70 / @0x80105124-48)
+ * P8 = lokale Translation von Part 8 (+0x198 + 8*172 + 0x2C) = Bind-Versatz des Teils in der geladenen Bank;
+ * seite = +0x15A (Haupt-Handler) bzw. +0x16A (Stagger) = +-1, 0 beim Wurzel-Flinch; dy = 300 bzw. 500 (Flinch). */
+static void re2z_blood_a3(const re15_actor_t *e, int zone, int seite, int dy, int32_t a3[3])
+{
+    if (zone == 0) { a3[0] = 0; a3[1] = 800; a3[2] = 0; return; }       /* sh zero,16 / sh 800,18 / sh zero,20 */
+    a3[0] = a3[1] = a3[2] = 0;
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    int b8 = re2z_part_to_bone(e, 8);
+    if (b && b->skel.bone_count > b8 && b8 >= 0) {
+        a3[0] = b->skel.bone_relative_pos[b8][0];                          /* lw 1420 -> sh 16  */
+        a3[1] = b->skel.bone_relative_pos[b8][1];                          /* lw 1424 -> sh 18  */
+        a3[2] = b->skel.bone_relative_pos[b8][2];                          /* lw 1428 -> sh 20  */
+    }
+    a3[0] -= 100 * seite;                                                  /* `subu v1,v1,v0` (100 * +0x15A) */
+    a3[1] += dy;                                                           /* `addiu v0,v0,300` bzw. 500 */
+}
+
+static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw, int seite, int dy)
 {
     /* scale16 = 0x2000 (@0x80105c54 / @0x80105cbc, RE1.5-Praesentation) statt der RE2-eigenen
      * 6096 = 0x17D0 (@0x8010567C) — Mandats-Entscheidung, beide Werte oben zitiert.
-     * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78). */
-    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, RE2Z_BLOOD_TRIGGERS);
+     * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78); seit Runde 36 mit
+     * dem a3-Versatz des Originals (re2z_blood_a3). */
+    int zone = (int)((unsigned)e->re2z_hits1d2 % 3u);
+    int32_t a3[3];
+    re2z_blood_a3(e, zone, seite, dy, a3);
+    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, RE2Z_BLOOD_TRIGGERS, a3);
 }
 
 static void re2z_blood_fx(re15_actor_t *e)
 {
-    re2z_blood_fx_dir(e, (int16_t)e->rot_y);
+    /* Wurzel-Flinch @0x801050B0-158: kein Seitenversatz, y + 500 (@0x80105138), Gier = +0x76. */
+    re2z_blood_fx_dir(e, (int16_t)e->rot_y, 0, 500);
 }
 
 /* FUN_800152C8(self, yaw_off) — applies the +0x144 vector yaw-rotated (self-disasm'd:
@@ -5058,7 +5086,10 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
          * die -1 ueberschreibt ihn nur im Ruecken-Treffer (@0x80105CE4-F8). Frueher stand hier
          * fest 1, weil +0x1D0 keinen Produzenten hatte; den gibt es jetzt (re2z_stamp_hitdir). */
         e->re2z_dir16a = (e->re2z_hitdir1d0 & 0x20u) ? (uint8_t)0xffu : (uint8_t)1u;
-        re2z_blood_fx(e);                                          /* @0x80105D80 / @0x80105DB8 */
+        /* Runde 36 Spur C: Stagger-Emitter @0x80105D14-DBC — seite = +0x16A (`lb v1,362` @0x80105D2C),
+         * y + 300 (@0x80105D5C), Gier = +0x76 - t0 (t0 = 2048 bei Ruecken, @0x80105D68-7C). */
+        re2z_blood_fx_dir(e, (int16_t)((int)e->rot_y - ((e->re2z_hitdir1d0 & 0x20u) ? 2048 : 0)),
+                          (int)(int8_t)e->re2z_dir16a, 300);       /* @0x80105D80 / @0x80105DB8 */
         /* Zeile 10 = GL Brand -> Verkohlung (@0x80105DC4-E08), Zeile 11 = GL Saeure -> das
          * BEIN WEGAETZEN (@0x80105E08-F18) + FUN_80106310 (@0x80105F14). */
         if (e->sub_state_1 == 10u && !(e->re2z_f10e & 0x80u)) {    /* @0x80105DC4-E00 */
@@ -5349,7 +5380,9 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
         if (e->sub_state_1 != 16u) {                               /* @0x80105640-48 */
             int16_t bdir = (int16_t)((int)e->rot_y -
                                      ((e->re2z_hitdir1d0 & 0x20u) ? 2048 : 0));
-            re2z_blood_fx_dir(e, bdir);                            /* Id 6096 @0x8010567C */
+            /* Runde 36 Spur C: seite = +0x15A = 1 (@0x801055BC) bzw. -1 bei +0x1D0 & 0x20 (@0x80105638),
+             * y + 300 (@0x801056B0) — Belege include/re15_schuss_r36.h (Punkt 2). */
+            re2z_blood_fx_dir(e, bdir, (e->re2z_hitdir1d0 & 0x20u) ? -1 : 1, 300);   /* Id 6096 @0x8010567C */
         }
         break;
     case 1:
@@ -7046,7 +7079,7 @@ static void re2z_getup_hurt(re15_actor_t *e, re15_actor_t *pl)
          * @0x80107B28), v = {0,300,0} @0x80107B20-24. Auftritt nach dem Nutzer-Mandat (RE2-
          * Entscheidung, RE1.5-Praesentation) wie die drei Treffer-Emitter der HURT-Wurzel
          * (s. re2z_blood_fx_dir: scale16 0x2000 @0x80105C54, 8 Splatter). */
-        re2z_blood_fx_scaled(e, 8, (int16_t)e->rot_y, 0x2000, 8);
+        re2z_blood_fx_scaled(e, 8, (int16_t)e->rot_y, 0x2000, 8, NULL);
         e->anim_frac = 15;                                         /* sb 15,334 @0x80107B3C: NUR das
                                                                     * Blend-Byte, Clip/Bild bleiben */
         if ((e->re2z_word228 & 0xffu) == 1u)                       /* andi 0xff / bne v0,s0(=1)

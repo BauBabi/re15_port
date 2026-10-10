@@ -53,5 +53,26 @@ int re15_schuss_r36_sichtlinie_blockiert(const re15_actor_t *pl, const re15_acto
  * verworfen hat (`bne v0,zero,0x80012540` @0x80012170). */
 int  re15_schuss_r36_sichtlinie_verworfen(void);
 void re15_schuss_r36_sichtlinie_reset(void);
+/* ---- Punkt 2: BLUT-ANKER des RE2-Zombie-Treffers (Dossier C_schuss.md §2) --------------------
+ * Die drei Treffer-Emitter in EMZ0.BIN rufen FUN_8001BF10(id, Gier, a2, a3) mit a2 = Part-WELTMATRIX
+ * (+0x198 + part*172 + 72) und a3 = VERSATZ im Part-Rahmen; die ESP-Maschine setzt die Lage auf
+ * Anker.R * a3 + Anker.T (re15_esp.c:1455, `jal 0x800661c0` @0x8001a248 / `addu` @0x8001a258-2a4):
+ *   Wurzel-Flinch @0x801050B0-158 : Zone 0 -> Part 1 (+244), a3 = (0, 800, 0), id 6096
+ *                                   sonst  -> Part 0 (+72), a3 = (P8.x, P8.y + 500, P8.z), id 4096
+ *   Haupt-Handler P0 @0x80105650-708: Zone 0 -> Part 1, (0, 800, 0)
+ *                                   sonst  -> Part 0, (P8.x - 100*+0x15A, P8.y + 300, P8.z), Gier - 2048 bei Ruecken
+ *                                   (+0x15A = 1 @0x801055BC, -1 bei +0x1D0 & 0x20 @0x80105624-38)
+ *   Stagger P0 @0x80105D14-DBC     : Zone 0 -> Part 1, (0, 800, 0)
+ *                                   sonst  -> Part 0, (P8.x - 100*+0x16A, P8.y + 300, P8.z)  (`lb v1,362` @0x80105D2C)
+ * P8 = lokale Translation von Part 8 = +0x198 + 8*172 + 0x2C (`lw 1420/1424/1428(a1)` @0x80105698-B8 /
+ * @0x80105D44-64 / @0x80105124-40) = der Bind-Versatz des Teils (bone_relative_pos[8] der geladenen Bank);
+ * Zone = +0x1D2 % 3 (0 Beine / 1 Rumpf / 2 Kopf, Maskentabelle @0x800A6DB4 `srl s7,v1,1` @0x8004149C).
+ * Port vorher: Lage = Knochen-Weltposition OHNE a3 -> immer am Becken (gemessen probe_r36_blut: Rumpf-
+ * Treffer 505 zu tief, Bein-Treffer 794 zu hoch).
+ *
+ * Lage = Welt(t_part) + Ryaw * (R_part * a3); t_part ueber re15_enemy_bone_world_pos (alle Sonderfaelle),
+ * R_part aus der Pose (QUERY-Modus). Rueckgabe 0 = ohne Bank (out = Aktor-Wurzel), 1 = nur t_part,
+ * 2 = mit Versatz. */
+int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3]);
 
 #endif /* RE15_SCHUSS_R36_H */

@@ -189,23 +189,42 @@ int main(int argc, char **argv)
         if (g_actors[s].active && g_actors[s].type == 0x10 && g_actors[s].x == -1800 && g_actors[s].z == -19600) zs = s;
     if (zs < 0) { printf("FAIL: Platz (-1800,-19600) nicht gefunden\n"); return 1; }
     re15_actor_t *z = &g_actors[zs];
+    /* Nur dieser eine Zombie: alle anderen Plaetze aus (Auto-Zielen und Koerperschub sonst auf Platz 5). */
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != zs) g_actors[s].active = 0;
     pl->x = z->x + 1800; pl->z = z->z; pl->rot_y = 2048;          /* Blick -x auf den Zombie */
     for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
 
     drawn_t prev, cur; memset(&prev, 0, sizeof prev); memset(&cur, 0, sizeof cur);
     int32_t fx0[3]; re15_re2z_last_fx_pos(fx0);
     int treffer = 0, fails = 0, n_spawn = 0;
-    for (int f = 0; f < 240; f++) {
+    for (int f = 0; f < 400; f++) {
         pl->hp = 100;
         uint16_t cr = RE15_PAD_BIT_R1 | (tief ? RE15_PAD_BIT_DOWN : 0), ed = 0;
-        /* Schuss, sobald der Zombie steht (nicht mehr Fresser) und alle 12 Bilder */
-        if (f >= 30 && ((f - 30) % 12) == 0 && z->state == 1) { cr |= RE15_PAD_BIT_SQUARE; ed = RE15_PAD_BIT_SQUARE; }
+        /* Schuss, sobald der Zombie steht (nicht mehr Fresser EXEC[8]) und alle 12 Bilder */
+        static int steht_seit = -1;
+        if (steht_seit < 0 && z->state == 1 && z->sub_state_1 != 8) steht_seit = f;
+        if (steht_seit >= 0 && f >= steht_seit + 20 && ((f - steht_seit - 20) % 12) == 0 && z->state == 1) {
+            cr |= RE15_PAD_BIT_SQUARE; ed = RE15_PAD_BIT_SQUARE;
+        }
+        if (!pin && ((f % 20) == 0 || ed))
+            printf("  f%-3d z st=%u ss1=%u ss2=%u 1D3=%02X 10E=%04X hp=%d d=%u hr=%02x | pl st=%u ss1=%u mo=%u aim=%d "
+                   "rot=%d (%d,%d) z(%d,%d)%s\n",
+                   f, z->state, z->sub_state_1, z->sub_state_2, z->re2z_self1d3, z->re2z_f10e, z->hp,
+                   (unsigned)z->ai_dist, z->hit_react, pl->state, pl->sub_state_1, (unsigned)pl->motion,
+                   re15_player_aim_ready(), pl->rot_y, pl->x, pl->z, z->x, z->z, ed ? " SCHUSS" : "");
         int32_t hp_vor = z->hp;
         frame(cr, ed);
         zeichne(z, &cur);                                        /* "der Zeichner" dieses Bildes */
         int32_t fx[3]; re15_re2z_last_fx_pos(fx);
         int gespawnt = (fx[0] != fx0[0] || fx[1] != fx0[1] || fx[2] != fx0[2]);
-        if (gespawnt && cur.ok && prev.ok) {
+        if (gespawnt) { fx0[0] = fx[0]; fx0[1] = fx[1]; fx0[2] = fx[2]; }
+        /* nur die Treffer-Emitter (Anker Part 0/1) DIESES Zombies (naeher als 1500 an seiner Wurzel) */
+        int32_t zw[3] = { z->x, z->y, z->z };
+        if (gespawnt && !pin) printf("  f%-3d fx part=%d (%d,%d,%d) zombie (%d,%d,%d) st=%u/%u/%u hp=%d\n", f, re15_re2z_last_fx_part(),
+                             fx[0], fx[1], fx[2], z->x, z->y, z->z, z->state, z->sub_state_1, z->sub_state_2, z->hp);
+        /* nur die TREFFER-Emitter: Part 0/1, in diesem Bild HP verloren (die Liege-/Fress-Emitter spawnen ohne Treffer) */
+        if (gespawnt && (re15_re2z_last_fx_part() == 0 || re15_re2z_last_fx_part() == 1) && abst(fx, zw) < 3000 &&
+            z->hp < hp_vor && cur.ok && prev.ok) {
             int zone = (int)(z->re2z_hits1d2 % 3u);
             int seite = (z->re2z_hitdir1d0 & 0x20u) ? -1 : 1;
             int32_t soll_prev[3], soll_cur[3];
@@ -220,10 +239,14 @@ int main(int argc, char **argv)
                    soll_prev[0], soll_prev[1], soll_prev[2], d_prev, soll_cur[0], soll_cur[1], soll_cur[2], d_cur,
                    d_p0, d_p1, d_p8, prev.t[0][1], soll_prev[1]);
             if (pin) {
+                /* Schranke 40: gemessen d(T) <= 1, d(T-1) <= 19 (ein Bild Bewegung); vorher 500-800 (Becken). */
                 int32_t best = d_prev < d_cur ? d_prev : d_cur;
-                if (best > 160) { printf("FAIL: Blut %d vom RE2-Sollpunkt entfernt (Schranke 160)\n", best); fails++; }
+                if (best > 40) { printf("FAIL: Blut %d vom RE2-Sollpunkt entfernt (Schranke 40)\n", best); fails++; }
+                /* und der Mechanismus, nicht nur die Naehe: Rumpf-Treffer liegen OBERHALB des Beckens (PSX -y),
+                 * Bein-Treffer UNTERHALB — vorher lag das Blut in beiden Faellen am Becken. */
+                if (zone != 0 && !(fx[1] < prev.t[0][1] - 300)) { printf("FAIL: Rumpf-Blut nicht oberhalb des Beckens\n"); fails++; }
+                if (zone == 0 && !(fx[1] > prev.t[1][1] + 300)) { printf("FAIL: Bein-Blut nicht unterhalb des Beckens\n"); fails++; }
             }
-            fx0[0] = fx[0]; fx0[1] = fx[1]; fx0[2] = fx[2];
         }
         if (z->hp < hp_vor) treffer++;
         prev = cur;
