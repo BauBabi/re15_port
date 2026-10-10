@@ -678,3 +678,30 @@ y = -1800 zitiert, dort die erste mit Substate 0.)
   Rest); der Pin faehrt sie jetzt nur noch ausdruecklich "erzwungen" mit und prueft fuer jede Lage, dass sie
   wirklich installiert ist.
 - Entscheidungsfrage: keine.
+
+## Nachbesserung 3 (nach Abnahme 2, 2026-10-10 nachts)
+
+Abnahme 2 (`A_abnahme_2.md`): Punkt 1 erfuellt (M1 echter Weg 10D0 -> 10F0 -> 1090, M2 Endlage von Westen, V1
+Gegenprobe ohne Fix, M3/M4 5020/20A0 an der exe); RE-Gate der Nachbesserung 2 NICHT erfuellt. Zwei Maengel:
+(1) Beleg 3/4 falsch — @0x8002c6c4 ist nicht der "Spieler-Fall", sondern liegt im Fall-Handler FUN_8002c444
+der Typ-4-OBJEKTE (Typ-Tabelle @0x80073c70 [4] = FUN_8002c40c, `jal 0x8002c444` @0x8002c42c; Ausloeser im
+Objekt-Pass @0x8002c0fc-c14c); das Objekt-Band +0x82 aendert sich im Original zur Laufzeit; @0x800421d0
+(Sce_em_set) fehlt in der Schreiber-Einordnung. (2) Der Port hat diesen Objekt-Fall nicht (M5: 5020-Kiste
+faehrt ueber die Band-4-Kante und bleibt in der Luft stehen).
+
+ORCHESTRATOR-ENTSCHEIDUNG (Regel "Original oder nicht", Nutzer-Wortlaut "Das macht ein Fortschritt im Spiel
+unmoeglich"): den Objekt-Fall byte-true PORTIEREN (nicht als OFFEN/Frage fuehren).
+
+Plan:
+1. REPRODUZIEREN: M5 der Abnahme an der eigenen exe (ROOM5020, Kiste nach Osten ueber die Band-4-Kante).
+2. SELBST disassemblieren: Objekt-Pass FUN_8002bd44 @0x8002c0ec-c150 (Ausloeser), Typ-Tabelle @0x80073c70,
+   FUN_8002c40c, FUN_8002c444 (ganz: Zustaende obj+5 0..3, Zaehler obj+6, Kippen, Schwerkraft, Bodenhoehe
+   @0x8002c67c, Band @0x8002c6c4, Landen, Nachfedern), FUN_8002d3d8 (Fallrichtung), FUN_8003b7f0 (SCA-Wort mit
+   Rand), FUN_8001c6e8 (Bodenhoehe); Schreiber-Zensus von +0x82 neu einordnen (inkl. Sce_em_set @0x800421d0).
+3. Port: neue Datei `engine/src/objfall_r36.c` + `include/re15_objfall_r36.h`, kleiner Haken im Objekt-Pass des
+   Ports; jede Konstante mit @0x.
+4. Messen an der exe: ROOM5020/5021 (Kiste faellt ab x >= -8125, landet auf Band 0, Latch @0x012F4-302 setzt
+   (4,203)=1), ROOM20A0/20A1 (Tasche, Latch @0x01AD4-e2 -> (3,204)=1); Klettern auf die gefallene Kiste.
+5. Mangel 1: Dossier Beleg 3/4/OFFEN, Sondenkopf probe_r36_klettern_zensus.c:50-51, probes/r36_klettern.cmake:36-37
+   berichtigen, eeca9a89 als ueberholt vermerken; 11A0/11A1 mit dem richtigen Grund belegen oder als ungemessen.
+6. Pins je Raum, bauen, gezielte Tests, Commit.
