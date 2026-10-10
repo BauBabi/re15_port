@@ -923,3 +923,15 @@ Punkte 1 und 3 (Abnahme 1: erfuellt) unberuehrt; ihre Riegel im gezielten Lauf g
 Commits der Nachbesserung 2 (Zweig r36/schuss): 3a688104 (Gliederung), 66fea251 (Ursache + Messung vorher), fb3c5932 (RE-Beleg),
 ccc46f65 (Code + Pins), 6b140f55 (Dossier 9.4/9.5 + Sonde), ee9842bc (9.7), a41911ad (Zitate), 0c07d2b3 (exe + Tests), dieser
 Abschluss-Commit (Flag-Zitate im Lesezugriff, 9.8).
+
+## 10. Nachbesserung 3 (nach Abnahme 2, `C_abnahme_2.md` §6 M1)
+
+Stand: Fortsetzung im selben Baum ab 4adb4890 (Abnahme 2). Einziger Mangel M1 (Punkt 2): Kriecher-Kopfabriss — zwei
+Blut-Emitter am Kriecher, den Leon bei der Befreiung aus dem Bein-Biss toetet, mit WELT-Versatz statt Anker-Versatz
+(enemy_ai_re2_zombie.c:2028 `re2z_gore_fx_ex(e, 0, 0x00801000u, rot_y, 0, -600, 0)`, :2048 `re2z_gore_fx_ex(e, 8, 4096u,
+ang, 0, 100, 0)`); der Zensus §8.8 C fuehrte beide falsch als "Griff/Biss — kein Blut am getroffenen Zombie"; der Pin
+`probe_r36_blut pin mg` bricht beim Kriecher ab und sieht den Fall nicht. Punkte 1 und 3 (Abnahme 2: erfuellt) bleiben
+unberuehrt; ihre Riegel muessen gruen bleiben. Eigene Mess-Dateien im Scratchpad `c_nb3_r36/` (Kurzform `nb3/...`),
+Kopien der urteilstragenden Skripte/Ausgaben im Repo unter `C_schuss_mess/n3/`.
+Gliederung (wird fortlaufend gefuellt): 10.1 Ursache / 10.2 Messung vorher / 10.3 RE-Beleg / 10.4 Zensus berichtigt
+(alle 88 Stellen mit a0) / 10.5 Aenderung / 10.6 Messung nachher / 10.7 Tests / 10.8 OFFEN + Fuer den Nutzer / 10.9 Stand.
