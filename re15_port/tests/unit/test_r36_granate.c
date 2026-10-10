@@ -382,6 +382,39 @@ static void abschnitt_wurf(void)
         }
         PRUEF(206, lower == 9, "Browning (Schwelle 7): R1 los im Bild 8 -> LOWER im Bild %d (soll 9, unveraendert)", lower);
     }
+    /* 2c — letzte Granate im Stapel (Menge 1): Abzug -> Wurf, Menge 0; danach Abzug ohne Granate = kein Wurf */
+    {
+        if (sp_bringup(9, 1) != 0) { PRUEF(207, 0, "Bringup letzte Granate"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        if (sp_zielen(0) < 0) { PRUEF(207, 0, "letzte Granate: nicht zielbereit"); return; }
+        int lower = -1, menge = -1;
+        int spawn = wurf(0, -1, &lower, &menge);
+        int spawn2 = -1; re15_esp_fx_reset();
+        for (int b = 0; b < 40; b++) {
+            uint16_t pad = RE15_PAD_BIT_R1 | (b < 6 ? RE15_PAD_BIT_SQUARE : 0);
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (spawn2 < 0 && granate_platz() >= 0) spawn2 = b;
+        }
+        PRUEF(207, spawn == 22 && menge == 0 && spawn2 < 0 && g_inv.slots[3].qty == 0,
+              "letzte Granate: Spawn %d, Menge %d, zweiter Abzug Spawn %d, Menge %d (soll 22 / 0 / keiner / 0)",
+              spawn, menge, spawn2, g_inv.slots[3].qty);
+    }
+    /* 2d — Abzug schon WAEHREND des Hebens (Clip 6, 10 Bilder) gedrueckt und gehalten: der Abzug ist ein
+     * HELD-Bit (`andi 0x40` im HOLD @0x80033308, kein Edge) -> Wurf im ersten HOLD-Bild + 22 */
+    {
+        if (sp_bringup(9, 5) != 0) { PRUEF(208, 0, "Bringup Heben"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        int ready = -1, spawn = -1;
+        for (int b = 0; b < 60; b++) {
+            sp_bild((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+                    (uint16_t)(b == 0 ? (RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE) : 0));
+            if (ready < 0 && re15_player_aim_ready()) ready = b;
+            if (spawn < 0 && granate_platz() >= 0) spawn = b;
+        }
+        PRUEF(208, ready >= 0 && spawn >= 0 && (spawn - ready == 22 || spawn - ready == 23) && g_inv.slots[3].qty == 4,
+              "Abzug waehrend des Hebens gehalten: zielbereit Bild %d, Spawn Bild %d (soll zielbereit + 22 [Abzug im HOLD-Bild] oder + 23 [Folgebild]), Menge %d (4)",
+              ready, spawn, g_inv.slots[3].qty);
+    }
 }
 
 /* ================================================================================================
