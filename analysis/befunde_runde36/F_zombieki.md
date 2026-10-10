@@ -735,3 +735,76 @@ Routen-Erweiterung schadet, enger gaten statt global umsteuern.
 | 2 | Nordwest-Tasche nur am gepinnten Punkt; Startknoten ohne Erreichbarkeit; Path-B-Weitsprung ungenutzt | Startknoten nur aus der eigenen Komponente; am Rand der unerreichbaren Tasche der Original-Weitsprung (A[4] Path B @0x801180cc-f8); Riegel prueft Blockade auch NACH dem ersten Angriff, drei Taschen-Plaetze |
 | 3 | Voll-Suite | Orchestrator; hier gezielt |
 
+
+### NB3 Mangel 1 — Umweg nach SCA-Reihenfolge statt Weglaenge (Regression a76cd217)
+- **Ursache (Code gelesen + gemessen):** `r36_uw_komp_bfs` war eine ungewichtete Breitensuche ueber Komponenten; die erste
+  Pad-Kante in SCA-Reihenfolge setzt den Vorgaenger — #36 (Ost, @ROOM11C0.RDT 0x015d8) vor #47 (West, @0x0165c), beide u1 = 0x10.
+  Messung vorher = Abnahme 2 (exe Slot 2 F2438/F1939/F1806 statt v0.8.23 F680/F704/F694; Sonde (-14000,2000) Umweg G1 nie, 919
+  blockiert). Eigene Gegenmessung v0.8.23-exe (`re15_pc_abn0f_basis.exe`, (-14000,2000)): Slot 2 F680, bitgleich zur Abnahme.
+- **Beleg (Sprung = Original):** A[4] Path A FUN_8003b93c(+0x34, box[6]+100, +0x82, attr 0x10) @0x80117ee0-f00, Yaw-Fenster
+  @0x80117f18-38, +0x9f / +0x5/6/7 = 7/0/1 @0x80117f40-74 (unveraendert aus NB1/NB2, Abnahme 2 Abschnitt 1 selbst gelesen).
+- **Aenderung (PORT-WAHL):** `r36_uw_astern` — A* ueber das Raster (Achtel-Metrik gerade 2 / diagonal 3), die 0x10-Pads als
+  Kanten mit ihrer Weglaenge Start -> Landung; der erste Sprung auf dem KUERZESTEN Weg ist der Original-Sprung.
+- **Nachher:** Sonde Szene 5 (Leon (-14000,2000), Gorilla 1 ab (-9013,-15461)): kein Gorilla ueber #36, erster Angriff Bild
+  352 (Original-Regel 430); (-14000,4000) 350 (458), (-14500,6000) 358 (433). exe: Tabelle unten.
+
+### NB3 Mangel 2 — Nordwest-Tasche
+- **Messung 1 — die Plaetze sind fuer Leon nicht begehbar:** Sonde `leonlauf` (echte Spieler-Klemme, Leon rennt 600 Bilder
+  auf den Platz zu): von (-23000,14400) Richtung (-26000,7000) / (-27000,12000) / (-24000,10000) endet Leon bei z 11938
+  (= #20-Oberkante 11470 + 450 + 0x12), Abstand 5174 / 2548 / 1938; von (-14600,6000) Richtung (-22000,7000) bei x -17322
+  (#13/#20-Ostkante -17790 + 468), Abstand 4678. Leon-Raster (Radius 450, Maske 1): x < -17322 / z < 11938 alles Zelle
+  (#13 @0x014c4 x -28290..-17790 z ..8112, #20 @0x01518 Typ 8 z 6800..11470, #21 @0x01524 x ..-24920 z 10000..14110).
+  `RE15_PLAYER_POS` setzt Leon hinein; exe NB2: (-26000,7000) -> (-26000,6332), (-27000,12000) -> (-26932,9532),
+  (-22000,7000) -> (-22000,6332) — alle IN #13/#20. Kein Gorilla kann dort angreifen (Angriffsweite 0xbb8/0xfa0, s. unten).
+- **Messung 2 — die "Tasche" im Gorilla-Raster ist ein Artefakt:** Sonde `klemme`: (-25800,6800) -> #13 schiebt auf 9730,
+  #20 auf 13088, #21 zurueck auf 6800 = die Vorlage. Beleg FUN_8003bca8 Code-0-Zweig: Vergleich Lage/Vorlage `lw a3,0(a1)` /
+  `lh v0,0(a2)` / `bne` @0x8003be38-54, Rueckfall `lh v0,0(a2)` / `sw v0,0(a1)` / `lh v1,4(a2)` / `addu v0,zero,zero` /
+  `sw v1,8(a1)` @0x8003be8c-a0 (PSX.EXE, re15_disasm.py). Mit Vorlage = Knoten (NB2) zaehlt jede solche Lage als frei:
+  286 von 708 Knoten (Schritt 800), darunter die ganze Tasche (`F_belege/nb3_raster800_vorlage_knoten.txt` gegen
+  `..._plus1.txt`); ein in der Tasche abgesetzter Gorilla bewegt sich 300 Bilder nicht (Sonde `fest -26000 7000 300 -26000 11000`).
+- **Messung 3 — Startknoten (Abnahme-Teilursache):** bestaetigt; am Rand (-23302,13088) lag der naechste "freie" Knoten
+  (-23400,12400) in der Tasche (Artefakt) — mit dem neuen Frei-Test existiert er nicht mehr, zusaetzlich nimmt
+  `r36_uw_knoten` nur Knoten, die der Gorilla GERADE erreicht (Strecke frei fuer seinen Radius).
+- **Path-B-Weitsprung:** traegt nicht in die Tasche — +0x7 = 0 laesst +0x82 = 0 (`floor = 1` nur bei +0x7 != 0
+  @0x80118ab4-af0), die Flugbahn bleibt an Band 0 geklemmt; Sonde `weit -20000 14500 -24000 10000`: Landung am Rand
+  (-23302,13088), nicht hinein.
+- **Aenderung:** Frei-Test mit Vorlage = Knoten + 1 (`r36_frei_bei`), Kanten = Schritt, den die Klemme in BEIDE Richtungen
+  nicht aufhebt (Schraegschieber haengen an der Bewegungsrichtung, Rueckfall @0x8003ced4-ceec), Startknoten gerade
+  erreichbar, Leons Knoten auf Leons Seite (Strecke frei fuer die Spieler-Klemme: Radius 450 = PR, Maske 1).
+- **Nachher (Sonde, Original-Regel -> Umweg):** Befundstelle (Leon steht auf (-24000,11938)): nie/nie -> 572/360;
+  Taschenrand (-24452,11938): nie/nie -> 601/361; (-22288,11938): nie/nie -> 480/340. An den Abnahme-Plaetzen selbst (Leon
+  IN den Zellen) greift keiner an — dort ist Leon im Spiel nicht.
+- **Blockade NACH dem ersten Angriff:** der Riegel misst sie jetzt je Gorilla (`nach`) und davon FERN (`fern`, Leon >= 0x1771).
+  In allen sieben Riegel-Szenen ist die FERN-Blockade nach dem ersten Angriff 0 (Szene 1: 4 Bilder). Was bleibt, ist NAH
+  (3900..4600 vor Leon): Leon wird in die Nordwest-Ecke (x -26932..-24452, z 14578..17268) gestossen, die ein Gorilla nur
+  ueber den 390 breiten Streifen z 15728..16118 erreicht; einer greift dort an, der zweite wartet. Eine Umlenkung auch NAH
+  wurde gemessen (Haenge-Beginn bei Leon > 3000): `unit_r35_affen_griff` rot ("Weg 2: erster Biss T474", Original-GDB kein
+  Biss bis T495, e1/e2 ~3925/~4990 an der Klemme) und `unit_r35_affen_szene` rot (5 Fehler, Biss-Takt/Tod gegen das Original)
+  — die Spur-J-Riegel pinnen genau diese Nahjagd als Original. Deshalb nur FERN.
+
+### NB3 Umweg-Beginn (beide Maengel): erst wenn der Gorilla haengt
+- NB2 startete bei JEDEM Klemmen-Kontakt und lenkte auch Gorillas um, die an der Wand entlang zu Leon rutschten: Sonde Leon
+  (6000,-9000) Gorilla 1 Angriff Bild 196 (Original-Regel) -> 284 (sofortiger Beginn mit A*).
+- Beleg: der Gorilla zaehlt das Klemmen-Haengen selbst — +0x1de im Gehirn-Schwanz `lhu v0,470(v1)` / `beq` @0x80117448-50,
+  +1 @0x80117458-68, sonst 0 @0x8011746c, INIT @0x8011706c; Voll-Scan 0x80116db8..0x8011c600 (STAGE1.BIN ohne Kopf):
+  sonst kein Zugriff auf Offset 478 — kein Verbraucher in der Beta.
+- PORT-WAHL: der Umweg ist dieser Verbraucher — Beginn, wenn der Gorilla FERN (>= 0x1771 @0x80117bc8) in Sub 3/4 seit 45
+  Bildern weniger als 400 vorankommt und an der Klemme steht. 45 = halbe Mess-Definition der Abnahme (90 Bilder im Anker
+  400); gemessen 1 / 15 / 30 / 45 (Raster Radius/4): 24353 / 22328 / 25112 / 20084 blockierte Bilder (52 Seeds).
+  Ausserdem sofort: in der JAGD (Sub 3) an der Kante eines 0x10-Pads, wenn der kuerzeste Weg ueber dieses Pad fuehrt (A[3]
+  hat keinen Sprung @0x80117b40-c74; ohne das lief der Gorilla in die Pad-Mitte, sprang in Richtung 0xf00 und landete vor dem
+  0x20-Pad #19 in der Original-Blindsprung-Schleife @0x80117fe4-80118024); Pad-Mitte-Drehen (NB1) nur bei Leon >= 0xbb8
+  (@0x80117a60-74; sonst sprang Gorilla 2 2053 vor Leon davon). Gerader Weg zu Leon frei -> Original (sonst verfehlten zwei
+  Gorillas 2100 vor Leon auf seinen KNOTEN gelenkt das Biss-Fenster).
+- Hook: enemy_ai_common.c Gehirn-Schwanz (1 Zeile, nach den Timern +0x1dc/+0x1e1).
+
+### NB3 Zufallsgang (52 Seeds x 6000 Bilder, je Lauf eigener Prozess; `F_belege/nb3_52seeds_*.txt`)
+| Anker | AUS (Original-Regel) | NB2 | **NB3** |
+|---|---|---|---|
+| 400 | 114029 / 226 Griffe | 15857 / 217 | **17975 / 245** (besser 47, schlechter 3, schlechtester +135) |
+| 40 | 75408 | 1329 | **221** (schlechter 0) |
+| 16 Seeds (Riegel), 400 | 38439 / 73 | 4568 / 76 | **5725 / 74** (schlechtester +59) |
+
+Anker 40 (Stillstand) faellt um 83 % gegenueber NB2; Anker 400 (Pendeln/Springen im 400er-Fenster) steigt um 2118 Bilder:
+NB2s sofortiger Umweg-Beginn holte mehr Gorillas aus der Nahjagd an Wagen-Diagonalen (Rest NB3: nah 14662, Sub 7 2352), lenkte
+aber dafuer auch rutschende Gorillas um (oben). Abwaegung im Sinne des Orchestrators ("lieber enger gaten").
