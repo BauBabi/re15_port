@@ -656,3 +656,65 @@ Grundlage: `F_abnahme_1.md` (Stand 7a9a0e7f, NICHT BESTANDEN, Maengel 1-6). Plan
 - **Riegel 17/17** (`F_belege/nb2_m4_affen_riegel.txt`): 16 Seeds AUS 38439 -> AN 4568 (<= 1/6), schlechtester -100
   (<= 600), Griffe 76 >= 80 % von 73; Szene 1 Angriff 140/425, Szene 2 898/1275, Szene 3 929/218, Szene 4 (Befundstelle)
   597/929, je Gegenprobe kein Angriff, keine Blind-Schleife.
+
+### NB2 Mangel 6 — Voll-Suite
+Im Spurbaum verboten (Auftrag); der Orchestrator faehrt sie EINMAL im Integrationsbaum. Hier gezielt (unten).
+
+### NB2 Messung nachher in der exe (Zusammenfassung, `F_belege/nb2_exe_messungen.txt`, Kopie `re15_pc_nb2f.exe`)
+- **M1 ROOM1010 Abnahme-Lage** (`RE15_DEBUG_JUMP=1010@250 RE15_PLAYER_POS=3750,4300,1024,0 RE15_AI_FLAVOR=re2`): Slot 1 Griff F30,
+  Wurf endet bei (3433,2983) VOR dem Keil, Sub 5 (liegt) F120-F420, F450 Gang, **F480 erneuter Griff**, F540 Sub 6 (frisst Leon).
+  Vorher (Abnahme 1): nach dem Griff Gang auf der Stelle bei (2934,1917), 540-840 Bilder, 2172..2815 vor Leon.
+- **M2 ROOM1040, Leon im Westgang** (`RE15_DEBUG_JUMP=1040@250 RE15_PLAYER_POS=-29900,6000,0,0`): Sicht-Bit Ostgang Slot 1 / 2
+  **0/900 und 0/900** (NB1: 895/900 und 396/900; v0.8.23: 0/900); Westgang Slot 3/4/5 895/894/895 (sehen Leon zu Recht).
+- **M3 ROOM11C0 Befundstelle** (`RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-24000,10000,1024,0`): **Slot 3
+  Angriff F850, Slot 2 F1912**, 0 Blind-Spruenge (NB1: keiner greift an, Slot 2 1519 Bilder Sprungschleife).
+
+### NB2 Tests (probes/r36_zombieki.cmake)
+| Test | Mangel | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_eintritt` | M1 | 266 Faelle: PASSIV 0, **KLEMME 0** (aufrecht nach der Reaktion); Taschenfall 1010<-1020 Slot 1: Gegenprobe 450 Bilder auf der Stelle, mit Wurf-Klemme 0 und Abstand ab Griff+300 = 85; Kriecher; ROOM10B0 | 9/9 |
+| `unit_r36_zombieki_sicht` | M2, M5 | Durchwand-Zensus aller Stages: Gegenprobe NB1 1814 Plaetze ueber ROOM1040 #4, NB2 0, gesamt 74 nur ueber Beleg-Zellen; ROOM1040-Westgang 0/2 (Gegenprobe 2/2); Leons Kopf aus PL00; NB1-Pruefungen unveraendert | 15/15 |
+| `unit_r36_zombieki_affen_block` | M3, M4 | 16 Seeds Anker 400 (38439 -> 4568, 0 schlechter); 4 Szenen mit beiden Gorillas je eigener Prozess, Szene 4 = Befundstelle (-24000,10000): beide greifen an, keine Blind-Schleife, Gegenprobe kein Angriff | 17/17 |
+| `unit_r36_zombieki_wecker`, `_szenen` | M5 | Kopf aus PL00 im Bildtakt (wie der Renderer); Weck-Zensus / Szenen unveraendert | 2/2, 5/5 |
+| `unit_r36_zombieki_affen` | P3 (erfuellt) | Gorilla-Lache, unveraendert | 9/9 |
+
+**Gezielte Laeufe (keine Voll-Suite im Spurbaum)** — Module/Raeume des Diffs (enemy_ai_common.c Zombie-Klemme + Gorilla-Haken,
+zombieki_r36.c, Zombie-/Gorilla-/Raum-Riegel):
+- `ctest --test-dir re15_port/build -R "affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|1010|1220|r35_raeume|r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav|unit_enemy_|room1070_wake|ai_flavor|re2_room1090|ada_eintritt|r17_waffen_loop|schatten|shadow|grab|griff|victim" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 163** (510,6 s)
+- nach dem letzten Neubau `ctest --test-dir re15_port/build -R "r36_zombieki" --timeout 600 -j 6` -> **100% tests passed, 0 tests failed out of 6**
+- Gorilla-Gruppe `ctest -R "unit_r35_affen|unit_maggot|r17_waffen_loop|unit_r36_zombieki_affen$"` -> 100% tests passed, 0 tests failed out of 25
+
+### NB2 OFFEN
+- **Gorillas, Nahjagd an Wagen-Diagonalen**: der Rest der Blockade (52 Seeds, Anker 400: 13794 von 15857 Bildern) ist die
+  Original-Nahjagd (Sub 3 unter 0x1771, Gorilla sieht Leon ueber eine Wagen-Diagonale mit Nibble 2, drueckt mit B[3] auf
+  playerX @0x80117d4c dagegen, bis Leon weitergeht). Jede gemessene Ausdehnung des Umwegs in den Nahbereich brach Spur-J-
+  Riegel (unit_r35_affen_griff/_szene, Original-GDB-Spuren). Naechster Weg: GDB-Messung des Originals an einer
+  Wagen-Diagonale (Muster J_affen.md), ob das Original dort ebenso steht — dann ist es RE1.5-Verhalten.
+- **Befundstelle nach den Angriffen**: wird Leon tiefer in die Nordwest-Tasche gestossen (unerreichbar fuer Radius 1600),
+  wartet der Gorilla am Rand (Sub 3, 3900..4500 vor Leon) — dieselbe Original-Nahlogik.
+- **Zufallsgang 52 Seeds**: 3 Seeds schlechter als die Original-Regel (schlechtester 0x179803a8 +825, Nahjagd); Griffe 226 -> 217.
+- **Moebel-Tabelle**: deckt die Zellen, ueber die der Durchwand-Zensus (alle 240 RDTs, jede Zombie-Startlage, Raster bis
+  0x1388) ueberhaupt Sicht oeffnen kann, mit Beleg (ROOM1010 Tisch/Stuehle, ROOM1220 Betten). Weitere Moebel (99 Zellen
+  mit Obj_model_set darauf, `F_belege/nb2_m2_oberkante_nb1_alle_rdt.txt`) bleiben volle Hoehe, bis je Zelle ein Beleg
+  vorliegt (Messweg: `test_r36_zombieki_sicht oberkante <raum>` + Projektion `F_belege/nb1_hoehe_1010.py`).
+- Vorgaenger-OFFEN ROOM10B0 (Terrasse ohne Abstieg, per Daten) unveraendert.
+
+### NB2 Fuer den Nutzer
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine. Entscheidungsfragen: keine.
+- Spuerbar neu: (1) Ein Zombie, den Leon nach dem Griff wegstoesst, faellt nicht mehr in eine Ecke zwischen Stuhl und
+  Schrank, aus der er nicht mehr herauskommt (Verhoerraum 1010) — er steht wieder auf und greift erneut an. (2) Zombies
+  sehen nicht mehr durch Waende, an denen Gegenstaende haengen (Gaenge 1040); ueber den Verhoertisch und die Betten im
+  Zellentrakt sehen sie weiter. (3) Monkeys 11C0: auch wenn Leon in einer Ecke steht, in die ein Gorilla nicht passt,
+  laufen beide bis an den Rand und greifen an; sie springen nicht mehr endlos gegen einen Wagen, und zwei Gorillas
+  blockieren sich nicht mehr gegenseitig am selben Sprungfeld.
+
+### NB2 Ergebnis je Mangel (Kurzfassung)
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| 1 Taschenfall 1010 | RE2-Wurf P8 (@0x80102CA0-AC) + Klemme Satz fuer Satz schiebt den Zombie ueber die Rautenmitte in eine Tasche ohne stabile Lage | Klemmen-Spur F124->F125 (#13 -> #15); Rueckfall-Form @0x8003ced4-ceec | PORT-WAHL Wurf-Klemme P7/P8 | exe erneuter Griff F480; Sonde KLEMME 0, Taschenfall gepinnt |
+| 2 Waende als Moebel | NB1-Abbildung "jedes Obj_model_set im Rechteck" (eab5925a) | Durchwand 1814 Plaetze ueber ROOM1040 #4 (senkrechte Tafeln MD1 z 0..0) | Beleg-Tabelle je Zelle (Byte-Offsets) | exe Ostgang 0/900; Sonde 0 ueber #4, 74 nur ueber Beleg-Zellen |
+| 3 Befundstelle 11C0 | Leon in Tasche ohne Pad -> NB1-Umweg aus -> Wanddruck / Blind-Schleife | Raster (Komponenten), Weitsprung-Sonde 2050 vor Leon | Ziel = erreichbarer Knoten naechst Leon; Kontakt-Pad-Regel | exe Angriff F850/F1912, Sonde 597/929, 0 Blind-Spruenge |
+| 4 Riegel | Anker 40, geparkter Gorilla 2, Stelle ungepinnt | Abnahme-Messung | Anker 400, beide Gorillas, Szene 4, eigene Prozesse | 17/17; 52 Seeds 114029 -> 15857 |
+| 5 Belegform | -2514 / -2000 ohne Beleg | PL00 Clip 0 Bild 0 = -2513; Kamera Cut 0 @ROOM1010.RDT 0x60 | Konstante entfernt (head_world); -2000 PORT-WAHL Messwert | Sonden-Kopf aus PL00 |
+| 6 Voll-Suite | — | — | Orchestrator | gezielt 163/163 |

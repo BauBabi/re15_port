@@ -50,7 +50,11 @@ set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)
 #   unit_r36_zombieki_affen_block  Punkt 2: Gorilla "blockiert" in ROOM11C0 — drei Szenen Jagd ohne Sicht an der Klemme
 #                                  (Gegenprobe = Original-Regel A[3] @0x80117b40-c74 ohne Ausgang) gegen die PORT-WAHL
 #                                  Pad-Suche (re15_zombieki_r36.h) + Zufallsgang 6000 Bilder ohne Stillstand.
-#                                  Sonden: `fest <x> <z> [bilder] [gx gz [+0x7]]` = Szene, `[bilder] [seed] [0|1]` = Zufallsgang.
+#                                  NB2 (Abnahme 1, Maengel 3/4): Blockade mit Anker 400 (Spruenge auf der Stelle zaehlen),
+#                                  vier Szenen mit BEIDEN Gorillas je eigener Prozess, Szene 4 = Befundstelle (-24000,10000).
+#                                  Sonden: `fest <x> <z> [bilder] [gx gz [+0x7]]` = Szene, `[bilder] [seed] [0|1]` = Zufallsgang,
+#                                  `eins <i> <0|1> <bilder> [anker]`, `szene2 <lx> <lz> [gx gz] [bilder] [0|1] [spur]`,
+#                                  `weit <gx> <gz> <lx> <lz>` (Path-B-Weitsprung erzwungen).
 add_executable(test_r36_zombieki_affen_block ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen_block.c)
 target_link_libraries(test_r36_zombieki_affen_block PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_zombieki_affen_block PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -63,6 +67,8 @@ endif()
 #   unit_r36_zombieki_sicht  Punkt 1: Sicht-Zensus — Raster von Leon-Plaetzen im Vorderkegel jedes stehenden Zombies
 #                            (Stage 1, Leon-Raeume), je Platz Zell-Strahl (Slab) / RE1.5-Strahl (Nibble 3) / Reaktion
 #                            in 480 Bildern. `test_r36_zombieki_sicht mess [raum] [bilder]` = Tabelle.
+#                            NB2 (Abnahme 1, Mangel 2): Durchwand-Zensus aller Stages (`durchwand [raum] [1|2]`): die
+#                            Hoehenregel oeffnet Sicht nur ueber Beleg-Moebel, 0 ueber ROOM1040 #4; `oberkante`, `kopf`.
 add_executable(test_r36_zombieki_sicht ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_sicht.c)
 target_link_libraries(test_r36_zombieki_sicht PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_zombieki_sicht PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -81,6 +87,8 @@ set_tests_properties(unit_r36_zombieki_affen_block PROPERTIES TIMEOUT 600)
 #   unit_r36_zombieki_eintritt  Punkt 1 (Nachbesserung 1): Eintritts-Zensus NACH LAGE — jede Tuer in einen Stage-1-
 #                               Raum mit Zombies (Door_aot_set-Spawn), Leon steht bzw. geht per Pad auf jeden Zombie zu;
 #                               PASSIV (nie reagiert, Leon im Kegel nah) / KLEMME (reagiert, dann auf der Stelle).
+#                               NB2 (Abnahme 1, Mangel 1): KLEMME == 0 gepinnt + Taschenfall ROOM1010<-1020 Slot 1 mit
+#                               Gegenprobe (Wurf-Klemme aus = 450 Bilder auf der Stelle).
 #                               `test_r36_zombieki_eintritt mess [raum] [bilder]` = Tabelle.
 add_executable(test_r36_zombieki_eintritt ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_eintritt.c)
 target_link_libraries(test_r36_zombieki_eintritt PRIVATE re15_engine re15_test_support)
