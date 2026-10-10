@@ -25,7 +25,8 @@
 
 extern unsigned g_current_room_id;
 
-/* ---- Das Programm (1350 Bytes, 288 Opcodes) und der RE2-Tuerton ---------------------------------- */
+/* ---- Das Programm (1342 Bytes, 285 Opcodes; Runde 36 Spur J: Abgang ohne Cut_chg 0 — Kamera bleibt
+ * auf Leon, NUTZER-VORGABE AUFTRAG.md Z.72) und der RE2-Tuerton --------------------------------------- */
 #include "gen/cut10f0_szene.inc"
 #include "gen/cut10f0_tuerton.inc"
 

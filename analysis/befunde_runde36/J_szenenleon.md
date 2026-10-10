@@ -103,3 +103,39 @@ Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder 
   caseD Modus 0 -> +0x1b8 |= 0x12 (0x02 Ziel = Keyframe, 0x10 Pitch 0); Satzform ROOM11B0 sub06 @0x01646
   `41 00 00 00 00 00 00 00 64 00` (Marvin) bzw. ROOM1150 sub08 @0x012D2. Danach slewt die Kopf-FSM auf die Pose des
   Clips zurueck und haelt sie (kein Ziel mehr).
+
+## §3 Punkt 3 — ROOM10F0: Kamera bleibt auf Leon, kein "Ploppen", nur Tuer-zu-Ton
+
+### 3.1 Messung vorher (78a4a748, `RE15_DEBUG_JUMP=10f0@250`, Bilder 2560..2960/4, RE15_STATE_LOG)
+- debug.log: `[scd F2650] Cut_chg(0)` (Abgang-Kamera auf die Tuer), `[scd F2700] Cut_chg(2)`.
+- state.log: Marvin (Aktor 2) bei F2657 noch bei (6213,1837) im Bild von Cut 0, bei F2677 schon (-30000,-30000);
+  Ada (Aktor 1) bei F2677 (6814,1613), bei F2697 geparkt — beide verschwinden MITTEN IM BILD von Cut 0.
+- Bilder `J_belege/p3_vorher_10f0_abgang_F2636_F2728.png`: f_002672 Marvin verschwindet mitten im Raum, f_002688..2696
+  Ada ebenso ("plopp"), f_002704 Schnitt zurueck auf Cut 2.
+- Zeitachse: die Szene laeuft heute ~430 Bilder spaeter als in K_cut10f0.md §4 gemessen (Zeile 23 bei F2260+3*110);
+  die Bildnummern hier gelten fuer 78a4a748.
+
+### 3.2 Beleg (Form) und Nutzer-Vorgabe
+- NUTZER-VORGABE (AUFTRAG.md Z.72): Kamera beim Abgang auf Leon, nur ein Tuer-schliessen-Ton zum Schluss.
+- Kamera Cut 2 = ROOM10F0.RDT @0x0A0 pos (5874,-3618,1851), Blick +88 Grad (Nord) — die Tuer (8400,-350)
+  (ROOM10D0 main00 @0x01174, Spawn/Ziel) liegt HINTER der Kamera (z -350 < 1851). Ohne den Schnitt laufen beide aus
+  dem unteren Bildrand und werden erst an der Tuer geparkt.
+- Parken = Pos_set weit weg (Form ROOM10D0 sub21 @0x01D9E `32 00 1c 57 00 00 34 ef`), unveraendert.
+- Ton = vorhandenes Se_on Port-Bank 0x0E Satz 1 = RE2 DOOR13 Door_exit (gen/tuer_zuordnung.inc "S047 T027 ROOM10F0 ->
+  ROOM10D0 | DOOR13 V0", RE2-Archivtabelle @0x8009A604) — der Schliesston GENAU dieser Tuer; er steht jetzt als
+  letzter Ton nach dem Parken beider (der Nutzer nennt den Door_exit-Satz in Runde 36 selbst "Sound von Tuer
+  schliessen", AUFTRAG.md Z.67 ueber den DOOR04-Door_exit der Montage).
+
+### 3.3 Umsetzung
+- `re15_port/tools/r35_k/szene_bauen.py`: im Abgang `cut_chg(0)` und das spaetere `sleep(10)` + `cut_chg(2)`
+  entfernt; Reihenfolge sonst unveraendert (Marvin/Ada Plc_dest Modus 5 ueber die Wegpunkte zur Tuer, Pos_set
+  geparkt bei Ankunft, dann Se_on, Sleep 45, Schwanz). Neu erzeugt: `engine/src/gen/cut10f0_szene.inc` 1342 B /
+  285 Opcodes (vorher 1350 B / 288), RE15_CUT10F0_OFF_TUER_ZU 0x0512.
+
+### 3.4 Messung nachher (gleicher Lauf, Bilder 2560..2800/2, `J_belege/p3_nachher_10f0_abgang_F2600_F2790.png`)
+- debug.log: nach `[scd F914] Cut_chg(2)` KEIN weiterer Cut_chg; state.log cam=2 durchgehend bis zum Szenenende.
+- Marvin: (5460,2758) F2650 -> (8046,4) F2670 -> geparkt F2675; Ada: (5503,3359) F2665 -> (7814,373) F2685 ->
+  geparkt F2690; Tuerton danach (`[se] Se_on bank=14 id=1 -> RE2-Tuerbank`).
+- Pixel-Differenz aufeinanderfolgender Bilder (Schwelle 60, 2er-Schritt): bis F2668 wandert die Aenderung nach unten
+  aus dem Bild (bbox y bis 215 = Unterkante des Bildfelds), **ab F2670 0 geaenderte Pixel** — die beiden Park-
+  Zeitpunkte F2671..2675 und F2686..2690 aendern im Bild NICHTS: kein Ploppen.
