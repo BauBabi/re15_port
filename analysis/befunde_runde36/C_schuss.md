@@ -330,8 +330,16 @@ Suite: §7.
 ## 5. OFFEN (mit Adresse und Messweg)
 1. **RE1.5-KI-Pfad des Fressers (nicht Vorgabe):** unter RE1.5-KI fuehrt der Port fuer die 0x86/0x06-Fresser keinen
    +0x93-Riegel (RE1.5 hat fuer sie keinen Nibble-Dispatch, INIT-Decoder @0x80100E60/EB0 -> +0x5 = 0xc); ob
-   RE1.5 den Fresser im Auslieferungsstand sperrt, ist nicht belegt (Messweg: Savestate ROOM1140 unter DuckStation,
-   +0x93 der Fresser je Bild lesen). Die Vorgabe des Nutzers ist mit RE2-KI (Default) erfuellt.
+   RE1.5 den Fresser im Auslieferungsstand sperrt, ist nicht belegt. Savestate-Befund (Fortsetzung, `stage_saves/
+   mzd_stage1_briefing.sav` + `_live.sav`, Enemy-Array DAT_800acc2c Stride 0x1f4, Spieler am Tuerpunkt (-7600,-17600)
+   bzw. (-5118,-15817)): die vier Fresser (+0x5 = 0xc, +0x6 = 3/2) tragen +0x93 = 0x00 und word0 = 0x40000001
+   (aktiv + LEVEL-Stempel), der Liegende 0x16 dagegen +0x93 = 0x01. Die RE1.5-Kandidatenschleife FUN_80011f50 gatet
+   nur `word0 & Spieler-word0 & 0xE0000000` @0x800120d4-ec (Band) und `lw v0,144(s0)` / `and 0x03000000` /
+   `beq v0,s4` @0x800120f4-100 (= +0x93 & 3 == 3 -> uebersprungen) vor dem Tester @0x80012110 — ein RE1.5-Fresser ist
+   also KANDIDAT und verloere HP. Dass der Nutzer im Original "keinen Treffer" sieht, kann nur aus dem Hurt-Weg des
+   0xc-Zustands kommen (RE1.5 unfertig; nicht disassembliert; Messweg DuckStation-GDB: +0x9a des Fressers beim
+   Schuss lesen). Beta -> Retail: Sollseite ist RE2 (Gate 2/4), damit ist die Vorgabe mit RE2-KI (Default) erfuellt;
+   unter RE15_AI_FLAVOR=re15 bleibt der Fresser treffbar wie im RE1.5-Resolver.
 2. **RE1.5-KI-Pfad des Bluts:** re15_enemy_hurt_fx spawnt an der Aktor-Wurzel; RE1.5 FUN_80105b7c P0 spawnt am
    Gore-Bone LAB_8011f784[Typ] (+0x6 == 1 @0x80105c48-a0) bzw. Bone 2 (+0x6 == 0 @0x80105cb0-d0) mit a3 =
    (200,0,0) @0x8011fe84; die uebrigen +0x6-Zweige (@0x80105ce4 ff.) sind nicht disassembliert. Messweg: probe_r36_blut
