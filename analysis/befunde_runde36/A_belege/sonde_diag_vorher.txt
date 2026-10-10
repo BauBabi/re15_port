@@ -1,0 +1,26 @@
+--- Flag(3,102)=0: prop_count=4 tritt=3
+    prop[0] id=1 type=0 active=1 flags=0x000B band=1 pos=(2650,-1248,7750)
+    prop[1] id=2 type=0 active=1 flags=0x000B band=1 pos=(2550,-1248,-2850)
+    prop[2] id=3 type=0 active=1 flags=0x000B band=1 pos=(-1450,-1300,3850)
+    prop[3] id=0 type=4 active=1 flags=0x0001 band=0 pos=(-6050,0,4950)
+[f0 yaw0] spieler=(-7125,0,4950) rot=0 band=0 sonde=(-6325,4950) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-6050,0,4950) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f0 yaw1024] spieler=(-6000,0,6000) rot=1024 band=0 sonde=(-6000,5200) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-6050,0,4950) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f0 yaw2048] spieler=(-4875,0,4950) rot=2048 band=0 sonde=(-5675,4950) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-6050,0,4950) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f0 yaw3072] spieler=(-6000,0,3900) rot=3072 band=0 sonde=(-6000,4700) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-6050,0,4950) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+--- Flag(3,102)=1: prop_count=4 tritt=3
+    prop[0] id=1 type=0 active=1 flags=0x000B band=1 pos=(2650,-1248,7750)
+    prop[1] id=2 type=0 active=1 flags=0x000B band=1 pos=(2550,-1248,-2850)
+    prop[2] id=3 type=0 active=1 flags=0x000B band=1 pos=(-1450,-1300,3850)
+    prop[3] id=0 type=4 active=1 flags=0x0001 band=0 pos=(-4850,0,-850)
+[f1 yaw0] spieler=(-5925,0,-850) rot=0 band=0 sonde=(-5125,-850) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-4850,0,-850) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f1 yaw1024] spieler=(-4800,0,200) rot=1024 band=0 sonde=(-4800,-600) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-4850,0,-850) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f1 yaw2048] spieler=(-3675,0,-850) rot=2048 band=0 sonde=(-4475,-850) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-4850,0,-850) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
+[f1 yaw3072] spieler=(-4800,0,-1900) rot=3072 band=0 sonde=(-4800,-1100) s6(typeword)=0x0000 obj3 flags=0x0001 band=0 pos=(-4850,0,-850) box c(50,-900,0) h(675,900,600) reach=1 boxhit(-112)=1 stand=-1
+    try_start=0 sub=0 kind=0x00 -> ende_bild=-1 y=0 band=0
