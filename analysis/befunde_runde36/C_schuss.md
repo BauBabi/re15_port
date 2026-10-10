@@ -121,6 +121,18 @@ Nutzer mit dem Runde-36-Auftrag fuer die FRESSER aufhebt ("Im Original geht beid
   gleich, GEGENPROBE frei (Leon (200,-18200) hinter dem Tisch, Platz 5 in 1400 -> geweckt, Python) Platz 5
   250 -> -1. Passed 46.96 s.
 
+### 1.5 Bestehende Tests, die durch Punkt 1/3 rot wurden (Suite-Lauf mess_r36c/suite1.log, je Test entschieden)
+Der erste Suite-Lauf (Stand 37d796f3, 7310 s; ab Test 407 brach die Maschine mit Timeouts/0xc0000142 weg —
+Umgebung, nicht Code, s. §7) zeigte fuenf echte Rot-Faelle. Keiner deckt eine Regression auf, jeder pinnte das
+ALTE Verhalten, das der Auftrag aufhebt:
+| Test | Rot weil | Entscheidung (Commit b19cc82e / cd06ef46) |
+|---|---|---|
+| unit_re2_zombie_hitfilter | Pruefung 4a pinnte "Fresser in der Spawn-Pose muss TREFFBAR sein" (v0.3.5, Sollseite RE1.5 FUN_80011F50 @0x80011FFC-38) | Umgedreht auf GESPERRT mit RE2-Beleg Gate 2 @0x80041270-78 / Gate 4 @0x80041290-9c (+0x1D3 aus EXEC[8] P0 @0x80103C04-14, +0x10E aus dem Spawn-Remap @0x80100A88-8C); Latches bleiben stehen (zweite Pruefung unveraendert) |
+| unit_re2_zombie_abc / probe_re2z_block (Sweeps) | "UNSTERBLICH"-Zaehler: ein Zombie mit hp >= 0 >= 200 Bilder vom Kandidatenfilter gesperrt — der Fresser ist das jetzt per Regel, bis er aufsteht/geweckt wird | Der Fresser in der Spawn-Pose (st 1, ss1 8, +0x1D3 & 0x80) zaehlt nicht als Haenger (Zeile mit Beleg im Test); alle anderen Haenger-Pruefungen unveraendert |
+| unit_re2_crow_ai | Pruefung "GIB verbirgt das Mesh (Part-Scatter-Stand-in)" pinnte das crow_hide des alten Stand-ins | Pin auf das RE2-Verhalten: 13 Zeilen mit eigener Matrix (Bit 0x40), Zeile 0 Wurf 0x4A (@0x80102CE8-F0 / Wurf 0x80102EF4), crow_hide 0 |
+| unit_crow_death_corpse (probe_crow_death.c, RE1.5-KI) | Die Sonde schoss von (530,-5150) durch die THEKE von ROOM1170 (RDT @0xb10: x -12422..9682, z -10910..-8498, Wort 0x43 = Band 4 / Klasse 3) auf die fliegende Kraehe (1719,-10522,-10983): FUN_8003dcc4 ohne y-Komponente (liest nur cur+0x34/+0x3c @0x8003dd00/10, delta+0/+8 @0x8003dd20/4c; Band = Spieler +0x82 @0x8003de60) sperrt den Schuss — gemessen `fire=0 ... los=1`. Alle sieben Kraehen nach 60 Bildern: sechs sitzen (y -7600, Band 4), eine fliegt (Band 5) hinter der Theke; die zweite fliegende (10106,-10522,-6729) sitzt IN der Zelle x 5848..13624 / z -9776..-5672 (@0xb1c) | Standort bleibt; TIEFZIELEN (re15_player_set_aim_elevation_for_test(-1): Boden-Kraehe vert 400 < 800 = DOWN-Band des ACTIVE-Tail-Stempels @0x80112560-c8) auf die naechste Kraehe mit freier Sichtlinie (Slot 4 (-2770,-7600,-100), `fire=5`); Treffer-Pruefung (fire != 0) und "keine Kraehe gefunden" sind jetzt FAIL statt stiller Rueckkehr. Beide Laeufe (w3 Normal-Lane: Land-Clip 0x0a Frame 12, Lache 375+510, flags 0x42; w7 GIB: Pool-WIPE 1x1, hide) erreichen dieselben Erwartungen wie vorher |
+| unit_pri_hashes | war seit master 5a9dbb7b rot (Spur B) | master 78a4a748 (Hashes neu erzeugt) in den Zweig gemerged, gruen |
+
 ## 2. Punkt 2 — Blut-Anker bei getroffenen Zombies
 
 ### 2.1 Messung vorher (`probe_r36_blut mess eben|tief`, ROOM1140, RE2-KI, RE2-Bank CDEMD0.EMS, echter game_step)

@@ -5,13 +5,13 @@
  *
  *  A  SICHTLINIE (RE1.5 FUN_8001b9b4 @0x80012168-74 -> FUN_8003dcc4): echte ROOM1140.RDT,
  *     Konferenztisch = SCA-Zelle 6 {x -4650..7450, z -17450..-11350, Band 0, Klasse 3}. Leon
- *     (200,-10300) Blick -z, Zombie (200,-19600): Pistole 3, Redhawk 7, Schrot 8, Python 20,
- *     Ingram 12, Messer 1 -> KEIN Treffer, Zaehler `verworfen` zaehlt; neben dem Tisch (x 9000)
+ *     (200,-10300) Blick -z, Zombie (200,-19600): alle zehn Hitscan-Waffen 3/4/5/6/7/8/12/13/19/20
+ *     -> KEIN Treffer, Zaehler `verworfen` zaehlt; neben dem Tisch (x 9000)
  *     und ohne SCA -> Treffer; Spieler in Band 1 (Zelle traegt Band 0) -> Treffer (Bandfilter
  *     `lbu v1,130(cur)` / `bne` @0x8003de60-6c); Zombie VOR dem Tisch (z -11000) -> Treffer.
  *  B  FRESSER-SPERRE (RE2 FUN_800410CC @0x80041270-9c ueber re15_re2z_hit_filter_apply):
  *     RE2-KI, Zombie EXEC[8] (ss1 8) mit +0x1D3 = 0x80 / +0x10E = 0x4004 -> kein Treffer fuer
- *     3/7/8/20; nach dem Aufstehen (P3 `andi 0x7f` @0x80103CE4, Wecker `andi 0xbfff`
+ *     alle zehn Hitscan-Waffen; nach dem Aufstehen (P3 `andi 0x7f` @0x80103CE4, Wecker `andi 0xbfff`
  *     @0x80104F0C) -> Treffer. Je Gate einzeln. Liegender EXEC[7] (nicht passiv) unveraendert.
  */
 #include <stdio.h>
@@ -88,10 +88,16 @@ static void teil_a(void)
              c6->type == 1 && c6->floor == 0x03,
           "Zelle 6 = Tisch {x -4650..7450, z -17450..-11350, Typ 1, Wort+10 0x0300 = Band 0 Klasse 3}");
 
-    static const int W[5] = { 3, 7, 8, 20, 12 };
-    static const char *WN[5] = { "Pistole 3", "Redhawk 7", "Schrot 8", "Python 20", "Ingram 12" };
-    int nr = 10;
-    for (int k = 0; k < 5; k++, nr += 2) {
+    /* ALLE Schusswaffen mit Hitscan-Tester 0x80012574 (Tabelle @0x8006e548): 3 Browning HP, 4 SIG P228,
+     * 5 Beretta M93R, 6 Glock 18, 7 Super Redhawk, 8 Remington M870, 12 Ingram M10, 13 SPAS-12, 19 H&K MC51,
+     * 20 Colt Python (PORT-WAHL Streifen, B_werfer §3.5). Die Werfer 14..18 laufen nicht durch FUN_80011f50
+     * (RE2-Projektile/-Strahl, re2_fx.c, Spur B r35: Rakete am Tisch Pruefung 111, Applier-Gates 104-107);
+     * ihre exe-Messung steht in C_schuss.md §1.4 (run_p1_alle.sh). */
+    static const int W[10] = { 3, 4, 5, 6, 7, 8, 12, 13, 19, 20 };
+    static const char *WN[10] = { "Browning 3", "SIG 4", "Beretta 5", "Glock 6", "Redhawk 7", "Remington 8",
+                                  "Ingram 12", "SPAS 13", "MC51 19", "Python 20" };
+    int nr = 100;
+    for (int k = 0; k < 10; k++, nr += 2) {
         /* HINTER dem Tisch: Leon (200,-10300) Blick -z (rot 1024), Zombie (200,-19600). */
         re15_schuss_r36_sichtlinie_reset();
         spieler(200, -10300, 1024, 0);
@@ -165,10 +171,11 @@ static void teil_b(void)
     printf("== B Fresser-Sperre (RE2 FUN_800410CC Gate 2/4 ueber +0x93 Bit 0)\n");
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     g_room_rdt_ok = 0;
-    static const int W[4] = { 3, 7, 8, 20 };
-    static const char *WN[4] = { "Pistole 3", "Redhawk 7", "Schrot 8", "Python 20" };
-    int nr = 40;
-    for (int k = 0; k < 4; k++, nr += 3) {
+    static const int W[10] = { 3, 4, 5, 6, 7, 8, 12, 13, 19, 20 };
+    static const char *WN[10] = { "Browning 3", "SIG 4", "Beretta 5", "Glock 6", "Redhawk 7", "Remington 8",
+                                  "Ingram 12", "SPAS 13", "MC51 19", "Python 20" };
+    int nr = 200;
+    for (int k = 0; k < 10; k++, nr += 3) {
         /* FRISST: EXEC[8] (ss1 8), +0x1D3 = 0x80 (@0x80103c04-14), +0x10E = 0x4004 (@0x80100A88-8C), Deskriptor 0x06. */
         spieler(0, 0, 0, 0);
         re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 2500, 0, 250, 2048);
@@ -190,6 +197,16 @@ static void teil_b(void)
         re15_re2z_hit_filter_apply(RE15_ACTOR_SLOT_PLAYER + 1);
         hit = feuer(W[k]);
         CHECK(nr + 2, hit != 0 && z->hp < 250, "%s nach dem Aufstehen: Treffer (hit=%d hp=%d)", WN[k], hit, z->hp);
+    }
+    /* Nur Messung (kein Pin): Messer 1 / Rohr 2 gegen den Fresser auf 1200 — der +0x93-Riegel gilt im Port
+     * fuer jede Waffe; welche Gates RE2s Messer-Resolver fuehrt, ist nicht disassembliert (Dossier OFFEN). */
+    for (int w = 1; w <= 2; w++) {
+        spieler(0, 0, 0, 0);
+        re15_actor_t *z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 1200, 0, 250, 2048);
+        z->sub_state_1 = 8; z->grid_id = 0x06; z->re2z_self1d3 = 0x80; z->re2z_f10e = 0x4004;
+        re15_re2z_hit_filter_apply(RE15_ACTOR_SLOT_PLAYER + 1);
+        int hit = feuer(w);
+        printf("info Nahkampf w%d gegen Fresser (1200): hit=%d hp=%d hr=%02x\n", w, hit, z->hp, z->hit_react);
     }
     /* Je Gate einzeln (Pistole): nur 1D3=80 sperrt, nur 10E=4000 sperrt. */
     {

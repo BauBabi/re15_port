@@ -11,6 +11,7 @@
 #            (vorher: Platz 2 und 5 auf -1).
 #   frei     Gegenprobe: Leon (200,-18200) Blick -z, HINTER dem Tisch (Kante -17450), Platz 5 in 1400 -> der
 #            Schuss trifft (Platz 5 verliert HP) — der Resolver schiesst noch.
+#   gl_tisch / gl_fresser  dieselben Aufstellungen mit dem Granatwerfer (15, Explosiv): KEIN Platz verliert HP.
 # Ein Lauf ohne Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen) wird EINMAL wiederholt.
 
 cmake_minimum_required(VERSION 3.16)
@@ -31,12 +32,12 @@ function(r36_fehler _lauf _text)
     message(FATAL_ERROR "${_tag} [${_lauf}]: ${_text}")
 endfunction()
 
-function(r36_exe _lauf _dir _pos)
+function(r36_exe _lauf _dir _pos _waffe)
     file(MAKE_DIRECTORY "${_dir}")
     set(WORKDIR "${_dir}")
     set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
              RE15_WINDOW_SCALE=1 RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=${_pos}"
-             RE15_AI_FLAVOR=re2 "RE15_GIVE=20:6" "RE15_EQUIP=20"
+             RE15_AI_FLAVOR=re2 "RE15_GIVE=${_waffe}:6" "RE15_EQUIP=${_waffe}"
              RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=M0.6,MA1.5,M1.0,W4"
              RE15_STATE_LOG=state.log RE15_WAFFEN_LOG=wf.log "RE15_EXIT_AT=200#1140")
     re15_start_spiel(_rv 240 ${_env} "${RE15_PC_EXE}")
@@ -116,7 +117,7 @@ endfunction()
 
 # ---------------------------------------------------------------------------------------------------
 set(_d "${_wurzel}/tisch")
-r36_exe("tisch" "${_d}" "200,-10300,1024")
+r36_exe("tisch" "${_d}" "200,-10300,1024" 20)
 file(STRINGS "${_d}/wf.log" _schuss REGEX "arms_rec=0|SPAWN id=2")
 list(LENGTH _schuss _n_schuss)
 if(_n_schuss LESS 1)
@@ -125,14 +126,25 @@ endif()
 r36_keiner_verliert("tisch" "${_d}/state.log")
 
 set(_d "${_wurzel}/fresser")
-r36_exe("fresser" "${_d}" "-7600,-17600,0")
+r36_exe("fresser" "${_d}" "-7600,-17600,0" 20)
 r36_keiner_verliert("fresser" "${_d}/state.log")
 
 set(_d "${_wurzel}/frei")
-r36_exe("frei" "${_d}" "200,-18200,1024")
+r36_exe("frei" "${_d}" "200,-18200,1024" 20)
 r36_gegner("${_d}/state.log" 5 _hp0 _hpmin)
 if(_hpmin GREATER_EQUAL _hp0)
     r36_fehler("frei" "Gegenprobe: Platz 5 hinter dem Tisch in 1400 verliert keine HP (${_hp0} -> ${_hpmin}) — der Resolver schiesst nicht mehr")
 endif()
 message(STATUS "${_tag} [frei]: Platz 5 HP ${_hp0} -> ${_hpmin} (Gegenprobe Treffer)")
-message(STATUS "-- ${_tag}: OK — Tisch sperrt, Fresser gesperrt, Gegenprobe trifft")
+# Granatwerfer-Variante (Wortlaut "alle Schusswaffen"): GL Explosiv 15 — die Runde laeuft nicht durch
+# FUN_80011f50, sondern als RE2-Projektil (re2_fx.c, Spur B r35: Zellen-Sperre am Tisch, Applier-Gates
+# +0x1D3/+0x10E @0x80047138-64 gegen Fresser). Dieselben zwei Aufstellungen, dieselbe Erwartung.
+set(_d "${_wurzel}/gl_tisch")
+r36_exe("gl_tisch" "${_d}" "200,-10300,1024" 15)
+r36_keiner_verliert("gl_tisch" "${_d}/state.log")
+
+set(_d "${_wurzel}/gl_fresser")
+r36_exe("gl_fresser" "${_d}" "-7600,-17600,0" 15)
+r36_keiner_verliert("gl_fresser" "${_d}/state.log")
+
+message(STATUS "-- ${_tag}: OK — Tisch sperrt (Python, GL), Fresser gesperrt (Python, GL), Gegenprobe trifft")
