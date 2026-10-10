@@ -19,14 +19,14 @@ anlegen, fortlaufend schreiben, frueh committen — das Sitzungslimit beendet al
 | G | tueren | Tuersequenz-Modelle Fahrstuhl ROOM1080 und grosse Tuer ROOM2090 (beide in RE2 vorhanden) korrekt bauen; Tuer-Textur ROOM10C0<->10D0 "billig"; Tueren, die mit Karte o.ae. geoeffnet werden: in RE2 erst "piep", dann Unlock-Ton — bei uns nicht |
 | H | ziel1190 | Zielscheiben-Texte gehoeren HINTEN an die Zielscheiben (beim Anklicken), nicht vorne an die Knoepfe; bei Elza (ROOM1191) sind es die anderen zwei Scheiben -> Texte vertauscht. Dazu Frage: Kiste in ROOM1090 — Verwendungszweck? (am RDT/Original belegen) |
 | I | inventar | Memory Cards: beim Speichern Anzahl -1; Memory Cards oder Handgranaten bei 0 aus dem Inventar entfernen. Debug-Menue Raumsprung: bei Elza in die "1"-Raeume (z.B. ROOM1071), nicht in Leons |
-| J | szenen-leon | ROOM11B0 Cutscene (Leon/Ada/Marvin verlassen Stage 1): (1) Container-Schieben mit Marvin (Animation + gemeinsames Schieben) klappt nicht; (2) Erweiterung am Ende: Marvin "Hold on", rennt zur Tuer Parkplatz ROOM11C0, Zuschliess-Animation + Zuschliess-Ton (RE2 Robert Kendo Spielanfang), dann zur Innenseite der Werkstatt-Tuer, gleiches noch einmal, Tuer bleibt zu (gleiche Meldung wie Elzas Szenario "The door is locked." ROOM11B1 msg 12), zurueck zu Leon/Ada: "I just want to make sure we don't have any unwanted followers."; beide Tueren danach mit Elzas Text. ROOM10F0-Szene: Kamera bleibt beim Abgang von Marvin/Ada auf Leon, nur Tuer-zu-Ton am Ende (kein "Ploppen"). Irons: sobald tot (9,73), kein Kopf-Tracking hinter Leon mehr |
+| J | szenen-leon | ROOM11B0 Cutscene (Leon/Ada/Marvin verlassen Stage 1): (1) Container-Schieben mit Marvin (Animation + gemeinsames Schieben) klappt nicht; (2) Erweiterung am Ende — **geaendert 14:00 (Nachtrag AUFTRAG.md): Marvin schliesst NUR die Werkstatt-Tuer ab, NICHT die Parkplatz-Tuer 11B0->11C0** — Marvin "Hold on", rennt zur Innenseite der Werkstatt-Tuer, Zuschliess-Animation + Zuschliess-Ton (RE2 Robert Kendo Spielanfang), Tuer bleibt zu (gleiche Meldung wie Elzas Szenario "The door is locked." ROOM11B1 msg 12), zurueck zu Leon/Ada: "I just want to make sure we don't have any unwanted followers."; die Werkstatt-Tuer danach mit Elzas Text (Bit 84). Die Parkplatz-Tuer bleibt unberuehrt (nur Spur Q retypt sie, Schluessel-Sperre). ROOM10F0-Szene: Kamera bleibt beim Abgang von Marvin/Ada auf Leon, nur Tuer-zu-Ton am Ende (kein "Ploppen"). Irons: sobald tot (9,73), kein Kopf-Tracking hinter Leon mehr |
 | K | szene-1150 | Irons-Todesszene/Montage: Tuerknall ist nur ein Tuer-zu-Ton — echten Tuerknall/Einbruch-Ton aus RE2 (RE2_SOUND_LISTE.md: Door sounds ROOM207/209/20A, Zombies breaking through wood ROOM205/112/106); 11C0-Schnitt: Marvin und Ada sprechen MITEINANDER (zugewandt, nicht ins Leere); Reihenfolge je Montage-Schritt: erst Knall, DANN Zombies spawnen, DANN Kamerawechsel (nicht Kamera vor Spawn) |
 | L | elza | Elza (xxx1-Raeume): ROOM1121 Fenster von Anfang an kaputt (Schaden-Overlay aus Spur M r35) + eine Kraehe mehr; ROOM1151 Irons von Anfang an tot auf der Liege, Anklicken: "He has already passed..." (NUTZER-VORGABE, Original msg 2 lebend); ROOM1211 Kendo-Befreiung: Unlock-Ton beim Aufschliessen; ROOM1021 Kendo erschiesst Roy: Schuss-Toene + Roys Sterbe-/Hinfall-Ton; ROOM1101: waehrend Roy bewusstlos wird Voiceover `synchro/STAGE1/room1011/main16.5.wav` abspielen (Datei liegt in room1011!) + Untertitel dafuer anlegen |
 | M | karte | Treppenhaus 10A0 B1: Treppen fehlen; ROOM11D0: Marker steht nach der Tuer in der Mitte statt am Eingang; ROOM1090: zwei getrennte Bereiche (Gang mit Luke / Westen-Raum) sauber getrennt; Tuer ROOM11C0 um 90 Grad verdreht; kleine Tuerbereiche ROOM1110 vorab "besucht"; Fahrstuhl-Etagen vorab "besucht" |
 | N | karten-items | RE2-Lageplan-Weltmodell (extracted_re2_items karte01/karte02) als aufsammelbare Karte: 3F in ROOM1150 (map3F.bmp), 2F ROOM10D0 (map2F.bmp), 1F ROOM1030 (map1F.bmp), B2 ROOM1200 (mapB2.bmp), B1 ROOM11D0 (mapB1.bmp); Aufnehmen schaltet die Etagenkarte frei wie in RE2 (ganze Etage sichtbar, mit Text) |
 | O | pri | ROOM10F0 Cut 2: neue PRI-Maske des Nutzers pri/STAGE1/10F0/02_02.png (Absperrung ueberdeckt Marvin) einbauen; ROOM1100: Leon wird von halbtransparentem Boden ueberdeckt (Marker-Datei fehlt — selbst messen, alle Cuts) |
-| Q | schluessel | Leon: Tuer ROOM11B0 -> ROOM11C0 (Parkplatz) bleibt verschlossen, bis der Parking-Lot-Schluessel in ROOM10F0 gefunden ist (RE2-Item-Modell, das am ehesten nach Parkplatz-Schluessel aussieht); Elza: Prison Key NICHT mehr in ROOM1011, sondern an derselben Stelle in ROOM10F1 (RE2-Modell fuer einen Gefaengnis-Schluessel) — beide Spuren teilen EINE Position, Q legt sie fest |
-| P | story | Story-Logik Leon/Elza (nur Analyse, kein Port-Code): Fortsetzung von `analysis/story_leon_elza/` (Zensus/Texte liegen) — Kreuz-Zeitleiste, Widersprueche, Vorschlaege; Korrektur des Nutzers: Elza flieht ZUSAMMEN mit Kendo (er bleibt nicht in der Zelle); Vorgabe: bei Elza ist Irons von Anfang an tot |
+| Q | schluessel | Leon: Tuer ROOM11B0 -> ROOM11C0 (Parkplatz) bleibt verschlossen, bis der Parking-Lot-Schluessel in ROOM10F0 gefunden ist (RE2-Item-Modell, das am ehesten nach Parkplatz-Schluessel aussieht); Elza: Prison Key NICHT mehr in ROOM1011, sondern an derselben Stelle in ROOM10F1 (RE2-Modell fuer einen Gefaengnis-Schluessel) — beide Spuren teilen EINE Position, Q legt sie fest. Story-Hintergrund (Nachtrag 14:00, nur Dossier): Kendo/John sitzt wegen des sabotierten Funkraums in Untersuchungshaft, die Beamten entzogen Roy die Befugnis — deshalb liegt der Schluessel im Communications Room; KEIN leerer Haken fuer Leon. Spur J retypt die Parkplatz-Tuer NICHT mehr (nur Werkstatt-Tuer) — der frueher vermerkte Slot-Konflikt entfaellt |
+| P | story | (Analyse-Teil erledigt, `analysis/story_leon_elza/`.) BAU seit 2026-10-10 14:00 (Nachtrag AUFTRAG.md): (P1) Roys Leiche in Leons ROOM1020 (Record @0x01DEE, Text msg 0) erst NACH Einschalten des Stroms ((4,0xF3)/(4,0x06) — belegen, welches Bit der Port fuer "Strom an" fuehrt); (P2) Leon ROOM1210: Text-AOT an Kendos/Johns Zelle "The cell door is open..." (Position = Zellentuer aus ROOM1211 msg 10-AOT); (P3) Elza ROOM1091: Text-AOT am ausgebrannten Schuppen ("burnt-out shed"; Position = Leons Feuer-/Loesch-AOT in ROOM1090); (P4) Text-Sweep "Leon und Elza sind sich NIE begegnet": jede Textstelle beider Szenarien, die eine Begegnung/Bekanntschaft andeutet, per re15_msg_install_text-Override nach dem Raumladen umschreiben (bekannt: ROOM30C1 msg 2-6, ROOM6030 msg 1-5, ROOM6031 msg 0-2, ROOM3060 msg 1-8 im Leon-RDT — Sweep ueber texte_leon.md/texte_elza.md: "Elza" bei Leon, "Leon" bei Elza, "separated", "met", Szenen-Subs mit beiden Sprechern); alt->neu-Tabelle im Dossier, Wortlaut = PORT-WAHL (Story), Szenenfunktion erhalten |
 
 ## 1. Zuteilung
 
@@ -37,10 +37,11 @@ Belegt (Zensus 2026-10-10, re15_port/include/*.h): 53-63 (Runde 34), 65 (Ada-Ruf
 | Bits | Spur | Verwendung |
 |---|---|---|
 | 82, 83 | Q | 82 = Parking-Lot-Schluessel genommen (Leon 10F0), 83 = Prison Key genommen (Elza 10F1) |
-| 84, 85 | J | 84 = Marvin hat die Tueren in 11B0 verschlossen (Szene gelaufen), 85 Reserve |
+| 84, 85 | J | 84 = Marvin hat die Werkstatt-Tuer in 11B0 verschlossen (Szene gelaufen; seit 14:00 NUR diese Tuer), 85 Reserve |
 | 86 | L | Reserve (Elza-Zustaende bevorzugt aus dem Szenario-Flag ableiten) |
 | 87-91 | N | 87 = Karte 3F, 88 = 2F, 89 = 1F, 90 = B2, 91 = B1 genommen/freigeschaltet |
-| 92-95 | — | Reserve (nur mit Begruendung im Dossier) |
+| 92 | P | Reserve fuer die Story-Spur (P1 haengt am ORIGINAL-Strom-Bit, braucht kein eigenes; nur mit Begruendung im Dossier) |
+| 93-95 | — | Reserve (nur mit Begruendung im Dossier) |
 
 Vorhandene Flags duerfen GELESEN werden ((3,94) erste Irons-Szene, (9,71) 10F0-Szene gesehen, (9,73) Irons
 tot, (9,79) Fenster 1120 kaputt, (4,64) Parkplatz erreicht, Szenario-/Charakter-Flag des Spielers).
@@ -61,6 +62,10 @@ vergeben), 1151=4, 1021=15, 1101=6, 1211=11, 1121=9, 1190=6 (6..11 r35 H), 1191=
 | ROOM1190/1191 | H | 6..11 (r35-Zuteilung bleibt; H baut sie um) |
 | ROOM1150/10D0/1030/1200/11D0 (+ xxx1) | N | Karten: je Raum 2 IDs ab 28 (1150: 28/29 frei? r35 nahm 20..31 — N prueft und nimmt notfalls Reserve 30/31 bzw. weicht auf das Item-Modal aus) |
 | ROOM1090 | H | nur Dossier (Kiste), keine IDs |
+| ROOM1210 (Leon, RDT-Zahl 0) | P | 20..21 ("The cell door is open...") |
+| ROOM1091 (Elza, RDT-Zahl 0) | P | 20..21 ("burnt-out shed") |
+| ROOM1020 | P | keine neue ID (msg 0 "It's the RPD officer, Roy..." bleibt, nur an die Leiche gebunden) |
+| ROOM30C1, 6030, 6031, 3060 + Sweep-Treffer | P | OVERRIDE bestehender IDs per re15_msg_install_text NACH re15_msg_load_room_block (Dauer neu per re15_msg_install_durations); keine neuen IDs ausser 20..21 je Raum, falls ein Ersatzsatz mehr Zeilen braucht |
 
 Sprachdateien: `synchro/STAGE1/room<RAUM>/main<ID>.wav` (Port bindet sie automatisch). Spur L: die Datei
 `main16.5.wav` liegt in room1011 (nicht 1101!) — Zuordnung belegen und ggf. den Nutzer-Pfad als
@@ -70,7 +75,7 @@ Sonderfall einbinden, nicht umbenennen/verschieben (Nutzer-Datei).
 Vergeben: ROOM1050 2 (Rolltor), 13 (Ada-Ruf); ROOM1150 4 (Hebetisch), 21 (Irons-Tod/Montage, Spur K
 uebernimmt); ROOM10F0 20 (Szene, J uebernimmt); ROOM1120 24 (Fenster); ROOM1190 27 (Zielscheiben, H).
 Neu: J = 22, 23 in ROOM11B0; Q = 25 (10F0/10F1/11B0); L = 26 (1151/1121/1021/1101/1211); N = 28 (alle
-Karten-Raeume); I/M/O/A/B/C/D/E/F/G: keine.
+Karten-Raeume); P = 29 (1020/1210/1091 — nur falls ein Port-Programm noetig ist; Text-AOTs und Overrides brauchen keins); I/M/O/A/B/C/D/E/F/G: keine.
 
 ### 1.4 Dateien — Konfliktvermeidung beim Zusammenfuehren
 * Neue Logik in NEUEN Dateien `engine/src/<thema>_r36.c` + `include/re15_<thema>_r36.h`; gemeinsame
@@ -84,7 +89,9 @@ Karten-Raeume); I/M/O/A/B/C/D/E/F/G: keine.
   enemy_ai_re2_zombie.c / affen_11c0.c / enemy_ai_common.c-Haken (Sichtfilter); E = RE15_ACTOR_MAX + alle
   Arrays; I = inventory_common.c + re15_savepoint.c + Debug-Menue; N/M = Karte (map_*; N nur Items +
   Freischaltung, M nur Zonen/Tuermarken/Besucht-Latches); O = PRI-Masken/pri-Pipeline; Q = inhalt_r35.c-
-  Muster (Item-AOT) in neuer Datei schluessel_r36.c + Tuer-Sperre nach tuer1120_1130.c-Muster.
+  Muster (Item-AOT) in neuer Datei schluessel_r36.c + Tuer-Sperre nach tuer1120_1130.c-Muster; P = story_r36.c
+  (Leichen-Gate 1020 nach dem Muster der Spawn-Overrides, Text-AOTs 1210/1091 nach dem Muster der Text-AOTs
+  (04 02 ... 01 00), Text-Overrides als Installer-Zeilen je Raum am ENDE des Blocks in scd_room_setup.c).
 * Tests: NEUE Sonden/Pins in `tests/unit/probes/r36_<spur>.cmake` (GLOB) + eigene
   `tests/unit/test_r36_<spur>*.c` / `tests/integration/test_r36_<spur>*.cmake` (registriert aus der
   eigenen probes-Datei). NICHT tests/unit/CMakeLists.txt, NICHT tests/integration/CMakeLists.txt.
