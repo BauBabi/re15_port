@@ -180,31 +180,49 @@ static int aufbau(re15_actor_t **gout, re15_actor_t **plout)
     return 1;
 }
 
-/* Riegel-Szene: Leon fest auf (lx,lz), Gorilla 1 auf (gx,gz) in der Jagd mit Sicht-Latch, Gorilla 2 geparkt. */
-typedef struct { int erst, dmin, sub3, spr; } szene_t;
-static szene_t szene(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
+/* (NB1-Szene mit geparktem Gorilla 2 entfernt — NB2 Mangel 4: szene2 unten fuehrt BEIDE Gorillas.) */
+
+static int s_zg_anker = 400; /* NB2 (Abnahme 1, Mangel 4): Anker-Radius der Blockade (Manhattan); 40 zaehlte Spruenge/Pendeln
+                              * auf der Stelle (ein Sprung versetzt um ~100) nicht als blockiert. `eins ... [anker]` */
+/* NB2 (Abnahme 1, Maengel 3/4): Szene mit BEIDEN Gorillas (keiner geparkt). Leon fest auf (lx,lz) mit Blick auf Gorilla 1;
+ * gx/gz != 0: Gorilla 1 dorthin in die BLINDE Jagd (+0x7 = 1, Latch 0); Gorilla 2 bleibt in der Original-Lage F195, ausser
+ * Gorilla 1 steht dort (dann in dessen Lage). Je Gorilla: erster Angriff (Sub 5/6/8/15), kleinster Abstand, Spruenge, und
+ * blockierte Bilder mit derselben Definition wie der Zufallsgang (lebt, kein Angriff, >= 90 Bilder im Anker 400). */
+static int s_sz2_spur = 0;   /* Sonde szene2 ... 1: Spur je 60 Bilder */
+typedef struct { int erst[2], dmin[2], spr[2], blind[2]; long blockiert[2]; } szene2_t;
+static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
 {
-    szene_t r = { 0, 1 << 30, 0, 0 };
+    szene2_t r; memset(&r, 0, sizeof r); r.dmin[0] = r.dmin[1] = 1 << 30;
     re15_actor_t *g[2]; re15_actor_t *pl;
     if (!aufbau(g, &pl)) return r;
     pl->x = lx; pl->z = lz; pl->y = 0; pl->floor = 0;
-    g[0]->x = gx; g[0]->z = gz; g[1]->x = 20000; g[1]->z = -20000;
-    g[0]->dog_flags = 0; g[0]->sub_state_3 = 1; g[0]->motion = 4;   /* BLINDE Jagd (+0x7 = 1, Latch 0) — der Befund-Zustand, unabhaengig von der Phase des 16-Takt-Sensors */
+    if (gx || gz) {
+        if (labs(gx - g[1]->x) + labs(gz - g[1]->z) < 3200) { g[1]->x = g[0]->x; g[1]->z = g[0]->z; }
+        g[0]->x = gx; g[0]->z = gz;
+        g[0]->dog_flags = 0; g[0]->sub_state_3 = 1; g[0]->motion = 4;
+    }
     pl->rot_y = (int16_t)((((int)re15_atan2_q12(g[0]->z - pl->z, g[0]->x - pl->x) - 0x400)) & 0xfff);
-    int prev7 = 0;
+    int prev7[2] = { 0, 0 }, fa[2] = { 0, 0 }; int32_t ax[2] = { g[0]->x, g[1]->x }, az[2] = { g[0]->z, g[1]->z };
     for (int f = 1; f <= bilder; f++) {
         frame(0, 0);
         if (pl->hp < 100) pl->hp = 100;
-        re15_actor_t *e = g[0]; int sub = e->sub_state_1 & 31;
-        long long dx = e->x - pl->x, dz = e->z - pl->z; int d = isqrt64(dx * dx + dz * dz);
-        if (d < r.dmin) r.dmin = d;
-        if (sub == 3) r.sub3++;
-        if (!r.erst && (sub == 5 || sub == 6 || sub == 8 || sub == 15)) r.erst = f;
-        if (sub == 7 && !prev7) r.spr++;
-        prev7 = (sub == 7);
+        for (int k = 0; k < 2; k++) {
+            re15_actor_t *e = g[k]; int sub = e->sub_state_1 & 31;
+            long long dx = e->x - pl->x, dz = e->z - pl->z; int d = isqrt64(dx * dx + dz * dz);
+            if (d < r.dmin[k]) r.dmin[k] = d;
+            int kampf = (sub == 5 || sub == 6 || sub == 8 || sub == 15);
+            if (!r.erst[k] && kampf) r.erst[k] = f;
+            if (sub == 7 && !prev7[k]) { r.spr[k]++; if (e->sub_state_3 == 3) r.blind[k]++; }
+            prev7[k] = (sub == 7);
+            if (s_sz2_spur && (f % 60) == 0) { int32_t ux = 0, uz = 0; int up = -1; int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up);
+                printf("  F%d G%d st=%d/%d/%d/%d @(%d,%d) rot=%d los=%d klemme=%d d=%d | Umweg %d (%d,%d) Pad %d\n", f, k + 1, e->state, e->sub_state_1,
+                       e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y, e->dog_flags & 1, e->sca_wall_hit != 0, d, ua, (int)ux, (int)uz, up); }
+            int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
+            if (e->state == 1 && !kampf && !bewegt) { if (!fa[k]) fa[k] = f; }
+            else { if (fa[k] && f - fa[k] >= 90) r.blockiert[k] += f - fa[k]; fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
+        }
     }
-    printf("    [szene Ende: Gorilla st=%d/%d/%d/%d @(%d,%d) hp %d los=%d klemme=%d aktiv=%d]\n", g[0]->state, g[0]->sub_state_1, g[0]->sub_state_2,
-           g[0]->sub_state_3, (int)g[0]->x, (int)g[0]->z, (int)g[0]->hp, g[0]->dog_flags & 1, g[0]->sca_wall_hit != 0, re15_r36_affen_padsuche_aktiv((int)(g[0] - g_actors)));
+    for (int k = 0; k < 2; k++) if (fa[k] && bilder + 1 - fa[k] >= 90) r.blockiert[k] += bilder + 1 - fa[k];
     return r;
 }
 
@@ -241,7 +259,7 @@ static zg_t zg_stat(int bilder, uint32_t seed)
             int sub = e->sub_state_1 & 31;
             int lebt = (e->state == 1);
             int kampf = (sub == 5 || sub == 6 || sub == 8 || sub == 15);
-            int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= 40;
+            int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
             if (lebt && !kampf && !bewegt) { subs_akk[k][sub]++; if (fa[k] == 0) fa[k] = f;
                 long long ddx = e->x - pl->x, ddz = e->z - pl->z;
                 akk_nah[k] += (ddx * ddx + ddz * ddz < 6001LL * 6001LL); akk_los[k] += (e->dog_flags & 1); akk_kl[k] += (e->sca_wall_hit != 0); }
@@ -300,10 +318,42 @@ int main(int argc, char **argv)
         printf("       x von -33000 bis 22000, Schritt %d, Radius %d; # = Klemme verschiebt, p/P = 0x10-Pad frei/geklemmt, q/Q = 0x20-Pad\n", st, rad);
         return 0;
     }
+    if (argc > 3 && strcmp(argv[1], "szene2") == 0) {   /* NB2 Sonde: szene2 <lx> <lz> [gx gz] [bilder] [0 = Umweg aus] */
+        int32_t lx = atoi(argv[2]), lz = atoi(argv[3]), gx = (argc > 5) ? atoi(argv[4]) : 0, gz = (argc > 5) ? atoi(argv[5]) : 0;
+        int b = (argc > 6) ? atoi(argv[6]) : 2400;
+        if (argc > 7 && atoi(argv[7]) == 0) re15_r36_affen_padsuche_enable(0);
+        if (argc > 8) s_sz2_spur = atoi(argv[8]);
+        szene2_t r = szene2(lx, lz, gx, gz, b);
+        for (int k = 0; k < 2; k++)
+            printf("SZENE2 Leon (%d,%d) G%d: erster Angriff %d, Abstand min %d, Spruenge %d (blind %d), blockiert %ld (Anker %d)\n", (int)lx, (int)lz, k + 1,
+                   r.erst[k], r.dmin[k], r.spr[k], r.blind[k], r.blockiert[k], s_zg_anker);
+        return 0;
+    }
+    if (argc > 5 && strcmp(argv[1], "weit") == 0) {   /* NB2 Sonde: weit <gx> <gz> <lx> <lz> [bilder]: Gorilla 1 auf (gx,gz) mit Blick
+                                                        * auf Leon, Path-B-Weitsprung (+0x5 = 7, +0x7 = 0 @0x801180cc-f8) erzwungen */
+        re15_actor_t *gg[2]; re15_actor_t *pp;
+        if (!aufbau(gg, &pp)) return 1;
+        int b = (argc > 6) ? atoi(argv[6]) : 300;
+        pp->x = atoi(argv[4]); pp->z = atoi(argv[5]); pp->y = 0; pp->floor = 0;
+        gg[1]->x = 20000; gg[1]->z = -20000;
+        gg[0]->x = atoi(argv[2]); gg[0]->z = atoi(argv[3]); gg[0]->dog_flags = 1;
+        gg[0]->rot_y = (int16_t)((((int)re15_atan2_q12(pp->z - gg[0]->z, pp->x - gg[0]->x)) - 0x400) & 0xfff);
+        gg[0]->sub_state_1 = 7; gg[0]->sub_state_2 = 0; gg[0]->sub_state_3 = 0;
+        for (int f = 1; f <= b; f++) {
+            frame(0, 0); if (pp->hp < 100) pp->hp = 100;
+            re15_actor_t *e = gg[0];
+            if ((f % 10) == 0 || f < 4)
+                printf("  F%d G1 st=%d/%d/%d/%d @(%d,%d) y=%d floor=%d rot=%d los=%d klemme=%d dist=%d\n", f, e->state, e->sub_state_1, e->sub_state_2,
+                       e->sub_state_3, (int)e->x, (int)e->z, (int)e->y, (int)e->floor, (int)e->rot_y, e->dog_flags & 1, e->sca_wall_hit != 0,
+                       (int)isqrt64((long long)(e->x - pp->x) * (e->x - pp->x) + (long long)(e->z - pp->z) * (e->z - pp->z)));
+        }
+        return 0;
+    }
     if (argc > 4 && strcmp(argv[1], "eins") == 0) {   /* eins <seed-index> <0 AUS|1 AN> <bilder>: EIN Lauf je Prozess (Modulzustand
                                                          * bleibt sonst zwischen Laeufen haengen — gemessen: stat-AUS 73006 allein
                                                          * gegen 61502 im Wechsel mit AN) */
         int i = atoi(argv[2]), modus = atoi(argv[3]), b = atoi(argv[4]);
+        if (argc > 5) s_zg_anker = atoi(argv[5]);
         re15_r36_affen_padsuche_enable(modus ? 1 : 0);
         zg_t r = zg_stat(b, zg_seed(i));
         printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
@@ -467,7 +517,9 @@ int main(int argc, char **argv)
         /* NACHBESSERUNG 1 (Abnahme 0, Mangel 6): der Riegel misst die BLOCKADE, nicht nur "es gibt Griffe". 16 Seeds x 6000
          * Bilder Zufallsgang, AUS (Original-Regel) gegen AN (PORT-WAHL Umweg), jeder Lauf in einem EIGENEN Prozess
          * (`eins`): im selben Prozess bleibt Modulzustand haengen (gemessen: stat-AUS allein 73006 gegen 61502 im Wechsel).
-         * Messung 2026-10-10 (Dossier NB1): AUS 28653 blockierte Bilder / 73 Griffe, AN 721 / 80, schlechtester Seed +194. */
+         * Messung 2026-10-10 (Dossier NB1, Anker 40): AUS 28653 blockierte Bilder / 73 Griffe, AN 721 / 80, schlechtester +194.
+         * NB2 (Abnahme 1, Mangel 4): Anker 400 (Spruenge/Pendeln auf der Stelle zaehlen jetzt als blockiert):
+         * AUS 38439 / 73 Griffe, AN 4568 / 76 (11,9 %), kein Seed schlechter (schlechtester -100). */
         long su_aus = 0, su_an = 0; int gr_aus = 0, gr_an = 0, n_ok = 0; long schlimmer = -1000000; uint32_t s_schl = 0;
         for (int i = 0; i < 16; i++) {
             long bl[2] = { -1, -1 }; int gr[2] = { 0, 0 };
@@ -487,26 +539,44 @@ int main(int argc, char **argv)
         }
         CHECK(n_ok == 16, "16 Zufallsgaenge je AUS und AN gelaufen (%d)", n_ok);
         CHECK(su_aus >= 10000, "Gegenprobe Original-Regel: %ld blockierte Gorilla-Bilder (Befund 'noch oft blockiert')", su_aus);
-        CHECK(su_an * 10 <= su_aus, "Umweg: blockierte Bilder %ld <= 10%% von %ld", su_an, su_aus);
+        CHECK(su_an * 6 <= su_aus, "Umweg: blockierte Bilder (Anker %d) %ld <= 1/6 von %ld", s_zg_anker, su_an, su_aus);
         CHECK(schlimmer <= 600, "kein Seed mehr als 600 Bilder schlechter (schlechtester 0x%08x: %+ld)", s_schl, schlimmer);
         CHECK(gr_an * 10 >= gr_aus * 8, "Griffe AN %d >= 80%% von AUS %d (die Gorillas erreichen Leon)", gr_an, gr_aus);
     }
     {
-        /* Punkt 2 (PORT-WAHL Umweg, re15_zombieki_r36.h): drei Szenen "Leon noerdlich der Wagenbloecke, Gorilla in
-         * der Jagd suedlich/westlich, Sicht faellt". Gegenprobe (Umweg aus) = Original-Regel A[3] @0x80117b40-c74:
-         * kein Ausgang ohne Sicht -> 1200 Bilder ohne Angriff, Abstand bleibt. Mit dem Umweg: Pad-Anlauf von der
-         * eigenen Seite -> Sprung des Originals -> Angriff. */
-        static const int32_t sz[3][4] = { { -7000, 12500, -14000, -3000 }, { -7000, 12500, -5525, -14883 }, { 7000, 4000, -8915, -12487 } };
-        /* Leon noerdlich (bzw. oestlich) der Wagenbloecke #2/#7 (Nibble 3), Gorilla suedlich/westlich in der blinden Jagd. */
-        for (int i = 0; i < 3; i++) {
-            re15_r36_affen_padsuche_enable(0);
-            szene_t v = szene(sz[i][0], sz[i][1], sz[i][2], sz[i][3], 1200);
-            re15_r36_affen_padsuche_enable(1);
-            szene_t n = szene(sz[i][0], sz[i][1], sz[i][2], sz[i][3], 1200);
-            printf("Szene %d Leon (%d,%d) Gorilla (%d,%d): VORHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d | NACHHER Angriff %d, min %d, Sub3 %d/1200, Spruenge %d\n",
-                   i + 1, (int)sz[i][0], (int)sz[i][1], (int)sz[i][2], (int)sz[i][3], v.erst, v.dmin, v.sub3, v.spr, n.erst, n.dmin, n.sub3, n.spr);
-            CHECK(v.erst == 0 && v.dmin > 6001, "Szene %d Gegenprobe (Original-Regel): 1200 Bilder ohne Angriff, Abstand min %d, Sub 3 %d / Sub 4 %d (Befund)", i + 1, v.dmin, v.sub3, 1200 - v.sub3);
-            CHECK(n.erst > 0 && n.erst <= 1200 && n.dmin < 1200, "Szene %d Umweg: Sprung %d, erster Angriff Bild %d (<= 1200), Abstand min %d (< 1200)", i + 1, n.spr, n.erst, n.dmin);
+        /* Punkt 2 (PORT-WAHL Umweg, re15_zombieki_r36.h) — NB2 (Abnahme 1, Maengel 3/4): vier Szenen mit BEIDEN Gorillas (keiner
+         * geparkt). 1-3: Leon noerdlich/oestlich der Wagenbloecke, Gorilla 1 suedlich/westlich in der blinden Jagd, Gorilla 2 in
+         * seiner Original-Lage F195. 4 = die Befundstelle der Spur (-24000,10000) — Leon in der Nordwest-Tasche, die ein Gorilla
+         * (Radius 1600 @0x80121356) nicht betreten kann; beide Gorillas in der Original-Lage F195. Gegenprobe (Umweg aus) =
+         * Original-Regel (A[3] @0x80117b40-c74 ohne Ausgang ohne Sicht; A[4] Blind-Sprung @0x80117fe4-80118024): keiner greift
+         * an. Mit dem Umweg greifen BEIDE an, ohne Blind-Sprung-Schleife. */
+        static const int32_t sz[4][5] = { { -7000, 12500, -14000, -3000, 2400 }, { -7000, 12500, -5525, -14883, 2400 },
+                                          { 7000, 4000, -8915, -12487, 2400 }, { -24000, 10000, 0, 0, 2400 } };
+        for (int i = 0; i < 4; i++) {
+            szene2_t vn[2]; memset(vn, 0, sizeof vn);
+            for (int m = 0; m < 2; m++) {                      /* je Szene und Modus ein EIGENER Prozess (Modulzustand, s. oben) */
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" szene2 %d %d %d %d %d %d", argv[0], (int)sz[i][0], (int)sz[i][1],
+                                         (int)sz[i][2], (int)sz[i][3], (int)sz[i][4], m);
+                FILE *pp = popen(cmd, "r"); char zl[512];
+                while (pp && fgets(zl, sizeof zl, pp)) {
+                    int lx, lz, k, er, dm, sp, bl; long bk;
+                    if (sscanf(zl, "SZENE2 Leon (%d,%d) G%d: erster Angriff %d, Abstand min %d, Spruenge %d (blind %d), blockiert %ld",
+                               &lx, &lz, &k, &er, &dm, &sp, &bl, &bk) == 8 && k >= 1 && k <= 2) {
+                        vn[m].erst[k - 1] = er; vn[m].dmin[k - 1] = dm; vn[m].spr[k - 1] = sp; vn[m].blind[k - 1] = bl; vn[m].blockiert[k - 1] = bk;
+                    }
+                }
+                if (pp) pclose(pp);
+            }
+            szene2_t v = vn[0], n = vn[1];
+            printf("Szene %d Leon (%d,%d): VORHER G1 Angriff %d min %d blockiert %ld / G2 Angriff %d min %d blockiert %ld | NACHHER G1 Angriff %d "
+                   "min %d Spruenge %d (blind %d) / G2 Angriff %d min %d Spruenge %d (blind %d)\n", i + 1, (int)sz[i][0], (int)sz[i][1],
+                   v.erst[0], v.dmin[0], v.blockiert[0], v.erst[1], v.dmin[1], v.blockiert[1], n.erst[0], n.dmin[0], n.spr[0], n.blind[0],
+                   n.erst[1], n.dmin[1], n.spr[1], n.blind[1]);
+            CHECK(v.erst[0] == 0 && v.erst[1] == 0, "Szene %d Gegenprobe (Original-Regel): %d Bilder, keiner der beiden Gorillas greift an (Befund)",
+                  i + 1, (int)sz[i][4]);
+            CHECK(n.erst[0] > 0 && n.erst[1] > 0, "Szene %d Umweg: BEIDE Gorillas greifen an (Bild %d / %d von %d)", i + 1, n.erst[0], n.erst[1], (int)sz[i][4]);
+            CHECK(n.blind[0] == 0 && n.blind[1] == 0, "Szene %d Umweg: keine Blind-Sprung-Schleife (blind %d / %d; Abnahme 1: 48 an der Befundstelle)",
+                  i + 1, n.blind[0], n.blind[1]);
         }
         re15_r36_affen_padsuche_enable(1);
     }

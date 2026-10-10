@@ -1,0 +1,39 @@
+ROOM11C0 6000 Bilder, Seed 0x1234567: Leon-Weg 599085, Griffe 5, Bisse(hp<40) 0; Gorillas: (-24983,16118) hp 180 / (-23320,13371) hp 180
+  Seed 0x01234567: AUS 342 blockiert / 9 Griffe | AN 0 / 5
+  Seed 0x0000beef: AUS 3367 blockiert / 3 Griffe | AN 320 / 5
+  Seed 0x9b5bf362: AUS 3391 blockiert / 7 Griffe | AN 180 / 4
+  Seed 0x39936d13: AUS 2613 blockiert / 3 Griffe | AN 633 / 10
+  Seed 0xd7cae6c4: AUS 4955 blockiert / 8 Griffe | AN 0 / 3
+  Seed 0x76026075: AUS 3094 blockiert / 2 Griffe | AN 461 / 2
+  Seed 0x1439da26: AUS 1261 blockiert / 3 Griffe | AN 207 / 2
+  Seed 0xb27153d7: AUS 2307 blockiert / 3 Griffe | AN 0 / 3
+  Seed 0x50a8cd88: AUS 3379 blockiert / 3 Griffe | AN 0 / 3
+  Seed 0xeee04739: AUS 1223 blockiert / 8 Griffe | AN 893 / 12
+  Seed 0x8d17c0ea: AUS 1697 blockiert / 6 Griffe | AN 286 / 5
+  Seed 0x2b4f3a9b: AUS 4196 blockiert / 1 Griffe | AN 824 / 8
+  Seed 0xc986b44c: AUS 1508 blockiert / 4 Griffe | AN 101 / 5
+  Seed 0x67be2dfd: AUS 100 blockiert / 6 Griffe | AN 0 / 1
+  Seed 0x05f5a7ae: AUS 3754 blockiert / 4 Griffe | AN 436 / 6
+  Seed 0xa42d215f: AUS 1252 blockiert / 3 Griffe | AN 227 / 2
+ok:   16 Zufallsgaenge je AUS und AN gelaufen (16)
+ok:   Gegenprobe Original-Regel: 38439 blockierte Gorilla-Bilder (Befund 'noch oft blockiert')
+ok:   Umweg: blockierte Bilder (Anker 400) 4568 <= 1/6 von 38439
+ok:   kein Seed mehr als 600 Bilder schlechter (schlechtester 0x67be2dfd: -100)
+ok:   Griffe AN 76 >= 80% von AUS 73 (die Gorillas erreichen Leon)
+Szene 1 Leon (-7000,12500): VORHER G1 Angriff 0 min 8416 blockiert 1881 / G2 Angriff 0 min 24557 blockiert 2347 | NACHHER G1 Angriff 140 min 954 Spruenge 1 (blind 0) / G2 Angriff 425 min 1497 Spruenge 1 (blind 0)
+ok:   Szene 1 Gegenprobe (Original-Regel): 2400 Bilder, keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 1 Umweg: BEIDE Gorillas greifen an (Bild 140 / 425 von 2400)
+ok:   Szene 1 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48 an der Befundstelle)
+Szene 2 Leon (-7000,12500): VORHER G1 Angriff 0 min 26687 blockiert 2349 / G2 Angriff 0 min 24545 blockiert 2354 | NACHHER G1 Angriff 898 min 954 Spruenge 1 (blind 0) / G2 Angriff 1275 min 1505 Spruenge 1 (blind 0)
+ok:   Szene 2 Gegenprobe (Original-Regel): 2400 Bilder, keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 2 Umweg: BEIDE Gorillas greifen an (Bild 898 / 1275 von 2400)
+ok:   Szene 2 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48 an der Befundstelle)
+Szene 3 Leon (7000,4000): VORHER G1 Angriff 0 min 22222 blockiert 2324 / G2 Angriff 0 min 19327 blockiert 2348 | NACHHER G1 Angriff 929 min 2049 Spruenge 1 (blind 0) / G2 Angriff 218 min 953 Spruenge 1 (blind 0)
+ok:   Szene 3 Gegenprobe (Original-Regel): 2400 Bilder, keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 3 Umweg: BEIDE Gorillas greifen an (Bild 929 / 218 von 2400)
+ok:   Szene 3 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48 an der Befundstelle)
+Szene 4 Leon (-24000,10000): VORHER G1 Angriff 0 min 21455 blockiert 2111 / G2 Angriff 0 min 18468 blockiert 2149 | NACHHER G1 Angriff 597 min 955 Spruenge 2 (blind 0) / G2 Angriff 929 min 954 Spruenge 2 (blind 0)
+ok:   Szene 4 Gegenprobe (Original-Regel): 2400 Bilder, keiner der beiden Gorillas greift an (Befund)
+ok:   Szene 4 Umweg: BEIDE Gorillas greifen an (Bild 597 / 929 von 2400)
+ok:   Szene 4 Umweg: keine Blind-Sprung-Schleife (blind 0 / 0; Abnahme 1: 48 an der Befundstelle)
+17 Pruefungen, 0 Fehler

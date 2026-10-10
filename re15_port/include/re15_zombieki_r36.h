@@ -174,6 +174,20 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *   MESSUNG (52 Seeds x 6000 Bilder Zufallsgang, je Lauf eigener Prozess): blockiert AUS 75408 -> AN 2380, Griffe
  *   226 -> 254, besser 39 / schlechter 3 (+194 hoechstens) / gleich 10; exe Kampf-Layout: Slot 2 Angriff F896
  *   (v0.8.23 nie), Slot 3 F606 (v0.8.23 F1012).
+ * NACHBESSERUNG 2 (Abnahme 1, Maengel 3/4):
+ *   GEMESSEN (Befundstelle Leon (-24000,10000)): Leon steht in der Nordwest-Tasche, die das Raster der Original-Klemme
+ *   (Radius 1600) als EIGENE Komponente ohne Pad fuehrt (Spitzenberuehrung bei (-25850,15750)). Der NB1-Umweg fand kein
+ *   Pad zu Leons Komponente und schaltete ab -> Gorilla 2 drueckte in Sub 4 mit Sicht gegen die Wand (-321,12280), Gorilla 1
+ *   sprang nach dem Pad-Mitte-Sprung in der Original-Blind-Schleife (A[4] +0x7 = 3 @0x80117fe4-80118024) bei (-13518,-316).
+ *   Ein erzwungener Path-B-Weitsprung (+0x5 = 7, +0x7 = 0 @0x801180cc-f8) vom Nordstreifen landet 2050 vor Leon: die Tasche
+ *   ist ueber ihren Rand angreifbar.
+ *   UMSETZUNG: Ziel = Leons Knoten, wenn seine Komponente zu Fuss + ueber 0x10-Pads (Breitensuche ueber Komponenten, auch
+ *   mehrere Spruenge) erreichbar ist, SONST der erreichbare Knoten, der Leon am naechsten liegt; der erste Sprung auf dem
+ *   Weg ist der Original-Sprung wie in NB1. Zwei Gorillas im KOERPERKONTAKT (Radien 2 x 1600 @0x80121356 + ein
+ *   Rasterschritt) auf demselben Pad: der dem Pad naehere behaelt es, der andere nimmt ein anderes (gemessen: beide auf
+ *   Pad #36 schoben sich 1200 Bilder fest). Keine neue Zahl.
+ *   MESSUNG: Befundstelle beide Gorillas Angriff (Sonde F597/F929, exe F850/F1912), 0 Blind-Spruenge (NB1: 48);
+ *   Zufallsgang 52 Seeds mit Anker 400: AUS 114029 -> AN 15857 (NB1 27597), Anker 40: 75408 -> NB2 siehe Dossier.
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine

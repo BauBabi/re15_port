@@ -182,7 +182,7 @@ int  re15_r36_affen_padsuche_aktiv(int slot) { return (slot >= 0 && slot < RE15_
 static void r36_padsuche_reset(const re15_actor_t *e)
 {
     long slot = e - g_actors;
-    if (slot >= 0 && slot < RE15_ACTOR_MAX) s_r36_padsuche_aktiv[slot] = 0;
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1; }
 }
 
 /* ---- Raster: Begehbarkeit aus der ORIGINAL-Klemme (FUN_8003b0a4-Zwilling re15_collision_constrain_contact_band
@@ -196,6 +196,7 @@ typedef struct {
     uint8_t frei[R36_UW_MAX];
     uint16_t komp[R36_UW_MAX];
     int16_t dist[R36_UW_MAX]; int dist_ziel;
+    int nkomp;                 /* NB2: Zahl der Komponenten (Ids 1..nkomp) */
 } r36_uw_t;
 static r36_uw_t s_uw;
 
@@ -245,6 +246,7 @@ static int r36_uw_bauen(int band, int32_t r, uint32_t mask)
             }
         }
     }
+    s_uw.nkomp = id;
     s_uw.ok = 1;
     return 1;
 }
@@ -324,13 +326,14 @@ static int r36_uw_schritt(int g, int z, int32_t *tx, int32_t *tz)
     return 1;
 }
 
-/* Pad zwischen den Komponenten kg (Gorilla) und kl (Leon): SCA-Zelle u1 == 0x10 auf dem Band (die Zellen, die
- * FUN_8003b93c(attr 0x10) in A[4] @0x80117ee0-f00 abfragt), an deren einer Seite kg und an der GEGENUEBERLIEGENDEN
- * kl liegt. Der Sprung des Originals geht von der Kontaktseite UEBER das Pad (coll_contact_dir @0x8003ba8c: westlich
- * 0x000, suedlich 0xc00, noerdlich 0x400, oestlich 0x800). *start = freier Knoten der kg-Seite (Anlaufpunkt). */
-static int r36_uw_pad(int kg, int kl, int32_t gx, int32_t gz, int *start)
+/* Pad-Kanten zwischen Komponenten: SCA-Zelle u1 == 0x10 auf dem Band (die Zellen, die FUN_8003b93c(attr 0x10) in A[4]
+ * @0x80117ee0-f00 abfragt); von einer Seite s (freier Knoten) UEBER das Pad auf die GEGENUEBERLIEGENDE Seite. Der Sprung
+ * des Originals geht von der Kontaktseite ueber das Pad (coll_contact_dir @0x8003ba8c: westlich 0x000, suedlich 0xc00,
+ * noerdlich 0x400, oestlich 0x800). */
+typedef struct { uint16_t ka, kb; int16_t pad; int start; } r36_kante_t;
+static int r36_uw_kanten(r36_kante_t *kt, int max)
 {
-    int best = -1; int64_t bd = 0;
+    int n = 0;
     for (int i = 0; i < g_room_rdt.sca_count; i++) {
         const re15_sca_entry_t *c = &g_room_rdt.sca[i];
         if ((int)(c->floor >> 4) != s_uw.band || c->u1 != 0x10u) continue;
@@ -339,30 +342,83 @@ static int r36_uw_pad(int kg, int kl, int32_t gx, int32_t gz, int *start)
         int32_t sx[4] = { mx, mx, (int32_t)c->x - a, (int32_t)c->x + (int32_t)c->width + a };
         int32_t sz[4] = { (int32_t)c->z - a, (int32_t)c->z + (int32_t)c->density + a, mz, mz };
         int ks[4];
-        for (int s = 0; s < 4; s++) { int k = r36_uw_knoten(sx[s], sz[s], 3); ks[s] = (k >= 0) ? k : -1; }
-        for (int s = 0; s < 4; s++) {
+        for (int s = 0; s < 4; s++) ks[s] = r36_uw_knoten(sx[s], sz[s], 3);
+        for (int s = 0; s < 4 && n < max; s++) {
             int o = s ^ 1;                             /* Gegenseite: 0<->1 (Sued/Nord), 2<->3 (West/Ost) */
-            if (ks[s] < 0 || ks[o] < 0 || s_uw.komp[ks[s]] != kg || s_uw.komp[ks[o]] != kl) continue;
-            int64_t ex = (int64_t)sx[s] - gx, ez = (int64_t)sz[s] - gz, d = ex * ex + ez * ez;
-            if (best < 0 || d < bd) { best = i; bd = d; *start = ks[s]; }
+            if (ks[s] < 0 || ks[o] < 0 || s_uw.komp[ks[s]] == s_uw.komp[ks[o]]) continue;
+            kt[n].ka = s_uw.komp[ks[s]]; kt[n].kb = s_uw.komp[ks[o]]; kt[n].pad = (int16_t)i; kt[n].start = ks[s]; n++;
         }
     }
-    return best;
+    return n;
 }
 
-/* Zielwahl fuer Gorilla e mit Leon pl. Rueckgabe 0 = kein Umweg (Original), 1 = zu Fuss, 2 = Pad-Anlauf. */
+/* Zielwahl fuer Gorilla e mit Leon pl. Rueckgabe 0 = kein Umweg (Original), 1 = zu Fuss, 2 = Pad-Anlauf.
+ * NB2 (Abnahme 1, Mangel 3): ZIEL = Leons Knoten, wenn seine Komponente zu Fuss + ueber 0x10-Pads (auch mehrere Spruenge)
+ * erreichbar ist; sonst der erreichbare Knoten, der Leon am naechsten liegt (Leon in einer Ecke, die der Gorilla mit
+ * Radius 1600 nicht betreten kann — gemessen ROOM11C0 (-24000,10000): Nordwest-Tasche, eigene Komponente, kein Pad).
+ * Dort greift die Original-Nahlogik (unter 0x1771 schaltet decide ab). */
+static uint8_t  s_uw_ks[R36_UW_MAX + 1];
+static uint16_t s_uw_kv[R36_UW_MAX + 1];
+static int16_t  s_uw_kp[R36_UW_MAX + 1];
+/* Ist Pad p von einem ANDEREN Gorilla (lebt, Umweg aktiv) belegt? NB2: zwei Gorillas auf demselben Anlauf schieben sich
+ * gegenseitig fest (gemessen: Szene Leon (-7000,12500), beide auf Pad #36, 1200 Bilder kein Angriff). */
+static int r36_pad_belegt(int p, int slot)
+{
+    const re15_actor_t *e = &g_actors[slot];
+    const re15_sca_entry_t *c = &g_room_rdt.sca[p];
+    int64_t mx = (int64_t)c->x + c->width / 2, mz = (int64_t)c->z + c->density / 2;
+    int64_t ich = (e->x - mx) * (e->x - mx) + (e->z - mz) * (e->z - mz);
+    for (int s = 0; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *o = &g_actors[s];
+        if (s == slot || !o->active || o->type != 0x27u || o->state != 1 || !s_r36_padsuche_aktiv[s] || s_r36_pad_idx[s] != p) continue;
+        int64_t kx = (int64_t)o->x - e->x, kz = (int64_t)o->z - e->z, rr = (int64_t)o->hit_radius_min + e->hit_radius_min + s_uw.st;
+        if (kx * kx + kz * kz >= rr * rr) continue;                 /* nur im KOERPERKONTAKT (Radien @0x80121356 + ein Rasterschritt) */
+        int64_t er = (o->x - mx) * (o->x - mx) + (o->z - mz) * (o->z - mz);
+        if (er < ich) return 1;                                      /* der Naehere behaelt das Pad, der andere weicht aus */
+    }
+    return 0;
+}
+static void r36_uw_komp_bfs(int kg, const r36_kante_t *kt, int nk, int slot, int meiden)
+{
+    static uint16_t q[R36_UW_MAX + 1]; int h = 0, t = 0;                          /* Breitensuche ueber Komponenten (Pads) */
+    memset(s_uw_ks, 0, (size_t)s_uw.nkomp + 1);
+    q[t++] = (uint16_t)kg; s_uw_ks[kg] = 1; s_uw_kp[kg] = -1;
+    while (h < t) {
+        int k = q[h++];
+        for (int i = 0; i < nk; i++)
+            if (kt[i].ka == k && !s_uw_ks[kt[i].kb] && !(meiden && r36_pad_belegt(kt[i].pad, slot))) {
+                s_uw_ks[kt[i].kb] = 1; s_uw_kv[kt[i].kb] = (uint16_t)k; s_uw_kp[kt[i].kb] = (int16_t)i; q[t++] = kt[i].kb;
+            }
+    }
+}
 static int r36_uw_route(const re15_actor_t *e, const re15_actor_t *pl, int slot)
 {
+    s_r36_pad_idx[slot] = -1;
     if (!r36_uw_bauen((int)e->floor, (int32_t)e->hit_radius_min, 4u)) return 0;   /* Maske 4 = re15_enemy_sca_clamp_band(..., 4u) des 0x27-Zweigs */
-    int g = r36_uw_knoten(e->x, e->z, 3), l = r36_uw_knoten(pl->x, pl->z, 4);
-    if (g < 0 || l < 0) return 0;
+    int g = r36_uw_knoten(e->x, e->z, 3);
+    if (g < 0) return 0;
+    r36_kante_t kt[64]; int nk = r36_uw_kanten(kt, 64);
+    int kg = s_uw.komp[g];
+    int l = r36_uw_knoten(pl->x, pl->z, 4);
+    r36_uw_komp_bfs(kg, kt, nk, slot, 1);                                          /* zuerst ohne die Pads der anderen */
+    if (l < 0 || !s_uw_ks[s_uw.komp[l]]) r36_uw_komp_bfs(kg, kt, nk, slot, 0);     /* sonst alle Pads */
+    if (l < 0 || !s_uw_ks[s_uw.komp[l]]) {                                         /* Leon unerreichbar: naechster erreichbarer Knoten */
+        l = -1; int64_t bd = 0;
+        for (int k = 0; k < s_uw.nx * s_uw.nz; k++) {
+            if (!s_uw.frei[k] || !s_uw_ks[s_uw.komp[k]]) continue;
+            int64_t ex = (int64_t)s_uw.x0 + (int64_t)(k % s_uw.nx) * s_uw.st - pl->x, ez = (int64_t)s_uw.z0 + (int64_t)(k / s_uw.nx) * s_uw.st - pl->z;
+            if (l < 0 || ex * ex + ez * ez < bd) { l = k; bd = ex * ex + ez * ez; }
+        }
+        if (l < 0 || l == g) return 0;                                             /* schon am naechsten Punkt: Original */
+    }
     int32_t tx, tz;
-    if (s_uw.komp[g] == s_uw.komp[l]) {
+    if (s_uw.komp[l] == kg) {
         if (!r36_uw_schritt(g, l, &tx, &tz)) return 0;
         s_r36_ziel_x[slot] = tx; s_r36_ziel_z[slot] = tz;
         return 1;
     }
-    int start = -1, p = r36_uw_pad(s_uw.komp[g], s_uw.komp[l], e->x, e->z, &start);
+    int kz = s_uw.komp[l], p = -1, start = -1;                                     /* erster Sprung auf dem Weg kg -> kz */
+    while (kz != kg && s_uw_kp[kz] >= 0) { if (s_uw_kv[kz] == kg) { p = kt[s_uw_kp[kz]].pad; start = kt[s_uw_kp[kz]].start; break; } kz = s_uw_kv[kz]; }
     if (p < 0) return 0;
     const re15_sca_entry_t *c = &g_room_rdt.sca[p];
     int32_t sx = s_uw.x0 + (start % s_uw.nx) * s_uw.st, sz = s_uw.z0 + (start / s_uw.nx) * s_uw.st;

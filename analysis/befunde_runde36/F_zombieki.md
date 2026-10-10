@@ -604,3 +604,55 @@ Grundlage: `F_abnahme_1.md` (Stand 7a9a0e7f, NICHT BESTANDEN, Maengel 1-6). Plan
   auf der Wand ueber der Lehne -> Oberkante tiefer, eingetragen als OBERGRENZE (`F_belege/nb1_r1010_c0_hoehen.png`,
   `F_belege/nb1_hoehe_1010.py`). Die RE1.5-Daten tragen keine Stuhlhoehe; ohne die Zahl blockten die Stuehle wie Waende
   (Abnahme-0-Fall Slot 2 stand dann wieder).
+
+### NB2 Mangel 3 — Befundstelle (-24000,10000) weiter blockiert
+- **Messung vorher** (Stand 7a9a0e7f, `test_r36_zombieki_affen_block fest -24000 10000 2400`, `F_belege/nb2_m3_fest_24000_vorher.txt`):
+  bitgleich zur Abnahme — Gorilla 1: 53 Spruenge (48 blind), Sub 7 2032/2400, Abstand min 16125, kein Angriff; Gorilla 2:
+  Sub 4 1850/2400 mit Sicht an der Klemme bei (-321,12280), kein Angriff.
+- **Ursache (gemessen)**: Raster der Original-Klemme (`raster 800/400/100 1600`): Leon steht in der NORDWEST-TASCHE
+  (x ~ -29800..-23400, z ~ 4800..15600), die fuer Radius 1600 eine EIGENE Komponente ist — sie beruehrt den Nordstreifen
+  nur an einer Spitze bei (-25850,15750), kein 0x10-Pad fuehrt hinein. Der NB1-Umweg suchte nur ein Pad direkt zu Leons
+  Komponente, fand keins und schaltete ab: Gorilla 2 drueckte (Original B[4] auf playerX @0x801181e0) in die Wand bei
+  (-321,12280) — Path B (Weitsprung) verlangt `+0x1d6 == 0` @0x80118054-5c und bleibt an der Klemme zu; Gorilla 1 landete
+  nach dem Pad-Mitte-Sprung (NB1-Regel, Code 0xf00 -> Gier 3840) bei (-13418,-316) mit Blick nach Osten auf das
+  0x20-Pad #19/#55 (x -11900..-9300) -> Original-Blind-Sprung `ori v0,zero,0x3` / `sb v0,7` @0x80117fe4-80118024 in die
+  Wagen und zurueck, endlos (dieselbe Schleife, die `unit_r35_affen_zonensprung` als Original pinnt).
+- **Beleg, dass die Tasche angreifbar ist**: neue Sonde `weit <gx> <gz> <lx> <lz>` (Path-B-Weitsprung +0x5 = 7, +0x7 = 0
+  @0x801180cc-f8 erzwungen): von (-20000,14500) / (-15000,12000) / (-26000,16000) landet der Gorilla 2050 vor Leon und
+  greift an (Sub 6 -> Sub 15); zu Fuss erreicht er den Taschenrand bei (-22600,13200) (Raster), 3493 vor Leon.
+- **Aenderung (PORT-WAHL, Erweiterung des NB1-Umwegs)**: `r36_uw_route` (zombieki_r36.c): Breitensuche ueber die
+  Komponenten (0x10-Pads als Kanten, auch mehrere Spruenge). Ziel = Leons Knoten, wenn erreichbar, SONST der erreichbare
+  Knoten, der Leon am naechsten liegt; der erste Sprung auf dem Weg ist der Original-Sprung (wie NB1). Unter 0x1771 schaltet
+  decide wie bisher ab (Original-Nahlogik, Spur-J-Riegel bildgenau). Dazu (gemessen beim Pinnen mit BEIDEN Gorillas,
+  Mangel 4): zwei Gorillas im Koerperkontakt (Radien 2 x 1600 @0x80121356 + ein Rasterschritt) auf demselben Pad schoben
+  sich 1200 Bilder fest (Szene 2: beide auf Pad #36 bei (4806,-8856)/(6749,-11275)) -> der dem Pad naehere behaelt es, der
+  andere nimmt ein anderes (`r36_pad_belegt`). Keine neue Zahl. Verworfen (gemessen): (i) Umweg auch im Nahbereich an der
+  Klemme mit versperrtem Koerperweg -> `unit_r35_affen_griff` + `_szene` rot (Spur-J-Original-Spuren) — zurueckgenommen;
+  (ii) Pad-Wahl nach naechstem Anlauf + Belegung ohne Kontakt-Bedingung -> 52 Seeds 22817..23186 statt 15857.
+- **Nachher**: Sonde (beide Gorillas Original-Lage F195, je Lauf eigener Prozess): Angriff Bild **597 / 929**, Abstand
+  min 955 / 954, **0 Blind-Spruenge**; Gegenprobe (Umweg aus) kein Angriff. exe (`re15_pc_nb2f.exe`, Abnahme-Kommandozeile
+  `RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-24000,10000,1024,0`, `F_belege/nb2_exe_messungen.txt`):
+  **Slot 3 Angriff F850, Slot 2 F1912**, Abstand min 761 / 954, 0 Blind-Spruenge (NB1: nie, 1519 Bilder Sprungschleife).
+- **Rest (OFFEN, Original-Nahlogik)**: nach den ersten Angriffen wird Leon tiefer in die Tasche gestossen; der Gorilla
+  wartet dann in Sub 3 am Taschenrand (-23302,13100) an der Klemme, 3900..4500 vor Leon (A[3] unter 0x1771 ohne Ausgang,
+  Biss nur unter 0xbb8 @0x80117b60-68).
+
+### NB2 Mangel 4 — Riegel misst die Nutzer-Form "blockiert"
+- **Aenderung `unit_r36_zombieki_affen_block`**: Blockade mit **Anker 400** (Manhattan; Spruenge/Pendeln auf der Stelle
+  zaehlen, `eins ... [anker]` fuer Vergleiche); Szenen mit **BEIDEN** Gorillas (`szene2`, keiner geparkt; je Szene und
+  Modus ein eigener Prozess — im selben Prozess lieferte die Gegenprobe der Szene 4 nach Szene 3 Angriffe, Modulzustand);
+  **Szene 4 = Befundstelle (-24000,10000)** gepinnt: Gegenprobe kein Angriff, Umweg BEIDE greifen an, keine Blind-Schleife.
+- **Zufallsgang** (`F_belege/nb2_m4_52seeds_final.txt`, je Lauf eigener Prozess, AUS = Original-Regel):
+
+| Messung | AUS | NB1 (Abnahme 1) | **NB2** |
+|---|---|---|---|
+| 52 Seeds, Anker 400 | 114029 | 27597 (7 schlechter, +509) | **15857** (-86 %; 3 schlechter, schlechtester 0x179803a8 +825, Nahjagd) |
+| 52 Seeds, Anker 40 | 75408 | 2380 (3 schlechter, +194) | **1329** (2 schlechter, +196) |
+| 16 Seeds (Riegel), Anker 400 | 38439 / 73 Griffe | — | **4568 / 76** (0 schlechter, -100) |
+
+  Rest (Anker 400, 52 Seeds): 13794 von 15857 Bildern NAH (< 6001) in Sub 3 an der Klemme, 11729 mit Sicht — Gorilla sieht
+  Leon ueber eine Wagen-Diagonale (Nibble 2, blockt keine Sicht), drueckt in der Original-Nahjagd dagegen (B[3] playerX
+  @0x80117d4c) bis Leon weitergeht. Jede gemessene Ausdehnung des Umwegs in den Nahbereich brach Spur-J-Riegel (s. oben).
+- **Riegel 17/17** (`F_belege/nb2_m4_affen_riegel.txt`): 16 Seeds AUS 38439 -> AN 4568 (<= 1/6), schlechtester -100
+  (<= 600), Griffe 76 >= 80 % von 73; Szene 1 Angriff 140/425, Szene 2 898/1275, Szene 3 929/218, Szene 4 (Befundstelle)
+  597/929, je Gegenprobe kein Angriff, keine Blind-Schleife.

@@ -1,0 +1,13 @@
+exe NB2 (re15_pc_nb2f.exe = Stand mit Umweg-Ziel + Kontakt-Pad-Regel): RE15_SET_FLAG=4:64 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-24000,10000,1024,0 RE15_GEGNER_Y_LOG=gy.log RE15_EXIT_AT=2400#11C0
+erster Angriff {Slot 3: F850, Slot 2: F1912}, Abstand min {2: 954, 3: 761}, Blind-Spruenge 0
+Slot 2: 2400 Bilder, los 0/2400, Abstand min 954, Strecken >= 90 Bilder im Anker 400: F1-F264 (263) @(-9013,-15461); F1723-F1866 (143) @(-20117,13100); F2105-F2257 (152) @(-23023,13073); F2257-F2400 (143) @(-23302,13195)
+Slot 3: 2400 Bilder, los 0/2400, Abstand min 761, Strecken >= 90 Bilder im Anker 400: F1-F258 (257) @(9434,2189)
+
+exe NB2 ROOM1010 Abnahme-Lage (RE15_DEBUG_JUMP=1010@250 RE15_PLAYER_POS=3750,4300,1024,0 RE15_AI_FLAVOR=re2): Slot 1 Griff F30, Wurf endet (3433,2983), Sub 5 F120-F420 (liegt), F450 Gang, F480 erneuter Griff, F540 Sub 6 (frisst Leon)
+
+exe NB2 ROOM1040 (RE15_DEBUG_JUMP=1040@250 RE15_PLAYER_POS=-29900,6000,0,0 RE15_AI_FLAVOR=re2):
+Slot 1: 900 Bilder, los 0/900, Abstand min 3578, Strecken >= 90 Bilder im Anker 400: 
+Slot 2: 900 Bilder, los 0/900, Abstand min 3720, Strecken >= 90 Bilder im Anker 400: 
+Slot 3: 900 Bilder, los 895/900, Abstand min 324, Strecken >= 90 Bilder im Anker 400: F494-F837 (343) @(-29059,9631)
+Slot 4: 900 Bilder, los 894/900, Abstand min 1153, Strecken >= 90 Bilder im Anker 400: F494-F676 (182) @(-30289,10415); F710-F900 (190) @(-30558,12144)
+Slot 5: 900 Bilder, los 895/900, Abstand min 386, Strecken >= 90 Bilder im Anker 400: F710-F900 (190) @(-30760,10234)
