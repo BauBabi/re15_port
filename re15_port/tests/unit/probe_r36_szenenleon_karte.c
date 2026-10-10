@@ -7,10 +7,13 @@
  * Flags wie nach der Szene: (4,0xF3) Strom, (3,0x43) 11C0 erledigt, (3,0x82) sub04 gesehen, (3,0x83) sub06 gesehen
  * (@0x01478), (4,0xCD) Container verschoben (@0x0147C), (9,84) Werkstatt-Tuer verschlossen (VERTRAG §1.1 Spur J).
  *
- * Aufruf: probe_r36_szenenleon_karte <kartendatei> <ost|west> [offen]
+ * Aufruf: probe_r36_szenenleon_karte <kartendatei> <ost|west> [offen] [cut=N]
  *   ost   Leon (-20500,0,-16300) Blick West (2048) — oestlich der Trennwand, Zone 0->2 (RDT @0x0280)
  *   west  Leon (-23300,0,-16300) Blick Ost (0)     — westlich der Trennwand
  *   offen Gegenprobe ohne (9,84): Original, die Tuer steht offen (Bild 8/7)
+ *   cut=N gespeicherter Kamera-Cut (re15_savedata camera_cut). Der CONTINUE-Weg setzt ihn NACH main00/sub00 wieder
+ *         (main.c "FE-4 CONTINUE", s_resume_cut) — er ist der Cut, in dem der Spieler beim Speichern stand: nach der
+ *         Szene an der Tuer Ost 2 (Tuer zu), vor der Szene / ohne (9,84) Ost 8 (Tuer offen, Leon sub00 @0x01188).
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -28,11 +31,17 @@ int main(int argc, char **argv)
 {
     const char *path = (argc > 1) ? argv[1] : "re15_card.mcr";
     const char *seite = (argc > 2) ? argv[2] : "ost";
-    int offen = (argc > 3 && strcmp(argv[3], "offen") == 0);
+    int offen = 0, cut = 0;
+    for (int a = 3; a < argc; a++) {
+        if (strcmp(argv[a], "offen") == 0) offen = 1;
+        else if (strncmp(argv[a], "cut=", 4) == 0) cut = atoi(argv[a] + 4);
+        else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
+    }
     int west = (strcmp(seite, "west") == 0);
     if (!west && strcmp(seite, "ost") != 0) { printf("FAIL: Seite '%s' (ost|west)\n", seite); return 2; }
 
     scd_vm_init();
+    g_scd.cam_id = (uint8_t)cut;          /* -> re15_savedata camera_cut (re15_savedata.c: out->camera_cut = cam_id) */
     re15_actor_init();
     re15_aot_init();
     g_current_room_id = (int)RE15_SZL_RAUM;
@@ -53,8 +62,8 @@ int main(int argc, char **argv)
     uint16_t rr = 0;
     if (re15_savedata_restore(&back, &rr) != 0) { printf("FAIL: Restore\n"); return 1; }
     int zu = re15_game_flag_get(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU) ? 1 : 0;
-    printf("Karte %s: Raum 0x%04X, Leon %s (%ld,%ld), Flag(9,%d)=%d\n", path, (unsigned)rr, west ? "West" : "Ost",
-           (long)pl->x, (long)pl->z, RE15_SZL_BIT_ZU, zu);
-    if (rr != (uint16_t)RE15_SZL_RAUM || zu != !offen) { printf("FAIL: Ruecklesen\n"); return 1; }
+    printf("Karte %s: Raum 0x%04X, Leon %s (%ld,%ld), Flag(9,%d)=%d, Cut %u\n", path, (unsigned)rr, west ? "West" : "Ost",
+           (long)pl->x, (long)pl->z, RE15_SZL_BIT_ZU, zu, (unsigned)back.camera_cut);
+    if (rr != (uint16_t)RE15_SZL_RAUM || zu != !offen || back.camera_cut != (uint8_t)cut) { printf("FAIL: Ruecklesen\n"); return 1; }
     return 0;
 }
