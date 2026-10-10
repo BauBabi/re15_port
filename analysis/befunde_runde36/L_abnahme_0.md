@@ -13,11 +13,12 @@ Der Bericht wird fortlaufend geschrieben (Sitzungslimit).
 - [x] P1 Fenster 1121 + Kraehe (erfuellt)
 - [x] P2 Irons 1151 tot + Text (erfuellt)
 - [x] P3 Unlock 1211 (erfuellt)
-- [ ] P4 Schuesse 1021
-- [ ] P5 Roy-Sterbe-Ton 1021
-- [ ] P6 main16.5 + Untertitel
+- [x] P4 Schuesse 1021 (erfuellt)
+- [x] P5 Roy-Sterbe-Ton 1021 (erfuellt; Beobachtung B1)
+- [x] P6 main16.5 + Untertitel (erfuellt; Beobachtung B2)
 - [x] RE-Gate (Adressen selbst disassembliert / Bytes selbst gelesen, s. §2)
-- [ ] Vertrag / Pfade / Nebenwirkungen
+- [x] Vertrag / Pfade / Nebenwirkungen (§4)
+- **Ergebnis: bestanden** (§7)
 
 ## 1. Bau und gezielte Tests
 
@@ -45,7 +46,8 @@ Der Bericht wird fortlaufend geschrieben (Sitzungslimit).
 
 Werkzeug: `.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` / `re2_disasm.py`, Binaerdateien `info/Re1.5/PSX.EXE`,
 `info/Re1.5/PSX/BIN/STAGE1.BIN`, `info/re2leon/PSX.EXE`; RDT-Bytes per Python aus `re15_port/shared_assets/PSX/STAGE1/` und
-`info/re2leon/PL0/RDT/`.
+`info/re2leon/PL0/RDT/`. (Die ersten vier Disassemblierungen liefen versehentlich ueber die Skript-Kopie des Hauptbaums, die
+dessen gleichnamige, versionierte info/-Dateien liest; ab dem Kill-Flag-Gate ueber die Kopie im Spurbaum — nur lesend.)
 
 | Zitat im Diff | selbst gelesen | Urteil |
 |---|---|---|
@@ -180,3 +182,164 @@ Zweiter Lauf p3a (Spielstand direkt im Auto-Feld, wie der Integrationshaken der 
 (9364) bei Hintergrund ~2000..3400 — gleiche Form.
 
 **Urteil P3: erfuellt.** (Ton = RE2-Aufschliesston ROOM1140 Satz 0x25, Tonhoehe aus den RE2-Tone-Daten bytegleich.)
+Kreuzkorrelation (eigenes Skript `scratchpad/abn0L/korr.py`: Welle selbst dekodiert, mit der Tonhoehe aus dem SE-Log
+resampelt, gegen den Mitschnitt): **0,594 bei F1014+1**, Gegenprobe 60 Bilder frueher 0,007.
+
+### P4 — ROOM1021: Schuss-Toene, wenn Kendo (John) Roy erschiesst
+
+Wortlaut: "In Elzas Cutscene in Room 1021 wo Kendo Roy erschiesst fehlen die Schuss Sounds."
+
+Lauf p4 (ECHTER Weg: Elza-Spielstand ROOM1011 vor Tuer-Slot 1 mit dem Story-Stand nach Kendos Befreiung — (4,0xF1) Roy
+getroffen, (4,0xEC) Prison key, (4,0xFC)/(4,0x60)/(3,0xC9)/(3,0x2C)/(3,0xBA) aus ROOM1211 sub02 @0x01F76..@0x01F8E laut
+analysis/story_leon_elza/ablauf_elza.md E12, (3,0x74) —, CONTINUE, Aktionstaste F30, Tuersequenz -> ROOM1021, nach Westen
+ins Auto-Feld (AOT 5 `AUTO_EVENT Mitte(-12050,-7100) halb(1050,2000) ev=2`), Szene laeuft ohne weiteres Zutun):
+```
+probe_r36_elza_karte re15_card.mcr 1011 3650 -3950 0 4:0xF1 4:0xEC 4:0xFC 4:0x60 3:0xC9 3:0x74 3:0x2C 3:0xBA
+run.sh p4 420 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_STATE_LOG=state.log
+  RE15_ELZA_LOG=elza.log RE15_SE_DEBUG=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_PRESS=square@30 RE15_INPUT_SCRIPT_BASIS=spiel
+  RE15_INPUT_SCRIPT_START=60 RE15_INPUT_SCRIPT=XU2.2,W2 RE15_FRAMEDUMP=650-950/3:bild_ RE15_EXIT_AT=1000#1021
+-> [aot] DOOR FIRE slot=1 rect=(4650,-3950,hw=500,hh=1000) target_cut=9 spawn=(-3785,0,-7412)
+   [room] PC loaded room1021.rdt (274480 bytes)
+   state.log: F89 (-9771,-7486) / F119 (-11171,-7486) im Feld; Szene: msg 0 (F97), msg 1 (F247), msg 2 (F396), msg 3 (F497)
+   elza.log: F30 [elza] ROOM1021: 3 Anker armiert
+             F748 [elza] ROOM1021 Anker @0x020CE -> Aktion 2 (Takt 744)
+             F778 [elza] ROOM1021 Anker @0x020D6 -> Aktion 2 (Takt 774)
+             F778 [elza] ROOM1021 Anker @0x020DE -> Aktion 3 (Takt 774)
+   debug.log (Reihenfolge):
+     [scd] Plc_motion(entity=2, motion=7, flags=0x00) -> slot=1
+     [se] Stimme: se=1 layer=0 vag=1 note=69 fine=109 center=91 vol=100 pitch=0x4f3 (13641 Hz) -> SE-Stimme -16 (SPU 0)
+     ...
+     [scd] Plc_motion(entity=2, motion=7, flags=0x00) -> slot=1
+     [scd] Plc_motion(entity=1, motion=7, flags=0x00) -> slot=2
+     [se] Stimme: se=1 layer=0 vag=1 note=69 fine=109 center=91 vol=100 pitch=0x4f3 (13641 Hz) -> SE-Stimme -16 (SPU 0)
+     [se] Stimme: se=5 layer=0 vag=5 note=65 fine=0 center=89 vol=127 pitch=0x400 (11025 Hz) -> SE-Stimme 5 (SPU 21)
+```
+Mitschnitt, Spitze je Bild: F744..F747 770..960 (Hintergrund) -> **F748 6319, F749 6886, F750 6360, F751 6033**, abklingend bis
+F757 1648 (Knall) | F760..F777 ~900..1250 -> **F778 6393, F779 6802, F780 7007, F781 7310**, F782 4744 ... (Knall 2).
+Kreuzkorrelation mit der selbst dekodierten RE2-Welle ROOM40A0 @0x17B80 (4736 B, Tonhoehe 0x4f3): **0,806 bei F748+0**
+(Gegenprobe -0,112) und **0,631 bei F778+0** (Gegenprobe -0,016; niedriger, weil Roys Ton darueberliegt).
+Bild `scratchpad/abn0L/p4/p4_sheet.png`: die Kamera steht waehrend beider Schuesse auf Cut 10 (Roy im Gang). Zusatzlauf p4c
+(Integrationsweg der Spur mit `RE15_FORCE_CUT=9`, `scratchpad/abn0L/p4c/p4c_sheet.png`): John zielt beidhaendig mit einer
+PISTOLE, Anker F698 -> Ton F699, Rueckstoss im Bild F700 — Pistolenknall passt zur Waffe, Ton 1 Bild nach Clip-Start.
+
+**Urteil P4: erfuellt** (zwei Schuesse = die zwei Feuer-Clips @0x020CE/@0x020D6 des Original-Skripts, 30 Bilder auseinander).
+
+### P5 — ROOM1021: Roys Sterbe-/Leid-/Hinfall-Ton, sobald er erschossen wurde
+
+Wortlaut: "In Elzas Cutscene in Room 1021 wo Kendo Roy erschiesst fehlt noch ein Sterbe/Leid/Hinfall sound von Roy, sobald
+er erschossen wurde."
+
+Derselbe Lauf p4. Roys Todes-Clip @0x020DE `3f 01 07 00` laeuft im Bild des zweiten Schusses (F778); im selben Takt
+`[se] Stimme: se=5 ... vag=5 ... (11025 Hz)` = Raum-SE 5 (ROOM1021 snd1, EDT `00 00 69 15` -> VAG 6, 15392 B; dieselbe
+Welle ist Satz 5 der Zombie-Raumbaenke 1000/1010/1020/1060/1070/...; RE1.5-Zombie-Tod @0x80106da8/@0x80106dac).
+Mitschnitt ab F787: stimmhaft (Nulldurchgangsrate 0,015..0,037 statt 0,08..0,10 beim Knall), Spitzen 3000..8664 bis ~F850
+(Welle 2,44 s bei 11025 Hz). Kreuzkorrelation mit der selbst dekodierten Welle ROOM1021 @0x1C8E8 (Tonhoehe 0x400):
+**0,739 bei F778+1** (Gegenprobe 60 Bilder frueher 0,006). Reihenfolge im Log: Schuss-Ton vor Sterbe-Ton (Ursache vor Wirkung).
+
+**Urteil P5: erfuellt** (der Ton erklingt mit dem toedlichen zweiten Schuss).
+Beobachtung (nicht Teil des Wortlauts, Spur-Dossier OFFEN 1, s. §5 B1): Roy bleibt im Bild stehen — p4_sheet F779..F920 zeigt
+ihn unveraendert aufrecht im Gang, waehrend das Sterbe-Stoehnen laeuft.
+
+### P6 — main16.5 abspielen, waehrend Roy bewusstlos wird, + Untertitel
+
+Wortlaut: "Ich habe fuer Elzas Szenario Synchron Dateien hinzugefuegt. In Room 1101 - waehrend Roy bewusstlos wird - moechte
+ich das du das Voiceover main 16.5 abspielst. Auch wenn es aktuell keinen Text dafuer gibt. Erstelle gerne ein Untertitel
+dafuer, wie bei den anderen auch."
+
+Raum-Zuordnung (selbst geprueft): ROOM1101 (= ROOM1100 bytegleich, rdt_msgdump) traegt nur die 6 Texte des Stimmschlosses
+("It's electronically locked." ... "I don't need to use this anymore."), keinen Roy. Roy wird nur in ROOM1011 bewusstlos:
+sub02 `2b 10 00 00`@0x00D3A (msg 16 "Roy: Please, you have to help him...") -> `29 01`@0x00D52 -> **`3f 00 09 00`@0x00D54** ->
+`09 0a 64 00` -> `2b 11 00 00`@0x00D5C (msg 17 "Elza: Roy, wake up! Please wake up!"), spaeter msg 18 "He has passed out from
+his injuries.". Die Nutzer-Datei liegt in `synchro/STAGE1/room1011/` (Hauptbaum, unversioniert) zwischen main16 und main17 —
+"16.5" = genau diese Stelle. "1101" ist ein Zahlendreher; die Spur hat richtig ROOM1011 genommen.
+
+Lauf p6 (ECHTER Weg: Elza-Spielstand ROOM1021 vor Tuer-Slot 1 OHNE Story-Flags (erster Besuch bei Roy), CONTINUE,
+Aktionstaste F20, Tuersequenz -> ROOM1011, Roy-Szene laeuft von selbst; die 19 Nutzer-WAVs von room1011 (main00..17 +
+main16.5, nur gelesen) liegen im Arbeitsordner unter `synchro/STAGE1/room1011/`, die Original-Datei, kein Stellvertreter):
+```
+probe_r36_elza_karte re15_card.mcr 1021 -4300 -18450 0
+run.sh p6 540 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 RE15_STATE_LOG=state.log
+  RE15_ELZA_LOG=elza.log RE15_MSG_LOG=1 RE15_AUDIO_CAP_SYNC=cap.raw RE15_PRESS=square@20 RE15_FRAMEDUMP=1700-2100/6:bild_
+  RE15_EXIT_AT=2150#1011
+-> [aot] DOOR FIRE slot=1 rect=(-2950,-18450,hw=750,hh=1150) target_cut=0 spawn=(3650,0,6900)
+   [room] PC loaded room1011.rdt (210440 bytes)
+   [voice] clip loaded: main16.wav (32000 Hz x1 -> 113152 @44100 Hz)
+   [voice] clip loaded: main16.5.wav (32000 Hz x1 -> 63488 @44100 Hz)
+   [voice] clip loaded: main17.wav (32000 Hz x1 -> 188928 @44100 Hz)
+   elza.log: F20 [elza] ROOM1011: 1 Anker armiert / F1939 [elza] ROOM1011 Anker @0x00D54 -> Aktion 4 (Takt 1935)
+   state.log: F1838..F1937 msg id=16 | F1939 cam=1, Roy `mo=9`, msg(a=1 fsm=1 id=24) bis F2038 | F2039 msg id=17
+```
+Mitschnitt: Kreuzkorrelation der Nutzer-Datei (32 kHz -> 44,1 kHz resampelt, `scratchpad/abn0L/korr_wav.py`) mit dem Mitschnitt:
+**main16.5.wav 0,607 bei F1939+1** (Gegenprobe 150 Bilder frueher 0,012); Attrappen an derselben Stelle: main10.wav 0,200,
+main00.wav 0,169 — es klingt die Nutzer-Aufnahme, keine andere.
+Untertitel: Bild `scratchpad/abn0L/p6/p6_sheet.png`: F1898/F1934 "Roy: Please, you have to help him...", **F1940..F2018
+"Roy: \*groans\*"** (Name rot/orange, Text weiss — dieselbe Form wie alle Roy-Zeilen), F2042/F2084 "Elza: Roy, wake up! Please
+wake up!". Text = ROOM1011 msg 10 @0x010C9 woertlich (23 Byte, Array-Vergleich §2), Anzeige 100 Bilder wie die Nachbarzeilen.
+Wortlaut-Pruefung der Datei (50-ms-Huellkurve, selbst gerechnet): main16.5 = EIN stimmhafter Ausbruch 0,40..0,90 s
+(Nulldurchgangsrate 0,007..0,033), danach hauchiger Ausklang — dieselbe Form wie main10 ("Roy: groans") und main00 ("Officer:
+groans"); main16 (ein Satz) zeigt dagegen mehrere Silbenpakete. "*groans*" beschreibt die Aufnahme.
+
+**Urteil P6: erfuellt** (Raum richtig gedeutet, Nutzer-Datei unveraendert unter ihrem Namen geladen, an der Stelle @0x00D54
+zwischen main16 und main17, Untertitel in der Form der anderen).
+Beobachtung (nicht Teil des Wortlauts, s. §5 B2): Roy sackt im Bild NICHT zusammen — `scratchpad/abn0L/p6/p6_roy.png`:
+F1940 vorgebeugt, F1946..F1958 richtet er sich auf, F2018/F2084 steht er aufrecht, waehrend "*groans*" und "Roy, wake up!"
+laufen.
+
+## 4. Gates
+
+| Gate | Messung | Ergebnis |
+|---|---|---|
+| RE-Gate: Konstanten mit Beleg | Diff gelesen: Anker-Offsets/Signaturen (RDT-Bytes), Verzuege 20/1/1/0 (RE2 ROOM1010 @0x01C1C bzw. sub31 @0x02680; Roy = Takt von Schuss 2; Stoehnen = vor dem Opcode), Toene (RE2 @0x80051654-5c / ROOM40A0 @0x02896 / RE1.5 @0x80106da8), Irons (Clip 2 Bild 89, @0x80041ed8-f10, @0x80041f5c-6c, Slot @0x00D92), Kraehe (Form @0x00D0C, Lage gemessen, Kill-Flag Zensus). NUTZER-VORGABE/PORT-WAHL benannt (Text "He has already passed...", Kraehen-Lage, Kill-Flag, Untertitel-Wortlaut, Id 24). Commit 059cc672 nennt dieselben Adressen. | haelt |
+| RE-Gate: Stichproben selbst disassembliert | 0x800397e4/ec, 0x80041ea4-f14 + 0x80041f5c-6c, 0x80106d9c-dac (STAGE1.BIN), RE2 0x80051640-5c + 0x8005ba28 (Zerlegung a0), Gate 0x80042120-38 (`lbu a1,7(a1)` / `beq a1,0xff` / `jal 0x8004efe4` / `beq v0,zero`), Loco-Kanal 0x80050e64/6c; RDT-Bytes in ROOM1211/1021/1011/1151/1121 und RE2 ROOM1010/40A0/1140 (Tabelle §2) | alle Zitate stimmen |
+| Rate-Woerter / Env-Schalter | keine (§2); einziger getenv = Messschiene RE15_ELZA_LOG | haelt |
+| Fix erklaert den Befund | Vorher-Messung des Dossiers (kein Se_on in den drei Szenen, Irons Atem-Clip 3 + msg 2, 3 Kraehen + heiles Fenster, main16.5 nie geladen) -> nachher genau diese Stellen geaendert; meine Laeufe zeigen jeweils die neue Wirkung an der zitierten Stelle (Anker-Bild = Ton-/Text-Bild) | haelt |
+| Vertrag: Bank-9-Bits | keine benutzt (Reserve 86 frei gelassen) | haelt |
+| Vertrag: Nachrichten-IDs | ROOM1151 Id 20 (zugeteilt 20..23); ROOM1011 Id 24 = RDT-Zahl (statt der zugeteilten ROOM1101 20..21, weil die Szene in 1011 liegt — begruendet im Dossier §3/§8, keine andere Spur hat 1011-IDs) | haelt, Abweichung dokumentiert (H4) |
+| Vertrag: Ereignis | 26 nur in ROOM1121 (zugeteilt L = 26) | haelt |
+| Vertrag: Kill-Flag | (7,0xAC): eigener Byte-Zensus STAGE1-3: kein Ck/Set(7,0xAC); 6 Byte-Treffer "44 bf 2e 13 bb fe 00 ac" in 10E0/10E1/1110/1111/2010/2011 sind keine Sce_em_set (Slot-Byte 0xBF) | frei |
+| Vertrag: Pfade | `git diff master --name-only`: keine release/, platform/android/, shared_assets/PSX/, tests/*/CMakeLists.txt, RELEASE_NOTES (0 Treffer); neue Daten nur shared_assets/RE2/ELZASE.VBS + gen/re2_elza_bank.inc | haelt |
+| Vertrag: gemeinsame Dateien nur kleine Haken | scd_vm.c +6, scd_room_setup.c +2 (Installer-Zeile am Ende des Blocks, Kommentar "Runde 36 Spur L"), main.c +3, audio_pc.c +17/-4 (Durchreiche re15_audio_se_play_bank + Dateistamm im Stimmen-Lader; audio_pc.c steht nicht in der §1.4-Liste); fenster_1120.c/.h = Eigentum L | haelt |
+| Tests je Punkt, messend | 8 Unit-Teile + 5 Integrationshaken (probes/r36_elza.cmake, eigene test_r36_elza.c/.cmake), Arbeitsordner r36_elza_wd != Targetname, WINDOW_SCALE=1, Messkopie unter eigenem Namen, kein taskkill; selbst gefahren: 79/79 Unit, 12/12 Integration | haelt |
+| Nebenwirkungen beide Szenarien | Leon 1120 (drei Kraehen, Fenster heil: unit_r36_elza_fenster, unit/integration_r35_fenster gruen), Leon 1150 (Irons lebt, Slot 2 sce 5: unit_r36_elza_irons; integration_r35_cut1150 gruen), Leon-Raeume ohne Anker (unit_r36_elza_signatur), Stimmen-Lader unveraendert fuer mainNN (unit_synchro_stimme, unit_voice_ausreden gruen; Log-Zeile `[voice] clip loaded: main16.wav` unveraendert), CONTINUE in 1121: 4 Kraehen, keine Doppel-Spawns (Lauf p1c) | keine gefunden |
+
+## 5. Beobachtungen und Hinweise (nicht blockierend — ausserhalb des Wortlauts oder Sache des Orchestrators)
+
+* **B1 — Roy faellt in ROOM1021 nicht sichtbar** (Spur-Dossier OFFEN 1): p4_sheet F779..F920 — Roy steht aufrecht, waehrend
+  die Schuesse fallen und sein Sterbe-Stoehnen laeuft. Vorbestehend (der Zweig aendert keine Animation); Ursache laut Dossier
+  @0x020DE `3f 01 07 00` -> Loco-Kanal (@0x80050e64 `lw a0,132(v0)` / @0x80050e6c `lw a1,364(v0)`, selbst disassembliert),
+  EM047 Clip 7 = 1 Bild. Messweg: DuckStation-Savestate der Szene, Roy-Entity +0x84/+0x16c.
+* **B2 — Roy sackt in ROOM1011 nicht sichtbar zusammen** (im Spur-Dossier NICHT vermerkt): `p6/p6_roy.png` — F1940 vorgebeugt,
+  F1946..F1958 richtet er sich auf, F2018/F2084 steht er aufrecht, waehrend "*groans*" und "Elza: Roy, wake up! Please wake up!"
+  laufen. Das Dossier (§2, §3 P6) und die Ausgabe von unit_r36_elza_stoehnen ("Roy sackt zusammen (Clip 9)") deuten nur die
+  Clip-Nummer @0x00D54 `3f 00 09 00`; das GERENDERTE Bild zeigt das Gegenteil (Lehre "Platzhalter ist trotzdem Verhalten").
+  Vorbestehend (Roy laeuft in Clip 9 frei durch, `mo=9 af=1 -> af=19 ss2=2`, keine Sperre durch Nachricht 24 mit Maske 0).
+  Vermutlich dieselbe Familie wie B1 (Roys Plc_motion-Bank). Messweg wie B1 (Savestate ROOM1011, Roy-Entity +0x84/+0x16c).
+  Dem Nutzer NICHT als "Roy sackt zusammen" melden.
+* **H3 — Paket**: neu `re15_port/shared_assets/RE2/ELZASE.VBS` (13144 B, md5 8e996ef238defe2188292e55af7f8ab2); die
+  Nutzer-Aufnahme `synchro/STAGE1/room1011/main16.5.wav` (und ueberhaupt alle neuen Elza-Synchronordner room1011/1021/1031/
+  1041/1141/1211/11B1) ist im Hauptbaum UNVERSIONIERT und fehlt im Spurbaum — der Integrationshaken prueft mit einer
+  Stellvertreter-Datei (room1170/main00.wav) nur die Zuordnung. Paket-Gate muss die Nutzer-Dateien mitnehmen.
+* **H4 — Id-Abweichung zusammenfuehren**: ROOM1011 Nachricht 24 (statt ROOM1101 20..21). Beim Zusammenfuehren pruefen, dass
+  Spur P (Text-Sweep) und Spur Q (Prison key aus 1011) in ROOM1011 keine Id 24 belegen.
+* **H5 — Orchestrator**: RE15_MIN_TESTS +13 (Suite 605); Android neu konfigurieren (neue Quellen engine/src/elza_r36.c,
+  platform/pc/src/elza_se_pc.c).
+
+## 6. Maengel
+
+Keine blockierenden Maengel. (B2 ist eine falsche Beschreibung im Dossier/Testtext, kein Verstoss gegen den Wortlaut von P6:
+Stimme und Untertitel liegen genau an der Original-Stelle, an der Roy laut Skript bewusstlos wird.)
+
+## 7. Urteil
+
+| Punkt | Urteil | Kernbeleg |
+|---|---|---|
+| P1 Fenster 1121 kaputt + Kraehe | erfuellt | Tuerweg 1131->1121: 163/163 Lochpixel in allen Cut-1-Bildern, 4 Kraehen (Slot 3 (5327,0,10217)), Kraehe fliegt bei Annaeherung auf |
+| P2 Irons 1151 tot + Text | erfuellt | Tuerweg 1131->1151 und Spielstand: Irons 300/300 bzw. 241/241 Bilder Clip 2 Bild 89, Kopf 144/144 bzw. 90/90 fest; Quadrat F90 -> msg 20 "He has already passed...", msg 2 nie |
+| P3 Unlock 1211 | erfuellt | Tuerweg 1221->1211: Anker F1014, Klicks F1017/F1025, Korrelation 0,594 mit RE2 ROOM1140-Welle, vor dem Aufschwingen (~F1055) |
+| P4 Schuesse 1021 | erfuellt | Tuerweg 1011->1021: Knall F748 / F778, Korrelation 0,806 / 0,631 mit RE2 ROOM40A0-Welle; John schiesst mit Pistole |
+| P5 Roys Sterbe-Ton 1021 | erfuellt | Raum-SE 5 im Takt von Schuss 2, Korrelation 0,739 ab F779; (B1: Roy faellt nicht sichtbar, vorbestehend) |
+| P6 main16.5 + Untertitel | erfuellt | Tuerweg 1021->1011: main16.5.wav geladen, Korrelation 0,607 ab F1940 (Attrappen 0,20/0,17), "Roy: *groans*" F1940..F2018 zwischen msg 16 und 17; (B2: Roy sackt nicht sichtbar zusammen, vorbestehend) |
+
+**bestanden: ja** — alle sechs Punkte am gebauten Stand gegen den Wortlaut gemessen erfuellt, alle Gates halten.
+Fuer die Abschlussmeldung an den Nutzer: B1 und B2 als eigene Folgepunkte anbieten (Roys Posen in 1021/1011 gegen das Original
+messen), H3 (Nutzer-Synchrondateien ins Paket), main16.5-Wortlaut "*groans*" (Frage der Spur) bestaetigen lassen.
