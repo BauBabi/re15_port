@@ -4904,6 +4904,9 @@ re_title:;
     /* Runde 35 Spur M: FENSTER ROOM1120 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter),
      * nach dem Restore der Flags ((9,73)/(9,79) entscheiden). Herleitung: include/re15_fenster1120.h. */
     re15_fenster1120_install((uint16_t)g_current_room_id);
+    /* Runde 36 Spur P: derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter), nach dem Restore der
+     * Flags ((4,0xF3) entscheidet ueber Roy in 1020). Herleitung: include/re15_story_r36.h. */
+    { extern void re15_story_r36_install(uint16_t); re15_story_r36_install((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

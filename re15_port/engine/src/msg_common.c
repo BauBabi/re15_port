@@ -13,6 +13,8 @@
 #include "re15_audio.h"     /* re15_audio_core_se -- die Toene der Ja/Nein-Auswahl */
 #include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter @0x800285d4/f0 */
 #include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
+#include "re15_room.h"       /* g_current_room_id — Runde 36 Spur P (Text-Overrides) */
+#include "re15_story_r36.h"  /* re15_story_r36_texte — Runde 36 Spur P */
 
 #define DIALOG_BASE_SCROLL_SPEED  2  /* "g_dialogBasisGeschwindigkeit = 2 << istZweiterPuffer" */
 
@@ -344,6 +346,9 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
         re15_msg_install_text((unsigned char)i, m, len);
     }
     re15_msg_install_provider();
+    /* Runde 36 Spur P: Text-Overrides "nie begegnet" NACH dem Laden (der Tuer-Weg laedt erst nach
+     * scd_room_reenter, room_common.c Schritt 11) — re15_story_r36.h. */
+    re15_story_r36_texte((uint16_t)g_current_room_id);
 }
 
 /* ===== BYTE-TRUE dialog typewriter FSM (FUN_80028134) ======================
