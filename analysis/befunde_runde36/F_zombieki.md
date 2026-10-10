@@ -20,7 +20,8 @@ Datum: 2026-10-10.
 - [x] Punkt 2 Monkeys blockiert: Beleg (A[3] @0x80117b40-c74 ohne Ausgang, B[3] playerX @0x80117d4c) / Umsetzung PORT-WAHL Pad-Suche / Messung nachher / Riegel unit_r36_zombieki_affen_block 7/7
 - [x] Punkt 3 Monkey-Blutlache: Messung vorher (Code + Gegenprobe im Riegel)
 - [x] Punkt 3 Monkey-Blutlache: Beleg (FUN_80116f50/FUN_8011be54) / Umsetzung (zombieki_r36.c) / Messung nachher (Riegel 9/9, exe-Bild) / Pin unit_r36_zombieki_affen
-- [ ] Suite gruen (RE15_MIN_TESTS=592)
+- [x] Nachbesserung 3 (Abnahme 2): M1 Umweg nach Weglaenge (A*), M2 Tasche = Zurueckschnapp-Artefakt + nicht begehbar, Beginn erst beim Haengen (+0x1de), Riegel 46/46, exe zehn Stellen nicht spaeter als v0.8.23, gezielt 163/163
+- [ ] Voll-Suite (Orchestrator im Integrationsbaum)
 
 ---
 
