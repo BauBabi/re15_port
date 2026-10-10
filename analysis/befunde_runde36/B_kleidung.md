@@ -20,7 +20,7 @@ PSX.EXE: 0 Treffer; STAGE1.BIN 22, STAGE2 10, STAGE3 17, STAGE4 21, STAGE5 21, S
 entsteht, weil dieselben Griffe, die HP kosten, die Panels fuellen: RE2-Griff -30/-20/-30 HP, Stempel
 +50 je Abwurf, Schwelle 120 -> der DRITTE ueberlebte Griff bringt Leon auf 20 HP (Caution/"Warning",
 naechster Treffer Danger) UND setzt die erste Wund-Stufe. Original-Ground-Truth dazu:
-stage_saves/mzd_blood_decals_hp30.sav (blood_decals.md §3.4) — hp 30 nach drei Griffen von vorn,
+stage_saves/mzd_blood_decals_hp30.sav (Hauptbaum, unversioniert; blood_decals.md §3.4) — hp 30 nach drei Griffen von vorn,
 Panels 5/7 Stufe 1. Der Port-Spielweg (§5.3) liefert dieselbe Kopplung: hp 100 -> 70 -> 50 -> 20,
 Panel 7 Stufe 1 beim dritten Abwurf, sichtbar auf der Weste (Bild). Damit ist der Wortlaut erfuellt:
 Leons Kleidung zeigt beim Abstieg auf Warning/Danger wieder Blut/Risse — unter dem Standardgehirn

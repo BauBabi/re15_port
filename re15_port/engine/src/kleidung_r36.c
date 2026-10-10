@@ -13,7 +13,8 @@
 extern void re15_player_victim_bone_pos_pub(int bone, int32_t out[3]);   /* enemy_ai_common.c (Spur J r35) */
 
 /* MESSHAKEN RE15_KLEIDUNG_LOG=1 (env-gegatet, kein Verhalten): je Stempel-Ereignis eine Zeile
- * mit Bild, Quelle, Richtung, Spieler-HP und der Wund-Tabelle (Level/Akku je Panel) DANACH —
+ * mit Bild, Quelle, Richtung (abwurf: aca59-Richtung; hundebiss: Tabellenindex aca59*2+rng; kraehe:
+ * vert = Spieler.y - Kraehe.y), Spieler-HP und der Wund-Tabelle (Level/Akku je Panel) DANACH —
  * belegt auf dem echten Spielweg, welcher Griff/Biss welche Panels fuellt (Dossier §5.3). */
 static void kleid_log(const char *quelle, int typ, int dir)
 {
