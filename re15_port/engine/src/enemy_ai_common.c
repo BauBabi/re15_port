@@ -3051,6 +3051,14 @@ int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
     return 1;
 }
 
+/* Runde 36 Spur F (Sonde): nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Nibble-3-Zellen, 4 Regionen) von e nach (px,pz). */
+int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz)
+{
+    re15_actor_t ziel = { 0 }; ziel.x = px; ziel.z = pz;
+    for (int k = 0; k < 4; k++) if (re15_los_ray_blocked(e, &ziel, k, e->sca_mask ? e->sca_mask : 4u)) return 1;
+    return 0;
+}
+
 /* CORPSE / PRONE-SETTLE (root state 7 = FUN_80109554, shared m0/m1; raw-disasm'd C7 2026-07-05):
  * a killed zombie does NOT freeze — it lies in clip 0x15 (face-down) / 0x14 (face-up, after the
  * backward fall 0xb or when downed +0x9&0x80), its blood pool spreads (+0xbc/+0xbe += 8/frame for

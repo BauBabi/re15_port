@@ -57,3 +57,18 @@ target_compile_definitions(test_r36_zombieki_affen_block PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r36_zombieki_affen_block PRIVATE m)
 endif()
+
+#   unit_r36_zombieki_sicht  Punkt 1: Sicht-Zensus — Raster von Leon-Plaetzen im Vorderkegel jedes stehenden Zombies
+#                            (Stage 1, Leon-Raeume), je Platz Zell-Strahl (Slab) / RE1.5-Strahl (Nibble 3) / Reaktion
+#                            in 480 Bildern. `test_r36_zombieki_sicht mess [raum] [bilder]` = Tabelle.
+add_executable(test_r36_zombieki_sicht ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_sicht.c)
+target_link_libraries(test_r36_zombieki_sicht PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_zombieki_sicht PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_zombieki_sicht PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r36_zombieki_sicht PRIVATE m)
+endif()
+add_test(NAME unit_r36_zombieki_sicht COMMAND test_r36_zombieki_sicht
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r36_zombieki_sicht PROPERTIES TIMEOUT 900)

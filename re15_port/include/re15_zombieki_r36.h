@@ -1,6 +1,6 @@
 /*
- * Runde 36 Spur F "zombieki" — Gorilla (Typ 0x27, ROOM11C0) Schatten-Record und Blutlache der Leiche.
- * Dossier: analysis/befunde_runde36/F_zombieki.md, Punkt 3.
+ * Runde 36 Spur F "zombieki" — Punkt 1: Sicht-Bit des RE2-Zombies (unten); Punkt 3: Gorilla (Typ 0x27, ROOM11C0)
+ * Schatten-Record und Blutlache der Leiche. Dossier: analysis/befunde_runde36/F_zombieki.md.
  *
  * Nutzer: "Bei den Monkeys in ROOM 11C0 laeuft das Blut nicht aus wenn sie tot sind."
  *
@@ -47,5 +47,41 @@ int re15_r36_affen_lache_render(const re15_actor_t *npc, int32_t *nhx, int32_t *
 
 /* Nur fuer Sonden: Leichen-Haken abschalten (Gegenprobe). */
 void re15_r36_affen_lache_enable(int an);
+
+/* ---------------------------------------------------------------------------------------------------------
+ * Punkt 1 — "sie bleiben hier ewig Beteiligungslos stehen, obwohl ich ziemlich in Ihrer Naehe vor ihnen bin"
+ *
+ * MESSUNG (test_r36_zombieki_sicht, Stand v0.8.23): 45 stehende Zombies, 2653 Leon-Plaetze im Vorderkegel bis
+ * 4000; der Zell-Rechteck-Strahl re15_re2_los_cells_blocked (Slab-Test gegen JEDE u0&4-Zelle, Port-Mapping der
+ * Kraehen-Flugkopplung 3486be93, 2026-09-08, vom Zombie mitgelesen) nahm an 306 Plaetzen (11,5 %) die Sicht, an
+ * denen der RE1.5-Sichtstrahl (Nibble 3) frei ist; an 68 davon (ROOM10B0, Terrassenkante #9 Nibble 1) blieb der
+ * Zombie 480 Bilder stehen. Bei freier Sicht stand KEINER.
+ *
+ * ORIGINAL RE2 (Ziel, Beta -> Retail): der Zombie-Navigator FUN_8004A808 setzt +0x154&0x800 aus dem Strahl
+ *   FUN_80050858(selfPart, playerPart, a2 = 0x2000 `li a2,0x2000` @0x8004a868, a3 = 1 `li a3,1` @0x8004a86c,
+ *   jal @0x8004a8d8), `andi v0,v0,0xf7ff` @0x8004a87c, `ori v0,v0,0x800` @0x8004a8f0 bei Rueckgabe 0.
+ *   FUN_80050858 nimmt NUR Saetze mit Attribut & 0x2000 (`and`/`beq` @0x800508bc-c8) und ueberspringt die Formen
+ *   {1..5,13} (Tabelle @0x800A73B4 = [0,1,1,1,1,1,0,0,0,0,0,0,0,1,0,0], `lbu` @0x800508d0-e4); mit a3 = 1 prueft er
+ *   zusaetzlich die HOEHE des Satzes (-(w>>11)*100 - ((w>>6)&0x1f)*1800 @0x80050b34-74) gegen den Strahl zwischen
+ *   den Koerperteilen -> niedrige Saetze (Tische, Tresen, Kanten) nehmen keine Sicht.
+ * ORIGINAL RE1.5 (Datenseite der Raeume): der RE1.5-Sensor FUN_8001b84c ruft FUN_8003dcc4 mit `ori a2,zero,0xf00`
+ *   @0x8001b8d4 / `ori a3,zero,0x300` @0x8001b8ec (Delay-Slot des jal @0x8001b8e8): es blocken NUR Zellen, deren
+ *   Boden-Nibble (w5 & 0xf00) == 0x300 ist (`and v1,t5,a0` @0x8003de7c, `bne v1,v0,LAB_8003e0a8` @0x8003de94;
+ *   Band-Test `lbu v1,0x82(v1)` / `sra v0,v0,0x1c` / `bne` @0x8003de60-6c). Das Nibble ist der von Capcom je Zelle
+ *   gesetzte Sicht-Blocker (Waende 3; Tresen ROOM1030 #18 = 0, Terrassenkante ROOM10B0 #4/#9 = 1) — das RE1.5-
+ *   Gegenstueck zum RE2-Attribut 0x2000 + Hoehenpruefung.
+ * PORT (Mapping, benannt): das Sicht-Bit des RE2-Zombies kommt NUR aus dem RE1.5-Strahl FUN_8003dcc4 (4 Regionen,
+ *   Aktor-Maske wie Runde 35 Spur H); der Slab-Test bleibt der Kraehe (Flugkopplung) und dem Zellenarm.
+ * --------------------------------------------------------------------------------------------------------- */
+
+/* Sicht-Bit +0x154&0x800 des RE2-Zombies (Haken in enemy_ai_re2_zombie.c): 1 = Sicht frei. */
+int re15_r36_zombie_sicht_frei(re15_actor_t *e, re15_actor_t *pl);
+
+/* Nur fuer Sonden: 0 = alter Weg (re15_re2_los_clear mit Slab-Test) fuer die Gegenprobe im selben Lauf. */
+void re15_r36_zombie_sicht_enable(int an);
+
+/* enemy_ai_common.c: nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Zellen mit Boden-Nibble 3, 4 Regionen,
+ * re15_los_ray_blocked, Aktor-Maske) von e nach (px,pz); 1 = verdeckt. */
+int re15_r36_los_ray_nib3(const re15_actor_t *e, int32_t px, int32_t pz);
 
 #endif /* RE15_ZOMBIEKI_R36_H */

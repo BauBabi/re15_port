@@ -61,6 +61,7 @@
 #include "re15_actor.h"
 #include "re15_math.h"       /* re15_vector_normal — MatrixNormal_0-Zwilling */
 #include "re15_ai_flavor.h"
+#include "re15_zombieki_r36.h"   /* Runde 36 Spur F: Sicht-Bit */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
@@ -8559,7 +8560,7 @@ int re15_re2z_tick(int slot)
      * damit einen anderen Strahl als die Kraehe (4), ein STEHENDER Zombie (4) denselben.
      * Die restlichen 16 % waeren nur mit einem RE1.5-Zellattribut abbildbar, das dem
      * RE2-Modus entspricht - ein solches gibt es nicht. OFFEN und beziffert. */
-    e->re2z_los154 = (uint8_t)(re15_re2_los_clear(e, pl) ? 1u : 0u);
+    e->re2z_los154 = (uint8_t)re15_r36_zombie_sicht_frei(e, pl);   /* Runde 36 Spur F: nur der RE1.5-Sichtstrahl FUN_8003dcc4 (Nibble 3), kein Slab-Test — Belege re15_zombieki_r36.h */
 
     /* ⛔ D15.2 GEFIXT — SKRIPT-WECKER fuer die Liegenden (Nutzer-Report ROOM1100: nach dem
      * "Leichen erwachen"-Event passiert nichts). Das Weck-Signal des Spiels ist ein RE1.5-

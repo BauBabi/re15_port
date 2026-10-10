@@ -14,8 +14,8 @@ Datum: 2026-10-10.
 ## Arbeitsstand (fortlaufend)
 
 - [x] Punkt 1 Zombies: Messung vorher (exe 1010/1040/1030/1140, Weck-Zensus 45 Faelle, Szenen)
-- [x] Punkt 1 Zombies: Bisect (keine Regression) / RE-Beleg (RE2 Sichtstrahl, Navigator FUN_8004A808)
-- [ ] Punkt 1 Zombies: Umsetzung + Messung nachher + Pin
+- [x] Punkt 1 Zombies: Bisect (keine Regression; Ursache 3486be93 v0.7.18) / RE-Beleg (RE2 FUN_80050858 Hoehe + Attribut, RE1.5 FUN_8003dcc4 Nibble 3)
+- [x] Punkt 1 Zombies: Ursache gefunden (Slab-Test im Sicht-Bit) + Umsetzung (zombieki_r36.c) + Messung nachher + Riegel unit_r36_zombieki_sicht
 - [ ] Punkt 2 Monkeys blockiert: Messung vorher
 - [ ] Punkt 2 Monkeys blockiert: Beleg / Umsetzung / Messung nachher / Pin
 - [x] Punkt 3 Monkey-Blutlache: Messung vorher (Code + Gegenprobe im Riegel)
@@ -79,17 +79,87 @@ Sichtfilter-Aenderung der Runde 35 Spur H (d0684bcc, `u0 & Maske` @0x800508bc-c8
 machen (Zellen ohne Maskentreffer werden uebersprungen), nicht blinder; die Schwerkraft 94494e03 greift nur auf
 Absturzkanten (Zellattribut 2, @0x8001bdb0-b4) — in den gemessenen Raeumen b0/f1c0=0000 durchgehend.
 
-### RE-Belege
+### Messung vorher, Fortsetzung (2. Sitzung): der Nutzer-Fall liegt im SICHT-BIT, nicht im Hirn
 
-(siehe oben; Fortsetzung folgt)
+Der Weck-Zensus stellte Leon nur auf Plaetze, die der Zell-Strahl `re15_re2_los_cells_blocked` (Maske 1) FREI meldet —
+er konnte den Fall per Konstruktion nicht finden, wenn der Zell-Strahl selbst die Ursache ist. Neue Sonde
+`test_r36_zombieki_sicht` (echte Spielschleife wie der Weck-Zensus): je stehendem Zombie ein RASTER von Leon-Plaetzen
+im Vorderkegel +-1024 (Schritt 400, Abstand 600..4000, Boden frei r 450 Maske 1), je Platz drei Werte — `zell` = der
+Zell-Rechteck-Strahl (Slab-Test gegen JEDE Zelle mit u0&4, aus `re15_re2_los_clear`), `ray` = der RE1.5-Sichtstrahl
+FUN_8003dcc4 (nur Zellen mit Boden-Nibble 3, 4 Regionen), `steht` = keine Reaktion in 480 Bildern.
+
+**Ergebnis (Stand v0.8.23, `F_belege/p1_sicht_vorher.txt`): 45 Zombies, 2653 Plaetze. Zell-Strahl blockt 721 (27,2 %),
+RE1.5-Strahl 415 (15,6 %), NUR der Zell-Strahl 306 (11,5 %). STEHT 318 (12,0 %): davon 250 hinter einer Nibble-3-Zelle
+(Wand — korrekt), 0 bei freier Sicht, 68 NUR wegen des Zell-Strahls.** Die 68 liegen alle in **ROOM10B0 (FRONT
+EXTERIOR, Vorhof)**: vier Zombies (Typ 0x10, y = -1800 = Band 1, Sce_em_set @ROOM10B0.RDT 0x1726-0x1775) stehen auf der
+Terrasse hinter der Kante **Zelle #9 (t1, u0=ff, fl=0x11 = Band 1, Nibble 1; x -24392..-3980, z -11414..-9380, 20412 x
+2034)**; Leon davor auf z >= -8632, Abstand 3200..4000 — der Slab-Test schneidet die Kante, der RE1.5-Strahl nicht,
+DECISION[0] bekommt kein Sicht-Bit, der Selbstwecker (+0x158, braucht Sicht @0x80101544-7C) auch nicht: der Zombie
+steht, bis der Wander-Wurf (rand&1 je 300..555 Bilder) ihn irgendwann in P3 bringt. Zweiter Fall derselben Klasse:
+ROOM1030 Slot 3/6 (hinter dem Tresen #18 = Nibble 0, 24264 x 1649) — alle 108/122 Plaetze Zell-geblockt, dort aber
+sofortige Reaktion ueber den Deskriptor (Sub 1 im Bild 1), deshalb nicht als "steht" gezaehlt.
+
+Was das Nibble ist (Daten, Stage 1, eindeutige Zellen mit u0&4 und Nibble != 3): 1030 Tresen (Nibble 0), 1210 Gitter-
+staebe der Zellen 1060 x 16662 (Nibble 0 = durchsichtig!), 1250 Tischchen 600 x 800 / 900 x 600 (0), 10B0 Terrassen-
+kante (1), 11A0/1260 Rampenkanten u1=01 (1), 11C0 die sieben Wagen-Diagonalen t2/t4/t6 (2), 1020/1150/1190 Moebel (2),
+Waende ueberall 1800/2000 dick (3). Das Nibble ist der von Capcom gesetzte Hoehen-/Sicht-Klassen-Wert; der RE1.5-Sensor
+liest ausschliesslich 3 (Belege unten).
+
+### Bisect v0.8.21 -> v0.8.23
+Keine Regression in diesem Fenster: der Zell-Strahl kam mit **3486be93 (2026-09-08, v0.7.18, "fix(re2-kraehe): der
+Sichtstrahl kennt jetzt die Zellen, die den Flug stoppen")** als Flugkopplung der RE2-Kraehe in `re15_re2_los_clear`,
+das der Zombie seit dem F2-Fix (2026-09-05) mitliest. Die Sichtfilter-Aenderung der Runde 35 Spur H (d0684bcc, `u0 &
+Maske` @0x800508bc-c8) kann die Sicht nur FREIER machen; die Schwerkraft 94494e03 greift nur auf Absturzkanten.
+
+### RE-Belege (selbst gelesen)
+- **RE2 (Ziel), Zombie-Navigator FUN_8004A808:** `andi v0,v0,0xf7ff` / `sh v0,0x154(s0)` @0x8004a87c-80 loescht das
+  Sicht-Bit; `li a2,0x2000` @0x8004a868, `li a3,0x1` @0x8004a86c, a0 = Teil-Lage self[+0x198] + self[+0x1c1]*0xac + 0x5c
+  @0x8004a878-a4, a1 = Spieler-Teil DAT_800cfd90 + DAT_800cfdb9*0xac + 0x5c @0x8004a8a8-dc, `jal FUN_80050858`
+  @0x8004a8d8; Rueckgabe 0 -> `ori v0,v0,0x800` / `sh` @0x8004a8f0-f4. Leser des Bits: DECISION[0] @0x80101308-1C
+  und fuenf weitere (@0x8010134C/@0x80101390/@0x80101568/@0x80101688/@0x80103AE8).
+- **RE2 FUN_80050858 (RE2_Quellcode_V2, 130 Z.):** Satz-Schleife ueberspringt `(attr & a2) == 0` und Formen mit
+  Skip-Tabelle `(&DAT_800a73b4)[attr & 0xf] != 0` = {1,2,3,4,5,13} (@0x800508bc-e4); Endpunkt IM Rechteck -> Hoehenpfad
+  ohne XZ-Test, sonst Diagonal-Straddle in XZ; `param_4 == 0 -> return 1`; mit a3 = 1: Satzhoehe oben = `-(w>>11)*100 -
+  ((w>>6)&0x1f)*0x708` (psVar7[0xd]), unten = -0x708 je Null-Bit der Boden-Maske (psVar7[0xe]); blockt nur, wenn der
+  Strahl zwischen den KOERPERTEILEN das Rechteck auch in YZ und YX schneidet (@0x80050b34-c30). => niedrige Saetze
+  (Tische, Tresen, Kanten) nehmen dem RE2-Zombie keine Sicht.
+- **RE1.5 (Datenseite), Sensor FUN_8001b84c:** `ori a2,zero,0xf00` @0x8001b8d4, `jal 0x8003dcc4` @0x8001b8e8,
+  `ori a3,zero,0x300` @0x8001b8ec (Delay-Slot) — nur Zellen mit `(w5 & 0xf00) == 0x300`. FUN_8003dcc4: Band
+  `lbu v1,0x82(v1)` / `sll v0,a0,0x10` / `sra v0,v0,0x1c` / `bne v1,v0,LAB_8003e0a8` @0x8003de60-6c, Nibble
+  `lhu t5,local_80(sp)` / `and v1,t5,a0` / ... / `bne v1,v0,LAB_8003e0a8` @0x8003de74-94; dann die beiden
+  Diagonal-Straddle-Tests (OuterProduct0). Zweiter Aufrufer FUN_8001bb00 nimmt `ori a2,zero,0x400` / `ori a3,zero,0x400`
+  @0x8001bbcc-d4 (Nibble-Bit 4 = andere Klasse). Die Kollision selbst liest vom Wort nur `& 0xf002` (Band + u1-Bit 1,
+  @0x8003b8a8-b0) — das Nibble 0x0f00 ist AUSSCHLIESSLICH der Sicht-Klassen-Wert.
+- **Port:** `re15_los_ray_blocked` (enemy_ai_common.c) ist der byte-true FUN_8003dcc4 (Nibble-3-Filter, Regionen);
+  `re15_re2_los_clear` setzte DAVOR den Slab-Test `re15_re2_los_cells_blocked` ueber jede u0&4-Zelle — eingefuehrt fuer
+  die Kraehe (Flug wird von denselben Zellen gestoppt), ohne Gegenstueck in RE2s Zombie-Strahl (Hoehe!) und ohne
+  Gegenstueck im RE1.5-Sensor.
 
 ### Umsetzung
-
-(folgt)
+- NEU in `engine/src/zombieki_r36.c` / `include/re15_zombieki_r36.h`: `re15_r36_zombie_sicht_frei(e, pl)` = NUR der
+  RE1.5-Sichtstrahl FUN_8003dcc4 ueber die 4 Regionen (Aktor-Maske wie Runde 35 Spur H), kein Slab-Test;
+  `re15_r36_zombie_sicht_enable` (nur Sonden: alter Weg fuer die Gegenprobe).
+- Haken: `enemy_ai_re2_zombie.c` Z. 8562 (1 Zeile: `e->re2z_los154 = re15_r36_zombie_sicht_frei(e, pl)`) + Include;
+  `enemy_ai_common.c` nach `re15_re2_los_clear` der Export `re15_r36_los_ray_nib3` (6 Zeilen, Schleife ueber
+  `re15_los_ray_blocked`). `re15_re2_los_clear` selbst bleibt unveraendert fuer Kraehe (Flugkopplung) und Zellenarm.
+- Konstanten: keine neuen Zahlen — der Nibble-3-Filter (`0xf00`/`0x300` @0x8001b8d4/@0x8001b8ec) und die Regionen-
+  Schleife stehen bereits in `re15_los_ray_blocked`.
 
 ### Messung nachher
-
-(folgt)
+- Sonde `test_r36_zombieki_sicht mess` (`F_belege/p1_sicht_nachher.txt`): 45 Zombies, 2657 Plaetze, **STEHT 250 (9,4 %):
+  250 hinter Nibble-3-Zellen (Waende), 0 nur-Zell-Strahl, 0 bei freier Sicht**; ROOM10B0 alle vier Zombies: 0 stehende
+  Plaetze (vorher 21/23/23/1), Reaktion Bild 2 (Selbstwecker-Faelle Bild 225/279).
+- exe (Kopie `re15_pc_r36f.exe` = Stand mit Haken; `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp
+  RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=10B0@250 RE15_PLAYER_POS=-17000,-8500,2048,0 RE15_AI_FLAVOR=re2
+  RE15_GEGNER_Y_LOG RE15_EXIT_AT=3600#10B0`, `r36f/l2/gy.log`): Leon am Fuss der Terrasse (Band 0), die vier Zombies
+  gehen in Bild 2 in Sub 1 (los=1) und laufen los. **OFFEN-Befund dabei (Navigation, nicht Sicht):** sie laufen an der
+  Terrassenkante entlang nach Osten bis x ~ -6800 (Zelle #18 = Treppe x -9070..-7162 wird nicht genommen) und treten
+  dort auf der Stelle — die Terrasse (z < -11414) liegt in KEINER der 5 Nav-Zonen des Raums (ROOM10B0.RDT @0x1680:
+  Zone 1 = Vorhofstreifen z -9400..-6100, Zone 2 = x -4300..18300 / z -14500..-9400), der Navigator FUN_80039e7c
+  (re15_nav_update_steer) findet fuer "keine Zone -> Zone 1" keinen Pfad und steuert den letzten Zwischenpunkt. Das ist
+  dieselbe Nav-Datenlage wie im Original; ob RE1.5s eigene Zombies dort herunterkommen, ist nicht gemessen (DuckStation
+  ROOM10B0). Fuer den Nutzer: die Zombies reagieren jetzt (Wecken, Stoehnen, Gang), erreichen Leon unten aber nicht.
+- Riegel `unit_r36_zombieki_sicht` 6/6 (Gegenprobe alter Weg ROOM10B0 = 68 Befund-Plaetze; Haken: 0 / 0 / 250 = 250).
 
 ---
 

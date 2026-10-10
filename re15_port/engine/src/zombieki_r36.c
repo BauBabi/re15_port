@@ -2,6 +2,19 @@
  * Runde 36 Spur F "zombieki" — Gorilla-Schattenrecord und Blutlache der Leiche (Belege: re15_zombieki_r36.h).
  */
 #include "re15_zombieki_r36.h"
+#include "re15_room.h"
+#include "re15_ai_flavor.h"
+
+/* ----- Punkt 1: Sicht-Bit des RE2-Zombies (Belege: re15_zombieki_r36.h) ----- */
+static int s_r36_zombie_sicht_an = 1;   /* NUR Sonden: 0 = alter Weg re15_re2_los_clear (Slab-Test) */
+void re15_r36_zombie_sicht_enable(int an) { s_r36_zombie_sicht_an = an ? 1 : 0; }
+
+int re15_r36_zombie_sicht_frei(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (!s_r36_zombie_sicht_an) return re15_re2_los_clear(e, pl) ? 1 : 0;
+    if (!g_room_rdt_ok) return 1;                                   /* keine Zellen -> frei (wie bisher) */
+    return re15_r36_los_ray_nib3(e, pl->x, pl->z) ? 0 : 1;          /* FUN_8003dcc4(0xf00, 0x300) @0x8001b8d4/8ec */
+}
 
 /* NUR FUER SONDEN (Gegenprobe "vorher" im selben Lauf): 0 = die Leichen-Haken schreiben nichts. Das Spiel ruft das nie. */
 static int s_r36_affen_lache_an = 1;
