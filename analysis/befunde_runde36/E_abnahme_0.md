@@ -17,11 +17,12 @@ Gelesen: AUFTRAG.md, VERTRAG.md, E_gegnerzahl.md, `git log master..HEAD` (12 Com
 ## 1. Stand der Abnahme (fortlaufend)
 
 - [x] Bau (§2)
-- [x] RE-Gate (§3: 4 Stellen selbst disassembliert, alle wie zitiert, + 2 weitere Belege gefunden)
-- [x] Messung Nutzer-Punkt an der exe (§4: M1/M2 echter Tuerweg neu gegen alt, K1/K2 Kampf + Tod + Speichern/Laden)
-- [~] Spur-Tests + Testgruppen der beruehrten Module (§5: Unit 496/496 gruen; Integration laeuft)
+- [x] RE-Gate (§3: 5 zitierte Stellen selbst disassembliert, alle wie zitiert, + 2 weitere Belege gefunden)
+- [x] Messung Nutzer-Punkt an der exe (§4: M1/M2/EL echter Tuerweg neu gegen alt, B Bild, K1/K2 Kampf + Tod + Speichern/Laden)
+- [x] Spur-Tests + Testgruppen der beruehrten Module (§5: Unit 496/496, Integration 13/13 gruen)
 - [x] Zensus-Stichprobe (§6)
 - [x] Vertrag (§7)
+- [x] Urteil (§8), Gates (§9), Maengel (§10: keine), Hinweise (§11: H1-H6)
 
 ## 2. Bau
 
@@ -111,6 +112,15 @@ Aktionstaste (`run_cont.sh`, Skript `W10,A0.2,W200`, Ende 350#1031):
 | neu | `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`, `CONTINUE: resumed in room 1041`, `DOOR FIRE slot=1` -> `room1031.rdt`, Raumskript `DOOR FIRE slot=18` -> `room1241.rdt` -> `room1031.rdt` | **5: {16,17,18,19,20}**, st=1 |
 | alt | dieselbe Raumfolge 1041 -> 1031 -> 1241 -> 1031 (Elza-Ablauf, unabhaengig von dieser Spur) | **0: {}** — die fuenf fehlten auch bei Elza |
 
+### B: BILD — die Aktoren 16..20 werden gezeichnet (Framedump, beschleunigter Renderer, RE15_WINDOW_SCALE=1)
+`run_jump.sh` (Debug-Sprung 1030@250, `RE15_SET_FLAG=7:0..7:14`, `RE15_PLAYER_POS=-10000,-22500,1024`, kein Feuer,
+`RE15_FRAMEDUMP=300-400/100:f_`), beide exe. Bilder: Scratchpad `E0/runs/B_neu/f_000400.png`, `E0/runs/B_alt/f_000400.png`,
+Ausschnitt nebeneinander `E0/runs/B_vergleich_400.png` (Ausschnitt x 110..270, y 70..170, 3-fach).
+| exe | state.log F400 | Bild F300/F400 |
+|---|---|---|
+| neu | Aktor 16..20, t=16, st=1, (-8344..-12164, -24838..-25535) hinter dem Rolltor-Gitter | Leon vor dem Gitter, dahinter **Zombies sichtbar** (links und rechts neben/hinter Leon) |
+| alt | keine Gegner | Leon vor dem Gitter, dahinter **leer** |
+
 ### RDT-Bytes der Records 15..19 selbst gelesen (xxd, shared_assets/PSX/STAGE1)
 `ROOM1030.RDT @0x1de2: 24 12 06 00 | 44 00 16 0d ...` (Save(0x12,6), unmittelbar danach Record Slot 0);
 `@0x1f12: 44 0f 16 0d 00 00 01 0f` (Slot 15, Typ 0x16, pc[7] = Tot-Bit 0x0F) ... `@0x1f62: 44 13 16 0d 00 00 01 13` (Slot 19,
@@ -124,7 +134,20 @@ walk-stops=0`, Slot >= 15 nur in ROOM1030/1031/1040/1041 (Slots bis 19) und ROOM
 |---|---|---|
 | Unit gesamt + Spawn/Tuer-Sonden (der Diff aendert RE15_ACTOR_MAX, also JEDES Modul) | `ctest --test-dir re15_port/build -R "^unit_\|^prop_spawn_entered$\|^probe_r16_tuer1040_" -E "android_bash" --timeout 600 -j4` | `100% tests passed, 0 tests failed out of 496` (183,91 s), darunter unit_r36_gegnerzahl_{feld,raum1030,raum1031,raum1040,raum1041,raum20b0,kein_platz}, unit_r35_cut1150_* (12), unit_1030_*, unit_room1040_switch, unit_gator_*, unit_alligator_ai |
 
-(Integration: s. unten, wird nachgetragen.)
+| Integration (Spur + Montage-/Spawn-Raeume + Render-/Fenster-Haken wegen render_pc.c), SEQUENZIELL | `ctest --test-dir re15_port/build -R "^(integration_r36_gegnerzahl\|integration_r35_granate\|integration_r35_cut1150\|integration_r30_titel_puls\|integration_boot_bg_pin\|integration_dark_start_pin\|integration_headless_run\|integration_room_probe_sweep\|integration_room_transition\|integration_cross_stage\|integration_r34n_g_schrift1150\|integration_r30_sicherung_bild\|integration_r34_plattform_takt)$" --timeout 900 --output-on-failure` | `100% tests passed, 0 tests failed out of 13` (882,49 s): r35_cut1150 512,32 s, r35_granate 160,68 s, r36_gegnerzahl 88,46 s, Rest gruen; kein Fenster-Haken rot (kein Nachfahren noetig) |
+
+Arbeitsordner des eigenen Laufs von integration_r36_gegnerzahl (`build/r36_gegnerzahl_wd/lauf_99e8cb80_*`) selbst gelesen:
+a `CONTINUE: resumed in room 1030` -> `PC loaded room1040.rdt` -> F90 {16,17,18,19,20}; b 1040 -> 1030 {16..20}; c {1..5};
+d {18,19,20}; e ROOM20B0 Typ 0x24 {1..20}, `[schatten] gezeichnet 21, verworfen 0 (Kapazitaet 21)`, 0 Zeilen mit "verworfen >= 1".
+Der Riegel misst also den Nutzer-Punkt selbst (echter Tuerweg, genaue Aktorenmenge) und wuerde mit RE15_ACTOR_MAX 16 rot
+(a/b/d: leer bzw. {} statt {16..20}/{18..20}; Unit-Riegel raum1030/1040 ab k = 10/11).
+
+Savestate-Gegenprobe (Dossier §3.5 "Platz = Script-Slot, Zaehler = Spawns"): `tools/r36_e/feld_ram.py` auf
+`stage_saves/mzd_stage1_engage_live.sav` -> `stub@0x80026e4c=03e00008` (sauber, `jr ra`), `zaehler 0x800aca4e = 5`, aktiv
+Platz 0..4 = 0x16/0x10/0x10/0x11/0x11 (ROOM1140-Records Slot 0..4), `0x800af33c..` = Nullen — wie behauptet.
+
+Altkarte: `run_cont.sh` mit `tests/unit/probes/r30_karte_nutzer_2026-09-27.mcr` (neue exe) -> `[save] CONTINUE: resumed in
+room 1150 (hp=100)`, F60 mg=15 bx=50 — Speicherformat kompatibel.
 
 ## 6. Zensus-Stichprobe (unabhaengig vom Bau-Agenten, grep im Spurbaum)
 
@@ -159,3 +182,56 @@ Decompilat liest die laufende Entity DAT_800ac784) — eine Liste in Aktor-Groes
 * Die geaenderten r35-Erwartungen sind KEINE Aufweichung: Lauf F verlangt jetzt "5 erscheinen im Port, Auffuellung 0" und
   "Zaehler 5 -> 5" statt "0 ... Auffuellung 5" / "5 -> 0" — dieselbe Schaerfe, die Bilanzzeile ("5 Zombies, durchs Tor 5")
   bleibt unveraendert; granate Lauf gator Slot 15 -> 20 folgt aus der Rueckwaertssuche (main.c:7502).
+
+## 8. Urteil je Nutzer-Punkt (gegen den WORTLAUT)
+
+| Punkt (AUFTRAG.md Z.19-20) | Urteil | Beleg |
+|---|---|---|
+| "Der Port verwaltet hoechstens 15 Gegner je Raum, das Original 20. In ROOM1040 und 1030 fehlen deshalb die letzten fuenf Zombies [...] --> Das auch!" | **erfuellt** | Original: 20 Plaetze selbst disassembliert (@0x800372b4 `sltiu 0x14`, Feldende 0x800af33c @0x80039b38/40, Loeschschleife @0x8001a4c0 `ori a0,zero,0x13`, Zielsuche FUN_80011f50 `< 0x14`), Sce_em_set ohne Grenze (@0x800420f8/@0x80042118), Tot-Bit vor Limit (@0x80042120-38 / @0x80042214-3c). Port: RE15_ACTOR_MAX 21. exe, echter Tuerweg, neu gegen alt: M1 1030 {13..18} statt {13,14,15}; M2 1040 {14..18} statt {14,15}; Elza 1031 {16..20} statt {}; Integrationsriegel a/b/d {16..20}/{16..20}/{18,19,20}. Die fuenf sind vollwertig: gezeichnet (B), beschossen und getoetet (K1a), Tod bleibt ueber Speichern/Laden (K2b: nur {17} kehrt zurueck). ROOM20B0 20 statt 15 Emitter, 21 Schatten ohne Verwurf. Unit 496/496, Integration 13/13 |
+
+## 9. Gates
+
+| Gate | Ergebnis |
+|---|---|
+| RE-Gate (Konstanten mit @0x / PORT-WAHL; 3 Stichproben selbst disassembliert) | haelt — 5 zitierte Stellen nachgelesen, alle wie behauptet (§3); keine Konstante ohne Beleg im Diff |
+| Fix erklaert den Befund | ja — vorher verwarf `op_sce_em_set` Aktor >= 16 NACH Tot-Bit-Gate und Limit (scd_vm.c:3800-3801), d.h. Records 15..19 = Aktor 16..20 fielen weg; mit 21 Plaetzen erscheinen genau sie (M1/M2/EL alt gegen neu) |
+| Vertrag (Pfade, Bits, IDs, Ereignisse) | haelt (§7); Hinweis H3 zur Hakengroesse in render_pc.c |
+| Tests je Punkt vorhanden und messend | ja — unit_r36_gegnerzahl_* (7, echte RDTs, je k = 0..20 genaue Aktorenmenge) + integration_r36_gegnerzahl (echte exe, Karte + CONTINUE + Original-Tuer), alle gruen; kein_platz mit Gegenprobe |
+| Rate-Woerter / Env-Schalter als Abschluss | keine im Code; ein "vermutlich" im Dossier §8 zu einem spurfremden Nebenbefund (H2) |
+| Nebenwirkungen | geprueft: Elza (EL), ROOM20B0 (C20, Lauf e), ROOM2090 Gator Slot 20 (integration_r35_granate gruen), Montage 1040 (integration_r35_cut1150 gruen), Altkarte 27.09. laedt, ganze Unit-Suite gruen |
+
+## 10. Maengel (blockierend)
+
+Keine.
+
+## 11. Hinweise (nicht blockierend, nachpruefbar)
+
+* **H1** Original fuer die Slots 15..19 nicht dynamisch gemessen (kein sauberer Savestate in ROOM1030/1040). Der Mechanismus ist
+  statisch an sechs Stellen belegt (§3, davon zwei von dieser Abnahme zusaetzlich gefunden: @0x8001a4c0, FUN_80011f50); der
+  Messweg steht im Dossier §8. Kein Anlass zur Nacharbeit.
+* **H2** Dossier §8 "Ursache **vermutlich** der synthetische Kartenstand" (CONTINUE in ROOM20B0, Kamera bleibt Cut 0): gemessen
+  identisch mit der Vorher-exe (C20) -> keine Folge dieser Spur; die Ursache selbst bleibt offen. Empfehlung: Satz ersetzen durch
+  "unabhaengig von Spur E (alt = neu Bild fuer Bild gemessen), Ursache offen".
+* **H3** render_pc.c (gemeinsame Datei, VERTRAG §1.4 "kleine Haken 1-5 Zeilen"): neben der einen Konstanten ein 7-Zeilen-Messhaken
+  `RE15_SCHATTEN_LOG` in `re15_render_end_frame` + Verwurf-Zaehler in zwei Guards (+14/-6 Zeilen gesamt). Klar benannt
+  ("Runde 36 Spur E"), vom Riegel Lauf e gebraucht; beim Zusammenfuehren auf Konflikte mit anderen render_pc.c-Spuren achten.
+* **H4** Veraltete Kommentare nach dem Fix (Code ist symbolisch und richtig, nur der Text stimmt nicht mehr):
+  `engine/src/irons_tod_1150.c:196` "Records 15..19 belegen also Limit-Plaetze, ohne zu erscheinen (gemessen: Records 0..14 tot -> 0
+  Zombies)", `engine/src/irons_tod_1150.c:635` "Records 15..19 belegen das Limit, erscheinen aber nicht",
+  `include/re15_irons_tod.h:172-173` "Records 15..19 = Aktor 16..20 belegen das Limit, erscheinen aber nicht". Seit diesem Commit
+  erscheinen sie (gemessen M2, Lauf F). Empfehlung: "(bis Runde 35, RE15_ACTOR_MAX 16)" ergaenzen — sonst liest eine spaetere
+  Spur das als heutigen Mechanismus.
+* **H5** PSX-Ziel: g_actors waechst um 5 x sizeof(re15_actor_t); im Spurbaum nicht baubar (PSn00bSDK fehlt) — RAM-Budget
+  ungemessen (Dossier §8, Memory reai-v2-psx-build-gap).
+* **H6** ROOM20B0/20B1: die Slots 20..34 schreibt das Original hinter sein 20er-Feld (bis 0x800b1087: NPC-Feld, SCD-Variablen
+  0x800b0fd0.., Tot-Bit-Zonen); der Port verwirft sie (PORT-ENTSCHEIDUNG, Dossier §6.5, Kommentar re15_actor.h). Wie viele Emitter
+  das Original dort SICHTBAR zeigt, ist ungemessen (Dossier §8) — liegt ausserhalb des Nutzer-Punkts (1030/1040).
+
+## 12. Messprotokoll-Ablage (Scratchpad dieser Abnahme)
+
+`E0/run.sh` (Karte + CONTINUE + Tuer), `E0/run_jump.sh` (Debug-Sprung), `E0/run_cont.sh` (CONTINUE einer Karte), `E0/ana.py`
+(state.log-Auswertung), `E0/karte_elza.py` (Karte auf Elza umstellen), Laeufe `E0/runs/{M1,M2,C20,EL,K1a,K1b,K2a,K2b,B}_{neu,alt}`,
+Bilder `E0/runs/B_neu/f_000400.png`, `E0/runs/B_alt/f_000400.png`, `E0/runs/B_vergleich_400.png`, ctest-Logs `E0/ctest_unit.log`,
+`E0/ctest_int.log`. Scratchpad = C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad.
+
+**Ergebnis: BESTANDEN** — Punkt erfuellt, alle Gates halten, keine blockierenden Maengel; sechs Hinweise (H1-H6).
