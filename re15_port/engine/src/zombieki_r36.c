@@ -10,6 +10,7 @@
 #include "re15_damage.h"     /* re15_enemy_bone_world_pos (Kopfteil 8) */
 #include "re15_enemy_ai.h"   /* re15_re2z_owns_type, re15_nav_* */
 #include <string.h>
+#include <stdlib.h>   /* abs */
 
 /* ----- Punkt 1: Sicht-Bit des RE2-Zombies (Belege: re15_zombieki_r36.h) ----- */
 static int s_r36_zombie_sicht_an = 1;   /* NUR Sonden: 0 = alter Weg re15_re2_los_clear (Slab-Test) */
@@ -177,35 +178,85 @@ static int     s_r36_padsuche_an = 1;                  /* NUR Sonden: 0 = Origin
 static uint8_t s_r36_padsuche_aktiv[RE15_ACTOR_MAX];   /* 0 = aus, 1 = Umweg zu Fuss, 2 = Anlauf auf ein Pad (Sprung = Original) */
 static int32_t s_r36_ziel_x[RE15_ACTOR_MAX], s_r36_ziel_z[RE15_ACTOR_MAX];
 static int16_t s_r36_pad_idx[RE15_ACTOR_MAX];
+/* NB3 (Abnahme 2, Maengel 1/2): das KLEMMEN-HAENGEN, das der Umweg aufloesen soll, zaehlt das Original selbst — der
+ * Gehirn-Schwanz des Gorillas (Zustand 1, nach dem A/B-Wechsel) fuehrt +0x1de: `lhu v0,470(v1)` (+0x1d6 = Rueckgabe der
+ * Klemme FUN_8003b0a4) / `beq v0,zero` @0x80117448-50, `lhu v0,478(v1)` / `addiu v0,v0,1` / `sh v0,478(v1)` @0x80117458-68
+ * (+1 je Bild an der Klemme), sonst `sh zero,478(v1)` @0x8011746c; INIT `sh zero,478(v0)` @0x8011706c. Voll-Scan des
+ * Gorilla-Bereichs 0x80116db8..0x8011c600 (STAGE1.BIN ohne Kopf): KEIN weiterer Zugriff auf 478 — der Zaehler hat in der
+ * Beta keinen Verbraucher. Der Umweg ist dieser fehlende Verbraucher (PORT-WAHL): er startet erst, wenn der Gorilla FERN
+ * (Leon >= 0x1771 @0x80117bc8) in Sub 3/4 seit R36_FEST_START Bildern weniger als R36_FEST_ANKER (Manhattan) vorankommt und
+ * im Startbild an der Klemme steht (+0x1de > 0) — die Mess-Definition der Abnahmen ("blockiert" = >= 90 Bilder im Anker
+ * 400) mit HALBER Dauer, damit ein aufgeloestes Haengen nicht mehr als blockiert zaehlt (+0x1de selbst setzt bei jedem
+ * kontaktfreien Bild zurueck; gemessen in der Ecke #20/#21: Kontakt flackert 1/0). Bis NB2 startete er bei JEDEM
+ * Klemmen-Kontakt und lenkte auch Gorillas um, die an der Wand entlang zu Leon rutschten (gemessen: Sonde Leon
+ * (6000,-9000) Gorilla 1 Angriff Bild 196 -> 284). Schwelle gemessen (52 Seeds x 6000 Bilder, Radius/4): 1 / 15 / 30 / 45 ->
+ * 24353 / 22328 / 25112 / 20084 blockierte Bilder. */
+#define R36_FEST_START 45
+#define R36_FEST_ANKER 400
+static uint16_t s_r36_1de[RE15_ACTOR_MAX], s_r36_fest[RE15_ACTOR_MAX];
+static int32_t  s_r36_anker_x[RE15_ACTOR_MAX], s_r36_anker_z[RE15_ACTOR_MAX];
 void re15_r36_affen_padsuche_enable(int an) { s_r36_padsuche_an = an ? 1 : 0; memset(s_r36_padsuche_aktiv, 0, sizeof s_r36_padsuche_aktiv); }
 int  re15_r36_affen_padsuche_aktiv(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_r36_padsuche_aktiv[slot] : 0; }
 static void r36_padsuche_reset(const re15_actor_t *e)
 {
     long slot = e - g_actors;
-    if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1; }
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) { s_r36_padsuche_aktiv[slot] = 0; s_r36_pad_idx[slot] = -1;
+                                              s_r36_1de[slot] = 0; s_r36_fest[slot] = 0; }   /* +0x1de INIT @0x8011706c */
+}
+void re15_r36_affen_fest_takt(const re15_actor_t *e)
+{
+    long slot = e - g_actors;
+    if (!e || slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    s_r36_1de[slot] = e->sca_wall_hit ? (uint16_t)(s_r36_1de[slot] + 1) : 0;          /* +0x1de @0x80117448-6c */
+    int sub = e->sub_state_1 & 31;
+    if ((sub != 3 && sub != 4)                                                        /* Anker-Messung: +0x1de setzt bei JEDEM Bild ohne
+                                                                                       * Kontakt zurueck — gemessen: Gorilla in der Ecke #20/#21
+                                                                                       * (-23302,13100) flackert klemme 1/0, +0x1de kommt nie hoch */
+        || (uint16_t)e->dog_dist < 0x1771u                                            /* NAH (`sltiu 0x1771` @0x80117bc8 / @0x8011806c): die
+                                                                                       * Original-Nahlogik bleibt (s. decide) */
+        || labs((long)e->x - s_r36_anker_x[slot]) + labs((long)e->z - s_r36_anker_z[slot]) >= R36_FEST_ANKER) {
+        s_r36_anker_x[slot] = e->x; s_r36_anker_z[slot] = e->z; s_r36_fest[slot] = 0;
+    } else if (s_r36_fest[slot] < 0xffffu) s_r36_fest[slot]++;
 }
 
 /* ---- Raster: Begehbarkeit aus der ORIGINAL-Klemme (FUN_8003b0a4-Zwilling re15_collision_constrain_contact_band
- * mit Radius, Band und Maske des Aktors): ein Knoten ist frei, wenn die Klemme ihn nicht verschiebt. Schritt = Radius/2:
- * zwei freie Nachbarknoten liegen je >= Radius von jeder Zelle entfernt, eine Zelle kann also nicht zwischen ihnen
- * liegen (keine Abkuerzung durch Waende). Komponenten = 8er-Nachbarschaft (diagonal nur mit beiden Kanten frei). */
-#define R36_UW_MAX 12288
+ * mit Radius, Band und Maske des Aktors).
+ * NB3 (Abnahme 2, Mangel 2) — FREI-TEST: ein Knoten ist frei, wenn die Klemme einen Aktor, der von NEBENAN (Vorlage =
+ * Knoten + 1 Einheit) dort ankommt, NICHT verschiebt. Bis NB2 war die Vorlage der Knoten selbst; dann setzt der
+ * Rechteck-Schieber FUN_8003bca8 im Code-0-Zweig ("bewegt, frontal in eine Flaeche") die Lage auf die VORLAGE zurueck
+ * (`lh v0,0(a2)` / `sw v0,0(a1)` / `lh v1,4(a2)` / `addu v0,zero,zero` / `sw v1,8(a1)` @0x8003be8c-a0, Vergleich mit der
+ * Vorlage @0x8003be38-54) — der Knoten blieb unveraendert und galt als frei, obwohl er IN Zellen liegt. Gemessen ROOM11C0
+ * (Schritt 800): 286 von 708 "freien" Knoten waren solche Zurueckschnapp-Lagen, darunter die ganze "Nordwest-Tasche"
+ * (in #13/#20/#21, ROOM11C0.RDT 0x014c4/0x01518/0x01524): ein dort abgesetzter Gorilla bewegt sich nie (Sonde `fest`).
+ * Schritt = Radius/2 (wie NB1/NB2; NB3 gemessen: Radius/4 fuehrt zwar den 390 breiten Nordstreifen ueber #21, der aber nur
+ * in der NAHJAGD gebraucht wuerde, die Original bleibt — Zufallsgang 52 Seeds Radius/4 20084, Radius/2 17975 blockierte
+ * Bilder): zwei freie Nachbarknoten liegen je >= Radius von jeder Zelle, eine Zelle passt nicht zwischen sie. Komponenten =
+ * 8er-Nachbarschaft ueber begehbare Kanten (s. r36_uw_bauen). Laufzeit: einmal je Raum ~5000 Knoten x (1 + 8) Klemmen-
+ * Aufrufe (ROOM11C0); vor einem PSX-Port als Tabelle vorzuberechnen (Nutzer-Regel 2026-09-03, OFFEN im Dossier). */
+#define R36_UW_MAX    12288
+#define R36_UW_KEINER 0xffffu
+#define R36_UW_ZU     0xfffeu
+#define R36_KOMP_MAX  1024
 typedef struct {
     const void *rdt_id; int band; int32_t r; uint32_t mask; int ok;
     int32_t x0, z0, st; int nx, nz;
-    uint8_t frei[R36_UW_MAX];
+    int nkomp;                 /* Zahl der Komponenten (Ids 1..nkomp) */
+    uint8_t  frei[R36_UW_MAX];
+    uint8_t  kante[R36_UW_MAX];   /* NB3: Bit d = Schritt zum Nachbarn d begehbar (beide Richtungen, s. r36_uw_bauen) */
     uint16_t komp[R36_UW_MAX];
-    int16_t dist[R36_UW_MAX]; int dist_ziel;
-    int nkomp;                 /* NB2: Zahl der Komponenten (Ids 1..nkomp) */
 } r36_uw_t;
+static const int8_t k_r36_dx[8] = { -1, 0, 1, -1, 1, -1, 0, 1 }, k_r36_dz[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };   /* Gegenrichtung = 7 - d */
 static r36_uw_t s_uw;
+static uint16_t s_uw_dist[R36_UW_MAX], s_uw_pred[R36_UW_MAX], s_uw_heap[R36_UW_MAX], s_uw_hpos[R36_UW_MAX];
 
-static int r36_uw_frei_punkt(int32_t x, int32_t z, int32_t r, int band, uint32_t mask)
+static int r36_frei_bei(int32_t x, int32_t z, int32_t r, int band, uint32_t mask)
 {
     int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
-    re15_collision_constrain_contact_band(&g_room_rdt, x, z, &nx, &nz, r, band, mask, &ct, &at);
+    re15_collision_constrain_contact_band(&g_room_rdt, x + 1, z, &nx, &nz, r, band, mask, &ct, &at);   /* Vorlage = Nachbarpunkt (NB3) */
     return nx == x && nz == z;
 }
+static int32_t r36_kx(int k) { return s_uw.x0 + (k % s_uw.nx) * s_uw.st; }
+static int32_t r36_kz(int k) { return s_uw.z0 + (k / s_uw.nx) * s_uw.st; }
 
 static int r36_uw_bauen(int band, int32_t r, uint32_t mask)
 {
@@ -220,29 +271,50 @@ static int r36_uw_bauen(int band, int32_t r, uint32_t mask)
         if ((int32_t)c->z + (int32_t)c->density > zb) zb = (int32_t)c->z + (int32_t)c->density;
     }
     int32_t st = r / 2;
-    int nx = (xb - xa) / st + 1, nz = (zb - za) / st + 1;
+    int nx = (st > 0) ? (xb - xa) / st + 1 : 0, nz = (st > 0) ? (zb - za) / st + 1 : 0;
     s_uw.ok = 0;
     if (st <= 0 || nx <= 2 || nz <= 2 || nx * nz > R36_UW_MAX) return 0;
     s_uw.rdt_id = (const void *)g_room_rdt.sca; s_uw.band = band; s_uw.r = r; s_uw.mask = mask;
-    s_uw.x0 = xa; s_uw.z0 = za; s_uw.st = st; s_uw.nx = nx; s_uw.nz = nz; s_uw.dist_ziel = -1;
-    for (int k = 0; k < nx * nz; k++)
-        s_uw.frei[k] = (uint8_t)r36_uw_frei_punkt(xa + (k % nx) * st, za + (k / nx) * st, r, band, mask);
-    static int q[R36_UW_MAX];
+    s_uw.x0 = xa; s_uw.z0 = za; s_uw.st = st; s_uw.nx = nx; s_uw.nz = nz;
+    for (int k = 0; k < nx * nz; k++) s_uw.frei[k] = (uint8_t)r36_frei_bei(r36_kx(k), r36_kz(k), r, band, mask);
+    /* NB3: KANTEN = ein Schritt Knoten -> Nachbar, den die Original-Klemme nicht aufhebt (Vorlage = Ausgangsknoten), in BEIDE
+     * Richtungen; diagonal nur mit beiden Kantenknoten frei. Die Schieber der Schraegzellen haengen an der Bewegungsrichtung
+     * (Rueckfall auf die Vorlage @0x8003ced4-ceec, LAB_8003cb9c): gemessen ROOM11C0 Ost-Pad-Suedkante — Knoten (7000,-5900) ist
+     * aus jeder Richtung stabil, der Gorilla kam von (7790,-7700) trotzdem 1200 Bilder nicht hin (Umweg-Ziel ueber eine
+     * Schraege, die nur die Knoten-Probe fuer frei hielt). */
+    memset(s_uw.kante, 0, sizeof s_uw.kante);
+    for (int k = 0; k < nx * nz; k++) {
+        if (!s_uw.frei[k]) continue;
+        int ix = k % nx, iz = k / nx;
+        for (int d = 0; d < 8; d++) {
+            int jx = ix + k_r36_dx[d], jz = iz + k_r36_dz[d];
+            if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
+            int m = jz * nx + jx;
+            if (!s_uw.frei[m]) continue;
+            if (k_r36_dx[d] && k_r36_dz[d] && (!s_uw.frei[iz * nx + jx] || !s_uw.frei[jz * nx + ix])) continue;
+            int32_t bx = r36_kx(m), bz = r36_kz(m), qx = bx, qz = bz; uint8_t ct = 0; uint16_t at = 0;
+            re15_collision_constrain_contact_band(&g_room_rdt, r36_kx(k), r36_kz(k), &qx, &qz, r, band, mask, &ct, &at);
+            if (qx == bx && qz == bz) s_uw.kante[k] |= (uint8_t)(1u << d);
+        }
+    }
+    for (int k = 0; k < nx * nz; k++)                                  /* nur Kanten, die in beide Richtungen gehen */
+        for (int d = 0; d < 8; d++) {
+            if (!(s_uw.kante[k] & (1u << d))) continue;
+            int m = (k / nx + k_r36_dz[d]) * nx + (k % nx + k_r36_dx[d]);
+            if (!(s_uw.kante[m] & (1u << (7 - d)))) s_uw.kante[k] &= (uint8_t)~(1u << d);
+        }
     memset(s_uw.komp, 0, sizeof s_uw.komp);
     uint16_t id = 0;
     for (int k = 0; k < nx * nz; k++) {
         if (!s_uw.frei[k] || s_uw.komp[k]) continue;
-        id++; int h = 0, t = 0; q[t++] = k; s_uw.komp[k] = id;
+        id++; int h = 0, t = 0; s_uw_heap[t++] = (uint16_t)k; s_uw.komp[k] = id;   /* s_uw_heap hier als Warteschlange */
         while (h < t) {
-            int n = q[h++], ix = n % nx, iz = n / nx;
-            for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++) {
-                if (!dx && !dz) continue;
-                int jx = ix + dx, jz = iz + dz;
-                if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
-                int m = jz * nx + jx;
-                if (!s_uw.frei[m] || s_uw.komp[m]) continue;
-                if (dx && dz && (!s_uw.frei[iz * nx + jx] || !s_uw.frei[jz * nx + ix])) continue;
-                s_uw.komp[m] = id; q[t++] = m;
+            int n = s_uw_heap[h++], ix = n % nx, iz = n / nx;
+            for (int d = 0; d < 8; d++) {
+                if (!(s_uw.kante[n] & (1u << d))) continue;
+                int m = (iz + k_r36_dz[d]) * nx + (ix + k_r36_dx[d]);
+                if (s_uw.komp[m]) continue;
+                s_uw.komp[m] = id; s_uw_heap[t++] = (uint16_t)m;
             }
         }
     }
@@ -251,86 +323,68 @@ static int r36_uw_bauen(int band, int32_t r, uint32_t mask)
     return 1;
 }
 
-/* naechster freier Knoten zu (x,z) innerhalb von `ring` Knoten (-1 = keiner) */
-static int r36_uw_knoten(int32_t x, int32_t z, int ring)
+/* gerade Strecke (ax,az) -> (bx,bz) fuer Radius rs / Maske ms frei (Abtastung je halber Schritt, Endpunkt eingeschlossen,
+ * die eigene Lage (ax,az) ausgenommen) */
+static int r36_strecke_frei_pt(int32_t ax, int32_t az, int32_t bx, int32_t bz, int32_t rs, uint32_t ms)
 {
+    int64_t dx = (int64_t)bx - ax, dz = (int64_t)bz - az, len2 = dx * dx + dz * dz, h = s_uw.st / 2;
+    int n = 1; while ((int64_t)n * n * h * h < len2) n++;
+    for (int i = 1; i <= n; i++)
+        if (!r36_frei_bei(ax + (int32_t)(dx * i / n), az + (int32_t)(dz * i / n), rs, s_uw.band, ms)) return 0;
+    return 1;
+}
+
+/* NB3 (Abnahme 2, Mangel 2): naechster freier Knoten innerhalb `weite`, den der Aktor von (x,z) GERADE erreicht (Strecke
+ * frei fuer Radius rs / Maske ms) — bis NB2 der naechste freie Knoten ohne Pruefung: am Taschenrand (-23302,13088) lag er
+ * hinter der Wand. rs = 0: ohne Streckenpruefung (Pad-Seiten). -1 = keiner. */
+static int r36_uw_knoten(int32_t x, int32_t z, int32_t weite, int32_t rs, uint32_t ms)
+{
+    int ring = (int)(weite / s_uw.st); if (ring > 8) ring = 8;
     int ix = (int)((x - s_uw.x0 + s_uw.st / 2) / s_uw.st), iz = (int)((z - s_uw.z0 + s_uw.st / 2) / s_uw.st);
-    int best = -1; int64_t bd = 0;
+    int kand[289]; int64_t kd[289]; int n = 0;
     for (int dz = -ring; dz <= ring; dz++) for (int dx = -ring; dx <= ring; dx++) {
         int jx = ix + dx, jz = iz + dz;
         if (jx < 0 || jz < 0 || jx >= s_uw.nx || jz >= s_uw.nz) continue;
         int m = jz * s_uw.nx + jx;
         if (!s_uw.frei[m]) continue;
-        int64_t ex = (int64_t)s_uw.x0 + (int64_t)jx * s_uw.st - x, ez = (int64_t)s_uw.z0 + (int64_t)jz * s_uw.st - z, d = ex * ex + ez * ez;
-        if (best < 0 || d < bd) { best = m; bd = d; }
+        int64_t ex = (int64_t)r36_kx(m) - x, ez = (int64_t)r36_kz(m) - z, d = ex * ex + ez * ez;
+        int p = n++;
+        while (p > 0 && kd[p - 1] > d) { kand[p] = kand[p - 1]; kd[p] = kd[p - 1]; p--; }
+        kand[p] = m; kd[p] = d;
     }
-    return best;
+    for (int i = 0; i < n; i++)
+        if (rs <= 0 || r36_strecke_frei_pt(x, z, r36_kx(kand[i]), r36_kz(kand[i]), rs, ms)) return kand[i];
+    return -1;
 }
 
-static void r36_uw_bfs(int ziel)
+static int r36_uw_strecke_frei(int a, int b)   /* gerade Strecke Knoten a -> b: jeder Halbschritt in DIESER Richtung bleibt unter
+                                                * der Original-Klemme stehen (NB3; bis NB2 nur "Stuetzpunkte frei" — die Schraeg-
+                                                * schieber haengen an der Bewegungsrichtung, @0x8003ced4-ceec) */
 {
-    if (s_uw.dist_ziel == ziel) return;
-    static int q[R36_UW_MAX];
-    int n = s_uw.nx * s_uw.nz;
-    for (int k = 0; k < n; k++) s_uw.dist[k] = -1;
-    int h = 0, t = 0; q[t++] = ziel; s_uw.dist[ziel] = 0;
-    while (h < t) {
-        int a = q[h++], ix = a % s_uw.nx, iz = a / s_uw.nx;
-        for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++) {
-            if (!dx && !dz) continue;
-            int jx = ix + dx, jz = iz + dz;
-            if (jx < 0 || jz < 0 || jx >= s_uw.nx || jz >= s_uw.nz) continue;
-            int m = jz * s_uw.nx + jx;
-            if (!s_uw.frei[m] || s_uw.dist[m] >= 0) continue;
-            if (dx && dz && (!s_uw.frei[iz * s_uw.nx + jx] || !s_uw.frei[jz * s_uw.nx + ix])) continue;
-            s_uw.dist[m] = (int16_t)(s_uw.dist[a] + 1); q[t++] = m;
-        }
-    }
-    s_uw.dist_ziel = ziel;
-}
-
-static int r36_uw_strecke_frei(int a, int b)   /* gerade Strecke Knoten a -> b nur ueber freie Knoten (halber Schritt) */
-{
-    int32_t ax = s_uw.x0 + (a % s_uw.nx) * s_uw.st, az = s_uw.z0 + (a / s_uw.nx) * s_uw.st;
-    int32_t bx = s_uw.x0 + (b % s_uw.nx) * s_uw.st, bz = s_uw.z0 + (b / s_uw.nx) * s_uw.st;
+    int32_t ax = r36_kx(a), az = r36_kz(a), bx = r36_kx(b), bz = r36_kz(b);
     int32_t dx = bx - ax, dz = bz - az; int64_t len = (int64_t)dx * dx + (int64_t)dz * dz;
     int n = 1; while ((int64_t)n * n * (s_uw.st / 2) * (s_uw.st / 2) < len) n++;
-    for (int i = 1; i < n; i++) {
-        int k = r36_uw_knoten(ax + (int32_t)((int64_t)dx * i / n), az + (int32_t)((int64_t)dz * i / n), 0);
-        if (k < 0) return 0;
+    int32_t vx = ax, vz = az;
+    for (int i = 1; i <= n; i++) {
+        int32_t px = ax + (int32_t)((int64_t)dx * i / n), pz = az + (int32_t)((int64_t)dz * i / n), qx = px, qz = pz;
+        uint8_t ct = 0; uint16_t at = 0;
+        re15_collision_constrain_contact_band(&g_room_rdt, vx, vz, &qx, &qz, s_uw.r, s_uw.band, s_uw.mask, &ct, &at);
+        if (qx != px || qz != pz) return 0;
+        vx = px; vz = pz;
     }
-    return 1;
-}
-
-/* Fuss-Umweg: Knoten g -> Ziel-Knoten z (gleiche Komponente); Zielpunkt = der fernste Knoten entlang des fallenden
- * BFS-Abstands, der gerade erreichbar ist (hoechstens 8 Schritte voraus). */
-static int r36_uw_schritt(int g, int z, int32_t *tx, int32_t *tz)
-{
-    r36_uw_bfs(z);
-    if (s_uw.dist[g] < 0) return 0;
-    int cur = g, wahl = g;
-    for (int s = 0; s < 8 && s_uw.dist[cur] > 0; s++) {
-        int ix = cur % s_uw.nx, iz = cur / s_uw.nx, nxt = -1;
-        for (int dz = -1; dz <= 1 && nxt < 0; dz++) for (int dx = -1; dx <= 1; dx++) {
-            int jx = ix + dx, jz = iz + dz;
-            if ((!dx && !dz) || jx < 0 || jz < 0 || jx >= s_uw.nx || jz >= s_uw.nz) continue;
-            int m = jz * s_uw.nx + jx;
-            if (s_uw.dist[m] == s_uw.dist[cur] - 1) { nxt = m; break; }
-        }
-        if (nxt < 0) break;
-        cur = nxt;
-        if (r36_uw_strecke_frei(g, cur)) wahl = cur;
-    }
-    if (wahl == g) wahl = cur;
-    *tx = s_uw.x0 + (wahl % s_uw.nx) * s_uw.st; *tz = s_uw.z0 + (wahl / s_uw.nx) * s_uw.st;
     return 1;
 }
 
 /* Pad-Kanten zwischen Komponenten: SCA-Zelle u1 == 0x10 auf dem Band (die Zellen, die FUN_8003b93c(attr 0x10) in A[4]
  * @0x80117ee0-f00 abfragt); von einer Seite s (freier Knoten) UEBER das Pad auf die GEGENUEBERLIEGENDE Seite. Der Sprung
  * des Originals geht von der Kontaktseite ueber das Pad (coll_contact_dir @0x8003ba8c: westlich 0x000, suedlich 0xc00,
- * noerdlich 0x400, oestlich 0x800). */
-typedef struct { uint16_t ka, kb; int16_t pad; int start; } r36_kante_t;
+ * noerdlich 0x400, oestlich 0x800). NB3: Kosten = Weglaenge Start -> Landung (Achtel-Metrik wie das Raster). */
+typedef struct { uint16_t ka, kb; int16_t pad; uint16_t start, lande, kosten; } r36_kante_t;
+static int r36_okt(int a, int b)   /* Achtel-Abstand in Rasterschritten, gerade 2 / diagonal 3 */
+{
+    int dx = abs(a % s_uw.nx - b % s_uw.nx), dz = abs(a / s_uw.nx - b / s_uw.nx);
+    return (dx > dz) ? 2 * dx + dz : 2 * dz + dx;
+}
 static int r36_uw_kanten(r36_kante_t *kt, int max)
 {
     int n = 0;
@@ -342,24 +396,17 @@ static int r36_uw_kanten(r36_kante_t *kt, int max)
         int32_t sx[4] = { mx, mx, (int32_t)c->x - a, (int32_t)c->x + (int32_t)c->width + a };
         int32_t sz[4] = { (int32_t)c->z - a, (int32_t)c->z + (int32_t)c->density + a, mz, mz };
         int ks[4];
-        for (int s = 0; s < 4; s++) ks[s] = r36_uw_knoten(sx[s], sz[s], 3);
+        for (int s = 0; s < 4; s++) ks[s] = r36_uw_knoten(sx[s], sz[s], 3 * s_uw.r / 2, 0, 0u);
         for (int s = 0; s < 4 && n < max; s++) {
             int o = s ^ 1;                             /* Gegenseite: 0<->1 (Sued/Nord), 2<->3 (West/Ost) */
             if (ks[s] < 0 || ks[o] < 0 || s_uw.komp[ks[s]] == s_uw.komp[ks[o]]) continue;
-            kt[n].ka = s_uw.komp[ks[s]]; kt[n].kb = s_uw.komp[ks[o]]; kt[n].pad = (int16_t)i; kt[n].start = ks[s]; n++;
+            kt[n].ka = s_uw.komp[ks[s]]; kt[n].kb = s_uw.komp[ks[o]]; kt[n].pad = (int16_t)i;
+            kt[n].start = (uint16_t)ks[s]; kt[n].lande = (uint16_t)ks[o]; kt[n].kosten = (uint16_t)r36_okt(ks[s], ks[o]); n++;
         }
     }
     return n;
 }
 
-/* Zielwahl fuer Gorilla e mit Leon pl. Rueckgabe 0 = kein Umweg (Original), 1 = zu Fuss, 2 = Pad-Anlauf.
- * NB2 (Abnahme 1, Mangel 3): ZIEL = Leons Knoten, wenn seine Komponente zu Fuss + ueber 0x10-Pads (auch mehrere Spruenge)
- * erreichbar ist; sonst der erreichbare Knoten, der Leon am naechsten liegt (Leon in einer Ecke, die der Gorilla mit
- * Radius 1600 nicht betreten kann — gemessen ROOM11C0 (-24000,10000): Nordwest-Tasche, eigene Komponente, kein Pad).
- * Dort greift die Original-Nahlogik (unter 0x1771 schaltet decide ab). */
-static uint8_t  s_uw_ks[R36_UW_MAX + 1];
-static uint16_t s_uw_kv[R36_UW_MAX + 1];
-static int16_t  s_uw_kp[R36_UW_MAX + 1];
 /* Ist Pad p von einem ANDEREN Gorilla (lebt, Umweg aktiv) belegt? NB2: zwei Gorillas auf demselben Anlauf schieben sich
  * gegenseitig fest (gemessen: Szene Leon (-7000,12500), beide auf Pad #36, 1200 Bilder kein Angriff). */
 static int r36_pad_belegt(int p, int slot)
@@ -378,60 +425,141 @@ static int r36_pad_belegt(int p, int slot)
     }
     return 0;
 }
-static void r36_uw_komp_bfs(int kg, const r36_kante_t *kt, int nk, int slot, int meiden)
+
+/* Komponenten, die von kg aus zu Fuss + ueber die erlaubten 0x10-Pads erreichbar sind */
+static uint8_t s_kerr[R36_KOMP_MAX + 1];
+static void r36_komp_erreichbar(int kg, const r36_kante_t *kt, int nk, const uint8_t *erlaubt)
 {
-    static uint16_t q[R36_UW_MAX + 1]; int h = 0, t = 0;                          /* Breitensuche ueber Komponenten (Pads) */
-    memset(s_uw_ks, 0, (size_t)s_uw.nkomp + 1);
-    q[t++] = (uint16_t)kg; s_uw_ks[kg] = 1; s_uw_kp[kg] = -1;
-    while (h < t) {
-        int k = q[h++];
+    memset(s_kerr, 0, sizeof s_kerr);
+    if (kg <= 0 || kg > R36_KOMP_MAX) return;
+    s_kerr[kg] = 1;
+    for (int weiter = 1; weiter; ) {
+        weiter = 0;
         for (int i = 0; i < nk; i++)
-            if (kt[i].ka == k && !s_uw_ks[kt[i].kb] && !(meiden && r36_pad_belegt(kt[i].pad, slot))) {
-                s_uw_ks[kt[i].kb] = 1; s_uw_kv[kt[i].kb] = (uint16_t)k; s_uw_kp[kt[i].kb] = (int16_t)i; q[t++] = kt[i].kb;
-            }
+            if (erlaubt[i] && kt[i].ka <= R36_KOMP_MAX && kt[i].kb <= R36_KOMP_MAX && s_kerr[kt[i].ka] && !s_kerr[kt[i].kb]) { s_kerr[kt[i].kb] = 1; weiter = 1; }
     }
 }
+static int r36_erreichbar(int k) { return k >= 0 && s_uw.komp[k] <= R36_KOMP_MAX && s_kerr[s_uw.komp[k]]; }
+
+/* NB3 (Abnahme 2, Mangel 1): KUERZESTER Weg g -> t (A*, Achtel-Metrik gerade 2 / diagonal 3, 0x10-Pads als Kanten mit
+ * ihrer Weglaenge Start -> Landung). Bis NB2 eine UNGEWICHTETE Breitensuche ueber Komponenten: die erste Pad-Kante in
+ * SCA-Reihenfolge gewann (#36 Ost vor #47 West) — gemessen: Gorilla-Start (-9013,-15461), Leon im Nordwest-Gang -> Umweg
+ * ueber das Ost-Pad, erster Angriff 850..920 Bilder spaeter als v0.8.23. Rueckgabe 1 = t erreicht (Vorgaenger s_uw_pred). */
+static int r36_f(int k, int t) { return (int)s_uw_dist[k] + r36_okt(k, t); }
+static void r36_heap_hoch(int p, int t)
+{
+    uint16_t k = s_uw_heap[p]; int fk = r36_f(k, t);
+    while (p > 0) {
+        int q = (p - 1) / 2; uint16_t kq = s_uw_heap[q];
+        if (r36_f(kq, t) <= fk) break;
+        s_uw_heap[p] = kq; s_uw_hpos[kq] = (uint16_t)p; p = q;
+    }
+    s_uw_heap[p] = k; s_uw_hpos[k] = (uint16_t)p;
+}
+static void r36_entspannen(int a, int m, int w, int t, int *hn)
+{
+    if (s_uw_hpos[m] == R36_UW_ZU) return;
+    int nd = (int)s_uw_dist[a] + w;
+    if (nd >= (int)s_uw_dist[m]) return;
+    s_uw_dist[m] = (uint16_t)nd; s_uw_pred[m] = (uint16_t)a;
+    if (s_uw_hpos[m] == R36_UW_KEINER) { s_uw_heap[*hn] = (uint16_t)m; s_uw_hpos[m] = (uint16_t)*hn; (*hn)++; }
+    r36_heap_hoch(s_uw_hpos[m], t);
+}
+static int r36_uw_astern(int g, int t, const r36_kante_t *kt, int nk, const uint8_t *erlaubt)
+{
+    int n = s_uw.nx * s_uw.nz, hn = 0;
+    for (int k = 0; k < n; k++) { s_uw_dist[k] = R36_UW_KEINER; s_uw_hpos[k] = R36_UW_KEINER; }
+    s_uw_dist[g] = 0; s_uw_pred[g] = R36_UW_KEINER; s_uw_heap[hn] = (uint16_t)g; s_uw_hpos[g] = 0; hn++;
+    while (hn > 0) {
+        int a = s_uw_heap[0];
+        s_uw_hpos[a] = R36_UW_ZU;                                       /* geschlossen */
+        hn--;
+        if (hn > 0) {                                                   /* letztes Element an die Wurzel, absenken */
+            uint16_t k = s_uw_heap[hn]; int p = 0, fk = r36_f(k, t);
+            for (;;) {
+                int c1 = 2 * p + 1, c2 = c1 + 1, m = p, fm = fk;
+                if (c1 < hn && r36_f(s_uw_heap[c1], t) < fm) { m = c1; fm = r36_f(s_uw_heap[c1], t); }
+                if (c2 < hn && r36_f(s_uw_heap[c2], t) < fm) { m = c2; }
+                if (m == p) break;
+                s_uw_heap[p] = s_uw_heap[m]; s_uw_hpos[s_uw_heap[p]] = (uint16_t)p; p = m;
+            }
+            s_uw_heap[p] = k; s_uw_hpos[k] = (uint16_t)p;
+        }
+        if (a == t) return 1;
+        int ix = a % s_uw.nx, iz = a / s_uw.nx;
+        for (int d = 0; d < 8; d++) {                                   /* begehbare Rasterkanten (NB3) */
+            if (!(s_uw.kante[a] & (1u << d))) continue;
+            r36_entspannen(a, (iz + k_r36_dz[d]) * s_uw.nx + (ix + k_r36_dx[d]), (k_r36_dx[d] && k_r36_dz[d]) ? 3 : 2, t, &hn);
+        }
+        for (int j = 0; j < nk; j++)                                    /* 0x10-Pad: Start -> Landung */
+            if (erlaubt[j] && kt[j].start == a) r36_entspannen(a, kt[j].lande, kt[j].kosten, t, &hn);
+    }
+    return 0;
+}
+
+/* Zielwahl fuer Gorilla e mit Leon pl. Rueckgabe 0 = kein Umweg (Original), 1 = zu Fuss, 2 = Pad-Anlauf.
+ * ZIEL = Leons Knoten, wenn seine Komponente zu Fuss + ueber 0x10-Pads erreichbar ist; sonst der erreichbare Knoten, der
+ * Leon am naechsten liegt (NB2). NB3: Weg = der kuerzeste (A*); der erste Sprung auf DIESEM Weg ist der Original-Sprung. */
 static int r36_uw_route(const re15_actor_t *e, const re15_actor_t *pl, int slot)
 {
     s_r36_pad_idx[slot] = -1;
     if (!r36_uw_bauen((int)e->floor, (int32_t)e->hit_radius_min, 4u)) return 0;   /* Maske 4 = re15_enemy_sca_clamp_band(..., 4u) des 0x27-Zweigs */
-    int g = r36_uw_knoten(e->x, e->z, 3);
+    int g = r36_uw_knoten(e->x, e->z, 3 * s_uw.r / 2, s_uw.r, 4u);                 /* NB3: vom Gorilla GERADE erreichbar (eigener Radius) */
     if (g < 0) return 0;
-    r36_kante_t kt[64]; int nk = r36_uw_kanten(kt, 64);
+    r36_kante_t kt[64]; uint8_t erlaubt[64]; int nk = r36_uw_kanten(kt, 64);
     int kg = s_uw.komp[g];
-    int l = r36_uw_knoten(pl->x, pl->z, 4);
-    r36_uw_komp_bfs(kg, kt, nk, slot, 1);                                          /* zuerst ohne die Pads der anderen */
-    if (l < 0 || !s_uw_ks[s_uw.komp[l]]) r36_uw_komp_bfs(kg, kt, nk, slot, 0);     /* sonst alle Pads */
-    if (l < 0 || !s_uw_ks[s_uw.komp[l]]) {                                         /* Leon unerreichbar: naechster erreichbarer Knoten */
+    int l = r36_uw_knoten(pl->x, pl->z, 2 * s_uw.r, 450, 1u);                      /* NB3: auf LEONS Seite der Wand: Strecke frei fuer die
+                                                                                     * Spieler-Klemme (Radius 450 = PR, Maske 1; re15_collision_constrain) */
+    for (int i = 0; i < nk; i++) erlaubt[i] = (uint8_t)!r36_pad_belegt(kt[i].pad, slot);   /* zuerst ohne die Pads der anderen */
+    r36_komp_erreichbar(kg, kt, nk, erlaubt);
+    if (!r36_erreichbar(l)) {                                                      /* sonst alle Pads */
+        for (int i = 0; i < nk; i++) erlaubt[i] = 1;
+        r36_komp_erreichbar(kg, kt, nk, erlaubt);
+    }
+    if (r36_erreichbar(l) && s_uw.komp[l] == kg && r36_uw_strecke_frei(g, l)) return 0;   /* NB3: gerader Weg zu Leon frei: Original
+                                                                                     * (B[3]/B[4] auf playerX @0x80117d4c/@0x801181e0). Gemessen:
+                                                                                     * auf Leons KNOTEN gelenkt, verfehlten zwei Gorillas 2100 vor
+                                                                                     * Leon das Biss-Fenster a804(0xbb8,0x180) @0x80117a60-74 */
+    if (!r36_erreichbar(l)) {                                                      /* Leon unerreichbar: naechster erreichbarer Knoten */
         l = -1; int64_t bd = 0;
         for (int k = 0; k < s_uw.nx * s_uw.nz; k++) {
-            if (!s_uw.frei[k] || !s_uw_ks[s_uw.komp[k]]) continue;
-            int64_t ex = (int64_t)s_uw.x0 + (int64_t)(k % s_uw.nx) * s_uw.st - pl->x, ez = (int64_t)s_uw.z0 + (int64_t)(k / s_uw.nx) * s_uw.st - pl->z;
+            if (!s_uw.frei[k] || !r36_erreichbar(k)) continue;
+            int64_t ex = (int64_t)r36_kx(k) - pl->x, ez = (int64_t)r36_kz(k) - pl->z;
             if (l < 0 || ex * ex + ez * ez < bd) { l = k; bd = ex * ex + ez * ez; }
         }
-        if (l < 0 || l == g) return 0;                                             /* schon am naechsten Punkt: Original */
     }
-    int32_t tx, tz;
-    if (s_uw.komp[l] == kg) {
-        if (!r36_uw_schritt(g, l, &tx, &tz)) return 0;
-        s_r36_ziel_x[slot] = tx; s_r36_ziel_z[slot] = tz;
-        return 1;
+    if (l < 0 || l == g || !r36_uw_astern(g, l, kt, nk, erlaubt)) return 0;        /* schon am naechsten Punkt: Original */
+    int len = 0;                                                                   /* Weg l -> g, dann umdrehen (s_uw_heap als Puffer) */
+    for (int k = l; k != (int)R36_UW_KEINER && len < R36_UW_MAX; k = s_uw_pred[k]) s_uw_heap[len++] = (uint16_t)k;
+    for (int i = 0; i < len / 2; i++) { uint16_t t = s_uw_heap[i]; s_uw_heap[i] = s_uw_heap[len - 1 - i]; s_uw_heap[len - 1 - i] = t; }
+    int sprung = -1;                                                               /* erster Sprung = Wegnachbarn, die keine Rasternachbarn sind */
+    for (int i = 0; i + 1 < len && sprung < 0; i++) {
+        int a = s_uw_heap[i], b = s_uw_heap[i + 1];
+        if (abs(a % s_uw.nx - b % s_uw.nx) > 1 || abs(a / s_uw.nx - b / s_uw.nx) > 1) sprung = i;
     }
-    int kz = s_uw.komp[l], p = -1, start = -1;                                     /* erster Sprung auf dem Weg kg -> kz */
-    while (kz != kg && s_uw_kp[kz] >= 0) { if (s_uw_kv[kz] == kg) { p = kt[s_uw_kp[kz]].pad; start = kt[s_uw_kp[kz]].start; break; } kz = s_uw_kv[kz]; }
-    if (p < 0) return 0;
-    const re15_sca_entry_t *c = &g_room_rdt.sca[p];
-    int32_t sx = s_uw.x0 + (start % s_uw.nx) * s_uw.st, sz = s_uw.z0 + (start / s_uw.nx) * s_uw.st;
-    int64_t ex = (int64_t)sx - e->x, ez = (int64_t)sz - e->z;
-    s_r36_pad_idx[slot] = (int16_t)p;
-    if (ex * ex + ez * ez > (int64_t)s_uw.st * s_uw.st * 4) {        /* noch nicht am Anlaufpunkt: zu Fuss dorthin */
-        if (!r36_uw_schritt(g, start, &tx, &tz)) return 0;
-        s_r36_ziel_x[slot] = tx; s_r36_ziel_z[slot] = tz;
-        return 1;
+    int ende = (sprung >= 0) ? sprung : len - 1;                                    /* zu Fuss bis hierher */
+    if (sprung >= 0) {
+        int p = -1;
+        for (int j = 0; j < nk; j++) if (kt[j].start == s_uw_heap[sprung] && kt[j].lande == s_uw_heap[sprung + 1]) { p = kt[j].pad; break; }
+        if (p < 0) return 0;
+        s_r36_pad_idx[slot] = (int16_t)p;
+        int64_t ex = (int64_t)r36_kx(s_uw_heap[sprung]) - e->x, ez = (int64_t)r36_kz(s_uw_heap[sprung]) - e->z;
+        if (ex * ex + ez * ez <= (int64_t)s_uw.r * s_uw.r) {                       /* am Anlaufpunkt (NB2: zwei Schritte a 800 = ein
+                                                                                     * Radius): gerader Anlauf auf die Pad-Mitte — die
+                                                                                     * Kontaktseite zeigt auf Leons Seite */
+            const re15_sca_entry_t *c = &g_room_rdt.sca[p];
+            s_r36_ziel_x[slot] = (int32_t)c->x + (int32_t)c->width / 2;
+            s_r36_ziel_z[slot] = (int32_t)c->z + (int32_t)c->density / 2;
+            return 2;
+        }
     }
-    s_r36_ziel_x[slot] = (int32_t)c->x + (int32_t)c->width / 2;      /* gerader Anlauf auf die Pad-Mitte: die Kontaktseite */
-    s_r36_ziel_z[slot] = (int32_t)c->z + (int32_t)c->density / 2;    /* zeigt auf Leons Seite, das Yaw-Fenster passt */
-    return 2;
+    int wahl = -1, bis = ende;                                                     /* Zielpunkt: der fernste Wegknoten bis 4 Radien voraus */
+    while (bis > 1 && (int64_t)bis * s_uw.st > 4 * (int64_t)s_uw.r) bis--;         /* (NB2: 8 Knoten a 800), der gerade erreichbar ist —   */
+    for (int i = bis; i >= 1 && wahl < 0; i--)                                     /* vom fernsten her, der erste Treffer gilt            */
+        if (r36_uw_strecke_frei(g, s_uw_heap[i])) wahl = s_uw_heap[i];
+    if (wahl < 0) wahl = s_uw_heap[(ende >= 1) ? 1 : 0];
+    s_r36_ziel_x[slot] = r36_kx(wahl); s_r36_ziel_z[slot] = r36_kz(wahl);
+    return 1;
 }
 
 /* Mitte des Gorillas in einem 0x10-Pad-Rechteck (Band des Gorillas)? */
@@ -456,13 +584,35 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub)
                                                                                        * @0x80117c48-54) */
     if ((uint16_t)e->dog_dist < 0x1771u && !r36_im_pad10(e)) { s_r36_padsuche_aktiv[slot] = 0; return 0; }
                                                                                       /* NAH (< 6001, `sltiu 0x1771` @0x80117bc8 / @0x8011806c):
-                                                                                       * Original (Spur-J-Riegel bildgenau) — ausser der Gorilla
-                                                                                       * steckt MIT DER MITTE in einem 0x10-Pad (Engstelle, Kontakt-
-                                                                                       * code 0xf00 @0x8003ba8c, das Yaw-Fenster passt nie zu Leon) */
-    if (!s_r36_padsuche_aktiv[slot] && e->sca_wall_hit == 0) return 0;                  /* Beginn nur an der Wandklemme (+0x1d6, A[3]
-                                                                                       * @0x80117b18-20 / A[4] @0x80118054-5c) */
+                                                                                       * Original — die Spur-J-Riegel griff/szene pinnen die
+                                                                                       * Original-Nahjagd bildgenau (GDB): nach der Freigabe warten
+                                                                                       * e1/e2 ~3925/~4990 vor Leon an der Klemme, kein Biss bis T495.
+                                                                                       * NB3 gemessen: ein Haenge-Beginn auch NAH (Leon > 3000) liess
+                                                                                       * e1 T474 beissen -> griff/szene rot; deshalb nur FERN. */
     uint8_t zk = 0;
-    if (r36_im_pad10(e) && re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zk)) {
+    int am_pad = re15_collision_zone_query(&g_room_rdt, e->x, e->z, (int32_t)e->hit_radius_min + 100, (int)e->floor, 0x10u, &zk);
+    int verkeilt = am_pad && r36_im_pad10(e) && (uint16_t)e->dog_dist >= 0xbb8u;   /* NB3: Pad-Mitte-Drehen nur, wenn Leon ausserhalb der
+                                                                                       * Bissweite a804(0xbb8,0x180) @0x80117a60-74 steht —
+                                                                                       * gemessen: Gorilla 2 sprang sonst 2053 vor Leon (Nordkante
+                                                                                       * #47, Biss-Sperre +0x1dc) in Richtung 0xf00 davon */
+    if (!s_r36_padsuche_aktiv[slot] && !verkeilt && (s_r36_fest[slot] < R36_FEST_START || s_r36_1de[slot] == 0)) {
+        /* NB3: Beginn erst, wenn der Gorilla FERN haengt (+0x1de @0x80117448-6c, s. oben) — bis NB2 bei jedem Klemmen-Kontakt.
+         * Verkeilt MIT DER MITTE in einem 0x10-Pad (Kontaktcode 0xf00 @0x8003ba8c): sofort (NB1). Ausserdem sofort in der JAGD (Sub 3) an der Kante eines
+         * 0x10-Pads (dieselbe Abfrage wie A[4] FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10) @0x80117ee0-f00), wenn der Weg zu
+         * Leon UEBER dieses Pad fuehrt: A[3] hat keinen Sprung (@0x80117b40-c74), der Gorilla laeuft in das Pad, verkeilt mit
+         * der Mitte (Code 0xf00) und kann nur noch in Richtung 0xf00 springen — gemessen ROOM11C0 West-Pad #47: Landung bei
+         * (-13518,-356) vor dem 0x20-Pad #19, dort die Original-Blindsprung-Schleife (+0x7 = 3 @0x80117fe4-80118024,
+         * Spur-J-Riegel zonensprung) ohne Ende. */
+        if (sub != 3 || !am_pad) return 0;
+        uint8_t m = (uint8_t)r36_uw_route(e, pl, slot);
+        if (m == 0 || s_r36_pad_idx[slot] < 0) return 0;
+        const re15_sca_entry_t *c = &g_room_rdt.sca[s_r36_pad_idx[slot]];
+        int32_t r = (int32_t)e->hit_radius_min + 100;
+        if (!((uint32_t)(e->x - ((int32_t)c->x - r)) < (uint32_t)((int32_t)c->width + 2 * r) &&
+              (uint32_t)(e->z - ((int32_t)c->z - r)) < (uint32_t)((int32_t)c->density + 2 * r))) return 0;   /* Weg ueber ein ANDERES Pad */
+        s_r36_padsuche_aktiv[slot] = m;
+    }
+    if (verkeilt) {
         /* MITTE IM PAD (Engstelle, verkeilt): der Kontaktcode ist der Platzhalter 0xf00 (coll_contact_dir @0x8003ba8c);
          * zu Fuss kommt der Gorilla nicht heraus (Klemme hebt jeden Schritt auf). Ausweg = der Sprung des Originals:
          * in die Code-Richtung (zc & 0xf0) << 4 drehen, dann passt das Yaw-Fenster @0x80117f18-38. */

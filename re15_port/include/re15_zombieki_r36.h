@@ -197,6 +197,10 @@ int re15_r36_affen_padsuche_decide(re15_actor_t *e, int slot, int sub);
 /* Haken in B[3]: Steuerziel (playerX oder Pad-Mitte bzw. Punkt in Pad-Richtung); 1 = Pad-Suche aktiv. */
 int re15_r36_affen_padsuche_ziel(const re15_actor_t *e, int slot, int sub, int32_t plx, int32_t plz, int32_t *tx, int32_t *tz);
 
+/* NB3: Gehirn-Schwanz des Gorillas (Zustand 1, nach den Timern +0x1dc/+0x1e1): +0x1de = Bilder an der Klemme
+ * (@0x80117448-6c, ohne Verbraucher in der Beta) + Anker-Messung — der Beginn des Umwegs. */
+void re15_r36_affen_fest_takt(const re15_actor_t *e);
+
 /* Nur fuer Sonden: Pad-Suche abschalten (Gegenprobe = Original-Verhalten). */
 void re15_r36_affen_padsuche_enable(int an);
 int  re15_r36_affen_padsuche_aktiv(int slot);

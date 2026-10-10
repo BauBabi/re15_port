@@ -9416,6 +9416,7 @@ static void re15_maggot_ai_tick(int slot)
          * @0x80117448-6c has no consumer in the shipped subs.) */
         if (e->dog_blocked_ctr) e->dog_blocked_ctr--;
         if (e->mag_pin_cd) e->mag_pin_cd--;
+        re15_r36_affen_fest_takt(e);   /* Runde 36 Spur F NB3: +0x1de @0x80117448-6c (Klemmen-Haengen) — Beginn des Umwegs (PORT-WAHL) */
         break;
     }
 

@@ -189,7 +189,7 @@ static int s_zg_anker = 400; /* NB2 (Abnahme 1, Mangel 4): Anker-Radius der Bloc
  * Gorilla 1 steht dort (dann in dessen Lage). Je Gorilla: erster Angriff (Sub 5/6/8/15), kleinster Abstand, Spruenge, und
  * blockierte Bilder mit derselben Definition wie der Zufallsgang (lebt, kein Angriff, >= 90 Bilder im Anker 400). */
 static int s_sz2_spur = 0;   /* Sonde szene2 ... 1: Spur je 60 Bilder */
-typedef struct { int erst[2], dmin[2], spr[2], blind[2]; long blockiert[2]; } szene2_t;
+typedef struct { int erst[2], dmin[2], spr[2], blind[2]; long blockiert[2], nach[2]; } szene2_t;   /* NB3: nach = blockiert NACH dem ersten Angriff */
 static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
 {
     szene2_t r; memset(&r, 0, sizeof r); r.dmin[0] = r.dmin[1] = 1 << 30;
@@ -214,15 +214,17 @@ static szene2_t szene2(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilde
             if (!r.erst[k] && kampf) r.erst[k] = f;
             if (sub == 7 && !prev7[k]) { r.spr[k]++; if (e->sub_state_3 == 3) r.blind[k]++; }
             prev7[k] = (sub == 7);
-            if (s_sz2_spur && (f % 60) == 0) { int32_t ux = 0, uz = 0; int up = -1; int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up);
-                printf("  F%d G%d st=%d/%d/%d/%d @(%d,%d) rot=%d los=%d klemme=%d d=%d | Umweg %d (%d,%d) Pad %d\n", f, k + 1, e->state, e->sub_state_1,
-                       e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y, e->dog_flags & 1, e->sca_wall_hit != 0, d, ua, (int)ux, (int)uz, up); }
+            if (s_sz2_spur && (f % (s_sz2_spur > 1 ? s_sz2_spur : 60)) == 0) { int32_t ux = 0, uz = 0; int up = -1; int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up);
+                printf("  F%d G%d st=%d/%d/%d/%d @(%d,%d) rot=%d los=%d klemme=%d d=%d | Umweg %d (%d,%d) Pad %d | Leon (%d,%d)\n", f, k + 1, e->state, e->sub_state_1,
+                       e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y, e->dog_flags & 1, e->sca_wall_hit != 0, d, ua, (int)ux, (int)uz, up,
+                       (int)pl->x, (int)pl->z); }
             int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= s_zg_anker;
             if (e->state == 1 && !kampf && !bewegt) { if (!fa[k]) fa[k] = f; }
-            else { if (fa[k] && f - fa[k] >= 90) r.blockiert[k] += f - fa[k]; fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
+            else { if (fa[k] && f - fa[k] >= 90) { r.blockiert[k] += f - fa[k]; if (r.erst[k] && fa[k] > r.erst[k]) r.nach[k] += f - fa[k]; }
+                   fa[k] = 0; ax[k] = e->x; az[k] = e->z; }
         }
     }
-    for (int k = 0; k < 2; k++) if (fa[k] && bilder + 1 - fa[k] >= 90) r.blockiert[k] += bilder + 1 - fa[k];
+    for (int k = 0; k < 2; k++) if (fa[k] && bilder + 1 - fa[k] >= 90) { r.blockiert[k] += bilder + 1 - fa[k]; if (r.erst[k] && fa[k] > r.erst[k]) r.nach[k] += bilder + 1 - fa[k]; }
     return r;
 }
 
@@ -265,7 +267,8 @@ static zg_t zg_stat(int bilder, uint32_t seed)
                 akk_nah[k] += (ddx * ddx + ddz * ddz < 6001LL * 6001LL); akk_los[k] += (e->dog_flags & 1); akk_kl[k] += (e->sca_wall_hit != 0); }
             else {
                 int dauer = fa[k] ? f - fa[k] : 0;
-                if (dauer >= 90 && s_zg_lage) printf("LAGE %08x g%d %d %d leon %d %d dauer %d los %ld\n", seed, k, (int)ax[k], (int)az[k], (int)pl->x, (int)pl->z, dauer, akk_los[k]);
+                if (dauer >= 90 && s_zg_lage) printf("LAGE %08x g%d %d %d leon %d %d dauer %d los %ld ab F%d sub3 %ld sub4 %ld sub7 %ld\n", seed, k, (int)ax[k], (int)az[k],
+                                                     (int)pl->x, (int)pl->z, dauer, akk_los[k], fa[k], subs_akk[k][3], subs_akk[k][4], subs_akk[k][7]);
                 if (dauer >= 90) { r.blockiert += dauer; for (int q = 0; q < 32; q++) r.sub[q] += subs_akk[k][q];
                                    r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k]; }
                 fa[k] = 0; memset(subs_akk[k], 0, sizeof subs_akk[k]); akk_nah[k] = akk_los[k] = akk_kl[k] = 0;
@@ -300,13 +303,14 @@ int main(int argc, char **argv)
      * (Abstand min/Ende, erster Angriff, Anteile Sub-Zustaende, Klemme, Sicht, Zonenspruenge). */
     if (argc > 1 && strcmp(argv[1], "raster") == 0) {   /* raster [schritt] [radius]: Begehbarkeit fuer den Gorilla (echte Klemme, Band 0, Maske 4) */
         int st = (argc > 2) ? atoi(argv[2]) : 800, rad = (argc > 3) ? atoi(argv[3]) : 1600;
+        int dlt = (argc > 4) ? atoi(argv[4]) : 0;   /* NB3: Vorlage = Knoten + (dlt,0) — 1 deckt den Zurueckschnapp-Artefakt auf */
         re15_actor_t *gg[2]; re15_actor_t *pp;
         if (!aufbau(gg, &pp)) return 1;
         for (int z = 26000; z >= -31000; z -= st) {
             printf("%6d ", z);
             for (int x = -33000; x <= 22000; x += st) {
                 int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
-                re15_collision_constrain_contact_band(&g_room_rdt, x, z, &nx, &nz, rad, 0, 4u, &ct, &at);
+                re15_collision_constrain_contact_band(&g_room_rdt, x + dlt, z, &nx, &nz, rad, 0, 4u, &ct, &at);
                 uint8_t zc = 0;
                 char ch = (nx != x || nz != z) ? '#' : '.';
                 if (re15_collision_zone_query(&g_room_rdt, x, z, 0, 0, 0x10u, &zc)) ch = (ch == '#') ? 'P' : 'p';
@@ -325,8 +329,43 @@ int main(int argc, char **argv)
         if (argc > 8) s_sz2_spur = atoi(argv[8]);
         szene2_t r = szene2(lx, lz, gx, gz, b);
         for (int k = 0; k < 2; k++)
-            printf("SZENE2 Leon (%d,%d) G%d: erster Angriff %d, Abstand min %d, Spruenge %d (blind %d), blockiert %ld (Anker %d)\n", (int)lx, (int)lz, k + 1,
-                   r.erst[k], r.dmin[k], r.spr[k], r.blind[k], r.blockiert[k], s_zg_anker);
+            printf("SZENE2 Leon (%d,%d) G%d: erster Angriff %d, Abstand min %d, Spruenge %d (blind %d), blockiert %ld (Anker %d) nach %ld\n", (int)lx, (int)lz, k + 1,
+                   r.erst[k], r.dmin[k], r.spr[k], r.blind[k], r.blockiert[k], s_zg_anker, r.nach[k]);
+        return 0;
+    }
+    if (argc > 3 && strcmp(argv[1], "klemme") == 0) {   /* NB3 Sonde: klemme <x> <z> [radius] [maske] [ox oz]: EIN Aufruf der Original-
+                                                          * Klemme (FUN_8003b0a4-Zwilling) Band 0, mit COLL_TRACE-artiger Ausgabe */
+        re15_actor_t *gg[2]; re15_actor_t *pp;
+        if (!aufbau(gg, &pp)) return 1;
+        int32_t x = atoi(argv[2]), z = atoi(argv[3]), r = (argc > 4) ? atoi(argv[4]) : 1600; uint32_t mk = (argc > 5) ? (uint32_t)atoi(argv[5]) : 4u;
+        int32_t ox = (argc > 7) ? atoi(argv[6]) : x, oz = (argc > 7) ? atoi(argv[7]) : z;
+        int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
+        int hit = re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz, r, 0, mk, &ct, &at);
+        printf("KLEMME (%d,%d) alt (%d,%d) r %d maske %u -> (%d,%d) kontakt %d code %02x attr %04x\n", (int)x, (int)z, (int)ox, (int)oz, (int)r, (unsigned)mk,
+               (int)nx, (int)nz, hit, ct, at);
+        return 0;
+    }
+    if (argc > 5 && strcmp(argv[1], "leonlauf") == 0) {   /* NB3 Sonde: leonlauf <sx> <sz> <tx> <tz> [bilder]: Leon (Gorillas aus)
+                                                            * rennt von (sx,sz) auf (tx,tz) zu (UP+CROSS, Drehen wie der Zufallsgang)
+                                                            * — erreicht er die Stelle zu Fuss? (echte Spieler-Klemme) */
+        re15_actor_t *gg[2]; re15_actor_t *pp;
+        if (!aufbau(gg, &pp)) return 1;
+        gg[0]->active = 0; gg[1]->active = 0;
+        int b = (argc > 6) ? atoi(argv[6]) : 600;
+        int32_t tx = atoi(argv[4]), tz = atoi(argv[5]);
+        pp->x = atoi(argv[2]); pp->z = atoi(argv[3]); pp->y = 0; pp->floor = 0;
+        long long best = -1; int32_t bx = pp->x, bz = pp->z;
+        for (int f = 1; f <= b; f++) {
+            int ziel = (int)((((int)re15_atan2_q12(tz - pp->z, tx - pp->x)) - 0x400) & 0xfff);
+            int err = ((ziel - (int)(pp->rot_y & 0xfff) + 2048 + 4096) % 4096) - 2048;
+            uint16_t held = (err > 48) ? RE15_PAD_BIT_RIGHT : (err < -48) ? RE15_PAD_BIT_LEFT : (uint16_t)(RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS);
+            frame(held, 0);
+            long long dx = pp->x - tx, dz = pp->z - tz, d = dx * dx + dz * dz;
+            if (best < 0 || d < best) { best = d; bx = pp->x; bz = pp->z; }
+            if ((f % 60) == 0) printf("  F%d Leon (%d,%d) rot=%d\n", f, (int)pp->x, (int)pp->z, (int)pp->rot_y);
+        }
+        printf("LEONLAUF (%s,%s) -> (%d,%d): naechster Punkt (%d,%d) Abstand %d, Ende (%d,%d)\n", argv[2], argv[3], (int)tx, (int)tz,
+               (int)bx, (int)bz, (int)isqrt64(best), (int)pp->x, (int)pp->z);
         return 0;
     }
     if (argc > 5 && strcmp(argv[1], "weit") == 0) {   /* NB2 Sonde: weit <gx> <gz> <lx> <lz> [bilder]: Gorilla 1 auf (gx,gz) mit Blick
@@ -354,6 +393,7 @@ int main(int argc, char **argv)
                                                          * gegen 61502 im Wechsel mit AN) */
         int i = atoi(argv[2]), modus = atoi(argv[3]), b = atoi(argv[4]);
         if (argc > 5) s_zg_anker = atoi(argv[5]);
+        if (argc > 6) s_zg_lage = atoi(argv[6]);   /* NB3: LAGE-Zeile je blockierter Strecke */
         re15_r36_affen_padsuche_enable(modus ? 1 : 0);
         zg_t r = zg_stat(b, zg_seed(i));
         printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
