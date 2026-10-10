@@ -65,6 +65,18 @@ static const uint8_t k_s36_6030_m2[] = {
     0x4f,0x50,0x41,0x4e,0x4f,0x1a,0x04,0x01,0x01,0x63,
 };
 
+/* ROOM6030 msg 12 (umschreiben) — Annette (sub08, Zug vorne, Eintritt Cut 0) kann VOR der Wagen-Szene (sub02) kommen: Spawn aus 6000 (-17970,-20380) liegt oestlich der Marke Slot 5 x[-19730..-18130], die Tuer nach vorne Slot 1 bei x -9300 - dann wusste Leon ohne Sherry, was Elza tut = Bekanntschaft
+ *   alt @0x015FC (70 B): "Leon: Keeping the monsters at bay. Can you start this thing?"
+ *   Kopf 12 B + Schwanz 4 B = Original-Bytes derselben Nachricht
+ *   neu (61 B): "Leon: I've never met her. Can you start this thing?"
+ *   Zeilenbreiten px: 167, 166 (Grenze 271) */
+static const uint8_t k_s36_6030_m12[] = {
+    0x04,0x00,0x05,0x01,0x28,0x41,0x4b,0x4a,0x16,0x05,0x00,0x00,0x25,0x3a,0x52,0x41,
+    0x00,0x4a,0x41,0x52,0x41,0x4e,0x00,0x49,0x41,0x50,0x00,0x44,0x41,0x4e,0x57,0x08,
+    0x1f,0x3d,0x4a,0x00,0x55,0x4b,0x51,0x00,0x4f,0x50,0x3d,0x4e,0x50,0x00,0x50,0x44,
+    0x45,0x4f,0x00,0x50,0x44,0x45,0x4a,0x43,0x1b,0x04,0x01,0x01,0x63,
+};
+
 /* ROOM6031 msg 0 (umschreiben) — Elza fragte nach Leon
  *   alt @0x01148 (29 B): "Elza: Where's Leon?"
  *   Kopf 12 B + Schwanz 4 B = Original-Bytes derselben Nachricht
@@ -160,6 +172,8 @@ static const re15_story_r36_text_t k_s36_texte[] = {
       "Leon: Is anyone else with you?" },
     { 0x6030,  2, k_s36_6030_m2, (uint8_t)sizeof k_s36_6030_m2, 0x01416, "Sherry: She's out there fighting the monsters!",
       "Sherry: Elza is out there fighting the monsters!" },
+    { 0x6030, 12, k_s36_6030_m12, (uint8_t)sizeof k_s36_6030_m12, 0x015FC, "Leon: Keeping the monsters at bay. Can you start this thing?",
+      "Leon: I've never met her. Can you start this thing?" },
     { 0x6031,  0, k_s36_6031_m0, (uint8_t)sizeof k_s36_6031_m0, 0x01148, "Elza: Where's Leon?",
       "Elza: Sherry! Is anyone else here?" },
     { 0x6031,  1, k_s36_6031_m1, (uint8_t)sizeof k_s36_6031_m1, 0x01165, "Sherry: He's fighting off monsters. He wants you to start the train.",

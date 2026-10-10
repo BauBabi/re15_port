@@ -27,3 +27,9 @@ foreach(_teil roy zelle schuppen texte sweep reihenfolge)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r36_story_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# MESS-WERKZEUG (kein add_test): Speicherkarte mit einem Stand je Punkt (Leon/Elza), fuer die echte exe.
+#   probe_r36_story_karte <kartendatei> <stand> [strom]
+add_executable(probe_r36_story_karte ${CMAKE_CURRENT_LIST_DIR}/../probe_r36_story_karte.c)
+target_link_libraries(probe_r36_story_karte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r36_story_karte PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -150,6 +150,10 @@ UMSCHREIBEN = [
      "Leon fragte nach Elza beim Namen"),
     ("6030", 2, "k_s36_6030_m2", ["Elza is out there fighting", "the monsters!"],
      "Sherry nennt Elza jetzt als Fremde beim Namen (Antwort auf die neue Frage)"),
+    ("6030", 12, "k_s36_6030_m12", ["I've never met her.", "Can you start this thing?"],
+     "Annette (sub08, Zug vorne, Eintritt Cut 0) kann VOR der Wagen-Szene (sub02) kommen: Spawn aus 6000 "
+     "(-17970,-20380) liegt oestlich der Marke Slot 5 x[-19730..-18130], die Tuer nach vorne Slot 1 bei x -9300 "
+     "- dann wusste Leon ohne Sherry, was Elza tut = Bekanntschaft"),
     ("6031", 0, "k_s36_6031_m0", ["Sherry! Is anyone else here?"],
      "Elza fragte nach Leon"),
     ("6031", 1, "k_s36_6031_m1", ["A policeman! He's fighting off", "monsters. He wants us to start the train."],

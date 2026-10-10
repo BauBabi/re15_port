@@ -357,7 +357,7 @@ static int teil_texte(void)
         CHECK(fremd == 0, "ROOM%04X: alle anderen %d Nachrichten bytegleich zur RDT", t->raum, nmsg - 1);
         free(r.buf);
     }
-    CHECK(umgeschrieben == 10, "P4: %d umgeschriebene Nachrichten (30C1 3/4/7, 6030 1/2, 6031 0/1, 50B0 1, 6000 0/3)",
+    CHECK(umgeschrieben == 11, "P4: %d umgeschriebene Nachrichten (30C1 3/4/7, 6030 1/2/12, 6031 0/1, 50B0 1, 6000 0/3)",
           umgeschrieben);
     return 0;
 }
@@ -375,7 +375,7 @@ static const erlaubt_t k_erlaubt[] = {
 };
 static const char *const k_verboten[] = {
     "How is he", "separated", "Where's Elza", "Where's Leon", "He wants you", "Your other friends",
-    "Your friends are", "join your friends", "tell him that me",
+    "Your friends are", "join your friends", "tell him that me", "Keeping the monsters at bay",
 };
 
 static int erlaubt(uint16_t raum, int id)
