@@ -34,6 +34,32 @@
 
 #define RE15_FENSTER_RAUM          0x1120   /* nur Leon: ROOM1121 (Elza) hat keine Irons-Montage   */
 
+/* ---- Runde 36 Spur L: ELZA-ZWEIG ROOM1121 ---------------------------------------------------------------------
+ * NUTZER-VORGABE (AUFTRAG.md Runde 36, bestaetigt Nachtrag 14:00): "Bei Elzas Szenario soll die Scheibe in Room 1120
+ * die bei Leons Szenario zum schluss zerspringt in Stage1, bereits immer kaputt sein, und eine Kraehe mehr im Raum."
+ * ROOM1121.RDT == ROOM1120.RDT (bytegleich), Hintergrund ROOM112.BSS variantenlos -> dieselbe Schadens-Ueberlagerung
+ * (gen/fenster1120_schaden.inc) liegt IMMER ueber Cut 1, ohne Ereignis (kein Glas, kein Knall, kein Flag (9,79)).
+ * Die zusaetzliche Kraehe = die Fensterkraehe, die schon hereingeflogen ist:
+ *   Form   = RE1.5-Sce_em_set wie die drei Raum-Kraehen main00 @0x00D0C `44 00 21 00 00 00 00 a7 ..` (Typ 0x21,
+ *            Verhalten 0, pc[4..6] = 0, y = 0 = Boden wie alle drei), Gegner-Slot 3 (main00 belegt 0..2).
+ *   Lage   = Ende des 7-Bilder-Durchflugs der Leon-Fensterkraehe (RE2-Perch Sub 2 P2 @0x801038d8: Start
+ *            (5400,-2500,12100), speed 300 -10/Bild, 7 Bilder @0x801038a0 `+0x219 = 6`), gemessen mit
+ *            probe_r36_elza_mess 1120 (Bild 8): (5327,-2500,10217) -> am Boden (5327, 0, 10217).
+ *   Gier   = Flugrichtung der Fensterkraehe 0x0418 (= RE2 sub09 dir 0x0c18 - 0x800, s. RE15_FENSTER_KRAEHE_RE2_DIR).
+ *   Kill-Flag 0xAC = freies Zone-7-Bit (Zensus Sce_em_set pc[7] + Set/Ck(7,..) ueber alle 132 RDTs STAGE1-3, Dossier
+ *            L_elza.md §P1; frei und nicht in der Montage-Liste der Runde 35 {0x28-0x2B,0x2E-0x31,0x4B-0x4F,0x53,0x54,
+ *            0x5A,0x5B,0x5F}) — die erlegte Kraehe bleibt tot (Gate @0x80042128-38, Setzer Kraehe @0x801146EC).
+ *   Spawn  = Port-Programm ueber Ereignis 26 (VERTRAG Runde 36 §1.3, L = 26), wie der Leon-Zweig ueber 24. */
+#define RE15_FENSTER_RAUM_ELZA     0x1121
+#define RE15_FENSTER_ELZA_EREIGNIS 26
+#define RE15_FENSTER_ELZA_EM       3
+#define RE15_FENSTER_ELZA_KILL     0xAC
+#define RE15_FENSTER_ELZA_X        5327
+#define RE15_FENSTER_ELZA_Y        0
+#define RE15_FENSTER_ELZA_Z        10217
+#define RE15_FENSTER_ELZA_DIR      0x0418
+int  re15_fenster1120_elza_gespawnt(void);   /* Pruefhaken: Programm abgegeben (0/1) */
+
 /* Zustandsbits (VERTRAG Runde 35 §1.1): (9,79) = "1120-Fenster zerbrochen" (Spur M);
  * (9,73) = "Irons-Todesszene gesehen" (Spur L, nur GELESEN). Bank 9 = 0x800b1078, im Speicherstand. */
 #define RE15_FENSTER_BANK          9

@@ -56,6 +56,7 @@
 #include "re15_zombie_abstand.h" /* Runde 35 Spur F: Zombie-Abstand ROOM1010/1220 (zombie_abstand_r35.c) */
 #include "re15_ziel1190.h"   /* Runde 35 Spur H: Zielscheiben-Texte ROOM1190 (ziel_1190.c) */
 #include "re15_trage1200.h"   /* Runde 35 Spur H: +0x1ba-Seed fuer die Schwerkraft (trage_1200.c) */
+#include "re15_elza_r36.h"   /* Runde 36 Spur L: Anker-Toene/Stimme Elza-Szenen (elza_r36.c) */
 
 scd_vm_t g_scd;
 
@@ -177,6 +178,8 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
      * seine 56 Byte suchen — Sicherung und Granate oeffnen ihre Aufnahme erst dort
      * (include/re15_hebetisch.h). 238 von 240 Raeumen -> kein Treffer. */
     re15_hebetisch_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0);
+    /* Runde 36 Spur L: Anker der Elza-Szenen 1211/1021/1011 (Datei-Offset + 8-Byte-Signatur, re15_elza_r36.h). */
+    re15_elza_r36_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -708,6 +711,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1] && !re15_irons_tod_sub01_gesperrt())
         scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
     if (!s_vm_room_init) re15_irons_tod_tick();   /* Runde 35 Spur L: Signal (5,12) -> Irons' Arm faellt */
+    if (!s_vm_room_init) re15_elza_r36_tick();    /* Runde 36 Spur L: verzoegerte Anker-Toene (re15_elza_r36.h) */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -743,6 +747,8 @@ void scd_vm_tick(void)
              * den Hinweis an — RE2 setzt dort den Opcode 0x84 (ROOM30B0.RDT @0x01A86).
              * Wachposten = Ankerzahl (in allen anderen Raeumen 0). */
             if (g_re15_map_hint_anchor_n) re15_map_hint_pc(t->pc);
+            /* Runde 36 Spur L: Anker der Elza-Szenen (Wachposten = Ankerzahl, ausserhalb 1211/1021/1011 0). */
+            if (g_re15_elza_anker_n) re15_elza_r36_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */

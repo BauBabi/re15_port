@@ -3943,6 +3943,7 @@ re_title:;
         free(rtex);
     }
     re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
+    { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4908,6 +4909,8 @@ re_title:;
     /* Runde 35 Spur M: FENSTER ROOM1120 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter),
      * nach dem Restore der Flags ((9,73)/(9,79) entscheiden). Herleitung: include/re15_fenster1120.h. */
     re15_fenster1120_install((uint16_t)g_current_room_id);
+    /* Runde 36 Spur L: Irons tot ROOM1151 — derselbe Grund (Boot-/CONTINUE-Weg ohne scd_room_reenter). */
+    { extern void re15_elza_r36_install(uint16_t); re15_elza_r36_install((uint16_t)g_current_room_id); }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

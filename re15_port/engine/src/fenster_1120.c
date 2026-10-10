@@ -83,6 +83,28 @@ static void spawn_programm_bauen(void)
     s_prog_spawn[21] = 0x00;
 }
 
+/* ---- Runde 36 Spur L: Elza-Kraehe ROOM1121 (Herleitung im Header, Abschnitt ELZA-ZWEIG) -------------------------
+ * Ein RE1.5-Sce_em_set in der Satzform der drei Raum-Kraehen (main00 @0x00D0C), dann Evt_end. */
+static uint8_t s_prog_elza[22];
+static int     s_elza_offen = 0;
+static int     s_elza_gespawnt = 0;
+int re15_fenster1120_elza_gespawnt(void) { return s_elza_gespawnt; }
+
+static void elza_programm_bauen(void)
+{
+    memset(s_prog_elza, 0, sizeof s_prog_elza);
+    s_prog_elza[0] = 0x44;                             /* Sce_em_set                              */
+    s_prog_elza[1] = RE15_FENSTER_ELZA_EM;             /* Gegner-Slot 3                            */
+    s_prog_elza[2] = 0x21;                             /* Kraehe (main00 @0x00D0E)                 */
+    s_prog_elza[7] = RE15_FENSTER_ELZA_KILL;           /* Kill-Flag 0xAC                           */
+    s_prog_elza[8]  = (uint8_t)(RE15_FENSTER_ELZA_X & 0xff);  s_prog_elza[9]  = (uint8_t)((RE15_FENSTER_ELZA_X >> 8) & 0xff);
+    s_prog_elza[10] = (uint8_t)(RE15_FENSTER_ELZA_Y & 0xff);  s_prog_elza[11] = (uint8_t)((RE15_FENSTER_ELZA_Y >> 8) & 0xff);
+    s_prog_elza[12] = (uint8_t)(RE15_FENSTER_ELZA_Z & 0xff);  s_prog_elza[13] = (uint8_t)((RE15_FENSTER_ELZA_Z >> 8) & 0xff);
+    s_prog_elza[16] = (uint8_t)(RE15_FENSTER_ELZA_DIR & 0xff); s_prog_elza[17] = (uint8_t)((RE15_FENSTER_ELZA_DIR >> 8) & 0xff);
+    s_prog_elza[20] = 0x01;                            /* Evt_end                                  */
+    s_prog_elza[21] = 0x00;
+}
+
 /* ---- Zustand ------------------------------------------------------------------------------------ */
 static int s_phase = RE15_FENSTER_AUS;
 static int s_spawn_offen = 0;       /* Spawn-Programm angefordert, Kraehe noch nicht ausgestattet */
@@ -127,6 +149,16 @@ void re15_fenster1120_install(uint16_t room_id)
 {
     s_phase = RE15_FENSTER_AUS; s_spawn_offen = 0; s_kraehe = -1;
     s_takt = -1; s_splitter = 0; s_knalle = 0;
+    s_elza_offen = 0; s_elza_gespawnt = 0;
+    if (room_id == RE15_FENSTER_RAUM_ELZA) {
+        /* Runde 36 Spur L: Elza — Fenster schon kaputt (re15_fenster1120_schaden_sichtbar), kein Ereignis; nur die
+         * zusaetzliche Kraehe ueber das Port-Programm (Gate der Kill-Flag im Sce_em_set-Handler @0x80042128-38). */
+        s_elza_offen = 1;
+        (void)scd_event_fire(RE15_FENSTER_ELZA_EREIGNIS);
+        logf_("[fenster] ROOM1121 (Elza): Fenster kaputt, Kraehe Slot %d Kill-Flag 0x%02X Programm %d %d",
+              RE15_FENSTER_ELZA_EM, RE15_FENSTER_ELZA_KILL, s_elza_gespawnt, 0);
+        return;
+    }
     if (room_id != RE15_FENSTER_RAUM) return;
     if (!tor_offen()) {
         logf_("[fenster] ROOM1120 aus: (9,73)=%d (9,79)=%d %d %d",
@@ -154,6 +186,12 @@ void re15_fenster1120_install(uint16_t room_id)
 
 const uint8_t *re15_fenster1120_ereignis(uint16_t room_id, uint8_t event_id)
 {
+    if (room_id == RE15_FENSTER_RAUM_ELZA && event_id == RE15_FENSTER_ELZA_EREIGNIS && s_elza_offen) {
+        s_elza_offen = 0;                              /* Runde 36 Spur L: genau einmal je Raumaufbau */
+        s_elza_gespawnt = 1;
+        elza_programm_bauen();
+        return s_prog_elza;
+    }
     if (room_id != RE15_FENSTER_RAUM || event_id != RE15_FENSTER_EREIGNIS) return NULL;
     if (s_phase != RE15_FENSTER_SCHARF) return NULL;
     if (s_spawn_offen == 1) {
@@ -239,6 +277,8 @@ void re15_fenster1120_tick(void)
 
 int re15_fenster1120_schaden_sichtbar(int cut)
 {
+    /* Runde 36 Spur L: bei Elza IMMER kaputt (NUTZER-VORGABE), dieselbe Ueberlagerung auf demselben Cut 1. */
+    if (g_current_room_id == RE15_FENSTER_RAUM_ELZA) return cut == 1;
     if (g_current_room_id != RE15_FENSTER_RAUM || cut != 1) return 0;
     if (s_phase == RE15_FENSTER_LAEUFT) return s_takt >= RE15_FENSTER_T_SPLITTER;
     return re15_game_flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT);
