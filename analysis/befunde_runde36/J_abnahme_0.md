@@ -1,7 +1,9 @@
 # Runde 36 — Spur J "szenenleon": UNABHAENGIGE ABNAHME 0
 
 Pruefer: Abnahme-Agent 0 (glaubt nur, was er selbst am gebauten Stand gemessen hat).
-Baum: `.claude/worktrees/r36_szenenleon`, Zweig `r36/szenenleon`, HEAD b80c88be (Basis master 78a4a748).
+Baum: `.claude/worktrees/r36_szenenleon`, Zweig `r36/szenenleon`, gemessen auf b80c88be (Basis master 78a4a748).
+Waehrend der Abnahme kam bd6e96c2 "Merge branch 'master'" hinzu — `git diff --stat b80c88be bd6e96c2` = nur
+analysis/befunde_runde36/AUFTRAG.md (+15, der Nachtrag 836023f5); der gemessene Code ist identisch.
 Massstab: AUFTRAG.md (Wortlaut + Nachtrag 14:00 + Nachtrag "abends" fuer Spur J Punkt 2, master 836023f5 23:40 —
 nach dem Bau-Ende, aber ausdruecklich "gilt fuer Bau, Nachbesserung UND Abnahme"), VERTRAG.md, CLAUDE.md (RE-Gate).
 
