@@ -15,6 +15,12 @@ Eigentuemer laut VERTRAG §1.4: "E = RE15_ACTOR_MAX + alle Arrays".
 
 ## 1. Arbeitsprotokoll (chronologisch)
 - [start] Baum sauber auf 78a4a748; AUFTRAG/VERTRAG gelesen; L_cut1150.md §10.1/§10.5 (Vorrunde) gelesen.
+- RDT-Zensus der Sce_em_set-Slots (§3.4), Original selbst disassembliert (§3.1-3.3), Zensus der Port-Nutzer (§4).
+- Basis gebaut, Messung vorher an der exe (§2) -> Befund reproduziert (0 statt 5).
+- RE15_ACTOR_MAX 21 + Sentinel irons_tod_1150.c, gebaut, Messung nachher (§6.1) -> 5 (Aktor 16..20).
+- 484 Unit-Tests gruen (§7); Riegel unit_r36_gegnerzahl_* + integration_r36_gegnerzahl (Karte + CONTINUE + Tuer) gebaut;
+  Sentinel-Pin mit dem alten Wert 0x0f gegengeprueft (rot), dann wieder auf den Fix.
+- r35-Tests mit festen Annahmen angepasst (cut1150 Lauf F, granate Gator-Slot), gezielte Integrationslaeufe (§7).
 
 ## 2. Messung vorher
 
@@ -152,7 +158,16 @@ s. §3.2 Punkt 3), dieselbe, die bisher die Aktoren 1..6 setzte; danach gehen si
 3347 in 160 Bildern).
 
 ## 7. Tests (Namen, Ergebnis)
-(folgt)
+
+| Test | misst | Ergebnis |
+|---|---|---|
+| unit_r36_gegnerzahl_feld | RE15_ACTOR_MAX = 21, g_actors 21 Plaetze (+ `_Static_assert`) | gruen |
+| unit_r36_gegnerzahl_raum1030 / _raum1031 | echte RDT, Raumaufbau ueber scd_room_reenter; je k = 0..20 (Records 0..k-1 tot) erscheinen GENAU Aktor k+1..k+n, n = min(6, 20-k) (Tot-Bit vor Limit @0x80042120-3c, Limit 6 @0x1de2/@0x1e58); 1030: die sub00-Aufstellung (0x53 Art 2 ueber 20 Plaetze) setzt den i-ten anwesenden auf Pos_set-Fall i (auch Aktor 16..20); 1031 mit seiner Vorbedingung Ck(3,0x7d) @0x01E54 | gruen (je 21 Faelle + 20 Aufstellungen) |
+| unit_r36_gegnerzahl_raum1040 / _raum1041 | dito, Limit 5 (@0x11f0/@0x1218), beide Zweige (Ck(4,5) @0x011F8) | gruen (je 42 Faelle) |
+| unit_r36_gegnerzahl_raum20b0 | ROOM20B0/20B1: Slots 0..19 = Aktor 1..20 (Typ 0x24), Slots 20..34 verworfen, keine fremden Aktoren | gruen |
+| unit_r36_gegnerzahl_kein_platz | alle 20 Plaetze belegt + Nachspawn-Programm 14 (irons_tod_1150.c): 5/5 Port-Spawns tragen Slot 20 + Tot-Bit 0xFF, nach 10 Bildern alle 20 Plaetze unveraendert | gruen; GEGENPROBE mit dem alten Wert 0x0f: rot (0/5, nur 19/20 heil = Aktor 16 ueberschrieben) |
+| integration_r36_gegnerzahl | ECHTER Weg: Karte (probe_r36_gegnerzahl_karte) + CONTINUE + Aktionstaste an der Original-Tuer; letzte state.log-Zeile im Zielraum: a 1030->1040 (1040 Records 0..14 tot) {16..20}; b 1040->1030 (1030 Records 0..14 tot) {16..20}; c Kontrolle 1040 alle leben {1..5}; d 1030 Records 0..16 tot {18,19,20} | gruen, 69,5 s |
+| alle 484 Unit-Tests (`ctest -R "^unit_" -E "android_bash" --timeout 600 -j4`) | Gesamtbestand mit RE15_ACTOR_MAX 21 | `100% tests passed, 0 tests failed out of 484` (183,8 s), darunter unit_r35_cut1150_montage_1040_reihe (k = 0..20 je 5 Zombies) |
 
 ## 8. OFFEN
 (folgt)
