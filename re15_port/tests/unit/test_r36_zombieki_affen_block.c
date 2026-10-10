@@ -157,6 +157,7 @@ typedef struct { int f0, f1; int32_t x, z; int dist; int subs[32]; int los1; int
 static int aufbau(re15_actor_t **gout, re15_actor_t **plout)
 {
     re15_game_state_init();
+    re15_damage_seed_rng(0x2545f491u);   /* NB1: jeder Lauf mit demselben Engine-Zufall (FUN_8001af20-Zwilling) — Laeufe unabhaengig */
     re15_game_flag_set(4, 0x40, 1);
     if (room_boot(0x11C0, -6729, -12800, 647, 5, 3) != 0) { printf("ROOM11C0 nicht ladbar\n"); return 0; }
     if (!bank_laden_27()) { printf("EM027-Bank fehlt\n"); return 0; }
@@ -203,6 +204,70 @@ static szene_t szene(int32_t lx, int32_t lz, int32_t gx, int32_t gz, int bilder)
     return r;
 }
 
+/* ---- Nachbesserung 1 (Abnahme 0, Maengel 5/6): ZUFALLSGANG-STATISTIK ueber viele Seeds -------------------------
+ * Derselbe Zufallsgang wie unten (alle 90 Bilder neue Blickrichtung, Rennen = UP+CROSS, HP je Bild 100, im Griff
+ * abwechselnd Quadrat/Kreuz), dieselbe Blockade-Definition (Gorilla lebt, beisst/greift nicht, bewegt sich >= 90
+ * Bilder < 40 Einheiten ab Streckenbeginn), aber nur Summen: blockierte Bilder, Griffe, Sub-Histogramm der
+ * blockierten Bilder. Der Riegel vergleicht damit Port-Wahl AN gegen AUS auf demselben Seed-Satz. */
+typedef struct { long blockiert; int griffe; long sub[32]; long nah, fern, los, klemme; } zg_t;
+static int s_zg_lage = 0;   /* 1: je blockierte Strecke eine LAGE-Zeile (Sonde stat ... 3) */
+static zg_t zg_stat(int bilder, uint32_t seed)
+{
+    zg_t r; memset(&r, 0, sizeof r);
+    re15_actor_t *g[2]; re15_actor_t *pl;
+    if (!aufbau(g, &pl)) { r.blockiert = -1; return r; }
+    int32_t ax[2], az[2]; int fa[2] = { 0, 0 }; long subs_akk[2][32]; long akk_nah[2] = { 0, 0 }, akk_los[2] = { 0, 0 }, akk_kl[2] = { 0, 0 };
+    for (int k = 0; k < 2; k++) { ax[k] = g[k]->x; az[k] = g[k]->z; memset(subs_akk[k], 0, sizeof subs_akk[k]); }
+    int ziel_rot = pl->rot_y, prev_gr = 0; uint32_t rng = seed;
+    for (int f = 1; f <= bilder; f++) {
+        if ((f % 90) == 1) { rng = rng * 1103515245u + 12345u; ziel_rot = (int)((rng >> 8) & 0xfff); }
+        uint16_t held = 0;
+        int err = ((ziel_rot - (int)(pl->rot_y & 0xfff) + 2048 + 4096) % 4096) - 2048;
+        if (err > 48)       held = RE15_PAD_BIT_RIGHT;
+        else if (err < -48) held = RE15_PAD_BIT_LEFT;
+        else                held = RE15_PAD_BIT_UP | RE15_PAD_BIT_CROSS;
+        int gr = re15_player_is_grabbed();
+        if (gr) held = (uint16_t)((f & 1) ? RE15_PAD_BIT_SQUARE : RE15_PAD_BIT_CROSS);
+        frame(held, (uint16_t)(gr ? held : 0));
+        if (pl->hp < 100) pl->hp = 100;
+        if (gr && !prev_gr) r.griffe++;
+        prev_gr = gr;
+        for (int k = 0; k < 2; k++) {
+            re15_actor_t *e = g[k];
+            int sub = e->sub_state_1 & 31;
+            int lebt = (e->state == 1);
+            int kampf = (sub == 5 || sub == 6 || sub == 8 || sub == 15);
+            int bewegt = (labs(e->x - ax[k]) + labs(e->z - az[k])) >= 40;
+            if (lebt && !kampf && !bewegt) { subs_akk[k][sub]++; if (fa[k] == 0) fa[k] = f;
+                long long ddx = e->x - pl->x, ddz = e->z - pl->z;
+                akk_nah[k] += (ddx * ddx + ddz * ddz < 6001LL * 6001LL); akk_los[k] += (e->dog_flags & 1); akk_kl[k] += (e->sca_wall_hit != 0); }
+            else {
+                int dauer = fa[k] ? f - fa[k] : 0;
+                if (dauer >= 90 && s_zg_lage) printf("LAGE %08x g%d %d %d leon %d %d dauer %d los %ld\n", seed, k, (int)ax[k], (int)az[k], (int)pl->x, (int)pl->z, dauer, akk_los[k]);
+                if (dauer >= 90) { r.blockiert += dauer; for (int q = 0; q < 32; q++) r.sub[q] += subs_akk[k][q];
+                                   r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k]; }
+                fa[k] = 0; memset(subs_akk[k], 0, sizeof subs_akk[k]); akk_nah[k] = akk_los[k] = akk_kl[k] = 0;
+                ax[k] = e->x; az[k] = e->z;
+            }
+        }
+    }
+    for (int k = 0; k < 2; k++) {                                   /* offene Strecke am Laufende mitzaehlen */
+        int dauer = fa[k] ? bilder + 1 - fa[k] : 0;
+        if (dauer >= 90) { r.blockiert += dauer; for (int q = 0; q < 32; q++) r.sub[q] += subs_akk[k][q];
+                           r.nah += akk_nah[k]; r.fern += dauer - akk_nah[k]; r.los += akk_los[k]; r.klemme += akk_kl[k]; }
+    }
+    return r;
+}
+
+/* Seed-Satz des Riegels: 0x1234567, 0xbeef und 2..(n-1) aus einem festen LCG (reproduzierbar). */
+static uint32_t zg_seed(int i)
+{
+    if (i == 0) return 0x1234567u;
+    if (i == 1) return 0xbeefu;
+    uint32_t s = 0x5eed0000u + (uint32_t)i * 2654435761u;
+    return s;
+}
+
 static int fails = 0, checks = 0;
 #define CHECK(c, ...) do { checks++; if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } \
                            else { printf("ok:   " __VA_ARGS__); printf("\n"); } } while (0)
@@ -211,6 +276,63 @@ int main(int argc, char **argv)
 {
     /* "fest <x> <z> [bilder]": Leon steht still auf (x,z) und blickt auf Gorilla 1 — Spur je 30 Bilder + Summe
      * (Abstand min/Ende, erster Angriff, Anteile Sub-Zustaende, Klemme, Sicht, Zonenspruenge). */
+    if (argc > 1 && strcmp(argv[1], "raster") == 0) {   /* raster [schritt] [radius]: Begehbarkeit fuer den Gorilla (echte Klemme, Band 0, Maske 4) */
+        int st = (argc > 2) ? atoi(argv[2]) : 800, rad = (argc > 3) ? atoi(argv[3]) : 1600;
+        re15_actor_t *gg[2]; re15_actor_t *pp;
+        if (!aufbau(gg, &pp)) return 1;
+        for (int z = 26000; z >= -31000; z -= st) {
+            printf("%6d ", z);
+            for (int x = -33000; x <= 22000; x += st) {
+                int32_t nx = x, nz = z; uint8_t ct = 0; uint16_t at = 0;
+                re15_collision_constrain_contact_band(&g_room_rdt, x, z, &nx, &nz, rad, 0, 4u, &ct, &at);
+                uint8_t zc = 0;
+                char ch = (nx != x || nz != z) ? '#' : '.';
+                if (re15_collision_zone_query(&g_room_rdt, x, z, 0, 0, 0x10u, &zc)) ch = (ch == '#') ? 'P' : 'p';
+                else if (re15_collision_zone_query(&g_room_rdt, x, z, 0, 0, 0x20u, &zc)) ch = (ch == '#') ? 'Q' : 'q';
+                putchar(ch);
+            }
+            putchar('\n');
+        }
+        printf("       x von -33000 bis 22000, Schritt %d, Radius %d; # = Klemme verschiebt, p/P = 0x10-Pad frei/geklemmt, q/Q = 0x20-Pad\n", st, rad);
+        return 0;
+    }
+    if (argc > 4 && strcmp(argv[1], "eins") == 0) {   /* eins <seed-index> <0 AUS|1 AN> <bilder>: EIN Lauf je Prozess (Modulzustand
+                                                         * bleibt sonst zwischen Laeufen haengen — gemessen: stat-AUS 73006 allein
+                                                         * gegen 61502 im Wechsel mit AN) */
+        int i = atoi(argv[2]), modus = atoi(argv[3]), b = atoi(argv[4]);
+        re15_r36_affen_padsuche_enable(modus ? 1 : 0);
+        zg_t r = zg_stat(b, zg_seed(i));
+        printf("EINS seed 0x%08x modus %d blockiert %ld griffe %d nah %ld fern %ld los %ld klemme %ld sub3 %ld sub4 %ld sub7 %ld\n",
+               zg_seed(i), modus, r.blockiert, r.griffe, r.nah, r.fern, r.los, r.klemme, r.sub[3], r.sub[4], r.sub[7]);
+        return 0;
+    }
+    if (argc > 3 && strcmp(argv[1], "stat") == 0) {   /* stat <seeds> <bilder> [0|1|2 = nur AUS | nur AN | beide] */
+        int n = atoi(argv[2]), b = atoi(argv[3]), modus = (argc > 4) ? atoi(argv[4]) : 2;
+        if (argc > 5) s_zg_lage = atoi(argv[5]);
+        long su_an = 0, su_aus = 0, sub_an[32], sub_aus[32]; int gr_an = 0, gr_aus = 0, besser = 0, schlechter = 0, gleich = 0;
+        long q_an[4] = { 0, 0, 0, 0 }, q_aus[4] = { 0, 0, 0, 0 };   /* nah, fern, Sicht, Klemme (blockierte Bilder) */
+        memset(sub_an, 0, sizeof sub_an); memset(sub_aus, 0, sizeof sub_aus);
+        for (int i = 0; i < n; i++) {
+            zg_t aus = { 0 }, an = { 0 };
+            if (modus != 1) { re15_r36_affen_padsuche_enable(0); aus = zg_stat(b, zg_seed(i)); }
+            if (modus != 0) { re15_r36_affen_padsuche_enable(1); an = zg_stat(b, zg_seed(i)); }
+            re15_r36_affen_padsuche_enable(1);
+            su_an += an.blockiert; su_aus += aus.blockiert; gr_an += an.griffe; gr_aus += aus.griffe;
+            for (int q = 0; q < 32; q++) { sub_an[q] += an.sub[q]; sub_aus[q] += aus.sub[q]; }
+            q_an[0] += an.nah; q_an[1] += an.fern; q_an[2] += an.los; q_an[3] += an.klemme;
+            q_aus[0] += aus.nah; q_aus[1] += aus.fern; q_aus[2] += aus.los; q_aus[3] += aus.klemme;
+            if (modus == 2) { if (an.blockiert < aus.blockiert) besser++; else if (an.blockiert > aus.blockiert) schlechter++; else gleich++; }
+            printf("seed 0x%08x: AUS blockiert %5ld Griffe %2d | AN blockiert %5ld Griffe %2d\n", zg_seed(i), aus.blockiert, aus.griffe, an.blockiert, an.griffe);
+        }
+        printf("SUMME %d Seeds x %d Bilder x 2 Gorillas: AUS %ld blockiert, %d Griffe | AN %ld blockiert, %d Griffe | besser %d schlechter %d gleich %d\n",
+               n, b, su_aus, gr_aus, su_an, gr_an, besser, schlechter, gleich);
+        printf("Sub-Anteile der blockierten Bilder AUS:"); for (int q = 0; q < 32; q++) if (sub_aus[q]) printf(" %d:%ld", q, sub_aus[q]);
+        printf("\nSub-Anteile der blockierten Bilder AN: "); for (int q = 0; q < 32; q++) if (sub_an[q]) printf(" %d:%ld", q, sub_an[q]);
+        printf("\nblockiert nah(<6001)/fern/mit Sicht/an der Klemme: AUS %ld/%ld/%ld/%ld | AN %ld/%ld/%ld/%ld",
+               q_aus[0], q_aus[1], q_aus[2], q_aus[3], q_an[0], q_an[1], q_an[2], q_an[3]);
+        printf("\n");
+        return 0;
+    }
     const int fest = (argc > 3 && strcmp(argv[1], "fest") == 0);
     const int riegel = (argc > 1 && strcmp(argv[1], "riegel") == 0);
     int bilder = fest ? ((argc > 4) ? atoi(argv[4]) : 1500) : ((argc > 1 && !riegel) ? atoi(argv[1]) : 6000);
@@ -219,6 +341,7 @@ int main(int argc, char **argv)
 
 
     re15_actor_t *g[2]; re15_actor_t *pl;
+    if (argc > 4 && !fest && strcmp(argv[4], "aus") == 0) re15_r36_affen_padsuche_enable(0);   /* Zufallsgang-Spur ohne Port-Wahl */
     if (!aufbau(g, &pl)) return 1;
     if (fest) {
         pl->x = fest_x; pl->z = fest_z; pl->y = 0; pl->floor = 0;
@@ -291,6 +414,8 @@ int main(int argc, char **argv)
                    f, k + 1, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3, (int)e->x, (int)e->z, (int)e->rot_y, (int)e->floor,
                    e->dog_flags & 1, e->sca_wall_hit != 0, (int)e->dog_blocked_ctr, hit, zc, win, hit2, zc2, (int)pl->x, (int)pl->z, (int)pl->rot_y,
                    (int)isqrt64((long long)(e->x - pl->x) * (e->x - pl->x) + (long long)(e->z - pl->z) * (e->z - pl->z)));
+            { int32_t ux = 0, uz = 0; int up = -1; int ua = re15_r36_affen_umweg_lesen((int)(e - g_actors), &ux, &uz, &up);
+              printf("        Umweg %d Ziel (%d,%d) Pad #%d\n", ua, (int)ux, (int)uz, up); }
         }
         for (int k = 0; k < 2; k++) {
             re15_actor_t *e = g[k];

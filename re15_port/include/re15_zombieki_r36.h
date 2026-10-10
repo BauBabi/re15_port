@@ -130,6 +130,7 @@ int re15_r36_affen_padsuche_ziel(const re15_actor_t *e, int slot, int sub, int32
 /* Nur fuer Sonden: Pad-Suche abschalten (Gegenprobe = Original-Verhalten). */
 void re15_r36_affen_padsuche_enable(int an);
 int  re15_r36_affen_padsuche_aktiv(int slot);
+int  re15_r36_affen_umweg_lesen(int slot, int32_t *x, int32_t *z, int *pad);   /* NUR Sonden */
 
 /* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
  * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt
