@@ -181,8 +181,12 @@ static void tuer_sperren(uint16_t room_id)
 {
     if (room_id != RE15_R36Q_TUER_RAUM) return;
     if (re15_game_flag_get(9, RE15_R36Q_TUER_BIT)) return;          /* schon aufgeschlossen */
-    /* Nur den echten Tuer-Satz umwidmen (main00 @0x00FAA). Ohne Strom hat sub01 @0x01216 den Slot
-     * bereits zum Text msg 15 gemacht — oder tut es im naechsten Bild; dann bleibt alles RE1.5. */
+    /* Ohne Strom widmet sub01 den Slot in JEDEM Bild zum Text msg 15 um: @0x011F2 If, @0x011F6
+     * `21 04 f3 00` Ck(4,0xF3)==0, @0x01216 `46 01 01 31 0f 00 ff ff 00 00` Aot_reset(1, sce 1, 0x31,
+     * msg 15) ("It's too dark to see anything..."). Dann bleibt alles RE1.5 — gesperrt wird nur bei
+     * Strom (4,0xF3)=1, wenn Slot 1 die Tuer bleibt. */
+    if (!re15_game_flag_get(RE15_R36Q_STROM_BANK, RE15_R36Q_STROM_BIT)) return;
+    /* Nur den echten Tuer-Satz umwidmen (main00 @0x00FAA). */
     const re15_aot_t *a = &g_aot.slots[RE15_R36Q_TUER_SLOT];
     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) return;
 

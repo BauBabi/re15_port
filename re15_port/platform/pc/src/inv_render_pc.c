@@ -52,6 +52,7 @@ extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
 #include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
+#include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Icon + Bild der zwei Schluessel (0x42/0x45) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -303,6 +304,7 @@ static int inv_assets_init(void)
     /* Icon der Sicherung (Tile 0x40 @0x12C00) einsetzen — derselbe Eingriff an ALLEN
      * Ladestellen, sonst zeigen Raster und Item-Box zwei Gegenstaende (re15_sicherung.h). */
     re15_sicherung_icon_einsetzen(s_itemall, s_itemall_size);
+    re15_schluessel_r36_icon_einsetzen(s_itemall, s_itemall_size);   /* Runde 36 Spur Q */
 
     /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
      * tiles, pic ids 1-14 (see the s_mixitem note above). */
@@ -320,6 +322,7 @@ static int inv_assets_init(void)
      * unten nimmt ihn deshalb an — das CHECK-Foto der Sicherung war vorher LEER, weil
      * der ausgelieferte Block 0x40 die RE2-Rechtecke (0,480) / (0,0) traegt. */
     if (s_itps) re15_sicherung_bild_einsetzen(s_itps, s_itps_size);
+    if (s_itps) re15_schluessel_r36_bild_einsetzen(s_itps, s_itps_size);   /* Runde 36 Spur Q */
     /* PRUEFZEILE der beiden Ladestellen dieses Schirms (Runde 30, Nachbesserung): 0 = das
      * Rohr ist in DEN Puffern, aus denen Raster (inv_compose_cells) und CHECK-Foto
      * (photo_upload_check) lesen. Ohne Einsetzen stuende hier der ausgelieferte Stand

@@ -9,6 +9,7 @@
  */
 #include "re15_itps.h"
 #include "re15_sicherung.h"   /* re15_sicherung_bild_einsetzen (Runde 30, Thema H) */
+#include "re15_schluessel_r36.h" /* re15_schluessel_r36_bild_einsetzen (Runde 36 Spur Q) */
 #include <stddef.h>
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -50,6 +51,7 @@ int re15_itps_load(void)
      * Datei bleibt byte-true. Dieselbe Zeile steht an allen Ladestellen von ITPS.ITP
      * (platform/pc/main.c, inv_render_pc.c). Herleitung: include/re15_sicherung.h. */
     re15_sicherung_bild_einsetzen(data, sz);
+    re15_schluessel_r36_bild_einsetzen(data, sz);   /* Runde 36 Spur Q: Bloecke 0x42/0x45 */
     s_itps  = data;
     s_loaded = 1;
     return 0;

@@ -40,6 +40,7 @@
  */
 #include "re15_item_prompt.h"
 #include "re15_files.h"       /* Runde 30: Dokument-Namen ab Item-Id 0x48 (Dokument-Tabelle) */
+#include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Namen der Ids 0x42/0x45 (Prison/Parking Lot Key) */
 #include "gen/item_prompt_data.inc"
 
 /* Port-Prompt-Schluessel -> BSS-Skriptindex. Die Zuordnung der vier bisher genutzten
@@ -169,6 +170,10 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
                     }
                     continue;
                 }
+            }
+            {   /* Runde 36 Spur Q: Port-Name der zwei Schluessel (re15_schluessel_r36.h), 0x07-terminiert. */
+                const uint8_t *nm = re15_schluessel_r36_name(item_id);
+                if (nm) { for (; *nm != 0x07; nm++) { if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0); total++; } continue; }
             }
             /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102, s. Kopf),
              * nicht ein gewaehltes Limit. Das Original maskiert nur `andi a0,a0,0xff` und

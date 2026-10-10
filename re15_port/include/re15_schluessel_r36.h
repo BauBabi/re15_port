@@ -112,6 +112,10 @@
  * nichts (er greift nur, solange Slot 1 eine TUER ist). */
 #define RE15_R36Q_TUER_RAUM        0x11B0
 #define RE15_R36Q_TUER_SLOT        1
+/* Strom-Flag: ROOM11B0 sub01 @0x011F6 `21 04 f3 00` Ck(4,0xF3)==0 -> @0x01216 Aot_reset(1 -> Text 15);
+ * gesetzt vom Kesselraum ROOM11F0 sub18 @0x016F6 Set(4,0xF3)=1 (ablauf_leon.md L17). */
+#define RE15_R36Q_STROM_BANK       4
+#define RE15_R36Q_STROM_BIT        0xF3
 /* Nachrichten-Ids (VERTRAG 1.2: ROOM11B0 Spur Q 28..29; ROOM11B0 hat 16 RDT-Nachrichten 0..15). */
 #define RE15_R36Q_MSG_ZU           28       /* "It's locked. / The door is marked "Parking Lot"." */
 #define RE15_R36Q_MSG_BENUTZT      29       /* "You've used the Parking Lot Key."                   */

@@ -7,6 +7,7 @@
  */
 #include "re15_item_icon.h"
 #include "re15_sicherung.h"   /* re15_sicherung_icon_einsetzen (Runde 30, Thema H) */
+#include "re15_schluessel_r36.h" /* re15_schluessel_r36_icon_einsetzen (Runde 36 Spur Q) */
 #include <stddef.h>
 
 /* Platform asset reader (re15_asset_read_file lives in the PC/PSX backend; test_support stubs it). */
@@ -79,6 +80,7 @@ int re15_itemall_load(void)
      * bleibt byte-true. Dieselbe Zeile steht an allen Ladestellen von ITEMALL.PIX
      * (platform/pc/main.c, inv_render_pc.c). Herleitung: include/re15_sicherung.h. */
     re15_sicherung_icon_einsetzen(pix, sz);
+    re15_schluessel_r36_icon_einsetzen(pix, sz);   /* Runde 36 Spur Q: Tiles 0x42/0x45 */
     s_pix = pix;
     s_loaded = 1;
     return 0;
