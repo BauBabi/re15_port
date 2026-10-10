@@ -31,3 +31,18 @@ endif()
 add_test(NAME unit_r36_zombieki_szenen COMMAND test_r36_zombieki_szenen
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r36_zombieki_szenen PROPERTIES TIMEOUT 300)
+
+#   unit_r36_zombieki_affen  Punkt 3: Gorilla-Leiche ROOM11C0 — Schattenrecord +0xBC/+0xBE = 1700/1800
+#                            (@0x801171d8-f0), Lache 0x00ffff38 + 8/Takt ueber 91 Takte (FUN_8011be54
+#                            @0x8011bed0-bf44) am echten Schusspfad; Gegenprobe ohne Haken = Befund.
+add_executable(test_r36_zombieki_affen ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen.c)
+target_link_libraries(test_r36_zombieki_affen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r36_zombieki_affen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r36_zombieki_affen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r36_zombieki_affen PRIVATE m)
+endif()
+add_test(NAME unit_r36_zombieki_affen COMMAND test_r36_zombieki_affen
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)

@@ -41,6 +41,7 @@
 #include "re15_fenster1120.h" /* Runde 35 Spur M: re15_re2crow_zwang_ist (Fensterkraehe ROOM1120) */
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
+#include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
@@ -8888,13 +8889,10 @@ static void re15_maggot_ai_tick(int slot)
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
         /* Runde 35 Spur J: +0x1ba hat KEINEN INIT-Store (FUN_80116f50, kein 442(.)) — Seed @0x80042210 */
         /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
-         * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
-         * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
-         * @0x8010dabc und `ori a3,zero,0x1f4` = 500 @0x8010dac8. Ohne diese Felder
-         * griff der Standard-Charakterschatten und die Leiche bekam nie ihre Lache. */
-        e->crow_shadow_w = 1000;                              /* +0xBC @0x8010dabc */
-        e->crow_shadow_h = 500;                               /* +0xBE @0x8010dac8 */
-        e->crow_pool     = 0;
+         * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record entity+0xB0.
+         * ⛔ Runde 36 Spur F: hier standen die HUNDE-Werte 1000/500 (@0x8010dabc/dac8) — der
+         * Gorilla-INIT uebergibt rec+6 (0x80121356 = 1600) + 100 / + 200 @0x801171d8-f0, s. re15_zombieki_r36.h. */
+        re15_r36_affen_lache_init(e);                         /* Runde 36 Spur F: +0xBC = 1700, +0xBE = 1800 @0x801171e8/f0 */
         /* RENDER-SCALE: Flag 0x800 an @0x80117138 (ori v0,v0,0x800) + +0x166 = 0x1b33
          * (= 6963/4096 = 1.6999 ~ 1.7x) @0x80117148-4c; Override wenn Spawn-Byte +0x9
          * Bit 0x40 (@0x80117164 andi 0x40): Scale = ((+0x9 & 0xf) + 10) * 0x1000 / 10
@@ -9555,8 +9553,10 @@ static void re15_maggot_ai_tick(int slot)
         }
         if (e->sub_state_3 == 1) {
             /* per tick: +0xc4/+0xec = (x & 0xff000000) | 0x00ffff38 corpse tint and pool spread
-             * +0xbc/+0xbe += 8 @0x8011bed0-bf14 — model-pool color/pool channel, render-side (the
-             * same channel as the zombie corpse pool, re15_enemy_corpse_settle) */
+             * +0xbc/+0xbe += 8 @0x8011bed0-bf14 — ⛔ Runde 36 Spur F: stand hier nur als Kommentar
+             * ("render-side"), wurde aber nie geschrieben, und der Renderer las die Felder fuer 0x27
+             * nicht -> "Blut laeuft nicht aus" (Nutzer). Jetzt AI-seitig wie beim Hund (case 7 oben). */
+            re15_r36_affen_lache_tick(e);                     /* Runde 36 Spur F: Tinte + += 8 @0x8011bed0-bf14 */
             int16_t t = e->grab_kill_ctr; e->grab_kill_ctr = (int16_t)(t - 1);   /* unconditional dec @0x8011bf24-34 */
             if (t == 0) e->sub_state_3 = 2;                   /* @0x8011bf38-44 */
         }
