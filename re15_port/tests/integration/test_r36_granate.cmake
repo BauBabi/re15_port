@@ -8,8 +8,8 @@
 #           (c) die Zombies werden weiterhin zerrissen (Clip != 1 im Folgebild, Lage aendert sich > 600 in 10 Bildern).
 #   brand   dieselbe Aufstellung mit der Brandgranate (Item 0x0B, Art 4): nach der Explosion gezeichnete Flammen
 #           (id=8) > 0 — die Brand-Verkohlung FUN_80106128 bleibt, Feuer nur bei incendiary.
-#   serie   ROOM1140, 6 Abzuege der HE-Granate hintereinander (Skript aus `MA0.2,M1.4` je Wurf; R1 bleibt gehalten):
-#           gr.log traegt 6 SPAWN-Zeilen (N Abzuege = N Granaten), kein Abzug ohne Granate.
+#   serie   ROOM1220, 8 Abzuege der HE-Granate mit R1-Freigabe 0,0..0,7 s nach jedem Abzug (der Aussetzer des Nutzers):
+#           8 SPAWN- und 8 Explosions-Zeilen (N Abzuege = N Granaten), Granaten 30 -> 22 (vorher 2 Wuerfe, 8 weg).
 # Ein Lauf OHNE Ergebnis (exit=1 = von aussen beendet; debug.log < 10 Zeilen = Startfehler) wird EINMAL wiederholt.
 
 cmake_minimum_required(VERSION 3.16)
@@ -248,4 +248,57 @@ if(_an)
         r36_fehler(brand "keine gezeichnete Flamme (id=8) nach dem Explosionsbild ${_G_X} — die Brandgranate muss brennen (FUN_80106128 / Bodenfeuer Op 48)")
     endif()
     message(STATUS "${_tag} [brand]: ok — X=${_G_X}, Eingriffe ${_G_EINGRIFFE}, Flammen nach X: ${_F_NACH}")
+endif()
+
+# ---------------------------------------------------------------------------------------------------
+# Lauf "serie" — N Abzuege = N Granaten, auch wenn R1 kurz nach dem Abzug losgelassen wird (der Aussetzer des
+# Nutzers; Dossier §3.1 r1_sweep: vorher 8 Abzuege -> 2 Wuerfe, 8 Granaten weg). ROOM1220 (Zellentrakt, keine
+# laufenden Gegner), 8 Bloecke `M0.5,MA0.2,M<h>,W1.5` mit h = 0.0 .. 0.7 s (R1 nach 0..21 Bildern los).
+# ---------------------------------------------------------------------------------------------------
+r36_laeuft(serie _an)
+if(_an)
+    set(_dir "${_wurzel}/serie")
+    set(_skript "M0.5,MA0.2,M0.0,W1.5")
+    foreach(_h 0.1 0.2 0.3 0.4 0.5 0.6 0.7)
+        string(APPEND _skript ",M0.5,MA0.2,M${_h},W1.5")
+    endforeach()
+    r36_exe(serie "${_dir}" 400 ${_env_basis}
+        RE15_DEBUG_JUMP=1220@250 "RE15_PLAYER_POS=-19533,-9700,2048" RE15_GIVE=9:30 RE15_EQUIP=9
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_skript}"
+        "RE15_EXIT_AT=700#1220")
+    # Abzuege = Flanken auf pad 8800 (R1 + SQUARE) im Zustandslog NACH dem Sprung
+    r36_zustand("${_dir}/state.log")
+    set(_abzuege 0)
+    set(_prev "")
+    set(_mg_vor "")
+    set(_mg_nach "")
+    foreach(_f RANGE 0 ${_ZMAX})
+        if(DEFINED _Z_${_f})
+            if(_Z_${_f} MATCHES "^F[0-9]+ pad=([0-9a-f]+) .* mg=([0-9]+) ")
+                if("${CMAKE_MATCH_1}" STREQUAL "8800" AND NOT "${_prev}" STREQUAL "8800")
+                    math(EXPR _abzuege "${_abzuege} + 1")
+                endif()
+                set(_prev "${CMAKE_MATCH_1}")
+                if("${_mg_vor}" STREQUAL "")
+                    set(_mg_vor "${CMAKE_MATCH_2}")
+                endif()
+                set(_mg_nach "${CMAKE_MATCH_2}")
+            endif()
+        endif()
+    endforeach()
+    file(STRINGS "${_dir}/gr.log" _sp REGEX "SPAWN granate art=2 ")
+    file(STRINGS "${_dir}/gr.log" _rs REGEX "EV resolver art=2 ")
+    list(LENGTH _sp _n_sp)
+    list(LENGTH _rs _n_rs)
+    if(NOT _abzuege EQUAL 8)
+        r36_fehler(serie "${_abzuege} Abzuege im Zustandslog (soll 8) — Skript/Aufstellung verschoben?")
+    endif()
+    if(NOT _n_sp EQUAL _abzuege OR NOT _n_rs EQUAL _abzuege)
+        r36_fehler(serie "${_n_sp} Wuerfe / ${_n_rs} Explosionen bei ${_abzuege} Abzuegen (soll gleich; vorher 2/2 bei 8: Rueckstoss-Abbruch @0x8003363c vor dem Spawn)")
+    endif()
+    math(EXPR _mg_soll "${_mg_vor} - ${_abzuege}")
+    if(NOT "${_mg_nach}" STREQUAL "${_mg_soll}")
+        r36_fehler(serie "Granaten ${_mg_vor} -> ${_mg_nach} (soll ${_mg_soll}: je Abzug eine)")
+    endif()
+    message(STATUS "${_tag} [serie]: ok — ${_abzuege} Abzuege = ${_n_sp} Wuerfe = ${_n_rs} Explosionen, Granaten ${_mg_vor} -> ${_mg_nach}")
 endif()

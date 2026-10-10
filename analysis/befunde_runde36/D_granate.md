@@ -121,3 +121,35 @@ greift fuer die Granate erst ab dem Spawnbild der aktuellen Zielhoehe (19 HOCH @
 24 TIEF @0x80033758) statt ab 10 (@0x800740ba) — die Form der Regel (Schwelle je Waffe, LOWER sobald Cursor > Schwelle)
 bleibt die des Originals, nur die Schwelle der Granate wird an ihr "Schuss-Bild" gebunden, wie bei den Schusswaffen
 (Schuss Bild 0 < Schwelle 10). Nach dem Spawnbild senkt R1-Loslassen den Arm wie bisher.
+
+### 3.4 Zweite Ursache: voller Effektpool im Spawnbild (PORT-WAHL)
+FUN_80019700 sucht die Plaetze 0..95 (`sltiu` @0x8001978c) und liefert bei vollem Pool 0xFF (`ori v0,zero,0xff`
+@0x800197c8-cc) — Routine 30 laeuft dann nie, die Granate ist weg (Abzug im Bild 0), kein Wurf. Gemessen he_zombie
+(state.log `fx=`): F119 Explosion an 2 Zombies, F120 54, F124 72, F128 88, **F130 95 von 96**, F141 8. Drei zerrissene
+Zombies fuellen den Pool; ein Spawnbild (Abzug + 19/22/24) in diesem Fenster verliert die Granate — der zweite Wurf
+unmittelbar nach dem ersten ("selten"). Der RE2-Gore-Schub (Blut 0/0, Brocken 5/7) auf dem RE1.5-Pool ist eine
+Port-Konstruktion, das Original kennt diese Last nicht. PORT-WAHL: der Wurfkoerper (Spielobjekt) verdraengt das
+Blut-Teilchen mit dem kleinsten Index (Effekt-Id 0, die Mehrzahl des Schubs; der Spawner fuellt ab Index 0, also das
+aelteste); keine Granate, kein Nicht-Blut-Effekt wird verdraengt, ohne Blut bleibt das Original-Verhalten.
+(Versuch `pool_voll`: zweiter Abzug im Bild 99 mit Spawnbild 123 — dort fiel der Wurf stattdessen dem GRIFF des
+Zombies zum Opfer (F119 Leon rot 1079 -> 507, mo 0/1, Ziel-FSM unterbrochen): Abzug waehrend eines Griffs verfaellt,
+byte-true. Der Pool-Fall ist deshalb in der Sonde [3] nachgestellt, nicht an der exe.)
+
+### 3.5 Umsetzung (Dateien, Konstanten)
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| `engine/src/granate_r36.c` + `include/re15_granate_r36.h` | `re15_granate_r36_russ_flammen` (Punkt 1, Gate = 0), `re15_granate_r36_spawnbild` (19/22/24), `re15_granate_r36_recoil_break(id, elev)` (9/10/11 -> Spawnbild, sonst -1), `re15_granate_r36_platz_freimachen` (Blut Id 0, kleinster Index), Zaehler fuer Sonden | Spawnbilder @0x80033690/@0x800336a4/@0x80033758; Abbruch `sltu` @0x8003363c, Byte 2 @0x800740ba; Flammen @0x80106418-44/@0x80106450-74; Pool 0xFF @0x800197c8-cc |
+| `engine/src/enemy_ai_re2_zombie.c` | include + 2 Zeilen in `re2z_gore_soot` (Gate um die beiden Flammen-Spawns) | FUN_8010640C |
+| `engine/src/player_common.c` | 4 Zeilen hinter dem Werfer-Override: `rb_thr` der Granate = `re15_granate_r36_recoil_break(eq_w, s_aim_elev)` | @0x8003360c-50 |
+| `engine/src/re15_esp.c` + `include/re15_esp.h` | `re15_esp_fx_free_slot(i)` (3 Zeilen) + 1 Zeile in `re15_esp_granate_spawn` (Pool voll -> raeumen) | @0x800197c8-cc |
+| `tests/unit/probe_r34_wurf.c` | PRUEF 109: R1 los im Bild 15 -> jetzt Spawn 22 (vorher keiner), Menge 4 | verhaltensbedingt (Punkt 2) |
+Keine neuen Assets, kein Patch an shared_assets, keine Bits/IDs/Ereignisse, kein Env-Schalter.
+
+### 3.6 Messung nachher (exe ab dd88956b bzw. 2cb21596, Messkopie, gleiche Aufstellungen)
+* `r1_sweep_n` (ROOM1220, 8 Abzuege, R1 nach 0,0..0,7 s los): **8 SPAWN (F38, 104, 173, 245, 320, 398, 479, 563) =
+  Abzug + 22, 8 Explosionen, Granaten 30 -> 22** (vorher 2 Wuerfe, 30 -> 22).
+* `he_zombie_n` (ROOM1140 TIEF an die Zombies, RE15_FX_LOG): Explosion F119 `eingriffe=3`, **0 Zeilen `id=8`** (vorher
+  844 = 4 je Bild), Zerreissen unveraendert (ss1=9, mo=2, Lage F120 -> F121 um > 300), Blut/Brocken wie vorher (0/0 913,
+  7/2 153 Zeilen).
+* `brand_zombie_n` (Brandgranate 0x0B, gleiche Aufstellung): Explosion F119, `aufschlag re2_art=1`, **id=8 ab F120 9 je
+  Bild** (3 Zombies x Verkohlung Part 0/Kopf/Unterarm) bis zum Ende — Feuer bei incendiary unveraendert.
