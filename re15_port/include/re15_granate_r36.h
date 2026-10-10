@@ -81,4 +81,26 @@ int re15_granate_r36_spawnbild(int elev);
 int      re15_granate_r36_platz_freimachen(void);
 unsigned re15_granate_r36_platz_geraeumt(void);   /* Zaehlung fuer Sonden */
 
+/* (2c) NACHBESSERUNG 1 (Abnahme 0, M1/M2) — VERBRAUCH = ABGANG. Gemessen (Dossier §6.3, Lauf c2 ROOM1140):
+ *     zweiter Abzug F105 (Menge 4 -> 3), Zombie 0x11 packt Leon F113, Spawnbild waere F129 -> 2 Abzuege, 1 Wurf,
+ *     Menge 5 -> 3. Original: Mengen-Abzug im Rueckstossbild 0 (`jalr v0` @0x800334e0 -> Entlade-Handler
+ *     0x80033B38/58/78 = nur `jal 0x8004eae4` @0x80033b40/60/80), Abgang erst im Bild 19/22/24 (`jal 0x80019700`
+ *     @0x800336ec/@0x80033748/@0x800337a4); der Griff ersetzt das Kommando ohne Ziel-Gate (STAGE1.BIN
+ *     `sb v1(=2),0x800aca58` @0x80113b00, `sh zero,0x800aca5a` @0x80113b30) -> Granate weg, kein Wurf.
+ *     Retail-Vorbild RE2-Granatwerfer: Munition beim Eintritt (`jalr` @0x80042d3c -> 0x80043fcc `jal 0x8006a0cc`
+ *     @0x80043fdc), Geschoss im Bild 1 (`lbu v1,333(s0) / addiu v0,zero,1 / bne` @0x80044b98-a0) = 1 Bild Fenster.
+ *     ORCHESTRATOR-ENTSCHEIDUNG gemaess Nutzer-Wortlaut ("wird nicht geworfen"): eine Granate wird NUR verbraucht,
+ *     wenn sie wirklich geworfen wird. FORM: fuer die Wurf-Ids 9/10/11 entfaellt der Abzug des Entlade-Handlers im
+ *     Bild 0; derselbe FUN_8004eae4 laeuft im Spawnbild hinter der erfolgreichen Platzvergabe des Wurfkoerpers
+ *     (Fenster 0 Bilder). Griff/Treffer/Statusschirm-Waffenwechsel vor dem Spawnbild oder kein Platz im Pool ->
+ *     kein Wurf und kein Verbrauch. Abzug-Gate (Magazin > 0, `jal 0x8004ea6c` @0x80033314) unveraendert. */
+
+/** 1 = fuer Waffe `id` entfaellt der Mengen-Abzug FUN_8004eae4 des Entlade-Handlers im Rueckstossbild 0
+ *  (Wurf-Ids 9/10/11: Handler 0x80033B38/58/78, `jal 0x8004eae4` @0x80033b40/60/80), sonst 0. */
+int      re15_granate_r36_verbrauch_im_spawnbild(int id);
+/** Der Wurfkoerper hat seinen Platz bekommen (Spawnbild): jetzt FUN_8004eae4 (eine Granate, Rueckgabe wie
+ *  dort: 1 = abgezogen, 0 = Menge war schon 0). Aufrufer: game_step_common.c hinter re15_esp_granate_spawn. */
+int      re15_granate_r36_geworfen(void);
+unsigned re15_granate_r36_verbraucht(void);       /* Zaehlung fuer Sonden (Abzuege im Spawnbild) */
+
 #endif /* RE15_GRANATE_R36_H */

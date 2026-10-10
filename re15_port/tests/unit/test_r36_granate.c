@@ -5,10 +5,12 @@
  *       HE-Tod (Art 2, RE2-Zeile 9 -> 0x80108BEC -> Spreng-Russ FUN_8010640C) = 0, nach dem Brand-Tod
  *       (Art 4, Zeile 10 -> Verkohlung FUN_80106128) > 0; Zerreissen und Russ-Tinten bleiben.
  *   [2] wurf  — "Granate wird manchmal nicht geworfen": N Abzuege = N Granaten (Spielschritt, s.u.).
+ *   [3] pool  — voller Effektpool im Spawnbild.
+ *   [4] griff — Nachbesserung 1: Treffer/Waffenwechsel in der Wurfbewegung -> kein Wurf, Granate bleibt.
  *
  * Dossier: analysis/befunde_runde36/D_granate.md. Arena/Spielschritt wie test_r35_granate.c [4].
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r36_granate [feuer|wurf|pool|alle]
+ * Aufruf: test_r36_granate [feuer|wurf|pool|griff|alle]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -306,10 +308,13 @@ static int granate_platz(void)
 }
 /* Ein Wurf: Abzug im Bild 0 (SQUARE 6 Bilder wie das Skript MA0.2), R1 bis einschliesslich Bild `r1_bis`
  * gehalten (danach 0; -1 = nie loslassen). Liefert das Spawnbild (-1 = keiner), *lower = erstes Bild der
- * Phase LOWER (4) nach dem Abzug (-1 = nie), *menge = Menge nach 60 Bildern. */
+ * Phase LOWER (4) nach dem Abzug (-1 = nie), *menge = Menge nach 60 Bildern. s_verbrauch_bild = erstes Bild,
+ * in dem die Menge faellt (-1 = nie) — Nachbesserung 1: = Spawnbild (re15_granate_r36.h 2c). */
+static int s_verbrauch_bild = -1;
 static int wurf(int elev, int r1_bis, int *lower, int *menge)
 {
-    int spawn = -1; *lower = -1;
+    int spawn = -1; *lower = -1; s_verbrauch_bild = -1;
+    const int menge0 = g_inv.slots[3].qty;
     uint16_t eb = (elev > 0) ? RE15_PAD_BIT_UP : (elev < 0) ? RE15_PAD_BIT_DOWN : 0;
     for (int b = 0; b < 60; b++) {
         uint16_t pad = 0;
@@ -317,6 +322,7 @@ static int wurf(int elev, int r1_bis, int *lower, int *menge)
         if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
         sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
         if (spawn < 0 && granate_platz() >= 0) spawn = b;
+        if (s_verbrauch_bild < 0 && g_inv.slots[3].qty < menge0) s_verbrauch_bild = b;
         if (*lower < 0 && (re15_player_aim_phase_debug() & 0x0f) == 4) *lower = b;
     }
     *menge = g_inv.slots[3].qty;
@@ -328,6 +334,7 @@ static void abschnitt_wurf(void)
     static const int k_elev [3] = { 1, 0, -1 };
     static const char *k_name[3] = { "HOCH", "MITTE", "TIEF" };
     int gesamt_abzuege = 0, gesamt_wuerfe = 0, gesamt_menge_ok = 0, gesamt_lower_ok = 0, gesamt_spawn_ok = 0;
+    int gesamt_verbrauch_ok = 0;
     for (int ei = 0; ei < 3; ei++) {
         int abz = 0, wu = 0, menge_ok = 0, lower_ok = 0, spawn_ok = 0;
         int erster_fehl = -1;
@@ -342,6 +349,7 @@ static void abschnitt_wurf(void)
             if (spawn >= 0) wu++; else if (erster_fehl < 0) erster_fehl = r;
             if (spawn == k_spawn[ei]) spawn_ok++;
             if (menge == 4) menge_ok++;
+            if (spawn >= 0 && s_verbrauch_bild == spawn) gesamt_verbrauch_ok++;   /* N1: Verbrauch = Abgang */
             /* R1 vor dem Spawnbild losgelassen: LOWER fruehestens im Bild nach dem Spawn, spaetestens 2 danach
              * (Schwelle = Spawnbild, `Cursor > Schwelle`); R1 danach oder nie: LOWER erst nach dem Loslassen */
             if (r >= 0 && r < k_spawn[ei]) { if (lower > k_spawn[ei] && lower <= k_spawn[ei] + 2) lower_ok++; }
@@ -358,7 +366,10 @@ static void abschnitt_wurf(void)
     PRUEF(201, gesamt_wuerfe == gesamt_abzuege, "N Abzuege = N Granaten: %d Wuerfe bei %d Abzuegen (R1 los in Bild 0..30 nach dem Abzug, HOCH/MITTE/TIEF; vorher: r <= 18/21/23 ohne Wurf)",
           gesamt_wuerfe, gesamt_abzuege);
     PRUEF(202, gesamt_spawn_ok == gesamt_abzuege, "Spawnbild bleibt 19/22/24 (@0x80033690/@0x800336a4/@0x80033758) in %d/%d", gesamt_spawn_ok, gesamt_abzuege);
-    PRUEF(203, gesamt_menge_ok == gesamt_abzuege, "je Abzug genau eine Granate abgezogen (Bild 0 @0x80033b40) in %d/%d", gesamt_menge_ok, gesamt_abzuege);
+    PRUEF(203, gesamt_menge_ok == gesamt_abzuege, "je Abzug genau eine Granate abgezogen in %d/%d", gesamt_menge_ok, gesamt_abzuege);
+    PRUEF(209, gesamt_verbrauch_ok == gesamt_abzuege,
+          "Nachbesserung 1: die Menge faellt IM Spawnbild (FUN_8004eae4 hinter `jal 0x80019700` @0x800336ec/@0x80033748/"
+          "@0x800337a4 statt im Bild 0 @0x80033b40) in %d/%d", gesamt_verbrauch_ok, gesamt_abzuege);
     PRUEF(204, gesamt_lower_ok == gesamt_abzuege, "R1-Loslassen senkt den Arm (LOWER) im Bild nach dem Abgang bzw. nach dem Loslassen in %d/%d", gesamt_lower_ok, gesamt_abzuege);
     PRUEF(205, re15_granate_r36_recoil_break(9, 1) == 19 && re15_granate_r36_recoil_break(9, 0) == 22 &&
                re15_granate_r36_recoil_break(9, -1) == 24 && re15_granate_r36_recoil_break(10, 0) == 22 &&
@@ -408,20 +419,26 @@ static void abschnitt_wurf(void)
      * Quadrat gehalten, zieht die FSM nach dem Ende des Rueckstoss-Clips im naechsten HOLD-Bild ERNEUT ab
      * (Rueckstoss MITTE = Clip 7 = 35 Bilder, PL00W09.PLW EDD-Tabelle @0x24 = 0x23; Ende bei Bild 34 = fc-1,
      * HOLD + Held-Abzug im selben Bild -> Abzug k+1 = Abzug k + 34), Spawn = Abzug + 22. Jeder Abzug = eine
-     * Granate (Punkt 2); gemessen ueber die Menge (Abzug-Bilder) und die Granaten-Plaetze (Spawn-Bilder). */
+     * Granate (Punkt 2); gemessen ueber den Rueckstoss-Beginn (Abzug-Bilder: der Clip-Zaehler
+     * re15_player_granate_frame beginnt neu — beim gehaltenen Abzug faellt das Rueckstoss-Bit nie, Clip-Ende
+     * und neuer Abzug liegen im selben Bild), die Granaten-Plaetze (Spawn-Bilder) und die Menge (Verbrauchs-
+     * Bilder; Nachbesserung 1: Verbrauch IM Spawnbild, re15_granate_r36.h 2c — vorher fiel sie im Abzugbild). */
     {
         if (sp_bringup(9, 5) != 0) { PRUEF(208, 0, "Bringup Heben"); return; }
         for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
         enum { K_MAX = 8 };
-        int ready = -1, n_abzug = 0, n_spawn = 0, abzug[K_MAX], spawn[K_MAX];
-        int qty_vor = g_inv.slots[3].qty, gran_vor = 0;
+        int ready = -1, n_abzug = 0, n_spawn = 0, n_verbr = 0, abzug[K_MAX], spawn[K_MAX], verbr[K_MAX];
+        int qty_vor = g_inv.slots[3].qty, gran_vor = 0, gf_vor = -1;
         for (int b = 0; b < 110; b++) {
             sp_bild((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
                     (uint16_t)(b == 0 ? (RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE) : 0));
             int ph = re15_player_aim_phase_debug() & 0x0f;
+            int gf = re15_player_granate_frame();                     /* Rueckstoss-Clipbild oder -1 */
             if (ready < 0 && ph == 2) ready = b;                      /* erstes HOLD-Bild (READY) */
+            if (gf >= 0 && (gf_vor < 0 || gf < gf_vor) && n_abzug < K_MAX) abzug[n_abzug++] = b;   /* Abzug */
+            gf_vor = gf;
             int qty = g_inv.slots[3].qty;
-            if (qty < qty_vor) { if (n_abzug < K_MAX) abzug[n_abzug++] = b; qty_vor = qty; }
+            if (qty < qty_vor) { if (n_verbr < K_MAX) verbr[n_verbr++] = b; qty_vor = qty; }
             int gran = 0;
             for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
                 const re15_esp_fx_t *f = re15_esp_fx_get(i);
@@ -430,18 +447,111 @@ static void abschnitt_wurf(void)
             if (gran > gran_vor && n_spawn < K_MAX) spawn[n_spawn++] = b;
             gran_vor = gran;
         }
-        int ok = ready >= 0 && n_abzug >= 2 && n_abzug == n_spawn && abzug[0] == ready
+        int ok = ready >= 0 && n_abzug >= 2 && n_abzug == n_spawn && n_verbr == n_spawn && abzug[0] == ready
                  && g_inv.slots[3].qty == 5 - n_abzug;
         for (int k = 0; k < n_abzug && k < n_spawn; k++) {
             if (spawn[k] != abzug[k] + 22) ok = 0;                     /* Spawnbild MITTE @0x800336a4 */
             if (k > 0 && abzug[k] != abzug[k - 1] + 34) ok = 0;         /* Clip 7 = 35 Bilder (PLW @0x24) */
+            if (k < n_verbr && verbr[k] != spawn[k]) ok = 0;           /* N1: Verbrauch = Abgang */
         }
-        PRUEF(208, ok, "Quadrat waehrend des Hebens gehalten: READY Bild %d, %d Abzuege (%d,%d,%d) / %d Spawns (%d,%d,%d), Menge %d "
-                       "(soll Abzug 1 = READY, Spawn = Abzug + 22, Abzug k+1 = Abzug k + 34 [Clip 7 = 35 Bilder], Menge 5 - Abzuege)",
+        PRUEF(208, ok, "Quadrat waehrend des Hebens gehalten: READY Bild %d, %d Abzuege (%d,%d,%d) / %d Spawns (%d,%d,%d) / "
+                       "%d Verbrauchsbilder (%d,%d,%d), Menge %d (soll Abzug 1 = READY, Spawn = Abzug + 22, Abzug k+1 = "
+                       "Abzug k + 34 [Clip 7 = 35 Bilder], Verbrauch = Spawnbild, Menge 5 - Abzuege)",
               ready, n_abzug, n_abzug > 0 ? abzug[0] : -1, n_abzug > 1 ? abzug[1] : -1, n_abzug > 2 ? abzug[2] : -1,
               n_spawn, n_spawn > 0 ? spawn[0] : -1, n_spawn > 1 ? spawn[1] : -1, n_spawn > 2 ? spawn[2] : -1,
+              n_verbr, n_verbr > 0 ? verbr[0] : -1, n_verbr > 1 ? verbr[1] : -1, n_verbr > 2 ? verbr[2] : -1,
               g_inv.slots[3].qty);
     }
+}
+
+/* ================================================================================================
+ * [4] GRIFF/TREFFER — Nachbesserung 1 (Abnahme 0, M1/M2): "Granate verbraucht, aber nicht geworfen", sobald
+ * Leon in den 19-24 Bildern der Wurfbewegung getroffen/gepackt wird. Original: Abzug Bild 0 (`jal 0x8004eae4`
+ * @0x80033b40), Abgang 19/22/24 (`jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4), der cmd-Write des
+ * Treffers/Griffs ersetzt die Ziel-FSM (`sb v1,0x800aca58` @0x80113b00 / `sh zero,0x800aca5a` @0x80113b30).
+ * ORCHESTRATOR-ENTSCHEIDUNG: verbraucht wird nur, was geworfen wird (Verbrauch im Spawnbild, re15_granate_r36.h
+ * 2c). Treffer = der echte HP-Drop-Detektor des Spielschritts (HP 100 -> 70 -> re15_player_stagger_cmd2 ->
+ * re15_player_aim_interrupt, dieselbe Unterbrechung wie der Griff re15_re2z_victim_begin).
+ * ================================================================================================ */
+/* Spieler-HP vor dem Bild `b_treffer` senken (Treffer), Abzug im Bild 0, R1 durchgehend; Ergebnis: Spawnbild
+ * (-1 = keiner) und Menge nach 60 Bildern; s_treffer_wirkt = im Trefferbild lief die Reaktion an UND die
+ * Ziel-FSM ist aus (Phase NONE, kein Rueckstoss). */
+extern int re15_player_hit_flinch_active(void);
+static int s_treffer_wirkt = 0;
+static int wurf_mit_treffer(int b_treffer, int *menge)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int spawn = -1; s_treffer_wirkt = 0;
+    for (int b = 0; b < 60; b++) {
+        if (b == b_treffer) pl->hp = (int16_t)(pl->hp - 30);
+        uint16_t pad = RE15_PAD_BIT_R1;
+        if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
+        sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+        if (b == b_treffer)
+            s_treffer_wirkt = re15_player_hit_flinch_active() && re15_player_aim_phase_debug() == 0;
+        if (spawn < 0 && granate_platz() >= 0) spawn = b;
+    }
+    *menge = g_inv.slots[3].qty;
+    return spawn;
+}
+static void abschnitt_griff(void)
+{
+    /* 4a — Treffer im Bild 8 der Wurfbewegung (MITTE, Spawnbild 22): kein Wurf, die Granate BLEIBT. */
+    if (sp_bringup(9, 5) != 0) { PRUEF(400, 0, "Bringup griff"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    if (sp_zielen(0) < 0) { PRUEF(400, 0, "griff: nicht zielbereit"); return; }
+    re15_granate_r36_zaehler_reset();
+    int menge = -1;
+    int spawn = wurf_mit_treffer(8, &menge);
+    PRUEF(400, s_treffer_wirkt && spawn < 0 && menge == 5 && re15_granate_r36_verbraucht() == 0u,
+          "Treffer im Bild 8 nach dem Abzug (Reaktion + Ziel-FSM aus: %d): Spawn %d, Menge %d, Verbrauch %u (soll 1 / keiner / "
+          "5 / 0; vorher Menge 4 ohne Wurf = Abzug Bild 0 @0x80033b40)", s_treffer_wirkt, spawn, menge,
+          re15_granate_r36_verbraucht());
+    /* 4b — dieselbe Granate ist danach wurfbereit: Reaktion auslaufen lassen, neu zielen, werfen -> Spawn 22,
+     *      Menge 4, Verbrauch im Spawnbild. */
+    {
+        int n = 0;
+        for (; n < 120 && re15_player_hit_flinch_active(); n++) sp_bild(0, 0);
+        for (int k = 0; k < 4; k++) sp_bild(0, 0);
+        if (sp_zielen(0) < 0) { PRUEF(401, 0, "griff: nach dem Treffer nicht wieder zielbereit (%d Bilder Reaktion)", n); return; }
+        int lower = -1;
+        int spawn2 = wurf(0, -1, &lower, &menge);
+        PRUEF(401, spawn2 == 22 && menge == 4 && s_verbrauch_bild == 22 && re15_granate_r36_verbraucht() == 1u,
+              "nach dem Treffer erneut geworfen: Spawn %d, Menge %d, Verbrauchsbild %d, Verbrauch %u (soll 22 / 4 / 22 / 1)",
+              spawn2, menge, s_verbrauch_bild, re15_granate_r36_verbraucht());
+    }
+    /* 4c — Treffer im Bild NACH dem Spawnbild (23): der Wurf ist schon ab, die Granate verbraucht (Verbrauch =
+     *      Abgang ist nicht rueckgaengig). */
+    if (sp_bringup(9, 5) != 0) { PRUEF(402, 0, "Bringup griff 4c"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    if (sp_zielen(0) < 0) { PRUEF(402, 0, "griff 4c: nicht zielbereit"); return; }
+    spawn = wurf_mit_treffer(23, &menge);
+    PRUEF(402, spawn == 22 && menge == 4, "Treffer im Bild 23 (nach dem Abgang 22): Spawn %d, Menge %d (soll 22 / 4)", spawn, menge);
+    /* 4d — Waffenwechsel waehrend der Wurfbewegung (Statusschirm-Fall, Dossier OFFEN 5: Spawn-Gate `id == 9`
+     *      @0x8003368c scheitert im Spawnbild): kein Wurf, die Granate bleibt. Der Wechsel = der Setter der
+     *      ausgeruesteten Waffe (Platz-Sync wie der Menue-Commit 25c8 := Cursor @0x8004abd0). */
+    if (sp_bringup(9, 5) != 0) { PRUEF(403, 0, "Bringup griff 4d"); return; }
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    if (sp_zielen(0) < 0) { PRUEF(403, 0, "griff 4d: nicht zielbereit"); return; }
+    {
+        int sp4 = -1, browning = -1;
+        for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) if (g_inv.slots[i].id == 3) { browning = i; break; }
+        for (int b = 0; b < 60; b++) {
+            if (b == 10 && browning >= 0) re15_player_set_equipped_weapon(3);
+            uint16_t pad = RE15_PAD_BIT_R1;
+            if (b < 6) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (sp4 < 0 && granate_platz() >= 0) sp4 = b;
+        }
+        PRUEF(403, browning >= 0 && sp4 < 0 && g_inv.slots[3].qty == 5,
+              "Waffenwechsel (Browning, Platz %d) im Bild 10 der Wurfbewegung: Spawn %d, Granaten %d (soll keiner / 5; "
+              "vorher 4 = Abzug Bild 0)", browning, sp4, g_inv.slots[3].qty);
+    }
+    PRUEF(404, re15_granate_r36_verbrauch_im_spawnbild(9) && re15_granate_r36_verbrauch_im_spawnbild(10) &&
+               re15_granate_r36_verbrauch_im_spawnbild(11) && !re15_granate_r36_verbrauch_im_spawnbild(3) &&
+               !re15_granate_r36_verbrauch_im_spawnbild(8) && !re15_granate_r36_verbrauch_im_spawnbild(15),
+          "Verbrauch im Spawnbild nur fuer die Wurf-Ids 9/10/11 (Entlade-Tabelle @0x80074100 [9..11] = 0x80033B38/58/78); "
+          "Schusswaffen und Werfer-Klasse unveraendert");
 }
 
 /* ================================================================================================
@@ -509,6 +619,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "feuer")) { printf("[1] Feuer\n"); abschnitt_feuer(); }
     if (alle || strstr(teil, "wurf"))  { printf("[2] Wurf\n");  abschnitt_wurf(); }
     if (alle || strstr(teil, "pool"))  { printf("[3] Pool\n");  abschnitt_pool(); }
+    if (alle || strstr(teil, "griff")) { printf("[4] Griff/Treffer (Nachbesserung 1)\n"); abschnitt_griff(); }
 
     free(buf);
     if (s_fehler) { printf("test_r36_granate: %d Fehler, erste Pruefung %d\n", s_fehler, s_erste); return s_erste; }

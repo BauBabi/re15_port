@@ -2,9 +2,11 @@
  * Dossier analysis/befunde_runde36/D_granate.md. */
 #include "re15_granate_r36.h"
 #include "re15_esp.h"
+#include "re15_inventory.h"   /* re15_ammo_consume = FUN_8004eae4 */
 
 static unsigned s_russ_unterdrueckt = 0;
 static unsigned s_platz_geraeumt    = 0;
+static unsigned s_verbraucht        = 0;
 
 /* Punkt 1 — die Flammen des Spreng-Russ FUN_8010640C (@0x80106418-44 Part 0 / @0x80106450-74 Part 3).
  * RE2 Retail spawnt sie fuer die Zeilen 9 (HE-Granate 0x09, GL-Explosivrunde) und 17 (Rakete) — beide
@@ -21,7 +23,26 @@ int re15_granate_r36_russ_flammen(unsigned zeile)
 
 unsigned re15_granate_r36_russ_unterdrueckt(void) { return s_russ_unterdrueckt; }
 unsigned re15_granate_r36_platz_geraeumt(void)    { return s_platz_geraeumt; }
-void     re15_granate_r36_zaehler_reset(void)     { s_russ_unterdrueckt = 0; s_platz_geraeumt = 0; }
+unsigned re15_granate_r36_verbraucht(void)        { return s_verbraucht; }
+void     re15_granate_r36_zaehler_reset(void)     { s_russ_unterdrueckt = 0; s_platz_geraeumt = 0; s_verbraucht = 0; }
+
+/* Nachbesserung 1 (M1/M2) — Verbrauch = Abgang (Herleitung re15_granate_r36.h (2c), Dossier §6).
+ * Original: Abzug im Rueckstossbild 0 (Entlade-Handler 0x80033B38/58/78, `jal 0x8004eae4` @0x80033b40/60/80),
+ * Abgang erst im Bild 19/22/24; ein Griff dazwischen (@0x80113b00/@0x80113b30) kostet die Granate ohne Wurf.
+ * ORCHESTRATOR-ENTSCHEIDUNG ("wird nicht geworfen"): fuer die Wurf-Ids faellt der Abzug in das Spawnbild. */
+int re15_granate_r36_verbrauch_im_spawnbild(int id)
+{
+    return id == 9 || id == 10 || id == 11;        /* Entlade-Tabelle @0x80074100 [9..11] = 0x80033B38/58/78 */
+}
+
+/* Spawnbild, Wurfkoerper hat seinen Platz (`jal 0x80019700` @0x800336ec/@0x80033748/@0x800337a4 erfolgreich):
+ * derselbe FUN_8004eae4 wie im Entlade-Handler (eine Granate des ausgeruesteten Platzes). */
+int re15_granate_r36_geworfen(void)
+{
+    int r = re15_ammo_consume();
+    if (r) s_verbraucht++;
+    return r;
+}
 
 /* Punkt 2b — voller Pool im Spawnbild. FUN_80019700 sucht 0..95 (`sltiu` @0x8001978c) und gibt bei
  * vollem Pool 0xFF zurueck (`ori v0,zero,0xff` @0x800197c8-cc): die Granate ist dann weg (Abzug im
