@@ -1103,7 +1103,7 @@ nie (Liste aller Speicher auf 0(s1)/484(s1) in dem Bereich). Der Anker des Origi
   4adb4890, Rest neu): kriecher OK, **kriecher5 exit 1 (`F266 Spawn part=0 mit a3 liegt 666`)** — der Pin traegt beide Teile.
 * Die sieben bisherigen Pins unveraendert gruen, gleiche Kennzahlen wie §9.5 ((G) max d: eben 24, tief 32, mg 88, rip 0, arm 0,
   burst 0, glied 73).
-* Gezielter ctest-Lauf: s. 10.9.
+* Gezielter ctest-Lauf: s. 10.10.
 
 ### 10.8 OFFEN (Stand Nachbesserung 3) + Fuer den Nutzer
 * **OFFEN 13 (neu, fehlendes Blut, nicht Lage): Fress-Tropfen @0x80103C8C** — EXEC[8] P1 spawnt bei Bild-Wort & 0x10000
@@ -1140,9 +1140,36 @@ den Blut-Anker-Helfern, VERTRAG §1.4 "C = Blut-Anker"), enemy_ai_common.c (+3 Z
 eigene Dateien schuss_r36.c / re15_schuss_r36.h / probe_r36_blut.c / probes/r36_schuss.cmake; probe_re2z_stomp.c nur ein
 Kommentar (Id). Keine Bank-9-Bits, Nachrichten-IDs, Ereignisse, Assets. `git merge-tree --write-tree HEAD <zweig>` gegen alle
 17 r36-Zweige (elza, gegnerzahl, granate, integration, inventar, karte, kartenitems, kleidung, klettern, pri, schluessel, story,
-szene1150, szenenleon, tueren, ziel1190, zombieki): alle rc=0, 0 CONFLICT (Stand 6b21dd7b; ab4187c3 aendert nur schuss_r36.c).
+szene1150, szenenleon, tueren, ziel1190, zombieki): alle rc=0, 0 CONFLICT (Stand 440e96f2 gegen die Zweigstaende vom
+11.10. 00:xx, u.a. zombieki b7687fb1, elza b6ddb39f, schluessel 847e6045, story 4b45aca3, integration 916e6fe2; der
+Abschluss-Commit aendert nur eigene Dateien: Header-Kommentar re15_schuss_r36.h + Dossier/Messordner).
 Hinweis fuer die Integration: r36/zombieki fuegt hinter re15_enemy_sca_clamp re15_r36_wurf_klemme ein — die Nachfuehrung am
 Ende von run_all erfasst diese Lage-Korrektur mit.
 
 Messkopien: re15_pc_r36c_nb3_alt.exe / _neu.exe nach den Laeufen geloescht; zwei Kopien re15_pc_r35c/r35l_haken_* aus
 abgebrochenen eigenen ctest-Laeufen geloescht (die aelteren re15_pc_r35e/r35k_haken_* von 15:44/16:49 stammen nicht von hier).
+
+### 10.10 Gezielte Tests (Abschluss Nachbesserung 3, keine volle Suite im Spurbaum)
+* Regex = die von Nachbesserung 1/2 (`mess_r36c/n1/regex2.txt`) plus die Gruppen, die der Nachfuehr-Haken in run_all
+  zusaetzlich beruehrt (`C_schuss_mess/n3/ctest_regex.txt`):
+  ```
+  r36|crow|kraehe|hitfilter|zombie|re2z|re2_|1140|1030|1040|10d0|1100|1210|damage|werfer|dog_hit|spider|gator|birkin|g5_|shootable|hit_|autofire|waffen|blood|blut|gore|feeder|straight_shot|enemy_ai|combat|aim|r16_|rise_|knockdown|stagger|death|crawl|writher|r26_mg|r35_inhalt|r35_raeume|r35_cut1150|r35_zgirl|r30_hund|redhawk|r17_|zfall|situp|fx_region|granate|kriech|1010|1220|1240|10c0|stomp|pushoff|grab|bite|victim|push|esp|splatter|fx_|body
+  ```
+  `ctest --test-dir re15_port/build -R "<regex>" --timeout 600 --output-on-failure -j 2` auf Stand ab4187c3, woertlich:
+  **`100% tests passed, 0 tests failed out of 219`**, `Total Test time (real) = 1035.87 sec` (ohne Wiederholungslauf; Liste
+  `C_schuss_mess/n3/ctest_gezielt_liste.txt`). Darin u.a. integration_r36_schuss (134.91 s), unit_r36_schuss,
+  unit_r36_schuss_kraehe, unit_r36_blut_pin_{eben,tief,mg,rip,arm,burst,glied,kriecher,kriecher5}, unit_re2_zombie_teardeath,
+  unit_r26_mg_blut, probe_re2z_stomp, unit_crow_death_corpse, unit_re2_crow_ai, unit_re2_zombie_hitfilter.
+  (Zwei fruehere Anlaeufe auf Zwischenstaenden habe ich selbst abgebrochen — eigene PIDs —, weil der Code danach noch
+  verlegt wurde; ihre Teil-Ergebnisse zaehlen nicht.)
+* Danach nur noch ein Kommentar in include/re15_schuss_r36.h (Code identisch) -> neu gebaut, auf dem Endstand:
+  `ctest --test-dir re15_port/build -R "r36_blut|r36_schuss|re2z_stomp|r26_mg_blut|teardeath" --timeout 600 --output-on-failure -j 2`
+  -> **`100% tests passed, 0 tests failed out of 15`**, `Total Test time (real) = 143.70 sec`; 320 Laeufe der Abnahme-Sonde
+  erneut gegen die End-Bibliothek gelinkt: unveraendert (K1 32/32 d 0, K2 282 d 0, K9 max 361); exe E2f mit der End-exe:
+  fx.log bytegleich mit dem Zwischenlauf (`diff` 0 Zeilen), F226 `id=5 sub=0 ... w(-3302,-117,-19659)`.
+
+### 10.11 Commits der Nachbesserung 3 (Zweig r36/schuss)
+4bede841 (Gliederung), 01445c3e (Emitter a3 + Id 8, Dossier 10.1-10.4), 3a60ef41 (Nachfuehrung Anker-Zeitpunkt),
+b37d7bb9 (Pins kriecher/kriecher5, Id im Mess-Ring, Dossier 10.5-10.8), 3550b3b3 (include konfliktfrei, Stomp-Kommentar),
+6b21dd7b (Nachfuehrung am Ende von run_all), ab4187c3 (Puffer = ESP-Pool), 440e96f2 (Dossier 10.9), dieser Abschluss-Commit
+(Header-Kommentar, 10.10/10.11).

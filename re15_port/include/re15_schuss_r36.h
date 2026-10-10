@@ -125,9 +125,9 @@ int      re15_schuss_r36_fx_holen_id(unsigned nr, uint32_t *packed);
  * Schub und SCA-Klemme im Schwanz von run_all verschieben den Aktor danach noch. Der Kriecher-Griff setzt die Lage
  * ABSOLUT (FUN_80015cb8: +0x38/+0x3C/+0x40 = +0x164/+0x166/+0x168 + R*Wurzelversatz @0x80015D58-90); liegt dieses Ziel
  * hinter einer Wand, holt die Klemme ihn im selben Tick zurueck (gemessen bis 665) und der Spawn sass an der verworfenen
- * Lage. Nachfuehrung: die Spawns dieses Aktors aus diesem Bild werden nach der Klemme um die Lage-Differenz des
- * SCHWANZES (Handler-Ende -> Klemme) verschoben — nicht bei Ankern mit eigener Matrix (freifliegende Teile haengen nicht
- * an der Wurzel). Bewegung IM Handler nach dem Spawn (z.B. MG-Schub @0x80108110-48) bleibt wie im Original vor dem
+ * Lage. Nachfuehrung: die Spawns eines Gegners aus diesem Bild werden am Ende von run_all (nach Schub, Klemme und jedem
+ * spaeteren Schwanz-Haken) um die Lage-Differenz des SCHWANZES (Handler-Ende -> Ende run_all) verschoben — nicht bei
+ * Ankern mit eigener Matrix (freifliegende Teile haengen nicht an der Wurzel). Bewegung IM Handler nach dem Spawn (z.B. MG-Schub @0x80108110-48) bleibt wie im Original vor dem
  * Spawn unberuehrt. Mess-Ring (Sonden) wird mitgefuehrt. */
 void re15_schuss_r36_fx_nach(const re15_actor_t *e);          /* direkt nach dem ESP-Spawn eines re2z-Emitters */
 void re15_schuss_r36_nachfuehr_marke(const re15_actor_t *e);  /* run_all: nach dem Handler, vor dem Schwanz */
