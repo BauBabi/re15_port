@@ -813,3 +813,42 @@ mal lokaler Pose aus dem Paar, das der Handler animiert (Paar 1 oder 2), MIT der
 eigene, von der Physik gefuehrte Matrix. Port-Zwilling = die Pose, die der Port-Renderer zeichnet (main.c: Bankwahl 9798-9925,
 Crossfade g_anim_pose_actor 9960, Unterhaelfte 10195-10220, Ragdoll-Anker 10315-10330, eigene Teil-Matrix 10339) — fuer ALLE
 Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
+
+### 9.4 Aenderung (Commit ccc46f65)
+* `engine/src/schuss_r36.c`: neu `re15_schuss_r36_gezeichnet(e, bone, R, T)` = Zwilling dessen, was der Port-Renderer zeichnet
+  (s. 9.3 =>): `zeichen_bank` (Bankwahl main.c:9798-9925 in derselben Reihenfolge — Hauptbank + clip_override bei +0x1C4 & 4,
+  Loco-Bank bei re15_actor_uses_loco_bank, Kanaele state 4, eigene Bank, RE1.5-Sitz-Import), Crossfade auf einer Schatten-Kopie
+  (wie bisher), Unterhaelfte Bones 1..6 aus re15_re2z_lower_kf mit deren Skelett, Ragdoll-Bodenanker
+  (re15_re2z_ragdoll_part_anchor mit der GEZEICHNETEN Part-0-Lage), und fuer ein Teil mit eigener, schon geseedeter Matrix diese
+  Matrix (re15_re2z_gore_part_matrix_peek). `re15_schuss_r36_blut_anker` = T + R * a3 daraus — fuer JEDEN Emitter, a3 = NULL/0
+  eingeschlossen. Ohne Bank wie bisher Wurzel + Ryaw * a3 (unit_r26_mg_blut, test_re2_gore_decoder).
+* `engine/src/enemy_ai_re2_zombie.c` (kleine Haken): `re2z_gore_fx_core` ruft den Anker auch fuer a3 = NULL (1 Zeile statt
+  re15_enemy_bone_world_pos) — damit Gruppe B (re2z_gore_fx / re2z_gore_fx_ex) inkl. RIP-P1 und Aufschlag-Blut;
+  `re15_re2z_gore_part_matrix_peek` (Lesezugriff neben re15_re2z_gore_part_matrix, kein Seeding, kein Physikschritt).
+  re2z_blood_fx_at lief schon ueber den Anker und erbt Bank/Ragdoll-Korrektur.
+* `include/re15_schuss_r36.h`: Belegkette (9.3) + Deklarationen.
+* Keine neue Konstante. Die Port-Konvention "laufendes Bild" bleibt (Abnahme B1).
+
+### 9.5 Messung nachher
+* **nb2_blut (Renderer-Zwilling), Ausgaben `C_schuss_mess/n2/nachher/`, woertlich:**
+  ```
+  w13 px eben: F66 part 0 (ohne) d_r 0 (vorher 80) | F78 Z part 9 fx=(-3230,0,-20039) d_r 0 (vorher 1902, fx (-2902,-1853,-20316))
+               F78 Z part 12 d_r 0 (2280) | F84 Z part 9/12 d_r 0/0 (2063/2408) — das Aufschlag-Blut liegt jetzt AM BODEN beim Glied
+               F66 part 8 (Kopf) fx=(-1871,-2745,-19682) d_alt 0: an der Seed-Lage (gezeichnete Skelett-Pose), aus der der
+               Kopf abfliegt (d_r 361 = Abstand zum Kopf NACH seinem ersten Driftschritt 400-50 = 350, FUN_80028DAC — im
+               Original ebenso: der Anker ist die zuletzt gezeichnete Matrix, die Drift laeuft erst beim naechsten Zeichnen)
+  w12 pz eben: F76 part 12 (ohne) d_r 24 (204), part 13 (ohne, fliegt ab) d_alt 57 (93); F89/F94 Z part 13 d_r 0/0 (2124/2201)
+               (MG-Bild: Restabstand = Drehung/Schub NACH dem Spawn @0x8010810C-6C, wie die a3-Stoesse d_r 30-73)
+  w8 pz tief:  F66 part 3 (ohne, 4. Spawn) fx=(-1301,-1016,-19854) = Seed-Lage (d_alt 0; vorher (-1220,-1031,-19899) d 93)
+  w8 px eben:  F86 rag 1 part 1 (ohne) d_r 0 (98)
+  w3 px eben:  F66/F78 bank loco part 0 a3=(-140,-483,0) d_r 0/0 (103/121); w3 pz tief F66/F78 part 1 d_r 0/0 (56/110)
+  ERGEBNIS: w13 "mit a3 0, ohne a3 361 (>40: 1 = Kopf vs. gedriftet)", w12 "ohne a3 143 (>40: 1 = Glied vs. gedriftet)",
+            w8 pz tief "ohne a3 10", w8 px eben "0", w3 px eben "mit a3 24", w3 pz tief "mit a3 32", w7 "0"
+  ```
+* **Pins (probe_r36_blut, Renderer-Zwilling + (G)), gegen den ALTEN Engine-Stand gelinkt** (libre15_engine.a mit den
+  Objekten aus 6fa888c2, `nb2/altlib/`, Ausgaben `C_schuss_mess/n2/pin_alt_engine/`): eben exit 1 (4 FAIL: F66/F78 Loco-Bank
+  103/121), tief exit 1 (4: 56/109), rip exit 1 (7: Kopf 504, RIP-P1 80/80, Aufschlag 1902/2280/2063/2408), arm exit 1 (1: 93),
+  burst exit 1 (1: 98), glied exit 1 (3: Glied 204, Aufschlag 2124/2201), mg exit 0 (kein Abriss mit dieser Saat).
+  **Neuer Stand** (`pin_neu/`): alle sieben `probe_r36_blut: OK` — (G) max d: eben 24, tief 32, mg 88 (MG-Bilder, Schranke 100),
+  rip 0, arm 0, burst 0, glied 73 (MG-Bilder); Zaehler rip: Kopf 1, RIP-P1 2, Aufschlag 4; arm: 4. Spawn 1; burst: Ragdoll 1;
+  glied: Gliedabriss 2, Aufschlag 2; eben/tief: je 2 Spawns in Loco-Bank-Bildern.

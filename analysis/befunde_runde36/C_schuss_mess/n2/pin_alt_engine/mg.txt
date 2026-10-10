@@ -1,0 +1,76 @@
+F66   (G)   part= 0 fx=(-1697,-1789,-19626) a3=(-214,240,64) bank haupt rag 0 -> Skelett d=58 (Schranke 100) | roh d=262
+F66   SPAWN part=0 fx=(-1697,-1789,-19626) a3=(-214,240,64) [Treffer, zone 1] -> KRIECH d=179 | Defekt BECKEN(ohne a3) d=283 | Becken y=-1984
+F66     MG a3=(-214,240,64) -> Anker.R*a3+Anker.T d=35 | Welt-Versatz d=53 | Band ok
+F78   (G)   part= 0 fx=(-1084,-1939,-19700) a3=(250,28,-158) bank haupt rag 0 -> Skelett d=25 (Schranke 100) | roh d=307
+F78   SPAWN part=0 fx=(-1084,-1939,-19700) a3=(250,28,-158) [Treffer, zone 1] -> KRIECH d=407 | Defekt BECKEN(ohne a3) d=299 | Becken y=-2031
+F78     MG a3=(250,28,-158) -> Anker.R*a3+Anker.T d=7 | Welt-Versatz d=92 | Band ok
+F90   (G)   part= 0 fx=(-1054,-2206,-19378) a3=(186,-252,60) bank haupt rag 0 -> Skelett d=38 (Schranke 100) | roh d=378
+F90   SPAWN part=0 fx=(-1054,-2206,-19378) a3=(186,-252,60) [Treffer, zone 1] -> FLINCH/TROPF d=219 | Defekt BECKEN(ohne a3) d=312 | Becken y=-2016
+F90     MG a3=(186,-252,60) -> Anker.R*a3+Anker.T d=16 | Welt-Versatz d=156 | Band ok
+F102  (G)   part= 0 fx=(-1392,-1779,-19576) a3=(-196,244,34) bank haupt rag 0 -> Skelett d=55 (Schranke 100) | roh d=285
+F102  SPAWN part=0 fx=(-1392,-1779,-19576) a3=(-196,244,34) [Treffer, zone 1] -> KRIECH d=176 | Defekt BECKEN(ohne a3) d=285 | Becken y=-1952
+F102    MG a3=(-196,244,34) -> Anker.R*a3+Anker.T d=24 | Welt-Versatz d=110 | Band ok
+F114  (G)   part= 0 fx=(-1167,-2110,-19193) a3=(224,-144,148) bank haupt rag 0 -> Skelett d=71 (Schranke 100) | roh d=400
+F114  SPAWN part=0 fx=(-1167,-2110,-19193) a3=(224,-144,148) [Treffer, zone 1] -> FLINCH/TROPF d=302 | Defekt BECKEN(ohne a3) d=298 | Becken y=-2007
+F114    MG a3=(224,-144,148) -> Anker.R*a3+Anker.T d=33 | Welt-Versatz d=301 | Band ok
+F126  (G)   part= 0 fx=(-1406,-2067,-19357) a3=(2,-36,242) bank haupt rag 0 -> Skelett d=55 (Schranke 100) | roh d=271
+F126  SPAWN part=0 fx=(-1406,-2067,-19357) a3=(2,-36,242) [Treffer, zone 1] -> FLINCH/TROPF d=351 | Defekt BECKEN(ohne a3) d=243 | Becken y=-2015
+F126    MG a3=(2,-36,242) -> Anker.R*a3+Anker.T d=9 | Welt-Versatz d=259 | Band ok
+F138  (G)   part= 0 fx=(-1280,-2181,-19406) a3=(-24,-180,78) bank haupt rag 0 -> Skelett d=87 (Schranke 100) | roh d=259
+F138  SPAWN part=0 fx=(-1280,-2181,-19406) a3=(-24,-180,78) [Treffer, zone 1] -> FLINCH/TROPF d=143 | Defekt BECKEN(ohne a3) d=192 | Becken y=-2005
+F138    MG a3=(-24,-180,78) -> Anker.R*a3+Anker.T d=22 | Welt-Versatz d=77 | Band ok
+F150  (G)   part= 0 fx=(-1363,-2179,-19108) a3=(230,-212,32) bank haupt rag 0 -> Skelett d=58 (Schranke 100) | roh d=408
+F150  SPAWN part=0 fx=(-1363,-2179,-19108) a3=(230,-212,32) [Treffer, zone 1] -> FLINCH/TROPF d=246 | Defekt BECKEN(ohne a3) d=309 | Becken y=-2026
+F150    MG a3=(230,-212,32) -> Anker.R*a3+Anker.T d=36 | Welt-Versatz d=484 | Band ok
+F162  (G)   part= 0 fx=(-1242,-2167,-19559) a3=(-248,-108,122) bank haupt rag 0 -> Skelett d=69 (Schranke 100) | roh d=290
+F162  SPAWN part=0 fx=(-1242,-2167,-19559) a3=(-248,-108,122) [Treffer, zone 1] -> FLINCH/TROPF d=243 | Defekt BECKEN(ohne a3) d=250 | Becken y=-2008
+F162    MG a3=(-248,-108,122) -> Anker.R*a3+Anker.T d=23 | Welt-Versatz d=367 | Band ok
+F174  (G)   part= 0 fx=(-1101,-1936,-19140) a3=(60,72,-224) bank haupt rag 0 -> Skelett d=40 (Schranke 100) | roh d=237
+F174  SPAWN part=0 fx=(-1101,-1936,-19140) a3=(60,72,-224) [Treffer, zone 1] -> KRIECH d=336 | Defekt BECKEN(ohne a3) d=245 | Becken y=-2022
+F174    MG a3=(60,72,-224) -> Anker.R*a3+Anker.T d=18 | Welt-Versatz d=398 | Band ok
+F186  (G)   part= 0 fx=(-1386,-2090,-19309) a3=(-220,-52,150) bank haupt rag 0 -> Skelett d=56 (Schranke 100) | roh d=263
+F186  SPAWN part=0 fx=(-1386,-2090,-19309) a3=(-220,-52,150) [Treffer, zone 1] -> FLINCH/TROPF d=295 | Defekt BECKEN(ohne a3) d=237 | Becken y=-2012
+F186    MG a3=(-220,-52,150) -> Anker.R*a3+Anker.T d=39 | Welt-Versatz d=355 | Band ok
+F198  (G)   part= 0 fx=(-1149,-1852,-18905) a3=(88,128,-196) bank haupt rag 0 -> Skelett d=31 (Schranke 100) | roh d=308
+F198  SPAWN part=0 fx=(-1149,-1852,-18905) a3=(88,128,-196) [Treffer, zone 1] -> KRIECH d=281 | Defekt BECKEN(ohne a3) d=243 | Becken y=-1990
+F198    MG a3=(88,128,-196) -> Anker.R*a3+Anker.T d=11 | Welt-Versatz d=362 | Band ok
+F450  (G)   part= 8 fx=(-308,-2145,-21503) a3=(0,300,0) bank haupt rag 0 -> Skelett d=39 (Schranke 100) | roh d=299
+F450  SPAWN part=8 fx=(-308,-2145,-21503) a3=(0,300,0) [Treffer, zone 1] -> AUF d=39 | Defekt PART8(ohne a3) d=300 | Becken y=-1591
+F462  (G)   part= 8 fx=(-254,-2427,-21492) a3=(0,300,0) bank haupt rag 0 -> Skelett d=11 (Schranke 100) | roh d=302
+F462  SPAWN part=8 fx=(-254,-2427,-21492) a3=(0,300,0) [Treffer, zone 1] -> AUF d=11 | Defekt PART8(ohne a3) d=286 | Becken y=-1955
+F474  (G)   part= 0 fx=(-498,-2512,-21270) a3=(192,-536,134) bank haupt rag 0 -> Skelett d=75 (Schranke 100) | roh d=684
+F474  SPAWN part=0 fx=(-498,-2512,-21270) a3=(192,-536,134) [Treffer, zone 1] -> NACH d=212 | Defekt PART8(ohne a3) d=344 | Becken y=-2022
+F474    MG a3=(192,-536,134) -> Anker.R*a3+Anker.T d=33 | Welt-Versatz d=469 | Band ok
+F486  (G)   part= 0 fx=(-126,-1791,-21383) a3=(134,228,-138) bank haupt rag 0 -> Skelett d=52 (Schranke 100) | roh d=292
+F486  SPAWN part=0 fx=(-126,-1791,-21383) a3=(134,228,-138) [Treffer, zone 1] -> KRIECH d=208 | Defekt BECKEN(ohne a3) d=301 | Becken y=-2000
+F486    MG a3=(134,228,-138) -> Anker.R*a3+Anker.T d=22 | Welt-Versatz d=355 | Band ok
+F498  (G)   part= 0 fx=(-523,-2466,-21290) a3=(206,-540,100) bank haupt rag 0 -> Skelett d=74 (Schranke 100) | roh d=641
+F498  SPAWN part=0 fx=(-523,-2466,-21290) a3=(206,-540,100) [Treffer, zone 1] -> NACH d=202 | Defekt PART8(ohne a3) d=329 | Becken y=-1978
+F498    MG a3=(206,-540,100) -> Anker.R*a3+Anker.T d=34 | Welt-Versatz d=500 | Band ok
+F510  (G)   part= 0 fx=(-684,-2429,-21248) a3=(236,-448,178) bank haupt rag 0 -> Skelett d=52 (Schranke 100) | roh d=623
+F510  SPAWN part=0 fx=(-684,-2429,-21248) a3=(236,-448,178) [Treffer, zone 1] -> NACH d=291 | Defekt PART8(ohne a3) d=461 | Becken y=-2022
+F510    MG a3=(236,-448,178) -> Anker.R*a3+Anker.T d=51 | Welt-Versatz d=548 | Band ok
+F522  (G)   part= 0 fx=(-507,-2521,-21421) a3=(-32,-532,76) bank haupt rag 0 -> Skelett d=79 (Schranke 100) | roh d=527
+F522  SPAWN part=0 fx=(-507,-2521,-21421) a3=(-32,-532,76) [Treffer, zone 1] -> HURT d=97 | Defekt PART8(ohne a3) d=261 | Becken y=-1993
+F522    MG a3=(-32,-532,76) -> Anker.R*a3+Anker.T d=60 | Welt-Versatz d=104 | Band ok
+F534  (G)   part= 0 fx=(-261,-2338,-21162) a3=(30,-308,-224) bank haupt rag 0 -> Skelett d=66 (Schranke 100) | roh d=453
+F534  SPAWN part=0 fx=(-261,-2338,-21162) a3=(30,-308,-224) [Treffer, zone 1] -> FLINCH/TROPF d=236 | Defekt BECKEN(ohne a3) d=374 | Becken y=-2020
+F534    MG a3=(30,-308,-224) -> Anker.R*a3+Anker.T d=17 | Welt-Versatz d=437 | Band ok
+F546  (G)   part= 0 fx=(-638,-2456,-21183) a3=(-4,-476,104) bank haupt rag 0 -> Skelett d=60 (Schranke 100) | roh d=561
+F546  SPAWN part=0 fx=(-638,-2456,-21183) a3=(-4,-476,104) [Treffer, zone 1] -> HURT16A d=90 | Defekt PART8(ohne a3) d=326 | Becken y=-2018
+F546    MG a3=(-4,-476,104) -> Anker.R*a3+Anker.T d=33 | Welt-Versatz d=238 | Band ok
+F558  (G)   part= 0 fx=(-400,-2174,-21225) a3=(-166,-128,-72) bank haupt rag 0 -> Skelett d=57 (Schranke 100) | roh d=254
+F558  SPAWN part=0 fx=(-400,-2174,-21225) a3=(-166,-128,-72) [Treffer, zone 1] -> FLINCH/TROPF d=177 | Defekt BECKEN(ohne a3) d=195 | Becken y=-2022
+F558    MG a3=(-166,-128,-72) -> Anker.R*a3+Anker.T d=20 | Welt-Versatz d=284 | Band ok
+F570  (G)   part= 0 fx=(-551,-1699,-20852) a3=(202,284,-190) bank haupt rag 0 -> Skelett d=76 (Schranke 100) | roh d=382
+F570  SPAWN part=0 fx=(-551,-1699,-20852) a3=(202,284,-190) [Treffer, zone 1] -> KRIECH d=309 | Defekt BECKEN(ohne a3) d=403 | Becken y=-2022
+F570    MG a3=(202,284,-190) -> Anker.R*a3+Anker.T d=37 | Welt-Versatz d=489 | Band ok
+F582  (G)   part= 0 fx=(-586,-2066,-21162) a3=(-128,-44,-22) bank haupt rag 0 -> Skelett d=39 (Schranke 100) | roh d=141
+F582  SPAWN part=0 fx=(-586,-2066,-21162) a3=(-128,-44,-22) [Treffer, zone 1] -> FLINCH/TROPF d=238 | Defekt BECKEN(ohne a3) d=108 | Becken y=-1996
+F582    MG a3=(-128,-44,-22) -> Anker.R*a3+Anker.T d=15 | Welt-Versatz d=185 | Band ok
+F604  Kriecher (10E=2001) — MG-Lauf endet hier
+Treffer 24, Spawns 24 (Ring 0..24), Tod bei Bild -1, Tropfblut nach dem Tod 0
+Zuordnung: AUF=2
+(G): 24 Spawns, max d 87, davon ohne a3 0, beim Zeichnen (Aufschlag) 0, Loco-Bank 0, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 0, Arm-Abriss 4. Spawn 0
+MG: 22 Stoesse, Summe d(Anker-Modell) 595, Summe d(Welt-Versatz) 6623
+probe_r36_blut: OK

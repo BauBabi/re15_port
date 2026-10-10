@@ -1,0 +1,43 @@
+F66   (G)   part= 0 fx=(-1697,-1789,-19626) a3=(-214,240,64) bank haupt rag 0 -> Skelett d=58 (Schranke 100) | roh d=262
+F67   (G)   part= 0 fx=(-1745,-1810,-19643) a3=(-218,208,24) bank haupt rag 0 -> Skelett d=55 (Schranke 100) | roh d=265
+F68   (G)   part= 0 fx=(-1667,-2577,-19369) a3=(-158,-584,250) bank haupt rag 0 -> Skelett d=60 (Schranke 100) | roh d=600
+F69   (G)   part= 0 fx=(-1534,-2640,-19450) a3=(88,-640,186) bank haupt rag 0 -> Skelett d=47 (Schranke 100) | roh d=651
+F74   (G)   part= 0 fx=(-1671,-2494,-19876) a3=(-128,-500,-196) bank haupt rag 0 -> Skelett d=68 (Schranke 100) | roh d=596
+F75   (G)   part= 0 fx=(-1774,-1907,-19799) a3=(18,68,-146) bank haupt rag 0 -> Skelett d=72 (Schranke 100) | roh d=184
+F76   (G)   part=12 fx=(-1952,-2610,-19256) a3=ohne (0,0,0) bank haupt rag 0 -> Skelett d=204 (Schranke 100) | roh d=77
+FAIL: F76 Spawn part=12 ohne a3 liegt 204 von der gezeichneten Matrix (Skelett), Schranke 100 (roh 77)
+F76   (G)   part=13 fx=(-1712,-2097,-19216) a3=ohne (0,0,0) bank haupt rag 0 -> Skelett = Seed (fliegt ab) d=93 (Schranke 100) | roh d=124
+F76   (G)   part= 0 fx=(-1862,-2501,-19885) a3=(-124,-516,-228) bank haupt rag 0 -> Skelett d=62 (Schranke 100) | roh d=611
+F77   (G)   part= 0 fx=(-1852,-2031,-19419) a3=(-4,-60,218) bank haupt rag 0 -> Skelett d=43 (Schranke 100) | roh d=210
+F78   (G)   part= 0 fx=(-1965,-2347,-19717) a3=(-78,-360,-86) bank haupt rag 0 -> Skelett d=53 (Schranke 100) | roh d=328
+F79   (G)   part= 0 fx=(-2005,-2264,-19640) a3=(-52,-284,-24) bank haupt rag 0 -> Skelett d=42 (Schranke 100) | roh d=316
+F80   (G)   part= 0 fx=(-1929,-1813,-19720) a3=(64,168,-88) bank haupt rag 0 -> Skelett d=58 (Schranke 100) | roh d=205
+F81   (G)   part= 0 fx=(-1844,-2214,-19586) a3=(230,-212,32) bank haupt rag 0 -> Skelett d=59 (Schranke 100) | roh d=346
+F86   (G)   part= 0 fx=(-1790,-2603,-19631) a3=(116,-696,46) bank haupt rag 0 -> Skelett d=51 (Schranke 100) | roh d=737
+F87   (G)   part= 0 fx=(-1899,-2304,-19826) a3=(194,-396,-172) bank haupt rag 0 -> Skelett d=50 (Schranke 100) | roh d=514
+F88   (G)   part= 0 fx=(-2180,-1896,-19842) a3=(60,72,-224) bank haupt rag 0 -> Skelett d=43 (Schranke 100) | roh d=263
+F89   (G)   part= 0 fx=(-2446,-1791,-19699) a3=(-158,208,-96) bank haupt rag 0 -> Skelett d=57 (Schranke 100) | roh d=287
+F89   (G) Z part=13 fx=(-2462,-2052,-19161) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (Aufschlag) d=2124 (Schranke 40) | roh d=0
+FAIL: F89 Spawn part=13 ohne a3 liegt 2124 von der gezeichneten Matrix (eigene Matrix (Aufschlag)), Schranke 40 (roh 0)
+F90   (G)   part= 0 fx=(-2238,-1807,-19748) a3=(92,168,-144) bank haupt rag 0 -> Skelett d=35 (Schranke 100) | roh d=233
+F91   (G)   part= 0 fx=(-2527,-1862,-19804) a3=(-172,116,-206) bank haupt rag 0 -> Skelett d=44 (Schranke 100) | roh d=284
+F92   (G)   part= 0 fx=(-2516,-1700,-19672) a3=(-130,272,-56) bank haupt rag 0 -> Skelett d=50 (Schranke 100) | roh d=282
+F93   (G)   part= 0 fx=(-2668,-1958,-19444) a3=(-192,4,178) bank haupt rag 0 -> Skelett d=43 (Schranke 100) | roh d=215
+F94   (G) Z part=13 fx=(-2582,-2102,-19165) a3=ohne (0,0,0) bank haupt rag 0 -> eigene Matrix (Aufschlag) d=2201 (Schranke 40) | roh d=0
+FAIL: F94 Spawn part=13 ohne a3 liegt 2201 von der gezeichneten Matrix (eigene Matrix (Aufschlag)), Schranke 40 (roh 0)
+F98   (G)   part= 0 fx=(-2450,-1765,-19782) a3=(116,184,-168) bank haupt rag 0 -> Skelett d=47 (Schranke 100) | roh d=282
+F99   (G)   part= 0 fx=(-2736,-1728,-19723) a3=(-108,292,-70) bank haupt rag 0 -> Skelett d=35 (Schranke 100) | roh d=343
+F100  (G)   part= 0 fx=(-2713,-1850,-19879) a3=(-138,160,-208) bank haupt rag 0 -> Skelett d=30 (Schranke 100) | roh d=309
+F101  (G)   part= 0 fx=(-2675,-2685,-19691) a3=(-90,-688,-42) bank haupt rag 0 -> Skelett d=40 (Schranke 100) | roh d=650
+F102  (G)   part= 0 fx=(-2692,-2476,-19654) a3=(-40,-483,0) bank haupt rag 0 -> Skelett d=1 (Schranke 100) | roh d=503
+F102  TOD hp 2->-2 st 2/15/1 -> 3/15/1 10E=0004
+F107  (G)   part= 0 fx=(-2660,-2263,-19624) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=0 (Schranke 40) | roh d=295
+F109  (G)   part= 0 fx=(-2636,-2222,-19609) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=1 (Schranke 40) | roh d=302
+F111  (G)   part= 0 fx=(-2622,-2114,-19599) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=1 (Schranke 40) | roh d=307
+F113  (G)   part= 0 fx=(-2636,-1863,-19603) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=1 (Schranke 40) | roh d=307
+F115  (G)   part= 0 fx=(-2662,-1502,-19614) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=1 (Schranke 40) | roh d=295
+F117  (G)   part= 0 fx=(-2668,-1193,-19618) a3=(-40,-283,0) bank haupt rag 0 -> Skelett d=1 (Schranke 40) | roh d=286
+Treffer 25, Spawns 0 (Ring 0..35), Tod bei Bild 102, Tropfblut nach dem Tod 0
+Zuordnung:
+(G): 35 Spawns, max d 2201, davon ohne a3 4, beim Zeichnen (Aufschlag) 2, Loco-Bank 0, Ragdoll ohne a3 0, RIP-Kopf 0, RIP-P1 0, Gliedabriss 2, Arm-Abriss 4. Spawn 0
+probe_r36_blut: 3 FAILURES
