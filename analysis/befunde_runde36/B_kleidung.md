@@ -331,5 +331,65 @@ RE_15_Quellcode_Overlays/STAGE{N}_full):
 ## Nachbesserung 1 (2026-10-10, nach Abnahme 0 — B_abnahme_0.md)
 
 Maengel: M1 (Nutzer-Weg Hunde ROOM1190: fuenf RE2-Bisse 100 -> 0, 250 Wundpunkte, kein Decal) und
-M2 (Hinweis: Abnahme 0 Teilstand; Messumgebung RDP -> `SDL_ASSERT=always_ignore`). In Arbeit —
-Abschnitte folgen fortlaufend (Ursache, Messung vorher, Beleg, Aenderung, Messung nachher).
+M2 (Hinweis: Abnahme 0 Teilstand; Messumgebung RDP -> `SDL_ASSERT=always_ignore`).
+
+### N1.1 M1 — Messung vorher (selbst wiederholt, HEAD a096a1a5 = gebauter Stand 866af8e3)
+
+Messkopie `re15_pc_r36b_nb1_vorher.exe` (= re15_pc.exe 16:13), Arbeitsordner Scratchpad, Befehl der
+Abnahme (Bild-Fenster verkuerzt):
+```
+SDL_ASSERT=always_ignore RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_SHOT=title.bmp
+RE15_TITLE_SHOT_AF=2 RE15_KLEIDUNG_LOG=1 RE15_DEBUG_JUMP=1190@240 RE15_DEBUG_SUB=13@450
+RE15_DEBUG_DOGWAKE=500 RE15_FRAMEDUMP=560-760/20:h_ RE15_EXIT_AT=1000   -> RC=0, 43 s
+[kleidung] F582 hundebiss typ=0x20 dir=2 hp=80 gen=1 panels=0/0,0/0,0/0,0/0,0/50,0/0,0/0,0/0
+[kleidung] F585 hundebiss typ=0x20 dir=2 hp=60 gen=1 panels=0/0,0/0,0/0,0/0,0/100,0/0,0/0,0/0
+[kleidung] F587 hundebiss typ=0x20 dir=1 hp=40 gen=1 panels=0/0,0/0,0/0,0/0,0/100,0/0,0/0,0/50
+[kleidung] F673 hundebiss typ=0x20 dir=0 hp=20 gen=1 panels=0/0,0/0,0/0,0/0,0/100,0/50,0/0,0/50
+[kleidung] F708 hundebiss typ=0x20 dir=0 hp=0 gen=1 panels=0/0,0/0,0/0,0/0,0/100,0/100,0/0,0/50
+```
+Zeilengleich mit B_abnahme_0.md §5.1 (deterministisch). Fuenf Bisse x 20 HP, je EIN Stempel +0x32 ->
+250 Punkte, kein Panel erreicht 0x78, gen bleibt 1: kein Decal bis in den Tod. Der Mangel ist echt.
+
+### N1.2 M1 — RE-Belege (selbst disassembliert)
+
+RE1.5-Hund, Angriffszustand 8 = FUN_8010f15c (Zustandstabelle @0x80120fd4, Eintrag 8 = 0x80120ff4 ->
+0x8010f15c; Phasen-Sprungtabelle @0x801001ec: [0] 0x8010f1a0 [1] 0x8010f204 [2] 0x8010f370
+[3] 0x8010f3e0 ...), STAGE1.BIN:
+```
+Fenster 1 (Sprung, Phase 1, +0x95 > 0x0c: `sltiu v0,v0,0xd` @0x8010f254):
+8010f2bc lhu v0,-13586(v0)   player.hp
+8010f2c8 addiu a0,v0,-10                     ; BISS KOSTET 10 HP
+8010f2d0 sh a0,-13586(at)    player.hp
+8010f2dc bne +0x1e4 / 8010f2e4 bltz hp       ; Griff-Eskalation 0x8010f468
+8010f334 jal 0x8001af20 (rng) / 8010f34c andi v0,v0,0x1
+8010f35c lbu a0,0(v1)  (0x80121010 + aca59*2 + rng&1 -> Bytes @0x80121014 = 05 07 04 06)
+8010f360 jal 0x80037edc / 8010f364 ori a1,zero,0x32   ; EIN Stempel je 10-HP-Biss
+Fenster 2 (Landung, Phase 3, nur nach Fehlsprung):
+8010f438 lhu player.hp / 8010f444 addiu a0,v0,-10 / 8010f44c sh   ; ebenfalls 10 HP
+8010f460 bgez -> 8010f4b8: Knockdown OHNE jal 0x80037edc (bis 8010f504 j 0x8010f598)
+```
+Das RE1.5-Verhaeltnis des Knockdown-Bisses (Fenster 1) ist damit **0x32 Wundpunkte je 10 HP, ein
+Stempel (mit eigenem rng-Zug @0x8010f334) je Biss**. Der Lande-Biss (Fenster 2) ist ein Nachschnappen
+nach einem Fehlsprung und stempelt nie.
+
+RE2-Hund (EMD0G_MOD0.BIN, re2_disasm.py):
+```
+80104eb8 addiu a0,zero,20 / 80104ebc jal 0x800401d4 / 80104ec0 addu a1,zero,zero   ; BISS KOSTET 20 HP
+80104f7c sh v0(=3),6(s0) / 80104f84 sb 1,6(s3) / 80104f90 bltz hp / 80104fa4 jal 0x801051bc ; Boden-Biss
+```
+Der RE2-Biss entspricht dem RE1.5-Fenster-1-Biss (Kontakt im Sprung -> Spieler HURT, kein
+Nachschnappen-Fenster), kostet aber das DOPPELTE. Die Spur hatte ihm EINEN RE1.5-Stempel gegeben ->
+halbes Verhaeltnis; auf dem Hundeweg reichen die HP nicht, um ein Panel ueber 0x78 zu bringen.
+
+**Ursache M1:** PORT-MAPPING mit falschem Massstab — ein RE2-Biss (20 HP) wurde als EIN RE1.5-Biss
+(10 HP) gestempelt. Richtig ist: je 10 HP Biss-Schaden ein RE1.5-Biss-Stempel, also beim RE2-Biss
+20/10 = **zwei** Stempel der RE1.5-Form (je eigener rng-Zug, je +0x32, Panel-Paar nach Blickrichtung).
+
+### N1.3 Nebenbefund (nicht Spur B, unter OFFEN): RE2-Hund-Claim fehlt
+Die drei Bisse F582/F585/F587 fallen in FUENF Bildern (100 -> 40). RE2 0x801051BC (EMD0G_MOD0.BIN)
+schreibt beim Boden-Biss `sb 2,4(a0)` @0x801051e4 (PL HURT), `sb dir+2,5(a0)` @0x801051ec und
+`ori v1,v1,0x80` / `sb v1,467(a0)` @0x801051f8/0x80105200 = PL+0x1D3 |= 0x80 (Claim); jeder weitere
+Hund prueft diesen Claim (`re15_player_is_grabbed`, @0x80104E5C-68) und beisst nicht, solange er
+steht. Der Port laesst den Claim aus (enemy_ai_re2_dog.c re2d_contact, Kommentar "der Claim ueber den
+Grab-Pin unterbleibt") -> mehrere Hunde beissen im selben Augenblick. Das veraendert die HP-Kurve,
+nicht das Verhaeltnis Wundpunkte:HP — keine Spur-B-Zuteilung (Hunde-KI), Adresse + Messweg unter OFFEN.
