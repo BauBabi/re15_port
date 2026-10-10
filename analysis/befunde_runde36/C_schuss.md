@@ -328,7 +328,7 @@ Treffer-Bild komplett (das ist der Befund des Nutzers).
 | unit_r36_blut_pin_mg | (Nachbesserung 1, §8.3/§8.8) MG-Blutstoss 0x80107EF0: a3-Band je Zone, Lage gegen Anker.R*a3 + Anker.T, Summe gegen das Welt-Versatz-Modell |
 | integration_r36_schuss | (Nachbesserung 1, §8.4/§8.7) zusaetzlich frei_re15 / tisch_re15 / gl_tisch_re15 (treffbare Ziele hinter dem Tisch), Messkopie der exe (8 Laeufe, 129 s) |
 | unit_r36_schuss_kraehe | RE2 GIB 0x80102CA0: Felder, Draws, Physik bis zum Verschwinden, Dispatch @0x80104A18 |
-Suite: §7; Nachbesserung 1: gezielte Laeufe §8.9.
+Suite: §7; Nachbesserung 1: gezielte Laeufe §8.11.
 
 ## 5. OFFEN (mit Adresse und Messweg)
 1. **RE1.5-KI-Pfad des Fressers (nicht Vorgabe):** unter RE1.5-KI fuehrt der Port fuer die 0x86/0x06-Fresser keinen
@@ -670,3 +670,52 @@ bzw. ohne -> OFFEN 9.
 0x8010AC44, 0x8010AD70, 0x8010B188, 0x8010B244, 0x8010B668, 0x8010B6A8, 0x8010B6D0, 0x8010C1D0, 0x8010C208, 0x8010C240,
 0x8010C278, 0x8010C56C), deren Adressen der Port nirgends nennt (OFFEN 10).
 Summe 27 + 30 + 14 + 17 = 88.
+
+### 8.9 Gegenmessung an der exe (Punkt 2, derselbe Aufbau wie die Abnahme 0)
+Skript `run_n1_p2.sh` (Scratchpad c1, Aufbau = `run_abn_p2.sh` der Abnahme): ROOM1140 per RE15_DEBUG_JUMP, Leon
+(-5000,-19600) Blick +x, Pistole, RE2-KI, Dauerfeuer `W1.2,M0.6,MA9.0,M0.5,W2`, RE15_FX_LOG + RE15_STATE_LOG, Messkopie
+`re15_r36c_n1.exe` (danach geloescht), `exit=0`. Auswertung `fx_auswertung.py` (erste Zeile je Blut-Effekt id 0 / frame=1);
+vorher = Roh-Logs der Abnahme (`abn/p2/tod`, nicht neu gefahren). Die Treffer liegen in beiden Laeufen auf denselben
+Bildern und Lagen (state.log Platz 2: F55 50->34, F77 ->18, F99 ->2, F121 2->-14 st 3), die Lauf-Folge ist also gleich:
+| Bild | Emitter (state.log) | vorher (Abnahme) | nachher | Befund |
+|---|---|---|---|---|
+| F55 | Treffer im Aufstehen aus dem Fressen (F54 `st=1 ss1=8 ss2=4` -> F55 `st=2 ss1=3`) = FUN_80107A78 | `w(-1733,-2445,-19605)` | `w(-1781,-2163,-19518)` | 282 tiefer = Part8.R*(0,300,0) — M2 (die Abnahme hielt F55 fuer den Brust-Treffer; es ist der Part-8-Emitter) |
+| F77 | Haupt-Handler (HURT) | `w(-1723,-2140,-19787)` | `w(-1723,-2140,-19787)` | gleich (Bau-Agent-Fix, unberuehrt) |
+| F99 | Zone-0-Treffer | `w(-1867,-355,-19977)` | `w(-1867,-355,-19977)` | gleich |
+| F121 | TOD (2 -> -14, st 3) | `w(-1907,-1808,-20497)` | `w(-1862,-2176,-20446)` | 368 hoeher = Brust statt Becken — M1 |
+| F126..F136 | Tropfblut Tod P1 (ungerade Bilder) | y -1747 .. -1053 | y -1934 .. -1199 | je ~190-280 hoeher (P8.y+500 = 283 ueber dem Becken im Becken-Rahmen) |
+
+### 8.10 Bestehende Riegel, die die Nachbesserung rot machte (je Test entschieden, wie §1.5)
+Erster gezielter Lauf (188 Tests, Regex `mess_r36c/n1/regex.txt`, -j 2, 648 s): `99% tests passed, 2 tests failed out
+of 188` — `unit_re2_zombie_teardeath`, `unit_r26_mg_blut`. Beide aus der Nachbesserung erklaert, keiner ist eine
+Regression des Verhaltens, das sie pruefen:
+| Test | Rot weil (gemessen) | Entscheidung |
+|---|---|---|
+| unit_re2_zombie_teardeath (PIN7 w12) | `PIN7 Waffe 12 -> cell=0 ... end(st=7 hp=-1 10E=2001) hits=13 f=2599`: der Kampf endete im KRIECHER-GRIFF-TOD (RE15_T20-Spur: Griff f160, Abwurf, Kriecher 10E 0x2001 f460, Griff, st 7 hp -1 f520 = FUN_801025EC P6 @0x80102BE8, `sw 7,4` @0x80102BF4 / `sh -1,342` @0x80102BFC) — kein Schuss-Tod, also nie Zustand 3. Bisect an der Engine: Nachbluten auf den alten Stand -> gruen (`cell=1 row=15 ... f=471`); neue Wuerfe, aber ohne Anker-Rechnung (gore_fx_ex) -> rot wie oben. Ursache = die zwei Original-Wuerfe des Nachblutens (@0x80105FC8/D0): die w3/w4-Kaempfe davor verbrauchen jetzt mehr Wuerfe, der w12-Kampf beginnt mit einer anderen Zufallslage. MG-Aufruf auf Welt-Versatz zurueck -> weiter rot (nicht der MG-Fix). | Fixture neu verankert: jeder PIN7-Kampf startet mit `re15_re2z_rng_reset()` (Zufallslage des Raumladens, wie actor_common.c beim Raumwechsel) — die Wache haengt nicht mehr davon ab, wie viele Wuerfe ANDERE Pins ziehen. Ein erster Versuch mit Wiederholung bei Griff-Tod (Vorlauf +20) brachte im zweiten Anlauf `hits=0` (verworfen). Ergebnis: alle vier Waffen `cell=1` (w3 f519, w4 f519, w12 `row=15 ... hits=13 f=506`, w19 `row=18 ... f=405`), `test_re2_zombie_teardeath: OK`; Pruefungen unveraendert |
+| unit_r26_mg_blut | `(1) MG-Blutstoss belegt 10 Slots ... (5) 64/64 Stoesse sitzen ohne Versatz auf dem Anker ... (6) scale ist konstant (8000)`: der Riegel laeuft OHNE Gegner-Bank; re15_schuss_r36_blut_anker liess a3 ohne Bank ganz weg, der MG-Stoss lag auf der Wurzel und slots_bei() zaehlte fremde Spawns mit. | Engine: ohne Bank Anker.T = Aktor-Wurzel (re15_enemy_bone_world_pos), R_part = Einheit, a3 im Aktor-Rahmen (Ryaw) — im Spiel traegt jeder RE2-Zombie seine Bank, der Zweig betrifft nur Sonden. Riegel: Nullpunkt fuer (5) ist die Wurzel (1000,0,2000) des Treffer-Aktors statt des Pistolenstosses, der seit Runde 36 selbst a3 = P8 + (-100*s, 300, 0) traegt (@0x80105680-B4). Ergebnis: `64 Treffer: 0/64 auf dem Anker, 0/64 ausserhalb des Bandes, 63/63 Wechsel, scale 7024..9016` / `=== RIEGEL r26: GRUEN ===` |
+
+### 8.11 Gezielte Tests (Abschluss Nachbesserung 1, keine volle Suite im Spurbaum)
+* Regex (`mess_r36c/n1/regex2.txt`) = eigene Tests (r36) + die Gruppen aller beruehrten Module (enemy_ai_re2_zombie.c:
+  zombie|re2z|re2_|gore|blood|blut|hit_|death|crawl|stagger|knockdown|writher|...; schuss_r36.c/re15_damage.c-Haken:
+  damage|aim|shootable|waffen|werfer|autofire|1140|...; Raeume 1030/1040/10d0/1100/1210; Riegel r16_/r26_mg/r35_*/
+  r30_hund/redhawk/r17_/zfall/situp/fx_region/granate):
+  ```
+  r36|crow|kraehe|hitfilter|zombie|re2z|re2_|1140|1030|1040|10d0|1100|1210|damage|werfer|dog_hit|spider|gator|birkin|g5_|shootable|hit_|autofire|waffen|blood|blut|gore|feeder|straight_shot|enemy_ai|combat|aim|r16_|rise_|knockdown|stagger|death|crawl|writher|r26_mg|r35_inhalt|r35_raeume|r35_cut1150|r35_zgirl|r30_hund|redhawk|r17_|zfall|situp|fx_region|granate
+  ```
+  `ctest --test-dir re15_port/build -R "<regex>" --timeout 600 --output-on-failure -j 2` (Endstand, nach §8.10):
+  **`100% tests passed, 0 tests failed out of 199`** (`Total Test time (real) = 882.18 sec`, Log `mess_r36c/n1/ctest_gezielt2.log`).
+  Darin u.a. integration_r36_schuss (8 Laeufe), unit_r36_blut_pin_eben/_tief/_mg, unit_r36_schuss, unit_r36_schuss_kraehe,
+  unit_re2_zombie_teardeath, unit_r26_mg_blut, unit_re2_zombie_hitfilter/_abc, unit_re2_gore*, integration_r35_werfer*.
+* Davor (erster gezielter Lauf, 188 Tests, vor §8.10): `99% tests passed, 2 tests failed out of 188` — die zwei Riegel aus §8.10.
+
+### 8.12 Stand je Mangel
+| Mangel | Stand |
+|---|---|
+| M1 toedlicher Treffer | behoben + erweitert: TOD (Zone!=0/0), Kriecher-Tod, Tod des Liegenden, Tropfblut; Sonde + exe (F121 y -1808 -> -2176) |
+| M2 Aufsteh-Treffer + Nachbluten | behoben: Part-8-a3 (beide Spawns), Nachbluten byte-true (gerades +0x15A, zwei Wuerfe, Id 5096, a3 y-500); exe F55 282 tiefer |
+| M3 Pin | probe_r36_blut neu (Ring, bis zum Tod, alle Familien, Anker-Rahmen), vorher rot (33/23 FAIL), nachher gruen; + Variante mg |
+| M4 Tisch-Trennschaerfe | integration_r36_schuss + frei_re15/tisch_re15/gl_tisch_re15 (treffbare Ziele), gruen |
+| M5 Zitate | berichtigt (Deskriptor 7/8 @0x80100A64-DC, Lagen-Tick @0x8001DB74-DC1C), selbst disassembliert |
+| M6 Regressionsaussage | keine Regression aus v0.8.22/23 (git log -L je Funktion: 0 Commits), Herkunft 76d63ac0/ee97f515 (2026-08-20) |
+| M7 Messkopie | re15_pc_r36c_haken_<id> neben der exe, am Ende geloescht |
+| dazu (Zensus §8.8) | MG, MAGNUM, RIP, BURST (inkl. Tropfblut 500 UNTER statt 283 ueber dem Becken), Arm-Abriss: a3 im Anker-Rahmen; offen: §5 OFFEN 7-11 |
