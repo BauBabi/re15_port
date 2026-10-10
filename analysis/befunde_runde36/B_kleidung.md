@@ -280,6 +280,17 @@ Dog-/Kraehen-/Zombie-Griff-Tests (Suite-Zeile s.u.).
 unit_pri_hashes war auf dem Basisstand 5a9dbb7b rot (Nutzer-Maske 10F0/02_02.png ungelistet) — auf
 master mit 78a4a748 behoben und in diesen Zweig gemergt (37ed0867); hier gruen.
 
+Volle Suite im Baum (2026-10-10, configure/build/test je ueber local_build.sh, Basis master 78a4a748,
+parallel liefen die Suiten der Spuren schuss/granate/klettern/zombieki, 5033 s):
+```
+100% tests passed, 0 tests failed out of 599
+=== LOCAL-BUILD-OK (test) — Tests 599/599
+```
+(Ein zweiter Durchlauf als `local_build.sh all` wurde danach gestartet; seine Zeile steht, sobald er
+durch ist, in einem Folge-Commit — die Flatter-Kandidaten boot_bg_pin, dark_start_pin, relatch_pin,
+save_counter_pin, weste_load_pin, r30_sicherung_*, r30_titel_puls, r34n_e_dokumente_bild waren im
+ersten Durchlauf alle gruen.)
+
 ## 7. OFFEN (ausserhalb der Regression; beruehrt den Wortlaut nur fuer Gegner, die nie stempelten)
 
 Zensus aller `jal 0x80037edc`-Stellen je Overlay (Byte-Scan, STAGE*.BIN ohne Header, Funktionen aus
