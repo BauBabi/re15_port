@@ -4882,6 +4882,8 @@ re_title:;
     { extern void re15_tuer1060_install(uint16_t); extern void re15_irons_tod_install(uint16_t);
       re15_tuer1060_install((uint16_t)g_current_room_id);
       re15_irons_tod_install((uint16_t)g_current_room_id); }
+    { extern void re15_szl_install(uint16_t);   /* Runde 36 Spur J: Boot-/CONTINUE-Weg wie oben (ROOM11B0 Werkstatt-Tuer) */
+      re15_szl_install((uint16_t)g_current_room_id); }
     /* VIER DOKUMENTE (Runde 34 Nacht, Spur E) — derselbe Grund wie Sicherung, Schreibtisch und
      * Granate darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN
      * Raumlader FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem

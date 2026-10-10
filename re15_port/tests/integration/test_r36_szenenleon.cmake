@@ -12,7 +12,7 @@
 #   B  (9,84)=1 ((3,0x83)/(4,0xCD) gesetzt), Leon oestlich vor der Tuer mit Blick nach Westen, Aktionstaste:
 #      "[szl-r36] Werkstatt-Tuer verschlossen (9,84): Ereignis 23", tuerse.log "raum=11B1 nachricht=12 art=M"
 #
-# SDL_AUDIODRIVER=dummy: Mischer ohne Geraet (die Bank-Weiche laeuft und loggt mit RE15_SE_DEBUG).
+# RE15_TITLE_SHOT(_AF): Titel-Autovorlauf (Muster test_r30_cut_blitz.cmake). SDL_AUDIODRIVER=dummy: Mischer ohne Geraet (die Bank-Weiche laeuft und loggt mit RE15_SE_DEBUG).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r36_szenenleon.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -55,6 +55,7 @@ set(WORKDIR "${_basis}_a")
 file(MAKE_DIRECTORY "${WORKDIR}")
 re15_start_spiel(_rv 400
     RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=11b0@250 "RE15_SET_FLAG=3:0x43,3:0x82,4:0xf3"
     RE15_MSG_LOG=1 RE15_SE_DEBUG=1 "RE15_EXIT_AT=20#1260"
     "${_exe_kopie}")
@@ -70,7 +71,7 @@ _reihenfolge("${_dbg}" A
     "[msg] room=11b0 id=20"
     "-> RE2-Schlossbank SCHLOSS1010"
     "[msg] room=11b0 id=21"
-    "STAGE1/ROOM1260.RDT")
+    "[room] PC loaded room1260.rdt")
 string(FIND "${_dbg}" "[schlossse]" _p)
 if(NOT _p LESS 0)
     message(FATAL_ERROR "r36_szenenleon[A]: SCHLOSS1010 nicht geladen (shared_assets/RE2/SCHLOSS1010.*)")
@@ -82,6 +83,7 @@ set(WORKDIR "${_basis}_b")
 file(MAKE_DIRECTORY "${WORKDIR}")
 re15_start_spiel(_rv 200
     RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=11b0@250 "RE15_SET_FLAG=4:0xf3,3:0x82,3:0x83,4:0xcd,9:0x54" "RE15_PLAYER_POS=-20900,-16230,2048"
     "RE15_TUERSE_LOG=${WORKDIR}/tuerse.log" RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=300
     "RE15_INPUT_SCRIPT=U1.5,W0.5,A0.2,W2" "RE15_EXIT_AT=480#11b0"
