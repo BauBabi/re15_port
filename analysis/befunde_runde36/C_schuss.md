@@ -723,3 +723,13 @@ Regression des Verhaltens, das sie pruefen:
 Commits der Nachbesserung 1 (Zweig r36/schuss): 62cc4289 (M5/M6), a752ff99 (M1/M2/M3), 63d89d9a (M4/M7), c26c5f5a
 (Zensus: MG/MAGNUM/RIP/BURST/Arm-Abriss), f20967a4 (Dossier), fc786782 (Riegel teardeath/r26, Anker ohne Bank),
 97b41606 (fix, Abschluss Code), ee8eabbb (Mess-Skripte), dieser Abschluss-Commit.
+
+## 9. Nachbesserung 2 (nach Abnahme 1, `C_abnahme_1.md` §7 M1)
+
+Stand: Fortsetzung im selben Baum ab 6fa888c2 (Abnahme 1). Einziger Mangel M1 (Punkt 2): die Emitter der Zensus-Gruppe B
+(a3 = 0, §8.8) ankern an der ROHEN Keyframe-Pose (re2z_gore_fx_ex/re2z_gore_fx -> re15_enemy_bone_world_pos,
+`g_anim_pose_actor = NULL`), die a3-Emitter an der gezeichneten. Punkte 1 und 3 (von der Abnahme erfuellt) bleiben
+unberuehrt; ihre Riegel muessen gruen bleiben. Vorher-Messung = die der Abnahme (`abn1C/blut_w*.txt`, nicht wiederholt);
+eigene Mess-Sonde und Logs im Scratchpad `c_nb2_r36/` (Kurzform `nb2/...`).
+Gliederung (wird fortlaufend gefuellt): 9.1 Ursache / 9.2 Messung vorher / 9.3 RE-Beleg / 9.4 Aenderung /
+9.5 Messung nachher / 9.6 Tests / 9.7 OFFEN + Fuer den Nutzer.
