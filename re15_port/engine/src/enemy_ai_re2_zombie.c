@@ -1109,8 +1109,9 @@ static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
  * Raum ohne Ziel-Id (ROOM1190 traegt nur {7}): auch der Global-Fallback findet 5/7
  * nicht -> spawnt nichts, harmlos. */
 /* Runde 36 Spur C: `a3` != NULL = der Original-Versatz im ANKER-Rahmen (Lage = Anker.R * a3 + Anker.T,
- * FUN_8001BF10 + RE2-Lagen-Tick @0x8001DB74-DC1C, re15_schuss_r36_blut_anker); NULL = bisheriger Weg
- * (Knochen-Weltlage + Welt-Versatz ofs_*). Aufrufer mit a3: re2z_gore_fx_a3. */
+ * FUN_8001BF10 + RE2-Lagen-Tick @0x8001DB74-DC1C, re15_schuss_r36_blut_anker); NULL = ohne Versatz (Anker.T) plus
+ * Welt-Versatz ofs_*. Aufrufer mit a3: re2z_gore_fx_a3. Der Anker ist in BEIDEN Faellen die gezeichnete Matrix
+ * (Nachbesserung 2, include/re15_schuss_r36.h). */
 static void re2z_gore_fx_core(re15_actor_t *e, int part, uint32_t packed, int16_t yaw, const int32_t *a3,
                               int32_t ofs_x, int32_t ofs_y, int32_t ofs_z)
 {
@@ -1127,8 +1128,9 @@ static void re2z_gore_fx_core(re15_actor_t *e, int part, uint32_t packed, int16_
     case 4:  if (sub == 15) { id = 0; sub = 3; break; } return;
     default: return;
     }
-    if (a3) re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);   /* Runde 36 Spur C */
-    else    re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p);
+    re15_schuss_r36_blut_anker(e, re2z_part_to_bone(e, part), a3, p);   /* Runde 36 Spur C; a3 = 0 (Gruppe B) seit
+                                                                          * Nachbesserung 2 ebenfalls an der gezeichneten
+                                                                          * Matrix (`sw zero,44/48` @0x8001C000-04) */
     p[0] += ofs_x; p[1] += ofs_y; p[2] += ofs_z;
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
@@ -4783,6 +4785,20 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
         if (fl & 0x08u) re2z_part_phys_dac(e, part);           /* @0x80027B98 */
     }
 
+    for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
+    for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
+    return 1;
+}
+
+/* Runde 36 Spur C, Nachbesserung 2 — Lesezugriff auf dieselbe eigene Matrix fuer den Blut-Anker (Aufschlag-Blut
+ * `addiu a2,s1,72` @0x80028C34): kein Seeding, kein Physikschritt (Deklaration include/re15_schuss_r36.h). */
+int re15_re2z_gore_part_matrix_peek(const re15_actor_t *e, int bone, int32_t rot[9], int32_t trans[3])
+{
+    if (!e || !rot || !trans || !re15_re2z_gore_active(e)) return 0;
+    int part = re2z_bone_to_part(e, bone);
+    if (part < 0 || part >= 16) return 0;
+    uint16_t fl = e->re2z_part_flags[part];
+    if (!(fl & 0x40u) || !(fl & 0x01u) || !(e->re2z_part_seeded & (uint16_t)(1u << part))) return 0;
     for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
     for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
     return 1;

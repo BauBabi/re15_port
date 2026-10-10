@@ -34,7 +34,21 @@
  *  (5) Mechanik: y des Versatzes im ANKER-Rahmen (Anker.R^T * (Lage - Anker.T)) im Band der Familie
  *      (HURT/TOD/NACH < -400, FLINCH/TROPF < -200, ZONE0 > 600, AUF/KRIECH > 200) — stehend wie liegend.
  *
- * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg]  (mg = Ingram 12 von +z, MG-Blutstoss 0x80107EF0)
+ * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg|rip|arm|burst]  (mg = Ingram 12 von +z, MG-Blutstoss 0x80107EF0)
+ *
+ * NACHBESSERUNG 2 (Abnahme 1 M1, Dossier C_schuss.md §9): "der Zeichner" dieser Sonde ist jetzt ein ZWILLING DES
+ * PORT-RENDERERS (platform/pc/main.c: Bankwahl 9798-9925 — Loco-Bank in den Paar-1-Phasen, clip_override bei +0x1C4 & 4,
+ * Sitz-Import —, Crossfade 9960 einmal je Bild, Unterhaelfte 10195-10220, Ragdoll-Bodenanker 10315-10330, freifliegende
+ * Teile samt Physik ueber re15_re2z_gore_part_matrix 10339). Vorher rechnete er immer die Hauptbank: in den Paar-1-Phasen
+ * zeichnet der Renderer aber die Loco-Bank (gemessen 56-121 Abstand), und ohne den Gore-Haken flog nie ein Teil.
+ * Neue Pruefung (G) fuer JEDEN Spawn dieses Zombies, mit und ohne a3, jeder Part (Zensus-Gruppe B, §8.8):
+ *   Lage <= Schranke an R*a3 + T der gezeichneten Matrix — Spawn im Spielschritt: Skelett-Pose dieses Bilds (Teil, das
+ *   erst jetzt abfliegt: genau die Pose, aus der der Renderer es seedet) bzw. die eigene Matrix eines schon fliegenden
+ *   Teils; Spawn WAEHREND des Zeichnens (Aufschlag-Blut FUN_80028AD8 @0x80028C34-4C): die eigene Matrix des Teils.
+ *   Schranke 40, in MG-Trefferbildern 100 (der MG-P0 dreht/schiebt den Zombie NACH dem Spawn @0x8010810C-6C).
+ *   Varianten: rip = SPAS 13 von +x (RIP-Kopf @0x80108E28, RIP-P1 @0x80109108/@0x8010913C, Aufschlag-Blut der Beine),
+ *   arm = Remington 8 von +z tief (Arm-Abriss, 4. Spawn a3 = 0 @0x80107704), burst = Remington 8 von +x (Ragdoll-Emitter
+ *   Part 1 @0x80106D7C im Bodenanker), mg zusaetzlich Gliedabriss @0x80105368/@0x801053D0 + Aufschlag-Blut.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -53,6 +67,8 @@
 #include "re15_msg.h"
 #include "re15_emd.h"
 #include "re15_skeleton.h"
+#include "re15_anim_select.h"
+#include "re15_engine.h"
 #include "re2_ems.h"
 #include "re15_schuss_r36.h"
 
@@ -105,35 +121,87 @@ static void frame(uint16_t cur, uint16_t edge)
     re15_game_step(&s_ctx);
 }
 
-/* Gezeichnete Pose wie main.c (g_anim_pose_actor = Aktor, Crossfade laeuft mit). k: 0 = Part 0, 1 = Part 1, 2 = Part 8. */
-typedef struct { int32_t rot[3][9]; int32_t t[3][3]; int ok; int32_t p8loc[3]; } drawn_t;
+/* "Der Zeichner" = Zwilling des Port-Renderers (Kopf, Nachbesserung 2). Je Knochen: R/T = Skelett-Pose (vor dem
+ * Gore-Haken; fuer ein Teil, das in diesem Bild zum ersten Mal mit eigener Matrix gezeichnet wird, genau die Seed-Pose),
+ * Rd/Td = das, was gezeichnet wird (eigene Matrix eines fliegenden Teils nach seinem Physikschritt). rot/t: Parts 0/1/8
+ * (k = 0/1/2) fuer die Familien-Pruefungen der Varianten eben/tief/mg. */
+#define MAXB RE15_EMD_MAX_BONES
+typedef struct {
+    int ok, n, bank;                                   /* bank: 0 Hauptbank, 1 Loco-Bank, 2 RE1.5-Sitz-Import */
+    int32_t R[MAXB][9], T[MAXB][3], Rd[MAXB][9], Td[MAXB][3]; int flieg[MAXB];
+    int32_t rot[3][9]; int32_t t[3][3]; int32_t p8loc[3];
+} drawn_t;
 static void zeichne(re15_actor_t *e, drawn_t *d)
 {
     memset(d, 0, sizeof *d);
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (!b || !b->ok || b->skel.bone_count < 9) return;
-    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
-    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    /* Bankwahl wie main.c:9798-9925 (Gegner-Zweig von re15_actor_anim_select, dann Loco-Bank / Sitz-Import). */
+    re15_anim_banks_t banks; memset(&banks, 0, sizeof banks);
+    re15_anim_view_t av; re15_actor_anim_select(e, 0, &banks, &av);
+    const re15_emd_skeleton_t *sk = av.skel; const re15_emd_animation_t *an = av.anim;
+    if (re15_actor_uses_loco_bank(e)) {
+        if (b->loco_ok && (int)e->motion < b->anim_loco.clip_count) {
+            sk = &b->skel_loco; an = &b->anim_loco; av.clip_override = (int)e->motion; d->bank = 1;
+        }
+    }
+    if (e->re2z_re15_pose && e->state != 4 && !re15_actor_uses_own_bank(e)) {   /* Kette main.c:9852-9925 */
+        const re15_emd_skeleton_t *rs = re15_re2z_re15_pose_skel(); const re15_emd_animation_t *ra = re15_re2z_re15_pose_anim();
+        if (rs && ra && (int)e->motion < ra->clip_count) { sk = rs; an = ra; av.clip_override = (int)e->motion; d->bank = 2; }
+    }
+    if (!sk || !an || an->clip_count <= 0) return;
+    int kf = re15_compute_actor_kf(an, sk, e, av.clip_override, e->anim_frame);
+    re15_skel_pose_t poses[MAXB], low[MAXB]; int low_ok = 0;
     void *save = g_anim_pose_actor;
-    g_anim_pose_actor = e;
-    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = e;                                 /* wie main.c:9960 — der Crossfade-Zustand laeuft mit */
+    int rv = re15_skel_compute_pose(sk, kf, poses);
     g_anim_pose_actor = save;
     if (rv != 0) return;
-    static const int P[3] = { 0, 1, 8 };
-    int32_t c = re15_cos_q12(e->rot_y), s = re15_sin_q12(e->rot_y);
-    for (int k = 0; k < 3; k++) {
-        const re15_skel_pose_t *po = &poses[P[k]];
-        /* Welt-R = Ryaw * R_part; Ryaw = [c 0 s; 0 1 0; -s 0 c] */
-        for (int col = 0; col < 3; col++) {
-            int32_t r0 = po->rot[0*3+col], r1 = po->rot[1*3+col], r2 = po->rot[2*3+col];
-            d->rot[k][0*3+col] = (int32_t)(((int64_t)c*r0 + (int64_t)s*r2) >> 12);
-            d->rot[k][1*3+col] = r1;
-            d->rot[k][2*3+col] = (int32_t)(((int64_t)-s*r0 + (int64_t)c*r2) >> 12);
-        }
-        re15_skel_bone_to_world(po->trans, e->rot_y, e->x, e->y, e->z, d->t[k]);
+    if (e->re2z_rag_anchor_on) {                           /* Unterhaelfte (main.c:10195-10220) */
+        const re15_emd_skeleton_t *ls = NULL; int lkf = re15_re2z_lower_kf(e, &ls);
+        g_anim_pose_actor = NULL;
+        low_ok = (re15_skel_compute_pose(ls ? ls : sk, lkf, low) == 0);
+        g_anim_pose_actor = save;
     }
+    int32_t c = re15_cos_q12(e->rot_y), s = re15_sin_q12(e->rot_y);
+    int32_t ny[9] = { c, 0, s, 0, 0x1000, 0, -s, 0, c };
+    uint8_t gd[MAXB]; uint32_t gt[MAXB]; uint8_t gm[MAXB];
+    for (int i = 0; i < MAXB; i++) { gd[i] = 1u; gt[i] = 0x00808080u; gm[i] = (uint8_t)i; }
+    int gore_on = re15_re2z_gore_resolve(e, sk->bone_parent, sk->bone_count < MAXB ? sk->bone_count : MAXB, gd, gt, gm);
+    d->n = sk->bone_count < MAXB ? sk->bone_count : MAXB;
+    for (int k = 0; k < d->n; k++) {
+        const re15_skel_pose_t *np = (e->re2z_rag_anchor_on && k >= 1 && k <= 6 && low_ok) ? &low[k] : &poses[k];
+        for (int r = 0; r < 3; r++) {
+            int64_t a = 0;
+            for (int q = 0; q < 3; q++) {
+                d->R[k][r*3+q] = (int32_t)(((int64_t)ny[r*3+0]*np->rot[0*3+q] + (int64_t)ny[r*3+1]*np->rot[1*3+q] +
+                                            (int64_t)ny[r*3+2]*np->rot[2*3+q]) >> 12);
+                a += (int64_t)ny[r*3+q] * np->trans[q];
+            }
+            d->T[k][r] = (int32_t)(a >> 12);
+        }
+        d->T[k][0] += e->x; d->T[k][1] += e->y; d->T[k][2] += e->z;
+        if (e->re2z_rag_anchor_on) {                       /* Ragdoll-Bodenanker (main.c:10315-10330) */
+            int32_t p0w[3];
+            for (int r = 0; r < 3; r++)
+                p0w[r] = (int32_t)(((int64_t)ny[r*3+0]*poses[0].trans[0] + (int64_t)ny[r*3+1]*poses[0].trans[1] +
+                                    (int64_t)ny[r*3+2]*poses[0].trans[2]) >> 12);
+            p0w[0] += e->x; p0w[1] += e->y; p0w[2] += e->z;
+            re15_re2z_ragdoll_part_anchor(e, k, p0w, d->T[k]);
+        }
+        memcpy(d->Rd[k], d->R[k], sizeof d->Rd[k]); memcpy(d->Td[k], d->T[k], sizeof d->Td[k]);
+        if (gore_on)                                       /* eigene Matrix + Physik (main.c:10339) */
+            d->flieg[k] = re15_re2z_gore_part_matrix(e, k, g_engine.frame_count, d->Rd[k], d->Td[k]);
+    }
+    static const int P[3] = { 0, 1, 8 };
+    for (int k = 0; k < 3; k++) { memcpy(d->rot[k], d->R[P[k]], sizeof d->rot[k]); memcpy(d->t[k], d->T[P[k]], sizeof d->t[k]); }
     for (int k = 0; k < 3; k++) d->p8loc[k] = b->skel.bone_relative_pos[8][k];
     d->ok = 1;
+}
+static void appl_k(const int32_t R[9], const int32_t T[3], const int32_t a[3], int32_t out[3])
+{
+    for (int r = 0; r < 3; r++)
+        out[r] = T[r] + (int32_t)(((int64_t)R[r*3+0]*a[0] + (int64_t)R[r*3+1]*a[1] + (int64_t)R[r*3+2]*a[2]) >> 12);
 }
 static void appl(const drawn_t *d, int k, int32_t ax, int32_t ay, int32_t az, int32_t out[3])
 {
@@ -177,6 +245,14 @@ int main(int argc, char **argv)
     int pin  = (argc > 1 && strcmp(argv[1], "pin") == 0);
     int tief = (argc > 2 && strcmp(argv[2], "tief") == 0);
     int mg   = (argc > 2 && strcmp(argv[2], "mg") == 0);     /* Ingram 12 -> RE2-Zeile 15 = MG-Handler 0x80107EF0 */
+    /* Nachbesserung 2 — Gruppe-B-Varianten (Kopf): Waffe/Seite/Hoehe wie die Laeufe der Abnahme 1 (abn1_blut). */
+    int rip   = (argc > 2 && strcmp(argv[2], "rip") == 0);    /* SPAS 13 von +x: RIP 0x80108BEC */
+    int arm   = (argc > 2 && strcmp(argv[2], "arm") == 0);    /* Remington 8 von +z, tief: Arm-Abriss @0x80107680-708 */
+    int burst = (argc > 2 && strcmp(argv[2], "burst") == 0);  /* Remington 8 von +x: Ragdoll-Emitter @0x80106D7C */
+    int glied = (argc > 2 && strcmp(argv[2], "glied") == 0);  /* Ingram 12 von +z, Dauerfeuer, Saat der Abnahme 1:
+                                                               * Gliedabriss @0x80105368/@0x801053D0 + Aufschlag-Blut */
+    int grp_b = rip || arm || burst || glied;                 /* nur Pruefung (G) + Zaehler, keine Pistolen-Familien */
+    if (arm) tief = 1;
     const char *base = getenv("RE15_ASSET_DIR");
     char path[600];
     snprintf(path, sizeof path, "%s/STAGE1/ROOM1140.RDT", (base && *base) ? base : RE15_ASSET_PSX_DIR);
@@ -190,7 +266,7 @@ int main(int argc, char **argv)
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();
-    re15_damage_seed_rng(0x0badf00du);
+    re15_damage_seed_rng(glied ? 0x1234567u : 0x0badf00du);  /* glied: Saat von abn1_blut (Abnahme 1 §3.1, F76 Abriss) */
     g_current_room_id = 0x1140;
     if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
     if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
@@ -209,8 +285,9 @@ int main(int argc, char **argv)
     re15_collision_set_band(0);
     re15_player_set_aim_clip_len(12);
     re15_inv_load_briefing();
-    if (mg) re15_inv_grant(12, 250);
-    re15_player_set_equipped_weapon(mg ? 12 : 3);
+    int waffe = (mg || glied) ? 12 : rip ? 13 : (arm || burst) ? 8 : 3;
+    if (waffe != 3) re15_inv_grant(waffe, 250);
+    re15_player_set_equipped_weapon(waffe);
     {   int es = re15_inv_equipped_slot(); if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
     int zs = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -220,40 +297,80 @@ int main(int argc, char **argv)
     /* Nur dieser eine Zombie: alle anderen Plaetze aus (Auto-Zielen und Koerperschub sonst auf Platz 5). */
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != zs) g_actors[s].active = 0;
     pl->x = z->x + 1800; pl->z = z->z; pl->rot_y = 2048;          /* Blick -x auf den Zombie */
-    if (mg) { pl->x = z->x; pl->z = z->z + 1800; pl->rot_y = 1024; }  /* MG: von +z (Blick -z), damit der Zombie
+    if (mg || arm || glied) { pl->x = z->x; pl->z = z->z + 1800; pl->rot_y = 1024; }  /* MG: von +z (Blick -z), damit der Zombie
                                                                     * NICHT mit Gier 0 steht — Welt- und Anker-Versatz
                                                                     * fielen sonst fast zusammen (Ryaw = 1) */
-    for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
+    for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); g_engine.frame_count++; }
 
-    drawn_t prev, cur; memset(&prev, 0, sizeof prev); memset(&cur, 0, sizeof cur);
+    static drawn_t prev, cur; memset(&prev, 0, sizeof prev); memset(&cur, 0, sizeof cur);
     unsigned ring0 = re15_schuss_r36_fx_zahl();
     int fails = 0, treffer = 0, tot_ab = -1, steht_seit = -1;
     int n_k[K_N]; memset(n_k, 0, sizeof n_k);
     int n_spawn = 0, n_tod_pflicht = 0, n_tropf = 0, n_mg = 0;
     int64_t mg_sum_anker = 0, mg_sum_welt = 0;
+    /* (G)-Zaehler (Nachbesserung 2) */
+    int g_n = 0, g_max = 0, g_null = 0, g_zeichnen = 0, g_loco = 0, g_kopf = 0, g_rip1 = 0, g_glied = 0, g_arm4 = 0, g_rag = 0;
     for (int f = 0; f < 2400; f++) {
         pl->hp = 100;
         uint16_t cr = RE15_PAD_BIT_R1 | (tief ? RE15_PAD_BIT_DOWN : 0), ed = 0;
         /* Schuss alle 12 Bilder, sobald der Zombie steht (nicht mehr Fresser EXEC[8]), bis zum Tod. */
         if (steht_seit < 0 && z->state == 1 && z->sub_state_1 != 8) steht_seit = f;
-        if (tot_ab < 0 && steht_seit >= 0 && f >= steht_seit + 20 && ((f - steht_seit - 20) % 12) == 0) {
+        if (glied) {                                         /* Dauerfeuer wie abn1_blut: Taste gehalten, Flanke je 30 */
+            if (tot_ab < 0 && steht_seit >= 0 && f >= steht_seit + 20) {
+                cr |= RE15_PAD_BIT_SQUARE; if (((f - steht_seit) % 30) == 0) ed = RE15_PAD_BIT_SQUARE;
+            }
+        } else if (tot_ab < 0 && steht_seit >= 0 && f >= steht_seit + 20 && ((f - steht_seit - 20) % 12) == 0) {
             cr |= RE15_PAD_BIT_SQUARE; ed = RE15_PAD_BIT_SQUARE;
         }
         int32_t hp_vor = z->hp; unsigned st_vor = z->state, s1_vor = z->sub_state_1, s2_vor = z->sub_state_2;
         unsigned n0 = re15_schuss_r36_fx_zahl();
         frame(cr, ed);
+        unsigned n1 = re15_schuss_r36_fx_zahl();                 /* Spawns des Spielschritts: [n0, n1) */
+        int32_t roh[MAXB][3];                                    /* alter Anker (rohe Hauptbank-Pose), nur Ausgabe */
+        for (int k = 0; k < MAXB; k++) re15_enemy_bone_world_pos(z, k, roh[k]);
         zeichne(z, &cur);                                        /* "der Zeichner" dieses Bildes */
-        unsigned n1 = re15_schuss_r36_fx_zahl();
+        unsigned n2 = re15_schuss_r36_fx_zahl();                 /* Spawns WAEHREND des Zeichnens: [n1, n2) */
+        g_engine.frame_count++;                                  /* wie main.c:11483 — Physik-Takt der Teile */
         int hit  = z->hp < hp_vor;
         int died = (hp_vor >= 0 && z->hp < 0) ||
                    ((st_vor != 3u && st_vor != 7u) && (z->state == 3u || z->state == 7u));
         if (hit) treffer++;
-        if (!pin && ((f % 40) == 0 || ed || hit || n1 != n0))
+        if (!pin && ((f % 40) == 0 || ed || hit || n2 != n0))
             printf("  f%-4d z st=%u/%u/%u -> %u/%u/%u hp %d->%d 1D2=%u 222=%u 15A=%d 16A=%d 10E=%04X%s\n", f, st_vor, s1_vor,
                    s2_vor, z->state, z->sub_state_1, z->sub_state_2, hp_vor, z->hp, z->re2z_hits1d2, z->re2z_flag222,
                    z->re2z_t15a, (int)(int8_t)z->re2z_dir16a, z->re2z_f10e, ed ? " SCHUSS" : "");
+        /* (G) Nachbesserung 2: JEDER Spawn (jeder Part, mit und ohne a3) an der gezeichneten Matrix (Kopf). */
+        for (unsigned nr = n0; nr < n2 && cur.ok; nr++) {
+            int part, mit; int32_t fx[3], a3[3], ref[3];
+            if (!re15_schuss_r36_fx_holen(nr, &part, fx, a3, &mit)) continue;
+            if (part < 0 || part >= cur.n) { if (pin) { printf("FAIL: F%d Spawn an Part %d ohne Knochen\n", f, part); fails++; } continue; }
+            int beim_zeichnen = (nr >= n1);
+            const char *quelle;
+            if (beim_zeichnen) { appl_k(cur.Rd[part], cur.Td[part], a3, ref); quelle = "eigene Matrix (Aufschlag)"; }
+            else if (prev.ok && prev.flieg[part]) { appl_k(prev.Rd[part], prev.Td[part], a3, ref); quelle = "eigene Matrix (fliegt)"; }
+            else { appl_k(cur.R[part], cur.T[part], a3, ref); quelle = cur.flieg[part] ? "Skelett = Seed (fliegt ab)" : "Skelett"; }
+            int32_t dg = abst(fx, ref), droh = abst(fx, roh[part]);
+            int schranke = ((mg || glied) && hit && !beim_zeichnen) ? 100 : 40;   /* MG-P0 dreht/schiebt NACH dem Spawn @0x8010810C-6C */
+            printf("F%-4d (G) %s part=%2d fx=(%d,%d,%d) a3=%s(%d,%d,%d) bank %s rag %u -> %s d=%d (Schranke %d) | roh d=%d\n",
+                   f, beim_zeichnen ? "Z" : " ", part, fx[0], fx[1], fx[2], mit ? "" : "ohne ", a3[0], a3[1], a3[2],
+                   cur.bank == 1 ? "loco" : cur.bank == 2 ? "re15" : "haupt", (unsigned)z->re2z_rag_anchor_on, quelle, dg,
+                   schranke, droh);
+            g_n++; if (dg > g_max) g_max = dg;
+            if (!mit || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) g_null++;
+            if (beim_zeichnen) g_zeichnen++;
+            if (cur.bank == 1) g_loco++;
+            if (z->re2z_rag_anchor_on && !mit) g_rag++;
+            if (died && part == 8 && !mit) g_kopf++;                     /* RIP-Kopf @0x80108E28 */
+            if (rip && died && part == 0 && !mit) g_rip1++;              /* RIP-P1 @0x80109108/@0x8010913C (Port a3 = 0) */
+            if (!beim_zeichnen && !mit && (part == 9 || part == 12 || part == 10 || part == 13) && !died) g_glied++;
+            if (arm && part == 3 && !mit) g_arm4++;                      /* Arm-Abriss 4. Spawn @0x80107704 */
+            if (pin && dg > schranke) {
+                printf("FAIL: F%d Spawn part=%d %s liegt %d von der gezeichneten Matrix (%s), Schranke %d (roh %d)\n", f, part,
+                       mit ? "mit a3" : "ohne a3", dg, quelle, schranke, droh); fails++;
+            }
+        }
         int tod_treffer_ok = 0, tod_spawns = 0;
-        for (unsigned nr = n0; nr < n1; nr++) {
+        for (unsigned nr = n0; nr < n1 && !grp_b; nr++) {
             int part, mit; int32_t fx[3], a3[3];
             if (!re15_schuss_r36_fx_holen(nr, &part, fx, a3, &mit)) continue;
             int32_t zw[3] = { z->x, z->y, z->z };
@@ -360,11 +477,11 @@ int main(int argc, char **argv)
                    z->state, z->sub_state_1, z->sub_state_2, z->re2z_f10e);
             /* (2) das Todesbild traegt den TOD-/ZONE0-/KRIECH-Spawn */
             if (tod_treffer_ok) n_tod_pflicht++;
-            else if (pin) { printf("FAIL: F%d Todesbild ohne TOD-Spawn am Sollpunkt (%d Spawns an Part 0/1)\n", f, tod_spawns); fails++; }
+            else if (pin && !grp_b) { printf("FAIL: F%d Todesbild ohne TOD-Spawn am Sollpunkt (%d Spawns an Part 0/1)\n", f, tod_spawns); fails++; }
         }
         prev = cur;
         if (tot_ab < 0 && died) tot_ab = f;
-        if (mg && (z->re2z_f10e & 1u)) {     /* Kriecher (+0x10E Bit 0): danach Griff/Biss, kein Treffer-Emitter */
+        if ((mg || glied) && (z->re2z_f10e & 1u)) {     /* Kriecher (+0x10E Bit 0): danach Griff/Biss, kein Treffer-Emitter */
             printf("F%-4d Kriecher (10E=%04X) — MG-Lauf endet hier\n", f, z->re2z_f10e);
             break;
         }
@@ -373,6 +490,23 @@ int main(int argc, char **argv)
     printf("Treffer %d, Spawns %d (Ring %u..%u), Tod bei Bild %d, Tropfblut nach dem Tod %d\n", treffer, n_spawn, ring0,
            re15_schuss_r36_fx_zahl(), tot_ab, n_tropf);
     printf("Zuordnung:"); for (int k = 0; k < K_N; k++) if (n_k[k]) printf(" %s=%d", KN[k], n_k[k]); printf("\n");
+    printf("(G): %d Spawns, max d %d, davon ohne a3 %d, beim Zeichnen (Aufschlag) %d, Loco-Bank %d, Ragdoll ohne a3 %d, "
+           "RIP-Kopf %d, RIP-P1 %d, Gliedabriss %d, Arm-Abriss 4. Spawn %d\n", g_n, g_max, g_null, g_zeichnen, g_loco, g_rag,
+           g_kopf, g_rip1, g_glied, g_arm4);
+    if (pin && grp_b) {
+        /* Zaehler je Gruppe-B-Variante (gemessen, Dossier §9.6): der Lauf muss die Emitter wirklich sehen. */
+        if (tot_ab < 0) { printf("FAIL: Zombie nicht gestorben\n"); fails++; }
+        if (rip && g_kopf < 1)     { printf("FAIL: kein RIP-Kopf-Spawn (Part 8, a3 0 @0x80108E28)\n"); fails++; }
+        if (rip && g_rip1 < 1)     { printf("FAIL: kein RIP-P1-Nachbluten (Part 0 @0x80109108/@0x8010913C)\n"); fails++; }
+        if (rip && g_zeichnen < 1) { printf("FAIL: kein Aufschlag-Blut eines fliegenden Teils (@0x80028C4C)\n"); fails++; }
+        if (arm && g_arm4 < 1)     { printf("FAIL: kein Arm-Abriss-Spawn ohne a3 (@0x80107704)\n"); fails++; }
+        if (burst && g_rag < 1)    { printf("FAIL: kein Ragdoll-Spawn ohne a3 (@0x80106D7C)\n"); fails++; }
+        if (glied && g_glied < 1)  { printf("FAIL: kein Gliedabriss-Spawn (@0x80105368/@0x801053D0)\n"); fails++; }
+        if (glied && g_zeichnen < 1) { printf("FAIL: kein Aufschlag-Blut des abgerissenen Glieds (@0x80028C4C)\n"); fails++; }
+        if (fails) { printf("probe_r36_blut: %d FAILURES\n", fails); return 1; }
+        printf("probe_r36_blut: OK\n");
+        return 0;
+    }
     if (pin) {
         /* (4) Zaehler: der Lauf muss die Emitter wirklich treffen, die er pinnen soll */
         if (!mg && tot_ab < 0)                  { printf("FAIL: Zombie nicht gestorben\n"); fails++; }

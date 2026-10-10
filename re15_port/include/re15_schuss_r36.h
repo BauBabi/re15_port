@@ -74,10 +74,35 @@ void re15_schuss_r36_sichtlinie_reset(void);
  * Port vorher: Lage = Knochen-Weltposition OHNE a3 -> immer am Becken (gemessen probe_r36_blut: Rumpf-
  * Treffer 505 zu tief, Bein-Treffer 794 zu hoch).
  *
- * Lage = Welt(t_part) + Ryaw * (R_part * a3); t_part ueber re15_enemy_bone_world_pos (alle Sonderfaelle),
- * R_part aus der Pose (QUERY-Modus). Rueckgabe 0 = ohne Bank (out = Aktor-Wurzel), 1 = nur t_part,
- * 2 = mit Versatz. */
+ * Lage = T + R * a3 mit (R, T) = re15_schuss_r36_gezeichnet. Rueckgabe 0 = ohne Bank (out = Aktor-Wurzel
+ * + Ryaw * a3), 1 = nur T (a3 NULL oder 0), 2 = mit Versatz.
+ *
+ * NACHBESSERUNG 2 (Abnahme 1 M1, Dossier C_schuss.md §9): DER ANKER IST FUER JEDEN EMITTER DIE GEZEICHNETE MATRIX —
+ * auch fuer a3 = 0 (Zensus-Gruppe B), die vorher die ROHE Hauptbank-Pose nahm (re15_enemy_bone_world_pos, QUERY).
+ *   FUN_8001BF10: a3 == 0 -> nur `sw zero,44(t0)` / `sw zero,48(t0)` @0x8001C000-04; die Matrix kommt fuer alle aus a2
+ *   (`lw` 0..28(a2) -> slot+76..+104 @0x8001C03C-78). a2 = Part-Record+72 schreibt NUR der Zeichner FUN_80027434
+ *   (Part-Walk `addiu a3,s2,72` @0x80027390 / `addiu s0,s2,72` @0x800273B0, Stride 172): R = R_Eltern * R_lokal(Record+0x18)
+ *   (MVMVA @0x80027504/48/8C, `sh` -> Record+72 @0x8002751C-A8), t = Eltern * t_lokal(Record+0x2C) + TR (`swc2` -> +92..+100
+ *   @0x800275D4-DC); Flag 0x40 = eigene Matrix, keine Neukomposition (@0x80027498-9C), die Teile-Physik fuehrt sie
+ *   (`jal 0x80028ad8`, a1 = Record+72 @0x800276A0-A4). Record+0x18 fuellt der Anim-Durchlauf aus dem (EMR,EDD)-Paar der
+ *   Aufrufstelle (`sw a2,376(a0)` / `jal 0x80029614` @0x800295F8-FC) mit der Blende a3 * +0x14E (@0x800296A8-BC).
+ *   Port-Zwilling (re15_schuss_r36_gezeichnet) = was der Port-Renderer zeichnet (platform/pc/main.c): Bank wie dort
+ *   (9798-9925: Loco-Bank in den Paar-1-Phasen, Kanaele, Sitz-Import; clip_override bei +0x1C4 & 4), Crossfade
+ *   (9960, auf einer Schatten-Kopie), Unterhaelfte Bones 1..6 aus re15_re2z_lower_kf (10195-10220), Ragdoll-Bodenanker
+ *   (10315-10330) und fuer ein geseedetes 0x40-Teil dessen eigene Matrix (10339, re15_re2z_gore_part_matrix_peek).
+ *   PORT-KONVENTION (unveraendert, §2.3/§8.2): die Pose des LAUFENDEN Bilds statt der des Vorbilds. */
 int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3]);
+
+/* Welt-Rotation R (Q12, zeilenweise; Ryaw * R_part bzw. die eigene Matrix des Teils) und Welt-Translation T des
+ * Knochens `bone`, wie der Port-Renderer ihn in diesem Bild zeichnet (s. o.). Rueckgabe 0 = ohne Bank/Pose (T =
+ * Wurzel, R = Ryaw), 1 = Skelett-Pose, 2 = eigene Matrix eines freifliegenden Teils. */
+int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], int32_t T[3]);
+
+/* enemy_ai_re2_zombie.c (Nachbesserung 2): eigene Matrix des Teils am Bone-Slot `bone`, wenn es Flag 0x40 + Bit 0 traegt
+ * UND der Renderer sie schon geseedet hat (re15_re2z_gore_part_matrix) — reiner Lesezugriff, KEIN Physikschritt. 1 = rot/
+ * trans geschrieben (Welt), 0 = keine eigene Matrix (Skelett-Pose gilt; vor dem ersten Zeichnen ist das genau die Pose,
+ * aus der der Renderer seedet). */
+int re15_re2z_gore_part_matrix_peek(const re15_actor_t *e, int bone, int32_t rot[9], int32_t trans[3]);
 
 /* Mess-Ring (nur Sonden; die Engine liest ihn nicht): JEDER Spawn der RE2-Zombie-Blut-/Gore-Emitter
  * (re2z_blood_fx_scaled, re2z_gore_fx_*) mit Anker-Part, Weltlage und dem a3-Versatz (NULL = ohne,

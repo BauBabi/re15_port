@@ -30,64 +30,117 @@ int re15_schuss_r36_sichtlinie_blockiert(const re15_actor_t *pl, const re15_acto
 
 /* ---- Punkt 2: Blut-Anker = Anker.R * a3 + Anker.T (Belege im Header) ------------------------- */
 #include "re15_damage.h"       /* re15_enemy_bone_world_pos */
-#include "re15_enemy.h"        /* re15_enemy_find */
+#include "re15_enemy.h"        /* re15_enemy_find, re15_actor_rbj_skel/_anim, re15_re2z_re15_pose_skel/_anim */
+#include "re15_enemy_ai.h"     /* re15_actor_uses_loco_bank, re15_actor_uses_own_bank */
 #include "re15_skeleton.h"     /* re15_skel_compute_pose / g_anim_pose_actor / re15_sin_q12 */
 #include "re15_anim_select.h"  /* re15_compute_actor_kf */
 
-int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3])
+/* Nachbesserung 2: die BANK, aus der der Port-Renderer den Aktor zeichnet — Zwilling von platform/pc/main.c
+ * 9798-9925 fuer einen Gegner mit eigener Bank (re15_actor_anim_select-Gegnerzweig: Hauptbank, clip_override = motion
+ * nur bei +0x1C4 & 4; dann Loco-Bank / Kanaele / eigene Bank / RE1.5-Sitz-Import in DERSELBEN Reihenfolge wie dort).
+ * Im Original ist das das (EMR,EDD)-Paar, das der Handler dem Anim-Durchlauf reicht (`sw a2,376(a0)` / `jal 0x80029614`
+ * @0x800295F8-FC) — Paar 1 = Loco-Bank (re15_re2z_poses_loco_bank). */
+static void zeichen_bank(const re15_actor_t *e, const re15_enemy_bank_t *b, const re15_emd_skeleton_t **sk,
+                         const re15_emd_animation_t **an, int *ov)
+{
+    const int slot = (int)(e - g_actors), mo = (int)e->motion;
+    *sk = &b->skel; *an = &b->anim;
+    *ov = (e->anim_flags & 0x04) ? mo : -1;
+    if (re15_actor_uses_loco_bank(e) && b->loco_ok && mo < b->anim_loco.clip_count) {           /* main.c:9832-9843 */
+        *sk = &b->skel_loco; *an = &b->anim_loco; *ov = mo;
+    }
+    if (e->state == 4 && e->sub_state_1 == 0 && !e->walk_active) {                              /* main.c:9852-9861 */
+        const re15_emd_skeleton_t  *rs = (slot >= 0 && slot < RE15_ACTOR_MAX) ? re15_actor_rbj_skel(slot) : NULL;
+        const re15_emd_animation_t *ra = (slot >= 0 && slot < RE15_ACTOR_MAX) ? re15_actor_rbj_anim(slot) : NULL;
+        if (rs && ra && mo < ra->clip_count) { *sk = rs; *an = ra; *ov = mo; }
+    } else if (e->state == 4 && !e->walk_active &&
+               (e->sub_state_1 == 1 || e->sub_state_1 == 7 || e->sub_state_1 == 8)) {         /* main.c:9862-9869 */
+        if (b->loco_ok && mo < b->anim_loco.clip_count) { *sk = &b->skel_loco; *an = &b->anim_loco; *ov = mo; }
+    } else if (e->state == 4 && !e->walk_active && e->sub_state_1 == 3) {                       /* main.c:9870-9875 */
+        if (b->victim_ok && mo < b->anim_victim.clip_count) { *sk = &b->skel_victim; *an = &b->anim_victim; *ov = mo; }
+    } else if (re15_actor_uses_own_bank(e)) {                                                    /* main.c:9876-9912 */
+        if (b->own_ok && mo < b->anim_own.clip_count) { *sk = &b->skel_own; *an = &b->anim_own; *ov = mo; }
+    } else if (e->re2z_re15_pose) {                                                              /* main.c:9913-9925 */
+        const re15_emd_skeleton_t  *rs = re15_re2z_re15_pose_skel();
+        const re15_emd_animation_t *ra = re15_re2z_re15_pose_anim();
+        if (rs && ra && mo < ra->clip_count) { *sk = rs; *an = ra; *ov = mo; }
+    }
+}
+
+int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], int32_t T[3])
 {
     static re15_actor_t sh;                                   /* Schatten-Aktor (Muster enemy_ai_re2_zellenarm.c:462-82) */
-    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-    int32_t v[3], c, s;
-    int kf, rv, r;
-    if (!e || !out) return 0;
-    re15_enemy_bone_world_pos(e, bone, out);                 /* Anker.T (Welt) aus der ROHEN Pose, inkl. Ragdoll */
-    re15_enemy_bank_t *b = re15_enemy_find(e->type);
-    if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) {
-        /* Ohne geladene Bank (nur Unit-Sonden; im Spiel traegt jeder RE2-Zombie seine Bank) gibt es keine
-         * Part-Matrix: Anker.T = Aktor-Wurzel (re15_enemy_bone_world_pos), R_part = Einheit, a3 im Aktor-Rahmen
-         * (Ryaw wie unten). Nachbesserung 1: vorher fiel a3 hier ganz weg — der MG-Stoss (a3 = Zufallsvektor
-         * @0x80108014-38) laege dann ohne Streuung auf der Wurzel (unit_r26_mg_blut). */
-        if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
-        c = re15_cos_q12(e->rot_y); s = re15_sin_q12(e->rot_y);
-        out[0] += (int32_t)(((int64_t)c * a3[0] + (int64_t)s * a3[2]) >> 12);
-        out[1] += a3[1];
-        out[2] += (int32_t)(((int64_t)-s * a3[0] + (int64_t)c * a3[2]) >> 12);
-        return 2;
-    }
-    if (e->re2z_rag_anchor_on) {                             /* abgetrennte Unterhaelfte: Anker wie bisher */
-        if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
-        void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
-        rv = re15_skel_compute_pose(&b->skel, re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame), poses);
-        g_anim_pose_actor = save;
-        if (rv != 0) return 1;
-    } else {
-        /* Das Original liest die Matrix, die der ZEICHNER geschrieben hat (Record +0x48, FUN_8001e8c8 im
-         * Vorbild) — also die CROSSFADE-geblendete Pose (FUN_8001f3bc), nicht das rohe Keyframe. Der Port
-         * blendet nur mit gesetztem g_anim_pose_actor und schreibt dabei den Blend-Zustand zurueck; eine
-         * KOPIE des Aktors liefert dieselbe Pose, die der Renderer in diesem Bild zeichnet, ohne den
-         * Zustand des echten Aktors zu veraendern (gemessen probe_r36_blut: roh vs. gezeichnet bis 98
-         * Einheiten im zweiten Treffer-Clip). */
-        sh = *e;
-        kf = re15_compute_actor_kf(&b->anim, &b->skel, &sh, -1, e->anim_frame);
-        {   void *save = g_anim_pose_actor; g_anim_pose_actor = &sh;
-            rv = (kf >= 0) ? re15_skel_compute_pose(&b->skel, kf, poses) : -1;
-            g_anim_pose_actor = save;
-        }
-        if (rv != 0) return 1;
-        re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);   /* Anker.T gezeichnet */
-        if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return 1;
-    }
-    /* R_part * a3 (Q12; RE2-Lagen-Tick 0x8001D894: RT = Record+76 @0x8001DB74, V0 = a3 @0x8001DBA0,
-     * MVMVA 0x4A486012 @0x8001DBB4, + Anker.T @0x8001DBD0-DC1C) ... */
-    for (r = 0; r < 3; r++)
-        v[r] = (int32_t)(((int64_t)poses[bone].rot[r*3+0] * a3[0] + (int64_t)poses[bone].rot[r*3+1] * a3[1] +
-                          (int64_t)poses[bone].rot[r*3+2] * a3[2]) >> 12);
-    /* ... dann in die Welt des Aktors (Ryaw wie re15_skel_bone_to_world: Netz blickt +X bei Gier 0). */
+    static re15_skel_pose_t po[RE15_EMD_MAX_BONES], lo[RE15_EMD_MAX_BONES];
+    const re15_emd_skeleton_t *sk; const re15_emd_animation_t *an;
+    const re15_skel_pose_t *np;
+    int32_t c, s, ny[9];
+    int ov, kf, rv, r, q;
+    if (!e || !R || !T) return 0;
     c = re15_cos_q12(e->rot_y); s = re15_sin_q12(e->rot_y);
-    out[0] += (int32_t)(((int64_t)c * v[0] + (int64_t)s * v[2]) >> 12);
-    out[1] += v[1];
-    out[2] += (int32_t)(((int64_t)-s * v[0] + (int64_t)c * v[2]) >> 12);
+    ny[0] = c; ny[1] = 0; ny[2] = s; ny[3] = 0; ny[4] = 0x1000; ny[5] = 0; ny[6] = -s; ny[7] = 0; ny[8] = c;
+    for (r = 0; r < 9; r++) R[r] = ny[r];                    /* Rueckfall: Wurzel, R = Ryaw (Aktor-Rahmen) */
+    T[0] = e->x; T[1] = e->y; T[2] = e->z;
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || bone < 0 || bone >= RE15_EMD_MAX_BONES) return 0;
+    /* (5) Teil mit EIGENER Matrix (Flag 0x40, vom Renderer schon geseedet): der Zeichner komponiert es nicht neu
+     * (`andi v0,s3,0x40` / `bne` @0x80027498-9C), die Physik fuehrt dieselbe Matrix (`jal 0x80028ad8`, a1 = Record+72
+     * @0x800276A0-A4) — sie IST der Anker (Aufschlag-Blut `addiu a2,s1,72` @0x80028C34). */
+    if (re15_re2z_gore_part_matrix_peek(e, bone, R, T)) return 2;
+    zeichen_bank(e, b, &sk, &an, &ov);
+    if (!sk || !an || an->clip_count <= 0 || bone >= sk->bone_count) return 0;
+    /* Crossfade wie der Renderer (g_anim_pose_actor = Aktor, main.c:9960; Original: Blende a3 * +0x14E im
+     * Anim-Durchlauf @0x800296A8-BC) — auf einer KOPIE, damit der Blend-Zustand des echten Aktors unberuehrt bleibt. */
+    sh = *e;
+    kf = re15_compute_actor_kf(an, sk, &sh, ov, (uint32_t)e->anim_frame);
+    {   void *save = g_anim_pose_actor; g_anim_pose_actor = &sh;
+        rv = re15_skel_compute_pose(sk, kf, po);
+        g_anim_pose_actor = save;
+    }
+    if (rv != 0) return 0;
+    np = &po[bone];
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 6) {   /* Unterhaelfte: eigener Clip (main.c:10195-10220) */
+        const re15_emd_skeleton_t *ls = NULL;
+        int lkf = re15_re2z_lower_kf(e, &ls);
+        void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+        if (re15_skel_compute_pose(ls ? ls : sk, lkf, lo) == 0) np = &lo[bone];
+        g_anim_pose_actor = save;
+    }
+    for (r = 0; r < 3; r++) {                                 /* R = Ryaw * R_part, T = Ryaw * t_part + Wurzel */
+        int64_t a = 0;
+        for (q = 0; q < 3; q++) {
+            R[r*3+q] = (int32_t)(((int64_t)ny[r*3+0] * np->rot[0*3+q] + (int64_t)ny[r*3+1] * np->rot[1*3+q] +
+                                  (int64_t)ny[r*3+2] * np->rot[2*3+q]) >> 12);
+            a += (int64_t)ny[r*3+q] * np->trans[q];
+        }
+        T[r] = (int32_t)(a >> 12);
+    }
+    T[0] += e->x; T[1] += e->y; T[2] += e->z;
+    if (e->re2z_rag_anchor_on) {                              /* Ragdoll-Bodenanker (main.c:10315-10330) */
+        int32_t p0w[3];
+        for (r = 0; r < 3; r++)
+            p0w[r] = (int32_t)(((int64_t)ny[r*3+0] * po[0].trans[0] + (int64_t)ny[r*3+1] * po[0].trans[1] +
+                                (int64_t)ny[r*3+2] * po[0].trans[2]) >> 12);
+        p0w[0] += e->x; p0w[1] += e->y; p0w[2] += e->z;
+        re15_re2z_ragdoll_part_anchor(e, bone, p0w, T);
+    }
+    return 1;
+}
+
+int re15_schuss_r36_blut_anker(const re15_actor_t *e, int bone, const int32_t a3[3], int32_t out[3])
+{
+    int32_t R[9];
+    int r, rv;
+    if (!e || !out) return 0;
+    /* Anker = die Matrix, die der Zeichner zuletzt in Record+72 geschrieben hat (FUN_80027434 @0x8002751C-DC), fuer
+     * JEDEN Emitter — auch bei a3 = 0 (FUN_8001BF10 nullt dann nur den Versatz, `sw zero,44/48(t0)` @0x8001C000-04).
+     * Ohne geladene Bank (nur Unit-Sonden): Anker.T = Aktor-Wurzel, R = Ryaw (a3 im Aktor-Rahmen, unit_r26_mg_blut). */
+    rv = re15_schuss_r36_gezeichnet(e, bone, R, out);
+    if (!a3 || (a3[0] == 0 && a3[1] == 0 && a3[2] == 0)) return rv ? 1 : 0;
+    /* R * a3 (Q12; RE2-Lagen-Tick 0x8001D894: RT = Record+76 @0x8001DB74, V0 = a3 @0x8001DBA0, MVMVA 0x4A486012
+     * @0x8001DBB4, + Anker.T @0x8001DBD0-DC1C); R ist schon die Welt-Rotation (Ryaw * R_part bzw. die eigene
+     * Matrix des Teils). */
+    for (r = 0; r < 3; r++)
+        out[r] += (int32_t)(((int64_t)R[r*3+0] * a3[0] + (int64_t)R[r*3+1] * a3[1] + (int64_t)R[r*3+2] * a3[2]) >> 12);
     return 2;
 }
 

@@ -45,7 +45,19 @@ endif()
 add_test(NAME unit_r36_blut_pin_eben COMMAND probe_r36_blut pin eben)
 add_test(NAME unit_r36_blut_pin_tief COMMAND probe_r36_blut pin tief)
 add_test(NAME unit_r36_blut_pin_mg   COMMAND probe_r36_blut pin mg)
-set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief unit_r36_blut_pin_mg PROPERTIES TIMEOUT 120)
+#                             Nachbesserung 2 (Abnahme 1 M1): "Zeichner" der Sonde = Zwilling des Port-Renderers (Bankwahl,
+#                             Crossfade, Unterhaelfte, Ragdoll-Anker, fliegende Teile); Pruefung (G) fuer JEDEN Spawn (auch
+#                             a3 = 0, Zensus-Gruppe B) gegen die gezeichnete Matrix: rip = SPAS (RIP-Kopf @0x80108E28, RIP-P1
+#                             @0x80109108/3C, Aufschlag-Blut @0x80028C4C), arm = Remington tief (@0x80107704), burst = Remington
+#                             (Ragdoll-Emitter @0x80106D7C), glied = Ingram Dauerfeuer (Gliedabriss @0x80105368/@0x801053D0 +
+#                             Aufschlag-Blut des Glieds).
+add_test(NAME unit_r36_blut_pin_rip   COMMAND probe_r36_blut pin rip)
+add_test(NAME unit_r36_blut_pin_arm   COMMAND probe_r36_blut pin arm)
+add_test(NAME unit_r36_blut_pin_burst COMMAND probe_r36_blut pin burst)
+add_test(NAME unit_r36_blut_pin_glied COMMAND probe_r36_blut pin glied)
+set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief unit_r36_blut_pin_mg
+                     unit_r36_blut_pin_rip unit_r36_blut_pin_arm unit_r36_blut_pin_burst unit_r36_blut_pin_glied
+                     PROPERTIES TIMEOUT 120)
 
 #   unit_r36_schuss_kraehe    Punkt 3: Kraehe gegen Super Redhawk = RE2 GIB 0x80102CA0 (13 Teile Wurf/Wirbel, Draws,
 #                             Physik bis zum Verschwinden, Dispatch @0x80104A18).
