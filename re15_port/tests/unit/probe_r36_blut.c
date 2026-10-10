@@ -31,7 +31,7 @@
  *  (5) Mechanik: Rumpf-/Tod-/Nachblut-Spawns (Zone != 0) > 300 UEBER dem Becken, Zone 0 > 300 UNTER Part 1,
  *      AUF > 200 von der Part-8-Lage entfernt.
  *
- * Aufruf: probe_r36_blut [mess|pin] [eben|tief]
+ * Aufruf: probe_r36_blut [mess|pin] [eben|tief|mg]  (mg = Ingram 12 von +z, MG-Blutstoss 0x80107EF0)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -173,6 +173,7 @@ int main(int argc, char **argv)
 {
     int pin  = (argc > 1 && strcmp(argv[1], "pin") == 0);
     int tief = (argc > 2 && strcmp(argv[2], "tief") == 0);
+    int mg   = (argc > 2 && strcmp(argv[2], "mg") == 0);     /* Ingram 12 -> RE2-Zeile 15 = MG-Handler 0x80107EF0 */
     const char *base = getenv("RE15_ASSET_DIR");
     char path[600];
     snprintf(path, sizeof path, "%s/STAGE1/ROOM1140.RDT", (base && *base) ? base : RE15_ASSET_PSX_DIR);
@@ -205,7 +206,8 @@ int main(int argc, char **argv)
     re15_collision_set_band(0);
     re15_player_set_aim_clip_len(12);
     re15_inv_load_briefing();
-    re15_player_set_equipped_weapon(3);
+    if (mg) re15_inv_grant(12, 250);
+    re15_player_set_equipped_weapon(mg ? 12 : 3);
     {   int es = re15_inv_equipped_slot(); if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 250; }
     int zs = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -215,13 +217,17 @@ int main(int argc, char **argv)
     /* Nur dieser eine Zombie: alle anderen Plaetze aus (Auto-Zielen und Koerperschub sonst auf Platz 5). */
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != zs) g_actors[s].active = 0;
     pl->x = z->x + 1800; pl->z = z->z; pl->rot_y = 2048;          /* Blick -x auf den Zombie */
+    if (mg) { pl->x = z->x; pl->z = z->z + 1800; pl->rot_y = 1024; }  /* MG: von +z (Blick -z), damit der Zombie
+                                                                    * NICHT mit Gier 0 steht — Welt- und Anker-Versatz
+                                                                    * fielen sonst fast zusammen (Ryaw = 1) */
     for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
 
     drawn_t prev, cur; memset(&prev, 0, sizeof prev); memset(&cur, 0, sizeof cur);
     unsigned ring0 = re15_schuss_r36_fx_zahl();
     int fails = 0, treffer = 0, tot_ab = -1, steht_seit = -1;
     int n_k[K_N]; memset(n_k, 0, sizeof n_k);
-    int n_spawn = 0, n_tod_pflicht = 0, n_tropf = 0;
+    int n_spawn = 0, n_tod_pflicht = 0, n_tropf = 0, n_mg = 0;
+    int64_t mg_sum_anker = 0, mg_sum_welt = 0;
     for (int f = 0; f < 2400; f++) {
         pl->hp = 100;
         uint16_t cr = RE15_PAD_BIT_R1 | (tief ? RE15_PAD_BIT_DOWN : 0), ed = 0;
@@ -273,6 +279,33 @@ int main(int argc, char **argv)
             printf("F%-4d SPAWN part=%d fx=(%d,%d,%d) a3=%s(%d,%d,%d) [%s, zone %d] -> %s d=%d | Defekt %s d=%d | "
                    "Becken y=%d\n", f, part, fx[0], fx[1], fx[2], mit ? "" : "ohne ", a3[0], a3[1], a3[2], art, zone,
                    KN[best], d[best], KN[bestdef], d[bestdef], cur.t[0][1]);
+            if (mg && hit && !died && (part == 0 || part == 1)) {
+                /* MG-Blutstoss 0x80107EF0 @0x80107FC8-801080C4: a3 = sp+16 ZUFALLSVEKTOR — Zone != 0 Part 0
+                 * (256-2r, 312-4r, 256-2r) @0x80108000-38, Zone 0 Part 1 (127-r, 927-r, 127-r) @0x8010806C-98.
+                 * Gepinnt: (a) der Ring-a3 liegt in diesem Band (r = 0..255, @0x80016004), (b) die Lage ist
+                 * Anker.R * a3 + Anker.T (gezeichnete Pose T-1/T) <= 40 — vorher Welt-Versatz. */
+                int k = (part == 0) ? 0 : 1;
+                int32_t ep[3], ec[3];
+                appl(&prev, k, a3[0], a3[1], a3[2], ep); appl(&cur, k, a3[0], a3[1], a3[2], ec);
+                int32_t dm = abst(fx, ep) < abst(fx, ec) ? abst(fx, ep) : abst(fx, ec);
+                int32_t wv[3] = { (k ? cur.t[1][0] : cur.t[0][0]) + a3[0], (k ? cur.t[1][1] : cur.t[0][1]) + a3[1],
+                                  (k ? cur.t[1][2] : cur.t[0][2]) + a3[2] };
+                int band = (zone != 0) ? (part == 0 && a3[0] >= -254 && a3[0] <= 256 && a3[1] >= -708 && a3[1] <= 312 &&
+                                          a3[2] >= -254 && a3[2] <= 256)
+                                       : (part == 1 && a3[0] >= -128 && a3[0] <= 127 && a3[1] >= 672 && a3[1] <= 927 &&
+                                          a3[2] >= -128 && a3[2] <= 127);
+                printf("F%-4d   MG a3=(%d,%d,%d) -> Anker.R*a3+Anker.T d=%d | Welt-Versatz d=%d | Band %s\n", f, a3[0], a3[1],
+                       a3[2], dm, abst(fx, wv), band ? "ok" : "VERLETZT");
+                n_mg++; mg_sum_anker += dm; mg_sum_welt += abst(fx, wv);
+                /* Schranke 100 statt 40: der MG-P0 dreht den Zombie NACH dem Spawn um +64-(r&0x7f) (@0x8010815C-6C)
+                 * und schiebt ihn 20..83 zurueck (@0x80108110-48) — die Sonde sieht nur die Pose vor (T-1) und nach
+                 * (T) dem ganzen Bild. Trennschaerfe ueber die Summe unten (Anker-Modell gegen Welt-Versatz). */
+                if (pin && (!mit || !band || dm > 100)) {
+                    printf("FAIL: F%d MG-Blut: a3 %s, Band %s, d(Anker.R*a3+Anker.T) = %d (Schranke 100)\n", f,
+                           mit ? "da" : "FEHLT", band ? "ok" : "verletzt", dm); fails++;
+                }
+                continue;
+            }
             n_k[best]++;
             if (tot_ab >= 0 && f > tot_ab && (best == K_FLINCH || best == K_TROPF)) n_tropf++;   /* Tod P1 @0x8010887C-D4 */
             /* (1) naechster Sollpunkt ist ein Original-Emitter, <= 40, naeher als jeder Defekt-Kandidat */
@@ -328,6 +361,10 @@ int main(int argc, char **argv)
         }
         prev = cur;
         if (tot_ab < 0 && died) tot_ab = f;
+        if (mg && (z->re2z_f10e & 1u)) {     /* Kriecher (+0x10E Bit 0): danach Griff/Biss, kein Treffer-Emitter */
+            printf("F%-4d Kriecher (10E=%04X) — MG-Lauf endet hier\n", f, z->re2z_f10e);
+            break;
+        }
         if (tot_ab >= 0 && f > tot_ab + 80) break;
     }
     printf("Treffer %d, Spawns %d (Ring %u..%u), Tod bei Bild %d, Tropfblut nach dem Tod %d\n", treffer, n_spawn, ring0,
@@ -335,15 +372,22 @@ int main(int argc, char **argv)
     printf("Zuordnung:"); for (int k = 0; k < K_N; k++) if (n_k[k]) printf(" %s=%d", KN[k], n_k[k]); printf("\n");
     if (pin) {
         /* (4) Zaehler: der Lauf muss die Emitter wirklich treffen, die er pinnen soll */
-        if (tot_ab < 0)                         { printf("FAIL: Zombie nicht gestorben\n"); fails++; }
-        if (n_tod_pflicht < 1)                  { printf("FAIL: kein TOD-Spawn am Sollpunkt\n"); fails++; }
-        if (n_k[K_HURT] + n_k[K_HURT16A] + n_k[K_FLINCH] + n_k[K_ZONE0] < 1)
+        if (!mg && tot_ab < 0)                  { printf("FAIL: Zombie nicht gestorben\n"); fails++; }
+        if (!mg && n_tod_pflicht < 1)           { printf("FAIL: kein TOD-Spawn am Sollpunkt\n"); fails++; }
+        if (!mg && n_k[K_HURT] + n_k[K_HURT16A] + n_k[K_FLINCH] + n_k[K_ZONE0] < 1)
                                                 { printf("FAIL: kein Treffer-Spawn (HURT/FLINCH/ZONE0)\n"); fails++; }
         /* je Variante gemessen (Dossier §8.3): beide Laeufe treffen Nachbluten (Stagger P1) und Aufsteh-Treffer, der
          * ebene Lauf zusaetzlich das Tropfblut nach dem Tod — der Pin muss diese Emitter wirklich sehen. */
-        if (n_k[K_NACH] < 1) { printf("FAIL: kein Nachblut-Spawn (Stagger P1 @0x80105F5C-FF8)\n"); fails++; }
-        if (n_k[K_AUF] < 1)  { printf("FAIL: kein Aufsteh-Treffer (Part 8 @0x80107B14-30)\n"); fails++; }
-        if (!tief && n_tropf < 1) { printf("FAIL: kein Tropfblut nach dem Tod (@0x8010887C-D4)\n"); fails++; }
+        if (mg) printf("MG: %d Stoesse, Summe d(Anker-Modell) %lld, Summe d(Welt-Versatz) %lld\n", n_mg,
+                       (long long)mg_sum_anker, (long long)mg_sum_welt);
+        if (mg && 2 * mg_sum_anker >= mg_sum_welt) {
+            printf("FAIL: MG-Blut folgt nicht dem Anker-Rahmen (Summe %lld gegen Welt-Versatz %lld)\n",
+                   (long long)mg_sum_anker, (long long)mg_sum_welt); fails++;
+        }
+        if (mg && n_mg < 5) { printf("FAIL: weniger als 5 MG-Blutstoesse (0x80107EF0 @0x801080C4)\n"); fails++; }
+        if (!mg && n_k[K_NACH] < 1) { printf("FAIL: kein Nachblut-Spawn (Stagger P1 @0x80105F5C-FF8)\n"); fails++; }
+        if (!mg && n_k[K_AUF] < 1)  { printf("FAIL: kein Aufsteh-Treffer (Part 8 @0x80107B14-30)\n"); fails++; }
+        if (!tief && !mg && n_tropf < 1) { printf("FAIL: kein Tropfblut nach dem Tod (@0x8010887C-D4)\n"); fails++; }
         if (fails) { printf("probe_r36_blut: %d FAILURES\n", fails); return 1; }
         printf("probe_r36_blut: OK\n");
     }

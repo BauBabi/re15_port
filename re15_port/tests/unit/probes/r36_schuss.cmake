@@ -44,7 +44,8 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r36_blut_pin_eben COMMAND probe_r36_blut pin eben)
 add_test(NAME unit_r36_blut_pin_tief COMMAND probe_r36_blut pin tief)
-set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief PROPERTIES TIMEOUT 120)
+add_test(NAME unit_r36_blut_pin_mg   COMMAND probe_r36_blut pin mg)
+set_tests_properties(unit_r36_blut_pin_eben unit_r36_blut_pin_tief unit_r36_blut_pin_mg PROPERTIES TIMEOUT 120)
 
 #   unit_r36_schuss_kraehe    Punkt 3: Kraehe gegen Super Redhawk = RE2 GIB 0x80102CA0 (13 Teile Wurf/Wirbel, Draws,
 #                             Physik bis zum Verschwinden, Dispatch @0x80104A18).
