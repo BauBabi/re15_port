@@ -191,11 +191,13 @@ deshalb laeuft Lauf B ueber RE15_GOTO_ROOM, das den Raum mit Elza-Bit korrekt la
 | `unit_r36_klettern_10f0_startlage` | dasselbe in der Startlage (-6050,4950), Flag (3,102)=0 |
 | `unit_1090_climb_pin` (bestehend, berichtigt) | N4: Flags 0 -> kein Klettern; N4b: Flags 0x0001 -> Klettern (Substate 9, KIND 0x81) |
 | `integration_r36_klettern` | die drei Laeufe A/B/C oben mit der echten exe; je Lauf: Tritt in der Startlage gesehen, Schieben (`push=5`), `sub=9 kind=0x81`, oben (y=-1800, band=1, stand=Tritt) mit Tritt in der Schiebezone (x > -5800, z < 250 = Aot_set Slot 10 @0x010E0), Zielraum 1090/1091 per EXIT_AT erreicht; C zusaetzlich Szene gestartet + zu Ende; B zusaetzlich `[pl] Spieler-Familie PL04` (Elza wirklich im Spiel). Laufzeit ~540 s (TIMEOUT 1200) |
-| `unit_r36_klettern_zensus` (NEU, Fortsetzung) | ALLE Typ-4-Objekte ohne Bit 0x100 des Zensus in der VM (Abschnitt "Zensus-Pin" unten): 12 Raeume (Leon + Elza), je Lage (Flag 0/1), je Objekt vier Anlaufseiten; Riegel = je Objekt mindestens eine Seite mit Substate 9, KIND 0x81, Objekt = Tritt, Aufstieg endet y = obj.y - 2*box_hy, Band + 1, Standobjekt = Tritt. **Nachbesserung 1:** dazu Null-Box ROOM3091 obj 1 — Wahrheitstafel FUN_8002da4c (h 0, Rand -112, 12 Punkte, @0x8002da8c-c0), achsgerade 4/4 ohne Objekt-Treffer, Querversatz +-300 8/8 Start auf Band 1, derselbe Schraeganlauf vom Boden (Band 0) 8/8 ohne Objekt-Treffer (@0x8002d370) |
+| `unit_r36_klettern_zensus` (NEU, Fortsetzung) | ALLE Typ-4-Objekte ohne Bit 0x100 des Zensus in der VM (Abschnitt "Zensus-Pin" unten): 12 Raeume (Leon + Elza), ~~je Lage (Flag 0/1)~~ (⛔ Nachbesserung 2: seither je RECORD, 24 Records mit Lage-Pruefung gegen die RDT-Bytes; 11A0/11A1 @0x0107E ERZWUNGEN + Gegenprobe), je Objekt vier Anlaufseiten; Riegel = je Objekt mindestens eine Seite mit Substate 9, KIND 0x81, Objekt = Tritt, Aufstieg endet y = obj.y - 2*box_hy, Band + 1, Standobjekt = Tritt. **Nachbesserung 1:** dazu Null-Box ROOM3091 obj 1 — Wahrheitstafel FUN_8002da4c (h 0, Rand -112, 12 Punkte, @0x8002da8c-c0), achsgerade 4/4 ohne Objekt-Treffer, Querversatz +-300 8/8 Start auf Band 1, derselbe Schraeganlauf vom Boden (Band 0) 8/8 ohne Objekt-Treffer (@0x8002d370) |
 
 Vorher (ohne Fix) fallen `unit_r36_klettern_10f0_*` an P2 (`try_start` = 0), `unit_r36_klettern_zensus`
-mit 0/24 (gemessen, unten) und `integration_r36_klettern` an "KEIN Klettern" (gemessen: K1 auf master UND
-v0.8.21).
+mit 0/24 (gemessen, unten; ⛔ alte Zaehlung mit 11A0/11A1 doppelt — die Sonde von Nachbesserung 2 gegen das
+alte Gate: `0/24 Records ... beim Laden erreichbar 0/22, nur ERZWUNGEN 0/2`, FAIL 25, exit 1,
+`A_belege/nb2_zensus_altes_gate.txt`) und `integration_r36_klettern` an "KEIN Klettern" (gemessen: K1 auf
+master UND v0.8.21).
 
 ## Zensus-Pin — der Wortlaut ist PLURAL ("Leitern/Tritte", 10F0 nur "z.B.") (Fortsetzung 2026-10-10)
 
@@ -206,7 +208,7 @@ gelesen):
 | Raum | Objekt | Modell/Box | Lage-Flag (Ifel_ck/Ck/Else_ck) | Schiebezone (Aot sce 5) |
 |---|---|---|---|---|
 | 10F0/10F1 | obj 0 | Tritt h(675,900,600) | (3,102): 0 -> (-6050,0,4950) @0x010F4; 1 -> (-4850,0,-850) @0x0111A | Slot 10 @0x010E0 (-5800,-1800,2050,2050) |
-| 11A0/11A1 | obj 0 | Kiste h(900,900,900) | (5,6): 0 -> Band 3 (10050,-5400,8800) @0x01058; 1 -> Band 0 (-19300,0,3300) @0x0107E | Slot 6 @0x01044 (-20150,2350,2050,2050) |
+| 11A0/11A1 | obj 0 | Kiste h(900,900,900) | (5,6): 0 -> Band 3 (10050,-5400,8800) @0x01058; 1 -> Band 0 (-19300,0,3300) @0x0107E. ⛔ BERICHTIGT (Nachbesserung 2): (5,6) liegt in Bank 5 Wort 0, das der Raum-Init vor main00 nullt (@0x8003ed74) — beim Laden steht die Kiste IMMER auf Band 3; @0x0107E wird im Auslieferungsstand nie installiert (auch nicht zur Laufzeit) und war bis Nachbesserung 1 auch in der Sonde NICHT gefahren; seit Nachbesserung 2 ERZWUNGEN gefahren und getrennt gezaehlt | Slot 6 @0x01044 (-20150,2350,2050,2050), nur unter (5,6) == 0 installiert |
 | 2040/2041 | obj 1, obj 2 | Tritt h(675,900,600) | unbedingt, Band 3: (-16575,-5400,1700) @0x0137A, (22925,-5400,-5400) @0x0139C | keine (statisch; Slot 9 @0x0146A gehoert zu obj 0 = 0x0101-Kiste) |
 | 2060/2061 | obj 2 | Tritt h(675,900,600) | (3,172): 0 -> (-3125,0,2075) @0x00EA6; 1 -> (475,0,-7375) @0x00ECC | Slot 2 @0x00E92 (-550,-8300,2050,2050) |
 | 20A0/20A1 | obj 0 | Kiste h(900,900,900) | (3,204): 0 -> Band 4 (12250,-7200,-12400) @0x01854; 1 -> Band 0 (23150,0,-24400) @0x0187A | Slots 4/7/9 @0x017FC/@0x01840/@0x018B2 |
@@ -219,6 +221,8 @@ Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re1
 - **Vorher** (Gate `!= 0x101` kurz wiederhergestellt, gebaut, gemessen — `A_belege/zensus_sonde_vorher_kompakt.txt`):
   `Zensus: 0/24 Objekte (Raum x Lage) kletterbar`, alle 100 Seiten "kein Start" (`try=0`; 24 x 4 Riegel-
   Seiten + 4 Seiten 3091), obwohl `reach=1`.
+- (⛔ Zaehlung "x/24 Objekte (Raum x Lage)" in beiden Zeilen hier = ALTE Sonde: 22 verschiedene Records, 11A0/11A1
+  "Lage 1" wiederholte Lage 0 — Nachbesserung 2.)
 - **Nachher** (Commit 1c926683, `A_belege/zensus_sonde_nachher.txt`): `Zensus: 24/24 Objekte (Raum x Lage)
   kletterbar`, alle 96 Seiten (24 Objekte x 4) `try=1 sub=9 kind=0x81`, Aufstieg endet nach 51 Bildern (wie
   K1: T642 -> T694) auf y = obj.y - 2*box_hy (-1800 / -7200 / -9000), Band + 1, Standobjekt = Objekt, z.B.
@@ -233,8 +237,12 @@ Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re1
   "Nachbesserung 1"). Die Commit-Message von fd9c0f48 ("kein Start, wie FUN_8002da4c mit Rand -112")
   ist damit ueberholt.
 
-Damit ist jedes Objekt der betroffenen Klasse in beiden Szenarien und beiden Lagen gemessen, nicht nur
-"durch dieselbe Zeile abgedeckt".
+~~Damit ist jedes Objekt der betroffenen Klasse in beiden Szenarien und beiden Lagen gemessen, nicht nur
+"durch dieselbe Zeile abgedeckt".~~ ⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 Mangel 1): FALSCH fuer
+11A0/11A1 — die Sonde setzte (5,6) vor dem Raum-Init, der Bank 5 Wort 0 nullt; die beiden "Lage 1"-Zeilen fuhren
+die Lage 0 ein zweites Mal. "24/24 Objekte (Raum x Lage)" waren 22 verschiedene Records plus 2 Wiederholungen.
+Stand nach Nachbesserung 2 (Abschnitt dort): 24 Records, jeder per Lage-Pruefung gegen seine RDT-Bytes belegt;
+22 beim Laden erreichbar, 2 (11A0/11A1 @0x0107E) nur erzwungen — im Original nie installiert.
 
 ## Suite (bash re15_port/tools/local_build.sh all, Baum r36_klettern)
 
@@ -271,7 +279,8 @@ C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 ob
 ## OFFEN (kritisch gegen den Wortlaut geprueft, Fortsetzung 2026-10-10)
 
 - **Erledigt:** "uebrige Typ-4-Raeume nicht einzeln gefahren" — jetzt je Raum/Szenario/Lage/Objekt in der
-  VM gemessen (Zensus-Pin, 24/24; vorher 0/24). Der exe-Lauf ueber den echten Weg (Schieben + Klettern +
+  VM gemessen (Zensus-Pin; ⛔ Nachbesserung 2: 24 Records mit Lage-Pruefung, davon 22 beim Laden erreichbar,
+  11A0/11A1 @0x0107E nur erzwungen; die frueheren Zahlen "24/24 / vorher 0/24" zaehlten 11A0/11A1 doppelt). Der exe-Lauf ueber den echten Weg (Schieben + Klettern +
   oben + Tuer) liegt fuer 10F0/10F1 vor (Laeufe A/B/C); fuer die anderen Raeume ist nur der Kletterstart
   betroffen (gleiches Gate, gleiche Objektklasse), das Schieben war nie gestoert (Substate 8 kennt das
   Flags-Wort nicht).
@@ -317,7 +326,10 @@ C_leon_szene : T252 t4pos=(-6050,4950) | T3771 push=5 | T4316 sub=9 kind=0x81 ob
   und auf das Gate (climb_common.c) zeigt seither keine Aenderung; davor gab es im Port gar kein Klettern.
   Der Weg fiel erst mit der Runde-35-Szene in 10F0 (Parkplatz-Kette) auf. Betroffen waren alle
   Tritte/Leitern/Kisten ohne Bit 0x100 (10F0, 11A0, 2040 obj 1/2, 2060 obj 2, 20A0, 5020 + Elza-Spiegel),
-  jetzt alle gemessen kletterbar (Zensus-Pin); die Kisten in ROOM1090 (0x0101) gingen immer.
+  jetzt in jeder Lage, die das Spiel beim Laden aufbaut, gemessen kletterbar (Zensus-Pin, 22 Records); die
+  Kisten in ROOM1090 (0x0101) gingen immer. ⛔ Berichtigt (Nachbesserung 2): die Kiste in ROOM11A0/11A1 steht
+  bei jedem Betreten auf der erhoehten Ebene (Band 3) — im Original genauso; die zweite Lage im Raumskript
+  (Boden, @0x0107E) baut das Original nie auf.
 - Entscheidungsfrage: keine.
 - Nachbesserung 1 (Abnahme 0): KEINE Verhaltensaenderung im Spiel — berichtigt wurde eine falsche
   RE-Aussage im Dossier/Testkommentar (Sonderfall Null-Box ROOM3091), dazu ein zusaetzlicher Riegel und
@@ -546,3 +558,35 @@ aller `sb/sh rt,130(rs)` in PSX.EXE und STAGE1.BIN, dazu `sw/swl/swr` mit 128..1
 Auslieferungsstand totes Datum — weder beim Laden noch zur Laufzeit erreichbar. Der Port tut dasselbe
 (scd_room_setup.c:297 Wisch; Member_set auf Objekte schreibt nur x/y/z/rot, scd_vm.c). Die Frage der Abnahme
 1 ("ob das Original die Kiste dynamisch auf Band 0 bringt, ist ungemessen") ist damit statisch beantwortet: nein.
+
+**Aenderung (nur Testcode und Text, KEIN Engine-Code; re15_pc.exe unveraendert, md5 74a17d61... = die von Abnahme
+1 gemessene exe — der Bau uebersetzte nur `probe_r36_klettern_zensus.c`).**
+| Datei | Aenderung |
+|---|---|
+| `tests/unit/probe_r36_klettern_zensus.c` | Tabelle je RECORD (`R[]`, 24 Eintraege: Raum, Lage-Flag + Wert, Datei-Byte-Offset des Obj_model_set, erwartete Kandidatenzahl, `laden` 1/0). (a) LAGE-PRUEFUNG `lage_pruefen`: liest die Record-Bytes am Offset (Opcode 0x2D, Typ 4, obj_id) und vergleicht das installierte Objekt Feld fuer Feld (aktiv, Typ, Band pc[4], x/y/z pc[10..15], Flags pc[6..7]\|1 @0x80040990-a4, Box pc[22..33]) — Abweichung = FAIL "Lage-Flag wirkungslos?"; dazu Kandidaten-Zaehlung (aktive Typ-4 ohne 0x100 == erwartet, Record-Objekt dabei). (b) Lage-Flags Bank 3/4 wie ein Spielstand VOR dem Raum-Init; Bank 5 ((5,6)=1, 11A0/11A1 @0x0107E) ERZWUNGEN NACH dem Wisch ueber den Modell-Sync-Rueckruf (`re15_scd_set_player_model_sync`, in scd_room_reenter nach `g_game.flags[5][0] = 0` und vor `scd_thread_start`) und getrennt gezaehlt ("beim Laden erreichbar" / "nur ERZWUNGEN"). (c) GEGENPROBE: (5,6)=1 VOR dem Raum-Init (der alte Weg) -> Flag danach muss 0 sein UND die Lage-Pruefung muss @0x0107E als FALSCH melden, sonst FAIL. Kopfkommentar berichtigt (11A0-Zeile, Abschnitt "NACHBESSERUNG 2"). Null-Box-Teil unveraendert (nur Typ `rec_t`, RDT-Laden gecacht) |
+| `tests/unit/probes/r36_klettern.cmake` | nur Kommentar (Records, Lage-Pruefung, 22 + 2 erzwungen, Belege) |
+| `A_klettern.md` | Zensus-Tabelle Zeile 11A0/11A1, "Damit ist jedes Objekt ... beiden Lagen gemessen", die "x/24"-Zeilen, Testbeschreibung, OFFEN "Erledigt", "Fuer den Nutzer" berichtigt (⛔-Vermerke), dieser Abschnitt |
+
+**Messung nachher** (`build/tests/unit/probe_r36_klettern_zensus.exe pin`, exit 0, `A_belege/nb2_zensus_nachher.txt`):
+```
+--- ROOM11A0 Record @0x01058 flag(5,6)=0 beim Laden: Flag nach dem Raum-Init 0; Lage OK (obj 0 Band 3 (10050,-5400,8800) fl 0x0001 box c(0,-900,0) h(900,900,900) = Record); Typ-4 ohne 0x100: 1 (soll 1)
+--- ROOM11A0 Record @0x0107E flag(5,6)=1 ERZWUNGEN (Flag nach dem Wisch @0x8003ed74): Flag nach dem Raum-Init 1; Lage OK (obj 0 Band 0 (-19300,0,3300) fl 0x0001 box c(0,-900,0) h(900,900,900) = Record); Typ-4 ohne 0x100: 1 (soll 1)
+    ROOM11A0 lage=@0x0107E flag=1(ERZWUNGEN) obj=0(prop 0) fl=0x0001 band=0 pos=(-19300,0,3300) yaw=3072 start=(-19300,1950) reach=1 try=1 sub=9 kind=0x81 obj=0 ende=51 oben=(-19300,-1800,3098)(soll y -1800) band=1(soll 1) stand=0 -> OBEN
+    (11A1 identisch; alle 4 Seiten beider erzwungener Records OBEN)
+--- ROOM10F0 Record @0x0111A flag(3,102)=1 beim Laden: Flag nach dem Raum-Init 1; Lage OK (obj 0 Band 0 (-4850,0,-850) ...)
+--- ROOM20A0 Record @0x0187A flag(3,204)=1 beim Laden: Flag nach dem Raum-Init 1; Lage OK (obj 0 Band 0 (23150,0,-24400) ...)
+--- ROOM5021 Record @0x01288 flag(4,203)=1 beim Laden: Flag nach dem Raum-Init 1; Lage OK (obj 0 Band 0 (-3400,0,-25300) ...)
+Zensus: 24/24 Records (Raum x Objekt x Lage) wie der RDT-Record installiert und kletterbar; davon beim Laden erreichbar 22/22, nur ERZWUNGEN (11A0/11A1 @0x0107E, Bank 5) 2/2
+--- GEGENPROBE ROOM11A0: flag(5,6)=1 VOR dem Raum-Init -> Flag danach 0, Lage-Pruefung @0x0107E: FALSCH (soll Band 0 (-19300,0,3300) fl 0x0001, ist aktiv 1 Band 3 (10050,-5400,8800) fl 0x0001)
+--- GEGENPROBE ROOM11A1: (dasselbe)
+Null-Box: Tafel 0 Abweichungen, achsgerade ohne Objekt-Treffer 4/4, Querversatz +-300 mit Start 8/8 (Spieler Band 1), vom Boden (Band 0) ohne Objekt-Treffer 8/8
+PASS
+```
+96/96 Seiten OBEN (24 Records x 4), alle 24 Lage-Pruefungen "= Record", alle Kandidatenzahlen wie erwartet (2040/2041: 2).
+Die Gegenprobe zeigt den Mangel der Abnahme genau so, wie er war (Flag vor dem Init -> 0, Kiste auf Band 3) — und
+dass die neue Lage-Pruefung ihn erkennt.
+
+**Riegel ohne Fix** (dieselbe neue Sonde, Gate voruebergehend wieder `!= 0x101u`, eigenes Bauverzeichnis
+`build_nb2gate`, Quelle danach mit Original-mtime zurueck — `A_belege/nb2_zensus_altes_gate.txt`): `Zensus: 0/24
+Records ... beim Laden erreichbar 0/22, nur ERZWUNGEN 0/2`, 96/96 Seiten "kein Start", alle 24 Lage-Pruefungen
+OK (die Lage haengt nicht am Gate), Null-Box quer 0/8 (0x0081 faellt am alten Gate durch), `FAIL 25`, exit 1.
