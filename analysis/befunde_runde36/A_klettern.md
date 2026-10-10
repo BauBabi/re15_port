@@ -620,3 +620,61 @@ der Abnahme 1).
 
 Die Commit-Message fd9c0f48 ("je Lage per Flag ... (5,6) ... 24/24") ist Historie und nicht aenderbar — sie ist
 durch diesen Abschnitt ueberholt (wie in Nachbesserung 1 fuer die 3091-Aussage).
+
+### Tests der Nachbesserung 2 (gezielt, keine volle Suite)
+
+**Bau:** `bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`; uebersetzt wurde NUR
+`probe_r36_klettern_zensus.c` (+ CMake-Neulauf wegen des geaenderten Kommentars in `probes/r36_klettern.cmake`).
+`re15_pc.exe` md5 `74a17d614423a4502cfd9be8b8bca52c` = die von Abnahme 1 gemessene exe (kein Engine-Code
+geaendert).
+
+Schnelle Gruppe (eigene Tests + jedes Modul, das der Zweig gegen master beruehrt — climb_common.c/1090/10F0,
+granate_1150.c, sicherung_1150.c, Null-Box-Module, Titel-Pfad main.c — wie Abnahme 1, dazu `unit_1190_ruestung`
+als zweiter Nutzer von `re15_scd_set_player_model_sync`), nach dem letzten Bau:
+```
+ctest --test-dir re15_port/build -R "^(unit_r36_klettern_.*|unit_1090_.*|unit_rvd_scan_ungated_by_climb|unit_re2_room1090_ab|unit_r20_birkin_push_pin|unit_r22_10f0_figur|unit_r35_cut10f0_.*|unit_r35_inventar1050_kiste|unit_stair_1170_regression|unit_stair_hwtruth_1060|unit_r30_granate|unit_r35_granate|unit_sicherung_1150|unit_r30_sicherung_.*|unit_room1050_sicherung|unit_r30_irons_tisch|unit_r30_irons_tisch_licht|unit_r31_hebetisch|unit_r32_hebetisch_faecher|unit_r34_plattform|unit_r34_plattform_ton|unit_r34n_e_dokumente|unit_r35_inhalt_.*|r30_titel_blinken|unit_enemy_body_push|unit_plc_back_yaw_1090|unit_map_1090|unit_1190_ruestung)$" --timeout 600 --output-on-failure
+48/50 Test #572: unit_r36_klettern_10f0_endlage .....   Passed    0.01 sec
+49/50 Test #573: unit_r36_klettern_10f0_startlage ...   Passed    0.01 sec
+50/50 Test #574: unit_r36_klettern_zensus ...........   Passed    0.28 sec
+100% tests passed, 0 tests failed out of 50
+Total Test time (real) =  10.83 sec
+```
+Riegel des erfuellten Nutzer-Punkts (echte exe, echter Weg), nach dem Sondenumbau:
+```
+ctest --test-dir re15_port/build -R "^integration_r36_klettern$" --timeout 1500 --output-on-failure
+1/1 Test #575: integration_r36_klettern .........   Passed  515.69 sec
+100% tests passed, 0 tests failed out of 1
+```
+Arbeitsordner `build/tests/integration/r36_klettern_wd/lauf_cb621d86_*` selbst gelesen:
+```
+A_leon_10f0 : T572 room=10F0 push=5 | T1121 sub=9 kind=0x81 obj=3 | T1152 pos=(-4899,-1800,-1206) band=1 stand=3 | T1227 room=1090 | EXIT_AT Bild 1400 in 1090 | PL00
+B_elza_10f1 : T590 room=10F1 push=5 | T1137 sub=9 kind=0x81 obj=3 | T1168 pos=(-5015,-1800,-1174) band=1 stand=3 | T1243 room=1091 | EXIT_AT Bild 1320 in 1091 | PL04 (Elza-Bit=1)
+C_leon_szene: Szene gestartet + zu Ende | T3741 push=5 | T4286 sub=9 kind=0x81 obj=3 | T4317 band=1 stand=3 | T4392 room=1090 | EXIT_AT Bild 4550 in 1090 | PL00
+```
+(Bildnummern von Push/Start/Raumwechsel gleich dem Lauf der Nachbesserung 1; hier ist die erste Zeile mit
+y = -1800 zitiert, dort die erste mit Substate 0.)
+
+### OFFEN (Stand Nachbesserung 2)
+
+- Unveraendert (ausserhalb des Mangels, oben unter OFFEN mit Adressen + Messweg): H1 ROOM2060 Spinne schiebt
+  Leon vom Tritt (@0x80031cbc vor @0x80031ce8, Erreichbarkeit im Original ungemessen); H3 Null-/Kleinbox-Objekte
+  auf Spieler-Band ohne Abgleich am laufenden Original; FUN_8002dc48 (Herunterfall 0xd, nur 0x100-Objekte)
+  nicht portiert.
+- Geschlossen durch Nachbesserung 2: die Frage der Abnahme 1 §5, ob das Original die 11A0/11A1-Kiste dynamisch
+  auf Band 0 bringt — statisch NEIN (Beleg 3: kein Laufzeit-Schreiber von obj+0x82 ausser Member 18, den
+  11A0/11A1 nicht benutzen; Beleg 4: Slot 6 stempelt die Band-3-Kiste nie; Beleg 1: (5,6) waere vor main00
+  ohnehin gewischt). Optionaler dynamischer Gegencheck, falls gewuenscht: DuckStation mit der Auslieferungs-EXE,
+  ROOM11A0 per Debug-Menue (Skill re15-room-capture), Kiste auf der Band-3-Ebene schieben und Bild fuer Bild
+  0x800b3f98+0x82 (obj 0 Band), 0x800b3f98+0x0B (Stempel) und 0x800b1028 (Bank 5 Wort 0, Maske 0x02000000)
+  lesen — erwartet: Band 3, Stempel nie 6, Bit nie gesetzt.
+
+### Fuer den Nutzer (Nachbesserung 2)
+
+- KEINE Verhaltensaenderung im Spiel, keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien,
+  keine Bank-9-Bits/Nachrichten-IDs/Ereignisse.
+- Berichtigt wurde eine zu weit gehende Messbehauptung des Kletter-Pins: die Kiste in ROOM11A0 ("SEWER EXIT")
+  bzw. Elzas ROOM11A1 steht bei JEDEM Betreten auf der erhoehten Ebene — im Original genauso — und ist dort
+  kletterbar. Die zweite Kisten-Lage am Boden, die das Raumskript enthaelt, baut das Original nie auf (Prototyp-
+  Rest); der Pin faehrt sie jetzt nur noch ausdruecklich "erzwungen" mit und prueft fuer jede Lage, dass sie
+  wirklich installiert ist.
+- Entscheidungsfrage: keine.

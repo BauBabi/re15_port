@@ -45,8 +45,10 @@
  *   - Lage-Flags der Banks 3/4 (persistent, vom Raum-Init nicht beruehrt) werden wie ein
  *     gespeicherter Spielstand VOR dem Raum-Init gesetzt = "beim Laden erreichbar".
  *   - (5,6)=1 ist beim Laden NIE gesetzt (der Latch in sub01 @0x012B2-c4 wirkt erst auf das
- *     naechste main00, und vor dem steht wieder der Wisch; das Objekt-Band +0x82 schreiben nur der
- *     Installer @0x80040974 und Member 18 @0x80041228, ROOM11A0/11A1 setzen nur Member 1). Der
+ *     naechste main00, und vor dem steht wieder der Wisch; er feuert auch nie: Slot 6 hat Floor 0,
+ *     das Band-Gate der Objekt-Abtastung @0x80042cac-ccc laesst die Band-3-Kiste vor dem Stempel
+ *     +0x0B @0x80042f5c/@0x80042fc4 aus; das Objekt-Band +0x82 schreiben nur der Installer
+ *     @0x80040974 und Member 18 @0x80041228, ROOM11A0/11A1 setzen nur Member 1). Der
  *     Record @0x0107E wird deshalb ERZWUNGEN gefahren: Flag NACH dem Wisch, ueber den einzigen
  *     Rueckruf zwischen Wisch und main00-Start (re15_scd_set_player_model_sync, scd_room_reenter),
  *     und getrennt gezaehlt.
