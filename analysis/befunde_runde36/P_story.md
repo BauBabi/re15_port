@@ -226,7 +226,7 @@ Einbau: Tabelle `engine/src/gen/story_r36_texte.inc` (11 Overrides + 2 neue Ids)
 re15_story_r36_texte(room) am Ende von re15_msg_load_room_block (Text + Dauer, re15_msg_install_text/_durations).
 
 ### Messung nachher
-* unit_r36_story_texte (66): je Zeile Original an der Id == alt (Offset aus RDT+0x3C), nach dem Laden == neu, Kopf
+* unit_r36_story_texte (69 Pruefungen): je Zeile Original an der Id == alt (Offset aus RDT+0x3C), nach dem Laden == neu, Kopf
   und Schwanz bytegleich, Dauer gleich (99 Bilder), alle anderen Nachrichten des Raums bytegleich zur RDT, 11
   Overrides.
 * unit_r36_story_sweep: alle 206 ladbaren RDTs beider Szenarien mit Port-Lader + Overrides: der andere Name nur
