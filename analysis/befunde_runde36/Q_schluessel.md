@@ -28,7 +28,8 @@ der Gefaengnisschluessel nicht bei Roy, sondern im Communications Room. KEIN lee
 - [x] RE-Belege (RE1.5-Tuer-Handler ohne Schluessel, RE2-Tuer-Handler, Item-Aufnahme, ROOM1011/1211)
 - [x] Umsetzung (Modul + Haken + RE2-Bytes + TUERSE.VBS-Aufschliess-Satz)
 - [x] Riegel unit_r36_schluessel_{raum,tuer,zelle,namen}
-- [ ] Echte exe: Integrations-Haken (Abschnitt 5)
+- [x] Echte exe: integration_r36_schluessel (Abschnitt 4/5)
+- [x] Wegwerf-Kette Parking Lot Key (RE2 @0x80051670)
 
 ## 1. Messung vorher (Stand 78a4a748)
 
@@ -178,8 +179,9 @@ Ostwand (SCA 10 x 7400..9300, z 2500..14750), links im Eintrittsbild Cut 0 (Tuer
   vz ~2600 (Suche ueber alle Platten: groesste Laenge 12 px, nur am Bildrand).
 - **Verworfen: der Holzschreibtisch mit Lampe** (Suedende SCA 9 x -2650..-950, Tischhoehe -1300 = Original-
   Remington obj 3 (-1450,-1300,3850)). In Cut 5 und Cut 6 — den einzigen Kameras auf diesen Tisch — deckt
-  eine (nachgezeichnete) Maske JEDE der 28 gemessenen Plattenstellen (x -2550..-1050, z 3250..4250, Sonde
-  `sicht`): Framedump Cut 6 zeigt weder Schluessel noch die Original-Remington
+  eine (nachgezeichnete) Maske JEDE der 28 gemessenen Plattenstellen (Raster x -2550..-1050 / z 3250..4250,
+  Sonde `sicht`: in jedem der zwei Cuts, in dem die Stelle im Bild liegt, mindestens eine verdeckende Maske):
+  Framedump Cut 6 zeigt weder Schluessel noch die Original-Remington
   (`Q_belege/q_verworfen_tisch_cut6.png`). -> Notiz fuer Spur O/den Nutzer (OFFEN).
 - Zone: der Aktions-Scan nimmt je Druck den KLEINSTEN treffenden Slot (`j 0x80043028` @0x80042f94); Slot 2
   (Text "A large communications device..." x 7000..7800, z 2600..12300) wuerde jede Zone mit x <= 7800
@@ -252,7 +254,17 @@ Neu (tests/unit/probes/r36_schluessel.cmake):
 Angepasst: `unit_r30_tuerse_bank` (TUERSE.VBS 42808 B, 6 Saetze, Soll-Zeilen AUF_KEY/AUF_HIER).
 
 ### 5a. Summenzeilen (gezielte Laeufe, keine volle Suite)
-(folgt)
+Lauf 1 (alle Gruppen der beruehrten Module, `-j 3`), -R-Ausdruck woertlich:
+`r36_schluessel|r21_discard|r30_tuer|r31_tuer_ton|door_1170_lock|integration_door_lock|unit_inv_fsm|unit_item_|unit_inv_grant|itembox|pri_inventar_riegel|r26_inventar|r35_inventar1050|item_name_census|android_n1_inventar|sicherung|r35_cut10f0|r22_10f0|r35_inhalt|r34n_e_dokumente|r30_irons_tisch|unit_msg_dialog|action_msg_gate|r33_tuer1120|rolltor|adaruf|r35_cut1150|fenster1120|r35_fenster|elza_selbsttuer|elza_zweig`
+-> `98% tests passed, 2 tests failed out of 102`. Beide Fehler sind GEWOLLTE Verhaltensaenderungen dieser Spur,
+keine Regressionen, und beide Riegel wurden angepasst:
+- `unit_r26_inventar` Teil B4 ("kein Kollateral in den uebrigen Skripten" fuer alle 102 Namen): die Prompts von
+  0x42/0x45 tragen jetzt die Port-Namen. B4 nimmt die zwei Ids aus (wie die Dokument-Ids 0x48..), neuer Teil
+  B4c verlangt in allen 9 Skripten genau den Port-Namen.
+- `integration_r35_cut10f0` Teil E (Leon geht von ROOM11B0 durch die Parkplatz-Tuer nach ROOM11C0, ohne
+  Schluessel): die Tuer ist jetzt bis zum Parking Lot Key zu (Auftrag). Das Kartenwerkzeug
+  probe_r35_cut10f0_karte setzt bei `vor11c0` zusaetzlich (9,93)=1 (= Tuer schon aufgeschlossen).
+Lauf 2 (die zwei + eigene): siehe unten.
 
 ## 6. OFFEN
 - **Holzschreibtisch 10F0/10F1 Cut 5/6 vollstaendig maskiert** (Sonde `sicht`, 28/28 Stellen): auch die

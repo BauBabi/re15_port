@@ -35,6 +35,7 @@
 #include "re15_item_prompt.h"
 #include "re15_inv_ui.h"
 #include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (Ausnahme in B4, Pruefung B5) */
+#include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Port-Namen der Ids 0x42/0x45 (Ausnahme in B4, Pruefung B4c) */
 
 /* Die AUSGELIEFERTEN Prompt-Tabellen als Vergleichsquelle (dieselbe Datei, die die Engine
  * einbindet; erzeugt von tools/gen_item_prompt_data.py aus DEBUG.BIN @0x800c4fc6/@0x800c495c).
@@ -255,11 +256,31 @@ int main(void)
     {
         static const int key2script[10] = { 0, 0, 1, 0, 4, 2, 3, 5, 6, 7 };
         unsigned char ref[512];
-        int ok = 1, gefahren = 0, dokumente = 0;
+        int ok = 1, gefahren = 0, dokumente = 0, port_namen = 0, port_ok = 1, port_einsatz = 0;
         for (int pk = 0; pk <= 9; pk++) {
             if (key2script[pk] == 6) continue;                 /* Skript [6] = B1/B2 */
             for (int id = 0; id < re15_item_prompt_name_count(); id++) {
                 if (re15_files_doc_from_item(id) >= 0) { dokumente++; continue; } /* -> B5 */
+                /* Runde 36 Spur Q: 0x42/0x45 tragen den Port-Namen (Prison Key / Parking Lot Key,
+                 * re15_schluessel_r36.h) statt "Key Disc"/"Water Key". B4c: setzt das Skript einen
+                 * Namen ein (der Soll-Lauf mit dem AUSGELIEFERTEN Namen enthaelt ihn), steht im Lauf
+                 * der Port-Name und nicht mehr der ausgelieferte; sonst ist der Lauf bit-gleich. */
+                if (re15_schluessel_r36_name((uint8_t)id)) {
+                    const uint8_t *pn = re15_schluessel_r36_name((uint8_t)id);
+                    const uint8_t *an = re15_item_prompt_name_blob + re15_item_prompt_name_off[id];
+                    int pl = 0, al = 0; while (pn[pl] != 0x07) pl++; while (an[al] != 0x07) al++;
+                    lauf_t lq; int nq = lauf_holen(pk, (uint8_t)id, &lq);
+                    int mq = ref_lauf((int)re15_item_prompt_script_off[key2script[pk]], (uint8_t)id,
+                                      ref, (int)sizeof ref);
+                    int ref_hat = 0, port_hat = 0, alt_hat = 0;
+                    for (int i = 0; i + al <= mq; i++) if (memcmp(ref + i, an, (size_t)al) == 0) ref_hat = 1;
+                    for (int i = 0; i + pl <= nq; i++) if (memcmp(lq.g + i, pn, (size_t)pl) == 0) port_hat = 1;
+                    for (int i = 0; i + al <= nq; i++) if (memcmp(lq.g + i, an, (size_t)al) == 0) alt_hat = 1;
+                    if (ref_hat ? (!port_hat || alt_hat || nq != mq - al + pl)
+                                : (nq != mq || memcmp(lq.g, ref, (size_t)mq) != 0)) port_ok = 0;
+                    if (ref_hat) port_einsatz++;
+                    port_namen++; continue;
+                }
                 lauf_t l; int n = lauf_holen(pk, (uint8_t)id, &l);
                 int m = ref_lauf((int)re15_item_prompt_script_off[key2script[pk]],
                                  (uint8_t)id, ref, (int)sizeof ref);
@@ -274,7 +295,10 @@ int main(void)
          * (102 - Tabellengroesse) werden je Schluessel verglichen. */
         const int n_dok = re15_files_doc_count();
         PRUEFE("B4 kein Kollateral in den uebrigen Skripten",
-               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok) && gefahren >= 850);
+               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 2) && gefahren >= 850);
+        printf("  (B4c Laeufe 0x42/0x45: %d, davon mit Namens-Einsatz: %d)\n", port_namen, port_einsatz);
+        PRUEFE("B4c 0x42/0x45: Port-Name statt ausgeliefertem Namen, sonst bit-gleich (Runde 36 Spur Q)",
+               port_ok && port_namen == 9 * 2 && port_einsatz >= 2 * 2);
         PRUEFE("B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal",
                dokumente == 9 * n_dok);
     }
