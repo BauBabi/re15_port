@@ -347,6 +347,13 @@ ctest --test-dir re15_port/build -R "integration_r35_cut10f0|integration_door_lo
 
 ## Nachbesserung 1 (nach Abnahme 0, analysis/befunde_runde36/J_abnahme_0.md) — STAND: ABGESCHLOSSEN 2026-10-11
 
+| Mangel | Ursache | Messung vorher | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|---|
+| M1 Tuer bleibt im Bild offen | Leon sub00 @0x01184 `4b 00 07` / @0x01188 `4b 02 08` tauscht bei Strom auf die OFFEN-Bilder 7/8; Ereignis 22/23 schlossen nur Zelle + Text | Abnahme a2 F2446 Cut 8 offen, d1/d2 Cut 8/7 offen; eigener Lauf mit Faden-Start nach dem Init-Lauf: Bild 1..6 Cut 8 | BSS 2/0 zu, 8/7 offen (gleiche Kamera RDT @0x00A0==@0x0160, @0x0060==@0x0140); Cut_replace = Tausch LAB_80040414 @0x8004044c..@0x800404a8; Init-Lauf FUN_8003ef6c @0x8003f018 | Rueck-Tausch (dieselben Saetze) + Cut_chg 2 in der Szene; Ereignis 23 mit Rueck-Tausch + Ansicht 7->0/8->2 (Form sub00 @0x01174) IM Init-Lauf hinter sub00 | Szene ab F2397 Tuer zu; Ost/West Bild 1..400 zu, cam nie 8/7; CONTINUE (D) nie 8 |
+| M2 kein Schliessen vor dem Abschliessen | Nachtrag 23:40 kam nach dem Bau | a2: nur Kendos Folge +0x005C..+0x0080 | Tuer nur im Hintergrund (kein Objekt/ESP, N1.1); RE2 Door_exit Satz 1 @0x800141f0/@0x800141f4; DOOR1A @0x8009A658 | +0x005C Clip 20 (PORT-WAHL, Hand-Maximum Bild 15), Rueck-Tausch + Cut_chg 2 + Se_on 0x0E/1, Clip 20 zurueck; dann Kendo | F2381 Schliessen < F2396 Tuer-zu-Ton < F2431 Abschliessen < F2451 Abschliess-Ton; Framedump-Serie nb1_m2_* |
+| M3 Falschaussage im Dossier | Bild 8 fuer "das" Tuerbild gehalten, Bild 2 nicht verglichen | §2.3/OFFEN 1/Entscheidungsfrage | probe_bg_dump 2/8, 0/7 (N1.1) | berichtigt (durchgestrichen + Verweis), Entscheidungsfrage entfaellt | — |
+| M4 kein Riegel fuer das Tuerbild | Riegel prueften Zelle/Text/Ton | — | — | unit programm/erweiterung/tuer + integration A2/B/C/D/E (N1.5) | 7/7 gruen |
+
 Maengel M1-M4 der Abnahme; Punkte 1/3/4 (erfuellt) bleiben unberuehrt (ihre Riegel gruen halten).
 
 ### N1.0 Messung vorher (Abnahme-Laeufe, nicht wiederholt)
