@@ -775,3 +775,41 @@ Gliederung (wird fortlaufend gefuellt): 9.1 Ursache / 9.2 Messung vorher / 9.3 R
   ```
   (MG w12: a3-Spawns d_r 30-72 = d_alt; der MG-P0 dreht/schiebt den Zombie NACH dem Spawn @0x8010810C-6C, Abnahme 1 §3.1 —
   keine Anker-Abweichung. MAGNUM w7: d_r 1.)
+
+### 9.3 RE-Beleg (selbst disassembliert, re2_disasm.py; RE2 info/re2leon/PSX.EXE bzw. COMMON/BIN/EMZ0.BIN)
+```
+; (1) FUN_8001BF10: a3 = 0 nullt nur den Versatz, der Anker ist derselbe a2 wie bei den a3-Emittern
+8001bfe0: beq a3,zero,0x8001c000 / 8001bfe8: lw v0,0(a3) / 8001bff0: sw v0,44(t0) / 8001bff4: lw v0,4(a3) / 8001bffc: sw v0,48(t0)
+8001c000: sw zero,44(t0) / 8001c004: sw zero,48(t0)                        ; a3 == 0 -> Versatz 0
+8001c03c: lw v0,0(a2) ... 8001c05c: lw v0,16(a2) / 8001c060: lw v1,20(a2) / 8001c064: lw a0,24(a2) / 8001c068: lw a1,28(a2)
+8001c04c..8001c078: sw -> slot+76..+104                                    ; 32 Byte = MATRIX{m[3][3]; t[3]} aus a2 (t @+20)
+; (2) die Gruppe-B-Stellen uebergeben a2 = Part-Record + 72 wie alle anderen
+80108e18: addiu a0,zero,3000 / 80108e1c: sll a1,v0,4 / 80108e20: addiu s0,s0,1448 / 80108e24: addu a2,s0,zero
+80108e28: jal 0x8001bf10 / 80108e2c: addu a3,zero,zero                      ; RIP-Kopf, Part 8
+8010535c: addiu a0,zero,8000 / 80105364: addiu a2,s0,72 / 80105368: jal 0x8001bf10 / 8010536c: addu a3,zero,zero   ; Gliedabriss
+801053c4: addiu a0,zero,7000 / 801053cc: addiu a2,s0,72 / 801053d0: jal 0x8001bf10 / 801053d4: addu a3,zero,zero
+80106d6c: lui a0,0x3 / 80106d70: ori a0,a0,0x1000 / 80106d78: addiu a2,s0,244 / 80106d7c: jal / 80106d80: addu a3,zero,zero ; Ragdoll Part 1
+80107700: addu a2,s0,zero / 80107704: jal 0x8001bf10 / 80107708: addu a3,zero,zero                           ; Arm-Abriss 4. Spawn
+; (3) WER Record+72 schreibt: der ZEICHNER. Part-Walk (Stride 172, a3 = Record+72):
+80027374: lw a2,0(s2) / 8002737c: andi v0,a2,0x1 / 8002738c: jal 0x80027434 / 80027390: addiu a3,s2,72 / 800273a4: addiu s2,s2,172
+800273b0: addiu s0,s2,72 / 800273d4: jal 0x80027434 / 800273d8: addu a3,s0,zero / 800273f8: addiu s0,s0,172 / 8002740c: addiu s2,s2,172
+; FUN_80027434 (a0 Entity, a1 Record, a2 Flags, a3 = Record+72):
+8002747c: lw a2,116(s1)                     ; Eltern-Matrix (Record+0x74)
+80027498: andi v0,s3,0x40 / 8002749c: bne v0,zero,0x800275e4     ; Flag 0x40 = eigene Matrix -> NICHT neu komponieren
+800274a4..800274e0: ctc2 RT/TR <- Eltern-Matrix ; 8002748c: addiu a0,s1,24 (lokale Rotation Record+0x18)
+80027504/48/8c: MVMVA 0x4a49e012 ; 8002751c-24 / 80027560-68 / 800275a0-a8: sh t4/t5/t6 -> Record+72.. (R = R_Eltern * R_lokal)
+80027590: addiu a1,s1,44 (lokale Translation Record+0x2C) / 800275cc: MVMVA 0x4a480012 (RT*V0+TR)
+800275d0: addiu a1,s0,20 / 800275d4-dc: swc2 -> Record+72+20/24/28  ; t = Welt-Translation
+80027694: andi v0,s3,0x20 / 800276a0: jal 0x80028ad8 / 800276a4: addu a1,s0,zero   ; Teile-Physik auf DERSELBEN Matrix
+; (4) Record+0x18 fuellt der Anim-Durchlauf aus dem (EMR,EDD)-Paar der AUFRUFSTELLE, mit Blende
+8002959c..800295f8: Bild aus EDD[+0x14C], +0x14D -> sw a2,376(a0) / 800295fc: jal 0x80029614
+800296a8: lbu t3,334(s2) (+0x14E) / 800296b0: beq t3,zero / 800296b8: andi v0,a3,0xffff / 800296bc: mult v0,t3   ; Gewicht a3 * +0x14E
+; (5) Aufschlag-Blut des fliegenden Teils (FUN_80028AD8): Anker = die EIGENE Matrix des Teils
+80028c28: jal 0x80015fe8 / 80028c30: sll a1,v0,4 / 80028c34: addiu a2,s1,72 / 80028c3c: addu a3,zero,zero
+80028c4c: jal 0x8001bf10 / 80028c50: ori a0,a0,0x7d0                       ; t[1] = Boden schon @0x80028BF4 (Port-Kommentar)
+```
+=> Jeder FUN_8001BF10-Anker (mit oder ohne a3) ist die Matrix, die der Zeichner zuletzt in Record+72 geschrieben hat: Eltern-Kette
+mal lokaler Pose aus dem Paar, das der Handler animiert (Paar 1 oder 2), MIT der +0x14E-Blende; fuer ein Teil mit Flag 0x40 die
+eigene, von der Physik gefuehrte Matrix. Port-Zwilling = die Pose, die der Port-Renderer zeichnet (main.c: Bankwahl 9798-9925,
+Crossfade g_anim_pose_actor 9960, Unterhaelfte 10195-10220, Ragdoll-Anker 10315-10330, eigene Teil-Matrix 10339) — fuer ALLE
+Emitter. Die Port-Konvention "laufendes Bild" (§2.3/§8.2, Abnahme B1) bleibt.
