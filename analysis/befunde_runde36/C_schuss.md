@@ -733,3 +733,45 @@ unberuehrt; ihre Riegel muessen gruen bleiben. Vorher-Messung = die der Abnahme 
 eigene Mess-Sonde und Logs im Scratchpad `c_nb2_r36/` (Kurzform `nb2/...`).
 Gliederung (wird fortlaufend gefuellt): 9.1 Ursache / 9.2 Messung vorher / 9.3 RE-Beleg / 9.4 Aenderung /
 9.5 Messung nachher / 9.6 Tests / 9.7 OFFEN + Fuer den Nutzer.
+
+### 9.1 M1 — Ursache (Code gelesen + gemessen)
+* `re2z_gore_fx_core` (enemy_ai_re2_zombie.c) nahm fuer a3 == NULL `re15_enemy_bone_world_pos` = ROHES Keyframe der
+  Hauptbank (QUERY, `g_anim_pose_actor = NULL`, re15_damage.c:3205-3210) — Zweig fuer re2z_gore_fx_ex / re2z_gore_fx und damit
+  fuer alle Gruppe-B-Stellen (§8.8 B) samt RIP-P1-Nachbluten @0x80109108/@0x8010913C (a3 = +0x144, Port-Konvention §8.2).
+* Dabei zeigte die eigene Messung (9.2) zwei weitere Abweichungen DESSELBEN Ankers, die die Metrik der Abnahme nicht sehen konnte
+  (sie rechnet die "gezeichnete" Pose wie re15_schuss_r36_blut_anker aus der Hauptbank):
+  (a) **Bank:** re15_schuss_r36_blut_anker posiert IMMER `b->anim`/`b->skel` (Paar 2) mit clip_override -1; der Renderer
+      (platform/pc/main.c:9798-9925) zeichnet in den Paar-1-Phasen die Loco-Bank (`re15_actor_uses_loco_bank`, main.c:9832-9843;
+      hit_MAIN P1/P2 @0x80105790/@0x801058C0 u.a., Regel re15_re2z_poses_loco_bank) und loopt bei +0x1C4 & 4 (clip_override,
+      re15_actor_anim_select). Folge: auch a3-Emitter (HURT/ZONE0) lagen dort 56-121 neben dem GEZEICHNETEN Koerper.
+  (b) **Freifliegendes Teil:** das Aufschlag-Blut der Teile-Physik (FUN_80028AD8 @0x80028C4C, Port re2z_part_phys_ad8 ->
+      `re2z_gore_fx(e, i, 2000u)`) nahm den Skelett-Knochen des Rumpfs statt der eigenen Matrix des fliegenden Teils —
+      das Blut erschien am Koerper (Armhoehe), das Teil lag 1900-2400 entfernt am Boden.
+  (c) **Ragdoll:** im Zweig `re2z_rag_anchor_on` blieb der Anker roh (Crossfade fehlt) — 98 neben dem gezeichneten Becken.
+
+### 9.2 Messung vorher (Stand 6fa888c2 = Code 97b41606)
+* **Abnahme 1 (nicht wiederholt, `abn1C/blut_w*.txt`, Metrik "Spawn gegen Hauptbank-Pose des Bilds"):** SPAS-RIP-Kopf
+  @0x80108E28 442-443, RIP-P1 @0x80109108/3C 109, Ingram-Gliedabriss @0x80105368/@0x801053D0 168/140, Arm-Abriss 4. Spawn
+  @0x80107704 37.
+* **Eigene Sonde `nb2/nb2_blut.c`** (Kopie im Repo `C_schuss_mess/n2/`): Aufbau wie abn1_blut.c, aber die Referenz ist ein
+  ZWILLING DES PORT-RENDERERS (Bankwahl main.c:9798-9925, Crossfade mit g_anim_pose_actor = Aktor einmal je Bild, Unterhaelfte
+  Bones 1..6 ueber re15_re2z_lower_kf, Ragdoll-Bodenanker, freifliegende Teile ueber re15_re2z_gore_part_matrix samt Physik —
+  Spawns waehrend des Zeichnens werden mitgezaehlt, Spalte `Z`). d_r = Abstand Spawn gegen R*a3 + T dieses Zwillings im selben
+  Bild; d_alt = Metrik der Abnahme. Ausgaben `nb2/vorher/w<waffe>_<seite>_<hoehe>.txt`, woertlich:
+  ```
+  w13 px eben (SPAS, RIP-Tod F66):
+  F66   TOD   ... bank haupt fl 1 | part  8 fx=(-2326,-2528,-19705) a3=(0,0,0) (ohne) | d_r 326 | d_alt 504   <- Kopf @0x80108E28
+  F66   TOD   ... bank haupt fl 0 | part  0 fx=(-1886,-1882,-19643) a3=(0,0,0) (ohne) | d_r 80 | d_alt 80     <- RIP-P1 (2x)
+  F78       Z ... bank haupt fl 1 | part  9 fx=(-2902,-1853,-20316) a3=(0,0,0) (ohne) | d_r 1902 | d_alt 0  <- Aufschlag @0x80028C4C
+  F78       Z ... bank haupt fl 1 | part 12 fx=(-2776,-2217,-19570) a3=(0,0,0) (ohne) | d_r 2280 | d_alt 0
+  F84       Z ... part  9 ... d_r 2063 / part 12 ... d_r 2408
+  w12 pz eben (Ingram): F76 part 12 (ohne) d_r 204 | F76 part 13 (ohne, fl 1) d_r 108 | F89/F94 Z part 13 d_r 2124/2201
+  w8 pz tief (Remington Bein): F66 part 3 a3=(0,0,0) (ohne) d_r 92 (die drei a3-Spawns desselben Parts: d_r 10)
+  w8 px eben (Remington, BURST/Ragdoll): F86 rag 1 part 1 (ohne) d_r 98 | d_alt 357
+  w3 px eben (Pistole): F66 TREF st 1->2/3/1 bank loco | part 0 a3=(-140,-483,0) | d_r 103 | d_alt 1
+                        F78 TREF st 2->2/3/1 bank loco | part 0 a3=(-140,-483,0) | d_r 121 | d_alt 1
+  w3 pz tief (Pistole Beine): F66/F78 bank loco | part 1 a3=(0,800,0) | d_r 56 / 110 | d_alt 1 / 1
+  ERGEBNIS-Zeilen: w13 px eben "ohne a3 2408 (>40: 7)", w12 pz eben "ohne a3 2201 (>40: 4)", w3 px eben "mit a3 121 (>40: 2)"
+  ```
+  (MG w12: a3-Spawns d_r 30-72 = d_alt; der MG-P0 dreht/schiebt den Zombie NACH dem Spawn @0x8010810C-6C, Abnahme 1 §3.1 —
+  keine Anker-Abweichung. MAGNUM w7: d_r 1.)
