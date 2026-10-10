@@ -216,7 +216,8 @@ Sonde `tests/unit/probe_r36_klettern_zensus.c` (echte VM, `scd_room_reenter` je 
 Ebene des Objekts, Boxkante + 450, Blick auf das Objekt; Aktionstaste; dann `re15_climb_tick` bis Substate 0):
 
 - **Vorher** (Gate `!= 0x101` kurz wiederhergestellt, gebaut, gemessen — `A_belege/zensus_sonde_vorher_kompakt.txt`):
-  `Zensus: 0/24 Objekte (Raum x Lage) kletterbar`, 100/100 Seiten "kein Start" (`try=0`), obwohl `reach=1`.
+  `Zensus: 0/24 Objekte (Raum x Lage) kletterbar`, alle 100 Seiten "kein Start" (`try=0`; 24 x 4 Riegel-
+  Seiten + 4 Seiten 3091), obwohl `reach=1`.
 - **Nachher** (Commit 1c926683, `A_belege/zensus_sonde_nachher.txt`): `Zensus: 24/24 Objekte (Raum x Lage)
   kletterbar`, alle 96 Seiten (24 Objekte x 4) `try=1 sub=9 kind=0x81`, Aufstieg endet nach 51 Bildern (wie
   K1: T642 -> T694) auf y = obj.y - 2*box_hy (-1800 / -7200 / -9000), Band + 1, Standobjekt = Objekt, z.B.
