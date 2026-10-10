@@ -128,22 +128,95 @@ Deckungsgleich mit climb_common.c:238-255. In ROOM10F0 ist s6 = 0x0000 an allen 
 oben), der Tritt ist also im Original NUR ueber s5 (FUN_8002d2c0) kletterbar — und dort faellt er mit Flags
 0x0001 durch das `andi 0x101 / beq zero`-Gate NICHT durch.
 
-## Umsetzung
+## Umsetzung (Commit 1c926683)
 
-(folgt)
+| Datei | Aenderung |
+|---|---|
+| `engine/src/climb_common.c:86` | `if ((flags & 0x101u) == 0u) continue;` statt `!= 0x101u` — byte-true zu @0x8002d358 `andi v0,v0,0x101` + @0x8002d35c `beq v0,zero`. Kopfkommentar der Sonde mit dem Beleg. Dazu (Diagnose, env-gegatet) schreibt `RE15_CLIMB_TRACE` jetzt `t4=<idx> t4pos=(x,z) t4fl=0x..` des ersten Typ-4-Objekts mit, damit "Tritt verschieben" im Log messbar ist. |
+| `engine/src/scd_vm.c:4252`, `include/re15_scd.h` (Flags-Kommentar) | Falsche Aussage "Bit 0x100 = kletterbar" berichtigt (0x100 = FUN_8002dc48 @0x8002dd94, Herunterfall-Pruefung). |
+| `tests/unit/test_1090_climb_pin.c` | N4 prueft jetzt Flags 0 (= AUS, @0x8004098c `sw zero`); NEU N4b: Flags 0x0001 (ohne 0x100) -> Substate 9, KIND 0x81. T1-Kommentar berichtigt. |
+| `platform/pc/main.c:3703` | Messhaken (2 Zeilen): `RE15_TITLE_SHOT_CHAR=1` startet den Titel-Kurzweg als Elza (derselbe Aufruf `re15_gameflow_new_game(ch)` wie das Player-Select-Ende @main.c:3622). |
+| `tests/unit/probe_r36_klettern_10f0.c`, `tests/unit/probes/r36_klettern.cmake`, `tests/integration/test_r36_klettern.cmake` | Sonde + Riegel (unten). |
 
-## Messung nachher
+Keine neuen Assets, keine Patches an `shared_assets/PSX/*`, keine Nachrichten-IDs/Flags/Ereignisse belegt.
 
-(folgt)
+## Messung nachher (exe-Kopie re15_pc_r36a.exe aus dem eigenen Baum, RE15_CLIMB_TRACE)
 
-## Tests
+K1 (Endlage, wie "Messung vorher") — `A_belege/k1_master_nach_fix_climb_trace_kompakt.txt`:
+```
+T642 room=10F0 pad=8000 pos=(-4800,0,400) rot=1024 band=0 sub=9 kind=0x81 ph=0 obj=3 stand=-1
+T643 ... sub=9 kind=0x81 ph=2 ... mo=230 (W01 Clip 5)      T644 ... ph=3 mo=231 (PL00 Clip 2)
+T673 room=10F0 ... pos=(-4800,-1800,-748) band=1 sub=9 ph=3 stand=3      (Ausloesebild 0x1d: Y -= 1800, Band +1)
+T694 room=10F0 ... pos=(-4800,-1800,-748) band=1 sub=0 obj=3 stand=3     (Substate 0, steht AUF dem Tritt)
+```
 
-(folgt)
+ECHTER WEG — drei Laeufe in je EINEM Stueck (Eingabeskript auf der Spielbild-Achse; Kompakt-Traces in `A_belege/`):
+
+**Lauf A (Leon, ROOM10F0 per Sprung, Szene (9,71) gesehen, Leon westlich des Tritts):**
+`U2.6` schiebt den Tritt von x -6050 auf -4914 (Substate 8: `push=5` = PL00 Clip 0x12, Wurzel-Schub
+@0x80035a5c/FUN_800369f8), aussen herum (`L0.37,U0.5,R0.37,U0.55,R0.37`: Leon auf (-4762,6001) Gierung 1056),
+`U10.5` schiebt ihn von z 4950 auf -1108 (6058 Einheiten; Stopp an der Wand = FUN_8003b558-Klasse 2),
+`A` -> `T1118 sub=9 kind=0x81 obj=3`, `T1170 pos=(-5028,-1800,-1206) band=1 stand=3 sub=0` (oben),
+`U0.6` nach -Z auf dem Tritt (Eingrenzung FUN_8002cfd4) auf z -1332, `A` -> `[tuer] Sequenz Archiv 2 DOOR1E`,
+`T1224 room=1090 pos=(-13600,-9000,1300) band=5` = **ROOM1090 erreicht**.
+
+**Lauf B (Elza, ROOM10F1 ueber RE15_GOTO_ROOM = Tuer-Spawn (8400,0,-350) Gierung 2048 aus ROOM10D1):**
+Weg durch den Raum (Ostflur -X bis x 5368 = Wand, +Z bis z 9202, -X bis x 400, -Z bis z 1441, -X bis
+x -7332, +Z bis z 5023), dann wie A: Tritt x -6050 -> -4892, z 4950 -> -1076; `T1137 sub=9 kind=0x81`,
+`T1189 pos=(-5015,-1800,-1174) band=1 stand=3`, Tuer `T1243 room=1091` = **ROOM1091 erreicht** (PL04 geladen:
+"[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)").
+
+**Lauf C (Leon, ERSTES Betreten von ROOM10F0, Runde-35-Szene laeuft):** "[cut10f0] ROOM10F0: Szene gestartet"
+(Bild 250) ... "Szene zu Ende: Kartenhinweis ... angefordert" (Bild ~2994; Leon auf (4792,0,11354) Gierung
+1415, pm=0 ab Bild ~3007; Kartenhinweis-Schirm danach). Skript ab Bild 3400: -Z bis z 9154, -X bis x 193,
+-Z bis z 1007, -X bis x -7332, +Z bis z 5022, dann wie A: Tritt -6050 -> -4970 / 4950 -> -1108,
+`T4286 sub=9 kind=0x81`, `T4338 pos=(-5083,-1800,-1206) band=1 stand=3`, `T4392 room=1090` = **ROOM1090
+erreicht**. Die Szene hinterlaesst keinen Zustand, der die Sonde sperrt.
+
+Nebenbefund (nicht Teil des Auftrags, nur Beobachtung): das Debug-Menue sprang mit Elza nach "ROOM10F1" in
+den Leon-Raum 10F0 (Trace `room=10F0`, Tuer nach 1090) — das ist der Punkt der Spur I (VERTRAG §0 I);
+deshalb laeuft Lauf B ueber RE15_GOTO_ROOM, das den Raum mit Elza-Bit korrekt laedt.
+
+## Tests (alle gruen, eigene probes-Datei `tests/unit/probes/r36_klettern.cmake`)
+
+| Test | misst |
+|---|---|
+| `unit_r36_klettern_10f0_endlage` | ROOM10F0.RDT in der VM, Flag (3,102)=1: Tritt obj 0 Typ 4 Flags 0x0001 Band 0 bei (-4850,-850); Leon suedlich davor, Blick -Z: Reichweite FUN_8002d1e8 = 1, `try_start` = 1, Substate 9, KIND 0x81, Objekt = Tritt; Aufstieg endet mit y = obj.y - 2*box_hy = -1800, Band 1, Standobjekt = Tritt |
+| `unit_r36_klettern_10f0_startlage` | dasselbe in der Startlage (-6050,4950), Flag (3,102)=0 |
+| `unit_1090_climb_pin` (bestehend, berichtigt) | N4: Flags 0 -> kein Klettern; N4b: Flags 0x0001 -> Klettern (Substate 9, KIND 0x81) |
+| `integration_r36_klettern` | die drei Laeufe A/B/C oben mit der echten exe; je Lauf: Tritt in der Startlage gesehen, Schieben (`push=5`), `sub=9 kind=0x81`, oben (y=-1800, band=1, stand=Tritt) mit Tritt in der Schiebezone (x > -5800, z < 250 = Aot_set Slot 10 @0x010E0), Zielraum 1090/1091 per EXIT_AT erreicht; C zusaetzlich Szene gestartet + zu Ende. Laufzeit ~540 s (TIMEOUT 1200) |
+
+Vorher (ohne Fix) fallen `unit_r36_klettern_10f0_*` an P2 (`try_start` = 0) und `integration_r36_klettern`
+an "KEIN Klettern" (gemessen: K1 auf master UND v0.8.21).
 
 ## OFFEN
 
-(folgt)
+- FUN_8002dc48 @0x8002dc48 (Spieler-Dispatcher @0x80031d38): die Herunterfall-Pruefung (Substate 0xd) ist
+  im Port nicht portiert (nur erwaehnt in game_step_common.c:1369). Fuer das Klettern ohne Belang; wer von
+  einem Objekt herunter will, nimmt wie bisher die Aktionstaste (Substate 10, FUN_8002d474 Abwaerts-Zweig,
+  portiert). Messweg bei Bedarf: Objekt mit Bit 0x100 (z.B. ROOM1090 Kiste), auf der Kiste zur Kante gehen,
+  Original setzt +0x05 = 0xd (DuckStation-Savestate / GDB auf 0x800aca59).
+- Die uebrigen Raeume mit Typ-4-Objekten ohne 0x100 (11A0/11A1, 2040/2041, 2060/2061, 20A0/20A1, 3091,
+  5020/5021) sind durch dieselbe Sonde abgedeckt (eine Zeile, ein Gate), aber nicht einzeln mit der exe
+  gefahren — Messweg wie Lauf A (RE15_DEBUG_JUMP + RE15_PLAYER_POS + RE15_CLIMB_TRACE).
 
 ## Fuer den Nutzer
 
-(folgt)
+- Keine neuen Assets (Paket-Gate unveraendert), keine Sprachdateien.
+- Bedienung wie vorher: UP gehalten schiebt den Tritt (nach ~9 Bildern Kontakt), Aktionstaste (Viereck)
+  vor dem Tritt klettert hinauf, oben Viereck an der Kante springt herunter.
+- Einordnung des Befunds "nicht mehr": der Tritt in ROOM10F0 war im Port seit dem byte-true Klettern
+  (2026-08-21) nie kletterbar; der Weg fiel erst mit der Runde-35-Szene in 10F0 (Parkplatz-Kette) auf.
+  Betroffen waren alle Tritte/Leitern ohne Bit 0x100 (10F0, 11A0, 2040, 2060, 20A0, 3091, 5020 + Elza-
+  Spiegel); die Kisten in ROOM1090 (0x0101) gingen immer.
+- Entscheidungsfrage: keine.
+
+## Anhang — Zensus Typ-4-Objekte (A_belege/zensus_obj_typ4_flags.txt, Auszug)
+
+```
+ROOM1090 obj=0 type=4 band=1 flags=0x0101 KLETTERBIT      ROOM10F0 obj=0 type=4 band=0 flags=0x0001 ohne-0x100
+ROOM1090 obj=1 type=4 band=5 flags=0x0101 KLETTERBIT      ROOM10F1 obj=0 type=4 band=0 flags=0x0001 ohne-0x100
+ROOM11A0 obj=0 type=4 band=3 flags=0x0001 ohne-0x100      ROOM2040 obj=1/2 type=4 band=3 flags=0x0001 ohne-0x100
+ROOM2060 obj=2 type=4 band=0 flags=0x0001 ohne-0x100      ROOM20A0 obj=0 type=4 band=4/0 flags=0x0001 ohne-0x100
+ROOM3091 obj=1 type=4 band=1 flags=0x0081 ohne-0x100      ROOM5020 obj=0 type=4 band=4/0 flags=0x0001 ohne-0x100
+```
