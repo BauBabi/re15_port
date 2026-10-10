@@ -191,7 +191,9 @@ int re15_schuss_r36_fx_holen_id(unsigned nr, uint32_t *packed)
 }
 
 /* ---- Nachbesserung 3: Nachfuehrung der Spawns eines Gegner-Ticks auf die gezeichnete Lage (Belege im Header) ---- */
-#define NF_MAX 16
+#define NF_MAX RE15_ESP_FX_MAX   /* PORT-PUFFER (kein Original-Wert): so viele Eintraege wie der ESP-Pool Plaetze hat
+                                  * (96, `addiu t2,zero,96` @0x8001BF10-Schleife) — die Eintraege eines Bilds werden erst am
+                                  * Ende von run_all abgearbeitet, kein Spawn darf vorher verdraengt werden */
 static struct {
     const re15_actor_t *e; uint32_t bild; int32_t x, z; unsigned ring; int eigen; int n;
     uint8_t slot[RE15_ESP_FX_MAX];

@@ -1050,9 +1050,13 @@ nie (Liste aller Speicher auf 0(s1)/484(s1) in dem Bereich). Der Anker des Origi
 = nach der Klemme jenes Ticks. Der Port rechnet ihn (PORT-KONVENTION "laufendes Bild") mitten im Tick, VOR Schub und Klemme.
 * Umsetzung (eigene Datei schuss_r36.c + kleine Haken): `re15_schuss_r36_fx_merke` merkt die belegten ESP-Plaetze unmittelbar
   vor dem Spawn, `re15_schuss_r36_fx_nach(e)` (1 Zeile nach dem Spawn in re2z_blood_fx_scaled und re2z_gore_fx_core) legt
-  {Aktor, Bild, Lage, neue Plaetze, Ring-Nr., eigene Matrix?} ab; run_all Zombie-Zweig (enemy_ai_common.c, 2 Zeilen + include):
-  `re15_schuss_r36_nachfuehr_marke(e)` direkt nach re15_enemy_ai_live_step = Lage am Handler-Ende, `re15_schuss_r36_nachfuehren(e)`
-  direkt nach re15_enemy_sca_clamp = die Plaetze (x/z) und der Mess-Ring werden um die Lage-Differenz des SCHWANZES verschoben.
+  {Aktor, Bild, Lage, neue Plaetze, Ring-Nr., eigene Matrix?} ab; enemy_ai_common.c (2 Zeilen + include):
+  `re15_schuss_r36_nachfuehr_marke(e)` im Zombie-Zweig von run_all direkt nach re15_enemy_ai_live_step = Lage am Handler-Ende,
+  `re15_schuss_r36_nachfuehren_alle()` als letzte Zeile von run_all = die Plaetze (x/z) und der Mess-Ring werden um die
+  Lage-Differenz des SCHWANZES verschoben (Commit 6b21dd7b; zuerst stand der Aufruf direkt hinter re15_enemy_sca_clamp —
+  dort fuegt r36/zombieki re15_r36_wurf_klemme ein, eine WEITERE Lage-Korrektur nach der Klemme: textueller merge-Konflikt
+  und deren Bewegung waere nicht erfasst worden. Am Ende von run_all ist jeder Gegner fertig geschoben/geklemmt — Schub und
+  Klemme bewegen nur den Aktor des laufenden Ticks; run_all hat keinen vorzeitigen Ausstieg).
   Nicht verschoben: Anker mit eigener Matrix (freifliegende Teile, re15_schuss_r36_gezeichnet == 2) und Bewegung IM Handler
   nach dem Spawn (MG-Schub @0x80108110-48 — auch im Original spawnt der Handler vor dem Schub). Schub/Klemme aendern nur x/z,
   nicht die Gier (re15_enemy_sca_clamp, re15_body_push) -> die Verschiebung ist exakt die Lage der gezeichneten Matrix.
