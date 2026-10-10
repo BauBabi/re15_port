@@ -916,23 +916,30 @@ static void teil_knallbank(void)
     re15_vab_t vab; int rc = re15_vab_parse(b + vh_off, 0xC38u - vh_off, &vab);
     PRUEF(rc == 0 && vab.vag_count == 2, "re15_vab_parse rc=%d, %d VAGs", rc, vab.vag_count);
     uint32_t vbd = n - 0xC38u;
-    PRUEF(vab.samples[0].size == 9216 && vab.samples[1].size == 8080 && vab.samples[1].offset + vab.samples[1].size == vbd,
-          "VAG 1 = 9216 B (DOOR04 Door_exit), VAG 2 = 8080 B (ROOM1030 0x0c), VB %u B", (unsigned)vbd);
+    /* Runde 36 Spur K (K1, analysis/befunde_runde36/K_szene1150.md): Satz 0 = RE2 ROOM1060 Se_on 0x0a (sub05 @0x00F48,
+     * EDT @0x03F80 `00 00 85 20` -> Tone 8 + 1 Zusatzlage -> VAG 5 @Datei 0x066B8, 8768 B) statt DOOR04 Door_exit. */
+    PRUEF(vab.samples[0].size == 8768 && vab.samples[1].size == 8080 && vab.samples[1].offset + vab.samples[1].size == vbd,
+          "VAG 1 = 8768 B (RE2 ROOM1060 VAG 5), VAG 2 = 8080 B (ROOM1030 0x0c), VB %u B", (unsigned)vbd);
     re15_edt_rec_t e0, e1;
     PRUEF(re15_edt_decode(b, 0, &e0) == 0 && re15_edt_decode(b, 1, &e1) == 0 &&
-          e0.prog == 0 && e0.tone == 0 && e1.prog == 0 && e1.tone == 1 && !e0.empty && !e1.empty,
-          "EDT-Saetze 0/1 -> Programm 0 Tone 0 / Tone 1 (prio %d/%d, Stimme %d/%d)", e0.prio, e1.prio, e0.voice, e1.voice);
-    /* Tone-Saetze: VAG-Index 1 bzw. 2 (Tone-Segment Programm 0 @VH+0x20+0x800, Satz 0x20 B, VAG @+0x16) */
-    const uint8_t *t0 = b + vh_off + 0x20 + 0x800, *t1 = t0 + 0x20;
-    PRUEF(t0[0x16] == 1 && t1[0x16] == 2 && t0[2] == 127 && t1[2] == 127, "Tone 0 -> VAG 1 (vol %d), Tone 1 -> VAG 2 (vol %d)", t0[2], t1[2]);
+          e0.prog == 0 && e0.tone == 0 && e0.extra == 1 && e0.voice == -16 &&
+          e1.prog == 0 && e1.tone == 2 && e1.extra == 0 && !e0.empty && !e1.empty,
+          "EDT-Saetze 0/1 -> Tone 0 (+%d Lage, Stimme %d = Direkt-Zweig wie RE2 `00 00 85 20`) / Tone 2 (prio %d/%d)",
+          e0.extra, e0.voice, e0.prio, e1.prio);
+    /* Tone-Saetze: Tone 0/1 = RE2 ROOM1060 Tone 8/9 (fine 0/1) -> VAG 1, Tone 2 = ROOM1030 Tone 7 -> VAG 2
+     * (Tone-Segment Programm 0 @VH+0x20+0x800, Satz 0x20 B, VAG @+0x16) */
+    const uint8_t *t0 = b + vh_off + 0x20 + 0x800, *t1 = t0 + 0x20, *t2 = t1 + 0x20;
+    PRUEF(t0[0x16] == 1 && t1[0x16] == 1 && t2[0x16] == 2 && t0[2] == 127 && t1[2] == 127 && t2[2] == 127 &&
+          t0[5] == 0 && t1[5] == 1 && t0[4] == 91 && t0[6] == 67 && t2[4] == 92 && t2[6] == 68,
+          "Tone 0/1 -> VAG 1 (center %d min %d fine %d/%d), Tone 2 -> VAG 2 (center %d min %d)", t0[4], t0[6], t0[5], t1[5], t2[4], t2[6]);
     for (int i = 0; i < 2; i++) {
         size_t cap = (vab.samples[i].size / 16) * 28;
         int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
         int got = pcm ? re15_vag_adpcm_decode(b + 0xC38u + vab.samples[i].offset, vab.samples[i].size, pcm, cap) : 0;
         int peak = 0; for (int k = 0; k < got; k++) { int v = pcm[k] < 0 ? -pcm[k] : pcm[k]; if (v > peak) peak = v; }
-        /* Abtastwerte bis zum ADPCM-Endflag: 16100 (DOOR04 VAG 3) / 14112 (ROOM1030 VAG 6) — dieselben Zahlen wie
-         * die Python-Dekodierung im Dossier §2.5. */
-        PRUEF(got == (i == 0 ? 16100 : 14112) && peak > 30000, "VAG %d dekodiert: %d Abtastwerte, Spitze %d", i + 1, got, peak);
+        /* Abtastwerte bis zum ADPCM-Endflag: 15316 (RE2 ROOM1060 VAG 5) / 14112 (ROOM1030 VAG 6) — dieselben Zahlen wie
+         * die Python-Dekodierung (tools/r36_k/knall_zensus.py adpcm). */
+        PRUEF(got == (i == 0 ? 15316 : 14112) && peak > 30000, "VAG %d dekodiert: %d Abtastwerte, Spitze %d", i + 1, got, peak);
         free(pcm);
     }
 }

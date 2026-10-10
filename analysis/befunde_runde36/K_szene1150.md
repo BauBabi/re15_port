@@ -37,7 +37,19 @@ Punkte: K1 = Tuerknall-Ton (RE2), K2 = 11C0-Dialog Marvin/Ada einander zugewandt
 ## K1 — Tuerknall (RE2)
 
 ### K1.1 Messung vorher
-(folgt nach dem Bau, §K1.4)
+Echte exe (Stand 78a4a748 gebaut, Messkopie `re15_pc_r36k_mess.exe`), Weg wie integration_r35_cut1150 Lauf A:
+Karte `probe_r35_cut1150_karte re15_card.mcr 1130 nach10f0 ersteszene`, CONTINUE in ROOM1130, Aktionstaste an der
+Tuer -> 1150 -> ganze Kette bis `RE15_EXIT_AT=510#11C0`; Ton per `RE15_AUDIO_CAP_SYNC=cap.raw` (deterministischer
+Mitschnitt ohne Audiogeraet); Werkzeug `tools/r36_k/kette_lauf.sh` (Lauf `vor_11c0`).
+Auswertung `tools/r36_k/knall_im_mitschnitt.py cap.raw` (normierte Kreuzkorrelation der ersten 0,4 s jeder Referenz):
+```
+Mitschnitt: 5240550 Abtastwerte = 118.8 s = 3565 Spielbilder
+DOOR04   (16397 Hz): t=63.63 s Bild 1909 r=0.997 Huelle-max 3335; t=65.83 s Bild 1975 r=0.899 Huelle-max 3184; t=84.13 s Bild 2524 r=0.967 Huelle-max 3500
+RE2_1060 (11025 Hz): kein Treffer >= 0,5
+R1030    (11025 Hz): t=71.87 s Bild 2156 r=0.982 Huelle-max 4243; t=89.97 s Bild 2699 r=0.852 Huelle-max 4818
+```
+= der "Tuerknall" an den drei Stellen (Ende 1150, 1130 Cut 0, 1030 Cut 7) ist der Door_exit-Satz von DOOR04
+(Befund des Nutzers reproduziert); debug.log: `[se] Stimme: se=0 ... center=79 ... pitch=0x5f3 (16397 Hz)` je Knall.
 
 ### K1.2 RE2-Beleg: welcher Ton spielt in RE2, wenn Zombies gegen eine Tuer schlagen / durchbrechen
 Werkzeug `re15_port/tools/r36_k/knall_zensus.py` (Raumbank snd0 = RDT-Kopfworte +0x08/+0x0C/+0x10; jeder EDT-Satz
