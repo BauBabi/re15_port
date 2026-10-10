@@ -93,6 +93,33 @@ Laengen). Der RBJ-Binder FUN_8001b3f8 schreibt nur +0x180/+0x184 (Spieler 0x800a
 Plausibilitaet: Sleep 85 nach dem Start, 10 Bilder Clip 0x11, danach ~73 Bilder Clip 0x12 = 3 Schub-Phasen (Bilder
 0..14 je 25er Zyklus) x 523 = ~1569 gegen die +1550 der Raum-Records.
 
+### 1.3 Umsetzung (Code seit 3d394d71, in der Fortsetzung gebaut, Haken gelesen und gemessen)
+- `engine/src/szenenleon_r36.c` Teil 1 + `include/re15_szenenleon_r36.h` (Konstanten mit Adresse): Spieler-Sub 0x13
+  (Phasen 0..7 wie §1.2, Kurs-Rastung @0x80052960-88/@0x80052a40-70, Wurzelschritt auf Bild-Wort-Bit 0x2000
+  @0x80052b18, Bank-5-Bit @0x80052b44 -> Phase 6, Phase 7 -> Sub 6 @0x80052be0), NPC-Sub 0x13 (Loco-Kanal +0x84/+0x16c
+  in Phase 2..7, eigene Bank +0x170/+0x174 in 0/1), Objekt-Pass Bit 0x200 (FUN_8002cabc(Spieler,obj,1) @0x8002bed4).
+- Haken (je 1-3 Zeilen): scd_vm.c op_plc_dest (Modus 0x13 -> Spieler-Sub-Start) + op_member_set (Id 6 = Objekt-Wort
+  0 @0x800411c8); aot_common.c re15_prop_push_tick (Bit 0x200 vor dem Typ-4-Zweig); enemy_ai_common.c (Dispatch
+  `case 0x13`, Kanal-Auskunft own/loco, NPC-Tick laeuft im Executor); game_step_common.c (Takt nach re15_player_tick,
+  re15_player_event_reach_end beendet auch Sub 0x13); anim_select_common.c (PL00-Bank fuer Phase 2..7); main.c (W-Bank
+  Clip 5 fuer Phase 0/1 auf +0x170, @0x8005294c).
+
+### 1.4 Messung nachher
+- exe (Lauf m8/m9, gleiche Schalter wie 1.1): debug.log `[szl-r36] ROOM11B0 Spieler: Plc_dest Modus 0x13 (Schub-Sub
+  @0x80052864)` -> `Schub-Sub zu Ende -> Sub 6`; `[walk] F1650 mo=17` (0x11) `F1680/F1700/F1710 mo=18` (0x12, af
+  2 -> 22 -> 7 = 25er-Schleife) `F1740 mo=1` (Sub 6); state.log Marvin `ss1=19` (Sub 0x13) `ss2=3 mo=17` F1650 ->
+  `ss2=5 mo=18` F1700 -> `ss1=6` F1740. Leon z -21535 -> -19999 (+1536), Marvin -21516 -> -19999 (+1517).
+- Bilder `J_belege/p1_nachher_schieben_F1636_F1772.png`: beide in Schiebehaltung am Container, der Container wandert
+  nach hinten, der Gully wird frei (vorher: beide standen, `p1_vorher_11b0_schieben_F1560_F1896.png`).
+- Riegel unit_r36_szenenleon_schub (echte VM + Spielschritt, PL00 + EM040 geladen): Container z -20918 -> -19549
+  (+1369), Objektwort 0x0201 waehrend, 0x0081 am Ende, snd0 Satz 7 achtmal (2 Schieber x Bild 1 von 0x12 x 2 Zyklen
+  + Phase 7).
+- Die Raum-Records legen den Container beim Wiederbetreten auf -19368 (+1550, main00 @0x010EA). Der Unterschied
+  (181) kommt aus dem Startpunkt: Leon haelt den Lauf-Plc_dest (-1549,-21368) schon im Ankunftsradius 300
+  (`0x12c` LAB_80030e5c, actor_locomotion.c PLC_ARRIVAL_RUN) bei z -21535 an, 167 vor der Kontaktlinie
+  -20918 - 450 = -21368; der Schub selbst (+1536) entspricht den +1550. Beim Wiederbetreten springt der Container
+  also wie im Original auf den Record-Wert (die Szene verlaesst den Raum ohnehin durch den Gully).
+
 ## §4 Punkt 4 — Irons-Kopf nach dem Tod
 
 ### 4.1 RE-Belege
