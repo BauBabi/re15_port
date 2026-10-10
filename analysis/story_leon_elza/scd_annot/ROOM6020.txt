@@ -1,0 +1,27 @@
+ROOM6020  (re15_port/shared_assets/PSX/STAGE6/ROOM6020.RDT)
+
+=== main00
+  0x00B46 Door_aot_set   3b 00 02 31 00 00 84 ea 52 03 d0 07 ..    ; Door_aot_set slot=0 sce=2 -> ROOM5130 cut=9
+  0x00B66 Door_aot_set   3b 01 02 31 00 00 46 ec e8 b8 d0 07 ..    ; Door_aot_set slot=1 sce=2 -> ROOM5130 cut=6
+  0x00B86 Evt_end        01 00                                   
+
+=== sub00
+  0x00B8E Ifel_ck        06 00 2e 00                             
+  0x00B92   Ck             21 03 4c 01                               ; Ck(3,0x4C)==1
+  0x00B96   Sce_em_set     44 00 40 40 00 01 00 ff d8 dc 00 00 ..    ; Sce_em_set slot=0 TYP=0x40 beh=0x40 pos=(-9000, 0, 9575) yaw=400 b4..7=00 01 00 ff
+  0x00BAA   Sce_em_set     44 01 42 40 00 01 00 ff c0 e0 00 00 ..    ; Sce_em_set slot=1 TYP=0x42 beh=0x40 pos=(-8000, 0, 10575) yaw=400 b4..7=00 01 00 ff
+  0x00BBE   Endif          08 00                                   
+  0x00BC0 Evt_end        01 00                                   
+
+=== sub01
+  0x00BC2 Evt_end        01 00                                   
+
+=== sub02
+  0x00BC4 Cut_chg        29 08                                     ; Cut_chg 8
+  0x00BC6 Message_on     2b 00 ff ff                               ; Message_on 0  "Itembox is not available in / this preview."
+  0x00BCA Evt_next       02                                      
+  0x00BCB Nop            00                                      
+  0x00BCC Cut_old        2a                                      
+  0x00BCD Nop            00                                      
+  0x00BCE Cut_auto       3c 01                                   
+  0x00BD0 Evt_end        01 00                                   

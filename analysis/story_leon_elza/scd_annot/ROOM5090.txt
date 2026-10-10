@@ -1,0 +1,109 @@
+ROOM5090  (re15_port/shared_assets/PSX/STAGE5/ROOM5090.RDT)
+
+=== main00
+  0x0104E Door_aot_set   3b 00 02 31 00 00 18 fc 4e 0c 84 03 ..    ; Door_aot_set slot=0 sce=2 -> ROOM5090 cut=9
+  0x0106E Door_aot_set   3b 01 02 31 00 00 34 6c d2 0f 84 03 ..    ; Door_aot_set slot=1 sce=2 -> ROOM6030 cut=12
+  0x0108E Door_aot_set   3b 02 02 31 00 00 18 fc 72 d4 84 03 ..    ; Door_aot_set slot=2 sce=2 -> ROOM5090 cut=14
+  0x010AE Door_aot_set   3b 03 02 31 00 00 3e 62 72 d4 84 03 ..    ; Door_aot_set slot=3 sce=2 -> ROOM5090 cut=0
+  0x010CE Door_aot_set   3b 04 02 31 00 00 3e 62 2c 9d 84 03 ..    ; Door_aot_set slot=4 sce=2 -> ROOM5090 cut=5
+  0x010EE Door_aot_set   3b 05 02 31 01 00 00 00 00 00 00 00 ..    ; Door_aot_set slot=5 sce=2 -> ROOM6040 cut=0
+  0x0110E Sce_espr_on    3a 00 08 02 00 00 00 40 b8 0b 7c fc ..  
+  0x0111E Sce_espr_on    3a 00 08 02 00 00 00 20 4a 15 3e fe ..  
+  0x0112E Sce_espr_on    3a 00 08 02 00 00 00 10 02 21 1f ff ..  
+  0x0113E Sce_espr_on    3a 00 08 02 00 00 00 30 56 2c 5d fd ..  
+  0x0114E Sce_espr_on    3a 00 08 02 00 00 00 10 38 31 1f ff ..  
+  0x0115E Sce_espr_on    3a 00 08 02 00 00 00 30 10 0e 5d fd ..  
+  0x0116E Sce_espr_on    3a 00 08 02 00 00 00 30 b0 04 5d fd ..  
+  0x0117E Sce_espr_on    3a 00 08 02 00 00 00 30 60 09 5d fd ..  
+  0x0118E Sce_espr_on    3a 00 08 02 00 00 00 30 7c fc 5d fd ..  
+  0x0119E Sce_espr_on    3a 00 08 02 00 00 00 20 a8 fd 3e fe ..  
+  0x011AE Sce_espr_on    3a 00 08 02 00 00 00 10 7c fc 1f ff ..  
+  0x011BE Sce_espr_on    3a 00 08 02 00 00 00 20 a8 fd 3e fe ..  
+  0x011CE Sce_espr_on    3a 00 08 02 00 00 00 20 ac 26 3e fe ..  
+  0x011DE Sce_espr_on    3a 00 08 02 00 00 00 20 f2 2b 3e fe ..  
+  0x011EE Sce_espr_on    3a 00 08 02 00 00 00 30 ac 26 5d fd ..  
+  0x011FE Sce_espr_on    3a 00 08 02 00 00 00 30 a0 0f 5d fd ..  
+  0x0120E Sce_espr_on    3a 00 08 02 00 00 00 40 18 fc 7c fc ..  
+  0x0121E Evt_end        01 00                                   
+
+=== sub00
+  0x0122A Sce_em_set     44 00 4d 40 00 00 00 ff 58 02 00 00 ..    ; Sce_em_set slot=0 TYP=0x4D beh=0x40 pos=(600, 0, -25300) yaw=0 b4..7=00 00 00 ff
+  0x0123E Ifel_ck        06 00 2a 00                             
+  0x01242   Ck             21 03 2a 00                               ; Ck(3,0x2A)==0
+  0x01246   Set            22 01 00 01                               ; SET (1,0x00)=1
+  0x0124A   Sce_em_set     44 01 30 33 00 00 00 ff 94 c6 00 00 ..    ; Sce_em_set slot=1 TYP=0x30 beh=0x33 pos=(-14700, 0, -23350) yaw=0 b4..7=00 00 00 ff
+  0x0125E   Set            22 01 00 00                               ; SET (1,0x00)=0
+  0x01262   Sce_bgm_control 54 00 01 00 00 00                       
+  0x01268   Else_ck        07 00 0c 00                             
+  0x0126C   Sce_bgm_control 54 00 01 00 00 00                       
+  0x01272   Nop            00                                      
+  0x01273   Nop            00                                      
+  0x01274 Ifel_ck        06 00 0a 00                             
+  0x01278   Ck             21 03 59 01                               ; Ck(3,0x59)==1
+  0x0127C   Evt_exec       04 ff 18 03                               ; Evt_exec -> sub03
+  0x01280   Endif          08 00                                   
+  0x01282 Evt_end        01 00                                   
+
+=== sub01
+  0x01284 Ifel_ck        06 00 1a 00                             
+  0x01288   Ck             21 03 2a 00                               ; Ck(3,0x2A)==0
+  0x0128C   Ifel_ck        06 00 10 00                             
+  0x01290     Cmp            23 00 0a 00 0c 00                         ; Cmp(var0A op0 12)
+  0x01296     Evt_exec       04 ff 18 04                               ; Evt_exec -> sub04
+  0x0129A     Set            22 03 2a 01                               ; SET (3,0x2A)=1
+  0x0129E     Endif          08 00                                   
+  0x012A0   Endif          08 00                                   
+  0x012A2 Ifel_ck        06 00 1a 00                             
+  0x012A6   Ck             21 05 1c 01                               ; Ck(5,0x1C)==1
+  0x012AA   Set            22 05 1c 00                               ; SET (5,0x1C)=0
+  0x012AE   Sce_bgm_control 54 01 02 00 00 00                       
+  0x012B4   Sce_bgm_control 54 00 01 00 00 00                       
+  0x012BA   Evt_exec       04 ff 18 02                               ; Evt_exec -> sub02
+  0x012BE   Endif          08 00                                   
+  0x012C0 Evt_end        01 00                                   
+
+=== sub02
+  0x012C2 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x012C6 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x012CA Sleep          09 0a 14 00                             
+  0x012CE Message_on     2b 00 00 00                               ; Message_on 0  "THANK YOU FOR PLAYING !!!"
+  0x012D2 Sleep          09 0a 64 00                             
+  0x012D6 Aot_on         47 05                                   
+  0x012D8 Evt_end        01 00                                   
+
+=== sub03
+  0x012DA Set            22 01 1c 01                               ; SET (1,0x1C)=1
+  0x012DE Sleep          09 0a 08 00                             
+  0x012E2 Set            22 01 1c 00                               ; SET (1,0x1C)=0
+  0x012E6 Sleep          09 0a 14 00                             
+  0x012EA Goto           17 ff ff 00 f0 ff                       
+  0x012F0 Evt_end        01 00                                   
+
+=== sub04
+  0x012F2 Set            22 01 1b 01                               ; SET (1,0x1B)=1
+  0x012F6 Set            22 02 07 01                               ; SET (2,0x07)=1
+  0x012FA Work_set       2e 02 01                                  ; Work_set -> NPC-Slot 1
+  0x012FD Nop            00                                      
+  0x012FE Pos_set        32 00 b0 04 00 00 ca a4                   ; Pos_set (1200,0,-23350)
+  0x01306 Sleep          09 0a 01 00                             
+  0x0130A Member_set     34 0c 13 00                               ; Member_set m=0x0C val=19
+  0x0130E Cut_chg        29 0f                                     ; Cut_chg 15
+  0x01310 Sce_bgm_control 54 00 02 00 00 00                       
+  0x01316 Sce_bgm_control 54 01 01 00 00 00                       
+  0x0131C Work_set       2e 01 00                                  ; Work_set -> SPIELER
+  0x0131F Nop            00                                      
+  0x01320 Plc_dest       40 00 09 20 2c 01 98 a4                   ; Plc_dest mode=9 (300,-23400)
+  0x01328 Do             11 00 08 00                             
+  0x0132C Evt_next       02                                      
+  0x0132D Nop            00                                      
+  0x0132E Edwhile        12 04                                   
+  0x01330 Ck             21 05 20 00                               ; Ck(5,0x20)==0
+  0x01334 Aot_reset      46 04 01 31 01 00 ff ff 00 00             ; Aot_reset slot=4 TEXT msg 1 "I can't put my friends / in danger.I have no choice but to / stop that creature here!"
+  0x0133E Sleep          09 0a 1e 00                             
+  0x01342 Cut_chg        29 0c                                     ; Cut_chg 12
+  0x01344 Set            22 01 1b 00                               ; SET (1,0x1B)=0
+  0x01348 Set            22 02 07 00                               ; SET (2,0x07)=0
+  0x0134C Cut_auto       3c 01                                   
+  0x0134E Plc_ret        42                                      
+  0x0134F Nop            00                                      
+  0x01350 Evt_end        01 00                                   
