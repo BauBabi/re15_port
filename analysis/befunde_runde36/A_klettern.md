@@ -248,8 +248,13 @@ blieb bei Bild 370 (state.log) in einer SDL2-Assertion haengen — `Assertion fa
 (.../_deps/sdl2-src/src/video/windows/SDL_windowsmodes.c:380) 'index == *display_index'` (debug.log, letzte
 Zeile), d.h. die Anzeige-Konfiguration des Hosts aenderte sich waehrend des Laufs; die Meldung "Endbild
 nicht erreicht - Lauf vorher abgerissen" ist die Folge des 600-s-Timeouts. ROOM1130/1150 enthalten kein
-Typ-4-Objekt, die Spur-A-Aenderung (ein Gate in der Kletter-Sonde) wird dort nie erreicht. Einzel-Nachlauf:
-siehe unten.
+Typ-4-Objekt, die Spur-A-Aenderung (ein Gate in der Kletter-Sonde) wird dort nie erreicht.
+
+**Einzel-Nachlauf** (`ctest --test-dir re15_port/build -R "^integration_r35_cut1150$"`, direkt im Anschluss):
+```
+1/1 Test #502: integration_r35_cut1150 ..........   Passed  546.82 sec
+100% tests passed, 0 tests failed out of 1
+```
 
 Die drei Laeufe von `integration_r36_klettern` aus diesem Suite-Lauf (`A_belege/suite_lauf1_integration_r36_klettern_kompakt.txt`):
 ```
