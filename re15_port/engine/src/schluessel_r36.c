@@ -16,6 +16,7 @@
 #include "re15_inventory.h"
 #include "re15_lock_se.h"
 #include "re15_audio.h"
+#include "re15_item_discard.h"
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -233,11 +234,15 @@ const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id)
     if (room_id != RE15_R36Q_TUER_RAUM || event_id != RE15_R36Q_EREIGNIS || !s_gesperrt) return NULL;
     /* RE2 LAB_80051514: Besitz-Test im INVENTAR (`jal FUN_800696cc` @0x80051628, `bltz` @0x80051634). */
     if (re15_inv_find_item(RE15_R36Q_PARK_ITEM) >= 0) {
-        /* gefunden: Text (@0x8005164c), Aufschliess-Ton (@0x80051654/58 Se_on(2,0x25)), Schlossbit
-         * (@0x80051690 FUN_8007730c) — KEIN Durchgang bei diesem Druck (v0 = 0 @0x80051698); der
-         * Platz wird wieder die Original-Tuer, der naechste Druck geht hindurch. */
+        /* gefunden: Text (@0x8005164c), Aufschliess-Ton (@0x80051654/58 Se_on(2,0x25)), Wegwerf-
+         * Fortsetzung (@0x80051670), Schlossbit (@0x80051690 FUN_8007730c) — KEIN Durchgang bei
+         * diesem Druck (v0 = 0 @0x80051698); der Platz wird wieder die Original-Tuer, der naechste
+         * Druck geht hindurch. Die Wegwerf-Kette des Ports in RE2s Reihenfolge (re15_item_discard.h):
+         * Besitz VOR dem Oeffnen (@0x80051628/34), Fortsetzung NACH dem Oeffnen (@0x80051670). */
+        (void)re15_discard_besitz_vor_nachricht(room_id, RE15_R36Q_MSG_BENUTZT);
         re15_scd_show_message(RE15_R36Q_MSG_BENUTZT, RE15_R36Q_MASKE << 16);
         re15_audio_re2_door_se(RE2_DOOR_SE_AUF_KEY);
+        re15_discard_notice_message(room_id, RE15_R36Q_MSG_BENUTZT);
         re15_game_flag_set(9, RE15_R36Q_TUER_BIT, 1);
         g_aot.slots[RE15_R36Q_TUER_SLOT].band = g_aot.door_params[RE15_R36Q_TUER_SLOT].band;
         re15_aot_retype(RE15_R36Q_TUER_SLOT, 2, RE15_R36Q_TUER_FLAGS,
@@ -255,6 +260,13 @@ const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id)
         log_q("ROOM11B0: Parkplatz-Tuer verschlossen (kein Parking Lot Key im Inventar)");
     }
     return k_evt_end;
+}
+
+int re15_schluessel_r36_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item)
+{
+    if ((uint16_t)room_id != RE15_R36Q_TUER_RAUM || msg_id != RE15_R36Q_MSG_BENUTZT) return 0;
+    if (out_item) *out_item = RE15_R36Q_PARK_ITEM;
+    return 1;
 }
 
 void re15_schluessel_r36_genommen(uint8_t item_id, uint8_t taken_bit)

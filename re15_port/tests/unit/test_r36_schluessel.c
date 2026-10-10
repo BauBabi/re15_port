@@ -32,6 +32,7 @@
 #include "re15_itps.h"
 #include "re15_files.h"
 #include "re15_lock_se.h"
+#include "re15_item_discard.h"
 #include "re15_md1.h"
 #include "re15_msg.h"
 #include "re15_gameflow.h"
@@ -288,6 +289,7 @@ static void teil_tuer(void)
 
     /* 2. mit Schluessel */
     hochfahren(&r, tx, tz, 0, strom, 0);
+    re15_discard_reset();
     re15_inv_grant(0x45, 1);
     ruhe(6);
     se0 = g_test_door_se_count;
@@ -296,6 +298,25 @@ static void teil_tuer(void)
           g_test_door_se_last == RE2_DOOR_SE_AUF_KEY && re15_game_flag_get(9, 93) && !g_room_change.pending,
           "B Druck mit Schluessel: msg %d (29), Ton Satz %d (AUF_KEY = RE2 ROOM1140 0x25), (9,93)=1, "
           "KEIN Durchgang bei diesem Druck (RE2 v0 = 0 @0x80051698)", g_scd.message_id, g_test_door_se_last);
+    CHECK(re15_discard_active() && re15_discard_pending_item() == 0x45,
+          "W Wegwerf-Fortsetzung eingehaengt (RE2 @0x80051670): vorgemerkt Item 0x%02X",
+          re15_discard_pending_item());
+    {   /* Nachricht schliessen -> die Abfrage geht auf (RE2 @0x800517f4 Warte-Schranke, @0x80051834) */
+        g_scd.message_display_frames = 0; g_scd.message_query = 0; g_scd.message_active = 0;
+        g_scd.message_fsm_active = 0;
+        re15_pauseflags_clear();
+        uint8_t it = 0; int wahl = -1, w = 0;
+        while (re15_discard_active() && !re15_discard_prompt(&it, &wahl) && w++ < 400) re15_discard_tick(0, 0);
+        int frage = re15_discard_prompt(&it, &wahl);
+        CHECK(frage && it == 0x45 && wahl == 0,
+              "W Abfrage \"You don't need this key any more. Discard it?\" fuer 0x%02X (Ja vorbelegt)", it);
+        w = 0;
+        while (re15_discard_active() && !re15_discard_ready() && w++ < 800) re15_discard_tick(0, 0);
+        w = 0;
+        while (re15_discard_active() && w++ < 800) re15_discard_tick((uint16_t)0x4000u, 0);
+        CHECK(menge_im_inventar(0x45) == 0 && re15_game_flag_get(9, 93),
+              "W Ja: Parking Lot Key weggeworfen, Tuer bleibt offen ((9,93) = 1)");
+    }
     CHECK(a->active && a->type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_room == 0x1C &&
           g_aot.door_params[1].spawn_x == -25279 && g_aot.door_params[1].spawn_z == 17268 &&
           !re15_schluessel_r36_tuer_gesperrt(),

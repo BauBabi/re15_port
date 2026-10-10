@@ -3,8 +3,10 @@
 #
 #   zu      Leon ROOM11B0 (Strom an), OHNE Parking Lot Key vor der Parkplatz-Tuer, ein Quadrat-Druck:
 #           "[schluessel] ... verschlossen", KEIN "DOOR FIRE", Bild 150 noch in ROOM11B0
-#   auf     dasselbe MIT Parking Lot Key im Inventar: "benutzt", danach die Tuer halten -> "DOOR FIRE slot=1"
-#           und ROOM11C0 erreicht (RE2-Tuer-Handler: erst aufschliessen, der naechste Druck geht hindurch)
+#   auf     dasselbe MIT Parking Lot Key im Inventar: "benutzt" (Bild 45), Text schliessen (140), die
+#           Wegwerf-Abfrage "You don't need this key any more. Discard it?" (RE2 @0x80051670/@0x80051834,
+#           getippt bis ~Bild 235) mit Ja beantworten (245), dann die Tuer halten (270..282) -> "DOOR FIRE
+#           slot=1" und ROOM11C0 erreicht (RE2-Tuer-Handler: erst aufschliessen, der naechste Druck geht hindurch)
 #   leon    Leon ROOM10F0 vor der Funkkonsole, Druck -> Aufnahme-Modal -> Ja: "PARKING LOT KEY genommen"
 #   elza    Elza ROOM10F1, gleiche Stelle: "PRISON KEY genommen" und "(4,0xEC) = 1" (Zelle ROOM1211)
 #   check   Statusschirm CHECK beider Schluessel (Harness RE15_INV_CHECK_SHOT): "CHECK-Foto Item 0x45/0x42:
@@ -92,14 +94,14 @@ message(STATUS "r36_schluessel[zu] OK: ohne Schluessel Text msg 28 + Verschlosse
 
 # --- auf ---
 set(_halten "")
-foreach(_f RANGE 170 182)
+foreach(_f RANGE 270 282)
     string(APPEND _halten ",${_f}:A")
 endforeach()
-lauf(auf "${_tuer};give:0x45:1" "RE15_PAD_AT=45:A,140:A${_halten};RE15_EXIT_AT=5#11c0" _lh)
+lauf(auf "${_tuer};give:0x45:1" "RE15_PAD_AT=45:A,140:A,245:A${_halten};RE15_EXIT_AT=5#11c0" _lh)
 muss(auf "${_lh}" "[schluessel] ROOM11B0: Parking Lot Key benutzt -> Tuer offen, Flag (9,93) = 1")
 muss(auf "${_lh}" "DOOR FIRE slot=1")
 muss(auf "${_lh}" "EXIT_AT: Bild 5 in Raum 11c0")
-message(STATUS "r36_schluessel[auf] OK: mit Schluessel Text msg 29 + Aufschliessen, naechster Druck -> ROOM11C0")
+message(STATUS "r36_schluessel[auf] OK: mit Schluessel Text msg 29 + Aufschliessen + Wegwerf-Abfrage, naechster Druck -> ROOM11C0")
 
 # --- leon / elza: Aufnahme an der Funkkonsole (Stand (8350,2050) Blick +z) ---
 set(_pad "RE15_PAD_AT=45:A,120:A,160:A,200:A")

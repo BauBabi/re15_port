@@ -161,6 +161,14 @@ uint8_t re15_schluessel_r36_umleiten(uint16_t room_id, uint8_t event_id);
  * und liefert ein leeres Programm (Evt_end); sonst NULL. */
 const uint8_t *re15_schluessel_r36_ereignis(uint16_t room_id, uint8_t event_id);
 
+/* Haken in re15_discard_besitz_vor_nachricht (item_discard_common.c), hinter der erzeugten Tabelle
+ * gen/discard_sites.inc: (ROOM11B0, msg 29 "You've used the Parking Lot Key.") ist eine Benutzungsstelle
+ * des Parking Lot Key — RE2 haengt genau dort die Wegwerf-Fortsetzung ein (@0x80051670, nach Text 5
+ * @0x8005164c), die bei Anzahl 0 "This key is useless now. Discard?" fragt (@0x80051834; im Port
+ * RE1.5s eigene Zeile DEBUG.BIN @0x800C508B "You don't need this key any more. Discard it?").
+ * 1 + *out_item = Gegenstand fuer diese Stelle, sonst 0. */
+int re15_schluessel_r36_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);
+
 /* Haken im Item-Modal unmittelbar nach dem Setzen des Zone-9-Bits: der Prison Key setzt das
  * Original-Flag (4,0xEC) wie ROOM1011 sub06 @0x00E2C. */
 void re15_schluessel_r36_genommen(uint8_t item_id, uint8_t taken_bit);
