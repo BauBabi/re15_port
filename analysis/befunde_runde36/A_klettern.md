@@ -594,8 +594,9 @@ OK (die Lage haengt nicht am Gate), Null-Box quer 0/8 (0x0081 faellt am alten Ga
 **Beleg 4 — auch der Latch in sub01 kann im Auslieferungsstand nicht feuern** (selbst disassembliert): sub01
 prueft `Member_cmp 15 == 6` = obj+0x0B (Member-Tabelle @0x80010c8c Eintrag 15 -> @0x8004120c `j` / Delay
 `sb a2,11(a0)`). obj+0x0B stempelt die AOT-Abtastung FUN_80042bac im Objekt-Pool-Pass (Aufruf aus FUN_800436a8
-@0x8004378c, a1 = 4, Stride 148): `80042f58 addiu v0,s2,255` / `80042f5c sb v0,11(s1)` (Slot-Index auf das
-Objekt). VOR dem Stempel im selben Slot-Durchlauf das Band-Gate:
+@0x8004378c, a1 = 4, Stride 148, a2 = 0 = AUTO): Stempel `80042f58 addiu v0,s2,255` / `80042f5c sb v0,11(s1)`
+bzw. der AUTO-Stempel `80042f44 addiu v0,s2,255` / `80042fc4 sb v0,11(s1)` (0-basierter Slot-Index auf das
+Objekt; vgl. aot_common.c:925-946). VOR beiden Stempeln im selben Slot-Durchlauf das Band-Gate:
 ```
 80042cac: lbu  v0,2(s0)          ; Floor-Byte des AOT
 80042cb4: andi v0,v0,0x80        ; 0x80 = Platzhalter (jedes Band)
