@@ -171,3 +171,51 @@ GENAU Kendos Abschliess-Bewegung (linke Hand vor + hoch, Hand max (544,-707,120)
 @0xAF24 82736 B = room1010/snd0.edt/.vh/.vb), EDT Satz 0x0A @0x28 `00 00 83 01` = Prog 0 Ton 8 (vab_common.c
 re15_edt_decode: tone = e[2]>>4) -> VAG 4 (6800 B). Bank 2 = Raumbank (`srl t1,a0,24` @0x8005ba30, Herleitung
 re15_lock_se.h). RE2_SOUND_LISTE.md: "ROOM101.SAP - Gun Shop".
+
+### 2.2 Umsetzung (Ereignis 22/23, Texte 20..22, Bit (9,84), Port-Bank 0x3A)
+- `tools/r36_j/szene11b0_bauen.py` -> `engine/src/gen/szl11b0_szene.inc`: Erweiterung 248 B (Ereignis 22) + Tuer-zu-
+  Programm 30 B (Ereignis 23) + msg 20/21/22. Jede Zeile mit Vorbild-Offset im Generator-Kopf. Ablauf:
+  `22 09 54 01` Set(9,84)=1 ZUERST -> Work_set(2,0) Marvin -> msg 20 "Marvin: Hold on." (NUTZER-VORGABE, Punkt =
+  Satzform der Original-Zeilen) + Clip 15/23 im Zeilentakt @0x014F6..@0x0150A -> Plc_dest Modus 5 Bit 2 ueber
+  (1250,-21571) (-2600,-21571) (-6103,-25224) (-16603,-25224) (-20860,-16230) je mit `18 0b` (Gosub sub11
+  @0x018BE, Form sub08 @0x0185A); Cut_chg 10 vor dem 3., Cut_chg 8 vor dem 5. Wegpunkt -> Modus 9 zur Tuer
+  (-22903,-16230) -> **Kendo-Form** `3f 00 0f 00` / Sleep 20 / `36 3a 0a 00 ..` / Sleep 10 / `3f 00 0f 00` +
+  `43 00 80 00` / Sleep 35 -> **Tuer zu** `37 03 0c ff` + `39 03 0c 03` + `2c 08 01 31 00 00 80 a8 d0 bc b0 04 a4 06
+  16 00 ff ff 00 00` -> Rueckweg (Cut 10, Cut 6) nach (1100,-19999), Modus 9 zu Leon (sub06 @0x0174C) -> msg 21
+  "Marvin: I just want to make sure / we don't have any unwanted followers." (NUTZER-VORGABE; Zeilenbreite 214/262 px
+  <= 271 px = 99 %-Grenze der ausgelieferten Zeilen) + Clip 16/23 -> `47 05 01 00` (= sub06 @0x017EA/@0x017EC).
+  Wegpunkte PORT-WAHL, frei von allen SCA-Zellen + Radius 450 (Gully (3,9) @0x00EA4, Block (3,11) @0x00EBC,
+  (3,10) @0x00EB0, Trennwand (3,7) @0x00E8C) und mit >= 900 Abstand zu Leon (-1639,-19999) / Ada (-1490,-22549).
+  PORT-WAHL Abweichung von Kendo: RE1.5 hat kein Plc_cnt (RE2 0x5B @0x80057120 `sb pc[1],333(v1)` = Bild setzen)
+  und kein Plc_stop (RE2 0x66 @0x80056ff0, +0x4 <-> 0x1404); Kendos 5+5+25 Bilder nach dem Rueckwaerts sind hier
+  ein Sleep 35 mit vollem Rueckwaerts-Clip (RE2 Plc_motion @0x80056b8c: pc[3] -> +0x1CC = Richtungs-/Halte-Flags).
+- `engine/src/szenenleon_r36.c` Teil 2: `re15_szl_aot_on_umleitung` (scd_vm.c op_aot_on, 1 Zeile): steht der Faden
+  auf `rdt->sub_scd[6] + (0x017EA - 0x01478)` mit `47 05` und ist (9,84)=0 -> pc = Erweiterung; deren Schwanz
+  `47 05` liegt ausserhalb von sub06 und laeuft normal. `re15_szl_install` (scd_room_setup.c, letzte Zeile des
+  Installer-Blocks "Runde 36 Spur J"): Texte 20..22 + Dauern in ROOM11B0; bei (9,84)=1 `scd_event_fire(23)` ->
+  Tuer-zu-Programm im ersten Spielbild (Leon sub00 @0x0118C hat die Zelle im Init-Lauf geoeffnet).
+  `re15_szl_ereignis` (scd_event_fire, 1 Zeile). `re15_szl_lock_stelle` (lock_se_common.c, 2 Zeilen):
+  (0x11B0, 22) -> (0x11B1, 12) = Elzas Zeile `{ 0x11B1, 12, M, 1 }` in gen/lock_se_sites.inc -> gleicher
+  RE2-Tuer-zu-Ton wie bei Elza.
+- `platform/pc/src/audio_pc.c`: Schlossbank SCHLOSS1010 (Muster GLAS1090) + 1 Zeile im Se_on-Zweig vor der
+  Bank-Weiche (Port-Bank 0x3A, die Original-Weiche FUN_80045024 kennt nur Bank 0..5).
+- NEUE ASSETS: `shared_assets/RE2/SCHLOSS1010.EDT` (192 B), `.VH` (3616 B), `.VB` (82736 B) =
+  RE2 ROOM1010 snd0, bytegleich gegen die RDT geprueft (`tools/r36_j/schloss1010_extrakt.py --pruefen`).
+
+### 2.3 Messung nachher (exe-Kopie, `RE15_DEBUG_JUMP=11b0@250 RE15_SET_FLAG=3:0x43,3:0x82,4:0xf3`)
+- debug.log: `[szl-r36] ROOM11B0 sub06 @0x017EA Aot_on 5 -> erst die Erweiterung` bei F2135; msg 20; Plc_dest
+  Marvin zu den 5 Wegpunkten; `Cut_chg(10)` F2238, `Cut_chg(8)` F2321; an der Tuer (-20745,-16468) r2119 (Ankunft
+  < 300, Sub 5 @0x80051764); `Se_on bank=0x3A id=10 -> RE2-Schlossbank SCHLOSS1010` + `Stimme: se=10 vag=3 note=66
+  center=90 vol=127` (VAG 4 der VH, 0-basiert 3); Rueckweg `Cut_chg(10)` F2507, `Cut_chg(6)` F2592; Marvin daheim
+  (1222,-20189) r2121 (Blick nach Westen zu Leon), msg 21 ~F2625; F2748 Raumwechsel ROOM1260 (Gully) wie im Original.
+  Dauer der Erweiterung 613 Bilder (~20 s). Kleinster Abstand Marvin-Ada 971 (F2600), Marvin-Leon 1575.
+- Bilder `J_belege/p2_nachher_hold_on_lauf_F2140_F2375.png` (Text "Marvin: Hold on.", Lauf durch Cut 6/10/8),
+  `p2_nachher_abschliessen_F2380_F2450.png` (Clip 15 vor: linke Hand zur Tuer, F2408 Endbild, rueckwaerts F2414..),
+  `p2_nachher_rueckweg_zeile_F2450_F2740.png` (Rueckweg, Zeile 21 zweizeilig).
+- Tuer danach (Lauf mit (3,0x83),(4,0xCD),(9,84)=1, Leon vor der Tuer, `U1.5 A0.2`): von OSTEN bleibt Leon bei
+  x -20942 stehen, von WESTEN bei x -22618 (Zelle (3,0x0C) solid); Aktionstaste -> "The door is locked."
+  (`J_belege/p2_nachher_tuer_text_ost_west.png`) und `tuerse.log`: `raum=11B1 nachricht=12 art=M weg=AOT satz=0(ZU_A)`
+  = derselbe RE2-Ton wie bei Elza.
+- ⛔ BILD: der Hintergrund (ROOM11B.BSS, von 11B0 UND 11B1 geteilt) zeigt die Tuer in Cut 8 OFFEN gemalt (Tuerblatt
+  aufgeschwungen an der Nordwand, `J_belege/p2_hintergrund_tuer_cut8_cut7.png`) — genau so sieht Elza sie, waehrend
+  ihr Text "The door is locked." sagt. Die Erweiterung aendert das Bild nicht (Entscheidungsfrage unten).
