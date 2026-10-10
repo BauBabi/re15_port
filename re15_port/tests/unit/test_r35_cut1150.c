@@ -345,7 +345,7 @@ static int frei_zone7(int bit)
 static void teil_programme(void)
 {
     printf("== programme ==\n");
-    for (int w = 0; w <= 18; w++) {
+    for (int w = 0; w <= 19; w++) {   /* Runde 36 Spur K: 19 = k_p_1030_luecke */
         int n = 0; const uint8_t *p = re15_irons_tod_programm(w, &n);
         if (!p) { PRUEF(0, "Programm %d fehlt", w); continue; }
         int o = 0, ok = 1, n_em = 0, n_door = 0, letzte = -1, bad_bit = -1, tiefe = 0, n_gosub9 = 0, bad_se = -1;
@@ -531,7 +531,9 @@ static void teil_montage_1130(void)
     PRUEF(re15_irons_tod_sub01_gesperrt() == 1, "sub01-Reseed gesperrt");
     int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 600, 1);
-    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0, "1130: lautes Tuerknallen (Knall-Bank Satz 0) genau einmal: %d", g_test_tuer_se_count - knall0);
+    /* Runde 36 Spur K (K3): der Tuerknall dieses Schritts kam am Ende von 1150; hier spielt am ENDE der Knall des naechsten
+     * Schritts (1040, Satz 1), noch auf Cut 0 vor dem Tuersatz. */
+    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1130: am Ende der Knall des 1040-Schritts (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(aktive_gegner(-1) == 4, "4 Zombies erschienen (Kopie 40 still): %d", aktive_gegner(-1));
     PRUEF(aktive_gegner(0x10) == 2 && aktive_gegner(0x11) == 2, "Typen 0x10 x2, 0x11 x2");
     PRUEF(s_shown == 0 || g_scd.cam_id == 0, "Kamera Cut 0 (angezeigt %d, angefordert %d)", s_shown, (int)g_scd.cam_id);
@@ -601,7 +603,9 @@ static void teil_montage_1040(void)
     aufstellung_pruefen("Tor zu");
     lauf_t L; lauf(&L, RE15_IT_1040_KAPPE + 200, 1);   /* Kappe + Tor-Vorlauf */
     durchgang_pruefen("Tor zu", &L);
-    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 1, "1040: der Knall wie ROOM1030 (Knall-Bank Satz 1) genau einmal: %d", g_test_tuer_se_count - knall0);
+    /* Runde 36 Spur K (K3): der Knall wie ROOM1030 kam am Ende von 1130; hier am ENDE der Tuerknall des 1030-Cut-7-Schritts
+     * ((9,76)=1, Satz 0), noch auf Cut 1 vor dem Tuersatz. */
+    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0, "1040: am Ende der Tuerknall des 1030-Schritts (Knall-Bank Satz 0) genau einmal: %d", g_test_tuer_se_count - knall0);
     PRUEF(y0 == 0 && g_scd.props[0].y == -5400, "Rolltor von y=%d auf y=%d (sub08 135 x -40)", y0, (int)g_scd.props[0].y);
     PRUEF(re15_game_flag_get(4, 5) == 1 && re15_game_flag_get(4, 4) == 1, "(4,5)=1 (4,4)=1 Tor offen");
     PRUEF(n0 == 5 && aktive_gegner(0x16) == 5, "5 Zombies (Gleichzeitig-Limit 5): %d", aktive_gegner(0x16));
@@ -617,7 +621,9 @@ static void teil_montage_1040(void)
         durchgang_pruefen("Tor offen", &L);
         PRUEF(g_scd.props[0].y == -5400, "Tor war offen: bleibt bei y=-5400 (%d)", (int)g_scd.props[0].y);
         PRUEF(aktive_gegner(0x16) == 5, "Tor war offen: 5 Zombies (%d)", aktive_gegner(0x16));
-        PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 6 && L.bilder < RE15_IT_1040_KAPPE, "Schnitt nach ROOM1030 Cut 6 nach %d Bildern", L.bilder);
+        /* Runde 36 Spur K (K3): ohne Cut-7-Teil zeigt das erste Bild von 1030 das AUFGEBROCHENE Tor = Cut 12 (Bruch + Kriecher im
+         * Raumaufbau); r35: Cut 6. */
+        PRUEF(L.raumwechsel && L.ziel == 0x1030 && L.ziel_cut == 12 && L.bilder < RE15_IT_1040_KAPPE, "Schnitt nach ROOM1030 Cut 12 nach %d Bildern", L.bilder);
     }
     /* Tor offen und der Spieler hat vorher 18 der 20 Raum-Zombies getoetet: 2 Raum-Records + 3 Auffuell-Records
      * = wieder fuenf (NUTZER-VORGABE "Wenn es bereits offen ist, kommen nur 5 Zombies"). */
@@ -723,8 +729,10 @@ static void teil_montage_1030(void)
     int knall0 = g_test_tuer_se_count;
     lauf_t L; lauf(&L, 900, 1);
     int n1 = aktive_gegner(-1);
-    PRUEF(g_test_tuer_se_count == knall0 + 1 && g_test_tuer_se_last == 0, "1030 Cut 7: Tuerknall (Knall-Bank Satz 0) genau einmal: %d", g_test_tuer_se_count - knall0);
-    PRUEF(n1 == n0 + 7, "4 Kopien + 3 Kriecher dazu: %d -> %d", n0, n1);
+    /* Runde 36 Spur K (K3): der Tuerknall des Cut-7-Schritts kam am Ende von 1040; die 4 Kopien stehen schon nach dem Raumaufbau
+     * (n0), im Schritt kommen nur die 3 Kriecher dazu; der Tor-Knall ist das Original-Se_on (keine Knall-Bank). */
+    PRUEF(g_test_tuer_se_count == knall0, "1030: keine Knall-Bank im Raum (Tor-Knall = Original-Se_on @0x02776): %d", g_test_tuer_se_count - knall0);
+    PRUEF(n1 == n0 + 3, "3 Kriecher dazu (4 Kopien schon im Raumaufbau): %d -> %d", n0, n1);
     PRUEF(g_scd.work_vars[0x12] == 20, "Gleichzeitig-Limit 20 (Save 0x12)");
     PRUEF(L.raumwechsel && L.ziel == 0x11C0 && L.ziel_cut == 13 && L.ziel_x == RE15_IT_PARK_11C0_X, "Schnitt nach ROOM11C0 Cut 13 nach %d Bildern", L.bilder);
     kriecher_pruefen(&L, "(4,15)=0");
@@ -733,7 +741,7 @@ static void teil_montage_1030(void)
     /* Variante: die Original-Szene war schon gelaufen ((4,15)=1) — "noch einmal" */
     szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 15, 1);
     re15_irons_tod_zustand_setzen(RE15_IT_S1040);
-    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 6) == 0) {
+    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 12) == 0) {   /* Runde 36: Tuer -> Cut 12 */
         for (int f = 0; f < 3; f++) frame(0, 0);
         PRUEF(g_scd.cam_id == 12, "(4,15)=1: die Tor-Ansicht ist von Anfang an Cut 12 (sub00 hat 6<->12 getauscht @0x01FFD): %d", (int)g_scd.cam_id);
         {   /* kein zweiter Tausch: die Zonen, die sub00 auf 12 umetikettiert hat, tragen am Ende noch 12 */
@@ -750,7 +758,7 @@ static void teil_montage_1030(void)
     /* Variante: Ada steht nicht mehr an Cut 13 ((4,64)=1) -> aus 1030 direkt zurueck nach 1150 */
     szene_flags(); re15_game_flag_set(9, 73, 1); re15_game_flag_set(4, 64, 1);
     re15_irons_tod_zustand_setzen(RE15_IT_S1040);
-    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 6) == 0) {
+    if (room_boot(0x1030, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 12) == 0) {   /* Runde 36: Tuer -> Cut 12 */
         lauf(&L, 900, 1);
         PRUEF(L.raumwechsel && L.ziel == 0x1150 && L.ziel_cut == 7 && L.ziel_x == RE15_IT_COUCH_X && L.ziel_z == RE15_IT_COUCH_Z,
               "(4,64)=1: Schnitt aus 1030 direkt nach ROOM1150 Cut 7 (Ziel %04X Cut %d)", L.ziel, L.ziel_cut);
@@ -764,10 +772,16 @@ static void teil_montage_1030(void)
     /* Nachspawn */
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);
     if (room_boot(0x1030, 160, 6145, 0, 0) == 0) {
-        int m0 = 0; for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type) m0++;
+        /* Runde 36 Spur K (K3): der Nachspawn laeuft im Raumaufbau (vor dem ersten Bild) — die 7 Montage-Records (4 Kopien,
+         * 47 still, + 3 Kriecher) stehen also schon nach room_boot und bleiben ueber die Bilder. */
+        int mont0 = 0; for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type && (g_actors[s].em_flag_id == 48 || g_actors[s].em_flag_id == 49 ||
+                g_actors[s].em_flag_id == 75 || g_actors[s].em_flag_id == 76 || g_actors[s].em_flag_id == 77 ||
+                g_actors[s].em_flag_id == 78 || g_actors[s].em_flag_id == 79)) mont0++;
+        int m0 = aktive_gegner(-1);
         for (int f = 0; f < 5; f++) frame(0, 0);
         int m1 = aktive_gegner(-1);
-        PRUEF(m1 == m0 + 7 || m1 == 15, "Nachspawn 1030: +7 (%d -> %d)", m0, m1);
+        PRUEF(mont0 == 7 && m1 == m0, "Nachspawn 1030: 7 Montage-Records schon im Raumaufbau (%d), danach unveraendert (%d -> %d)", mont0, m0, m1);
         PRUEF(g_room_change.pending == 0 && re15_irons_tod_sub01_gesperrt() == 0, "normaler Raum: keine Tuer, sub01 frei");
     }
     re15_irons_tod_zustand_setzen(RE15_IT_AUS);

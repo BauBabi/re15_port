@@ -159,12 +159,20 @@ static const uint8_t k_p_szene[] = {
     OP_EM(2, 0x10, 0x02, 0x01, 42, -2000, -12000, 3072), \
     OP_EM(3, 0x11, 0x02, 0x01, 43, -1300, -10800, 3072), \
     OP_EM(4, 0x11, 0x02, 0x01, 46,  -700, -11600, 3072)
+/* RUNDE 36 SPUR K (K3, NUTZER-VORGABE "Erst 'Tuerknallen' Dann Zombie Spawnen und dann erst der Kamera Wechsel hin zu
+ * den Zombies"): GEMESSEN vorher (Lauf vor_1130, Dossier K_szene1150.md §K3.1): Kamera Cut 0 ab Bild 0 (Tuer-Cut,
+ * Einblendung), Knall in Bild 21, die Zombies erscheinen in Bild 31 vor der Kamera. Jetzt: der Knall dieses Schritts
+ * kommt am ENDE der Szene in 1150 (k_p_szene), die Zombies erscheinen im RAUMAUFBAU (erster Abschnitt bis zum ersten
+ * Sleep, sofort ausgefuehrt — erster_abschnitt_sofort, Form = die Raum-Records im Init-Lauf FUN_8003ef6c ->
+ * FUN_8003f0a0 @0x8003f018 vor der Einblendung @0x8001cbb8..@0x8001cc28), und erst das erste Bild zeigt Cut 0.
+ * Am Ende der Knall des NAECHSTEN Schritts (1040, "so wie bei der Cutscene von ROOM 1030") noch auf Cut 0.
+ * Zeiten = PORT-WAHL: Tuer wie bisher 175 Bilder nach dem ersten Takt (r35: 15 + 10 + 150), davon 45 nach dem Knall
+ * (wie k_p_szene). */
 static const uint8_t k_p_1130[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
-    OP_CUT(RE15_IT_CUT_1130), OP_SLEEP(15),
-    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(10),
-    EM_1130_LISTE,
-    OP_SLEEP(150),
+    EM_1130_LISTE,                                          /* Raumaufbau: vor dem ersten Bild */
+    OP_SLEEP(130),
+    OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(45),        /* Knall des 1040-Schritts, noch auf Cut 0 */
     OP_DOOR(RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 0x04, RE15_IT_CUT_1040),
     OP_AOT_ON,
     OP_END,
@@ -206,9 +214,12 @@ static const uint8_t k_p_1130_nach[] = { EM_1130_LISTE, OP_END };   /* spaeteres
     OP_EM(0, 0x16, 0x0d, 0x01, 90, -28394, 13500, 0), \
     OP_EM(0, 0x16, 0x0d, 0x01, 91, -28394, 12500, 0), \
     OP_EM(0, 0x16, 0x0d, 0x01, 95, -28394, 11500, 0)
+/* Runde 36 Spur K (K3): Kopf + Aufstellung laufen im RAUMAUFBAU (erster Abschnitt bis zum ersten Sleep, s.
+ * erster_abschnitt_sofort) — die Zombies stehen hinter dem Tor, bevor das erste Bild Cut 1 (Tuer-Cut) zeigt; der
+ * Cut_chg 1 der Runde 35 entfaellt (das erste Bild IST Cut 1). GEMESSEN vorher (Lauf vor_1040): Cut 1 ab Bild 0, die
+ * Raum-Zombies an ihren Raum-Plaetzen, in Bild 6 auf die Aufstell-Plaetze versetzt, Knall erst in Bild 21. */
 static const uint8_t k_p_1040_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
-    OP_CUT(RE15_IT_CUT_1040),
     OP_ZAEHLER_1040,                                        /* Nachbesserung 2: verworfene Records geben ihren Platz zurueck */
     EM_1040_LISTE,                                          /* erst erscheinen, dann im selben Takt aufstellen */
 };
@@ -239,9 +250,10 @@ static const uint8_t k_p_1040_aufstellen[] = {
     0x26, 0x00, 0x00, 0x04, 0x01, 0x00,                               /* @0x02168 var4 += 1 */
     0x0e, 0x00,                                                       /* @0x0216E Next */
 };
-static const uint8_t k_p_1040_knall[] = {
-    OP_SLEEP(15),
-    OP_KNALL(RE15_IT_SIG_KNALL_1030), OP_SLEEP(20),
+/* Runde 36 Spur K (K3): der Knall dieses Schritts liegt jetzt am Ende des vorigen (k_p_1130 bzw. k_p_szene, wenn 1140
+ * leer ist); hier bleibt nur der Vorlauf bis zur Tor-Fahrt (r35: 15 + 20 Bilder = PORT-WAHL, unveraendert). */
+static const uint8_t k_p_1040_vorlauf[] = {
+    OP_SLEEP(35),
 };
 static const uint8_t k_p_1040_tor[] = {
     0x36, 0x02, 0x0c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* @0x019B2 */
@@ -266,10 +278,14 @@ static const uint8_t k_p_1040_tor[] = {
 /* Ende des 1040-Schritts: warten, bis der Port-Takt "alle durch" meldet (Signal (5,30), Poll-Form ROOM1150 sub08
  * @0x0112A..@0x01132), dann noch ein Blick auf die Durchgekommenen (Sleep 90 = PORT-WAHL, 3 s), dann der Schnitt.
  * Vorher: feste Sleep 240 — bei offenem Tor kam damit unter der RE1.5-KI nur einer von fuenf durch (Riegel). */
+/* Runde 36 Spur K (K3): vor dem Schnitt der Knall des NAECHSTEN Schritts, noch auf Cut 1 — Tuerknall (Satz 0), wenn in
+ * 1030 Cut 7 die Zombies aus 1070 erscheinen ((9,76)=1), sonst der Knall wie ROOM1030 (Satz 1) fuer den Tor-Teil
+ * (Weiche in programm_bauen: knall_setzen). 45 Bilder bis zur Tuer wie k_p_szene. */
 static const uint8_t k_p_1040_ende[] = {
     0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_IT_SIG_ALLE_DURCH, 0x00,
     OP_SLEEP(90),
-    OP_DOOR(RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03, RE15_IT_CUT_1030_TUER),   /* Cut 7 oder 6 (Weiche) */
+    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(45),        /* Knall des 1030-Schritts (Weiche) */
+    OP_DOOR(RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03, RE15_IT_CUT_1030_TUER),   /* Cut 7 oder 12 (Weiche) */
     OP_AOT_ON,
     OP_END,
 };
@@ -317,16 +333,22 @@ static const uint8_t k_p_1030_kopf[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
     0x24, 0x12, LE16(20),                                   /* Save(0x12,20): Gleichzeitig-Limit */
 };
+/* Runde 36 Spur K (K3): GEMESSEN vorher (Lauf vor_1030): Cut 7 ab Bild 0, Knall in Bild 21, die 1070-Kopien erscheinen
+ * in Bild 31 vor der Kamera; Cut 6 in Bild 181, Knall in Bild 196, die Kriecher erscheinen danach hinter dem Tor IM
+ * BILD. Jetzt: Cut-7-Teil = die Kopien im RAUMAUFBAU (der Tuerknall dazu kam am Ende von 1040), dann der Blick
+ * (PORT-WAHL wie bisher 175 Bilder bis zum naechsten Knall). Tor-Teil = der Original-Knall @0x02776 NOCH AUF CUT 7, das
+ * Tor bricht (k_p_1030_bruch), 10 Bilder spaeter (wie Knall -> Kopien in r35) erscheinen die Kriecher hinter dem Tor
+ * (k_p_1030_kriechen, ausserhalb von Cut 7), und erst danach der Kamerawechsel Cut 12 (@0x027AA, wie im Original NACH
+ * Knall und den ersten Gosub sub09). Ohne Cut-7-Teil ((9,76)=0): der Knall kam am Ende von 1040, Bruch + Kriecher laufen
+ * im Raumaufbau, das erste Bild zeigt Cut 12 (Tuer-Cut). */
 static const uint8_t k_p_1030_tuer[] = {
-    OP_CUT(RE15_IT_CUT_1030_TUER), OP_SLEEP(15),
-    OP_KNALL(RE15_IT_SIG_KNALL_TUER), OP_SLEEP(10),
-    EM_1070_LISTE,
-    OP_SLEEP(150),
+    EM_1070_LISTE,                                          /* Raumaufbau: vor dem ersten Bild (Cut 7) */
+    OP_SLEEP(175),
 };
 static const uint8_t k_p_1030_tor[] = {
-    OP_CUT(RE15_IT_CUT_1030_TOR), OP_SLEEP(15),
     0x36, 0x02, 0x0c, 0x00, 0x00, 0x00, 0xcc, 0xdd, 0xf8, 0xf8, 0xf0, 0xa7,   /* sub08 @0x02776: der Knall */
 };
+static const uint8_t k_p_1030_luecke[] = { OP_SLEEP(10) };    /* Knall -> Kriecher (r35: Knall -> Kopien 10) */
 /* Das Tor bricht auf — NUR wenn die Original-Szene noch nicht gelaufen ist ((4,15)=0). Bei (4,15)=1 hat
  * sub00 @0x01FF4..@0x02004 dieselben Zeilen schon beim Raumaufbau ausgefuehrt, und Cut_replace ist ein
  * TAUSCH (LAB_80040414 @0x8004044c-a8: jeder Zonen-Satz mit a bekommt b UND umgekehrt): ein zweiter Lauf
@@ -368,21 +390,66 @@ static const uint8_t k_p_1030_nach_tor[]  = { EM_KRIECHER_NACH, OP_END };
  * quer/tief 0,46 statt Adas 0,26 -> rechts von Ada am Bildrand angeschnitten (Abnahme 0 M5, s11c0 F12..F402).
  * LAUFZIEL: Mitte des Tuer-Rechtecks Slot 0 @0x01712 (-27100,15900, 4000 x 2700) = (-25100,17250), die Tuer
  * ins Gebaeude (ROOM11B0) = "Richtung Gebaeude"; der Weg fuehrt hinter der Kamera aus dem Bild. */
+/* RUNDE 36 SPUR K (K2, NUTZER-VORGABE "sie unterhalten sich nicht miteinander, sondern schauen irgendwo hin ... Sie
+ * muessen sich schon miteinander unterhalten"). GEMESSEN vorher (Lauf vor_11c0, K_belege/k2_vor_11c0.png): beide drehen
+ * sich zum Gebaeude (die Tuer liegt HINTER der Kamera Cut 13) und sprechen ihre Zeilen in die Kamera; Ada wendet sich
+ * Marvin nie zu, Marvin erst vor "I have to help him"; kein einziges Plc_neck in 11C0 (neck.log).
+ * FORM = der Original-Dialog DIESES Raums, ROOM11C0 sub02 (Leon <-> Ada): der Sprecher wendet Kopf UND Koerper zum
+ * Gegenueber — `41 01 <x> 00 00 <z> 64 00` (Plc_neck Modus 1 = Weltpunkt, y 0, Rate 0x64; @0x01886 Leon -> Ada,
+ * @0x018C0 Ada -> Leon) + `40 00 09 ff <x> <z>` (Plc_dest Modus 9 = Drehen; @0x01890 ff 0, @0x018CA ff 1) + Warten auf
+ * die Ankunft `18 05` / `18 06` (@0x01898 / @0x018D2: sub05 @0x01C3E / sub06 @0x01C50 = Set(5,n)=0, While
+ * Ck(5,n)==0 { Evt_next }); beide zum selben Punkt = @0x01964..@0x0197C (erst der eine, Sleep 10, dann der andere +
+ * Warten). Adas Sprech-Geste = ihre erste Zeile im Original-Dialog: Clip 19 vor/zurueck (@0x018D8..@0x018E8). Nicken =
+ * sub03 @0x01BB2..@0x01BCA (`41 00 .. 64 00` Kopf frei, Sleep 5, `41 03 01 00 00 00 00 00 00 3c`). Bank-5-Bits 0/1
+ * sind in 11C0 nur die Ankunfts-Bits dieser beiden Subs (Leon/Ada; Leon ist hier nicht im Raum).
+ * ABLAUF (Beats = NUTZER-VORGABE r35, AUFTRAG r35 Z.83-90; "einander zugewandt" = r36): (1) beide drehen sich zum
+ * Gebaeude (der Knall), (2) Ada wendet sich Marvin zu und fragt ihn, Marvin sieht sie an, (3) Marvin dreht sich zu ihr
+ * und nickt "Yes!....", (4) "Oh, no, Leon!" zum Gebaeude gewandt, Ada sieht ihn weiter an, (5) "Marvin dreht sich zu
+ * Ada": "I have to help him, sorry!" + Arm, (6) rennt los, (7) Ada sieht ihm nach (Kopf + Koerper zur Tuer), "Marvin!..."
+ * + Arm. Orte: Ada sub00 @0x01770 (-8965,-14347), Marvin (-8163,-13748) (r35 M5), Tuer = Mitte des Rechtecks Slot 0
+ * @0x01712 (-25100,17250). Sleeps = PORT-WAHL im Takt der r35-Fassung. */
+#define IT_ADA_X       (-8965)
+#define IT_ADA_Z       (-14347)
+#define IT_MARVIN_X    (-8163)
+#define IT_MARVIN_Z    (-13748)
+#define IT_TUER11C0_X  (-25100)
+#define IT_TUER11C0_Z  (17250)
+#define OP_NECK1(x,z)  0x41, 0x01, LE16(x), LE16(0), LE16(z), 0x64, 0x00   /* 11C0 sub02 @0x01886 */
+#define OP_NECK0       0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00   /* 11C0 sub03 @0x01BB2 */
+#define OP_NICKEN      0x41, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3c   /* 11C0 sub03 @0x01BC0 */
+#define OP_TURN(f,x,z) OP_DEST(9, (f), (x), (z))                                     /* 11C0 sub02 @0x01890 / @0x018CA */
+#define OP_GOSUB(n)    0x18, (n)                                                     /* 11C0 sub02 @0x01898 / @0x018D2 */
 static const uint8_t k_p_11c0[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),
-    OP_EM(3, 0x40, 0x40, 0x00, 0xff, -8163, -13748, 475),    /* Marvin, Slot 3 = Aktor 4 (Standort s.o.) */
-    OP_CUT(RE15_IT_CUT_11C0), OP_SLEEP(30),
-    OP_WORK(2, 0), OP_DEST(9, 0x21, -27100, 15900),         /* Ada dreht sich zum Gebaeude */
-    OP_WORK(2, 3), OP_DEST(9, 0x22, -27100, 15900),         /* Marvin ebenso */
-    OP_SLEEP(45),
-    OP_WORK(2, 0), OP_MSG(10), OP_SLEEP(90),                /* "Ada: What was this noise? Did you hear that?" */
-    OP_WORK(2, 3), OP_MSG(11), OP_SLEEP(60),                /* "Marvin: Yes!...." */
+    OP_EM(3, 0x40, 0x40, 0x00, 0xff, IT_MARVIN_X, IT_MARVIN_Z, 475),   /* Marvin, Slot 3 = Aktor 4 — Raumaufbau (K3) */
+    OP_SLEEP(30),
+    /* (1) beide zum Gebaeude */
+    OP_WORK(2, 3), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x00, IT_TUER11C0_X, IT_TUER11C0_Z),
+    OP_SLEEP(10),
+    OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
+    OP_SLEEP(20),
+    /* (2) Marvin sieht Ada an; Ada wendet sich ihm zu und fragt */
+    OP_WORK(2, 3), OP_NECK1(IT_ADA_X, IT_ADA_Z),
+    OP_WORK(2, 0), OP_NECK1(IT_MARVIN_X, IT_MARVIN_Z), OP_TURN(0x01, IT_MARVIN_X, IT_MARVIN_Z), OP_GOSUB(6),
+    OP_MSG(10),                                             /* "Ada: What was this noise? Did you hear that?" */
+    OP_MOTION(0, 19), OP_SLEEP(40), OP_MOTION(0, 19), OP_FLG_REV, OP_SLEEP(50),
+    /* (3) Marvin dreht sich zu Ada, nickt */
+    OP_WORK(2, 3), OP_TURN(0x00, IT_ADA_X, IT_ADA_Z), OP_GOSUB(5),
+    OP_MSG(11),                                             /* "Marvin: Yes!...." */
+    OP_NECK0, OP_SLEEP(5), OP_NICKEN, OP_SLEEP(20),
+    OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_SLEEP(30),
+    /* (4) zum Gebaeude gewandt */
+    OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x00, IT_TUER11C0_X, IT_TUER11C0_Z),
     OP_MSG(12), OP_SLEEP(60),                               /* "Marvin: Oh, no, Leon!" */
-    OP_DEST(9, 0x22, -8965, -14347), OP_SLEEP(40),          /* Marvin dreht sich zu Ada */
+    /* (5) Marvin dreht sich zu Ada */
+    OP_NECK1(IT_ADA_X, IT_ADA_Z), OP_TURN(0x00, IT_ADA_X, IT_ADA_Z), OP_GOSUB(5),
     OP_MSG(13),                                             /* "Marvin: I have to help him, sorry!" */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
-    OP_DEST(5, 0x22, -25100, 17250), OP_SLEEP(30),          /* Marvin rennt zur Tuer Slot 0 @0x01712 (Mitte) */
-    OP_WORK(2, 0), OP_MSG(14),                              /* "Ada: Marvin!..." */
+    /* (6) rennt zur Tuer Slot 0 @0x01712 (Mitte), Modus 5 (11B0 sub06 @0x015EA) */
+    OP_NECK0, OP_DEST(5, 0x22, IT_TUER11C0_X, IT_TUER11C0_Z), OP_SLEEP(10),
+    /* (7) Ada sieht ihm nach */
+    OP_WORK(2, 0), OP_NECK1(IT_TUER11C0_X, IT_TUER11C0_Z), OP_TURN(0x01, IT_TUER11C0_X, IT_TUER11C0_Z), OP_GOSUB(6),
+    OP_MSG(14),                                             /* "Ada: Marvin!..." */
     OP_MOTION(0, 15), OP_SLEEP(25), OP_MOTION(0, 15), OP_FLG_REV, OP_SLEEP(26),
     OP_SLEEP(60),
     OP_DOOR(RE15_IT_COUCH_X, RE15_IT_COUCH_Z, RE15_IT_COUCH_YAW, 0x15, RE15_IT_CUT_1150),
@@ -541,7 +608,8 @@ const uint8_t *re15_irons_tod_programm(int welches, int *out_len)
     case 15: p = k_p_1030_bruch;     n = (int)sizeof k_p_1030_bruch;     break;
     case 16: p = k_p_1030_kriechen;  n = (int)sizeof k_p_1030_kriechen;  break;
     case 17: p = k_p_1040_aufstellen; n = (int)sizeof k_p_1040_aufstellen; break;
-    case 18: p = k_p_1040_knall;     n = (int)sizeof k_p_1040_knall;     break;
+    case 18: p = k_p_1040_vorlauf;   n = (int)sizeof k_p_1040_vorlauf;   break;   /* r35: k_p_1040_knall */
+    case 19: p = k_p_1030_luecke;    n = (int)sizeof k_p_1030_luecke;    break;   /* Runde 36 Spur K */
     default: break;
     }
     if (out_len) *out_len = n;
@@ -666,6 +734,84 @@ static int programm_laeuft(void)
     return 0;
 }
 
+/* ---- Runde 36 Spur K (K3): Ereignisfolge + erster Abschnitt im Raumaufbau ------------------------------------------ */
+static re15_it_folge_t s_folge[64];
+static int s_folge_n = 0;
+static int s_takt = 0;            /* globaler Spieltakt: re15_irons_tod_tick zaehlt jedes Bild mit laufender VM */
+static int s_folge_gegner = -1;   /* aktive Gegner beim letzten Takt (Spawn-Erkennung waehrend eines Schritts) */
+static int s_folge_cut = -1;      /* Kamera beim letzten Takt (Cut_chg-Erkennung) */
+
+static void folge(char art, int takt, int wert, int aufbau)
+{
+    if (s_folge_n < (int)(sizeof s_folge / sizeof s_folge[0])) {
+        re15_it_folge_t *f = &s_folge[s_folge_n];
+        f->art = art; f->raum = (uint16_t)g_current_room_id; f->takt = takt; f->wert = wert; f->aufbau = aufbau;
+    }
+    s_folge_n++;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[irons-tod] Folge #%d %c ROOM%04X T%d %s %d%s\n", s_folge_n, art, (unsigned)g_current_room_id, takt,
+            art == 'K' ? "Knall Satz" : art == 'S' ? "Spawn +" : "Kamera Cut", wert,
+            aufbau ? " (Raumaufbau, vor dem ersten Bild)" : "");
+#endif
+}
+int  re15_irons_tod_folge_n(void) { return s_folge_n < 64 ? s_folge_n : 64; }
+const re15_it_folge_t *re15_irons_tod_folge(int i) { return (i >= 0 && i < re15_irons_tod_folge_n()) ? &s_folge[i] : NULL; }
+void re15_irons_tod_folge_reset(void) { s_folge_n = 0; s_takt = 0; s_folge_gegner = -1; s_folge_cut = -1; }
+
+static int aktive_gegner_zahl(void)
+{
+    int n = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (g_actors[i].active && g_actors[i].type) n++;
+    return n;
+}
+
+/* Den ERSTEN ABSCHNITT eines eben gestarteten Fadens (bis zu seiner ersten Pause) SOFORT laufen lassen — im Raumaufbau,
+ * also vor dem ersten Bild des Raums. FORM = das Original: die Gegner eines Raums erscheinen im Init-Lauf (Raumlader
+ * FUN_8001d600 -> @0x80039a00 `jal 0x8003ef6c` -> FUN_8003ef6c ruft den Dispatcher FUN_8003f0a0 direkt @0x8003f018)
+ * VOR der Einblendung (State-3-Rumpf @0x8001cbb8..@0x8001cc28, re15_room_transition_present) — ein Faden, den sub00
+ * dort per Evt_exec startet, laeuft im selben Init-Lauf mit (gleiche Slot-Schleife, scd_vm.c). Der Installer laeuft
+ * NACH dem Init-Lauf (scd_room_setup.c); darum hier ein zweiter Init-Lauf NUR fuer diesen Faden: die anderen Faeden des
+ * Raums ruhen dabei (aktiv-Bits gemerkt und zurueckgelegt), der sub01-Reseed und der Port-Takt laufen im Init-Lauf
+ * ohnehin nicht (scd_vm_tick, s_vm_room_init); der Frame-Ende-Wisch (work_vars[0..3] = -1, Bank 5 Wort 1 = 0,
+ * FUN_8003ebf4) setzt nur, was der Init-Lauf eben schon gesetzt hat. */
+static void erster_abschnitt_sofort(int slot)
+{
+    if (slot < 0 || slot >= SCD_THREAD_COUNT) return;
+    uint8_t aktiv[SCD_THREAD_COUNT];
+    for (int s = 0; s < SCD_THREAD_COUNT; s++) {
+        aktiv[s] = g_scd.threads[s].active;
+        if (s != slot) g_scd.threads[s].active = 0;
+    }
+    scd_vm_set_room_init(1);
+    scd_vm_tick();
+    scd_vm_set_room_init(0);
+    for (int s = 0; s < SCD_THREAD_COUNT; s++) if (s != slot) g_scd.threads[s].active = aktiv[s];
+}
+
+/* Ereignis 21 starten; Montage-Schritte und Nachspawns mit sofortigem ersten Abschnitt (K3). Ergebnis wie scd_event_fire. */
+static int starten(int sofort)
+{
+    int n0 = aktive_gegner_zahl();
+    int slot = scd_event_fire(RE15_IT_EREIGNIS);
+    if (slot >= 0 && sofort) {
+        erster_abschnitt_sofort(slot);
+        int n1 = aktive_gegner_zahl();
+        if (s_zustand != RE15_IT_AUS) {
+            /* 'S' im Raumaufbau = ALLE Gegner, die das erste Bild zeigt: die Raum-Records aus dem Init-Lauf (ROOM1040: die
+             * fuenf, die durchs Tor kommen; ROOM1030: die sechs hinter dem Tor) plus die des ersten Abschnitts (n1 - n0). */
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[irons-tod] ROOM%04X: erstes Bild mit %d Gegnern (Init-Lauf %d + erster Abschnitt %d)\n",
+                    (unsigned)g_current_room_id, n1, n0, n1 - n0);
+#endif
+            if (n1 > 0) folge('S', s_takt, n1, 1);
+            folge('C', s_takt, (int)g_scd.cam_id, 1);
+        }
+        s_folge_gegner = n1;
+        s_folge_cut = (int)g_scd.cam_id;
+    }
+    return slot;
+}
+
 static void prog_anhaengen(const uint8_t *p, int n)
 {
     if (s_prog_len + n > (int)sizeof s_prog) return;
@@ -730,16 +876,28 @@ static void tuer_setzen(int door_off, int x, int z, int yaw, uint8_t room, uint8
     d[DOOR_OFF_CUT]  = cut;
 }
 
+/* Runde 36 Spur K (K3): das Knall-Signal VOR dem Tuersatz (Form `22 05 ss 01` + Sleep 45 + Door_aot_set + Aot_on + Evt_end
+ * = 4 + 4 + 32 + 2 + 2 Byte am Programmende) auf den Satz des naechsten Schritts stellen. */
+static void knall_setzen(uint8_t signal)
+{
+    uint8_t *k = s_prog + s_prog_len - 44;
+    if (s_prog_len >= 44 && k[0] == 0x22 && k[1] == 0x05) k[2] = signal;
+}
+
 /* Das Programm fuer (Raum, Zustand) in s_prog zusammensetzen; 0 = keins. */
+static int s_1030_knall_off = -1;   /* K3-Messung: Lage des Original-Se_on @0x02776 im Laufprogramm (sonst -1) */
 static int programm_bauen(uint16_t room_id)
 {
     s_prog_len = 0;
+    s_1030_knall_off = -1;
     switch (s_zustand) {
     case RE15_IT_SZENE:
         if (room_id != RE15_IT_RAUM_1150) return 0;
         prog_anhaengen(k_p_szene, (int)sizeof k_p_szene);
-        if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))   /* 1140 leer: "passiert nichts" -> 1040 */
+        if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {  /* 1140 leer: "passiert nichts" -> 1040 */
             tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1040_X, RE15_IT_PARK_1040_Z, 1024, 0x04, RE15_IT_CUT_1040);
+            knall_setzen(RE15_IT_SIG_KNALL_1030);            /* der Knall des 1040-Schritts (Runde 36 Spur K, K3) */
+        }
         return 1;
     case RE15_IT_S1130:
         if (room_id != RE15_IT_RAUM_1130) return 0;
@@ -751,23 +909,30 @@ static int programm_bauen(uint16_t room_id)
         zaehler_1040_setzen(0);                              /* Nachbesserung 2: Save(0x11, erschienene Raum-Records) */
         slots_zuweisen(0);                                   /* Auffuell-Records auf freie Plaetze */
         prog_anhaengen(k_p_1040_aufstellen, (int)sizeof k_p_1040_aufstellen);   /* hinter das Tor (Zone 0) */
-        prog_anhaengen(k_p_1040_knall, (int)sizeof k_p_1040_knall);
+        prog_anhaengen(k_p_1040_vorlauf, (int)sizeof k_p_1040_vorlauf);
         if (!re15_game_flag_get(4, 5)) prog_anhaengen(k_p_1040_tor, (int)sizeof k_p_1040_tor);
         prog_anhaengen(k_p_1040_ende, (int)sizeof k_p_1040_ende);
-        if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030))   /* 1070 leer: gleich Cut 6 */
-            tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03,
-                        re15_game_flag_get(4, 15) ? 12 : RE15_IT_CUT_1030_TOR);   /* aufgebrochenes Tor = Cut 12 (s. S1030) */
+        if (!re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)) {   /* 1070 leer: gleich der Tor-Teil */
+            /* Runde 36 Spur K (K3): Bruch + Kriecher laufen im Raumaufbau, das erste Bild zeigt das AUFGEBROCHENE Tor =
+             * Cut 12 (@0x027AA; bei (4,15)=1 hat sub00 6<->12 schon getauscht @0x01FFD, bei (4,15)=0 tut es der Bruch im
+             * Raumaufbau, k_p_1030_bruch) — r35: Cut 6 bzw. 12. Der Knall dazu = Satz 1 (wie ROOM1030), hier noch auf Cut 1. */
+            tuer_setzen(s_prog_len - 36, RE15_IT_PARK_1030_X, RE15_IT_PARK_1030_Z, 0, 0x03, 12);
+            knall_setzen(RE15_IT_SIG_KNALL_1030);
+        }
         return 1;
     case RE15_IT_S1030: {
         if (room_id != RE15_IT_RAUM_1030) return 0;
         prog_anhaengen(k_p_1030_kopf, (int)sizeof k_p_1030_kopf);
         int von = s_prog_len;
-        if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)) prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
-        int tor = s_prog_len;
-        prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
-        if (re15_game_flag_get(4, 15)) s_prog[tor + 1] = 12;   /* Tor schon aufgebrochen: die Tor-Ansicht ist nach dem
-                                                                * Tausch von sub00 (@0x01FFD `4b 06 0c`) Cut 12 */
-        else prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
+        int tuer = re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1030);
+        if (tuer) {                                          /* Cut-7-Teil, dann der Original-Knall noch auf Cut 7 */
+            prog_anhaengen(k_p_1030_tuer, (int)sizeof k_p_1030_tuer);
+            s_1030_knall_off = s_prog_len;
+            prog_anhaengen(k_p_1030_tor, (int)sizeof k_p_1030_tor);
+        }
+        if (!re15_game_flag_get(4, 15))                      /* Tor noch zu: es bricht (bei (4,15)=1 hat sub00 getauscht) */
+            prog_anhaengen(k_p_1030_bruch, (int)sizeof k_p_1030_bruch);
+        if (tuer) prog_anhaengen(k_p_1030_luecke, (int)sizeof k_p_1030_luecke);
         prog_anhaengen(k_p_1030_kriechen, (int)sizeof k_p_1030_kriechen);
         slots_zuweisen(von);
         if (re15_irons_tod_ohne_11c0())                      /* Ada steht nicht mehr an Cut 13: gleich zurueck */
@@ -963,10 +1128,35 @@ static void bilanz_1040_melden(void)
 #endif
 }
 
+/* K3-Messung im Spieltakt (Runde 36 Spur K): der Takt laeuft am Kopf des VM-Laufs (scd_vm.c), also VOR den Faeden —
+ * was die Faeden im vorigen Bild getan haben (Spawn, Cut_chg, Original-Se_on), steht jetzt fest und gehoert zu Takt-1. */
+static void folge_takt(void)
+{
+    s_takt++;
+    if (s_zustand == RE15_IT_AUS || s_zustand == RE15_IT_SZENE || s_zustand == RE15_IT_RUECKKEHR) {
+        s_folge_gegner = -1; s_folge_cut = -1; return;
+    }
+    int n = aktive_gegner_zahl();
+    if (s_folge_gegner >= 0 && n > s_folge_gegner) folge('S', s_takt - 1, n - s_folge_gegner, 0);
+    s_folge_gegner = n;
+    if (s_folge_cut >= 0 && (int)g_scd.cam_id != s_folge_cut) folge('C', s_takt - 1, (int)g_scd.cam_id, 0);
+    s_folge_cut = (int)g_scd.cam_id;
+    /* der Original-Knall @0x02776 in ROOM1030 (Se_on Bank 2, kein Port-Signal): gespielt, sobald der Faden hinter ihm steht */
+    if (s_1030_knall_off >= 0 && (uint16_t)g_current_room_id == RE15_IT_RAUM_1030) {
+        for (int s = 0; s < SCD_THREAD_COUNT; s++) {
+            const scd_thread_t *t = &g_scd.threads[s];
+            if (t->active && t->pc > s_prog + s_1030_knall_off && t->pc < s_prog + s_prog_len) {
+                folge('K', s_takt - 1, 2, 0); s_1030_knall_off = -1; break;
+            }
+        }
+    }
+}
+
 void re15_irons_tod_tick(void)
 {
     mess_zeile();
     bilanz_takt();
+    folge_takt();
     /* Marvins Marker-Alias (Aktor 4 spielt Adas Gesten-Record) JEDEN Takt setzen: auf dem Tuer-Weg bindet
      * main.c das Raum-RBJ erst NACH dem Installer (debug.log: "[irons-tod] ... Montage 11C0" vor "[rbj] room 11C0
      * cinematic overlay"), und re15_rbj_bind_room setzt die Aliase zurueck. Gemessen (Lauf v11c0, Bilder 340/370):
@@ -985,12 +1175,14 @@ void re15_irons_tod_tick(void)
         if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_TUER)) {
             re15_game_flag_set(5, RE15_IT_SIG_KNALL_TUER, 0);
             if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_TUER);
-            log_it("Signal (5,28): Tuerknall (Knall-Bank Satz 0)");
+            log_it("Signal (5,28): Tuerknall (Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a)");
+            folge('K', s_takt, KNALL_SE_TUER, 0);
         }
         if (re15_game_flag_get(5, RE15_IT_SIG_KNALL_1030)) {
             re15_game_flag_set(5, RE15_IT_SIG_KNALL_1030, 0);
             if (!stumm) re15_audio_re2_tuer_se(KNALL_SE_1030);
             log_it("Signal (5,29): Knall wie ROOM1030 (Knall-Bank Satz 1)");
+            folge('K', s_takt, KNALL_SE_1030, 0);
         }
     }
     if ((uint16_t)g_current_room_id == RE15_IT_RAUM_1150 && re15_game_flag_get(5, RE15_IT_SIG_ARM)) {
@@ -1007,6 +1199,8 @@ void re15_irons_tod_tick(void)
     }
 }
 
+/* Runde 36 Spur K (K3): Montage-Schritte und Nachspawns starten mit starten(1) = erster Abschnitt (Spawns, Latches,
+ * Aufstellung) noch im Raumaufbau, VOR dem ersten Bild (erster_abschnitt_sofort). Szene/Rueckkehr in 1150 unveraendert. */
 void re15_irons_tod_install(uint16_t room_id)
 {
     switch (room_id) {
@@ -1028,6 +1222,7 @@ void re15_irons_tod_install(uint16_t room_id)
             !re15_game_flag_get(RE15_IT_IRONS_BANK, RE15_IT_IRONS_BIT)) return;
         if (!irons()) { log_it("kein Irons im Raum - Szene unterbleibt"); return; }
         re15_irons_tod_bilanz_reset();
+        re15_irons_tod_folge_reset();                        /* Runde 36 Spur K: K3-Ereignisfolge */
         umzug_vorbereiten();
         meldungen_einsetzen(room_id);
         knallbank_laden();
@@ -1039,43 +1234,43 @@ void re15_irons_tod_install(uint16_t room_id)
         if (s_zustand == RE15_IT_SZENE && re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)) {
             s_zustand = RE15_IT_S1130;
             knallbank_laden();
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Montage 1130 (Programm 1)");
+            if (starten(1) >= 0) log_it("Montage 1130 (Programm 1)");
             return;
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (1130)"); }
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Nachspawn 1130 (Programm 10)");
+            if (starten(1) >= 0) log_it("Nachspawn 1130 (Programm 10)");
         return;
     case RE15_IT_RAUM_1040:
         if (s_zustand == RE15_IT_S1130 ||
             (s_zustand == RE15_IT_SZENE && !re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1130))) {
             s_zustand = RE15_IT_S1040;
             knallbank_laden();
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Montage 1040 (Programm 2)");
+            if (starten(1) >= 0) log_it("Montage 1040 (Programm 2)");
             return;
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (1040)"); }
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_1040))
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Nachspawn 1040 (Programm 14)");
+            if (starten(1) >= 0) log_it("Nachspawn 1040 (Programm 14)");
         return;
     case RE15_IT_RAUM_1030:
         if (s_zustand == RE15_IT_S1040) {
             bilanz_1040_melden();
             s_zustand = RE15_IT_S1030;
             knallbank_laden();
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Montage 1030 (Programm 3)");
+            if (starten(1) >= 0) log_it("Montage 1030 (Programm 3)");
             return;
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (1030)"); }
         if (re15_game_flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN))
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Nachspawn 1030 (Programm 11-13)");
+            if (starten(1) >= 0) log_it("Nachspawn 1030 (Programm 11-13)");
         return;
     case RE15_IT_RAUM_11C0:
         if (s_zustand == RE15_IT_S1030) {
             s_zustand = RE15_IT_S11C0;
             re15_rbj_set_alias(4, 1);          /* Marvin (Aktor 4) spielt Adas Gesten-Record (Marker 2) */
             meldungen_einsetzen(room_id);
-            if (scd_event_fire(RE15_IT_EREIGNIS) >= 0) log_it("Montage 11C0 (Programm 4)");
+            if (starten(1) >= 0) log_it("Montage 11C0 (Programm 4)");
             return;
         }
         if (s_zustand != RE15_IT_AUS) { s_zustand = RE15_IT_AUS; log_it("Kette unterbrochen (11C0)"); }

@@ -12,10 +12,11 @@ KARTE=(); while [ $# -gt 0 ] && [ "$1" != "--" ]; do KARTE+=("$1"); shift; done
 [ "${1:-}" = "--" ] && shift
 BUILD="$BAUM/re15_port/build"
 EXE="$BUILD/platform/pc/re15_pc.exe"
-KOPIE="$BUILD/platform/pc/re15_pc_r36k_mess.exe"
+# K_KOPIE=<exe>: diese (schon vorhandene) Messkopie benutzen statt neu zu kopieren (Laeufe gegen einen festen Stand).
+KOPIE="${K_KOPIE:-$BUILD/platform/pc/re15_pc_r36k_mess.exe}"
 TOOL="$BUILD/tests/unit/probe_r35_cut1150_karte.exe"
 mkdir -p "$LAUF"; rm -f "$LAUF"/debug.log "$LAUF"/state.log "$LAUF"/re15_card.mcr "$LAUF"/*.ppm "$LAUF"/cap.raw
-cp -f "$EXE" "$KOPIE"
+[ -n "${K_KOPIE:-}" ] || cp -f "$EXE" "$KOPIE"
 ( cd "$LAUF" && "$TOOL" re15_card.mcr 1130 "${KARTE[@]}" ) > "$LAUF/karte.txt" 2>&1 || { echo "Karte fehlgeschlagen"; cat "$LAUF/karte.txt"; exit 1; }
 cd "$LAUF"
 env RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0 \

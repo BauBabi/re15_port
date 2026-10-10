@@ -75,7 +75,8 @@
  * Ein-Bild-Handshake-Wort (Plc_dest-Ankunft 0x20 u.a.), das FUN_8003ebf4 nach JEDEM VM-Takt
  * wischt (scd_vm.c `g_game.flags[5][1] = 0`) — gemessen: ein Signal auf Bit 44 kam nie an. */
 #define RE15_IT_SIG_ARM     12
-/* Knall-Signale, dieselbe Bauart: 28 = Tuerknall (Knall-Bank Satz 0 = RE2 DOOR04 Door_exit), 29 = Knall wie
+/* Knall-Signale, dieselbe Bauart: 28 = Tuerknall (Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a, sub05 @0x00F48 —
+ * Runde 36 Spur K; Runde 35: DOOR04 Door_exit), 29 = Knall wie
  * die ROOM1030-Szene (Satz 1 = ROOM1030 snd0 Tone 7, sub08 @0x02776). Der Takt ruft re15_audio_re2_tuer_se
  * auf der geladenen Knall-Bank. KEIN Se_on mit einem Port-Bankbyte: der Se_on-Verteiler bleibt byte-true
  * (`sltiu v0,v1,0x6; beq v0,zero,ret` @0x80045094 verwirft Bank >= 6, Pin unit_se_bank_routing). Bits 28/29
@@ -218,5 +219,17 @@ int            re15_irons_tod_1040_kappe(void);   /* 1 = (5,30) kam aus der KAPP
 int            re15_irons_tod_1040_angehalten(void);   /* Zahl der hinter der Kamera angehaltenen Zombies */
 void           re15_irons_tod_hp(int *out_start, int *out_min);
 void           re15_irons_tod_bilanz_reset(void);
+
+/* RUNDE 36 SPUR K (K3, NUTZER-VORGABE "Erst 'Tuerknallen' Dann Zombie Spawnen und dann erst der Kamera Wechsel hin zu
+ * den Zombies"): EREIGNISFOLGE der Montage, fortlaufend mitgeschrieben (debug.log `[irons-tod] Folge ...` + Puffer).
+ *   'K' Knall    (wert = Knall-Bank-Satz 0/1, oder 2 = Original-Se_on ROOM1030 sub08 @0x02776)
+ *   'S' Spawn    (wert = Zahl der Gegner, die dazugekommen sind; im RAUMAUFBAU = vor dem ersten Bild)
+ *   'C' Kamera   (wert = Cut; im RAUMAUFBAU = der Tuer-Cut, den das erste Bild zeigt, sonst ein Cut_chg)
+ * takt = globaler Spieltakt (re15_irons_tod_tick zaehlt jedes Bild mit laufender VM; der Raumaufbau liegt zwischen
+ * zwei Takten), aufbau = 1, wenn im Raumaufbau (vor dem ersten Bild des Raums) erfasst. Reset beim Szenenstart. */
+typedef struct { char art; uint16_t raum; int takt; int wert; int aufbau; } re15_it_folge_t;
+int  re15_irons_tod_folge_n(void);
+const re15_it_folge_t *re15_irons_tod_folge(int i);
+void re15_irons_tod_folge_reset(void);
 
 #endif /* RE15_IRONS_TOD_H */
