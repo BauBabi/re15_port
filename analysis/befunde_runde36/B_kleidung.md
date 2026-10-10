@@ -491,3 +491,21 @@ ueberlebte RE2-Griffe 100 -> 70 -> 50 -> 20, Decal beim dritten bei hp 20 = Caut
   geblittet, Spielstand geschrieben, `nullen` findet die Wunde, Bild 42: >= 13 Pixel (gemessen 27),
   alle in x170..240/y80..170. ~50 s. GEGENPROBE mit der Vorher-exe (re15_pc_r36b_nb1_vorher.exe):
   der Riegel scheitert an der ersten Biss-Zeile ("Biss ohne genau zwei Stempel").
+
+Gezielte Tests (keine volle Suite, Spurbaum; Build `local_build.sh build` -> LOCAL-BUILD-OK), -j 4:
+```
+ctest --test-dir re15_port/build -R "r36_kleidung|dog|hund|crow|kraehe|zombie|re2z|wound|damage|weste|injur|victim|grab|re2_hit|r35_affen|savedata|blut|arm|1210|gitter|crawl|1140" -j 4 --timeout 600 --output-on-failure
+100% tests passed, 0 tests failed out of 112
+```
+(Darin alle 8 Spur-Riegel: unit_r36_kleidung_griff_re2/_re15/_hund/_kraehe/_lut,
+integration_r36_kleidung_bild 66 s, _spielweg 32 s, _hundeweg 56 s; dazu die Gruppen jedes Moduls des
+Spur-Diffs gegen master: Hunde (RE1.5/RE2), Kraehen, Zombies/re2z/Kriecher/1140, Arme 1210, Schaden/
+Wunden/Weste/Spielstand.)
+
+### N1.8 Ergebnis Nachbesserung 1
+* M1 behoben und erklaert: der RE2-Biss stempelte mit halbem RE1.5-Massstab (1 Stempel je 20 HP statt
+  1 je 10 HP). Jetzt: Decal auf dem Hundeweg der Abnahme beim zweiten Biss (hp 60, Caution) statt nie;
+  das RE1.5-Gehirn auf demselben Weg liefert dieselbe Stufe (hp 60). Bildbeleg Westen-Rueckseite 27 px.
+* M2: Hinweis umgesetzt (exe-Riegel RDP-fest), Zombie-Weg steht als Riegel.
+* Nicht verschlechtert: die von Abnahme 0 bestaetigten Teile (Phase-4-Abwurf, Kraehe, LUT, Elza-Zeile 4,
+  Zombie-Spielweg) sind unveraendert und ihre Riegel gruen (Liste oben).
