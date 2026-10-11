@@ -240,25 +240,33 @@ eigenen Raum — 537 Pixel Unterschied, Huelle x120..193 y80..158.
 (Vitrinen-Ereignis, Ueberlapp z -16183..-15800 — davor gewinnt die Vitrine, rechts davon die Karte);
 11D0: 142 / 1407, 0; 1030: alle 5760 Treffer landen in Slot 8 = der Karte.
 
+### 4.4 Kartenschirm je Etage (exe, Lade-Weg, Statusschirm + L1, RE15_INV_FB_SHOT inv-Bild 140)
+Je Raum derselbe Lauf mit/ohne Plan-Bit (integration_r36_kartenitems_bild Teil 1c), probe_r36_kartenitems_bmp im
+Kartenfeld (20..300, 50..215): 3F 537, 2F 623, 1F 905, B2 763, B1 866 Pixel mehr MIT Plan, ausserhalb je 0.
+Bild: mit Plan ist die ganze Etage gezeichnet (unbesuchte Raeume als Umriss = RE2-Zeile 498, der eigene Raum
+gefuellt), ohne Plan nur der eigene Raum — fuer alle fuenf Blaetter (3F/2F/1F/B2/B1).
+
 ## 5. Tests
 
 | Test | misst | Ergebnis |
 |---|---|---|
-| `unit_r36_kartenitems` | T Tabelle (Blatt = Zonen-Blatt, Bits 87..91, MD1/TIM parsen, MD1 nur Ecken verschieden, Texte = RE2-Wortlaut, Frage mit 0x03); R Raumstart aller 10 Raeume (Leon+Elza): Prop obj 15 an Lage/Drehung, EVENT-Satz Ereignis 28 sat 0x31, 1030/1031 Telefon -> Slot 39, Installer idempotent; G Bit gesetzt -> nichts, Slot 8 = Telefon; D echter Bild-Ablauf (re15_game_step) 1140 Ja, 1140 Nein, 10D1 (Elza) Ja: Frage 30 -> Bit/Zone weg/Modell (20000,..)/Meldung 31/Blatt besitzt+waehlbar bzw. nichts; K Kartenblatt je Etage ohne Plan 0 unbesuchte Kacheln, mit Plan Zeile 498 (+6/+10/+10/+9/+6 Kacheln), fremdes Blatt erst mit SEINEM Plan waehlbar; S Spielstand-Rundlauf | 192 Pruefungen gruen |
-| `integration_r36_kartenitems_bild` | echte exe, 12 Laeufe: je Raum Lade-Weg mit/ohne Bit, Karte NUR im Marken-Fenster (ausserhalb 0 Pixel), Boot-Haken-Zeile; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28, Kartenschirm 3F mit allen Raeumen (>= 268 Pixel mehr) | gruen (207,8 s) |
+| `unit_r36_kartenitems` | T Tabelle (Blatt = Zonen-Blatt, Bits 87..91, MD1/TIM parsen, MD1 nur Ecken verschieden, Texte = RE2-Wortlaut, Frage mit 0x03); R Raumstart aller 10 Raeume (Leon+Elza): Prop obj 15 an Lage/Drehung, EVENT-Satz Ereignis 28 sat 0x31, 1030/1031 Telefon -> Slot 39, Installer idempotent; G Bit gesetzt -> nichts, Slot 8 = Telefon; D echter Bild-Ablauf (re15_game_step) 1140 Ja, 1140 Nein, 10D1 (Elza) Ja, 1030 Ja: Frage 30 -> Bit/Zone weg/Modell (20000,..)/Meldung 31/Blatt besitzt+waehlbar bzw. nichts; 1030 danach an derselben Stelle Telefon-Text (Nachricht 3 aus Slot 39); K Kartenblatt je Etage ohne Plan 0 unbesuchte Kacheln, mit Plan Zeile 498 (+6/+10/+10/+9/+6 Kacheln), fremdes Blatt erst mit SEINEM Plan waehlbar; S Spielstand-Rundlauf | 201 Pruefungen gruen |
+| `integration_r36_kartenitems_bild` | echte exe, 12 Laeufe: je Raum Lade-Weg mit/ohne Bit, Karte NUR im Marken-Fenster (ausserhalb 0 Pixel), Boot-Haken-Zeile, danach Kartenschirm des Blatts: MIT Bit die ganze Etage; ROOM1140 echter Weg (Aktion, Ja) -> Ereignis 28, Kartenschirm 3F mit allen Raeumen (>= 268 Pixel mehr) | gruen (437,7 s; Schwellen kalibriert: Wand-Fenster je ~Haelfte, Kartenschirm 3F 268 / 2F 311 / 1F 452 / B2 381 / B1 433) |
 
 Gezielte Laeufe (KEINE volle Suite, VERTRAG 1.5 / Auftrag):
 * `ctest --test-dir re15_port/build -R "r36_kartenitems" --timeout 1200 --output-on-failure`
-  -> **"100% tests passed, 0 tests failed out of 2"**
+  -> **"100% tests passed, 0 tests failed out of 2"** (Endstand, Total Test time 437,89 s)
 * Regressionsgruppen der beruehrten Module (Karte/Besitz/Hinweis, Prop-Lader/Licht, scd_event_fire-Kette,
   Raumstart-Installer, die fuenf Raeume):
   `ctest --test-dir re15_port/build -R "karte|map|besitz|hinweis|r34n_e|r35_inhalt|r34n_a|r34n_d|fenster|cut10f0|r35_cut|1030|1140|10d0|1200|11d0|item_stack|r36_kartenitems" --timeout 600 --output-on-failure`
-  -> REGRESSION_ZEILE
+  -> **"100% tests passed, 0 tests failed out of 100"** (Total Test time 1596,55 s; darin 9 exe-Haken: r34n_e_dokumente_bild,
+  r35_cut10f0, r35_cut1150, r35_fenster, r35_karte, r35_karte_fahrstuhl, r36_kartenitems_bild, map_uebergang,
+  map_raum_live — alle im ersten Lauf gruen)
 
 ## 6. OFFEN
 * **Groesse** (PORT-WAHL, Entscheidungsfrage 7.2): die Karten sind in die Nutzer-Marken eingepasst (Flaeche
-  391..745 x 260..497 Einheiten); die RE2-Originalgroesse waere 1080 x 720 (2F: 53 x 35 statt 20 x 13 Pixel —
-  sie deckte dort die Fahndungsplakate und das Foto zu).
+  391..745 x 260..497 Einheiten); die RE2-Originalgroesse waere 1080 x 720 (2F: rund 2,8-mal so gross, gut 55 x 40
+  statt 20 x 15 Pixel — sie deckte dort die Fahndungsplakate und das Foto zu).
 * **Licht** (PORT-WAHL, Abschnitt 3.3): Papier so hell wie die hellsten 15 % der Umgebung im Nutzer-Cut,
   statt des RDT-Figurenlichts (gemessen 31..70 von 128 an allen Waenden, Karte sonst fast schwarz). Kein
   Original-Gegenstueck — RE1.5 hat an diesen Stellen kein Objekt.
