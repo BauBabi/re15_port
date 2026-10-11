@@ -186,8 +186,18 @@ e) Zweite Folge desselben Bodenstreifens: der kriechende Zombie an der Suedecke 
   ist_spieler auf "unten" setzen (eine Zeile).
 - Die Quaderbasen anderer Raeume (Zellenpolster) sind nicht geprueft; nur ROOM1100 war Auftrag.
 
-## 5. Suite
-(wird nach dem gezielten Lauf eingetragen)
+## 5. Suite (gezielt, keine volle Suite im Spurbaum)
+- `ctest --test-dir re15_port/build -R "r36_pri|unit_pri_|integration_pri_masken|unit_sld_atlas" --timeout 600`
+  -> **100% tests passed, 0 tests failed out of 10** (unit_sld_atlas, unit_pri_inventar_riegel, unit_pri_kopfschnitt,
+  unit_pri_eingemessen, unit_pri_hashes, unit_pri_silhouette, unit_r36_pri_absperrung, unit_r36_pri_schatten,
+  integration_r36_pri_schatten, integration_pri_masken). Erster Lauf von integration_r36_pri_schatten war rot
+  (1214 "geaenderte" Pixel): probe_r34_ppm_beitrag zaehlt ohne Schwelle, also jede Atlas-Rundung der Masken-
+  Re-Blits; seitdem probe_r36_ppm_diff mit Schwelle 24 (dieselbe Schwelle wie alle Messungen in §1/§2).
+- Zweite Gruppe (beruehrte Module: Schattenpfad render_pc.c/main.c, 10F0-Szene mit neuen Masken, ROOM1100):
+  `ctest --test-dir re15_port/build -R "crow_shadow|hundeschatten|room1100|r22_10f0|r35_cut10f0|r32_tor|marvin_render_pose|re2_gore_render" --timeout 900`
+  -> **100% tests passed, 0 tests failed out of 16** (u.a. integration_r35_cut10f0 240,8 s, integration_r32_tor_hell
+  = Standbild-Weg mit der Schattenkopie, unit_r22_10f0_figur, unit_re2_crow_shadow_release, unit_r35_raeume_hundeschatten).
+- Volle Suite: nicht im Spurbaum (Vorgabe), faehrt der Orchestrator im Integrationsbaum.
 
 ## 6. Fuer den Nutzer
 - Neue Assets fuer das Paket-Gate: `re15_port/shared_assets/PSX/MASKS/ROOM10F0.MSK`, `ROOM10F0_PRI02.TIM`,
