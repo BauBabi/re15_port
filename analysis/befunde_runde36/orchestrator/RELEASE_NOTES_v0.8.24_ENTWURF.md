@@ -126,8 +126,10 @@ FUN_8003b558 @0x8003b634-794) und am Port (Leon und Elza, Schuebe aus allen Rich
 ROOM10F0/10F1 ueber Tritt, Tuer und Korridor): sie laesst sich **weder im Original noch im Port bewegen** - jeder Schub
 setzt sie in die Bruestung oder die Westwand, und das Spiel nimmt ihn nicht an (Sperre @0x8002c0b0). Kein Softlock,
 kein Fix noetig; ein Riegel haelt den Mechanismus fest. Die Kisten in ROOM3050 (Fall = vorgesehener Weg zur Super
-Redhawk) und ROOM2050 (die Tuer nach 2040 auf der Kiste faellt mit, 2040 bleibt ueber ROOM2070 erreichbar - Tuer slot 5 @0x00B1C, unbedingt)
-fallen wie vorgesehen.
+Redhawk) und ROOM2050/2051 (die Kiste obj 6 faellt auch im Original - am Original gemessen, Fall-Ausloeser @0x8002c13c,
+Landung Band 2; die Tuer nach 2040 auf ihr faellt mit, 2040 bleibt ueber 2020 -> 2030 -> 2060 erreichbar: die Luecke in
+ROOM2020 oeffnet das Skript nach dem Hinweis in ROOM2010, Sca_id_set @0x0098E/@0x00A06, an der exe Ende-zu-Ende gefahren)
+fallen wie im Original.
 
 ## Zur Freigabe: umgeschriebene Texte
 
@@ -207,4 +209,7 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
   Mischung) werden im Port weiter ueber NCCT gezeichnet, nicht halbtransparent - 91 flache Objekte, vorbestehend,
   Raumliste im N-Dossier 8.8.
 * Mit Elza zeigt der Statusschirm weiter Leons Dienstausweis (vorbestehend, nicht beauftragt).
-* Dach-Kiste ROOM1090/1091: keine Grenze - Softlock ausgeschlossen (s. oben).
+* Dach-Kiste ROOM1090/1091: keine Grenze - Softlock ausgeschlossen (s. oben). Bei der fallenden Kiste in ROOM2050
+  stimmen Ausloeser und Landehoehe mit dem Original (Band 2, y -3600), die Endlage weicht um 593 Einheiten ab
+  (Port z -13681, Original -13088; Kippbahn FUN_8002c444, Spur A). Der Ersatzweg 2020 -> 2030 -> 2060 ist nur an
+  der exe gefahren, nicht am Original; die Kiste in ROOM3050 ist am Original nicht gemessen (Datenlage eindeutig).
