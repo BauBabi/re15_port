@@ -69,6 +69,12 @@ von ROOM11C0 liegt waagerecht auf der Wand. Die kleinen Raeume von ROOM1110 und 
 als besucht, wenn man drin war (Fahrstuhl 1F -> 3F: nur 1F und 3F). Dafuer musste ROOM11A0 (Leiter zur
 Kanalisation) auf das Blatt "DRAINS B2" umziehen - auf B1 gibt es fuer ihn kein Rechteck. Alte Spielstaende zeigen
 diese Teilbereiche erst wieder, wenn man sie erneut betritt.
+
+**Tueren.** Der Fahrstuhl ROOM1080 spielt die RE2-Fahrstuhltuer (DOOR27: zwei Fluegel schieben auseinander), die
+grosse Tuer ROOM2090 <-> 20A0 das zweiteilige RE2-Schott (DOOR26). Die Tuer 10C0 <-> 10D0 hat eine neue Textur
+(helles Holz mit Faser, Drahtglas, Panikstange, Trittblech) statt der "billigen". Karten- und Ziffernfeld-Tueren:
+beim Erfolg ein Piep, eine halbe Sekunde spaeter das Aufschliessen, wie in RE2 (ROOM2110); Riegel von der
+Innenseite mit dem RE2-Entriegeln.
 @@WEITERE@@
 
 ## Zur Freigabe: umgeschriebene Texte
@@ -110,6 +116,10 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
   (Schiessstand B1), ROOM1090 ist der Hinterhof. War 1190 gemeint?
 * Karte: Wer das Treppenhaus ROOM1060 nur im Erdgeschoss betritt, kann schon zu 2F/3F blaettern (leer). Fuer den
   Fahrstuhl ist das abgestellt - soll es fuer Treppenhaeuser genauso gelten?
+* Tueren: DOOR27/DOOR26 sind RE2-LABOR-Tueren (oliv-grau mit Bedienfeld / rostrotes Schott "TYPE-P") - RE2 hat keinen
+  Revier-Fahrstuhl dieser Art. Passt die Labor-Optik im Revier, oder soll die gemalte RE1.5-Farbe zurueck?
+* ROOM4000 (Blue Master Keycard): die neue Folge Klack/Piep/Aufschliessen liegt ueber dem Tor-Motor-Ton des
+  Originals - beim Spielen pruefen, ob das stoert.
 @@ENTSCHEIDEN@@
 
 ## Grenzen
@@ -129,4 +139,6 @@ Ohne Datei laufen die Zeilen stumm mit Untertitel.
 * Elza ROOM1021: Roy sackt beim Schuss nicht sichtbar zusammen (Original noch nicht gemessen).
 * Karte ROOM11D0: der Zwinger-Gang noerdlich der Tuerwand hat in der Kachel keinen Platz, der Marker klemmt
   dort an der Oberkante (Platzhalter-Kachel des Prototyps).
+* Fahrstuhl: beim AUSSTIEG aus der Kabine (ROOM1080 -> Etage) gibt es weiter keine Tuersequenz; RE2 spielt dort
+  DOOR27 (ROOM6010). Nicht beauftragt, nachruestbar.
 @@GRENZEN_REST@@
