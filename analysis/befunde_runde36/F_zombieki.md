@@ -1303,3 +1303,17 @@ c541415c ("In die Ostgasse kommt kein Gorilla zu Fuss") ist damit ebenfalls beri
 | 1 NAH-Stillstand an den Stoss-Zielen | (a) EIN naher Gorilla an der Klemme knapp ausserhalb der Bissweite (B[3] gerade auf playerX @0x80117d4c, A[3] nah nur Biss @0x80117a60-74); (b) Stellen 4/11/12/13 + t11b0kampf: der ZWEITE Gorilla steht an, der einzige Bissplatz ist belegt | Spuren je Stelle; Bissplaetze Ecke 1649..1833 < 3168; J-Fenster 353 (Messreihe N) | PORT-WAHL Nah-Umweg zum freien Bissplatz ab R36_NAH_START 354 (= J-Fenster + 1), Belegt-Test | exe Stelle 3 1653/1875 -> 429/368 (Kriterium erfuellt), Stelle 1 826 -> 591, 14 Stellen 10466 -> 7500; kanonischer Kampf + 12 Stellen bitgleich; (b) gemessen nicht erreichbar (WIDERLEGT fuer den zweiten Gorilla), Nachruecken gebaut |
 | 2 falsche Begruendung | "passt nicht hinein" / "kommt nicht zu Fuss" | V3 Biss 54, exe Stelle 3 Biss F1220, Bissplaetze, GDB O1 Gassenmitte | an beiden Stellen durchgestrichen + berichtigt | — |
 | 3 Riegel pinnt Stillstand | O1/O3b/O5 im PORT-Modus | Abnahme 4 | Gleichheit im Modus Original-Regel, PORT-Modus misst Angriff/<= 450 mit Gegenprobe NB4 | Riegel 66/66 |
+
+---
+
+## Nachbesserung 6 (nach Abnahme 5, 2026-10-11) — fortlaufend
+
+Grundlage: `F_abnahme_5.md` (Stand e856447f/8030e41f: P1 erfuellt, P2 teilweise, P3 erfuellt; Maengel 1-3). P1/P3 nicht
+anfassen (Riegel `unit_r36_zombieki_{sicht,eintritt,wecker,szenen,affen}` gruen), Spur-J-Riegel `unit_r35_affen_*` und das
+J-Fenster (`kanon`: Heavy +363, Bisse 468 521 571 ..., Tod +1194, Slot-2-NAH-Anker 353) unveraendert.
+
+| Mangel | Kern | Kriterium der Abnahme | Weg |
+|---|---|---|---|
+| 1 | NAHER Gorilla, den nur das 0x10-Pad #36 (ROOM11C0.RDT 0x015d8) von Leon trennt, steht unbegrenzt (Gasse einzeln ~1530, O1 PORT G1 1368 / G2 1615, exe-Stelle 8 S3 468) | beide Lagen: jeder nahe Gorilla greift nach <= 450 NAH-fest an oder steht nachweislich an (kein freier Bissplatz); exe-Stelle 8 S3 <= 450; J-Pins unveraendert; Riegel mit Gegenprobe NB5 | Messen, WO er steht (Pad-Mitte/Pad-Kante, Kontaktcode, Sicht), Original-Sprungpfad A[4] Path A @0x80117ecc-8011802c lesen (Bedingungen, Richtung, Landung); Nah-Umweg auch ueber 0x10-Pads (A* mit Pad-Kanten wie `r36_uw_route`), Sprung = Original |
+| 2 | 354-Bilder-Wartezeit beginnt nach Anker-Reset (Rutschen an der Kante) und nach dem Tod des Partners neu (Nachruecken 588, exe nw12_schuss S2 532) | Nachruecken <= 450 nach dem Tod; exe nw12_schuss kein Gorilla > 450 NAH fest; J-Fenster bitgleich; Riegel prueft die Schranke | Messen, WAS den Zaehler zuruecksetzt (Spur je Bild); Zaehlung an den Fortschritt zu Leon koppeln bzw. Anstehen-Zeit anrechnen; J-Fenster mit derselben Zaehlung neu messen |
+| 3 | Dossier: NB5-OFFEN "Gleiten" gemessen falsch (Anstehen hinter G2), NB5 "Fuer den Nutzer" ohne Verzoegerung/Gassenmitte | beide Stellen nach Messung berichtigt | durchstreichen + berichtigen (Messwerte der Abnahme 5 2.2 und eigene) |
