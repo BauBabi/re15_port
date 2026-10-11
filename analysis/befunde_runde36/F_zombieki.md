@@ -1424,6 +1424,7 @@ Vorgaengers (`re15_pc_nb6b.exe`, Scratch F_nb6) sind gy.log-bitgleich zu den eig
 | NB5 (bits 0; bitgleich zu NB4 `s400d_k22.txt`) | 16352 | 242 | 125 |
 | NB6a (bits 3, Stand 5a02b824) | 17242 | 252 | **0** |
 | NB6b (bits 3, Stand c9f3a8eb, s. u.) | 17638 | 253 | **0** |
+| NB6c (bits 3, Seitenwaechter, Endstand, s. u.) | 17655 | 252 | **0** |
 
 Kein Gorilla steht mit NB6 noch >= 90 Bilder STILL (Anker 40: 125 -> 0). Das Anker-400-Mass steigt um 890/1286 Bilder: je Seed
 (`zg_diff_nb5_nb6a_nb6b.txt`) 4 besser / 4 schlechter / 44 bitgleich. Die zwei groessten Zuwaechse gemessen mit der neuen Spur je Bild
@@ -1477,3 +1478,15 @@ Bissplatz); kanon bitgleich (363 468 521 ..., Tod +1194, Anker 353); unit_r35_af
 **Riegel (NB6b)**: die Ostgasse-Pins messen jetzt die NAH-fest-Zeit VOR dem ersten Angriff (<= 450; das Mangel-1-Mass der Abnahme 5
 "greift nach hoechstens 450 Bildern NAH fest an") und lassen eine spaetere Wartezeit nur als Anstehen zu (`frei 0`) oder <= 450;
 neuer Pin "Stelle 8 verkeilt" (Gegenprobe Stand NB5 900/900 ohne Angriff; NB6 Angriff 112, Grund 13). 77 Pruefungen, 0 Fehler.
+
+### NB6c — Seitenwaechter der Korrektur (Stand nach c9f3a8eb)
+Die Regel "am Pad = am Anlaufpunkt" (NB6b) haette einen Gorilla, der das Pad von einer ANDEREN Seite als der Startseite des Wegs
+beruehrt (z. B. Westkante, Weg springt Sued -> Nord), auf die Pad-Mitte zulaufen lassen; an seiner Kante liefert FUN_8003b93c den Code
+seiner Seite (@0x8003ba8c), der Original-Sprung ginge quer ueber das Pad statt zu Leon. Deshalb gilt die Regel nur, wenn der
+Kontaktcode seiner Lage (`r36_seiten_code`, FUN_8001bf04 @0x8001bfa4/ac/e8/ec) gleich dem des Startknotens ist — oder er mit der Mitte
+im Pad steht (0xf8, dann Grund 14 mit dem Startseiten-Code). Fuer die Ostgasse (#36: Ost/West sind Wagenwaende) aendert das nichts:
+Sonden Gasse/O1/Stelle-3-Endlage/Stelle 8 Spur je 30 Bilder bitgleich zu NB6b (`nb6c_lage_*_m1_spur30.txt`), Nachruecken 505,
+kanon bitgleich (`nb6c_kanon.txt`), Riegel 77/77 (`nb6_riegel_direkt5.txt`), ctest 25/25 (`nb6_ctest_riegel_lauf4.txt`). Zufallsgang
+Anker 400: 17655 (NB6b 17638; ein Seed 0x9075ea6c 92 -> 109, Griffe 4 -> 3 — dort lag der Gorilla an einer anderen Seite als der
+Startknoten und laeuft nun zum Startknoten), Anker 40: 0, Griffe 252 (`seeds/zg_summen_nb6c.txt`). Die exe-Messreihe (33 Laeufe) wurde
+mit diesem Stand neu gefahren (Kopie `re15_pc_nb6h.exe`, Abschnitt "NB6 Messung nachher in der exe").

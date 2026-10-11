@@ -248,6 +248,12 @@ void re15_r36_affen_nah_enable(int an);         /* NUR Sonden (NB5): 0 = Stand N
 void re15_r36_affen_nb6_enable(int bits);       /* NUR Sonden (NB6): Bit 0 Nah-Umweg ueber 0x10-Pads, Bit 1 Nachruecken; 0 = Stand NB5 */
 int  re15_r36_affen_nah_grund(int slot);        /* NUR Sonden (NB6): letzte Antwort von r36_nah_route (Codes in zombieki_r36.c) */
 int  re15_r36_affen_bissplaetze_frei(int slot); /* NUR Sonden (NB6): freie Bissplatz-Knoten des Umweg-Rasters (0 = steht an) */
+/* NB6b (Fortsetzung nach dem Wochenlimit): im Nah-Umweg ueber ein 0x10-Pad gilt "am Anlaufpunkt" auch, wenn der Gorilla das Pad
+ * im Sinne der Box-Abfrage des Original-Pad-Sprungs erreicht hat (FUN_8003b93c(+0x34, box[6]+100, +0x82, 0x10) @0x80117ee0-f00),
+ * nicht erst am Raster-Startknoten der Pad-Kante. GEMESSEN (exe Stelle 3, Messschiene RE15_AFFEN_LOG): in der Ostgasse (1550 breit
+ * < 2 x 1600) liegt dieser Knoten 1970 ausserhalb der Muendung; der Gorilla an der Pad-Kante lief von Leon weg, kippte ueber 0x1771
+ * (FERN, Umweg geloescht) und zaehlte an der Kante neu — S2 griff nie an. Mit der Mitte im Pad (Code 0xf8 ohne Seite @0x8001bf74)
+ * springt er wie der Verkeilte mit dem Seitencode der Startseite (Grund 14). Nachher: Stelle 3 S2 Angriff F1651, Gasse einzeln 157. */
 
 /* ---- Nachbesserung 1, Mangel 2 (ROOM10B0 Terrasse): ZONENLOSER RE2-Zombie --------------------------
  * GEMESSEN (test_r36_zombieki_eintritt spur 10B0 1260 7 1 1): Steuerziel steer = (0,0) — die Terrasse liegt

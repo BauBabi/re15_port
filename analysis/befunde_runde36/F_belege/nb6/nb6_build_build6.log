@@ -1,0 +1,874 @@
+
+=== [local_build] Preflight — Toolchain messen
+    PATH   = /c/msys64/mingw64/bin:/c/Program Files/CMake/bin:/c/Python310/Scripts:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem
+    CC     = C:/msys64/mingw64/bin/gcc.exe
+    cmake  = /c/Program Files/CMake/bin/cmake
+    ninja  = /c/Python310/Scripts/ninja
+    ctest  = /c/Program Files/CMake/bin/ctest
+    cc1    = C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/cc1.exe
+    cc1 --version EXIT=0  -> Toolchain OK
+    Mini-Compile OK (95539 Bytes exe)
+
+=== [local_build] build — re15_port/build
+[0/1] Re-running CMake...
+-- RE15_ASSETS_PATH: C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/shared_assets/PSX
+CMake Warning (dev) at C:/Program Files/CMake/share/cmake-4.3/Modules/FetchContent.cmake:1386 (message):
+  The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+  not set.  The policy's OLD behavior will be used.  When using a URL
+  download, the timestamps of extracted files should preferably be that of
+  the time of extraction, otherwise code that depends on the extracted
+  contents might not be rebuilt if the URL changes.  The OLD behavior
+  preserves the timestamps from the archive instead, but this is usually not
+  what you want.  Update your project to the NEW behavior or specify the
+  DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+  robustness issue.
+Call Stack (most recent call first):
+  platform/pc/CMakeLists.txt:21 (FetchContent_Declare)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Deprecation Warning at build/_deps/sdl2-src/CMakeLists.txt:8 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+CMake Deprecation Warning at build/_deps/sdl2-src/CMakeLists.txt:3215 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- 
+-- SDL2 was configured with the following options:
+-- 
+-- Platform: Windows-10.0.26200
+-- 64-bit:   TRUE
+-- Compiler: C:/msys64/mingw64/bin/gcc.exe
+-- Revision: SDL-release-2.28.5-0-g15ead9a40
+-- 
+-- Subsystems:
+--   Atomic:	ON
+--   Audio:	ON
+--   Video:	ON
+--   Render:	ON
+--   Events:	ON
+--   Joystick:	ON
+--   Haptic:	ON
+--   Hidapi:	ON
+--   Power:	ON
+--   Threads:	ON
+--   Timers:	ON
+--   File:	ON
+--   Loadso:	ON
+--   CPUinfo:	ON
+--   Filesystem:	ON
+--   Sensor:	ON
+--   Locale:	ON
+--   Misc:	ON
+-- 
+-- Options:
+--   SDL2_DISABLE_INSTALL        (Wanted: ON): OFF
+--   SDL2_DISABLE_SDL2MAIN       (Wanted: OFF): OFF
+--   SDL2_DISABLE_UNINSTALL      (Wanted: OFF): OFF
+--   SDL_3DNOW                   (Wanted: ON): ON
+--   SDL_ALSA                    (Wanted: OFF): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: ON): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ARMSIMD                 (Wanted: OFF): OFF
+--   SDL_ARTS                    (Wanted: OFF): OFF
+--   SDL_ARTS_SHARED             (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: ON): ON
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: ON): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: OFF): OFF
+--   SDL_DIRECTFB                (Wanted: OFF): OFF
+--   SDL_DIRECTFB_SHARED         (Wanted: OFF): OFF
+--   SDL_DIRECTX                 (Wanted: ON): ON
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYVIDEO              (Wanted: ON): ON
+--   SDL_ESD                     (Wanted: OFF): OFF
+--   SDL_ESD_SHARED              (Wanted: OFF): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_FUSIONSOUND             (Wanted: OFF): OFF
+--   SDL_FUSIONSOUND_SHARED      (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: ON): ON
+--   SDL_HIDAPI                  (Wanted: ON): ON
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+--   SDL_HIDAPI_LIBUSB           (Wanted: OFF): OFF
+--   SDL_IBUS                    (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: OFF): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: OFF): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBSAMPLERATE           (Wanted: OFF): OFF
+--   SDL_LIBSAMPLERATE_SHARED    (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: ON): ON
+--   SDL_NAS                     (Wanted: OFF): OFF
+--   SDL_NAS_SHARED              (Wanted: OFF): OFF
+--   SDL_OFFSCREEN               (Wanted: ON): ON
+--   SDL_OPENGL                  (Wanted: ON): ON
+--   SDL_OPENGLES                (Wanted: ON): ON
+--   SDL_OSS                     (Wanted: OFF): OFF
+--   SDL_PIPEWIRE                (Wanted: OFF): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: ON): ON
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: OFF): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: OFF): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: ON): ON
+--   SDL_SSE2                    (Wanted: ON): ON
+--   SDL_SSE3                    (Wanted: ON): ON
+--   SDL_SSEMATH                 (Wanted: ON): ON
+--   SDL_STATIC_PIC              (Wanted: OFF): OFF
+--   SDL_SYSTEM_ICONV            (Wanted: ON): OFF
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_VENDOR_INFO             (Wanted: ): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: ON): ON
+--   SDL_WASAPI                  (Wanted: ON): ON
+--   SDL_WAYLAND                 (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_QT_TOUCH        (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: OFF): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+--   SDL_X11_XDBE                (Wanted: OFF): OFF
+--   SDL_X11_XFIXES              (Wanted: OFF): OFF
+--   SDL_X11_XINPUT              (Wanted: OFF): OFF
+--   SDL_X11_XRANDR              (Wanted: OFF): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+--   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+--   SDL_XINPUT                  (Wanted: ON): ON
+-- 
+--  CFLAGS:         -idirafter "C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/build/_deps/sdl2-src/src/video/khronos"
+--  EXTRA_CFLAGS:   -Wall -fno-strict-aliasing -Wdeclaration-after-statement -fvisibility=hidden -Wshadow -Wno-unused-local-typedefs -fdiagnostics-color=always -mmmx -m3dnow -msse -msse2 -msse3
+--  EXTRA_LDFLAGS:  -Wl,--no-undefined
+--  EXTRA_LIBS:    m;kernel32;user32;gdi32;winmm;imm32;ole32;oleaut32;version;uuid;advapi32;setupapi;shell32;dinput8
+-- 
+--  Build Shared Library: OFF
+--  Build Static Library: ON
+--  Build Static Library with Position Independent Code: OFF
+-- 
+-- Configuring done (1.4s)
+-- Generating done (1.5s)
+-- Build files have been written to: C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/build
+[1/674] Building C object tests/unit/CMakeFiles/test_r36_zombieki_affen.dir/test_r36_zombieki_affen.c.obj
+[2/674] Building C object tests/unit/CMakeFiles/test_r36_zombieki_eintritt.dir/test_r36_zombieki_eintritt.c.obj
+[3/674] Building C object tests/unit/CMakeFiles/test_r36_zombieki_sicht.dir/test_r36_zombieki_sicht.c.obj
+[4/674] Building C object engine/CMakeFiles/re15_engine.dir/src/zombieki_r36.c.obj
+[5/674] Building C object tests/unit/CMakeFiles/test_r36_zombieki_affen_block.dir/test_r36_zombieki_affen_block.c.obj
+[6/674] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_zombie.c.obj
+[7/674] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_common.c.obj
+[8/674] Linking C static library engine\libre15_engine.a
+[9/674] Linking C executable tests\re15_tests.exe
+[10/674] Linking C executable tests\property\prop_rdt_filename.exe
+[11/674] Linking C executable tests\property\prop_fixpoint_precision.exe
+[12/674] Linking C executable tests\property\prop_tank_controls.exe
+[13/674] Linking C executable tests\property\prop_rdt_null_offset.exe
+[14/674] Linking C executable tests\property\prop_scd_pc_advance.exe
+[15/674] Linking C executable tests\property\prop_door_roundtrip.exe
+[16/674] Linking C executable tests\property\prop_bss_chunk.exe
+[17/674] Linking C executable tests\property\prop_point_in_poly.exe
+[18/674] Linking C executable tests\property\prop_zone_dispatch.exe
+[19/674] Linking C executable tests\property\prop_sca_collision.exe
+[20/674] Linking C executable tests\property\prop_savestate_cmp.exe
+[21/674] Linking C executable tests\property\prop_spawn_entered.exe
+[22/674] Linking C executable tests\unit\test_rdt_parser.exe
+[23/674] Linking C executable tests\unit\test_scd_opcodes.exe
+[24/674] Linking C executable tests\unit\test_member.exe
+[25/674] Linking C executable tests\unit\test_math_common.exe
+[26/674] Linking C executable tests\unit\test_room_load.exe
+[27/674] Linking C executable tests\unit\test_sca_parser.exe
+[28/674] Building C object platform/pc/CMakeFiles/re15_pc.dir/main.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/platform/pc/main.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/platform/pc/main.c:8669:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 8669 |                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/platform/pc/main.c:9965:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 9965 |                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/platform/pc/main.c:10344:58: warning: passing argument 1 of 're15_re2z_gore_part_matrix' discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+10344 |                         (void)re15_re2z_gore_part_matrix(npc, nbi,
+      |                                                          ^~~
+In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/include/re15_affen.h:75,
+                 from C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/platform/pc/main.c:76:
+C:/workspace/git/reAi_v2/.claude/worktrees/r36_zombieki/re15_port/include/re15_actor.h:1222:46: note: expected 're15_actor_t *' but argument is of type 'const re15_actor_t *'
+ 1222 | int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+      |                                ~~~~~~~~~~~~~~^
+[29/674] Linking C executable tests\unit\test_dog_ai.exe
+[30/674] Linking C executable tests\unit\test_room1140_spawn.exe
+[31/674] Linking C executable tests\unit\test_enemy_ai.exe
+[32/674] Linking C executable tests\unit\test_damage.exe
+[33/674] Linking C executable tests\unit\test_room1140_combat.exe
+[34/674] Linking C executable tests\unit\test_spider_ai.exe
+[35/674] Linking C executable tests\unit\test_crow_ai.exe
+[36/674] Linking C executable tests\unit\test_adult_spider_ai.exe
+[37/674] Linking C executable tests\unit\test_cockroach_ai.exe
+[38/674] Linking C executable tests\unit\test_npc_scd_pose.exe
+[39/674] Linking C executable tests\unit\test_maggot_ai.exe
+[40/674] Linking C executable tests\unit\test_npc_ai.exe
+[41/674] Linking C executable tests\unit\test_ems.exe
+[42/674] Linking C executable tests\unit\test_zgirl_ai.exe
+[43/674] Linking C executable tests\unit\test_weapon_select.exe
+[44/674] Linking C executable tests\unit\test_esp_parse.exe
+[45/674] Linking C executable tests\unit\test_inv_fsm.exe
+[46/674] Linking C executable tests\unit\test_item_icon.exe
+[47/674] Linking C executable tests\unit\test_writher_ai.exe
+[48/674] Linking C executable tests\unit\test_zombie_pose.exe
+[49/674] Linking C executable tests\unit\test_tyrant_ai.exe
+[50/674] Linking C executable tests\unit\test_alligator_ai.exe
+[51/674] Linking C executable tests\unit\test_birkin_ai.exe
+[52/674] Linking C executable tests\unit\test_ivy_ai.exe
+[53/674] Linking C executable tests\unit\test_fx_emitter_ai.exe
+[54/674] Linking C executable tests\unit\test_enemy_shootable.exe
+[55/674] Linking C executable tests\unit\test_aot_edge.exe
+[56/674] Linking C executable tests\unit\test_enemy_body_push.exe
+[57/674] Linking C executable tests\unit\test_scd_aot_opcodes.exe
+[58/674] Linking C executable tests\unit\test_aim_all_around.exe
+[59/674] Linking C executable tests\unit\test_slope_collision.exe
+[60/674] Linking C executable tests\unit\test_aim_lower_exit.exe
+[61/674] Linking C executable tests\unit\test_hit_reaction.exe
+[62/674] Linking C executable platform\pc\re15_pc.exe
+[63/674] Linking C executable tests\unit\test_scd_for2.exe
+[64/674] Linking C executable tests\unit\test_bleed_rng.exe
+[65/674] Linking C executable tests\unit\test_xa_decode.exe
+[66/674] Linking C executable tests\unit\test_rvd_scan_order.exe
+[67/674] Linking C executable tests\unit\test_em_status_persist.exe
+[68/674] Linking C executable tests\unit\test_audio_decode.exe
+[69/674] Linking C executable tests\unit\test_getup_advance.exe
+[70/674] Linking C executable tests\unit\test_scd_dir_set.exe
+[71/674] Linking C executable tests\unit\test_collision_layers.exe
+[72/674] Linking C executable tests\unit\test_anim_pose_order.exe
+[73/674] Linking C executable tests\unit\test_savepoint.exe
+[74/674] Linking C executable tests\unit\test_savedata.exe
+[75/674] Linking C executable tests\unit\test_msg_dialog.exe
+[76/674] Linking C executable tests\unit\test_action_msg_gate.exe
+[77/674] Linking C executable tests\unit\test_camera_view.exe
+[78/674] Linking C executable tests\unit\test_flag_gate.exe
+[79/674] Linking C executable tests\unit\test_scd_flag_fade.exe
+[80/674] Linking C executable tests\unit\test_inv_grant.exe
+[81/674] Linking C executable tests\unit\test_scd_key_ck.exe
+[82/674] Linking C executable tests\unit\test_rotmatrix.exe
+[83/674] Linking C executable tests\unit\test_squareroot0.exe
+[84/674] Linking C executable tests\unit\test_enemy_attack_reach.exe
+[85/674] Linking C executable tests\unit\test_catan.exe
+[86/674] Linking C executable tests\unit\test_item_modal.exe
+[87/674] Linking C executable tests\unit\test_item_use.exe
+[88/674] Linking C executable tests\unit\test_dog_aim_band.exe
+[89/674] Linking C executable tests\unit\test_writher_hit_feedback.exe
+[90/674] Linking C executable tests\unit\test_item_stack_press.exe
+[91/674] Linking C executable tests\unit\test_weste_effekt.exe
+[92/674] Linking C executable tests\unit\test_sherry_wall_pin.exe
+[93/674] Linking C executable tests\unit\test_montage_fx.exe
+[94/674] Linking C executable tests\unit\test_dormant_activation.exe
+[95/674] Linking C executable tests\unit\test_map_re2_system.exe
+[96/674] Linking C executable tests\unit\test_map_orient.exe
+[97/674] Linking C executable tests\unit\test_map_mark_band.exe
+[98/674] Linking C executable tests\unit\test_maggot_bone_square.exe
+[99/674] Linking C executable tests\unit\test_map_floor_visited.exe
+[100/674] Linking C executable tests\unit\test_map_durchgang.exe
+[101/674] Linking C executable tests\unit\test_map_marker_innen.exe
+[102/674] Linking C executable tests\unit\test_map_innenwand.exe
+[103/674] Linking C executable tests\unit\test_map_etagenzeile.exe
+[104/674] Linking C executable tests\unit\test_map_synth.exe
+[105/674] Linking C executable tests\unit\test_map_teilbereich.exe
+[106/674] Linking C executable tests\unit\test_pad_remap.exe
+[107/674] Linking C executable tests\unit\test_room1150_itembox.exe
+[108/674] Linking C executable tests\unit\test_map_zone_bits.exe
+[109/674] Linking C executable tests\unit\test_itembox_transfer.exe
+[110/674] Linking C executable tests\unit\probe_re2z_hierarchie.exe
+[111/674] Linking C executable tests\unit\test_itembox_screen.exe
+[112/674] Linking C executable tests\unit\test_aot_sce_census.exe
+[113/674] Linking C executable tests\unit\test_re2_room1140_ab.exe
+[114/674] Linking C executable tests\unit\test_re2_dog_ai.exe
+[115/674] Linking C executable tests\unit\test_re2_zombie_ai.exe
+[116/674] Linking C executable tests\unit\test_se_pitch.exe
+[117/674] Linking C executable tests\unit\test_re2_crow_ai.exe
+[118/674] Linking C executable tests\unit\test_re2_room1190_ab.exe
+[119/674] Linking C executable tests\unit\test_re2_room10c0_ab.exe
+[120/674] Linking C executable tests\unit\test_crow_fixes.exe
+[121/674] Linking C executable tests\unit\test_wound_accumulator.exe
+[122/674] Linking C executable tests\unit\test_zombie_hit_fixes.exe
+[123/674] Linking C executable tests\unit\probe_bite_fx.exe
+[124/674] Linking C executable tests\unit\probe_crow_1170.exe
+[125/674] Linking C executable tests\unit\probe_stair_10a0.exe
+[126/674] Linking C executable tests\unit\probe_zombie_hit.exe
+[127/674] Linking C executable tests\unit\probe_stair_cam_1060.exe
+[128/674] Linking C executable tests\unit\probe_elliot_1170_run.exe
+[129/674] Linking C executable tests\unit\probe_stair_cam_chain.exe
+[130/674] Linking C executable tests\unit\probe_marvin_10d0.exe
+[131/674] Linking C executable tests\unit\probe_stair_cam_10a0.exe
+[132/674] Linking C executable tests\unit\test_debug_menu.exe
+[133/674] Linking C executable tests\unit\probe_stair_1170.exe
+[134/674] Linking C executable tests\unit\probe_zlyer_10d0.exe
+[135/674] Linking C executable tests\unit\probe_crow_kill.exe
+[136/674] Linking C executable tests\unit\probe_save_counter.exe
+[137/674] Linking C executable tests\unit\probe_crow_flinch.exe
+[138/674] Linking C executable tests\unit\probe_save_room_name.exe
+[139/674] Linking C executable tests\unit\probe_crow_death.exe
+[140/674] Linking C executable tests\unit\probe_headlook_10d0.exe
+[141/674] Linking C executable tests\unit\probe_save_injured.exe
+[142/674] Linking C executable tests\unit\probe_door_1170.exe
+[143/674] Linking C executable tests\unit\probe_zreentry_10d0.exe
+[144/674] Linking C executable tests\unit\probe_marvin_spawn.exe
+[145/674] Linking C executable tests\unit\probe_em40_gait.exe
+[146/674] Linking C executable tests\unit\probe_room1040_switch.exe
+[147/674] Linking C executable tests\unit\probe_sicherung_1150.exe
+[148/674] Linking C executable tests\unit\probe_marvin_render_pose.exe
+[149/674] Linking C executable tests\unit\probe_room1070_wake.exe
+[150/674] Linking C executable tests\unit\probe_cut_1030.exe
+[151/674] Linking C executable tests\unit\probe_camload_1030.exe
+[152/674] Linking C executable tests\unit\probe_load_after_death.exe
+[153/674] Linking C executable tests\unit\probe_cut_replace_1030.exe
+[154/674] Linking C executable tests\unit\probe_hitdoor_entry_anim.exe
+[155/674] Linking C executable tests\unit\probe_rvd_diff_10a0.exe
+[156/674] Linking C executable tests\unit\probe_stair_eject_10a0.exe
+[157/674] Linking C executable tests\unit\probe_lane_d_traj1060.exe
+[158/674] Linking C executable tests\unit\probe_cam_1030_reentry.exe
+[159/674] Linking C executable tests\unit\probe_lanea_1060_zonepath.exe
+[160/674] Linking C executable tests\unit\probe_lanee_chain_1060.exe
+[161/674] Linking C executable tests\unit\probe_laneF_floor_1060.exe
+[162/674] Linking C executable tests\unit\probe_lb_stairfsm.exe
+[163/674] Linking C executable tests\unit\probe_lanee_reach_1060.exe
+[164/674] Linking C executable tests\unit\probe_lanea_1060_margin.exe
+[165/674] Linking C executable tests\unit\probe_lanee_margin_1060.exe
+[166/674] Linking C executable tests\unit\probe_lanec_camscan_1060.exe
+[167/674] Linking C executable tests\unit\probe_laneF_floorgate_rooms.exe
+[168/674] Linking C executable tests\unit\probe_lanee_eject_census.exe
+[169/674] Linking C executable tests\unit\probe_laneF_gap_1060.exe
+[170/674] Linking C executable tests\unit\probe_adv_stairband_1060.exe
+[171/674] Linking C executable tests\unit\probe_adv_ejectcam_1060.exe
+[172/674] Linking C executable tests\unit\probe_advc_chain1060.exe
+[173/674] Linking C executable tests\unit\probe_advF_ejectcam_1060.exe
+[174/674] Linking C executable tests\unit\probe_advz_cause_1060.exe
+[175/674] Linking C executable tests\unit\probe_stair_hwtruth_1060.exe
+[176/674] Linking C executable tests\unit\probe_laneE_1030_visible.exe
+[177/674] Linking C executable tests\unit\probe_refA_gaitcause_1060.exe
+[178/674] Linking C executable tests\unit\probe_laned_1030_spawn.exe
+[179/674] Linking C executable tests\unit\probe_laneb_1030_horde.exe
+[180/674] Linking C executable tests\unit\probe_elevator_1080.exe
+[181/674] Linking C executable tests\unit\probe_objnotch_census.exe
+[182/674] Linking C executable tests\unit\probe_lanea_1030_cap.exe
+[183/674] Linking C executable tests\unit\probe_gate_1030.exe
+[184/674] Linking C executable tests\unit\probe_gen_11f0.exe
+[185/674] Linking C executable tests\unit\probe_1030_spawncap.exe
+[186/674] Linking C executable tests\unit\probe_laneE_gatemask.exe
+[187/674] Linking C executable tests\unit\probe_adv_1030_verify.exe
+[188/674] Linking C executable tests\unit\test_crawl_toggle.exe
+[189/674] Linking C executable tests\unit\probe_gegenprobe_hund_luftzeile.exe
+[190/674] Linking C executable tests\unit\probe_re2_dog_hitwindow.exe
+[191/674] Linking C executable tests\unit\probe_crawl_commit.exe
+[192/674] Linking C executable tests\unit\probe_dog_hit.exe
+[193/674] Linking C executable tests\unit\probe_espr_11e0.exe
+[194/674] Linking C executable tests\unit\probe_dog_devour.exe
+[195/674] Linking C executable tests\unit\test_re2_ems.exe
+[196/674] Linking C executable tests\unit\test_re2_enemse.exe
+[197/674] Linking C executable tests\unit\test_neck_headlook.exe
+[198/674] Linking C executable tests\unit\test_lane_b1_ai.exe
+[199/674] Linking C executable tests\unit\test_text_freeze.exe
+[200/674] Linking C executable tests\unit\test_re2_sfx_cadence.exe
+[201/674] Linking C executable tests\unit\test_room_transition_cmd.exe
+[202/674] Linking C executable tests\unit\probe_1140_reentry.exe
+[203/674] Linking C executable tests\unit\probe_irons_neck_1150.exe
+[204/674] Linking C executable tests\unit\test_irons_neck_1150.exe
+[205/674] Linking C executable tests\unit\probe_10d0_knockse.exe
+[206/674] Linking C executable tests\unit\test_zombie_bank_sfx.exe
+[207/674] Linking C executable tests\unit\probe_ab_se_10d0_1140.exe
+[208/674] Linking C executable tests\unit\test_zombie_se_ab_10d0.exe
+[209/674] Linking C executable tests\unit\test_knockdown_frontback.exe
+[210/674] Linking C executable tests\unit\test_anim_rate.exe
+[211/674] Linking C executable tests\unit\test_se_voice_machine.exe
+[212/674] Linking C executable tests\unit\probe_re2_livepath.exe
+[213/674] Linking C executable tests\unit\probe_stagger_fall_1140.exe
+[214/674] Linking C executable tests\unit\test_anim_reverse_se.exe
+[215/674] Linking C executable tests\unit\test_rotor_bgm_pin.exe
+[216/674] Linking C executable tests\unit\test_re2_weapon_rows.exe
+[217/674] Linking C executable tests\unit\test_re2_enemse_bank.exe
+[218/674] Linking C executable tests\unit\test_zombie_getup_se.exe
+[219/674] Linking C executable tests\unit\test_knockdown_handoff.exe
+[220/674] Linking C executable tests\unit\test_re2_gore.exe
+[221/674] Linking C executable tests\unit\test_re2_hit_reaction.exe
+[222/674] Linking C executable tests\unit\test_re2_spider_ai.exe
+[223/674] Linking C executable tests\unit\test_re2_gore_fly.exe
+[224/674] Linking C executable tests\unit\test_re2_room1090_ab.exe
+[225/674] Linking C executable tests\unit\test_re2_gore_render.exe
+[226/674] Linking C executable tests\unit\test_re2_spider_water_2090.exe
+[227/674] Linking C executable tests\unit\probe_hund_ersttreffer2.exe
+[228/674] Linking C executable tests\unit\probe_hund_ersttreffer.exe
+[229/674] Linking C executable tests\unit\probe_re2_hitpath.exe
+[230/674] Linking C executable tests\unit\test_re2_hit_repeat.exe
+[231/674] Linking C executable tests\unit\test_re2_hit_repeat_crow_spider.exe
+[232/674] Linking C executable tests\unit\probe_re2_hit_crow_spider.exe
+[233/674] Linking C executable tests\unit\test_re2_hybrid_rig.exe
+[234/674] Linking C executable tests\unit\probe_re2_baby_spider_hit.exe
+[235/674] Linking C executable tests\unit\probe_re2_stagger.exe
+[236/674] Linking C executable tests\unit\test_re2_baby_spider_dmg.exe
+[237/674] Linking C executable tests\unit\test_re2_hp_model.exe
+[238/674] Linking C executable tests\unit\probe_schrot_bauch_y.exe
+[239/674] Linking C executable tests\unit\probe_re2_hp_model.exe
+[240/674] Linking C executable tests\unit\test_re2_stagger_knockdown.exe
+[241/674] Linking C executable tests\unit\test_re2_dog_hp_reroll.exe
+[242/674] Linking C executable tests\unit\test_re2_crow_se_bank.exe
+[243/674] Linking C executable tests\unit\probe_re2_zfall.exe
+[244/674] Linking C executable tests\unit\test_re15_zombie_death_anim.exe
+[245/674] Linking C executable tests\unit\probe_re15_zdeath.exe
+[246/674] Linking C executable tests\unit\test_re2_dog_playdead_gate.exe
+[247/674] Linking C executable tests\unit\test_re2_zombie_hitfilter.exe
+[248/674] Linking C executable tests\unit\test_re15_re2z_import.exe
+[249/674] Linking C executable tests\unit\probe_re15_gore_import.exe
+[250/674] Linking C executable tests\unit\test_re2_zombie_death_fall.exe
+[251/674] Linking C executable tests\unit\probe_lyer_1140.exe
+[252/674] Linking C executable tests\unit\test_re15_re2z_gore_se.exe
+[253/674] Linking C executable tests\unit\test_re2_lyer_1140.exe
+[254/674] Linking C executable tests\unit\probe_1140_feeder_shot.exe
+[255/674] Linking C executable tests\unit\probe_re2z_abc.exe
+[256/674] Linking C executable tests\unit\test_1140_straight_shot.exe
+[257/674] Linking C executable tests\unit\test_1090_room_pin.exe
+[258/674] Linking C executable tests\unit\probe_1090_objects.exe
+[259/674] Linking C executable tests\unit\probe_re2z_sperre29.exe
+[260/674] Linking C executable tests\unit\probe_re2z_gegen13.exe
+[261/674] Linking C executable tests\unit\probe_1090_push.exe
+[262/674] Linking C executable tests\unit\probe_re2_victim_pose.exe
+[263/674] Linking C executable tests\unit\test_re2_victim_collapse.exe
+[264/674] Linking C executable tests\unit\probe_re2_crawl_gate.exe
+[265/674] Linking C executable tests\unit\probe_gen_11f0_cursor_view.exe
+[266/674] Linking C executable tests\unit\test_prop_texel_key_11f0.exe
+[267/674] Linking C executable tests\unit\test_re2_zombie_abc.exe
+[268/674] Linking C executable tests\unit\test_re2_crawler.exe
+[269/674] Linking C executable tests\unit\test_1090_push_pin.exe
+[270/674] Linking C executable tests\unit\test_1090_fire_pin.exe
+[271/674] Linking C executable tests\unit\probe_1030_crawl_live.exe
+[272/674] Linking C executable tests\unit\test_1030_trigger_chain.exe
+[273/674] Linking C executable tests\unit\probe_1030_stuck_who.exe
+[274/674] Linking C executable tests\unit\probe_1030_tempo_weiche.exe
+[275/674] Linking C executable tests\unit\probe_1030_bandsweep.exe
+[276/674] Linking C executable tests\unit\probe_pruef_tempoursache.exe
+[277/674] Linking C executable tests\unit\probe_sca_contact90.exe
+[278/674] Linking C executable tests\unit\probe_sca_wall_hit.exe
+[279/674] Linking C executable tests\unit\probe_re2_ztear.exe
+[280/674] Linking C executable tests\unit\probe_1090_push_anim.exe
+[281/674] Linking C executable tests\unit\test_re2_zombie_teardeath.exe
+[282/674] Linking C executable tests\unit\probe_1090_gate_selfdoor.exe
+[283/674] Linking C executable tests\unit\probe_texel_key_census.exe
+[284/674] Linking C executable tests\unit\probe_dog_victim_pose.exe
+[285/674] Linking C executable tests\unit\probe_1090_cutscene.exe
+[286/674] Linking C executable tests\unit\probe_11f0_cut_after_puzzle.exe
+[287/674] Linking C executable tests\unit\test_tim_texel_key_rule.exe
+[288/674] Linking C executable tests\unit\probe_re2z_fallstand.exe
+[289/674] Linking C executable tests\unit\probe_1090_trigger_walk.exe
+[290/674] Linking C executable tests\unit\probe_dog_attack_live.exe
+[291/674] Linking C executable tests\unit\test_dog_grab_anchor.exe
+[292/674] Linking C executable tests\unit\test_cam_selfheal.exe
+[293/674] Linking C executable tests\unit\probe_re2z_deathgetup.exe
+[294/674] Linking C executable tests\unit\test_plc_back_yaw_1090.exe
+[295/674] Linking C executable tests\unit\test_re2_zombie_pose_bank.exe
+[296/674] Linking C executable tests\unit\probe_re2z_corpse.exe
+[297/674] Linking C executable tests\unit\test_re2z_death_getup.exe
+[298/674] Linking C executable tests\unit\probe_re2_dog_kill.exe
+[299/674] Linking C executable tests\unit\test_npc_back_walk.exe
+[300/674] Linking C executable tests\unit\test_re2z_corpse_pool.exe
+[301/674] Linking C executable tests\unit\probe_1090_climb.exe
+[302/674] Linking C executable tests\unit\test_re2_dog_jaw_contact.exe
+[303/674] Linking C executable tests\unit\probe_re2_crow_shadow.exe
+[304/674] Linking C executable tests\unit\probe_re2_aim4.exe
+[305/674] Linking C executable tests\unit\test_1090_climb_pin.exe
+[306/674] Linking C executable tests\unit\test_re2_crow_shadow_release.exe
+[307/674] Linking C executable tests\unit\probe_dogwound_zknock.exe
+[308/674] Linking C executable tests\unit\test_re2_dog_grab_anchor.exe
+[309/674] Linking C executable tests\unit\probe_11f0_escape_sweep.exe
+[310/674] Linking C executable tests\unit\test_rvd_scan_oracle.exe
+[311/674] Linking C executable tests\unit\test_cut_old_displayed.exe
+[312/674] Linking C executable tests\unit\test_fade_step0_hold.exe
+[313/674] Linking C executable tests\unit\probe_11f0_escape_during.exe
+[314/674] Linking C executable tests\unit\test_rvd_scan_ungated_by_climb.exe
+[315/674] Linking C executable tests\unit\probe_re15_poise_re2.exe
+[316/674] Linking C executable tests\unit\probe_11f0_puzzle_pos.exe
+[317/674] Linking C executable tests\unit\test_scd_zone2_pauseflags.exe
+[318/674] Linking C executable tests\unit\test_re15_poise_re2_import.exe
+[319/674] Linking C executable tests\unit\probe_re2z_crawl_attack.exe
+[320/674] Linking C executable tests\unit\probe_re2z_devour.exe
+[321/674] Linking C executable tests\unit\probe_re2z_pushoff.exe
+[322/674] Linking C executable tests\unit\test_re2z_devour_anchor.exe
+[323/674] Linking C executable tests\unit\test_1090_stay_on_crate.exe
+[324/674] Linking C executable tests\unit\probe_plc_back_clip.exe
+[325/674] Linking C executable tests\unit\test_re2z_pushoff_crawl.exe
+[326/674] Linking C executable tests\unit\probe_re2_fatz_walkspot.exe
+[327/674] Linking C executable tests\unit\probe_10d0_situp_re2.exe
+[328/674] Linking C executable tests\unit\test_re2z_bump_walk.exe
+[329/674] Linking C executable tests\unit\probe_1090_flame_touch.exe
+[330/674] Linking C executable tests\unit\probe_rig_root_y.exe
+[331/674] Linking C executable tests\unit\test_ai_flavor_mixed.exe
+[332/674] Linking C executable tests\unit\probe_rig_sohle.exe
+[333/674] Linking C executable tests\unit\probe_10d0_float_y.exe
+[334/674] Linking C executable tests\unit\probe_re2z_stomp.exe
+[335/674] Linking C executable tests\unit\probe_1090_flinch_anim.exe
+[336/674] Linking C executable tests\unit\test_re2z_grab_core_se.exe
+[337/674] Linking C executable tests\unit\test_re2z_finisher_bite.exe
+[338/674] Linking C executable tests\unit\probe_1220_kriecher.exe
+[339/674] Linking C executable tests\unit\probe_1010_kriecher.exe
+[340/674] Linking C executable tests\unit\probe_item_model_1020.exe
+[341/674] Linking C executable tests\unit\probe_re2z_bandlock.exe
+[342/674] Linking C executable tests\unit\test_re2z_rise_hittable.exe
+[343/674] Linking C executable tests\unit\test_writher_kill_flag.exe
+[344/674] Linking C executable tests\unit\test_rig_root_fix.exe
+[345/674] Linking C executable tests\unit\test_1090_flame_out_pin.exe
+[346/674] Linking C executable tests\unit\test_re2doc_bildebene.exe
+[347/674] Linking C executable tests\unit\probe_1210_material.exe
+[348/674] Linking C executable tests\unit\probe_1090_flame_out.exe
+[349/674] Linking C executable tests\unit\test_npc_wall_clamp.exe
+[350/674] Linking C executable tests\unit\test_writher_abtauchen.exe
+[351/674] Linking C executable tests\unit\probe_1210_reach.exe
+[352/674] Linking C executable tests\unit\test_1090_nodraw_pin.exe
+[353/674] Linking C executable tests\unit\test_1090_npc_prop_push.exe
+[354/674] Linking C executable tests\unit\probe_1210_masken.exe
+[355/674] Linking C executable tests\unit\test_stage6_hintergrund.exe
+[356/674] Linking C executable tests\unit\probe_1210_wandgriff.exe
+[357/674] Linking C executable tests\unit\probe_1210_vakuanz.exe
+[358/674] Linking C executable tests\unit\probe_1210_geo.exe
+[359/674] Linking C executable tests\unit\probe_1210_trigger.exe
+[360/674] Linking C executable tests\unit\probe_1210_sound.exe
+[361/674] Linking C executable tests\unit\probe_1210_griff.exe
+[362/674] Linking C executable tests\unit\probe_ada_counter.exe
+[363/674] Linking C executable tests\unit\probe_1210_natur.exe
+[364/674] Linking C executable tests\unit\probe_ada_escort_anim.exe
+[365/674] Linking C executable tests\unit\probe_ada_kiste.exe
+[366/674] Linking C executable tests\unit\test_1210_gitterhaende.exe
+[367/674] Linking C executable tests\unit\probe_1210_cutcheck.exe
+[368/674] Linking C executable tests\unit\probe_1210_vak.exe
+[369/674] Linking C executable tests\unit\probe_ada_reach.exe
+[370/674] Linking C executable tests\unit\probe_1210_re2takt.exe
+[371/674] Linking C executable tests\unit\probe_ada_kiste_gegen.exe
+[372/674] Linking C executable tests\unit\probe_1090_vakgegen.exe
+[373/674] Linking C executable tests\unit\probe_1090_bgdiff.exe
+[374/674] Linking C executable tests\unit\probe_1210_vakgegen.exe
+[375/674] Linking C executable tests\unit\probe_1190_props.exe
+[376/674] Linking C executable tests\unit\test_1190_weste.exe
+[377/674] Linking C executable tests\unit\probe_1190_ruestung.exe
+[378/674] Linking C executable tests\unit\test_1190_ruestung.exe
+[379/674] Linking C executable tests\unit\test_sld_atlas.exe
+[380/674] Linking C executable tests\unit\probe_bg_dump.exe
+[381/674] Linking C executable tests\unit\probe_1190_texte.exe
+[382/674] Linking C executable tests\unit\probe_synchro_status.exe
+[383/674] Linking C executable tests\unit\probe_hund_bellen.exe
+[384/674] Linking C executable tests\unit\test_synchro_stimme.exe
+[385/674] Linking C executable tests\unit\test_audio_sperren.exe
+[386/674] Linking C executable tests\unit\test_map_marke_auf_kunst.exe
+[387/674] Linking C executable tests\unit\test_map_tuerachse.exe
+[388/674] Linking C executable tests\unit\probe_gorilla_11c0_stuck.exe
+[389/674] Linking C executable tests\unit\test_map_etagen_rect.exe
+[390/674] Linking C executable tests\unit\test_re2_crow_kill_cmd3.exe
+[391/674] Linking C executable tests\unit\test_map_marke_haengt_an.exe
+[392/674] Linking C executable tests\unit\probe_re2_crow_kill.exe
+[393/674] Linking C executable tests\unit\test_re2z_spawn_seed.exe
+[394/674] Linking C executable tests\unit\test_pri_kopfschnitt.exe
+[395/674] Linking C executable tests\unit\test_maggot_zone_leap.exe
+[396/674] Linking C executable tests\unit\test_map_eingemessen.exe
+[397/674] Linking C executable tests\unit\probe_re2_crow_1120.exe
+[398/674] Linking C executable tests\unit\test_pri_eingemessen.exe
+[399/674] Linking C executable tests\unit\probe_los_divergenz.exe
+[400/674] Linking C executable tests\unit\probe_sichtregion.exe
+[401/674] Linking C executable tests\unit\probe_re2_crow_10c0.exe
+[402/674] Linking C executable tests\unit\probe_nav_wirkung.exe
+[403/674] Linking C executable tests\unit\probe_re2_crow_bank.exe
+[404/674] Linking C executable tests\unit\test_re2_gore_decoder.exe
+[405/674] Linking C executable tests\unit\probe_gator_sweep.exe
+[406/674] Linking C executable tests\unit\test_g5_morph.exe
+[407/674] Linking C executable tests\unit\probe_5090_birkin_verify.exe
+[408/674] Linking C executable tests\unit\probe_5090_birkin.exe
+[409/674] Linking C executable tests\unit\probe_atlas_kollision.exe
+[410/674] Linking C executable tests\unit\probe_g5_tentakel.exe
+[411/674] Linking C executable tests\unit\probe_g5_boss.exe
+[412/674] Linking C executable tests\unit\probe_gator_fress.exe
+[413/674] Linking C executable tests\unit\probe_spinne_elevation.exe
+[414/674] Linking C executable tests\unit\probe_gator_maul.exe
+[415/674] Linking C executable tests\unit\test_voice_ausreden.exe
+[416/674] Linking C executable tests\unit\probe_1030_grenzzyklus.exe
+[417/674] Linking C executable tests\unit\test_map_1090.exe
+[418/674] Linking C executable tests\unit\test_autofire_pin.exe
+[419/674] Linking C executable tests\unit\test_1210_arme.exe
+[420/674] Linking C executable tests\unit\probe_stimme_takt.exe
+[421/674] Linking C executable tests\unit\probe_res223_test.exe
+[422/674] Linking C executable tests\unit\probe_re2z_tempobit.exe
+[423/674] Linking C executable tests\unit\probe_re2_stepsize.exe
+[424/674] Linking C executable tests\unit\probe_tempo_gegenpruefung.exe
+[425/674] Linking C executable tests\unit\probe_wallstep.exe
+[426/674] Linking C executable tests\unit\probe_wallstep_gegen.exe
+[427/674] Linking C executable tests\unit\probe_wrapgain_check.exe
+[428/674] Linking C executable tests\unit\probe_verify_fatcadence.exe
+[429/674] Linking C executable tests\unit\probe_re2_kfjump.exe
+[430/674] Linking C executable tests\unit\probe_1030_gegenpruefung.exe
+[431/674] Linking C executable tests\unit\probe_verify_step_tunnel.exe
+[432/674] Linking C executable tests\unit\probe_1030_gz_verify.exe
+[433/674] Linking C executable tests\unit\probe_gegen_dkf2.exe
+[434/674] Linking C executable tests\unit\probe_sperre_schiene.exe
+[435/674] Linking C executable tests\unit\probe_re2z_block.exe
+[436/674] Linking C executable tests\unit\probe_marke_treffbar.exe
+[437/674] Linking C executable tests\unit\probe_verify_portklemme.exe
+[438/674] Linking C executable tests\unit\probe_hund_trefferluecke.exe
+[439/674] Linking C executable tests\unit\probe_gegen_1d3fenster.exe
+[440/674] Linking C executable tests\unit\probe_verify_hund_abzugzaehlung.exe
+[441/674] Linking C executable tests\unit\probe_verify_sperre_dauer.exe
+[442/674] Linking C executable tests\unit\probe_abzug_takt.exe
+[443/674] Linking C executable tests\unit\probe_verify_hundsperre.exe
+[444/674] Linking C executable tests\unit\probe_gegen_hundsperre.exe
+[445/674] Linking C executable tests\unit\probe_gegen_hundsperre2.exe
+[446/674] Linking C executable tests\unit\probe_1d3gate_hang.exe
+[447/674] Linking C executable tests\unit\probe_1d3_zensus.exe
+[448/674] Linking C executable tests\unit\probe_1d3gate_verify.exe
+[449/674] Linking C executable tests\unit\probe_1d3_gate_hang.exe
+[450/674] Linking C executable tests\unit\probe_skept_kraehe_takt.exe
+[451/674] Linking C executable tests\unit\probe_1050_maskentiefe.exe
+[452/674] Linking C executable tests\unit\probe_hund_takt_nachmessung.exe
+[453/674] Linking C executable tests\unit\probe_re2z_unterhaelfte.exe
+[454/674] Linking C executable tests\unit\probe_v_einbauweg_93.exe
+[455/674] Linking C executable tests\unit\probe_1230_hundetod.exe
+[456/674] Linking C executable tests\unit\probe_gator_maul_gegen.exe
+[457/674] Linking C executable tests\unit\probe_maul_gegen.exe
+[458/674] Linking C executable tests\unit\probe_1050_gegen.exe
+[459/674] Linking C executable tests\unit\probe_re2_dog_deathpose.exe
+[460/674] Linking C executable tests\unit\probe_gator_maul_lokal.exe
+[461/674] Linking C executable tests\unit\probe_gator_maul_x.exe
+[462/674] Linking C executable tests\unit\probe_5090_lang.exe
+[463/674] Linking C executable tests\unit\probe_gator_anker_nachmess.exe
+[464/674] Linking C executable tests\unit\probe_gator_fress_anker.exe
+[465/674] Linking C executable tests\unit\probe_verify_gator_scale.exe
+[466/674] Linking C executable tests\unit\probe_verify_ankery.exe
+[467/674] Linking C executable tests\unit\probe_verify_p3stand.exe
+[468/674] Linking C executable tests\unit\probe_p3_clip11_check.exe
+[469/674] Linking C executable tests\unit\probe_elevator_4020_full.exe
+[470/674] Linking C executable tests\unit\probe_verify_kfpfad.exe
+[471/674] Linking C executable tests\unit\probe_elevator_1080_full.exe
+[472/674] Linking C executable tests\unit\probe_v_maul_gegen.exe
+[473/674] Linking C executable tests\unit\test_p2_1210_arme_re2.exe
+[474/674] Linking C executable tests\unit\test_r16_liegende_unschiessbar.exe
+[475/674] Linking C executable tests\unit\probe_p2_birkin_g5.exe
+[476/674] Linking C executable tests\unit\test_karte_besitz.exe
+[477/674] Linking C executable tests\unit\probe_p3_gator_maul.exe
+[478/674] Linking C executable tests\unit\probe_p2_atlas_dump.exe
+[479/674] Linking C executable tests\unit\test_p2_kriecher1010.exe
+[480/674] Linking C executable tests\unit\test_pri_silhouette.exe
+[481/674] Linking C executable tests\unit\test_r16_aufstehen_schuss.exe
+[482/674] Linking C executable tests\unit\probe_p3_birkin_rest.exe
+[483/674] Linking C executable tests\unit\probe_p2_floor_dump.exe
+[484/674] Linking C executable tests\unit\probe_p3_gator_lunge.exe
+[485/674] Linking C executable tests\unit\probe_p3_spider_stalk.exe
+[486/674] Linking C executable tests\unit\probe_p3_restposten.exe
+[487/674] Linking C executable tests\unit\probe_r16_birkin_g5.exe
+[488/674] Linking C executable tests\unit\probe_r16_arme_1210_re2.exe
+[489/674] Linking C executable tests\unit\probe_r16_aufstehen_schuss.exe
+[490/674] Linking C executable tests\unit\probe_r16_gator_se.exe
+[491/674] Linking C executable tests\unit\probe_r16_gator_finisher_anker.exe
+[492/674] Linking C executable tests\unit\probe_r16_spider_se.exe
+[493/674] Linking C executable tests\unit\probe_r16_sk_arme_1210_re2.exe
+[494/674] Linking C executable tests\unit\probe_r16_objekte_paket.exe
+[495/674] Linking C executable tests\unit\probe_r16_kriecher1010.exe
+[496/674] Linking C executable tests\unit\probe_r16_liegende_zombies.exe
+[497/674] Linking C executable tests\unit\probe_r16_sk_birkin_g5.exe
+[498/674] Linking C executable tests\unit\probe_r16_sk_kriecher_1010.exe
+[499/674] Linking C executable tests\unit\probe_r16_pri_masken_audit.exe
+[500/674] Linking C executable tests\unit\probe_r16_sk_gator_finisher_sounds.exe
+[501/674] Linking C executable tests\unit\probe_r16_sk_liegende_zombies.exe
+[502/674] Linking C executable tests\unit\probe_r16_sk_objekte_paket.exe
+[503/674] Linking C executable tests\unit\probe_r16_skept2_liegende_zombies.exe
+[504/674] Linking C executable tests\unit\probe_r16_trefferhoehe.exe
+[505/674] Linking C executable tests\unit\probe_r16_tuer1040.exe
+[506/674] Linking C executable tests\unit\probe_r16_sk_tuer_animation_1040.exe
+[507/674] Linking C executable tests\unit\probe_r17_weste_karte.exe
+[508/674] Linking C executable tests\unit\probe_r16_sk_trefferhoehe.exe
+[509/674] Linking C executable tests\unit\probe_r17_birkin_1zu1.exe
+[510/674] Linking C executable tests\unit\probe_r17_cursor_klick.exe
+[511/674] Linking C executable tests\unit\probe_r17_munition.exe
+[512/674] Linking C executable tests\unit\probe_r17_untertitel.exe
+[513/674] Linking C executable tests\unit\test_r18_ada_eintritt_1050.exe
+[514/674] Linking C executable tests\unit\probe_r17_waffen_loop.exe
+[515/674] Linking C executable tests\unit\probe_r18_birkin_rest.exe
+[516/674] Linking C executable tests\unit\r19_marke3_1050_c1_tiefe.exe
+[517/674] Linking C executable tests\unit\probe_irons_mittelmodell.exe
+[518/674] Linking C executable tests\unit\test_r19_marke1_10d0_c1.exe
+[519/674] Linking C executable tests\unit\test_r19_zerreiss_10e0c7.exe
+[520/674] Linking C executable tests\unit\r19b_marke4_10d0_c7_zeilenmodell.exe
+[521/674] Linking C executable tests\unit\probe_r20_birkin_push.exe
+[522/674] Linking C executable tests\unit\probe_r21_tentakel_schub.exe
+[523/674] Linking C executable tests\unit\probe_r22_10f0_figur.exe
+[524/674] Linking C executable tests\unit\probe_r22_codepanel_reihenfolge.exe
+[525/674] Linking C executable tests\unit\probe_eintritt_pose_einmal.exe
+[526/674] Linking C executable tests\unit\r21_discard_wegwerfen.exe
+[527/674] Linking C executable tests\unit\test_r26_kaefig_release0c.exe
+[528/674] Linking C executable tests\unit\probe_besitz_zensus.exe
+[529/674] Linking C executable tests\unit\probe_r26_inventar.exe
+[530/674] Linking C executable tests\unit\probe_m93r_nachladen.exe
+[531/674] Linking C executable tests\unit\probe_r26_mg_blut.exe
+[532/674] Linking C executable tests\unit\r26_panel_11f0.exe
+[533/674] Linking C executable tests\unit\probe_r26_pose80.exe
+[534/674] Linking C executable tests\unit\test_elev_se.exe
+[535/674] Linking C executable tests\unit\probe_r27_hund_biss.exe
+[536/674] Linking C executable tests\unit\r27_panel_schalterwerte.exe
+[537/674] Linking C executable tests\unit\test_r27_ada_cutscene_1050.exe
+[538/674] Linking C executable tests\unit\test_r27_hund_wandtrieb.exe
+[539/674] Linking C executable tests\unit\probe_r28_messer_dauerschlag.exe
+[540/674] Linking C executable tests\unit\probe_r30_android_n1_inventar_cmd.exe
+[541/674] Linking C executable tests\unit\probe_r30_android_r1_toggle.exe
+[542/674] Linking C executable tests\unit\probe_r30_elza_intro.exe
+[543/674] Linking C executable tests\unit\probe_r29_1d3_doppelabzug.exe
+[544/674] Linking C executable tests\unit\probe_r30_android_n3_plc_aim.exe
+[545/674] Linking C executable tests\unit\probe_r30_birkin_frost.exe
+[546/674] Linking C executable tests\unit\test_r30_elza_selbsttuer.exe
+[547/674] Linking C executable tests\unit\probe_r30_granate_karte.exe
+[548/674] Linking C executable tests\unit\probe_r30_granate.exe
+[549/674] Linking C executable tests\unit\probe_r30_hund_tod.exe
+[550/674] Linking C executable tests\unit\probe_r30_hund_tod_zensus.exe
+[551/674] Linking C executable tests\unit\probe_r30_irons_diary_dokument.exe
+[552/674] Linking C executable tests\unit\test_r30_irons_diary_ablauf.exe
+[553/674] Linking C executable tests\unit\probe_r30_irons-diary-welt.exe
+[554/674] Linking C executable tests\unit\probe_r30_irons_tisch_karte.exe
+[555/674] Linking C executable tests\unit\probe_r30_karte-3010_ton.exe
+[556/674] Linking C executable tests\unit\test_r30_irons_tisch_licht.exe
+[557/674] Linking C executable tests\unit\test_r30_irons_tisch.exe
+[558/674] Linking C executable tests\unit\probe_r30_karte-3010_ziel.exe
+[559/674] Linking C executable tests\unit\probe_r30_karten-marken.exe
+[560/674] Linking C executable tests\unit\test_r30_hinweis.exe
+[561/674] Linking C executable tests\unit\probe_r30_karte-3010.exe
+[562/674] Linking C executable tests\unit\test_map_marke_zid.exe
+[563/674] Linking C executable tests\unit\probe_r30_karten-marken_rundlauf.exe
+[564/674] Linking C executable tests\unit\test_map_speichern_laden.exe
+[565/674] Linking C executable tests\unit\test_r30_karte_nutzerstand.exe
+[566/674] Linking C executable tests\unit\probe_r30_n_room5080.exe
+[567/674] Linking C executable tests\unit\probe_r30_sicherung_modell.exe
+[568/674] Linking C executable tests\unit\test_r30_pfeil.exe
+[569/674] Linking C executable tests\unit\probe_r30_sicherung_nein.exe
+[570/674] Linking C executable tests\unit\probe_r30_sicherung_bild.exe
+[571/674] Linking C executable tests\unit\probe_r30_tuerse_bank.exe
+[572/674] Linking C executable tests\unit\probe_r30_sicherung_sitz.exe
+[573/674] Linking C executable tests\unit\test_r30_titel_blinken.exe
+[574/674] Linking C executable tests\unit\probe_r30_sicherung_karte.exe
+[575/674] Linking C executable tests\unit\probe_r30_tuer_verschlossen.exe
+[576/674] Linking C executable tests\unit\test_r30_tuer.exe
+[577/674] Linking C executable tests\unit\probe_r31_boxen.exe
+[578/674] Linking C executable tests\unit\r31_generator.exe
+[579/674] Linking C executable tests\unit\probe_r31_tueren.exe
+[580/674] Linking C executable tests\unit\probe_r30_zielfenster.exe
+[581/674] Linking C executable tests\unit\probe_r30b_muendung.exe
+[582/674] Linking C executable tests\unit\probe_r32_hebetisch_faecher.exe
+[583/674] Linking C executable tests\unit\probe_r31_hebetisch.exe
+[584/674] Linking C executable tests\unit\probe_r32_unterteilung.exe
+[585/674] Linking C executable tests\unit\probe_r32_tor.exe
+[586/674] Linking C executable tests\unit\test_r33_karte.exe
+[587/674] Linking C executable tests\unit\probe_r33_aufrufstelle.exe
+[588/674] Linking C executable tests\unit\probe_r33_speichern_karte.exe
+[589/674] Linking C executable tests\unit\probe_r33_speichern.exe
+[590/674] Linking C executable tests\unit\probe_r33_tueren.exe
+[591/674] Linking C executable tests\unit\test_r33_tuer1120.exe
+[592/674] Linking C executable tests\unit\probe_r34_plattform.exe
+[593/674] Linking C executable tests\unit\probe_r34_re2fx.exe
+[594/674] Linking C executable tests\unit\test_r31_tuer_ton.exe
+[595/674] Linking C executable tests\unit\probe_r34_re2fx_knochen.exe
+[596/674] Linking C executable tests\unit\probe_r34_re2fx_raum.exe
+[597/674] Linking C executable tests\unit\probe_r34_schaden.exe
+[598/674] Linking C executable tests\unit\probe_r34_re2fx_bild.exe
+[599/674] Linking C executable tests\unit\probe_r34_re2fx_pc.exe
+[600/674] Linking C executable tests\unit\probe_r34_reaktion.exe
+[601/674] Linking C executable tests\unit\probe_r34_wurf.exe
+[602/674] Linking C executable tests\unit\probe_r34_wasser.exe
+[603/674] Linking C executable tests\unit\test_r34n_a_rolltor.exe
+[604/674] Linking C executable tests\unit\probe_r34n_a_rolltor.exe
+[605/674] Linking C executable tests\unit\probe_r34n_d_adaruf.exe
+[606/674] Linking C executable tests\unit\probe_r34n_b_messung.exe
+[607/674] Linking C executable tests\unit\probe_r34n_b_cursor.exe
+[608/674] Linking C executable tests\unit\probe_r34n_c_generator.exe
+[609/674] Linking C executable tests\unit\test_r34n_d_adaruf.exe
+[610/674] Linking C executable tests\unit\probe_r34_plattform_ton.exe
+[611/674] Linking C executable tests\unit\probe_r34n_d_karte.exe
+[612/674] Linking C executable tests\unit\test_r34n_e_dokumente.exe
+[613/674] Linking C executable tests\unit\probe_r34n_e_dokumente.exe
+[614/674] Linking C executable tests\unit\probe_r34n_e_karte.exe
+[615/674] Linking C executable tests\unit\probe_r34n_g_sld.exe
+[616/674] Linking C executable tests\unit\probe_r34n_g_bss.exe
+[617/674] Linking C executable tests\unit\test_r34n_f_leiche.exe
+[618/674] Linking C executable tests\unit\probe_r34n_f_karte.exe
+[619/674] Linking C executable tests\unit\probe_r34n_f_leiche.exe
+[620/674] Linking C executable tests\unit\test_r35_cut10f0.exe
+[621/674] Linking C executable tests\unit\probe_r34n_g_karte.exe
+[622/674] Linking C executable tests\unit\probe_r34n_g_maskgrp.exe
+[623/674] Linking C executable tests\unit\probe_r35_cut10f0_karte.exe
+[624/674] Linking C executable tests\unit\test_r35_affen.exe
+[625/674] Linking C executable tests\unit\test_r35_cut1150.exe
+[626/674] Linking C executable tests\unit\probe_r35_cut1150_karte.exe
+[627/674] Linking C executable tests\unit\probe_r35_fenster.exe
+[628/674] Linking C executable tests\unit\test_elza_zweig.exe
+[629/674] Linking C executable tests\unit\test_r35_entladen.exe
+[630/674] Linking C executable tests\unit\probe_r35_entladen_karte.exe
+[631/674] Linking C executable tests\unit\test_r35_inhalt_doku.exe
+[632/674] Linking C executable tests\unit\test_r35_inhalt_zombies.exe
+[633/674] Linking C executable tests\unit\probe_r35_inhalt_tueren.exe
+[634/674] Linking C executable tests\unit\test_r35_inhalt_items.exe
+[635/674] Linking C executable tests\unit\test_r35_granate.exe
+[636/674] Linking C executable tests\unit\probe_r35_inhalt_karte.exe
+[637/674] Linking C executable tests\unit\probe_r35_karte.exe
+[638/674] Linking C executable tests\unit\test_r35_inventar1050.exe
+[639/674] Linking C executable tests\unit\test_r35_raeume_hundeschatten.exe
+[640/674] Linking C executable tests\unit\test_r35_raeume_ziel.exe
+[641/674] Linking C executable tests\unit\test_r35_raeume_arme.exe
+[642/674] Linking C executable tests\unit\probe_r35_raeume_re2orig.exe
+[643/674] Linking C executable tests\unit\probe_r35_raeume_arme.exe
+[644/674] Linking C executable tests\unit\probe_r35_raeume_trage_los.exe
+[645/674] Linking C executable tests\unit\test_r35_raeume_trage.exe
+[646/674] Linking C executable tests\unit\probe_r35_redhawk.exe
+[647/674] Linking C executable tests\unit\test_room1050_sicherung.exe
+[648/674] Linking C executable tests\unit\test_r35_werfer.exe
+[649/674] Linking C executable tests\unit\test_r35_zgirl.exe
+[650/674] Linking C executable tests\unit\test_r36_zombieki_wecker.exe
+[651/674] Linking C executable tests\unit\unit_door_seq.exe
+[652/674] Linking C executable tests\unit\test_r36_zombieki_szenen.exe
+[653/674] Linking C executable tests\unit\test_r35_werfer_kombi.exe
+[654/674] Linking C executable tests\unit\test_r36_zombieki_affen.exe
+[655/674] Linking C executable tests\unit\test_r36_zombieki_affen_block.exe
+[656/674] Linking C executable tests\unit\test_r36_zombieki_sicht.exe
+[657/674] Linking C executable tests\unit\test_r36_zombieki_eintritt.exe
+[658/674] Linking C executable tests\unit\probe_tor_1170_anfrage.exe
+[659/674] Linking C executable tests\integration\test_room_transition.exe
+[660/674] Linking C executable tests\integration\test_cross_stage.exe
+[661/674] Linking C executable tests\integration\test_headless_run.exe
+[662/674] Linking C executable tests\integration\test_door_traversal.exe
+[663/674] Linking C executable tests\integration\test_rvd_coverage.exe
+[664/674] Linking C executable tests\integration\test_map_raum_live.exe
+[665/674] Linking C executable tests\integration\test_map_uebergang.exe
+[666/674] Linking C executable tests\integration\test_room_probe_sweep.exe
+[667/674] Linking C executable tests\integration\test_door_lock.exe
+[668/674] Linking C executable tests\integration\test_item_name_census.exe
+[669/674] Linking C executable tests\integration\test_flag_census.exe
+[670/674] Linking C executable tests\integration\test_keydoor.exe
+[671/674] Linking C executable tests\integration\test_keypad.exe
+[672/674] Linking C executable tests\integration\test_fx_region_cull.exe
+[673/674] Linking C executable tests\integration\test_pri_masken.exe
+    build OK
+
+=== LOCAL-BUILD-OK (build)
+BUILD_RC=0

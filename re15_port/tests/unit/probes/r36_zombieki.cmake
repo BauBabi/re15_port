@@ -58,6 +58,9 @@ set_tests_properties(unit_r36_zombieki_affen PROPERTIES TIMEOUT 120)
 #                                  NB6 (Abnahme 5): Ostgasse "Gasse einzeln"/O1 (Nah-Umweg ueber das 0x10-Pad #36, Gegenprobe
 #                                  Modus 6 = Stand NB5), Nachruecken <= 450 Bilder nach dem Tod (Gegenprobe Stand NB5 588);
 #                                  Sonden `lage ... [kill_f kill_art [nb6-bits]]`, `platz <lx> <lz> [schritt] [ox oz]`.
+#                                  NB6b: Ostgasse-Pins messen NAH fest VOR dem ersten Angriff (<= 450), danach nur Anstehen (frei 0)
+#                                  oder <= 450; Pin "Stelle 8 verkeilt" (Gegenprobe Stand NB5 900/900, NB6 Angriff 112, Grund 13);
+#                                  Sonde `eins <i> 1 <bilder> <anker> <lage> <vt> <nah> <nb6> [spur_von spur_bis]` = Spur je Bild.
 add_executable(test_r36_zombieki_affen_block ${CMAKE_CURRENT_LIST_DIR}/../test_r36_zombieki_affen_block.c)
 target_link_libraries(test_r36_zombieki_affen_block PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r36_zombieki_affen_block PRIVATE ${CMAKE_SOURCE_DIR}/include)

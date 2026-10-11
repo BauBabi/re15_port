@@ -603,6 +603,7 @@ static int r36_am_pad(const re15_actor_t *e, int p, int32_t r)
     return (uint32_t)(e->x - ((int32_t)c->x - r)) < (uint32_t)((int32_t)c->width + 2 * r) &&
            (uint32_t)(e->z - ((int32_t)c->z - r)) < (uint32_t)((int32_t)c->density + 2 * r);
 }
+static uint8_t r36_seiten_code(int32_t px, int32_t pz, const re15_sca_entry_t *c);   /* unten (Kontaktcode wie @0x8003ba8c) */
 static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r36_kante_t *kt, int nk, int nah)
 {
     s_uw_sprung_start = -1;
@@ -621,17 +622,23 @@ static int r36_weg_folgen(const re15_actor_t *e, int slot, int g, int l, const r
         if (p < 0) return 0;
         s_r36_pad_idx[slot] = (int16_t)p; s_uw_sprung_start = s_uw_heap[sprung];
         int64_t ex = (int64_t)r36_kx(s_uw_heap[sprung]) - e->x, ez = (int64_t)r36_kz(s_uw_heap[sprung]) - e->z;
-        if (ex * ex + ez * ez <= (int64_t)s_uw.r * s_uw.r                          /* am Anlaufpunkt (NB2: zwei Schritte a 800 = ein
+        const re15_sca_entry_t *c = &g_room_rdt.sca[p];
+        int am = ex * ex + ez * ez <= (int64_t)s_uw.r * s_uw.r;                     /* am Anlaufpunkt (NB2: zwei Schritte a 800 = ein
                                                                                      * Radius): gerader Anlauf auf die Pad-Mitte — die
                                                                                      * Kontaktseite zeigt auf Leons Seite */
-            || (nah && r36_am_pad(e, p, (int32_t)e->hit_radius_min + 100))) {
+        if (!am && nah && r36_am_pad(e, p, (int32_t)e->hit_radius_min + 100)) {
+            uint8_t sg = r36_seiten_code(e->x, e->z, c), ss = r36_seiten_code(r36_kx(s_uw_heap[sprung]), r36_kz(s_uw_heap[sprung]), c);
+            am = (sg == ss) || (sg & 0xf0u) == 0xf0u;                                /* nur auf DERSELBEN Seite wie der Startknoten (sonst
+                                                                                     * spraenge der Original-Sprung mit dem Code der falschen
+                                                                                     * Seite quer ueber das Pad) oder mit der Mitte im Pad */
+        }
+        if (am) {
             /* NB6 (Nah-Umweg): oder schon AM PAD im Sinne des Original-Sprungs (Box + box[6]+100 @0x80117ee0-f00). GEMESSEN
              * (exe Stelle 3, Messschiene RE15_AFFEN_LOG, F_belege/nb6/nb6_stelle3_affenlog_vorher.txt): Slot 2 steht in der Gassen-
              * muendung an der Suedkante von #36 (6418,-6820), der Startknoten der Pad-Kante liegt 1970 entfernt bei (7000,-8700)
              * (die Gasse ist schmaler als 2 x 1600 -> dort kein freier Rasterknoten) -> "Weg zum Anlauf" fuehrte ihn von Leon WEG,
              * +0x1d4 kippte ueber 0x1771 (FERN -> Sub 4, Umweg geloescht), an der Kante zaehlte der NAH-Anker neu: Zyklus von
              * ~150 Bildern ohne Sprung bis zum Laufende (S2 "nie"). */
-            const re15_sca_entry_t *c = &g_room_rdt.sca[p];
             s_r36_ziel_x[slot] = (int32_t)c->x + (int32_t)c->width / 2;
             s_r36_ziel_z[slot] = (int32_t)c->z + (int32_t)c->density / 2;
             return 2;
