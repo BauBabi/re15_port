@@ -18,7 +18,10 @@
  * sie. Quelle 2: Bank 3 Bit 54/55/56. Die Bits allein reichen NICHT: die Etagenraeume setzen
  * sie in sub01 nur unter Ck(4,243,1) ("Reservestrom an", ROOM11F0 sub18 @0x016F6) und nur bei
  * Eintritts-Cut 5/0/0 (`23 00 0a 00 05 00` ROOM1040 @0x15D0 usw.) - wer 3F aus ROOM1130
- * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage. */
+ * (Cut 3) oder vor dem Strom betritt, faende sonst die Kabine auf der falschen Etage.
+ * Runde 36 Spur M: ebenso fuer den zweiten Fahrstuhl ROOM4020 (Blatt 8/9/10 aus ROOM4000/5000/
+ * 50C0, Bank 3 Bit 0x93/0x94/0x95; Belege im .c). Der Wert bindet seit Runde 36 auch das
+ * BESUCHT-Bit der Kabine an diese eine Etage (re15_map_visited_mark_at). */
 int re15_karte_fahrstuhl_blatt(unsigned room);
 
 /* Raumwechsel melden (aus re15_map_zone_update: je Bild und am Raumlade-Punkt). */

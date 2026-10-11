@@ -94,16 +94,22 @@ int main(void)
                      "im %s ist Teil %d aktuell - ist Teil %d",
                      P[p].wo, P[p].soll, rot);
             CHECK(t, rot == P[p].soll);
-            /* Und die anderen beiden muessen GRUEN sein, nicht schwarz - der Raum
-             * ist ja besucht. Das ist der zweite Halbsatz des Nutzers: "und der
-             * Evidence Room wieder gruen". */
+            /* Die anderen: BESUCHT nur, wo der Spieler schon WAR.
+             * ⛔ GEAENDERT Runde 36 Spur M (Nutzer 2026-10-10: "Die kleinen Tuerbereiche von
+             * ROOM 1110 werden schon als besucht angezeigt, obwohl ich dort noch garnicht drin
+             * war"). Bis hier verlangte der Pin "die anderen beiden sind GRUEN" schon im
+             * Evidence Room - genau der gemeldete Fehler. Der Halbsatz vom 2026-09-07 ("und der
+             * Evidence Room wieder gruen") gilt weiter: der Evidence Room (Teil 0) ist der
+             * EINGANG (einziger Spawn von aussen, ROOM1100 @0x009BA) und mit dem Raum besucht;
+             * die kleinen Raeume (Teil 1/2) erst, wenn man in ihnen stand (Besucht-Bit je Teil,
+             * include/re15_karte_r36.h). Reihenfolge der Standorte: 0, 1, 2. */
             for (k = 0; k < n; k++) {
-                int tx, ty, tw, th, ts;
+                int tx, ty, tw, th, ts, soll_besucht = (k == 0 || k < p);
                 if (k == rot) continue;
                 if (!re15_map_teil_get(3, 5, k, &tx, &ty, &tw, &th, &ts)) continue;
-                snprintf(t, sizeof t, "im %s ist Teil %d besucht (gruen), nicht schwarz",
-                         P[p].wo, k);
-                CHECK(t, ts == RE15_MAP_RECT_VISITED);
+                snprintf(t, sizeof t, "im %s ist Teil %d %s", P[p].wo, k,
+                         soll_besucht ? "besucht (gruen)" : "UNBESUCHT (noch nie betreten)");
+                CHECK(t, ts == (soll_besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED));
             }
         }
     }

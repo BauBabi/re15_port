@@ -427,6 +427,20 @@ int main(void)
             if (zn->etage || (zn->room & 1)) continue;
             begehe_zeile(i);
         }
+        /* Runde 36 Spur M (Besucht-Bit je TEILBEREICH, include/re15_karte_r36.h; Nutzer
+         * 2026-10-10 "Die kleinen Tuerbereiche von ROOM 1110 werden schon als besucht angezeigt,
+         * obwohl ich dort noch garnicht drin war"): "alles begangen" heisst seitdem auch, in JEDEM
+         * Teil gestanden zu haben - ein Punkt je Zone trifft nur einen Teil, und eine Innenwand
+         * zwischen zwei unbesuchten Teilen wird (richtig) nicht gezeichnet. Mitte jeder Weltbox. */
+        {   int k2, q2;
+            for (k2 = 0; k2 < (int)(sizeof s_map_teile / sizeof s_map_teile[0]); k2++)
+                for (q2 = 0; q2 < NZ; q2++)
+                    if (s_map_zones[q2].zid == s_map_teile[k2].zid && !s_map_zones[q2].etage) {
+                        stehe(s_map_zones[q2].room, (s_map_teile[k2].wx0 + s_map_teile[k2].wx1) / 2,
+                              (s_map_teile[k2].wz0 + s_map_teile[k2].wz1) / 2, 0);
+                        break;
+                    }
+        }
         {   const re15_map_zone_t *s0 = NULL; int32_t px = 0, pz = 0; int q;
             for (q = 0; q < NZ; q++)
                 if (s_map_zones[q].room == 0x1150 && !s_map_zones[q].etage) { s0 = &s_map_zones[q]; break; }

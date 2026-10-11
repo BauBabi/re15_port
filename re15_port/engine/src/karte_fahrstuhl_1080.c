@@ -25,6 +25,30 @@ void re15_karte_raum_gesehen(unsigned room)
 int re15_karte_fahrstuhl_blatt(unsigned room)
 {
     unsigned vor;
+    /* Runde 36 Spur M (Nutzer: "Die Fahrstuhl Etagen werden als besucht angezeigt, obwohl ich
+     * auf den verschiedenen Etagen noch nicht im Fahrstuhl war"): der ZWEITE Fahrstuhl des Spiels,
+     * ROOM4020, liegt genauso auf drei Blaettern (s_map_floors: Band 0 -> Blatt 8/9/10) und hatte
+     * dasselbe Gemeinsam-Besucht. Eingestiegen wird nur aus seinen drei Etagenraeumen (Tuer-Datensaetze
+     * ROOM4000 @0x0107A slot 0 / ROOM5000 @0x008A4 slot 3 / ROOM50C0 @0x0094A slot 1 -> 4020 Spawn
+     * (-21400,0,-23400); Rueckweg ROOM4020 main @0x0063A/0x0065A/0x0067A). Blatt je Etagenraum
+     * aus dem Seiten-Setzer: Stage 3 -> `ori v1,zero,0x8` @0x8004bdb4, ROOM5000 (Stage 4 Raum 0,
+     * Tabelle @0x800111b4) -> `ori v1,zero,0x9` @0x8004bf50, ROOM50C0 (Raum 12) -> `ori v1,
+     * zero,0xa` @0x8004bee4. Etagen-Bits des Spiels (wie 54/55/56 fuer 1080): Bank 3 Bit
+     * 0x93/0x94/0x95 - ROOM4000 @0x013CC `22 03 93 01`, ROOM5000 @0x008FC `22 03 94 01`,
+     * ROOM50C0 @0x00A34 `22 03 95 01` (je die anderen beiden geloescht); ROOM4020 sub07 @0x00906
+     * liest `21 03 93 00`. */
+    if ((room & ~1u) == 0x4020u) {
+        vor = s_raum_vorher & ~1u;
+        if (s_raum_jetzt == room) {
+            if (vor == 0x4000u) return 8;
+            if (vor == 0x5000u) return 9;
+            if (vor == 0x50C0u) return 10;
+        }
+        if (re15_game_flag_get(3, 0x93)) return 8;
+        if (re15_game_flag_get(3, 0x94)) return 9;
+        if (re15_game_flag_get(3, 0x95)) return 10;
+        return -1;
+    }
     if ((room & ~1u) != 0x1080u) return -1;
     /* (1) Man betritt die Kabine IMMER aus einem Etagenraum - dort steht sie also. */
     vor = s_raum_vorher & ~1u;

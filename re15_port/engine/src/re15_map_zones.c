@@ -32,6 +32,7 @@
                                * dasselbe wie der Zeichner (Runde 30) */
 #include "re15_map_zones.h"
 #include "re15_karte_fahrstuhl.h"   /* Runde 35 Spur G: Blatt der Fahrstuhlkabine */
+#include "re15_karte_r36.h"         /* Runde 36 Spur M: Besucht-Bit je Teilbereich */
 
 #define ZONE_COUNT ((int)(sizeof s_map_zones / sizeof s_map_zones[0]))
 /* Toleranz beim Zonen-Test: dieselbe, mit der der Generator Bereiche verschmilzt —
@@ -115,7 +116,10 @@ s_etage_bit[] = {
     { 0x50D0, 0,  0, 11 },   /* Bit 23                                */
     { 0x50D0, 0,  3, 10 },   /* Bit 24                                */
     { 0x10A0, 0,  4,  0 },   /* Bit 25  Runde 35 Spur G: B1-Absatz    */
-    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: 8 * sizeof s_visited_floor = 128. */
+    { 0x11A0, 0,  3,  6 },   /* Bit 26  Runde 36 Spur M: 11A0 Band 3 auf seiner Drains-Kachel
+                              *         (Bit 15 {0x11A0,0,3,0} ist seitdem unbenutzt) */
+    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: Bits 0..95 (RE15_KARTE_R36_TEIL_BASIS); ab Bit 96
+     * liegen im selben Feld die Teilbereich-Bits (Runde 36 Spur M, re15_karte_r36.h). */
 };
 #define ETAGE_BIT_COUNT ((int)(sizeof s_etage_bit / sizeof s_etage_bit[0]))
 
@@ -152,7 +156,8 @@ static void etage_setzen(int j)
  * hat die Bit-Tabelle, und wie viele Bits fasst das Feld? */
 int re15_map_floor_bit_test(int floor_zeile) { return etage_bit(floor_zeile); }
 int re15_map_floor_bit_count(void) { return ETAGE_BIT_COUNT; }
-int re15_map_floor_bit_kapazitaet(void) { return 8 * (int)sizeof s_visited_floor; }
+/* Runde 36 Spur M: die Etagen-Bits enden vor den Teilbereich-Bits (re15_karte_r36.h). */
+int re15_map_floor_bit_kapazitaet(void) { return RE15_KARTE_R36_TEIL_BASIS; }
 int re15_map_floor_count(void) { return FLOOR_COUNT; }
 
 void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
@@ -357,6 +362,27 @@ int re15_map_zone_etage_besucht(const re15_map_zone_t *zn)
     return 0;
 }
 
+/* ---- Runde 36 Spur M: BESUCHT-BIT JE TEILBEREICH (Belege include/re15_karte_r36.h) --------
+ * Nutzer 2026-10-10: "Die kleinen Tuerbereiche von ROOM 1110 werden schon als besucht angezeigt,
+ * obwohl ich dort noch garnicht drin war." Ein Teil wird besucht, solange der Spieler in SEINER
+ * Weltbox steht - dieselbe Pruefung (+-250, 250er-Raster der Box), die ihn AKTUELL macht. */
+static int teil_drin(const re15_map_teil_t *t, int32_t x, int32_t z)
+{
+    return x >= t->wx0 - 250 && x <= t->wx1 + 250 && z >= t->wz0 - 250 && z <= t->wz1 + 250;
+}
+
+static void teile_merken(int zid, int32_t x, int32_t z)
+{
+    int k;
+    for (k = 0; k < (int)(sizeof s_map_teile / sizeof s_map_teile[0]); k++) {
+        const re15_map_teil_t *t = &s_map_teile[k];
+        int b;
+        if (t->zid != zid || !teil_drin(t, x, z)) continue;
+        b = re15_karte_r36_teil_bit(t->page, t->rect, t->tx, t->ty, 0);
+        if (b >= 0) s_visited_floor[b >> 3] |= (uint8_t)(1u << (b & 7));
+    }
+}
+
 void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
 {
     int i = zone_index_at(room, x, z);
@@ -365,6 +391,7 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
     b = zone_bit(i);
     if (b < 0) return;
     s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+    teile_merken(s_map_zones[i].zid, x, z);   /* Runde 36 Spur M: nur der Teil, in dem er steht */
     /* zusaetzlich die Etage, auf der er gerade steht */
     f = floor_row(s_map_zones[i].room, s_map_zones[i].idx, re15_map_player_band());
     if (f >= 0) etage_setzen(f);
@@ -383,7 +410,18 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
             if (erst < 0) erst = s_map_floors[j].band;
             else if (s_map_floors[j].band != erst) { gleich = 0; break; }
         }
-        if (gleich && erst >= 0)
+        /* ⛔ Runde 36 Spur M (Nutzer 2026-10-10: "Die Fahrstuhl Etagen werden als besucht
+         * angezeigt, obwohl ich auf den verschiedenen Etagen noch nicht im Fahrstuhl war"):
+         * die "gleiche Baender"-Regel trifft genau die beiden Fahrstuehle (1080: Blatt 2/3/4,
+         * 4020: Blatt 8/9/10, alle Band 0). Ist die Etage der Kabine bekannt
+         * (re15_karte_fahrstuhl_blatt >= 0: Etagenraum, aus dem man einstieg, sonst die
+         * Etagen-Bits des Spiels), hat floor_row oben schon GENAU die Zeile dieser Etage
+         * gesetzt - der Ort ist (Kabine, Etage), wie RE2 das Bit beim Betreten des RAUMS setzt
+         * (FUN_80049e48 -> jal 0x8006931c @0x8004a39c, Bank 9 @0x80069390/0x80069394).
+         * NUTZER-VORGABE gegen RE2: dort teilt ein Raum, der auf mehreren Karten gezeichnet ist,
+         * EIN Bit (Raumkacheln @0x800aaa38 +0x0C: ROOM601 auf Area 13/16/18, ROOM505 auf
+         * 10/12/13/16). Nur bei UNBEKANNTER Etage bleibt es bei der alten Regel. */
+        if (gleich && erst >= 0 && re15_karte_fahrstuhl_blatt(s_map_zones[i].room) < 0)
             for (j = 0; j < FLOOR_COUNT; j++) {
                 if (s_map_floors[j].room != s_map_zones[i].room) continue;
                 if ((int)s_map_floors[j].zone != s_map_zones[i].idx) continue;
@@ -407,7 +445,8 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
  *     gilt fuer einen besuchten mehrbaendigen Ort die HAUPT-Zeile als begangen — die
  *     Zeile, deren (Blatt, Rechteck) die Zonenzeile OHNE Etagen-Marke fuehrt:
  *     ROOM1060 -> Blatt 2 (1F), ROOM1090 -> Blatt 2, ROOM10A0 -> Blatt 2,
- *     ROOM10F0 -> Blatt 3, ROOM1170/z1 -> Blatt 5 (ROOF), ROOM11A0 -> Blatt 0,
+ *     ROOM10F0 -> Blatt 3, ROOM1170/z1 -> Blatt 5 (ROOF), ROOM11A0 -> Blatt 6 (seit Runde 36
+ *     Spur M; vorher Blatt 0),
  *     ROOM4070 -> Blatt 8, ROOM50D0 -> Blatt 10.
  *     BEGRUENDUNG: der Nutzer meldet genau den Verlust bereits aufgedeckter Raeume
  *     (2026-09-27). Das Zonen-Bit BELEGT den Besuch des Ortes; unbekannt ist nur die
@@ -697,20 +736,23 @@ static int teil_zustand(const re15_map_teil_t *t)
     extern unsigned g_current_room_id;
     const re15_map_zone_t *cur = re15_map_zone_current();
     int i, besucht = 0;
+    /* Runde 36 Spur M: eigenes Bit je Teil (re15_karte_r36.h). Das Zonen-Bit zaehlt nur noch fuer
+     * den EINGANGS-Teil (einziger Tuer-Spawn von aussen) und fuer Teile ohne Tabellenzeile. */
+    int eingang = 0;
+    int tb = re15_karte_r36_teil_bit(t->page, t->rect, t->tx, t->ty, &eingang);
     if (!cur && !s_ohne_aktuell) cur = re15_map_zone_at(g_current_room_id,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    if (tb >= 0 && ((s_visited_floor[tb >> 3] >> (tb & 7)) & 1)) besucht = 1;
     for (i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
         if (zn->zid != t->zid) continue;
-        if (re15_map_zone_visited(zn)) besucht = 1;
+        if ((tb < 0 || eingang) && re15_map_zone_visited(zn)) besucht = 1;
         if (cur && cur->zid == t->zid) {
-            int32_t px = g_actors[RE15_ACTOR_SLOT_PLAYER].x;
-            int32_t pz = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
             /* Rand mitnehmen: die Weltbox stammt aus einem 250er-Raster, der
              * Spieler kann eine halbe Zelle daneben stehen. */
-            if (px >= t->wx0 - 250 && px <= t->wx1 + 250 &&
-                pz >= t->wz0 - 250 && pz <= t->wz1 + 250)
+            if (teil_drin(t, g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                          g_actors[RE15_ACTOR_SLOT_PLAYER].z))
                 return RE15_MAP_RECT_CURRENT;
         }
     }
@@ -878,6 +920,14 @@ void re15_map_debug_reveal_page(unsigned page)
             b = zone_bit(j);
             if (b >= 0) s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
         }
+    }
+    /* Runde 36 Spur M: auch die Teilbereich-Bits des Blattes (re15_karte_r36.h). */
+    for (i = 0; i < (int)(sizeof s_map_teile / sizeof s_map_teile[0]); i++) {
+        int b;
+        if ((unsigned)s_map_teile[i].page != page) continue;
+        b = re15_karte_r36_teil_bit(s_map_teile[i].page, s_map_teile[i].rect,
+                                    s_map_teile[i].tx, s_map_teile[i].ty, 0);
+        if (b >= 0) s_visited_floor[b >> 3] |= (uint8_t)(1u << (b & 7));
     }
 }
 
