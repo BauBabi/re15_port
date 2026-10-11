@@ -50,10 +50,14 @@ set_tests_properties(unit_r36_dachkiste_zellschub PROPERTIES TIMEOUT 300)
 # (Treppe sce 13 slot 5/6 @0x0133C/@0x01350: Band 5 -> 3) — ROOM2040 ist ohne die Kiste in 2050 erreichbar.
 # Nachbesserung 3 (Abnahme 2 P1/P2): tritt2060 (Ruhe-Zweig LAB_8002c0b8 -> Tritt (-3143,2075), Nord/Ost-Schub, Latch (3,172),
 # Aufstieg, Tuer slot 1 -> ROOM2040 wie im Original orig_2060_glied), echt2050/elza2051 (echte Tuer 2000/2001 slot 4, Y-Test
-# FUN_8002cabc: Band-3-Spieler laeuft durch die Band-0-Kiste, dann Fall).
+# FUN_8002cabc: Band-3-Spieler laeuft durch die Band-0-Kiste, dann Fall); echt2050 faehrt seit dem Abschluss nach dem Fall
+# zurueck (2050 slot 0 -> 2000 -> slot 4 -> 2050) und verlangt die Kiste wieder auf dem Record main00 @0x01D0E.
+# TIMEOUT: gemessen 1279.87 s fuer elf Laeufe unter ctest -j 4 (ohne Rueckkehr) und 1463.54 s allein MIT Rueckkehr
+# (echt2050 285 s: RE15_EXIT_AT zaehlt g_engine.frame_count, das bei jedem Raumladen neu beginnt — nach dem dritten
+# Raumladen laeuft der Lauf bis Bild 5400 des Wiederbetretens). 2700 s lassen der vollen Suite Luft.
 add_test(NAME integration_r36_dachkiste
     COMMAND ${CMAKE_COMMAND}
         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
         -DWORKDIR=${CMAKE_BINARY_DIR}/r36_dachkiste_wd
         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r36_dachkiste.cmake)
-set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 1800)
+set_tests_properties(integration_r36_dachkiste PROPERTIES TIMEOUT 2700)

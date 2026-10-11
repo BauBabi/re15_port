@@ -70,7 +70,7 @@ das Tor unerreichbar (Softlock). Nutzer-Wortlaut der Spur A: "Das macht ein Fort
   Quellaenderung zellschub_r36.c 23:02:06 = Stand 50edb2be). Gezielte Regression VOLLSTAENDIG (226/226, s. Tests), Riegel mit
   elf Laeufen selbst gelesen (s. "Abschluss"). Neue Messung "Wiederbetreten nach dem Fall der 2050-Kiste" an der exe
   (nb3_2050wiederkehr) und am Original (orig_2050_wiederkehr); Riegel-Lauf echt2050 um die Rueckkehr erweitert und erneut
-  gefahren; Dossier abgeschlossen. Commits 02c53c0a, 860d7aa1, 30386001, Abschluss.
+  gefahren; Dossier abgeschlossen. Commits 02c53c0a, 860d7aa1, 30386001, 7e3b4dec, Abschluss.
 
 ## Punkt 1 — Messung an der exe (Leon ROOM1090, Elza ROOM1091)
 
@@ -1012,7 +1012,7 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     x 3402; Aktor dito; Schiebe-Modus Band 3 kein Schub, Band 0 Kiste -> 1950. Diskriminiert: ein Port ohne Ruhe-Zweig
     (Tritt bleibt -3125), ohne die +18/400/kleinerer-Betrag-Regeln, ohne r = hz oder ohne Y-Test faellt durch.
   - `test_r36_dachkiste_zellschub diag`: Zensus ueber alle RDTs (206 Raeume, 513 Objekte): nur 2060/2061 obj 2 bewegt.
-  - `integration_r36_dachkiste` um drei Laeufe erweitert (TIMEOUT 1800): **`tritt2060`** (Wegplan = Original-Weg: MUSS push.txt
+  - `integration_r36_dachkiste` um drei Laeufe erweitert (TIMEOUT 1800, seit dem Abschluss 2700 s, s. u.): **`tritt2060`** (Wegplan = Original-Weg: MUSS push.txt
     `p=2 obj=2 RUHE-AUSSCHIEBUNG lage=(-3125,2075) -> (-3143,2075)` + `ZELLE [9]: x -2400..3150 z 2150..5350 r=675`,
     objfall.txt `p2 (-3143,0,2075) b0`, wegplan_log `FLAG (3,172) = 0` -> Nord `obj.z = -74xx` -> Ost `obj.x = 3xx` ->
     `FLAG (3,172) = 1`, >= 300x SCHUB-OK, kein GESPERRT, `[aot] DOOR FIRE slot=1 rect=(450,-8350,hw=650,hh=500)
@@ -1037,7 +1037,17 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
     `225/226 Test #573: integration_r36_dachkiste ................   Passed  1279.87 sec`, `integration_r36_klettern`
     535.00 s, alle `unit_r36_klettern_*`/`unit_r36_objfall_*` (Spur A) gruen, kein Fenster-Haken rot. Protokoll
     `R_belege/nb3_regression.log`; Riegel-Laufordner `re15_port/build/r36_dachkiste_wd/lauf_13d906c3` (Inhalt s. "Abschluss").
-  - @@RIEGEL2@@
+  - Riegel nach der Erweiterung (echt2050 mit Rueckkehr) ALLEIN neu gefahren, 2026-10-11 23:59 - 10-12 00:24:
+    `ctest --test-dir re15_port/build -R "^integration_r36_dachkiste$" --timeout 1800 --output-on-failure` ->
+    **`1/1 Test #573: integration_r36_dachkiste ........   Passed  1463.54 sec`** / `100% tests passed, 0 tests failed out
+    of 1`, Laufordner `lauf_38a9635c`: `echt2050` mit `DOOR FIRE slot=0 rect=(9100,5700,hw=1000,hh=1000) target_cut=10
+    spawn=(-26450,-1800,10250)`, 2x `loaded room2050.rdt`, letzte Lage `F5400 room=2050 spieler=(9100,-5400,4100) ... | p0
+    (-1600,-5400,-9348) b3`; die zehn uebrigen Laeufe mit denselben Zeilen wie lauf_13d906c3. Gegenprobe des neuen Blocks
+    (als eigenes cmake -P auf beide Laufordner): lauf_38a9635c besteht, der alte Lauf lauf_13d906c3 (ohne Rueckkehr)
+    faellt mit `Tuer 2050 slot 0 @0x01C4A nach dem Fall nicht ausgeloest` durch. `echt2050` dauerte 285 s (vorher 120 s):
+    RE15_EXIT_AT zaehlt `g_engine.frame_count`, das der Raumwechsel neu startet (`main.c:8151 g_engine.frame_count = 0`),
+    der Lauf endet also bei Bild 5400 des Wiederbetretens. TIMEOUT des Riegels deshalb 1800 -> 2700 s
+    (probes/r36_dachkiste.cmake, mit Messwerten kommentiert; `local_build.sh configure` -> CTestTestfile `TIMEOUT "2700"`).
 * Gezielte Laeufe (KEINE volle Suite im Spurbaum), Stand Nachbesserung 2 (81d02dd3+, Bau LOCAL-BUILD-OK):
   - `ctest --test-dir re15_port/build -R "unit_r36_dachkiste_zensus|unit_r36_objfall|unit_r36_klettern|unit_1090_|prop_sca_collision|prop_point_in_poly|prop_zone_dispatch|unit_r22_10f0_figur|unit_re2_room1090_ab|unit_plc_back_yaw_1090|probe_1090_|unit_map_1090|unit_r35_cut10f0|unit_r36_szenenleon_abgang10f0" --timeout 900`:
     `100% tests passed, 0 tests failed out of 31` (Total Test time (real) = 14.89 sec; mit den 2050-Pins der Sonde).
@@ -1087,8 +1097,11 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
   nur nach dem Hinweis in ROOM2010 (sub02 @0x008CA (3,114)) und dem Ereignis in 2020 (Aot slot 3 sce 3 @0x009AE -> sub02
   @0x00ADE). An der exe gemessen ist der Durchgang nach dem Ereignis (Lauf nb2_2020durchgang, s. Nachbesserung 2 N2);
   am Original NICHT gemessen (kein Spielstand mit (3,114)=1 in 2020; Messweg: JUMP 202, Flag per GDB setzen, Ereignis am
-  Rechteck ausloesen). Die Glieder 2030 Band 9 -> slot 3 -> 2060 (Abnahme 1 R2) und 2060 Tritt -> slot 1 -> 2040 (Spur A)
-  sind an der exe gemessen; der exe-Haenger in 2060 (R_abnahme_1.md Nachtrag) ist nicht Teil dieser Spur.
+  Rechteck ausloesen). Die Glieder 2030 Band 9 -> slot 3 -> 2060 (Abnahme 1 R2) und 2060 Tritt -> slot 1 -> 2040 sind an
+  der exe gemessen (das 2060-Glied seit Nachbesserung 3 auch am Original: nb3_2060glied / Riegel tritt2060 / orig_2060_glied
+  b); der exe-Haenger in 2060 (R_abnahme_1.md Nachtrag) ist nicht Teil dieser Spur (Abnahme 2 lief ueber die Stelle ohne
+  Einfrieren). Fuer die Softlock-Frage ist dieser Weg seit dem Abschluss nur noch der ZWEITE Ausweg: das Wiederbetreten
+  von ROOM2050 stellt die Kiste selbst zurueck (Abschluss, exe + Original).
 
 ## Fuer den Nutzer
 
@@ -1098,8 +1111,8 @@ Alle in `tests/unit/probes/r36_dachkiste.cmake` (GLOB), kein Eingriff in tests/*
 * ROOM2050/2051, **Softlock nach dem Fall der Kiste im Port: NEIN** (gemessen, zwei unabhaengige Wege): (1) wer den Raum
   verlaesst und wieder betritt, findet die Kiste wieder auf ihrem Platz — das Raumskript setzt sie bei jedem Betreten
   neu (Port `nb3_2050wiederkehr` + Riegel `echt2050`, Original `orig_2050_wiederkehr`, beide mit Leon; ROOM2051
-  byteidentisch); (2) ROOM2040 ist ausserdem ueber
-  ROOM2020 -> 2030 -> 2060 (Tritt) erreichbar (Port Riegel `weg2020` + `tritt2060`, Original `orig_2060_glied` b).
+  byteidentisch); (2) ROOM2040 ist ausserdem ueber ROOM2020 -> 2030 -> 2060 (Tritt) erreichbar (Port Riegel `weg2020`
+  + `tritt2060`, Original `orig_2060_glied` b).
 **Port = Original? JA** — fuer die Kisten in ROOM1090/1091 (Schub gesperrt), ROOM3050/3051 (Fall vorgesehen),
 ROOM2050/2051 (Ausloeser, Landeband, Ruhelage z -13068, Wiederbetreten) und den Weg ueber den Tritt in ROOM2060 (Ende-zu-Ende,
 Nachbesserung 3). Zwei Restabweichungen ohne Folge fuer den Fortschritt sind unter OFFEN benannt: die Endlage der
@@ -1120,11 +1133,10 @@ der der Schub endete).
   UND im Original gemessen (jetzt auch ueber den ECHTEN Weg durch die Tuer aus ROOM2000/2001, Leon und Elza; vorher
   klemmte der Port auf dem Weg an einer Kiste auf einer anderen Etage — behoben, Nachbesserung 3 P2). Faellt sie, ist
   diese Tuer nur weg, bis man den Raum verlaesst: **beim naechsten Betreten steht die Kiste wieder an ihrem Platz** (im
-  Port und im Original mit Leon gemessen; Elzas ROOM2051 ist byteidentisch, main00 @0x01D0E gleich). Und **ROOM2040 bleibt
-  ausserdem erreichbar ueber
-  ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 handeln) -> ROOM2030 -> ROOM2060 -> Tritt in die Kerbe schieben,
-  hinaufsteigen, Tuer -> Halle.** Das Glied in ROOM2060 ist jetzt
-  am Original UND im Port Ende-zu-Ende gefahren (Nachbesserung 3 P1): der Tritt liess sich im Port vorher gar nicht
+  Port und im Original mit Leon gemessen; Elzas ROOM2051 ist byteidentisch, main00 @0x01D0E gleich). Und **ROOM2040
+  bleibt ausserdem erreichbar ueber ROOM2020 (Hinweis in ROOM2010 lesen, dann in 2020 handeln) -> ROOM2030 -> ROOM2060
+  -> Tritt in die Kerbe schieben, hinaufsteigen, Tuer -> Halle.** Das Glied in ROOM2060 ist jetzt am Original UND im
+  Port Ende-zu-Ende gefahren (Nachbesserung 3 P1): der Tritt liess sich im Port vorher gar nicht
   bewegen, weil der Port eine Regel des Originals nicht hatte (jedes ruhende Objekt wird jedes Bild um 18 Einheiten aus
   einer beruehrten Wandzelle geschoben) — im Original stand der Tritt deshalb 18 Einheiten westlich seines Datensatzes.
   **Bedienhinweis (Originalverhalten):** den Tritt zuerst von Sueden bis ganz in den Norden der Westgasse schieben
@@ -1139,5 +1151,5 @@ der der Schub endete).
   (re15_collision.c, FUN_8002cabc @0x8002cb84-cbc8), Haken in aot_common.c / game_step_common.c / scd_room_setup.c /
   enemy_ai_common.c. Keine neuen Assets fuer das Paket-Gate, keine Sprachdateien, keine Entscheidungsfrage.
 * DuckStation: `settings.ini` nach jedem Original-Lauf aus der Sicherung zurueckgeschrieben (EnableGDBServer = false,
-  ConfirmPowerOff = true, [Pad1] nur SDL-0 wie vorgefunden; nach den Laeufen orig_2060_glied a/b und orig_2050_fall
-  geprueft).
+  ConfirmPowerOff = true, [Pad1] nur SDL-0 wie vorgefunden; nach den Laeufen orig_2060_glied a/b, orig_2050_fall und
+  orig_2050_wiederkehr a/b geprueft; die Sicherungskopien settings.ini.bak wurden aus R_belege entfernt).
