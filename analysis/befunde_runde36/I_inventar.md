@@ -75,6 +75,111 @@ ausgeruestet.
 
 ## RE-Belege
 
+Alle Zeilen selbst disassembliert (`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py` fuer RE1.5
+PSX.EXE/TITLE.BIN; RE2 MEM_CARD.BIN mit `re2_disasm.dis_one` auf Ladeadresse 0x801C0000, roh ohne Kopf,
+`info/re2leon/COMMON/BIN/MEM_CARD.BIN`, 23932 Bytes).
+
+### I4 — der Raumlader waehlt die Datei aus Charakter-Bit, nicht aus dem Menue
+RE1.5 FUN_800396fc (Raumlader):
+```
+800397b8  lw   a0,-13764(a0)     ; DAT_800aca3c (Lebenszyklus-Wort, Bit 31 = Elza)
+800397cc  addiu at,at,17292      ; Stage-Zeigertabelle 0x8007438c
+800397e0  lhu  v0,0(v1)          ; Basis-Dateiindex [Stage][Raum]  (Raum = DAT_800b0fe2)
+800397e4  srl  a0,a0,31          ; Bytes c2 27 04 00 — Elza-Bit 0/1
+800397e8  jal  0x80013b60        ; CD-Datei laden
+800397ec  addu a0,a0,v0          ; Bytes 21 20 82 00 — Index = Basis + Elza-Bit (Delay-Slot)
+```
+Stage-0-Tabelle @0x8007429c = 681, 684, 687, 690, 693, 696 (Schritt 3 = BSS + Leon-RDT + Elza-RDT je Raum).
+Der Debug-Sprung laeuft durch DENSELBEN Lader — JUMP-Executor FUN_8001d600, Debug-Zweig
+(`bne v0,zero` @0x8001d618 auf DAT_800ac9a8 == 0):
+```
+8001d654  lbu  v0,0(at)          ; (&0x800bbe5f)[Stage] = Menue-Raumindex
+8001d660  sh   v0,4066(at)       ; -> DAT_800b0fe2 (Raum)
+8001d808  sh   v0,4064(at)       ; -> DAT_800b0fe0 (Stage, nur bei Wechsel)
+8001d818  sb   zero,-1099(at)    ; Cut 0
+8001d820  sh   zero,4068(at)     ; Szenario 0
+8001d824  j    0x8001d988
+8001d988  jal  0x800396fc        ; Raumlader (Elza-Bit oben)
+```
+Das Menue kennt nur Stage/Index; die Variante kommt allein aus dem Elza-Bit. Gesetzt wird es von der
+Spielerwahl (TITLE.BIN, `--bin TITLE.BIN`): Leon `lui v1,0x7fff` @0x801024ac / `ori v1,v1,0xffff`
+@0x801024b8 / `and v0,v0,v1` @0x801024c8 + `sb zero,-13732(at)` @0x801024c0 (aca5c = 0); Elza
+`lui v1,0x8000` @0x801024a8 / `or v0,v0,v1` @0x801024e4 + `ori v0,zero,0x4` / `sb` @0x801024cc/d4
+(aca5c = 4). Der Port fuehrt dafuer bereits `re15_char_variant()` = (character & 4) ? 1 : 0 und
+`re15_room_for_char(base)` = (base & 0xFFF0) | Variante (include/re15_gameflow.h:69-84, gleiche Belege).
+Zensus (scratchpad dbg_tbl.py ueber DEBUG.BIN @0x263a, 6 x 49 Saetze): **101 belegte Sprung-Saetze, fuer
+alle 101 liegen ROOMxxx0.RDT UND ROOMxxx1.RDT** in shared_assets/PSX/STAGEn — kein Elza-Ziel fehlt.
+
+### I1/I2 — RE2 verbraucht das Farbband beim Schreiben, bei 0 verschwindet der Platz
+RE2 MEM_CARD.BIN, Schreibzweig des Speicherschirms:
+```
+801c1168..84  memcpy(sp+0x1F0, 0x800D4A3C, 44)     ; Inventar (11 Plaetze) SICHERN (jal 0x80076a00, a2=44)
+801c1188      lbu t1,-895(fp)                      ; 0x800D46BD sichern
+801c118c      addiu a0,zero,30                     ; Item 0x1E = Ink Ribbon
+801c1190      jal 0x800696cc                       ; Platz suchen (nur Inventar)
+801c11a4      lbu v0,19005(at)                     ; Menge (0x800D4A3D + Platz*4)
+801c11ac      addiu v0,v0,-1                       ; Menge - 1
+801c11b8      sb v0,19005(at)
+801c11c0      bne v0,zero,0x801c11e8               ; > 0 -> fertig
+801c11d0      sb zero,19004(at)                    ; == 0: Id := 0
+801c11dc      sb zero,19006(at)                    ;       Byte +2 := 0
+801c11e0      jal 0x80069714                       ;       Inventar verdichten
+801c11e8..00  0x800D46C4 += 1                      ; Speicherzaehler
+...           Spielstand bauen + schreiben (jal 0x801c3678)
+801c128c      beq v0,zero,0x801c12c8               ; Schreiben ok -> weiter
+801c1290..bc  memcpy(0x800D4A3C, Sicherung, 44); Zaehler -1; 46BD zurueck   ; FEHLER -> alles zurueck
+```
+= das Farbband faellt NUR beim tatsaechlichen Schreiben, der GESCHRIEBENE Stand traegt die neue Menge (der
+Abzug liegt vor dem Bau des Blocks), ein Fehlschlag gibt es zurueck; Abbrechen im Speicherschirm erreicht
+den Zweig nie. RE2 FUN_80069714 (RE2_Quellcode_V2/FUN_80069714.c): ersten freien Platz suchen
+(FUN_80069668(0)), Rest um eins nachruecken, Ausruest-Indizes DAT_800d5bf8/DAT_800d69f4 mitziehen.
+RE1.5-Gegenstueck derselben Form (fuer die Port-Seite massgeblich, Port-Funktion re15_inv_remove_slot):
+```
+8004aee4..af28  sb zero -> 0x800b10ac/ad/ae [Platz]   ; Verbrauch beim Benutzen: Id/Menge/Flag := 0
+8004af2c        jal 0x8004dadc                        ; verdichten
+8004daec        jal 0x8004df2c                        ; FUN_8004dadc: erster freier Platz
+8004db4c..dba8  Id/Menge/Flag s0 -> s0-1             ; nachruecken
+8004dbac..dbc8  lbu 25c8 / bne v0,s0 / addiu -1 / sb  ; Ausruest-Platz zieht mit
+8004dbec        jal 0x8004947c                        ; letzte Zelle leeren
+```
+Runde 33 hatte genau diesen RE2-Block auf Nutzerwunsch WEGGELASSEN (speichern_memory_card.md §1.5,
+ee17ca0a); jetzt bestellt der Nutzer den Verbrauch -> RE2-Form wieder herein, Memory Card (Item 0x21) statt
+Ink Ribbon (0x1E).
+
+### I3 — RE1.5 laesst die leere Granate liegen; die Entfernung ist NUTZER-VORGABE in RE2/RE1.5-Form
+* Granaten-Entladung 0x80033B38: `jal 0x8004eae4` @0x80033b40 (sonst nichts; 0x80033B58/78 fuer 10/11
+  bytegleich). FUN_8004eae4: `lbu v0,0(at)` @0x8004eb3c (Menge), `bne v0,zero` @0x8004eb44, `addiu v0,v0,-1`
+  @0x8004eb48, `sb v0,0(at)` @0x8004eb60 — KEIN Entfernen bei 0. Genau das zeigt die Messung (Platz 2 =
+  Granate 0).
+* RE2 hat keine Handgranaten; sein Munitionsabzug FUN_8006a0cc (RE2_Quellcode_V2/FUN_8006a0cc.c) entfernt
+  ebenfalls nie. RE2s Regel "Menge 0 -> Platz weg" gilt fuer VERBRAUCHSGEGENSTAENDE: Farbband (oben,
+  @0x801c11c0-e0) und Schluessel (LAB_80051718 @0x80051810 `addiu v0,v0,-1` -> bei 0 Wegwerf-Abfrage).
+  -> "Handgranaten bei 0 weg" = **NUTZER-VORGABE**; FORM = Farbband-Regel / RE1.5-Verbrauch
+  (@0x8004aee4-af2c + FUN_8004dadc), d.h. re15_inv_remove_slot.
+* War die leere Granate ausgeruestet: ABLEGEN wie im Statusschirm, UNEQUIP @0x8004ad44-4c
+  (`ori v0,zero,0x80` / `sb v0,9672(at)` -> 25c8 := 0x80), danach die Commit-Regel @0x80046654-88:
+  ```
+  80046658  lbu v1,9672(v1)    ; 25c8
+  8004665c  ori v0,zero,0x80
+  80046660  bne v1,v0,...
+  8004666c  ori v0,zero,0x1    ; 0x80 -> Waffe 1 (Messer, Rueckfall Runde 35 Spur E)
+  80046688  sb  v0,-13731(at)  ; DAT_800aca5d
+  80046694..a0  player &= ~0x4000            ; Messer-in-der-Hand-Latch weg
+  800466b0  jal 0x80036b68 / 800466c4 jal 0x80043d8c(aca5d, 0x80198000)   ; Modell + Bank
+  ```
+  Port: re15_player_set_equipped_weapon + re15_audio_prime_weapon (menu_common.c:1509-1516).
+* WARUM der Commit selbst gesetzt werden muss: das Original committet NUR beim Schliessen des Statusschirms
+  und nur, wenn sich die Id unter 25c8 gegen die Momentaufnahme 25ce aendert (@0x800465f4-0x8004661c
+  `lbu 25c8` / `lbu 25ce` / `beq`). Mit 25c8 = 0x80 beim Oeffnen UND Schliessen ist das immer gleich
+  (Port: equip_id_now() -> Waechter 0xff, menu_common.c:159-164) — ohne eigenen Commit behielte Leon die
+  Granate (aca5d = 9) dauerhaft in der Hand.
+* WANN: der Wurf liest die Waffe JEDES Bild (`lbu 0x800aca5d` @0x80032e60 -> Dispatch) und das Projektil
+  spawnt nur bei aca5d == 9 (`lbu` @0x80033684 / `ori v0,zero,0x9` @0x80033688 / `bne` @0x8003368c), im
+  Rueckstoss-Bild 19/22/24 — ~22 Bilder NACH dem Abzug (gemessen F19 Abzug, F41 Projektil). Der Platz faellt
+  deshalb sofort (nichts Leeres im Statusschirm, auch wenn START mitten im Wurf kommt), die Waffen-Id
+  wechselt aber erst, wenn der Ziel-Zustand verlassen ist (re15_player_aim_active() == 0) — PORT-WAHL
+  des Zeitpunkts, die den Wurf byte-true zu Ende laufen laesst.
+
 ## Umsetzung
 
 ## Messung nachher
