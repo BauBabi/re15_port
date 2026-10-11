@@ -334,11 +334,17 @@ Ankunfts-Regel) war ebenfalls 56/56.
   oder mit ihr angekommen bist (1F -> 3F: 1F und 3F, nicht 2F). Das gilt auch fuer den zweiten
   Fahrstuhl ROOM4020 (Labor). In RE2 wird ein Raum, der auf mehreren Etagenkarten steht, auf
   allen gleichzeitig besucht - hier gilt deine Vorgabe.
+* Fahrstuhl per Debug-Menue (Nachbesserung 1): springst du mit "108 ELEVATOR" direkt in die Kabine,
+  weiss das Spiel nicht, auf welcher Etage sie steht (auch das Original nicht - der "Tuer auf"-Knopf
+  tut dann nichts). Die Karte zeigt die Kabine dann auf 1F, wie das Original sie immer auf der
+  1F-Karte zeigt; 2F und 3F bleiben leer und sind nicht anwaehlbar, bis du mit dem Fahrstuhl dorthin
+  faehrst. Dasselbe fuer ROOM4020 (Blatt "LABORATORY B1").
 * Alte Spielstaende: die kleinen Raeume in ROOM1110 erscheinen erst wieder, wenn du sie
   betrittst (der alte Stand weiss nicht, ob du drin warst); der Evidence Room bleibt sichtbar.
   Ebenso die Ostkammer von ROOM1190. Die Fahrstuhlkabine erscheint in einem alten Stand auf
   KEINER Etage, bis du wieder einsteigst - dann nur auf dieser Etage (der alte Stand hatte alle
-  drei Etagen gemeinsam markiert; welche du wirklich benutzt hast, steht nirgends).
+  drei Etagen gemeinsam markiert; welche du wirklich benutzt hast, steht nirgends). Seit
+  Nachbesserung 1 gilt das auch fuer ganz alte Staende (Format v7/v8 vor Runde 30).
 * Keine neuen Assets, keine Sprachdateien, kein neues Speicherformat (v9 bleibt).
 
 ## Stand / Fortschritt
@@ -349,6 +355,7 @@ Ankunfts-Regel) war ebenfalls 56/56.
 - [x] Riegel unit_r36_karte_* (6) gruen, Gegenprobe am alten Motor ROT
 - [x] integration_r36_karte (echte exe) gruen
 - [x] gezielte Suite (siehe Abschluss-Lauf)
+- [x] Nachbesserung 1 (Abnahme 0 M1): siehe Abschnitt "Nachbesserung 1" am Ende
 
 ## Riegel 6 nach der Ankunfts-Regel (`probe_r36_karte fahrstuhl`, Stand da5ae967)
 
@@ -463,3 +470,52 @@ dieser Etage (Runde 35 G, PORT-WAHL); bei UNBEKANNTER Etage ist das Blatt des Or
 Wahl. Die Etage selbst ist dann auch im Original unbestimmt: ROOM1080 sub10 ("Tuer auf der
 aktuellen Etage") feuert nur unter Ck(3,54/55/56,1) (@0x08AC/0x08BC/0x08CC,
 analysis/befunde_2026-09-26/fahrstuhl-faehrt-nicht.md §2.4) - ohne Bit tut sie nichts.
+Besucht-Form wie bisher RE2 (Bit beim Betreten des Raums, FUN_80049e48 -> `jal 0x8006931c`
+@0x8004a39c; Test je Kachel @0x8006e67c/@0x8006e744): der Ort, an dem die Karte den Spieler
+AKTUELL zeigt, ist danach besucht - bei unbekannter Etage also die Kabine auf Blatt 2 bzw. 8, und
+nur dort. Etage je Kabine bleibt NUTZER-VORGABE (RE2 fuehrt EIN Bit je Raum, @0x800aaa38).
+
+### N1.4 Aenderung
+| Datei | Aenderung | Beleg |
+|---|---|---|
+| `engine/src/karte_fahrstuhl_1080.c` `re15_karte_fahrstuhl_blatt` | Etage unbekannt -> **2** (ROOM1080) bzw. **8** (ROOM4020) statt -1; fuer eine Kabine gibt es kein "unbekannt" mehr | Seiten-Setzer `ori v0,zero,0x2` @0x8004b684 / `sb v0,0x260e` @0x8004b88c; `ori v1,zero,0x8` @0x8004bdb4 / `sb v1,0x260e` @0x8004bdbc (N1.3) |
+| `engine/src/re15_map_zones.c` `re15_map_visited_mark_at` | "gleiche Baender"-Schleife ueberspringt Kabinen-Zeilen (`re15_karte_r36_fahrstuhl_bit(room,page) >= 0`); Bedingung `re15_karte_fahrstuhl_blatt < 0` entfaellt (Kabinen nie, sonst gleiches Verhalten: ROOM3080) | N1.1 |
+| dto. `re15_map_page_known` | Zonenzeilen einer Kabine machen ein Blatt nicht mehr ueber das (raumweite) Zonen-Bit bekannt, nur ueber das Kabinen-Bit des Blattes (Etagen-Schleife) - dieselbe Bedingung wie das Zeichnen (`re15_map_rect_state`: Gast-Zeile nur ueber ihr Etagen-Bit) | N1.1, Gegenprobe unten |
+| dto. `re15_map_visited_floor_heben` | v7/v8-Hebung setzt fuer die Kabinen KEIN Etagen-Bit mehr (vorher alle drei) | N1.1; Regel fuer alte Staende wie Riegel 6 (alte v9-Bits 3/4/5) |
+| dto. Kommentar `re15_map_rect_state` | "Fahrstuhl auf allen drei Blaettern - dokumentierte Absicht" gestrichen | - |
+| `include/re15_karte_fahrstuhl.h` | Vertrag: -1 nur noch "kein Fahrstuhl", Quelle 3 mit Adressen | - |
+| `tests/unit/test_map_speichern_laden.c` (Pin 2026-09-27, fremd) | v8: "Fahrstuhl ROOM1080: Etagen-Bit := Zonen-Bit, alle 3 Blaetter" (e1080 == 3) -> **e1080 == 0**, Summe 4 -> **1** | der Pin verlangte woertlich den gemeldeten Befund fuer gehobene v8-Staende; ROOM1060 (Haupt-Zeile) unveraendert |
+
+Keine neuen Bits, kein neues Speicherformat, kein Bank-9-Bit, keine Nachrichten-ID; nur Dateien des
+Kartenmoduls (M/N) und eigene Tests. Spur N (karten-items): `git diff 78a4a748 r36/kartenitems`
+(Stand 8eaf672f) aendert `re15_map_blatt_waehlbar` (map_hint_common.c: `|| re15_map_owned_page(page)`)
+und re15_map_owned.c - keine Ueberschneidung mit re15_map_zones.c / karte_fahrstuhl_1080.c. Ein
+Blatt mit aufgenommenem Plan bleibt dort anwaehlbar, unabhaengig von der Kabinen-Regel hier.
+
+### N1.5 Messung nachher
+Riegel `probe_r36_karte kabine` (Ausgabe `M_karte_werkzeug/nb1_kabine_nachher.txt`):
+```
+PASS: JUMP 108 ELEVATOR aus ROOM1100, Spawn DEBUG.BIN (-13650,-900): gezeigt Blatt 2, 1F-Kabine AKTUELL, 2F-Kabine unbesucht, 3F-Kabine unbesucht
+PASS: Kabinen-Etagen-Bits nach dem Sprung: 1F(112)=1 2F(113)=0 3F(114)=0 - nur das Blatt des Seiten-Setzers (Blatt 2 @0x8004b684)
+PASS: 3F-Blatt (4) nach dem Sprung NICHT anwaehlbar (nie auf 3F) - bekannt 0
+PASS: danach mit dem Fahrstuhl auf 3F angekommen: 3F-Kabine besucht, 2F-Kabine unbesucht, 1F-Kabine besucht
+PASS: JUMP 4020 aus ROOM4010, Spawn DEBUG.BIN (-21400,-23400): gezeigt Blatt 8, Blatt 8 AKTUELL, Blatt 9 unbesucht, Blatt 10 unbesucht
+PASS: 4020-Etagen-Bits: Blatt 8 (115)=1, 9 (116)=0, 10 (117)=0 - nur Blatt 8 (@0x8004bdb4); Blatt 9/10 bekannt 0/0
+PASS: v8-Stand mit Kabinen-Zonen-Bits (1080/4020) wird angenommen und gehoben
+PASS: v8-Hebung: Kabinen-Etagen-Bits 112..117 gesetzt 0 (vorher alle 6)
+```
+Gegenprobe "nur die Schleife auslassen" (Vorschlag der Abnahme), `re15_map_page_known` voruebergehend
+ohne die Kabinen-Regel gebaut (`nb1_kabine_ohne_blattregel.txt`): die Bits stimmen, aber
+`FAIL: 3F-Blatt (4) ... bekannt 1` und `FAIL: ... Blatt 9/10 bekannt 1/1` - das 3F-Blatt blieb
+anwaehlbar (leer), weil die Gast-Zeilen das Zonen-Bit der Kabine tragen. Die Blatt-Regel ist also noetig.
+
+Echte exe, derselbe Weg wie vorher (`nb1_exe_nachher.txt`):
+```
+Blatt 1F  Kasten (109,134)-(118,143) rot=54 besucht=0          <- Kabine aktuell (wie vorher)
+Blatt 2F  Kasten (109,134)-(118,143) rot=0  besucht=0 wand=0   <- vorher besucht=64
+2x HOCH   Kasten (127,137)-(136,146) rot=0  besucht=0 wand=0   <- vorher besucht=64
+          Abzug 1x HOCH gegen 2x HOCH: GLEICH 0 Pixel (vorher 1065) = das zweite HOCH bleibt auf 2F,
+          Blatt 3F ist nicht anwaehlbar
+```
+Bilder `M_karte_bilder/nb1_nachher_debugsprung_1F_x2.png` (Kabine aktuell auf "POLICE STATION 1F")
+und `nb1_nachher_debugsprung_2xHOCH_x2.png` ("POLICE STATION 2F", nur der 1100-Gang, keine Kabine).
