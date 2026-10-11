@@ -26,6 +26,10 @@ extern scd_vm_t g_scd;
 static uint16_t s_spiegel_x[RE15_SCD_MAX_PROPS];
 static uint16_t s_spiegel_z[RE15_SCD_MAX_PROPS];
 static int      s_pass_lief;
+/* Messschrieb (RE15_PUSH_LOG, dachkiste_r36.c): je Treffer von FUN_8003b558 im Ruhe-Zweig 8 Werte —
+ * Zellenindex, x0, x1, z0, z1, r, Lage x/z NACH FUN_8003da78. Nur Diagnose. */
+static int32_t  s_log[8 * 8];
+static int      s_log_n;
 
 void re15_zellschub_install(uint16_t room_id)
 {
@@ -179,6 +183,11 @@ int re15_zellschub_8003b558(const re15_rdt_t *rdt, int p, int32_t *x, int32_t *z
         (void)re15_zellschub_8003da78((int32_t)e->x, (int32_t)e->width, (int32_t)e->z, (int32_t)e->density,
                                       cx, cz, r, sx, sz, x, z);
         s5 |= 1;
+        if (s_log_n < 8) {                                        /* Messschrieb */
+            int32_t *l = &s_log[8 * s_log_n++];
+            l[0] = i; l[1] = e->x; l[2] = (int32_t)e->x + (int32_t)e->width; l[3] = e->z;
+            l[4] = (int32_t)e->z + (int32_t)e->density; l[5] = r; l[6] = *x; l[7] = *z;
+        }
     }
     return s5;                                                    /* @0x8003b7bc andi v0,s5,0xff         */
 }
@@ -188,9 +197,15 @@ void re15_zellschub_ruhe(const re15_rdt_t *rdt, int p)
 {
     if (p < 0 || p >= RE15_SCD_MAX_PROPS || !g_scd.props[p].active) return;
     int32_t x = g_scd.props[p].x, z = g_scd.props[p].z;
+    const int32_t ox = x, oz = z;
+    s_log_n = 0;
     (void)re15_zellschub_8003b558(rdt, p, &x, &z, 2u);           /* @0x8002c0b8 ori a1,zero,2           */
     g_scd.props[p].x = x;                                         /* FUN_8003da78 sw 52(a1)              */
     g_scd.props[p].z = z;                                         /* FUN_8003da78 sw 60(a1)              */
+    if (x != ox || z != oz) {                                     /* Messschrieb RE15_PUSH_LOG (Spur R)  */
+        extern void re15_dachkiste_ruhe_log(int, int32_t, int32_t, int32_t, int32_t, int, const int32_t *);
+        re15_dachkiste_ruhe_log(p, ox, oz, x, z, s_log_n, s_log);
+    }
 }
 
 void re15_zellschub_pass_lief(void) { s_pass_lief = 1; }

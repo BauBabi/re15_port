@@ -666,7 +666,115 @@ Spiegel am Ende jedes Eintrags), `game_step_common.c` (1 Zeile vor `re15_objfall
 (Installer-Zeile am Blockende). Waehrend eines Falls (obj+4 = 1, FUN_8002c444 schreibt den Spiegel selbst
 @0x8002c6ac-b0) rechnet der Ruhe-Zweig mit Spiegel = Lage (liest `re15_objfall_info`).
 
-**Messung nachher.** (folgt)
+### P2 — Y-Test der Ausschiebung FUN_8002cabc (Spieler/Aktor <-> Objekt)
+
+**Ursache.** `push_out_of` (re15_collision.c, Aufrufer `re15_collision_objects` fuer den Spieler und
+`re15_collision_objects_actor` fuer die NPC-Familie) und `re15_collision_push_prop` (Schiebe-Modus a2 = 1) rechneten nur
+x/z. Das Original prueft nach der x/z-Broadphase die HOEHE und schiebt bei fehlender Y-Ueberlappung nicht.
+
+**Messung vorher** (Abnahme 2, A1/A5/O1, selbst nachgelesen): Port `abn2/echt2050/climb.txt` `T861 room=2050 ...
+pos=(3402,-5400,-6634)`, danach x = 3402 bis T4200 (= 2952 + 450, Ostkante der Band-0-Kiste obj 1 (2052,0,-5552)
++ PR); Elza `abn2/elza2051/climb.txt` dito (3402,-5400,-6717). Original `abn2/orig_2050_abn2/log.txt`: `GEHE
+(9100,-6300): angekommen bei (9002,-6417)`, `GEHE (-100,-6300): angekommen bei (-125,-6291)` — durch die Grundflaeche.
+
+**Belege (Instruktionen, `dis 0x8002cabc 210`).** `8002cb50 addu v1,t8,t5 / cb54 sll v0,t5,1 / cb58 sltu v0,v0,v1 /
+cb5c bne v0,zero,0x8002cde4` (x-Broadphase), `8002cb64-70` (z), `8002cb78 ori v0,zero,0x2 / cb7c beq t9,v0,0x8002cde4`
+(a2 = 2 -> Rueckgabe 1 ohne Y-Test; der Spieler-Pfad @0x8002c0e4 und der Aktor-Pfad @0x8002be40 uebergeben a2 = 0,
+der Schub @0x8002bfa4/@0x8002bed4/@0x800384e0-50 a2 = 1), dann **`8002cb84 lh v1,2(t1)` objbox.cy / `cb88 lw a1,56(t0)`
+obj.y / `cb8c lh v0,2(t2)` actorbox.cy (t2 = Aktor+0x78, NICHT die gedrehte +0x7c) / `cb90 lw a0,56(a3)` Aktor.y /
+`cb94 addu v1,v1,a1` / `cb98 addu v0,v0,a0` / `cb9c lhu a1,8(t2)` actorbox.hy / `cba0 lhu a0,8(t1)` objbox.hy /
+`cba4 subu t6,v1,v0` dy / `cba8 addu a1,a1,a0` hySum / `cbac addu t3,t6,a1` / `cbb0 sll v0,a1,1` / `cbb4 sltu
+v0,v0,t3` / `cbb8 xori t3,v0,0x1` / `cbbc bne t3,zero,0x8002cbcc` / `cbc4 j 0x8002cde4` / `cbc8 addu v0,zero,zero`**
+= keine Ueberlappung -> Rueckgabe 0. Aktor-Box: Spieler +0x78 = 0x80073e94 (Savestate room2050_orig.sav, Abnahme 2),
+EXE Datei-Offset 0x64694 `00 00 06 fa 00 00 c2 01 fa 05 c2 01` = {0,-1530,0,450,1530,450}; NPC-Familie 0x40..0x4d
+@0x80121658 = STAGE1.BIN Offset 0x21658 (ohne Kopf) dieselben Bytes. Rechnung 2050: objCY = 0 - 900 = -900, actorCY
+= -5400 - 1530 = -6930, dy = 6030, hySum = 2430, `(u32)4860 < (u32)8460` -> keine Ueberlappung; Band 0: dy = 630 -> Schub.
+
+**Aenderung.** `re15_collision.c`: `y_ueberlappt_8002cb84(i, actor_y)` mit `RE15_AKTORBOX_CY = -1530`,
+`RE15_AKTORBOX_HY = 1530` (0x80073e94 +2/+8); Aufruf in `push_out_of` (neuer Parameter actor_y; `re15_collision_objects`
+reicht `g_actors[PLAYER].y`, `re15_collision_objects_actor(x, z, actor_y)` den Aktor — Signatur in re15_collision.h,
+einziger Aufrufer enemy_ai_common.c `re15_actor_prop_pushout` reicht `ac->y`; der bestehende Pin
+test_1090_npc_prop_push.c reicht `n->y`) und in `re15_collision_push_prop` (alle drei Aufrufer uebergeben den Spieler:
+Schubkette @0x8002bfa4, Herunterspringen @0x800384e0-50, Szenen-Schub @0x8002bed4; gelesen wird `g_actors[PLAYER].y`).
+NICHT portiert (OFFEN, mit Adresse): der Zweig @0x8002cc3c-cce4 — bei FRISCHER Y-Ueberlappung (Vor-y-Spiegel +0x42 von
+Aktor und Objekt: `8002cc3c lh v1,66(t0)` / `cc44 lh v0,66(a3)` / `cc64-6c xori/xor/and`) schiebt das Original in Y
+statt in x/z (`8002cc80-ccb0` Objekt, `8002ccb4-cce4` Aktor: y = Gegenueber +- (1 + hySum)). Der Port fuehrt keinen
+Vor-y-Spiegel, und die Landung auf Objekten laeuft dort im Kletter-FSM (Spur A, climb_sub10 @0x80038560-604); heute
+schiebt der Port in diesem Fall horizontal wie vorher — keine neue Abweichung durch P2, aber eine bestehende.
+
+### P4 — Nicht-Quadrat-Zweig von FUN_8003b558 (r = hz)
+
+Belege s. P1 (@0x8003b684-734). `re15_zellschub_8003b558` rechnet den Lagecode der Objektmitte je Zelle (x: 3 westlich,
+2 innerhalb, 0 oestlich; z analog) und nimmt r = hz nur bei x == 2 und z in {3, 0}; der Schub-Test @0x8002bfb0 in
+re15_prop_push_tick ruft jetzt diese Funktion (auf eine Kopie der Ziel-Lage), `re15_collision_box_blocked` (immer
+r = hx) hat keinen Aufrufer mehr und bleibt als Referenz. Messschrieb RE15_PUSH_LOG (TREFFER-ZELLE) rechnet dieselbe
+Regel und gibt r aus. Pin `unit_r36_dachkiste_zellschub` (quadrat): ROOM2060 Zelle [1] x -2100..2950 z -5550..5350,
+Objektmitte (425,-6190) = 640 suedlich der Zellkante -> mit r = hx (675) GESPERRT (`re15_collision_box_blocked` = 1),
+mit r = hz (600) FREI (`re15_zellschub_8003b558` = 0); 100 weiter noerdlich sperren beide.
+
+### P3 — Dossier
+
+(a) exe-Messung der 2050-Kiste vom ECHTEN WEG: Lauf `R_belege/nb3_2050echt` (Leon, ROOM2000 Band 1 -> Tuer slot 4
+@0x0169E -> ROOM2050; Wegplan `wegplan_2050_echt.txt` = Plan der Abnahme ohne Umweg): `DOOR FIRE slot=4 ...
+spawn=(9100,-5400,4100)`, `loaded room2050.rdt`, `GEHE (9100,-6300)` angekommen (9100,-6175), **`GEHE (-100,-6300)`
+angekommen bei (17,-6335) (F487)** — durch die Grundflaeche der Band-0-Kiste (x 1152..2952), keine Klemme bei 3402;
+danach Sued (obj.z -7036), Ost (x 7553), Nord: push.txt 812x `p=0 obj=6 SCHUB-OK`, 0 GESPERRT; objfall.txt `F1874
+AUSLOESER wort=0x3202 band=3 pos=(7553,-5400,-11705)`, `F1891 LANDUNG y=-3600 band=2 pos=(7553,-13250)`, Ende `p0
+(7553,-3600,-13068) b2`. Elza: Lauf `nb3_2051echt_elza` (ROOM2001 -> slot 4 -> ROOM2051), s. Messung nachher.
+(b) 4.3 letzter Absatz berichtigt (Sonde 2050/2051 soll = 1 seit Nachbesserung 2). (c) N5 als GEMESSEN uebernommen
+(Abnahme 2 O2, `abn2/orig_3050b_abn2/log.txt`): JUMP 305 spawnt auf Band 0 bei (-23996,0,1523); Leon per GDB-RAM
+(+0x34/+0x38/+0x3C, +0x82) auf die 30E0-Ankunft (-3596,-7200,1523) Band 4; WEST 307 SCHUB-OK / SUED 117 SCHUB-OK, 0
+gesperrt, FALL-AUSLOESER obj=(-24070,-7200,-18492), Endlage (-24070,0,-15631) Band 0 — Port (Riegel fall3050) AUSLOESER
+(-24058,-7200,-18488), Endlage (-24058,0,-15561) Band 0: Port = Original. (d) "Fuer den Nutzer" neu gefasst (s. u.).
+
+### Messung nachher (P1, P2, P4)
+
+* **Pin `unit_r36_dachkiste_zellschub`** (tests/unit/test_r36_dachkiste_zellschub.c, 25 Pruefungen): ROOM2060 obj 2
+  Record (-3125,2075) -> nach Bild 1 (-3143,2075), Spiegel (-3143,2075), stabil ueber vier Bilder (davon eines ueber
+  `re15_zellschub_nach_pass`), kein anderes Objekt bewegt; FUN_8003da78 Code 0 unbewegt/Code 1/Code 2/Code 3/Code 0
+  bewegt (Rueckstellung, Rueckgabe 0)/Code 2 mit |a3| > 400 — alle sechs Zweige mit den Zahlen des Tritts; P4-Zelle;
+  P2 Band 3/Band 0 Spieler und Aktor, Schiebe-Modus. `100% tests passed, 0 tests failed out of 1`.
+* **Zensus Port (Sonde `test_r36_dachkiste_zellschub diag`):** alle RDTs, Raumaufbau mit Nullflags, ein Objekt-Pass:
+  `ZENSUS: 206 Raeume, 513 aktive Objekte, 2 vom Ruhe-Zweig im ersten Bild bewegt` — genau ROOM2060/ROOM2061 obj 2
+  (-3125,2075) -> (-3143,2075). Kein anderes Objekt im Auslieferungsstand beruehrt eine Klasse-2-Zelle seines Bands.
+* **Zensus Original (`R_belege/savestate_zellschub_zensus.py` -> `savestate_zellschub_zensus.txt`):** 57 auswertbare
+  Spielstaende aus stage_saves (RDT-Zeiger DAT_800ac778, Pool 0x800b3f98, SCA-Kopf aus der RAM: ceil + 5 absolute
+  Zeiger ab +4, Zellen ab +0x18; Quadrant 0..3 wie @0x8003b5f4-624), 187 aktive Objekte: **0 Objekte, die an ihrer
+  Ruhelage eine Klasse-2-Zelle ihres Bands treffen** (Modell FUN_8003b558 mit und ohne Nicht-Quadrat-Zweig) — die
+  Invariante des Ruhe-Zweigs gilt in jedem Spielstand; 87 gegen den Obj_model_set-Record verschobene Objekte, davon
+  83 + 2 mit Wort-Bit 0x8 (Null-Box bzw. Box {0,1260,0,45,1260,700}, per Skript geparkt, von FUN_8003b558
+  @0x8003b668-674 ausgenommen) und 2x ROOM1090 obj 0 (Hof-Kiste, -1700 in x = Spielerschub der Sitzung, kein
+  18er-Schritt). Dach-Kiste obj 1 in beiden 1090-Spielstaenden auf dem Record (-5960,-9000,-15482). Abnahme-Spielstaende
+  (`savestate_zellschub_zensus_abn2.txt`): **room2060_orig.sav Pool 2 pos (-3143,0,2075) rec (-3125,0,2075) spiegel
+  (-3143,2075)** = Lage UND Spiegel wie der Port nach Bild 1; room3050_orig.sav Pool 1 auf dem Record.
+* **exe, 2060-Glied Lauf a (`R_belege/nb3_2060glied_a`, Plan der Abnahme wp_2060echt2):** objfall.txt `F15 ... p2
+  (-3143,0,2075) b0` (Raumstart), wegplan.txt `SCHIEB blick 1024 bis obj.z <= -7000` -> `F1120 Bedingung erfuellt (obj.z
+  = -7042)`, push.txt 647x `p=2 obj=2 SCHUB-OK`, 0 GESPERRT; `SCHIEB blick 0 bis obj.x >= 300` -> `F1481 (obj.x = 337)`;
+  objfall.txt `F1448 p=2 KERBE m0b=2 pos=(-494,0,-7042)`; AKTION bei (503,-5992) Blick 1024 -> Aufstieg (climb.txt sub 9
+  kind 0x81 obj 2, danach (503,-1800,-7140) Band 1 stand 2); oben bis (503,-1800,-7417) = Eingrenzung (-7042 - 600 + 225),
+  AKTION -> **Absprung** (sub 9 kind 0x02 -> sub 10, Landung (503,0,-7832) Band 0), die Landung schiebt den Tritt per
+  Objekt-Pass @0x800384e0-50 auf z -6782; keine Tuer.
+* **Original, 2060-Glied (`R_belege/orig_2060_glied.py`, Laeufe a = `orig_2060_glied_a/log.txt`, b =
+  `orig_2060_glied/log.txt`; Spielstand abn2/room2060_orig.sav JUMP 206, Auslieferungs-EXE 0800e003, Spinnen ueber
+  Aktiv-Bit + g_active_count, Haltepunkte @0x8002bfc0/@0x8002c0b0/@0x8002c13c/@0x8003da78):** START `obj=(-3143,0,2075)
+  ... (3,172)=0`; NORD `Schub angenommen 453 x, gesperrt 0 x` (a: 461), Tritt z 2075 -> -7408 (a: -7405); OST `169 x,
+  gesperrt 0 x`, x -3143 -> 339 (a: 334), **danach `(3,172)=1`** (Zonentabelle @0x80074664[3] = 0x800b0ff8, Wort +20 Bit
+  0x00080000 — Ck-Handler @0x8003fcf4-28); Lauf a: Square direkt nach dem Drehen (sub 3) bzw. nach dem Schub (sub 8)
+  blieb ohne Wirkung (NICHT oben); Lauf b mit 1 s Ruhe: `AUFSTIEG-SQUARE VOR spieler=(429,0,-6341) blick=9259 ... sub=0`
+  -> `NACH spieler=(429,-1800,-7489) band=1` **OBEN**; oben UP 1,5 s -> `(429,-1800,-7783)` (= obj.z - 600 + 225, die
+  Eingrenzung FUN_8002cfd4), Blick 1024, Square -> **`OBEN-SQUARE NACH spieler=(-12850,-5400,1600) blick=1024 band=3`,
+  `TUER AUSGELOEST — RDT-Kopf 000d0900... -> 00100500...`** = ROOM2040-Ankunft der Tuer slot 1 @0x00DBA. Das Glied ist im
+  Original Ende-zu-Ende gangbar (Nord-Schub, Ost-Schub, Latch, Aufstieg, Tuer).
+* **Warum der Port in Lauf a oben absprang und das Original die Tuer nahm — Tritt-LAGE, nicht Reihenfolge:** die
+  ENTRY-Handler (`dis 0x80031fc0 40`: `80031fd0 jal 0x8002d474` Kletter-Sonde, `80031fd8 bne v0,zero -> Ende`, `80031fe4
+  jal 0x80042bac` a1 = 1 / a2 = 0x10 Tuer-Scan) laufen im Port in derselben Reihenfolge (game_step_common.c:2089-93).
+  FUN_8002d474 nimmt den Absprung nur, wenn der Reichweitentest FUN_8002d1e8(Spieler, Stand-Objekt, 1) @0x8002d708
+  fehlschlaegt UND die Bodenhoehe am Sondenpunkt 800 voraus (FUN_8001c6e8 @0x8002d724) tiefer liegt als der Spieler
+  (`8002d738-3c`, Port climb_common.c:285-291). Im Original stand der Tritt bei z -7408: Spieler oben bei -7783, Sonde
+  800 voraus = -8583 in der Nordwand der Kerbe (< -8300) -> kein Absprung -> Tuer-Scan trifft (Punkt 620 voraus = -8403
+  in x -200..1100 z -8850..-7850, floor 1). In Lauf a stand der Tritt bei -7042 (mein Plan schob nur bis -7000): Spieler
+  -7417, Sonde -8217 auf Kerbenboden -> Absprung. Der Port-Plan wurde auf den Original-Weg gesetzt (Nord bis z <= -7400):
+  Lauf b `nb3_2060glied`, s. u.
 
 ## Tests
 

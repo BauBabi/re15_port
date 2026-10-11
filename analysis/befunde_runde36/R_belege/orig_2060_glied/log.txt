@@ -1,0 +1,92 @@
+DuckStation gestartet {'112076'}
+GDB verbunden
+Stopp: b'S02'
+EXE-Stub @0x80026e4c: 0800e003 (Auslieferung 0800e003)
+  Pool  0: w0 00000099 pos (5775,-4860,5325) spiegel (5775,5325) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  1: w0 00000099 pos (-5525,-4860,825) spiegel (-5525,825) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  2: w0 00000001 pos (-3143,0,2075) spiegel (-3143,2075) faellt=0 z=0 band=0 box [50, -900, 0, 675, 900, 600]
+  Pool  3: w0 00000101 pos (-19554,0,22684) spiegel (-19554,22684) faellt=0 z=0 band=0 box [0, -900, 0, 900, 900, 900]
+  Pool  4: w0 00000101 pos (19571,0,-22542) spiegel (19571,-22542) faellt=0 z=0 band=0 box [0, -900, 0, 900, 900, 900]
+  Pool  5: w0 0000000b pos (-24433,10,19398) spiegel (-24433,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  6: w0 0000000b pos (-21333,10,19398) spiegel (-21333,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  7: w0 0000000b pos (-18333,10,19398) spiegel (-18333,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  8: w0 0000000b pos (-15133,10,19398) spiegel (-15133,19398) faellt=0 z=0 band=2 box [0, 0, 0, 0, 0, 0]
+  Pool  9: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 10: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 11: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 12: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 13: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 14: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+  Pool 15: w0 00000000 pos (0,0,0) spiegel (0,0) faellt=0 z=0 band=0 box -
+Spieler: (7600, 0, 3950, 0, 0, 0) K = 2 HP: 100 RDT: (2148635440, '000d09000000000068ee1180e8ee1180') (3,172) = 0
+Entity 0 @800acc2c: w0 0801 typ 0x25 pos (5800, -3600, 6400) -> Aktiv-Bit geloescht
+Entity 1 @800ace20: w0 0801 typ 0x25 pos (-6600, -3600, 800) -> Aktiv-Bit geloescht
+g_active_count @0x800aca4e: 2 -> 0
+Z0 8002bfc0: b'OK'
+Z0 8002c0b0: b'OK'
+Z0 8002c13c: b'OK'
+Z0 8003da78: b'OK'
+Drehsinn: R 0.4 s -> dBlick = 1152
+START spieler=(7600,0,3950) blick=2208 band=0 sub=3 | obj=(-3143,0,2075) faellt=0 z=0 band=0 n=0 | (3,172)=0
+== 1. um den Tritt herum vor seine Suedseite (Port-Weg nb3_2060glied) ==
+  GEHE (5000,3950): angekommen bei (5176,3988), Schub-Ereignisse unterwegs 0
+  GEHE (5000,-6900): angekommen bei (5007,-6944), Schub-Ereignisse unterwegs 0
+  GEHE (-4700,-6900): angekommen bei (-4740,-6880), Schub-Ereignisse unterwegs 0
+  GEHE (-4700,3250): angekommen bei (-4663,3194), Schub-Ereignisse unterwegs 0
+  GEHE (-3100,3300): angekommen bei (-3123,3326), Schub-Ereignisse unterwegs 0
+== NORD-Schub (Blick 1024) bis Tritt-Mitte z <= -7400 ==
+  GEHE (-3118,3300): angekommen bei (-3123,3326), Schub-Ereignisse unterwegs 0
+NORD Runde 0 VOR spieler=(-3123,0,3326) blick=1008 band=0 sub=3 | obj=(-3143,0,2075) faellt=0 z=0 band=0 n=0 | (3,172)=0
+  SCHUB-OK obj=(-3143, 0, 2000, 0, 0, 0, 9) spieler=(-3114, 0, 3050, 1008, 0, 1) s4/s5=(-3143,2075)
+  SCHUB-OK obj=(-3143, 0, 1908, 0, 0, 0, 9) spieler=(-3084, 0, 2958, 1049, 0, 8) s4/s5=(-3143,1957)
+  SCHUB-OK obj=(-3143, 0, 1349, 0, 0, 0, 9) spieler=(-3149, 0, 2399, 1049, 0, 8) s4/s5=(-3143,1388)
+  SCHUB-OK obj=(-3143, 0, 807, 0, 0, 0, 9) spieler=(-3201, 0, 1857, 1049, 0, 8) s4/s5=(-3143,846)
+  SCHUB-OK obj=(-3143, 0, 265, 0, 0, 0, 9) spieler=(-3253, 0, 1315, 1049, 0, 8) s4/s5=(-3143,304)
+  SCHUB-OK obj=(-3143, 0, -277, 0, 0, 0, 9) spieler=(-3305, 0, 773, 1049, 0, 8) s4/s5=(-3143,-238)
+  SCHUB-OK obj=(-3143, 0, -819, 0, 0, 0, 9) spieler=(-3357, 0, 231, 1049, 0, 8) s4/s5=(-3143,-780)
+  SCHUB-OK obj=(-3143, 0, -1361, 0, 0, 0, 9) spieler=(-3409, 0, -311, 1049, 0, 8) s4/s5=(-3143,-1322)
+  SCHUB-OK obj=(-3143, 0, -1903, 0, 0, 0, 9) spieler=(-3461, 0, -853, 1049, 0, 8) s4/s5=(-3143,-1864)
+  SCHUB-OK obj=(-3143, 0, -2445, 0, 0, 0, 9) spieler=(-3513, 0, -1395, 1049, 0, 8) s4/s5=(-3143,-2406)
+  SCHUB-OK obj=(-3143, 0, -2987, 0, 0, 0, 9) spieler=(-3565, 0, -1937, 1049, 0, 8) s4/s5=(-3143,-2948)
+  SCHUB-OK obj=(-3143, 0, -3529, 0, 0, 0, 9) spieler=(-3617, 0, -2479, 1049, 0, 8) s4/s5=(-3143,-3490)
+  SCHUB-OK obj=(-3143, 0, -4071, 0, 0, 0, 9) spieler=(-3669, 0, -3021, 1049, 0, 8) s4/s5=(-3143,-4032)
+  SCHUB-OK obj=(-3143, 0, -4613, 0, 0, 0, 9) spieler=(-3721, 0, -3563, 1049, 0, 8) s4/s5=(-3143,-4574)
+  SCHUB-OK obj=(-3143, 0, -5155, 0, 0, 0, 9) spieler=(-3773, 0, -4105, 1049, 0, 8) s4/s5=(-3143,-5116)
+  SCHUB-OK obj=(-3143, 0, -5697, 0, 0, 0, 9) spieler=(-3825, 0, -4647, 1049, 0, 8) s4/s5=(-3143,-5658)
+  SCHUB-OK obj=(-3143, 0, -6239, 0, 0, 0, 9) spieler=(-3877, 0, -5189, 1049, 0, 8) s4/s5=(-3143,-6200)
+  SCHUB-OK obj=(-3143, 0, -6781, 0, 0, 0, 9) spieler=(-3929, 0, -5731, 1049, 0, 8) s4/s5=(-3143,-6742)
+NORD Runde 0 NACH (Stillstand) spieler=(-4221,0,-6085) blick=1049 band=0 sub=1 | obj=(-3143,0,-6979) faellt=0 z=0 band=0 n=0 | (3,172)=0
+  GEHE (-3118,-5754): angekommen bei (-3097,-5730), Schub-Ereignisse unterwegs 0
+NORD Runde 1 VOR spieler=(-3097,0,-5730) blick=5129 band=0 sub=3 | obj=(-3143,0,-6979) faellt=0 z=0 band=0 n=0 | (3,172)=0
+  SCHUB-OK obj=(-3143, 0, -7310, 0, 0, 0, 9) spieler=(-3108, 0, -6260, 5127, 0, 8) s4/s5=(-3143,-7258)
+NORD Runde 1 NACH (Bedingung) spieler=(-3127,0,-6358) blick=5127 band=0 sub=8 | obj=(-3143,0,-7408) faellt=0 z=0 band=0 n=9 | (3,172)=0
+NORD: Schub angenommen 453 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+== 2. Westseite, OST-Schub (Blick 0) bis Tritt-Mitte x >= 300 (Kerbe) ==
+  GEHE (-4700,-5000): angekommen bei (-4703,-4969), Schub-Ereignisse unterwegs 0
+  GEHE (-4700,-7408): angekommen bei (-4731,-7438), Schub-Ereignisse unterwegs 0
+  GEHE (-4643,-7408): angekommen bei (-4731,-7438), Schub-Ereignisse unterwegs 0
+OST Runde 0 VOR spieler=(-4731,0,-7438) blick=8199 band=0 sub=3 | obj=(-3143,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=0
+  SCHUB-OK obj=(-2713, 0, -7408, 0, 0, 0, 9) spieler=(-3788, 0, -7465, 8198, 0, 8) s4/s5=(-2762,-7408)
+  SCHUB-OK obj=(-2171, 0, -7408, 0, 0, 0, 9) spieler=(-3246, 0, -7501, 8198, 0, 8) s4/s5=(-2220,-7408)
+  SCHUB-OK obj=(-1629, 0, -7408, 0, 0, 0, 9) spieler=(-2704, 0, -7537, 8198, 0, 8) s4/s5=(-1678,-7408)
+  SCHUB-OK obj=(-1087, 0, -7408, 0, 0, 0, 9) spieler=(-2162, 0, -7573, 8198, 0, 8) s4/s5=(-1136,-7408)
+  SCHUB-OK obj=(-545, 0, -7408, 0, 0, 0, 9) spieler=(-1620, 0, -7609, 8198, 0, 8) s4/s5=(-594,-7408)
+  SCHUB-OK obj=(-3, 0, -7408, 0, 0, 0, 9) spieler=(-1078, 0, -7645, 8198, 0, 8) s4/s5=(-52,-7408)
+OST Runde 0 NACH (Bedingung) spieler=(-736,0,-7651) blick=8198 band=0 sub=8 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=9 | (3,172)=1
+OST: Schub angenommen 169 x, gesperrt 0 x, Fall-Ausloeser 0 x, Ende: Bedingung
+NACH-OST spieler=(-736,0,-7651) blick=8198 band=0 sub=8 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=9 | (3,172)=1
+== 3. Latch (3,172) = 1 (Zonentabelle @0x80074664[3] = 0x800b0ff8, Wort +20 Bit 0x00080000) ==
+== 4. Aufstieg von Sueden: GEHE (obj.x+50, obj.z+1100), Blick 1024, SQUARE ==
+  GEHE (389,-6308): angekommen bei (429,-6341), Schub-Ereignisse unterwegs 2
+AUFSTIEG-SQUARE VOR spieler=(429,0,-6341) blick=9259 band=0 sub=0 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=1
+AUFSTIEG-SQUARE NACH spieler=(429,-1800,-7489) blick=9216 band=1 sub=0 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=1
+Aufstieg: OBEN (y -1800, Band 1)
+== 5. oben nach Norden (UP 1.5 s) bis zur Eingrenzung, Blick 1024, SQUARE ==
+OBEN-NORDKANTE spieler=(429,-1800,-7783) blick=9216 band=1 sub=1 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=1
+OBEN-SQUARE VOR spieler=(429,-1800,-7783) blick=9216 band=1 sub=0 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=1
+OBEN-SQUARE NACH spieler=(-12850,-5400,1600) blick=1024 band=3 sub=0 | obj=(339,0,-7408) faellt=0 z=0 band=0 n=0 | (3,172)=1
+OBEN-SQUARE: TUER AUSGELOEST — RDT-Kopf (2148635440, '000d09000000000068ee1180e8ee1180') -> (2148635440, '0010050000000000d0f2118050f31180'), Spieler (-12850, -5400, 1600, 1024, 3, 0) (2040-Ankunft (-12850, -5400, 1600))
+ENDE spieler=(-12850,-5400,1600) blick=1024 band=3 sub=0 | obj=(22925,-5400,-5400) faellt=0 z=0 band=3 n=0 | (3,172)=1
+ENDE: TUER AUSGELOEST — RDT-Kopf (2148635440, '000d09000000000068ee1180e8ee1180') -> (2148635440, '0010050000000000d0f2118050f31180'), Spieler (-12850, -5400, 1600, 1024, 3, 0) (2040-Ankunft (-12850, -5400, 1600))
+Ereignisse gesamt: 624 Fall-Ausloeser: 0 HP: 100
+settings.ini zurueckgeschrieben (EnableGDBServer = false: True)

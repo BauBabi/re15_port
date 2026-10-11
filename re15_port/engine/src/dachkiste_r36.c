@@ -34,6 +34,7 @@
  *                                das Objekt faellt (y aendert sich), die Schubkette dreimal sperrt oder max Bilder
  *   AKTION                       Aktionstaste (Quadrat) 3 Bilder
  *   AOTS                         aktive AOT-Slots (Typ, Ereignis, Flags, Band, Rechteck) ins Log
+ *   FLAG z b                     Spielflag (Bank z, Bit b) ins Log (Nachbesserung 3)
  *   ENDE
  * Log: RE15_WEGPLAN_LOG=<datei> (Default wegplan.txt im Arbeitsordner).
  */
@@ -91,12 +92,10 @@ static void treffer_zellen(FILE *f, int32_t cx, int32_t cz, int band, int32_t hx
     }
 }
 
-/* Letztes Schub-Ergebnis fuer den Wegplan-Treiber (SCHIEB bricht nach drei gesperrten Schueben ab). */
-static uint32_t s_schub_bild = 0;
-static int      s_schub_gesperrt = 0;
-static int      s_schub_obj = -1;
-
-void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int gesperrt)
+/* Nachbesserung 3 (P1): Messschrieb der RUHE-AUSSCHIEBUNG (zellschub_r36.c re15_zellschub_ruhe) — eine Zeile je
+ * bewegtem Objekt mit den getroffenen Zellen (Index, Rechteck, r) und der Lage nach FUN_8003da78; Gegenstueck zum
+ * Original-Haltepunkt @0x8003da78 ausserhalb des Spieler-Schubs (z. B. ROOM2060 Raumstart, 2050-Fall). */
+static FILE *push_log_datei(void)
 {
     static int init = 0;
     static FILE *f = NULL;
@@ -105,6 +104,30 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
         const char *p = getenv("RE15_PUSH_LOG");
         if (p && *p) f = fopen(p, "w");
     }
+    return f;
+}
+
+void re15_dachkiste_ruhe_log(int prop_idx, int32_t ox, int32_t oz, int32_t nx, int32_t nz, int n, const int32_t *l)
+{
+    FILE *f = push_log_datei();
+    if (!f || prop_idx < 0 || prop_idx >= RE15_SCD_MAX_PROPS) return;
+    fprintf(f, "F%u room=%04X p=%d obj=%d RUHE-AUSSCHIEBUNG lage=(%d,%d) -> (%d,%d) band=%d y=%d\n",
+            g_engine.frame_count, g_current_room_id, prop_idx, (int)g_scd.props[prop_idx].obj_id, ox, oz, nx, nz,
+            (int)g_scd.props[prop_idx].band, g_scd.props[prop_idx].y);
+    for (int i = 0; i < n && i < 8; i++)
+        fprintf(f, "  ZELLE [%d]: x %d..%d z %d..%d r=%d -> lage (%d,%d)\n", (int)l[8 * i], (int)l[8 * i + 1],
+                (int)l[8 * i + 2], (int)l[8 * i + 3], (int)l[8 * i + 4], (int)l[8 * i + 5], (int)l[8 * i + 6], (int)l[8 * i + 7]);
+    fflush(f);
+}
+
+/* Letztes Schub-Ergebnis fuer den Wegplan-Treiber (SCHIEB bricht nach drei gesperrten Schueben ab). */
+static uint32_t s_schub_bild = 0;
+static int      s_schub_gesperrt = 0;
+static int      s_schub_obj = -1;
+
+void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int gesperrt)
+{
+    FILE *f = push_log_datei();
     s_schub_bild = g_engine.frame_count;
     s_schub_gesperrt = gesperrt;
     s_schub_obj = prop_idx;
@@ -131,7 +154,7 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_LEFT   0x0080u
 #define WP_SQUARE 0x8000u
 
-enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_ENDE };
+enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE };
 
 typedef struct {
     int kind;
@@ -225,6 +248,7 @@ static void wp_parse(const char *pfad)
                                             cmd.c = (s2[0] == '<') ? 1 : 0; cmd.d = d; cmd.e = e; }
         else if (!strcmp(w, "AKTION"))    { cmd.kind = WP_AKTION; }
         else if (!strcmp(w, "AOTS"))      { cmd.kind = WP_AOTS; }
+        else if (!strcmp(w, "FLAG"))      { cmd.kind = WP_FLAG; sscanf(zeile, "%*s %d %d", &a, &b); cmd.a = a; cmd.b = b; }
         else if (!strcmp(w, "ENDE"))      { cmd.kind = WP_ENDE; }
         else continue;
         s_wp[s_wp_n++] = cmd;
@@ -257,6 +281,7 @@ static void wp_start(const wp_cmd_t *c)
                            c->c ? "<=" : ">=", c->d, c->e); break;
     case WP_AKTION: wp_log("AKTION"); break;
     case WP_AOTS:  wp_log("AOTS"); break;
+    case WP_FLAG:  wp_log("FLAG (%d,%d)", c->a, c->b); break;
     default: break;
     }
 }
@@ -354,6 +379,10 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         break; }
     case WP_ZELLE:
         wp_zelle(c->a, c->b);
+        wp_naechster("gelesen");
+        break;
+    case WP_FLAG:   /* Nachbesserung 3: Spielflag (Bank, Bit) ins Log — z. B. der Latch (3,172) von ROOM2060 sub01 */
+        wp_log("  FLAG (%d,%d) = %d", c->a, c->b, re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b));
         wp_naechster("gelesen");
         break;
     case WP_BLICK:

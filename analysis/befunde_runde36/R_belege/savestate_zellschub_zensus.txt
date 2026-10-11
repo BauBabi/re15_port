@@ -1,0 +1,176 @@
+PATCHED-EXE_HASH-881C08B8082E53B6_1.sav            ROOM1170/ROOM1171  n=6 Spieler=(2664,-7200,-7336) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+PATCHED-EXE_HASH-881C08B8082E53B6_2.sav            ROOM2000/ROOM2001  n=3 Spieler=(4350,-1800,-20500) b1 stand=00000000
+PATCHED-EXE_HASH-881C08B8082E53B6_3.sav            ROOM3000/ROOM3001  n=0 Spieler=(-23774,0,-13736) b0 stand=00000000
+PATCHED-EXE_HASH-881C08B8082E53B6_4.sav            ROOM4000/ROOM4001  n=7 Spieler=(-3427,0,-2539) b0 stand=00000000
+PATCHED-EXE_HASH-881C08B8082E53B6_5.sav            ROOM5000/ROOM5001  n=2 Spieler=(-1500,0,-2150) b0 stand=00000000
+PATCHED-EXE_HASH-881C08B8082E53B6_6.sav            ROOM6000/ROOM6001  n=2 Spieler=(5200,-3600,1600) b2 stand=00000000
+boot_16.sav                                        SKIP (PSX.EXE signature not found in savestate RAM)
+boot_20.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_24.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_28.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_32.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_36.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_40.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_44.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_48.sav                                        SKIP (RDT-Zeiger 00000000)
+boot_52.sav                                        SKIP (RDT-Zeiger 00000000)
+doorA_square.sav                                   ROOM1130/ROOM1131  n=1 Spieler=(-1300,0,-13950) b0 stand=00000000
+doorB2_walkin.sav                                  ROOM1140/ROOM1141  n=1 Spieler=(-8132,0,-19252) b0 stand=00000000
+doorB_walkin.sav                                   ROOM1140/ROOM1141  n=1 Spieler=(-8132,0,-16849) b0 stand=00000000
+equip_test.sav                                     ROOM1140/ROOM1141  n=1 Spieler=(-5118,0,-15817) b0 stand=00000000
+fx_R60.sav                                         ROOM1240/ROOM1241/ROOM6040/ROOM6041 n=0 Spieler=(-26214,0,-3861) b0 stand=00000000
+lamp_1170_run2.sav                                 ROOM1170/ROOM1171  n=6 Spieler=(-31000,-7200,31000) b4 stand=00000000
+lamp_1170_run3.sav                                 ROOM1170/ROOM1171  n=6 Spieler=(-31000,-7200,31000) b4 stand=00000000
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_1170_run4.sav                                 ROOM1170/ROOM1171  n=6 Spieler=(-435,-7200,-6912) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_1170_stage1.sav                               SKIP (SCA-Zeiger 77770700)
+lamp_behind1.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(3640,-7200,-8030) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_behind2.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(3640,-7200,-8030) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_behind3.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-1630,-7200,-6177) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_fwd1.sav                                      ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,-6651) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_left1.sav                                     ROOM1170/ROOM1171  n=6 Spieler=(-224,-7200,-1588) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_near.sav                                      ROOM1170/ROOM1171  n=6 Spieler=(-8000,-7200,2200) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_near_0.5.sav                                  ROOM1170/ROOM1171  n=6 Spieler=(-7790,-7200,2654) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lamp_near_0.9.sav                                  ROOM1170/ROOM1171  n=6 Spieler=(-7428,-7200,2855) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lampwalk_1.2.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,-3768) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lampwalk_2.4.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,-978) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lampwalk_3.4.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,1358) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lampwalk_4.2.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,3087) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+lampwalk_base.sav                                  ROOM1170/ROOM1171  n=6 Spieler=(-6963,-7200,-6651) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+montage1240_orig.sav                               ROOM1240/ROOM1241/ROOM6040/ROOM6041 n=0 Spieler=(-25943,0,-3861) b0 stand=00000000
+mzd_after_flow.sav                                 SKIP (SCA-Zeiger 00000000)
+mzd_blood_decals_hp30.sav                          ROOM1140/ROOM1141  n=1 Spieler=(-5864,0,-12017) b0 stand=00000000
+mzd_death_cmd5_struggle.sav                        ROOM1140/ROOM1141  n=1 Spieler=(-310,0,-23132) b0 stand=00000000
+mzd_death_cmd6_collapse.sav                        ROOM1140/ROOM1141  n=1 Spieler=(-183,0,-26068) b0 stand=00000000
+mzd_death_cmd7_youdied.sav                         ROOM1140/ROOM1141  n=1 Spieler=(-183,0,-26068) b0 stand=00000000
+mzd_debugmenu.sav                                  ROOM1240/ROOM1241/ROOM6040/ROOM6041 n=0 Spieler=(-26214,0,-3861) b0 stand=00000000
+mzd_edit_panelA.sav                                SKIP (RDT-Zeiger 00000000)
+mzd_edit_panelB.sav                                SKIP (RDT-Zeiger 00000000)
+mzd_inv_open.sav                                   ROOM1140/ROOM1141  n=1 Spieler=(-7600,0,-17600) b0 stand=00000000
+mzd_options.sav                                    SKIP (RDT-Zeiger 00000000)
+mzd_stage1_briefing.sav                            ROOM1140/ROOM1141  n=1 Spieler=(-7600,0,-17600) b0 stand=00000000
+mzd_stage1_briefing_live.sav                       ROOM1140/ROOM1141  n=1 Spieler=(-5118,0,-15817) b0 stand=00000000
+mzd_stage1_combat_death.sav                        ROOM1250/ROOM1251  n=0 Spieler=(-12435,0,-20389) b0 stand=00000000
+mzd_stage1_dog.sav                                 ROOM11A0/ROOM11A1  n=4 Spieler=(-50,-1800,24200) b1 stand=00000000
+   Pool  0: w0 00000001 typ 4 band 3 pos (10050, -5400, 8800) rec (10050, -5400, 8800) spiegel (10050,8800) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+mzd_stage1_engage_live.sav                         ROOM1140/ROOM1141  n=1 Spieler=(-367,0,-23132) b0 stand=00000000
+mzd_stage1_hit_effect.sav                          ROOM1140/ROOM1141  n=1 Spieler=(-2437,0,-20491) b0 stand=00000000
+mzd_stage1_maggot.sav                              ROOM11C0/ROOM11C1  n=1 Spieler=(-15897,0,-5707) b0 stand=00000000
+   Pool  0: w0 0000008b typ 0 band 1 pos (-840, -2930, -19110) rec (-2390, -1830, -18510) spiegel (-840,-19110) cnt 0 fall 0 box [0, 1260, 0, 45, 1260, 700] VERSCHOBEN d=(1550,-600)
+mzd_stage1_maggot_heavy.sav                        ROOM11C0/ROOM11C1  n=1 Spieler=(-2266,0,-11445) b0 stand=00000000
+   Pool  0: w0 0000008b typ 0 band 1 pos (-840, -2930, -19110) rec (-2390, -1830, -18510) spiegel (-840,-19110) cnt 0 fall 0 box [0, 1260, 0, 45, 1260, 700] VERSCHOBEN d=(1550,-600)
+mzd_stage1_npc.sav                                 ROOM11B0/ROOM11B1  n=3 Spieler=(-26130,0,-18455) b0 stand=00000000
+mzd_stage1_spider.sav                              ROOM1090/ROOM1091  n=4 Spieler=(-10200,-9000,1400) b5 stand=00000000
+   Pool  0: w0 00000101 typ 4 band 1 pos (-9836, -1800, 4753) rec (-8136, -1800, 4753) spiegel (-9836,4753) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] VERSCHOBEN d=(-1700,0)
+   Pool  1: w0 00000101 typ 4 band 5 pos (-5960, -9000, -15482) rec (-5960, -9000, -15482) spiegel (-5960,-15482) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+mzd_stage1_walked.sav                              ROOM1140/ROOM1141  n=1 Spieler=(4458,0,-23359) b0 stand=00000000
+mzd_title.sav                                      SKIP (RDT-Zeiger 00000000)
+mzd_title_after_death.sav                          SKIP (SCA-Zeiger 77770700)
+narrator_orig.sav                                  ROOM1240/ROOM1241/ROOM6040/ROOM6041 n=0 Spieler=(-25667,0,-3861) b0 stand=00000000
+nav_A4.sav                                         SKIP (RDT-Zeiger 00000000)
+nav_Y4.sav                                         SKIP (RDT-Zeiger 00000000)
+nav_down1.sav                                      SKIP (RDT-Zeiger 00000000)
+nav_loadgame.sav                                   SKIP (RDT-Zeiger 00000000)
+navtest.sav                                        SKIP (RDT-Zeiger 00000000)
+navtest3.sav                                       SKIP (RDT-Zeiger 00000000)
+orig_1170_gp.sav                                   ROOM1170/ROOM1171  n=6 Spieler=(-31000,-7200,31000) b4 stand=00000000
+orig_1170_gp2.sav                                  ROOM1170/ROOM1171  n=6 Spieler=(2465,-7200,3365) b4 stand=00000000
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+orig_intro_late.sav                                ROOM1240/ROOM1241/ROOM6040/ROOM6041 n=0 Spieler=(-25943,0,-3861) b0 stand=00000000
+orig_lamp_start.sav                                ROOM1170/ROOM1171  n=6 Spieler=(57536,-7200,-58536) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+orig_lamp_walk.sav                                 ROOM1170/ROOM1171  n=6 Spieler=(57536,-7200,-62343) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+orig_lamp_z3500.sav                                ROOM1170/ROOM1171  n=6 Spieler=(57536,-7200,-62036) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+orig_lamp_z4500.sav                                ROOM1170/ROOM1171  n=6 Spieler=(57536,-7200,-61036) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+orig_lamp_z4500_out.sav                            ROOM1170/ROOM1171  n=6 Spieler=(57868,-7200,-61312) b4 stand=00000000
+   Pool  2: w0 0000000b typ 0 band 5 pos (-31000, -7200, 23700) rec (-1161, -7200, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  3: w0 0000000b typ 0 band 5 pos (-31000, -12296, 23700) rec (-1161, -12296, 1991) spiegel (-31000,23700) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-29839,21709)
+   Pool  4: w0 0000000b typ 0 band 5 pos (-31000, -11996, 26500) rec (10939, -11996, 1991) spiegel (-31000,26500) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-41939,24509)
+   Pool  5: w0 0000000b typ 0 band 5 pos (-31000, -7200, 28000) rec (-3461, -7200, 4491) spiegel (-31000,28000) cnt 0 fall 0 box [0, 0, 0, 0, 0, 0] VERSCHOBEN d=(-27539,23509)
+parity_turn_R2.sav                                 ROOM1140/ROOM1141  n=1 Spieler=(-8132,0,-17422) b0 stand=00000000
+room1090_orig.sav                                  ROOM1090/ROOM1091  n=4 Spieler=(-5282,-9000,-1514) b5 stand=00000000
+   Pool  0: w0 00000101 typ 4 band 1 pos (-9836, -1800, 4753) rec (-8136, -1800, 4753) spiegel (-9836,4753) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] VERSCHOBEN d=(-1700,0)
+   Pool  1: w0 00000101 typ 4 band 5 pos (-5960, -9000, -15482) rec (-5960, -9000, -15482) spiegel (-5960,-15482) cnt 0 fall 0 box [0, -900, 0, 900, 900, 900] 
+room1140_entry.sav                                 ROOM1140/ROOM1141  n=1 Spieler=(-7600,0,-17600) b0 stand=00000000
+sub2_newgame.sav                                   SKIP (RDT-Zeiger 00000000)
+sub_down1.sav                                      SKIP (RDT-Zeiger 00000000)
+sub_loadgame.sav                                   SKIP (RDT-Zeiger 00000000)
+sub_newgame.sav                                    SKIP (SCA-Zeiger 00000000)
+sub_option.sav                                     SKIP (RDT-Zeiger 00000000)
+SUMME: 57 Spielstaende, 187 aktive Objekte, 87 verschoben, 0 mit Treffer-jetzt
