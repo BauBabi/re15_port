@@ -101,3 +101,93 @@ F630 Blatt weg, Kartenschirm POLICE STATION 2F komplett. Die xxx1-RDTs selbst (1
 + Aufnahme in 10D1 und 1031 am Bild-Ablauf re15_game_step) deckt `unit_r36_kartenitems` Teile R/D ab (selbst
 gelaufen, Abschnitt 3.3). Beobachtung ausserhalb der Spur: der Statusschirm zeigt mit Elza Leons Dienstausweis
 (vorbestehend, nicht Teil des Auftrags).
+
+### 1.5 Etagenwahl "wie in RE2" (Batch F, Spielstand ROOM1140 Cut 5, Skript `S0.3,W2,Q0.3,W2,D0.2,W4`, Abzug inv-Bild 200)
+Ohne 2F-Plan bleibt RUNTER auf "POLICE STATION 3F" (nur 1140 gefuellt, 2F nie betreten); mit Bit 88 (2F-Plan)
+wechselt RUNTER auf "POLICE STATION 2F" mit allen 2F-Raeumen als Umriss (`f_sheet.png`) = RE2 Bank 35
+(Set(35,n) bei der Aufnahme room20B0 @0x037E6-EE, gelesen @0x8006D934/@0x8006D998, selbst im RE2-Dump gelesen:
+`8006d934 jal FUN_80077360` + `8006d938 _addiu a0,..,0x4d94`).
+
+### 1.6 Nebenwirkung des Slot-Umzugs in ROOM1030 (Batch G, Spielstand vor der Karte, `RE15_AOT_DUMP=1 RE15_STATE_LOG`)
+AOT-Dump beim Raumstart: `[aot] 8 GENERIC Mitte(-1692,-23280) halb(500,500) ev=28` (Karte) und `[aot] 39 MESSAGE
+Mitte(-2208,-23844) halb(2048,2048) ev=3` (der unveraendert umgezogene Telefon-Satz). Skript `A0.1,W3,A0.1,W3,
+A0.1,W2,A0.1,W4,A0.1,W3`; state.log: F31 `msg(a=1 fsm=1 id=30)` (Frage), F128 `id=31` (Meldung), F279 — vierter
+Druck an derselben Stelle — `msg(a=1 fsm=1 id=3)` = "A payphone..." (Nachricht 3 des RDT): nach der Aufnahme
+antwortet dort wieder das Telefon (Aot_reset(8) im Port-Programm, Slot 39 bleibt).
+
+## 2. Urteil je Nutzer-Punkt (gegen den Wortlaut AUFTRAG.md Z. 73-77)
+
+| # | Wortlaut (kurz) | Urteil | Beleg |
+|---|---|---|---|
+| 1 | Karte01/02 extrahieren, beispielhaft an die Stelle von map3F.bmp haengen, damit 3F freischalten wie in RE2, mit Text | **erfuellt** | 1.0 (map3F.bmp = ROOM1140 Cut 5, 8,5 gegen >= 113,8 fuer ROOM1150), 1.1 (Blatt in der Marke, AUSSEN 0, Palettenfarben), 1.2 (Frage "A police 3F map. / Will you take it?" Ja/Nein, Meldung "You've taken the / police 3F map.", Blatt weg), 1.5 (ganze Etage + Etagenwahl = RE2 Bank 33/35); Modell = karte01 (MD1 md5 99dae133 / TIM bf0fbcc7 laut Generator-Kopf, Unit-Test T prueft TIM 16928 B + MD1-Bytes) |
+| 2a | 2F in ROOM10D0 bei map2F.bmp | **erfuellt** | 1.0 (10D0 Cut 6: 2,0), 1.1, 1.2, 1.4 (Elza-Figur) |
+| 2b | 1F in ROOM1030 bei map1F.bmp | **erfuellt** | 1.0 (1030 Cut 3: 12,8), 1.1 (Cut 3 und Cut 0), 1.2, 1.6 (Telefon nach der Aufnahme) |
+| 2c | B2 in ROOM1200 bei mapB2.bmp | **erfuellt** | 1.0 (1200 Cut 2: 3,7), 1.1, 1.2 |
+| 2d | B1 in ROOM11D0 bei mapB1.bmp | **erfuellt** | 1.0 (11D0 Cut 0: 1,3), 1.1, 1.2, 1.3 (ECHTER Tuer-Weg 1180 -> 11D0 mit Aufnahme) |
+
+## 3. Gates
+
+### 3.1 RE-Gate — Stichproben SELBST disassembliert (richtige Binaerdatei, Sprungziele gelesen)
+Nachbesserung 1 (die neuen Konstanten 0x10 / 0x2 / 0x0010 / 0x80):
+
+| Zitat im Diff | selbst gelesen | Ergebnis |
+|---|---|---|
+| FUN_8002c18c `lw v0,0xc(s1)` @0x8002c2ec, `andi 0x10` @0x8002c2f4, `beq` @0x8002c2f8 | ghidra1_V2.txt Z. 119032-119036: `8002c2ec 0c 00 22 8e lw v0,0xc(s1)=>DAT_800b3fa4` / `8002c2f4 10 00 42 30 andi v0,v0,0x10` / `8002c2f8 19 00 40 10 beq v0,zero,LAB_8002c360` / Delay-Slot `8002c2fc _addiu s0,s1,0x70` | stimmt |
+| Flach-Zweig FUN_80022f0c @0x8002c320 / FUN_80023098 @0x8002c350 mit a2 = obj+0x70 | `8002c300 move a2=>DAT_800b4008,s0` (s0 = s1+0x70), `8002c304 move a3,s2`, `8002c320 c3 8b 00 0c jal FUN_80022f0c`, `8002c350 26 8c 00 0c jal FUN_80023098`; NCCT-Zweig LAB_8002c360: `8002c380 jal FUN_800254a0`, `8002c3b0 jal FUN_800256b0` | stimmt |
+| Bit 0x2 = Halbtransparenz @0x8002c2b4 (Parameter 4) | `8002c2ac lw v0,0xc(s1)` / `8002c2b4 02 00 42 30 andi v0,v0,0x2` / `8002c2b8 sltu s2,zero,v0` -> a3 = s2 in beiden Zweigen; Typ 3 `ori v0,zero,0x3` / `bne v1,v0` @0x8002c2c0 -> `jal FUN_8003e64c` @0x8002c2c8 | stimmt |
+| Obj_model_set pc[8..9] -> Pool+0x0c @0x800409a8/@0x800409b0, beide Zweige | ghidra1_V2.txt Z. 150758-150760: `800409a8 08 00 c2 84 lh v0,0x8(a2)` / `800409b0 0c 00 a2 ac sw v0,0xc(a1)=>DAT_800b3fa4`; a2 = `lw a2,0x1c(t0)` (Thread-pc), a1 = Pool + id*0x94; der Zweig `beq v0,zero,LAB_80040990` @0x80040980 fuehrt ueber `lhu v0,0x6(a2)`/`ori 1`/`sw 0x0(a1)` @0x80040990-a4 nach 0x800409a8, der andere ueber `j LAB_800409a8` @0x80040988 mit `_sw zero,0x0(a1)` | stimmt |
+| obj+0x70 = 0x808080 (FUN_8002b898.c:16) | RE_15_Quellcode_V2/FUN_8002b898.c: `*(undefined4 *)(&DAT_800b4008 + iVar1) = 0x808080;` mit iVar1 = id*0x94, DAT_800b4008 - DAT_800b3f98 = 0x70 | stimmt |
+| FUN_80022f0c: Farbe = Konstante, kein NCCT | FUN_80022f0c.c Z. 24-26/41: `param_3->cd = param_4 << 1 \| 0x34; gte_ldrgb(param_3);` ... `*(CVECTOR *)(param_2 + 1) = *param_3;` | stimmt |
+| RE2 room20B0 obj 8 @0x03158 / room2130 obj 0 @0x00FDC = 0x0010 | `xxd`: `2d08 0000 0000 0000 0000 0a00 1000 204e 204e 204e ...` / `2d00 0000 0000 0000 0000 0a00 1000 fcbd 50fb 60d7 ...` (Wort vor der Position = 0x0010) | stimmt (positionell, wie das Dossier sagt) |
+| RE2 FUN_800363f0.c:41-54 | `if ((puVar4[4] & 0x10) == 0) { FUN_80027bec; FUN_80027dbc } else { FUN_8002d0e8; FUN_8002d244 }`, `uVar5 = puVar4[4] >> 1 & 1`; FUN_80035710.c:16 `(&DAT_800d03a0)[param_1 * 0x7e] = 0x808080;` | stimmt |
+| RE1.5 ROOM1200 obj 0/1 @0x007DA/@0x00804 = 0x0010, ROOM1140 obj 0 @0x00B28 = 0x0000 | `xxd` (shared_assets md5 = info/Re1.5): `2d00 0000 0100 0a00 1000 bab2 ...`, `2d01 0000 0100 0a00 1000 a29d ...`, `2d00 0000 0100 0a00 0000 2ce4 ...`; dazu SCD-Dumps 1210 obj 0 `0a 00 10 00`, 11E0 obj 0 `fc 03 10 00` | stimmt |
+| 0x80 im SDL-Weg = Textur unveraendert | render_pc.c:2616 `psx_prim_to_sdl_vert`: `(v*0xFF + 0x40) / 0x80` -> 0x80 -> 255 (= Texel x 1) | stimmt |
+
+Urspruenglicher Bau (Stichproben, zusaetzlich zur Abnahme 0): ROOM5030 sub02 @0x010AC `2b00 ffff 0200 0600 1e00
+210c 1f00 4605 .. 090a 0100 2203 7301 2b01 ffff 0200 0800 0100` und sub00 @0x0108A `2c05 03b1 ..`; RE2 room20B0
+sub10 @0x037BA..0x0381A (`2b00 .. 2208 5301 2221 0201 .. 2223 0401 2e04 0800 3200 204e 204e 204e 0200 2b00 1100
+00ff 0700 1200 3604 0501 .. 0100`); RE2 FUN_8006E120 `8006e66c jal FUN_80077360` mit a0 = 0x800D4924 (Bank 33),
+`8006e744 beq v0,zero,LAB_8006e768`; ROOM1030 Telefon @0x01D2E `2c08 0131 0000 60ef dc9a 0010 0010 0300`. Alle
+stimmen.
+
+Der Fix ERKLAERT den Befund M1: die Karte war mit NCCT in den Ambient-Raeumen (1140/10D0/11D0: Vertexfarbe
+41/128) fast schwarz bzw. mit der Tint-Konstante blau; das Original zeichnet ein Objekt mit Attribut-Bit 0x10
+ohne Raumlicht mit 0x808080 — genau das Bild, das jetzt gemessen ist (jeder Kartenpixel Palettenfarbe, Summe
+296..310 in sechs Ansichten bei Raumlicht 36..89). Wortsuche im Code-Diff (deferred/tunable/interim/for now/
+faithful/plausib/TODO/FIXME/getenv/approx): 0 Treffer; kein neuer Env-Schalter. Die Licht-Spalte, BG_REF und
+"hellste 15 %" sind aus Header, Tabelle, Generator und Code entfernt (Generator-Diff: nur noch der Hinweis
+"keine Spalte mehr"). Einzige nicht adressierte Zahlen: Lage/Massstab/Rechteck/Slots (PORT-WAHL aus den Marken,
+gekennzeichnet) und die Port-Entscheidung `(attr & 0x12) == 0x10` (Abschnitt 3.4).
+
+### 3.2 Vertrag
+* Bank-9-Bits 87..91, Ereignis 28, Nachrichten 30/31 (VERTRAG 1.2 Reserve) — unveraendert gegenueber Abnahme 0.
+* Pfade (`git diff 78a4a748 --name-only`, 17 Dateien): engine/src (kartenitems_r36.c, gen/kartenitems_r36.inc,
+  map_hint_common.c, re15_map_owned.c, scd_room_setup.c, scd_vm.c), include (re15_kartenitems_r36.h, re15_scd.h),
+  platform/pc/main.c, tests/unit/probes/r36_kartenitems.cmake (GLOB), eigene Tests/Auswerter, tools/r36_kartenitems,
+  Dossier + Abnahme 0. Kein release/, platform/android/, shared_assets/PSX/, keine Test-CMakeLists.
+* Gemeinsame Dateien: scd_vm.c +3 Zeilen (include, Ereignis-Kette, `attr`), re15_scd.h +1 Feld (+Kommentar),
+  scd_room_setup.c +2, re15_map_owned.c +4, map_hint_common.c +2, main.c: include, Installer 1 Zeile, Prop-Lader
+  6 Zeilen (r35-Muster), Flach-Zweig 2+2 Zeilen (Dreieck/Viereck) — der frueher dort stehende 3-Zeilen-Karten-Haken
+  ist weg. `g_scd.props` wird nirgends serialisiert (re15_savedata.c/re15_savepoint.c: 0 Treffer) — das neue Feld
+  aendert kein Spielstand-Layout.
+* Tests je Punkt vorhanden und messend: `unit_r36_kartenitems` (217 Pruefungen: Tabelle/Texte, Raumstart aller
+  10 Raeume inkl. Prop-Attribut 0x0010 und RDT-Attribute 1200/1140, echter Druck 1140 Ja/Nein, 10D1 Elza, 1030 mit
+  Telefon danach, Kartenblatt, Spielstand) und `integration_r36_kartenitems_bild` (echte exe: 5 Raeume + 1030
+  Cut 0, Marken-Fenster, Palettenpruefung, Cut-3/Cut-0-Helligkeit, Kartenschirm, echter Weg 1140) — Ergebnis
+  Abschnitt 3.3.
+
+### 3.4 Nebenwirkung des generischen Flach-Zweigs (Batch C: alte exe 6f16291b gegen neue ab178a50, Debug-Sprung,
+`RE15_FORCE_CUT`, F700, `eval_c.py` |dR|+|dG|+|dB| > 30, Bilder `c_<raum>_<cut>.png` alt | neu)
+Der Zweig gilt fuer JEDES Objekt mit Attribut-Wort `(attr & 0x12) == 0x10` — so hatte es die Abnahme 0 verlangt
+("Zweig `& 0x10` im Prop-Zeichner"), und so arbeitet der Original-Dispatcher FUN_8002c18c fuer jeden Pool-Eintrag
+(3.1). Selbst gemessen (Zahlen = Dossier 8.7, unabhaengig reproduziert):
+
+| Raum (Cut) | Objekt (attr aus dem SCD-Dump) | Pixel | Mittel alt -> neu | Bild |
+|---|---|---|---|---|
+| 1210 (6) | obj 0 Zellentuer `0a 00 10 00` @0x01E4E | 4341 | (21,19,14) S55 -> (52,46,35) S134 | vorher dunkelbraune Flaeche, nachher die Tuer mit Gitterfenster in der Helligkeit des gemalten Hintergrunds |
+| 11E0 (5) | obj 0 Rolltor `fc 03 10 00` @0x016E6 | 5152 | (5,5,6) S16 -> (20,22,24) S67 | vorher fast schwarzer Block im Gang, nachher das gewellte Tor mit Lamellen |
+| 1200 (2) | obj 0/1 Schubladen-Fronten `0a 00 10 00` @0x007DA/@0x00804 | 2204 | (18,18,12) S49 -> (44,43,30) S119 | vorher fast schwarze Kaesten vor den gemalten Schraenken, nachher gleiche Helligkeit wie der Hintergrund |
+
+Das ist die Folge des Original-Mechanismus (Objekte mit Bit 0x10 ohne Raumlicht, Farbe 0x808080), nicht eine
+Spur-Konstante; die Spur hat die vorbestehende Abweichung (Port zeichnete alle 672 Obj_model_set ueber NCCT)
+fuer die 169 deckenden Flach-Objekte mit behoben. Release-Notes-Hinweis (Dossier 8.9) ist angemessen.
