@@ -355,9 +355,9 @@ ok:   Bissplaetze Leon (-26932,14578) Nordwest-Ecke: 279, Durchmesser 1649 < 316
 ok:   Bissplaetze Leon (-26932,15700) Nordwest-Ecke: 296, Durchmesser 1833 < 3168 (nur EIN Gorilla)
 ok:   Bissplaetze Leon (-7107,-12395) kanonischer Kampf: 4030, Durchmesser 5809 >= 3168 (zwei Gorillas passen)
 ok:   Bissplaetze Leon (-7138,-12372) kanonischer Kampf: 4035, Durchmesser 5809 >= 3168 (zwei Gorillas passen)
-Nachruecken (Gorilla 1 faellt F400 aus): Stand NB4 Gorilla 2 Angriff ab F401: 0 | mit Nah-Umweg: 991
+Nachruecken (Gorilla 1 F400 getoetet): Stand NB4 Gorilla 2 Angriff ab F401: 0 | mit Nah-Umweg: 988
 ok:   Nachruecken Gegenprobe Stand NB4: Gorilla 2 bleibt an der #21-Ecke (kein Angriff nach dem Ausfall)
-ok:   Nachruecken mit Nah-Umweg: Gorilla 2 nimmt den freien Bissplatz und greift an (Bild 991)
+ok:   Nachruecken mit Nah-Umweg: Gorilla 2 nimmt den freien Bissplatz und greift an (Bild 988)
 ok:   J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse 15/15 = Original, Tod +1194); Slot 2 NAH-Anker vor dem ersten Biss 353 < R36_NAH_START 354
 
 66 Pruefungen, 0 Fehler

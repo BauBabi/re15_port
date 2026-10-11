@@ -208,6 +208,13 @@ void re15_r36_wurf_klemme_enable(int an);   /* NUR Sonden: 0 = Weg vor NB2 (Gege
  *   NAHEN Gorilla vor ihm, geht der NAHE den Umweg zu Fuss, bis sein gerader Weg zu Leon frei ist.
  *   MESSUNG: Stau-Sonde beide greifen an (91/101, vorher keiner), exe Nordwest-Rand FERN 1465/691 -> 0/50; Zufallsgang 52 Seeds
  *   Anker 400 17975 -> 16352, Anker 40 221 -> 125.
+ * NACHBESSERUNG 5 (Abnahme 4, Mangel 1), Belege in zombieki_r36.c (R36_NAH_START, r36_nah_route):
+ *   NAH-UMWEG (PORT-WAHL): ein naher Gorilla in der Jagd, der R36_NAH_START = 354 Bilder an der Klemme ausserhalb der Bissweite
+ *   (0xbb8 @0x80117a60) im Anker steht, geht zu Fuss zum naechsten FREIEN Bissplatz (Knoten < 0xbb8 vor Leon, kein anderer
+ *   Gorilla in Koerperkontakt-Abstand, Radius box[6] @0x80121356). 354 = laengste Nah-Wartezeit des kanonischen Ankunftskampfes
+ *   (353, Spur-J-Riegel szene) + 1. Kein freier Bissplatz -> Original (Anstehen: in der Nordwest-Ecke passt nur EIN Gorilla in
+ *   Bissweite, Durchmesser der Bissplaetze 1649..1833 < 3168).
+ *   MESSUNG: exe Stelle 3 Slot 2/3 fest 1653/1875 -> 429/368, 14 Stellen 10466 -> 7500; kanonischer Kampf bitgleich.
  * --------------------------------------------------------------------------------------------------------- */
 
 /* Haken in re15_maggot_ai_tick A[3] (nach dem Biss-Test, vor B[3]); sub = 3 (andere Werte: Rueckgabe 0, keine

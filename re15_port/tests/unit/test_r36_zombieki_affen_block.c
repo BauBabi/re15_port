@@ -498,7 +498,8 @@ int main(int argc, char **argv)
         int kill_f = (argc > 18) ? atoi(argv[18]) : 0, kill_art = (argc > 19) ? atoi(argv[19]) : 0;   /* NB5: Gorilla 1 faellt in Bild kill_f aus
                                                                                                     * (art 0: HP 0 = Tod, Leiche bleibt; 1: aktiv = 0) */
         for (int f = 1; f <= b; f++) {
-            if (kill_f > 0 && f == kill_f) { if (kill_art) g[0]->active = 0; else g[0]->hp = 0; }
+            if (kill_f > 0 && f == kill_f) {                           /* art 2: Treffer mit HP 1 -> Tod ueber re15_enemy_take_damage (Leiche bleibt) */
+                if (kill_art == 1) g[0]->active = 0; else if (kill_art == 2) { g[0]->hp = 1; (void)re15_enemy_take_damage(g[0], 1); } else g[0]->hp = 0; }
             frame(0, 0); if (pl->hp < 100) pl->hp = 100;
             for (int k = 0; k < 2; k++) {
                 re15_actor_t *e = g[k]; int sub = e->sub_state_1 & 31;
@@ -959,11 +960,12 @@ int main(int argc, char **argv)
                 if (lp[i][2]) CHECK(n > 0 && dm >= 3168, "Bissplaetze Leon (%d,%d) kanonischer Kampf: %d, Durchmesser %d >= 3168 (zwei Gorillas passen)", (int)lp[i][0], (int)lp[i][1], n, dm);
                 else          CHECK(n > 0 && dm < 3168, "Bissplaetze Leon (%d,%d) Nordwest-Ecke: %d, Durchmesser %d < 3168 (nur EIN Gorilla)", (int)lp[i][0], (int)lp[i][1], n, dm);
             }
-            /* NACHRUECKEN: Stau-Lage O3 (Gorilla 1 greift in der Ecke an, Gorilla 2 steht an der #21-Ecke), Gorilla 1 faellt in Bild 400 aus
-             * (aktiv = 0): mit Nah-Umweg nimmt Gorilla 2 den frei gewordenen Bissplatz; Stand NB4 (Modus 4) bleibt er an der #21-Ecke. */
+            /* NACHRUECKEN: Stau-Lage O3 (Gorilla 1 greift in der Ecke an, Gorilla 2 steht an der #21-Ecke), Gorilla 1 wird in Bild 400
+             * per Treffer getoetet (HP 1 + re15_enemy_take_damage, Leiche bleibt liegen): mit Nah-Umweg nimmt Gorilla 2 den frei gewordenen
+             * Bissplatz; Stand NB4 (Modus 4) bleibt er an der #21-Ecke. */
             int ag[2] = { 0, 0 };
             for (int m = 0; m < 2; m++) {
-                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage 1200 %d 1 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0 400 1", argv[0], m ? 1 : 4);
+                char cmd[1200]; snprintf(cmd, sizeof cmd, "\"%s\" lage 1200 %d 1 -26606 14578 18 -23302 14489 2067 3 0 -20579 16118 1885 4 0 400 2", argv[0], m ? 1 : 4);
                 FILE *pp = popen(cmd, "r"); char zl[1024];
                 while (pp && fgets(zl, sizeof zl, pp)) {   /* Angriff von Gorilla 2 NACH dem Ausfall (Spur je Bild: Sub 5/6/8/15 ab F401) */
                     int f; char *g2 = strstr(zl, "| G2 ");
@@ -974,7 +976,7 @@ int main(int argc, char **argv)
                 }
                 if (pp) pclose(pp);
             }
-            printf("Nachruecken (Gorilla 1 faellt F400 aus): Stand NB4 Gorilla 2 Angriff ab F401: %d | mit Nah-Umweg: %d\n", ag[0], ag[1]);
+            printf("Nachruecken (Gorilla 1 F400 getoetet): Stand NB4 Gorilla 2 Angriff ab F401: %d | mit Nah-Umweg: %d\n", ag[0], ag[1]);
             CHECK(ag[0] == 0, "Nachruecken Gegenprobe Stand NB4: Gorilla 2 bleibt an der #21-Ecke (kein Angriff nach dem Ausfall)");
             CHECK(ag[1] > 400, "Nachruecken mit Nah-Umweg: Gorilla 2 nimmt den freien Bissplatz und greift an (Bild %d)", ag[1]);
         }

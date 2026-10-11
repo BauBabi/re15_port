@@ -22,6 +22,7 @@ Datum: 2026-10-10.
 - [x] Punkt 3 Monkey-Blutlache: Beleg (FUN_80116f50/FUN_8011be54) / Umsetzung (zombieki_r36.c) / Messung nachher (Riegel 9/9, exe-Bild) / Pin unit_r36_zombieki_affen
 - [x] Nachbesserung 3 (Abnahme 2): M1 Umweg nach Weglaenge (A*), M2 Tasche = Zurueckschnapp-Artefakt + nicht begehbar, Beginn erst beim Haengen (+0x1de), Riegel 46/46, exe zehn Stellen nicht spaeter als v0.8.23, gezielt 163/163
 - [x] Nachbesserung 4 (Abnahme 3): M1 FERN-Stau am Nordwest-Rand (Original per GDB = Stau; PORT-WAHL Vortritt, exe FERN 0), M2 Nah-Wartezeit am Original gemessen (Nordwest-Ecke, Ostgasse: Original wartet ebenso, Riegel pinnt es), Angabe "fern 0" berichtigt
+- [x] Nachbesserung 5 (Abnahme 4): M1 PORT-WAHL Nah-Umweg zum freien Bissplatz ab 354 (= J-Fenster 353 + 1, kanonischer Kampf bitgleich), exe Stelle 3 1653/1875 -> 429/368, 14 Stellen 10466 -> 7500; Nordwest-Ecke = Anstehen (nur EIN Bissplatz, gemessen) mit Nachruecken; M2 Begruendung berichtigt; M3 Original-Gleichheit im Modus Original-Regel, Riegel 66/66, gezielt 232/232
 - [ ] Voll-Suite (Orchestrator im Integrationsbaum)
 
 ---
@@ -1246,7 +1247,59 @@ c541415c ("In die Ostgasse kommt kein Gorilla zu Fuss") ist damit ebenfalls beri
 - PORT-Modus (1) misst die Verbesserung: O3b Angriff Bild 399, NAH fest 371; O5 Angriff 410, fest 377 (<= 450); Gegenprobe Stand NB4
   (Modus 4) je 900 fest ohne Angriff (= Befund).
 - Bissplaetze: Ecke 1649/1649/1833 < 3168 (EIN Gorilla), V-Nische 5809 (zwei) — der Grund des Anstehens als Pin, nicht der Stillstand.
-- Nachruecken: Gorilla 1 faellt in der Stau-Lage aus (Bild 400) -> Gorilla 2 nimmt den freien Bissplatz und greift an (Bild 991);
-  Stand NB4 nie.
+- Nachruecken: Gorilla 1 wird in der Stau-Lage in Bild 400 per Treffer getoetet (HP 1 + `re15_enemy_take_damage`, Leiche bleibt
+  liegen) -> Gorilla 2 nimmt den freien Bissplatz und greift an (Bild 988); Stand NB4 nie (1231 fest an der #21-Ecke).
 - J-Fenster: kanonischer Kampf mit Nah-Umweg bitgleich (Heavy + 14 Bisse 15/15, Tod +1194), Slot 2 NAH-Anker 353 < 354.
 - Unveraendert gruen: 16 Seeds AUS 38439 -> AN 5174, sieben Szenen, 4b, Stau-Block (Modus 0/3/1).
+
+### NB5 Tests (probes/r36_zombieki.cmake, unveraendert registriert — keine neue Testdatei)
+| Test | Mangel | Misst | Ergebnis |
+|---|---|---|---|
+| `unit_r36_zombieki_affen_block` | M1, M3 | wie NB4 (16 Seeds, sieben Szenen, 4b, Stau-Block) + NB5: Original-Gleichheit O1/O3b/O5 im Modus Original-Regel; Nah-Umweg O3b/O5 (Angriff, NAH fest <= 450) mit Gegenprobe Stand NB4 (900 fest); Bissplaetze Ecke < 3168 / V-Nische >= 3168; Nachruecken nach Ausfall; J-Fenster (kanonischer Kampf bitgleich, Slot 2 NAH-Anker 353) | **66/66** |
+| `unit_r36_zombieki_sicht`, `_eintritt`, `_wecker`, `_szenen`, `_affen` | P1/P3 (erfuellt) | unveraendert (kein P1/P3-Code geaendert) | gruen |
+| Spur-J `unit_r35_affen_*` (20), `unit_maggot_*` (3), `unit_r17_waffen_loop_pin` | Original-Nahjagd, kanonischer Kampf | bildgenau gegen GDB | gruen |
+
+**Gezielte Laeufe (keine Voll-Suite im Spurbaum):**
+- Regex der Abnahme 4 (Module/Raeume des Zweig-Diffs + alle Gegner-KI-Tests):
+  `ctest --test-dir re15_port/build -R "affen|maggot|re2z|re2_zombie|zombie|dog|hund|crow|kraehe|1030|1040|1140|1210|1100|10d0|10b0|1010|1220|11c0|r35_raeume|r35_inhalt_zombies|r35_cut1150|r35_zgirl|r35_fenster_kraehe|leiche|corpse|r34n_f|r36_zombieki|nav|unit_enemy_|room1070_wake|ai_flavor|re2_room1090|ada_eintritt|r17_waffen_loop|schatten|shadow|grab|griff|victim|re2_crawler|knockdown|stagger|hit_reaction|re2_livepath|re2_hit_repeat|sca_contact90|sca_wall_hit|npc_wall_clamp|r16_aufstehen|r34_reaktion|r34_schaden|unit_damage|re2_gore|r26_mg_blut|re2_stepsize|re2_kfjump|poise|re2_hp_model|room_probe_sweep|r35_granate|r35_redhawk|r35_werfer|r34_granaten|spider_ai|adult_spider|cockroach|unit_npc_ai|zgirl_ai|birkin|writher|alligator|fx_emitter|tyrant|ivy_ai|re2_spider|baby_spider|gator|g5_|spinne|autofire|r35_entladen_gegner" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 232** (511 s; `F_belege/nb5/nb5_ctest_gezielt.txt`; darin alle 6 Spur-Tests, alle 20
+  `unit_r35_affen_*`, `integration_r35_cut1150`, `integration_r35_zgirl`)
+- nach dem letzten Bau (nur der Riegel geaendert: Nachruecken per Treffer) `ctest --test-dir re15_port/build -R "r36_zombieki|unit_r35_affen|unit_maggot|r17_waffen_loop" --timeout 600 -j 6 --output-on-failure`
+  -> **100% tests passed, 0 tests failed out of 30** (`F_belege/nb5/nb5_ctest_spur.txt`); Riegel direkt `test_r36_zombieki_affen_block riegel` **66 Pruefungen, 0 Fehler** (`F_belege/nb5/nb5_affen_riegel.txt`)
+
+### NB5 OFFEN
+- **Anstehen** (Nordwest-Ecke: Stellen 4/11/12/13, Tuerweg t11b0kampf): der zweite Gorilla kann nicht angreifen, solange der erste den
+  einzigen Bissplatz haelt (Bissplaetze: Durchmesser 1649..1833 < 3168) — im Original ebenso. Das Abnahme-4-Kriterium ist dort fuer den
+  zweiten Gorilla nicht durch Angreifen erreichbar (gemessen, Gegenprobe ohne Belegt-Test: nur Umzug hinter den ersten). Nicht gebaut:
+  zielloses Hin-und-her-Laufen allein fuer das Messmass.
+- **Gleiten an Schraegkanten** setzt den NAH-Anker (400) zurueck: Sonde `lage 900 1 1 5858 -5716 0 5876 -8818 3077 3 0 9434 2189 2656 0 0`
+  (EIN Gorilla am Ostgassen-Eingang, GDB-Lage O4) gleitet F301-F330 um ~1000 nach Westen und pendelt dort um 300..400 — der Zaehler
+  kommt nicht auf 354, fest 892 (lage-Mass). In der exe (Stelle 3) gleitet er nicht und der Nah-Umweg loest. Naechster Weg: Anker an
+  den Abstand zu Leon koppeln (seitliches Gleiten ohne Annaeherung = kein Fortschritt) — dann aber das J-Fenster mit derselben
+  Zaehlung neu messen (der +0x1de-Zwilling ohne Anker erreicht im kanonischen Kampf 444).
+- **Gassenmitte** (GDB O1, exe-Stelle 8 Slot 3 468 Bilder bei (6418,-3617)): Gorilla mit Sicht im 0x10-Pad verkeilt; sein Rasterknoten
+  liegt in der Suedkomponente, kein Bissplatz erreichbar -> kein Umweg (Original O1 ebenso; seit NB3 unveraendert).
+- **Kanonischer Ankunftskampf**: Slot 2 wartet weiter ~12 s an der V-Spitze (Original, Spur-J-Riegel `szene`); der Nah-Umweg beginnt
+  bewusst erst danach (354).
+- PSX-Laufzeit: der Nah-Umweg prueft je Bild alle Rasterknoten (~5000) auf Bissweite + Belegung und rechnet A* — vor einem PSX-Port
+  fuer ROOM11C0 als Tabelle vorzuberechnen (wie NB3/NB4).
+- Vorgaenger-OFFEN (ROOM10B0-Terrasse, Moebel-Tabelle, Stelle 7 FERN 108) unveraendert.
+
+### NB5 Fuer den Nutzer
+- Neue Assets: keine. Sprachdateien: keine. Bedienhinweise: keine. Entscheidungsfragen: keine.
+- Spuerbar neu: Bleibt ein Gorilla knapp vor Leon an einer Wagenkante haengen — am Eingang der schmalen Gasse zwischen den Wagen
+  (Ostseite), an der Ecke vor der Nordwest-Ecke hinter dem Block, am Nordende des Westgangs —, sucht er sich nach rund 12 Sekunden
+  zu Fuss den Weg zu einem freien Platz neben Leon und greift an. Im Original (und bis v0.8.23) wartete er dort, bis Leon herauskam.
+- Bleibt wie im Original: der erste Kampf direkt nach der Ada/Marvin-Szene (der erste Gorilla wartet dort etwa 12 s an der
+  Wagenkante, bis der zweite Leon anspringt — diese Szene ist Bild fuer Bild am Original gemessen und festgeschrieben).
+- Anstehen: In der Nordwest-Ecke hinter dem Block passt nur EIN Gorilla in Bissweite. Greift dort einer an, wartet der zweite, bis
+  Platz ist; faellt der erste aus oder laeuft Leon aus der Ecke, kommt der zweite nach.
+- Berichtigung zu NB4: dort stand, ein Gorilla "passe nicht hinein". Das war falsch — er blieb an der Wagenkante haengen, weil er im
+  Original stur geradeaus auf Leon zulaeuft.
+
+### NB5 Ergebnis je Mangel (Kurzfassung)
+| Mangel | Ursache | Beleg | Aenderung | Messung nachher |
+|---|---|---|---|---|
+| 1 NAH-Stillstand an den Stoss-Zielen | (a) EIN naher Gorilla an der Klemme knapp ausserhalb der Bissweite (B[3] gerade auf playerX @0x80117d4c, A[3] nah nur Biss @0x80117a60-74); (b) Stellen 4/11/12/13 + t11b0kampf: der ZWEITE Gorilla steht an, der einzige Bissplatz ist belegt | Spuren je Stelle; Bissplaetze Ecke 1649..1833 < 3168; J-Fenster 353 (Messreihe N) | PORT-WAHL Nah-Umweg zum freien Bissplatz ab R36_NAH_START 354 (= J-Fenster + 1), Belegt-Test | exe Stelle 3 1653/1875 -> 429/368 (Kriterium erfuellt), Stelle 1 826 -> 591, 14 Stellen 10466 -> 7500; kanonischer Kampf + 12 Stellen bitgleich; (b) gemessen nicht erreichbar (WIDERLEGT fuer den zweiten Gorilla), Nachruecken gebaut |
+| 2 falsche Begruendung | "passt nicht hinein" / "kommt nicht zu Fuss" | V3 Biss 54, exe Stelle 3 Biss F1220, Bissplaetze, GDB O1 Gassenmitte | an beiden Stellen durchgestrichen + berichtigt | — |
+| 3 Riegel pinnt Stillstand | O1/O3b/O5 im PORT-Modus | Abnahme 4 | Gleichheit im Modus Original-Regel, PORT-Modus misst Angriff/<= 450 mit Gegenprobe NB4 | Riegel 66/66 |

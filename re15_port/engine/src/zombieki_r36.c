@@ -198,6 +198,17 @@ static int32_t  s_r36_anker_x[RE15_ACTOR_MAX], s_r36_anker_z[RE15_ACTOR_MAX];
 static uint16_t s_r36_nah[RE15_ACTOR_MAX];                                     /* NB5: Bilder NAH im Anker (Jagd, ausser Bissweite) */
 static int32_t  s_r36_nanker_x[RE15_ACTOR_MAX], s_r36_nanker_z[RE15_ACTOR_MAX];
 static uint8_t  s_r36_nahumweg[RE15_ACTOR_MAX];                                /* NB5: Nah-Umweg zum freien Bissplatz aktiv */
+/* NB5 (Abnahme 4, Mangel 1) — NAH-UMWEG (PORT-WAHL, Nutzer "irgendwie verbessern"). GEMESSEN: an den Stoss-Zielen (exe Stelle 3
+ * Ostgassen-Eingang, O3b #21-Ecke, O5 Westkante #2) steht EIN naher Gorilla 900..1875 Bilder an der Klemme 41..160 Einheiten
+ * ausserhalb des Bissfensters — B[3] steuert gerade auf playerX (`addiu a0,a0,-13688` @0x80117d4c, `jal 0x8001a8f8` @0x80117d50),
+ * A[3] hat NAH nur den Biss (`ori a0,zero,0xbb8` / `ori a1,zero,0x180` / `jal 0x8001a804` / `bgez v0,0x80117b40` @0x80117a60-74),
+ * kein anderer Ausgang (@0x80117b40-c74). Ein freier Bissplatz ist zu Fuss erreichbar (Sonde `platz`). Dieselbe Lage hat der
+ * KANONISCHE Ankunftskampf (Slot 2 an der V-Spitze d 3041..3099 bis zum Biss +521, Spur-J-Riegel `szene` = GDB jnb1/g_orig):
+ * NAH-Anker dort hoechstens 353 Bilder (J-Harness `szene` und exe-Tuerweg 11B0->11C0 je 353, exe-Sprung 346). Messreihe Beginn N
+ * (Sonde `kanon`): jedes N < 354 kann den kanonischen Kampf veraendern (1/45/90/.../343/345 veraendert, 344/350/353 zufaellig
+ * gleich), ab 354 bleibt er bitgleich. R36_NAH_START = 353 + 1 — kein Original-Wert (das Original hat NAH keinen Ausgang), sondern
+ * der kleinste Beginn, der den gepinnten Original-Kampf unberuehrt laesst. Kein freier Bissplatz (z. B. Nordwest-Ecke: alle
+ * Bissplaetze in < 3168 Durchmesser, der andere Gorilla greift dort an) -> kein Umweg, der Gorilla steht an (Original). */
 #define R36_NAH_START 354
 static int      s_r36_nah_k = R36_NAH_START;                                   /* NUR Sonden: Schwelle (Messreihe), 0 = aus */
 static int      s_r36_nah_belegt_an = 1;                                       /* NUR Sonden: 0 = Bissplaetze ohne Belegt-Test (Gegenprobe) */
