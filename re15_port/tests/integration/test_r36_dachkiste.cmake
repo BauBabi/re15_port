@@ -90,6 +90,9 @@ macro(_muss _text _var _was)
     endif()
 endmacro()
 
+# ⛔ Makro-Argumente werden TEXTUELL eingesetzt und im Makro ein zweites Mal ausgewertet (gemessen 2026-10-11: ein
+# "\\(" im Aufruf wurde zur Gruppe "(", der Riegel fand den gesperrten Schub nicht): Regex-Argumente deshalb ohne
+# Backslash — Klammerausdruecke [(] [)] [.] bzw. "." fuer eckige Klammern; Klartext ueber string(FIND).
 macro(_darf_nicht _regex _var _was)
     string(REGEX MATCH "${_regex}" _m "${${_var}}")
     if(NOT "${_m}" STREQUAL "")
@@ -97,9 +100,16 @@ macro(_darf_nicht _regex _var _was)
     endif()
 endmacro()
 
+macro(_darf_nicht_text _text _var _was)
+    string(FIND "${${_var}}" "${_text}" _pos)
+    if(NOT _pos LESS 0)
+        _fehler("${_was} — gefunden: '${_text}'")
+    endif()
+endmacro()
+
 # Kiste obj 1 (Dach, Band 5) im Raum <_raum>: nur gesperrte Schuebe, Treffer-Zelle <_zelle>, kein Fall, Record-Lage.
 macro(_kiste_bleibt _name _raum _ziel_regex _zelle)
-    string(REGEX MATCHALL "room=${_raum} p=1 obj=1 SCHUB-GESPERRT[^\n]*ziel=${_ziel_regex}[^\n]*band=5\n  TREFFER-ZELLE r[0-9]+\\[[0-9]+\\]: ${_zelle}" _ges "${_push}")
+    string(REGEX MATCHALL "room=${_raum} p=1 obj=1 SCHUB-GESPERRT[^\n]*ziel=${_ziel_regex}[^\n]*band=5\n  TREFFER-ZELLE r[0-9]+.[0-9]+.: ${_zelle}" _ges "${_push}")
     list(LENGTH _ges _n_ges)
     if(_n_ges LESS 1)
         _fehler("${_name}: kein gesperrter Schub an obj 1 in ROOM${_raum} mit Ziel ${_ziel_regex} und Treffer-Zelle '${_zelle}' (push.txt: ${_push})")
@@ -131,17 +141,17 @@ set(_grund RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_
 # ~1088, Nord), U8 den Korridor hinauf bis an die Kiste (Spieler z -14132) = erster Schub, U1.5/U1.5 = zwei
 # weitere Schuebe (Zaehler obj+0x8C laeuft nach dem Loslassen neu, @0x8002bf74).
 set(_weg "W10,U2.6,W1,L0.37,W0.3,U0.5,W0.3,R0.37,W0.3,U0.55,W0.3,R0.37,W0.5,U10.5,W1,A0.1,W2.5,U0.6,W0.3,A0.1,W3,W10,R0.35,W0.3,U8,W0.5,U1.5,W0.5,U1.5,W2")
-set(_bruestung "x -7256\\.\\.4624 z -18560\\.\\.-16403")
-set(_westwand  "x -9200\\.\\.-6878 z -18524\\.\\.265")
+set(_bruestung "x -7256[.][.]4624 z -18560[.][.]-16403")
+set(_westwand  "x -9200[.][.]-6878 z -18524[.][.]265")
 
 # ---- leon: ROOM10F0 -> Tritt -> Tuer -> ROOM1090 -> Korridor -> Schub nach Norden -------------------------
 _lauf(leon 400 ${_grund} RE15_SET_FLAG=9:71 RE15_DEBUG_JUMP=10F0@250 "RE15_PLAYER_POS=-7125,4950,0"
       "RE15_INPUT_SCRIPT=${_weg}" "RE15_EXIT_AT=2000#1090")
 _muss("loaded room10f0.rdt" _dbg "leon: ROOM10F0 nicht geladen")
-_darf_nicht("\\[cut10f0\\] ROOM10F0: Szene gestartet" _dbg "leon: Szene 10F0 lief trotz (9,71)=1")
+_darf_nicht_text("[cut10f0] ROOM10F0: Szene gestartet" _dbg "leon: Szene 10F0 lief trotz (9,71)=1")
 _muss("[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500) target_cut=0 spawn=(-13600,-9000,1300)" _dbg "leon: Tuer slot 1 nach ROOM1090 nicht ausgeloest (Tritt/Klettern/Aktion)")
 _muss("loaded room1090.rdt" _dbg "leon: ROOM1090 nicht geladen")
-_kiste_bleibt(leon 1090 "\\(-5960,-155[0-9][0-9]\\)" "${_bruestung}")
+_kiste_bleibt(leon 1090 "[(]-5960,-155[0-9][0-9][)]" "${_bruestung}")
 
 # ---- elza: derselbe Weg, ROOM10F1 -> ROOM1091 -------------------------------------------------------------
 _lauf(elza 400 ${_grund} RE15_PSELECT_AUTO_SWITCH=1 RE15_DEBUG_JUMP=10F0@250 "RE15_PLAYER_POS=-7125,4950,0"
@@ -150,13 +160,13 @@ _muss("Spieler-Familie PL04" _dbg "elza: Elza nicht gewaehlt (RE15_PSELECT_AUTO_
 _muss("loaded room10f1.rdt" _dbg "elza: ROOM10F1 nicht geladen")
 _muss("[aot] DOOR FIRE slot=1 rect=(-4750,-1750,hw=600,hh=500) target_cut=0 spawn=(-13600,-9000,1300)" _dbg "elza: Tuer slot 1 nach ROOM1091 nicht ausgeloest")
 _muss("loaded room1091.rdt" _dbg "elza: ROOM1091 nicht geladen")
-_kiste_bleibt(elza 1091 "\\(-5960,-155[0-9][0-9]\\)" "${_bruestung}")
+_kiste_bleibt(elza 1091 "[(]-5960,-155[0-9][0-9][)]" "${_bruestung}")
 
 # ---- west: Leon in der Tasche oestlich der Kiste, Schub nach Westen (Westwand r3[2]) ------------------------
 _lauf(west 200 ${_grund} RE15_DEBUG_JUMP=1090@250 "RE15_PLAYER_POS=-4610,-15155,2112,5"
       "RE15_INPUT_SCRIPT=W2,U2,W0.5,U1.5,W0.5,U1.5,W1" "RE15_EXIT_AT=450#1090")
 _muss("loaded room1090.rdt" _dbg "west: ROOM1090 nicht geladen")
-_kiste_bleibt(west 1090 "\\(-60[0-9][0-9],-15482\\)" "${_westwand}")
+_kiste_bleibt(west 1090 "[(]-60[0-9][0-9],-15482[)]" "${_westwand}")
 
 file(REMOVE "${_exe}")
 message(STATUS "r36_dachkiste: OK — Dach-Kiste ROOM1090/1091: jeder Schub gesperrt wie im Original, kein Fall, Tor-Stufe bleibt")
