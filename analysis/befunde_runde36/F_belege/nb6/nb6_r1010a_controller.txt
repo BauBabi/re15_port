@@ -1,5 +1,5 @@
 # NB6 (Endstand NB6g): r1010a (P1, ROOM1010, Abnahme-1-Fall) — Abweichung des Vorgaenger-Laufs (F_nb6l, 13:xx) erklaert und widerlegt
-# Kommandozeile (alle drei Laeufe, nur die exe wechselt):
+# Kommandozeile (alle Laeufe, nur die exe wechselt):
 re15_pc_nb6l.exe RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_GEGNER_Y_LOG=gy.log RE15_AI_FLAVOR=re2 RE15_DEBUG_JUMP=1010@250 RE15_PLAYER_POS=3750,4300,1024,0 RE15_EXIT_AT=1500#1010
 
 ## 1. Vorgaenger-Lauf F_nb6l/r1010a_nb6l (exe nb6l = HEAD-Code): R1010-Teil 958 Zeilen statt 780, erste Abweichung gy.log Zeile 267 = R1010 F16 (F1..F15 bitgleich, F13 setzt t158=148 in beiden)
@@ -41,9 +41,7 @@ F20 R1010	[1 t=10 st=1/3/3/0 mo=12 af=7 @(3790,0,3762) b0 f1ba=0 f1c0=0000 rot=3
 # Abnahme-5-Lauf:
 5:[pad] Controller: "Xbox 360 Controller" (Slot 0)
 
-## 4. Wiederholung (F_nb6m, 2026-10-11 nachmittags, Controller nicht angefasst, run.sh Muster F_nb6g), R1010-Teil gegen Abnahme 5 (780 Zeilen):
-nb6l: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 t158=142
-t158=0; [pad]-Zeilen 1; 
-abn5f_neu: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 t158=142
-t158=0; [pad]-Zeilen 1; 
-# md5 re15_pc_nb6l.exe = re15_pc.exe (HEAD 30c2ecb3 ohne Kommentar-Aenderung des Headers): c76387e9d472
+## 4. Wiederholung (Scratch F_nb6m, 2026-10-11 ~16:17, Controller nicht angefasst, run.sh Muster F_nb6g, je Lauf eigener Prozess), R1010-Teil gegen Abnahme 5 (780 Zeilen):
+nb6l: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a nb6l rc=124 901s
+abn5f_neu: R1010 780 Zeilen, cmp gegen Abnahme 5: GLEICH; F16 Slot 1 t158=142; [pad]-Zeilen 1; runs.log: r1010a abn5f_neu rc=124 901s
+# md5 re15_pc_nb6l.exe (Messkopie, Bau 30c2ecb3 13:04) = c76387e9d472; re15_pc.exe nach dem Kommentar-Rebuild = c76387e9d472

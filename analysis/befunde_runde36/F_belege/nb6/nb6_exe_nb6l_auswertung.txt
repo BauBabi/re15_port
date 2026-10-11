@@ -171,3 +171,5 @@ t11b0szene_schuss st.log: Abnahme5 GLEICH | nb6h GLEICH
 ## p3lache Framedumps gegen Abnahme 5
 Framedumps 51, bitgleich 51
 ## r1010a R1010-Teil gegen Abnahme 5
+r1010a aus C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/F_nb6m/r1010a_nb6l: R1010-Zeilen 780 (Abnahme 5: 780)
+R1010-Teil GLEICH
